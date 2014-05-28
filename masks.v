@@ -27,6 +27,7 @@ Notation "m1 ⊆ m2"  := (mle m1 m2)  (at level 70) : mask_scope.
 Notation "m1 ∩ m2" := (fun i => (m1 : mask) i /\ (m2 : mask) i) (at level 40) : mask_scope.
 Notation "m1 \  m2"  := (fun i => (m1 : mask) i /\ ~ (m2 : mask) i) (at level 30) : mask_scope.
 Notation "m1 ∪ m2" := (fun i => (m1 : mask) i \/ (m2 : mask) i) (at level 50) : mask_scope.
+Notation "m1 # m2" := (mask_disj m1 m2) (at level 70) : mask_scope.
 
 Open Scope mask_scope.
 
