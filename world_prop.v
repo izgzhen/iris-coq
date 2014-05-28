@@ -23,7 +23,7 @@ Module WorldProp (Res : PCM_T).
     Local Instance pcm_disc P `{cmetric P} : pcmType P | 2000 := disc_pcm P.
 
     Definition FProp P `{cmP : cmetric P} :=
-      (nat -f> P) -m> UPred res.
+      (nat -f> P) -m> UPred (option res).
 
     Context {U V} `{cmU : cmetric U} `{cmV : cmetric V}.
 

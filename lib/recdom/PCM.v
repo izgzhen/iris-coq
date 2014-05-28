@@ -89,10 +89,10 @@ Section Order.
   Local Open Scope pcm_scope.
   Local Existing Instance eqT.
 
-  Definition pcm_ord (t1 t2 : T) :=
-    exists ot, ot · Some t1 = Some t2.
+  Definition pcm_ord (t1 t2 : option T) :=
+    exists td, td · t1 = t2.
 
-  Global Program Instance PCM_preo : preoType T | 0 := mkPOType pcm_ord.
+  Global Program Instance PCM_preo {pcmT : PCM T} : preoType (option T) | 0 := mkPOType pcm_ord.
   Next Obligation.
     split.
     - intros x; exists 1; eapply pcm_op_unit; assumption.
@@ -100,23 +100,11 @@ Section Order.
       rewrite <- assoc; congruence.
   Qed.
 
-  Local Existing Instance option_preo_top.
-
   Global Instance prod_ord : Proper (pord ==> pord ==> pord) (pcm_op _).
   Proof.
-    intros x1 x2 EQx y1 y2 EQy.
-    destruct x2 as [x2 |]; [| erewrite pcm_op_zero by eassumption; exact I].
-    destruct x1 as [x1 |]; [| contradiction]; destruct EQx as [x EQx].
-    destruct y2 as [y2 |]; [| erewrite (comm (Some x2)), pcm_op_zero by eassumption; exact I].
-    destruct y1 as [y1 |]; [| contradiction]; destruct EQy as [y EQy].
-    destruct (Some x2 · Some y2) as [xy2 |] eqn: EQxy2; [| exact I].
-    destruct (Some x1 · Some y1) as [xy1 |] eqn: EQxy1.
-    - exists (x · y); rewrite <- EQxy1.
-      rewrite <- assoc, (comm y), <- assoc, assoc, (comm (Some y1)); congruence.
-    - rewrite <- EQx, <- EQy in EQxy2.
-      rewrite <- assoc, (assoc (Some x1)), (comm (Some x1)), <- assoc in EQxy2.
-      erewrite EQxy1, (comm y), comm, !pcm_op_zero in EQxy2 by eassumption.
-      discriminate.
+    intros x1 x2 [xd EQx] y1 y2 [yd EQy].
+    exists (xd · yd).
+    rewrite <- assoc, (comm yd), <- assoc, assoc, (comm y1); congruence.
   Qed.
 
 End Order.

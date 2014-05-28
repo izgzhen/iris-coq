@@ -12,6 +12,8 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
   End R.
   Module Import WP := WorldProp R.
 
+  Definition res := option R.res.
+
   Delimit Scope iris_scope with iris.
   Local Open Scope iris_scope.
 
@@ -35,7 +37,7 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
     Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
 
     Program Definition box : Props -n> Props :=
-      n[(fun p => m[(fun w => mkUPred (fun n r => p w n (pcm_unit _)) _)])].
+      n[(fun p => m[(fun w => mkUPred (fun n r => p w n 1%pcm) _)])].
     Next Obligation.
       intros n m r s HLe _ Hp; rewrite HLe; assumption.
     Qed.
@@ -58,7 +60,7 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
   Section IntEq.
     Context {T} `{mT : metric T}.
 
-    Program Definition intEqP (t1 t2 : T) : UPred R.res :=
+    Program Definition intEqP (t1 t2 : T) : UPred res :=
       mkUPred (fun n r => t1 = S n = t2) _.
     Next Obligation.
       intros n1 n2 _ _ HLe _; apply mono_dist; now auto with arith.
@@ -88,49 +90,58 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
 
   Notation "t1 '===' t2" := (intEq t1 t2) (at level 70) : iris_scope.
 
-  (** Invariants **)
-  Definition invP (i : nat) (p : Props) (w : Wld) : UPred R.res :=
-    intEqP (w i) (Some (ı' p)).
-  Program Definition inv i : Props -n> Props :=
-    n[(fun p => m[(invP i p)])].
-  Next Obligation.
-    intros w1 w2 EQw; unfold equiv, invP in *.
-    apply intEq_equiv; [apply EQw | reflexivity].
-  Qed.
-  Next Obligation.
-    intros w1 w2 EQw; unfold invP; simpl morph.
-    destruct n; [apply dist_bound |].
-    apply intEq_dist; [apply EQw | reflexivity].
-  Qed.
-  Next Obligation.
-    intros w1 w2 Sw; unfold invP; simpl morph.
-    intros n r HP; do 2 red; specialize (Sw i); do 2 red in HP.
-    destruct (w1 i) as [μ1 |]; [| contradiction].
-    destruct (w2 i) as [μ2 |]; [| contradiction]; simpl in Sw.
-    rewrite <- Sw; assumption.
-  Qed.
-  Next Obligation.
-    intros p1 p2 EQp w; unfold equiv, invP in *; simpl morph.
-    apply intEq_equiv; [reflexivity |].
-    rewrite EQp; reflexivity.
-  Qed.
-  Next Obligation.
-    intros p1 p2 EQp w; unfold invP; simpl morph.
-    apply intEq_dist; [reflexivity |].
-    apply dist_mono, (met_morph_nonexp _ _ ı'), EQp.
-  Qed.
+  Section Invariants.
+
+    (** Invariants **)
+    Definition invP (i : nat) (p : Props) (w : Wld) : UPred res :=
+      intEqP (w i) (Some (ı' p)).
+    Program Definition inv i : Props -n> Props :=
+      n[(fun p => m[(invP i p)])].
+    Next Obligation.
+      intros w1 w2 EQw; unfold equiv, invP in *.
+      apply intEq_equiv; [apply EQw | reflexivity].
+    Qed.
+    Next Obligation.
+      intros w1 w2 EQw; unfold invP; simpl morph.
+      destruct n; [apply dist_bound |].
+      apply intEq_dist; [apply EQw | reflexivity].
+    Qed.
+    Next Obligation.
+      intros w1 w2 Sw; unfold invP; simpl morph.
+      intros n r HP; do 2 red; specialize (Sw i); do 2 red in HP.
+      destruct (w1 i) as [μ1 |]; [| contradiction].
+      destruct (w2 i) as [μ2 |]; [| contradiction]; simpl in Sw.
+      rewrite <- Sw; assumption.
+    Qed.
+    Next Obligation.
+      intros p1 p2 EQp w; unfold equiv, invP in *; simpl morph.
+      apply intEq_equiv; [reflexivity |].
+      rewrite EQp; reflexivity.
+    Qed.
+    Next Obligation.
+      intros p1 p2 EQp w; unfold invP; simpl morph.
+      apply intEq_dist; [reflexivity |].
+      apply dist_mono, (met_morph_nonexp _ _ ı'), EQp.
+    Qed.
+
+  End Invariants.
 
   (** Ownership **)
-  Definition own (r : R.res) : Props :=
+  Definition own (r : res) : Props :=
     pcmconst (up_cr (pord r)).
 
+  Definition injFst (r : option RP.res) : res :=
+    option_map (fun r => (r, pcm_unit _)) r.
+  Definition injSnd (r : option RL.res) : res :=
+    option_map (fun r => (pcm_unit _, r)) r.
+
   (** Physical part **)
-  Definition ownP (r : RP.res) : Props :=
-    own (r, pcm_unit _).
+  Definition ownP (r : option RP.res) : Props :=
+    own (injFst r).
 
   (** Logical part **)
-  Definition ownL (r : RL.res) : Props :=
-    own (pcm_unit _, r).
+  Definition ownL (r : option RL.res) : Props :=
+    own (injSnd r).
 
   Notation "□ p" := (box p) (at level 30, right associativity) : iris_scope.
   Notation "⊤" := (top : Props) : iris_scope.
@@ -151,9 +162,9 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
     Local Open Scope pcm_scope.
 
     (* XXX: logical state omitted, since it looks weird. Also, later over the whole deal. *)
-    Program Definition erasure (σ : state) (m : mask) (r s : R.res) (w : Wld) : UPred () :=
+    Program Definition erasure (σ : state) (m : mask) (r s : res) (w : Wld) : UPred () :=
       ▹ (mkUPred (fun n _ =>
-                    erase_state (option_map fst (Some r · Some s)) σ
+                    erase_state (option_map fst (r · s)) σ
                     /\ forall i π, m i -> w i == Some π -> (ı π) w n s) _).
     Next Obligation.
       intros n1 n2 _ _ HLe _ [HES HRS]; split; [assumption | clear HES; intros].
@@ -165,9 +176,9 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
       intros w1 w2 EQw [| n] []; [reflexivity |].
       split; intros [HES HRS]; (split; [tauto | clear HES; intros ? ? HM HLu]).
       - rewrite <- EQw; eapply HRS; [eassumption |].
-        change (w1 i == Some π); rewrite EQw; assumption.
+        rewrite EQw; assumption.
       - rewrite EQw; eapply HRS; [eassumption |].
-        change (w2 i == Some π); rewrite <- EQw; assumption.
+        rewrite <- EQw; assumption.
     Qed.
 
     Global Instance erasure_dist n σ m r s : Proper (dist n ==> dist n) (erasure σ m r s).
@@ -194,30 +205,22 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
     Local Open Scope mask_scope.
     Local Open Scope pcm_scope.
     Local Obligation Tactic := intros.
+    Local Instance eqRes : Setoid res := discreteType.
 
-    Program Definition preVS (m1 m2 : mask) (p : Props) (w : Wld) : UPred R.res :=
-      mkUPred (fun n r => forall w1 s rf rc mf σ k (HSub : w ⊑ w1) (HLe : k <= n)
-                                 (HGt : k > 0) (HR : Some rc = Some r · Some rf)
-                                 (HE : erasure σ (m1 ∪ mf) rc s w1 @ k) (HD : mf # m1 ∪ m2),
-                            exists w2 rc' r' s', w1 ⊑ w2 /\ p w2 k r' /\
-                                                 Some rc' = Some r' · Some rf /\
-                                                 erasure σ (m2 ∪ mf) rc' s' w2 @ k) _.
+    Program Definition preVS (m1 m2 : mask) (p : Props) (w : Wld) : UPred res :=
+      mkUPred (fun n r => forall w1 s rf mf σ k (HSub : w ⊑ w1) (HLe : k <= n)
+                                 (HGt : k > 0) (HD : mf # m1 ∪ m2)
+                                 (HE : erasure σ (m1 ∪ mf) (r · rf) s w1 @ k),
+                          exists w2 r' s', w1 ⊑ w2 /\ p w2 k r' /\
+                                           erasure σ (m2 ∪ mf) (r' · rf) s' w2 @ k) _.
     Next Obligation.
-      intros n1 n2 r1 r2 HLe HSub HP; intros.
-      destruct HSub as [ [rd |] HSub]; [| erewrite pcm_op_zero in HSub by eauto with typeclass_instances; discriminate].
-      rewrite (comm (Commutative := pcm_op_comm _)) in HSub; rewrite <- HSub in HR.
-      rewrite <- (assoc (Associative := pcm_op_assoc _)) in HR.
-      destruct (Some rd · Some rf) as [rf' |] eqn: HR';
-        [| erewrite (comm (Commutative := pcm_op_comm _)), pcm_op_zero in HR by apply _; discriminate].
-      edestruct (HP w1 s rf' rc mf σ k) as [w2 [rc' [r1' [s' HH] ] ] ];
-        try eassumption; [etransitivity; eassumption |]; clear - HR' HH.
-      destruct HH as [HW [HP [HR HE] ] ]; rewrite <- HR' in HR.
-      rewrite (assoc (Associative := pcm_op_assoc _)) in HR.
-      destruct (Some r1' · Some rd) as [r2' |] eqn: HR'';
-        [| erewrite pcm_op_zero in HR by apply _; discriminate].
-      exists w2 rc' r2' s'; intuition; [].
-      eapply uni_pred, HP; [reflexivity |].
-      exists (Some rd); rewrite (comm (Commutative := pcm_op_comm _)); assumption.
+      intros n1 n2 r1 r2 HLe [rd HR] HP; intros.
+      destruct (HP w1 s (rd · rf) mf σ k) as [w2 [r1' [s' [HW [HP' HE'] ] ] ] ]; try assumption; [| |].
+      - etransitivity; eassumption.
+      - rewrite assoc, (comm r1), HR; assumption.
+      - exists w2 (rd · r1') s'; split; [assumption | split].
+        + eapply uni_pred, HP'; [| eexists]; reflexivity.
+        + rewrite (comm rd), <- assoc; assumption.
     Qed.
 
     Program Definition pvs (m1 m2 : mask) : Props -n> Props :=
@@ -232,20 +235,21 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
     Next Obligation.
       intros w1 w2 EQw n' r HLt; destruct n as [| n]; [now inversion HLt |]; split; intros HP w2'; intros.
       - symmetry in EQw; assert (HDE := extend_dist _ _ _ _ EQw HSub).
+
         assert (HSE := extend_sub _ _ _ _ EQw HSub); specialize (HP (extend w2' w1)).
-        edestruct HP as [w1'' [rc' [r' [s' [HW HH] ] ] ] ]; try eassumption; clear HP; [ | ].
+        edestruct HP as [w1'' [r' [s' [HW HH] ] ] ]; try eassumption; clear HP; [ | ].
         + eapply erasure_dist, HE; [symmetry; eassumption | now eauto with arith].
         + symmetry in HDE; assert (HDE' := extend_dist _ _ _ _ HDE HW).
-          assert (HSE' := extend_sub _ _ _ _ HDE HW); destruct HH as [HP [HR' HE'] ];
-          exists (extend w1'' w2') rc' r' s'; repeat split; [assumption | | assumption |].
+          assert (HSE' := extend_sub _ _ _ _ HDE HW); destruct HH as [HP HE'];
+          exists (extend w1'' w2') r' s'; repeat split; [assumption | |].
           * eapply (met_morph_nonexp _ _ p), HP ; [symmetry; eassumption | now eauto with arith].
           * eapply erasure_dist, HE'; [symmetry; eassumption | now eauto with arith].
       - assert (HDE := extend_dist _ _ _ _ EQw HSub); assert (HSE := extend_sub _ _ _ _ EQw HSub); specialize (HP (extend w2' w2)).
-        edestruct HP as [w1'' [rc' [r' [s' [HW HH] ] ] ] ]; try eassumption; clear HP; [ | ].
+        edestruct HP as [w1'' [r' [s' [HW HH] ] ] ]; try eassumption; clear HP; [ | ].
         + eapply erasure_dist, HE; [symmetry; eassumption | now eauto with arith].
         + symmetry in HDE; assert (HDE' := extend_dist _ _ _ _ HDE HW).
-          assert (HSE' := extend_sub _ _ _ _ HDE HW); destruct HH as [HP [HR' HE'] ];
-          exists (extend w1'' w2') rc' r' s'; repeat split; [assumption | | assumption |].
+          assert (HSE' := extend_sub _ _ _ _ HDE HW); destruct HH as [HP HE'];
+          exists (extend w1'' w2') r' s'; repeat split; [assumption | |].
           * eapply (met_morph_nonexp _ _ p), HP ; [symmetry; eassumption | now eauto with arith].
           * eapply erasure_dist, HE'; [symmetry; eassumption | now eauto with arith].
     Qed.
@@ -260,10 +264,10 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
     Qed.
     Next Obligation.
       intros p1 p2 EQp w n' r HLt; split; intros HP w1; intros.
-      - edestruct HP as [w2 [rc' [r' [s' [HW [HP' [HR' HE'] ] ] ] ] ] ]; try eassumption; [].
+      - edestruct HP as [w2 [r' [s' [HW [HP' HE'] ] ] ] ]; try eassumption; [].
         clear HP; repeat eexists; try eassumption; [].
         apply EQp; [now eauto with arith | assumption].
-      - edestruct HP as [w2 [rc' [r' [s' [HW [HP' [HR' HE'] ] ] ] ] ] ]; try eassumption; [].
+      - edestruct HP as [w2 [r' [s' [HW [HP' HE'] ] ] ] ]; try eassumption; [].
         clear HP; repeat eexists; try eassumption; [].
         apply EQp; [now eauto with arith | assumption].
     Qed.
