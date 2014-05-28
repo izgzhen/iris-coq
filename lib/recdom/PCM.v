@@ -92,7 +92,7 @@ Section Order.
   Definition pcm_ord (t1 t2 : T) :=
     exists ot, ot · Some t1 = Some t2.
 
-  Global Program Instance PCM_preo : preoType T := mkPOType pcm_ord.
+  Global Program Instance PCM_preo : preoType T | 0 := mkPOType pcm_ord.
   Next Obligation.
     split.
     - intros x; exists 1; eapply pcm_op_unit; assumption.
