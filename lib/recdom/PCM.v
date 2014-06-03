@@ -17,10 +17,10 @@ Section Definitions.
   Class PCM_op   := pcm_op : option T -> option T -> option T.
   Class PCM {TU : PCM_unit} {TOP : PCM_op} :=
     mkPCM {
-        pcm_op_assoc :> Associative (eqT := discreteType) pcm_op;
-        pcm_op_comm  :> Commutative (eqT := discreteType) pcm_op;
-        pcm_op_unit  :  forall t, pcm_op (Some pcm_unit) t = t;
-        pcm_op_zero  :  forall t, pcm_op None t = None
+        pcm_op_assoc  :> Associative pcm_op;
+        pcm_op_comm   :> Commutative pcm_op;
+        pcm_op_unit t : pcm_op (Some pcm_unit) t = t;
+        pcm_op_zero t : pcm_op None t = None
       }.
 
 End Definitions.
@@ -31,11 +31,12 @@ Notation "p · q" := (pcm_op _ p q) (at level 40, left associativity) : pcm_scop
 
 Delimit Scope pcm_scope with pcm.
 
+Instance pcm_eq T `{pcmT : PCM T} : Setoid T | 0 := eqT _.
+
 (* PCMs with cartesian products of carriers. *)
 Section Products.
   Context S T `{pcmS : PCM S, pcmT : PCM T}.
   Local Open Scope pcm_scope.
-  Local Existing Instance eqT.
 
   Global Instance pcm_unit_prod : PCM_unit (S * T) := (pcm_unit S, pcm_unit T).
   Global Instance pcm_op_prod : PCM_op (S * T) :=
@@ -54,29 +55,36 @@ Section Products.
     - intros [[s1 t1] |]; [| reflexivity].
       intros [[s2 t2] |]; [| reflexivity].
       intros [[s3 t3] |];
-        [unfold pcm_op, pcm_op_prod |
-         unfold pcm_op at 1 2, pcm_op_prod;
+        [| unfold pcm_op at 1 2, pcm_op_prod;
            destruct (Some (s1, t1) · Some (s2, t2)) as [[s t] |]; simpl; tauto].
       assert (HS := assoc (Some s1) (Some s2) (Some s3));
         assert (HT := assoc (Some t1) (Some t2) (Some t3)).
+      unfold pcm_op, pcm_op_prod.
       destruct (Some s1 · Some s2) as [s12 |];
         destruct (Some s2 · Some s3) as [s23 |]; [.. | reflexivity].
       + destruct (Some t1 · Some t2) as [t12 |];
         destruct (Some t2 · Some t3) as [t23 |]; [.. | reflexivity].
-        * simpl in HS, HT; rewrite HS, HT; reflexivity.
-        * erewrite comm, pcm_op_zero in HT by eassumption; simpl in HT.
-          rewrite <- HT; destruct (Some s12 · Some s3); reflexivity.
-        * erewrite pcm_op_zero in HT by eassumption; simpl in HT.
-          rewrite HT; destruct (Some s1 · Some s23); reflexivity.
-      + erewrite comm, pcm_op_zero in HS by eassumption; simpl in HS.
+        * destruct (Some s1 · Some s23) as [s |]; destruct (Some s12 · Some s3) as [s' |];
+          try (reflexivity || contradiction); simpl in HS; subst s'; [].
+          destruct (Some t1 · Some t23) as [t |]; destruct (Some t12 · Some t3) as [t' |];
+          try (reflexivity || contradiction); simpl in HT; subst t'; reflexivity.
+        * erewrite comm, pcm_op_zero in HT by apply _.
+          destruct (Some t12 · Some t3); [contradiction |].
+          destruct (Some s12 · Some s3); reflexivity.
+        * erewrite pcm_op_zero in HT by apply _.
+          destruct (Some t1 · Some t23); [contradiction |].
+          destruct (Some s1 · Some s23); reflexivity.
+      + erewrite comm, pcm_op_zero in HS by apply _.
         destruct (Some t1 · Some t2) as [t12 |]; [| reflexivity].
-        rewrite <- HS; reflexivity.
-      + erewrite pcm_op_zero in HS by eassumption; simpl in HS.
+        destruct (Some s12 · Some s3) as [s |]; [contradiction | reflexivity].
+      + erewrite pcm_op_zero in HS by apply _.
         destruct (Some t2 · Some t3) as [t23 |]; [| reflexivity].
-        rewrite HS; reflexivity.
-    - intros [[s1 t1] |] [[s2 t2] |]; try reflexivity; []; simpl; unfold pcm_op, pcm_op_prod.
-      rewrite (comm (Some s1)); assert (HT := comm (Some t1) (Some t2)).
-      simpl in HT; rewrite HT; reflexivity.
+        destruct (Some s1 · Some s23); [contradiction | reflexivity].
+    - intros [[s1 t1] |] [[s2 t2] |]; try reflexivity; []; simpl morph; unfold pcm_op, pcm_op_prod.
+      assert (HS := comm (Some s1) (Some s2)); assert (HT := comm (Some t1) (Some t2)).
+      destruct (Some s1 · Some s2); destruct (Some s2 · Some s1); try (contradiction || exact I); [].
+      destruct (Some t1 · Some t2); destruct (Some t2 · Some t1); try (contradiction || exact I); [].
+      simpl in HS, HT; subst s0 t0; reflexivity.
     - intros [[s t] |]; [| reflexivity]; unfold pcm_op, pcm_op_prod; simpl.
       erewrite !pcm_op_unit by eassumption; reflexivity.
     - intros st; reflexivity.
@@ -87,24 +95,59 @@ End Products.
 Section Order.
   Context T `{pcmT : PCM T}.
   Local Open Scope pcm_scope.
-  Local Existing Instance eqT.
 
-  Definition pcm_ord (t1 t2 : option T) :=
-    exists td, td · t1 = t2.
-
-  Global Program Instance PCM_preo {pcmT : PCM T} : preoType (option T) | 0 := mkPOType pcm_ord.
-  Next Obligation.
-    split.
-    - intros x; exists 1; eapply pcm_op_unit; assumption.
-    - intros z yz xyz [y Hyz] [x Hxyz]; exists (x · y).
-      rewrite <- assoc; congruence.
+  Global Instance pcm_op_equiv : Proper (equiv ==> equiv ==> equiv) (pcm_op _).
+  Proof.
+    intros [s1 |] [s2 |] EQs; try contradiction; [|];
+    [intros [t1 |] [t2 |] EQt; try contradiction; [| rewrite (comm (Some s1)), (comm (Some s2)) ] | intros t1 t2 _];
+    try (erewrite !pcm_op_zero by apply _; reflexivity); [].
+    simpl in EQs, EQt; subst t2 s2; reflexivity.
   Qed.
 
-  Global Instance prod_ord : Proper (pord ==> pord ==> pord) (pcm_op _).
+  Definition pcm_ord (t1 t2 : T) :=
+    exists td, Some td · Some t1 == Some t2.
+
+  Global Program Instance PCM_preo : preoType T | 0 := mkPOType pcm_ord.
+  Next Obligation.
+    split.
+    - intros x; eexists; erewrite pcm_op_unit by apply _; reflexivity.
+    - intros z yz xyz [y Hyz] [x Hxyz]; unfold pcm_ord.
+      rewrite <- Hyz, assoc in Hxyz; setoid_rewrite <- Hxyz.
+      destruct (Some x · Some y) as [xy |] eqn: Hxy; [eexists; reflexivity |].
+      erewrite pcm_op_zero in Hxyz by apply _; contradiction.
+  Qed.
+
+  Definition opcm_ord (t1 t2 : option T) :=
+    exists otd, otd · t1 == t2.
+  Global Program Instance opcm_preo : preoType (option T) :=
+    mkPOType opcm_ord.
+  Next Obligation.
+    split.
+    - intros r; exists 1; erewrite pcm_op_unit by apply _; reflexivity.
+    - intros z yz xyz [y Hyz] [x Hxyz]; exists (x · y).
+      rewrite <- Hxyz, <- Hyz; symmetry; apply assoc.
+  Qed.
+
+  Global Instance equiv_pord_pcm : Proper (equiv ==> equiv ==> equiv) (pord (T := option T)).
   Proof.
-    intros x1 x2 [xd EQx] y1 y2 [yd EQy].
-    exists (xd · yd).
-    rewrite <- assoc, (comm yd), <- assoc, assoc, (comm y1); congruence.
+    intros s1 s2 EQs t1 t2 EQt; split; intros [s HS].
+    - exists s; rewrite <- EQs, <- EQt; assumption.
+    - exists s; rewrite EQs, EQt; assumption.
+  Qed.
+
+  Global Instance pcm_op_monic : Proper (pord ==> pord ==> pord) (pcm_op _).
+  Proof.
+    intros x1 x2 [x EQx] y1 y2 [y EQy]; exists (x · y).
+    rewrite <- assoc, (comm y), <- assoc, assoc, (comm y1), EQx, EQy; reflexivity.
+  Qed.
+
+  Lemma ord_res_optRes r s :
+    (r ⊑ s) <-> (Some r ⊑ Some s).
+  Proof.
+    split; intros HR.
+     - destruct HR as [d EQ]; exists (Some d); assumption.
+     - destruct HR as [[d |] EQ]; [exists d; assumption |].
+       erewrite pcm_op_zero in EQ by apply _; contradiction.
   Qed.
 
 End Order.
