@@ -149,17 +149,27 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
   Definition ownRL (r : RL.res) : Props :=
     ownR (pcm_unit _, r).
 
-  (** Proper ghost state: ownership of logical w/ possibility of undefined **)
-  Definition ownL (r : option RL.res) : Props :=
-    match r with
-      | Some r => ownRL r
-      | None => ⊥
-    end.
-
-  Lemma ores_equiv_eq (r1 r2 : option res) (HEq : r1 == r2) : r1 = r2.
+  Lemma ores_equiv_eq T `{pcmT : PCM T} (r1 r2 : option T) (HEq : r1 == r2) : r1 = r2.
   Proof.
     destruct r1 as [r1 |]; destruct r2 as [r2 |]; try contradiction;
     simpl in HEq; subst; reflexivity.
+  Qed.
+
+  Instance logR_metr : metric RL.res := discreteMetric.
+  Instance logR_cmetr : cmetric RL.res := discreteCMetric.
+
+  (** Proper ghost state: ownership of logical w/ possibility of undefined **)
+  Program Definition ownL : (option RL.res) -n> Props :=
+    n[(fun r => match r with
+                  | Some r => ownRL r
+                  | None => ⊥
+                end)].
+  Next Obligation.
+    intros r1 r2 EQr; apply ores_equiv_eq in EQr; now rewrite EQr.
+  Qed.
+  Next Obligation.
+    intros r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
+    destruct r1 as [r1 |]; destruct r2 as [r2 |]; try contradiction; simpl in EQr; subst; reflexivity.
   Qed.
 
   (** Lemmas about box **)
@@ -177,18 +187,23 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
     exists r; now erewrite comm, pcm_op_unit by apply _.
   Qed.
 
+  Lemma box_top : ⊤ == □ ⊤.
+  Proof.
+    intros w n r; simpl; unfold const; reflexivity.
+  Qed.
+
   (** Ghost state ownership **)
   Lemma ownL_sc (u t : option RL.res) :
     ownL (u · t)%pcm == ownL u * ownL t.
   Proof.
     intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
     - destruct (u · t)%pcm as [ut |] eqn: EQut; [| contradiction].
-      do 13 red in Hut; rewrite <- Hut.
+      do 15 red in Hut; rewrite <- Hut.
       destruct u as [u |]; [| now erewrite pcm_op_zero in EQut by apply _].
       assert (HT := comm (Some u) t); rewrite EQut in HT.
       destruct t as [t |]; [| now erewrite pcm_op_zero in HT by apply _]; clear HT.
       exists (pcm_unit RP.res, u) (pcm_unit RP.res, t).
-      split; [unfold pcm_op, res_op, pcm_op_prod | split; do 13 red; reflexivity].
+      split; [unfold pcm_op, res_op, pcm_op_prod | split; do 15 red; reflexivity].
       now erewrite pcm_op_unit, EQut by apply _.
     - destruct u as [u |]; [| contradiction]; destruct t as [t |]; [| contradiction].
       destruct Hu as [ru EQu]; destruct Ht as [rt EQt].
@@ -302,6 +317,13 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
         apply HR; [reflexivity | assumption].
     Qed.
 
+    Lemma erasure_not_empty σ m r s w k (HN : r · s == 0) :
+      ~ erasure σ m r s w (S k) tt.
+    Proof.
+      intros [HD _]; apply ores_equiv_eq in HN; setoid_rewrite HN in HD.
+      now apply erase_state_nonzero in HD.
+    Qed.
+
   End Erasure.
 
   Notation " p @ k " := ((p : UPred ()) k tt) (at level 60, no associativity).
@@ -310,13 +332,6 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
     Local Open Scope mask_scope.
     Local Open Scope pcm_scope.
     Local Obligation Tactic := intros.
-
-Lemma erasure_not_empty σ m r s w k (HN : r · s == 0) :
-  ~ erasure σ m r s w @ S k.
-Proof.
-  intros [HD _]; apply ores_equiv_eq in HN; setoid_rewrite HN in HD.
-  now apply erase_state_nonzero in HD.
-Qed.
 
     Program Definition preVS (m1 m2 : mask) (p : Props) (w : Wld) : UPred res :=
       mkUPred (fun n r => forall w1 rf s mf σ k (HSub : w ⊑ w1) (HLe : k < n)
@@ -450,7 +465,7 @@ Qed.
       destruct HE as [HES [rs [HE HM] ] ].
       exists w' (pcm_unit _) (Some r · s); split; [reflexivity | split; [exact I |] ].
       assert (HR' : Some r · rf · s = rf · (Some r · s))
-        by (apply ores_equiv_eq; rewrite assoc, (comm rf); reflexivity).
+        by (eapply ores_equiv_eq; rewrite assoc, (comm rf); reflexivity).
       setoid_rewrite HR' in HES; erewrite pcm_op_unit by apply _.
       split; [assumption |].
       remember (match rs i with Some ri => ri | None => pcm_unit _ end) as ri eqn: EQri.
@@ -481,7 +496,7 @@ Qed.
         [| erewrite pcm_op_unit in EQR by apply _; discriminate].
         contradiction (erase_state_nonzero σ); clear - HE HES EQrsi EQR.
         assert (HH : rf · (Some r · s) = 0); [clear HES | rewrite HH in HES; assumption].
-        apply ores_equiv_eq; rewrite <- HE, erase_remove by eassumption.
+        eapply ores_equiv_eq; rewrite <- HE, erase_remove by eassumption.
         rewrite (assoc (Some r)), (comm (Some r)), EQR, comm.
         erewrite !pcm_op_zero by apply _; reflexivity.
     Qed.
@@ -542,12 +557,95 @@ Qed.
           clear; intros i; tauto.
     Qed.
 
+    (* XXX: extra lemma *)
+    Lemma valid_iff p :
+      valid p <-> (⊤ ⊑ p).
+    Proof.
+      split; intros Hp.
+      - intros w n r _; apply Hp.
+      - intros w n r; apply Hp; exact I.
+    Qed.
+
     Lemma vsFalse m1 m2 :
       valid (vs m1 m2 ⊥ ⊥).
     Proof.
-      intros pw nn r w _; clear r pw.
-      intros n r _ _ HB; contradiction.
+      rewrite valid_iff, box_top.
+      unfold vs; apply box_intro.
+      rewrite <- and_impl, and_projR.
+      apply bot_false.
     Qed.
+
+    Instance LP_optres (P : option RL.res -> Prop) : LimitPreserving P.
+    Proof.
+      intros σ σc HPc; simpl; unfold option_compl.
+      generalize (@eq_refl _ (σ 1%nat)).
+      pattern (σ 1%nat) at 1 3; destruct (σ 1%nat); [| intros HE; rewrite HE; apply HPc].
+      intros HE; simpl; unfold discreteCompl, unSome.
+      generalize (@eq_refl _ (σ 2)); pattern (σ 2) at 1 3; destruct (σ 2).
+      + intros HE'; rewrite HE'; apply HPc.
+      + intros HE'; exfalso; specialize (σc 1 1 2)%nat.
+        rewrite <- HE, <- HE' in σc; contradiction σc; auto with arith.
+    Qed.
+
+    Definition ownLP (P : option RL.res -> Prop) : {s : option RL.res | P s} -n> Props :=
+      ownL <M< inclM.
+
+Lemma pcm_op_split rp1 rp2 rp sp1 sp2 sp :
+  Some (rp1, sp1) · Some (rp2, sp2) == Some (rp, sp) <->
+  Some rp1 · Some rp2 == Some rp /\ Some sp1 · Some sp2 == Some sp.
+Proof.
+  unfold pcm_op at 1, res_op at 2, pcm_op_prod at 1.
+  destruct (Some rp1 · Some rp2) as [rp' |]; [| simpl; tauto].
+  destruct (Some sp1 · Some sp2) as [sp' |]; [| simpl; tauto].
+  simpl; split; [| intros [EQ1 EQ2]; subst; reflexivity].
+  intros EQ; inversion EQ; tauto.
+Qed.
+
+    Lemma vsGhostUpd m rl (P : option RL.res -> Prop)
+          (HU : forall rf (HD : rl · rf <> None), exists sl, P sl /\ sl · rf <> None) :
+      valid (vs m m (ownL rl) (xist (ownLP P))).
+    Proof.
+      unfold ownLP; intros _ _ _ w _ n [rp' rl'] _ _ HG w'; intros.
+      destruct rl as [rl |]; simpl in HG; [| contradiction].
+      destruct HG as [ [rdp rdl] EQr]; rewrite pcm_op_split in EQr; destruct EQr as [EQrp EQrl].
+      erewrite comm, pcm_op_unit in EQrp by apply _; simpl in EQrp; subst rp'.
+      destruct (Some (rdp, rl') · rf · s) as [t |] eqn: EQt;
+        [| destruct HE as [HES _]; setoid_rewrite EQt in HES; contradiction (erase_state_nonzero σ) ].
+      assert (EQt' : Some (rdp, rl') · rf · s == Some t) by (rewrite EQt; reflexivity).
+      clear EQt; rename EQt' into EQt.
+      destruct rf as [ [rfp rfl] |]; [| now erewrite (comm _ 0), !pcm_op_zero in EQt by apply _].
+      destruct s as [ [sp sl] |]; [| now erewrite (comm _ 0), pcm_op_zero in EQt by apply _].
+      destruct (Some (rdp, rl') · Some (rfp, rfl)) as [ [rdfp rdfl] |] eqn: EQdf;
+        setoid_rewrite EQdf in EQt; [| now erewrite pcm_op_zero in EQt by apply _].
+      destruct (HU (Some rdl · Some rfl · Some sl)) as [rsl [HPrsl HCrsl] ].
+      - intros HEq; destruct t as [tp tl]; apply pcm_op_split in EQt; destruct EQt as [_ EQt].
+        assert (HT : Some (rdp, rl') · Some (rfp, rfl) == Some (rdfp, rdfl)) by (rewrite EQdf; reflexivity); clear EQdf.
+        apply pcm_op_split in HT; destruct HT as [_ EQdf].
+        now rewrite <- EQdf, <- EQrl, (comm (Some rdl)), <- (assoc (Some rl)), <- assoc, HEq in EQt.
+      - destruct (rsl · Some rdl) as [rsl' |] eqn: EQrsl;
+        [| contradiction HCrsl; eapply ores_equiv_eq; now erewrite !assoc, EQrsl, !pcm_op_zero by apply _ ].
+        exists w' (rdp, rsl') (Some (sp, sl)); split; [reflexivity | split].
+        + exists (exist _ rsl HPrsl); destruct rsl as [rsl |];
+          [simpl | now erewrite pcm_op_zero in EQrsl by apply _].
+          exists (rdp, rdl); rewrite pcm_op_split.
+          split; [now erewrite comm, pcm_op_unit by apply _ | now rewrite comm, EQrsl].
+        + destruct HE as [HES HEL]; split; [| assumption]; clear HEL.
+          assert (HT := ores_equiv_eq _ _ _ EQt); setoid_rewrite EQdf in HES;
+          setoid_rewrite HT in HES; clear HT; destruct t as [tp tl].
+          destruct (rsl · (Some rdl · Some rfl · Some sl)) as [tl' |] eqn: EQtl;
+          [| now contradiction HCrsl]; clear HCrsl.
+          assert (HT : Some (rdp, rsl') · Some (rfp, rfl) · Some (sp, sl) = Some (tp, tl')); [| setoid_rewrite HT; apply HES].
+          rewrite <- EQdf, <- assoc in EQt; clear EQdf; eapply ores_equiv_eq; rewrite <- assoc.
+          destruct (Some (rfp, rfl) · Some (sp, sl)) as [ [up ul] |] eqn: EQu;
+            setoid_rewrite EQu in EQt; [| now erewrite comm, pcm_op_zero in EQt by apply _].
+          apply pcm_op_split in EQt; destruct EQt as [EQt _]; apply pcm_op_split; split; [assumption |].
+          assert (HT : Some rfl · Some sl == Some ul);
+            [| now rewrite <- EQrsl, <- EQtl, <- HT, !assoc].
+          apply (proj2 (A := Some rfp · Some sp == Some up)), pcm_op_split.
+          now erewrite EQu.
+    Qed.
+    (* The above proof is rather ugly in the way it handles the monoid elements,
+       but it works *)
 
     Global Instance nat_type : Setoid nat := discreteType.
     Global Instance nat_metr : metric nat := discreteMetric.
@@ -583,10 +681,6 @@ Qed.
       apply Le.le_n_S, SS_last_le; assumption.
     Qed.
 
-    (* XXX: move up to definitions *)
-    Definition injProp (P : Prop) : Props :=
-      pcmconst (up_cr (const P)).
-
     Instance LP_mask m : LimitPreserving m.
     Proof.
       intros σ σc Hp; apply Hp.
@@ -609,7 +703,7 @@ Qed.
         unfold proj1_sig; rewrite fdUpdate_eq; reflexivity.
       - erewrite pcm_op_unit by apply _.
         assert (HR : rf · (Some r · s) = Some r · rf · s)
-          by (apply ores_equiv_eq; rewrite assoc, (comm rf); reflexivity).
+          by (eapply ores_equiv_eq; rewrite assoc, (comm rf); reflexivity).
         destruct HE as [HES [rs [HE HM] ] ].
         split; [setoid_rewrite HR; assumption | clear HR].
         assert (HRi : rs i = None).
@@ -626,7 +720,9 @@ Qed.
           apply HM; assumption.
     Qed.
 
-    (* XXX missing statements: NewGhost, GhostUpd, VSTimeless *)
+
+
+    (* XXX missing statements: GhostUpd, VSTimeless *)
 
   End ViewShiftProps.
 
