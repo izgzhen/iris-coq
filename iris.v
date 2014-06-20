@@ -589,7 +589,7 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
       - intros w n r; apply Hp; exact I.
     Qed.
 
-    Lemma vsFalse m1 m2 :
+    Lemma vsFalse m1 m2 : (* TODO move to derived rules *)
       valid (vs m1 m2 ⊥ ⊥).
     Proof.
       rewrite valid_iff, box_top.
@@ -745,7 +745,7 @@ Qed.
 
 
 
-    (* XXX missing statements: GhostUpd, VSTimeless *)
+    (* XXX missing statements: VSTimeless *)
 
   End ViewShiftProps.
 
@@ -1163,7 +1163,7 @@ Qed.
     Qed.
 
     (** Framing **)
-
+    (* TODO: mask framing *)
     Lemma htFrame m P R e φ :
       ht m P e φ ⊑ ht m (P * R) e (lift_bin sc φ (umconst R)).
     Proof.
@@ -1269,8 +1269,6 @@ Qed.
           assert (HT := fill_value _ _ HV);subst K; rewrite fill_empty in HV.
           eapply fork_not_value; eassumption.
     Qed.
-
-    (** Not stated: the Shift (timeless) rule *)
 
   End HoareTripleProperties.
 

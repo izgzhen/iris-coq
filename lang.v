@@ -89,7 +89,48 @@ Module Lang (C : CORE_LANG).
     apply comp_ctx_inj1 in HEq; congruence.
   Qed.
 
-  (* atomic expressions *)
+  (* Lemmas about expressions *)
+  Lemma reducible_not_value e:
+    reducible e -> ~is_value e.
+  Proof.
+    intros H_red H_val.
+    eapply values_stuck; try eassumption.
+    now erewrite fill_empty.
+  Qed.
+
+  Lemma step_same_ctx: forall K K' e e',
+                         fill K e = fill K' e' ->
+                         reducible e  ->
+                         reducible e' ->
+                         K = K'.
+  Proof.
+    intros K K' e e' H_fill H_red H_red'.
+    edestruct (step_by_value K K' e e') as [K'' H_K''].
+    - assumption.
+    - assumption.
+    - now apply reducible_not_value.
+    - edestruct (step_by_value K' K e' e) as [K''' H_K'''].
+      + now symmetry.
+      + assumption.
+      + now apply reducible_not_value.
+      + subst K.
+        rewrite comp_ctx_assoc in H_K''.
+        assert (H_emp := comp_ctx_neut_emp_r _ _ H_K'').
+        apply fill_noinv in H_emp.
+        destruct H_emp as[H_K'''_emp H_K''_emp].
+        subst K'' K'''.
+        now rewrite comp_ctx_emp_r.
+  Qed.
+
+  Lemma atomic_not_stuck e:
+    atomic e -> ~stuck e.
+  Proof.
+    intros H_atomic H_stuck.
+    eapply H_stuck.
+    - now erewrite fill_empty.
+    - now eapply atomic_reducible.
+  Qed.
+
   Lemma fork_not_atomic K e :
     ~atomic (K [[ fork e ]]).
   Proof.

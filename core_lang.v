@@ -40,6 +40,8 @@ Module Type CORE_LANG.
                        K1 [[ e ]] = K2 [[ e ]] -> K1 = K2.
   Axiom fill_inj2  : forall K e1 e2,
                        K [[ e1 ]] = K [[ e2 ]] -> e1 = e2.
+  Axiom fill_noinv: forall K1 K2, (* Interestingly, it seems impossible to derive this *)
+                       K1 ∘ K2 = ε -> K1 = ε /\ K2 = ε.
   Axiom fill_value : forall K e,
                        is_value (K [[ e ]]) ->
                        K = ε.
@@ -56,10 +58,14 @@ Module Type CORE_LANG.
   (** The primitive atomic stepping relation **)
   Parameter prim_step : prim_cfg -> prim_cfg -> Prop.
 
+
+  Definition reducible e: Prop :=
+    exists sigma cfg', prim_step (e, sigma) cfg'.
+
   Definition stuck (e : expr) : Prop :=
-    forall σ c K e',
+    forall K e',
       e = K [[ e' ]] ->
-      ~prim_step (e', σ) c.
+      ~reducible e'.
 
   Axiom fork_stuck :
     forall K e, stuck (K [[ fork e ]]).
@@ -71,9 +77,9 @@ Module Type CORE_LANG.
      sub-context of K' - in other words, e also contains the reducible
      expression *)
   Axiom step_by_value :
-    forall K K' e e' sigma cfg,
+    forall K K' e e',
       K [[ e ]] = K' [[ e' ]] ->
-      prim_step (e', sigma) cfg ->
+      reducible e' ->
       ~ is_value e ->
       exists K'', K' = K ∘ K''.
   (* Similar to above, buth with a fork instead of a reducible
@@ -87,13 +93,13 @@ Module Type CORE_LANG.
   (** Atomic expressions **)
   Parameter atomic : expr -> Prop.
 
-  Axiom atomic_not_stuck :
-    forall e, atomic e -> ~stuck e.
+  Axiom atomic_reducible :
+    forall e, atomic e -> reducible e.
 
-  Axiom atomic_step : forall eR K e e' σ σ',
-                        atomic eR ->
-                        eR = K [[ e ]] ->
-                        prim_step (e, σ) (e', σ') ->
-                        K = ε /\ is_value e'.
+
+  Axiom atomic_step: forall e σ e' σ',
+                       atomic e ->
+                       prim_step (e, σ) (e', σ') ->
+                       is_value e'.
 
 End CORE_LANG.
