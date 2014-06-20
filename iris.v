@@ -1,11 +1,11 @@
 Require Import world_prop core_lang lang masks.
 Require Import RecDom.PCM RecDom.UPred RecDom.BI RecDom.PreoMet RecDom.Finmap.
 
-Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
+Module Iris (RL : PCM_T) (C : CORE_LANG).
 
-  Module Import L  := Lang RP RL C.
+  Module Import L  := Lang C.
   Module Import R <: PCM_T.
-    Definition res := (RP.res * RL.res)%type.
+    Definition res := (pcm_res_ex state * RL.res)%type.
     Instance res_op   : PCM_op res := _.
     Instance res_unit : PCM_unit res := _.
     Instance res_pcm  : PCM res := _.
@@ -142,13 +142,29 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
     pcmconst (up_cr (pord r)).
 
   (** Physical part **)
-  Definition ownRP (r : RP.res) : Props :=
+  Definition ownRP (r : pcm_res_ex state) : Props :=
     ownR (r, pcm_unit _).
 
   (** Logical part **)
   Definition ownRL (r : RL.res) : Props :=
     ownR (pcm_unit _, r).
 
+  (** Proper physical state: ownership of the machine state **)
+  Instance state_type : Setoid state := discreteType.
+  Instance state_metr : metric state := discreteMetric.
+  Instance state_cmetr : cmetric state := discreteCMetric.
+
+  Program Definition ownS : state -n> Props :=
+    n[(fun s => ownRP (ex_own _ s))].
+  Next Obligation.
+    intros r1 r2 EQr. hnf in EQr. now rewrite EQr.
+  Qed.
+  Next Obligation.
+    intros r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
+    simpl in EQr. subst; reflexivity.
+  Qed.
+
+  (** Proper ghost state: ownership of logical w/ possibility of undefined **)
   Lemma ores_equiv_eq T `{pcmT : PCM T} (r1 r2 : option T) (HEq : r1 == r2) : r1 = r2.
   Proof.
     destruct r1 as [r1 |]; destruct r2 as [r2 |]; try contradiction;
@@ -158,7 +174,6 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
   Instance logR_metr : metric RL.res := discreteMetric.
   Instance logR_cmetr : cmetric RL.res := discreteCMetric.
 
-  (** Proper ghost state: ownership of logical w/ possibility of undefined **)
   Program Definition ownL : (option RL.res) -n> Props :=
     n[(fun r => match r with
                   | Some r => ownRL r
@@ -171,6 +186,7 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
     intros r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
     destruct r1 as [r1 |]; destruct r2 as [r2 |]; try contradiction; simpl in EQr; subst; reflexivity.
   Qed.
+
 
   (** Lemmas about box **)
   Lemma box_intro p q (Hpq : □ p ⊑ q) :
@@ -202,7 +218,7 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
       destruct u as [u |]; [| now erewrite pcm_op_zero in EQut by apply _].
       assert (HT := comm (Some u) t); rewrite EQut in HT.
       destruct t as [t |]; [| now erewrite pcm_op_zero in HT by apply _]; clear HT.
-      exists (pcm_unit RP.res, u) (pcm_unit RP.res, t).
+      exists (pcm_unit (pcm_res_ex state), u) (pcm_unit (pcm_res_ex state), t).
       split; [unfold pcm_op, res_op, pcm_op_prod | split; do 15 red; reflexivity].
       now erewrite pcm_op_unit, EQut by apply _.
     - destruct u as [u |]; [| contradiction]; destruct t as [t |]; [| contradiction].
@@ -216,6 +232,8 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
       destruct (Some rt · Some ru)%pcm as [rut |];
         [| now erewrite pcm_op_zero in EQr by apply _].
       exists rut; assumption.
+
+      (* TODO: own 0 = False, own 1 = True *)
   Qed.
 
   Section Erasure.
@@ -268,11 +286,16 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
         rewrite !assoc, (comm (Some r2)); reflexivity.
     Qed.
 
+    Definition erase_state (r: option res) σ: Prop := match r with
+    | Some (ex_own s, _) => s = σ
+    | _ => False
+    end.
+
     Global Instance preo_unit : preoType () := disc_preo ().
 
     Program Definition erasure (σ : state) (m : mask) (r s : option res) (w : Wld) : UPred () :=
       ▹ (mkUPred (fun n _ =>
-                    erase_state (option_map fst (r · s)) σ
+                    erase_state (r · s) σ
                     /\ exists rs : nat -f> res,
                          erase rs == s /\
                          forall i (Hm : m i),
@@ -321,7 +344,7 @@ Module Iris (RP RL : PCM_T) (C : CORE_LANG RP).
       ~ erasure σ m r s w (S k) tt.
     Proof.
       intros [HD _]; apply ores_equiv_eq in HN; setoid_rewrite HN in HD.
-      now apply erase_state_nonzero in HD.
+      exact HD.
     Qed.
 
   End Erasure.

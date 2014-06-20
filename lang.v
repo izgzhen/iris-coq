@@ -3,13 +3,12 @@ Require Import RecDom.PCM.
 Require Import core_lang.
 
 (******************************************************************)
-(** * Derived language with physical and logical resources **)
+(** * Derived language with threadpool steps **)
 (******************************************************************)
 
-Module Lang (RP: PCM_T) (RL: PCM_T) (C : CORE_LANG RP).
+Module Lang (C : CORE_LANG).
 
   Export C.
-  Export RP RL.
 
   Local Open Scope lang_scope.
 
@@ -106,87 +105,5 @@ Module Lang (RP: PCM_T) (RL: PCM_T) (C : CORE_LANG RP).
     apply atomic_not_stuck in HAt; apply values_stuck in HVal.
     tauto.
   Qed.
-
-  (* Derived facts about expression erasure *)
-  (* I don't think we need these for now — F. *)
-  (*
-  Lemma erase_exp_zero r e :
-    erase_exp r e ->
-    erase_exp RP.res_zero e.
-  Proof.
-    move=>r e H.
-    rewrite -(RP.res_timesZ r) RP.res_timesC.
-      by eapply C.erase_exp_mono.
-  Qed.
-
-  Lemma erase_exp_mono: forall r r' e,
-                          erase_exp (resP r) e ->
-                          erase_exp (resP (r ** r')) e.
-  Proof.
-    move=>r r' e H.
-    case EQ_m:(RL.res_times (resL r) (resL r'))=>[m|].
-    - erewrite resP_comm.
-    - by apply C.erase_exp_mono.
-    - by rewrite EQ_m.
-    - move:(resL_zero _ _ EQ_m)=>->/=.
-                               eapply erase_exp_zero; eassumption.
-  Qed.
-
-  Lemma erase_exp_idemp: forall r e,
-                           erase_exp (resP r) e ->
-                           exists r',
-                             r = r ** r' /\
-                             r' = r' ** r' /\
-                             erase_exp (resP r') e.
-  Proof.
-    move=>[[rP rL]|] /= e H_erase; last first.
-    - exists None.
-             split; first done.
-             split; first done.
-             done.
-             move:(C.erase_exp_idemp _ _ H_erase)=>{H_erase}[r'] [H_EQ1 [H_EQ2 H_erase]].
-             exists (resFP r').
-             split; last split.
-             - case:r' H_EQ1 {H_EQ2 H_erase}=>[r'|]/=H_EQ1.
-             - by rewrite -H_EQ1 RL.res_timesC RL.res_timesI /=.
-                  - by rewrite RP.res_timesC RP.res_timesZ in H_EQ1.
-             - by rewrite -resFP_comm -H_EQ2.
-             - by rewrite resP_FP.
-  Qed.
-
-  Lemma erase_exp_split: forall r K e, 
-                           erase_exp (resP r) (fill K e) ->
-                           exists r_K r_e,
-                             r = r_K ** r_e /\
-                             erase_exp (resP r_K) (fill K fork_ret) /\
-                             erase_exp (resP r_e) e.
-  Proof.
-    move=>r K e H_erase.
-    move:(C.erase_exp_split _ _ _ H_erase)=>{H_erase}[r_K [r_e [H_EQ [H_erase1 H_erase2]]]].
-    exists (resFP r_K ** resFL (resL r)). exists (resFP r_e).
-    split; last split.
-    - rewrite -{1}(res_eta r).
-      rewrite res_timesA [_  ** resFP _]res_timesC -res_timesA.
-      f_equal.
-        by rewrite -resFP_comm H_EQ.
-    - eapply erase_exp_mono.
-        by rewrite resP_FP.
-    - by rewrite resP_FP.
-  Qed.
-
-  Lemma erase_exp_combine: forall r_K r_e e K,
-                             erase_exp (resP r_K) (fill K fork_ret) ->
-                             erase_exp (resP r_e) e ->
-                             erase_exp (resP (r_K ** r_e)) (fill K e).
-  Proof.
-    move=>r_k r_e e K H_K H_e.
-    case EQ_m:(RL.res_times (resL r_k) (resL r_e))=>[m|]; last first.
-    - apply resL_zero in EQ_m.
-      rewrite EQ_m.
-      eapply erase_exp_zero, erase_exp_combine; eassumption.
-      rewrite resP_comm; last first.
-    - by rewrite EQ_m.
-      eapply erase_exp_combine; eassumption.
-  Qed.*)
 
 End Lang.

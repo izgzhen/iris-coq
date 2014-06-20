@@ -1,8 +1,6 @@
 Require Import RecDom.PCM.
 
-Module Type CORE_LANG (Res : PCM_T).
-  Import Res.
-
+Module Type CORE_LANG.
   Delimit Scope lang_scope with lang.
   Local Open Scope lang_scope.
 
@@ -97,54 +95,5 @@ Module Type CORE_LANG (Res : PCM_T).
                         eR = K [[ e ]] ->
                         prim_step (e, σ) (e', σ') ->
                         K = ε /\ is_value e'.
-
-
-  (******************************************************************)
-  (** ** Erasures **)
-  (******************************************************************)
-
-  (** Erasure of a resource to the set of states it describes **)
-  Parameter erase_state : option res -> state -> Prop.
-
-  Axiom erase_state_nonzero :
-    forall σ, ~ erase_state 0%pcm σ.
-
-  Axiom erase_state_emp :
-    forall σ, erase_state 1%pcm σ.
-
-  (** Erasure of a resource to the set of expressions it describes **)
-  (* Not needed for now *)
-  Parameter erase_exp : option res -> expr -> Prop.
-
-  Axiom erase_exp_mono :
-    forall r r' e,
-      erase_exp r e ->
-      erase_exp (r · r')%pcm e.
-
-  Axiom erase_fork_ret :
-    forall r, erase_exp r fork_ret.
-
-  Axiom erase_fork :
-    forall r e,
-      erase_exp r (fork e) ->
-      erase_exp r e.
-
-  Axiom erase_exp_idemp :
-    forall r e, erase_exp r e ->
-      exists r', r = (r · r')%pcm /\ r' = (r' · r')%pcm /\ erase_exp r' e.
-
-  Axiom erase_exp_split :
-    forall r K e,
-      erase_exp r (fill K e) ->
-      exists r_K r_e,
-        r = (r_K · r_e)%pcm /\
-        erase_exp r_K (fill K fork_ret) /\
-        erase_exp r_e e.
-
-  Axiom erase_exp_combine :
-    forall r_K r_e e K,
-      erase_exp r_K (fill K fork_ret) ->
-      erase_exp r_e e ->
-      erase_exp (r_K · r_e)%pcm (fill K e).
 
 End CORE_LANG.
