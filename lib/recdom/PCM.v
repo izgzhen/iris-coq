@@ -152,6 +152,35 @@ Section Order.
 
 End Order.
 
+Section Exclusive.
+  Context (T: Type).
+  Local Open Scope pcm_scope.
+
+  Inductive pcm_res_ex: Type :=
+  | ex_own: T -> pcm_res_ex
+  | ex_unit: pcm_res_ex.
+
+  Global Instance pcm_unit_ex : PCM_unit pcm_res_ex := ex_unit.
+  Global Instance pcm_op_ex : PCM_op pcm_res_ex :=
+    fun ost1 ost2 =>
+      match ost1, ost2 with
+        | Some (ex_own s1), Some ex_unit => Some (ex_own s1)
+        | Some ex_unit, Some (ex_own s2) => Some (ex_own s2)
+        | Some ex_unit, Some ex_unit     => Some ex_unit
+        | _, _                           => None
+      end.
+  Global Instance pcm_ex : PCM pcm_res_ex.
+  Proof.
+    split.
+    - intros [[s1|]|] [[s2|]|] [[s3|]|]; reflexivity.
+    - intros [[s1|]|] [[s2|]|]; reflexivity.
+    - intros [[s1|]|]; reflexivity.
+    - intros [[s1|]|]; reflexivity.
+  Qed.
+
+End Exclusive.
+
+
 (* Package of a monoid as a module type (for use with other modules). *)
 Module Type PCM_T.
 
