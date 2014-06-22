@@ -438,6 +438,7 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
 
     Definition mask_sing i := mask_set mask_emp i True.
 
+    (* TODO: Why do we even need the nonzero lemma about erase_state here? *)
     Lemma vsOpen i p :
       valid (vs (mask_sing i) mask_emp (inv i p) (▹ p)).
     Proof.
@@ -454,7 +455,7 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
           by (rewrite <- HE, assoc, <- (assoc (Some r)), (comm rf), assoc; reflexivity).
         apply ores_equiv_eq in HR; setoid_rewrite HR in HES; clear HR.
         destruct (Some r · Some ri) as [rri |] eqn: HR;
-          [| erewrite !pcm_op_zero in HES by apply _; now apply erase_state_nonzero in HES].
+          [| erewrite !pcm_op_zero in HES by apply _; now contradiction].
         exists w' rri (erase (fdRemove i rs)); split; [reflexivity |].
         split; [| split; [assumption |] ].
         + simpl; eapply HInv; [now auto with arith |].
@@ -517,8 +518,8 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
           exists rd; assumption.
       - destruct (rs i) as [rsi |] eqn: EQrsi; subst;
         [| erewrite pcm_op_unit in EQR by apply _; discriminate].
-        contradiction (erase_state_nonzero σ); clear - HE HES EQrsi EQR.
-        assert (HH : rf · (Some r · s) = 0); [clear HES | rewrite HH in HES; assumption].
+        clear - HE HES EQrsi EQR.
+        assert (HH : rf · (Some r · s) = 0); [clear HES | rewrite HH in HES; contradiction].
         eapply ores_equiv_eq; rewrite <- HE, erase_remove by eassumption.
         rewrite (assoc (Some r)), (comm (Some r)), EQR, comm.
         erewrite !pcm_op_zero by apply _; reflexivity.
@@ -633,7 +634,7 @@ Qed.
       destruct HG as [ [rdp rdl] EQr]; rewrite pcm_op_split in EQr; destruct EQr as [EQrp EQrl].
       erewrite comm, pcm_op_unit in EQrp by apply _; simpl in EQrp; subst rp'.
       destruct (Some (rdp, rl') · rf · s) as [t |] eqn: EQt;
-        [| destruct HE as [HES _]; setoid_rewrite EQt in HES; contradiction (erase_state_nonzero σ) ].
+        [| destruct HE as [HES _]; setoid_rewrite EQt in HES; contradiction].
       assert (EQt' : Some (rdp, rl') · rf · s == Some t) by (rewrite EQt; reflexivity).
       clear EQt; rename EQt' into EQt.
       destruct rf as [ [rfp rfl] |]; [| now erewrite (comm _ 0), !pcm_op_zero in EQt by apply _].
