@@ -957,6 +957,185 @@ Qed.
 
   End HoareTriples.
 
+  Section Soundness.
+    Local Open Scope mask_scope.
+    Local Open Scope pcm_scope.
+    Local Open Scope bi_scope.
+    Local Open Scope lang_scope.
+    Local Open Scope list_scope.
+
+    Inductive stepn : nat -> cfg -> cfg -> Prop :=
+    | stepn_O ρ : stepn O ρ ρ
+    | stepn_S ρ1 ρ2 ρ3 n
+              (HS  : step ρ1 ρ2)
+              (HSN : stepn n ρ2 ρ3) :
+        stepn (S n) ρ1 ρ3.
+
+    Inductive wptp (m : mask) (w : Wld) (n : nat) : tpool -> list res -> Prop :=
+    | wp_emp : wptp m w n nil nil
+    | wp_cons e r tp rs
+              (WPE  : wp m e (umconst ⊤) w n r)
+              (WPTP : wptp m w n tp rs) :
+        wptp m w n (e :: tp) (r :: rs).
+
+    (* Trivial lemma about application split *)
+    Lemma wptp_app m w n tp1 tp2 rs1 rs2
+          (HW1 : wptp m w n tp1 rs1)
+          (HW2 : wptp m w n tp2 rs2) :
+      wptp m w n (tp1 ++ tp2) (rs1 ++ rs2).
+    Proof.
+      induction HW1; [| constructor]; now trivial.
+    Qed.
+
+    (* Closure under future worlds and smaller steps *)
+    Lemma wptp_closure m (w1 w2 : Wld) n1 n2 tp rs
+          (HSW : w1 ⊑ w2) (HLe : n2 <= n1)
+          (HW : wptp m w1 n1 tp rs) :
+      wptp m w2 n2 tp rs.
+    Proof.
+      induction HW; constructor; [| assumption].
+      eapply uni_pred; [eassumption | reflexivity |].
+      rewrite <- HSW; assumption.
+    Qed.
+
+    Lemma wptp_app_tp m w n t1 t2 rs
+          (HW : wptp m w n (t1 ++ t2) rs) :
+      exists rs1 rs2, rs1 ++ rs2 = rs /\ wptp m w n t1 rs1 /\ wptp m w n t2 rs2.
+    Proof.
+      revert rs HW; induction t1; intros; inversion HW; simpl in *; subst; clear HW.
+      - exists (@nil res) (@nil res); now auto using wptp.
+      - exists (@nil res); simpl; now eauto using wptp.
+      - apply IHt1 in WPTP; destruct WPTP as [rs1 [rs2 [EQrs [WP1 WP2] ] ] ]; clear IHt1.
+        exists (r :: rs1) rs2; simpl; subst; now auto using wptp.
+    Qed.
+
+    Lemma comp_list_app rs1 rs2 :
+      comp_list (rs1 ++ rs2) == comp_list rs1 · comp_list rs2.
+    Proof.
+      induction rs1; simpl comp_list; [now rewrite pcm_op_unit by apply _ |].
+      now rewrite IHrs1, assoc.
+    Qed.
+
+    Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
+
+    Lemma unfold_wp m :
+      wp m == (wpF m) (wp m).
+    Proof.
+      unfold wp; apply fixp_eq.
+    Qed.
+
+    Lemma sound_tp m n k e e' tp tp' σ σ' φ w r rs s
+          (HSN  : stepn n (e :: tp, σ) (e' :: tp', σ'))
+          (HV   : is_value e')
+          (HWE  : wp m e φ w (n + S k) r)
+          (HWTP : wptp m w (n + S k) tp rs)
+          (HE   : erasure σ m (Some r · comp_list rs) s w @ n + S k) :
+      exists w' r' s',
+        w ⊑ w' /\ φ (exist _ e' HV) w' (S k) r' /\ erasure σ' m (Some r') s' w' @ S k.
+    Proof.
+      revert e tp σ w r rs s HSN HWE HWTP HE; induction n using wf_nat_ind; rename H into HInd.
+      intros; inversion HSN; subst; clear HSN.
+      (* e is a value *)
+      { rename e' into e; clear HInd HWTP; simpl plus in *; rewrite unfold_wp in HWE.
+        edestruct (HWE w k) as [HVal _]; [reflexivity | unfold lt; reflexivity | eassumption |].
+        specialize (HVal HV); destruct HVal as [w' [r' [s' [HSW [Hφ HE'] ] ] ] ].
+        destruct (Some r' · comp_list rs) as [r'' |] eqn: EQr.
+        - exists w' r'' s'; split; [assumption | split; [| assumption] ].
+          eapply uni_pred, Hφ; [reflexivity |].
+          rewrite ord_res_optRes; exists (comp_list rs); rewrite comm, EQr; reflexivity.
+        - exfalso; eapply erasure_not_empty, HE'.
+          now erewrite pcm_op_zero by apply _.
+      }
+      rename n0 into n; specialize (HInd n (le_n _)); inversion HS; subst; clear HS.
+      (* atomic step *)
+      { destruct t1 as [| ee t1]; inversion H0; subst; clear H0.
+        (* step in e *)
+        - simpl in HSN0; rewrite unfold_wp in HWE; edestruct (HWE w (n + S k)) as [_ [HS _] ];
+          [reflexivity | apply le_n | eassumption |].
+          edestruct HS as [w' [r' [s' [HSW [HWE' HE'] ] ] ] ]; [reflexivity | eassumption | clear HS HWE HE].
+          setoid_rewrite HSW; eapply HInd; try eassumption.
+          eapply wptp_closure, HWTP; [assumption | now auto with arith].
+        (* step in a spawned thread *)
+        - apply wptp_app_tp in HWTP; destruct HWTP as [rs1 [rs2 [EQrs [HWTP1 HWTP2] ] ] ].
+          inversion HWTP2; subst; clear HWTP2; rewrite unfold_wp in WPE.
+          edestruct (WPE w (n + S k) s (Some r · comp_list (rs1 ++ rs0))) as [_ [HS _] ];
+            [reflexivity | apply le_n | eapply erasure_equiv, HE; try reflexivity; [] |].
+          + rewrite !comp_list_app; simpl comp_list; unfold equiv.
+            rewrite assoc, (comm (Some r0)), <- assoc; apply pcm_op_equiv; [reflexivity |].
+            now rewrite assoc, (comm (Some r0)), <- assoc.
+          + edestruct HS as [w' [r0' [s' [HSW [WPE' HE'] ] ] ] ];
+            [reflexivity | eassumption | clear WPE HS].
+            setoid_rewrite HSW; eapply HInd; try eassumption; [| |].
+            * rewrite <- HSW; eapply uni_pred, HWE; [now auto with arith | reflexivity].
+            * apply wptp_app; [eapply wptp_closure, HWTP1; [assumption | now auto with arith] |].
+            constructor; [eassumption | eapply wptp_closure, WPTP; [assumption | now auto with arith] ].
+          * eapply erasure_equiv, HE'; try reflexivity; [].
+            rewrite assoc, (comm (Some r0')), <- assoc; apply pcm_op_equiv; [reflexivity |].
+            rewrite !comp_list_app; simpl comp_list.
+            now rewrite assoc, (comm (comp_list rs1)), <- assoc.
+      }
+      (* fork *)
+      destruct t1 as [| ee t1]; inversion H; subst; clear H.
+      (* fork from e *)
+      - simpl in HSN0; rewrite unfold_wp in HWE; edestruct (HWE w (n + S k)) as [_ [_ HF] ];
+        [reflexivity | apply le_n | eassumption |].
+        specialize (HF _ _ eq_refl); destruct HF as [w' [rfk [rret [s' [HSW [HWE' [HWFK HE'] ] ] ] ] ] ].
+        clear HWE HE; setoid_rewrite HSW; eapply HInd with (rs := rs ++ [rfk]); try eassumption; [|].
+        + apply wptp_app; [| now auto using wptp].
+          eapply wptp_closure, HWTP; [assumption | now auto with arith].
+        + eapply erasure_equiv, HE'; try reflexivity; []; unfold equiv; clear.
+          rewrite (comm (Some rfk)), <- assoc; apply pcm_op_equiv; [reflexivity |].
+          rewrite comp_list_app; simpl comp_list; rewrite comm.
+          now erewrite (comm _ 1), pcm_op_unit by apply _.
+      (* fork from a spawned thread *)
+      - apply wptp_app_tp in HWTP; destruct HWTP as [rs1 [rs2 [EQrs [HWTP1 HWTP2] ] ] ].
+        inversion HWTP2; subst; clear HWTP2; rewrite unfold_wp in WPE.
+        edestruct (WPE w (n + S k) s (Some r · comp_list (rs1 ++ rs0))) as [_ [_ HF] ];
+          [reflexivity | apply le_n | eapply erasure_equiv, HE; try reflexivity; [] |].
+        + rewrite assoc, (comm (Some r0)), <- assoc; apply pcm_op_equiv; [reflexivity |].
+          rewrite !comp_list_app; simpl comp_list; now rewrite assoc, (comm (Some r0)), <- assoc.
+        + specialize (HF _ _ eq_refl); destruct HF as [w' [rfk [rret [s' [HSW [WPE' [WPS HE'] ] ] ] ] ] ]; clear WPE.
+          setoid_rewrite HSW; eapply HInd; try eassumption; [| |].
+          * rewrite <- HSW; eapply uni_pred, HWE; [now auto with arith | reflexivity].
+          * apply wptp_app; [eapply wptp_closure, HWTP1; [assumption | now auto with arith] |].
+            constructor; [eassumption | apply wptp_app; [| now eauto using wptp] ].
+            eapply wptp_closure, WPTP; [assumption | now auto with arith].
+          * eapply erasure_equiv, HE'; try reflexivity; [].
+            rewrite (assoc _ (Some r)), (comm _ (Some r)), <- assoc.
+            apply pcm_op_equiv; [reflexivity |].
+            rewrite (comm (Some rfk)), <- assoc, comp_list_app; simpl comp_list.
+            rewrite assoc, (comm _ (Some rret)), <- assoc.
+            apply pcm_op_equiv; [reflexivity |].
+            rewrite (comm (Some rfk)), !comp_list_app; simpl comp_list.
+            rewrite assoc; apply pcm_op_equiv; [reflexivity |].
+            now erewrite comm, pcm_op_unit by apply _.
+    Qed.
+
+    Lemma unit_min r : pcm_unit _ ⊑ r.
+    Proof.
+      exists r; now erewrite comm, pcm_op_unit by apply _.
+    Qed.
+
+    (** This is a (relatively) generic soundness statement; one can
+        simplify it for certain classes of assertions (e.g.,
+        independent of the worlds) and obtain easy corollaries. *)
+    Theorem soundness m e p φ n k e' tp σ σ' w r s
+            (HT  : valid (ht m p e φ))
+            (HSN : stepn n ([e], σ) (e' :: tp, σ'))
+            (HV  : is_value e')
+            (HP  : p w (n + S k) r)
+            (HE  : erasure σ m (Some r) s w @ n + S k) :
+      exists w' r' s',
+        w ⊑ w' /\ φ (exist _ e' HV) w' (S k) r' /\ erasure σ' m (Some r') s' w' @ S k.
+    Proof.
+      specialize (HT w (n + S k) r).
+      eapply sound_tp; [eassumption | | constructor | eapply erasure_equiv, HE; try reflexivity; [] ].
+      - apply HT in HP; try reflexivity; [eassumption | apply unit_min].
+      - simpl comp_list; now erewrite comm, pcm_op_unit by apply _.
+    Qed.
+
+  End Soundness.
+
   Section HoareTripleProperties.
     Local Open Scope mask_scope.
     Local Open Scope pcm_scope.
@@ -1015,13 +1194,6 @@ Qed.
       - destruct n as [| n]; [apply dist_bound | simpl in EQv].
         rewrite EQv; reflexivity.
     Qed.
-
-    Lemma unit_min r : pcm_unit _ ⊑ r.
-    Proof.
-      exists r; now erewrite comm, pcm_op_unit by apply _.
-    Qed.
-
-    Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
 
     Lemma htBind P φ φ' K e m :
       ht m P e φ ∧ all (plugV m φ φ' K) ⊑ ht m P (K [[ e ]]) φ'.
