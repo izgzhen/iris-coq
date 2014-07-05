@@ -236,6 +236,34 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
       (* TODO: own 0 = False, own 1 = True *)
   Qed.
 
+  (** Timeless *)
+
+  Definition timelessP (p : Props) w n :=
+    forall w' k r (HSw : w ⊑ w') (HLt : k < n) (Hp : p w' k r), p w' (S k) r.
+
+  Program Definition timeless (p : Props) : Props :=
+    m[(fun w => mkUPred (fun n r => timelessP p w n) _)].
+  Next Obligation.
+    intros n1 n2 _ _ HLe _ HT w' k r HSw HLt Hp; eapply HT, Hp; [eassumption |].
+    now eauto with arith.
+  Qed.
+  Next Obligation.
+    intros w1 w2 EQw n rr; simpl; split; intros HT k r HLt;
+    [rewrite <- EQw | rewrite EQw]; apply HT; assumption.
+  Qed.
+  Next Obligation.
+    intros w1 w2 EQw k; simpl; intros _ HLt; destruct n as [| n]; [now inversion HLt |].
+    split; intros HT w' m r HSw HLt' Hp.
+    - symmetry in EQw; assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
+      apply (met_morph_nonexp _ _ p) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
+    - assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
+      apply (met_morph_nonexp _ _ p) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
+  Qed.
+  Next Obligation.
+    intros w1 w2 HSw n; simpl; intros _ HT w' m r HSw' HLt Hp.
+    eapply HT, Hp; [etransitivity |]; eassumption.
+  Qed.
+
   Section Erasure.
     Local Open Scope pcm_scope.
     Local Open Scope bi_scope.
@@ -437,6 +465,17 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
     Implicit Types (p q r : Props) (i : nat) (m : mask).
 
     Definition mask_sing i := mask_set mask_emp i True.
+
+    Lemma vsTimeless m p :
+      timeless p ⊑ vs m m (▹ p) p.
+    Proof.
+      intros w' n r1 HTL w HSub; rewrite HSub in HTL; clear w' HSub.
+      intros np rp HLe HS Hp w1; intros.
+      exists w1 rp s; split; [reflexivity | split; [| assumption] ]; clear HE HD.
+      destruct np as [| np]; [now inversion HLe0 |]; simpl in Hp.
+      unfold lt in HLe0; rewrite HLe0.
+      rewrite <- HSub; apply HTL, Hp; [reflexivity | assumption].
+    Qed.
 
     (* TODO: Why do we even need the nonzero lemma about erase_state here? *)
     Lemma vsOpen i p :
@@ -743,10 +782,6 @@ Qed.
           setoid_rewrite <- HSub.
           apply HM; assumption.
     Qed.
-
-
-
-    (* XXX missing statements: VSTimeless *)
 
   End ViewShiftProps.
 
