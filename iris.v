@@ -1175,13 +1175,14 @@ Qed.
             (HV : is_value e') :
         φ (exist _ e' HV).
     Proof.
-      edestruct (soundness _ _ _ _ _ 0 _ _ _ _ fdEmpty (ex_own _ σ, pcm_unit _) 1 HT HSN) as [w' [r' [s' [H_wle [H_phi _] ] ] ] ].
-      - simpl. hnf. exists (pcm_unit _).
-        rewrite pcm_op_unit by intuition. reflexivity.
-      - rewrite Plus.plus_comm. simpl. split.
-        + admit. (* TODO: rewrite comm. does not work though?? *)
-        + exists (fdEmpty (V:=res)). simpl. split; [reflexivity|].
-          intros i _. split; [tauto|].
+      edestruct (soundness _ _ _ _ _ 0 _ _ _ _ fdEmpty (ex_own _ σ, pcm_unit _) 1 HT HSN) as [w [r [s [H_wle [H_phi _] ] ] ] ].
+      - exists (pcm_unit _); now rewrite pcm_op_unit by apply _.
+      - rewrite Plus.plus_comm; split.
+        + assert (HS : Some (ex_own _ σ, pcm_unit _) · 1 = Some (ex_own _ σ, pcm_unit _));
+          [| now setoid_rewrite HS].
+          eapply ores_equiv_eq; now erewrite comm, pcm_op_unit by apply _.
+        + exists (fdEmpty (V:=res)); split; [reflexivity|].
+          intros i _; split; [reflexivity |].
           intros _ _ [].
       - exact H_phi.
     Qed.
