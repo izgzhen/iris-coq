@@ -1155,6 +1155,37 @@ Qed.
       - simpl comp_list; now erewrite comm, pcm_op_unit by apply _.
     Qed.
 
+    Program Definition cons_pred (φ : value -=> Prop): value -n> Props :=
+      n[(fun v => pcmconst (mkUPred (fun n r => φ v) _))].
+    Next Obligation.
+      firstorder.
+    Qed.
+    Next Obligation.
+      intros x y  H_xy P n r. simpl. rewrite H_xy. tauto.
+    Qed.
+    Next Obligation.
+      intros x y H_xy P m r. simpl in H_xy. destruct n.
+      - intros LEZ. exfalso. omega.
+      - intros _. simpl. assert(H_xy': equiv x y) by assumption. rewrite H_xy'. tauto.
+    Qed.
+
+    Theorem soundness_obs m e (φ : value -=> Prop) n e' tp σ σ'
+            (HT  : valid (ht m (ownS σ) e (cons_pred φ)))
+            (HSN : stepn n ([e], σ) (e' :: tp, σ'))
+            (HV : is_value e') :
+        φ (exist _ e' HV).
+    Proof.
+      edestruct (soundness _ _ _ _ _ 0 _ _ _ _ fdEmpty (ex_own _ σ, pcm_unit _) 1 HT HSN) as [w' [r' [s' [H_wle [H_phi _] ] ] ] ].
+      - simpl. hnf. exists (pcm_unit _).
+        rewrite pcm_op_unit by intuition. reflexivity.
+      - rewrite Plus.plus_comm. simpl. split.
+        + admit. (* TODO: rewrite comm. does not work though?? *)
+        + exists (fdEmpty (V:=res)). simpl. split; [reflexivity|].
+          intros i _. split; [tauto|].
+          intros _ _ [].
+      - exact H_phi.
+    Qed.
+
   End Soundness.
 
   Section HoareTripleProperties.
