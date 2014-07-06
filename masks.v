@@ -1,4 +1,4 @@
-Require Import Arith Program RelationClasses.
+Require Import Arith Program RelationClasses Morphisms.
 
 Definition mask := nat -> Prop.
 
@@ -78,95 +78,32 @@ Proof.
   - intros m1 m2 m3 LEm12 LEm23 n Hm1; auto.
 Qed.
 
-(*
-Lemma mask_union_set_false m1 m2 i:
-  mask_disj m1 m2 -> m1 i ->
-  (set_mask m1 i False) \/1 m2 = set_mask (m1 \/1 m2) i False.
+Lemma mask_emp_union m :
+  meq (m ∪ mask_emp) m.
 Proof.
-move=>H_disj H_m1. extensionality j.
-rewrite /set_mask.
-case beq i j; last done.
-apply Prop_ext. split; last tauto.
-move=>[H_F|H_m2]; first tauto.
-eapply H_disj; eassumption.
+  intros k; unfold mask_emp, const; tauto.
 Qed.
 
-Lemma set_mask_true_union m i:
-  set_mask m i True = (set_mask mask_emp i True) \/1 m.
+Lemma mask_emp_disjoint m :
+  mask_emp # m.
 Proof.
-extensionality j.
-apply Prop_ext.
-rewrite /set_mask /mask_emp.
-case EQ_beq:(beq_nat i j); tauto.
+  intros k; unfold mask_emp, const; tauto.
 Qed.
 
-Lemma mask_disj_mle_l m1 m1' m2:
-  m1 <=1 m1' ->
-  mask_disj m1' m2 -> mask_disj m1 m2.
+Lemma mask_union_idem m :
+  meq (m ∪ m) m.
 Proof.
-move=>H_incl H_disj i.
-firstorder.
+  intros k; tauto.
 Qed.
 
-Lemma mask_disj_mle_r m1 m2 m2':
-  m2 <=1 m2' ->
-  mask_disj m1 m2' -> mask_disj m1 m2.
+Global Instance mask_disj_sub : Proper (mle --> mle --> impl) mask_disj.
 Proof.
-move=>H_incl H_disj i.
-firstorder.
+  intros m1 m1' Hm1 m2 m2' Hm2 Hd k [Hm1' Hm2']; unfold flip in *.
+  apply (Hd k); split; [apply Hm1, Hm1' | apply Hm2, Hm2'].
 Qed.
 
-Lemma mle_union_l m1 m2:
-  m1 <=1 m1 \/1 m2.
+Global Instance mask_disj_eq : Proper (meq ==> meq ==> iff) mask_disj.
 Proof.
-move=>i. cbv. tauto.
+  intros m1 m1' EQm1 m2 m2' EQm2; split; intros Hd k [Hm1 Hm2];
+  apply (Hd k); (split; [apply EQm1, Hm1 | apply EQm2, Hm2]).
 Qed.
-
-Lemma mle_union_r m1 m2:
-  m1 <=1 m2 \/1 m1.
-Proof.
-move=>i. cbv. tauto.
-Qed.
-
-Lemma mle_set_false m i:
-  (set_mask m i False) <=1 m.
-Proof.
-move=>j.
-rewrite /set_mask.
-case H: (beq_nat i j); done.
-Qed.
-
-Lemma mle_set_true m i:
-  m <=1 (set_mask m i True).
-Proof.
-move=>j.
-rewrite /set_mask.
-case H: (beq_nat i j); done.
-Qed.
-
-Lemma mask_union_idem m:
-  m \/1 m = m.
-Proof.
-extensionality i.
-eapply Prop_ext.
-tauto.
-Qed.
-
-Lemma mask_union_emp_r m:
-  m \/1 mask_emp = m.
-Proof.
-extensionality i.
-eapply Prop_ext.
-rewrite/mask_emp /=.
-tauto.
-Qed.
-
-Lemma mask_union_emp_l m:
-  mask_emp \/1 m = m.
-Proof.
-extensionality j.
-apply Prop_ext.
-rewrite /mask_emp.
-tauto.
-Qed.
-*)
