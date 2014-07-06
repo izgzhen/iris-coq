@@ -147,4 +147,16 @@ Module Lang (C : CORE_LANG).
     tauto.
   Qed.
 
+  Lemma atomic_fill e K
+        (HAt : atomic (K [[ e ]]))
+        (HNV : ~ is_value e) :
+    K = empty_ctx.
+  Proof.
+    destruct (step_by_value K ε e (K [[ e ]])) as [K' EQK].
+    - now rewrite fill_empty.
+    - now apply atomic_reducible.
+    - assumption.
+    - symmetry in EQK; now apply fill_noinv in EQK.
+  Qed.
+
 End Lang.

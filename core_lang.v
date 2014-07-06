@@ -96,10 +96,6 @@ Module Type CORE_LANG.
   Axiom atomic_reducible :
     forall e, atomic e -> reducible e.
 
-  Axiom atomic_fill :
-    forall e K (HAt : atomic (K [[e ]])),
-      K = empty_ctx.
-
   Axiom atomic_step: forall e σ e' σ',
                        atomic e ->
                        prim_step (e, σ) (e', σ') ->

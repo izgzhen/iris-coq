@@ -1358,7 +1358,9 @@ Qed.
         [reflexivity | apply le_n | rewrite HSub; eassumption | eassumption |].
       edestruct HS as [w [r'' [s'' [HSw [He' HE] ] ] ] ]; try eassumption; clear He HS HE'.
       destruct k as [| k]; [exists w' r' s'; split; [reflexivity | split; [apply wpO | exact I] ] |].
-      subst e; assert (HT := atomic_fill _ _ HAt); subst K.
+      assert (HNV : ~ is_value ei)
+        by (intros HV; eapply (values_stuck _ HV); [symmetry; apply fill_empty | repeat eexists; eassumption]).
+      subst e; assert (HT := atomic_fill _ _ HAt HNV); subst K; clear HNV.
       rewrite fill_empty in *; rename ei into e.
       setoid_rewrite HSw'; setoid_rewrite HSw.
       assert (HVal := atomic_step _ _ _ _ HAt HStep).
@@ -1467,7 +1469,9 @@ Qed.
           [| eapply erasure_not_empty in HE';
              [contradiction | now erewrite !pcm_op_zero by apply _] ].
         do 3 eexists; split; [eassumption | split; [| eassumption] ].
-        subst e; assert (HT := atomic_fill _ _ HAt); subst K.
+        assert (HNV : ~ is_value ei)
+          by (intros HV; eapply (values_stuck _ HV); [symmetry; apply fill_empty | repeat eexists; eassumption]).
+        subst e; assert (HT := atomic_fill _ _ HAt HNV); subst K; clear HNV.
         rewrite fill_empty in *.
         unfold lt in HLt; rewrite <- HLt, HSw, HSw' in HLR; simpl in HLR.
         assert (HVal := atomic_step _ _ _ _ HAt HStep).
