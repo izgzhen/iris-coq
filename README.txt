@@ -8,5 +8,6 @@ This folder is organized as follows:
 * world_prop.v uses the aforementioned Coq library to construct the domain for Iris propositions
 * iris.v is the main file and contains the actual logic and the proof of the rules for view shifts and Hoare tiples
 
+Run "make" in this folder to build it all.
 Be aware that iris.v takes a long time to check and needs significant amounts of RAM!
 8GiB may be sufficient, but to be safe you should have 16GiB and give it around 2 to 3 hours.
