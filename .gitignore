@@ -1,3 +1,5 @@
 *.vo
 *.v.d
 *.glob
+guide
+html
