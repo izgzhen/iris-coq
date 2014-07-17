@@ -1,4 +1,15 @@
-This folder contains the Coq development for Iris.
+This folder contains the Coq development for
+Iris: Monoids and Invariants as an Orthogonal Basis for Concurrent Reasoning
+by
+Ralf Jung <jung@mpi-sws.org>
+David Swasey <swasey@mpi-sws.org>
+Filip Sieczkowski <filips@cs.au.dk>
+Kasper Svendsen <ksvendsen@cs.au.dk>
+Aaron Turon <turon@mpi-sws.org>
+Lars Birkedal <birkedal@cs.au.dk>
+Derek Dreyer <dreyer@mpi-sws.org>
+
+
 It uses a Coq library in lib/ by Sieczkowski et al. to solve the recursive domain equation (see the paper for a reference).
 
 This folder is organized as follows:
