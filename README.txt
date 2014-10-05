@@ -1,24 +1,70 @@
-This folder contains the Coq development for
-Iris: Monoids and Invariants as an Orthogonal Basis for Concurrent Reasoning
-by
-Ralf Jung <jung@mpi-sws.org>
-David Swasey <swasey@mpi-sws.org>
-Filip Sieczkowski <filips@cs.au.dk>
-Kasper Svendsen <ksvendsen@cs.au.dk>
-Aaron Turon <turon@mpi-sws.org>
-Lars Birkedal <birkedal@cs.au.dk>
-Derek Dreyer <dreyer@mpi-sws.org>
+
+DESCRIPTION
+
+  This folder contains the Coq development for
+  Iris: Monoids and Invariants as an Orthogonal Basis for Concurrent Reasoning
+
+  by
+  
+  Ralf Jung <jung@mpi-sws.org>
+  David Swasey <swasey@mpi-sws.org>
+  Filip Sieczkowski <filips@cs.au.dk>
+  Kasper Svendsen <ksvendsen@cs.au.dk>
+  Aaron Turon <turon@mpi-sws.org>
+  Lars Birkedal <birkedal@cs.au.dk>
+  Derek Dreyer <dreyer@mpi-sws.org>
 
 
-It uses a Coq library in lib/ by Sieczkowski et al. to solve the recursive domain equation (see the paper for a reference).
+CONTENTS
 
-This folder is organized as follows:
-* core_lang.v contains the axioms about the language
-* lang.v defines the threadpool reduction and derives some lemmas from core_lang.v
-* masks.v introduces some lemmas about masks
-* world_prop.v uses the aforementioned Coq library to construct the domain for Iris propositions
-* iris.v is the main file and contains the actual logic and the proof of the rules for view shifts and Hoare tiples
+  The folder is organized as follows:
+  * core_lang.v contains the axioms about the language
+  * lang.v defines the threadpool reduction and derives some lemmas from core_lang.v
+  * masks.v introduces some lemmas about masks
+  * world_prop.v uses the aforementioned Coq library to construct the domain for Iris propositions
+  * iris.v is the main file and contains the actual logic and the proof of the rules for view shifts and Hoare tiples
 
-Run "make" in this folder to build it all.
-Be aware that iris.v takes a long time to check and needs significant amounts of RAM!
-8GiB may be sufficient, but to be safe you should have 16GiB and give it around 2 to 3 hours.
+  It uses a Coq library in lib/ by Sieczkowski et al. to solve the recursive domain equation (see the paper for a reference).
+
+
+REQUIREMENTS
+
+  Coq 
+  8GB ram
+
+  We have tested the development using Coq v. 8.4pl4 on a machine with 8GB RAM + 4GB swap.  
+  
+
+HOW TO COMPILE
+
+  To compile the development, run
+  
+  > make 
+
+  in the folder containing this README. 
+
+  Be aware that iris.v takes a long time to check and needs significant amounts of RAM!
+  8GiB may be sufficient, but to be safe you should have 16GiB and give it around 2 to 3 hours.
+
+
+OVERVIEW OF LEMMAS
+
+  Below we give a mapping from proof rules in the paper to Coq lemma's in Iris.v
+
+  RULE         Coq lemma
+  -----------------------
+  VSTimeless   vsTimeless
+  NewInv       vsNewInv
+  VSOpen       vsOpen
+  VSClose      vsClose
+  VSTrans      vsTrans
+  VSImp        vsEnt
+  GhostUpd     vsGhostUpd
+
+  Ret          htRet
+  Bind         htBind
+  Frame        htFrame
+  Csq          htCons
+  ACSQ         htACons
+
+  The main adequacy result is expressed by Theorem soundness_obs.
