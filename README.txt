@@ -22,7 +22,7 @@ CONTENTS
   * lang.v defines the threadpool reduction and derives some lemmas from core_lang.v
   * masks.v introduces some lemmas about masks
   * world_prop.v uses the aforementioned Coq library to construct the domain for Iris propositions
-  * iris.v is the main file and contains the actual logic and the proof of the rules for view shifts and Hoare tiples
+  * iris.v is the main file and contains the actual logic and the proof of the rules for view shifts and Hoare triples
 
   It uses a Coq library in lib/ by Sieczkowski et al. to solve the recursive domain equation (see the paper for a reference).
 
@@ -59,12 +59,15 @@ OVERVIEW OF LEMMAS
   VSClose      vsClose
   VSTrans      vsTrans
   VSImp        vsEnt
-  GhostUpd     vsGhostUpd
+  VSFrame      vsFrame
+  FpUpd        vsGhostUpd
 
   Ret          htRet
   Bind         htBind
   Frame        htFrame
+  AFrame       htAFrame
   Csq          htCons
   ACSQ         htACons
+  Fork         htFork
 
   The main adequacy result is expressed by Theorem soundness_obs.
