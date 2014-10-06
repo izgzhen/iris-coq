@@ -30,9 +30,9 @@ CONTENTS
 REQUIREMENTS
 
   Coq 
-  8GB ram
+  8GB ram + 4GB swap
 
-  We have tested the development using Coq v. 8.4pl4 on a machine with 8GB RAM + 4GB swap.  
+  We have tested the development using Coq v. 8.4pl4 on Linux and Mac machines with at least 8GB RAM + 4GB swap.
   
 
 HOW TO COMPILE
