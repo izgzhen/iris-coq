@@ -33,6 +33,7 @@ REQUIREMENTS
   8GB ram + 4GB swap
 
   We have tested the development using Coq v. 8.4pl4 on Linux and Mac machines with at least 8GB RAM + 4GB swap.
+  The entire compilation took around 3 hours.
   
 
 HOW TO COMPILE
