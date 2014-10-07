@@ -59,10 +59,10 @@ CONTENTS
   * iris.v is the main file and contains the actual logic and the
     proof of the rules for view shifts and Hoare triples
 
-  The development uses ModuRes, a Coq library in by Sieczkowski et
-  al. to solve the recursive domain equation (see the paper for a
-  reference) and prove some of the standard separation logic rules. It
-  is located in the lib/ subdirectory.
+  The development uses ModuRes, a Coq library by Sieczkowski et al. to
+  solve the recursive domain equation (see the paper for a reference)
+  and prove some of the standard separation logic rules. It is located
+  in the lib/ subdirectory.
 
 
 REQUIREMENTS
