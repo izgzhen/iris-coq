@@ -17,14 +17,29 @@ DESCRIPTION
 
 CONTENTS
 
-  The folder is organized as follows:
-  * core_lang.v contains the axioms about the language
-  * lang.v defines the threadpool reduction and derives some lemmas from core_lang.v
-  * masks.v introduces some lemmas about masks
-  * world_prop.v uses the aforementioned Coq library to construct the domain for Iris propositions
-  * iris.v is the main file and contains the actual logic and the proof of the rules for view shifts and Hoare triples
+  Our artifact is a Coq formalization of the model of our Iris logic,
+  together with a proof of adequacy (establishing that the model is
+  faithful wrt the operational semantics), and a proof of soundness of
+  the primitive rules of the logic wrt the model.
 
-  It uses a Coq library in lib/ by Sieczkowski et al. to solve the recursive domain equation (see the paper for a reference).
+
+  The folder is organized as follows:
+
+  * core_lang.v contains the axioms about the language
+
+  * lang.v defines the threadpool reduction and derives some lemmas
+    from core_lang.v
+  
+  * masks.v introduces some lemmas about masks
+  
+  * world_prop.v uses the aforementioned Coq library to construct the
+    domain for Iris propositions
+  
+  * iris.v is the main file and contains the actual logic and the
+    proof of the rules for view shifts and Hoare triples
+
+  It uses a Coq library in lib/ by Sieczkowski et al. to solve the
+  recursive domain equation (see the paper for a reference).
 
 
 REQUIREMENTS
@@ -32,8 +47,9 @@ REQUIREMENTS
   Coq 
   8GB ram + 4GB swap
 
-  We have tested the development using Coq v. 8.4pl4 on Linux and Mac machines with at least 8GB RAM + 4GB swap.
-  The entire compilation took around 3 hours.
+  We have tested the development using Coq v. 8.4pl4 on Linux and Mac
+  machines with at least 8GB RAM + 4GB swap.  The entire compilation
+  took around 3 hours.
   
 
 HOW TO COMPILE
@@ -44,13 +60,15 @@ HOW TO COMPILE
 
   in the folder containing this README. 
 
-  Be aware that iris.v takes a long time to check and needs significant amounts of RAM!
-  8GiB may be sufficient, but to be safe you should have 16GiB and give it around 2 to 3 hours.
+  Be aware that iris.v takes a long time to check and needs
+  significant amounts of RAM!
+  
 
 
 OVERVIEW OF LEMMAS
 
-  Below we give a mapping from proof rules in the paper to Coq lemma's in Iris.v
+  Below we give a mapping from proof rules in the paper to Coq lemma's
+  in Iris.v.
 
   RULE         Coq lemma
   -----------------------
