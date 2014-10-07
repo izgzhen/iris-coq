@@ -19,8 +19,29 @@ CONTENTS
 
   Our artifact is a Coq formalization of the model of our Iris logic,
   together with a proof of adequacy (establishing that the model is
-  faithful wrt the operational semantics), and a proof of soundness of
+  faithful wrt the operational semantics) and a proof of soundness of
   the primitive rules of the logic wrt the model.
+
+  NOTE: We have just mechanized the *soundness* of the *primitive*
+  rules of Iris in Coq.  We have not mechanized the proofs of derived
+  rules (i.e. those derivable from the primitive rules), nor have we
+  mechanized the case study or other examples that are proven within
+  the logic.  Proof outlines for the latter are given in the appendix
+  that accompanied the POPL submission, and will be fleshed out even
+  further for the final version of the appendix.
+
+  The reason we focused on the primitive rules is that those are the
+  rules whose soundness is proven by direct appeal to the semantic
+  model of Iris.  For space reasons, we did not want to present the
+  semantic model of Iris in any detail in the paper, but we still
+  wanted to give the reader confidence in the results of the paper.
+  With our Coq mechanization in hand, the reader can safely ignore the
+  semantic model and instead focus on how to *use* the primitive rules
+  of the logic (to derive more sophisticated rules or prove
+  interesting examples).
+
+  Mechanizing Iris proofs is a very interesting and important
+  direction for future work, but it is beyond the scope of the paper.
 
 
   The folder is organized as follows:
@@ -90,3 +111,4 @@ OVERVIEW OF LEMMAS
   Fork         htFork
 
   The main adequacy result is expressed by Theorem soundness_obs.
+
