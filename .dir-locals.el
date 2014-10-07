@@ -3,6 +3,6 @@
 
 ((coq-mode
   (coq-load-path
-   (rec "lib/recdom/" "RecDom"))))
+   (rec "lib/ModuRes/" "ModuRes"))))
 
 

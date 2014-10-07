@@ -1,8 +1,8 @@
 (** In this file, we show how we can use the solution of the recursive
     domain equations to build a higher-order separation logic *)
-Require Import RecDom.PreoMet RecDom.MetricRec RecDom.CBUltInst.
-Require Import RecDom.Finmap RecDom.Constr.
-Require Import RecDom.PCM RecDom.UPred RecDom.BI.
+Require Import ModuRes.PreoMet ModuRes.MetricRec ModuRes.CBUltInst.
+Require Import ModuRes.Finmap ModuRes.Constr.
+Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI.
 
 Module WorldProp (Res : PCM_T).
 

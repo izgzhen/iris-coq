@@ -1,5 +1,5 @@
 Require Import world_prop core_lang lang masks.
-Require Import RecDom.PCM RecDom.UPred RecDom.BI RecDom.PreoMet RecDom.Finmap.
+Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
 Module Iris (RL : PCM_T) (C : CORE_LANG).
 
@@ -213,6 +213,12 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
   Lemma box_top : ⊤ == □ ⊤.
   Proof.
     intros w n r; simpl; unfold const; reflexivity.
+  Qed.
+
+  Lemma box_disj p q :
+    □ (p ∨ q) == □ p ∨ □ q.
+  Proof.
+    intros w n r; reflexivity.
   Qed.
 
   (** Ghost state ownership **)

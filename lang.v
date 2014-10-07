@@ -1,5 +1,5 @@
 Require Import List.
-Require Import RecDom.PCM.
+Require Import ModuRes.PCM.
 Require Import core_lang.
 
 (******************************************************************)

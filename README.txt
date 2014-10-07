@@ -53,14 +53,16 @@ CONTENTS
   
   * masks.v introduces some lemmas about masks
   
-  * world_prop.v uses the aforementioned Coq library to construct the
-    domain for Iris propositions
+  * world_prop.v uses the ModuRes Coq library to construct the domain
+    for Iris propositions
   
   * iris.v is the main file and contains the actual logic and the
     proof of the rules for view shifts and Hoare triples
 
-  It uses a Coq library in lib/ by Sieczkowski et al. to solve the
-  recursive domain equation (see the paper for a reference).
+  The development uses ModuRes, a Coq library in by Sieczkowski et
+  al. to solve the recursive domain equation (see the paper for a
+  reference) and prove some of the standard separation logic rules. It
+  is located in the lib/ subdirectory.
 
 
 REQUIREMENTS
