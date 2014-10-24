@@ -97,8 +97,8 @@ OVERVIEW OF LEMMAS
   -----------------------
   VSTimeless   vsTimeless
   NewInv       vsNewInv
-  VSOpen       vsOpen
-  VSClose      vsClose
+  InvOpen      vsOpen
+  InvClose     vsClose
   VSTrans      vsTrans
   VSImp        vsEnt
   VSFrame      vsFrame
