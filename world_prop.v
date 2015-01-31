@@ -3,8 +3,9 @@
 Require Import ModuRes.PreoMet ModuRes.MetricRec ModuRes.CBUltInst.
 Require Import ModuRes.Finmap ModuRes.Constr.
 Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI.
+Require Import world_prop_sig.
 
-Module WorldProp (Res : PCM_T).
+Module WorldProp (Res : PCM_T) <: WORLD_PROP Res.
 
   (** The construction is parametric in the monoid we choose *)
   Import Res.
@@ -72,6 +73,7 @@ Module WorldProp (Res : PCM_T).
   Definition Props   := FProp PreProp.
   Definition Wld     := (nat -f> PreProp).
 
+  (* Establish the isomorphism (FIXME: do it only once...) *)
   Definition ı  : PreProp -t> halve (cmfromType Props) := Unfold.
   Definition ı' : halve (cmfromType Props) -t> PreProp := Fold.
 
@@ -80,14 +82,10 @@ Module WorldProp (Res : PCM_T).
   Lemma isoR T : ı (ı' T) == T.
   Proof. apply (UF_id T). Qed.
 
-  Set Printing All.
-  (* PreProp has an equivalence and a complete metric. It also has a preorder that fits to everything else. *)
-  Instance PProp_ty   : Setoid PreProp     := _.
-  Instance PProp_m    : metric PreProp     := _.
-  Instance PProp_cm   : cmetric PreProp    := _.
-  Instance PProp_preo : preoType PreProp   := disc_preo PreProp.
-  Instance PProp_pcm  : pcmType PreProp    := disc_pcm PreProp.
-  Instance PProp_ext  : extensible PreProp := disc_ext PreProp.
+  (* Define an order on PreProp. *)
+  Instance PProp_preo: preoType PreProp   := disc_preo PreProp.
+  Instance PProp_pcm : pcmType PreProp    := disc_pcm PreProp.
+  Instance PProp_ext : extensible PreProp := disc_ext PreProp.
 
   (* Give names to the things for Props, so the terms can get shorter. *)
   Instance Props_ty   : Setoid Props     := _.

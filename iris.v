@@ -25,23 +25,8 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
 
   Instance Props_BI : ComplBI Props | 0 := _.
   Instance Props_Later : Later Props | 0 := _.
+  Set Printing All.
   
-  (* Benchmark: How large is thid type? *)
-  Section Benchmark.
-    Local Open Scope mask_scope.
-    Local Open Scope pcm_scope.
-    Local Open Scope bi_scope.
-    Local Open Scope lang_scope.
-
-    Local Instance _bench_expr_type : Setoid expr := discreteType.
-    Local Instance _bench_expr_metr : metric expr := discreteMetric.
-    Local Instance _bench_cmetr : cmetric expr := discreteCMetric.
-
-    Set Printing All.
-    Check (expr -n> (value -n> Props) -n> Props).
-    Check ((expr -n> (value -n> Props) -n> Props) -n> expr -n> (value -n> Props) -n> Props).
-  End Benchmark.
-
   (** And now we're ready to build the IRIS-specific connectives! *)
 
   Section Necessitation.
