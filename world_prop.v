@@ -80,8 +80,20 @@ Module WorldProp (Res : PCM_T).
   Lemma isoR T : ı (ı' T) == T.
   Proof. apply (UF_id T). Qed.
 
+  Set Printing All.
+  (* PreProp has an equivalence and a complete metric. It also has a preorder that fits to everything else. *)
+  Instance PProp_ty   : Setoid PreProp     := _.
+  Instance PProp_m    : metric PreProp     := _.
+  Instance PProp_cm   : cmetric PreProp    := _.
   Instance PProp_preo : preoType PreProp   := disc_preo PreProp.
   Instance PProp_pcm  : pcmType PreProp    := disc_pcm PreProp.
   Instance PProp_ext  : extensible PreProp := disc_ext PreProp.
+
+  (* Give names to the things for Props, so the terms can get shorter. *)
+  Instance Props_ty   : Setoid Props     := _.
+  Instance Props_m    : metric Props     := _.
+  Instance Props_cm   : cmetric Props    := _.
+  Instance Props_preo : preoType Props   := _.
+  Instance Props_pcm  : pcmType Props    := _.
 
 End WorldProp.

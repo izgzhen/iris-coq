@@ -25,7 +25,7 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
 
   Instance Props_BI : ComplBI Props | 0 := _.
   Instance Props_Later : Later Props | 0 := _.
-
+  
   (* Benchmark: How large is thid type? *)
   Section Benchmark.
     Local Open Scope mask_scope.
@@ -33,11 +33,12 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
     Local Open Scope bi_scope.
     Local Open Scope lang_scope.
 
-    Local Instance expr_type : Setoid expr := discreteType.
-    Local Instance expr_metr : metric expr := discreteMetric.
-    Local Instance expr_cmetr : cmetric expr := discreteCMetric.
+    Local Instance _bench_expr_type : Setoid expr := discreteType.
+    Local Instance _bench_expr_metr : metric expr := discreteMetric.
+    Local Instance _bench_cmetr : cmetric expr := discreteCMetric.
 
     Set Printing All.
+    Check (expr -n> (value -n> Props) -n> Props).
     Check ((expr -n> (value -n> Props) -n> Props) -n> expr -n> (value -n> Props) -n> Props).
   End Benchmark.
 
@@ -403,6 +404,7 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
 
   End Erasure.
 
+  Check erasure.
 
   Notation " p @ k " := ((p : UPred ()) k tt) (at level 60, no associativity).
 
@@ -483,6 +485,8 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
       □ (p → pvs m1 m2 q).
 
   End ViewShifts.
+
+  Check vs.
 
   Section ViewShiftProps.
     Local Open Scope mask_scope.
@@ -996,6 +1000,8 @@ Qed.
 
   End HoareTriples.
 
+  Check wp.
+
   Section Soundness.
     Local Open Scope mask_scope.
     Local Open Scope pcm_scope.
@@ -1210,6 +1216,8 @@ Qed.
     Qed.
 
   End Soundness.
+
+  Check soundness.
 
   Section HoareTripleProperties.
     Local Open Scope mask_scope.
