@@ -1,4 +1,4 @@
-Require Import world_prop_sig core_lang lang masks.
+Require Import world_prop core_lang lang masks.
 Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
 Module IrisRes (RL : PCM_T) (C : CORE_LANG) <: PCM_T.
@@ -10,10 +10,9 @@ Module IrisRes (RL : PCM_T) (C : CORE_LANG) <: PCM_T.
 End IrisRes.
   
 Module Iris (RL : PCM_T) (C : CORE_LANG).
-Module Import R := IrisRes RL C.
-Module IrisInner (WP : WORLD_PROP R).  
   Module Import L  := Lang C.
-  Import WP.
+  Module Import R  := IrisRes RL C.
+  Module Import WP := WorldProp R.
 
   Delimit Scope iris_scope with iris.
   Local Open Scope iris_scope.
@@ -409,9 +408,6 @@ Module IrisInner (WP : WORLD_PROP R).
 
   End Erasure.
 
-  Check erasure.
-
   Notation " p @ k " := ((p : UPred ()) k tt) (at level 60, no associativity).
 
-End IrisInner.
 End Iris.
