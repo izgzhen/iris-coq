@@ -9,10 +9,10 @@ Module IrisRes (RL : PCM_T) (C : CORE_LANG) <: PCM_T.
   Instance res_pcm  : PCM res := _.
 End IrisRes.
   
-Module Iris (RL : PCM_T) (C : CORE_LANG).
-  Module Import L  := Lang C.
-  Module Import R  := IrisRes RL C.
-  Module Import WP := WorldProp R.
+Module IrisCore (RL : PCM_T) (C : CORE_LANG).
+  Module Export L  := Lang C.
+  Module Export R  := IrisRes RL C.
+  Module Export WP := WorldProp R.
 
   Delimit Scope iris_scope with iris.
   Local Open Scope iris_scope.
@@ -410,4 +410,4 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
 
   Notation " p @ k " := ((p : UPred ()) k tt) (at level 60, no associativity).
 
-End Iris.
+End IrisCore.
