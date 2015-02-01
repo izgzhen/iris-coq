@@ -25,7 +25,6 @@ Module Iris (RL : PCM_T) (C : CORE_LANG).
 
   Instance Props_BI : ComplBI Props | 0 := _.
   Instance Props_Later : Later Props | 0 := _.
-  Set Printing All.
   
   (** And now we're ready to build the IRIS-specific connectives! *)
 

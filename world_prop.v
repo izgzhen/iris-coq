@@ -5,7 +5,7 @@ Require Import ModuRes.Finmap ModuRes.Constr.
 Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI.
 Require Import world_prop_sig.
 
-Module WorldProp (Res : PCM_T) <: WORLD_PROP Res.
+Module WorldProp (Res : PCM_T) : WORLD_PROP Res.
 
   (** The construction is parametric in the monoid we choose *)
   Import Res.

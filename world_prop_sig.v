@@ -20,7 +20,7 @@ Module Type WORLD_PROP (Res : PCM_T).
   Parameter ı  : PreProp -t> halve (cmfromType Props).
   Parameter ı' : halve (cmfromType Props) -t> PreProp.
   Axiom iso : forall P, ı' (ı P) == P.
-  Axiom isoR : forall T, ı (ı' T) == T.
+  Axiom isoR: forall T, ı (ı' T) == T.
 
   (* Define all the things on Props, so they have names - this shortens the terms later *)
   Instance Props_ty   : Setoid Props := _.
