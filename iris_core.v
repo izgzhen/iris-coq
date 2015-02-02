@@ -153,9 +153,9 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
   Notation "p → q" := (BI.impl p q : Props) (at level 55, right associativity) : iris_scope.
   Notation "p '-*' q" := (si p q : Props) (at level 55, right associativity) : iris_scope.
   Notation "∀ x , p" := (all n[(fun x => p)] : Props) (at level 60, x ident, no associativity) : iris_scope.
-  Notation "∃ x , p" := (all n[(fun x => p)] : Props) (at level 60, x ident, no associativity) : iris_scope.
+  Notation "∃ x , p" := (xist n[(fun x => p)] : Props) (at level 60, x ident, no associativity) : iris_scope.
   Notation "∀ x : T , p" := (all n[(fun x : T => p)] : Props) (at level 60, x ident, no associativity) : iris_scope.
-  Notation "∃ x : T , p" := (all n[(fun x : T => p)] : Props) (at level 60, x ident, no associativity) : iris_scope.
+  Notation "∃ x : T , p" := (xist n[(fun x : T => p)] : Props) (at level 60, x ident, no associativity) : iris_scope.
 
   Lemma valid_iff p :
     valid p <-> (⊤ ⊑ p).
