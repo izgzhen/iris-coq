@@ -99,7 +99,7 @@ Module WorldProp (Res : PCM_T) : WORLD_PROP Res.
   Definition Props   := FProp PreProp.
   Definition Wld     := (nat -f> PreProp).
 
-  (* Establish the isomorphism (FIXME: do it only once...) *)
+  (* Establish the isomorphism *)
   Definition ı  : PreProp -t> halve (cmfromType Props) := Unfold.
   Definition ı' : halve (cmfromType Props) -t> PreProp := Fold.
 
