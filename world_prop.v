@@ -99,15 +99,6 @@ Module WorldProp (Res : PCM_T) : WORLD_PROP Res.
   Definition Props   := FProp PreProp.
   Definition Wld     := (nat -f> PreProp).
 
-  (* Establish the isomorphism *)
-  Definition ı  : PreProp -t> halve (cmfromType Props) := Unfold.
-  Definition ı' : halve (cmfromType Props) -t> PreProp := Fold.
-
-  Lemma iso P : ı' (ı P) == P.
-  Proof. apply (FU_id P). Qed.
-  Lemma isoR T : ı (ı' T) == T.
-  Proof. apply (UF_id T). Qed.
-
   (* Define an order on PreProp. *)
   Instance PProp_preo: preoType PreProp   := disc_preo PreProp.
   Instance PProp_pcm : pcmType PreProp    := disc_pcm PreProp.
@@ -119,5 +110,14 @@ Module WorldProp (Res : PCM_T) : WORLD_PROP Res.
   Instance Props_cm   : cmetric Props    := _.
   Instance Props_preo : preoType Props   := _.
   Instance Props_pcm  : pcmType Props    := _.
+
+  (* Establish the isomorphism *)
+  Definition ı  : PreProp -t> halve (cmfromType Props) := Unfold.
+  Definition ı' : halve (cmfromType Props) -t> PreProp := Fold.
+
+  Lemma iso P : ı' (ı P) == P.
+  Proof. apply (FU_id P). Qed.
+  Lemma isoR T : ı (ı' T) == T.
+  Proof. apply (UF_id T). Qed.
 
 End WorldProp.
