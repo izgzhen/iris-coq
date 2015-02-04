@@ -56,8 +56,12 @@ CONTENTS
   * world_prop.v uses the ModuRes Coq library to construct the domain
     for Iris propositions
   
-  * iris.v is the main file and contains the actual logic and the
-    proof of the rules for view shifts and Hoare triples
+  * iris_core.v defines erasure and the simpler assertions
+  
+  * iris_wp.v defines weakest preconditions and proves the rules for
+    Hoare triples
+  
+  * iris_vs.v defines view shifts and proves their rules
 
   The development uses ModuRes, a Coq library by Sieczkowski et al. to
   solve the recursive domain equation (see the paper for a reference)
@@ -68,49 +72,44 @@ CONTENTS
 REQUIREMENTS
 
   Coq 
-  8GB ram + 4GB swap
 
   We have tested the development using Coq v. 8.4pl4 on Linux and Mac
-  machines with at least 8GB RAM + 4GB swap.  The entire compilation
-  took around 3 hours.
+  machines with 8GB RAM. The entire compilation took around an hour.
   
 
 HOW TO COMPILE
 
   To compile the development, run
   
-  > make 
+  > (cd lib/ModuRes; make) && make 
 
   in the folder containing this README. 
-
-  Be aware that iris.v takes a long time to check and needs
-  significant amounts of RAM!
   
 
 
 OVERVIEW OF LEMMAS
 
-  Below we give a mapping from proof rules in the paper to Coq lemma's
-  in Iris.v.
+  Below we give a mapping from proof rules in the paper to Coq lemma's.
 
   RULE         Coq lemma
   -----------------------
-  VSTimeless   vsTimeless
-  NewInv       vsNewInv
-  InvOpen      vsOpen
-  InvClose     vsClose
-  VSTrans      vsTrans
-  VSImp        vsEnt
-  VSFrame      vsFrame
-  FpUpd        vsGhostUpd
+  VSTimeless   iris_vs.v:/vsTimeless
+  NewInv       iris_vs.v:/vsNewInv
+  InvOpen      iris_vs.v:/vsOpen
+  InvClose     iris_vs.v:/vsClose
+  VSTrans      iris_vs.v:/vsTrans
+  VSImp        iris_vs.v:/vsEnt
+  VSFrame      iris_vs.v:/vsFrame
+  FpUpd        iris_vs.v:/vsGhostUpd
 
-  Ret          htRet
-  Bind         htBind
-  Frame        htFrame
-  AFrame       htAFrame
-  Csq          htCons
-  ACSQ         htACons
-  Fork         htFork
+  Ret          iris_wp.v:/htRet
+  Bind         iris_wp.v:/htBind
+  Frame        iris_wp.v:/htFrame
+  AFrame       iris_wp.v:/htAFrame
+  Csq          iris_wp.v:/htCons
+  ACSQ         iris_wp.v:/htACons
+  Fork         iris_wp.v:/htFork
 
-  The main adequacy result is expressed by Theorem soundness_obs.
+  The main adequacy result is expressed by Theorem
+  iris_wp.v:/soundness_obs.
 
