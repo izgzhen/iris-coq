@@ -15,19 +15,19 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
     Program Definition preVS (m1 m2 : mask) (p : Props) (w : Wld) : UPred res :=
       mkUPred (fun n r => forall w1 rf s mf σ k (HSub : w ⊑ w1) (HLe : k < n)
                                  (HD : mf # m1 ∪ m2)
-                                 (HE : erasure σ (m1 ∪ mf) (Some r · rf) s w1 @ S k),
+                                 (HE : wsat σ (m1 ∪ mf) (Some r · rf) s w1 @ S k),
                           exists w2 r' s',
                             w1 ⊑ w2 /\ p w2 (S k) r'
-                            /\ erasure σ (m2 ∪ mf) (Some r' · rf) s' w2 @ S k) _.
+                            /\ wsat σ (m2 ∪ mf) (Some r' · rf) s' w2 @ S k) _.
     Next Obligation.
       intros n1 n2 r1 r2 HLe [rd HR] HP; intros.
       destruct (HP w1 (Some rd · rf) s mf σ k) as [w2 [r1' [s' [HW [HP' HE'] ] ] ] ];
         try assumption; [now eauto with arith | |].
-      - eapply erasure_equiv, HE; try reflexivity.
+      - eapply wsat_equiv, HE; try reflexivity.
         rewrite assoc, (comm (Some r1)), HR; reflexivity.
       - rewrite assoc, (comm (Some r1')) in HE'.
         destruct (Some rd · Some r1') as [r2' |] eqn: HR';
-          [| apply erasure_not_empty in HE'; [contradiction | now erewrite !pcm_op_zero by apply _] ].
+          [| apply wsat_not_empty in HE'; [contradiction | now erewrite !pcm_op_zero by apply _] ].
         exists w2 r2' s'; split; [assumption | split; [| assumption] ].
         eapply uni_pred, HP'; [| exists rd; rewrite HR']; reflexivity.
     Qed.
@@ -46,20 +46,20 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
       - symmetry in EQw; assert (HDE := extend_dist _ _ _ _ EQw HSub).
         assert (HSE := extend_sub _ _ _ _ EQw HSub); specialize (HP (extend w2' w1)).
         edestruct HP as [w1'' [r' [s' [HW HH] ] ] ]; try eassumption; clear HP; [ | ].
-        + eapply erasure_dist, HE; [symmetry; eassumption | now eauto with arith].
+        + eapply wsat_dist, HE; [symmetry; eassumption | now eauto with arith].
         + symmetry in HDE; assert (HDE' := extend_dist _ _ _ _ HDE HW).
           assert (HSE' := extend_sub _ _ _ _ HDE HW); destruct HH as [HP HE'];
           exists (extend w1'' w2') r' s'; split; [assumption | split].
           * eapply (met_morph_nonexp _ _ p), HP ; [symmetry; eassumption | now eauto with arith].
-          * eapply erasure_dist, HE'; [symmetry; eassumption | now eauto with arith].
+          * eapply wsat_dist, HE'; [symmetry; eassumption | now eauto with arith].
       - assert (HDE := extend_dist _ _ _ _ EQw HSub); assert (HSE := extend_sub _ _ _ _ EQw HSub); specialize (HP (extend w2' w2)).
         edestruct HP as [w1'' [r' [s' [HW HH] ] ] ]; try eassumption; clear HP; [ | ].
-        + eapply erasure_dist, HE; [symmetry; eassumption | now eauto with arith].
+        + eapply wsat_dist, HE; [symmetry; eassumption | now eauto with arith].
         + symmetry in HDE; assert (HDE' := extend_dist _ _ _ _ HDE HW).
           assert (HSE' := extend_sub _ _ _ _ HDE HW); destruct HH as [HP HE'];
           exists (extend w1'' w2') r' s'; split; [assumption | split].
           * eapply (met_morph_nonexp _ _ p), HP ; [symmetry; eassumption | now eauto with arith].
-          * eapply erasure_dist, HE'; [symmetry; eassumption | now eauto with arith].
+          * eapply wsat_dist, HE'; [symmetry; eassumption | now eauto with arith].
     Qed.
     Next Obligation.
       intros w1 w2 EQw n r HP w2'; intros; eapply HP; try eassumption; [].
@@ -116,13 +116,13 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
       do 8 red in HInv.
       destruct HE as [HES [rs [HE HM] ] ].
       destruct (rs i) as [ri |] eqn: HLr.
-      - rewrite erase_remove with (i := i) (r := ri) in HE by assumption.
-        assert (HR : Some r · rf · s == Some r · Some ri · rf · erase (fdRemove i rs))
+      - rewrite comp_map_remove with (i := i) (r := ri) in HE by assumption.
+        assert (HR : Some r · rf · s == Some r · Some ri · rf · comp_map (fdRemove i rs))
           by (rewrite <- HE, assoc, <- (assoc (Some r)), (comm rf), assoc; reflexivity).
         apply ores_equiv_eq in HR; setoid_rewrite HR in HES; clear HR.
         destruct (Some r · Some ri) as [rri |] eqn: HR;
           [| erewrite !pcm_op_zero in HES by apply _; now contradiction].
-        exists w' rri (erase (fdRemove i rs)); split; [reflexivity |].
+        exists w' rri (comp_map (fdRemove i rs)); split; [reflexivity |].
         split; [| split; [assumption |] ].
         + simpl; eapply HInv; [now auto with arith |].
           eapply uni_pred, HM with i;
@@ -162,9 +162,9 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
       destruct (Some ri · Some r) as [rri |] eqn: EQR.
       - exists (fdUpdate i rri rs); split; [| intros j Hm].
         + symmetry; rewrite <- HE; clear - EQR EQri; destruct (rs i) as [rsi |] eqn: EQrsi; subst;
-          [eapply erase_insert_old; [eassumption | rewrite <- EQR; reflexivity] |].
+          [eapply comp_map_insert_old; [eassumption | rewrite <- EQR; reflexivity] |].
           erewrite pcm_op_unit in EQR by apply _; rewrite EQR.
-          now apply erase_insert_new.
+          now apply comp_map_insert_new.
         + specialize (HD j); unfold mask_sing, mask_set in *; simpl in Hm, HD.
           destruct (Peano_dec.eq_nat_dec i j);
             [subst j; clear Hm |
@@ -186,7 +186,7 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
         [| erewrite pcm_op_unit in EQR by apply _; discriminate].
         clear - HE HES EQrsi EQR.
         assert (HH : rf · (Some r · s) = 0); [clear HES | rewrite HH in HES; contradiction].
-        eapply ores_equiv_eq; rewrite <- HE, erase_remove by eassumption.
+        eapply ores_equiv_eq; rewrite <- HE, comp_map_remove by eassumption.
         rewrite (assoc (Some r)), (comm (Some r)), EQR, comm.
         erewrite !pcm_op_zero by apply _; reflexivity.
     Qed.
@@ -232,14 +232,14 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
       - (* disjointness of masks: possible lemma *)
         clear - HD HDisj; intros i [ [Hmf | Hmf] Hm12]; [eapply HDisj; now eauto |].
         eapply HD; split; [eassumption | tauto].
-      - rewrite assoc, HR; eapply erasure_equiv, HE; try reflexivity; [].
+      - rewrite assoc, HR; eapply wsat_equiv, HE; try reflexivity; [].
         clear; intros i; tauto.
       - rewrite assoc in HEq; destruct (Some rq · Some rr) as [rqr |] eqn: HR';
-        [| apply erasure_not_empty in HEq; [contradiction | now erewrite !pcm_op_zero by apply _] ].
+        [| apply wsat_not_empty in HEq; [contradiction | now erewrite !pcm_op_zero by apply _] ].
         exists w'' rqr s'; split; [assumption | split].
         + unfold lt in HLe0; rewrite HSub, HSub', <- HLe0 in Hr; exists rq rr.
           rewrite HR'; split; now auto.
-        + eapply erasure_equiv, HEq; try reflexivity; [].
+        + eapply wsat_equiv, HEq; try reflexivity; [].
           clear; intros i; tauto.
     Qed.
 
@@ -378,7 +378,7 @@ Qed.
         { destruct (HM i) as [HDom _]; [tauto |].
           rewrite <- fdLookup_notin_strong, HDom, fdLookup_notin_strong; assumption.
         }
-        exists (fdUpdate i r rs); split; [now rewrite <- erase_insert_new, HE by assumption | intros j Hm'].
+        exists (fdUpdate i r rs); split; [now rewrite <- comp_map_insert_new, HE by assumption | intros j Hm'].
         rewrite !fdLookup_in_strong; destruct (Peano_dec.eq_nat_dec i j).
         + subst j; rewrite !fdUpdate_eq; split; [intuition now eauto | intros].
           simpl in HLw, HLrs; subst ri; rewrite <- HLw, isoR, <- HSub.

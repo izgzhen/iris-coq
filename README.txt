@@ -58,10 +58,10 @@ CONTENTS
   
   * iris_core.v defines erasure and the simpler assertions
   
+  * iris_vs.v defines view shifts and proves their rules
+  
   * iris_wp.v defines weakest preconditions and proves the rules for
     Hoare triples
-  
-  * iris_vs.v defines view shifts and proves their rules
 
   The development uses ModuRes, a Coq library by Sieczkowski et al. to
   solve the recursive domain equation (see the paper for a reference)
@@ -73,8 +73,8 @@ REQUIREMENTS
 
   Coq 
 
-  We have tested the development using Coq v. 8.4pl4 on Linux and Mac
-  machines with 8GB RAM. The entire compilation took around an hour.
+  We have tested the development using Coq 8.4pl4 on Linux and Mac
+  machines. The entire compilation took less than an hour.
   
 
 HOW TO COMPILE
@@ -111,5 +111,5 @@ OVERVIEW OF LEMMAS
   Fork         iris_wp.v:/htFork
 
   The main adequacy result is expressed by Theorem
-  iris_wp.v:/soundness_obs.
+  iris_wp.v:/adequacy_obs.
 

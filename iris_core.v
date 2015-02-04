@@ -295,11 +295,11 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
     eapply HT, Hp; [etransitivity |]; eassumption.
   Qed.
 
-  Section Erasure.
+  Section WorldSatisfaction.
     Local Open Scope pcm_scope.
     Local Open Scope bi_scope.
 
-    (* First, we need to erase a finite map. This won't be pretty, for
+    (* First, we need to compose the resources of a finite map. This won't be pretty, for
        now, since the library does not provide enough
        constructs. Hopefully we can provide a fold that'd work for
        that at some point
@@ -311,33 +311,33 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
       end.
 
     Definition cod (m : nat -f> res) : list res := List.map snd (findom_t m).
-    Definition erase (m : nat -f> res) : option res := comp_list (cod m).
+    Definition comp_map (m : nat -f> res) : option res := comp_list (cod m).
 
-    Lemma erase_remove (rs : nat -f> res) i r (HLu : rs i = Some r) :
-      erase rs == Some r · erase (fdRemove i rs).
+    Lemma comp_map_remove (rs : nat -f> res) i r (HLu : rs i = Some r) :
+      comp_map rs == Some r · comp_map (fdRemove i rs).
     Proof.
-      destruct rs as [rs rsP]; unfold erase, cod, findom_f in *; simpl findom_t in *.
+      destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
       induction rs as [| [j s] ]; [discriminate |]; simpl comp_list; simpl in HLu.
       destruct (comp i j); [inversion HLu; reflexivity | discriminate |].
       simpl comp_list; rewrite IHrs by eauto using SS_tail.
       rewrite !assoc, (comm (Some s)); reflexivity.
     Qed.
 
-    Lemma erase_insert_new (rs : nat -f> res) i r (HNLu : rs i = None) :
-      Some r · erase rs == erase (fdUpdate i r rs).
+    Lemma comp_map_insert_new (rs : nat -f> res) i r (HNLu : rs i = None) :
+      Some r · comp_map rs == comp_map (fdUpdate i r rs).
     Proof.
-      destruct rs as [rs rsP]; unfold erase, cod, findom_f in *; simpl findom_t in *.
+      destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
       induction rs as [| [j s] ]; [reflexivity | simpl comp_list; simpl in HNLu].
       destruct (comp i j); [discriminate | reflexivity |].
       simpl comp_list; rewrite <- IHrs by eauto using SS_tail.
       rewrite !assoc, (comm (Some r)); reflexivity.
     Qed.
 
-    Lemma erase_insert_old (rs : nat -f> res) i r1 r2 r
+    Lemma comp_map_insert_old (rs : nat -f> res) i r1 r2 r
           (HLu : rs i = Some r1) (HEq : Some r1 · Some r2 == Some r) :
-      Some r2 · erase rs == erase (fdUpdate i r rs).
+      Some r2 · comp_map rs == comp_map (fdUpdate i r rs).
     Proof.
-      destruct rs as [rs rsP]; unfold erase, cod, findom_f in *; simpl findom_t in *.
+      destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
       induction rs as [| [j s] ]; [discriminate |]; simpl comp_list; simpl in HLu.
       destruct (comp i j); [inversion HLu; subst; clear HLu | discriminate |].
       - simpl comp_list; rewrite assoc, (comm (Some r2)), <- HEq; reflexivity.
@@ -345,18 +345,18 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
         rewrite !assoc, (comm (Some r2)); reflexivity.
     Qed.
 
-    Definition erase_state (r: option res) σ: Prop := match r with
+    Definition state_sat (r: option res) σ: Prop := match r with
     | Some (ex_own s, _) => s = σ
     | _ => False
     end.
 
     Global Instance preo_unit : preoType () := disc_preo ().
 
-    Program Definition erasure (σ : state) (m : mask) (r s : option res) (w : Wld) : UPred () :=
+    Program Definition wsat (σ : state) (m : mask) (r s : option res) (w : Wld) : UPred () :=
       ▹ (mkUPred (fun n _ =>
-                    erase_state (r · s) σ
+                    state_sat (r · s) σ
                     /\ exists rs : nat -f> res,
-                         erase rs == s /\
+                         comp_map rs == s /\
                          forall i (Hm : m i),
                            (i ∈ dom rs <-> i ∈ dom w) /\
                            forall π ri (HLw : w i == Some π) (HLrs : rs i == Some ri),
@@ -366,7 +366,7 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
       setoid_rewrite HLe; eassumption.
     Qed.
 
-    Global Instance erasure_equiv σ : Proper (meq ==> equiv ==> equiv ==> equiv ==> equiv) (erasure σ).
+    Global Instance wsat_equiv σ : Proper (meq ==> equiv ==> equiv ==> equiv ==> equiv) (wsat σ).
     Proof.
       intros m1 m2 EQm r r' EQr s s' EQs w1 w2 EQw [| n] []; [reflexivity |];
       apply ores_equiv_eq in EQr; apply ores_equiv_eq in EQs; subst r' s'.
@@ -379,7 +379,7 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
         rewrite fdLookup_in; setoid_rewrite <- EQw; rewrite <- fdLookup_in; reflexivity.
     Qed.
 
-    Global Instance erasure_dist n σ m r s : Proper (dist n ==> dist n) (erasure σ m r s).
+    Global Instance wsat_dist n σ m r s : Proper (dist n ==> dist n) (wsat σ m r s).
     Proof.
       intros w1 w2 EQw [| n'] [] HLt; [reflexivity |]; destruct n as [| n]; [now inversion HLt |].
       split; intros [HES [rs [HE HM] ] ]; (split; [tauto | clear HES; exists rs]).
@@ -399,14 +399,14 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
         apply HR; [reflexivity | assumption].
     Qed.
 
-    Lemma erasure_not_empty σ m r s w k (HN : r · s == 0) :
-      ~ erasure σ m r s w (S k) tt.
+    Lemma wsat_not_empty σ m r s w k (HN : r · s == 0) :
+      ~ wsat σ m r s w (S k) tt.
     Proof.
       intros [HD _]; apply ores_equiv_eq in HN; setoid_rewrite HN in HD.
       exact HD.
     Qed.
 
-  End Erasure.
+  End WorldSatisfaction.
 
   Notation " p @ k " := ((p : UPred ()) k tt) (at level 60, no associativity).
 

@@ -28,19 +28,19 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
 
     Definition wpFP safe m (WP : expr -n> (value -n> Props) -n> Props) e φ w n r :=
       forall w' k s rf mf σ (HSw : w ⊑ w') (HLt : k < n) (HD : mf # m)
-             (HE : erasure σ (m ∪ mf) (Some r · rf) s w' @ S k),
+             (HE : wsat σ (m ∪ mf) (Some r · rf) s w' @ S k),
         (forall (HV : is_value e),
          exists w'' r' s', w' ⊑ w'' /\ φ (exist _ e HV) w'' (S k) r'
-                           /\ erasure σ (m ∪ mf) (Some r' · rf) s' w'' @ S k) /\
+                           /\ wsat σ (m ∪ mf) (Some r' · rf) s' w'' @ S k) /\
         (forall σ' ei ei' K (HDec : e = K [[ ei ]])
                 (HStep : prim_step (ei, σ) (ei', σ')),
          exists w'' r' s', w' ⊑ w'' /\ WP (K [[ ei' ]]) φ w'' k r'
-                           /\ erasure σ' (m ∪ mf) (Some r' · rf) s' w'' @ k) /\
+                           /\ wsat σ' (m ∪ mf) (Some r' · rf) s' w'' @ k) /\
         (forall e' K (HDec : e = K [[ fork e' ]]),
          exists w'' rfk rret s', w' ⊑ w''
                                  /\ WP (K [[ fork_ret ]]) φ w'' k rret
                                  /\ WP e' (umconst ⊤) w'' k rfk
-                                 /\ erasure σ (m ∪ mf) (Some rfk · Some rret · rf) s' w'' @ k) /\
+                                 /\ wsat σ (m ∪ mf) (Some rfk · Some rret · rf) s' w'' @ k) /\
         (forall HSafe : safe = true,
          is_value e \/
          (exists σ' ei ei' K, e = K [[ ei ]] /\ prim_step (ei, σ) (ei', σ')) \/
@@ -57,21 +57,21 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       - specialize (HV HV0); destruct HV as [w'' [r1' [s' [HSw' [Hφ HE'] ] ] ] ].
         rewrite assoc, (comm (Some r1')) in HE'.
         destruct (Some rd · Some r1') as [r2' |] eqn: HR;
-          [| apply erasure_not_empty in HE'; [contradiction | now erewrite !pcm_op_zero by apply _] ].
+          [| apply wsat_not_empty in HE'; [contradiction | now erewrite !pcm_op_zero by apply _] ].
         exists w'' r2' s'; split; [assumption | split; [| assumption] ].
         eapply uni_pred, Hφ; [| eexists; rewrite <- HR]; reflexivity.
       - specialize (HS _ _ _ _ HDec HStep); destruct HS as [w'' [r1' [s' [HSw' [HWP HE'] ] ] ] ].
         rewrite assoc, (comm (Some r1')) in HE'.
-        destruct k as [| k]; [exists w'' r1' s'; simpl erasure; tauto |].
+        destruct k as [| k]; [exists w'' r1' s'; simpl wsat; tauto |].
         destruct (Some rd · Some r1') as [r2' |] eqn: HR;
-          [| apply erasure_not_empty in HE'; [contradiction | now erewrite !pcm_op_zero by apply _] ].
+          [| apply wsat_not_empty in HE'; [contradiction | now erewrite !pcm_op_zero by apply _] ].
         exists w'' r2' s'; split; [assumption | split; [| assumption] ].
         eapply uni_pred, HWP; [| eexists; rewrite <- HR]; reflexivity.
       - specialize (HF _ _ HDec); destruct HF as [w'' [rfk [rret1 [s' [HSw' [HWR [HWF HE'] ] ] ] ] ] ].
-        destruct k as [| k]; [exists w'' rfk rret1 s'; simpl erasure; tauto |].
+        destruct k as [| k]; [exists w'' rfk rret1 s'; simpl wsat; tauto |].
         rewrite assoc, <- (assoc (Some rfk)), (comm (Some rret1)) in HE'.
         destruct (Some rd · Some rret1) as [rret2 |] eqn: HR;
-          [| apply erasure_not_empty in HE'; [contradiction | now erewrite (comm _ 0), !pcm_op_zero by apply _] ].
+          [| apply wsat_not_empty in HE'; [contradiction | now erewrite (comm _ 0), !pcm_op_zero by apply _] ].
         exists w'' rfk rret2 s'; repeat (split; try assumption); [].
         eapply uni_pred, HWR; [| eexists; rewrite <- HR]; reflexivity.
       - auto.
@@ -86,48 +86,48 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       intros w1 w2 EQw n' r HLt; simpl; destruct n as [| n]; [now inversion HLt |]; split; intros Hp w2'; intros.
       - symmetry in EQw; assert (EQw' := extend_dist _ _ _ _ EQw HSw); assert (HSw' := extend_sub _ _ _ _ EQw HSw); symmetry in EQw'.
         edestruct (Hp (extend w2' w1)) as [HV [HS [HF HS'] ] ]; try eassumption;
-        [eapply erasure_dist, HE; [eassumption | now eauto with arith] |].
+        [eapply wsat_dist, HE; [eassumption | now eauto with arith] |].
         split; [clear HS HF | split; [clear HV HF | split; clear HV HS; [| clear HF ] ] ]; intros.
         + specialize (HV HV0); destruct HV as [w1'' [r' [s' [HSw'' [Hφ HE'] ] ] ] ].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') r' s'; split; [assumption |].
-          split; [| eapply erasure_dist, HE'; [eassumption | now eauto with arith] ].
+          split; [| eapply wsat_dist, HE'; [eassumption | now eauto with arith] ].
           eapply (met_morph_nonexp _ _ (φ _)), Hφ; [eassumption | now eauto with arith].
         + specialize (HS _ _ _ _ HDec HStep); destruct HS as [w1'' [r' [s' [HSw'' [HWP HE'] ] ] ] ].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') r' s'; split; [assumption |].
-          split; [| eapply erasure_dist, HE'; [eassumption | now eauto with arith] ].
+          split; [| eapply wsat_dist, HE'; [eassumption | now eauto with arith] ].
           eapply (met_morph_nonexp _ _ (WP _ _)), HWP; [eassumption | now eauto with arith].
         + specialize (HF _ _ HDec); destruct HF as [w1'' [rfk [rret [s' [HSw'' [HWR [HWF HE'] ] ] ] ] ] ].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') rfk rret s'; split; [assumption |].
-          split; [| split; [| eapply erasure_dist, HE'; [eassumption | now eauto with arith] ] ];
+          split; [| split; [| eapply wsat_dist, HE'; [eassumption | now eauto with arith] ] ];
           eapply (met_morph_nonexp _ _ (WP _ _)); try eassumption; now eauto with arith.
         + auto.
       - assert (EQw' := extend_dist _ _ _ _ EQw HSw); assert (HSw' := extend_sub _ _ _ _ EQw HSw); symmetry in EQw'.
         edestruct (Hp (extend w2' w2)) as [HV [HS [HF HS'] ] ]; try eassumption;
-        [eapply erasure_dist, HE; [eassumption | now eauto with arith] |].
+        [eapply wsat_dist, HE; [eassumption | now eauto with arith] |].
         split; [clear HS HF | split; [clear HV HF | split; clear HV HS; [| clear HF] ] ]; intros.
         + specialize (HV HV0); destruct HV as [w1'' [r' [s' [HSw'' [Hφ HE'] ] ] ] ].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') r' s'; split; [assumption |].
-          split; [| eapply erasure_dist, HE'; [eassumption | now eauto with arith] ].
+          split; [| eapply wsat_dist, HE'; [eassumption | now eauto with arith] ].
           eapply (met_morph_nonexp _ _ (φ _)), Hφ; [eassumption | now eauto with arith].
         + specialize (HS _ _ _ _ HDec HStep); destruct HS as [w1'' [r' [s' [HSw'' [HWP HE'] ] ] ] ].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') r' s'; split; [assumption |].
-          split; [| eapply erasure_dist, HE'; [eassumption | now eauto with arith] ].
+          split; [| eapply wsat_dist, HE'; [eassumption | now eauto with arith] ].
           eapply (met_morph_nonexp _ _ (WP _ _)), HWP; [eassumption | now eauto with arith].
         + specialize (HF _ _ HDec); destruct HF as [w1'' [rfk [rret [s' [HSw'' [HWR [HWF HE'] ] ] ] ] ] ].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') rfk rret s'; split; [assumption |].
-          split; [| split; [| eapply erasure_dist, HE'; [eassumption | now eauto with arith] ] ];
+          split; [| split; [| eapply wsat_dist, HE'; [eassumption | now eauto with arith] ] ];
           eapply (met_morph_nonexp _ _ (WP _ _)); try eassumption; now eauto with arith.
         + auto.
     Qed.
@@ -227,7 +227,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
 
   End HoareTriples.
 
-  Section Soundness.
+  Section Adequacy.
     Local Open Scope mask_scope.
     Local Open Scope pcm_scope.
     Local Open Scope bi_scope.
@@ -241,6 +241,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
               (HSN : stepn n ρ2 ρ3) :
         stepn (S n) ρ1 ρ3.
 
+    (* weakest-pre for a threadpool *)
     Inductive wptp (safe : bool) (m : mask) (w : Wld) (n : nat) : tpool -> list res -> Prop :=
     | wp_emp : wptp safe m w n nil nil
     | wp_cons e r tp rs
@@ -294,14 +295,14 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       unfold wp; apply fixp_eq.
     Qed.
 
-    Lemma sound_tp safe m n k e e' tp tp' σ σ' φ w r rs s
+    Lemma adequate_tp safe m n k e e' tp tp' σ σ' φ w r rs s
           (HSN  : stepn n (e :: tp, σ) (e' :: tp', σ'))
           (HV   : is_value e')
           (HWE  : wp safe m e φ w (n + S k) r)
           (HWTP : wptp safe m w (n + S k) tp rs)
-          (HE   : erasure σ m (Some r · comp_list rs) s w @ n + S k) :
+          (HE   : wsat σ m (Some r · comp_list rs) s w @ n + S k) :
       exists w' r' s',
-        w ⊑ w' /\ φ (exist _ e' HV) w' (S k) r' /\ erasure σ' m (Some r') s' w' @ S k.
+        w ⊑ w' /\ φ (exist _ e' HV) w' (S k) r' /\ wsat σ' m (Some r') s' w' @ S k.
     Proof.
       revert e tp σ w r rs s HSN HWE HWTP HE; induction n using wf_nat_ind; rename H into HInd.
       intros; inversion HSN; subst; clear HSN.
@@ -315,7 +316,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
         - exists w' r'' s'; split; [assumption | split; [| assumption] ].
           eapply uni_pred, Hφ; [reflexivity |].
           rewrite ord_res_optRes; exists (comp_list rs); rewrite comm, EQr; reflexivity.
-        - exfalso; eapply erasure_not_empty, HE'.
+        - exfalso; eapply wsat_not_empty, HE'.
           now erewrite pcm_op_zero by apply _.
       }
       rename n0 into n; specialize (HInd n (le_n _)); inversion HS; subst; clear HS.
@@ -332,7 +333,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
           inversion HWTP2; subst; clear HWTP2; rewrite unfold_wp in WPE.
           edestruct (WPE w (n + S k) s (Some r · comp_list (rs1 ++ rs0))) as [_ [HS _] ];
             [reflexivity | apply le_n | apply mask_emp_disjoint
-             | eapply erasure_equiv, HE; try reflexivity; [apply mask_emp_union |] |].
+             | eapply wsat_equiv, HE; try reflexivity; [apply mask_emp_union |] |].
           + rewrite !comp_list_app; simpl comp_list; unfold equiv.
             rewrite assoc, (comm (Some r0)), <- assoc; apply pcm_op_equiv; [reflexivity |].
             now rewrite assoc, (comm (Some r0)), <- assoc.
@@ -342,7 +343,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
             * rewrite <- HSW; eapply uni_pred, HWE; [now auto with arith | reflexivity].
             * apply wptp_app; [eapply wptp_closure, HWTP1; [assumption | now auto with arith] |].
             constructor; [eassumption | eapply wptp_closure, WPTP; [assumption | now auto with arith] ].
-          * eapply erasure_equiv, HE'; try reflexivity; [symmetry; apply mask_emp_union |].
+          * eapply wsat_equiv, HE'; try reflexivity; [symmetry; apply mask_emp_union |].
             rewrite assoc, (comm (Some r0')), <- assoc; apply pcm_op_equiv; [reflexivity |].
             rewrite !comp_list_app; simpl comp_list.
             now rewrite assoc, (comm (comp_list rs1)), <- assoc.
@@ -356,7 +357,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
         clear HWE HE; setoid_rewrite HSW; eapply HInd with (rs := rs ++ [rfk]); try eassumption; [|].
         + apply wptp_app; [| now auto using wptp].
           eapply wptp_closure, HWTP; [assumption | now auto with arith].
-        + eapply erasure_equiv, HE'; try reflexivity; [symmetry; apply mask_emp_union |].
+        + eapply wsat_equiv, HE'; try reflexivity; [symmetry; apply mask_emp_union |].
           rewrite (comm (Some rfk)), <- assoc; apply pcm_op_equiv; [reflexivity |].
           rewrite comp_list_app; simpl comp_list; rewrite comm.
           now erewrite (comm _ 1), pcm_op_unit by apply _.
@@ -365,7 +366,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
         inversion HWTP2; subst; clear HWTP2; rewrite unfold_wp in WPE.
         edestruct (WPE w (n + S k) s (Some r · comp_list (rs1 ++ rs0))) as [_ [_ [HF _] ] ];
           [reflexivity | apply le_n | apply mask_emp_disjoint
-           | eapply erasure_equiv, HE; try reflexivity; [apply mask_emp_union |] |].
+           | eapply wsat_equiv, HE; try reflexivity; [apply mask_emp_union |] |].
         + rewrite assoc, (comm (Some r0)), <- assoc; apply pcm_op_equiv; [reflexivity |].
           rewrite !comp_list_app; simpl comp_list; now rewrite assoc, (comm (Some r0)), <- assoc.
         + specialize (HF _ _ eq_refl); destruct HF as [w' [rfk [rret [s' [HSW [WPE' [WPS HE'] ] ] ] ] ] ]; clear WPE.
@@ -374,7 +375,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
           * apply wptp_app; [eapply wptp_closure, HWTP1; [assumption | now auto with arith] |].
             constructor; [eassumption | apply wptp_app; [| now eauto using wptp] ].
             eapply wptp_closure, WPTP; [assumption | now auto with arith].
-          * eapply erasure_equiv, HE'; try reflexivity; [symmetry; apply mask_emp_union |].
+          * eapply wsat_equiv, HE'; try reflexivity; [symmetry; apply mask_emp_union |].
             rewrite (assoc _ (Some r)), (comm _ (Some r)), <- assoc.
             apply pcm_op_equiv; [reflexivity |].
             rewrite (comm (Some rfk)), <- assoc, comp_list_app; simpl comp_list.
@@ -390,20 +391,20 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       exists r; now erewrite comm, pcm_op_unit by apply _.
     Qed.
 
-    (** This is a (relatively) generic soundness statement; one can
+    (** This is a (relatively) generic adequacy statement for all postconditions; one can
         simplify it for certain classes of assertions (e.g.,
         independent of the worlds) and obtain easy corollaries. *)
-    Theorem soundness safe m e p φ n k e' tp σ σ' w r s
+    Theorem adequacy_post safe m e p φ n k e' tp σ σ' w r s
             (HT  : valid (ht safe m p e φ))
             (HSN : stepn n ([e], σ) (e' :: tp, σ'))
             (HV  : is_value e')
             (HP  : p w (n + S k) r)
-            (HE  : erasure σ m (Some r) s w @ n + S k) :
+            (HE  : wsat σ m (Some r) s w @ n + S k) :
       exists w' r' s',
-        w ⊑ w' /\ φ (exist _ e' HV) w' (S k) r' /\ erasure σ' m (Some r') s' w' @ S k.
+        w ⊑ w' /\ φ (exist _ e' HV) w' (S k) r' /\ wsat σ' m (Some r') s' w' @ S k.
     Proof.
       specialize (HT w (n + S k) r).
-      eapply sound_tp; [eassumption | | constructor | eapply erasure_equiv, HE; try reflexivity; [] ].
+      eapply adequate_tp; [eassumption | | constructor | eapply wsat_equiv, HE; try reflexivity; [] ].
       - apply HT in HP; try reflexivity; [eassumption | apply unit_min].
       - simpl comp_list; now erewrite comm, pcm_op_unit by apply _.
     Qed.
@@ -422,13 +423,14 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       - intros _. simpl. assert(H_xy': equiv x y) by assumption. rewrite H_xy'. tauto.
     Qed.
 
-    Theorem soundness_obs safe m e (φ : value -=> Prop) n e' tp σ σ'
+    (* Adequacy as stated in the paper: for observations of the return value *)
+    Theorem adequacy_obs safe m e (φ : value -=> Prop) n e' tp σ σ'
             (HT  : valid (ht safe m (ownS σ) e (cons_pred φ)))
             (HSN : stepn n ([e], σ) (e' :: tp, σ'))
             (HV : is_value e') :
         φ (exist _ e' HV).
     Proof.
-      edestruct (soundness _ _ _ _ _ _ 0 _ _ _ _ fdEmpty (ex_own _ σ, pcm_unit _) 1 HT HSN) as [w [r [s [H_wle [H_phi _] ] ] ] ].
+      edestruct (adequacy_post _ _ _ _ _ _ 0 _ _ _ _ fdEmpty (ex_own _ σ, pcm_unit _) 1 HT HSN) as [w [r [s [H_wle [H_phi _] ] ] ] ].
       - exists (pcm_unit _); now rewrite pcm_op_unit by apply _.
       - rewrite Plus.plus_comm; split.
         + assert (HS : Some (ex_own _ σ, pcm_unit _) · 1 = Some (ex_own _ σ, pcm_unit _));
@@ -440,7 +442,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       - exact H_phi.
     Qed.
 
-  End Soundness.
+  End Adequacy.
 
   Section HoareTripleProperties.
     Local Open Scope mask_scope.
@@ -662,7 +664,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       intros w n; revert w e φ; induction n using wf_nat_ind; rename H into HInd; intros w e φ r HW.
       rewrite unfold_wp; rewrite unfold_wp in HW; intros w'; intros.
       edestruct HW with (mf := mf ∪ m2) as [HV [HS [HF HS'] ] ]; try eassumption;
-      [| eapply erasure_equiv, HE; try reflexivity; [] |].
+      [| eapply wsat_equiv, HE; try reflexivity; [] |].
       { intros j [ [Hmf | Hm'] Hm]; [apply (HD0 j) | apply (HD j) ]; tauto.
       }
       { clear; intros j; tauto.
@@ -670,16 +672,16 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       clear HW HE; split; [intros HVal; clear HS HF HInd | split; [intros; clear HV HF | split; [intros; clear HV HS | intros; clear HV HS HF] ] ].
       - specialize (HV HVal); destruct HV as [w'' [r' [s' [HSW [Hφ HE] ] ] ] ].
         do 3 eexists; split; [eassumption | split; [eassumption |] ].
-        eapply erasure_equiv, HE; try reflexivity; [].
+        eapply wsat_equiv, HE; try reflexivity; [].
         intros j; tauto.
       - edestruct HS as [w'' [r' [s' [HSW [HW HE] ] ] ] ]; try eassumption; []; clear HS.
         do 3 eexists; split; [eassumption | split; [eapply HInd, HW; assumption |] ].
-        eapply erasure_equiv, HE; try reflexivity; [].
+        eapply wsat_equiv, HE; try reflexivity; [].
         intros j; tauto.
       - destruct (HF _ _ HDec) as [w'' [rfk [rret [s' [HSW [HWR [HWF HE] ] ] ] ] ] ]; clear HF.
         do 4 eexists; split; [eassumption |].
         do 2 (split; [apply HInd; eassumption |]).
-        eapply erasure_equiv, HE; try reflexivity; [].
+        eapply wsat_equiv, HE; try reflexivity; [].
         intros j; tauto.
       - auto.
     Qed.
@@ -697,21 +699,21 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       clear He; split; [intros HVal; clear HS HF IH HE | split; [clear HV HF HE | clear HV HS HE; split; [clear HS' | clear HF] ]; intros ].
       - specialize (HV HVal); destruct HV as [w'' [r1' [s' [HSw' [Hφ HE] ] ] ] ].
         rewrite assoc in HE; destruct (Some r1' · Some r2) as [r' |] eqn: EQr';
-        [| eapply erasure_not_empty in HE; [contradiction | now erewrite !pcm_op_zero by apply _] ].
+        [| eapply wsat_not_empty in HE; [contradiction | now erewrite !pcm_op_zero by apply _] ].
         do 3 eexists; split; [eassumption | split; [| eassumption ] ].
         exists r1' r2; split; [now rewrite EQr' | split; [assumption |] ].
         unfold lt in HLt; rewrite HLt, <- HSw', <- HSw; apply HLR.
       - edestruct HS as [w'' [r1' [s' [HSw' [He HE] ] ] ] ]; try eassumption; []; clear HS.
         destruct k as [| k]; [exists w' r1' s'; split; [reflexivity | split; [apply wpO | exact I] ] |].
         rewrite assoc in HE; destruct (Some r1' · Some r2) as [r' |] eqn: EQr';
-        [| eapply erasure_not_empty in HE; [contradiction | now erewrite !pcm_op_zero by apply _] ].
+        [| eapply wsat_not_empty in HE; [contradiction | now erewrite !pcm_op_zero by apply _] ].
         do 3 eexists; split; [eassumption | split; [| eassumption] ].
         eapply IH; try eassumption; [rewrite <- EQr'; reflexivity |].
         unfold lt in HLt; rewrite Le.le_n_Sn, HLt, <- HSw', <- HSw; apply HLR.
       - specialize (HF _ _ HDec); destruct HF as [w'' [rfk [rret [s' [HSw' [HWF [HWR HE] ] ] ] ] ] ].
         destruct k as [| k]; [exists w' rfk rret s'; split; [reflexivity | split; [apply wpO | split; [apply wpO | exact I] ] ] |].
         rewrite assoc, <- (assoc (Some rfk)) in HE; destruct (Some rret · Some r2) as [rret' |] eqn: EQrret;
-        [| eapply erasure_not_empty in HE; [contradiction | now erewrite (comm _ 0), !pcm_op_zero by apply _] ].
+        [| eapply wsat_not_empty in HE; [contradiction | now erewrite (comm _ 0), !pcm_op_zero by apply _] ].
         do 4 eexists; split; [eassumption | split; [| split; eassumption] ].
         eapply IH; try eassumption; [rewrite <- EQrret; reflexivity |].
         unfold lt in HLt; rewrite Le.le_n_Sn, HLt, <- HSw', <- HSw; apply HLR.
@@ -736,7 +738,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
         edestruct HeS as [w'' [r1' [s' [HSw' [He' HE'] ] ] ] ]; try eassumption; [].
         clear HE He HeS; rewrite assoc in HE'.
         destruct (Some r1' · Some r2) as [r' |] eqn: EQr';
-          [| eapply erasure_not_empty in HE';
+          [| eapply wsat_not_empty in HE';
              [contradiction | now erewrite !pcm_op_zero by apply _] ].
         do 3 eexists; split; [eassumption | split; [| eassumption] ].
         assert (HNV : ~ is_value ei)
@@ -750,7 +752,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
         + rewrite unfold_wp in He'; rewrite <- EQr', <- assoc in HE; edestruct He' as [HVal _]; try eassumption; [].
           specialize (HVal HV); destruct HVal as [w'' [r1'' [s'' [HSw' [Hφ HE'] ] ] ] ].
           rewrite assoc in HE'; destruct (Some r1'' · Some r2) as [r'' |] eqn: EQr'';
-          [| eapply erasure_not_empty in HE';
+          [| eapply wsat_not_empty in HE';
              [contradiction | now erewrite !pcm_op_zero by apply _] ].
           do 3 eexists; split; [eassumption | split; [| eassumption] ].
           exists r1'' r2; split; [now rewrite EQr'' | split; [assumption |] ].
