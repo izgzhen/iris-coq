@@ -1,11 +1,9 @@
 Require Import world_prop core_lang lang masks.
 Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
-Module Type IRIS_RES (RL : PCM_T) (C : CORE_LANG) :=
-  PCM_T with Definition res := (pcm_res_ex C.state * RL.res)%type.
-
-Module IrisRes (RL : PCM_T) (C : CORE_LANG) <: IRIS_RES RL C.
-  Definition res := (pcm_res_ex C.state * RL.res)%type.
+Module IrisRes (RL : PCM_T) (C : CORE_LANG) <: PCM_T.
+  Import C.
+  Definition res := (pcm_res_ex state * RL.res)%type.
   Instance res_op   : PCM_op res := _.
   Instance res_unit : PCM_unit res := _.
   Instance res_pcm  : PCM res := _.
