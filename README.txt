@@ -56,7 +56,7 @@ CONTENTS
   * world_prop.v uses the ModuRes Coq library to construct the domain
     for Iris propositions
   
-  * iris_core.v defines erasure and the simpler assertions
+  * iris_core.v defines world satisfaction and the simpler assertions
   
   * iris_vs.v defines view shifts and proves their rules
   
