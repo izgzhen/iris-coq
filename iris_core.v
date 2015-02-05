@@ -350,29 +350,32 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
     Definition state_sat (r: option res) σ: Prop := match r with
     | Some (ex_own s, _) => s = σ
     | _ => False
-    end.
+                                                    end.
+
+    Global Instance state_sat_dist : Proper (equiv ==> equiv ==> iff) state_sat.
+    Proof.
+      intros r1 r2 EQr σ1 σ2 EQσ; apply ores_equiv_eq in EQr. rewrite EQσ, EQr. tauto.
+    Qed.
 
     Global Instance preo_unit : preoType () := disc_preo ().
 
-    Program Definition wsat (σ : state) (m : mask) (r s : option res) (w : Wld) : UPred () :=
-      ▹ (mkUPred (fun n _ =>
-                    state_sat (r · s) σ
-                    /\ exists rs : nat -f> res,
-                         comp_map rs == s /\
-                         forall i (Hm : m i),
+    Program Definition wsat (σ : state) (m : mask) (r : option res) (w : Wld) : UPred () :=
+      ▹ (mkUPred (fun n _ => exists rs : nat -f> res,
+                    state_sat (r · (comp_map rs)) σ
+                      /\ forall i (Hm : m i),
                            (i ∈ dom rs <-> i ∈ dom w) /\
                            forall π ri (HLw : w i == Some π) (HLrs : rs i == Some ri),
                              ı π w n ri) _).
     Next Obligation.
-      intros n1 n2 _ _ HLe _ [HES HRS]; split; [assumption |].
+      intros n1 n2 _ _ HLe _ [rs [HLS HRS] ]. exists rs; split; [assumption|].
       setoid_rewrite HLe; eassumption.
     Qed.
 
-    Global Instance wsat_equiv σ : Proper (meq ==> equiv ==> equiv ==> equiv ==> equiv) (wsat σ).
+    Global Instance wsat_equiv σ : Proper (meq ==> equiv ==> equiv ==> equiv) (wsat σ).
     Proof.
-      intros m1 m2 EQm r r' EQr s s' EQs w1 w2 EQw [| n] []; [reflexivity |];
-      apply ores_equiv_eq in EQr; apply ores_equiv_eq in EQs; subst r' s'.
-      split; intros [HES [rs [HE HM] ] ]; (split; [tauto | clear HES; exists rs]).
+      intros m1 m2 EQm r r' EQr w1 w2 EQw [| n] []; [reflexivity |];
+      apply ores_equiv_eq in EQr; subst r'.
+      split; intros [rs [HE HM] ]; exists rs.
       - split; [assumption | intros; apply EQm in Hm; split; [| setoid_rewrite <- EQw; apply HM, Hm] ].
         destruct (HM _ Hm) as [HD _]; rewrite HD; clear - EQw.
         rewrite fdLookup_in; setoid_rewrite EQw; rewrite <- fdLookup_in; reflexivity.
@@ -381,10 +384,10 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
         rewrite fdLookup_in; setoid_rewrite <- EQw; rewrite <- fdLookup_in; reflexivity.
     Qed.
 
-    Global Instance wsat_dist n σ m r s : Proper (dist n ==> dist n) (wsat σ m r s).
+    Global Instance wsat_dist n σ m r : Proper (dist n ==> dist n) (wsat σ m r).
     Proof.
       intros w1 w2 EQw [| n'] [] HLt; [reflexivity |]; destruct n as [| n]; [now inversion HLt |].
-      split; intros [HES [rs [HE HM] ] ]; (split; [tauto | clear HES; exists rs]).
+      split; intros [rs [HE HM] ]; exists rs.
       - split; [assumption | split; [rewrite <- (domeq _ _ _ EQw); apply HM, Hm |] ].
         intros; destruct (HM _ Hm) as [_ HR]; clear HE HM Hm.
         assert (EQπ := EQw i); rewrite HLw in EQπ; clear HLw.
@@ -401,10 +404,10 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
         apply HR; [reflexivity | assumption].
     Qed.
 
-    Lemma wsat_not_empty σ m r s w k (HN : r · s == 0) :
-      ~ wsat σ m r s w (S k) tt.
+    Lemma wsat_not_empty σ m (r: option res) w k (HN : r == 0) :
+      ~ wsat σ m r w (S k) tt.
     Proof.
-      intros [HD _]; apply ores_equiv_eq in HN; setoid_rewrite HN in HD.
+      intros [rs [HD _] ]; apply ores_equiv_eq in HN. setoid_rewrite HN in HD.
       exact HD.
     Qed.
 
