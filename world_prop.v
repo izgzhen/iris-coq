@@ -7,11 +7,11 @@ Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI.
 
 (* This interface keeps some of the details of the solution opaque *)
 Module Type WORLD_PROP (Res : PCM_T).
-  (* PreProp: The solution to the recursive equation. Equipped with a discrete order *)
+  (* PreProp: The solution to the recursive equation. Equipped with a discrete order. *)
   Parameter PreProp    : cmtyp.
-  Instance PProp_preo: preoType PreProp   := disc_preo PreProp.
-  Instance PProp_pcm : pcmType PreProp    := disc_pcm PreProp.
-  Instance PProp_ext : extensible PreProp := disc_ext PreProp.
+  Instance PProp_preo  : preoType PreProp   := disc_preo PreProp.
+  Instance PProp_pcm   : pcmType PreProp    := disc_pcm PreProp.
+  Instance PProp_ext   : extensible PreProp := disc_ext PreProp.
 
   (* Defines Worlds, Propositions *)
   Definition Wld       := nat -f> PreProp.
@@ -24,13 +24,13 @@ Module Type WORLD_PROP (Res : PCM_T).
   Instance Props_preo : preoType Props| 1 := _.
   Instance Props_pcm  : pcmType Props | 1 := _.
 
-  
   (* Establish the recursion isomorphism *)
   Parameter ı  : PreProp -n> halve (cmfromType Props).
   Parameter ı' : halve (cmfromType Props) -n> PreProp.
   Axiom iso : forall P, ı' (ı P) == P.
   Axiom isoR: forall T, ı (ı' T) == T.
 End WORLD_PROP.
+
 
 (* Now we come to the actual implementation *)
 Module WorldProp (Res : PCM_T) : WORLD_PROP Res.
