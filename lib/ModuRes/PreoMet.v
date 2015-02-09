@@ -58,7 +58,7 @@ Section PUMMorphProps1.
 
   Definition PMEquiv (x y : T -m> U) := mu_morph x == mu_morph y.
 
-  Global Program Instance PMtypeM : Setoid (T -m> U) := mkType PMEquiv.
+  Global Program Instance PMtypeM : Setoid (T -m> U) | 5 := mkType PMEquiv.
   Next Obligation.
     split.
     - intros f x; simpl; reflexivity.
@@ -68,7 +68,7 @@ Section PUMMorphProps1.
 
   Definition PMDist n (f g : T -m> U) := (mu_morph f) = n = (mu_morph g).
 
-  Global Program Instance PMMetric : metric (T -m> U) := mkMetr PMDist.
+  Global Program Instance PMMetric : metric (T -m> U) | 5 := mkMetr PMDist.
   Next Obligation.
     intros f g EQfg h i EQhi; split; intros EQ x; [symmetry in EQfg, EQhi |]; rewrite (EQfg x), (EQhi x); apply EQ.
   Qed.
@@ -126,7 +126,7 @@ Section PUMMorphProps1.
     rewrite HSub; reflexivity.
   Qed.
 
-  Global Program Instance PMcmetric : cmetric (T -m> U) :=
+  Global Program Instance PMcmetric : cmetric (T -m> U) | 5 :=
     mkCMetr PMCompl.
   Next Obligation.
     apply (conv_cauchy (liftc mu_morph_ne σ)).
