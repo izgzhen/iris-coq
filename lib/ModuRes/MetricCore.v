@@ -17,7 +17,9 @@ Generalizable Variables T U V W.
 (** ** 1-Bounded bisected Ultra Metric type
     d_n(x,y) <-> |x - y| <= 1/2^n *)
 
-(** Metric on the [type] M with requirements. Note that this only covers bisected metric spaces. *)
+(** Metric on the [type] M with requirements. Note that this only covers bisected metric spaces.
+    To fully follow the unbundled style, we'd have to factor out "dist" - but things already work
+    pretty well this way. *)
 Class metric (T : Type) {eqT : Setoid T} :=
   { dist         :  nat -> T -> T -> Prop;
     dist_morph n :> Proper (equiv ==> equiv ==> iff) (dist n);
@@ -94,7 +96,7 @@ Qed.
 (** Cauchy chains of elements of a metric spaces. This is a very strong form of
 convergence, since we require than all elements after the n-th are closer than 2⁻ⁿ.*)
 Definition chain (T : Type) := nat -> T.
-Class cchain `{mT : metric T} (σ : chain T) :=
+Class cchain `{mT : metric T} (σ : chain T): Prop :=
   chain_cauchy : forall n i j {HLei : n <= i} {HLej : n <= j}, (σ i) = n = (σ j).
 
 Arguments cchain [T eqT mT] σ.
@@ -124,6 +126,7 @@ Section Chains.
 
 End Chains.
 
+(* Again, this is not fully unbundled - "compl" is a computational component *)
 Class cmetric T `{mT : metric T} :=
   { compl       : forall σ {σc : cchain σ}, T;
     conv_cauchy : forall σ {σc : cchain σ}, mconverge σ (compl σ)}.

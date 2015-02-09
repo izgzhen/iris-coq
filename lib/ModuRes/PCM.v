@@ -15,7 +15,7 @@ Section Definitions.
 
   Class PCM_unit := pcm_unit : T.
   Class PCM_op   := pcm_op : option T -> option T -> option T.
-  Class PCM {TU : PCM_unit} {TOP : PCM_op} :=
+  Class PCM {TU : PCM_unit} {TOP : PCM_op}: Prop :=
     mkPCM {
         pcm_op_assoc  :> Associative pcm_op;
         pcm_op_comm   :> Commutative pcm_op;
