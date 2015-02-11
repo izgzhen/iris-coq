@@ -34,6 +34,11 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
 
     Local Obligation Tactic := intros; eauto with typeclass_instances.
 
+    Definition safeExpr e σ :=
+      is_value e \/
+         (exists σ' ei ei' K, e = K [[ ei ]] /\ prim_step (ei, σ) (ei', σ')) \/
+         (exists e' K, e = K [[ fork e' ]]).
+
     Definition wpFP safe m (WP : expr -n> vPred -n> Props) e φ w n r :=
       forall w' k rf mf σ (HSw : w ⊑ w') (HLt : k < n) (HD : mf # m)
              (HE : wsat σ (m ∪ mf) (Some r · rf) w' @ S k),
@@ -49,10 +54,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
                                  /\ WP (K [[ fork_ret ]]) φ w'' k rret
                                  /\ WP e' (umconst ⊤) w'' k rfk
                                  /\ wsat σ (m ∪ mf) (Some rfk · Some rret · rf) w'' @ k) /\
-        (forall HSafe : safe = true,
-         is_value e \/
-         (exists σ' ei ei' K, e = K [[ ei ]] /\ prim_step (ei, σ) (ei', σ')) \/
-         (exists e' K, e = K [[ fork e' ]])).
+        (forall HSafe : safe = true, safeExpr e σ).
 
     (* Define the function wp will be a fixed-point of *)
     Program Definition wpF safe m : (expr -n> vPred -n> Props) -n> (expr -n> vPred -n> Props) :=
@@ -232,6 +234,14 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
     Definition wp safe m : expr -n> vPred -n> Props :=
       fixp (wpF safe m) (umconst (umconst ⊤)).
 
+    Lemma unfold_wp safe m :
+      wp safe m == (wpF safe m) (wp safe m).
+    Proof.
+      unfold wp; apply fixp_eq.
+    Qed.
+
+    Opaque wp.
+
     Definition ht safe m P e φ := □ (P → wp safe m e φ).
 
   End HoareTriples.
@@ -280,14 +290,6 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       induction HW; constructor; [| assumption].
       eapply uni_pred; [eassumption | reflexivity |].
       rewrite <- HSW; assumption.
-    Qed.
-
-    Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
-
-    Lemma unfold_wp safe m :
-      wp safe m == (wpF safe m) (wp safe m).
-    Proof.
-      unfold wp; apply fixp_eq.
     Qed.
 
     Lemma preserve_wptp safe m n k tp tp' σ σ' w rs φs
@@ -347,51 +349,39 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
           rewrite <-assoc, (comm (Some rret)), comm. reflexivity.
     Qed.
 
-
-    Lemma adequate_tp safe m n k e e' tp tp' σ σ' φ w r rs φs
-          (HSN  : stepn n (e :: tp, σ) (e' :: tp', σ'))
-          (HV   : is_value e')
-          (HWE  : wp safe m e φ w (n + S k) r)
-          (HWTP : wptp safe m w (n + S k) tp rs φs)
-          (HE   : wsat σ m (Some r · comp_list rs) w @ n + S k) :
-      exists w' r',
-        w ⊑ w' /\ φ (exist _ e' HV) w' (S k) r' /\ wsat σ' m (Some r') w' @ S k.
-    Proof.
-      edestruct preserve_wptp as [w' [rs' [φs' [HSW' [HSWTP' HSWS'] ] ] ] ]; first eassumption.
-      - econstructor; eassumption.
-      - assumption.
-      - inversion HSWTP'; subst; clear HSWTP'.
-        rewrite ->unfold_wp in WPE.
-        edestruct (WPE w' k) as [HVal _];
-          [reflexivity | unfold lt; reflexivity | now apply mask_emp_disjoint | rewrite mask_emp_union; eassumption|].
-        fold comp_list in HVal.
-        specialize (HVal HV); destruct HVal as [w'' [r'' [HSW'' [Hφ'' HE''] ] ] ].
-        destruct (Some r'' · comp_list rs0) as [r''' |] eqn: EQr.
-        + exists w'' r'''. split; [etransitivity; eassumption|].
-          split; [|rewrite <-mask_emp_union; assumption].
-          eapply uni_pred, Hφ''; [reflexivity|].
-          rewrite ord_res_optRes. exists (comp_list rs0). rewrite ->comm, EQr. reflexivity.
-        + exfalso. eapply wsat_not_empty, HE''. reflexivity.
-    Qed.
-
-    (** This is a (relatively) generic adequacy statement for all postconditions; one can
-        simplify it for certain classes of assertions (e.g.,
-        independent of the worlds) and obtain easy corollaries. *)
-    Theorem adequacy_post safe m e p φ n k e' tp σ σ' w r
+    Lemma adequacy_ht {safe m e p φ n k tp' σ σ' w r}
             (HT  : valid (ht safe m p e φ))
-            (HSN : stepn n ([e], σ) (e' :: tp, σ'))
-            (HV  : is_value e')
+            (HSN : stepn n ([e], σ) (tp', σ'))
             (HP  : p w (n + S k) r)
             (HE  : wsat σ m (Some r) w @ n + S k) :
-      exists w' r',
-        w ⊑ w' /\ φ (exist _ e' HV) w' (S k) r' /\ wsat σ' m (Some r') w' @ S k.
+      exists w' rs' φs',
+        w ⊑ w' /\ wptp safe m w' (S k) tp' rs' (φ :: φs') /\ wsat σ' m (comp_list rs') w' @ S k.
     Proof.
-      specialize (HT w (n + S k) r).
-      eapply adequate_tp; [eassumption | | constructor | eapply wsat_equiv, HE; try reflexivity; [] ].
-      - apply HT in HP; try reflexivity; [eassumption | apply unit_min].
-      - simpl comp_list; now erewrite comm, pcm_op_unit by apply _.
+      edestruct preserve_wptp with (rs:=[r]) as [w' [rs' [φs' [HSW' [HSWTP' HSWS'] ] ] ] ]; [eassumption | | simpl comp_list; erewrite comm, pcm_op_unit by apply _; eassumption | clear HT HSN HP HE].
+      - specialize (HT w (n + S k) r). apply HT in HP; try reflexivity; [|now apply unit_min].
+        econstructor; [|now econstructor]. eassumption.
+      - exists w' rs' φs'. now auto.
     Qed.
 
+    (** This is a (relatively) generic adequacy statement for triples about an entire program: They always execute to a "good" threadpool. It does not expect the program to execute to termination.  *)
+    Theorem adequacy_glob safe m e φ tp' σ σ' k'
+            (HT  : valid (ht safe m (ownS σ) e φ))
+            (HSN : steps ([e], σ) (tp', σ')):
+      exists w' rs' φs',
+        wptp safe m w' (S k') tp' rs' (φ :: φs') /\ wsat σ' m (comp_list rs') w' @ S k'.
+    Proof.
+      destruct (steps_stepn _ _ HSN) as [n HSN']. clear HSN.
+      edestruct (adequacy_ht (w:=fdEmpty) (k:=k') (r:=(ex_own _ σ, pcm_unit _)) HT HSN') as [w' [rs' [φs' [HW [HSWTP HWS] ] ] ] ]; clear HT HSN'.
+      - exists (pcm_unit _); now rewrite ->pcm_op_unit by apply _.
+      - hnf. rewrite Plus.plus_comm. exists (fdEmpty (V:=res)). split.
+        + assert (HS : Some (ex_own _ σ, pcm_unit _) · 1 = Some (ex_own _ σ, pcm_unit _));
+          [| now setoid_rewrite HS].
+          eapply ores_equiv_eq; now erewrite comm, pcm_op_unit by apply _.
+        + intros i _; split; [reflexivity |].
+          intros _ _ [].
+      - do 3 eexists. split; [eassumption|]. assumption.
+    Qed.
+      
     Program Definition cons_pred (φ : value -=> Prop): vPred :=
       n[(fun v => pcmconst (mkUPred (fun n r => φ v) _))].
     Next Obligation.
@@ -406,23 +396,44 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       - intros _. simpl. assert(H_xy': equiv x y) by assumption. rewrite H_xy'. tauto.
     Qed.
 
-    (* Adequacy as stated in the paper: for observations of the return value *)
-    Theorem adequacy_obs safe m e (φ : value -=> Prop) e' tp σ σ'
+    (* Adequacy as stated in the paper: for observations of the return value, after termination *)
+    Theorem adequacy_obs safe m e (φ : value -=> Prop) e' tp' σ σ'
             (HT  : valid (ht safe m (ownS σ) e (cons_pred φ)))
-            (HSN : steps ([e], σ) (e' :: tp, σ'))
+            (HSN : steps ([e], σ) (e' :: tp', σ'))
             (HV : is_value e') :
         φ (exist _ e' HV).
     Proof.
-      destruct (steps_stepn _ _ HSN) as [n HSN']. clear HSN.
-      edestruct (adequacy_post _ _ _ _ _ _ 0 _ _ _ _ fdEmpty (ex_own _ σ, pcm_unit _) HT HSN') as [w [r [H_wle [H_phi _] ] ] ].
-      - exists (pcm_unit _); now rewrite ->pcm_op_unit by apply _.
-      - hnf. rewrite Plus.plus_comm. exists (fdEmpty (V:=res)). split.
-        + assert (HS : Some (ex_own _ σ, pcm_unit _) · 1 = Some (ex_own _ σ, pcm_unit _));
-          [| now setoid_rewrite HS].
-          eapply ores_equiv_eq; now erewrite comm, pcm_op_unit by apply _.
-        + intros i _; split; [reflexivity |].
-          intros _ _ [].
-      - exact H_phi.
+      edestruct adequacy_glob as [w' [rs' [φs' [HSWTP HWS] ] ] ]; try eassumption.
+      inversion HSWTP; subst; clear HSWTP WPTP.
+      rewrite ->unfold_wp in WPE.
+      edestruct (WPE w' O) as [HVal _];
+        [reflexivity | unfold lt; reflexivity | now apply mask_emp_disjoint | rewrite mask_emp_union; eassumption |].
+      fold comp_list in HVal.
+      specialize (HVal HV); destruct HVal as [w'' [r'' [HSW'' [Hφ'' HE''] ] ] ].
+      destruct (Some r'' · comp_list rs) as [r''' |] eqn: EQr.
+      + assumption.
+      + exfalso. eapply wsat_not_empty, HE''. reflexivity.
+    Qed.
+
+    (* Adequacy for safe triples *)
+    Theorem adequacy_safe m e (φ : vPred) tp' σ σ' e'
+            (HT  : valid (ht true m (ownS σ) e φ))
+            (HSN : steps ([e], σ) (tp', σ'))
+            (HE  : e' ∈ tp'):
+      safeExpr e' σ'.
+    Proof.
+      edestruct adequacy_glob as [w' [rs' [φs' [HSWTP HWS] ] ] ]; try eassumption.
+      destruct (List.in_split _ _ HE) as [tp1 [tp2 HTP] ]. clear HE. subst tp'.
+      apply wptp_app_tp in HSWTP; destruct HSWTP as [rs1 [rs2 [_ [φs2 [EQrs [_ [_ HWTP2] ] ] ] ] ] ].
+      inversion HWTP2; subst; clear HWTP2 WPTP.
+      rewrite ->unfold_wp in WPE.
+      edestruct (WPE w' O) as [_ [_ [_ HSafe] ] ];
+        [reflexivity | unfold lt; reflexivity | now apply mask_emp_disjoint | |].
+      - rewrite mask_emp_union.
+        eapply wsat_equiv, HWS; try reflexivity.
+        rewrite comp_list_app. simpl comp_list.
+        rewrite ->(assoc (comp_list rs1)), ->(comm (comp_list rs1) (Some r)), <-assoc. reflexivity.
+      - apply HSafe. reflexivity.
     Qed.
 
   End Adequacy.
@@ -460,7 +471,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       - subst e; assert (HT := fill_value _ _ HV); subst K.
         revert HV; rewrite fill_empty; intros.
         contradiction (fork_not_value _ HV).
-      - auto.
+      - unfold safeExpr. auto.
     Qed.
 
     Lemma wpO safe m e φ w r : wp safe m e φ w O r.
@@ -487,6 +498,8 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       - destruct n as [| n]; [apply dist_bound | simpl in EQv].
         rewrite EQv; reflexivity.
     Qed.
+
+    Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
 
     Lemma htBind P φ φ' K e safe m :
       ht safe m P e φ ∧ all (plugV safe m φ φ' K) ⊑ ht safe m P (K [[ e ]]) φ'.
@@ -515,7 +528,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
           edestruct HS as [w'' [r' [HSw' [He HE] ] ] ]; try eassumption; [].
           subst e; clear HStep HS.
           do 2 eexists; split; [eassumption | split; [| eassumption] ].
-          rewrite <- fill_comp; apply IH; try assumption; [].
+          rewrite <- fill_comp. apply IH; try assumption; [].
           unfold lt in HLt; rewrite <- HSw', <- HSw, Le.le_n_Sn, HLt; apply HK.
         + clear He HS HE; edestruct fork_by_value as [K' EQK]; try eassumption; [].
           subst K0; rewrite <- fill_comp in HDec; apply fill_inj2 in HDec.
@@ -744,7 +757,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
         + subst; clear -HVal.
           assert (HT := fill_value _ _ HVal); subst K; rewrite ->fill_empty in HVal.
           contradiction (fork_not_value e').
-        + auto.
+        + unfold safeExpr. now auto.
       - subst; eapply fork_not_atomic; eassumption.
       - rewrite <- EQr, <- assoc in HE; rewrite ->unfold_wp in He.
         specialize (He w' k (Some r2 · rf) mf σ HSw HLt HD0 HE); clear HE.
