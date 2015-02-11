@@ -95,7 +95,7 @@ Section PUMMorphProps1.
     unfold cchain; intros; apply σc; assumption.
   Qed.
 
-  Global Program Instance PMpreoT : preoType (T -m> U) :=
+  Global Program Instance PMpreoT : preoType (T -m> U) | 5:=
     mkPOType (fun f g => forall x, (f x ⊑ g x)%pd).
   Next Obligation.
     split.
@@ -134,7 +134,7 @@ Section PUMMorphProps1.
 
   Arguments PMEquiv _ _ /.
 
-  Global Instance mon_morph_preoT : pcmType (T -m> U).
+  Global Instance mon_morph_preoT : pcmType (T -m> U) | 5.
   Proof.
     clear; split.
     - intros f1 f2 HEqf g1 g2 HEqg; split; intros HSub x; [symmetry in HEqf, HEqg |];
