@@ -1,4 +1,4 @@
-Require Import world_prop core_lang lang masks.
+Require Import world_prop core_lang masks.
 Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
 Module IrisRes (RL : PCM_T) (C : CORE_LANG) <: PCM_T.
@@ -10,7 +10,7 @@ Module IrisRes (RL : PCM_T) (C : CORE_LANG) <: PCM_T.
 End IrisRes.
   
 Module IrisCore (RL : PCM_T) (C : CORE_LANG).
-  Module Export L  := Lang C.
+  Export C.
   Module Export R  := IrisRes RL C.
   Module Export WP := WorldProp R.
 
@@ -309,6 +309,13 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
         | nil => 1
         | (x :: xs)%list => Some x · comp_list xs
       end.
+
+    Lemma comp_list_app rs1 rs2 :
+      comp_list (rs1 ++ rs2) == comp_list rs1 · comp_list rs2.
+    Proof.
+      induction rs1; simpl comp_list; [now rewrite pcm_op_unit by apply _ |].
+      now rewrite IHrs1, assoc.
+    Qed.
 
     Definition cod (m : nat -f> res) : list res := List.map snd (findom_t m).
     Definition comp_map (m : nat -f> res) : option res := comp_list (cod m).

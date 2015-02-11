@@ -150,6 +150,11 @@ Section Order.
        erewrite pcm_op_zero in EQ by apply _; contradiction.
   Qed.
 
+  Lemma unit_min r : pcm_unit _ ⊑ r.
+  Proof.
+    exists r; now erewrite comm, pcm_op_unit by apply _.
+  Qed.
+
 End Order.
 
 Section Exclusive.
