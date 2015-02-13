@@ -402,3 +402,10 @@ Section OptDefs.
   Qed.
 
 End OptDefs.
+
+Section DiscreteType.
+  Context {T : Type}.
+
+  Program Instance discreteType : Setoid T := mkType (@eq T).
+End DiscreteType.
+

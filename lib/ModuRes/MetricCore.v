@@ -870,22 +870,26 @@ Qed.
 (** Discrete spaces are proper metric spaces (discrete meaning that the distance
     is 1 if elements are diffent and 0 for equal elements. Equality here is
     propositional Coq equality. *)
-Section Discrete.
-  Context {T : Type}.
-
-  Program Instance discreteType : Setoid T := mkType (@eq T).
+Section DiscreteMetric.
+  Context {T : Type} {T_type : Setoid T}.
 
   Definition discreteDist n (x y : T) :=
     match n with
         O => True
-      | _ => x = y
+      | _ => x == y
     end.
   Global Arguments discreteDist n x y / .
-
+  
   Program Instance discreteMetric : metric T := mkMetr discreteDist.
   Next Obligation.
-    split; intros HEq; [specialize (HEq 1) | intros [ | n] ];
-    inversion HEq; subst; simpl; reflexivity.
+    intros x y Heq x' y' Heq'. split; (destruct n as [|n]; [reflexivity|simpl]).
+    - intros Heqx. rewrite <-Heq, <-Heq'. assumption.
+    - intros Heqy. rewrite Heq, Heq'. assumption.
+  Qed.
+  Next Obligation.
+    split; intros Heq.
+    - now apply (Heq 1).
+    - intros [|n]; tauto.
   Qed.
   Next Obligation.
     destruct n as [| n]; intros x y HS; simpl in *; [| symmetry]; tauto.
@@ -903,11 +907,11 @@ Section Discrete.
   Next Obligation.
     intros n; exists 1; simpl; intros [| i] HLe; [inversion HLe |].
     destruct n as [| n]; [exact I |].
-    assert (HT := chain_cauchy σ _ 1 (S i) 1); inversion HT.
-    rewrite H0; reflexivity.
+    assert (HT := chain_cauchy σ _ 1 (S i) 1). rewrite HT.
+    reflexivity.
   Qed.
 
-End Discrete.
+End DiscreteMetric.
 
 Section Option.
   Context `{cT : cmetric T}.
