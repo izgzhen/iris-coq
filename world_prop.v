@@ -72,10 +72,6 @@ Module WorldProp (Res : PCM_T) : WORLD_PROP Res.
       intros m1 m2 Eqm; unfold PropMorph, equiv in *.
       rewrite Eqm; reflexivity.
     Qed.
-    Next Obligation.
-      intros m1 m2 Eqm; unfold PropMorph.
-      rewrite Eqm; reflexivity.
-    Qed.
 
     Instance FFun : BiFunctor F.
     Proof.

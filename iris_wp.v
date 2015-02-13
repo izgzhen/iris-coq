@@ -88,12 +88,6 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       - auto.
     Qed.
     Next Obligation.
-      intros w1 w2 EQw n r; simpl.
-      split; intros Hp w'; intros; eapply Hp; try eassumption.
-      - rewrite EQw; assumption.
-      - rewrite <- EQw; assumption.
-    Qed.
-    Next Obligation.
       intros w1 w2 EQw n' r HLt; simpl; destruct n as [| n]; [now inversion HLt |]; split; intros Hp w2'; intros.
       - symmetry in EQw; assert (EQw' := extend_dist _ _ _ _ EQw HSw); assert (HSw' := extend_sub _ _ _ _ EQw HSw); symmetry in EQw'.
         edestruct (Hp (extend w2' w1)) as [HV [HS [HF HS'] ] ]; try eassumption;
@@ -147,10 +141,6 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       etransitivity; eassumption.
     Qed.
     Next Obligation.
-      intros φ1 φ2 EQφ w n r; simpl.
-      unfold wpFP; setoid_rewrite EQφ; reflexivity.
-    Qed.
-    Next Obligation.
       intros φ1 φ2 EQφ w k r HLt; simpl; destruct n as [| n]; [now inversion HLt |].
       split; intros Hp w'; intros; edestruct Hp as [HV [HS [HF HS'] ] ]; try eassumption; [|].
       - split; [| split; [| split] ]; intros.
@@ -177,16 +167,8 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
         + auto.
     Qed.
     Next Obligation.
-      intros e1 e2 EQe φ w n r; simpl.
-      simpl in EQe; subst e2; reflexivity.
-    Qed.
-    Next Obligation.
       intros e1 e2 EQe φ w k r HLt; destruct n as [| n]; [now inversion HLt | simpl].
       simpl in EQe; subst e2; reflexivity.
-    Qed.
-    Next Obligation.
-      intros WP1 WP2 EQWP e φ w n r; simpl.
-      unfold wpFP; setoid_rewrite EQWP; reflexivity.
     Qed.
     Next Obligation.
       intros WP1 WP2 EQWP e φ w k r HLt; destruct n as [| n]; [now inversion HLt | simpl].
@@ -388,9 +370,6 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       firstorder.
     Qed.
     Next Obligation.
-      intros x y  H_xy P n r. simpl. rewrite H_xy. tauto.
-    Qed.
-    Next Obligation.
       intros x y H_xy P m r. simpl in H_xy. destruct n.
       - intros LEZ. exfalso. omega.
       - intros _. simpl. assert(H_xy': equiv x y) by assumption. rewrite H_xy'. tauto.
@@ -452,9 +431,6 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
     Program Definition eqV v : vPred :=
       n[(fun v' : value => v === v')].
     Next Obligation.
-      intros v1 v2 EQv w n r; simpl in *; split; congruence.
-    Qed.
-    Next Obligation.
       intros v1 v2 EQv w m r HLt; destruct n as [| n]; [now inversion HLt | simpl in *].
       split; congruence.
     Qed.
@@ -486,11 +462,6 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
         and context is nonexpansive. *)
     Program Definition plugV safe m φ φ' K :=
       n[(fun v : value => ht safe m (φ v) (K [[` v]]) φ')].
-    Next Obligation.
-      intros v1 v2 EQv w n r; simpl.
-      setoid_rewrite EQv at 1.
-      simpl in EQv; rewrite EQv; reflexivity.
-    Qed.
     Next Obligation.
       intros v1 v2 EQv; unfold ht; eapply (met_morph_nonexp _ _ box).
       eapply (impl_dist (ComplBI := Props_BI)).
@@ -553,10 +524,6 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
         postconditions is nonexpansive *)
     Program Definition vsLift m1 m2 φ φ' :=
       n[(fun v => vs m1 m2 (φ v) (φ' v))].
-    Next Obligation.
-      intros v1 v2 EQv; unfold vs.
-      rewrite EQv; reflexivity.
-    Qed.
     Next Obligation.
       intros v1 v2 EQv; unfold vs.
       rewrite ->EQv; reflexivity.

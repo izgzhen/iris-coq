@@ -91,7 +91,6 @@ VFILES:=BI.v\
   PCM.v\
   Predom.v\
   PreoMet.v\
-  TOTInst.v\
   UPred.v
 
 -include $(addsuffix .d,$(VFILES))

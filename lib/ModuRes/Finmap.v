@@ -692,14 +692,6 @@ Section FinDom.
     Program Definition fdMap (f : U -m> V) : (K -f> U) -m> (K -f> V) :=
       m[(pre_fdMap f)].
     Next Obligation.
-      intros m1 m2 HEq k; simpl; specialize (HEq k).
-      destruct (m1 k) as [u1 |] eqn: HFnd1; destruct (m2 k) as [u2 |] eqn: HFnd2;
-      [| contradiction HEq | contradiction HEq |].
-      - rewrite pre_fdMap_lookup with (u := u1), pre_fdMap_lookup with (u := u2); [apply morph_resp | ..];
-        assumption.
-      - rewrite !pre_fdMap_lookup_nf; assumption.
-    Qed.
-    Next Obligation.
       intros m1 m2 HEq; destruct n as [| n]; [apply dist_bound |]; intros k; simpl; specialize (HEq k).
       destruct (m1 k) as [u1 |] eqn: HFnd1; destruct (m2 k) as [u2 |] eqn: HFnd2; try contradiction HEq; [|].
       - rewrite pre_fdMap_lookup with (u := u1), pre_fdMap_lookup with (u := u2);

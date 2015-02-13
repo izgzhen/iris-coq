@@ -116,10 +116,6 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
     Program Definition inv i : Props -n> Props :=
       n[(fun p => m[(invP i p)])].
     Next Obligation.
-      intros w1 w2 EQw; unfold equiv, invP in *.
-      apply intEq_equiv; [apply EQw | reflexivity].
-    Qed.
-    Next Obligation.
       intros w1 w2 EQw; unfold invP; simpl morph.
       destruct n; [apply dist_bound |].
       apply intEq_dist; [apply EQw | reflexivity].
@@ -130,11 +126,6 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
       destruct (w1 i) as [μ1 |]; [| contradiction].
       destruct (w2 i) as [μ2 |]; [| contradiction]; simpl in Sw.
       rewrite <- Sw; assumption.
-    Qed.
-    Next Obligation.
-      intros p1 p2 EQp w; unfold equiv, invP in *; simpl morph.
-      apply intEq_equiv; [reflexivity |].
-      rewrite EQp; reflexivity.
     Qed.
     Next Obligation.
       intros p1 p2 EQp w; unfold invP; simpl morph.
@@ -185,9 +176,6 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
   Program Definition ownS : state -n> Props :=
     n[(fun s => ownRP (ex_own _ s))].
   Next Obligation.
-    intros r1 r2 EQr. hnf in EQr. now rewrite EQr.
-  Qed.
-  Next Obligation.
     intros r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
     simpl in EQr. subst; reflexivity.
   Qed.
@@ -207,9 +195,6 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
                   | Some r => ownRL r
                   | None => ⊥
                 end)].
-  Next Obligation.
-    intros r1 r2 EQr; apply ores_equiv_eq in EQr; now rewrite EQr.
-  Qed.
   Next Obligation.
     intros r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
     destruct r1 as [r1 |]; destruct r2 as [r2 |]; try contradiction; simpl in EQr; subst; reflexivity.
@@ -247,12 +232,12 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
   Proof.
     intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
     - destruct (u · t)%pcm as [ut |] eqn: EQut; [| contradiction].
-      do 15 red in Hut; rewrite <- Hut.
+      do 17 red in Hut. rewrite <- Hut.
       destruct u as [u |]; [| now erewrite pcm_op_zero in EQut by apply _].
       assert (HT := comm (Some u) t); rewrite EQut in HT.
       destruct t as [t |]; [| now erewrite pcm_op_zero in HT by apply _]; clear HT.
       exists (pcm_unit (pcm_res_ex state), u) (pcm_unit (pcm_res_ex state), t).
-      split; [unfold pcm_op, res_op, pcm_op_prod | split; do 15 red; reflexivity].
+      split; [unfold pcm_op, res_op, pcm_op_prod | split; do 17 red; reflexivity].
       now erewrite pcm_op_unit, EQut by apply _.
     - destruct u as [u |]; [| contradiction]; destruct t as [t |]; [| contradiction].
       destruct Hu as [ru EQu]; destruct Ht as [rt EQt].
@@ -277,10 +262,6 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
   Next Obligation.
     intros n1 n2 _ _ HLe _ HT w' k r HSw HLt Hp; eapply HT, Hp; [eassumption |].
     now eauto with arith.
-  Qed.
-  Next Obligation.
-    intros w1 w2 EQw n rr; simpl; split; intros HT k r HLt;
-    [rewrite <- EQw | rewrite EQw]; apply HT; assumption.
   Qed.
   Next Obligation.
     intros w1 w2 EQw k; simpl; intros _ HLt; destruct n as [| n]; [now inversion HLt |].

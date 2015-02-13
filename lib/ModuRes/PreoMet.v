@@ -114,9 +114,6 @@ Section PUMMorphProps1.
   Next Obligation.
     intros x y HEq t; apply HEq.
   Qed.
-  Next Obligation.
-    intros f g HEq t; apply HEq.
-  Qed.
 
   Program Definition PMCompl (σ : chain (T -m> U)) (σc : cchain σ) :=
     mkMUMorph (compl (liftc mu_morph_ne σ)) _.

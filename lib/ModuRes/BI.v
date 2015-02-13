@@ -449,10 +449,6 @@ Section MonotoneExt.
     fun U eqU mU cmU R =>
       m[(fun t => all n[(fun u => R u t)])].
   Next Obligation.
-    intros t1 t2 EQt; apply all_equiv; intros u; simpl morph.
-    rewrite EQt; reflexivity.
-  Qed.
-  Next Obligation.
     intros t1 t2 EQt; apply all_dist; intros u; simpl morph.
     rewrite EQt; reflexivity.
   Qed.
@@ -464,10 +460,6 @@ Section MonotoneExt.
   Global Program Instance xist_mm : xistBI (T -m> B) :=
     fun U eqU mU cmU R =>
       m[(fun t => xist n[(fun u => R u t)])].
-  Next Obligation.
-    intros t1 t2 EQt; apply xist_equiv; intros u; simpl morph.
-    rewrite EQt; reflexivity.
-  Qed.
   Next Obligation.
     intros t1 t2 EQt; apply xist_dist; intros u; simpl morph.
     rewrite EQt; reflexivity.
@@ -699,10 +691,6 @@ Section MComplUP.
       rewrite HLe, <- HSubv; apply HT, HSubt.
     Qed.
     Next Obligation.
-      intros t1 t2 EQt n v; split; intros HT t' Subt; apply HT; [| symmetry in EQt];
-      rewrite EQt; assumption.
-    Qed.
-    Next Obligation.
       intros t1 t2 EQt m v HLt; split; intros HT t' Subt;
       (destruct n as [| n]; [now inversion HLt |]).
       - symmetry in EQt.
@@ -715,9 +703,6 @@ Section MComplUP.
     Qed.
     Next Obligation.
       intros t1 t2 Subt n v HT t' Subt'; apply HT; etransitivity; eassumption.
-    Qed.
-    Next Obligation.
-      intros f1 f2 EQf u n v; split; intros HH u' HSub; apply EQf, HH, HSub.
     Qed.
     Next Obligation.
       intros f1 f2 EQf u m v HLt; split; intros HH u' HSub; apply EQf, HH; assumption.
@@ -768,11 +753,6 @@ Section MComplMM.
     Qed.
     Next Obligation.
       intros f1 f2 EQf u v; simpl morph.
-      apply (morph_resp mclose); clear u v; intros [u v]; simpl morph.
-      apply EQf.
-    Qed.
-    Next Obligation.
-      intros f1 f2 EQf u v; simpl morph.
       apply mclose; clear u v; intros [u v]; simpl morph.
       apply EQf.
     Qed.
@@ -792,7 +772,7 @@ Section MComplMM.
 
 End MComplMM.
 
-Section Foo.
+Section BIValid.
   Local Obligation Tactic := intros.
 
   Global Program Instance BI_valid T `{ComplBI T} : Valid T :=
@@ -801,4 +781,4 @@ Section Foo.
     etransitivity; [apply top_true | assumption].
   Qed.
 
-End Foo.
+End BIValid.

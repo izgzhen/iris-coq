@@ -192,7 +192,17 @@ Record metric_morphism T U `{mT : metric T} `{mU : metric U} :=
 Arguments mkUMorph [T U eqT mT eqT0 mU] _ _.
 Arguments met_morph [T U] {eqT mT eqT0 mU} _.
 Infix "-n>" := metric_morphism (at level 45, right associativity).
-Notation "'n[(' f ')]'" := (mkUMorph s[(f)] _).
+
+Program Definition mkNMorph T U `{mT : metric T} `{mU : metric U} (f: T -> U)
+        (NEXP : forall n, Proper (dist n ==> dist n) f) :=
+  mkUMorph s[(f)] _.
+Next Obligation.
+  intros x y Heq.
+  eapply dist_refl. intros n.
+  eapply NEXP. rewrite Heq. reflexivity.
+Qed.
+Arguments mkNMorph [T U eqT mT eqT0 mU] _ _.
+Notation "'n[(' f ')]'" := (mkNMorph f _).
 
 Instance subrel_dist `{mT : metric T} n : subrelation equiv (dist n).
 Proof.
@@ -202,7 +212,7 @@ Qed.
 Section MMInst.
   Context `{mT : metric T} `{mU : metric U}.
 
-  Global Program Instance nonexp_type : Setoid (T -n> U) :=
+  Global Program Instance nonexp_type : Setoid (T -n> U) | 5 :=
     mkType (fun f g => met_morph f == g).
   Next Obligation.
     split.
@@ -211,7 +221,7 @@ Section MMInst.
     + intros f g h Hfg Hgh x; etransitivity; [apply Hfg | apply Hgh].
   Qed.
 
-  Global Program Instance nonexp_metric : metric (T -n> U) :=
+  Global Program Instance nonexp_metric : metric (T -n> U) | 5 :=
     mkMetr (fun n f g => forall x, f x = n = g x).
   Next Obligation.
     intros f1 f2 EQf g1 g2 EQg; split; intros EQfg x; [symmetry in EQf, EQg |];
@@ -409,9 +419,6 @@ Section Iteration.
   Next Obligation.
     induction n; simpl; [apply _ | resp_set].
   Qed.
-  Next Obligation.
-    induction n; simpl; [apply _ | resp_set].
-  Qed.
 
   Lemma iter_plus f m n x : iter m f (iter n f x) = iter (m + n) f x.
   Proof. induction m; simpl; [reflexivity | f_equal; assumption]. Qed.
@@ -510,11 +517,6 @@ Section ChainApps.
   complete metric space. *)
   Program Definition fun_lub : T -n> U :=
     n[(fun x => compl (fun i => σ i x))].
-  Next Obligation.
-    intros x y HEq; rewrite <- dist_refl; intros n.
-    rewrite (nonexp_lub n); [| rewrite HEq]; reflexivity.
-  Qed.
-  Next Obligation. exact (nonexp_lub n). Qed.
 
 End ChainApps.
 
@@ -522,7 +524,7 @@ Section NonexpCMetric.
   Context `{cT : cmetric T} `{cU : cmetric U}.
 
   (** THe set of non-expansive morphisms between two complete metric spaces is again a complete metric space. *)
-  Global Program Instance nonexp_cmetric : cmetric (T -n> U) :=
+  Global Program Instance nonexp_cmetric : cmetric (T -n> U) | 5 :=
     mkCMetr fun_lub.
   Next Obligation.
     intros n; exists n; intros m HLe x.
@@ -830,10 +832,6 @@ Section Exponentials.
     intros [a1 b1] [a2 b2] [Ha Hb]; simpl in *.
     rewrite Ha, Hb; reflexivity.
   Qed.
-  Next Obligation.
-    intros [a1 b1] [a2 b2] [Ha Hb]; simpl in *.
-    rewrite Ha, Hb; reflexivity.
-  Qed.  
 
   Program Definition curryM (f : T * U -n> V) : T -n> U -n> V := lift2m (mcurry f) _ _.
 

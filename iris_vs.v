@@ -35,13 +35,6 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
     Program Definition pvs (m1 m2 : mask) : Props -n> Props :=
       n[(fun p => m[(preVS m1 m2 p)])].
     Next Obligation.
-      intros w1 w2 EQw n r; split; intros HP w2'; intros.
-      - eapply HP; try eassumption; [].
-        rewrite EQw; assumption.
-      - eapply HP; try eassumption; [].
-        rewrite <- EQw; assumption.
-    Qed.
-    Next Obligation.
       intros w1 w2 EQw n' r HLt; destruct n as [| n]; [now inversion HLt |]; split; intros HP w2'; intros.
       - symmetry in EQw; assert (HDE := extend_dist _ _ _ _ EQw HSub).
         assert (HSE := extend_sub _ _ _ _ EQw HSub); specialize (HP (extend w2' w1)).
@@ -64,11 +57,6 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
     Next Obligation.
       intros w1 w2 EQw n r HP w2'; intros; eapply HP; try eassumption; [].
       etransitivity; eassumption.
-    Qed.
-    Next Obligation.
-      intros p1 p2 EQp w n r; split; intros HP w1; intros.
-      - setoid_rewrite <- EQp; eapply HP; eassumption.
-      - setoid_rewrite EQp; eapply HP; eassumption.
     Qed.
     Next Obligation.
       intros p1 p2 EQp w n' r HLt; split; intros HP w1; intros.
@@ -110,7 +98,7 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
     Proof.
       intros pw nn r w _; clear r pw.
       intros n r _ _ HInv w'; clear nn; intros.
-      do 12 red in HInv; destruct (w i) as [μ |] eqn: HLu; [| contradiction].
+      do 14 red in HInv; destruct (w i) as [μ |] eqn: HLu; [| contradiction].
       apply ı in HInv; rewrite (isoR p) in HInv.
       (* get rid of the invisible 1/2 *)
       do 8 red in HInv.
@@ -146,7 +134,7 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
     Proof.
       intros pw nn r w _; clear r pw.
       intros n r _ _ [r1 [r2 [HR [HInv HP] ] ] ] w'; clear nn; intros.
-      do 12 red in HInv; destruct (w i) as [μ |] eqn: HLu; [| contradiction].
+      do 14 red in HInv; destruct (w i) as [μ |] eqn: HLu; [| contradiction].
       apply ı in HInv; rewrite (isoR p) in HInv.
       (* get rid of the invisible 1/2 *)
       do 8 red in HInv.
@@ -254,16 +242,16 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
     Definition ownLP (P : option RL.res -> Prop) : {s : option RL.res | P s} -n> Props :=
       ownL <M< inclM.
 
-Lemma pcm_op_split rp1 rp2 rp sp1 sp2 sp :
-  Some (rp1, sp1) · Some (rp2, sp2) == Some (rp, sp) <->
-  Some rp1 · Some rp2 == Some rp /\ Some sp1 · Some sp2 == Some sp.
-Proof.
-  unfold pcm_op at 1, res_op at 2, pcm_op_prod at 1.
-  destruct (Some rp1 · Some rp2) as [rp' |]; [| simpl; tauto].
-  destruct (Some sp1 · Some sp2) as [sp' |]; [| simpl; tauto].
-  simpl; split; [| intros [EQ1 EQ2]; subst; reflexivity].
-  intros EQ; inversion EQ; tauto.
-Qed.
+    Lemma pcm_op_split rp1 rp2 rp sp1 sp2 sp :
+      Some (rp1, sp1) · Some (rp2, sp2) == Some (rp, sp) <->
+      Some rp1 · Some rp2 == Some rp /\ Some sp1 · Some sp2 == Some sp.
+    Proof.
+      unfold pcm_op at 1, res_op at 2, pcm_op_prod at 1.
+      destruct (Some rp1 · Some rp2) as [rp' |]; [| simpl; tauto].
+      destruct (Some sp1 · Some sp2) as [sp' |]; [| simpl; tauto].
+      simpl; split; [| intros [EQ1 EQ2]; subst; reflexivity].
+      intros EQ; inversion EQ; tauto.
+    Qed.
 
     Lemma vsGhostUpd m rl (P : option RL.res -> Prop)
           (HU : forall rf (HD : rl · rf <> None), exists sl, P sl /\ sl · rf <> None) :
@@ -320,15 +308,8 @@ Qed.
     Program Definition inv' m : Props -n> {n : nat | m n} -n> Props :=
       n[(fun p => n[(fun n => inv n p)])].
     Next Obligation.
-      intros i i' EQi; simpl in EQi; rewrite EQi; reflexivity.
-    Qed.
-    Next Obligation.
       intros i i' EQi; destruct n as [| n]; [apply dist_bound |].
       simpl in EQi; rewrite EQi; reflexivity.
-    Qed.
-    Next Obligation.
-      intros p1 p2 EQp i; simpl morph.
-      apply (morph_resp (inv (` i))); assumption.
     Qed.
     Next Obligation.
       intros p1 p2 EQp i; simpl morph.
@@ -365,7 +346,7 @@ Qed.
         now rewrite fdUpdate_neq by assumption.
       }
       exists (fdUpdate i (ı' p) w) (pcm_unit _); split; [assumption | split].
-      - exists (exist _ i Hm); do 16 red.
+      - exists (exist _ i Hm); do 22 red.
         unfold proj1_sig; rewrite fdUpdate_eq; reflexivity.
       - erewrite pcm_op_unit by apply _.
         destruct HE as [rs [HE HM] ].
