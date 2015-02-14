@@ -16,19 +16,10 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
     Local Open Scope bi_scope.
     Local Open Scope lang_scope.
 
-    Global Instance expr_type : Setoid expr := discreteType.
-    Global Instance expr_metr : metric expr := discreteMetric.
-    Global Instance expr_cmetr : cmetric expr := discreteCMetric.
     Instance LP_isval : LimitPreserving is_value.
     Proof.
       intros σ σc HC; apply HC.
     Qed.
-
-    (* We use this type quite a bit, so give it and its instances names *)
-    Definition vPred := value -n> Props.
-    Global Instance vPred_type  : Setoid vPred  := _.
-    Global Instance vPred_metr  : metric vPred  := _.
-    Global Instance vPred_cmetr : cmetric vPred := _.
 
     Implicit Types (P Q R : Props) (i : nat) (m : mask) (e : expr) (w : Wld) (φ : vPred) (r : res).
 
@@ -331,10 +322,10 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
           rewrite <-assoc, (comm (Some rret)), comm. reflexivity.
     Qed.
 
-    Lemma adequacy_ht {safe m e p φ n k tp' σ σ' w r}
-            (HT  : valid (ht safe m p e φ))
+    Lemma adequacy_ht {safe m e P φ n k tp' σ σ' w r}
+            (HT  : valid (ht safe m P e φ))
             (HSN : stepn n ([e], σ) (tp', σ'))
-            (HP  : p w (n + S k) r)
+            (HP  : P w (n + S k) r)
             (HE  : wsat σ m (Some r) w @ n + S k) :
       exists w' rs' φs',
         w ⊑ w' /\ wptp safe m w' (S k) tp' rs' (φ :: φs') /\ wsat σ' m (comp_list rs') w' @ S k.
@@ -363,8 +354,8 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
           intros _ _ [].
       - do 3 eexists. split; [eassumption|]. assumption.
     Qed.
-      
-    Program Definition cons_pred (φ : value -=> Prop): vPred :=
+
+    Program Definition lift_pred (φ : value -=> Prop): vPred :=
       n[(fun v => pcmconst (mkUPred (fun n r => φ v) _))].
     Next Obligation.
       firstorder.
@@ -375,9 +366,10 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       - intros _. simpl. assert(H_xy': equiv x y) by assumption. rewrite H_xy'. tauto.
     Qed.
 
+      
     (* Adequacy as stated in the paper: for observations of the return value, after termination *)
     Theorem adequacy_obs safe m e (φ : value -=> Prop) e' tp' σ σ'
-            (HT  : valid (ht safe m (ownS σ) e (cons_pred φ)))
+            (HT  : valid (ht safe m (ownS σ) e (lift_pred φ)))
             (HSN : steps ([e], σ) (e' :: tp', σ'))
             (HV : is_value e') :
         φ (exist _ e' HV).
@@ -417,6 +409,14 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
 
   End Adequacy.
 
+(*  Section Lifting.
+
+    Theorem lift_pure_step e (e's : expr -=> Prop) P Q mask
+            (RED  : reducible e)
+            (STEP : forall σ e' σ', prim_step (e, σ) (e', σ') -> 
+
+  End Lifting. *)
+  
   Section HoareTripleProperties.
     Local Open Scope mask_scope.
     Local Open Scope pcm_scope.
@@ -472,8 +472,8 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
 
     Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
 
-    Lemma htBind P φ φ' K e safe m :
-      ht safe m P e φ ∧ all (plugV safe m φ φ' K) ⊑ ht safe m P (K [[ e ]]) φ'.
+    Lemma htBind P φ ψ K e safe m :
+      ht safe m P e φ ∧ all (plugV safe m φ ψ K) ⊑ ht safe m P (K [[ e ]]) ψ.
     Proof.
       intros wz nz rz [He HK] w HSw n r HLe _ HP.
       specialize (He _ HSw _ _ HLe (unit_min _ _) HP).
@@ -485,7 +485,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
         clear He HE; specialize (HV HVal); destruct HV as [w'' [r' [HSw' [Hφ HE] ] ] ].
         (* Fold the goal back into a wp *)
         setoid_rewrite HSw'.
-        assert (HT : wp safe m (K [[ e ]]) φ' w'' (S k) r');
+        assert (HT : wp safe m (K [[ e ]]) ψ w'' (S k) r');
           [| rewrite ->unfold_wp in HT; eapply HT; [reflexivity | unfold lt; reflexivity | eassumption | eassumption] ].
         clear HE; specialize (HK (exist _ e HVal)).
         do 30 red in HK; unfold proj1_sig in HK.

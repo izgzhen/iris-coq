@@ -2,8 +2,7 @@
     domain equations to build a higher-order separation logic *)
 Require Import ModuRes.PreoMet ModuRes.MetricRec ModuRes.CBUltInst.
 Require Import ModuRes.Finmap ModuRes.Constr.
-Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI.
-
+Require Import ModuRes.PCM ModuRes.UPred.
 
 (* This interface keeps some of the details of the solution opaque *)
 Module Type WORLD_PROP (Res : PCM_T).
@@ -17,7 +16,7 @@ Module Type WORLD_PROP (Res : PCM_T).
   Definition Wld       := nat -f> PreProp.
   Definition Props     := Wld -m> UPred Res.res.
 
-  (* Define all the things on Props, so they have names - this shortens the terms later *)
+  (* Define all the things on Props, so they have names - this shortens the terms later. *)
   Instance Props_ty   : Setoid Props  | 1 := _.
   Instance Props_m    : metric Props  | 1 := _.
   Instance Props_cm   : cmetric Props | 1 := _.

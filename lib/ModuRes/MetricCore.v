@@ -145,7 +145,7 @@ Class cmetric M `{mM : metric M} {cM : Completion M} :=
 Record cmtyp :=
   { cmm  :> Mtyp;
     iscm :  cmetric cmm}.
-Instance cmtyp_cmetric {M : cmtyp} : cmetric M := iscm M.
+Instance cmtyp_cmetric {M : cmtyp} : cmetric M | 0 := iscm M.
 Definition cmfromType (T : Type) `{cT : cmetric T} := Build_cmtyp (mfromType T) _.
 
 Section ChainCompl.

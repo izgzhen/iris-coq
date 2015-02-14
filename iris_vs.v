@@ -158,7 +158,7 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
           rewrite HSub in HP; specialize (HSub i); rewrite HLu in HSub.
           destruct (w' i) as [π' |]; [| contradiction].
           split; [intuition now eauto | intros].
-          simpl in HLw, HLrs, HSub; subst ri0; rewrite <- HLw, <- HSub.
+          simpl in HLw, HLrs, HSub. subst ri0. rewrite <- HLw, <- HSub.
           apply HInv; [now auto with arith |].
           eapply uni_pred, HP; [now auto with arith |].
           assert (HT : Some ri · Some r1 · Some r2 == Some rri)
@@ -300,10 +300,6 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
     Qed.
     (* The above proof is rather ugly in the way it handles the monoid elements,
        but it works *)
-
-    Global Instance nat_type : Setoid nat := discreteType.
-    Global Instance nat_metr : metric nat := discreteMetric.
-    Global Instance nat_cmetr : cmetric nat := discreteCMetric.
 
     Program Definition inv' m : Props -n> {n : nat | m n} -n> Props :=
       n[(fun p => n[(fun n => inv n p)])].

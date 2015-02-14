@@ -31,6 +31,7 @@ Notation "p · q" := (pcm_op _ p q) (at level 40, left associativity) : pcm_scop
 
 Delimit Scope pcm_scope with pcm.
 
+(* FIXME having this with highest priority is really not a good idea. but necessary. *)
 Instance pcm_eq T `{pcmT : PCM T} : Setoid T | 0 := eqT _.
 
 (* PCMs with cartesian products of carriers. *)
@@ -96,7 +97,7 @@ Section Order.
   Context T `{pcmT : PCM T}.
   Local Open Scope pcm_scope.
 
-  Global Instance pcm_op_equiv : Proper (equiv ==> equiv ==> equiv) (pcm_op _).
+  Global Instance pcm_op_equiv : Proper (equiv ==> equiv ==> equiv) (pcm_op T).
   Proof.
     intros [s1 |] [s2 |] EQs; try contradiction; [|];
     [intros [t1 |] [t2 |] EQt; try contradiction; [| rewrite (comm (Some s1)), (comm (Some s2)) ] | intros t1 t2 _];

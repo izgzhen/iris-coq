@@ -27,25 +27,30 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
 
   Instance Props_BI : ComplBI Props | 0 := _.
   Instance Props_Later : Later Props | 0 := _.
- 
+
+  (** Instances for a bunch of types *)
+  Instance state_type : Setoid state := discreteType.
+  Instance state_metr : metric state := discreteMetric.
+  Instance state_cmetr : cmetric state := discreteCMetric.
+
+  (* The equivalence for this is a paremeter *)
+  Instance logR_metr : metric RL.res := discreteMetric.
+  Instance logR_cmetr : cmetric RL.res := discreteCMetric.
+
+  Instance nat_type : Setoid nat := discreteType.
+  Instance nat_metr : metric nat := discreteMetric.
+  Instance nat_cmetr : cmetric nat := discreteCMetric.
+
+  Instance expr_type : Setoid expr := discreteType.
+  Instance expr_metr : metric expr := discreteMetric.
+  Instance expr_cmetr : cmetric expr := discreteCMetric.
+
+  (* We use this type quite a bit, so give it and its instances names *)
+  Definition vPred := value -n> Props.
+  Instance vPred_type  : Setoid vPred  := _.
+  Instance vPred_metr  : metric vPred  := _.
+  Instance vPred_cmetr : cmetric vPred := _.
   
-  (* Benchmark: How large is this type? *)
-  (*Section Benchmark.
-    Local Open Scope mask_scope.
-    Local Open Scope pcm_scope.
-    Local Open Scope bi_scope.
-    Local Open Scope lang_scope.
-
-    Local Instance _bench_expr_type : Setoid expr := discreteType.
-    Local Instance _bench_expr_metr : metric expr := discreteMetric.
-    Local Instance _bench_cmetr : cmetric expr := discreteCMetric.
-
-    Set Printing All.
-    Check (expr -n> (value -n> Props) -n> Props).
-    Check ((expr -n> (value -n> Props) -n> Props) -n> expr -n> (value -n> Props) -n> Props).
-    Unset Printing All.
-  End Benchmark.*)
-
   (** And now we're ready to build the IRIS-specific connectives! *)
 
   Section Necessitation.
@@ -169,10 +174,6 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
     ownR (pcm_unit _, r).
 
   (** Proper physical state: ownership of the machine state **)
-  Instance state_type : Setoid state := discreteType.
-  Instance state_metr : metric state := discreteMetric.
-  Instance state_cmetr : cmetric state := discreteCMetric.
-
   Program Definition ownS : state -n> Props :=
     n[(fun s => ownRP (ex_own _ s))].
   Next Obligation.
@@ -186,9 +187,6 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
     destruct r1 as [r1 |]; destruct r2 as [r2 |]; try contradiction;
     simpl in HEq; subst; reflexivity.
   Qed.
-
-  Instance logR_metr : metric RL.res := discreteMetric.
-  Instance logR_cmetr : cmetric RL.res := discreteCMetric.
 
   Program Definition ownL : (option RL.res) -n> Props :=
     n[(fun r => match r with
@@ -212,7 +210,7 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
   Proof.
     intros w n r Hp; simpl in Hp.
     eapply uni_pred, Hp; [reflexivity |].
-    exists r; now erewrite comm, pcm_op_unit by apply _.
+    now eapply unit_min.
   Qed.
 
   Lemma box_top : ⊤ == □ ⊤.
