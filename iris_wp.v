@@ -628,24 +628,24 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       rewrite unfold_wp; rewrite ->unfold_wp in HW; intros w'; intros.
       edestruct HW with (mf := mf ∪ m2) as [HV [HS [HF HS'] ] ]; try eassumption;
       [| eapply wsat_equiv, HE; try reflexivity; [] |].
-      { intros j [ [Hmf | Hm'] Hm]; [apply (HD0 j) | apply (HD j) ]; tauto.
+      { intros j [ [Hmf | Hm'] Hm]; [unfold mcup in HD0; apply (HD0 j) | apply (HD j) ]; tauto.
       }
-      { clear; intros j; tauto.
+      { clear; intros j; unfold mcup; tauto.
       }
       clear HW HE; split; [intros HVal; clear HS HF HInd | split; [intros; clear HV HF | split; [intros; clear HV HS | intros; clear HV HS HF] ] ].
       - specialize (HV HVal); destruct HV as [w'' [r' [HSW [Hφ HE] ] ] ].
         do 2 eexists; split; [eassumption | split; [eassumption |] ].
         eapply wsat_equiv, HE; try reflexivity; [].
-        intros j; tauto.
+        intros j; unfold mcup; tauto.
       - edestruct HS as [w'' [r' [HSW [HW HE] ] ] ]; try eassumption; []; clear HS.
         do 2 eexists; split; [eassumption | split; [eapply HInd, HW; assumption |] ].
         eapply wsat_equiv, HE; try reflexivity; [].
-        intros j; tauto.
+        intros j; unfold mcup; tauto.
       - destruct (HF _ _ HDec) as [w'' [rfk [rret [HSW [HWR [HWF HE] ] ] ] ] ]; clear HF.
         do 3 eexists; split; [eassumption |].
         do 2 (split; [apply HInd; eassumption |]).
         eapply wsat_equiv, HE; try reflexivity; [].
-        intros j; tauto.
+        intros j; unfold mcup; tauto.
       - auto.
     Qed.
 

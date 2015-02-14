@@ -21,12 +21,19 @@ Definition mle (m1 m2 : mask) :=
   forall n, m1 n -> m2 n.
 Definition meq (m1 m2 : mask) :=
   forall n, m1 n <-> m2 n.
+Definition mcap (m1 m2 : mask) : mask :=
+  fun i => (m1 : mask) i /\ (m2 : mask) i.
+Definition mcup (m1 m2 : mask) : mask :=
+  fun i => (m1 : mask) i \/ (m2 : mask) i.
+Definition mminus (m1 m2 : mask) : mask :=
+  fun i => (m1 : mask) i /\ ~ (m2 : mask) i.
 
+Delimit Scope mask_scope with mask.
 Notation "m1 == m2" := (meq m1 m2) (at level 70) : mask_scope.
 Notation "m1 ⊆ m2"  := (mle m1 m2)  (at level 70) : mask_scope.
-Notation "m1 ∩ m2" := (fun i => (m1 : mask) i /\ (m2 : mask) i) (at level 40) : mask_scope.
-Notation "m1 \  m2"  := (fun i => (m1 : mask) i /\ ~ (m2 : mask) i) (at level 30) : mask_scope.
-Notation "m1 ∪ m2" := (fun i => (m1 : mask) i \/ (m2 : mask) i) (at level 50) : mask_scope.
+Notation "m1 ∩ m2" := (mcap m1 m2) (at level 40) : mask_scope.
+Notation "m1 \  m2"  := (mminus m1 m2) (at level 30) : mask_scope.
+Notation "m1 ∪ m2" := (mcup m1 m2) (at level 50) : mask_scope.
 Notation "m1 # m2" := (mask_disj m1 m2) (at level 70) : mask_scope.
 
 Open Scope mask_scope.
@@ -81,7 +88,13 @@ Qed.
 Lemma mask_emp_union m :
   meq (m ∪ mask_emp) m.
 Proof.
-  intros k; unfold mask_emp, const; tauto.
+  intros k; unfold mcup, mask_emp, const. tauto.
+Qed.
+
+Lemma mask_full_union m :
+  meq (mask_full ∪ m) mask_full.
+Proof.
+  intros i; unfold mcup, mask_full, const; tauto.
 Qed.
 
 Lemma mask_emp_disjoint m :
@@ -93,7 +106,7 @@ Qed.
 Lemma mask_union_idem m :
   meq (m ∪ m) m.
 Proof.
-  intros k; tauto.
+  intros k; unfold mcup; tauto.
 Qed.
 
 Global Instance mask_disj_sub : Proper (mle --> mle --> impl) mask_disj.

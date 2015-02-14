@@ -119,9 +119,9 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
             symmetry; destruct (w' i); [assumption | contradiction].
         + exists (fdRemove i rs); split; [assumption | intros j Hm].
           destruct Hm as [| Hm]; [contradiction |]; specialize (HD j); simpl in HD.
-          unfold mask_sing, mask_set in HD; destruct (Peano_dec.eq_nat_dec i j);
+          unfold mask_sing, mask_set, mcup in HD; destruct (Peano_dec.eq_nat_dec i j);
           [subst j; contradiction HD; tauto | clear HD].
-          rewrite fdLookup_in; setoid_rewrite (fdRemove_neq _ _ _ n0); rewrite <- fdLookup_in; now auto.
+          rewrite fdLookup_in; setoid_rewrite (fdRemove_neq _ _ _ n0); rewrite <- fdLookup_in; unfold mcup in HM; now auto.
       - rewrite <- fdLookup_notin_strong in HLr; contradiction HLr; clear HLr.
         specialize (HSub i); rewrite HLu in HSub; clear - HM HSub.
         destruct (HM i) as [HD _]; [left | rewrite HD, fdLookup_in_strong; destruct (w' i); [eexists; reflexivity | contradiction] ].
@@ -149,7 +149,7 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
           * erewrite <-comp_map_insert_old; try eassumption. rewrite<- EQR; reflexivity.
           * erewrite <-comp_map_insert_new; try eassumption. rewrite <-EQR.
             erewrite pcm_op_unit by apply _. assumption.
-        + specialize (HD j); unfold mask_sing, mask_set in *; simpl in Hm, HD.
+        + specialize (HD j); unfold mask_sing, mask_set, mcup in *; simpl in Hm, HD.
           destruct (Peano_dec.eq_nat_dec i j);
             [subst j; clear Hm |
              destruct Hm as [Hm | Hm]; [contradiction | rewrite fdLookup_in_strong, fdUpdate_neq, <- fdLookup_in_strong by assumption; now auto] ].
@@ -215,16 +215,16 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
       destruct HVS as [w'' [rq [HSub' [Hq HEq] ] ] ]; try assumption; [| |].
       - (* disjointness of masks: possible lemma *)
         clear - HD HDisj; intros i [ [Hmf | Hmf] Hm12]; [eapply HDisj; now eauto |].
-        eapply HD; split; [eassumption | tauto].
+        unfold mcup in *; eapply HD; split; [eassumption | tauto].
       - rewrite assoc, HR; eapply wsat_equiv, HE; try reflexivity; [].
-        clear; intros i; tauto.
+        clear; intros i; unfold mcup; tauto.
       - rewrite assoc in HEq; destruct (Some rq · Some rr) as [rqr |] eqn: HR';
         [| apply wsat_not_empty in HEq; [contradiction | now erewrite !pcm_op_zero by apply _] ].
         exists w'' rqr; split; [assumption | split].
         + unfold lt in HLe0; rewrite HSub, HSub', <- HLe0 in Hr; exists rq rr.
           rewrite HR'; split; now auto.
         + eapply wsat_equiv, HEq; try reflexivity; [].
-          clear; intros i; tauto.
+          clear; intros i; unfold mcup; tauto.
     Qed.
 
     Instance LP_optres (P : option RL.res -> Prop) : LimitPreserving P.
@@ -348,7 +348,7 @@ Module IrisVS (RL : PCM_T) (C : CORE_LANG).
         destruct HE as [rs [HE HM] ].
         exists (fdUpdate i r rs).
         assert (HRi : rs i = None).
-        { destruct (HM i) as [HDom _]; [tauto |].
+        { destruct (HM i) as [HDom _]; unfold mcup; [tauto |].
           rewrite <- fdLookup_notin_strong, HDom, fdLookup_notin_strong; assumption.
         }
         split.
