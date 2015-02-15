@@ -1,15 +1,21 @@
 Require Import world_prop core_lang masks.
-Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
+Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
-Module IrisRes (RL : PCM_T) (C : CORE_LANG) <: PCM_T.
-  Import C.
-  Definition res := (pcm_res_ex state * RL.res)%type.
-  Instance res_op   : PCM_op res := _.
-  Instance res_unit : PCM_unit res := _.
-  Instance res_pcm  : PCM res := _.
+Module IrisRes (RL : RA_T) (C : CORE_LANG) <: RA_T.
+  Instance state_type : Setoid C.state := discreteType.
+  
+  Definition res := (ra_res_ex C.state * RL.res)%type.
+  Instance res_type : Setoid res := _.
+  Instance res_op   : RA_op res := _.
+  Instance res_unit : RA_unit res := _.
+  Instance res_valid: RA_valid res := _.
+  Instance res_ra  : RA res := _.
+
+  (* The order on (ra_pos res) is inferred correctly, but this one is not *)
+  Instance res_pord: preoType res := ra_preo res.
 End IrisRes.
   
-Module IrisCore (RL : PCM_T) (C : CORE_LANG).
+Module IrisCore (RL : RA_T) (C : CORE_LANG).
   Export C.
   Module Export R  := IrisRes RL C.
   Module Export WP := WorldProp R.
@@ -17,23 +23,10 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
   Delimit Scope iris_scope with iris.
   Local Open Scope iris_scope.
 
-  (** The final thing we'd like to check is that the space of
-      propositions does indeed form a complete BI algebra.
-
-      The following instance declaration checks that an instance of
-      the complete BI class can be found for Props (and binds it with
-      a low priority to potentially speed up the proof search).
-   *)
-
-  Instance Props_BI : ComplBI Props | 0 := _.
-  Instance Props_Later : Later Props | 0 := _.
-
-  (** Instances for a bunch of types *)
-  Instance state_type : Setoid state := discreteType.
+  (** Instances for a bunch of types (some don't even have Setoids) *)
   Instance state_metr : metric state := discreteMetric.
   Instance state_cmetr : cmetric state := discreteCMetric.
 
-  (* The equivalence for this is a paremeter *)
   Instance logR_metr : metric RL.res := discreteMetric.
   Instance logR_cmetr : cmetric RL.res := discreteCMetric.
 
@@ -50,6 +43,18 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
   Instance vPred_type  : Setoid vPred  := _.
   Instance vPred_metr  : metric vPred  := _.
   Instance vPred_cmetr : cmetric vPred := _.
+
+
+  (** The final thing we'd like to check is that the space of
+      propositions does indeed form a complete BI algebra.
+
+      The following instance declaration checks that an instance of
+      the complete BI class can be found for Props (and binds it with
+      a low priority to potentially speed up the proof search).
+   *)
+
+  Instance Props_BI : ComplBI Props | 0 := _.
+  Instance Props_Later : Later Props | 0 := _.
   
   (** And now we're ready to build the IRIS-specific connectives! *)
 
@@ -60,7 +65,7 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
     Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
 
     Program Definition box : Props -n> Props :=
-      n[(fun p => m[(fun w => mkUPred (fun n r => p w n (pcm_unit _)) _)])].
+      n[(fun p => m[(fun w => mkUPred (fun n r => p w n ra_pos_unit) _)])].
     Next Obligation.
       intros n m r s HLe _ Hp; rewrite HLe; assumption.
     Qed.
@@ -83,7 +88,7 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
   Section IntEq.
     Context {T} `{mT : metric T}.
 
-    Program Definition intEqP (t1 t2 : T) : UPred res :=
+    Program Definition intEqP (t1 t2 : T) : UPred pres :=
       mkUPred (fun n r => t1 = S n = t2) _.
     Next Obligation.
       intros n1 n2 _ _ HLe _; apply mono_dist; now auto with arith.
@@ -116,7 +121,7 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
   Section Invariants.
 
     (** Invariants **)
-    Definition invP (i : nat) (p : Props) (w : Wld) : UPred res :=
+    Definition invP (i : nat) (p : Props) (w : Wld) : UPred pres :=
       intEqP (w i) (Some (ı' p)).
     Program Definition inv i : Props -n> Props :=
       n[(fun p => m[(invP i p)])].
@@ -161,42 +166,71 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
     - intros w n r; apply Hp; exact I.
   Qed.
 
-  (** Ownership **)
-  Definition ownR (r : res) : Props :=
-    pcmconst (up_cr (pord r)).
+  Section Ownership.
+    Local Open Scope ra.
 
-  (** Physical part **)
-  Definition ownRP (r : pcm_res_ex state) : Props :=
-    ownR (r, pcm_unit _).
+    (** Ownership **)
+    (* We define this on *any* resource, not just the positive (valid) ones.
+       Note that this makes ownR trivially *False* for invalid u: There is no
+       elment v such that u · v = r (where r is valid) *)
+    Program Definition ownR (u : res) : Props :=
+      pcmconst (mkUPred(fun n r => u ⊑ ra_proj r) _).
+    Next Obligation.
+      intros n m r1 r2 Hle [d Hd ] [e He]. change (u ⊑ (ra_proj r2)). rewrite <-Hd, <-He.
+      exists (d · e). rewrite assoc. reflexivity.
+    Qed.
 
-  (** Logical part **)
-  Definition ownRL (r : RL.res) : Props :=
-    ownR (pcm_unit _, r).
+    (** Proper physical state: ownership of the machine state **)
+    Program Definition ownS : state -n> Props :=
+      n[(fun s => ownR (ex_own _ s, 1%ra))].
+    Next Obligation.
+      intros r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
+      simpl in EQr. subst; reflexivity.
+    Qed.
 
-  (** Proper physical state: ownership of the machine state **)
-  Program Definition ownS : state -n> Props :=
-    n[(fun s => ownRP (ex_own _ s))].
-  Next Obligation.
-    intros r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
-    simpl in EQr. subst; reflexivity.
-  Qed.
+    (** Proper ghost state: ownership of logical **)
+    Program Definition ownL : RL.res -n> Props :=
+      n[(fun r => ownR (ex_unit _, r))].
+    Next Obligation.
+      intros r1 r2 EQr. destruct n as [| n]; [apply dist_bound |eapply dist_refl].
+      simpl in EQr. intros w m t. simpl. change ( (ex_unit state, r1) ⊑ (ra_proj t) <->  (ex_unit state, r2) ⊑ (ra_proj t)). rewrite EQr. reflexivity.
+    Qed.
 
-  (** Proper ghost state: ownership of logical w/ possibility of undefined **)
-  Lemma ores_equiv_eq T `{pcmT : PCM T} (r1 r2 : option T) (HEq : r1 == r2) : r1 = r2.
-  Proof.
-    destruct r1 as [r1 |]; destruct r2 as [r2 |]; try contradiction;
-    simpl in HEq; subst; reflexivity.
-  Qed.
+    Lemma ownL_iff u w n r: ownL u w n r <-> exists VAL, (ra_mk_pos (1, u) (VAL:=VAL)) ⊑ r.
+    Proof.
+      split.
+      - intros H.
+        destruct (✓u) eqn:Heq; [|exfalso].
+        + exists Heq. exact H.
+        + destruct H as [s H]. apply ra_op_pos_valid2 in H. unfold ra_valid in H. simpl in H.
+          congruence.
+      - intros [VAL Hle]. exact Hle.
+    Qed.
 
-  Program Definition ownL : (option RL.res) -n> Props :=
-    n[(fun r => match r with
-                  | Some r => ownRL r
-                  | None => ⊥
-                end)].
-  Next Obligation.
-    intros r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
-    destruct r1 as [r1 |]; destruct r2 as [r2 |]; try contradiction; simpl in EQr; subst; reflexivity.
-  Qed.
+    (** Ghost state ownership **)
+    Lemma ownL_sc (u t : RL.res) :
+      ownL (u · t) == ownL u * ownL t.
+    Proof.
+      intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
+      - apply ownL_iff in Hut. destruct Hut as [VAL Hut].
+        rewrite <- Hut. clear Hut.
+        unfold ra_valid in VAL. simpl in VAL.
+        assert (VALu:✓u = true) by (eapply ra_op_valid; now eauto).
+        assert (VALt:✓t = true) by (eapply ra_op_valid2; now eauto).
+        exists (ra_mk_pos (1, u) (VAL:=VALu)).
+        exists (ra_mk_pos (1, t) (VAL:=VALt)).
+        split; [reflexivity|split].
+        + do 15 red. reflexivity.
+        + do 15 red. reflexivity.
+      - apply ownL_iff in Hu. destruct Hu as [VALu [d Hu] ].
+        apply ownL_iff in Ht. destruct Ht as [VALt [e Ht] ].
+        unfold ra_valid in VALu, VALt. simpl in VALu, VALt.
+        exists (d · e). rewrite <-EQr, <-Hu, <-Ht.
+        rewrite !assoc. rewrite <-(assoc d _ e), (comm (ra_proj _) e).
+        rewrite <-!assoc. reflexivity.
+    Qed.
+
+  End Ownership.
 
   (** Lemmas about box **)
   Lemma box_intro p q (Hpq : □ p ⊑ q) :
@@ -224,32 +258,6 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
     intros w n r; reflexivity.
   Qed.
 
-  (** Ghost state ownership **)
-  Lemma ownL_sc (u t : option RL.res) :
-    ownL (u · t)%pcm == ownL u * ownL t.
-  Proof.
-    intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
-    - destruct (u · t)%pcm as [ut |] eqn: EQut; [| contradiction].
-      do 17 red in Hut. rewrite <- Hut.
-      destruct u as [u |]; [| now erewrite pcm_op_zero in EQut by apply _].
-      assert (HT := comm (Some u) t); rewrite EQut in HT.
-      destruct t as [t |]; [| now erewrite pcm_op_zero in HT by apply _]; clear HT.
-      exists (pcm_unit (pcm_res_ex state), u) (pcm_unit (pcm_res_ex state), t).
-      split; [unfold pcm_op, res_op, pcm_op_prod | split; do 17 red; reflexivity].
-      now erewrite pcm_op_unit, EQut by apply _.
-    - destruct u as [u |]; [| contradiction]; destruct t as [t |]; [| contradiction].
-      destruct Hu as [ru EQu]; destruct Ht as [rt EQt].
-      rewrite <- EQt, assoc, (comm (Some r1)) in EQr.
-      rewrite <- EQu, assoc, <- (assoc (Some rt · Some ru)%pcm) in EQr.
-      unfold pcm_op at 3, res_op at 4, pcm_op_prod at 1 in EQr.
-      erewrite pcm_op_unit in EQr by apply _; clear EQu EQt.
-      destruct (Some u · Some t)%pcm as [ut |];
-        [| now erewrite comm, pcm_op_zero in EQr by apply _].
-      destruct (Some rt · Some ru)%pcm as [rut |];
-        [| now erewrite pcm_op_zero in EQr by apply _].
-      exists rut; assumption.
-  Qed.
-
   (** Timeless *)
 
   Definition timelessP (p : Props) w n :=
@@ -275,7 +283,7 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
   Qed.
 
   Section WorldSatisfaction.
-    Local Open Scope pcm_scope.
+    Local Open Scope ra_scope.
     Local Open Scope bi_scope.
 
     (* First, we need to compose the resources of a finite map. This won't be pretty, for
@@ -283,68 +291,69 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
        constructs. Hopefully we can provide a fold that'd work for
        that at some point
      *)
-    Fixpoint comp_list (xs : list res) : option res :=
+    Fixpoint comp_list (xs : list pres) : res :=
       match xs with
         | nil => 1
-        | (x :: xs)%list => Some x · comp_list xs
+        | (x :: xs)%list => ra_proj x · comp_list xs
       end.
 
     Lemma comp_list_app rs1 rs2 :
       comp_list (rs1 ++ rs2) == comp_list rs1 · comp_list rs2.
     Proof.
-      induction rs1; simpl comp_list; [now rewrite pcm_op_unit by apply _ |].
+      induction rs1; simpl comp_list; [now rewrite ra_op_unit by apply _ |].
       now rewrite IHrs1, assoc.
     Qed.
 
-    Definition cod (m : nat -f> res) : list res := List.map snd (findom_t m).
-    Definition comp_map (m : nat -f> res) : option res := comp_list (cod m).
+    Definition cod (m : nat -f> pres) : list pres := List.map snd (findom_t m).
+    Definition comp_map (m : nat -f> pres) : res := comp_list (cod m).
 
-    Lemma comp_map_remove (rs : nat -f> res) i r (HLu : rs i = Some r) :
-      comp_map rs == Some r · comp_map (fdRemove i rs).
+    Lemma comp_map_remove (rs : nat -f> pres) i r (HLu : rs i = Some r) :
+      comp_map rs == ra_proj r · comp_map (fdRemove i rs).
     Proof.
       destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
       induction rs as [| [j s] ]; [discriminate |]; simpl comp_list; simpl in HLu.
       destruct (comp i j); [inversion HLu; reflexivity | discriminate |].
       simpl comp_list; rewrite IHrs by eauto using SS_tail.
-      rewrite !assoc, (comm (Some s)); reflexivity.
+      rewrite !assoc, (comm (_ s)); reflexivity.
     Qed.
 
-    Lemma comp_map_insert_new (rs : nat -f> res) i r (HNLu : rs i = None) :
-      Some r · comp_map rs == comp_map (fdUpdate i r rs).
+    Lemma comp_map_insert_new (rs : nat -f> pres) i r (HNLu : rs i = None) :
+      ra_proj r · comp_map rs == comp_map (fdUpdate i r rs).
     Proof.
       destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
       induction rs as [| [j s] ]; [reflexivity | simpl comp_list; simpl in HNLu].
       destruct (comp i j); [discriminate | reflexivity |].
       simpl comp_list; rewrite <- IHrs by eauto using SS_tail.
-      rewrite !assoc, (comm (Some r)); reflexivity.
+      rewrite !assoc, (comm (_ r)); reflexivity.
     Qed.
 
-    Lemma comp_map_insert_old (rs : nat -f> res) i r1 r2 r
-          (HLu : rs i = Some r1) (HEq : Some r1 · Some r2 == Some r) :
-      Some r2 · comp_map rs == comp_map (fdUpdate i r rs).
+    Lemma comp_map_insert_old (rs : nat -f> pres) i r1 r2 r
+          (HLu : rs i = Some r1) (HEq : ra_proj r1 · ra_proj r2 == ra_proj r) :
+      ra_proj r2 · comp_map rs == comp_map (fdUpdate i r rs).
     Proof.
       destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
       induction rs as [| [j s] ]; [discriminate |]; simpl comp_list; simpl in HLu.
       destruct (comp i j); [inversion HLu; subst; clear HLu | discriminate |].
-      - simpl comp_list; rewrite assoc, (comm (Some r2)), <- HEq; reflexivity.
+      - simpl comp_list; rewrite assoc, (comm (_ r2)), <- HEq; reflexivity.
       - simpl comp_list; rewrite <- IHrs by eauto using SS_tail.
-        rewrite !assoc, (comm (Some r2)); reflexivity.
+        rewrite !assoc, (comm (_ r2)); reflexivity.
     Qed.
 
-    Definition state_sat (r: option res) σ: Prop := match r with
-    | Some (ex_own s, _) => s = σ
-    | _ => False
-                                                    end.
+    Definition state_sat (r: res) σ: Prop := ✓r = true /\
+      match r with
+        | (ex_own s, _) => s = σ
+        | _ => True
+      end.
 
     Global Instance state_sat_dist : Proper (equiv ==> equiv ==> iff) state_sat.
     Proof.
-      intros r1 r2 EQr σ1 σ2 EQσ; apply ores_equiv_eq in EQr. rewrite EQσ, EQr. tauto.
+      intros [ [s1| |] r1] [ [s2| |] r2] [EQs EQr] σ1 σ2 EQσ; unfold state_sat; simpl in *; try tauto; try rewrite !EQs; try rewrite !EQr; try rewrite !EQσ; reflexivity.
     Qed.
 
     Global Instance preo_unit : preoType () := disc_preo ().
 
-    Program Definition wsat (σ : state) (m : mask) (r : option res) (w : Wld) : UPred () :=
-      ▹ (mkUPred (fun n _ => exists rs : nat -f> res,
+    Program Definition wsat (σ : state) (m : mask) (r : res) (w : Wld) : UPred () :=
+      ▹ (mkUPred (fun n _ => exists rs : nat -f> pres,
                     state_sat (r · (comp_map rs)) σ
                       /\ forall i (Hm : m i),
                            (i ∈ dom rs <-> i ∈ dom w) /\
@@ -357,13 +366,12 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
 
     Global Instance wsat_equiv σ : Proper (meq ==> equiv ==> equiv ==> equiv) (wsat σ).
     Proof.
-      intros m1 m2 EQm r r' EQr w1 w2 EQw [| n] []; [reflexivity |];
-      apply ores_equiv_eq in EQr; subst r'.
+      intros m1 m2 EQm r r' EQr w1 w2 EQw [| n] []; [reflexivity |].
       split; intros [rs [HE HM] ]; exists rs.
-      - split; [assumption | intros; apply EQm in Hm; split; [| setoid_rewrite <- EQw; apply HM, Hm] ].
+      - split; [rewrite <-EQr; assumption | intros; apply EQm in Hm; split; [| setoid_rewrite <- EQw; apply HM, Hm] ].
         destruct (HM _ Hm) as [HD _]; rewrite HD; clear - EQw.
         rewrite fdLookup_in; setoid_rewrite EQw; rewrite <- fdLookup_in; reflexivity.
-      - split; [assumption | intros; apply EQm in Hm; split; [| setoid_rewrite EQw; apply HM, Hm] ].
+      - split; [rewrite EQr; assumption | intros; apply EQm in Hm; split; [| setoid_rewrite EQw; apply HM, Hm] ].
         destruct (HM _ Hm) as [HD _]; rewrite HD; clear - EQw.
         rewrite fdLookup_in; setoid_rewrite <- EQw; rewrite <- fdLookup_in; reflexivity.
     Qed.
@@ -388,11 +396,13 @@ Module IrisCore (RL : PCM_T) (C : CORE_LANG).
         apply HR; [reflexivity | assumption].
     Qed.
 
-    Lemma wsat_not_empty σ m (r: option res) w k (HN : r == 0) :
+    Lemma wsat_not_empty σ m (r: res) w k (HN : ✓r = false) :
       ~ wsat σ m r w (S k) tt.
     Proof.
-      intros [rs [HD _] ]; apply ores_equiv_eq in HN. setoid_rewrite HN in HD.
-      exact HD.
+      intros [rs [HD _] ]. destruct HD as [VAL _].
+      assert(VALr:✓r = true).
+      { eapply ra_op_valid. eassumption. }
+      congruence.
     Qed.
 
   End WorldSatisfaction.

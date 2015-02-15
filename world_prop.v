@@ -2,10 +2,12 @@
     domain equations to build a higher-order separation logic *)
 Require Import ModuRes.PreoMet ModuRes.MetricRec ModuRes.CBUltInst.
 Require Import ModuRes.Finmap ModuRes.Constr.
-Require Import ModuRes.PCM ModuRes.UPred.
+Require Import ModuRes.RA ModuRes.UPred.
 
 (* This interface keeps some of the details of the solution opaque *)
-Module Type WORLD_PROP (Res : PCM_T).
+Module Type WORLD_PROP (Res : RA_T).
+  Definition pres := ra_pos Res.res.
+  
   (* PreProp: The solution to the recursive equation. Equipped with a discrete order. *)
   Parameter PreProp    : cmtyp.
   Instance PProp_preo  : preoType PreProp   := disc_preo PreProp.
@@ -14,7 +16,7 @@ Module Type WORLD_PROP (Res : PCM_T).
 
   (* Defines Worlds, Propositions *)
   Definition Wld       := nat -f> PreProp.
-  Definition Props     := Wld -m> UPred Res.res.
+  Definition Props     := Wld -m> UPred pres.
 
   (* Define all the things on Props, so they have names - this shortens the terms later. *)
   Instance Props_ty   : Setoid Props  | 1 := _.
@@ -32,10 +34,10 @@ End WORLD_PROP.
 
 
 (* Now we come to the actual implementation *)
-Module WorldProp (Res : PCM_T) : WORLD_PROP Res.
+Module WorldProp (Res : RA_T) : WORLD_PROP Res.
 
   (** The construction is parametric in the monoid we choose *)
-  Import Res.
+  Definition pres := ra_pos Res.res.
 
   (** We need to build a functor that would describe the following
       recursive domain equation:
@@ -51,7 +53,7 @@ Module WorldProp (Res : PCM_T) : WORLD_PROP Res.
     Local Instance pcm_disc P `{cmetric P} : pcmType P | 2000 := disc_pcm P.
 
     Definition FProp P `{cmP : cmetric P} :=
-      (nat -f> P) -m> UPred res.
+      (nat -f> P) -m> UPred pres.
 
     Context {U V} `{cmU : cmetric U} `{cmV : cmetric V}.
 

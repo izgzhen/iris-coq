@@ -30,7 +30,7 @@ End Definitions.
 
 Notation "1" := (ra_unit _) : ra_scope.
 Notation "p · q" := (ra_op _ p q) (at level 40, left associativity) : ra_scope.
-Notation "'valid' p" := (ra_valid _ p) (at level 35) : ra_scope.
+Notation "'✓' p" := (ra_valid _ p) (at level 35) : ra_scope.
 
 Delimit Scope ra_scope with ra.
 
@@ -44,19 +44,19 @@ Section RAs.
     rewrite comm. now eapply ra_op_unit.
   Qed.
 
-  Lemma ra_op_invalid2 t1 t2: valid t2 = false -> valid (t1 · t2) = false.
+  Lemma ra_op_invalid2 t1 t2: ✓ t2 = false -> ✓ (t1 · t2) = false.
   Proof.
     rewrite comm. now eapply ra_op_invalid.
   Qed.
 
-  Lemma ra_op_valid t1 t2: valid (t1 · t2) = true -> valid t1 = true.
+  Lemma ra_op_valid t1 t2: ✓ (t1 · t2) = true -> ✓ t1 = true.
   Proof.
     intros Hval.
-    destruct (valid t1) eqn:Heq; [reflexivity|].
+    destruct (✓ t1) eqn:Heq; [reflexivity|].
     rewrite <-Hval. symmetry. now eapply ra_op_invalid.
   Qed.
 
-  Lemma ra_op_valid2 t1 t2: valid (t1 · t2) = true -> valid t2 = true.
+  Lemma ra_op_valid2 t1 t2: ✓ (t1 · t2) = true -> ✓ t2 = true.
   Proof.
     rewrite comm. now eapply ra_op_valid.
   Qed.
@@ -74,8 +74,7 @@ Section Products.
         | (s1, t1), (s2, t2) => (s1 · s2, t1 · t2)
       end.
   Global Instance ra_valid_prod : RA_valid (S * T) :=
-    fun st => match st with (s, t) =>
-                            valid s && valid t
+    fun st => match st with (s, t) => ✓ s && ✓ t
               end.
   Global Instance ra_prod : RA (S * T).
   Proof.
@@ -99,27 +98,28 @@ Section PositiveCarrier.
   Context {T} `{raT : RA T}.
   Local Open Scope ra_scope.
 
-  Definition ra_pos: Type := { r | valid r = true }.
+  Definition ra_pos: Type := { r | ✓ r = true }.
   Coercion ra_proj (t:ra_pos): T := proj1_sig t.
 
-  Definition ra_mk_pos t (VAL: valid t = true): ra_pos := exist _ t VAL.
+  Definition ra_mk_pos t {VAL: ✓ t = true}: ra_pos := exist _ t VAL.
+  Definition ra_cr_pos {t} (VAL: ✓ t = true) := ra_mk_pos t (VAL:=VAL).
 
   Program Definition ra_pos_unit: ra_pos := exist _ 1 _.
   Next Obligation.
     now erewrite ra_valid_unit by apply _.
   Qed.
 
-  Lemma ra_pos_mult_valid t1 t2 t:
-    t1 · t2 == ra_proj t -> valid t1 = true.
+  Lemma ra_op_pos_valid t1 t2 t:
+    t1 · t2 == ra_proj t -> ✓ t1 = true.
   Proof.
     destruct t as [t Hval]; simpl. intros Heq. rewrite <-Heq in Hval.
     eapply ra_op_valid. eassumption.
   Qed.
 
-  Lemma ra_pos_mult_valid2 t1 t2 t:
-    t1 · t2 == ra_proj t -> valid t2 = true.
+  Lemma ra_op_pos_valid2 t1 t2 t:
+    t1 · t2 == ra_proj t -> ✓ t2 = true.
   Proof.
-    rewrite comm. now eapply ra_pos_mult_valid.
+    rewrite comm. now eapply ra_op_pos_valid.
   Qed.
 
 End PositiveCarrier.
@@ -130,57 +130,61 @@ Section Order.
   Context T `{raT : RA T}.
   Local Open Scope ra_scope.
 
-  Definition ra_ord (t1 t2 : ra_pos T) :=
-    exists td, (ra_proj td) · (ra_proj t1) == (ra_proj t2).
+  Definition pra_ord (t1 t2 : ra_pos T) :=
+    exists td, td · (ra_proj t1) == (ra_proj t2).
 
-  Global Program Instance RA_preo : preoType (ra_pos T) | 0 := mkPOType ra_ord.
+  Global Program Instance pRA_preo : preoType (ra_pos T) | 0 := mkPOType pra_ord.
   Next Obligation.
     split.
-    - intros x; exists ra_pos_unit. simpl. erewrite ra_op_unit by apply _; reflexivity.
-    - intros z yz xyz [y Hyz] [x Hxyz]; unfold ra_ord.
+    - intros x; exists 1. simpl. erewrite ra_op_unit by apply _; reflexivity.
+    - intros z yz xyz [y Hyz] [x Hxyz]; unfold pra_ord.
       rewrite <- Hyz, assoc in Hxyz; setoid_rewrite <- Hxyz.
-      assert (VAL:valid (ra_proj x · ra_proj y) = true).
-      { now eapply ra_pos_mult_valid in Hxyz. }
-      exists (ra_mk_pos (ra_proj x · ra_proj y) VAL). reflexivity.
+      exists (x · y). reflexivity.
   Qed.
 
-(*  Definition opcm_ord (t1 t2 : option T) :=
-    exists otd, otd · t1 == t2.
-  Global Program Instance opcm_preo : preoType (option T) :=
-    mkPOType opcm_ord.
-  Next Obligation.
-    split.
-    - intros r; exists 1; erewrite pcm_op_unit by apply _; reflexivity.
-    - intros z yz xyz [y Hyz] [x Hxyz]; exists (x · y).
-      rewrite <- Hxyz, <- Hyz; symmetry; apply assoc.
-  Qed.
-
-  Global Instance equiv_pord_pcm : Proper (equiv ==> equiv ==> equiv) (pord (T := option T)).
+  Global Instance equiv_pord_pra : Proper (equiv ==> equiv ==> equiv) (pord (T := ra_pos T)).
   Proof.
     intros s1 s2 EQs t1 t2 EQt; split; intros [s HS].
     - exists s; rewrite <- EQs, <- EQt; assumption.
     - exists s; rewrite EQs, EQt; assumption.
   Qed.
 
-  Global Instance pcm_op_monic : Proper (pord ==> pord ==> pord) (pcm_op _).
+  Lemma unit_min r : ra_pos_unit ⊑ r.
   Proof.
-    intros x1 x2 [x EQx] y1 y2 [y EQy]; exists (x · y).
+    exists (ra_proj r). simpl.
+    now erewrite ra_op_unit2 by apply _.
+  Qed.
+
+  Definition ra_ord (t1 t2 : T) :=
+    exists t, t · t1 == t2.
+  Global Program Instance ra_preo : preoType T := mkPOType ra_ord.
+  Next Obligation.
+    split.
+    - intros r; exists 1; erewrite ra_op_unit by apply _; reflexivity.
+    - intros z yz xyz [y Hyz] [x Hxyz]; exists (x · y).
+      rewrite <- Hxyz, <- Hyz; symmetry; apply assoc.
+  Qed.
+
+  Global Instance equiv_pord_ra : Proper (equiv ==> equiv ==> equiv) (pord (T := T)).
+  Proof.
+    intros s1 s2 EQs t1 t2 EQt; split; intros [s HS].
+    - exists s; rewrite <- EQs, <- EQt; assumption.
+    - exists s; rewrite EQs, EQt; assumption.
+  Qed.
+
+  Global Instance ra_op_monic : Proper (pord ++> pord ++> pord) (ra_op _).
+  Proof.
+    intros x1 x2 [x EQx] y1 y2 [y EQy]. exists (x · y).
     rewrite <- assoc, (comm y), <- assoc, assoc, (comm y1), EQx, EQy; reflexivity.
   Qed.
 
   Lemma ord_res_optRes r s :
-    (r ⊑ s) <-> (Some r ⊑ Some s).
+    (r ⊑ s) <-> (ra_proj r ⊑ ra_proj s).
   Proof.
     split; intros HR.
-     - destruct HR as [d EQ]; exists (Some d); assumption.
-     - destruct HR as [[d |] EQ]; [exists d; assumption |].
-       erewrite pcm_op_zero in EQ by apply _; contradiction.
+    - destruct HR as [d EQ]. exists d. assumption.
+    - destruct HR as [d EQ]. exists d. assumption.
   Qed.
-
-  Lemma unit_min r : pcm_unit _ ⊑ r.
-  Proof.
-    exists r; now erewrite comm, pcm_op_unit by apply _.
-  Qed.*)
 
 End Order.
 

@@ -1,5 +1,5 @@
 Require Import PreoMet.
-Require Import PCM.
+Require Import RA.
 
 Section CompleteBI.
   Context {T : Type}.
@@ -140,28 +140,30 @@ Section UPredLater.
 End UPredLater.
 
 Section UPredBI.
-  Context Res `{pcmRes : PCM Res}.
-  Local Open Scope pcm_scope.
+  Context res `{raRes : RA res}.
+  Local Open Scope ra_scope.
   Local Obligation Tactic := intros; eauto with typeclass_instances.
 
-  (* Standard interpretations of propositional connectives. *)
-  Global Program Instance top_up : topBI (UPred Res) := up_cr (const True).
-  Global Program Instance bot_up : botBI (UPred Res) := up_cr (const False).
+  Definition pres := ra_pos res.
 
-  Global Program Instance and_up : andBI (UPred Res) :=
+  (* Standard interpretations of propositional connectives. *)
+  Global Program Instance top_up : topBI (UPred pres) := up_cr (const True).
+  Global Program Instance bot_up : botBI (UPred pres) := up_cr (const False).
+
+  Global Program Instance and_up : andBI (UPred pres) :=
     fun P Q =>
       mkUPred (fun n r => P n r /\ Q n r) _.
   Next Obligation.
     intros n m r1 r2 HLe HSub; rewrite HSub, HLe; tauto.
   Qed.
-  Global Program Instance or_up : orBI (UPred Res) :=
+  Global Program Instance or_up : orBI (UPred pres) :=
     fun P Q =>
       mkUPred (fun n r => P n r \/ Q n r) _.
   Next Obligation.
     intros n m r1 r2 HLe HSub; rewrite HSub, HLe; tauto.
   Qed.
 
-  Global Program Instance impl_up : implBI (UPred Res) :=
+  Global Program Instance impl_up : implBI (UPred pres) :=
     fun P Q =>
       mkUPred (fun n r => forall m r', m <= n -> r ⊑ r' -> P m r' -> Q m r') _.
   Next Obligation.
@@ -170,40 +172,44 @@ Section UPredBI.
   Qed.
 
   (* BI connectives. *)
-  Global Program Instance sc_up : scBI (UPred Res) :=
+  Global Program Instance sc_up : scBI (UPred pres) :=
     fun P Q =>
-      mkUPred (fun n r => exists r1 r2, Some r1 · Some r2 == Some r /\ P n r1 /\ Q n r2) _.
+      mkUPred (fun n r => exists r1 r2, ra_proj r1 · ra_proj r2 == ra_proj r /\ P n r1 /\ Q n r2) _.
   Next Obligation.
     intros n m r1 r2 HLe [rd HEq] [r11 [r12 [HEq' [HP HQ]]]].
     rewrite <- HEq', assoc in HEq; setoid_rewrite HLe.
-    destruct (Some rd · Some r11) as [r11' |] eqn: HEq'';
-      [| erewrite pcm_op_zero in HEq by apply _; contradiction].
-    repeat eexists; [eassumption | | assumption].
-    eapply uni_pred, HP; [reflexivity |].
-    exists rd; rewrite HEq''; reflexivity.
+    assert(VAL: ✓ (rd · ra_proj r11) = true).
+    { eapply ra_op_pos_valid; eassumption. }
+    exists (ra_cr_pos VAL) r12.
+    split; [|split;[|assumption] ].
+    - simpl. assumption.
+    - eapply uni_pred, HP; [reflexivity|].
+      exists rd. reflexivity.
   Qed.
 
-  Global Program Instance si_up : siBI (UPred Res) :=
+  Global Program Instance si_up : siBI (UPred pres) :=
     fun P Q =>
-      mkUPred (fun n r => forall m r' rr, Some r · Some r' == Some rr -> m <= n -> P m r' -> Q m rr) _.
+      mkUPred (fun n r => forall m r' rr, ra_proj r · ra_proj r' == ra_proj rr -> m <= n -> P m r' -> Q m rr) _.
   Next Obligation.
     intros n m r1 r2 HLe [r12 HEq] HSI k r rr HEq' HSub HP.
     rewrite comm in HEq; rewrite <- HEq, <- assoc in HEq'.
-    destruct (Some r12 · Some r) as [r' |] eqn: HEq'';
-      [| erewrite comm, pcm_op_zero in HEq' by apply _; contradiction].
-    eapply HSI; [eassumption | etransitivity; eassumption |].
-    eapply uni_pred, HP; [| exists r12; rewrite HEq'']; reflexivity.
+    assert (VAL: ✓ (r12 · ra_proj r) = true).
+    { eapply ra_op_pos_valid. erewrite comm. eassumption. }
+    pose (rc := ra_cr_pos VAL).
+    eapply HSI with (r':=rc); [| etransitivity; eassumption |].
+    - simpl. assumption. 
+    - eapply uni_pred, HP; [reflexivity|]. exists r12. reflexivity.
   Qed.
 
   (* Quantifiers. *)
-  Global Program Instance all_up : allBI (UPred Res) :=
+  Global Program Instance all_up : allBI (UPred pres) :=
     fun T eqT mT cmT R =>
       mkUPred (fun n r => forall t, R t n r) _.
   Next Obligation.
     intros n m r1 r2 HLe HSub HR t; rewrite HLe, <- HSub; apply HR.
   Qed.
 
-  Global Program Instance xist_up : xistBI (UPred Res) :=
+  Global Program Instance xist_up : xistBI (UPred pres) :=
     fun T eqT mT cmT R =>
       mkUPred (fun n r => exists t, R t n r) _.
   Next Obligation.
@@ -254,7 +260,7 @@ Section UPredBI.
   Global Instance impl_up_dist n : Proper (dist n ==> dist n ==> dist n) impl_up.
   Proof.
     intros P1 P2 EQP Q1 Q2 EQQ m r HLt; simpl.
-    split; intros; apply EQQ, H, EQP; now eauto with arith.
+    split; intros; apply EQQ, H0, EQP; now eauto with arith.
   Qed.
   Global Instance impl_up_ord : Proper (pord --> pord ++> pord) impl_up.
   Proof.
@@ -287,7 +293,7 @@ Section UPredBI.
   Global Instance si_up_dist n : Proper (dist n ==> dist n ==> dist n) si_up.
   Proof.
     intros P1 P2 EQP Q1 Q2 EQQ m r HLt; simpl.
-    split; intros; eapply EQQ, H, EQP; now eauto with arith.
+    split; intros; eapply EQQ, H0, EQP; now eauto with arith.
   Qed.
   Global Instance si_up_ord : Proper (pord --> pord ++> pord) si_up.
   Proof.
@@ -300,23 +306,23 @@ Section UPredBI.
 
     Existing Instance nonexp_type.
 
-    Global Instance all_up_equiv : Proper (equiv (T := V -n> UPred Res) ==> equiv) all.
+    Global Instance all_up_equiv : Proper (equiv (T := V -n> UPred pres) ==> equiv) all.
     Proof.
       intros R1 R2 EQR n r; simpl.
       setoid_rewrite EQR; tauto.
     Qed.
-    Global Instance all_up_dist n : Proper (dist (T := V -n> UPred Res) n ==> dist n) all.
+    Global Instance all_up_dist n : Proper (dist (T := V -n> UPred pres) n ==> dist n) all.
     Proof.
       intros R1 R2 EQR m r HLt; simpl.
       split; intros; apply EQR; now auto.
     Qed.
 
-    Global Instance xist_up_equiv : Proper (equiv (T := V -n> UPred Res) ==> equiv) xist.
+    Global Instance xist_up_equiv : Proper (equiv (T := V -n> UPred pres) ==> equiv) xist.
     Proof.
       intros R1 R2 EQR n r; simpl.
       setoid_rewrite EQR; tauto.
     Qed.
-    Global Instance xist_up_dist n : Proper (dist (T := V -n> UPred Res)n ==> dist n) xist.
+    Global Instance xist_up_dist n : Proper (dist (T := V -n> UPred pres)n ==> dist n) xist.
     Proof.
       intros R1 R2 EQR m r HLt; simpl.
       split; intros [t HR]; exists t; apply EQR; now auto.
@@ -324,7 +330,7 @@ Section UPredBI.
 
   End Quantifiers.
 
-  Global Program Instance bi_up : ComplBI (UPred Res).
+  Global Program Instance bi_up : ComplBI (UPred pres).
   Next Obligation.
     intros n r _; exact I.
   Qed.
@@ -356,30 +362,32 @@ Section UPredBI.
   Qed.
   Next Obligation.
     intros P Q n r; simpl.
-    setoid_rewrite (comm (Commutative := pcm_op_comm _)) at 1.
+    setoid_rewrite (comm (Commutative := ra_op_comm _)) at 1.
     firstorder.
   Qed.
   Next Obligation.
     intros P Q R n r; split.
     - intros [r1 [rr [EQr [HP [r2 [r3 [EQrr [HQ HR]]]]]]]].
-      rewrite <- EQrr, assoc in EQr.
-      destruct (Some r1 · Some r2) as [r12 |] eqn: EQr';
-        [| now erewrite pcm_op_zero in EQr by apply _].
+      rewrite <- EQrr, assoc in EQr. unfold sc.
+      assert(VAL: ✓ (ra_proj r1 · ra_proj r2) = true).
+      { eapply ra_op_pos_valid; eassumption. }
+      pose (r12 := ra_cr_pos VAL).
       exists r12 r3; split; [assumption | split; [| assumption] ].
-      exists r1 r2; split; [rewrite EQr'; reflexivity | split; assumption].
+      exists r1 r2; split; [reflexivity | split; assumption].
     - intros [rr [r3 [EQr [[r1 [r2 [EQrr [HP HQ]]]] HR]]]].
       rewrite <- EQrr, <- assoc in EQr; clear EQrr.
-      destruct (Some r2 · Some r3) as [r23 |] eqn: EQ23;
-        [| now erewrite comm, pcm_op_zero in EQr by apply _].
+      assert(VAL: ✓ (ra_proj r2 · ra_proj r3) = true).
+      { eapply ra_op_pos_valid. rewrite comm. eassumption. }
+      pose (r23 := ra_cr_pos VAL).
       exists r1 r23; split; [assumption | split; [assumption |] ].
-      exists r2 r3; split; [rewrite EQ23; reflexivity | split; assumption].
+      exists r2 r3; split; [reflexivity | split; assumption].
   Qed.
   Next Obligation.
     intros n r; split.
     - intros [r1 [r2 [EQr [_ HP]]]].
-      eapply uni_pred, HP; [| exists r1]; trivial.
-    - intros HP; exists (pcm_unit _) r; split;
-      [erewrite pcm_op_unit by apply _; reflexivity |].
+      eapply uni_pred, HP; [reflexivity|]. exists (ra_proj r1). assumption.
+    - intros HP. exists (ra_pos_unit (T:=res)) r. split;
+      [simpl; erewrite ra_op_unit by apply _; reflexivity |].
       simpl; unfold const; tauto.
   Qed.
   Next Obligation.
@@ -394,7 +402,7 @@ Section UPredBI.
     - intros HH u n r HP; apply HH; assumption.
   Qed.
   Next Obligation.
-    intros n r HA u; apply H, HA.
+    intros n r HA u; apply H0, HA.
   Qed.
   Next Obligation.
     split.
@@ -405,7 +413,7 @@ Section UPredBI.
     intros n t [t1 [t2 [EQt [[u HP] HQ]]]]; exists u t1 t2; tauto.
   Qed.
   Next Obligation.
-    intros n r [u HA]; exists u; apply H, HA.
+    intros n r [u HA]; exists u; apply H0, HA.
   Qed.
 
 End UPredBI.
