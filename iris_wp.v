@@ -21,7 +21,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       intros σ σc HC; apply HC.
     Qed.
 
-    Implicit Types (P Q R : Props) (i : nat) (m : mask) (e : expr) (w : Wld) (φ : vPred) (r : res).
+    Implicit Types (P : Props) (i : nat) (m : mask) (e : expr) (w : Wld) (φ : vPred) (r : res).
 
     Local Obligation Tactic := intros; eauto with typeclass_instances.
 
@@ -215,207 +215,9 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
 
     Opaque wp.
 
-    Definition ht safe m P e φ := □ (P → wp safe m e φ).
+    Definition ht safe m P e Q := □ (P → wp safe m e Q).
 
   End HoareTriples.
-
-  Section Adequacy.
-    Local Open Scope mask_scope.
-    Local Open Scope pcm_scope.
-    Local Open Scope bi_scope.
-    Local Open Scope lang_scope.
-    Local Open Scope list_scope.
-
-    (* weakest-pre for a threadpool *)
-    Inductive wptp (safe : bool) (m : mask) (w : Wld) (n : nat) : tpool -> list res -> list vPred -> Prop :=
-    | wp_emp : wptp safe m w n nil nil nil
-    | wp_cons e φ r tp rs φs
-              (WPE  : wp safe m e φ w n r)
-              (WPTP : wptp safe m w n tp rs φs) :
-        wptp safe m w n (e :: tp) (r :: rs) (φ :: φs).
-
-    (* Trivial lemmas about split over append *)
-    Lemma wptp_app safe m w n tp1 tp2 rs1 rs2 φs1 φs2
-          (HW1 : wptp safe m w n tp1 rs1 φs1)
-          (HW2 : wptp safe m w n tp2 rs2 φs2) :
-      wptp safe m w n (tp1 ++ tp2) (rs1 ++ rs2) (φs1 ++ φs2).
-    Proof.
-      induction HW1; [| constructor]; now trivial.
-    Qed.
-
-    Lemma wptp_app_tp safe m w n t1 t2 rs φs
-          (HW : wptp safe m w n (t1 ++ t2) rs φs) :
-      exists rs1 rs2 φs1 φs2, rs1 ++ rs2 = rs /\ φs1 ++ φs2 = φs /\ wptp safe m w n t1 rs1 φs1 /\ wptp safe m w n t2 rs2 φs2.
-    Proof.
-      revert rs φs HW; induction t1; intros; inversion HW; simpl in *; subst; clear HW.
-      - do 4 eexists. split; [|split; [|split; now econstructor] ]; reflexivity.
-      - do 4 eexists. split; [|split; [|split; now eauto using wptp] ]; reflexivity.
-      - apply IHt1 in WPTP; destruct WPTP as [rs1 [rs2 [φs1 [φs2 [EQrs [EQφs [WP1 WP2] ] ] ] ] ] ]; clear IHt1.
-        exists (r :: rs1) rs2 (φ :: φs1) φs2; simpl; subst; now auto using wptp.
-    Qed.
-
-    (* Closure under future worlds and smaller steps *)
-    Lemma wptp_closure safe m (w1 w2 : Wld) n1 n2 tp rs φs
-          (HSW : w1 ⊑ w2) (HLe : n2 <= n1)
-          (HW : wptp safe m w1 n1 tp rs φs) :
-      wptp safe m w2 n2 tp rs φs.
-    Proof.
-      induction HW; constructor; [| assumption].
-      eapply uni_pred; [eassumption | reflexivity |].
-      rewrite <- HSW; assumption.
-    Qed.
-
-    Lemma preserve_wptp safe m n k tp tp' σ σ' w rs φs
-          (HSN  : stepn n (tp, σ) (tp', σ'))
-          (HWTP : wptp safe m w (n + S k) tp rs φs)
-          (HE   : wsat σ m (comp_list rs) w @ n + S k) :
-      exists w' rs' φs',
-        w ⊑ w' /\ wptp safe m w' (S k) tp' rs' (φs ++ φs') /\ wsat σ' m (comp_list rs') w' @ S k.
-    Proof.
-      revert tp σ w rs  φs HSN HWTP HE. induction n; intros; inversion HSN; subst; clear HSN.
-      (* no step is taken *)
-      { exists w rs (@nil vPred). split; [reflexivity|]. split.
-        - rewrite List.app_nil_r. assumption.
-        - assumption.
-      }
-      inversion HS; subst; clear HS.
-      (* atomic step *)
-      { inversion H0; subst; clear H0.
-        apply wptp_app_tp in HWTP; destruct HWTP as [rs1 [rs2 [φs1 [φs2 [EQrs [EQφs [HWTP1 HWTP2] ] ] ] ] ] ].
-        inversion HWTP2; subst; clear HWTP2; rewrite ->unfold_wp in WPE.
-        edestruct (WPE w (n + S k) (comp_list (rs1 ++ rs0))) as [_ [HS _] ];
-          [reflexivity | now apply le_n | now apply mask_emp_disjoint | |].
-        + eapply wsat_equiv, HE; try reflexivity; [apply mask_emp_union |].
-          rewrite !comp_list_app; simpl comp_list; unfold equiv.
-          rewrite ->assoc, (comm (Some r)), <- assoc. reflexivity.       
-        + edestruct HS as [w' [r' [HSW [WPE' HE'] ] ] ];
-          [reflexivity | eassumption | clear WPE HS].
-          setoid_rewrite HSW. eapply IHn; clear IHn.
-          * eassumption.
-          * apply wptp_app; [eapply wptp_closure, HWTP1; [assumption | now auto with arith] |].
-            constructor; [eassumption | eapply wptp_closure, WPTP; [assumption | now auto with arith] ].
-          * eapply wsat_equiv, HE'; [now erewrite mask_emp_union| |reflexivity].
-            rewrite !comp_list_app; simpl comp_list; unfold equiv.
-            rewrite ->2!assoc, (comm (Some r')). reflexivity.
-      }
-      (* fork *)
-      inversion H; subst; clear H.
-      apply wptp_app_tp in HWTP; destruct HWTP as [rs1 [rs2 [φs1 [φs2 [EQrs [EQφs [HWTP1 HWTP2] ] ] ] ] ] ].
-      inversion HWTP2; subst; clear HWTP2; rewrite ->unfold_wp in WPE.
-      edestruct (WPE w (n + S k) (comp_list (rs1 ++ rs0))) as [_ [_ [HF _] ] ];
-        [reflexivity | now apply le_n | now apply mask_emp_disjoint | |].
-      + eapply wsat_equiv, HE; try reflexivity; [apply mask_emp_union |].
-        rewrite !comp_list_app; simpl comp_list; unfold equiv.
-        rewrite ->assoc, (comm (Some r)), <- assoc. reflexivity.
-      + specialize (HF _ _ eq_refl); destruct HF as [w' [rfk [rret [HSW [WPE' [WPS HE'] ] ] ] ] ]; clear WPE.
-        setoid_rewrite HSW. edestruct IHn as [w'' [rs'' [φs'' [HSW'' [HSWTP'' HSE''] ] ] ] ]; first eassumption; first 2 last.
-        * exists w'' rs'' ([umconst ⊤] ++ φs''). split; [eassumption|].
-          rewrite List.app_assoc. split; eassumption.
-        * rewrite -List.app_assoc. apply wptp_app; [eapply wptp_closure, HWTP1; [assumption | now auto with arith] |].
-          constructor; [eassumption|].
-          apply wptp_app; [eapply wptp_closure, WPTP; [assumption | now auto with arith] |].
-          constructor; [|now constructor]. eassumption.
-        * eapply wsat_equiv, HE'; try reflexivity; [symmetry; apply mask_emp_union |].
-          rewrite comp_list_app. simpl comp_list. rewrite !comp_list_app. simpl comp_list.
-          rewrite (comm _ 1). erewrite pcm_op_unit by apply _. unfold equiv.
-          rewrite (comm _ (Some rfk)). rewrite ->!assoc. apply pcm_op_equiv;[|reflexivity]. unfold equiv.
-          rewrite <-assoc, (comm (Some rret)), comm. reflexivity.
-    Qed.
-
-    Lemma adequacy_ht {safe m e P φ n k tp' σ σ' w r}
-            (HT  : valid (ht safe m P e φ))
-            (HSN : stepn n ([e], σ) (tp', σ'))
-            (HP  : P w (n + S k) r)
-            (HE  : wsat σ m (Some r) w @ n + S k) :
-      exists w' rs' φs',
-        w ⊑ w' /\ wptp safe m w' (S k) tp' rs' (φ :: φs') /\ wsat σ' m (comp_list rs') w' @ S k.
-    Proof.
-      edestruct preserve_wptp with (rs:=[r]) as [w' [rs' [φs' [HSW' [HSWTP' HSWS'] ] ] ] ]; [eassumption | | simpl comp_list; erewrite comm, pcm_op_unit by apply _; eassumption | clear HT HSN HP HE].
-      - specialize (HT w (n + S k) r). apply HT in HP; try reflexivity; [|now apply unit_min].
-        econstructor; [|now econstructor]. eassumption.
-      - exists w' rs' φs'. now auto.
-    Qed.
-
-    (** This is a (relatively) generic adequacy statement for triples about an entire program: They always execute to a "good" threadpool. It does not expect the program to execute to termination.  *)
-    Theorem adequacy_glob safe m e φ tp' σ σ' k'
-            (HT  : valid (ht safe m (ownS σ) e φ))
-            (HSN : steps ([e], σ) (tp', σ')):
-      exists w' rs' φs',
-        wptp safe m w' (S k') tp' rs' (φ :: φs') /\ wsat σ' m (comp_list rs') w' @ S k'.
-    Proof.
-      destruct (steps_stepn _ _ HSN) as [n HSN']. clear HSN.
-      edestruct (adequacy_ht (w:=fdEmpty) (k:=k') (r:=(ex_own _ σ, pcm_unit _)) HT HSN') as [w' [rs' [φs' [HW [HSWTP HWS] ] ] ] ]; clear HT HSN'.
-      - exists (pcm_unit _); now rewrite ->pcm_op_unit by apply _.
-      - hnf. rewrite Plus.plus_comm. exists (fdEmpty (V:=res)). split.
-        + assert (HS : Some (ex_own _ σ, pcm_unit _) · 1 = Some (ex_own _ σ, pcm_unit _));
-          [| now setoid_rewrite HS].
-          eapply ores_equiv_eq; now erewrite comm, pcm_op_unit by apply _.
-        + intros i _; split; [reflexivity |].
-          intros _ _ [].
-      - do 3 eexists. split; [eassumption|]. assumption.
-    Qed.
-
-    Program Definition lift_pred (φ : value -=> Prop): vPred :=
-      n[(fun v => pcmconst (mkUPred (fun n r => φ v) _))].
-    Next Obligation.
-      firstorder.
-    Qed.
-    Next Obligation.
-      intros x y H_xy P m r. simpl in H_xy. destruct n.
-      - intros LEZ. exfalso. omega.
-      - intros _. simpl. assert(H_xy': equiv x y) by assumption. rewrite H_xy'. tauto.
-    Qed.
-
-      
-    (* Adequacy as stated in the paper: for observations of the return value, after termination *)
-    Theorem adequacy_obs safe m e (φ : value -=> Prop) e' tp' σ σ'
-            (HT  : valid (ht safe m (ownS σ) e (lift_pred φ)))
-            (HSN : steps ([e], σ) (e' :: tp', σ'))
-            (HV : is_value e') :
-        φ (exist _ e' HV).
-    Proof.
-      edestruct adequacy_glob as [w' [rs' [φs' [HSWTP HWS] ] ] ]; try eassumption.
-      inversion HSWTP; subst; clear HSWTP WPTP.
-      rewrite ->unfold_wp in WPE.
-      edestruct (WPE w' O) as [HVal _];
-        [reflexivity | unfold lt; reflexivity | now apply mask_emp_disjoint | rewrite mask_emp_union; eassumption |].
-      fold comp_list in HVal.
-      specialize (HVal HV); destruct HVal as [w'' [r'' [HSW'' [Hφ'' HE''] ] ] ].
-      destruct (Some r'' · comp_list rs) as [r''' |] eqn: EQr.
-      + assumption.
-      + exfalso. eapply wsat_not_empty, HE''. reflexivity.
-    Qed.
-
-    (* Adequacy for safe triples *)
-    Theorem adequacy_safe m e (φ : vPred) tp' σ σ' e'
-            (HT  : valid (ht true m (ownS σ) e φ))
-            (HSN : steps ([e], σ) (tp', σ'))
-            (HE  : e' ∈ tp'):
-      safeExpr e' σ'.
-    Proof.
-      edestruct adequacy_glob as [w' [rs' [φs' [HSWTP HWS] ] ] ]; try eassumption.
-      destruct (List.in_split _ _ HE) as [tp1 [tp2 HTP] ]. clear HE. subst tp'.
-      apply wptp_app_tp in HSWTP; destruct HSWTP as [rs1 [rs2 [_ [φs2 [EQrs [_ [_ HWTP2] ] ] ] ] ] ].
-      inversion HWTP2; subst; clear HWTP2 WPTP.
-      rewrite ->unfold_wp in WPE.
-      edestruct (WPE w' O) as [_ [_ [_ HSafe] ] ];
-        [reflexivity | unfold lt; reflexivity | now apply mask_emp_disjoint | |].
-      - rewrite mask_emp_union.
-        eapply wsat_equiv, HWS; try reflexivity.
-        rewrite comp_list_app. simpl comp_list.
-        rewrite ->(assoc (comp_list rs1)), ->(comm (comp_list rs1) (Some r)), <-assoc. reflexivity.
-      - apply HSafe. reflexivity.
-    Qed.
-
-  End Adequacy.
-
-(*  Section Lifting.
-
-    Theorem lift_pure_step e (e's : expr -=> Prop) P Q mask
-            (RED  : reducible e)
-            (STEP : forall σ e' σ', prim_step (e, σ) (e', σ') -> 
-
-  End Lifting. *)
   
   Section HoareTripleProperties.
     Local Open Scope mask_scope.
@@ -425,7 +227,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
 
     Existing Instance LP_isval.
 
-    Implicit Types (P Q R : Props) (i : nat) (safe : bool) (m : mask) (e : expr) (φ : vPred) (r : res).
+    Implicit Types (P : Props) (i : nat) (safe : bool) (m : mask) (e : expr) (Q : vPred) (r : res).
 
     (** Ret **)
     Program Definition eqV v : vPred :=
@@ -460,20 +262,20 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
     (** Quantification in the logic works over nonexpansive maps, so
         we need to show that plugging the value into the postcondition
         and context is nonexpansive. *)
-    Program Definition plugV safe m φ φ' K :=
-      n[(fun v : value => ht safe m (φ v) (K [[` v]]) φ')].
+    Program Definition plugV safe m Q Q' K :=
+      n[(fun v : value => ht safe m (Q v) (K [[` v]]) Q')].
     Next Obligation.
       intros v1 v2 EQv; unfold ht; eapply (met_morph_nonexp _ _ box).
       eapply (impl_dist (ComplBI := Props_BI)).
-      - apply φ; assumption.
+      - apply Q; assumption.
       - destruct n as [| n]; [apply dist_bound | simpl in EQv].
         rewrite EQv; reflexivity.
     Qed.
 
     Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
 
-    Lemma htBind P φ ψ K e safe m :
-      ht safe m P e φ ∧ all (plugV safe m φ ψ K) ⊑ ht safe m P (K [[ e ]]) ψ.
+    Lemma htBind P Q R K e safe m :
+      ht safe m P e Q ∧ all (plugV safe m Q R K) ⊑ ht safe m P (K [[ e ]]) R.
     Proof.
       intros wz nz rz [He HK] w HSw n r HLe _ HP.
       specialize (He _ HSw _ _ HLe (unit_min _ _) HP).
@@ -485,7 +287,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
         clear He HE; specialize (HV HVal); destruct HV as [w'' [r' [HSw' [Hφ HE] ] ] ].
         (* Fold the goal back into a wp *)
         setoid_rewrite HSw'.
-        assert (HT : wp safe m (K [[ e ]]) ψ w'' (S k) r');
+        assert (HT : wp safe m (K [[ e ]]) R w'' (S k) r');
           [| rewrite ->unfold_wp in HT; eapply HT; [reflexivity | unfold lt; reflexivity | eassumption | eassumption] ].
         clear HE; specialize (HK (exist _ e HVal)).
         do 30 red in HK; unfold proj1_sig in HK.
@@ -522,55 +324,55 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
     (** Much like in the case of the plugging, we need to show that
         the map from a value to a view shift between the applied
         postconditions is nonexpansive *)
-    Program Definition vsLift m1 m2 φ φ' :=
+    Program Definition vsLift m1 m2 (φ φ' : vPred) :=
       n[(fun v => vs m1 m2 (φ v) (φ' v))].
     Next Obligation.
       intros v1 v2 EQv; unfold vs.
       rewrite ->EQv; reflexivity.
     Qed.
 
-    Lemma htCons P P' φ φ' safe m e :
-      vs m m P P' ∧ ht safe m P' e φ' ∧ all (vsLift m m φ' φ) ⊑ ht safe m P e φ.
+    Lemma htCons P P' Q Q' safe m e :
+      vs m m P P' ∧ ht safe m P' e Q' ∧ all (vsLift m m Q' Q) ⊑ ht safe m P e Q.
     Proof.
-      intros wz nz rz [ [HP He] Hφ] w HSw n r HLe _ Hp.
+      intros wz nz rz [ [HP He] HQ] w HSw n r HLe _ Hp.
       specialize (HP _ HSw _ _ HLe (unit_min _ _) Hp); rewrite unfold_wp.
-      rewrite <- HLe, HSw in He, Hφ; clear wz nz HSw HLe Hp.
+      rewrite <- HLe, HSw in He, HQ; clear wz nz HSw HLe Hp.
       intros w'; intros; edestruct HP as [w'' [r' [HSw' [Hp' HE'] ] ] ]; try eassumption; [now rewrite mask_union_idem |].
       clear HP HE; rewrite ->HSw in He; specialize (He w'' HSw' _ r' HLt (unit_min _ _) Hp').
       setoid_rewrite HSw'.
-      assert (HT : wp safe m e φ w'' (S k) r');
+      assert (HT : wp safe m e Q w'' (S k) r');
         [| rewrite ->unfold_wp in HT; eapply HT; [reflexivity | apply le_n | eassumption | eassumption] ].
-      unfold lt in HLt; rewrite ->HSw, HSw', <- HLt in Hφ; clear - He Hφ.
+      unfold lt in HLt; rewrite ->HSw, HSw', <- HLt in HQ; clear - He HQ.
       (* Second phase of the proof: got rid of the preconditions,
          now induction takes care of the evaluation. *)
       rename r' into r; rename w'' into w.
-      revert w r e He Hφ; generalize (S k) as n; clear k; induction n using wf_nat_ind.
+      revert w r e He HQ; generalize (S k) as n; clear k; induction n using wf_nat_ind.
       rename H into IH; intros; rewrite ->unfold_wp; rewrite ->unfold_wp in He.
       intros w'; intros; edestruct He as [HV [HS [HF HS'] ] ]; try eassumption; [].
       split; [intros HVal; clear HS HF IH HS' | split; intros; [clear HV HF HS' | split; [intros; clear HV HS HS' | clear HV HS HF ] ] ].
-      - clear He HE; specialize (HV HVal); destruct HV as [w'' [r' [HSw' [Hφ' HE] ] ] ].
-        eapply Hφ in Hφ'; [| etransitivity; eassumption | apply HLt | apply unit_min].
-        clear w n HSw Hφ HLt; edestruct Hφ' as [w [r'' [HSw [Hφ HE'] ] ] ];
+      - clear He HE; specialize (HV HVal); destruct HV as [w'' [r' [HSw' [HQ' HE] ] ] ].
+        eapply HQ in HQ'; [| etransitivity; eassumption | apply HLt | apply unit_min].
+        clear w n HSw HQ HLt; edestruct HQ' as [w [r'' [HSw [HQ HE'] ] ] ];
         [reflexivity | apply le_n | rewrite mask_union_idem; eassumption | eassumption |].
         exists w r''; split; [etransitivity; eassumption | split; assumption].
       - clear HE He; edestruct HS as [w'' [r' [HSw' [He HE] ] ] ];
         try eassumption; clear HS.
         do 2 eexists; split; [eassumption | split; [| eassumption] ].
         apply IH; try assumption; [].
-        unfold lt in HLt; rewrite ->Le.le_n_Sn, HLt, <- HSw', <- HSw; apply Hφ.
+        unfold lt in HLt; rewrite ->Le.le_n_Sn, HLt, <- HSw', <- HSw; apply HQ.
       - clear HE He; edestruct HF as [w'' [rfk [rret [HSw' [HWF [HWR HE] ] ] ] ] ]; [eassumption |].
         clear HF; do 3 eexists; split; [eassumption | split; [| split; eassumption] ].
         apply IH; try assumption; [].
-        unfold lt in HLt; rewrite ->Le.le_n_Sn, HLt, <- HSw', <- HSw; apply Hφ.
+        unfold lt in HLt; rewrite ->Le.le_n_Sn, HLt, <- HSw', <- HSw; apply HQ.
       - assumption.
     Qed.
 
-    Lemma htACons safe m m' e P P' φ φ'
+    Lemma htACons safe m m' e P P' Q Q'
           (HAt   : atomic e)
           (HSub  : m' ⊆ m) :
-      vs m m' P P' ∧ ht safe m' P' e φ' ∧ all (vsLift m' m φ' φ) ⊑ ht safe m P e φ.
+      vs m m' P P' ∧ ht safe m' P' e Q' ∧ all (vsLift m' m Q' Q) ⊑ ht safe m P e Q.
     Proof.
-      intros wz nz rz [ [HP He] Hφ] w HSw n r HLe _ Hp.
+      intros wz nz rz [ [HP He] HQ] w HSw n r HLe _ Hp.
       specialize (HP _ HSw _ _ HLe (unit_min _ _) Hp); rewrite unfold_wp.
       split; [intros HV; contradiction (atomic_not_value e) |].
       edestruct HP as [w'' [r' [HSw' [Hp' HE'] ] ] ]; try eassumption; [|]; clear HP.
@@ -578,9 +380,9 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
         destruct Hmm'; [| apply HSub]; assumption.
       }
       split; [| split; [intros; subst; contradiction (fork_not_atomic K e') |] ].
-      - intros; rewrite <- HLe, HSw in He, Hφ; clear wz nz HSw HLe Hp.
+      - intros; rewrite <- HLe, HSw in He, HQ; clear wz nz HSw HLe Hp.
         clear HE; rewrite ->HSw0 in He; specialize (He w'' HSw' _ r' HLt (unit_min _ _) Hp').
-        unfold lt in HLt; rewrite ->HSw0, <- HLt in Hφ; clear w n HSw0 HLt Hp'.
+        unfold lt in HLt; rewrite ->HSw0, <- HLt in HQ; clear w n HSw0 HLt Hp'.
         rewrite ->unfold_wp in He; edestruct He as [_ [HS _] ];
           [reflexivity | apply le_n | rewrite ->HSub; eassumption | eassumption |].
         edestruct HS as [w [r'' [HSw [He' HE] ] ] ]; try eassumption; clear He HS HE'.
@@ -591,27 +393,27 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
         rewrite ->fill_empty in *; rename ei into e.
         setoid_rewrite HSw'; setoid_rewrite HSw.
         assert (HVal := atomic_step _ _ _ _ HAt HStep).
-        rewrite ->HSw', HSw in Hφ; clear - HE He' Hφ HSub HVal HD.
+        rewrite ->HSw', HSw in HQ; clear - HE He' HQ HSub HVal HD.
         rewrite ->unfold_wp in He'; edestruct He' as [HV _];
         [reflexivity | apply le_n | rewrite ->HSub; eassumption | eassumption |].
-        clear HE He'; specialize (HV HVal); destruct HV as [w' [r [HSw [Hφ' HE] ] ] ].
-        eapply Hφ in Hφ'; [| assumption | apply Le.le_n_Sn | apply unit_min].
-        clear Hφ; edestruct Hφ' as [w'' [r' [HSw' [Hφ HE'] ] ] ];
+        clear HE He'; specialize (HV HVal); destruct HV as [w' [r [HSw [HQ' HE] ] ] ].
+        eapply HQ in HQ'; [| assumption | apply Le.le_n_Sn | apply unit_min].
+        clear HQ; edestruct HQ' as [w'' [r' [HSw' [HQ HE'] ] ] ];
           [reflexivity | apply le_n | | eassumption |].
         { intros j [Hmf Hmm']; apply (HD j); split; [assumption |].
           destruct Hmm'; [apply HSub |]; assumption.
         }
-        clear Hφ' HE; exists w'' r'; split;
+        clear HQ' HE; exists w'' r'; split;
         [etransitivity; eassumption | split; [| eassumption] ].
-        clear - Hφ; rewrite ->unfold_wp; intros w; intros; split; [intros HVal' | split; intros; [intros; exfalso|split; [intros |] ] ].
+        clear - HQ; rewrite ->unfold_wp; intros w; intros; split; [intros HVal' | split; intros; [intros; exfalso|split; [intros |] ] ].
         + do 2 eexists; split; [reflexivity | split; [| eassumption] ].
           unfold lt in HLt; rewrite ->HLt, <- HSw.
-          eapply φ, Hφ; [| apply le_n]; simpl; reflexivity.
+          eapply Q, HQ; [| apply le_n]; simpl; reflexivity.
         + eapply values_stuck; [.. | repeat eexists]; eassumption.
         + clear - HDec HVal; subst; assert (HT := fill_value _ _ HVal); subst.
           rewrite ->fill_empty in HVal; now apply fork_not_value in HVal.
         + intros; left; assumption.
-      - clear Hφ; intros; rewrite <- HLe, HSw in He; clear HLe HSw.
+      - clear HQ; intros; rewrite <- HLe, HSw in He; clear HLe HSw.
         specialize (He w'' (transitivity HSw0 HSw') _ r' HLt (unit_min _ _) Hp').
         rewrite ->unfold_wp in He; edestruct He as [_ [_ [_ HS'] ] ];
           [reflexivity | apply le_n | rewrite ->HSub; eassumption | eassumption |].
@@ -649,8 +451,8 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       - auto.
     Qed.
 
-    Lemma htFrame safe m m' P R e φ (HD : m # m') :
-      ht safe m P e φ ⊑ ht safe (m ∪ m') (P * R) e (lift_bin sc φ (umconst R)).
+    Lemma htFrame safe m m' P R e Q (HD : m # m') :
+      ht safe m P e Q ⊑ ht safe (m ∪ m') (P * R) e (lift_bin sc Q (umconst R)).
     Proof.
       intros w n rz He w' HSw n' r HLe _ [r1 [r2 [EQr [HP HLR] ] ] ].
       specialize (He _ HSw _ _ HLe (unit_min _ _) HP).
@@ -683,10 +485,10 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
       - auto.
     Qed.
 
-    Lemma htAFrame safe m m' P R e φ
+    Lemma htAFrame safe m m' P R e Q
           (HD  : m # m')
           (HAt : atomic e) :
-      ht safe m P e φ ⊑ ht safe (m ∪ m') (P * ▹ R) e (lift_bin sc φ (umconst R)).
+      ht safe m P e Q ⊑ ht safe (m ∪ m') (P * ▹ R) e (lift_bin sc Q (umconst R)).
     Proof.
       intros w n rz He w' HSw n' r HLe _ [r1 [r2 [EQr [HP HLR] ] ] ].
       specialize (He _ HSw _ _ HLe (unit_min _ _) HP).
@@ -772,7 +574,7 @@ Module IrisWP (RL : PCM_T) (C : CORE_LANG).
 
     Existing Instance LP_isval.
 
-    Implicit Types (P Q R : Props) (i : nat) (m : mask) (e : expr) (φ : vPred) (r : res).
+    Implicit Types (P : Props) (i : nat) (m : mask) (e : expr) (r : res).
 
     Lemma vsFalse m1 m2 :
       valid (vs m1 m2 ⊥ ⊥).

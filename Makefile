@@ -85,6 +85,7 @@ VFILES:=core_lang.v\
   iris_unsafe.v\
   iris_vs.v\
   iris_wp.v\
+  iris_meta.v\
   lang.v\
   masks.v\
   world_prop.v
