@@ -178,7 +178,7 @@ Section UPredBI.
   Next Obligation.
     intros n m r1 r2 HLe [rd HEq] [r11 [r12 [HEq' [HP HQ]]]].
     rewrite <- HEq', assoc in HEq; setoid_rewrite HLe.
-    assert(VAL: ✓ (rd · ra_proj r11) = true).
+    assert(VAL: ✓ (rd · ra_proj r11) ).
     { eapply ra_op_pos_valid; eassumption. }
     exists (ra_cr_pos VAL) r12.
     split; [|split;[|assumption] ].
@@ -193,7 +193,7 @@ Section UPredBI.
   Next Obligation.
     intros n m r1 r2 HLe [r12 HEq] HSI k r rr HEq' HSub HP.
     rewrite comm in HEq; rewrite <- HEq, <- assoc in HEq'.
-    assert (VAL: ✓ (r12 · ra_proj r) = true).
+    assert (VAL: ✓ (r12 · ra_proj r) ).
     { eapply ra_op_pos_valid. erewrite comm. eassumption. }
     pose (rc := ra_cr_pos VAL).
     eapply HSI with (r':=rc); [| etransitivity; eassumption |].
@@ -369,14 +369,14 @@ Section UPredBI.
     intros P Q R n r; split.
     - intros [r1 [rr [EQr [HP [r2 [r3 [EQrr [HQ HR]]]]]]]].
       rewrite <- EQrr, assoc in EQr. unfold sc.
-      assert(VAL: ✓ (ra_proj r1 · ra_proj r2) = true).
+      assert(VAL: ✓ (ra_proj r1 · ra_proj r2) ).
       { eapply ra_op_pos_valid; eassumption. }
       pose (r12 := ra_cr_pos VAL).
       exists r12 r3; split; [assumption | split; [| assumption] ].
       exists r1 r2; split; [reflexivity | split; assumption].
     - intros [rr [r3 [EQr [[r1 [r2 [EQrr [HP HQ]]]] HR]]]].
       rewrite <- EQrr, <- assoc in EQr; clear EQrr.
-      assert(VAL: ✓ (ra_proj r2 · ra_proj r3) = true).
+      assert(VAL: ✓ (ra_proj r2 · ra_proj r3) ).
       { eapply ra_op_pos_valid. rewrite comm. eassumption. }
       pose (r23 := ra_cr_pos VAL).
       exists r1 r23; split; [assumption | split; [assumption |] ].
@@ -729,7 +729,7 @@ Section MComplUP.
 
 End MComplUP.
 
-(* The above suffice for showing that the eqn used in Rose actually forms a Complete BI.
+(* The above suffice for showing that the eqn used in Iris actually forms a Complete BI.
    The following would allow for further monotone morphisms to be added. *)
 
 Section MComplMM.

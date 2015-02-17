@@ -24,13 +24,17 @@ Section Definitions.
         ra_op_unit t       : ra_op ra_unit t == t;
         ra_valid_proper    :> Proper (equiv ==> eq) ra_valid;
         ra_valid_unit      : ra_valid ra_unit = true;
-        ra_op_invalid t1 t2: ra_valid t1 = false -> ra_valid (ra_op t1 t2) = false
+        ra_op_valid t1 t2  : ra_valid (ra_op t1 t2) = true -> ra_valid t1 = true
       }.
 End Definitions.
+Arguments ra_valid {T} {_} t.
 
 Notation "1" := (ra_unit _) : ra_scope.
 Notation "p · q" := (ra_op _ p q) (at level 40, left associativity) : ra_scope.
-Notation "'✓' p" := (ra_valid _ p) (at level 35) : ra_scope.
+Notation "'✓' p" := (ra_valid p = true) (at level 35) : ra_scope.
+Notation "'~' '✓' p" := (ra_valid p <> true) (at level 35) : ra_scope.
+
+Tactic Notation "decide✓" ident(t1) "eqn:" ident(H) := destruct (ra_valid t1) eqn:H; [|apply not_true_iff_false in H].
 
 Delimit Scope ra_scope with ra.
 
@@ -43,22 +47,22 @@ Section RAs.
   Proof.
     rewrite comm. now eapply ra_op_unit.
   Qed.
-
-  Lemma ra_op_invalid2 t1 t2: ✓ t2 = false -> ✓ (t1 · t2) = false.
-  Proof.
-    rewrite comm. now eapply ra_op_invalid.
-  Qed.
-
-  Lemma ra_op_valid t1 t2: ✓ (t1 · t2) = true -> ✓ t1 = true.
-  Proof.
-    intros Hval.
-    destruct (✓ t1) eqn:Heq; [reflexivity|].
-    rewrite <-Hval. symmetry. now eapply ra_op_invalid.
-  Qed.
-
-  Lemma ra_op_valid2 t1 t2: ✓ (t1 · t2) = true -> ✓ t2 = true.
+  
+  Lemma ra_op_valid2 t1 t2: ✓ (t1 · t2) -> ✓ t2.
   Proof.
     rewrite comm. now eapply ra_op_valid.
+  Qed.
+
+  Lemma ra_op_invalid t1 t2: ~✓t1 -> ~✓(t1 · t2).
+  Proof.
+    intros Hinval Hval.
+    apply Hinval.
+    eapply ra_op_valid; now eauto.
+  Qed.
+
+  Lemma ra_op_invalid2 t1 t2: ~✓t2 -> ~✓(t1 · t2).
+  Proof.
+    rewrite comm. now eapply ra_op_invalid.
   Qed.
 End RAs.
 
@@ -74,7 +78,7 @@ Section Products.
         | (s1, t1), (s2, t2) => (s1 · s2, t1 · t2)
       end.
   Global Instance ra_valid_prod : RA_valid (S * T) :=
-    fun st => match st with (s, t) => ✓ s && ✓ t
+    fun st => match st with (s, t) => ra_valid s && ra_valid t
               end.
   Global Instance ra_prod : RA (S * T).
   Proof.
@@ -87,9 +91,9 @@ Section Products.
     - intros [s1 t1] [s2 t2] [Heqs Heqt]. unfold ra_valid; simpl in *.
       rewrite Heqs, Heqt. reflexivity.
     - unfold ra_unit, ra_valid; simpl. erewrite !ra_valid_unit by apply _. reflexivity.
-    - intros [s1 t1] [s2 t2]. unfold ra_valid; simpl. rewrite !andb_false_iff. intros [Hv|Hv].
-      + left. now eapply ra_op_invalid.
-      + right. now eapply ra_op_invalid.
+    - intros [s1 t1] [s2 t2]. unfold ra_valid; simpl. rewrite !andb_true_iff. intros [H1 H2]. split.
+      + eapply ra_op_valid; now eauto.
+      + eapply ra_op_valid; now eauto.
   Qed.
 
 End Products.
@@ -98,11 +102,11 @@ Section PositiveCarrier.
   Context {T} `{raT : RA T}.
   Local Open Scope ra_scope.
 
-  Definition ra_pos: Type := { r | ✓ r = true }.
+  Definition ra_pos: Type := { r | ✓ r }.
   Coercion ra_proj (t:ra_pos): T := proj1_sig t.
 
-  Definition ra_mk_pos t {VAL: ✓ t = true}: ra_pos := exist _ t VAL.
-  Definition ra_cr_pos {t} (VAL: ✓ t = true) := ra_mk_pos t (VAL:=VAL).
+  Definition ra_mk_pos t {VAL: ✓ t}: ra_pos := exist _ t VAL.
+  Definition ra_cr_pos {t} (VAL: ✓ t) := ra_mk_pos t (VAL:=VAL).
 
   Program Definition ra_pos_unit: ra_pos := exist _ 1 _.
   Next Obligation.
@@ -110,14 +114,14 @@ Section PositiveCarrier.
   Qed.
 
   Lemma ra_op_pos_valid t1 t2 t:
-    t1 · t2 == ra_proj t -> ✓ t1 = true.
+    t1 · t2 == ra_proj t -> ✓ t1.
   Proof.
     destruct t as [t Hval]; simpl. intros Heq. rewrite <-Heq in Hval.
-    eapply ra_op_valid. eassumption.
+    eapply ra_op_valid; eassumption.
   Qed.
 
   Lemma ra_op_pos_valid2 t1 t2 t:
-    t1 · t2 == ra_proj t -> ✓ t2 = true.
+    t1 · t2 == ra_proj t -> ✓ t2.
   Proof.
     rewrite comm. now eapply ra_op_pos_valid.
   Qed.

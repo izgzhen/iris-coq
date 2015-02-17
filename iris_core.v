@@ -14,7 +14,7 @@ Module IrisRes (RL : RA_T) (C : CORE_LANG) <: RA_T.
   (* The order on (ra_pos res) is inferred correctly, but this one is not *)
   Instance res_pord: preoType res := ra_preo res.
 End IrisRes.
-  
+
 Module IrisCore (RL : RA_T) (C : CORE_LANG).
   Export C.
   Module Export R  := IrisRes RL C.
@@ -188,8 +188,8 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
     Proof.
       intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
       - destruct Hut as [s Heq]. rewrite assoc in Heq.
-        assert (VALu:✓(s · u) = true). { eapply ra_op_pos_valid. eassumption. }
-        assert (VALt:✓t = true). { eapply ra_op_pos_valid2. eassumption. }
+        assert (VALu:✓(s · u) ). { eapply ra_op_pos_valid. eassumption. }
+        assert (VALt:✓t ). { eapply ra_op_pos_valid2. eassumption. }
         exists (ra_mk_pos (s · u) (VAL:=VALu)). exists (ra_mk_pos t (VAL:=VALt)).
         split; [|split].
         + rewrite <-Heq. reflexivity.
@@ -201,12 +201,11 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
         rewrite <-assoc, (comm _ u), assoc. reflexivity.
     Qed.
 
-    Lemma ownR_valid u (INVAL: ✓u = false):
+    Lemma ownR_valid u (INVAL: ~✓u):
       ownR u ⊑ ⊥.
     Proof.
       intros w n [r VAL] [v Heq]. hnf. unfold ra_proj, proj1_sig in Heq.
-      rewrite <-Heq in VAL. apply ra_op_valid2 in VAL. rewrite INVAL in VAL.
-      discriminate.
+      rewrite <-Heq in VAL. apply ra_op_valid2 in VAL. contradiction.
     Qed.
 
     (** Proper physical state: ownership of the machine state **)
@@ -345,7 +344,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
         rewrite !assoc, (comm (_ r2)); reflexivity.
     Qed.
 
-    Definition state_sat (r: res) σ: Prop := ✓r = true /\
+    Definition state_sat (r: res) σ: Prop := ✓r /\
       match r with
         | (ex_own s, _) => s = σ
         | _ => True
@@ -402,12 +401,12 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
         apply HR; [reflexivity | assumption].
     Qed.
 
-    Lemma wsat_not_empty σ m (r: res) w k (HN : ✓r = false) :
+    Lemma wsat_not_empty σ m (r: res) w k (HN : ~✓r) :
       ~ wsat σ m r w (S k) tt.
     Proof.
       intros [rs [HD _] ]. destruct HD as [VAL _].
-      assert(VALr:✓r = true).
-      { eapply ra_op_valid. eassumption. }
+      assert(VALr:✓r).
+      { eapply ra_op_valid; [now apply _|]. eassumption. }
       congruence.
     Qed.
 
