@@ -173,11 +173,40 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
     (* We define this on *any* resource, not just the positive (valid) ones.
        Note that this makes ownR trivially *False* for invalid u: There is no
        elment v such that u · v = r (where r is valid) *)
-    Program Definition ownR (u : res) : Props :=
-      pcmconst (mkUPred(fun n r => u ⊑ ra_proj r) _).
+    Program Definition ownR: res -=> Props :=
+      s[(fun u => pcmconst (mkUPred(fun n r => u ⊑ ra_proj r) _) )].
     Next Obligation.
       intros n m r1 r2 Hle [d Hd ] [e He]. change (u ⊑ (ra_proj r2)). rewrite <-Hd, <-He.
       exists (d · e). rewrite assoc. reflexivity.
+    Qed.
+    Next Obligation.
+      intros u1 u2 Hequ. intros w n r. split; intros [t Heqt]; exists t; [rewrite <-Hequ|rewrite Hequ]; assumption.
+    Qed.
+
+    Lemma ownR_sc u t:
+      ownR (u · t) == ownR u * ownR t.
+    Proof.
+      intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
+      - destruct Hut as [s Heq]. rewrite assoc in Heq.
+        assert (VALu:✓(s · u) = true). { eapply ra_op_pos_valid. eassumption. }
+        assert (VALt:✓t = true). { eapply ra_op_pos_valid2. eassumption. }
+        exists (ra_mk_pos (s · u) (VAL:=VALu)). exists (ra_mk_pos t (VAL:=VALt)).
+        split; [|split].
+        + rewrite <-Heq. reflexivity.
+        + exists s. reflexivity.
+        + do 13 red. reflexivity.
+      - destruct Hu as [u' Hequ]. destruct Ht as [t' Heqt].
+        exists (u' · t'). rewrite <-EQr, <-Hequ, <-Heqt.
+        rewrite !assoc. eapply ra_op_proper; try (reflexivity || now apply _).
+        rewrite <-assoc, (comm _ u), assoc. reflexivity.
+    Qed.
+
+    Lemma ownR_valid u (INVAL: ✓u = false):
+      ownR u ⊑ ⊥.
+    Proof.
+      intros w n [r VAL] [v Heq]. hnf. unfold ra_proj, proj1_sig in Heq.
+      rewrite <-Heq in VAL. apply ra_op_valid2 in VAL. rewrite INVAL in VAL.
+      discriminate.
     Qed.
 
     (** Proper physical state: ownership of the machine state **)
@@ -185,7 +214,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
       n[(fun s => ownR (ex_own _ s, 1%ra))].
     Next Obligation.
       intros r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
-      simpl in EQr. subst; reflexivity.
+      rewrite EQr. reflexivity.
     Qed.
 
     (** Proper ghost state: ownership of logical **)
@@ -196,38 +225,15 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
       simpl in EQr. intros w m t. simpl. change ( (ex_unit state, r1) ⊑ (ra_proj t) <->  (ex_unit state, r2) ⊑ (ra_proj t)). rewrite EQr. reflexivity.
     Qed.
 
-    Lemma ownL_iff u w n r: ownL u w n r <-> exists VAL, (ra_mk_pos (1, u) (VAL:=VAL)) ⊑ r.
-    Proof.
-      split.
-      - intros H.
-        destruct (✓u) eqn:Heq; [|exfalso].
-        + exists Heq. exact H.
-        + destruct H as [s H]. apply ra_op_pos_valid2 in H. unfold ra_valid in H. simpl in H.
-          congruence.
-      - intros [VAL Hle]. exact Hle.
-    Qed.
-
     (** Ghost state ownership **)
     Lemma ownL_sc (u t : RL.res) :
       ownL (u · t) == ownL u * ownL t.
     Proof.
-      intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
-      - apply ownL_iff in Hut. destruct Hut as [VAL Hut].
-        rewrite <- Hut. clear Hut.
-        unfold ra_valid in VAL. simpl in VAL.
-        assert (VALu:✓u = true) by (eapply ra_op_valid; now eauto).
-        assert (VALt:✓t = true) by (eapply ra_op_valid2; now eauto).
-        exists (ra_mk_pos (1, u) (VAL:=VALu)).
-        exists (ra_mk_pos (1, t) (VAL:=VALt)).
-        split; [reflexivity|split].
-        + do 15 red. reflexivity.
-        + do 15 red. reflexivity.
-      - apply ownL_iff in Hu. destruct Hu as [VALu [d Hu] ].
-        apply ownL_iff in Ht. destruct Ht as [VALt [e Ht] ].
-        unfold ra_valid in VALu, VALt. simpl in VALu, VALt.
-        exists (d · e). rewrite <-EQr, <-Hu, <-Ht.
-        rewrite !assoc. rewrite <-(assoc d _ e), (comm (ra_proj _) e).
-        rewrite <-!assoc. reflexivity.
+      assert (Heq: (ex_unit state, u · t) == ((ex_unit state, u) · (ex_unit state, t)) ) by reflexivity.
+      (* I cannot believe I have to write this... *)
+      change (ownR (ex_unit state, u · t) == ownR (ex_unit state, u) * ownR (ex_unit state, t)).
+      rewrite Heq.
+      now eapply ownR_sc.
     Qed.
 
   End Ownership.
