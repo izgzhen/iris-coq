@@ -9,7 +9,7 @@ Module IrisRes (RL : RA_T) (C : CORE_LANG) <: RA_T.
   Instance res_op   : RA_op res := _.
   Instance res_unit : RA_unit res := _.
   Instance res_valid: RA_valid res := _.
-  Instance res_ra  : RA res := _.
+  Instance res_ra   : RA res := _.
 
   (* The order on (ra_pos res) is inferred correctly, but this one is not *)
   Instance res_pord: preoType res := ra_preo res.
@@ -188,8 +188,8 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
     Proof.
       intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
       - destruct Hut as [s Heq]. rewrite assoc in Heq.
-        exists✓ (s · u). { eapply ra_op_pos_valid. eassumption. }
-        exists✓ t. { eapply ra_op_pos_valid2. eassumption. }
+        exists✓ (s · u) by auto_valid.
+        exists✓ t by auto_valid.
         split; [|split].
         + rewrite <-Heq. reflexivity.
         + exists s. reflexivity.

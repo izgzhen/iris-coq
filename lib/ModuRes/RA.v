@@ -127,7 +127,22 @@ Section PositiveCarrier.
 
 End PositiveCarrier.
 Global Arguments ra_pos T {_}.
+
+(** Validity automation tactics *)
+Ltac auto_valid_inner :=
+  solve [ eapply ra_op_pos_valid; (eassumption || rewrite comm; eassumption)
+        | eapply ra_op_pos_valid2; (eassumption || rewrite comm; eassumption)
+        | eapply ra_op_valid; (eassumption || rewrite comm; eassumption) ].
+Ltac auto_valid := match goal with
+                     | |- @ra_valid ?T _ _ = true =>
+                       let H := fresh in assert (H : RA T) by apply _; auto_valid_inner
+                   end.
+
+(* FIXME put the common parts into a helper tactic, and allow arbitrary tactics after "by" *)
 Tactic Notation "exists✓" constr(t) := let H := fresh "Hval" in assert(H:(✓t)%ra); [|exists (ra_mk_pos t (VAL:=H) ) ].
+Tactic Notation "exists✓" constr(t) "by" "auto_valid" := let H := fresh "Hval" in assert(H:(✓t)%ra); [auto_valid|exists (ra_mk_pos t (VAL:=H) ) ].
+Tactic Notation "pose✓" ident(name) ":=" constr(t) := let H := fresh "Hval" in assert(H:(✓t)%ra); [|pose (name := ra_mk_pos t (VAL:=H) ) ].
+Tactic Notation "pose✓" ident(name) ":=" constr(t) "by" "auto_valid" := let H := fresh "Hval" in assert(H:(✓t)%ra); [auto_valid|pose (name := ra_mk_pos t (VAL:=H) ) ].
 
 
 Section Order.
