@@ -188,9 +188,8 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
     Proof.
       intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
       - destruct Hut as [s Heq]. rewrite assoc in Heq.
-        assert (VALu:✓(s · u) ). { eapply ra_op_pos_valid. eassumption. }
-        assert (VALt:✓t ). { eapply ra_op_pos_valid2. eassumption. }
-        exists (ra_mk_pos (s · u) (VAL:=VALu)). exists (ra_mk_pos t (VAL:=VALt)).
+        exists✓ (s · u). { eapply ra_op_pos_valid. eassumption. }
+        exists✓ t. { eapply ra_op_pos_valid2. eassumption. }
         split; [|split].
         + rewrite <-Heq. reflexivity.
         + exists s. reflexivity.
@@ -401,13 +400,11 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
         apply HR; [reflexivity | assumption].
     Qed.
 
-    Lemma wsat_not_empty σ m (r: res) w k (HN : ~✓r) :
-      ~ wsat σ m r w (S k) tt.
+    Lemma wsat_not_empty σ m (r: res) w k :
+      wsat σ m r w (S k) tt -> ✓r.
     Proof.
       intros [rs [HD _] ]. destruct HD as [VAL _].
-      assert(VALr:✓r).
-      { eapply ra_op_valid; [now apply _|]. eassumption. }
-      congruence.
+      eapply ra_op_valid; [now apply _|]. eassumption.
     Qed.
 
   End WorldSatisfaction.

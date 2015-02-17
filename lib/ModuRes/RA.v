@@ -33,10 +33,10 @@ Notation "1" := (ra_unit _) : ra_scope.
 Notation "p · q" := (ra_op _ p q) (at level 40, left associativity) : ra_scope.
 Notation "'✓' p" := (ra_valid p = true) (at level 35) : ra_scope.
 Notation "'~' '✓' p" := (ra_valid p <> true) (at level 35) : ra_scope.
+Delimit Scope ra_scope with ra.
 
 Tactic Notation "decide✓" ident(t1) "eqn:" ident(H) := destruct (ra_valid t1) eqn:H; [|apply not_true_iff_false in H].
 
-Delimit Scope ra_scope with ra.
 
 (* General RA lemmas *)
 Section RAs.
@@ -106,7 +106,6 @@ Section PositiveCarrier.
   Coercion ra_proj (t:ra_pos): T := proj1_sig t.
 
   Definition ra_mk_pos t {VAL: ✓ t}: ra_pos := exist _ t VAL.
-  Definition ra_cr_pos {t} (VAL: ✓ t) := ra_mk_pos t (VAL:=VAL).
 
   Program Definition ra_pos_unit: ra_pos := exist _ 1 _.
   Next Obligation.
@@ -128,6 +127,7 @@ Section PositiveCarrier.
 
 End PositiveCarrier.
 Global Arguments ra_pos T {_}.
+Tactic Notation "exists✓" constr(t) := let H := fresh "Hval" in assert(H:(✓t)%ra); [|exists (ra_mk_pos t (VAL:=H) ) ].
 
 
 Section Order.
