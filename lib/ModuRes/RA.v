@@ -199,14 +199,16 @@ Section Order.
   Definition pra_ord (t1 t2 : ra_pos T) :=
     exists td, td · (ra_proj t1) == (ra_proj t2).
 
-  Global Program Instance pRA_preo : preoType (ra_pos T) | 0 := mkPOType pra_ord.
-  Next Obligation.
+  Global Instance pra_ord_preo: PreOrder pra_ord.
+  Proof.
     split.
     - intros x; exists 1. simpl. erewrite ra_op_unit by apply _; reflexivity.
     - intros z yz xyz [y Hyz] [x Hxyz]; unfold pra_ord.
       rewrite <- Hyz, assoc in Hxyz; setoid_rewrite <- Hxyz.
       exists (x · y). reflexivity.
   Qed.
+
+  Global Program Instance pRA_preo : preoType (ra_pos T) | 0 := mkPOType pra_ord.
 
   Global Instance equiv_pord_pra : Proper (equiv ==> equiv ==> equiv) (pord (T := ra_pos T)).
   Proof.
@@ -223,13 +225,16 @@ Section Order.
 
   Definition ra_ord (t1 t2 : T) :=
     exists t, t · t1 == t2.
-  Global Program Instance ra_preo : preoType T := mkPOType ra_ord.
-  Next Obligation.
+
+  Global Instance ra_ord_preo: PreOrder ra_ord.
+  Proof.
     split.
     - intros r; exists 1; erewrite ra_op_unit by apply _; reflexivity.
     - intros z yz xyz [y Hyz] [x Hxyz]; exists (x · y).
       rewrite <- Hxyz, <- Hyz; symmetry; apply assoc.
   Qed.
+  
+  Global Program Instance ra_preo : preoType T := mkPOType ra_ord.
 
   Global Instance equiv_pord_ra : Proper (equiv ==> equiv ==> equiv) (pord (T := T)).
   Proof.

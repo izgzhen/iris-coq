@@ -1,27 +1,21 @@
 Set Automatic Coercions Import.
 Require Import ssreflect ssrfun ssrbool eqtype.
 Require Import core_lang masks iris_wp.
-Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
+Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
-Delimit Scope mask_scope with mask.
-
-Module Unsafety (RL : PCM_T) (C : CORE_LANG).
+Module Unsafety (RL : RA_T) (C : CORE_LANG).
 
   Module Export Iris := IrisWP RL C.
-  Local Open Scope mask_scope.	(* clobbers == *)
-  Local Open Scope pcm_scope.
-  Local Open Scope type_scope.	(* so == means setoid equality *)
+  Local Open Scope mask_scope.
+  Local Open Scope ra_scope.
   Local Open Scope bi_scope.
   Local Open Scope lang_scope.
   Local Open Scope iris_scope.
 
-  (* PDS: Why isn't this inferred automatically? If necessary, move this to ris_core.v *)
-  Global Program Instance res_preorder : PreOrder (pcm_ord res) := @preoPO res (PCM_preo res).
-
   (* PDS: Move to iris_core.v *)
-  Lemma ownL_timeless {r : option RL.res} :
+  Lemma ownL_timeless {r : RL.res} :
     valid(timeless(ownL r)).
-  Proof. intros w n _ w' k r' HSW HLE; now destruct r. Qed.
+  Proof. intros w n _ w' k r' HSW HLE. auto. Qed.
 
   (* PDS: Hoist, somewhere. *)
   Program Definition restrictV (Q : expr -n> Props) : vPred :=
@@ -41,7 +35,7 @@ Module Unsafety (RL : PCM_T) (C : CORE_LANG).
     move=> Hm; exfalso; exact: HD.
   Qed.
 
-  Implicit Types (P : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (Q : vPred) (r : res) (w : Wld) (σ : state).
+  Implicit Types (P : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (Q : vPred) (r : pres) (w : Wld) (σ : state).
 
   (* PDS: Move to iris_wp.v *)
   Lemma htUnsafe {m P e Q} : ht true m P e Q ⊑ ht false m P e Q.
@@ -70,9 +64,10 @@ Module Unsafety (RL : PCM_T) (C : CORE_LANG).
     (BI.and (BI.impl p q) (BI.impl q p)).
 
   Notation "P ↔ Q" := (iffBI P Q) (at level 95, no associativity) : iris_scope.
-  Notation "p * q" := (BI.sc p q) (at level 40, left associativity) : iris_scope.
+  Notation "p * q" := (BI.sc p q) (at level 40, left associativity) : iris_scope. (* RJ: there's already notation for this in iris_core? *)
 
-  Notation "a ⊑%pcm b" := (pcm_ord _ a b) (at level 70, no associativity) : pcm_scope.
+  (* RJ commented out for now, should not be necessary *)
+  (*Notation "a ⊑%pcm b" := ( _ a b) (at level 70, no associativity) : pcm_scope.*)
 
   Lemma wpO {safe m e Q w r} : wp safe m e Q w O r.
   Proof.
@@ -82,10 +77,12 @@ Module Unsafety (RL : PCM_T) (C : CORE_LANG).
   Qed.
 
   (* Easier to apply (with SSR, at least) than wsat_not_empty. *)
+  (* RJ: Commented out, does not have a multi-zero equivalent
   Lemma wsat_nz {σ m w k} : ~ wsat σ m 0 w (S k) tt.
-  Proof. by move=> [rs [HD _] ]; exact: HD. Qed.
+  Proof. by move=> [rs [HD _] ]; exact: HD. Qed. *)
 
-  (* Leibniz equality arise from SSR's case tactic. *)
+  (* Leibniz equality arise from SSR's case tactic.
+     RJ: I could use this ;-) move to CSetoid? *)
   Lemma equivP {T : Type} `{eqT : Setoid T} {a b : T} : a = b -> a == b.
   Proof. by move=>->; reflexivity. Qed.
 
@@ -108,7 +105,7 @@ Module Unsafety (RL : PCM_T) (C : CORE_LANG).
 
   Ltac propsM H := solve [ done | apply (propsM H); solve [ done | reflexivity | omega ] ].
 
-  Lemma wsatM {σ m} {r : option res} {w n k}
+  Lemma wsatM {σ m} {r : res} {w n k}
       (HW : wsat σ m r w @ n) (HLe : k <= n) :
     wsat σ m r w @ k.
   Proof. by exact: (uni_pred _ _ _ _ _ HLe). Qed.
@@ -213,11 +210,11 @@ Module Unsafety (RL : PCM_T) (C : CORE_LANG).
       have {Hei} Hei: (E ei) w' (S k) rei by propsM Hei.
       have HSw': w' ⊑ w' by reflexivity.
       have HLe: S k <= S k by omega.
-      have H1ei: pcm_unit _ ⊑ rei by exact: unit_min.
+      have H1ei: ra_pos_unit ⊑ rei by apply: unit_min.
       have HLt': k < S k by omega.
       move: HW; rewrite
       	{1}mask_full_union  -{1}(mask_full_union mask_emp)
-      	-pcm_op_assoc
+      	-assoc
       => HW.
       case: (atomic_dec ei) => HA; last first.
       
@@ -229,8 +226,9 @@ Module Unsafety (RL : PCM_T) (C : CORE_LANG).
         move: {He HLe H1ei Hei} (He _ HSw' _ _ HLe H1ei Hei) => He.
         move: {HD} (mask_emp_disjoint (mask_full ∪ mask_full)) => HD.
         move: {He HSw' HW} (He _ _ _ _ _ HSw' HLt' HD HW) => [w'' [r' [HSw' [Hei' HW] ] ] ].
-        move: HW; rewrite pcm_op_assoc.
-        case Hα: (Some r' · Some rK)=>[α |] => HW; last by exfalso; exact: (wsat_nz HW).
+        move: HW; rewrite assoc. move=>HW.
+        pose✓ α := (ra_proj r' · ra_proj rK).
+        { clear -HW. apply wsat_valid in HW. auto_valid. }
         have {HSw₀} HSw₀: w₀ ⊑ w'' by transitivity w'.
         exists w'' α; split; [done| split]; last first.
         + by move: HW; rewrite 2! mask_full_union => HW; wsatM HW.
@@ -260,9 +258,9 @@ Module Unsafety (RL : PCM_T) (C : CORE_LANG).
       move: HV; rewrite -(fill_empty ei') => HV.
       move: {Hv} (Hv HV) => [w''' [rei' [HSw'' [Hei' HW] ] ] ].
       (* now IH *)
-      move: HW; rewrite pcm_op_assoc.
-      case Hα: (Some rei' · _) => [α |] HW; last first.
-      - rewrite pcm_op_zero in HW; exfalso; exact: (wsat_nz HW).
+      move: HW; rewrite assoc. move=>HW.
+      pose✓ α := (ra_proj rei' · ra_proj rK).
+      { clear -HW. apply wsat_valid in HW. auto_valid. }
       exists w''' α. split; first by transitivity w''.
       split; last by rewrite mask_full_union -(mask_full_union mask_emp).
       rewrite/= in Hei'; rewrite fill_empty -Hk' in Hei' * => {Hk'}.
