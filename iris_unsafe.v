@@ -1,5 +1,5 @@
 Set Automatic Coercions Import.
-Require Import ssreflect ssrfun ssrbool eqtype seq fintype.
+Require Import ssreflect ssrfun ssrbool eqtype.
 Require Import core_lang masks iris_wp.
 Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
@@ -15,14 +15,40 @@ Module Unsafety (RL : PCM_T) (C : CORE_LANG).
   Local Open Scope lang_scope.
   Local Open Scope iris_scope.
 
-  Implicit Types (P Q R : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (φ : value -n> Props) (r : res) (w : Wld).
+  (* PDS: Why isn't this inferred automatically? If necessary, move this to ris_core.v *)
+  Global Program Instance res_preorder : PreOrder (pcm_ord res) := @preoPO res (PCM_preo res).
+
+  (* PDS: Move to iris_core.v *)
+  Lemma ownL_timeless {r : option RL.res} :
+    valid(timeless(ownL r)).
+  Proof. intros w n _ w' k r' HSW HLE; now destruct r. Qed.
+
+  (* PDS: Hoist, somewhere. *)
+  Program Definition restrictV (Q : expr -n> Props) : vPred :=
+    n[(fun v => Q (` v))].
+  Solve Obligations using resp_set.
+  Next Obligation.
+    move=> v v' Hv w k r; move: Hv.
+    case: n=>[_ Hk | n]; first by exfalso; omega.
+    by move=> /= ->.
+  Qed.
+
+  (* PDS: masks.v *)
+  Lemma mask_full_disjoint m (HD : m # mask_full) :
+    meq m mask_emp.
+  Proof.
+    move=> i; move: {HD} (HD i) => HD; split; last done.
+    move=> Hm; exfalso; exact: HD.
+  Qed.
+
+  Implicit Types (P : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (Q : vPred) (r : res) (w : Wld) (σ : state).
 
   (* PDS: Move to iris_wp.v *)
-  Lemma htUnsafe {m P e φ} : ht true m P e φ ⊑ ht false m P e φ.
+  Lemma htUnsafe {m P e Q} : ht true m P e Q ⊑ ht false m P e Q.
   Proof.
     move=> wz nz rz He w HSw n r HLe Hr HP.
     move: {He P wz nz rz HSw HLe Hr HP} (He _ HSw _ _ HLe Hr HP).
-    move: n e φ w r; elim/wf_nat_ind; move=> n IH e φ w r He.
+    move: n e Q w r; elim/wf_nat_ind; move=> n IH e Q w r He.
     rewrite unfold_wp; move=> w' k rf mf σ HSw HLt HD Hw.
     move: {IH} (IH _ HLt) => IH.
     move: He => /unfold_wp He; move: {He HSw HLt HD Hw} (He _ _ _ _ _ HSw HLt HD Hw) => [HV [HS [HF _] ] ].
@@ -48,16 +74,20 @@ Module Unsafety (RL : PCM_T) (C : CORE_LANG).
 
   Notation "a ⊑%pcm b" := (pcm_ord _ a b) (at level 70, no associativity) : pcm_scope.
 
-  Lemma wpO {safe m e φ w r} : wp safe m e φ w O r.
+  Lemma wpO {safe m e Q w r} : wp safe m e Q w O r.
   Proof.
     rewrite unfold_wp.
     move=> w' k rf mf σ HSw HLt HD HW.
-    by absurd (k < 0); omega.
+    by exfalso; omega.
   Qed.
 
   (* Easier to apply (with SSR, at least) than wsat_not_empty. *)
   Lemma wsat_nz {σ m w k} : ~ wsat σ m 0 w (S k) tt.
   Proof. by move=> [rs [HD _] ]; exact: HD. Qed.
+
+  (* Leibniz equality arise from SSR's case tactic. *)
+  Lemma equivP {T : Type} `{eqT : Setoid T} {a b : T} : a = b -> a == b.
+  Proof. by move=>->; reflexivity. Qed.
 
   (*
 	Simple monotonicity tactics for props and wsat.
@@ -85,235 +115,164 @@ Module Unsafety (RL : PCM_T) (C : CORE_LANG).
 
   Ltac wsatM H := solve [done | apply (wsatM H); solve [done | omega] ].
 
-  Notation "'ℊ' a" := (pcm_unit(pcm_res_ex state), a)
-    (at level 41, format "ℊ  a") : iris_scope.
-
+  (*
+   * Robust safety:
+   *
+   * Assume E : Exp → Prop satisfies
+   *
+   *	E(fork e) = E e
+   *	E(K[e]) = E e * E(K[()])
+   *
+   * and there exist Γ₀, Θ₀ s.t.
+   *
+   *	(i) for every pure reduction ς; e → ς; e',
+   *		Γ₀ | □Θ₀ ⊢ E e ==>>_⊤ E e'
+   *
+   *	(ii) for every atomic reduction ς; e → ς'; e',
+   *		Γ₀ | □Θ₀ ⊢ [E e] e [v. E v]_⊤
+   *
+   * Then, for every e, Γ₀ | □Θ₀ ⊢ [E e] e [v. E v]_⊤.
+   *
+   * The theorem has applications to security (hence the name).
+   *)
   Section RobustSafety.
 
-    (* The adversarial resources in e. *)
-    Variable prim_of : expr -> RL.res.
+    (*
+     * Assume primitive reductions are either pure (do not change the
+     * state) or atomic (step to a value).
+     *
+     * PDS: I suspect we need these to prove the lifting lemmas. If
+     * so, they should be in core_lang.v.
+     *)
+
+    Axiom atomic_dec : forall e, atomic e + ~atomic e.
+
+    Axiom pure_step : forall e σ e' σ',
+      ~ atomic e ->
+      prim_step (e, σ) (e', σ') ->
+      σ = σ'.
+
+    Parameter E : expr -n> Props.
+
+    (* Compatibility for those expressions wp cares about. *)
+    Axiom forkE : forall e, E (fork e) == E e.
+    Axiom fillE : forall K e, E (K [[e]]) == E e * E (K [[fork_ret]]).
     
-    Variable prim_dup : forall {e},	(* Irrelevant to robust_safety. *)
-      Some(prim_of e) == Some(prim_of e) · Some(prim_of e).
+    (* One can prove forkE, fillE as valid internal equalities. *)
+    Remark valid_intEq {P P' : Props} (H : valid(P === P')) : P == P'.
+    Proof. move=> w n r; exact: H. Qed.
 
-    (* Compatibility. *)
-  
-    Hypothesis prim_of_fork : forall {e},
-      prim_of (fork e) == prim_of e.
-  
-    Hypothesis prim_of_fork_ret :	(* Irrelevant to robust_safety. *)
-      prim_of fork_ret == pcm_unit RL.res.
-  
-    Hypothesis prim_of_split : forall {K e},
-      Some(prim_of (K [[e]])) == Some(prim_of e) · Some(prim_of (K [[fork_ret]])).
-  
-    (*
-     * Adversarial steps need only adversarial resources and preserve
-     * any frame and all invariants.
-     *)
+    (* View shifts or atomic triples for every primitive reduction. *)
+    Parameter w₀ : Wld.
+    Definition valid₀ P := forall {w n r} (HSw₀ : w₀ ⊑ w), P w n r.
+    
+    Axiom pureE : forall {e σ e'},
+      prim_step (e,σ) (e',σ) ->
+      valid₀ (vs mask_full mask_full (E e) (E e')).
 
-    Notation "'ɑ' e" := (ℊ (prim_of e))
-      (at level 41, format "ɑ  e") : iris_scope.	(* K[[e]] at level 40 *)
-  
-    Hypothesis adv_step : forall {e σ e' σ' rf w k},
-      prim_step (e,σ) (e',σ') ->
-      wsat σ mask_full (Some (ɑ e) · rf) w @ S k ->
-      exists w', w ⊑ w' /\
-        wsat σ' mask_full (Some (ɑ e') · rf) w' @ k.
+    Axiom atomicE : forall {e},
+      atomic e ->
+      valid₀ (ht false mask_full (E e) e (restrictV E)).
 
-    (*
-     * Lift compatibility to full resources. (Trivial.)
-     *)
-
-    Lemma res_of_fork {e} :
-      ɑ fork e == ɑ e.
-    Proof. by rewrite prim_of_fork. Qed.
-
-    Lemma res_of_fork_ret :	(* Irrelevant to robust_safety. *)
-      ɑ fork_ret == ℊ pcm_unit(RL.res).
-    Proof. by rewrite prim_of_fork_ret. Qed.
-
-    (* PDS: Is there a cleaner way? *)
-    Lemma prim_res_eq_hack {a b : option RL.res} : a == b -> a = b.
+    Lemma robust_safety {e} : valid₀(ht false mask_full (E e) e (restrictV E)).
     Proof.
-      rewrite/=/opt_eq.
-      by case Ha: a=>[a' |]; case Hb: b=>[b' |]; first by move=>->.
+      move=> wz nz rz HSw₀ w HSw n r HLe _ He.
+      have {HSw₀ HSw} HSw₀ : w₀ ⊑ w by transitivity wz.
+      
+      (* For e = K[fork e'] we'll have to prove wp(e', ⊤), so the IH takes a post. *)
+      pose post Q := forall (v : value) w n r, (E (`v)) w n r -> (Q v) w n r.
+      set Q := restrictV E; have HQ: post Q by done.
+      move: {HLe} HSw₀ He HQ; move: n e w r Q; elim/wf_nat_ind;
+        move=> {wz nz rz} n IH e w r Q HSw₀ He HQ.
+      apply unfold_wp; move=> w' k rf mf σ HSw HLt HD HW.
+      split; [| split; [| split; [| done] ] ]; first 2 last.
+
+      (* e forks: fillE, IH (twice), forkE *)
+      - move=> e' K HDec.
+        have {He} He: (E e) w' k r by propsM He.
+        move: He; rewrite HDec fillE; move=> [re' [rK [Hr [He' HK] ] ] ].   
+        exists w' re' rK; split; first by reflexivity.
+        have {IH} IH: forall Q, post Q ->
+          forall e r, (E e) w' k r -> wp false mask_full e Q w' k r.
+        + by move=> Q0 HQ0 e0 r0 He0; apply: (IH _ HLt); first by transitivity w.
+        split; [exact: IH | split]; last first.
+        + by move: HW; rewrite -Hr => HW; wsatM HW.
+        have Htop: post (umconst ⊤) by done.
+        by apply: (IH _ Htop e' re'); move: He'; rewrite forkE.
+
+      (* e value: done *)
+      - move=> {IH} HV; exists w' r; split; [by reflexivity | split; [| done] ].
+        by apply: HQ; propsM He.
+      
+      (* e steps: fillE, atomic_dec *)
+      move=> σ' ei ei' K HDec HStep.
+      have {HSw₀} HSw₀ : w₀ ⊑ w' by transitivity w.
+      move: He; rewrite HDec fillE; move=> [rei [rK [Hr [Hei HK] ] ] ].
+      move: HW; rewrite -Hr => HW.
+      (* bookkeeping common to both cases. *)
+      have {Hei} Hei: (E ei) w' (S k) rei by propsM Hei.
+      have HSw': w' ⊑ w' by reflexivity.
+      have HLe: S k <= S k by omega.
+      have H1ei: pcm_unit _ ⊑ rei by exact: unit_min.
+      have HLt': k < S k by omega.
+      move: HW; rewrite
+      	{1}mask_full_union  -{1}(mask_full_union mask_emp)
+      	-pcm_op_assoc
+      => HW.
+      case: (atomic_dec ei) => HA; last first.
+      
+      (* ei pure: pureE, IH, fillE *)
+      - move: (pure_step _ _ _ _ HA HStep) => {HA} Hσ.
+        rewrite Hσ in HStep HW => {Hσ}.
+        move: (pureE HStep) => {HStep} He.
+        move: {He} (He w' (S k) r HSw₀) => He.
+        move: {He HLe H1ei Hei} (He _ HSw' _ _ HLe H1ei Hei) => He.
+        move: {HD} (mask_emp_disjoint (mask_full ∪ mask_full)) => HD.
+        move: {He HSw' HW} (He _ _ _ _ _ HSw' HLt' HD HW) => [w'' [r' [HSw' [Hei' HW] ] ] ].
+        move: HW; rewrite pcm_op_assoc.
+        case Hα: (Some r' · Some rK)=>[α |] => HW; last by exfalso; exact: (wsat_nz HW).
+        have {HSw₀} HSw₀: w₀ ⊑ w'' by transitivity w'.
+        exists w'' α; split; [done| split]; last first.
+        + by move: HW; rewrite 2! mask_full_union => HW; wsatM HW.
+        apply: (IH _ HLt _ _ _ _ HSw₀); last done.
+        rewrite fillE; exists r' rK; split; [exact: equivP | split; [by propsM Hei' |] ].
+        have {HSw} HSw: w ⊑ w'' by transitivity w'.
+        by propsM HK.
+
+      (* ei atomic: atomicE, IH, fillE *)
+      move: (atomic_step _ _ _ _ HA HStep) => HV.
+      move: (atomicE HA) => He {HA}.
+      move: {He} (He w' (S k) rei HSw₀) => He.
+      move: {He HLe H1ei Hei} (He _ HSw' _ _ HLe H1ei Hei) => He.
+      (* unroll wp(ei,E)—step case—to get wp(ei',E) *)
+      move: He; rewrite {1}unfold_wp => He.
+      move: {HD} (mask_emp_disjoint (mask_full)) => HD.
+      move: {He HSw' HLt' HW} (He _ _ _ _ _ HSw' HLt' HD HW) => [_ [HS _] ].
+      have Hεei: ei = ε[[ei]] by move: (fill_empty ei)->.
+      move: {HS Hεei HStep} (HS _ _ _ _ Hεei HStep) => [w'' [r' [HSw' [He' HW] ] ] ].
+      (* unroll wp(ei',E)—value case—to get E ei' *)
+      move: He'; rewrite {1}unfold_wp => He'.
+      move: HW; case Hk': k => [| k'] HW.
+      - by exists w'' r'; split; [done | split; [exact: wpO | done] ].
+      have HSw'': w'' ⊑ w'' by reflexivity.
+      have HLt': k' < k by omega.
+      move: {He' HSw'' HLt' HD HW} (He' _ _ _ _ _ HSw'' HLt' HD HW) => [Hv _].
+      move: HV; rewrite -(fill_empty ei') => HV.
+      move: {Hv} (Hv HV) => [w''' [rei' [HSw'' [Hei' HW] ] ] ].
+      (* now IH *)
+      move: HW; rewrite pcm_op_assoc.
+      case Hα: (Some rei' · _) => [α |] HW; last first.
+      - rewrite pcm_op_zero in HW; exfalso; exact: (wsat_nz HW).
+      exists w''' α. split; first by transitivity w''.
+      split; last by rewrite mask_full_union -(mask_full_union mask_emp).
+      rewrite/= in Hei'; rewrite fill_empty -Hk' in Hei' * => {Hk'}.
+      have {HSw₀} HSw₀ : w₀ ⊑ w''' by transitivity w''; first by transitivity w'.
+      apply: (IH _ HLt _ _ _ _ HSw₀); last done.
+      rewrite fillE; exists rei' rK; split; [exact: equivP | split; [done |] ].
+      have {HSw HSw' HSw''} HSw: w ⊑ w''' by transitivity w''; first by transitivity w'.
+      by propsM HK.
     Qed.
-
-    Lemma res_of_split {K e} :
-      Some (ɑ K [[e]]) == Some(ɑ e) · Some(ɑ K [[fork_ret]]).
-    Proof.
-      rewrite /pcm_op/res_op/pcm_op_prod.
-      case Hp: (_ · _)=>[p |]; last done.
-      rewrite /pcm_op/= in Hp; case: Hp=><-.
-(*
-      rewrite -prim_of_split.
-
-Maybe I'm missing some instances (rewrite, erewrite also fail):
-	Error:
-	Tactic failure:Unable to satisfy the rewriting constraints.
-	Unable to satisfy the following constraints:
-	EVARS:
-	 ?8556==[K e p _pattern_value_ _rewrite_rule_
-	          (do_subrelation:=do_subrelation)
-	          |- Proper (eq ==> flip impl) (SetoidClass.equiv (Some (ɑ K [[e]])))]
-	          (internal placeholder)
-	 ?8555==[K e p _pattern_value_ _rewrite_rule_
-	          |- subrelation SetoidClass.equiv eq] (internal placeholder)
-But I can hack around it...
-*)
-      move: (@prim_of_split K e) => /prim_res_eq_hack Hsplit.
-      by rewrite -Hsplit.
-    Qed.
-
-    (*
-     * The predicate adv e internalizes ɑ e ⊑ -.
-     *)
-
-    Definition advP e r := ɑ e ⊑ r.
-
-    Program Definition adv : expr -n> Props :=
-      n[(fun e => m[(fun w => mkUPred (fun n r => advP e r) _)])].
-    Next Obligation.
-      move=> n k r r' HLe [α Hr'] [β Hr]; rewrite/advP.
-      move: Hr'; move: Hr<-;
-      rewrite	(* α · (β · e) *)
-      	[Some β · _]pcm_op_comm	(* α · (e · β) *)
-      	pcm_op_assoc	(* (α · e) · β *)
-      	[Some α · _]pcm_op_comm	(* (e · α) · β *)
-      	-pcm_op_assoc	(* e · (α · β) *)
-      	pcm_op_comm	(* (α · β) · e *)
-      => Hr'.
-      move: Hr'; case Hαβ: (Some α · _) => [αβ |] Hr'; last done.
-      by exists αβ.
-    Qed.
-    Next Obligation. done. Qed.
-    Next Obligation. by move=> w w' HSw. Qed.
-    Next Obligation. (* use the def of discrete e = n = e' *)
-      move=> e e' HEq w k r HLt; rewrite/=/advP.
-      move: HEq HLt; case: n=>[| n'] /= HEq HLt.
-      - by absurd(k < 0); omega.
-      by rewrite HEq.
-    Qed.
-
-    Lemma robust_safety {e} : valid (ht false mask_full (adv e) e (umconst ⊤)).
-    Proof.
-      move=> wz nz rz w HSw n r HLe _ He.
-      move: {HSw HLe} He; move: n e w r; elim/wf_nat_ind; move=> {wz nz rz} n IH e w r He.
-      rewrite unfold_wp; move=> w' k rf mf σ _ HLt _ HW.
-      split; [| split; [| split; [| done] ] ].
-
-      (* e value *)
-      - by move=> {IH HLt} HV; exists w' r; split; [by reflexivity | done].
-
-      (* e steps *)
-      - move=> σ' ei ei' K HDec HStep.
-        move: He; move: HDec->; move=> [r' He].
-        move: He;	(* r' · K[ei] *)
-        rewrite
-        	pcm_op_comm	(* K[ei] · r' *)
-        	res_of_split	(* (ei · K) · r' *)
-        	-pcm_op_assoc	(* ei · (K · r') *)
-        => He.
-        move: HW; rewrite {1}mask_full_union => HW.
-(* Bug?: Error: tampering with discharged assumptions of "in" tactical
-        rewrite mask_full_union in HW.
-*)
-        move: HW; rewrite -He -pcm_op_assoc; move=> {He} HW.
-        move: {HStep HW} (adv_step _ _ _ _ _ _ _ HStep HW) => [w'' [HSW' HW'] ].
-        move: HW';	(* ei' · ((K · r') · rf) *)
-        rewrite
-        	pcm_op_assoc	(* ei' · (K · (r' · rf)) *)
-        	pcm_op_assoc	(* ((ei' · K) · r') · rf *)
-        	-res_of_split	(* (K[ei]' · r') · rf *)
-        => HW'.
-        move: HW' HLt; case HEq: k=>[| k'] HW' HLt.
-        + by exists w' r'; split; [by reflexivity | split; [exact: wpO| done] ].
-        move: HW'; case Hr': (Some _ · Some _) => [r'' |] HW'; last first.
-        + by rewrite pcm_op_zero in HW'; exfalso; exact: (wsat_nz HW').
-        exists w'' r''; split; [done | split; [| by rewrite mask_full_union] ].
-        apply: (IH _ HLt _ _); rewrite/=/advP/=/pcm_ord; exists r'.
-        by rewrite pcm_op_comm -Hr'; reflexivity.
-
-      (* e forks *)
-      move=> e' K HDec.
-      move: He; move: HDec->; move=> [r' He].
-      move: He;	(* r' · K[fork e'] *)
-      rewrite
-      	res_of_split	(* r' · (fork e' · K) *)
-      	res_of_fork	(* r' · (e' · K) *)
-      	pcm_op_comm	(* (e' · K) · r' *)
-      	-pcm_op_assoc.	(* e' · (K · r') *)
-      case Hrret: (_ · Some r') => [rret |] He; last done.
-      exists w' (ɑ e') rret; split; first by reflexivity.
-      have {IH} IH: forall e r, ɑ e ⊑ r -> (wp false mask_full e (umconst top)) w' k r.
-      + by move=> e0 r0 He0; apply: (IH _ HLt); rewrite/=/advP.
-      split; [| split ].
-      + by apply IH; rewrite/=; exists r'; rewrite pcm_op_comm Hrret.
-      + by apply IH; reflexivity.
-      by rewrite He; wsatM HW.
-    Qed.
-
-    (*
-     * Facts about adv.
-     *)
-
-    Lemma adv_timeless {e} :
-      valid(timeless(adv e)).
-    Proof. by move=> w n _ w' k r HSW HLe; rewrite/=/advP. Qed.
-
-    Lemma adv_dup {e} :
-      valid(adv e → adv e * adv e).
-    Proof.
-      move=> _ _ _ w' _ k r' _ _ [β Hβ]; rewrite/=/advP.
-      have Hdup: Some(ɑ e) == Some(ɑ e)· Some(ɑ e).
-      - rewrite/pcm_op/res_op/pcm_op_prod pcm_op_unit.
-        by move/prim_res_eq_hack: (prim_dup e) => <-.
-      move: Hβ; rewrite Hdup pcm_op_assoc.
-      case Hβe: (Some _ · _) => [βe |]; last done.
-      case Hβee: (_ · _) => [βee |] Hβ; last done.
-      exists βe (ɑ e); split; [| split].
-      - by move: Hβee Hβ; rewrite /= => -> ->.
-      - by rewrite/=; exists β; move: Hβe; rewrite /= => ->.
-      by reflexivity.
-    Qed.
-
-    Lemma adv_fork {e} :
-      valid(adv (fork e) ↔ adv e).
-    Proof. by move=> w n r; rewrite/=/advP prim_of_fork; tauto. Qed.
-
-    Lemma adv_fork_ret :
-      valid(adv fork_ret).
-    Proof.
-      move=> w n r; rewrite/=/advP prim_of_fork_ret /=.
-      by exists r; rewrite pcm_op_comm pcm_op_unit.
-    Qed.
-
-    Lemma adv_split {K e} :
-      valid(adv (K [[e]]) ↔ adv e * adv (K [[fork_ret]])).
-    Proof.
-      move=> w n r; rewrite/=/advP; split; move=> {w n r} _ _ _ r _ _.
-      - move=> [β].
-        rewrite	(* β · K[e] *)
-        	res_of_split	(* β · (e · K) *)
-        	pcm_op_assoc.	(* (β · e) · K) *)
-        case Hβe: (Some β · _)=>[βe |] Hβ; last done.
-        exists βe (ɑ K[[fork_ret]]); split; [done | split; [| by reflexivity] ].
-        + by exists β; rewrite Hβe.
-      move=> [α [β [Hαβ [ [α' Hα'e] [β' Hβ'K] ] ] ] ].
-      move: Hαβ; move: Hβ'K <-; move: Hα'e <-.
-      rewrite	(* (α' · e) · (β' · K) *)
-      	[Some β' · _]pcm_op_comm	(* (α' · e) · (K · β') *)
-      	pcm_op_assoc	(* ((α' · e) · K) · β') *)
-      	-[_ · Some(ɑ K [[fork_ret]]) ]pcm_op_assoc	(* (α' · (e · K)) · β' *)
-      	-res_of_split	(* (α' · K[e]) · β' *)
-      	[Some α' · _]pcm_op_comm	(* (K[e] · α) · β' *)
-      	-pcm_op_assoc	(* K[e] · (α' · β') *)
-      	pcm_op_comm.	(* (α' · β') · K[e] *)
-      case Hαβ: (Some α' · _) => [αβ |]; last done.
-      by exists αβ.
-    Qed.
-
+    
   End RobustSafety.
-
+  
 End Unsafety.
