@@ -1,8 +1,10 @@
 Require Import ssreflect.
 Require Import core_lang masks iris_wp.
-Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
+Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
-Module IrisMeta (RL : PCM_T) (C : CORE_LANG).
+Set Bullet Behavior "Strict Subproofs".
+
+Module IrisMeta (RL : RA_T) (C : CORE_LANG).
   Module Export WP := IrisWP RL C.
 
   Delimit Scope iris_scope with iris.
@@ -10,13 +12,13 @@ Module IrisMeta (RL : PCM_T) (C : CORE_LANG).
 
   Section Adequacy.
     Local Open Scope mask_scope.
-    Local Open Scope pcm_scope.
+    Local Open Scope ra_scope.
     Local Open Scope bi_scope.
     Local Open Scope lang_scope.
     Local Open Scope list_scope.
 
     (* weakest-pre for a threadpool *)
-    Inductive wptp (safe : bool) (m : mask) (w : Wld) (n : nat) : tpool -> list res -> list vPred -> Prop :=
+    Inductive wptp (safe : bool) (m : mask) (w : Wld) (n : nat) : tpool -> list pres -> list vPred -> Prop :=
     | wp_emp : wptp safe m w n nil nil nil
     | wp_cons e φ r tp rs φs
               (WPE  : wp safe m e φ w n r)
@@ -76,7 +78,7 @@ Module IrisMeta (RL : PCM_T) (C : CORE_LANG).
           [reflexivity | now apply le_n | now apply mask_emp_disjoint | |].
         + eapply wsat_equiv, HE; try reflexivity; [apply mask_emp_union |].
           rewrite !comp_list_app; simpl comp_list; unfold equiv.
-          rewrite ->assoc, (comm (Some r)), <- assoc. reflexivity.       
+          rewrite ->assoc, (comm (_ r)), <- assoc. reflexivity.       
         + edestruct HS as [w' [r' [HSW [WPE' HE'] ] ] ];
           [reflexivity | eassumption | clear WPE HS].
           setoid_rewrite HSW. eapply IHn; clear IHn.
@@ -85,7 +87,7 @@ Module IrisMeta (RL : PCM_T) (C : CORE_LANG).
             constructor; [eassumption | eapply wptp_closure, WPTP; [assumption | now auto with arith] ].
           * eapply wsat_equiv, HE'; [now erewrite mask_emp_union| |reflexivity].
             rewrite !comp_list_app; simpl comp_list; unfold equiv.
-            rewrite ->2!assoc, (comm (Some r')). reflexivity.
+            rewrite ->2!assoc, (comm (_ r')). reflexivity.
       }
       (* fork *)
       inversion H; subst; clear H.
@@ -95,7 +97,7 @@ Module IrisMeta (RL : PCM_T) (C : CORE_LANG).
         [reflexivity | now apply le_n | now apply mask_emp_disjoint | |].
       + eapply wsat_equiv, HE; try reflexivity; [apply mask_emp_union |].
         rewrite !comp_list_app; simpl comp_list; unfold equiv.
-        rewrite ->assoc, (comm (Some r)), <- assoc. reflexivity.
+        rewrite ->assoc, (comm (_ r)), <- assoc. reflexivity.
       + specialize (HF _ _ eq_refl); destruct HF as [w' [rfk [rret [HSW [WPE' [WPS HE'] ] ] ] ] ]; clear WPE.
         setoid_rewrite HSW. edestruct IHn as [w'' [rs'' [φs'' [HSW'' [HSWTP'' HSE''] ] ] ] ]; first eassumption; first 2 last.
         * exists w'' rs'' ([umconst ⊤] ++ φs''). split; [eassumption|].
@@ -106,20 +108,20 @@ Module IrisMeta (RL : PCM_T) (C : CORE_LANG).
           constructor; [|now constructor]. eassumption.
         * eapply wsat_equiv, HE'; try reflexivity; [symmetry; apply mask_emp_union |].
           rewrite comp_list_app. simpl comp_list. rewrite !comp_list_app. simpl comp_list.
-          rewrite (comm (Some rfk) 1). erewrite pcm_op_unit by apply _. unfold equiv.
-          rewrite (comm _ (Some rfk)). rewrite ->!assoc. apply pcm_op_equiv;[|reflexivity]. unfold equiv.
-          rewrite <-assoc, (comm (Some rret)), comm. reflexivity.
+          rewrite (comm (_ rfk)). erewrite ra_op_unit by apply _.
+          rewrite (comm _ (_ rfk)). rewrite ->!assoc. eapply ra_op_proper;[now apply _ | |reflexivity]. unfold equiv.
+          rewrite <-assoc, (comm (_ rret)). rewrite (comm (_ rret)). reflexivity.
     Qed.
 
     Lemma adequacy_ht {safe m e P Q n k tp' σ σ' w r}
             (HT  : valid (ht safe m P e Q))
             (HSN : stepn n ([e], σ) (tp', σ'))
             (HP  : P w (n + S k) r)
-            (HE  : wsat σ m (Some r) w @ n + S k) :
+            (HE  : wsat σ m (ra_proj r) w @ n + S k) :
       exists w' rs' φs',
         w ⊑ w' /\ wptp safe m w' (S k) tp' rs' (Q :: φs') /\ wsat σ' m (comp_list rs') w' @ S k.
     Proof.
-      edestruct preserve_wptp with (rs:=[r]) as [w' [rs' [φs' [HSW' [HSWTP' HSWS'] ] ] ] ]; [eassumption | | simpl comp_list; erewrite comm, pcm_op_unit by apply _; eassumption | clear HT HSN HP HE].
+      edestruct preserve_wptp with (rs:=[r]) as [w' [rs' [φs' [HSW' [HSWTP' HSWS'] ] ] ] ]; [eassumption | | simpl comp_list; erewrite comm, ra_op_unit by apply _; eassumption | clear HT HSN HP HE].
       - specialize (HT w (n + S k) r). apply HT in HP; try reflexivity; [|now apply unit_min].
         econstructor; [|now econstructor]. eassumption.
       - exists w' rs' φs'. now auto.
@@ -133,12 +135,13 @@ Module IrisMeta (RL : PCM_T) (C : CORE_LANG).
         wptp safe m w' (S k') tp' rs' (Q :: φs') /\ wsat σ' m (comp_list rs') w' @ S k'.
     Proof.
       destruct (steps_stepn _ _ HSN) as [n HSN']. clear HSN.
-      edestruct (adequacy_ht (w:=fdEmpty) (k:=k') (r:=(ex_own _ σ, pcm_unit _)) HT HSN') as [w' [rs' [φs' [HW [HSWTP HWS] ] ] ] ]; clear HT HSN'.
-      - exists (pcm_unit _); now rewrite ->pcm_op_unit by apply _.
-      - hnf. rewrite Plus.plus_comm. exists (fdEmpty (V:=res)). split.
-        + assert (HS : Some (ex_own _ σ, pcm_unit _) · 1 = Some (ex_own _ σ, pcm_unit _));
-          [| now setoid_rewrite HS].
-          eapply ores_equiv_eq; now erewrite comm, pcm_op_unit by apply _.
+      pose✓ r := (ex_own _ σ, 1:RL.res).
+      { unfold ra_valid. simpl. eapply ra_valid_unit. now apply _. }
+      edestruct (adequacy_ht (w:=fdEmpty) (k:=k') (r:=r) HT HSN') as [w' [rs' [φs' [HW [HSWTP HWS] ] ] ] ]; clear HT HSN'.
+      - exists (ra_unit _); now rewrite ->ra_op_unit by apply _.
+      - hnf. rewrite Plus.plus_comm. exists (fdEmpty (V:=pres)). split.
+        + unfold r, comp_map. simpl. rewrite ra_op_unit2. split; first assumption.
+          reflexivity.
         + intros i _; split; [reflexivity |].
           intros _ _ [].
       - do 3 eexists. split; [eassumption|]. assumption.
@@ -170,9 +173,7 @@ Module IrisMeta (RL : PCM_T) (C : CORE_LANG).
         [reflexivity | unfold lt; reflexivity | now apply mask_emp_disjoint | rewrite mask_emp_union; eassumption |].
       fold comp_list in HVal.
       specialize (HVal HV); destruct HVal as [w'' [r'' [HSW'' [Hφ'' HE''] ] ] ].
-      destruct (Some r'' · comp_list rs) as [r''' |] eqn: EQr.
-      + assumption.
-      + exfalso. eapply wsat_not_empty, HE''. reflexivity.
+      exact Hφ''.
     Qed.
 
     (* Adequacy for safe triples *)
@@ -192,7 +193,7 @@ Module IrisMeta (RL : PCM_T) (C : CORE_LANG).
       - rewrite mask_emp_union.
         eapply wsat_equiv, HWS; try reflexivity.
         rewrite comp_list_app. simpl comp_list.
-        rewrite ->(assoc (comp_list rs1)), ->(comm (comp_list rs1) (Some r)), <-assoc. reflexivity.
+        rewrite ->(assoc (comp_list rs1)), ->(comm (comp_list rs1) (ra_proj r)), <-assoc. reflexivity.
       - apply HSafe. reflexivity.
     Qed.
 
@@ -201,11 +202,11 @@ Module IrisMeta (RL : PCM_T) (C : CORE_LANG).
   Section Lifting.
 
     Local Open Scope mask_scope.
-    Local Open Scope pcm_scope.
+    Local Open Scope ra_scope.
     Local Open Scope bi_scope.
     Local Open Scope lang_scope.
 
-    Implicit Types (P : Props) (i : nat) (safe : bool) (m : mask) (e : expr) (Q R : vPred) (r : res).
+    Implicit Types (P : Props) (i : nat) (safe : bool) (m : mask) (e : expr) (Q R : vPred) (r : pres).
 
 
     Program Definition lift_ePred (φ : expr -=> Prop) : expr -n> Props :=

@@ -1,5 +1,3 @@
-Require Import ModuRes.PCM.
-
 Module Type CORE_LANG.
   Delimit Scope lang_scope with lang.
   Local Open Scope lang_scope.

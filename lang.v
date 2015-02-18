@@ -1,5 +1,4 @@
 Require Import List.
-Require Import ModuRes.PCM.
 Require Import core_lang.
 
 (******************************************************************)

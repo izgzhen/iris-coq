@@ -403,7 +403,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
         apply HR; [reflexivity | assumption].
     Qed.
 
-    Lemma wsat_not_empty σ m (r: res) w k :
+    Lemma wsat_valid σ m (r: res) w k :
       wsat σ m r w (S k) tt -> ✓r.
     Proof.
       intros [rs [HD _] ]. destruct HD as [VAL _].

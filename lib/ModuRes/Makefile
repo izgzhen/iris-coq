@@ -88,7 +88,6 @@ VFILES:=BI.v\
   MetricCore.v\
   MetricRec.v\
   PCBUltInst.v\
-  PCM.v\
   RA.v\
   Predom.v\
   PreoMet.v\

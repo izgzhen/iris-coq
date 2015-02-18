@@ -30,7 +30,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
         rewrite ->assoc, (comm (_ r1)), HR; reflexivity.
       - rewrite ->assoc, (comm (_ r1')) in HE'.
         exists w2. exists✓ (rd · ra_proj r1').
-        { apply wsat_not_empty in HE'. auto_valid. }
+        { apply wsat_valid in HE'. auto_valid. }
         split; [assumption | split; [| assumption] ].
         eapply uni_pred, HP'; [reflexivity|]. exists rd. reflexivity.
     Qed.
@@ -223,7 +223,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
         clear; intros i; unfold mcup; tauto.
       - rewrite ->assoc in HEq.
         exists w''. exists✓ (ra_proj rq · ra_proj rr).
-        { apply wsat_not_empty in HEq. auto_valid. }
+        { apply wsat_valid in HEq. auto_valid. }
         split; [assumption | split].
         + unfold lt in HLe0; rewrite ->HSub, HSub', <- HLe0 in Hr; exists rq rr.
           split; now auto.
@@ -231,7 +231,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
           clear; intros i; unfold mcup; tauto.
     Qed.
 
-    Instance limit_preserving_res (P : RL.res -> Prop) : LimitPreserving P.
+    Instance LP_res (P : RL.res -> Prop) : LimitPreserving P.
     Proof.
       intros σ σc HPc; simpl. unfold discreteCompl.
       now auto.

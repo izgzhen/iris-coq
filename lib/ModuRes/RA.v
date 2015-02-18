@@ -1,7 +1,8 @@
 (** Resource algebras: Commutative monoids with a decidable validity predicate. *)
 
 Require Import Bool.
-Require Export Predom.
+Require Import Predom.
+Require Import CSetoid.
 Require Import MetricCore.
 Require Import PreoMet.
 
@@ -143,6 +144,12 @@ Section PositiveCarrier.
   Program Definition ra_pos_unit: ra_pos := exist _ 1 _.
   Next Obligation.
     now erewrite ra_valid_unit by apply _.
+  Qed.
+
+  Lemma ra_proj_cancel r (VAL: ✓r):
+    ra_proj (ra_mk_pos r (VAL:=VAL)) = r.
+  Proof.
+    reflexivity.
   Qed.
 
   Lemma ra_op_pos_valid t1 t2 t:
