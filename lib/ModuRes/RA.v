@@ -271,16 +271,13 @@ Section Exclusive.
       | _, _ => False
     end.
 
-  Global Program Instance ra_eq_equiv : Equivalence ra_res_ex_eq.
-  Next Obligation.
-    intros [t| |]; simpl; now auto.
-  Qed.
-  Next Obligation.
-    intros [t1| |] [t2| |]; simpl; now auto.
-  Qed.
-  Next Obligation.
-    intros [t1| |] [t2| |] [t3| |]; simpl; try now auto.
-    - intros ? ?. etransitivity; eassumption.
+  Global Instance ra_eq_equiv : Equivalence ra_res_ex_eq.
+  Proof.
+    split.
+    - intros [t| |]; simpl; now auto.
+    - intros [t1| |] [t2| |]; simpl; now auto.
+    - intros [t1| |] [t2| |] [t3| |]; simpl; try now auto.
+      + intros ? ?. etransitivity; eassumption.
   Qed.
 
   Global Program Instance ra_type_ex : Setoid ra_res_ex :=

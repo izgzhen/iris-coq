@@ -168,7 +168,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
         rewrite ->HSub in HP; specialize (HSub i); rewrite HLu in HSub.
         destruct (w' i) as [π' |]; [| contradiction].
         split; [intuition now eauto | intros].
-        simpl in HLw, HSub. change (equiv rri ri0) in HLrs. rewrite <- HLw, <- HSub.
+        simpl in HLw, HSub. change (rri == ri0) in HLrs. rewrite <- HLw, <- HSub.
         apply HInv; [now auto with arith |].
         eapply uni_pred, HP; [now auto with arith |].
         rewrite <-HLrs. clear dependent ri0.

@@ -1,4 +1,5 @@
 Require Import Arith Program RelationClasses Morphisms.
+Require Import ModuRes.CSetoid.
 
 Definition mask := nat -> Prop.
 
@@ -28,8 +29,16 @@ Definition mcup (m1 m2 : mask) : mask :=
 Definition mminus (m1 m2 : mask) : mask :=
   fun i => (m1 : mask) i /\ ~ (m2 : mask) i.
 
+Global Instance meq_Equivalence: Equivalence meq.
+Proof.
+  split.
+  - intros m. unfold meq. tauto.
+  - intros m1 m2. unfold meq. now auto.
+  - intros m1 m2 m3. unfold meq. now firstorder.
+Qed.
+Global Instance mask_type : Setoid mask := mkType meq.
+
 Delimit Scope mask_scope with mask.
-Notation "m1 == m2" := (meq m1 m2) (at level 70) : mask_scope.
 Notation "m1 ⊆ m2"  := (mle m1 m2)  (at level 70) : mask_scope.
 Notation "m1 ∩ m2" := (mcap m1 m2) (at level 40) : mask_scope.
 Notation "m1 \  m2"  := (mminus m1 m2) (at level 30) : mask_scope.

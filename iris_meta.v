@@ -155,7 +155,7 @@ Module IrisMeta (RL : RA_T) (C : CORE_LANG).
     Next Obligation.
       intros x y H_xy P m r. simpl in H_xy. destruct n.
       - intros LEZ. exfalso. omega.
-      - intros _. simpl. assert(H_xy': equiv x y) by assumption. rewrite H_xy'. tauto.
+      - intros _. simpl. assert(H_xy': x == y) by assumption. rewrite H_xy'. tauto.
     Qed.
 
       
@@ -217,7 +217,7 @@ Module IrisMeta (RL : RA_T) (C : CORE_LANG).
     Next Obligation.
       intros x y H_xy P m r. simpl in H_xy. destruct n.
       - intros LEZ. exfalso. omega.
-      - intros _. simpl. assert(H_xy': equiv x y) by assumption. rewrite H_xy'. tauto.
+      - intros _. simpl. assert(H_xy': x == y) by assumption. rewrite H_xy'. tauto.
     Qed.
 
     Program Definition plugExpr safe m φ P Q: expr -n> Props :=
