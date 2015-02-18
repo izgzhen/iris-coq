@@ -2,6 +2,8 @@ Require Import ssreflect.
 Require Import world_prop core_lang lang masks iris_vs.
 Require Import ModuRes.PCM ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
+Set Bullet Behavior "Strict Subproofs".
+
 Module IrisWP (RL : PCM_T) (C : CORE_LANG).
   Module Export L  := Lang C.
   Module Export VS := IrisVS RL C.

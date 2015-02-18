@@ -1,5 +1,8 @@
+Require Import ssreflect.
 Require Import world_prop core_lang masks.
 Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
+
+Set Bullet Behavior "Strict Subproofs".
 
 Module IrisRes (RL : RA_T) (C : CORE_LANG) <: RA_T.
   Instance state_type : Setoid C.state := discreteType.
@@ -67,7 +70,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
     Program Definition box : Props -n> Props :=
       n[(fun p => m[(fun w => mkUPred (fun n r => p w n ra_pos_unit) _)])].
     Next Obligation.
-      intros n m r s HLe _ Hp; rewrite HLe; assumption.
+      intros n m r s HLe _ Hp; rewrite-> HLe; assumption.
     Qed.
     Next Obligation.
       intros w1 w2 EQw m r HLt; simpl.
@@ -91,7 +94,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
     Program Definition intEqP (t1 t2 : T) : UPred pres :=
       mkUPred (fun n r => t1 = S n = t2) _.
     Next Obligation.
-      intros n1 n2 _ _ HLe _; apply mono_dist; now auto with arith.
+      intros n1 n2 _ _ HLe _; apply mono_dist; omega.
     Qed.
 
     Definition intEq (t1 t2 : T) : Props := pcmconst (intEqP t1 t2).
@@ -101,7 +104,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
       intros l1 l2 EQl r1 r2 EQr n r.
       split; intros HEq; do 2 red.
       - rewrite <- EQl, <- EQr; assumption.
-      - rewrite EQl, EQr; assumption.
+      - rewrite ->EQl, EQr; assumption.
     Qed.
 
     Instance intEq_dist n : Proper (dist n ==> dist n ==> dist n) intEqP.
@@ -187,7 +190,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
       ownR (u · t) == ownR u * ownR t.
     Proof.
       intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
-      - destruct Hut as [s Heq]. rewrite assoc in Heq.
+      - destruct Hut as [s Heq]. rewrite-> assoc in Heq.
         exists✓ (s · u) by auto_valid.
         exists✓ t by auto_valid.
         split; [|split].
@@ -217,7 +220,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
 
     (** Proper ghost state: ownership of logical **)
     Program Definition ownL : RL.res -n> Props :=
-      n[(fun r => ownR (ex_unit _, r))].
+      n[(fun r => ownR (1%ra, r))].
     Next Obligation.
       intros r1 r2 EQr. destruct n as [| n]; [apply dist_bound |eapply dist_refl].
       simpl in EQr. intros w m t. simpl. change ( (ex_unit state, r1) ⊑ (ra_proj t) <->  (ex_unit state, r2) ⊑ (ra_proj t)). rewrite EQr. reflexivity.
@@ -271,7 +274,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
     m[(fun w => mkUPred (fun n r => timelessP p w n) _)].
   Next Obligation.
     intros n1 n2 _ _ HLe _ HT w' k r HSw HLt Hp; eapply HT, Hp; [eassumption |].
-    now eauto with arith.
+    omega.
   Qed.
   Next Obligation.
     intros w1 w2 EQw k; simpl; intros _ HLt; destruct n as [| n]; [now inversion HLt |].
@@ -304,48 +307,48 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
     Lemma comp_list_app rs1 rs2 :
       comp_list (rs1 ++ rs2) == comp_list rs1 · comp_list rs2.
     Proof.
-      induction rs1; simpl comp_list; [now rewrite ra_op_unit by apply _ |].
-      now rewrite IHrs1, assoc.
+      induction rs1; simpl comp_list; [now rewrite ->ra_op_unit by apply _ |].
+      now rewrite ->IHrs1, assoc.
     Qed.
 
     Definition cod (m : nat -f> pres) : list pres := List.map snd (findom_t m).
     Definition comp_map (m : nat -f> pres) : res := comp_list (cod m).
 
-    Lemma comp_map_remove (rs : nat -f> pres) i r (HLu : rs i = Some r) :
+    Lemma comp_map_remove (rs : nat -f> pres) i r (HLu : rs i == Some r) :
       comp_map rs == ra_proj r · comp_map (fdRemove i rs).
     Proof.
       destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
-      induction rs as [| [j s] ]; [discriminate |]; simpl comp_list; simpl in HLu.
-      destruct (comp i j); [inversion HLu; reflexivity | discriminate |].
-      simpl comp_list; rewrite IHrs by eauto using SS_tail.
-      rewrite !assoc, (comm (_ s)); reflexivity.
+      induction rs as [| [j s] ]; [contradiction |]; simpl comp_list; simpl in HLu.
+      destruct (comp i j); [do 5 red in HLu; rewrite-> HLu; reflexivity | contradiction |].
+      simpl comp_list; rewrite ->IHrs by eauto using SS_tail.
+      rewrite-> !assoc, (comm (_ s)); reflexivity.
     Qed.
 
-    Lemma comp_map_insert_new (rs : nat -f> pres) i r (HNLu : rs i = None) :
+    Lemma comp_map_insert_new (rs : nat -f> pres) i r (HNLu : rs i == None) :
       ra_proj r · comp_map rs == comp_map (fdUpdate i r rs).
     Proof.
       destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
       induction rs as [| [j s] ]; [reflexivity | simpl comp_list; simpl in HNLu].
-      destruct (comp i j); [discriminate | reflexivity |].
+      destruct (comp i j); [contradiction | reflexivity |].
       simpl comp_list; rewrite <- IHrs by eauto using SS_tail.
-      rewrite !assoc, (comm (_ r)); reflexivity.
+      rewrite-> !assoc, (comm (_ r)); reflexivity.
     Qed.
 
     Lemma comp_map_insert_old (rs : nat -f> pres) i r1 r2 r
-          (HLu : rs i = Some r1) (HEq : ra_proj r1 · ra_proj r2 == ra_proj r) :
+          (HLu : rs i == Some r1) (HEq : ra_proj r1 · ra_proj r2 == ra_proj r) :
       ra_proj r2 · comp_map rs == comp_map (fdUpdate i r rs).
     Proof.
       destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
-      induction rs as [| [j s] ]; [discriminate |]; simpl comp_list; simpl in HLu.
-      destruct (comp i j); [inversion HLu; subst; clear HLu | discriminate |].
-      - simpl comp_list; rewrite assoc, (comm (_ r2)), <- HEq; reflexivity.
+      induction rs as [| [j s] ]; [contradiction |]; simpl comp_list; simpl in HLu.
+      destruct (comp i j); [do 5 red in HLu; rewrite-> HLu; clear HLu | contradiction |].
+      - simpl comp_list; rewrite ->assoc, (comm (_ r2)), <- HEq; reflexivity.
       - simpl comp_list; rewrite <- IHrs by eauto using SS_tail.
-        rewrite !assoc, (comm (_ r2)); reflexivity.
+        rewrite-> !assoc, (comm (_ r2)); reflexivity.
     Qed.
 
     Definition state_sat (r: res) σ: Prop := ✓r /\
-      match r with
-        | (ex_own s, _) => s = σ
+      match fst r with
+        | ex_own s => s = σ
         | _ => True
       end.
 
@@ -386,17 +389,17 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
       split; intros [rs [HE HM] ]; exists rs.
       - split; [assumption | split; [rewrite <- (domeq _ _ _ EQw); apply HM, Hm |] ].
         intros; destruct (HM _ Hm) as [_ HR]; clear HE HM Hm.
-        assert (EQπ := EQw i); rewrite HLw in EQπ; clear HLw.
+        assert (EQπ := EQw i); rewrite-> HLw in EQπ; clear HLw.
         destruct (w1 i) as [π' |]; [| contradiction]; do 3 red in EQπ.
         apply ı in EQπ; apply EQπ; [now auto with arith |].
-        apply (met_morph_nonexp _ _ (ı π')) in EQw; apply EQw; [now auto with arith |].
+        apply (met_morph_nonexp _ _ (ı π')) in EQw; apply EQw; [omega |].
         apply HR; [reflexivity | assumption].
       - split; [assumption | split; [rewrite (domeq _ _ _ EQw); apply HM, Hm |] ].
         intros; destruct (HM _ Hm) as [_ HR]; clear HE HM Hm.
-        assert (EQπ := EQw i); rewrite HLw in EQπ; clear HLw.
+        assert (EQπ := EQw i); rewrite-> HLw in EQπ; clear HLw.
         destruct (w2 i) as [π' |]; [| contradiction]; do 3 red in EQπ.
         apply ı in EQπ; apply EQπ; [now auto with arith |].
-        apply (met_morph_nonexp _ _ (ı π')) in EQw; apply EQw; [now auto with arith |].
+        apply (met_morph_nonexp _ _ (ı π')) in EQw; apply EQw; [omega |].
         apply HR; [reflexivity | assumption].
     Qed.
 

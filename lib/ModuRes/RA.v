@@ -35,7 +35,7 @@ Notation "'✓' p" := (ra_valid p = true) (at level 35) : ra_scope.
 Notation "'~' '✓' p" := (ra_valid p <> true) (at level 35) : ra_scope.
 Delimit Scope ra_scope with ra.
 
-Tactic Notation "decide✓" ident(t1) "eqn:" ident(H) := destruct (ra_valid t1) eqn:H; [|apply not_true_iff_false in H].
+Tactic Notation "decide✓" ident(t1) "as" ident(H) := destruct (ra_valid t1) eqn:H; [|apply not_true_iff_false in H].
 
 
 (* General RA lemmas *)
@@ -95,8 +95,41 @@ Section Products.
       + eapply ra_op_valid; now eauto.
       + eapply ra_op_valid; now eauto.
   Qed.
-
 End Products.
+
+Section ProductLemmas.
+  Context {S T} `{raS : RA S, raT : RA T}.
+  Local Open Scope ra_scope.
+    
+  Lemma ra_op_prod_fst (st1 st2: S*T):
+    fst (st1 · st2) = fst st1 · fst st2.
+  Proof.
+    destruct st1 as [s1 t1]. destruct st2 as [s2 t2]. reflexivity.
+  Qed.
+  
+  Lemma ra_op_prod_snd (st1 st2: S*T):
+    snd (st1 · st2) = snd st1 · snd st2.
+  Proof.
+    destruct st1 as [s1 t1]. destruct st2 as [s2 t2]. reflexivity.
+  Qed.
+
+  Lemma ra_prod_valid (s: S) (t: T):
+    ✓(s, t) <-> ✓s /\ ✓t.
+  Proof.
+    unfold ra_valid, ra_valid_prod.
+    rewrite andb_true_iff.
+    reflexivity.
+  Qed.
+
+  Lemma ra_prod_valid2 (st: S*T):
+    ✓st <-> ✓(fst st) /\ ✓(snd st).
+  Proof.
+    destruct st as [s t]. unfold ra_valid, ra_valid_prod.
+    rewrite andb_true_iff.
+    tauto.
+  Qed.
+
+End ProductLemmas.
 
 Section PositiveCarrier.
   Context {T} `{raT : RA T}.
@@ -123,6 +156,13 @@ Section PositiveCarrier.
     t1 · t2 == ra_proj t -> ✓ t2.
   Proof.
     rewrite comm. now eapply ra_op_pos_valid.
+  Qed.
+
+  Lemma ra_pos_valid (r : ra_pos):
+    ✓(ra_proj r).
+  Proof.
+    destruct r as [r VAL].
+    exact VAL.
   Qed.
 
 End PositiveCarrier.
@@ -197,7 +237,7 @@ Section Order.
     rewrite <- assoc, (comm y), <- assoc, assoc, (comm y1), EQx, EQy; reflexivity.
   Qed.
 
-  Lemma ord_res_optRes r s :
+  Lemma ord_res_pres r s :
     (r ⊑ s) <-> (ra_proj r ⊑ ra_proj s).
   Proof.
     split; intros HR.
@@ -224,15 +264,20 @@ Section Exclusive.
       | _, _ => False
     end.
 
+  Global Program Instance ra_eq_equiv : Equivalence ra_res_ex_eq.
+  Next Obligation.
+    intros [t| |]; simpl; now auto.
+  Qed.
+  Next Obligation.
+    intros [t1| |] [t2| |]; simpl; now auto.
+  Qed.
+  Next Obligation.
+    intros [t1| |] [t2| |] [t3| |]; simpl; try now auto.
+    - intros ? ?. etransitivity; eassumption.
+  Qed.
+
   Global Program Instance ra_type_ex : Setoid ra_res_ex :=
     mkType ra_res_ex_eq.
-  Next Obligation.
-    split.
-    - intros [t| |]; simpl; now auto.
-    - intros [t1| |] [t2| |]; simpl; now auto.
-    - intros [t1| |] [t2| |] [t3| |]; simpl; try now auto.
-      + intros ? ?. etransitivity; eassumption.
-  Qed.
       
   Global Instance ra_unit_ex : RA_unit ra_res_ex := ex_unit.
   Global Instance ra_op_ex : RA_op ra_res_ex :=
