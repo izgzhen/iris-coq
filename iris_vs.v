@@ -107,7 +107,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       do 8 red in HInv.
       destruct HE as [rs [HE HM] ].
       destruct (rs i) as [ri |] eqn: HLr.
-      - rewrite ->comp_map_remove with (i := i) (r := ri) in HE by (rewrite HLr; reflexivity).
+      - rewrite ->comp_map_remove with (i := i) (r := ri) in HE by now eapply equivR.
         rewrite ->assoc, <- (assoc (_ r)), (comm rf), assoc in HE.
         exists w'.
         exists↓ (ra_proj r · ra_proj ri). { destruct HE as [HE _]. eapply ra_op_valid, ra_op_valid; eauto with typeclass_instances. }
@@ -149,15 +149,15 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       { destruct (rs i) as [rsi |] eqn: EQrsi; subst;
         [| simpl; rewrite ->ra_op_unit by apply _; now apply ra_pos_valid].
         clear - HE EQrsi. destruct HE as [HE _].
-        rewrite ->comp_map_remove with (i:=i) in HE by (erewrite EQrsi; reflexivity).
+        rewrite ->comp_map_remove with (i:=i) in HE by (eapply equivR; eassumption).
         rewrite ->(assoc (_ r)), (comm (_ r)), comm, assoc, <-(assoc (_ rsi) _), (comm _ (ra_proj r)), assoc in HE.
         eapply ra_op_valid, ra_op_valid; now eauto with typeclass_instances.
       }
       exists (fdUpdate i rri rs); split; [| intros j Hm].
       - simpl. erewrite ra_op_unit by apply _.
         clear - HE EQri. destruct (rs i) as [rsi |] eqn: EQrsi.
-        + subst rsi. erewrite <-comp_map_insert_old; [ eassumption | rewrite EQrsi; reflexivity | reflexivity ].
-        + unfold rri. subst ri. simpl. erewrite <-comp_map_insert_new; [|rewrite EQrsi; reflexivity]. simpl.
+        + subst rsi. erewrite <-comp_map_insert_old; [ eassumption | eapply equivR; eassumption | reflexivity ].
+        + unfold rri. subst ri. simpl. erewrite <-comp_map_insert_new; [|now eapply equivR]. simpl.
           erewrite ra_op_unit by apply _. assumption.
       - specialize (HD j); unfold mask_sing, mask_set, mcup in *; simpl in Hm, HD.
         destruct (Peano_dec.eq_nat_dec i j);
@@ -321,7 +321,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
         }
         split.
         {
-          rewrite <-comp_map_insert_new by (rewrite HRi; reflexivity).
+          rewrite <-comp_map_insert_new by now eapply equivR.
           rewrite ->assoc, (comm rf). assumption.
         }
         intros j Hm'.

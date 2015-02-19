@@ -16,6 +16,13 @@ Generalizable Variables T U V W.
 Definition equiv `{Setoid T} := SetoidClass.equiv.
 Arguments equiv {_ _} _ _ /.
 
+(* Proof by reflexivity *)
+Lemma equivR {T : Type} `{eqT : Setoid T} {a b : T} :
+  a = b -> a == b.
+Proof.
+  intros Heq. subst a. reflexivity.
+Qed.
+
 Notation "'mkType' R" := (@Build_Setoid _ R _) (at level 10).
 
 (** A morphism between two types is an actual function together with a

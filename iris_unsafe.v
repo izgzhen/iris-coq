@@ -61,11 +61,6 @@ Module Unsafety (RL : RA_T) (C : CORE_LANG).
     by exfalso; omega.
   Qed.
 
-  (* Leibniz equality arise from SSR's case tactic.
-     RJ: I could use this ;-) move to CSetoid? *) (* PDS: Feel free. I'd like to eventually get everything but the robust safety theorem out of this file. *)
-  Lemma equivP {T : Type} `{eqT : Setoid T} {a b : T} : a = b -> a == b.
-  Proof. by move=>->; reflexivity. Qed.
-
   (*
 	Simple monotonicity tactics for props and wsat.
 
@@ -213,7 +208,7 @@ Module Unsafety (RL : RA_T) (C : CORE_LANG).
         exists w'' α; split; [done| split]; last first.
         + by move: HW; rewrite 2! mask_full_union => HW; wsatM HW.
         apply: (IH _ HLt _ _ _ _ HSw₀); last done.
-        rewrite fillE; exists r' rK; split; [exact: equivP | split; [by propsM Hei' |] ].
+        rewrite fillE; exists r' rK; split; [exact: equivR | split; [by propsM Hei' |] ].
         have {HSw} HSw: w ⊑ w'' by transitivity w'.
         by propsM HK.
 
@@ -246,7 +241,7 @@ Module Unsafety (RL : RA_T) (C : CORE_LANG).
       rewrite/= in Hei'; rewrite fill_empty -Hk' in Hei' * => {Hk'}.
       have {HSw₀} HSw₀ : w₀ ⊑ w''' by transitivity w''; first by transitivity w'.
       apply: (IH _ HLt _ _ _ _ HSw₀); last done.
-      rewrite fillE; exists rei' rK; split; [exact: equivP | split; [done |] ].
+      rewrite fillE; exists rei' rK; split; [exact: equivR | split; [done |] ].
       have {HSw HSw' HSw''} HSw: w ⊑ w''' by transitivity w''; first by transitivity w'.
       by propsM HK.
     Qed.
