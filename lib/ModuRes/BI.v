@@ -178,7 +178,7 @@ Section UPredBI.
   Next Obligation.
     intros n m r1 r2 HLe [rd HEq] [r11 [r12 [HEq' [HP HQ]]]].
     rewrite <- HEq', assoc in HEq; setoid_rewrite HLe.
-    exists✓ (rd · ra_proj r11) by auto_valid.
+    exists↓ (rd · ra_proj r11) by auto_valid.
     exists r12.
     split; [|split;[|assumption] ].
     - simpl. assumption.
@@ -192,7 +192,7 @@ Section UPredBI.
   Next Obligation.
     intros n m r1 r2 HLe [r12 HEq] HSI k r rr HEq' HSub HP.
     rewrite comm in HEq; rewrite <- HEq, <- assoc in HEq'.
-    pose✓ rc := (r12 · ra_proj r) by auto_valid.
+    pose↓ rc := (r12 · ra_proj r) by auto_valid.
     eapply HSI with (r':=rc); [| etransitivity; eassumption |].
     - simpl. assumption. 
     - eapply uni_pred, HP; [reflexivity|]. exists r12. reflexivity.
@@ -366,13 +366,13 @@ Section UPredBI.
     intros P Q R n r; split.
     - intros [r1 [rr [EQr [HP [r2 [r3 [EQrr [HQ HR]]]]]]]].
       rewrite <- EQrr, assoc in EQr. unfold sc.
-      exists✓ (ra_proj r1 · ra_proj r2) by auto_valid.
+      exists↓ (ra_proj r1 · ra_proj r2) by auto_valid.
       exists r3; split; [assumption | split; [| assumption] ].
       exists r1 r2; split; [reflexivity | split; assumption].
     - intros [rr [r3 [EQr [[r1 [r2 [EQrr [HP HQ]]]] HR]]]].
       rewrite <- EQrr, <- assoc in EQr; clear EQrr.
       exists r1.
-      exists✓ (ra_proj r2 · ra_proj r3) by auto_valid.
+      exists↓ (ra_proj r2 · ra_proj r3) by auto_valid.
       split; [assumption | split; [assumption |] ].
       exists r2 r3; split; [reflexivity | split; assumption].
   Qed.

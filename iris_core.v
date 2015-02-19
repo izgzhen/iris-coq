@@ -191,8 +191,8 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
     Proof.
       intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
       - destruct Hut as [s Heq]. rewrite-> assoc in Heq.
-        exists✓ (s · u) by auto_valid.
-        exists✓ t by auto_valid.
+        exists↓ (s · u) by auto_valid.
+        exists↓ t by auto_valid.
         split; [|split].
         + rewrite <-Heq. reflexivity.
         + exists s. reflexivity.
@@ -203,7 +203,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
         rewrite <-assoc, (comm _ u), assoc. reflexivity.
     Qed.
 
-    Lemma ownR_valid u (INVAL: ~✓u):
+    Lemma ownR_valid u (INVAL: ~↓u):
       ownR u ⊑ ⊥.
     Proof.
       intros w n [r VAL] [v Heq]. hnf. unfold ra_proj, proj1_sig in Heq.
@@ -346,7 +346,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
         rewrite-> !assoc, (comm (_ r2)); reflexivity.
     Qed.
 
-    Definition state_sat (r: res) σ: Prop := ✓r /\
+    Definition state_sat (r: res) σ: Prop := ↓r /\
       match fst r with
         | ex_own s => s = σ
         | _ => True
@@ -404,7 +404,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
     Qed.
 
     Lemma wsat_valid σ m (r: res) w k :
-      wsat σ m r w (S k) tt -> ✓r.
+      wsat σ m r w (S k) tt -> ↓r.
     Proof.
       intros [rs [HD _] ]. destruct HD as [VAL _].
       eapply ra_op_valid; [now apply _|]. eassumption.

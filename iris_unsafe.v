@@ -227,7 +227,7 @@ Module Unsafety (RL : RA_T) (C : CORE_LANG).
         move: {HD} (mask_emp_disjoint (mask_full ∪ mask_full)) => HD.
         move: {He HSw' HW} (He _ _ _ _ _ HSw' HLt' HD HW) => [w'' [r' [HSw' [Hei' HW] ] ] ].
         move: HW; rewrite assoc. move=>HW.
-        pose✓ α := (ra_proj r' · ra_proj rK).
+        pose↓ α := (ra_proj r' · ra_proj rK).
         { clear -HW. apply wsat_valid in HW. auto_valid. }
         have {HSw₀} HSw₀: w₀ ⊑ w'' by transitivity w'.
         exists w'' α; split; [done| split]; last first.
@@ -259,7 +259,7 @@ Module Unsafety (RL : RA_T) (C : CORE_LANG).
       move: {Hv} (Hv HV) => [w''' [rei' [HSw'' [Hei' HW] ] ] ].
       (* now IH *)
       move: HW; rewrite assoc. move=>HW.
-      pose✓ α := (ra_proj rei' · ra_proj rK).
+      pose↓ α := (ra_proj rei' · ra_proj rK).
       { clear -HW. apply wsat_valid in HW. auto_valid. }
       exists w''' α. split; first by transitivity w''.
       split; last by rewrite mask_full_union -(mask_full_union mask_emp).

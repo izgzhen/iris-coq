@@ -60,21 +60,21 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
       split; [clear HS HF | split; [clear HV HF | split; clear HV HS; [| clear HF ] ] ]; intros.
       - specialize (HV HV0); destruct HV as [w'' [r1' [HSw' [Hφ HE'] ] ] ].
         rewrite ->assoc, (comm (_ r1')) in HE'.
-        exists w''. exists✓ (rd · ra_proj r1').
+        exists w''. exists↓ (rd · ra_proj r1').
         { clear -HE'. apply wsat_valid in HE'. auto_valid. }
         split; [assumption | split; [| assumption] ].
         eapply uni_pred, Hφ; [| exists rd]; reflexivity.
       - specialize (HS _ _ _ _ HDec HStep); destruct HS as [w'' [r1' [HSw' [HWP HE'] ] ] ].
         rewrite ->assoc, (comm (_ r1')) in HE'. exists w''.
         destruct k as [| k]; [exists r1'; simpl wsat; tauto |].
-        exists✓ (rd · ra_proj r1').
+        exists↓ (rd · ra_proj r1').
         { clear- HE'. apply wsat_valid in HE'. auto_valid. }
         split; [assumption | split; [| assumption] ].
         eapply uni_pred, HWP; [| exists rd]; reflexivity.
       - specialize (HF _ _ HDec); destruct HF as [w'' [rfk [rret1 [HSw' [HWR [HWF HE'] ] ] ] ] ].
         destruct k as [| k]; [exists w'' rfk rret1; simpl wsat; tauto |].
         rewrite ->assoc, <- (assoc (_ rfk)) in HE'.
-        exists w''. exists rfk. exists✓ (rd · ra_proj rret1).
+        exists w''. exists rfk. exists↓ (rd · ra_proj rret1).
         { clear- HE'. apply wsat_valid in HE'. rewrite comm. eapply ra_op_valid, ra_op_valid; try now apply _.
           rewrite ->(comm (_ rfk)) in HE'. eassumption. }
         repeat (split; try assumption).
@@ -468,14 +468,14 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
       clear He; split; [intros HVal; clear HS HF IH HE | split; [clear HV HF HE | clear HV HS HE; split; [clear HS' | clear HF] ]; intros ].
       - specialize (HV HVal); destruct HV as [w'' [r1' [HSw' [Hφ HE] ] ] ].
         rewrite ->assoc in HE. exists w''.
-        exists✓ (ra_proj r1' · ra_proj r2).
+        exists↓ (ra_proj r1' · ra_proj r2).
         { apply wsat_valid in HE. auto_valid. }
         split; [eassumption | split; [| eassumption ] ].
         exists r1' r2; split; [reflexivity | split; [assumption |] ].
         unfold lt in HLt; rewrite ->HLt, <- HSw', <- HSw; apply HLR.
       - edestruct HS as [w'' [r1' [HSw' [He HE] ] ] ]; try eassumption; []; clear HS.
         destruct k as [| k]; [exists w' r1'; split; [reflexivity | split; [apply wpO | exact I] ] |].
-        rewrite ->assoc in HE. exists w''. exists✓ (ra_proj r1' · ra_proj r2).
+        rewrite ->assoc in HE. exists w''. exists↓ (ra_proj r1' · ra_proj r2).
         { apply wsat_valid in HE. auto_valid. }
         split; [eassumption | split; [| eassumption] ].
         eapply IH; try eassumption; [ reflexivity |].
@@ -483,7 +483,7 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
       - specialize (HF _ _ HDec); destruct HF as [w'' [rfk [rret [HSw' [HWF [HWR HE] ] ] ] ] ].
         destruct k as [| k]; [exists w' rfk rret; split; [reflexivity | split; [apply wpO | split; [apply wpO | exact I] ] ] |].
         rewrite ->assoc, <- (assoc (_ rfk)) in HE.
-        exists w''. exists rfk. exists✓ (ra_proj rret · ra_proj r2).
+        exists w''. exists rfk. exists↓ (ra_proj rret · ra_proj r2).
         { clear- HE. apply wsat_valid in HE. eapply ra_op_valid2, ra_op_valid; try now apply _. eassumption. }
         split; [eassumption | split; [| split; eassumption] ].
         eapply IH; try eassumption; [ reflexivity |].
@@ -508,7 +508,7 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
         edestruct He as [_ [HeS _] ]; try eassumption; [].
         edestruct HeS as [w'' [r1' [HSw' [He' HE'] ] ] ]; try eassumption; [].
         clear HE He HeS; rewrite ->assoc in HE'.
-        exists w''. exists✓ (ra_proj r1' · ra_proj r2).
+        exists w''. exists↓ (ra_proj r1' · ra_proj r2).
         { clear- HE'. apply wsat_valid in HE'. auto_valid. }
         split; [eassumption | split; [| eassumption] ].
         assert (HNV : ~ is_value ei)
@@ -523,7 +523,7 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
           edestruct He' as [HVal _]; try eassumption; [].
           specialize (HVal HV); destruct HVal as [w'' [r1'' [HSw' [Hφ HE'] ] ] ].
           rewrite ->assoc in HE'.
-          exists w''. exists✓ (ra_proj r1'' · ra_proj r2).
+          exists w''. exists↓ (ra_proj r1'' · ra_proj r2).
           { clear- HE'. apply wsat_valid in HE'. auto_valid. }
           split; [eassumption | split; [| eassumption] ].
           exists r1'' r2; split; [reflexivity | split; [assumption |] ].

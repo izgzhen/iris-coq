@@ -32,11 +32,11 @@ Arguments ra_valid {T} {_} t.
 
 Notation "1" := (ra_unit _) : ra_scope.
 Notation "p · q" := (ra_op _ p q) (at level 40, left associativity) : ra_scope.
-Notation "'✓' p" := (ra_valid p = true) (at level 35) : ra_scope.
-Notation "'~' '✓' p" := (ra_valid p <> true) (at level 35) : ra_scope.
+Notation "'↓' p" := (ra_valid p = true) (at level 35) : ra_scope.
+Notation "'~' '↓' p" := (ra_valid p <> true) (at level 35) : ra_scope.
 Delimit Scope ra_scope with ra.
 
-Tactic Notation "decide✓" ident(t1) "as" ident(H) := destruct (ra_valid t1) eqn:H; [|apply not_true_iff_false in H].
+Tactic Notation "decide↓" ident(t1) "as" ident(H) := destruct (ra_valid t1) eqn:H; [|apply not_true_iff_false in H].
 
 
 (* General RA lemmas *)
@@ -49,19 +49,19 @@ Section RAs.
     rewrite comm. now eapply ra_op_unit.
   Qed.
   
-  Lemma ra_op_valid2 t1 t2: ✓ (t1 · t2) -> ✓ t2.
+  Lemma ra_op_valid2 t1 t2: ↓ (t1 · t2) -> ↓ t2.
   Proof.
     rewrite comm. now eapply ra_op_valid.
   Qed.
 
-  Lemma ra_op_invalid t1 t2: ~✓t1 -> ~✓(t1 · t2).
+  Lemma ra_op_invalid t1 t2: ~↓t1 -> ~↓(t1 · t2).
   Proof.
     intros Hinval Hval.
     apply Hinval.
     eapply ra_op_valid; now eauto.
   Qed.
 
-  Lemma ra_op_invalid2 t1 t2: ~✓t2 -> ~✓(t1 · t2).
+  Lemma ra_op_invalid2 t1 t2: ~↓t2 -> ~↓(t1 · t2).
   Proof.
     rewrite comm. now eapply ra_op_invalid.
   Qed.
@@ -115,7 +115,7 @@ Section ProductLemmas.
   Qed.
 
   Lemma ra_prod_valid (s: S) (t: T):
-    ✓(s, t) <-> ✓s /\ ✓t.
+    ↓(s, t) <-> ↓s /\ ↓t.
   Proof.
     unfold ra_valid, ra_valid_prod.
     rewrite andb_true_iff.
@@ -123,7 +123,7 @@ Section ProductLemmas.
   Qed.
 
   Lemma ra_prod_valid2 (st: S*T):
-    ✓st <-> ✓(fst st) /\ ✓(snd st).
+    ↓st <-> ↓(fst st) /\ ↓(snd st).
   Proof.
     destruct st as [s t]. unfold ra_valid, ra_valid_prod.
     rewrite andb_true_iff.
@@ -136,37 +136,37 @@ Section PositiveCarrier.
   Context {T} `{raT : RA T}.
   Local Open Scope ra_scope.
 
-  Definition ra_pos: Type := { r | ✓ r }.
+  Definition ra_pos: Type := { r | ↓ r }.
   Coercion ra_proj (t:ra_pos): T := proj1_sig t.
 
-  Definition ra_mk_pos t {VAL: ✓ t}: ra_pos := exist _ t VAL.
+  Definition ra_mk_pos t {VAL: ↓ t}: ra_pos := exist _ t VAL.
 
   Program Definition ra_pos_unit: ra_pos := exist _ 1 _.
   Next Obligation.
     now erewrite ra_valid_unit by apply _.
   Qed.
 
-  Lemma ra_proj_cancel r (VAL: ✓r):
+  Lemma ra_proj_cancel r (VAL: ↓r):
     ra_proj (ra_mk_pos r (VAL:=VAL)) = r.
   Proof.
     reflexivity.
   Qed.
 
   Lemma ra_op_pos_valid t1 t2 t:
-    t1 · t2 == ra_proj t -> ✓ t1.
+    t1 · t2 == ra_proj t -> ↓ t1.
   Proof.
     destruct t as [t Hval]; simpl. intros Heq. rewrite <-Heq in Hval.
     eapply ra_op_valid; eassumption.
   Qed.
 
   Lemma ra_op_pos_valid2 t1 t2 t:
-    t1 · t2 == ra_proj t -> ✓ t2.
+    t1 · t2 == ra_proj t -> ↓ t2.
   Proof.
     rewrite comm. now eapply ra_op_pos_valid.
   Qed.
 
   Lemma ra_pos_valid (r : ra_pos):
-    ✓(ra_proj r).
+    ↓(ra_proj r).
   Proof.
     destruct r as [r VAL].
     exact VAL.
@@ -186,10 +186,10 @@ Ltac auto_valid := match goal with
                    end.
 
 (* FIXME put the common parts into a helper tactic, and allow arbitrary tactics after "by" *)
-Tactic Notation "exists✓" constr(t) := let H := fresh "Hval" in assert(H:(✓t)%ra); [|exists (ra_mk_pos t (VAL:=H) ) ].
-Tactic Notation "exists✓" constr(t) "by" "auto_valid" := let H := fresh "Hval" in assert(H:(✓t)%ra); [auto_valid|exists (ra_mk_pos t (VAL:=H) ) ].
-Tactic Notation "pose✓" ident(name) ":=" constr(t) := let H := fresh "Hval" in assert(H:(✓t)%ra); [|pose (name := ra_mk_pos t (VAL:=H) ) ].
-Tactic Notation "pose✓" ident(name) ":=" constr(t) "by" "auto_valid" := let H := fresh "Hval" in assert(H:(✓t)%ra); [auto_valid|pose (name := ra_mk_pos t (VAL:=H) ) ].
+Tactic Notation "exists↓" constr(t) := let H := fresh "Hval" in assert(H:(↓t)%ra); [|exists (ra_mk_pos t (VAL:=H) ) ].
+Tactic Notation "exists↓" constr(t) "by" "auto_valid" := let H := fresh "Hval" in assert(H:(↓t)%ra); [auto_valid|exists (ra_mk_pos t (VAL:=H) ) ].
+Tactic Notation "pose↓" ident(name) ":=" constr(t) := let H := fresh "Hval" in assert(H:(↓t)%ra); [|pose (name := ra_mk_pos t (VAL:=H) ) ].
+Tactic Notation "pose↓" ident(name) ":=" constr(t) "by" "auto_valid" := let H := fresh "Hval" in assert(H:(↓t)%ra); [auto_valid|pose (name := ra_mk_pos t (VAL:=H) ) ].
 
 
 Section Order.
