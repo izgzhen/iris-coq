@@ -29,7 +29,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       - eapply wsat_equiv, HE; try reflexivity.
         rewrite ->assoc, (comm (_ r1)), HR; reflexivity.
       - rewrite ->assoc, (comm (_ r1')) in HE'.
-        exists w2. exists✓ (rd · ra_proj r1').
+        exists w2. exists↓ (rd · ra_proj r1').
         { apply wsat_valid in HE'. auto_valid. }
         split; [assumption | split; [| assumption] ].
         eapply uni_pred, HP'; [reflexivity|]. exists rd. reflexivity.
@@ -110,7 +110,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       - rewrite ->comp_map_remove with (i := i) (r := ri) in HE by (rewrite HLr; reflexivity).
         rewrite ->assoc, <- (assoc (_ r)), (comm rf), assoc in HE.
         exists w'.
-        exists✓ (ra_proj r · ra_proj ri). { destruct HE as [HE _]. eapply ra_op_valid, ra_op_valid; eauto with typeclass_instances. }
+        exists↓ (ra_proj r · ra_proj ri). { destruct HE as [HE _]. eapply ra_op_valid, ra_op_valid; eauto with typeclass_instances. }
         split; [reflexivity |].
         split.
         + simpl; eapply HInv; [now auto with arith |].
@@ -145,7 +145,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       exists w' ra_pos_unit; split; [reflexivity | split; [exact I |] ].
       rewrite ->(comm (_ r)), <-assoc in HE.
       remember (match rs i with Some ri => ri | None => ra_pos_unit end) as ri eqn: EQri.
-      pose✓ rri := (ra_proj ri · ra_proj r).
+      pose↓ rri := (ra_proj ri · ra_proj r).
       { destruct (rs i) as [rsi |] eqn: EQrsi; subst;
         [| simpl; rewrite ->ra_op_unit by apply _; now apply ra_pos_valid].
         clear - HE EQrsi. destruct HE as [HE _].
@@ -222,7 +222,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       - rewrite ->assoc, HR; eapply wsat_equiv, HE; try reflexivity; [].
         clear; intros i; unfold mcup; tauto.
       - rewrite ->assoc in HEq.
-        exists w''. exists✓ (ra_proj rq · ra_proj rr).
+        exists w''. exists↓ (ra_proj rq · ra_proj rr).
         { apply wsat_valid in HEq. auto_valid. }
         split; [assumption | split].
         + unfold lt in HLe0; rewrite ->HSub, HSub', <- HLe0 in Hr; exists rq rr.
@@ -241,7 +241,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       ownL <M< inclM.
 
     Lemma vsGhostUpd m rl (P : RL.res -> Prop)
-          (HU : forall rf (HD : ✓(rl · rf)), exists sl, P sl /\ ✓(sl · rf)) :
+          (HU : forall rf (HD : ↓(rl · rf)), exists sl, P sl /\ ↓(sl · rf)) :
       valid (vs m m (ownL rl) (xist (ownLP P))).
     Proof.
       unfold ownLP; intros _ _ _ w _ n [ [rp' rl'] Hrval] _ _ HG w'; intros.
@@ -251,7 +251,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       - clear - Hval EQrl. eapply ra_prod_valid2 in Hval. destruct Hval as [_ Hsnd].
         rewrite ->assoc, (comm rl), EQrl.
         rewrite ra_op_prod_snd in Hsnd. exact Hsnd.
-      - exists w'. exists✓ (rp', rsl).
+      - exists w'. exists↓ (rp', rsl).
         { clear - Hval HCrsl.
           apply ra_prod_valid. split; [|auto_valid].
           eapply ra_prod_valid2 in Hval. destruct Hval as [Hfst _].

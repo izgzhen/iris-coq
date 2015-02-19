@@ -135,7 +135,7 @@ Module IrisMeta (RL : RA_T) (C : CORE_LANG).
         wptp safe m w' (S k') tp' rs' (Q :: φs') /\ wsat σ' m (comp_list rs') w' @ S k'.
     Proof.
       destruct (steps_stepn _ _ HSN) as [n HSN']. clear HSN.
-      pose✓ r := (ex_own _ σ, 1:RL.res).
+      pose↓ r := (ex_own _ σ, 1:RL.res).
       { unfold ra_valid. simpl. eapply ra_valid_unit. now apply _. }
       edestruct (adequacy_ht (w:=fdEmpty) (k:=k') (r:=r) HT HSN') as [w' [rs' [φs' [HW [HSWTP HWS] ] ] ] ]; clear HT HSN'.
       - exists (ra_unit _); now rewrite ->ra_op_unit by apply _.
