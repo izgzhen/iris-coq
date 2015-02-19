@@ -305,7 +305,14 @@ Section MCont.
   Context `{cT : cmetric T} `{cU : cmetric U} `{cV : cmetric V}.
 
   (** Definition of contractive functions. This works since the spaces are bisected. *)
-  Class contractive (f : T -n> U) := contr n : Proper (dist n ==> dist (S n)) f.
+  Class contractive (f : T -> U) := contr n : Proper (dist n ==> dist (S n)) f.
+
+  Program Definition contractive_nonexp (f: T -> U) (fC: contractive f): T -n> U :=
+    n[(f)].
+  Next Obligation.
+    intros t u EQ. eapply dist_mono, fC. assumption.
+  Qed.
+    
 
   (** Image of a Cauchy chain by a non-expansive function is another Cauchy sequence. *)
   Definition liftc (f : T -> U) (σ : chain T) : chain U := fun i => f (σ i).
@@ -452,15 +459,20 @@ Section Fixpoints.
   (** Stating that the proposed fixed point is in fact a fixed point. *)
   Lemma fixp_eq f x {HC : contractive f} : fixp f x == f (fixp f x).
   Proof.
+    pose (f' := contractive_nonexp _ HC).
+    change (fixp f' x == f' (fixp f' x)).
     rewrite <- dist_refl; intros n; unfold fixp.
-    destruct (conv_cauchy (fun n => iter n f x) n) as [m Hm].
+    destruct (conv_cauchy (fun n => iter n f' x) n) as [m Hm].
     rewrite (Hm (S (max n m))), (Hm (max n m)) at 1; simpl; reflexivity || apply _.
   Qed.
 
   Lemma fixp_iter f x i {HC : contractive f} : fixp f x == iter i f (fixp f x).
   Proof.
+    pose (f' := contractive_nonexp _ HC).
+    change (fixp f' x == iter i f' (fixp f' x)).
     induction i; [reflexivity |].
-    simpl; rewrite fixp_eq, IHi at 1; reflexivity.
+    etransitivity; [eapply fixp_eq|].
+    rewrite IHi at 1. reflexivity.
   Qed.
 
   (** Fixed points are unique, i.e. the fixp does not depend on the starting point of the iteration. *)

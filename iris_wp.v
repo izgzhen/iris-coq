@@ -50,8 +50,8 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
         (forall HSafe : safe = true, safeExpr e σ).
 
     (* Define the function wp will be a fixed-point of *)
-    Program Definition wpF safe m : (expr -n> vPred -n> Props) -n> (expr -n> vPred -n> Props) :=
-      n[(fun WP => n[(fun e => n[(fun φ => m[(fun w => mkUPred (wpFP safe m WP e φ w) _)])])])].
+    Program Definition wpF safe m : (expr -n> vPred -n> Props) -> (expr -n> vPred -n> Props) :=
+      fun WP => n[(fun e => n[(fun φ => m[(fun w => mkUPred (wpFP safe m WP e φ w) _)])])].
     Next Obligation.
       intros n1 n2 r1 r2 HLe [rd EQr] Hp w' k rf mf σ HSw HLt HD HE.
       rewrite <- EQr, (comm rd), <- assoc in HE.
@@ -164,26 +164,6 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
     Next Obligation.
       intros e1 e2 EQe φ w k r HLt; destruct n as [| n]; [now inversion HLt | simpl].
       simpl in EQe; subst e2; reflexivity.
-    Qed.
-    Next Obligation.
-      intros WP1 WP2 EQWP e φ w k r HLt; destruct n as [| n]; [now inversion HLt | simpl].
-      split; intros Hp w'; intros; edestruct Hp as [HF [HS [HV HS'] ] ]; try eassumption; [|].
-      - split; [assumption | split; [| split]; intros].
-        + clear HF HV; specialize (HS _ _ _ _ HDec HStep); destruct HS as [w'' [r' [HSw' [HWP HE'] ] ] ].
-          exists w'' r'; split; [assumption | split; [| assumption] ].
-          eapply (EQWP _ _ _), HWP; omega.
-        + clear HF HS; specialize (HV _ _ HDec); destruct HV as [w'' [rfk [rret [HSw' [HWR [HWF HE'] ] ] ] ] ].
-          exists w'' rfk rret; split; [assumption |].
-          split; [| split; [| assumption] ]; eapply EQWP; try eassumption; omega.
-        + auto.
-      - split; [assumption | split; [| split]; intros].
-        + clear HF HV; specialize (HS _ _ _ _ HDec HStep); destruct HS as [w'' [r' [HSw' [HWP HE'] ] ] ].
-          exists w'' r'; split; [assumption | split; [| assumption] ].
-          eapply (EQWP _ _ _), HWP; omega.
-        + clear HF HS; specialize (HV _ _ HDec); destruct HV as [w'' [rfk [rret [HSw' [HWR [HWF HE'] ] ] ] ] ].
-          exists w'' rfk rret; split; [assumption |].
-          split; [| split; [| assumption] ]; eapply EQWP; try eassumption; omega.
-        + auto.
     Qed.
 
     Instance contr_wpF safe m : contractive (wpF safe m).
