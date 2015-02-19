@@ -16,28 +16,24 @@ Section Definitions.
 
   Class RA_unit := ra_unit : T.
   Class RA_op   := ra_op : T -> T -> T.
-  Class RA_valid:= ra_valid : T -> bool.
+  Class RA_valid:= ra_valid : T -> Prop.
   Class RA {TU : RA_unit} {TOP : RA_op} {TV : RA_valid}: Prop :=
     mkRA {
         ra_op_proper       :> Proper (equiv ==> equiv ==> equiv) ra_op;
         ra_op_assoc        :> Associative ra_op;
         ra_op_comm         :> Commutative ra_op;
         ra_op_unit t       : ra_op ra_unit t == t;
-        ra_valid_proper    :> Proper (equiv ==> eq) ra_valid;
-        ra_valid_unit      : ra_valid ra_unit = true;
-        ra_op_valid t1 t2  : ra_valid (ra_op t1 t2) = true -> ra_valid t1 = true
+        ra_valid_proper    :> Proper (equiv ==> iff) ra_valid;
+        ra_valid_unit      : ra_valid ra_unit;
+        ra_op_valid t1 t2  : ra_valid (ra_op t1 t2) -> ra_valid t1
       }.
 End Definitions.
 Arguments ra_valid {T} {_} t.
 
 Notation "1" := (ra_unit _) : ra_scope.
 Notation "p · q" := (ra_op _ p q) (at level 40, left associativity) : ra_scope.
-Notation "'↓' p" := (ra_valid p = true) (at level 35) : ra_scope.
-Notation "'~' '↓' p" := (ra_valid p <> true) (at level 35) : ra_scope.
+Notation "'↓' p" := (ra_valid p) (at level 35) : ra_scope.
 Delimit Scope ra_scope with ra.
-
-Tactic Notation "decide↓" ident(t1) "as" ident(H) := destruct (ra_valid t1) eqn:H; [|apply not_true_iff_false in H].
-
 
 (* General RA lemmas *)
 Section RAs.
@@ -79,7 +75,7 @@ Section Products.
         | (s1, t1), (s2, t2) => (s1 · s2, t1 · t2)
       end.
   Global Instance ra_valid_prod : RA_valid (S * T) :=
-    fun st => match st with (s, t) => ra_valid s && ra_valid t
+    fun st => match st with (s, t) => ra_valid s /\ ra_valid t
               end.
   Global Instance ra_prod : RA (S * T).
   Proof.
@@ -91,8 +87,8 @@ Section Products.
     - intros [s t]. simpl; split; now rewrite ra_op_unit.
     - intros [s1 t1] [s2 t2] [Heqs Heqt]. unfold ra_valid; simpl in *.
       rewrite Heqs, Heqt. reflexivity.
-    - unfold ra_unit, ra_valid; simpl. erewrite !ra_valid_unit by apply _. reflexivity.
-    - intros [s1 t1] [s2 t2]. unfold ra_valid; simpl. rewrite !andb_true_iff. intros [H1 H2]. split.
+    - unfold ra_unit, ra_valid; simpl. split; eapply ra_valid_unit; now apply _.
+    - intros [s1 t1] [s2 t2]. unfold ra_valid; simpl. intros [H1 H2]. split.
       + eapply ra_op_valid; now eauto.
       + eapply ra_op_valid; now eauto.
   Qed.
@@ -114,19 +110,10 @@ Section ProductLemmas.
     destruct st1 as [s1 t1]. destruct st2 as [s2 t2]. reflexivity.
   Qed.
 
-  Lemma ra_prod_valid (s: S) (t: T):
-    ↓(s, t) <-> ↓s /\ ↓t.
-  Proof.
-    unfold ra_valid, ra_valid_prod.
-    rewrite andb_true_iff.
-    reflexivity.
-  Qed.
-
-  Lemma ra_prod_valid2 (st: S*T):
+  Lemma ra_prod_valid (st: S*T):
     ↓st <-> ↓(fst st) /\ ↓(snd st).
   Proof.
     destruct st as [s t]. unfold ra_valid, ra_valid_prod.
-    rewrite andb_true_iff.
     tauto.
   Qed.
 
@@ -139,11 +126,13 @@ Section PositiveCarrier.
   Definition ra_pos: Type := { r | ↓ r }.
   Coercion ra_proj (t:ra_pos): T := proj1_sig t.
 
+  Global Instance ra_pos_type : Setoid ra_pos := _.
+
   Definition ra_mk_pos t {VAL: ↓ t}: ra_pos := exist _ t VAL.
 
   Program Definition ra_pos_unit: ra_pos := exist _ 1 _.
   Next Obligation.
-    now erewrite ra_valid_unit by apply _.
+    now eapply ra_valid_unit; apply _.
   Qed.
 
   Lemma ra_proj_cancel r (VAL: ↓r):
@@ -180,16 +169,19 @@ Ltac auto_valid_inner :=
   solve [ eapply ra_op_pos_valid; (eassumption || rewrite comm; eassumption)
         | eapply ra_op_pos_valid2; (eassumption || rewrite comm; eassumption)
         | eapply ra_op_valid; (eassumption || rewrite comm; eassumption) ].
-Ltac auto_valid := match goal with
-                     | |- @ra_valid ?T _ _ = true =>
+Ltac auto_valid := idtac; match goal with
+                     | |- @ra_valid ?T _ _ =>
                        let H := fresh in assert (H : RA T) by apply _; auto_valid_inner
                    end.
 
 (* FIXME put the common parts into a helper tactic, and allow arbitrary tactics after "by" *)
-Tactic Notation "exists↓" constr(t) := let H := fresh "Hval" in assert(H:(↓t)%ra); [|exists (ra_mk_pos t (VAL:=H) ) ].
-Tactic Notation "exists↓" constr(t) "by" "auto_valid" := let H := fresh "Hval" in assert(H:(↓t)%ra); [auto_valid|exists (ra_mk_pos t (VAL:=H) ) ].
-Tactic Notation "pose↓" ident(name) ":=" constr(t) := let H := fresh "Hval" in assert(H:(↓t)%ra); [|pose (name := ra_mk_pos t (VAL:=H) ) ].
-Tactic Notation "pose↓" ident(name) ":=" constr(t) "by" "auto_valid" := let H := fresh "Hval" in assert(H:(↓t)%ra); [auto_valid|pose (name := ra_mk_pos t (VAL:=H) ) ].
+Ltac exists_valid t tac := let H := fresh "Hval" in assert(H:(↓t)%ra); [tac|exists (ra_mk_pos t (VAL:=H) ) ].
+Tactic Notation "exists↓" constr(t) := exists_valid t idtac.
+Tactic Notation "exists↓" constr(t) "by" tactic(tac) := exists_valid t ltac:(now tac).
+
+Ltac pose_valid name t tac := let H := fresh "Hval" in assert(H:(↓t)%ra); [tac|pose (name := ra_mk_pos t (VAL:=H) ) ].
+Tactic Notation "pose↓" ident(name) ":=" constr(t) := pose_valid name t idtac.
+Tactic Notation "pose↓" ident(name) ":=" constr(t) "by" tactic(tac) := pose_valid name t ltac:(now tac).
 
 
 Section Order.
@@ -299,8 +291,8 @@ Section Exclusive.
       end.
   Global Instance ra_valid_ex : RA_valid ra_res_ex :=
     fun e => match e with
-               | ex_bot => false
-               | _      => true
+               | ex_bot => False
+               | _      => True
              end.
   
   Global Instance ra_ex : RA ra_res_ex.

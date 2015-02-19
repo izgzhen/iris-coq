@@ -136,7 +136,7 @@ Module IrisMeta (RL : RA_T) (C : CORE_LANG).
     Proof.
       destruct (steps_stepn _ _ HSN) as [n HSN']. clear HSN.
       pose↓ r := (ex_own _ σ, 1:RL.res).
-      { unfold ra_valid. simpl. eapply ra_valid_unit. now apply _. }
+      { unfold ra_valid. simpl. split; [|eapply ra_valid_unit; now apply _]. exact I. }
       edestruct (adequacy_ht (w:=fdEmpty) (k:=k') (r:=r) HT HSN') as [w' [rs' [φs' [HW [HSWTP HWS] ] ] ] ]; clear HT HSN'.
       - exists (ra_unit _); now rewrite ->ra_op_unit by apply _.
       - hnf. rewrite Plus.plus_comm. exists (fdEmpty (V:=pres)). split.

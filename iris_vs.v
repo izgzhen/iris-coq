@@ -248,20 +248,20 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       destruct HE as [rs [ Hsat HE] ]. rewrite <-assoc in Hsat. simpl in Hsat. destruct Hsat as [Hval Hst].
       destruct HG as [ [rdp rdl] [_ EQrl] ]. simpl in EQrl. clear rdp.
       destruct (HU (rdl · snd(rf · comp_map rs))) as [rsl [HPrsl HCrsl] ].
-      - clear - Hval EQrl. eapply ra_prod_valid2 in Hval. destruct Hval as [_ Hsnd].
+      - clear - Hval EQrl. eapply ra_prod_valid in Hval. destruct Hval as [_ Hsnd].
         rewrite ->assoc, (comm rl), EQrl.
         rewrite ra_op_prod_snd in Hsnd. exact Hsnd.
       - exists w'. exists↓ (rp', rsl).
         { clear - Hval HCrsl.
           apply ra_prod_valid. split; [|auto_valid].
-          eapply ra_prod_valid2 in Hval. destruct Hval as [Hfst _].
+          eapply ra_prod_valid in Hval. destruct Hval as [Hfst _].
           rewrite ra_op_prod_fst in Hfst. auto_valid. }
         split; first reflexivity. split.
         + exists (exist _ rsl HPrsl). simpl.
           exists (rp', 1:RL.res). simpl.
           rewrite ra_op_unit ra_op_unit2. split; reflexivity.
-        + exists rs. split; [| assumption]; clear HE. rewrite <-assoc. split; [eapply ra_prod_valid2; split|].
-          * clear - Hval. eapply ra_prod_valid2 in Hval. destruct Hval as [Hfst _].
+        + exists rs. split; [| assumption]; clear HE. rewrite <-assoc. split; [eapply ra_prod_valid; split|].
+          * clear - Hval. eapply ra_prod_valid in Hval. destruct Hval as [Hfst _].
             rewrite ra_op_prod_fst in Hfst.
             rewrite ra_op_prod_fst. exact Hfst.
           * clear -HCrsl. rewrite ->!assoc, (comm rsl), <-assoc in HCrsl.
