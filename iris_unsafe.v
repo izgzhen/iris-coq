@@ -27,14 +27,6 @@ Module Unsafety (RL : RA_T) (C : CORE_LANG).
     by move=> /= ->.
   Qed.
 
-  (* PDS: masks.v *)
-  Lemma mask_full_disjoint m (HD : m # mask_full) :
-    meq m mask_emp.
-  Proof.
-    move=> i; move: {HD} (HD i) => HD; split; last done.
-    move=> Hm; exfalso; exact: HD.
-  Qed.
-
   Implicit Types (P : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (Q : vPred) (r : pres) (w : Wld) (σ : state).
 
   (* PDS: Move to iris_wp.v *)
@@ -60,14 +52,7 @@ Module Unsafety (RL : RA_T) (C : CORE_LANG).
 
 	PDS: Should be moved or discarded.
   *)
-  Definition iffBI {T : Type} `{_ : ComplBI T} (p q : T) :=
-    (BI.and (BI.impl p q) (BI.impl q p)).
-
-  Notation "P ↔ Q" := (iffBI P Q) (at level 95, no associativity) : iris_scope.
-  Notation "p * q" := (BI.sc p q) (at level 40, left associativity) : iris_scope. (* RJ: there's already notation for this in iris_core? *)
-
-  (* RJ commented out for now, should not be necessary *)
-  (*Notation "a ⊑%pcm b" := ( _ a b) (at level 70, no associativity) : pcm_scope.*)
+  Notation "p * q" := (BI.sc p q) (at level 40, left associativity) : iris_scope. (* RJ: there's already notation for this in iris_core? *) (* PDS: The notation in Iris core uses sc : UPred (ra_pos res) -> UPred (ra_pos res) -> UPred (ra_pos res) rather than BI.sc. This variant is generic, so it survives more simplification. *)
 
   Lemma wpO {safe m e Q w r} : wp safe m e Q w O r.
   Proof.
@@ -76,13 +61,8 @@ Module Unsafety (RL : RA_T) (C : CORE_LANG).
     by exfalso; omega.
   Qed.
 
-  (* Easier to apply (with SSR, at least) than wsat_not_empty. *)
-  (* RJ: Commented out, does not have a multi-zero equivalent
-  Lemma wsat_nz {σ m w k} : ~ wsat σ m 0 w (S k) tt.
-  Proof. by move=> [rs [HD _] ]; exact: HD. Qed. *)
-
   (* Leibniz equality arise from SSR's case tactic.
-     RJ: I could use this ;-) move to CSetoid? *)
+     RJ: I could use this ;-) move to CSetoid? *) (* PDS: Feel free. I'd like to eventually get everything but the robust safety theorem out of this file. *)
   Lemma equivP {T : Type} `{eqT : Setoid T} {a b : T} : a = b -> a == b.
   Proof. by move=>->; reflexivity. Qed.
 
@@ -226,9 +206,9 @@ Module Unsafety (RL : RA_T) (C : CORE_LANG).
         move: {He HLe H1ei Hei} (He _ HSw' _ _ HLe H1ei Hei) => He.
         move: {HD} (mask_emp_disjoint (mask_full ∪ mask_full)) => HD.
         move: {He HSw' HW} (He _ _ _ _ _ HSw' HLt' HD HW) => [w'' [r' [HSw' [Hei' HW] ] ] ].
-        move: HW; rewrite assoc. move=>HW.
+        move: HW; rewrite assoc=>HW.
         pose↓ α := (ra_proj r' · ra_proj rK).
-        { clear -HW. apply wsat_valid in HW. auto_valid. }
+        + by apply wsat_valid in HW; auto_valid.
         have {HSw₀} HSw₀: w₀ ⊑ w'' by transitivity w'.
         exists w'' α; split; [done| split]; last first.
         + by move: HW; rewrite 2! mask_full_union => HW; wsatM HW.
@@ -244,9 +224,9 @@ Module Unsafety (RL : RA_T) (C : CORE_LANG).
       move: {He HLe H1ei Hei} (He _ HSw' _ _ HLe H1ei Hei) => He.
       (* unroll wp(ei,E)—step case—to get wp(ei',E) *)
       move: He; rewrite {1}unfold_wp => He.
-      move: {HD} (mask_emp_disjoint (mask_full)) => HD.
+      move: {HD} (mask_emp_disjoint mask_full) => HD.
       move: {He HSw' HLt' HW} (He _ _ _ _ _ HSw' HLt' HD HW) => [_ [HS _] ].
-      have Hεei: ei = ε[[ei]] by move: (fill_empty ei)->.
+      have Hεei: ei = ε[[ei]] by rewrite fill_empty.
       move: {HS Hεei HStep} (HS _ _ _ _ Hεei HStep) => [w'' [r' [HSw' [He' HW] ] ] ].
       (* unroll wp(ei',E)—value case—to get E ei' *)
       move: He'; rewrite {1}unfold_wp => He'.
@@ -258,9 +238,9 @@ Module Unsafety (RL : RA_T) (C : CORE_LANG).
       move: HV; rewrite -(fill_empty ei') => HV.
       move: {Hv} (Hv HV) => [w''' [rei' [HSw'' [Hei' HW] ] ] ].
       (* now IH *)
-      move: HW; rewrite assoc. move=>HW.
+      move: HW; rewrite assoc => HW.
       pose↓ α := (ra_proj rei' · ra_proj rK).
-      { clear -HW. apply wsat_valid in HW. auto_valid. }
+      + by apply wsat_valid in HW; auto_valid.
       exists w''' α. split; first by transitivity w''.
       split; last by rewrite mask_full_union -(mask_full_union mask_emp).
       rewrite/= in Hei'; rewrite fill_empty -Hk' in Hei' * => {Hk'}.
