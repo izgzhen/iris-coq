@@ -380,21 +380,21 @@ Section InfiniteProduct.
   Global Instance ra_equiv_infprod : Equivalence ra_eq_infprod.
   Proof. split; repeat intro; [ | rewrite (H0 s) | rewrite (H0 s), (H1 s) ]; reflexivity. Qed.
   
-  Global Instance ra_type_infprod : Setoid _ := mkType ra_eq_infprod.
+  Global Instance ra_type_infprod : Setoid ra_res_infprod := mkType ra_eq_infprod.
   Global Instance ra_unit_infprod : RA_unit _ := fun s => ra_unit T.
   Global Instance ra_op_infprod : RA_op _ := fun f g s => f s · g s.
   Global Instance ra_valid_infprod : RA_valid _ := fun f => forall s, ra_valid (f s). 
   Global Instance ra_infprod : RA ra_res_infprod.
   Proof.
     split; repeat intro.
-    - specialize (H0 s); specialize (H1 s); now apply (ra_op_proper (RA := RA_T) _ _). 
-    - compute; now rewrite (ra_op_assoc (RA := RA_T) _ (t1 s)).
-    - compute; now rewrite (ra_op_comm (RA := RA_T) _ (t1 s)).
-    - compute; now rewrite (ra_op_unit (RA := RA_T) _ (t s)).
+    - eapply ra_op_proper; now firstorder.
+    - compute. now rewrite (ra_op_assoc (RA := RA_T) _).
+    - compute; now rewrite (ra_op_comm (RA := RA_T) _).
+    - compute; now rewrite (ra_op_unit (RA := RA_T) _).
     - compute; intros; split; intros; symmetry in H0;
-      eapply (ra_valid_proper (RA := RA_T) _ (y s) _ (H0 s)); now apply H1.
-    - now firstorder.
-    - eapply (ra_op_valid (RA := RA_T) _ (t1 s)); now eauto.
+      eapply (ra_valid_proper (RA := RA_T) _ _ _ (H0 s)); now apply H1.
+    - now eapply (ra_valid_unit (RA := RA_T) _).
+    - eapply (ra_op_valid (RA := RA_T) _ _); now eauto.
   Qed.
 
 End InfiniteProduct.
