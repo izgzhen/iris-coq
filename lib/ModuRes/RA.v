@@ -310,6 +310,96 @@ Section Exclusive.
 End Exclusive.
 
 
+Section Agreement.
+  Context T `{T_ty : Setoid T} (eq_dec : forall x y, {x == y} + {x =/= y}).
+  Local Open Scope ra_scope.
+  
+  Inductive ra_res_agree : Type :=
+    | ag_bottom
+    | ag_unit
+    | ag_inj (t : T).
+  
+  Global Instance ra_unit_agree : RA_unit _ := ag_unit.
+  Global Instance ra_valid_ag : RA_valid _ := 
+           fun x => match x with ag_bottom => False | _ => True end.
+  Global Instance ra_op_ag : RA_op _ :=
+    fun x y => match x, y with
+               | ag_inj t1, ag_inj t2 => 
+                   if eq_dec t1 t2 then ag_inj t1 else ag_bottom
+               | ag_bottom , y => ag_bottom
+               | x , ag_bottom => ag_bottom
+               | ag_unit, y => y
+               | x, ag_unit => x
+             end.
+
+  Definition ra_eq_ag (x : ra_res_agree) (y : ra_res_agree) : Prop :=
+    match x,y with 
+      | ag_inj t1, ag_inj t2 => t1 == t2
+      | x, y => x = y
+    end.
+  
+
+  Global Instance ra_equivalence_agree : Equivalence ra_eq_ag.
+  Proof. 
+    split; intro; intros; destruct x; try (destruct y; try destruct z); simpl; try reflexivity;
+    simpl in *; try inversion H; try inversion H0; try rewrite <- H; try rewrite <- H0; try firstorder.
+  Qed.
+  Global Instance ra_type_agree : Setoid ra_res_agree := mkType ra_eq_ag.
+  Global Instance res_agree : RA ra_res_agree.
+  Proof.
+    split; repeat intro.
+    - repeat (match goal with [ x : ra_res_agree |- _ ] => destruct x end); 
+      simpl in *; try reflexivity; try rewrite H; try rewrite H0; try reflexivity;
+      try inversion H; try inversion H0; compute;
+      destruct (eq_dec t2 t0), (eq_dec t1 t); simpl; auto; exfalso;
+      [ rewrite <- H, -> e in c | rewrite -> H, -> e in c; symmetry in c]; contradiction.
+    - repeat (match goal with [ x : ra_res_agree |- _ ] => destruct x end); 
+      simpl in *; auto; try reflexivity; compute; try destruct (eq_dec _ _); try reflexivity.
+      destruct (eq_dec t0 t), (eq_dec t1 t0), (eq_dec t1 t); simpl; auto; try reflexivity;
+      rewrite e in e0; contradiction.
+    -  destruct t1, t2; try reflexivity; compute; destruct (eq_dec t0 t), (eq_dec t t0); 
+       try reflexivity; auto; try contradiction; try (symmetry in e; contradiction).
+    - destruct t; reflexivity.
+    - destruct x, y; simpl; firstorder; try now inversion H.
+    - now constructor.
+    - destruct t1, t2; try contradiction; now constructor.
+  Qed. 
+
+End Agreement.
+
+
+Section InfiniteProduct.
+  Context (S T : Type) `{RA_T : RA T}.
+  Local Open Scope ra_scope.
+
+  Definition ra_res_infprod := forall (s : S), T.
+
+  Implicit Type (s : S) (f g : ra_res_infprod).
+  
+  Definition ra_eq_infprod := fun f g => forall s, f s == g s.
+  Global Instance ra_equiv_infprod : Equivalence ra_eq_infprod.
+  Proof. split; repeat intro; [ | rewrite (H0 s) | rewrite (H0 s), (H1 s) ]; reflexivity. Qed.
+  
+  Global Instance ra_type_infprod : Setoid _ := mkType ra_eq_infprod.
+  Global Instance ra_unit_infprod : RA_unit _ := fun s => ra_unit T.
+  Global Instance ra_op_infprod : RA_op _ := fun f g s => f s · g s.
+  Global Instance ra_valid_infprod : RA_valid _ := fun f => forall s, ra_valid (f s). 
+  Global Instance ra_infprod : RA ra_res_infprod.
+  Proof.
+    split; repeat intro.
+    - specialize (H0 s); specialize (H1 s); now apply (ra_op_proper (RA := RA_T) _ _). 
+    - compute; now rewrite (ra_op_assoc (RA := RA_T) _ (t1 s)).
+    - compute; now rewrite (ra_op_comm (RA := RA_T) _ (t1 s)).
+    - compute; now rewrite (ra_op_unit (RA := RA_T) _ (t s)).
+    - compute; intros; split; intros; symmetry in H0;
+      eapply (ra_valid_proper (RA := RA_T) _ (y s) _ (H0 s)); now apply H1.
+    - now firstorder.
+    - eapply (ra_op_valid (RA := RA_T) _ (t1 s)); now eauto.
+  Qed.
+
+End InfiniteProduct.
+
+
 (* Package of a monoid as a module type (for use with other modules). *)
 Module Type RA_T.
 
