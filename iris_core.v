@@ -180,6 +180,32 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
 
   End Invariants.
 
+  Section Timeless.
+  
+    Definition timelessP P w n :=
+      forall w' k r (HSw : w ⊑ w') (HLt : k < n) (Hp : P w' k r), P w' (S k) r.
+  
+    Program Definition timeless P : Props :=
+      m[(fun w => mkUPred (fun n r => timelessP P w n) _)].
+    Next Obligation.
+      intros n1 n2 _ _ HLe _ HT w' k r HSw HLt Hp; eapply HT, Hp; [eassumption |].
+      omega.
+    Qed.
+    Next Obligation.
+      intros w1 w2 EQw k; simpl; intros _ HLt; destruct n as [| n]; [now inversion HLt |].
+      split; intros HT w' m r HSw HLt' Hp.
+      - symmetry in EQw; assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
+        apply (met_morph_nonexp _ _ P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
+      - assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
+        apply (met_morph_nonexp _ _ P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
+    Qed.
+    Next Obligation.
+      intros w1 w2 HSw n; simpl; intros _ HT w' m r HSw' HLt Hp.
+      eapply HT, Hp; [etransitivity |]; eassumption.
+    Qed.
+  
+  End Timeless.
+
   Section Ownership.
 
     (** Ownership **)
@@ -196,13 +222,17 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
       intros u1 u2 Hequ. intros w n r. split; intros [t Heqt]; exists t; [rewrite <-Hequ|rewrite Hequ]; assumption.
     Qed.
 
-    Lemma ownR_sc u t:
-      ownR (u · t) == ownR u * ownR t.
+    Lemma ownR_timeless {u} :
+      valid(timeless(ownR u)).
+    Proof. intros w n _ w' k r _ _; now auto. Qed.
+  
+    Lemma ownR_sc u v:
+      ownR (u · v) == ownR u * ownR v.
     Proof.
       intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
       - destruct Hut as [s Heq]. rewrite-> assoc in Heq.
         exists↓ (s · u) by auto_valid.
-        exists↓ t by auto_valid.
+        exists↓ v by auto_valid.
         split; [|split].
         + rewrite <-Heq. reflexivity.
         + exists s. reflexivity.
@@ -228,6 +258,9 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
       rewrite EQr. reflexivity.
     Qed.
 
+    Lemma ownS_timeless {σ} : valid(timeless(ownS σ)).
+    Proof. exact ownR_timeless. Qed.
+  
     (** Proper ghost state: ownership of logical **)
     Program Definition ownL : RL.res -n> Props :=
       n[(fun r : RL.res => ownR (1, r))].
@@ -236,6 +269,9 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
       simpl in EQr. intros w m t. simpl. change ( (ex_unit state, r1) ⊑ (ra_proj t) <->  (ex_unit state, r2) ⊑ (ra_proj t)). rewrite EQr. reflexivity.
     Qed.
 
+    Lemma ownL_timeless {r : RL.res} : valid(timeless(ownL r)).
+    Proof. exact ownR_timeless. Qed.
+  
     (** Ghost state ownership **)
     Lemma ownL_sc (r s : RL.res) :
       ownL (r · s) == ownL r * ownL s.
@@ -248,30 +284,6 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
     Qed.
 
   End Ownership.
-
-  (** Timeless *)
-
-  Definition timelessP P w n :=
-    forall w' k r (HSw : w ⊑ w') (HLt : k < n) (Hp : P w' k r), P w' (S k) r.
-
-  Program Definition timeless P : Props :=
-    m[(fun w => mkUPred (fun n r => timelessP P w n) _)].
-  Next Obligation.
-    intros n1 n2 _ _ HLe _ HT w' k r HSw HLt Hp; eapply HT, Hp; [eassumption |].
-    omega.
-  Qed.
-  Next Obligation.
-    intros w1 w2 EQw k; simpl; intros _ HLt; destruct n as [| n]; [now inversion HLt |].
-    split; intros HT w' m r HSw HLt' Hp.
-    - symmetry in EQw; assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
-      apply (met_morph_nonexp _ _ P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
-    - assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
-      apply (met_morph_nonexp _ _ P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
-  Qed.
-  Next Obligation.
-    intros w1 w2 HSw n; simpl; intros _ HT w' m r HSw' HLt Hp.
-    eapply HT, Hp; [etransitivity |]; eassumption.
-  Qed.
 
   Section WorldSatisfaction.
 

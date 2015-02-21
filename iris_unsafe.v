@@ -11,11 +11,6 @@ Module Unsafety (RL : RA_T) (C : CORE_LANG).
   Local Open Scope bi_scope.
   Local Open Scope iris_scope.
 
-  (* PDS: Move to iris_core.v *)
-  Lemma ownL_timeless {r : RL.res} :
-    valid(timeless(ownL r)).
-  Proof. intros w n _ w' k r' HSW HLE. auto. Qed.
-
   (* PDS: Hoist, somewhere. *)
   Program Definition restrictV (Q : expr -n> Props) : vPred :=
     n[(fun v => Q (` v))].
