@@ -417,4 +417,28 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
     - intros w n r; apply Hp; exact I.
   Qed.
 
+  (*
+	Simple monotonicity tactics for props and wsat.
+
+	The tactic propsM H proves P w' n' r' given H : P w n r when
+		w ⊑ w', n' <= n, r ⊑ r'
+	are immediate.
+
+	The tactic wsatM is similar.
+  *)
+
+  Lemma propsM {P w n r w' n' r'}
+      (HP : P w n r) (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
+    P w' n' r'.
+  Proof. by apply: (mu_mono _ _ P _ _ HSw); exact: (uni_pred _ _ _ _ _ HLe HSr). Qed.
+
+  Ltac propsM H := solve [ done | apply (propsM H); solve [ done | reflexivity | omega ] ].
+
+  Lemma wsatM {σ m} {r : res} {w n k}
+      (HW : wsat σ m r w @ n) (HLe : k <= n) :
+    wsat σ m r w @ k.
+  Proof. by exact: (uni_pred _ _ _ _ _ HLe). Qed.
+
+  Ltac wsatM H := solve [done | apply (wsatM H); solve [done | omega] ].
+
 End IrisCore.

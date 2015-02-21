@@ -230,7 +230,7 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
       - unfold safeExpr. auto.
     Qed.
 
-    Lemma wpO safe m e φ w r : wp safe m e φ w O r.
+    Lemma wpO {safe m e Q w r} : wp safe m e Q w O r.
     Proof.
       rewrite unfold_wp; intros w'; intros; now inversion HLt.
     Qed.
@@ -543,6 +543,27 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
         + left; apply fork_ret_is_value.
       - right; right; exists e empty_ctx; rewrite ->fill_empty; reflexivity.
     Qed.
+
+    Set Bullet Behavior "None".	(* PDS: Ridiculous. *)
+
+    Lemma htUnsafe {m P e Q} : ht true m P e Q ⊑ ht false m P e Q.
+    Proof.
+      move=> wz nz rz He w HSw n r HLe Hr HP.
+      move: {He P wz nz rz HSw HLe Hr HP} (He _ HSw _ _ HLe Hr HP).
+      move: n e Q w r; elim/wf_nat_ind; move=> n IH e Q w r He.
+      rewrite unfold_wp; move=> w' k rf mf σ HSw HLt HD Hw.
+      move: {IH} (IH _ HLt) => IH.
+      move: He => /unfold_wp He; move: {He HSw HLt HD Hw} (He _ _ _ _ _ HSw HLt HD Hw) => [HV [HS [HF _] ] ].
+      split; [done | clear HV; split; [clear HF | split; [clear HS | done] ] ].
+      - move=> σ' ei ei' K HK Hs.
+        move: {HS HK Hs} (HS _ _ _ _ HK Hs) => [w'' [r' [HSw' [He' Hw'] ] ] ].
+        exists w'' r'; split; [done | split; [exact: IH | done] ].
+      move=> e' K HK.
+      move: {HF HK} (HF _ _ HK) => [w'' [rfk [rret [HSw' [Hk [He' Hw'] ] ] ] ] ].
+      exists w'' rfk rret; split; [done | split; [exact: IH | split; [exact: IH | done] ] ].
+    Qed.
+    
+    Set Bullet Behavior "Strict Subproofs".
 
   End HoareTripleProperties.
 
