@@ -6,10 +6,9 @@ Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finma
 Module Unsafety (RL : RA_T) (C : CORE_LANG).
 
   Module Export Iris := IrisWP RL C.
-  Local Open Scope mask_scope.
+  Local Open Scope lang_scope.
   Local Open Scope ra_scope.
   Local Open Scope bi_scope.
-  Local Open Scope lang_scope.
   Local Open Scope iris_scope.
 
   (* PDS: Move to iris_core.v *)
@@ -52,7 +51,6 @@ Module Unsafety (RL : RA_T) (C : CORE_LANG).
 
 	PDS: Should be moved or discarded.
   *)
-  Notation "p * q" := (BI.sc p q) (at level 40, left associativity) : iris_scope. (* RJ: there's already notation for this in iris_core? *) (* PDS: The notation in Iris core uses sc : UPred (ra_pos res) -> UPred (ra_pos res) -> UPred (ra_pos res) rather than BI.sc. This variant is generic, so it survives more simplification. *)
 
   Lemma wpO {safe m e Q w r} : wp safe m e Q w O r.
   Proof.

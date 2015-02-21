@@ -102,7 +102,19 @@ Class Later (T : Type) `{pcmT : pcmType T} {vT : Valid T} :=
     loeb (t : T) (HL : later t ⊑ t) : valid t
   }.
 
+Delimit Scope bi_scope with bi.
 Notation " ▹ p " := (later p) (at level 20) : bi_scope.
+Notation "⊤" := (top) : bi_scope.
+Notation "⊥" := (bot) : bi_scope.
+Notation "p ∧ q" := (and p q) (at level 40, left associativity) : bi_scope.
+Notation "p ∨ q" := (or p q) (at level 50, left associativity) : bi_scope.
+Notation "p * q" := (sc p q) (at level 40, left associativity) : bi_scope.
+Notation "p → q" := (impl p q) (at level 55, right associativity) : bi_scope.
+Notation "p '-*' q" := (si p q) (at level 55, right associativity) : bi_scope.
+Notation "∀ x , p" := (all n[(fun x => p)]) (at level 60, x ident, no associativity) : bi_scope.
+Notation "∃ x , p" := (xist n[(fun x => p)]) (at level 60, x ident, no associativity) : bi_scope.
+Notation "∀ x : T , p" := (all n[(fun x : T => p)]) (at level 60, x ident, no associativity) : bi_scope.
+Notation "∃ x : T , p" := (xist n[(fun x : T => p)]) (at level 60, x ident, no associativity) : bi_scope.
 
 Require Import UPred.
 
@@ -144,7 +156,7 @@ Section UPredBI.
   Local Open Scope ra_scope.
   Local Obligation Tactic := intros; eauto with typeclass_instances.
 
-  Definition pres := ra_pos res.
+  Let pres := ⁺res.
 
   (* Standard interpretations of propositional connectives. *)
   Global Program Instance top_up : topBI (UPred pres) := up_cr (const True).

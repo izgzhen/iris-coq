@@ -8,15 +8,13 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
   Module Export L  := Lang C.
   Module Export VS := IrisVS RL C.
 
-  Delimit Scope iris_scope with iris.
+  Local Open Scope lang_scope.
+  Local Open Scope ra_scope.
+  Local Open Scope bi_scope.
   Local Open Scope iris_scope.
 
   Section HoareTriples.
   (* Quadruples, really *)
-    Local Open Scope mask_scope.
-    Local Open Scope ra_scope.
-    Local Open Scope bi_scope.
-    Local Open Scope lang_scope.
 
     Instance LP_isval : LimitPreserving is_value.
     Proof.
@@ -199,15 +197,11 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
 
     Opaque wp.
 
-    Definition ht safe m P e Q := □ (P → wp safe m e Q).
+    Definition ht safe m P e Q := □(P → wp safe m e Q).
 
   End HoareTriples.
   
   Section HoareTripleProperties.
-    Local Open Scope mask_scope.
-    Local Open Scope ra_scope.
-    Local Open Scope bi_scope.
-    Local Open Scope lang_scope.
 
     Existing Instance LP_isval.
 
@@ -474,7 +468,7 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
     Lemma htAFrame safe m m' P R e Q
           (HD  : m # m')
           (HAt : atomic e) :
-      ht safe m P e Q ⊑ ht safe (m ∪ m') (P * ▹ R) e (lift_bin sc Q (umconst R)).
+      ht safe m P e Q ⊑ ht safe (m ∪ m') (P * ▹R) e (lift_bin sc Q (umconst R)).
     Proof.
       intros w n rz He w' HSw n' r HLe _ [r1 [r2 [EQr [HP HLR] ] ] ].
       specialize (He _ HSw _ _ HLe (unit_min _ _) HP).
@@ -521,7 +515,7 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
 
     (** Fork **)
     Lemma htFork safe m P R e :
-      ht safe m P e (umconst ⊤) ⊑ ht safe m (▹ P * ▹ R) (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).
+      ht safe m P e (umconst ⊤) ⊑ ht safe m (▹P * ▹R) (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).
     Proof.
       intros w n rz He w' HSw n' r HLe _ [r1 [r2 [EQr [HP HLR] ] ] ].
       destruct n' as [| n']; [apply wpO |].
@@ -553,10 +547,6 @@ Module IrisWP (RL : RA_T) (C : CORE_LANG).
   End HoareTripleProperties.
 
   Section DerivedRules.
-    Local Open Scope mask_scope.
-    Local Open Scope ra_scope.
-    Local Open Scope bi_scope.
-    Local Open Scope lang_scope.
 
     Existing Instance LP_isval.
 

@@ -39,6 +39,7 @@ Qed.
 Global Instance mask_type : Setoid mask := mkType meq.
 
 Delimit Scope mask_scope with mask.
+Bind Scope mask_scope with mask.
 Notation "m1 ⊆ m2"  := (mle m1 m2)  (at level 70) : mask_scope.
 Notation "m1 ∩ m2" := (mcap m1 m2) (at level 40) : mask_scope.
 Notation "m1 \  m2"  := (mminus m1 m2) (at level 30) : mask_scope.

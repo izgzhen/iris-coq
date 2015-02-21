@@ -7,14 +7,13 @@ Set Bullet Behavior "Strict Subproofs".
 Module IrisMeta (RL : RA_T) (C : CORE_LANG).
   Module Export WP := IrisWP RL C.
 
-  Delimit Scope iris_scope with iris.
+  Local Open Scope lang_scope.
+  Local Open Scope ra_scope.
+  Local Open Scope bi_scope.
   Local Open Scope iris_scope.
 
   Section Adequacy.
-    Local Open Scope mask_scope.
-    Local Open Scope ra_scope.
-    Local Open Scope bi_scope.
-    Local Open Scope lang_scope.
+
     Local Open Scope list_scope.
 
     (* weakest-pre for a threadpool *)
@@ -201,11 +200,6 @@ Module IrisMeta (RL : RA_T) (C : CORE_LANG).
 
   Section Lifting.
 
-    Local Open Scope mask_scope.
-    Local Open Scope ra_scope.
-    Local Open Scope bi_scope.
-    Local Open Scope lang_scope.
-
     Implicit Types (P : Props) (i : nat) (safe : bool) (m : mask) (e : expr) (Q R : vPred) (r : pres).
 
 
@@ -242,6 +236,6 @@ Module IrisMeta (RL : RA_T) (C : CORE_LANG).
     Proof.
     Admitted.
 
-  End Lifting. 
+  End Lifting.
 
 End IrisMeta.
