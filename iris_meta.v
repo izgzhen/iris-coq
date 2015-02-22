@@ -362,7 +362,7 @@ Module IrisMeta (RL : RA_T) (C : CORE_LANG).
     Qed.
 
     Program Definition plugExpr safe m φ P Q: expr -n> Props :=
-      n[(fun e => (lift_ePred φ e) ∨ (ht safe m P e Q))].
+      n[(fun e' => (lift_ePred φ e') → (ht safe m P e' Q))].
     Next Obligation.
       intros e1 e2 Heq w n' r HLt.
       destruct n as [|n]; [now inversion HLt | simpl in *].
