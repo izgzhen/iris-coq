@@ -63,7 +63,7 @@ CONTENTS
   * iris_wp.v defines weakest preconditions and proves the rules for
     Hoare triples
   
-  * iris_unsafe.v proves rules for unsafe Hoare triples
+  * iris_meta.v proves adequacy, robust safety, and the lifting lemmas
 
   The development uses ModuRes, a Coq library by Sieczkowski et al. to
   solve the recursive domain equation (see the paper for a reference)

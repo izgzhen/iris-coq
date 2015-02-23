@@ -30,15 +30,18 @@ Section Definitions.
 End Definitions.
 Arguments ra_valid {T} {_} t.
 
+Delimit Scope ra_scope with ra.
+Local Open Scope ra_scope.
+
 Notation "1" := (ra_unit _) : ra_scope.
 Notation "p · q" := (ra_op _ p q) (at level 40, left associativity) : ra_scope.
 Notation "'↓' p" := (ra_valid p) (at level 35) : ra_scope.
-Delimit Scope ra_scope with ra.
 
 (* General RA lemmas *)
 Section RAs.
   Context {T} `{RA T}.
-  Local Open Scope ra_scope.
+
+  Implicit Types (t : T).
 
   Lemma ra_op_unit2 t: t · 1 == t.
   Proof.
@@ -66,7 +69,6 @@ End RAs.
 (* RAs with cartesian products of carriers. *)
 Section Products.
   Context S T `{raS : RA S, raT : RA T}.
-  Local Open Scope ra_scope.
 
   Global Instance ra_unit_prod : RA_unit (S * T) := (ra_unit S, ra_unit T).
   Global Instance ra_op_prod : RA_op (S * T) :=
@@ -96,7 +98,6 @@ End Products.
 
 Section ProductLemmas.
   Context {S T} `{raS : RA S, raT : RA T}.
-  Local Open Scope ra_scope.
     
   Lemma ra_op_prod_fst (st1 st2: S*T):
     fst (st1 · st2) = fst st1 · fst st2.
@@ -121,10 +122,11 @@ End ProductLemmas.
 
 Section PositiveCarrier.
   Context {T} `{raT : RA T}.
-  Local Open Scope ra_scope.
 
-  Definition ra_pos: Type := { r | ↓ r }.
-  Coercion ra_proj (t:ra_pos): T := proj1_sig t.
+  Definition ra_pos: Type := { t : T | ↓ t }.
+  Coercion ra_proj (r:ra_pos): T := proj1_sig r.
+
+  Implicit Types (t u : T) (r : ra_pos).
 
   Global Instance ra_pos_type : Setoid ra_pos := _.
 
@@ -135,26 +137,26 @@ Section PositiveCarrier.
     now eapply ra_valid_unit; apply _.
   Qed.
 
-  Lemma ra_proj_cancel r (VAL: ↓r):
-    ra_proj (ra_mk_pos r (VAL:=VAL)) = r.
+  Lemma ra_proj_cancel t (VAL: ↓t):
+    ra_proj (ra_mk_pos t (VAL:=VAL)) = t.
   Proof.
     reflexivity.
   Qed.
 
-  Lemma ra_op_pos_valid t1 t2 t:
-    t1 · t2 == ra_proj t -> ↓ t1.
+  Lemma ra_op_pos_valid t1 t2 r:
+    t1 · t2 == ra_proj r -> ↓ t1.
   Proof.
-    destruct t as [t Hval]; simpl. intros Heq. rewrite <-Heq in Hval.
+    destruct r as [t Hval]; simpl. intros Heq. rewrite <-Heq in Hval.
     eapply ra_op_valid; eassumption.
   Qed.
 
-  Lemma ra_op_pos_valid2 t1 t2 t:
-    t1 · t2 == ra_proj t -> ↓ t2.
+  Lemma ra_op_pos_valid2 t1 t2 r:
+    t1 · t2 == ra_proj r -> ↓ t2.
   Proof.
     rewrite comm. now eapply ra_op_pos_valid.
   Qed.
 
-  Lemma ra_pos_valid (r : ra_pos):
+  Lemma ra_pos_valid r:
     ↓(ra_proj r).
   Proof.
     destruct r as [r VAL].
@@ -163,6 +165,7 @@ Section PositiveCarrier.
 
 End PositiveCarrier.
 Global Arguments ra_pos T {_}.
+Notation "'⁺' T" := (ra_pos T) (at level 75) : type_scope.
 
 (** Validity automation tactics *)
 Ltac auto_valid_inner :=
@@ -186,10 +189,11 @@ Tactic Notation "pose↓" ident(name) ":=" constr(t) "by" tactic(tac) := pose_va
 
 Section Order.
   Context T `{raT : RA T}.
-  Local Open Scope ra_scope.
 
-  Definition pra_ord (t1 t2 : ra_pos T) :=
-    exists td, td · (ra_proj t1) == (ra_proj t2).
+  Implicit Types (t : T) (r s : ra_pos T).
+
+  Definition pra_ord r1 r2 :=
+    exists t, t · (ra_proj r1) == (ra_proj r2).
 
   Global Instance pra_ord_preo: PreOrder pra_ord.
   Proof.
@@ -215,7 +219,7 @@ Section Order.
     now erewrite ra_op_unit2 by apply _.
   Qed.
 
-  Definition ra_ord (t1 t2 : T) :=
+  Definition ra_ord t1 t2 :=
     exists t, t · t1 == t2.
 
   Global Instance ra_ord_preo: PreOrder ra_ord.
@@ -253,16 +257,17 @@ End Order.
 
 Section Exclusive.
   Context (T: Type) `{Setoid T}.
-  Local Open Scope ra_scope.
-
+  
   Inductive ra_res_ex: Type :=
   | ex_own: T -> ra_res_ex
   | ex_unit: ra_res_ex
   | ex_bot: ra_res_ex.
 
-  Definition ra_res_ex_eq e1 e2: Prop :=
-    match e1, e2 with
-      | ex_own s1, ex_own s2 => s1 == s2
+  Implicit Types (r s : ra_res_ex).
+
+  Definition ra_res_ex_eq r s: Prop :=
+    match r, s with
+      | ex_own t1, ex_own t2 => t1 == t2
       | ex_unit, ex_unit => True
       | ex_bot, ex_bot => True
       | _, _ => False
@@ -282,15 +287,15 @@ Section Exclusive.
       
   Global Instance ra_unit_ex : RA_unit ra_res_ex := ex_unit.
   Global Instance ra_op_ex : RA_op ra_res_ex :=
-    fun e1 e2 =>
-      match e1, e2 with
-        | ex_own s1, ex_unit => ex_own s1
-        | ex_unit, ex_own s2 => ex_own s2
+    fun r s =>
+      match r, s with
+        | ex_own _, ex_unit => r
+        | ex_unit, ex_own _ => s
         | ex_unit, ex_unit   => ex_unit
         | _, _               => ex_bot
       end.
   Global Instance ra_valid_ex : RA_valid ra_res_ex :=
-    fun e => match e with
+    fun r => match r with
                | ex_bot => False
                | _      => True
              end.
@@ -400,7 +405,7 @@ Section InfiniteProduct.
 End InfiniteProduct.
 
 
-(* Package of a monoid as a module type (for use with other modules). *)
+(* Package a RA as a module type (for use with other modules). *)
 Module Type RA_T.
 
   Parameter res : Type.

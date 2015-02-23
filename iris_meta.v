@@ -7,14 +7,13 @@ Set Bullet Behavior "Strict Subproofs".
 Module IrisMeta (RL : RA_T) (C : CORE_LANG).
   Module Export WP := IrisWP RL C.
 
-  Delimit Scope iris_scope with iris.
+  Local Open Scope lang_scope.
+  Local Open Scope ra_scope.
+  Local Open Scope bi_scope.
   Local Open Scope iris_scope.
 
   Section Adequacy.
-    Local Open Scope mask_scope.
-    Local Open Scope ra_scope.
-    Local Open Scope bi_scope.
-    Local Open Scope lang_scope.
+
     Local Open Scope list_scope.
 
     (* weakest-pre for a threadpool *)
@@ -199,12 +198,154 @@ Module IrisMeta (RL : RA_T) (C : CORE_LANG).
 
   End Adequacy.
 
-  Section Lifting.
+  Set Bullet Behavior "None".	(* PDS: Ridiculous. *)
+  Section RobustSafety.
 
-    Local Open Scope mask_scope.
-    Local Open Scope ra_scope.
-    Local Open Scope bi_scope.
-    Local Open Scope lang_scope.
+    Implicit Types (P : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (Q : vPred) (r : pres) (w : Wld) (σ : state).
+
+    Program Definition restrictV (Q : expr -n> Props) : vPred :=
+      n[(fun v => Q (` v))].
+    Next Obligation.
+      move=> v v' Hv w k r; move: Hv.
+      case: n=>[_ Hk | n]; first by exfalso; omega.
+      by move=> /= ->.
+    Qed.
+  
+    (*
+     * Primitive reductions are either pure (do not change the state)
+     * or atomic (step to a value).
+     *)
+
+    Hypothesis atomic_dec : forall e, atomic e + ~atomic e.
+
+    Hypothesis pure_step : forall e σ e' σ',
+      ~ atomic e ->
+      prim_step (e, σ) (e', σ') ->
+      σ = σ'.
+
+    Variable E : expr -n> Props.
+
+    (* Compatibility for those expressions wp cares about. *)
+    Hypothesis forkE : forall e, E (fork e) == E e.
+    Hypothesis fillE : forall K e, E (K [[e]]) == E e * E (K [[fork_ret]]).
+    
+    (* One can prove forkE, fillE as valid internal equalities. *)
+    Remark valid_intEq {P P' : Props} (H : valid(P === P')) : P == P'.
+    Proof. move=> w n r; exact: H. Qed.
+
+    (* View shifts or atomic triples for every primitive reduction. *)
+    Variable w₀ : Wld.
+    Definition valid₀ P := forall w n r (HSw₀ : w₀ ⊑ w), P w n r.
+    
+    Hypothesis pureE : forall {e σ e'},
+      prim_step (e,σ) (e',σ) ->
+      valid₀ (vs mask_full mask_full (E e) (E e')).
+
+    Hypothesis atomicE : forall {e},
+      atomic e ->
+      valid₀ (ht false mask_full (E e) e (restrictV E)).
+
+    Lemma robust_safety {e} : valid₀(ht false mask_full (E e) e (restrictV E)).
+    Proof.
+      move=> wz nz rz HSw₀ w HSw n r HLe _ He.
+      have {HSw₀ HSw} HSw₀ : w₀ ⊑ w by transitivity wz.
+      
+      (* For e = K[fork e'] we'll have to prove wp(e', ⊤), so the IH takes a post. *)
+      pose post Q := forall (v : value) w n r, (E (`v)) w n r -> (Q v) w n r.
+      set Q := restrictV E; have HQ: post Q by done.
+      move: {HLe} HSw₀ He HQ; move: n e w r Q; elim/wf_nat_ind;
+        move=> {wz nz rz} n IH e w r Q HSw₀ He HQ.
+      apply unfold_wp; move=> w' k rf mf σ HSw HLt HD HW.
+      split; [| split; [| split; [| done] ] ]; first 2 last.
+
+      (* e forks: fillE, IH (twice), forkE *)
+      - move=> e' K HDec.
+        have {He} He: (E e) w' k r by propsM He.
+        move: He; rewrite HDec fillE; move=> [re' [rK [Hr [He' HK] ] ] ].   
+        exists w' re' rK; split; first by reflexivity.
+        have {IH} IH: forall Q, post Q ->
+          forall e r, (E e) w' k r -> wp false mask_full e Q w' k r.
+        + by move=> Q0 HQ0 e0 r0 He0; apply: (IH _ HLt); first by transitivity w.
+        split; [exact: IH | split]; last first.
+        + by move: HW; rewrite -Hr => HW; wsatM HW.
+        have Htop: post (umconst ⊤) by done.
+        by apply: (IH _ Htop e' re'); move: He'; rewrite forkE.
+
+      (* e value: done *)
+      - move=> {IH} HV; exists w' r; split; [by reflexivity | split; [| done] ].
+        by apply: HQ; propsM He.
+      
+      (* e steps: fillE, atomic_dec *)
+      move=> σ' ei ei' K HDec HStep.
+      have {HSw₀} HSw₀ : w₀ ⊑ w' by transitivity w.
+      move: He; rewrite HDec fillE; move=> [rei [rK [Hr [Hei HK] ] ] ].
+      move: HW; rewrite -Hr => HW.
+      (* bookkeeping common to both cases. *)
+      have {Hei} Hei: (E ei) w' (S k) rei by propsM Hei.
+      have HSw': w' ⊑ w' by reflexivity.
+      have HLe: S k <= S k by omega.
+      have H1ei: ra_pos_unit ⊑ rei by apply: unit_min.
+      have HLt': k < S k by omega.
+      move: HW; rewrite {1}mask_full_union -{1}(mask_full_union mask_emp) -assoc => HW.
+      case: (atomic_dec ei) => HA; last first.
+      
+      (* ei pure: pureE, IH, fillE *)
+      - move: (pure_step _ _ _ _ HA HStep) => {HA} Hσ.
+        rewrite Hσ in HStep HW => {Hσ}.
+        move: (pureE _ _ _ HStep) => {HStep} He.
+        move: {He} (He w' (S k) r HSw₀) => He.
+        move: {He HLe H1ei Hei} (He _ HSw' _ _ HLe H1ei Hei) => He.
+        move: {HD} (mask_emp_disjoint (mask_full ∪ mask_full)) => HD.
+        move: {He HSw' HW} (He _ _ _ _ _ HSw' HLt' HD HW) => [w'' [r' [HSw' [Hei' HW] ] ] ].
+        move: HW; rewrite assoc=>HW.
+        pose↓ α := (ra_proj r' · ra_proj rK).
+        + by apply wsat_valid in HW; auto_valid.
+        have {HSw₀} HSw₀: w₀ ⊑ w'' by transitivity w'.
+        exists w'' α; split; [done| split]; last first.
+        + by move: HW; rewrite 2! mask_full_union => HW; wsatM HW.
+        apply: (IH _ HLt _ _ _ _ HSw₀); last done.
+        rewrite fillE; exists r' rK; split; [exact: equivR | split; [by propsM Hei' |] ].
+        have {HSw} HSw: w ⊑ w'' by transitivity w'.
+        by propsM HK.
+
+      (* ei atomic: atomicE, IH, fillE *)
+      move: (atomic_step _ _ _ _ HA HStep) => HV.
+      move: (atomicE _ HA) => He {HA}.
+      move: {He} (He w' (S k) rei HSw₀) => He.
+      move: {He HLe H1ei Hei} (He _ HSw' _ _ HLe H1ei Hei) => He.
+      (* unroll wp(ei,E)—step case—to get wp(ei',E) *)
+      move: He; rewrite {1}unfold_wp => He.
+      move: {HD} (mask_emp_disjoint mask_full) => HD.
+      move: {He HSw' HLt' HW} (He _ _ _ _ _ HSw' HLt' HD HW) => [_ [HS _] ].
+      have Hεei: ei = ε[[ei]] by rewrite fill_empty.
+      move: {HS Hεei HStep} (HS _ _ _ _ Hεei HStep) => [w'' [r' [HSw' [He' HW] ] ] ].
+      (* unroll wp(ei',E)—value case—to get E ei' *)
+      move: He'; rewrite {1}unfold_wp => He'.
+      move: HW; case Hk': k => [| k'] HW.
+      - by exists w'' r'; split; [done | split; [exact: wpO | done] ].
+      have HSw'': w'' ⊑ w'' by reflexivity.
+      have HLt': k' < k by omega.
+      move: {He' HSw'' HLt' HD HW} (He' _ _ _ _ _ HSw'' HLt' HD HW) => [Hv _].
+      move: HV; rewrite -(fill_empty ei') => HV.
+      move: {Hv} (Hv HV) => [w''' [rei' [HSw'' [Hei' HW] ] ] ].
+      (* now IH *)
+      move: HW; rewrite assoc => HW.
+      pose↓ α := (ra_proj rei' · ra_proj rK).
+      + by apply wsat_valid in HW; auto_valid.
+      exists w''' α. split; first by transitivity w''.
+      split; last by rewrite mask_full_union -(mask_full_union mask_emp).
+      rewrite/= in Hei'; rewrite fill_empty -Hk' in Hei' * => {Hk'}.
+      have {HSw₀} HSw₀ : w₀ ⊑ w''' by transitivity w''; first by transitivity w'.
+      apply: (IH _ HLt _ _ _ _ HSw₀); last done.
+      rewrite fillE; exists rei' rK; split; [exact: equivR | split; [done |] ].
+      have {HSw HSw' HSw''} HSw: w ⊑ w''' by transitivity w''; first by transitivity w'.
+      by propsM HK.
+    Qed.
+    
+  End RobustSafety.
+  Set Bullet Behavior "Strict Subproofs".
+
+  Section Lifting.
 
     Implicit Types (P : Props) (i : nat) (safe : bool) (m : mask) (e : expr) (Q R : vPred) (r : pres).
 
@@ -221,7 +362,7 @@ Module IrisMeta (RL : RA_T) (C : CORE_LANG).
     Qed.
 
     Program Definition plugExpr safe m φ P Q: expr -n> Props :=
-      n[(fun e => (lift_ePred φ e) ∨ (ht safe m P e Q))].
+      n[(fun e' => (lift_ePred φ e') → (ht safe m P e' Q))].
     Next Obligation.
       intros e1 e2 Heq w n' r HLt.
       destruct n as [|n]; [now inversion HLt | simpl in *].
@@ -242,6 +383,6 @@ Module IrisMeta (RL : RA_T) (C : CORE_LANG).
     Proof.
     Admitted.
 
-  End Lifting. 
+  End Lifting.
 
 End IrisMeta.

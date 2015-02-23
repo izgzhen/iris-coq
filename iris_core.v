@@ -24,6 +24,8 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
   Module Export WP := WorldProp R.
 
   Delimit Scope iris_scope with iris.
+  Local Open Scope ra_scope.
+  Local Open Scope bi_scope.
   Local Open Scope iris_scope.
 
   (** Instances for a bunch of types (some don't even have Setoids) *)
@@ -61,24 +63,26 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
   
   (** And now we're ready to build the IRIS-specific connectives! *)
 
+  Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (m : mask) (r : pres) (u v : res) (σ : state).
+
   Section Necessitation.
     (** Note: this could be moved to BI, since it's possible to define
-        for any UPred over a monoid. **)
+        for any UPred over a RA. **)
 
     Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
 
     Program Definition box : Props -n> Props :=
-      n[(fun p => m[(fun w => mkUPred (fun n r => p w n ra_pos_unit) _)])].
+      n[(fun P => m[(fun w => mkUPred (fun n r => P w n ra_pos_unit) _)])].
     Next Obligation.
       intros n m r s HLe _ Hp; rewrite-> HLe; assumption.
     Qed.
     Next Obligation.
       intros w1 w2 EQw m r HLt; simpl.
-      eapply (met_morph_nonexp _ _ p); eassumption.
+      eapply (met_morph_nonexp _ _ P); eassumption.
     Qed.
     Next Obligation.
       intros w1 w2 Subw n r; simpl.
-      apply p; assumption.
+      apply P; assumption.
     Qed.
     Next Obligation.
       intros p1 p2 EQp w m r HLt; simpl.
@@ -86,6 +90,34 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
     Qed.
 
   End Necessitation.
+
+  Notation "□ P" := (box P) (at level 30, right associativity) : iris_scope.
+
+  (** Lemmas about box **)
+  Lemma box_intro P Q (Hpr : □P ⊑ Q) :
+    □P ⊑ □Q.
+  Proof.
+    intros w n r Hp; simpl; apply Hpr, Hp.
+  Qed.
+
+  Lemma box_elim P :
+    □P ⊑ P.
+  Proof.
+    intros w n r Hp; simpl in Hp.
+    eapply uni_pred, Hp; [reflexivity |].
+    now eapply unit_min.
+  Qed.
+
+  Lemma box_top : ⊤ == □⊤.
+  Proof.
+    intros w n r; simpl; unfold const; reflexivity.
+  Qed.
+
+  Lemma box_disj P Q :
+    □(P ∨ Q) == □P ∨ □Q.
+  Proof.
+    intros w n r; reflexivity.
+  Qed.
 
   (** "Internal" equality **)
   Section IntEq.
@@ -124,10 +156,10 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
   Section Invariants.
 
     (** Invariants **)
-    Definition invP (i : nat) (p : Props) (w : Wld) : UPred pres :=
-      intEqP (w i) (Some (ı' p)).
+    Definition invP i P w : UPred pres :=
+      intEqP (w i) (Some (ı' P)).
     Program Definition inv i : Props -n> Props :=
-      n[(fun p => m[(invP i p)])].
+      n[(fun P => m[(invP i P)])].
     Next Obligation.
       intros w1 w2 EQw; unfold invP; simpl morph.
       destruct n; [apply dist_bound |].
@@ -148,34 +180,38 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
 
   End Invariants.
 
-  Notation "□ p" := (box p) (at level 30, right associativity) : iris_scope.
-  Notation "⊤" := (top : Props) : iris_scope.
-  Notation "⊥" := (bot : Props) : iris_scope.
-  Notation "p ∧ q" := (and p q : Props) (at level 40, left associativity) : iris_scope.
-  Notation "p ∨ q" := (or p q : Props) (at level 50, left associativity) : iris_scope.
-  Notation "p * q" := (sc p q : Props) (at level 40, left associativity) : iris_scope.
-  Notation "p → q" := (BI.impl p q : Props) (at level 55, right associativity) : iris_scope.
-  Notation "p '-*' q" := (si p q : Props) (at level 55, right associativity) : iris_scope.
-  Notation "∀ x , p" := (all n[(fun x => p)] : Props) (at level 60, x ident, no associativity) : iris_scope.
-  Notation "∃ x , p" := (xist n[(fun x => p)] : Props) (at level 60, x ident, no associativity) : iris_scope.
-  Notation "∀ x : T , p" := (all n[(fun x : T => p)] : Props) (at level 60, x ident, no associativity) : iris_scope.
-  Notation "∃ x : T , p" := (xist n[(fun x : T => p)] : Props) (at level 60, x ident, no associativity) : iris_scope.
-
-  Lemma valid_iff p :
-    valid p <-> (⊤ ⊑ p).
-  Proof.
-    split; intros Hp.
-    - intros w n r _; apply Hp.
-    - intros w n r; apply Hp; exact I.
-  Qed.
+  Section Timeless.
+  
+    Definition timelessP P w n :=
+      forall w' k r (HSw : w ⊑ w') (HLt : k < n) (Hp : P w' k r), P w' (S k) r.
+  
+    Program Definition timeless P : Props :=
+      m[(fun w => mkUPred (fun n r => timelessP P w n) _)].
+    Next Obligation.
+      intros n1 n2 _ _ HLe _ HT w' k r HSw HLt Hp; eapply HT, Hp; [eassumption |].
+      omega.
+    Qed.
+    Next Obligation.
+      intros w1 w2 EQw k; simpl; intros _ HLt; destruct n as [| n]; [now inversion HLt |].
+      split; intros HT w' m r HSw HLt' Hp.
+      - symmetry in EQw; assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
+        apply (met_morph_nonexp _ _ P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
+      - assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
+        apply (met_morph_nonexp _ _ P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
+    Qed.
+    Next Obligation.
+      intros w1 w2 HSw n; simpl; intros _ HT w' m r HSw' HLt Hp.
+      eapply HT, Hp; [etransitivity |]; eassumption.
+    Qed.
+  
+  End Timeless.
 
   Section Ownership.
-    Local Open Scope ra.
 
     (** Ownership **)
     (* We define this on *any* resource, not just the positive (valid) ones.
        Note that this makes ownR trivially *False* for invalid u: There is no
-       elment v such that u · v = r (where r is valid) *)
+       element v such that u · v = r (where r is valid) *)
     Program Definition ownR: res -=> Props :=
       s[(fun u => pcmconst (mkUPred(fun n r => u ⊑ ra_proj r) _) )].
     Next Obligation.
@@ -186,13 +222,17 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
       intros u1 u2 Hequ. intros w n r. split; intros [t Heqt]; exists t; [rewrite <-Hequ|rewrite Hequ]; assumption.
     Qed.
 
-    Lemma ownR_sc u t:
-      ownR (u · t) == ownR u * ownR t.
+    Lemma ownR_timeless {u} :
+      valid(timeless(ownR u)).
+    Proof. intros w n _ w' k r _ _; now auto. Qed.
+  
+    Lemma ownR_sc u v:
+      ownR (u · v) == ownR u * ownR v.
     Proof.
       intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
       - destruct Hut as [s Heq]. rewrite-> assoc in Heq.
         exists↓ (s · u) by auto_valid.
-        exists↓ t by auto_valid.
+        exists↓ v by auto_valid.
         split; [|split].
         + rewrite <-Heq. reflexivity.
         + exists s. reflexivity.
@@ -212,86 +252,40 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
 
     (** Proper physical state: ownership of the machine state **)
     Program Definition ownS : state -n> Props :=
-      n[(fun s => ownR (ex_own _ s, 1%ra))].
+      n[(fun s => ownR (ex_own _ s, 1))].
     Next Obligation.
       intros r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
       rewrite EQr. reflexivity.
     Qed.
 
+    Lemma ownS_timeless {σ} : valid(timeless(ownS σ)).
+    Proof. exact ownR_timeless. Qed.
+  
     (** Proper ghost state: ownership of logical **)
     Program Definition ownL : RL.res -n> Props :=
-      n[(fun r => ownR (1%ra, r))].
+      n[(fun r : RL.res => ownR (1, r))].
     Next Obligation.
       intros r1 r2 EQr. destruct n as [| n]; [apply dist_bound |eapply dist_refl].
       simpl in EQr. intros w m t. simpl. change ( (ex_unit state, r1) ⊑ (ra_proj t) <->  (ex_unit state, r2) ⊑ (ra_proj t)). rewrite EQr. reflexivity.
     Qed.
 
+    Lemma ownL_timeless {r : RL.res} : valid(timeless(ownL r)).
+    Proof. exact ownR_timeless. Qed.
+  
     (** Ghost state ownership **)
-    Lemma ownL_sc (u t : RL.res) :
-      ownL (u · t) == ownL u * ownL t.
+    Lemma ownL_sc (r s : RL.res) :
+      ownL (r · s) == ownL r * ownL s.
     Proof.
-      assert (Heq: (ex_unit state, u · t) == ((ex_unit state, u) · (ex_unit state, t)) ) by reflexivity.
+      assert (Heq: (1, r · s) == ((1, r) · (1, s)) ) by reflexivity.
       (* I cannot believe I have to write this... *)
-      change (ownR (ex_unit state, u · t) == ownR (ex_unit state, u) * ownR (ex_unit state, t)).
+      change (ownR (1, r · s) == ownR (1, r) * ownR (1, s)).
       rewrite Heq.
       now eapply ownR_sc.
     Qed.
 
   End Ownership.
 
-  (** Lemmas about box **)
-  Lemma box_intro p q (Hpq : □ p ⊑ q) :
-    □ p ⊑ □ q.
-  Proof.
-    intros w n r Hp; simpl; apply Hpq, Hp.
-  Qed.
-
-  Lemma box_elim p :
-    □ p ⊑ p.
-  Proof.
-    intros w n r Hp; simpl in Hp.
-    eapply uni_pred, Hp; [reflexivity |].
-    now eapply unit_min.
-  Qed.
-
-  Lemma box_top : ⊤ == □ ⊤.
-  Proof.
-    intros w n r; simpl; unfold const; reflexivity.
-  Qed.
-
-  Lemma box_disj p q :
-    □ (p ∨ q) == □ p ∨ □ q.
-  Proof.
-    intros w n r; reflexivity.
-  Qed.
-
-  (** Timeless *)
-
-  Definition timelessP (p : Props) w n :=
-    forall w' k r (HSw : w ⊑ w') (HLt : k < n) (Hp : p w' k r), p w' (S k) r.
-
-  Program Definition timeless (p : Props) : Props :=
-    m[(fun w => mkUPred (fun n r => timelessP p w n) _)].
-  Next Obligation.
-    intros n1 n2 _ _ HLe _ HT w' k r HSw HLt Hp; eapply HT, Hp; [eassumption |].
-    omega.
-  Qed.
-  Next Obligation.
-    intros w1 w2 EQw k; simpl; intros _ HLt; destruct n as [| n]; [now inversion HLt |].
-    split; intros HT w' m r HSw HLt' Hp.
-    - symmetry in EQw; assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
-      apply (met_morph_nonexp _ _ p) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
-    - assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
-      apply (met_morph_nonexp _ _ p) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
-  Qed.
-  Next Obligation.
-    intros w1 w2 HSw n; simpl; intros _ HT w' m r HSw' HLt Hp.
-    eapply HT, Hp; [etransitivity |]; eassumption.
-  Qed.
-
   Section WorldSatisfaction.
-    Local Open Scope ra_scope.
-    Local Open Scope bi_scope.
 
     (* First, we need to compose the resources of a finite map. This won't be pretty, for
        now, since the library does not provide enough
@@ -359,7 +353,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
 
     Global Instance preo_unit : preoType () := disc_preo ().
 
-    Program Definition wsat (σ : state) (m : mask) (r : res) (w : Wld) : UPred () :=
+    Program Definition wsat σ m (r : res) w : UPred () :=
       ▹ (mkUPred (fun n _ => exists rs : nat -f> pres,
                     state_sat (r · (comp_map rs)) σ
                       /\ forall i (Hm : m i),
@@ -383,7 +377,7 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
         rewrite fdLookup_in; setoid_rewrite <- EQw; rewrite <- fdLookup_in; reflexivity.
     Qed.
 
-    Global Instance wsat_dist n σ m r : Proper (dist n ==> dist n) (wsat σ m r).
+    Global Instance wsat_dist n σ m u : Proper (dist n ==> dist n) (wsat σ m u).
     Proof.
       intros w1 w2 EQw [| n'] [] HLt; [reflexivity |]; destruct n as [| n]; [now inversion HLt |].
       split; intros [rs [HE HM] ]; exists rs.
@@ -412,6 +406,39 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
 
   End WorldSatisfaction.
 
-  Notation " p @ k " := ((p : UPred ()) k tt) (at level 60, no associativity).
+  Notation " P @ k " := ((P : UPred ()) k tt) (at level 60, no associativity).
+
+
+  Lemma valid_iff P :
+    valid P <-> (⊤ ⊑ P).
+  Proof.
+    split; intros Hp.
+    - intros w n r _; apply Hp.
+    - intros w n r; apply Hp; exact I.
+  Qed.
+
+  (*
+	Simple monotonicity tactics for props and wsat.
+
+	The tactic propsM H proves P w' n' r' given H : P w n r when
+		w ⊑ w', n' <= n, r ⊑ r'
+	are immediate.
+
+	The tactic wsatM is similar.
+  *)
+
+  Lemma propsM {P w n r w' n' r'}
+      (HP : P w n r) (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
+    P w' n' r'.
+  Proof. by apply: (mu_mono _ _ P _ _ HSw); exact: (uni_pred _ _ _ _ _ HLe HSr). Qed.
+
+  Ltac propsM H := solve [ done | apply (propsM H); solve [ done | reflexivity | omega ] ].
+
+  Lemma wsatM {σ m} {r : res} {w n k}
+      (HW : wsat σ m r w @ n) (HLe : k <= n) :
+    wsat σ m r w @ k.
+  Proof. by exact: (uni_pred _ _ _ _ _ HLe). Qed.
+
+  Ltac wsatM H := solve [done | apply (wsatM H); solve [done | omega] ].
 
 End IrisCore.

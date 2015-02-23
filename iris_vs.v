@@ -7,20 +7,21 @@ Set Bullet Behavior "Strict Subproofs".
 Module IrisVS (RL : RA_T) (C : CORE_LANG).
   Module Export CORE := IrisCore RL C.
 
-  Delimit Scope iris_scope with iris.
+  Local Open Scope ra_scope.
+  Local Open Scope bi_scope.
   Local Open Scope iris_scope.
 
+  Implicit Types (P Q R : Props) (w : Wld) (n i k : nat) (m : mask) (r : pres) (σ : state).
+
   Section ViewShifts.
-    Local Open Scope mask_scope.
-    Local Open Scope ra_scope.
     Local Obligation Tactic := intros.
 
-    Program Definition preVS (m1 m2 : mask) (p : Props) (w : Wld) : UPred pres :=
+    Program Definition preVS m1 m2 P w : UPred pres :=
       mkUPred (fun n r => forall w1 (rf: res) mf σ k (HSub : w ⊑ w1) (HLe : k < n)
                                  (HD : mf # m1 ∪ m2)
                                  (HE : wsat σ (m1 ∪ mf) (ra_proj r · rf) w1 @ S k),
                           exists w2 r',
-                            w1 ⊑ w2 /\ p w2 (S k) r'
+                            w1 ⊑ w2 /\ P w2 (S k) r'
                             /\ wsat σ (m2 ∪ mf) (r' · rf) w2 @ S k) _.
     Next Obligation.
       intros n1 n2 r1 r2 HLe [rd HR] HP; intros.
@@ -35,8 +36,8 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
         eapply uni_pred, HP'; [reflexivity|]. exists rd. reflexivity.
     Qed.
 
-    Program Definition pvs (m1 m2 : mask) : Props -n> Props :=
-      n[(fun p => m[(preVS m1 m2 p)])].
+    Program Definition pvs m1 m2 : Props -n> Props :=
+      n[(fun P => m[(preVS m1 m2 P)])].
     Next Obligation.
       intros w1 w2 EQw n' r HLt; destruct n as [| n]; [now inversion HLt |]; split; intros HP w2'; intros.
       - symmetry in EQw; assert (HDE := extend_dist _ _ _ _ EQw HSub).
@@ -46,7 +47,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
         + symmetry in HDE; assert (HDE' := extend_dist _ _ _ _ HDE HW).
           assert (HSE' := extend_sub _ _ _ _ HDE HW); destruct HH as [HP HE'];
           exists (extend w1'' w2') r'; split; [assumption | split].
-          * eapply (met_morph_nonexp _ _ p), HP ; [symmetry; eassumption | omega].
+          * eapply (met_morph_nonexp _ _ P), HP ; [symmetry; eassumption | omega].
           * eapply wsat_dist, HE'; [symmetry; eassumption | omega].
       - assert (HDE := extend_dist _ _ _ _ EQw HSub); assert (HSE := extend_sub _ _ _ _ EQw HSub); specialize (HP (extend w2' w2)).
         edestruct HP as [w1'' [r' [HW HH] ] ]; try eassumption; clear HP; [ | ].
@@ -54,7 +55,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
         + symmetry in HDE; assert (HDE' := extend_dist _ _ _ _ HDE HW).
           assert (HSE' := extend_sub _ _ _ _ HDE HW); destruct HH as [HP HE'];
           exists (extend w1'' w2') r'; split; [assumption | split].
-          * eapply (met_morph_nonexp _ _ p), HP ; [symmetry; eassumption | omega].
+          * eapply (met_morph_nonexp _ _ P), HP ; [symmetry; eassumption | omega].
           * eapply wsat_dist, HE'; [symmetry; eassumption | omega].
     Qed.
     Next Obligation.
@@ -71,22 +72,17 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
         apply EQp; [now eauto with arith | assumption].
     Qed.
 
-    Definition vs (m1 m2 : mask) (p q : Props) : Props :=
-      □ (p → pvs m1 m2 q).
+    Definition vs m1 m2 P Q : Props :=
+      □(P → pvs m1 m2 Q).
 
   End ViewShifts.
 
   Section ViewShiftProps.
-    Local Open Scope mask_scope.
-    Local Open Scope ra_scope.
-    Local Open Scope bi_scope.
-
-    Implicit Types (p q r : Props) (i : nat) (m : mask).
 
     Definition mask_sing i := mask_set mask_emp i True.
 
-    Lemma vsTimeless m p :
-      timeless p ⊑ vs m m (▹ p) p.
+    Lemma vsTimeless m P :
+      timeless P ⊑ vs m m (▹P) P.
     Proof.
       intros w' n r1 HTL w HSub; rewrite ->HSub in HTL; clear w' HSub.
       intros np rp HLe HS Hp w1; intros.
@@ -96,18 +92,18 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       rewrite <- HSub; apply HTL, Hp; [reflexivity | assumption].
     Qed.
 
-    Lemma vsOpen i p :
-      valid (vs (mask_sing i) mask_emp (inv i p) (▹ p)).
+    Lemma vsOpen i P :
+      valid (vs (mask_sing i) mask_emp (inv i P) (▹P)).
     Proof.
       intros pw nn r w _; clear r pw.
       intros n r _ _ HInv w'; clear nn; intros.
       do 14 red in HInv; destruct (w i) as [μ |] eqn: HLu; [| contradiction].
-      apply ı in HInv; rewrite ->(isoR p) in HInv.
+      apply ı in HInv; rewrite ->(isoR P) in HInv.
       (* get rid of the invisible 1/2 *)
       do 8 red in HInv.
       destruct HE as [rs [HE HM] ].
       destruct (rs i) as [ri |] eqn: HLr.
-      - rewrite ->comp_map_remove with (i := i) (r := ri) in HE by (rewrite HLr; reflexivity).
+      - rewrite ->comp_map_remove with (i := i) (r := ri) in HE by now eapply equivR.
         rewrite ->assoc, <- (assoc (_ r)), (comm rf), assoc in HE.
         exists w'.
         exists↓ (ra_proj r · ra_proj ri). { destruct HE as [HE _]. eapply ra_op_valid, ra_op_valid; eauto with typeclass_instances. }
@@ -132,13 +128,13 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
         destruct (Peano_dec.eq_nat_dec i i); tauto.
     Qed.
 
-    Lemma vsClose i p :
-      valid (vs mask_emp (mask_sing i) (inv i p * ▹ p) ⊤).
+    Lemma vsClose i P :
+      valid (vs mask_emp (mask_sing i) (inv i P * ▹P) ⊤).
     Proof.
       intros pw nn r w _; clear r pw.
       intros n r _ _ [r1 [r2 [HR [HInv HP] ] ] ] w'; clear nn; intros.
       do 14 red in HInv; destruct (w i) as [μ |] eqn: HLu; [| contradiction].
-      apply ı in HInv; rewrite ->(isoR p) in HInv.
+      apply ı in HInv; rewrite ->(isoR P) in HInv.
       (* get rid of the invisible 1/2 *)
       do 8 red in HInv.
       destruct HE as [rs [HE HM] ].
@@ -149,15 +145,15 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       { destruct (rs i) as [rsi |] eqn: EQrsi; subst;
         [| simpl; rewrite ->ra_op_unit by apply _; now apply ra_pos_valid].
         clear - HE EQrsi. destruct HE as [HE _].
-        rewrite ->comp_map_remove with (i:=i) in HE by (erewrite EQrsi; reflexivity).
+        rewrite ->comp_map_remove with (i:=i) in HE by (eapply equivR; eassumption).
         rewrite ->(assoc (_ r)), (comm (_ r)), comm, assoc, <-(assoc (_ rsi) _), (comm _ (ra_proj r)), assoc in HE.
         eapply ra_op_valid, ra_op_valid; now eauto with typeclass_instances.
       }
       exists (fdUpdate i rri rs); split; [| intros j Hm].
       - simpl. erewrite ra_op_unit by apply _.
         clear - HE EQri. destruct (rs i) as [rsi |] eqn: EQrsi.
-        + subst rsi. erewrite <-comp_map_insert_old; [ eassumption | rewrite EQrsi; reflexivity | reflexivity ].
-        + unfold rri. subst ri. simpl. erewrite <-comp_map_insert_new; [|rewrite EQrsi; reflexivity]. simpl.
+        + subst rsi. erewrite <-comp_map_insert_old; [ eassumption | eapply equivR; eassumption | reflexivity ].
+        + unfold rri. subst ri. simpl. erewrite <-comp_map_insert_new; [|now eapply equivR]. simpl.
           erewrite ra_op_unit by apply _. assumption.
       - specialize (HD j); unfold mask_sing, mask_set, mcup in *; simpl in Hm, HD.
         destruct (Peano_dec.eq_nat_dec i j);
@@ -179,8 +175,8 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
         rewrite <-HR, assoc. reflexivity.
     Qed.
 
-    Lemma vsTrans p q r m1 m2 m3 (HMS : m2 ⊆ m1 ∪ m3) :
-      vs m1 m2 p q ∧ vs m2 m3 q r ⊑ vs m1 m3 p r.
+    Lemma vsTrans P Q R m1 m2 m3 (HMS : m2 ⊆ m1 ∪ m3) :
+      vs m1 m2 P Q ∧ vs m2 m3 Q R ⊑ vs m1 m3 P R.
     Proof.
       intros w' n r1 [Hpq Hqr] w HSub; specialize (Hpq _ HSub); rewrite ->HSub in Hqr; clear w' HSub.
       intros np rp HLe HS Hp w1; intros; specialize (Hpq _ _ HLe HS Hp).
@@ -198,8 +194,8 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       setoid_rewrite HSw12; eauto 8.
     Qed.
 
-    Lemma vsEnt p q m :
-      □ (p → q) ⊑ vs m m p q.
+    Lemma vsEnt P Q m :
+      □(P → Q) ⊑ vs m m P Q.
     Proof.
       intros w' n r1 Himp w HSub; rewrite ->HSub in Himp; clear w' HSub.
       intros np rp HLe HS Hp w1; intros.
@@ -208,8 +204,8 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       unfold lt in HLe0; rewrite ->HLe0, <- HSub; assumption.
     Qed.
 
-    Lemma vsFrame p q r m1 m2 mf (HDisj : mf # m1 ∪ m2) :
-      vs m1 m2 p q ⊑ vs (m1 ∪ mf) (m2 ∪ mf) (p * r) (q * r).
+    Lemma vsFrame P Q R m1 m2 mf (HDisj : mf # m1 ∪ m2) :
+      vs m1 m2 P Q ⊑ vs (m1 ∪ mf) (m2 ∪ mf) (P * R) (Q * R).
     Proof.
       intros w' n r1 HVS w HSub; specialize (HVS _ HSub); clear w' r1 HSub.
       intros np rpr HLe _ [rp [rr [HR [Hp Hr] ] ] ] w'; intros.
@@ -270,7 +266,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
     Qed.
 
     Program Definition inv' m : Props -n> {n : nat | m n} -n> Props :=
-      n[(fun p => n[(fun n => inv n p)])].
+      n[(fun P => n[(fun n : {n | m n} => inv n P)])].
     Next Obligation.
       intros i i' EQi; destruct n as [| n]; [apply dist_bound |].
       simpl in EQi; rewrite EQi; reflexivity.
@@ -297,19 +293,19 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
       intros σ σc Hp; apply Hp.
     Qed.
 
-    Lemma vsNewInv p m (HInf : mask_infinite m) :
-      valid (vs m m (▹ p) (xist (inv' m p))).
+    Lemma vsNewInv P m (HInf : mask_infinite m) :
+      valid (vs m m (▹P) (xist (inv' m P))).
     Proof.
       intros pw nn r w _; clear r pw.
       intros n r _ _ HP w'; clear nn; intros.
       destruct n as [| n]; [now inversion HLe | simpl in HP].
       rewrite ->HSub in HP; clear w HSub; rename w' into w.
       destruct (fresh_region w m HInf) as [i [Hm HLi] ].
-      assert (HSub : w ⊑ fdUpdate i (ı' p) w).
+      assert (HSub : w ⊑ fdUpdate i (ı' P) w).
       { intros j; destruct (Peano_dec.eq_nat_dec i j); [subst j; rewrite HLi; exact I|].
         now rewrite ->fdUpdate_neq by assumption.
       }
-      exists (fdUpdate i (ı' p) w) (ra_pos_unit); split; [assumption | split].
+      exists (fdUpdate i (ı' P) w) (ra_pos_unit); split; [assumption | split].
       - exists (exist _ i Hm). do 22 red.
         unfold proj1_sig. rewrite fdUpdate_eq; reflexivity.
       - unfold ra_pos_unit, proj1_sig. erewrite ra_op_unit by apply _.
@@ -321,7 +317,7 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
         }
         split.
         {
-          rewrite <-comp_map_insert_new by (rewrite HRi; reflexivity).
+          rewrite <-comp_map_insert_new by now eapply equivR.
           rewrite ->assoc, (comm rf). assumption.
         }
         intros j Hm'.
