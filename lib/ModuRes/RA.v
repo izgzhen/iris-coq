@@ -358,9 +358,9 @@ Section Agreement.
       destruct (eq_dec t0 t), (eq_dec t1 t0), (eq_dec t1 t); simpl; auto; try reflexivity;
       rewrite e in e0; contradiction.
     -  destruct t1, t2; try reflexivity; compute; destruct (eq_dec t0 t), (eq_dec t t0); 
-       try reflexivity; auto; try contradiction; try (symmetry in e; contradiction).
+       try reflexivity; auto; try contradiction; symmetry in e; contradiction.
     - destruct t; reflexivity.
-    - destruct x, y; simpl; firstorder; try now inversion H.
+    - destruct x, y; simpl; firstorder; now inversion H.
     - now constructor.
     - destruct t1, t2; try contradiction; now constructor.
   Qed. 
