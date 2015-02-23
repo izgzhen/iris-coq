@@ -374,6 +374,7 @@ End Agreement.
 
 
 Section InfiniteProduct.
+  (* I is the index type (domain), S the type of the components (codomain) *)
   Context (I : Type) (S : forall (i : I), Type) 
           `{tyS : forall i, Setoid (S i)} 
           `{uS : forall i, RA_unit (S i)}
@@ -406,15 +407,15 @@ Section InfiniteProduct.
     - now eapply (ra_valid_unit (RA := raS i) _).
     - eapply (ra_op_valid (RA := raS i) _ _); now eauto.
   Qed.
-
 End InfiniteProduct.
 
+
 Section HomogeneousProduct.
+  (* I is the index type (domain), S the type of the components (codomain) *)
   Context (I : Type) (S : Type) `{RA S}.
   
   Global Instance ra_homprod : RA (forall (i : I), S).
   Proof. now eapply ra_infprod; auto. Qed.
-  
 End HomogeneousProduct.
 
 
