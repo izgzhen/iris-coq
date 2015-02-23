@@ -369,6 +369,7 @@ End Agreement.
 
 
 Section InfiniteProduct.
+  (* S is the index type (domain), T the type of the components (codomain) *)
   Context (S T : Type) `{RA_T : RA T}.
   Local Open Scope ra_scope.
 
