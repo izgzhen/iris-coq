@@ -4,7 +4,11 @@ Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finma
 
 Set Bullet Behavior "Strict Subproofs".
 
-Module IrisRes (RL : RA_T) (C : CORE_LANG) <: RA_T.
+(* Because Coq has a restriction of how to apply functors, we have to hack a bit here.
+   The hack that involves least work, is to duplicate the definition of our final
+   resource type, as a module type (which is how we can use it, circumventing the
+   Coq restrictions) and as a module (to show the type can be instantiated). *)
+Module Type IRIS_RES (RL : RA_T) (C : CORE_LANG) <: RA_T.
   Instance state_type : Setoid C.state := discreteType.
   
   Definition res := (ra_res_ex C.state * RL.res)%type.
@@ -16,12 +20,15 @@ Module IrisRes (RL : RA_T) (C : CORE_LANG) <: RA_T.
 
   (* The order on (ra_pos res) is inferred correctly, but this one is not *)
   Instance res_pord: preoType res := ra_preo res.
+End IRIS_RES.
+Module IrisRes (RL : RA_T) (C : CORE_LANG) <: IRIS_RES RL C.
+  Include IRIS_RES RL C. (* I cannot believe Coq lets me do this... *)
 End IrisRes.
 
-Module IrisCore (RL : RA_T) (C : CORE_LANG).
+Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R).
   Export C.
-  Module Export R  := IrisRes RL C.
-  Module Export WP := WorldProp R.
+  Export R.
+  Export WP.
 
   Delimit Scope iris_scope with iris.
   Local Open Scope ra_scope.
@@ -441,4 +448,8 @@ Module IrisCore (RL : RA_T) (C : CORE_LANG).
 
   Ltac wsatM H := solve [done | apply (wsatM H); solve [done | omega] ].
 
+End IRIS_CORE.
+
+Module IrisCore (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) : IRIS_CORE RL C R WP.
+  Include IRIS_CORE RL C R WP.
 End IrisCore.

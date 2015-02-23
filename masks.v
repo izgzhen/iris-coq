@@ -130,3 +130,5 @@ Proof.
   intros m1 m1' EQm1 m2 m2' EQm2; split; intros Hd k [Hm1 Hm2];
   apply (Hd k); (split; [apply EQm1, Hm1 | apply EQm2, Hm2]).
 Qed.
+
+Definition mask_sing i := mask_set mask_emp i True.

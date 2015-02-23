@@ -1,11 +1,12 @@
 Require Import ssreflect.
-Require Import core_lang masks iris_wp.
+Require Import core_lang masks world_prop iris_core iris_vs iris_wp.
 Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Module IrisMeta (RL : RA_T) (C : CORE_LANG).
-  Module Export WP := IrisWP RL C.
+Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (VS: IRIS_VS RL C R WP CORE) (HT: IRIS_HT RL C R WP CORE).
+  Export VS.
+  Export HT.
 
   Local Open Scope lang_scope.
   Local Open Scope ra_scope.
@@ -201,6 +202,8 @@ Module IrisMeta (RL : RA_T) (C : CORE_LANG).
   Set Bullet Behavior "None".	(* PDS: Ridiculous. *)
   Section RobustSafety.
 
+    Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
+
     Implicit Types (P : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (Q : vPred) (r : pres) (w : Wld) (σ : state).
 
     Program Definition restrictV (Q : expr -n> Props) : vPred :=
@@ -385,4 +388,8 @@ Module IrisMeta (RL : RA_T) (C : CORE_LANG).
 
   End Lifting.
 
+End IRIS_META.
+
+Module IrisMeta (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (VS: IRIS_VS RL C R WP CORE) (HT: IRIS_HT RL C R WP CORE) : IRIS_META RL C R WP CORE VS HT.
+  Include IRIS_META RL C R WP CORE VS HT.
 End IrisMeta.

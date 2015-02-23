@@ -4,8 +4,8 @@ Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finma
 
 Set Bullet Behavior "Strict Subproofs".
 
-Module IrisVS (RL : RA_T) (C : CORE_LANG).
-  Module Export CORE := IrisCore RL C.
+Module Type IRIS_VS (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP).
+  Export CORE.
 
   Local Open Scope ra_scope.
   Local Open Scope bi_scope.
@@ -78,8 +78,6 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
   End ViewShifts.
 
   Section ViewShiftProps.
-
-    Definition mask_sing i := mask_set mask_emp i True.
 
     Lemma vsTimeless m P :
       timeless P ⊑ vs m m (▹P) P.
@@ -332,4 +330,8 @@ Module IrisVS (RL : RA_T) (C : CORE_LANG).
 
   End ViewShiftProps.
 
+End IRIS_VS.
+
+Module IrisVS (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) : IRIS_VS RL C R WP CORE.
+  Include IRIS_VS RL C R WP CORE.
 End IrisVS.

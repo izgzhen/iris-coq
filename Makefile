@@ -85,6 +85,7 @@ VFILES:=core_lang.v\
   iris_meta.v\
   iris_vs.v\
   iris_wp.v\
+  iris_wp_rules.v\
   lang.v\
   masks.v\
   world_prop.v
