@@ -376,11 +376,11 @@ End Agreement.
 Section InfiniteProduct.
   (* I is the index type (domain), S the type of the components (codomain) *)
   Context (I : Type) (S : forall (i : I), Type) 
-          `{tyS : forall i, Setoid (S i)} 
-          `{uS : forall i, RA_unit (S i)}
-          `{opS : forall i, RA_op (S i)}
-          `{vS : forall i, RA_valid (S i)}
-          `{raS : forall i, RA (S i)}.
+          {tyS : forall i, Setoid (S i)}
+          {uS : forall i, RA_unit (S i)}
+          {opS : forall i, RA_op (S i)}
+          {vS : forall i, RA_valid (S i)}
+          {raS : forall i, RA (S i)}.
   Local Open Scope ra_scope.
 
   Definition ra_res_infprod := forall (i : I), S i.
