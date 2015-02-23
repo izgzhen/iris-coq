@@ -374,35 +374,49 @@ End Agreement.
 
 
 Section InfiniteProduct.
-  Context (S T : Type) `{RA_T : RA T}.
+  Context (I : Type) (S : forall (i : I), Type) 
+          `{tyS : forall i, Setoid (S i)} 
+          `{uS : forall i, RA_unit (S i)}
+          `{opS : forall i, RA_op (S i)}
+          `{vS : forall i, RA_valid (S i)}
+          `{raS : forall i, RA (S i)}.
   Local Open Scope ra_scope.
 
-  Definition ra_res_infprod := forall (s : S), T.
+  Definition ra_res_infprod := forall (i : I), S i.
 
-  Implicit Type (s : S) (f g : ra_res_infprod).
+  Implicit Type (i : I) (f g : ra_res_infprod).
   
-  Definition ra_eq_infprod := fun f g => forall s, f s == g s.
+  Definition ra_eq_infprod := fun f g => forall i, f i == g i.
   Global Instance ra_equiv_infprod : Equivalence ra_eq_infprod.
-  Proof. split; repeat intro; [ | rewrite (H0 s) | rewrite (H0 s), (H1 s) ]; reflexivity. Qed.
+  Proof. split; repeat intro; [ | rewrite (H i) | rewrite (H i), (H0 i) ]; reflexivity. Qed.
   
   Global Instance ra_type_infprod : Setoid ra_res_infprod := mkType ra_eq_infprod.
-  Global Instance ra_unit_infprod : RA_unit _ := fun s => ra_unit T.
-  Global Instance ra_op_infprod : RA_op _ := fun f g s => f s · g s.
-  Global Instance ra_valid_infprod : RA_valid _ := fun f => forall s, ra_valid (f s). 
+  Global Instance ra_unit_infprod : RA_unit _ := fun i => ra_unit (S i).
+  Global Instance ra_op_infprod : RA_op _ := fun f g i => f i · g i.
+  Global Instance ra_valid_infprod : RA_valid _ := fun f => forall i, ra_valid (f i). 
   Global Instance ra_infprod : RA ra_res_infprod.
   Proof.
     split; repeat intro.
-    - eapply ra_op_proper; now firstorder.
-    - compute. now rewrite (ra_op_assoc (RA := RA_T) _).
-    - compute; now rewrite (ra_op_comm (RA := RA_T) _).
-    - compute; now rewrite (ra_op_unit (RA := RA_T) _).
-    - compute; intros; split; intros; symmetry in H0;
-      eapply (ra_valid_proper (RA := RA_T) _ _ _ (H0 s)); now apply H1.
-    - now eapply (ra_valid_unit (RA := RA_T) _).
-    - eapply (ra_op_valid (RA := RA_T) _ _); now eauto.
+    - eapply ra_op_proper; [ now auto | | ]; now firstorder.
+    - compute; now rewrite (ra_op_assoc (RA := raS i) _ (t1 i) (t2 i) (t3 i)). 
+    - compute; now rewrite (ra_op_comm (RA := raS i) _ (t1 i) (t2 i)).
+    - compute; now rewrite (ra_op_unit (RA := raS i) _ (t i)).
+    - compute; intros; split; intros; symmetry in H;
+      eapply (ra_valid_proper (RA := raS i) _ _ _ (H i)); now firstorder.
+    - now eapply (ra_valid_unit (RA := raS i) _).
+    - eapply (ra_op_valid (RA := raS i) _ _); now eauto.
   Qed.
 
 End InfiniteProduct.
+
+Section HomogeneousProduct.
+  Context (I : Type) (S : Type) `{RA S}.
+  
+  Global Instance ra_homprod : RA (forall (i : I), S).
+  Proof. now eapply ra_infprod; auto. Qed.
+  
+End HomogeneousProduct.
+
 
 
 (* Package a RA as a module type (for use with other modules). *)
