@@ -1,81 +1,17 @@
 Require Import ssreflect.
-Require Import world_prop core_lang masks iris_core.
+Require Import world_prop core_lang masks iris_core iris_plog.
 Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Module Type IRIS_VS (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP).
-  Export CORE.
+Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE).
+  Export PLOG.
 
   Local Open Scope ra_scope.
   Local Open Scope bi_scope.
   Local Open Scope iris_scope.
 
   Implicit Types (P Q R : Props) (w : Wld) (n i k : nat) (m : mask) (r : pres) (σ : state).
-
-  Section ViewShifts.
-    Local Obligation Tactic := intros.
-
-    Program Definition preVS m1 m2 P w : UPred pres :=
-      mkUPred (fun n r => forall w1 (rf: res) mf σ k (HSub : w ⊑ w1) (HLe : k < n)
-                                 (HD : mf # m1 ∪ m2)
-                                 (HE : wsat σ (m1 ∪ mf) (ra_proj r · rf) w1 @ S k),
-                          exists w2 r',
-                            w1 ⊑ w2 /\ P w2 (S k) r'
-                            /\ wsat σ (m2 ∪ mf) (r' · rf) w2 @ S k) _.
-    Next Obligation.
-      intros n1 n2 r1 r2 HLe [rd HR] HP; intros.
-      destruct (HP w1 (rd · rf) mf σ k) as [w2 [r1' [HW [HP' HE'] ] ] ];
-        try assumption; [now eauto with arith | |].
-      - eapply wsat_equiv, HE; try reflexivity.
-        rewrite ->assoc, (comm (_ r1)), HR; reflexivity.
-      - rewrite ->assoc, (comm (_ r1')) in HE'.
-        exists w2. exists↓ (rd · ra_proj r1').
-        { apply wsat_valid in HE'. auto_valid. }
-        split; [assumption | split; [| assumption] ].
-        eapply uni_pred, HP'; [reflexivity|]. exists rd. reflexivity.
-    Qed.
-
-    Program Definition pvs m1 m2 : Props -n> Props :=
-      n[(fun P => m[(preVS m1 m2 P)])].
-    Next Obligation.
-      intros w1 w2 EQw n' r HLt; destruct n as [| n]; [now inversion HLt |]; split; intros HP w2'; intros.
-      - symmetry in EQw; assert (HDE := extend_dist _ _ _ _ EQw HSub).
-        assert (HSE := extend_sub _ _ _ _ EQw HSub); specialize (HP (extend w2' w1)).
-        edestruct HP as [w1'' [r' [HW HH] ] ]; try eassumption; clear HP; [ | ].
-        + eapply wsat_dist, HE; [symmetry; eassumption | omega].
-        + symmetry in HDE; assert (HDE' := extend_dist _ _ _ _ HDE HW).
-          assert (HSE' := extend_sub _ _ _ _ HDE HW); destruct HH as [HP HE'];
-          exists (extend w1'' w2') r'; split; [assumption | split].
-          * eapply (met_morph_nonexp _ _ P), HP ; [symmetry; eassumption | omega].
-          * eapply wsat_dist, HE'; [symmetry; eassumption | omega].
-      - assert (HDE := extend_dist _ _ _ _ EQw HSub); assert (HSE := extend_sub _ _ _ _ EQw HSub); specialize (HP (extend w2' w2)).
-        edestruct HP as [w1'' [r' [HW HH] ] ]; try eassumption; clear HP; [ | ].
-        + eapply wsat_dist, HE; [symmetry; eassumption | omega].
-        + symmetry in HDE; assert (HDE' := extend_dist _ _ _ _ HDE HW).
-          assert (HSE' := extend_sub _ _ _ _ HDE HW); destruct HH as [HP HE'];
-          exists (extend w1'' w2') r'; split; [assumption | split].
-          * eapply (met_morph_nonexp _ _ P), HP ; [symmetry; eassumption | omega].
-          * eapply wsat_dist, HE'; [symmetry; eassumption | omega].
-    Qed.
-    Next Obligation.
-      intros w1 w2 EQw n r HP w2'; intros; eapply HP; try eassumption; [].
-      etransitivity; eassumption.
-    Qed.
-    Next Obligation.
-      intros p1 p2 EQp w n' r HLt; split; intros HP w1; intros.
-      - edestruct HP as [w2 [r' [HW [HP' HE'] ] ] ]; try eassumption; [].
-        clear HP; repeat (eexists; try eassumption); [].
-        apply EQp; [now eauto with arith | assumption].
-      - edestruct HP as [w2 [r' [HW [HP' HE'] ] ] ]; try eassumption; [].
-        clear HP; repeat (eexists; try eassumption); [].
-        apply EQp; [now eauto with arith | assumption].
-    Qed.
-
-    Definition vs m1 m2 P Q : Props :=
-      □(P → pvs m1 m2 Q).
-
-  End ViewShifts.
 
   Section ViewShiftProps.
 
@@ -330,8 +266,8 @@ Module Type IRIS_VS (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PR
 
   End ViewShiftProps.
 
-End IRIS_VS.
+End IRIS_VS_RULES.
 
-Module IrisVS (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) : IRIS_VS RL C R WP CORE.
-  Include IRIS_VS RL C R WP CORE.
-End IrisVS.
+Module IrisVSRules (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE): IRIS_VS_RULES RL C R WP CORE PLOG.
+  Include IRIS_VS_RULES RL C R WP CORE PLOG.
+End IrisVSRules.

@@ -25,6 +25,9 @@ Module IrisRes (RL : RA_T) (C : CORE_LANG) <: IRIS_RES RL C.
   Include IRIS_RES RL C. (* I cannot believe Coq lets me do this... *)
 End IrisRes.
 
+(* This instantiates the framework(s) provided by ModuRes to obtain a higher-order
+   separation logic with ownership, later, necessitation and equality.
+   The logic has "worlds" in its model, but nothing here uses them yet. *)
 Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R).
   Export C.
   Export R.
@@ -160,33 +163,6 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Notation "t1 '===' t2" := (intEq t1 t2) (at level 70) : iris_scope.
 
-  Section Invariants.
-
-    (** Invariants **)
-    Definition invP i P w : UPred pres :=
-      intEqP (w i) (Some (ı' P)).
-    Program Definition inv i : Props -n> Props :=
-      n[(fun P => m[(invP i P)])].
-    Next Obligation.
-      intros w1 w2 EQw; unfold invP; simpl morph.
-      destruct n; [apply dist_bound |].
-      apply intEq_dist; [apply EQw | reflexivity].
-    Qed.
-    Next Obligation.
-      intros w1 w2 Sw; unfold invP; simpl morph.
-      intros n r HP; do 2 red; specialize (Sw i); do 2 red in HP.
-      destruct (w1 i) as [μ1 |]; [| contradiction].
-      destruct (w2 i) as [μ2 |]; [| contradiction]; simpl in Sw.
-      rewrite <- Sw; assumption.
-    Qed.
-    Next Obligation.
-      intros p1 p2 EQp w; unfold invP; simpl morph.
-      apply intEq_dist; [reflexivity |].
-      apply dist_mono, (met_morph_nonexp _ _ ı'), EQp.
-    Qed.
-
-  End Invariants.
-
   Section Timeless.
   
     Definition timelessP P w n :=
@@ -292,130 +268,6 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   End Ownership.
 
-  Section WorldSatisfaction.
-
-    (* First, we need to compose the resources of a finite map. This won't be pretty, for
-       now, since the library does not provide enough
-       constructs. Hopefully we can provide a fold that'd work for
-       that at some point
-     *)
-    Fixpoint comp_list (xs : list pres) : res :=
-      match xs with
-        | nil => 1
-        | (x :: xs)%list => ra_proj x · comp_list xs
-      end.
-
-    Lemma comp_list_app rs1 rs2 :
-      comp_list (rs1 ++ rs2) == comp_list rs1 · comp_list rs2.
-    Proof.
-      induction rs1; simpl comp_list; [now rewrite ->ra_op_unit by apply _ |].
-      now rewrite ->IHrs1, assoc.
-    Qed.
-
-    Definition cod (m : nat -f> pres) : list pres := List.map snd (findom_t m).
-    Definition comp_map (m : nat -f> pres) : res := comp_list (cod m).
-
-    Lemma comp_map_remove (rs : nat -f> pres) i r (HLu : rs i == Some r) :
-      comp_map rs == ra_proj r · comp_map (fdRemove i rs).
-    Proof.
-      destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
-      induction rs as [| [j s] ]; [contradiction |]; simpl comp_list; simpl in HLu.
-      destruct (comp i j); [do 5 red in HLu; rewrite-> HLu; reflexivity | contradiction |].
-      simpl comp_list; rewrite ->IHrs by eauto using SS_tail.
-      rewrite-> !assoc, (comm (_ s)); reflexivity.
-    Qed.
-
-    Lemma comp_map_insert_new (rs : nat -f> pres) i r (HNLu : rs i == None) :
-      ra_proj r · comp_map rs == comp_map (fdUpdate i r rs).
-    Proof.
-      destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
-      induction rs as [| [j s] ]; [reflexivity | simpl comp_list; simpl in HNLu].
-      destruct (comp i j); [contradiction | reflexivity |].
-      simpl comp_list; rewrite <- IHrs by eauto using SS_tail.
-      rewrite-> !assoc, (comm (_ r)); reflexivity.
-    Qed.
-
-    Lemma comp_map_insert_old (rs : nat -f> pres) i r1 r2 r
-          (HLu : rs i == Some r1) (HEq : ra_proj r1 · ra_proj r2 == ra_proj r) :
-      ra_proj r2 · comp_map rs == comp_map (fdUpdate i r rs).
-    Proof.
-      destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
-      induction rs as [| [j s] ]; [contradiction |]; simpl comp_list; simpl in HLu.
-      destruct (comp i j); [do 5 red in HLu; rewrite-> HLu; clear HLu | contradiction |].
-      - simpl comp_list; rewrite ->assoc, (comm (_ r2)), <- HEq; reflexivity.
-      - simpl comp_list; rewrite <- IHrs by eauto using SS_tail.
-        rewrite-> !assoc, (comm (_ r2)); reflexivity.
-    Qed.
-
-    Definition state_sat (r: res) σ: Prop := ↓r /\
-      match fst r with
-        | ex_own s => s = σ
-        | _ => True
-      end.
-
-    Global Instance state_sat_dist : Proper (equiv ==> equiv ==> iff) state_sat.
-    Proof.
-      intros [ [s1| |] r1] [ [s2| |] r2] [EQs EQr] σ1 σ2 EQσ; unfold state_sat; simpl in *; try tauto; try rewrite !EQs; try rewrite !EQr; try rewrite !EQσ; reflexivity.
-    Qed.
-
-    Global Instance preo_unit : preoType () := disc_preo ().
-
-    Program Definition wsat σ m (r : res) w : UPred () :=
-      ▹ (mkUPred (fun n _ => exists rs : nat -f> pres,
-                    state_sat (r · (comp_map rs)) σ
-                      /\ forall i (Hm : m i),
-                           (i ∈ dom rs <-> i ∈ dom w) /\
-                           forall π ri (HLw : w i == Some π) (HLrs : rs i == Some ri),
-                             ı π w n ri) _).
-    Next Obligation.
-      intros n1 n2 _ _ HLe _ [rs [HLS HRS] ]. exists rs; split; [assumption|].
-      setoid_rewrite HLe; eassumption.
-    Qed.
-
-    Global Instance wsat_equiv σ : Proper (meq ==> equiv ==> equiv ==> equiv) (wsat σ).
-    Proof.
-      intros m1 m2 EQm r r' EQr w1 w2 EQw [| n] []; [reflexivity |].
-      split; intros [rs [HE HM] ]; exists rs.
-      - split; [rewrite <-EQr; assumption | intros; apply EQm in Hm; split; [| setoid_rewrite <- EQw; apply HM, Hm] ].
-        destruct (HM _ Hm) as [HD _]; rewrite HD; clear - EQw.
-        rewrite fdLookup_in; setoid_rewrite EQw; rewrite <- fdLookup_in; reflexivity.
-      - split; [rewrite EQr; assumption | intros; apply EQm in Hm; split; [| setoid_rewrite EQw; apply HM, Hm] ].
-        destruct (HM _ Hm) as [HD _]; rewrite HD; clear - EQw.
-        rewrite fdLookup_in; setoid_rewrite <- EQw; rewrite <- fdLookup_in; reflexivity.
-    Qed.
-
-    Global Instance wsat_dist n σ m u : Proper (dist n ==> dist n) (wsat σ m u).
-    Proof.
-      intros w1 w2 EQw [| n'] [] HLt; [reflexivity |]; destruct n as [| n]; [now inversion HLt |].
-      split; intros [rs [HE HM] ]; exists rs.
-      - split; [assumption | split; [rewrite <- (domeq _ _ _ EQw); apply HM, Hm |] ].
-        intros; destruct (HM _ Hm) as [_ HR]; clear HE HM Hm.
-        assert (EQπ := EQw i); rewrite-> HLw in EQπ; clear HLw.
-        destruct (w1 i) as [π' |]; [| contradiction]; do 3 red in EQπ.
-        apply ı in EQπ; apply EQπ; [now auto with arith |].
-        apply (met_morph_nonexp _ _ (ı π')) in EQw; apply EQw; [omega |].
-        apply HR; [reflexivity | assumption].
-      - split; [assumption | split; [rewrite (domeq _ _ _ EQw); apply HM, Hm |] ].
-        intros; destruct (HM _ Hm) as [_ HR]; clear HE HM Hm.
-        assert (EQπ := EQw i); rewrite-> HLw in EQπ; clear HLw.
-        destruct (w2 i) as [π' |]; [| contradiction]; do 3 red in EQπ.
-        apply ı in EQπ; apply EQπ; [now auto with arith |].
-        apply (met_morph_nonexp _ _ (ı π')) in EQw; apply EQw; [omega |].
-        apply HR; [reflexivity | assumption].
-    Qed.
-
-    Lemma wsat_valid σ m (r: res) w k :
-      wsat σ m r w (S k) tt -> ↓r.
-    Proof.
-      intros [rs [HD _] ]. destruct HD as [VAL _].
-      eapply ra_op_valid; [now apply _|]. eassumption.
-    Qed.
-
-  End WorldSatisfaction.
-
-  Notation " P @ k " := ((P : UPred ()) k tt) (at level 60, no associativity).
-
-
   Lemma valid_iff P :
     valid P <-> (⊤ ⊑ P).
   Proof.
@@ -423,30 +275,6 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     - intros w n r _; apply Hp.
     - intros w n r; apply Hp; exact I.
   Qed.
-
-  (*
-	Simple monotonicity tactics for props and wsat.
-
-	The tactic propsM H proves P w' n' r' given H : P w n r when
-		w ⊑ w', n' <= n, r ⊑ r'
-	are immediate.
-
-	The tactic wsatM is similar.
-  *)
-
-  Lemma propsM {P w n r w' n' r'}
-      (HP : P w n r) (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
-    P w' n' r'.
-  Proof. by apply: (mu_mono _ _ P _ _ HSw); exact: (uni_pred _ _ _ _ _ HLe HSr). Qed.
-
-  Ltac propsM H := solve [ done | apply (propsM H); solve [ done | reflexivity | omega ] ].
-
-  Lemma wsatM {σ m} {r : res} {w n k}
-      (HW : wsat σ m r w @ n) (HLe : k <= n) :
-    wsat σ m r w @ k.
-  Proof. by exact: (uni_pred _ _ _ _ _ HLe). Qed.
-
-  Ltac wsatM H := solve [done | apply (wsatM H); solve [done | omega] ].
 
 End IRIS_CORE.
 

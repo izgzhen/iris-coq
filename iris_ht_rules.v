@@ -1,12 +1,11 @@
 Require Import ssreflect.
-Require Import world_prop core_lang lang masks iris_core iris_vs iris_wp.
+Require Import world_prop core_lang lang masks iris_core iris_plog.
 Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Module Type IRIS_WP_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (VS: IRIS_VS RL C R WP CORE) (HT: IRIS_HT RL C R WP CORE).
-  Export VS.
-  Export HT.
+Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE).
+  Export PLOG.
 
   Local Open Scope lang_scope.
   Local Open Scope ra_scope.
@@ -374,25 +373,8 @@ Module Type IRIS_WP_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
 
   End HoareTripleProperties.
 
-  Section DerivedRules.
+End IRIS_HT_RULES.
 
-    Existing Instance LP_isval.
-
-    Implicit Types (P : Props) (i : nat) (m : mask) (e : expr) (r : res).
-
-    Lemma vsFalse m1 m2 :
-      valid (vs m1 m2 ⊥ ⊥).
-    Proof.
-      rewrite ->valid_iff, box_top.
-      unfold vs; apply box_intro.
-      rewrite <- and_impl, and_projR.
-      apply bot_false.
-    Qed.
-
-  End DerivedRules.
-
-End IRIS_WP_RULES.
-
-Module IrisWPRules (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (VS: IRIS_VS RL C R WP CORE) (HT: IRIS_HT RL C R WP CORE) : IRIS_WP_RULES RL C R WP CORE VS HT.
-  Include IRIS_WP_RULES RL C R WP CORE VS HT.
-End IrisWPRules.
+Module IrisHTRules (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE) : IRIS_HT_RULES RL C R WP CORE PLOG.
+  Include IRIS_HT_RULES RL C R WP CORE PLOG.
+End IrisHTRules.
