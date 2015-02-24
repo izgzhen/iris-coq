@@ -101,22 +101,23 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         rewrite-> !assoc, (comm r2); reflexivity.
     Qed.
 
-    Definition state_sat (r: res) σ: Prop := ↓r /\
+    (* When is a resource okay with a state? *)
+    Definition res_sat (r: res) σ: Prop := ↓r /\
       match fst r with
         | ex_own s => s = σ
-        | _ => True (* We don't care. Note that validity is ensured independently *)
+        | _ => True (* We don't care. Note that validity is ensured by the first conjunct. *)
       end.
 
-    Global Instance state_sat_dist : Proper (equiv ==> equiv ==> iff) state_sat.
+    Global Instance res_sat_dist : Proper (equiv ==> equiv ==> iff) res_sat.
     Proof.
-      intros [ [s1| |] r1] [ [s2| |] r2] [EQs EQr] σ1 σ2 EQσ; unfold state_sat; simpl in *; try tauto; try rewrite !EQs; try rewrite !EQr; try rewrite !EQσ; reflexivity.
+      intros [ [s1| |] r1] [ [s2| |] r2] [EQs EQr] σ1 σ2 EQσ; unfold res_sat; simpl in *; try tauto; try rewrite !EQs; try rewrite !EQr; try rewrite !EQσ; reflexivity.
     Qed.
 
     Global Instance preo_unit : preoType () := disc_preo ().
 
     Program Definition wsat σ m (r : res) w : UPred () :=
       ▹ (mkUPred (fun n _ => exists rs : nat -f> res,
-                    state_sat (r · (comp_map rs)) σ
+                    res_sat (r · (comp_map rs)) σ
                       /\ forall i (Hm : m i),
                            (i ∈ dom rs <-> i ∈ dom w) /\
                            forall π ri (HLw : w i == Some π) (HLrs : rs i == Some ri),
