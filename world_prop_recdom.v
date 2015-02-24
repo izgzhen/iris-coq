@@ -7,9 +7,7 @@ Require Import world_prop.
 
 (* Now we come to the actual implementation *)
 Module WorldProp (Res : RA_T) : WORLD_PROP Res.
-
   (** The construction is parametric in the monoid we choose *)
-  Definition pres := ra_pos Res.res.
 
   (** We need to build a functor that would describe the following
       recursive domain equation:
@@ -25,7 +23,7 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
     Local Instance pcm_disc P `{cmetric P} : pcmType P | 2000 := disc_pcm P.
 
     Definition FProp P `{cmP : cmetric P} :=
-      (nat -f> P) -m> UPred pres.
+      (nat -f> P) -m> UPred (Res.res).
 
     Context {U V} `{cmU : cmetric U} `{cmV : cmetric V}.
 

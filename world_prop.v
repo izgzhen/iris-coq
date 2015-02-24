@@ -6,8 +6,6 @@ Require Import ModuRes.RA ModuRes.UPred.
 
 (* This interface keeps some of the details of the solution opaque *)
 Module Type WORLD_PROP (Res : RA_T).
-  Definition pres := ra_pos Res.res.
-  
   (* PreProp: The solution to the recursive equation. Equipped with a discrete order. *)
   Parameter PreProp    : cmtyp.
   Instance PProp_preo  : preoType PreProp   := disc_preo PreProp.
@@ -16,7 +14,7 @@ Module Type WORLD_PROP (Res : RA_T).
 
   (* Defines Worlds, Propositions *)
   Definition Wld       := nat -f> PreProp.
-  Definition Props     := Wld -m> UPred pres.
+  Definition Props     := Wld -m> UPred (Res.res).
 
   (* Define all the things on Props, so they have names - this shortens the terms later. *)
   Instance Props_ty   : Setoid Props  | 1 := _.

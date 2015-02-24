@@ -120,104 +120,8 @@ Section ProductLemmas.
 
 End ProductLemmas.
 
-Section PositiveCarrier.
-  Context {T} `{raT : RA T}.
-
-  Definition ra_pos: Type := { t : T | ↓ t }.
-  Coercion ra_proj (r:ra_pos): T := proj1_sig r.
-
-  Implicit Types (t u : T) (r : ra_pos).
-
-  Global Instance ra_pos_type : Setoid ra_pos := _.
-
-  Definition ra_mk_pos t {VAL: ↓ t}: ra_pos := exist _ t VAL.
-
-  Program Definition ra_pos_unit: ra_pos := exist _ 1 _.
-  Next Obligation.
-    now eapply ra_valid_unit; apply _.
-  Qed.
-
-  Lemma ra_proj_cancel t (VAL: ↓t):
-    ra_proj (ra_mk_pos t (VAL:=VAL)) = t.
-  Proof.
-    reflexivity.
-  Qed.
-
-  Lemma ra_op_pos_valid t1 t2 r:
-    t1 · t2 == ra_proj r -> ↓ t1.
-  Proof.
-    destruct r as [t Hval]; simpl. intros Heq. rewrite <-Heq in Hval.
-    eapply ra_op_valid; eassumption.
-  Qed.
-
-  Lemma ra_op_pos_valid2 t1 t2 r:
-    t1 · t2 == ra_proj r -> ↓ t2.
-  Proof.
-    rewrite comm. now eapply ra_op_pos_valid.
-  Qed.
-
-  Lemma ra_pos_valid r:
-    ↓(ra_proj r).
-  Proof.
-    destruct r as [r VAL].
-    exact VAL.
-  Qed.
-
-End PositiveCarrier.
-Global Arguments ra_pos T {_}.
-Notation "'⁺' T" := (ra_pos T) (at level 75) : type_scope.
-
-(** Validity automation tactics *)
-Ltac auto_valid_inner :=
-  solve [ eapply ra_op_pos_valid; (eassumption || rewrite comm; eassumption)
-        | eapply ra_op_pos_valid2; (eassumption || rewrite comm; eassumption)
-        | eapply ra_op_valid; (eassumption || rewrite comm; eassumption) ].
-Ltac auto_valid := idtac; match goal with
-                     | |- @ra_valid ?T _ _ =>
-                       let H := fresh in assert (H : RA T) by apply _; auto_valid_inner
-                   end.
-
-(* FIXME put the common parts into a helper tactic, and allow arbitrary tactics after "by" *)
-Ltac exists_valid t tac := let H := fresh "Hval" in assert(H:(↓t)%ra); [tac|exists (ra_mk_pos t (VAL:=H) ) ].
-Tactic Notation "exists↓" constr(t) := exists_valid t idtac.
-Tactic Notation "exists↓" constr(t) "by" tactic(tac) := exists_valid t ltac:(now tac).
-
-Ltac pose_valid name t tac := let H := fresh "Hval" in assert(H:(↓t)%ra); [tac|pose (name := ra_mk_pos t (VAL:=H) ) ].
-Tactic Notation "pose↓" ident(name) ":=" constr(t) := pose_valid name t idtac.
-Tactic Notation "pose↓" ident(name) ":=" constr(t) "by" tactic(tac) := pose_valid name t ltac:(now tac).
-
-
 Section Order.
   Context T `{raT : RA T}.
-
-  Implicit Types (t : T) (r s : ra_pos T).
-
-  Definition pra_ord r1 r2 :=
-    exists t, t · (ra_proj r1) == (ra_proj r2).
-
-  Global Instance pra_ord_preo: PreOrder pra_ord.
-  Proof.
-    split.
-    - intros x; exists 1. simpl. erewrite ra_op_unit by apply _; reflexivity.
-    - intros z yz xyz [y Hyz] [x Hxyz]; unfold pra_ord.
-      rewrite <- Hyz, assoc in Hxyz; setoid_rewrite <- Hxyz.
-      exists (x · y). reflexivity.
-  Qed.
-
-  Global Program Instance pRA_preo : preoType (ra_pos T) | 0 := mkPOType pra_ord.
-
-  Global Instance equiv_pord_pra : Proper (equiv ==> equiv ==> equiv) (pord (T := ra_pos T)).
-  Proof.
-    intros s1 s2 EQs t1 t2 EQt; split; intros [s HS].
-    - exists s; rewrite <- EQs, <- EQt; assumption.
-    - exists s; rewrite EQs, EQt; assumption.
-  Qed.
-
-  Lemma unit_min r : ra_pos_unit ⊑ r.
-  Proof.
-    exists (ra_proj r). simpl.
-    now erewrite ra_op_unit2 by apply _.
-  Qed.
 
   Definition ra_ord t1 t2 :=
     exists t, t · t1 == t2.
@@ -245,12 +149,10 @@ Section Order.
     rewrite <- assoc, (comm y), <- assoc, assoc, (comm y1), EQx, EQy; reflexivity.
   Qed.
 
-  Lemma ord_res_pres r s :
-    (r ⊑ s) <-> (ra_proj r ⊑ ra_proj s).
+  Lemma unit_min r : 1 ⊑ r.
   Proof.
-    split; intros HR.
-    - destruct HR as [d EQ]. exists d. assumption.
-    - destruct HR as [d EQ]. exists d. assumption.
+    exists r. simpl.
+    now erewrite ra_op_unit2 by apply _.
   Qed.
 
 End Order.

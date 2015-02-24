@@ -17,14 +17,12 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Local Open Scope bi_scope.
   Local Open Scope iris_scope.
   
-  Implicit Types (P : Props) (w : Wld) (n i k : nat) (m : mask) (r : pres) (u v : res) (σ : state) (φ : vPred).
-
-
+  Implicit Types (P : Props) (w : Wld) (n i k : nat) (m : mask) (r u v : res) (σ : state) (φ : vPred).
 
   Section Invariants.
 
     (** Invariants **)
-    Definition invP i P w : UPred pres :=
+    Definition invP i P w : UPred res :=
       intEqP (w i) (Some (ı' P)).
     Program Definition inv i : Props -n> Props :=
       n[(fun P => m[(invP i P)])].
@@ -55,10 +53,10 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
        constructs. Hopefully we can provide a fold that'd work for
        that at some point
      *)
-    Fixpoint comp_list (xs : list pres) : res :=
+    Fixpoint comp_list (xs : list res) : res :=
       match xs with
         | nil => 1
-        | (x :: xs)%list => ra_proj x · comp_list xs
+        | (x :: xs)%list => x · comp_list xs
       end.
 
     Lemma comp_list_app rs1 rs2 :
@@ -68,45 +66,45 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       now rewrite ->IHrs1, assoc.
     Qed.
 
-    Definition cod (m : nat -f> pres) : list pres := List.map snd (findom_t m).
-    Definition comp_map (m : nat -f> pres) : res := comp_list (cod m).
+    Definition cod (m : nat -f> res) : list res := List.map snd (findom_t m).
+    Definition comp_map (m : nat -f> res) : res := comp_list (cod m).
 
-    Lemma comp_map_remove (rs : nat -f> pres) i r (HLu : rs i == Some r) :
-      comp_map rs == ra_proj r · comp_map (fdRemove i rs).
+    Lemma comp_map_remove (rs : nat -f> res) i r (HLu : rs i == Some r) :
+      comp_map rs == r · comp_map (fdRemove i rs).
     Proof.
       destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
       induction rs as [| [j s] ]; [contradiction |]; simpl comp_list; simpl in HLu.
-      destruct (comp i j); [do 5 red in HLu; rewrite-> HLu; reflexivity | contradiction |].
+      destruct (comp i j); [red in HLu; rewrite-> HLu; reflexivity | contradiction |].
       simpl comp_list; rewrite ->IHrs by eauto using SS_tail.
-      rewrite-> !assoc, (comm (_ s)); reflexivity.
+      rewrite-> !assoc, (comm s). reflexivity.
     Qed.
 
-    Lemma comp_map_insert_new (rs : nat -f> pres) i r (HNLu : rs i == None) :
-      ra_proj r · comp_map rs == comp_map (fdUpdate i r rs).
+    Lemma comp_map_insert_new (rs : nat -f> res) i r (HNLu : rs i == None) :
+      r · comp_map rs == comp_map (fdUpdate i r rs).
     Proof.
       destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
       induction rs as [| [j s] ]; [reflexivity | simpl comp_list; simpl in HNLu].
       destruct (comp i j); [contradiction | reflexivity |].
       simpl comp_list; rewrite <- IHrs by eauto using SS_tail.
-      rewrite-> !assoc, (comm (_ r)); reflexivity.
+      rewrite-> !assoc, (comm r); reflexivity.
     Qed.
 
-    Lemma comp_map_insert_old (rs : nat -f> pres) i r1 r2 r
-          (HLu : rs i == Some r1) (HEq : ra_proj r1 · ra_proj r2 == ra_proj r) :
-      ra_proj r2 · comp_map rs == comp_map (fdUpdate i r rs).
+    Lemma comp_map_insert_old (rs : nat -f> res) i r1 r2 r
+          (HLu : rs i == Some r1) (HEq : r1 · r2 == r):
+      r2 · comp_map rs == comp_map (fdUpdate i r rs).
     Proof.
       destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
       induction rs as [| [j s] ]; [contradiction |]; simpl comp_list; simpl in HLu.
-      destruct (comp i j); [do 5 red in HLu; rewrite-> HLu; clear HLu | contradiction |].
-      - simpl comp_list; rewrite ->assoc, (comm (_ r2)), <- HEq; reflexivity.
+      destruct (comp i j); [red in HLu; rewrite-> HLu; clear HLu | contradiction |].
+      - simpl comp_list; rewrite ->assoc, (comm r2), <- HEq; reflexivity.
       - simpl comp_list; rewrite <- IHrs by eauto using SS_tail.
-        rewrite-> !assoc, (comm (_ r2)); reflexivity.
+        rewrite-> !assoc, (comm r2); reflexivity.
     Qed.
 
     Definition state_sat (r: res) σ: Prop := ↓r /\
       match fst r with
         | ex_own s => s = σ
-        | _ => True
+        | _ => True (* We don't care. Note that validity is ensured independently *)
       end.
 
     Global Instance state_sat_dist : Proper (equiv ==> equiv ==> iff) state_sat.
@@ -117,7 +115,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Global Instance preo_unit : preoType () := disc_preo ().
 
     Program Definition wsat σ m (r : res) w : UPred () :=
-      ▹ (mkUPred (fun n _ => exists rs : nat -f> pres,
+      ▹ (mkUPred (fun n _ => exists rs : nat -f> res,
                     state_sat (r · (comp_map rs)) σ
                       /\ forall i (Hm : m i),
                            (i ∈ dom rs <-> i ∈ dom w) /\
@@ -198,10 +196,10 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Section ViewShifts.
     Local Obligation Tactic := intros.
 
-    Program Definition preVS m1 m2 P w : UPred pres :=
+    Program Definition preVS m1 m2 P w : UPred res :=
       mkUPred (fun n r => forall w1 (rf: res) mf σ k (HSub : w ⊑ w1) (HLe : k < n)
                                  (HD : mf # m1 ∪ m2)
-                                 (HE : wsat σ (m1 ∪ mf) (ra_proj r · rf) w1 @ S k),
+                                 (HE : wsat σ (m1 ∪ mf) (r · rf) w1 @ S k),
                           exists w2 r',
                             w1 ⊑ w2 /\ P w2 (S k) r'
                             /\ wsat σ (m2 ∪ mf) (r' · rf) w2 @ S k) _.
@@ -210,10 +208,9 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       destruct (HP w1 (rd · rf) mf σ k) as [w2 [r1' [HW [HP' HE'] ] ] ];
         try assumption; [now eauto with arith | |].
       - eapply wsat_equiv, HE; try reflexivity.
-        rewrite ->assoc, (comm (_ r1)), HR; reflexivity.
-      - rewrite ->assoc, (comm (_ r1')) in HE'.
-        exists w2. exists↓ (rd · ra_proj r1').
-        { apply wsat_valid in HE'. auto_valid. }
+        rewrite ->assoc, (comm r1), HR; reflexivity.
+      - rewrite ->assoc, (comm r1') in HE'.
+        exists w2 (rd · r1').
         split; [assumption | split; [| assumption] ].
         eapply uni_pred, HP'; [reflexivity|]. exists rd. reflexivity.
     Qed.
@@ -277,19 +274,19 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Definition wpFP safe m (WP : expr -n> vPred -n> Props) e φ w n r :=
       forall w' k rf mf σ (HSw : w ⊑ w') (HLt : k < n) (HD : mf # m)
-             (HE : wsat σ (m ∪ mf) (ra_proj r · rf) w' @ S k),
+             (HE : wsat σ (m ∪ mf) (r · rf) w' @ S k),
         (forall (HV : is_value e),
          exists w'' r', w' ⊑ w'' /\ φ (exist _ e HV) w'' (S k) r'
-                           /\ wsat σ (m ∪ mf) (ra_proj r' · rf) w'' @ S k) /\
+                           /\ wsat σ (m ∪ mf) (r' · rf) w'' @ S k) /\
         (forall σ' ei ei' K (HDec : e = K [[ ei ]])
                 (HStep : prim_step (ei, σ) (ei', σ')),
          exists w'' r', w' ⊑ w'' /\ WP (K [[ ei' ]]) φ w'' k r'
-                           /\ wsat σ' (m ∪ mf) (ra_proj r' · rf) w'' @ k) /\
+                           /\ wsat σ' (m ∪ mf) (r' · rf) w'' @ k) /\
         (forall e' K (HDec : e = K [[ fork e' ]]),
          exists w'' rfk rret, w' ⊑ w''
                                  /\ WP (K [[ fork_ret ]]) φ w'' k rret
                                  /\ WP e' (umconst ⊤) w'' k rfk
-                                 /\ wsat σ (m ∪ mf) (ra_proj rfk · ra_proj rret · rf) w'' @ k) /\
+                                 /\ wsat σ (m ∪ mf) (rfk · rret · rf) w'' @ k) /\
         (forall HSafe : safe = true, safeExpr e σ).
 
     (* Define the function wp will be a fixed-point of *)
@@ -302,27 +299,23 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       [| omega | ..]; try assumption; [].      
       split; [clear HS HF | split; [clear HV HF | split; clear HV HS; [| clear HF ] ] ]; intros.
       - specialize (HV HV0); destruct HV as [w'' [r1' [HSw' [Hφ HE'] ] ] ].
-        rewrite ->assoc, (comm (_ r1')) in HE'.
-        exists w''. exists↓ (rd · ra_proj r1').
-        { clear -HE'. apply wsat_valid in HE'. auto_valid. }
+        rewrite ->assoc, (comm r1') in HE'.
+        exists w'' (rd · r1').
         split; [assumption | split; [| assumption] ].
         eapply uni_pred, Hφ; [| exists rd]; reflexivity.
       - specialize (HS _ _ _ _ HDec HStep); destruct HS as [w'' [r1' [HSw' [HWP HE'] ] ] ].
-        rewrite ->assoc, (comm (_ r1')) in HE'. exists w''.
+        rewrite ->assoc, (comm r1') in HE'. exists w''.
         destruct k as [| k]; [exists r1'; simpl wsat; tauto |].
-        exists↓ (rd · ra_proj r1').
-        { clear- HE'. apply wsat_valid in HE'. auto_valid. }
+        exists (rd · r1').
         split; [assumption | split; [| assumption] ].
         eapply uni_pred, HWP; [| exists rd]; reflexivity.
       - specialize (HF _ _ HDec); destruct HF as [w'' [rfk [rret1 [HSw' [HWR [HWF HE'] ] ] ] ] ].
         destruct k as [| k]; [exists w'' rfk rret1; simpl wsat; tauto |].
-        rewrite ->assoc, <- (assoc (_ rfk)) in HE'.
-        exists w''. exists rfk. exists↓ (rd · ra_proj rret1).
-        { clear- HE'. apply wsat_valid in HE'. rewrite comm. eapply ra_op_valid, ra_op_valid; try now apply _.
-          rewrite ->(comm (_ rfk)) in HE'. eassumption. }
+        rewrite ->assoc, <- (assoc rfk) in HE'.
+        exists w''. exists rfk (rd · rret1).
         repeat (split; try assumption).
         + eapply uni_pred, HWR; [| exists rd]; reflexivity.
-        + clear -HE'. unfold ra_proj. rewrite ->(comm _ rd) in HE'. exact HE'.
+        + clear -HE'. rewrite ->(comm _ rd) in HE'. exact HE'.
       - auto.
     Qed.
     Next Obligation.

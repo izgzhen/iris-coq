@@ -73,7 +73,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   
   (** And now we're ready to build the IRIS-specific connectives! *)
 
-  Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (m : mask) (r : pres) (u v : res) (σ : state).
+  Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (m : mask) (r u v : res) (σ : state).
 
   Section Necessitation.
     (** Note: this could be moved to BI, since it's possible to define
@@ -82,7 +82,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
 
     Program Definition box : Props -n> Props :=
-      n[(fun P => m[(fun w => mkUPred (fun n r => P w n ra_pos_unit) _)])].
+      n[(fun P => m[(fun w => mkUPred (fun n r => P w n 1) _)])].
     Next Obligation.
       intros n m r s HLe _ Hp; rewrite-> HLe; assumption.
     Qed.
@@ -129,11 +129,20 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     intros w n r; reflexivity.
   Qed.
 
+  Lemma box_dup P :
+    □P == □P * □P.
+  Proof.
+    intros w n r. split.
+    - intros HP. exists 1 r. split; [now rewrite ra_op_unit|].
+      split;  assumption.
+    - intros [r1 [r2 [_ [HP _] ] ] ]. assumption.
+  Qed.
+
   (** "Internal" equality **)
   Section IntEq.
     Context {T} `{mT : metric T}.
 
-    Program Definition intEqP (t1 t2 : T) : UPred pres :=
+    Program Definition intEqP (t1 t2 : T) : UPred res :=
       mkUPred (fun n r => t1 = S n = t2) _.
     Next Obligation.
       intros n1 n2 _ _ HLe _; apply mono_dist; omega.
@@ -196,9 +205,9 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
        Note that this makes ownR trivially *False* for invalid u: There is no
        element v such that u · v = r (where r is valid) *)
     Program Definition ownR: res -=> Props :=
-      s[(fun u => pcmconst (mkUPred(fun n r => u ⊑ ra_proj r) _) )].
+      s[(fun u => pcmconst (mkUPred(fun n r => u ⊑ r) _) )].
     Next Obligation.
-      intros n m r1 r2 Hle [d Hd ] [e He]. change (u ⊑ (ra_proj r2)). rewrite <-Hd, <-He.
+      intros n m r1 r2 Hle [d Hd ] [e He]. change (u ⊑ r2). rewrite <-Hd, <-He.
       exists (d · e). rewrite assoc. reflexivity.
     Qed.
     Next Obligation.
@@ -214,8 +223,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Proof.
       intros w n r; split; [intros Hut | intros [r1 [r2 [EQr [Hu Ht] ] ] ] ].
       - destruct Hut as [s Heq]. rewrite-> assoc in Heq.
-        exists↓ (s · u) by auto_valid.
-        exists↓ v by auto_valid.
+        exists (s · u) v.
         split; [|split].
         + rewrite <-Heq. reflexivity.
         + exists s. reflexivity.
@@ -224,13 +232,6 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         exists (u' · t'). rewrite <-EQr, <-Hequ, <-Heqt.
         rewrite !assoc. eapply ra_op_proper; try (reflexivity || now apply _).
         rewrite <-assoc, (comm _ u), assoc. reflexivity.
-    Qed.
-
-    Lemma ownR_valid u (INVAL: ~↓u):
-      ownR u ⊑ ⊥.
-    Proof.
-      intros w n [r VAL] [v Heq]. hnf. unfold ra_proj, proj1_sig in Heq.
-      rewrite <-Heq in VAL. apply ra_op_valid2 in VAL. contradiction.
     Qed.
 
     (** Proper physical state: ownership of the machine state **)
@@ -249,7 +250,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       n[(fun r : RL.res => ownR (1, r))].
     Next Obligation.
       intros r1 r2 EQr. destruct n as [| n]; [apply dist_bound |eapply dist_refl].
-      simpl in EQr. intros w m t. simpl. change ( (ex_unit state, r1) ⊑ (ra_proj t) <->  (ex_unit state, r2) ⊑ (ra_proj t)). rewrite EQr. reflexivity.
+      simpl in EQr. intros w m t. simpl. change ( (ex_unit state, r1) ⊑ t <->  (ex_unit state, r2) ⊑ t). rewrite EQr. reflexivity.
     Qed.
 
     Lemma ownL_timeless {r : RL.res} : valid(timeless(ownL r)).
