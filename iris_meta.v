@@ -17,7 +17,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Local Open Scope list_scope.
 
     (* weakest-pre for a threadpool *)
-    Inductive wptp (safe : bool) (m : mask) (w : Wld) (n : nat) : tpool -> list pres -> list vPred -> Prop :=
+    Inductive wptp (safe : bool) (m : mask) (w : Wld) (n : nat) : tpool -> list res -> list vPred -> Prop :=
     | wp_emp : wptp safe m w n nil nil nil
     | wp_cons e φ r tp rs φs
               (WPE  : wp safe m e φ w n r)
@@ -77,7 +77,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
           [reflexivity | now apply le_n | now apply mask_emp_disjoint | |].
         + eapply wsat_equiv, HE; try reflexivity; [apply mask_emp_union |].
           rewrite !comp_list_app; simpl comp_list; unfold equiv.
-          rewrite ->assoc, (comm (_ r)), <- assoc. reflexivity.       
+          rewrite ->assoc, (comm r), <- assoc. reflexivity.       
         + edestruct HS as [w' [r' [HSW [WPE' HE'] ] ] ];
           [reflexivity | eassumption | clear WPE HS].
           setoid_rewrite HSW. eapply IHn; clear IHn.
@@ -86,7 +86,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
             constructor; [eassumption | eapply wptp_closure, WPTP; [assumption | now auto with arith] ].
           * eapply wsat_equiv, HE'; [now erewrite mask_emp_union| |reflexivity].
             rewrite !comp_list_app; simpl comp_list; unfold equiv.
-            rewrite ->2!assoc, (comm (_ r')). reflexivity.
+            rewrite ->2!assoc, (comm r'). reflexivity.
       }
       (* fork *)
       inversion H; subst; clear H.
@@ -96,7 +96,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         [reflexivity | now apply le_n | now apply mask_emp_disjoint | |].
       + eapply wsat_equiv, HE; try reflexivity; [apply mask_emp_union |].
         rewrite !comp_list_app; simpl comp_list; unfold equiv.
-        rewrite ->assoc, (comm (_ r)), <- assoc. reflexivity.
+        rewrite ->assoc, (comm r), <- assoc. reflexivity.
       + specialize (HF _ _ eq_refl); destruct HF as [w' [rfk [rret [HSW [WPE' [WPS HE'] ] ] ] ] ]; clear WPE.
         setoid_rewrite HSW. edestruct IHn as [w'' [rs'' [φs'' [HSW'' [HSWTP'' HSE''] ] ] ] ]; first eassumption; first 2 last.
         * exists w'' rs'' ([umconst ⊤] ++ φs''). split; [eassumption|].
@@ -107,16 +107,16 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
           constructor; [|now constructor]. eassumption.
         * eapply wsat_equiv, HE'; try reflexivity; [symmetry; apply mask_emp_union |].
           rewrite comp_list_app. simpl comp_list. rewrite !comp_list_app. simpl comp_list.
-          rewrite (comm (_ rfk)). erewrite ra_op_unit by apply _.
-          rewrite (comm _ (_ rfk)). rewrite ->!assoc. eapply ra_op_proper;[now apply _ | |reflexivity]. unfold equiv.
-          rewrite <-assoc, (comm (_ rret)). rewrite (comm (_ rret)). reflexivity.
+          rewrite (comm rfk). erewrite ra_op_unit by apply _.
+          rewrite (comm _ rfk). rewrite ->!assoc. eapply ra_op_proper;[now apply _ | |reflexivity]. unfold equiv.
+          rewrite <-assoc, (comm rret). rewrite comm. reflexivity.
     Qed.
 
     Lemma adequacy_ht {safe m e P Q n k tp' σ σ' w r}
             (HT  : valid (ht safe m P e Q))
             (HSN : stepn n ([e], σ) (tp', σ'))
             (HP  : P w (n + S k) r)
-            (HE  : wsat σ m (ra_proj r) w @ n + S k) :
+            (HE  : wsat σ m r w @ n + S k) :
       exists w' rs' φs',
         w ⊑ w' /\ wptp safe m w' (S k) tp' rs' (Q :: φs') /\ wsat σ' m (comp_list rs') w' @ S k.
     Proof.
@@ -134,13 +134,12 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         wptp safe m w' (S k') tp' rs' (Q :: φs') /\ wsat σ' m (comp_list rs') w' @ S k'.
     Proof.
       destruct (steps_stepn _ _ HSN) as [n HSN']. clear HSN.
-      pose↓ r := (ex_own _ σ, 1:RL.res).
-      { unfold ra_valid. simpl. split; [|eapply ra_valid_unit; now apply _]. exact I. }
+      pose (r := (ex_own _ σ, 1:RL.res)).
       edestruct (adequacy_ht (w:=fdEmpty) (k:=k') (r:=r) HT HSN') as [w' [rs' [φs' [HW [HSWTP HWS] ] ] ] ]; clear HT HSN'.
       - exists (ra_unit _); now rewrite ->ra_op_unit by apply _.
-      - hnf. rewrite Plus.plus_comm. exists (fdEmpty (V:=pres)). split.
-        + unfold r, comp_map. simpl. rewrite ra_op_unit2. split; first assumption.
-          reflexivity.
+      - hnf. rewrite Plus.plus_comm. exists (fdEmpty (V:=res)). split.
+        + unfold r, comp_map. simpl. rewrite ra_op_unit2. split; last reflexivity.
+          unfold ra_valid. simpl. split; [|eapply ra_valid_unit; now apply _]. exact I.
         + intros i _; split; [reflexivity |].
           intros _ _ [].
       - do 3 eexists. split; [eassumption|]. assumption.
@@ -192,7 +191,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       - rewrite mask_emp_union.
         eapply wsat_equiv, HWS; try reflexivity.
         rewrite comp_list_app. simpl comp_list.
-        rewrite ->(assoc (comp_list rs1)), ->(comm (comp_list rs1) (ra_proj r)), <-assoc. reflexivity.
+        rewrite ->(assoc (comp_list rs1)), ->(comm (comp_list rs1) r), <-assoc. reflexivity.
       - apply HSafe. reflexivity.
     Qed.
 
@@ -203,7 +202,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
 
-    Implicit Types (P : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (Q : vPred) (r : pres) (w : Wld) (σ : state).
+    Implicit Types (P : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (Q : vPred) (r : res) (w : Wld) (σ : state).
 
     Program Definition restrictV (Q : expr -n> Props) : vPred :=
       n[(fun v => Q (` v))].
@@ -286,7 +285,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       have {Hei} Hei: (E ei) w' (S k) rei by propsM Hei.
       have HSw': w' ⊑ w' by reflexivity.
       have HLe: S k <= S k by omega.
-      have H1ei: ra_pos_unit ⊑ rei by apply: unit_min.
+      have H1ei: 1 ⊑ rei by apply: unit_min.
       have HLt': k < S k by omega.
       move: HW; rewrite {1}mask_full_union -{1}(mask_full_union mask_emp) -assoc => HW.
       case: (atomic_dec ei) => HA; last first.
@@ -300,10 +299,8 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         move: {HD} (mask_emp_disjoint (mask_full ∪ mask_full)) => HD.
         move: {He HSw' HW} (He _ _ _ _ _ HSw' HLt' HD HW) => [w'' [r' [HSw' [Hei' HW] ] ] ].
         move: HW; rewrite assoc=>HW.
-        pose↓ α := (ra_proj r' · ra_proj rK).
-        + by apply wsat_valid in HW; auto_valid.
         have {HSw₀} HSw₀: w₀ ⊑ w'' by transitivity w'.
-        exists w'' α; split; [done| split]; last first.
+        exists w'' (r' · rK); split; [done| split]; last first.
         + by move: HW; rewrite 2! mask_full_union => HW; wsatM HW.
         apply: (IH _ HLt _ _ _ _ HSw₀); last done.
         rewrite fillE; exists r' rK; split; [exact: equivR | split; [by propsM Hei' |] ].
@@ -332,9 +329,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       move: {Hv} (Hv HV) => [w''' [rei' [HSw'' [Hei' HW] ] ] ].
       (* now IH *)
       move: HW; rewrite assoc => HW.
-      pose↓ α := (ra_proj rei' · ra_proj rK).
-      + by apply wsat_valid in HW; auto_valid.
-      exists w''' α. split; first by transitivity w''.
+      exists w''' (rei' · rK). split; first by transitivity w''.
       split; last by rewrite mask_full_union -(mask_full_union mask_emp).
       rewrite/= in Hei'; rewrite fill_empty -Hk' in Hei' * => {Hk'}.
       have {HSw₀} HSw₀ : w₀ ⊑ w''' by transitivity w''; first by transitivity w'.
@@ -349,7 +344,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Section Lifting.
 
-    Implicit Types (P : Props) (i : nat) (safe : bool) (m : mask) (e : expr) (Q R : vPred) (r : pres).
+    Implicit Types (P : Props) (i : nat) (safe : bool) (m : mask) (e : expr) (Q R : vPred) (r : res).
 
 
     Program Definition lift_ePred (φ : expr -=> Prop) : expr -n> Props :=
