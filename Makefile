@@ -24,7 +24,7 @@ $(call includecmdwithout@,$(COQBIN)coqtop -config)
 ##########################
 
 COQLIBS?=-I . -R lib/ModuRes ModuRes
-COQDOCLIBS?=-R lib/ModuRes ModuRes
+COQDOCLIBS?=-I lib
 
 ##########################
 #                        #
@@ -64,7 +64,7 @@ endif
 #                    #
 ######################
 
-VFILES:=$(wildcard *.v)
+VFILES:=$(wildcard *.v) $(wildcard lib/ModuRes/*.v)
 
 -include $(addsuffix .d,$(VFILES))
 .SECONDARY: $(addsuffix .d,$(VFILES))
@@ -88,7 +88,7 @@ endif
 #                                     #
 #######################################
 
-all: $(VOFILES) ./lib/ModuRes
+all: $(VOFILES)
 
 spec: $(VIFILES)
 
@@ -122,16 +122,7 @@ beautify: $(VFILES:=.beautified)
 	@echo 'Do not do "make clean" until you are sure that everything went well!'
 	@echo 'If there were a problem, execute "for file in $$(find . -name \*.v.old -print); do mv $${file} $${file%.old}; done" in your shell/'
 
-.PHONY: all opt byte archclean clean install userinstall depend html validate ./lib/ModuRes
-
-###################
-#                 #
-# Subdirectories. #
-#                 #
-###################
-
-./lib/ModuRes:
-	cd ./lib/ModuRes ; $(MAKE) all
+.PHONY: all opt byte archclean clean install userinstall depend html validate
 
 ####################
 #                  #
@@ -148,28 +139,13 @@ opt:
 userinstall:
 	+$(MAKE) USERINSTALL=true install
 
-install:
-	install -d $(DSTROOT)$(COQLIBINSTALL)/ModuRes; \
-	for i in $(VOFILESINC); do \
-	 install -m 0644 $$i $(DSTROOT)$(COQLIBINSTALL)/ModuRes/`basename $$i`; \
-	done
-	+cd ./lib/ModuRes && $(MAKE) DSTROOT="$(DSTROOT)" INSTALLDEFAULTROOT="$(INSTALLDEFAULTROOT)/./lib/ModuRes" install
-
-install-doc:
-	install -d "$(DSTROOT)"$(COQDOCINSTALL)/ModuRes/html
-	for i in html/*; do \
-	 install -m 0644 $$i "$(DSTROOT)"$(COQDOCINSTALL)/ModuRes/$$i;\
-	done
-
 clean:
 	rm -f $(VOFILES) $(VIFILES) $(GFILES) $(VFILES:.v=.v.d) $(VFILES:=.beautified) $(VFILES:=.old)
 	rm -f all.ps all-gal.ps all.pdf all-gal.pdf all.glob $(VFILES:.v=.glob) $(VFILES:.v=.tex) $(VFILES:.v=.g.tex) all-mli.tex
 	- rm -rf html mlihtml
-	(cd ./lib/ModuRes ; $(MAKE) clean)
 
 archclean:
 	rm -f *.cmx *.o
-	(cd ./lib/ModuRes ; $(MAKE) archclean)
 
 printenv:
 	@"$(COQBIN)coqtop" -config

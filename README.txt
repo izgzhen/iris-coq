@@ -83,7 +83,7 @@ HOW TO COMPILE
 
   To compile the development, run
   
-  > (cd lib/ModuRes; make) && make 
+  > make -j
 
   in the folder containing this README. 
   

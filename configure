@@ -1,2 +1,0 @@
-#!/bin/sh
-coq_makefile lib/ModuRes -R lib/ModuRes ModuRes *.v -o Makefile
