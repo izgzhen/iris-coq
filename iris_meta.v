@@ -232,6 +232,8 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Hypothesis fillE : forall K e, E (K [[e]]) == E e * E (K [[fork_ret]]).
     
     (* One can prove forkE, fillE as valid internal equalities. *)
+    (* RJ: We don't have rules for internal equality of propositions, don't we? Maybe we should have an axiom,
+       saying they are equal iff they are equivalent. *)
     Remark valid_intEq {P P' : Props} (H : valid(P === P')) : P == P'.
     Proof. move=> w n r; exact: H. Qed.
 
