@@ -1,4 +1,4 @@
-(** Resource algebras: Commutative monoids with a decidable validity predicate. *)
+(** Resource algebras: Commutative monoids with a validity predicate. *)
 
 Require Import Bool.
 Require Import Predom.

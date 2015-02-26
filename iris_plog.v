@@ -102,11 +102,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Qed.
 
     (* When is a resource okay with a state? *)
-    Definition res_sat (r: res) σ: Prop := ↓r /\
-      match fst r with
-        | ex_own s => s = σ
-        | _ => True (* We don't care. Note that validity is ensured by the first conjunct. *)
-      end.
+    Definition res_sat (r: res) σ: Prop := ↓r /\ fst r == ex_own state σ.
 
     Global Instance res_sat_dist : Proper (equiv ==> equiv ==> iff) res_sat.
     Proof.
