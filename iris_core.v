@@ -5,12 +5,13 @@ Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finma
 Set Bullet Behavior "Strict Subproofs".
 
 (* Because Coq has a restriction of how to apply functors, we have to hack a bit here.
+   PDS: "a bit"?! Hahaha.
    The hack that involves least work, is to duplicate the definition of our final
    resource type, as a module type (which is how we can use it, circumventing the
    Coq restrictions) and as a module (to show the type can be instantiated). *)
 Module Type IRIS_RES (RL : RA_T) (C : CORE_LANG) <: RA_T.
   Instance state_type : Setoid C.state := discreteType.
-  
+ 
   Definition res := (ra_res_ex C.state * RL.res)%type.
   Instance res_type : Setoid res := _.
   Instance res_op   : RA_op res := _.
@@ -70,10 +71,30 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Instance Props_BI : ComplBI Props | 0 := _.
   Instance Props_Later : Later Props | 0 := _.
-  
+ 
   (** And now we're ready to build the IRIS-specific connectives! *)
 
   Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (m : mask) (r u v : res) (σ : state).
+
+  Section Resources.
+
+    (* PDS: These should probably be split into RA-level and resource-level lemmas. *)
+
+    Lemma ex_frame {σ f} : ↓((ex_own state σ,1:RL.res)·f) -> fst f == 1.
+    Proof.
+      move: f=>[fx fg]; rewrite/ra_op/res_op/ra_op_prod/fst.
+      move=>[Hx _]; move: Hx {fg}; rewrite/ra_op/ra_op_ex.
+      by case: fx.
+    Qed.
+  
+    Lemma ex_fpu {σ σ' u} : ↓((ex_own state σ, 1:RL.res) · u) -> ↓((ex_own state σ', 1:RL.res) · u).
+    Proof.
+      move=> Hv; move: (ex_frame Hv)=> Hxu; move: Hxu Hv.
+      move: u=>[ux ug]; rewrite/fst; move=>->.
+      by rewrite /ra_op/res_op/ra_op_prod ra_op_unit.
+    Qed.
+
+  End Resources.
 
   Section Necessitation.
     (** Note: this could be moved to BI, since it's possible to define
@@ -97,6 +118,12 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Next Obligation.
       intros p1 p2 EQp w m r HLt; simpl.
       apply EQp; assumption.
+    Qed.
+
+    Global Program Instance box_dist n : Proper (dist n ==> dist n) box.
+    Next Obligation.
+      move=> P P' HEq w k r HLt.
+      exact: (HEq w).
     Qed.
 
   End Necessitation.
@@ -138,6 +165,21 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     - intros [r1 [r2 [_ [HP _] ] ] ]. assumption.
   Qed.
 
+  Section BoxAll.
+    Context {T} `{cT : cmetric T}.
+    Context (φ : T -n> Props).
+  
+    Program Definition box_all_lhs : Props := ∀t, □φ t.
+    Next Obligation.
+      move=> t t' HEq.
+      apply: box_dist.
+      exact: (met_morph_nonexp _ _ φ).
+    Qed.
+  
+    Lemma box_all : □all φ == box_all_lhs.
+    Proof. done. Qed.
+  End BoxAll.
+
   (** "Internal" equality **)
   Section IntEq.
     Context {T} `{mT : metric T}.
@@ -171,10 +213,10 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Notation "t1 '===' t2" := (intEq t1 t2) (at level 70) : iris_scope.
 
   Section Timeless.
-  
+ 
     Definition timelessP P w n :=
       forall w' k r (HSw : w ⊑ w') (HLt : k < n) (Hp : P w' k r), P w' (S k) r.
-  
+ 
     Program Definition timeless P : Props :=
       m[(fun w => mkUPred (fun n r => timelessP P w n) _)].
     Next Obligation.
@@ -193,7 +235,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       intros w1 w2 HSw n; simpl; intros _ HT w' m r HSw' HLt Hp.
       eapply HT, Hp; [etransitivity |]; eassumption.
     Qed.
-  
+ 
   End Timeless.
 
   Section IntEqTimeless.
@@ -232,7 +274,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Lemma ownR_timeless {u} :
       valid(timeless(ownR u)).
     Proof. intros w n _ w' k r _ _; now auto. Qed.
-  
+ 
     Lemma ownR_sc u v:
       ownR (u · v) == ownR u * ownR v.
     Proof.
@@ -259,7 +301,15 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Lemma ownS_timeless {σ} : valid(timeless(ownS σ)).
     Proof. exact ownR_timeless. Qed.
-  
+
+    Lemma ownS_state {σ w n r} (Hv : ↓r) :
+      (ownS σ) w n r -> fst r == ex_own state σ.
+    Proof.
+      move: Hv; move: r => [rx _] [Hv _] [ [x _] /= [Hr _] ].
+      move: Hv; rewrite -Hr {Hr}.
+      by case: x.
+    Qed.
+
     (** Proper ghost state: ownership of logical **)
     Program Definition ownL : RL.res -n> Props :=
       n[(fun r : RL.res => ownR (1, r))].
@@ -270,7 +320,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Lemma ownL_timeless {r : RL.res} : valid(timeless(ownL r)).
     Proof. exact ownR_timeless. Qed.
-  
+ 
     (** Ghost state ownership **)
     Lemma ownL_sc (r s : RL.res) :
       ownL (r · s) == ownL r * ownL s.

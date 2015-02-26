@@ -56,8 +56,6 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         rewrite EQv; reflexivity.
     Qed.
 
-    Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
-
     Lemma htBind P Q R K e safe m :
       ht safe m P e Q ∧ all (plugV safe m Q R K) ⊑ ht safe m P (K [[ e ]]) R.
     Proof.

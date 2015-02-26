@@ -7,7 +7,7 @@ Module Type CORE_LANG.
   (******************************************************************)
 
   (** Expressions and values **)
-  Parameter expr : Type.
+  Parameter expr : Type.	(* PDS: setoid. *)
 
   Parameter is_value : expr -> Prop.
   Definition value : Type := {e: expr | is_value e}.
@@ -24,7 +24,7 @@ Module Type CORE_LANG.
                      fork e1 = fork e2 -> e1 = e2.
 
   (** Evaluation contexts **)
-  Parameter ectx : Type.
+  Parameter ectx : Type.	(* PDS: setoid. *)
   Parameter empty_ctx : ectx.
   Parameter comp_ctx : ectx -> ectx -> ectx.
   Parameter fill : ectx -> expr -> expr.
@@ -48,7 +48,7 @@ Module Type CORE_LANG.
                        K = ε.
 
   (** Shared machine state (e.g., the heap) **)
-  Parameter state : Type.
+  Parameter state : Type.	(* PDS: setoid. *)
 
   (** Primitive (single thread) machine configurations **)
   Definition prim_cfg : Type := (expr * state)%type.
