@@ -16,7 +16,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
 
     Existing Instance LP_isval.
 
-    Implicit Types (P : Props) (i : nat) (safe : bool) (m : mask) (e : expr) (Q : vPred) (r : pres).
+    Implicit Types (P : Props) (i : nat) (safe : bool) (m : mask) (e : expr) (Q : vPred) (r : res).
 
     (** Ret **)
     Program Definition eqV v : vPred :=
@@ -247,24 +247,20 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       rewrite <- EQr, <- assoc in HE; edestruct He as [HV [HS [HF HS'] ] ]; try eassumption; [].
       clear He; split; [intros HVal; clear HS HF IH HE | split; [clear HV HF HE | clear HV HS HE; split; [clear HS' | clear HF] ]; intros ].
       - specialize (HV HVal); destruct HV as [w'' [r1' [HSw' [Hφ HE] ] ] ].
-        rewrite ->assoc in HE. exists w''.
-        exists↓ (ra_proj r1' · ra_proj r2).
-        { apply wsat_valid in HE. auto_valid. }
+        rewrite ->assoc in HE. exists w'' (r1' · r2).
         split; [eassumption | split; [| eassumption ] ].
         exists r1' r2; split; [reflexivity | split; [assumption |] ].
         unfold lt in HLt; rewrite ->HLt, <- HSw', <- HSw; apply HLR.
       - edestruct HS as [w'' [r1' [HSw' [He HE] ] ] ]; try eassumption; []; clear HS.
         destruct k as [| k]; [exists w' r1'; split; [reflexivity | split; [apply wpO | exact I] ] |].
-        rewrite ->assoc in HE. exists w''. exists↓ (ra_proj r1' · ra_proj r2).
-        { apply wsat_valid in HE. auto_valid. }
+        rewrite ->assoc in HE. exists w'' (r1' · r2).
         split; [eassumption | split; [| eassumption] ].
         eapply IH; try eassumption; [ reflexivity |].
         unfold lt in HLt; rewrite ->Le.le_n_Sn, HLt, <- HSw', <- HSw; apply HLR.
       - specialize (HF _ _ HDec); destruct HF as [w'' [rfk [rret [HSw' [HWF [HWR HE] ] ] ] ] ].
         destruct k as [| k]; [exists w' rfk rret; split; [reflexivity | split; [apply wpO | split; [apply wpO | exact I] ] ] |].
-        rewrite ->assoc, <- (assoc (_ rfk)) in HE.
-        exists w''. exists rfk. exists↓ (ra_proj rret · ra_proj r2).
-        { clear- HE. apply wsat_valid in HE. eapply ra_op_valid2, ra_op_valid; try now apply _. eassumption. }
+        rewrite ->assoc, <- (assoc rfk) in HE.
+        exists w''. exists rfk (rret · r2).
         split; [eassumption | split; [| split; eassumption] ].
         eapply IH; try eassumption; [ reflexivity |].
         unfold lt in HLt; rewrite ->Le.le_n_Sn, HLt, <- HSw', <- HSw; apply HLR.
@@ -288,8 +284,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         edestruct He as [_ [HeS _] ]; try eassumption; [].
         edestruct HeS as [w'' [r1' [HSw' [He' HE'] ] ] ]; try eassumption; [].
         clear HE He HeS; rewrite ->assoc in HE'.
-        exists w''. exists↓ (ra_proj r1' · ra_proj r2).
-        { clear- HE'. apply wsat_valid in HE'. auto_valid. }
+        exists w'' (r1' · r2).
         split; [eassumption | split; [| eassumption] ].
         assert (HNV : ~ is_value ei)
           by (intros HV; eapply (values_stuck _ HV); [symmetry; apply fill_empty | repeat eexists; eassumption]).
@@ -299,12 +294,11 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         assert (HVal := atomic_step _ _ _ _ HAt HStep).
         clear - He' HVal HLR; rename w'' into w; rewrite ->unfold_wp; intros w'; intros.
         split; [intros HV; clear HVal | split; intros; [exfalso| split; intros; [exfalso |] ] ].
-        + rewrite ->unfold_wp in He'. rewrite ra_proj_cancel in HE. rewrite <-assoc in HE.
+        + rewrite ->unfold_wp in He'. rewrite <-assoc in HE.
           edestruct He' as [HVal _]; try eassumption; [].
           specialize (HVal HV); destruct HVal as [w'' [r1'' [HSw' [Hφ HE'] ] ] ].
           rewrite ->assoc in HE'.
-          exists w''. exists↓ (ra_proj r1'' · ra_proj r2).
-          { clear- HE'. apply wsat_valid in HE'. auto_valid. }
+          exists w'' (r1'' · r2).
           split; [eassumption | split; [| eassumption] ].
           exists r1'' r2; split; [reflexivity | split; [assumption |] ].
           unfold lt in HLt; rewrite <- HLt, HSw, HSw' in HLR; apply HLR.
@@ -315,7 +309,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         + unfold safeExpr. now auto.
       - subst; eapply fork_not_atomic; eassumption.
       - rewrite <- EQr, <- assoc in HE; rewrite ->unfold_wp in He.
-        specialize (He w' k (ra_proj r2 · rf) mf σ HSw HLt HD0 HE); clear HE.
+        specialize (He w' k (r2 · rf) mf σ HSw HLt HD0 HE); clear HE.
         destruct He as [_ [_ [_ HS'] ] ]; auto.
     Qed.
 
@@ -339,7 +333,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         rewrite ->fill_empty; rewrite ->unfold_wp; rewrite <- (le_S_n _ _ HLt), HSw in HLR.
         clear - HLR; intros w''; intros; split; [intros | split; intros; [exfalso | split; intros; [exfalso |] ] ].
         + do 2 eexists; split; [reflexivity | split; [| eassumption] ].
-          exists (ra_pos_unit) r2; split; [unfold ra_pos_unit; simpl; now erewrite ra_op_unit by apply _ |].
+          exists 1 r2; split; [simpl; now erewrite ra_op_unit by apply _ |].
           split; [| unfold lt in HLt; rewrite <- HLt, HSw in HLR; apply HLR].
           simpl; reflexivity.
         + eapply values_stuck; [exact fork_ret_is_value | eassumption | repeat eexists; eassumption].

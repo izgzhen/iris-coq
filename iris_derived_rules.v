@@ -15,8 +15,6 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
 
   Section DerivedRules.
 
-    Existing Instance LP_isval.
-
     Implicit Types (P : Props) (i : nat) (m : mask) (e : expr) (r : res).
 
     Lemma vsFalse m1 m2 :

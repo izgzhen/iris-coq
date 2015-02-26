@@ -156,26 +156,24 @@ Section UPredBI.
   Local Open Scope ra_scope.
   Local Obligation Tactic := intros; eauto with typeclass_instances.
 
-  Let pres := ⁺res.
-
   (* Standard interpretations of propositional connectives. *)
-  Global Program Instance top_up : topBI (UPred pres) := up_cr (const True).
-  Global Program Instance bot_up : botBI (UPred pres) := up_cr (const False).
+  Global Program Instance top_up : topBI (UPred res) := up_cr (const True).
+  Global Program Instance bot_up : botBI (UPred res) := up_cr (const False).
 
-  Global Program Instance and_up : andBI (UPred pres) :=
+  Global Program Instance and_up : andBI (UPred res) :=
     fun P Q =>
       mkUPred (fun n r => P n r /\ Q n r) _.
   Next Obligation.
     intros n m r1 r2 HLe HSub; rewrite HSub, HLe; tauto.
   Qed.
-  Global Program Instance or_up : orBI (UPred pres) :=
+  Global Program Instance or_up : orBI (UPred res) :=
     fun P Q =>
       mkUPred (fun n r => P n r \/ Q n r) _.
   Next Obligation.
     intros n m r1 r2 HLe HSub; rewrite HSub, HLe; tauto.
   Qed.
 
-  Global Program Instance impl_up : implBI (UPred pres) :=
+  Global Program Instance impl_up : implBI (UPred res) :=
     fun P Q =>
       mkUPred (fun n r => forall m r', m <= n -> r ⊑ r' -> P m r' -> Q m r') _.
   Next Obligation.
@@ -184,13 +182,13 @@ Section UPredBI.
   Qed.
   
   (* BI connectives. *)
-  Global Program Instance sc_up : scBI (UPred pres) :=
+  Global Program Instance sc_up : scBI (UPred res) :=
     fun P Q =>
-      mkUPred (fun n r => exists r1 r2, ra_proj r1 · ra_proj r2 == ra_proj r /\ P n r1 /\ Q n r2) _.
+      mkUPred (fun n r => exists r1 r2, r1 · r2 == r /\ P n r1 /\ Q n r2) _.
   Next Obligation.
     intros n m r1 r2 HLe [rd HEq] [r11 [r12 [HEq' [HP HQ]]]].
     rewrite <- HEq', assoc in HEq; setoid_rewrite HLe.
-    exists↓ (rd · ra_proj r11) by auto_valid.
+    exists (rd · r11).
     exists r12.
     split; [|split;[|assumption] ].
     - simpl. assumption.
@@ -198,27 +196,27 @@ Section UPredBI.
       exists rd. reflexivity.
   Qed.
 
-  Global Program Instance si_up : siBI (UPred pres) :=
+  Global Program Instance si_up : siBI (UPred res) :=
     fun P Q =>
-      mkUPred (fun n r => forall m r' rr, ra_proj r · ra_proj r' == ra_proj rr -> m <= n -> P m r' -> Q m rr) _.
+      mkUPred (fun n r => forall m r' rr, r · r' == rr -> m <= n -> P m r' -> Q m rr) _.
   Next Obligation.
     intros n m r1 r2 HLe [r12 HEq] HSI k r rr HEq' HSub HP.
     rewrite comm in HEq; rewrite <- HEq, <- assoc in HEq'.
-    pose↓ rc := (r12 · ra_proj r) by auto_valid.
+    pose (rc := (r12 · r)).
     eapply HSI with (r':=rc); [| etransitivity; eassumption |].
     - simpl. assumption. 
     - eapply uni_pred, HP; [reflexivity|]. exists r12. reflexivity.
   Qed.
 
   (* Quantifiers. *)
-  Global Program Instance all_up : allBI (UPred pres) :=
+  Global Program Instance all_up : allBI (UPred res) :=
     fun T eqT mT cmT R =>
       mkUPred (fun n r => forall t, R t n r) _.
   Next Obligation.
     intros n m r1 r2 HLe HSub HR t; rewrite HLe, <- HSub; apply HR.
   Qed.
 
-  Global Program Instance xist_up : xistBI (UPred pres) :=
+  Global Program Instance xist_up : xistBI (UPred res) :=
     fun T eqT mT cmT R =>
       mkUPred (fun n r => exists t, R t n r) _.
   Next Obligation.
@@ -315,23 +313,23 @@ Section UPredBI.
 
     Existing Instance nonexp_type.
 
-    Global Instance all_up_equiv : Proper (equiv (A := V -n> UPred pres) ==> equiv) all.
+    Global Instance all_up_equiv : Proper (equiv (A := V -n> UPred res) ==> equiv) all.
     Proof.
       intros R1 R2 EQR n r; simpl.
       setoid_rewrite EQR; tauto.
     Qed.
-    Global Instance all_up_dist n : Proper (dist (T := V -n> UPred pres) n ==> dist n) all.
+    Global Instance all_up_dist n : Proper (dist (T := V -n> UPred res) n ==> dist n) all.
     Proof.
       intros R1 R2 EQR m r HLt; simpl.
       split; intros; apply EQR; now auto.
     Qed.
 
-    Global Instance xist_up_equiv : Proper (equiv (A := V -n> UPred pres) ==> equiv) xist.
+    Global Instance xist_up_equiv : Proper (equiv (A := V -n> UPred res) ==> equiv) xist.
     Proof.
       intros R1 R2 EQR n r; simpl.
       setoid_rewrite EQR; tauto.
     Qed.
-    Global Instance xist_up_dist n : Proper (dist (T := V -n> UPred pres)n ==> dist n) xist.
+    Global Instance xist_up_dist n : Proper (dist (T := V -n> UPred res)n ==> dist n) xist.
     Proof.
       intros R1 R2 EQR m r HLt; simpl.
       split; intros [t HR]; exists t; apply EQR; now auto.
@@ -339,7 +337,7 @@ Section UPredBI.
 
   End Quantifiers.
 
-  Global Program Instance bi_up : ComplBI (UPred pres).
+  Global Program Instance bi_up : ComplBI (UPred res).
   Next Obligation.
     intros n r _; exact I.
   Qed.
@@ -371,29 +369,27 @@ Section UPredBI.
   Qed.
   Next Obligation.
     intros P Q n r; simpl.
-    setoid_rewrite (comm (Commutative := ra_op_comm _)) at 1.
-    firstorder.
+    split; intros [r1 [r2 HPQ]]; exists r2 r1; rewrite comm; tauto.
   Qed.
   Next Obligation.
     intros P Q R n r; split.
     - intros [r1 [rr [EQr [HP [r2 [r3 [EQrr [HQ HR]]]]]]]].
       rewrite <- EQrr, assoc in EQr. unfold sc.
-      exists↓ (ra_proj r1 · ra_proj r2) by auto_valid.
+      exists (r1 · r2).
       exists r3; split; [assumption | split; [| assumption] ].
       exists r1 r2; split; [reflexivity | split; assumption].
     - intros [rr [r3 [EQr [[r1 [r2 [EQrr [HP HQ]]]] HR]]]].
       rewrite <- EQrr, <- assoc in EQr; clear EQrr.
       exists r1.
-      exists↓ (ra_proj r2 · ra_proj r3) by auto_valid.
+      exists (r2 · r3).
       split; [assumption | split; [assumption |] ].
       exists r2 r3; split; [reflexivity | split; assumption].
   Qed.
   Next Obligation.
     intros n r; split.
     - intros [r1 [r2 [EQr [_ HP]]]].
-      eapply uni_pred, HP; [reflexivity|]. exists (ra_proj r1). assumption.
-    - intros HP. exists (ra_pos_unit (T:=res)) r. split;
-      [simpl; erewrite ra_op_unit by apply _; reflexivity |].
+      eapply uni_pred, HP; [reflexivity|]. exists (r1). assumption.
+    - intros HP. exists (ra_unit res) r. split; [simpl; erewrite ra_op_unit by apply _; reflexivity |].
       simpl; unfold const; tauto.
   Qed.
   Next Obligation.

@@ -11,7 +11,7 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
   Local Open Scope bi_scope.
   Local Open Scope iris_scope.
 
-  Implicit Types (P Q R : Props) (w : Wld) (n i k : nat) (m : mask) (r : pres) (σ : state).
+  Implicit Types (P Q R : Props) (w : Wld) (n i k : nat) (m : mask) (r : res) (σ : state).
 
   Section ViewShiftProps.
 
@@ -38,14 +38,13 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       destruct HE as [rs [HE HM] ].
       destruct (rs i) as [ri |] eqn: HLr.
       - rewrite ->comp_map_remove with (i := i) (r := ri) in HE by now eapply equivR.
-        rewrite ->assoc, <- (assoc (_ r)), (comm rf), assoc in HE.
-        exists w'.
-        exists↓ (ra_proj r · ra_proj ri). { destruct HE as [HE _]. eapply ra_op_valid, ra_op_valid; eauto with typeclass_instances. }
+        rewrite ->assoc, <- (assoc r), (comm rf), assoc in HE.
+        exists w' (r · ri).
         split; [reflexivity |].
         split.
         + simpl; eapply HInv; [now auto with arith |].
           eapply uni_pred, HM with i;
-            [| exists (ra_proj r) | | | rewrite HLr]; try reflexivity; [reflexivity| |].
+            [| exists r | | | rewrite HLr]; try reflexivity.
           * left; unfold mask_sing, mask_set.
             destruct (Peano_dec.eq_nat_dec i i); tauto.
           * specialize (HSub i); rewrite HLu in HSub.
@@ -72,17 +71,10 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       (* get rid of the invisible 1/2 *)
       do 8 red in HInv.
       destruct HE as [rs [HE HM] ].
-      exists w' ra_pos_unit; split; [reflexivity | split; [exact I |] ].
-      rewrite ->(comm (_ r)), <-assoc in HE.
-      remember (match rs i with Some ri => ri | None => ra_pos_unit end) as ri eqn: EQri.
-      pose↓ rri := (ra_proj ri · ra_proj r).
-      { destruct (rs i) as [rsi |] eqn: EQrsi; subst;
-        [| simpl; rewrite ->ra_op_unit by apply _; now apply ra_pos_valid].
-        clear - HE EQrsi. destruct HE as [HE _].
-        rewrite ->comp_map_remove with (i:=i) in HE by (eapply equivR; eassumption).
-        rewrite ->(assoc (_ r)), (comm (_ r)), comm, assoc, <-(assoc (_ rsi) _), (comm _ (ra_proj r)), assoc in HE.
-        eapply ra_op_valid, ra_op_valid; now eauto with typeclass_instances.
-      }
+      exists w' 1; split; [reflexivity | split; [exact I |] ].
+      rewrite ->(comm r), <-assoc in HE.
+      remember (match rs i with Some ri => ri | None => 1 end) as ri eqn: EQri.
+      pose (rri := (ri · r)).
       exists (fdUpdate i rri rs); split; [| intros j Hm].
       - simpl. erewrite ra_op_unit by apply _.
         clear - HE EQri. destruct (rs i) as [rsi |] eqn: EQrsi.
@@ -102,11 +94,8 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         apply HInv; [now auto with arith |].
         eapply uni_pred, HP; [now auto with arith |].
         rewrite <-HLrs. clear dependent ri0.
-        exists (ra_proj ri · ra_proj r1).
-        subst rri.
-        (* Coq, are you serious?!?? *)
-        change (ra_proj ri · ra_proj r1 · ra_proj r2 == (ra_proj ri · ra_proj r)).
-        rewrite <-HR, assoc. reflexivity.
+        exists (ri · r1).
+        subst rri. rewrite <-HR, assoc. reflexivity.
     Qed.
 
     Lemma vsTrans P Q R m1 m2 m3 (HMS : m2 ⊆ m1 ∪ m3) :
@@ -134,7 +123,7 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       intros w' n r1 Himp w HSub; rewrite ->HSub in Himp; clear w' HSub.
       intros np rp HLe HS Hp w1; intros.
       exists w1 rp; split; [reflexivity | split; [| assumption ] ].
-      eapply Himp; [assumption | now eauto with arith | now apply ord_res_pres, unit_min | ].
+      eapply Himp; [assumption | now eauto with arith | now apply unit_min | ].
       unfold lt in HLe0; rewrite ->HLe0, <- HSub; assumption.
     Qed.
 
@@ -143,8 +132,8 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
     Proof.
       intros w' n r1 HVS w HSub; specialize (HVS _ HSub); clear w' r1 HSub.
       intros np rpr HLe _ [rp [rr [HR [Hp Hr] ] ] ] w'; intros.
-      assert (HS : ra_unit _ ⊑ ra_proj rp) by (eapply unit_min).
-      specialize (HVS _ _ HLe HS Hp w' (ra_proj rr · rf) (mf ∪ mf0) σ k); clear HS.
+      assert (HS : ra_unit _ ⊑ rp) by (eapply unit_min).
+      specialize (HVS _ _ HLe HS Hp w' (rr · rf) (mf ∪ mf0) σ k); clear HS.
       destruct HVS as [w'' [rq [HSub' [Hq HEq] ] ] ]; try assumption; [| |].
       - (* disjointness of masks: possible lemma *)
         clear - HD HDisj; intros i [ [Hmf | Hmf] Hm12]; [eapply HDisj; now eauto |].
@@ -152,8 +141,7 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       - rewrite ->assoc, HR; eapply wsat_equiv, HE; try reflexivity; [].
         clear; intros i; unfold mcup; tauto.
       - rewrite ->assoc in HEq.
-        exists w''. exists↓ (ra_proj rq · ra_proj rr).
-        { apply wsat_valid in HEq. auto_valid. }
+        exists w'' (rq · rr).
         split; [assumption | split].
         + unfold lt in HLe0; rewrite ->HSub, HSub', <- HLe0 in Hr; exists rq rr.
           split; now auto.
@@ -174,18 +162,14 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
           (HU : forall rf (HD : ↓(rl · rf)), exists sl, P sl /\ ↓(sl · rf)) :
       valid (vs m m (ownL rl) (xist (ownLP P))).
     Proof.
-      unfold ownLP; intros _ _ _ w _ n [ [rp' rl'] Hrval] _ _ HG w'; intros.
-      destruct HE as [rs [ Hsat HE] ]. rewrite <-assoc in Hsat. simpl in Hsat. destruct Hsat as [Hval Hst].
+      unfold ownLP; intros _ _ _ w _ n [rp' rl'] _ _ HG w'; intros.
+      destruct HE as [rs [ Hsat HE] ]. rewrite <-assoc in Hsat. destruct Hsat as [Hval Hst].
       destruct HG as [ [rdp rdl] [_ EQrl] ]. simpl in EQrl. clear rdp.
       destruct (HU (rdl · snd(rf · comp_map rs))) as [rsl [HPrsl HCrsl] ].
       - clear - Hval EQrl. eapply ra_prod_valid in Hval. destruct Hval as [_ Hsnd].
         rewrite ->assoc, (comm rl), EQrl.
         rewrite ra_op_prod_snd in Hsnd. exact Hsnd.
-      - exists w'. exists↓ (rp', rsl).
-        { clear - Hval HCrsl.
-          apply ra_prod_valid. split; [|auto_valid].
-          eapply ra_prod_valid in Hval. destruct Hval as [Hfst _].
-          rewrite ra_op_prod_fst in Hfst. auto_valid. }
+      - exists w' (rp', rsl).
         split; first reflexivity. split.
         + exists (exist _ rsl HPrsl). simpl.
           exists (rp', 1:RL.res). simpl.
@@ -239,10 +223,10 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       { intros j; destruct (Peano_dec.eq_nat_dec i j); [subst j; rewrite HLi; exact I|].
         now rewrite ->fdUpdate_neq by assumption.
       }
-      exists (fdUpdate i (ı' P) w) (ra_pos_unit); split; [assumption | split].
+      exists (fdUpdate i (ı' P) w) 1; split; [assumption | split].
       - exists (exist _ i Hm). do 22 red.
         unfold proj1_sig. rewrite fdUpdate_eq; reflexivity.
-      - unfold ra_pos_unit, proj1_sig. erewrite ra_op_unit by apply _.
+      - erewrite ra_op_unit by apply _.
         destruct HE as [rs [HE HM] ].
         exists (fdUpdate i r rs).
         assert (HRi : rs i = None).
@@ -262,6 +246,18 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         + rewrite ->!fdUpdate_neq, <- !fdLookup_in_strong by assumption.
           setoid_rewrite <- HSub.
           apply HM; assumption.
+    Qed.
+
+    Lemma vsNotOwnInvalid m1 m2 r
+      (Hnval: ~↓r):
+      valid (vs m1 m2 (ownR r) ⊥).
+    Proof.
+      intros pw n s w _. clear pw s.
+      intros m s _ _. clear n.
+      intros [rs Heq] w' rf mf σ k _ _ _ [ ri [ [ Hval _ ] ] ].
+      exfalso.
+      apply Hnval. rewrite <-Heq in Hval.
+      eapply ra_op_valid2, ra_op_valid, ra_op_valid; last eassumption; now apply _.
     Qed.
 
   End ViewShiftProps.
