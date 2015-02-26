@@ -31,7 +31,8 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
     Proof.
       intros pw nn r w _; clear r pw.
       intros n r _ _ HInv w'; clear nn; intros.
-      do 14 red in HInv; destruct (w i) as [μ |] eqn: HLu; [| contradiction].
+      change (match w i with Some x => x = S n = ı' P | None => False end) in HInv.
+      destruct (w i) as [μ |] eqn: HLu; [| contradiction].
       apply ı in HInv; rewrite ->(isoR P) in HInv.
       (* get rid of the invisible 1/2 *)
       do 8 red in HInv.
@@ -66,7 +67,8 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
     Proof.
       intros pw nn r w _; clear r pw.
       intros n r _ _ [r1 [r2 [HR [HInv HP] ] ] ] w'; clear nn; intros.
-      do 14 red in HInv; destruct (w i) as [μ |] eqn: HLu; [| contradiction].
+      change (match w i with Some x => x = S n = ı' P | None => False end) in HInv.
+      destruct (w i) as [μ |] eqn: HLu; [| contradiction].
       apply ı in HInv; rewrite ->(isoR P) in HInv.
       (* get rid of the invisible 1/2 *)
       do 8 red in HInv.
@@ -224,8 +226,9 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         now rewrite ->fdUpdate_neq by assumption.
       }
       exists (fdUpdate i (ı' P) w) 1; split; [assumption | split].
-      - exists (exist _ i Hm). do 22 red.
-        unfold proj1_sig. rewrite fdUpdate_eq; reflexivity.
+      - exists (exist _ i Hm).
+        change (((fdUpdate i (ı' P) w) i) = S (S k) = (Some (ı' P))).
+        rewrite fdUpdate_eq; reflexivity.
       - erewrite ra_op_unit by apply _.
         destruct HE as [rs [HE HM] ].
         exists (fdUpdate i r rs).
