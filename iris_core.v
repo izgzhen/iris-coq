@@ -189,6 +189,19 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   
   End Timeless.
 
+  Section IntEqTimeless.
+    Context {T} `{tT: Setoid T}.
+    (* This only works for types with the discrete metric! *)
+    Local Instance mT: metric T := discreteMetric.
+
+    Lemma intEqTimeless (t1 t2: T):
+      valid(timeless(intEq t1 t2)).
+    Proof.
+      intros w n r. intros w' k r' Hsq Hlt.
+      simpl. tauto.
+    Qed.
+  End IntEqTimeless.
+
   Section Ownership.
 
     (** Ownership **)
