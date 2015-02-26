@@ -150,7 +150,7 @@ End DiscM_Defs.
 Section DiscM_Props.
   Context U V W `{cmU : cmetric U} `{cmV : cmetric V} `{cmW : cmetric W}.
 
-  Global Instance disc_equiv : Proper (equiv (T := U -n> V) ==> equiv) disc_m.
+  Global Instance disc_equiv : Proper (equiv (A := U -n> V) ==> equiv) disc_m.
   Proof. resp_set. Qed.
   Global Instance disc_dist n : Proper (dist (T := U -n> V) n ==> dist n) disc_m.
   Proof. resp_set. Qed.

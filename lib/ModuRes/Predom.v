@@ -1,5 +1,5 @@
 Require Export Coq.Program.Program.
-Require Export Morphisms SetoidClass SetoidTactics.
+Require Import CSetoid.
 
 Generalizable Variables T U V W.
 

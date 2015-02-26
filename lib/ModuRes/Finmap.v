@@ -470,13 +470,16 @@ Section FinDom.
     Context {V} `{cV : pcmType V}.
 
     Definition equiv_fd (f1 f2 : K -f> V) := forall k, f1 k == f2 k.
-    Global Program Instance type_findom : Setoid (K -f> V) | 5:= mkType equiv_fd.
-    Next Obligation.
+
+    Global Instance equiv_fd_e: Equivalence equiv_fd.
+    Proof.
       split.
       - intros m k; reflexivity.
       - intros m1 m2 HS k; symmetry; apply HS.
       - intros m1 m2 m3 H12 H23 k; etransitivity; [apply H12 | apply H23].
     Qed.
+    
+    Global Program Instance type_findom : Setoid (K -f> V) | 5:= mkType equiv_fd.
 
     Global Instance lookup_proper : Proper (equiv ==> eq ==> equiv) (findom_f (V := V)).
     Proof.

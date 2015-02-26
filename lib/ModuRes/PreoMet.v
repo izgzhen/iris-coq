@@ -58,13 +58,15 @@ Section PUMMorphProps1.
 
   Definition PMEquiv (x y : T -m> U) := mu_morph x == mu_morph y.
 
-  Global Program Instance PMtypeM : Setoid (T -m> U) | 5 := mkType PMEquiv.
-  Next Obligation.
+  Global Instance PMEquivE: Equivalence PMEquiv.
+  Proof.
     split.
     - intros f x; simpl; reflexivity.
     - intros f g Hfg x; simpl; symmetry; apply Hfg.
     - intros f g h Hfg Hgh x; simpl; etransitivity; [apply Hfg | apply Hgh].
   Qed.
+  
+  Global Program Instance PMtypeM : Setoid (T -m> U) | 5 := mkType PMEquiv.
 
   Definition PMDist n (f g : T -m> U) := (mu_morph f) = n = (mu_morph g).
 
@@ -168,7 +170,7 @@ Section PUMMorphProps1.
   Qed.
     
   Global Instance pcm_equiv_inherit :
-    Proper (equiv (T := T -m> U) ==> equiv (T := T -n> U)) (mu_morph (U := U)).
+    Proper (equiv (A := T -m> U) ==> equiv (A := T -n> U)) (mu_morph (U := U)).
   Proof. intros f g HEq; apply HEq. Qed.
 
   Global Instance pcm_dist_inherit n :
@@ -188,7 +190,7 @@ Section CompProps.
   Qed.
 
   Global Instance pcomp_inherit :
-    Proper (equiv (T := T -m> U) ==> equiv ==> equiv) pcomp.
+    Proper (equiv (A := T -m> U) ==> equiv ==> equiv) pcomp.
   Proof.
     intros f f' Eqf g g' Eqg x; simpl; rewrite Eqf, Eqg; reflexivity.
   Qed.
@@ -246,7 +248,7 @@ Section MMorphProps2.
     f ∘ g ∘ h ⊑ f ∘ (g ∘ h).
   Proof. intros x; reflexivity. Qed.
 
-  Global Instance precomp_equiv : Proper (equiv (T := T -m> U) ==> equiv) precomp_mne.
+  Global Instance precomp_equiv : Proper (equiv (A := T -m> U) ==> equiv) precomp_mne.
   Proof. resp_set. Qed.
 
   Global Instance precomp_dist n : Proper (dist n (T := T -m> U) ==> dist n) precomp_mne.
@@ -255,7 +257,7 @@ Section MMorphProps2.
   Global Instance precomp_ord : Proper (pord ==> pord) precomp_mne.
   Proof. mono_resp. Qed.
 
-  Global Instance postcomp_equiv : Proper (equiv (T := T -m> U) ==> equiv) postcomp_mne.
+  Global Instance postcomp_equiv : Proper (equiv (A := T -m> U) ==> equiv) postcomp_mne.
   Proof. resp_set. Qed.
 
   Global Instance postcomp_dist n : Proper (dist n (T := T -m> U) ==> dist n) postcomp_mne.

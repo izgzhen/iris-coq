@@ -243,6 +243,7 @@ Section MMInst.
     rewrite (EQf x), (EQg x); apply EQfg.
   Qed.
   Next Obligation.
+    fold equiv.
     split; [intros HEq t | intros HEq n].
     - rewrite <- dist_refl; intros n; apply HEq.
     - intros t; revert n; rewrite dist_refl; apply HEq.

@@ -16,13 +16,15 @@ Section Definitions.
 
   Definition up_equiv (p q : UPred) := forall n t, p n t == q n t.
 
-  Global Program Instance up_type : Setoid UPred := mkType up_equiv.
-  Next Obligation.
+  Global Instance up_equiv_e: Equivalence up_equiv.
+  Proof.
     split.
     - intros p n t; reflexivity.
     - intros p q Hpq n t; symmetry; apply Hpq.
     - intros p q r Hpq Hqr n t; etransitivity; [apply Hpq | apply Hqr].
   Qed.
+
+  Global Program Instance up_type : Setoid UPred := mkType up_equiv.
 
   Definition up_dist n (p q : UPred) :=
     forall m t, m < n -> (p m t <-> q m t).

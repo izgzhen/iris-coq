@@ -315,7 +315,7 @@ Section UPredBI.
 
     Existing Instance nonexp_type.
 
-    Global Instance all_up_equiv : Proper (equiv (T := V -n> UPred pres) ==> equiv) all.
+    Global Instance all_up_equiv : Proper (equiv (A := V -n> UPred pres) ==> equiv) all.
     Proof.
       intros R1 R2 EQR n r; simpl.
       setoid_rewrite EQR; tauto.
@@ -326,7 +326,7 @@ Section UPredBI.
       split; intros; apply EQR; now auto.
     Qed.
 
-    Global Instance xist_up_equiv : Proper (equiv (T := V -n> UPred pres) ==> equiv) xist.
+    Global Instance xist_up_equiv : Proper (equiv (A := V -n> UPred pres) ==> equiv) xist.
     Proof.
       intros R1 R2 EQR n r; simpl.
       setoid_rewrite EQR; tauto.
@@ -570,7 +570,7 @@ Section MonotoneExt.
   Section Quantifiers.
     Context V `{cmV : cmetric V}.
 
-    Global Instance all_mm_equiv : Proper (equiv (T := V -n> T -m> B) ==> equiv) all.
+    Global Instance all_mm_equiv : Proper (equiv (A := V -n> T -m> B) ==> equiv) all.
     Proof.
       intros R1 R2 EQR t; simpl morph.
       apply all_equiv; intros u; simpl morph; apply EQR.
@@ -581,7 +581,7 @@ Section MonotoneExt.
       apply all_dist; intros u; simpl morph; apply EQR.
     Qed.
 
-    Global Instance xist_mm_equiv : Proper (equiv (T := V -n> T -m> B) ==> equiv) xist.
+    Global Instance xist_mm_equiv : Proper (equiv (A := V -n> T -m> B) ==> equiv) xist.
     Proof.
       intros R1 R2 EQR t; simpl.
       apply xist_equiv; intros u; simpl; apply EQR.

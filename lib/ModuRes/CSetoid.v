@@ -7,14 +7,10 @@
     and some of their properties are proved.
  *)
 Require Export Coq.Program.Program.
-Require Export Morphisms SetoidClass SetoidTactics.
+Require Export Morphisms SetoidTactics.
+Require Export SetoidClass.
 
 Generalizable Variables T U V W.
-
-(* Make sure equiv is in the right scope and that it's not simplified
-   too soon. *)
-Definition equiv `{Setoid T} := SetoidClass.equiv.
-Arguments equiv {_ _} _ _ /.
 
 (* Proof by reflexivity *)
 Lemma equivR {T : Type} `{eqT : Setoid T} {a b : T} :
@@ -97,7 +93,7 @@ Section MorphConsts.
 
   (** Composition maps equal morphism to equal morphisms. *)
   Global Instance equiv_mcomp :
-    Proper (equiv (T := U -=> V) ==> equiv ==> equiv) mcomp.
+    Proper (equiv (A := U -=> V) ==> equiv ==> equiv) mcomp.
   Proof.
     intros f f' HEq g g' HEq' x; simpl; rewrite HEq, HEq'; reflexivity.
   Qed.
@@ -175,7 +171,7 @@ Section SetoidProducts.
     s[(fun t => (f t, g t))].
   Next Obligation.
     add_morphism_tactic; intros.
-    rewrite H; reflexivity.
+    rewrite H. split; reflexivity.
   Qed.
 
   Lemma mprod_unique (f: T -=> U) (g: T -=> V) (h: T -=> U * V) :
@@ -330,7 +326,7 @@ Section Subsetoid.
   Qed.
 
   Global Instance proj1sig_proper :
-    Proper (equiv (T := {t : T | P t}) ==> equiv) (@proj1_sig _ _).
+    Proper (equiv (A := {t : T | P t}) ==> equiv) (@proj1_sig _ _).
   Proof. intros [x Hx] [y Hy] HEq; simpl in *; assumption. Qed.
 
   (** Inclusion from the subset to the superset is an
@@ -344,7 +340,7 @@ Section Subsetoid.
   Program Definition minherit (f : U -=> T) (HB : forall u, P (f u)) :
     U -=> {t : T | P t} := s[(fun u => exist P (f u) (HB u))].
   Next Obligation.
-    intros x y HEq; unfold equiv; red; simpl; rewrite HEq; reflexivity.
+    intros x y HEq; red; simpl; rewrite HEq; reflexivity.
   Qed.
 
   (** Inclusion from subset determined by P to the superset is a monomorphism. *)

@@ -202,6 +202,10 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Section Ownership.
 
+    (* Make sure equiv is not simplified too soon. Unfortunately, settings this globally breaks
+       other things. *)
+    Local Arguments equiv {_ _} _ _ /.
+
     (** Ownership **)
     (* We define this on *any* resource, not just the positive (valid) ones.
        Note that this makes ownR trivially *False* for invalid u: There is no
