@@ -1,12 +1,5 @@
-Require Import MetricCore.
+Require Import MetricCore Constr.
 Require Import Arith.
-
-Module NatDec.
-  Definition U := nat.
-  Definition eq_dec := eq_nat_dec.
-End NatDec.
-
-Module D := Coq.Logic.Eqdep_dec.DecidableEqDep(NatDec).
 
 (** A category enriched in complete bisected metric spaces and with a terminal object. *)
 

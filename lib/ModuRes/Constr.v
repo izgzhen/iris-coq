@@ -1,13 +1,21 @@
 (** This module provides some additional constructions on CBUlt. These
     are:
-    - the "1/2" functor, which divides all the distances by 1/2,
+    - the "1/2" operation, which divides all the distances by 1/2,
       and so makes any locally non-expansive functor locally
       contractive,
     - an extension operation on the space Tᵏ, for k ∈ nat, as a
       non-expansive morphism. *)
 
-Require Import MetricRec.
 Require Export UPred.
+Require Import MetricCore.
+Require Import Arith.
+
+Module NatDec.
+  Definition U := nat.
+  Definition eq_dec := eq_nat_dec.
+End NatDec.
+
+Module D := Coq.Logic.Eqdep_dec.DecidableEqDep(NatDec).
 
 Section Halving.
   Context (T : cmtyp).
@@ -65,75 +73,6 @@ Ltac unhalve :=
     | |- dist_halve _ ?n ?f ?g => destruct n as [| n]; [exact I | change (f = n = g) ]
     | |- ?f = ?n = ?g => destruct n as [| n]; [exact I | change (f = n = g) ]
   end.
-
-(* TODO: Refactor the following so that one can make it work for PCM
-         instantiation without a lot of extra work. *)
-Require Import CBUltInst.
-
-Section Halving_Fun.
-  Context F {FA : BiFMap F} {FFun : BiFunctor F}.
-  Local Obligation Tactic := intros; resp_set || eauto.
-
-  Program Instance halveFMap : BiFMap (fun T1 T2 => halve (F T1 T2)) :=
-    fun m1 m2 m3 m4 => lift2m (lift2s (fun ars ob => fmorph (F := F) ars ob) _ _) _ _.
-  Next Obligation.
-    intros p1 p2 EQp x; simpl; rewrite EQp; reflexivity.
-  Qed.
-  Next Obligation.
-    intros e1 e2 EQ; simpl. unhalve.
-    rewrite EQ; reflexivity.
-  Qed.
-  Next Obligation.
-    intros p1 p2 EQ e; simpl; unhalve.
-    apply dist_mono in EQ.
-    rewrite EQ; reflexivity.
-  Qed.
-
-  Instance halveF : BiFunctor (fun T1 T2 => halve (F T1 T2)).
-  Proof.
-    split; intros.
-    + intros T; simpl.
-      apply (fmorph_comp _ _ _ _ _ _ _ _ _ _ T).
-    + intros T; simpl.
-      apply (fmorph_id _ _ T).
-  Qed.
-
-  Instance halve_contractive {m0 m1 m2 m3} :
-    contractive (@fmorph _ _ (fun T1 T2 => halve (F T1 T2)) _ m0 m1 m2 m3).
-  Proof.
-    intros n p1 p2 EQ f; simpl.
-    change ((fmorph (F := F) p1) f = n = (fmorph p2) f).
-    rewrite EQ; reflexivity.
-  Qed.
-
-End Halving_Fun.
-
-Module Type SimplInput(Cat : MCat).
-  Import Cat.
-
-  Parameter F : M -> M -> M.
-  Parameter FArr : BiFMap F.
-  Parameter FFun : BiFunctor F.
-
-  Parameter F_ne : (1 -t> F 1 1)%cat.
-End SimplInput.
-
-Module InputHalve (S : SimplInput (CBUlt)) : InputType(CBUlt)
-    with Definition F := fun T1 T2 => halve (S.F T1 T2).
-  Import CBUlt.
-  Local Existing Instance S.FArr.
-  Local Existing Instance S.FFun.
-  Local Open Scope cat_scope.
-
-  Definition F T1 T2 := halve (S.F T1 T2).
-  Definition FArr := halveFMap S.F.
-  Definition FFun := halveF S.F.
-
-  Definition tmorph_ne : 1 -t> F 1 1 :=
-    umconst (S.F_ne tt : F 1 1).
-
-  Definition F_contractive := @halve_contractive S.F _.
-End InputHalve.
 
 (** Trivial extension of a nonexpansive morphism to monotone one on a
     metric space equipped with a trivial preorder. *)
