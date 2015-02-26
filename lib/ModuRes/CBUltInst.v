@@ -1,8 +1,8 @@
 (** This file provides the proof that CBUlt, the category of complete,
     bisected, ultrametric spaces, forms an M-category. *)
 
-Require Import MetricCore.
-Require Import MetricRec.
+Require Import CSetoid Constr.
+Require Import MetricCore MetricRec.
 
 Module CBUlt <: MCat.
   Local Open Scope cat_scope.

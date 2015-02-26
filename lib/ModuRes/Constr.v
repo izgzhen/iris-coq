@@ -6,16 +6,9 @@
     - an extension operation on the space Tᵏ, for k ∈ nat, as a
       non-expansive morphism. *)
 
-Require Export UPred.
+Require Import UPred.
 Require Import MetricCore.
-Require Import Arith.
-
-Module NatDec.
-  Definition U := nat.
-  Definition eq_dec := eq_nat_dec.
-End NatDec.
-
-Module D := Coq.Logic.Eqdep_dec.DecidableEqDep(NatDec).
+Require Fin.
 
 Section Halving.
   Context (T : cmtyp).
@@ -173,8 +166,6 @@ Section EvaluationClosure.
   Definition rel_evalCl : UPred T -m> UPred T := m[(evalCl)].
 
 End EvaluationClosure.
-
-Require Fin.
 
 Definition transfer {A} {T : A -> Type} {x y : A} (EQ : x = y) (t : T x) : T y :=
   eq_rect x T t y EQ.

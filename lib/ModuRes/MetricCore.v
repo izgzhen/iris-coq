@@ -1001,3 +1001,11 @@ Section Option.
 End Option.
 
 Arguments dist {_ _ _} _ _ _ /.
+
+(* We have several users of this, so deifne it centrally *)
+Module NatDec.
+  Definition U := nat.
+  Definition eq_dec := eq_nat_dec.
+End NatDec.
+
+Module D := Coq.Logic.Eqdep_dec.DecidableEqDep(NatDec).
