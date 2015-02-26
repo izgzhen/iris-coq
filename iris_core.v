@@ -139,24 +139,22 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       intros n1 n2 _ _ HLe _; apply mono_dist; omega.
     Qed.
 
-    Definition intEq (t1 t2 : T) : Props := pcmconst (intEqP t1 t2).
-
-    Instance intEq_equiv : Proper (equiv ==> equiv ==> equiv) intEqP.
+    Instance subrel_dist_n `{mT : metric T} (n m: nat) (Hlt: m < n) : subrelation (dist n) (dist m).
     Proof.
-      intros l1 l2 EQl r1 r2 EQr n r.
-      split; intros HEq; do 2 red.
-      - rewrite <- EQl, <- EQr; assumption.
-      - rewrite ->EQl, EQr; assumption.
+      intros x y HEq. eapply mono_dist, HEq. omega.
     Qed.
 
-    Instance intEq_dist n : Proper (dist n ==> dist n ==> dist n) intEqP.
-    Proof.
-      intros l1 l2 EQl r1 r2 EQr m r HLt.
-      split; intros HEq; do 2 red.
-      - etransitivity; [| etransitivity; [apply HEq |] ];
-        apply mono_dist with n; eassumption || now auto with arith.
-      - etransitivity; [| etransitivity; [apply HEq |] ];
-        apply mono_dist with n; eassumption || now auto with arith.
+    Program Definition intEq: T -n> T -n> Props :=
+      n[(fun t1 => n[(fun t2 => pcmconst (intEqP t1 t2))])].
+    Next Obligation.
+      intros t2 t2' Heqt2. intros w m r HLt.
+      change ((t1 = S m = t2) <-> (t1 = S m = t2')). (* Why, oh why... *)
+      split; (etransitivity; [eassumption|]); eapply mono_dist; (eassumption || symmetry; eassumption).
+    Qed.
+    Next Obligation.
+      intros t1 t1' Heqt1. intros t2 w m r HLt.
+      change ((t1 = S m = t2) <-> (t1' = S m = t2)). (* Why, oh why... *)
+      split; (etransitivity; [|eassumption]); eapply mono_dist; (eassumption || symmetry; eassumption).
     Qed.
 
   End IntEq.

@@ -25,25 +25,28 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     (** Invariants **)
     Definition invP i P w : UPred pres :=
-      intEqP (w i) (Some (ı' P)).
+      intEq (w i) (Some (ı' P)) w.
     Program Definition inv i : Props -n> Props :=
       n[(fun P => m[(invP i P)])].
     Next Obligation.
-      intros w1 w2 EQw; unfold invP; simpl morph.
+      intros w1 w2 EQw; unfold invP.
       destruct n; [apply dist_bound |].
-      apply intEq_dist; [apply EQw | reflexivity].
+      rewrite (EQw i).
+      now eapply met_morph_nonexp.
     Qed.
     Next Obligation.
-      intros w1 w2 Sw; unfold invP; simpl morph.
-      intros n r HP; do 2 red; specialize (Sw i); do 2 red in HP.
+      intros w1 w2 Sw; unfold invP.
+      intros n r HP; specialize (Sw i).
       destruct (w1 i) as [μ1 |]; [| contradiction].
-      destruct (w2 i) as [μ2 |]; [| contradiction]; simpl in Sw.
+      destruct (w2 i) as [μ2 |]; [| contradiction]. simpl in Sw.
       rewrite <- Sw; assumption.
     Qed.
     Next Obligation.
-      intros p1 p2 EQp w; unfold invP; simpl morph.
-      apply intEq_dist; [reflexivity |].
-      apply dist_mono, (met_morph_nonexp _ _ ı'), EQp.
+      intros p1 p2 EQp w; unfold invP.
+      cut ((w i === Some (ı' p1)) = n = (w i === Some (ı' p2))).
+      { intros Heq. now eapply Heq. }
+      eapply met_morph_nonexp.
+      now eapply dist_mono, (met_morph_nonexp _ _ ı').
     Qed.
 
   End Invariants.

@@ -37,6 +37,15 @@ Record Mtyp :=
 Instance mtyp_proj_metr {M : Mtyp} : metric M := mmetr M.
 Definition mfromType (T : Type) `{mT : metric T} := Build_Mtyp (fromType T) _.
 
+(* And now it gets annoying that we are not fully unbundled... *)
+Global Instance metric_dist_equiv (T: Type) `{mT: metric T} n: Equivalence (dist n).
+Proof.
+  split.
+  - intros x. eapply dist_refl. reflexivity.
+  - now eapply dist_sym.
+  - now eapply dist_trans.
+Qed.
+
 Section DistProps.
   Context `{mT : metric T}.
 
@@ -193,6 +202,12 @@ Arguments mkUMorph [T U eqT mT eqT0 mU] _ _.
 Arguments met_morph [T U] {eqT mT eqT0 mU} _.
 Infix "-n>" := metric_morphism (at level 45, right associativity).
 
+Global Instance metric_morphism_proper T U `{mT : metric T} `{mU : metric U} n (f: T -n> U):
+  Proper (dist n ==> dist n) f.
+Proof.
+  now eapply met_morph_nonexp.
+Qed.
+
 Program Definition mkNMorph T U `{mT : metric T} `{mU : metric U} (f: T -> U)
         (NEXP : forall n, Proper (dist n ==> dist n) f) :=
   mkUMorph s[(f)] _.
@@ -204,7 +219,7 @@ Qed.
 Arguments mkNMorph [T U eqT mT eqT0 mU] _ _.
 Notation "'n[(' f ')]'" := (mkNMorph f _).
 
-Instance subrel_dist `{mT : metric T} n : subrelation equiv (dist n).
+Instance subrel_dist `{mT : metric T} n : subrelation equiv (dist n) | 5.
 Proof.
   intros x y HEq; revert n; rewrite dist_refl; assumption.
 Qed.

@@ -391,7 +391,7 @@ Section InfiniteProduct.
   Global Instance ra_equiv_infprod : Equivalence ra_eq_infprod.
   Proof. split; repeat intro; [ | rewrite (H i) | rewrite (H i), (H0 i) ]; reflexivity. Qed.
   
-  Global Instance ra_type_infprod : Setoid ra_res_infprod := mkType ra_eq_infprod.
+  Global Instance ra_type_infprod : Setoid ra_res_infprod | 5 := mkType ra_eq_infprod.
   Global Instance ra_unit_infprod : RA_unit _ := fun i => ra_unit (S i).
   Global Instance ra_op_infprod : RA_op _ := fun f g i => f i · g i.
   Global Instance ra_valid_infprod : RA_valid _ := fun f => forall i, ra_valid (f i). 
