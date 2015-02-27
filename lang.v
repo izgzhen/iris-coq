@@ -1,9 +1,12 @@
+Require Import ssreflect.
 Require Import List.
 Require Import core_lang.
 
 (******************************************************************)
 (** * Derived language with threadpool steps **)
 (******************************************************************)
+
+Set Bullet Behavior "Strict Subproofs".
 
 Module Lang (C : CORE_LANG).
 
@@ -58,7 +61,7 @@ Module Lang (C : CORE_LANG).
   Proof.
     intros HEq.
     apply fill_inj1 with (K [[ fork_ret ]]).
-    now rewrite !fill_comp, HEq.
+    now rewrite -> !fill_comp, HEq.
   Qed.
 
   Lemma comp_ctx_inj2  K K1 K2 :
@@ -67,7 +70,7 @@ Module Lang (C : CORE_LANG).
   Proof.
     intros HEq.
     apply fill_inj1 with fork_ret, fill_inj2 with K.
-    now rewrite !fill_comp, HEq.
+    now rewrite -> !fill_comp, HEq.
   Qed.
 
   Lemma comp_ctx_neut_emp_r K K' :
@@ -95,6 +98,14 @@ Module Lang (C : CORE_LANG).
     intros H_red H_val.
     eapply values_stuck; try eassumption.
     now erewrite fill_empty.
+  Qed.
+
+  Lemma reducible_not_fork {e K e'} :
+    reducible e -> e <> K [[fork e']].
+  Proof.
+    move=> HRed HDec.
+    move: (fork_stuck K e'); rewrite -HDec -(fill_empty e) => HStuck {HDec}.
+    exact: (HStuck _ _ eq_refl).
   Qed.
 
   Lemma step_same_ctx: forall K K' e e',

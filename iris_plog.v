@@ -158,11 +158,20 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         apply HR; [reflexivity | assumption].
     Qed.
 
-    Lemma wsat_valid σ m (r: res) w k :
+    Lemma wsat_valid {σ m r w k} :
       wsat σ m r w (S k) tt -> ↓r.
     Proof.
       intros [rs [HD _] ]. destruct HD as [VAL _].
       eapply ra_op_valid; [now apply _|]. eassumption.
+    Qed.
+
+    Lemma wsat_state {σ m u w k} :
+      wsat σ m u w (S k) tt -> fst u == ex_own state σ \/ fst u == 1.
+    Proof.
+      move: u=>[ux ug]; move=>[rs [ [ Hv Heq] _] ] {m w k}; move: Hv Heq.
+      move: (comp_map _)=> [rsx rsg] [Hv _] {rs}; move: Hv.
+      rewrite ra_op_prod_fst 2![fst _]/=.
+      by case: ux; case: rsx; auto.
     Qed.
 
   End WorldSatisfaction.
@@ -179,19 +188,34 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 	The tactic wsatM is similar.
    *)
 
+  Lemma prefl {T} `{oT : preoType T} (t : T) : t ⊑ t. Proof. by reflexivity. Qed.
+  
+  Definition lerefl (n : nat) : n <= n. Proof. by reflexivity. Qed.
+  
+  Definition lt0 (n : nat) :  ~ n < 0. Proof. by omega. Qed.
+
+  Lemma propsMW {P w n r w'} (HSw : w ⊑ w') : P w n r -> P w' n r.
+  Proof. exact: (mu_mono _ _ P _ _ HSw). Qed.
+  
+  Lemma propsMNR {P w n r n' r'} (HLe : n' <= n) (HSr : r ⊑ r') : P w n r -> P w n' r'.
+  Proof. exact: (uni_pred _ _ _ _ _ HLe HSr). Qed.
+  
+  Lemma propsMN {P w n r n'} (HLe : n' <= n) : P w n r -> P w n' r.
+  Proof. apply: (propsMNR HLe (prefl r)). Qed.
+  
+  Lemma propsMR {P w n r r'} (HSr : r ⊑ r') : P w n r -> P w n r'.
+  Proof. exact: (propsMNR (lerefl n) HSr). Qed.
+  
   Lemma propsM {P w n r w' n' r'}
       (HP : P w n r) (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
     P w' n' r'.
-  Proof. by apply: (mu_mono _ _ P _ _ HSw); exact: (uni_pred _ _ _ _ _ HLe HSr). Qed.
+  Proof. by apply: (propsMW HSw); exact: (propsMNR HLe HSr). Qed.
 
   Ltac propsM H := solve [ done | apply (propsM H); solve [ done | reflexivity | omega ] ].
 
-  Lemma wsatM {σ m} {r : res} {w n k}
-      (HW : wsat σ m r w @ n) (HLe : k <= n) :
-    wsat σ m r w @ k.
+  Lemma wsatM {σ m} {r : res} {w n k} (HLe : k <= n) :
+    wsat σ m r w @ n -> wsat σ m r w @ k.
   Proof. by exact: (uni_pred _ _ _ _ _ HLe). Qed.
-
-  Ltac wsatM H := solve [done | apply (wsatM H); solve [done | omega] ].
 
   Section ViewShifts.
     Local Obligation Tactic := intros.
@@ -446,6 +470,9 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
 
   End HoareTriples.
+
+  (* Simple things, needed elsewhere. *)
+  Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
 
 End IRIS_PLOG.
 

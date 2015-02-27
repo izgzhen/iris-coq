@@ -111,10 +111,10 @@ Notation "p ∨ q" := (or p q) (at level 50, left associativity) : bi_scope.
 Notation "p * q" := (sc p q) (at level 40, left associativity) : bi_scope.
 Notation "p → q" := (impl p q) (at level 55, right associativity) : bi_scope.
 Notation "p '-*' q" := (si p q) (at level 55, right associativity) : bi_scope.
-Notation "∀ x , p" := (all n[(fun x => p)]) (at level 60, x ident, no associativity) : bi_scope.
-Notation "∃ x , p" := (xist n[(fun x => p)]) (at level 60, x ident, no associativity) : bi_scope.
-Notation "∀ x : T , p" := (all n[(fun x : T => p)]) (at level 60, x ident, no associativity) : bi_scope.
-Notation "∃ x : T , p" := (xist n[(fun x : T => p)]) (at level 60, x ident, no associativity) : bi_scope.
+Notation "∀ x , p" := (all n[(fun x => p)]) (at level 60, x ident, right associativity) : bi_scope.
+Notation "∃ x , p" := (xist n[(fun x => p)]) (at level 60, x ident, right associativity) : bi_scope.
+Notation "∀ x : T , p" := (all n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
+Notation "∃ x : T , p" := (xist n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
 
 Require Import UPred.
 

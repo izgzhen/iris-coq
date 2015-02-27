@@ -1,10 +1,13 @@
 (** Resource algebras: Commutative monoids with a validity predicate. *)
 
+Require Import ssreflect.
 Require Import Bool.
 Require Import Predom.
 Require Import CSetoid.
 Require Import MetricCore.
 Require Import PreoMet.
+
+Set Bullet Behavior "Strict Subproofs".
 
 Class Associative {T} `{eqT : Setoid T} (op : T -> T -> T) :=
   assoc : forall t1 t2 t3, op t1 (op t2 t3) == op (op t1 t2) t3.
@@ -47,7 +50,7 @@ Section RAs.
   Proof.
     rewrite comm. now eapply ra_op_unit.
   Qed.
-  
+
   Lemma ra_op_valid2 t1 t2: ↓ (t1 · t2) -> ↓ t2.
   Proof.
     rewrite comm. now eapply ra_op_valid.
@@ -64,6 +67,15 @@ Section RAs.
   Proof.
     rewrite comm. now eapply ra_op_invalid.
   Qed.
+
+  (* PDS: The duplication is ugly, but ra_op_valid2 fails (slowly), and ra_opV2 does not and I haven't looked into it. *)
+
+  Lemma ra_opV1 {t t'} (Hv : ↓(t · t')) : ↓t.
+  Proof. exact: ra_op_valid. Qed.
+
+  Lemma ra_opV2 {t t'} (Hv : ↓(t · t')) : ↓t'.
+  Proof. by move: Hv; rewrite comm; exact: ra_op_valid. Qed.
+
 End RAs.
 
 (* RAs with cartesian products of carriers. *)
@@ -83,12 +95,12 @@ Section Products.
   Proof.
     split.
     - intros [s1 t1] [s2 t2] [Heqs Heqt]. intros [s'1 t'1] [s'2 t'2] [Heqs' Heqt']. simpl in *.
-      split; [rewrite Heqs, Heqs'|rewrite Heqt, Heqt']; reflexivity.
+      split; [rewrite -> Heqs, Heqs'|rewrite ->Heqt, Heqt']; reflexivity.
     - intros [s1 t1] [s2 t2] [s3 t3]. simpl; split; now rewrite ra_op_assoc.
     - intros [s1 t1] [s2 t2]. simpl; split; now rewrite ra_op_comm.
     - intros [s t]. simpl; split; now rewrite ra_op_unit.
     - intros [s1 t1] [s2 t2] [Heqs Heqt]. unfold ra_valid; simpl in *.
-      rewrite Heqs, Heqt. reflexivity.
+      rewrite -> Heqs, Heqt. reflexivity.
     - unfold ra_unit, ra_valid; simpl. split; eapply ra_valid_unit; now apply _.
     - intros [s1 t1] [s2 t2]. unfold ra_valid; simpl. intros [H1 H2]. split.
       + eapply ra_op_valid; now eauto.
@@ -98,13 +110,13 @@ End Products.
 
 Section ProductLemmas.
   Context {S T} `{raS : RA S, raT : RA T}.
-    
+
   Lemma ra_op_prod_fst (st1 st2: S*T):
     fst (st1 · st2) = fst st1 · fst st2.
   Proof.
     destruct st1 as [s1 t1]. destruct st2 as [s2 t2]. reflexivity.
   Qed.
-  
+
   Lemma ra_op_prod_snd (st1 st2: S*T):
     snd (st1 · st2) = snd st1 · snd st2.
   Proof.
@@ -133,20 +145,27 @@ Section Order.
     - intros z yz xyz [y Hyz] [x Hxyz]; exists (x · y).
       rewrite <- Hxyz, <- Hyz; symmetry; apply assoc.
   Qed.
-  
+
   Global Program Instance ra_preo : preoType T := mkPOType ra_ord.
 
   Global Instance equiv_pord_ra : Proper (equiv ==> equiv ==> equiv) (pord (T := T)).
   Proof.
     intros s1 s2 EQs t1 t2 EQt; split; intros [s HS].
     - exists s; rewrite <- EQs, <- EQt; assumption.
-    - exists s; rewrite EQs, EQt; assumption.
+    - exists s; rewrite -> EQs, EQt; assumption.
   Qed.
 
   Global Instance ra_op_monic : Proper (pord ++> pord ++> pord) (ra_op _).
   Proof.
     intros x1 x2 [x EQx] y1 y2 [y EQy]. exists (x · y).
     rewrite <- assoc, (comm y), <- assoc, assoc, (comm y1), EQx, EQy; reflexivity.
+  Qed.
+
+  Global Program Instance ra_valid_ord : Proper (pord ==> flip impl) ra_valid.
+  Next Obligation.
+    move=>r r' [r'' HLe] Hv.
+    move: Hv; rewrite -HLe => {HLe}.
+    exact: ra_op_valid2.
   Qed.
 
   Lemma unit_min r : 1 ⊑ r.
@@ -159,7 +178,7 @@ End Order.
 
 Section Exclusive.
   Context (T: Type) `{Setoid T}.
-  
+
   Inductive ra_res_ex: Type :=
   | ex_own: T -> ra_res_ex
   | ex_unit: ra_res_ex
@@ -186,7 +205,7 @@ Section Exclusive.
 
   Global Program Instance ra_type_ex : Setoid ra_res_ex :=
     mkType ra_res_ex_eq.
-      
+
   Global Instance ra_unit_ex : RA_unit ra_res_ex := ex_unit.
   Global Instance ra_op_ex : RA_op ra_res_ex :=
     fun r s =>
@@ -201,11 +220,11 @@ Section Exclusive.
                | ex_bot => False
                | _      => True
              end.
-  
+
   Global Instance ra_ex : RA ra_res_ex.
   Proof.
     split.
-    - intros [t1| |] [t2| |] Heqt [t'1| |] [t'2| |] Heqt'; simpl; now auto.  
+    - intros [t1| |] [t2| |] Heqt [t'1| |] [t'2| |] Heqt'; simpl; now auto.
     - intros [s1| |] [s2| |] [s3| |]; reflexivity.
     - intros [s1| |] [s2| |]; reflexivity.
     - intros [s1| |]; reflexivity.
@@ -220,19 +239,19 @@ End Exclusive.
 Section Agreement.
   Context T `{T_ty : Setoid T} (eq_dec : forall x y, {x == y} + {x =/= y}).
   Local Open Scope ra_scope.
-  
+
   Inductive ra_res_agree : Type :=
     | ag_bottom
     | ag_unit
     | ag_inj (t : T).
-  
+
   Global Instance ra_unit_agree : RA_unit _ := ag_unit.
-  Global Instance ra_valid_ag : RA_valid _ := 
+  Global Instance ra_valid_ag : RA_valid _ :=
            fun x => match x with ag_bottom => False | _ => True end.
   Global Instance ra_op_ag : RA_op _ :=
     fun x y => match x, y with
-               | ag_inj t1, ag_inj t2 => 
-                   if eq_dec t1 t2 then ag_inj t1 else ag_bottom
+               | ag_inj t1, ag_inj t2 =>
+                   if eq_dec t1 t2 is left _ then ag_inj t1 else ag_bottom
                | ag_bottom , y => ag_bottom
                | x , ag_bottom => ag_bottom
                | ag_unit, y => y
@@ -240,14 +259,14 @@ Section Agreement.
              end.
 
   Definition ra_eq_ag (x : ra_res_agree) (y : ra_res_agree) : Prop :=
-    match x,y with 
+    match x,y with
       | ag_inj t1, ag_inj t2 => t1 == t2
       | x, y => x = y
     end.
-  
+
 
   Global Instance ra_equivalence_agree : Equivalence ra_eq_ag.
-  Proof. 
+  Proof.
     split; intro; intros; destruct x; try (destruct y; try destruct z); simpl; try reflexivity;
     simpl in *; try inversion H; try inversion H0; try rewrite <- H; try rewrite <- H0; try firstorder.
   Qed.
@@ -255,29 +274,29 @@ Section Agreement.
   Global Instance res_agree : RA ra_res_agree.
   Proof.
     split; repeat intro.
-    - repeat (match goal with [ x : ra_res_agree |- _ ] => destruct x end); 
+    - repeat (match goal with [ x : ra_res_agree |- _ ] => destruct x end);
       simpl in *; try reflexivity; try rewrite H; try rewrite H0; try reflexivity;
       try inversion H; try inversion H0; compute;
       destruct (eq_dec t2 t0), (eq_dec t1 t); simpl; auto; exfalso;
       [ rewrite <- H, -> e in c | rewrite -> H, -> e in c; symmetry in c]; contradiction.
-    - repeat (match goal with [ x : ra_res_agree |- _ ] => destruct x end); 
+    - repeat (match goal with [ x : ra_res_agree |- _ ] => destruct x end);
       simpl in *; auto; try reflexivity; compute; try destruct (eq_dec _ _); try reflexivity.
       destruct (eq_dec t0 t), (eq_dec t1 t0), (eq_dec t1 t); simpl; auto; try reflexivity;
-      rewrite e in e0; contradiction.
-    -  destruct t1, t2; try reflexivity; compute; destruct (eq_dec t0 t), (eq_dec t t0); 
+      rewrite -> e in e0; contradiction.
+    -  destruct t1, t2; try reflexivity; compute; destruct (eq_dec t0 t), (eq_dec t t0);
        try reflexivity; auto; try contradiction; symmetry in e; contradiction.
     - destruct t; reflexivity.
     - destruct x, y; simpl; firstorder; now inversion H.
     - now constructor.
     - destruct t1, t2; try contradiction; now constructor.
-  Qed. 
+  Qed.
 
 End Agreement.
 
 
 Section InfiniteProduct.
   (* I is the index type (domain), S the type of the components (codomain) *)
-  Context (I : Type) (S : forall (i : I), Type) 
+  Context (I : Type) (S : forall (i : I), Type)
           {tyS : forall i, Setoid (S i)}
           {uS : forall i, RA_unit (S i)}
           {opS : forall i, RA_op (S i)}
@@ -288,22 +307,22 @@ Section InfiniteProduct.
   Definition ra_res_infprod := forall (i : I), S i.
 
   Implicit Type (i : I) (f g : ra_res_infprod).
-  
+
   Definition ra_eq_infprod := fun f g => forall i, f i == g i.
   Global Instance ra_equiv_infprod : Equivalence ra_eq_infprod.
-  Proof. split; repeat intro; [ | rewrite (H i) | rewrite (H i), (H0 i) ]; reflexivity. Qed.
-  
+  Proof. split; repeat intro; [ | rewrite (H i) | rewrite -> (H i), (H0 i) ]; reflexivity. Qed.
+
   Global Instance ra_type_infprod : Setoid ra_res_infprod | 5 := mkType ra_eq_infprod.
   Global Instance ra_unit_infprod : RA_unit _ := fun i => ra_unit (S i).
   Global Instance ra_op_infprod : RA_op _ := fun f g i => f i · g i.
-  Global Instance ra_valid_infprod : RA_valid _ := fun f => forall i, ra_valid (f i). 
+  Global Instance ra_valid_infprod : RA_valid _ := fun f => forall i, ra_valid (f i).
   Global Instance ra_infprod : RA ra_res_infprod.
   Proof.
     split; repeat intro.
     - eapply ra_op_proper; [ now auto | | ]; now firstorder.
-    - compute; now rewrite (ra_op_assoc (RA := raS i) _ (t1 i) (t2 i) (t3 i)). 
-    - compute; now rewrite (ra_op_comm (RA := raS i) _ (t1 i) (t2 i)).
-    - compute; now rewrite (ra_op_unit (RA := raS i) _ (t i)).
+    - compute; now rewrite -> (ra_op_assoc (RA := raS i) _ (t1 i) (t2 i) (t3 i)).
+    - compute; now rewrite -> (ra_op_comm (RA := raS i) _ (t1 i) (t2 i)).
+    - compute; now rewrite -> (ra_op_unit (RA := raS i) _ (t i)).
     - compute; intros; split; intros; symmetry in H;
       eapply (ra_valid_proper (RA := raS i) _ _ _ (H i)); now firstorder.
     - now eapply (ra_valid_unit (RA := raS i) _).
@@ -315,7 +334,7 @@ End InfiniteProduct.
 Section HomogeneousProduct.
   (* I is the index type (domain), S the type of the components (codomain) *)
   Context (I : Type) (S : Type) `{RA S}.
-  
+
   Global Instance ra_homprod : RA (forall (i : I), S).
   Proof. now eapply ra_infprod; auto. Qed.
 End HomogeneousProduct.
