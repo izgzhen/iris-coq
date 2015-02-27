@@ -442,6 +442,9 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Definition ht safe m P e Q := □(P → wp safe m e Q).
 
+    (* People will need that *)
+    Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
+
   End HoareTriples.
 
 End IRIS_PLOG.

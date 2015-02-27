@@ -200,8 +200,6 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Set Bullet Behavior "None".	(* PDS: Ridiculous. *)
   Section RobustSafety.
 
-    Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
-
     Implicit Types (P : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (Q : vPred) (r : res) (w : Wld) (σ : state).
 
     Program Definition restrictV (Q : expr -n> Props) : vPred :=
