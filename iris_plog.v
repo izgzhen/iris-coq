@@ -471,9 +471,6 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   End HoareTriples.
 
-  (* Simple things, needed elsewhere. *)
-  Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
-
 End IRIS_PLOG.
 
 Module IrisPlog (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) : IRIS_PLOG RL C R WP CORE.
