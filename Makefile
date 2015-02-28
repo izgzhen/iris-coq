@@ -23,7 +23,7 @@ $(call includecmdwithout@,$(COQBIN)coqtop -config)
 #                        #
 ##########################
 
-COQLIBS?=-I . -R lib/ModuRes ModuRes
+COQLIBS?=-I . -R . _
 COQDOCLIBS?=-I lib
 
 ##########################
