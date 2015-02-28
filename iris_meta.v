@@ -199,144 +199,125 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Section RobustSafety.
 
-    Implicit Types (P : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (Q : vPred) (r : res) (w : Wld) (σ : state).
+    Implicit Types (P : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (v : value) (Q : vPred) (r : res) (w : Wld) (σ : state).
 
-    Program Definition restrictV (Q : expr -n> Props) : vPred :=
-      n[(fun v => Q (` v))].
+    Implicit Types (E : expr -n> Props) (Θ : Props).
+
+    Program Definition restrictV E : vPred :=
+      n[(fun v => E (` v))].
     Next Obligation.
       move=> v v' Hv w k r; move: Hv.
       case: n=>[_ Hk | n]; first by exfalso; omega.
       by move=> /= ->.
     Qed.
 
-    (*
-     * Primitive reductions are either pure (do not change the state)
-     * or atomic (step to a value).
-     *)
-
-    Hypothesis atomic_dec : forall e, atomic e + ~atomic e.
-
-    Hypothesis pure_step : forall e σ e' σ',
-      ~ atomic e ->
-      prim_step (e, σ) (e', σ') ->
-      σ = σ'.
-
-    Variable E : expr -n> Props.
-
-    (* Compatibility for those expressions wp cares about. *)
-    Hypothesis forkE : forall e, E (fork e) == E e.
-    Hypothesis fillE : forall K e, E (K [[e]]) == E e * E (K [[fork_ret]]).
-
-    (* One can prove forkE, fillE as valid internal equalities. *)
+    Definition fork_compat E := forall e,
+      E (fork e) == E e.
+    
+    Definition fill_compat E := forall K e,
+      E (K [[e]]) == E e * E (K [[fork_ret]]).
+    
+    (* One can prove fork_compat, fill_compat as valid internal equalities. *)
     (* RJ: We don't have rules for internal equality of propositions, don't we? Maybe we should have an axiom,
        saying they are equal iff they are equivalent. *)
     (* PDS: Would you like to flush out §5.1 of the appendix? *)
-    Remark valid_intEq {P P' : Props} (H : valid(P === P')) : P == P'.
+    Remark valid_intEq {P P'} (H : valid(P === P')) : P == P'.
     Proof. move=> w n r; exact: H. Qed.
 
-    (* View shifts or atomic triples for every primitive reduction. *)
-    Variable w₀ : Wld.
-    Definition valid₀ P := forall w n r (HSw₀ : w₀ ⊑ w), P w n r.
+    Definition pure e := forall σ e' σ',
+      prim_step (e,σ) (e',σ') ->
+      σ == σ'.
+    
+    Definition restrict_lang := forall e,
+      reducible e ->
+      atomic e \/ pure e.
 
-    Hypothesis pureE : forall {e σ e'},
-      prim_step (e,σ) (e',σ) ->
-      valid₀ (vs mask_full mask_full (E e) (E e')).
-
-    Hypothesis atomicE : forall {e},
+    Definition atomic_compat E Θ m := forall e,
       atomic e ->
-      valid₀ (ht false mask_full (E e) e (restrictV E)).
+      Θ ⊑ ht false m (E e) e (restrictV E).
 
-    Lemma robust_safety {e} : valid₀(ht false mask_full (E e) e (restrictV E)).
+    Definition pure_compat E Θ m := forall e σ e',
+      prim_step (e,σ) (e',σ) ->
+      Θ ⊑ vs m m (E e) (E e').
+
+    Lemma robust_safety {E Θ e m}
+        (FORK : fork_compat E)
+        (FILL : fill_compat E)
+        (LANG : restrict_lang)
+        (HT : atomic_compat E Θ m)
+        (VS : pure_compat E Θ m) :
+      □Θ ⊑ ht false m (E e) e (restrictV E).
     Proof.
-      move=> wz nz rz HSw₀ w HSw n r HLe _ He.
-      have {HSw₀ HSw} HSw₀ : w₀ ⊑ w by transitivity wz.
-
-      (* For e = K[fork e'] we'll have to prove wp(e', ⊤), so the IH takes a post. *)
-      pose post Q := forall (v : value) w n r, (E (`v)) w n r -> (Q v) w n r.
+      move=> wz nz rz HΘ w HSw n r HLe _ He.
+      have {HΘ wz nz rz HSw HLe} HΘ: Θ w n 1
+        by rewrite/= in HΘ; exact: (propsM HSw HLe (prefl 1) HΘ).
+      (* generalize IH's post-condition for the fork case *)
+      pose post Q := forall v w n r, (E (`v)) w n r -> (Q v) w n r.
       set Q := restrictV E; have HQ: post Q by done.
-      move: {HLe} HSw₀ He HQ; move: n e w r Q; elim/wf_nat_ind;
-        move=> {wz nz rz} n IH e w r Q HSw₀ He HQ.
-      apply unfold_wp; move=> w' k rf mf σ HSw HLt HD HW.
-      split; [| split; [| split; [| done] ] ]; first 2 last.
-
-      (* e forks: fillE, IH (twice), forkE *)
-      { move=> e' K HDec.
-        have {He} He: (E e) w' k r by propsM He.
-        move: He; rewrite HDec fillE; move=> [re' [rK [Hr [He' HK] ] ] ].
-        exists w' re' rK; split; first by reflexivity.
-        have {IH} IH: forall Q, post Q ->
-          forall e r, (E e) w' k r -> wp false mask_full e Q w' k r.
-        { by move=> Q0 HQ0 e0 r0 He0; apply: (IH _ HLt); first by transitivity w. }
-        split; [exact: IH | split]; last first.
-        { by move: HW; rewrite -Hr => HW; exact: (wsatM _ HW). }
-        have Htop: post (umconst ⊤) by done.
-        by apply: (IH _ Htop e' re'); move: He'; rewrite forkE. }
-
-      (* e value: done *)
-      { move=> {IH} HV; exists w' r; split; [by reflexivity | split; [| done] ].
-        by apply: HQ; propsM He. }
-
-      (* e steps: fillE, atomic_dec *)
-      move=> σ' ei ei' K HDec HStep.
-      have {HSw₀} HSw₀ : w₀ ⊑ w' by transitivity w.
-      move: He; rewrite HDec fillE; move=> [rei [rK [Hr [Hei HK] ] ] ].
-      move: HW; rewrite -Hr => HW.
-      (* bookkeeping common to both cases. *)
-      have {Hei} Hei: (E ei) w' (S k) rei by propsM Hei.
-      set HSw' := prefl w'.
-      set HLe := lerefl (S k).
-      have H1ei: 1 ⊑ rei by apply: unit_min.
+      move: HΘ He HQ; move: n e w r Q; elim/wf_nat_ind => n IH e w r Q HΘ He HQ.
+      rewrite unfold_wp; move=> w' k rf mf σ HSw HLt HD HW.
+      split.
+      (* e value *)
+      { move=> HV {FORK FILL LANG HT VS IH}.
+        exists w' r. split; [by reflexivity | split; [| done] ].
+        apply: HQ; have HLe: S k <= n by omega.
+        exact: (propsM HSw HLe (prefl r)). }
+      split; [| split; [| done] ]; first last.
+      (* e forks *)
+      { move=> e' K HDec {LANG HT VS}.
+        have HLe: k <= n by omega.
+        move/(propsM HSw HLe (prefl r)): He => He.
+        move/(propsM HSw HLe (prefl 1)): HΘ => HΘ {HLe}.
+        move: He; rewrite HDec FILL FORK; move=> [re' [rK [Hr [He' HK] ] ] ].
+        exists w' re' rK. split; [by reflexivity | split; [exact: IH | split; [exact: IH |] ] ].
+        by move: HW; rewrite -Hr; exact: wsatM. }
+      (* e steps *)
+      move=> σ' ei ei' K HDec HStep {FORK}.
+      move: He; rewrite HDec FILL; move=> [rei [rK [Hr [Hei HK] ] ] ].
+      move: HW; rewrite -Hr -assoc => HW {Hr r}.
+      (* both forthcoming cases work at step-indices S k and (for the IH) k. *)
+      have HLe: S k <= n by omega.
       have HLt': k < S k by done.
-      move: HW; rewrite {1}mask_full_union -{1}(mask_full_union mask_emp) -assoc => HW.
-      case: (atomic_dec ei) => HA; last first.
-
-      (* ei pure: pureE, IH, fillE *)
-      { move: (pure_step _ _ _ _ HA HStep) => {HA} Hσ.
-        rewrite Hσ in HStep HW => {Hσ}.
-        move: (pureE _ _ _ HStep) => {HStep} He.
-        move: {He} (He w' (S k) r HSw₀) => He.
-        move: {He HLe H1ei Hei} (He _ HSw' _ _ HLe H1ei Hei) => He.
-        move: {HD} (mask_emp_disjoint (mask_full ∪ mask_full)) => HD.
-        move: {He HSw' HW} (He _ _ _ _ _ HSw' HLt' HD HW) => [w'' [r' [HSw' [Hei' HW] ] ] ].
-        move: HW; rewrite assoc=>HW.
-        have {HSw₀} HSw₀: w₀ ⊑ w'' by transitivity w'.
-        exists w'' (r' · rK); split; [done| split]; last first.
-        { by move: HW; rewrite 2! mask_full_union => HW; exact: (wsatM _ HW). }
-        apply: (IH _ HLt _ _ _ _ HSw₀); last done.
-        rewrite fillE; exists r' rK; split; [exact: equivR | split; [by propsM Hei' |] ].
-        have {HSw} HSw: w ⊑ w'' by transitivity w'.
-        by propsM HK. }
-
-      (* ei atomic: atomicE, IH, fillE *)
-      move: (atomic_step _ _ _ _ HA HStep) => HV.
-      move: (atomicE _ HA) => He {HA}.
-      move: {He} (He w' (S k) rei HSw₀) => He.
-      move: {He HLe H1ei Hei} (He _ HSw' _ _ HLe H1ei Hei) => He.
+      move/(propsM HSw HLe (prefl rei)): Hei => Hei.
+      move/(propsM HSw HLe (prefl rK)): HK => HK.
+      have HRed: reducible ei by exists σ (ei',σ').
+      case: (LANG ei HRed)=>[HA {VS} | HP {HT}] {LANG HRed}; last first.
+      (* pure step *)
+      { move/(_ _ _ _ HStep): HP => HP; move: HStep HW; rewrite HP => HStep HW {HP σ}.
+        move/(_ _ _ _ HStep _ _ _ HΘ _ HSw _ _ HLe (unit_min _ rei) Hei): VS => VS {HStep HLe Hei}.
+        move: HD; rewrite -{1}(mask_union_idem m) => HD.
+        move/(_ _ _ _ _ _ (prefl w') HLt' HD HW): VS => [w'' [r' [HSw' [Hei' HW'] ] ] ] {HLt' HD HW}.
+        have HLe': k <= S k by omega.
+        exists w'' (r' · rK). split; [done | split]; last by move/(wsatM HLe'): HW'; rewrite assoc.
+        apply: (IH _ HLt); last done.
+        { have HLe: k <= n by omega.
+          by exact: (propsM (ptrans w' HSw HSw') HLe (prefl 1) HΘ). }
+        rewrite FILL; exists r' rK. split; first by reflexivity.
+        split; [ exact: (propsMN HLe') | exact: (propsM HSw' HLe' (prefl rK) HK) ]. }
+      (* atomic step *)
+      move/(_ _ HA _ _ _ HΘ _ HSw (S k) _ HLe (unit_min _ rei) Hei): HT => {Hei HLe} Hei.
       (* unroll wp(ei,E)—step case—to get wp(ei',E) *)
-      move: He; rewrite {1}unfold_wp => He.
-      move: {HD} (mask_emp_disjoint mask_full) => HD.
-      move: {He HSw' HLt' HW} (He _ _ _ _ _ HSw' HLt' HD HW) => [_ [HS _] ].
+      move: Hei; rewrite {1}unfold_wp => Hei.
+      move/(_ _ _ _ _ _ (prefl w') HLt' HD HW): Hei => [_ [HS _] ] {HLt' HW}.
       have Hεei: ei = ε[[ei]] by rewrite fill_empty.
-      move: {HS Hεei HStep} (HS _ _ _ _ Hεei HStep) => [w'' [r' [HSw' [He' HW] ] ] ].
+      move/(_ _ _ _ _ Hεei HStep): HS => [w'' [r' [HSw' [Hei' HW'] ] ] ] {Hεei}.
       (* unroll wp(ei',E)—value case—to get E ei' *)
-      move: He'; rewrite {1}unfold_wp => He'.
-      move: HW; case Hk': k => [| k'] HW.
-      { by exists w'' r'; split; [done | split; [exact: wpO | done] ]. }
-      have HSw'': w'' ⊑ w'' by reflexivity.
-      have HLt': k' < k by omega.
-      move: {He' HSw'' HLt' HD HW} (He' _ _ _ _ _ HSw'' HLt' HD HW) => [Hv _].
-      move: HV; rewrite -(fill_empty ei') => HV.
-      move: {Hv} (Hv HV) => [w''' [rei' [HSw'' [Hei' HW] ] ] ].
-      (* now IH *)
+      move: Hei'; rewrite (fill_empty ei') {1}unfold_wp => Hei'.
+      move: HLt HK HW' Hei'; case: k => [| k'] HLt HK HW' Hei'.
+      { exists w'' r'. by split; [done | split; [exact: wpO | done] ]. }
+      have HLt': k' < S k' by done.
+      move/(_ _ _ _ _ _ (prefl w'') HLt' HD HW'): Hei' => [Hv _] {HLt' HD HW'}.
+      move: (atomic_step _ _ _ _ HA HStep) => HV {HA HStep}.
+      move/(_ HV): Hv => [w''' [rei' [HSw'' [Hei' HW] ] ] ].
       move: HW; rewrite assoc => HW.
-      exists w''' (rei' · rK). split; first by transitivity w''.
-      split; last by rewrite mask_full_union -(mask_full_union mask_emp).
-      rewrite/= in Hei'; rewrite fill_empty -Hk' in Hei' * => {Hk'}.
-      have {HSw₀} HSw₀ : w₀ ⊑ w''' by transitivity w''; first by transitivity w'.
-      apply: (IH _ HLt _ _ _ _ HSw₀); last done.
-      rewrite fillE; exists rei' rK; split; [exact: equivR | split; [done |] ].
-      have {HSw HSw' HSw''} HSw: w ⊑ w''' by transitivity w''; first by transitivity w'.
-      by propsM HK.
+      move: (ptrans w'' HSw' HSw'') => HSw''' {HSw''}.
+      exists w''' (rei' · rK). split; [done | split; [| done] ].
+      apply: (IH _ HLt); last done.
+      { have HLe: S k' <= n by omega.
+        by exact: (propsM (ptrans w' HSw HSw''') HLe (prefl 1) HΘ). }
+      rewrite FILL; exists rei' rK. split; [by reflexivity | split; [done |] ].
+      have HLe: S k' <= S (S k') by omega.
+      exact: (propsM HSw''' HLe (prefl rK)).
     Qed.
 
   End RobustSafety.
@@ -391,7 +372,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       { clear - HPS HW HSw2.
         move: HPS => [r1 [r2 [Hr [_ /(propsMW HSw2) HS ] ] ] ] {HSw2}.
         apply: (ownS_wsat HS HW); move=> {HS HW}.
-        exists (r1 · rf); move: Hr=><-.
+        exists (r1 · rf). move: Hr=><-.
         by rewrite -{1}assoc  [rf · _]comm {1}assoc; reflexivity. }
       split; [| split; [| split ] ]; first 2 last.
       { move=> e' K HDec; exfalso; exact: (reducible_not_fork RED HDec). }
@@ -418,17 +399,17 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       { have {HLt} HLt: k <= n' by omega.
         move/(propsMW HSw2): HP; move/(propsMN HLt) => HP.
         have HS': (ownS σ') w2 k rS' by exists 1; rewrite ra_op_unit; split; reflexivity.
-        exists rP rS'; split; [by reflexivity | split; [done | done] ]. }
+        exists rP rS'. split; [by reflexivity | split; [done | done] ]. }
       move/(_ (e',σ') _ HSw1 _ rz (lerefl nz) (prefl rz) He'): {He'} Hfrom => He'.
       have {HLe HLt} HLe: k <= nz by omega.
       move/(_ _ HSw2 _ r' HLe (unit_min _ _) HPS): He' => He' {HLe HPS}.
 
       (* wsat σ' r' follows from wsat σ r (by the construction of r'). *)
-      exists w2 r'; split; [by reflexivity | split; [done |] ].
+      exists w2 r'. split; [by reflexivity | split; [done |] ].
       have HLe: k <= S k by omega.
       move/(wsatM HLe): HW; move=>{He' HLe}.
       case: k=>[| k]; first done; move=>[rs [Hstate HWld] ].
-      exists rs; split; last done.
+      exists rs. split; last done.
       clear - Hr HrS Hstate; move: Hstate=>[Hv _]; move: Hv.
       rewrite -Hr -HrS /r'/= => {Hr HrS r' rS}.
       rewrite (* ((P(gσ))f)s *) [rP · _]comm -3!assoc =>/ra_opV2 Hv {rSg}.  (* ((σP)f)s *)

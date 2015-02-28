@@ -178,21 +178,16 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Notation " P @ k " := ((P : UPred ()) k tt) (at level 60, no associativity).
 
-  (*
-	Simple monotonicity tactics for props and wsat.
-
-	The tactic propsM H proves P w' n' r' given H : P w n r when
-		w ⊑ w', n' <= n, r ⊑ r'
-	are immediate.
-
-	The tactic wsatM is similar.
-   *)
+  (* Simple view lemmas. *)
 
   Lemma prefl {T} `{oT : preoType T} (t : T) : t ⊑ t. Proof. by reflexivity. Qed.
   
-  Definition lerefl (n : nat) : n <= n. Proof. by reflexivity. Qed.
+  Lemma ptrans {T} `{oT : preoType T} {t t''} (t' : T) (HL : t ⊑ t') (HU : t' ⊑ t'') : t ⊑ t''.
+  Proof. by transitivity t'. Qed.
+
+  Lemma lerefl (n : nat) : n <= n. Proof. by reflexivity. Qed.
   
-  Definition lt0 (n : nat) :  ~ n < 0. Proof. by omega. Qed.
+  Lemma lt0 (n : nat) :  ~ n < 0. Proof. by omega. Qed.
 
   Lemma propsMW {P w n r w'} (HSw : w ⊑ w') : P w n r -> P w' n r.
   Proof. exact: (mu_mono _ _ P _ _ HSw). Qed.
@@ -206,12 +201,9 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Lemma propsMR {P w n r r'} (HSr : r ⊑ r') : P w n r -> P w n r'.
   Proof. exact: (propsMNR (lerefl n) HSr). Qed.
   
-  Lemma propsM {P w n r w' n' r'}
-      (HP : P w n r) (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
-    P w' n' r'.
-  Proof. by apply: (propsMW HSw); exact: (propsMNR HLe HSr). Qed.
-
-  Ltac propsM H := solve [ done | apply (propsM H); solve [ done | reflexivity | omega ] ].
+  Lemma propsM {P w n r w' n' r'} (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
+    P w n r -> P w' n' r'.
+  Proof. move=> HP; by apply: (propsMW HSw); exact: (propsMNR HLe HSr). Qed.
 
   Lemma wsatM {σ m} {r : res} {w n k} (HLe : k <= n) :
     wsat σ m r w @ n -> wsat σ m r w @ k.
