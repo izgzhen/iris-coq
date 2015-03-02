@@ -1,5 +1,5 @@
 Require Import ssreflect.
-Require Import world_prop core_lang masks.
+Require Import world_prop core_lang.
 Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
 Set Bullet Behavior "Strict Subproofs".
@@ -11,7 +11,7 @@ Set Bullet Behavior "Strict Subproofs".
    Coq restrictions) and as a module (to show the type can be instantiated). *)
 Module Type IRIS_RES (RL : RA_T) (C : CORE_LANG) <: RA_T.
   Instance state_type : Setoid C.state := discreteType.
- 
+
   Definition res := (ra_res_ex C.state * RL.res)%type.
   Instance res_type : Setoid res := _.
   Instance res_op   : RA_op res := _.
@@ -71,10 +71,37 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Instance Props_BI : ComplBI Props | 0 := _.
   Instance Props_Later : Later Props | 0 := _.
- 
-  (** And now we're ready to build the IRIS-specific connectives! *)
 
-  Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (m : mask) (r u v : res) (σ : state).
+  Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (r u v : res) (σ : state).
+
+  (* Simple view lemmas. *)
+
+  Lemma prefl {T} `{oT : preoType T} (t : T) : t ⊑ t. Proof. by reflexivity. Qed.
+
+  Lemma ptrans {T} `{oT : preoType T} {t t''} (t' : T) (HL : t ⊑ t') (HU : t' ⊑ t'') : t ⊑ t''.
+  Proof. by transitivity t'. Qed.
+
+  Lemma lerefl (n : nat) : n <= n. Proof. by reflexivity. Qed.
+
+  Lemma lt0 (n : nat) :  ~ n < 0. Proof. by omega. Qed.
+
+  Lemma propsMW {P w n r w'} (HSw : w ⊑ w') : P w n r -> P w' n r.
+  Proof. exact: (mu_mono _ _ P _ _ HSw). Qed.
+
+  Lemma propsMNR {P w n r n' r'} (HLe : n' <= n) (HSr : r ⊑ r') : P w n r -> P w n' r'.
+  Proof. exact: (uni_pred _ _ _ _ _ HLe HSr). Qed.
+
+  Lemma propsMN {P w n r n'} (HLe : n' <= n) : P w n r -> P w n' r.
+  Proof. apply: (propsMNR HLe (prefl r)). Qed.
+
+  Lemma propsMR {P w n r r'} (HSr : r ⊑ r') : P w n r -> P w n r'.
+  Proof. exact: (propsMNR (lerefl n) HSr). Qed.
+
+  Lemma propsM {P w n r w' n' r'} (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
+    P w n r -> P w' n' r'.
+  Proof. move=> HP; by apply: (propsMW HSw); exact: (propsMNR HLe HSr). Qed.
+
+  (** And now we're ready to build the IRIS-specific connectives! *)
 
   Section Resources.
 
@@ -86,7 +113,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       move=>[Hx _]; move: Hx {fg}; rewrite/ra_op/ra_op_ex.
       by case: fx.
     Qed.
-  
+
     Lemma ex_fpu {σ σ' u} : ↓((ex_own state σ, 1:RL.res) · u) -> ↓((ex_own state σ', 1:RL.res) · u).
     Proof.
       move=> Hv; move: (ex_frame Hv)=> Hxu; move: Hxu Hv.
@@ -168,14 +195,14 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Section BoxAll.
     Context {T} `{cT : cmetric T}.
     Context (φ : T -n> Props).
-  
+
     Program Definition box_all_lhs : Props := ∀t, □φ t.
     Next Obligation.
       move=> t t' HEq.
       apply: box_dist.
       exact: (met_morph_nonexp _ _ φ).
     Qed.
-  
+
     Lemma box_all : □all φ == box_all_lhs.
     Proof. done. Qed.
   End BoxAll.
@@ -212,11 +239,51 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Notation "t1 '===' t2" := (intEq t1 t2) (at level 70) : iris_scope.
 
+  Section IntEqProps.
+
+    (* On Props, valid biimplication, valid internal equality, and external equality coincide. *)
+
+    Notation "P ↔ Q" := ((P → Q) ∧ (Q → P)) (at level 90, no associativity) : iris_scope.
+
+    Remark valid_biimp_intEq {P Q} : valid(P ↔ Q) -> valid(P === Q).
+    Proof.
+      move=> H wz nz rz w n r HLt. move/(_ w n r): H => [Hpq Hqp]. split.
+      - by move/(_ _ (prefl w) _ _ (lerefl n) (prefl r)): Hpq.
+      - by move/(_ _ (prefl w) _ _ (lerefl n) (prefl r)): Hqp.
+    Qed.
+
+    Remark valid_intEq_equiv {P Q} : valid(P === Q) -> P == Q.
+    Proof. move=> H w n r; exact: H. Qed.
+
+    Remark valid_equiv_biimp {P Q} : P == Q -> valid(P ↔ Q).
+    Proof.
+      by move=> H wz nz rz; split; move=> w HSw n r HLe HSr; move: H->.
+    Qed.
+
+    (* Internal equality implies biimplication, but not vice versa. *)
+
+    Remark biimp_equiv {P Q}: P === Q ⊑ (P ↔ Q).
+    Proof.
+      have HLt n n' : n' <= n -> n' < S n by omega.
+      move=> w n r H; split;
+      move=> w' HSw' n' r' HLe' HSr' HP;
+      move/(_ w' n' r' (HLt _ _ HLe')): H => [Hpq Hqp];
+      [exact: Hpq | exact: Hqp].
+    Qed.
+
+    Goal forall P Q, (P ↔ Q) ⊑ (P === Q).
+    Proof.
+      move=> P Q w n r [Hpq Hqp] w' n' r' HLt; split.
+      move=> HP.	(* Lacking w ⊑ w', we cannot apply Hpq. *)
+    Abort.
+
+  End IntEqProps.
+
   Section Timeless.
- 
+
     Definition timelessP P w n :=
       forall w' k r (HSw : w ⊑ w') (HLt : k < n) (Hp : P w' k r), P w' (S k) r.
- 
+
     Program Definition timeless P : Props :=
       m[(fun w => mkUPred (fun n r => timelessP P w n) _)].
     Next Obligation.
@@ -235,7 +302,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       intros w1 w2 HSw n; simpl; intros _ HT w' m r HSw' HLt Hp.
       eapply HT, Hp; [etransitivity |]; eassumption.
     Qed.
- 
+
   End Timeless.
 
   Section IntEqTimeless.
@@ -274,7 +341,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Lemma ownR_timeless {u} :
       valid(timeless(ownR u)).
     Proof. intros w n _ w' k r _ _; now auto. Qed.
- 
+
     Lemma ownR_sc u v:
       ownR (u · v) == ownR u * ownR v.
     Proof.
@@ -320,7 +387,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Lemma ownL_timeless {r : RL.res} : valid(timeless(ownL r)).
     Proof. exact ownR_timeless. Qed.
- 
+
     (** Ghost state ownership **)
     Lemma ownL_sc (r s : RL.res) :
       ownL (r · s) == ownL r * ownL s.
@@ -341,33 +408,6 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     - intros w n r _; apply Hp.
     - intros w n r; apply Hp; exact I.
   Qed.
-
-  (* Simple view lemmas. *)
-
-  Lemma prefl {T} `{oT : preoType T} (t : T) : t ⊑ t. Proof. by reflexivity. Qed.
-  
-  Lemma ptrans {T} `{oT : preoType T} {t t''} (t' : T) (HL : t ⊑ t') (HU : t' ⊑ t'') : t ⊑ t''.
-  Proof. by transitivity t'. Qed.
-
-  Lemma lerefl (n : nat) : n <= n. Proof. by reflexivity. Qed.
-  
-  Lemma lt0 (n : nat) :  ~ n < 0. Proof. by omega. Qed.
-
-  Lemma propsMW {P w n r w'} (HSw : w ⊑ w') : P w n r -> P w' n r.
-  Proof. exact: (mu_mono _ _ P _ _ HSw). Qed.
-  
-  Lemma propsMNR {P w n r n' r'} (HLe : n' <= n) (HSr : r ⊑ r') : P w n r -> P w n' r'.
-  Proof. exact: (uni_pred _ _ _ _ _ HLe HSr). Qed.
-  
-  Lemma propsMN {P w n r n'} (HLe : n' <= n) : P w n r -> P w n' r.
-  Proof. apply: (propsMNR HLe (prefl r)). Qed.
-  
-  Lemma propsMR {P w n r r'} (HSr : r ⊑ r') : P w n r -> P w n r'.
-  Proof. exact: (propsMNR (lerefl n) HSr). Qed.
-  
-  Lemma propsM {P w n r w' n' r'} (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
-    P w n r -> P w' n' r'.
-  Proof. move=> HP; by apply: (propsMW HSw); exact: (propsMNR HLe HSr). Qed.
 
 End IRIS_CORE.
 
