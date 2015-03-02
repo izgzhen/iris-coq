@@ -342,6 +342,33 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     - intros w n r; apply Hp; exact I.
   Qed.
 
+  (* Simple view lemmas. *)
+
+  Lemma prefl {T} `{oT : preoType T} (t : T) : t ⊑ t. Proof. by reflexivity. Qed.
+  
+  Lemma ptrans {T} `{oT : preoType T} {t t''} (t' : T) (HL : t ⊑ t') (HU : t' ⊑ t'') : t ⊑ t''.
+  Proof. by transitivity t'. Qed.
+
+  Lemma lerefl (n : nat) : n <= n. Proof. by reflexivity. Qed.
+  
+  Lemma lt0 (n : nat) :  ~ n < 0. Proof. by omega. Qed.
+
+  Lemma propsMW {P w n r w'} (HSw : w ⊑ w') : P w n r -> P w' n r.
+  Proof. exact: (mu_mono _ _ P _ _ HSw). Qed.
+  
+  Lemma propsMNR {P w n r n' r'} (HLe : n' <= n) (HSr : r ⊑ r') : P w n r -> P w n' r'.
+  Proof. exact: (uni_pred _ _ _ _ _ HLe HSr). Qed.
+  
+  Lemma propsMN {P w n r n'} (HLe : n' <= n) : P w n r -> P w n' r.
+  Proof. apply: (propsMNR HLe (prefl r)). Qed.
+  
+  Lemma propsMR {P w n r r'} (HSr : r ⊑ r') : P w n r -> P w n r'.
+  Proof. exact: (propsMNR (lerefl n) HSr). Qed.
+  
+  Lemma propsM {P w n r w' n' r'} (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
+    P w n r -> P w' n' r'.
+  Proof. move=> HP; by apply: (propsMW HSw); exact: (propsMNR HLe HSr). Qed.
+
 End IRIS_CORE.
 
 Module IrisCore (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) : IRIS_CORE RL C R WP.
