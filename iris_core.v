@@ -162,7 +162,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     intros w n r. split.
     - intros HP. exists 1 r. split; [now rewrite ra_op_unit|].
       split;  assumption.
-    - intros [r1 [r2 [_ [HP _] ] ] ]. assumption.
+    - intros [r1 [r2 [_ [HP _]]]]. assumption.
   Qed.
 
   Section BoxAll.

@@ -31,20 +31,21 @@ Module Type CORE_LANG.
 
   Notation "'ε'"    := empty_ctx : lang_scope.
   Notation "K1 ∘ K2"  := (comp_ctx K1 K2) (at level 40, left associativity) : lang_scope.
-  Notation "K '[[' e ']]' " := (fill K e) (at level 40, left associativity) : lang_scope.
-  Axiom fill_empty : forall e, ε [[ e ]] = e.
-  Axiom fill_comp  : forall K1 K2 e, K1 [[ K2 [[ e ]] ]] = K1 ∘ K2 [[ e ]].
-  Axiom fill_inj1  : forall K1 K2 e,
-                       K1 [[ e ]] = K2 [[ e ]] -> K1 = K2.
-  Axiom fill_inj2  : forall K e1 e2,
-                       K [[ e1 ]] = K [[ e2 ]] -> e1 = e2.
-  Axiom fill_noinv: forall K1 K2, (* Interestingly, it seems impossible to derive this *)
+  (* We used to also have notation for filling, but registering any of "[[", "]]", "])" as keyword
+     is bound to become annoying in Ltac. *)
+  Axiom fill_empty : forall e, fill ε e = e.
+  Axiom fill_comp  : forall K1 K2 e, fill K1 (fill K2 e) = fill (K1 ∘ K2) e.
+  Axiom fill_inj1  : forall K1 K2 e, (* left-Cancellativity*)
+                       fill K1 e = fill K2 e -> K1 = K2.
+  Axiom fill_inj2  : forall K e1 e2, (* right-cancellativity *)
+                       fill K e1 = fill K e2 -> e1 = e2.
+  Axiom fill_noinv: forall K1 K2, (* positivity *)
                        K1 ∘ K2 = ε -> K1 = ε /\ K2 = ε.
   Axiom fill_value : forall K e,
-                       is_value (K [[ e ]]) ->
+                       is_value (fill K e ) ->
                        K = ε.
   Axiom fill_fork  : forall K e e',
-                       fork e' = K [[ e ]] ->
+                       fork e' = fill K e ->
                        K = ε.
 
   (** Shared machine state (e.g., the heap) **)
@@ -62,11 +63,11 @@ Module Type CORE_LANG.
 
   Definition stuck (e : expr) : Prop :=
     forall K e',
-      e = K [[ e' ]] ->
+      e = fill K e' ->
       ~reducible e'.
 
   Axiom fork_stuck :
-    forall K e, stuck (K [[ fork e ]]).
+    forall K e, stuck (fill K (fork e) ).
   Axiom values_stuck :
     forall e, is_value e -> stuck e.
 
@@ -76,7 +77,7 @@ Module Type CORE_LANG.
      expression *)
   Axiom step_by_value :
     forall K K' e e',
-      K [[ e ]] = K' [[ e' ]] ->
+      fill K e = fill K' e' ->
       reducible e' ->
       ~ is_value e ->
       exists K'', K' = K ∘ K''.
@@ -84,7 +85,7 @@ Module Type CORE_LANG.
      expression *)
   Axiom fork_by_value :
     forall K K' e e',
-      K [[ e ]] = K' [[ fork e' ]] ->
+      fill K e = fill K' (fork e') ->
       ~ is_value e ->
       exists K'', K' = K ∘ K''.
 

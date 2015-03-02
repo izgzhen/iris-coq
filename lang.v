@@ -24,13 +24,13 @@ Module Lang (C : CORE_LANG).
   Inductive step (ρ ρ' : cfg) : Prop :=
   | step_atomic : forall e e' σ σ' K t1 t2,
       prim_step (e, σ) (e', σ') ->
-      ρ  = (t1 ++ K [[ e  ]] :: t2, σ) ->
-      ρ' = (t1 ++ K [[ e' ]] :: t2, σ') ->
+      ρ  = (t1 ++ fill K e  :: t2, σ) ->
+      ρ' = (t1 ++ fill K e' :: t2, σ') ->
       step ρ ρ'
   | step_fork : forall e σ K t1 t2,
       (* thread ID is 0 for the head of the list, new thread gets first free ID *)
-      ρ  = (t1 ++ K [[ fork e   ]] :: t2, σ) ->
-      ρ' = (t1 ++ K [[ fork_ret ]] :: t2 ++ e :: nil, σ) ->
+      ρ  = (t1 ++ fill K (fork e) :: t2, σ) ->
+      ρ' = (t1 ++ fill K fork_ret :: t2 ++ e :: nil, σ) ->
       step ρ ρ'.
 
   (* Some derived facts about contexts *)
@@ -60,7 +60,7 @@ Module Lang (C : CORE_LANG).
     K1 = K2.
   Proof.
     intros HEq.
-    apply fill_inj1 with (K [[ fork_ret ]]).
+    apply fill_inj1 with (fill K fork_ret).
     now rewrite -> !fill_comp, HEq.
   Qed.
 
@@ -101,7 +101,7 @@ Module Lang (C : CORE_LANG).
   Qed.
 
   Lemma reducible_not_fork {e K e'} :
-    reducible e -> e <> K [[fork e']].
+    reducible e -> e <> fill K (fork e').
   Proof.
     move=> HRed HDec.
     move: (fork_stuck K e'); rewrite -HDec -(fill_empty e) => HStuck {HDec}.
@@ -142,7 +142,7 @@ Module Lang (C : CORE_LANG).
   Qed.
 
   Lemma fork_not_atomic K e :
-    ~atomic (K [[ fork e ]]).
+    ~atomic (fill K (fork e)).
   Proof.
     intros HAt.
     apply atomic_not_stuck in HAt.
@@ -158,11 +158,11 @@ Module Lang (C : CORE_LANG).
   Qed.
 
   Lemma atomic_fill e K
-        (HAt : atomic (K [[ e ]]))
+        (HAt : atomic (fill K e))
         (HNV : ~ is_value e) :
     K = empty_ctx.
   Proof.
-    destruct (step_by_value K ε e (K [[ e ]])) as [K' EQK].
+    destruct (step_by_value K ε e (fill K e)) as [K' EQK].
     - now rewrite fill_empty.
     - now apply atomic_reducible.
     - assumption.

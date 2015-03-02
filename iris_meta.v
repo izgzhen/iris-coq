@@ -215,7 +215,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       E (fork e) == E e.
     
     Definition fill_compat E := forall K e,
-      E (K [[e]]) == E e * E (K [[fork_ret]]).
+      E (fill K e) == E e * E (fill K fork_ret).
     
     (* One can prove fork_compat, fill_compat as valid internal equalities. *)
     (* RJ: We don't have rules for internal equality of propositions, don't we? Maybe we should have an axiom,
@@ -299,7 +299,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       (* unroll wp(ei,E)—step case—to get wp(ei',E) *)
       move: Hei; rewrite {1}unfold_wp => Hei.
       move/(_ _ _ _ _ _ (prefl w') HLt' HD HW): Hei => [_ [HS _] ] {HLt' HW}.
-      have Hεei: ei = ε[[ei]] by rewrite fill_empty.
+      have Hεei: ei = fill ε ei by rewrite fill_empty.
       move/(_ _ _ _ _ Hεei HStep): HS => [w'' [r' [HSw' [Hei' HW'] ] ] ] {Hεei}.
       (* unroll wp(ei',E)—value case—to get E ei' *)
       move: Hei'; rewrite (fill_empty ei') {1}unfold_wp => Hei'.

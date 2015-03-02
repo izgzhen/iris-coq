@@ -259,8 +259,8 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Definition safeExpr e σ :=
       is_value e \/
-         (exists σ' ei ei' K, e = K [[ ei ]] /\ prim_step (ei, σ) (ei', σ')) \/
-         (exists e' K, e = K [[ fork e' ]]).
+         (exists σ' ei ei' K, e = fill K ei /\ prim_step (ei, σ) (ei', σ')) \/
+         (exists e' K, e = fill K (fork e')).
 
     Definition wpFP safe m (WP : expr -n> vPred -n> Props) e φ w n r :=
       forall w' k rf mf σ (HSw : w ⊑ w') (HLt : k < n) (HD : mf # m)
@@ -268,13 +268,13 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         (forall (HV : is_value e),
          exists w'' r', w' ⊑ w'' /\ φ (exist _ e HV) w'' (S k) r'
                            /\ wsat σ (m ∪ mf) (r' · rf) w'' @ S k) /\
-        (forall σ' ei ei' K (HDec : e = K [[ ei ]])
+        (forall σ' ei ei' K (HDec : e = fill K ei)
                 (HStep : prim_step (ei, σ) (ei', σ')),
-         exists w'' r', w' ⊑ w'' /\ WP (K [[ ei' ]]) φ w'' k r'
+         exists w'' r', w' ⊑ w'' /\ WP (fill K ei') φ w'' k r'
                            /\ wsat σ' (m ∪ mf) (r' · rf) w'' @ k) /\
-        (forall e' K (HDec : e = K [[ fork e' ]]),
+        (forall e' K (HDec : e = fill K (fork e')),
          exists w'' rfk rret, w' ⊑ w''
-                                 /\ WP (K [[ fork_ret ]]) φ w'' k rret
+                                 /\ WP (fill K fork_ret) φ w'' k rret
                                  /\ WP e' (umconst ⊤) w'' k rfk
                                  /\ wsat σ (m ∪ mf) (rfk · rret · rf) w'' @ k) /\
         (forall HSafe : safe = true, safeExpr e σ).
@@ -293,13 +293,13 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         exists w'' (rd · r1').
         split; [assumption | split; [| assumption] ].
         eapply uni_pred, Hφ; [| exists rd]; reflexivity.
-      - specialize (HS _ _ _ _ HDec HStep); destruct HS as [w'' [r1' [HSw' [HWP HE'] ] ] ].
+      - specialize (HS _ _ _ _ HDec HStep); destruct HS as [w'' [r1' [HSw' [HWP HE']]]].
         rewrite ->assoc, (comm r1') in HE'. exists w''.
         destruct k as [| k]; [exists r1'; simpl wsat; tauto |].
         exists (rd · r1').
         split; [assumption | split; [| assumption] ].
         eapply uni_pred, HWP; [| exists rd]; reflexivity.
-      - specialize (HF _ _ HDec); destruct HF as [w'' [rfk [rret1 [HSw' [HWR [HWF HE'] ] ] ] ] ].
+      - specialize (HF _ _ HDec); destruct HF as [w'' [rfk [rret1 [HSw' [HWR [HWF HE']]]]]].
         destruct k as [| k]; [exists w'' rfk rret1; simpl wsat; tauto |].
         rewrite ->assoc, <- (assoc rfk) in HE'.
         exists w''. exists rfk (rd · rret1).
@@ -313,20 +313,20 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       - symmetry in EQw; assert (EQw' := extend_dist _ _ _ _ EQw HSw); assert (HSw' := extend_sub _ _ _ _ EQw HSw); symmetry in EQw'.
         edestruct (Hp (extend w2' w1)) as [HV [HS [HF HS'] ] ]; try eassumption;
         [eapply wsat_dist, HE; [eassumption | omega] |].
-        split; [clear HS HF | split; [clear HV HF | split; clear HV HS; [| clear HF ] ] ]; intros.
+        split; [clear HS HF | split; [clear HV HF | split; clear HV HS; [| clear HF ]]]; intros.
         + specialize (HV HV0); destruct HV as [w1'' [r' [HSw'' [Hφ HE'] ] ] ].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') r'; split; [assumption |].
           split; [| eapply wsat_dist, HE'; [eassumption | omega] ].
           eapply (met_morph_nonexp _ _ (φ _)), Hφ; [eassumption | omega].
-        + specialize (HS _ _ _ _ HDec HStep); destruct HS as [w1'' [r' [HSw'' [HWP HE'] ] ] ].
+        + specialize (HS _ _ _ _ HDec HStep); destruct HS as [w1'' [r' [HSw'' [HWP HE']]]].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') r'; split; [assumption |].
           split; [| eapply wsat_dist, HE'; [eassumption | omega] ].
           eapply (met_morph_nonexp _ _ (WP _ _)), HWP; [eassumption | omega].
-        + specialize (HF _ _ HDec); destruct HF as [w1'' [rfk [rret [HSw'' [HWR [HWF HE'] ] ] ] ] ].
+        + specialize (HF _ _ HDec); destruct HF as [w1'' [rfk [rret [HSw'' [HWR [HWF HE']]]]]].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') rfk rret; split; [assumption |].
@@ -343,13 +343,13 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
           exists (extend w1'' w2') r'; split; [assumption |].
           split; [| eapply wsat_dist, HE'; [eassumption | omega] ].
           eapply (met_morph_nonexp _ _ (φ _)), Hφ; [eassumption | omega].
-        + specialize (HS _ _ _ _ HDec HStep); destruct HS as [w1'' [r' [HSw'' [HWP HE'] ] ] ].
+        + specialize (HS _ _ _ _ HDec HStep); destruct HS as [w1'' [r' [HSw'' [HWP HE']]]].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') r'; split; [assumption |].
           split; [| eapply wsat_dist, HE'; [eassumption | omega] ].
           eapply (met_morph_nonexp _ _ (WP _ _)), HWP; [eassumption | omega].
-        + specialize (HF _ _ HDec); destruct HF as [w1'' [rfk [rret [HSw'' [HWR [HWF HE'] ] ] ] ] ].
+        + specialize (HF _ _ HDec); destruct HF as [w1'' [rfk [rret [HSw'' [HWR [HWF HE']]]]]].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') rfk rret; split; [assumption |].

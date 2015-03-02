@@ -47,7 +47,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         we need to show that plugging the value into the postcondition
         and context is nonexpansive. *)
     Program Definition plugV safe m Q Q' K :=
-      n[(fun v : value => ht safe m (Q v) (K [[` v]]) Q')].
+      n[(fun v : value => ht safe m (Q v) (fill K (`v)) Q' )].
     Next Obligation.
       intros v1 v2 EQv; unfold ht; eapply (met_morph_nonexp _ _ box).
       eapply (impl_dist (ComplBI := Props_BI)).
@@ -57,7 +57,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
     Qed.
 
     Lemma htBind P Q R K e safe m :
-      ht safe m P e Q ∧ all (plugV safe m Q R K) ⊑ ht safe m P (K [[ e ]]) R.
+      ht safe m P e Q ∧ all (plugV safe m Q R K) ⊑ ht safe m P (fill K e) R.
     Proof.
       intros wz nz rz [He HK] w HSw n r HLe _ HP.
       specialize (He _ HSw _ _ HLe (unit_min _ _) HP).
@@ -69,7 +69,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         clear He HE; specialize (HV HVal); destruct HV as [w'' [r' [HSw' [Hφ HE] ] ] ].
         (* Fold the goal back into a wp *)
         setoid_rewrite HSw'.
-        assert (HT : wp safe m (K [[ e ]]) R w'' (S k) r');
+        assert (HT : wp safe m (fill K e) R w'' (S k) r');
           [| rewrite ->unfold_wp in HT; eapply HT; [reflexivity | unfold lt; reflexivity | eassumption | eassumption] ].
         clear HE; specialize (HK (exist _ e HVal)).
         do 30 red in HK; unfold proj1_sig in HK.
@@ -357,7 +357,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         move: {HS HK Hs} (HS _ _ _ _ HK Hs) => [w'' [r' [HSw' [He' Hw'] ] ] ].
         exists w'' r'; split; [done | split; [exact: IH | done] ].
       move=> e' K HK.
-      move: {HF HK} (HF _ _ HK) => [w'' [rfk [rret [HSw' [Hk [He' Hw'] ] ] ] ] ].
+      move: {HF HK} (HF _ _ HK) => [w'' [rfk [rret [HSw' [Hk [He' Hw']]]]]].
       exists w'' rfk rret; split; [done | split; [exact: IH | split; [exact: IH | done] ] ].
     Qed.
     
