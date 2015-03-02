@@ -178,33 +178,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Notation " P @ k " := ((P : UPred ()) k tt) (at level 60, no associativity).
 
-  (* Simple view lemmas. *)
-
-  Lemma prefl {T} `{oT : preoType T} (t : T) : t ⊑ t. Proof. by reflexivity. Qed.
-  
-  Lemma ptrans {T} `{oT : preoType T} {t t''} (t' : T) (HL : t ⊑ t') (HU : t' ⊑ t'') : t ⊑ t''.
-  Proof. by transitivity t'. Qed.
-
-  Lemma lerefl (n : nat) : n <= n. Proof. by reflexivity. Qed.
-  
-  Lemma lt0 (n : nat) :  ~ n < 0. Proof. by omega. Qed.
-
-  Lemma propsMW {P w n r w'} (HSw : w ⊑ w') : P w n r -> P w' n r.
-  Proof. exact: (mu_mono _ _ P _ _ HSw). Qed.
-  
-  Lemma propsMNR {P w n r n' r'} (HLe : n' <= n) (HSr : r ⊑ r') : P w n r -> P w n' r'.
-  Proof. exact: (uni_pred _ _ _ _ _ HLe HSr). Qed.
-  
-  Lemma propsMN {P w n r n'} (HLe : n' <= n) : P w n r -> P w n' r.
-  Proof. apply: (propsMNR HLe (prefl r)). Qed.
-  
-  Lemma propsMR {P w n r r'} (HSr : r ⊑ r') : P w n r -> P w n r'.
-  Proof. exact: (propsMNR (lerefl n) HSr). Qed.
-  
-  Lemma propsM {P w n r w' n' r'} (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
-    P w n r -> P w' n' r'.
-  Proof. move=> HP; by apply: (propsMW HSw); exact: (propsMNR HLe HSr). Qed.
-
+  (* Simple view lemma. *)
   Lemma wsatM {σ m} {r : res} {w n k} (HLe : k <= n) :
     wsat σ m r w @ n -> wsat σ m r w @ k.
   Proof. by exact: (uni_pred _ _ _ _ _ HLe). Qed.
