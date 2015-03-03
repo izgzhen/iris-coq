@@ -429,37 +429,29 @@ Qed.
 Section Iteration.
   Context `{mT : metric T}.
 
-  Fixpoint iter n (f : T -> T) :=
-    match n with
-      | O => id
-      | S n => fun x => f (iter n f x)
-    end.
-
   (** Iteration of a non-expansive function again gives a non-expansive function. *)
-
   Program Definition itern n (f : T -n> T) : T -n> T :=
-    n[(iter n f)].
+    n[(nat_iter n f)].
   Next Obligation.
-    induction n; simpl; [apply _ | resp_set].
+    induction n; simpl.
+    - intros x y EQ. assumption.
+    - resp_set.
   Qed.
-
-  Lemma iter_plus f m n x : iter m f (iter n f x) = iter (m + n) f x.
-  Proof. induction m; simpl; [reflexivity | f_equal; assumption]. Qed.
 
   (** If a function is contractive then after sufficiently many iterations it
   maps all elements closer than 2⁻ⁿ. *)
   Lemma bounded_contractive_n f {HC : contractive f} n m x y (HLe : n <= m) :
-    iter m f x = n = iter m f y.
+    nat_iter m f x = n = nat_iter m f y.
   Proof.
     revert m x y HLe; induction n; intros; [apply dist_bound |].
     destruct m; [inversion HLe |]; simpl; apply HC, IHn; omega.
   Qed.
 
-  Global Instance cfix f {HC : contractive f} x : cchain (fun n => iter n f x).
+  Global Instance cfix f {HC : contractive f} x : cchain (fun n => nat_iter n f x).
   Proof.
     unfold cchain; intros.
-    cutrewrite (i = n + (i - n)); [rewrite <- iter_plus | omega].
-    cutrewrite (j = n + (j - n)); [rewrite <- iter_plus | omega].
+    cutrewrite (i = n + (i - n)); [rewrite -> nat_iter_plus | omega].
+    cutrewrite (j = n + (j - n)); [rewrite -> nat_iter_plus | omega].
     apply bounded_contractive_n; [assumption | auto].
   Qed.
 
@@ -470,7 +462,7 @@ Section Fixpoints.
 
   (** A fixed point of a contractive f is the limit of the iterations of the
   function. This seemingly depends on the starting point x. *)
-  Definition fixp f {HC : contractive f} x := compl (fun n => iter n f x).
+  Definition fixp f {HC : contractive f} x := compl (fun n => nat_iter n f x).
 
   (** Stating that the proposed fixed point is in fact a fixed point. *)
   Lemma fixp_eq f x {HC : contractive f} : fixp f x == f (fixp f x).
@@ -478,14 +470,14 @@ Section Fixpoints.
     pose (f' := contractive_nonexp _ HC).
     change (fixp f' x == f' (fixp f' x)).
     rewrite <- dist_refl; intros n; unfold fixp.
-    destruct (conv_cauchy (fun n => iter n f' x) n) as [m Hm].
+    destruct (conv_cauchy (fun n => nat_iter n f' x) n) as [m Hm].
     rewrite (Hm (S (max n m))), (Hm (max n m)) at 1; simpl; reflexivity || apply _.
   Qed.
 
-  Lemma fixp_iter f x i {HC : contractive f} : fixp f x == iter i f (fixp f x).
+  Lemma fixp_iter f x i {HC : contractive f} : fixp f x == nat_iter i f (fixp f x).
   Proof.
     pose (f' := contractive_nonexp _ HC).
-    change (fixp f' x == iter i f' (fixp f' x)).
+    change (fixp f' x == nat_iter i f' (fixp f' x)).
     induction i; [reflexivity |].
     etransitivity; [eapply fixp_eq|].
     rewrite IHi at 1. reflexivity.
@@ -495,8 +487,8 @@ Section Fixpoints.
   Lemma fixp_unique f x y {HC : contractive f} : fixp f x == fixp f y.
   Proof.
     rewrite <- dist_refl; intros n; unfold fixp.
-    destruct (conv_cauchy (fun n => iter n f x) n) as [mx Hmx].
-    destruct (conv_cauchy (fun n => iter n f y) n) as [my Hmy].
+    destruct (conv_cauchy (fun n => nat_iter n f x) n) as [mx Hmx].
+    destruct (conv_cauchy (fun n => nat_iter n f y) n) as [my Hmy].
     rewrite (Hmx (max n (max mx my))), Hmy;
       [ rewrite bounded_contractive_n | ..]; reflexivity || apply _.
   Qed.
@@ -506,8 +498,8 @@ Section Fixpoints.
     fixp f x = n = fixp f' x'.
   Proof.
     rewrite fixp_unique with (x := x') (y := x).
-    clear x'; unfold fixp; destruct (conv_cauchy (fun n => iter n f x) n) as [m Hm].
-    destruct (conv_cauchy (fun n => iter n f' x) n) as [k Hk].
+    clear x'; unfold fixp; destruct (conv_cauchy (fun n => nat_iter n f x) n) as [m Hm].
+    destruct (conv_cauchy (fun n => nat_iter n f' x) n) as [k Hk].
     rewrite (Hm (max m k)), (Hk (max m k)); try apply _; [].
     clear Hm Hk; induction (max m k); simpl; [reflexivity |].
     rewrite IHn0; apply HEq.
