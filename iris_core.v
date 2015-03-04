@@ -78,7 +78,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Lemma prefl {T} `{oT : preoType T} (t : T) : t ⊑ t. Proof. by reflexivity. Qed.
 
-  Lemma ptrans {T} `{oT : preoType T} {t t''} (t' : T) (HL : t ⊑ t') (HU : t' ⊑ t'') : t ⊑ t''.
+  Lemma ptrans {T} `{oT : preoType T} {t t' t''} (HL : t ⊑ t') (HU : t' ⊑ t'') : t ⊑ t''.
   Proof. by transitivity t'. Qed.
 
   Lemma lerefl (n : nat) : n <= n. Proof. by reflexivity. Qed.

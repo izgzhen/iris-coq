@@ -288,7 +288,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         move/(_ _ _ _ _ _ (prefl w') HLt' HD HW): VS => [w'' [r' [HSw' [Hei' HW']]]] {HLt' HD HW}.
         have HLe': k <= S k by omega.
         exists w'' (r' · rK). split; [done | split; [| by move/(wsatM HLe'): HW'; rewrite assoc]].
-        set HwSw'' := ptrans w' HSw HSw'.
+        set HwSw'' := ptrans HSw HSw'.
         apply: IH; [done | | done].
         apply: (FILL _ _ _ HwSw'' _ _ (lelt HLt) unit_min).
         exists r' rK. split; first by reflexivity.
@@ -309,8 +309,8 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       move: (atomic_step _ _ _ _ HA HStep) => HV {HA HStep}.
       move/(_ HV): Hv => [w''' [rei' [HSw'' [Hei' HW]]]].
       move: HW; rewrite assoc => HW.
-      set Hw'Sw''' := ptrans w'' HSw' HSw''.
-      set HwSw''' := ptrans w' HSw Hw'Sw'''.
+      set Hw'Sw''' := ptrans HSw' HSw''.
+      set HwSw''' := ptrans HSw Hw'Sw'''.
       exists w''' (rei' · rK). split; [done | split; [| done]].
       apply: IH; [done | | done].
       apply: (FILL _ _ _ HwSw''' _ _ (lelt HLt) unit_min).
