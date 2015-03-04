@@ -212,7 +212,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       by move=> /= ->.
     Qed.
 
-    Definition pure e := forall σ e' σ',
+    Definition pure e := ~ atomic e /\ forall σ e' σ',
       prim_step (e,σ) (e',σ') ->
       σ == σ'.
     
@@ -280,7 +280,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         /(propsMWN HSw HLe): He => [rei [rK [Hr [Hei HK]]]] {SPLIT}.
       move: HW; rewrite -Hr -assoc => HW {Hr r}.
       have HRed: reducible ei by exists σ (ei',σ').
-      case: (LANG ei HRed)=>[HA {VS} | HP {HT}] {LANG HRed}; last first.
+      case: (LANG ei HRed)=>[HA {VS} | [_ HP] {HT}] {LANG HRed}; last first.
       (* pure step *)
       { move/(_ _ _ _ HStep): HP => HP; move: HStep HW; rewrite HP => HStep HW {HP σ}.
         move/(_ _ _ _ HStep _ HSw _ _ HLe unit_min Hei): VS => VS {HStep HLe Hei}.
