@@ -83,6 +83,9 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Lemma lerefl (n : nat) : n <= n. Proof. by reflexivity. Qed.
 
+  Lemma lelt {n k} (H : k < n) : k <= n.
+  Proof. by omega. Qed.
+
   Lemma lt0 (n : nat) :  ~ n < 0. Proof. by omega. Qed.
 
   Lemma propsMW {P w n r w'} (HSw : w ⊑ w') : P w n r -> P w' n r.
@@ -97,6 +100,10 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Lemma propsMR {P w n r r'} (HSr : r ⊑ r') : P w n r -> P w n r'.
   Proof. exact: (propsMNR (lerefl n) HSr). Qed.
 
+  Lemma propsMWN {P w n r w' n'} (HSw : w ⊑ w') (HLe : n' <= n) :
+    P w n r -> P w' n' r.
+  Proof. move=> HP; by apply: (propsMW HSw); exact: (propsMNR HLe (prefl r)). Qed.
+  
   Lemma propsM {P w n r w' n' r'} (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
     P w n r -> P w' n' r'.
   Proof. move=> HP; by apply: (propsMW HSw); exact: (propsMNR HLe HSr). Qed.
@@ -239,11 +246,18 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Notation "t1 '===' t2" := (intEq t1 t2) (at level 70) : iris_scope.
 
+  Notation "P ↔ Q" := ((P → Q) ∧ (Q → P)) (at level 95, no associativity) : iris_scope.
+
+  Lemma biimpL {P Q : Props} {w n r} : (P ↔ Q) w n r -> (P → Q) w n r.
+  Proof. by move=>[L _]. Qed.
+
+  Lemma biimpR {P Q : Props} {w n r} : (P ↔ Q) w n r -> (Q → P) w n r.
+  Proof. by move=>[_ R]. Qed.
+
   Section IntEqProps.
 
     (* On Props, valid biimplication, valid internal equality, and external equality coincide. *)
 
-    Notation "P ↔ Q" := ((P → Q) ∧ (Q → P)) (at level 90, no associativity) : iris_scope.
 
     Remark valid_biimp_intEq {P Q} : valid(P ↔ Q) -> valid(P === Q).
     Proof.
