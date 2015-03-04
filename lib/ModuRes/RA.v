@@ -169,11 +169,8 @@ Section Order.
     exact: ra_op_valid2.
   Qed.
 
-  Lemma unit_min r : 1 ⊑ r.
-  Proof.
-    exists r. simpl.
-    now erewrite ra_op_unit2 by apply _.
-  Qed.
+  Lemma unit_min {r} : 1 ⊑ r.
+  Proof. exists r. exact: ra_op_unit2. Qed.
 
 End Order.
 

@@ -60,7 +60,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       ht safe m P e Q ∧ all (plugV safe m Q R K) ⊑ ht safe m P (fill K e) R.
     Proof.
       intros wz nz rz [He HK] w HSw n r HLe _ HP.
-      specialize (He _ HSw _ _ HLe (unit_min _) HP).
+      specialize (He _ HSw _ _ HLe unit_min HP).
       rewrite ->HSw, <- HLe in HK; clear wz nz HSw HLe HP.
       revert e w r He HK; induction n using wf_nat_ind; intros; rename H into IH.
       rewrite ->unfold_wp in He; rewrite unfold_wp.
@@ -117,10 +117,10 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       vs m m P P' ∧ ht safe m P' e Q' ∧ all (vsLift m m Q' Q) ⊑ ht safe m P e Q.
     Proof.
       intros wz nz rz [ [HP He] HQ] w HSw n r HLe _ Hp.
-      specialize (HP _ HSw _ _ HLe (unit_min _) Hp); rewrite unfold_wp.
+      specialize (HP _ HSw _ _ HLe unit_min Hp); rewrite unfold_wp.
       rewrite <- HLe, HSw in He, HQ; clear wz nz HSw HLe Hp.
       intros w'; intros. edestruct HP with (mf:=mf) as [w'' [r' [HSw' [Hp' HE'] ] ] ]; try eassumption; [now rewrite mask_union_idem |].
-      clear HP HE; rewrite ->HSw in He; specialize (He w'' HSw' _ r' HLt (unit_min _) Hp').
+      clear HP HE; rewrite ->HSw in He; specialize (He w'' HSw' _ r' HLt unit_min Hp').
       setoid_rewrite HSw'.
       assert (HT : wp safe m e Q w'' (S k) r');
         [| rewrite ->unfold_wp in HT; eapply HT; [reflexivity | apply le_n | eassumption | eassumption] ].
@@ -155,7 +155,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       vs m m' P P' ∧ ht safe m' P' e Q' ∧ all (vsLift m' m Q' Q) ⊑ ht safe m P e Q.
     Proof.
       intros wz nz rz [ [HP He] HQ] w HSw n r HLe _ Hp.
-      specialize (HP _ HSw _ _ HLe (unit_min _) Hp); rewrite unfold_wp.
+      specialize (HP _ HSw _ _ HLe unit_min Hp); rewrite unfold_wp.
       split; [intros HV; contradiction (atomic_not_value e) |].
       edestruct HP as [w'' [r' [HSw' [Hp' HE'] ] ] ]; try eassumption; [|]; clear HP.
       { intros j [Hmf Hmm']; apply (HD j); split; [assumption |].
@@ -163,7 +163,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       }
       split; [| split; [intros; subst; contradiction (fork_not_atomic K e') |] ].
       - intros; rewrite <- HLe, HSw in He, HQ; clear wz nz HSw HLe Hp.
-        clear HE; rewrite ->HSw0 in He; specialize (He w'' HSw' _ r' HLt (unit_min _) Hp').
+        clear HE; rewrite ->HSw0 in He; specialize (He w'' HSw' _ r' HLt unit_min Hp').
         unfold lt in HLt; rewrite ->HSw0, <- HLt in HQ; clear w n HSw0 HLt Hp'.
         rewrite ->unfold_wp in He; edestruct He as [_ [HS _] ];
           [reflexivity | apply le_n | rewrite ->HSub; eassumption | eassumption |].
@@ -196,7 +196,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
           rewrite ->fill_empty in HVal; now apply fork_not_value in HVal.
         + intros; left; assumption.
       - clear HQ; intros; rewrite <- HLe, HSw in He; clear HLe HSw.
-        specialize (He w'' (transitivity HSw0 HSw') _ r' HLt (unit_min _) Hp').
+        specialize (He w'' (transitivity HSw0 HSw') _ r' HLt unit_min Hp').
         rewrite ->unfold_wp in He; edestruct He as [_ [_ [_ HS'] ] ];
           [reflexivity | apply le_n | rewrite ->HSub; eassumption | eassumption |].
         auto.
@@ -237,7 +237,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       ht safe m P e Q ⊑ ht safe (m ∪ m') (P * R) e (lift_bin sc Q (umconst R)).
     Proof.
       intros w n rz He w' HSw n' r HLe _ [r1 [r2 [EQr [HP HLR] ] ] ].
-      specialize (He _ HSw _ _ HLe (unit_min _) HP).
+      specialize (He _ HSw _ _ HLe unit_min HP).
       clear P w n rz HSw HLe HP; rename w' into w; rename n' into n.
       apply wp_mask_weaken; [assumption |]; revert e w r1 r EQr HLR He.
       induction n using wf_nat_ind; intros; rename H into IH.
@@ -271,7 +271,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       ht safe m P e Q ⊑ ht safe (m ∪ m') (P * ▹R) e (lift_bin sc Q (umconst R)).
     Proof.
       intros w n rz He w' HSw n' r HLe _ [r1 [r2 [EQr [HP HLR] ] ] ].
-      specialize (He _ HSw _ _ HLe (unit_min _) HP).
+      specialize (He _ HSw _ _ HLe unit_min HP).
       clear rz n HLe; apply wp_mask_weaken; [assumption |]; rewrite ->unfold_wp.
       clear w HSw; rename n' into n; rename w' into w; intros w'; intros.
       split; [intros; exfalso | split; intros; [| split; intros; [exfalso| ] ] ].
@@ -317,7 +317,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
     Proof.
       intros w n rz He w' HSw n' r HLe _ [r1 [r2 [EQr [HP HLR] ] ] ].
       destruct n' as [| n']; [apply wpO |].
-      simpl in HP; specialize (He _ HSw _ _ (Le.le_Sn_le _ _ HLe) (unit_min _) HP).
+      simpl in HP; specialize (He _ HSw _ _ (Le.le_Sn_le _ _ HLe) unit_min HP).
       clear rz n HLe; rewrite ->unfold_wp.
       clear w HSw HP; rename n' into n; rename w' into w; intros w'; intros.
       split; [intros; contradiction (fork_not_value e) | split; intros; [exfalso | split; intros ] ].
@@ -345,7 +345,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
     Lemma htUnsafe {m P e Q} : ht true m P e Q ⊑ ht false m P e Q.
     Proof.
       move=> wz nz rz He w HSw n r HLe _ HP.
-      move: {He P wz nz rz HSw HLe HP} (He _ HSw _ _ HLe (unit_min _) HP).
+      move: {He P wz nz rz HSw HLe HP} (He _ HSw _ _ HLe unit_min HP).
       move: n e Q w r; elim/wf_nat_ind; move=> n IH e Q w r He.
       rewrite unfold_wp; move=> w' k rf mf σ HSw HLt HD HW.
       move/(_ _ HLt): IH => IH.
