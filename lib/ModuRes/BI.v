@@ -267,7 +267,7 @@ Section UPredBI.
   Global Instance impl_up_dist n : Proper (dist n ==> dist n ==> dist n) impl_up.
   Proof.
     intros P1 P2 EQP Q1 Q2 EQQ m r HLt; simpl.
-    split; intros; apply EQQ, H0, EQP; now eauto with arith.
+    split; intros; apply EQQ, H, EQP; now eauto with arith.
   Qed.
   Global Instance impl_up_ord : Proper (pord --> pord ++> pord) impl_up.
   Proof.
@@ -300,7 +300,7 @@ Section UPredBI.
   Global Instance si_up_dist n : Proper (dist n ==> dist n ==> dist n) si_up.
   Proof.
     intros P1 P2 EQP Q1 Q2 EQQ m r HLt; simpl.
-    split; intros; eapply EQQ, H0, EQP; now eauto with arith.
+    split; intros; eapply EQQ, H, EQP; now eauto with arith.
   Qed.
   Global Instance si_up_ord : Proper (pord --> pord ++> pord) si_up.
   Proof.
@@ -389,7 +389,7 @@ Section UPredBI.
     intros n r; split.
     - intros [r1 [r2 [EQr [_ HP]]]].
       eapply uni_pred, HP; [reflexivity|]. exists (r1). assumption.
-    - intros HP. exists (ra_unit res) r. split; [simpl; erewrite ra_op_unit by apply _; reflexivity |].
+    - intros HP. exists 1 r. split; [simpl; erewrite ra_op_unit by apply _; reflexivity |].
       simpl; unfold const; tauto.
   Qed.
   Next Obligation.
@@ -404,7 +404,7 @@ Section UPredBI.
     - intros HH u n r HP; apply HH; assumption.
   Qed.
   Next Obligation.
-    intros n r HA u; apply H0, HA.
+    intros n r HA u; apply H, HA.
   Qed.
   Next Obligation.
     split.
@@ -415,7 +415,7 @@ Section UPredBI.
     intros n t [t1 [t2 [EQt [[u HP] HQ]]]]; exists u t1 t2; tauto.
   Qed.
   Next Obligation.
-    intros n r [u HA]; exists u; apply H0, HA.
+    intros n r [u HA]; exists u; apply H, HA.
   Qed.
 
 End UPredBI.

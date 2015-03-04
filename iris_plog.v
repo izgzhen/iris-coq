@@ -105,7 +105,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Qed.
 
     (* When is a resource okay with a state? *)
-    Definition res_sat (r: res) σ: Prop := ↓r /\ fst r == ex_own state σ.
+    Definition res_sat (r: res) σ: Prop := ↓r /\ fst r == ex_own σ.
 
     Global Instance res_sat_dist : Proper (equiv ==> equiv ==> iff) res_sat.
     Proof.
@@ -161,12 +161,11 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Lemma wsat_valid {σ m r w k} :
       wsat σ m r w (S k) tt -> ↓r.
     Proof.
-      intros [rs [HD _] ]. destruct HD as [VAL _].
-      eapply ra_op_valid; [now apply _|]. eassumption.
+      move=> [rs [[Hv _] _]]; exact: ra_op_valid Hv.
     Qed.
 
     Lemma wsat_state {σ m u w k} :
-      wsat σ m u w (S k) tt -> fst u == ex_own state σ \/ fst u == 1.
+      wsat σ m u w (S k) tt -> fst u == ex_own σ \/ fst u == 1.
     Proof.
       move: u=>[ux ug]; move=>[rs [ [ Hv Heq] _] ] {m w k}; move: Hv Heq.
       move: (comp_map _)=> [rsx rsg] [Hv _] {rs}; move: Hv.

@@ -110,7 +110,7 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         destruct Hm12 as [Hm1 | Hm2]; [left; assumption | apply HMS, Hm2].
       }
       rewrite <- HLe, HSub in Hqr; specialize (Hqr _ HSw12); clear Hpq HE w HSub Hp.
-      edestruct (Hqr (S k) _ HLe0 (unit_min _ _) Hq w2) as [w3 [rR [HSw23 [Hr HEr] ] ] ];
+      edestruct (Hqr (S k) _ HLe0 (unit_min _) Hq w2) as [w3 [rR [HSw23 [Hr HEr] ] ] ];
         try (reflexivity || eassumption); [now auto with arith | |].
       { clear - HD HMS; intros j [Hmf Hm23]; apply (HD j); split; [assumption |].
         destruct Hm23 as [Hm2 | Hm3]; [apply HMS, Hm2 | right; assumption].

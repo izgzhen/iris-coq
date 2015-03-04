@@ -107,9 +107,9 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
           constructor; [|now constructor]. eassumption.
         * eapply wsat_equiv, HE'; try reflexivity; [symmetry; apply mask_emp_union |].
           rewrite comp_list_app. simpl comp_list. rewrite !comp_list_app. simpl comp_list.
-          rewrite (comm rfk). erewrite ra_op_unit by apply _.
-          rewrite (comm _ rfk). rewrite ->!assoc. eapply ra_op_proper;[now apply _ | |reflexivity]. unfold equiv.
-          rewrite <-assoc, (comm rret). rewrite comm. reflexivity.
+          rewrite (comm rfk). rewrite ra_op_unit.
+          rewrite (comm _ rfk). rewrite ->!assoc. apply: ra_op_proper; last by reflexivity.
+          rewrite -assoc comm (comm rret). reflexivity.
     Qed.
 
     Lemma adequacy_ht {safe m e P Q n k tp' σ σ' w r}
@@ -134,9 +134,9 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         wptp safe m w' (S k') tp' rs' (Q :: φs') /\ wsat σ' m (comp_list rs') w' @ S k'.
     Proof.
       destruct (steps_stepn _ _ HSN) as [n HSN']. clear HSN.
-      pose (r := (ex_own _ σ, 1:RL.res)).
+      pose (r := (ex_own σ, 1) : res).
       edestruct (adequacy_ht (w:=fdEmpty) (k:=k') (r:=r) HT HSN') as [w' [rs' [φs' [HW [HSWTP HWS]]]]]; clear HT HSN'.
-      - exists (ra_unit _); now rewrite ->ra_op_unit by apply _.
+      - exists 1; now rewrite ->ra_op_unit by apply _.
       - hnf. rewrite Plus.plus_comm. exists (fdEmpty (V:=res)). split.
         + unfold r, comp_map. simpl. rewrite ra_op_unit2. split; last reflexivity.
           unfold ra_valid. simpl. split; [|eapply ra_valid_unit; now apply _]. exact I.
@@ -267,34 +267,34 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       split; [| split; [| done]]; first last.
       (* e forks *)
       { move=> e' K HDec {LANG FILL HT VS}; rewrite HDec {HDec} in He.
-        move/(SPLIT _ _ _ (prefl w) _ _ (lerefl n) (unit_min _ r))
+        move/(SPLIT _ _ _ (prefl w) _ _ (lerefl n) (unit_min r))
           /(propsMWN HSw (lelt HLt)): He => [re' [rK [Hr [He' HK]]]] {SPLIT}.
-        move/(FORK _ _ HSw _ _ (lelt HLt) (unit_min _ re')): He' => He' {FORK}.
+        move/(FORK _ _ HSw _ _ (lelt HLt) (unit_min re')): He' => He' {FORK}.
         exists w' re' rK. split; [by reflexivity | split; [exact: IH | split; [exact: IH |]]].
         move: HW; rewrite -Hr. exact: wsatM. }
       (* e steps *)
       (* both forthcoming cases work at step-indices S k and (for the IH) k. *)
       have HLt': k < S k by done.
       move=> σ' ei ei' K HDec HStep; rewrite HDec {HDec} in He.
-      move/(SPLIT _ _ _ (prefl w) _ _ (lerefl n) (unit_min _ r))
+      move/(SPLIT _ _ _ (prefl w) _ _ (lerefl n) (unit_min r))
         /(propsMWN HSw HLe): He => [rei [rK [Hr [Hei HK]]]] {SPLIT}.
       move: HW; rewrite -Hr -assoc => HW {Hr r}.
       have HRed: reducible ei by exists σ (ei',σ').
       case: (LANG ei HRed)=>[HA {VS} | HP {HT}] {LANG HRed}; last first.
       (* pure step *)
       { move/(_ _ _ _ HStep): HP => HP; move: HStep HW; rewrite HP => HStep HW {HP σ}.
-        move/(_ _ _ _ HStep _ HSw _ _ HLe (unit_min _ rei) Hei): VS => VS {HStep HLe Hei}.
+        move/(_ _ _ _ HStep _ HSw _ _ HLe (unit_min rei) Hei): VS => VS {HStep HLe Hei}.
         move: HD; rewrite -{1}(mask_union_idem m) => HD.
         move/(_ _ _ _ _ _ (prefl w') HLt' HD HW): VS => [w'' [r' [HSw' [Hei' HW']]]] {HLt' HD HW}.
         have HLe': k <= S k by omega.
         exists w'' (r' · rK). split; [done | split; [| by move/(wsatM HLe'): HW'; rewrite assoc]].
         set HwSw'' := ptrans w' HSw HSw'.
         apply: IH; [done | | done].
-        apply: (FILL _ _ _ HwSw'' _ _ (lelt HLt) (unit_min _ (r' · rK))).
+        apply: (FILL _ _ _ HwSw'' _ _ (lelt HLt) (unit_min (r' · rK))).
         exists r' rK. split; first by reflexivity.
         split; [ exact: propsMN Hei' | exact: propsMWN HK ]. }
       (* atomic step *)
-      move/(_ _ HA _ HSw (S k) _ HLe (unit_min _ rei) Hei): HT => {Hei HLe} Hei.
+      move/(_ _ HA _ HSw (S k) _ HLe (unit_min rei) Hei): HT => {Hei HLe} Hei.
       (* unroll wp(ei,E)—step case—to get wp(ei',E) *)
       move: Hei; rewrite {1}unfold_wp => Hei.
       move/(_ _ _ _ _ _ (prefl w') HLt' HD HW): Hei => [_ [HS _]] {HLt' HW}.
@@ -313,7 +313,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       set HwSw''' := ptrans w' HSw Hw'Sw'''.
       exists w''' (rei' · rK). split; [done | split; [| done]].
       apply: IH; [done | | done].
-      apply: (FILL _ _ _ HwSw''' _ _ (lelt HLt) (unit_min _ (rei' · rK))).
+      apply: (FILL _ _ _ HwSw''' _ _ (lelt HLt) (unit_min (rei' · rK))).
       exists rei' rK. split; [by reflexivity | split; [done |]].
       have HLe: S k' <= S (S k') by omega.
       exact: propsMWN HK.
@@ -332,7 +332,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         (Hu : r ⊑ u) :
       σ == σ'.
     Proof.
-      move: (ra_valid_ord _ _ _ Hu (wsat_valid HW)) => Hv.
+      move: (ra_valid_ord _ _ Hu (wsat_valid HW)) => Hv.
       move/(ownS_state Hv): Hr; move=>{n}; move/wsat_state: HW; move=>{m w k Hv}.
       move: Hu=>[[r'x r'g] [Hx Hg]]; move: Hx Hg.
       move: u=> [ux ug]; move: r=> [rx rg].
@@ -392,7 +392,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       (* … after building P * ownS σ' *)
       move: HPS HLe HLt; case: n=>[| n'] HPS HLe HLt; first by exfalso; exact: lt0.
       move: HPS => [rP [rS [Hr [HP [rSg HrS]]]]]; rewrite/= in HP.
-      pose (rS' := (ex_own state σ', 1:RL.res)).
+      pose (rS' := (ex_own σ', 1) : res).
       pose (r' := rP · rS').
       have HPS: (P * ownS σ') w2 k r'.
       { have {HLt} HLt: k <= n' by omega.
@@ -401,7 +401,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         exists rP rS'. split; [by reflexivity | split; [done | done]]. }
       move/(_ (e',σ') _ HSw1 _ rz (lerefl nz) (prefl rz) He'): {He'} Hfrom => He'.
       have {HLe HLt} HLe: k <= nz by omega.
-      move/(_ _ HSw2 _ r' HLe (unit_min _ _) HPS): He' => He' {HLe HPS}.
+      move/(_ _ HSw2 _ r' HLe (unit_min _) HPS): He' => He' {HLe HPS}.
 
       (* wsat σ' r' follows from wsat σ r (by the construction of r'). *)
       exists w2 r'. split; [by reflexivity | split; [done |]].
@@ -411,7 +411,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       exists rs. split; last done.
       clear - Hr HrS Hstate; move: Hstate=>[Hv _]; move: Hv.
       rewrite -Hr -HrS /r'/= => {Hr HrS r' rS}.
-      rewrite (* ((P(gσ))f)s *) [rP · _]comm -3!assoc =>/ra_opV2 Hv {rSg}.  (* ((σP)f)s *)
+      rewrite (* ((P(gσ))f)s *) [rP · _]comm -3!assoc =>/ra_op_valid2 Hv {rSg}.  (* ((σP)f)s *)
       rewrite (* ((Pσ')f)s *) [rP · _]comm -2!assoc. (* σ'(P(fs)) *)
       split; first by exact: (ex_fpu Hv).
       rewrite/rS' ra_op_prod_fst.

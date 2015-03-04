@@ -20,7 +20,7 @@ Module Type IRIS_RES (RL : RA_T) (C : CORE_LANG) <: RA_T.
   Instance res_ra   : RA res := _.
 
   (* The order on (ra_pos res) is inferred correctly, but this one is not *)
-  Instance res_pord: preoType res := ra_preo res.
+  Instance res_pord: preoType res := ra_preo (T := res).
 End IRIS_RES.
 Module IrisRes (RL : RA_T) (C : CORE_LANG) <: IRIS_RES RL C.
   Include IRIS_RES RL C. (* I cannot believe Coq lets me do this... *)
@@ -114,17 +114,17 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     (* PDS: These should probably be split into RA-level and resource-level lemmas. *)
 
-    Lemma ex_frame {σ f} : ↓((ex_own state σ,1:RL.res)·f) -> fst f == 1.
+    Lemma ex_frame {σ rf} : ↓((ex_own σ,1) · rf) -> fst rf == 1.
     Proof.
-      move: f=>[fx fg]; rewrite/ra_op/res_op/ra_op_prod/fst.
+      move: rf=>[fx fg]; rewrite/ra_op/res_op/ra_op_prod/fst.
       move=>[Hx _]; move: Hx {fg}; rewrite/ra_op/ra_op_ex.
       by case: fx.
     Qed.
 
-    Lemma ex_fpu {σ σ' u} : ↓((ex_own state σ, 1:RL.res) · u) -> ↓((ex_own state σ', 1:RL.res) · u).
+    Lemma ex_fpu {σ σ' rf} : ↓((ex_own σ, 1) · rf) -> ↓((ex_own σ', 1) · rf).
     Proof.
       move=> Hv; move: (ex_frame Hv)=> Hxu; move: Hxu Hv.
-      move: u=>[ux ug]; rewrite/fst; move=>->.
+      move: rf=>[fx fg]; rewrite/fst; move=>->.
       by rewrite /ra_op/res_op/ra_op_prod ra_op_unit.
     Qed.
 
@@ -374,7 +374,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     (** Proper physical state: ownership of the machine state **)
     Program Definition ownS : state -n> Props :=
-      n[(fun s => ownR (ex_own _ s, 1))].
+      n[(fun σ => ownR (ex_own σ, 1))].
     Next Obligation.
       intros r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
       rewrite EQr. reflexivity.
@@ -384,7 +384,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Proof. exact ownR_timeless. Qed.
 
     Lemma ownS_state {σ w n r} (Hv : ↓r) :
-      (ownS σ) w n r -> fst r == ex_own state σ.
+      (ownS σ) w n r -> fst r == ex_own σ.
     Proof.
       move: Hv; move: r => [rx _] [Hv _] [ [x _] /= [Hr _] ].
       move: Hv; rewrite -Hr {Hr}.
@@ -396,7 +396,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       n[(fun r : RL.res => ownR (1, r))].
     Next Obligation.
       intros r1 r2 EQr. destruct n as [| n]; [apply dist_bound |eapply dist_refl].
-      simpl in EQr. intros w m t. simpl. change ( (ex_unit state, r1) ⊑ t <->  (ex_unit state, r2) ⊑ t). rewrite EQr. reflexivity.
+      simpl in EQr. intros w m t. simpl. change ( (ex_unit, r1) ⊑ t <->  (ex_unit, r2) ⊑ t). rewrite EQr. reflexivity.
     Qed.
 
     Lemma ownL_timeless {r : RL.res} : valid(timeless(ownL r)).
