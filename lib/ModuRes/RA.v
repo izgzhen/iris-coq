@@ -15,7 +15,7 @@ Class Commutative {T} `{eqT : Setoid T} (op : T -> T -> T) :=
   comm  : forall t1 t2, op t1 t2 == op t2 t1.
 
 Section Definitions.
-  Context (T : Type) `{eqT : Setoid T}.
+  Context {T : Type} `{eqT : Setoid T}.
 
   Class RA_unit := ra_unit : T.
   Class RA_op   := ra_op : T -> T -> T.
@@ -25,22 +25,16 @@ Section Definitions.
         ra_op_proper       :> Proper (equiv ==> equiv ==> equiv) ra_op;
         ra_op_assoc        :> Associative ra_op;
         ra_op_comm         :> Commutative ra_op;
-        ra_op_unit t       : ra_op ra_unit t == t;
+        ra_op_unit {t}     : ra_op ra_unit t == t;
         ra_valid_proper    :> Proper (equiv ==> iff) ra_valid;
         ra_valid_unit      : ra_valid ra_unit;
-        ra_op_valid t1 t2  : ra_valid (ra_op t1 t2) -> ra_valid t1
+        ra_op_valid {t1 t2}: ra_valid (ra_op t1 t2) -> ra_valid t1
       }.
 End Definitions.
-Arguments ra_unit {_ _}.
-Arguments ra_op {_ _} _ _.
-Arguments ra_valid {_ _} _.
-Arguments ra_op_proper {_ _ _ _ _ _} _ _ _ _ _ _.
-Arguments ra_op_assoc {_ _ _ _ _ _} _ _ _.
-Arguments ra_op_comm {_ _ _ _ _ _} _ _.
-Arguments ra_op_unit {_ _ _ _ _ _} {_}.
-Arguments ra_valid_proper {_ _ _ _ _ _} _ _ _.
-Arguments ra_valid_unit {_ _ _ _ _ _}.
-Arguments ra_op_valid {_ _ _ _ _ _} {_ _} _.
+Arguments RA_unit : clear implicits.
+Arguments RA_op : clear implicits.
+Arguments RA_valid : clear implicits.
+Arguments RA T {_ _ _ _}: clear implicits.
 
 Delimit Scope ra_scope with ra.
 Local Open Scope ra_scope.
@@ -81,7 +75,7 @@ End RAs.
 
 (* RAs with cartesian products of carriers. *)
 Section Products.
-  Context {S T} `{raS : RA S, raT : RA T}.
+  Context {S T: Type} `{raS : RA S, raT : RA T}.
 
   Global Instance ra_unit_prod : RA_unit (S * T) := (1, 1).
   Global Instance ra_op_prod : RA_op (S * T) :=
