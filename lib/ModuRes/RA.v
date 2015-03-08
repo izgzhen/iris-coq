@@ -171,14 +171,14 @@ End Order.
 Section Exclusive.
   Context (T: Type) `{eqT : Setoid T}.
 
-  Inductive ra_res_ex: Type :=
-  | ex_own: T -> ra_res_ex
-  | ex_unit: ra_res_ex
-  | ex_bot: ra_res_ex.
+  Inductive ex: Type :=
+  | ex_own: T -> ex
+  | ex_unit: ex
+  | ex_bot: ex.
 
-  Implicit Types (r s : ra_res_ex).
+  Implicit Types (r s : ex).
 
-  Definition ra_res_ex_eq r s: Prop :=
+  Definition ex_eq r s: Prop :=
     match r, s with
       | ex_own t1, ex_own t2 => t1 == t2
       | ex_unit, ex_unit => True
@@ -186,7 +186,7 @@ Section Exclusive.
       | _, _ => False
     end.
 
-  Global Instance ra_eq_equiv : Equivalence ra_res_ex_eq.
+  Global Instance ra_equiv_ex : Equivalence ex_eq.
   Proof.
     split.
     - intros [t| |]; simpl; now auto.
@@ -195,8 +195,8 @@ Section Exclusive.
       + intros ? ?. etransitivity; eassumption.
   Qed.
 
-  Global Program Instance ra_type_ex : Setoid ra_res_ex :=
-    mkType ra_res_ex_eq.
+  Global Program Instance ra_type_ex : Setoid ex :=
+    mkType ex_eq.
 
   Global Instance ra_unit_ex : RA_unit _ := ex_unit.
   Global Instance ra_op_ex : RA_op _ :=
@@ -213,7 +213,7 @@ Section Exclusive.
                | _      => True
              end.
 
-  Global Instance ra_ex : RA ra_res_ex.
+  Global Instance ra_ex : RA ex.
   Proof.
     split.
     - intros [t1| |] [t2| |] Heqt [t'1| |] [t'2| |] Heqt'; simpl; now auto.

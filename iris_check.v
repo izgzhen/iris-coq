@@ -166,7 +166,7 @@ Module StupidLang : CORE_LANG.
 End StupidLang.
 
 Module TrivialRA : RA_T.
-  Definition res := ra_res_ex unit.
+  Definition res := ex unit.
   Instance res_type : Setoid res := _.
   Instance res_op   : RA_op res := _.
   Instance res_unit : RA_unit res := _.

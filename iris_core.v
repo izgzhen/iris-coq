@@ -5,14 +5,13 @@ Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finma
 Set Bullet Behavior "Strict Subproofs".
 
 (* Because Coq has a restriction of how to apply functors, we have to hack a bit here.
-   PDS: "a bit"?! Hahaha.
    The hack that involves least work, is to duplicate the definition of our final
    resource type, as a module type (which is how we can use it, circumventing the
    Coq restrictions) and as a module (to show the type can be instantiated). *)
 Module Type IRIS_RES (RL : RA_T) (C : CORE_LANG) <: RA_T.
   Instance state_type : Setoid C.state := discreteType.
 
-  Definition res := (ra_res_ex C.state * RL.res)%type.
+  Definition res := (ex C.state * RL.res)%type.
   Instance res_type : Setoid res := _.
   Instance res_op   : RA_op res := _.
   Instance res_unit : RA_unit res := _.
