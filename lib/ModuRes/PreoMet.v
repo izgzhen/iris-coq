@@ -1,6 +1,6 @@
 Require Export Predom MetricCore.
 
-Generalizable Variables T U V W.
+Generalizable Variables T U V W X Y.
 
 Section PreCBUmet.
   Context (T : Type) `{cmT : cmetric T}.
@@ -385,9 +385,38 @@ Section Extras.
   Context `{pT : pcmType T} `{pU : pcmType U} `{pV : pcmType V} `{pW : pcmType W}.
 
   Definition pcmprod_map (f : T -m> U) (g : V -m> W) := 〈f ∘ π₁, g ∘ π₂〉.
+    
+  Global Instance pcmprod_map_resp : Proper (equiv ==> equiv ==> equiv) pcmprod_map.
+  Proof. intros f g H1 h j H2 [t1 v1]; simpl; now rewrite H1, H2. Qed.
+  
+  Global Instance pcmprod_map_nonexp n : Proper (dist n ==> dist n ==> dist n) pcmprod_map.
+  Proof.
+    intros f g H1 h j H2 [t1 v1]; split; simpl; [ rewrite H1 | rewrite H2]; reflexivity.
+  Qed.
+  
+  Global Instance pcmprod_map_monic : Proper (pord ==> pord ==> pord) pcmprod_map.
+  Proof.
+    intros f g H1 h j H2 [t1 v1]; split; simpl; [ rewrite H1 | rewrite H2]; reflexivity.
+  Qed.
+  
   Program Definition pcmconst u : T -m> U := mkMUMorph (umconst u) _.
-
+  
 End Extras.
+  
+Section Instances.
+  Local Open Scope pumet_scope.
+  Local Obligation Tactic := intros; apply _ || mono_resp || program_simpl.
+  Context `{pT : pcmType T} `{pU : pcmType U} `{pV : pcmType V} `{pW : pcmType W}.
+
+  Lemma pcmprod_map_id : pcmprod_map (pid T) (pid U) == pid _. 
+  Proof. simpl. repeat intro; split; reflexivity. Qed.
+
+  Context `{pX : pcmType Y} `{pY : pcmType X} {f : T -m> U} {g : V -m> W} {h : X -m> T} {j : Y -m> V}.
+  
+  Lemma pcmprod_map_comp  :
+  ((pcmprod_map f g) ∘ (pcmprod_map h j))%pm == (pcmprod_map (f ∘ h) (g ∘ j))%pm.
+  Proof. intros [x y]; reflexivity. Qed.
+End Instances.
 
 Notation "f × g" := (pcmprod_map f g) (at level 40, left associativity) : pumet_scope.
 
@@ -619,3 +648,20 @@ Section ExtOrdDiscrete.
   Qed.
 
 End ExtOrdDiscrete.
+
+Section ExtProd.
+  Context T U `{ET : extensible T} `{EU : extensible U}. 
+
+  Global Instance prod_extensible : extensible (T * U) := mkExtend (fun s s' => pair (extend (fst s) (fst s')) (extend (snd s) (snd s'))).
+  Proof. 
+    - intros n [v1 v2] [vd1 vd2] [ve1 ve2] [E1 E2] [S1 S2]. 
+      split.
+      + eapply (extend_dist n _ _ _ E1 S1). 
+      + eapply (extend_dist n _ _ _ E2 S2). 
+    - intros n [v1 v2] [vd1 vd2] [ve1 ve2] [E1 E2] [S1 S2]. 
+      split.
+      + eapply (extend_sub n _ _ _ E1 S1).
+      + eapply (extend_sub n _ _ _ E2 S2).
+  Qed.
+
+End ExtProd.
