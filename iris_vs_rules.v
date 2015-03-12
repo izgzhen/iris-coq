@@ -100,55 +100,85 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         subst rri. rewrite <-HR, assoc. reflexivity.
     Qed.
 
-    Lemma vsTrans P Q R m1 m2 m3 (HMS : m2 ⊆ m1 ∪ m3) :
-      vs m1 m2 P Q ∧ vs m2 m3 Q R ⊑ vs m1 m3 P R.
+    Lemma pvsTrans P m1 m2 m3 (HMS : m2 ⊆ m1 ∪ m3) :
+      pvs m1 m2 (pvs m2 m3 P) ⊑ pvs m1 m3 P.
     Proof.
-      intros w' n r1 [Hpq Hqr] w HSub; specialize (Hpq _ HSub); rewrite ->HSub in Hqr; clear w' HSub.
-      intros np rp HLe HS Hp w1; intros; specialize (Hpq _ _ HLe HS Hp).
-      edestruct Hpq as [w2 [rq [HSw12 [Hq HEq] ] ] ]; try eassumption; [|].
+      intros w0 n r0 HP w1 rf mf σ k HSub Hnk HD HSat.
+      destruct (HP w1 rf mf σ _ HSub Hnk) as (w2 & r2 & HSub2 & HP2 & HSat2); [ | by auto | ].
       { clear - HD HMS; intros j [Hmf Hm12]; apply (HD j); split; [assumption |].
         destruct Hm12 as [Hm1 | Hm2]; [left; assumption | apply HMS, Hm2].
       }
-      rewrite <- HLe, HSub in Hqr; specialize (Hqr _ HSw12); clear Hpq HE w HSub Hp.
-      edestruct (Hqr (S k) _ HLe0 unit_min Hq w2) as [w3 [rR [HSw23 [Hr HEr] ] ] ];
-        try (reflexivity || eassumption); [now auto with arith | |].
+      destruct (HP2 w2 rf mf σ k) as (w3 & r3 & HSub3 & HP3 & HSat3); 
+        [ reflexivity | omega | | auto | ].
       { clear - HD HMS; intros j [Hmf Hm23]; apply (HD j); split; [assumption |].
         destruct Hm23 as [Hm2 | Hm3]; [apply HMS, Hm2 | right; assumption].
       }
-      clear HEq Hq HS.
-      setoid_rewrite HSw12; eauto 8.
+      exists w3 r3; split; [ by rewrite -> HSub2 | by split ].
+    Qed.
+    
+    Lemma pvsEnt P m1 m2 (HMS : m2 ⊆ m1) :
+      P ⊑ pvs m1 m2 P.
+    Proof.
+      intros w0 n r0 HP w1 rf mf σ k HSub Hnk HD HSat.
+      exists w1 r0; repeat split; [ reflexivity | eapply propsMWN; eauto | ].
+      destruct HSat as (s & HSat & H).
+      exists s; split; first by auto.
+      move => i [/HMS|] IN; eapply H; [by left | by right].
+    Qed.
+    
+    Lemma pvsImpl P Q m1 m2 :
+      □ (P → Q) ∧ pvs m1 m2 P ⊑ pvs m1 m2 Q.
+    Proof.
+      move => w0 n r0 [HPQ HvsP].
+      intros w1 rf mf σ k HSub1 Hlt HD HSat.
+      move/HvsP: HSat => [|||w2 [r2 [HSub2 [/HPQ HQ HSat]]]]; try eassumption; []. 
+      do 2!eexists; split; [exact HSub2|split; [|eassumption]].
+      eapply HQ; [by rewrite -> HSub1 | omega | exact unit_min].
+    Qed.
+      
+    Lemma vsTrans P Q R m1 m2 m3 (HMS : m2 ⊆ m1 ∪ m3) :
+      vs m1 m2 P Q ∧ vs m2 m3 Q R ⊑ vs m1 m3 P R.
+    Proof.
+      intros w0 n0 r0 [HPQ HQR] w1 HSub n1 r1 Hlt _ HP.
+      eapply pvsTrans; eauto.
+      eapply pvsImpl; split; first eapply propsMWN; 
+      [eassumption | eassumption | exact HQR | ].
+      eapply HPQ; by eauto using unit_min.
     Qed.
 
     Lemma vsEnt P Q m :
       □(P → Q) ⊑ vs m m P Q.
     Proof.
-      intros w' n r1 Himp w HSub; rewrite ->HSub in Himp; clear w' HSub.
-      intros np rp HLe HS Hp w1; intros.
-      exists w1 rp; split; [reflexivity | split; [| assumption ] ].
-      eapply Himp; [assumption | now eauto with arith | now apply unit_min | ].
-      unfold lt in HLe0; rewrite ->HLe0, <- HSub; assumption.
+      move => w0 n r0 HPQ w1 HSub n1 r1 Hlt _ /(HPQ _ HSub _ _ Hlt) HQ.
+      eapply pvsEnt, HQ; [reflexivity | exact unit_min].
     Qed.
-
+    
+    Lemma pvsFrame P Q m1 m2 mf (HDisj : mf # m1 ∪ m2) :
+      pvs m1 m2 P * Q ⊑ pvs (m1 ∪ mf) (m2 ∪ mf) (P * Q).
+    Proof.
+      move => w0 n r0 [rp [rq [HEr [HvsP HQ]]]].
+      move => w1 rf mf1 σ k HSub1 Hlt HD HSat.
+      edestruct (HvsP w1 (rq · rf) (mf ∪ mf1)) as (w2 & r2 & HSub2 & HP & HSat2); eauto.
+      - (* disjointness of masks: possible lemma *)
+        clear - HD HDisj; intros i [ [Hmf | Hmf] [Hm1|Hm2]]; by firstorder.
+      - rewrite assoc HEr. 
+        eapply wsat_equiv; last eassumption; [|reflexivity|reflexivity].
+        unfold mcup in *; split; intros i; tauto.
+      - exists w2 (r2 · rq); split; [eassumption|split; [|]].
+        do 2!eexists; split; [reflexivity | split; [assumption|]].
+        * eapply propsMWN; last eassumption; [by rewrite <- HSub2| omega].
+        * setoid_rewrite <- ra_op_assoc.
+          eapply wsat_equiv; last eassumption; [|reflexivity|reflexivity].
+          unfold mcup in *; split; intros i; tauto.
+    Qed.          
+          
     Lemma vsFrame P Q R m1 m2 mf (HDisj : mf # m1 ∪ m2) :
       vs m1 m2 P Q ⊑ vs (m1 ∪ mf) (m2 ∪ mf) (P * R) (Q * R).
     Proof.
-      intros w' n r1 HVS w HSub; specialize (HVS _ HSub); clear w' r1 HSub.
-      intros np rpr HLe _ [rp [rr [HR [Hp Hr] ] ] ] w'; intros.
-      assert (HS : ra_unit _ ⊑ rp) by (eapply unit_min).
-      specialize (HVS _ _ HLe HS Hp w' (rr · rf) (mf ∪ mf0) σ k); clear HS.
-      destruct HVS as [w'' [rq [HSub' [Hq HEq] ] ] ]; try assumption; [| |].
-      - (* disjointness of masks: possible lemma *)
-        clear - HD HDisj; intros i [ [Hmf | Hmf] Hm12]; [eapply HDisj; now eauto |].
-        unfold mcup in *; eapply HD; split; [eassumption | tauto].
-      - rewrite ->assoc, HR; eapply wsat_equiv, HE; try reflexivity; [].
-        clear; intros i; unfold mcup; tauto.
-      - rewrite ->assoc in HEq.
-        exists w'' (rq · rr).
-        split; [assumption | split].
-        + unfold lt in HLe0; rewrite ->HSub, HSub', <- HLe0 in Hr; exists rq rr.
-          split; now auto.
-        + eapply wsat_equiv, HEq; try reflexivity; [].
-          clear; intros i; unfold mcup; tauto.
+      intros w0 n0 r0 HVS w1 HSub n1 r1 Hlt _ [r21 [r22 [HEr [HP HR]]]].
+      eapply pvsFrame; first assumption. 
+      eapply HVS in HP; eauto using unit_min; [].
+      do 2!eexists; split; last split; eauto.
     Qed.
 
     Instance LP_res (P : RL.res -> Prop) : LimitPreserving P.
