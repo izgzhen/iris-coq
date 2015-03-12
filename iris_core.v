@@ -100,13 +100,17 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Lemma propsMR {P w n r r'} (HSr : r ⊑ r') : P w n r -> P w n r'.
   Proof. exact: (propsMNR (lerefl n) HSr). Qed.
 
-  Lemma propsMWN {P w n r w' n'} (HSw : w ⊑ w') (HLe : n' <= n) :
-    P w n r -> P w' n' r.
-  Proof. move=> HP; by apply: (propsMW HSw); exact: (propsMNR HLe (prefl r)). Qed.
-  
   Lemma propsM {P w n r w' n' r'} (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
     P w n r -> P w' n' r'.
   Proof. move=> HP; by apply: (propsMW HSw); exact: (propsMNR HLe HSr). Qed.
+
+  Lemma propsMWR {P w n r w' r'} (HLe : w ⊑ w') (HSr : r ⊑ r') : P w n r -> P w' n r'.
+  Proof. move=> HP; eapply propsM; (eassumption || reflexivity). Qed.
+
+  Lemma propsMWN {P w n r w' n'} (HSw : w ⊑ w') (HLe : n' <= n) :
+    P w n r -> P w' n' r.
+  Proof. move=> HP; eapply propsM; (eassumption || reflexivity). Qed.
+
 
   (** And now we're ready to build the IRIS-specific connectives! *)
 
