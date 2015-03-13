@@ -180,7 +180,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   (* Simple view lemma. *)
   Lemma wsatM {σ m} {r : res} {w n k} (HLe : k <= n) :
     wsat σ m r w @ n -> wsat σ m r w @ k.
-  Proof. by exact: (uni_pred _ _ _ _ _ HLe). Qed.
+  Proof. by exact: (uni_pred HLe). Qed.
 
   Section ViewShifts.
     Local Obligation Tactic := intros.

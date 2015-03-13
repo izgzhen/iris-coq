@@ -136,6 +136,8 @@ Section Definitions.
 End Definitions.
 
 Global Arguments UPred T {pT}.
+Arguments uni_pred {T pT u} {n m t1 t2} _ _ _.
+
 Notation "▹ p" := (later_up p) (at level 20) : upred_scope.
 
 Section Products.

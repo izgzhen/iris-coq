@@ -86,7 +86,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Proof. exact: (mu_mono P HSw). Qed.
 
   Lemma propsMNR {P w n r n' r'} (HLe : n' <= n) (HSr : r ⊑ r') : P w n r -> P w n' r'.
-  Proof. exact: (uni_pred _ _ _ _ _ HLe HSr). Qed.
+  Proof. exact: (uni_pred HLe HSr). Qed.
 
   Lemma propsMN {P w n r n'} (HLe : n' <= n) : P w n r -> P w n' r.
   Proof. apply: (propsMNR HLe (prefl r)). Qed.
