@@ -363,7 +363,7 @@ Section FinDom.
         eapply IHfs, SS_tail; eassumption.
     Qed.
 
-    Lemma fdRemove_neq t t' f (Hneq : t <> t') : fdRemove t f t' = f t'.
+    Lemma fdRemove_neq {t t'} f (Hneq : t <> t') : fdRemove t f t' = f t'.
     Proof.
       destruct f as [fs fP]; unfold findom_f; simpl; induction fs; [reflexivity |].
       destruct a as [k v]; assert (HT := compat_compare t k); simpl; destruct (comp t k); [| reflexivity |].

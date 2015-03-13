@@ -54,7 +54,7 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
           destruct Hm as [| Hm]; [contradiction |]; specialize (HD j); simpl in HD.
           unfold mask_sing, mask_set, mcup in HD; destruct (Peano_dec.eq_nat_dec i j);
           [subst j; contradiction HD; tauto | clear HD].
-          rewrite fdLookup_in; setoid_rewrite (fdRemove_neq _ _ _ n0); rewrite <- fdLookup_in; unfold mcup in HM; now auto.
+          rewrite fdLookup_in; setoid_rewrite (fdRemove_neq _ n0); rewrite <- fdLookup_in; unfold mcup in HM; now auto.
       - rewrite <- fdLookup_notin_strong in HLr; contradiction HLr; clear HLr.
         specialize (HSub i); rewrite HLu in HSub; clear - HM HSub.
         destruct (HM i) as [HD _]; [left | rewrite ->HD, fdLookup_in_strong; destruct (w' i); [eexists; reflexivity | contradiction] ].
