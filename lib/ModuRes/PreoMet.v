@@ -30,6 +30,8 @@ Record monoMet_morphism T U `{pcmT : pcmType T} `{pcmU : pcmType U} := mkMUMorph
 
 Arguments mkMUMorph [T U] {_ _ _ _ _ _ _ _ _ _} _ _.
 Arguments mu_morph  [T U] {_ _ _ _ _ _ _ _ _ _} _.
+Arguments mu_mono  {_ _} {_ _ _ _ _ _ _ _ _ _} _ {_ _} _.
+
 Infix "-m>" := monoMet_morphism (at level 45, right associativity) : pumet_scope.
 Notation "'m[(' f ')]'" := (mkMUMorph n[(f)] _).
 Delimit Scope pumet_scope with pm.
@@ -42,7 +44,7 @@ Section Morph_Props.
   Program Definition pcomp (f : U -m> V) (g : T -m> U) :=
     m[(f <M< g)].
   Next Obligation.
-    intros x y HSub; now apply mu_mono, mu_mono.
+    intros x y HSub; apply mu_mono; now apply mu_mono.
   Qed.
 
   Program Definition pid := m[(umid _)].
@@ -105,8 +107,8 @@ Section PUMMorphProps1.
     - intros f g h Hfg Hgh; simpl; etransitivity; [apply Hfg | apply Hgh].
   Qed.
 
-  Global Instance PM_proper (f : T -m> U) :
-    Proper (pord ==> pord) f := mu_mono _ _ f.
+  Global Instance PM_proper (f : T -m> U) : Proper (pord ==> pord) f.
+  Proof. apply mu_mono. Qed.
 
   Definition PMasMono (f : T -m> U) : (T -m> U)%pd :=
     mkMMorph (mu_morph f) _.

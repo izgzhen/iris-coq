@@ -83,7 +83,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Lemma lt0 (n : nat) :  ~ n < 0. Proof. by omega. Qed.
 
   Lemma propsMW {P w n r w'} (HSw : w ⊑ w') : P w n r -> P w' n r.
-  Proof. exact: (mu_mono _ _ P _ _ HSw). Qed.
+  Proof. exact: (mu_mono P HSw). Qed.
 
   Lemma propsMNR {P w n r n' r'} (HLe : n' <= n) (HSr : r ⊑ r') : P w n r -> P w n' r'.
   Proof. exact: (uni_pred _ _ _ _ _ HLe HSr). Qed.
