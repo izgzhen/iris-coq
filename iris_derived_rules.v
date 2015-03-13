@@ -13,7 +13,11 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
   Local Open Scope bi_scope.
   Local Open Scope iris_scope.
 
-  Section DerivedRules.
+  (* Ideally, these rules should never talk about worlds or such.
+     At the very least, they should not open the definition of the complex assertrtions:
+     invariants, primitive view shifts, weakest pre. *)
+
+  Section DerivedVSRules.
 
     Implicit Types (P : Props) (i : nat) (m : mask) (e : expr) (r : res).
 
@@ -26,7 +30,25 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
       apply bot_false.
     Qed.
 
-  End DerivedRules. 
+    Lemma vsTrans P Q R m1 m2 m3 (HMS : m2 ⊆ m1 ∪ m3) :
+      vs m1 m2 P Q ∧ vs m2 m3 Q R ⊑ vs m1 m3 P R.
+    Proof.
+      intros w0 n0 r0 [HPQ HQR] w1 HSub n1 r1 Hlt _ HP.
+      eapply pvsTrans; eauto.
+      eapply pvsImpl; split; first eapply propsMWN; 
+      [eassumption | eassumption | exact HQR | ].
+      eapply HPQ; by eauto using unit_min.
+    Qed.
+
+    Lemma vsEnt P Q m :
+      □(P → Q) ⊑ vs m m P Q.
+    Proof.
+      move => w0 n r0 HPQ w1 HSub n1 r1 Hlt _ /(HPQ _ HSub _ _ Hlt) HQ.
+      eapply pvsEnt, HQ; exact unit_min.
+    Qed.    
+
+
+  End DerivedVSRules. 
 
 End IRIS_DERIVED_RULES.
 

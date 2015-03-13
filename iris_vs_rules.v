@@ -116,14 +116,11 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       exists w3 r3; split; [ by rewrite -> HSub2 | by split ].
     Qed.
     
-    Lemma pvsEnt P m1 m2 (HMS : m2 ⊆ m1) :
-      P ⊑ pvs m1 m2 P.
+    Lemma pvsEnt P m :
+      P ⊑ pvs m m P.
     Proof.
       intros w0 n r0 HP w1 rf mf σ k HSub Hnk HD HSat.
-      exists w1 r0; repeat split; [ reflexivity | eapply propsMWN; eauto | ].
-      destruct HSat as (s & HSat & H).
-      exists s; split; first by auto.
-      move => i [/HMS|] IN; eapply H; [by left | by right].
+      exists w1 r0; repeat split; [ reflexivity | eapply propsMWN; eauto | assumption ].
     Qed.
     
     Lemma pvsImpl P Q m1 m2 :
@@ -136,23 +133,6 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       eapply HQ; [by rewrite -> HSub1 | omega | exact unit_min].
     Qed.
       
-    Lemma vsTrans P Q R m1 m2 m3 (HMS : m2 ⊆ m1 ∪ m3) :
-      vs m1 m2 P Q ∧ vs m2 m3 Q R ⊑ vs m1 m3 P R.
-    Proof.
-      intros w0 n0 r0 [HPQ HQR] w1 HSub n1 r1 Hlt _ HP.
-      eapply pvsTrans; eauto.
-      eapply pvsImpl; split; first eapply propsMWN; 
-      [eassumption | eassumption | exact HQR | ].
-      eapply HPQ; by eauto using unit_min.
-    Qed.
-
-    Lemma vsEnt P Q m :
-      □(P → Q) ⊑ vs m m P Q.
-    Proof.
-      move => w0 n r0 HPQ w1 HSub n1 r1 Hlt _ /(HPQ _ HSub _ _ Hlt) HQ.
-      eapply pvsEnt, HQ; [reflexivity | exact unit_min].
-    Qed.
-    
     Lemma pvsFrame P Q m1 m2 mf (HDisj : mf # m1 ∪ m2) :
       pvs m1 m2 P * Q ⊑ pvs (m1 ∪ mf) (m2 ∪ mf) (P * Q).
     Proof.
@@ -170,15 +150,6 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         * setoid_rewrite <- ra_op_assoc.
           eapply wsat_equiv; last eassumption; [|reflexivity|reflexivity].
           unfold mcup in *; split; intros i; tauto.
-    Qed.          
-          
-    Lemma vsFrame P Q R m1 m2 mf (HDisj : mf # m1 ∪ m2) :
-      vs m1 m2 P Q ⊑ vs (m1 ∪ mf) (m2 ∪ mf) (P * R) (Q * R).
-    Proof.
-      intros w0 n0 r0 HVS w1 HSub n1 r1 Hlt _ [r21 [r22 [HEr [HP HR]]]].
-      eapply pvsFrame; first assumption. 
-      eapply HVS in HP; eauto using unit_min; [].
-      do 2!eexists; split; last split; eauto.
     Qed.
 
     Instance LP_res (P : RL.res -> Prop) : LimitPreserving P.
