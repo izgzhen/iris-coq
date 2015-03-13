@@ -133,7 +133,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       exists w' rs' φs',
         wptp safe m w' (S k') tp' rs' (Q :: φs') /\ wsat σ' m (comp_list rs') w' @ S k'.
     Proof.
-      destruct (steps_stepn _ _ HSN) as [n HSN']. clear HSN.
+      destruct (steps_stepn HSN) as [n HSN']. clear HSN.
       pose (r := (ex_own σ, 1) : res).
       edestruct (adequacy_ht (w:=fdEmpty) (k:=k') (r:=r) HT HSN') as [w' [rs' [φs' [HW [HSWTP HWS]]]]]; clear HT HSN'.
       - exists 1; now rewrite ->ra_op_unit by apply _.
@@ -306,7 +306,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       { exists w'' r'. by split; [done | split; [exact: wpO | done]]. }
       have HLt': k' < S k' by done.
       move/(_ _ _ _ _ _ (prefl w'') HLt' HD HW'): Hei' => [Hv _] {HLt' HD HW'}.
-      move: (atomic_step _ _ _ _ HA HStep) => HV {HA HStep}.
+      move: (atomic_step HA HStep) => HV {HA HStep}.
       move/(_ HV): Hv => [w''' [rei' [HSw'' [Hei' HW]]]].
       move: HW; rewrite assoc => HW.
       set Hw'Sw''' := ptrans HSw' HSw''.
@@ -383,7 +383,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       have HK: K = ε.
       { move: HDec; rewrite eq_sym_iff -(fill_empty e) => HDec.
         have HRed1: reducible ei by exists σ (e',σ').
-        by apply: (step_same_ctx _ _ _ _ HDec HRed1 RED). }
+        by apply: (step_same_ctx HDec HRed1 RED). }
       move: HDec HStep; rewrite HK 2!fill_empty; move=><- HStep {ei K HK RED}.
 
       (* have φ(e',σ'), so we can apply the triple… *)
