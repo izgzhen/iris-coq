@@ -44,7 +44,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       cut ((w i === Some (ı' p1)) = n = (w i === Some (ı' p2))).
       { intros Heq. now eapply Heq. }
       eapply met_morph_nonexp.
-      now eapply dist_mono, (met_morph_nonexp _ _ ı').
+      now eapply dist_mono, (met_morph_nonexp ı').
     Qed.
 
   End Invariants.
@@ -147,14 +147,14 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         assert (EQπ := EQw i); rewrite-> HLw in EQπ; clear HLw.
         destruct (w1 i) as [π' |]; [| contradiction]; do 3 red in EQπ.
         apply ı in EQπ; apply EQπ; [now auto with arith |].
-        apply (met_morph_nonexp _ _ (ı π')) in EQw; apply EQw; [omega |].
+        apply (met_morph_nonexp (ı π')) in EQw; apply EQw; [omega |].
         apply HR; [reflexivity | assumption].
       - split; [assumption | split; [rewrite (domeq _ _ _ EQw); apply HM, Hm |] ].
         intros; destruct (HM _ Hm) as [_ HR]; clear HE HM Hm.
         assert (EQπ := EQw i); rewrite-> HLw in EQπ; clear HLw.
         destruct (w2 i) as [π' |]; [| contradiction]; do 3 red in EQπ.
         apply ı in EQπ; apply EQπ; [now auto with arith |].
-        apply (met_morph_nonexp _ _ (ı π')) in EQw; apply EQw; [omega |].
+        apply (met_morph_nonexp (ı π')) in EQw; apply EQw; [omega |].
         apply HR; [reflexivity | assumption].
     Qed.
 
@@ -215,7 +215,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         + symmetry in HDE; assert (HDE' := extend_dist _ _ _ _ HDE HW).
           assert (HSE' := extend_sub _ _ _ _ HDE HW); destruct HH as [HP HE'];
           exists (extend w1'' w2') r'; split; [assumption | split].
-          * eapply (met_morph_nonexp _ _ P), HP ; [symmetry; eassumption | omega].
+          * eapply (met_morph_nonexp P), HP ; [symmetry; eassumption | omega].
           * eapply wsat_dist, HE'; [symmetry; eassumption | omega].
       - assert (HDE := extend_dist _ _ _ _ EQw HSub); assert (HSE := extend_sub _ _ _ _ EQw HSub); specialize (HP (extend w2' w2)).
         edestruct HP as [w1'' [r' [HW HH] ] ]; try eassumption; clear HP; [ | ].
@@ -223,7 +223,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         + symmetry in HDE; assert (HDE' := extend_dist _ _ _ _ HDE HW).
           assert (HSE' := extend_sub _ _ _ _ HDE HW); destruct HH as [HP HE'];
           exists (extend w1'' w2') r'; split; [assumption | split].
-          * eapply (met_morph_nonexp _ _ P), HP ; [symmetry; eassumption | omega].
+          * eapply (met_morph_nonexp P), HP ; [symmetry; eassumption | omega].
           * eapply wsat_dist, HE'; [symmetry; eassumption | omega].
     Qed.
     Next Obligation.
@@ -318,19 +318,19 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') r'; split; [assumption |].
           split; [| eapply wsat_dist, HE'; [eassumption | omega] ].
-          eapply (met_morph_nonexp _ _ (φ _)), Hφ; [eassumption | omega].
+          eapply (met_morph_nonexp (φ _)), Hφ; [eassumption | omega].
         + specialize (HS _ _ _ _ HDec HStep); destruct HS as [w1'' [r' [HSw'' [HWP HE']]]].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') r'; split; [assumption |].
           split; [| eapply wsat_dist, HE'; [eassumption | omega] ].
-          eapply (met_morph_nonexp _ _ (WP _ _)), HWP; [eassumption | omega].
+          eapply (met_morph_nonexp (WP _ _)), HWP; [eassumption | omega].
         + specialize (HF _ _ HDec); destruct HF as [w1'' [rfk [rret [HSw'' [HWR [HWF HE']]]]]].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') rfk rret; split; [assumption |].
           split; [| split; [| eapply wsat_dist, HE'; [eassumption | omega] ] ];
-          eapply (met_morph_nonexp _ _ (WP _ _)); try eassumption; omega.
+          eapply (met_morph_nonexp (WP _ _)); try eassumption; omega.
         + auto.
       - assert (EQw' := extend_dist _ _ _ _ EQw HSw); assert (HSw' := extend_sub _ _ _ _ EQw HSw); symmetry in EQw'.
         edestruct (Hp (extend w2' w2)) as [HV [HS [HF HS'] ] ]; try eassumption;
@@ -341,19 +341,19 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') r'; split; [assumption |].
           split; [| eapply wsat_dist, HE'; [eassumption | omega] ].
-          eapply (met_morph_nonexp _ _ (φ _)), Hφ; [eassumption | omega].
+          eapply (met_morph_nonexp (φ _)), Hφ; [eassumption | omega].
         + specialize (HS _ _ _ _ HDec HStep); destruct HS as [w1'' [r' [HSw'' [HWP HE']]]].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') r'; split; [assumption |].
           split; [| eapply wsat_dist, HE'; [eassumption | omega] ].
-          eapply (met_morph_nonexp _ _ (WP _ _)), HWP; [eassumption | omega].
+          eapply (met_morph_nonexp (WP _ _)), HWP; [eassumption | omega].
         + specialize (HF _ _ HDec); destruct HF as [w1'' [rfk [rret [HSw'' [HWR [HWF HE']]]]]].
           assert (EQw'' := extend_dist _ _ _ _ EQw' HSw''); symmetry in EQw'';
           assert (HSw''' := extend_sub _ _ _ _ EQw' HSw'').
           exists (extend w1'' w2') rfk rret; split; [assumption |].
           split; [| split; [| eapply wsat_dist, HE'; [eassumption | omega] ] ];
-          eapply (met_morph_nonexp _ _ (WP _ _)); try eassumption; omega.
+          eapply (met_morph_nonexp (WP _ _)); try eassumption; omega.
         + auto.
     Qed.
     Next Obligation.
@@ -369,10 +369,10 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
           apply EQφ, Hφ; omega.
         + clear HV HF; specialize (HS _ _ _ _ HDec HStep); destruct HS as [w'' [r' [HSw' [Hφ HE'] ] ] ].
           exists w'' r'; split; [assumption | split; [| assumption] ].
-          eapply (met_morph_nonexp _ _ (WP _)), Hφ; [symmetry; eassumption | omega].
+          eapply (met_morph_nonexp (WP _)), Hφ; [symmetry; eassumption | omega].
         + clear HV HS; specialize (HF _ _ HDec); destruct HF as [w'' [rfk [rret [HSw' [HWR [HWF HE'] ] ] ] ] ].
           exists w'' rfk rret ; repeat (split; try assumption); [].
-          eapply (met_morph_nonexp _ _ (WP _)), HWR; [symmetry; eassumption | omega].
+          eapply (met_morph_nonexp (WP _)), HWR; [symmetry; eassumption | omega].
         + auto.
       - split; [| split; [| split] ]; intros.
         + clear HS HF; specialize (HV HV0); destruct HV as [w'' [r' [HSw' [Hφ HE'] ] ] ].
@@ -380,10 +380,10 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
           apply EQφ, Hφ; omega.
         + clear HV HF; specialize (HS _ _ _ _ HDec HStep); destruct HS as [w'' [r' [HSw' [Hφ HE'] ] ] ].
           exists w'' r'; split; [assumption | split; [| assumption] ].
-          eapply (met_morph_nonexp _ _ (WP _)), Hφ; [eassumption | omega].
+          eapply (met_morph_nonexp (WP _)), Hφ; [eassumption | omega].
         + clear HV HS; specialize (HF _ _ HDec); destruct HF as [w'' [rfk [rret [HSw' [HWR [HWF HE'] ] ] ] ] ].
           exists w'' rfk rret; repeat (split; try assumption); [].
-          eapply (met_morph_nonexp _ _ (WP _)), HWR; [eassumption | omega].
+          eapply (met_morph_nonexp (WP _)), HWR; [eassumption | omega].
         + auto.
     Qed.
     Next Obligation.

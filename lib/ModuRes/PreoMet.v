@@ -438,7 +438,6 @@ Section PCMExponentials.
 
   Program Definition lift2_pcm (f : T -n> U -n> V) p q : T -m> U -m> V :=
     mkMUMorph (mkUMorph (mkMorph (fun a => mkMUMorph (f a) (p a)) _) _) q.
-(* (fun g h EQ x => equiv_morph _ _ (morph_resp f _ _ EQ) _ _ (reflexivity x))) (fun n g h EQ x => mmorph_proper n _ _ (met_morph_nonexp _ _ f _ _ _ EQ) _ _ (reflexivity x))) q.*)
 
   Program Definition mcurry (f : T * U -m> V) : T -m> U -m> V :=
     lift2_pcm (curryM f) _ _.

@@ -200,6 +200,7 @@ Record metric_morphism T U `{mT : metric T} `{mU : metric U} :=
 
 Arguments mkUMorph [T U eqT mT eqT0 mU] _ _.
 Arguments met_morph [T U] {eqT mT eqT0 mU} _.
+Arguments met_morph_nonexp {_ _} {_ _ _ _} _ {_} {_ _} _.
 Infix "-n>" := metric_morphism (at level 45, right associativity).
 
 Global Instance metric_morphism_proper T U `{mT : metric T} `{mU : metric U} n (f: T -n> U):
@@ -313,7 +314,8 @@ Instance mmorph_extend `{mT : metric T} `{mU : metric U} n :
 Proof. intros f g HEq x; rewrite (HEq x); reflexivity. Qed.
 
 Instance morph_proper' n `{mT : metric T} `{mU : metric U} (f : T -n> U) :
-  Proper (dist n ==> dist n) f := met_morph_nonexp _ _ _ _.
+  Proper (dist n ==> dist n) f.
+Proof. apply met_morph_nonexp. Qed.
 
 Ltac resp_dist := intros n; resp_set.
 

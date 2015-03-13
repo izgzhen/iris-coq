@@ -131,7 +131,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Qed.
     Next Obligation.
       intros w1 w2 EQw m r HLt; simpl.
-      eapply (met_morph_nonexp _ _ P); eassumption.
+      eapply (met_morph_nonexp P); eassumption.
     Qed.
     Next Obligation.
       intros w1 w2 Subw n r; simpl.
@@ -195,7 +195,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Next Obligation.
       move=> t t' HEq.
       apply: box_dist.
-      exact: (met_morph_nonexp _ _ φ).
+      exact: (met_morph_nonexp φ).
     Qed.
 
     Lemma box_all : □all φ == box_all_lhs.
@@ -296,9 +296,9 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       intros w1 w2 EQw k; simpl; intros _ HLt; destruct n as [| n]; [now inversion HLt |].
       split; intros HT w' m r HSw HLt' Hp.
       - symmetry in EQw; assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
-        apply (met_morph_nonexp _ _ P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
+        apply (met_morph_nonexp P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
       - assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
-        apply (met_morph_nonexp _ _ P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
+        apply (met_morph_nonexp P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
     Qed.
     Next Obligation.
       intros w1 w2 HSw n; simpl; intros _ HT w' m r HSw' HLt Hp.

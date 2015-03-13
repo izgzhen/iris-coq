@@ -49,7 +49,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
     Program Definition plugV safe m Q Q' K :=
       n[(fun v : value => ht safe m (Q v) (fill K (`v)) Q' )].
     Next Obligation.
-      intros v1 v2 EQv; unfold ht; eapply (met_morph_nonexp _ _ box).
+      intros v1 v2 EQv; unfold ht; eapply (met_morph_nonexp box).
       eapply (impl_dist (ComplBI := Props_BI)).
       - apply Q; assumption.
       - destruct n as [| n]; [apply dist_bound | simpl in EQv].
