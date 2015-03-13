@@ -142,14 +142,14 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Proof.
       intros w1 w2 EQw [| n'] [] HLt; [reflexivity |]; destruct n as [| n]; [now inversion HLt |].
       split; intros [rs [HE HM] ]; exists rs.
-      - split; [assumption | split; [rewrite <- (domeq _ _ _ EQw); apply HM, Hm |] ].
+      - split; [assumption | split; [rewrite <- (domeq EQw); apply HM, Hm |] ].
         intros; destruct (HM _ Hm) as [_ HR]; clear HE HM Hm.
         assert (EQπ := EQw i); rewrite-> HLw in EQπ; clear HLw.
         destruct (w1 i) as [π' |]; [| contradiction]; do 3 red in EQπ.
         apply ı in EQπ; apply EQπ; [now auto with arith |].
         apply (met_morph_nonexp (ı π')) in EQw; apply EQw; [omega |].
         apply HR; [reflexivity | assumption].
-      - split; [assumption | split; [rewrite (domeq _ _ _ EQw); apply HM, Hm |] ].
+      - split; [assumption | split; [rewrite (domeq EQw); apply HM, Hm |] ].
         intros; destruct (HM _ Hm) as [_ HR]; clear HE HM Hm.
         assert (EQπ := EQw i); rewrite-> HLw in EQπ; clear HLw.
         destruct (w2 i) as [π' |]; [| contradiction]; do 3 red in EQπ.

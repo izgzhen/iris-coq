@@ -512,7 +512,7 @@ Section FinDom.
       destruct n as [| n]; [reflexivity |]; intros k; eapply dist_mono, H.
     Qed.
 
-    Lemma domeq (m1 m2 : K -f> V) n (HEq : m1 = S n = m2) : dom m1 = dom m2.
+    Lemma domeq {m1 m2 : K -f> V} {n} (HEq : m1 = S n = m2) : dom m1 = dom m2.
     Proof.
       destruct m1 as [ms1 mP1]; destruct m2 as [ms2 mP2]; revert ms2 mP2 HEq; induction ms1; intros.
       { destruct ms2 as [| [kf vf] ms2]; [reflexivity |]; specialize (HEq kf); unfold findom_f in *; simpl in *.
@@ -582,7 +582,7 @@ Section FinDom.
       destruct (inlst k (dom (σ 1))) eqn: HIn.
       - specialize (HT _ HIn HIn (S i)); rewrite HT; [| auto with arith].
         unfold findom_lub; rewrite findom_map_app with (HIn := HIn); reflexivity.
-      - assert (HInS := HIn); rewrite domeq with (n := 0) (m2 := σ (S i)) in HInS;
+      - assert (HInS := HIn); rewrite @domeq with (n := 0) (m2 := σ (S i)) in HInS;
         [| eapply chain_cauchy; auto with arith].
         rewrite !(proj1 (fdLookup_notin _ _)); [reflexivity | rewrite <- In_inlst; congruence |].
         unfold findom_lub, dom; simpl; rewrite list_fst_map, <- In_inlst; congruence.
