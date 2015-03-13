@@ -197,7 +197,6 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   End Adequacy.
 
-  Notation "P ↔ Q" := ((P → Q) ∧ (Q → P)) (at level 95, no associativity) : iris_scope.	(* PDS *)
   Section RobustSafety.
 
     Implicit Types (P : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (v : value) (Q : vPred) (r : res) (w : Wld) (σ : state).
