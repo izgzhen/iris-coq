@@ -75,11 +75,6 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   (* Simple view lemmas. *)
 
-  Lemma prefl {T} `{oT : preoType T} (t : T) : t ⊑ t. Proof. by reflexivity. Qed.
-
-  Lemma ptrans {T} `{oT : preoType T} {t t' t''} (HL : t ⊑ t') (HU : t' ⊑ t'') : t ⊑ t''.
-  Proof. by transitivity t'. Qed.
-
   Lemma lerefl (n : nat) : n <= n. Proof. by reflexivity. Qed.
 
   Lemma lelt {n k} (H : k < n) : k <= n.
@@ -115,21 +110,11 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Section Resources.
 
-    (* PDS: These should probably be split into RA-level and resource-level lemmas. *)
+    Lemma state_sep {σ g rf} (Hv : ↓(ex_own σ, g) · rf) : fst rf == 1.
+    Proof. move: (ra_sep_prod Hv) => [Hs _]; exact: ra_sep_ex Hs. Qed.
 
-    Lemma ex_frame {σ rf} : ↓((ex_own σ,1) · rf) -> fst rf == 1.
-    Proof.
-      move: rf=>[fx fg]; rewrite/ra_op/res_op/ra_op_prod/fst.
-      move=>[Hx _]; move: Hx {fg}; rewrite/ra_op/ra_op_ex.
-      by case: fx.
-    Qed.
-
-    Lemma ex_fpu {σ σ' rf} : ↓((ex_own σ, 1) · rf) -> ↓((ex_own σ', 1) · rf).
-    Proof.
-      move=> Hv; move: (ex_frame Hv)=> Hxu; move: Hxu Hv.
-      move: rf=>[fx fg]; rewrite/fst; move=>->.
-      by rewrite /ra_op/res_op/ra_op_prod ra_op_unit.
-    Qed.
+    Lemma state_fps {σ g σ' rf} (Hv : ↓(ex_own σ, g) · rf) : ↓(ex_own σ', g) · rf.
+    Proof. exact: (ra_fps_fst (ra_fps_ex σ σ') rf). Qed.
 
   End Resources.
 

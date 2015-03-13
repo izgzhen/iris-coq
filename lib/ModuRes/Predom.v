@@ -253,3 +253,16 @@ Section SubPredom.
 End SubPredom.
 
 Global Arguments subset_ord {_ _ _} _ _ /.
+
+Section ViewLemmas.
+  Require Import ssreflect.  
+  Context {T} `{oT : preoType T}.
+  Implicit Types (t : T).
+  Local Open Scope predom_scope.
+
+  Lemma prefl t : t ⊑ t.
+  Proof. by reflexivity. Qed.
+  
+  Lemma ptrans {t1 t2 t3} (HL : t1 ⊑ t2) (HU : t2 ⊑ t3) : t1 ⊑ t3.
+  Proof. by transitivity t2. Qed.
+End ViewLemmas.

@@ -332,7 +332,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         (Hu : r ⊑ u) :
       σ == σ'.
     Proof.
-      move: (ra_valid_ord _ _ Hu (wsat_valid HW)) => Hv.
+      move: (ra_valid_ord Hu (wsat_valid HW)) => Hv.
       move/(ownS_state Hv): Hr; move=>{n}; move/wsat_state: HW; move=>{m w k Hv}.
       move: Hu=>[[r'x r'g] [Hx Hg]]; move: Hx Hg.
       move: u=> [ux ug]; move: r=> [rx rg].
@@ -413,9 +413,9 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       rewrite -Hr -HrS /r'/= => {Hr HrS r' rS}.
       rewrite (* ((P(gσ))f)s *) [rP · _]comm -3!assoc =>/ra_op_valid2 Hv {rSg}.  (* ((σP)f)s *)
       rewrite (* ((Pσ')f)s *) [rP · _]comm -2!assoc. (* σ'(P(fs)) *)
-      split; first by exact: (ex_fpu Hv).
+      split; first by exact: state_fps Hv.
       rewrite/rS' ra_op_prod_fst.
-      move/ex_frame: Hv =>->.
+      move/state_sep: Hv =>->.
       exact: ra_op_unit2.
     Qed.
     

@@ -161,8 +161,7 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
     Definition ownLP (P : RL.res -> Prop) : {s : RL.res | P s} -n> Props :=
       ownL <M< inclM.
 
-    Lemma vsGhostUpd m rl (P : RL.res -> Prop)
-          (HU : forall rf (HD : ↓(rl · rf)), exists sl, P sl /\ ↓(sl · rf)) :
+    Lemma vsGhostUpd m rl (P : RL.res -> Prop) (HU : rl ⇝∈ P) :
       valid (vs m m (ownL rl) (xist (ownLP P))).
     Proof.
       unfold ownLP; intros _ _ _ w _ n [rp' rl'] _ _ HG w'; intros.
