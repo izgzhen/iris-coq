@@ -623,6 +623,8 @@ Class extensible V `{pcmV : pcmType V} :=
                vd ⊑ extend ve vd
            }.
 Arguments mkExtend {_ _ _ _ _ _} _ {_ _}.
+Arguments extend_dist {_ _ _ _ _ _ _} {_} {_ _ _} _ _.
+Arguments extend_sub {_ _ _ _ _ _ _} {_} {_ _ _} _ _.
 
 Section ExtOrdDiscrete.
   Context U `{cmU : cmetric U}.
@@ -657,12 +659,12 @@ Section ExtProd.
   Proof. 
     - intros n [v1 v2] [vd1 vd2] [ve1 ve2] [E1 E2] [S1 S2]. 
       split.
-      + eapply (extend_dist n _ _ _ E1 S1). 
-      + eapply (extend_dist n _ _ _ E2 S2). 
+      + eapply (extend_dist E1 S1). 
+      + eapply (extend_dist E2 S2). 
     - intros n [v1 v2] [vd1 vd2] [ve1 ve2] [E1 E2] [S1 S2]. 
       split.
-      + eapply (extend_sub n _ _ _ E1 S1).
-      + eapply (extend_sub n _ _ _ E2 S2).
+      + eapply (extend_sub E1 S1).
+      + eapply (extend_sub E2 S2).
   Qed.
 
 End ExtProd.

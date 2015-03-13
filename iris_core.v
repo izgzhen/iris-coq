@@ -4,9 +4,9 @@ Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finma
 
 Set Bullet Behavior "Strict Subproofs".
 
-(* Because Coq has a restriction of how to apply functors, we have to hack a bit here.
-   The hack that involves least work, is to duplicate the definition of our final
-   resource type, as a module type (which is how we can use it, circumventing the
+(* We hack a bit here to avoid spelling out module types for functor results.
+   The hack that involves least work is to duplicate the definition of our final
+   resource type as a module type (which is how we can use it, circumventing the
    Coq restrictions) and as a module (to show the type can be instantiated). *)
 Module Type IRIS_RES (RL : RA_T) (C : CORE_LANG) <: RA_T.
   Instance state_type : Setoid C.state := discreteType.
@@ -295,9 +295,9 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Next Obligation.
       intros w1 w2 EQw k; simpl; intros _ HLt; destruct n as [| n]; [now inversion HLt |].
       split; intros HT w' m r HSw HLt' Hp.
-      - symmetry in EQw; assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
+      - symmetry in EQw; assert (HD := extend_dist EQw HSw); assert (HS := extend_sub EQw HSw).
         apply (met_morph_nonexp P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
-      - assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
+      - assert (HD := extend_dist EQw HSw); assert (HS := extend_sub EQw HSw).
         apply (met_morph_nonexp P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
     Qed.
     Next Obligation.
