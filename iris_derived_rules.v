@@ -48,7 +48,7 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
     Qed.    
 
 
-  End DerivedRules. 
+  End DerivedVSRules. 
 
 End IRIS_DERIVED_RULES.
 
