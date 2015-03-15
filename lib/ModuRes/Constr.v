@@ -6,6 +6,7 @@
     - an extension operation on the space Tᵏ, for k ∈ nat, as a
       non-expansive morphism. *)
 
+Require Import ssreflect.
 Require Import UPred.
 Require Import MetricCore.
 Require Fin.
@@ -97,7 +98,7 @@ Section DiscM_Props.
 End DiscM_Props.
 
 Section EvaluationClosure.
-  Context {T} {preoT : preoType T} (step : T -> T -> Prop).
+  Context {T} `{preoT : preoType T} (step : T -> T -> Prop).
   Definition irr t := forall t', ~ step t t'.
 
   Definition ext_step :=
@@ -137,9 +138,9 @@ Section EvaluationClosure.
   Global Instance eval_equiv : Proper (equiv ==> equiv) evalCl.
   Proof.
     apply equiv_upred_simpl; [apply _ |]; intros R1 R2 n t EQR HEv; revert t HEv; induction n; intros.
-    - rewrite evalCl_simpl in *; simpl; split; [| tauto]; destruct HEv as [HIrr _].
+    - rewrite -> evalCl_simpl in *; simpl; split; [| tauto]; destruct HEv as [HIrr _].
       rewrite <- EQR; assumption.
-    - rewrite evalCl_simpl in HEv; destruct HEv as [HIrr HEv].
+    - rewrite -> evalCl_simpl in HEv; destruct HEv as [HIrr HEv].
       rewrite evalCl_simpl; split; [rewrite <- EQR; assumption | intros].
       apply IHn, HEv, HS.
   Qed.
@@ -148,9 +149,9 @@ Section EvaluationClosure.
   Proof.
     apply dist_upred_simpl; [apply _ |]; intros R1 R2 m t HLt EQR HEv;
     revert t HEv; induction m; intros.
-    - rewrite evalCl_simpl in *; destruct HEv as [HIrr _]; simpl; split; [| tauto].
+    - rewrite -> evalCl_simpl in *; destruct HEv as [HIrr _]; simpl; split; [| tauto].
       intros HIrred; apply EQR, HIrr, HIrred; assumption.
-    - rewrite evalCl_simpl in HEv; rewrite evalCl_simpl.
+    - rewrite -> evalCl_simpl in HEv; rewrite evalCl_simpl.
       split; [| intros; apply IHm, HEv, HS; now auto with arith].
       intros HIrr; apply EQR, HEv, HIrr; assumption.
   Qed.
@@ -158,8 +159,8 @@ Section EvaluationClosure.
   Global Instance eval_pord : Proper (pord ==> pord) evalCl.
   Proof.
     intros R1 R2 HSub n; induction n; intros t HEv.
-    - rewrite evalCl_simpl in *; split; [rewrite <- HSub; apply HEv | simpl; tauto].
-    - rewrite evalCl_simpl in *; split; [rewrite <- HSub; apply HEv |].
+    - rewrite -> evalCl_simpl in *; split; [rewrite <- HSub; apply HEv | simpl; tauto].
+    - rewrite -> evalCl_simpl in *; split; [rewrite <- HSub; apply HEv |].
       intros; apply IHn, HEv, HS; now auto with arith.
   Qed.
 

@@ -1,7 +1,8 @@
+Require Import ssreflect.
 Require Export PreoMet.
 
 Section Definitions.
-  Context {T} {pT : preoType T}.
+  Context {T} `{pT : preoType T}.
 
   Program Definition uniform (p : nat -> T -> Prop) :=
     forall n m (t1 t2 : T) (HLe : m <= n) (HSub : t1 ⊑ t2), p n t1 -> p m t2.
@@ -12,7 +13,7 @@ Section Definitions.
 
   Program Definition up_cr (p : T -> Prop) {HP : Proper (pord ==> impl) p}:=
     mkUPred (fun n t => p t) _.
-  Next Obligation. intros m n t1 t2 _ HT; simpl; rewrite HT; tauto. Qed.
+  Next Obligation. intros m n t1 t2 _ HT; simpl; rewrite -> HT; tauto. Qed.
 
   Definition up_equiv (p q : UPred) := forall n t, p n t == q n t.
 
@@ -32,7 +33,7 @@ Section Definitions.
   Global Program Instance up_metric : metric UPred := mkMetr up_dist.
   Next Obligation.
     intros p q Hpq r s Hrs; split; intros HD m t HLt; [symmetry in Hpq, Hrs |];
-    rewrite (Hpq m t), (Hrs m t); apply HD; assumption.
+    rewrite -> (Hpq m t), (Hrs m t); apply HD; assumption.
   Qed.
   Next Obligation.
     split; intros HEq.
@@ -68,11 +69,16 @@ Section Definitions.
 
   Definition up_ord (p q : UPred) := forall n t, p n t -> q n t.
 
-  Global Program Instance up_preotype : preoType UPred := mkPOType up_ord.
+  Global Program Instance up_preotype : preoType UPred := mkPOType up_ord _.
   Next Obligation.
     split.
     + intros p n t; tauto.
     + intros p q r Hpq Hqr n t Hp; apply Hqr, Hpq, Hp.
+  Qed.
+  Next Obligation.
+    move=> p1 p2 Rp q1 q2 Rq HLe n t.
+    rewrite -(Rp n t) -(Rq n t).
+    exact: HLe.
   Qed.
 
   Global Instance up_pcmetric : pcmType UPred.
@@ -135,25 +141,25 @@ Section Definitions.
 
 End Definitions.
 
-Global Arguments UPred T {pT}.
-Arguments uni_pred {T pT u} {n m t1 t2} _ _ _.
+Global Arguments UPred T {eqT pT}.
+Arguments uni_pred {T eqT pT u} {n m t1 t2} _ _ _.
 
 Notation "▹ p" := (later_up p) (at level 20) : upred_scope.
 
 Section Products.
-  Context {R S} {pR : preoType R} {pS : preoType S}.
+  Context {R S} `{pR : preoType R} `{pS : preoType S}.
 
   Program Definition prod_up (p : UPred R) (q : UPred S) : UPred (R * S) :=
     mkUPred (fun n rs => p n (fst rs) /\ q n (snd rs)) _.
   Next Obligation.
     intros n m [r1 s1] [r2 s2] HLe [Subr Subs] [HP HQ]; simpl in HP, HQ.
-    simpl; split; [rewrite <- Subr | rewrite <- Subs]; rewrite HLe; assumption.
+    simpl; split; [rewrite <- Subr | rewrite <- Subs]; rewrite -> HLe; assumption.
   Qed.
 
   Global Instance prod_up_equiv : Proper (equiv ==> equiv ==> equiv) prod_up.
   Proof.
     intros p1 p2 EQp q1 q2 EQq n [r s]; simpl.
-    rewrite EQp, EQq; tauto.
+    rewrite -> EQp, EQq; tauto.
   Qed.
   Global Instance prod_up_dist n : Proper (dist n ==> dist n ==> dist n) prod_up.
   Proof.
@@ -187,7 +193,7 @@ Section Closures.
   Next Obligation.
     intros n m r1 r2 HLe HSubr [t' [HP HQ]].
     exists t'; split; [assumption |].
-    rewrite HLe, <- HSubr; apply HQ.
+    rewrite -> HLe, <- HSubr; apply HQ.
   Qed.
 
 End Closures.

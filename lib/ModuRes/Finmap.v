@@ -1,3 +1,4 @@
+Require Import ssreflect.
 Require Import MetricCore.
 Require Import PreoMet.
 Require Import Arith Min Max List.
@@ -94,8 +95,8 @@ Section Sortedness.
   Lemma In_inlst k xs : inlst k xs = true <-> k ∈ xs.
   Proof.
     induction xs; simpl; [intuition discriminate |].
-    rewrite Bool.orb_true_iff, IHxs; clear IHxs; intuition.
-    - rewrite iseq_eq in H0; subst; tauto.
+    rewrite -> Bool.orb_true_iff, IHxs; clear IHxs; intuition.
+    - rewrite -> iseq_eq in H0; subst; tauto.
     - subst; unfold iseq; rewrite comp_self_Eq; auto.
   Qed.
 
@@ -106,7 +107,7 @@ Section Sortedness.
 
   Lemma NIn_inlst k xs : inlst k xs = false <-> ~ (k ∈ xs).
     induction xs; simpl; [tauto |].
-    rewrite Bool.orb_false_iff, IHxs, (eq_sym_iff _ a), <- iseq_eq; clear IHxs.
+    rewrite -> Bool.orb_false_iff, IHxs, (eq_sym_iff _ a), <- iseq_eq; clear IHxs.
     destruct (iseq k a); intuition congruence.
   Qed.
 
@@ -241,7 +242,8 @@ Section FinDom.
       - apply SS_tail in fP; rewrite <- IHfs; [| assumption]; intuition.
     Qed.
 
-    Lemma option_dec {A} (v : option A): {v = None} + {exists a, v = Some a}.
+    Lemma option_dec {A} (v : option A): sumbool(v = None) (exists a, v = Some a).
+    Proof.
       destruct v ; eauto.
     Qed.
       
@@ -421,7 +423,7 @@ Section FinDom.
       induction xs; intros; [exists 0; intros; discriminate |].
       specialize (IHxs (fun k HIn => H k (orb_right_intro _ _ HIn))); destruct IHxs as [m IH].
       specialize (H a (proj2 (In_inlst (compT := compK) _ _) (in_eq a xs))); destruct H as [k Hk].
-      exists (max m k); intros t HIn; rewrite In_inlst in HIn; simpl in HIn; destruct HIn as [HEq | HIn];
+      exists (max m k); intros t HIn; rewrite -> In_inlst in HIn; simpl in HIn; destruct HIn as [HEq | HIn];
         [subst | rewrite <- In_inlst in HIn]; eapply A; [| eassumption |..]; eauto using le_max_r, le_max_l.
     Qed.
 
@@ -431,12 +433,12 @@ Section FinDom.
     Proof.
       induction xs; [discriminate |].
       simpl; assert (HT := compat_compare x a); destruct (comp x a).
-      - subst; rewrite (D.UIP _ _ _ HIn); reflexivity.
+      - subst; rewrite -> (D.UIP _ _ _ HIn); reflexivity.
       - contradiction (StrictSorted_lt_notin _ _ xs HT).
         rewrite <- In_inlst; assumption.
       - simpl in *; specialize (IHxs (fun y Y => I _ (orb_right_intro _ _ Y))).
         assert (HInT : inlst x xs = true) by (unfold iseq in HIn; rewrite comp_gt_Gt in HIn; assumption).
-        specialize (IHxs HInT (SS_tail _ _ HSS)); simpl in IHxs; rewrite (D.UIP _ _ _ HIn) in IHxs; apply IHxs.
+        specialize (IHxs HInT (SS_tail _ _ HSS)); simpl in IHxs; rewrite -> (D.UIP _ _ _ HIn) in IHxs; apply IHxs.
     Qed.
 
     Lemma findom_map_app U W (m : K -f> U) x (HIn : inlst x (dom m) = true)
@@ -497,7 +499,7 @@ Section FinDom.
     Global Program Instance metric_findom : metric (K -f> V) | 5 := mkMetr dist_fd.
     Next Obligation.
       revert n; intros [| n] f1 f2 EQf g1 g2 EQg; [reflexivity |]; split;
-      intros EQ k; [symmetry in EQf, EQg |]; rewrite EQf, EQg; apply EQ.
+      intros EQ k; [symmetry in EQf, EQg |]; rewrite -> EQf, EQg; apply EQ.
     Qed.
     Next Obligation.
       split; intros HEq.
@@ -527,7 +529,7 @@ Section FinDom.
       { assert (HT := compat_compare k1 k2); assert (HLt := HEq k1); assert (HGt := HEq k2);
           unfold findom_f in *; simpl in *; clear IHms1 HEq.
         rewrite comp_self_Eq in HLt; destruct (comp k1 k2); [assumption | contradiction HLt |].
-        rewrite comp_lt_Lt, comp_self_Eq in HGt; [contradiction HGt | intuition].
+        rewrite -> comp_lt_Lt, comp_self_Eq in HGt; [contradiction HGt | intuition].
       }
       subst; unfold dom; simpl; f_equal; simpl in *.
       apply IHms1 with (mP1 := SS_tail _ _ mP1) (mP2 := SS_tail _ _ mP2); intros k; clear IHms1.
@@ -546,11 +548,11 @@ Section FinDom.
     Proof.
       revert σ σc HIn; induction n; intros; [assumption |].
       apply (IHn (cutn σ 1)); simpl; clear IHn; [apply _ |].
-      rewrite fdLookup_in in HIn; destruct HIn as [v HLU].
+      rewrite -> fdLookup_in in HIn; destruct HIn as [v HLU].
       remember ((σ 2) x) as ov; symmetry in Heqov; destruct ov.
       - rewrite fdLookup_in; eexists; setoid_rewrite Heqov; reflexivity.
       - assert (HT := chain_cauchy σ _ 1 1 2 x).
-        rewrite Heqov, HLU in HT; contradiction HT.
+        rewrite -> Heqov, HLU in HT; contradiction HT.
     Qed.
 
     Definition finmap_chainx (σ : chain (K -f> V)) {σc : cchain σ} x (HIn : x ∈ dom (σ 1)) :=
@@ -583,11 +585,11 @@ Section FinDom.
       destruct HT as [m HT]; exists (S m); intros [| i] HLe k; [inversion HLe |].
       destruct (inlst k (dom (σ 1))) eqn: HIn.
       - specialize (HT _ HIn HIn (S i)); rewrite HT; [| auto with arith].
-        unfold findom_lub; rewrite findom_map_app with (HIn := HIn); reflexivity.
-      - assert (HInS := HIn); rewrite @domeq with (n := 0) (m2 := σ (S i)) in HInS;
+        unfold findom_lub; rewrite -> findom_map_app with (HIn := HIn); reflexivity.
+      - assert (HInS := HIn); rewrite -> @domeq with (n := 0) (m2 := σ (S i)) in HInS;
         [| eapply chain_cauchy; auto with arith].
         rewrite !(proj1 (fdLookup_notin _ _)); [reflexivity | rewrite <- In_inlst; congruence |].
-        unfold findom_lub, dom; simpl; rewrite list_fst_map, <- In_inlst; congruence.
+        unfold findom_lub, dom; simpl; rewrite -> list_fst_map, <- In_inlst; congruence.
     Qed.
 
     Local Existing Instance option_preo_bot.
@@ -595,11 +597,15 @@ Section FinDom.
 
     Definition extOrd (m1 m2 : K -f> V) := forall k, m1 k ⊑ m2 k.
 
-    Global Program Instance extOrd_preo : preoType (K -f> V) := mkPOType extOrd.
+    Global Program Instance extOrd_preo : preoType (K -f> V) := mkPOType extOrd _.
     Next Obligation.
       split.
       - intros m k; reflexivity.
       - intros m1 m2 m3 S12 S23 k; etransitivity; [apply (S12 k) | apply (S23 k) ].
+    Qed.
+    Next Obligation.
+      move=> f1 f2 Rf g1 g2 Rg H k.
+      by rewrite -(Rf k) -(Rg k).
     Qed.
 
     Definition chain_fin_app (σ : chain (K -f> V)) k : chain (option V) :=
@@ -619,8 +625,8 @@ Section FinDom.
       generalize (@eq_refl _ (σ 1 k)) as EQs; pattern (σ 1 k) at 1 3; destruct (σ 1 k) as [vs |]; intros.
       - unfold findom_lub.
         assert (HIn : inlst k (dom (σ 1)) = true).
-        { rewrite In_inlst, fdLookup_in_strong; exists vs; congruence. }
-        rewrite findom_map_app with (HIn := HIn).
+        { rewrite -> In_inlst, fdLookup_in_strong; exists vs; congruence. }
+        rewrite -> findom_map_app with (HIn := HIn).
         unfold equiv; simpl; apply umet_complete_ext; intros.
         unfold unSome, finmap_chainx.
         generalize (@eq_refl _ (σ (S i) k)) as EQsi.
@@ -631,8 +637,8 @@ Section FinDom.
           specialize (σc 1 1 (S i) (le_n _) LEi k).
           rewrite <- EQs, <- EQsi in σc; contradiction σc.
       - unfold findom_lub.
-        rewrite findom_map_app_nf; [reflexivity |].
-        rewrite NIn_inlst, fdLookup_notin_strong; congruence.
+        rewrite -> findom_map_app_nf; [reflexivity |].
+        rewrite -> NIn_inlst, fdLookup_notin_strong; congruence.
     Qed.
 
     Global Instance findom_pcmType : pcmType (K -f> V).
@@ -640,7 +646,7 @@ Section FinDom.
       split.
       - intros s s' HEqs t t' HEqt; split; intros HSub k.
         + rewrite <- (HEqs k), <- (HEqt k); apply (HSub k).
-        + rewrite (HEqs k), (HEqt k); apply (HSub k).
+        + rewrite -> (HEqs k), (HEqt k); apply (HSub k).
       - intros σ ρ σc ρc HSub k; rewrite !foo.
         eapply pcm_respC; [now auto with typeclass_instances | intros].
         unfold chain_fin_app; eapply HSub.
@@ -699,7 +705,7 @@ Section FinDom.
     Next Obligation.
       intros m1 m2 HEq; destruct n as [| n]; [apply dist_bound |]; intros k; simpl; specialize (HEq k).
       destruct (m1 k) as [u1 |] eqn: HFnd1; destruct (m2 k) as [u2 |] eqn: HFnd2; try contradiction HEq; [|].
-      - rewrite pre_fdMap_lookup with (u := u1), pre_fdMap_lookup with (u := u2);
+      - rewrite -> pre_fdMap_lookup with (u := u1), pre_fdMap_lookup with (u := u2);
         [apply met_morph_nonexp |..]; assumption.
       - rewrite !pre_fdMap_lookup_nf; assumption.
     Qed.
@@ -709,25 +715,25 @@ Section FinDom.
         destruct (m2 k) as [u2 |] eqn: HFnd2; [| contradiction Subm].
         erewrite pre_fdMap_lookup by eassumption.
         unfold pord in *; simpl in *.
-        rewrite Subm; reflexivity.
-      - rewrite pre_fdMap_lookup_nf by assumption; exact I.
+        rewrite -> Subm; reflexivity.
+      - rewrite -> pre_fdMap_lookup_nf by assumption; exact I.
     Qed.
 
     Global Instance fdMap_resp : Proper (equiv ==> equiv) fdMap.
     Proof.
       intros f1 f2 EQf m k; destruct (m k) as [u |] eqn: HFnd; simpl morph.
-      - rewrite !pre_fdMap_lookup with (u := u) by assumption.
+      - rewrite -> !pre_fdMap_lookup with (u := u) by assumption.
         rewrite EQf; apply morph_resp; reflexivity.
-      - rewrite !pre_fdMap_lookup_nf by assumption; reflexivity.
+      - rewrite -> !pre_fdMap_lookup_nf by assumption; reflexivity.
     Qed.
 
     Global Instance fdMap_nonexp n : Proper (dist n ==> dist n) fdMap.
     Proof.
       intros f1 f2 EQf m; destruct n as [| n]; [apply dist_bound |]; intros k.
       simpl morph; destruct (m k) as [u |] eqn: HFnd.
-      - rewrite !pre_fdMap_lookup with (u := u) by assumption.
+      - rewrite -> !pre_fdMap_lookup with (u := u) by assumption.
         unfold dist; simpl; rewrite EQf; apply met_morph_nonexp; reflexivity.
-      - rewrite !pre_fdMap_lookup_nf by assumption; reflexivity.
+      - rewrite -> !pre_fdMap_lookup_nf by assumption; reflexivity.
     Qed.
 
     Global Instance fdMap_monic : Proper (pord ==> pord) fdMap.
@@ -736,7 +742,7 @@ Section FinDom.
       destruct (m k) as [u |] eqn: HFnd.
       - erewrite !pre_fdMap_lookup by eassumption.
         unfold pord; simpl; apply (Subf u).
-      - rewrite !pre_fdMap_lookup_nf by assumption.
+      - rewrite -> !pre_fdMap_lookup_nf by assumption.
         reflexivity.
     Qed.
 
@@ -891,19 +897,18 @@ Qed.
     Proof.
       intros m k; simpl morph.
       destruct (m k) as [u |] eqn: HFnd.
-      - rewrite pre_fdMap_lookup with (u := u) by assumption.
-        rewrite pre_fdMap_lookup with (u := f u); [reflexivity |].
-        rewrite pre_fdMap_lookup with (u := u) by assumption; reflexivity.
-      - rewrite !pre_fdMap_lookup_nf; [reflexivity |..]; try assumption; [].
-        rewrite pre_fdMap_lookup_nf; reflexivity || assumption.
+      - rewrite -> pre_fdMap_lookup with (u := u) by assumption.
+        rewrite -> pre_fdMap_lookup with (u := f u); [reflexivity |].
+        rewrite -> pre_fdMap_lookup with (u := u) by assumption; reflexivity.
+      - now rewrite !pre_fdMap_lookup_nf; [reflexivity |..]; try assumption; [].
     Qed.
 
     Lemma fdMap_id : fdMap _ _ (pid U) == (pid (K -f> U)).
     Proof.
       intros w k; simpl morph.
       destruct (w k) as [v |] eqn: HFnd.
-      - rewrite pre_fdMap_lookup with (u := v) by assumption; reflexivity.
-      - rewrite pre_fdMap_lookup_nf by assumption; reflexivity.
+      - rewrite -> pre_fdMap_lookup with (u := v) by assumption; reflexivity.
+      - rewrite -> pre_fdMap_lookup_nf by assumption; reflexivity.
     Qed.
 
     Context {extV : extensible V}.
@@ -923,7 +928,7 @@ Qed.
     Next Obligation.
       clear dependent U; clear dependent W; intros; intros k; unfold Extend_fd.
       destruct (inlst k (dom ve)) eqn: HIne.
-      - rewrite findom_map_app with (HIn := HIne).
+      - rewrite -> findom_map_app with (HIn := HIne).
         generalize (@eq_refl _ (inlst k (dom vd))) as HInd.
         pattern (inlst k (dom vd)) at 2 3; destruct (inlst k (dom vd)); intros.
         + specialize (HD k); specialize (HS k).
@@ -934,8 +939,8 @@ Qed.
           unfold dist, pord in *; simpl in *.
           eapply extend_dist; eassumption.
         + rewrite Indom_lookup_find; reflexivity.
-      - rewrite findom_map_app_nf by assumption.
-        rewrite NIn_inlst, fdLookup_notin in HIne.
+      - rewrite -> findom_map_app_nf by assumption.
+        rewrite -> NIn_inlst, fdLookup_notin in HIne.
         rewrite HIne; reflexivity.
     Qed.
     Next Obligation.
@@ -943,12 +948,12 @@ Qed.
       specialize (HD k); destruct (vd k) as [v1 |] eqn: HFnd1; [| exact I].
       specialize (HS k); destruct (v k) as [v2 |]; [| contradiction HD].
       destruct (ve k) as [v3 |] eqn: HFnd2; [| contradiction HS].
-      assert (HInd : inlst k (dom vd) = true) by (rewrite In_inlst, fdLookup_in_strong; eauto).
-      assert (HIne : inlst k (dom ve) = true) by (rewrite In_inlst, fdLookup_in_strong; eauto).
+      assert (HInd : inlst k (dom vd) = true) by (rewrite -> In_inlst, fdLookup_in_strong; eauto).
+      assert (HIne : inlst k (dom ve) = true) by (rewrite -> In_inlst, fdLookup_in_strong; eauto).
       unfold extend, Extend_fd.
-      rewrite findom_map_app with (HIn := HIne).
+      rewrite -> findom_map_app with (HIn := HIne).
       generalize (@eq_refl _ (inlst k (dom vd))).
-      pattern (inlst k (dom vd)) at 2 3; rewrite HInd; clear HInd; intros HInd.
+      pattern (inlst k (dom vd)) at 2 3; rewrite -> HInd; clear HInd; intros HInd.
       unfold dist, pord in *; simpl in *.
       rewrite <- Indom_lookup_find with (HIn := HInd) in HFnd1.
       inversion HFnd1; subst v1; clear HFnd1.
