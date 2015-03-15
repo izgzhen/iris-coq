@@ -363,7 +363,7 @@ Section SubPredom.
 
 End SubPredom.
 
-Global Arguments subset_ord {_ _ _} _ _ /.
+Global Arguments subset_ord {_ _ _ _} _ _ /.
 
 Section ViewLemmas.
   Context {T} `{oT : preoType T}.
