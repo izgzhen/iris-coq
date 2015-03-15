@@ -34,7 +34,7 @@ Arguments morph_resp [S T eqS eqT] _ _ _ _.
 Infix "-=>" := morphism (at level 45, right associativity).
 Notation "'s[(' f ')]'" := (mkMorph f _).
 Ltac resp_set :=
-  intros t1 t2 HEqt; repeat (intros ?); simpl in *; try rewrite !HEqt; reflexivity.
+  intros t1 t2 HEqt; repeat (intros ?); simpl in *; try rewrite -> !HEqt; reflexivity.
 
 (** This seems just to be a package putting together all the
     ingredients of [type], i.e. the carrier set, the relation and the
