@@ -1,6 +1,7 @@
 (** Resource algebras: Commutative monoids with a validity predicate. *)
 
 Require Import ssreflect.
+Require Import Coq.Classes.RelationPairs.
 Require Import Bool.
 Require Import Predom.
 Require Import CSetoid.
@@ -189,7 +190,7 @@ End ProductLemmas.
 Section Order.
   Context {T} `{raT : RA T}.
 
-  Definition ra_ord t1 t2 :=
+  Let ra_ord t1 t2 :=
     exists t, t · t1 == t2.
 
   Global Instance ra_ord_preo: PreOrder ra_ord.
@@ -200,13 +201,10 @@ Section Order.
       rewrite <- Hxyz, <- Hyz; symmetry; apply assoc.
   Qed.
 
-  Global Program Instance ra_preo : preoType T := mkPOType ra_ord.
-
-  Global Instance equiv_pord_ra : Proper (equiv ==> equiv ==> equiv) (pord (T := T)).
-  Proof.
-    intros s1 s2 EQs t1 t2 EQt; split; intros [s HS].
-    - exists s; rewrite <- EQs, <- EQt; assumption.
-    - exists s; rewrite -> EQs, EQt; assumption.
+  Global Program Instance pord_ra : preoType T := mkPOType ra_ord _.
+  Next Obligation.
+    move=> x1 x2 Rx y1 y2 Ry [t Ht].
+    exists t; by rewrite -Rx -Ry.
   Qed.
 
   Global Instance ra_op_mono : Proper (pord ++> pord ++> pord) ra_op.
@@ -215,6 +213,7 @@ Section Order.
     rewrite <- assoc, (comm y), <- assoc, assoc, (comm y1), EQx, EQy; reflexivity.
   Qed.
 
+  (* PDS: Are we actually searching for validity proofs? *)
   Global Instance ra_valid_ord : Proper (pord ==> flip impl) ra_valid.
   Proof. move=>t1 t2 [t' HEq]; rewrite -HEq; exact: ra_op_valid2. Qed.
 
@@ -228,14 +227,21 @@ Section Order.
     by apply: Hc; move: HEq; rewrite assoc -[t · _]comm -assoc.
   Qed.
 End Order.
-Arguments equiv_pord_ra {_ _ _ _ _ _} {_ _} _ {_ _} _.
 Arguments ra_op_mono {_ _ _ _ _ _} {_ _} _ {_ _} _.
 Arguments ra_valid_ord {_ _ _ _ _ _} {_ _} _ _.
+
+Section OrdTests.
+  Context {S T} `{raS : RA S, raT : RA T}.
+  Implicit Types (s : S) (t : T).
+
+  Goal forall s1 s2 t, s1 == s2 -> (s1,t) ⊑ (s2,t).
+  Proof. move=> s1 s2 t ->. reflexivity. Qed.
+End OrdTests.
 
 
 (** The exclusive RA. *)
 Section Exclusive.
-  Context {T: Type} `{eqT : Setoid T}.
+  Context {T: Type} {eqT : Setoid T}.
 
   Inductive ex: Type :=
   | ex_own: T -> ex
@@ -263,6 +269,9 @@ Section Exclusive.
 
   Global Program Instance ra_type_ex : Setoid ex :=
     mkType ex_eq.
+
+  Global Instance ex_own_compat : Proper (equiv ==> equiv) ex_own.
+  Proof. by move=> t1 t2 EQt. Qed.
 
   Global Instance ra_unit_ex : RA_unit _ := ex_unit.
   Global Instance ra_op_ex : RA_op _ :=
@@ -310,6 +319,23 @@ Section Exclusive.
 End Exclusive.
 Arguments ex T : clear implicits.
 
+Section ExTests.
+  Context {T : Type} {eqT : Setoid T}.
+  Implicit Types (t : T).
+
+  Goal forall t1 t2, t1 == t2 -> ex_own t1 == ex_own t2.
+  Proof. move=> t1 t2 ->. reflexivity. Qed.
+
+  Context {U} `{raU : RA U}.
+  Implicit Types (u : U).
+  
+  Goal forall t1 t2 u, t1 == t2 -> (ex_own t1,u) ⊑ (ex_own t2,u).
+  Proof. move=> t1 t2 u ->. reflexivity. Qed.
+
+  Goal forall t u1 u2, u1 == u2 -> (ex_own t,u1) == (ex_own t,u2).
+  Proof. move=> t u1 u2 ->. reflexivity. Qed.
+End ExTests.
+
 (** The authoritative RA. *)
 Section Authoritative.
   Context {T} `{raT : RA T}.
@@ -318,7 +344,7 @@ Section Authoritative.
 
   Implicit Types (x : ex T) (g t u : T) (r s : auth).
 
-  Definition auth_eq r s : Prop :=
+  Let auth_eq r s : Prop :=
     match r, s with
     | Auth p, Auth p' => p == p'
     end.
@@ -331,7 +357,17 @@ Section Authoritative.
     - by move=> [p1] [p2] [p3]; rewrite/auth_eq; transitivity p2.
   Qed.
   Global Instance ra_type_auth : Setoid auth := mkType auth_eq.
-  
+
+  Section Compat.
+    Variable R : relation (ex T * T).
+
+    Let RA : relation auth := fun r1 r2 =>
+      match r1, r2 with Auth p1, Auth p2 => R p1 p2 end.
+
+    Global Instance auth_compat : Proper(R ==> RA) Auth.
+    Proof. by move=> p1 p2 Rp. Qed.
+  End Compat.
+
   Global Instance ra_unit_auth : RA_unit auth := Auth(ex_unit, 1).
 
   Global Instance ra_op_auth : RA_op auth := fun r s =>
@@ -353,7 +389,10 @@ Section Authoritative.
     - by move=> [[x1 t1]] [[x2 t2]] /=; split; rewrite comm; reflexivity.
     - by move=> [[x t]] /=; split; rewrite ra_op_unit; reflexivity.
     - move=> [[x t]] [[x' t']] [/= Hx Ht].
-      move: Hx; case: x=>[g||]; case: x'=>[g'||] => //= Hg; rewrite/ra_valid/ra_valid_auth Ht; [by rewrite Hg | done].
+      rewrite/ra_valid/ra_valid_auth.
+      move: Hx; case: x=>[g||]; case: x'=>[g'||] => //= Hg.
+      + by rewrite Ht Hg.
+      + by rewrite Ht.
     - rewrite/ra_unit/ra_unit_auth/ra_valid/ra_valid_auth; exact: ra_valid_unit.
     - move=> [[x t]] [[x' t']]. rewrite /ra_op/ra_op_auth/ra_valid/ra_valid_auth.
       case: x=>[g||]; case: x'=>[g'||] //=.
@@ -417,6 +456,16 @@ Notation "• g" := (Auth (ex_own g,1)) (at level 48) : ra_scope.
 Notation "∘ t" := (Auth (1,t)) (at level 48) : ra_scope.
 *)
 
+Section AuthTests.
+  Context {T : Type} `{raT : RA T}.
+  Implicit Types (x : ex T) (t : T).
+  
+  Goal forall x t1 t2, t1 == t2 -> Auth(x,t1) == Auth(x,t2).
+  Proof. move=> x t1 t2 EQt. rewrite EQt. reflexivity. Qed.
+
+  Goal forall x1 x2 t, x1 == x2 -> Auth(x1,t) == Auth(x2,t).
+  Proof. move=> x1 x2 t EQx. rewrite EQx. reflexivity. Qed.
+End AuthTests.
 
 
 Section Agreement.
