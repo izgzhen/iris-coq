@@ -1,3 +1,4 @@
+Require Import ssreflect.
 Require Export Predom MetricCore.
 
 Generalizable Variables T U V W X Y.
@@ -74,7 +75,7 @@ Section PUMMorphProps1.
 
   Global Program Instance PMMetric : metric (T -m> U) | 5 := mkMetr PMDist.
   Next Obligation.
-    intros f g EQfg h i EQhi; split; intros EQ x; [symmetry in EQfg, EQhi |]; rewrite (EQfg x), (EQhi x); apply EQ.
+    intros f g EQfg h i EQhi; split; intros EQ x; [symmetry in EQfg, EQhi |]; rewrite -> (EQfg x), (EQhi x); apply EQ.
   Qed.
   Next Obligation.
     split; [intros HEq t | intros HEq n].
@@ -100,11 +101,16 @@ Section PUMMorphProps1.
   Qed.
 
   Global Program Instance PMpreoT : preoType (T -m> U) | 5:=
-    mkPOType (fun f g => forall x, (f x ⊑ g x)%pd).
+    mkPOType (fun f g => forall x, (f x ⊑ g x)%pd) _.
   Next Obligation.
     split.
     - intros x; simpl; reflexivity.
     - intros f g h Hfg Hgh; simpl; etransitivity; [apply Hfg | apply Hgh].
+  Qed.
+  Next Obligation.
+    move=> f1 f2 Rf g1 g2 Rg H t.
+    rewrite -(Rf t) -(Rg t).
+    exact: H.
   Qed.
 
   Global Instance PM_proper (f : T -m> U) : Proper (pord ==> pord) f.
@@ -124,7 +130,7 @@ Section PUMMorphProps1.
   Next Obligation.
     intros x y HSub; simpl.
     eapply pcm_respC; [assumption |]; intros; simpl.
-    rewrite HSub; reflexivity.
+    rewrite -> HSub; reflexivity.
   Qed.
 
   Global Program Instance PMcmetric : cmetric (T -m> U) | 5 :=
@@ -139,7 +145,7 @@ Section PUMMorphProps1.
   Proof.
     clear; split.
     - intros f1 f2 HEqf g1 g2 HEqg; split; intros HSub x; [symmetry in HEqf, HEqg |];
-      simpl in *; rewrite HEqf, HEqg; apply HSub.
+      simpl in *; rewrite -> HEqf, HEqg; apply HSub.
     - intros f g fc gc Hc x; simpl; eapply pcm_respC; try eassumption.
       intros n; apply Hc.
   Qed.
@@ -188,19 +194,19 @@ Section CompProps.
 
   Global Instance pord_equiv : Proper (equiv ==> equiv ==> iff) pord.
   Proof.
-    intros a1 a2 EQa b1 b2 EQb; split; intros Sub; [symmetry in EQa, EQb |]; rewrite EQa, EQb; assumption.
+    intros a1 a2 EQa b1 b2 EQb; split; intros Sub; [symmetry in EQa, EQb |]; rewrite -> EQa, EQb; assumption.
   Qed.
 
   Global Instance pcomp_inherit :
     Proper (equiv (A := T -m> U) ==> equiv ==> equiv) pcomp.
   Proof.
-    intros f f' Eqf g g' Eqg x; simpl; rewrite Eqf, Eqg; reflexivity.
+    intros f f' Eqf g g' Eqg x; simpl; rewrite -> Eqf, Eqg; reflexivity.
   Qed.
 
   Global Instance pcomp_inherit_dist n :
     Proper (dist (T := T -m> U) n ==> dist n ==> dist n) pcomp.
   Proof.
-    intros f f' Eqf g g' Eqg x; simpl; rewrite Eqf, Eqg; reflexivity.
+    intros f f' Eqf g g' Eqg x; simpl; rewrite -> Eqf, Eqg; reflexivity.
   Qed.
 
   Context W `{pcmW : pcmType W}.
@@ -239,7 +245,7 @@ Section MMorphProps2.
   Global Instance pord_pcomp :
     Proper (pord (T := U -m> V) ==> pord ==> pord) pcomp.
   Proof.
-    intros f f' HSubf g g' HSubg x; simpl; rewrite HSubf, HSubg; reflexivity.
+    intros f f' HSubf g g' HSubg x; simpl; rewrite -> HSubf, HSubg; reflexivity.
   Qed.
 
   Lemma mmcompAL (f: V -m> W) (g: U -m> V) (h: T -m> U) :
@@ -304,9 +310,9 @@ Section MonotoneProducts.
     split.
     - intros [a1 b1] [a2 b2] [Ha12 Hb12] [a3 b3] [a4 b4] [Ha34 Hb34].
       simpl in *; unfold prod_ord; simpl.
-      rewrite Ha12, Hb12, Ha34, Hb34; reflexivity.
+      rewrite -> Ha12, Hb12, Ha34, Hb34; reflexivity.
     - intros σ ρ σc ρc HC; split; unfold liftc; eapply pcm_respC; try assumption; unfold liftc;
-      intros i; rewrite HC; reflexivity.
+      intros i; rewrite -> HC; reflexivity.
   Qed.
 
   Global Instance pcmprod_proper : Proper (pord ==> pord ==> pord) (@pair U V).
@@ -350,18 +356,22 @@ Section IndexedProducts.
   Definition pcOrdI (f1 f2 : forall i, P i) := forall i, f1 i ⊑ f2 i.
 
   Global Program Instance pcOrdTypeI : preoType (forall i, P i) :=
-    mkPOType pcOrdI.
+    mkPOType pcOrdI _.
   Next Obligation.
     split.
     + intros f i; reflexivity.
     + intros f g h Hfg Hgh i; etransitivity; [apply Hfg | apply Hgh].
+  Qed.
+  Next Obligation.
+    move=> f1 f2 Rf g1 g2 Rg H i.
+    rewrite -(Rf i) -(Rg i); exact: H.
   Qed.
 
   Global Instance pcmTypI : pcmType (forall i, P i).
   Proof.
     split.
     + intros x y EQxy u v EQuv; split; intros SUBxu i; [symmetry in EQxy, EQuv |];
-      rewrite (EQxy i), (EQuv i); apply SUBxu.
+      rewrite -> (EQxy i), (EQuv i); apply SUBxu.
     + intros σ ρ σc ρc SUBc i; eapply pcm_respC; [apply _ | intros n; simpl; apply SUBc].
   Qed.
 
@@ -389,7 +399,7 @@ Section Extras.
   Definition pcmprod_map (f : T -m> U) (g : V -m> W) := 〈f ∘ π₁, g ∘ π₂〉.
     
   Global Instance pcmprod_map_resp : Proper (equiv ==> equiv ==> equiv) pcmprod_map.
-  Proof. intros f g H1 h j H2 [t1 v1]; simpl; now rewrite H1, H2. Qed.
+  Proof. intros f g H1 h j H2 [t1 v1]; simpl; now rewrite -> H1, H2. Qed.
   
   Global Instance pcmprod_map_nonexp n : Proper (dist n ==> dist n ==> dist n) pcmprod_map.
   Proof.
@@ -398,7 +408,7 @@ Section Extras.
   
   Global Instance pcmprod_map_monic : Proper (pord ==> pord ==> pord) pcmprod_map.
   Proof.
-    intros f g H1 h j H2 [t1 v1]; split; simpl; [ rewrite H1 | rewrite H2]; reflexivity.
+    intros f g H1 h j H2 [t1 v1]; split; simpl; [ rewrite -> H1 | rewrite -> H2]; reflexivity.
   Qed.
   
   Program Definition pcmconst u : T -m> U := mkMUMorph (umconst u) _.
@@ -433,7 +443,7 @@ Section PCMExponentials.
   Program Definition pcmuncurry (f : T -m> U -m> V) : T * U -m> V :=
     m[(uncurry (um_bin_morph f))].
   Next Obligation.
-    intros [a1 b1] [a2 b2] [HSa HSb]; simpl in *; now rewrite HSa, HSb.
+    intros [a1 b1] [a2 b2] [HSa HSb]; simpl in *; now rewrite -> HSa, HSb.
   Qed.
 
   Program Definition lift2_pcm (f : T -n> U -n> V) p q : T -m> U -m> V :=
@@ -445,7 +455,7 @@ Section PCMExponentials.
   Program Definition meval : (T -m> U) * T -m> U :=
     m[(evalM <M< prodM_map n[(mu_morph (U := U))] (umid _))].
   Next Obligation.
-    intros [f a] [g b] [Sub1 Sub2]; simpl in *; rewrite Sub1, Sub2; reflexivity.
+    intros [f a] [g b] [Sub1 Sub2]; simpl in *; rewrite -> Sub1, Sub2; reflexivity.
   Qed.
 
 End PCMExponentials.
@@ -475,7 +485,7 @@ Section SubPCM.
   Proof.
     split.
     - intros [x HPx] [y HPy] EQxy [u HPu] [v HPv] EQuv; simpl in *.
-      rewrite EQxy, EQuv; reflexivity.
+      rewrite -> EQxy, EQuv; reflexivity.
     - intros σ ρ σc ρc SUBc; simpl.
       eapply pcm_respC; [assumption |]; intros i; simpl; apply SUBc.
   Qed.
@@ -491,12 +501,12 @@ Section SubPCM.
 
   Lemma muforget_mono (f g : U -m> {a : T | P a}) : muincl ∘ f ⊑ muincl ∘ g -> f ⊑ g.
   Proof.
-    intros HEq x; simpl; rewrite (HEq x); reflexivity.
+    move=> HEq x; exact: HEq.
   Qed.
 
   Lemma muforget_mono' (f g : U -m> {a : T | P a}) : muincl ∘ f == muincl ∘ g -> f == g.
   Proof.
-    intros HEq x; simpl; rewrite (HEq x); reflexivity.
+    move=> HEq x; exact: HEq.
   Qed.
 
 End SubPCM.
@@ -519,12 +529,18 @@ Section Option.
                        | Some v2 => v1 ⊑ v2
                      end
       end.
-    Program Instance option_preo_bot : preoType (option V) := mkPOType option_pord_bot.
+    Program Instance option_preo_bot : preoType (option V) := mkPOType option_pord_bot _.
     Next Obligation.
       split.
       - intros [v |]; simpl; [reflexivity | exact I].
       - intros [v1 |] [v2 |] [v3 |] Sub12 Sub23; simpl in *; try exact I || contradiction; [].
         etransitivity; eassumption.
+    Qed.
+    Next Obligation.
+      move=> x1 x2 Rx y1 y2 Ry; move: Rx Ry.
+      case: x1=>[x1|]; case: x2=>[x2|] //= Rx.
+      case: y1=>[y1|]; case: y2=>[y2|] //= Ry; last done.
+      by rewrite Rx Ry; reflexivity.
     Qed.
 
     Instance option_pcm_bot : pcmType (option V).
@@ -540,7 +556,7 @@ Section Option.
           destruct o2 as [v2 |]; [| contradiction EQ12].
           destruct o4 as [v4 |]; [| contradiction HS].
           destruct o3 as [v3 |]; [simpl in * | contradiction EQ34].
-          rewrite EQ12, EQ34; assumption.
+          rewrite -> EQ12, EQ34; assumption.
       - intros σ ρ σc ρc HS.
         unfold compl, option_cmt, option_compl at 1; simpl.
         generalize (@eq_refl _ (σ 1)); pattern (σ 1) at 1 3; destruct (σ 1) as [vs1 |]; intros; [| exact I].
@@ -571,14 +587,20 @@ Section Option.
                        | Some v1 => v1 ⊑ v2
                      end
       end.
-    Program Instance option_preo_top : preoType (option V) := mkPOType option_pord_top.
+    Program Instance option_preo_top : preoType (option V) := mkPOType option_pord_top _.
     Next Obligation.
       split.
       - intros [v |]; simpl; [reflexivity | exact I].
       - intros [v1 |] [v2 |] [v3 |] Sub12 Sub23; simpl in *; try exact I || contradiction; [].
         etransitivity; eassumption.
     Qed.
-
+    Next Obligation.
+      move=> x1 x2 Rx y1 y2 Ry; move: Rx Ry.
+      case: x1=>[x1|]; case: x2=>[x2|] //= Rx;
+      case: y1=>[y1|]; case: y2=>[y2|] //= Ry; last done.
+      rewrite Rx Ry; by reflexivity.
+    Qed.
+      
     Instance option_pcm_top : pcmType (option V).
     Proof.
       split.
@@ -592,7 +614,7 @@ Section Option.
           destruct o4 as [v4 |]; [| contradiction EQ34].
           destruct o2 as [v2 |]; [| contradiction HS].
           destruct o1 as [v1 |]; [simpl in * | contradiction EQ12].
-          rewrite EQ12, EQ34; assumption.
+          rewrite -> EQ12, EQ34; assumption.
       - intros σ ρ σc ρc HS.
         unfold compl, option_cmt, option_compl at 2; simpl.
         generalize (@eq_refl _ (ρ 1)); pattern (ρ 1) at 1 3; destruct (ρ 1) as [vr1 |]; intros; [| exact I].
@@ -629,9 +651,13 @@ Arguments extend_sub {_ _ _ _ _ _ _} {_} {_ _ _} _ _.
 Section ExtOrdDiscrete.
   Context U `{cmU : cmetric U}.
 
-  Program Instance disc_preo : preoType U := mkPOType equiv.
+  Program Instance disc_preo : preoType U := mkPOType equiv _.
   Next Obligation.
     split; apply _.
+  Qed.
+  Next Obligation.
+    move=> x1 x2 Rx y1 y2 Ry.
+    by rewrite Rx Ry.
   Qed.
 
   Instance disc_pcm : pcmType U.
