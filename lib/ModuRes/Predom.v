@@ -8,8 +8,15 @@ Class preoType T {eqT : Setoid T} :=
   {pord   :  relation T;
    preoPO :> PreOrder pord;
    preoC  : Proper (equiv ==> equiv ==> impl) pord}.
-   
-Instance preoType_compat T `{pT : preoType T} : Proper (equiv ==> equiv ==> impl) pord := preoC.
+
+(** Rewriting under pord. *)
+Instance preoType_compat T `{pT : preoType T} : Proper (equiv ==> equiv ==> iff) pord.
+Proof.
+  split; first by exact: preoC.
+  symmetry in H, H0.
+  exact: preoC.
+Qed.
+
 Arguments pord {_ _ _} !_ !_.
 Notation "'mkPOType' R" := (Build_preoType _ _ R _) (at level 10).
 Notation "s ⊑ t" := (pord s t) (at level 70, no associativity) : predom_scope.
