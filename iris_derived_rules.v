@@ -33,7 +33,7 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
     Lemma vsTrans P Q R m1 m2 m3 (HMS : m2 ⊆ m1 ∪ m3) :
       vs m1 m2 P Q ∧ vs m2 m3 Q R ⊑ vs m1 m3 P R.
     Proof.
-      intros w0 n0 r0 [HPQ HQR] w1 HSub n1 r1 Hlt _ HP.
+      move=> w0 n0 r0 [HPQ HQR] w1 HSub n1 r1 Hlt _ HP.
       eapply pvsTrans; eauto.
       eapply pvsImpl; split; first eapply propsMWN; 
       [eassumption | eassumption | exact HQR | ].
@@ -45,8 +45,23 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
     Proof.
       move => w0 n r0 HPQ w1 HSub n1 r1 Hlt _ /(HPQ _ HSub _ _ Hlt) HQ.
       eapply pvsEnt, HQ; exact unit_min.
-    Qed.    
+    Qed.
 
+    Existing Instance LP_res.
+
+    Lemma vsGhostUpd m rl (P : RL.res -> Prop) (HU : rl ⇝∈ P) :
+      valid (vs m m (ownL rl) (xist (ownLP P))).
+    Proof.
+      move=>w0 n0 _ w1 Hw01 n1 r1 Hn01 _ Hown.
+      eapply pvsGhostUpd, Hown. assumption.
+    Qed.
+
+    Lemma vsGhostStep m (rl rl': RL.res) (HU : rl ⇝ rl') :
+      valid (vs m m (ownL rl) (ownL rl')).
+    Proof.
+      move=>w0 n0 _ w1 Hw01 n1 r1 Hn01 _ Hown.
+      eapply pvsGhostStep, Hown. assumption.
+    Qed.
 
   End DerivedVSRules. 
 

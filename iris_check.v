@@ -1,5 +1,5 @@
 Require Import Arith ssreflect.
-Require Import world_prop world_prop_recdom core_lang lang masks iris_core iris_plog iris_meta iris_vs_rules iris_ht_rules iris_derived_rules.
+Require Import world_prop world_prop_recdom core_lang lang masks iris_core iris_plog iris_meta iris_vs_rules iris_ht_rules.
 Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
 Set Bullet Behavior "Strict Subproofs".
@@ -182,7 +182,6 @@ Module Import Plog := IrisPlog TrivialRA StupidLang Res World Core.
 Module Import Meta := IrisMeta TrivialRA StupidLang Res World Core Plog.
 Module Import HTRules := IrisHTRules TrivialRA StupidLang Res World Core Plog.
 Module Import VSRules := IrisVSRules TrivialRA StupidLang Res World Core Plog.
-Module Import DRRules := IrisDerivedRules TrivialRA StupidLang Res World Core Plog VSRules HTRules.
 
 (* And now we check for axioms *)
 Print Assumptions adequacy_obs.
@@ -194,8 +193,10 @@ Print Assumptions lift_pure_det_step.
 
 Print Assumptions vsOpen.
 Print Assumptions vsClose.
-Print Assumptions vsTrans.
-Print Assumptions vsGhostUpd.
+Print Assumptions vsNewInv.
+Print Assumptions pvsFrame.
+Print Assumptions pvsTrans.
+Print Assumptions pvsGhostUpd.
 Print Assumptions htBind.
 Print Assumptions htCons.
 Print Assumptions htACons.

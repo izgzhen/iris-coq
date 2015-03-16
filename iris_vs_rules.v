@@ -161,10 +161,10 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
     Definition ownLP (P : RL.res -> Prop) : {s : RL.res | P s} -n> Props :=
       ownL <M< inclM.
 
-    Lemma vsGhostUpd m rl (P : RL.res -> Prop) (HU : rl ⇝∈ P) :
-      valid (vs m m (ownL rl) (xist (ownLP P))).
+    Lemma pvsGhostUpd m rl (P : RL.res -> Prop) (HU : rl ⇝∈ P) :
+      ownL rl ⊑ pvs m m (xist (ownLP P)).
     Proof.
-      unfold ownLP; intros _ _ _ w _ n [rp' rl'] _ _ HG w'; intros.
+      unfold ownLP. intros w n [rp' rl'] HG w'; intros.
       destruct HE as [rs [ Hsat HE] ]. rewrite <-assoc in Hsat. destruct Hsat as [Hval Hst].
       destruct HG as [ [rdp rdl] [_ EQrl] ]. simpl in EQrl. clear rdp.
       destruct (HU (rdl · snd(rf · comp_map rs))) as [rsl [HPrsl HCrsl] ].
@@ -183,6 +183,22 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
           * clear -HCrsl. rewrite ->!assoc, (comm rsl), <-assoc in HCrsl.
             apply ra_op_valid2 in HCrsl. rewrite ra_op_prod_snd. exact HCrsl.
           * clear -Hst. rewrite ra_op_prod_fst. rewrite ra_op_prod_fst in Hst. exact Hst.
+    Qed.
+
+    Lemma pvsGhostStep m (rl rl': RL.res) (HU : rl ⇝ rl') :
+      ownL rl ⊑ pvs m m (ownL rl').
+    Proof.
+      etransitivity.
+      - pose(P:= fun r:RL.res => r = rl').
+        eapply pvsGhostUpd with (P:=P).
+        clear -HU. move=>rf Hval. exists rl'.
+        split; first reflexivity.
+        by eapply HU.
+      - move=>w0 n0 r0 Hpvs.
+        eapply pvsImpl.
+        split; last eassumption.
+        move=>w1 Hw01 n1 r1 Hn01 Hr01 [[rl'' Hrl''] Hown].
+        subst rl''. exact Hown.
     Qed.
 
     Program Definition inv' m : Props -n> {n : nat | m n} -n> Props :=
