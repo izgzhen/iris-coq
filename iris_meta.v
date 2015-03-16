@@ -347,14 +347,14 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Implicit Types (Q : vPred).
 
     (* Obligation common to lift_pred and lemma statement. *)
-    Program Instance lift_pred_dist (φ : expr * state -> Props) n : Proper (dist n ==> dist n) φ.
+    Program Instance lift_esPred_dist (φ : expr * state -> Props) n : Proper (dist n ==> dist n) φ.
     Next Obligation.
       move=> [e'1 σ'1] [e'2 σ'2] HEq w k r HLe.
       move: HEq HLe; case: n=>[|n] HEq HLt; first by exfalso; exact: lt0.
       by move: HEq=>/=[-> ->].
     Qed.
 
-    Program Definition lift_pred φ : expr * state -n> Props :=
+    Program Definition lift_esPred φ : expr * state -n> Props :=
       n[(fun c => pcmconst(mkUPred(fun n r => φ c) _))].
     Next Obligation. done. Qed.
 
@@ -362,7 +362,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         (RED : reducible e)
         (STEP : forall e' σ', prim_step (e,σ) (e',σ') -> φ(e',σ'))
         (SAFE : if safe then safeExpr e σ else True) :
-      (∀c, let: (e',σ') := c in lift_pred φ (e',σ') → ht safe m (P * ownS σ') e' Q)
+      (∀c, let: (e',σ') := c in lift_esPred φ (e',σ') → ht safe m (P * ownS σ') e' Q)
         ⊑ ht safe m (▹P * ownS σ) e Q.
     Proof.
       move=> wz nz rz Hfrom w1 HSw1 n r HLe _ HPS.
@@ -419,8 +419,8 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       exact: ra_op_unit2.
     Qed.
     
-    Program Definition lift_post φ : value -n> Props :=
-      n[(fun v => ∃σ', ownS σ' ∧ lift_pred φ (`v, σ'))].
+    Program Definition lift_esPost φ : value -n> Props :=
+      n[(fun v => ∃σ', ownS σ' ∧ lift_esPred φ (`v, σ'))].
     Next Obligation.
       move=> σ σ' HEq w k r HLt.
       move: HEq HLt; case: n=>[|n] HEq HLt; first by exfalso; omega.
@@ -436,15 +436,16 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         (AT : atomic e)
         (STEP : forall e' σ', prim_step (e,σ) (e',σ') -> φ(e',σ'))
         (SAFE : if safe then safeExpr e σ else True) :
-      valid(ht safe m (ownS σ) e (lift_post φ)).
+      valid(ht safe m (ownS σ) e (lift_esPost φ)).
     Abort.
-    
+
   End StatefulLifting.
 
-  Section Lifting.
+  Section StatelessLifting.
 
-    Implicit Types (P : Props) (i : nat) (safe : bool) (m : mask) (e : expr) (Q R : vPred) (r : res).
-
+    Implicit Types (P : Props) (n k : nat) (safe : bool) (m : mask) (e : expr) (r : res) (σ : state) (w : Wld).
+    Implicit Types (Q R: vPred) (φ : expr -=> Prop).
+    
     Program Definition lift_ePred (φ : expr -=> Prop) : expr -n> Props :=
       n[(fun v => pcmconst (mkUPred (fun n r => φ v) _))].
     Next Obligation.
@@ -456,7 +457,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       - intros _. simpl. assert(H_xy': x == y) by assumption. rewrite H_xy'. tauto.
     Qed.
 
-    Program Definition plugExpr safe m φ P Q: expr -n> Props :=
+    Program Definition plug_ePred safe m φ P Q: expr -n> Props :=
       n[(fun e' => (lift_ePred φ e') → (ht safe m P e' Q))].
     Next Obligation.
       intros e1 e2 Heq w n' r HLt.
@@ -466,17 +467,55 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Theorem lift_pure_step safe m e (φ : expr -=> Prop) P Q
             (RED  : reducible e)
-            (STEP : forall σ e2 σ2, prim_step (e, σ) (e2, σ2) -> σ2 = σ /\ φ e2):
-      (all (plugExpr safe m φ P Q)) ⊑ ht safe m (▹P) e Q.
-    Abort.
+            (STEP : forall σ e2 σ2, prim_step (e, σ) (e2, σ2) -> σ2 = σ /\ φ e2)
+            (SAFE : forall σ, if safe then safeExpr e σ else True):
+      (all (plug_ePred safe m φ P Q)) ⊑ ht safe m (▹P) e Q.
+    Proof.
+      move=> w0 n0 r0 Hfrom w1 Hw01 n1 r1 Hn01 _ HlaterP.
+      rewrite unfold_wp => w2 n2 rf mf σ Hw12 Hn12 Hmask Hsat.
+      (* The four cases of WP *)
+      split; last split; last split.
+      - move=>HV. exfalso. eapply reducible_not_value; eauto.
+      - move=>σ' ei ei' K Hfill Hstep.
+        have HK: K = ε.
+        { eapply step_same_ctx; first 2 last.
+          - eassumption.
+          - rewrite fill_empty. symmetry. eassumption.
+          - do 2 eexists. eassumption. }
+        subst K. rewrite fill_empty in Hfill. subst ei. rewrite fill_empty.
+        specialize (STEP _ _ _ Hstep). destruct STEP as [Hσ Hφ]. subst σ'.
+        exists w2 r1.
+        split; first reflexivity.
+        split; last by (eapply wsatM, Hsat; omega).
+        (* Now we just want to apply Hfrom. TODO: Is there a less annoying way to do that? *)
+        assert (Hht: ht safe m P ei' Q w1 n1 r1).
+        { move: Hfrom.
+          move/(_ ei' _ Hw01 _ _ Hn01 (prefl _)).
+          apply. simpl. apply Hφ. }
+        clear Hfrom Hφ RED SAFE.
+        destruct n1 as [|n1']; first by (exfalso; omega).
+        specialize (Hht _ Hw12 n2 r1).
+        eapply Hht.
+        + omega.
+        + apply: unit_min.
+        + change (P w1 n1' r1) in HlaterP.
+          eapply propsMWN, HlaterP.
+          * assumption.
+          * omega.
+      - move=>e' K Hfill. exfalso.
+        eapply reducible_not_fork; first by eexact RED.
+        eassumption.
+      - move=>Heq. subst safe. by apply SAFE.
+    Qed.
 
     Lemma lift_pure_deterministic_step safe m e e' P Q
           (RED  : reducible e)
           (STEP : forall σ e2 σ2, prim_step (e, σ) (e2, σ2) -> σ2 = σ /\ e2 = e):
       ht safe m P e' Q ⊑ ht safe m (▹P) e Q.
+      
     Abort.
 
-  End Lifting.
+  End StatelessLifting.
 
 End IRIS_META.
 
