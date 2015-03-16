@@ -419,7 +419,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Qed.
     
     Program Definition lift_esPost φ : value -n> Props :=
-      n[(fun v => ∃σ', ownS σ' ∧ lift_esPred φ (`v, σ'))].
+      n[(fun v => ∃σ', ownS σ' ∧ lift_esPred φ (v, σ'))].
     Next Obligation.
       move=> σ σ' HEq w k r HLt.
       move: HEq HLt; case: n=>[|n] HEq HLt; first by exfalso; omega.
@@ -431,12 +431,46 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       by move: HEq=>/=->.
     Qed.
 
-    Lemma lift_atomic_det {m safe e σ φ P Q}
+    Lemma lift_atomic_det_step {m safe e σ φ P Q}
         (AT : atomic e)
         (STEP : forall e' σ', prim_step (e,σ) (e',σ') -> φ(e',σ'))
         (SAFE : if safe then safeExpr e σ else True) :
       valid(ht safe m (ownS σ) e (lift_esPost φ)).
-    Abort.
+    Proof.
+      move=>w0 n0 r0.
+      assert (HEQ: ownS σ == ▹⊤ * ownS σ).
+      { rewrite <-later_true. symmetry. by apply: sc_top_unit. }
+      rewrite HEQ=>{HEQ}.
+      pose(φ' := fun (c : expr*state) => let (e', σ') := c in φ c /\ is_value e').
+      assert(Mφ': Proper (equiv ==> equiv) φ').
+      { clear. move=>[e0 σ0] [e1 σ1] /= [HEQe HEQσ]. subst. reflexivity. }
+      eapply (lift_step (φ := mkMorph φ' Mφ')).
+      - by apply: atomic_reducible.
+      - move=> e' σ' Hstep /=.
+        split; first by apply: STEP.
+        eapply atomic_step, Hstep. assumption.
+      - assumption.
+      - case =>{SAFE} e' σ' w1 Hw01 n1 r1 Hn01 Hr01 [Hφ Hval].
+        move=>w2 Hw12 n2 r2 Hn12 Hr12 Hσ'.
+        rewrite ->sc_top_unit in Hσ'. rewrite unfold_wp.
+        move=>w3 n3 rf mf σ'' Hw23 Hn23 Hm Hsat.
+        (* The four cases of WP *)
+        split; last split; last split.
+        + move=>Hval2. exists w3 r2.
+          split; first by reflexivity.
+          split; last by assumption.
+          exists σ'. split.
+          * eapply propsM, Hσ'; [assumption|omega|reflexivity].
+          * exact Hφ.
+        + move=>? ? ? ? Hfill Hstep. exfalso.
+          eapply values_stuck; first by eassumption.
+          * eassumption.
+          * do 2 eexists. eassumption.
+        + move=>? K Hfill. exfalso. eapply fork_not_value. subst e'.
+          assert(HK := fill_value Hval). subst K.
+          rewrite fill_empty in Hval. eassumption.
+        + move=>_. left. assumption.
+    Qed.
 
   End StatefulLifting.
 
@@ -507,7 +541,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       - move=>Heq. subst safe. by apply SAFE.
     Qed.
 
-    Lemma lift_pure_deterministic_step safe m e e' P Q
+    Lemma lift_pure_det_step safe m e e' P Q
           (RED  : reducible e)
           (STEP : forall σ e2 σ2, prim_step (e, σ) (e2, σ2) -> σ2 = σ /\ e2 = e')
           (SAFE : forall σ, if safe then safeExpr e σ else True):

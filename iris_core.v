@@ -242,6 +242,14 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Lemma biimpR {P Q : Props} {w n r} : (P ↔ Q) w n r -> (Q → P) w n r.
   Proof. by move=>[_ R]. Qed.
 
+  Lemma later_true: (⊤:Props) == ▹⊤.
+  Proof.
+    move=> w n r.
+    case:n=>[|n].
+    - reflexivity.
+    - reflexivity.
+  Qed.
+
   Section IntEqProps.
 
     (* On Props, valid biimplication, valid internal equality, and external equality coincide. *)

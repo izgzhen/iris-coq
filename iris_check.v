@@ -189,6 +189,9 @@ Print Assumptions adequacy_obs.
 Print Assumptions adequacy_safe.
 Print Assumptions robust_safety.
 
+Print Assumptions lift_atomic_det_step.
+Print Assumptions lift_pure_det_step.
+
 Print Assumptions vsOpen.
 Print Assumptions vsClose.
 Print Assumptions vsTrans.

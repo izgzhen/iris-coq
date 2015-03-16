@@ -431,6 +431,13 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Definition ht safe m P e Q := □(P → wp safe m e Q).
 
+    Global Instance ht_proper safe m: Proper (equiv ==> equiv ==> equiv ==> equiv) (ht safe m).
+    Proof.
+      move=> P0 P1 HEQP e0 e1 HEQe Q0 Q1 HEQQ.
+      unfold ht. rewrite HEQe. rewrite HEQP. rewrite HEQQ.
+      reflexivity.
+    Qed.
+
     (* People will need that *)
     Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
 
