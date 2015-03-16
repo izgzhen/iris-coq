@@ -261,6 +261,24 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
          (exists σ' ei ei' K, e = fill K ei /\ prim_step (ei, σ) (ei', σ')) \/
          (exists e' K, e = fill K (fork e')).
 
+    Lemma tp_safe e tp σ
+          (SAFE  : safeExpr e σ)
+          (INPOOL: e ∈ tp):
+      is_value e \/ exists tp' σ', step (tp, σ) (tp', σ').
+    Proof.
+      apply List.in_split in INPOOL.
+      destruct INPOOL as [tp1 [tp2 Htp]].
+      destruct SAFE as [Hval|[ [σ' [ei [ei' [K [Hfill Hstep]]]]] | [e' [K Hfill]] ]].
+      - left. assumption.
+      - right; do 2 eexists. eapply step_atomic.
+        + eassumption.
+        + rewrite Htp Hfill. reflexivity.
+        + reflexivity.
+      - right; do 2 eexists. eapply step_fork.
+        + rewrite Htp Hfill. reflexivity.
+        + reflexivity.
+    Qed.
+
     Definition wpFP safe m (WP : expr -n> vPred -n> Props) e φ w n r :=
       forall w' k rf mf σ (HSw : w ⊑ w') (HLt : k < n) (HD : mf # m)
              (HE : wsat σ (m ∪ mf) (r · rf) w' @ S k),
