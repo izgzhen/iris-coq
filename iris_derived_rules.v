@@ -30,6 +30,22 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
       apply bot_false.
     Qed.
 
+    Lemma vsNotOwnInvalid m1 m2 r
+       (Hnval: ~↓r):
+      valid (vs m1 m2 (ownR r) ⊥).
+    Proof.
+      move=>w0 n0 _ w1 Hw01 n1 r1 Hn01 _ Hown.
+      eapply pvsNotOwnInvalid; eassumption.
+    Qed.
+
+    Lemma vsTimeless m P :
+      timeless P ⊑ vs m m (▹P) P.
+    Proof.
+      move=>w0 n0 r0 Htl w1 Hw01 n1 r1 Hn01 _ HP.
+      eapply pvsTimeless. split; last assumption.
+      eapply propsMWN, Htl; eassumption.
+    Qed.
+
     Lemma vsTrans P Q R m1 m2 m3 (HMS : m2 ⊆ m1 ∪ m3) :
       vs m1 m2 P Q ∧ vs m2 m3 Q R ⊑ vs m1 m3 P R.
     Proof.
@@ -61,6 +77,29 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
     Proof.
       move=>w0 n0 _ w1 Hw01 n1 r1 Hn01 _ Hown.
       eapply pvsGhostStep, Hown. assumption.
+    Qed.
+
+    Lemma vsOpen i P :
+      valid (vs (mask_sing i) mask_emp (inv i P) (▹P)).
+    Proof.
+      move=>w0 n0 _ w1 Hw01 n1 r1 Hn01 _ Hinv.
+      eapply pvsOpen, Hinv.
+    Qed.
+
+    Lemma vsClose i P :
+      valid (vs mask_emp (mask_sing i) (inv i P ∧ ▹P) ⊤).
+    Proof.
+      move=>w0 n0 _ w1 Hw01 n1 r1 Hn01 _ Hpre.
+      eapply pvsClose, Hpre.
+    Qed.
+
+    Existing Instance LP_mask.
+
+    Lemma vsNewInv P m (HInf : mask_infinite m) :
+      valid (vs m m (▹P) (xist (inv' m P))).
+    Proof.
+      move=>w0 n0 _ w1 Hw01 n1 r1 Hn01 _ HP.
+      eapply pvsNewInv; eassumption.
     Qed.
 
   End DerivedVSRules. 

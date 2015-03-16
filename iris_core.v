@@ -335,9 +335,6 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Local Arguments equiv {_ _} _ _ /.
 
     (** Ownership **)
-    (* We define this on *any* resource, not just the positive (valid) ones.
-       Note that this makes ownR trivially *False* for invalid u: There is no
-       element v such that u · v = r (where r is valid) *)
     Program Definition ownR: res -=> Props :=
       s[(fun u => pcmconst (mkUPred(fun n r => u ⊑ r) _) )].
     Next Obligation.
