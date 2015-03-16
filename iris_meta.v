@@ -509,10 +509,19 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Lemma lift_pure_deterministic_step safe m e e' P Q
           (RED  : reducible e)
-          (STEP : forall σ e2 σ2, prim_step (e, σ) (e2, σ2) -> σ2 = σ /\ e2 = e):
+          (STEP : forall σ e2 σ2, prim_step (e, σ) (e2, σ2) -> σ2 = σ /\ e2 = e')
+          (SAFE : forall σ, if safe then safeExpr e σ else True):
       ht safe m P e' Q ⊑ ht safe m (▹P) e Q.
-      
-    Abort.
+    Proof.
+      move=> w0 n0 r0 Hfrom.
+      pose(φ := s[(fun e => e = e')]).
+      eapply lift_pure_step with (φ := φ).
+      - assumption.
+      - move=>? ? ? Hstep. simpl. apply STEP. assumption.
+      - assumption.
+      - move=>e2 {RED STEP SAFE} w1 Hw01 n1 r1 Hn01 Hr01 Hφ.
+        hnf in Hφ. subst e2. eapply propsM, Hfrom; eassumption.
+    Qed.
 
   End StatelessLifting.
 
