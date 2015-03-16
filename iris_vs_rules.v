@@ -132,6 +132,16 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       do 2!eexists; split; [exact HSub2|split; [|eassumption]].
       eapply HQ; [by rewrite -> HSub1 | omega | exact unit_min].
     Qed.
+
+    (* A weaker version of pvsImpl, not giving the implication the chance to only hold in some worlds *)
+    Lemma pvsByImpl P Q m1 m2 :
+      (P ⊑ Q) -> pvs m1 m2 P ⊑ pvs m1 m2 Q.
+    Proof.
+      move=> HPQ w0 n0 r0 Hpvs.
+      eapply pvsImpl. split; last eassumption.
+      move=>{Hpvs} w1 Hw01 n1 r1 Hn01 _ HP.
+      eapply HPQ, HP.
+    Qed.
       
     Lemma pvsFrame P Q m1 m2 mf (HDisj : mf # m1 ∪ m2) :
       pvs m1 m2 P * Q ⊑ pvs (m1 ∪ mf) (m2 ∪ mf) (P * Q).
@@ -195,9 +205,8 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         split; first reflexivity.
         by eapply HU.
       - move=>w0 n0 r0 Hpvs.
-        eapply pvsImpl.
-        split; last eassumption.
-        move=>w1 Hw01 n1 r1 Hn01 Hr01 [[rl'' Hrl''] Hown].
+        eapply pvsByImpl; last eassumption.
+        move=>{Hpvs w0 n0 r0} w0 n0 r0 [[rl'' Hrl''] Hown].
         subst rl''. exact Hown.
     Qed.
 

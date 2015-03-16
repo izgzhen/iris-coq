@@ -34,7 +34,7 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
       vs m1 m2 P Q ∧ vs m2 m3 Q R ⊑ vs m1 m3 P R.
     Proof.
       move=> w0 n0 r0 [HPQ HQR] w1 HSub n1 r1 Hlt _ HP.
-      eapply pvsTrans; eauto.
+      eapply pvsTrans; first by eauto.
       eapply pvsImpl; split; first eapply propsMWN; 
       [eassumption | eassumption | exact HQR | ].
       eapply HPQ; by eauto using unit_min.
