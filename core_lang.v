@@ -42,7 +42,7 @@ Module Type CORE_LANG.
   Axiom fill_noinv: forall K1 K2, (* positivity *)
                        K1 ∘ K2 = ε -> K1 = ε /\ K2 = ε.
   Axiom fill_value : forall K e,
-                       is_value (fill K e ) ->
+                       is_value (fill K e) ->
                        K = ε.
   Axiom fill_fork  : forall K e e',
                        fork e' = fill K e ->

@@ -30,6 +30,8 @@ Record monoMet_morphism T U `{pcmT : pcmType T} `{pcmU : pcmType U} := mkMUMorph
 
 Arguments mkMUMorph [T U] {_ _ _ _ _ _ _ _ _ _} _ _.
 Arguments mu_morph  [T U] {_ _ _ _ _ _ _ _ _ _} _.
+Arguments mu_mono  {_ _} {_ _ _ _ _ _ _ _ _ _} _ {_ _} _.
+
 Infix "-m>" := monoMet_morphism (at level 45, right associativity) : pumet_scope.
 Notation "'m[(' f ')]'" := (mkMUMorph n[(f)] _).
 Delimit Scope pumet_scope with pm.
@@ -42,7 +44,7 @@ Section Morph_Props.
   Program Definition pcomp (f : U -m> V) (g : T -m> U) :=
     m[(f <M< g)].
   Next Obligation.
-    intros x y HSub; now apply mu_mono, mu_mono.
+    intros x y HSub; apply mu_mono; now apply mu_mono.
   Qed.
 
   Program Definition pid := m[(umid _)].
@@ -105,8 +107,8 @@ Section PUMMorphProps1.
     - intros f g h Hfg Hgh; simpl; etransitivity; [apply Hfg | apply Hgh].
   Qed.
 
-  Global Instance PM_proper (f : T -m> U) :
-    Proper (pord ==> pord) f := mu_mono _ _ f.
+  Global Instance PM_proper (f : T -m> U) : Proper (pord ==> pord) f.
+  Proof. apply mu_mono. Qed.
 
   Definition PMasMono (f : T -m> U) : (T -m> U)%pd :=
     mkMMorph (mu_morph f) _.
@@ -436,7 +438,6 @@ Section PCMExponentials.
 
   Program Definition lift2_pcm (f : T -n> U -n> V) p q : T -m> U -m> V :=
     mkMUMorph (mkUMorph (mkMorph (fun a => mkMUMorph (f a) (p a)) _) _) q.
-(* (fun g h EQ x => equiv_morph _ _ (morph_resp f _ _ EQ) _ _ (reflexivity x))) (fun n g h EQ x => mmorph_proper n _ _ (met_morph_nonexp _ _ f _ _ _ EQ) _ _ (reflexivity x))) q.*)
 
   Program Definition mcurry (f : T * U -m> V) : T -m> U -m> V :=
     lift2_pcm (curryM f) _ _.
@@ -622,6 +623,8 @@ Class extensible V `{pcmV : pcmType V} :=
                vd ⊑ extend ve vd
            }.
 Arguments mkExtend {_ _ _ _ _ _} _ {_ _}.
+Arguments extend_dist {_ _ _ _ _ _ _} {_} {_ _ _} _ _.
+Arguments extend_sub {_ _ _ _ _ _ _} {_} {_ _ _} _ _.
 
 Section ExtOrdDiscrete.
   Context U `{cmU : cmetric U}.
@@ -656,12 +659,12 @@ Section ExtProd.
   Proof. 
     - intros n [v1 v2] [vd1 vd2] [ve1 ve2] [E1 E2] [S1 S2]. 
       split.
-      + eapply (extend_dist n _ _ _ E1 S1). 
-      + eapply (extend_dist n _ _ _ E2 S2). 
+      + eapply (extend_dist E1 S1). 
+      + eapply (extend_dist E2 S2). 
     - intros n [v1 v2] [vd1 vd2] [ve1 ve2] [E1 E2] [S1 S2]. 
       split.
-      + eapply (extend_sub n _ _ _ E1 S1).
-      + eapply (extend_sub n _ _ _ E2 S2).
+      + eapply (extend_sub E1 S1).
+      + eapply (extend_sub E2 S2).
   Qed.
 
 End ExtProd.

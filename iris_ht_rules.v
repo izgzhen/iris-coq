@@ -33,9 +33,9 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       rewrite unfold_wp; intros w'; intros; split; [| split; [| split] ]; intros.
       - exists w' r'; split; [reflexivity | split; [| assumption] ].
         simpl; reflexivity.
-      - contradiction (values_stuck _ HV _ _ HDec).
+      - contradiction (values_stuck HV HDec).
         repeat eexists; eassumption.
-      - subst e; assert (HT := fill_value _ _ HV); subst K.
+      - subst e; assert (HT := fill_value HV); subst K.
         revert HV; rewrite fill_empty; intros.
         contradiction (fork_not_value _ HV).
       - unfold safeExpr. auto.
@@ -49,7 +49,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
     Program Definition plugV safe m Q Q' K :=
       n[(fun v : value => ht safe m (Q v) (fill K (`v)) Q' )].
     Next Obligation.
-      intros v1 v2 EQv; unfold ht; eapply (met_morph_nonexp _ _ box).
+      intros v1 v2 EQv; unfold ht; eapply (met_morph_nonexp box).
       eapply (impl_dist (ComplBI := Props_BI)).
       - apply Q; assumption.
       - destruct n as [| n]; [apply dist_bound | simpl in EQv].
@@ -75,7 +75,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         do 30 red in HK; unfold proj1_sig in HK.
         apply HK; [etransitivity; eassumption | apply HLt | apply unit_min | assumption].
       - intros w'; intros; edestruct He as [_ [HS [HF HS'] ] ]; try eassumption; [].
-        split; [intros HVal; contradiction HNVal; assert (HT := fill_value _ _ HVal);
+        split; [intros HVal; contradiction HNVal; assert (HT := fill_value HVal);
                 subst K; rewrite fill_empty in HVal; assumption | split; [| split]; intros].
         + clear He HF HE; edestruct step_by_value as [K' EQK];
           [eassumption | repeat eexists; eassumption | eassumption |].
@@ -170,11 +170,11 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         edestruct HS as [w [r'' [HSw [He' HE] ] ] ]; try eassumption; clear He HS HE'.
         destruct k as [| k]; [exists w' r'; split; [reflexivity | split; [apply wpO | exact I] ] |].
         assert (HNV : ~ is_value ei)
-          by (intros HV; eapply (values_stuck _ HV); [symmetry; apply fill_empty | repeat eexists; eassumption]).
-        subst e; assert (HT := atomic_fill _ _ HAt HNV); subst K; clear HNV.
+          by (intros HV; eapply (values_stuck HV); [symmetry; apply fill_empty | repeat eexists; eassumption]).
+        subst e; assert (HT := atomic_fill HAt HNV); subst K; clear HNV.
         rewrite ->fill_empty in *; rename ei into e.
         setoid_rewrite HSw'; setoid_rewrite HSw.
-        assert (HVal := atomic_step _ _ _ _ HAt HStep).
+        assert (HVal := atomic_step HAt HStep).
         rewrite ->HSw', HSw in HQ; clear - HE He' HQ HSub HVal HD.
         rewrite ->unfold_wp in He'; edestruct He' as [HV _];
         [reflexivity | apply le_n | rewrite ->HSub; eassumption | eassumption |].
@@ -192,7 +192,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
           unfold lt in HLt; rewrite ->HLt, <- HSw.
           eapply Q, HQ; [| apply le_n]; simpl; reflexivity.
         + eapply values_stuck; [.. | repeat eexists]; eassumption.
-        + clear - HDec HVal; subst; assert (HT := fill_value _ _ HVal); subst.
+        + clear - HDec HVal; subst; assert (HT := fill_value HVal); subst.
           rewrite ->fill_empty in HVal; now apply fork_not_value in HVal.
         + intros; left; assumption.
       - clear HQ; intros; rewrite <- HLe, HSw in He; clear HLe HSw.
@@ -285,11 +285,11 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         exists w'' (r1' · r2).
         split; [eassumption | split; [| eassumption] ].
         assert (HNV : ~ is_value ei)
-          by (intros HV; eapply (values_stuck _ HV); [symmetry; apply fill_empty | repeat eexists; eassumption]).
-        subst e; assert (HT := atomic_fill _ _ HAt HNV); subst K; clear HNV.
+          by (intros HV; eapply (values_stuck HV); [symmetry; apply fill_empty | repeat eexists; eassumption]).
+        subst e; assert (HT := atomic_fill HAt HNV); subst K; clear HNV.
         rewrite ->fill_empty in *.
         unfold lt in HLt; rewrite <- HLt, HSw, HSw' in HLR; simpl in HLR.
-        assert (HVal := atomic_step _ _ _ _ HAt HStep).
+        assert (HVal := atomic_step HAt HStep).
         clear - He' HVal HLR; rename w'' into w; rewrite ->unfold_wp; intros w'; intros.
         split; [intros HV; clear HVal | split; intros; [exfalso| split; intros; [exfalso |] ] ].
         + rewrite ->unfold_wp in He'. rewrite <-assoc in HE.
@@ -302,7 +302,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
           unfold lt in HLt; rewrite <- HLt, HSw, HSw' in HLR; apply HLR.
         + eapply values_stuck; [.. | repeat eexists]; eassumption.
         + subst; clear -HVal.
-          assert (HT := fill_value _ _ HVal); subst K; rewrite ->fill_empty in HVal.
+          assert (HT := fill_value HVal); subst K; rewrite ->fill_empty in HVal.
           contradiction (fork_not_value e').
         + unfold safeExpr. now auto.
       - subst; eapply fork_not_atomic; eassumption.
@@ -321,9 +321,9 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       clear rz n HLe; rewrite ->unfold_wp.
       clear w HSw HP; rename n' into n; rename w' into w; intros w'; intros.
       split; [intros; contradiction (fork_not_value e) | split; intros; [exfalso | split; intros ] ].
-      - assert (HT := fill_fork _ _ _ HDec); subst K; rewrite ->fill_empty in HDec; subst.
+      - assert (HT := fill_fork HDec); subst K; rewrite ->fill_empty in HDec; subst.
         eapply fork_stuck with (K := ε); [| repeat eexists; eassumption ]; reflexivity.
-      - assert (HT := fill_fork _ _ _ HDec); subst K; rewrite ->fill_empty in HDec.
+      - assert (HT := fill_fork HDec); subst K; rewrite ->fill_empty in HDec.
         apply fork_inj in HDec; subst e'; rewrite <- EQr in HE.
         unfold lt in HLt; rewrite <- (le_S_n _ _ HLt), HSw in He.
         simpl in HLR; rewrite <- Le.le_n_Sn in HE.
@@ -336,7 +336,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
           simpl; reflexivity.
         + eapply values_stuck; [exact fork_ret_is_value | eassumption | repeat eexists; eassumption].
         + assert (HV := fork_ret_is_value); rewrite ->HDec in HV; clear HDec.
-          assert (HT := fill_value _ _ HV);subst K; rewrite ->fill_empty in HV.
+          assert (HT := fill_value HV);subst K; rewrite ->fill_empty in HV.
           eapply fork_not_value; eassumption.
         + left; apply fork_ret_is_value.
       - right; right; exists e empty_ctx; rewrite ->fill_empty; reflexivity.

@@ -14,8 +14,8 @@ Class Associative {T} `{eqT : Setoid T} (op : T -> T -> T) :=
 Class Commutative {T} `{eqT : Setoid T} (op : T -> T -> T) :=
   comm  : forall t1 t2, op t1 t2 == op t2 t1.
 
-Section Definitions.
-  Context {T : Type} `{eqT : Setoid T}.
+Section RADef.
+  Context {T : Type} {eqT : Setoid T}.
 
   Class RA_unit := ra_unit : T.
   Class RA_op   := ra_op : T -> T -> T.
@@ -30,7 +30,7 @@ Section Definitions.
         ra_valid_unit      : ra_valid ra_unit;
         ra_op_valid {t1 t2}: ra_valid (ra_op t1 t2) -> ra_valid t1
       }.
-End Definitions.
+End RADef.
 Arguments RA_unit : clear implicits.
 Arguments RA_op : clear implicits.
 Arguments RA_valid : clear implicits.
@@ -41,10 +41,24 @@ Local Open Scope ra_scope.
 
 Notation "1" := (ra_unit) : ra_scope.
 Notation "p · q" := (ra_op p q) (at level 40, left associativity) : ra_scope.
-Notation "'↓' p" := (ra_valid p) (at level 35) : ra_scope.	(* PDS: wouldn't "higher than ·" be an improvement? *)
+Notation "'↓' p" := (ra_valid p) (at level 48) : ra_scope.
+
+Class Cancellative {T} `(raT : RA T) : Prop :=
+  ra_cancel : forall {t1 t2 t3 : T}, ↓t1 · t3 -> t1 · t2 == t1 · t3 -> t2 == t3.
+
+Section RA_FPU.
+  Context {T} `{raT : RA T}.
+  Implicit Types (t : T) (P : T -> Prop).
+
+  (* Two judgments means we'll duplicate some work (e.g., for products). *)
+  Definition RA_FPS t1 t2 := forall tf, ↓t1 · tf -> ↓t2 · tf.
+  Definition RA_FPU t1 P := forall tf, ↓t1 · tf -> exists t2, P t2 /\ ↓t2 · tf.
+End RA_FPU.
+Notation "a ⇝ b" := (RA_FPS a b) (at level 48, no associativity) : ra_scope.
+Notation "a '⇝∈' B" := (RA_FPU a B) (at level 48, no associativity) : ra_scope.
 
 (* General RA lemmas *)
-Section RAs.
+Section RALemmas.
   Context {T} `{raT : RA T}.
 
   Implicit Types (t : T).
@@ -71,7 +85,16 @@ Section RAs.
     rewrite comm. now eapply ra_op_invalid.
   Qed.
 
-End RAs.
+  Lemma ra_fpu_fps {t1 t2} (Hu : t1 ⇝ t2) : t1 ⇝∈ (equiv t2).
+  Proof. move=> f Hv; exists t2; split; [by reflexivity | exact: Hu]. Qed.
+
+  Lemma ra_fps_id {t :T} : t ⇝ t.
+  Proof. done. Qed.
+  
+  Lemma ra_fpu_id {t : T} {P : T -> Prop} (Ht : P t) : t ⇝∈ P.
+  Proof. by move=> f Hv; exists t. Qed.
+End RALemmas.
+
 
 (* RAs with cartesian products of carriers. *)
 Section Products.
@@ -105,28 +128,63 @@ End Products.
 
 Section ProductLemmas.
   Context {S T} `{raS : RA S, raT : RA T}.
+  Implicit Types (s : S) (t : T) (p : S * T).
 
-  Lemma ra_op_prod_fst {st1 st2: S*T} :
-    fst (st1 · st2) = fst st1 · fst st2.
+  Lemma ra_op_prod_fst {p1 p2} :
+    fst (p1 · p2) = fst p1 · fst p2.
   Proof.
-    destruct st1 as [s1 t1]. destruct st2 as [s2 t2]. reflexivity.
+    by move: p1=>[s1 t1]; move: p2=>[s2 t2]; reflexivity.
   Qed.
 
-  Lemma ra_op_prod_snd {st1 st2: S*T} :
-    snd (st1 · st2) = snd st1 · snd st2.
+  Lemma ra_op_prod_snd {p1 p2} :
+    snd (p1 · p2) = snd p1 · snd p2.
   Proof.
-    destruct st1 as [s1 t1]. destruct st2 as [s2 t2]. reflexivity.
+    by move: p1=>[s1 t1]; move: p2=>[s2 t2]; reflexivity.
   Qed.
 
-  Lemma ra_prod_valid {st: S*T} :
-    ↓st <-> ↓(fst st) /\ ↓(snd st).
+  Lemma ra_prod_valid {p} :
+    ↓p <-> ↓fst p /\ ↓snd p.
+  Proof. by move: p=>[s t]. Qed.
+
+  Lemma ra_sep_prod {p1 p2} :
+    ↓p1 · p2 -> ↓fst p1 · fst p2 /\ ↓snd p1 · snd p2.
+  Proof. by move: p1 p2 => [s t] [s' t']. Qed.
+
+  Lemma ra_fps_prod {s s' t t'} (Hs : s ⇝ s') (Ht : t ⇝ t') : (s,t) ⇝ (s',t').
   Proof.
-    destruct st as [s t]. unfold ra_valid, ra_valid_prod.
-    tauto.
+    move=> [fs ft] /ra_sep_prod [Hvs Hvt]; split; [exact: Hs Hvs | exact: Ht Hvt].
   Qed.
 
+  Lemma ra_fps_fst {s s' t} (Hs : s ⇝ s') : (s,t) ⇝ (s',t).
+  Proof. exact: ra_fps_prod Hs ra_fps_id. Qed.
+
+  Lemma ra_fps_snd {s t t'} (Ht : t ⇝ t') : (s,t) ⇝ (s,t').
+  Proof. exact: ra_fps_prod ra_fps_id Ht. Qed.
+  
+  Lemma ra_fpu_prod {s t PS PT} (Hs : s ⇝∈ PS) (Ht : t ⇝∈ PT) :
+    (s,t) ⇝∈ fun p => PS(fst p) /\ PT(snd p).
+  Proof.
+    move=> [fs ft] /ra_sep_prod [Hvs Hvt].
+    move/(_ _ Hvs): Hs=> [s' [HPS Hs']]; move/(_ _ Hvt): Ht=> [t' [HPT Ht']].
+    by exists (s',t').
+  Qed.
+
+  Lemma ra_fpu_fst {s t PS} (Hs : s ⇝∈ PS) : (s,t) ⇝∈ fun p => PS(fst p) /\ t == snd p.
+  Proof. exact: ra_fpu_prod Hs (ra_fpu_id (srefl t)). Qed.
+  
+  Lemma ra_fpu_snd {s t PT} (Ht : t ⇝∈ PT) : (s,t) ⇝∈ fun p => s == fst p /\ PT(snd p).
+  Proof. exact: ra_fpu_prod (ra_fpu_id (srefl s)) Ht. Qed.
+  
+  Global Instance ra_can_prod {cS : Cancellative raS} {cT : Cancellative raT} :
+     Cancellative (ra_prod (S := S) (T := T)).
+  Proof.
+    move=> [f f'] [a a'] [b b'] [Hv Hv'] [/= /(ra_cancel Hv)-> /(ra_cancel Hv')->].
+    by split; reflexivity.
+  Qed.
 End ProductLemmas.
 
+
+(** The usual algebraic order on RAs. *)
 Section Order.
   Context {T} `{raT : RA T}.
 
@@ -150,35 +208,42 @@ Section Order.
     - exists s; rewrite -> EQs, EQt; assumption.
   Qed.
 
-  Global Instance ra_op_monic : Proper (pord ++> pord ++> pord) ra_op.
+  Global Instance ra_op_mono : Proper (pord ++> pord ++> pord) ra_op.
   Proof.
     intros x1 x2 [x EQx] y1 y2 [y EQy]. exists (x · y).
     rewrite <- assoc, (comm y), <- assoc, assoc, (comm y1), EQx, EQy; reflexivity.
   Qed.
 
-  Global Program Instance ra_valid_ord : Proper (pord ==> flip impl) ra_valid.
-  Next Obligation.
-    move=>r r' [r'' HLe] Hv.
-    move: Hv; rewrite -HLe => {HLe}.
-    exact: ra_op_valid2.
-  Qed.
+  Global Instance ra_valid_ord : Proper (pord ==> flip impl) ra_valid.
+  Proof. move=>t1 t2 [t' HEq]; rewrite -HEq; exact: ra_op_valid2. Qed.
 
   Lemma unit_min {r} : 1 ⊑ r.
   Proof. exists r. exact: ra_op_unit2. Qed.
 
+  Lemma ra_cancel_ord {HC : Cancellative raT} {a b c : T} :
+    ↓a · c -> a · b ⊑ a · c -> b ⊑ c.
+  Proof.
+    move=> /ra_cancel Hc [t HEq]; exists t.
+    by apply: Hc; move: HEq; rewrite assoc -[t · _]comm -assoc.
+  Qed.
 End Order.
+Arguments equiv_pord_ra {_ _ _ _ _ _} {_ _} _ {_ _} _.
+Arguments ra_op_mono {_ _ _ _ _ _} {_ _} _ {_ _} _.
+Arguments ra_valid_ord {_ _ _ _ _ _} {_ _} _ _.
 
+
+(** The exclusive RA. *)
 Section Exclusive.
-  Context (T: Type) `{eqT : Setoid T}.
+  Context {T: Type} `{eqT : Setoid T}.
 
-  Inductive ra_res_ex: Type :=
-  | ex_own: T -> ra_res_ex
-  | ex_unit: ra_res_ex
-  | ex_bot: ra_res_ex.
+  Inductive ex: Type :=
+  | ex_own: T -> ex
+  | ex_unit: ex
+  | ex_bot: ex.
 
-  Implicit Types (r s : ra_res_ex).
+  Implicit Types (r s : ex) (t : T).
 
-  Definition ra_res_ex_eq r s: Prop :=
+  Definition ex_eq r s: Prop :=
     match r, s with
       | ex_own t1, ex_own t2 => t1 == t2
       | ex_unit, ex_unit => True
@@ -186,7 +251,7 @@ Section Exclusive.
       | _, _ => False
     end.
 
-  Global Instance ra_eq_equiv : Equivalence ra_res_ex_eq.
+  Global Instance ra_equiv_ex : Equivalence ex_eq.
   Proof.
     split.
     - intros [t| |]; simpl; now auto.
@@ -195,8 +260,8 @@ Section Exclusive.
       + intros ? ?. etransitivity; eassumption.
   Qed.
 
-  Global Program Instance ra_type_ex : Setoid ra_res_ex :=
-    mkType ra_res_ex_eq.
+  Global Program Instance ra_type_ex : Setoid ex :=
+    mkType ex_eq.
 
   Global Instance ra_unit_ex : RA_unit _ := ex_unit.
   Global Instance ra_op_ex : RA_op _ :=
@@ -213,7 +278,7 @@ Section Exclusive.
                | _      => True
              end.
 
-  Global Instance ra_ex : RA ra_res_ex.
+  Global Instance ra_ex : RA ex.
   Proof.
     split.
     - intros [t1| |] [t2| |] Heqt [t'1| |] [t'2| |] Heqt'; simpl; now auto.
@@ -225,10 +290,132 @@ Section Exclusive.
     - intros [t1| |] [t2| |]; unfold ra_valid; simpl; now auto.
   Qed.
 
+  Lemma ra_sep_ex {t r} : ↓ex_own t · r -> r == 1.
+  Proof. by case: r. Qed.
+
+  Lemma ra_fps_ex_any t {r} (Hr : ↓r) : ex_own t ⇝ r.
+  Proof. by move=> f /ra_sep_ex ->; rewrite ra_op_unit2. Qed.
+
+  Lemma ra_fps_ex t t' : ex_own t ⇝ ex_own t'.
+  Proof. exact: ra_fps_ex_any. Qed.
+
+  Global Instance ra_can_ex : Cancellative ra_ex.
+  Proof.
+    case=>[t ||] a b Hv HEq.
+    - by rewrite (ra_sep_ex Hv); move: Hv; rewrite -HEq=> /ra_sep_ex->; reflexivity.
+    - by move: HEq; rewrite 2!ra_op_unit.
+    - by exfalso.
+  Qed.
 End Exclusive.
-Arguments ex_own {_} _.
-Arguments ex_unit {_}.
-Arguments ex_bot {_}.
+Arguments ex T : clear implicits.
+
+(** The authoritative RA. *)
+Section Authoritative.
+  Context {T} `{raT : RA T}.
+
+  CoInductive auth := Auth of ex T * T.
+
+  Implicit Types (x : ex T) (g t u : T) (r s : auth).
+
+  Definition auth_eq r s : Prop :=
+    match r, s with
+    | Auth p, Auth p' => p == p'
+    end.
+
+  Global Instance ra_equiv_auth : Equivalence auth_eq.
+  Proof.
+    split.
+    - by move=> [p]; rewrite/auth_eq; reflexivity.
+    - by move=> [p] [p']; rewrite/auth_eq; symmetry.
+    - by move=> [p1] [p2] [p3]; rewrite/auth_eq; transitivity p2.
+  Qed.
+  Global Instance ra_type_auth : Setoid auth := mkType auth_eq.
+  
+  Global Instance ra_unit_auth : RA_unit auth := Auth(ex_unit, 1).
+
+  Global Instance ra_op_auth : RA_op auth := fun r s =>
+    match r, s with Auth(x, t), Auth(x', t') => Auth(x·x', t·t') end.
+
+  Global Instance ra_valid_auth : RA_valid auth := fun r =>
+    match r with
+    | Auth(ex_unit, t) => ↓t
+    | Auth(ex_own g, t) => ↓g /\ ↓t /\ t ⊑ g
+    | Auth(ex_bot, _) => False
+    end.
+
+  Global Instance ra_auth : RA auth.
+  Proof.
+    split.
+    - move=> [[x1 t1]] [[x1' t1']] [/= Hx1 Ht1] [[x2 t2]] [[x2' t2']] [/= Hx2 Ht2].
+      by rewrite Hx1 Ht1 Hx2 Ht2; split; reflexivity.
+    - by move=> [[x1 t1]] [[x2 t2]] [[x3 t3]] /=; split; rewrite assoc; reflexivity.
+    - by move=> [[x1 t1]] [[x2 t2]] /=; split; rewrite comm; reflexivity.
+    - by move=> [[x t]] /=; split; rewrite ra_op_unit; reflexivity.
+    - move=> [[x t]] [[x' t']] [/= Hx Ht].
+      move: Hx; case: x=>[g||]; case: x'=>[g'||] => //= Hg; rewrite/ra_valid/ra_valid_auth Ht; [by rewrite Hg | done].
+    - rewrite/ra_unit/ra_unit_auth/ra_valid/ra_valid_auth; exact: ra_valid_unit.
+    - move=> [[x t]] [[x' t']]. rewrite /ra_op/ra_op_auth/ra_valid/ra_valid_auth.
+      case: x=>[g||]; case: x'=>[g'||] //=.
+      + move=>[Hg [Htv [t'' Ht]]]; split; [done | split; [exact: ra_op_valid Htv |]].
+        exists (t'' · t'); by rewrite -assoc [t' · _]comm.
+      + move=>[_ [Htv _]]; exact: ra_op_valid Htv.
+      + exact: ra_op_valid.
+  Qed.
+
+  Lemma ra_sep_auth {t u x u'} :
+    ↓Auth(ex_own t, u) · Auth(x, u') -> ↓t /\ x == 1 /\ ↓u · u' /\ u · u' ⊑ t.
+  Proof.
+    case: x=>[g||]; [done | | done].
+    rewrite {1}/ra_valid/ra_valid_auth {1}/ra_op/ra_op_auth.
+    by move=> [Ht [HSep HLe]].
+  Qed.
+
+  Definition auth_side_cond t u t' : Prop :=
+    ↓t · u -> forall tf, t · tf ⊑ t · u -> t' · tf ⊑ t' · u.
+
+  Lemma ra_fps_auth {t u t'} (SIDE : auth_side_cond t u t') (Hu' : ↓t' · u) :
+    Auth(ex_own(t · u), t) ⇝ Auth(ex_own(t' · u), t').
+  Proof.
+    move=> [[xf tf]] /ra_sep_auth [Htu [Hxf [Htf HLe]]].
+    rewrite/ra_valid/ra_valid_auth [Auth _ · _]/ra_op/ra_op_auth.
+    move: Hxf; case: xf=>[g||] H; [done| clear H |done].	(* i.e., "rewrite Hxf" despite the match. *)
+    rewrite {1}/ra_op/ra_op_ex.
+    split; first done.
+    set LE' := _ ⊑ _; suff HLe': LE'.
+    { split; last done; move: Hu'; move: HLe'=>[t'' <-]. exact: ra_op_valid2. }
+    exact: SIDE.
+  Qed.
+
+  Lemma ra_fps_auth_canc {HC : Cancellative raT} t {u t'} (Hu' : ↓t' · u) :
+    Auth(ex_own(t · u), t) ⇝ Auth(ex_own(t' · u), t').
+  Proof.
+    apply: ra_fps_auth Hu'.
+    move=> Hu tf HLe.
+    apply: (ra_op_mono (prefl t')).
+    exact: ra_cancel_ord HLe.
+  Qed.
+
+  Definition ra_local_action (act : T -=> T) : Prop :=
+    forall t tf, ↓act t -> ↓t · tf -> act(t · tf) == act t · tf.
+
+  Lemma ra_fps_auth_local {act t u} (HL : ra_local_action act) (Hu' : ↓act t · u) :
+    Auth(ex_own(t · u), t) ⇝ Auth(ex_own(act t · u), act t).
+  Proof.
+    apply: ra_fps_auth (Hu').
+    move/(_ t _ (ra_op_valid Hu')): HL => HL {Hu'}.
+    move=> Hu tf [w HEq]; exists w.
+    move: HEq; rewrite comm -assoc => HEq; rewrite comm -assoc.
+    rewrite -(HL _ Hu).
+    move: Hu; rewrite -HEq => Hu; rewrite -(HL _ Hu).
+    by reflexivity.
+  Qed.
+End Authoritative.
+Arguments auth : clear implicits.
+(*
+Notation "• g" := (Auth (ex_own g,1)) (at level 48) : ra_scope.
+Notation "∘ t" := (Auth (1,t)) (at level 48) : ra_scope.
+*)
+
 
 
 Section Agreement.
@@ -336,7 +523,7 @@ End HomogeneousProduct.
 
 
 
-(* Package a RA as a module type (for use with other modules). *)
+(* Package an RA as a module type (for use with other modules). *)
 Module Type RA_T.
 
   Parameter res : Type.

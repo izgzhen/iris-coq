@@ -4,15 +4,14 @@ Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finma
 
 Set Bullet Behavior "Strict Subproofs".
 
-(* Because Coq has a restriction of how to apply functors, we have to hack a bit here.
-   PDS: "a bit"?! Hahaha.
-   The hack that involves least work, is to duplicate the definition of our final
-   resource type, as a module type (which is how we can use it, circumventing the
+(* We hack a bit here to avoid spelling out module types for functor results.
+   The hack that involves least work is to duplicate the definition of our final
+   resource type as a module type (which is how we can use it, circumventing the
    Coq restrictions) and as a module (to show the type can be instantiated). *)
 Module Type IRIS_RES (RL : RA_T) (C : CORE_LANG) <: RA_T.
   Instance state_type : Setoid C.state := discreteType.
 
-  Definition res := (ra_res_ex C.state * RL.res)%type.
+  Definition res := (ex C.state * RL.res)%type.
   Instance res_type : Setoid res := _.
   Instance res_op   : RA_op res := _.
   Instance res_unit : RA_unit res := _.
@@ -76,11 +75,6 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   (* Simple view lemmas. *)
 
-  Lemma prefl {T} `{oT : preoType T} (t : T) : t ⊑ t. Proof. by reflexivity. Qed.
-
-  Lemma ptrans {T} `{oT : preoType T} {t t' t''} (HL : t ⊑ t') (HU : t' ⊑ t'') : t ⊑ t''.
-  Proof. by transitivity t'. Qed.
-
   Lemma lerefl (n : nat) : n <= n. Proof. by reflexivity. Qed.
 
   Lemma lelt {n k} (H : k < n) : k <= n.
@@ -89,16 +83,16 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Lemma lt0 (n : nat) :  ~ n < 0. Proof. by omega. Qed.
 
   Lemma propsMW {P w n r w'} (HSw : w ⊑ w') : P w n r -> P w' n r.
-  Proof. exact: (mu_mono _ _ P _ _ HSw). Qed.
+  Proof. exact: (mu_mono P HSw). Qed.
 
   Lemma propsMNR {P w n r n' r'} (HLe : n' <= n) (HSr : r ⊑ r') : P w n r -> P w n' r'.
-  Proof. exact: (uni_pred _ _ _ _ _ HLe HSr). Qed.
+  Proof. exact: uni_pred HLe HSr. Qed.
 
   Lemma propsMN {P w n r n'} (HLe : n' <= n) : P w n r -> P w n' r.
-  Proof. apply: (propsMNR HLe (prefl r)). Qed.
+  Proof. apply: uni_pred HLe (prefl r). Qed.
 
   Lemma propsMR {P w n r r'} (HSr : r ⊑ r') : P w n r -> P w n r'.
-  Proof. exact: (propsMNR (lerefl n) HSr). Qed.
+  Proof. exact: uni_pred (lerefl n) HSr. Qed.
 
   Lemma propsM {P w n r w' n' r'} (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
     P w n r -> P w' n' r'.
@@ -116,21 +110,11 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Section Resources.
 
-    (* PDS: These should probably be split into RA-level and resource-level lemmas. *)
+    Lemma state_sep {σ g rf} (Hv : ↓(ex_own σ, g) · rf) : fst rf == 1.
+    Proof. move: (ra_sep_prod Hv) => [Hs _]; exact: ra_sep_ex Hs. Qed.
 
-    Lemma ex_frame {σ rf} : ↓((ex_own σ,1) · rf) -> fst rf == 1.
-    Proof.
-      move: rf=>[fx fg]; rewrite/ra_op/res_op/ra_op_prod/fst.
-      move=>[Hx _]; move: Hx {fg}; rewrite/ra_op/ra_op_ex.
-      by case: fx.
-    Qed.
-
-    Lemma ex_fpu {σ σ' rf} : ↓((ex_own σ, 1) · rf) -> ↓((ex_own σ', 1) · rf).
-    Proof.
-      move=> Hv; move: (ex_frame Hv)=> Hxu; move: Hxu Hv.
-      move: rf=>[fx fg]; rewrite/fst; move=>->.
-      by rewrite /ra_op/res_op/ra_op_prod ra_op_unit.
-    Qed.
+    Lemma state_fps {σ g σ' rf} (Hv : ↓(ex_own σ, g) · rf) : ↓(ex_own σ', g) · rf.
+    Proof. exact: (ra_fps_fst (ra_fps_ex σ σ') rf). Qed.
 
   End Resources.
 
@@ -147,7 +131,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Qed.
     Next Obligation.
       intros w1 w2 EQw m r HLt; simpl.
-      eapply (met_morph_nonexp _ _ P); eassumption.
+      eapply (met_morph_nonexp P); eassumption.
     Qed.
     Next Obligation.
       intros w1 w2 Subw n r; simpl.
@@ -211,7 +195,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Next Obligation.
       move=> t t' HEq.
       apply: box_dist.
-      exact: (met_morph_nonexp _ _ φ).
+      exact: (met_morph_nonexp φ).
     Qed.
 
     Lemma box_all : □all φ == box_all_lhs.
@@ -311,10 +295,10 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Next Obligation.
       intros w1 w2 EQw k; simpl; intros _ HLt; destruct n as [| n]; [now inversion HLt |].
       split; intros HT w' m r HSw HLt' Hp.
-      - symmetry in EQw; assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
-        apply (met_morph_nonexp _ _ P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
-      - assert (HD := extend_dist _ _ _ _ EQw HSw); assert (HS := extend_sub _ _ _ _ EQw HSw).
-        apply (met_morph_nonexp _ _ P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
+      - symmetry in EQw; assert (HD := extend_dist EQw HSw); assert (HS := extend_sub EQw HSw).
+        apply (met_morph_nonexp P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
+      - assert (HD := extend_dist EQw HSw); assert (HS := extend_sub EQw HSw).
+        apply (met_morph_nonexp P) in HD; apply HD, HT, HD, Hp; now (assumption || eauto with arith).
     Qed.
     Next Obligation.
       intros w1 w2 HSw n; simpl; intros _ HT w' m r HSw' HLt Hp.
