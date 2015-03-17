@@ -129,34 +129,33 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       do 2!eexists; split; [exact HSub2|split; [|eassumption]].
       eapply HQ; [by rewrite -> HSub1 | omega | exact unit_min].
     Qed.
-
-    (* A weaker version of pvsImpl, not giving the implication the chance to only hold in some worlds *)
-    Lemma pvsByImpl P Q m1 m2 :
-      (P ⊑ Q) -> pvs m1 m2 P ⊑ pvs m1 m2 Q.
-    Proof.
-      move=> HPQ w0 n0 r0 Hpvs.
-      eapply pvsImpl. split; last eassumption.
-      move=>{Hpvs} w1 Hw01 n1 r1 Hn01 _ HP.
-      eapply HPQ, HP.
-    Qed.
       
-    Lemma pvsFrame P Q m1 m2 mf (HDisj : mf # m1 ∪ m2) :
-      (pvs m1 m2 P) * Q ⊑ pvs (m1 ∪ mf) (m2 ∪ mf) (P * Q).
+    Lemma pvsFrameMask P m1 m2 mf (HDisj : mf # m1 ∪ m2) :
+      pvs m1 m2 P ⊑ pvs (m1 ∪ mf) (m2 ∪ mf) P.
     Proof.
-      move => w0 n r0 [rp [rq [HEr [HvsP HQ]]]].
+      move => w0 n r0 HvsP.
       move => w1 rf mf1 σ k HSub1 Hlt HD HSat.
-      edestruct (HvsP w1 (rq · rf) (mf ∪ mf1)) as (w2 & r2 & HSub2 & HP & HSat2); eauto.
+      edestruct (HvsP w1 rf (mf ∪ mf1)) as (w2 & r2 & HSub2 & HP & HSat2); eauto.
       - (* disjointness of masks: possible lemma *)
         clear - HD HDisj; intros i [ [Hmf | Hmf] [Hm1|Hm2]]; by firstorder.
-      - rewrite assoc HEr. 
+      - eapply wsat_equiv; last eassumption; [|reflexivity|reflexivity].
+        unfold mcup in *; split; intros i; tauto.
+      - exists w2 r2; split; [eassumption|split; [assumption|]].
         eapply wsat_equiv; last eassumption; [|reflexivity|reflexivity].
         unfold mcup in *; split; intros i; tauto.
+    Qed.
+
+    Lemma pvsFrameRes P Q m1 m2:
+      (pvs m1 m2 P) * Q ⊑ pvs m1 m2 (P * Q).
+    Proof.
+      move => w0 n r0 [rp [rq [HEr [HvsP HQ]]]].
+      move => w1 rf mf σ k HSub1 Hlt HD HSat.
+      edestruct (HvsP w1 (rq · rf) mf) as (w2 & r2 & HSub2 & HP & HSat2); eauto.
+      - rewrite assoc HEr. eassumption. 
       - exists w2 (r2 · rq); split; [eassumption|split; [|]].
-        do 2!eexists; split; [reflexivity | split; [assumption|]].
-        * eapply propsMWN; last eassumption; [by rewrite <- HSub2| omega].
-        * setoid_rewrite <- ra_op_assoc.
-          eapply wsat_equiv; last eassumption; [|reflexivity|reflexivity].
-          unfold mcup in *; split; intros i; tauto.
+        + do 2!eexists; split; [reflexivity | split; [assumption|]].
+          * eapply propsMWN; last eassumption; [by rewrite <- HSub2| omega].
+        + setoid_rewrite <- ra_op_assoc. assumption.
     Qed.
 
     Instance LP_res (P : RL.res -> Prop) : LimitPreserving P.
@@ -190,21 +189,6 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
           * clear -HCrsl. rewrite ->!assoc, (comm rsl), <-assoc in HCrsl.
             apply ra_op_valid2 in HCrsl. rewrite ra_op_prod_snd. exact HCrsl.
           * clear -Hst. rewrite ra_op_prod_fst. rewrite ra_op_prod_fst in Hst. exact Hst.
-    Qed.
-
-    Lemma pvsGhostStep m (rl rl': RL.res) (HU : rl ⇝ rl') :
-      ownL rl ⊑ pvs m m (ownL rl').
-    Proof.
-      etransitivity.
-      - pose(P:= fun r:RL.res => r = rl').
-        eapply pvsGhostUpd with (P:=P).
-        clear -HU. move=>rf Hval. exists rl'.
-        split; first reflexivity.
-        by eapply HU.
-      - move=>w0 n0 r0 Hpvs.
-        eapply pvsByImpl; last eassumption.
-        move=>{Hpvs w0 n0 r0} w0 n0 r0 [[rl'' Hrl''] Hown].
-        subst rl''. exact Hown.
     Qed.
 
     Program Definition inv' m : Props -n> {n : nat | m n} -n> Props :=

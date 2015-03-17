@@ -191,12 +191,14 @@ Print Assumptions robust_safety.
 Print Assumptions lift_atomic_det_step.
 Print Assumptions lift_pure_det_step.
 
-Print Assumptions vsOpen.
-Print Assumptions vsClose.
-Print Assumptions vsNewInv.
+Print Assumptions pvsOpen.
+Print Assumptions pvsClose.
+Print Assumptions pvsNewInv.
 Print Assumptions pvsFrame.
 Print Assumptions pvsTrans.
 Print Assumptions pvsGhostUpd.
-Print Assumptions htBind.
+
+Print Assumptions wpRet.
+Print Assumptions wpBind.
 Print Assumptions htCons.
 Print Assumptions htACons.

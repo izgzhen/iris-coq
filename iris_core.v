@@ -250,6 +250,14 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     - reflexivity.
   Qed.
 
+  Lemma laterM {P Q: Props}:
+    (P → Q) ∧ ▹P ⊑ ▹Q.
+  Proof.
+    move=>w0 n0 r0 [HPQ HLP].
+    destruct n0 as [|n0]; first by auto.
+    simpl. simpl in HLP. eapply HPQ, HLP; [reflexivity|omega|reflexivity].
+  Qed.
+
   Section IntEqProps.
 
     (* On Props, valid biimplication, valid internal equality, and external equality coincide. *)

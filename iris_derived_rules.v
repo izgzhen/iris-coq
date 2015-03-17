@@ -63,6 +63,16 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
       eapply pvsEnt, HQ; exact unit_min.
     Qed.
 
+    (* A weaker version of pvsImpl, not giving the implication the chance to only hold in some worlds *)
+    Lemma pvsByImpl P Q m1 m2 :
+      (P ⊑ Q) -> pvs m1 m2 P ⊑ pvs m1 m2 Q.
+    Proof.
+      move=> HPQ w0 n0 r0 Hpvs.
+      eapply pvsImpl. split; last eassumption.
+      move=>{Hpvs} w1 Hw01 n1 r1 Hn01 _ HP.
+      eapply HPQ, HP.
+    Qed.
+
     Existing Instance LP_res.
 
     Lemma vsGhostUpd m rl (P : RL.res -> Prop) (HU : rl ⇝∈ P) :
@@ -70,6 +80,21 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
     Proof.
       move=>w0 n0 _ w1 Hw01 n1 r1 Hn01 _ Hown.
       eapply pvsGhostUpd, Hown. assumption.
+    Qed.
+
+    Lemma pvsGhostStep m (rl rl': RL.res) (HU : rl ⇝ rl') :
+      ownL rl ⊑ pvs m m (ownL rl').
+    Proof.
+      etransitivity.
+      - pose(P:= fun r:RL.res => r = rl').
+        eapply pvsGhostUpd with (P:=P).
+        clear -HU. move=>rf Hval. exists rl'.
+        split; first reflexivity.
+        by eapply HU.
+      - move=>w0 n0 r0 Hpvs.
+        eapply pvsByImpl; last eassumption.
+        move=>{Hpvs w0 n0 r0} w0 n0 r0 [[rl'' Hrl''] Hown].
+        subst rl''. exact Hown.
     Qed.
 
     Lemma vsGhostStep m (rl rl': RL.res) (HU : rl ⇝ rl') :
@@ -102,7 +127,92 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
       eapply pvsNewInv; eassumption.
     Qed.
 
-  End DerivedVSRules. 
+  End DerivedVSRules.
+
+  Section DerivedHTRules.
+
+    Existing Instance LP_isval.
+
+    Implicit Types (P : Props) (i : nat) (m : mask) (e : expr) (r : res) (Q : vPred).
+
+    Lemma htRet e (HV : is_value e) safe m :
+      valid (ht safe m ⊤ e (eqV (exist _ e HV))).
+    Proof.
+      move=>w0 n0 _ w1 Hw01 n1 r1 Hn01 _ _.
+      eapply wpRet.
+    Qed.
+    
+    (** Quantification in the logic works over nonexpansive maps, so
+        we need to show that plugging the value into the postcondition
+        and context is nonexpansive. *)
+    Program Definition plugCtxHt safe m Q Q' K :=
+      n[(fun v : value => ht safe m (Q v) (fill K v) Q' )].
+    Next Obligation.
+      intros v1 v2 EQv; unfold ht; eapply (met_morph_nonexp box).
+      eapply (impl_dist (ComplBI := Props_BI)).
+      - apply Q; assumption.
+      - destruct n as [| n]; [apply dist_bound | simpl in EQv].
+        rewrite EQv; reflexivity.
+    Qed.
+
+    Lemma htBind P Q R K e safe m :
+      ht safe m P e Q ∧ all (plugCtxHt safe m Q R K) ⊑ ht safe m P (fill K e) R.
+    Proof.
+      move=>w0 n0 r0 [He HK] w1 Hw01 n1 r1 Hn01 _ HP.
+      eapply wpBind. eapply wpImpl. split; last first.
+      - unfold ht in He. specialize (He _ Hw01 _ _ Hn01 unit_min HP). eexact He. (* Why does eapply He not work? *)
+      - intros v w2 Hw12 n2 r2 Hn12 _ HQ. simpl. unfold plugCtxHt in HK.
+        move:HK. move/(_ v _ _ _ _ _ _ HQ)=>HK. apply HK. (* TODO: Nicer way to get these as goals (not requiring the current goal to match)? *)
+        + etransitivity; eassumption.
+        + omega.
+        + apply: unit_min.
+    Qed.
+
+    Lemma htFrame safe m m' P R e Q (HD : m # m') :
+      ht safe m P e Q ⊑ ht safe (m ∪ m') (P * R) e (lift_bin sc Q (umconst R)).
+    Proof.
+      move=>w0 n0 r0 Hht w1 Hw01 n1 r1 Hn01 _ [r1_1 [r1_2 [HEQr [HP HR]]]].
+      eapply wpFrameMask; first by assumption.
+      eapply wpFrameRes. exists r1_1 r1_2. split; first assumption. split.
+      - unfold ht in Hht. specialize (Hht _ Hw01 _ _ Hn01 unit_min HP). assumption.
+      - assumption.
+    Qed.
+
+    Lemma htAFrame safe m m' P R e Q
+          (HD  : m # m')
+          (HAt : atomic e) :
+      ht safe m P e Q ⊑ ht safe (m ∪ m') (P * ▹R) e (lift_bin sc Q (umconst R)).
+    Proof.
+      move=>w0 n0 r0 Hht w1 Hw01 n1 r1 Hn01 _ [r1_1 [r1_2 [HEQr [HP HLR]]]].
+      eapply wpFrameMask; first by assumption.
+      eapply wpAFrameRes; first assumption. exists r1_1 r1_2. split; first assumption. split.
+      - unfold ht in Hht. specialize (Hht _ Hw01 _ _ Hn01 unit_min HP). assumption.
+      - assumption.
+    Qed.
+
+    Lemma htFork safe m P R e :
+      ht safe m P e (umconst ⊤) ⊑ ht safe m (▹P * ▹R) (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).
+    Proof.
+      move=>w0 n0 r0 Hht w1 Hw01 n1 r1 Hn01 _ [r1_1 [r1_2 [HEQr [HLP HLR]]]].
+      eapply wpFork. exists r1_1 r1_2. split; first assumption. split.
+      - eapply laterM. split; last by eapply HLP. move=> w2 Hw12 n2 r2 Hn12 Hr12 HP.
+        move:Hht. move/(_ _ _ _ _ _ _ HP)=>{HP}HP. apply HP.
+        + etransitivity; eassumption.
+        + omega.
+        + apply: unit_min.
+      - assumption.
+    Qed.
+
+    Lemma htUnsafe {m P e Q} :
+      ht true m P e Q ⊑ ht false m P e Q.
+    Proof.
+      move=>w0 n0 r0 Hht w1 Hw01 n1 r1 Hn01 _ HP.
+      eapply wpUnsafe. move:Hht. move/(_ _ _ _ _ _ _ HP)=>{HP}HP. apply HP.
+      + assumption.
+      + apply: unit_min.
+    Qed.
+
+  End DerivedHTRules.
 
 End IRIS_DERIVED_RULES.
 
