@@ -261,6 +261,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
          (exists σ' ei ei' K, e = fill K ei /\ prim_step (ei, σ) (ei', σ')) \/
          (exists e' K, e = fill K (fork e')).
 
+    (* Show that this definition makes some sense *)
     Lemma tp_safe e tp σ
           (SAFE  : safeExpr e σ)
           (INPOOL: e ∈ tp):
