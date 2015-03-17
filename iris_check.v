@@ -194,7 +194,8 @@ Print Assumptions lift_pure_det_step.
 Print Assumptions pvsOpen.
 Print Assumptions pvsClose.
 Print Assumptions pvsNewInv.
-Print Assumptions pvsFrame.
+Print Assumptions pvsFrameMask.
+Print Assumptions pvsFrameRes.
 Print Assumptions pvsTrans.
 Print Assumptions pvsGhostUpd.
 
