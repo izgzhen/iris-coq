@@ -261,6 +261,25 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
          (exists σ' ei ei' K, e = fill K ei /\ prim_step (ei, σ) (ei', σ')) \/
          (exists e' K, e = fill K (fork e')).
 
+    (* Show that this definition makes some sense *)
+    Lemma tp_safe e tp σ
+          (SAFE  : safeExpr e σ)
+          (INPOOL: e ∈ tp):
+      is_value e \/ exists tp' σ', step (tp, σ) (tp', σ').
+    Proof.
+      apply List.in_split in INPOOL.
+      destruct INPOOL as [tp1 [tp2 Htp]].
+      destruct SAFE as [Hval|[ [σ' [ei [ei' [K [Hfill Hstep]]]]] | [e' [K Hfill]] ]].
+      - left. assumption.
+      - right; do 2 eexists. eapply step_atomic.
+        + eassumption.
+        + rewrite Htp Hfill. reflexivity.
+        + reflexivity.
+      - right; do 2 eexists. eapply step_fork.
+        + rewrite Htp Hfill. reflexivity.
+        + reflexivity.
+    Qed.
+
     Definition wpFP safe m (WP : expr -n> vPred -n> Props) e φ w n r :=
       forall w' k rf mf σ (HSw : w ⊑ w') (HLt : k < n) (HD : mf # m)
              (HE : wsat σ (m ∪ mf) (r · rf) w' @ S k),
@@ -430,6 +449,13 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Qed.
 
     Definition ht safe m P e Q := □(P → wp safe m e Q).
+
+    Global Instance ht_proper safe m: Proper (equiv ==> equiv ==> equiv ==> equiv) (ht safe m).
+    Proof.
+      move=> P0 P1 HEQP e0 e1 HEQe Q0 Q1 HEQQ.
+      unfold ht. rewrite HEQe. rewrite HEQP. rewrite HEQQ.
+      reflexivity.
+    Qed.
 
     (* People will need that *)
     Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.

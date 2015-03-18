@@ -15,22 +15,20 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
 
   Section ViewShiftProps.
 
-    Lemma vsTimeless m P :
-      timeless P ⊑ vs m m (▹P) P.
+    Lemma pvsTimeless m P :
+      timeless P ∧ ▹P ⊑ pvs m m P.
     Proof.
-      intros w' n r1 HTL w HSub; rewrite ->HSub in HTL; clear w' HSub.
-      intros np rp HLe HS Hp w1; intros.
-      exists w1 rp; split; [reflexivity | split; [| assumption] ]; clear HE HD.
-      destruct np as [| np]; [now inversion HLe0 |]; simpl in Hp.
-      unfold lt in HLe0; rewrite ->HLe0.
-      rewrite <- HSub; apply HTL, Hp; [reflexivity | assumption].
+      intros w n r [HTL Hp] w'; intros.
+      exists w' r; split; [reflexivity | split; [| assumption] ]; clear HE HD.
+      destruct n as [| n]; [exfalso;omega |]; simpl in Hp.
+      rewrite ->HSub in HTL.
+      eapply HTL, propsM, Hp; (assumption || reflexivity || omega).
     Qed.
 
-    Lemma vsOpen i P :
-      valid (vs (mask_sing i) mask_emp (inv i P) (▹P)).
+    Lemma pvsOpen i P :
+      (inv i P) ⊑ pvs (mask_sing i) mask_emp (▹P).
     Proof.
-      intros pw nn r w _; clear r pw.
-      intros n r _ _ HInv w'; clear nn; intros.
+      intros w n r HInv w'; intros.
       change (match w i with Some x => x = S n = ı' P | None => False end) in HInv.
       destruct (w i) as [μ |] eqn: HLu; [| contradiction].
       apply ı in HInv; rewrite ->(isoR P) in HInv.
@@ -62,11 +60,10 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         destruct (Peano_dec.eq_nat_dec i i); tauto.
     Qed.
 
-    Lemma vsClose i P :
-      valid (vs mask_emp (mask_sing i) (inv i P * ▹P) ⊤).
+    Lemma pvsClose i P :
+      (inv i P ∧ ▹P) ⊑ pvs mask_emp (mask_sing i) ⊤.
     Proof.
-      intros pw nn r w _; clear r pw.
-      intros n r _ _ [r1 [r2 [HR [HInv HP] ] ] ] w'; clear nn; intros.
+      intros w n r [HInv HP] w'; intros.
       change (match w i with Some x => x = S n = ı' P | None => False end) in HInv.
       destruct (w i) as [μ |] eqn: HLu; [| contradiction].
       apply ı in HInv; rewrite ->(isoR P) in HInv.
@@ -96,8 +93,8 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         apply HInv; [now auto with arith |].
         eapply uni_pred, HP; [now auto with arith |].
         rewrite <-HLrs. clear dependent ri0.
-        exists (ri · r1).
-        subst rri. rewrite <-HR, assoc. reflexivity.
+        exists (ri).
+        subst rri. reflexivity.
     Qed.
 
     Lemma pvsTrans P m1 m2 m3 (HMS : m2 ⊆ m1 ∪ m3) :
@@ -133,23 +130,32 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       eapply HQ; [by rewrite -> HSub1 | omega | exact unit_min].
     Qed.
       
-    Lemma pvsFrame P Q m1 m2 mf (HDisj : mf # m1 ∪ m2) :
-      pvs m1 m2 P * Q ⊑ pvs (m1 ∪ mf) (m2 ∪ mf) (P * Q).
+    Lemma pvsFrameMask P m1 m2 mf (HDisj : mf # m1 ∪ m2) :
+      pvs m1 m2 P ⊑ pvs (m1 ∪ mf) (m2 ∪ mf) P.
     Proof.
-      move => w0 n r0 [rp [rq [HEr [HvsP HQ]]]].
+      move => w0 n r0 HvsP.
       move => w1 rf mf1 σ k HSub1 Hlt HD HSat.
-      edestruct (HvsP w1 (rq · rf) (mf ∪ mf1)) as (w2 & r2 & HSub2 & HP & HSat2); eauto.
+      edestruct (HvsP w1 rf (mf ∪ mf1)) as (w2 & r2 & HSub2 & HP & HSat2); eauto.
       - (* disjointness of masks: possible lemma *)
         clear - HD HDisj; intros i [ [Hmf | Hmf] [Hm1|Hm2]]; by firstorder.
-      - rewrite assoc HEr. 
+      - eapply wsat_equiv; last eassumption; [|reflexivity|reflexivity].
+        unfold mcup in *; split; intros i; tauto.
+      - exists w2 r2; split; [eassumption|split; [assumption|]].
         eapply wsat_equiv; last eassumption; [|reflexivity|reflexivity].
         unfold mcup in *; split; intros i; tauto.
+    Qed.
+
+    Lemma pvsFrameRes P Q m1 m2:
+      (pvs m1 m2 P) * Q ⊑ pvs m1 m2 (P * Q).
+    Proof.
+      move => w0 n r0 [rp [rq [HEr [HvsP HQ]]]].
+      move => w1 rf mf σ k HSub1 Hlt HD HSat.
+      edestruct (HvsP w1 (rq · rf) mf) as (w2 & r2 & HSub2 & HP & HSat2); eauto.
+      - rewrite assoc HEr. eassumption. 
       - exists w2 (r2 · rq); split; [eassumption|split; [|]].
-        do 2!eexists; split; [reflexivity | split; [assumption|]].
-        * eapply propsMWN; last eassumption; [by rewrite <- HSub2| omega].
-        * setoid_rewrite <- ra_op_assoc.
-          eapply wsat_equiv; last eassumption; [|reflexivity|reflexivity].
-          unfold mcup in *; split; intros i; tauto.
+        + do 2!eexists; split; [reflexivity | split; [assumption|]].
+          * eapply propsMWN; last eassumption; [by rewrite <- HSub2| omega].
+        + setoid_rewrite <- ra_op_assoc. assumption.
     Qed.
 
     Instance LP_res (P : RL.res -> Prop) : LimitPreserving P.
@@ -161,10 +167,10 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
     Definition ownLP (P : RL.res -> Prop) : {s : RL.res | P s} -n> Props :=
       ownL <M< inclM.
 
-    Lemma vsGhostUpd m rl (P : RL.res -> Prop) (HU : rl ⇝∈ P) :
-      valid (vs m m (ownL rl) (xist (ownLP P))).
+    Lemma pvsGhostUpd m rl (P : RL.res -> Prop) (HU : rl ⇝∈ P) :
+      ownL rl ⊑ pvs m m (xist (ownLP P)).
     Proof.
-      unfold ownLP; intros _ _ _ w _ n [rp' rl'] _ _ HG w'; intros.
+      unfold ownLP. intros w n [rp' rl'] HG w'; intros.
       destruct HE as [rs [ Hsat HE] ]. rewrite <-assoc in Hsat. destruct Hsat as [Hval Hst].
       destruct HG as [ [rdp rdl] [_ EQrl] ]. simpl in EQrl. clear rdp.
       destruct (HU (rdl · snd(rf · comp_map rs))) as [rsl [HPrsl HCrsl] ].
@@ -213,11 +219,10 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       intros σ σc Hp; apply Hp.
     Qed.
 
-    Lemma vsNewInv P m (HInf : mask_infinite m) :
-      valid (vs m m (▹P) (xist (inv' m P))).
+    Lemma pvsNewInv P m (HInf : mask_infinite m) :
+      ▹P ⊑ pvs m m (xist (inv' m P)).
     Proof.
-      intros pw nn r w _; clear r pw.
-      intros n r _ _ HP w'; clear nn; intros.
+      intros w n r HP w'; intros.
       destruct n as [| n]; [now inversion HLe | simpl in HP].
       rewrite ->HSub in HP; clear w HSub; rename w' into w.
       destruct (fresh_region w m HInf) as [i [Hm HLi] ].
@@ -251,13 +256,11 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
           apply HM; assumption.
     Qed.
 
-    Lemma vsNotOwnInvalid m1 m2 r
+    Lemma pvsNotOwnInvalid m1 m2 r
       (Hnval: ~↓r):
-      valid (vs m1 m2 (ownR r) ⊥).
+      ownR r ⊑ pvs m1 m2 ⊥.
     Proof.
-      intros pw n s w _. clear pw s.
-      intros m s _ _. clear n.
-      intros [rs Heq] w' rf mf σ k _ _ _ [ ri [ [ Hval _ ] ] ].
+      intros w0 n0 r0 [rs Heq] w' rf mf σ k _ _ _ [ ri [ [ Hval _ ] ] ].
       exfalso.
       apply Hnval. rewrite <-Heq in Hval.
       eapply ra_op_valid2, ra_op_valid, ra_op_valid; last eassumption; now apply _.

@@ -242,6 +242,22 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Lemma biimpR {P Q : Props} {w n r} : (P ↔ Q) w n r -> (Q → P) w n r.
   Proof. by move=>[_ R]. Qed.
 
+  Lemma later_true: (⊤:Props) == ▹⊤.
+  Proof.
+    move=> w n r.
+    case:n=>[|n].
+    - reflexivity.
+    - reflexivity.
+  Qed.
+
+  Lemma laterM {P Q: Props}:
+    (P → Q) ∧ ▹P ⊑ ▹Q.
+  Proof.
+    move=>w0 n0 r0 [HPQ HLP].
+    destruct n0 as [|n0]; first by auto.
+    simpl. simpl in HLP. eapply HPQ, HLP; [reflexivity|omega|reflexivity].
+  Qed.
+
   Section IntEqProps.
 
     (* On Props, valid biimplication, valid internal equality, and external equality coincide. *)
@@ -327,9 +343,6 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Local Arguments equiv {_ _} _ _ /.
 
     (** Ownership **)
-    (* We define this on *any* resource, not just the positive (valid) ones.
-       Note that this makes ownR trivially *False* for invalid u: There is no
-       element v such that u · v = r (where r is valid) *)
     Program Definition ownR: res -=> Props :=
       s[(fun u => pcmconst (mkUPred(fun n r => u ⊑ r) _) )].
     Next Obligation.
