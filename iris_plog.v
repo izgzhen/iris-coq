@@ -182,7 +182,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     wsat σ m r w @ n -> wsat σ m r w @ k.
   Proof. by exact: (uni_pred HLe). Qed.
 
-  Section ViewShifts.
+  Section PrimitiveViewShifts.
     Local Obligation Tactic := intros.
 
     Program Definition preVS m1 m2 P w : UPred res :=
@@ -240,14 +240,10 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         apply EQp; [now eauto with arith | assumption].
     Qed.
 
-    Definition vs m1 m2 P Q : Props :=
-      □(P → pvs m1 m2 Q).
-
-  End ViewShifts.
+  End PrimitiveViewShifts.
 
 
-  Section HoareTriples.
-  (* Quadruples, really *)
+  Section WeakestPre.
 
     Instance LP_isval : LimitPreserving is_value.
     Proof.
@@ -448,6 +444,19 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       rewrite unfold_wp; intros w'; intros; now inversion HLt.
     Qed.
 
+  End WeakestPre.
+
+  Section DerviedForms.
+    (* There will be no base rules concerning these derived forms - but there's a bunch of derived rules in iris_derived_rules.v *)
+
+    Definition vs m1 m2 P Q : Props :=
+      □(P → pvs m1 m2 Q).
+
+    Global Instance vsProper m1 m2: Proper (equiv ==> equiv ==> equiv) (vs m1 m2).
+    Proof.
+      move=>P1 P2 EQP Q1 Q2 EQQ. unfold vs. rewrite EQP EQQ. reflexivity.
+    Qed.
+
     Definition ht safe m P e Q := □(P → wp safe m e Q).
 
     Global Instance ht_proper safe m: Proper (equiv ==> equiv ==> equiv ==> equiv) (ht safe m).
@@ -457,10 +466,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       reflexivity.
     Qed.
 
-    (* People will need that *)
-    Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
-
-  End HoareTriples.
+  End DerivedForms.
 
 End IRIS_PLOG.
 

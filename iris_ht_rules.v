@@ -1,4 +1,4 @@
-Require Import ssreflect.
+Require Import ssreflect ssrfun.
 Require Import world_prop core_lang lang masks iris_core iris_plog.
 Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
@@ -120,103 +120,88 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       - assumption.
     Qed.
 
-    (** Much like in the case of the plugging, we need to show that
-        the map from a value to a view shift between the applied
-        postconditions is nonexpansive *)
-    Program Definition vsLift m1 m2 (φ φ' : vPred) :=
-      n[(fun v => vs m1 m2 (φ v) (φ' v))].
-    Next Obligation.
-      intros v1 v2 EQv; unfold vs.
-      rewrite ->EQv; reflexivity.
-    Qed.
-
-    Lemma htCons P P' Q Q' safe m e :
-      vs m m P P' ∧ ht safe m P' e Q' ∧ all (vsLift m m Q' Q) ⊑ ht safe m P e Q.
+    Lemma wpPreVS m safe e φ:
+      pvs m m (wp safe m e φ) ⊑ wp safe m e φ.
     Proof.
-      intros wz nz rz [ [HP He] HQ] w HSw n r HLe _ Hp.
-      specialize (HP _ HSw _ _ HLe unit_min Hp); rewrite unfold_wp.
-      rewrite <- HLe, HSw in He, HQ; clear wz nz HSw HLe Hp.
-      intros w'; intros. edestruct HP with (mf:=mf) as [w'' [r' [HSw' [Hp' HE'] ] ] ]; try eassumption; [now rewrite mask_union_idem |].
-      clear HP HE; rewrite ->HSw in He; specialize (He w'' HSw' _ r' HLt unit_min Hp').
-      setoid_rewrite HSw'.
-      assert (HT : wp safe m e Q w'' (S k) r');
-        [| rewrite ->unfold_wp in HT; eapply HT; [reflexivity | apply le_n | eassumption | eassumption] ].
-      unfold lt in HLt; rewrite ->HSw, HSw', <- HLt in HQ; clear - He HQ.
-      (* Second phase of the proof: got rid of the preconditions,
-         now induction takes care of the evaluation. *)
-      rename r' into r; rename w'' into w.
-      revert w r e He HQ; generalize (S k) as n; clear k; induction n using wf_nat_ind.
-      rename H into IH; intros; rewrite ->unfold_wp; rewrite ->unfold_wp in He.
-      intros w'; intros; edestruct He as [HV [HS [HF HS'] ] ]; try eassumption; [].
-      split; [intros HVal; clear HS HF IH HS' | split; intros; [clear HV HF HS' | split; [intros; clear HV HS HS' | clear HV HS HF ] ] ].
-      - clear He HE; specialize (HV HVal); destruct HV as [w'' [r' [HSw' [HQ' HE] ] ] ].
-        eapply HQ in HQ'; [| etransitivity; eassumption | apply HLt | apply unit_min].
-        clear w n HSw HQ HLt; edestruct HQ' as [w [r'' [HSw [HQ HE'] ] ] ];
-        [reflexivity | apply le_n | rewrite mask_union_idem; eassumption | eassumption |].
-        exists w r''; split; [etransitivity; eassumption | split; assumption].
-      - clear HE He; edestruct HS as [w'' [r' [HSw' [He HE] ] ] ];
-        try eassumption; clear HS.
-        do 2 eexists; split; [eassumption | split; [| eassumption] ].
-        apply IH; try assumption; [].
-        unfold lt in HLt; rewrite ->Le.le_n_Sn, HLt, <- HSw', <- HSw; apply HQ.
-      - clear HE He; edestruct HF as [w'' [rfk [rret [HSw' [HWF [HWR HE] ] ] ] ] ]; [eassumption |].
-        clear HF; do 3 eexists; split; [eassumption | split; [| split; eassumption] ].
-        apply IH; try assumption; [].
-        unfold lt in HLt; rewrite ->Le.le_n_Sn, HLt, <- HSw', <- HSw; apply HQ.
+      rewrite -> unfold_wp.
+      move=>w0 n0 r0 Hvswp w1. intros.
+      move:Hvswp. case/(_ w1 rf mf σ k HSw HLt _ HE); last move=>w2 [r2 [Hw12 [Hwp Hsat]]].
+      { intros j. clear -HD. specialize (HD j). unfold mcup. tauto. }
+      move: Hwp. case/(_ w2 k rf mf σ _ _ _ Hsat)/Wrap; last move=>[Hval [Hstep [Hfork Hsafe]]] {HE Hsat}.
+      - reflexivity.
+      - omega.
       - assumption.
+      - split; last split; last split; last assumption.
+        + move=>Hisval. destruct (Hval Hisval) as (w3 & r3 & Hw23 & Hrem).
+          exists w3 r3. split; first (etransitivity; eassumption). assumption.
+        + move=> ? ? ? ? Hfill Hpstep. destruct (Hstep _ _ _ _ Hfill Hpstep) as (w3 & r3 & Hw23 & Hrem).
+          exists w3 r3. split; last assumption. etransitivity; eassumption.
+        + move=> ? ? Hfill. destruct (Hfork _ _ Hfill) as (w3 & rfk & rret & Hw23 &Hrem).
+          do 3 eexists. split; last eassumption. etransitivity; eassumption.
     Qed.
 
-    Lemma htACons safe m m' e P P' Q Q'
+    Lemma wpPostVS m safe e φ:
+      wp safe m e ((pvs m m) <M< φ) ⊑ wp safe m e φ.
+    Proof.
+      move=>w0 n0. move: n0 w0 e. elim/wf_nat_ind=>n0 IH w0 e r0 Hwpvs.
+      rewrite ->unfold_wp. intros w1; intros. rewrite->unfold_wp in Hwpvs.
+      edestruct Hwpvs as (Hwpval & Hwpstep & Hwpfork & Hwpsafe); [eassumption|eassumption|eassumption|eassumption|].
+      split; last split; last split; last assumption.
+      - move=>Hval. destruct (Hwpval Hval) as (w2 & r2 & Hw12 & Hvsφ & Hsat).
+        edestruct Hvsφ as (w3 & r3 & Hw23 & Hφ & Hsat');[| | |eassumption|].
+        + reflexivity.
+        + omega.
+        + clear-HD. intros j. specialize (HD j). unfold mcup. tauto.
+        + exists w3 r3. split; first (etransitivity;eassumption). split; assumption.
+      - move=>? ? ? ? Hfill Hstep. destruct (Hwpstep _ _ _ _ Hfill Hstep) as (w2 & r2 & Hw12 & Hwp & Hsat)=>{Hwpval Hwpstep Hwpfork Hwpsafe}.
+        exists w2 r2. split; first assumption. split; last assumption.
+        eapply IH, Hwp. omega.
+      - move=>? ? Hfill. destruct (Hwpfork _ _ Hfill) as (w2 & rfk & rret & Hw12 & Hwpret & Hwpk & Hsat)=>{Hwpval Hwpstep Hwpfork Hwpsafe}.
+        exists w2 rfk rret. split; first assumption. split; last (split; assumption).
+        eapply IH, Hwpret. omega.
+    Qed.
+
+    Lemma wpACons safe m m' e φ
           (HAt   : atomic e)
           (HSub  : m' ⊆ m) :
-      vs m m' P P' ∧ ht safe m' P' e Q' ∧ all (vsLift m' m Q' Q) ⊑ ht safe m P e Q.
+      pvs m m' (wp safe m' e ((pvs m' m) <M< φ)) ⊑ wp safe m e φ.
     Proof.
-      intros wz nz rz [ [HP He] HQ] w HSw n r HLe _ Hp.
-      specialize (HP _ HSw _ _ HLe unit_min Hp); rewrite unfold_wp.
+      move=>w0 n0 r0 Hvswpvs. rewrite->unfold_wp. intros w1; intros.
       split; [intros HV; contradiction (atomic_not_value e) |].
-      edestruct HP as [w'' [r' [HSw' [Hp' HE'] ] ] ]; try eassumption; [|]; clear HP.
-      { intros j [Hmf Hmm']; apply (HD j); split; [assumption |].
-        destruct Hmm'; [| apply HSub]; assumption.
-      }
-      split; [| split; [intros; subst; contradiction (fork_not_atomic K e') |] ].
-      - intros; rewrite <- HLe, HSw in He, HQ; clear wz nz HSw HLe Hp.
-        clear HE; rewrite ->HSw0 in He; specialize (He w'' HSw' _ r' HLt unit_min Hp').
-        unfold lt in HLt; rewrite ->HSw0, <- HLt in HQ; clear w n HSw0 HLt Hp'.
-        rewrite ->unfold_wp in He; edestruct He as [_ [HS _] ];
-          [reflexivity | apply le_n | rewrite ->HSub; eassumption | eassumption |].
-        edestruct HS as [w [r'' [HSw [He' HE] ] ] ]; try eassumption; clear He HS HE'.
-        destruct k as [| k]; [exists w' r'; split; [reflexivity | split; [apply wpO | exact I] ] |].
-        assert (HNV : ~ is_value ei)
+      edestruct Hvswpvs as (w2 & r2 & Hw12 & Hwpvs & Hsat2);[eassumption|eassumption| |eassumption|].
+      { clear-HD HSub. intros j. specialize (HD j). specialize (HSub j). unfold mcup. tauto. }
+      rewrite->unfold_wp in Hwpvs.
+      edestruct Hwpvs as (Hwpval & Hwpstep & Hwpfork & Hwpsafe);[reflexivity| | |eassumption|]; first omega.
+      { clear-HD HSub. intros j. specialize (HD j). specialize (HSub j). tauto. }
+      split; last (split; [intros e' K ?; subst; contradiction (fork_not_atomic K e') |assumption]).
+      move=>σ' ei ei' K Hfill Hstep {Hwpval Hwpfork Hwpsafe Hvswpvs Hwpvs Hsat2 HE}.
+      destruct k as [| k]; [exists w1 r0; split; [reflexivity | split; [apply wpO | exact I] ] |].
+      destruct (Hwpstep _ _ _ _ Hfill Hstep) as (w3 & r3 & Hw23 & Hwpvs & Hsat3)=>{Hwpstep}.
+      assert (HNV : ~ is_value ei)
           by (intros HV; eapply (values_stuck HV); [symmetry; apply fill_empty | repeat eexists; eassumption]).
-        subst e; assert (HT := atomic_fill HAt HNV); subst K; clear HNV.
-        rewrite ->fill_empty in *; rename ei into e.
-        setoid_rewrite HSw'; setoid_rewrite HSw.
-        assert (HVal := atomic_step HAt HStep).
-        rewrite ->HSw', HSw in HQ; clear - HE He' HQ HSub HVal HD.
-        rewrite ->unfold_wp in He'; edestruct He' as [HV _];
-        [reflexivity | apply le_n | rewrite ->HSub; eassumption | eassumption |].
-        clear HE He'; specialize (HV HVal); destruct HV as [w' [r [HSw [HQ' HE] ] ] ].
-        eapply HQ in HQ'; [| assumption | apply Le.le_n_Sn | apply unit_min].
-        clear HQ; edestruct HQ' as [w'' [r' [HSw' [HQ HE'] ] ] ];
-          [reflexivity | apply le_n | | eassumption |].
-        { intros j [Hmf Hmm']; apply (HD j); split; [assumption |].
-          destruct Hmm'; [apply HSub |]; assumption.
-        }
-        clear HQ' HE; exists w'' r'; split;
-        [etransitivity; eassumption | split; [| eassumption] ].
-        clear - HQ; rewrite ->unfold_wp; intros w; intros; split; [intros HVal' | split; intros; [intros; exfalso|split; [intros |] ] ].
-        + do 2 eexists; split; [reflexivity | split; [| eassumption] ].
-          unfold lt in HLt; rewrite ->HLt, <- HSw.
-          eapply Q, HQ; [| apply le_n]; simpl; reflexivity.
-        + eapply values_stuck; [.. | repeat eexists]; eassumption.
-        + clear - HDec HVal; subst; assert (HT := fill_value HVal); subst.
-          rewrite ->fill_empty in HVal; now apply fork_not_value in HVal.
-        + intros; left; assumption.
-      - clear HQ; intros; rewrite <- HLe, HSw in He; clear HLe HSw.
-        specialize (He w'' (transitivity HSw0 HSw') _ r' HLt unit_min Hp').
-        rewrite ->unfold_wp in He; edestruct He as [_ [_ [_ HS'] ] ];
-          [reflexivity | apply le_n | rewrite ->HSub; eassumption | eassumption |].
-        auto.
+      subst e; assert (HT := atomic_fill HAt HNV); subst K; clear HNV.
+      rewrite ->fill_empty in *; rename ei into e. rewrite->unfold_wp in Hwpvs.
+      assert (HVal := atomic_step HAt Hstep)=>{Hstep e HAt σ}.
+      edestruct Hwpvs as (Hwpval & _); [reflexivity| | |eassumption|]=>{Hwpvs Hsat3}; first omega.
+      { clear-HD HSub. intros j. specialize (HD j). specialize (HSub j). tauto. }
+      destruct (Hwpval HVal) as (w4 & r4 & Hw34 & Hvs & Hsat4)=>{Hwpval}.
+      edestruct Hvs as (w5 & r5 & Hw45 & Hφ & Hsat5); [reflexivity| | |eassumption|]=>{Hvs Hsat4}; first omega.
+      { clear-HD HSub. intros j. specialize (HD j). specialize (HSub j). unfold mcup. tauto. }
+      exists w5 r5.
+      split.
+      { rewrite ->Hw12, Hw23, Hw34. assumption. }
+      split; last assumption.
+      rewrite unfold_wp. move=>w6 n6 rf6 mf6 σ6 Hw56 Hn56 Hmf6 Hsat6.
+      split; last split; last split.
+      - do 2 eexists; split; [reflexivity | split; [| eassumption] ].
+        assert (Heq: ((exist _ ei' HVal):value) == (exist _ ei' HV)) by reflexivity. (* TODO can we do without this? *)
+        rewrite -Heq. eapply propsMWN, Hφ.
+        + assumption.
+        + omega.
+      - intros. exfalso. eapply values_stuck; [.. | repeat eexists]; eassumption.
+      - intros. exfalso. clear - HDec HVal; subst; assert (HT := fill_value HVal); subst.
+        rewrite ->fill_empty in HVal; now apply fork_not_value in HVal.
+      - intros; left; assumption.
     Qed.
 
     (** Framing **)

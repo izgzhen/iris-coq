@@ -133,7 +133,7 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
 
     Existing Instance LP_isval.
 
-    Implicit Types (P : Props) (i : nat) (m : mask) (e : expr) (r : res) (Q : vPred).
+    Implicit Types (P : Props) (i : nat) (m : mask) (e : expr) (r : res) (φ Q : vPred) (w : Wld) (n k : nat).
 
     Lemma htRet e (HV : is_value e) safe m :
       valid (ht safe m ⊤ e (eqV (exist _ e HV))).
@@ -166,6 +166,60 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
         + etransitivity; eassumption.
         + omega.
         + apply: unit_min.
+    Qed.
+
+    (** Much like in the case of the plugging, we need to show that
+        the map from a value to a view shift between the applied
+        postconditions is nonexpansive *)
+    Program Definition vsLift m1 m2 (φ φ' : vPred) :=
+      n[(fun v => vs m1 m2 (φ v) (φ' v))].
+    Next Obligation.
+      intros v1 v2 EQv; unfold vs.
+      rewrite ->EQv; reflexivity.
+    Qed.
+
+    Lemma pvsWpCompose {safe m m' P e φ}:
+      pvs m m' P ∧ ht safe m' P e φ ⊑ pvs m m' (wp safe m' e φ).
+    Proof.
+      move=>w0 n0 r0 [Hpvs Hht]. unfold vsLift, vs, ht in *.
+      eapply pvsImpl. split; eassumption.
+    Qed.
+
+    Lemma wpPvsCompose {safe m m' e φ φ'}:
+      wp safe m' e φ ∧ all (vsLift m' m φ φ') ⊑ wp safe m' e (pvs m' m <M< φ').
+    Proof.
+      move=>w0 n0 r0 [Hwp Hvs]. unfold vsLift, vs, ht in *.
+      eapply wpImpl. split; last eassumption.
+      move=>v w1 Hw01 n1 r1 Hn01 _ Hφ. change (pvs m' m (φ' v) w1 n1 r1).
+      specialize (Hvs v). apply: Hvs Hφ; [assumption|by apply:unit_min].
+    Qed.
+
+    Lemma htCons P P' Q Q' safe m e :
+      vs m m P P' ∧ ht safe m P' e Q' ∧ all (vsLift m m Q' Q) ⊑ ht safe m P e Q.
+    Proof.
+      move=>w0 n0 r0 [HvsP [Hht HvsQ]] w1 Hw01 n1 r1 Hn01 _ HP.
+      eapply wpPostVS, wpPvsCompose. split; last first.
+      { eapply propsMWN; last apply: HvsQ; assumption. }
+      eapply wpPreVS, pvsWpCompose. split; last first.
+      { eapply propsMWN; last apply: Hht; assumption. }
+      unfold vs in HvsP=>{Hht HvsQ}. eapply HvsP; (assumption || by apply: unit_min).
+    Qed.
+
+    Lemma htACons safe m m' e P P' Q Q'
+          (HAt   : atomic e)
+          (HSub  : m' ⊆ m) :
+      vs m m' P P' ∧ ht safe m' P' e Q' ∧ all (vsLift m' m Q' Q) ⊑ ht safe m P e Q.
+    Proof.
+      move=>w0 n0 r0 [HvsP [Hht HvsQ]] w1 Hw01 n1 r1 Hn01 _ HP.
+      unfold vsLift, vs, ht in *.
+      eapply wpACons;[eassumption|eassumption|].
+      eapply pvsWpCompose. split.
+      { apply: HvsP; (assumption || by apply: unit_min). }
+      move=>w2 Hw12 n2 r2 Hn12 Hr12 HP'.
+      eapply wpPvsCompose. split; last first.
+      { eapply propsMWN; last apply: HvsQ; (etransitivity;eassumption). }
+      (* TODO: This next step is slow. It's still the most sensible script though. *)
+      eapply Hht, HP'; ((etransitivity;eassumption) || by apply: unit_min).
     Qed.
 
     Lemma htFrame safe m m' P R e Q (HD : m # m') :

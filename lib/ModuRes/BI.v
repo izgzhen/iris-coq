@@ -106,8 +106,8 @@ Delimit Scope bi_scope with bi.
 Notation " ▹ p " := (later p) (at level 20) : bi_scope.
 Notation "⊤" := (top) : bi_scope.
 Notation "⊥" := (bot) : bi_scope.
-Notation "p ∧ q" := (and p q) (at level 40, left associativity) : bi_scope.
-Notation "p ∨ q" := (or p q) (at level 50, left associativity) : bi_scope.
+Notation "p ∧ q" := (and p q) (at level 39, right associativity) : bi_scope.
+Notation "p ∨ q" := (or p q) (at level 51, right associativity) : bi_scope.
 Notation "p * q" := (sc p q) (at level 40, left associativity) : bi_scope.
 Notation "p → q" := (impl p q) (at level 55, right associativity) : bi_scope.
 Notation "p '-*' q" := (si p q) (at level 55, right associativity) : bi_scope.
