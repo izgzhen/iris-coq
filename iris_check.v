@@ -201,5 +201,6 @@ Print Assumptions pvsGhostUpd.
 
 Print Assumptions wpRet.
 Print Assumptions wpBind.
-Print Assumptions htCons.
-Print Assumptions htACons.
+Print Assumptions wpPreVS.
+Print Assumptions wpPostVS.
+Print Assumptions wpACons.
