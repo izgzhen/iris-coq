@@ -446,7 +446,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   End WeakestPre.
 
-  Section DerviedForms.
+  Section DerivedForms.
     (* There will be no base rules concerning these derived forms - but there's a bunch of derived rules in iris_derived_rules.v *)
 
     Definition vs m1 m2 P Q : Props :=
@@ -462,6 +462,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Global Instance ht_proper safe m: Proper (equiv ==> equiv ==> equiv ==> equiv) (ht safe m).
     Proof.
       move=> P0 P1 HEQP e0 e1 HEQe Q0 Q1 HEQQ.
+      (* TODO these rewrites are *slow* *)
       unfold ht. rewrite HEQe. rewrite HEQP. rewrite HEQQ.
       reflexivity.
     Qed.
