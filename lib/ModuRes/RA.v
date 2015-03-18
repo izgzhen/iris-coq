@@ -6,6 +6,7 @@ Require Import Predom.
 Require Import CSetoid.
 Require Import MetricCore.
 Require Import PreoMet.
+Require Import Finmap.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -521,6 +522,121 @@ Section HomogeneousProduct.
   Proof. now eapply ra_infprod; auto. Qed.
 End HomogeneousProduct.
 
+Section FiniteProduct.
+  Context {I : Type} {S : Type} `{comparable I} `{RA S}.
+  Implicit Type (i : I) (s : S) (f g : I -f> S).
+  
+  Definition ra_eq_finprod := fun f g => forall i s, f i == Some s <-> g i == Some s.
+  
+  Global Instance ra_equiv_finprod : Equivalence ra_eq_finprod.
+  Proof. 
+    split; repeat intro; 
+    [| rewrite (_ : ra_eq_finprod x y) | rewrite (_ : ra_eq_finprod x y) ?(_ : ra_eq_finprod y z) ]; 
+    (try eassumption); reflexivity. 
+  Qed.
+  
+  Lemma opt_eq_iff x y : (forall v, x == Some v <-> y == Some v) -> x == y.
+  Proof.
+    intros. destruct x as [vx|] eqn:X, y as [vy|] eqn:Y.
+    - generalize (H1 vy) => H1y.
+      rewrite H1y. reflexivity.
+    - specialize (H1 vx). destruct H1 as [H1 _]. destruct H1. reflexivity.
+    - specialize (H1 vy). destruct H1 as [_ H1]. destruct H1. reflexivity.
+    - reflexivity.
+  Qed.
+
+  Global Instance ra_type_finprod : Setoid (I -f> S) := _.
+  Global Instance ra_unit_finprod : RA_unit (I -f> S) := fdEmpty.
+  Global Instance ra_op_finprod : RA_op (I -f> S) := fdCompose (ra_op).
+  Global Instance ra_valid_finprod : RA_valid (I -f> S) := fun f => forall i s, f i == Some s -> ra_valid s.
+  
+  Definition fdComposeP' := fdComposeP ra_op (ra_op_proper).
+  Definition fdComposePN' := fdComposePN ra_op (ra_op_proper).
+
+  Global Instance ra_finprod : RA (I -f> S).
+  Proof.
+    split; repeat intro.
+    - unfold ra_op, ra_op_finprod.
+      eapply opt_eq_iff => v.
+      split => /(fdComposeP').
+      + move => [[v1 [v2 [Hv [Hx Hx0]]]]|[[Hx Hx0]|[Hx Hx0]]];
+        apply/fdComposeP'.
+        * left. exists v1 v2; split; first (now auto); split; by rewrite -?H1 -?H2.
+        * right. left. split; by rewrite -?H1 -?H2.
+        * right. right. split; by rewrite -?H1 -?H2.
+      + move => [[v1 [v2 [Hv [Hy Hy0]]]]|[[Hy Hy0]|[Hy Hy0]]];
+        apply fdComposeP'.
+        * left. exists v1 v2; split; first (now auto); split; by rewrite ?H1 ?H2.
+        * right. left. split; by rewrite ?H1 ?H2.
+        * right. right. split; by rewrite ?H1 ?H2.
+    - unfold ra_op, ra_op_finprod.
+      eapply opt_eq_iff => v.
+      split => /(fdComposeP').
+      + move => [[v1 [v2 [Hv [Hx Hx0]]]]|[[Hx Hx0]|[Hx Hx0]]];
+        apply fdComposeP'.
+        * apply fdComposeP' in Hx0.
+          destruct Hx0 as [[v1' [v2' [Hv' [Hx' Hx'0]]]]|[[Hx' Hx'0]|[Hx' Hx'0]]].
+          { left. exists (v1 · v1') v2'; split; last split; last auto.
+            - rewrite -ra_op_assoc Hv'. exact Hv.
+            - apply fdComposeP'. left. exists v1 v1'; repeat split; auto. reflexivity.
+          }
+          { right. left. split; auto. apply fdComposeP'. left. eexists; now eauto. }
+          { left. exists v1 v2; repeat split; auto.
+            apply fdComposeP'. now eauto. }
+        * apply fdComposePN' in Hx0. destruct Hx0.
+          right. left. split; last now auto.
+          apply fdComposeP'. now auto. 
+        * apply fdComposeP' in Hx0.
+          destruct Hx0 as [[v1' [v2' [Hv' [Hx' Hx'0]]]]|[[Hx' Hx'0]|[Hx' Hx'0]]].
+          { left. do 2!eexists; repeat split; [now eauto | | now eauto]. 
+            apply fdComposeP'. now eauto. }
+          { right. left. split; auto; []. apply fdComposeP'. now eauto. }
+          { right. right. split; [|assumption]. now apply fdComposePN'. }
+      + move => [[v1 [v2 [Hv [Hy Hy0]]]]|[[Hy Hy0]|[Hy Hy0]]];
+        apply fdComposeP'.
+        * apply fdComposeP' in Hy.
+          destruct Hy as [[v1' [v2' [Hv' [Hy' Hy'0]]]]|[[Hy' Hy'0]|[Hy' Hy'0]]].
+          { left. do 2!eexists; repeat split; [| |].
+            - rewrite <- Hv, <- Hv', -> ra_op_assoc. reflexivity. 
+            - assumption.
+            - eapply fdComposeP'. left. do 2!eexists; split; eauto; []. reflexivity.
+          }
+          { left. do 2!eexists; repeat split; [eassumption| assumption |].
+            eapply fdComposeP'. right; right. now eauto. }
+          { right; right. split; first assumption. eapply fdComposeP'.
+            left; now eauto. }
+        * apply fdComposeP' in Hy.
+          destruct Hy as [[v1' [v2' [Hv' [Hy' Hy'0]]]]|[[Hy' Hy'0]|[Hy' Hy'0]]].
+          { left. do 2!eexists; repeat split; [| |].
+            - exact Hv'.
+            - assumption.
+            - eapply fdComposeP'. now eauto. 
+          }
+          { right; left. split; first assumption. by eapply fdComposePN'. }
+          { right; right. split; first assumption. eapply fdComposeP'.
+            right; left; now eauto. }
+        * apply fdComposePN' in Hy. destruct Hy.
+          right; right; split; first assumption. apply fdComposeP'. now eauto. 
+    - apply opt_eq_iff => v.
+      split => /fdComposeP'; move => [[v1 [v2 [Hv [H1 H2]]]]|[[H1 H2]|[H1 H2]]];
+        apply fdComposeP'; try (now eauto); 
+        rewrite -> ra_op_comm in Hv; left; do 2!eexists; repeat split; eauto.
+    - cut (forall v, (1 · t) k == v <-> t k == v).
+      + intros. specialize (H1 ((1 · t) k)). symmetry. apply H1. reflexivity.
+      + move => [v|].
+        * split; [move => /fdComposeP'; move => [[v1 [v2 [Hv [[] //]]]]|[[[] //]|[H1 H2 //]]]|].
+          move=>Ht. apply fdComposeP'. by right; right.
+        * split; [move/fdComposePN' => [] //|move => ?; apply fdComposePN'; split; now auto].
+    - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H1 // -?H1.
+    - by destruct H1.
+    - case Hi: (t2 i) => [v|]; apply equivR in Hi. 
+      + apply (ra_op_valid (t2 := v)). apply (H1 i), fdComposeP'. 
+        left; do 2!eexists; repeat split; eauto. reflexivity.
+      + apply (H1 i). eapply fdComposeP'. by eauto.
+  Qed.
+     
+
+End FiniteProduct.
 
 
 (* Package an RA as a module type (for use with other modules). *)
