@@ -562,6 +562,18 @@ Section ExtOrdDiscrete.
 
 End ExtOrdDiscrete.
 
+Section ExtMetricDiscrete.
+  Context T {eqtT : Setoid T} {preoT : preoType T}.
+
+  Global Instance disc_metric_pcm : pcmType (mT:=discreteMetric) (cmT:=discreteCMetric) T.
+  Proof.
+    split. move=>σ ρ σc ρc Hle.
+    rewrite /compl /= /discreteCompl.
+    by apply: Hle.
+  Qed.
+End ExtMetricDiscrete.
+
+
 Section ExtProd.
   Context T U `{ET : extensible T} `{EU : extensible U}. 
 
