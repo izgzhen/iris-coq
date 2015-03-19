@@ -359,6 +359,16 @@ Section OptDefs.
     apply EQf.
   Qed.
 
+  Lemma opt_eq_iff x y : (forall v, x == Some v <-> y == Some v) -> x == y.
+  Proof.
+    intros. destruct x as [vx|] eqn:X, y as [vy|] eqn:Y.
+    - generalize (H vy). intros H1y.
+      rewrite H1y. reflexivity.
+    - specialize (H vx). destruct H as [H1 _]. destruct H1. reflexivity.
+    - specialize (H vy). destruct H as [_ H1]. destruct H1. reflexivity.
+    - reflexivity.
+  Qed.
+
 End OptDefs.
 
 Section DiscreteType.
