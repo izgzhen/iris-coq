@@ -297,7 +297,7 @@ Section MonotoneProducts.
   Context `{pcT : pcmType T} `{pcU : pcmType U} `{pcV : pcmType V}.
   Local Obligation Tactic := intros; apply _ || mono_resp || program_simpl.
 
-  Global Instance pcmType_prod : pcmType (U * V).
+  Global Instance pcmType_prod : pcmType (U * V) | 5.
   Proof.
     split.
     - intros [a1 b1] [a2 b2] [Ha12 Hb12] [a3 b3] [a4 b4] [Ha34 Hb34].
@@ -431,7 +431,7 @@ Section SubPCM.
   Program Definition p1sNE :=
     n[(fun x : {a : T | P a} => proj1_sig x)].
 
-  Global Instance pcmType_sub : pcmType {a : T | P a}.
+  Global Instance pcmType_sub : pcmType {a : T | P a} | 5.
   Proof.
     split.
     - intros [x HPx] [y HPy] EQxy [u HPu] [v HPv] EQuv; simpl in *.
@@ -471,29 +471,9 @@ Section Option.
   (* The preorder on options where None is the bottom element. *)
   Section Bot.
 
-    Definition option_pord_bot (o1 o2 : option V) :=
-      match o1 with
-        | None => True
-        | Some v1 => match o2 with
-                       | None => False
-                       | Some v2 => v1 ⊑ v2
-                     end
-      end.
-    Program Instance option_preo_bot : preoType (option V) := mkPOType option_pord_bot _.
-    Next Obligation.
-      split.
-      - intros [v |]; simpl; [reflexivity | exact I].
-      - intros [v1 |] [v2 |] [v3 |] Sub12 Sub23; simpl in *; try exact I || contradiction; [].
-        etransitivity; eassumption.
-    Qed.
-    Next Obligation.
-      move=> x1 x2 Rx y1 y2 Ry; move: Rx Ry.
-      case: x1=>[x1|]; case: x2=>[x2|] //= Rx.
-      case: y1=>[y1|]; case: y2=>[y2|] //= Ry; last done.
-      by rewrite Rx Ry; reflexivity.
-    Qed.
+    Existing Instance option_preo_bot.
 
-    Instance option_pcm_bot : pcmType (option V).
+    Instance option_pcm_bot : pcmType (option V) | 5.
     Proof.
       split.
       - intros o1 o2 EQ12 o3 o4 EQ34; split; intros HS.
@@ -529,29 +509,9 @@ Section Option.
   (* And the preorder, where None is a top element *)
   Section Top.
 
-    Definition option_pord_top (o1 o2 : option V) :=
-      match o2 with
-        | None => True
-        | Some v2 => match o1 with
-                       | None => False
-                       | Some v1 => v1 ⊑ v2
-                     end
-      end.
-    Program Instance option_preo_top : preoType (option V) := mkPOType option_pord_top _.
-    Next Obligation.
-      split.
-      - intros [v |]; simpl; [reflexivity | exact I].
-      - intros [v1 |] [v2 |] [v3 |] Sub12 Sub23; simpl in *; try exact I || contradiction; [].
-        etransitivity; eassumption.
-    Qed.
-    Next Obligation.
-      move=> x1 x2 Rx y1 y2 Ry; move: Rx Ry.
-      case: x1=>[x1|]; case: x2=>[x2|] //= Rx;
-      case: y1=>[y1|]; case: y2=>[y2|] //= Ry; last done.
-      rewrite Rx Ry; by reflexivity.
-    Qed.
-      
-    Instance option_pcm_top : pcmType (option V).
+    Existing Instance option_preo_top.
+
+    Instance option_pcm_top : pcmType (option V) | 5.
     Proof.
       split.
       - intros o1 o2 EQ12 o3 o4 EQ34; split; intros HS.
@@ -629,7 +589,6 @@ Section ExtOrdDiscrete.
 End ExtOrdDiscrete.
 
 Section ExtProd.
-  (* FIXME This is a duplicate of stuf in BI.v: There's also an "extensible_prod" there. *)
   Context T U `{ET : extensible T} `{EU : extensible U}. 
 
   Global Instance prod_extensible : extensible (T * U) := mkExtend (fun s s' => pair (extend (fst s) (fst s')) (extend (snd s) (snd s'))).

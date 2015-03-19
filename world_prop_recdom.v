@@ -1,8 +1,7 @@
 (** In this file, we show how we can obtain a solution of the recursive
     domain equations to build a higher-order separation logic *)
-Require Import ModuRes.PreoMet ModuRes.MetricRec ModuRes.CBUltInst.
-Require Import ModuRes.Finmap ModuRes.Constr.
-Require Import ModuRes.RA ModuRes.UPred.
+Require Import ModuRes.PreoMet ModuRes.Finmap ModuRes.RA ModuRes.UPred.
+Require Import ModuRes.CatBasics ModuRes.MetricRec ModuRes.CBUltInst.
 Require Import world_prop.
 
 (* Now we come to the actual implementation *)

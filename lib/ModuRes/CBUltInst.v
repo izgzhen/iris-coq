@@ -2,7 +2,7 @@
     bisected, ultrametric spaces, forms an M-category. *)
 
 Require Import CSetoid.
-Require Import MetricCore MetricRec.
+Require Import MetricCore CatBasics MetricRec.
 
 Module CBUlt <: MCat.
   Local Open Scope cat_scope.

@@ -53,9 +53,9 @@ Section MMorphProps1.
     - move=> f1 f2 EQf t. by symmetry.
     - move=> f1 f2 f3 EQ12 EQ23 t. by transitivity (f2 t).
   Qed.
-  Global Instance mon_morph_type : Setoid (T -m> U) := mkType mon_morph_eq.
+  Global Instance mon_morph_type : Setoid (T -m> U) | 5 := mkType mon_morph_eq.
 
-  Global Program Instance mon_morph_preoT : preoType (T -m> U) :=
+  Global Program Instance mon_morph_preoT : preoType (T -m> U) | 5 :=
     mkPOType (fun f g => forall x, f x ⊑ g x) _.
   Next Obligation.
     split.
@@ -115,7 +115,7 @@ Section MonotoneProducts.
 
   Definition prod_ord (p1 p2 : U * V) := (fst p1 ⊑ fst p2) /\ (snd p1 ⊑ snd p2).
 
-  Global Program Instance preoType_prod : preoType (U * V) := mkPOType prod_ord _.
+  Global Program Instance preoType_prod : preoType (U * V) | 5 := mkPOType prod_ord _.
   Next Obligation.
     split.
     - intros [a b]; split; simpl; reflexivity.
@@ -292,7 +292,7 @@ Section SubPredom.
 
   Definition subset_ord (x y : {t : T | P t}) := proj1_sig x ⊑ proj1_sig y.
   Arguments subset_ord _ _ /.
-  Global Program Instance subset_preo : preoType {a : T | P a} := mkPOType subset_ord _.
+  Global Program Instance subset_preo : preoType {a : T | P a} | 5 := mkPOType subset_ord _.
   Next Obligation.
     split.
     - intros [x Hx]; red; simpl; reflexivity.
@@ -326,6 +326,70 @@ Section SubPredom.
 End SubPredom.
 
 Global Arguments subset_ord {_ _ _ _} _ _ /.
+
+(** Preorders on option types.
+
+    Caution: this is *one* of the ways to define the order, and not necessarily the only useful.
+    Thus, the instances are local, and should be declared w/ Existing Instance where needed. *)
+Section Option.
+  Context `{pcV : preoType V}.
+
+  (* The preorder on options where None is the bottom element. *)
+  Section Bot.
+
+    Definition option_pord_bot (o1 o2 : option V) :=
+      match o1 with
+        | None => True
+        | Some v1 => match o2 with
+                       | None => False
+                       | Some v2 => pord v1 v2
+                     end
+      end.
+    Program Instance option_preo_bot : preoType (option V) | 5 := mkPOType option_pord_bot _.
+    Next Obligation.
+      split.
+      - intros [v |]; simpl; [reflexivity | exact I].
+      - intros [v1 |] [v2 |] [v3 |] Sub12 Sub23; simpl in *; try exact I || contradiction; [].
+        etransitivity; eassumption.
+    Qed.
+    Next Obligation.
+      move=> x1 x2 Rx y1 y2 Ry; move: Rx Ry.
+      case: x1=>[x1|]; case: x2=>[x2|] //= Rx.
+      case: y1=>[y1|]; case: y2=>[y2|] //= Ry; last done.
+      by rewrite Rx Ry; reflexivity.
+    Qed.
+
+  End Bot.
+
+  (* And the preorder, where None is a top element *)
+  Section Top.
+
+    Definition option_pord_top (o1 o2 : option V) :=
+      match o2 with
+        | None => True
+        | Some v2 => match o1 with
+                       | None => False
+                       | Some v1 => pord v1 v2
+                     end
+      end.
+    Program Instance option_preo_top : preoType (option V) | 5 := mkPOType option_pord_top _.
+    Next Obligation.
+      split.
+      - intros [v |]; simpl; [reflexivity | exact I].
+      - intros [v1 |] [v2 |] [v3 |] Sub12 Sub23; simpl in *; try exact I || contradiction; [].
+        etransitivity; eassumption.
+    Qed.
+    Next Obligation.
+      move=> x1 x2 Rx y1 y2 Ry; move: Rx Ry.
+      case: x1=>[x1|]; case: x2=>[x2|] //= Rx;
+      case: y1=>[y1|]; case: y2=>[y2|] //= Ry; last done.
+      rewrite Rx Ry; by reflexivity.
+    Qed.
+      
+  End Top.
+
+End Option.
+
 
 Section ViewLemmas.
   Context {T} `{oT : preoType T}.

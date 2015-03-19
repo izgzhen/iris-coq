@@ -1,7 +1,7 @@
 (** In this file, we we define what it means to be a solution of the recursive
     domain equations to build a higher-order separation logic *)
-Require Import ModuRes.PreoMet.
-Require Import ModuRes.Finmap ModuRes.Constr.
+Require Import ModuRes.PreoMet ModuRes.Finmap.
+Require Import ModuRes.CatBasics. (* Get the "halve" functor. This brings in bundled types... *)
 Require Import ModuRes.RA ModuRes.UPred.
 
 (* This interface keeps some of the details of the solution opaque *)

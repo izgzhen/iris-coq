@@ -252,15 +252,15 @@ Section MMInst.
 
 (*
   (** Note the set of morphisms, not the set of non-expansive maps. The distance is the supremum of pointwise distances. *)
-  Global Program Instance fundistS : Dist (M -s> N) :=
+  Global Program Instance fundistS : Dist (M -s> N) | 5 :=
     fun n f g => forall x, f x = n = g x.
 
   (** Note the set of non-expansive maps with the point-wise distance. *)
-  Global Program Instance fundist : Dist (M -n> N) :=
+  Global Program Instance fundist : Dist (M -n> N) | 5:=
     fun n f g => met_morph f = n = met_morph g.
 
   (** The hom-set (i.e. the set of non-expansive maps) is again a bisected ultrametic spaces. *)
-  Global Instance MMmetric : metric (M -n> N) (D := fundist).
+  Global Instance MMmetric : metric (M -n> N) (D := fundist) | 5.
   Proof.
     split.
     + split; [intros HEq t | intros HEq n].
@@ -554,7 +554,7 @@ Section MetricProducts.
     fst p1 = n = fst p2 /\ snd p1 = n = snd p2.
   Global Arguments prod_dist n p1 p2 /.
 
-  Global Program Instance prod_metric : metric (U * V) := mkMetr prod_dist.
+  Global Program Instance prod_metric : metric (U * V) | 5 := mkMetr prod_dist.
   Next Obligation.
     intros [a1 b1] [a2 b2] [Ha Hb] [a3 b3] [a4 b4] [Ha' Hb']; simpl in *.
     rewrite Ha, Hb, Ha', Hb'; reflexivity.
@@ -610,7 +610,7 @@ Section MetricProducts.
     (compl (liftc Mfst σ), compl (liftc Msnd σ)).
   Arguments prod_compl σ σc /.
 
-  Global Program Instance prod_cmetric : cmetric (U * V) :=
+  Global Program Instance prod_cmetric : cmetric (U * V) | 5 :=
     mkCMetr prod_compl.
   Next Obligation.
     intros n; destruct (conv_cauchy (liftc Mfst σ) n) as [mfst Hfst].
@@ -662,7 +662,7 @@ Section OptM.
                end
       end.
 
-  Global Program Instance option_metric : metric (option T) :=
+  Global Program Instance option_metric : metric (option T) | 5 :=
     mkMetr option_dist.
   Next Obligation.
     destruct n as [| n]; intros [x |] [y |] EQxy [u |] [v |] EQuv; simpl in *; try (contradiction || reflexivity); [].
@@ -700,7 +700,7 @@ Section Submetric.
   Definition subset_Dist n (x y : {e : T | P e}) := proj1_sig x = n = proj1_sig y.
   Global Arguments subset_Dist n x y /.
 
-  Global Program Instance sub_metric : metric {e : T | P e} :=
+  Global Program Instance sub_metric : metric {e : T | P e} | 5 :=
     mkMetr subset_Dist.
   Next Obligation.
     intros [x Hx] [y Hy] EQxy [u Hu] [v Hv] EQuv; unfold equiv in EQxy, EQuv; simpl in *.
@@ -743,7 +743,7 @@ Section SubCMetric.
 
   Definition sub_compl (σ : chain {x : T | P x}) {σc : cchain σ} :=
     exist P (compl (liftc inclM σ)) (subchainlubP σ).
-  Global Program Instance sub_cmetric : cmetric {x : T | P x} :=
+  Global Program Instance sub_cmetric : cmetric {x : T | P x} | 5 :=
     mkCMetr sub_compl.
   Next Obligation.
     intros n; simpl; destruct (conv_cauchy (liftc inclM σ) n) as [m Hm].
@@ -810,7 +810,7 @@ Section DiscreteMetric.
     end.
   Global Arguments discreteDist n x y / .
   
-  Program Instance discreteMetric : metric T := mkMetr discreteDist.
+  Program Instance discreteMetric : metric T | 10 := mkMetr discreteDist.
   Next Obligation.
     intros x y Heq x' y' Heq'. split; (destruct n as [|n]; [reflexivity|simpl]).
     - intros Heqx. rewrite <-Heq, <-Heq'. assumption.
@@ -833,7 +833,7 @@ Section DiscreteMetric.
 
   Definition discreteCompl (σ : chain T) {σc : cchain σ} := σ 1.
 
-  Program Instance discreteCMetric : cmetric T := mkCMetr discreteCompl.
+  Program Instance discreteCMetric : cmetric T | 10 := mkCMetr discreteCompl.
   Next Obligation.
     intros n; exists 1; simpl; intros [| i] HLe; [inversion HLe |].
     destruct n as [| n]; [exact I |].
@@ -877,7 +877,7 @@ Section Option.
       | Some v => Some (compl (unSome σ _))
     end.
 
-  Global Program Instance option_cmt : cmetric (option T) := mkCMetr option_compl.
+  Global Program Instance option_cmt : cmetric (option T) | 5 := mkCMetr option_compl.
   Next Obligation.
     intros [| n]; [exists 0; intros; apply dist_bound | unfold option_compl].
     generalize (@eq_refl _ (σ 1)) as EQ1; pattern (σ 1) at 1 3; destruct (σ 1) as [v |]; intros.

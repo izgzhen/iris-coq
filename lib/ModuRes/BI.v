@@ -741,20 +741,7 @@ Section MComplMM.
 
   Section Def.
     Context U `{pcmU : pcmType U} {eU : extensible U}.
-
-    Program Instance extensible_prod : extensible (U * V) :=
-      mkExtend (fun uv1 uv2 => (extend (fst uv1) (fst uv2), extend (snd uv1) (snd uv2))).
-    Next Obligation.
-      destruct vd as [ud vd]; destruct ve as [ue ve].
-      destruct HD as [HDu HDv]; destruct HS as [HSu HSv].
-      split; eapply extend_dist; eassumption.
-    Qed.
-    Next Obligation.
-      destruct vd as [ud vd]; destruct ve as [ue ve].
-      destruct HD as [HDu HDv]; destruct HS as [HSu HSv].
-      split; eapply extend_sub; eassumption.
-    Qed.
-
+    
     Program Definition mclose_mm : (U -n> V -m> B) -n> U -m> V -m> B :=
       n[(fun f => mcurry (mclose n[(fun uv => f (fst uv) (snd uv))]))].
     Next Obligation.

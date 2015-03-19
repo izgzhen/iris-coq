@@ -3,7 +3,7 @@
     M-category. *)
 
 Require Import PreoMet.
-Require Import MetricRec.
+Require Import CatBasics MetricRec.
 
 Module PCBUlt <: MCat.
   Local Obligation Tactic := intros; resp_set || mono_resp || eauto with typeclass_instances.
