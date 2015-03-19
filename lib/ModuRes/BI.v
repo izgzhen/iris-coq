@@ -40,7 +40,7 @@ Section CompleteBI.
         and_projR   :  forall P Q, and P Q ⊑ Q;
         and_equiv   :> Proper (equiv ==> equiv ==> equiv) and;
         and_dist n  :> Proper (dist n ==> dist n ==> dist n) and;
-        and_pord    :> Proper (pord ==> pord ==> pord) and;
+        and_pord    :> Proper (pord ++> pord ++> pord) and;
         and_impl    :  forall P Q R, and P Q ⊑ R <-> P ⊑ impl Q R;
         impl_equiv  :> Proper (equiv ==> equiv ==> equiv) impl;
         impl_dist n :> Proper (dist n ==> dist n ==> dist n) impl;
@@ -50,13 +50,13 @@ Section CompleteBI.
         or_self     :  forall P, or P P ⊑ P;
         or_equiv    :> Proper (equiv ==> equiv ==> equiv) or;
         or_dist n   :> Proper (dist n ==> dist n ==> dist n) or;
-        or_pord     :> Proper (pord ==> pord ==> pord) or;
+        or_pord     :> Proper (pord ++> pord ++> pord) or;
         sc_comm     :> Commutative sc;
         sc_assoc    :> Associative sc;
         sc_top_unit :  forall P, sc top P == P;
         sc_equiv    :> Proper (equiv ==> equiv ==> equiv) sc;
         sc_dist n   :> Proper (dist n ==> dist n ==> dist n) sc;
-        sc_pord     :> Proper (pord ==> pord ==> pord) sc;
+        sc_pord     :> Proper (pord ++> pord ++> pord) sc;
         sc_si       :  forall P Q R, sc P Q ⊑ R <-> P ⊑ si Q R;
         si_equiv    :> Proper (equiv ==> equiv ==> equiv) si;
         si_dist n   :> Proper (dist n ==> dist n ==> dist n) si;

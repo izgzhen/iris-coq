@@ -653,6 +653,7 @@ Section ExtOrdDiscrete.
 End ExtOrdDiscrete.
 
 Section ExtProd.
+  (* FIXME This is a duplicate of stuf in BI.v: There's also an "extensible_prod" there. *)
   Context T U `{ET : extensible T} `{EU : extensible U}. 
 
   Global Instance prod_extensible : extensible (T * U) := mkExtend (fun s s' => pair (extend (fst s) (fst s')) (extend (snd s) (snd s'))).
