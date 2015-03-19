@@ -91,7 +91,7 @@ Module Type IRIS_DERIVED_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (W
         clear -HU. move=>rf Hval. exists rl'.
         split; first reflexivity.
         by eapply HU.
-      - move=>w0 n0 r0 Hpvs.
+      - intros w0 n0 r0 Hpvs.
         eapply pvsByImpl; last eassumption.
         move=>{Hpvs w0 n0 r0} w0 n0 r0 [[rl'' Hrl''] Hown].
         subst rl''. exact Hown.
