@@ -264,7 +264,6 @@ Section Image.
      rainherit f _.
    Next Obligation. move: u=> t. by exists t; reflexivity. Qed.
 End Image.
-
 (*
 	Let f : T -> U.
 	Define image and pre-image as usual:

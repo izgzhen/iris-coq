@@ -3,8 +3,7 @@
 
 Require Import ssreflect.
 Require Import Arith Min Max.
-Require Import UPred.
-Require Import MetricCore.
+Require Import MetricCore PreoMet.
 Require Fin.
 
 Module NatDec.
@@ -232,8 +231,6 @@ Section IndexedProductsPCM.
   Global Instance pcmTypI : pcmType (forall i, P i).
   Proof.
     split.
-    + intros x y EQxy u v EQuv; split; intros SUBxu i; [symmetry in EQxy, EQuv |];
-      rewrite -> (EQxy i), (EQuv i); apply SUBxu.
     + intros σ ρ σc ρc SUBc i; eapply pcm_respC; [apply _ | intros n; simpl; apply SUBc].
   Qed.
 
@@ -341,6 +338,7 @@ Section DiscM_Props.
 
 End DiscM_Props.
 
+(* TODO RJ: What is this? Why is it here? Why am *I* here?
 Section EvaluationClosure.
   Context {T} `{preoT : preoType T} (step : T -> T -> Prop).
   Definition irr t := forall t', ~ step t t'.
@@ -411,6 +409,7 @@ Section EvaluationClosure.
   Definition rel_evalCl : UPred T -m> UPred T := m[(evalCl)].
 
 End EvaluationClosure.
+*)
 
 Definition transfer {A} {T : A -> Type} {x y : A} (EQ : x = y) (t : T x) : T y :=
   eq_rect x T t y EQ.

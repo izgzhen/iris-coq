@@ -11,8 +11,7 @@ Section PreCBUmet.
       (forall i, le (σ i) (ρ i)) -> le (compl σ) (compl ρ).
 
   Class pcmType {pTA : preoType T} :=
-    { pcm_respM :> Proper (equiv ==> equiv ==> iff) pord;
-      pcm_respC :  respect_chain pord}.
+    { pcm_respC :  respect_chain pord }.
 
 End PreCBUmet.
 
@@ -136,10 +135,8 @@ Section PUMMorphProps1.
   Global Instance mon_morph_preoT : pcmType (T -m> U) | 5.
   Proof.
     clear; split.
-    - intros f1 f2 HEqf g1 g2 HEqg; split; intros HSub x; [symmetry in HEqf, HEqg |];
-      simpl in *; rewrite -> HEqf, HEqg; apply HSub.
-    - intros f g fc gc Hc x; simpl; eapply pcm_respC; try eassumption.
-      intros n; apply Hc.
+    intros f g fc gc Hc x; simpl; eapply pcm_respC; try eassumption.
+    intros n; apply Hc.
   Qed.
 
   Global Instance pord_pmu :
@@ -166,7 +163,7 @@ Section PUMMorphProps1.
     Proper (ordS ==> equiv ==> pord) (morph T U).
   Proof.
     intros f g HS x y HS'; etransitivity; [apply HS |].
-    eapply pcm_respM; try assumption; [reflexivity | apply g; rewrite <- HS' |]; reflexivity.
+    eapply preoC; try assumption; [reflexivity | apply g; rewrite <- HS' |]; reflexivity.
   Qed.
     
   Global Instance pcm_equiv_inherit :
@@ -300,24 +297,21 @@ Section MonotoneProducts.
   Global Instance pcmType_prod : pcmType (U * V) | 5.
   Proof.
     split.
-    - intros [a1 b1] [a2 b2] [Ha12 Hb12] [a3 b3] [a4 b4] [Ha34 Hb34].
-      simpl in *; unfold prod_ord; simpl.
-      rewrite -> Ha12, Hb12, Ha34, Hb34; reflexivity.
-    - intros σ ρ σc ρc HC; split; unfold liftc; eapply pcm_respC; try assumption; unfold liftc;
-      intros i; rewrite -> HC; reflexivity.
+    intros σ ρ σc ρc HC; split; unfold liftc; eapply pcm_respC; try assumption; unfold liftc;
+    intros i; rewrite -> HC; reflexivity.
   Qed.
 
-  Global Instance pcmprod_proper : Proper (pord ==> pord ==> pord) (@pair U V).
+  Global Instance pcmprod_proper : Proper (pord ++> pord ++> pord) (@pair U V).
   Proof.
     intros a a' Ha b b' Hb; split; assumption.
   Qed.
 
-  Global Instance pcmfst_proper : Proper (pord ==> pord) (@fst U V).
+  Global Instance pcmfst_proper : Proper (pord ++> pord) (@fst U V).
   Proof.
     intros [a1 b1] [a2 b2] [Ha Hb]; assumption.
   Qed.
 
-  Global Instance pcmsnd_proper : Proper (pord ==> pord) (@snd U V).
+  Global Instance pcmsnd_proper : Proper (pord ++> pord) (@snd U V).
   Proof.
     intros [a1 b1] [a2 b2] [Ha Hb]; assumption.
   Qed.
@@ -434,10 +428,8 @@ Section SubPCM.
   Global Instance pcmType_sub : pcmType {a : T | P a} | 5.
   Proof.
     split.
-    - intros [x HPx] [y HPy] EQxy [u HPu] [v HPv] EQuv; simpl in *.
-      rewrite -> EQxy, EQuv; reflexivity.
-    - intros σ ρ σc ρc SUBc; simpl.
-      eapply pcm_respC; [assumption |]; intros i; simpl; apply SUBc.
+    intros σ ρ σc ρc SUBc; simpl.
+    eapply pcm_respC; [assumption |]; intros i; simpl; apply SUBc.
   Qed.
 
   Global Instance proj1sig_proper :
@@ -476,17 +468,6 @@ Section Option.
     Instance option_pcm_bot : pcmType (option V) | 5.
     Proof.
       split.
-      - intros o1 o2 EQ12 o3 o4 EQ34; split; intros HS.
-        + destruct o2 as [v2 |]; [| exact I].
-          destruct o1 as [v1 |]; [| contradiction EQ12].
-          destruct o3 as [v3 |]; [| contradiction HS].
-          destruct o4 as [v4 |]; [simpl in * | contradiction EQ34].
-          rewrite <- EQ12, <- EQ34; assumption.
-        + destruct o1 as [v1 |]; [| exact I].
-          destruct o2 as [v2 |]; [| contradiction EQ12].
-          destruct o4 as [v4 |]; [| contradiction HS].
-          destruct o3 as [v3 |]; [simpl in * | contradiction EQ34].
-          rewrite -> EQ12, EQ34; assumption.
       - intros σ ρ σc ρc HS.
         unfold compl, option_cmt, option_compl at 1; simpl.
         generalize (@eq_refl _ (σ 1)); pattern (σ 1) at 1 3; destruct (σ 1) as [vs1 |]; intros; [| exact I].
@@ -514,17 +495,6 @@ Section Option.
     Instance option_pcm_top : pcmType (option V) | 5.
     Proof.
       split.
-      - intros o1 o2 EQ12 o3 o4 EQ34; split; intros HS.
-        + destruct o4 as [v4 |]; [| exact I].
-          destruct o3 as [v3 |]; [| contradiction EQ34].
-          destruct o1 as [v1 |]; [| contradiction HS].
-          destruct o2 as [v2 |]; [simpl in * | contradiction EQ12].
-          rewrite <- EQ12, <- EQ34; assumption.
-        + destruct o3 as [v3 |]; [| exact I].
-          destruct o4 as [v4 |]; [| contradiction EQ34].
-          destruct o2 as [v2 |]; [| contradiction HS].
-          destruct o1 as [v1 |]; [simpl in * | contradiction EQ12].
-          rewrite -> EQ12, EQ34; assumption.
       - intros σ ρ σc ρc HS.
         unfold compl, option_cmt, option_compl at 2; simpl.
         generalize (@eq_refl _ (ρ 1)); pattern (ρ 1) at 1 3; destruct (ρ 1) as [vr1 |]; intros; [| exact I].
@@ -573,7 +543,6 @@ Section ExtOrdDiscrete.
   Instance disc_pcm : pcmType U.
   Proof.
     split; simpl.
-    - apply _.
     - intros σ ρ σc ρc HS.
       apply umet_complete_ext; assumption.
   Qed.

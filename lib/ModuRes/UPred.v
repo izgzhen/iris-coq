@@ -84,8 +84,6 @@ Section Definitions.
   Global Instance up_pcmetric : pcmType UPred.
   Proof.
     split.
-    + intros p q Hpq r s Hrs; split; intros Hpr n t Hq;
-      apply Hrs, Hpr, Hpq, Hq.
     + intros σ ρ σc ρc HSub n t Hpc; simpl in *; apply HSub, Hpc.
   Qed.
 

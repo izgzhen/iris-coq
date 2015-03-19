@@ -644,9 +644,6 @@ Section FinDom.
     Global Instance findom_pcmType : pcmType (K -f> V).
     Proof.
       split.
-      - intros s s' HEqs t t' HEqt; split; intros HSub k.
-        + rewrite <- (HEqs k), <- (HEqt k); apply (HSub k).
-        + rewrite -> (HEqs k), (HEqt k); apply (HSub k).
       - intros σ ρ σc ρc HSub k; rewrite !foo.
         eapply pcm_respC; [now auto with typeclass_instances | intros].
         unfold chain_fin_app; eapply HSub.
