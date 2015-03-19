@@ -51,7 +51,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
     Next Obligation.
       intros v1 v2 EQv.
       destruct n as [|n]; first by apply: dist_bound.
-      rewrite EQv. reflexivity.
+      simpl in EQv. rewrite EQv. reflexivity.
     Qed.
 
     Lemma wpBind φ K e safe m :

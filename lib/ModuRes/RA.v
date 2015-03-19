@@ -157,7 +157,7 @@ Section DiscretePCM.
   Existing Instance discreteMetric.
   Existing Instance discreteCMetric.
 
-  Instance ra_discrete_pcm: pcmType T | 5.
+  Local Instance ra_discrete_pcm: pcmType T | 5.
   Proof.
     (* TODO. *)
   Abort.

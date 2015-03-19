@@ -17,6 +17,7 @@ Module Type WORLD_PROP (Res : RA_T).
   Definition Props     := Wld -m> UPred (Res.res).
 
   (* Define all the things on Props, so they have names - this shortens the terms later. *)
+  (* TODO: Why again does this not use priority 0? *)
   Instance Props_ty   : Setoid Props  | 1 := _.
   Instance Props_m    : metric Props  | 1 := _.
   Instance Props_cm   : cmetric Props | 1 := _.

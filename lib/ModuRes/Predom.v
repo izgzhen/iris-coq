@@ -7,7 +7,7 @@ Generalizable Variables T U V W.
 Class preoType T {eqT : Setoid T} :=
   {pord   :  relation T;
    preoPO :> PreOrder pord;
-   preoC  : Proper (equiv ==> equiv ==> impl) pord}.
+   preoC  :> Proper (equiv ==> equiv ==> impl) pord}.
 
 (** Rewriting under pord. *)
 Instance preoType_compat T `{pT : preoType T} : Proper (equiv ==> equiv ==> iff) pord.
@@ -53,9 +53,9 @@ Section MMorphProps1.
     - move=> f1 f2 EQf t. by symmetry.
     - move=> f1 f2 f3 EQ12 EQ23 t. by transitivity (f2 t).
   Qed.
-  Global Instance mon_morph_type : Setoid (T -m> U) | 5 := mkType mon_morph_eq.
+  Global Instance mon_morph_type : Setoid (T -m> U) := mkType mon_morph_eq.
 
-  Global Program Instance mon_morph_preoT : preoType (T -m> U) | 5 :=
+  Global Program Instance mon_morph_preoT : preoType (T -m> U) :=
     mkPOType (fun f g => forall x, f x ⊑ g x) _.
   Next Obligation.
     split.
@@ -115,7 +115,7 @@ Section MonotoneProducts.
 
   Definition prod_ord (p1 p2 : U * V) := (fst p1 ⊑ fst p2) /\ (snd p1 ⊑ snd p2).
 
-  Global Program Instance preoType_prod : preoType (U * V) | 5 := mkPOType prod_ord _.
+  Global Program Instance preoType_prod : preoType (U * V) := mkPOType prod_ord _.
   Next Obligation.
     split.
     - intros [a b]; split; simpl; reflexivity.
@@ -292,7 +292,7 @@ Section SubPredom.
 
   Definition subset_ord (x y : {t : T | P t}) := proj1_sig x ⊑ proj1_sig y.
   Arguments subset_ord _ _ /.
-  Global Program Instance subset_preo : preoType {a : T | P a} | 5 := mkPOType subset_ord _.
+  Global Program Instance subset_preo : preoType {a : T | P a} := mkPOType subset_ord _.
   Next Obligation.
     split.
     - intros [x Hx]; red; simpl; reflexivity.
@@ -345,7 +345,7 @@ Section Option.
                        | Some v2 => pord v1 v2
                      end
       end.
-    Program Instance option_preo_bot : preoType (option V) | 5 := mkPOType option_pord_bot _.
+    Program Instance option_preo_bot : preoType (option V) := mkPOType option_pord_bot _.
     Next Obligation.
       split.
       - intros [v |]; simpl; [reflexivity | exact I].
@@ -372,7 +372,7 @@ Section Option.
                        | Some v1 => pord v1 v2
                      end
       end.
-    Program Instance option_preo_top : preoType (option V) | 5 := mkPOType option_pord_top _.
+    Program Instance option_preo_top : preoType (option V) := mkPOType option_pord_top _.
     Next Obligation.
       split.
       - intros [v |]; simpl; [reflexivity | exact I].

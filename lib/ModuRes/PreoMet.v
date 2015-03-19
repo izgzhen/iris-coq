@@ -91,7 +91,7 @@ Section PUMMorphProps1.
     unfold cchain; intros; apply σc; assumption.
   Qed.
 
-  Global Program Instance PMpreoT : preoType (T -m> U) | 5:=
+  Global Program Instance PMpreoT : preoType (T -m> U) | 5 :=
     mkPOType (fun f g => forall x, (f x ⊑ g x)%pd) _.
   Next Obligation.
     split.
@@ -174,6 +174,7 @@ Section PUMMorphProps1.
     Proper (dist n (T := T -m> U) ==> dist n (T := T -n> U)) (mu_morph (U := U)).
   Proof. intros f g HEq; apply HEq. Qed.
 
+
 End PUMMorphProps1.
 
 Notation "x ⊑ y" := (pord x y) (at level 70, no associativity) : pumet_scope.
@@ -181,10 +182,12 @@ Notation "x ⊑ y" := (pord x y) (at level 70, no associativity) : pumet_scope.
 Section CompProps.
   Context T U V `{pcmT : pcmType T} `{pcmU : pcmType U} `{pcmV : pcmType V}.
 
+(*
   Global Instance pord_equiv : Proper (equiv ==> equiv ==> iff) pord.
   Proof.
     intros a1 a2 EQa b1 b2 EQb; split; intros Sub; [symmetry in EQa, EQb |]; rewrite -> EQa, EQb; assumption.
   Qed.
+*)
 
   Global Instance pcomp_inherit :
     Proper (equiv (A := T -m> U) ==> equiv ==> equiv) pcomp.
@@ -294,13 +297,14 @@ Section MonotoneProducts.
   Context `{pcT : pcmType T} `{pcU : pcmType U} `{pcV : pcmType V}.
   Local Obligation Tactic := intros; apply _ || mono_resp || program_simpl.
 
-  Global Instance pcmType_prod : pcmType (U * V) | 5.
+  Global Instance pcmType_prod : pcmType (U * V).
   Proof.
     split.
     intros σ ρ σc ρc HC; split; unfold liftc; eapply pcm_respC; try assumption; unfold liftc;
     intros i; rewrite -> HC; reflexivity.
   Qed.
 
+(* RJ These are already in Predom.v, right?
   Global Instance pcmprod_proper : Proper (pord ++> pord ++> pord) (@pair U V).
   Proof.
     intros a a' Ha b b' Hb; split; assumption.
@@ -315,6 +319,7 @@ Section MonotoneProducts.
   Proof.
     intros [a1 b1] [a2 b2] [Ha Hb]; assumption.
   Qed.
+*)
 
   Definition pcmfst : (U * V) -m> U := m[(Mfst)].
   Definition pcmsnd : (U * V) -m> V := m[(Msnd)].
@@ -425,7 +430,7 @@ Section SubPCM.
   Program Definition p1sNE :=
     n[(fun x : {a : T | P a} => proj1_sig x)].
 
-  Global Instance pcmType_sub : pcmType {a : T | P a} | 5.
+  Global Instance pcmType_sub : pcmType {a : T | P a}.
   Proof.
     split.
     intros σ ρ σc ρc SUBc; simpl.
@@ -465,7 +470,7 @@ Section Option.
 
     Existing Instance option_preo_bot.
 
-    Instance option_pcm_bot : pcmType (option V) | 5.
+    Instance option_pcm_bot : pcmType (option V).
     Proof.
       split.
       - intros σ ρ σc ρc HS.
@@ -492,7 +497,7 @@ Section Option.
 
     Existing Instance option_preo_top.
 
-    Instance option_pcm_top : pcmType (option V) | 5.
+    Instance option_pcm_top : pcmType (option V).
     Proof.
       split.
       - intros σ ρ σc ρc HS.

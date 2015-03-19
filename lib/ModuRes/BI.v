@@ -733,15 +733,16 @@ End MComplUP.
 
 (* The above suffice for showing that the eqn used in Iris actually forms a Complete BI.
    The following would allow for further monotone morphisms to be added. *)
-
-Section MComplMM.
+(* RJ: The following is also so slow (since we moved the pord Proper from pcmType to preoType) that I
+   disabled it. *)
+(* Section MComplMM.
   Context B `{BBI : ComplBI B} {MCB : MonotoneClosure B}
           V `{pcmV : pcmType V} {eT : extensible V}.
   Local Obligation Tactic := intros; resp_set || mono_resp || eauto with typeclass_instances.
 
   Section Def.
     Context U `{pcmU : pcmType U} {eU : extensible U}.
-    
+
     Program Definition mclose_mm : (U -n> V -m> B) -n> U -m> V -m> B :=
       n[(fun f => mcurry (mclose n[(fun uv => f (fst uv) (snd uv))]))].
     Next Obligation.
@@ -767,7 +768,7 @@ Section MComplMM.
     rewrite HSubv; apply HFW; assumption.
   Qed.
 
-End MComplMM.
+End MComplMM.*)
 
 Section BIValid.
   Local Obligation Tactic := intros.
