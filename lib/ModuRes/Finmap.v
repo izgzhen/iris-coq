@@ -1080,7 +1080,7 @@ Qed.
               - right. right; split; [reflexivity|]. 
                 unfold findom_f; simpl findom_lu. by rewrite FU.
             } 
-            { rewrite fdUpdate_neq in Hf by auto.
+            { rewrite ->fdUpdate_neq in Hf by auto.
               right. left. split; first now auto. unfold findom_f; simpl findom_lu.
               destruct (comp k k0) eqn:C; [generalize (compat_compare k k0); rewrite C; intros; exfalso; auto | reflexivity | ].
               exact Hg. }
@@ -1089,8 +1089,8 @@ Qed.
             assert (C : comp k0 k = Lt) by (eapply SS_Lt; eauto).
             assert (k0 <> k) by (generalize (compat_compare k0 k); rewrite C; intros []; auto).
             right. right. split. 
-            { by rewrite fdUpdate_neq in Hf by auto. }
-            { unfold findom_f; simpl findom_lu. rewrite comp_flip_lg by auto. exact Hg. }
+            { by rewrite ->fdUpdate_neq in Hf by auto. }
+            { unfold findom_f; simpl findom_lu. rewrite ->comp_flip_lg by auto. exact Hg. }
         + 
           destruct H as [[v1 [v2 [Hv [Hf Hg]]]]|[[Hf Hg]|[Hf Hg]]];
           fold (fdUpdate k0 (upd (mkFD _ SSf k0) v0) (mkFD _ (SSf))) in *.
@@ -1156,26 +1156,26 @@ Qed.
           assert (fdCompose f g k == Some (op vf vg)).
           { apply fdComposeP; auto.
             left. do 2!eexists; repeat split; eauto. reflexivity. }
-          rewrite H in H2. by destruct H2.
+          rewrite ->H in H2. by destruct H2.
         + assert (f k == Some vf) by (rewrite F; reflexivity).
           assert (g k == None) by (rewrite G; reflexivity).
           assert (fdCompose f g k == Some vf).
           { apply fdComposeP; now auto. }
-          rewrite H in H2. by destruct H2.
+          rewrite ->H in H2. by destruct H2.
         + assert (f k == None) by (rewrite F; reflexivity).
           assert (g k == Some vg) by (rewrite G; reflexivity).
           assert (fdCompose f g k == Some vg).
           { apply fdComposeP; now auto. }
-          rewrite H in H2. by destruct H2.
+          rewrite ->H in H2. by destruct H2.
         + split; reflexivity. 
       - destruct H as [Hf Hg]. 
         destruct (fdCompose f g k) as [v|] eqn:F; last reflexivity.
         assert (fdCompose f g k == Some v) by (rewrite F; reflexivity).
         apply fdComposeP in H; last auto. 
         destruct H as [[v1 [v2 [Hv [H1 H2]]]]|[[H1 H2]|[H1 H2]]].
-        + rewrite Hf in H1. by destruct H1.
-        + rewrite Hf in H1. by destruct H1.
-        + rewrite Hg in H2. by destruct H2.
+        + rewrite ->Hf in H1. by destruct H1.
+        + rewrite ->Hf in H1. by destruct H1.
+        + rewrite ->Hg in H2. by destruct H2.
     Qed.
         
 
