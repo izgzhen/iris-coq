@@ -16,14 +16,6 @@ Section PreCBUmet.
 
 End PreCBUmet.
 
-Record pcmtyp :=
-  { pcmt_cmt :> cmtyp;
-    pcmt_PO  :  preoType pcmt_cmt;
-    pcmt_T   :  pcmType pcmt_cmt}.
-
-Instance proj_preoType {U : pcmtyp} : preoType U := pcmt_PO U.
-Instance proj_pcmType  {U : pcmtyp} : pcmType U := pcmt_T U.
-Definition pcmFromType (T : Type) `{pcmT : pcmType T} := Build_pcmtyp (cmfromType T) _ _.
 
 Record monoMet_morphism T U `{pcmT : pcmType T} `{pcmU : pcmType U} := mkMUMorph
   { mu_morph :> T -n> U;
@@ -348,48 +340,6 @@ Notation "〈 f , g 〉" := (pcmprod f g) : pumet_scope.
 Notation "'π₁'" := pcmfst : pumet_scope.
 Notation "'π₂'" := pcmsnd : pumet_scope.
 
-Section IndexedProducts.
-  Context {I : Type} {P : I -> pcmtyp}.
-  Local Obligation Tactic := intros; apply _ || mono_resp || program_simpl.
-
-  (* We have to repeat those due to coercions not going into preotyp *)
-  Definition pcOrdI (f1 f2 : forall i, P i) := forall i, f1 i ⊑ f2 i.
-
-  Global Program Instance pcOrdTypeI : preoType (forall i, P i) :=
-    mkPOType pcOrdI _.
-  Next Obligation.
-    split.
-    + intros f i; reflexivity.
-    + intros f g h Hfg Hgh i; etransitivity; [apply Hfg | apply Hgh].
-  Qed.
-  Next Obligation.
-    move=> f1 f2 Rf g1 g2 Rg H i.
-    rewrite -(Rf i) -(Rg i); exact: H.
-  Qed.
-
-  Global Instance pcmTypI : pcmType (forall i, P i).
-  Proof.
-    split.
-    + intros x y EQxy u v EQuv; split; intros SUBxu i; [symmetry in EQxy, EQuv |];
-      rewrite -> (EQxy i), (EQuv i); apply SUBxu.
-    + intros σ ρ σc ρc SUBc i; eapply pcm_respC; [apply _ | intros n; simpl; apply SUBc].
-  Qed.
-
-  Program Definition pcmProjI (i : I) : (forall i, P i) -m> P i :=
-    m[(MprojI _)].
-  Next Obligation. intros x y HSub; apply HSub. Qed.
-
-  Context {A} `{mA : pcmType A}.
-  Program Definition pcmProdI (f : forall i, A -m> P i) : A -m> forall i, P i :=
-    m[(MprodI f)].
-
-  Lemma pcmProdI_proj f i : pcmProjI i ∘ pcmProdI f == f i.
-  Proof. intros x; reflexivity. Qed.
-
-  Lemma pcmProdI_unique f g (HEq : forall i, pcmProjI i ∘ g == f i) : g == pcmProdI f.
-  Proof. apply (mprodI_unique f g HEq). Qed.
-
-End IndexedProducts.
 
 Section Extras.
   Local Open Scope pumet_scope.

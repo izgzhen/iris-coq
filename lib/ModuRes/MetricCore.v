@@ -31,12 +31,6 @@ Class metric (T : Type) {eqT : Setoid T} :=
 
 Notation "'mkMetr' D" := (Build_metric _ _ D _ _ _ _ _ _) (at level 10).
 
-Record Mtyp :=
-  { mtyp  :> eqType;
-    mmetr : metric mtyp}.
-Instance mtyp_proj_metr {M : Mtyp} : metric M := mmetr M.
-Definition mfromType (T : Type) `{mT : metric T} := Build_Mtyp (fromType T) _.
-
 (* And now it gets annoying that we are not fully unbundled... *)
 Global Instance metric_dist_equiv (T: Type) `{mT: metric T} n: Equivalence (dist n).
 Proof.
@@ -150,12 +144,6 @@ Arguments mcompl {M e eqM D mM Completion} σ {σc}.
 Class cmetric M `{mM : metric M} {cM : Completion M} :=
   conv_cauchy : forall σ {σc : cchain σ}, mconverge σ (mcompl σ).
 *)
-
-Record cmtyp :=
-  { cmm  :> Mtyp;
-    iscm :  cmetric cmm}.
-Instance cmtyp_cmetric {M : cmtyp} : cmetric M | 0 := iscm M.
-Definition cmfromType (T : Type) `{cT : cmetric T} := Build_cmtyp (mfromType T) _.
 
 Section ChainCompl.
   Context `{cT : cmetric T} (σ ρ : chain T) {σc : cchain σ} {ρc : cchain ρ}.
@@ -633,86 +621,6 @@ Section MetricProducts.
 
 End MetricProducts.
 
-(** Indexed product, very similar to binary product. The metric is pointwise, the supremum. *)
-Section MetricIndexed.
-  Context {I : Type} {P : I -> Mtyp}.
-
-  Local Obligation Tactic := intros; apply _ || resp_set || program_simpl.
-
-  Definition distI n (a b : forall i, P i) := forall i, mprojI i a = n = mprojI i b.
-  Global Arguments distI n a b /.
-
-  Global Program Instance prodI_metr : metric (forall i, P i) :=
-    mkMetr distI.
-  Next Obligation.
-    intros x y EQxy u v EQuv; split; intros EQ i; [symmetry in EQxy, EQuv |]; rewrite (EQxy i), (EQuv i); apply EQ.
-  Qed.
-  Next Obligation.
-    split; intros HEq n.
-    + rewrite <- dist_refl; intros m; apply (HEq m).
-    + intros i; revert n; rewrite dist_refl; apply HEq.
-  Qed.
-  (*Next Obligation.
-    intros x y HS i; symmetry; apply HS.
-  Qed.*)
-  Next Obligation.
-    intros x y z Hxy Hyz i; etransitivity; [apply Hxy | apply Hyz].
-  Qed.
-  Next Obligation.
-    eapply mono_dist, H; auto.
-  Qed.
-  Next Obligation.
-    apply dist_bound.
-  Qed.
-
-  Program Definition MprojI (i : I) : (forall i, P i) -n> P i :=
-    n[(mprojI i)].
-
-  Context `{mT : metric T}.
-  Program Definition MprodI (f : forall i, T -n> P i) : T -n> forall i, P i :=
-    n[(mprodI f)].
-
-  Lemma MprodI_proj f i : MprojI i <M< MprodI f == f i.
-  Proof. intros x; reflexivity. Qed.
-
-  Lemma MprodI_unique f g (HEq : forall i, MprojI i <M< g == f i) : g == MprodI f.
-  Proof. apply (mprodI_unique f g HEq). Qed.
-
-End MetricIndexed.
-
-(** Indexed product of complete spaces is again a complete space. *)
-Section CompleteIndexed.
-  Context {I : Type} {P : I -> cmtyp}.
-
-  Definition prodI_compl (σ : chain (forall i, P i)) (σc : cchain σ) (i : I) :=
-    compl (liftc (MprojI i) σ).
-  Arguments prodI_compl σ σc i /.
-  Global Program Instance prodI_cmetric : cmetric (forall i, P i) :=
-    mkCMetr prodI_compl.
-  Next Obligation.
-    intros n; exists n; intros m HLe i.
-    destruct (conv_cauchy (liftc (MprojI i) σ) n) as [k Hk]; simpl in *.
-    rewrite  Hk; [| apply le_max_r]; clear Hk.
-    unfold liftc; apply σc; eauto using le_trans, le_max_l.
-  Qed.
-
-End CompleteIndexed.
-
-Section Chains_of_IProds.
-  Context {I : Type} {P : I -> cmtyp} (σ : chain (forall i, P i)) {σc : cchain σ}.
-
-  Global Instance dep_chain_app (x : I) : cchain (fun n => σ n x).
-  Proof.
-    unfold cchain; intros; apply σc; assumption.
-  Qed.
-
-  Lemma dep_chain_compl (x : I) :
-    compl σ x == compl (fun n => σ n x).
-  Proof.
-    apply umet_complete_ext; intros n; reflexivity.
-  Qed.
-
-End Chains_of_IProds.
 
 Section ComplSetup.
   Context `{cT : cmetric T} `{cU : cmetric U} (σ : chain T) (ρ : chain U) {σc : cchain σ} {ρc : cchain ρ}.
@@ -995,11 +903,3 @@ Section Option.
 End Option.
 
 Arguments dist {_ _ _} _ _ _ /.
-
-(* We have several users of this, so deifne it centrally *)
-Module NatDec.
-  Definition U := nat.
-  Definition eq_dec := eq_nat_dec.
-End NatDec.
-
-Module D := Coq.Logic.Eqdep_dec.DecidableEqDep(NatDec).

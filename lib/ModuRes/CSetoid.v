@@ -36,15 +36,6 @@ Notation "'s[(' f ')]'" := (mkMorph f _).
 Ltac resp_set :=
   intros t1 t2 HEqt; repeat (intros ?); simpl in *; try rewrite -> !HEqt; reflexivity.
 
-(** This seems just to be a package putting together all the
-    ingredients of [type], i.e. the carrier set, the relation and the
-    property that the relation is an equivalence relation. *)
-Record eqType :=
-  {eqtyp  :> Type;
-   eqtype :  Setoid eqtyp}.
-Instance eqType_proj_type {ET : eqType} : Setoid ET := eqtype _.
-Definition fromType T `{eT : Setoid T} : eqType := Build_eqType T _.
-
 Section Morphisms.
   Context `{eT : Setoid T} `{eU : Setoid U} `{eV : Setoid V}.
 
@@ -184,42 +175,6 @@ End SetoidProducts.
 
 Arguments mprod_unique [U eU V eV T eT f g h] _ _ _.
 
-Section IndexedProducts.
-  Context {I : Type} {P : I -> eqType}.
-
-  (** Equality on the indexed product. Essentially the same as for binary products, i.e. pointwise. *)
-  Global Program Instance prodI_type : Setoid (forall i, P i) :=
-    mkType (fun p1 p2 => forall i, p1 i == p2 i).
-  Next Obligation.
-    split.
-    - intros X x; reflexivity.
-    - intros X Y HS x; symmetry; apply HS.
-    - intros X Y Z HPQ HQR x; etransitivity; [apply HPQ | apply HQR].
-  Qed.
-
-  Local Obligation Tactic := intros; resp_set || program_simpl.
-
-  (** Projection functions. *)
-  Program Definition mprojI (i : I) : (forall i, P i) -=> P i :=
-    s[(fun X => X i)].
-
-  Context `{eT : Setoid T}.
-
-  (** Tupling into the indexed products. *)
-  Program Definition mprodI (f : forall i, T -=> P i) : T -=> (forall i, P i) :=
-    s[(fun t i => f i t)].
-
-  Lemma mprod_projI (f : forall i, T -=> P i) i : mprojI i << mprodI f == f i.
-  Proof. intros X; reflexivity. Qed.
-
-  (** Product with the projections is an actual product. *)
-  Lemma mprodI_unique (f : forall i, T -=> P i) (h : T -=> forall i, P i) :
-    (forall i, mprojI i << h == f i) -> h == mprodI f.
-  Proof.
-    intros HEq x i; simpl; rewrite <- HEq; reflexivity.
-  Qed.
-
-End IndexedProducts.
 
 Section Exponentials.
   Context `{eT : Setoid T} `{eU : Setoid U} `{eV : Setoid V} `{eW : Setoid W}.

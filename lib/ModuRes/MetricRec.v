@@ -1,4 +1,4 @@
-Require Import MetricCore Constr.
+Require Import MetricCore CatBasics.
 Require Import Arith.
 
 (** A category enriched in complete bisected metric spaces and with a terminal object. *)

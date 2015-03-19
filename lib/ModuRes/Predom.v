@@ -22,11 +22,6 @@ Notation "'mkPOType' R" := (Build_preoType _ _ R _) (at level 10).
 Notation "s ⊑ t" := (pord s t) (at level 70, no associativity) : predom_scope.
 Delimit Scope predom_scope with pd.
 
-Record preotyp :=
-  {ptyp   :> eqType;
-   pprTyp :  preoType ptyp}.
-Instance preotyp_pTyp {T : preotyp} : preoType T := pprTyp T.
-
 Ltac mono_resp :=
   intros t1 t2 HSub; repeat (intros ?); rewrite -> ?HSub; simpl in *; rewrite -> ?HSub; repeat split; reflexivity.
 
@@ -206,46 +201,6 @@ End ProdTests.
 Global Arguments prod_ord {_ _ _ _ _ _} _ _ /.
 Notation "〈 f , g 〉" := (mprod f g) : predom_scope.
 
-Section IndexedProducts.
-  Local Open Scope predom_scope.
-  Context {I : Type} {P : I -> preotyp}.
-
-  Definition ordI (f1 f2 : forall i, P i) := forall i, f1 i ⊑ f2 i.
-
-  Global Program Instance ordTypeI : preoType (forall i, P i) := mkPOType ordI _.
-  Next Obligation.
-    split.
-    + intros f i; reflexivity.
-    + intros f g h Hfg Hgh i; etransitivity; [apply Hfg | apply Hgh].
-  Qed.
-  Next Obligation.
-    move=> f1 f2 EQf g1 g2 EQg LE i.
-    by rewrite -(EQf i) -(EQg i).
-  Qed.
-    
-  Program Definition ordProjI (i : I) : (forall i, P i) -m> P i :=
-    mkMMorph (mprojI i) _.
-  Next Obligation. intros x y HSub; apply HSub. Qed.
-
-  Context `{pT : preoType T}.
-  Program Definition ordProdI (f : forall i, T -m> P i) : T -m> forall i, P i :=
-    mkMMorph (mprodI f) _.
-  Next Obligation. intros x y HSub i; simpl; apply f; assumption. Qed.
-
-  Lemma ordProdI_proj f i : ordProjI i ∘ ordProdI f ⊑ f i.
-  Proof. intros x; reflexivity. Qed.
-  Lemma ordProdI_proj_rev f i : f i ⊑ ordProjI i ∘ ordProdI f.
-  Proof. intros x; reflexivity. Qed.
-
-  Lemma ordProdI_unique f g (HEq : forall i, ordProjI i ∘ g ⊑ f i) : g ⊑ ordProdI f.
-  Proof. intros x i; apply (HEq i x). Qed.
-
-  Lemma ordProdI_unique_rev f g (HEq : forall i, f i ⊑ ordProjI i ∘ g) : ordProdI f ⊑ g.
-  Proof. intros x i; apply (HEq i x). Qed.
-
-End IndexedProducts.
-
-Global Arguments ordI {_ _} _ _ /.
 
 Section Extras.
   Local Open Scope predom_scope.

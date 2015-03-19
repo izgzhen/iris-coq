@@ -18,8 +18,8 @@ Module Type IRIS_RES (RL : RA_T) (C : CORE_LANG) <: RA_T.
   Instance res_valid: RA_valid res := _.
   Instance res_ra   : RA res := _.
 
-  (* The order on (ra_pos res) is inferred correctly, but this one is not *)
-  Instance res_pord: preoType res := ra_preo (T := res).
+  (* Make this explicit. It would otherwise infer the order on pairs. *)
+  Instance res_pord: preoType res := pord_ra (T := res).
 End IRIS_RES.
 Module IrisRes (RL : RA_T) (C : CORE_LANG) <: IRIS_RES RL C.
   Include IRIS_RES RL C. (* I cannot believe Coq lets me do this... *)

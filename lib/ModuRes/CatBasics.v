@@ -1,15 +1,259 @@
-(** This module provides some additional constructions on CBUlt. These
-    are:
-    - the "1/2" operation, which divides all the distances by 1/2,
-      and so makes any locally non-expansive functor locally
-      contractive,
-    - an extension operation on the space Tᵏ, for k ∈ nat, as a
-      non-expansive morphism. *)
+(** This module provides the basics to do category theory on metric spaces:
+    Bundled types, indexed products on bundled types, and some functors. *)
 
 Require Import ssreflect.
+Require Import Arith Min Max.
 Require Import UPred.
 Require Import MetricCore.
 Require Fin.
+
+Module NatDec.
+  Definition U := nat.
+  Definition eq_dec := eq_nat_dec.
+End NatDec.
+
+Module D := Coq.Logic.Eqdep_dec.DecidableEqDep(NatDec).
+
+(** This packs together all the
+    ingredients of [type], i.e. the carrier set, the relation and the
+    property that the relation is an equivalence relation. *)
+Record eqType :=
+  {eqtyp  :> Type;
+   eqtype :  Setoid eqtyp}.
+Instance eqType_proj_type {ET : eqType} : Setoid ET := eqtype _.
+Definition fromType T `{eT : Setoid T} : eqType := Build_eqType T _.
+
+Section IndexedProductsSetoid.
+  Context {I : Type} {P : I -> eqType}.
+
+  (** Equality on the indexed product. Essentially the same as for binary products, i.e. pointwise. *)
+  Global Program Instance prodI_type : Setoid (forall i, P i) :=
+    mkType (fun p1 p2 => forall i, p1 i == p2 i).
+  Next Obligation.
+    split.
+    - intros X x; reflexivity.
+    - intros X Y HS x; symmetry; apply HS.
+    - intros X Y Z HPQ HQR x; etransitivity; [apply HPQ | apply HQR].
+  Qed.
+
+  Local Obligation Tactic := intros; resp_set || program_simpl.
+
+  (** Projection functions. *)
+  Program Definition mprojI (i : I) : (forall i, P i) -=> P i :=
+    s[(fun X => X i)].
+
+  Context {T: Type} `{eT : Setoid T}.
+
+  (** Tupling into the indexed products. *)
+  Program Definition mprodI (f : forall i, T -=> P i) : T -=> (forall i, P i) :=
+    s[(fun t i => f i t)].
+
+  Lemma mprod_projI (f : forall i, T -=> P i) i : mprojI i << mprodI f == f i.
+  Proof. intros X; reflexivity. Qed.
+
+  (** Product with the projections is an actual product. *)
+  Lemma mprodI_unique (f : forall i, T -=> P i) (h : T -=> forall i, P i) :
+    (forall i, mprojI i << h == f i) -> h == mprodI f.
+  Proof.
+    intros HEq x i; simpl; rewrite <- HEq; reflexivity.
+  Qed.
+
+End IndexedProductsSetoid.
+
+Record Mtyp :=
+  { mtyp  :> eqType;
+    mmetr : metric mtyp}.
+Instance mtyp_proj_metr {M : Mtyp} : metric M := mmetr M.
+Definition mfromType (T : Type) `{mT : metric T} := Build_Mtyp (fromType T) _.
+
+Record cmtyp :=
+  { cmm  :> Mtyp;
+    iscm :  cmetric cmm}.
+Instance cmtyp_cmetric {M : cmtyp} : cmetric M | 0 := iscm M.
+Definition cmfromType (T : Type) `{cT : cmetric T} := Build_cmtyp (mfromType T) _.
+
+
+(** Indexed product, very similar to binary product. The metric is pointwise, the supremum. *)
+Section MetricIndexed.
+  Context {I : Type} {P : I -> Mtyp}.
+
+  Local Obligation Tactic := intros; apply _ || resp_set || program_simpl.
+
+  Definition distI n (a b : forall i, P i) := forall i, mprojI i a = n = mprojI i b.
+  Global Arguments distI n a b /.
+
+  Global Program Instance prodI_metr : metric (forall i, P i) :=
+    mkMetr distI.
+  Next Obligation.
+    intros x y EQxy u v EQuv; split; intros EQ i; [symmetry in EQxy, EQuv |]; rewrite-> (EQxy i), (EQuv i); apply EQ.
+  Qed.
+  Next Obligation.
+    split; intros HEq n.
+    + rewrite <- dist_refl; intros m; apply (HEq m).
+    + intros i; revert n; rewrite dist_refl; apply HEq.
+  Qed.
+  (*Next Obligation.
+    intros x y HS i; symmetry; apply HS.
+  Qed.*)
+  Next Obligation.
+    intros x y z Hxy Hyz i; etransitivity; [apply Hxy | apply Hyz].
+  Qed.
+  Next Obligation.
+    eapply mono_dist, H; auto.
+  Qed.
+  Next Obligation.
+    apply dist_bound.
+  Qed.
+
+  Program Definition MprojI (i : I) : (forall i, P i) -n> P i :=
+    n[(mprojI i)].
+
+  Context {T: Type} `{mT : metric T}.
+  Program Definition MprodI (f : forall i, T -n> P i) : T -n> forall i, P i :=
+    n[(mprodI f)].
+
+  Lemma MprodI_proj f i : MprojI i <M< MprodI f == f i.
+  Proof. intros x; reflexivity. Qed.
+
+  Lemma MprodI_unique f g (HEq : forall i, MprojI i <M< g == f i) : g == MprodI f.
+  Proof. apply (mprodI_unique f g HEq). Qed.
+
+End MetricIndexed.
+
+(** Indexed product of complete spaces is again a complete space. *)
+Section CompleteIndexed.
+  Context {I : Type} {P : I -> cmtyp}.
+
+  Definition prodI_compl (σ : chain (forall i, P i)) (σc : cchain σ) (i : I) :=
+    compl (liftc (MprojI i) σ).
+  Arguments prodI_compl σ σc i /.
+  Global Program Instance prodI_cmetric : cmetric (forall i, P i) :=
+    mkCMetr prodI_compl.
+  Next Obligation.
+    intros n; exists n; intros m HLe i.
+    destruct (conv_cauchy (liftc (MprojI i) σ) n) as [k Hk]; simpl in *.
+    rewrite -> Hk; [| apply le_max_r]; clear Hk.
+    unfold liftc; apply σc; eauto using le_trans, le_max_l.
+  Qed.
+
+End CompleteIndexed.
+
+Section Chains_of_IProds.
+  Context {I : Type} {P : I -> cmtyp} (σ : chain (forall i, P i)) {σc : cchain σ}.
+
+  Global Instance dep_chain_app (x : I) : cchain (fun n => σ n x).
+  Proof.
+    unfold cchain; intros; apply σc; assumption.
+  Qed.
+
+  Lemma dep_chain_compl (x : I) :
+    compl σ x == compl (fun n => σ n x).
+  Proof.
+    apply umet_complete_ext; intros n; reflexivity.
+  Qed.
+
+End Chains_of_IProds.
+
+Record preotyp :=
+  {ptyp   :> eqType;
+   pprTyp :  preoType ptyp}.
+Instance preotyp_pTyp {T : preotyp} : preoType T := pprTyp T.
+
+Section IndexedProductsPreo.
+  Local Open Scope predom_scope.
+  Context {I : Type} {P : I -> preotyp}.
+
+  Definition ordI (f1 f2 : forall i, P i) := forall i, f1 i ⊑ f2 i.
+
+  Global Program Instance ordTypeI : preoType (forall i, P i) := mkPOType ordI _.
+  Next Obligation.
+    split.
+    + intros f i; reflexivity.
+    + intros f g h Hfg Hgh i; etransitivity; [apply Hfg | apply Hgh].
+  Qed.
+  Next Obligation.
+    move=> f1 f2 EQf g1 g2 EQg LE i.
+    by rewrite -(EQf i) -(EQg i).
+  Qed.
+    
+  Program Definition ordProjI (i : I) : (forall i, P i) -m> P i :=
+    mkMMorph (mprojI i) _.
+  Next Obligation. intros x y HSub; apply HSub. Qed.
+
+  Context {T: Type} `{pT : preoType T}.
+  Program Definition ordProdI (f : forall i, T -m> P i) : T -m> forall i, P i :=
+    mkMMorph (mprodI f) _.
+  Next Obligation. intros x y HSub i; simpl; apply f; assumption. Qed.
+
+  Lemma ordProdI_proj f i : ordProjI i ∘ ordProdI f ⊑ f i.
+  Proof. intros x; reflexivity. Qed.
+  Lemma ordProdI_proj_rev f i : f i ⊑ ordProjI i ∘ ordProdI f.
+  Proof. intros x; reflexivity. Qed.
+
+  Lemma ordProdI_unique f g (HEq : forall i, ordProjI i ∘ g ⊑ f i) : g ⊑ ordProdI f.
+  Proof. intros x i; apply (HEq i x). Qed.
+
+  Lemma ordProdI_unique_rev f g (HEq : forall i, f i ⊑ ordProjI i ∘ g) : ordProdI f ⊑ g.
+  Proof. intros x i; apply (HEq i x). Qed.
+
+End IndexedProductsPreo.
+
+Global Arguments ordI {_ _} _ _ /.
+
+
+Record pcmtyp :=
+  { pcmt_cmt :> cmtyp;
+    pcmt_PO  :  preoType pcmt_cmt;
+    pcmt_T   :  pcmType pcmt_cmt}.
+
+Instance proj_preoType {U : pcmtyp} : preoType U := pcmt_PO U.
+Instance proj_pcmType  {U : pcmtyp} : pcmType U := pcmt_T U.
+Definition pcmFromType (T : Type) `{pcmT : pcmType T} := Build_pcmtyp (cmfromType T) _ _.
+
+Section IndexedProductsPCM.
+  Context {I : Type} {P : I -> pcmtyp}.
+  Local Obligation Tactic := intros; apply _ || mono_resp || program_simpl.
+
+  (* We have to repeat those due to coercions not going into preotyp *)
+  Definition pcOrdI (f1 f2 : forall i, P i) := forall i, f1 i ⊑ f2 i.
+
+  Global Program Instance pcOrdTypeI : preoType (forall i, P i) :=
+    mkPOType pcOrdI _.
+  Next Obligation.
+    split.
+    + intros f i; reflexivity.
+    + intros f g h Hfg Hgh i; etransitivity; [apply Hfg | apply Hgh].
+  Qed.
+  Next Obligation.
+    move=> f1 f2 Rf g1 g2 Rg H i.
+    rewrite -(Rf i) -(Rg i); exact: H.
+  Qed.
+
+  Global Instance pcmTypI : pcmType (forall i, P i).
+  Proof.
+    split.
+    + intros x y EQxy u v EQuv; split; intros SUBxu i; [symmetry in EQxy, EQuv |];
+      rewrite -> (EQxy i), (EQuv i); apply SUBxu.
+    + intros σ ρ σc ρc SUBc i; eapply pcm_respC; [apply _ | intros n; simpl; apply SUBc].
+  Qed.
+
+  Program Definition pcmProjI (i : I) : (forall i, P i) -m> P i :=
+    m[(MprojI _)].
+  Next Obligation. intros x y HSub; apply HSub. Qed.
+
+  Context {A} `{mA : pcmType A}.
+  Program Definition pcmProdI (f : forall i, A -m> P i) : A -m> forall i, P i :=
+    m[(MprodI f)].
+
+  Lemma pcmProdI_proj f i : pcmProjI i ∘ pcmProdI f == f i.
+  Proof. intros x; reflexivity. Qed.
+
+  Lemma pcmProdI_unique f g (HEq : forall i, pcmProjI i ∘ g == f i) : g == pcmProdI f.
+  Proof. apply (mprodI_unique f g HEq). Qed.
+
+End IndexedProductsPCM.
+
+
 
 Section Halving.
   Context (T : cmtyp).
