@@ -52,7 +52,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Proof.
       induction HW; constructor; [| assumption].
       eapply uni_pred; [eassumption | reflexivity |].
-      rewrite <- HSW; assumption.
+      eapply propsMW, WPE. assumption.
     Qed.
 
     Lemma preserve_wptp safe m n k tp tp' σ σ' w rs φs
@@ -213,7 +213,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Definition pure e := ~ atomic e /\ forall σ e' σ',
       prim_step (e,σ) (e',σ') ->
-      σ == σ'.
+      σ = σ'.
     
     Definition restrict_lang := forall e,
       reducible e ->
@@ -281,7 +281,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       have HRed: reducible ei by exists σ (ei',σ').
       case: (LANG ei HRed)=>[HA {VS} | [_ HP] {HT}] {LANG HRed}; last first.
       (* pure step *)
-      { move/(_ _ _ _ HStep): HP => HP; move: HStep HW; rewrite HP => HStep HW {HP σ}.
+      { move/(_ _ _ _ HStep): HP => HP; move: HStep HW. rewrite HP => HStep HW {HP σ}.
         move/(_ _ _ _ HStep _ HSw _ _ HLe unit_min Hei): VS => VS {HStep HLe Hei}.
         move: HD; rewrite -{1}(mask_union_idem m) => HD.
         move/(_ _ _ _ _ _ (prefl w') HLt' HD HW): VS => [w'' [r' [HSw' [Hei' HW']]]] {HLt' HD HW}.
@@ -366,7 +366,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Proof.
       move=> wz nz rz Hfrom w1 HSw1 n r HLe _ HPS.
       rewrite unfold_wp; move=> w2 k rf mf σi HSw2 HLt _ HW.
-      have Hσ: σ == σi.
+      have Hσ: σ = σi.
       { clear - HPS HW HSw2.
         move: HPS => [r1 [r2 [Hr [_ /(propsMW HSw2) HS]]]] {HSw2}.
         apply: (ownS_wsat HS HW); move=> {HS HW}.
