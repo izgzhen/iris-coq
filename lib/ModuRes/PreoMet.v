@@ -91,13 +91,17 @@ Section PUMMorphProps1.
     unfold cchain; intros; apply σc; assumption.
   Qed.
 
-  Global Program Instance PMpreoT : preoType (T -m> U) | 5 :=
-    mkPOType (fun f g => forall x, (f x ⊑ g x)%pd) _.
-  Next Obligation.
+  Definition PMpreo (f g: T -m> U) := forall x, (f x ⊑ g x)%pd.
+
+  Global Instance PMpreo_is : PreOrder PMpreo.
+  Proof.
     split.
-    - intros x; simpl; reflexivity.
-    - intros f g h Hfg Hgh; simpl; etransitivity; [apply Hfg | apply Hgh].
+    - intros f x; simpl. reflexivity.
+    - intros f g h Hfg Hgh x. simpl; etransitivity; [apply Hfg | apply Hgh].
   Qed.
+
+  Global Program Instance PMpreoT : preoType (T -m> U) | 5 :=
+    mkPOType PMpreo _.
   Next Obligation.
     move=> f1 f2 Rf g1 g2 Rg H t.
     rewrite -(Rf t) -(Rg t).
