@@ -4,6 +4,8 @@ Require Import Predom CSetoid RA.
 Local Open Scope ra_scope.
 Local Open Scope predom_scope.
 
+Set Bullet Behavior "Strict Subproofs".
+
 (** These constructions are only for RA, so their equality is also defined locally. *)
 
 (** The exclusive RA. *)
@@ -236,50 +238,50 @@ Section AuthTests.
 End AuthTests.
 
 
-Section Agreement.
+Section DecAgreement.
   Context T `{T_ty : Setoid T} (eq_dec : forall x y, {x == y} + {x =/= y}).
   Local Open Scope ra_scope.
 
-  Inductive ra_res_agree : Type :=
-    | ag_bottom
-    | ag_unit
-    | ag_inj (t : T).
+  Inductive ra_dagree : Type :=
+    | dag_bottom
+    | dag_unit
+    | dag_inj (t : T).
 
-  Global Instance ra_unit_agree : RA_unit _ := ag_unit.
-  Global Instance ra_valid_ag : RA_valid _ :=
-           fun x => match x with ag_bottom => False | _ => True end.
-  Global Instance ra_op_ag : RA_op _ :=
+  Global Instance ra_unit_dagree : RA_unit _ := dag_unit.
+  Global Instance ra_valid_dag : RA_valid _ :=
+           fun x => match x with dag_bottom => False | _ => True end.
+  Global Instance ra_op_dag : RA_op _ :=
     fun x y => match x, y with
-               | ag_inj t1, ag_inj t2 =>
-                   if eq_dec t1 t2 is left _ then ag_inj t1 else ag_bottom
-               | ag_bottom , y => ag_bottom
-               | x , ag_bottom => ag_bottom
-               | ag_unit, y => y
-               | x, ag_unit => x
+               | dag_inj t1, dag_inj t2 =>
+                   if eq_dec t1 t2 is left _ then dag_inj t1 else dag_bottom
+               | dag_bottom , y => dag_bottom
+               | x , dag_bottom => dag_bottom
+               | dag_unit, y => y
+               | x, dag_unit => x
              end.
 
-  Definition ra_eq_ag (x : ra_res_agree) (y : ra_res_agree) : Prop :=
+  Definition ra_eq_dag (x y: ra_dagree): Prop :=
     match x,y with
-      | ag_inj t1, ag_inj t2 => t1 == t2
+      | dag_inj t1, dag_inj t2 => t1 == t2
       | x, y => x = y
     end.
 
 
-  Global Instance ra_equivalence_agree : Equivalence ra_eq_ag.
+  Global Instance ra_equivalence_agree : Equivalence ra_eq_dag.
   Proof.
     split; intro; intros; destruct x; try (destruct y; try destruct z); simpl; try reflexivity;
     simpl in *; try inversion H; try inversion H0; try rewrite <- H; try rewrite <- H0; try firstorder.
   Qed.
-  Global Instance ra_type_agree : Setoid ra_res_agree := mkType ra_eq_ag.
-  Global Instance res_agree : RA ra_res_agree.
+  Global Instance ra_type_dagree : Setoid ra_dagree := mkType ra_eq_dag.
+  Global Instance res_dagree : RA ra_dagree.
   Proof.
     split; repeat intro.
-    - repeat (match goal with [ x : ra_res_agree |- _ ] => destruct x end);
+    - repeat (match goal with [ x : ra_dagree |- _ ] => destruct x end);
       simpl in *; try reflexivity; try rewrite H; try rewrite H0; try reflexivity;
       try inversion H; try inversion H0; compute;
       destruct (eq_dec t2 t0), (eq_dec t1 t); simpl; auto; exfalso;
       [ rewrite <- H, -> e in c | rewrite -> H, -> e in c; symmetry in c]; contradiction.
-    - repeat (match goal with [ x : ra_res_agree |- _ ] => destruct x end);
+    - repeat (match goal with [ x : ra_dagree |- _ ] => destruct x end);
       simpl in *; auto; try reflexivity; compute; try destruct (eq_dec _ _); try reflexivity.
       destruct (eq_dec t0 t), (eq_dec t1 t0), (eq_dec t1 t); simpl; auto; try reflexivity;
       rewrite -> e in e0; contradiction.
@@ -289,6 +291,61 @@ Section Agreement.
     - destruct x, y; simpl; firstorder; now inversion H.
     - now constructor.
     - destruct t1, t2; try contradiction; now constructor.
+  Qed.
+
+End DecAgreement.
+
+Section Agreement.
+  (* This is more complex than above, and it does not require a decidable equality.
+     I also comes with support for pcmType. *)
+  Context T `{T_ty : Setoid T}.
+  Local Open Scope ra_scope.
+
+  Inductive ra_agree : Type :=
+  | ag_inj (t: T) (valid: Prop)
+  | ag_unit.
+
+  Global Instance ra_agree_unit : RA_unit _ := ag_unit.
+  Global Instance ra_agree_valid : RA_valid _ :=
+           fun x => match x with ag_unit => True | ag_inj _ valid => valid end.
+  Global Instance ra_dag_op : RA_op _ :=
+    fun x y => match x, y with
+               | ag_inj t1 v1, ag_inj t2 v2 => ag_inj t1 (v1 /\ v2 /\ t1 == t2)
+               | ag_unit, y => y
+               | x, ag_unit => x
+               end.
+
+  Definition ra_agree_eq (x y: ra_agree): Prop :=
+    match x, y with
+      | ag_inj t1 v1, ag_inj t2 v2 => v1 == v2 /\ (v1 -> t1 == t2)
+      | ag_unit, ag_unit => True
+      | _, _ => False
+    end.
+
+  Definition ra_ag_inj (t: T): ra_agree := ag_inj t True.
+
+  Global Instance ra_agree_eq_equiv : Equivalence ra_agree_eq.
+  Proof.
+    split; intro; intros; destruct x as [tx vx|]; try destruct y as [ty vy|]; try destruct z as [tz vz|]; simpl in *; try (exact I || contradiction); [| |]. (* 3 goals left. *)
+    - split; first tauto. intros; reflexivity.
+    - split; first tauto. intros; symmetry; tauto.
+    - split; first tauto. intros. etransitivity; [eapply H|eapply H0]; tauto.
+  Qed.
+  Global Instance ra_agree_type : Setoid ra_agree := mkType ra_agree_eq.
+  Global Instance ra_agree_res : RA ra_agree.
+  Proof.
+    split; repeat intro.
+    - repeat (match goal with [ x : ra_agree |- _ ] => destruct x end); simpl in *; try firstorder; [|].
+      + rewrite -H1 H7 H2. reflexivity.
+      + rewrite H1 H7 -H2. reflexivity.
+    - repeat (match goal with [ x : ra_agree |- _ ] => destruct x end); simpl in *; try firstorder; [|].
+      + rewrite H1 H3. reflexivity.
+      + rewrite -H3 H2. reflexivity.
+    - repeat (match goal with [ x : ra_agree |- _ ] => destruct x end); simpl in *; firstorder.
+    - repeat (match goal with [ x : ra_agree |- _ ] => destruct x end); simpl in *; firstorder.
+    - repeat (match goal with [ x : ra_agree |- _ ] => destruct x end); simpl in *; firstorder.
+    - firstorder.
+    - repeat (match goal with [ x : ra_agree |- _ ] => destruct x end); simpl in *; firstorder.
   Qed.
 
 End Agreement.
