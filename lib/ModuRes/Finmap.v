@@ -1279,6 +1279,26 @@ Section RA.
         left; do 2!eexists; repeat split; eauto. reflexivity.
       + apply (H1 i). eapply fdComposeP'. by eauto.
   Qed.
-     
+
+  (* The RA order on finmaps is the same as the fpfun order over the RA order *)
+  Lemma ra_pord_iff_ext_pord {f g}:
+    pord (preoType:=pord_ra) f g <-> pord (preoType:=extOrd_preo) f g.
+  Proof.
+    (* FIXME show this *) admit.
+  Qed.
+
+  (* Show that this preserved pcm-edness of S with the RA-order of S *)
+  Section RA_PCM.
+    Context `{pcmS: pcmType (eqT:=eqT) (pTA:=pord_ra) S}.
+
+    Global Instance ra_finmap_pcm: pcmType (pTA:=pord_ra) (I -f> S).
+    Proof.
+      split. intros σ ρ σc ρc HC.
+      apply ra_pord_iff_ext_pord.
+      eapply pcm_respC; first by apply _.
+      move=>i. apply ra_pord_iff_ext_pord. by apply: HC.
+    Qed.
+  End RA_PCM.
+  
 End RA.
 
