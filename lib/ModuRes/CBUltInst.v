@@ -64,34 +64,44 @@ Section Halving_Fun.
   Context F {FA : BiFMap F} {FFun : BiFunctor F}.
   Local Obligation Tactic := intros; resp_set || eauto.
 
-  Program Instance halveFMap : BiFMap (fun T1 T2 => halve (F T1 T2)) :=
-    fun m1 m2 m3 m4 => lift2m (lift2s (fun ars ob => fmorph (F := F) ars ob) _ _) _ _.
+  Definition HF := fun T1 T2 => halveCM (F T1 T2).
+
+  Program Instance halveFMap : BiFMap HF :=
+    fun m1 m2 m3 m4 => lift2m (lift2s (fun (ars: (m2 -t> m1) * (m3 -t> m4)) (ob: halveCM (F m1 m3)) => halvedT (fmorph (F := F) ars (unhalvedT ob))) _ _) _ _.
+  Next Obligation.
+    repeat intro. unfold halvedT, unhalvedT, HF in *. simpl.
+    unhalveT. simpl. rewrite H. reflexivity.
+  Qed.
   Next Obligation.
     intros p1 p2 EQp x; simpl; rewrite EQp; reflexivity.
   Qed.
   Next Obligation.
-    intros e1 e2 EQ; simpl. unhalve.
-    rewrite EQ; reflexivity.
+    intros e1 e2 EQ; simpl. unfold halvedT, unhalvedT, HF in *. unhalveT.
+    destruct n as [|n]; first by exact I.
+    simpl in *. rewrite EQ; reflexivity.
   Qed.
   Next Obligation.
-    intros p1 p2 EQ e; simpl; unhalve.
-    apply dist_mono in EQ.
-    rewrite EQ; reflexivity.
+    intros p1 p2 EQ e; simpl. unfold halvedT, unhalvedT, HF in *. unhalveT.
+    destruct n as [|n]; first by exact I. simpl.
+    apply dist_mono. rewrite EQ. reflexivity.
   Qed.
 
-  Instance halveF : BiFunctor (fun T1 T2 => halve (F T1 T2)).
+  Instance halveF : BiFunctor HF.
   Proof.
     split; intros.
     + intros T; simpl.
+      unfold unhalvedT, HF in *. unhalveT. simpl.
       apply (fmorph_comp _ _ _ _ _ _ _ _ _ _ T).
     + intros T; simpl.
+      unfold unhalvedT, HF in *. unhalveT. simpl.
       apply (fmorph_id _ _ T).
   Qed.
 
   Instance halve_contractive {m0 m1 m2 m3} :
-    contractive (@fmorph _ _ (fun T1 T2 => halve (F T1 T2)) _ m0 m1 m2 m3).
+    contractive (@fmorph _ _ HF _ m0 m1 m2 m3).
   Proof.
     intros n p1 p2 EQ f; simpl.
+    unfold unhalvedT, HF in *. unhalveT. simpl.
     change ((fmorph (F := F) p1) f = n = (fmorph p2) f).
     rewrite EQ; reflexivity.
   Qed.
@@ -109,18 +119,18 @@ Module Type SimplInput(Cat : MCat).
 End SimplInput.
 
 Module InputHalve (S : SimplInput (CBUlt)) : InputType(CBUlt)
-    with Definition F := fun T1 T2 => halve (S.F T1 T2).
+    with Definition F := fun T1 T2 => halveCM (S.F T1 T2).
   Import CBUlt.
   Local Existing Instance S.FArr.
   Local Existing Instance S.FFun.
   Local Open Scope cat_scope.
 
-  Definition F T1 T2 := halve (S.F T1 T2).
+  Definition F T1 T2 := halveCM (S.F T1 T2).
   Definition FArr := halveFMap S.F.
   Definition FFun := halveF S.F.
 
   Definition tmorph_ne : 1 -t> F 1 1 :=
-    umconst (S.F_ne tt : F 1 1).
+    umconst (halvedT (S.F_ne tt)).
 
   Definition F_contractive := @halve_contractive S.F _.
 End InputHalve.

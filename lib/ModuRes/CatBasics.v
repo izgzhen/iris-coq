@@ -251,63 +251,18 @@ Section IndexedProductsPCM.
 End IndexedProductsPCM.
 
 
-
 Section Halving.
-  Context (T : cmtyp).
+  Definition halveT (T: eqType): eqType := fromType (halve T).
+  Definition halvedT {T}: eqtyp T -> eqtyp (halveT T) := fun h => halved h.
+  Definition unhalvedT {T}: eqtyp (halveT T) -> eqtyp T := fun h => unhalved h.
 
-  Definition dist_halve n :=
-    match n with
-      | O  => fun (_ _ : T) => True
-      | S n => dist n
-    end.
-
-  Program Definition halve_metr : metric T := mkMetr dist_halve.
-  Next Obligation.
-    destruct n; [resp_set | simpl; apply _].
-  Qed.
-  Next Obligation.
-    split; intros HEq.
-    - apply dist_refl; intros n; apply (HEq (S n)).
-    - intros [| n]; [exact I |]; revert n; apply dist_refl, HEq.
-  Qed.
-  Next Obligation.
-    intros t1 t2 HEq; destruct n; [exact I |]; symmetry; apply HEq.
-  Qed.
-  Next Obligation.
-    intros t1 t2 t3 HEq12 HEq23; destruct n; [exact I |]; etransitivity; [apply HEq12 | apply HEq23].
-  Qed.
-  Next Obligation.
-    destruct n; [exact I | apply dist_mono, H].
-  Qed.
-
-  Definition halveM : Mtyp := Build_Mtyp T halve_metr.
-
-  Instance halve_chain (σ : chain halveM) {σc : cchain σ} : cchain (fun n => σ (S n) : T).
-  Proof.
-    unfold cchain; intros.
-    apply (chain_cauchy σ σc (S n)); auto with arith.
-  Qed.
-
-  Definition compl_halve (σ : chain halveM) (σc : cchain σ) :=
-    compl (fun n => σ (S n)) (σc := halve_chain σ).
-
-  Program Definition halve_cm : cmetric halveM := mkCMetr compl_halve.
-  Next Obligation.
-    intros [| n]; [exists 0; intros; exact I |].
-    destruct (conv_cauchy _ (σc := halve_chain σ) n) as [m HCon].
-    exists (S m); intros [| i] HLe; [inversion HLe |].
-    apply HCon; auto with arith.
-  Qed.
-
-  Definition halve : cmtyp := Build_cmtyp halveM halve_cm.
-
+  Definition halveM (T: Mtyp) : Mtyp := Build_Mtyp (halveT T) halve_metr.
+  Definition halveCM (T: cmtyp): cmtyp := Build_cmtyp (halveM T) halve_cm.
 End Halving.
+Ltac unhalveT := repeat (unhalve || match goal with
+                       | x: eqtyp (mtyp (cmm (halveCM _))) |- _ => destruct x as [x]
+                       end).
 
-Ltac unhalve :=
-  match goal with
-    | |- dist_halve _ ?n ?f ?g => destruct n as [| n]; [exact I | change (f = n = g) ]
-    | |- ?f = ?n = ?g => destruct n as [| n]; [exact I | change (f = n = g) ]
-  end.
 
 (** Trivial extension of a nonexpansive morphism to monotone one on a
     metric space equipped with a trivial preorder. *)

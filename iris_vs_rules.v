@@ -29,11 +29,9 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       (inv i P) ⊑ pvs (mask_sing i) mask_emp (▹P).
     Proof.
       intros w n r HInv w'; intros.
-      change (match w i with Some x => x = S n = ı' P | None => False end) in HInv.
+      change (match w i with Some x => x = S n = ı' (halved P) | None => False end) in HInv.
       destruct (w i) as [μ |] eqn: HLu; [| contradiction].
-      apply ı in HInv; rewrite ->(isoR P) in HInv.
-      (* get rid of the invisible 1/2 *)
-      do 8 red in HInv.
+      apply ı in HInv; rewrite ->(isoR (halved P)) in HInv.
       destruct HE as [rs [HE HM] ].
       destruct (rs i) as [ri |] eqn: HLr.
       - rewrite ->comp_map_remove with (i := i) (r := ri) in HE by now eapply equivR.
@@ -41,7 +39,7 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         exists w' (r · ri).
         split; [reflexivity |].
         split.
-        + simpl; eapply HInv; [now auto with arith |].
+        + simpl. apply halve_eq in HInv. eapply HInv; [now auto with arith |].
           eapply uni_pred, HM with i;
             [| exists r | | | rewrite HLr]; try reflexivity.
           * left; unfold mask_sing, mask_set.
@@ -64,11 +62,10 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       (inv i P ∧ ▹P) ⊑ pvs mask_emp (mask_sing i) ⊤.
     Proof.
       intros w n r [HInv HP] w'; intros.
-      change (match w i with Some x => x = S n = ı' P | None => False end) in HInv.
+      change (match w i with Some x => x = S n = ı' (halved P) | None => False end) in HInv.
       destruct (w i) as [μ |] eqn: HLu; [| contradiction].
-      apply ı in HInv; rewrite ->(isoR P) in HInv.
-      (* get rid of the invisible 1/2 *)
-      do 8 red in HInv.
+      apply ı in HInv; rewrite ->(isoR (halved P)) in HInv.
+      apply halve_eq in HInv.
       destruct HE as [rs [HE HM] ].
       exists w' 1; split; [reflexivity | split; [exact I |] ].
       rewrite ->(comm r), <-assoc in HE.
@@ -226,13 +223,13 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       destruct n as [| n]; [now inversion HLe | simpl in HP].
       rewrite ->HSub in HP; clear w HSub; rename w' into w.
       destruct (fresh_region w m HInf) as [i [Hm HLi] ].
-      assert (HSub : w ⊑ fdUpdate i (ı' P) w).
+      assert (HSub : w ⊑ fdUpdate i (ı' (halved P)) w).
       { intros j; destruct (Peano_dec.eq_nat_dec i j); [subst j; rewrite HLi; exact I|].
         now rewrite ->fdUpdate_neq by assumption.
       }
-      exists (fdUpdate i (ı' P) w) 1; split; [assumption | split].
+      exists (fdUpdate i (ı' (halved P)) w) 1; split; [assumption | split].
       - exists (exist _ i Hm).
-        change (((fdUpdate i (ı' P) w) i) = S (S k) = (Some (ı' P))).
+        change (((fdUpdate i (ı' (halved P)) w) i) = S (S k) = (Some (ı' (halved P)))).
         rewrite fdUpdate_eq; reflexivity.
       - erewrite ra_op_unit by apply _.
         destruct HE as [rs [HE HM] ].
