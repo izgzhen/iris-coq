@@ -409,7 +409,7 @@ Section Agreement.
     apply σc; omega.
   Qed.
 
-  Instance unInj_c (σ : chain ra_agree) {σc : cchain σ} HNE : cchain (unInj σ HNE).
+ (* Instance unInj_c (σ : chain ra_agree) {σc : cchain σ} HNE : cchain (unInj σ HNE).
   Proof.
     (* This does NOT hold!
     intros [| k] n m HLE1 HLE2; [apply dist_bound |]; unfold unSome.
@@ -431,7 +431,7 @@ Section Agreement.
       | ag_inj t v => ag_inj (compl (unInj σ _)) v
     end.
 
-  (*
+
   Global Program Instance option_cmt : cmetric (option T) := mkCMetr option_compl.
   Next Obligation.
     intros [| n]; [exists 0; intros; apply dist_bound | unfold option_compl].
