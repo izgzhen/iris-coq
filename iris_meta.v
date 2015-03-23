@@ -1,4 +1,4 @@
-Require Import ssreflect.
+Require Import Ssreflect.ssreflect Omega.
 Require Import core_lang masks world_prop iris_core iris_plog.
 Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr.
 
@@ -120,9 +120,10 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       exists w' rs' φs',
         w ⊑ w' /\ wptp safe m w' (S k) tp' rs' (Q :: φs') /\ wsat σ' m (comp_list rs') w' @ S k.
     Proof.
-      edestruct preserve_wptp with (rs:=[r]) as [w' [rs' [φs' [HSW' [HSWTP' HSWS']]]]]; [eassumption | | simpl comp_list; erewrite comm, ra_op_unit by apply _; eassumption | clear HT HSN HP HE].
+      edestruct preserve_wptp with (rs:=[r]) as [w' [rs' [φs' [HSW' [HSWTP' HSWS']]]]]; first eassumption.
       - specialize (HT w (n + S k) r). apply HT in HP; try reflexivity; [|now apply unit_min].
         econstructor; [|now econstructor]. eassumption.
+      - simpl comp_list. rewrite comm ra_op_unit. eassumption.
       - exists w' rs' φs'. now auto.
     Qed.
 
@@ -349,7 +350,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Program Instance lift_esPred_dist (φ : expr * state -> Props) n : Proper (dist n ==> dist n) φ.
     Next Obligation.
       move=> [e'1 σ'1] [e'2 σ'2] HEq w k r HLe.
-      move: HEq HLe; case: n=>[|n] HEq HLt; first by exfalso; exact: lt0.
+      move: HEq HLe. case: n=>[|n] HEq HLt; first by (exfalso; omega).
       by move: HEq=>/=[-> ->].
     Qed.
 
@@ -375,7 +376,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       split; [| split; [| split ]]; first 2 last.
       { move=> e' K HDec; exfalso; exact: (reducible_not_fork RED HDec). }
       { by move: SAFE {Hfrom}; rewrite Hσ; case: safe. }
-      { move=> HV; exfalso; exact: reducible_not_value. }
+      { move=> HV; exfalso. apply: reducible_not_value; eassumption. }
 
       move=> σ' ei e' K HDec HStep {SAFE}.
       move: HW HStep; rewrite -Hσ => HW HStep {Hσ}.
@@ -389,9 +390,9 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       move/STEP: HStep => He' {STEP}.
 
       (* … after building P * ownS σ' *)
-      move: HPS HLe HLt; case: n=>[| n'] HPS HLe HLt; first by exfalso; exact: lt0.
+      move: HPS HLe HLt; case: n=>[| n'] HPS HLe HLt; first by exfalso; omega.
       move: HPS => [rP [rS [Hr [HP [rSg HrS]]]]]; rewrite/= in HP.
-      pose (rS' := (ex_own σ', 1) : res).
+      pose (rS' := (ex_own σ', 1:RL.res)).
       pose (r' := rP · rS').
       have HPS: (P * ownS σ') w2 k r'.
       { have {HLt} HLt: k <= n' by omega.
@@ -419,7 +420,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Qed.
     
     Program Definition lift_esPost φ : value -n> Props :=
-      n[(fun v => ∃σ', ownS σ' ∧ lift_esPred φ (v, σ'))].
+      n[(fun v:value => ∃σ', ownS σ' ∧ lift_esPred φ (v, σ'))].
     Next Obligation.
       move=> σ σ' HEq w k r HLt.
       move: HEq HLt; case: n=>[|n] HEq HLt; first by exfalso; omega.

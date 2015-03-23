@@ -495,8 +495,8 @@ Section FiniteProducts.
   Lemma extFin_env_one {k m} (η : FinI k) (ρ : FinI m) R :
     extFinI (extFinEnv η ρ) R == extFinEnv η (extFinI ρ R).
   Proof.
-    intros x.
-    refine (match x as x in Fin.t i return
+    intros xx.
+    refine (match xx as x in Fin.t i return
                   match i return Fin.t i -> Prop with
                     | O => fun _ => False
                     | S i => fun x => forall m k (η : FinI k) (ρ : FinI m)
@@ -514,7 +514,7 @@ Section FiniteProducts.
     - simpl in EQ; assert (EQ' := eq_add_S _ _ EQ); subst n.
       rewrite transfer_nat_eq; clear EQ.
       unfold extFinEnv; simpl.
-      destruct (fin_sum_split x0); simpl; reflexivity.
+      destruct (fin_sum_split x); simpl; reflexivity.
   Qed.
 
   Lemma extFinI_eq {n m} R (η : FinI m) (EQ : m = n) :

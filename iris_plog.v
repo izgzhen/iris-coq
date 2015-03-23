@@ -1,4 +1,4 @@
-Require Import ssreflect.
+Require Import Ssreflect.ssreflect Omega.
 Require Import world_prop core_lang lang masks iris_core.
 Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr.
 
@@ -36,7 +36,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       intros w1 w2 Sw; unfold invP.
       intros n r HP; specialize (Sw i).
       destruct (w1 i) as [μ1 |]; [| contradiction].
-      destruct (w2 i) as [μ2 |]; [| contradiction]. simpl in Sw.
+      destruct (w2 i) as [μ2 |]; [| contradiction]. simpl in *.
       rewrite <- Sw; assumption.
     Qed.
     Next Obligation.
@@ -126,7 +126,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       setoid_rewrite HLe; eassumption.
     Qed.
 
-    Global Instance wsat_equiv σ : Proper (meq ==> equiv ==> equiv ==> equiv) (wsat σ).
+    Global Instance wsat_equiv σ : Proper (equiv ==> equiv ==> equiv ==> equiv) (wsat σ).
     Proof.
       intros m1 m2 EQm r r' EQr w1 w2 EQw [| n] []; [reflexivity |].
       split; intros [rs [HE HM] ]; exists rs.

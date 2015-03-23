@@ -1,4 +1,4 @@
-Require Import ssreflect.
+Require Import Ssreflect.ssreflect.
 Require Import List.
 Require Import core_lang.
 
