@@ -1,4 +1,4 @@
-Require Import ssreflect.
+Require Import Ssreflect.ssreflect Omega.
 Require Import PreoMet RA.
 
 Local Open Scope ra_scope.
@@ -282,11 +282,13 @@ Section DecAgreement.
       destruct (eq_dec t2 t0), (eq_dec t1 t); simpl; auto; exfalso;
       [ rewrite <- H, -> e in c | rewrite -> H, -> e in c; symmetry in c]; contradiction.
     - repeat (match goal with [ x : ra_dagree |- _ ] => destruct x end);
-      simpl in *; auto; try reflexivity; compute; try destruct (eq_dec _ _); try reflexivity.
-      destruct (eq_dec t0 t), (eq_dec t1 t0), (eq_dec t1 t); simpl; auto; try reflexivity;
-      rewrite -> e in e0; contradiction.
-    -  destruct t1, t2; try reflexivity; compute; destruct (eq_dec t0 t), (eq_dec t t0);
-       try reflexivity; auto; try contradiction; symmetry in e; contradiction.
+      simpl in *; auto; try reflexivity; compute; try destruct (eq_dec _ _); 
+      try reflexivity;
+      destruct (eq_dec t0 t), (eq_dec t1 t0), (eq_dec t1 t); simpl; auto; 
+      try reflexivity;
+      try (rewrite <- e in c; contradiction); now exfalso; eauto.
+    - destruct t1, t2; try reflexivity; compute; destruct (eq_dec t0 t), (eq_dec t t0);
+      try reflexivity; auto; try contradiction; symmetry in e; contradiction.
     - destruct t; reflexivity.
     - destruct x, y; simpl; firstorder; now inversion H.
     - now constructor.
@@ -338,11 +340,11 @@ Section Agreement.
   Proof.
     split; repeat intro.
     - ra_agree_destr; try firstorder; [|].
-      + rewrite -H1 H7 H2. reflexivity.
-      + rewrite H1 H7 -H2. reflexivity.
+      + find_rewrite3 t1 t2 t0 t. reflexivity.
+      + find_rewrite3 t2 t1 t t0. reflexivity.
     - ra_agree_destr; try firstorder; [|].
-      + rewrite H1 H3. reflexivity.
-      + rewrite -H3 H2. reflexivity.
+      + find_rewrite2 t1 t0 t. reflexivity.
+      + find_rewrite2 t0 t1 t. reflexivity.
     - ra_agree_destr; firstorder.
     - ra_agree_destr; firstorder.
     - ra_agree_destr; firstorder.
@@ -367,8 +369,8 @@ Section Agreement.
   Next Obligation.
     repeat intro. destruct n as [|n]; first by auto.
     ra_agree_destr; try firstorder.
-    - rewrite -H1 -H2. assumption.
-    - rewrite H1 H2. assumption.
+    - find_rewrite1 t1 t2. find_rewrite1 t t0. assumption.
+    - find_rewrite1 t2 t1. find_rewrite1 t0 t. assumption.
   Qed.
   Next Obligation.
     repeat intro. split.
@@ -378,7 +380,7 @@ Section Agreement.
       + intro. eapply dist_refl. intro. specialize (Hall n). destruct n as [|n]; first by apply: dist_bound.
         firstorder.
     - repeat intro. destruct n as [|n]; first by auto. ra_agree_destr; try firstorder.
-      + rewrite H0. reflexivity.
+      + find_rewrite1 t0 t. reflexivity.
   Qed.
   Next Obligation.
     repeat intro. destruct n as [|n]; first by auto.
@@ -387,7 +389,7 @@ Section Agreement.
   Next Obligation.
     repeat intro. destruct n as [|n]; first by auto.
     ra_agree_destr; try firstorder; [].
-    rewrite H1 -H2. reflexivity.
+    etransitivity; eassumption.
   Qed.
   Next Obligation.
     repeat intro. destruct n as [|n]; first by auto.

@@ -1,5 +1,5 @@
 Require Import MetricCore CatBasics.
-Require Import Arith.
+Require Import Arith Omega.
 
 (** A category enriched in complete bisected metric spaces and with a terminal object. *)
 
@@ -602,7 +602,7 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
         unfold binaryLimit, chainPE; simpl.
         rewrite 3!tcomp_assoc, <- (tcomp_assoc (Embeddings i ∘ Projection i)).
         simpl; rewrite fmorph_comp.
-        rewrite 2!retract_EP, fmorph_id, tid_right, <- (tcomp_assoc (Embeddings i)).
+        rewrite !retract_EP, fmorph_id, tid_right, <- (tcomp_assoc (Embeddings i)).
         rewrite retract_IP, tid_right; reflexivity.
       + symmetry; apply (colim_unique _ DCoLimit DCoLimit); intros n; rewrite tid_left; reflexivity.
     Qed.

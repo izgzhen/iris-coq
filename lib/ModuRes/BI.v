@@ -673,7 +673,7 @@ Section MonotoneLater.
   Qed.
 
   Global Program Instance later_mon_morph : Later (U -m> T) :=
-    Build_Later _ _ _ _ _ _ _ m[(fun f => m[(fun u => later (f u))])] _ _ _.
+    Build_Later _ _ _ _ _ _ _ m[(fun f: U -m> T => m[(fun u => later (f u))])] _ _ _.
   Next Obligation.
     intros u; simpl morph; apply later_mon.
   Qed.
@@ -695,7 +695,7 @@ Section MComplUP.
     Context T `{pcmT : pcmType T} {eT : extensible T}.
 
     Program Definition mclose_up : (T -n> UPred V) -n> T -m> UPred V :=
-      n[(fun f => m[(fun t => mkUPred (fun n v => forall t', t ⊑ t' -> f t' n v) _)])].
+      n[(fun f: T -n> UPred V => m[(fun t => mkUPred (fun n v => forall t', t ⊑ t' -> f t' n v) _)])].
     Next Obligation.
       intros n m v1 v2 HLe HSubv HT t' HSubt.
       rewrite HLe, <- HSubv; apply HT, HSubt.
@@ -744,7 +744,7 @@ End MComplUP.
     Context U `{pcmU : pcmType U} {eU : extensible U}.
 
     Program Definition mclose_mm : (U -n> V -m> B) -n> U -m> V -m> B :=
-      n[(fun f => mcurry (mclose n[(fun uv => f (fst uv) (snd uv))]))].
+      n[(fun f:U -n> V -m> B  => mcurry (mclose n[(fun uv => f (fst uv) (snd uv))]))].
     Next Obligation.
       intros [u1 v1] [u2 v2] [EQu EQv]; simpl morph.
       unfold fst, snd in *; rewrite EQu, EQv; reflexivity.

@@ -21,6 +21,15 @@ Qed.
 
 Notation "'mkType' R" := (@Build_Setoid _ R _) (at level 10).
 
+Ltac find_rewrite1 t0 t1 := match goal with
+                            | H: t0 = t1 |- _ => rewrite-> H
+                            | H: t0 == t1 |- _ => rewrite-> H
+                            | H: t1 = t0 |- _ => rewrite<- H
+                            | H: t1 == t0 |- _ => rewrite<- H
+                            end.
+Ltac find_rewrite2 t0 t1 t2 := find_rewrite1 t0 t1; find_rewrite1 t1 t2.
+Ltac find_rewrite3 t0 t1 t2 t3 := find_rewrite2 t0 t1 t2; find_rewrite1 t2 t3.
+
 (** A morphism between two types is an actual function together with a
     proof that it preserves equality. *)
 Record morphism S T `{eqS : Setoid S} `{eqT : Setoid T} :=
@@ -349,7 +358,7 @@ Section OptDefs.
     end.
 
   Program Definition moptbind : (T -=> option U) -=> option T -=> option U :=
-    lift2s optbind _ _.
+    lift2s (T:=T-=>option U) optbind _ _.
   Next Obligation.
     intros [v1 |] [v2 |] EQv; try (contradiction EQv || exact I); [].
     unfold optbind; apply x, EQv.
@@ -378,7 +387,7 @@ Section DiscreteType.
 End DiscreteType.
 
 Section ViewLemmas.
-  Require Import ssreflect.  
+  Require Import Ssreflect.ssreflect.  
   Context {T} `{eqT : Setoid T}.
   Implicit Types (t : T).
 

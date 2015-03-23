@@ -1,4 +1,4 @@
-Require Import ssreflect.
+Require Import Ssreflect.ssreflect Omega.
 Require Export Predom MetricCore.
 
 Generalizable Variables T U V W X Y.

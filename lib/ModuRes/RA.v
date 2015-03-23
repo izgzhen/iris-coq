@@ -1,6 +1,6 @@
 (** Resource algebras: Commutative monoids with a validity predicate. *)
 
-Require Import ssreflect.
+Require Import Ssreflect.ssreflect.
 Require Import Coq.Classes.RelationPairs.
 Require Import Bool.
 Require Import Predom.
@@ -314,7 +314,12 @@ Section Id.
   Context {T} `{raT : RA T}.
 
   Program Definition raid : T -ra> T := ra[(mid T)].
-  Solve Obligations using reflexivity.
+  Next Obligation.
+    reflexivity.
+  Qed.
+  Next Obligation.
+    reflexivity.
+  Qed.
 End Id.
 
 Section Const.
@@ -476,7 +481,12 @@ Section Subra.
 
   (* The inclusion is an RA-morphism. *)
   Program Definition raincl : sub -ra> T := ra[(mincl)].
-  Solve Obligations using reflexivity.
+  Next Obligation.
+    reflexivity.
+  Qed.
+  Next Obligation.
+    reflexivity.
+  Qed.
 
   (* The inclusion is monic. *)
   Context {U} `{raU : RA U}.

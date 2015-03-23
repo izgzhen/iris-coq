@@ -1,7 +1,7 @@
 (** This module provides the basics to do category theory on metric spaces:
     Bundled types, indexed products on bundled types, and some functors. *)
 
-Require Import ssreflect.
+Require Import Ssreflect.ssreflect.
 Require Import Arith Min Max.
 Require Import MetricCore PreoMet.
 Require Fin.

@@ -67,7 +67,7 @@ Section Halving_Fun.
   Definition HF := fun T1 T2 => halveCM (F T1 T2).
 
   Program Instance halveFMap : BiFMap HF :=
-    fun m1 m2 m3 m4 => lift2m (lift2s (fun (ars: (m2 -t> m1) * (m3 -t> m4)) (ob: halveCM (F m1 m3)) => halvedT (fmorph (F := F) ars (unhalvedT ob))) _ _) _ _.
+    fun m1 m2 m3 m4 => lift2m (lift2s (fun (ars: (m2 -t> m1) * (m3 -t> m4)) (ob: halveCM (F m1 m3)) => halvedT (fmorph (F := F) (BiFMap := FA) ars (unhalvedT ob))) _ _) _ _.
   Next Obligation.
     repeat intro. unfold halvedT, unhalvedT, HF in *. simpl.
     unhalveT. simpl. rewrite H. reflexivity.
@@ -91,10 +91,10 @@ Section Halving_Fun.
     split; intros.
     + intros T; simpl.
       unfold unhalvedT, HF in *. unhalveT. simpl.
-      apply (fmorph_comp _ _ _ _ _ _ _ _ _ _ T).
+      apply (fmorph_comp (BiFunctor := FFun) _ _ _ _ _ _ _ _ _ _ T).
     + intros T; simpl.
       unfold unhalvedT, HF in *. unhalveT. simpl.
-      apply (fmorph_id _ _ T).
+      apply (fmorph_id (BiFunctor := FFun) _ _ T).
   Qed.
 
   Instance halve_contractive {m0 m1 m2 m3} :
@@ -102,7 +102,7 @@ Section Halving_Fun.
   Proof.
     intros n p1 p2 EQ f; simpl.
     unfold unhalvedT, HF in *. unhalveT. simpl.
-    change ((fmorph (F := F) p1) f = n = (fmorph p2) f).
+    change ((fmorph (F := F) (BiFMap := FA) p1) f = n = (fmorph (BiFMap := FA) p2) f).
     rewrite EQ; reflexivity.
   Qed.
 
