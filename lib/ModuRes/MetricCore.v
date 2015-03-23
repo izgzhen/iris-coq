@@ -10,6 +10,8 @@ Require Export CSetoid.
 Require Import Omega.
 Require Import Min Max.
 
+Set Bullet Behavior "Strict Subproofs".
+
 Open Scope nat_scope.
 
 Generalizable Variables T U V W.
@@ -123,9 +125,9 @@ Section Chains.
   Proof. unfold cchain; reflexivity. Qed.
 
   (** Chain [c] converges to [x].
-      NOTE: Interesting that here you require an existence of [m] and not that every element after n-th is closer than 2⁻ⁿ. *)
+      NOTE: Similar to chain_cauchy, we require that every element after n-th is closer than 2⁻ⁿ. *)
   Definition mconverge (m : T) :=
-    forall n, exists k, forall i {HLe : k <= i}, m = n = (σ i).
+    forall n, forall i {HLe : n <= i}, m = n = (σ i).
 
 End Chains.
 
@@ -151,8 +153,8 @@ Section ChainCompl.
   Lemma umet_complete_extn n (HEq : forall i, σ i = n = ρ i) :
     compl σ = n = compl ρ.
   Proof.
-    destruct (conv_cauchy σ n) as [m Hm]; destruct (conv_cauchy ρ n) as [k Hk].
-    rewrite Hm, Hk; eauto using le_max_l, le_max_r.
+    assert (Hm:=conv_cauchy σ n n). assert (Hk:=conv_cauchy ρ n n).
+    rewrite Hm, Hk; first (by apply HEq); reflexivity. 
   Qed.
 
   Lemma umet_complete_ext :
@@ -165,15 +167,15 @@ Section ChainCompl.
   Lemma umet_complete_const m : compl (fun _ => m) == m.
   Proof.
     symmetry; rewrite <- dist_refl; intros n.
-    destruct (conv_cauchy (fun _ => m) n) as [k Hk]; rewrite Hk; eauto || reflexivity.
+    assert (Hk:=conv_cauchy (fun _ => m) n). rewrite Hk; eauto || reflexivity.
   Qed.
 
   (** Limits don't depend on prefixes of sequences. *)
   Lemma cut_complete_eq n :
     compl σ == compl (cutn σ n).
   Proof.
-    rewrite <- dist_refl; intros m; destruct (conv_cauchy σ m) as [k Hk].
-    destruct (conv_cauchy (cutn σ n) m) as [j Hj]; simpl in *.
+    rewrite <- dist_refl; intros m; assert (Hk:=conv_cauchy σ m).
+    assert (Hj:=conv_cauchy (cutn σ n) m); simpl in *.
     unfold cutn in *; rewrite Hj, Hk; [reflexivity | | apply le_max_l]; clear Hk Hj.
     apply _.
   Qed.
@@ -319,9 +321,8 @@ Section MCont.
   Lemma nonexp_continuous (f : T -n> U) (σ : chain T) (σc : cchain σ) :
     f (compl σ) == compl (liftc f σ).
   Proof.
-    rewrite <- dist_refl; intros n; destruct (conv_cauchy σ n) as [k B].
-    destruct (conv_cauchy (liftc f σ) n) as [m A]; simpl in *.
-    specialize (B (max m k) _); specialize (A (max m k) _).
+    rewrite <- dist_refl; intros n; assert (B:=conv_cauchy σ n n).
+    assert (A:=conv_cauchy (liftc f σ) n n). simpl in *.
     rewrite B, A; reflexivity.
   Qed.
 
@@ -450,11 +451,11 @@ Section Halving.
 
   Program Definition halve_cm : cmetric halve := mkCMetr compl_halve.
   Next Obligation.
-    intros [| n]; [exists 0; intros; exact I |].
-    destruct (conv_cauchy _ (σc := halve_chain σ) n) as [m HCon].
-    exists (S m); intros [| i] HLe; [inversion HLe |]. unfold compl_halve.
+    intros [| n]; [intros; exact I |].
+    assert (HCon:=conv_cauchy _ (σc := halve_chain σ) n).
+    intros [| i] HLe; [inversion HLe |]. unfold compl_halve.
     apply le_S_n in HLe.
-    specialize (HCon i _). destruct (σ (S i)). simpl. assumption.
+    specialize (HCon i _). simpl in HCon. destruct (σ (S i)). simpl. assumption.
   Qed.
 
   Global Instance halve_eq n: Proper (dist (S n) ==> dist n) unhalved.
@@ -479,7 +480,7 @@ Next Obligation. tauto. Qed.
 Program Instance unit_cmetric : cmetric unit :=
   mkCMetr (fun _ _ => tt).
 Next Obligation.
-  intros n; exists 0; intros k HLe; destruct (σ k); reflexivity.
+  intros n; intros k HLe; destruct (σ k); reflexivity.
 Qed.
 
 Section Iteration.
@@ -526,8 +527,8 @@ Section Fixpoints.
     pose (f' := contractive_nonexp _ HC).
     change (fixp f' x == f' (fixp f' x)).
     rewrite <- dist_refl; intros n; unfold fixp.
-    destruct (conv_cauchy (fun n => nat_iter n f' x) n) as [m Hm].
-    rewrite (Hm (S (max n m))), (Hm (max n m)) at 1; simpl; reflexivity || apply _.
+    assert (Hm:=conv_cauchy (fun n => nat_iter n f' x) n).
+    rewrite (Hm (S n)), (Hm n) at 1 by omega. simpl. reflexivity.
   Qed.
 
   Lemma fixp_iter f x i {HC : contractive f} : fixp f x == nat_iter i f (fixp f x).
@@ -543,9 +544,9 @@ Section Fixpoints.
   Lemma fixp_unique f x y {HC : contractive f} : fixp f x == fixp f y.
   Proof.
     rewrite <- dist_refl; intros n; unfold fixp.
-    destruct (conv_cauchy (fun n => nat_iter n f x) n) as [mx Hmx].
-    destruct (conv_cauchy (fun n => nat_iter n f y) n) as [my Hmy].
-    rewrite (Hmx (max n (max mx my))), Hmy;
+    assert (Hmx:=conv_cauchy (fun n => nat_iter n f x) n).
+    assert (Hmy:=conv_cauchy (fun n => nat_iter n f y) n).
+    rewrite (Hmx n), Hmy;
       [ rewrite bounded_contractive_n | ..]; reflexivity || apply _.
   Qed.
 
@@ -554,11 +555,13 @@ Section Fixpoints.
     fixp f x = n = fixp f' x'.
   Proof.
     rewrite fixp_unique with (x := x') (y := x).
-    clear x'; unfold fixp; destruct (conv_cauchy (fun n => nat_iter n f x) n) as [m Hm].
-    destruct (conv_cauchy (fun n => nat_iter n f' x) n) as [k Hk].
-    rewrite (Hm (max m k)), (Hk (max m k)); try apply _; [].
-    clear Hm Hk; induction (max m k); simpl; [reflexivity |].
-    rewrite IHn0; apply HEq.
+    clear x'; unfold fixp; assert (Hm:=conv_cauchy (fun n => nat_iter n f x) n).
+    assert (Hk:=conv_cauchy (fun n => nat_iter n f' x) n).
+    rewrite (Hm n), (Hk n); try apply _; [].
+    clear Hm Hk. induction n; simpl; [reflexivity |].
+    etransitivity.
+    - eapply HC, IHn. by eapply dist_mono.
+    - rewrite HEq. reflexivity.
   Qed.
 
   (** From the non-expansiveness it also follows that fixp preserves equality of f. *)
@@ -583,8 +586,8 @@ Section ChainApps.
 
   Instance nonexp_lub n : Proper (dist n ==> dist n) (fun x => compl (fun i => σ i x)).
   Proof.
-    intros x y HEq; destruct (conv_cauchy (fun i => σ i x) n) as [mx Hmx].
-    destruct (conv_cauchy (fun i => σ i y) n) as [my Hmy].
+    intros x y HEq; assert (Hmx:=conv_cauchy (fun i => σ i x) n n).
+    assert (Hmy:=conv_cauchy (fun i => σ i y) n n).
     rewrite Hmx, Hmy; simpl; [rewrite HEq; reflexivity | ..]; auto using le_max_r, le_max_l.
   Qed.
 
@@ -603,9 +606,9 @@ Section NonexpCMetric.
   Global Program Instance nonexp_cmetric : cmetric (T -n> U) | 5 :=
     mkCMetr fun_lub.
   Next Obligation.
-    intros n; exists n; intros m HLe x.
-    destruct (conv_cauchy (fun i => σ i x) n) as [k Hk].
-    rewrite (Hk (max m k)), (chain_cauchy σ); [reflexivity |..]; apply _.
+    intros n; intros m HLe x.
+    assert (Hk:=conv_cauchy (fun i => σ i x) n).
+    rewrite (Hk m), (chain_cauchy σ); [reflexivity |..]; apply _.
   Qed.
 
 End NonexpCMetric.
@@ -679,9 +682,9 @@ Section MetricProducts.
   Global Program Instance prod_cmetric : cmetric (U * V) :=
     mkCMetr prod_compl.
   Next Obligation.
-    intros n; destruct (conv_cauchy (liftc Mfst σ) n) as [mfst Hfst].
-    destruct (conv_cauchy (liftc Msnd σ) n) as [msnd Hsnd].
-    exists (max mfst msnd); intros k HLe; split; simpl in *;
+    intros n; assert (Hfst:=conv_cauchy (liftc Mfst σ) n).
+    assert (Hsnd:=conv_cauchy (liftc Msnd σ) n).
+    intros k HLe; split; simpl in *;
       [apply Hfst | apply Hsnd]; eauto using le_max_l, le_max_r, le_trans.
   Qed.
 
@@ -710,8 +713,8 @@ Class LimitPreserving `{cT : cmetric T} (P : T -> Prop) :=
 Instance contractive_complete `{cT : cmetric T} `{cU : cmetric U} :
   LimitPreserving (fun f : T -n> U => contractive f).
 Proof.
-  intros σ σc HC n x y HEq; destruct (conv_cauchy σ (S n)) as [m Hm].
-  rewrite (Hm m); [apply HC |]; trivial.
+  intros σ σc HC n x y HEq; assert (Hm:=conv_cauchy σ (S n)).
+  rewrite (Hm (S n)); [apply HC |]; trivial.
 Qed.
 
 Section OptM.
@@ -812,8 +815,8 @@ Section SubCMetric.
   Global Program Instance sub_cmetric : cmetric {x : T | P x} :=
     mkCMetr sub_compl.
   Next Obligation.
-    intros n; simpl; destruct (conv_cauchy (liftc inclM σ) n) as [m Hm].
-    exists m; intros k HLe; apply (Hm _ HLe).
+    intros n; simpl; assert (Hm:=conv_cauchy (liftc inclM σ) n).
+    intros k HLe; apply (Hm _ HLe).
   Qed.
 
 End SubCMetric.
@@ -901,10 +904,10 @@ Section DiscreteMetric.
 
   Program Instance discreteCMetric : cmetric T := mkCMetr discreteCompl.
   Next Obligation.
-    intros n; exists 1; simpl; intros [| i] HLe; [inversion HLe |].
-    destruct n as [| n]; [exact I |].
-    assert (HT := chain_cauchy σ _ 1 (S i) 1). rewrite HT.
-    reflexivity.
+    intros n; simpl; intros [| i] HLe; [now inversion HLe |].
+    destruct n as [| n]; [exact I |]. unfold discreteCompl.
+    change (σ 1 = 1 = σ (S i)).
+    eapply σc; omega.
   Qed.
 
 End DiscreteMetric.
@@ -945,10 +948,9 @@ Section Option.
 
   Global Program Instance option_cmt : cmetric (option T) := mkCMetr option_compl.
   Next Obligation.
-    intros [| n]; [exists 0; intros; apply dist_bound | unfold option_compl].
+    intros [| n]; [intros; apply dist_bound | unfold option_compl].
     generalize (@eq_refl _ (σ 1)) as EQ1; pattern (σ 1) at 1 3; destruct (σ 1) as [v |]; intros.
     - assert (HT := conv_cauchy (unSome σ (option_compl_obligation_1 _ _ _ EQ1)) (S n)).
-      destruct HT as [k HT]; exists (max k (S n)); intros.
       destruct (σ i) as [vi |] eqn: EQi; [unfold dist; simpl; rewrite (HT i) by eauto with arith | exfalso].
       + unfold unSome; generalize (@eq_refl _ (σ (S i))); pattern (σ (S i)) at 1 3.
         destruct (σ (S i)) as [vsi |]; intros EQsi; clear HT; [| exfalso].
@@ -959,11 +961,11 @@ Section Option.
           apply σc; auto with arith.
       + clear HT; specialize (σc 1 1 i); rewrite <- EQ1, EQi in σc.
         apply σc; auto with arith.
-        rewrite <- HLe, <- Max.le_max_r; auto with arith.
-    - exists 1; intros.
+        rewrite <- HLe; auto with arith.
+    - intros.
       destruct (σ i) as [vi |] eqn: EQi; [| reflexivity].
       specialize (σc 1 1 i); rewrite <- EQ1, EQi in σc.
-      apply σc; auto with arith.
+      apply σc; omega.
   Qed.
 
 End Option.

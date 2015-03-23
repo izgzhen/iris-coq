@@ -63,7 +63,7 @@ Section Definitions.
 
   Global Program Instance up_cmetric : cmetric UPred := mkCMetr up_compl.
   Next Obligation.
-    intros n; exists n; intros i HLe k t HLt; simpl.
+    intros n; intros i HLe k t HLt; simpl.
     eapply (chain_cauchy σ σc (S k)); eauto with arith.
   Qed.
 

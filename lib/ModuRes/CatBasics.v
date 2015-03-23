@@ -129,8 +129,8 @@ Section CompleteIndexed.
   Global Program Instance prodI_cmetric : cmetric (forall i, P i) :=
     mkCMetr prodI_compl.
   Next Obligation.
-    intros n; exists n; intros m HLe i.
-    destruct (conv_cauchy (liftc (MprojI i) σ) n) as [k Hk]; simpl in *.
+    intros n; intros m HLe i.
+    assert (Hk:=conv_cauchy (liftc (MprojI i) σ) n); simpl in *.
     rewrite -> Hk; [| apply le_max_r]; clear Hk.
     unfold liftc; apply σc; eauto using le_trans, le_max_l.
   Qed.

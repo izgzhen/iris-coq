@@ -508,14 +508,14 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
     Program Definition DCoLimit : CoLimit DTower := mkBaseColimit _ DCoCone (fun C => compl (chainPE _ (AllLimits DTower) C)) _ _.
     Next Obligation.
       rewrite (cut_complete_eq _ n), <- dist_refl; intros m.
-      destruct (conv_cauchy (cutn (chainPE _ (AllLimits DTower) C) n) m) as [k Hk].
+      assert (Hk:=conv_cauchy (cutn (chainPE _ (AllLimits DTower) C) n) m).
       specialize (Hk _ (le_n _)).
       assert (HT : forall m, Proper (dist m ==> dist m) (fun x : α DInf -t> cocone_t _ C => x ∘ Embeddings n))
         by (intros t e e' R; rewrite R; reflexivity).
       apply HT in Hk; clear HT. rewrite Hk; simpl morph.
       unfold cutn, chainPE.
       rewrite <- tcomp_assoc, emp.
-      clear Hk; revert m; rewrite dist_refl, coconeCom_l; [reflexivity | omega].
+      clear Hk. apply dist_refl. rewrite coconeCom_l; [reflexivity | omega].
     Qed.
     Next Obligation.
       rewrite <- (tid_right h), <- EP_id, nonexp_continuous; apply umet_complete_ext; intros i; simpl.
@@ -562,8 +562,8 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
       cocone_m _ C n == compl (chainPE _ FCone C) ∘ cocone_m _ ECoCone n.
     Proof.
       simpl morph; rewrite (cut_complete_eq _ n), <- dist_refl; intros m.
-      destruct (conv_cauchy (cutn (chainPE _ FCone C) n) m) as [k Hk]; specialize (Hk _ (le_n _)).
-      rewrite Hk; simpl morph; clear Hk; revert m; rewrite dist_refl.
+      assert (Hk:=conv_cauchy (cutn (chainPE _ FCone C) n) m).
+      rewrite Hk by reflexivity. simpl morph; clear Hk. apply dist_refl.
       unfold chainPE, cutn; rewrite <- tcomp_assoc, coconeCom_l; [apply equiv_morph; [reflexivity |] | omega].
       rewrite t_nmProjection, t_nmEmbedding, <- morph_tnm; simpl.
       rewrite <- tcomp_assoc; apply equiv_morph; [reflexivity |].
