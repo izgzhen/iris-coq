@@ -1,5 +1,5 @@
 Require Import ssreflect.
-Require Import Predom CSetoid RA.
+Require Import PreoMet RA.
 
 Local Open Scope ra_scope.
 Local Open Scope predom_scope.
@@ -324,6 +324,8 @@ Section Agreement.
 
   Definition ra_ag_inj (t: T): ra_agree := ag_inj t True.
 
+  Local Ltac ra_agree_destr := repeat (match goal with [ x : ra_agree |- _ ] => destruct x end); simpl in *.
+
   Global Instance ra_agree_eq_equiv : Equivalence ra_agree_eq.
   Proof.
     split; intro; intros; destruct x as [tx vx|]; try destruct y as [ty vy|]; try destruct z as [tz vz|]; simpl in *; try (exact I || contradiction); [| |]. (* 3 goals left. *)
@@ -335,18 +337,124 @@ Section Agreement.
   Global Instance ra_agree_res : RA ra_agree.
   Proof.
     split; repeat intro.
-    - repeat (match goal with [ x : ra_agree |- _ ] => destruct x end); simpl in *; try firstorder; [|].
+    - ra_agree_destr; try firstorder; [|].
       + rewrite -H1 H7 H2. reflexivity.
       + rewrite H1 H7 -H2. reflexivity.
-    - repeat (match goal with [ x : ra_agree |- _ ] => destruct x end); simpl in *; try firstorder; [|].
+    - ra_agree_destr; try firstorder; [|].
       + rewrite H1 H3. reflexivity.
       + rewrite -H3 H2. reflexivity.
-    - repeat (match goal with [ x : ra_agree |- _ ] => destruct x end); simpl in *; firstorder.
-    - repeat (match goal with [ x : ra_agree |- _ ] => destruct x end); simpl in *; firstorder.
-    - repeat (match goal with [ x : ra_agree |- _ ] => destruct x end); simpl in *; firstorder.
+    - ra_agree_destr; firstorder.
+    - ra_agree_destr; firstorder.
+    - ra_agree_destr; firstorder.
     - firstorder.
-    - repeat (match goal with [ x : ra_agree |- _ ] => destruct x end); simpl in *; firstorder.
+    - ra_agree_destr; firstorder.
   Qed.
+
+  (* We also have a metric *)
+  Context {mT: metric T}.
+
+  Definition ra_agree_dist n :=
+    match n with
+    | O => fun _ _ => True
+    | S n => fun x y => match x, y with
+                        | ag_inj t1 v1, ag_inj t2 v2 => v1 == v2 /\ (v1 -> t1 = S n = t2)
+                        | ag_unit, ag_unit => True
+                        | _, _ => False
+                        end
+    end.
+
+  Global Program Instance ra_agree_metric : metric ra_agree := mkMetr ra_agree_dist.
+  Next Obligation.
+    repeat intro. destruct n as [|n]; first by auto.
+    ra_agree_destr; try firstorder.
+    - rewrite -H1 -H2. assumption.
+    - rewrite H1 H2. assumption.
+  Qed.
+  Next Obligation.
+    repeat intro. split.
+    - intros Hall. ra_agree_destr; last exact I; try (specialize (Hall (S O)); now firstorder); [].
+      split.
+      + specialize (Hall (S O)); now firstorder.
+      + intro. eapply dist_refl. intro. specialize (Hall n). destruct n as [|n]; first by apply: dist_bound.
+        firstorder.
+    - repeat intro. destruct n as [|n]; first by auto. ra_agree_destr; try firstorder.
+      + rewrite H0. reflexivity.
+  Qed.
+  Next Obligation.
+    repeat intro. destruct n as [|n]; first by auto.
+    ra_agree_destr; try firstorder.
+  Qed.
+  Next Obligation.
+    repeat intro. destruct n as [|n]; first by auto.
+    ra_agree_destr; try firstorder; [].
+    rewrite H1 -H2. reflexivity.
+  Qed.
+  Next Obligation.
+    repeat intro. destruct n as [|n]; first by auto.
+    ra_agree_destr; try firstorder; [].
+    eapply dist_mono. assumption.
+  Qed.
+
+  (* And a complete metric! *)
+  Context {cmT: cmetric T}.
+
+  Program Definition unInj (σ : chain ra_agree) {σc : cchain σ} (HNE : σ (S O) <> ag_unit) : chain T :=
+    fun i => match σ (S i) with
+             | ag_unit => False_rect _ _
+             | ag_inj t v => t
+             end.
+  Next Obligation.
+    specialize (σc (S O) (S O) (S i)); rewrite <- Heq_anonymous in σc.
+    destruct (σ (S O)) as [ t v |]; last (contradiction HNE; reflexivity).
+    apply σc; omega.
+  Qed.
+
+  Instance unInj_c (σ : chain ra_agree) {σc : cchain σ} HNE : cchain (unInj σ HNE).
+  Proof.
+    (* This does NOT hold!
+    intros [| k] n m HLE1 HLE2; [apply dist_bound |]; unfold unSome.
+    generalize (@eq_refl _ (σ (S n))); pattern (σ (S n)) at 1 3.
+    destruct (σ (S n)) as [v |]; simpl; intros EQn.
+    - generalize (@eq_refl _ (σ (S m))); pattern (σ (S m)) at 1 3.
+      destruct (σ (S m)) as [v' |]; simpl; intros EQm.
+      + specialize (σc (S k) (S n) (S m)); rewrite <- EQm, <- EQn in σc.
+        apply σc; auto with arith.
+      + exfalso; specialize (σc 1 1 (S m)); rewrite <- EQm in σc.
+        destruct (σ 1) as [v' |]; [contradiction σc; auto with arith | contradiction HNE; reflexivity].
+    - exfalso; specialize (σc 1 1 (S n)); rewrite <- EQn in σc.
+      destruct (σ 1) as [v |]; [contradiction σc; auto with arith | contradiction HNE; reflexivity].*)
+  Admitted.
+
+  Program Definition option_compl (σ : chain ra_agree) {σc : cchain σ} :=
+    match σ (S O) with
+      | ag_unit => ag_unit
+      | ag_inj t v => ag_inj (compl (unInj σ _)) v
+    end.
+
+  (*
+  Global Program Instance option_cmt : cmetric (option T) := mkCMetr option_compl.
+  Next Obligation.
+    intros [| n]; [exists 0; intros; apply dist_bound | unfold option_compl].
+    generalize (@eq_refl _ (σ 1)) as EQ1; pattern (σ 1) at 1 3; destruct (σ 1) as [v |]; intros.
+    - assert (HT := conv_cauchy (unSome σ (option_compl_obligation_1 _ _ _ EQ1)) (S n)).
+      destruct HT as [k HT]; exists (max k (S n)); intros.
+      destruct (σ i) as [vi |] eqn: EQi; [unfold dist; simpl; rewrite (HT i) by eauto with arith | exfalso].
+      + unfold unSome; generalize (@eq_refl _ (σ (S i))); pattern (σ (S i)) at 1 3.
+        destruct (σ (S i)) as [vsi |]; intros EQsi; clear HT; [| exfalso].
+        * assert (HT : S n <= i) by eauto with arith.
+          specialize (σc (S n) (S i) i); rewrite EQi, <- EQsi in σc.
+          apply σc; auto with arith.
+        * specialize (σc 1 1 (S i)); rewrite <- EQ1, <- EQsi in σc.
+          apply σc; auto with arith.
+      + clear HT; specialize (σc 1 1 i); rewrite <- EQ1, EQi in σc.
+        apply σc; auto with arith.
+        rewrite <- HLe, <- Max.le_max_r; auto with arith.
+    - exists 1; intros.
+      destruct (σ i) as [vi |] eqn: EQi; [| reflexivity].
+      specialize (σc 1 1 i); rewrite <- EQ1, EQi in σc.
+      apply σc; auto with arith.
+  Qed.*)
+    
 
 End Agreement.
 

@@ -23,7 +23,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     (** Invariants **)
     Definition invP i P w : UPred res :=
-      intEq (w i) (Some (ı' P)) w.
+      intEq (w i) (Some (ı' (halved P))) w.
     Program Definition inv i : Props -n> Props :=
       n[(fun P => m[(invP i P)])].
     Next Obligation.
@@ -41,7 +41,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Qed.
     Next Obligation.
       intros p1 p2 EQp w; unfold invP.
-      cut ((w i === Some (ı' p1)) = n = (w i === Some (ı' p2))).
+      cut ((w i === Some (ı' (halved p1))) = n = (w i === Some (ı' (halved p2)))).
       { intros Heq. now eapply Heq. }
       eapply met_morph_nonexp.
       now eapply dist_mono, (met_morph_nonexp ı').
@@ -120,7 +120,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
                       /\ forall i (Hm : m i),
                            (i ∈ dom rs <-> i ∈ dom w) /\
                            forall π ri (HLw : w i == Some π) (HLrs : rs i == Some ri),
-                             ı π w n ri) _).
+                             (unhalved (ı π)) w n ri) _).
     Next Obligation.
       intros n1 n2 _ _ HLe _ [rs [HLS HRS] ]. exists rs; split; [assumption|].
       setoid_rewrite HLe; eassumption.
@@ -146,15 +146,16 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         intros; destruct (HM _ Hm) as [_ HR]; clear HE HM Hm.
         assert (EQπ := EQw i); rewrite-> HLw in EQπ; clear HLw.
         destruct (w1 i) as [π' |]; [| contradiction]; do 3 red in EQπ.
-        apply ı in EQπ; apply EQπ; [now auto with arith |].
-        apply (met_morph_nonexp (ı π')) in EQw; apply EQw; [omega |].
+        apply ı in EQπ. apply halve_eq in EQπ.
+        apply EQπ; [now auto with arith |].
+        apply (met_morph_nonexp (unhalved (ı π'))) in EQw; apply EQw; [omega |].
         apply HR; [reflexivity | assumption].
       - split; [assumption | split; [rewrite (domeq EQw); apply HM, Hm |] ].
         intros; destruct (HM _ Hm) as [_ HR]; clear HE HM Hm.
         assert (EQπ := EQw i); rewrite-> HLw in EQπ; clear HLw.
-        destruct (w2 i) as [π' |]; [| contradiction]; do 3 red in EQπ.
-        apply ı in EQπ; apply EQπ; [now auto with arith |].
-        apply (met_morph_nonexp (ı π')) in EQw; apply EQw; [omega |].
+        destruct (w2 i) as [π' |]; [| contradiction]. do 3 red in EQπ.
+        apply ı in EQπ. apply halve_eq in EQπ. apply EQπ; [now auto with arith |].
+        apply (met_morph_nonexp (unhalved (ı π'))) in EQw; apply EQw; [omega |].
         apply HR; [reflexivity | assumption].
     Qed.
 

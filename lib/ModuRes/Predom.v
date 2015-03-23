@@ -1,6 +1,5 @@
 Require Import ssreflect.
-Require Export Coq.Program.Program.
-Require Import CSetoid.
+Require Export CSetoid.
 
 Generalizable Variables T U V W.
 

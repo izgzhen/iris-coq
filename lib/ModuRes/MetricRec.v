@@ -266,7 +266,7 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
       Proof.
         induction k; intros; simpl in *.
         + rewrite DIter_coerce_simpl, tid_left, !tid_right; reflexivity.
-        + rewrite IHk at 1. rewrite <- !tcomp_assoc. clear IHk.
+        + rewrite IHk at 1. rewrite <- 4!tcomp_assoc. clear IHk.
           do 2 (apply equiv_morph; [reflexivity |]).
           rewrite (tow_morphs_coerce _ _ (plus_n_Sm _ _)).
           rewrite <- tcomp_assoc, DIter_coerce_comp.
@@ -279,9 +279,9 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
       Proof.
         induction k; intros; simpl in *.
         + rewrite DIter_coerce_simpl, !tid_right, tid_left; reflexivity.
-        + rewrite (IHk m), !tcomp_assoc; clear IHk.
+        + rewrite (IHk m), 2!tcomp_assoc; clear IHk.
           rewrite (tow_morphsI_coerce _ _ (plus_n_Sm _ _)).
-          rewrite !tcomp_assoc, DIter_coerce_comp.
+          rewrite 3!tcomp_assoc, DIter_coerce_comp.
           rewrite DIter_coerce_simpl, tid_left; reflexivity.
       Qed.
 
@@ -294,7 +294,7 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
         + destruct k; [contradict HEq; omega |].
           assert (HT : k + n = m + n) by omega.
           simpl; rewrite (IHm _ _ HT) at 1; clear IHm.
-          rewrite !tcomp_assoc. apply equiv_morph; [| reflexivity].
+          rewrite 2!tcomp_assoc. apply equiv_morph; [| reflexivity].
           simpl in HEq; generalize HT HEq; rewrite HT; clear HEq HT; intros HEq HT.
           rewrite !DIter_coerce_simpl, tid_left, tid_right; reflexivity.
       Qed.
@@ -308,7 +308,7 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
         + destruct k; [contradict HEq; omega |].
           assert (HT : m + n = k + n) by omega.
           simpl; rewrite (IHm _ _ HT) at 1; clear IHm.
-          rewrite <- !tcomp_assoc. apply equiv_morph; [reflexivity |].
+          rewrite <- 2!tcomp_assoc. apply equiv_morph; [reflexivity |].
           simpl in HEq; generalize HT HEq; rewrite HT; clear HEq HT; intros HEq HT.
           rewrite !DIter_coerce_simpl, tid_left, tid_right; reflexivity.
       Qed.
@@ -321,11 +321,11 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
         + destruct (lt_eq_lt_dec n (S m)) as [ [HLtS | HC ] | HC]; try (contradict HC; omega).
           assert (HEq' : S (m - n) + n = S m - n + n) by omega.
           rewrite (Injection_nm_coerce _ _ _ HEq').
-          simpl; rewrite !tcomp_assoc.
+          simpl; rewrite 3!tcomp_assoc.
           apply equiv_morph; [| reflexivity].
           rewrite (tow_morphs_coerce _ _ (eq_sym (lt_plus_minus HLt))).
           do 2 rewrite <- tcomp_assoc with (f := DIter_coerce _ ∘ tow_morphs _ _).
-          rewrite !DIter_coerce_comp.
+          rewrite 2!DIter_coerce_comp.
           rewrite DIter_coerce_simpl, tid_right, <- tcomp_assoc, @tow_retract, tid_right; reflexivity.
         + destruct (lt_eq_lt_dec n (S m)) as [[HLtS | HC ] | HC]; try (contradict HC; omega).
           subst; assert (HEq : 1 + m = S m - m + m) by omega.
@@ -339,9 +339,9 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
             rewrite tid_left, <- tcomp_assoc, DIter_coerce_comp.
             rewrite DIter_coerce_simpl, tid_right; reflexivity.
           * assert (HEq : n - m + m = S (n - S m) + m) by omega.
-            rewrite (Projection_nm_coerce _ _ _ HEq), Proj_left_comp, <- !tcomp_assoc.
+            rewrite (Projection_nm_coerce _ _ _ HEq), Proj_left_comp, <- 4!tcomp_assoc.
             do 2 (apply equiv_morph; [reflexivity |]).
-            rewrite !DIter_coerce_comp; remember (lt_plus_minus HGtS) as xx.
+            rewrite 2!DIter_coerce_comp; remember (lt_plus_minus HGtS) as xx.
             rewrite (D.UIP _ _ _ xx); reflexivity.
       Qed.
 
@@ -367,14 +367,14 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
         unfold t_nm; destruct (lt_eq_lt_dec n m) as [[HLt | HEq] | HGt].
         + destruct (lt_eq_lt_dec (S n) m) as [[HLtS | HEq] | HC]; try (contradict HC; omega).
           * assert (HEq : S (m - S n) + n = m - n + n) by omega.
-            rewrite (Injection_nm_coerce _ _ _ HEq), Inj_right_comp, !tcomp_assoc.
+            rewrite (Injection_nm_coerce _ _ _ HEq), Inj_right_comp, 3!tcomp_assoc.
             do 2 rewrite <- tcomp_assoc with (g := (Injection_nm _ _)) (h := (tow_morphsI _ _)).
             apply equiv_morph; [| reflexivity].
-            rewrite !DIter_coerce_comp; remember (Logic.eq_sym (lt_plus_minus HLtS)) as xx.
+            rewrite 2!DIter_coerce_comp; remember (Logic.eq_sym (lt_plus_minus HLtS)) as xx.
             rewrite (D.UIP _ _ _ xx); reflexivity.
           * subst; assert (HEq : 1 + n = S n - n + n) by omega.
             rewrite (Injection_nm_coerce _ _ _ HEq); simpl.
-            rewrite tid_right, !tcomp_assoc; apply equiv_morph; [| reflexivity].
+            rewrite tid_right, tcomp_assoc; apply equiv_morph; [| reflexivity].
             rewrite DIter_coerce_comp, !DIter_coerce_simpl; reflexivity.
         + destruct (lt_eq_lt_dec (S n) m) as [[HC | HC] | HGtS]; try (contradict HC; omega).
           subst; rewrite DIter_coerce_simpl; assert (HEq : S m - m + m = 1 + m) by omega.
@@ -385,8 +385,8 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
           assert (HEq : S n - m + m = S (n - m) + m) by omega.
           rewrite (Projection_nm_coerce _ _ _ HEq), <- (tcomp_assoc (Projection_nm _ _)),
           DIter_coerce_comp; simpl.
-          rewrite <- !tcomp_assoc; apply equiv_morph; [reflexivity |].
-          rewrite (tow_morphs_coerce _ _ (lt_plus_minus HGt)), <- !tcomp_assoc.
+          rewrite <- 2!tcomp_assoc; apply equiv_morph; [reflexivity |].
+          rewrite (tow_morphs_coerce _ _ (lt_plus_minus HGt)), <- 2!tcomp_assoc.
           rewrite (tcomp_assoc _ _ (tow_morphsI _ _)), DIter_coerce_comp.
           rewrite DIter_coerce_simpl, tid_left, tow_retract, tid_right; reflexivity.
       Qed.
@@ -566,8 +566,8 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
       rewrite Hk; simpl morph; clear Hk; revert m; rewrite dist_refl.
       unfold chainPE, cutn; rewrite <- tcomp_assoc, coconeCom_l; [apply equiv_morph; [reflexivity |] | omega].
       rewrite t_nmProjection, t_nmEmbedding, <- morph_tnm; simpl.
-      rewrite <- !tcomp_assoc; apply equiv_morph; [reflexivity |].
-      rewrite tcomp_assoc, fmorph_comp, !emp; reflexivity.
+      rewrite <- tcomp_assoc; apply equiv_morph; [reflexivity |].
+      rewrite tcomp_assoc, fmorph_comp, 2!emp; reflexivity.
     Qed.
 
     Lemma CoLimitUnique (C : CoCone DTower) (h : cocone_t _ ECoCone -t> cocone_t _ C)
@@ -600,9 +600,9 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
         rewrite (nonexp_cont2 _ _ _).
         rewrite (umet_complete_ext _ (chainPE _ (AllLimits DTower) DCoCone)), EP_id, tid_left; [reflexivity | intros i; simpl].
         unfold binaryLimit, chainPE; simpl.
-        rewrite !tcomp_assoc, <- (tcomp_assoc (Embeddings i ∘ Projection i)).
+        rewrite 3!tcomp_assoc, <- (tcomp_assoc (Embeddings i ∘ Projection i)).
         simpl; rewrite fmorph_comp.
-        rewrite !retract_EP, fmorph_id, tid_right, <- (tcomp_assoc (Embeddings i)).
+        rewrite 2!retract_EP, fmorph_id, tid_right, <- (tcomp_assoc (Embeddings i)).
         rewrite retract_IP, tid_right; reflexivity.
       + symmetry; apply (colim_unique _ DCoLimit DCoLimit); intros n; rewrite tid_left; reflexivity.
     Qed.

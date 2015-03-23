@@ -63,16 +63,17 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
       the space of worlds. We'll store the actual solutions in the
       worlds, and use the action of the FPropO on them as the space we
       normally work with. *)
-  Definition PreProp := DInfO.
-  Definition Props   := FProp PreProp.
-  Definition Wld     := (nat -f> PreProp).
-
-  (* Define an order on PreProp. *)
+  Definition PreProp : Type := DInfO.
+  Instance PProp_t  : Setoid PreProp := _.
+  Instance PProp_m  : metric PreProp := _.
+  Instance PProp_cm : cmetric PreProp := _.
   Instance PProp_preo: preoType PreProp   := disc_preo PreProp.
   Instance PProp_pcm : pcmType PreProp    := disc_pcm PreProp.
   Instance PProp_ext : extensible PreProp := disc_ext PreProp.
 
-  (* Give names to the things for Props, so the terms can get shorter. *)
+  (* Define worlds and propositions *)
+  Definition Wld     := (nat -f> PreProp).
+  Definition Props   := FProp PreProp.
   Instance Props_ty   : Setoid Props     := _.
   Instance Props_m    : metric Props     := _.
   Instance Props_cm   : cmetric Props    := _.
@@ -80,8 +81,8 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
   Instance Props_pcm  : pcmType Props    := _.
 
   (* Establish the isomorphism *)
-  Definition ı  : PreProp -t> halve (cmfromType Props) := Unfold.
-  Definition ı' : halve (cmfromType Props) -t> PreProp := Fold.
+  Definition ı  : DInfO -t> halveCM (cmfromType Props) := Unfold.
+  Definition ı' : halveCM (cmfromType Props) -t> DInfO := Fold.
 
   Lemma iso P : ı' (ı P) == P.
   Proof. apply (FU_id P). Qed.

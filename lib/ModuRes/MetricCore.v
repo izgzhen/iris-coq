@@ -379,6 +379,97 @@ End MCompP.
 
 Arguments umid T {eqT mT}.
 
+Section Halving.
+  Context {T: Type} `{cmT : cmetric T}.
+
+  CoInductive halve := halved: T -> halve.
+  Definition unhalved (h: halve) := match h with halved t => t end.
+
+  Definition dist_halve n :=
+    match n with
+      | O  => fun _ _ => True
+      | S n => fun h1 h2 => match h1, h2 with halved t1, halved t2 => dist n t1 t2 end
+    end.
+
+  Global Program Instance halve_ty : Setoid halve :=
+    mkType (fun h1 h2 =>  match h1, h2 with halved t1, halved t2 => t1 == t2 end).
+  Next Obligation.
+    split; repeat intro;
+      repeat (match goal with [ x : halve |- _ ] => destruct x end).
+    - reflexivity.
+    - symmetry; assumption.
+    - etransitivity; eassumption.
+  Qed.
+
+  Global Instance unhalve_proper : Proper (equiv ==> equiv) unhalved.
+  Proof.
+    repeat intro. repeat (match goal with [ x : halve |- _ ] => destruct x end).
+    simpl in *. assumption.
+  Qed.
+
+  Global Program Instance halve_metr : metric halve := mkMetr dist_halve.
+  Next Obligation.
+    destruct n; [now resp_set | repeat intro ];
+      repeat (match goal with [ x : halve |- _ ] => destruct x end).
+    simpl. rewrite H, H0. reflexivity.
+  Qed.
+  Next Obligation.
+    split; intros HEq.
+    - repeat (match goal with [ x : halve |- _ ] => destruct x end).
+      apply dist_refl; intros n; apply (HEq (S n)).
+    - intros [| n]; [exact I |]. simpl.
+      repeat (match goal with [ x : halve |- _ ] => destruct x end).
+      revert n; apply dist_refl, HEq.
+  Qed.
+  Next Obligation.
+    intros t1 t2 HEq; destruct n; [exact I |].
+    repeat (match goal with [ x : halve |- _ ] => destruct x end). simpl in *.
+    symmetry; apply HEq.
+  Qed.
+  Next Obligation.
+    intros t1 t2 t3 HEq12 HEq23; destruct n; [exact I |].
+    repeat (match goal with [ x : halve |- _ ] => destruct x end). simpl in *.
+    etransitivity; [apply HEq12 | apply HEq23].
+  Qed.
+  Next Obligation.
+    destruct n; [exact I | ].
+    repeat (match goal with [ x : halve |- _ ] => destruct x end). simpl in *.
+    apply dist_mono, H.
+  Qed.
+
+  Instance halve_chain (σ : chain halve) {σc : cchain σ} : cchain (fun n => unhalved (σ (S n))).
+  Proof.
+    unfold cchain; intros.
+    apply le_n_S in HLei. apply le_n_S in HLej.
+    specialize (chain_cauchy _ σc (S n) (S i) (S j)). simpl. intros Hcauchy.
+    destruct (σ (S i)), (σ (S j)). assumption.
+  Qed.
+
+  Definition compl_halve (σ : chain halve) (σc : cchain σ) : halve :=
+    halved (compl (fun n => unhalved (σ (S n))) (σc := halve_chain σ)).
+
+  Program Definition halve_cm : cmetric halve := mkCMetr compl_halve.
+  Next Obligation.
+    intros [| n]; [exists 0; intros; exact I |].
+    destruct (conv_cauchy _ (σc := halve_chain σ) n) as [m HCon].
+    exists (S m); intros [| i] HLe; [inversion HLe |]. unfold compl_halve.
+    apply le_S_n in HLe.
+    specialize (HCon i _). destruct (σ (S i)). simpl. assumption.
+  Qed.
+
+  Global Instance halve_eq n: Proper (dist (S n) ==> dist n) unhalved.
+  Proof.
+    repeat intro. repeat (match goal with [ x : halve |- _ ] => destruct x end). simpl. assumption.
+  Qed.
+End Halving.
+Arguments halve : clear implicits.
+Ltac unhalve := repeat match goal with
+                       | x: halve _ |- _ => destruct x as [x]
+                       | H: halved _ == halved _ |- _ => simpl in H
+                       | H: halved _ = _ = halved _ |- _ => simpl in H
+                       end.
+
+
 (** Single element space and the distance on it. *)
 Program Instance unit_metric : metric unit :=
   mkMetr (fun _ _ _ => True).
@@ -508,7 +599,7 @@ End ChainApps.
 Section NonexpCMetric.
   Context `{cT : cmetric T} `{cU : cmetric U}.
 
-  (** THe set of non-expansive morphisms between two complete metric spaces is again a complete metric space. *)
+  (** The set of non-expansive morphisms between two complete metric spaces is again a complete metric space. *)
   Global Program Instance nonexp_cmetric : cmetric (T -n> U) | 5 :=
     mkCMetr fun_lub.
   Next Obligation.
