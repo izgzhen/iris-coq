@@ -964,7 +964,7 @@ Qed.
   
   Section Compose.
     Context {V : Type} `{ev : Setoid V} (op : V -> V -> V).
-    Implicit Type (f : K -f> V) (k : K) (v : V).
+    Implicit Type (f g : K -f> V) (k : K) (v : V).
     
     Definition upd (v0 : option V) v :=
             match v0 with Some v' => op v' v | _ => v end.
@@ -1021,44 +1021,53 @@ Qed.
         eapply Lt_trans; [ eassumption | by apply IHlg ].
     Qed.
 
-    Lemma fdComposeP (DProper : Proper (equiv ==> equiv ==> equiv) op) f g k v: 
+    Lemma fin_ind : 
+      forall (P : K -f> V -> Prop),
+       P fdEmpty ->
+       (forall k v l (SSf : StrictSorted (k :: map fst l)), 
+          let f := mkFD _ (SS_tail _ _ SSf) in
+          let f' := mkFD ((k,v) :: l) SSf in
+              P f -> P f') ->
+       forall f : K -f> V, P f.
+    Proof.
+      move => P P0 IH [f].
+      induction f as [|[k v] f] => SSf; first by rewrite (eq_SS _ SSf SS_nil). 
+      apply: (IH _ _ _ SSf). exact: IHf.
+    Qed.
+    
+
+    Context {DProper : Proper (equiv ==> equiv ==> equiv) op}.
+    
+    Lemma fdComposeP f g k v: 
       fdCompose f g k == Some v
     <-> ((exists v1 v2, op v1 v2 == v /\ f k == Some v1 /\ g k == Some v2)
         \/ (f k == Some v /\ g k == None) 
         \/ (f k == None /\ g k == Some v)).
     Proof.
-     destruct f as [lf SSf], g as [lg SSg].
-     revert lf SSf.
-     induction lg; intros.
+     revert g f. elim/fin_ind => [f|k0 v0 l SSg g g' IHg f].
       - rewrite fdCompose_equation. simpl. 
         split; intros.
         + right. left; split; now eauto.
-        + destruct H as [[v1 [v2 [Hv [Hf Hg]]]]|[[Hf Hg]|[Hf Hg]]].
-          * exfalso; by simpl in Hg.
-          * exact Hf. 
-          * exfalso; by simpl in Hg.
-      - rewrite fdCompose_equation. destruct a; unfold fst, snd, findom_t. 
-        simpl in SSg, SSf.
-        rewrite fdRemove_head.
+        + by case : H => [[v1 [v2 [Hv [Hf []]]]]|[[Hf Hg //]|[Hf []]]].
+      - rewrite fdCompose_equation. 
+        simpl in SSg. simpl findom_t; red.
+        rewrite fdRemove_head; fold g. 
         split; intros.
-        + apply IHlg in H. clear IHlg.
-          destruct H as [[v1 [v2 [Hv [Hf Hg]]]]|[[Hf Hg]|[Hf Hg]]];
-            fold (fdUpdate k0 (upd (mkFD _ SSf k0) v0) (mkFD _ (SSf))) in Hf.
+        + case/IHg: H => [[v1 [v2 [Hv [Hf Hg]]]]|[[Hf Hg]|[Hf Hg]]];
+            fold (fdUpdate k0 (upd (f k0) v0) (f)) in Hf.
           * unfold findom_f, findom_t in *.
             assert (comp k0 k = Lt).
             { destruct (comp k0 k) eqn:C; auto.
-              - generalize (compat_compare k0 k). rewrite C; intros; subst. 
-                assert (In k (map fst lg)).
-                { change (In k (dom (mkFD _ (SS_tail _ _ SSg)))). apply fdLookup_in.
-                  exists v2. exact Hg. }
+              - generalize (compat_compare k0 k). rewrite C; intros. subst k.
+                assert (In k0 (map fst (findom_t g))).
+                { apply fdLookup_in. exists v2. exact Hg. }
                 exfalso. eapply StrictSorted_notin; last exact H; now eauto.
-              - assert (In k (map fst lg)).
-                { change (In k (dom (mkFD _ (SS_tail _ _ SSg)))). apply fdLookup_in.
-                  exists v2. exact Hg. }
+              - assert (In k (map fst (findom_t g))).
+                { apply fdLookup_in. exists v2. exact Hg. }
                 inversion SSg.
-                + assert (lg = []) by (destruct lg; eauto; discriminate H2).
-                  rewrite H0 in Hg. simpl in Hg. now auto.
-                + subst. rewrite <- H2 in H.
+                + assert (l = []) by (destruct l; eauto; discriminate H2).
+                  rewrite /= H0 in Hg. by destruct Hg. 
+                + subst. rewrite /= -H2 in H.
                   exfalso. eapply StrictSorted_lt_notin; last (now eauto); eauto.
                   eapply comp_Lt_lt. eapply Lt_trans; eauto.
                   eapply comp_lt_Lt. destruct (comp_Gt_gt _ _ C); split; now auto.
@@ -1066,11 +1075,11 @@ Qed.
             left. exists v1 v2; split; first now auto.
             split; last first.
             { simpl findom_lu. rewrite comp_flip_lg; now eauto. }
-            assert (fdUpdate k0 (upd (mkFD _ SSf k0) v0) (mkFD _ SSf) k == Some v1) by exact Hf.
+            assert (fdUpdate k0 (upd (f k0) v0) f k == Some v1) by exact Hf.
             rewrite fdUpdate_neq in H0; first now eauto.
             by eapply comp_Lt_lt.
           * destruct (XM k k0); subst.
-            { destruct (mkFD _ SSf k0) eqn:F;
+            { destruct (f k0) eqn:F;
                 rewrite fdUpdate_eq in Hf;
                 unfold upd in Hf.
               - left. exists v1 v0; split; first now eauto. split; eauto. reflexivity.
@@ -1091,12 +1100,12 @@ Qed.
             { unfold findom_f; simpl findom_lu. rewrite ->comp_flip_lg by auto. exact Hg. }
         + 
           destruct H as [[v1 [v2 [Hv [Hf Hg]]]]|[[Hf Hg]|[Hf Hg]]];
-          fold (fdUpdate k0 (upd (mkFD _ SSf k0) v0) (mkFD _ (SSf))) in *.
+          fold (fdUpdate k0 (upd (f k0) v0) f) in *.
           * unfold findom_f in Hg; simpl findom_lu in Hg. 
             destruct (comp k k0) eqn:C.
             { generalize (compat_compare k k0); rewrite C; intros; subst.
-              apply IHlg; clear IHlg. right. left.
-              fold (fdUpdate k0 (upd (mkFD _ SSf k0) v0) (mkFD _ (SSf))) in *.
+              apply IHg; right. left.
+              fold (fdUpdate k0 (upd (f k0) v0) f) in *.
               split.
               - rewrite fdUpdate_eq.
                 unfold upd. rewrite <- Hv. case: (_ k0) Hf. 
@@ -1106,13 +1115,13 @@ Qed.
               - apply fdLookup_notin. by apply StrictSorted_notin. 
             }
             { by destruct Hg. }
-            { apply IHlg; clear IHlg. left. exists v1 v2; split; auto.
+            { apply IHg; left. exists v1 v2; split; auto.
               split; last assumption. 
-              fold (fdUpdate k0 (upd (mkFD _ SSf k0) v0) (mkFD _ (SSf))) in *.
+              fold (fdUpdate k0 (upd (f k0) v0) f) in *.
               rewrite fdUpdate_neq; last by apply comp_Lt_lt, comp_flip_gl. assumption.
             }
-          * apply IHlg; clear IHlg. right. left.
-            fold (fdUpdate k0 (upd (mkFD _ SSf k0) v0) (mkFD _ (SSf))) in *.
+          * apply IHg; right. left.
+            fold (fdUpdate k0 (upd (f k0) v0) f) in *.
             unfold findom_f in Hg; simpl findom_lu in Hg.
             destruct (comp k k0) eqn:C.
             { by destruct Hg. }
@@ -1127,8 +1136,8 @@ Qed.
           * unfold findom_f in Hg; simpl findom_lu in Hg. 
             destruct (comp k k0) eqn:C.
             { generalize (compat_compare k k0); rewrite C; intros; subst.
-              apply IHlg; clear IHlg. right. left. 
-              fold (fdUpdate k0 (upd (mkFD _ SSf k0) v0) (mkFD _ (SSf))) in *.
+              apply IHg; right. left. 
+              fold (fdUpdate k0 (upd (f k0) v0) f) in *.
               rewrite fdUpdate_eq. split.
               - unfold upd. rewrite <- Hg. case: (_ k0) Hf. 
                 + intros. simpl in Hf. by destruct Hf.
@@ -1136,14 +1145,14 @@ Qed.
               - apply fdLookup_notin. by apply StrictSorted_notin. 
             }
             { by destruct Hg. }
-            { apply IHlg; clear IHlg. right. right.
-              fold (fdUpdate k0 (upd (mkFD _ SSf k0) v0) (mkFD _ (SSf))) in *.
+            { apply IHg; right. right.
+              fold (fdUpdate k0 (upd (f k0) v0) f) in *.
               split; last assumption.
               rewrite fdUpdate_neq; last by apply comp_Lt_lt, comp_flip_gl. assumption.
             }
     Qed.
     
-    Lemma fdComposePN (DProper : Proper (equiv ==> equiv ==> equiv) op) f g k: 
+    Lemma fdComposePN f g k: 
       fdCompose f g k == None
     <-> (f k == None /\ g k == None).
     Proof.
@@ -1176,8 +1185,65 @@ Qed.
         + rewrite ->Hg in H2. by destruct H2.
     Qed.
         
+    Lemma fdCompose_sym (op_sym : forall v1 v2, op v1 v2 == op v2 v1) f g: 
+      fdCompose f g == fdCompose g f.
+    Proof.
+      move => x.
+      apply opt_eq_iff => v.
+      split; move/fdComposeP => [[v1 [v2 [Hv [H1 H2]]]]|[[H1 H2]|[H1 H2]]]; apply/fdComposeP;
+      try rewrite -> op_sym in Hv; eauto 10.
+    Qed.
+    
+    Lemma fdCompose_PL f g x v:
+      f x == Some v -> ((exists v2, fdCompose f g x == Some (op v v2) /\ g x == Some v2) 
+                          \/ fdCompose f g x == Some v /\ g x == None).
+    Proof.
+      move => Hf. case Hg: (g x) => [v2|]; move/equivR in Hg.
+      - left; eexists; split; last reflexivity. apply fdComposeP; left. do 2!eexists; repeat split; eauto; []; reflexivity. 
+      - right; split; last reflexivity.
+        apply fdComposeP; auto. 
+    Qed.
+    
+    Lemma fdCompose_PR f g x v:
+      g x == Some v -> ((exists v1, fdCompose f g x == Some (op v1 v) /\ f x == Some v1) 
+                          \/ fdCompose f g x == Some v /\ f x == None).
+    Proof.
+      move => Hf. case Hg: (f x) => [v2|]; move/equivR in Hg.
+      - left; eexists; split; last reflexivity. apply fdComposeP; left. do 2!eexists; repeat split; eauto; []; reflexivity. 
+      - right; split; last reflexivity.
+        apply fdComposeP; auto. 
+    Qed.
 
-          
+    Lemma fdCompose_update_neq f g k v x (NEq : k <> x):
+      fdCompose (fdUpdate k v f) g x == fdCompose f g x. 
+    Proof.
+      apply opt_eq_iff => v0.
+      split => /fdComposeP => H; apply fdComposeP; move: H; rewrite -> fdUpdate_neq by auto; by []. 
+    Qed.
+    
+    Lemma fdCompose_update_eq f g k v:
+      fdCompose g (fdUpdate k v f) k == Some (upd (g k) v). 
+    Proof.
+      apply fdComposeP. rewrite fdUpdate_eq. case : (g k) => [vg|].  
+      - left. simpl. do 2!eexists; repeat split; reflexivity.
+      - right; right. split; first now auto. reflexivity.
+    Qed.
+    
+    Lemma fdCompose_remove_neq f g k x (NEq : k <> x):
+      fdCompose (fdRemove k f) g x == fdCompose f g x. 
+    Proof.
+      apply opt_eq_iff => v0.
+      split => /fdComposeP => H; apply fdComposeP; move: H; rewrite -> fdRemove_neq by auto; by []. 
+    Qed.
+    
+    Lemma fdCompose_remove_eq f g k:
+      fdCompose (fdRemove k f) g k == g k. 
+    Proof.
+      case Hg : (g k) => [vg|].
+      - apply fdComposeP. rewrite fdRemove_eq. right; right; split; [reflexivity|exact/equivR].
+      - apply fdComposePN. rewrite fdRemove_eq. split; [reflexivity|exact/equivR].
+    Qed.
+
   End Compose.
 
 End FinDom.
@@ -1185,7 +1251,7 @@ End FinDom.
 Arguments fdMap {K cT ord equ preo ord_part compK U V eqT mT cmT pTA pcmU eqT0 mT0 cmT0 pTA0 cmV} _.
 
 Section RA.
-  Context {I : Type} {S : Type} `{comparable I} `{RA S}.
+  Context {I : Type} {S : Type} `{CI : comparable I} `{RAS : RA S}.
   Implicit Type (i : I) (s : S) (f g : I -f> S).
 
   Local Open Scope ra_scope.
@@ -1195,8 +1261,11 @@ Section RA.
   Global Instance ra_op_finprod : RA_op (I -f> S) := fdCompose (ra_op).
   Global Instance ra_valid_finprod : RA_valid (I -f> S) := fun f => forall i s, f i == Some s -> ra_valid s.
   
-  Definition fdComposeP' := fdComposeP ra_op (ra_op_proper).
-  Definition fdComposePN' := fdComposePN ra_op (ra_op_proper).
+  
+  Definition fdComposeP' := fdComposeP ra_op (DProper := ra_op_proper).
+  Definition fdComposePN' := fdComposePN ra_op (DProper := ra_op_proper).
+  Definition fdCompose_sym' := fdCompose_sym ra_op (DProper := ra_op_proper) (ra_op_comm).
+
 
   Global Instance ra_finprod : RA (I -f> S).
   Proof.
@@ -1205,15 +1274,15 @@ Section RA.
       eapply opt_eq_iff => v.
       split => /(fdComposeP').
       + move => [[v1 [v2 [Hv [Hx Hx0]]]]|[[Hx Hx0]|[Hx Hx0]]];
-        apply/fdComposeP'.
-        * left. exists v1 v2; split; first (now auto); split; by rewrite -?H1 -?H2.
-        * right. left. split; by rewrite -?H1 -?H2.
-        * right. right. split; by rewrite -?H1 -?H2.
+        apply fdComposeP'.
+        * left. exists v1 v2; split; first (now auto); split; by rewrite -?H -?H0.
+        * right. left. split; by rewrite -?H -?H0.
+        * right. right. split; by rewrite -?H -?H0.
       + move => [[v1 [v2 [Hv [Hy Hy0]]]]|[[Hy Hy0]|[Hy Hy0]]];
         apply fdComposeP'.
-        * left. exists v1 v2; split; first (now auto); split; by rewrite ?H1 ?H2.
-        * right. left. split; by rewrite ?H1 ?H2.
-        * right. right. split; by rewrite ?H1 ?H2.
+        * left. exists v1 v2; split; first (now auto); split; by rewrite ?H ?H0.
+        * right. left. split; by rewrite ?H ?H0.
+        * right. right. split; by rewrite ?H ?H0.
     - unfold ra_op, ra_op_finprod.
       eapply opt_eq_iff => v.
       split => /(fdComposeP').
@@ -1267,25 +1336,124 @@ Section RA.
         apply fdComposeP'; try (now eauto); 
         rewrite -> ra_op_comm in Hv; left; do 2!eexists; repeat split; eauto.
     - cut (forall v, (1 · t) k == v <-> t k == v).
-      + intros. specialize (H1 ((1 · t) k)). symmetry. apply H1. reflexivity.
+      + intros. specialize (H ((1 · t) k)). symmetry. apply H. reflexivity.
       + move => [v|].
         * split; [move => /fdComposeP'; move => [[v1 [v2 [Hv [[] //]]]]|[[[] //]|[H1 H2 //]]]|].
           move=>Ht. apply fdComposeP'. by right; right.
         * split; [move/fdComposePN' => [] //|move => ?; apply fdComposePN'; split; now auto].
-    - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H1 // -?H1.
-    - by destruct H1.
+    - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H // -?H.
+    - by destruct H.
     - case Hi: (t2 i) => [v|]; apply equivR in Hi. 
-      + apply (ra_op_valid (t2 := v)). apply (H1 i), fdComposeP'. 
+      + apply (ra_op_valid (t2 := v)). apply (H i), fdComposeP'. 
         left; do 2!eexists; repeat split; eauto. reflexivity.
-      + apply (H1 i). eapply fdComposeP'. by eauto.
+      + apply (H i). eapply fdComposeP'. by eauto.
   Qed.
 
   (* The RA order on finmaps is the same as the fpfun order over the RA order *)
   Lemma ra_pord_iff_ext_pord {f g}:
     pord (preoType:=pord_ra) f g <-> pord (preoType:=extOrd_preo) f g.
   Proof.
-    (* FIXME show this *) admit.
+    split.
+    - move => [h Hhf] x. specialize (Hhf x). 
+      revert g f h x Hhf; apply : fin_ind => [f|k v l SSg g g' IHg f] h x Hhf.
+      + case Hfx: (f x) => //=. 
+        assert (f x = None).
+        { case Hhfx : ((h · f) x).
+          - move/equivR in Hhfx. by rewrite -> Hhf in Hhfx. 
+          - move/equivR/fdComposePN' : Hhfx => []. by rewrite Hfx.
+        }
+        by rewrite H in Hfx.
+      + case : (XM x k) Hhf => [-> <-|Hxk Hx].
+        * case Hfk: (f k) => [a|//]; move/equivR in Hfk.
+          { case (fdCompose_PR _ h _ _ _ Hfk) => [[v1 [-> _]]|[-> _]].
+            - exists v1; reflexivity.
+            - reflexivity. }
+        * assert (Hg'x : g' x == None \/ g' x == g x).
+          { unfold findom_f. simpl findom_lu. 
+            case Cxk : (comp x k).
+            - generalize (compat_compare x k). rewrite Cxk => ?; by subst x.
+            - left; now auto.
+            - right; now auto.
+          } 
+          case: Hg'x => [|Hg'x].
+          { rewrite <- Hx. move/fdComposePN' => [_ ->]. reflexivity. }
+          { rewrite -> Hg'x in *. eapply IHg. exact: Hx. }
+    - revert g f.
+      apply : fin_ind => [f|k v l SSg g g' IHg f].
+      + move => H. eexists fdEmpty => x. apply fdComposePN'; split; first now auto.
+        move: (H x). by case (f x).
+      + move => H. 
+        case Hfk : (f k) => [vf|].
+        * have/IHg IH : (fdRemove k f ⊑ g).
+          { move => x; fold g; case Cxk : (comp x k).
+            - generalize (compat_compare x k); rewrite Cxk => ->. by rewrite fdRemove_eq.
+            - rewrite fdRemove_neq; last by apply comp_Gt_gt, comp_flip_lg.
+              move: (H x). unfold findom_f at 2; simpl findom_lu. rewrite Cxk.
+              by case (f x).
+            - rewrite fdRemove_neq; last by apply comp_Lt_lt, comp_flip_gl.
+              move: (H x). unfold findom_f at 2; simpl findom_lu. by rewrite Cxk.
+          } 
+          move: (H k); rewrite Hfk. case Hgk' : (g' k) => [vg|//]. move => [vr Hvr].
+          rewrite /findom_f [findom_lu _ k]/= FU /= in Hgk'. move/equivR => /= in Hgk'. 
+          rewrite <- Hgk' in Hvr. clear Hgk'.
+          move : IH => [h Hhf].
+          exists (fdUpdate k vr h) => x.
+          apply opt_eq_iff => vx. 
+          split.
+          { case Cxk : (comp x k).
+            - generalize (compat_compare x k); rewrite Cxk; move => E; subst x.
+              rewrite (fdCompose_sym' _ f k) fdCompose_update_eq Hfk [_ == _]/= ra_op_comm Hvr => <-.
+              rewrite /findom_f [findom_lu _ k]/= FU. reflexivity.
+            - rewrite fdCompose_update_neq; last by apply comp_Gt_gt, comp_flip_lg.
+              move : (Hhf x).
+              rewrite (fdCompose_sym' _ (fdRemove k _) x) fdCompose_remove_neq ?(fdCompose_sym' _ h) 
+              => [-> Hg|];
+                last by apply comp_Gt_gt, comp_flip_lg.
+              exfalso. eapply StrictSorted_lt_notin; [apply comp_Lt_lt; eassumption|eassumption|right].
+              change (x ∈ dom g). apply fdLookup_in. by eauto.
+            - rewrite fdCompose_update_neq; last by apply comp_Lt_lt, comp_flip_gl.
+              move : (Hhf x).
+              rewrite (fdCompose_sym' _ (fdRemove k _) x) fdCompose_remove_neq ?(fdCompose_sym' _ h) 
+              => [-> Hg|];
+                last by apply comp_Lt_lt, comp_flip_gl.
+              by rewrite /findom_f [findom_lu _ x]/= Cxk.
+          } 
+          { 
+            rewrite [g' x]/findom_f [findom_lu _ x]/=.
+            case Cxk : (comp x k) => [|//|].
+            + generalize (compat_compare x k); rewrite Cxk; move => E; subst x.
+              move => Hvx. rewrite /= in Hvx. rewrite <- Hvx.
+              apply fdComposeP'. left; exists vr vf; repeat split; [now auto| |exact/equivR].
+              rewrite fdUpdate_eq. reflexivity.
+            + rewrite -/(g x) -Hhf.
+              have Hhu : (forall v0, h x == v0 -> fdUpdate k vr h x == v0).
+              { move => v0. rewrite fdUpdate_neq; first by []; by apply comp_Lt_lt, comp_flip_gl. }
+              rewrite (fdCompose_sym' h _ x) fdCompose_remove_neq ?fdCompose_update_neq
+                     ?(fdCompose_sym' _ h x) => //; by apply comp_Lt_lt, comp_flip_gl.
+          }
+       * have/IHg IH : (f ⊑ g).
+         { move => x. move: (H x). rewrite /(findom_f g') [findom_lu _ x]/=.
+           case Cxk : (comp x k) => [||//].
+           + generalize (compat_compare x k); rewrite Cxk => E; subst x; by rewrite Hfk.
+           + by case (f x).
+         } 
+         move: IH => [h Hfg].
+         exists (fdUpdate k v h) => x.
+         case Cxk : (comp x k) => [||]; rewrite [g' x]/findom_f [findom_lu (findom_t g') x]/= Cxk.
+         { generalize (compat_compare x k); rewrite Cxk => E; subst x.
+           apply fdComposeP'. right; left; split; [rewrite fdUpdate_eq; reflexivity|exact/equivR].
+         }
+         { rewrite fdCompose_update_neq; last by apply comp_Gt_gt, comp_flip_lg. 
+           case Hhf : (_ x) => [vx|//].
+           exfalso. eapply StrictSorted_lt_notin.
+           - apply comp_Lt_lt; eassumption.
+           - eassumption.
+           - right. change (x ∈ dom g). apply fdLookup_in. eexists; now rewrite -Hfg Hhf.
+         } 
+         { rewrite fdCompose_update_neq; last by apply comp_Lt_lt, comp_flip_gl. 
+           exact: Hfg. }
   Qed.
+           
 
   (* Show that this preserved pcm-edness of S with the RA-order of S *)
   Section RA_PCM.
