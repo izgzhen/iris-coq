@@ -1,6 +1,6 @@
 Require Import Ssreflect.ssreflect Omega.
 Require Import core_lang masks world_prop iris_core iris_plog.
-Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr.
+Require Import ModuRes.RA ModuRes.UPred ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -58,9 +58,9 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Lemma preserve_wptp safe m n k tp tp' σ σ' w rs φs
           (HSN  : stepn n (tp, σ) (tp', σ'))
           (HWTP : wptp safe m w (n + S k) tp rs φs)
-          (HE   : wsat σ m (comp_list rs) w @ n + S k) :
+          (HE   : wsat σ m (comp_list rs) w (n + S k)) :
       exists w' rs' φs',
-        w ⊑ w' /\ wptp safe m w' (S k) tp' rs' (φs ++ φs') /\ wsat σ' m (comp_list rs') w' @ S k.
+        w ⊑ w' /\ wptp safe m w' (S k) tp' rs' (φs ++ φs') /\ wsat σ' m (comp_list rs') w' (S k).
     Proof.
       revert tp σ w rs  φs HSN HWTP HE. induction n; intros; inversion HSN; subst; clear HSN.
       (* no step is taken *)
@@ -116,9 +116,9 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
             (HT  : valid (ht safe m P e Q))
             (HSN : stepn n ([e], σ) (tp', σ'))
             (HP  : P w (n + S k) r)
-            (HE  : wsat σ m r w @ n + S k) :
+            (HE  : wsat σ m r w (n + S k)) :
       exists w' rs' φs',
-        w ⊑ w' /\ wptp safe m w' (S k) tp' rs' (Q :: φs') /\ wsat σ' m (comp_list rs') w' @ S k.
+        w ⊑ w' /\ wptp safe m w' (S k) tp' rs' (Q :: φs') /\ wsat σ' m (comp_list rs') w' (S k).
     Proof.
       edestruct preserve_wptp with (rs:=[r]) as [w' [rs' [φs' [HSW' [HSWTP' HSWS']]]]]; first eassumption.
       - specialize (HT w (n + S k) r). apply HT in HP; try reflexivity; [|now apply unit_min].
@@ -132,7 +132,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
             (HT  : valid (ht safe m (ownS σ) e Q))
             (HSN : steps ([e], σ) (tp', σ')):
       exists w' rs' φs',
-        wptp safe m w' (S k') tp' rs' (Q :: φs') /\ wsat σ' m (comp_list rs') w' @ S k'.
+        wptp safe m w' (S k') tp' rs' (Q :: φs') /\ wsat σ' m (comp_list rs') w' (S k').
     Proof.
       destruct (steps_stepn HSN) as [n HSN']. clear HSN.
       pose (r := (ex_own σ, 1) : res).
@@ -328,7 +328,7 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     (* A bit too specific to hoist to iris_plog.v without cause. *)
     Lemma ownS_wsat {σ w n r σ' m u k}
         (Hr : (ownS σ) w n r)
-        (HW : wsat σ' m u w @ S k)
+        (HW : wsat σ' m u w (S k))
         (Hu : r ⊑ u) :
       σ == σ'.
     Proof.
