@@ -1,6 +1,6 @@
 Require Import Ssreflect.ssreflect Omega.
 Require Import world_prop core_lang lang masks iris_core.
-Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr.
+Require Import ModuRes.RA ModuRes.UPred ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -112,23 +112,21 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       intros [ [s1| |] r1] [ [s2| |] r2] [EQs EQr] σ1 σ2 EQσ; unfold res_sat; simpl in *; try tauto; try rewrite !EQs; try rewrite !EQr; try rewrite !EQσ; reflexivity.
     Qed.
 
-    Global Instance preo_unit : preoType () := disc_preo ().
-
-    Program Definition wsat σ m (r : res) w : UPred () :=
-      ▹ (mkUPred (fun n _ => exists rs : nat -f> res,
+    Program Definition wsat σ m (r : res) w : SPred :=
+      ▹ (mkSPred (fun n => exists rs : nat -f> res,
                     res_sat (r · (comp_map rs)) σ
                       /\ forall i (Hm : m i),
                            (i ∈ dom rs <-> i ∈ dom w) /\
                            forall π ri (HLw : w i == Some π) (HLrs : rs i == Some ri),
                              (unhalved (ı π)) w n ri) _).
     Next Obligation.
-      intros n1 n2 _ _ HLe _ [rs [HLS HRS] ]. exists rs; split; [assumption|].
+      intros n1 n2 HLe [rs [HLS HRS] ]. exists rs; split; [assumption|].
       setoid_rewrite HLe; eassumption.
     Qed.
 
     Global Instance wsat_equiv σ : Proper (equiv ==> equiv ==> equiv ==> equiv) (wsat σ).
     Proof.
-      intros m1 m2 EQm r r' EQr w1 w2 EQw [| n] []; [reflexivity |].
+      intros m1 m2 EQm r r' EQr w1 w2 EQw [| n]; [reflexivity |].
       split; intros [rs [HE HM] ]; exists rs.
       - split; [rewrite <-EQr; assumption | intros; apply EQm in Hm; split; [| setoid_rewrite <- EQw; apply HM, Hm] ].
         destruct (HM _ Hm) as [HD _]; rewrite HD; clear - EQw.
@@ -140,7 +138,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Global Instance wsat_dist n σ m u : Proper (dist n ==> dist n) (wsat σ m u).
     Proof.
-      intros w1 w2 EQw [| n'] [] HLt; [reflexivity |]; destruct n as [| n]; [now inversion HLt |].
+      intros w1 w2 EQw [| n'] HLt; [reflexivity |]; destruct n as [| n]; [now inversion HLt |].
       split; intros [rs [HE HM] ]; exists rs.
       - split; [assumption | split; [rewrite <- (domeq EQw); apply HM, Hm |] ].
         intros; destruct (HM _ Hm) as [_ HR]; clear HE HM Hm.
@@ -160,13 +158,13 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Qed.
 
     Lemma wsat_valid {σ m r w k} :
-      wsat σ m r w (S k) tt -> ↓r.
+      wsat σ m r w (S k) -> ↓r.
     Proof.
       move=> [rs [[Hv _] _]]; exact: ra_op_valid Hv.
     Qed.
 
     Lemma wsat_state {σ m u w k} :
-      wsat σ m u w (S k) tt -> fst u == ex_own σ \/ fst u == 1.
+      wsat σ m u w (S k) -> fst u == ex_own σ \/ fst u == 1.
     Proof.
       move: u=>[ux ug]; move=>[rs [ [ Hv Heq] _] ] {m w k}; move: Hv Heq.
       move: (comp_map _)=> [rsx rsg] [Hv _] {rs}; move: Hv.
@@ -176,12 +174,10 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   End WorldSatisfaction.
 
-  Notation " P @ k " := ((P : UPred ()) k tt) (at level 60, no associativity).
-
   (* Simple view lemma. *)
   Lemma wsatM {σ m} {r : res} {w n k} (HLe : k <= n) :
-    wsat σ m r w @ n -> wsat σ m r w @ k.
-  Proof. by exact: (uni_pred HLe). Qed.
+    wsat σ m r w n -> wsat σ m r w k.
+  Proof. by exact: (dpred HLe). Qed.
 
   Section PrimitiveViewShifts.
     Local Obligation Tactic := intros.
@@ -189,10 +185,10 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Program Definition preVS m1 m2 P w : UPred res :=
       mkUPred (fun n r => forall w1 (rf: res) mf σ k (HSub : w ⊑ w1) (HLe : k < n)
                                  (HD : mf # m1 ∪ m2)
-                                 (HE : wsat σ (m1 ∪ mf) (r · rf) w1 @ S k),
+                                 (HE : wsat σ (m1 ∪ mf) (r · rf) w1 (S k)),
                           exists w2 r',
                             w1 ⊑ w2 /\ P w2 (S k) r'
-                            /\ wsat σ (m2 ∪ mf) (r' · rf) w2 @ S k) _.
+                            /\ wsat σ (m2 ∪ mf) (r' · rf) w2 (S k)) _.
     Next Obligation.
       intros n1 n2 r1 r2 HLe [rd HR] HP; intros.
       destruct (HP w1 (rd · rf) mf σ k) as [w2 [r1' [HW [HP' HE'] ] ] ];
@@ -279,19 +275,19 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Definition wpFP safe m (WP : expr -n> vPred -n> Props) e φ w n r :=
       forall w' k rf mf σ (HSw : w ⊑ w') (HLt : k < n) (HD : mf # m)
-             (HE : wsat σ (m ∪ mf) (r · rf) w' @ S k),
+             (HE : wsat σ (m ∪ mf) (r · rf) w' (S k)),
         (forall (HV : is_value e),
          exists w'' r', w' ⊑ w'' /\ φ (exist _ e HV) w'' (S k) r'
-                           /\ wsat σ (m ∪ mf) (r' · rf) w'' @ S k) /\
+                           /\ wsat σ (m ∪ mf) (r' · rf) w'' (S k)) /\
         (forall σ' ei ei' K (HDec : e = fill K ei)
                 (HStep : prim_step (ei, σ) (ei', σ')),
          exists w'' r', w' ⊑ w'' /\ WP (fill K ei') φ w'' k r'
-                           /\ wsat σ' (m ∪ mf) (r' · rf) w'' @ k) /\
+                           /\ wsat σ' (m ∪ mf) (r' · rf) w'' k) /\
         (forall e' K (HDec : e = fill K (fork e')),
          exists w'' rfk rret, w' ⊑ w''
                                  /\ WP (fill K fork_ret) φ w'' k rret
                                  /\ WP e' (umconst ⊤) w'' k rfk
-                                 /\ wsat σ (m ∪ mf) (rfk · rret · rf) w'' @ k) /\
+                                 /\ wsat σ (m ∪ mf) (rfk · rret · rf) w'' k) /\
         (forall HSafe : safe = true, safeExpr e σ).
 
     (* Define the function wp will be a fixed-point of *)

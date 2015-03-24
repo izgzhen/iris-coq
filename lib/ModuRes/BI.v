@@ -91,17 +91,14 @@ Arguments allBI  T {_ _ _}.
 Arguments xistBI T {_ _ _}.
 Arguments ComplBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _}.
 
-Class Valid (T : Type) `{pcmT : pcmType T} :=
-  { valid : T -> Prop;
-    valid_top (t t' : T) (HV : valid t) : t' ⊑ t
-  }.
-
-Class Later (T : Type) `{pcmT : pcmType T} {vT : Valid T} :=
+Class Later (T : Type) `{ComplBI T} :=
   { later : T -m> T;
     later_mon (t : T) : t ⊑ later t;
     later_contr : contractive later;
-    loeb (t : T) (HL : later t ⊑ t) : valid t
+    loeb (t : T) (HL : later t ⊑ t) : top ⊑ t
   }.
+
+Arguments Build_Later _ {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _} _ _ _ _.
 
 Delimit Scope bi_scope with bi.
 Notation " ▹ p " := (later p) (at level 20) : bi_scope.
@@ -117,70 +114,6 @@ Notation "∃ x , p" := (xist n[(fun x => p)]) (at level 60, x ident, right asso
 Notation "∀ x : T , p" := (all n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
 Notation "∃ x : T , p" := (xist n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
 
-Section UPredLater.
-  Context Res `{preoRes : preoType Res}.
-  Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
-
-  Global Program Instance valid_up : Valid (UPred Res) :=
-    Build_Valid _ _ _ _ _ _ (fun p : UPred Res => forall n r, p n r) _.
-  Next Obligation.
-    intros n r _; apply HV.
-  Qed.
-
-  Global Instance later_up_mon : Proper (pord ==> pord) later_up.
-  Proof.
-    intros p q Hpq [| n] r; [intros; exact I | simpl; apply Hpq].
-  Qed.
-
-  Global Program Instance later_upred : Later (UPred Res) :=
-    Build_Later _ _ _ _ _ _ _ m[(later_up)] _ _ _.
-  Next Obligation.
-    intros [| n] r Ht; [exact I | simpl].
-    rewrite Le.le_n_Sn; assumption.
-  Qed.
-  Next Obligation.
-    intros n p q Hpq [| m] r HLt; simpl; [tauto |].
-    apply Hpq; auto with arith.
-  Qed.
-  Next Obligation.
-    intros n r; induction n.
-    - apply HL; exact I.
-    - apply HL, IHn.
-  Qed.
-
-End UPredLater.
-
-Section SPredLater.
-  Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
-
-  Global Program Instance valid_sp : Valid SPred :=
-    Build_Valid _ _ _ _ _ _ (fun p : SPred => forall n, p n) _.
-  Next Obligation.
-    intros n _; apply HV.
-  Qed.
-
-  Global Instance later_sp_mon : Proper (pord ==> pord) later_sp.
-  Proof.
-    intros p q Hpq [| n]; [intros; exact I | simpl; apply Hpq].
-  Qed.
-
-  Global Program Instance later_spred : Later SPred :=
-    Build_Later _ _ _ _ _ _ _ m[(later_sp)] _ _ _.
-  Next Obligation.
-    intros [| n] Ht; [exact I | simpl].
-    rewrite Le.le_n_Sn; assumption.
-  Qed.
-  Next Obligation.
-    intros n p q Hpq [| m] HLt; simpl; [tauto |].
-    apply Hpq; auto with arith.
-  Qed.
-  Next Obligation.
-    intros n; induction n.
-    - apply HL; exact I.
-    - apply HL, IHn.
-  Qed.
-
-End SPredLater.
 
 Section UPredBI.
   Context res `{raRes : RA res}.
@@ -653,6 +586,60 @@ Section SPredBI.
 
 End SPredBI.
 
+Section UPredLater.
+  Context res `{raRes : RA res}.
+  Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
+
+  Global Instance later_up_mon : Proper (pord ==> pord) later_up.
+  Proof.
+    intros p q Hpq [| n] r; [intros; exact I | simpl; apply Hpq].
+  Qed.
+
+  Global Program Instance later_upred : Later (UPred res) :=
+    Build_Later _ m[(later_up)] _ _ _.
+  Next Obligation.
+    intros [| n] r Ht; [exact I | simpl].
+    rewrite Le.le_n_Sn; assumption.
+  Qed.
+  Next Obligation.
+    intros n p q Hpq [| m] r HLt; simpl; [tauto |].
+    apply Hpq; auto with arith.
+  Qed.
+  Next Obligation.
+    intros n r _; induction n.
+    - apply HL; exact I.
+    - apply HL, IHn.
+  Qed.
+
+End UPredLater.
+
+Section SPredLater.
+  Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
+
+  Global Instance later_sp_mon : Proper (pord ==> pord) later_sp.
+  Proof.
+    intros p q Hpq [| n]; [intros; exact I | simpl; apply Hpq].
+  Qed.
+
+  Global Program Instance later_spred : Later SPred :=
+    Build_Later _ m[(later_sp)] _ _ _.
+  Next Obligation.
+    intros [| n] Ht; [exact I | simpl].
+    rewrite Le.le_n_Sn; assumption.
+  Qed.
+  Next Obligation.
+    intros n p q Hpq [| m] HLt; simpl; [tauto |].
+    apply Hpq; auto with arith.
+  Qed.
+  Next Obligation.
+    intros n _; induction n.
+    - apply HL; exact I.
+    - apply HL, IHn.
+  Qed.
+
+End SPredLater.
+
+
 
 (* This class describes a type that can close over "future Us",
    thus making a nonexpansive map monotone *)
@@ -897,17 +884,12 @@ Section MonotoneExt.
 End MonotoneExt.
 
 Section MonotoneLater.
-  Context T U `{LT : Later T} `{pcmU : pcmType U}.
+  Context B `{BBI : ComplBI B} {MCB : MonotoneClosure B} {LB: Later B}
+          T `{pcmT' : pcmType T} {eT : extensible T}.
   Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
 
-  Global Program Instance valid_mon : Valid (U -m> T) :=
-    Build_Valid _ _ _ _ _ _ (fun f : U -m> T => forall u, valid (f u)) _.
-  Next Obligation.
-    intros u; apply valid_top, HV.
-  Qed.
-
-  Global Program Instance later_mon_morph : Later (U -m> T) :=
-    Build_Later _ _ _ _ _ _ _ m[(fun f: U -m> T => m[(fun u => later (f u))])] _ _ _.
+  Global Program Instance later_mon_morph : Later (T -m> B) :=
+    Build_Later (T -m> B) m[(fun f: T -m> B => m[(fun u => later (f u))])] _ _ _.
   Next Obligation.
     intros u; simpl morph; apply later_mon.
   Qed.
@@ -1003,14 +985,3 @@ End MComplUP.
   Qed.
 
 End MComplMM.*)
-
-Section BIValid.
-  Local Obligation Tactic := intros.
-
-  Global Program Instance BI_valid T `{ComplBI T} : Valid T :=
-    Build_Valid _ _ _ _ _ _ (fun t => top ⊑ t) _.
-  Next Obligation.
-    etransitivity; [apply top_true | assumption].
-  Qed.
-
-End BIValid.
