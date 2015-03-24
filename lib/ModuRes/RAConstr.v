@@ -387,6 +387,22 @@ Section Agreement.
   { simpl in *. tauto. }
   Qed.
 
+  Lemma ra_ag_pord (x y: ra_agree):
+    x ⊑ y <-> x · y == y.
+  Proof.
+    split.
+    - move=>[z EQ]. ra_ag_destr; try ra_ag_auto; [].
+      destruct EQ as [EQv EQts]. split.
+      + split.
+        * intros (pv1 & pv2 & EQt). assumption.
+        * erewrite <-EQv. intros (pv1 & pv2 & EQt). do 2 eexists. erewrite <-EQt. erewrite <-EQts. f_equiv. by eapply ProofIrrelevance.
+      + move=>[pv1 [pv2 EQt]] pv3. pi pv3 pv2. assumption.
+    - intros EQ. exists y. rewrite comm. assumption.
+  Grab Existential Variables.
+  { do 2 eexists. eassumption. }
+  { rewrite <-EQv. do 2 eexists. eassumption. }
+  Qed.
+
   (* We also have a metric *)
   Context {mT: metric T}.
 
@@ -488,7 +504,7 @@ Section Agreement.
   Global Program Instance ra_ag_cmt : cmetric ra_agree := mkCMetr ra_ag_compl.
   Next Obligation.
     intros [| n]; [now intros; apply dist_bound | unfold ra_ag_compl].
-    generalize (@eq_refl _ (σ (S O))) as EQ1; pattern (σ (S O)) at 1 3. destruct (σ (S O)) as [v0 ts0 |]; intros.
+    generalize (@eq_refl _ (σ (S O))) as EQ1. pattern (σ (S O)) at 1 3. destruct (σ (S O)) as [v0 ts0 |]; intros.
     - destruct (σ i) as [vi |] eqn: EQi; [split| exfalso].
       + move:(σc (S 0)). move/(_ (S 0) i _ _)/Wrap. intros H. edestruct H as [HEQ]=>{H}; first omega.
         rewrite <-EQ1, EQi in HEQ. destruct HEQ as [HEQ _]. assumption.
@@ -509,6 +525,44 @@ Section Agreement.
       destruct (σ i) as [vi tsvi |] eqn: EQi; [| reflexivity].
       specialize (σc (S O) (S O) i); rewrite <- EQ1, EQi in σc.
       apply σc; omega.
+  Qed.
+
+  (* And we have a pcmType, too! *)
+  Global Instance ra_ag_pcm: pcmType ra_agree.
+  Proof.
+    split. repeat intro. eapply ra_ag_pord. unfold compl, ra_ag_cmt, ra_ag_compl.
+    generalize (@eq_refl _ (ρ (S O))) as Hρ. pattern (ρ (S O)) at 1 3 7.
+    destruct (ρ (S O)) as [ρv ρts|]; intros.
+    - generalize (@eq_refl _ (σ (S O))) as Hσ. pattern (σ (S O)) at 1 3.
+      destruct (σ (S O)) as [σv σts|]; intros.
+      + simpl.
+        assert (HT: forall pv1 pv2, compl (unInj σ (ra_ag_compl_obligation_1 σ σc σv σts Hσ pv1) pv1) ==
+                                    compl (unInj ρ (ra_ag_compl_obligation_1 ρ ρc ρv ρts Hρ pv2) pv2)).
+        { intros ? ?. apply umet_complete_ext=>i. assert (HLe: S O <= S i) by omega.
+          unfold unInj. generalize (@eq_refl _ (ρ (S i))) as Hρi. pattern (ρ (S i)) at 1 3.
+          destruct (ρ (S i)) as [ρiv ρits|]; intros; last first.
+          { exfalso. specialize (ρc _ _ _ HLe (le_refl _)). rewrite <-Hρ, <-Hρi in ρc. exact ρc. }
+          generalize (@eq_refl _ (σ (S i))) as Hσi. pattern (σ (S i)) at 1 3.
+          destruct (σ (S i)) as [σiv σits|]; intros; last first.
+          { exfalso. specialize (σc _ _ _ HLe (le_refl _)). rewrite <-Hσ, <-Hσi in σc. exact σc. }
+          specialize (H (S i)). rewrite ->ra_ag_pord in H.
+          rewrite <-Hρi, <-Hσi in H. destruct H as [EQv EQts].
+          erewrite <-EQts. f_equiv. by eapply ProofIrrelevance.
+        }
+        split.
+        * split; first by (intros (pv1 & pv2 & _); tauto).
+          intros pv. specialize (H (S O)). rewrite ->ra_ag_pord, <-Hρ, <-Hσ in H.
+          destruct H as [H _]. rewrite <-H in pv. destruct pv as (pv1 & pv2 & EQ).
+          exists pv1 pv2. eapply HT.
+        * intros (pv1 & pv2 & EQ) pv3. eapply HT.
+      + rewrite ra_op_unit. reflexivity.
+    - generalize (@eq_refl _ (σ (S O))) as Hσ. pattern (σ (S O)) at 1 3.
+      destruct (σ (S O)) as [σv σts|]; intros.
+      + simpl. specialize (H (S O)). rewrite ->ra_ag_pord, <-Hρ, <-Hσ in H. exact H.
+      + reflexivity.
+  Grab Existential Variables.
+  { rewrite EQv. specialize (ρc _ _ _ HLe (le_refl _)). rewrite <-Hρ, <-Hρi in ρc.
+    destruct ρc as [EQv' _]. rewrite EQv'. assumption. }
   Qed.
 End Agreement.
 
