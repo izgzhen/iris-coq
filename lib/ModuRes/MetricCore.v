@@ -208,7 +208,7 @@ Qed.
 Arguments mkNMorph [T U eqT mT eqT0 mU] _ _.
 Notation "'n[(' f ')]'" := (mkNMorph f _).
 
-Instance subrel_dist `{mT : metric T} n : subrelation equiv (dist n) | 5.
+Instance subrel_dist `{mT : metric T} n : subrelation equiv (dist n).
 Proof.
   intros x y HEq; revert n; rewrite dist_refl; assumption.
 Qed.
@@ -216,7 +216,7 @@ Qed.
 Section MMInst.
   Context `{mT : metric T} `{mU : metric U}.
 
-  Global Program Instance nonexp_type : Setoid (T -n> U) | 5 :=
+  Global Program Instance nonexp_type : Setoid (T -n> U) :=
     mkType (fun f g => met_morph f == g).
   Next Obligation.
     split.
@@ -225,7 +225,7 @@ Section MMInst.
     + intros f g h Hfg Hgh x; etransitivity; [apply Hfg | apply Hgh].
   Qed.
 
-  Global Program Instance nonexp_metric : metric (T -n> U) | 5 :=
+  Global Program Instance nonexp_metric : metric (T -n> U) :=
     mkMetr (fun n f g => forall x, f x = n = g x).
   Next Obligation.
     intros f1 f2 EQf g1 g2 EQg; split; intros EQfg x; [symmetry in EQf, EQg |];
@@ -600,7 +600,7 @@ Section NonexpCMetric.
   Context `{cT : cmetric T} `{cU : cmetric U}.
 
   (** The set of non-expansive morphisms between two complete metric spaces is again a complete metric space. *)
-  Global Program Instance nonexp_cmetric : cmetric (T -n> U) | 5 :=
+  Global Program Instance nonexp_cmetric : cmetric (T -n> U) :=
     mkCMetr fun_lub.
   Next Obligation.
     intros n; exists n; intros m HLe x.

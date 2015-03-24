@@ -484,7 +484,7 @@ Section FinDom.
       - intros m1 m2 m3 H12 H23 k; etransitivity; [apply H12 | apply H23].
     Qed.
     
-    Global Program Instance type_findom : Setoid (K -f> V) | 5:= mkType equiv_fd.
+    Global Program Instance type_findom : Setoid (K -f> V) := mkType equiv_fd.
 
     Global Instance lookup_proper : Proper (equiv ==> eq ==> equiv) (findom_f (V := V)).
     Proof.
@@ -497,7 +497,7 @@ Section FinDom.
         | S _ => forall k, f1 k = n = f2 k
       end.
 
-    Global Program Instance metric_findom : metric (K -f> V) | 5 := mkMetr dist_fd.
+    Global Program Instance metric_findom : metric (K -f> V) := mkMetr dist_fd.
     Next Obligation.
       revert n; intros [| n] f1 f2 EQf g1 g2 EQg; [reflexivity |]; split;
       intros EQ k; [symmetry in EQf, EQg |]; rewrite -> EQf, EQg; apply EQ.
@@ -560,7 +560,7 @@ Section FinDom.
       fun n => Indom_lookup x (findom_t (σ (S n))) (proj2 (In_inlst _ _) (finmap_chain_dom _ _ _ HIn)).
 
     Program Instance finmap_chainx_cauchy (σ : chain (K -f> V)) {σc : cchain σ} x (HIn : x ∈ dom (σ 1)) :
-      cchain (finmap_chainx σ x HIn) | 5.
+      cchain (finmap_chainx σ x HIn).
     Next Obligation.
       unfold cchain; intros.
       assert (HT : Some (finmap_chainx σ x HIn i) = S n = Some (finmap_chainx σ x HIn j)); [| apply dist_mono, HT].
@@ -570,7 +570,7 @@ Section FinDom.
     Definition findom_lub (σ : chain (K -f> V)) (σc : cchain σ) : K -f> V :=
       findom_map _ _ (σ 1) (fun x HLu => compl (finmap_chainx σ x (proj1 (In_inlst _ _) HLu))).
 
-    Global Program Instance findom_cmetric : cmetric (K -f> V) | 5 := mkCMetr findom_lub.
+    Global Program Instance findom_cmetric : cmetric (K -f> V) := mkCMetr findom_lub.
     Next Obligation.
       intros [| n]; [exists 0; intros; exact I |].
       assert (HT : exists m, forall x, inlst x (dom (σ 1)) = true -> forall (X : inlst x (dom (σ 1)) = true) i,

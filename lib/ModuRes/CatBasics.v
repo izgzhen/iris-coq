@@ -68,7 +68,7 @@ Definition mfromType (T : Type) `{mT : metric T} := Build_Mtyp (fromType T) _.
 Record cmtyp :=
   { cmm  :> Mtyp;
     iscm :  cmetric cmm}.
-Instance cmtyp_cmetric {M : cmtyp} : cmetric M | 0 := iscm M.
+Instance cmtyp_cmetric {M : cmtyp} : cmetric M := iscm M.
 Definition cmfromType (T : Type) `{cT : cmetric T} := Build_cmtyp (mfromType T) _.
 
 
