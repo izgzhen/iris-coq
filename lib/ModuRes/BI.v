@@ -1,5 +1,6 @@
 Require Import PreoMet.
 Require Import RA.
+Require Import UPred.
 
 Section CompleteBI.
   Context {T : Type}.
@@ -115,8 +116,6 @@ Notation "∀ x , p" := (all n[(fun x => p)]) (at level 60, x ident, right assoc
 Notation "∃ x , p" := (xist n[(fun x => p)]) (at level 60, x ident, right associativity) : bi_scope.
 Notation "∀ x : T , p" := (all n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
 Notation "∃ x : T , p" := (xist n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
-
-Require Import UPred.
 
 Section UPredLater.
   Context Res `{preoRes : preoType Res}.

@@ -438,7 +438,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       unfold wp; apply fixp_eq.
     Qed.
 
-    Opaque wp.
+    Global Opaque wp.
 
     Lemma wpO {safe m e φ w r} : wp safe m e φ w O r.
     Proof.
