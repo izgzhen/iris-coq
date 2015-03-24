@@ -1,5 +1,5 @@
 Require Import Ssreflect.ssreflect Ssreflect.ssrfun Omega.
-Require Import PreoMet RA.
+Require Import PreoMet RA Axioms.
 
 Local Open Scope ra_scope.
 Local Open Scope predom_scope.
@@ -331,13 +331,8 @@ Section Agreement.
     end.
 
   Local Ltac ra_ag_destr := repeat (match goal with [ x : ra_agree |- _ ] => destruct x end).
-
-  (* Land of dragons starts here *)
-  Axiom ProofIrrelevance: forall (P: Prop) (p q: P), p = q.
-  Ltac pi p q := erewrite (ProofIrrelevance _ p q).
-
   Local Ltac ra_ag_auto := first [by firstorder | split; [by firstorder|intros pv1 pv2; pi pv1 pv2; by firstorder ]].
-  
+
   Global Instance ra_agree_eq_equiv : Equivalence ra_agree_eq.
   Proof.
     split; repeat intro; ra_ag_destr; try (exact I || contradiction); [| |]. (* 3 goals left. *)
