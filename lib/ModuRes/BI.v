@@ -1,5 +1,6 @@
 Require Import PreoMet.
 Require Import RA.
+Require Import UPred SPred.
 
 Section CompleteBI.
   Context {T : Type}.
@@ -116,8 +117,6 @@ Notation "∃ x , p" := (xist n[(fun x => p)]) (at level 60, x ident, right asso
 Notation "∀ x : T , p" := (all n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
 Notation "∃ x : T , p" := (xist n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
 
-Require Import UPred.
-
 Section UPredLater.
   Context Res `{preoRes : preoType Res}.
   Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
@@ -150,6 +149,38 @@ Section UPredLater.
   Qed.
 
 End UPredLater.
+
+Section SPredLater.
+  Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
+
+  Global Program Instance valid_sp : Valid SPred :=
+    Build_Valid _ _ _ _ _ _ (fun p : SPred => forall n, p n) _.
+  Next Obligation.
+    intros n _; apply HV.
+  Qed.
+
+  Global Instance later_sp_mon : Proper (pord ==> pord) later_sp.
+  Proof.
+    intros p q Hpq [| n]; [intros; exact I | simpl; apply Hpq].
+  Qed.
+
+  Global Program Instance later_spred : Later SPred :=
+    Build_Later _ _ _ _ _ _ _ m[(later_sp)] _ _ _.
+  Next Obligation.
+    intros [| n] Ht; [exact I | simpl].
+    rewrite Le.le_n_Sn; assumption.
+  Qed.
+  Next Obligation.
+    intros n p q Hpq [| m] HLt; simpl; [tauto |].
+    apply Hpq; auto with arith.
+  Qed.
+  Next Obligation.
+    intros n; induction n.
+    - apply HL; exact I.
+    - apply HL, IHn.
+  Qed.
+
+End SPredLater.
 
 Section UPredBI.
   Context res `{raRes : RA res}.
@@ -419,6 +450,209 @@ Section UPredBI.
   Qed.
 
 End UPredBI.
+
+Section SPredBI.
+  Local Obligation Tactic := intros; eauto with typeclass_instances.
+
+  (* Standard interpretations of propositional connectives. *)
+  Global Program Instance top_sp : topBI SPred := sp_c True.
+  Global Program Instance bot_sp : botBI SPred := sp_c False.
+
+  Global Program Instance and_sp : andBI SPred :=
+    fun P Q =>
+      mkSPred (fun n => P n /\ Q n) _.
+  Next Obligation.
+    intros n m HLe; rewrite HLe; tauto.
+  Qed.
+  Global Program Instance or_sp : orBI SPred :=
+    fun P Q =>
+      mkSPred (fun n => P n \/ Q n) _.
+  Next Obligation.
+    intros n m HLe; rewrite HLe; tauto.
+  Qed.
+
+  Global Program Instance impl_sp : implBI SPred :=
+    fun P Q =>
+      mkSPred (fun n => forall m, m <= n -> P m -> Q m) _.
+  Next Obligation.
+    intros n m HLe HImp k HLe' HP.
+    apply HImp; try (etransitivity; eassumption); assumption.
+  Qed.
+  
+  (* BI connectives: Boring. We'd actually want just a Heyting Algebra for SPred, but whatever. *)
+  Global Instance sc_sp : scBI SPred := and_sp.
+  Global Instance si_sp : siBI SPred := impl_sp.
+
+  (* Quantifiers. *)
+  Global Program Instance all_sp : allBI SPred :=
+    fun T eqT mT cmT R =>
+      mkSPred (fun n => forall t, R t n) _.
+  Next Obligation.
+    intros n m HLe HR t. rewrite HLe; apply HR.
+  Qed.
+
+  Global Program Instance xist_sp : xistBI SPred :=
+    fun T eqT mT cmT R =>
+      mkSPred (fun n => exists t, R t n) _.
+  Next Obligation.
+    intros n m HLe [t HR]; exists t; rewrite HLe; apply HR.
+  Qed.
+
+  (* For some reason tc inference gets confused otherwise *)
+  Existing Instance sp_type.
+
+  (* All of the above preserve all the props it should. *)
+  Global Instance and_sp_equiv : Proper (equiv ==> equiv ==> equiv) and_sp.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
+    rewrite EQP, EQQ; tauto.
+  Qed.
+  Global Instance and_sp_dist n : Proper (dist n ==> dist n ==> dist n) and_sp.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ m HLt; simpl.
+    split; intros; (split; [apply EQP | apply EQQ]; now auto with arith).
+  Qed.
+  Global Instance and_sp_ord : Proper (pord ==> pord ==> pord) and_sp.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
+    rewrite EQP, EQQ; tauto.
+  Qed.
+
+  Global Instance or_sp_equiv : Proper (equiv ==> equiv ==> equiv) or_sp.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
+    rewrite EQP, EQQ; tauto.
+  Qed.
+  Global Instance or_sp_dist n : Proper (dist n ==> dist n ==> dist n) or_sp.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ m HLt; simpl.
+    split; (intros [HP | HQ]; [left; apply EQP | right; apply EQQ]; now auto with arith).
+  Qed.
+  Global Instance or_sp_ord : Proper (pord ==> pord ==> pord) or_sp.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
+    rewrite EQP, EQQ; tauto.
+  Qed.
+
+  Global Instance impl_sp_equiv : Proper (equiv ==> equiv ==> equiv) impl_sp.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
+    setoid_rewrite EQP; setoid_rewrite EQQ; tauto.
+  Qed.
+  Global Instance impl_sp_dist n : Proper (dist n ==> dist n ==> dist n) impl_sp.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ m HLt; simpl.
+    split; intros; apply EQQ, H, EQP; now eauto with arith.
+  Qed.
+  Global Instance impl_sp_ord : Proper (pord --> pord ++> pord) impl_sp.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ n HP m r'.
+    rewrite <- EQP, <- EQQ; now apply HP.
+  Qed.
+
+  Global Instance sc_sp_equiv : Proper (equiv ==> equiv ==> equiv) sc_sp := and_sp_equiv.
+  Global Instance sc_sp_dist n : Proper (dist n ==> dist n ==> dist n) sc_sp := and_sp_dist n.
+  Global Instance sc_sp_ord : Proper (pord ==> pord ==> pord) sc_sp := and_sp_ord.
+
+  Global Instance si_sp_equiv : Proper (equiv ==> equiv ==> equiv) si_sp := impl_sp_equiv.
+  Global Instance si_sp_dist n : Proper (dist n ==> dist n ==> dist n) si_sp := impl_sp_dist n.
+  Global Instance si_sp_ord : Proper (pord --> pord ++> pord) si_sp := impl_sp_ord.
+
+  Section Quantifiers.
+    Context V `{pU : cmetric V}.
+
+    Existing Instance nonexp_type.
+
+    Global Instance all_sp_equiv : Proper (equiv (A := V -n> SPred) ==> equiv) all.
+    Proof.
+      intros R1 R2 EQR n; simpl.
+      setoid_rewrite EQR; tauto.
+    Qed.
+    Global Instance all_sp_dist n : Proper (dist (T := V -n> SPred) n ==> dist n) all.
+    Proof.
+      intros R1 R2 EQR m HLt; simpl.
+      split; intros; apply EQR; now auto.
+    Qed.
+
+    Global Instance xist_sp_equiv : Proper (equiv (A := V -n> SPred) ==> equiv) xist.
+    Proof.
+      intros R1 R2 EQR n; simpl.
+      setoid_rewrite EQR; tauto.
+    Qed.
+    Global Instance xist_sp_dist n : Proper (dist (T := V -n> SPred)n ==> dist n) xist.
+    Proof.
+      intros R1 R2 EQR m HLt; simpl.
+      split; intros [t HR]; exists t; apply EQR; now auto.
+    Qed.
+
+  End Quantifiers.
+
+  Global Program Instance bi_sp : ComplBI SPred.
+  Next Obligation.
+    intros n _; exact I.
+  Qed.
+  Next Obligation.
+    intros n HC; contradiction HC.
+  Qed.
+  Next Obligation.
+    intros n; simpl; tauto.
+  Qed.
+  Next Obligation.
+    intros n [HP HQ]; assumption.
+  Qed.
+  Next Obligation.
+    intros n [HP HQ]; assumption.
+  Qed.
+  Next Obligation.
+    split; intros HH n.
+    - intros HP m HLe HQ; apply HH; split; [rewrite HLe |]; assumption.
+    - intros [HP HQ]; eapply HH; eassumption || reflexivity.
+  Qed.
+  Next Obligation.
+    intros n HP; left; assumption.
+  Qed.
+  Next Obligation.
+    intros n HQ; right; assumption.
+  Qed.
+  Next Obligation.
+    intros n; simpl; tauto.
+  Qed.
+  Next Obligation.
+    intros P Q n; simpl. tauto.
+  Qed.
+  Next Obligation.
+    intros P Q R n; split; simpl; tauto.
+  Qed.
+  Next Obligation.
+    intros n; split; simpl; tauto.
+  Qed.
+  Next Obligation.
+    split; intros HH n; simpl in *.
+    - intros HP m HLe HQ. apply HH. split; last assumption. rewrite HLe. assumption.
+    - intros [HP HQ]. eapply HH; try eassumption; omega.
+  Qed.
+  Next Obligation.
+    split.
+    - intros HH n HP u; apply HH; assumption.
+    - intros HH u n HP; apply HH; assumption.
+  Qed.
+  Next Obligation.
+    intros n HA u; apply H, HA.
+  Qed.
+  Next Obligation.
+    split.
+    - intros HH n [u HP]; eapply HH; eassumption.
+    - intros HH u n HP; apply HH; exists u; assumption.
+  Qed.
+  Next Obligation.
+    intros n [[u HP] HQ]; exists u. split; assumption.
+  Qed.
+  Next Obligation.
+    intros n [u HA]; exists u. apply H, HA.
+  Qed.
+
+End SPredBI.
+
 
 (* This class describes a type that can close over "future Us",
    thus making a nonexpansive map monotone *)
