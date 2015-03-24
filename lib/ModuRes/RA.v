@@ -295,7 +295,7 @@ Section MorphEq.
     - move=> f f' HEq t. by symmetry.
     - move=> f f' f'' HEq HEq' t. by transitivity (f' t).
   Qed.
-  Global Instance ra_type_morph : Setoid (T -ra> U) | 5 := mkType ra_morph_eq.
+  Global Instance ra_type_morph : Setoid (T -ra> U) := mkType ra_morph_eq.
 End MorphEq.
 
 Section Comp.

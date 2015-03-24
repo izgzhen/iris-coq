@@ -60,11 +60,11 @@ Section PUMMorphProps1.
     - intros f g h Hfg Hgh x; simpl; etransitivity; [apply Hfg | apply Hgh].
   Qed.
   
-  Global Program Instance PMtypeM : Setoid (T -m> U) | 5 := mkType PMEquiv.
+  Global Program Instance PMtypeM : Setoid (T -m> U) := mkType PMEquiv.
 
   Definition PMDist n (f g : T -m> U) := (mu_morph f) = n = (mu_morph g).
 
-  Global Program Instance PMMetric : metric (T -m> U) | 5 := mkMetr PMDist.
+  Global Program Instance PMMetric : metric (T -m> U) := mkMetr PMDist.
   Next Obligation.
     intros f g EQfg h i EQhi; split; intros EQ x; [symmetry in EQfg, EQhi |]; rewrite -> (EQfg x), (EQhi x); apply EQ.
   Qed.
@@ -100,7 +100,7 @@ Section PUMMorphProps1.
     - intros f g h Hfg Hgh x. simpl; etransitivity; [apply Hfg | apply Hgh].
   Qed.
 
-  Global Program Instance PMpreoT : preoType (T -m> U) | 5 :=
+  Global Program Instance PMpreoT : preoType (T -m> U) :=
     mkPOType PMpreo _.
   Next Obligation.
     move=> f1 f2 Rf g1 g2 Rg H t.
@@ -128,7 +128,7 @@ Section PUMMorphProps1.
     rewrite -> HSub; reflexivity.
   Qed.
 
-  Global Program Instance PMcmetric : cmetric (T -m> U) | 5 :=
+  Global Program Instance PMcmetric : cmetric (T -m> U) :=
     mkCMetr PMCompl.
   Next Obligation.
     apply (conv_cauchy (liftc mu_morph_ne σ)).
@@ -136,7 +136,7 @@ Section PUMMorphProps1.
 
   Arguments PMEquiv _ _ /.
 
-  Global Instance mon_morph_preoT : pcmType (T -m> U) | 5.
+  Global Instance mon_morph_preoT : pcmType (T -m> U).
   Proof.
     clear; split.
     intros f g fc gc Hc x; simpl; eapply pcm_respC; try eassumption.

@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+
+TIME() {
+    rm -f "$1" && time make "$1"
+}
+
+make -j lib/ModuRes/{RA,UPred}.vo # BI dependencies
+TIME lib/ModuRes/BI.vo
+
+make -j {lang,masks,iris_core}.vo # iris_plog dependencies
+TIME iris_plog.vo
+TIME iris_meta.vo
+TIME iris_ht_rules.vo
