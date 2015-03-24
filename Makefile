@@ -64,12 +64,14 @@ endif
 #                    #
 ######################
 
-VFILES:=$(wildcard *.v) $(wildcard lib/ModuRes/*.v)
+LIBVFILES:=$(wildcard lib/*/*.v)
+VFILES:=$(wildcard *.v) $(LIBVFILES)
 
 -include $(addsuffix .d,$(VFILES))
 .SECONDARY: $(addsuffix .d,$(VFILES))
 
 VOFILES:=$(VFILES:.v=.vo)
+LIBVOFILES:=$(LIBVFILES:.v=.vo)
 VOFILESINC=$(filter $(wildcard ./*),$(VOFILES)) 
 GLOBFILES:=$(VFILES:.v=.glob)
 VIFILES:=$(VFILES:.v=.vi)
@@ -89,6 +91,8 @@ endif
 #######################################
 
 all: $(VOFILES)
+
+lib: $(LIBVOFILES)
 
 spec: $(VIFILES)
 
@@ -122,7 +126,7 @@ beautify: $(VFILES:=.beautified)
 	@echo 'Do not do "make clean" until you are sure that everything went well!'
 	@echo 'If there were a problem, execute "for file in $$(find . -name \*.v.old -print); do mv $${file} $${file%.old}; done" in your shell/'
 
-.PHONY: all opt byte archclean clean install userinstall depend html validate
+.PHONY: all lib opt byte archclean clean install userinstall depend html validate
 
 ####################
 #                  #
