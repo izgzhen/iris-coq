@@ -581,11 +581,8 @@ Section FinDom.
       generalize (@eq_refl _ (σ (S j) x)); pattern (σ (S j) x) at 1 3.
       destruct (σ (S j) x) as [vj |] => [EQnj|E]; last first. 
       { exfalso. eapply fdLookup_notin_strong. symmetry. eassumption. by eapply finmap_chain_dom. }
-      move : (σc _ _ _ (HLei) (HLej) x). 
-      admit.
-      (* 
+      move : (σc _ _ _ (le_S _ _ HLei) (le_S _ _ HLej) x). 
       by rewrite -EQni -EQnj. 
-      *)
     Qed.
     
     Definition findom_lub (σ : chain (K -f> V)) (σc : cchain σ) : K -f> V :=
