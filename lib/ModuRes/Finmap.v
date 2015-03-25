@@ -555,42 +555,65 @@ Section FinDom.
       - assert (HT := chain_cauchy σ _ 1 1 2 x).
         rewrite -> Heqov, HLU in HT; contradiction HT.
     Qed.
-
-    Definition finmap_chainx (σ : chain (K -f> V)) {σc : cchain σ} x (HIn : x ∈ dom (σ 1)) :=
-      fun n => Indom_lookup x (findom_t (σ (S n))) (proj2 (In_inlst _ _) (finmap_chain_dom _ _ _ HIn)).
-
-    Program Instance finmap_chainx_cauchy (σ : chain (K -f> V)) {σc : cchain σ} x (HIn : x ∈ dom (σ 1)) :
-      cchain (finmap_chainx σ x HIn) | 5.
+    
+    Program Definition finmap_chainx (σ : chain (K -f> V)) {σc : cchain σ} x (HIn : x ∈ dom (σ 1)) : chain V :=
+      fun n => 
+                         match σ (S n) x with
+                           | None =>  _
+                           | Some v => v
+                         end.
     Next Obligation.
-      unfold cchain; intros.
-      assert (HT : Some (finmap_chainx σ x HIn i) = S n = Some (finmap_chainx σ x HIn j)); [| apply dist_mono, HT].
-      unfold finmap_chainx; rewrite !Indom_lookup_find; apply (chain_cauchy σ σc (S n)); auto with arith.
-    Qed.
+      exfalso.
+      assert (Le1n : 1 <= S n) by omega.
+      move: (σc _ _ _ Le1n (le_refl _) x).
+      move/fdLookup_in_strong : HIn => [v ->]. by rewrite -Heq_anonymous.
+    Defined.
 
+    Program Instance finmap_chainx_cauchy (σ : chain (K -f> V)) {σc : cchain σ} x {HIn : x ∈ dom (σ 1)} :
+      cchain (finmap_chainx σ x HIn) | 5.
+    Next Obligation. 
+      fold dist.
+      destruct n as [|n]; first by apply dist_bound.
+      unfold finmap_chainx.
+      generalize (@eq_refl _ (σ (S i) x)); pattern (σ (S i) x) at 1 3.
+      destruct (σ (S i) x) as [vi |] => [EQni|E]; last first. 
+      { exfalso. eapply fdLookup_notin_strong. symmetry. eassumption. by eapply finmap_chain_dom. }
+      generalize (@eq_refl _ (σ (S j) x)); pattern (σ (S j) x) at 1 3.
+      destruct (σ (S j) x) as [vj |] => [EQnj|E]; last first. 
+      { exfalso. eapply fdLookup_notin_strong. symmetry. eassumption. by eapply finmap_chain_dom. }
+      move : (σc _ _ _ (HLei) (HLej) x). 
+      admit.
+      (* 
+      by rewrite -EQni -EQnj. 
+      *)
+    Qed.
+    
     Definition findom_lub (σ : chain (K -f> V)) (σc : cchain σ) : K -f> V :=
       findom_map _ _ (σ 1) (fun x HLu => compl (finmap_chainx σ x (proj1 (In_inlst _ _) HLu))).
 
     Global Program Instance findom_cmetric : cmetric (K -f> V) | 5 := mkCMetr findom_lub.
     Next Obligation.
-      intros [| n]; [exists 0; intros; exact I |].
-      assert (HT : exists m, forall x, inlst x (dom (σ 1)) = true -> forall (X : inlst x (dom (σ 1)) = true) i,
-        m < i -> σ i x = S n = Some (compl (finmap_chainx _ _ (proj1 (In_inlst _ _) X)))).
-      { apply ff; intros; [apply H0; omega |].
-        destruct (conv_cauchy (finmap_chainx _ _ (proj1 (In_inlst _ _) H)) (S n)) as [m P]; exists m;
-          intros HIn [| i] HLe; [inversion HLe |].
-        apply lt_n_Sm_le in HLe; specialize (P _ HLe); unfold finmap_chainx at 2 in P; simpl in P.
-        erewrite <- Indom_lookup_find; unfold dist; simpl; rewrite <- P; apply umet_complete_extn; intros k; clear P; simpl.
-        change (Some (finmap_chainx σ x (proj1 (In_inlst _ _) H) k) = S n = Some (finmap_chainx σ x (proj1 (In_inlst _ _) HIn) k)).
-        unfold finmap_chainx; rewrite !Indom_lookup_find; reflexivity.
-      }
-      destruct HT as [m HT]; exists (S m); intros [| i] HLe k; [inversion HLe |].
+      move => [| n] ; [now auto|]. 
+      move => i LEi k.
       destruct (inlst k (dom (σ 1))) eqn: HIn.
-      - specialize (HT _ HIn HIn (S i)); rewrite HT; [| auto with arith].
-        unfold findom_lub; rewrite -> findom_map_app with (HIn := HIn); reflexivity.
-      - assert (HInS := HIn); rewrite -> @domeq with (n := 0) (m2 := σ (S i)) in HInS;
-        [| eapply chain_cauchy; auto with arith].
-        rewrite !(proj1 (fdLookup_notin _ _)); [reflexivity | rewrite <- In_inlst; congruence |].
-        unfold findom_lub, dom; simpl; rewrite -> list_fst_map, <- In_inlst; congruence.
+      - rewrite /findom_lub findom_map_app.
+        assert (HT := conv_cauchy (finmap_chainx σ k (proj1 (In_inlst k (dom (σ 1))) HIn)) (S n)).
+        case EQi : (σ i k) => [vi|]; [|exfalso].
+        + rewrite /dist /= -/dist. rewrite HT {HT}. 
+          rewrite /finmap_chainx.
+          generalize (@eq_refl _ (σ (S i) k)); pattern (σ (S i) k) at 1 3.
+          destruct (σ (S i) k) as [vSi |] => [EQsi|EQsi]; [|exfalso].
+          * have σc' := (σc (S n) (S i) i _ _ k) => {σc}. rewrite <- EQsi, EQi in σc'. 
+            apply σc'; by omega.
+          * have σc' := (σc (S n) (S i) i _ _ k) => {σc}. rewrite <- EQsi, EQi in σc'. 
+            apply σc'; by omega.
+        + clear HT. have σc' := (σc 1 1 i _ _ k) => {σc}. rewrite EQi in σc'. 
+          move/In_inlst/fdLookup_in_strong : HIn σc' => [v1 ->] σc.
+          apply σc; by omega.
+      - rewrite /findom_lub findom_map_app_nf //.
+        have σc' := σc 1 1 i _ _ k => {σc}.
+        move/NIn_inlst/fdLookup_notin_strong : HIn σc' => -> σc'. 
+        destruct (σ i k) => //. exfalso; apply σc'; omega.
     Qed.
 
     Local Existing Instance option_preo_bot.
@@ -631,8 +654,10 @@ Section FinDom.
         unfold equiv; simpl; apply umet_complete_ext; intros.
         unfold unSome, finmap_chainx.
         generalize (@eq_refl _ (σ (S i) k)) as EQsi.
-        pattern (σ (S i) k) at 1 3; destruct (σ (S i) k) as [vsi |]; intros; [| exfalso].
-        + erewrite <- (Indom_lookup_find _ (σ (S i))) in EQsi.
+        pattern (σ (S i) k) at 1 3 7; destruct (σ (S i) k) as [vsi |]; intros; [| exfalso].
+        + have HInSi : inlst k (dom (σ (S i))) = true.
+          { apply In_inlst. apply finmap_chain_dom => //. exact/In_inlst. }
+          rewrite <- (Indom_lookup_find _ (σ (S i)) HInSi) in EQsi.
           inversion EQsi; reflexivity.
         + assert (LEi : 1 <= S i) by auto with arith.
           specialize (σc 1 1 (S i) (le_n _) LEi k).
