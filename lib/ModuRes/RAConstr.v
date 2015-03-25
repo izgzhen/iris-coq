@@ -580,7 +580,7 @@ Section IndexedProduct.
   Global Instance ra_equiv_infprod : Equivalence ra_eq_infprod.
   Proof. split; repeat intro; [ | rewrite (H i) | rewrite -> (H i), (H0 i) ]; reflexivity. Qed.
 
-  Global Instance ra_type_infprod : Setoid ra_res_infprod | 5 := mkType ra_eq_infprod.
+  Global Instance ra_type_infprod : Setoid ra_res_infprod | 15 := mkType ra_eq_infprod. (* low priority, this is a fairly generic type... *)
   Global Instance ra_unit_infprod : RA_unit ra_res_infprod := fun i => 1.
   Global Instance ra_op_infprod : RA_op ra_res_infprod := fun f g i => f i · g i.
   Global Instance ra_valid_infprod : RA_valid ra_res_infprod := fun f => forall i, ↓ (f i).
