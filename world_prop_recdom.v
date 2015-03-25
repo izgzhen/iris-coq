@@ -2,35 +2,10 @@
     domain equations to build a higher-order separation logic *)
 Require Import ModuRes.PreoMet ModuRes.Finmap ModuRes.RA ModuRes.RAConstr ModuRes.SPred.
 Require Import ModuRes.CatBasics ModuRes.MetricRec ModuRes.CBUltInst.
-(* Require Import world_prop. *)
-
-Section PreComp.
-  Context {T U V R: Type} `{pcmType T} `{pcmType U} `{pcmType V} `{pcmType R}.
-
-  (* (*    prodRAFstMap (fdRAMap (ra_agree_map f)) ▹ <M<
-   prodRAFstMap (fdRAMap (ra_agree_map h)) ▹ ==
-   prodRAFstMap (fdRAMap (ra_agree_map h) ∘ fdRAMap (ra_agree_map f))%pm ▹ *)
-
- *)
-
-  Lemma precomp_by_comp (f: T -m> U) (g: U -m> V) (h: T -m> V):
-    (g ∘ f)%pm == h ->
-    (precomp_mne (V:=R) f) <M< (precomp_mne g) == h ▹.
-  Proof.
-    intros Hcomp i. simpl morph. rewrite <-Hcomp. rewrite pcomp_assoc. reflexivity.
-  Qed.
-
-  Lemma precomp_by_id (f: T -m> T):
-    f == (pid T) ->
-    equiv (A:=(T -m> R) -n> (T -m> R)) (precomp_mne f) (umid _).
-  Proof.
-    intros Hcomp i. simpl morph. rewrite Hcomp. intros x. reflexivity.
-  Qed.
-
-End PreComp.
+Require Import world_prop.
 
 (* Now we come to the actual implementation *)
-Module WorldProp (Res : RA_T) (*: WORLD_PROP Res*) .
+Module WorldProp (Res : RA_T) : WORLD_PROP Res.
   (** The construction is parametric in the monoid we choose *)
 
   (** We need to build a functor that would describe the following
@@ -115,8 +90,13 @@ Module WorldProp (Res : RA_T) (*: WORLD_PROP Res*) .
   Instance PProp_preo: preoType PreProp   := disc_preo PreProp.
   Instance PProp_pcm : pcmType PreProp    := disc_pcm PreProp.
 
-  (* Define worlds and propositions *)
+  (* Define worlds *)
   Definition Wld     := FRes PreProp.
+  Instance WldRA : RA Wld := _.
+  Instance WldPO : preoType Wld := _.
+  Instance WldPCM: pcmType Wld := _.
+
+  (* Define propositions *)
   Definition Props   := FProp PreProp.
   Instance Props_ty   : Setoid Props     := _.
   Instance Props_m    : metric Props     := _.

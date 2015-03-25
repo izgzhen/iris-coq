@@ -234,6 +234,26 @@ Arguments postcomp_mne {T U V _ _ _ _ _ _ _ _ _ _ _ _ _ _ _} f.
 Notation "f ▹" := (precomp_mne f) (at level 30) : pumet_scope.
 Notation "◃ f" := (postcomp_mne f) (at level 30) : pumet_scope.
 
+Section PreCompProps.
+  Context {T U V R: Type} `{pcmType T} `{pcmType U} `{pcmType V} `{pcmType R}.
+
+  Lemma precomp_by_comp (f: T -m> U) (g: U -m> V) (h: T -m> V):
+    g ∘ f == h ->
+    (precomp_mne (V:=R) f) <M< (precomp_mne g) == h ▹.
+  Proof.
+    intros Hcomp i. simpl morph. rewrite <-Hcomp. rewrite pcomp_assoc. reflexivity.
+  Qed.
+
+  Lemma precomp_by_id (f: T -m> T):
+    f == (pid T) ->
+    equiv (A:=(T -m> R) -n> (T -m> R)) (precomp_mne f) (umid _).
+  Proof.
+    intros Hcomp i. simpl morph. rewrite Hcomp. intros x. reflexivity.
+  Qed.
+
+End PreCompProps.
+
+
 Section MMorphProps2.
   Local Open Scope pumet_scope.
   Context `{pT : pcmType T} `{pU : pcmType U} `{pV : pcmType V} `{pW : pcmType W}.
