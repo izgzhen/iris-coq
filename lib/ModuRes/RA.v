@@ -113,7 +113,9 @@ Section Order.
       rewrite <- Hxyz, <- Hyz; symmetry; apply assoc.
   Qed.
 
-  Global Program Instance pord_ra : preoType T := mkPOType ra_ord _.
+  (* Do not infer this automatically: It often ends in an endless loop searching for the unit of a type which is,
+     not at all, an RA. *)
+  Global Program Instance pord_ra : preoType T | 5 := mkPOType ra_ord _.
   Next Obligation.
     move=> x1 x2 Rx y1 y2 Ry [t Ht].
     exists t; by rewrite -Rx -Ry.
@@ -265,7 +267,92 @@ Section Pairs.
     Qed.
   End PairsPCM.
 End Pairs.
+Section PairsMap.
+  Context {S: Type} {eqS: Setoid S} `{raS: RA (eqT:=eqS) S} `{pcmS: pcmType (eqT:=eqS) (pTA:=pord_ra) S}.
+  Context {T: Type} {eqT: Setoid T} `{raT: RA (eqT:=eqT) T} `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T}.
+  Context {U: Type} {eqU: Setoid U} `{raU: RA (eqT:=eqU) U} `{pcmU: pcmType (eqT:=eqU) (pTA:=pord_ra) U}.
 
+  Local Instance ra_force_pord_TS: preoType (T * S) := pord_ra.
+  Local Instance ra_force_pord_US: preoType (U * S) := pord_ra.
+  
+  Program Definition prodRAFstMap (f: T -m> U): (T * S) -m> (U * S) :=
+    mkMUMorph (prodFstMap f) _.
+  Next Obligation. (* If one day, this obligation disappears, then probably the instances are not working out anymore *)
+    move=>x y EQxy. change (prodFstMap f x ⊑ prodFstMap f y).
+    apply ra_pord_iff_prod_pord. apply ra_pord_iff_prod_pord in EQxy.
+    by eapply mu_mono.
+  Qed.
+
+  Global Instance prodRAFstMap_resp: Proper (equiv ==> equiv) prodRAFstMap.
+  Proof.
+    move=>x y EQxy z. change (prodFstMap x z == prodFstMap y z). unfold prodFstMap.
+    (* TODO this should probably be proven in the form of compatibility lemmas in MetricCore. *)
+    split; last reflexivity.
+    simpl. rewrite EQxy. reflexivity.
+  Qed.
+  Global Instance prodRAFstMap_nonexp n : Proper (dist n ==> dist n) prodRAFstMap.
+  Proof.
+    move=>x y EQxy z. change (prodFstMap x z = n = prodFstMap y z). unfold prodFstMap.
+    split; last reflexivity.
+    simpl. rewrite EQxy. reflexivity.
+  Qed.
+  
+
+  Local Instance ra_force_pord_ST: preoType (S * T) := pord_ra.
+  Local Instance ra_force_pord_SU: preoType (S * U) := pord_ra.
+
+  Program Definition prodRASndMap (f: T -m> U): (S * T) -m> (S * U) :=
+    mkMUMorph (prodSndMap f) _.
+  Next Obligation. (* If one day, this obligation disappears, then probably the instances are not working out anymore *)
+    move=>x y EQxy. change (prodSndMap f x ⊑ prodSndMap f y).
+    apply ra_pord_iff_prod_pord. apply ra_pord_iff_prod_pord in EQxy.
+    by eapply mu_mono.
+  Qed.
+
+  Global Instance prodRASndMap_resp: Proper (equiv ==> equiv) prodRASndMap.
+  Proof.
+    move=>x y EQxy z. change (prodSndMap x z == prodSndMap y z). unfold prodSndMap.
+    (* TODO this should probably be proven in the form of compatibility lemmas in MetricCore. *)
+    split; first reflexivity.
+    simpl. rewrite EQxy. reflexivity.
+  Qed.
+  Global Instance prodRASndMap_nonexp n : Proper (dist n ==> dist n) prodRASndMap.
+  Proof.
+    move=>x y EQxy z. change (prodSndMap x z = n = prodSndMap y z). unfold prodSndMap.
+    split; first reflexivity.
+    simpl. rewrite EQxy. reflexivity.
+  Qed.
+
+End PairsMap.
+Section PairsMapComp.
+  Context {S: Type} {eqS: Setoid S} `{raS: RA (eqT:=eqS) S} `{pcmS: pcmType (eqT:=eqS) (pTA:=pord_ra) S}.
+  Context {T: Type} {eqT: Setoid T} `{raT: RA (eqT:=eqT) T} `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T}.
+
+  Lemma prodRAFstMap_id:
+    prodRAFstMap (S:=S) (pid T) == pid (T*S).
+  Proof.
+    intros x. unfold prodRAFstMap. simpl. split; reflexivity.
+  Qed.
+  Lemma prodRASndMap_id:
+    prodRASndMap (S:=S) (pid T) == pid (S*T).
+  Proof.
+    intros x. unfold prodRASndMap. simpl. split; reflexivity.
+  Qed.
+  
+  Context {U: Type} {eqU: Setoid U} `{raU: RA (eqT:=eqU) U} `{pcmU: pcmType (eqT:=eqU) (pTA:=pord_ra) U}.
+  Context {V: Type} {eqV: Setoid V} `{raV: RA (eqT:=eqV) V} `{pcmV: pcmType (eqT:=eqV) (pTA:=pord_ra) V}.
+
+  Lemma prodRAFstMap_comp (f: T -m> U) (g: U -m> V):
+    prodRAFstMap g ∘ prodRAFstMap f == prodRAFstMap (S:=S) (g ∘ f).
+  Proof.
+    intros x. unfold prodRAFstMap. simpl. split; reflexivity.
+  Qed.
+  Lemma prodRASndMap_comp (f: T -m> U) (g: U -m> V):
+    prodRASndMap g ∘ prodRASndMap f == prodRASndMap (S:=S) (g ∘ f).
+  Proof.
+    intros x. unfold prodRASndMap. simpl. split; reflexivity.
+  Qed.
+End PairsMapComp.
 
 
 (** Morphisms between RAs. *)

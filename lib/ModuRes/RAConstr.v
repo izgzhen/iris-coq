@@ -561,6 +561,73 @@ Section Agreement.
   Qed.
 End Agreement.
 
+Section AgreementMap.
+  Context {T U: Type} `{cmT: cmetric T} `{cmU: cmetric U}.
+  Local Open Scope pumet_scope.
+
+  Program Definition ra_agree_map (f: T -n> U): ra_agree T -m> ra_agree U :=
+    m[(fun x => match x with
+                | ag_inj v ts => ag_inj U v (compose f ts)
+                | ag_unit => ag_unit U
+                end)].
+  Next Obligation.
+    move=> x y EQxy.
+    destruct n as [|n]; first by apply: dist_bound.
+    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); try (contradiction EQxy || reflexivity); [].
+    destruct EQxy as [Hv Hts]. split; first assumption.
+    move=>pv1 pv2. specialize (Hts pv1 pv2). unfold compose. rewrite Hts. reflexivity.
+  Qed.
+  Next Obligation.
+    move=>x y EQxy. apply ra_ag_pord. apply ra_ag_pord in EQxy.
+    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); try (contradiction EQxy || reflexivity); [].
+    destruct EQxy as [EQv EQts]. split; first split.
+    - intros (pv1 & pv2 & _). assumption.
+    - rewrite <-EQv. intros (pv1 & pv2 & EQ). exists pv1 pv2. unfold compose. rewrite EQ. reflexivity.
+    - unfold compose. intros [pv1 [pv2 EQ]] pv3. f_equiv. erewrite <-EQts. f_equiv. by eapply ProofIrrelevance.
+  Grab Existential Variables.
+  { rewrite EQv. assumption. }
+  Qed.
+
+  Global Instance ra_agree_map_resp: Proper (equiv ==> equiv) ra_agree_map.
+  Proof.
+    move=> x1 x2 EQx y.
+    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); last reflexivity.
+    split; first reflexivity.
+    move=>pv1 pv2. rewrite EQx. unfold compose. repeat f_equiv. eapply ProofIrrelevance.
+  Qed.
+  Global Instance ra_agree_map_dist n: Proper (dist n ==> dist n) ra_agree_map.
+  Proof.
+    move=> x1 x2 EQx y.
+    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); last reflexivity.
+    destruct n as [|n]; first by apply: dist_bound.
+    split; first reflexivity.
+    move=>pv1 pv2. rewrite EQx. unfold compose. repeat f_equiv. eapply ProofIrrelevance.
+  Qed.
+End AgreementMap.
+Section AgreementMapComp.
+  Local Open Scope pumet_scope.
+  Context {T: Type} `{cmT: cmetric T}.
+
+  Lemma ra_agree_map_id:
+    ra_agree_map (umid T) == (pid (ra_agree T)).
+  Proof.
+    intros x.
+    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); last reflexivity.
+    simpl. split; first reflexivity.
+    intros pv1 pv2. repeat f_equiv. eapply ProofIrrelevance.
+  Qed.
+  
+  Context {U V: Type} `{cmU: cmetric U} `{cmV: cmetric V}.
+
+  Lemma ra_agree_map_comp (f: T -n> U) (g: U -n> V): 
+    (ra_agree_map g) ∘ (ra_agree_map f) == ra_agree_map (g <M< f).
+  Proof.
+    intros x.
+    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); last reflexivity.
+    simpl. split; first reflexivity.
+    intros pv1 pv2. repeat f_equiv. eapply ProofIrrelevance.
+  Qed.
+End AgreementMapComp.
 
 Section IndexedProduct.
   (* I is the index type (domain), S the type of the components (codomain) *)

@@ -1,18 +1,55 @@
 (** In this file, we show how we can obtain a solution of the recursive
     domain equations to build a higher-order separation logic *)
-Require Import ModuRes.PreoMet ModuRes.Finmap ModuRes.RA ModuRes.UPred.
+Require Import ModuRes.PreoMet ModuRes.Finmap ModuRes.RA ModuRes.RAConstr ModuRes.SPred.
 Require Import ModuRes.CatBasics ModuRes.MetricRec ModuRes.CBUltInst.
-Require Import world_prop.
+(* Require Import world_prop. *)
+
+Section PreComp.
+  Context {T U V R: Type} `{pcmType T} `{pcmType U} `{pcmType V} `{pcmType R}.
+
+  (* (*    prodRAFstMap (fdRAMap (ra_agree_map f)) ▹ <M<
+   prodRAFstMap (fdRAMap (ra_agree_map h)) ▹ ==
+   prodRAFstMap (fdRAMap (ra_agree_map h) ∘ fdRAMap (ra_agree_map f))%pm ▹ *)
+
+ *)
+
+  Lemma precomp_by_comp (f: T -m> U) (g: U -m> V) (h: T -m> V):
+    (g ∘ f)%pm == h ->
+    (precomp_mne (V:=R) f) <M< (precomp_mne g) == h ▹.
+  Proof.
+    intros Hcomp i. simpl morph. rewrite <-Hcomp. rewrite pcomp_assoc. reflexivity.
+  Qed.
+
+  Lemma precomp_by_id (f: T -m> T):
+    f == (pid T) ->
+    equiv (A:=(T -m> R) -n> (T -m> R)) (precomp_mne f) (umid _).
+  Proof.
+    intros Hcomp i. simpl morph. rewrite Hcomp. intros x. reflexivity.
+  Qed.
+
+End PreComp.
 
 (* Now we come to the actual implementation *)
-Module WorldProp (Res : RA_T) : WORLD_PROP Res.
+Module WorldProp (Res : RA_T) (*: WORLD_PROP Res*) .
   (** The construction is parametric in the monoid we choose *)
 
   (** We need to build a functor that would describe the following
       recursive domain equation:
-        Prop ≃ (Loc -f> Prop) -m> UPred (Res)
+        Prop ≃ (Loc -f> ra_agree Prop) * Res -m> SPred
       As usual, we split the negative and (not actually occurring)
       positive occurrences of Prop. *)
+
+  Local Open Scope type.
+
+  (** We need to metrics for the base resources *)
+  Local Instance res_metric : metric Res.res := discreteMetric.
+  Local Instance res_cmetric : cmetric Res.res := discreteCMetric.
+
+  (** Finally, we need the right pcmType for the entire resource *)
+  Definition FRes P := (nat -f> ra_agree P) * Res.res.
+  Local Instance FResRA P `{cmetric P} : RA (FRes P) := _.
+  Local Instance FResPO P `{cmetric P} : preoType (FRes P) := pord_ra.
+  Local Instance FResPCM P `{cmetric P} : pcmType (FRes P) := _.
 
   Section Definitions.
     (** We'll be working with complete metric spaces, so whenever
@@ -21,13 +58,22 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
     Local Instance pt_disc P `{cmetric P} : preoType P | 2000 := disc_preo P.
     Local Instance pcm_disc P `{cmetric P} : pcmType P | 2000 := disc_pcm P.
 
-    Definition FProp P `{cmP : cmetric P} :=
-      (nat -f> P) -m> UPred (Res.res).
+    Section ObjectAction.
+      Context (P: Type) `{cmP: cmetric P}.
+      
+      Definition FProp :=
+        FRes P -m> SPred.
+    End ObjectAction.
 
-    Context {U V} `{cmU : cmetric U} `{cmV : cmetric V}.
+    Section ArrowAction.
+      Context {U V} `{cmU : cmetric U} `{cmV : cmetric V}.
 
-    Definition PropMorph (m : V -n> U) : FProp U -n> FProp V :=
-      fdMap (disc_m m) ▹.
+      Context (m: V -n> U).
+      Let InvMap : FRes V -m> FRes U :=
+        prodRAFstMap (fdRAMap (ra_agree_map m)).
+      Definition PropMorph : FProp U -n> FProp V :=
+        InvMap ▹. (* this "later" is post-composition *)
+    End ArrowAction.
 
   End Definitions.
 
@@ -46,14 +92,13 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
     Instance FFun : BiFunctor F.
     Proof.
       split; intros; unfold fmorph; simpl morph; unfold PropMorph.
-      - rewrite disc_m_comp, <- fdMap_comp, <- ucomp_precomp.
-        intros x; simpl morph; reflexivity.
-      - rewrite disc_m_id, fdMap_id, pid_precomp.
-        intros x; simpl morph; reflexivity.
+      - eapply precomp_by_comp. rewrite <-ra_agree_map_comp, <-fdRAMap_comp. eapply prodRAFstMap_comp.
+      - eapply precomp_by_id. unfold tid, MId. rewrite ra_agree_map_id, fdRAMap_id.
+        eapply prodRAFstMap_id.
     Qed.
 
     Definition F_ne : 1 -t> F 1 1 :=
-      umconst (pcmconst (up_cr (const True))).
+      umconst (pcmconst (sp_c True)).
   End F.
 
   Module F_In := InputHalve(F).
@@ -69,10 +114,9 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
   Instance PProp_cm : cmetric PreProp := _.
   Instance PProp_preo: preoType PreProp   := disc_preo PreProp.
   Instance PProp_pcm : pcmType PreProp    := disc_pcm PreProp.
-  Instance PProp_ext : extensible PreProp := disc_ext PreProp.
 
   (* Define worlds and propositions *)
-  Definition Wld     := (nat -f> PreProp).
+  Definition Wld     := FRes PreProp.
   Definition Props   := FProp PreProp.
   Instance Props_ty   : Setoid Props     := _.
   Instance Props_m    : metric Props     := _.

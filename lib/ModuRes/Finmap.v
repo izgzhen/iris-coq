@@ -1492,3 +1492,52 @@ Section RA.
   
 End RA.
 
+Section RAMap.
+  Context {I : Type} `{CI : comparable I}.
+  Context {T: Type} {eqT: Setoid T} `{raT: RA (eqT:=eqT) T} `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T}.
+  Context {U: Type} {eqU: Setoid U} `{raU: RA (eqT:=eqU) U} `{pcmU: pcmType (eqT:=eqU) (pTA:=pord_ra) U}.
+
+  Local Instance ra_force_pord_T: preoType (I -f> T) := pord_ra.
+  Local Instance ra_force_pord_U: preoType (I -f> U) := pord_ra.
+
+  Program Definition fdRAMap (f: T -m> U): (I -f> T) -m> (I -f> U) :=
+    mkMUMorph (fdMap f) _.
+  Next Obligation. (* If one day, this obligation disappears, then probably the instances are not working out anymore *)
+    move=>x y EQxy. change (fdMap f x ⊑ fdMap f y).
+    apply ra_pord_iff_ext_pord. apply ra_pord_iff_ext_pord in EQxy.
+    by eapply mu_mono.
+  Qed.
+
+  Global Instance fdRAMap_resp: Proper (equiv ==> equiv) fdRAMap.
+  Proof.
+    move=>x y EQxy. change (fdMap x == fdMap y). by eapply fdMap_resp.
+  Qed.
+  Global Instance fdRAMap_nonexp n : Proper (dist n ==> dist n) fdRAMap.
+  Proof.
+    move=>x y EQxy. change (fdMap x = n = fdMap y). by eapply fdMap_nonexp.
+  Qed.
+  
+End RAMap.
+
+Section RAMapComp.
+  Context {I : Type} `{CI : comparable I}.
+  Context {T: Type} {eqT: Setoid T} `{raT: RA (eqT:=eqT) T} `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T}.
+
+  Lemma fdRAMap_id:
+    fdRAMap (pid T) == pid (I -f> T).
+  Proof.
+    change (fdMap (pid T) == pid (I -f> T)).
+    by eapply fdMap_id.
+  Qed.
+  
+  Context {U: Type} {eqU: Setoid U} `{raU: RA (eqT:=eqU) U} `{pcmU: pcmType (eqT:=eqU) (pTA:=pord_ra) U}.
+  Context {V: Type} {eqV: Setoid V} `{raV: RA (eqT:=eqV) V} `{pcmV: pcmType (eqT:=eqV) (pTA:=pord_ra) V}.
+
+  Lemma fdRAMap_comp (f: T -m> U) (g: U -m> V):
+    fdRAMap g ∘ fdRAMap f == fdRAMap (g ∘ f).
+  Proof.
+    change (fdMap g ∘ fdMap f == fdMap (g ∘ f)).
+    by eapply fdMap_comp.
+  Qed.
+
+End RAMapComp.

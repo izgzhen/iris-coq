@@ -25,7 +25,7 @@ Arguments mu_morph  [T U] {_ _ _ _ _ _ _ _ _ _} _.
 Arguments mu_mono  {_ _} {_ _ _ _ _ _ _ _ _ _} _ {_ _} _.
 
 Infix "-m>" := monoMet_morphism (at level 45, right associativity) : pumet_scope.
-Notation "'m[(' f ')]'" := (mkMUMorph n[(f)] _).
+Notation "'m[(' f ')]'" := (mkMUMorph n[(f)] _) : pumet_scope.
 Delimit Scope pumet_scope with pm.
 Open Scope pumet_scope.
 
