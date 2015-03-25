@@ -337,12 +337,24 @@ Section MonotoneProducts.
     intros HL HR x; split; simpl; [rewrite <- HL | rewrite <- HR]; reflexivity.
   Qed.
 
+
 End MonotoneProducts.
 
 Notation "〈 f , g 〉" := (pcmprod f g) : pumet_scope.
 Notation "'π₁'" := pcmfst : pumet_scope.
 Notation "'π₂'" := pcmsnd : pumet_scope.
 
+Section MonotoneProductMap.
+  Local Open Scope pumet_scope.
+  Context `{pcT : pcmType T} `{pcU : pcmType U} `{pcV : pcmType V}.
+
+  Definition prodFstMap (f: T -m> U): (T * V) -m> (U * V) :=
+    〈 f ∘ π₁ , π₂ 〉.
+
+  Definition prodSndMap (f: T -m> U): (V * T) -m> (V * U) :=
+    〈 π₁ , f ∘ π₂ 〉.
+
+End MonotoneProductMap.
 
 Section Extras.
   Local Open Scope pumet_scope.
