@@ -577,10 +577,10 @@ Section FinDom.
       unfold finmap_chainx.
       generalize (@eq_refl _ (σ (S i) x)); pattern (σ (S i) x) at 1 3.
       destruct (σ (S i) x) as [vi |] => [EQni|E]; last first. 
-      { exfalso. eapply fdLookup_notin_strong. symmetry. eassumption. by eapply finmap_chain_dom. }
+      { exfalso. eapply (fdLookup_notin_strong x (σ (S i))); [by symmetry|by eapply finmap_chain_dom]. }
       generalize (@eq_refl _ (σ (S j) x)); pattern (σ (S j) x) at 1 3.
       destruct (σ (S j) x) as [vj |] => [EQnj|E]; last first. 
-      { exfalso. eapply fdLookup_notin_strong. symmetry. eassumption. by eapply finmap_chain_dom. }
+      { exfalso. eapply (fdLookup_notin_strong x (σ (S j))); [by symmetry|by eapply finmap_chain_dom]. }
       move : (σc _ _ _ (le_S _ _ HLei) (le_S _ _ HLej) x). 
       by rewrite -EQni -EQnj. 
     Qed.
