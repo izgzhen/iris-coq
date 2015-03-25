@@ -73,6 +73,17 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (r u v : res) (σ : state).
 
+  Definition valid (P: Props) :=
+    forall w n r, P w n r.
+
+  Lemma valid_iff P :
+    valid P <-> (⊤ ⊑ P).
+  Proof.
+    split; intros Hp.
+    - intros w n r _; apply Hp.
+    - intros w n r; apply Hp; exact I.
+  Qed.
+
   (* Simple view lemmas. *)
 
   Lemma lerefl (n : nat) : n <= n. Proof. by reflexivity. Qed.
@@ -415,14 +426,6 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Qed.
 
   End Ownership.
-
-  Lemma valid_iff P :
-    valid P <-> (⊤ ⊑ P).
-  Proof.
-    split; intros Hp.
-    - intros w n r _; apply Hp.
-    - intros w n r; apply Hp; exact I.
-  Qed.
 
   (* People will need that *)
   Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
