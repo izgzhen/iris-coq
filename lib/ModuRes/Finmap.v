@@ -1475,27 +1475,31 @@ Section RA.
          { rewrite fdCompose_update_neq; last by apply comp_Lt_lt, comp_flip_gl. 
            exact: Hfg. }
   Qed.
-           
-
-  (* Show that this preserved pcm-edness of S with the RA-order of S *)
-  Section RA_PCM.
-    Context `{pcmS: pcmType (eqT:=eqT) (pTA:=pord_ra) S}.
-
-    Global Instance ra_finmap_pcm: pcmType (pTA:=pord_ra) (I -f> S).
-    Proof.
-      split. intros σ ρ σc ρc HC.
-      apply ra_pord_iff_ext_pord.
-      eapply pcm_respC; first by apply _.
-      move=>i. apply ra_pord_iff_ext_pord. by apply: HC.
-    Qed.
-  End RA_PCM.
-  
 End RA.
+Section CMRA.
+  Context {I : Type} `{CI : comparable I}.
+  Context {T: Type} `{cmraS: CMRA T}.
+
+  Global Instance ra_finmap_pcm: pcmType (pTA:=pord_ra) (I -f> T).
+  Proof.
+    split. intros σ ρ σc ρc HC.
+    apply ra_pord_iff_ext_pord.
+    eapply pcm_respC; first by apply _.
+    move=>i. apply ra_pord_iff_ext_pord. by apply: HC.
+  Qed.
+
+  Global Instance finmap_cmra : CMRA (I -f> T).
+  Proof.
+    split. move=>n f1 f2 EQf g1 g2 EQg.
+    destruct n as [|n]; first by apply: dist_bound.
+    admit.
+  Qed.
+  
+End CMRA.
 
 Section RAMap.
   Context {I : Type} `{CI : comparable I}.
-  Context {T: Type} {eqT: Setoid T} `{raT: RA (eqT:=eqT) T} `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T}.
-  Context {U: Type} {eqU: Setoid U} `{raU: RA (eqT:=eqU) U} `{pcmU: pcmType (eqT:=eqU) (pTA:=pord_ra) U}.
+  Context {T U: Type} `{cmraT: CMRA T} `{cmraU: CMRA U}.
 
   Local Instance ra_force_pord_T: preoType (I -f> T) := pord_ra.
   Local Instance ra_force_pord_U: preoType (I -f> U) := pord_ra.
@@ -1521,7 +1525,7 @@ End RAMap.
 
 Section RAMapComp.
   Context {I : Type} `{CI : comparable I}.
-  Context {T: Type} {eqT: Setoid T} `{raT: RA (eqT:=eqT) T} `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T}.
+  Context {T: Type} `{cmraT: CMRA T}.
 
   Lemma fdRAMap_id:
     fdRAMap (pid T) == pid (I -f> T).
@@ -1529,9 +1533,9 @@ Section RAMapComp.
     change (fdMap (pid T) == pid (I -f> T)).
     by eapply fdMap_id.
   Qed.
-  
-  Context {U: Type} {eqU: Setoid U} `{raU: RA (eqT:=eqU) U} `{pcmU: pcmType (eqT:=eqU) (pTA:=pord_ra) U}.
-  Context {V: Type} {eqV: Setoid V} `{raV: RA (eqT:=eqV) V} `{pcmV: pcmType (eqT:=eqV) (pTA:=pord_ra) V}.
+
+  Context {U: Type} `{cmraU: CMRA U}.
+  Context {V: Type} `{cmraV: CMRA V}.
 
   Lemma fdRAMap_comp (f: T -m> U) (g: U -m> V):
     fdRAMap g ∘ fdRAMap f == fdRAMap (g ∘ f).
