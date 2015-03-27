@@ -13,6 +13,16 @@ Section Definitions.
     mkSPred (fun n => p) _.
   Next Obligation. intros m n _ HP. tauto. Qed.
 
+  Definition sp_top: SPred := sp_c True.
+
+  Definition sp_full (p: SPred) := forall n, p n.
+
+  Lemma sp_top_full:
+    sp_full sp_top.
+  Proof.
+    intro. exact I.
+  Qed.
+
   Definition sp_equiv (p q : SPred) := forall n, p n == q n.
 
   Global Instance sp_equiv_e: Equivalence sp_equiv.
@@ -24,6 +34,12 @@ Section Definitions.
   Qed.
 
   Global Program Instance sp_type : Setoid SPred := mkType sp_equiv.
+
+  Global Instance sp_full_resp: Proper (equiv ==> equiv) sp_full.
+  Proof.
+    move=>s1 s2 EQs.
+    split; intros H n; now firstorder.
+  Qed.
 
   Definition sp_dist n (p q : SPred) :=
     forall m, m < n -> (p m <-> q m).
@@ -137,59 +153,4 @@ End Definitions.
 Arguments dpred {s} {n m} _ _.
 
 Notation "▹ p" := (later_sp p) (at level 20) : spred_scope.
-(*
-Section Products.
-  Context {R S} `{pR : preoType R} `{pS : preoType S}.
-
-  Program Definition prod_up (p : UPred R) (q : UPred S) : UPred (R * S) :=
-    mkUPred (fun n rs => p n (fst rs) /\ q n (snd rs)) _.
-  Next Obligation.
-    intros n m [r1 s1] [r2 s2] HLe [Subr Subs] [HP HQ]; simpl in HP, HQ.
-    simpl; split; [rewrite <- Subr | rewrite <- Subs]; rewrite -> HLe; assumption.
-  Qed.
-
-  Global Instance prod_up_equiv : Proper (equiv ==> equiv ==> equiv) prod_up.
-  Proof.
-    intros p1 p2 EQp q1 q2 EQq n [r s]; simpl.
-    rewrite -> EQp, EQq; tauto.
-  Qed.
-  Global Instance prod_up_dist n : Proper (dist n ==> dist n ==> dist n) prod_up.
-  Proof.
-    intros p1 p2 EQp q1 q2 EQq m [r s] HLt; simpl.
-    split; intros [HP HQ]; (split; [apply EQp | apply EQq]); assumption.
-  Qed.
-  Global Instance prod_up_pord : Proper (pord ==> pord ==> pord) prod_up.
-  Proof.
-    intros p1 p2 Subp q1 q2 Subq n [r s]; simpl; intros [HP HQ].
-    split; [apply Subp | apply Subq]; assumption.
-  Qed.
-
-End Products.
-Notation "p × q" := (prod_up p q) (at level 40, left associativity) : spred_scope.
-*)
 Delimit Scope spred_scope with sp.
-(*
-Section Closures.
-  Context {T} `{pcmT : pcmType T} {R} `{poT : preoType R} (P : T -> Prop) (Q : T -> UPred R).
-  Local Obligation Tactic := intros.
-
-  Program Definition all_cl : UPred R :=
-    mkUPred (fun n r => forall t (HP : P t), Q t n r) _.
-  Next Obligation.
-    intros n m r1 r2 HLe HSubr HQ t' HP.
-    rewrite <- HSubr, HLe; apply HQ, HP.
-  Qed.
-
-  Program Definition xist_cl : UPred R :=
-    mkUPred (fun n r => exists t, P t /\ Q t n r) _.
-  Next Obligation.
-    intros n m r1 r2 HLe HSubr [t' [HP HQ]].
-    exists t'; split; [assumption |].
-    rewrite -> HLe, <- HSubr; apply HQ.
-  Qed.
-
-End Closures.
-
-Notation "∀ w ∈ P , Q" := (all_cl P (fun w => Q)) (at level 60, w at level 30, P, Q at next level) : upred_scope.
-Notation "∃ w ∈ P , Q" := (xist_cl P (fun w => Q)) (at level 60, w at level 30, P, Q at next level) : upred_scope.
-*)

@@ -1,6 +1,5 @@
 Require Import PreoMet.
-Require Import RA.
-Require Import UPred SPred.
+Require Import RA SPred.
 
 Section CompleteBI.
   Context {T : Type}.
@@ -30,12 +29,15 @@ Section CompleteBI.
 
   End Lift.
 
-  Class ComplBI `{pcmT : pcmType T, BIT : topBI, BIB : botBI, BIA : andBI,
-                                    BIO : orBI, BII : implBI, BISC : scBI, BISI : siBI}
-        {BIAll : allBI} {BIXist : xistBI} :=
-    mkCBI {
+  Class Bounded `{pcmT : pcmType T, BIT : topBI, BIB : botBI}: Prop :=
+    mkBounded {
         top_true    :  forall P, P ⊑ top;
-        bot_false   :  forall P, bot ⊑ P;
+        bot_false   :  forall P, bot ⊑ P
+      }.
+
+  Class ComplBI `{pcmT : Bounded, BIA : andBI, BIO : orBI, BII : implBI, BISC : scBI, BISI : siBI}
+        {BIAll : allBI} {BIXist : xistBI} : Prop :=
+    mkCBI {
         and_self    :  forall P, P ⊑ and P P;
         and_projL   :  forall P Q, and P Q ⊑ P;
         and_projR   :  forall P Q, and P Q ⊑ Q;
@@ -70,7 +72,7 @@ Section CompleteBI.
           (forall u, P u ⊑ Q u) -> all P ⊑ all Q;
         xist_L     U `{cmU : cmetric U} :
           forall (P : U -n> T) Q, (forall u, P u ⊑ Q) <-> xist P ⊑ Q;
-        xist_sc    U `{cmU : cmetric U} :
+        xist_sc    U `{cmU : cmetric U} : (* RJ: Where does this come from? Why is there nothing similar for all? *)
           forall (P : U -n> T) Q, sc (xist P) Q ⊑ xist (lift_bin sc P (umconst Q));
         xist_equiv U `{cmU : cmetric U} :> Proper (equiv ==> equiv) xist;
         xist_dist  U `{cmU : cmetric U} n :> Proper (dist n ==> dist n) xist;
@@ -89,16 +91,17 @@ Arguments scBI   : default implicits.
 Arguments siBI   : default implicits.
 Arguments allBI  T {_ _ _}.
 Arguments xistBI T {_ _ _}.
-Arguments ComplBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _}.
+Arguments Bounded T {_ _ _ _ _ _ _}.
+Arguments ComplBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _}.
 
-Class Later (T : Type) `{ComplBI T} :=
+Class Later (T : Type) `{Bounded T} :=
   { later : T -m> T;
     later_mon (t : T) : t ⊑ later t;
     later_contr : contractive later;
     loeb (t : T) (HL : later t ⊑ t) : top ⊑ t
   }.
 
-Arguments Build_Later _ {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _} _ _ _ _.
+Arguments Build_Later T {_ _ _ _ _ _ _ _} _ _ _ _.
 
 Delimit Scope bi_scope with bi.
 Notation " ▹ p " := (later p) (at level 20) : bi_scope.
@@ -114,281 +117,19 @@ Notation "∃ x , p" := (xist n[(fun x => p)]) (at level 60, x ident, right asso
 Notation "∀ x : T , p" := (all n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
 Notation "∃ x : T , p" := (xist n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
 
-Section UPredBI.
-  Context res `{raRes : RA res}.
-  Local Open Scope ra_scope.
-  Local Obligation Tactic := intros; eauto with typeclass_instances.
-
-  (* Standard interpretations of propositional connectives. *)
-  Global Program Instance top_up : topBI (UPred res) := up_cr (const True).
-  Global Program Instance bot_up : botBI (UPred res) := up_cr (const False).
-
-  Global Program Instance and_up : andBI (UPred res) :=
-    fun P Q =>
-      mkUPred (fun n r => P n r /\ Q n r) _.
-  Next Obligation.
-    intros n m r1 r2 HLe HSub; rewrite HSub, HLe; tauto.
-  Qed.
-  Global Program Instance or_up : orBI (UPred res) :=
-    fun P Q =>
-      mkUPred (fun n r => P n r \/ Q n r) _.
-  Next Obligation.
-    intros n m r1 r2 HLe HSub; rewrite HSub, HLe; tauto.
-  Qed.
-
-  Global Program Instance impl_up : implBI (UPred res) :=
-    fun P Q =>
-      mkUPred (fun n r => forall m r', m <= n -> r ⊑ r' -> P m r' -> Q m r') _.
-  Next Obligation.
-    intros n m r1 r2 HLe HSub HImp k r3 HLe' HSub' HP.
-    apply HImp; try (etransitivity; eassumption); assumption.
-  Qed.
-  
-  (* BI connectives. *)
-  Global Program Instance sc_up : scBI (UPred res) :=
-    fun P Q =>
-      mkUPred (fun n r => exists r1 r2, r1 · r2 == r /\ P n r1 /\ Q n r2) _.
-  Next Obligation.
-    intros n m r1 r2 HLe [rd HEq] [r11 [r12 [HEq' [HP HQ]]]].
-    rewrite <- HEq', assoc in HEq; setoid_rewrite HLe.
-    exists (rd · r11).
-    exists r12.
-    split; [|split;[|assumption] ].
-    - simpl. assumption.
-    - eapply uni_pred, HP; [reflexivity|].
-      exists rd. reflexivity.
-  Qed.
-
-  Global Program Instance si_up : siBI (UPred res) :=
-    fun P Q =>
-      mkUPred (fun n r => forall m r' rr, r · r' == rr -> m <= n -> P m r' -> Q m rr) _.
-  Next Obligation.
-    intros n m r1 r2 HLe [r12 HEq] HSI k r rr HEq' HSub HP.
-    rewrite comm in HEq; rewrite <- HEq, <- assoc in HEq'.
-    pose (rc := (r12 · r)).
-    eapply HSI with (r':=rc); [| etransitivity; eassumption |].
-    - simpl. assumption. 
-    - eapply uni_pred, HP; [reflexivity|]. exists r12. reflexivity.
-  Qed.
-
-  (* Quantifiers. *)
-  Global Program Instance all_up : allBI (UPred res) :=
-    fun T eqT mT cmT R =>
-      mkUPred (fun n r => forall t, R t n r) _.
-  Next Obligation.
-    intros n m r1 r2 HLe HSub HR t; rewrite HLe, <- HSub; apply HR.
-  Qed.
-
-  Global Program Instance xist_up : xistBI (UPred res) :=
-    fun T eqT mT cmT R =>
-      mkUPred (fun n r => exists t, R t n r) _.
-  Next Obligation.
-    intros n m r1 r2 HLe HSub [t HR]; exists t; rewrite HLe, <- HSub; apply HR.
-  Qed.
-
-  (* For some reason tc inference gets confused otherwise *)
-  Existing Instance up_type.
-
-  (* All of the above preserve all the props it should. *)
-  Global Instance and_up_equiv : Proper (equiv ==> equiv ==> equiv) and_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n r; simpl.
-    rewrite EQP, EQQ; tauto.
-  Qed.
-  Global Instance and_up_dist n : Proper (dist n ==> dist n ==> dist n) and_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ m r HLt; simpl.
-    split; intros; (split; [apply EQP | apply EQQ]; now auto with arith).
-  Qed.
-  Global Instance and_up_ord : Proper (pord ==> pord ==> pord) and_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n r; simpl.
-    rewrite EQP, EQQ; tauto.
-  Qed.
-
-  Global Instance or_up_equiv : Proper (equiv ==> equiv ==> equiv) or_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n r; simpl.
-    rewrite EQP, EQQ; tauto.
-  Qed.
-  Global Instance or_up_dist n : Proper (dist n ==> dist n ==> dist n) or_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ m r HLt; simpl.
-    split; (intros [HP | HQ]; [left; apply EQP | right; apply EQQ]; now auto with arith).
-  Qed.
-  Global Instance or_up_ord : Proper (pord ==> pord ==> pord) or_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n r; simpl.
-    rewrite EQP, EQQ; tauto.
-  Qed.
-
-  Global Instance impl_up_equiv : Proper (equiv ==> equiv ==> equiv) impl_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n r; simpl.
-    setoid_rewrite EQP; setoid_rewrite EQQ; tauto.
-  Qed.
-  Global Instance impl_up_dist n : Proper (dist n ==> dist n ==> dist n) impl_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ m r HLt; simpl.
-    split; intros; apply EQQ, H, EQP; now eauto with arith.
-  Qed.
-  Global Instance impl_up_ord : Proper (pord --> pord ++> pord) impl_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n r HP m r'.
-    rewrite <- EQP, <- EQQ; apply HP.
-  Qed.
-
-  Global Instance sc_up_equiv : Proper (equiv ==> equiv ==> equiv) sc_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n r; simpl.
-    setoid_rewrite EQP; setoid_rewrite EQQ; tauto.
-  Qed.
-  Global Instance sc_up_dist n : Proper (dist n ==> dist n ==> dist n) sc_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ m r HLt; simpl.
-    split; intros [r1 [r2 [EQr [HP HQ]]]]; exists r1; exists r2;
-    (split; [assumption | split; [apply EQP | apply EQQ]; now auto with arith]).
-  Qed.
-  Global Instance sc_up_ord : Proper (pord ==> pord ==> pord) sc_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n r HH; simpl.
-    setoid_rewrite <- EQP; setoid_rewrite <- EQQ; apply HH.
-  Qed.
-
-  Global Instance si_up_equiv : Proper (equiv ==> equiv ==> equiv) si_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n r; simpl.
-    setoid_rewrite EQP; setoid_rewrite EQQ; tauto.
-  Qed.
-  Global Instance si_up_dist n : Proper (dist n ==> dist n ==> dist n) si_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ m r HLt; simpl.
-    split; intros; eapply EQQ, H, EQP; now eauto with arith.
-  Qed.
-  Global Instance si_up_ord : Proper (pord --> pord ++> pord) si_up.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n r HP m r' rr.
-    rewrite <- EQP, <- EQQ; apply HP.
-  Qed.
-
-  Section Quantifiers.
-    Context V `{pU : cmetric V}.
-
-    Existing Instance nonexp_type.
-
-    Global Instance all_up_equiv : Proper (equiv (A := V -n> UPred res) ==> equiv) all.
-    Proof.
-      intros R1 R2 EQR n r; simpl.
-      setoid_rewrite EQR; tauto.
-    Qed.
-    Global Instance all_up_dist n : Proper (dist (T := V -n> UPred res) n ==> dist n) all.
-    Proof.
-      intros R1 R2 EQR m r HLt; simpl.
-      split; intros; apply EQR; now auto.
-    Qed.
-
-    Global Instance xist_up_equiv : Proper (equiv (A := V -n> UPred res) ==> equiv) xist.
-    Proof.
-      intros R1 R2 EQR n r; simpl.
-      setoid_rewrite EQR; tauto.
-    Qed.
-    Global Instance xist_up_dist n : Proper (dist (T := V -n> UPred res)n ==> dist n) xist.
-    Proof.
-      intros R1 R2 EQR m r HLt; simpl.
-      split; intros [t HR]; exists t; apply EQR; now auto.
-    Qed.
-
-  End Quantifiers.
-
-  Global Program Instance bi_up : ComplBI (UPred res).
-  Next Obligation.
-    intros n r _; exact I.
-  Qed.
-  Next Obligation.
-    intros n r HC; contradiction HC.
-  Qed.
-  Next Obligation.
-    intros n r; simpl; tauto.
-  Qed.
-  Next Obligation.
-    intros n r [HP HQ]; assumption.
-  Qed.
-  Next Obligation.
-    intros n r [HP HQ]; assumption.
-  Qed.
-  Next Obligation.
-    split; intros HH n r.
-    - intros HP m r' HLe HSub HQ; apply HH; split; [rewrite HLe, <- HSub |]; assumption.
-    - intros [HP HQ]; eapply HH; eassumption || reflexivity.
-  Qed.
-  Next Obligation.
-    intros n r HP; left; assumption.
-  Qed.
-  Next Obligation.
-    intros n r HQ; right; assumption.
-  Qed.
-  Next Obligation.
-    intros n r; simpl; tauto.
-  Qed.
-  Next Obligation.
-    intros P Q n r; simpl.
-    split; intros [r1 [r2 HPQ]]; exists r2 r1; rewrite comm; tauto.
-  Qed.
-  Next Obligation.
-    intros P Q R n r; split.
-    - intros [r1 [rr [EQr [HP [r2 [r3 [EQrr [HQ HR]]]]]]]].
-      rewrite <- EQrr, assoc in EQr. unfold sc.
-      exists (r1 · r2).
-      exists r3; split; [assumption | split; [| assumption] ].
-      exists r1 r2; split; [reflexivity | split; assumption].
-    - intros [rr [r3 [EQr [[r1 [r2 [EQrr [HP HQ]]]] HR]]]].
-      rewrite <- EQrr, <- assoc in EQr; clear EQrr.
-      exists r1.
-      exists (r2 · r3).
-      split; [assumption | split; [assumption |] ].
-      exists r2 r3; split; [reflexivity | split; assumption].
-  Qed.
-  Next Obligation.
-    intros n r; split.
-    - intros [r1 [r2 [EQr [_ HP]]]].
-      eapply uni_pred, HP; [reflexivity|]. exists (r1). assumption.
-    - intros HP. exists 1 r. split; [simpl; erewrite ra_op_unit by apply _; reflexivity |].
-      simpl; unfold const; tauto.
-  Qed.
-  Next Obligation.
-    split; intros HH n r.
-    - intros HP m r' rr EQrr HLe HQ; apply HH; rewrite <- HLe in HP.
-      eexists; eexists; split; [eassumption | tauto].
-    - intros [r1 [r2 [EQr [HP HQ]]]]; eapply HH; eassumption || reflexivity.
-  Qed.
-  Next Obligation.
-    split.
-    - intros HH n r HP u; apply HH; assumption.
-    - intros HH u n r HP; apply HH; assumption.
-  Qed.
-  Next Obligation.
-    intros n r HA u; apply H, HA.
-  Qed.
-  Next Obligation.
-    split.
-    - intros HH n r [u HP]; eapply HH; eassumption.
-    - intros HH u n r HP; apply HH; exists u; assumption.
-  Qed.
-  Next Obligation.
-    intros n t [t1 [t2 [EQt [[u HP] HQ]]]]; exists u t1 t2; tauto.
-  Qed.
-  Next Obligation.
-    intros n r [u HA]; exists u; apply H, HA.
-  Qed.
-
-End UPredBI.
-
 Section SPredBI.
   Local Obligation Tactic := intros; eauto with typeclass_instances.
 
   (* Standard interpretations of propositional connectives. *)
-  Global Program Instance top_sp : topBI SPred := sp_c True.
+  Global Program Instance top_sp : topBI SPred := sp_top.
   Global Program Instance bot_sp : botBI SPred := sp_c False.
+
+  Global Instance bounded_sp : Bounded SPred.
+  Proof.
+    split; intro.
+    - intros n _; exact I.
+    - intros n HC; contradiction HC.
+  Qed.
 
   Global Program Instance and_sp : andBI SPred :=
     fun P Q =>
@@ -521,12 +262,6 @@ Section SPredBI.
 
   Global Program Instance bi_sp : ComplBI SPred.
   Next Obligation.
-    intros n _; exact I.
-  Qed.
-  Next Obligation.
-    intros n HC; contradiction HC.
-  Qed.
-  Next Obligation.
     intros n; simpl; tauto.
   Qed.
   Next Obligation.
@@ -585,33 +320,6 @@ Section SPredBI.
 
 End SPredBI.
 
-Section UPredLater.
-  Context res `{raRes : RA res}.
-  Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
-
-  Global Instance later_up_mon : Proper (pord ==> pord) later_up.
-  Proof.
-    intros p q Hpq [| n] r; [intros; exact I | simpl; apply Hpq].
-  Qed.
-
-  Global Program Instance later_upred : Later (UPred res) :=
-    Build_Later _ m[(later_up)] _ _ _.
-  Next Obligation.
-    intros [| n] r Ht; [exact I | simpl].
-    rewrite Le.le_n_Sn; assumption.
-  Qed.
-  Next Obligation.
-    intros n p q Hpq [| m] r HLt; simpl; [tauto |].
-    apply Hpq; auto with arith.
-  Qed.
-  Next Obligation.
-    intros n r _; induction n.
-    - apply HL; exact I.
-    - apply HL, IHn.
-  Qed.
-
-End UPredLater.
-
 Section SPredLater.
   Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
 
@@ -646,7 +354,7 @@ Class MonotoneClosure T `{pcmT : pcmType T} :=
   { mclose : forall {U} `{pcmU : pcmType U} {eU : extensible U},
                (U -n> T) -n> U -m> T;
     mclose_cl : forall {U} `{pcmU : pcmType U} {eU : extensible U} (f : U -n> T) u,
-                  mclose f u ⊑ f u;
+                  mclose f u ⊑ f u; (* RJ: TODO why can't we get rid of the eta-expanded u here? *)
     mclose_fw : forall {U} `{pcmU : pcmType U} {eU : extensible U} (f : U -n> T) u t
                        (HFW : forall u' (HS : u ⊑ u'), t ⊑ f u'),
                   t ⊑ mclose f u
@@ -660,6 +368,16 @@ Section MonotoneExt.
 
   Global Instance top_mm : topBI (T -m> B) := pcmconst top.
   Global Instance bot_mm : botBI (T -m> B) := pcmconst bot.
+
+  (* TODO this should not depend on a full-blown BI for B *)
+  Global Program Instance bounded_mm : Bounded (T -m> B).
+  Next Obligation.
+    intros t; apply top_true.
+  Qed.
+  Next Obligation.
+    intros t; apply bot_false.
+  Qed.
+
 
   Global Program Instance and_mm : andBI (T -m> B) :=
     fun P Q => m[(lift_bin and P Q)].
@@ -812,12 +530,6 @@ Section MonotoneExt.
 
   Global Program Instance bi_mm : ComplBI (T -m> B).
   Next Obligation.
-    intros t; apply top_true.
-  Qed.
-  Next Obligation.
-    intros t; apply bot_false.
-  Qed.
-  Next Obligation.
     intros t; simpl morph; apply and_self.
   Qed.
   Next Obligation.
@@ -901,86 +613,3 @@ Section MonotoneLater.
 
 End MonotoneLater.
 
-Section MComplUP.
-
-  Context V `{pV : preoType V}.
-  Local Obligation Tactic := intros; try resp_set.
-
-  Section Def.
-    Context T `{pcmT : pcmType T} {eT : extensible T}.
-
-    Program Definition mclose_up : (T -n> UPred V) -n> T -m> UPred V :=
-      n[(fun f: T -n> UPred V => m[(fun t => mkUPred (fun n v => forall t', t ⊑ t' -> f t' n v) _)])].
-    Next Obligation.
-      intros n m v1 v2 HLe HSubv HT t' HSubt.
-      rewrite HLe, <- HSubv; apply HT, HSubt.
-    Qed.
-    Next Obligation.
-      intros t1 t2 EQt m v HLt; split; intros HT t' Subt;
-      (destruct n as [| n]; [now inversion HLt |]).
-      - symmetry in EQt.
-        assert (HH : f t' = S n = f (extend t' t1)) by (eapply f, extend_dist; eassumption).
-        apply HH; [assumption |].
-        eapply HT, extend_sub; eassumption.
-      - assert (HH : f t' = S n = f (extend t' t2)) by (eapply f, extend_dist; eassumption).
-        apply HH; [assumption |].
-        eapply HT, extend_sub; eassumption.
-    Qed.
-    Next Obligation.
-      intros t1 t2 Subt n v HT t' Subt'; apply HT; etransitivity; eassumption.
-    Qed.
-    Next Obligation.
-      intros f1 f2 EQf u m v HLt; split; intros HH u' HSub; apply EQf, HH; assumption.
-    Qed.
-
-  End Def.
-
-  Global Program Instance MCl_up : MonotoneClosure (UPred V) :=
-    Build_MonotoneClosure mclose_up.
-  Next Obligation.
-    intros n v HH; apply HH; reflexivity.
-  Qed.
-  Next Obligation.
-    intros n v HH u' HSub; apply HFW; assumption.
-  Qed.
-
-End MComplUP.
-
-(* The above suffice for showing that the eqn used in Iris actually forms a Complete BI.
-   The following would allow for further monotone morphisms to be added. *)
-(* RJ: The following is also so slow (since we moved the pord Proper from pcmType to preoType) that I
-   disabled it. *)
-(* Section MComplMM.
-  Context B `{BBI : ComplBI B} {MCB : MonotoneClosure B}
-          V `{pcmV : pcmType V} {eT : extensible V}.
-  Local Obligation Tactic := intros; resp_set || mono_resp || eauto with typeclass_instances.
-
-  Section Def.
-    Context U `{pcmU : pcmType U} {eU : extensible U}.
-
-    Program Definition mclose_mm : (U -n> V -m> B) -n> U -m> V -m> B :=
-      n[(fun f:U -n> V -m> B  => mcurry (mclose n[(fun uv => f (fst uv) (snd uv))]))].
-    Next Obligation.
-      intros [u1 v1] [u2 v2] [EQu EQv]; simpl morph.
-      unfold fst, snd in *; rewrite EQu, EQv; reflexivity.
-    Qed.
-    Next Obligation.
-      intros f1 f2 EQf u v; simpl morph.
-      apply mclose; clear u v; intros [u v]; simpl morph.
-      apply EQf.
-    Qed.
-
-  End Def.
-
-  Global Program Instance MCl_mm : MonotoneClosure (V -m> B) := Build_MonotoneClosure mclose_mm.
-  Next Obligation.
-    intros v; simpl morph.
-    rewrite mclose_cl; reflexivity.
-  Qed.
-  Next Obligation.
-    intros v; simpl morph.
-    apply mclose_fw; intros [u' v'] [HSubu HSubv]; simpl morph.
-    rewrite HSubv; apply HFW; assumption.
-  Qed.
-
-End MComplMM.*)

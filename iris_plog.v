@@ -1,6 +1,6 @@
 Require Import Ssreflect.ssreflect Omega.
 Require Import world_prop core_lang lang masks iris_core.
-Require Import ModuRes.RA ModuRes.UPred ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr.
+Require Import ModuRes.RA ModuRes.SPred ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr.
 
 Set Bullet Behavior "Strict Subproofs".
 
