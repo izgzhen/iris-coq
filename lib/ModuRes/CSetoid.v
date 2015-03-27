@@ -6,9 +6,12 @@
     (product, exponential, initial objects and functors at the end)
     and some of their properties are proved.
  *)
+
+Require Import Ssreflect.ssreflect.  
 Require Export Coq.Program.Program.
 Require Export Morphisms SetoidTactics.
 Require Export SetoidClass.
+Require Export Util.
 
 Generalizable Variables T U V W.
 
@@ -20,15 +23,6 @@ Proof.
 Qed.
 
 Notation "'mkType' R" := (@Build_Setoid _ R _) (at level 10).
-
-Ltac find_rewrite1 t0 t1 := match goal with
-                            | H: t0 = t1 |- _ => rewrite-> H
-                            | H: t0 == t1 |- _ => rewrite-> H
-                            | H: t1 = t0 |- _ => rewrite<- H
-                            | H: t1 == t0 |- _ => rewrite<- H
-                            end.
-Ltac find_rewrite2 t0 t1 t2 := find_rewrite1 t0 t1; find_rewrite1 t1 t2.
-Ltac find_rewrite3 t0 t1 t2 t3 := find_rewrite2 t0 t1 t2; find_rewrite1 t2 t3.
 
 (** A morphism between two types is an actual function together with a
     proof that it preserves equality. *)
@@ -95,7 +89,7 @@ Section MorphConsts.
   Global Instance equiv_mcomp :
     Proper (equiv (A := U -=> V) ==> equiv ==> equiv) mcomp.
   Proof.
-    intros f f' HEq g g' HEq' x; simpl; rewrite HEq, HEq'; reflexivity.
+    intros f f' HEq g g' HEq' x; simpl; rewrite ->HEq, HEq'; reflexivity.
   Qed.
 
   (** Composition of morphisms is associative. *)
@@ -198,7 +192,7 @@ Section Exponentials.
     s[(fun p => f (fst p) (snd p))].
   Next Obligation.
     add_morphism_tactic; intros [t1 u1] [t2 u2] [Ht Hu]; simpl in *.
-    rewrite Ht, Hu; reflexivity.
+    rewrite ->Ht, Hu; reflexivity.
   Qed.
 
   (** Currying map, i.e. the exponential transpose. *)
@@ -213,7 +207,7 @@ Section Exponentials.
     s[(fun p => fst p (snd p))].
   Next Obligation.
     add_morphism_tactic; intros [f1 t1] [f2 t2] [Hf Ht]; simpl in *.
-    rewrite Hf, Ht; reflexivity.
+    rewrite ->Hf, Ht; reflexivity.
   Qed.
 
 End Exponentials.
@@ -311,7 +305,7 @@ Section Subsetoid.
   Lemma mforget_mono (f g : U -=> {t : T | P t}) :
     mincl << f == mincl << g -> f == g.
   Proof.
-    intros HEq x; simpl; rewrite (HEq x); reflexivity.
+    intros HEq x; simpl; rewrite ->(HEq x); reflexivity.
   Qed.
 
 End Subsetoid.
@@ -387,7 +381,6 @@ Section DiscreteType.
 End DiscreteType.
 
 Section ViewLemmas.
-  Require Import Ssreflect.ssreflect.  
   Context {T} `{eqT : Setoid T}.
   Implicit Types (t : T).
 

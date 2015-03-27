@@ -136,6 +136,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
         rewrite fdLookup_in; setoid_rewrite <- EQw; rewrite <- fdLookup_in; reflexivity.
     Qed.
 
+    (* TODO: this duplicates some proof effort from above. unify these two. *)
     Global Instance wsat_dist n σ m u : Proper (dist n ==> dist n) (wsat σ m u).
     Proof.
       intros w1 w2 EQw [| n'] HLt; [reflexivity |]; destruct n as [| n]; [now inversion HLt |].
