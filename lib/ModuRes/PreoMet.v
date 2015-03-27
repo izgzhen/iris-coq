@@ -10,7 +10,7 @@ Section PreCBUmet.
     forall (σ ρ : chain T) (σc : cchain σ) (ρc : cchain ρ),
       (forall i, le (σ i) (ρ i)) -> le (compl σ) (compl ρ).
 
-  Class pcmType {pTA : preoType T} :=
+  Class pcmType {pTA : preoType T}: Prop :=
     { pcm_respC :  respect_chain pord }.
 
 End PreCBUmet.

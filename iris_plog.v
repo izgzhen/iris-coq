@@ -242,10 +242,11 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Section WeakestPre.
 
+    (* RJ this should now be captured by the generic instance for discrete metrics.
     Instance LP_isval : LimitPreserving is_value.
     Proof.
       intros σ σc HC; apply HC.
-    Qed.
+    Qed. *)
 
     Local Obligation Tactic := intros; eauto with typeclass_instances.
 

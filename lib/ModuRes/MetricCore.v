@@ -910,6 +910,12 @@ Section DiscreteMetric.
     eapply σc; omega.
   Qed.
 
+  (** Every predicate is complete on the discrete metric space *)
+  Global Instance discreteLP (P : T -> Prop): LimitPreserving P | 5. (* just to be safe, give this a low priority. *)
+  Proof.
+    repeat intro. simpl. unfold discreteCompl. by apply: H.
+  Qed.
+
 End DiscreteMetric.
 
 Section Option.

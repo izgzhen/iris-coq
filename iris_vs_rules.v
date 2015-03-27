@@ -155,11 +155,12 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
         + setoid_rewrite <- ra_op_assoc. assumption.
     Qed.
 
+    (* RJ this should now be captured by the generic instance for discrete metrics.
     Instance LP_res (P : RL.res -> Prop) : LimitPreserving P.
     Proof.
       intros σ σc HPc; simpl. unfold discreteCompl.
       now auto.
-    Qed.
+    Qed.*)
 
     Definition ownLP (P : RL.res -> Prop) : {s : RL.res | P s} -n> Props :=
       ownL <M< inclM.
@@ -211,10 +212,11 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       apply Le.le_n_S, SS_last_le; assumption.
     Qed.
 
+    (* RJ this should now be captured by the generic instance for discrete metrics.
     Instance LP_mask m : LimitPreserving m.
     Proof.
       intros σ σc Hp; apply Hp.
-    Qed.
+    Qed. *)
 
     Lemma pvsNewInv P m (HInf : mask_infinite m) :
       ▹P ⊑ pvs m m (xist (inv' m P)).
