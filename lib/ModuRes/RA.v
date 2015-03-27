@@ -152,10 +152,21 @@ Section OrdTests.
   Proof. move=> s1 s2 t ->. reflexivity. Qed.
 End OrdTests.
 
+
+(* CMRA ("camera"): RAs with a complete metric. *)
+Section CMRA.
+  Context {T: Type} {eqT: Setoid T} `{raT: RA (eqT:=eqT) T}.
+
+  Class CMRA `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T}: Prop := (* force this to become an actual argument *)
+    { ra_op_dist n :> Proper (dist n ==> dist n ==> dist n) ra_op }.
+End CMRA.
+Arguments CMRA T {_ _ _ _ _ _ _ _}: clear implicits.
+
+
 (* RAs with cartesian products of carriers. *)
 Section Pairs.
-  Context {S T: Type} {eqS: Setoid S} {eqT: Setoid T}.
-  Context`{raS : RA (eqT:=eqS) S, raT : RA (eqT:=eqT) T}.
+  Context {S T: Type}.
+  Context `{raS : RA S, raT : RA T}.
 
   Global Instance ra_unit_prod : RA_unit (S * T) := (1, 1).
   Global Instance ra_op_prod : RA_op (S * T) :=
@@ -251,26 +262,30 @@ Section Pairs.
   Proof.
     rewrite ra_prod_pord /pord /=. reflexivity.
   Qed.
-
-
-  (* This preserves pcm-edness of the orders *)
-  Section PairsPCM.
-    Context `{pcmS: pcmType (eqT:=eqS) (pTA:=pord_ra) S}.
-    Context `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T}.
-
-    Global Instance ra_prod_pcm: pcmType (pTA:=pord_ra) (S * T).
-    Proof.
-      split. intros σ ρ σc ρc HC.
-      apply ra_pord_iff_prod_pord.
-      eapply pcm_respC; first by apply _.
-      move=>i. apply ra_pord_iff_prod_pord. by apply: HC.
-    Qed.
-  End PairsPCM.
 End Pairs.
+(* Pairs work as CMRA *)
+Section PairsCMRA.
+  Context {S T: Type} `{cmraS: CMRA S} `{cmraT: CMRA T}.
+
+  Global Instance ra_prod_pcm: pcmType (pTA:=pord_ra) (S * T).
+  Proof.
+    split. intros σ ρ σc ρc HC.
+    apply ra_pord_iff_prod_pord.
+    eapply pcm_respC; first by apply _.
+    move=>i. apply ra_pord_iff_prod_pord. by apply: HC.
+  Qed.
+
+  Global Instance ra_prod_cmra: CMRA (S * T).
+  Proof.
+    split. move=>n [s11 t11] [s12 t12] /= [EQs1 EQt1] [s21 t21] [s22 t22] /= [EQs2 EQt2].
+    split.
+    - rewrite EQs1 EQs2. reflexivity.
+    - rewrite EQt1 EQt2. reflexivity.
+  Qed.
+End PairsCMRA.
+
 Section PairsMap.
-  Context {S: Type} {eqS: Setoid S} `{raS: RA (eqT:=eqS) S} `{pcmS: pcmType (eqT:=eqS) (pTA:=pord_ra) S}.
-  Context {T: Type} {eqT: Setoid T} `{raT: RA (eqT:=eqT) T} `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T}.
-  Context {U: Type} {eqU: Setoid U} `{raU: RA (eqT:=eqU) U} `{pcmU: pcmType (eqT:=eqU) (pTA:=pord_ra) U}.
+  Context {S T U: Type} `{cmraS: CMRA S} `{cmraT: CMRA T} `{cmraU: CMRA U}.
 
   Local Instance ra_force_pord_TS: preoType (T * S) := pord_ra.
   Local Instance ra_force_pord_US: preoType (U * S) := pord_ra.
@@ -325,8 +340,7 @@ Section PairsMap.
 
 End PairsMap.
 Section PairsMapComp.
-  Context {S: Type} {eqS: Setoid S} `{raS: RA (eqT:=eqS) S} `{pcmS: pcmType (eqT:=eqS) (pTA:=pord_ra) S}.
-  Context {T: Type} {eqT: Setoid T} `{raT: RA (eqT:=eqT) T} `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T}.
+  Context {S T: Type} `{cmraS: CMRA S} `{cmraT: CMRA T}.
 
   Lemma prodRAFstMap_id:
     prodRAFstMap (S:=S) (pid T) == pid (T*S).
@@ -338,9 +352,8 @@ Section PairsMapComp.
   Proof.
     intros x. unfold prodRASndMap. simpl. split; reflexivity.
   Qed.
-  
-  Context {U: Type} {eqU: Setoid U} `{raU: RA (eqT:=eqU) U} `{pcmU: pcmType (eqT:=eqU) (pTA:=pord_ra) U}.
-  Context {V: Type} {eqV: Setoid V} `{raV: RA (eqT:=eqV) V} `{pcmV: pcmType (eqT:=eqV) (pTA:=pord_ra) V}.
+
+  Context {U V: Type} `{cmraU: CMRA U} `{cmraV: CMRA V}.
 
   Lemma prodRAFstMap_comp (f: T -m> U) (g: U -m> V):
     prodRAFstMap g ∘ prodRAFstMap f == prodRAFstMap (S:=S) (g ∘ f).
