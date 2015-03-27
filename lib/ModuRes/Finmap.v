@@ -1479,6 +1479,8 @@ End RA.
 Section CMRA.
   Context {I : Type} `{CI : comparable I}.
   Context {T: Type} `{cmraS: CMRA T}.
+  
+  Local Open Scope ra.
 
   Global Instance ra_finmap_pcm: pcmType (pTA:=pord_ra) (I -f> T).
   Proof.
@@ -1492,7 +1494,19 @@ Section CMRA.
   Proof.
     split. move=>n f1 f2 EQf g1 g2 EQg.
     destruct n as [|n]; first by apply: dist_bound.
-    admit.
+    move => k. 
+    case Hf1g1: ((f1 · g1) k) => [v1|];
+    case Hf2g2: ((f2 · g2) k) => [v2|];
+      move : Hf1g1 Hf2g2 (EQf k) (EQg k) => // /equivR Hf1g1 /equivR Hf2g2.
+    - move/fdComposeP : (Hf1g1) => [[vf1 [vg1 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
+      move/fdComposeP : (Hf2g2) => [[vf2 [vg2 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
+      move => // /= -> ->. reflexivity.
+    - move/fdComposeP : (Hf1g1) => [[vf1 [vg1 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
+        move/fdComposePN : (Hf2g2) => [-> ->];
+        now move => // /= -> ->. 
+    - move/fdComposePN : (Hf1g1) => [-> ->];
+        move/fdComposeP : (Hf2g2) => [[vf2 [vg2 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
+        now move => // /= -> ->. 
   Qed.
   
 End CMRA.
