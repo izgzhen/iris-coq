@@ -162,6 +162,19 @@ Section CMRA.
 End CMRA.
 Arguments CMRA T {_ _ _ _ _ _ _ _}: clear implicits.
 
+Section DiscreteCMRA.
+  Context {T: Type} `{raT: RA T}.
+  Local Instance ra_discrete_metric: metric T := discreteMetric.
+  Local Instance ra_discrete_cmetric: cmetric T := discreteCMetric.
+
+  Global Instance discreteCMRA : CMRA T.
+  Proof.
+    split. move=>n a1 a2 EQa b1 b2 EQb.
+    destruct n as [|n]; first by exact I.
+    simpl in *. rewrite EQa EQb. reflexivity.
+  Qed.
+End DiscreteCMRA.
+
 
 (* RAs with cartesian products of carriers. *)
 Section Pairs.

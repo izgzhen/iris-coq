@@ -7,7 +7,7 @@ Local Open Scope type.
 
 (* This interface keeps some of the details of the solution opaque *)
 Module Type WORLD_PROP (Res : RA_T).
-  (* We need metrics on the resources *)
+  (* We need a metric for the base resources. The discrete CMRA will be infered. *)
   Instance res_metric : metric Res.res := discreteMetric.
   Instance res_cmetric : cmetric Res.res := discreteCMetric.
   
@@ -19,11 +19,10 @@ Module Type WORLD_PROP (Res : RA_T).
   Instance PProp_preo  : preoType PreProp   := disc_preo PreProp.
   Instance PProp_pcm   : pcmType PreProp    := disc_pcm PreProp.
 
-  (* Defines Worlds, and their structure: Make sure the order comes from the RA. *)
+  (* Defines Worlds, and make sure their order comes from the RA. *)
   Definition Wld := (nat -f> ra_agree PreProp) * Res.res.
   Instance WldRA : RA Wld := _.
-  Instance WldPO : preoType Wld := pord_ra.
-  Instance WldPCM: pcmType (pTA:=WldPO) Wld := _.
+  Instance WldPO : preoType Wld := pord_ra. (* disambiguate the order *)
 
   (* Now we are ready to define Propositions. *)
   Definition Props    := Wld -m> SPred.

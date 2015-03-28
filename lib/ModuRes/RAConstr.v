@@ -518,7 +518,7 @@ Section Agreement.
     - move=>n'' pv1 pv2 HLe. eapply EQts. omega.
   Qed.
 
-  Lemma ra_ag_op_dist n:
+  Global Instance ra_ag_op_dist n:
     Proper (dist n ==> dist n ==> dist n) ra_ag_op.
   Proof.
     move=>a1 aa2 EQa b1 b2 EQb. destruct n as [|n]; first by apply: dist_bound.
@@ -536,6 +536,12 @@ Section Agreement.
   { apply EQv2; assumption. }
   { apply EQv1; assumption. }
   Qed.
+
+  Global Instance ra_ag_inj_dist n:
+    Proper (dist n ==> dist n) ra_ag_inj.
+  Proof.
+    (* TODO *)
+  Abort.
 
   (* And a complete metric! *)
   Context {cmT: cmetric T}.
@@ -728,11 +734,11 @@ Section Agreement.
           cchain_discr σ (S (S n)) at 1 3 as [vσn tsσn tsxσn|] deqn:EQσn.
           specialize (H (S (S n))). rewrite ->ra_ag_pord, <-EQρn, <-EQσn in H.
           destruct H as [EQv _]. rewrite <-EQv in pvρ. destruct pvρ as [pv1 _]. assumption. }
-        do 2 eexists. etransitivity; last (etransitivity; first eapply HT).
+        do 2 eexists. etransitivity; last (etransitivity; first by eapply HT).
         * eapply dist_refl. apply equivR. apply ra_ag_tsdiag_n_pi.
         * eapply dist_refl. apply equivR. apply ra_ag_tsdiag_n_pi.
       + intros n (pv1 & pv2 & EQ) pv3.
-        etransitivity; last (etransitivity; first eapply HT).
+        etransitivity; last (etransitivity; first by eapply HT).
         * eapply dist_refl. apply equivR. apply ra_ag_tsdiag_n_pi.
         * eapply dist_refl. apply equivR. apply ra_ag_tsdiag_n_pi.
   Grab Existential Variables.
@@ -749,9 +755,6 @@ Section Agreement.
 
   (* And finally, be ready for the CMRA *)
   Global Instance ra_ag_cmra : CMRA ra_agree := Build_CMRA _ _ _ _.
-  Proof.
-    exact ra_ag_op_dist.
-  Qed.
 
   (* Provide a way to get a T out of the agreement again. *)
   Program Definition ra_ag_unInj x {HVal: ↓x}: option T :=
@@ -766,6 +769,13 @@ Section Agreement.
     (* TODO *)
   Abort.
 
+  (* Correctness of the embedding (and of the entire consruction, really - together with the duplicability shown above) *)
+  Lemma ra_ag_inj_unInj x {HVal: ↓x} t:
+    ra_ag_inj t ⊑ x -> ra_ag_unInj x (HVal:=HVal) == Some t.
+  Proof.
+    (* TODO *)
+  Abort.
+
 End Agreement.
 
 Section AgreementMap.
@@ -774,23 +784,28 @@ Section AgreementMap.
 
   Program Definition ra_agree_map (f: T -n> U): ra_agree T -m> ra_agree U :=
     m[(fun x => match x with
-                | ag_inj v ts => ag_inj U v (compose f ts)
+                | ag_inj v ts tsx => ag_inj U v (fun n => compose f (ts n)) _
                 | ag_unit => ag_unit U
                 end)].
+  Next Obligation.
+    move=>n i HLe pv. simpl. eapply met_morph_nonexp. specialize (tsx n i HLe pv).
+    rewrite tsx.
+    eapply dist_refl. f_equiv. by eapply ProofIrrelevance.
+  Qed.
   Next Obligation.
     move=> x y EQxy.
     destruct n as [|n]; first by apply: dist_bound.
     repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); try (contradiction EQxy || reflexivity); [].
     destruct EQxy as [Hv Hts]. split; first assumption.
-    move=>pv1 pv2. specialize (Hts pv1 pv2). unfold compose. rewrite Hts. reflexivity.
+    move=>n' pv1 pv2 HLe. specialize (Hts n' pv1 pv2 HLe). unfold compose. rewrite Hts. reflexivity.
   Qed.
   Next Obligation.
     move=>x y EQxy. apply ra_ag_pord. apply ra_ag_pord in EQxy.
     repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); try (contradiction EQxy || reflexivity); [].
     destruct EQxy as [EQv EQts]. split; first split.
     - intros (pv1 & pv2 & _). assumption.
-    - rewrite <-EQv. intros (pv1 & pv2 & EQ). exists pv1 pv2. unfold compose. rewrite EQ. reflexivity.
-    - unfold compose. intros [pv1 [pv2 EQ]] pv3. f_equiv. erewrite <-EQts. f_equiv. by eapply ProofIrrelevance.
+    - move=>pv. move/EQv:(pv)=>[pv1 [pv2 EQ]]. exists pv1 pv2. unfold compose. rewrite EQ. reflexivity.
+    - unfold compose. intros n [pv1 [pv2 EQ]] pv3. unfold ra_ag_compinj_ts. eapply met_morph_nonexp.  rewrite -EQts /ra_ag_compinj_ts. f_equiv. by eapply ProofIrrelevance.
   Grab Existential Variables.
   { rewrite EQv. assumption. }
   Qed.
@@ -800,7 +815,7 @@ Section AgreementMap.
     move=> x1 x2 EQx y.
     repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); last reflexivity.
     split; first reflexivity.
-    move=>pv1 pv2. rewrite EQx. unfold compose. repeat f_equiv. eapply ProofIrrelevance.
+    move=>n pv1 pv2. rewrite EQx. unfold compose. repeat f_equiv. eapply ProofIrrelevance.
   Qed.
   Global Instance ra_agree_map_dist n: Proper (dist n ==> dist n) ra_agree_map.
   Proof.
@@ -808,9 +823,12 @@ Section AgreementMap.
     repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); last reflexivity.
     destruct n as [|n]; first by apply: dist_bound.
     split; first reflexivity.
-    move=>pv1 pv2. rewrite EQx. unfold compose. repeat f_equiv. eapply ProofIrrelevance.
+    move=>n' pv1 pv2 HLe. rewrite /compose. eapply mono_dist; last first.
+    - rewrite EQx. repeat f_equiv. eapply ProofIrrelevance.
+    - omega.
   Qed.
 End AgreementMap.
+
 Section AgreementMapComp.
   Local Open Scope pumet_scope.
   Context {T: Type} `{cmT: cmetric T}.
@@ -821,7 +839,7 @@ Section AgreementMapComp.
     intros x.
     repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); last reflexivity.
     simpl. split; first reflexivity.
-    intros pv1 pv2. repeat f_equiv. eapply ProofIrrelevance.
+    intros n pv1 pv2. repeat f_equiv. eapply ProofIrrelevance.
   Qed.
   
   Context {U V: Type} `{cmU: cmetric U} `{cmV: cmetric V}.
@@ -832,7 +850,7 @@ Section AgreementMapComp.
     intros x.
     repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); last reflexivity.
     simpl. split; first reflexivity.
-    intros pv1 pv2. repeat f_equiv. eapply ProofIrrelevance.
+    intros n pv1 pv2. repeat f_equiv. eapply ProofIrrelevance.
   Qed.
 End AgreementMapComp.
 

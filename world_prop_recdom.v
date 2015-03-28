@@ -16,15 +16,14 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
 
   Local Open Scope type.
 
-  (** We need to metrics for the base resources *)
+  (** We need a metric for the base resources. The discrete CMRA will be infered. *)
   Local Instance res_metric : metric Res.res := discreteMetric.
   Local Instance res_cmetric : cmetric Res.res := discreteCMetric.
 
   (** Finally, we need the right pcmType for the entire resource *)
-  Definition FRes P := (nat -f> ra_agree P) * Res.res.
-  Local Instance FResRA P `{cmetric P} : RA (FRes P) := _.
-  Local Instance FResPO P `{cmetric P} : preoType (FRes P) := pord_ra.
-  Local Instance FResPCM P `{cmetric P} : pcmType (FRes P) := _.
+  Definition FRes P `{metric P} := (nat -f> ra_agree P) * Res.res.
+  Local Instance FResCMRA P `{cmetric P} : CMRA (FRes P) := _.
+  Local Instance FResPO P `{cmetric P} : preoType (FRes P) := pord_ra. (* disambiguate the order *)
 
   Section Definitions.
     (** We'll be working with complete metric spaces, so whenever
@@ -81,7 +80,7 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
 
   (** Now we can name the two isomorphic spaces of propositions, and
       the space of worlds. We'll store the actual solutions in the
-      worlds, and use the action of the FPropO on them as the space we
+      worlds, and use the action of FProp on them as the space we
       normally work with. *)
   Definition PreProp : Type := DInfO.
   Instance PProp_t  : Setoid PreProp := _.
@@ -94,7 +93,6 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
   Definition Wld     := FRes PreProp.
   Instance WldRA : RA Wld := _.
   Instance WldPO : preoType Wld := _.
-  Instance WldPCM: pcmType Wld := _.
 
   (* Define propositions *)
   Definition Props   := FProp PreProp.
