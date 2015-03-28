@@ -1,5 +1,5 @@
 Require Import Ssreflect.ssreflect.
-Require Export CSetoid.
+Require Export MetricCore.
 
 Generalizable Variables T U V W.
 
@@ -323,6 +323,7 @@ Section SubPredom.
   Qed.
 
 End SubPredom.
+
 
 Global Arguments subset_ord {_ _ _ _} _ _ /.
 

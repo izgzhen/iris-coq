@@ -44,7 +44,7 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
 
       Context (m: V -n> U).
       Let InvMap : FRes V -m> FRes U :=
-        prodRAFstMap (fdRAMap (ra_agree_map m)).
+        RAprod_map (fdRAMap (ra_agree_map m)) (pid _).
       Definition PropMorph : FProp U -n> FProp V :=
         InvMap ▹. (* this "later" is post-composition *)
     End ArrowAction.
@@ -66,9 +66,9 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
     Instance FFun : BiFunctor F.
     Proof.
       split; intros; unfold fmorph; simpl morph; unfold PropMorph.
-      - eapply precomp_by_comp. rewrite <-ra_agree_map_comp, <-fdRAMap_comp. eapply prodRAFstMap_comp.
+      - eapply precomp_by_comp. rewrite <-ra_agree_map_comp, <-fdRAMap_comp. eapply RAprod_map_comp_fst.
       - eapply precomp_by_id. unfold tid, MId. rewrite ra_agree_map_id, fdRAMap_id.
-        eapply prodRAFstMap_id.
+        eapply RAprod_map_id.
     Qed.
 
     Definition F_ne : 1 -t> F 1 1 :=

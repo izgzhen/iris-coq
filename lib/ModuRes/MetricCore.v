@@ -690,6 +690,24 @@ Section MetricProducts.
 
 End MetricProducts.
 
+Section MetricProductMap.
+  Context `{pcT : metric T} `{pcU : metric U} `{pcV : metric V} `{pcW : metric W}.
+
+  Definition Mprod_map (f: T -n> U) (g: V -n> W): (T * V) -n> (U * W) :=
+    Mprod (f <M< Mfst) (g <M< Msnd).
+
+  Global Instance Mprod_map_resp: Proper (equiv ==> equiv ==> equiv) Mprod_map.
+  Proof.
+    move=>f1 f2 EQf g1 g2 EQg [x1 x2]. simpl. now rewrite ->EQf, EQg.
+  Qed.
+  Global Instance Mprod_map_nonexp n: Proper (dist n ==> dist n ==> dist n) Mprod_map.
+  Proof.
+    move=>f1 f2 EQf g1 g2 EQg [x1 x2]. simpl. now rewrite ->EQf, EQg.
+  Qed.
+
+End MetricProductMap.
+
+
 
 Section ComplSetup.
   Context `{cT : cmetric T} `{cU : cmetric U} (σ : chain T) (ρ : chain U) {σc : cchain σ} {ρc : cchain ρ}.

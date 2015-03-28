@@ -337,7 +337,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Section IntEqTimeless.
     Context {T} `{tT: Setoid T}.
     (* This only works for types with the discrete metric! *)
-    Local Instance mT: metric T := discreteMetric.
+    Existing Instance discreteMetric.
 
     Lemma intEqTimeless (t1 t2: T):
       valid(timeless(intEq t1 t2)).

@@ -43,6 +43,25 @@ Section Morph_Props.
 
 End Morph_Props.
 
+Section NonexpPCM.
+  Context `{mT: metric T} `{eT: pcmType U}.
+
+  Definition nonexp_ord (f1 f2: T -n> U): Prop :=
+    forall x, (f1 x ⊑ f2 x)%pd.
+
+  Global Program Instance preoType_nexp : preoType (T -n> U) := mkPOType nonexp_ord _.
+  Next Obligation.
+    split.
+    - move=>f x. reflexivity.
+    - move=>f g h Hfg Hgh x. etransitivity; [by eapply Hfg|by eapply Hgh].
+  Qed.
+  Next Obligation.
+    move=>f1 f2 EQf g1 g2 EQg H x.
+    rewrite -EQg -EQf. by eapply H.
+  Qed.
+End NonexpPCM.
+
+
 Notation "f ∘ g" := (pcomp f g) (at level 40, left associativity) : pumet_scope.
 Arguments pid V {_ _ _ _ _}.
 
@@ -91,7 +110,7 @@ Section PUMMorphProps1.
     unfold cchain; intros; apply σc; assumption.
   Qed.
 
-  Definition PMpreo (f g: T -m> U) := forall x, (f x ⊑ g x)%pd.
+  Definition PMpreo (f g: T -m> U) := (mu_morph f ⊑ mu_morph g)%pd.
 
   Global Instance PMpreo_is : PreOrder PMpreo.
   Proof.
@@ -246,7 +265,7 @@ Section PreCompProps.
 
   Lemma precomp_by_id (f: T -m> T):
     f == (pid T) ->
-    equiv (A:=(T -m> R) -n> (T -m> R)) (precomp_mne f) (umid _).
+    mu_morph (precomp_mne f) == (umid (T -m> R)).
   Proof.
     intros Hcomp i. simpl morph. rewrite Hcomp. intros x. reflexivity.
   Qed.
@@ -364,25 +383,13 @@ Notation "〈 f , g 〉" := (pcmprod f g) : pumet_scope.
 Notation "'π₁'" := pcmfst : pumet_scope.
 Notation "'π₂'" := pcmsnd : pumet_scope.
 
-Section MonotoneProductMap.
-  Local Open Scope pumet_scope.
-  Context `{pcT : pcmType T} `{pcU : pcmType U} `{pcV : pcmType V}.
-
-  Definition prodFstMap (f: T -m> U): (T * V) -m> (U * V) :=
-    〈 f ∘ π₁ , π₂ 〉.
-
-  Definition prodSndMap (f: T -m> U): (V * T) -m> (V * U) :=
-    〈 π₁ , f ∘ π₂ 〉.
-
-End MonotoneProductMap.
-
 Section Extras.
   Local Open Scope pumet_scope.
   Local Obligation Tactic := intros; apply _ || mono_resp || program_simpl.
   Context `{pT : pcmType T} `{pU : pcmType U} `{pV : pcmType V} `{pW : pcmType W}.
 
   Definition pcmprod_map (f : T -m> U) (g : V -m> W) := 〈f ∘ π₁, g ∘ π₂〉.
-    
+
   Global Instance pcmprod_map_resp : Proper (equiv ==> equiv ==> equiv) pcmprod_map.
   Proof. intros f g H1 h j H2 [t1 v1]; simpl; now rewrite -> H1, H2. Qed.
   
@@ -493,6 +500,7 @@ Section SubPCM.
   Qed.
 
 End SubPCM.
+
 
 (** Extending the pcbult's to option types.
 
