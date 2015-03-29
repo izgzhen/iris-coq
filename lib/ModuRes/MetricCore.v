@@ -339,6 +339,16 @@ End MCont.
 
 Infix "<M<" := umcomp (at level 35).
 
+Section MSwap.
+  Context `{cT : cmetric T} `{cU : cmetric U} `{cV : cmetric V}.
+
+  Local Obligation Tactic := intros; apply _ || resp_set || eauto with typeclass_instances.
+
+  Program Definition Mswap (f: T -n> U -n> V): U -n> T -n> V :=
+    n[(fun u => n[(fun t => f t u)])].
+
+End MSwap.
+
 Section MCompP.
   Context `{cT : cmetric T} `{cU : cmetric U} `{cV : cmetric V} `{cW : cmetric W}.
   
@@ -993,5 +1003,20 @@ Section Option.
   Qed.
 
 End Option.
+
+Section Lift.
+  Context {T : Type}.
+  Local Open Scope type.
+  Context (f : T -> T -> T) `{cmT : cmetric T}
+          {fequiv : Proper (equiv ==> equiv ==> equiv) f}
+          {fdist : forall n, Proper (dist n ==> dist n ==> dist n) f}
+          {U} `{cmU : cmetric U} (P : U -n> T) (Q : U -n> T).
+
+  Local Obligation Tactic := intros; resp_set.
+
+  Program Definition lift_bin : U -n> T :=
+    n[(fun u => f (P u) (Q u))].
+
+End Lift.
 
 Arguments dist {_ _ _} _ _ _ /.

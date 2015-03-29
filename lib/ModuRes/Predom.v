@@ -21,6 +21,13 @@ Notation "'mkPOType' R" := (Build_preoType _ _ R _) (at level 10).
 Notation "s ⊑ t" := (pord s t) (at level 70, no associativity) : predom_scope.
 Delimit Scope predom_scope with pd.
 
+(* Proof by reflexivity *)
+Lemma pordR {T : Type} `{eqT : preoType T} {a b : T} :
+  a == b -> (a ⊑ b)%pd.
+Proof.
+  intros Heq. rewrite Heq. reflexivity.
+Qed.
+
 Ltac mono_resp :=
   intros t1 t2 HSub; repeat (intros ?); rewrite -> ?HSub; simpl in *; rewrite -> ?HSub; repeat split; reflexivity.
 

@@ -68,20 +68,23 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       a low priority to potentially speed up the proof search).
    *)
 
-  Instance Props_BI : ComplBI Props | 0 := _.
+  
+  Instance Props_BI : BI Props | 0 := _.
+  Instance Props_CBI : ComplBI Props | 0 := _.
   Instance Props_Later : Later Props | 0 := _.
+  Instance Props_Eq : EqBI Props | 0 := _.
 
   Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (r u v : res) (σ : state).
 
   Definition valid (P: Props) :=
-    forall w n r, P w n r.
+    forall w n, P w n.
 
   Lemma valid_iff P :
     valid P <-> (⊤ ⊑ P).
   Proof.
     split; intros Hp.
-    - intros w n r _; apply Hp.
-    - intros w n r; apply Hp; exact I.
+    - intros w n _; apply Hp.
+    - intros w n. apply Hp; exact I.
   Qed.
 
   (* Simple view lemmas. *)
@@ -212,40 +215,6 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Lemma box_all : □all φ == box_all_lhs.
     Proof. done. Qed.
   End BoxAll.
-
-  (** "Internal" equality **)
-  Section IntEq.
-    Context {T} `{mT : metric T}.
-
-    Program Definition intEqP (t1 t2 : T) : UPred res :=
-      mkUPred (fun n r => t1 = S n = t2) _.
-    Next Obligation.
-      intros n1 n2 _ _ HLe _; apply mono_dist; omega.
-    Qed.
-
-    Instance subrel_dist_n `{mT : metric T} (n m: nat) (Hlt: m < n) : subrelation (dist n) (dist m).
-    Proof.
-      intros x y HEq. eapply mono_dist, HEq. omega.
-    Qed.
-
-    Program Definition intEq: T -n> T -n> Props :=
-      n[(fun t1 => n[(fun t2 => pcmconst (intEqP t1 t2))])].
-    Next Obligation.
-      intros t2 t2' Heqt2. intros w m r HLt.
-      change ((t1 = S m = t2) <-> (t1 = S m = t2')). (* Why, oh why... *)
-      split; (etransitivity; [eassumption|]); eapply mono_dist; (eassumption || symmetry; eassumption).
-    Qed.
-    Next Obligation.
-      intros t1 t1' Heqt1. intros t2 w m r HLt.
-      change ((t1 = S m = t2) <-> (t1' = S m = t2)). (* Why, oh why... *)
-      split; (etransitivity; [|eassumption]); eapply mono_dist; (eassumption || symmetry; eassumption).
-    Qed.
-
-  End IntEq.
-
-  Notation "t1 '===' t2" := (intEq t1 t2) (at level 70) : iris_scope.
-
-  Notation "P ↔ Q" := ((P → Q) ∧ (Q → P)) (at level 95, no associativity) : iris_scope.
 
   Lemma biimpL {P Q : Props} {w n r} : (P ↔ Q) w n r -> (P → Q) w n r.
   Proof. by move=>[L _]. Qed.

@@ -162,6 +162,19 @@ Section CMRA.
 End CMRA.
 Arguments CMRA T {_ _ _ _ _ _ _ _}: clear implicits.
 
+Section CMRAProps.
+  Context {T: Type} `{cmraT: CMRA T}.
+
+  Program Definition ra_op_n : T -n> T -n> T :=
+    n[(fun t1:T => n[(fun t2:T => t1 · t2)])].
+  Next Obligation.
+    move=>t2 t2' EQt2. simpl. rewrite EQt2. reflexivity.
+  Qed.
+  Next Obligation.
+    move=>t1 t1' EQt1 t2. simpl. rewrite EQt1. reflexivity.
+  Qed.
+End CMRAProps.
+
 Section DiscreteCMRA.
   Context {T: Type} `{raT: RA T}.
   Existing Instance discreteMetric.
