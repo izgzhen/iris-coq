@@ -45,9 +45,7 @@ Section CompleteBI.
         and_dist n  :> Proper (dist n ==> dist n ==> dist n) and;
         and_pord    :> Proper (pord ++> pord ++> pord) and;
         and_impl    :  forall P Q R, and P Q ⊑ R <-> P ⊑ impl Q R;
-        impl_equiv  :> Proper (equiv ==> equiv ==> equiv) impl;
         impl_dist n :> Proper (dist n ==> dist n ==> dist n) impl;
-        impl_pord   :> Proper (pord --> pord ++> pord) impl;
         or_injL     :  forall P Q, P ⊑ or P Q;
         or_injR     :  forall P Q, Q ⊑ or P Q;
         or_self     :  forall P, or P P ⊑ P;
@@ -61,24 +59,18 @@ Section CompleteBI.
         sc_dist n   :> Proper (dist n ==> dist n ==> dist n) sc;
         sc_pord     :> Proper (pord ++> pord ++> pord) sc;
         sc_si       :  forall P Q R, sc P Q ⊑ R <-> P ⊑ si Q R;
-        si_equiv    :> Proper (equiv ==> equiv ==> equiv) si;
-        si_dist n   :> Proper (dist n ==> dist n ==> dist n) si;
-        si_pord     :> Proper (pord --> pord ++> pord) si
+        si_dist n   :> Proper (dist n ==> dist n ==> dist n) si
       }.
   
   Class ComplBI `{BBI: BI} {BIAll : allBI} {BIXist : xistBI}:Prop :=
     mkCBI {
         all_R      U `{cmU : cmetric U} :
           forall P (Q : U -n> T), (forall u, P ⊑ Q u) <-> P ⊑ all Q;
-        all_equiv  U `{cmU : cmetric U}   :> Proper (equiv ==> equiv) all;
         all_dist   U `{cmU : cmetric U} n :> Proper (dist n ==> dist n) all;
-        all_pord   U `{cmU : cmetric U}   :> Proper (pord ++> pord) all;
         xist_L     U `{cmU : cmetric U} :
           forall (P : U -n> T) Q, (forall u, P u ⊑ Q) <-> xist P ⊑ Q;
-        xist_equiv U `{cmU : cmetric U}   :> Proper (equiv ==> equiv) xist;
-        xist_dist  U `{cmU : cmetric U} n :> Proper (dist n ==> dist n) xist;
-        xist_pord  U `{cmU : cmetric U}   :> Proper (pord ++> pord) xist
-      }.
+        xist_dist  U `{cmU : cmetric U} n :> Proper (dist n ==> dist n) xist
+     }.
 
   Class Later `{Bounded} {mT: metric T} {cmT: cmetric T} {pcmT: pcmType T} {Later: laterBI}: Prop :=
     { later_equiv :> Proper (equiv ==> equiv) later;
@@ -122,53 +114,6 @@ Arguments BI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _}.
 Arguments ComplBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _}.
 Arguments Later T {_ _ _ _ _ _ _ _ _ _}.
 Arguments EqBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _}.
-
-(* Show that any BI can close over "future Us", for U being a CMRA. *)
-Section MComplBI.
-  Context {B} `{ComplBI B}.
-  Context {T} `{CMRA T}.
-  Local Obligation Tactic := intros; try resp_set.
-
-  Program Definition mclose : (T -n> B) -n> T -m> B :=
-    n[(fun f: T -n> B => m[(fun t => (all (U:=T) (f <M< n[(ra_op t)])))])].
-  Next Obligation.
-    move=>t1 t2 EQt. eapply all_dist. eapply ndist_umcomp; first reflexivity.
-    move=>u. now eapply ra_op_dist.
-  Qed.
-  Next Obligation.
-    intros t1 t2 [t3 EQt]. simpl. eapply all_R=>u.
-    simpl. rewrite <-EQt. rewrite-> (comm t3), <-assoc.
-    transitivity ((f <M< n[(ra_op t1)]) (t3 · u)%ra); last first.
-    - eapply pordR. simpl. reflexivity.
-    - eapply all_R. eapply pordR, all_equiv. move=>?. reflexivity.
-  Qed.
-  Next Obligation.
-    intros f1 f2 EQf t. simpl. eapply all_dist. move=>u. simpl. rewrite EQf. reflexivity.
-  Qed.
-
-  Lemma mclose_cl f : (mclose f: T -n> B) ⊑ f.
-  Proof.
-    unfold mclose=>u. simpl.
-    transitivity ((f <M< n[(ra_op u)]) 1%ra).
-    - eapply all_R. eapply all_pord=>t. reflexivity.
-    - simpl. rewrite ra_op_unit2. reflexivity.
-  Qed.
-  Lemma  mclose_fw (f : T -n> B) u t (HFW : forall u' (HS : u ⊑ u'), t ⊑ f u'):
-    t ⊑ mclose f u.
-  Proof.
-    unfold mclose. simpl. eapply all_R=>u'.
-    eapply HFW. exists u'. rewrite comm. reflexivity.
-  Qed.
-
-End MComplBI.
-
-Global Instance later_dist {T: Type} `{lT: Later T} n: Proper (dist n ==> dist n) later.
-Proof.
-  pose (lf := contractive_nonexp later _).
-  move=>t1 t2 EQt.
-  by eapply (met_morph_nonexp lf).
-Qed.
-
 
 Delimit Scope bi_scope with bi.
 Notation " ▹ p " := (later p) (at level 20) : bi_scope.
@@ -236,6 +181,39 @@ Section BIProps.
     move=>b1 b2. apply pord_antisym; now apply or_pcomm.
   Qed.
 
+  Global Instance impl_pord :
+    Proper (pord --> pord ++> pord) impl.
+  Proof.
+    move=>P1 P2 EQP Q1 Q2 EQQ. rewrite <-and_impl. rewrite <-EQQ=>{Q2 EQQ}.
+    unfold flip in EQP. rewrite ->EQP, ->and_impl. reflexivity.
+  Qed.
+
+  Global Instance impl_equiv :
+    Proper (equiv ==> equiv ==> equiv) impl.
+  Proof.
+    move=>P1 P2 EQP Q1 Q2 EQQ. apply pord_antisym; apply impl_pord; rewrite ?EQP ?EQQ; reflexivity.
+  Qed.
+
+  Lemma modus_ponens P Q R: P ⊑ Q -> P ⊑ Q → R -> P ⊑ R.
+  Proof.
+    move=>HQ HQR. transitivity ((Q → R) ∧ Q).
+    - apply and_R; split; assumption.
+    - clear P HQ HQR. apply and_impl. reflexivity.
+  Qed.
+  
+  Global Instance si_pord :
+    Proper (pord --> pord ++> pord) si.
+  Proof.
+    move=>P1 P2 EQP Q1 Q2 EQQ. rewrite <-sc_si. rewrite <-EQQ=>{Q2 EQQ}.
+    unfold flip in EQP. rewrite ->EQP. rewrite ->sc_si. reflexivity.
+  Qed.
+
+  Global Instance si_equiv :
+    Proper (equiv ==> equiv ==> equiv) si.
+  Proof.
+    move=>P1 P2 EQP Q1 Q2 EQQ. apply pord_antisym; apply si_pord; rewrite ?EQP ?EQQ; reflexivity.
+  Qed.
+  
   Lemma sc_projR P Q: P * Q ⊑ Q.
   Proof.
     transitivity (top * Q).
@@ -255,12 +233,6 @@ Section BIProps.
     - apply sc_projR.
   Qed.
 
-  Lemma modus_ponens P Q R: P ⊑ Q -> P ⊑ Q → R -> P ⊑ R.
-  Proof.
-    move=>HQ HQR. transitivity ((Q → R) ∧ Q).
-    - apply and_R; split; assumption.
-    - clear P HQ HQR. apply and_impl. reflexivity.
-  Qed.
 End BIProps.
 
 Section ComplBIProps.
@@ -273,12 +245,38 @@ Section ComplBIProps.
     specialize (all_R _ (all P) P)=>Hall. eapply Hall. reflexivity.
   Qed.
 
+  Global Instance all_pord U `{cmU : cmetric U} :
+    Proper (pord ++> pord) all.
+  Proof.
+    move=>f1 f2 Hf. apply all_R=>u. rewrite <-Hf.
+    apply (all_L u). reflexivity.
+  Qed.
+
+  Global Instance all_equiv U `{cmU : cmetric U} :
+    Proper (equiv ==> equiv) all.
+  Proof.
+    move=>f1 f2 Hf. apply pord_antisym; eapply all_pord; rewrite Hf; reflexivity.
+  Qed.
+
   Lemma xist_R {U} `{cmU : cmetric U} u P (Q: U -n> B):
     P ⊑ Q u -> P ⊑ xist Q.
   Proof.
     move=>Hpq. rewrite ->Hpq=>{Hpq P}.
     specialize (xist_L _ Q (xist Q))=>Hxist.
     eapply Hxist. reflexivity.
+  Qed. 
+
+  Global Instance xist_pord U `{cmU : cmetric U} :
+    Proper (pord ++> pord) xist.
+  Proof.
+    move=>f1 f2 Hf. apply xist_L=>u. rewrite ->Hf.
+    apply (xist_R u). reflexivity.
+  Qed.
+
+  Global Instance xist_equiv U `{cmU : cmetric U} :
+    Proper (equiv ==> equiv) xist.
+  Proof.
+    move=>f1 f2 Hf. apply pord_antisym; eapply xist_pord; rewrite Hf; reflexivity.
   Qed.
 
   Lemma xist_and U `{cmU : cmetric U} :
@@ -296,7 +294,6 @@ Section ComplBIProps.
     apply xist_L=>u. apply sc_si.
     apply (xist_R u). simpl morph. reflexivity.
   Qed.
-
 
   Lemma xist_sc_r U `{cmU : cmetric U} :
     forall (P : U -n> B) Q, Q * (xist P) ⊑ xist (lift_bin sc (umconst Q) P).
@@ -364,6 +361,13 @@ End EqBIProps.
 Section LoebBIProps.
   Context {T} `{BIT: BI T} {LtT: laterBI T} {LB: Later T}.
 
+  Global Instance later_dist n: Proper (dist n ==> dist n) later.
+  Proof.
+    pose (lf := contractive_nonexp later _).
+    move=>t1 t2 EQt.
+      by eapply (met_morph_nonexp lf).
+  Qed.
+
   Lemma later_and_R P Q:
     ▹(P ∧ Q) ⊑ (▹P) ∧ (▹Q).
   Proof.
@@ -381,6 +385,44 @@ Section LoebBIProps.
 
 End LoebBIProps.
 
+(* Show that any BI can close over "future Us", for U being a CMRA. *)
+Section MComplBI.
+  Context {B} `{ComplBI B}.
+  Context {T} `{CMRA T}.
+  Local Obligation Tactic := intros; try resp_set.
+
+  Program Definition mclose : (T -n> B) -n> T -m> B :=
+    n[(fun f: T -n> B => m[(fun t => (all (U:=T) (f <M< n[(ra_op t)])))])].
+  Next Obligation.
+    move=>t1 t2 EQt. eapply all_dist. eapply ndist_umcomp; first reflexivity.
+    move=>u. now eapply ra_op_dist.
+  Qed.
+  Next Obligation.
+    intros t1 t2 [t3 EQt]. simpl. eapply all_R=>u.
+    simpl. rewrite <-EQt. rewrite-> (comm t3), <-assoc.
+    transitivity ((f <M< n[(ra_op t1)]) (t3 · u)%ra); last first.
+    - eapply pordR. simpl. reflexivity.
+    - eapply all_R. eapply pordR, all_equiv. move=>?. reflexivity.
+  Qed.
+  Next Obligation.
+    intros f1 f2 EQf t. simpl. eapply all_dist. move=>u. simpl. rewrite EQf. reflexivity.
+  Qed.
+
+  Lemma mclose_cl f : (mclose f: T -n> B) ⊑ f.
+  Proof.
+    unfold mclose=>u. simpl.
+    transitivity ((f <M< n[(ra_op u)]) 1%ra).
+    - eapply all_R. eapply all_pord=>t. reflexivity.
+    - simpl. rewrite ra_op_unit2. reflexivity.
+  Qed.
+  Lemma  mclose_fw (f : T -n> B) u t (HFW : forall u' (HS : u ⊑ u'), t ⊑ f u'):
+    t ⊑ mclose f u.
+  Proof.
+    unfold mclose. simpl. eapply all_R=>u'.
+    eapply HFW. exists u'. rewrite comm. reflexivity.
+  Qed.
+
+End MComplBI.
 
 Section SPredBI.
   Local Obligation Tactic := intros; eauto with typeclass_instances.
@@ -462,29 +504,17 @@ Section SPredBI.
     rewrite ->EQP, EQQ; tauto.
   Qed.
 
-  Global Instance impl_sp_equiv : Proper (equiv ==> equiv ==> equiv) impl_sp.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
-    setoid_rewrite EQP; setoid_rewrite EQQ; tauto.
-  Qed.
   Global Instance impl_sp_dist n : Proper (dist n ==> dist n ==> dist n) impl_sp.
   Proof.
     intros P1 P2 EQP Q1 Q2 EQQ m HLt; simpl.
     split; intros; apply EQQ, H, EQP; now eauto with arith.
-  Qed.
-  Global Instance impl_sp_ord : Proper (pord --> pord ++> pord) impl_sp.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n HP m r'.
-    rewrite <- EQP, <- EQQ; now apply HP.
   Qed.
 
   Global Instance sc_sp_equiv : Proper (equiv ==> equiv ==> equiv) sc_sp := and_sp_equiv.
   Global Instance sc_sp_dist n : Proper (dist n ==> dist n ==> dist n) sc_sp := and_sp_dist n.
   Global Instance sc_sp_ord : Proper (pord ==> pord ==> pord) sc_sp := and_sp_ord.
 
-  Global Instance si_sp_equiv : Proper (equiv ==> equiv ==> equiv) si_sp := impl_sp_equiv.
   Global Instance si_sp_dist n : Proper (dist n ==> dist n ==> dist n) si_sp := impl_sp_dist n.
-  Global Instance si_sp_ord : Proper (pord --> pord ++> pord) si_sp := impl_sp_ord.
 
   Global Program Instance bi_sp : BI SPred.
   Next Obligation.
@@ -545,36 +575,16 @@ Section SPredBI.
 
     Existing Instance nonexp_type.
 
-    Global Instance all_sp_equiv : Proper (equiv (A := V -n> SPred) ==> equiv) all.
-    Proof.
-      intros R1 R2 EQR n; simpl.
-      setoid_rewrite EQR; tauto.
-    Qed.
     Global Instance all_sp_dist n : Proper (dist (T := V -n> SPred) n ==> dist n) all.
     Proof.
       intros R1 R2 EQR m HLt; simpl.
       split; intros; apply EQR; now auto.
     Qed.
-    Global Instance all_sp_pord : Proper (pord (T := V -n> SPred) ++> pord) all.
-    Proof.
-      intros R1 R2 EQR m; simpl.
-      intros; apply EQR; now auto.
-    Qed.
 
-    Global Instance xist_sp_equiv : Proper (equiv (A := V -n> SPred) ==> equiv) xist.
-    Proof.
-      intros R1 R2 EQR n; simpl.
-      setoid_rewrite EQR; tauto.
-    Qed.
     Global Instance xist_sp_dist n : Proper (dist (T := V -n> SPred)n ==> dist n) xist.
     Proof.
       intros R1 R2 EQR m HLt; simpl.
       split; intros [t HR]; exists t; apply EQR; now auto.
-    Qed.
-    Global Instance xist_sp_pord : Proper (pord (T := V -n> SPred) ++> pord) xist.
-    Proof.
-      intros R1 R2 EQR n [v HR]; simpl.
-      exists v. by eapply EQR.
     Qed.
 
   End Quantifiers.
@@ -614,20 +624,6 @@ Section SPredLater.
     intros n; induction n.
     - apply HL; exact I.
     - apply HL, IHn.
-  Qed.
-
-  Goal forall P Q, ▹P → ▹Q == ▹(P → Q).
-  Proof.
-    move=>P Q n. split=>H.
-    - destruct n as [|n]; first exact I.
-      move=>m Hle HP. specialize (H (S m)). eapply H.
-      + omega.
-      + exact HP.
-    - move=>m Hle HP. destruct m as [|m]; first exact I.
-      destruct n as [|n]; first (exfalso; omega).
-      simpl in H. eapply H.
-      + omega.
-      + exact HP.
   Qed.
 
 End SPredLater.
@@ -705,7 +701,7 @@ Section MonotoneExt.
     fun P Q => mclose (lift_bin impl P Q).
 
   Global Program Instance sc_mm  : scBI (T -m> B) :=
-    fun P Q => m[(fun t => xist n[(fun ts:T*T => (Mfst ts · Msnd ts === t) ∧ (P (Mfst ts) * Q (Msnd ts)))])].
+    fun P Q => m[(fun t:T => xist n[(fun ts:T*T => ((Mfst ts · Msnd ts) === t) ∧ (P (Mfst ts) * Q (Msnd ts)))])].
   Next Obligation.
     move=>t1 t2 EQt. rewrite /= -/dist. eapply xist_dist. move=>[ts1 ts2] /=. rewrite -/dist.
     rewrite EQt. reflexivity.
@@ -777,22 +773,10 @@ Section MonotoneExt.
     apply or_pord; [apply EQP | apply EQQ].
   Qed.
 
-  Global Instance impl_mm_equiv : Proper (equiv ==> equiv ==> equiv) impl_mm.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ; unfold impl_mm.
-    apply (morph_resp mclose); intros t; simpl morph.
-    apply impl_equiv; [apply EQP | apply EQQ].
-  Qed.
   Global Instance impl_mm_dist n : Proper (dist n ==> dist n ==> dist n) impl_mm.
   Proof.
     intros P1 P2 EQP Q1 Q2 EQQ; apply met_morph_nonexp; intros t; simpl morph.
     apply impl_dist; [apply EQP | apply EQQ].
-  Qed.
-  Global Instance impl_mm_ord : Proper (pord --> pord ++> pord) impl_mm.
-  Proof.
-    intros P1 P2 SubP Q1 Q2 SubQ t; unfold flip in SubP; unfold impl, impl_mm.
-    apply mclose_fw; intros t' Subt. setoid_rewrite Subt; clear t Subt; simpl morph.
-    rewrite ->SubP, <- SubQ; apply mclose_cl.
   Qed.
 
   Global Instance sc_mm_equiv : Proper (equiv ==> equiv ==> equiv) sc_mm.
@@ -826,10 +810,10 @@ Section MonotoneExt.
   Qed.
 
   Program Definition sc_mm_assoc_f1 u1 u2 t (f1 f2 f3: T -n> B) :=
-    lift_bin and (umconst (u1 · u2 === t)) (lift_bin sc (umconst (f1 u1)) n[(fun ts => (fst ts · snd ts === u2) ∧ (f2 (fst ts) * f3 (snd ts)))]).
+    lift_bin and (umconst ((u1 · u2) === t)) (lift_bin sc (umconst (f1 u1)) n[(fun ts => ((fst ts · snd ts) === u2) ∧ (f2 (fst ts) * f3 (snd ts)))]).
 
   Program Definition sc_mm_assoc_f2 u1 u2 t (f1 f2 f3: T -n> B) :=
-    lift_bin and (umconst (u1 · u2 === t)) (lift_bin sc n[(fun ts => (fst ts · snd ts === u1) ∧ (f1 (fst ts) * f2 (snd ts)))] (umconst (f3 u2))).
+    lift_bin and (umconst ((u1 · u2) === t)) (lift_bin sc n[(fun ts => ((fst ts · snd ts) === u1) ∧ (f1 (fst ts) * f2 (snd ts)))] (umconst (f3 u2))).
 
   Existing Instance sc_equiv.
 
@@ -843,7 +827,7 @@ Section MonotoneExt.
         reflexivity.
       + apply xist_L; move=>[u3 u4]. simpl morph. unfold const.
         apply (xist_R (u1 · u3, u4)). simpl morph. apply and_R; split.
-        * transitivity ((u1 · u2 === t) ∧ (u3 · u4 === u2)).
+        * transitivity ((u1 · u2) === t ∧ (u3 · u4) === u2).
           { apply and_pord; first reflexivity. setoid_rewrite and_projL.
             apply sc_projR. }
           eapply intEq_rewrite_goal with (φ := intEq_l (u1 · u3 · u4)).
@@ -863,7 +847,7 @@ Section MonotoneExt.
         eapply xist_sc.
       + apply xist_L; move=>[u3 u4]. simpl morph. unfold const.
         apply (xist_R (u3, u4·u2)). simpl morph. apply and_R; split.
-        * transitivity ((u1 · u2 === t) ∧ (u3 · u4 === u1)).
+        * transitivity ((u1 · u2) === t ∧ (u3 · u4) === u1).
           { apply and_pord; first reflexivity. rewrite ->and_projL, sc_projL. reflexivity. }
           eapply intEq_rewrite_goal with (φ := intEq_l (u3 · (u4 · u2))).
           { rewrite ->and_projL. reflexivity. }
@@ -877,23 +861,11 @@ Section MonotoneExt.
           setoid_rewrite <-intEq_refl. apply top_true.
   Qed.
 
-  Global Instance si_mm_equiv : Proper (equiv ==> equiv ==> equiv) si_mm.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ t. simpl morph.
-    apply all_equiv; move=>u. simpl morph.
-    apply si_equiv; [apply EQP | apply EQQ].
-  Qed.
   Global Instance si_mm_dist n : Proper (dist n ==> dist n ==> dist n) si_mm.
   Proof.    
     intros P1 P2 EQP Q1 Q2 EQQ t. simpl morph.
     apply all_dist; move=>u. simpl morph.
     apply si_dist; [apply EQP | apply EQQ].
-  Qed.
-  Global Instance si_mm_ord : Proper (pord --> pord ++> pord) si_mm.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ t. simpl morph.
-    apply all_pord; move=>u. simpl morph.
-    apply si_pord; [apply EQP | apply EQQ].
   Qed.
 
   Global Program Instance bi_mm : BI (T -m> B).
@@ -971,22 +943,12 @@ Section MonotoneExt.
   Section Quantifiers.
     Context V `{cmV : cmetric V}.
 
-    Global Instance all_mm_equiv : Proper (equiv (A := V -n> T -m> B) ==> equiv) all.
-    Proof.
-      intros R1 R2 EQR t; simpl morph.
-      apply all_equiv; intros u; simpl morph; apply EQR.
-    Qed.
     Global Instance all_mm_dist n : Proper (dist (T := V -n> T -m> B) n ==> dist n) all.
     Proof.
       intros R1 R2 EQR t; simpl morph.
       apply all_dist; intros u; simpl morph; apply EQR.
     Qed.
 
-    Global Instance xist_mm_equiv : Proper (equiv (A := V -n> T -m> B) ==> equiv) xist.
-    Proof.
-      intros R1 R2 EQR t; simpl.
-      apply xist_equiv; intros u; simpl; apply EQR.
-    Qed.
     Global Instance xist_mm_dist n : Proper (dist (T := V -n> T -m> B)n ==> dist n) xist.
     Proof.
       intros R1 R2 EQR t; simpl morph.
@@ -1003,16 +965,10 @@ Section MonotoneExt.
       simpl morph in HH; apply HH.
   Qed.
   Next Obligation.
-    intros t P HLe u. apply all_pord. intro x. simpl morph. eapply HLe.
-  Qed.
-  Next Obligation.
     split.
     - intros HH t; simpl morph; rewrite <- xist_L; intros u; simpl morph; apply HH.
     - intros HH u t; specialize (HH t); simpl morph in *.
       rewrite <- xist_L in HH; simpl morph in HH; apply HH.
-  Qed.
-  Next Obligation.
-    intros t P H u; apply xist_pord; intros x; apply H.
   Qed.
 
 End MonotoneExt.
