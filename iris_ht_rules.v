@@ -94,6 +94,8 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
     Qed.
 
     (** Consequence **)
+    (* TODO RJ: formulate this as compatibility lemma with the partial order instead.
+       Then we do not need to talk abot boxes. *)
     Lemma wpImpl safe m e φ φ':
       (□all (lift_bin BI.impl φ φ')) ∧ wp safe m e φ ⊑ wp safe m e φ'.
     Proof.

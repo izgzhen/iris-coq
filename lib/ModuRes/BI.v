@@ -8,6 +8,7 @@ Section CompleteBI.
   Context {T : Type}.
   Local Open Scope type.
 
+  Class validBI:= valid: T -> Prop.
   Class topBI  := top  : T.
   Class botBI  := bot  : T.
   Class andBI  := and  : T -> T -> T.
@@ -25,12 +26,13 @@ Section CompleteBI.
     xist : forall {U} `{pU : cmetric U}, (U -n> T) -> T.
 
 
-  (* An ordered type which is antisymmetric and bounded. *)
-  Class Bounded `{preoT : preoType T, BIT : topBI, BIB : botBI}: Prop :=
+  (* An ordered type which is antisymmetric and bounded, and has a notion of validity. *)
+  Class Bounded `{preoT : preoType T, BIV: validBI, BIT : topBI, BIB : botBI}: Prop :=
     mkBounded {
         pord_antisym:  forall P Q, P ⊑ Q -> Q ⊑ P -> P == Q;
         top_true    :  forall P, P ⊑ top;
-        bot_false   :  forall P, bot ⊑ P
+        bot_false   :  forall P, bot ⊑ P;
+        top_valid   :  forall P, valid P <-> top ⊑ P
       }.
 
   Class BI `{bT : Bounded} {mT: metric T} {cmT: cmetric T} {pcmT: pcmType T}
@@ -83,7 +85,7 @@ Section CompleteBI.
       later_pord :> Proper (pord ++> pord) later;
       later_mon (t : T) : t ⊑ later t;
       later_contr :> contractive later; (* this implies later_dist *)
-      loeb (t : T) (HL : later t ⊑ t) : top ⊑ t
+      loeb (t : T) (HL : later t ⊑ t) : valid t
     }.
 
   (* A BI that can reflect equality. We don't bother with "a specific type here", as we already did
@@ -103,6 +105,7 @@ Section CompleteBI.
 
 End CompleteBI.
 
+Arguments validBI  : default implicits.
 Arguments topBI  : default implicits.
 Arguments botBI  : default implicits.
 Arguments andBI  : default implicits.
@@ -114,11 +117,11 @@ Arguments laterBI: default implicits.
 Arguments eqBI   : default implicits.
 Arguments allBI  T {_ _ _}.
 Arguments xistBI T {_ _ _}.
-Arguments Bounded T {_ _ _ _}.
-Arguments BI T {_ _ _ _ _ _ _ _ _ _ _ _ _}.
-Arguments ComplBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _}.
-Arguments Later T {_ _ _ _ _ _ _ _ _}.
-Arguments EqBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _}.
+Arguments Bounded T {_ _ _ _ _}.
+Arguments BI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _}.
+Arguments ComplBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _}.
+Arguments Later T {_ _ _ _ _ _ _ _ _ _}.
+Arguments EqBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _}.
 
 (* Show that any BI can close over "future Us", for U being a CMRA. *)
 Section MComplBI.
@@ -181,7 +184,7 @@ Notation "∀ x , p" := (all n[(fun x => p)]) (at level 60, x ident, right assoc
 Notation "∃ x , p" := (xist n[(fun x => p)]) (at level 60, x ident, right associativity) : bi_scope.
 Notation "∀ x : T , p" := (all n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
 Notation "∃ x : T , p" := (xist n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
-Notation "t1 '===' t2" := (intEq t1 t2) (at level 70) : bi_scope.
+Notation "t1 '===' t2" := (intEq t1 t2) (at level 15) : bi_scope.
 
 Local Open Scope bi.
 
@@ -331,7 +334,7 @@ Section EqBIProps.
   Qed.
 
   Lemma intEq_rewrite_goal {T} `{cmetric T} (t1 t2: T) P (φ: _ -n> B):
-    P ⊑ (t1 === t2) -> P ⊑ φ t1 -> P ⊑ φ t2.
+    P ⊑ t1 === t2 -> P ⊑ φ t1 -> P ⊑ φ t2.
   Proof.
     move=>HEQ Hφ. transitivity ((t1 === t2) ∧ φ t1).
     - apply and_R. split; assumption.
@@ -340,7 +343,7 @@ Section EqBIProps.
   Qed.
 
   Lemma intEq_sym {T} `{cmetric T} (t1 t2: T):
-    (t1 === t2) ⊑ (t2 === t1).
+    t1 === t2 ⊑ t2 === t1.
   Proof.
     rewrite intEq_leibnitz /bi_leibnitz.
     apply (all_L (intEq_r t1)). simpl morph. rewrite <-intEq_refl.
@@ -349,7 +352,7 @@ Section EqBIProps.
   Qed.
 
   Lemma intEqR {T} `{cmetric T} (t1 t2: T) P:
-    t1 == t2 -> P ⊑ (t1 === t2).
+    t1 == t2 -> P ⊑ t1 === t2.
   Proof.
     move=>EQ. transitivity (t1 === t1).
     - setoid_rewrite <-intEq_refl. apply top_true.
@@ -358,12 +361,34 @@ Section EqBIProps.
 
 End EqBIProps.
 
+Section LoebBIProps.
+  Context {T} `{BIT: BI T} {LtT: laterBI T} {LB: Later T}.
+
+  Lemma later_and_R P Q:
+    ▹(P ∧ Q) ⊑ (▹P) ∧ (▹Q).
+  Proof.
+    apply and_R; split; eapply later_pord; [apply and_projL|apply and_projR].
+  Qed.
+
+  Lemma later_or_L P Q:
+    ▹P ∨ ▹Q ⊑ ▹(P ∨ Q).
+  Proof.
+    apply or_L; split; eapply later_pord; [apply or_injL|apply or_injR].
+  Qed.
+
+  (* TODO RJ: We need much more, see the appendix. Do we need more axioms, or can
+     the rest be derived? *)
+
+End LoebBIProps.
+
+
 Section SPredBI.
   Local Obligation Tactic := intros; eauto with typeclass_instances.
 
   (* Standard interpretations of propositional connectives. *)
   Global Program Instance top_sp : topBI SPred := sp_top.
   Global Program Instance bot_sp : botBI SPred := sp_c False.
+  Global Program Instance valid_sp : validBI SPred := sp_full.
 
   Global Instance bounded_sp : Bounded SPred.
   Proof.
@@ -371,6 +396,9 @@ Section SPredBI.
     - intros P Q HPQ HQP n. split; [apply HPQ| apply HQP].
     - intros P n _; exact I.
     - intros P n HC; contradiction HC.
+    - intros P; split.
+      + intros HV n _. apply HV.
+      + intros HV n. now apply HV.
   Qed.
 
   Global Program Instance and_sp : andBI SPred :=
@@ -583,9 +611,23 @@ Section SPredLater.
     apply Hpq; auto with arith.
   Qed.
   Next Obligation.
-    intros n _; induction n.
+    intros n; induction n.
     - apply HL; exact I.
     - apply HL, IHn.
+  Qed.
+
+  Goal forall P Q, ▹P → ▹Q == ▹(P → Q).
+  Proof.
+    move=>P Q n. split=>H.
+    - destruct n as [|n]; first exact I.
+      move=>m Hle HP. specialize (H (S m)). eapply H.
+      + omega.
+      + exact HP.
+    - move=>m Hle HP. destruct m as [|m]; first exact I.
+      destruct n as [|n]; first (exfalso; omega).
+      simpl in H. eapply H.
+      + omega.
+      + exact HP.
   Qed.
 
 End SPredLater.
@@ -627,7 +669,7 @@ Section SPredEq.
 End SPredEq.
 
 Section MonotoneExt.
-  Context B {eqB: Setoid B} {preoB: preoType B} {BIBB: botBI B} {BITB: topBI B} {BB: Bounded B}.
+  Context B {eqB: Setoid B} {preoB: preoType B} {BIVB: validBI B} {BIBB: botBI B} {BITB: topBI B} {BB: Bounded B}.
   Context {mB: metric B} {cmB: cmetric B} {pcmB: pcmType B}.
   Context T `{cmraT: CMRA T}.
   Local Open Scope ra.
@@ -637,6 +679,7 @@ Section MonotoneExt.
 
   Global Instance top_mm : topBI (T -m> B) := pcmconst top.
   Global Instance bot_mm : botBI (T -m> B) := pcmconst bot.
+  Global Instance valid_mm : validBI (T -m> B) := fun P => forall t, valid (P t).
 
   Global Instance bounded_mm : Bounded (T -m> B).
   Proof.
@@ -644,6 +687,9 @@ Section MonotoneExt.
     - intros P Q HPQ HQP t. apply pord_antisym; [apply HPQ | apply HQP].
     - intros P t. apply top_true.
     - intros P t. apply bot_false.
+    - intros P. split; intros HV.
+      + intros t. simpl morph. unfold const. rewrite <-top_valid. eapply HV.
+      + intros t. rewrite ->top_valid. eapply HV.
   Qed.
 
   Context {BIAB : andBI B} {BIOB: orBI B} {BIIB: implBI B} {BISCB: scBI B} {BISIB: siBI B} {BBI: BI B}.
@@ -1023,6 +1069,3 @@ Section MonotoneEQ.
   Qed.
 
 End MonotoneEQ.
-
-
-  

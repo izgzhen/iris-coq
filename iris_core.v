@@ -76,49 +76,22 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (r u v : res) (σ : state).
 
-  Definition valid (P: Props) :=
-    forall w n, P w n.
-
-  Lemma valid_iff P :
-    valid P <-> (⊤ ⊑ P).
-  Proof.
-    split; intros Hp.
-    - intros w n _; apply Hp.
-    - intros w n. apply Hp; exact I.
-  Qed.
-
   (* Simple view lemmas. *)
-
-  Lemma lerefl (n : nat) : n <= n. Proof. by reflexivity. Qed.
 
   Lemma lelt {n k} (H : k < n) : k <= n.
   Proof. by omega. Qed.
 
   Lemma lt0 (n : nat) :  ~ n < 0. Proof. by omega. Qed.
 
-  Lemma propsMW {P w n r w'} (HSw : w ⊑ w') : P w n r -> P w' n r.
+  Lemma propsMW {P w n w'} (HSw : w ⊑ w') : P w n -> P w' n.
   Proof. exact: (mu_mono P HSw). Qed.
 
-  Lemma propsMNR {P w n r n' r'} (HLe : n' <= n) (HSr : r ⊑ r') : P w n r -> P w n' r'.
-  Proof. exact: uni_pred HLe HSr. Qed.
+  Lemma propsMN {P w n n'} (HLe : n' <= n) : P w n -> P w n'.
+  Proof. apply: dpred HLe. Qed.
 
-  Lemma propsMN {P w n r n'} (HLe : n' <= n) : P w n r -> P w n' r.
-  Proof. apply: uni_pred HLe (prefl r). Qed.
-
-  Lemma propsMR {P w n r r'} (HSr : r ⊑ r') : P w n r -> P w n r'.
-  Proof. exact: uni_pred (lerefl n) HSr. Qed.
-
-  Lemma propsM {P w n r w' n' r'} (HSw : w ⊑ w') (HLe : n' <= n) (HSr : r ⊑ r') :
-    P w n r -> P w' n' r'.
-  Proof. move=> HP; by apply: (propsMW HSw); exact: (propsMNR HLe HSr). Qed.
-
-  Lemma propsMWR {P w n r w' r'} (HLe : w ⊑ w') (HSr : r ⊑ r') : P w n r -> P w' n r'.
-  Proof. move=> HP; eapply propsM; (eassumption || reflexivity). Qed.
-
-  Lemma propsMWN {P w n r w' n'} (HSw : w ⊑ w') (HLe : n' <= n) :
-    P w n r -> P w' n' r.
-  Proof. move=> HP; eapply propsM; (eassumption || reflexivity). Qed.
-
+  Lemma propsM {P w n w' n' } (HSw : w ⊑ w') (HLe : n' <= n) :
+    P w n -> P w' n'.
+  Proof. move=> HP. eapply propsMW, propsMN, HP; assumption. Qed.
 
   (** And now we're ready to build the IRIS-specific connectives! *)
 

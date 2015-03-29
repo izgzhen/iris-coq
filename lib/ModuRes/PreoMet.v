@@ -566,17 +566,6 @@ Section Option.
 
 End Option.
 
-Class extensible V `{pcmV : pcmType V} :=
-  mkExtend { extend : V -> V -> V;
-             extend_dist n (v vd ve : V) (HD : v = S n = vd) (HS : v ⊑ ve) :
-               ve = S n = extend ve vd;
-             extend_sub  n (v vd ve : V) (HD : v = S n = vd) (HS : v ⊑ ve) :
-               vd ⊑ extend ve vd
-           }.
-Arguments mkExtend {_ _ _ _ _ _} _ {_ _}.
-Arguments extend_dist {_ _ _ _ _ _ _} {_} {_ _ _} _ _.
-Arguments extend_sub {_ _ _ _ _ _ _} {_} {_ _ _} _ _.
-
 Section ExtOrdDiscrete.
   Context U `{cmU : cmetric U}.
 
@@ -596,14 +585,6 @@ Section ExtOrdDiscrete.
       apply umet_complete_ext; assumption.
   Qed.
 
-  Program Instance disc_ext : extensible U := mkExtend (fun ueq ud => ud).
-  Next Obligation.
-    rewrite <- HS; assumption.
-  Qed.
-  Next Obligation.
-    reflexivity.
-  Qed.
-
 End ExtOrdDiscrete.
 
 Section ExtMetricDiscrete.
@@ -616,21 +597,3 @@ Section ExtMetricDiscrete.
     by apply: Hle.
   Qed.
 End ExtMetricDiscrete.
-
-
-Section ExtProd.
-  Context T U `{ET : extensible T} `{EU : extensible U}. 
-
-  Global Instance prod_extensible : extensible (T * U) := mkExtend (fun s s' => pair (extend (fst s) (fst s')) (extend (snd s) (snd s'))).
-  Proof. 
-    - intros n [v1 v2] [vd1 vd2] [ve1 ve2] [E1 E2] [S1 S2]. 
-      split.
-      + eapply (extend_dist E1 S1). 
-      + eapply (extend_dist E2 S2). 
-    - intros n [v1 v2] [vd1 vd2] [ve1 ve2] [E1 E2] [S1 S2]. 
-      split.
-      + eapply (extend_sub E1 S1).
-      + eapply (extend_sub E2 S2).
-  Qed.
-
-End ExtProd.

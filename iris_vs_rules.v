@@ -116,7 +116,9 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
       intros w0 n r0 HP w1 rf mf σ k HSub Hnk HD HSat.
       exists w1 r0; repeat split; [ reflexivity | eapply propsMWN; eauto | assumption ].
     Qed.
-    
+
+    (* TODO RJ: formulate this as compatibility lemma with the partial order instead.
+       Then we do not need to talk abot boxes. *)
     Lemma pvsImpl P Q m1 m2 :
       □ (P → Q) ∧ pvs m1 m2 P ⊑ pvs m1 m2 Q.
     Proof.

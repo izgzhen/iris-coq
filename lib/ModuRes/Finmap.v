@@ -931,57 +931,6 @@ Qed.
       - rewrite -> pre_fdMap_lookup_nf by assumption; reflexivity.
     Qed.
 
-    Context {extV : extensible V}.
-
-    Definition Extend_fd (me md : K -f> V) :=
-      findom_map _ _ me
-                 (fun x (HIn : inlst x (dom me) = true) =>
-                    let b := inlst x (dom md) in
-                    let ve := Indom_lookup x (findom_t me) HIn in
-                    match b as b return inlst x (dom md) = b -> V with
-                      | true => fun eq => extend ve (Indom_lookup x (findom_t md) eq)
-                      | false => fun _ => ve
-                    end eq_refl).
-    Local Obligation Tactic := idtac.
-
-    Global Program Instance extensible_fd : extensible (K -f> V) := mkExtend Extend_fd.
-    Next Obligation.
-      clear dependent U; clear dependent W; intros; intros k; unfold Extend_fd.
-      destruct (inlst k (dom ve)) eqn: HIne.
-      - rewrite -> findom_map_app with (HIn := HIne).
-        generalize (@eq_refl _ (inlst k (dom vd))) as HInd.
-        pattern (inlst k (dom vd)) at 2 3; destruct (inlst k (dom vd)); intros.
-        + specialize (HD k); specialize (HS k).
-          rewrite <- Indom_lookup_find with (HIn := HIne).
-          rewrite <- Indom_lookup_find with (HIn := HIne) in HS.
-          rewrite <- Indom_lookup_find with (HIn := HInd) in HD.
-          destruct (v k) as [vv |]; [| contradiction HD].
-          unfold dist, pord in *; simpl in *.
-          eapply extend_dist; eassumption.
-        + rewrite Indom_lookup_find; reflexivity.
-      - rewrite -> findom_map_app_nf by assumption.
-        rewrite -> NIn_inlst, fdLookup_notin in HIne.
-        rewrite HIne; reflexivity.
-    Qed.
-    Next Obligation.
-      clear dependent U; clear dependent W; intros; intros k.
-      specialize (HD k); destruct (vd k) as [v1 |] eqn: HFnd1; [| exact I].
-      specialize (HS k); destruct (v k) as [v2 |]; [| contradiction HD].
-      destruct (ve k) as [v3 |] eqn: HFnd2; [| contradiction HS].
-      assert (HInd : inlst k (dom vd) = true) by (rewrite -> In_inlst, fdLookup_in_strong; eauto).
-      assert (HIne : inlst k (dom ve) = true) by (rewrite -> In_inlst, fdLookup_in_strong; eauto).
-      unfold extend, Extend_fd.
-      rewrite -> findom_map_app with (HIn := HIne).
-      generalize (@eq_refl _ (inlst k (dom vd))).
-      pattern (inlst k (dom vd)) at 2 3; rewrite -> HInd; clear HInd; intros HInd.
-      unfold dist, pord in *; simpl in *.
-      rewrite <- Indom_lookup_find with (HIn := HInd) in HFnd1.
-      inversion HFnd1; subst v1; clear HFnd1.
-      rewrite <- Indom_lookup_find with (HIn := HIne) in HFnd2.
-      inversion HFnd2; subst v3; clear HFnd2.
-      eapply extend_sub; eassumption.
-    Qed.
-
   End MapProps.
   
   Section Compose.
