@@ -73,10 +73,6 @@ Section CompleteBI.
         all_pord   U `{cmU : cmetric U}   :> Proper (pord ++> pord) all;
         xist_L     U `{cmU : cmetric U} :
           forall (P : U -n> T) Q, (forall u, P u ⊑ Q) <-> xist P ⊑ Q;
-        xist_sc    U `{cmU : cmetric U} :
-          (* This is not provable using xist_L. The converse is. The corresponding rule for "all" (swapping
-             the order) does not hold. *)
-          forall (P : U -n> T) Q, sc (xist P) Q ⊑ xist (lift_bin sc P (umconst Q));
         xist_equiv U `{cmU : cmetric U}   :> Proper (equiv ==> equiv) xist;
         xist_dist  U `{cmU : cmetric U} n :> Proper (dist n ==> dist n) xist;
         xist_pord  U `{cmU : cmetric U}   :> Proper (pord ++> pord) xist
@@ -255,6 +251,13 @@ Section BIProps.
     - apply sc_projL.
     - apply sc_projR.
   Qed.
+
+  Lemma modus_ponens P Q R: P ⊑ Q -> P ⊑ Q → R -> P ⊑ R.
+  Proof.
+    move=>HQ HQR. transitivity ((Q → R) ∧ Q).
+    - apply and_R; split; assumption.
+    - clear P HQ HQR. apply and_impl. reflexivity.
+  Qed.
 End BIProps.
 
 Section ComplBIProps.
@@ -278,8 +281,19 @@ Section ComplBIProps.
   Lemma xist_and U `{cmU : cmetric U} :
     forall (P : U -n> B) Q, (xist P) ∧ Q ⊑ xist (lift_bin and P (umconst Q)).
   Proof.
-    (* TODO *)
-  Admitted.
+    move=>P Q. apply and_impl.
+    apply xist_L=>u. apply and_impl.
+    apply (xist_R u). simpl morph. reflexivity.
+  Qed.
+
+  Lemma xist_sc U `{cmU : cmetric U} :
+    forall (P : U -n> B) Q, (xist P) * Q ⊑ xist (lift_bin sc P (umconst Q)).
+  Proof.
+    move=>P Q. apply sc_si.
+    apply xist_L=>u. apply sc_si.
+    apply (xist_R u). simpl morph. reflexivity.
+  Qed.
+
 
   Lemma xist_sc_r U `{cmU : cmetric U} :
     forall (P : U -n> B) Q, Q * (xist P) ⊑ xist (lift_bin sc (umconst Q) P).
@@ -317,15 +331,21 @@ Section EqBIProps.
   Qed.
 
   Lemma intEq_rewrite_goal {T} `{cmetric T} (t1 t2: T) P (φ: _ -n> B):
-    P ⊑ (t1 === t2) -> P ⊑ φ t2 -> P ⊑ φ t1.
+    P ⊑ (t1 === t2) -> P ⊑ φ t1 -> P ⊑ φ t2.
   Proof.
-    admit.
+    move=>HEQ Hφ. transitivity ((t1 === t2) ∧ φ t1).
+    - apply and_R. split; assumption.
+    - move=>{P HEQ Hφ}. rewrite -/pord. apply and_impl. rewrite intEq_leibnitz /bi_leibnitz.
+      apply (all_L φ). simpl morph. reflexivity. 
   Qed.
 
   Lemma intEq_sym {T} `{cmetric T} (t1 t2: T):
-    (t1 === t2) == (t2 === t1).
+    (t1 === t2) ⊑ (t2 === t1).
   Proof.
-    admit.
+    rewrite intEq_leibnitz /bi_leibnitz.
+    apply (all_L (intEq_r t1)). simpl morph. rewrite <-intEq_refl.
+    eapply modus_ponens; last reflexivity.
+    apply top_true.
   Qed.
 
   Lemma intEqR {T} `{cmetric T} (t1 t2: T) P:
@@ -541,9 +561,6 @@ Section SPredBI.
     split.
     - intros HH n [u HP]; eapply HH; eassumption.
     - intros HH u n HP; apply HH; exists u; assumption.
-  Qed.
-  Next Obligation.
-    intros n [[u HP] HQ]; exists u. split; assumption.
   Qed.
 
 End SPredBI.
@@ -784,9 +801,9 @@ Section MonotoneExt.
           { apply and_pord; first reflexivity. setoid_rewrite and_projL.
             apply sc_projR. }
           eapply intEq_rewrite_goal with (φ := intEq_l (u1 · u3 · u4)).
-          { setoid_rewrite and_projL. rewrite intEq_sym. reflexivity. }
-          setoid_rewrite and_projR. eapply intEq_rewrite_goal with (t1:=u2) (φ := intEq_l (u1 · u3 · u4) <M< ra_op_n u1).
-          { rewrite intEq_sym. reflexivity. }
+          { rewrite ->and_projL. reflexivity. }
+          setoid_rewrite and_projR. eapply intEq_rewrite_goal with (t2:=u2) (φ := intEq_l (u1 · u3 · u4) <M< ra_op_n u1).
+          { reflexivity. }
           simpl morph. eapply intEqR. now rewrite assoc.
         * transitivity ((f1 u1 * f2 u3) * f3 u4).
           { rewrite ->and_projR, and_projR. rewrite assoc. reflexivity. }
@@ -803,9 +820,9 @@ Section MonotoneExt.
         * transitivity ((u1 · u2 === t) ∧ (u3 · u4 === u1)).
           { apply and_pord; first reflexivity. rewrite ->and_projL, sc_projL. reflexivity. }
           eapply intEq_rewrite_goal with (φ := intEq_l (u3 · (u4 · u2))).
-          { rewrite ->and_projL, intEq_sym. reflexivity. }
-          rewrite ->and_projR. simpl morph. eapply intEq_rewrite_goal with (t1:=u1) (φ := intEq_l (u3 · (u4 · u2)) <M< Mswap ra_op_n u2).
-          { rewrite intEq_sym. reflexivity. }
+          { rewrite ->and_projL. reflexivity. }
+          rewrite ->and_projR. simpl morph. eapply intEq_rewrite_goal with (t2:=u1) (φ := intEq_l (u3 · (u4 · u2)) <M< Mswap ra_op_n u2).
+          { reflexivity. }
           simpl morph. eapply intEqR. now rewrite assoc.
         * transitivity (f1 u3 * (f2 u4 * f3 u2)).
           { rewrite ->and_projR, and_projR. rewrite assoc. reflexivity. }
@@ -862,14 +879,23 @@ Section MonotoneExt.
     intros t; simpl morph. apply pord_antisym.
     - apply xist_L;move=>[ts1 ts2]. simpl morph.
       eapply intEq_rewrite_goal with (φ := P).
-      { rewrite ->and_projL, ->intEq_sym. reflexivity. }
+      { rewrite ->and_projL. reflexivity. }
       rewrite ->and_projR, ->sc_projR. apply mu_mono. exists ts1. reflexivity.
     - apply (xist_R (1, t)). simpl morph. apply and_R; split.
       + eapply intEqR. now rewrite ra_op_unit.
       + unfold const. rewrite sc_top_unit. reflexivity.
   Qed.
   Next Obligation.
-    admit.
+    split; move=>HLE t.
+    - simpl. apply all_R=>u. simpl morph.
+      eapply sc_si. rewrite <-(HLE _). simpl morph. apply (xist_R (t, u)). simpl morph.
+      apply and_R; split; last reflexivity.
+      eapply intEqR. reflexivity.
+    - simpl. apply xist_L;move=>[u1 u2]. simpl morph.
+      eapply intEq_rewrite_goal with (φ := R).
+      { rewrite ->and_projL. reflexivity. }
+      rewrite ->and_projR=>{t}. apply sc_si. rewrite ->HLE=>{HLE}. simpl.
+      apply (all_L u2). reflexivity.
   Qed.
 
   Global Program Instance all_mm : allBI (T -m> B) :=
@@ -940,14 +966,8 @@ Section MonotoneExt.
       rewrite <- xist_L in HH; simpl morph in HH; apply HH.
   Qed.
   Next Obligation.
-    intros t; simpl morph.
-    admit.
-  Qed.
-  Next Obligation.
     intros t P H u; apply xist_pord; intros x; apply H.
   Qed.
-
-  Print Assumptions cbi_mm.
 
 End MonotoneExt.
 
