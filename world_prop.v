@@ -1,7 +1,7 @@
 (** In this file, we we define what it means to be a solution of the recursive
     domain equations to build a higher-order separation logic *)
 Require Import ModuRes.PreoMet ModuRes.Finmap.
-Require Import ModuRes.RA ModuRes.RAConstr ModuRes.SPred.
+Require Import ModuRes.RA ModuRes.Agreement ModuRes.SPred.
 
 Local Open Scope type.
 

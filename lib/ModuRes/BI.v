@@ -1,6 +1,6 @@
 Require Import Ssreflect.ssreflect Omega.
 Require Import PreoMet.
-Require Import RA SPred.
+Require Import RA.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -16,7 +16,6 @@ Section CompleteBI.
   Class implBI := impl : T -> T -> T.
   Class scBI   := sc   : T -> T -> T.
   Class siBI   := si   : T -> T -> T.
-  Class laterBI:= later : T -> T.
   Class eqBI   := intEq : forall {U} `{pU : cmetric U}, U -> U -> T.
   (* This does not go to full generality: Compared to "adjoint of the projection", we fix
      the type that's "kept" to be unit (and simplify accordingly). *)
@@ -72,14 +71,6 @@ Section CompleteBI.
         xist_dist  U `{cmU : cmetric U} n :> Proper (dist n ==> dist n) xist
      }.
 
-  Class Later `{Bounded} {mT: metric T} {cmT: cmetric T} {pcmT: pcmType T} {Later: laterBI}: Prop :=
-    { later_equiv :> Proper (equiv ==> equiv) later;
-      later_pord :> Proper (pord ++> pord) later;
-      later_mon (t : T) : t ⊑ later t;
-      later_contr :> contractive later; (* this implies later_dist *)
-      loeb (t : T) (HL : later t ⊑ t) : valid t
-    }.
-
   (* A BI that can reflect equality. We don't bother with "a specific type here", as we already did
      not bother with that for completion. *)
   Program Definition bi_leibnitz `{BCBI: ComplBI} {U: Type} `{cmetric U} (u1 u2: U): T :=
@@ -105,18 +96,15 @@ Arguments orBI   : default implicits.
 Arguments implBI : default implicits.
 Arguments scBI   : default implicits.
 Arguments siBI   : default implicits.
-Arguments laterBI: default implicits.
 Arguments eqBI   : default implicits.
 Arguments allBI  T {_ _ _}.
 Arguments xistBI T {_ _ _}.
 Arguments Bounded T {_ _ _ _ _}.
 Arguments BI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _}.
 Arguments ComplBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _}.
-Arguments Later T {_ _ _ _ _ _ _ _ _ _}.
 Arguments EqBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _}.
 
 Delimit Scope bi_scope with bi.
-Notation " ▹ p " := (later p) (at level 20) : bi_scope.
 Notation "⊤" := (top) : bi_scope.
 Notation "⊥" := (bot) : bi_scope.
 Notation "p ∧ q" := (and p q) (at level 39, right associativity) : bi_scope.
@@ -129,7 +117,7 @@ Notation "∀ x , p" := (all n[(fun x => p)]) (at level 60, x ident, right assoc
 Notation "∃ x , p" := (xist n[(fun x => p)]) (at level 60, x ident, right associativity) : bi_scope.
 Notation "∀ x : T , p" := (all n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
 Notation "∃ x : T , p" := (xist n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
-Notation "t1 '===' t2" := (intEq t1 t2) (at level 15) : bi_scope.
+Notation "t1 '===' t2" := (intEq t1 t2) (at level 30) : bi_scope.
 
 Local Open Scope bi.
 
@@ -358,33 +346,6 @@ Section EqBIProps.
 
 End EqBIProps.
 
-Section LoebBIProps.
-  Context {T} `{BIT: BI T} {LtT: laterBI T} {LB: Later T}.
-
-  Global Instance later_dist n: Proper (dist n ==> dist n) later.
-  Proof.
-    pose (lf := contractive_nonexp later _).
-    move=>t1 t2 EQt.
-      by eapply (met_morph_nonexp lf).
-  Qed.
-
-  Lemma later_and_R P Q:
-    ▹(P ∧ Q) ⊑ (▹P) ∧ (▹Q).
-  Proof.
-    apply and_R; split; eapply later_pord; [apply and_projL|apply and_projR].
-  Qed.
-
-  Lemma later_or_L P Q:
-    ▹P ∨ ▹Q ⊑ ▹(P ∨ Q).
-  Proof.
-    apply or_L; split; eapply later_pord; [apply or_injL|apply or_injR].
-  Qed.
-
-  (* TODO RJ: We need much more, see the appendix. Do we need more axioms, or can
-     the rest be derived? *)
-
-End LoebBIProps.
-
 (* Show that any BI can close over "future Us", for U being a CMRA. *)
 Section MComplBI.
   Context {B} `{ComplBI B}.
@@ -424,246 +385,7 @@ Section MComplBI.
 
 End MComplBI.
 
-Section SPredBI.
-  Local Obligation Tactic := intros; eauto with typeclass_instances.
-
-  (* Standard interpretations of propositional connectives. *)
-  Global Program Instance top_sp : topBI SPred := sp_top.
-  Global Program Instance bot_sp : botBI SPred := sp_c False.
-  Global Program Instance valid_sp : validBI SPred := sp_full.
-
-  Global Instance bounded_sp : Bounded SPred.
-  Proof.
-    split.
-    - intros P Q HPQ HQP n. split; [apply HPQ| apply HQP].
-    - intros P n _; exact I.
-    - intros P n HC; contradiction HC.
-    - intros P; split.
-      + intros HV n _. apply HV.
-      + intros HV n. now apply HV.
-  Qed.
-
-  Global Program Instance and_sp : andBI SPred :=
-    fun P Q =>
-      mkSPred (fun n => P n /\ Q n) _.
-  Next Obligation.
-    intros n m HLe; rewrite-> HLe; tauto.
-  Qed.
-  Global Program Instance or_sp : orBI SPred :=
-    fun P Q =>
-      mkSPred (fun n => P n \/ Q n) _.
-  Next Obligation.
-    intros n m HLe; rewrite-> HLe; tauto.
-  Qed.
-
-  Global Program Instance impl_sp : implBI SPred :=
-    fun P Q =>
-      mkSPred (fun n => forall m, m <= n -> P m -> Q m) _.
-  Next Obligation.
-    intros n m HLe HImp k HLe' HP.
-    apply HImp; try (etransitivity; eassumption); assumption.
-  Qed.
-  
-  (* BI connectives: Boring. We'd actually want just a Heyting Algebra for SPred, but whatever. *)
-  Global Instance sc_sp : scBI SPred := and_sp.
-  Global Instance si_sp : siBI SPred := impl_sp.
-
-  (* For some reason tc inference gets confused otherwise *)
-  Existing Instance sp_type.
-
-  (* All of the above preserve all the props it should. *)
-  Global Instance and_sp_equiv : Proper (equiv ==> equiv ==> equiv) and_sp.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
-    rewrite-> EQP, EQQ; tauto.
-  Qed.
-  Global Instance and_sp_dist n : Proper (dist n ==> dist n ==> dist n) and_sp.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ m HLt; simpl.
-    split; intros; (split; [apply EQP | apply EQQ]; now auto with arith).
-  Qed.
-  Global Instance and_sp_ord : Proper (pord ==> pord ==> pord) and_sp.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
-    rewrite-> EQP, EQQ; tauto.
-  Qed.
-
-  Global Instance or_sp_equiv : Proper (equiv ==> equiv ==> equiv) or_sp.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
-    rewrite ->EQP, EQQ; tauto.
-  Qed.
-  Global Instance or_sp_dist n : Proper (dist n ==> dist n ==> dist n) or_sp.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ m HLt; simpl.
-    split; (intros [HP | HQ]; [left; apply EQP | right; apply EQQ]; now auto with arith).
-  Qed.
-  Global Instance or_sp_ord : Proper (pord ==> pord ==> pord) or_sp.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
-    rewrite ->EQP, EQQ; tauto.
-  Qed.
-
-  Global Instance impl_sp_dist n : Proper (dist n ==> dist n ==> dist n) impl_sp.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ m HLt; simpl.
-    split; intros; apply EQQ, H, EQP; now eauto with arith.
-  Qed.
-
-  Global Instance sc_sp_equiv : Proper (equiv ==> equiv ==> equiv) sc_sp := and_sp_equiv.
-  Global Instance sc_sp_dist n : Proper (dist n ==> dist n ==> dist n) sc_sp := and_sp_dist n.
-  Global Instance sc_sp_ord : Proper (pord ==> pord ==> pord) sc_sp := and_sp_ord.
-
-  Global Instance si_sp_dist n : Proper (dist n ==> dist n ==> dist n) si_sp := impl_sp_dist n.
-
-  Global Program Instance bi_sp : BI SPred.
-  Next Obligation.
-    intros n; simpl; tauto.
-  Qed.
-  Next Obligation.
-    intros n [HP HQ]; assumption.
-  Qed.
-  Next Obligation.
-    intros n [HP HQ]; assumption.
-  Qed.
-  Next Obligation.
-    split; intros HH n.
-    - intros HP m HLe HQ; apply HH; split; [rewrite-> HLe |]; assumption.
-    - intros [HP HQ]; eapply HH; eassumption || reflexivity.
-  Qed.
-  Next Obligation.
-    intros n HP; left; assumption.
-  Qed.
-  Next Obligation.
-    intros n HQ; right; assumption.
-  Qed.
-  Next Obligation.
-    intros n; simpl; tauto.
-  Qed.
-  Next Obligation.
-    intros P Q n; simpl. tauto.
-  Qed.
-  Next Obligation.
-    intros P Q R n; split; simpl; tauto.
-  Qed.
-  Next Obligation.
-    intros n; split; simpl; tauto.
-  Qed.
-  Next Obligation.
-    split; intros HH n; simpl in *.
-    - intros HP m HLe HQ. apply HH. split; last assumption. rewrite-> HLe. assumption.
-    - intros [HP HQ]. eapply HH; try eassumption; omega.
-  Qed.
-
-  (* Quantifiers. *)
-  Global Program Instance all_sp : allBI SPred :=
-    fun T eqT mT cmT R =>
-      mkSPred (fun n => forall t, R t n) _.
-  Next Obligation.
-    intros n m HLe HR t. rewrite-> HLe; apply HR.
-  Qed.
-
-  Global Program Instance xist_sp : xistBI SPred :=
-    fun T eqT mT cmT R =>
-      mkSPred (fun n => exists t, R t n) _.
-  Next Obligation.
-    intros n m HLe [t HR]; exists t; rewrite-> HLe; apply HR.
-  Qed.
-
-  Section Quantifiers.
-    Context V `{cmV : cmetric V}.
-
-    Existing Instance nonexp_type.
-
-    Global Instance all_sp_dist n : Proper (dist (T := V -n> SPred) n ==> dist n) all.
-    Proof.
-      intros R1 R2 EQR m HLt; simpl.
-      split; intros; apply EQR; now auto.
-    Qed.
-
-    Global Instance xist_sp_dist n : Proper (dist (T := V -n> SPred)n ==> dist n) xist.
-    Proof.
-      intros R1 R2 EQR m HLt; simpl.
-      split; intros [t HR]; exists t; apply EQR; now auto.
-    Qed.
-
-  End Quantifiers.
-
-  Global Program Instance cbi_sp : ComplBI SPred.
-  Next Obligation.
-    split.
-    - intros HH v n HP. apply HH; assumption.
-    - intros HH v n HP. apply HH. assumption.
-  Qed.
-  Next Obligation.
-    split.
-    - intros HH n [u HP]; eapply HH; eassumption.
-    - intros HH u n HP; apply HH; exists u; assumption.
-  Qed.
-
-End SPredBI.
-
-Section SPredLater.
-  Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
-
-  Global Instance sp_later : laterBI SPred := later_sp.
-
-  Global Program Instance later_spred : Later SPred.
-  Next Obligation.
-    intros p q Hpq [| n]; [intros; exact I | simpl; apply Hpq].
-  Qed.
-  Next Obligation.
-    intros [| m] HLt; simpl; [tauto |].
-    eapply dpred; last eassumption. omega.
-  Qed.
-  Next Obligation.
-    intros n p q Hpq [| m] HLt; simpl; [tauto |].
-    apply Hpq; auto with arith.
-  Qed.
-  Next Obligation.
-    intros n; induction n.
-    - apply HL; exact I.
-    - apply HL, IHn.
-  Qed.
-
-End SPredLater.
-
-Section SPredEq.
-  Global Program Instance sp_eq : eqBI SPred :=
-    fun U {eqU mU cmU u1 u2} => mkSPred (fun n => u1 = S n = u2) _.
-  Next Obligation.
-    move=>n m Hle. simpl. eapply mono_dist. omega.
-  Qed.
-
-  Global Instance sp_eq_dist {U} `{pU : cmetric U} n: Proper (dist n ==> dist n ==> dist n) (@sp_eq U _ _ _).
-  Proof.
-    move=>u1 u2 EQu t1 t2 EQt m Hle. simpl. split=>EQ.
-    - transitivity u1.
-      { symmetry. eapply mono_dist; last eassumption. omega. }
-      transitivity t1; first assumption.
-      eapply mono_dist; last eassumption. omega.
-    - transitivity u2.
-      { eapply mono_dist; last eassumption. omega. }
-      transitivity t2; first assumption.
-      symmetry. eapply mono_dist; last eassumption. omega.
-  Qed.
-
-  Global Program Instance eqbi_sp : EqBI SPred.
-  Next Obligation.
-    move=>u1 u2 EQu t1 t2 EQt n. simpl. rewrite ->EQu, EQt. reflexivity.
-  Qed.
-  Next Obligation.
-    move=>n. rewrite /= -/dist. split.
-    - move=>EQ P m HLe HP.
-      assert (P u1 = S n = P u2) by now rewrite EQ. apply H; first omega. assumption.
-    - move=>HP. pose(φ := n[(sp_eq _ _ _ _ u1)]). specialize (HP φ n (le_refl _)). eapply HP.
-      simpl. reflexivity.
-  Qed.
-  Next Obligation.
-    move=>?. simpl. tauto.
-  Qed.
-End SPredEq.
-
+(* Monotone functions from a CMRA to a BI form a BI. *)
 Section MonotoneExt.
   Context B {eqB: Setoid B} {preoB: preoType B} {BIVB: validBI B} {BIBB: botBI B} {BITB: topBI B} {BB: Bounded B}.
   Context {mB: metric B} {cmB: cmetric B} {pcmB: pcmType B}.
@@ -972,26 +694,6 @@ Section MonotoneExt.
   Qed.
 
 End MonotoneExt.
-
-Section MonotoneLater.
-  Context B `{LB: Later B}
-          T `{cmraT : CMRA T}.
-  Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
-
-  Global Program Instance later_mm : laterBI (T -m> B) :=
-    fun P => m[(fun t => later (P t))].
-
-  Global Instance later_mon_morph : Later (T -m> B).
-  Proof.
-    split.
-    - resp_set.
-    - mono_resp.
-    - intros P u; simpl morph. eapply later_mon.
-    - intros n f g Hfg u; simpl morph; apply later_contr, Hfg.
-    - intros u HL x. apply loeb, HL.
-  Qed.
-
-End MonotoneLater.
 
 Section MonotoneEQ.
   Context B `{LB: EqBI B}

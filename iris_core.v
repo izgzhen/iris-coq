@@ -1,6 +1,6 @@
 Require Import Ssreflect.ssreflect Omega.
 Require Import world_prop core_lang.
-Require Import ModuRes.RA ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr.
+Require Import ModuRes.RA ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr ModuRes.Agreement.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -71,27 +71,36 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   
   Instance Props_BI : BI Props | 0 := _.
   Instance Props_CBI : ComplBI Props | 0 := _.
-  Instance Props_Later : Later Props | 0 := _.
   Instance Props_Eq : EqBI Props | 0 := _.
 
   Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (r u v : res) (σ : state).
 
   (* Simple view lemmas. *)
 
-  Lemma lelt {n k} (H : k < n) : k <= n.
-  Proof. by omega. Qed.
+  Section Views.
+    Lemma lelt {n k} (H : k < n) : k <= n.
+    Proof. by omega. Qed.
 
-  Lemma lt0 (n : nat) :  ~ n < 0. Proof. by omega. Qed.
+    Lemma lt0 (n : nat) :  ~ n < 0. Proof. by omega. Qed.
 
-  Lemma propsMW {P w n w'} (HSw : w ⊑ w') : P w n -> P w' n.
-  Proof. exact: (mu_mono P HSw). Qed.
+    Lemma propsMW {P w n w'} (HSw : w ⊑ w') : P w n -> P w' n.
+    Proof. exact: (mu_mono P HSw). Qed.
 
-  Lemma propsMN {P w n n'} (HLe : n' <= n) : P w n -> P w n'.
-  Proof. apply: dpred HLe. Qed.
+    Lemma propsMN {P w n n'} (HLe : n' <= n) : P w n -> P w n'.
+    Proof. apply: dpred HLe. Qed.
 
-  Lemma propsM {P w n w' n' } (HSw : w ⊑ w') (HLe : n' <= n) :
-    P w n -> P w' n'.
-  Proof. move=> HP. eapply propsMW, propsMN, HP; assumption. Qed.
+    Lemma propsM {P w n w' n' } (HSw : w ⊑ w') (HLe : n' <= n) :
+      P w n -> P w' n'.
+    Proof.
+      move=> HP. eapply propsMW, propsMN, HP; assumption.
+    Qed.
+
+    Lemma biimpL {P Q : Props} {w n} : (P ↔ Q) w n -> (P → Q) w n.
+    Proof. by move=>[L _]. Qed.
+
+    Lemma biimpR {P Q : Props} {w n} : (P ↔ Q) w n -> (Q → P) w n.
+    Proof. by move=>[_ R]. Qed.
+  End Views.
 
   (** And now we're ready to build the IRIS-specific connectives! *)
 
@@ -105,9 +114,72 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   End Resources.
 
+  Section Later.
+    (** Note: this could be moved to BI, since it's possible to define
+        for any UPred over a RA. However, we should first figure out a concise
+        set of axioms. **)
+    Program Definition later: Props -> Props :=
+      fun P => m[(fun w => later_sp (P w))].
+    Next Obligation.
+      move=>w1 w2 EQw. simpl. eapply later_sp_dist. rewrite EQw. reflexivity.
+    Qed.
+    Next Obligation.
+      move=>w1 w2 Hw n H. destruct n as [|n]; first exact I.
+      simpl. rewrite <-Hw. exact H.
+    Qed.
+
+    Global Instance later_contractive: contractive later.
+    Proof.
+      move=>n P Q EQ w. rewrite/later. simpl morph. eapply contr.
+      rewrite EQ. reflexivity.
+    Qed.
+
+    Global Instance later_dist n : Proper (dist n ==> dist n) later.
+    Proof.
+      pose (lf := contractive_nonexp later _).
+      move=> ? ? ?.
+        by apply: (met_morph_nonexp lf).
+    Qed.    
+  End Later.
+  Notation " ▹ p " := (later p) (at level 35) : iris_scope.
+
+
+  Section LaterProps.
+    Lemma later_mon P: P ⊑ ▹P.
+    Proof.
+      move=>w n H. simpl morph.
+      destruct n as [|n]; first exact I.
+      simpl. eapply dpred; last eassumption. omega.
+    Qed.
+
+    Lemma loeb t (HL: later t ⊑ t): valid t.
+      intros w n. induction n.
+      - eapply HL. exact I.
+      - eapply HL. exact IHn.
+    Qed.
+
+    Lemma later_true: (⊤:Props) == ▹⊤.
+    Proof.
+      move=> w n.
+      case:n=>[|n].
+      - reflexivity.
+      - reflexivity.
+    Qed.
+
+    Lemma laterM {P Q: Props}:
+      (P → Q) ∧ ▹P ⊑ ▹Q.
+    Proof.
+      move=>w0 n0 [HPQ HLP].
+      destruct n0 as [|n0]; first by auto.
+      simpl. simpl in HLP. rewrite <-(ra_op_unit2 (t:=w0)). eapply HPQ; first omega. simpl. by rewrite ra_op_unit2.
+    Qed.
+
+  End LaterProps.
+
   Section Necessitation.
     (** Note: this could be moved to BI, since it's possible to define
-        for any UPred over a RA. **)
+        for any UPred over a RA. However, we should first figure out a concise
+        set of axioms. **)
 
     Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
 
@@ -129,87 +201,61 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       apply EQp; assumption.
     Qed.
 
-    Global Program Instance box_dist n : Proper (dist n ==> dist n) box.
-    Next Obligation.
-      move=> P P' HEq w k r HLt.
-      exact: (HEq w).
-    Qed.
-
   End Necessitation.
 
-  Notation "□ P" := (box P) (at level 30, right associativity) : iris_scope.
+  Notation "□ P" := (box P) (at level 35, right associativity) : iris_scope.
 
   (** Lemmas about box **)
-  Lemma box_intro P Q (Hpr : □P ⊑ Q) :
-    □P ⊑ □Q.
-  Proof.
-    intros w n r Hp; simpl; apply Hpr, Hp.
-  Qed.
-
-  Lemma box_elim P :
-    □P ⊑ P.
-  Proof.
-    intros w n r Hp; simpl in Hp.
-    eapply uni_pred, Hp; [reflexivity |].
-    now eapply unit_min.
-  Qed.
-
-  Lemma box_top : ⊤ == □⊤.
-  Proof.
-    intros w n r; simpl; unfold const; reflexivity.
-  Qed.
-
-  Lemma box_disj P Q :
-    □(P ∨ Q) == □P ∨ □Q.
-  Proof.
-    intros w n r; reflexivity.
-  Qed.
-
-  Lemma box_dup P :
-    □P == □P * □P.
-  Proof.
-    intros w n r. split.
-    - intros HP. exists 1 r. split; [now rewrite ra_op_unit|].
-      split;  assumption.
-    - intros [r1 [r2 [_ [HP _]]]]. assumption.
-  Qed.
-
-  Section BoxAll.
-    Context {T} `{cT : cmetric T}.
-    Context (φ : T -n> Props).
-
-    Program Definition box_all_lhs : Props := ∀t, □φ t.
-    Next Obligation.
-      move=> t t' HEq.
-      apply: box_dist.
-      exact: (met_morph_nonexp φ).
+  Section NecessitationProps.
+    Lemma box_intro P Q (Hpr : □P ⊑ Q) :
+      □P ⊑ □Q.
+    Proof.
+      intros w n r Hp; simpl; apply Hpr, Hp.
     Qed.
 
-    Lemma box_all : □all φ == box_all_lhs.
-    Proof. done. Qed.
-  End BoxAll.
+    Lemma box_elim P :
+      □P ⊑ P.
+    Proof.
+      intros w n r Hp; simpl in Hp.
+      eapply uni_pred, Hp; [reflexivity |].
+      now eapply unit_min.
+    Qed.
 
-  Lemma biimpL {P Q : Props} {w n r} : (P ↔ Q) w n r -> (P → Q) w n r.
-  Proof. by move=>[L _]. Qed.
+    Lemma box_top : ⊤ == □⊤.
+    Proof.
+      intros w n r; simpl; unfold const; reflexivity.
+    Qed.
 
-  Lemma biimpR {P Q : Props} {w n r} : (P ↔ Q) w n r -> (Q → P) w n r.
-  Proof. by move=>[_ R]. Qed.
+    Lemma box_disj P Q :
+      □(P ∨ Q) == □P ∨ □Q.
+    Proof.
+      intros w n r; reflexivity.
+    Qed.
 
-  Lemma later_true: (⊤:Props) == ▹⊤.
-  Proof.
-    move=> w n r.
-    case:n=>[|n].
-    - reflexivity.
-    - reflexivity.
-  Qed.
+    Lemma box_dup P :
+      □P == □P * □P.
+    Proof.
+      intros w n r. split.
+      - intros HP. exists 1 r. split; [now rewrite ra_op_unit|].
+        split;  assumption.
+      - intros [r1 [r2 [_ [HP _]]]]. assumption.
+    Qed.
 
-  Lemma laterM {P Q: Props}:
-    (P → Q) ∧ ▹P ⊑ ▹Q.
-  Proof.
-    move=>w0 n0 r0 [HPQ HLP].
-    destruct n0 as [|n0]; first by auto.
-    simpl. simpl in HLP. eapply HPQ, HLP; [reflexivity|omega|reflexivity].
-  Qed.
+    Section BoxAll.
+      Context {T} `{cT : cmetric T}.
+      Context (φ : T -n> Props).
+
+      Program Definition box_all_lhs : Props := ∀t, □φ t.
+      Next Obligation.
+        move=> t t' HEq.
+        apply: box_dist.
+        exact: (met_morph_nonexp φ).
+      Qed.
+
+      Lemma box_all : □all φ == box_all_lhs.
+      Proof. done. Qed.
+    End BoxAll.
+  End NecessitationProps.
 
   Section IntEqProps.
 
