@@ -1,6 +1,6 @@
 Require Import Arith Ssreflect.ssreflect.
 Require Import world_prop world_prop_recdom core_lang lang masks iris_core iris_plog iris_meta iris_vs_rules iris_ht_rules.
-Require Import ModuRes.RA ModuRes.UPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr.
+Require Import ModuRes.RA ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr.
 
 Set Bullet Behavior "Strict Subproofs".
 

@@ -123,7 +123,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Section Later.
     (** Note: this could be moved to BI, since it's possible to define
-        for any UPred over a RA. However, we should first figure out a concise
+        more generally. However, we should first figure out a concise
         set of axioms. **)
     Program Definition later: Props -> Props :=
       fun P => m[(fun w => later_sp (P w))].
@@ -185,7 +185,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
   Section Necessitation.
     (** Note: this could be moved to BI, since it's possible to define
-        for any UPred over a RA. However, we should first figure out a concise
+        more generally. However, we should first figure out a concise
         set of axioms. **)
 
     Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
@@ -295,11 +295,9 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       [exact: Hpq | exact: Hqp].
     Qed.
 
-    Goal forall P Q, (P ↔ Q) ⊑ (P === Q).
-    Proof.
-      move=> P Q w n r [Hpq Hqp] w' n' r' HLt; split.
-      move=> HP.	(* Lacking w ⊑ w', we cannot apply Hpq. *)
-    Abort.
+    (* Note that (P ↔ Q) ⊑ (P === Q) does NOT hold: The first says
+       that the equivalence holds in all future worlds, the second says
+       it holds in *all* worlds. *)
 
   End IntEqProps.
 
