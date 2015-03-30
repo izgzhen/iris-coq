@@ -29,7 +29,7 @@ Module CBUlt <: MCat.
       intros σ σc HG n.
       rewrite !dep_chain_compl.
       rewrite nonexp_continuous; apply umet_complete_ext; intros k.
-      simpl; apply HG.
+      simpl; apply dist_refl, HG.
     Qed.
 
     Definition lim_obj : cmtyp := cmfromType {σ : forall i, tow_objs T i | guard σ}.
