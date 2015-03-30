@@ -222,6 +222,13 @@ Section BIProps.
     - apply sc_projR.
   Qed.
 
+  Lemma sc_or P Q R: (P ∨ Q) * R ⊑ (P * R) ∨ (Q * R).
+  Proof.
+    apply sc_si. apply or_L. split; apply sc_si.
+    - apply or_injL.
+    - apply or_injR.
+  Qed.
+
 End BIProps.
 
 Section ComplBIProps.
