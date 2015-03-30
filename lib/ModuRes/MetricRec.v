@@ -498,7 +498,7 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
       apply (lim_unique _ (AllLimits DTower) (AllLimits DTower)); intros n.
       rewrite nonexp_continuous, (cut_complete_eq _ n); simpl.
       etransitivity; [symmetry; apply umet_complete_const |]; apply umet_complete_ext; intros i.
-      simpl; change (cone_m DTower (AllLimits DTower) n == cone_m DTower (AllLimits DTower) n ∘
+      apply dist_refl; simpl; change (cone_m DTower (AllLimits DTower) n == cone_m DTower (AllLimits DTower) n ∘
         (Embeddings (n + i) ∘ cone_m DTower (AllLimits DTower) (n + i))); rewrite tcomp_assoc.
       rewrite emp, coneCom_l; [reflexivity | omega].
     Qed.
@@ -519,7 +519,7 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
     Qed.
     Next Obligation.
       rewrite <- (tid_right h), <- EP_id, nonexp_continuous; apply umet_complete_ext; intros i; simpl.
-      unfold liftc, chainPE. rewrite tcomp_assoc, <- HEq; reflexivity.
+      apply dist_refl; unfold liftc, chainPE. rewrite tcomp_assoc, <- HEq; reflexivity.
     Qed.
 
     (** To show that DInf is a fixed point we define a cone and acocone to
@@ -578,7 +578,7 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
         [rewrite !EP_id, fmorph_id, tid_right; reflexivity |].
       rewrite <- pair_limit, (nonexp_continuous fmorph).
       rewrite nonexp_continuous, (cut_complete_eq (chainPE _ FCone C) 1). apply umet_complete_ext; intros i.
-      unfold liftc, chain_pair, chainPE, cutn; simpl.
+      apply dist_refl; unfold liftc, chain_pair, chainPE, cutn; simpl.
       rewrite fmorph_comp, coCom, (cone_m_com _ (AllLimits DTower) i); simpl in *.
       specialize (HEq (S i)); simpl in HEq; rewrite fmorph_comp, coCom, (cone_m_com _ (AllLimits DTower) i) in HEq.
       rewrite HEq, <- tcomp_assoc, fmorph_comp; reflexivity.
@@ -599,7 +599,7 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
       + apply (colim_unique _ DCoLimit DCoCone); intros n; unfold Fold, Unfold; simpl.
         rewrite (nonexp_cont2 _ _ _).
         rewrite (umet_complete_ext _ (chainPE _ (AllLimits DTower) DCoCone)), EP_id, tid_left; [reflexivity | intros i; simpl].
-        unfold binaryLimit, chainPE; simpl.
+        apply dist_refl; unfold binaryLimit, chainPE; simpl.
         rewrite 3!tcomp_assoc, <- (tcomp_assoc (Embeddings i ∘ Projection i)).
         simpl; rewrite fmorph_comp.
         rewrite !retract_EP, fmorph_id, tid_right, <- (tcomp_assoc (Embeddings i)).
@@ -622,7 +622,7 @@ Module Solution(Cat : MCat)(M_cat : InputType(Cat)) : SolutionType(Cat)(M_cat).
         apply (morph_resp tcomp); unfold equiv; symmetry.
         rewrite <- fmorph_id, <- !EP_id, <- pair_limit, nonexp_continuous.
         rewrite (cut_complete_eq _ 1); apply umet_complete_ext; intros i; simpl.
-        unfold chainPE, liftc, cutn, chain_pair, binaryLimit; simpl.
+        apply dist_refl; unfold chainPE, liftc, cutn, chain_pair, binaryLimit; simpl.
         replace (cone_m _ (AllLimits DTower) (S i)) with (Projections (S i)) by reflexivity.
         replace (cone_m _ (AllLimits DTower) i) with (Projections i) by reflexivity.
         rewrite !fmorph_comp, !coCom. rewrite !(cone_m_com _ (AllLimits DTower) i).

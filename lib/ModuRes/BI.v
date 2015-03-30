@@ -28,6 +28,7 @@ Section CompleteBI.
   (* An ordered type which is antisymmetric and bounded, and has a notion of validity. *)
   Class Bounded `{preoT : preoType T, BIV: validBI, BIT : topBI, BIB : botBI}: Prop :=
     mkBounded {
+        (* Anti-symmetry: Necessary for commutativity of addition, and commutativity of SC of the lifted BI *)
         pord_antisym:  forall P Q, P ⊑ Q -> Q ⊑ P -> P == Q;
         top_true    :  forall P, P ⊑ top;
         bot_false   :  forall P, bot ⊑ P;

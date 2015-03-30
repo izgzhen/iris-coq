@@ -9,6 +9,7 @@ Section Agreement.
      a metric. It also comes with a CMRA. *)
   Context T `{T_ty : Setoid T} {mT: metric T}.
   Local Open Scope ra_scope.
+  Local Open Scope nat.
 
   Implicit Types (v: SPred).
 
@@ -172,9 +173,9 @@ Section Agreement.
   Definition ra_agree_dist n :=
     match n with
     | O => fun _ _ => True
-    | S n' => fun x y => match x, y with
+    | S _ => fun x y => match x, y with
                         | ag_inj v1 ts1 _, ag_inj v2 ts2 _ =>
-                          v1 = n = v2 /\ (forall n'' pv1 pv2, n'' <= n' -> ts1 n'' pv1 = n'' = ts2 n'' pv2)
+                          v1 = S n = v2 /\ (forall n'' pv1 pv2, n'' <= n -> ts1 n'' pv1 = n'' = ts2 n'' pv2)
                                            (* be sure for n'' to be at a level where the validity equality actually means something: v1 = n = v2 means that they agree on n' and smaller! *)
                         | ag_unit, ag_unit => True
                         | _, _ => False
@@ -199,9 +200,10 @@ Section Agreement.
   Qed.
   Next Obligation.
     split.
-    - intros Hall. ra_ag_destr; last exact I; try (specialize (Hall (S O)); now firstorder); [].
+    - intros Hall. ra_ag_destr; last exact I; try (specialize (Hall 1); now firstorder); [].
       split.
-      + eapply dist_refl. move=> [|n]; first by apply: dist_bound. destruct (Hall (S n)) as [EQ _]. assumption.
+      + eapply dist_refl. move=> [|n]; first by apply: dist_bound. destruct (Hall (S n)) as [EQ _].
+        apply dist_mono. assumption.
       + intros n pv1 pv2. specialize (Hall (S n)). destruct n as [|n]; first by apply: dist_bound.
         now firstorder.
     - repeat intro. destruct n as [|n]; first by auto. ra_ag_destr; now firstorder.
@@ -247,62 +249,33 @@ Section Agreement.
   Global Instance ra_ag_inj_dist n:
     Proper (dist n ==> dist n) ra_ag_inj.
   Proof.
-    (* TODO *)
-  Abort.
-
-  (* And a complete metric! *)
-  Context {cmT: cmetric T}.
-
-  Tactic Notation "cchain_eq" constr(σ) "at" constr(P1) constr(P2) "lvl:" constr(L) :=
-    let le1 := fresh in
-    let le2 := fresh in
-    assert (le1: L <= P1) by omega; assert (le2: L <= P2) by omega;
-    match goal with
-    | [ σc: cchain σ |- _ ] => move/(_ _ _ _ le1 le2):(σc)
-    end; clear le1 le2.
-
-  Tactic Notation "cchain_eleq" constr(σ) "at" constr(P1) constr(P2) "lvl:" constr(L) :=
-    let eq := fresh in
-    cchain_eq σ at P1 P2 lvl:L =>eq;
-      match goal with
-      | [ H : _ = σ P1 |- _ ] => rewrite <-H in eq
-      | [ H : σ P1 = _ |- _ ] => rewrite ->H in eq
-      end;
-      match goal with
-      | [ H : _ = σ P2 |- _ ] => rewrite <-H in eq
-      | [ H : σ P2 = _ |- _ ] => rewrite ->H in eq
-      end;
-      move:eq.
-
-  Tactic Notation "cchain_discr" constr(σ) constr(P) "at" integer_list(pos) "as" simple_intropattern(pat) "deqn:" ident(EQ) :=
-    (generalize (@eq_refl _ (σ P)) as EQ; pattern (σ P) at pos;
-     destruct (σ P) as pat; move => EQ);
-    last (exfalso; match goal with
-                   | [ H : _ = σ (S O) |- _ ] => let EQ2 := fresh in
-                                                 cchain_eleq σ at (S O) (P) lvl:(S O)=>EQ2; eapply EQ2; omega
-                   end).
+    move=>t1 t2 EQt. destruct n as [|n]; first by apply: dist_bound.
+    simpl. rewrite -/dist. split.
+    - move=>? _. reflexivity.
+    - move=>m _ _ Hle. eapply mono_dist, EQt. omega.
+  Qed.
 
 
-  Program Definition ra_ag_vchain (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ (S O)} : chain SPred :=
+  Program Definition ra_ag_vchain (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ 1} : chain SPred :=
     fun i => match σ (S i) with
              | ag_unit => !
              | ag_inj v' _ _ => v'
              end.
   Next Obligation.
-    cchain_eleq σ at (S O) (S i) lvl:(S O)=>EQ.
+    cchain_eleq σ at 1 (S i) lvl:1=>EQ.
     apply EQ; omega.
   Qed.
 
-  Instance ra_ag_vchain_c (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ (S O)} : cchain (ra_ag_vchain σ v ts (HNE:=HNE)).
+  Instance ra_ag_vchain_c (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ 1} : cchain (ra_ag_vchain σ v ts (HNE:=HNE)).
   Proof.
     intros n j m HLe1 HLe2. destruct n as [|n]; first by apply: dist_bound. unfold ra_ag_vchain.
     cchain_discr σ (S j) at 1 3 as [v1 ts1 tsx1|] deqn:EQ1.
     cchain_discr σ (S m) at 1 3 as [v2 ts2 tsx2|] deqn:EQ2.
     cchain_eleq σ at (S j) (S m) lvl:(S n); move=>[EQv _].
-    assumption.
+    exact: dist_mono.
   Qed.
 
-  Lemma ra_ag_vchain_compl_n (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ (S O)} n:
+  Lemma ra_ag_vchain_compl_n (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ 1} n:
     compl (ra_ag_vchain σ v ts (HNE:=HNE)) n ->
     forall m k, m <= n -> k >= n -> ra_ag_vchain σ v ts (HNE:=HNE) k m.
   Proof.
@@ -316,7 +289,7 @@ Section Agreement.
     apply EQv; first omega. eapply dpred; eassumption.
   Qed.
 
-  Lemma ra_ag_vchain_ucompl_n (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ (S O)} n:
+  Lemma ra_ag_vchain_ucompl_n (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ 1} n:
     ra_ag_vchain σ v ts (HNE:=HNE) (S n) n ->
     compl (ra_ag_vchain σ v ts (HNE:=HNE)) n.
   Proof.
@@ -325,7 +298,7 @@ Section Agreement.
     apply HTv in pv; last by omega. assumption.
   Qed.
 
-  Lemma ra_ag_vchain_n (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ (S O)} n m:
+  Lemma ra_ag_vchain_n (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ 1} n m:
     ra_ag_vchain σ v ts (HNE:=HNE) n m -> forall v' ts' tsx', σ (S n) = ag_inj v' ts' tsx' -> v' m.
   Proof.
     move=>pv v' ts' tsx' EQ. move:pv EQ.
@@ -335,13 +308,13 @@ Section Agreement.
     move=><-. assumption.
   Qed.
 
-  Program Definition ra_ag_tsdiag_n (σ : chain ra_agree) {σc : cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ (S O)} n {pv: compl (ra_ag_vchain σ v ts (HNE:=HNE)) n}: T :=
+  Program Definition ra_ag_tsdiag_n (σ : chain ra_agree) {σc : cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ 1} n {pv: compl (ra_ag_vchain σ v ts (HNE:=HNE)) n}: T :=
     match σ (S n) with
     | ag_unit => !
     | ag_inj v' ts' tsx' => ts' n _
     end.
   Next Obligation.
-    cchain_eleq σ at (S O) (S n) lvl:(S O)=>EQ.
+    cchain_eleq σ at 1 (S n) lvl:1=>EQ.
     apply EQ; omega.
   Qed.
   Next Obligation.
@@ -351,7 +324,7 @@ Section Agreement.
     apply EQv; first omega. assumption.
   Qed.
 
-  Lemma ra_ag_tsdiag_n_pi (σ : chain ra_agree) {σc : cchain σ} v ts {tsx1 tsx2} {HNE1 : ag_inj v ts tsx1 = σ (S O)} {HNE2 : ag_inj v ts tsx2 = σ (S O)} n {pv1: compl (ra_ag_vchain σ v ts (HNE:=HNE1)) n} {pv2: compl (ra_ag_vchain σ v ts (HNE:=HNE2)) n}:
+  Lemma ra_ag_tsdiag_n_pi (σ : chain ra_agree) {σc : cchain σ} v ts {tsx1 tsx2} {HNE1 : ag_inj v ts tsx1 = σ 1} {HNE2 : ag_inj v ts tsx2 = σ 1} n {pv1: compl (ra_ag_vchain σ v ts (HNE:=HNE1)) n} {pv2: compl (ra_ag_vchain σ v ts (HNE:=HNE2)) n}:
     ra_ag_tsdiag_n σ v ts n (HNE:=HNE1) (pv:=pv1) = ra_ag_tsdiag_n σ v ts n (HNE:=HNE2) (pv:=pv2).
   Proof.
     Set Printing Implicit.
@@ -362,7 +335,7 @@ Section Agreement.
   Qed.
 
   Program Definition ra_ag_compl (σ : chain ra_agree) {σc : cchain σ} :=
-    match σ (S O) with
+    match σ 1 with
       | ag_unit => ag_unit
       | ag_inj v ts tsx => ag_inj (compl (ra_ag_vchain σ v ts (tsx:=tsx) (HNE:=_)))
                                   (fun n pv => ra_ag_tsdiag_n σ v ts n (pv:=pv)) _
@@ -390,12 +363,13 @@ Section Agreement.
   Global Program Instance ra_ag_cmt : cmetric ra_agree := mkCMetr ra_ag_compl.
   Next Obligation.
     intros [| n]; [now intros; apply dist_bound | unfold ra_ag_compl].
-    ddes (σ (S O)) at 1 3 as [v0 ts0 tsx0|] deqn:EQ1.
+    ddes (σ 1) at 1 3 as [v0 ts0 tsx0|] deqn:EQ1.
     - intros i HLe. destruct (σ i) as [vi |] eqn: EQi; [split| exfalso].
       + assert (HT:=conv_cauchy (ra_ag_vchain σ v0 ts0 (HNE:=ra_ag_compl_obligation_1 σ σc v0 _ _ EQ1))).
-        rewrite HT. unfold ra_ag_vchain.
-        cchain_discr σ (S i) at 1 3 as [vSi tsSi tsxSi|] deqn:EQSi.
-        cchain_eleq σ at (S i) i lvl: (S n); move=>[EQv _]. assumption.
+        assert (HLe': S (S n) <= S i) by omega.
+        rewrite (HT (S i)). unfold ra_ag_vchain.
+        cchain_discr σ (S (S i)) at 1 3 as [vSi tsSi tsxSi|] deqn:EQSi.
+        cchain_eleq σ at (S (S i)) i lvl: (S n); move=>[EQv _]. assumption.
       + move=>j pv1 pv2 HLej.
         assert (HeqH := ra_ag_compl_obligation_1 σ σc v0 ts0 tsx0 EQ1).
         assert (pvc: compl (ra_ag_vchain σ v0 ts0 (HNE:=HeqH)) j).
@@ -404,11 +378,11 @@ Section Agreement.
         destruct j as [|j]; first by apply: dist_bound.
         unfold ra_ag_tsdiag_n.
         cchain_discr σ (S (S j)) at 1 3 as [vSSj tsSSj tsxSSj|]deqn:EQSSj.
-        cchain_eleq σ at (S (S j)) i lvl: (S (S j)); move=>[EQv EQts].
+        cchain_eleq σ at (S (S j)) i lvl: (S j); move=>[EQv EQts].
         eapply EQts. omega.
-      + cchain_eleq σ at (S O) i lvl:(S O)=>EQ. apply EQ; omega.
+      + cchain_eleq σ at 1 i lvl:1=>EQ. apply EQ; omega.
     - intros j Hle. 
-      cchain_eq σ at (S O) j lvl:(S O). rewrite -EQ1.
+      cchain_eq σ at 1 j lvl:1. rewrite -EQ1.
       destruct (σ j); simpl; tauto.
   Qed.
 
@@ -417,9 +391,9 @@ Section Agreement.
   Global Instance ra_ag_pcm: pcmType ra_agree.
   Proof.
     split. repeat intro. eapply ra_ag_pord. unfold compl, ra_ag_cmt, ra_ag_compl.
-    ddes (ρ (S O)) at 1 3 7 as [ρv ρts|] deqn:Hρ; ddes (σ (S O)) at 1 3 as [σv σts|] deqn:Hσ; last first.
+    ddes (ρ 1) at 1 3 7 as [ρv ρts|] deqn:Hρ; ddes (σ 1) at 1 3 as [σv σts|] deqn:Hσ; last first.
     - reflexivity.
-    - simpl. specialize (H (S O)). rewrite ->ra_ag_pord, <-Hρ, <-Hσ in H. exact H.
+    - simpl. specialize (H 1). rewrite ->ra_ag_pord, <-Hρ, <-Hσ in H. exact H.
     - rewrite ra_op_unit. reflexivity.
     - simpl.
       assert (HT: forall n pv1 pv2, ra_ag_tsdiag_n σ σv σts (HNE:=Hσ) (pv:=pv1) n = n = ra_ag_tsdiag_n ρ ρv ρts (HNE:=Hρ) (pv:=pv2) n).
@@ -464,24 +438,47 @@ Section Agreement.
   Global Instance ra_ag_cmra : CMRA ra_agree := Build_CMRA _ _ _ _.
 
   (* Provide a way to get a T out of the agreement again. *)
+  (* For this, we need a complete metric! *)
+  Context {cmT: cmetric T}.
+
+  Program Definition ra_ag_tschain v (ts: vChain v) (tsx: cvChain ts) {HVal: ↓(ag_inj v ts tsx)}: chain T :=
+    fun i => ts i _.
+
+  Instance ra_ag_tschain_c v (ts: vChain v) (tsx: cvChain ts) {HVal: ↓(ag_inj v ts tsx)} : cchain (ra_ag_tschain v ts tsx (HVal:=HVal)).
+  Proof.
+    intros n j m HLe1 HLe2. destruct n as [|n]; first by apply: dist_bound. unfold ra_ag_tschain.
+    etransitivity; first by eapply (tsx (S n)).
+    symmetry. etransitivity; first by eapply (tsx (S n)).
+    eapply dist_refl; apply equivR. f_equiv. eapply ProofIrrelevance.
+  Qed.
+
   Program Definition ra_ag_unInj x {HVal: ↓x}: option T :=
     match x with
     | ag_unit => None
-    | ag_inj v ts tsx => Some (ts 2 _)
+    | ag_inj v ts tsx => Some (compl (ra_ag_tschain v ts tsx (HVal:=_)))
     end.
 
   Lemma ra_ag_unInj_dist x y {HVal1: ↓x} {HVal2: ↓y} n: (* The function is dependent, hence no "Proper" can be registered *)
     x = n = y -> ra_ag_unInj x (HVal:=HVal1) = n = ra_ag_unInj y (HVal:=HVal2).
   Proof.
-    (* TODO *)
-  Abort.
+    move=>EQ. destruct n as [|n]; first exact: dist_bound.
+    destruct x as [xv xts xtsx|]; last first.
+    { destruct y as [v ts tsx|]; first contradiction EQ. reflexivity. }
+    destruct y as [yv yts ytsx|]; last contradiction EQ.
+    destruct EQ as [_ EQts]. unfold ra_valid, ra_agree_valid in HVal1. unfold ra_valid, ra_agree_valid in HVal2.
+    simpl. eapply umet_complete_extn. unfold ra_ag_tschain.
+    eapply EQts. reflexivity.
+  Qed.
 
   (* Correctness of the embedding (and of the entire consruction, really - together with the duplicability shown above) *)
   Lemma ra_ag_inj_unInj x {HVal: ↓x} t:
     ra_ag_inj t ⊑ x -> ra_ag_unInj x (HVal:=HVal) == Some t.
   Proof.
-    (* TODO *)
-  Abort.
+    rewrite ra_ag_pord. destruct x as [v ts tsx|]=>Heq; last contradiction.
+    unfold ra_ag_inj in Heq. destruct Heq as [EQv EQts]. simpl. rewrite <-(umet_complete_const t).
+    apply umet_complete_ext=>i. unfold ra_ag_tschain. unfold ra_ag_compinj_ts in EQts. symmetry.
+    eapply EQts. rewrite EQv. apply HVal.
+  Qed.
 
 End Agreement.
 

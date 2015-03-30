@@ -582,7 +582,7 @@ Section ExtOrdDiscrete.
   Proof.
     split; simpl.
     - intros σ ρ σc ρc HS.
-      apply umet_complete_ext; assumption.
+      apply umet_complete_ext=>i. rewrite HS. reflexivity.
   Qed.
 
 End ExtOrdDiscrete.
