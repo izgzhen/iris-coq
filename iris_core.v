@@ -100,6 +100,13 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
 
     Lemma biimpR {P Q : Props} {w n} : (P ↔ Q) w n -> (Q → P) w n.
     Proof. by move=>[_ R]. Qed.
+
+    Lemma applyImpl {P Q: Props} {w n w' n'} (HImpl: (P → Q) w n) (HSw : w ⊑ w') (HLe : n' <= n):
+      P w' n' -> Q w' n'.
+    Proof.
+      move=>HP. destruct HSw as [wF EQw]. rewrite <-EQw. rewrite comm. eapply HImpl; first assumption.
+      simpl morph. by rewrite comm EQw.
+    Qed.
   End Views.
 
   (** And now we're ready to build the IRIS-specific connectives! *)
@@ -171,7 +178,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Proof.
       move=>w0 n0 [HPQ HLP].
       destruct n0 as [|n0]; first by auto.
-      simpl. simpl in HLP. rewrite <-(ra_op_unit2 (t:=w0)). eapply HPQ; first omega. simpl. by rewrite ra_op_unit2.
+      simpl. simpl in HLP. eapply (applyImpl HPQ);[reflexivity|now eauto|assumption].
     Qed.
 
   End LaterProps.
