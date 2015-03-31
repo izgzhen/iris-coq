@@ -94,6 +94,11 @@ Section RALemmas.
   
   Lemma ra_fpu_id {t : T} {P : T -> Prop} (Ht : P t) : t ⇝∈ P.
   Proof. by move=> f Hv; exists t. Qed.
+
+  Local Obligation Tactic := resp_set || eauto with typeclass_instances.
+  
+  Program Definition ra_op_s: T -=> T -=> T :=
+    s[(fun t1 => s[(ra_op t1)])].
 End RALemmas.
 
 
