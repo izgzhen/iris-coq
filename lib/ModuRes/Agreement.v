@@ -175,7 +175,7 @@ Section Agreement.
     | O => fun _ _ => True
     | S _ => fun x y => match x, y with
                         | ag_inj v1 ts1 _, ag_inj v2 ts2 _ =>
-                          v1 = S n = v2 /\ (forall n'' pv1 pv2, n'' <= n -> ts1 n'' pv1 = n'' = ts2 n'' pv2)
+                          v1 = S n = v2 /\ (forall n' pv1 pv2, n' <= n -> ts1 n' pv1 = n' = ts2 n' pv2)
                                            (* be sure for n'' to be at a level where the validity equality actually means something: v1 = n = v2 means that they agree on n' and smaller! *)
                         | ag_unit, ag_unit => True
                         | _, _ => False
