@@ -213,7 +213,7 @@ Section Authoritative.
     move=>t' tf Hact Hcomp. simpl. rewrite assoc. reflexivity.
   Qed.
 
-  Lemma ra_fps_auth_local {act t u} (HL : ra_local_action (t · u) act) (Hu' : ↓act t · u) :
+  Lemma ra_fps_auth_local {act t u} (HL : ra_local_action act) (Hu' : ↓act t · u) :
     Auth(ex_own(t · u), t) ⇝ Auth(ex_own(act t · u), act t).
   Proof.
     apply: ra_fps_auth (Hu').
