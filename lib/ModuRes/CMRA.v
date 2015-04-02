@@ -47,7 +47,7 @@ Section DiscreteCMRA.
   Existing Instance discreteMetric.
   Existing Instance discreteCMetric.
 
-  Global Instance discreteCMRA_valid : CMRA_valid T :=
+  Local Instance discreteCMRA_valid : CMRA_valid T := (* can't make this global, it does not depend on the discrete metric... *)
     fun t => sp_c (↓t).
 
   Global Instance discreteCMRA : CMRA T.

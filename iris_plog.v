@@ -112,6 +112,11 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       intros [ [s1| |] r1] [ [s2| |] r2] [EQs EQr] σ1 σ2 EQσ; unfold res_sat; simpl in *; try tauto; try rewrite !EQs; try rewrite !EQr; try rewrite !EQσ; reflexivity.
     Qed.
 
+    (* RJ: For the CMRA wsat, * think the folloiwing should work:
+       Require the fully composed world to be (S n)-valid. Since this is under a ▹, that
+       should not hinder non-expansiveness. Then use that proof and ra_ag_unInjApprox to
+       extract an (S n)-approximation of the (halve Props) from the World. This
+       will be an n-approximation of the Props, so things should fit. *)
     Program Definition wsat σ m (r : res) w : SPred :=
       ▹ (mkSPred (fun n => exists rs : nat -f> res,
                     res_sat (r · (comp_map rs)) σ

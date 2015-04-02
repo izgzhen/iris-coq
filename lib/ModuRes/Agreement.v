@@ -1,6 +1,8 @@
 Require Import Ssreflect.ssreflect Ssreflect.ssrfun Omega.
 Require Import SPred PreoMet RA CMRA Axioms.
 
+Set Bullet Behavior "Strict Subproofs".
+
 Local Open Scope ra_scope.
 Local Open Scope predom_scope.
 
@@ -25,11 +27,12 @@ Section Agreement.
   | ag_unit.
 
   Global Instance ra_agree_unit : RA_unit _ := ag_unit.
-  Global Instance ra_agree_valid : RA_valid _ :=
+  Global Program Instance cmra_agree_valid : CMRA_valid _ :=
     fun x => match x with
-             | ag_unit => True
-             | ag_inj valid _ _ => sp_full valid
+             | ag_unit => sp_top
+             | ag_inj valid _ _ => valid
              end.
+  Global Instance ra_agree_valid : RA_valid _ := compose sp_full cmra_agree_valid.
 
   Local Ltac ra_ag_pi := match goal with
                            [H: dist ?n (?ts1 ?pv11) (?ts2 ?pv21) |- dist ?n (?ts1 ?pv12) (?ts2 ?pv22) ] =>
@@ -138,8 +141,9 @@ Section Agreement.
       + intros n [pv1 [pv2 EQ]] [pv3 [pv4 EQ']]. unfold ra_ag_compinj_ts in *. ra_ag_pi.
     - ra_ag_destr; reflexivity.
     - ra_ag_destr; unfold ra_valid, ra_agree_valid in *; firstorder.
-    - firstorder.
-    - ra_ag_destr; try firstorder; []. intro n. destruct (H n) as [Hn _]. assumption.
+    - simpl. exact I.
+    - ra_ag_destr; try firstorder; last exact I; [].
+      destruct (H n) as [Hn _]. assumption.
   Qed.
 
   Lemma ra_ag_pord (x y: ra_agree):
@@ -435,9 +439,42 @@ Section Agreement.
   Qed.
 
   (* And finally, be ready for the CMRA *)
-  Global Instance ra_ag_cmra : CMRA ra_agree := Build_CMRA _ _ _ _.
+  Global Instance ra_ag_cmra : CMRA ra_agree.
+  Proof.
+    split.
+    - now apply _.
+    - move=>n t1 t2 EQt. destruct n as [|n]; first exact: dist_bound.
+      ra_ag_destr; try firstorder; [].
+      move=>m Hle. rewrite /cmra_valid /=. destruct EQt as [EQv _]. apply EQv. omega.
+    - move=>t. reflexivity.
+  Qed.
 
-  (* Provide a way to get a T out of the agreement again. *)
+  (* Provide a way to get an n-approximation of the element out of an n-valid agreement. *)
+  Program Definition ra_ag_unInjApprox x n {HVal: cmra_valid x n}: option T :=
+    match x with
+    | ag_unit => None
+    | ag_inj v ts _ => Some (ts n _)
+    end.
+
+  Lemma ra_ag_unInjApprox_dist x y n {HVal1: cmra_valid x n} {HVal2: cmra_valid y n}: (* The function is dependent, hence no "Proper" can be registered *)
+    x = n = y -> ra_ag_unInjApprox x n (HVal:=HVal1) = n = ra_ag_unInjApprox y n (HVal:=HVal2).
+  Proof.
+    move=>EQ. destruct n as [|n]; first exact: dist_bound.
+    ra_ag_destr; now firstorder.
+  Qed.
+
+  Lemma ra_ag_inj_unInjApprox x n {HVal: cmra_valid x n} t:
+    ra_ag_inj t ⊑ x -> ra_ag_unInjApprox x n (HVal:=HVal) = n = Some t.
+  Proof.
+    rewrite ra_ag_pord. destruct x as [v ts tsx|]=>Heq; last contradiction.
+    unfold ra_ag_inj in Heq. destruct Heq as [EQv EQts]. unfold ra_ag_unInjApprox.
+    destruct n as [|n]; first exact: dist_bound. simpl. symmetry. eapply EQts.
+  Grab Existential Variables.
+  { rewrite EQv. apply HVal. }
+  Qed.
+  
+  (* Provide a way to get the full T out of the agreement again. We don't need this, but I proved it before
+     I realized. *)
   (* For this, we need a complete metric! *)
   Context {cmT: cmetric T}.
 

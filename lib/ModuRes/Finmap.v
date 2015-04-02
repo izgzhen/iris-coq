@@ -1,7 +1,7 @@
 Require Import ssreflect.
 Require Import MetricCore.
 Require Import PreoMet.
-Require Import RA CMRA.
+Require Import RA CMRA SPred.
 Require Import Arith Min Max List.
 
 Set Bullet Behavior "Strict Subproofs".
@@ -1439,23 +1439,32 @@ Section CMRA.
     move=>i. apply ra_pord_iff_ext_pord. by apply: HC.
   Qed.
 
+  Global Program Instance finmap_cmra_valid: CMRA_valid (I -f> T) :=
+    fun f => mkSPred (fun n => forall i s, f i == Some s -> cmra_valid s n) _.
+  Next Obligation.
+    move=>n m Hle /= H i s EQ. eapply dpred; last eapply H; eassumption.
+  Qed.
+    
   Global Instance finmap_cmra : CMRA (I -f> T).
   Proof.
-    split. move=>n f1 f2 EQf g1 g2 EQg.
-    destruct n as [|n]; first by apply: dist_bound.
-    move => k. 
-    case Hf1g1: ((f1 · g1) k) => [v1|];
-    case Hf2g2: ((f2 · g2) k) => [v2|];
+    split.
+    - move=>n f1 f2 EQf g1 g2 EQg.
+      destruct n as [|n]; first by apply: dist_bound.
+      move => k. 
+      case Hf1g1: ((f1 · g1) k) => [v1|];
+      case Hf2g2: ((f2 · g2) k) => [v2|];
       move : Hf1g1 Hf2g2 (EQf k) (EQg k) => // /equivR Hf1g1 /equivR Hf2g2.
-    - move/fdComposeP : (Hf1g1) => [[vf1 [vg1 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
-      move/fdComposeP : (Hf2g2) => [[vf2 [vg2 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
-      move => // /= -> ->. reflexivity.
-    - move/fdComposeP : (Hf1g1) => [[vf1 [vg1 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
+      + move/fdComposeP : (Hf1g1) => [[vf1 [vg1 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
+        move/fdComposeP : (Hf2g2) => [[vf2 [vg2 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
+        move => // /= -> ->. reflexivity.
+      + move/fdComposeP : (Hf1g1) => [[vf1 [vg1 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
         move/fdComposePN : (Hf2g2) => [-> ->];
         now move => // /= -> ->. 
-    - move/fdComposePN : (Hf1g1) => [-> ->];
+      + move/fdComposePN : (Hf1g1) => [-> ->];
         move/fdComposeP : (Hf2g2) => [[vf2 [vg2 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
-        now move => // /= -> ->. 
+        now move => // /= -> ->.
+    - admit.
+    - admit.
   Qed.
   
 End CMRA.
