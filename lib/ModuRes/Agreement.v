@@ -1,5 +1,5 @@
 Require Import Ssreflect.ssreflect Ssreflect.ssrfun Omega.
-Require Import SPred PreoMet RA Axioms.
+Require Import SPred PreoMet RA CMRA Axioms.
 
 Local Open Scope ra_scope.
 Local Open Scope predom_scope.

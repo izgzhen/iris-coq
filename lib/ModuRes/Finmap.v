@@ -1,7 +1,7 @@
 Require Import ssreflect.
 Require Import MetricCore.
 Require Import PreoMet.
-Require Import RA.
+Require Import RA CMRA.
 Require Import Arith Min Max List.
 
 Set Bullet Behavior "Strict Subproofs".

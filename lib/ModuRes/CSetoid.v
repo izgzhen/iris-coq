@@ -24,6 +24,12 @@ Qed.
 
 Notation "'mkType' R" := (@Build_Setoid _ R _) (at level 10).
 
+Class Associative {T} `{eqT : Setoid T} (op : T -> T -> T) :=
+  assoc : forall t1 t2 t3, op t1 (op t2 t3) == op (op t1 t2) t3.
+Class Commutative {T} `{eqT : Setoid T} (op : T -> T -> T) :=
+  comm  : forall t1 t2, op t1 t2 == op t2 t1.
+
+
 (** A morphism between two types is an actual function together with a
     proof that it preserves equality. *)
 Record morphism S T `{eqS : Setoid S} `{eqT : Setoid T} :=

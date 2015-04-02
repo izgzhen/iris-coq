@@ -200,6 +200,7 @@ Section PUMMorphProps1.
 
 End PUMMorphProps1.
 
+(* Re-export the predom notation for pord in this scope *)
 Notation "x ⊑ y" := (pord x y) (at level 70, no associativity) : pumet_scope.
 
 Section CompProps.

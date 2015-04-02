@@ -20,10 +20,11 @@ Arguments pord {_ _ _} !_ !_.
 Notation "'mkPOType' R" := (Build_preoType _ _ R _) (at level 10).
 Notation "s ⊑ t" := (pord s t) (at level 70, no associativity) : predom_scope.
 Delimit Scope predom_scope with pd.
+Local Open Scope predom_scope.
 
 (* Proof by reflexivity *)
 Lemma pordR {T : Type} `{eqT : preoType T} {a b : T} :
-  a == b -> (a ⊑ b)%pd.
+  a == b -> (a ⊑ b).
 Proof.
   intros Heq. rewrite Heq. reflexivity.
 Qed.
@@ -32,8 +33,6 @@ Ltac mono_resp :=
   intros t1 t2 HSub; repeat (intros ?); rewrite -> ?HSub; simpl in *; rewrite -> ?HSub; repeat split; reflexivity.
 
 Section Monotone_Morphisms.
-  Local Open Scope predom_scope.
-
   Record monotone_morphism T U `{pT : preoType T} `{pU : preoType U} := mkMMorph
     { mono_morph :> T -=> U;
       mono_mono  :  Proper (pord ++> pord) mono_morph}.

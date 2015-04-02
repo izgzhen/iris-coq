@@ -5,15 +5,9 @@ Require Import Coq.Classes.RelationPairs.
 Require Import Bool.
 Require Import Predom.
 Require Import CSetoid.
-Require Import MetricCore.
-Require Import PreoMet.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Class Associative {T} `{eqT : Setoid T} (op : T -> T -> T) :=
-  assoc : forall t1 t2 t3, op t1 (op t2 t3) == op (op t1 t2) t3.
-Class Commutative {T} `{eqT : Setoid T} (op : T -> T -> T) :=
-  comm  : forall t1 t2, op t1 t2 == op t2 t1.
 
 Section RADef.
   Context {T : Type} {eqT : Setoid T}.
@@ -38,6 +32,7 @@ Arguments RA_valid : clear implicits.
 Arguments RA T {_ _ _ _}: clear implicits.
 
 Delimit Scope ra_scope with ra.
+Local Open Scope predom_scope.
 Local Open Scope ra_scope.
 
 Notation "'1'" := (ra_unit) : ra_scope.
@@ -153,42 +148,6 @@ Section OrdTests.
 End OrdTests.
 
 
-(* CMRA ("camera"): RAs with a complete metric. *)
-Section CMRA.
-  Context {T: Type} {eqT: Setoid T} `{raT: RA (eqT:=eqT) T}.
-
-  Class CMRA `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T}: Prop := (* force this to become an actual argument *)
-    { ra_op_dist n :> Proper (dist n ==> dist n ==> dist n) ra_op }.
-End CMRA.
-Arguments CMRA T {_ _ _ _ _ _ _ _}: clear implicits.
-
-Section CMRAProps.
-  Context {T: Type} `{cmraT: CMRA T}.
-
-  Program Definition ra_op_n : T -n> T -n> T :=
-    n[(fun t1:T => n[(fun t2:T => t1 · t2)])].
-  Next Obligation.
-    move=>t2 t2' EQt2. simpl. rewrite EQt2. reflexivity.
-  Qed.
-  Next Obligation.
-    move=>t1 t1' EQt1 t2. simpl. rewrite EQt1. reflexivity.
-  Qed.
-End CMRAProps.
-
-Section DiscreteCMRA.
-  Context {T: Type} `{raT: RA T}.
-  Existing Instance discreteMetric.
-  Existing Instance discreteCMetric.
-
-  Global Instance discreteCMRA : CMRA T.
-  Proof.
-    split. move=>n a1 a2 EQa b1 b2 EQb.
-    destruct n as [|n]; first by exact I.
-    simpl in *. rewrite EQa EQb. reflexivity.
-  Qed.
-End DiscreteCMRA.
-
-
 (* RAs with cartesian products of carriers. *)
 Section Pairs.
   Context {S T: Type}.
@@ -289,82 +248,6 @@ Section Pairs.
     rewrite ra_prod_pord /pord /=. reflexivity.
   Qed.
 End Pairs.
-(* Pairs work as CMRA *)
-Section PairsCMRA.
-  Context {S T: Type} `{cmraS: CMRA S} `{cmraT: CMRA T}.
-
-  Global Instance ra_prod_pcm: pcmType (pTA:=pord_ra) (S * T).
-  Proof.
-    split. intros σ ρ σc ρc HC.
-    apply ra_pord_iff_prod_pord.
-    eapply pcm_respC; first by apply _.
-    move=>i. apply ra_pord_iff_prod_pord. by apply: HC.
-  Qed.
-
-  Global Instance ra_prod_cmra: CMRA (S * T).
-  Proof.
-    split. move=>n [s11 t11] [s12 t12] /= [EQs1 EQt1] [s21 t21] [s22 t22] /= [EQs2 EQt2].
-    split.
-    - rewrite EQs1 EQs2. reflexivity.
-    - rewrite EQt1 EQt2. reflexivity.
-  Qed.
-End PairsCMRA.
-
-Section PairsMap.
-  Context {S T U V: Type} `{cmraS: CMRA S} `{cmraT: CMRA T} `{cmraU: CMRA U} `{cmraV: CMRA V}.
-
-  Local Instance ra_force_pord_TS: preoType (T * S) := pord_ra.
-  Local Instance ra_force_pord_UV: preoType (U * V) := pord_ra.
-  
-  Program Definition RAprod_map (f: T -m> U) (g: S -m> V): (T * S) -m> (U * V) :=
-    mkMUMorph (pcmprod_map f g) _.
-  Next Obligation. (* If one day, this obligation disappears, then probably the instances are not working out anymore *)
-    move=>x y EQxy. change (pcmprod_map f g x ⊑ pcmprod_map f g y).
-    apply ra_pord_iff_prod_pord. apply ra_pord_iff_prod_pord in EQxy.
-    by eapply mu_mono.
-  Qed.
-
-  Global Instance RAprod_map_resp: Proper (equiv ==> equiv ==> equiv) RAprod_map.
-  Proof.
-    move=>f1 f2 EQf g1 g2 EQg. change (pcmprod_map f1 g1 == pcmprod_map f2 g2).
-    rewrite EQf EQg. reflexivity.
-  Qed.
-  Global Instance RAprod_map_nonexp n : Proper (dist n ==> dist n ==> dist n) RAprod_map.
-  Proof.
-    move=>f1 f2 EQf g1 g2 EQg. change (pcmprod_map f1 g1 = n = pcmprod_map f2 g2).
-    rewrite EQf EQg. reflexivity.
-  Qed.
-  Global Instance RAprod_map_monic : Proper (pord ++> pord ++> pord) RAprod_map.
-  Proof.
-    move=>f1 f2 EQf g1 g2 EQg x. apply ra_pord_iff_prod_pord. 
-    revert x. change (pcmprod_map f1 g1 ⊑ pcmprod_map f2 g2).
-    by eapply pcmprod_map_monic.
-  Qed.
-End PairsMap.
-Section PairsMapComp.
-  Context {S T: Type} `{cmraS: CMRA S} `{cmraT: CMRA T}.
-
-  Lemma RAprod_map_id:
-    RAprod_map (pid T) (pid S) == pid (T*S).
-  Proof. (* doing the proof again here is actually easier than using the ones from PreoMet... *)
-    intros x. simpl. split; reflexivity.
-  Qed.
-
-  Context {U V W X: Type} `{cmraU: CMRA U} `{cmraV: CMRA V} `{cmraW: CMRA W} `{cmraX: CMRA X}.
-
-  Lemma RAprod_map_comp (f: T -m> U) (g: U -m> V) (h: S -m> W) (i: W -m> X):
-    RAprod_map g i ∘ RAprod_map f h == RAprod_map (g ∘ f) (i ∘ h).
-  Proof.
-    intros x. simpl. split; reflexivity.
-  Qed.
-End PairsMapComp.
-Lemma RAprod_map_comp_fst {S T U V W: Type}
-      `{cmraS: CMRA S} `{cmraT: CMRA T} `{cmraU: CMRA U} `{cmraV: CMRA V} `{cmraW: CMRA W}
-      (f: T -m> U) (g: U -m> V) (h: S -m> W):
-  RAprod_map g h ∘ RAprod_map f (pid _) == RAprod_map (g ∘ f) h.
-Proof.
-  intros x. simpl. split; reflexivity.
-Qed.
 
 (** Morphisms between RAs. *)
 Section Morph.
