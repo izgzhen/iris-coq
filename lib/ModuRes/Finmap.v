@@ -1463,8 +1463,20 @@ Section CMRA.
       + move/fdComposePN : (Hf1g1) => [-> ->];
         move/fdComposeP : (Hf2g2) => [[vf2 [vg2 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
         now move => // /= -> ->.
-    - admit.
-    - admit.
+    - move => [|n] f1 f2 D12 i LTin; first inversion LTin.
+        unfold cmra_valid. 
+      split => H1 k s Hk.
+      + case Hk' : (f1 k) => [s'|]. 
+        * eapply cmra_valid_dist, H1; [symmetry|eassumption|apply/equivR; eassumption].
+          move : (D12 k). by rewrite Hk Hk'. 
+        * move : (D12 k). by rewrite Hk Hk'. 
+      + case Hk' : (f2 k) => [s'|]. 
+        * eapply cmra_valid_dist, H1; [|eassumption|apply/equivR; eassumption].
+          move : (D12 k). by rewrite Hk Hk'. 
+        * move : (D12 k). by rewrite Hk Hk'. 
+    - move => f1. split => [H k s H1|H i k s H1].
+      + apply cmra_ra_valid. move => i. exact: (H i k s H1).
+      + apply cmra_ra_valid. exact (H k s H1).
   Qed.
   
 End CMRA.
