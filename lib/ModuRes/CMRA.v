@@ -1,5 +1,7 @@
 Require Import Ssreflect.ssreflect.
-Require Import RA MetricCore PreoMet BI.
+Require Import RA MetricCore PreoMet BI SPred.
+
+Set Bullet Behavior "Strict Subproofs".
 
 Local Open Scope ra_scope.
 
@@ -7,10 +9,17 @@ Local Open Scope ra_scope.
 Section CMRA.
   Context {T: Type} {eqT: Setoid T} `{raT: RA (eqT:=eqT) T}.
 
-  Class CMRA `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T}: Prop := (* force this to become an actual argument *)
-    { ra_op_dist n :> Proper (dist n ==> dist n ==> dist n) ra_op }.
+  Class CMRA_valid:= cmra_valid : T -> SPred.
+
+
+  Class CMRA `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T} {TCV: CMRA_valid}: Prop := (* force this to become an actual argument *)
+    { cmra_op_dist n :> Proper (dist n ==> dist n ==> dist n) ra_op ;
+      cmra_valid_dist n :> Proper (dist n ==> dist n) cmra_valid ;
+      cmra_ra_valid t: (sp_full (cmra_valid t)) <-> ra_valid t
+    }.
 End CMRA.
-Arguments CMRA T {_ _ _ _ _ _ _ _}: clear implicits.
+Arguments CMRA_valid : clear implicits.
+Arguments CMRA T {_ _ _ _ _ _ _ _ _}: clear implicits.
 
 Section CMRAProps.
   Context {T: Type} `{cmraT: CMRA T}.
@@ -23,6 +32,14 @@ Section CMRAProps.
   Next Obligation.
     move=>t1 t1' EQt1 t2. simpl. rewrite EQt1. reflexivity.
   Qed.
+
+  Global Instance cmra_valid_equiv:
+    Proper (equiv ==> equiv) cmra_valid.
+  Proof.
+    move=>t1 t2 EQt. apply dist_refl=>n.
+    eapply cmra_valid_dist. by apply dist_refl.
+  Qed.
+  
 End CMRAProps.
 
 Section DiscreteCMRA.
@@ -30,11 +47,20 @@ Section DiscreteCMRA.
   Existing Instance discreteMetric.
   Existing Instance discreteCMetric.
 
+  Global Instance discreteCMRA_valid : CMRA_valid T :=
+    fun t => sp_c (↓t).
+
   Global Instance discreteCMRA : CMRA T.
   Proof.
-    split. move=>n a1 a2 EQa b1 b2 EQb.
-    destruct n as [|n]; first by exact I.
-    simpl in *. rewrite EQa EQb. reflexivity.
+    split.
+    - move=>n a1 a2 EQa b1 b2 EQb.
+      destruct n as [|n]; first by exact I.
+      simpl in *. rewrite EQa EQb. reflexivity.
+    - move=>n t1 t2 EQt. destruct n as [|n]; first exact: dist_bound.
+      simpl in EQt. move=>m Hle. simpl. rewrite ->EQt. reflexivity.
+    - move=>t. split.
+      + move=>H. specialize (H 1%nat). exact H.
+      + move=>H n. simpl. exact H.
   Qed.
 End DiscreteCMRA.
 
@@ -50,12 +76,20 @@ Section PairsCMRA.
     move=>i. apply ra_pord_iff_prod_pord. by apply: HC.
   Qed.
 
+  Global Instance ra_prod_cmra_valid : CMRA_valid (S * T) :=
+    fun st => let (s, t) := st in and (cmra_valid s) (cmra_valid t).
+
   Global Instance ra_prod_cmra: CMRA (S * T).
   Proof.
-    split. move=>n [s11 t11] [s12 t12] /= [EQs1 EQt1] [s21 t21] [s22 t22] /= [EQs2 EQt2].
     split.
-    - rewrite EQs1 EQs2. reflexivity.
-    - rewrite EQt1 EQt2. reflexivity.
+    - move=>n [s11 t11] [s12 t12] /= [EQs1 EQt1] [s21 t21] [s22 t22] /= [EQs2 EQt2].
+      split.
+      + rewrite EQs1 EQs2. reflexivity.
+      + rewrite EQt1 EQt2. reflexivity.
+    - move=>n [t1 s1] [t2 s2] /= [EQt EQs]. eapply and_sp_dist; eapply cmra_valid_dist; assumption.
+    - move=>[t s]. split=>H.
+      + split; eapply cmra_ra_valid; intro n; eapply H.
+      + move=>n. split; eapply cmra_ra_valid; eapply H.
   Qed.
 End PairsCMRA.
 
@@ -126,7 +160,7 @@ Section MComplBI.
     n[(fun f: T -n> B => m[(fun t => (all (U:=T) (f <M< n[(ra_op t)])))])].
   Next Obligation.
     move=>t1 t2 EQt. eapply all_dist. eapply ndist_umcomp; first reflexivity.
-    move=>u. now eapply ra_op_dist.
+    move=>u. now eapply cmra_op_dist.
   Qed.
   Next Obligation.
     intros t1 t2 [t3 EQt]. simpl. eapply all_R=>u.
