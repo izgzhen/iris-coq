@@ -1,15 +1,16 @@
 (** In this file, we we define what it means to be a solution of the recursive
     domain equations to build a higher-order separation logic *)
 Require Import ModuRes.PreoMet ModuRes.Finmap.
-Require Import ModuRes.RA ModuRes.Agreement ModuRes.SPred.
+Require Import ModuRes.RA ModuRes.CMRA ModuRes.Agreement ModuRes.SPred.
 
 Local Open Scope type.
 
 (* This interface keeps some of the details of the solution opaque *)
 Module Type WORLD_PROP (Res : RA_T).
-  (* We need a metric for the base resources. The discrete CMRA will be infered. *)
+  (* We need a CMRA for the base resources. *)
   Instance res_metric : metric Res.res := discreteMetric.
   Instance res_cmetric : cmetric Res.res := discreteCMetric.
+  Instance res_cmra : CMRA Res.res := discreteCMRA.
   
   (* PreProp: The solution to the recursive equation. Equipped with a discrete order. *)
   Parameter PreProp    : Type.

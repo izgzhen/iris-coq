@@ -47,10 +47,10 @@ Section DiscreteCMRA.
   Existing Instance discreteMetric.
   Existing Instance discreteCMetric.
 
-  Local Instance discreteCMRA_valid : CMRA_valid T := (* can't make this global, it does not depend on the discrete metric... *)
+  Global Instance discreteCMRA_valid : CMRA_valid T | 20 :=
     fun t => sp_c (↓t).
 
-  Global Instance discreteCMRA : CMRA T.
+  Global Instance discreteCMRA : CMRA T | 20.
   Proof.
     split.
     - move=>n a1 a2 EQa b1 b2 EQb.
