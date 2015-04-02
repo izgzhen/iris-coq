@@ -1,6 +1,6 @@
 (** In this file, we show how we can obtain a solution of the recursive
     domain equations to build a higher-order separation logic *)
-Require Import ModuRes.PreoMet ModuRes.Finmap ModuRes.RA ModuRes.Agreement ModuRes.SPred.
+Require Import ModuRes.PreoMet ModuRes.Finmap ModuRes.RA ModuRes.CMRA ModuRes.Agreement ModuRes.SPred.
 Require Import ModuRes.CatBasics ModuRes.MetricRec ModuRes.CBUltInst.
 Require Import world_prop.
 
@@ -19,6 +19,7 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
   (** We need a metric for the base resources. The discrete CMRA will be infered. *)
   Local Instance res_metric : metric Res.res := discreteMetric.
   Local Instance res_cmetric : cmetric Res.res := discreteCMetric.
+  Local Instance res_cmra : CMRA Res.res := discreteCMRA.
 
   (** Finally, we need the right pcmType for the entire resource *)
   Definition FRes P `{metric P} := (nat -f> ra_agree P) * Res.res.
