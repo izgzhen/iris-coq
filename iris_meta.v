@@ -12,6 +12,21 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Local Open Scope bi_scope.
   Local Open Scope iris_scope.
 
+  Section Consistency.
+
+    (* One cannot derive false in the empty context.
+       TODO: We could generalize this to "~valid(⊥)" in BI.v *)
+    Lemma consistency: ~(⊤ ⊑ ⊥).
+    Proof.
+      move=>H. eapply H. exact I.
+    Grab Existential Variables.
+    { exact 1. }
+    { exact 0. }
+    { exact fdEmpty. }
+    Qed.
+
+  End Consistency.
+
   Section Adequacy.
 
     Local Open Scope list_scope.
