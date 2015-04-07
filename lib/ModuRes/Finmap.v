@@ -1477,7 +1477,14 @@ Section CMRA.
     - move => f1. split => [H k s H1|H i k s H1].
       + apply cmra_ra_valid. move => i. exact: (H i k s H1).
       + apply cmra_ra_valid. exact (H k s H1).
-    - move=>f1 f2 n Hval /= i s H. admit.
+    - move=>f1 f2 n Hval /= i s H. 
+      case H2 : (f2 i) => [s2|]; move/equivR in H2.
+      + assert (fdCompose ra_op f1 f2 i == Some (ra_op s s2)). 
+        { apply fdComposeP'. left; exists s s2; repeat split; now auto. }
+        move/Hval in H0. by move/cmra_op_valid in H0.
+      + assert (fdCompose ra_op f1 f2 i == Some s).
+        { apply fdComposeP'. right; left; now auto. }
+        move/Hval in H0. assumption.
   Qed.
   
 End CMRA.
