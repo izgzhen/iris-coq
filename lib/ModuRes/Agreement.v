@@ -447,6 +447,9 @@ Section Agreement.
       ra_ag_destr; try firstorder; [].
       move=>m Hle. rewrite /cmra_valid /=. destruct EQt as [EQv _]. apply EQv. omega.
     - move=>t. reflexivity.
+    - move=> t1 t2. ra_ag_destr; try firstorder; last first.
+      { move=>n H. exact I. }
+      move=>n [pv _]. exact pv.
   Qed.
 
   (* Provide a way to get an n-approximation of the element out of an n-valid agreement. *)

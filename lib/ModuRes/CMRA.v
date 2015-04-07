@@ -15,7 +15,8 @@ Section CMRA.
   Class CMRA `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T} {TCV: CMRA_valid}: Prop := (* force this to become an actual argument *)
     { cmra_op_dist n :> Proper (dist n ==> dist n ==> dist n) ra_op ;
       cmra_valid_dist n :> Proper (dist n ==> dist n) cmra_valid ;
-      cmra_ra_valid t: (sp_full (cmra_valid t)) <-> ra_valid t
+      cmra_ra_valid t: (sp_full (cmra_valid t)) <-> ra_valid t ;
+      cmra_op_valid {t1 t2}: cmra_valid (t1 · t2) ⊑ cmra_valid t1
     }.
 End CMRA.
 Arguments CMRA_valid : clear implicits.
@@ -39,6 +40,18 @@ Section CMRAProps.
     move=>t1 t2 EQt. apply dist_refl=>n.
     eapply cmra_valid_dist. by apply dist_refl.
   Qed.
+
+  Lemma cmra_op_valid2 {t1 t2} : cmra_valid (t1 · t2) ⊑ cmra_valid t2.
+  Proof.
+    rewrite comm. now eapply cmra_op_valid.
+  Qed.
+
+  Global Instance cmra_valid_ord : Proper (pord ==> flip pord) cmra_valid.
+  Proof.
+    move=>t1 t2 [t' HEq]. rewrite -HEq.
+    rewrite /flip /=.
+    exact: cmra_op_valid2.
+  Qed.
   
 End CMRAProps.
 
@@ -61,6 +74,7 @@ Section DiscreteCMRA.
     - move=>t. split.
       + move=>H. specialize (H 1%nat). exact H.
       + move=>H n. simpl. exact H.
+    - move=>t1 t2 n. exact: ra_op_valid.
   Qed.
 End DiscreteCMRA.
 
@@ -90,6 +104,7 @@ Section PairsCMRA.
     - move=>[t s]. split=>H.
       + split; eapply cmra_ra_valid; intro n; eapply H.
       + move=>n. split; eapply cmra_ra_valid; eapply H.
+    - move=>[s1 t1] [s2 t2] n H. split; eapply cmra_op_valid; eapply H.
   Qed.
 End PairsCMRA.
 

@@ -1477,6 +1477,7 @@ Section CMRA.
     - move => f1. split => [H k s H1|H i k s H1].
       + apply cmra_ra_valid. move => i. exact: (H i k s H1).
       + apply cmra_ra_valid. exact (H k s H1).
+    - move=>f1 f2 n Hval /= i s H. admit.
   Qed.
   
 End CMRA.
