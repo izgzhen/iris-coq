@@ -217,7 +217,12 @@ Section Authoritative.
   Qed.
 
   Definition ra_local_action (act : T -=> T) : Prop :=
-    forall t tf, ↓act t -> ↓t · tf -> act(t · tf) == act t · tf.
+    forall t tf, ↓act t -> ↓t · tf -> act(t · tf) == (act t) · tf.
+
+  Lemma ra_op_local t: ra_local_action (ra_op_s t).
+  Proof.
+    move=>t' tf Hact Hcomp. simpl. rewrite assoc. reflexivity.
+  Qed.
 
   Lemma ra_fps_auth_local {act t u} (HL : ra_local_action act) (Hu' : ↓act t · u) :
     Auth(ex_own(t · u), t) ⇝ Auth(ex_own(act t · u), act t).
