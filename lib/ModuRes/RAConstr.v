@@ -141,7 +141,7 @@ Section Authoritative.
 
   Global Instance ra_unit_auth : RA_unit auth := 
     fun a => match a with 
-               | Auth (e,t) => Auth(1 e, 1 t)
+               | Auth (e,t) => Auth(ex_unit, 1 t)
              end.
 
   Global Instance ra_op_auth : RA_op auth := fun r s =>
@@ -161,7 +161,8 @@ Section Authoritative.
       by rewrite Hx1 Ht1 Hx2 Ht2; split; reflexivity.
     - by move=> [[x1 t1]] [[x2 t2]] [[x3 t3]] /=; split; rewrite assoc; reflexivity.
     - by move=> [[x1 t1]] [[x2 t2]] /=; split; rewrite comm; reflexivity.
-    - by move=> [[x t]] /=; split; rewrite ra_op_unit; reflexivity.
+    - move=> [[s t]] /=. split; last (rewrite ra_op_unit; reflexivity).
+      destruct s; reflexivity.
     - move => [[x1 t1]] [[x2 t2]]. by firstorder.
     - move => [[x1 t1]] [[x2 t2]].
       destruct (ra_unit_mono x1 x2) as [x3 Hx], (ra_unit_mono t1 t2) as [t3 Ht].
@@ -180,7 +181,7 @@ Section Authoritative.
   Qed.
 
   Lemma ra_sep_auth {t u x u'} :
-    ↓Auth(ex_own t, u) · Auth(x, u') -> ↓t /\ x == 1 (ex_own t) /\ ↓u · u' /\ u · u' ⊑ t.
+    ↓Auth(ex_own t, u) · Auth(x, u') -> ↓t /\ x == ex_unit /\ ↓u · u' /\ u · u' ⊑ t.
   Proof.
     case: x=>[g||]; [done | | done].
     rewrite {1}/ra_valid/ra_valid_auth {1}/ra_op/ra_op_auth.
@@ -305,7 +306,7 @@ Section DecAgreement.
 
 End DecAgreement.
 
-(*
+(* TODO: make this work with multi-unit
 Section IndexedProduct.
   (* I is the index type (domain), S the type of the components (codomain) *)
   Context {I : Type} {S : forall (i : I), Type}
