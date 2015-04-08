@@ -1316,6 +1316,7 @@ Section RA.
     - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H // -?H.
     - by exists (1 t') => k.
     - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H // -?H.
+    - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H // -?H.
     - case Hi: (t2 i) => [v|]; apply equivR in Hi. 
       + apply (ra_op_valid (t2 := v)). apply (H i), fdComposeP'. 
         left; do 2!eexists; repeat split; eauto. reflexivity.

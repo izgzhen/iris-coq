@@ -143,6 +143,7 @@ Section Agreement.
     - ra_ag_destr; unfold ra_valid, ra_agree_valid in *; firstorder.
     - by exists ag_unit. 
     - ra_ag_destr; unfold ra_valid, ra_agree_valid in *; firstorder.
+    - ra_ag_destr; unfold ra_valid, ra_agree_valid in *; firstorder.
     - ra_ag_destr; try firstorder; last exact I; [].
       destruct (H n) as [Hn _]. assumption.
   Qed.

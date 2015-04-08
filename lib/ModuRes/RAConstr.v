@@ -66,6 +66,7 @@ Section Exclusive.
     - intros [s1| |]; reflexivity.
     - intros [t1| |] [t2| |] Heqt; unfold ra_valid; simpl in *; now auto.
     - intros t1 t2. exists ex_unit. reflexivity. 
+    - intros [t | |]; reflexivity.
     - intros [t1| |] [t2| |] Heqt; unfold ra_valid; simpl in *; now auto.
     - intros [t1| |] [t2| |]; unfold ra_valid; simpl; now auto.
   Qed.
@@ -167,6 +168,7 @@ Section Authoritative.
     - move => [[x1 t1]] [[x2 t2]].
       destruct (ra_unit_mono x1 x2) as [x3 Hx], (ra_unit_mono t1 t2) as [t3 Ht].
       exists (Auth (x3, t3)); split; assumption. 
+    - move=> [[x t]]. unfold ra_unit, ra_unit_auth. by rewrite !ra_unit_idem.
     - move=> [[x t]] [[x' t']] [/= Hx Ht].
       rewrite/ra_valid/ra_valid_auth.
       move: Hx; case: x=>[g||]; case: x'=>[g'||] => //= Hg.
@@ -300,6 +302,7 @@ Section DecAgreement.
     - destruct t; reflexivity.
     - destruct x, y; simpl; firstorder; now inversion H.
     - by exists dag_unit.
+    - destruct t; reflexivity.
     - destruct x, y; simpl; firstorder; now inversion H.
     - destruct t1, t2; try contradiction; now constructor.
   Qed.
