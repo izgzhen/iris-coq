@@ -1228,7 +1228,8 @@ Section RA.
   Local Open Scope ra_scope.
   
   Global Instance ra_type_finprod : Setoid (I -f> S) := _.
-  Global Instance ra_unit_finprod : RA_unit (I -f> S) := fdEmpty.
+  (* TODO: this clears invariants i.e. they disappear in box *)
+  Global Instance ra_unit_finprod : RA_unit (I -f> S) := fun f => fdEmpty.
   Global Instance ra_op_finprod : RA_op (I -f> S) := fdCompose (ra_op).
   Global Instance ra_valid_finprod : RA_valid (I -f> S) := fun f => forall i s, f i == Some s -> ra_valid s.
   
@@ -1306,14 +1307,15 @@ Section RA.
       split => /fdComposeP'; move => [[v1 [v2 [Hv [H1 H2]]]]|[[H1 H2]|[H1 H2]]];
         apply fdComposeP'; try (now eauto); 
         rewrite -> ra_op_comm in Hv; left; do 2!eexists; repeat split; eauto.
-    - cut (forall v, (1 · t) k == v <-> t k == v).
-      + intros. specialize (H ((1 · t) k)). symmetry. apply H. reflexivity.
+    - cut (forall v, (1 t · t) k == v <-> t k == v).
+      + intros. specialize (H ((1 t · t) k)). symmetry. apply H. reflexivity.
       + move => [v|].
         * split; [move => /fdComposeP'; move => [[v1 [v2 [Hv [[] //]]]]|[[[] //]|[H1 H2 //]]]|].
           move=>Ht. apply fdComposeP'. by right; right.
         * split; [move/fdComposePN' => [] //|move => ?; apply fdComposePN'; split; now auto].
     - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H // -?H.
-    - by destruct H.
+    - by exists (1 t') => k.
+    - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H // -?H.
     - case Hi: (t2 i) => [v|]; apply equivR in Hi. 
       + apply (ra_op_valid (t2 := v)). apply (H i), fdComposeP'. 
         left; do 2!eexists; repeat split; eauto. reflexivity.
@@ -1463,6 +1465,7 @@ Section CMRA.
       + move/fdComposePN : (Hf1g1) => [-> ->];
         move/fdComposeP : (Hf2g2) => [[vf2 [vg2 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
         now move => // /= -> ->.
+    - by move => [|n] f1 f2 D12.
     - move => [|n] f1 f2 D12 i LTin; first inversion LTin.
         unfold cmra_valid. 
       split => H1 k s Hk.

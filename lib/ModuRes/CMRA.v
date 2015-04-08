@@ -14,6 +14,7 @@ Section CMRA.
 
   Class CMRA `{pcmT: pcmType (eqT:=eqT) (pTA:=pord_ra) T} {TCV: CMRA_valid}: Prop := (* force this to become an actual argument *)
     { cmra_op_dist n :> Proper (dist n ==> dist n ==> dist n) ra_op ;
+      cmra_unit_dist n :> Proper (dist n ==> dist n) ra_unit ;
       cmra_valid_dist n :> Proper (dist n ==> dist n) cmra_valid ;
       cmra_ra_valid t: (sp_full (cmra_valid t)) <-> ra_valid t ;
       cmra_op_valid {t1 t2}: cmra_valid (t1 · t2) ⊑ cmra_valid t1
@@ -69,6 +70,9 @@ Section DiscreteCMRA.
     - move=>n a1 a2 EQa b1 b2 EQb.
       destruct n as [|n]; first by exact I.
       simpl in *. rewrite EQa EQb. reflexivity.
+    - move=>n a1 a2 EQa.
+      destruct n as [|n]; first by exact I.
+      simpl in *. rewrite EQa. reflexivity.
     - move=>n t1 t2 EQt. destruct n as [|n]; first exact: dist_bound.
       simpl in EQt. move=>m Hle. simpl. rewrite ->EQt. reflexivity.
     - move=>t. split.
@@ -100,6 +104,10 @@ Section PairsCMRA.
       split.
       + rewrite EQs1 EQs2. reflexivity.
       + rewrite EQt1 EQt2. reflexivity.
+    - move=>n [s11 t11] [s12 t12] /= [EQs1 EQt1].
+      split.
+      + rewrite EQs1. reflexivity.
+      + rewrite EQt1. reflexivity.
     - move=>n [t1 s1] [t2 s2] /= [EQt EQs]. eapply and_sp_dist; eapply cmra_valid_dist; assumption.
     - move=>[t s]. split=>H.
       + split; eapply cmra_ra_valid; intro n; eapply H.
@@ -191,7 +199,7 @@ Section MComplBI.
   Lemma mclose_cl f : (mclose f: T -n> B) ⊑ f.
   Proof.
     unfold mclose=>u. simpl.
-    transitivity ((f <M< n[(ra_op u)]) 1%ra).
+    transitivity ((f <M< n[(ra_op u)]) (1 u)%ra).
     - eapply all_R. eapply all_pord=>t. reflexivity.
     - simpl. rewrite ra_op_unit2. reflexivity.
   Qed.
@@ -440,7 +448,7 @@ Section MonotoneExt.
       eapply intEq_rewrite_goal with (φ := P).
       { rewrite ->and_projL. reflexivity. }
       rewrite ->and_projR, ->sc_projR. apply mu_mono. exists ts1. reflexivity.
-    - apply (xist_R (1, t)). simpl morph. apply and_R; split.
+    - apply (xist_R (1 t, t)). simpl morph. apply and_R; split.
       + eapply intEqR. now rewrite ra_op_unit.
       + unfold const. rewrite sc_top_unit. reflexivity.
   Qed.
@@ -542,7 +550,7 @@ Section MonotoneEQ.
         apply (all_L n[(φ)]). simpl morph. apply (all_L x)%ra. simpl morph. unfold const. apply impl_pord.
         * reflexivity.
         * reflexivity.
-    - move=>t. simpl morph. unfold const. apply (xist_R (1%ra, t)). simpl morph.
+    - move=>t. simpl morph. unfold const. apply (xist_R (1 t%ra, t)). simpl morph.
       apply and_R; split; last now eapply intEq_sc.
       apply intEqR. now rewrite ra_op_unit.
   Qed.
@@ -558,3 +566,10 @@ Module Type CMRA_T <: RA_T.
   Declare Instance res_cmra_valid : CMRA_valid res.
   Declare Instance res_cmra : CMRA res.
 End CMRA_T.
+
+Module Type CMVIRA_T <: VIRA_T.
+  Include CMRA_T.
+  Declare Instance res_inhab : RA_inhab res.
+  Declare Instance res_inhab_valid : RA_inhab_valid res.
+End CMVIRA_T.
+  

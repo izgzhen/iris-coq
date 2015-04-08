@@ -26,7 +26,7 @@ Section Agreement.
   | ag_inj (v: SPred) (ts: vChain v) (tsx: cvChain ts)
   | ag_unit.
 
-  Global Instance ra_agree_unit : RA_unit _ := ag_unit.
+  Global Instance ra_agree_unit : RA_unit _ := fun _ => ag_unit.
   Global Program Instance cmra_agree_valid : CMRA_valid _ :=
     fun x => match x with
              | ag_unit => sp_top
@@ -141,7 +141,8 @@ Section Agreement.
       + intros n [pv1 [pv2 EQ]] [pv3 [pv4 EQ']]. unfold ra_ag_compinj_ts in *. ra_ag_pi.
     - ra_ag_destr; reflexivity.
     - ra_ag_destr; unfold ra_valid, ra_agree_valid in *; firstorder.
-    - simpl. exact I.
+    - by exists ag_unit. 
+    - ra_ag_destr; unfold ra_valid, ra_agree_valid in *; firstorder.
     - ra_ag_destr; try firstorder; last exact I; [].
       destruct (H n) as [Hn _]. assumption.
   Qed.
@@ -398,7 +399,7 @@ Section Agreement.
     ddes (ρ 1) at 1 3 7 as [ρv ρts|] deqn:Hρ; ddes (σ 1) at 1 3 as [σv σts|] deqn:Hσ; last first.
     - reflexivity.
     - simpl. specialize (H 1). rewrite ->ra_ag_pord, <-Hρ, <-Hσ in H. exact H.
-    - rewrite ra_op_unit. reflexivity.
+    - reflexivity.
     - simpl.
       assert (HT: forall n pv1 pv2, ra_ag_tsdiag_n σ σv σts (HNE:=Hσ) (pv:=pv1) n = n = ra_ag_tsdiag_n ρ ρv ρts (HNE:=Hρ) (pv:=pv2) n).
       { move=>n pv1 pv2. destruct n as [|n]; first by apply: dist_bound.
@@ -443,6 +444,7 @@ Section Agreement.
   Proof.
     split.
     - now apply _.
+    - by move=>[|n] t1 t2 EQt. 
     - move=>n t1 t2 EQt. destruct n as [|n]; first exact: dist_bound.
       ra_ag_destr; try firstorder; [].
       move=>m Hle. rewrite /cmra_valid /=. destruct EQt as [EQv _]. apply EQv. omega.

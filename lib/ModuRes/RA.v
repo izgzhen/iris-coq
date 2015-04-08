@@ -12,7 +12,7 @@ Set Bullet Behavior "Strict Subproofs".
 Section RADef.
   Context {T : Type} {eqT : Setoid T}.
 
-  Class RA_unit := ra_unit : T.
+  Class RA_unit := ra_unit : T -> T.
   Class RA_op   := ra_op : T -> T -> T.
   Class RA_valid:= ra_valid : T -> Prop.
   Class RA {TU : RA_unit} {TOP : RA_op} {TV : RA_valid}: Prop :=
@@ -20,16 +20,27 @@ Section RADef.
         ra_op_proper       :> Proper (equiv ==> equiv ==> equiv) ra_op;
         ra_op_assoc        :> Associative ra_op;
         ra_op_comm         :> Commutative ra_op;
-        ra_op_unit {t}     : ra_op ra_unit t == t;
+        ra_op_unit {t}     : ra_op (ra_unit t) t == t;
+        ra_unit_proper     :> Proper (equiv ==> equiv) ra_unit;
+        ra_unit_mono t t'  : exists t'', ra_unit (ra_op t t') == ra_op (ra_unit t) t'';  
         ra_valid_proper    :> Proper (equiv ==> iff) ra_valid;
-        ra_valid_unit      : ra_valid ra_unit;
         ra_op_valid {t1 t2}: ra_valid (ra_op t1 t2) -> ra_valid t1
       }.
 End RADef.
+Section VIRADef.
+  Context {T : Type} `{RA0 : RA T}.
+  Class RA_inhab := ra_inhab : T.
+  Class RA_inhab_valid `{RA0 : RA} {INH : RA_inhab}  := 
+    mkIV { 
+        ra_inhab_valid :> ra_valid ra_inhab
+      }.
+End VIRADef.
 Arguments RA_unit : clear implicits.
 Arguments RA_op : clear implicits.
 Arguments RA_valid : clear implicits.
 Arguments RA T {_ _ _ _}: clear implicits.
+Arguments RA_inhab T: clear implicits.
+Arguments RA_inhab_valid T {_ _ _ _ _ _ _ _}: clear implicits.
 
 Delimit Scope ra_scope with ra.
 Local Open Scope predom_scope.
@@ -59,7 +70,7 @@ Section RALemmas.
 
   Implicit Types (t : T).
 
-  Lemma ra_op_unit2 {t} : t · 1 == t.
+  Lemma ra_op_unit2 {t} : t · 1 t == t.
   Proof.
     rewrite comm. now eapply ra_op_unit.
   Qed.
@@ -103,7 +114,7 @@ Section Order.
   Global Instance ra_ord_preo: PreOrder ra_ord.
   Proof.
     split.
-    - intros r; exists 1; erewrite ra_op_unit by apply _; reflexivity.
+    - intros r; exists (1 r); erewrite ra_op_unit by apply _; reflexivity.
     - intros z yz xyz [y Hyz] [x Hxyz]; exists (x · y).
       rewrite <- Hxyz, <- Hyz; symmetry; apply assoc.
   Qed.
@@ -126,7 +137,7 @@ Section Order.
   Global Instance ra_valid_ord : Proper (pord ==> flip impl) ra_valid.
   Proof. move=>t1 t2 [t' HEq]; rewrite -HEq; exact: ra_op_valid2. Qed.
 
-  Lemma unit_min {r} : 1 ⊑ r.
+  Lemma unit_min {r} : 1 r ⊑ r.
   Proof. exists r. exact: ra_op_unit2. Qed.
 
   Lemma ra_cancel_ord {HC : Cancellative raT} {a b c : T} :
@@ -153,7 +164,7 @@ Section Pairs.
   Context {S T: Type}.
   Context `{raS : RA S, raT : RA T}.
 
-  Global Instance ra_unit_prod : RA_unit (S * T) := (1, 1).
+  Global Instance ra_unit_prod : RA_unit (S * T) := fun st => (1 (fst st), 1 (snd st)).
   Global Instance ra_op_prod : RA_op (S * T) :=
     fun st1 st2 =>
       match st1, st2 with
@@ -170,9 +181,13 @@ Section Pairs.
     - intros [s1 t1] [s2 t2] [s3 t3]. simpl; split; now rewrite assoc.
     - intros [s1 t1] [s2 t2]. simpl; split; now rewrite comm.
     - intros [s t]. simpl; split; now rewrite ra_op_unit.
+    - move => [s1 t1] [s2 t2] [] /= EQs EQt. 
+      split; rewrite ?EQs ?EQt; reflexivity.
+    - move => [s1 t1] [s2 t2] /=. 
+      destruct (ra_unit_mono s1 s2) as [s3 Hs], (ra_unit_mono t1 t2) as [t3 Ht].
+      exists (s3,t3). rewrite Hs Ht. split; reflexivity.
     - intros [s1 t1] [s2 t2] [Heqs Heqt]. unfold ra_valid; simpl in *.
       rewrite -> Heqs, Heqt. reflexivity.
-    - unfold ra_unit, ra_valid; simpl. split; eapply ra_valid_unit; now apply _.
     - intros [s1 t1] [s2 t2]. unfold ra_valid; simpl. intros [H1 H2]. split.
       + eapply ra_op_valid; now eauto.
       + eapply ra_op_valid; now eauto.
@@ -255,7 +270,7 @@ Section Morph.
   Record RA_morphism  :=
     mkRAMorph
       { ra_morph :> T -=> U;
-        ra_morph_unit : ra_morph 1 == 1;
+        ra_morph_unit t : ra_morph (1 t) == 1 (ra_morph t);
         ra_morph_op {t t'} : ra_morph (t · t') == ra_morph t · ra_morph t';
         ra_morph_valid {t} : ↓t -> ↓ra_morph t }.
 End Morph.
@@ -303,6 +318,7 @@ Section Id.
   Qed.
 End Id.
 
+(* JOK : This doesn't work with multi units
 Section Const.
   Context {T U} `{raT : RA T, raU : RA U}.
 
@@ -311,6 +327,7 @@ Section Const.
   Next Obligation. by rewrite ra_op_unit; reflexivity. Qed.
   Next Obligation. exact: ra_valid_unit. Qed.
 End Const.
+*)
 
 Section MorphLemmas.
   Context {T U V W} `{raT : RA T, raU : RA U, raV : RA V, raW : RA W}.
@@ -368,6 +385,7 @@ Section MorphProductLemmas.
   Proof. move=> u. split; [exact: HL | exact: HR]. Qed.
 End MorphProductLemmas.
 
+(* JOK: broken by multi units
 (** T -ra> U as a pointwise RA, if ·U total. *)
 (* PDS: This can likely be improved. *)
 Class RA_total (T : Type) {TOP : RA_op T} {TV : RA_valid T} :=
@@ -535,6 +553,7 @@ End Image.
 		If (f<{ua}) ⇝∈ (f<uB) : U,
 		then (f<{ua}) ⇝∈ (f<uB) : T.
 *)
+  *)
 
 
 
@@ -549,3 +568,11 @@ Module Type RA_T.
   Declare Instance res_ra : RA res.
 
 End RA_T.
+
+Module Type VIRA_T.
+
+  Include RA_T.
+  Declare Instance res_inhab : RA_inhab res.
+  Declare Instance res_inhab_valid : RA_inhab_valid res.
+  
+End VIRA_T.

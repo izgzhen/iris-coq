@@ -42,7 +42,7 @@ Section Exclusive.
   Global Instance ex_own_compat : Proper (equiv ==> equiv) ex_own.
   Proof. by move=> t1 t2 EQt. Qed.
 
-  Global Instance ra_unit_ex : RA_unit _ := ex_unit.
+  Global Instance ra_unit_ex : RA_unit _ := fun _ => ex_unit.
   Global Instance ra_op_ex : RA_op _ :=
     fun r s =>
       match r, s with
@@ -65,15 +65,16 @@ Section Exclusive.
     - intros [s1| |] [s2| |]; reflexivity.
     - intros [s1| |]; reflexivity.
     - intros [t1| |] [t2| |] Heqt; unfold ra_valid; simpl in *; now auto.
-    - reflexivity.
+    - intros t1 t2. exists ex_unit. reflexivity. 
+    - intros [t1| |] [t2| |] Heqt; unfold ra_valid; simpl in *; now auto.
     - intros [t1| |] [t2| |]; unfold ra_valid; simpl; now auto.
   Qed.
 
-  Lemma ra_sep_ex {t r} : ↓ex_own t · r -> r == 1.
+  Lemma ra_sep_ex {t r} : ↓ex_own t · r -> r == 1 r.
   Proof. by case: r. Qed.
 
   Lemma ra_fps_ex_any t {r} (Hr : ↓r) : ex_own t ⇝ r.
-  Proof. by move=> f /ra_sep_ex ->; rewrite ra_op_unit2. Qed.
+  Proof. by move=> f /ra_sep_ex ->; rewrite (ra_op_unit2 (t := r)). Qed.
 
   Lemma ra_fps_ex t t' : ex_own t ⇝ ex_own t'.
   Proof. exact: ra_fps_ex_any. Qed.
@@ -82,7 +83,7 @@ Section Exclusive.
   Proof.
     case=>[t ||] a b Hv HEq.
     - by rewrite (ra_sep_ex Hv); move: Hv; rewrite -HEq=> /ra_sep_ex->; reflexivity.
-    - by move: HEq; rewrite 2!ra_op_unit.
+    - by move: HEq; rewrite (ra_op_unit (t:=a)) (ra_op_unit (t:=b)).
     - by exfalso.
   Qed.
 End Exclusive.
@@ -138,7 +139,10 @@ Section Authoritative.
     Proof. by move=> p1 p2 Rp. Qed.
   End Compat.
 
-  Global Instance ra_unit_auth : RA_unit auth := Auth(ex_unit, 1).
+  Global Instance ra_unit_auth : RA_unit auth := 
+    fun a => match a with 
+               | Auth (e,t) => Auth(1 e, 1 t)
+             end.
 
   Global Instance ra_op_auth : RA_op auth := fun r s =>
     match r, s with Auth(x, t), Auth(x', t') => Auth(x·x', t·t') end.
@@ -158,12 +162,15 @@ Section Authoritative.
     - by move=> [[x1 t1]] [[x2 t2]] [[x3 t3]] /=; split; rewrite assoc; reflexivity.
     - by move=> [[x1 t1]] [[x2 t2]] /=; split; rewrite comm; reflexivity.
     - by move=> [[x t]] /=; split; rewrite ra_op_unit; reflexivity.
+    - move => [[x1 t1]] [[x2 t2]]. by firstorder.
+    - move => [[x1 t1]] [[x2 t2]].
+      destruct (ra_unit_mono x1 x2) as [x3 Hx], (ra_unit_mono t1 t2) as [t3 Ht].
+      exists (Auth (x3, t3)); split; assumption. 
     - move=> [[x t]] [[x' t']] [/= Hx Ht].
       rewrite/ra_valid/ra_valid_auth.
       move: Hx; case: x=>[g||]; case: x'=>[g'||] => //= Hg.
       + by rewrite Ht Hg.
       + by rewrite Ht.
-    - rewrite/ra_unit/ra_unit_auth/ra_valid/ra_valid_auth; exact: ra_valid_unit.
     - move=> [[x t]] [[x' t']]. rewrite /ra_op/ra_op_auth/ra_valid/ra_valid_auth.
       case: x=>[g||]; case: x'=>[g'||] //=.
       + move=>[Hg [Htv [t'' Ht]]]; split; [done | split; [exact: ra_op_valid Htv |]].
@@ -173,7 +180,7 @@ Section Authoritative.
   Qed.
 
   Lemma ra_sep_auth {t u x u'} :
-    ↓Auth(ex_own t, u) · Auth(x, u') -> ↓t /\ x == 1 /\ ↓u · u' /\ u · u' ⊑ t.
+    ↓Auth(ex_own t, u) · Auth(x, u') -> ↓t /\ x == 1 (ex_own t) /\ ↓u · u' /\ u · u' ⊑ t.
   Proof.
     case: x=>[g||]; [done | | done].
     rewrite {1}/ra_valid/ra_valid_auth {1}/ra_op/ra_op_auth.
@@ -247,7 +254,7 @@ Section DecAgreement.
     | dag_unit
     | dag_inj (t : T).
 
-  Global Instance ra_unit_dagree : RA_unit _ := dag_unit.
+  Global Instance ra_unit_dagree : RA_unit _ := fun _ => dag_unit.
   Global Instance ra_valid_dag : RA_valid _ :=
            fun x => match x with dag_bottom => False | _ => True end.
   Global Instance ra_op_dag : RA_op _ :=
@@ -291,12 +298,14 @@ Section DecAgreement.
       try reflexivity; auto; try contradiction; symmetry in e; contradiction.
     - destruct t; reflexivity.
     - destruct x, y; simpl; firstorder; now inversion H.
-    - now constructor.
+    - by exists dag_unit.
+    - destruct x, y; simpl; firstorder; now inversion H.
     - destruct t1, t2; try contradiction; now constructor.
   Qed.
 
 End DecAgreement.
 
+(*
 Section IndexedProduct.
   (* I is the index type (domain), S the type of the components (codomain) *)
   Context {I : Type} {S : forall (i : I), Type}
@@ -316,7 +325,7 @@ Section IndexedProduct.
   Proof. split; repeat intro; [ | rewrite (H i) | rewrite -> (H i), (H0 i) ]; reflexivity. Qed.
 
   Global Instance ra_type_infprod : Setoid ra_res_infprod | 15 := mkType ra_eq_infprod. (* low priority, this is a fairly generic type... *)
-  Global Instance ra_unit_infprod : RA_unit ra_res_infprod := fun i => 1.
+  Global Instance ra_unit_infprod : RA_unit ra_res_infprod := fun t => fun i => 1 (t i).
   Global Instance ra_op_infprod : RA_op ra_res_infprod := fun f g i => f i · g i.
   Global Instance ra_valid_infprod : RA_valid ra_res_infprod := fun f => forall i, ↓ (f i).
   Global Instance ra_infprod : RA ra_res_infprod.
@@ -326,6 +335,8 @@ Section IndexedProduct.
     - compute; now rewrite -> (assoc (T := S i) (t1 i) (t2 i) (t3 i)).
     - compute; now rewrite -> (comm (T :=S i) (t1 i) (t2 i)).
     - compute; now rewrite -> (ra_op_unit (RA := raS i) (t := t i)).
+    - compute; rewrite (H i); reflexivity.
+    - exists t' => i. destruct (ra_unit_mono (t i) (t' i)).
     - compute; intros; split; intros; by move/(_ i): H0; rewrite (H i).
     - now eapply (ra_valid_unit (RA := raS i)).
     - eapply (ra_op_valid (RA := raS i)); now eauto.
@@ -340,3 +351,4 @@ Section HomogeneousProduct.
   Global Instance ra_homprod : RA (forall (i : I), S).
   Proof. now eapply ra_infprod; auto. Qed.
 End HomogeneousProduct.
+*)
