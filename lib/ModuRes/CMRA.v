@@ -60,10 +60,10 @@ Section DiscreteCMRA.
   Existing Instance discreteMetric.
   Existing Instance discreteCMetric.
 
-  Global Instance discreteCMRA_valid : CMRA_valid T | 20 :=
+  Instance discreteCMRA_valid : CMRA_valid T :=
     fun t => sp_c (↓t).
 
-  Global Instance discreteCMRA : CMRA T | 20.
+  Instance discreteCMRA : CMRA T.
   Proof.
     split.
     - move=>n a1 a2 EQa b1 b2 EQb.
@@ -548,3 +548,13 @@ Section MonotoneEQ.
   Qed.
 
 End MonotoneEQ.
+
+(* Package an CMRA as a module type (for use with other modules). *)
+Module Type CMRA_T <: RA_T.
+  Include RA_T.
+  Declare Instance res_metric : metric res.
+  Declare Instance res_cmetric : cmetric res.
+  Declare Instance res_pcmetric : pcmType (eqT:=res_type) (pTA:=pord_ra) res.
+  Declare Instance res_cmra_valid : CMRA_valid res.
+  Declare Instance res_cmra : CMRA res.
+End CMRA_T.

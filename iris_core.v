@@ -1,6 +1,7 @@
 Require Import Ssreflect.ssreflect Omega.
 Require Import world_prop core_lang.
 Require Import ModuRes.RA ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr ModuRes.Agreement.
+Require Import ModuRes.CMRA.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -8,8 +9,17 @@ Set Bullet Behavior "Strict Subproofs".
    The hack that involves least work is to duplicate the definition of our final
    resource type as a module type (which is how we can use it, circumventing the
    Coq restrictions) and as a module (to show the type can be instantiated). *)
-Module Type IRIS_RES (RL : RA_T) (C : CORE_LANG) <: RA_T.
+Module Type IRIS_RES (RL : RA_T) (C : CORE_LANG) <: CMRA_T.
   Instance state_type : Setoid C.state := discreteType.
+  Instance state_metr : metric (ex C.state) := discreteMetric.
+  Instance state_cmetr : cmetric (ex C.state) := discreteCMetric.
+  Instance state_cmra_valid : CMRA_valid (ex C.state) := discreteCMRA_valid. 
+  Instance state_cmra : CMRA (ex C.state) := discreteCMRA. 
+
+  Instance logR_metr : metric RL.res := discreteMetric.
+  Instance logR_cmetr : cmetric RL.res := discreteCMetric.
+  Instance logR_cmra_valid : CMRA_valid RL.res := discreteCMRA_valid. 
+  Instance logR_cmra : CMRA RL.res := discreteCMRA. 
 
   Definition res := (ex C.state * RL.res)%type.
   Instance res_type : Setoid res := _.
@@ -17,10 +27,17 @@ Module Type IRIS_RES (RL : RA_T) (C : CORE_LANG) <: RA_T.
   Instance res_unit : RA_unit res := _.
   Instance res_valid: RA_valid res := _.
   Instance res_ra   : RA res := _.
-
-  (* Make this explicit. It may otherwise use the order on pairs. *)
+  
+  Instance res_metric : metric res := _.
+  Instance res_cmetric : cmetric res := _.
   Instance res_pord: preoType res := pord_ra.
+  Instance res_pcmetric : pcmType res := _.
+
+  Instance res_cmra_valid : CMRA_valid res := _.
+  Instance res_cmra : CMRA res := _.
+
 End IRIS_RES.
+
 Module IrisRes (RL : RA_T) (C : CORE_LANG) <: IRIS_RES RL C.
   Include IRIS_RES RL C. (* I cannot believe Coq lets me do this... *)
 End IrisRes.
@@ -39,12 +56,9 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Local Open Scope iris_scope.
 
   (** Instances for a bunch of types (some don't even have Setoids) *)
-  Instance state_metr : metric state := discreteMetric.
-  Instance state_cmetr : cmetric state := discreteCMetric.
-
-  Instance logR_metr : metric RL.res := discreteMetric.
-  Instance logR_cmetr : cmetric RL.res := discreteCMetric.
-
+  Instance state_metr : metric C.state := discreteMetric.
+  Instance state_cmetr : cmetric C.state := discreteCMetric.
+  
   Instance nat_type : Setoid nat := discreteType.
   Instance nat_metr : metric nat := discreteMetric.
   Instance nat_cmetr : cmetric nat := discreteCMetric.
@@ -191,20 +205,33 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
 
     Program Definition box : Props -n> Props :=
-      n[(fun P => m[(fun w => mkUPred (fun n r => P w n 1) _)])].
+      n[(fun P => m[(fun w => mkSPred (fun n => exists w_dup w', w_dup · w' = S n = w /\ w_dup == w_dup · w_dup /\ P w_dup n) _)])].
     Next Obligation.
-      intros n m r s HLe _ Hp; rewrite-> HLe; assumption.
+      intros n m HLe (w' & HSub & HDw' & HP). 
+      admit.
     Qed.
     Next Obligation.
-      intros w1 w2 EQw m r HLt; simpl.
-      eapply (met_morph_nonexp P); eassumption.
+      intros w1 w2 EQw m HLt. 
+      split; intros (w_dup & w' & Hw' & Hdup & HP).
+      - hnf. exists w_dup w'. split; last by auto. 
+        etransitivity; first exact Hw'. eapply mono_dist; last eassumption.
+        omega.
+      - hnf. exists w_dup w'. split; last by auto. 
+        etransitivity; first exact Hw'. symmetry. eapply mono_dist; last eassumption.
+        omega.
     Qed.
     Next Obligation.
-      intros w1 w2 Subw n r; simpl.
-      apply P; assumption.
+      intros w1 w2 (w1_r & HSub) n (w_dup & w' & Hw' & Hdup & HP); hnf.
+      exists w_dup (w' · w1_r). split; last by auto.
+      etransitivity; last by eapply dist_refl, HSub.
+      rewrite assoc (ra_op_comm w1_r). 
+      apply CMRA.cmra_op_dist; last reflexivity.
+      assumption.
     Qed.
     Next Obligation.
-      intros p1 p2 EQp w m r HLt; simpl.
+      intros p1 p2 EQp w m HLt.
+      split; intros (w_dup & w' & Hw' & Hdup & HP); hnf; exists w_dup w'; 
+      (split; first assumption); (split; first assumption);
       apply EQp; assumption.
     Qed.
 
@@ -217,33 +244,77 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
     Lemma box_intro P Q (Hpr : □P ⊑ Q) :
       □P ⊑ □Q.
     Proof.
-      intros w n r Hp; simpl; apply Hpr, Hp.
+      intros w n (w_dup & w' & Hw' & Hdup & HP). 
+      exists w_dup w'. split; first assumption. split; first assumption.
+      apply : Hpr. exists w_dup. eexists 1. split; last by auto.
+      rewrite ra_op_unit2. reflexivity.
     Qed.
 
     Lemma box_elim P :
       □P ⊑ P.
     Proof.
-      intros w n r Hp; simpl in Hp.
-      eapply uni_pred, Hp; [reflexivity |].
-      now eapply unit_min.
+      intros w n (w_dup & w' & Hw' & Hdup & HP).
+      assert (P w = S n = P (w_dup · w')) by by rewrite <- Hw'.
+      apply H; first omega.
+      eapply propsMW; last eassumption.
+      exists w'. rewrite comm. reflexivity.
     Qed.
 
     Lemma box_top : ⊤ == □⊤.
     Proof.
-      intros w n r; simpl; unfold const; reflexivity.
+      intros w n; hnf; unfold const. 
+      split; last by auto. 
+      move => _. eexists 1; exists w.
+      split; last split. 
+      - rewrite ra_op_unit. reflexivity.
+      - rewrite ra_op_unit. reflexivity.
+      - now auto.
     Qed.
 
     Lemma box_disj P Q :
       □(P ∨ Q) == □P ∨ □Q.
     Proof.
-      intros w n r; reflexivity.
+      intros w n.
+      split.
+      - intros (w_dup & w' & Hw' & Hdup & HPQ).
+        case : HPQ => [HP|HQ]; [left|right];
+        exists w_dup w'; now auto.
+      - move => []; intros (w_dup & w' & Hw' & Hdup & HPQ); exists w_dup w'; (split; last split);
+        hnf; now auto. 
+    Qed.
+    
+    Lemma box_conj P Q :
+      □(P ∧ Q) == □P ∧ □Q.
+    Proof.
+      intros w n.
+      split; last first.
+      - move => []. intros (w_dup1 & w1' & Hw1' & Hdup1 & HP) (w_dup2 & w2' & Hw2' & Hdup2 & HQ).
+        assert (w = S n = w_dup2 · w).
+        { transitivity (w_dup2 · w_dup2 · w2').
+          - rewrite -Hdup2. rewrite Hw2'. reflexivity.
+          - rewrite -assoc. eapply cmra_op_dist; [reflexivity|assumption]. 
+        } 
+        exists (w_dup1 · w_dup2) w1'. split; last split; last split.
+        + rewrite -> H. rewrite (comm w_dup1) -assoc. 
+          apply cmra_op_dist; first reflexivity. assumption.
+        + rewrite {1}Hdup1 {1}Hdup2. 
+          rewrite !assoc. 
+          eapply ra_op_proper; last reflexivity.
+          rewrite -!assoc.
+          eapply ra_op_proper; first reflexivity.
+          rewrite comm.
+          reflexivity.
+        + eapply propsMW, HP. exists w_dup2. rewrite comm. reflexivity.
+        + eapply propsMW, HQ. exists w_dup1. rewrite comm. reflexivity.
+      - intros (w_dup & w' & Hw' & Hdup & HP & HQ).
+        split; exists w_dup w'; now auto.
     Qed.
 
     Lemma box_dup P :
       □P == □P * □P.
     Proof.
-      intros w n r. split.
-      - intros HP. exists 1 r. split; [now rewrite ra_op_unit|].
+      intros w n. split.
+      - intros HP. exists 1. split; [now rewrite ra_op_unit|].
         split;  assumption.
       - intros [r1 [r2 [_ [HP _]]]]. assumption.
     Qed.
