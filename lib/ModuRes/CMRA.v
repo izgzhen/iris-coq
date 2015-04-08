@@ -213,10 +213,9 @@ Section MComplBI.
 End MComplBI.
 
 (* Monotone functions from a CMRA to a BI form a BI. *)
-Section MonotoneExt.
-  Context B {eqB: Setoid B} {preoB: preoType B} {BIVB: validBI B} {BIBB: botBI B} {BITB: topBI B} {BB: Bounded B}.
-  Context {mB: metric B} {cmB: cmetric B} {pcmB: pcmType B}.
-  Context T `{cmraT: CMRA T}.
+Section MonotoneExtLattice.
+  Context B `{BL: Lattice B}.
+  Context T `{cmraT: CMRA T} {cmraI: VIRA T}.
   Local Open Scope ra_scope.
   Local Open Scope bi_scope.
   
@@ -226,25 +225,90 @@ Section MonotoneExt.
   Global Instance bot_mm : botBI (T -m> B) := pcmconst bot.
   Global Instance valid_mm : validBI (T -m> B) := fun P => forall t, valid (P t).
 
-  Global Instance bounded_mm : Bounded (T -m> B).
-  Proof.
-    split.
-    - intros P Q HPQ HQP t. apply pord_antisym; [apply HPQ | apply HQP].
-    - intros P t. apply top_true.
-    - intros P t. apply bot_false.
-    - intros P. split; intros HV.
-      + intros t. simpl morph. unfold const. rewrite <-top_valid. eapply HV.
-      + intros t. rewrite ->top_valid. eapply HV.
-  Qed.
-
-  Context {BIAB : andBI B} {BIOB: orBI B} {BIIB: implBI B} {BISCB: scBI B} {BISIB: siBI B} {BBI: BI B}.
-  Context {BIAllB: allBI B} {BIXistB: xistBI B} {CBBI: ComplBI B}. (* We need this already for upclosing and equality *)
-  Context {EQBT: eqBI B} {EQB: EqBI B}.
-
   Global Program Instance and_mm : andBI (T -m> B) :=
     fun P Q => m[(lift_bin and P Q)].
   Global Program Instance or_mm  : orBI  (T -m> B) :=
     fun P Q => m[(lift_bin or P Q)].
+
+  Global Instance and_mm_equiv : Proper (equiv ==> equiv ==> equiv) and_mm.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ t; simpl morph.
+    apply and_equiv; [apply EQP | apply EQQ].
+  Qed.
+  Global Instance and_mm_dist n : Proper (dist n ==> dist n ==> dist n) and_mm.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ t; simpl morph.
+    apply and_dist; [apply EQP | apply EQQ].
+  Qed.
+  Global Instance and_mm_ord : Proper (pord ==> pord ==> pord) and_mm.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ t; simpl morph.
+    apply and_pord; [apply EQP | apply EQQ].
+  Qed.
+
+  Global Instance or_mm_equiv : Proper (equiv ==> equiv ==> equiv) or_mm.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ t; simpl morph.
+    apply or_equiv; [apply EQP | apply EQQ].
+  Qed.
+  Global Instance or_mm_dist n : Proper (dist n ==> dist n ==> dist n) or_mm.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ t; simpl morph.
+    apply or_dist; [apply EQP | apply EQQ].
+  Qed.
+  Global Instance or_mm_ord : Proper (pord ==> pord ==> pord) or_mm.
+  Proof.
+    intros P1 P2 EQP Q1 Q2 EQQ t; simpl morph.
+    apply or_pord; [apply EQP | apply EQQ].
+  Qed.
+
+  Global Program Instance lattice_mm : Lattice (T -m> B).
+  Next Obligation.
+    move=>t. apply pord_antisym; auto.
+  Qed.
+  Next Obligation.
+    intros t. apply top_true.
+  Qed.
+  Next Obligation.
+    intros t. apply bot_false.
+  Qed.
+  Next Obligation.
+    split; intros HV.
+    - intros t. simpl morph. unfold const. rewrite <-top_valid. eapply HV.
+    - intros t. rewrite ->top_valid. eapply HV.
+  Qed.
+  Next Obligation.
+    move=>H. destruct cmraI as [t _].
+    specialize (H t). simpl in H. unfold const in H. apply consistency in H.
+    contradiction.
+  Qed.
+  Next Obligation.
+    intros t; simpl morph; apply and_self.
+  Qed.
+  Next Obligation.
+    intros t; simpl morph; apply and_projL.
+  Qed.
+  Next Obligation.
+    intros t; simpl morph; apply and_projR.
+  Qed.
+  Next Obligation.
+    intros t; simpl morph; apply or_injL.
+  Qed.
+  Next Obligation.
+    intros t; simpl morph; apply or_injR.
+  Qed.
+  Next Obligation.
+    intros t; simpl morph; apply or_self.
+  Qed.
+End MonotoneExtLattice.
+  
+Section MonotoneExtCBI.
+  Context B `{BL: EqBI B}.
+  Context T `{cmraT: CMRA T} {cmraI: VIRA T}.
+  Local Open Scope ra_scope.
+  Local Open Scope bi_scope.
+  
+  Local Obligation Tactic := intros; resp_set || mono_resp || eauto with typeclass_instances.
 
   Global Program Instance impl_mm : implBI (T -m> B) :=
     fun P Q => mclose (lift_bin impl P Q).
@@ -287,39 +351,6 @@ Section MonotoneExt.
       rewrite EQt. reflexivity.
     - eapply (all_L (t3 · u)). simpl. eapply si_pord; first reflexivity. eapply mu_mono, pordR.
       rewrite assoc (comm t1). reflexivity.
-  Qed.
-
-  (* All of the above preserve all the props it should. *)
-  Global Instance and_mm_equiv : Proper (equiv ==> equiv ==> equiv) and_mm.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ t; simpl morph.
-    apply and_equiv; [apply EQP | apply EQQ].
-  Qed.
-  Global Instance and_mm_dist n : Proper (dist n ==> dist n ==> dist n) and_mm.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ t; simpl morph.
-    apply and_dist; [apply EQP | apply EQQ].
-  Qed.
-  Global Instance and_mm_ord : Proper (pord ==> pord ==> pord) and_mm.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ t; simpl morph.
-    apply and_pord; [apply EQP | apply EQQ].
-  Qed.
-
-  Global Instance or_mm_equiv : Proper (equiv ==> equiv ==> equiv) or_mm.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ t; simpl morph.
-    apply or_equiv; [apply EQP | apply EQQ].
-  Qed.
-  Global Instance or_mm_dist n : Proper (dist n ==> dist n ==> dist n) or_mm.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ t; simpl morph.
-    apply or_dist; [apply EQP | apply EQQ].
-  Qed.
-  Global Instance or_mm_ord : Proper (pord ==> pord ==> pord) or_mm.
-  Proof.
-    intros P1 P2 EQP Q1 Q2 EQQ t; simpl morph.
-    apply or_pord; [apply EQP | apply EQQ].
   Qed.
 
   Global Instance impl_mm_dist n : Proper (dist n ==> dist n ==> dist n) impl_mm.
@@ -417,54 +448,6 @@ Section MonotoneExt.
     apply si_dist; [apply EQP | apply EQQ].
   Qed.
 
-  Global Program Instance bi_mm : BI (T -m> B).
-  Next Obligation.
-    intros t; simpl morph; apply and_self.
-  Qed.
-  Next Obligation.
-    intros t; simpl morph; apply and_projL.
-  Qed.
-  Next Obligation.
-    intros t; simpl morph; apply and_projR.
-  Qed.
-  Next Obligation.
-    split; intros HH t; simpl morph.
-    - apply mclose_fw; intros t' Subt; specialize (HH t'); simpl morph in *.
-      rewrite ->Subt, <- and_impl; assumption.
-    - rewrite ->and_impl, (HH t); apply mclose_cl.
-  Qed.
-  Next Obligation.
-    intros t; simpl morph; apply or_injL.
-  Qed.
-  Next Obligation.
-    intros t; simpl morph; apply or_injR.
-  Qed.
-  Next Obligation.
-    intros t; simpl morph; apply or_self.
-  Qed.
-  Next Obligation.
-    intros t; simpl morph. apply pord_antisym.
-    - apply xist_L;move=>[ts1 ts2]. simpl morph.
-      eapply intEq_rewrite_goal with (φ := P).
-      { rewrite ->and_projL. reflexivity. }
-      rewrite ->and_projR, ->sc_projR. apply mu_mono. exists ts1. reflexivity.
-    - apply (xist_R (1 t, t)). simpl morph. apply and_R; split.
-      + eapply intEqR. now rewrite ra_op_unit.
-      + unfold const. rewrite sc_top_unit. reflexivity.
-  Qed.
-  Next Obligation.
-    split; move=>HLE t.
-    - simpl. apply all_R=>u. simpl morph.
-      eapply sc_si. rewrite <-(HLE _). simpl morph. apply (xist_R (t, u)). simpl morph.
-      apply and_R; split; last reflexivity.
-      eapply intEqR. reflexivity.
-    - simpl. apply xist_L;move=>[u1 u2]. simpl morph.
-      eapply intEq_rewrite_goal with (φ := R).
-      { rewrite ->and_projL. reflexivity. }
-      rewrite ->and_projR=>{t}. apply sc_si. rewrite ->HLE=>{HLE}. simpl.
-      apply (all_L u2). reflexivity.
-  Qed.
-
   Global Program Instance all_mm : allBI (T -m> B) :=
     fun U eqU mU cmU R =>
       m[(fun t => all n[(fun u => R u t)])].
@@ -508,6 +491,34 @@ Section MonotoneExt.
 
   Global Program Instance cbi_mm : ComplBI (T -m> B).
   Next Obligation.
+    split; intros HH t; simpl morph.
+    - apply mclose_fw; intros t' Subt; specialize (HH t'); simpl morph in *.
+      rewrite ->Subt, <- and_impl; assumption.
+    - rewrite ->and_impl, (HH t); apply mclose_cl.
+  Qed.
+  Next Obligation.
+    intros t; simpl morph. apply pord_antisym.
+    - apply xist_L;move=>[ts1 ts2]. simpl morph.
+      eapply intEq_rewrite_goal with (φ := P).
+      { rewrite ->and_projL. reflexivity. }
+      rewrite ->and_projR, ->sc_projR. apply mu_mono. exists ts1. reflexivity.
+    - apply (xist_R (1 t, t)). simpl morph. apply and_R; split.
+      + eapply intEqR. now rewrite ra_op_unit.
+      + unfold const. rewrite sc_top_unit. reflexivity.
+  Qed.
+  Next Obligation.
+    split; move=>HLE t.
+    - simpl. apply all_R=>u. simpl morph.
+      eapply sc_si. rewrite <-(HLE _). simpl morph. apply (xist_R (t, u)). simpl morph.
+      apply and_R; split; last reflexivity.
+      eapply intEqR. reflexivity.
+    - simpl. apply xist_L;move=>[u1 u2]. simpl morph.
+      eapply intEq_rewrite_goal with (φ := R).
+      { rewrite ->and_projL. reflexivity. }
+      rewrite ->and_projR=>{t}. apply sc_si. rewrite ->HLE=>{HLE}. simpl.
+      apply (all_L u2). reflexivity.
+  Qed.
+  Next Obligation.
     split.
     - intros HH t; simpl morph; rewrite <- all_R; intros u; simpl morph; apply HH.
     - intros HH u t; specialize (HH t); simpl morph in *; rewrite <- all_R in HH.
@@ -519,12 +530,11 @@ Section MonotoneExt.
     - intros HH u t; specialize (HH t); simpl morph in *.
       rewrite <- xist_L in HH; simpl morph in HH; apply HH.
   Qed.
+End MonotoneExtCBI.
 
-End MonotoneExt.
-
-Section MonotoneEQ.
+Section MonotoneExtEQ.
   Context B `{LB: EqBI B}
-          T `{cmraT : CMRA T}.
+          T `{cmraT : CMRA T} {cmraI : VIRA T}.
   Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
   Local Open Scope ra_scope.
   Local Open Scope bi_scope.
@@ -555,7 +565,7 @@ Section MonotoneEQ.
       apply intEqR. now rewrite ra_op_unit.
   Qed.
 
-End MonotoneEQ.
+End MonotoneExtEQ.
 
 (* Package an CMRA as a module type (for use with other modules). *)
 Module Type CMRA_T <: RA_T.
@@ -569,7 +579,6 @@ End CMRA_T.
 
 Module Type CMVIRA_T <: VIRA_T.
   Include CMRA_T.
-  Declare Instance res_inhab : RA_inhab res.
-  Declare Instance res_inhab_valid : RA_inhab_valid res.
+  Declare Instance res_inhab : VIRA res.
 End CMVIRA_T.
   

@@ -30,18 +30,18 @@ Section RADef.
 End RADef.
 Section VIRADef.
   Context {T : Type} `{RA0 : RA T}.
-  Class RA_inhab := ra_inhab : T.
-  Class RA_inhab_valid `{RA0 : RA} {INH : RA_inhab}  := 
-    mkIV { 
-        ra_inhab_valid :> ra_valid ra_inhab
+  Class VIRA `{RA0 : RA}: Prop := 
+    mkVIRA {
+        ra_inhab       : T;
+        ra_inhab_valid : ra_valid ra_inhab
       }.
 End VIRADef.
+
 Arguments RA_unit : clear implicits.
 Arguments RA_op : clear implicits.
 Arguments RA_valid : clear implicits.
 Arguments RA T {_ _ _ _}: clear implicits.
-Arguments RA_inhab T: clear implicits.
-Arguments RA_inhab_valid T {_ _ _ _ _ _ _ _}: clear implicits.
+Arguments VIRA T {_ _ _ _ _ _ _}: clear implicits.
 
 Delimit Scope ra_scope with ra.
 Local Open Scope predom_scope.
@@ -652,7 +652,6 @@ End RA_T.
 Module Type VIRA_T.
 
   Include RA_T.
-  Declare Instance res_inhab : RA_inhab res.
-  Declare Instance res_inhab_valid : RA_inhab_valid res.
+  Declare Instance res_inhab : VIRA res.
   
 End VIRA_T.

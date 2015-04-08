@@ -24,33 +24,33 @@ Section CompleteBI.
     xist : forall {U} `{pU : cmetric U}, (U -n> T) -> T.
 
 
-  (* An ordered type which is antisymmetric and bounded, and has a notion of validity. *)
-  Class Bounded `{preoT : preoType T, BIV: validBI, BIT : topBI, BIB : botBI}: Prop :=
+  (* Lattices. *)
+  Class Lattice `{preoT : pcmType T, BIV: validBI, BIT : topBI, BIB : botBI, BIA : andBI, BIO : orBI}: Prop :=
     mkBounded {
         (* Anti-symmetry: Necessary for commutativity of addition, and commutativity of SC of the lifted BI *)
         pord_antisym:  forall P Q, P ⊑ Q -> Q ⊑ P -> P == Q;
         top_true    :  forall P, P ⊑ top;
         bot_false   :  forall P, bot ⊑ P;
-        top_valid   :  forall P, valid P <-> top ⊑ P
-      }.
-
-  Class BI `{bT : Bounded} {mT: metric T} {cmT: cmetric T} {pcmT: pcmType T}
-        {BIA : andBI} {BIO : orBI} {BII : implBI} {BISC : scBI} {BISI : siBI}: Prop :=
-    mkBI {
+        top_valid   :  forall P, valid P <-> top ⊑ P;
+        consistency :  ~valid bot;
         and_self    :  forall P, P ⊑ and P P;
         and_projL   :  forall P Q, and P Q ⊑ P;
         and_projR   :  forall P Q, and P Q ⊑ Q;
         and_equiv   :> Proper (equiv ==> equiv ==> equiv) and;
         and_dist n  :> Proper (dist n ==> dist n ==> dist n) and;
         and_pord    :> Proper (pord ++> pord ++> pord) and;
-        and_impl    :  forall P Q R, and P Q ⊑ R <-> P ⊑ impl Q R;
-        impl_dist n :> Proper (dist n ==> dist n ==> dist n) impl;
         or_injL     :  forall P Q, P ⊑ or P Q;
         or_injR     :  forall P Q, Q ⊑ or P Q;
         or_self     :  forall P, or P P ⊑ P;
         or_equiv    :> Proper (equiv ==> equiv ==> equiv) or;
         or_dist n   :> Proper (dist n ==> dist n ==> dist n) or;
-        or_pord     :> Proper (pord ++> pord ++> pord) or;
+        or_pord     :> Proper (pord ++> pord ++> pord) or
+      }.
+
+  Class ComplBI `{bL : Lattice}  {BII : implBI} {BISC : scBI} {BISI : siBI} {BIAll : allBI} {BIXist : xistBI}: Prop :=
+    mkCBI {
+        and_impl    :  forall P Q R, and P Q ⊑ R <-> P ⊑ impl Q R;
+        impl_dist n :> Proper (dist n ==> dist n ==> dist n) impl;
         sc_comm     :> Commutative sc;
         sc_assoc    :> Associative sc;
         sc_top_unit :  forall P, sc top P == P;
@@ -58,11 +58,7 @@ Section CompleteBI.
         sc_dist n   :> Proper (dist n ==> dist n ==> dist n) sc;
         sc_pord     :> Proper (pord ++> pord ++> pord) sc;
         sc_si       :  forall P Q R, sc P Q ⊑ R <-> P ⊑ si Q R;
-        si_dist n   :> Proper (dist n ==> dist n ==> dist n) si
-      }.
-  
-  Class ComplBI `{BBI: BI} {BIAll : allBI} {BIXist : xistBI}:Prop :=
-    mkCBI {
+        si_dist n   :> Proper (dist n ==> dist n ==> dist n) si;
         all_R      U `{cmU : cmetric U} :
           forall P (Q : U -n> T), (forall u, P ⊑ Q u) <-> P ⊑ all Q;
         all_dist   U `{cmU : cmetric U} n :> Proper (dist n ==> dist n) all;
@@ -99,10 +95,9 @@ Arguments siBI   : default implicits.
 Arguments eqBI   : default implicits.
 Arguments allBI  T {_ _ _}.
 Arguments xistBI T {_ _ _}.
-Arguments Bounded T {_ _ _ _ _}.
-Arguments BI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _}.
-Arguments ComplBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _}.
-Arguments EqBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _}.
+Arguments Lattice T {_ _ _ _ _ _ _ _ _ _}.
+Arguments ComplBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _}.
+Arguments EqBI T {_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _}.
 
 Delimit Scope bi_scope with bi.
 Notation "⊤" := (top) : bi_scope.
@@ -122,8 +117,8 @@ Notation "t1 '===' t2" := (intEq t1 t2) (at level 30) : bi_scope.
 Local Open Scope bi_scope.
 
 (* Derive some general BI rules *)
-Section BIProps.
-  Context {B} `{BI B}.
+Section LatticeProps.
+  Context {B} `{Lattice B}.
 
   Lemma and_R P Q R: (R ⊑ P /\ R ⊑ Q) <-> R ⊑ P ∧ Q.
   Proof.
@@ -168,7 +163,11 @@ Section BIProps.
   Proof.
     move=>b1 b2. apply pord_antisym; now apply or_pcomm.
   Qed.
+End LatticeProps.
 
+Section ComplBIProps.
+  Context {B} `{ComplBI B}.
+  
   Global Instance impl_pord :
     Proper (pord --> pord ++> pord) impl.
   Proof.
@@ -227,11 +226,6 @@ Section BIProps.
     - apply or_injL.
     - apply or_injR.
   Qed.
-
-End BIProps.
-
-Section ComplBIProps.
-  Context {B} `{ComplBI B}.
 
   Lemma all_L {U} `{cmU : cmetric U} u (P: U -n> B) Q:
     P u ⊑ Q -> all P ⊑ Q.

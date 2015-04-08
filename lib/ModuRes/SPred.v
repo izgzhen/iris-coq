@@ -167,17 +167,6 @@ Section SPredBI.
   Global Program Instance bot_sp : botBI SPred := sp_c False.
   Global Program Instance valid_sp : validBI SPred := sp_full.
 
-  Global Instance bounded_sp : Bounded SPred.
-  Proof.
-    split.
-    - intros P Q HPQ HQP n. split; [apply HPQ| apply HQP].
-    - intros P n _; exact I.
-    - intros P n HC; contradiction HC.
-    - intros P; split.
-      + intros HV n _. apply HV.
-      + intros HV n. now apply HV.
-  Qed.
-
   Global Program Instance and_sp : andBI SPred :=
     fun P Q =>
       mkSPred (fun n => P n /\ Q n) _.
@@ -191,23 +180,7 @@ Section SPredBI.
     intros n m HLe; rewrite-> HLe; tauto.
   Qed.
 
-  Global Program Instance impl_sp : implBI SPred :=
-    fun P Q =>
-      mkSPred (fun n => forall m, m <= n -> P m -> Q m) _.
-  Next Obligation.
-    intros n m HLe HImp k HLe' HP.
-    apply HImp; try (etransitivity; eassumption); assumption.
-  Qed.
-  
-  (* BI connectives: Boring. We'd actually want just a Heyting Algebra for SPred, but whatever. *)
-  Global Instance sc_sp : scBI SPred := and_sp.
-  Global Instance si_sp : siBI SPred := impl_sp.
-
-  (* For some reason tc inference gets confused otherwise *)
-  Existing Instance sp_type.
-
-  (* All of the above preserve all the props it should. *)
-  Global Instance and_sp_equiv : Proper (equiv ==> equiv ==> equiv) and_sp.
+    Global Instance and_sp_equiv : Proper (equiv ==> equiv ==> equiv) and_sp.
   Proof.
     intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
     rewrite-> EQP, EQQ; tauto.
@@ -239,6 +212,58 @@ Section SPredBI.
     rewrite ->EQP, EQQ; tauto.
   Qed.
 
+  Global Program Instance lattice_sp : Lattice SPred.
+  Next Obligation.
+    split; auto.
+  Qed.
+  Next Obligation.
+    intros n _; exact I.
+  Qed.
+  Next Obligation.
+    intros n HC; contradiction HC.
+  Qed.
+  Next Obligation.
+    split.
+    - intros HV n _. apply HV.
+    - intros HV n. now apply HV.
+  Qed.
+  Next Obligation.
+    move=>[]. exact 0.
+  Qed.
+  Next Obligation.
+    intros n; simpl; tauto.
+  Qed.
+  Next Obligation.
+    intros n [HP HQ]; assumption.
+  Qed.
+  Next Obligation.
+    intros n [HP HQ]; assumption.
+  Qed.
+  Next Obligation.
+    intros n HP; left; assumption.
+  Qed.
+  Next Obligation.
+    intros n HQ; right; assumption.
+  Qed.
+  Next Obligation.
+    intros n; simpl; tauto.
+  Qed.
+  
+  Global Program Instance impl_sp : implBI SPred :=
+    fun P Q =>
+      mkSPred (fun n => forall m, m <= n -> P m -> Q m) _.
+  Next Obligation.
+    intros n m HLe HImp k HLe' HP.
+    apply HImp; try (etransitivity; eassumption); assumption.
+  Qed.
+  
+  (* BI connectives: Boring. We'd actually want just a Heyting Algebra for SPred, but whatever. *)
+  Global Instance sc_sp : scBI SPred := and_sp.
+  Global Instance si_sp : siBI SPred := impl_sp.
+
+  (* For some reason tc inference gets confused otherwise *)
+  Existing Instance sp_type.
+
   Global Instance impl_sp_dist n : Proper (dist n ==> dist n ==> dist n) impl_sp.
   Proof.
     intros P1 P2 EQP Q1 Q2 EQQ m HLt; simpl.
@@ -250,45 +275,6 @@ Section SPredBI.
   Global Instance sc_sp_ord : Proper (pord ==> pord ==> pord) sc_sp := and_sp_ord.
 
   Global Instance si_sp_dist n : Proper (dist n ==> dist n ==> dist n) si_sp := impl_sp_dist n.
-
-  Global Program Instance bi_sp : BI SPred.
-  Next Obligation.
-    intros n; simpl; tauto.
-  Qed.
-  Next Obligation.
-    intros n [HP HQ]; assumption.
-  Qed.
-  Next Obligation.
-    intros n [HP HQ]; assumption.
-  Qed.
-  Next Obligation.
-    split; intros HH n.
-    - intros HP m HLe HQ; apply HH; split; [rewrite-> HLe |]; assumption.
-    - intros [HP HQ]; eapply HH; eassumption || reflexivity.
-  Qed.
-  Next Obligation.
-    intros n HP; left; assumption.
-  Qed.
-  Next Obligation.
-    intros n HQ; right; assumption.
-  Qed.
-  Next Obligation.
-    intros n; simpl; tauto.
-  Qed.
-  Next Obligation.
-    intros P Q n; simpl. tauto.
-  Qed.
-  Next Obligation.
-    intros P Q R n; split; simpl; tauto.
-  Qed.
-  Next Obligation.
-    intros n; split; simpl; tauto.
-  Qed.
-  Next Obligation.
-    split; intros HH n; simpl in *.
-    - intros HP m HLe HQ. apply HH. split; last assumption. rewrite-> HLe. assumption.
-    - intros [HP HQ]. eapply HH; try eassumption; omega.
-  Qed.
 
   (* Quantifiers. *)
   Global Program Instance all_sp : allBI SPred :=
@@ -325,6 +311,22 @@ Section SPredBI.
   End Quantifiers.
 
   Global Program Instance cbi_sp : ComplBI SPred.
+  Next Obligation.
+    split; intros HH n.
+    - intros HP m HLe HQ; apply HH; split; [rewrite-> HLe |]; assumption.
+    - intros [HP HQ]; eapply HH; eassumption || reflexivity.
+  Qed.
+  Next Obligation.
+    intros P Q R n; split; simpl; tauto.
+  Qed.
+  Next Obligation.
+    intros n; split; simpl; tauto.
+  Qed.
+  Next Obligation.
+    split; intros HH n; simpl in *.
+    - intros HP m HLe HQ. apply HH. split; last assumption. rewrite-> HLe. assumption.
+    - intros [HP HQ]. eapply HH; try eassumption; omega.
+  Qed.
   Next Obligation.
     split.
     - intros HH v n HP. apply HH; assumption.
