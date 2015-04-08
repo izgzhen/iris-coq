@@ -1428,6 +1428,19 @@ Section RA.
            exact: Hfg. }
   Qed.
 End RA.
+
+Section VIRA.
+  Context {I : Type} `{CI : comparable I}.
+  Context {T: Type} `{raT: RA T}.
+
+  Global Instance vira_finmap: VIRA (I -f> T).
+  Proof.
+    eexists fdEmpty. move=>i s [].
+  Qed.
+    
+End VIRA.
+
+
 Section CMRA.
   Context {I : Type} `{CI : comparable I}.
   Context {T: Type} `{cmraS: CMRA T}.

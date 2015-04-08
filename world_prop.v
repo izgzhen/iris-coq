@@ -17,9 +17,7 @@ Module Type WORLD_PROP (Res : CMRA_T).
 
   (* Defines Worlds, and make sure their order comes from the RA. *)
   Definition Wld := (nat -f> ra_agree PreProp) * Res.res.
-  Instance WldRA : RA Wld := _.
   Instance WldPO : preoType Wld := pord_ra. (* disambiguate the order *)
-  Instance WldCMRA : CMRA Wld := _.
 
   (* Now we are ready to define Propositions. *)
   Definition Props    := Wld -m> SPred.

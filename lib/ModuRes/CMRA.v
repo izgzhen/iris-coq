@@ -577,8 +577,7 @@ Module Type CMRA_T <: RA_T.
   Declare Instance res_cmra : CMRA res.
 End CMRA_T.
 
-Module Type CMVIRA_T <: VIRA_T.
+Module Type CMVIRA_T <: VIRA_T <: CMRA_T.
   Include CMRA_T.
-  Declare Instance res_inhab : VIRA res.
+  Declare Instance res_vira : VIRA res.
 End CMVIRA_T.
-  

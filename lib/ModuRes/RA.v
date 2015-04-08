@@ -29,8 +29,8 @@ Section RADef.
       }.
 End RADef.
 Section VIRADef.
-  Context {T : Type} `{RA0 : RA T}.
-  Class VIRA `{RA0 : RA}: Prop := 
+  Context {T : Type}.
+  Class VIRA `{RAT : RA T}: Prop := 
     mkVIRA {
         ra_inhab       : T;
         ra_inhab_valid : ra_valid ra_inhab
@@ -41,7 +41,7 @@ Arguments RA_unit : clear implicits.
 Arguments RA_op : clear implicits.
 Arguments RA_valid : clear implicits.
 Arguments RA T {_ _ _ _}: clear implicits.
-Arguments VIRA T {_ _ _ _ _ _ _}: clear implicits.
+Arguments VIRA T {_ _ _ _ _}: clear implicits.
 
 Delimit Scope ra_scope with ra.
 Local Open Scope predom_scope.
@@ -278,6 +278,16 @@ Section Pairs.
     rewrite ra_prod_pord /pord /=. reflexivity.
   Qed.
 End Pairs.
+Section PairVIRA.
+  Context {S T: Type} `{viraS : VIRA S, viraT : VIRA T}.
+
+  Global Instance vira_prod: VIRA (S * T).
+  Proof.
+    destruct viraS as [s HS], viraT as [t HT].
+    exists (s, t).
+    split; assumption.
+  Qed.
+End PairVIRA.
 
 (* Thanks to multi-unit, we can have sums. But they are ugly... *)
 Section Sums.
@@ -652,6 +662,6 @@ End RA_T.
 Module Type VIRA_T.
 
   Include RA_T.
-  Declare Instance res_inhab : VIRA res.
+  Declare Instance res_vira : VIRA res.
   
 End VIRA_T.

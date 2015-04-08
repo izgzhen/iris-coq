@@ -9,7 +9,7 @@ Set Bullet Behavior "Strict Subproofs".
    The hack that involves least work is to duplicate the definition of our final
    resource type as a module type (which is how we can use it, circumventing the
    Coq restrictions) and as a module (to show the type can be instantiated). *)
-Module Type IRIS_RES (RL : RA_T) (C : CORE_LANG) <: CMRA_T.
+Module Type IRIS_RES (RL : VIRA_T) (C : CORE_LANG) <: CMRA_T.
   Instance state_type : Setoid C.state := discreteType.
   Instance state_metr : metric (ex C.state) := discreteMetric.
   Instance state_cmetr : cmetric (ex C.state) := discreteCMetric.
@@ -35,17 +35,18 @@ Module Type IRIS_RES (RL : RA_T) (C : CORE_LANG) <: CMRA_T.
 
   Instance res_cmra_valid : CMRA_valid res := _.
   Instance res_cmra : CMRA res := _.
+  Instance res_vira : VIRA res := _.
 
 End IRIS_RES.
 
-Module IrisRes (RL : RA_T) (C : CORE_LANG) <: IRIS_RES RL C.
+Module IrisRes (RL : VIRA_T) (C : CORE_LANG) <: IRIS_RES RL C.
   Include IRIS_RES RL C. (* I cannot believe Coq lets me do this... *)
 End IrisRes.
 
 (* This instantiates the framework(s) provided by ModuRes to obtain a higher-order
    separation logic with ownership, later, necessitation and equality.
    The logic has "worlds" in its model, but nothing here uses them yet. *)
-Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R).
+Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R).
   Export C.
   Export R.
   Export WP.
@@ -83,7 +84,7 @@ Module Type IRIS_CORE (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
    *)
 
   
-  Instance Props_BI : BI Props | 0 := _.
+  Instance Props_Lattice : Lattice Props | 0 := _.
   Instance Props_CBI : ComplBI Props | 0 := _.
   Instance Props_Eq : EqBI Props | 0 := _.
 

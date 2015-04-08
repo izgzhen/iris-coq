@@ -87,9 +87,7 @@ Module WorldProp (Res : CMRA_T) : WORLD_PROP Res.
 
   (* Define worlds *)
   Definition Wld     := FRes PreProp.
-  Instance WldRA : RA Wld := _.
   Instance WldPO : preoType Wld := _.
-  Instance WldCMRA : CMRA Wld := _.
 
   (* Define propositions *)
   Definition Props   := FProp PreProp.

@@ -87,6 +87,11 @@ Section Exclusive.
     - by move: HEq; rewrite (ra_op_unit (t:=a)) (ra_op_unit (t:=b)).
     - by exfalso.
   Qed.
+
+  Global Instance ra_vira_ex : VIRA ex.
+  Proof.
+    exists ex_unit. exact I.
+  Qed.
 End Exclusive.
 Arguments ex T : clear implicits.
 
