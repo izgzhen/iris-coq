@@ -5,7 +5,7 @@ Require Import ModuRes.CatBasics ModuRes.MetricRec ModuRes.CBUltInst.
 Require Import world_prop.
 
 (* Now we come to the actual implementation *)
-Module WorldProp (Res : RA_T) : WORLD_PROP Res.
+Module WorldProp (Res : CMRA_T) : WORLD_PROP Res.
   (** The construction is parametric in the monoid we choose *)
 
   (** We need to build a functor that would describe the following
@@ -15,11 +15,6 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
       positive occurrences of Prop. *)
 
   Local Open Scope type.
-
-  (** We need a metric for the base resources. The discrete CMRA will be infered. *)
-  Local Instance res_metric : metric Res.res := discreteMetric.
-  Local Instance res_cmetric : cmetric Res.res := discreteCMetric.
-  Local Instance res_cmra : CMRA Res.res := discreteCMRA.
 
   (** Finally, we need the right pcmType for the entire resource *)
   Definition FRes P `{metric P} := (nat -f> ra_agree P) * Res.res.
@@ -94,6 +89,7 @@ Module WorldProp (Res : RA_T) : WORLD_PROP Res.
   Definition Wld     := FRes PreProp.
   Instance WldRA : RA Wld := _.
   Instance WldPO : preoType Wld := _.
+  Instance WldCMRA : CMRA Wld := _.
 
   (* Define propositions *)
   Definition Props   := FProp PreProp.
