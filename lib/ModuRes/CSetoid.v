@@ -15,6 +15,8 @@ Require Export Util.
 
 Generalizable Variables T U V W.
 
+Local Open Scope type.
+
 (* Proof by reflexivity *)
 Lemma equivR {T : Type} `{eqT : Setoid T} {a b : T} :
   a = b -> a == b.
@@ -183,6 +185,27 @@ Section SetoidProducts.
 End SetoidProducts.
 
 Arguments mprod_unique [U eU V eV T eT f g h] _ _ _.
+
+Section SetoidSums.
+  Context `{eU : Setoid U} `{eV : Setoid V}.
+
+  (** The sum of two types is another type, with equality defined pointwise. *)
+  Definition sum_equiv (s1 s2: U + V) :=
+    match s1, s2 with
+    | inl u1, inl u2 => u1 == u2
+    | inr v1, inr v2 => v1 == v2
+    | _     , _      => False
+    end.
+  
+  Global Program Instance sum_type : Setoid (U + V) :=
+    mkType sum_equiv.
+  Next Obligation.
+    split.
+    - intros [u|v]; simpl; reflexivity.
+    - move=> [u1|v1] [u2|v2] /=; try tauto; move=>H; symmetry; assumption.
+    - move=> [u1|v1] [u2|v2] [u3|v3] /=; try tauto; move=>H1 H2; etransitivity; eassumption.
+  Qed.
+End SetoidSums.
 
 
 Section Exponentials.
