@@ -51,7 +51,7 @@ Notation "'1'" := (ra_unit) : ra_scope.
 Notation "p · q" := (ra_op p q) (at level 40, left associativity) : ra_scope.
 Notation "'↓' p" := (ra_valid p) (at level 48) : ra_scope.
 
-Class Cancellative {T} `(raT : RA T) : Prop :=
+Class Cancellative T `{raT : RA T} : Prop :=
   ra_cancel : forall {t1 t2 t3 : T}, ↓t1 · t3 -> t1 · t2 == t1 · t3 -> t2 == t3.
 
 Section RA_FPU.
@@ -101,6 +101,7 @@ Section RALemmas.
   
   Lemma ra_fpu_id {t : T} {P : T -> Prop} (Ht : P t) : t ⇝∈ P.
   Proof. by move=> f Hv; exists t. Qed.
+
 End RALemmas.
 
 
@@ -141,12 +142,19 @@ Section Order.
   Lemma unit_min {r} : 1 r ⊑ r.
   Proof. exists r. exact: ra_op_unit2. Qed.
 
-  Lemma ra_cancel_ord {HC : Cancellative raT} {a b c : T} :
+  Lemma ra_cancel_ord {HC : Cancellative T} {a b c : T} :
     ↓a · c -> a · b ⊑ a · c -> b ⊑ c.
   Proof.
     move=> /ra_cancel Hc [t HEq]; exists t.
     by apply: Hc; move: HEq; rewrite assoc -[t · _]comm -assoc.
   Qed.
+
+  Global Instance ra_unit_proper_pord: Proper (pord ++> pord) ra_unit.
+  Proof.
+    move=>t1 t2 [t3 EQ]. destruct (ra_unit_mono t1 t3) as [t4 EQ'].
+    exists t4. rewrite comm -EQ' -EQ comm. reflexivity.
+  Qed.
+    
 End Order.
 Arguments ra_op_mono {_ _ _ _ _ _} {_ _} _ {_ _} _.
 Arguments ra_valid_ord {_ _ _ _ _ _} {_ _} _ _.
@@ -251,8 +259,8 @@ Section Pairs.
   Lemma ra_fpu_snd {s t PT} (Ht : t ⇝∈ PT) : (s,t) ⇝∈ fun p => s == fst p /\ PT(snd p).
   Proof. exact: ra_fpu_prod (ra_fpu_id (srefl s)) Ht. Qed.
   
-  Global Instance ra_can_prod {cS : Cancellative raS} {cT : Cancellative raT} :
-     Cancellative (ra_prod).
+  Global Instance ra_can_prod {cS : Cancellative S} {cT : Cancellative T} :
+     Cancellative (S * T).
   Proof.
     move=> [f f'] [a a'] [b b'] [Hv Hv'] [/= /(ra_cancel Hv)-> /(ra_cancel Hv')->].
     by split; reflexivity.
@@ -265,6 +273,71 @@ Section Pairs.
     rewrite ra_prod_pord /pord /=. reflexivity.
   Qed.
 End Pairs.
+
+(* Thanks to multi-unit, we can have sums. But they are ugly... *)
+Section Sums.
+  Context {S T: Type}.
+  Context `{raS : RA S, raT : RA T}.
+
+  Global Instance ra_unit_sum : RA_unit (option (S + T)) :=
+    fun st => match st with
+              | Some (inl s) => Some (inl (1 s))
+              | Some (inr t) => Some (inr (1 t))
+              | None => None
+              end.
+  Global Instance ra_op_sum : RA_op (option (S + T)) :=
+    fun st1 st2 =>
+      match st1, st2 with
+        | Some (inl s1), Some (inl s2) => Some (inl (s1 · s2))
+        | Some (inr t1), Some (inr t2) => Some (inr (t1 · t2))
+        | _            , _             => None
+      end.
+  Global Instance ra_valid_sum : RA_valid (option (S + T)) :=
+    fun st => match st with
+              | Some (inl s) => ↓ s
+              | Some (inr t) => ↓ t
+              | None => False
+              end.
+  Definition ra_inl s: option (S + T) := Some (inl s).
+  Definition ra_inr s: option (S + T) := Some (inr s).
+  Global Instance ra_sum : RA (option (S + T)).
+  Proof.
+    split.
+    - move=>[[s1|t1]|] [[s2|t2]|] /= EQ [[s3|t3]|] [[s4|t4]|] /= EQ'; try tauto.
+      + rewrite EQ EQ'; reflexivity.
+      + rewrite EQ EQ'; reflexivity.
+    - move=>[[s1|t1]|] [[s2|t2]|] [[s3|t3]|] /=; try tauto; rewrite assoc; reflexivity.
+    - move=>[[s1|t1]|] [[s2|t2]|] /=; try tauto; rewrite comm; reflexivity.
+    - move=>[[s1|t1]|] /=; try tauto; apply ra_op_unit.
+    - move=>[[s1|t1]|] [[s2|t2]|] /= EQ; try tauto; rewrite EQ; reflexivity.
+    - move=>[[s1|t1]|] [[s2|t2]|] /=; try (eexists None; reflexivity).
+      + destruct (ra_unit_mono s1 s2) as [s3 EQ]. eexists (ra_inl s3).
+        simpl. assumption.
+      + destruct (ra_unit_mono t1 t2) as [t3 EQ]. eexists (ra_inr t3).
+        simpl. assumption.
+    - move=>[[s1|t1]|] /=; rewrite /ra_unit /ra_unit_sum /=; try reflexivity; do 2 f_equiv; apply ra_unit_idem.
+    - move=>[[s1|t1]|] [[s2|t2]|] /= EQ; try tauto; rewrite /ra_valid /ra_valid_sum /=; apply ra_valid_proper; assumption.
+    - move=>[[s1|t1]|] [[s2|t2]|] /=; rewrite /ra_valid /ra_valid_sum /=; try tauto; apply ra_op_valid.
+  Qed.
+
+  (* This shows adequacy of our operation *)
+  Global Instance ra_sum_cancel {cS : Cancellative S} {cT : Cancellative T} :
+     Cancellative (option (S + T)).
+  Proof.
+    move=>[[s1|t1]|] [[s2|t2]|] [[s3|t3]|] /=; rewrite /ra_valid /ra_valid_sum /=; try tauto.
+    + apply ra_cancel.
+    + apply ra_cancel.
+  Qed.
+  
+  Lemma ra_sum_inl s1 s2:
+    ra_inl s1 · ra_inl s2 == ra_inl (s1 · s2).
+  Proof. reflexivity. Qed.
+
+  Lemma ra_sum_inr s1 s2:
+    ra_inr s1 · ra_inr s2 == ra_inr (s1 · s2).
+  Proof. reflexivity. Qed.
+End Sums.
+
 
 (** Morphisms between RAs. *)
 Section Morph.

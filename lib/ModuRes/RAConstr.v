@@ -80,7 +80,7 @@ Section Exclusive.
   Lemma ra_fps_ex t t' : ex_own t ⇝ ex_own t'.
   Proof. exact: ra_fps_ex_any. Qed.
 
-  Global Instance ra_can_ex : Cancellative ra_ex.
+  Global Instance ra_can_ex : Cancellative ex.
   Proof.
     case=>[t ||] a b Hv HEq.
     - by rewrite (ra_sep_ex Hv); move: Hv; rewrite -HEq=> /ra_sep_ex->; reflexivity.
@@ -206,7 +206,7 @@ Section Authoritative.
     exact: SIDE.
   Qed.
 
-  Lemma ra_fps_auth_canc {HC : Cancellative raT} t {u t'} (Hu' : ↓t' · u) :
+  Lemma ra_fps_auth_canc {HC : Cancellative T} t {u t'} (Hu' : ↓t' · u) :
     Auth(ex_own(t · u), t) ⇝ Auth(ex_own(t' · u), t').
   Proof.
     apply: ra_fps_auth Hu'.
