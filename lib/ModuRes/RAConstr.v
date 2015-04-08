@@ -168,7 +168,8 @@ Section Authoritative.
     - move => [[x1 t1]] [[x2 t2]].
       destruct (ra_unit_mono x1 x2) as [x3 Hx], (ra_unit_mono t1 t2) as [t3 Ht].
       exists (Auth (x3, t3)); split; assumption. 
-    - move=> [[x t]]. unfold ra_unit, ra_unit_auth. by rewrite !ra_unit_idem.
+    - move=> [[x t]]. unfold ra_unit, ra_unit_auth. rewrite !ra_unit_idem.
+      reflexivity.
     - move=> [[x t]] [[x' t']] [/= Hx Ht].
       rewrite/ra_valid/ra_valid_auth.
       move: Hx; case: x=>[g||]; case: x'=>[g'||] => //= Hg.

@@ -23,7 +23,7 @@ Section RADef.
         ra_op_unit {t}     : ra_op (ra_unit t) t == t;
         ra_unit_proper     :> Proper (equiv ==> equiv) ra_unit;
         ra_unit_mono t t'  : exists t'', ra_unit (ra_op t t') == ra_op (ra_unit t) t'';  
-        ra_unit_idem t     : ra_unit (ra_unit t) = ra_unit t;
+        ra_unit_idem t     : ra_unit (ra_unit t) == ra_unit t;
         ra_valid_proper    :> Proper (equiv ==> iff) ra_valid;
         ra_op_valid {t1 t2}: ra_valid (ra_op t1 t2) -> ra_valid t1
       }.
@@ -195,7 +195,8 @@ Section Pairs.
     - move => [s1 t1] [s2 t2] /=. 
       destruct (ra_unit_mono s1 s2) as [s3 Hs], (ra_unit_mono t1 t2) as [t3 Ht].
       exists (s3,t3). rewrite Hs Ht. split; reflexivity.
-    - intros [s t]. unfold ra_unit, ra_unit_prod. by rewrite !(ra_unit_idem).
+    - intros [s t]. unfold ra_unit, ra_unit_prod. rewrite !(ra_unit_idem).
+      reflexivity.
     - intros [s1 t1] [s2 t2] [Heqs Heqt]. unfold ra_valid; simpl in *.
       rewrite -> Heqs, Heqt. reflexivity.
     - intros [s1 t1] [s2 t2]. unfold ra_valid; simpl. intros [H1 H2]. split.
@@ -315,7 +316,7 @@ Section Sums.
         simpl. assumption.
       + destruct (ra_unit_mono t1 t2) as [t3 EQ]. eexists (ra_inr t3).
         simpl. assumption.
-    - move=>[[s1|t1]|] /=; rewrite /ra_unit /ra_unit_sum /=; try reflexivity; do 2 f_equiv; apply ra_unit_idem.
+    - move=>[[s1|t1]|] /=; rewrite /ra_unit /ra_unit_sum /=; try tauto; apply ra_unit_idem.
     - move=>[[s1|t1]|] [[s2|t2]|] /= EQ; try tauto; rewrite /ra_valid /ra_valid_sum /=; apply ra_valid_proper; assumption.
     - move=>[[s1|t1]|] [[s2|t2]|] /=; rewrite /ra_valid /ra_valid_sum /=; try tauto; apply ra_op_valid.
   Qed.
