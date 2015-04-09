@@ -1,5 +1,5 @@
 Require Import Ssreflect.ssreflect Omega.
-Require Import PreoMet RA.
+Require Import CSetoid PreoMet RA DecEnsemble.
 
 Local Open Scope ra_scope.
 Local Open Scope predom_scope.
@@ -319,6 +319,210 @@ Section DecAgreement.
   Qed.
 
 End DecAgreement.
+
+Section STS.
+  Context {S T: Type}. (* the types of states and tokens. We ignore their Setoids. *)
+  Local Instance STS_States_discrete : Setoid S := discreteType.
+  Definition Toks := DecEnsemble T.
+  Context (step: relation S) (tok: S -> Toks).
+
+  Local Open Scope de_scope.  
+
+
+  Definition tokstep: relation (S * Toks) :=
+    fun st1 st2 => match st1, st2 with
+                   | (s1, t1), (s2, t2) => step s1 s2 /\ (tok s1) # t1 /\ (tok s2) # t2 /\
+                                           (tok s1) ∪ t1 == (tok s2) ∪ t2
+                   end.
+
+  Local Instance tokstep_equiv: Proper (equiv ==> equiv ==> equiv) tokstep.
+  Proof.
+    move=>[s11 t11] [s12 t12] /= [EQs1 EQt1] [s21 t21] [s22 t22] /= [EQs2 EQt2]. subst.
+    rewrite EQt1 EQt2. reflexivity.
+  Qed.
+
+  Definition toksteps := refl_trans_closure tokstep.
+
+  Definition toksframe (st: S * Toks): S * Toks :=
+    let (s, t) := st in (s, de_full \ (tok s ∪ t)).
+
+  Lemma toksframe_step {s s' t t'}:
+    tok s # t ->
+    tokstep (toksframe (s, t)) (s', t') ->
+    (s', t') == toksframe (s', t).
+  Proof.
+    intros Hdisj (Hstep & Htok1 & Htok2 & Hpres).
+    rewrite /toksframe.
+    split; first reflexivity. simpl.
+    de_auto_eq.
+  Qed.
+
+  Lemma toksframe_smaller s1 s2 t1 t2:
+    t1 ⊑ t2 ->
+    tokstep (toksframe (s1, t2)) (toksframe (s2, t2)) ->
+    tokstep (toksframe (s1, t1)) (toksframe (s2, t1)).
+  Proof.
+    unfold toksframe in *.
+    intros Hle (Hstep & Hdisj3 & Hdisj4 & Heq).
+    split; split_conjs.
+    - assumption.
+    - clear Hdisj4 Heq. de_auto_eq.
+    - clear Hdisj3 Heq. de_auto_eq.
+    - clear Hdisj3 Hdisj4. de_auto_eq.
+  Qed.
+    
+  Definition upclosed (ss: S -> Prop) (t: Toks): Prop :=
+    forall s1 s2, ss s1 -> tokstep (toksframe (s1, t)) (toksframe (s2, t)) -> ss s2.
+
+  Definition upclose (ss: S -> Prop) (t: Toks): S -> Prop :=
+    fun s' => exists s, ss s /\ toksteps (toksframe (s, t)) (toksframe (s', t)).
+
+  Local Instance upclose_equiv: Proper (equiv ==> equiv ==> equiv) upclose.
+  Proof.
+    move=>ss1 ss2 EQss t1 t2 EQt s.
+    split; intros [s' [Hs' Hstep]]; (exists s'; split; first now apply EQss).
+    - rewrite /toksframe. rewrite -EQt. exact Hstep.
+    - rewrite /toksframe. rewrite EQt. exact Hstep.
+  Qed.
+
+  Lemma upclose_upclosed ss t:
+    upclosed (upclose ss t) t.
+  Proof.
+    move=>s1 s2 [s1' [Hs1 Hsteps1]] Hsteps2.
+    exists s1'. split; first assumption.
+    eapply rt_trans; try (now apply _); first eassumption.
+    by apply rt_onestep.
+  Qed.
+
+  Lemma upclose_incl (ss: S -> Prop) t:
+    forall s, ss s -> upclose ss t s.
+  Proof.
+    move=>s H. exists s. split; first assumption.
+    apply rt_refl. reflexivity.
+  Qed.
+
+  Lemma upclose_noop (ss: S -> Prop) t (Hadisj: forall s, ss s -> tok s # t):
+    upclosed ss t ->
+    upclose ss t == ss.
+  Proof.
+    move=>Hclosed s. split.
+    - move=>[s' [Hs' Hstep]].
+      remember (toksframe (s', t)) as s't. remember (toksframe (s, t)) as st.
+      rewrite -Heqs't -Heqst in Hstep.
+      apply equivR in Heqs't. apply equivR in Heqst.
+      revert s' s Hs' Heqs't Heqst. induction Hstep; intros.
+      + rewrite ->Heqs't, ->Heqst in H. destruct H as [Heq1 _]. rewrite <-Heq1. assumption.
+      + rewrite ->Heqs't in H. destruct ρ2 as [s'' t''].
+        assert (Hdisj: tok s' # t).
+        { now apply Hadisj. }
+        assert (Heq:=toksframe_step Hdisj H).
+        rewrite ->Heq in H.
+        eapply IHHstep; last first.
+        * eassumption.
+        * eassumption. 
+        * eapply Hclosed; last eassumption. assumption.
+    - eapply upclose_incl.
+  Qed.
+
+  CoInductive STSMon :=
+  | STSEl: forall (ss: S -> Prop) (t: Toks) (v: Prop), upclosed ss t -> (forall s, ss s -> tok s # t) -> STSMon.
+
+  Local Ltac sts_destr := repeat (match goal with [ x : STSMon |- _ ] => destruct x end).
+
+  Definition STS_eq: relation STSMon :=
+    fun el1 el2 => match el1, el2 with
+                   | STSEl ss1 t1 v1 _ _, STSEl ss2 t2 v2 _ _ => ss1 == ss2 /\ t1 == t2 /\ v1 == v2
+                   end.
+
+  Global Instance STS_equiv: Equivalence STS_eq.
+  Proof.
+    split.
+    - intros ?. sts_destr; simpl. split_conjs; reflexivity.
+    - intros ? ?. sts_destr; simpl. intros [EQs ?].
+      split_conjs; now symmetry.
+    - intros ? ? ?. sts_destr; simpl. intros [EQs1 [EQt1 EQv1]] [EQs2 [EQt2 EQv2]].
+      split_conjs; try (etransitivity; eassumption).
+      move=>s. rewrite EQs1. now auto.
+  Qed.
+
+  Global Instance STS_Type: Setoid STSMon := mkType STS_eq.
+
+  Global Instance STS_valid: RA_valid STSMon :=
+    fun el => let (ss, _, v, _, _) := el in v /\ (exists s, ss s).
+
+  Global Program Instance STS_unit: RA_unit STSMon :=
+    fun el => let (ss, t, v, uc, d) := el in STSEl (upclose ss de_emp) de_emp True _ _.
+  Next Obligation.
+    apply upclose_upclosed.
+  Qed.
+  Next Obligation.
+    rewrite de_emp_isect. reflexivity.
+  Qed.
+
+  Global Program Instance STS_op: RA_op STSMon :=
+    fun el1 el2 => match el1, el2 with
+                   | STSEl ss1 t1 v1 uc1 d1, STSEl ss2 t2 v2 uc2 d2 =>
+                     STSEl (fun s => ss1 s /\ ss2 s)
+                           (t1 ∪ t2) (v1 /\ v2 /\ t1 # t2) _ _
+                   end.
+  Next Obligation.
+    move=>s1 s2 [Hss1 Hss2] Hstep.
+    assert(Hss1': ss1 s2).
+    { eapply uc1; first eassumption.
+      eapply toksframe_smaller, Hstep.
+      de_auto_eq. }
+    assert(Hss2': ss2 s2).
+    { eapply uc2; first eassumption.
+      eapply toksframe_smaller, Hstep.
+      de_auto_eq. }
+    split_conjs; assumption.
+  Qed.
+  Next Obligation.
+    specialize (d1 _ H). specialize (d2 _ H0). de_auto_eq.
+  Qed.
+
+  Global Instance STS_RA: RA STSMon.
+  Proof.
+    split.
+    - intros el1 el2. sts_destr. intros [EQs1 [EQt1 EQv1]] el3 el4. sts_destr. intros [EQs3 [EQt3 EQv3]]. split; last split.
+      + move=>s. simpl. rewrite (EQs1 s) (EQs3 s). reflexivity.
+      + now rewrite EQt1 EQt3.
+      + now rewrite EQt1 EQt3 EQv1 EQv3.
+    - intros el1 el2 el3. sts_destr. split; last (split; first (now rewrite assoc)); last first.
+      { split; intros H; split_conjs; try tauto; de_auto_eq. }
+      intro s. split; intros [Hin1 Hin2]; tauto.
+    - intros el1 el2. sts_destr. split; last (split; first (now rewrite comm)).
+      + intro s. split; tauto.
+      + rewrite comm. split; tauto.
+    - move=>t. sts_destr. split; last (split; first now rewrite comm de_emp_union); last first.
+      { split=>H; first tauto. split_conjs; try tauto; de_auto_eq. }
+      move=>s. split=>Hss; first tauto.
+      split_conjs.
+      + exists s. split; first assumption. now apply rt_refl.
+      + assumption.
+    - move=>el1 el2. sts_destr. move =>[EQs [EQt EQv]]. split; last (split; reflexivity).
+      rewrite EQs. reflexivity.
+    - move=>t t'. exists (1 (t · t')). sts_destr. split; last (split; first now rewrite de_emp_union); last first.
+      { split=>H; last tauto. split_conjs; try tauto; de_auto_eq. }
+      move=>s. split.
+      + intros [s' H]. split_conjs.
+        * exists s'. tauto.
+        * exists s'. tauto.
+      + intros [_ [s'' [[Hs' Hs''] Hsteps'']]].
+        exists s''. tauto.
+    - move=>t. sts_destr. simpl. split; last (split; reflexivity).
+      apply upclose_noop; last exact: upclose_upclosed.
+      move=>s _. de_auto_eq.
+    - apply proper_sym_impl_iff; try (now apply _). move=>el1 el2. sts_destr. move =>[EQs [EQt EQv]] [Hv [s Hinh]].
+      split; first now apply EQv. exists s. now apply EQs.
+    - move=>t1 t2. sts_destr. move=>[Hv [s Hinh]].
+      split; first tauto.
+      exists s. tauto.
+  Qed.
+
+  Print Assumptions STS_RA.
+  
+End STS.
 
 (* TODO: make this work with multi-unit
 Section IndexedProduct.

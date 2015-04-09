@@ -1,6 +1,7 @@
 Require Import Ssreflect.ssreflect.
 Require Import List.
 Require Import core_lang.
+Require Import ModuRes.Util ModuRes.CSetoid.
 
 (******************************************************************)
 (** * Derived language with threadpool steps **)
@@ -180,30 +181,8 @@ Module Lang (C : CORE_LANG).
   Qed.
 
   (* Reflexive, transitive closure of the step relation *)
-  Inductive steps : cfg -> cfg -> Prop :=
-  | steps_refl ρ : steps ρ ρ
-  | stepn_trans ρ1 ρ2 ρ3 : step ρ1 ρ2 -> steps ρ2 ρ3 -> steps ρ1 ρ3.
-                     
-  
-  Inductive stepn : nat -> cfg -> cfg -> Prop :=
-  | stepn_O ρ : stepn O ρ ρ
-  | stepn_S ρ1 ρ2 ρ3 n
-            (HS  : step ρ1 ρ2)
-            (HSN : stepn n ρ2 ρ3) :
-      stepn (S n) ρ1 ρ3.
-
-  Lemma steps_stepn {ρ1 ρ2} :
-    steps ρ1 ρ2 -> exists n, stepn n ρ1 ρ2.
-  Proof.
-    induction 1.
-    - eexists. eauto using stepn.
-    - destruct IHsteps as [n IH]. eexists. eauto using stepn.
-  Qed.
-
-  Lemma stepn_steps {n ρ1 ρ2}:
-    stepn n ρ1 ρ2 -> steps ρ1 ρ2.
-  Proof.
-    induction 1; now eauto using steps.
-  Qed.
+  Global Instance cfg_type : Setoid cfg := discreteType.
+  Definition steps := refl_trans_closure step.
+  Definition stepn := n_closure step.
 
 End Lang.
