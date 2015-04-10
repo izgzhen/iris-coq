@@ -1,7 +1,7 @@
 Require Import Ssreflect.ssreflect.
 Require Import List.
 Require Import core_lang.
-Require Import ModuRes.Util ModuRes.CSetoid.
+Require Import ModuRes.Relations ModuRes.CSetoid.
 
 (******************************************************************)
 (** * Derived language with threadpool steps **)

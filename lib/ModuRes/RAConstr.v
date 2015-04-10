@@ -1,5 +1,5 @@
 Require Import Ssreflect.ssreflect Omega.
-Require Import CSetoid PreoMet RA DecEnsemble.
+Require Import CSetoid PreoMet RA DecEnsemble Relations.
 
 Local Open Scope ra_scope.
 Local Open Scope predom_scope.
@@ -343,10 +343,42 @@ Section STS.
 
   Definition toksteps := refl_trans_closure tokstep.
 
-  Definition toksframe (st: S * Toks): S * Toks :=
-    let (s, t) := st in (s, de_full \ (tok s ∪ t)).
+  Definition tframestep t: relation S :=
+    fun s1 s2 => step s1 s2 /\ tok s1 # t /\ tok s2 # t.
 
-  Lemma toksframe_step {s s' t t'}:
+  Local Instance tframestep_equiv: Proper (equiv ==> equiv ==> equiv ==> equiv) tframestep.
+  Proof.
+    move=>t1 t2 EQt s11 s12 EQs1 s21 s22 EQs2.
+    rewrite /tframestep EQs1 EQs2 EQt. reflexivity.
+  Qed.
+
+(*  Local Instance tframestep_equiv_t t: Proper (equiv ==> equiv ==> equiv) (tframestep t).
+  Proof.
+    eapply tframestep_equiv. reflexivity.
+  Qed.*)
+
+  Definition tframesteps t := refl_trans_closure (tframestep t).
+
+  Local Instance tframesteps_equiv: Proper (equiv ==> equiv) tframesteps.
+  Proof.
+    move=>t1 t2 EQt. rewrite /tframesteps.
+    eapply refl_trans_closure_r_equiv.
+    move=>s1 s2. now rewrite EQt.
+  Qed.
+
+  Lemma tokstep_framestep {s1 t1 s2 t2} tf:
+    tf # (tok s1 ∪ t1) ->
+    tokstep (s1, t1) (s2, t2) ->
+    tframestep tf s1 s2.
+  Proof.
+    intros Hdisj (Hstep & Hdisj1 & Hdisj2 & Hpres).
+    split; first assumption.
+    split.
+    - clear Hdisj2 Hpres. de_auto_eq.
+    - clear Hdisj1. de_auto_eq.
+  Qed.
+
+(*  Lemma toksframe_step {s s' t t'}:
     tok s # t ->
     tokstep (toksframe (s, t)) (s', t') ->
     (s', t') == toksframe (s', t).
@@ -355,34 +387,46 @@ Section STS.
     rewrite /toksframe.
     split; first reflexivity. simpl.
     de_auto_eq.
-  Qed.
+  Qed.*)
 
   Lemma toksframe_smaller s1 s2 t1 t2:
     t1 ⊑ t2 ->
-    tokstep (toksframe (s1, t2)) (toksframe (s2, t2)) ->
-    tokstep (toksframe (s1, t1)) (toksframe (s2, t1)).
+    tframestep t2 s1 s2 ->
+    tframestep t1 s1 s2.
   Proof.
-    unfold toksframe in *.
-    intros Hle (Hstep & Hdisj3 & Hdisj4 & Heq).
+    intros Hle (Hstep & Hdisj1 & Hdisj2).
     split; split_conjs.
     - assumption.
-    - clear Hdisj4 Heq. de_auto_eq.
-    - clear Hdisj3 Heq. de_auto_eq.
-    - clear Hdisj3 Hdisj4. de_auto_eq.
+    - clear Hdisj2. de_auto_eq.
+    - clear Hdisj1. de_auto_eq.
   Qed.
     
   Definition upclosed (ss: S -> Prop) (t: Toks): Prop :=
-    forall s1 s2, ss s1 -> tokstep (toksframe (s1, t)) (toksframe (s2, t)) -> ss s2.
+    forall s1 s2, ss s1 -> tframesteps t s1 s2 -> ss s2.
+
+  Lemma upclosed_bystep (ss: S -> Prop) t:
+    (forall s1 s2, ss s1 -> tframestep t s1 s2 -> ss s2) ->
+    upclosed ss t.
+  Proof.
+    move=>Hstep s1 s2 Hs1.
+    induction 1.
+    - rewrite -H. assumption.
+    - eapply IHrefl_trans_closure, Hstep.
+      + eassumption.
+      + assumption.
+  Qed.
 
   Definition upclose (ss: S -> Prop) (t: Toks): S -> Prop :=
-    fun s' => exists s, ss s /\ toksteps (toksframe (s, t)) (toksframe (s', t)).
+    fun s' => exists s, ss s /\ tframesteps t s s'.
 
   Local Instance upclose_equiv: Proper (equiv ==> equiv ==> equiv) upclose.
   Proof.
     move=>ss1 ss2 EQss t1 t2 EQt s.
     split; intros [s' [Hs' Hstep]]; (exists s'; split; first now apply EQss).
-    - rewrite /toksframe. rewrite -EQt. exact Hstep.
-    - rewrite /toksframe. rewrite EQt. exact Hstep.
+    - eapply tframesteps_equiv; last eassumption.
+      now symmetry.
+    - eapply tframesteps_equiv; last eassumption.
+      assumption.
   Qed.
 
   Lemma upclose_upclosed ss t:
@@ -390,8 +434,7 @@ Section STS.
   Proof.
     move=>s1 s2 [s1' [Hs1 Hsteps1]] Hsteps2.
     exists s1'. split; first assumption.
-    eapply rt_trans; try (now apply _); first eassumption.
-    by apply rt_onestep.
+    eapply rt_trans; try (now apply _); eassumption.
   Qed.
 
   Lemma upclose_incl (ss: S -> Prop) t:
@@ -407,20 +450,7 @@ Section STS.
   Proof.
     move=>Hclosed s. split.
     - move=>[s' [Hs' Hstep]].
-      remember (toksframe (s', t)) as s't. remember (toksframe (s, t)) as st.
-      rewrite -Heqs't -Heqst in Hstep.
-      apply equivR in Heqs't. apply equivR in Heqst.
-      revert s' s Hs' Heqs't Heqst. induction Hstep; intros.
-      + rewrite ->Heqs't, ->Heqst in H. destruct H as [Heq1 _]. rewrite <-Heq1. assumption.
-      + rewrite ->Heqs't in H. destruct ρ2 as [s'' t''].
-        assert (Hdisj: tok s' # t).
-        { now apply Hadisj. }
-        assert (Heq:=toksframe_step Hdisj H).
-        rewrite ->Heq in H.
-        eapply IHHstep; last first.
-        * eassumption.
-        * eassumption. 
-        * eapply Hclosed; last eassumption. assumption.
+      eapply Hclosed; eassumption.
     - eapply upclose_incl.
   Qed.
 
@@ -466,14 +496,15 @@ Section STS.
                            (t1 ∪ t2) (v1 /\ v2 /\ t1 # t2) _ _
                    end.
   Next Obligation.
+    apply upclosed_bystep.
     move=>s1 s2 [Hss1 Hss2] Hstep.
     assert(Hss1': ss1 s2).
     { eapply uc1; first eassumption.
-      eapply toksframe_smaller, Hstep.
+      eapply rt_onestep, toksframe_smaller, Hstep.
       de_auto_eq. }
     assert(Hss2': ss2 s2).
     { eapply uc2; first eassumption.
-      eapply toksframe_smaller, Hstep.
+      eapply rt_onestep, toksframe_smaller, Hstep.
       de_auto_eq. }
     split_conjs; assumption.
   Qed.
