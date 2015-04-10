@@ -93,8 +93,14 @@ Section RALemmas.
     rewrite comm. now eapply ra_op_invalid.
   Qed.
 
-  Lemma ra_fpu_fps {t1 t2} (Hu : t1 ⇝ t2) : t1 ⇝∈ (equiv t2).
+  Lemma ra_fps_fpu {t1 t2} (Hu : t1 ⇝ t2) : t1 ⇝∈ (equiv t2).
   Proof. move=> f Hv; exists t2; split; [by reflexivity | exact: Hu]. Qed.
+
+  Lemma ra_fpu_fps {t1 t2} (Hu : t1 ⇝∈ (equiv t2)) : t1 ⇝ t2.
+  Proof.
+    move=>f Hv. destruct (Hu f Hv) as [t [Heq Hv']].
+    by rewrite Heq.
+  Qed.
 
   Lemma ra_fps_id {t :T} : t ⇝ t.
   Proof. done. Qed.
@@ -107,7 +113,6 @@ Section RALemmas.
   Program Definition ra_op_s: T -=> T -=> T :=
     s[(fun t1 => s[(ra_op t1)])].
 End RALemmas.
-
 
 
 (** The usual algebraic order on RAs. *)

@@ -88,9 +88,9 @@ Proof.
 Qed.
 
 Ltac de_destr := repeat (match goal with [ x : DecEnsemble _ |- _ ] => destruct x as [x] end).
-Ltac de_auto_simpl := simpl in *; unfold const; repeat progress rewrite ->?Bool.andb_true_iff, ->?Bool.orb_true_iff, ?negb_true_iff.
-Ltac de_in_destr := repeat (match goal with [ |- context[?t ∈ ?de = _] ] => destruct (t ∈ de) end).
-Ltac de_tauto := de_auto_simpl; de_in_destr; repeat progress rewrite ->?de_ft_eq, ?de_tt_eq; tauto.
+Ltac de_in_destr := repeat (match goal with [ |- context[?t ∈ ?de] ] => destruct (t ∈ de) end).
+Ltac de_auto_destr := repeat progress (simpl; unfold const; de_in_destr).
+Ltac de_tauto := de_auto_destr; repeat (split || intro); (reflexivity || discriminate || tauto).
 Ltac de_auto_eq := destruct_conjs;
       let t := fresh "t" in move=>t;
       repeat (match goal with
