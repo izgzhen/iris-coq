@@ -711,7 +711,6 @@ Section STS.
 
 End STS.
 
-(* TODO: make this work with multi-unit
 Section IndexedProduct.
   (* I is the index type (domain), S the type of the components (codomain) *)
   Context {I : Type} {S : forall (i : I), Type}
@@ -741,20 +740,37 @@ Section IndexedProduct.
     - compute; now rewrite -> (assoc (T := S i) (t1 i) (t2 i) (t3 i)).
     - compute; now rewrite -> (comm (T :=S i) (t1 i) (t2 i)).
     - compute; now rewrite -> (ra_op_unit (RA := raS i) (t := t i)).
-    - compute; rewrite (H i); reflexivity.
-    - exists t' => i. destruct (ra_unit_mono (t i) (t' i)).
+    - compute. rewrite (H i); reflexivity.
+    - exists (fun i => proj1_sig (ra_unit_mono (t i) (t' i)))=>i.
+      unfold ra_op, ra_op_infprod. move:(ra_unit_mono (t i) (t' i))=>[t'' Heq].
+      etransitivity; last eapply Heq. reflexivity.
+    - rewrite /ra_unit /ra_unit_infprod ra_unit_idem. reflexivity.
     - compute; intros; split; intros; by move/(_ i): H0; rewrite (H i).
-    - now eapply (ra_valid_unit (RA := raS i)).
     - eapply (ra_op_valid (RA := raS i)); now eauto.
   Qed.
 End IndexedProduct.
+Arguments ra_res_infprod : default implicits.
 
 
 Section HomogeneousProduct.
   (* I is the index type (domain), S the type of the components (codomain) *)
   Context {I : Type} {S : Type} `{RA S}.
 
+  Global Instance ra_unit_homprod : RA_unit (forall (i : I), S) := ra_unit_infprod.
+  Global Instance ra_op_homprod : RA_op (forall (i : I), S) := ra_op_infprod.
+  Global Instance ra_valid_homprod : RA_valid (forall (i : I), S) := ra_valid_infprod.
   Global Instance ra_homprod : RA (forall (i : I), S).
-  Proof. now eapply ra_infprod; auto. Qed.
+  Proof.
+    split; repeat intro.
+    - now apply ra_op_proper.
+    - now apply ra_op_assoc.
+    - now apply ra_op_comm.
+    - now apply ra_op_unit.
+    - now apply ra_unit_proper.
+    - destruct (ra_unit_mono t t') as [i Hi]. exists i. apply Hi.
+    - now apply ra_unit_idem.
+    - now apply ra_valid_proper.
+    - eapply ra_op_valid. eapply H0.
+  Qed.
 End HomogeneousProduct.
-*)
+

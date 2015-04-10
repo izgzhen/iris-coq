@@ -15,14 +15,14 @@ Section RADef.
   Class RA_unit := ra_unit : T -> T.
   Class RA_op   := ra_op : T -> T -> T.
   Class RA_valid:= ra_valid : T -> Prop.
-  Class RA {TU : RA_unit} {TOP : RA_op} {TV : RA_valid}: Prop :=
+  Class RA {TU : RA_unit} {TOP : RA_op} {TV : RA_valid} :=
     mkRA {
         ra_op_proper       :> Proper (equiv ==> equiv ==> equiv) ra_op;
         ra_op_assoc        :> Associative ra_op;
         ra_op_comm         :> Commutative ra_op;
         ra_op_unit {t}     : ra_op (ra_unit t) t == t;
         ra_unit_proper     :> Proper (equiv ==> equiv) ra_unit;
-        ra_unit_mono t t'  : exists t'', ra_unit (ra_op t t') == ra_op (ra_unit t) t'';  
+        ra_unit_mono t t'  : { t'' | ra_unit (ra_op t t') == ra_op (ra_unit t) t''};
         ra_unit_idem t     : ra_unit (ra_unit t) == ra_unit t;
         ra_valid_proper    :> Proper (equiv ==> iff) ra_valid;
         ra_op_valid {t1 t2}: ra_valid (ra_op t1 t2) -> ra_valid t1
