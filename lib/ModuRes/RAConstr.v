@@ -196,10 +196,11 @@ Section Authoritative.
     by move=> [Ht [HSep HLe]].
   Qed.
 
-  Definition auth_side_cond_in t u t' (Pu': T -> Prop) : Prop :=
+  Definition auth_side_cond t u t' (Pu': T -> Prop) : Prop :=
     ↓u -> forall tf, t · tf ⊑ u -> exists u', Pu' u' /\ t' · tf ⊑ u' /\ ↓u'.
 
-  Lemma ra_fps_auth_in {t u t' Pu'} {Pn': auth -> Prop} (SIDE : auth_side_cond_in t u t' Pu') :
+  (* This is the strongest lemma for auth-FPU we found. Everything else will be derived from this. *)
+  Lemma ra_fpu_auth_general {t u t' Pu'} {Pn': auth -> Prop} (SIDE : auth_side_cond t u t' Pu') :
     (forall u', Pu' u' -> Pn' (Auth(ex_own u', t'))) ->
     Auth(ex_own u, t) ⇝∈ Pn'.
   Proof.
@@ -215,15 +216,34 @@ Section Authoritative.
     eapply ra_op_valid2. now erewrite HEq.
   Qed.
 
-  Definition auth_side_cond t u t' u' : Prop :=
-    ↓u -> forall tf, t · tf ⊑ u -> t' · tf ⊑ u' /\ ↓u'.
+  (* The following two lemmas for FPU and FPS are good enough for everything we need, and they
+     have a precondition that one can actually give some intuition to.
+     auth_steps is slightly stronger than auth_side_cond: Think of "tf" below being
+     both "tf" and the "w" hidden in ⊑ above. Then auth_side_cond allows changing
+     "w" to anything else, whereas auth_steps enforces using the same "w". *)
+  Definition auth_steps t u t' Pu' : Prop :=
+    ↓u -> forall tf, t · tf == u -> exists u', Pu' u' /\ t' · tf == u' /\ ↓u'.
+  
+  Lemma ra_fpu_auth {t u t' Pu'} {Pn': auth -> Prop} (STEPS : auth_steps t u t' Pu') :
+    (forall u', Pu' u' -> Pn' (Auth(ex_own u', t'))) ->
+    Auth(ex_own u, t) ⇝∈ Pn'.
+  Proof.
+    apply ra_fpu_auth_general. move=>Hu tf [w HEq].
+    specialize (STEPS Hu (tf · w)). move:STEPS. case.
+    - rewrite -HEq (comm w) assoc. reflexivity.
+    - move=>u' [HPu' [HEq' Hu']]. exists u'. split; first assumption. split; last assumption.
+      exists w. rewrite -HEq' (comm w) assoc. reflexivity.
+  Qed.
 
-  Lemma ra_fps_auth {t u t' u'} (SIDE : auth_side_cond t u t' u') :
+  Definition auth_step t u t' u' : Prop :=
+    ↓u -> forall tf, t · tf == u -> t' · tf == u' /\ ↓u'.
+
+  Lemma ra_fps_auth {t u t' u'} (STEP: auth_step t u t' u'):
     Auth(ex_own u, t) ⇝ Auth(ex_own u', t').
   Proof.
-    apply ra_fpu_fps. eapply (ra_fps_auth_in (Pu':=equiv u') (t':=t')).
-    - move=>Hval tf Hle. exists u'. split; first reflexivity. exact: SIDE.
-    - move=>u'' Heq. rewrite Heq. reflexivity.
+    apply ra_fpu_fps. eapply (ra_fpu_auth (Pu':=equiv u') (t':=t')).
+    - move=>Hu tf Heq. exists u'. split; first reflexivity. exact: STEP.
+    - move=>u'' ->. reflexivity.
   Qed.
 
   (* Some derived forms of the lemma above. But really, when proving in Coq,
@@ -234,8 +254,7 @@ Section Authoritative.
     apply: ra_fps_auth.
     move=> Hu tf HLe.
     split; last done.
-    apply: (ra_op_mono (prefl t')).
-    exact: ra_cancel_ord HLe.
+    move: Hu. move/ra_cancel. move/(_ _ HLe)=>->. reflexivity.
   Qed.
 
   Definition ra_local_action (act : T -=> T) : Prop :=
@@ -250,15 +269,13 @@ Section Authoritative.
     Auth(ex_own(t · u), t) ⇝ Auth(ex_own(act t · u), act t).
   Proof.
     eapply ra_fps_auth.
-    move=>Hval tf [w HEq]. split.
-    - exists w. rewrite (comm w) -assoc.
-      transitivity (act (t · u)).
-      + rewrite -HEq. rewrite (comm w) -assoc. symmetry. eapply HL.
-        * eapply ra_op_valid. eassumption.
-        * rewrite assoc (comm _ w) HEq. assumption.
-      + eapply HL; last assumption.
-        eapply ra_op_valid. eassumption.
-    - assumption.
+    move=>Hval tf HEq. split; last assumption.
+    transitivity (act (t · u)).
+    - rewrite -HEq. symmetry. eapply HL.
+      + eapply ra_op_valid. eassumption.
+      + rewrite HEq. assumption.
+    - eapply HL; last assumption.
+      eapply ra_op_valid. eassumption.
   Qed.
 End Authoritative.
 Arguments auth : clear implicits.
@@ -679,9 +696,9 @@ Section STS.
     STSAuth (ex_own st_a, st_l) ⇝∈ (fun n => exists st_an, STS_ss st_an s' /\ n == STSAuth (ex_own st_an, STS_upclose1 s' t')).
   Proof.
     destruct Hstart as [Hs Ht]. move=>Hsteps.
-    eapply (ra_fps_auth_in (Pu':=fun st_an => STS_ss st_an s') (t':=STS_upclose1 s' t')); last first.
+    eapply (ra_fpu_auth (Pu':=fun st_an => STS_ss st_an s') (t':=STS_upclose1 s' t')); last first.
     { move=>u' Hu'. exists u'. split; assumption || reflexivity. }
-    move=>Hval tf [w HEq].
+    move=>Hval tf HEq.
     assert (Hatoks: t ⊑ STS_t st_a).
     { sts_destr. destruct HEq as [_ [Htoks _]]. subst t. simpl. clear -Htoks. de_auto_eq. }
     assert (Hastoks: tok s # STS_t st_a).
@@ -689,7 +706,7 @@ Section STS.
     assert (Hsteptoks: tok s' # t' /\ tok s ∪ t == tok s' ∪ t').
     { apply toksteps_toks; last assumption. de_auto_eq. }
     assert (Htf: ↓tf).
-    { eapply ra_op_valid2. eapply ra_op_valid2. erewrite HEq. assumption. }
+    { eapply ra_op_valid2. erewrite HEq. assumption. }
     destruct tf as [tf_ss tf_t tf_v tf_u tf_d].
     assert (Htf_ss: tf_ss s).
     { sts_destr. destruct HEq as [Heq_ss _]. eapply Heq_ss. eexact Hs. }
