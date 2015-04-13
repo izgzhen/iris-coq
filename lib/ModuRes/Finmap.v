@@ -516,6 +516,13 @@ Section FinDom.
     Next Obligation.
       destruct n as [| n]; [reflexivity |]; intros k; eapply dist_mono, H.
     Qed.
+    
+    Global Instance lookup_dist n : Proper (dist n ==> eq ==> dist n) (findom_f (V := V)).
+    Proof.
+      intros f1 f2 HEqf k1 k2 HEqk; subst. 
+      destruct n; first now auto.
+      now apply HEqf.
+    Qed.
 
     Lemma domeq {m1 m2 : K -f> V} {n} (HEq : m1 = S n = m2) : dom m1 = dom m2.
     Proof.
