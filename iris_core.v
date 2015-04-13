@@ -281,12 +281,13 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Lemma box_dup P :
       □P == □P * □P.
     Proof.
-      intros w n. split.
-      - intros HP. exists (w, 1 w). 
+      apply pord_antisym.
+      - intros w n.
+        intros HP. exists (w, 1 w). 
         split; last by simpl; rewrite !ra_unit_idem.
         rewrite (ra_op_unit2).
         split; reflexivity.
-      - by apply: sc_projL.
+      - by apply sc_projL.
     Qed.
     
     Lemma box_box P :
@@ -472,14 +473,8 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
     Next Obligation.
       move => i n P1 P2 EQP.
-      cut (forall (wr : Wld), ((Mfst wr) i === Some (ra_ag_inj PreProp (ı' (halved P1)))) = n = ((Mfst wr) i === Some (ra_ag_inj PreProp (ı' (halved P2))))).
-        { move => HEq. 
-          split; move => [wr [Hown HP]]; 
-            (exists wr; split; first assumption;
-            now eapply (HEq wr _ _ H)).
-        } 
-      move => wr.
-      rewrite (_ : Some _ = n = Some (ra_ag_inj PreProp (ı' (halved P2)))); [reflexivity|].
+      apply xist_dist=>w. apply and_dist; first reflexivity.
+      apply intEq_dist; first reflexivity.
       destruct n; first now auto.
       split; first reflexivity. move => k _ _ HLe. 
       apply met_morph_nonexp. eapply mono_dist; last first.
