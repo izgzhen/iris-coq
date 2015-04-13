@@ -17,15 +17,16 @@ Module Type WORLD_PROP (Res : CMRA_T).
 
   (* Defines Worlds, and make sure their order comes from the RA. *)
   Definition Wld := (nat -f> ra_agree PreProp) * Res.res.
-  Instance WldPO : preoType Wld := pord_ra. (* disambiguate the order *)
+  Instance Wld_ty    : Setoid Wld := _.
+  Instance Wld_m     : metric Wld := _.
+  Instance Wld_cm    : cmetric Wld := _.
+  Instance Wld_preo  : preoType Wld := pord_ra. (* disambiguate the order *)
+  Instance Wld_pcm   : pcmType Wld := _.
+  Instance Wld_RA    : RA Wld := _.
+  Instance Wld_CMRA  : CMRA Wld := _.
 
   (* Now we are ready to define Propositions. *)
   Definition Props    := Wld -m> SPred.
-  Instance Props_ty   : Setoid Props   := _.
-  Instance Props_m    : metric Props   := _.
-  Instance Props_cm   : cmetric Props  := _.
-  Instance Props_preo : preoType Props := _.
-  Instance Props_pcm  : pcmType Props  := _.
 
   (* Require recursion isomorphisms *)
   Parameter ı  : PreProp -n> halve Props.

@@ -74,7 +74,6 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
   Instance vPred_metr  : metric vPred  := _.
   Instance vPred_cmetr : cmetric vPred := _.
 
-
   (** The final thing we'd like to check is that the space of
       propositions does indeed form a complete BI algebra.
 
@@ -82,8 +81,6 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       the complete BI class can be found for Props (and binds it with
       a low priority to potentially speed up the proof search).
    *)
-
-  
   Instance Props_Lattice : Lattice Props | 0 := _.
   Instance Props_CBI : ComplBI Props | 0 := _.
   Instance Props_Eq : EqBI Props | 0 := _.

@@ -1,5 +1,5 @@
 Require Import Ssreflect.ssreflect Omega.
-Require Import PreoMet RA.
+Require Import CSetoid PreoMet RA DecEnsemble Relations.
 
 Local Open Scope ra_scope.
 Local Open Scope predom_scope.
@@ -196,29 +196,65 @@ Section Authoritative.
     by move=> [Ht [HSep HLe]].
   Qed.
 
-  Definition auth_side_cond t u t' : Prop :=
-    ↓t · u -> forall tf, t · tf ⊑ t · u -> t' · tf ⊑ t' · u.
+  Definition auth_side_cond t u t' (Pu': T -> Prop) : Prop :=
+    ↓u -> forall tf, t · tf ⊑ u -> exists u', Pu' u' /\ t' · tf ⊑ u' /\ ↓u'.
 
-  Lemma ra_fps_auth {t u t'} (SIDE : auth_side_cond t u t') (Hu' : ↓t' · u) :
-    Auth(ex_own(t · u), t) ⇝ Auth(ex_own(t' · u), t').
+  (* This is the strongest lemma for auth-FPU we found. Everything else will be derived from this. *)
+  Lemma ra_fpu_auth_general {t u t' Pu'} {Pn': auth -> Prop} (SIDE : auth_side_cond t u t' Pu') :
+    (forall u', Pu' u' -> Pn' (Auth(ex_own u', t'))) ->
+    Auth(ex_own u, t) ⇝∈ Pn'.
   Proof.
-    move=> [[xf tf]] /ra_sep_auth [Htu [Hxf [Htf HLe]]].
+    move=>HPn' [[xf tf]] /ra_sep_auth [Htu [Hxf [Htf HLe]]].
+    move:(SIDE Htu _ HLe)=>{SIDE} [u' [HPu' [HLe' Hval]]].
+    exists (Auth (ex_own u', t')). split; first now apply HPn'.
     rewrite/ra_valid/ra_valid_auth [Auth _ · _]/ra_op/ra_op_auth.
     move: Hxf; case: xf=>[g||] H; [done| clear H |done].	(* i.e., "rewrite Hxf" despite the match. *)
     rewrite {1}/ra_op/ra_op_ex.
     split; first done.
-    set LE' := _ ⊑ _; suff HLe': LE'.
-    { split; last done; move: Hu'; move: HLe'=>[t'' <-]. exact: ra_op_valid2. }
-    exact: SIDE.
+    split; last done.
+    destruct HLe' as [w HEq].
+    eapply ra_op_valid2. now erewrite HEq.
   Qed.
 
+  (* The following two lemmas for FPU and FPS are good enough for everything we need, and they
+     have a precondition that one can actually give some intuition to.
+     auth_steps is slightly stronger than auth_side_cond: Think of "tf" below being
+     both "tf" and the "w" hidden in ⊑ above. Then auth_side_cond allows changing
+     "w" to anything else, whereas auth_steps enforces using the same "w". *)
+  Definition auth_steps t u t' Pu' : Prop :=
+    ↓u -> forall tf, t · tf == u -> exists u', Pu' u' /\ t' · tf == u' /\ ↓u'.
+  
+  Lemma ra_fpu_auth {t u t' Pu'} {Pn': auth -> Prop} (STEPS : auth_steps t u t' Pu') :
+    (forall u', Pu' u' -> Pn' (Auth(ex_own u', t'))) ->
+    Auth(ex_own u, t) ⇝∈ Pn'.
+  Proof.
+    apply ra_fpu_auth_general. move=>Hu tf [w HEq].
+    specialize (STEPS Hu (tf · w)). move:STEPS. case.
+    - rewrite -HEq (comm w) assoc. reflexivity.
+    - move=>u' [HPu' [HEq' Hu']]. exists u'. split; first assumption. split; last assumption.
+      exists w. rewrite -HEq' (comm w) assoc. reflexivity.
+  Qed.
+
+  Definition auth_step t u t' u' : Prop :=
+    ↓u -> forall tf, t · tf == u -> t' · tf == u' /\ ↓u'.
+
+  Lemma ra_fps_auth {t u t' u'} (STEP: auth_step t u t' u'):
+    Auth(ex_own u, t) ⇝ Auth(ex_own u', t').
+  Proof.
+    apply ra_fpu_fps. eapply (ra_fpu_auth (Pu':=equiv u') (t':=t')).
+    - move=>Hu tf Heq. exists u'. split; first reflexivity. exact: STEP.
+    - move=>u'' ->. reflexivity.
+  Qed.
+
+  (* Some derived forms of the lemma above. But really, when proving in Coq,
+     using ra_fps_auth directly is the easiest way forward *)
   Lemma ra_fps_auth_canc {HC : Cancellative T} t {u t'} (Hu' : ↓t' · u) :
     Auth(ex_own(t · u), t) ⇝ Auth(ex_own(t' · u), t').
   Proof.
-    apply: ra_fps_auth Hu'.
+    apply: ra_fps_auth.
     move=> Hu tf HLe.
-    apply: (ra_op_mono (prefl t')).
-    exact: ra_cancel_ord HLe.
+    split; last done.
+    move: Hu. move/ra_cancel. move/(_ _ HLe)=>->. reflexivity.
   Qed.
 
   Definition ra_local_action (act : T -=> T) : Prop :=
@@ -232,13 +268,14 @@ Section Authoritative.
   Lemma ra_fps_auth_local {act t u} (HL : ra_local_action act) (Hu' : ↓act t · u) :
     Auth(ex_own(t · u), t) ⇝ Auth(ex_own(act t · u), act t).
   Proof.
-    apply: ra_fps_auth (Hu').
-    move/(_ t _ (ra_op_valid Hu')): HL => HL {Hu'}.
-    move=> Hu tf [w HEq]; exists w.
-    move: HEq; rewrite comm -assoc => HEq; rewrite comm -assoc.
-    rewrite -(HL _ Hu).
-    move: Hu; rewrite -HEq => Hu; rewrite -(HL _ Hu).
-    by reflexivity.
+    eapply ra_fps_auth.
+    move=>Hval tf HEq. split; last assumption.
+    transitivity (act (t · u)).
+    - rewrite -HEq. symmetry. eapply HL.
+      + eapply ra_op_valid. eassumption.
+      + rewrite HEq. assumption.
+    - eapply HL; last assumption.
+      eapply ra_op_valid. eassumption.
   Qed.
 End Authoritative.
 Arguments auth : clear implicits.
@@ -320,7 +357,377 @@ Section DecAgreement.
 
 End DecAgreement.
 
-(* TODO: make this work with multi-unit
+Section STS.
+  Context {S T: Type}. (* the types of states and tokens. We ignore their Setoids. *)
+  Local Instance STS_States_discrete : Setoid S := discreteType.
+  Definition Toks := DecEnsemble T.
+  Context (step: relation S) (tok: S -> Toks).
+
+  Local Open Scope de_scope.  
+
+
+  Definition tokstep: relation (S * Toks) :=
+    fun st1 st2 => match st1, st2 with
+                   | (s1, t1), (s2, t2) => step s1 s2 /\ (tok s1) # t1 /\ (tok s2) # t2 /\
+                                           (tok s1) ∪ t1 == (tok s2) ∪ t2
+                   end.
+
+  Local Instance tokstep_equiv: Proper (equiv ==> equiv ==> equiv) tokstep.
+  Proof.
+    move=>[s11 t11] [s12 t12] /= [EQs1 EQt1] [s21 t21] [s22 t22] /= [EQs2 EQt2]. subst.
+    rewrite EQt1 EQt2. reflexivity.
+  Qed.
+
+  Definition toksteps := refl_trans_closure tokstep.
+
+  Lemma toksteps_toks t1 s1 t2 s2:
+    tok s1 # t1 ->
+    toksteps (s1, t1) (s2, t2) ->
+    tok s2 # t2 /\ (tok s1) ∪ t1 == (tok s2) ∪ t2.
+  Proof.
+    move=>Hdisj Hsteps. remember (s1, t1) as st1. remember (s2, t2) as st2.
+    revert s1 t1 s2 t2 Hdisj Heqst1 Heqst2. induction Hsteps; intros; subst.
+    - destruct H as [EQs EQt]. simpl in *. subst s2. rewrite EQt -EQt. now split.
+    - destruct ρ2 as [s3 t3]. destruct H as [_ [Htok1 [Htok2 Hpres]]].
+      move:IHHsteps. move/(_ _ _ _ _ Htok2 eq_refl). move/(_ s2 t2 eq_refl)=>[Htok3 Hpres'].
+      split; first assumption.
+      etransitivity; eassumption.
+  Qed.
+
+  Definition tframestep t: relation S :=
+    fun s1 s2 => step s1 s2 /\ tok s1 # t /\ tok s2 # t.
+
+  Local Instance tframestep_equiv: Proper (equiv ==> equiv ==> equiv ==> equiv) tframestep.
+  Proof.
+    move=>t1 t2 EQt s11 s12 EQs1 s21 s22 EQs2.
+    rewrite /tframestep EQs1 EQs2 EQt. reflexivity.
+  Qed.
+
+(*  Local Instance tframestep_equiv_t t: Proper (equiv ==> equiv ==> equiv) (tframestep t).
+  Proof.
+    eapply tframestep_equiv. reflexivity.
+  Qed.*)
+
+  Definition tframesteps t := refl_trans_closure (tframestep t).
+
+  Lemma tframesteps_toks t s1 s2:
+    tok s1 # t ->
+    tframesteps t s1 s2 ->
+    tok s2 # t.
+  Proof.
+    move=>Htok Hstep. revert Htok. induction Hstep.
+    - rewrite H. tauto.
+    - destruct H as [_ Htoks]. tauto.
+  Qed.
+
+  Local Instance tframesteps_equiv: Proper (equiv ==> equiv) tframesteps.
+  Proof.
+    move=>t1 t2 EQt. rewrite /tframesteps.
+    eapply refl_trans_closure_r_equiv.
+    move=>s1 s2. now rewrite EQt.
+  Qed.
+
+  Lemma tokstep_framestep {s1 t1 s2 t2} tf:
+    tf # (tok s1 ∪ t1) ->
+    tokstep (s1, t1) (s2, t2) ->
+    tframestep tf s1 s2.
+  Proof.
+    intros Hdisj (Hstep & Hdisj1 & Hdisj2 & Hpres).
+    split; first assumption.
+    split.
+    - clear Hdisj2 Hpres. de_auto_eq.
+    - clear Hdisj1. de_auto_eq.
+  Qed.
+
+  Lemma toksteps_framesteps {s1 t1 s2 t2} tf:
+    tf # (tok s1 ∪ t1) ->
+    toksteps (s1, t1) (s2, t2) ->
+    tframesteps tf s1 s2.
+  Proof.
+    move=>Hdisj Hsteps. remember (s1, t1) as st1. remember (s2, t2) as st2.
+    revert s1 t1 s2 t2 Hdisj Heqst1 Heqst2. induction Hsteps; intros.
+    - subst. destruct H as [EQs _]. apply rt_refl. apply EQs.
+    - subst. destruct ρ2 as [s3 t3]. eapply rt_step.
+      + eapply tokstep_framestep; eassumption.
+      + eapply IHHsteps; try reflexivity. destruct H as [_ [_ H]]. de_auto_eq.
+  Qed.
+
+  Lemma tframestep_smaller s1 s2 t1 t2:
+    t1 ⊑ t2 ->
+    tframestep t2 s1 s2 ->
+    tframestep t1 s1 s2.
+  Proof.
+    intros Hle (Hstep & Hdisj1 & Hdisj2).
+    split; split_conjs.
+    - assumption.
+    - clear Hdisj2. de_auto_eq.
+    - clear Hdisj1. de_auto_eq.
+  Qed.
+
+  Lemma tframesteps_smaller s1 s2 t1 t2:
+    t1 ⊑ t2 ->
+    tframesteps t2 s1 s2 ->
+    tframesteps t1 s1 s2.
+  Proof.
+    move=>Hle. induction 1.
+    - now apply rt_refl.
+    - eapply rt_step; last eassumption.
+      eapply tframestep_smaller; eassumption.
+  Qed.
+    
+  Definition upclosed (ss: S -> Prop) (t: Toks): Prop :=
+    forall s1 s2, ss s1 -> tframesteps t s1 s2 -> ss s2.
+
+  Lemma upclosed_bystep (ss: S -> Prop) t:
+    (forall s1 s2, ss s1 -> tframestep t s1 s2 -> ss s2) ->
+    upclosed ss t.
+  Proof.
+    move=>Hstep s1 s2 Hs1.
+    induction 1.
+    - rewrite -H. assumption.
+    - eapply IHrefl_trans_closure, Hstep.
+      + eassumption.
+      + assumption.
+  Qed.
+
+  Definition upclose (ss: S -> Prop) (t: Toks): S -> Prop :=
+    fun s' => exists s, ss s /\ tframesteps t s s'.
+
+  Local Instance upclose_equiv: Proper (equiv ==> equiv ==> equiv) upclose.
+  Proof.
+    move=>ss1 ss2 EQss t1 t2 EQt s.
+    split; intros [s' [Hs' Hstep]]; (exists s'; split; first now apply EQss).
+    - eapply tframesteps_equiv; last eassumption.
+      now symmetry.
+    - eapply tframesteps_equiv; last eassumption.
+      assumption.
+  Qed.
+
+  Lemma upclose_upclosed ss t:
+    upclosed (upclose ss t) t.
+  Proof.
+    move=>s1 s2 [s1' [Hs1 Hsteps1]] Hsteps2.
+    exists s1'. split; first assumption.
+    eapply rt_trans; try (now apply _); eassumption.
+  Qed.
+
+  Lemma upclose_incl (ss: S -> Prop) t:
+    forall s, ss s -> upclose ss t s.
+  Proof.
+    move=>s H. exists s. split; first assumption.
+    apply rt_refl. reflexivity.
+  Qed.
+
+  Lemma upclose_noop (ss: S -> Prop) t (Hadisj: forall s, ss s -> tok s # t):
+    upclosed ss t ->
+    upclose ss t == ss.
+  Proof.
+    move=>Hclosed s. split.
+    - move=>[s' [Hs' Hstep]].
+      eapply Hclosed; eassumption.
+    - eapply upclose_incl.
+  Qed.
+
+  CoInductive STSMon :=
+  | STSEl: forall (ss: S -> Prop) (t: Toks) (v: Prop), upclosed ss t -> (forall s, ss s -> tok s # t) -> STSMon.
+
+  Definition STS_ss (el: STSMon) :=
+    let (ss, _, _, _, _) := el in ss.
+
+  Definition STS_t (el: STSMon) :=
+    let (_, t, _, _, _) := el in t.
+
+  Local Ltac sts_destr := repeat (match goal with [ x : STSMon |- _ ] => destruct x end).
+
+  Definition STS_eq: relation STSMon :=
+    fun el1 el2 => match el1, el2 with
+                   | STSEl ss1 t1 v1 _ _, STSEl ss2 t2 v2 _ _ => ss1 == ss2 /\ t1 == t2 /\ v1 == v2
+                   end.
+
+  Global Instance STS_equiv: Equivalence STS_eq.
+  Proof.
+    split.
+    - intros ?. sts_destr; simpl. split_conjs; reflexivity.
+    - intros ? ?. sts_destr; simpl. intros [EQs ?].
+      split_conjs; now symmetry.
+    - intros ? ? ?. sts_destr; simpl. intros [EQs1 [EQt1 EQv1]] [EQs2 [EQt2 EQv2]].
+      split_conjs; try (etransitivity; eassumption).
+      move=>s. rewrite EQs1. now auto.
+  Qed.
+
+  Global Instance STS_Type: Setoid STSMon := mkType STS_eq.
+
+  Global Instance STS_valid: RA_valid STSMon :=
+    fun el => let (ss, _, v, _, _) := el in v /\ (exists s, ss s).
+
+  Program Definition STS_upclose (ss: S -> Prop) (t: Toks): STSMon :=
+    let ss' := (fun s' => ss s' /\ tok s' # t) in
+    STSEl (upclose ss' t) t True _ _.
+  Next Obligation.
+    apply upclose_upclosed.
+  Qed.
+  Next Obligation.
+    destruct H as [s' [[Hss Htok]] _].
+    eapply tframesteps_toks; eassumption.
+  Qed.
+
+  Definition STS_upclose1 s t := STS_upclose (fun s' => s' = s) t.
+  
+  Program Definition STS_upclose_notok (ss: S -> Prop): STSMon :=
+    STSEl (upclose ss de_emp) de_emp True _ _.
+  Next Obligation.
+    apply upclose_upclosed.
+  Qed.
+  Next Obligation.
+    rewrite de_emp_isect. reflexivity.
+  Qed.
+
+  Lemma STS_upclose_notok_eq ss:
+    STS_upclose_notok ss == STS_upclose ss de_emp.
+  Proof.
+    split; last (split; reflexivity).
+    eapply upclose_equiv; last reflexivity.
+    move=>s. split; last tauto.
+    move=>H. split; first eassumption.
+    de_auto_eq.
+  Qed.
+
+  Definition STS_upclose1_notok (s: S): STSMon := STS_upclose_notok (fun s' => s' = s).
+
+  Global Instance STS_unit: RA_unit STSMon :=
+    fun el => let (ss, t, v, uc, d) := el in STS_upclose_notok ss.
+
+  Global Program Instance STS_op: RA_op STSMon :=
+    fun el1 el2 => match el1, el2 with
+                   | STSEl ss1 t1 v1 uc1 d1, STSEl ss2 t2 v2 uc2 d2 =>
+                     STSEl (fun s => ss1 s /\ ss2 s)
+                           (t1 ∪ t2) (v1 /\ v2 /\ t1 # t2) _ _
+                   end.
+  Next Obligation.
+    apply upclosed_bystep.
+    move=>s1 s2 [Hss1 Hss2] Hstep.
+    assert(Hss1': ss1 s2).
+    { eapply uc1; first eassumption.
+      eapply rt_onestep, tframestep_smaller, Hstep.
+      de_auto_eq. }
+    assert(Hss2': ss2 s2).
+    { eapply uc2; first eassumption.
+      eapply rt_onestep, tframestep_smaller, Hstep.
+      de_auto_eq. }
+    split_conjs; assumption.
+  Qed.
+  Next Obligation.
+    specialize (d1 _ H). specialize (d2 _ H0). de_auto_eq.
+  Qed.
+
+  Global Instance STS_RA: RA STSMon.
+  Proof.
+    split.
+    - intros el1 el2. sts_destr. intros [EQs1 [EQt1 EQv1]] el3 el4. sts_destr. intros [EQs3 [EQt3 EQv3]]. split; last split.
+      + move=>s. simpl. rewrite (EQs1 s) (EQs3 s). reflexivity.
+      + now rewrite EQt1 EQt3.
+      + now rewrite EQt1 EQt3 EQv1 EQv3.
+    - intros el1 el2 el3. sts_destr. split; last (split; first (now rewrite assoc)); last first.
+      { split; intros H; split_conjs; try tauto; de_auto_eq. }
+      intro s. split; intros [Hin1 Hin2]; tauto.
+    - intros el1 el2. sts_destr. split; last (split; first (now rewrite comm)).
+      + intro s. split; tauto.
+      + rewrite comm. split; tauto.
+    - move=>t. sts_destr. split; last (split; first now rewrite comm de_emp_union); last first.
+      { split=>H; first tauto. split_conjs; try tauto; de_auto_eq. }
+      move=>s. split=>Hss; first tauto.
+      split_conjs.
+      + exists s. split; first assumption. now apply rt_refl.
+      + assumption.
+    - move=>el1 el2. sts_destr. move =>[EQs [EQt EQv]]. split; last (split; reflexivity).
+      rewrite EQs. reflexivity.
+    - move=>t t'. exists (1 (t · t')). sts_destr. split; last (split; first now rewrite de_emp_union); last first.
+      { split=>H; last tauto. split_conjs; try tauto; de_auto_eq. }
+      move=>s. split.
+      + intros [s' H]. split_conjs.
+        * exists s'. tauto.
+        * exists s'. tauto.
+      + intros [_ [s'' [[Hs' Hs''] Hsteps'']]].
+        exists s''. tauto.
+    - move=>t. sts_destr. simpl. split; last (split; reflexivity).
+      apply upclose_noop; last exact: upclose_upclosed.
+      move=>s _. de_auto_eq.
+    - apply proper_sym_impl_iff; try (now apply _). move=>el1 el2. sts_destr. move =>[EQs [EQt EQv]] [Hv [s Hinh]].
+      split; first now apply EQv. exists s. now apply EQs.
+    - move=>t1 t2. sts_destr. move=>[Hv [s Hinh]].
+      split; first tauto.
+      exists s. tauto.
+  Qed.
+
+  Lemma sts_pord st1 st2:
+    ↓st2 ->
+    (st1 ⊑ st2 <-> (↓st1 /\ STS_t st1 ⊑ STS_t st2 /\ STS_ss st2 == (fun s => STS_ss st1 s /\ upclose (STS_ss st2) (STS_t st2 \ STS_t st1) s))).
+  Proof.
+    move=>Hval. destruct st1 as [ss1 t1 v1 u1 d1], st2 as [ss2 t2 v2 u2 d2]. split.
+    - move=>[[ss3 t3 v3 u3 d3] Heq]. split_conjs; simpl; last (destruct Heq as [Heq_ss [Heq_t Heq_v]]=>s; split).
+      + eapply ra_op_valid2. erewrite Heq. assumption.
+      + destruct Heq. de_auto_eq.
+      + move=>Hss2. split; first now apply Heq_ss.
+        exists s. split; first assumption. now apply rt_refl.
+      + move=>[Hss1 [s' [Hss2 Hsteps]]]. apply Heq_ss. split; last assumption.
+        eapply (u3 s'); first (now eapply Heq_ss). eapply tframesteps_smaller; last eassumption.
+        destruct Hval as [Hval _]. apply Heq_v in Hval. de_auto_eq.
+    - destruct Hval as [Hval Hinh]. simpl.
+      move=>[[Hval' Hinh'] [Htincl Hseq]].
+      exists (STS_upclose ss2 (t2 \ t1)). split; last split; last first.
+      + split; first tauto. move=>_. split_conjs; try tauto. de_auto_eq.
+      + de_auto_eq.
+      + move=>s. split; last first.
+        { move=>Hss2. split; last now apply Hseq.
+          exists s. split_conjs; first assumption.
+          - specialize (d2 _ Hss2). de_auto_eq.
+          - apply rt_refl. reflexivity. }
+        move=>[[s' [[Hss2 Htok] Hstep]] Hss1].
+        apply Hseq. split; first assumption. exists s'. split; assumption.
+  Qed.
+
+  (* Now we become authoritative *)
+  Definition STSauth := auth STSMon.
+  Definition STSAuth := (@Auth STSMon).
+
+  Lemma sts_fupd st_a st_l s t s' t'
+    (Hstart: STS_ss st_a s /\ t = STS_t st_l) (* we start somewhere in st_a, with the tokens from st_l *) :
+    toksteps (s, t) (s', t') ->
+    STSAuth (ex_own st_a, st_l) ⇝∈ (fun n => exists st_an, STS_ss st_an s' /\ n == STSAuth (ex_own st_an, STS_upclose1 s' t')).
+  Proof.
+    destruct Hstart as [Hs Ht]. move=>Hsteps.
+    eapply (ra_fpu_auth (Pu':=fun st_an => STS_ss st_an s') (t':=STS_upclose1 s' t')); last first.
+    { move=>u' Hu'. exists u'. split; assumption || reflexivity. }
+    move=>Hval tf HEq.
+    assert (Hatoks: t ⊑ STS_t st_a).
+    { sts_destr. destruct HEq as [_ [Htoks _]]. subst t. simpl. clear -Htoks. de_auto_eq. }
+    assert (Hastoks: tok s # STS_t st_a).
+    { clear -Hatoks Hs. destruct st_a as [? ? ? ? a_d]. simpl. eapply a_d; eassumption. }
+    assert (Hsteptoks: tok s' # t' /\ tok s ∪ t == tok s' ∪ t').
+    { apply toksteps_toks; last assumption. de_auto_eq. }
+    assert (Htf: ↓tf).
+    { eapply ra_op_valid2. erewrite HEq. assumption. }
+    destruct tf as [tf_ss tf_t tf_v tf_u tf_d].
+    assert (Htf_ss: tf_ss s).
+    { sts_destr. destruct HEq as [Heq_ss _]. eapply Heq_ss. eexact Hs. }
+    assert (Hdisj_tf: tf_t # tok s ∪ t).
+    { move:(tf_d _ Htf_ss)=>Hdisj {Htf_ss}. rewrite <-HEq in Hval.
+      clear -Hval Hdisj Ht. sts_destr. destruct Hval as [Hval _]. rewrite Ht /=. de_auto_eq. }
+    assert (Htf_ss': tf_ss s').
+    { eapply tf_u; first eexact Htf_ss.
+      eapply toksteps_framesteps; eassumption. }
+    exists (STS_upclose1 s' t' · (STSEl tf_ss tf_t tf_v tf_u tf_d)). split_conjs.
+    - split; last assumption. exists s'. split; last now apply rt_refl.
+      split; first reflexivity. tauto.
+    - reflexivity.
+    - split.
+      + split; first done. split; first now apply Htf. de_auto_eq.
+      + exists s'. split; last assumption. exists s'. split; last now apply rt_refl.
+        split; first reflexivity. tauto.
+  Qed.
+
+End STS.
+
 Section IndexedProduct.
   (* I is the index type (domain), S the type of the components (codomain) *)
   Context {I : Type} {S : forall (i : I), Type}
@@ -350,20 +757,37 @@ Section IndexedProduct.
     - compute; now rewrite -> (assoc (T := S i) (t1 i) (t2 i) (t3 i)).
     - compute; now rewrite -> (comm (T :=S i) (t1 i) (t2 i)).
     - compute; now rewrite -> (ra_op_unit (RA := raS i) (t := t i)).
-    - compute; rewrite (H i); reflexivity.
-    - exists t' => i. destruct (ra_unit_mono (t i) (t' i)).
+    - compute. rewrite (H i); reflexivity.
+    - exists (fun i => proj1_sig (ra_unit_mono (t i) (t' i)))=>i.
+      unfold ra_op, ra_op_infprod. move:(ra_unit_mono (t i) (t' i))=>[t'' Heq].
+      etransitivity; last eapply Heq. reflexivity.
+    - rewrite /ra_unit /ra_unit_infprod ra_unit_idem. reflexivity.
     - compute; intros; split; intros; by move/(_ i): H0; rewrite (H i).
-    - now eapply (ra_valid_unit (RA := raS i)).
     - eapply (ra_op_valid (RA := raS i)); now eauto.
   Qed.
 End IndexedProduct.
+Arguments ra_res_infprod : default implicits.
 
 
 Section HomogeneousProduct.
   (* I is the index type (domain), S the type of the components (codomain) *)
   Context {I : Type} {S : Type} `{RA S}.
 
+  Global Instance ra_unit_homprod : RA_unit (forall (i : I), S) := ra_unit_infprod.
+  Global Instance ra_op_homprod : RA_op (forall (i : I), S) := ra_op_infprod.
+  Global Instance ra_valid_homprod : RA_valid (forall (i : I), S) := ra_valid_infprod.
   Global Instance ra_homprod : RA (forall (i : I), S).
-  Proof. now eapply ra_infprod; auto. Qed.
+  Proof.
+    split; repeat intro.
+    - now apply ra_op_proper.
+    - now apply ra_op_assoc.
+    - now apply ra_op_comm.
+    - now apply ra_op_unit.
+    - now apply ra_unit_proper.
+    - destruct (ra_unit_mono t t') as [i Hi]. exists i. apply Hi.
+    - now apply ra_unit_idem.
+    - now apply ra_valid_proper.
+    - eapply ra_op_valid. eapply H0.
+  Qed.
 End HomogeneousProduct.
-*)
+

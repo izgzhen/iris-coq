@@ -55,6 +55,8 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       eapply propsMW, WPE. assumption.
     Qed.
 
+    (* RJ TODO: This and the following have to be updated to the new def. of stepn in terms of a general closure
+       operation. *)
     Lemma preserve_wptp safe m n k tp tp' σ σ' w rs φs
           (HSN  : stepn n (tp, σ) (tp', σ'))
           (HWTP : wptp safe m w (n + S k) tp rs φs)

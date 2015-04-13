@@ -50,6 +50,16 @@ Ltac resp_set :=
 Section Morphisms.
   Context `{eT : Setoid T} `{eU : Setoid U} `{eV : Setoid V}.
 
+  (* This should really also be somewhere in the stdlib... *)
+  Global Program Instance pmorph_type : Setoid (T -> U) :=
+    mkType (fun f g => forall x, f x == g x).
+  Next Obligation.
+    clear; split.
+    - intros f x; reflexivity.
+    - intros f g HS x; symmetry; apply HS.
+    - intros f g h Hfg Hgh x; etransitivity; [apply Hfg | apply Hgh].
+  Qed.
+
   (** The type of equivalence-preserving maps is again a type with
       equivalence, defined pointwise. *)
   Global Program Instance morph_type : Setoid (T -=> U) :=
