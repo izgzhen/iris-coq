@@ -75,6 +75,11 @@ Section RALemmas.
   Proof.
     rewrite comm. now eapply ra_op_unit.
   Qed.
+  
+  Lemma ra_unit_dup {t} : 1 t · 1 t == 1 t.
+  Proof.
+    now rewrite -{1}(ra_unit_idem t) ra_op_unit.
+  Qed.
 
   Lemma ra_op_valid2 {t1 t2} : ↓ (t1 · t2) -> ↓ t2.
   Proof.
