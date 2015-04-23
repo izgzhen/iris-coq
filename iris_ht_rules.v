@@ -323,7 +323,7 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
 
     (** Fork **)
     Lemma wpFork safe m R e :
-      ▹wp safe m e (umconst ⊤) * ▹R ⊑ wp safe m (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).
+      ▹wp safe m e (umconst ⊤) * ▹R ⊑ wp safe m (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).	(* PDS: Why sc not and? *)
     Proof.
       intros w n r [r1 [r2 [EQr [Hwp HLR] ] ] ].
       destruct n as [| n]; [apply wpO |].
