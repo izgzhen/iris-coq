@@ -1,6 +1,6 @@
 Require Import Ssreflect.ssreflect Omega.
 Require Import world_prop core_lang lang masks iris_core.
-Require Import ModuRes.RA ModuRes.SPred ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr.
+Require Import ModuRes.RA ModuRes.CMRA ModuRes.SPred ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr ModuRes.Agreement.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -8,7 +8,7 @@ Set Bullet Behavior "Strict Subproofs".
    Invariants, View Shifts, and Hoare Triples. The last two make use
    of a notion of "world satisfaction" (which you can also think of
    as the erasure from logical states to physical ones). *)
-Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP).
+Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP).
   Export CORE.
   Module Export L  := Lang C.
 
@@ -17,37 +17,7 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
   Local Open Scope bi_scope.
   Local Open Scope iris_scope.
   
-  Implicit Types (P : Props) (w : Wld) (n i k : nat) (m : mask) (r u v : res) (σ : state) (φ : vPred).
-
-  Section Invariants.
-
-    (** Invariants **)
-    Definition invP i P w : UPred res :=
-      intEq (w i) (Some (ı' (halved P))) w.
-    Program Definition inv i : Props -n> Props :=
-      n[(fun P => m[(invP i P)])].
-    Next Obligation.
-      intros w1 w2 EQw; unfold invP.
-      destruct n; [apply dist_bound |].
-      rewrite (EQw i).
-      now eapply met_morph_nonexp.
-    Qed.
-    Next Obligation.
-      intros w1 w2 Sw; unfold invP.
-      intros n r HP; specialize (Sw i).
-      destruct (w1 i) as [μ1 |]; [| contradiction].
-      destruct (w2 i) as [μ2 |]; [| contradiction]. simpl in *.
-      rewrite <- Sw; assumption.
-    Qed.
-    Next Obligation.
-      intros p1 p2 EQp w; unfold invP.
-      cut ((w i === Some (ı' (halved p1))) = n = (w i === Some (ı' (halved p2)))).
-      { intros Heq. now eapply Heq. }
-      eapply met_morph_nonexp.
-      now eapply dist_mono, (met_morph_nonexp ı').
-    Qed.
-
-  End Invariants.
+  Implicit Types (P : Props) (u v w : Wld) (n i k : nat) (m : mask) (r : res) (σ : state) (φ : vPred).
 
   Section WorldSatisfaction.
 
@@ -56,24 +26,31 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
        constructs. Hopefully we can provide a fold that'd work for
        that at some point
      *)
-    Fixpoint comp_list (xs : list res) : res :=
+    Fixpoint comp_list w (xs : list Wld) : Wld :=
       match xs with
-        | nil => 1
-        | (x :: xs)%list => x · comp_list xs
+        | nil => 1 w
+        | (x :: xs)%list => x · comp_list w xs
       end.
 
-    Lemma comp_list_app rs1 rs2 :
-      comp_list (rs1 ++ rs2) == comp_list rs1 · comp_list rs2.
+    Lemma comp_list_unit w xs :
+      comp_list w xs == 1 w · comp_list w xs.
     Proof.
-      induction rs1; simpl comp_list; [now rewrite ->ra_op_unit by apply _ |].
+      induction xs; first now rewrite ra_unit_dup.
+      now rewrite [_ w _]/= {1}IHxs !assoc (comm _ (1 _)).
+    Qed.
+
+    Lemma comp_list_app w rs1 rs2 :
+      comp_list w (rs1 ++ rs2) == comp_list w rs1 · comp_list w rs2.
+    Proof.
+      induction rs1; simpl comp_list; [now rewrite {1}comp_list_unit |].
       now rewrite ->IHrs1, assoc.
     Qed.
 
-    Definition cod (m : nat -f> res) : list res := List.map snd (findom_t m).
-    Definition comp_map (m : nat -f> res) : res := comp_list (cod m).
+    Definition cod (m : nat -f> Wld) : list Wld := List.map snd (findom_t m).
+    Definition comp_map w (m : nat -f> Wld) : Wld := comp_list w (cod m).
 
-    Lemma comp_map_remove (rs : nat -f> res) i r (HLu : rs i == Some r) :
-      comp_map rs == r · comp_map (fdRemove i rs).
+    Lemma comp_map_remove u (rs : nat -f> Wld) i w (HLu : rs i == Some w) :
+      comp_map u rs == w · comp_map u (fdRemove i rs).
     Proof.
       destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
       induction rs as [| [j s] ]; [contradiction |]; simpl comp_list; simpl in HLu.
@@ -82,26 +59,26 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
       rewrite-> !assoc, (comm s). reflexivity.
     Qed.
 
-    Lemma comp_map_insert_new (rs : nat -f> res) i r (HNLu : rs i == None) :
-      r · comp_map rs == comp_map (fdUpdate i r rs).
+    Lemma comp_map_insert_new u (rs : nat -f> Wld) i w (HNLu : rs i == None) :
+      w · comp_map u rs == comp_map u (fdUpdate i w rs).
     Proof.
       destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
       induction rs as [| [j s] ]; [reflexivity | simpl comp_list; simpl in HNLu].
       destruct (comp i j); [contradiction | reflexivity |].
       simpl comp_list; rewrite <- IHrs by eauto using SS_tail.
-      rewrite-> !assoc, (comm r); reflexivity.
+      rewrite-> !assoc, (comm w); reflexivity.
     Qed.
 
-    Lemma comp_map_insert_old (rs : nat -f> res) i r1 r2 r
-          (HLu : rs i == Some r1) (HEq : r1 · r2 == r):
-      r2 · comp_map rs == comp_map (fdUpdate i r rs).
+    Lemma comp_map_insert_old u (rs : nat -f> Wld) i w1 w2 w
+          (HLu : rs i == Some w1) (HEq : w1 · w2 == w):
+      w2 · comp_map u rs == comp_map u (fdUpdate i w rs).
     Proof.
       destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
       induction rs as [| [j s] ]; [contradiction |]; simpl comp_list; simpl in HLu.
       destruct (comp i j); [red in HLu; rewrite-> HLu; clear HLu | contradiction |].
-      - simpl comp_list; rewrite ->assoc, (comm r2), <- HEq; reflexivity.
+      - simpl comp_list; rewrite ->assoc, (comm w2), <- HEq; reflexivity.
       - simpl comp_list; rewrite <- IHrs by eauto using SS_tail.
-        rewrite-> !assoc, (comm r2); reflexivity.
+        rewrite-> !assoc, (comm w2); reflexivity.
     Qed.
 
     (* When is a resource okay with a state? *)
@@ -117,15 +94,52 @@ Module Type IRIS_PLOG (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
        should not hinder non-expansiveness. Then use that proof and ra_ag_unInjApprox to
        extract an (S n)-approximation of the (halve Props) from the World. This
        will be an n-approximation of the Props, so things should fit. *)
-    Program Definition wsat σ m (r : res) w : SPred :=
-      ▹ (mkSPred (fun n => exists rs : nat -f> res,
-                    res_sat (r · (comp_map rs)) σ
-                      /\ forall i (Hm : m i),
-                           (i ∈ dom rs <-> i ∈ dom w) /\
-                           forall π ri (HLw : w i == Some π) (HLrs : rs i == Some ri),
-                             (unhalved (ı π)) w n ri) _).
+    Program Definition wsat σ m : Props :=
+      ▹ (m[(fun w => 
+              mkSPred (
+                  fun n => 
+                    exists rs : nat -f> Wld,
+                      let t := w · (comp_map w rs) in
+                      exists pv : (cmra_valid t (S n)),
+                        (fst (snd t) ⊑ ex_own σ)
+                            /\ forall i (INt : i ∈ dom (fst t)),
+                                 let op := Indom_lookup _ _ (proj2 (In_inlst _ _) INt) in
+                                       exists INrs : i ∈ dom rs,
+                                         let wp := Indom_lookup _ _ (proj2 (In_inlst _ _ ) INrs) in
+                                               match op with
+                                                 | ag_unit => True
+                                                 | ag_inj v p ts => unhalved (ı (p n _)) wp n
+                                               end
+                ) _ 
+        )] ).
     Next Obligation.
-      intros n1 n2 HLe [rs [HLS HRS] ]. exists rs; split; [assumption|].
+      symmetry in Heq_op.
+      apply equivR in Heq_op.
+      rewrite /cmra_valid /ra_prod_cmra_valid (surjective_pairing (w · _)) in pv.
+      destruct pv as [Hf Hs].
+      specialize (Hf i (ag_inj _ v p ts)).
+      have/Hf : (fst (w · comp_map w rs) i == Some (ag_inj PreProp v p ts)).
+      { rewrite -Heq_op. symmetry. apply/equivR. exact (Indom_lookup_find _ _ (proj2 (In_inlst _ _) INt)). }
+      apply dpred; omega.
+    Qed.
+    Next Obligation.
+      intros n1 n2 HLe (rs & pv & Hσ & H). 
+      exists rs. exists (dpred (m := S n2) (le_n_S _ _ HLe) pv).
+      split; [assumption|]. move => i INt. specialize (H i INt). destruct H as [INrs H].
+      exists INrs. 
+      pose (IL := 
+Indom_lookup i (findom_t (fst (w · comp_map w rs)))
+       (proj2
+          (In_inlst i (List.map fst (findom_t (fst (w · comp_map w rs)))))
+          INt)).
+      fold IL in H. fold IL.
+      clear H.
+      generalize (@eq_refl _ IL) as EQ.
+      pattern (IL) at 2 6.
+      ddes (IL) at 4 5 6 as [v0 ts0 tsx0|] deqn:EQ1.
+      generalize (eq_refl). pattern x.
+      destruct (Indom_lookup i (findom_t (fst (w · comp_map w rs))) (proj2 (In_inlst i (List.map fst (findom_t (fst (w · comp_map w rs))))) INt)).
+      
       setoid_rewrite HLe; eassumption.
     Qed.
 
