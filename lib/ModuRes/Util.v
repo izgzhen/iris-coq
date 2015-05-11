@@ -16,3 +16,6 @@ Tactic Notation "ddes" constr(T) "at" integer_list(pos) "as" simple_intropattern
    destruct (T) as pat; move => EQ).
 
 Ltac split_conjs := repeat (match goal with [ |- _ /\ _ ] => split end).
+
+(* TODO: Is this already defined somewhere? *)
+Class DecEq (T : Type) := dec_eq : forall (t1 t2: T), {t1 = t2} + {t1 <> t2}.

@@ -297,7 +297,7 @@ End AuthTests.
 
 
 Section DecAgreement.
-  Context T `{T_ty : Setoid T} (eq_dec : forall x y, {x == y} + {x =/= y}).
+  Context T (eq_dec : DecEq T).
   Local Open Scope ra_scope.
 
   Inductive ra_dagree : Type :=
@@ -320,7 +320,7 @@ Section DecAgreement.
 
   Definition ra_eq_dag (x y: ra_dagree): Prop :=
     match x,y with
-      | dag_inj t1, dag_inj t2 => t1 == t2
+      | dag_inj t1, dag_inj t2 => t1 = t2
       | x, y => x = y
     end.
 
@@ -335,16 +335,13 @@ Section DecAgreement.
   Proof.
     split; repeat intro.
     - repeat (match goal with [ x : ra_dagree |- _ ] => destruct x end);
-      simpl in *; try reflexivity; try rewrite H; try rewrite H0; try reflexivity;
-      try inversion H; try inversion H0; compute;
-      destruct (eq_dec t2 t0), (eq_dec t1 t); simpl; auto; exfalso;
-      [ rewrite <- H, -> e in c | rewrite -> H, -> e in c; symmetry in c]; contradiction.
+      simpl in *; try discriminate || reflexivity || assumption; [].
+      unfold ra_op, ra_op_dag.
+      destruct (eq_dec t2 t0), (eq_dec t1 t); simpl; auto; exfalso; apply n; congruence.
     - repeat (match goal with [ x : ra_dagree |- _ ] => destruct x end);
-      simpl in *; auto; try reflexivity; compute; try destruct (eq_dec _ _); 
-      try reflexivity;
-      destruct (eq_dec t0 t), (eq_dec t1 t0), (eq_dec t1 t); simpl; auto; 
-      try reflexivity;
-      try (rewrite <- e in c; contradiction); now exfalso; eauto.
+      simpl in *; try discriminate || reflexivity || assumption;
+      compute; try destruct (eq_dec _ _); try reflexivity; [].
+      destruct (eq_dec t0 t), (eq_dec t1 t0), (eq_dec t1 t); simpl; auto; exfalso; apply n; congruence.
     - destruct t1, t2; try reflexivity; compute; destruct (eq_dec t0 t), (eq_dec t t0);
       try reflexivity; auto; try contradiction; symmetry in e; contradiction.
     - destruct t; reflexivity.

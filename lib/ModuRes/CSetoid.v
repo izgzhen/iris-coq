@@ -364,15 +364,16 @@ Section Option.
       | _, _ => False
     end.
 
-  Global Program Instance option_type : Setoid (option T) :=
-    mkType opt_eq.
-  Next Obligation.
+  Global Instance opt_eq_equiv: Equivalence opt_eq.
+  Proof.
     split.
     - intros [a |]; simpl; reflexivity.
     - intros [a |] [b |] HS; simpl in *; now trivial || symmetry; assumption.
     - intros [a |] [b |] [c |] Hab Hbc; simpl in *; try (exact I || contradiction); [].
       etransitivity; eassumption.
   Qed.
+
+  Global Instance option_type : Setoid (option T) := mkType opt_eq.
 
 End Option.
 
