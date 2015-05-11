@@ -22,14 +22,12 @@ Section Agreement.
     eapply dpred; eassumption.
   Qed.
   
-  Inductive ra_agree : Type :=
-  | ag_inj (v: SPred) (ts: vChain v) (tsx: cvChain ts)
-  | ag_unit.
+  CoInductive ra_agree : Type :=
+  ag_inj (v: SPred) (ts: vChain v) (tsx: cvChain ts).
 
-  Global Instance ra_agree_unit : RA_unit _ := fun _ => ag_unit.
+  Global Instance ra_agree_unit : RA_unit ra_agree := fun x => x.
   Global Program Instance cmra_agree_valid : CMRA_valid _ :=
     fun x => match x with
-             | ag_unit => sp_top
              | ag_inj valid _ _ => valid
              end.
   Global Instance ra_agree_valid : RA_valid _ := compose sp_full cmra_agree_valid.
@@ -70,8 +68,6 @@ Section Agreement.
                  ag_inj (ra_ag_compinj_valid ts1 ts2 ts1x ts2x) (ra_ag_compinj_ts ts1 ts2 ts1x ts2x)
                         (ra_ag_compinj_tsx ts1 ts2 ts1x ts2x)
 
-               | ag_unit, y => y
-               | x, ag_unit => x
                end.
   Program Definition ra_ag_inj (t: T): ra_agree :=
     ag_inj sp_top (fun _ _ => t) (fun _ _ _ _ => _).
@@ -94,12 +90,10 @@ Section Agreement.
     (* Also, only the n-valid elements have to be only n-equal. Otherwise,
        commutativity breaks: n-valid here means that the arguments were
        n-equal. *)
-    | ag_unit, ag_unit => True
-    | _, _ => False
     end.
 
   Local Ltac ra_ag_destr := repeat (match goal with [ x : ra_agree |- _ ] => destruct x end).
-  Local Ltac ra_ag_auto := first [by firstorder | split; [by firstorder|intros n pv1 pv2; pi pv1 pv2; by firstorder ]].
+  (*Local Ltac ra_ag_auto := first [by firstorder | split; [by firstorder|intros n pv1 pv2; pi pv1 pv2; by firstorder ]].*)
 
   Global Instance ra_agree_eq_equiv : Equivalence ra_agree_eq.
   Proof.
@@ -113,10 +107,20 @@ Section Agreement.
   { rewrite -H. assumption. }
   Qed.
   Global Instance ra_agree_type : Setoid ra_agree := mkType ra_agree_eq.
+
+  Lemma ra_ag_dupl (x y: ra_agree):
+    x · x == x.
+  Proof.
+    ra_ag_destr. split.
+    - split; simpl; first by firstorder.
+      move=>pv. exists pv pv. now firstorder.
+    - move=>n ? ?. unfold ra_ag_compinj_ts. eapply dist_refl. apply equivR. f_equiv. by eapply ProofIrrelevance.
+  Qed.
+  
   Global Instance ra_agree_res : RA ra_agree.
   Proof.
     split; repeat intro.
-    - ra_ag_destr; try ra_ag_auto; [].
+    - ra_ag_destr; [].
       destruct H as (HeqV1 & HeqT1), H0 as (HeqV2 & HeqT2).
       split.
       + split; intros (pv1 & pv2 & Heq).
@@ -125,7 +129,7 @@ Section Agreement.
         * move:(pv1)(pv2)=>pv1' pv2'. rewrite <-HeqV1 in pv1'. rewrite <-HeqV2 in pv2'. exists pv1' pv2'.
           rewrite ->HeqT1, ->HeqT2. eapply Heq; eassumption.
       + intros n pv1 pv2. by apply: HeqT1.
-    - ra_ag_destr; try ra_ag_auto; []. simpl. unfold ra_ag_compinj_ts in *. split.
+    - ra_ag_destr; []. simpl. unfold ra_ag_compinj_ts in *. split.
       + intros n. split.
         * intros [pv1 [[pv2 [pv3 EQ']] EQ]]. hnf. 
           assert (pv4: (ra_ag_compinj_valid ts1 ts0 tsx1 tsx0) n).
@@ -136,15 +140,16 @@ Section Agreement.
           { hnf. exists pv2 pv3. rewrite <-EQ'. ra_ag_pi. }
           exists pv1 pv4. ra_ag_pi.
       + intros n pv1 pv2. f_equiv. by eapply ProofIrrelevance.
-    - ra_ag_destr; try ra_ag_auto; []. unfold ra_op, ra_ag_op. unfold ra_ag_compinj_ts in *. split.
+    - ra_ag_destr. unfold ra_op, ra_ag_op. unfold ra_ag_compinj_ts in *. split.
       + split; intros (pv1 & pv2 & Heq); do 2 eexists; symmetry; eassumption.
       + intros n [pv1 [pv2 EQ]] [pv3 [pv4 EQ']]. unfold ra_ag_compinj_ts in *. ra_ag_pi.
-    - ra_ag_destr; reflexivity.
+    - eapply ra_ag_dupl. assumption.
     - ra_ag_destr; unfold ra_valid, ra_agree_valid in *; firstorder.
-    - by exists ag_unit. 
+    - exists t'. reflexivity.
+    - ra_ag_destr; unfold ra_valid, ra_agree_valid in *. split; first reflexivity.
+      move=>n ? ?. eapply dist_refl. apply equivR. f_equiv. by eapply ProofIrrelevance.
     - ra_ag_destr; unfold ra_valid, ra_agree_valid in *; firstorder.
-    - ra_ag_destr; unfold ra_valid, ra_agree_valid in *; firstorder.
-    - ra_ag_destr; try firstorder; last exact I; [].
+    - ra_ag_destr; [].
       destruct (H n) as [Hn _]. assumption.
   Qed.
 
@@ -152,27 +157,15 @@ Section Agreement.
     x ⊑ y <-> x · y == y.
   Proof.
     split.
-    - move=>[z EQ]. ra_ag_destr; try ra_ag_auto; [|]; destruct EQ as [EQv EQts]; split.
+    - move=>[z EQ]. ra_ag_destr; destruct EQ as [EQv EQts]; split.
       +  unfold ra_ag_compinj_ts in *; split.
         * intros (pv1 & pv2 & EQt). assumption.
         * intros pv0. hnf. move:(pv0). rewrite -{1}EQv. move=>[pv1 [pv2 EQ']].
           exists pv2 pv0. erewrite <-EQts. symmetry. ra_ag_pi.
       + unfold ra_ag_compinj_ts in *; move=>n [pv1 [pv2 EQ]] pv3. ra_ag_pi.
-      + split.
-        * intros (pv1 & pv2 & EQt). assumption.
-        * rewrite -{1}EQv. move=>pv1. do 2 eexists. eapply EQts.
-      + unfold ra_ag_compinj_ts in *; move=>n [pv1 [pv2 EQt]] pv3. ra_ag_pi.
     - intros EQ. exists y. rewrite comm. assumption.
   Grab Existential Variables.
-  { rewrite -EQv. assumption. }
-  { assumption. }
   { do 2 eexists. eassumption. }
-  Qed.
-
-  Lemma ra_ag_dupl (x y: ra_agree):
-    x · x == x.
-  Proof.
-    eapply ra_ag_pord. reflexivity.
   Qed.
 
   (* We also have a metric *)
@@ -183,15 +176,13 @@ Section Agreement.
                         | ag_inj v1 ts1 _, ag_inj v2 ts2 _ =>
                           v1 = S n = v2 /\ (forall n' pv1 pv2, n' <= n -> ts1 n' pv1 = n' = ts2 n' pv2)
                                            (* be sure for n'' to be at a level where the validity equality actually means something: v1 = n = v2 means that they agree on n' and smaller! *)
-                        | ag_unit, ag_unit => True
-                        | _, _ => False
                         end
     end.
 
   Global Program Instance ra_agree_metric : metric ra_agree := mkMetr ra_agree_dist.
   Next Obligation.
     repeat intro. destruct n as [|n]; first by auto.
-    ra_ag_destr; try ra_ag_auto; []. destruct H as [EQv1 EQts1], H0 as [EQv2 EQts2]. split; move=>[EQv EQts]; split.
+    ra_ag_destr. destruct H as [EQv1 EQts1], H0 as [EQv2 EQts2]. split; move=>[EQv EQts]; split.
     - rewrite -EQv1 -EQv2. assumption.
     - move=> n' pv1 pv2 HLe. etransitivity; first (symmetry; by eapply EQts1).
       etransitivity; last (by eapply EQts2). by eapply EQts.
@@ -206,7 +197,7 @@ Section Agreement.
   Qed.
   Next Obligation.
     split.
-    - intros Hall. ra_ag_destr; last exact I; try (specialize (Hall 1); now firstorder); [].
+    - intros Hall. ra_ag_destr.
       split.
       + eapply dist_refl. move=> [|n]; first by apply: dist_bound. destruct (Hall (S n)) as [EQ _].
         apply dist_mono. assumption.
@@ -221,14 +212,16 @@ Section Agreement.
   Qed.
   Next Obligation.
     repeat intro. destruct n as [|n]; first by auto.
-    ra_ag_destr; try firstorder; [].
-    etransitivity; first by eapply H1. by eapply H2.
+    ra_ag_destr.
+    destruct H as [EQv1 EQts1], H0 as [EQv2 EQts2].
+    split; first now firstorder. intros.
+    etransitivity; first by eapply EQts1. by eapply EQts2.
   Grab Existential Variables.
-  { apply H; first omega. assumption. }
+  { apply EQv1; first omega. assumption. }
   Qed.
   Next Obligation.
     repeat intro. destruct n as [|n]; first by auto.
-    ra_ag_destr; try firstorder; []. destruct H as [EQv EQts]. split.
+    ra_ag_destr. destruct H as [EQv EQts]. split.
     - move=>n' HLe. eapply EQv. omega.
     - move=>n'' pv1 pv2 HLe. eapply EQts. omega.
   Qed.
@@ -261,77 +254,67 @@ Section Agreement.
     - move=>m _ _ Hle. eapply mono_dist, EQt. omega.
   Qed.
 
-
-  Program Definition ra_ag_vchain (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ 1} : chain SPred :=
+  Program Definition ra_ag_vchain (σ: chain ra_agree) {σc: cchain σ} : chain SPred :=
     fun i => match σ (S i) with
-             | ag_unit => !
              | ag_inj v' _ _ => v'
              end.
-  Next Obligation.
-    cchain_eleq σ at 1 (S i) lvl:1=>EQ.
-    apply EQ; omega.
-  Qed.
 
-  Instance ra_ag_vchain_c (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ 1} : cchain (ra_ag_vchain σ v ts (HNE:=HNE)).
+  Instance ra_ag_vchain_c (σ: chain ra_agree) {σc: cchain σ} : cchain (ra_ag_vchain σ).
   Proof.
     intros n j m HLe1 HLe2. destruct n as [|n]; first by apply: dist_bound. unfold ra_ag_vchain.
-    cchain_discr σ (S j) at 1 3 as [v1 ts1 tsx1|] deqn:EQ1.
-    cchain_discr σ (S m) at 1 3 as [v2 ts2 tsx2|] deqn:EQ2.
+    ddes (σ (S j)) at 1 3 as [v1 ts1 tsx1] deqn:EQ1.
+    ddes (σ (S m)) at 1 3 as [v2 ts2 tsx2] deqn:EQ2.
     cchain_eleq σ at (S j) (S m) lvl:(S n); move=>[EQv _].
     exact: dist_mono.
   Qed.
 
-  Lemma ra_ag_vchain_compl_n (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ 1} n:
-    compl (ra_ag_vchain σ v ts (HNE:=HNE)) n ->
-    forall m k, m <= n -> k >= n -> ra_ag_vchain σ v ts (HNE:=HNE) k m.
+  Lemma ra_ag_vchain_compl_n (σ: chain ra_agree) {σc: cchain σ} n:
+    compl (ra_ag_vchain σ) n ->
+    forall m k, m <= n -> k >= n -> ra_ag_vchain σ k m.
   Proof.
     move=>pv m k HLe HLe'.
-    assert (HTv := conv_cauchy (ra_ag_vchain σ v ts (HNE:=HNE)) (S n) _ (le_refl _)).
+    assert (HTv := conv_cauchy (ra_ag_vchain σ) (S n) _ (le_refl _)).
     apply HTv in pv; last by omega.
     clear HTv. move:pv. unfold ra_ag_vchain.
-    cchain_discr σ (S (S n)) at 1 3 as [v1 ts1 tsx1|] deqn:EQ1.
-    cchain_discr σ (S k) at 1 3 as [v2 ts2 tsx2|] deqn:EQ2=>pv.
+    ddes (σ (S (S n))) at 1 3 as [v1 ts1 tsx1] deqn:EQ1.
+    ddes (σ (S k)) at 1 3 as [v2 ts2 tsx2] deqn:EQ2=>pv.
     cchain_eleq σ at (S (S n)) (S k) lvl:(S m); move=>[EQv _].
     apply EQv; first omega. eapply dpred; eassumption.
   Qed.
 
-  Lemma ra_ag_vchain_ucompl_n (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ 1} n:
-    ra_ag_vchain σ v ts (HNE:=HNE) (S n) n ->
-    compl (ra_ag_vchain σ v ts (HNE:=HNE)) n.
+  Lemma ra_ag_vchain_ucompl_n (σ: chain ra_agree) {σc: cchain σ} n:
+    ra_ag_vchain σ (S n) n ->
+    compl (ra_ag_vchain σ) n.
   Proof.
     move=>pv.
-    assert (HTv := conv_cauchy (ra_ag_vchain σ v ts (HNE:=HNE)) (S n) _ (le_refl _)).
+    assert (HTv := conv_cauchy (ra_ag_vchain σ) (S n) _ (le_refl _)).
     apply HTv in pv; last by omega. assumption.
   Qed.
 
-  Lemma ra_ag_vchain_n (σ: chain ra_agree) {σc: cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ 1} n m:
-    ra_ag_vchain σ v ts (HNE:=HNE) n m -> forall v' ts' tsx', σ (S n) = ag_inj v' ts' tsx' -> v' m.
+  Lemma ra_ag_vchain_n (σ: chain ra_agree) {σc: cchain σ} n m:
+    ra_ag_vchain σ n m -> forall v' ts' tsx', σ (S n) = ag_inj v' ts' tsx' -> v' m.
   Proof.
     move=>pv v' ts' tsx' EQ. move:pv EQ.
     unfold ra_ag_vchain.
-    cchain_discr σ (S n) at 1 3 as [vSn tsSn tsxSSn|] deqn:EQSSn.
+    ddes (σ (S n)) at 1 3 as [vSn tsSn tsxSSn] deqn:EQSSn.
     move=>pv EQ. rewrite EQ in EQSSn. injection EQSSn=>{EQSSn EQ}EQ. destruct EQ.
     move=><-. assumption.
   Qed.
 
-  Program Definition ra_ag_tsdiag_n (σ : chain ra_agree) {σc : cchain σ} v ts {tsx} {HNE : ag_inj v ts tsx = σ 1} n {pv: compl (ra_ag_vchain σ v ts (HNE:=HNE)) n}: T :=
+  Program Definition ra_ag_tsdiag_n (σ : chain ra_agree) {σc : cchain σ} n {pv: compl (ra_ag_vchain σ) n}: T :=
     match σ (S n) with
-    | ag_unit => !
     | ag_inj v' ts' tsx' => ts' n _
     end.
   Next Obligation.
-    cchain_eleq σ at 1 (S n) lvl:1=>EQ.
-    apply EQ; omega.
-  Qed.
-  Next Obligation.
     unfold ra_ag_vchain in pv. move: pv.
-    cchain_discr σ (S (S n)) at 1 3 as [vSSn tsSSn tsxSSn|] deqn:EQ; move=>pv.
+    ddes (σ (S (S n))) at 1 3 as [vSSn tsSSn tsxSSn] deqn:EQ; move=>pv.
     cchain_eleq σ at (S n) (S (S n)) lvl:(S n); move=>[EQv _].
     apply EQv; first omega. assumption.
   Qed.
 
-  Lemma ra_ag_tsdiag_n_pi (σ : chain ra_agree) {σc : cchain σ} v ts {tsx1 tsx2} {HNE1 : ag_inj v ts tsx1 = σ 1} {HNE2 : ag_inj v ts tsx2 = σ 1} n {pv1: compl (ra_ag_vchain σ v ts (HNE:=HNE1)) n} {pv2: compl (ra_ag_vchain σ v ts (HNE:=HNE2)) n}:
-    ra_ag_tsdiag_n σ v ts n (HNE:=HNE1) (pv:=pv1) = ra_ag_tsdiag_n σ v ts n (HNE:=HNE2) (pv:=pv2).
+  (*
+  Lemma ra_ag_tsdiag_n_pi (σ : chain ra_agree) {σc : cchain σ} n {pv1: compl (ra_ag_vchain σ) n} {pv2: compl (ra_ag_vchain σ) n}:
+    ra_ag_tsdiag_n σ n (pv:=pv1) = ra_ag_tsdiag_n σ n (pv:=pv2).
   Proof.
     Set Printing Implicit.
     move: HNE1 HNE2 n pv1 pv2. pi tsx2 tsx1=>{tsx2} HNE1 HNE2.
@@ -339,22 +322,18 @@ Section Agreement.
     pi pv2 pv1. reflexivity.
     Unset Printing Implicit.
   Qed.
+  *)
 
   Program Definition ra_ag_compl (σ : chain ra_agree) {σc : cchain σ} :=
-    match σ 1 with
-      | ag_unit => ag_unit
-      | ag_inj v ts tsx => ag_inj (compl (ra_ag_vchain σ v ts (tsx:=tsx) (HNE:=_)))
-                                  (fun n pv => ra_ag_tsdiag_n σ v ts n (pv:=pv)) _
-    end.
+    ag_inj (compl (ra_ag_vchain σ))
+           (fun n pv => ra_ag_tsdiag_n σ n (pv:=pv)) _.
   Next Obligation.
     move=>n i HLe pv. simpl. rewrite -/dist.    
-    assert (pvc: compl (ra_ag_vchain σ v ts (HNE:=Heq_anonymous)) i).
-    { Set Printing Implicit. clear -pv. unfold compl, sp_cmetric, sp_compl in *. simpl in *.
-      erewrite (ProofIrrelevance _ _ Heq_anonymous) in pv. assumption. Unset Printing Implicit. }
+    assert (pvc: compl (ra_ag_vchain σ) i) by assumption.
     destruct n as [|n]; first by apply: dist_bound.
     unfold ra_ag_tsdiag_n.
-    cchain_discr σ (S i) at 1 3 as [vSi tsSi tsxSi|] deqn:EQSi.
-    cchain_discr σ (S (S n)) at 1 3 as [vSSn tsSSn tsxSSn|] deqn:EQSSn.
+    ddes (σ (S i)) at 1 3 as [vSi tsSi tsxSi] deqn:EQSi.
+    ddes (σ (S (S n))) at 1 3 as [vSSn tsSSn tsxSSn] deqn:EQSSn.
     cchain_eleq σ at (S i) (S (S n)) lvl:(S (S n)); move=>[EQv EQts].
     assert (pv': vSi i).
     { move:pvc. move/ra_ag_vchain_compl_n. case/(_ i i _ _)/Wrap; [omega|].
@@ -369,72 +348,53 @@ Section Agreement.
   Global Program Instance ra_ag_cmt : cmetric ra_agree := mkCMetr ra_ag_compl.
   Next Obligation.
     intros [| n]; [now intros; apply dist_bound | unfold ra_ag_compl].
-    ddes (σ 1) at 1 3 as [v0 ts0 tsx0|] deqn:EQ1.
-    - intros i HLe. destruct (σ i) as [vi |] eqn: EQi; [split| exfalso].
-      + assert (HT:=conv_cauchy (ra_ag_vchain σ v0 ts0 (HNE:=ra_ag_compl_obligation_1 σ σc v0 _ _ EQ1))).
-        assert (HLe': S (S n) <= S i) by omega.
-        rewrite (HT (S i)). unfold ra_ag_vchain.
-        cchain_discr σ (S (S i)) at 1 3 as [vSi tsSi tsxSi|] deqn:EQSi.
-        cchain_eleq σ at (S (S i)) i lvl: (S n); move=>[EQv _]. assumption.
-      + move=>j pv1 pv2 HLej.
-        assert (HeqH := ra_ag_compl_obligation_1 σ σc v0 ts0 tsx0 EQ1).
-        assert (pvc: compl (ra_ag_vchain σ v0 ts0 (HNE:=HeqH)) j).
-        { Set Printing Implicit. clear -pv1. unfold compl, sp_cmetric, sp_compl in *. simpl in *.
-          erewrite (ProofIrrelevance _ _ HeqH) in pv1. assumption. Unset Printing Implicit. }
-        destruct j as [|j]; first by apply: dist_bound.
-        unfold ra_ag_tsdiag_n.
-        cchain_discr σ (S (S j)) at 1 3 as [vSSj tsSSj tsxSSj|]deqn:EQSSj.
-        cchain_eleq σ at (S (S j)) i lvl: (S j); move=>[EQv EQts].
-        eapply EQts. omega.
-      + cchain_eleq σ at 1 i lvl:1=>EQ. apply EQ; omega.
-    - intros j Hle. 
-      cchain_eq σ at 1 j lvl:1. rewrite -EQ1.
-      destruct (σ j); simpl; tauto.
+    intros i HLe. destruct (σ i) as [vi] eqn: EQi; split.
+    - assert (HT:=conv_cauchy (ra_ag_vchain σ)).
+      assert (HLe': S (S n) <= S i) by omega.
+      rewrite (HT (S i)). unfold ra_ag_vchain.
+      ddes (σ (S (S i))) at 1 3 as [vSi tsSi tsxSi] deqn:EQSi.
+      cchain_eleq σ at (S (S i)) i lvl: (S n); move=>[EQv _]. assumption.
+    - move=>j pv1 pv2 HLej.
+      destruct j as [|j]; first by apply: dist_bound.
+      unfold ra_ag_tsdiag_n.
+      ddes (σ (S (S j))) at 1 3 as [vSSj tsSSj tsxSSj] deqn:EQSSj.
+      cchain_eleq σ at (S (S j)) i lvl: (S j); move=>[EQv EQts].
+      eapply EQts. omega.
   Qed.
-
 
   (* And we have a pcmType, too! *)
   Global Instance ra_ag_pcm: pcmType ra_agree.
   Proof.
     split. repeat intro. eapply ra_ag_pord. unfold compl, ra_ag_cmt, ra_ag_compl.
-    ddes (ρ 1) at 1 3 7 as [ρv ρts|] deqn:Hρ; ddes (σ 1) at 1 3 as [σv σts|] deqn:Hσ; last first.
-    - reflexivity.
-    - simpl. specialize (H 1). rewrite ->ra_ag_pord, <-Hρ, <-Hσ in H. exact H.
-    - reflexivity.
-    - simpl.
-      assert (HT: forall n pv1 pv2, ra_ag_tsdiag_n σ σv σts (HNE:=Hσ) (pv:=pv1) n = n = ra_ag_tsdiag_n ρ ρv ρts (HNE:=Hρ) (pv:=pv2) n).
-      { move=>n pv1 pv2. destruct n as [|n]; first by apply: dist_bound.
-        unfold ra_ag_tsdiag_n.
-        cchain_discr σ (S (S n)) at 1 3 as [vσn tsσn tsxσn|] deqn:EQσn.
-        cchain_discr ρ (S (S n)) at 1 3 as [vρn tsρn tsxρn|] deqn:EQρn.
-        specialize (H (S (S n))). rewrite ->ra_ag_pord in H.
-        rewrite <-EQσn, <-EQρn in H. destruct H as [EQv EQts].
-        erewrite <-EQts. unfold ra_ag_compinj_ts. f_equiv. eapply ProofIrrelevance.
-      }
-      split.
-      + move=>n. split; first by (intros (pv1 & pv2 & _); tauto).
-        simpl. move=>pv. move:(pv). rewrite {1}/ra_ag_vchain. simpl.
-        cchain_discr ρ (S (S n)) at 1 3 as [vρn tsρn tsxρn|] deqn:EQρn.
-        move=>pvρ.
-        assert (pvσ: (ra_ag_vchain σ σv σts (HNE:=Hσ) (S n)) n).
-        { unfold ra_ag_vchain.
-          cchain_discr σ (S (S n)) at 1 3 as [vσn tsσn tsxσn|] deqn:EQσn.
-          specialize (H (S (S n))). rewrite ->ra_ag_pord, <-EQρn, <-EQσn in H.
-          destruct H as [EQv _]. rewrite <-EQv in pvρ. destruct pvρ as [pv1 _]. assumption. }
-        do 2 eexists. etransitivity; last (etransitivity; first by eapply HT).
-        * eapply dist_refl. apply equivR. apply ra_ag_tsdiag_n_pi.
-        * eapply dist_refl. apply equivR. apply ra_ag_tsdiag_n_pi.
-      + intros n (pv1 & pv2 & EQ) pv3.
-        etransitivity; last (etransitivity; first by eapply HT).
-        * eapply dist_refl. apply equivR. apply ra_ag_tsdiag_n_pi.
-        * eapply dist_refl. apply equivR. apply ra_ag_tsdiag_n_pi.
+    assert (HT: forall n pv1 pv2, ra_ag_tsdiag_n σ (pv:=pv1) n = n = ra_ag_tsdiag_n ρ (pv:=pv2) n).
+    { move=>n pv1 pv2. destruct n as [|n]; first by apply: dist_bound.
+      unfold ra_ag_tsdiag_n.
+      ddes (σ (S (S n))) at 1 3 as [vσn tsσn tsxσn] deqn:EQσn.
+      ddes (ρ (S (S n))) at 1 3 as [vρn tsρn tsxρn] deqn:EQρn.
+      specialize (H (S (S n))). rewrite ->ra_ag_pord in H.
+      rewrite <-EQσn, <-EQρn in H. destruct H as [EQv EQts].
+      erewrite <-EQts. unfold ra_ag_compinj_ts. f_equiv. eapply ProofIrrelevance.
+    }
+    split.
+    - move=>n. split; first by (intros (pv1 & pv2 & _); tauto).
+      simpl. move=>pv. move:(pv). rewrite {1}/ra_ag_vchain. simpl.
+      ddes (ρ (S (S n))) at 1 3 as [vρn tsρn tsxρn] deqn:EQρn.
+      move=>pvρ.
+      assert (pvσ: (ra_ag_vchain σ (S n)) n).
+      { unfold ra_ag_vchain.
+        ddes (σ (S (S n))) at 1 3 as [vσn tsσn tsxσn] deqn:EQσn.
+        specialize (H (S (S n))). rewrite ->ra_ag_pord, <-EQρn, <-EQσn in H.
+        destruct H as [EQv _]. rewrite <-EQv in pvρ. destruct pvρ as [pv1 _]. assumption. }
+      do 2 eexists. etransitivity; last (etransitivity; first by eapply HT).
+      + eapply dist_refl. reflexivity.
+      + eapply dist_refl. reflexivity.
+    - intros n (pv1 & pv2 & EQ) pv3.
+      etransitivity; last (etransitivity; first by eapply HT).
+      + eapply dist_refl. apply equivR. reflexivity.
+      + eapply dist_refl. apply equivR. reflexivity.
   Grab Existential Variables.
-  { eapply ra_ag_vchain_ucompl_n. clear -pv1. erewrite (ProofIrrelevance _ _ Hσ) in pv1. assumption. }
-  { eapply ra_ag_vchain_ucompl_n. clear -pv2. erewrite (ProofIrrelevance _ _ Hρ) in pv2. assumption. }
-  { eapply ra_ag_vchain_ucompl_n. exact pvσ. }
-  { eapply ra_ag_vchain_ucompl_n. erewrite (ProofIrrelevance _ _ Hρ) in pv. exact pv. }
+  { eapply ra_ag_vchain_ucompl_n. assumption. }
   { assumption. }
-  { erewrite (ProofIrrelevance _ _ Hσ). assumption. }
   { apply EQv. eapply ra_ag_vchain_n.
     - eapply ra_ag_vchain_compl_n with (m:=S n) (k:=S n); first (by eexact pv2); omega.
     - symmetry. eassumption. }
@@ -450,16 +410,14 @@ Section Agreement.
       ra_ag_destr; try firstorder; [].
       move=>m Hle. rewrite /cmra_valid /=. destruct EQt as [EQv _]. apply EQv. omega.
     - move=>t. reflexivity.
-    - move=> t1 t2. ra_ag_destr; try firstorder; last first.
-      { move=>n H. exact I. }
+    - move=> t1 t2. ra_ag_destr.
       move=>n [pv _]. exact pv.
   Qed.
 
   (* Provide a way to get an n-approximation of the element out of an n-valid agreement. *)
-  Program Definition ra_ag_unInjApprox x n {HVal: cmra_valid x n}: option T :=
+  Program Definition ra_ag_unInjApprox x n {HVal: cmra_valid x n}: T :=
     match x with
-    | ag_unit => None
-    | ag_inj v ts _ => Some (ts n _)
+    | ag_inj v ts _ => (ts n _)
     end.
 
   Lemma ra_ag_unInjApprox_dist x y n {HVal1: cmra_valid x n} {HVal2: cmra_valid y n}: (* The function is dependent, hence no "Proper" can be registered *)
@@ -470,9 +428,9 @@ Section Agreement.
   Qed.
 
   Lemma ra_ag_inj_unInjApprox x n {HVal: cmra_valid x n} t:
-    ra_ag_inj t ⊑ x -> ra_ag_unInjApprox x n (HVal:=HVal) = n = Some t.
+    ra_ag_inj t ⊑ x -> ra_ag_unInjApprox x n (HVal:=HVal) = n = t.
   Proof.
-    rewrite ra_ag_pord. destruct x as [v ts tsx|]=>Heq; last contradiction.
+    rewrite ra_ag_pord. destruct x as [v ts tsx]=>Heq.
     unfold ra_ag_inj in Heq. destruct Heq as [EQv EQts]. unfold ra_ag_unInjApprox.
     destruct n as [|n]; first exact: dist_bound. simpl. symmetry. eapply EQts.
   Grab Existential Variables.
@@ -495,19 +453,17 @@ Section Agreement.
     eapply dist_refl; apply equivR. f_equiv. eapply ProofIrrelevance.
   Qed.
 
-  Program Definition ra_ag_unInj x {HVal: ↓x}: option T :=
+  Program Definition ra_ag_unInj x {HVal: ↓x}: T :=
     match x with
-    | ag_unit => None
-    | ag_inj v ts tsx => Some (compl (ra_ag_tschain v ts tsx (HVal:=_)))
+    | ag_inj v ts tsx => compl (ra_ag_tschain v ts tsx (HVal:=_))
     end.
 
   Lemma ra_ag_unInj_dist x y {HVal1: ↓x} {HVal2: ↓y} n: (* The function is dependent, hence no "Proper" can be registered *)
     x = n = y -> ra_ag_unInj x (HVal:=HVal1) = n = ra_ag_unInj y (HVal:=HVal2).
   Proof.
     move=>EQ. destruct n as [|n]; first exact: dist_bound.
-    destruct x as [xv xts xtsx|]; last first.
-    { destruct y as [v ts tsx|]; first contradiction EQ. reflexivity. }
-    destruct y as [yv yts ytsx|]; last contradiction EQ.
+    destruct x as [xv xts xtsx].
+    destruct y as [yv yts ytsx].
     destruct EQ as [_ EQts]. unfold ra_valid, ra_agree_valid in HVal1. unfold ra_valid, ra_agree_valid in HVal2.
     simpl. eapply umet_complete_extn. unfold ra_ag_tschain.
     eapply EQts. reflexivity.
@@ -515,9 +471,9 @@ Section Agreement.
 
   (* Correctness of the embedding (and of the entire consruction, really - together with the duplicability shown above) *)
   Lemma ra_ag_inj_unInj x {HVal: ↓x} t:
-    ra_ag_inj t ⊑ x -> ra_ag_unInj x (HVal:=HVal) == Some t.
+    ra_ag_inj t ⊑ x -> ra_ag_unInj x (HVal:=HVal) == t.
   Proof.
-    rewrite ra_ag_pord. destruct x as [v ts tsx|]=>Heq; last contradiction.
+    rewrite ra_ag_pord. destruct x as [v ts tsx]=>Heq.
     unfold ra_ag_inj in Heq. destruct Heq as [EQv EQts]. simpl. rewrite <-(umet_complete_const t).
     apply umet_complete_ext=>i. unfold ra_ag_tschain. unfold ra_ag_compinj_ts in EQts. symmetry.
     eapply EQts. rewrite EQv. apply HVal.
@@ -532,7 +488,6 @@ Section AgreementMap.
   Program Definition ra_agree_map (f: T -n> U): ra_agree T -m> ra_agree U :=
     m[(fun x => match x with
                 | ag_inj v ts tsx => ag_inj U v (fun n => compose f (ts n)) _
-                | ag_unit => ag_unit U
                 end)].
   Next Obligation.
     move=>n i HLe pv. simpl. eapply met_morph_nonexp. specialize (tsx n i HLe pv).
@@ -560,14 +515,14 @@ Section AgreementMap.
   Global Instance ra_agree_map_resp: Proper (equiv ==> equiv) ra_agree_map.
   Proof.
     move=> x1 x2 EQx y.
-    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); last reflexivity.
+    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end).
     split; first reflexivity.
     move=>n pv1 pv2. rewrite EQx. unfold compose. repeat f_equiv. eapply ProofIrrelevance.
   Qed.
   Global Instance ra_agree_map_dist n: Proper (dist n ==> dist n) ra_agree_map.
   Proof.
     move=> x1 x2 EQx y.
-    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); last reflexivity.
+    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end).
     destruct n as [|n]; first by apply: dist_bound.
     split; first reflexivity.
     move=>n' pv1 pv2 HLe. rewrite /compose. eapply mono_dist; last first.
@@ -584,7 +539,7 @@ Section AgreementMapComp.
     ra_agree_map (umid T) == (pid (ra_agree T)).
   Proof.
     intros x.
-    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); last reflexivity.
+    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end).
     simpl. split; first reflexivity.
     intros n pv1 pv2. repeat f_equiv. eapply ProofIrrelevance.
   Qed.
@@ -595,7 +550,7 @@ Section AgreementMapComp.
     (ra_agree_map g) ∘ (ra_agree_map f) == ra_agree_map (g <M< f).
   Proof.
     intros x.
-    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end); last reflexivity.
+    repeat (match goal with [ x : ra_agree _ |- _ ] => destruct x end).
     simpl. split; first reflexivity.
     intros n pv1 pv2. repeat f_equiv. eapply ProofIrrelevance.
   Qed.
