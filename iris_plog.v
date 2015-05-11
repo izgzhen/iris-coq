@@ -1,6 +1,6 @@
 Require Import Ssreflect.ssreflect Omega.
-Require Import world_prop core_lang lang masks iris_core.
-Require Import ModuRes.RA ModuRes.CMRA ModuRes.SPred ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr ModuRes.Agreement.
+Require Import world_prop core_lang lang iris_core.
+Require Import ModuRes.DecEnsemble ModuRes.RA ModuRes.CMRA ModuRes.SPred ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr ModuRes.Agreement.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -17,7 +17,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
   Local Open Scope bi_scope.
   Local Open Scope iris_scope.
   
-  Implicit Types (P : Props) (u v w : Wld) (n i k : nat) (m : mask) (r : res) (σ : state) (φ : vPred).
+  Implicit Types (P : Props) (u v w : Wld) (n i k : nat) (m : DecEnsemble nat) (r : res) (σ : state) (φ : vPred).
 
   Section WorldSatisfaction.
 
@@ -26,9 +26,9 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
        constructs. Hopefully we can provide a fold that'd work for
        that at some point
      *)
-    Fixpoint comp_list w (xs : list Wld) : Wld :=
+    Fixpoint comp_list w m (xs : list Wld) : Wld :=
       match xs with
-        | nil => 1 w
+        | nil => w
         | (x :: xs)%list => x · comp_list w xs
       end.
 

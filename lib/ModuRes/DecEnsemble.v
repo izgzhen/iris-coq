@@ -21,7 +21,7 @@ Section DecEnsemble.
 End DecEnsemble.
 
 Arguments DecEnsemble T: clear implicits.
-Notation "t ∈ de" := (de_in t de) (at level 31, left associativity) : de_scope.
+Notation "t '[∈]' de" := (de_in t de) (at level 31, left associativity) : de_scope.
 
 Section DecEnsembleOps.
   Context {T: Type}.
@@ -31,7 +31,7 @@ Section DecEnsembleOps.
   Definition de_full : DecEnsemble T := DE (const true).
 
   Definition dele de1 de2 :=
-    forall t, t ∈ de1 = true -> t ∈ de2 = true.
+    forall t, t [∈] de1 = true -> t [∈] de2 = true.
 
   Global Instance deeq_PreOrder: PreOrder dele.
   Proof.
@@ -41,7 +41,7 @@ Section DecEnsembleOps.
   Qed.
 
   Definition deeq de1 de2 :=
-    forall t, t ∈ de1 = true <-> t ∈ de2 = true.
+    forall t, t [∈] de1 = true <-> t [∈] de2 = true.
 
   Global Instance deeq_Equivalence: Equivalence deeq.
   Proof.
@@ -59,13 +59,13 @@ Section DecEnsembleOps.
   Qed.
 
   Definition de_cap de1 de2 :=
-    DE (fun t => t ∈ de1 && t ∈ de2).
+    DE (fun t => t [∈] de1 && t [∈] de2).
   Definition de_cup de1 de2 :=
-    DE (fun t => t ∈ de1 || t ∈ de2).
+    DE (fun t => t [∈] de1 || t [∈] de2).
   Definition de_minus de1 de2 :=
-    DE (fun t => t ∈ de1 && negb (t ∈ de2)).
+    DE (fun t => t [∈] de1 && negb (t [∈] de2)).
   Definition de_compl de :=
-    DE (fun t => negb (t ∈ de)).
+    DE (fun t => negb (t [∈] de)).
 End DecEnsembleOps.
 
 Notation "de1 ∩ de2" := (de_cap de1 de2) (at level 40) : de_scope.
@@ -88,7 +88,7 @@ Proof.
 Qed.
 
 Ltac de_destr := repeat (match goal with [ x : DecEnsemble _ |- _ ] => destruct x as [x] end).
-Ltac de_in_destr := repeat (match goal with [ |- context[?t ∈ ?de] ] => destruct (t ∈ de) end).
+Ltac de_in_destr := repeat (match goal with [ |- context[?t [∈] ?de] ] => destruct (t [∈] de) end).
 Ltac de_auto_destr := repeat progress (simpl; unfold const; de_in_destr).
 Ltac de_tauto := de_auto_destr; repeat (split || intro); (reflexivity || discriminate || tauto).
 Ltac de_auto_eq := destruct_conjs;
@@ -160,3 +160,15 @@ Section DecEnsembleProps.
   Proof. do 3 intro. de_auto_eq. Qed.
 
 End DecEnsembleProps.
+
+Section DecNatEnsemble.
+  Definition de_infinite (m : DecEnsemble nat) :=
+    forall i, exists j, j >= i /\ j [∈] m = true.
+
+  Lemma de_full_infinite : de_infinite de_full.
+  Proof.
+    intros i; exists i; split; [now auto with arith | reflexivity].
+  Qed.
+
+End DecNatEnsemble.
+

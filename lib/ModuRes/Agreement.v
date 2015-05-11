@@ -9,7 +9,7 @@ Local Open Scope predom_scope.
 Section Agreement.
   (* This is more complex than above, and it does not require a decidable equality. However, it needs
      a metric. It also comes with a CMRA. *)
-  Context T `{T_ty : Setoid T} {mT: metric T}.
+  Context {T} `{T_ty : Setoid T} {mT: metric T}.
   Local Open Scope ra_scope.
   Local Open Scope nat.
 
@@ -480,6 +480,7 @@ Section Agreement.
   Qed.
 
 End Agreement.
+Arguments ra_agree T {_ _} : clear implicits.
 
 Section AgreementMap.
   Context {T U: Type} `{cmT: cmetric T} `{cmU: cmetric U}.
@@ -487,7 +488,7 @@ Section AgreementMap.
 
   Program Definition ra_agree_map (f: T -n> U): ra_agree T -m> ra_agree U :=
     m[(fun x => match x with
-                | ag_inj v ts tsx => ag_inj U v (fun n => compose f (ts n)) _
+                | ag_inj v ts tsx => ag_inj v (fun n => compose f (ts n)) _
                 end)].
   Next Obligation.
     move=>n i HLe pv. simpl. eapply met_morph_nonexp. specialize (tsx n i HLe pv).
