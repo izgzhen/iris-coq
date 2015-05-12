@@ -5,7 +5,7 @@ Module Type CORE_LANG.
   (******************************************************************)
 
   (** Expressions and values **)
-  Parameter expr : Type.	(* PDS: setoid. *)
+  Parameter expr : Type.
 
   Parameter is_value : expr -> Prop.
   Definition value : Type := {e: expr | is_value e}.
@@ -22,38 +22,28 @@ Module Type CORE_LANG.
                      fork e1 = fork e2 -> e1 = e2.
 
   (** Evaluation contexts **)
-  Parameter ectx : Type.	(* PDS: setoid. *)
+  Parameter ectx : Type.
   Parameter empty_ctx : ectx.
   Parameter comp_ctx : ectx -> ectx -> ectx.
   Parameter fill : ectx -> expr -> expr.
 
   Axiom comp_ctx_assoc : forall K0 K1 K2,
-    comp_ctx (comp_ctx K0 K1) K2 = comp_ctx K0 (comp_ctx K1 K2).
-  Axiom comp_ctx_emp_l : forall K, comp_ctx empty_ctx K = K.
-  Axiom comp_ctx_emp_r : forall K, comp_ctx K empty_ctx = K.
-  Axiom comp_ctx_inj1 : forall K1 K2 K,
-    comp_ctx K1 K = comp_ctx K2 K -> K1 = K2.	(* left-injectivity *)
-  Axiom comp_ctx_inj2 : forall K K1 K2,
-    comp_ctx K K1 = comp_ctx K K2 -> K1 = K2.	(* right-injectivity *)
-  Axiom fill_empty : forall e, fill empty_ctx e = e.
+    comp_ctx K0 (comp_ctx K1 K2) = comp_ctx (comp_ctx K0 K1) K2.
+  Axiom comp_ctx_inj_r : forall K K1 K2,
+    comp_ctx K K1 = comp_ctx K K2 -> K1 = K2.
+  Axiom comp_ctx_emp_r : forall K,
+    comp_ctx K empty_ctx = K.
+  Axiom comp_ctx_positivity : forall K1 K2,
+    comp_ctx K1 K2 = empty_ctx -> K1 = empty_ctx /\ K2 = empty_ctx.
+
   Axiom fill_comp  : forall K1 K2 e, fill K1 (fill K2 e) = fill (comp_ctx K1 K2) e.
-(*
-  Axiom fill_inj1  : forall K1 K2,
-                       (forall e, fill K1 e = fill K2 e) -> K1 = K2.
-*)
-  Axiom fill_inj2  : forall K e1 e2, (* right-injectivity *)
-                       fill K e1 = fill K e2 -> e1 = e2.
-  Axiom fill_noinv: forall K1 K2, (* positivity *)
-                       comp_ctx K1 K2 = empty_ctx -> K1 = empty_ctx /\ K2 = empty_ctx.
-  Axiom fill_value : forall K e,
-                       is_value (fill K e) ->
-                       K = empty_ctx.
-  Axiom fill_fork  : forall K e e',
-                       fork e' = fill K e ->
-                       K = empty_ctx.
+  Axiom fill_inj_r  : forall K e1 e2, fill K e1 = fill K e2 -> e1 = e2.
+  Axiom fill_empty : forall e, fill empty_ctx e = e.
+  Axiom fill_value : forall K e, is_value (fill K e) -> K = empty_ctx.
+  Axiom fill_fork  : forall K e e', fork e' = fill K e -> K = empty_ctx.
 
   (** Shared machine state (e.g., the heap) **)
-  Parameter state : Type.	(* PDS: setoid. *)
+  Parameter state : Type.
 
   (** Primitive (single thread) machine configurations **)
   Definition prim_cfg : Type := (expr * state)%type.

@@ -58,19 +58,11 @@ Module StupidLang : CORE_LANG.
   
   Lemma comp_ctx_assoc K0 K1 K2 : (K0 ∘ K1) ∘ K2 = K0 ∘ (K1 ∘ K2).
   Proof. reflexivity. Qed.
-  
-  Lemma comp_ctx_emp_l K : ε ∘ K = K.
-  Proof. destruct K. reflexivity. Qed.
 
   Lemma comp_ctx_emp_r K : K ∘ ε = K.
   Proof. destruct K. reflexivity. Qed.
 
-  Lemma comp_ctx_inj1 K1 K2 K : K1 ∘ K = K2 ∘ K -> K1 = K2.
-  Proof.
-    destruct K1, K2. now tauto.
-  Qed.
-
-  Lemma comp_ctx_inj2 K K1 K2 : K ∘ K1 = K ∘ K2 -> K1 = K2.
+  Lemma comp_ctx_inj_r K K1 K2 : K ∘ K1 = K ∘ K2 -> K1 = K2.
   Proof.
     destruct K1, K2. now tauto.
   Qed.
@@ -84,12 +76,12 @@ Module StupidLang : CORE_LANG.
   Proof.
     reflexivity.
   Qed.
-  Lemma fill_inj2 K e1 e2 :
+  Lemma fill_inj_r K e1 e2 :
     K [[ e1 ]] = K [[ e2 ]] -> e1 = e2.
   Proof.
     tauto.
   Qed.
-  Lemma fill_noinv K1 K2:
+  Lemma comp_ctx_positivity K1 K2:
     K1 ∘ K2 = ε -> K1 = ε /\ K2 = ε.
   Proof.
     destruct K1, K2. intros _. split; reflexivity.

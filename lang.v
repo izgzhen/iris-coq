@@ -18,9 +18,9 @@ Module Lang (C : CORE_LANG).
   Notation "'ε'"    := empty_ctx : lang_scope.
   Notation "K1 ∘ K2"  := (comp_ctx K1 K2) (at level 40, left associativity) : lang_scope.
 
+  Arguments comp_ctx_positivity {_ _} _.
   Arguments fork_inj {_ _} _.
-  Arguments fill_inj2 _ {_ _} _.
-  Arguments fill_noinv {_ _} _.
+  Arguments fill_inj_r _ {_ _} _.
   Arguments fill_value {_ _} _.
   Arguments fill_fork {_ _ _} _.
   Arguments values_stuck {_} _ {_ _} _ _.
@@ -54,16 +54,7 @@ Module Lang (C : CORE_LANG).
   Proof.
     intros HEq.
     rewrite <- comp_ctx_emp_r in HEq at 1.
-    apply comp_ctx_inj2 in HEq; now symmetry.
-  Qed.
-
-  Lemma comp_ctx_neut_emp_l {K K'} :
-    K = K' ∘ K ->
-    K' = ε.
-  Proof.
-    intros HEq.
-    rewrite <- comp_ctx_emp_l in HEq at 1.
-    apply comp_ctx_inj1 in HEq; now symmetry.
+    apply comp_ctx_inj_r in HEq; now symmetry.
   Qed.
 
   (* Lemmas about expressions *)
@@ -99,9 +90,9 @@ Module Lang (C : CORE_LANG).
       + assumption.
       + now apply reducible_not_value.
       + subst K.
-        rewrite comp_ctx_assoc in H_K''.
+        rewrite <- comp_ctx_assoc in H_K''.
         assert (H_emp := comp_ctx_neut_emp_r H_K'').
-        apply fill_noinv in H_emp.
+        apply comp_ctx_positivity in H_emp.
         destruct H_emp as[H_K'''_emp H_K''_emp].
         subst K'' K'''.
         now rewrite comp_ctx_emp_r.
@@ -141,7 +132,7 @@ Module Lang (C : CORE_LANG).
     - now rewrite fill_empty.
     - now apply atomic_reducible.
     - assumption.
-    - symmetry in EQK; now apply fill_noinv in EQK.
+    - symmetry in EQK; now apply comp_ctx_positivity in EQK.
   Qed.
 
   (* Reflexive, transitive closure of the step relation *)

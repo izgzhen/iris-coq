@@ -73,13 +73,13 @@ Module Type IRIS_HT_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
                 subst K; rewrite fill_empty in HVal; assumption | split; [| split]; intros].
         + clear He HF HE; edestruct step_by_value as [K' EQK];
           [eassumption | repeat eexists; eassumption | eassumption |].
-          subst K0; rewrite <- fill_comp in HDec; apply fill_inj2 in HDec.
+          subst K0; rewrite <- fill_comp in HDec; apply fill_inj_r in HDec.
           edestruct HS as [w'' [r' [HSw' [He HE] ] ] ]; try eassumption; [].
           subst e; clear HStep HS.
           do 2 eexists; split; [eassumption | split; [| eassumption] ].
           rewrite <- fill_comp. apply IH; assumption.
         + clear He HS HE; edestruct fork_by_value as [K' EQK]; try eassumption; [].
-          subst K0; rewrite <- fill_comp in HDec; apply fill_inj2 in HDec.
+          subst K0; rewrite <- fill_comp in HDec; apply fill_inj_r in HDec.
           edestruct HF as [w'' [rfk [rret [HSw' [HWR [HWF HE] ] ] ] ] ];
             try eassumption; []; subst e; clear HF.
           do 3 eexists; split; [eassumption | split; [| split; eassumption] ].
