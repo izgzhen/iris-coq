@@ -12,8 +12,13 @@ Module Lang (C : CORE_LANG).
 
   Export C.
 
+  Delimit Scope lang_scope with lang.
+  Local Open Scope lang_scope.
+
+  Notation "'ε'"    := empty_ctx : lang_scope.
+  Notation "K1 ∘ K2"  := (comp_ctx K1 K2) (at level 40, left associativity) : lang_scope.
+
   Arguments fork_inj {_ _} _.
-  Arguments fill_inj1 {_ _} _ _.
   Arguments fill_inj2 _ {_ _} _.
   Arguments fill_noinv {_ _} _.
   Arguments fill_value {_ _} _.
@@ -42,46 +47,6 @@ Module Lang (C : CORE_LANG).
       ρ  = (t1 ++ fill K (fork e) :: t2, σ) ->
       ρ' = (t1 ++ fill K fork_ret :: t2 ++ e :: nil, σ) ->
       step ρ ρ'.
-
-  (* Some derived facts about contexts *)
-  Lemma comp_ctx_assoc {K0 K1 K2} :
-    (K0 ∘ K1) ∘ K2 = K0 ∘ (K1 ∘ K2).
-  Proof.
-    apply (fill_inj1 fork_ret).
-    now rewrite <- !fill_comp.
-  Qed.
-
-  Lemma comp_ctx_emp_l {K} :
-    ε ∘ K = K.
-  Proof.
-    apply (fill_inj1 fork_ret).
-    now rewrite <- fill_comp, fill_empty.
-  Qed.
-
-  Lemma comp_ctx_emp_r {K} :
-    K ∘ ε = K.
-  Proof.
-    apply (fill_inj1 fork_ret).
-    now rewrite <- fill_comp,  fill_empty.
-  Qed.
-
-  Lemma comp_ctx_inj1 {K1 K2 K} :
-    K1 ∘ K = K2 ∘ K ->
-    K1 = K2.
-  Proof.
-    intros HEq.
-    apply fill_inj1 with (fill K fork_ret).
-    now rewrite -> !fill_comp, HEq.
-  Qed.
-
-  Lemma comp_ctx_inj2  {K K1 K2} :
-    K ∘ K1 = K ∘ K2 ->
-    K1 = K2.
-  Proof.
-    intros HEq.
-    apply fill_inj1 with fork_ret, fill_inj2 with K.
-    now rewrite -> !fill_comp, HEq.
-  Qed.
 
   Lemma comp_ctx_neut_emp_r {K K'} :
     K = K ∘ K' ->
