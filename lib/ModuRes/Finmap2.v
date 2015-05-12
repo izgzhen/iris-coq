@@ -895,53 +895,62 @@ Section FinDom.
 
     End Fold.
 
-  Section FoldMorph.
-    Context {T: Type} `{Setoid T}.
+    Section FoldMorph.
+      Context {T: Type} `{Setoid T}.
 
-    Definition fdFoldMorph (Tstart: T) (Tstep: K -> V -=> T -=> T) (f: K -f> V) :=
-      fdFold Tstart (fun k v t => Tstep k v t) f.
+      Definition fdFoldMorph (Temp: T) (Tstep: K -> V -=> T -=> T) (f: K -f> V) :=
+        fdFold Temp (fun k v t => Tstep k v t) f.
 
-    Lemma fdFoldExtT: Proper (equiv ==> equiv (A := ) ==> equiv ==> equiv) fdFold.
-    
-    Context (Tstep1 Tstep2: K -> V -=> T -=> T).
-    Context {Tstep_eq: forall k v t, eqT (Tstep1 k v t) (Tstep2 k v t)}.
-    Context (Temp1 Temp2: T) {Temp_eq: eqT Temp1 Temp2}.
-
-    
-
-    (* We need the step function to preserve equivalence of states (T). Ouch. *)
-    Lemma fdFoldExtT: Proper (equiv ==> equiv ==> eq ==> equiv) (@fdFold T).
-    Proof.
-      move=>Tstart1 Tstart2 EQTstart Tstep1 Tstep2 EQTstep f f' EQf. subst f'.
-      rewrite !fdFoldBehavior. rewrite /fdFold'.
-      etransitivity; last (etransitivity; first eapply fold_ext).
-      f_equiv.
-      eapply fold_ext. remember (dom f) as l. clear Heql.
-      revert f. induction l; simpl; intros f.
-      - assumption.
-      - destruct (f a).
-        + rewrite IHl. apply EQTstep.
-        + apply IHl.
-    Qed.
-      
-
-    Definition fdStep_comm (Tstep: K -> V -> T -> T): Prop :=
-      forall (k1 k2:K) (v1 v2:V),
-        compose (Tstep k1 v1) (Tstep k2 v2) == compose (Tstep k2 v2) (Tstep k1 v1).
-
-
-    Section FoldExtPerm.
-      Context (Temp: T) (Tstep: K -> V -> T -> T).
-      Context (Tstep_proper: Proper (eq ==> equiv ==> equiv ==> equiv) Tstep) (Tstep_comm: fdStep_comm Tstep).
-    
-      Lemma fdFoldExtP: Proper (equiv (A:= K -f> V) ==> equiv) (fdFold Temp Tstep).
+      Lemma fdFoldExtT: Proper (equiv ==> equiv ==> eq ==> equiv) fdFoldMorph.
       Proof.
-        move=>f1 f2 EQf. rewrite !fdFoldBehavior.
-        rewrite /fdFold'. etransitivity; last eapply fold_perm.
-        - rewrite -/fdFold'. eapply fdFoldExtT.
-        
+        move=>Temp1 Temp2 EQemp Tstep1 Tstep2 EQstep f f' EQf. subst f'.
+        rewrite /fdFoldMorph !fdFoldBehavior /fdFold'.
+        apply fold_ext.
+        - move=>k k' EQk v1 v2 EQv. subst k'. rewrite /fdFold'Inner. destruct (f k).
+          + rewrite EQv. reflexivity.
+          + assumption.
+        - move=>k t. rewrite /fdFold'Inner. destruct (f k); last reflexivity.
+          apply EQstep.
+        - assumption.
+      Qed.
 
-  End FoldExtensionality.
+      Definition fdStep_comm (Tstep: K -> V -=> T -=> T): Prop :=
+        forall (k1 k2:K) (v1 v2:V),
+          compose (Tstep k1 v1) (Tstep k2 v2) == compose (Tstep k2 v2) (Tstep k1 v1).
+
+      Section FoldExtPerm.
+        Context (Temp: T) (Tstep: K -> V -=> T -=> T).
+        Context (Tstep_comm: fdStep_comm Tstep).
+        
+        Lemma fdFoldExtP: Proper (equiv ==> equiv) (fdFoldMorph Temp Tstep).
+        Proof.
+          move=>f1 f2 EQf. rewrite /fdFoldMorph !fdFoldBehavior /fdFold'.
+          rewrite /fdFold'. etransitivity; last eapply fold_perm.
+          - eapply fold_ext.
+            + move=>k k' EQk v1 v2 EQv. subst k'. rewrite /fdFold'Inner.
+              destruct (f1 k); last assumption. rewrite EQv. reflexivity.
+            + move=>k t. rewrite /fdFold'Inner. specialize (EQf k). destruct (f1 k), (f2 k); try contradiction.
+              * simpl in EQf. rewrite EQf. reflexivity.
+              * reflexivity.
+            + reflexivity.
+          - split; last split.
+            + apply dom_nodup.
+            + apply dom_nodup.
+            + move=>k. rewrite !fdLookup_in_strong. specialize (EQf k).
+              destruct (f1 k), (f2 k); try contradiction; last tauto; [].
+              split; discriminate.
+          - move=>v1 v2 t. rewrite /fdFold'Inner /=.
+            destruct (f2 v1), (f2 v2); try reflexivity; [].
+            apply Tstep_comm.
+        Qed.
+
+        Print Assumptions fdFoldExtP.
+        
+      End FoldExtPerm.
+
+    End FoldMorph.
+
+  End Induction.
 
 End FinDom.
 
@@ -968,22 +977,20 @@ Section RA.
     fun f1 f2 => mkFD (fun i => finprod_op (f1 i) (f2 i)) (findom f1 ++ findom f2) _.
   Next Obligation.
     rewrite /finprod_op. move=>i /=.
-    destruct (f1 i) as [s1|] eqn:EQf1; destruct (f2 i) as [s2|] eqn:EQf2; simpl; intros Hin; apply in_app_iff.
+    destruct (f1 i) as [s1|] eqn:EQf1; destruct (f2 i) as [s2|] eqn:EQf2; simpl; split; intros Hin; try apply in_app_iff; try discriminate.
     - left. apply (findom_b f1). rewrite EQf1. discriminate.
     - left. apply (findom_b f1). rewrite EQf1. discriminate.
     - right. apply (findom_b f2). rewrite EQf2. discriminate.
     - exfalso. now apply Hin.
+    - exfalso. apply in_app_iff in Hin. destruct Hin.
+      + apply findom_b in EQf1; tauto.
+      + apply findom_b in EQf2; tauto.
   Qed.
     
                                 
   Global Instance ra_valid_finprod : RA_valid (I -f> S) := fun f => forall i s, f i == Some s -> ra_valid s.
   
   
-  Definition fdComposeP' := fdComposeP ra_op (DProper := ra_op_proper).
-  Definition fdComposePN' := fdComposePN ra_op (DProper := ra_op_proper).
-  Definition fdCompose_sym' := fdCompose_sym ra_op (DProper := ra_op_proper) (ra_op_comm).
-
-
   Global Instance ra_finprod : RA (I -f> S).
   Proof.
     split; repeat intro.

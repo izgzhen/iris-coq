@@ -150,6 +150,7 @@ Section Fold.
     
     Lemma fold_perm (l1 l2: list V) (t1: T):
       NoDup_Perm l1 l2 ->
+      (forall v1 v2, forall t, eqT (compose (op v1) (op v2) t) (compose (op v2) (op v1) t)) ->
       eqT (fold_right op t1 l1) (fold_right op t1 l2).
     Proof.
       admit.
