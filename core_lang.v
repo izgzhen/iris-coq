@@ -26,7 +26,30 @@ Module Type CORE_LANG.
   Parameter empty_ctx : ectx.
   Parameter comp_ctx : ectx -> ectx -> ectx.
   Parameter fill : ectx -> expr -> expr.
+(*
+	All of
+		comp_ctx_assoc
+		comp_ctx_inj_r
+		comp_ctx_emp_r
+	arise only in the proof of
 
+		step_same_ctx K K' e e' :
+			fill K e = fill K' e' ->
+			reducible e  ->
+			reducible e' ->
+			K = K'.
+
+	Moreover, comp_ctx_positivity gets used only in step_same_ctx
+	and
+
+		atomic_fill e K :
+			atomic (fill K e) ->
+			~ is_value e ->
+			K = empty_ctx.
+	
+	It might be simpler to (prove and) assume these two rather
+	than those four.
+*)
   Axiom comp_ctx_assoc : forall K0 K1 K2,
     comp_ctx K0 (comp_ctx K1 K2) = comp_ctx (comp_ctx K0 K1) K2.
   Axiom comp_ctx_inj_r : forall K K1 K2,
