@@ -18,8 +18,8 @@ Generalizable Variables T U V W.
 Local Open Scope type.
 
 (* Proof by reflexivity *)
-Lemma equivR {T : Type} `{eqT : Setoid T} {a b : T} :
-  a = b -> a == b.
+Lemma equivR {T : Type} {R: relation T} {eqR : Equivalence R} {a b : T} :
+  a = b -> R a b.
 Proof.
   intros Heq. subst a. reflexivity.
 Qed.

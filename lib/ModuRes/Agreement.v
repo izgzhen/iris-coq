@@ -114,7 +114,7 @@ Section Agreement.
     ra_ag_destr. split.
     - split; simpl; first by firstorder.
       move=>pv. exists pv pv. now firstorder.
-    - move=>n ? ?. unfold ra_ag_compinj_ts. eapply dist_refl. apply equivR. f_equiv. by eapply ProofIrrelevance.
+    - move=>n ? ?. unfold ra_ag_compinj_ts. apply equivR. f_equiv. by eapply ProofIrrelevance.
   Qed.
   
   Global Instance ra_agree_res : RA ra_agree.
@@ -147,7 +147,7 @@ Section Agreement.
     - ra_ag_destr; unfold ra_valid, ra_agree_valid in *; firstorder.
     - exists t'. reflexivity.
     - ra_ag_destr; unfold ra_valid, ra_agree_valid in *. split; first reflexivity.
-      move=>n ? ?. eapply dist_refl. apply equivR. f_equiv. by eapply ProofIrrelevance.
+      move=>n ? ?. apply equivR. f_equiv. by eapply ProofIrrelevance.
     - ra_ag_destr; unfold ra_valid, ra_agree_valid in *; firstorder.
     - ra_ag_destr; [].
       destruct (H n) as [Hn _]. assumption.
@@ -252,6 +252,29 @@ Section Agreement.
     simpl. rewrite -/dist. split.
     - move=>? _. reflexivity.
     - move=>m _ _ Hle. eapply mono_dist, EQt. omega.
+  Qed.
+
+  Lemma ra_ag_prod_dist x y n:
+    cmra_valid (x · y) n ->
+    x · y = n = x.
+  Proof.
+    move=>Hval.  destruct n as [|n]; first exact: dist_bound.
+    unfold cmra_valid in Hval. ra_ag_destr. simpl in Hval.
+    destruct Hval as [pv1 [pv2 Heq]].
+    split.
+    - move=>m Hle /=. split.
+      + move=>_. eapply dpred, pv1. omega.
+      + move=>_.
+        assert (pv0: v0 m) by (eapply dpred, pv1; omega).
+        assert (pv: v m) by (eapply dpred, pv2; omega).
+        exists pv0 pv. assert (m <= S n) by omega.
+        etransitivity; last (etransitivity; first (eapply mono_dist, Heq; omega)).
+        * symmetry. etransitivity; first now eapply tsx0.
+          apply equivR. f_equal. now apply ProofIrrelevance.
+        * etransitivity; first now eapply tsx.
+          apply equivR. f_equal. now apply ProofIrrelevance.
+    - move=>m pvcomp pv3 Hle. unfold ra_ag_compinj_ts.
+      apply equivR. f_equal. now apply ProofIrrelevance.
   Qed.
 
   Program Definition ra_ag_vchain (σ: chain ra_agree) {σc: cchain σ} : chain SPred :=
@@ -390,8 +413,8 @@ Section Agreement.
       + eapply dist_refl. reflexivity.
     - intros n (pv1 & pv2 & EQ) pv3.
       etransitivity; last (etransitivity; first by eapply HT).
-      + eapply dist_refl. apply equivR. reflexivity.
-      + eapply dist_refl. apply equivR. reflexivity.
+      + apply equivR. reflexivity.
+      + apply equivR. reflexivity.
   Grab Existential Variables.
   { eapply ra_ag_vchain_ucompl_n. assumption. }
   { assumption. }
@@ -450,7 +473,7 @@ Section Agreement.
     intros n j m HLe1 HLe2. destruct n as [|n]; first by apply: dist_bound. unfold ra_ag_tschain.
     etransitivity; first by eapply (tsx (S n)).
     symmetry. etransitivity; first by eapply (tsx (S n)).
-    eapply dist_refl; apply equivR. f_equiv. eapply ProofIrrelevance.
+    apply equivR. f_equiv. eapply ProofIrrelevance.
   Qed.
 
   Program Definition ra_ag_unInj x {HVal: ↓x}: T :=
