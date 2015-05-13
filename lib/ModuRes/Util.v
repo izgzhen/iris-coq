@@ -20,6 +20,16 @@ Ltac split_conjs := repeat (match goal with [ |- _ /\ _ ] => split end).
 (* TODO RJ: Is this already defined somewhere? *)
 Class DecEq (T : Type) := dec_eq : forall (t1 t2: T), {t1 = t2} + {t1 <> t2}.
 
+Global Instance DecEqBool: DecEq bool.
+Proof.
+  move=>b1 b2. decide equality.
+Qed.
+
+Global Instance DecEqNat: DecEq nat.
+Proof.
+  move=>n1 n2. decide equality.
+Qed.
+
 (* Well-founded induction. *)
 Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
 

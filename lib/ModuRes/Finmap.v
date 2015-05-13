@@ -1,474 +1,205 @@
 Require Import ssreflect.
 Require Import MetricCore.
+Require Import Axioms.
 Require Import PreoMet.
 Require Import RA CMRA SPred.
-Require Import Arith Min Max List.
+Require Import Arith Min Max List ListSet Lists.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Module BoolDec.
-  Definition U := bool.
-  Definition eq_dec (x y : U) : { x = y } + {x <> y}.
-  Proof.
-    decide equality.
-  Defined.
-End BoolDec.
 
-Module D := Coq.Logic.Eqdep_dec.DecidableEqDep(BoolDec).
-
-Module CompDec.
-  Definition U := comparison.
-  Definition eq_dec (x y : U) : { x = y } + {x <> y}.
-  Proof.
-    decide equality.
-  Defined.
-End CompDec.
-
-Module DC := Coq.Logic.Eqdep_dec.DecidableEqDep(CompDec).
-
-Class Comparer (T : Type) := comp : T -> T -> comparison.
-Class Order (T :Type) := leq : relation T.
-
-Class comparable (T : Type) {cT : Comparer T} {ord : Order T} `{ord_part : PartialOrder _ (@eq T) leq} :=
-  compat_compare : forall x y, match comp x y with
-                                 | Lt => leq x y /\ x <> y
-                                 | Eq => x = y
-                                 | Gt => leq y x /\ x <> y
-                               end.
-
-Instance Comp_nat : Comparer nat := nat_compare.
-Instance PreOrd_le : PreOrder le.
-Proof.
-  split.
-  - intros x; auto.
-  - intros x y z Hxy Hxz; eapply le_trans; eassumption.
-Qed.
-Instance PartOrd_nat : PartialOrder (@eq nat) le.
-Proof.
-  split; [intros; subst; split; reflexivity |].
-  unfold Basics.flip; intros [HLe HLe']; auto with arith.
-Qed.
-Instance ord_nat : Order nat := le.
-Instance comp_nat : comparable nat.
-Proof.
-  intros x y; remember (comp x y) as C; symmetry in HeqC; destruct C; unfold comp, Comp_nat in *.
-  - apply nat_compare_eq; assumption.
-  - rewrite <- nat_compare_lt in HeqC; split; unfold leq, ord_nat; omega.
-  - rewrite <- nat_compare_gt in HeqC; split; unfold leq, ord_nat; omega.
-Qed.
-
-Infix "∈" := In (at level 40, no associativity).
-
-Section Sortedness.
-  Context {T} `{compT : comparable T}.
-
-  Lemma comp_self_Eq k : comp k k = Eq.
-  Proof.
-    assert (HT := compat_compare k k); destruct (comp k k); intuition.
-  Qed.
-
-  Lemma comp_gt_Gt m k (HGt : leq m k /\ k <> m) : comp k m = Gt.
-  Proof.
-    assert (HT := compat_compare k m); destruct (comp k m); intuition.
-    contradiction H2; assert (HT := ord_part k m); simpl in HT.
-    apply <- HT; clear HT; split; assumption.
-  Qed.
-
-  Lemma comp_lt_Lt m k (HLt : leq k m /\ k <> m) : comp k m = Lt.
-  Proof.
-    assert (HT := compat_compare k m); destruct (comp k m); intuition.
-    contradiction H2; assert (HT := ord_part k m); simpl in HT.
-    apply <- HT; clear HT; split; assumption.
-  Qed.
-
-  Definition iseq (k1 k2 : T) : bool := match comp k1 k2 with Eq => true | _ => false end.
-  Lemma iseq_eq k1 k2 : iseq k1 k2 = true <-> k1 = k2.
-  Proof.
-    unfold iseq; assert (HT := compat_compare k1 k2); destruct (comp k1 k2); intuition discriminate.
-  Qed.
-
-  Fixpoint inlst k xs :=
-    match xs with
-      | nil => false
-      | x :: xs => (iseq k x || inlst k xs)%bool
-    end.
-
-  Lemma In_inlst k xs : inlst k xs = true <-> k ∈ xs.
-  Proof.
-    induction xs; simpl; [intuition discriminate |].
-    rewrite -> Bool.orb_true_iff, IHxs; clear IHxs; intuition.
-    - rewrite -> iseq_eq in H0; subst; tauto.
-    - subst; unfold iseq; rewrite comp_self_Eq; auto.
-  Qed.
-
-  Lemma eq_sym_iff : forall T (x y : T), x = y <-> y = x.
-  Proof.
-    split; apply eq_sym; assumption.
-  Qed.
-
-  Lemma NIn_inlst k xs : inlst k xs = false <-> ~ (k ∈ xs).
-    induction xs; simpl; [tauto |].
-    rewrite -> Bool.orb_false_iff, IHxs, (eq_sym_iff _ a), <- iseq_eq; clear IHxs.
-    destruct (iseq k a); intuition congruence.
-  Qed.
-
-  Inductive StrictSorted : list T -> Prop :=
-  | SS_nil : StrictSorted nil
-  | SS_sing : forall x, StrictSorted (x :: nil)
-  | SS_cons : forall x x' xs (HS : StrictSorted (x' :: xs)) (HLt : comp x x' = Lt),
-    StrictSorted (x :: x' :: xs).
-
-  Lemma SS_tail x xs (HSS : StrictSorted (x :: xs)) : StrictSorted xs.
-  Proof.
-    inversion HSS; subst; assumption || apply SS_nil.
-  Qed.
-
-  Lemma comp_Lt_lt: forall m k, comp k m = Lt -> leq k m /\ k <> m. 
-  Proof.
-    intros m k H; assert (HT := compat_compare k m); rewrite H in HT; assumption.
-  Qed.
-
-  Lemma comp_Gt_gt: forall m k, comp k m = Gt -> leq m k /\ k <> m. 
-  Proof.
-    intros m k H; assert (HT := compat_compare k m); rewrite H in HT; assumption.
-  Qed.
-
-  Lemma Lt_trans: forall x y z, comp x y = Lt -> comp y z = Lt -> comp x z = Lt.
-  Proof.
-    intros; apply comp_lt_Lt; apply comp_Lt_lt in H; apply comp_Lt_lt in H0.
-    split; [etransitivity; intuition eassumption |].
-    intros abs; subst; contradiction (proj2 H); apply ord_part; split; tauto.
-  Qed.
-  
-  Lemma Gt_trans: forall x y z, comp x y = Gt -> comp y z = Gt -> comp x z = Gt.
-  Proof.
-    intros; apply comp_gt_Gt; apply comp_Gt_gt in H; apply comp_Gt_gt in H0.
-    split; [etransitivity; intuition eassumption |].
-    intros abs; subst; contradiction (proj2 H); apply ord_part; split; tauto.
-  Qed.
-
-  Lemma StrictSorted_lt_notin k x xs (HLt : leq k x /\ k <> x)
-        (HSS : StrictSorted (x :: xs)) : ~ (k ∈ (x :: xs)).
-  Proof.
-    induction xs; [simpl; intros [HEq | HC]; [subst |]; tauto |].
-    inversion HSS; subst; simpl; intros HIn; apply IHxs; clear HSS IHxs; [| simpl; intuition].
-    - clear HIn; inversion HS; subst; [apply SS_sing | apply SS_cons; [assumption |]].
-      apply comp_lt_Lt; apply comp_Lt_lt in HLt0; apply comp_Lt_lt in HLt1. 
-      split; [etransitivity; intuition eassumption |].
-      intros HEq; subst; contradiction (proj2 HLt1); apply ord_part; split; tauto.
-    - subst; apply comp_Lt_lt in HLt0; destruct HLt0; contradiction H0; apply ord_part; split; assumption.
-  Qed.
-
-  Lemma StrictSorted_lt_notin' k x xs (HLt : comp k x = Lt)
-        (HSS : StrictSorted (x :: xs)) : ~ (k ∈ (x :: xs)).
-  Proof.
-    apply comp_Lt_lt in HLt; apply StrictSorted_lt_notin; assumption.
-  Qed.
-  
-  Lemma StrictSorted_notin x xs (HSS : StrictSorted (x :: xs)) : ~ (x ∈ xs).
-  Proof.
-    destruct xs as [| y ys]; [tauto |]; apply StrictSorted_lt_notin'; [| eapply SS_tail; eassumption].
-    inversion HSS; subst; assumption.
-  Qed.
-
-  Lemma last_cons (x y : T) xs : last (x :: xs) y = last xs x.
-  Proof.
-    revert x y; induction xs; intros; [reflexivity |].
-    etransitivity; [apply IHxs |]; symmetry; apply IHxs.
-  Qed.
-
-  Lemma SS_last_le y x xs (HSS : StrictSorted (x :: xs)) (HIn : y ∈ (x :: xs)) :
-    leq y (last xs x).
-  Proof.
-    revert x y HSS HIn; induction xs; intros.
-    - destruct HIn; [subst; reflexivity | contradiction].
-    - rewrite last_cons; inversion_clear HSS; apply comp_Lt_lt in HLt.
-      simpl in HIn; destruct HIn as [HEq | HIn]; [subst |].
-      + transitivity a; [tauto |].
-        apply IHxs; [assumption | simpl; tauto].
-      + apply IHxs; assumption.
-  Qed.
-
-End Sortedness.
+Delimit Scope finmap_scope with fm.
+Local Open Scope finmap_scope.
+Local Open Scope general_if_scope.
+Infix "∈" := In (at level 31, no associativity) : finmap_scope.
 
 Section Def.
-  Context (K V : Type).
+  Context {K V : Type}.
 
-  Record FinDom `{compK : comparable K} :=
-    mkFD {findom_t : list (K * V);
-          findom_P : StrictSorted (map (@fst _ _) findom_t)}.
+  Definition findom_bound (finmap: K -> option V) (findom: list K): Prop :=
+    forall k, finmap k <> None -> k ∈ findom.
+  Definition findom_approx (finmap: K -> option V) (findom: list K): Prop :=
+    forall k, finmap k <> None <-> k ∈ findom.
 
-  Context `{compK : comparable K}.
+  Record FinMap `{eqK : DecEq K} :=
+    mkFD {finmap :> K -> option V;
+          findom : list K;
+          findom_b : findom_approx finmap findom}.
 
-  Fixpoint findom_lu f x : option V :=
-    match f with
-      | nil => None
-      | (k, v) :: f =>
-        match comp x k with
-          | Lt => None
-          | Eq => Some v
-          | Gt => findom_lu f x
-        end
+  Context `{eqK : DecEq K}.
+
+  Definition dom (f: FinMap) := filter_dupes [] (findom f).
+
+  Lemma dom_nodup (f: FinMap): NoDup (dom f).
+  Proof.
+    unfold dom. apply filter_dupes_nodup.
+  Qed.
+
+  Fixpoint filter_None (f: K -> option V) (l: list K) :=
+    match l with
+    | [] => []
+    | k::l => match f k with
+              | Some _ => k::(filter_None f l)
+              | None   => filter_None f l
+              end
     end.
 
-  Definition findom_f f := findom_lu (findom_t f).
-  Definition dom f := map (@fst _ _) (findom_t f).
-  Definition codom f := map (@snd _ _) (findom_t f).
+  Lemma filter_None_isin f l k:
+    k ∈ filter_None f l -> f k <> None.
+  Proof.
+    induction l.
+    - intros [].
+    - simpl. destruct (f a) eqn:EQf.
+      + move=>[EQ|Hin].
+        * subst a. rewrite EQf. discriminate.
+        * apply IHl. exact Hin.
+      + exact IHl.
+  Qed.
+
+  Lemma filter_None_in f l k:
+    f k <> None -> k ∈ l -> k ∈ filter_None f l.
+  Proof.
+    induction l.
+    - move=>_ [].
+    - move=>Hneq [EQ|Hin].
+      + subst a. simpl. destruct (f k); last (exfalso; now apply Hneq).
+        left. reflexivity.
+      + simpl. destruct (f a); first right; apply IHl; assumption.
+  Qed.
+
+  Program Definition mkFDbound (f: K -> option V) (l: list K)
+          (Hbound: findom_bound f l) :=
+    mkFD _ f (filter_None f l) _.
+  Next Obligation.
+    move=>k. split.
+    - move=>Hnon. apply filter_None_in; first assumption.
+      apply Hbound. assumption.
+    - move/filter_None_isin. tauto.
+  Qed.
+
 End Def.
 
-Arguments mkFD [K V] {cT ord equ preo ord_part compK} _ _.
-Arguments findom_t [K V] {cT ord equ preo ord_part compK} _.
-Arguments findom_lu [K V] {cT} _ _.
-Arguments dom [K V] {cT ord equ preo ord_part compK} f.
-Arguments codom [K V] {cT ord equ preo ord_part compK} f.
-Arguments findom_f [K V] {cT ord equ preo ord_part compK} f x.
-Notation "K '-f>' V" := (FinDom K V) (at level 45).
+Arguments mkFD [K V] {eqK} _ _ _.
+Arguments FinMap K V {_} : clear implicits.
+Arguments finmap [K V] {eqK} _ _.
+Arguments findom [K V] {eqK} _.
+Arguments dom [K V] {eqK} _.
+Arguments findom_b [K V] {eqK} _ {k}.
+Notation "K '-f>' V" := (FinMap K V) (at level 45).
 
 Section FinDom.
-  Context {K} `{compK : comparable K}.
-
-  Coercion findom_f : FinDom >-> Funclass.
+  Context {K} `{eqK : DecEq K}.
 
   Section Props.
     Context {V : Type} `{ev : Setoid V}.
 
-    Program Definition fdEmpty : K -f> V := mkFD nil SS_nil.
+    Program Definition fdEmpty : K -f> V := mkFD (fun _ => None) nil _.
+    Next Obligation.
+      move=>k /=. split; last tauto. move=>H. now apply H.
+    Qed.
 
     Lemma fdLookup_notin_strong k (f : K -f> V) : (~ (k ∈ dom f)) <-> f k = None.
     Proof.
-      destruct f as [fs fP]; unfold findom_f, dom in *; simpl in *; induction fs; [firstorder |].
-      destruct a as [m v]; assert (HT := compat_compare k m); simpl in *; destruct (comp k m); subst.
-      - split; [intros HNIn; contradiction HNIn; tauto | inversion 1].
-      - split; [reflexivity | intros _]; apply (StrictSorted_lt_notin _ _ _ HT fP).
-      - apply SS_tail in fP; rewrite <- IHfs; [| assumption]; intuition.
-    Qed.
-
-    Lemma option_dec {A} (v : option A): sumbool(v = None) (exists a, v = Some a).
-    Proof.
-      destruct v ; eauto.
-    Qed.
-      
-    Lemma option_None_eq (v : option V) : v == None -> v = None.
-    Proof.
-      assert (d := option_dec v) ; destruct d as [l | r]; [auto | destruct r as [x Hx] ; rewrite Hx ; inversion 1].
+      destruct f as [f fd fdb]; unfold dom in *; simpl in *. split.
+      - destruct (f k) as [v|] eqn:EQf; last (move=>_; reflexivity).
+        move=>Hin. exfalso. apply Hin=>{Hin}. apply filter_dupes_in; first tauto.
+        apply fdb. rewrite EQf. discriminate.
+      - move=>EQf Hin. apply filter_dupes_isin in Hin. eapply fdb; last eassumption. tauto.
     Qed.
 
     Lemma fdLookup_notin k (f : K -f> V) : (~ (k ∈ dom f)) <-> f k == None.
     Proof.
       split ; intro H.
       + apply fdLookup_notin_strong in H ; rewrite H ; reflexivity.
-      + apply option_None_eq in H ; apply fdLookup_notin_strong ; auto.
+      + destruct (f k) as [v|] eqn:EQf; first (contradiction H).
+        apply fdLookup_notin_strong. assumption.
     Qed.
     
-    Lemma fdLookup_in_strong : forall (f : K -f> V) k, k ∈ dom f <-> exists v, f k = Some v.
+    Lemma fdLookup_in_strong (f : K -f> V) k: k ∈ dom f <-> f k <> None.
     Proof.
-      destruct f as [fs fP]; unfold findom_f, dom; simpl; induction fs; intros; simpl.
-      - intuition; destruct H as [x Hx]; inversion Hx.
-      - destruct a as [kf vf]; assert (HT := compat_compare k kf); unfold findom_f in *; simpl in *; split; intros.
-        + destruct (comp k kf); [exists vf ; reflexivity |..].
-          * destruct H; [subst; firstorder |]; contradiction (StrictSorted_lt_notin _ _ _ HT fP); simpl; tauto.
-          * apply -> IHfs; [| eapply SS_tail; eassumption]; destruct H; [subst; tauto | assumption].
-        + destruct H as [v HEqv]; destruct (comp k kf); [subst; tauto | inversion HEqv |].
-          right; apply <- IHfs; eauto using @SS_tail.
-    Qed.    
+      destruct f as [f fd fdb]; unfold dom; simpl. split.
+      - move=>Hin. apply filter_dupes_isin in Hin.
+        destruct (f k) as [v|] eqn:EQf; first discriminate. exfalso.
+        eapply fdb; last eassumption. tauto.
+      - move=>EQf. apply filter_dupes_in; first tauto. apply fdb. assumption.
+    Qed.
 
-    Lemma fdLookup_in : forall (f : K -f> V) k, k ∈ dom f <-> exists v, f k == Some v.
+    Lemma fdLookup_in : forall (f : K -f> V) k, k ∈ dom f <-> f k =/= None.
     Proof.
-      destruct f as [fs fP]; unfold findom_f, dom; simpl map; simpl findom_t.
-      induction fs; intros.
-      - intuition; destruct H as [x Hx]; inversion Hx.
-      - destruct a as [kf vf]; assert (HT := compat_compare k kf); unfold findom_f in *; simpl findom_lu in *; split; intros.
-        + destruct (comp k kf); [exists vf ; reflexivity |..].
-          * destruct H; [subst; firstorder |]; contradiction (StrictSorted_lt_notin _ _ _ HT fP); simpl; tauto.
-          * apply -> IHfs; [| eapply SS_tail; eassumption]; destruct H; [subst; tauto | assumption].
-        + destruct H as [v HEqv]; destruct (comp k kf); [simpl; subst; tauto | inversion HEqv |].
-          right; apply <- IHfs; eauto using @SS_tail.
-    Qed.    
+      simpl. split.
+      - move=>Hin. eapply fdLookup_in_strong in Hin. move=>Heq.
+        apply Hin. destruct (f k); contradiction || reflexivity.
+      - move=>Hneq. apply fdLookup_in_strong. destruct (f k); first discriminate.
+        exfalso. now apply Hneq. 
+    Qed.
 
-    Fixpoint pre_upd (x : K * V) ys :=
-      match ys with
-        | nil => x :: nil
-        | y :: ys' => match comp (fst x) (fst y) with
-                        | Lt => x :: ys
-                        | Eq => x :: ys'
-                        | Gt => y :: pre_upd x ys'
-                      end
+    (* The definition of the domain here is carefully tuned to make the recursion principle
+       less painful. *)
+    Definition fdStrongUpdate_dom k (v: option V) (f: K -f> V) :=
+      match v with
+      | Some _ => k::(dom f)
+      | None => match (dom f) with [] => []
+                          | k'::dom' => if dec_eq k k' then dom' else filter_dupes [k] (findom f) end
       end.
-
-    Program Definition fdUpdate k v (f : K -f> V) : K -f> V := mkFD (pre_upd (k, v) (findom_t f)) _.
+    Program Definition fdStrongUpdate k v (f : K -f> V) : K -f> V :=
+      mkFD (fun k' => if dec_eq k k' then v else f k')
+           (fdStrongUpdate_dom k v f)
+           _.
     Next Obligation.
-      destruct f as [fs fSS]; induction fs; simpl in *; [apply SS_sing |].
-      destruct a as [kf vf]; simpl in *; assert (HT := compat_compare k kf); destruct (comp k kf);
-        subst; simpl; [assumption | apply SS_cons; [assumption|apply comp_lt_Lt; assumption] |]. 
-      assert (HR : match map (@fst _ _) (pre_upd (k, v) fs)
-                     with nil => True | kn :: _ => leq kf kn /\ kf <> kn end).
-      - assert (HNEq' : kf <> k) by (intros HEq; subst; tauto).
-        destruct fs as [| [kn vn] fs']; inversion fSS; clear fSS IHfs; subst; simpl; [tauto |].
-        destruct (comp k kn); simpl; apply comp_Lt_lt in HLt; tauto.
-      - destruct (pre_upd (k, v) fs) as [| [kn vn] fs']; [apply SS_sing |]; simpl in *.
-        apply comp_lt_Lt in HR; apply SS_cons; eauto using @SS_tail.
+      move=>k'. simpl. unfold fdStrongUpdate_dom. destruct v as [v|]; destruct (dec_eq k k') as [EQ|NEQ]; split; intros Hin.
+      - left. assumption.
+      - discriminate.
+      - right. apply fdLookup_in_strong. assumption.
+      - apply fdLookup_in_strong. destruct Hin as [EQ|?]; last assumption. contradiction.
+      - exfalso. now apply Hin.
+      - exfalso. subst k'. destruct (dom f) as [|k' d] eqn:EQdf; first contradiction.
+        destruct (dec_eq k k') as [EQ|NEQ].
+        + subst k'. assert (Hndup := dom_nodup f). rewrite EQdf in Hndup. inversion Hndup; subst. contradiction.
+        + eapply filter_dupes_notin, Hin. left. reflexivity.
+      - apply fdLookup_in_strong in Hin. destruct (dom f) as [|k'' dom'] eqn:Hdom; first assumption.
+        destruct (dec_eq k k'') as [EQ'|NEQ'].
+        + subst k''. destruct Hin as [?|?]; first contradiction. assumption.
+        + unfold dom in Hdom. rewrite -Hdom in Hin.
+          apply filter_dupes_isin in Hin. apply filter_dupes_in.
+          * move=>[EQk|[]]. contradiction.
+          * tauto.
+      - apply fdLookup_in_strong. destruct (dom f) as [|k'' dom'] eqn:Hdom; first assumption.
+        destruct (dec_eq k k'') as [EQ'|NEQ'].
+        + subst k''. right. assumption.
+        + rewrite -Hdom /dom. apply filter_dupes_in; first tauto.
+          apply filter_dupes_isin in Hin. tauto.
     Qed.
       
-    Lemma fdUpdate_eq k v f : fdUpdate k v f k = Some v.
+    Lemma fdStrongUpdate_eq k v f : fdStrongUpdate k v f k = v.
     Proof.
-      destruct f as [fs fP]; unfold findom_f; simpl in *; clear fP;
-        induction fs; simpl; [rewrite comp_self_Eq; reflexivity |].
-      destruct a as [kf vf]; assert (HT := compat_compare k kf); simpl; destruct (comp k kf); simpl;
-        try (rewrite comp_self_Eq; reflexivity).
-      rewrite comp_gt_Gt; assumption.
+      simpl finmap. destruct (dec_eq k k) as [EQ|NEQ]; last (exfalso; now apply NEQ). reflexivity.
     Qed.
 
-    Lemma fdUpdate_neq k k' v f (Hneq : k <> k') : fdUpdate k v f k' = f k'.
+    Lemma fdStrongUpdate_neq k k' v f (Hneq : k <> k') : fdStrongUpdate k v f k' = f k'.
     Proof.
-      destruct f as [fs fP]; unfold findom_f; simpl in *; clear fP; induction fs; simpl.
-        assert (HT := compat_compare k' k); destruct (comp k' k); subst; tauto.
-      destruct a as [kf vf]; assert (HT := compat_compare k kf); simpl; destruct (comp k kf); simpl;
-        [..| rewrite IHfs; reflexivity].
-        subst; assert (HT := compat_compare k' kf); destruct (comp k' kf); subst; tauto.
-      assert (HR := compat_compare k' k); destruct (comp k' k); subst; try tauto.
-      assert (HQ := compat_compare k' kf); destruct (comp k' kf); try reflexivity; clear IHfs.
-        subst; contradiction Hneq; apply ord_part; split; tauto.
-      contradiction Hneq; apply ord_part; split; [etransitivity |]; intuition eassumption.
+      simpl finmap. destruct (dec_eq k k') as [EQ|NEQ]; first contradiction. reflexivity.
     Qed.
 
-    Fixpoint pre_rem x (ys : list (K * V)) :=
-      match ys with
-        | nil => nil
-        | y :: ys' => match comp x (fst y) with
-                        | Eq => ys'
-                        | Lt => ys
-                        | Gt => y :: pre_rem x ys'
-                      end
+    Program Definition fdLookup_indom f k (Hindom: k ∈ dom f): V :=
+      match f k with
+      | Some v => v
+      | None => !
       end.
-
-    Program Definition fdRemove k (f : K -f> V) : K -f> V := mkFD (pre_rem k (findom_t f)) _.
     Next Obligation.
-      destruct f as [fs fP]; simpl; induction fs; simpl; [assumption |].
-      destruct a as [kf vf]; assert (HT := compat_compare k kf); simpl; destruct (comp k kf); eauto using @SS_tail.
-      specialize (IHfs (SS_tail _ _ fP)); simpl; clear HT.
-      assert (HR : match map (@fst _ _) (pre_rem k fs)
-                     with nil => True | kn :: _ => leq kf kn /\ kf <> kn end).
-      - destruct fs as [| [kn vn] fs']; simpl in *; [trivial |].
-        destruct (comp k kn); simpl; inversion fP; subst; apply comp_Lt_lt in HLt; try tauto.
-        clear fP; destruct fs' as [| [km vm] fs']; simpl in *; [trivial |].
-        inversion HS; subst; split; apply comp_Lt_lt in HLt0; [etransitivity; intuition eassumption | intros HEq; subst].
-        contradiction (proj2 HLt); apply ord_part; split; tauto.
-      - destruct (map (@fst _ _) (pre_rem k fs)) as [| kn fs']; [apply SS_sing | apply comp_lt_Lt in HR; apply SS_cons; assumption].
+      apply fdLookup_in_strong in Hindom. rewrite Heq_anonymous in Hindom. apply Hindom. reflexivity.
     Qed.
 
-    Lemma fdRemove_eq t f : fdRemove t f t = None.
+    Lemma fdLookup_indom_corr f k (Hindom: k ∈ dom f) v:
+      fdLookup_indom f k Hindom = v <-> f k = Some v.
     Proof.
-      destruct f as [fs fP]; simpl; induction fs; [reflexivity |].
-      destruct a as [k v]; assert (HT := compat_compare t k); simpl in *; destruct (comp t k).
-      - apply fdLookup_notin_strong, StrictSorted_notin; subst; unfold dom; simpl; rewrite comp_self_Eq; apply fP.
-      - apply fdLookup_notin_strong; unfold findom_f, dom in *; simpl in *; rewrite comp_lt_Lt; [| assumption].
-        apply StrictSorted_lt_notin; assumption.
-      - unfold findom_f in *; simpl in *; rewrite comp_gt_Gt; [| assumption].
-        simpl; rewrite comp_gt_Gt; [| assumption].
-        eapply IHfs, SS_tail; eassumption.
+      split.
+      - rewrite /fdLookup_indom. ddes (f k) at 1 3 as [v'|] deqn:EQf.
+        + move=><-. now symmetry.
+        + unfold False_rect. destruct (_:False).
+      - rewrite /fdLookup_indom. ddes (f k) at 1 3 4 as [v'|] deqn:EQf.
+        + by move=>[EQ].
+        + move=>?. discriminate.
     Qed.
-
-    Lemma fdRemove_neq {t t'} f (Hneq : t <> t') : fdRemove t f t' = f t'.
-    Proof.
-      destruct f as [fs fP]; unfold findom_f; simpl; induction fs; [reflexivity |].
-      destruct a as [k v]; assert (HT := compat_compare t k); simpl; destruct (comp t k); [| reflexivity |].
-      - subst; assert (HQ := compat_compare t' k); destruct (comp t' k); subst; try tauto.
-        apply (fdLookup_notin_strong _ (mkFD fs (SS_tail _ _ fP))); unfold dom; simpl in *.
-        intros HT; eapply StrictSorted_lt_notin; eassumption || (simpl; tauto).
-      - simpl; rewrite IHfs; [reflexivity |]; eapply SS_tail; eassumption.
-    Qed.
-
-    Program Fixpoint Indom_lookup k (f : list (K * V)) (HIn : inlst k (map (@fst _ _) f) = true) : V :=
-      match f as f' return inlst k (map (@fst _ _) f') = true -> V with
-        | nil => fun F => False_rect _ _
-        | (k', v') :: fr => fun P =>
-          match iseq k k' as b return (b || inlst k (map (@fst _ _) fr) = true)%bool -> V with
-            | true => fun _ => v'
-            | false => fun P => Indom_lookup k fr P
-          end P
-      end HIn.
-
-    Lemma Indom_lookup_find k (f : K -f> V) (HIn : inlst k (dom f) = true) : Some (Indom_lookup _ _ HIn) = f k.
-    Proof.
-      destruct f as [fs fP]; unfold dom, findom_f in *; simpl in *; induction fs; [discriminate |].
-      revert HIn; destruct a as [kf vf]; simpl in *; unfold iseq.
-      assert (HT := compat_compare k kf); revert HT; destruct (comp k kf); intros; [subst; reflexivity |..].
-      - contradict HIn; simpl; rewrite In_inlst.
-        intros HIn; eapply StrictSorted_lt_notin; eassumption || (simpl; tauto).
-      - eapply IHfs, SS_tail; eassumption.
-    Qed.
-
-    Lemma orb_right_intro a b (HT : b = true) : (a || b = true)%bool.
-    Proof. subst b; apply Bool.orb_true_r. Qed.
-
-    Fixpoint ind_app_map U (xs : list K)
-      (I : forall x (HIn : inlst x xs = true), U) :=
-      match xs as lst return (forall x (HIn : inlst x lst = true), U) -> list (K * U) with
-        | nil => fun _ => nil
-        | x :: xs => fun R => (x, R x (proj2 (In_inlst _ _) (in_eq x xs))) ::
-                               ind_app_map U xs (fun y Y => R _ (orb_right_intro _ _ Y))
-      end I.
-
-    Lemma list_fst_map U xs I : map (@fst _ _) (ind_app_map U xs I) = xs.
-    Proof. induction xs; [reflexivity |]; simpl; f_equal; apply IHxs. Qed.
-
-    Program Definition findom_map U W (m : K -f> U) (f : forall x (HIn : inlst x (dom m) = true), W) : K -f> W :=
-      mkFD (ind_app_map _ (dom m) f) _.
-    Next Obligation.
-      rewrite list_fst_map; apply m.
-    Qed.
-
-    Lemma ff (P : K -> nat -> Prop) (A : forall x n m, n <= m -> P x n -> P x m) (xs : list K) :
-      (forall x, inlst x xs = true -> exists m, P x m) -> exists m, forall x, inlst x xs = true -> P x m.
-    Proof.
-      induction xs; intros; [exists 0; intros; discriminate |].
-      specialize (IHxs (fun k HIn => H k (orb_right_intro _ _ HIn))); destruct IHxs as [m IH].
-      specialize (H a (proj2 (In_inlst (compT := compK) _ _) (in_eq a xs))); destruct H as [k Hk].
-      exists (max m k); intros t HIn; rewrite -> In_inlst in HIn; simpl in HIn; destruct HIn as [HEq | HIn];
-        [subst | rewrite <- In_inlst in HIn]; eapply A; [| eassumption |..]; eauto using le_max_r, le_max_l.
-    Qed.
-
-    Lemma findom_fun_map U xs (I : forall x, inlst x xs = true -> U) x
-      (HIn : inlst x xs = true) (HSS : StrictSorted xs) :
-      findom_lu (ind_app_map _ xs I) x = Some (I _ HIn).
-    Proof.
-      induction xs; [discriminate |].
-      simpl; assert (HT := compat_compare x a); destruct (comp x a).
-      - subst; rewrite -> (D.UIP _ _ _ HIn); reflexivity.
-      - contradiction (StrictSorted_lt_notin _ _ xs HT).
-        rewrite <- In_inlst; assumption.
-      - simpl in *; specialize (IHxs (fun y Y => I _ (orb_right_intro _ _ Y))).
-        assert (HInT : inlst x xs = true) by (unfold iseq in HIn; rewrite comp_gt_Gt in HIn; assumption).
-        specialize (IHxs HInT (SS_tail _ _ HSS)); simpl in IHxs; rewrite -> (D.UIP _ _ _ HIn) in IHxs; apply IHxs.
-    Qed.
-
-    Lemma findom_map_app U W (m : K -f> U) x (HIn : inlst x (dom m) = true)
-      (f : forall x, (inlst x (dom m) = true) -> W) :
-      findom_map _ _ m f x = Some (f x HIn).
-    Proof.
-      destruct m as [ms mP]; unfold findom_f; simpl; unfold dom in *; simpl in *.
-      apply (findom_fun_map _ _ f); assumption.
-    Qed.
-
-    Lemma findom_fun_map_nf U xs (I : forall x, inlst x xs = true -> U) x
-      (HNIn : inlst x xs = false) (HSS : StrictSorted xs) :
-      findom_lu (ind_app_map _ xs I) x = None.
-    Proof.
-      induction xs; [reflexivity |].
-      simpl; assert (HT := compat_compare x a); destruct (comp x a); [| reflexivity |].
-      - simpl in HNIn; rewrite <- iseq_eq in HT; rewrite HT in HNIn; discriminate.
-      - simpl in *; apply IHxs; [| eapply SS_tail; eassumption].
-        destruct (iseq x a); [discriminate | apply HNIn].
-    Qed.
-
-    Lemma findom_map_app_nf U W (m : K -f> U) x (HNIn : inlst x (dom m) = false)
-      (f : forall x, (inlst x (dom m) = true) -> W) :
-      findom_map _ _ m f x = None.
-    Proof.
-      destruct m as [ms mP]; unfold findom_f; simpl; unfold dom in *; simpl in *.
-      apply (findom_fun_map_nf _ _ f); assumption.
-    Qed.
-
   End Props.
 
   Section Instances.
@@ -486,16 +217,31 @@ Section FinDom.
     
     Global Program Instance type_findom : Setoid (K -f> V) := mkType equiv_fd.
 
-    Global Instance lookup_proper : Proper (equiv ==> eq ==> equiv) (findom_f (V := V)).
+    Global Instance fdLookup_proper : Proper (equiv ==> eq ==> equiv) (finmap (V := V)).
     Proof.
       intros f1 f2 HEqf k1 k2 HEqk; subst; apply HEqf.
     Qed.
 
+    Lemma dom_proper {f1 f2}:
+      f1 == f2 -> (forall k, k ∈ dom f1 <-> k ∈ dom f2).
+    Proof.
+      move=>EQf k. split; rewrite !fdLookup_in; move=>Hin.
+      - now rewrite -EQf.
+      - now rewrite EQf.
+    Qed.
+    
+    Lemma fdEmpty_dom f:
+      f == fdEmpty <-> (forall k, ~k ∈ dom f).
+    Proof.
+      split.
+      - move=>Hemp k Hin. apply (dom_proper Hemp) in Hin. exact Hin.
+      - move=>Hemp k. destruct (f k) as [v|] eqn:EQf.
+        + exfalso. apply (Hemp k). apply fdLookup_in_strong. rewrite EQf. discriminate.
+        + reflexivity.
+    Qed.
+
     Definition dist_fd n (f1 f2 : K -f> V) :=
-      match n with
-        | O => True
-        | S _ => forall k, f1 k = n = f2 k
-      end.
+      forall k, f1 k = n = f2 k.
 
     Global Program Instance metric_findom : metric (K -f> V) := mkMetr dist_fd.
     Next Obligation.
@@ -505,119 +251,55 @@ Section FinDom.
     Next Obligation.
       split; intros HEq.
       - intros k; rewrite <- dist_refl; intros [| n]; [reflexivity; exact None | apply (HEq (S n) k) ].
-      - intros [| n]; [reflexivity |]; intros k; generalize (S n); rewrite dist_refl; apply HEq.
+      - intros n; intros k. apply dist_refl. apply HEq.
     Qed.
     Next Obligation.
-      revert n; intros [| n] x y HS; [reflexivity |]; intros k; symmetry; apply HS.
+      revert n; intros n x y HS; intros k; symmetry; apply HS.
     Qed.
     Next Obligation.
-      revert n; intros [| n] x y z Hxy Hyz; [reflexivity |]; intros k; etransitivity; [apply Hxy | apply Hyz].
+      revert n; intros n x y z Hxy Hyz; intros k; etransitivity; [apply Hxy | apply Hyz].
     Qed.
     Next Obligation.
-      destruct n as [| n]; [reflexivity |]; intros k; eapply dist_mono, H.
+      intros k; eapply dist_mono, H.
+    Qed.
+    Next Obligation.
+      move=>k. apply dist_bound.
     Qed.
     
-    Global Instance lookup_dist n : Proper (dist n ==> eq ==> dist n) (findom_f (V := V)).
+    Global Instance lookup_dist n : Proper (dist n ==> eq ==> dist n) (finmap (V := V)).
     Proof.
       intros f1 f2 HEqf k1 k2 HEqk; subst. 
       destruct n; first now auto.
       now apply HEqf.
     Qed.
 
-    Lemma domeq {m1 m2 : K -f> V} {n} (HEq : m1 = S n = m2) : dom m1 = dom m2.
-    Proof.
-      destruct m1 as [ms1 mP1]; destruct m2 as [ms2 mP2]; revert ms2 mP2 HEq; induction ms1; intros.
-      { destruct ms2 as [| [kf vf] ms2]; [reflexivity |]; specialize (HEq kf); unfold findom_f in *; simpl in *.
-        rewrite comp_self_Eq in HEq; contradiction HEq.
-      }
-      destruct a as [k1 v1]; destruct ms2 as [| [k2 v2] ms2].
-      { specialize (HEq k1); unfold findom_f in *; simpl in *; rewrite comp_self_Eq in HEq; contradiction HEq.
-      }
-      assert (HEqk : k1 = k2).
-      { assert (HT := compat_compare k1 k2); assert (HLt := HEq k1); assert (HGt := HEq k2);
-          unfold findom_f in *; simpl in *; clear IHms1 HEq.
-        rewrite comp_self_Eq in HLt; destruct (comp k1 k2); [assumption | contradiction HLt |].
-        rewrite -> comp_lt_Lt, comp_self_Eq in HGt; [contradiction HGt | intuition].
-      }
-      subst; unfold dom; simpl; f_equal; simpl in *.
-      apply IHms1 with (mP1 := SS_tail _ _ mP1) (mP2 := SS_tail _ _ mP2); intros k; clear IHms1.
-      specialize (HEq k); unfold findom_f in *; simpl in *.
-      assert (HT : mkFD ms1 (SS_tail _ _ mP1) k = S n = mkFD ms2 (SS_tail _ _ mP2) k); [| apply HT].
-      assert (HT := compat_compare k k2); destruct (comp k k2); [subst | | assumption].
-      { rewrite !(proj1 (fdLookup_notin_strong _ _)); [reflexivity |..]; unfold dom; simpl; apply StrictSorted_notin; assumption.
-      }
-      rewrite !(proj1 (fdLookup_notin_strong _ _)); [reflexivity |..]; unfold dom; simpl; intros HIn.
-      { apply (StrictSorted_lt_notin _ _ _ HT mP2); simpl; tauto.
-      }
-      apply (StrictSorted_lt_notin _ _ _ HT mP1); simpl; tauto.
-    Qed.
+    Definition finmap_chainx (σ : chain (K -f> V)) {σc : cchain σ} x : chain (option V) :=
+      fun n => (σ n) x.
 
-    Lemma finmap_chain_dom x n (σ : chain (K -f> V)) {σc : cchain σ} (HIn : In x (dom (σ 1))) : In x (dom (σ (S n))).
-    Proof.
-      revert σ σc HIn; induction n; intros; [assumption |].
-      apply (IHn (cutn σ 1)); simpl; clear IHn; [apply _ |].
-      rewrite -> fdLookup_in in HIn; destruct HIn as [v HLU].
-      remember ((σ 2) x) as ov; symmetry in Heqov; destruct ov.
-      - rewrite fdLookup_in; eexists; setoid_rewrite Heqov; reflexivity.
-      - assert (HT := chain_cauchy σ _ 1 1 2 x).
-        rewrite -> Heqov, HLU in HT; contradiction HT.
-    Qed.
-    
-    Program Definition finmap_chainx (σ : chain (K -f> V)) {σc : cchain σ} x (HIn : x ∈ dom (σ 1)) : chain V :=
-      fun n => 
-                         match σ (S n) x with
-                           | None =>  _
-                           | Some v => v
-                         end.
+    Program Instance finmap_chainx_cauchy (σ : chain (K -f> V)) {σc : cchain σ} x :
+      cchain (finmap_chainx σ x).
     Next Obligation.
-      exfalso.
-      assert (Le1n : 1 <= S n) by omega.
-      move: (σc _ _ _ Le1n (le_refl _) x).
-      move/fdLookup_in_strong : HIn => [v ->]. by rewrite -Heq_anonymous.
-    Defined.
-
-    Program Instance finmap_chainx_cauchy (σ : chain (K -f> V)) {σc : cchain σ} x {HIn : x ∈ dom (σ 1)} :
-      cchain (finmap_chainx σ x HIn).
-    Next Obligation. 
-      fold dist.
-      destruct n as [|n]; first by apply dist_bound.
-      unfold finmap_chainx.
-      generalize (@eq_refl _ (σ (S i) x)); pattern (σ (S i) x) at 1 3.
-      destruct (σ (S i) x) as [vi |] => [EQni|E]; last first. 
-      { exfalso. eapply (fdLookup_notin_strong x (σ (S i))); [by symmetry|by eapply finmap_chain_dom]. }
-      generalize (@eq_refl _ (σ (S j) x)); pattern (σ (S j) x) at 1 3.
-      destruct (σ (S j) x) as [vj |] => [EQnj|E]; last first. 
-      { exfalso. eapply (fdLookup_notin_strong x (σ (S j))); [by symmetry|by eapply finmap_chain_dom]. }
-      move : (σc _ _ _ (le_S _ _ HLei) (le_S _ _ HLej) x). 
-      by rewrite -EQni -EQnj. 
+      assert (σc':=σc).
+      specialize (σc' n i j HLei HLej x). unfold finmap_chainx. assumption.
     Qed.
     
-    Definition findom_lub (σ : chain (K -f> V)) (σc : cchain σ) : K -f> V :=
-      findom_map _ _ (σ 1) (fun x HLu => compl (finmap_chainx σ x (proj1 (In_inlst _ _) HLu))).
+    Program Definition findom_lub (σ : chain (K -f> V)) (σc : cchain σ) : K -f> V :=
+      mkFDbound (fun x => compl (finmap_chainx σ x)) (findom (σ 1)) _.
+    Next Obligation.
+      move=>k /= Hin.
+      assert(H:=conv_cauchy (finmap_chainx σ k) 1 1 (le_refl _)).
+      simpl in Hin. assert (Hin': (finmap_chainx σ k) 1 <> None).
+      { move=>EQ. rewrite EQ in H. apply Hin. symmetry in H. simpl in H.
+        destruct (option_compl (finmap_chainx σ k)); first contradiction.
+        reflexivity. }
+      clear Hin. apply (findom_b (σ 1)). assumption.
+    Qed.
 
     Global Program Instance findom_cmetric : cmetric (K -f> V) := mkCMetr findom_lub.
     Next Obligation.
       move => [| n] ; [now auto|]. 
-      move => i LEi k.
-      destruct (inlst k (dom (σ 1))) eqn: HIn.
-      - rewrite /findom_lub findom_map_app.
-        assert (HT := conv_cauchy (finmap_chainx σ k (proj1 (In_inlst k (dom (σ 1))) HIn)) (S n)).
-        case EQi : (σ i k) => [vi|]; [|exfalso].
-        + rewrite /dist /= -/dist. rewrite HT {HT}. 
-          rewrite /finmap_chainx.
-          generalize (@eq_refl _ (σ (S i) k)); pattern (σ (S i) k) at 1 3.
-          destruct (σ (S i) k) as [vSi |] => [EQsi|EQsi]; [|exfalso].
-          * have σc' := (σc (S n) (S i) i _ _ k) => {σc}. rewrite <- EQsi, EQi in σc'. 
-            apply σc'; by omega.
-          * have σc' := (σc (S n) (S i) i _ _ k) => {σc}. rewrite <- EQsi, EQi in σc'. 
-            apply σc'; by omega.
-        + clear HT. have σc' := (σc 1 1 i _ _ k) => {σc}. rewrite EQi in σc'. 
-          move/In_inlst/fdLookup_in_strong : HIn σc' => [v1 ->] σc.
-          apply σc; by omega.
-      - rewrite /findom_lub findom_map_app_nf //.
-        have σc' := σc 1 1 i _ _ k => {σc}.
-        move/NIn_inlst/fdLookup_notin_strong : HIn σc' => -> σc'. 
-        destruct (σ i k) => //. exfalso; apply σc'; omega.
+      move => i LEi k. unfold findom_lub. simpl finmap.
+      assert (H := conv_cauchy (finmap_chainx σ k) _ _ LEi). exact H.
     Qed.
 
     Local Existing Instance option_preo_bot.
@@ -636,232 +318,110 @@ Section FinDom.
       by rewrite -(Rf k) -(Rg k).
     Qed.
 
-    Definition chain_fin_app (σ : chain (K -f> V)) k : chain (option V) :=
-      fun i => σ i k.
-    Instance cchain_fin_app (σ : chain (K -f> V)) {σc : cchain σ} k : cchain (chain_fin_app σ k).
-    Proof.
-      intros n i j LEi LEj; unfold chain_fin_app.
-      specialize (σc n i j LEi LEj).
-      destruct n as [| n]; [apply dist_bound |].
-      specialize (σc k); assumption.
-    Qed.
-
-    Lemma foo (σ : chain (K -f> V)) (σc : cchain σ) k :
-      compl σ k == compl (chain_fin_app σ k).
-    Proof.
-      unfold compl, option_cmt, option_compl, chain_fin_app; simpl.
-      generalize (@eq_refl _ (σ 1 k)) as EQs; pattern (σ 1 k) at 1 3; destruct (σ 1 k) as [vs |]; intros.
-      - unfold findom_lub.
-        assert (HIn : inlst k (dom (σ 1)) = true).
-        { rewrite -> In_inlst, fdLookup_in_strong; exists vs; congruence. }
-        rewrite -> findom_map_app with (HIn := HIn).
-        unfold equiv; simpl; apply umet_complete_ext; intros.
-        unfold unSome, finmap_chainx.
-        generalize (@eq_refl _ (σ (S i) k)) as EQsi.
-        pattern (σ (S i) k) at 1 3 7; destruct (σ (S i) k) as [vsi |]; intros; [| exfalso].
-        + have HInSi : inlst k (dom (σ (S i))) = true.
-          { apply In_inlst. apply finmap_chain_dom => //. exact/In_inlst. }
-          rewrite <- (Indom_lookup_find _ (σ (S i)) HInSi) in EQsi.
-          inversion EQsi; reflexivity.
-        + assert (LEi : 1 <= S i) by auto with arith.
-          specialize (σc 1 1 (S i) (le_n _) LEi k).
-          rewrite <- EQs, <- EQsi in σc; contradiction σc.
-      - unfold findom_lub.
-        rewrite -> findom_map_app_nf; [reflexivity |].
-        rewrite -> NIn_inlst, fdLookup_notin_strong; congruence.
-    Qed.
-
     Global Instance findom_pcmType : pcmType (K -f> V).
     Proof.
       split.
-      - intros σ ρ σc ρc HSub k; rewrite !foo.
+      - intros σ ρ σc ρc HSub k.
         eapply pcm_respC; [now auto with typeclass_instances | intros].
-        unfold chain_fin_app; eapply HSub.
+        apply: HSub.
     Qed.
 
     Lemma dom_ext (m1 m2 : K -f> V) k (HSub : m1 ⊑ m2) (HIn : k ∈ dom m1) : k ∈ dom m2.
     Proof.
-      destruct m1 as [ms1 mP1]; destruct m2 as [ms2 mP2]; specialize (HSub k); simpl in *.
-      unfold findom_f, dom in *; simpl in *.
-      induction ms1; simpl in *; [contradiction | destruct a as [k0 v0]; simpl in * ].
-      assert (HT := compat_compare k k0); destruct (comp k k0); [subst k0 | |].
-      - destruct (findom_lu ms2 k) as [v1 |] eqn: HFnd; [| contradiction HSub].
-        clear -HFnd mP2 compK.
-        assert (HT := fdLookup_in_strong (mkFD ms2 mP2) k); unfold dom, findom_f in HT; simpl in HT.
-        rewrite HT; exists v1; assumption.
-      - assert (HNIn := (StrictSorted_lt_notin _ _ _ HT mP1) HIn); contradiction.
-      - destruct HIn as [HEq | HIn]; [destruct HT; congruence | apply SS_tail in mP1].
-        apply IHms1; assumption.
+      specialize (HSub k).
+      apply fdLookup_in in HIn.
+      apply fdLookup_in. destruct (m2 k) as [v'|].
+      - move=>[].
+      - exfalso. apply HIn. destruct (m1 k); contradiction || reflexivity.
     Qed.
 
   End Instances.
 
   Section Map.
-    Context U V `{pcmU : pcmType U} `{cmV : pcmType V}.
+    Context {U V} `{pcmU : pcmType U} `{cmV : pcmType V}.
 
-    Program Definition pre_fdMap (f : U -> V) (m : K -f> U) : (K -f> V) :=
-      mkFD (map (fun (a : K * U) => let (k, v) := a in (k, f v)) (findom_t m)) _.
+    Definition fdMap_pre (m : U -> V) (f: K -f> U) : K -> option V :=
+      fun k => match (f k) with None => None | Some v => Some (m v) end.
+
+    (* The nicest solution here would be to have a map on option... *)
+    Program Definition fdMapRaw (m : U -> V) : (K -f> U) -> (K -f> V) :=
+      fun f => mkFDbound (fdMap_pre m f) (findom f) _.
     Next Obligation.
-      destruct m as [ms mP]; simpl; induction ms as [| [k u]]; [apply SS_nil | simpl in *].
-      destruct ms as [| [k' u'] ms]; [apply SS_sing | simpl in *].
-      inversion mP; subst; apply SS_tail in mP; apply SS_cons; [apply IHms |]; assumption.
+      unfold fdMap_pre. move=>k /= Hneq; destruct (f k) eqn:EQf.
+      - apply findom_b. rewrite EQf. discriminate.
+      - exfalso. now apply Hneq.
     Qed.
-
-    Lemma pre_fdMap_dom_same f m : dom m = dom (pre_fdMap f m).
-    Proof.
-      destruct m as [ms mP]; unfold dom; simpl; clear mP; induction ms as [| [k u]]; [reflexivity |].
-      simpl; f_equal; apply IHms.
-    Qed.
-
-    Lemma pre_fdMap_lookup f (m : K -f> U) k u (HFnd : m k = Some u) : (pre_fdMap f m) k = Some (f u).
-    Proof.
-      destruct m as [ms mP]; unfold findom_f in *; simpl in *; clear mP.
-      induction ms as [| [k' u']]; [discriminate | simpl in *].
-      assert (HT := compat_compare k k'); destruct (comp k k'); [subst k' | discriminate |].
-      - inversion HFnd; subst u'; reflexivity.
-      - apply IHms; assumption.
-    Qed.
-
-    Lemma pre_fdMap_lookup_nf f (m : K -f> U) k (HFnd : m k = None) : (pre_fdMap f m) k = None.
-    Proof.
-      apply fdLookup_notin_strong; rewrite <- pre_fdMap_dom_same; apply fdLookup_notin_strong; assumption.
-    Qed.
-
-    Program Definition fdMap (f : U -m> V) : (K -f> U) -m> (K -f> V) :=
-      m[(pre_fdMap f)].
+    
+    Program Definition fdMapMorph (m : U -n> V) : (K -f> U) -n> (K -f> V) :=
+      n[(fdMapRaw m)].
     Next Obligation.
+      unfold fdMapRaw, fdMap_pre.
       intros m1 m2 HEq; destruct n as [| n]; [apply dist_bound |]; intros k; simpl; specialize (HEq k).
-      destruct (m1 k) as [u1 |] eqn: HFnd1; destruct (m2 k) as [u2 |] eqn: HFnd2; try contradiction HEq; [|].
-      - rewrite -> pre_fdMap_lookup with (u := u1), pre_fdMap_lookup with (u := u2);
-        [apply met_morph_nonexp |..]; assumption.
-      - rewrite !pre_fdMap_lookup_nf; assumption.
+      destruct (m1 k) as [u1 |] eqn: HFnd1; destruct (m2 k) as [u2 |] eqn: HFnd2; try contradiction HEq; [|exact I].
+      apply met_morph_nonexp. exact HEq.
+    Qed.
+
+    Program Definition fdMap (m : U -m> V) : (K -f> U) -m> (K -f> V) :=
+      m[(fdMapMorph m)].
+    Next Obligation.
+      move=>f1 f2 EQf k.
+      change (fdMapMorph m f1 k = n = fdMapMorph m f2 k).
+      now apply (met_morph_nonexp (fdMapMorph m)).
     Qed.
     Next Obligation.
-      intros m1 m2 Subm k; specialize (Subm k); destruct (m1 k) as [u1 |] eqn: HFnd1.
-      - erewrite pre_fdMap_lookup by eassumption.
-        destruct (m2 k) as [u2 |] eqn: HFnd2; [| contradiction Subm].
-        erewrite pre_fdMap_lookup by eassumption.
-        unfold pord in *; simpl in *.
-        rewrite -> Subm; reflexivity.
-      - rewrite -> pre_fdMap_lookup_nf by assumption; exact I.
+      unfold fdMapRaw, fdMap_pre. intros m1 m2 Subm k; specialize (Subm k); destruct (m1 k) as [u1 |] eqn: HFnd1.
+      - rewrite /= HFnd1 /=. destruct (m2 k) as [u2 |] eqn: HFnd2; [| contradiction Subm].
+        apply mu_mono, Subm.
+      - rewrite /= HFnd1 /=. destruct (m2 k); exact I.
     Qed.
 
     Global Instance fdMap_resp : Proper (equiv ==> equiv) fdMap.
     Proof.
-      intros f1 f2 EQf m k; destruct (m k) as [u |] eqn: HFnd; simpl morph.
-      - rewrite -> !pre_fdMap_lookup with (u := u) by assumption.
-        rewrite EQf; apply morph_resp; reflexivity.
-      - rewrite -> !pre_fdMap_lookup_nf by assumption; reflexivity.
+      intros f1 f2 EQf m k; rewrite /opt_eq /fdMap /= /fdMap_pre. destruct (m k).
+      - apply EQf.
+      - reflexivity.
     Qed.
 
     Global Instance fdMap_nonexp n : Proper (dist n ==> dist n) fdMap.
     Proof.
-      intros f1 f2 EQf m; destruct n as [| n]; [apply dist_bound |]; intros k.
-      simpl morph; destruct (m k) as [u |] eqn: HFnd.
-      - rewrite -> !pre_fdMap_lookup with (u := u) by assumption.
-        unfold dist; simpl; rewrite EQf; apply met_morph_nonexp; reflexivity.
-      - rewrite -> !pre_fdMap_lookup_nf by assumption; reflexivity.
+      intros f1 f2 EQf m k. destruct n as [|n]; first exact: dist_bound.
+      rewrite /opt_eq /fdMap /= /fdMap_pre. destruct (m k).
+      - apply EQf.
+      - reflexivity.
     Qed.
 
     Global Instance fdMap_monic : Proper (pord ==> pord) fdMap.
     Proof.
-      intros f1 f2 Subf m k; simpl morph.
-      destruct (m k) as [u |] eqn: HFnd.
-      - erewrite !pre_fdMap_lookup by eassumption.
-        unfold pord; simpl; apply (Subf u).
-      - rewrite -> !pre_fdMap_lookup_nf by assumption.
-        reflexivity.
+      intros f1 f2 EQf m k; rewrite /opt_eq /fdMap /= /fdMap_pre. destruct (m k) as [u |] eqn: HFnd.
+      - simpl. apply EQf.
+      - reflexivity.
     Qed.
-
-    Notation "fd [ x -> v ]" := (fdUpdate x v fd) (at level 50, x at next level).
-    Notation "fd \ x" := (fdRemove x fd) (at level 50).
-    
-    Lemma eq_SS : forall ks (fP fP' : StrictSorted ks), fP = fP'.
-    Proof.
-      clear -compK; induction ks; intros.
-      + refine (match fP as fP in StrictSorted xs return
-                      match xs return StrictSorted xs -> Prop with
-                        | nil => fun fP => fP = fP'
-                        | _ => fun _ => True
-                      end fP with
-                  | SS_nil => match fP' as gP in StrictSorted xs return
-                                   match xs return StrictSorted xs -> Prop with
-                                     | nil => fun gP => SS_nil = gP
-                                     | _ => fun _ => True
-                                   end gP with
-                               | SS_nil => eq_refl
-                               | _ => I
-                             end
-                  | _ => I
-                end).
-      + refine (match fP as fP in StrictSorted xs return
-                      match xs return StrictSorted xs -> Prop with
-                        | nil => fun _ => True
-                        | k :: ks => fun fP =>
-                                      forall fP' (IHks : forall fP fP' : StrictSorted ks, fP = fP'), fP = fP'
-                      end fP with
-                  | SS_nil => I
-                  | SS_sing x => _
-                  | SS_cons x x' xs HSS HLt => _
-                end fP' IHks); clear -compK; intros.
-        * refine (match fP' as fP in StrictSorted xs return
-                        match xs return StrictSorted xs -> Prop with
-                          | k :: nil => fun fP => SS_sing k = fP
-                          | _ => fun _ => True
-                        end fP with
-                    | SS_sing x => eq_refl
-                    | _ => I
-                  end).
-        * refine (match fP' as fP in StrictSorted xs return
-                        match xs return StrictSorted xs -> Prop with
-                          | x :: x' :: xs => fun fP => forall HSS HLt (IHks : forall fP fP' : StrictSorted (x' :: xs), fP = fP'), SS_cons x x' xs HSS HLt = fP
-                          | _ => fun _ => True
-                        end fP with
-                    | SS_cons x x' xs HSS HLt => _
-                    | _ => I
-                  end HSS HLt IHks); clear -compK.
-          intros; f_equal; [apply IHks | clear -compK].
-          apply DC.UIP.
-    Qed.          
-
-    Lemma eq_fd (f g : K -f> V) (HEq : findom_t f = findom_t g) : f = g.
-    Proof.
-      destruct f; destruct g; simpl in *; subst; f_equal; apply eq_SS.
-    Qed.
-
-    Lemma fin_Ind : forall (P : (K -f> V) -> Prop)
-                      (HNil : P fdEmpty)
-                      (HExt : forall k v f, P f -> P (fdUpdate k v f)),
-                    forall f, P f.
-    Proof.
-      clear dependent U.
-      intros.
-      destruct f as [fs fP].
-      induction fs; simpl in *. 
-      - assert ({| findom_t := nil; findom_P := fP |} = fdEmpty (V := V)) by (apply eq_fd; reflexivity); rewrite H; assumption.
-      - destruct a as [k v]; simpl in *.
-        inversion fP; subst; [destruct fs;[|discriminate]|].
-        + specialize (HExt k v fdEmpty HNil). 
-          unfold fdUpdate in HExt.
-          unfold pre_upd in HExt. simpl in HExt.
-          assert ({| findom_t := (k, v) :: nil; findom_P := fdUpdate_obligation_1 k v fdEmpty |} = {| findom_t := (k, v) :: nil; findom_P := fP |}) by (apply eq_fd; reflexivity). rewrite <- H; assumption.        
-        + rewrite H1 in HS. specialize (HExt k v ({|findom_t := fs; findom_P := HS |}) (IHfs HS)).
-          assert (findom_t (fdUpdate k v {| findom_t := fs; findom_P := HS |}) = (k,v)::fs).
-          {
-          unfold fdUpdate; simpl. 
-          unfold pre_upd.          
-          destruct fs; [discriminate|]. 
-          inversion H1; subst; simpl (fst (k,v)).
-          rewrite HLt; reflexivity.
-          }
-          assert ( fdUpdate k v {| findom_t := fs; findom_P := HS |} =
-                   {| findom_t := (k, v) :: fs; findom_P := fP |}) by (apply eq_fd; assumption).
-          rewrite <- H0; assumption.
-Qed.
 
   End Map.
 
-  Section Filter.
+  Notation "fd [ x -> v ]" := (fdStrongUpdate x (Some v) fd) (at level 50, x at next level) : finmap_scope.
+  Notation "fd \ x" := (fdStrongUpdate x None fd) (at level 50) : finmap_scope.
+
+  Section MapProps.
+
+    Context U V W `{pcmU : pcmType U} `{cmV : pcmType V} `{cmW : pcmType W}.
+
+    Lemma fdMap_comp (f : U -m> V) (g : V -m> W) :
+      (fdMap g ∘ fdMap f == fdMap (g ∘ f))%pm.
+    Proof.
+      intros m k. rewrite /= /fdMap /fdMapRaw /fdMap_pre /=.
+      destruct (m k); reflexivity.
+    Qed.
+
+    Lemma fdMap_id : fdMap (pid U) == (pid (K -f> U)).
+    Proof.
+      intros w k; rewrite /= /fdMap /fdMap_pre /=.
+      destruct (w k); reflexivity.
+    Qed.
+  End MapProps.
+
+    
+(*  Section Filter.
     Context V `{cmV : cmetric V}.
 
     Lemma filter_split A (p : A -> bool) x xs ys (HEq : x :: xs = filter p ys) :
@@ -913,34 +473,10 @@ Qed.
         apply H2, ord_part; split; assumption.
     Qed.
 
-  End Filter.
+  End Filter.*)
 
-  Section MapProps.
-
-    Context U V W `{pcmU : pcmType U} `{cmV : pcmType V} `{cmW : pcmType W}.
-
-    Lemma fdMap_comp (f : U -m> V) (g : V -m> W) :
-      (fdMap _ _ g ∘ fdMap _ _ f == fdMap _ _ (g ∘ f))%pm.
-    Proof.
-      intros m k; simpl morph.
-      destruct (m k) as [u |] eqn: HFnd.
-      - rewrite -> pre_fdMap_lookup with (u := u) by assumption.
-        rewrite -> pre_fdMap_lookup with (u := f u); [reflexivity |].
-        rewrite -> pre_fdMap_lookup with (u := u) by assumption; reflexivity.
-      - now rewrite !pre_fdMap_lookup_nf; [reflexivity |..]; try assumption; [].
-    Qed.
-
-    Lemma fdMap_id : fdMap _ _ (pid U) == (pid (K -f> U)).
-    Proof.
-      intros w k; simpl morph.
-      destruct (w k) as [v |] eqn: HFnd.
-      - rewrite -> pre_fdMap_lookup with (u := v) by assumption; reflexivity.
-      - rewrite -> pre_fdMap_lookup_nf by assumption; reflexivity.
-    Qed.
-
-  End MapProps.
   
-  Section Compose.
+(*  Section Compose.
     Context {V : Type} `{ev : Setoid V} (op : V -> V -> V).
     Implicit Type (f g : K -f> V) (k : K) (v : V).
     
@@ -1222,112 +758,297 @@ Qed.
       - apply fdComposePN. rewrite fdRemove_eq. split; [reflexivity|exact/equivR].
     Qed.
 
+  End Compose.*)
+
+  Section Induction.
+    Context {V : Type} `{eV : Setoid V}.
+
+    Section Recursion.
+      Context (T: (K -f> V) -> Type)
+              (Text: forall (f1 f2: K -f> V), (forall k, f1 k = f2 k) -> dom f1 = dom f2 -> T f1 -> T f2)
+              (Temp: T fdEmpty).
+      (* TODO: Why can't I use the sugar for finmaps?? *)
+      Context (Tstep: forall (k:K) (v:V) (f: K -f> V), ~(k ∈ dom f) -> T f -> T (fdStrongUpdate k (Some v) f)).
+
+      Definition fdRectInner: forall l f, dom f = l -> T f.
+      Proof.
+        refine (fix F (l: list K) :=
+                  match l as l return (forall f, dom f = l -> T f) with
+                  | [] => fun f Hdom => Text fdEmpty f _ _ Temp
+                  | k::l => fun f Hdom => let f' := f \ k in
+                                          let Hindom: k ∈ dom f := _ in
+                                          let v' := fdLookup_indom f k Hindom in
+                                          Text (fdStrongUpdate k (Some v') f') f _ _
+                                               (Tstep k v' f' _ (F l f' _))
+                  end); clear F.
+        - move=>k /=. symmetry. apply fdLookup_notin_strong. rewrite Hdom. tauto.
+        - rewrite Hdom. reflexivity.
+        - rewrite Hdom. left. reflexivity.
+        - subst f'. move=>k'. destruct (dec_eq k k') as [EQ|NEQ].
+          + subst k'. rewrite fdStrongUpdate_eq. subst v'. symmetry. eapply fdLookup_indom_corr.
+            reflexivity.
+          + erewrite !fdStrongUpdate_neq by assumption. reflexivity.
+        - rewrite Hdom /f'. rewrite /dom /=. f_equal. rewrite /dom /= Hdom.
+          destruct (dec_eq k k) as [_|NEQ]; last (exfalso; now apply NEQ).
+          assert (Hnod := dom_nodup f). rewrite Hdom in Hnod.
+          assert (Hfilt1: (filter_dupes [] l0) = l0).
+          { apply filter_dupes_id. simpl. inversion Hnod; subst. assumption. }
+          rewrite Hfilt1. apply filter_dupes_id. assumption.
+        - subst f'. apply fdLookup_notin. rewrite fdStrongUpdate_eq. reflexivity.
+        - subst f'. rewrite /dom /fdStrongUpdate /=.
+          rewrite Hdom. destruct (dec_eq k k) as [_|NEQ]; last (exfalso; now apply NEQ).
+          apply filter_dupes_id with (dupes:=[]); simpl.
+          assert (Hno:= dom_nodup f). rewrite Hdom in Hno.
+          inversion Hno; subst. assumption.
+      Defined.
+
+      Definition fdRect: forall f, T f :=
+        fun f => fdRectInner (dom f) f eq_refl.
+    End Recursion.
+
+    (* No need to restrict this Lemma to fdRectInner - that just messes up the details. *)
+    Lemma fdRectInner_eqL l l' f (Heq: dom f = l) (Heq': dom f = l')
+          (T: (K -f> V) -> Type) (F: forall l (f: K -f> V), dom f = l -> T f) :
+      F l f Heq = F l' f Heq'.
+    Proof.
+      assert (Heql: l = l').
+      { transitivity (dom f); first symmetry; assumption. }
+      revert Heq'.
+      refine (match Heql in eq _ l'' return (forall Heq' : dom f = l'', F l f Heq = F l'' f Heq') with
+              | eq_refl => _
+              end).
+      move=>Heq'. f_equal. apply ProofIrrelevance.
+    Qed.
+
+    Section Fold.
+      Context {T: Type}.
+      Context (Temp: T) (Tstep: K -> V -> T -> T).
+      
+      Definition fdFold: (K -f> V) -> T :=
+        fdRect (fun _ => T) (fun _ _ _ _ => id) (Temp)
+               (fun k v _ _ => Tstep k v).
+
+      Lemma fdFoldEmpty: fdFold fdEmpty = Temp.
+      Proof.
+        reflexivity.
+      Qed.
+
+      Lemma fdRectInner_eqLF l1 f1 l2 f2 (Heq1: dom f1 = l1) (Heq2: dom f2 = l2):
+        l1 = l2 -> (forall k, f1 k = f2 k) ->
+        fdRectInner (fun _ => T) (fun _ _ _ _ => id) (Temp) (fun k v _ _ => Tstep k v) l1 f1 Heq1 =
+        fdRectInner (fun _ => T) (fun _ _ _ _ => id) (Temp) (fun k v _ _ => Tstep k v) l2 f2 Heq2.
+      Proof.
+        move=>Heql. assert (Heq': dom f2 = l1).
+        { now subst l2. }
+        transitivity (fdRectInner (fun _ => T) (fun _ _ _ _ => id) (Temp) (fun k v _ _ => Tstep k v) l1 f2 Heq'); last first.
+        { rewrite (fdRectInner_eqL l1 l2). reflexivity. }
+        subst l2. clear Heql. revert f1 f2 Heq1 Heq' H. induction l1; intros f1 f2 Heq1 Heq2 Heqf.
+        - reflexivity.
+        - simpl. unfold id.
+          assert (Hf: exists v, f1 a = Some v /\ f2 a = Some v).
+          { destruct (f1 a) as [v|] eqn:EQf.
+            - exists v. split; first reflexivity. rewrite -Heqf. assumption.
+            - exfalso. apply fdLookup_notin_strong in EQf. apply EQf. rewrite Heq1.
+              left. reflexivity. }
+          destruct Hf as [v [Heqf1 Heqf2]].
+          eapply fdLookup_indom_corr in Heqf1. erewrite Heqf1.
+          eapply fdLookup_indom_corr in Heqf2. erewrite Heqf2.
+          f_equal. eapply IHl1. move=>k.
+          destruct (dec_eq a k) as [EQ|NEQ].
+          + subst a. rewrite !fdStrongUpdate_eq. reflexivity.
+          + erewrite !fdStrongUpdate_neq by assumption. now apply Heqf.
+      Qed.
+
+      Lemma fdFoldUpdate f k v:
+        ~k ∈ (dom f) ->
+        fdFold (fdStrongUpdate k (Some v) f) = Tstep k v (fdFold f).
+      Proof.
+        move=>Hindom. rewrite /fdFold /fdRect {2}/dom /=.
+        assert (Hl: fdStrongUpdate k (Some v) f k = Some v).
+        { apply fdStrongUpdate_eq. }
+        eapply fdLookup_indom_corr in Hl. erewrite Hl.
+        unfold id. f_equal.
+        apply fdRectInner_eqLF.
+        - apply filter_dupes_id. apply NoDup_cons.
+          + exact Hindom.
+          + apply filter_dupes_nodup.
+        - move=>k'. destruct (dec_eq k k') as [EQ|NEQ].
+          + subst k'. rewrite fdStrongUpdate_eq. symmetry. apply fdLookup_notin_strong. assumption.
+          + erewrite !fdStrongUpdate_neq by assumption. reflexivity.
+      Qed.
+
+      (* Alternative, more direct formulation of fold. *)
+      Definition fdFold'Inner fLookup k: T -> T :=
+        fun t => match fLookup k with
+                 | Some v => Tstep k v t
+                 (* We know this case never happens, but that would be very annoying to make use of here. *)
+                 | None => t end.
+      Definition fdFold' (f: K -f> V): T :=
+        fold_right (fdFold'Inner f) Temp (dom f).
+
+      (* They are equivalent. *)
+      Lemma fdFoldBehavior f:
+        fdFold f = fdFold' f.
+      Proof.
+        revert f. elim/fdRect.
+        - move=>f1 f2 EQf EQdom EQfd. etransitivity; last (etransitivity; first exact EQfd).
+          + rewrite /fdFold /fdRect. apply fdRectInner_eqLF.
+            * symmetry. assumption.
+            * move=>k. symmetry. now apply EQf.
+          + rewrite /fdFold' /fdFold'Inner. apply fold_ext_restr.
+            * assumption.
+            * reflexivity.
+            * move=>k t _. rewrite EQf. reflexivity.
+        - reflexivity.
+        - move=>k v f Hnin Heq. erewrite fdFoldUpdate by assumption.
+          rewrite /fdFold' /= /fdFold'Inner.
+          destruct (dec_eq k k) as [_|NEQ]; last (exfalso; now apply NEQ). f_equal. rewrite Heq.
+          rewrite /fdFold' /fdFold'Inner. apply fold_ext_restr.
+          + symmetry. apply filter_dupes_id. apply NoDup_cons; first assumption.
+            apply dom_nodup.
+          + reflexivity.
+          + clear -Hnin. move=>k' t Hin.
+            destruct (dec_eq k k'); last reflexivity. exfalso.
+            subst k'. contradiction.
+      Qed.
+
+    End Fold.
+
+    Section FoldMorph.
+      Context {T: Type} `{Setoid T}.
+
+      Definition fdFoldMorph (Temp: T) (Tstep: K -> V -=> T -=> T) (f: K -f> V) :=
+        fdFold Temp (fun k v t => Tstep k v t) f.
+
+      Lemma fdFoldExtT: Proper (equiv ==> equiv ==> eq ==> equiv) fdFoldMorph.
+      Proof.
+        move=>Temp1 Temp2 EQemp Tstep1 Tstep2 EQstep f f' EQf. subst f'.
+        rewrite /fdFoldMorph !fdFoldBehavior /fdFold'.
+        apply fold_ext.
+        - move=>k k' EQk v1 v2 EQv. subst k'. rewrite /fdFold'Inner. destruct (f k).
+          + rewrite EQv. reflexivity.
+          + assumption.
+        - move=>k t. rewrite /fdFold'Inner. destruct (f k); last reflexivity.
+          apply EQstep.
+        - assumption.
+      Qed.
+
+      Definition fdStep_comm (Tstep: K -> V -=> T -=> T): Prop :=
+        forall (k1 k2:K) (v1 v2:V),
+          compose (Tstep k1 v1) (Tstep k2 v2) == compose (Tstep k2 v2) (Tstep k1 v1).
+
+      Section FoldExtPerm.
+        Context (Temp: T) (Tstep: K -> V -=> T -=> T).
+        Context (Tstep_comm: fdStep_comm Tstep).
+        
+        Lemma fdFoldExtP: Proper (equiv ==> equiv) (fdFoldMorph Temp Tstep).
+        Proof.
+          move=>f1 f2 EQf. rewrite /fdFoldMorph !fdFoldBehavior /fdFold'.
+          rewrite /fdFold'. etransitivity; last eapply fold_perm.
+          - eapply fold_ext.
+            + move=>k k' EQk v1 v2 EQv. subst k'. rewrite /fdFold'Inner.
+              destruct (f1 k); last assumption. rewrite EQv. reflexivity.
+            + move=>k t. rewrite /fdFold'Inner. specialize (EQf k). destruct (f1 k), (f2 k); try contradiction.
+              * simpl in EQf. rewrite EQf. reflexivity.
+              * reflexivity.
+            + reflexivity.
+          - move=>k k' EQk v1 v2 EQv. subst k'. rewrite /fdFold'Inner.
+            destruct (f2 k); last assumption. rewrite EQv. reflexivity.
+          - move=>v1 v2 t. rewrite /fdFold'Inner /=.
+            destruct (f2 v1), (f2 v2); try reflexivity; [].
+            apply Tstep_comm.
+          - split; last split.
+            + apply dom_nodup.
+            + apply dom_nodup.
+            + move=>k. rewrite !fdLookup_in_strong. specialize (EQf k).
+              destruct (f1 k), (f2 k); try contradiction; last tauto; [].
+              split; discriminate.
+        Qed.
+
+      End FoldExtPerm.
+
+    End FoldMorph.
+
+  End Induction.
+
+  Section Compose.
+    Context {V : Type} `{eV : Setoid V}.
+    Context (op: option V -> option V -> option V).
+    Context {op_nongen: op None None = None}.
+
+    Program Definition fdCompose (f1 f2: K -f> V): K -f> V :=
+      mkFDbound (fun i => op (f1 i) (f2 i)) (findom f1 ++ findom f2) _.
+    Next Obligation.
+      move=>k /= Hin. apply in_app_iff.
+      destruct (f1 k) eqn:EQf1, (f2 k) eqn:EQf2.
+      - left. apply findom_b. rewrite EQf1. discriminate.
+      - left. apply findom_b. rewrite EQf1. discriminate.
+      - right. apply findom_b. rewrite EQf2. discriminate.
+      - contradiction.
+    Qed.
+
   End Compose.
 
 End FinDom.
 
-Arguments fdMap {K cT ord equ preo ord_part compK U V eqT mT cmT pTA pcmU eqT0 mT0 cmT0 pTA0 cmV} _.
+(*Arguments fdMap {K cT ord equ preo ord_part compK U V eqT mT cmT pTA pcmU eqT0 mT0 cmT0 pTA0 cmV} _.*)
 
 Section RA.
-  Context {I : Type} {S : Type} `{CI : comparable I} `{RAS : RA S}.
+  Context {I : Type} {S : Type} `{eqI : DecEq I} `{RAS : RA S}.
   Implicit Type (i : I) (s : S) (f g : I -f> S).
 
   Local Open Scope ra_scope.
+  Local Open Scope finmap_scope.
   
   Global Instance ra_type_finprod : Setoid (I -f> S) := _.
-  (* TODO: this clears invariants i.e. they disappear in box *)
-  Global Instance ra_unit_finprod : RA_unit (I -f> S) := fun f => fdEmpty.
-  Global Instance ra_op_finprod : RA_op (I -f> S) := fdCompose (ra_op).
-  Global Instance ra_valid_finprod : RA_valid (I -f> S) := fun f => forall i s, f i == Some s -> ra_valid s.
-  
-  
-  Definition fdComposeP' := fdComposeP ra_op (DProper := ra_op_proper).
-  Definition fdComposePN' := fdComposePN ra_op (DProper := ra_op_proper).
-  Definition fdCompose_sym' := fdCompose_sym ra_op (DProper := ra_op_proper) (ra_op_comm).
+  Global Program Instance ra_unit_finprod : RA_unit (I -f> S) :=
+    fdMapRaw ra_unit.
 
-
+  Definition finprod_op (s1 s2: option S) :=
+    match s1, s2 with
+    | Some s1, Some s2 => Some (s1 · s2)
+    | Some s1, None    => Some s1
+    | None   , Some s2 => Some s2
+    | None   , None    => None
+    end.
+  Global Program Instance ra_op_finprod : RA_op (I -f> S) :=
+    fdCompose finprod_op.                                
+  Global Instance ra_valid_finprod : RA_valid (I -f> S) :=
+    fun f => forall i, match f i with Some s => ra_valid s | None => True end.
+  
   Global Instance ra_finprod : RA (I -f> S).
   Proof.
     split; repeat intro.
-    - unfold ra_op, ra_op_finprod.
-      eapply opt_eq_iff => v.
-      split => /(fdComposeP').
-      + move => [[v1 [v2 [Hv [Hx Hx0]]]]|[[Hx Hx0]|[Hx Hx0]]];
-        apply fdComposeP'.
-        * left. exists v1 v2; split; first (now auto); split; by rewrite -?H -?H0.
-        * right. left. split; by rewrite -?H -?H0.
-        * right. right. split; by rewrite -?H -?H0.
-      + move => [[v1 [v2 [Hv [Hy Hy0]]]]|[[Hy Hy0]|[Hy Hy0]]];
-        apply fdComposeP'.
-        * left. exists v1 v2; split; first (now auto); split; by rewrite ?H ?H0.
-        * right. left. split; by rewrite ?H ?H0.
-        * right. right. split; by rewrite ?H ?H0.
-    - unfold ra_op, ra_op_finprod.
-      eapply opt_eq_iff => v.
-      split => /(fdComposeP').
-      + move => [[v1 [v2 [Hv [Hx Hx0]]]]|[[Hx Hx0]|[Hx Hx0]]];
-        apply fdComposeP'.
-        * apply fdComposeP' in Hx0.
-          destruct Hx0 as [[v1' [v2' [Hv' [Hx' Hx'0]]]]|[[Hx' Hx'0]|[Hx' Hx'0]]].
-          { left. exists (v1 · v1') v2'; split; last split; last auto.
-            - rewrite -ra_op_assoc Hv'. exact Hv.
-            - apply fdComposeP'. left. exists v1 v1'; repeat split; auto. reflexivity.
-          }
-          { right. left. split; auto. apply fdComposeP'. left. eexists; now eauto. }
-          { left. exists v1 v2; repeat split; auto.
-            apply fdComposeP'. now eauto. }
-        * apply fdComposePN' in Hx0. destruct Hx0.
-          right. left. split; last now auto.
-          apply fdComposeP'. now auto. 
-        * apply fdComposeP' in Hx0.
-          destruct Hx0 as [[v1' [v2' [Hv' [Hx' Hx'0]]]]|[[Hx' Hx'0]|[Hx' Hx'0]]].
-          { left. do 2!eexists; repeat split; [now eauto | | now eauto]. 
-            apply fdComposeP'. now eauto. }
-          { right. left. split; auto; []. apply fdComposeP'. now eauto. }
-          { right. right. split; [|assumption]. now apply fdComposePN'. }
-      + move => [[v1 [v2 [Hv [Hy Hy0]]]]|[[Hy Hy0]|[Hy Hy0]]];
-        apply fdComposeP'.
-        * apply fdComposeP' in Hy.
-          destruct Hy as [[v1' [v2' [Hv' [Hy' Hy'0]]]]|[[Hy' Hy'0]|[Hy' Hy'0]]].
-          { left. do 2!eexists; repeat split; [| |].
-            - rewrite <- Hv, <- Hv', -> ra_op_assoc. reflexivity. 
-            - assumption.
-            - eapply fdComposeP'. left. do 2!eexists; split; eauto; []. reflexivity.
-          }
-          { left. do 2!eexists; repeat split; [eassumption| assumption |].
-            eapply fdComposeP'. right; right. now eauto. }
-          { right; right. split; first assumption. eapply fdComposeP'.
-            left; now eauto. }
-        * apply fdComposeP' in Hy.
-          destruct Hy as [[v1' [v2' [Hv' [Hy' Hy'0]]]]|[[Hy' Hy'0]|[Hy' Hy'0]]].
-          { left. do 2!eexists; repeat split; [| |].
-            - exact Hv'.
-            - assumption.
-            - eapply fdComposeP'. now eauto. 
-          }
-          { right; left. split; first assumption. by eapply fdComposePN'. }
-          { right; right. split; first assumption. eapply fdComposeP'.
-            right; left; now eauto. }
-        * apply fdComposePN' in Hy. destruct Hy.
-          right; right; split; first assumption. apply fdComposeP'. now eauto. 
-    - apply opt_eq_iff => v.
-      split => /fdComposeP'; move => [[v1 [v2 [Hv [H1 H2]]]]|[[H1 H2]|[H1 H2]]];
-        apply fdComposeP'; try (now eauto); 
-        rewrite -> ra_op_comm in Hv; left; do 2!eexists; repeat split; eauto.
-    - cut (forall v, (1 t · t) k == v <-> t k == v).
-      + intros. specialize (H ((1 t · t) k)). symmetry. apply H. reflexivity.
-      + move => [v|].
-        * split; [move => /fdComposeP'; move => [[v1 [v2 [Hv [[] //]]]]|[[[] //]|[H1 H2 //]]]|].
-          move=>Ht. apply fdComposeP'. by right; right.
-        * split; [move/fdComposePN' => [] //|move => ?; apply fdComposePN'; split; now auto].
-    - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H // -?H.
-    - by exists (1 t') => k.
-    - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H // -?H.
-    - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H // -?H.
-    - case Hi: (t2 i) => [v|]; apply equivR in Hi. 
-      + apply (ra_op_valid (t2 := v)). apply (H i), fdComposeP'. 
-        left; do 2!eexists; repeat split; eauto. reflexivity.
-      + apply (H i). eapply fdComposeP'. by eauto.
+    - simpl. specialize (H k). specialize (H0 k).
+      destruct (x k), (y k), (x0 k), (y0 k); try contradiction; simpl; try reflexivity; try assumption; [].
+      simpl in H. simpl in H0. rewrite H H0. reflexivity.
+    - simpl. destruct (t1 k), (t2 k), (t3 k); try reflexivity; [].
+      simpl. rewrite assoc. reflexivity.
+    - simpl. destruct (t1 k), (t2 k); try reflexivity; [].
+      simpl. now rewrite comm.
+    - simpl. rewrite /fdMap_pre. destruct (t k); last reflexivity.
+      simpl. rewrite ra_op_unit. reflexivity.
+    - simpl. specialize (H k). rewrite /fdMap_pre.
+      destruct (x k), (y k); try (reflexivity || assumption); [].
+      simpl in H. simpl. rewrite H. reflexivity.
+    - pose (op := fun (os1 os2: option S) =>
+                    match os1, os2 with
+                    | Some s, Some s' => Some (proj1_sig (ra_unit_mono s s'))
+                    | Some s, None    => None
+                    | None  , Some s' => Some (ra_unit s')
+                    | None  , None    => None end).
+      exists (fdCompose op (op_nongen := eq_refl) t t').
+      move=>k. simpl. rewrite /fdMap_pre /ra_op /=.
+      destruct (t k), (t' k); simpl; try (reflexivity || tauto); [].
+      move:(ra_unit_mono s s0)=>[t'' Heq] /=. assumption.
+    - simpl. rewrite /fdMap_pre /ra_unit /= /fdMap_pre.
+      destruct (t k); last reflexivity.
+      apply ra_unit_idem.
+    - split; rewrite /ra_valid /=; move =>Hval i; specialize (H i); specialize (Hval i); destruct (x i), (y i); try (contradiction || tauto); [|].
+      + simpl in H. rewrite -H. assumption.
+      + simpl in H. rewrite H. assumption.
+    - move:(H i)=>{H}. rewrite /=. destruct (t1 i), (t2 i); simpl; try tauto; [].
+      apply ra_op_valid.
   Qed.
 
   (* The RA order on finmaps is the same as the fpfun order over the RA order *)
@@ -1335,124 +1056,55 @@ Section RA.
     pord (preoType:=pord_ra) f g <-> pord (preoType:=extOrd_preo) f g.
   Proof.
     split.
-    - move => [h Hhf] x. specialize (Hhf x). 
-      revert g f h x Hhf; apply : fin_ind => [f|k v l SSg g g' IHg f] h x Hhf.
-      + case Hfx: (f x) => //=. 
-        assert (f x = None).
-        { case Hhfx : ((h · f) x).
-          - move/equivR in Hhfx. by rewrite -> Hhf in Hhfx. 
-          - move/equivR/fdComposePN' : Hhfx => []. by rewrite Hfx.
-        }
-        by rewrite H in Hfx.
-      + case : (XM x k) Hhf => [-> <-|Hxk Hx].
-        * case Hfk: (f k) => [a|//]; move/equivR in Hfk.
-          { case (fdCompose_PR _ h _ _ _ Hfk) => [[v1 [-> _]]|[-> _]].
-            - exists v1; reflexivity.
-            - reflexivity. }
-        * assert (Hg'x : g' x == None \/ g' x == g x).
-          { unfold findom_f. simpl findom_lu. 
-            case Cxk : (comp x k).
-            - generalize (compat_compare x k). rewrite Cxk => ?; by subst x.
-            - left; now auto.
-            - right; now auto.
-          } 
-          case: Hg'x => [|Hg'x].
-          { rewrite <- Hx. move/fdComposePN' => [_ ->]. reflexivity. }
-          { rewrite -> Hg'x in *. eapply IHg. exact: Hx. }
-    - revert g f.
-      apply : fin_ind => [f|k v l SSg g g' IHg f].
-      + move => H. eexists fdEmpty => x. apply fdComposePN'; split; first now auto.
-        move: (H x). by case (f x).
-      + move => H. 
-        case Hfk : (f k) => [vf|].
-        * have/IHg IH : (fdRemove k f ⊑ g).
-          { move => x; fold g; case Cxk : (comp x k).
-            - generalize (compat_compare x k); rewrite Cxk => ->. by rewrite fdRemove_eq.
-            - rewrite fdRemove_neq; last by apply comp_Gt_gt, comp_flip_lg.
-              move: (H x). unfold findom_f at 2; simpl findom_lu. rewrite Cxk.
-              by case (f x).
-            - rewrite fdRemove_neq; last by apply comp_Lt_lt, comp_flip_gl.
-              move: (H x). unfold findom_f at 2; simpl findom_lu. by rewrite Cxk.
-          } 
-          move: (H k); rewrite Hfk. case Hgk' : (g' k) => [vg|//]. move => [vr Hvr].
-          rewrite /findom_f [findom_lu _ k]/= FU /= in Hgk'. move/equivR => /= in Hgk'. 
-          rewrite <- Hgk' in Hvr. clear Hgk'.
-          move : IH => [h Hhf].
-          exists (fdUpdate k vr h) => x.
-          apply opt_eq_iff => vx. 
-          split.
-          { case Cxk : (comp x k).
-            - generalize (compat_compare x k); rewrite Cxk; move => E; subst x.
-              rewrite (fdCompose_sym' _ f k) fdCompose_update_eq Hfk [_ == _]/= ra_op_comm Hvr => <-.
-              rewrite /findom_f [findom_lu _ k]/= FU. reflexivity.
-            - rewrite fdCompose_update_neq; last by apply comp_Gt_gt, comp_flip_lg.
-              move : (Hhf x).
-              rewrite (fdCompose_sym' _ (fdRemove k _) x) fdCompose_remove_neq ?(fdCompose_sym' _ h) 
-              => [-> Hg|];
-                last by apply comp_Gt_gt, comp_flip_lg.
-              exfalso. eapply StrictSorted_lt_notin; [apply comp_Lt_lt; eassumption|eassumption|right].
-              change (x ∈ dom g). apply fdLookup_in. by eauto.
-            - rewrite fdCompose_update_neq; last by apply comp_Lt_lt, comp_flip_gl.
-              move : (Hhf x).
-              rewrite (fdCompose_sym' _ (fdRemove k _) x) fdCompose_remove_neq ?(fdCompose_sym' _ h) 
-              => [-> Hg|];
-                last by apply comp_Lt_lt, comp_flip_gl.
-              by rewrite /findom_f [findom_lu _ x]/= Cxk.
-          } 
-          { 
-            rewrite [g' x]/findom_f [findom_lu _ x]/=.
-            case Cxk : (comp x k) => [|//|].
-            + generalize (compat_compare x k); rewrite Cxk; move => E; subst x.
-              move => Hvx. rewrite /= in Hvx. rewrite <- Hvx.
-              apply fdComposeP'. left; exists vr vf; repeat split; [now auto| |exact/equivR].
-              rewrite fdUpdate_eq. reflexivity.
-            + rewrite -/(g x) -Hhf.
-              have Hhu : (forall v0, h x == v0 -> fdUpdate k vr h x == v0).
-              { move => v0. rewrite fdUpdate_neq; first by []; by apply comp_Lt_lt, comp_flip_gl. }
-              rewrite (fdCompose_sym' h _ x) fdCompose_remove_neq ?fdCompose_update_neq
-                     ?(fdCompose_sym' _ h x) => //; by apply comp_Lt_lt, comp_flip_gl.
-          }
-       * have/IHg IH : (f ⊑ g).
-         { move => x. move: (H x). rewrite /(findom_f g') [findom_lu _ x]/=.
-           case Cxk : (comp x k) => [||//].
-           + generalize (compat_compare x k); rewrite Cxk => E; subst x; by rewrite Hfk.
-           + by case (f x).
-         } 
-         move: IH => [h Hfg].
-         exists (fdUpdate k v h) => x.
-         case Cxk : (comp x k) => [||]; rewrite [g' x]/findom_f [findom_lu (findom_t g') x]/= Cxk.
-         { generalize (compat_compare x k); rewrite Cxk => E; subst x.
-           apply fdComposeP'. right; left; split; [rewrite fdUpdate_eq; reflexivity|exact/equivR].
-         }
-         { rewrite fdCompose_update_neq; last by apply comp_Gt_gt, comp_flip_lg. 
-           case Hhf : (_ x) => [vx|//].
-           exfalso. eapply StrictSorted_lt_notin.
-           - apply comp_Lt_lt; eassumption.
-           - eassumption.
-           - right. change (x ∈ dom g). apply fdLookup_in. eexists; now rewrite -Hfg Hhf.
-         } 
-         { rewrite fdCompose_update_neq; last by apply comp_Lt_lt, comp_flip_gl. 
-           exact: Hfg. }
+    { move => [h Hhf] i. move:(Hhf i)=>{Hhf} /=.
+      destruct (f i), (g i), (h i); simpl; try tauto; [|].
+      - move=>Heq. exists s1. assumption.
+      - move=>Heq. rewrite Heq. reflexivity. }
+    move:g f. apply: fdRect.
+    - move=>f1 f2 Heqf Hdom Hleeq f Hle.
+      destruct (Hleeq f).
+      + move=>k. rewrite (Heqf k). now apply Hle.
+      + exists x. move=>k. rewrite -Heqf. apply H.
+    - move=>f Hle. exists (fdEmpty (V:=S)). move=>k. simpl.
+      specialize (Hle k). destruct (f k); last reflexivity.
+      contradiction Hle.
+    - move=>k v f Hnin IH g Hle. destruct (IH (fdStrongUpdate k None g)) as [h Hh]=>{IH}.
+      + move=>i. destruct (dec_eq k i) as [EQ|NEQ].
+        * subst i. rewrite fdStrongUpdate_eq. exact Logic.I.
+        * erewrite fdStrongUpdate_neq by assumption.
+          etransitivity; first now apply Hle.
+          erewrite fdStrongUpdate_neq by assumption. reflexivity.
+      + specialize (Hle k). rewrite fdStrongUpdate_eq in Hle. destruct (g k) eqn:EQg; last first.
+        { exists (fdStrongUpdate k (Some v) h). move=>i /= {Hle}. specialize (Hh i). simpl in Hh.
+          destruct (dec_eq k i) as [EQ|NEQ].
+          - subst i. rewrite EQg. reflexivity.
+          - assumption. }
+        destruct Hle as [h' Hle].
+        exists (fdStrongUpdate k (Some h') h). move=>i /=.
+        specialize (Hh i). simpl in Hh. destruct (dec_eq k i) as [EQ|NEQ].
+        * subst i. rewrite EQg. simpl. assumption.
+        * assumption.
   Qed.
 End RA.
 
 Section VIRA.
-  Context {I : Type} `{CI : comparable I}.
+  Context {I : Type} `{eqI : DecEq I}.
   Context {T: Type} `{raT: RA T}.
 
   Global Instance vira_finmap: VIRA (I -f> T).
   Proof.
-    eexists fdEmpty. move=>i s [].
+    eexists fdEmpty. move=>i. exact Logic.I.
   Qed.
     
 End VIRA.
 
 
 Section CMRA.
-  Context {I : Type} `{CI : comparable I}.
+  Context {I : Type} `{eqI : DecEq I}.
   Context {T: Type} `{cmraS: CMRA T}.
   
-  Local Open Scope ra.
+  Local Open Scope ra_scope.
+  Local Open Scope finmap_scope.
 
   Global Instance ra_finmap_pcm: pcmType (pTA:=pord_ra) (I -f> T).
   Proof.
@@ -1462,59 +1114,53 @@ Section CMRA.
     move=>i. apply ra_pord_iff_ext_pord. by apply: HC.
   Qed.
 
+  Definition finmap_cmra_valid_op (f: I -f> T) n :=
+    forall i, match f i with Some s => cmra_valid s n
+                        | None => True end.
+                            
   Global Program Instance finmap_cmra_valid: CMRA_valid (I -f> T) :=
-    fun f => mkSPred (fun n => forall i s, f i == Some s -> cmra_valid s n) _.
+    fun f => mkSPred (finmap_cmra_valid_op f) _.
   Next Obligation.
-    move=>n m Hle /= H i s EQ. eapply dpred; last eapply H; eassumption.
+    move=>n m Hle /= H i. specialize (H i).
+    destruct (f i); last tauto.
+    eapply dpred, H. assumption.
   Qed.
     
   Global Instance finmap_cmra : CMRA (I -f> T).
   Proof.
     split.
-    - move=>n f1 f2 EQf g1 g2 EQg.
-      destruct n as [|n]; first by apply: dist_bound.
-      move => k. 
-      case Hf1g1: ((f1 · g1) k) => [v1|];
-      case Hf2g2: ((f2 · g2) k) => [v2|];
-      move : Hf1g1 Hf2g2 (EQf k) (EQg k) => // /equivR Hf1g1 /equivR Hf2g2.
-      + move/fdComposeP : (Hf1g1) => [[vf1 [vg1 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
-        move/fdComposeP : (Hf2g2) => [[vf2 [vg2 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
-        move => // /= -> ->. reflexivity.
-      + move/fdComposeP : (Hf1g1) => [[vf1 [vg1 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
-        move/fdComposePN : (Hf2g2) => [-> ->];
-        now move => // /= -> ->. 
-      + move/fdComposePN : (Hf1g1) => [-> ->];
-        move/fdComposeP : (Hf2g2) => [[vf2 [vg2 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
-        now move => // /= -> ->.
-    - by move => [|n] f1 f2 D12.
-    - move => [|n] f1 f2 D12 i LTin; first inversion LTin.
-        unfold cmra_valid. 
-      split => H1 k s Hk.
-      + case Hk' : (f1 k) => [s'|]. 
-        * eapply cmra_valid_dist, H1; [symmetry|eassumption|apply/equivR; eassumption].
-          move : (D12 k). by rewrite Hk Hk'. 
-        * move : (D12 k). by rewrite Hk Hk'. 
-      + case Hk' : (f2 k) => [s'|]. 
-        * eapply cmra_valid_dist, H1; [|eassumption|apply/equivR; eassumption].
-          move : (D12 k). by rewrite Hk Hk'. 
-        * move : (D12 k). by rewrite Hk Hk'. 
-    - move => f1. split => [H k s H1|H i k s H1].
-      + apply cmra_ra_valid. move => i. exact: (H i k s H1).
-      + apply cmra_ra_valid. exact (H k s H1).
-    - move=>f1 f2 n Hval /= i s H. 
-      case H2 : (f2 i) => [s2|]; move/equivR in H2.
-      + assert (fdCompose ra_op f1 f2 i == Some (ra_op s s2)). 
-        { apply fdComposeP'. left; exists s s2; repeat split; now auto. }
-        move/Hval in H0. by move/cmra_op_valid in H0.
-      + assert (fdCompose ra_op f1 f2 i == Some s).
-        { apply fdComposeP'. right; left; now auto. }
-        move/Hval in H0. assumption.
+    - move=>n f1 f2 EQf g1 g2 EQg k.
+      destruct n as [|n]; first exact:dist_bound.
+      specialize (EQf k). specialize (EQg k). simpl.
+      destruct (f1 k), (f2 k), (g1 k), (g2 k); simpl; try (contradiction || assumption || tauto); [].
+      simpl in EQf. simpl in EQg. rewrite EQf EQg. reflexivity.
+    - move=>n f1 f2 EQf k.
+      destruct n as [|n]; first exact:dist_bound.
+      specialize (EQf k). rewrite /= /fdMap_pre.
+      destruct (f1 k), (f2 k); try (contradiction || assumption); [].
+      simpl in EQf. rewrite EQf. reflexivity.
+    - move=>n f1 f2 EQf.
+      destruct n as [|n]; first exact:dist_bound.
+      move=>m Hle. split; move=>Hval i; specialize (EQf i); specialize (Hval i); destruct (f1 i), (f2 i); simpl; try (contradiction || tauto); [|].
+      + simpl in EQf. eapply spredNE, Hval.
+        eapply mono_dist; last (now rewrite EQf). omega.
+      + simpl in EQf. eapply spredNE, Hval.
+        eapply mono_dist; last (now rewrite EQf). omega.
+    - move => f1. split => [H|H n] i. 
+      + destruct (f1 i) eqn:EQf; last tauto.
+        eapply cmra_ra_valid =>n.
+        specialize (H n i). rewrite EQf in H. assumption.
+      + specialize (H i). destruct (f1 i); last tauto.
+        now apply cmra_ra_valid.
+    - move=>t1 t2 n H i. move:(H i)=>{H}.
+      rewrite /=. destruct (t1 i), (t2 i); simpl; try tauto; [].
+      apply cmra_op_valid.
   Qed.
   
 End CMRA.
 
 Section RAMap.
-  Context {I : Type} `{CI : comparable I}.
+  Context {I : Type} `{CI : DecEq I}.
   Context {T U: Type} `{cmraT: CMRA T} `{cmraU: CMRA U}.
 
   Local Instance ra_force_pord_T: preoType (I -f> T) := pord_ra.
@@ -1540,7 +1186,7 @@ Section RAMap.
 End RAMap.
 
 Section RAMapComp.
-  Context {I : Type} `{CI : comparable I}.
+  Context {I : Type} `{CI : DecEq I}.
   Context {T: Type} `{cmraT: CMRA T}.
 
   Lemma fdRAMap_id:
