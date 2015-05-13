@@ -1101,7 +1101,7 @@ Section RA.
           - assumption. }
         destruct Hle as [h' Hle].
         exists (fdStrongUpdate k (Some h') h). move=>i /=.
-        specialize (Hh i). simpl in Hh.destruct (dec_eq k i) as [EQ|NEQ].
+        specialize (Hh i). simpl in Hh. destruct (dec_eq k i) as [EQ|NEQ].
         * subst i. rewrite EQg. simpl. assumption.
         * assumption.
   Qed.
@@ -1120,10 +1120,11 @@ End VIRA.
 
 
 Section CMRA.
-  Context {I : Type} `{CI : comparable I}.
+  Context {I : Type} `{eqI : DecEq I}.
   Context {T: Type} `{cmraS: CMRA T}.
   
-  Local Open Scope ra.
+  Local Open Scope ra_scope.
+  Local Open Scope finmap_scope.
 
   Global Instance ra_finmap_pcm: pcmType (pTA:=pord_ra) (I -f> T).
   Proof.
@@ -1133,59 +1134,53 @@ Section CMRA.
     move=>i. apply ra_pord_iff_ext_pord. by apply: HC.
   Qed.
 
+  Definition finmap_cmra_valid_op (f: I -f> T) n :=
+    forall i, match f i with Some s => cmra_valid s n
+                        | None => True end.
+                            
   Global Program Instance finmap_cmra_valid: CMRA_valid (I -f> T) :=
-    fun f => mkSPred (fun n => forall i s, f i == Some s -> cmra_valid s n) _.
+    fun f => mkSPred (finmap_cmra_valid_op f) _.
   Next Obligation.
-    move=>n m Hle /= H i s EQ. eapply dpred; last eapply H; eassumption.
+    move=>n m Hle /= H i. specialize (H i).
+    destruct (f i); last tauto.
+    eapply dpred, H. assumption.
   Qed.
     
   Global Instance finmap_cmra : CMRA (I -f> T).
   Proof.
     split.
-    - move=>n f1 f2 EQf g1 g2 EQg.
-      destruct n as [|n]; first by apply: dist_bound.
-      move => k. 
-      case Hf1g1: ((f1 · g1) k) => [v1|];
-      case Hf2g2: ((f2 · g2) k) => [v2|];
-      move : Hf1g1 Hf2g2 (EQf k) (EQg k) => // /equivR Hf1g1 /equivR Hf2g2.
-      + move/fdComposeP : (Hf1g1) => [[vf1 [vg1 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
-        move/fdComposeP : (Hf2g2) => [[vf2 [vg2 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
-        move => // /= -> ->. reflexivity.
-      + move/fdComposeP : (Hf1g1) => [[vf1 [vg1 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
-        move/fdComposePN : (Hf2g2) => [-> ->];
-        now move => // /= -> ->. 
-      + move/fdComposePN : (Hf1g1) => [-> ->];
-        move/fdComposeP : (Hf2g2) => [[vf2 [vg2 [<- [-> ->]]]]|[[-> ->]|[-> ->]]];
-        now move => // /= -> ->.
-    - by move => [|n] f1 f2 D12.
-    - move => [|n] f1 f2 D12 i LTin; first inversion LTin.
-        unfold cmra_valid. 
-      split => H1 k s Hk.
-      + case Hk' : (f1 k) => [s'|]. 
-        * eapply cmra_valid_dist, H1; [symmetry|eassumption|apply/equivR; eassumption].
-          move : (D12 k). by rewrite Hk Hk'. 
-        * move : (D12 k). by rewrite Hk Hk'. 
-      + case Hk' : (f2 k) => [s'|]. 
-        * eapply cmra_valid_dist, H1; [|eassumption|apply/equivR; eassumption].
-          move : (D12 k). by rewrite Hk Hk'. 
-        * move : (D12 k). by rewrite Hk Hk'. 
-    - move => f1. split => [H k s H1|H i k s H1].
-      + apply cmra_ra_valid. move => i. exact: (H i k s H1).
-      + apply cmra_ra_valid. exact (H k s H1).
-    - move=>f1 f2 n Hval /= i s H. 
-      case H2 : (f2 i) => [s2|]; move/equivR in H2.
-      + assert (fdCompose ra_op f1 f2 i == Some (ra_op s s2)). 
-        { apply fdComposeP'. left; exists s s2; repeat split; now auto. }
-        move/Hval in H0. by move/cmra_op_valid in H0.
-      + assert (fdCompose ra_op f1 f2 i == Some s).
-        { apply fdComposeP'. right; left; now auto. }
-        move/Hval in H0. assumption.
+    - move=>n f1 f2 EQf g1 g2 EQg k.
+      destruct n as [|n]; first exact:dist_bound.
+      specialize (EQf k). specialize (EQg k). simpl.
+      destruct (f1 k), (f2 k), (g1 k), (g2 k); simpl; try (contradiction || assumption || tauto); [].
+      simpl in EQf. simpl in EQg. rewrite EQf EQg. reflexivity.
+    - move=>n f1 f2 EQf k.
+      destruct n as [|n]; first exact:dist_bound.
+      specialize (EQf k). rewrite /= /fdMap_pre.
+      destruct (f1 k), (f2 k); try (contradiction || assumption); [].
+      simpl in EQf. rewrite EQf. reflexivity.
+    - move=>n f1 f2 EQf.
+      destruct n as [|n]; first exact:dist_bound.
+      move=>m Hle. split; move=>Hval i; specialize (EQf i); specialize (Hval i); destruct (f1 i), (f2 i); simpl; try (contradiction || tauto); [|].
+      + simpl in EQf. eapply spredNE, Hval.
+        eapply mono_dist; last (now rewrite EQf). omega.
+      + simpl in EQf. eapply spredNE, Hval.
+        eapply mono_dist; last (now rewrite EQf). omega.
+    - move => f1. split => [H|H n] i. 
+      + destruct (f1 i) eqn:EQf; last tauto.
+        eapply cmra_ra_valid =>n.
+        specialize (H n i). rewrite EQf in H. assumption.
+      + specialize (H i). destruct (f1 i); last tauto.
+        now apply cmra_ra_valid.
+    - move=>t1 t2 n H i. move:(H i)=>{H}.
+      rewrite /=. destruct (t1 i), (t2 i); simpl; try tauto; [].
+      apply cmra_op_valid.
   Qed.
   
 End CMRA.
 
 Section RAMap.
-  Context {I : Type} `{CI : comparable I}.
+  Context {I : Type} `{CI : DecEq I}.
   Context {T U: Type} `{cmraT: CMRA T} `{cmraU: CMRA U}.
 
   Local Instance ra_force_pord_T: preoType (I -f> T) := pord_ra.
@@ -1211,7 +1206,7 @@ Section RAMap.
 End RAMap.
 
 Section RAMapComp.
-  Context {I : Type} `{CI : comparable I}.
+  Context {I : Type} `{CI : DecEq I}.
   Context {T: Type} `{cmraT: CMRA T}.
 
   Lemma fdRAMap_id:

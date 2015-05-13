@@ -67,6 +67,9 @@ Section Definitions.
     intros m HLt; inversion HLt.    
   Qed.
 
+  Lemma spredNE {P1 P2 : SPred} {n} (EQP : P1 = S n = P2) : P1 n -> P2 n.
+  Proof. by apply EQP. Qed.
+
   Program Definition sp_compl (σ : chain SPred) (σc : cchain σ) :=
     mkSPred (fun n => σ (S n) n) _.
   Next Obligation.

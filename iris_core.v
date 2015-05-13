@@ -120,9 +120,6 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       simpl morph. by rewrite comm EQw.
     Qed.
     
-    Lemma spredNE {P1 P2 : SPred} {n} (EQP : P1 = S n = P2) : P1 n -> P2 n.
-    Proof. by apply EQP. Qed.
-
     Lemma propsNE {P : Props} {w1 w2 n} (EQw : w1 = S n = w2) :
       P w1 n -> P w2 n.
     Proof.
