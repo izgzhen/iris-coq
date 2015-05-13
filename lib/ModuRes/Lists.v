@@ -1,6 +1,8 @@
 Require Import Ssreflect.ssreflect.
 Require Import CSetoid List ListSet.
 
+Set Bullet Behavior "Strict Subproofs".
+
 (* Stuff about lists that ought to be in the stdlib... *)
 Lemma NoDup_app3 {T} (l1 l2 l3: list T):
   NoDup (l1 ++ l2 ++ l3) -> NoDup (l2 ++ l1 ++ l3).
@@ -103,6 +105,39 @@ Section FilterDup.
       revert Hndup. clear. change (NoDup(dupes ++ [a] ++ l) -> NoDup ([a] ++ dupes ++ l)).
       eapply NoDup_app3.
   Qed.
+
+  Lemma filter_dupes_ext dupes1 dupes2 l:
+    (forall k, k ∈ dupes1 <-> k ∈ dupes2) ->
+    filter_dupes dupes1 l = filter_dupes dupes2 l.
+  Proof.
+    revert dupes1 dupes2. induction l; intros ? ? Heq.
+    - reflexivity.
+    - simpl. destruct (set_mem dec_eq a dupes1) eqn:EQsm.
+      + apply set_mem_correct1 in EQsm. apply Heq in EQsm.
+        eapply set_mem_correct2 in EQsm. erewrite EQsm.
+        now apply IHl.
+      + apply set_mem_complete1 in EQsm. unfold set_In in EQsm.
+        rewrite ->Heq in EQsm.
+        eapply set_mem_complete2 in EQsm. erewrite EQsm.
+        f_equal. apply IHl. move=>k. simpl.
+        specialize (Heq k). tauto.
+  Qed.
+
+  Lemma filter_dupes_redundant dupes l a:
+    ~a ∈ l ->
+    filter_dupes (a::dupes) l = filter_dupes dupes l.
+  Proof.
+    revert dupes. induction l; intros dupes Hnin; simpl.
+    - reflexivity.
+    - destruct (dec_eq a0 a) as [EQ|NEQ].
+      { exfalso. subst. apply Hnin. left. reflexivity. }
+      destruct (set_mem dec_eq a0 dupes) eqn:EQsm.
+      { apply IHl. move=>Hin. apply Hnin. right. assumption. }
+      f_equal. etransitivity; last first.
+      + eapply IHl. move=>Hin. apply Hnin. right. assumption.
+      + apply filter_dupes_ext. move=>k. simpl. tauto.
+  Qed.
+
 End FilterDup.
 
 Section Fold.
@@ -137,23 +172,59 @@ Section Fold.
   End FoldExt.
 
   Section FoldPerm.
-    Context (op: V -> T -> T) {op_proper: Proper (eq ==> eqT ==> eqT) op}.
+    Context {eqV: DecEq V}.
 
     Definition NoDup_Perm (l1 l2: list V): Prop :=
       NoDup l1 /\ NoDup l2 /\ (forall v, v ∈ l1 <-> v ∈ l2).
-    
-    Lemma NoDup_Perm_len l1 l2:
-      NoDup_Perm l1 l2 -> length l1 = length l2.
+
+    Context (op: V -> T -> T) {op_proper: Proper (eq ==> eqT ==> eqT) op}.
+    Context (op_comm: forall v1 v2, forall t, eqT (compose (op v1) (op v2) t) (compose (op v2) (op v1) t)).
+
+    Lemma fold_tofront (l: list V) a (t1: T):
+      NoDup l -> a ∈ l ->
+      eqT (fold_right op t1 (a::filter_dupes [a] l)) (fold_right op t1 l).
     Proof.
-      revert l2. induction l1; induction l2; intros [Hnod1 [Hnod2 Heq]]; admit.
+      induction l; intros Hnod Hin.
+      - exfalso. apply Hin.
+      - simpl. destruct (dec_eq a0 a) as [EQ|NEQ].
+        + subst a. apply op_proper; first reflexivity.
+          rewrite filter_dupes_id; first reflexivity.
+          assumption.
+        + simpl. etransitivity; first now eapply op_comm.
+          simpl. apply op_proper; first reflexivity.
+          assert (Heq: filter_dupes [a0; a] l = filter_dupes [a] l).
+          { apply filter_dupes_redundant. inversion Hnod; subst; assumption. }
+          rewrite Heq. eapply IHl.
+          * inversion Hnod; subst; assumption.
+          * destruct Hin; last assumption. contradiction.
     Qed.
     
     Lemma fold_perm (l1 l2: list V) (t1: T):
       NoDup_Perm l1 l2 ->
-      (forall v1 v2, forall t, eqT (compose (op v1) (op v2) t) (compose (op v2) (op v1) t)) ->
       eqT (fold_right op t1 l1) (fold_right op t1 l2).
     Proof.
-      admit.
+      revert l2. induction l1; intros l2 Hnodp;
+      move:(Hnodp)=>[Hnod1 [Hnod2 Heq]].
+      - destruct l2 as [|a l2]; first reflexivity.
+        exfalso. destruct (Heq a) as [_ Hin]. apply Hin.
+        left. reflexivity.
+      - simpl.
+        assert (Hin2: a ∈ l2).
+        { apply Heq. left. reflexivity. }
+        etransitivity; last first.
+        + eapply fold_tofront; eassumption.
+        + simpl. apply op_proper; first reflexivity.
+          apply IHl1. split; last split; last split.
+          * inversion Hnod1; subst; assumption.
+          * apply filter_dupes_nodup.
+          * move=>Hin. apply filter_dupes_in.
+            { move=>[EQ|[]].
+              inversion Hnod1; subst. contradiction. }
+            apply Heq. right. assumption.
+          * move=>Hin. apply filter_dupes_isin in Hin.
+            destruct Hin as [Hneq Hin]. apply Heq in Hin.
+            destruct Hin as [EQ|?]; last assumption.
+            subst a. exfalso. apply Hneq. now left.
     Qed.
   End FoldPerm.
 End Fold.

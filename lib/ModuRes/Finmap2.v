@@ -933,19 +933,19 @@ Section FinDom.
               * simpl in EQf. rewrite EQf. reflexivity.
               * reflexivity.
             + reflexivity.
+          - move=>k k' EQk v1 v2 EQv. subst k'. rewrite /fdFold'Inner.
+            destruct (f2 k); last assumption. rewrite EQv. reflexivity.
+          - move=>v1 v2 t. rewrite /fdFold'Inner /=.
+            destruct (f2 v1), (f2 v2); try reflexivity; [].
+            apply Tstep_comm.
           - split; last split.
             + apply dom_nodup.
             + apply dom_nodup.
             + move=>k. rewrite !fdLookup_in_strong. specialize (EQf k).
               destruct (f1 k), (f2 k); try contradiction; last tauto; [].
               split; discriminate.
-          - move=>v1 v2 t. rewrite /fdFold'Inner /=.
-            destruct (f2 v1), (f2 v2); try reflexivity; [].
-            apply Tstep_comm.
         Qed.
 
-        Print Assumptions fdFoldExtP.
-        
       End FoldExtPerm.
 
     End FoldMorph.

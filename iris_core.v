@@ -650,9 +650,6 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
   End Ownership.
 
-  (* People will need that *)
-  Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
-
 End IRIS_CORE.
 
 Module IrisCore (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) : IRIS_CORE RL C R WP.
