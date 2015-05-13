@@ -37,12 +37,14 @@ Section Def.
   Context {K V : Type}.
 
   Definition findom_bound (finmap: K -> option V) (findom: list K): Prop :=
+    forall k, finmap k <> None -> k ∈ findom.
+  Definition findom_approx (finmap: K -> option V) (findom: list K): Prop :=
     forall k, finmap k <> None <-> k ∈ findom.
 
   Record FinMap `{eqK : DecEq K} :=
     mkFD {finmap :> K -> option V;
           findom : list K;
-          findom_b : findom_bound finmap findom}.
+          findom_b : findom_approx finmap findom}.
 
   Context `{eqK : DecEq K}.
 
@@ -51,6 +53,48 @@ Section Def.
   Lemma dom_nodup (f: FinMap): NoDup (dom f).
   Proof.
     unfold dom. apply filter_dupes_nodup.
+  Qed.
+
+  Fixpoint filter_None (f: K -> option V) (l: list K) :=
+    match l with
+    | [] => []
+    | k::l => match f k with
+              | Some _ => k::(filter_None f l)
+              | None   => filter_None f l
+              end
+    end.
+
+  Lemma filter_None_isin f l k:
+    k ∈ filter_None f l -> f k <> None.
+  Proof.
+    induction l.
+    - intros [].
+    - simpl. destruct (f a) eqn:EQf.
+      + move=>[EQ|Hin].
+        * subst a. rewrite EQf. discriminate.
+        * apply IHl. exact Hin.
+      + exact IHl.
+  Qed.
+
+  Lemma filter_None_in f l k:
+    f k <> None -> k ∈ l -> k ∈ filter_None f l.
+  Proof.
+    induction l.
+    - move=>_ [].
+    - move=>Hneq [EQ|Hin].
+      + subst a. simpl. destruct (f k); last (exfalso; now apply Hneq).
+        left. reflexivity.
+      + simpl. destruct (f a); first right; apply IHl; assumption.
+  Qed.
+
+  Program Definition mkFDbound (f: K -> option V) (l: list K)
+          (Hbound: findom_bound f l) :=
+    mkFD _ f (filter_None f l) _.
+  Next Obligation.
+    move=>k. split.
+    - move=>Hnon. apply filter_None_in; first assumption.
+      apply Hbound. assumption.
+    - move/filter_None_isin. tauto.
   Qed.
 
 End Def.
@@ -260,18 +304,15 @@ Section FinDom.
     Qed.
     
     Program Definition findom_lub (σ : chain (K -f> V)) (σc : cchain σ) : K -f> V :=
-      mkFD (fun x => compl (finmap_chainx σ x)) (findom (σ 1)) _.
+      mkFDbound (fun x => compl (finmap_chainx σ x)) (findom (σ 1)) _.
     Next Obligation.
-      move=>k. assert(H:=conv_cauchy (finmap_chainx σ k) 1 1 (le_refl _)).
-      split; move=>Hin.
-      - simpl in Hin. assert (Hin': (finmap_chainx σ k) 1 <> None).
-        { move=>EQ. rewrite EQ in H. apply Hin. symmetry in H. simpl in H.
-          destruct (option_compl (finmap_chainx σ k)); first contradiction.
-          reflexivity. }
-        clear Hin. apply (findom_b (σ 1)). assumption.
-      - simpl in H. destruct (option_compl (finmap_chainx σ k)); first discriminate.
-        apply findom_b in Hin. rewrite /finmap_chainx in H. destruct ((σ 1) k); first contradiction.
-        assumption.
+      move=>k /= Hin.
+      assert(H:=conv_cauchy (finmap_chainx σ k) 1 1 (le_refl _)).
+      simpl in Hin. assert (Hin': (finmap_chainx σ k) 1 <> None).
+      { move=>EQ. rewrite EQ in H. apply Hin. symmetry in H. simpl in H.
+        destruct (option_compl (finmap_chainx σ k)); first contradiction.
+        reflexivity. }
+      clear Hin. apply (findom_b (σ 1)). assumption.
     Qed.
 
     Global Program Instance findom_cmetric : cmetric (K -f> V) := mkCMetr findom_lub.
@@ -324,13 +365,11 @@ Section FinDom.
 
     (* The nicest solution here would be to have a map on option... *)
     Program Definition fdMapRaw (m : U -> V) : (K -f> U) -> (K -f> V) :=
-      fun f => mkFD (fdMap_pre m f) (findom f) _.
+      fun f => mkFDbound (fdMap_pre m f) (findom f) _.
     Next Obligation.
-      unfold fdMap_pre. move=>k /=. split; move=> Hneq; destruct (f k) eqn:EQf.
+      unfold fdMap_pre. move=>k /= Hneq; destruct (f k) eqn:EQf.
       - apply findom_b. rewrite EQf. discriminate.
       - exfalso. now apply Hneq.
-      - discriminate.
-      - exfalso. apply findom_b in Hneq. rewrite EQf in Hneq. now apply Hneq.
     Qed.
     
     Program Definition fdMapMorph (m : U -n> V) : (K -f> U) -n> (K -f> V) :=
@@ -952,6 +991,24 @@ Section FinDom.
 
   End Induction.
 
+  Section Compose.
+    Context {V : Type} `{eV : Setoid V}.
+    Context (op: option V -> option V -> option V).
+    Context {op_nongen: op None None = None}.
+
+    Program Definition fdCompose (f1 f2: K -f> V): K -f> V :=
+      mkFDbound (fun i => op (f1 i) (f2 i)) (findom f1 ++ findom f2) _.
+    Next Obligation.
+      move=>k /= Hin. apply in_app_iff.
+      destruct (f1 k) eqn:EQf1, (f2 k) eqn:EQf2.
+      - left. apply findom_b. rewrite EQf1. discriminate.
+      - left. apply findom_b. rewrite EQf1. discriminate.
+      - right. apply findom_b. rewrite EQf2. discriminate.
+      - contradiction.
+    Qed.
+
+  End Compose.
+
 End FinDom.
 
 (*Arguments fdMap {K cT ord equ preo ord_part compK U V eqT mT cmT pTA pcmU eqT0 mT0 cmT0 pTA0 cmV} _.*)
@@ -974,105 +1031,43 @@ Section RA.
     | None   , None    => None
     end.
   Global Program Instance ra_op_finprod : RA_op (I -f> S) :=
-    fun f1 f2 => mkFD (fun i => finprod_op (f1 i) (f2 i)) (findom f1 ++ findom f2) _.
-  Next Obligation.
-    rewrite /finprod_op. move=>i /=.
-    destruct (f1 i) as [s1|] eqn:EQf1; destruct (f2 i) as [s2|] eqn:EQf2; simpl; split; intros Hin; try apply in_app_iff; try discriminate.
-    - left. apply (findom_b f1). rewrite EQf1. discriminate.
-    - left. apply (findom_b f1). rewrite EQf1. discriminate.
-    - right. apply (findom_b f2). rewrite EQf2. discriminate.
-    - exfalso. now apply Hin.
-    - exfalso. apply in_app_iff in Hin. destruct Hin.
-      + apply findom_b in EQf1; tauto.
-      + apply findom_b in EQf2; tauto.
-  Qed.
-    
-                                
-  Global Instance ra_valid_finprod : RA_valid (I -f> S) := fun f => forall i s, f i == Some s -> ra_valid s.
-  
+    fdCompose finprod_op.                                
+  Global Instance ra_valid_finprod : RA_valid (I -f> S) :=
+    fun f => forall i, match f i with Some s => ra_valid s | None => True end.
   
   Global Instance ra_finprod : RA (I -f> S).
   Proof.
     split; repeat intro.
-    - unfold ra_op, ra_op_finprod.
-      eapply opt_eq_iff => v.
-      split => /(fdComposeP').
-      + move => [[v1 [v2 [Hv [Hx Hx0]]]]|[[Hx Hx0]|[Hx Hx0]]];
-        apply fdComposeP'.
-        * left. exists v1 v2; split; first (now auto); split; by rewrite -?H -?H0.
-        * right. left. split; by rewrite -?H -?H0.
-        * right. right. split; by rewrite -?H -?H0.
-      + move => [[v1 [v2 [Hv [Hy Hy0]]]]|[[Hy Hy0]|[Hy Hy0]]];
-        apply fdComposeP'.
-        * left. exists v1 v2; split; first (now auto); split; by rewrite ?H ?H0.
-        * right. left. split; by rewrite ?H ?H0.
-        * right. right. split; by rewrite ?H ?H0.
-    - unfold ra_op, ra_op_finprod.
-      eapply opt_eq_iff => v.
-      split => /(fdComposeP').
-      + move => [[v1 [v2 [Hv [Hx Hx0]]]]|[[Hx Hx0]|[Hx Hx0]]];
-        apply fdComposeP'.
-        * apply fdComposeP' in Hx0.
-          destruct Hx0 as [[v1' [v2' [Hv' [Hx' Hx'0]]]]|[[Hx' Hx'0]|[Hx' Hx'0]]].
-          { left. exists (v1 · v1') v2'; split; last split; last auto.
-            - rewrite -ra_op_assoc Hv'. exact Hv.
-            - apply fdComposeP'. left. exists v1 v1'; repeat split; auto. reflexivity.
-          }
-          { right. left. split; auto. apply fdComposeP'. left. eexists; now eauto. }
-          { left. exists v1 v2; repeat split; auto.
-            apply fdComposeP'. now eauto. }
-        * apply fdComposePN' in Hx0. destruct Hx0.
-          right. left. split; last now auto.
-          apply fdComposeP'. now auto. 
-        * apply fdComposeP' in Hx0.
-          destruct Hx0 as [[v1' [v2' [Hv' [Hx' Hx'0]]]]|[[Hx' Hx'0]|[Hx' Hx'0]]].
-          { left. do 2!eexists; repeat split; [now eauto | | now eauto]. 
-            apply fdComposeP'. now eauto. }
-          { right. left. split; auto; []. apply fdComposeP'. now eauto. }
-          { right. right. split; [|assumption]. now apply fdComposePN'. }
-      + move => [[v1 [v2 [Hv [Hy Hy0]]]]|[[Hy Hy0]|[Hy Hy0]]];
-        apply fdComposeP'.
-        * apply fdComposeP' in Hy.
-          destruct Hy as [[v1' [v2' [Hv' [Hy' Hy'0]]]]|[[Hy' Hy'0]|[Hy' Hy'0]]].
-          { left. do 2!eexists; repeat split; [| |].
-            - rewrite <- Hv, <- Hv', -> ra_op_assoc. reflexivity. 
-            - assumption.
-            - eapply fdComposeP'. left. do 2!eexists; split; eauto; []. reflexivity.
-          }
-          { left. do 2!eexists; repeat split; [eassumption| assumption |].
-            eapply fdComposeP'. right; right. now eauto. }
-          { right; right. split; first assumption. eapply fdComposeP'.
-            left; now eauto. }
-        * apply fdComposeP' in Hy.
-          destruct Hy as [[v1' [v2' [Hv' [Hy' Hy'0]]]]|[[Hy' Hy'0]|[Hy' Hy'0]]].
-          { left. do 2!eexists; repeat split; [| |].
-            - exact Hv'.
-            - assumption.
-            - eapply fdComposeP'. now eauto. 
-          }
-          { right; left. split; first assumption. by eapply fdComposePN'. }
-          { right; right. split; first assumption. eapply fdComposeP'.
-            right; left; now eauto. }
-        * apply fdComposePN' in Hy. destruct Hy.
-          right; right; split; first assumption. apply fdComposeP'. now eauto. 
-    - apply opt_eq_iff => v.
-      split => /fdComposeP'; move => [[v1 [v2 [Hv [H1 H2]]]]|[[H1 H2]|[H1 H2]]];
-        apply fdComposeP'; try (now eauto); 
-        rewrite -> ra_op_comm in Hv; left; do 2!eexists; repeat split; eauto.
-    - cut (forall v, (1 t · t) k == v <-> t k == v).
-      + intros. specialize (H ((1 t · t) k)). symmetry. apply H. reflexivity.
-      + move => [v|].
-        * split; [move => /fdComposeP'; move => [[v1 [v2 [Hv [[] //]]]]|[[[] //]|[H1 H2 //]]]|].
-          move=>Ht. apply fdComposeP'. by right; right.
-        * split; [move/fdComposePN' => [] //|move => ?; apply fdComposePN'; split; now auto].
-    - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H // -?H.
-    - by exists (1 t') => k.
-    - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H // -?H.
-    - split; move => Hx k v Hy; apply (Hx k); by rewrite ?H // -?H.
-    - case Hi: (t2 i) => [v|]; apply equivR in Hi. 
-      + apply (ra_op_valid (t2 := v)). apply (H i), fdComposeP'. 
-        left; do 2!eexists; repeat split; eauto. reflexivity.
-      + apply (H i). eapply fdComposeP'. by eauto.
+    - simpl. specialize (H k). specialize (H0 k).
+      destruct (x k), (y k), (x0 k), (y0 k); try contradiction; simpl; try reflexivity; try assumption; [].
+      simpl in H. simpl in H0. rewrite H H0. reflexivity.
+    - simpl. destruct (t1 k), (t2 k), (t3 k); try reflexivity; [].
+      simpl. rewrite assoc. reflexivity.
+    - simpl. destruct (t1 k), (t2 k); try reflexivity; [].
+      simpl. now rewrite comm.
+    - simpl. rewrite /fdMap_pre. destruct (t k); last reflexivity.
+      simpl. rewrite ra_op_unit. reflexivity.
+    - simpl. specialize (H k). rewrite /fdMap_pre.
+      destruct (x k), (y k); try (reflexivity || assumption); [].
+      simpl in H. simpl. rewrite H. reflexivity.
+    - pose (op := fun (os1 os2: option S) =>
+                    match os1, os2 with
+                    | Some s, Some s' => Some (proj1_sig (ra_unit_mono s s'))
+                    | Some s, None    => None
+                    | None  , Some s' => Some (ra_unit s')
+                    | None  , None    => None end).
+      exists (fdCompose op (op_nongen := eq_refl) t t').
+      move=>k. simpl. rewrite /fdMap_pre /ra_op /=.
+      destruct (t k), (t' k); simpl; try (reflexivity || tauto); [].
+      move:(ra_unit_mono s s0)=>[t'' Heq] /=. assumption.
+    - simpl. rewrite /fdMap_pre /ra_unit /= /fdMap_pre.
+      destruct (t k); last reflexivity.
+      apply ra_unit_idem.
+    - split; rewrite /ra_valid /=; move =>Hval i; specialize (H i); specialize (Hval i); destruct (x i), (y i); try (contradiction || tauto); [|].
+      + simpl in H. rewrite -H. assumption.
+      + simpl in H. rewrite H. assumption.
+    - move:(H i)=>{H}. rewrite /=. destruct (t1 i), (t2 i); simpl; try tauto; [].
+      apply ra_op_valid.
   Qed.
 
   (* The RA order on finmaps is the same as the fpfun order over the RA order *)
