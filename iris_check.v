@@ -81,13 +81,13 @@ Module StupidLang : CORE_LANG.
   Proof.
     tauto.
   Qed.
-  Lemma comp_ctx_positivity K1 K2:
+  Lemma comp_ctx_positive K1 K2:
     K1 ∘ K2 = ε -> K1 = ε /\ K2 = ε.
   Proof.
     destruct K1, K2. intros _. split; reflexivity.
   Qed.
   Lemma fill_value K e:
-    is_value (K [[ e ]]) -> K = ε.
+    is_value (K [[ e ]]) -> is_value e.
   Proof.
     destruct K. now auto.
   Qed.

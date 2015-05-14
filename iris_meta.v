@@ -482,9 +482,8 @@ Module Type IRIS_META (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_
           eapply values_stuck; first by eassumption.
           * eassumption.
           * do 2 eexists. eassumption.
-        + move=>? K Hfill. exfalso. eapply fork_not_value. subst e'.
-          assert(HK := fill_value Hval). subst K.
-          rewrite fill_empty in Hval. eassumption.
+        + move=>e'' K Hfill. clear - Hval Hfill. subst.
+          contradiction (fork_not_value (fill_value Hval)).
         + move=>_. left. assumption.
     Qed.
 
