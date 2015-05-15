@@ -463,8 +463,8 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         assert ((u · w1r) · (v · w2r) = S n = w1 · w2) by (apply: cmra_op_dist; assumption).
         etransitivity; last eassumption.
         transitivity (u · w1r · (v · w2r)); last (split).
-        + rewrite -!(assoc u) (assoc v) (assoc w1r) (comm v w1r).
-          reflexivity.
+        + rewrite -!assoc. apply cmra_op_dist; first reflexivity.
+          rewrite (comm v) (comm v) assoc. reflexivity.
         + by apply: (met_morph_nonexp Mfst). 
         + by apply: (met_morph_nonexp Msnd).
     Qed.
@@ -477,9 +477,9 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       exact Hw.
     Qed.
     Next Obligation.
-      move => i n P1 P2 EQP.
+      move => i n P1 P2 EQP. destruct n; first exact: dist_bound.
       apply xist_dist=>w. apply (met_morph_nonexp own). split; last reflexivity.
-      simpl. destruct n; first now auto.
+      simpl. 
       move=>j. destruct (beq_nat i j) eqn:EQ.
       - apply beq_nat_true in EQ. subst j. erewrite !fdStrongUpdate_eq.
         apply ra_ag_inj_dist. apply met_morph_nonexp. simpl. apply dist_mono. assumption.

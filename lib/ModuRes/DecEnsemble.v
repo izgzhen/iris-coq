@@ -3,10 +3,10 @@ Require Import Ssreflect.ssreflect.
 Require Import CSetoid Predom.
 
 Delimit Scope de_scope with de.
+Local Open Scope general_if_scope.
 Local Open Scope type.
 Local Open Scope bool_scope.
 Local Open Scope de_scope.
-
 
 Section DecEnsemble.
   Context {T: Type}.
@@ -31,31 +31,32 @@ Section DecEnsembleOps.
   Definition de_full : DecEnsemble T := DE (const true).
 
   Definition dele de1 de2 :=
-    forall t, t ∈ de1 = true -> t ∈ de2 = true.
+    forall t, implb (t ∈ de1) (t ∈ de2) = true.
 
   Global Instance deeq_PreOrder: PreOrder dele.
   Proof.
     split.
-    - intros ?. unfold dele. tauto.
-    - intros ? ? ?. unfold dele. now firstorder.
+    - intros ? ?. destruct (_ ∈ _); reflexivity.
+    - intros x y z. unfold dele. intros IMxy IMyz t. move:(IMxy t) (IMyz t).
+      destruct (t ∈ x), (t ∈ y), (t ∈ z); simpl; tauto.
   Qed.
 
   Definition deeq de1 de2 :=
-    forall t, t ∈ de1 = true <-> t ∈ de2 = true.
+    forall t, t ∈ de1 = t ∈ de2.
 
   Global Instance deeq_Equivalence: Equivalence deeq.
   Proof.
     split.
     - intros ?. unfold deeq. tauto.
     - intros ? ?. unfold deeq. now auto.
-    - intros ? ? ?. unfold deeq. now firstorder.
+    - intros ? ? ? EQxy EQyz t. rewrite EQxy EQyz. reflexivity. 
   Qed.
   Global Instance deeq_type : Setoid (DecEnsemble T) := mkType deeq.
 
   Global Program Instance deeq_preo: preoType (DecEnsemble T) := mkPOType dele _.
   Next Obligation.
-    move=>t1 t2 EQt s1 s2 EQs Hle t Hin.
-    apply EQs. apply Hle. apply EQt. assumption.
+    move=>t1 t2 EQt s1 s2 EQs Hle t.
+    rewrite -EQs. rewrite -EQt. exact:Hle.
   Qed.
 
   Definition de_cap de1 de2 :=
@@ -74,23 +75,10 @@ Notation "de1 \ de2"  := (de_minus de1 de2) (at level 35) : de_scope.
 Notation "de1 # de2" := (de1 ∩ de2 == de_emp) (at level 70) : de_scope.
 
 (* Some automation *)
-Lemma de_ft_eq: false = true <-> False.
-Proof.
-  split; tauto || discriminate.
-Qed.
-Lemma de_tt_eq: true = true <-> True.
-Proof.
-  split; intros; tauto || reflexivity.
-Qed.
-Lemma negb_true_iff b: negb b = true <-> ~(b = true).
-Proof.
-  destruct b; simpl; split; congruence.
-Qed.
-
 Ltac de_destr := repeat (match goal with [ x : DecEnsemble _ |- _ ] => destruct x as [x] end).
 Ltac de_in_destr := repeat (match goal with [ |- context[?t ∈ ?de] ] => destruct (t ∈ de) end).
 Ltac de_auto_destr := repeat progress (simpl; unfold const; de_in_destr).
-Ltac de_tauto := de_auto_destr; repeat (split || intro); (reflexivity || discriminate || tauto).
+Ltac de_tauto := de_auto_destr; rewrite ?de_ft_eq ?de_tf_eq ?de_tt_eq ?de_ff_eq; repeat (split || intro); (reflexivity || discriminate || tauto).
 Ltac de_auto_eq := destruct_conjs;
       let t := fresh "t" in move=>t;
       repeat (match goal with
@@ -160,6 +148,29 @@ Section DecEnsembleProps.
   Proof. do 3 intro. de_auto_eq. Qed.
 
 End DecEnsembleProps.
+
+Section DecEqEnsemble.
+  Context {T: Type} {eqT: DecEq T}.
+
+  Definition de_set de t b :=
+    DE (fun t' => if dec_eq t t' then b else t' ∈ de).
+
+  Lemma de_set_eq de t b:
+    t ∈ de_set de t b = b.
+  Proof.
+    simpl. rewrite DecEq_refl. reflexivity.
+  Qed.
+
+  Lemma de_set_neq de t b t':
+    t <> t' -> t' ∈ de_set de t b = t' ∈ de.
+  Proof.
+    move=>Hneq. simpl.
+    destruct (dec_eq t t') as [EQ|NEQ]; first contradiction.
+    reflexivity.
+  Qed.
+
+End DecEqEnsemble.
+  
 
 Section DecNatEnsemble.
   Definition de_infinite (m : DecEnsemble nat) :=

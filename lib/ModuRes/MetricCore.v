@@ -751,42 +751,41 @@ Section OptM.
   Context `{mT : metric T}.
 
   Definition option_dist n (x y : option T) :=
-    match n with
-      | O => True
-      | S _ => match x, y with
-                 | Some x, Some y => x = n = y
-                 | None, None => True
-                 | Some _, None => False
-                 | None, Some _ => False
-               end
-      end.
+    match x, y with
+    | Some x, Some y => x = n = y
+    | None, None => True
+    | _, _ => match n with O => True | _ => False end
+    end.
 
   Global Program Instance option_metric : metric (option T) :=
     mkMetr option_dist.
   Next Obligation.
-    destruct n as [| n]; intros [x |] [y |] EQxy [u |] [v |] EQuv; simpl in *; try (contradiction || reflexivity); [].
-    unfold equiv in EQxy, EQuv; simpl in *; rewrite ->EQxy, EQuv; reflexivity.
+    destruct n as [| n]; intros [x |] [y |] EQxy [u |] [v |] EQuv; simpl in *; try (contradiction || reflexivity); [|].
+    - rewrite EQxy EQuv. reflexivity.
+    - rewrite EQxy EQuv. reflexivity.
   Qed.
   Next Obligation.
     split; intros HEq.
     - destruct x; destruct y; try (contradiction (HEq 1) || reflexivity); [].
       unfold equiv; simpl; rewrite <- dist_refl; intros n.
       specialize (HEq (S n)); eapply mono_dist, HEq; auto.
-    - intros [| n]; [reflexivity |].
-      destruct x; destruct y; try (contradiction HEq || reflexivity); simpl in *.
-      generalize (S n); rewrite dist_refl; assumption.
+    - destruct x; destruct y; try (contradiction HEq || reflexivity); simpl in *.
+      rewrite dist_refl; assumption.
   Qed.
   Next Obligation.
     destruct n as [| n]; intros [x |] [y |] HS; try (contradiction HS || reflexivity);
     simpl; symmetry; assumption.
   Qed.
   Next Obligation.
-    revert n; intros [| n] [x |] [y |] [z |] Hxy Hyz; try (contradiction || reflexivity);
-    simpl; etransitivity; [apply Hxy | apply Hyz].
+    revert n; intros [| n] [x |] [y |] [z |] Hxy Hyz; try (contradiction || reflexivity || exact:dist_bound); simpl; [].
+    etransitivity; [apply Hxy | apply Hyz].
   Qed.
   Next Obligation.
     destruct n as [n |]; destruct x as [x |]; destruct y as [y |]; try (contradiction H || reflexivity);
     simpl; eapply mono_dist, H; auto.
+  Qed.
+  Next Obligation.
+    destruct x, y; try exact I. exact:dist_bound.
   Qed.
 
 End OptM.

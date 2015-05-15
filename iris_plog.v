@@ -1,6 +1,6 @@
 Require Import Ssreflect.ssreflect Omega.
 Require Import world_prop core_lang lang iris_core.
-Require Import ModuRes.DecEnsemble ModuRes.RA ModuRes.CMRA ModuRes.SPred ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr ModuRes.Agreement.
+Require Import ModuRes.DecEnsemble ModuRes.RA ModuRes.CMRA ModuRes.SPred ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr ModuRes.Agreement ModuRes.Lists.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -16,69 +16,139 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
   Local Open Scope ra_scope.
   Local Open Scope bi_scope.
   Local Open Scope iris_scope.
+  Local Open Scope de_scope.
   
-  Implicit Types (P : Props) (u v w : Wld) (n i k : nat) (m : DecEnsemble nat) (r : res) (σ : state) (φ : vPred).
+  Implicit Types (P : Props) (u v w : Wld) (n i k : nat) (m : DecEnsemble nat) (r : res) (σ : state) (φ : vPred) (s : nat -f> Wld).
 
   Section WorldSatisfaction.
 
-    (* First, we need to compose the resources of a finite map. This won't be pretty, for
-       now, since the library does not provide enough
-       constructs. Hopefully we can provide a fold that'd work for
-       that at some point
-     *)
-    Fixpoint comp_list w m (xs : list Wld) : Wld :=
-      match xs with
-        | nil => w
-        | (x :: xs)%list => x · comp_list w xs
-      end.
+    (* First, we need to compose the resources of a finite map. *)
+    Definition comp_finmap w0 m : (nat -f> Wld) -> Wld :=
+      fdFold w0 (fun k w' wt => if k ∈ m then wt · w' else wt).
 
-    Lemma comp_list_unit w xs :
-      comp_list w xs == 1 w · comp_list w xs.
+    Global Instance comp_finmap_nexp n: Proper (dist n ==> equiv ==> dist n ==> dist n) comp_finmap.
     Proof.
-      induction xs; first now rewrite ra_unit_dup.
-      now rewrite [_ w _]/= {1}IHxs !assoc (comm _ (1 _)).
+      move=>w01 w02 EQw0 m1 m2 EQm s1 s2 EQs. rewrite /comp_finmap.
+      etransitivity.
+      - eapply fdFoldExtP_dist; last eexact EQs.
+        + move=>k1 k2 w1 w2 w. unfold compose. rewrite (EQm k1) (EQm k2)=>{EQm m1}.
+          destruct (k2 ∈ m2), (k1 ∈ m2); try reflexivity; rewrite -assoc (comm w2) assoc; reflexivity.
+        + move=>k k' EQk w1 w2 EQw wt1 wt2 EQwt. subst k'. destruct (k ∈ m1).
+          * apply cmra_op_dist; assumption.
+          * assumption.
+      - eapply fdFoldExtT.
+        + move=>k k' EQk w1 w2 EQw wt1 wt2 EQwt. subst k' w2. destruct (k ∈ m1).
+          * apply cmra_op_dist; reflexivity || assumption.
+          * assumption.
+        + move=>k v t. apply dist_refl. rewrite (EQm k). reflexivity.
+        + assumption.
     Qed.
 
-    Lemma comp_list_app w rs1 rs2 :
-      comp_list w (rs1 ++ rs2) == comp_list w rs1 · comp_list w rs2.
+    Lemma comp_finmap_chmask w0 m (f: nat -f> Wld) i b:
+      ~List.In i (dom f) ->
+      comp_finmap w0 m f = comp_finmap w0 (de_set m i b) f.
     Proof.
-      induction rs1; simpl comp_list; [now rewrite {1}comp_list_unit |].
-      now rewrite ->IHrs1, assoc.
+      move=>Hnin. rewrite /comp_finmap !fdFoldBehavior /fdFold'.
+      eapply fold_ext_restr; try reflexivity; [].
+      move=>k' w Hdom.
+      rewrite /fdFold'Inner. destruct (f k'); last reflexivity.
+      destruct (dec_eq i k') as [EQ|NEQ].
+      { subst k'. contradiction. }
+      erewrite de_set_neq by assumption. reflexivity.
     Qed.
 
-    Definition cod (m : nat -f> Wld) : list Wld := List.map snd (findom_t m).
-    Definition comp_map w (m : nat -f> Wld) : Wld := comp_list w (cod m).
-
-    Lemma comp_map_remove u (rs : nat -f> Wld) i w (HLu : rs i == Some w) :
-      comp_map u rs == w · comp_map u (fdRemove i rs).
+    Global Instance comp_finmap_ext: Proper (equiv ==> equiv ==> equiv ==> equiv) comp_finmap.
     Proof.
-      destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
-      induction rs as [| [j s] ]; [contradiction |]; simpl comp_list; simpl in HLu.
-      destruct (comp i j); [red in HLu; rewrite-> HLu; reflexivity | contradiction |].
-      simpl comp_list; rewrite ->IHrs by eauto using SS_tail.
-      rewrite-> !assoc, (comm s). reflexivity.
+      move=>w01 w02 EQw0 m1 m2 EQm s1 s2 EQs. apply dist_refl=>n.
+      apply comp_finmap_nexp; assumption || apply dist_refl; assumption.
     Qed.
 
-    Lemma comp_map_insert_new u (rs : nat -f> Wld) i w (HNLu : rs i == None) :
-      w · comp_map u rs == comp_map u (fdUpdate i w rs).
+    Lemma comp_finmap_remove w0 m (s: nat -f> Wld) i w:
+      i ∈ m = true -> s i == Some w ->
+      comp_finmap w0 m s == comp_finmap w0 (de_set m i false) s · w.
     Proof.
-      destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
-      induction rs as [| [j s] ]; [reflexivity | simpl comp_list; simpl in HNLu].
-      destruct (comp i j); [contradiction | reflexivity |].
-      simpl comp_list; rewrite <- IHrs by eauto using SS_tail.
-      rewrite-> !assoc, (comm w); reflexivity.
+      revert s i w. rewrite /comp_finmap. apply:fdRect.
+      - move=>s1 s2 EQw EQd IH i w Hindom Hw.
+        etransitivity; last (etransitivity; first eapply IH).
+        + rewrite /comp_finmap. apply equivR.
+          symmetry. apply fdFoldExtF; assumption.
+        + eexact Hindom.
+        + rewrite EQw. eassumption.
+        + rewrite /comp_finmap. apply equivR. f_equal.
+          apply fdFoldExtF; assumption.
+      - move=>? ? _ [].
+      - move=>k v f Hnew IH i w Hindom Hw.
+        rewrite /comp_finmap. erewrite !fdFoldUpdate by assumption.
+        destruct (dec_eq i k) as [EQ|NEQ].
+        { subst i. rewrite Hindom. rewrite de_set_eq.
+          rewrite fdStrongUpdate_eq in Hw.
+          change (v == w) in Hw. rewrite Hw. clear v Hw.
+          apply ra_op_proper; last reflexivity.
+          apply equivR. exact:comp_finmap_chmask. }
+        erewrite de_set_neq by assumption.
+        destruct (k ∈ m) eqn:EQm.
+        + rewrite -assoc (comm v) assoc. apply ra_op_proper; last reflexivity.
+          eapply IH; first assumption.
+          erewrite <-Hw. rewrite fdStrongUpdate_neq; first reflexivity.
+          move=>EQ. subst k. now apply NEQ.
+        + eapply IH; first assumption.
+          erewrite <-Hw. rewrite fdStrongUpdate_neq; first reflexivity.
+          move=>EQ. subst k. now apply NEQ.
     Qed.
 
-    Lemma comp_map_insert_old u (rs : nat -f> Wld) i w1 w2 w
-          (HLu : rs i == Some w1) (HEq : w1 · w2 == w):
-      w2 · comp_map u rs == comp_map u (fdUpdate i w rs).
+    Lemma comp_finmap_move w0 w1 f m:
+      comp_finmap (w0 · w1) m f == comp_finmap w0 m f · w1.
     Proof.
-      destruct rs as [rs rsP]; unfold comp_map, cod, findom_f in *; simpl findom_t in *.
-      induction rs as [| [j s] ]; [contradiction |]; simpl comp_list; simpl in HLu.
-      destruct (comp i j); [red in HLu; rewrite-> HLu; clear HLu | contradiction |].
-      - simpl comp_list; rewrite ->assoc, (comm w2), <- HEq; reflexivity.
-      - simpl comp_list; rewrite <- IHrs by eauto using SS_tail.
-        rewrite-> !assoc, (comm w2); reflexivity.
+      rewrite /comp_finmap. revert f. apply:fdRect.
+      - move=>f1 f2 EQk EQdom IH.
+        etransitivity; last (etransitivity; first eapply IH).
+        + apply equivR. symmetry. apply fdFoldExtF; assumption.
+        + apply ra_op_proper; last reflexivity.
+          apply equivR. apply fdFoldExtF; assumption.
+      - rewrite !fdFoldEmpty. reflexivity.
+      - move=>k v f Hnew IH. erewrite !fdFoldUpdate by assumption.
+        destruct (k ∈ m).
+        + rewrite -assoc (comm v) assoc. apply ra_op_proper; last reflexivity.
+          eapply IH.
+        + eapply IH.
+    Qed.
+
+    Lemma comp_finmap_add w0 s m i w:
+      (i ∈ m <> true \/ s i == None) ->
+      comp_finmap w0 m s · w == comp_finmap w0 (de_set m i true) (fdStrongUpdate i (Some w) s).
+    Proof.
+      revert s. apply:fdRect.
+      - move=>f1 f2 EQk EQdom IH Hnew. rewrite /comp_finmap. 
+        etransitivity; last (etransitivity; first eapply IH).
+        + apply ra_op_proper; last reflexivity.
+          apply equivR. symmetry. apply fdFoldExtF; assumption.
+        + destruct Hnew; first (left; assumption). right.
+          rewrite EQk. assumption.
+        + apply equivR. apply fdFoldExtF.
+          * move=>k. simpl. rewrite EQk. reflexivity.
+          * rewrite /fdStrongUpdate /= /dom /=. rewrite /dom in EQdom.
+            rewrite EQdom. reflexivity.
+      - move=>Hnew. rewrite /comp_finmap fdFoldEmpty fdFoldUpdate.
+        + rewrite de_set_eq !fdFoldEmpty. reflexivity.
+        + move=>[].
+      - move=>k v f Hnew IH Hfresh. destruct (dec_eq i k) as [EQ|NEQ].
+        + subst k. rewrite fdStrongUpdateShadow /comp_finmap. erewrite fdFoldUpdate by assumption.
+          destruct (i ∈ m) eqn:EQim.
+          { exfalso. destruct Hfresh as [Hineq|Hl]; first now apply Hineq.
+            rewrite fdStrongUpdate_eq in Hl. exact Hl. }
+          clear Hfresh. erewrite fdFoldUpdate by assumption. rewrite de_set_eq.
+          apply ra_op_proper; last reflexivity.
+          apply equivR. exact:comp_finmap_chmask.
+        + erewrite fdStrongUpdateCommute by assumption.
+          erewrite fdStrongUpdate_neq in Hfresh by (now apply not_eq_sym).
+          rewrite /comp_finmap fdFoldUpdate; last assumption. rewrite fdFoldUpdate; last first.
+          { apply fdLookup_notin. erewrite fdStrongUpdate_neq by assumption.
+            now apply fdLookup_notin. }
+          unfold comp_finmap in IH.
+          erewrite de_set_neq by assumption. destruct (k ∈ m).
+          * rewrite -assoc (comm v) assoc. apply ra_op_proper; last reflexivity.
+            apply IH. assumption.
+          * apply IH. assumption.
     Qed.
 
     (* When is a resource okay with a state? *)

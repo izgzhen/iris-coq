@@ -133,53 +133,6 @@ Section FinDom.
         exfalso. now apply Hneq. 
     Qed.
 
-    (* The definition of the domain here is carefully tuned to make the recursion principle
-       less painful. *)
-    Definition fdStrongUpdate_dom k (v: option V) (f: K -f> V) :=
-      match v with
-      | Some _ => k::(dom f)
-      | None => match (dom f) with [] => []
-                          | k'::dom' => if dec_eq k k' then dom' else filter_dupes [k] (findom f) end
-      end.
-    Program Definition fdStrongUpdate k v (f : K -f> V) : K -f> V :=
-      mkFD (fun k' => if dec_eq k k' then v else f k')
-           (fdStrongUpdate_dom k v f)
-           _.
-    Next Obligation.
-      move=>k'. simpl. unfold fdStrongUpdate_dom. destruct v as [v|]; destruct (dec_eq k k') as [EQ|NEQ]; split; intros Hin.
-      - left. assumption.
-      - discriminate.
-      - right. apply fdLookup_in_strong. assumption.
-      - apply fdLookup_in_strong. destruct Hin as [EQ|?]; last assumption. contradiction.
-      - exfalso. now apply Hin.
-      - exfalso. subst k'. destruct (dom f) as [|k' d] eqn:EQdf; first contradiction.
-        destruct (dec_eq k k') as [EQ|NEQ].
-        + subst k'. assert (Hndup := dom_nodup f). rewrite EQdf in Hndup. inversion Hndup; subst. contradiction.
-        + eapply filter_dupes_notin, Hin. left. reflexivity.
-      - apply fdLookup_in_strong in Hin. destruct (dom f) as [|k'' dom'] eqn:Hdom; first assumption.
-        destruct (dec_eq k k'') as [EQ'|NEQ'].
-        + subst k''. destruct Hin as [?|?]; first contradiction. assumption.
-        + unfold dom in Hdom. rewrite -Hdom in Hin.
-          apply filter_dupes_isin in Hin. apply filter_dupes_in.
-          * move=>[EQk|[]]. contradiction.
-          * tauto.
-      - apply fdLookup_in_strong. destruct (dom f) as [|k'' dom'] eqn:Hdom; first assumption.
-        destruct (dec_eq k k'') as [EQ'|NEQ'].
-        + subst k''. right. assumption.
-        + rewrite -Hdom /dom. apply filter_dupes_in; first tauto.
-          apply filter_dupes_isin in Hin. tauto.
-    Qed.
-      
-    Lemma fdStrongUpdate_eq k v f : fdStrongUpdate k v f k = v.
-    Proof.
-      simpl finmap. destruct (dec_eq k k) as [EQ|NEQ]; last (exfalso; now apply NEQ). reflexivity.
-    Qed.
-
-    Lemma fdStrongUpdate_neq k k' v f (Hneq : k <> k') : fdStrongUpdate k v f k' = f k'.
-    Proof.
-      simpl finmap. destruct (dec_eq k k') as [EQ|NEQ]; first contradiction. reflexivity.
-    Qed.
-
     Program Definition fdLookup_indom f k (Hindom: k ∈ dom f): V :=
       match f k with
       | Some v => v
@@ -200,6 +153,7 @@ Section FinDom.
         + by move=>[EQ].
         + move=>?. discriminate.
     Qed.
+
   End Props.
 
   Section Instances.
@@ -245,12 +199,12 @@ Section FinDom.
 
     Global Program Instance metric_findom : metric (K -f> V) := mkMetr dist_fd.
     Next Obligation.
-      revert n; intros [| n] f1 f2 EQf g1 g2 EQg; [reflexivity |]; split;
+      intros f1 f2 EQf g1 g2 EQg; split;
       intros EQ k; [symmetry in EQf, EQg |]; rewrite -> EQf, EQg; apply EQ.
     Qed.
     Next Obligation.
       split; intros HEq.
-      - intros k; rewrite <- dist_refl; intros [| n]; [reflexivity; exact None | apply (HEq (S n) k) ].
+      - intros k; rewrite <- dist_refl; intros n. apply (HEq n k).
       - intros n; intros k. apply dist_refl. apply HEq.
     Qed.
     Next Obligation.
@@ -297,8 +251,7 @@ Section FinDom.
 
     Global Program Instance findom_cmetric : cmetric (K -f> V) := mkCMetr findom_lub.
     Next Obligation.
-      move => [| n] ; [now auto|]. 
-      move => i LEi k. unfold findom_lub. simpl finmap.
+      move => n i LEi k. unfold findom_lub. simpl finmap.
       assert (H := conv_cauchy (finmap_chainx σ k) _ _ LEi). exact H.
     Qed.
 
@@ -336,6 +289,72 @@ Section FinDom.
     Qed.
 
   End Instances.
+
+  Section Update.
+    Context {V: Type} `{eqV: Setoid V}.
+    
+    (* The definition of the domain here is carefully tuned to make the recursion principle
+       less painful. *)
+    Definition fdStrongUpdate_dom k (v: option V) (f: K -f> V) :=
+      match v with
+      | Some _ => k::(dom f)
+      | None => match (dom f) with [] => []
+                          | k'::dom' => if dec_eq k k' then dom' else filter_dupes [k] (findom f) end
+      end.
+    Program Definition fdStrongUpdate k v (f : K -f> V) : K -f> V :=
+      mkFD (fun k' => if dec_eq k k' then v else f k')
+           (fdStrongUpdate_dom k v f)
+           _.
+    Next Obligation.
+      move=>k'. simpl. unfold fdStrongUpdate_dom. destruct v as [v|]; destruct (dec_eq k k') as [EQ|NEQ]; split; intros Hin.
+      - left. assumption.
+      - discriminate.
+      - right. apply fdLookup_in_strong. assumption.
+      - apply fdLookup_in_strong. destruct Hin as [EQ|?]; last assumption. contradiction.
+      - exfalso. now apply Hin.
+      - exfalso. subst k'. destruct (dom f) as [|k' d] eqn:EQdf; first contradiction.
+        destruct (dec_eq k k') as [EQ|NEQ].
+        + subst k'. assert (Hndup := dom_nodup f). rewrite EQdf in Hndup. inversion Hndup; subst. contradiction.
+        + eapply filter_dupes_notin, Hin. left. reflexivity.
+      - apply fdLookup_in_strong in Hin. destruct (dom f) as [|k'' dom'] eqn:Hdom; first assumption.
+        destruct (dec_eq k k'') as [EQ'|NEQ'].
+        + subst k''. destruct Hin as [?|?]; first contradiction. assumption.
+        + unfold dom in Hdom. rewrite -Hdom in Hin.
+          apply filter_dupes_isin in Hin. apply filter_dupes_in.
+          * move=>[EQk|[]]. contradiction.
+          * tauto.
+      - apply fdLookup_in_strong. destruct (dom f) as [|k'' dom'] eqn:Hdom; first assumption.
+        destruct (dec_eq k k'') as [EQ'|NEQ'].
+        + subst k''. right. assumption.
+        + rewrite -Hdom /dom. apply filter_dupes_in; first tauto.
+          apply filter_dupes_isin in Hin. tauto.
+    Qed.
+      
+    Lemma fdStrongUpdate_eq k v f : fdStrongUpdate k v f k = v.
+    Proof.
+      simpl finmap. rewrite DecEq_refl. reflexivity.
+    Qed.
+
+    Lemma fdStrongUpdate_neq k k' v f (Hneq : k <> k') : fdStrongUpdate k v f k' = f k'.
+    Proof.
+      simpl finmap. destruct (dec_eq k k') as [EQ|NEQ]; first contradiction. reflexivity.
+    Qed.
+
+    Lemma fdStrongUpdateShadow k v1 v2 f:
+      fdStrongUpdate k v1 (fdStrongUpdate k v2 f) == fdStrongUpdate k v1 f.
+    Proof.
+      move=>i. simpl. destruct (dec_eq k i); reflexivity.
+    Qed.
+
+    Lemma fdStrongUpdateCommute k1 v1 k2 v2 f:
+      k1 <> k2 -> fdStrongUpdate k1 v1 (fdStrongUpdate k2 v2 f) == fdStrongUpdate k2 v2 (fdStrongUpdate k1 v1 f).
+    Proof.
+      move=>Hineq i. simpl. destruct (dec_eq k1 i) as [EQ1|NEQ1], (dec_eq k2 i) as [EQ2|NEQ2]; try reflexivity; [].
+      subst. exfalso. now apply Hineq.
+    Qed.
+
+  End Update.
+
 
   Section Map.
     Context {U V} `{pcmU : pcmType U} `{cmV : pcmType V}.
@@ -504,7 +523,7 @@ Section FinDom.
             reflexivity.
           + erewrite !fdStrongUpdate_neq by assumption. reflexivity.
         - rewrite Hdom /f'. rewrite /dom /=. f_equal. rewrite /dom /= Hdom.
-          destruct (dec_eq k k) as [_|NEQ]; last (exfalso; now apply NEQ).
+          rewrite DecEq_refl.
           assert (Hnod := dom_nodup f). rewrite Hdom in Hnod.
           assert (Hfilt1: (filter_dupes [] l0) = l0).
           { apply filter_dupes_id. simpl. inversion Hnod; subst. assumption. }
@@ -574,6 +593,13 @@ Section FinDom.
           + erewrite !fdStrongUpdate_neq by assumption. now apply Heqf.
       Qed.
 
+      Lemma fdFoldExtF (f1 f2: K -f> V):
+        (forall k, f1 k = f2 k) -> dom f1 = dom f2 ->
+        fdFold f1 = fdFold f2.
+      Proof.
+        move=>Heq Hdom. rewrite /fdFold /fdRect. eapply fdRectInner_eqLF; assumption.
+      Qed.
+
       Lemma fdFoldUpdate f k v:
         ~k ∈ (dom f) ->
         fdFold (fdStrongUpdate k (Some v) f) = Tstep k v (fdFold f).
@@ -606,14 +632,13 @@ Section FinDom.
         fdFold f = fdFold' f.
       Proof.
         revert f. elim/fdRect.
-        - move=>f1 f2 EQf EQdom EQfd. etransitivity; last (etransitivity; first exact EQfd).
-          + rewrite /fdFold /fdRect. apply fdRectInner_eqLF.
-            * symmetry. assumption.
-            * move=>k. symmetry. now apply EQf.
-          + rewrite /fdFold' /fdFold'Inner. apply fold_ext_restr.
-            * assumption.
-            * reflexivity.
-            * move=>k t _. rewrite EQf. reflexivity.
+        - move=>f1 f2 EQf EQdom EQfd. transitivity (fdFold f1).
+          { symmetry. apply fdFoldExtF; assumption. }
+          rewrite EQfd {EQfd}.
+          rewrite /fdFold' /fdFold'Inner. apply fold_ext_restr.
+          + assumption.
+          + reflexivity.
+          + move=>k t _. rewrite EQf. reflexivity.
         - reflexivity.
         - move=>k v f Hnin Heq. erewrite fdFoldUpdate by assumption.
           rewrite /fdFold' /= /fdFold'Inner.
@@ -629,60 +654,101 @@ Section FinDom.
 
     End Fold.
 
-    Section FoldMorph.
-      Context {T: Type} `{Setoid T}.
+    Section FoldExtStep.
+      (* One can change the step function *)
+      Context {T: Type} {eqT: relation T} {eqRT: Equivalence eqT}.
 
-      Definition fdFoldMorph (Temp: T) (Tstep: K -> V -=> T -=> T) (f: K -f> V) :=
-        fdFold Temp (fun k v t => Tstep k v t) f.
+      Context (Tstep1 Tstep2: K -> V -> T -> T).
+      Context {Tstep1_proper: Proper (eq ==> eq ==> eqT ==> eqT) Tstep1}.
+      Context {Tstep2_proper: Proper (eq ==> eq ==> eqT ==> eqT) Tstep2}.
+      Context {Tstep_eq: forall k v t, eqT (Tstep1 k v t) (Tstep2 k v t)}.
 
-      Lemma fdFoldExtT: Proper (equiv ==> equiv ==> eq ==> equiv) fdFoldMorph.
+      Lemma fdFoldExtT:
+        forall Temp1 Temp2, eqT Temp1 Temp2 ->
+                            forall f, eqT (fdFold Temp1 Tstep1 f) (fdFold Temp2 Tstep2 f).
       Proof.
-        move=>Temp1 Temp2 EQemp Tstep1 Tstep2 EQstep f f' EQf. subst f'.
-        rewrite /fdFoldMorph !fdFoldBehavior /fdFold'.
+        move=>Temp1 Temp2 EQemp f.
+        rewrite !fdFoldBehavior /fdFold'.
         apply fold_ext.
         - move=>k k' EQk v1 v2 EQv. subst k'. rewrite /fdFold'Inner. destruct (f k).
           + rewrite EQv. reflexivity.
           + assumption.
         - move=>k t. rewrite /fdFold'Inner. destruct (f k); last reflexivity.
-          apply EQstep.
+          apply Tstep_eq.
         - assumption.
       Qed.
+    End FoldExtStep.
 
-      Definition fdStep_comm (Tstep: K -> V -=> T -=> T): Prop :=
+    Section FoldExtPerm.        
+      (* If the step function is commutative, one can change the finmap. *)
+      Context {T: Type} `{Setoid T}.
+      Context (Temp: T) (Tstep: K -> V -> T -> T).
+
+      Definition fdStep_comm: Prop :=
         forall (k1 k2:K) (v1 v2:V),
           compose (Tstep k1 v1) (Tstep k2 v2) == compose (Tstep k2 v2) (Tstep k1 v1).
 
-      Section FoldExtPerm.
-        Context (Temp: T) (Tstep: K -> V -=> T -=> T).
-        Context (Tstep_comm: fdStep_comm Tstep).
+      Context (Tstep_comm: fdStep_comm).
+
+      Global Instance fdFoldExtP {Tstep_proper: Proper (eq ==> equiv ==> equiv ==> equiv) Tstep}:
+          Proper (equiv ==> equiv) (fdFold Temp Tstep).
+      Proof.
+        move=>f1 f2 EQf. rewrite !fdFoldBehavior /fdFold'.
+        rewrite /fdFold'. etransitivity; last eapply fold_perm.
+        - eapply fold_ext.
+          + move=>k k' EQk v1 v2 EQv. subst k'. rewrite /fdFold'Inner.
+            destruct (f1 k); last assumption. rewrite EQv. reflexivity.
+          + move=>k t. rewrite /fdFold'Inner. specialize (EQf k). destruct (f1 k), (f2 k); try contradiction.
+            * simpl in EQf. rewrite EQf. reflexivity.
+            * reflexivity.
+          + reflexivity.
+        - move=>k k' EQk v1 v2 EQv. subst k'. rewrite /fdFold'Inner.
+          destruct (f2 k); last assumption. rewrite EQv. reflexivity.
+        - move=>v1 v2 t. rewrite /fdFold'Inner /=.
+          destruct (f2 v1), (f2 v2); try reflexivity; [].
+          apply Tstep_comm.
+        - split; last split.
+          + apply dom_nodup.
+          + apply dom_nodup.
+          + move=>k. rewrite !fdLookup_in_strong. specialize (EQf k).
+            destruct (f1 k), (f2 k); try contradiction; last tauto; [].
+            split; discriminate.
+      Qed.
+    End FoldExtPerm.
+
+    Section FoldExtPermDist.
+      (* The same, up to n-equality. TODO: Figure out a way not to repeat all this. *)
+      Context {mV: metric V} {cmV: cmetric V}.
+      Context {T: Type} `{cmetric T}.
+      Context (Temp: T) (Tstep: K -> V -> T -> T).
+      Context (Tstep_comm: fdStep_comm Tstep).
         
-        Lemma fdFoldExtP: Proper (equiv ==> equiv) (fdFoldMorph Temp Tstep).
-        Proof.
-          move=>f1 f2 EQf. rewrite /fdFoldMorph !fdFoldBehavior /fdFold'.
-          rewrite /fdFold'. etransitivity; last eapply fold_perm.
-          - eapply fold_ext.
-            + move=>k k' EQk v1 v2 EQv. subst k'. rewrite /fdFold'Inner.
-              destruct (f1 k); last assumption. rewrite EQv. reflexivity.
-            + move=>k t. rewrite /fdFold'Inner. specialize (EQf k). destruct (f1 k), (f2 k); try contradiction.
-              * simpl in EQf. rewrite EQf. reflexivity.
-              * reflexivity.
-            + reflexivity.
-          - move=>k k' EQk v1 v2 EQv. subst k'. rewrite /fdFold'Inner.
-            destruct (f2 k); last assumption. rewrite EQv. reflexivity.
-          - move=>v1 v2 t. rewrite /fdFold'Inner /=.
-            destruct (f2 v1), (f2 v2); try reflexivity; [].
-            apply Tstep_comm.
-          - split; last split.
-            + apply dom_nodup.
-            + apply dom_nodup.
-            + move=>k. rewrite !fdLookup_in_strong. specialize (EQf k).
-              destruct (f1 k), (f2 k); try contradiction; last tauto; [].
-              split; discriminate.
-        Qed.
-
-      End FoldExtPerm.
-
-    End FoldMorph.
+      Lemma fdFoldExtP_dist n {Tstep_proper: Proper (eq ==> dist n ==> dist n ==> dist n) Tstep}:
+        Proper (dist n ==> dist n) (fdFold Temp Tstep).
+      Proof.
+        move=>f1 f2 EQf. rewrite !fdFoldBehavior /fdFold'.
+        destruct n as [|n]; first exact:dist_bound.
+        rewrite /fdFold'. etransitivity; last eapply fold_perm.
+        - eapply fold_ext.
+          + move=>k k' EQk v1 v2 EQv. subst k'. rewrite /fdFold'Inner.
+            destruct (f1 k); last assumption. apply Tstep_proper; reflexivity || assumption.
+          + move=>k t. rewrite /fdFold'Inner.
+            specialize (EQf k). destruct (f1 k), (f2 k); try (now destruct EQf).
+            * simpl in EQf. apply Tstep_proper; reflexivity || assumption.
+          + reflexivity.
+        - move=>k k' EQk v1 v2 EQv. subst k'. rewrite /fdFold'Inner.
+          destruct (f2 k); last assumption. rewrite EQv. reflexivity.
+        - move=>v1 v2 t. rewrite /fdFold'Inner /=.
+          destruct (f2 v1), (f2 v2); try reflexivity; [].
+          apply dist_refl, Tstep_comm.
+        - split; last split.
+          + apply dom_nodup.
+          + apply dom_nodup.
+          + move=>k. rewrite !fdLookup_in_strong. specialize (EQf k).
+            destruct (f1 k), (f2 k); split; intro; try (assumption || discriminate || contradiction).
+      Qed.
+                  
+    End FoldExtPermDist.
 
   End Induction.
 
@@ -859,7 +925,7 @@ Section CMRA.
       destruct n as [|n]; first exact:dist_bound.
       specialize (EQf k). rewrite /= /fdMap_pre.
       destruct (f1 k), (f2 k); try (contradiction || assumption); [].
-      simpl in EQf. rewrite EQf. reflexivity.
+      simpl in EQf. simpl. rewrite EQf. reflexivity.
     - move=>n f1 f2 EQf.
       destruct n as [|n]; first exact:dist_bound.
       move=>m Hle. split; move=>Hval i; specialize (EQf i); specialize (Hval i); destruct (f1 i), (f2 i); simpl; try (contradiction || tauto); [|].

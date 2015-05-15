@@ -1,5 +1,5 @@
 Require Import Ssreflect.ssreflect.
-Require Export MetricCore.
+Require Export CSetoid.
 
 Generalizable Variables T U V W.
 
