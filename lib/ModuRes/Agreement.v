@@ -438,23 +438,35 @@ Section Agreement.
   Qed.
 
   (* Provide a way to get an n-approximation of the element out of an n-valid agreement. *)
-  Program Definition ra_ag_unInjApprox x n {HVal: cmra_valid x n}: T :=
+  Program Definition ra_ag_unInj x n {HVal: cmra_valid x n}: T :=
     match x with
     | ag_inj v ts _ => (ts n _)
     end.
 
-  Lemma ra_ag_unInjApprox_dist x y n {HVal1: cmra_valid x n} {HVal2: cmra_valid y n}: (* The function is dependent, hence no "Proper" can be registered *)
-    x = n = y -> ra_ag_unInjApprox x n (HVal:=HVal1) = n = ra_ag_unInjApprox y n (HVal:=HVal2).
+  Lemma ra_ag_unInj_dist x y n {HVal1: cmra_valid x n} {HVal2: cmra_valid y n}: (* The function is dependent, hence no "Proper" can be registered *)
+    x = n = y -> ra_ag_unInj x n (HVal:=HVal1) = n = ra_ag_unInj y n (HVal:=HVal2).
   Proof.
     move=>EQ. destruct n as [|n]; first exact: dist_bound.
     ra_ag_destr; now firstorder.
   Qed.
 
-  Lemma ra_ag_inj_unInjApprox x n {HVal: cmra_valid x n} t:
-    ra_ag_inj t ⊑ x -> ra_ag_unInjApprox x n (HVal:=HVal) = n = t.
+  Lemma ra_ag_unInj_move x n1 n2 (Hle: n1 <= n2) {HVal1: cmra_valid x n1} {HVal2: cmra_valid x n2}:
+    ra_ag_unInj x n1 (HVal:=HVal1) = n1 = ra_ag_unInj x n2 (HVal:=HVal2).
+  Proof.
+    ra_ag_destr.
+    rewrite /ra_ag_unInj. symmetry.
+    etransitivity; last (etransitivity; first eapply (tsx n1 n2)).
+    - apply equivR. f_equal. apply ProofIrrelevance.
+    - apply equivR. f_equal. apply ProofIrrelevance.
+  Grab Existential Variables.
+  { exact HVal2. }
+  Qed.
+
+  Lemma ra_ag_inj_unInj x n {HVal: cmra_valid x n} t:
+    ra_ag_inj t ⊑ x -> ra_ag_unInj x n (HVal:=HVal) = n = t.
   Proof.
     rewrite ra_ag_pord. destruct x as [v ts tsx]=>Heq.
-    unfold ra_ag_inj in Heq. destruct Heq as [EQv EQts]. unfold ra_ag_unInjApprox.
+    unfold ra_ag_inj in Heq. destruct Heq as [EQv EQts]. unfold ra_ag_unInj.
     destruct n as [|n]; first exact: dist_bound. simpl. symmetry. eapply EQts.
   Grab Existential Variables.
   { rewrite EQv. apply HVal. }
@@ -476,13 +488,13 @@ Section Agreement.
     apply equivR. f_equiv. eapply ProofIrrelevance.
   Qed.
 
-  Program Definition ra_ag_unInj x {HVal: ↓x}: T :=
+  Program Definition ra_ag_unInjFull x {HVal: ↓x}: T :=
     match x with
     | ag_inj v ts tsx => compl (ra_ag_tschain v ts tsx (HVal:=_))
     end.
 
-  Lemma ra_ag_unInj_dist x y {HVal1: ↓x} {HVal2: ↓y} n: (* The function is dependent, hence no "Proper" can be registered *)
-    x = n = y -> ra_ag_unInj x (HVal:=HVal1) = n = ra_ag_unInj y (HVal:=HVal2).
+  Lemma ra_ag_unInjFull_dist x y {HVal1: ↓x} {HVal2: ↓y} n: (* The function is dependent, hence no "Proper" can be registered *)
+    x = n = y -> ra_ag_unInjFull x (HVal:=HVal1) = n = ra_ag_unInjFull y (HVal:=HVal2).
   Proof.
     move=>EQ. destruct n as [|n]; first exact: dist_bound.
     destruct x as [xv xts xtsx].
@@ -492,9 +504,9 @@ Section Agreement.
     eapply EQts. reflexivity.
   Qed.
 
-  (* Correctness of the embedding (and of the entire consruction, really - together with the duplicability shown above) *)
-  Lemma ra_ag_inj_unInj x {HVal: ↓x} t:
-    ra_ag_inj t ⊑ x -> ra_ag_unInj x (HVal:=HVal) == t.
+  (* Correctness of the embedding (and of the entire construction, really - together with the duplicability shown above) *)
+  Lemma ra_ag_inj_unInjFull x {HVal: ↓x} t:
+    ra_ag_inj t ⊑ x -> ra_ag_unInjFull x (HVal:=HVal) == t.
   Proof.
     rewrite ra_ag_pord. destruct x as [v ts tsx]=>Heq.
     unfold ra_ag_inj in Heq. destruct Heq as [EQv EQts]. simpl. rewrite <-(umet_complete_const t).

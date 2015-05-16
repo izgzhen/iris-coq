@@ -151,51 +151,38 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
           * apply IH. assumption.
     Qed.
 
-    (* When is a resource okay with a state? *)
-    Definition res_sat (r: res) σ: Prop := ↓r /\ fst r == ex_own σ.
+    (* Defines satisfaction of the invariant i at step index n *)
+    (* We use a separate definition here as "Program" screws up the match *)
+    Definition world_inv_sat s n i (P: PreProp): Prop :=
+      match s i with
+      | Some w => unhalved (ı P) w n
+      | None => False
+      end.
 
-    Global Instance res_sat_dist : Proper (equiv ==> equiv ==> iff) res_sat.
-    Proof.
-      intros [ [s1| |] r1] [ [s2| |] r2] [EQs EQr] σ1 σ2 EQσ; unfold res_sat; simpl in *; try tauto; try rewrite !EQs; try rewrite !EQr; try rewrite !EQσ; reflexivity.
-    Qed.
-
-    (* RJ: For the CMRA wsat, * think the folloiwing should work:
-       Require the fully composed world to be (S n)-valid. Since this is under a ▹, that
-       should not hinder non-expansiveness. Then use that proof and ra_ag_unInjApprox to
-       extract an (S n)-approximation of the (halve Props) from the World. This
-       will be an n-approximation of the Props, so things should fit. *)
-    Program Definition wsat σ m : Props :=
-      ▹ (m[(fun w => 
-              mkSPred (
-                  fun n => 
-                    exists rs : nat -f> Wld,
-                      let t := w · (comp_map w rs) in
-                      exists pv : (cmra_valid t (S n)),
-                        (fst (snd t) ⊑ ex_own σ)
-                            /\ forall i (INt : i ∈ dom (fst t)),
-                                 let op := Indom_lookup _ _ (proj2 (In_inlst _ _) INt) in
-                                       exists INrs : i ∈ dom rs,
-                                         let wp := Indom_lookup _ _ (proj2 (In_inlst _ _ ) INrs) in
-                                               match op with
-                                                 | ag_unit => True
-                                                 | ag_inj v p ts => unhalved (ı (p n _)) wp n
-                                               end
-                ) _ 
-        )] ).
+    Program Definition wsat σ m w : SPred :=
+      later_sp (mkSPred (fun n => exists s : nat -f> Wld,
+                             let wt := comp_finmap w m s in
+                             exists pv : (cmra_valid wt (S n)),
+                               (fst (snd wt) ⊑ ex_own σ)
+                               /\ forall i agP (Heq: (Invs wt) i == Some agP),
+                                 world_inv_sat s n i (ra_ag_unInj agP (S n) (HVal:=_))) _).
     Next Obligation.
-      symmetry in Heq_op.
-      apply equivR in Heq_op.
-      rewrite /cmra_valid /ra_prod_cmra_valid (surjective_pairing (w · _)) in pv.
-      destruct pv as [Hf Hs].
-      specialize (Hf i (ag_inj _ v p ts)).
-      have/Hf : (fst (w · comp_map w rs) i == Some (ag_inj PreProp v p ts)).
-      { rewrite -Heq_op. symmetry. apply/equivR. exact (Indom_lookup_find _ _ (proj2 (In_inlst _ _) INt)). }
-      apply dpred; omega.
+      remember (comp_finmap w m s) as wt.
+      destruct wt as [I O]. destruct pv as [HIval _]. specialize (HIval i).
+      simpl in Heq. destruct (I i).
+      - simpl in Heq. rewrite -Heq. assumption.
+      - destruct Heq.
     Qed.
     Next Obligation.
-      intros n1 n2 HLe (rs & pv & Hσ & H). 
-      exists rs. exists (dpred (m := S n2) (le_n_S _ _ HLe) pv).
-      split; [assumption|]. move => i INt. specialize (H i INt). destruct H as [INrs H].
+      intros n1 n2 HLe (s & pv & Hσ & H).
+      exists s. exists (dpred (m := S n2) (le_n_S _ _ HLe) pv).
+      split; [assumption|]. move => {Hσ} i agP Heq. move:(H i agP Heq)=>{H}.
+      rewrite /world_inv_sat. destruct (s i) as [ws|]; last move=>[].
+      move=>H. destruct HLe; first last. eapply spredNE; last first.
+      - eapply dpred; last exact H. omega.
+      - eapply mmorph_proper; last reflexivity. specialize (halve_eq (T:=Props) (S n2)).
+        unfold Proper, respectful=>Hprop. apply Hprop. (* RJ WTF, but "apply halve_eq" does not work?!?? *)
+        apply met_morph_nonexp.
       exists INrs. 
       pose (IL := 
 Indom_lookup i (findom_t (fst (w · comp_map w rs)))
@@ -213,20 +200,7 @@ Indom_lookup i (findom_t (fst (w · comp_map w rs)))
       setoid_rewrite HLe; eassumption.
     Qed.
 
-    Global Instance wsat_equiv σ : Proper (equiv ==> equiv ==> equiv ==> equiv) (wsat σ).
-    Proof.
-      intros m1 m2 EQm r r' EQr w1 w2 EQw [| n]; [reflexivity |].
-      split; intros [rs [HE HM] ]; exists rs.
-      - split; [rewrite <-EQr; assumption | intros; apply EQm in Hm; split; [| setoid_rewrite <- EQw; apply HM, Hm] ].
-        destruct (HM _ Hm) as [HD _]; rewrite HD; clear - EQw.
-        rewrite fdLookup_in; setoid_rewrite EQw; rewrite <- fdLookup_in; reflexivity.
-      - split; [rewrite EQr; assumption | intros; apply EQm in Hm; split; [| setoid_rewrite EQw; apply HM, Hm] ].
-        destruct (HM _ Hm) as [HD _]; rewrite HD; clear - EQw.
-        rewrite fdLookup_in; setoid_rewrite <- EQw; rewrite <- fdLookup_in; reflexivity.
-    Qed.
-
-    (* TODO: this duplicates some proof effort from above. unify these two. *)
-    Global Instance wsat_dist n σ m u : Proper (dist n ==> dist n) (wsat σ m u).
+    Global Instance wsat_dist n σ : Proper (equiv ==> dist n ==> dist n) (wsat σ).
     Proof.
       intros w1 w2 EQw [| n'] HLt; [reflexivity |]; destruct n as [| n]; [now inversion HLt |].
       split; intros [rs [HE HM] ]; exists rs.
@@ -245,6 +219,11 @@ Indom_lookup i (findom_t (fst (w · comp_map w rs)))
         apply ı in EQπ. apply halve_eq in EQπ. apply EQπ; [now auto with arith |].
         apply (met_morph_nonexp (unhalved (ı π'))) in EQw; apply EQw; [omega |].
         apply HR; [reflexivity | assumption].
+    Qed.
+
+    Global Instance wsat_equiv σ : Proper (equiv ==> equiv ==> equiv) (wsat σ).
+    Proof.
+      (* TODO: derive from wsat_dist *)
     Qed.
 
     Lemma wsat_valid {σ m r w k} :

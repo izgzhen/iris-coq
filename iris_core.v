@@ -87,6 +87,10 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
   Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (r u v : res) (σ : state).
 
+  Definition Invs (w: Wld) := fst w.
+  Definition State (w: Wld) := fst (snd w).
+  Definition Res (w: Wld) := snd (snd w).
+
   (* Simple view lemmas. *)
 
   Section Views.
@@ -421,6 +425,8 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Local Obligation Tactic := idtac.
 
     (** Ownership **)
+    (* TODO RJ: Seriously, defining these directly instead of in terms of a general ownership predicate
+       makes things much easier... *)
     Program Definition own: Wld -n> Props :=
       n[(fun w0 => m[(fun w => mkSPred (fun n => exists wr, w0 · wr = S n = w) _)] )].
     Next Obligation.
