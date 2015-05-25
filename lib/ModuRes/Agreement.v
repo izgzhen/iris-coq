@@ -35,8 +35,8 @@ Section Agreement.
   Local Ltac ra_ag_pi := match goal with
                            [H: dist ?n (?ts1 ?pv11) (?ts2 ?pv21) |- dist ?n (?ts1 ?pv12) (?ts2 ?pv22) ] =>
                            (* Also try with less rewrites, as some of the pvs apeparing in the goal may be existentials. *)
-                           first [pi pv12 pv11; pi pv22 pv21; eexact H |
-                                  pi pv22 pv21; eexact H | pi pv12 pv11; eexact H]
+                           first [rewrite_pi pv12 pv11; rewrite_pi pv22 pv21; eexact H |
+                                  rewrite_pi pv22 pv21; eexact H | rewrite_pi pv12 pv11; eexact H]
                          end.
 
 
@@ -98,7 +98,7 @@ Section Agreement.
   Global Instance ra_agree_eq_equiv : Equivalence ra_agree_eq.
   Proof.
     split; repeat intro; ra_ag_destr; try (exact I || contradiction); [| |]. (* 3 goals left. *)
-    - split; first reflexivity. intros. pi pv1 pv2. reflexivity.
+    - split; first reflexivity. intros. rewrite_pi pv1 pv2. reflexivity.
     - destruct H. split; intros; by symmetry.
     - destruct H, H0.
       split; first (etransitivity; now eauto).
@@ -114,7 +114,7 @@ Section Agreement.
     ra_ag_destr. split.
     - split; simpl; first by firstorder.
       move=>pv. exists pv pv. now firstorder.
-    - move=>n ? ?. unfold ra_ag_compinj_ts. apply equivR. f_equiv. by eapply ProofIrrelevance.
+    - move=>n ? ?. unfold ra_ag_compinj_ts. pi.
   Qed.
   
   Global Instance ra_agree_res : RA ra_agree.
@@ -269,12 +269,9 @@ Section Agreement.
         assert (pv: v m) by (eapply dpred, pv2; omega).
         exists pv0 pv. assert (m <= S n) by omega.
         etransitivity; last (etransitivity; first (eapply mono_dist, Heq; omega)).
-        * symmetry. etransitivity; first now eapply tsx0.
-          apply equivR. f_equal. now apply ProofIrrelevance.
-        * etransitivity; first now eapply tsx.
-          apply equivR. f_equal. now apply ProofIrrelevance.
-    - move=>m pvcomp pv3 Hle. unfold ra_ag_compinj_ts.
-      apply equivR. f_equal. now apply ProofIrrelevance.
+        * symmetry. etransitivity; first now eapply tsx0. pi.
+        * etransitivity; first now eapply tsx. pi.
+    - move=>m pvcomp pv3 Hle. unfold ra_ag_compinj_ts. pi.
   Qed.
 
   Program Definition ra_ag_vchain (σ: chain ra_agree) {σc: cchain σ} : chain SPred :=
@@ -364,8 +361,7 @@ Section Agreement.
     etransitivity; last first.
     { eapply EQts. omega. }
     move:(tsxSi (S n) i). move/(_ _ pv')=>EQ.
-    etransitivity; last eassumption.
-    eapply dist_refl. f_equiv. eapply ProofIrrelevance.
+    etransitivity; last eassumption. pi.
   Qed.
 
   Global Program Instance ra_ag_cmt : cmetric ra_agree := mkCMetr ra_ag_compl.
@@ -396,7 +392,7 @@ Section Agreement.
       ddes (ρ (S (S n))) at 1 3 as [vρn tsρn tsxρn] deqn:EQρn.
       specialize (H (S (S n))). rewrite ->ra_ag_pord in H.
       rewrite <-EQσn, <-EQρn in H. destruct H as [EQv EQts].
-      erewrite <-EQts. unfold ra_ag_compinj_ts. f_equiv. eapply ProofIrrelevance.
+      erewrite <-EQts. unfold ra_ag_compinj_ts. pi.
     }
     split.
     - move=>n. split; first by (intros (pv1 & pv2 & _); tauto).
@@ -455,9 +451,7 @@ Section Agreement.
   Proof.
     ra_ag_destr.
     rewrite /ra_ag_unInj. symmetry.
-    etransitivity; last (etransitivity; first eapply (tsx n1 n2)).
-    - apply equivR. f_equal. apply ProofIrrelevance.
-    - apply equivR. f_equal. apply ProofIrrelevance.
+    etransitivity; last (etransitivity; first eapply (tsx n1 n2)); pi.
   Grab Existential Variables.
   { exact HVal2. }
   Qed.
