@@ -16,7 +16,7 @@ Section CMRA.
     { cmra_op_dist n :> Proper (dist n ==> dist n ==> dist n) ra_op ;
       cmra_unit_dist n :> Proper (dist n ==> dist n) ra_unit ;
       cmra_valid_dist n :> Proper (dist n ==> dist n) cmra_valid ;
-      cmra_ra_valid t: (sp_full (cmra_valid t)) <-> ra_valid t ;
+      cmra_ra_valid t: (valid_sp (cmra_valid t)) <-> ra_valid t ;
       cmra_op_valid {t1 t2}: cmra_valid (t1 · t2) ⊑ cmra_valid t1
     }.
 End CMRA.
@@ -60,9 +60,9 @@ Section DiscreteCMRA.
   Context {T: Type} `{raT: RA T}.
   Existing Instance discreteMetric.
   Existing Instance discreteCMetric.
-
+  
   Instance discreteCMRA_valid : CMRA_valid T :=
-    fun t => sp_c (↓t).
+    fun t => sp_const (↓t).
 
   Instance discreteCMRA : CMRA T.
   Proof.
@@ -74,11 +74,14 @@ Section DiscreteCMRA.
       destruct n as [|n]; first by exact I.
       simpl in *. rewrite EQa. reflexivity.
     - move=>n t1 t2 EQt. destruct n as [|n]; first exact: dist_bound.
-      simpl in EQt. move=>m Hle. simpl. rewrite ->EQt. reflexivity.
+      simpl in EQt. move=>m Hle. simpl.
+      destruct m; first reflexivity. simpl.
+      rewrite ->EQt. reflexivity.
     - move=>t. split.
       + move=>H. specialize (H 1%nat). exact H.
-      + move=>H n. simpl. exact H.
-    - move=>t1 t2 n. exact: ra_op_valid.
+      + move=>H n. simpl. destruct n; simpl; tauto.
+    - move=>t1 t2 n. destruct n; first reflexivity.
+      exact: ra_op_valid.
   Qed.
 End DiscreteCMRA.
 

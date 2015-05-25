@@ -906,7 +906,11 @@ Section CMRA.
                         | None => True end.
                             
   Global Program Instance finmap_cmra_valid: CMRA_valid (I -f> T) :=
-    fun f => mkSPred (finmap_cmra_valid_op f) _.
+    fun f => mkSPred (finmap_cmra_valid_op f) _ _.
+  Next Obligation.
+    move=>i. destruct (f i); last tauto.
+    exact: bpred.
+  Qed.
   Next Obligation.
     move=>n m Hle /= H i. specialize (H i).
     destruct (f i); last tauto.

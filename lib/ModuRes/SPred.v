@@ -7,20 +7,17 @@ Section Definitions.
 
   Record SPred :=
     mkSPred {spred    :> nat -> Prop;
+             bpred    :  spred 0;
              dpred    :  dclosed spred }.
 
-  Program Definition sp_c (p : Prop) :=
-    mkSPred (fun n => p) _.
-  Next Obligation. intros m n _ HP. tauto. Qed.
-
-  Definition sp_top: SPred := sp_c True.
-
-  Definition sp_full (p: SPred) := forall n, p n.
-
-  Lemma sp_top_full:
-    sp_full sp_top.
-  Proof.
-    intro. exact I.
+  Definition sp_constF (P: Prop) :=
+    fun n => match n with
+             | O => True
+             | S _ => P end.
+  Program Definition sp_const P :=
+    mkSPred (sp_constF P) _ _.
+  Next Obligation.
+    move=>n m Hle. destruct m, n; simpl; tauto || inversion Hle.
   Qed.
 
   Definition sp_equiv (p q : SPred) := forall n, p n == q n.
@@ -35,14 +32,8 @@ Section Definitions.
 
   Global Program Instance sp_type : Setoid SPred := mkType sp_equiv.
 
-  Global Instance sp_full_resp: Proper (equiv ==> equiv) sp_full.
-  Proof.
-    move=>s1 s2 EQs.
-    split; intros H n; now firstorder.
-  Qed.
-
   Definition sp_dist n (p q : SPred) :=
-    forall m, m < n -> (p m <-> q m).
+    forall m, m <= n -> (p m <-> q m).
 
   Global Program Instance sp_metric : metric SPred := mkMetr sp_dist.
   Next Obligation.
@@ -64,24 +55,28 @@ Section Definitions.
     intros m HLt; apply H; auto with arith.    
   Qed.
   Next Obligation.
-    intros m HLt; inversion HLt.    
+    intros m Hle. destruct m; last omega.
+    split; intro; apply bpred.
   Qed.
 
-  Lemma spredNE {P1 P2 : SPred} {n} (EQP : P1 = S n = P2) : P1 n -> P2 n.
+  Lemma spredNE {P1 P2 : SPred} {n} (EQP : P1 = n = P2) : P1 n -> P2 n.
   Proof. by apply EQP. Qed.
 
   Program Definition sp_compl (σ : chain SPred) (σc : cchain σ) :=
-    mkSPred (fun n => σ (S n) n) _.
+    mkSPred (fun n => σ n n) _ _.
+  Next Obligation.
+    apply bpred.
+  Qed.
   Next Obligation.
     intros n m HLt HSub.
-    eapply (chain_cauchy σ σc (S m) (S n)); auto with arith; [].
+    eapply (chain_cauchy σ σc m n); auto with arith; [].
     eapply dpred; eassumption.
   Qed.
 
   Global Program Instance sp_cmetric : cmetric SPred := mkCMetr sp_compl.
   Next Obligation.
     intros n; intros i HLe k HLt; simpl.
-    eapply (chain_cauchy σ σc (S k)); eauto with arith.
+    eapply (chain_cauchy σ σc k); eauto with arith.
   Qed.
 
   Definition sp_ord (p q : SPred) := forall n, p n -> q n.
@@ -120,7 +115,7 @@ Section Definitions.
       | S n => p n
     end.
   Program Definition later_sp (p : SPred) :=
-    mkSPred (laterF p) _.
+    mkSPred (laterF p) _ _.
   Next Obligation.
     intros [| m] [| n] HLe; simpl; try tauto; [now inversion HLe |].
     intros HP; eapply dpred; [| eassumption]; auto with arith.
@@ -151,7 +146,7 @@ Section Definitions.
     [| symmetry]; assumption.
   Qed.
   Lemma dist_spred_simpl U (R : relation U) (f : U -> SPred) n {RS : Symmetric R}
-        (HP : forall u1 u2 m (HLt : m < n), R u1 u2 -> f u1 m -> f u2 m) :
+        (HP : forall u1 u2 m (HLt : m <= n), R u1 u2 -> f u1 m -> f u2 m) :
     Proper (R ==> dist n) f.
   Proof.
     intros u1 u2 HRu m; split; intros HF;
@@ -166,24 +161,37 @@ Section SPredBI.
   Local Obligation Tactic := intros; eauto with typeclass_instances.
 
   (* Standard interpretations of propositional connectives. *)
-  Global Program Instance top_sp : topBI SPred := sp_top.
-  Global Program Instance bot_sp : botBI SPred := sp_c False.
-  Global Program Instance valid_sp : validBI SPred := sp_full.
+  Global Program Instance top_sp : topBI SPred :=
+    mkSPred (fun _ => True) _ _. (* this behaves nicer than sp_c *)
+  Next Obligation.
+    repeat intro. exact I.
+  Qed.
+  
+  Global Program Instance bot_sp : botBI SPred := sp_const False.
+    
+  Global Program Instance valid_sp : validBI SPred :=
+    fun s => forall n, s n.
 
   Global Program Instance and_sp : andBI SPred :=
     fun P Q =>
-      mkSPred (fun n => P n /\ Q n) _.
+      mkSPred (fun n => P n /\ Q n) _ _.
+  Next Obligation.
+    split; now apply bpred.
+  Qed.
   Next Obligation.
     intros n m HLe; rewrite-> HLe; tauto.
   Qed.
   Global Program Instance or_sp : orBI SPred :=
     fun P Q =>
-      mkSPred (fun n => P n \/ Q n) _.
+      mkSPred (fun n => P n \/ Q n) _ _.
+  Next Obligation.
+    left. now apply bpred.
+  Qed.
   Next Obligation.
     intros n m HLe; rewrite-> HLe; tauto.
   Qed.
 
-    Global Instance and_sp_equiv : Proper (equiv ==> equiv ==> equiv) and_sp.
+  Global Instance and_sp_equiv : Proper (equiv ==> equiv ==> equiv) and_sp.
   Proof.
     intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
     rewrite-> EQP, EQQ; tauto.
@@ -223,7 +231,8 @@ Section SPredBI.
     intros n _; exact I.
   Qed.
   Next Obligation.
-    intros n HC; contradiction HC.
+    intros n HC; destruct n; last contradiction HC.
+    apply bpred.
   Qed.
   Next Obligation.
     split.
@@ -231,7 +240,7 @@ Section SPredBI.
     - intros HV n. now apply HV.
   Qed.
   Next Obligation.
-    move=>[]. exact 0.
+    move=>H. exact:(H 1).
   Qed.
   Next Obligation.
     intros n; simpl; tauto.
@@ -254,7 +263,11 @@ Section SPredBI.
   
   Global Program Instance impl_sp : implBI SPred :=
     fun P Q =>
-      mkSPred (fun n => forall m, m <= n -> P m -> Q m) _.
+      mkSPred (fun n => forall m, m <= n -> P m -> Q m) _ _.
+  Next Obligation.
+    destruct m; last omega.
+    apply bpred.
+  Qed.
   Next Obligation.
     intros n m HLe HImp k HLe' HP.
     apply HImp; try (etransitivity; eassumption); assumption.
@@ -282,16 +295,30 @@ Section SPredBI.
   (* Quantifiers. *)
   Global Program Instance all_sp : allBI SPred :=
     fun T eqT mT cmT R =>
-      mkSPred (fun n => forall t, R t n) _.
+      mkSPred (fun n => forall t, R t n) _ _.
+  Next Obligation.
+    apply bpred.
+  Qed.
   Next Obligation.
     intros n m HLe HR t. rewrite-> HLe; apply HR.
   Qed.
 
+  Definition xist_spF {T: Type} (R: T -> SPred) n :=
+    match n with
+    | O => True
+    | S _ => exists t, R t n
+    end.
   Global Program Instance xist_sp : xistBI SPred :=
     fun T eqT mT cmT R =>
-      mkSPred (fun n => exists t, R t n) _.
+      mkSPred (xist_spF R) _ _.
   Next Obligation.
-    intros n m HLe [t HR]; exists t; rewrite-> HLe; apply HR.
+    exact I.
+  Qed.
+  Next Obligation.
+    intros n m HLe. destruct n.
+    { destruct m; last omega. intro; exact I. }
+    intros [t HR]. destruct m; first exact I.
+    exists t; rewrite-> HLe; apply HR.
   Qed.
 
   Section Quantifiers.
@@ -308,6 +335,7 @@ Section SPredBI.
     Global Instance xist_sp_dist n : Proper (dist (T := V -n> SPred)n ==> dist n) xist.
     Proof.
       intros R1 R2 EQR m HLt; simpl.
+      destruct m; first reflexivity.
       split; intros [t HR]; exists t; apply EQR; now auto.
     Qed.
 
@@ -337,15 +365,20 @@ Section SPredBI.
   Qed.
   Next Obligation.
     split.
-    - intros HH n [u HP]; eapply HH; eassumption.
-    - intros HH u n HP; apply HH; exists u; assumption.
+    - intros HH n. destruct n; first (intro; exact: bpred).
+      intros [u HP]; eapply HH; eassumption.
+    - intros HH u n. destruct n; first (intro; exact: bpred).
+      intros HP; apply HH; exists u; assumption.
   Qed.
 
 End SPredBI.
 
 Section SPredEq.
   Global Program Instance sp_eq : eqBI SPred :=
-    fun U {eqU mU cmU u1 u2} => mkSPred (fun n => u1 = S n = u2) _.
+    fun U {eqU mU cmU u1 u2} => mkSPred (fun n => u1 = n = u2) _ _.
+  Next Obligation.
+    exact:dist_bound.
+  Qed.
   Next Obligation.
     move=>n m Hle. simpl. eapply mono_dist. omega.
   Qed.
@@ -370,7 +403,7 @@ Section SPredEq.
   Next Obligation.
     move=>n. rewrite /= -/dist. split.
     - move=>EQ P m HLe HP.
-      assert (P u1 = S n = P u2) by now rewrite EQ. apply H; first omega. assumption.
+      assert (P u1 = n = P u2) by now rewrite EQ. apply H; first omega. assumption.
     - move=>HP. pose(φ := n[(sp_eq _ _ _ _ u1)]). specialize (HP φ n (le_refl _)). eapply HP.
       simpl. reflexivity.
   Qed.
