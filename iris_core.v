@@ -124,7 +124,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       simpl morph. by rewrite comm EQw.
     Qed.
     
-    Lemma propsNE {P : Props} {w1 w2 n} (EQw : w1 = S n = w2) :
+    Lemma propsNE {P : Props} {w1 w2 n} (EQw : w1 = n = w2) :
       P w1 n -> P w2 n.
     Proof.
       apply spredNE. by rewrite EQw.
@@ -224,7 +224,10 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
 
     Program Definition box : Props -n> Props :=
-      n[(fun P => m[(fun w => mkSPred (fun n => P (1 w) n) _)])].
+      n[(fun P => m[(fun w => mkSPred (fun n => P (1 w) n) _ _)])].
+    Next Obligation.
+      exact: bpred.
+    Qed.
     Next Obligation.
       intros n m HLe. by apply propsMN.
     Qed.
@@ -293,10 +296,11 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Proof.
       apply pord_antisym.
       - intros w n.
-        intros HP. exists (w, 1 w). 
-        split; last by simpl; rewrite !ra_unit_idem.
-        rewrite (ra_op_unit2).
-        split; reflexivity.
+        intros HP. destruct n; first exact:bpred.
+        exists (w, 1 w). 
+        split; last by simpl; rewrite !ra_unit_idem. simpl morph.
+        do 3 red.
+        now rewrite (ra_op_unit2).
       - by apply sc_projL.
     Qed.
     
@@ -354,9 +358,10 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Remark biimp_equiv {P Q}: P === Q ⊑ (P ↔ Q).
     Proof.
       have HLt n n' : n' <= n -> n' < S n by omega.
-      move=> w n H; split;
+      move=> w n H. destruct n; first exact:bpred.
+      split;
       move=> w' n' HLt' HP;
-      move/(_ (w · w') n' (le_lt_n_Sm _ _ HLt')): H => [Hpq Hqp];
+      move/(_ (w · w') n' _): H => [Hpq Hqp];
       [exact: Hpq | exact: Hqp].
     Qed.
 
@@ -368,27 +373,31 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
   Section Timeless.
 
+    (* RJ TODO: Make this a modality. *)
     Definition timelessP P w n :=
-      forall w' k (HSw : w ⊑ w') (HLt : k < n) (Hp : P w' k), P w' (S k).
+      forall w' k (HSw : w ⊑ w') (HLt : (S k) < n) (Hp : P w' (S k)), P w' (S (S k)).
 
     Program Definition timeless P : Props :=
-      m[(fun w => mkSPred (fun n => timelessP P w n) _)].
+      m[(fun w => mkSPred (fun n => timelessP P w n) _ _)].
+    Next Obligation.
+      move=>? ? ? ?. exfalso. omega.
+    Qed.
     Next Obligation.
       intros n1 n2 HLe HP w' k HSub HLt. eapply HP; [eassumption |].
       omega.
     Qed.
     Next Obligation.
-      intros w1 w2 EQw k; simpl. intros HLt; destruct n as [| n]; [now inversion HLt |].
+      intros w1 w2 EQw k; simpl. intros HLt.
       split; intros HT w' m HSw HLt' Hp.
       - destruct HSw as [wr HSw].
-        have Hwr : wr · w1 = S n = w'. 
+        have Hwr : wr · w1 = n = w'. 
         { rewrite -HSw. apply cmra_op_dist; [reflexivity|assumption]. }
         apply: propsNE; [|eapply mono_dist; last eassumption; omega|].
         apply: HT; [exists wr; reflexivity|omega|].
         apply: propsNE; [|symmetry; eapply mono_dist; last eassumption; omega|].
         assumption.
       - destruct HSw as [wr HSw].
-        have Hwr : wr · w2 = S n = w'. 
+        have Hwr : wr · w2 = n = w'. 
         { rewrite -HSw. apply cmra_op_dist; [reflexivity|symmetry; assumption]. }
         apply: propsNE; [|eapply mono_dist; last eassumption; omega|].
         apply: HT; [exists wr; reflexivity|omega|].
@@ -411,7 +420,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Lemma intEqTimeless (t1 t2: T):
       valid(timeless(intEq t1 t2)).
     Proof.
-      intros w n. intros w' k HLt Hsq H.
+      intros w n. intros w' k HLt Hsq. simpl.
       tauto.
     Qed.
   End IntEqTimeless.
@@ -428,7 +437,10 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     (* TODO RJ: Seriously, defining these directly instead of in terms of a general ownership predicate
        makes things much easier... *)
     Program Definition own: Wld -n> Props :=
-      n[(fun w0 => m[(fun w => mkSPred (fun n => exists wr, w0 · wr = S n = w) _)] )].
+      n[(fun w0 => m[(fun w => mkSPred (fun n => exists wr, w0 · wr = n = w) _ _)] )].
+    Next Obligation.
+      move=>w0 w. exists w. exact:dist_bound.
+    Qed.
     Next Obligation.
       intros w w' n m HLe [wr Hwr].
       exists wr. eapply mono_dist; last eassumption. omega.
@@ -457,7 +469,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Lemma own_sc (u v : Wld):
       own (u · v) == own u * own v.
     Proof.
-      move => w n; split.
+      move => w n; destruct n; first (split; intro; exact:bpred). split.
       - move => [wr Hwr].
         exists (u, v · wr); split; last split.
         + split; now rewrite -Hwr -assoc.
@@ -497,7 +509,8 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       inv i P == □inv i P.
     Proof.
       apply pord_antisym; last by apply:box_elim.
-      intros [u r] n. intros [r' [[u'' r''] H]]. exists (1 r').
+      intros [u r] n. destruct n; first (intro; exact:bpred).
+      intros [r' [[u'' r''] H]]. exists (1 r').
       destruct (ra_unit_mono r' r'') as [r1 Heq]. exists (u'', r1).
       etransitivity; last first.
       { eapply cmra_unit_dist, H. }
@@ -543,19 +556,20 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       exact EQu.
     Qed.
     Next Obligation.
-      move => n r1 r2 EQr w k HLt. split; move => [u Hown].
+      move => n r1 r2 EQr w k HLt. destruct k; first (split; intro; exact:bpred).
+      split; move => [u Hown].
       - have EQw : (u, r1) = n = (u, r2) by now apply prod_proper_n. 
-        change ((own (u, r1) w k)) in Hown.
+        change ((own (u, r1) w (S k))) in Hown.
         exists u.
-        change ((own (u, r2) w k)).
+        change ((own (u, r2) w (S k))).
         eapply (met_morph_nonexp own); last eassumption.
         + symmetry. destruct EQw.
           split; eassumption.
         + omega.
       - have EQw : (u, r1) = n = (u, r2) by now apply prod_proper_n. 
-        change ((own (u, r2) w k)) in Hown.
+        change ((own (u, r2) w (S k))) in Hown.
         exists u.
-        change ((own (u, r1) w k)).
+        change ((own (u, r1) w (S k))).
         eapply (met_morph_nonexp own); last eassumption.
         + destruct EQw.
           split; eassumption. 
@@ -581,10 +595,10 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Lemma ownR_sc r1 r2:
       ownR (r1 · r2) == ownR r1 * ownR r2.
     Proof.
-      intros [u r] n; split.
+      intros [u r] n. destruct n; first (split; intro; exact:bpred). split.
       - move => [u' H].
-        change ((own (u', r1 · r2)) (u, r) n) in H.
-        have {H} : (own (u', r1) * own (u', r2)) (u, r) n.
+        change ((own (u', r1 · r2)) (u, r) (S n)) in H.
+        have {H} : (own (u', r1) * own (u', r2)) (u, r) (S n).
         { rewrite -own_sc. rewrite /ra_op /ra_op_prod.
           eapply spredNE, H. f_equiv.
           apply (met_morph_nonexp own). split; last reflexivity.
@@ -595,7 +609,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         exists w; split; first assumption.
         split; exists u'; assumption.
       - move => [w [Hw [[u1 H1] [u2 H2]]]].
-        have {H1 H2} : own ((u1, r1) · (u2, r2)) (u, r) n. 
+        have {H1 H2} : own ((u1, r1) · (u2, r2)) (u, r) (S n). 
         { rewrite own_sc. exists w; split; first assumption.
           split; assumption. }
         move => H. exists (u1 · u2). exact H.
@@ -626,10 +640,10 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Proof. apply: (xist_timeless (T := RL.res)). intros. apply ownR_timeless. Qed.
 
     Lemma ownS_state {σ w n} (Hv : ↓w) :
-      (ownS σ) w n -> fst (snd w) == ex_own σ.
+      (ownS σ) w (S n) -> fst (snd w) == ex_own σ.
     Proof.
       move: Hv; move: w => [w r] [_ Hv] [l [u Hlu]]. 
-      change (own (u , (ex_own σ, l)) (w, r) n) in Hlu.
+      change (own (u , (ex_own σ, l)) (w, r) (S n)) in Hlu.
       destruct Hlu as [[ur rr] [Hur Hrr]].
       unfold snd at 2 in Hrr.
       rewrite <- Hrr in Hv.
@@ -649,6 +663,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Next Obligation.
       intros n r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
       move => w m HLt.
+      destruct m; first (split; intro; exact:bpred).
       split; move => [σ [u [[ur [pr lr]] [Hwr1 Hwr2]]]].
       - exists σ u (ur, (pr, lr)). hnf. 
         rewrite -Hwr1 -Hwr2.
@@ -669,13 +684,13 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Lemma ownL_sc (g1 g2 : RL.res) :
       ownL (g1 · g2) == ownL g1 * ownL g2.
     Proof.
-      intros [u r] n; split.
+      intros [u r] n. destruct n; first (split; intro; exact:bpred). split.
       - move => [s H]. 
-        have {H} : (ownR (s, g1) * ownR (ex_unit, g2)) (u,r) n by (rewrite -ownR_sc; destruct s). 
+        have {H} : (ownR (s, g1) * ownR (ex_unit, g2)) (u,r) (S n) by (rewrite -ownR_sc; destruct s). 
         move => [w [Hw [H1 H2]]].
         exists w; split; first assumption; last split; by [exists s|exists (1s) ].
       - move => [w [Hw [[s1 H1] [s2 H2]]]].
-        have {H1 H2} : ownR ((s1, g1) · (s2, g2)) (u, r) n. 
+        have {H1 H2} : ownR ((s1, g1) · (s2, g2)) (u, r) (S n).
         { rewrite ownR_sc. exists w; split; first assumption.
           split; assumption. }
         move => H. by exists (s1 · s2). 

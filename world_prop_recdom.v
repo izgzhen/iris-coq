@@ -68,7 +68,7 @@ Module WorldProp (Res : CMRA_T) : WORLD_PROP Res.
     Qed.
 
     Definition F_ne : 1 -t> F 1 1 :=
-      umconst (pcmconst (sp_c True)).
+      umconst (pcmconst top_sp).
   End F.
 
   Module F_In := InputHalve(F).

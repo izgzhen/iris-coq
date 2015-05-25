@@ -151,53 +151,48 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
           * apply IH. assumption.
     Qed.
 
-    (* Defines satisfaction of the invariant i at step index n *)
-    (* We use a separate definition here as "Program" screws up the match *)
-    Definition world_inv_sat s n i (P: PreProp): Prop :=
-      match s i with
-      | Some w => unhalved (ı P) w n
-      | None => False
-      end.
-
-    Program Definition wsat σ m w : SPred :=
-      later_sp (mkSPred (fun n => exists s : nat -f> Wld,
-                             let wt := comp_finmap w m s in
-                             exists pv : (cmra_valid wt (S n)),
-                               (fst (snd wt) ⊑ ex_own σ)
-                               /\ forall i agP (Heq: (Invs wt) i == Some agP),
-                                 world_inv_sat s n i (ra_ag_unInj agP (S n) (HVal:=_))) _).
-    Next Obligation.
-      remember (comp_finmap w m s) as wt.
+    (* Go through some struggle to even write down world satisfaction... *)
+    Lemma world_inv_val {w m} {s : nat -f> Wld} {n}:
+      let wt := comp_finmap w m s in
+      forall (pv: cmra_valid wt n) {i agP} (Heq: (Invs wt) i == Some agP), cmra_valid agP n.
+    Proof.
+      intros wt pv i agP Heq.
       destruct wt as [I O]. destruct pv as [HIval _]. specialize (HIval i).
       simpl in Heq. destruct (I i).
       - simpl in Heq. rewrite -Heq. assumption.
       - destruct Heq.
     Qed.
+
+    (* It may be possible to use "later_sp" here, but let's avoid indirections where possible. *)
+    Definition wsatF σ m w n :=
+      match n with
+      | O => True
+      | S n' => exists s : nat -f> Wld,
+                  let wt := comp_finmap w m s in
+                  exists pv : (cmra_valid wt n),
+                    (fst (snd wt) ⊑ ex_own σ) /\
+                    forall i agP (Heq: (Invs wt) i == Some agP),
+                      match s i with
+                      | Some w => let P := ra_ag_unInj agP n (HVal:=world_inv_val pv Heq) in
+                                  unhalved (ı P) w n'
+                      | None => False
+                      end
+      end.
+
+    Program Definition wsat σ m w : SPred :=
+      mkSPred (wsatF σ m w) _ _.
     Next Obligation.
-      intros n1 n2 HLe (s & pv & Hσ & H).
-      exists s. exists (dpred (m := S n2) (le_n_S _ _ HLe) pv).
+      intros n1 n2 HLe. destruct n2; first (intro; exact I).
+      destruct n1; first (exfalso; omega).
+      intros (s & pv & Hσ & H).
+      exists s. exists (dpred (m := S n2) HLe pv).
       split; [assumption|]. move => {Hσ} i agP Heq. move:(H i agP Heq)=>{H}.
-      rewrite /world_inv_sat. destruct (s i) as [ws|]; last move=>[].
-      move=>H. destruct HLe; first last. eapply spredNE; last first.
+      destruct (s i) as [ws|]; last move=>[].
+      move=>/= H.
+      eapply spredNE; last first.
       - eapply dpred; last exact H. omega.
-      - eapply mmorph_proper; last reflexivity. specialize (halve_eq (T:=Props) (S n2)).
-        unfold Proper, respectful=>Hprop. apply Hprop. (* RJ WTF, but "apply halve_eq" does not work?!?? *)
-        apply met_morph_nonexp.
-      exists INrs. 
-      pose (IL := 
-Indom_lookup i (findom_t (fst (w · comp_map w rs)))
-       (proj2
-          (In_inlst i (List.map fst (findom_t (fst (w · comp_map w rs)))))
-          INt)).
-      fold IL in H. fold IL.
-      clear H.
-      generalize (@eq_refl _ IL) as EQ.
-      pattern (IL) at 2 6.
-      ddes (IL) at 4 5 6 as [v0 ts0 tsx0|] deqn:EQ1.
-      generalize (eq_refl). pattern x.
-      destruct (Indom_lookup i (findom_t (fst (w · comp_map w rs))) (proj2 (In_inlst i (List.map fst (findom_t (fst (w · comp_map w rs))))) INt)).
-      
-      setoid_rewrite HLe; eassumption.
+      - specialize (halve_eq (T:=Props) n2)=>Huneq. apply Huneq=>{Huneq H ws}.
+        apply met_morph_nonexp. symmetry. apply ra_ag_unInj_move. omega.
     Qed.
 
     Global Instance wsat_dist n σ : Proper (equiv ==> dist n ==> dist n) (wsat σ).
@@ -223,7 +218,8 @@ Indom_lookup i (findom_t (fst (w · comp_map w rs)))
 
     Global Instance wsat_equiv σ : Proper (equiv ==> equiv ==> equiv) (wsat σ).
     Proof.
-      (* TODO: derive from wsat_dist *)
+      move=> m1 m2 EQm w1 w2 EQw. apply dist_refl=>n.
+      apply wsat_dist; (assumption || eapply dist_refl; eassumption).
     Qed.
 
     Lemma wsat_valid {σ m r w k} :
