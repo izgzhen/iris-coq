@@ -152,15 +152,17 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     (* Go through some struggle to even write down world satisfaction... *)
+    Local Open Scope finmap_scope.
+    
     Lemma world_inv_val {w m} {s : nat -f> Wld} {n}:
       let wt := comp_finmap w m s in
-      forall (pv: cmra_valid wt n) {i agP} (Heq: (Invs wt) i == Some agP), cmra_valid agP n.
+      forall (pv: cmra_valid wt n) {i agP} (Heq: (Invs wt) i = Some agP), cmra_valid agP n.
     Proof.
       intros wt pv i agP Heq.
       destruct wt as [I O]. destruct pv as [HIval _]. specialize (HIval i).
-      simpl in Heq. destruct (I i).
-      - simpl in Heq. rewrite -Heq. assumption.
-      - destruct Heq.
+      simpl Invs in Heq. destruct (I i).
+      - eapply spredNE, HIval. apply cmra_valid_dist. inversion Heq. reflexivity.
+      - discriminate.
     Qed.
 
     (* It may be possible to use "later_sp" here, but let's avoid indirections where possible. *)
@@ -170,8 +172,8 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       | S n' => exists s : nat -f> Wld,
                   let wt := comp_finmap w m s in
                   exists pv : (cmra_valid wt n),
-                    (fst (snd wt) ⊑ ex_own σ) /\
-                    forall i agP (Heq: (Invs wt) i == Some agP),
+                    (State wt ⊑ ex_own σ) /\
+                    forall i agP (Heq: (Invs wt) i = Some agP),
                       match s i with
                       | Some w => let P := ra_ag_unInj agP n (HVal:=world_inv_val pv Heq) in
                                   unhalved (ı P) w n'
@@ -186,7 +188,8 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       destruct n1; first (exfalso; omega).
       intros (s & pv & Hσ & H).
       exists s. exists (dpred (m := S n2) HLe pv).
-      split; [assumption|]. move => {Hσ} i agP Heq. move:(H i agP Heq)=>{H}.
+      split; [assumption|]. move => {Hσ} i agP Heq.
+      move:(H i agP Heq)=>{H}.
       destruct (s i) as [ws|]; last move=>[].
       move=>/= H.
       eapply spredNE; last first.
@@ -195,25 +198,34 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         apply met_morph_nonexp. symmetry. apply ra_ag_unInj_move. omega.
     Qed.
 
+    Lemma wsat_pre_dist σ m1 m2 w1 w2 n (m: nat):
+      m1 == m2 -> w1 = n = w2 -> m <= n -> wsat σ m1 w1 m -> wsat σ m2 w2 m.
+    Proof.
+      intros EQm EQw Hlt. destruct m; first reflexivity.
+      destruct n as [| n]; [now inversion Hlt |].
+      intros [s [pv [HS HI]]]; exists s; intro wt.
+      assert (Hwt: comp_finmap w1 m1 s = S m = wt).
+      { subst wt. rewrite EQm EQw. reflexivity. }
+      assert (pv': cmra_valid wt (S m)).
+      { eapply spredNE, pv. apply cmra_valid_dist. assumption. }
+      exists pv'. split.
+      { rewrite <-HS. apply pordR. destruct Hwt as [_ [HwtS _]].
+        symmetry. exact HwtS. }
+      move=>i agP Heq.
+      edestruct (fdLookup_in_dist_strong (f2 := Invs (comp_finmap w1 m1 s)) (n:=m) Heq) as [agP' [Heq' HagPeq]].
+      { rewrite -Hwt. reflexivity. }
+      specialize (HI _ _ Heq'). destruct (s i); last exact HI.
+      simpl. simpl in HI.
+      eapply spredNE, HI.
+      specialize (halve_eq (T:=Props) m)=>Huneq. apply Huneq=>{Huneq HS}.
+      apply met_morph_nonexp. eapply ra_ag_unInj_dist.
+      symmetry. assumption.
+    Qed.
+
     Global Instance wsat_dist n σ : Proper (equiv ==> dist n ==> dist n) (wsat σ).
     Proof.
-      intros w1 w2 EQw [| n'] HLt; [reflexivity |]; destruct n as [| n]; [now inversion HLt |].
-      split; intros [rs [HE HM] ]; exists rs.
-      - split; [assumption | split; [rewrite <- (domeq EQw); apply HM, Hm |] ].
-        intros; destruct (HM _ Hm) as [_ HR]; clear HE HM Hm.
-        assert (EQπ := EQw i); rewrite-> HLw in EQπ; clear HLw.
-        destruct (w1 i) as [π' |]; [| contradiction]; do 3 red in EQπ.
-        apply ı in EQπ. apply halve_eq in EQπ.
-        apply EQπ; [now auto with arith |].
-        apply (met_morph_nonexp (unhalved (ı π'))) in EQw; apply EQw; [omega |].
-        apply HR; [reflexivity | assumption].
-      - split; [assumption | split; [rewrite (domeq EQw); apply HM, Hm |] ].
-        intros; destruct (HM _ Hm) as [_ HR]; clear HE HM Hm.
-        assert (EQπ := EQw i); rewrite-> HLw in EQπ; clear HLw.
-        destruct (w2 i) as [π' |]; [| contradiction]. do 3 red in EQπ.
-        apply ı in EQπ. apply halve_eq in EQπ. apply EQπ; [now auto with arith |].
-        apply (met_morph_nonexp (unhalved (ı π'))) in EQw; apply EQw; [omega |].
-        apply HR; [reflexivity | assumption].
+      intros m1 m2 EQm w1 w2 EQw m Hlt.
+      split; eapply wsat_pre_dist; eassumption || symmetry; assumption.
     Qed.
 
     Global Instance wsat_equiv σ : Proper (equiv ==> equiv ==> equiv) (wsat σ).
@@ -222,20 +234,20 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       apply wsat_dist; (assumption || eapply dist_refl; eassumption).
     Qed.
 
-    Lemma wsat_valid {σ m r w k} :
-      wsat σ m r w (S k) -> ↓r.
+    Lemma wsat_valid {σ m w k} :
+      wsat σ m w (S k) -> cmra_valid w (S k).
     Proof.
-      move=> [rs [[Hv _] _]]; exact: ra_op_valid Hv.
+      move=> [s [pv _]].
     Qed.
 
-    Lemma wsat_state {σ m u w k} :
+(*    Lemma wsat_state {σ m u w k} :
       wsat σ m u w (S k) -> fst u == ex_own σ \/ fst u == 1.
     Proof.
       move: u=>[ux ug]; move=>[rs [ [ Hv Heq] _] ] {m w k}; move: Hv Heq.
       move: (comp_map _)=> [rsx rsg] [Hv _] {rs}; move: Hv.
       rewrite ra_op_prod_fst 2![fst _]/=.
       by case: ux; case: rsx; auto.
-    Qed.
+    Qed.*)
 
   End WorldSatisfaction.
 
