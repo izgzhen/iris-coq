@@ -255,15 +255,18 @@ Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WO
           apply HM; assumption.
     Qed.
 
-    Lemma pvsNotOwnInvalid m1 m2 r
+    Lemma pvsNotOwnInvalid m1 m2 g
       (Hnval: ~↓r):
-      ownR r ⊑ pvs m1 m2 ⊥.
+      ownL g ⊑ pvs m1 m2 ⊥.
     Proof.
       intros w0 n0 r0 [rs Heq] w' rf mf σ k _ _ _ [ ri [ [ Hval _ ] ] ].
       exfalso.
       apply Hnval. rewrite <-Heq in Hval.
       eapply ra_op_valid2, ra_op_valid, ra_op_valid; last eassumption; now apply _.
     Qed.
+
+    (* TODO: can always get ownL of some unit *)
+    (* TODO: ownS * ownS => ⊥ *)
 
   End ViewShiftProps.
 

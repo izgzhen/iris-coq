@@ -85,11 +85,14 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
   Instance Props_CBI : ComplBI Props | 0 := _.
   Instance Props_Eq : EqBI Props | 0 := _.
 
-  Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (r : res) (σ : state).
+  Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (r : res) (g : RL.res) (σ : state).
 
   Definition Invs (w: Wld) := fst w.
+  Arguments Invs !w /.
   Definition State (w: Wld) := fst (snd w).
+  Arguments State !w /.
   Definition Res (w: Wld) := snd (snd w).
+  Arguments Res !w /.
 
   (* Simple view lemmas. *)
 
@@ -242,7 +245,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         more generally. However, we should first figure out a concise
         set of axioms. **)
 
-    Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances.
+(*    Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances. *)
 
     Program Definition box : Props -n> Props :=
       n[(fun P => m[(fun w => mkSPred (fun n => P (1 w) n) _ _)])].
@@ -430,6 +433,14 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       eapply HT, Hp; [etransitivity |]; eassumption.
     Qed.
 
+    Lemma xist_timeless {T:Type} `{cmetric T} (P : T -n> Props) :
+      (forall t, valid(timeless(P t))) -> valid (timeless (xist P)).
+    Proof.
+      intros.
+      move => w n w' k HSub HLt [t /H0 Ht].
+      exists t. apply: Ht; [| |eassumption|eassumption].
+    Qed.
+
   End Timeless.
 
   Section IntEqTimeless.
@@ -448,82 +459,68 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
   Section Ownership.
 
-    (* Make sure equiv is not simplified too soon. Unfortunately, settings this globally breaks
-       other things. *)
-    Local Arguments equiv {_ _} _ _ /.
-    
     Local Obligation Tactic := idtac.
 
-    (** Ownership **)
-    (* TODO RJ: Seriously, defining these directly instead of in terms of a general ownership predicate
-       makes things much easier... *)
+    (** General Ownership - used to show that the other assertions make sense **)
     Program Definition own: Wld -n> Props :=
-      n[(fun w0 => m[(fun w => mkSPred (fun n => exists wr, w0 · wr = n = w) _ _)] )].
+      n[(fun w0 => m[(fun w => ∃ wr, (w0 · wr) === w )] )].
     Next Obligation.
-      move=>w0 w. exists w. exact:dist_bound.
+      intros. move=>wr0 wr1 EQwr. apply intEq_dist; last reflexivity.
+      apply cmra_op_dist; first reflexivity. assumption.
     Qed.
     Next Obligation.
-      intros w w' n m HLe [wr Hwr].
-      exists wr. eapply mono_dist; last eassumption. omega.
-    Qed.
-    Next Obligation.
-      intros w0 n w1 w2 EQw k HLt; unfold spred; split; move => [wr Hwr];
+      intros w0 n w1 w2 EQw k HLt.
+      destruct k; first reflexivity.
+      split; move => [wr Hwr];
         exists wr. 
-      - etransitivity; first eassumption. eapply mono_dist; last eassumption. omega.
-      - etransitivity; first eassumption. eapply mono_dist; last (symmetry; eassumption). omega.
+      - eapply spredNE, Hwr. simpl morph. eapply intEq_dist; first reflexivity.
+        eapply mono_dist, EQw. assumption.
+      - eapply spredNE, Hwr. simpl morph. eapply intEq_dist; first reflexivity.
+        symmetry. eapply mono_dist, EQw. assumption.
     Qed.
     Next Obligation.
-      intros w w1 w2 Hequ. intros k [wr Hwr]. 
-      destruct Hequ as [wr' Hequ].
-      exists (wr · wr').
-      rewrite assoc -Hequ.
-      rewrite (comm wr' w1).
-      apply: cmra_op_dist; last reflexivity. assumption.
+      intros w w1 w2 [wd Hequ] k. destruct k; first reflexivity.
+      case=>wr. move/sp_eq_iff=>Heq. exists (wd · wr).
+      apply sp_eq_iff. rewrite -Hequ. rewrite assoc (comm w) -assoc.
+      apply cmra_op_dist; first reflexivity. assumption.
     Qed.
     Next Obligation.
-      intros n w1 w2 Hw w k HLt.
-      split; move => [wr Hwr]; exists wr; rewrite -Hwr;
-      (apply cmra_op_dist; last reflexivity); [symmetry|];
-      (eapply mono_dist; last eassumption; omega).
-    Qed.
-    
-    Lemma own_sc (u v : Wld):
-      own (u · v) == own u * own v.
-    Proof.
-      move => w n; destruct n; first (split; intro; exact:bpred). split.
-      - move => [wr Hwr].
-        exists (u, v · wr); split; last split.
-        + split; now rewrite -Hwr -assoc.
-        + exists (1u). now rewrite ra_op_unit2.
-        + now exists wr. 
-      - move : w => [wu wr] [[w1 w2] [Hw] [[w1r Hw1r] [w2r Hw2r]]].
-        exists (w1r · w2r).
-        assert ((Mfst (w1, w2) · Msnd (w1, w2)) = S n = (wu, wr)) by assumption.
-        assert ((u · w1r) · (v · w2r) = S n = w1 · w2) by (apply: cmra_op_dist; assumption).
-        etransitivity; last eassumption.
-        transitivity (u · w1r · (v · w2r)); last (split).
-        + rewrite -!assoc. apply cmra_op_dist; first reflexivity.
-          rewrite (comm v) (comm v) assoc. reflexivity.
-        + by apply: (met_morph_nonexp Mfst). 
-        + by apply: (met_morph_nonexp Msnd).
+      move=>n w0 w1 Heq w m HLt. destruct m; first reflexivity.
+      split; case=>wd; move/sp_eq_iff=>Heqd; exists wd; apply sp_eq_iff; rewrite -Heqd;
+        (apply cmra_op_dist; last reflexivity); eapply mono_dist; first eassumption; eassumption || symmetry; eassumption.
     Qed.
     
     Program Definition inv i : Props -n> Props := 
-      n[(fun P =>  ∃ r, own (fdStrongUpdate i (Some (ra_ag_inj (ı' (halved P)))) fdEmpty, r) )].
+      n[(fun P => m[(fun w => ∃Pr, Invs w i === Some (Pr · (ra_ag_inj (ı' (halved P)))) )] )].
     Next Obligation.
-      move => i P n w1 w2 Hw.
-      apply met_morph_nonexp. split; first reflexivity.
-      exact Hw.
+      intros. move=>Pr1 Pr2 EQPr. apply intEq_dist; first reflexivity.
+      simpl. apply ra_ag_op_dist; last reflexivity. assumption.
+    Qed.
+    Next Obligation.
+      move=>i P n w1 w2 EQw. apply xist_dist=>Pr. simpl morph. apply intEq_dist; last reflexivity.
+      now rewrite EQw.
+    Qed.
+    Next Obligation.
+      move => i P w1 w2 [wd Hw] n. simpl morph. destruct n; first reflexivity.
+      move=>[Pr HPr]. simpl morph in HPr. destruct w1 as [I1 R1], w2 as [I2 R2], wd as [Id Rd].
+      destruct Hw as [EQI _]. simpl in *. simpl. clear R1 R2 Rd. specialize (EQI i).
+      simpl in EQI. destruct (Id i) as [Pd|].
+      - exists (Pd · Pr). change (I2 i = S n = (Some (Pd · Pr · ra_ag_inj (ı' (halved P))))).
+        etransitivity; first (eapply dist_refl; symmetry; exact:EQI).
+        destruct (I1 i) as [P1|]; last contradiction HPr.
+        unfold finprod_op. do 3 red. rewrite -assoc. apply cmra_op_dist; first reflexivity.
+        exact HPr.
+      - exists Pr. change (I2 i = S n = (Some (Pr · ra_ag_inj (ı' (halved P))))).
+        etransitivity; last eexact HPr. symmetry. apply dist_refl.
+        destruct (I1 i) as [P1|]; last contradiction HPr.
+        exact EQI.
     Qed.
     Next Obligation.
       move => i n P1 P2 EQP. destruct n; first exact: dist_bound.
-      apply xist_dist=>w. apply (met_morph_nonexp own). split; last reflexivity.
-      simpl. 
-      move=>j. destruct (beq_nat i j) eqn:EQ.
-      - apply beq_nat_true in EQ. subst j. erewrite !fdStrongUpdate_eq.
-        apply ra_ag_inj_dist. apply met_morph_nonexp. simpl. apply dist_mono. assumption.
-      - apply beq_nat_false in EQ. erewrite !fdStrongUpdate_neq; try (exact EQ); [].
-        reflexivity.
+      intros w. apply xist_dist=>Pr. simpl morph. apply intEq_dist; first reflexivity.
+      do 3 red. apply cmra_op_dist; first reflexivity.
+      apply ra_ag_inj_dist. apply met_morph_nonexp.
+      simpl. apply dist_mono. assumption.
     Qed.
 
     Lemma inv_box i P:
@@ -531,190 +528,157 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Proof.
       apply pord_antisym; last by apply:box_elim.
       intros [u r] n. destruct n; first (intro; exact:bpred).
-      intros [r' [[u'' r''] H]]. exists (1 r').
-      destruct (ra_unit_mono r' r'') as [r1 Heq]. exists (u'', r1).
-      etransitivity; last first.
-      { eapply cmra_unit_dist, H. }
-      rewrite /ra_unit /ra_unit_prod /ra_op /ra_op_prod /fst /snd. split; rewrite /fst /snd.
-      - apply dist_refl. rewrite finmap_invs_unit. reflexivity.
-      - rewrite Heq. reflexivity.
+      case=>Pr. move/sp_eq_iff=>Heq. exists Pr. apply sp_eq_iff.
+      rewrite -Heq. unfold ra_unit, ra_unit_prod, Invs, fst. now rewrite finmap_invs_unit.
     Qed.
 
-    (* TODO RJ: complete if useful...
-    Lemma inv_iff i P w n:
-      cmra_valid w (S n) ->
-      (inv i P w n <-> Mfst w i = S n = Some (ra_ag_inj (ı' (halved P)))).
-    Proof.
-      intro Hval. split.
-      - move=>[r' [w' Hinv]]. destruct w as [I r]. destruct w' as [I' r''].
-        destruct Hval as [Hval _]. destruct Hinv as [Hinv _]. rewrite ra_op_prod_fst /fst in Hinv.
-        specialize (Hval i). specialize (Hinv i). simpl morph. move:Hinv.
-        rewrite /ra_op /ra_op_finprod fdComposeRed fdStrongUpdate_eq /finprod_op.
-        destruct (I' i) as [v'|] eqn:EQI'; last first.
-        { move=>Heq. symmetry. assumption. }
-        destruct (I i) as [v|] eqn:EQI; last first.
-        { move=>[]. }
-        move=>Heq. symmetry. eapply ra_ag_inj_prod; first assumption.
-        instantiate (1:=v'). exact Heq.
-      - move=>EQ. destruct w as [I r]. simpl morph in EQ. exists r. exists (I, r).
-        unfold ra_op, ra_op_prod. split; unfold fst, snd; last first.
-        { apply dist_refl. apply ra_op_unit. }
-        move=>j. destruct (beq_nat i j) eqn:EQi.
-        + apply beq_nat_true in EQi. subst j. rewrite EQ=>{EQ}. apply invs_comp. erewrite !fdUpdate_eq.
-          reflexivity.
-        + apply beq_nat_false in EQi. destruct (I j) as [v|] eqn:Ij.
-          * apply dist_refl. apply fdComposeP'. right. right. split; last now rewrite Ij.
-            erewrite fdUpdate_neq by assumption. reflexivity.
-          * apply dist_refl. apply fdComposePN'. split; last now rewrite Ij.
-            erewrite fdUpdate_neq by assumption. reflexivity.
-    Qed.*)
-    
-    Program Definition ownR : res -n> Props :=
-      n[(fun r => ∃ u, own (u, r) )].
+    Program Definition inv_own i P: Props :=
+      ∃ r, own (fdStrongUpdate i (Some (ra_ag_inj (ı' (halved P)))) fdEmpty, r).
     Next Obligation.
-      move => r n u1 u2 EQu.
-      apply met_morph_nonexp. split; last reflexivity.
-      exact EQu.
+      intros. move=>r1 r2 EQr. apply (met_morph_nonexp own). split; first reflexivity.
+      exact EQr.
     Qed.
-    Next Obligation.
-      move => n r1 r2 EQr w k HLt. destruct k; first (split; intro; exact:bpred).
-      split; move => [u Hown].
-      - have EQw : (u, r1) = n = (u, r2) by now apply prod_proper_n. 
-        change ((own (u, r1) w (S k))) in Hown.
-        exists u.
-        change ((own (u, r2) w (S k))).
-        eapply (met_morph_nonexp own); last eassumption.
-        + symmetry. destruct EQw.
-          split; eassumption.
-        + omega.
-      - have EQw : (u, r1) = n = (u, r2) by now apply prod_proper_n. 
-        change ((own (u, r2) w (S k))) in Hown.
-        exists u.
-        change ((own (u, r1) w (S k))).
-        eapply (met_morph_nonexp own); last eassumption.
-        + destruct EQw.
-          split; eassumption. 
-        + omega.
+
+    Lemma inv_iff i P:
+      inv i P == inv_own i P.
+    Proof.
+      move=>w n. destruct n; first reflexivity. split.
+      - case=>Pr. move/sp_eq_iff=>Heq. exists (1 (snd w)). exists w. apply sp_eq_iff.
+        destruct w as [I R]. unfold ra_op, ra_op_prod. split; last first.
+        { rewrite /snd ra_op_unit. reflexivity. }
+        simpl. move=>j. rewrite /ra_op /ra_op_finprod fdComposeRed.
+        destruct (dec_eq i j).
+        + subst j. rewrite fdStrongUpdate_eq. unfold Invs, fst in Heq.
+          destruct (I i) as [Ii|]; last contradiction Heq.
+          rewrite /finprod_op. do 3 red. do 3 red in Heq.
+          rewrite Heq=>{Heq}. apply dist_refl. rewrite assoc (comm _ Pr) -assoc.
+          rewrite ra_ag_dupl. reflexivity.
+        + erewrite fdStrongUpdate_neq by assumption. destruct (I j); reflexivity.
+      - case=>r. case=>wf. move/sp_eq_iff=>Heq. destruct w as [I R], wf as [If Rf].
+        destruct Heq as [HeqI _]. rewrite /ra_op /ra_op_prod /fst in HeqI. specialize (HeqI i).
+        rewrite /ra_op /ra_op_finprod fdComposeRed fdStrongUpdate_eq in HeqI.
+        destruct (If i) as [Ifi|].
+        + exists Ifi. apply sp_eq_iff. unfold Invs, fst. rewrite -HeqI /finprod_op.
+          rewrite comm. reflexivity.
+        + exists (1 (ra_ag_inj (ı' (halved P)))). apply sp_eq_iff. unfold Invs, fst.
+          rewrite -HeqI /finprod_op. rewrite ra_op_unit. reflexivity.
     Qed.
     
-    Lemma ownR_timeless {r} :
-      valid(timeless(ownR r)).
-    Proof. 
-      move => w n [u' r'] k HSub HLt [u1 [[ur rr] Hwr]].
-      exists (u').
-      exists ((u', 1 r · rr)). 
-      split.
-      - unfold ra_op, ra_op_prod.
-        rewrite /fst. rewrite -{1}(finmap_invs_unit u').
-        now rewrite ra_op_unit.
-      - unfold ra_op, ra_op_prod.
-        unfold snd.
-        rewrite assoc ra_op_unit2.
-        by destruct Hwr.
-    Qed.
-
-    Lemma ownR_sc r1 r2:
-      ownR (r1 · r2) == ownR r1 * ownR r2.
-    Proof.
-      intros [u r] n. destruct n; first (split; intro; exact:bpred). split.
-      - move => [u' H].
-        change ((own (u', r1 · r2)) (u, r) (S n)) in H.
-        have {H} : (own (u', r1) * own (u', r2)) (u, r) (S n).
-        { rewrite -own_sc. rewrite /ra_op /ra_op_prod.
-          eapply spredNE, H. f_equiv.
-          apply (met_morph_nonexp own). split; last reflexivity.
-          symmetry. apply dist_refl.
-          rewrite /fst. rewrite -{1}(finmap_invs_unit u').
-          now rewrite ra_op_unit. }
-        move => [w [Hw [H1 H2]]].
-        exists w; split; first assumption.
-        split; exists u'; assumption.
-      - move => [w [Hw [[u1 H1] [u2 H2]]]].
-        have {H1 H2} : own ((u1, r1) · (u2, r2)) (u, r) (S n). 
-        { rewrite own_sc. exists w; split; first assumption.
-          split; assumption. }
-        move => H. exists (u1 · u2). exact H.
-    Qed.
-
     (** Proper physical state: ownership of the machine state **)
     Program Definition ownS : state -n> Props :=
-      n[(fun σ => ∃ l, ownR (ex_own σ, l))].
+      n[(fun σ => m[(fun w => sp_const (ex_own σ ⊑ State w) )] )].
     Next Obligation.
-      intros σ n r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
-      apply met_morph_nonexp. split; first reflexivity.
-      rewrite EQr. reflexivity.
+      intros σ n w1 w2 EQw; destruct n as [| n]; [exact:dist_bound |].
+      move=>m HLt. destruct m; first reflexivity. simpl.
+      destruct w1 as [I1 [σ1 g1]], w2 as [I2 [σ2 g2]], EQw as [_ [EQσ _]]. simpl in EQσ.
+      unfold State. simpl. rewrite EQσ. reflexivity.
     Qed.
     Next Obligation.
-      intros n r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
-      rewrite EQr. reflexivity.
+      move=>σ [I1 [σ1 g1]] [I2 [σ2 g2]] [[I3 [σ3 g3]] /= [_ [EQσ _]]] n.
+      simpl. destruct n; first reflexivity. simpl=>Hle. rewrite <-EQσ, Hle.
+      exists σ3. reflexivity.
+    Qed.
+    Next Obligation.
+      move=>n σ1 σ2 EQσ w. simpl morph. destruct n; first exact:dist_bound.
+      hnf in EQσ. subst. reflexivity.
     Qed.
     
-    Lemma xist_timeless {T:Type} `{cmetric T} (P : T -n> Props) :
-      (forall t, valid(timeless(P t))) -> valid (timeless (xist P)).
+    Lemma ownS_timeless {σ} : valid(timeless(ownS σ)).
     Proof.
-      intros.
-      move => w n w' k HSub HLt [t /H0 Ht].
-      exists t. apply: Ht; [| |eassumption|eassumption].
+      unfold ownS. move=>w n w' k Hwle Hle. simpl. tauto.
     Qed.
 
-    Lemma ownS_timeless {σ} : valid(timeless(ownS σ)).
-    Proof. apply: (xist_timeless (T := RL.res)). intros. apply ownR_timeless. Qed.
+    Program Definition own_state σ: Props :=
+      ∃ I, ∃ g, own (I, (ex_own σ, g)).
+    Next Obligation.
+      intros. move=>g1 g2 EQg. cbv beta. apply met_morph_nonexp.
+      split; first reflexivity. split; first reflexivity.
+      simpl. assumption.
+    Qed.
+    Next Obligation.
+      intros. move=>I1 I2 EQI. cbv beta. apply xist_dist=>r.
+      rewrite {1 3}/met_morph /mkNMorph {1 4}/morph.
+      apply met_morph_nonexp.
+      split; last reflexivity. simpl. assumption.
+    Qed.
 
-    Lemma ownS_state {σ w n} (Hv : ↓w) :
-      (ownS σ) w (S n) -> fst (snd w) == ex_own σ.
+    Lemma ownS_iff σ:
+      ownS σ == own_state σ.
     Proof.
-      move: Hv; move: w => [w r] [_ Hv] [l [u Hlu]]. 
-      change (own (u , (ex_own σ, l)) (w, r) (S n)) in Hlu.
-      destruct Hlu as [[ur rr] [Hur Hrr]].
-      unfold snd at 2 in Hrr.
-      rewrite <- Hrr in Hv.
-      simpl in Hv.
-      destruct rr as [[] lr], Hv as [Hv _] => //.
-      by rewrite -Hrr /=.
+      move=>w n. destruct n; first reflexivity. split; simpl.
+      - move=>[Sr Heq]. destruct w as [I [S g]]. exists (1 I) (1 g) (I, (Sr, g)).
+        simpl. split; last split.
+        + apply dist_refl. rewrite ra_op_unit. reflexivity.
+        + rewrite comm. exact Heq.
+        + apply dist_refl. rewrite ra_op_unit. reflexivity.
+      - move=>[Id [rd [w' Heq]]]. destruct w as [I [S g]], w' as [I' [S' g']].
+        simpl in *. exists S'. destruct Heq as [_ [Heq _]]. rewrite comm. exact Heq.
     Qed.
 
     (** Proper ghost state: ownership of logical **)
     Program Definition ownL : RL.res -n> Props :=
-      n[(fun r : RL.res => ∃ σ, ownR (σ, r))].
+      n[(fun g => m[(fun w => sp_const (g ⊑ Res w) )] )].
     Next Obligation.
-      intros r n σ1 σ2 EQr. destruct n as [| n]; [apply dist_bound |eapply dist_refl].
-      intros w m. eapply (met_morph_nonexp ownR (n := S m)); last omega. 
-      split; [rewrite EQr|]; reflexivity.
+      intros r n w1 w2 EQw; destruct n as [| n]; [exact:dist_bound |].
+      move=>m HLt. destruct m; first reflexivity. simpl.
+      destruct w1 as [I1 [σ1 g1]], w2 as [I2 [σ2 g2]], EQw as [_ [_ EQg]]. simpl in EQg. simpl.
+      rewrite EQg. reflexivity.
     Qed.
     Next Obligation.
-      intros n r1 r2 EQr; destruct n as [| n]; [apply dist_bound |].
-      move => w m HLt.
-      destruct m; first (split; intro; exact:bpred).
-      split; move => [σ [u [[ur [pr lr]] [Hwr1 Hwr2]]]].
-      - exists σ u (ur, (pr, lr)). hnf. 
-        rewrite -Hwr1 -Hwr2.
-        split; rewrite /ra_op /ra_op_prod /fst /snd; [reflexivity|]. 
-        split; [reflexivity|]. rewrite /ra_op /res_op /=.
-        now rewrite EQr.
-      - exists σ u (ur, (pr, lr)). hnf. 
-        rewrite -Hwr1 -Hwr2.
-        split; rewrite /ra_op /ra_op_prod /fst /snd; [reflexivity|]. 
-        split; [reflexivity|]. rewrite /ra_op /res_op /=.
-        now rewrite EQr.
+      move=>r [I1 [σ1 g1]] [I2 [σ2 g2]] [[I3 [σ3 g3]] /= [_ [_ EQg]]] n.
+      simpl. destruct n; first reflexivity. simpl=>Hle. rewrite <-EQg, Hle.
+      exists g3. reflexivity.
+    Qed.
+    Next Obligation.
+      move=>n g1 g2 EQg w. simpl morph. destruct n; first exact:dist_bound.
+      move=>m Hle. simpl. destruct m; first reflexivity. simpl.
+      rewrite EQg. reflexivity.
     Qed.
     
-    Lemma ownL_timeless {r : RL.res} : valid(timeless(ownL r)).
-    Proof. apply: (xist_timeless (T := (ex state))). intros. apply ownR_timeless. Qed.
+    Lemma ownL_timeless {g} : valid(timeless(ownL g)).
+    Proof.
+      unfold ownL. move=>w n w' k Hwle Hle. simpl. tauto.
+    Qed.
 
-    (** Ghost state ownership **)
+    Program Definition own_ghost g: Props :=
+      ∃ I, ∃ S, own (I, (S, g)).
+    Next Obligation.
+      intros. move=>g1 g2 EQr. cbv beta. apply met_morph_nonexp.
+      split; first reflexivity. split; last reflexivity.
+      simpl. assumption.
+    Qed.
+    Next Obligation.
+      intros. move=>I1 I2 EQI. cbv beta. apply xist_dist=>S.
+      rewrite {1 3}/met_morph /mkNMorph {1 4}/morph.
+      apply met_morph_nonexp.
+      split; last reflexivity. simpl. assumption.
+    Qed.
+
+    Lemma ownL_iff g:
+      ownL g == own_ghost g.
+    Proof.
+      move=>w n. destruct n; first reflexivity. split; simpl.
+      - move=>[gr Heq]. destruct w as [I [S r]]. exists (1 I) (1 S) (I, (S, gr)).
+        simpl. split; last split.
+        + apply dist_refl. rewrite ra_op_unit. reflexivity.
+        + apply dist_refl. rewrite ra_op_unit. reflexivity.
+        + rewrite comm. exact Heq.
+      - move=>[Id [rd [w' Heq]]]. destruct w as [I [S g0]], w' as [I' [S' g']].
+        simpl in *. exists g'. destruct Heq as [_ [_ Heq]]. rewrite comm. exact Heq.
+    Qed.
+
     Lemma ownL_sc (g1 g2 : RL.res) :
       ownL (g1 · g2) == ownL g1 * ownL g2.
     Proof.
-      intros [u r] n. destruct n; first (split; intro; exact:bpred). split.
-      - move => [s H]. 
-        have {H} : (ownR (s, g1) * ownR (ex_unit, g2)) (u,r) (S n) by (rewrite -ownR_sc; destruct s). 
-        move => [w [Hw [H1 H2]]].
-        exists w; split; first assumption; last split; by [exists s|exists (1s) ].
-      - move => [w [Hw [[s1 H1] [s2 H2]]]].
-        have {H1 H2} : ownR ((s1, g1) · (s2, g2)) (u, r) (S n).
-        { rewrite ownR_sc. exists w; split; first assumption.
-          split; assumption. }
-        move => H. by exists (s1 · s2). 
+      intros [I [S g]] n. destruct n; first (split; intro; exact:bpred). split.
+      - simpl. move => [gd Heq]. exists ((I, (S, gd · g1)), (1 I, (1 S, g2))). simpl. split_conjs.
+        + rewrite ra_op_unit2. reflexivity.
+        + rewrite ra_op_unit2. reflexivity.
+        + rewrite -assoc. apply dist_refl. assumption.
+        + exists gd. reflexivity.
+        + reflexivity.
+      - simpl. move=>[[[I1 [S1 g'1]] [I2 [S2 g'2]]] /= [[_ [_ Heq]] [Hg1 Hg2]]].
+        rewrite ->Hg1, Hg2. apply pordR. exact Heq.
     Qed.
 
   End Ownership.

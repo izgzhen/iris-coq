@@ -17,7 +17,7 @@ Module CBUlt <: MCat.
 
   Instance Cat : BaseCat M.
   Proof.
-    split; intros; intros n; simpl; reflexivity || exact I.
+    split; intros; intros n; simpl; reflexivity || exact I. exact tt.
   Qed.
 
   Section Limits.
@@ -70,20 +70,11 @@ Section Halving_Fun.
     fun m1 m2 m3 m4 => lift2m (lift2s (fun (ars: (m2 -t> m1) * (m3 -t> m4)) (ob: halveCM (F m1 m3)) => halvedT (fmorph (F := F) (BiFMap := FA) ars (unhalvedT ob))) _ _) _ _.
   Next Obligation.
     repeat intro. unfold halvedT, unhalvedT, HF in *. simpl.
-    unhalveT. simpl. rewrite H. reflexivity.
+    unhalveT. destruct n; first exact I. simpl in *. rewrite H. reflexivity.
   Qed.
   Next Obligation.
-    intros p1 p2 EQp x; simpl; rewrite EQp; reflexivity.
-  Qed.
-  Next Obligation.
-    intros e1 e2 EQ; simpl. unfold halvedT, unhalvedT, HF in *. unhalveT.
-    destruct n as [|n]; first by exact I.
-    simpl in *. rewrite EQ; reflexivity.
-  Qed.
-  Next Obligation.
-    intros p1 p2 EQ e; simpl. unfold halvedT, unhalvedT, HF in *. unhalveT.
-    destruct n as [|n]; first by exact I. simpl.
-    apply dist_mono. rewrite EQ. reflexivity.
+    intros p1 p2 EQp x; (destruct n; first exact I). simpl.
+    unfold unhalvedT, HF in *. unhalveT. simpl. apply dist_mono. rewrite EQp. reflexivity. 
   Qed.
 
   Instance halveF : BiFunctor HF.

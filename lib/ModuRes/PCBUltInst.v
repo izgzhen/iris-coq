@@ -19,7 +19,7 @@ Module PCBUlt <: MCat.
 
   Instance Cat : BaseCat M.
   Proof.
-    split; intros; intros n; simpl; reflexivity || exact I.
+    split; intros; intros n; simpl; reflexivity || exact I. exact tt.
   Qed.
 
   Section Limits.

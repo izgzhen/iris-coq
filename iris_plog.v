@@ -428,7 +428,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
     Next Obligation.
       intros e1 e2 EQe φ w. destruct n as [| n]; first exact:dist_bound.
-      simpl in EQe; subst e2; reflexivity.
+      simpl in EQe; hnf in EQe; subst e2; reflexivity.
     Qed.
 
     Instance contr_wpF safe m : contractive (wpF safe m).
@@ -462,8 +462,6 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       unfold wp; apply fixp_eq.
     Qed.
 
-    Global Opaque wp.
-
   End WeakestPre.
 
   Section DerivedForms.
@@ -485,11 +483,13 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       move=> P0 P1 HEQP e0 e1 HEQe Q0 Q1 HEQQ.
       (* TODO these rewrites are *slow* *)
       unfold ht. apply morph_resp. apply impl_equiv; first assumption.
-      rewrite HEQe HEQQ.
-      reflexivity.
+      apply equiv_morph; last assumption.
+      hnf in HEQe. subst e1. reflexivity.
     Qed.
 
   End DerivedForms.
+
+  Global Opaque wp.
 
 End IRIS_PLOG.
 
