@@ -847,7 +847,7 @@ Section RA.
       move:(ra_unit_mono s s0)=>[t'' Heq] /=. assumption.
     - simpl. rewrite /fdMap_pre /ra_unit /= /fdMap_pre.
       destruct (t k); last reflexivity.
-      apply ra_unit_idem.
+      apply option_eq_Some, ra_unit_idem.
     - split; rewrite /ra_valid /=; move =>Hval i; specialize (H i); specialize (Hval i); destruct (x i), (y i); try (contradiction || tauto); [|].
       + simpl in H. rewrite -H. assumption.
       + simpl in H. rewrite H. assumption.

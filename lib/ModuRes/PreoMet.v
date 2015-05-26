@@ -473,6 +473,9 @@ Section SubPCM.
 
   Program Definition p1sNE :=
     n[(fun x : {a : T | P a} => proj1_sig x)].
+  Next Obligation.
+    move=>[t1 P1] [t2 P2] /=. tauto.
+  Qed.
 
   Global Instance pcmType_sub : pcmType {a : T | P a}.
   Proof.

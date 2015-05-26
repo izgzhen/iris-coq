@@ -25,6 +25,7 @@ Proof.
 Qed.
 
 Notation "'mkType' R" := (@Build_Setoid _ R _) (at level 10).
+Arguments equiv {_ _} !_ !_ /.
 
 Class Associative {T} `{eqT : Setoid T} (op : T -> T -> T) :=
   assoc : forall t1 t2 t3, op t1 (op t2 t3) == op (op t1 t2) t3.
@@ -229,10 +230,6 @@ Section Exponentials.
 
   Program Definition muncurry (f : T -=> U -=> V) : T * U -=> V :=
     s[(fun p => f (fst p) (snd p))].
-  Next Obligation.
-    add_morphism_tactic; intros [t1 u1] [t2 u2] [Ht Hu]; simpl in *.
-    rewrite ->Ht, Hu; reflexivity.
-  Qed.
 
   (** Currying map, i.e. the exponential transpose. *)
   Program Definition mcurry (f : T * U -=> V) : T -=> U -=> V :=
@@ -244,10 +241,6 @@ Section Exponentials.
   (** Evaluation map. *)
   Program Definition meval : (T -=> U) * T -=> U :=
     s[(fun p => fst p (snd p))].
-  Next Obligation.
-    add_morphism_tactic; intros [f1 t1] [f2 t2] [Hf Ht]; simpl in *.
-    rewrite ->Hf, Ht; reflexivity.
-  Qed.
 
 End Exponentials.
 
@@ -344,7 +337,7 @@ Section Subsetoid.
   Lemma mforget_mono (f g : U -=> {t : T | P t}) :
     mincl << f == mincl << g -> f == g.
   Proof.
-    intros HEq x; simpl; rewrite ->(HEq x); reflexivity.
+    intros HEq x; simpl. specialize (HEq x). simpl in HEq. exact HEq.
   Qed.
 
 End Subsetoid.
@@ -374,6 +367,12 @@ Section Option.
   Qed.
 
   Global Instance option_type : Setoid (option T) := mkType opt_eq.
+
+  Lemma option_eq_Some x y:
+    Some x == Some y <-> x == y.
+  Proof.
+    reflexivity.
+  Qed.
 
 End Option.
 

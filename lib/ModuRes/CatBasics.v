@@ -46,6 +46,9 @@ Section IndexedProductsSetoid.
   (** Tupling into the indexed products. *)
   Program Definition mprodI (f : forall i, T -=> P i) : T -=> (forall i, P i) :=
     s[(fun t i => f i t)].
+  Next Obligation.
+    move=>f1 f2 EQf. simpl. apply EQf.
+  Qed.
 
   Lemma mprod_projI (f : forall i, T -=> P i) i : mprojI i << mprodI f == f i.
   Proof. intros X; reflexivity. Qed.
@@ -106,6 +109,9 @@ Section MetricIndexed.
 
   Program Definition MprojI (i : I) : (forall i, P i) -n> P i :=
     n[(mprojI i)].
+  Next Obligation.
+    move=>f1 f2 EQf. simpl. apply EQf.
+  Qed.
 
   Context {T: Type} `{mT : metric T}.
   Program Definition MprodI (f : forall i, T -n> P i) : T -n> forall i, P i :=

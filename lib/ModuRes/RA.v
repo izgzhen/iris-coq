@@ -208,7 +208,7 @@ Section Pairs.
       split; rewrite ?EQs ?EQt; reflexivity.
     - move => [s1 t1] [s2 t2] /=. 
       destruct (ra_unit_mono s1 s2) as [s3 Hs], (ra_unit_mono t1 t2) as [t3 Ht].
-      exists (s3,t3). rewrite Hs Ht. split; reflexivity.
+      exists (s3,t3). simpl. rewrite Hs Ht. split; reflexivity.
     - intros [s t]. unfold ra_unit, ra_unit_prod. rewrite !(ra_unit_idem).
       reflexivity.
     - intros [s1 t1] [s2 t2] [Heqs Heqt]. unfold ra_valid; simpl in *.

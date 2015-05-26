@@ -59,14 +59,15 @@ Section DecEnsembleOps.
     rewrite -EQs. rewrite -EQt. exact:Hle.
   Qed.
 
+  (* These dfinitions look weird, to get better control over how they simplify. *)
   Definition de_cap de1 de2 :=
-    DE (fun t => t ∈ de1 && t ∈ de2).
+    locked (DE (fun t => t ∈ de1 && t ∈ de2)).
   Definition de_cup de1 de2 :=
-    DE (fun t => t ∈ de1 || t ∈ de2).
+    locked (DE (fun t => t ∈ de1 || t ∈ de2)).
   Definition de_minus de1 de2 :=
-    DE (fun t => t ∈ de1 && negb (t ∈ de2)).
+    locked (DE (fun t => t ∈ de1 && negb (t ∈ de2))).
   Definition de_compl de :=
-    DE (fun t => negb (t ∈ de)).
+    locked (DE (fun t => negb (t ∈ de))).
 End DecEnsembleOps.
 
 Notation "de1 ∩ de2" := (de_cap de1 de2) (at level 40) : de_scope.
@@ -75,10 +76,10 @@ Notation "de1 \ de2"  := (de_minus de1 de2) (at level 35) : de_scope.
 Notation "de1 # de2" := (de1 ∩ de2 == de_emp) (at level 70) : de_scope.
 
 (* Some automation *)
-Ltac de_destr := repeat (match goal with [ x : DecEnsemble _ |- _ ] => destruct x as [x] end).
-Ltac de_in_destr := repeat (match goal with [ |- context[?t ∈ ?de] ] => destruct (t ∈ de) end).
-Ltac de_auto_destr := repeat progress (simpl; unfold const; de_in_destr).
-Ltac de_tauto := de_auto_destr; rewrite ?de_ft_eq ?de_tf_eq ?de_tt_eq ?de_ff_eq; repeat (split || intro); (reflexivity || discriminate || tauto).
+Ltac de_unfold := unfold de_cap, de_cup, de_minus, de_compl; unlock.
+Ltac de_in_destr := repeat progress (simpl; unfold const;
+                                    repeat (match goal with [ |- context[?t ∈ ?de] ] => destruct (t ∈ de) end)).
+Ltac de_tauto := de_unfold; de_in_destr; rewrite ?de_ft_eq ?de_tf_eq ?de_tt_eq ?de_ff_eq; repeat (split || intro); (reflexivity || discriminate || tauto).
 Ltac de_auto_eq := destruct_conjs;
       let t := fresh "t" in move=>t;
       repeat (match goal with

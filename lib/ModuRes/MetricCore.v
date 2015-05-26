@@ -33,6 +33,7 @@ Class metric (T : Type) {eqT : Setoid T} :=
     dist_bound   :  forall x y, dist 0 x y}.
 
 Notation "'mkMetr' D" := (Build_metric _ _ D _ _ _ _ _ _) (at level 10).
+Arguments dist {_ _ _} n !_ !_ /.
 
 (* And now it gets annoying that we are not fully unbundled... *)
 Global Instance metric_dist_equiv (T: Type) `{mT: metric T} n: Equivalence (dist n).
@@ -423,12 +424,12 @@ Section Halving.
   Next Obligation.
     destruct n; [now resp_set | repeat intro ];
       repeat (match goal with [ x : halve |- _ ] => destruct x end).
-    simpl. rewrite ->H, H0. reflexivity.
+    simpl. simpl in *. rewrite ->H, H0. reflexivity.
   Qed.
   Next Obligation.
     split; intros HEq.
     - repeat (match goal with [ x : halve |- _ ] => destruct x end).
-      apply dist_refl; intros n; apply (HEq (S n)).
+      simpl. apply dist_refl; intros n; apply (HEq (S n)).
     - intros [| n]; [exact I |]. simpl.
       repeat (match goal with [ x : halve |- _ ] => destruct x end).
       revert n; apply dist_refl, HEq.
@@ -485,7 +486,7 @@ Ltac unhalve := repeat match goal with
 (** Single element space and the distance on it. *)
 Program Instance unit_metric : metric unit :=
   mkMetr (fun _ _ _ => True).
-Next Obligation. tauto. Qed.
+Next Obligation. destruct x, y. simpl. tauto. Qed.
 
 (** The unit space is complete. *)
 Program Instance unit_cmetric : cmetric unit :=
@@ -788,6 +789,12 @@ Section OptM.
     destruct x, y; try exact I. exact:dist_bound.
   Qed.
 
+  Lemma option_dist_Some x y n:
+    Some x = n = Some y <-> x = n = y.
+  Proof.
+    reflexivity.
+  Qed.
+
 End OptM.
 
 (** Subspaces. *)
@@ -805,7 +812,7 @@ Section Submetric.
     rewrite ->EQxy, EQuv; reflexivity.
   Qed.
   Next Obligation.
-    apply dist_refl.
+    simpl. apply dist_refl.
   Qed.
   Next Obligation.
     intros [x Hx] [y Hy] [z Hz] Hxy Hyz; simpl in *; etransitivity; eassumption.
@@ -819,6 +826,9 @@ Section Submetric.
 
   Program Definition inclM : {e : T | P e} -n> T :=
     n[(mincl)].
+  Next Obligation.
+    move=>[t1 P1] [t2 P2]. simpl. tauto.
+  Qed.
 
   Context {U} `{mU : metric U}.
 
@@ -1048,4 +1058,3 @@ Section Lift.
 
 End Lift.
 
-Arguments dist {_ _ _} _ _ _ /.

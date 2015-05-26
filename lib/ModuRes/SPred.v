@@ -209,7 +209,7 @@ Section SPredBI.
   Global Instance and_sp_equiv : Proper (equiv ==> equiv ==> equiv) and_sp.
   Proof.
     intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
-    rewrite-> EQP, EQQ; tauto.
+    rewrite-> EQP, EQQ; split; tauto.
   Qed.
   Global Instance and_sp_dist n : Proper (dist n ==> dist n ==> dist n) and_sp.
   Proof.
@@ -225,7 +225,7 @@ Section SPredBI.
   Global Instance or_sp_equiv : Proper (equiv ==> equiv ==> equiv) or_sp.
   Proof.
     intros P1 P2 EQP Q1 Q2 EQQ n; simpl.
-    rewrite ->EQP, EQQ; tauto.
+    rewrite ->EQP, EQQ; hnf; tauto.
   Qed.
   Global Instance or_sp_dist n : Proper (dist n ==> dist n ==> dist n) or_sp.
   Proof.
@@ -424,5 +424,11 @@ Section SPredEq.
   Qed.
   Next Obligation.
     move=>?. simpl. tauto.
+  Qed.
+
+  Lemma sp_eq_iff U `{cmU: cmetric U} {u1 u2: U} n:
+    ((intEq u1 u2):SPred) n <-> u1 = n = u2.
+  Proof.
+    reflexivity.
   Qed.
 End SPredEq.

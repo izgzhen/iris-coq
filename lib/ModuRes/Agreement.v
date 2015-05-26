@@ -114,7 +114,7 @@ Section Agreement.
   Qed.
   Global Instance ra_agree_type : Setoid ra_agree := mkType ra_agree_eq.
 
-  Lemma ra_ag_dupl (x y: ra_agree):
+  Lemma ra_ag_dupl (x : ra_agree):
     x · x == x.
   Proof.
     ra_ag_destr. split.
@@ -149,7 +149,7 @@ Section Agreement.
     - ra_ag_destr. unfold ra_op, ra_ag_op. unfold ra_ag_compinj_ts in *. split.
       + split; intros (pv1 & pv2 & Heq); do 2 eexists; symmetry; eassumption.
       + intros n [pv1 [pv2 EQ]] [pv3 [pv4 EQ']]. unfold ra_ag_compinj_ts in *. ra_ag_pi.
-    - eapply ra_ag_dupl. assumption.
+    - eapply ra_ag_dupl.
     - ra_ag_destr; unfold ra_valid, ra_agree_valid in *; firstorder.
     - exists t'. reflexivity.
     - ra_ag_destr; unfold ra_valid, ra_agree_valid in *. split; first reflexivity.

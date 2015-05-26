@@ -362,7 +362,6 @@ Section STS.
 
   Local Open Scope de_scope.  
 
-
   Definition tokstep: relation (S * Toks) :=
     fun st1 st2 => match st1, st2 with
                    | (s1, t1), (s2, t2) => step s1 s2 /\ (tok s1) # t1 /\ (tok s2) # t2 /\
@@ -371,7 +370,9 @@ Section STS.
 
   Local Instance tokstep_equiv: Proper (equiv ==> equiv ==> equiv) tokstep.
   Proof.
-    move=>[s11 t11] [s12 t12] /= [EQs1 EQt1] [s21 t21] [s22 t22] /= [EQs2 EQt2]. subst.
+    move=>[s11 t11] [s12 t12] /= [EQs1 EQt1] [s21 t21] [s22 t22] [EQs2 EQt2]. unfold tokstep.
+    simpl in *.
+    hnf in EQs2. hnf in EQs1. subst.
     rewrite EQt1 EQt2. reflexivity.
   Qed.
 
@@ -384,7 +385,7 @@ Section STS.
   Proof.
     move=>Hdisj Hsteps. remember (s1, t1) as st1. remember (s2, t2) as st2.
     revert s1 t1 s2 t2 Hdisj Heqst1 Heqst2. induction Hsteps; intros; subst.
-    - destruct H as [EQs EQt]. simpl in *. subst s2. rewrite EQt -EQt. now split.
+    - destruct H as [EQs EQt]. simpl in *. hnf in EQs. subst s2. rewrite EQt -EQt. now split.
     - destruct ρ2 as [s3 t3]. destruct H as [_ [Htok1 [Htok2 Hpres]]].
       move:IHHsteps. move/(_ _ _ _ _ Htok2 eq_refl). move/(_ s2 t2 eq_refl)=>[Htok3 Hpres'].
       split; first assumption.
@@ -549,7 +550,6 @@ Section STS.
       split_conjs; now symmetry.
     - intros ? ? ?. sts_destr; simpl. intros [EQs1 [EQt1 EQv1]] [EQs2 [EQt2 EQv2]].
       split_conjs; try (etransitivity; eassumption).
-      move=>s. rewrite EQs1. now auto.
   Qed.
 
   Global Instance STS_Type: Setoid STSMon := mkType STS_eq.
