@@ -85,7 +85,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
   Instance Props_CBI : ComplBI Props | 0 := _.
   Instance Props_Eq : EqBI Props | 0 := _.
 
-  Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (r u v : res) (σ : state).
+  Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (r : res) (σ : state).
 
   Definition Invs (w: Wld) := fst w.
   Definition State (w: Wld) := fst (snd w).
@@ -131,6 +131,27 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
       
   End Views.
+
+  Section SimplProper.
+    
+    Lemma dist_props_simpl U (R : relation U) (f : U -> Props) n {RS : Symmetric R}
+          (HP : forall u1 u2 w m, m <= n -> R u1 u2 -> f u1 w m -> f u2 w m) :
+      Proper (R ==> dist n) f.
+    Proof.
+      intros u1 u2 HRu m; split; intros HF;
+      eapply HP; eassumption || symmetry; eassumption.
+    Qed.
+
+    Lemma dist_props_simpl2 U V (RU : relation U) (RV : relation V)
+          (f : U -> V -> Props) n {RS : Symmetric RU} {VS : Symmetric RV}
+          (HP : forall u1 u2 v1 v2 w m, m <= n -> RU u1 u2 -> RV v1 v2 -> f u1 v1 w m -> f u2 v2 w m) :
+      Proper (RU ==> RV ==> dist n) f.
+    Proof.
+      intros u1 u2 HRu v1 v2 HRv m; split; intros HF;
+      eapply HP; eassumption || symmetry; eassumption.
+    Qed.
+
+  End SimplProper.
 
   Section Resources.
 

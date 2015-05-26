@@ -142,17 +142,32 @@ Section Definitions.
         (HP : forall u1 u2 n, R u1 u2 -> f u1 n -> f u2 n) :
     Proper (R ==> equiv) f.
   Proof.
-    intros u1 u2 HRu; split; intros HF; (eapply HP; [| eassumption]);
-    [| symmetry]; assumption.
+    split; intros HF;
+    eapply HP; eassumption || symmetry; eassumption.
   Qed.
   Lemma dist_spred_simpl U (R : relation U) (f : U -> SPred) n {RS : Symmetric R}
         (HP : forall u1 u2 m (HLt : m <= n), R u1 u2 -> f u1 m -> f u2 m) :
     Proper (R ==> dist n) f.
   Proof.
-    intros u1 u2 HRu m; split; intros HF;
-    (eapply HP; [eassumption | | eassumption]); [| symmetry]; assumption.
+    split; intros HF;
+    eapply HP; eassumption || symmetry; eassumption.
   Qed.
 
+  Lemma equiv_spred_simpl2 U V (RU : relation U) (RV : relation V) (f : U -> V -> SPred) {US : Symmetric RU} {VS : Symmetric RV}
+        (HP : forall u1 u2 v1 v2 n, RU u1 u2 -> RV v1 v2 -> f u1 v1 n -> f u2 v2 n) :
+    Proper (RU ==> RV ==> equiv) f.
+  Proof.
+    split; intros HF;
+    eapply HP; eassumption || symmetry; eassumption.
+  Qed.
+  Lemma dist_spred_simpl2 U V (RU : relation U) (RV : relation V) (f : U -> V -> SPred) n {US : Symmetric RU} {VS : Symmetric RV}
+        (HP : forall u1 u2 v1 v2 m (HLt : m <= n), RU u1 u2 -> RV v1 v2 -> f u1 v1 m -> f u2 v2 m) :
+    Proper (RU ==> RV ==> dist n) f.
+  Proof.
+    split; intros HF;
+    eapply HP; eassumption || symmetry; eassumption.
+  Qed.
+  
 End Definitions.
 
 Arguments dpred {s} {n m} _ _.
