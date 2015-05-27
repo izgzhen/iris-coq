@@ -156,6 +156,14 @@ Section DecEqEnsemble.
   Definition de_set de t b :=
     DE (fun t' => if dec_eq t t' then b else t' ∈ de).
 
+  Definition de_sing (t: T) := de_set de_emp t true.
+
+  Lemma de_sing_union de t:
+    de_sing t ∪ de == de_set de t true.
+  Proof.
+    move=>t'. rewrite /de_sing /de_set /=. de_unfold =>/=. destruct (dec_eq t t'); de_tauto.
+  Qed.
+
   Lemma de_set_eq de t b:
     t ∈ de_set de t b = b.
   Proof.

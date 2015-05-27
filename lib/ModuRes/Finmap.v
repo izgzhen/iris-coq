@@ -157,7 +157,32 @@ Section FinDom.
   End Props.
 
   Section Instances.
-    Context {V} `{cV : pcmType V}.
+    Context {V: Type}.
+
+    Definition equal_fd (f1 f2 : K -f> V):Prop :=
+      (forall k, f1 k = f2 k) /\ dom f1 = dom f2.
+
+    Global Instance equal_fd_e: Equivalence equal_fd.
+    Proof.
+      split.
+      - intros m. split; intros; reflexivity.
+      - intros m1 m2 [Hf Hdom]. split; intros; symmetry; now auto.
+      - intros m1 m2 m3 [Hf12 Hdom12] [Hf23 Hdom23]. split; intros; etransitivity; now eauto.
+    Qed.
+
+    Global Instance equal_fd_lookup:
+      Proper (equal_fd ==> eq ==> eq) (finmap (eqK:=eqK)).
+    Proof.
+      move=>f1 f2 EQf k1 k2 EQk. subst k1. apply EQf.
+    Qed.
+
+    Global Instance equal_fd_dom:
+      Proper (equal_fd ==> eq) (dom (eqK:=eqK)).
+    Proof.
+      move=>f1 f2 EQf. apply EQf.
+    Qed.
+
+    Context `{cV : pcmType V}.
 
     Definition equiv_fd (f1 f2 : K -f> V) := forall k, f1 k == f2 k.
 
@@ -316,7 +341,7 @@ Section FinDom.
       match v with
       | Some _ => k::(dom f)
       | None => match (dom f) with [] => []
-                          | k'::dom' => if dec_eq k k' then dom' else filter_dupes [k] (findom f) end
+                          | k'::dom' => if dec_eq k k' then dom' else filter_dupes [k] (dom f) end
       end.
     Program Definition fdStrongUpdate k v (f : K -f> V) : K -f> V :=
       mkFD (fun k' => if dec_eq k k' then v else f k')
@@ -337,14 +362,13 @@ Section FinDom.
         destruct (dec_eq k k'') as [EQ'|NEQ'].
         + subst k''. destruct Hin as [?|?]; first contradiction. assumption.
         + unfold dom in Hdom. rewrite -Hdom in Hin.
-          apply filter_dupes_isin in Hin. apply filter_dupes_in.
+          rewrite Hdom in Hin. apply filter_dupes_in.
           * move=>[EQk|[]]. contradiction.
-          * tauto.
+          * assumption.
       - apply fdLookup_in_strong. destruct (dom f) as [|k'' dom'] eqn:Hdom; first assumption.
         destruct (dec_eq k k'') as [EQ'|NEQ'].
         + subst k''. right. assumption.
-        + rewrite -Hdom /dom. apply filter_dupes_in; first tauto.
-          apply filter_dupes_isin in Hin. tauto.
+        + apply filter_dupes_isin in Hin. tauto.
     Qed.
       
     Lemma fdStrongUpdate_eq k v f : fdStrongUpdate k v f k = v.
@@ -368,6 +392,14 @@ Section FinDom.
     Proof.
       move=>Hineq i. simpl. destruct (dec_eq k1 i) as [EQ1|NEQ1], (dec_eq k2 i) as [EQ2|NEQ2]; try reflexivity; [].
       subst. exfalso. now apply Hineq.
+    Qed.
+
+    Global Instance fdStrongUpdate_equal k v:
+      Proper (equal_fd ==> equal_fd) (fdStrongUpdate k v).
+    Proof.
+      move=>f1 f2 [Hf Hdom]. split.
+      - move=>k'. simpl. rewrite Hf. reflexivity.
+      - rewrite /fdStrongUpdate /dom /= /fdStrongUpdate_dom. rewrite Hdom. reflexivity.
     Qed.
 
   End Update.
@@ -516,7 +548,7 @@ Section FinDom.
 
     Section Recursion.
       Context (T: (K -f> V) -> Type)
-              (Text: forall (f1 f2: K -f> V), (forall k, f1 k = f2 k) -> dom f1 = dom f2 -> T f1 -> T f2)
+              (Text: forall (f1 f2: K -f> V), equal_fd f1 f2 -> T f1 -> T f2)
               (Temp: T fdEmpty).
       (* TODO: Why can't I use the sugar for finmaps?? *)
       Context (Tstep: forall (k:K) (v:V) (f: K -f> V), ~(k ∈ dom f) -> T f -> T (fdStrongUpdate k (Some v) f)).
@@ -525,26 +557,28 @@ Section FinDom.
       Proof.
         refine (fix F (l: list K) :=
                   match l as l return (forall f, dom f = l -> T f) with
-                  | [] => fun f Hdom => Text fdEmpty f _ _ Temp
+                  | [] => fun f Hdom => Text fdEmpty f _ Temp
                   | k::l => fun f Hdom => let f' := f \ k in
                                           let Hindom: k ∈ dom f := _ in
                                           let v' := fdLookup_indom f k Hindom in
-                                          Text (fdStrongUpdate k (Some v') f') f _ _
+                                          Text (fdStrongUpdate k (Some v') f') f _
                                                (Tstep k v' f' _ (F l f' _))
                   end); clear F.
-        - move=>k /=. symmetry. apply fdLookup_notin_strong. rewrite Hdom. tauto.
-        - rewrite Hdom. reflexivity.
+        - split.
+          + move=>k /=. symmetry. apply fdLookup_notin_strong. rewrite Hdom. tauto.
+          + rewrite Hdom. reflexivity.
         - rewrite Hdom. left. reflexivity.
-        - subst f'. move=>k'. destruct (dec_eq k k') as [EQ|NEQ].
-          + subst k'. rewrite fdStrongUpdate_eq. subst v'. symmetry. eapply fdLookup_indom_corr.
-            reflexivity.
-          + erewrite !fdStrongUpdate_neq by assumption. reflexivity.
-        - rewrite Hdom /f'. rewrite /dom /=. f_equal. rewrite /dom /= Hdom.
-          rewrite DecEq_refl.
-          assert (Hnod := dom_nodup f). rewrite Hdom in Hnod.
-          assert (Hfilt1: (filter_dupes [] l0) = l0).
-          { apply filter_dupes_id. simpl. inversion Hnod; subst. assumption. }
-          rewrite Hfilt1. apply filter_dupes_id. assumption.
+        - subst f'. split.
+          + move=>k'. destruct (dec_eq k k') as [EQ|NEQ].
+            * subst k'. rewrite fdStrongUpdate_eq. subst v'. symmetry. eapply fdLookup_indom_corr.
+              reflexivity.
+            * erewrite !fdStrongUpdate_neq by assumption. reflexivity.
+          + rewrite Hdom /dom /=. f_equal. rewrite /dom /= Hdom.
+            rewrite DecEq_refl.
+            assert (Hnod := dom_nodup f). rewrite Hdom in Hnod.
+            assert (Hfilt1: (filter_dupes [] l0) = l0).
+            { apply filter_dupes_id. simpl. inversion Hnod; subst. assumption. }
+            rewrite Hfilt1. apply filter_dupes_id. assumption.
         - subst f'. apply fdLookup_notin. rewrite fdStrongUpdate_eq. reflexivity.
         - subst f'. rewrite /dom /fdStrongUpdate /=.
           rewrite Hdom. destruct (dec_eq k k) as [_|NEQ]; last (exfalso; now apply NEQ).
@@ -576,7 +610,7 @@ Section FinDom.
       Context (Temp: T) (Tstep: K -> V -> T -> T).
       
       Definition fdFold: (K -f> V) -> T :=
-        fdRect (fun _ => T) (fun _ _ _ _ => id) (Temp)
+        fdRect (fun _ => T) (fun _ _ _ => id) (Temp)
                (fun k v _ _ => Tstep k v).
 
       Lemma fdFoldEmpty: fdFold fdEmpty = Temp.
@@ -586,12 +620,12 @@ Section FinDom.
 
       Lemma fdRectInner_eqLF l1 f1 l2 f2 (Heq1: dom f1 = l1) (Heq2: dom f2 = l2):
         l1 = l2 -> (forall k, f1 k = f2 k) ->
-        fdRectInner (fun _ => T) (fun _ _ _ _ => id) (Temp) (fun k v _ _ => Tstep k v) l1 f1 Heq1 =
-        fdRectInner (fun _ => T) (fun _ _ _ _ => id) (Temp) (fun k v _ _ => Tstep k v) l2 f2 Heq2.
+        fdRectInner (fun _ => T) (fun _ _ _ => id) (Temp) (fun k v _ _ => Tstep k v) l1 f1 Heq1 =
+        fdRectInner (fun _ => T) (fun _ _ _ => id) (Temp) (fun k v _ _ => Tstep k v) l2 f2 Heq2.
       Proof.
         move=>Heql. assert (Heq': dom f2 = l1).
         { now subst l2. }
-        transitivity (fdRectInner (fun _ => T) (fun _ _ _ _ => id) (Temp) (fun k v _ _ => Tstep k v) l1 f2 Heq'); last first.
+        transitivity (fdRectInner (fun _ => T) (fun _ _ _ => id) (Temp) (fun k v _ _ => Tstep k v) l1 f2 Heq'); last first.
         { rewrite (fdRectInner_eqL l1 l2). reflexivity. }
         subst l2. clear Heql. revert f1 f2 Heq1 Heq' H. induction l1; intros f1 f2 Heq1 Heq2 Heqf.
         - reflexivity.
@@ -610,14 +644,13 @@ Section FinDom.
           + erewrite !fdStrongUpdate_neq by assumption. now apply Heqf.
       Qed.
 
-      Lemma fdFoldExtF (f1 f2: K -f> V):
-        (forall k, f1 k = f2 k) -> dom f1 = dom f2 ->
-        fdFold f1 = fdFold f2.
+      Global Instance fdFoldExtF:
+        Proper (equal_fd ==> eq) fdFold.
       Proof.
-        move=>Heq Hdom. rewrite /fdFold /fdRect. eapply fdRectInner_eqLF; assumption.
+        move=>f1 f2 [Heq Hdom]. rewrite /fdFold /fdRect. eapply fdRectInner_eqLF; assumption.
       Qed.
 
-      Lemma fdFoldUpdate f k v:
+      Lemma fdFoldAdd f k v:
         ~k ∈ (dom f) ->
         fdFold (fdStrongUpdate k (Some v) f) = Tstep k v (fdFold f).
       Proof.
@@ -635,6 +668,26 @@ Section FinDom.
           + erewrite !fdStrongUpdate_neq by assumption. reflexivity.
       Qed.
 
+      Lemma fdFoldRedundantRemove f k:
+        ~k ∈ (dom f) ->
+        fdFold (fdStrongUpdate k None f) = fdFold f.
+      Proof.
+        move=>Hindom. eapply fdFoldExtF. split.
+        - move=>k'. simpl. apply fdLookup_notin_strong in Hindom.
+          destruct (dec_eq k k').
+          + subst. now rewrite Hindom.
+          + reflexivity.
+        - rewrite /fdStrongUpdate /dom /= /dom. rewrite /dom in Hindom.
+          destruct (filter_dupes [] (findom f)) as [|k' dom'] eqn:Hdom'.
+          + reflexivity.
+          + destruct (dec_eq k k') as [EQ|NEQ].
+            * subst k'. exfalso. apply Hindom. now left.
+            * erewrite filter_dupes_id by apply filter_dupes_nodup.
+              erewrite filter_dupes_id; first reflexivity. simpl.
+              constructor; first assumption.
+              rewrite -Hdom'. apply filter_dupes_nodup.
+      Qed.
+
       (* Alternative, more direct formulation of fold. *)
       Definition fdFold'Inner fLookup k: T -> T :=
         fun t => match fLookup k with
@@ -644,20 +697,25 @@ Section FinDom.
       Definition fdFold' (f: K -f> V): T :=
         fold_right (fdFold'Inner f) Temp (dom f).
 
+      Global Instance fdFold'ExtF:
+        Proper (equal_fd ==> eq) fdFold'.
+      Proof.
+        move=>f1 f2 [Heq Hdom]. rewrite /fdFold' /fdFold'Inner. apply fold_ext_restr.
+          + assumption.
+          + reflexivity.
+          + move=>k t _. rewrite Heq. reflexivity.
+      Qed.
+
+
       (* They are equivalent. *)
       Lemma fdFoldBehavior f:
         fdFold f = fdFold' f.
       Proof.
         revert f. elim/fdRect.
-        - move=>f1 f2 EQf EQdom EQfd. transitivity (fdFold f1).
-          { symmetry. apply fdFoldExtF; assumption. }
-          rewrite EQfd {EQfd}.
-          rewrite /fdFold' /fdFold'Inner. apply fold_ext_restr.
-          + assumption.
-          + reflexivity.
-          + move=>k t _. rewrite EQf. reflexivity.
+        - move=>f1 f2 EQf EQfold. erewrite <-fdFoldExtF by eexact EQf.
+          rewrite EQfold. rewrite EQf. reflexivity.
         - reflexivity.
-        - move=>k v f Hnin Heq. erewrite fdFoldUpdate by assumption.
+        - move=>k v f Hnin Heq. erewrite fdFoldAdd by assumption.
           rewrite /fdFold' /= /fdFold'Inner.
           destruct (dec_eq k k) as [_|NEQ]; last (exfalso; now apply NEQ). f_equal. rewrite Heq.
           rewrite /fdFold' /fdFold'Inner. apply fold_ext_restr.
@@ -865,7 +923,7 @@ Section RA.
       - move=>Heq. exists s1. assumption.
       - move=>Heq. rewrite Heq. reflexivity. }
     move:g f. apply: fdRect.
-    - move=>f1 f2 Heqf Hdom Hleeq f Hle.
+    - move=>f1 f2 [Heqf _] Hleeq f Hle.
       destruct (Hleeq f).
       + move=>k. rewrite (Heqf k). now apply Hle.
       + exists x. move=>k. rewrite -Heqf. apply H.

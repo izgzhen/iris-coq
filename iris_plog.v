@@ -23,139 +23,106 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
   Section WorldSatisfaction.
 
     (* First, we need to compose the resources of a finite map. *)
-    Definition comp_finmap w0 m : (nat -f> Wld) -> Wld :=
-      fdFold w0 (fun k w' wt => if k ∈ m then wt · w' else wt).
+    Definition comp_finmap w0 : (nat -f> Wld) -> Wld :=
+      fdFold w0 (fun k w' wt => wt · w').
 
-    Global Instance comp_finmap_nexp n: Proper (dist n ==> equiv ==> dist n ==> dist n) comp_finmap.
+    Global Instance comp_finmap_nexp n: Proper (dist n ==> dist n ==> dist n) comp_finmap.
     Proof.
-      move=>w01 w02 EQw0 m1 m2 EQm s1 s2 EQs. rewrite /comp_finmap.
+      move=>w01 w02 EQw0 s1 s2 EQs. rewrite /comp_finmap.
       etransitivity.
       - eapply fdFoldExtP_dist; last eexact EQs.
-        + move=>k1 k2 w1 w2 w. unfold compose. rewrite (EQm k1) (EQm k2)=>{EQm m1}.
-          destruct (k2 ∈ m2), (k1 ∈ m2); try reflexivity; rewrite -assoc (comm w2) assoc; reflexivity.
-        + move=>k k' EQk w1 w2 EQw wt1 wt2 EQwt. subst k'. destruct (k ∈ m1).
-          * apply cmra_op_dist; assumption.
-          * assumption.
+        + move=>k1 k2 w1 w2 w. unfold compose.
+          rewrite -assoc (comm w2) assoc; reflexivity.
+        + move=>k k' EQk w1 w2 EQw wt1 wt2 EQwt.
+          apply cmra_op_dist; assumption.
       - eapply fdFoldExtT.
-        + move=>k k' EQk w1 w2 EQw wt1 wt2 EQwt. subst k' w2. destruct (k ∈ m1).
-          * apply cmra_op_dist; reflexivity || assumption.
-          * assumption.
-        + move=>k v t. apply dist_refl. rewrite (EQm k). reflexivity.
+        + move=>k k' EQk w1 w2 EQw wt1 wt2 EQwt. subst k' w2.
+          apply cmra_op_dist; reflexivity || assumption.
+        + move=>k v t. reflexivity.
         + assumption.
     Qed.
 
-    Lemma comp_finmap_chmask w0 m (f: nat -f> Wld) i b:
-      ~List.In i (dom f) ->
-      comp_finmap w0 m f = comp_finmap w0 (de_set m i b) f.
+    Global Instance comp_finmap_ext: Proper (equiv ==> equiv ==> equiv) comp_finmap.
     Proof.
-      move=>Hnin. rewrite /comp_finmap !fdFoldBehavior /fdFold'.
-      eapply fold_ext_restr; try reflexivity; [].
-      move=>k' w Hdom.
-      rewrite /fdFold'Inner. destruct (f k'); last reflexivity.
-      destruct (dec_eq i k') as [EQ|NEQ].
-      { subst k'. contradiction. }
-      erewrite de_set_neq by assumption. reflexivity.
-    Qed.
-
-    Global Instance comp_finmap_ext: Proper (equiv ==> equiv ==> equiv ==> equiv) comp_finmap.
-    Proof.
-      move=>w01 w02 EQw0 m1 m2 EQm s1 s2 EQs. apply dist_refl=>n.
+      move=>w01 w02 EQw0 s1 s2 EQs. apply dist_refl=>n.
       apply comp_finmap_nexp; assumption || apply dist_refl; assumption.
     Qed.
 
-    Lemma comp_finmap_remove w0 m (s: nat -f> Wld) i w:
-      i ∈ m = true -> s i == Some w ->
-      comp_finmap w0 m s == comp_finmap w0 (de_set m i false) s · w.
+    Lemma comp_finmap_remove w0 (s: nat -f> Wld) i w:
+      s i == Some w ->
+      comp_finmap w0 s == comp_finmap w0 (fdStrongUpdate i None s) · w.
     Proof.
-      revert s i w. rewrite /comp_finmap. apply:fdRect.
-      - move=>s1 s2 EQw EQd IH i w Hindom Hw.
-        etransitivity; last (etransitivity; first eapply IH).
-        + rewrite /comp_finmap. apply equivR.
-          symmetry. apply fdFoldExtF; assumption.
-        + eexact Hindom.
-        + rewrite EQw. eassumption.
-        + rewrite /comp_finmap. apply equivR. f_equal.
-          apply fdFoldExtF; assumption.
-      - move=>? ? _ [].
-      - move=>k v f Hnew IH i w Hindom Hw.
-        rewrite /comp_finmap. erewrite !fdFoldUpdate by assumption.
-        destruct (dec_eq i k) as [EQ|NEQ].
-        { subst i. rewrite Hindom. rewrite de_set_eq.
-          rewrite fdStrongUpdate_eq in Hw.
-          change (v == w) in Hw. rewrite Hw. clear v Hw.
-          apply ra_op_proper; last reflexivity.
-          apply equivR. exact:comp_finmap_chmask. }
-        erewrite de_set_neq by assumption.
-        destruct (k ∈ m) eqn:EQm.
-        + rewrite -assoc (comm v) assoc. apply ra_op_proper; last reflexivity.
-          eapply IH; first assumption.
-          erewrite <-Hw. rewrite fdStrongUpdate_neq; first reflexivity.
-          move=>EQ. subst k. now apply NEQ.
-        + eapply IH; first assumption.
-          erewrite <-Hw. rewrite fdStrongUpdate_neq; first reflexivity.
-          move=>EQ. subst k. now apply NEQ.
+      revert s i w. apply:fdRect.
+      - move=>s1 s2 EQs IH i w Hindom.
+        etransitivity; last (etransitivity; first eapply IH); first apply equivR; last apply equivR.
+        + rewrite EQs. reflexivity.
+        + destruct EQs as [EQw _]. rewrite (EQw i). eassumption.
+        + f_equal. rewrite EQs. reflexivity.
+      - move=>? ? [].
+      - move=>k v f Hnew IH i w Hindom. destruct (dec_eq i k) as [EQ|NEQ].
+        + subst i. clear IH. rewrite fdStrongUpdateShadow /comp_finmap.
+          erewrite fdFoldAdd by assumption. rewrite fdStrongUpdate_eq in Hindom.
+          simpl in Hindom. apply ra_op_proper; last assumption.
+          symmetry. apply equivR. eapply fdFoldRedundantRemove. assumption.
+        + erewrite fdStrongUpdateCommute by assumption.
+          erewrite fdStrongUpdate_neq in Hindom by (now apply not_eq_sym). specialize (IH _ _ Hindom).
+          rewrite /comp_finmap fdFoldAdd; last assumption. rewrite fdFoldAdd; last first.
+          { apply fdLookup_notin. erewrite fdStrongUpdate_neq by assumption.
+            apply fdLookup_notin. assumption. }
+          rewrite -assoc (comm v) assoc. apply ra_op_proper; last reflexivity.
+          rewrite /comp_finmap in IH. apply IH.
     Qed.
 
-    Lemma comp_finmap_move w0 w1 f m:
-      comp_finmap (w0 · w1) m f == comp_finmap w0 m f · w1.
+    Lemma comp_finmap_move w0 w1 f:
+      comp_finmap (w0 · w1) f == comp_finmap w0 f · w1.
     Proof.
       rewrite /comp_finmap. revert f. apply:fdRect.
-      - move=>f1 f2 EQk EQdom IH.
+      - move=>f1 f2 EQf IH.
         etransitivity; last (etransitivity; first eapply IH).
-        + apply equivR. symmetry. apply fdFoldExtF; assumption.
-        + apply ra_op_proper; last reflexivity.
-          apply equivR. apply fdFoldExtF; assumption.
+        + now rewrite EQf.
+        + apply ra_op_proper; last reflexivity. now rewrite EQf.
       - rewrite !fdFoldEmpty. reflexivity.
-      - move=>k v f Hnew IH. erewrite !fdFoldUpdate by assumption.
-        destruct (k ∈ m).
-        + rewrite -assoc (comm v) assoc. apply ra_op_proper; last reflexivity.
-          eapply IH.
-        + eapply IH.
+      - move=>k v f Hnew IH. erewrite !fdFoldAdd by assumption.
+        rewrite -assoc (comm v) assoc. apply ra_op_proper; last reflexivity.
+        eapply IH.
     Qed.
 
-    Lemma comp_finmap_add w0 s m i w:
-      (i ∈ m <> true \/ s i == None) ->
-      comp_finmap w0 m s · w == comp_finmap w0 (de_set m i true) (fdStrongUpdate i (Some w) s).
+    Lemma comp_finmap_add w0 s i w:
+      s i == None ->
+      comp_finmap w0 s · w == comp_finmap w0 (fdStrongUpdate i (Some w) s).
     Proof.
       revert s. apply:fdRect.
-      - move=>f1 f2 EQk EQdom IH Hnew. rewrite /comp_finmap. 
-        etransitivity; last (etransitivity; first eapply IH).
-        + apply ra_op_proper; last reflexivity.
-          apply equivR. symmetry. apply fdFoldExtF; assumption.
-        + destruct Hnew; first (left; assumption). right.
-          rewrite EQk. assumption.
-        + apply equivR. apply fdFoldExtF.
-          * move=>k. simpl. rewrite EQk. reflexivity.
-          * rewrite /fdStrongUpdate /= /dom /=. rewrite /dom in EQdom.
-            rewrite EQdom. reflexivity.
-      - move=>Hnew. rewrite /comp_finmap fdFoldEmpty fdFoldUpdate.
-        + rewrite de_set_eq !fdFoldEmpty. reflexivity.
+      - move=>f1 f2 EQf IH Hnew. rewrite -{2}EQf. rewrite -IH=>{IH}; last first.
+        { rewrite EQf. assumption. }
+        f_equiv. rewrite /comp_finmap. rewrite EQf. reflexivity.
+      - move=>Hnew. rewrite /comp_finmap fdFoldEmpty fdFoldAdd.
+        + rewrite !fdFoldEmpty. reflexivity.
         + move=>[].
       - move=>k v f Hnew IH Hfresh. destruct (dec_eq i k) as [EQ|NEQ].
-        + subst k. rewrite fdStrongUpdateShadow /comp_finmap. erewrite fdFoldUpdate by assumption.
-          destruct (i ∈ m) eqn:EQim.
-          { exfalso. destruct Hfresh as [Hineq|Hl]; first now apply Hineq.
-            rewrite fdStrongUpdate_eq in Hl. exact Hl. }
-          clear Hfresh. erewrite fdFoldUpdate by assumption. rewrite de_set_eq.
-          apply ra_op_proper; last reflexivity.
-          apply equivR. exact:comp_finmap_chmask.
+        + subst k. clear IH. rewrite fdStrongUpdateShadow /comp_finmap. erewrite fdFoldAdd by assumption.
+          rewrite fdStrongUpdate_eq in Hfresh. destruct Hfresh.
         + erewrite fdStrongUpdateCommute by assumption.
           erewrite fdStrongUpdate_neq in Hfresh by (now apply not_eq_sym).
-          rewrite /comp_finmap fdFoldUpdate; last assumption. rewrite fdFoldUpdate; last first.
+          rewrite /comp_finmap fdFoldAdd; last assumption. rewrite fdFoldAdd; last first.
           { apply fdLookup_notin. erewrite fdStrongUpdate_neq by assumption.
             now apply fdLookup_notin. }
-          unfold comp_finmap in IH.
-          erewrite de_set_neq by assumption. destruct (k ∈ m).
-          * rewrite -assoc (comm v) assoc. apply ra_op_proper; last reflexivity.
-            apply IH. assumption.
-          * apply IH. assumption.
+          specialize (IH Hfresh). unfold comp_finmap in IH.
+          rewrite -assoc (comm v) assoc. apply ra_op_proper; last reflexivity.
+          apply IH.
+    Qed.
+
+    Lemma comp_finmap_le w0 s:
+      w0 ⊑ comp_finmap w0 s.
+    Proof.
+      exists (comp_finmap (1 w0) s).
+      rewrite -comp_finmap_move ra_op_unit. reflexivity.
     Qed.
 
     (* Go through some struggle to even write down world satisfaction... *)
     Local Open Scope finmap_scope.
     
-    Lemma world_inv_val {w m} {s : nat -f> Wld} {n}:
-      let wt := comp_finmap w m s in
+    Lemma world_inv_val {w} {s : nat -f> Wld} {n}:
+      let wt := comp_finmap w s in
       forall (pv: cmra_valid wt n) {i agP} (Heq: (Invs wt) i = Some agP), cmra_valid agP n.
     Proof.
       intros wt pv i agP Heq.
@@ -170,14 +137,15 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       match n with
       | O => True
       | S n' => exists s : nat -f> Wld,
-                  let wt := comp_finmap w m s in
+                  let wt := comp_finmap w s in
                   exists pv : (cmra_valid wt n),
                     (State wt ⊑ ex_own σ) /\
                     forall i agP (Heq: (Invs wt) i = Some agP),
-                      match s i with
-                      | Some w => let P := ra_ag_unInj agP n (HVal:=world_inv_val pv Heq) in
-                                  unhalved (ı P) w n'
-                      | None => False
+                      match (i ∈ m)%de, s i with
+                      | true , Some w => let P := ra_ag_unInj agP n (HVal:=world_inv_val pv Heq) in
+                                         unhalved (ı P) w n'
+                      | false, None   => True
+                      | _    , _      => False
                       end
       end.
 
@@ -190,8 +158,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       exists s. exists (dpred (m := S n2) HLe pv).
       split; [assumption|]. move => {Hσ} i agP Heq.
       move:(H i agP Heq)=>{H}.
-      destruct (s i) as [ws|]; last move=>[].
-      move=>/= H.
+      destruct (s i) as [ws|], (i ∈ m)%de; simpl; tauto || (try contradiction); []=>H.
       eapply spredNE; last first.
       - eapply dpred; last exact H. omega.
       - specialize (halve_eq (T:=Props) n2)=>Huneq. apply Huneq=>{Huneq H ws}.
@@ -204,17 +171,18 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       intros m1 m2 w1 w2 m Hlt EQm EQw. destruct m; first reflexivity.
       destruct n as [| n]; [now inversion Hlt |].
       intros [s [pv [HS HI]]]; exists s; intro wt.
-      assert (Hwt: comp_finmap w1 m1 s = S m = wt).
-      { subst wt. rewrite EQm EQw. reflexivity. }
+      assert (Hwt: comp_finmap w1 s = S m = wt).
+      { subst wt. rewrite EQw. reflexivity. }
       assert (pv': cmra_valid wt (S m)).
       { eapply spredNE, pv. apply cmra_valid_dist. assumption. }
       exists pv'. split.
       { rewrite <-HS. apply pordR. destruct Hwt as [_ [HwtS _]].
         symmetry. exact HwtS. }
       move=>i agP Heq.
-      edestruct (fdLookup_in_dist_strong (f2 := Invs (comp_finmap w1 m1 s)) (n:=m) Heq) as [agP' [Heq' HagPeq]].
+      edestruct (fdLookup_in_dist_strong (f2 := Invs (comp_finmap w1 s)) (n:=m) Heq) as [agP' [Heq' HagPeq]].
       { rewrite -Hwt. reflexivity. }
-      specialize (HI _ _ Heq'). destruct (s i); last exact HI.
+      specialize (HI _ _ Heq'). rewrite -EQm. destruct (i ∈ m1)%de; last exact HI.
+      destruct (s i); last exact HI.
       simpl. simpl in HI.
       eapply spredNE, HI.
       specialize (halve_eq (T:=Props) m)=>Huneq. apply Huneq=>{Huneq HS}.
@@ -232,10 +200,8 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       wsat σ m w k -> cmra_valid w k.
     Proof.
       destruct k; first (intro; exact:bpred).
-      move=> [s [pv _]]. eapply cmra_op_valid2.
-      eapply spredNE, pv.
-      rewrite -{1}(ra_op_unit (t:=w)) comp_finmap_move.
-      reflexivity.
+      move=> [s [pv _]]. eapply cmra_valid_ord, pv.
+      exact:comp_finmap_le.
     Qed.
 
 (*    Lemma wsat_state {σ m u w k} :
@@ -258,7 +224,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Local Obligation Tactic := intros.
 
     Program Definition preVS m1 m2 P w : SPred :=
-      mkSPred (fun n => forall (wf: Wld) k mf σ (HLe : k < n)
+      mkSPred (fun n => forall (wf: Wld) k mf σ (HLe : S k < n)
                                (HD : mf # m1 ∪ m2)
                                (HE : wsat σ (m1 ∪ mf) (w · wf) (S k)),
                    exists w', P w' (S k)
@@ -343,7 +309,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     Definition wpFP safe m (WP : expr -n> vPred -n> Props) e φ w n :=
-      forall wf k mf σ (HLt : k < n) (HD : mf # m)
+      forall wf k mf σ (HLt : S k < n) (HD : mf # m)
              (HE : wsat σ (m ∪ mf) (w · wf) (S k)),
         (forall (HV : is_value e),
          exists w', φ (exist _ e HV) w' (S k)

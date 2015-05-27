@@ -1,39 +1,71 @@
 Require Import Ssreflect.ssreflect Omega.
-Require Import world_prop core_lang masks iris_core iris_plog.
-Require Import ModuRes.RA ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
+Require Import world_prop core_lang iris_core iris_plog.
+Require Import ModuRes.RA ModuRes.DecEnsemble ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Module Type IRIS_VS_RULES (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE).
+Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE).
   Export PLOG.
 
   Local Open Scope ra_scope.
   Local Open Scope bi_scope.
   Local Open Scope iris_scope.
 
-  Implicit Types (P Q R : Props) (w : Wld) (n i k : nat) (m : mask) (r : res) (σ : state).
+  Implicit Types (P Q R : Props) (w : Wld) (n i k : nat) (m : DecEnsemble nat) (r : res) (σ : state) (g : RL.res).
 
   Section ViewShiftProps.
 
     Lemma pvsTimeless m P :
       timeless P ∧ ▹P ⊑ pvs m m P.
     Proof.
-      intros w n r [HTL Hp] w'; intros.
-      exists w' r; split; [reflexivity | split; [| assumption] ]; clear HE HD.
+      intros w n [HTL Hp] ?; intros.
+      exists w. split; last assumption.
       destruct n as [| n]; [exfalso;omega |]; simpl in Hp.
-      rewrite ->HSub in HTL.
-      eapply HTL, propsM, Hp; (assumption || reflexivity || omega).
+      destruct n as [| n]; first omega.
+      eapply propsMN, HTL, Hp.
+      - omega.
+      - reflexivity.
+      - omega.
     Qed.
 
     Lemma pvsOpen i P :
-      (inv i P) ⊑ pvs (mask_sing i) mask_emp (▹P).
+      (inv i P) ⊑ pvs (de_sing i) de_emp (▹P).
     Proof.
-      intros w n r HInv w'; intros.
-      change (match w i with Some x => x = S n = ı' (halved P) | None => False end) in HInv.
-      destruct (w i) as [μ |] eqn: HLu; [| contradiction].
-      apply ı in HInv; rewrite ->(isoR (halved P)) in HInv.
-      destruct HE as [rs [HE HM] ].
-      destruct (rs i) as [ri |] eqn: HLr.
+      intros w n HInv.
+      destruct n; first exact:bpred. intros ?; intros.
+      destruct HInv as [Pr HInv].
+      destruct HE as [rs [pv [HS HM]]].
+      assert (Hle:=comp_finmap_le (w · wf) (de_sing i ∪ mf)%de rs).
+      destruct w as [I [St g]], wf as [If [Stf gf]]. simpl in HInv.
+      destruct (I i) as [μ |] eqn: HLu; [| contradiction]. simpl in HInv.
+      edestruct finmap_invs_le as [μ' [Hμ Hlu]]; first eexact HLu.
+      { clear HM HS. rewrite /ra_op /= in Hle. apply ra_pord_iff_prod_pord in Hle.
+        destruct Hle as [Hle _]. simpl in Hle. apply ra_pord_iff_ext_pord.
+        etransitivity; last eexact Hle. exists If. now rewrite comm. }
+      move:(HM _ _ Hlu) => /= Hi.
+      destruct (rs i) as [wi |] eqn: HLr; last contradiction Hi.
+      exists ((I, (St, g)) · wi). split.
+      { destruct Hμ as [μ'' Hμ].
+        eapply propsMW; first (eexists; reflexivity). eapply spredNE, Hi.
+        erewrite Agreement.ra_ag_inj_unInj; last first.
+        - rewrite <-Hμ. instantiate (2:=μ'' · Pr). rewrite -assoc. apply CMRA.cmra_op_dist; first reflexivity.
+          symmetry. eapply mono_dist, HInv. omega.
+        - rewrite isoR. simpl. reflexivity. }
+      clear μ μ' Hle Hμ HLu HInv Hlu Hi.
+      exists rs.
+      assert (Heqwt: (comp_finmap ((I, (St, g)) · wi · (If, (Stf, gf)))
+                                  (de_emp ∪ mf)%de rs) ==
+                     (comp_finmap ((I, (St, g)) · (If, (Stf, gf))) (de_sing i ∪ mf)%de rs)).
+      { rewrite -assoc (comm wi) assoc comp_finmap_move.
+        rewrite (comm de_emp) de_emp_union de_sing_union.
+        symmetry. apply comp_finmap_remove.
+        - move:(HD i). clear. de_unfold. simpl. unfold const. rewrite Util.DecEq_refl.
+          destruct (i ∈ mf)%de; simpl; tauto || discriminate.
+        - now rewrite HLr. }
+      eexists. split.
+      - rewrite <-HS. apply pordR. destruct Heqwt as [_ [Heqwt _]]. assumption.
+      - 
+          
       - rewrite ->comp_map_remove with (i := i) (r := ri) in HE by now eapply equivR.
         rewrite ->assoc, <- (assoc r), (comm rf), assoc in HE.
         exists w' (r · ri).

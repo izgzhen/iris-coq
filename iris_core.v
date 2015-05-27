@@ -174,6 +174,14 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       move=>i. rewrite /= /fdMap_pre. destruct (I i); last reflexivity.
       reflexivity.
     Qed.
+
+    Lemma finmap_invs_le (I1 I2: nat -f> ra_agree PreProp) i (μ: ra_agree PreProp):
+      I1 i = Some μ -> I1 ⊑ I2 ->
+      exists μ', μ ⊑ μ' /\ I2 i = Some μ'.
+    Proof.
+      move=>Heq Hord. specialize (Hord i). rewrite Heq in Hord. destruct (I2 i) as [μ'|]; last contradiction.
+      exists μ'. split; last reflexivity. exact Hord.
+    Qed.
   End FinmapInvs.
 
   (** And now we're ready to build the IRIS-specific connectives! *)

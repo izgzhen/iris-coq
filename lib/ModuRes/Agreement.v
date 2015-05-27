@@ -445,14 +445,15 @@ Section Agreement.
   { exact HVal2. }
   Qed.
 
-  Lemma ra_ag_inj_unInj x n {HVal: cmra_valid x n} t:
-    ra_ag_inj t ⊑ x -> ra_ag_unInj x n (HVal:=HVal) = n = t.
+  Lemma ra_ag_inj_unInj x n {HVal: cmra_valid x n} t d:
+    d · ra_ag_inj t = n = x -> ra_ag_unInj x n (HVal:=HVal) = n = t.
   Proof.
-    rewrite ra_ag_pord. destruct x as [v ts tsx]=>Heq.
-    unfold ra_ag_inj in Heq. destruct Heq as [EQv EQts]. unfold ra_ag_unInj.
-    destruct n as [|n]; first exact: dist_bound. simpl. symmetry. eapply EQts.
-  Grab Existential Variables.
-  { rewrite EQv. apply HVal. }
+    rewrite comm.
+    destruct x as [v ts tsx], d as [v' ts' tsx'] =>Heq.
+    destruct n as [|n]; first exact: dist_bound. 
+    unfold ra_ag_inj in Heq. destruct Heq as [EQv EQts]. unfold ra_ag_compinj_ts in EQts. unfold ra_ag_unInj.
+    symmetry. eapply EQts; last reflexivity.
+    eapply spredNE, HVal. symmetry. exact EQv.
   Qed.
   
   (* Provide a way to get the full T out of the agreement again. We don't need this, but I proved it before
