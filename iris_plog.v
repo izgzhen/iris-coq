@@ -232,9 +232,9 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Program Definition preVS m1 m2 P w : SPred :=
       mkSPred (fun n => forall (wf: Wld) k mf σ (HLe : S k < n)
                                (HD : mf # m1 ∪ m2)
-                               (HE : wsat σ (m1 ∪ mf) (w · wf) (S k)),
-                   exists w', P w' (S k)
-                              /\ wsat σ (m2 ∪ mf) (w' · wf) (S k)) _ _.
+                               (HE : wsat σ (m1 ∪ mf) (w · wf) (S (S k))),
+                   exists w', P w' (S (S k))
+                              /\ wsat σ (m2 ∪ mf) (w' · wf) (S (S k))) _ _.
     Next Obligation.
       inversion HLe.
     Qed.
@@ -316,18 +316,18 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
     Definition wpFP safe m (WP : expr -n> vPred -n> Props) e φ w n :=
       forall wf k mf σ (HLt : S k < n) (HD : mf # m)
-             (HE : wsat σ (m ∪ mf) (w · wf) (S k)),
+             (HE : wsat σ (m ∪ mf) (w · wf) (S (S k))),
         (forall (HV : is_value e),
-         exists w', φ (exist _ e HV) w' (S k)
-                    /\ wsat σ (m ∪ mf) (w' · wf) (S k)) /\
+         exists w', φ (exist _ e HV) w' (S (S k))
+                    /\ wsat σ (m ∪ mf) (w' · wf) (S (S k))) /\
         (forall σ' ei ei' K (HDec : e = fill K ei)
                 (HStep : prim_step (ei, σ) (ei', σ')),
-            exists w', WP (fill K ei') φ w' k
-                       /\ wsat σ' (m ∪ mf) (w' · wf) k) /\
+            exists w', WP (fill K ei') φ w' (S k)
+                       /\ wsat σ' (m ∪ mf) (w' · wf) (S k)) /\
         (forall e' K (HDec : e = fill K (fork e')),
-            exists wfk wret, WP (fill K fork_ret) φ wret k
-                             /\ WP e' (umconst ⊤) wfk k
-                             /\ wsat σ (m ∪ mf) (wfk · wret · wf) k) /\
+            exists wfk wret, WP (fill K fork_ret) φ wret (S k)
+                             /\ WP e' (umconst ⊤) wfk (S k)
+                             /\ wsat σ (m ∪ mf) (wfk · wret · wf) (S k)) /\
         (forall HSafe : safe = true, safeExpr e σ).
 
     (* Define the function wp will be a fixed-point of *)

@@ -52,7 +52,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       assert (Heqwt:  comp_finmap (w · wf) rs == wt).
       { rewrite /wt -assoc (comm wi) assoc (comp_finmap_move wi).
         rewrite -comp_finmap_remove; last now rewrite HLr. reflexivity. }
-      assert (pv': (cmra_valid wt) (S k)).
+      assert (pv': (cmra_valid wt) (S (S k))).
       { eapply spredNE, pv. rewrite -Heqwt. reflexivity. }
       exists pv'. split.
       - rewrite /State -Heqwt. assumption.
@@ -81,7 +81,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       { exfalso. rewrite HLu in HInv. destruct HInv. }
       exists (1 w). split; first exact I.
       exists (fdStrongUpdate i (Some w) rs). intros wt.
-      assert (HeqP: (Invs (comp_finmap (w · wf) rs)) i = S k =
+      assert (HeqP: (Invs (comp_finmap (w · wf) rs)) i = S (S k) =
                     Some (ra_ag_inj (ı' (halved P)))).
       { eapply world_invs_extract; first assumption; last first.
         - etransitivity; first (eapply mono_dist, HInv; omega). reflexivity.
@@ -95,7 +95,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           move=>_. reflexivity. }
         rewrite -(comp_finmap_move w) -assoc (comm wf) assoc ra_op_unit.
         reflexivity. }
-      assert (pv': (cmra_valid wt) (S k)).
+      assert (pv': (cmra_valid wt) (S (S k))).
       { eapply spredNE, pv. rewrite -Heqwt. reflexivity. }
       exists pv'. split.
       - rewrite /State -Heqwt. assumption.
@@ -105,7 +105,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           eapply spredNE, dpred, HP; last omega.
           rewrite ->Heqwt, ->Hlu in HeqP. simpl in HeqP.
           etransitivity; last first.
-          * assert(Heq:=halve_eq (T:=Props) k). apply Heq=>{Heq}.
+          * assert(Heq:=halve_eq (T:=Props) (S k)). apply Heq=>{Heq}.
             eapply (met_morph_nonexp ı). eapply ra_ag_unInj_dist.
             symmetry. eexact HeqP.
           * simpl. rewrite isoR. reflexivity.
@@ -126,65 +126,66 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           exists wf. now rewrite comm. }
     Qed.
 
-    Lemma pvsTrans P m1 m2 m3 (HMS : m2 ⊆ m1 ∪ m3) :
+    Lemma pvsTrans P m1 m2 m3 (HMS : m2 ⊑ m1 ∪ m3) :
       pvs m1 m2 (pvs m2 m3 P) ⊑ pvs m1 m3 P.
     Proof.
-      intros w0 n r0 HP w1 rf mf σ k HSub Hnk HD HSat.
-      destruct (HP w1 rf mf σ _ HSub Hnk) as (w2 & r2 & HSub2 & HP2 & HSat2); [ | by auto | ].
-      { clear - HD HMS; intros j [Hmf Hm12]; apply (HD j); split; [assumption |].
-        destruct Hm12 as [Hm1 | Hm2]; [left; assumption | apply HMS, Hm2].
-      }
-      destruct (HP2 w2 rf mf σ k) as (w3 & r3 & HSub3 & HP3 & HSat3); 
-        [ reflexivity | omega | | auto | ].
-      { clear - HD HMS; intros j [Hmf Hm23]; apply (HD j); split; [assumption |].
-        destruct Hm23 as [Hm2 | Hm3]; [apply HMS, Hm2 | right; assumption].
-      }
-      exists w3 r3; split; [ by rewrite -> HSub2 | by split ].
+      intros w1 n HP wf; intros.
+      destruct (HP wf _ mf σ HLe) as (w2 & HP2 & HSat2); [ de_auto_eq | by auto | ].
+      destruct (HP2 wf k mf σ) as (w3 & HP3 & HSat3);
+        [ omega | de_auto_eq | auto | ].
+      exists w3; split; assumption.
     Qed.
     
     Lemma pvsEnt P m :
       P ⊑ pvs m m P.
     Proof.
-      intros w0 n r0 HP w1 rf mf σ k HSub Hnk HD HSat.
-      exists w1 r0; repeat split; [ reflexivity | eapply propsMWN; eauto | assumption ].
+      intros w0 n HP wf; intros.
+      exists w0. split; last assumption.
+      eapply propsMN, HP. omega.
     Qed.
 
     Lemma pvsImpl P Q m1 m2 :
       □ (P → Q) ∧ pvs m1 m2 P ⊑ pvs m1 m2 Q.
     Proof.
-      move => w0 n r0 [HPQ HvsP].
-      intros w1 rf mf σ k HSub1 Hlt HD HSat.
-      move/HvsP: HSat => [|||w2 [r2 [HSub2 [/HPQ HQ HSat]]]]; try eassumption; []. 
-      do 2!eexists; split; [exact HSub2|split; [|eassumption]].
-      eapply HQ; [by rewrite -> HSub1 | omega | exact unit_min].
+      move => w0 n [HPQ HvsP].
+      intros wf k mf σ Hlt HD HSat.
+      destruct (HvsP (1 w0 · wf ) _ mf σ Hlt) as (w1 & HP & HSat2); [de_auto_eq| |].
+      { rewrite assoc (comm w0) ra_op_unit. assumption. }
+      exists (w1 · 1 w0). split.
+      - eapply (applyImpl HPQ).
+        + exists w1. reflexivity.
+        + omega.
+        + eapply propsMW, HP. eexists. erewrite comm. reflexivity.
+      - now rewrite -assoc.
     Qed.
       
     Lemma pvsFrameMask P m1 m2 mf (HDisj : mf # m1 ∪ m2) :
       pvs m1 m2 P ⊑ pvs (m1 ∪ mf) (m2 ∪ mf) P.
     Proof.
-      move => w0 n r0 HvsP.
-      move => w1 rf mf1 σ k HSub1 Hlt HD HSat.
-      edestruct (HvsP w1 rf (mf ∪ mf1)) as (w2 & r2 & HSub2 & HP & HSat2); eauto.
-      - (* disjointness of masks: possible lemma *)
-        clear - HD HDisj; intros i [ [Hmf | Hmf] [Hm1|Hm2]]; by firstorder.
-      - eapply wsat_equiv; last eassumption; [|reflexivity|reflexivity].
-        unfold mcup in *; split; intros i; tauto.
-      - exists w2 r2; split; [eassumption|split; [assumption|]].
-        eapply wsat_equiv; last eassumption; [|reflexivity|reflexivity].
-        unfold mcup in *; split; intros i; tauto.
+      move => w0 n HvsP wf; intros.
+      edestruct (HvsP wf k (mf ∪ mf0)) as (w2 & HP & HSat2); eauto.
+      - de_auto_eq.
+      - rewrite assoc. eassumption.
+      - exists w2. split; first assumption.
+        rewrite -assoc. assumption.
     Qed.
 
     Lemma pvsFrameRes P Q m1 m2:
       (pvs m1 m2 P) * Q ⊑ pvs m1 m2 (P * Q).
     Proof.
-      move => w0 n r0 [rp [rq [HEr [HvsP HQ]]]].
-      move => w1 rf mf σ k HSub1 Hlt HD HSat.
-      edestruct (HvsP w1 (rq · rf) mf) as (w2 & r2 & HSub2 & HP & HSat2); eauto.
-      - rewrite assoc HEr. eassumption. 
-      - exists w2 (r2 · rq); split; [eassumption|split; [|]].
-        + do 2!eexists; split; [reflexivity | split; [assumption|]].
-          * eapply propsMWN; last eassumption; [by rewrite <- HSub2| omega].
-        + setoid_rewrite <- ra_op_assoc. assumption.
+      move => w0 n. destruct n; first (intro; exact:bpred).
+      intros [[wp wq] [HEr [HvsP HQ]]].
+      move => wf mf σ k Hlt HD HSat.
+      edestruct (HvsP (wq · wf) mf) as (w2 & HP & HSat2); eauto.
+      { simpl morph. eapply wsat_dist, HSat;[reflexivity| |reflexivity].
+        simpl in HEr. rewrite assoc. apply cmra_op_dist; last reflexivity.
+        eapply mono_dist, HEr. omega. }
+      exists (w2 · wq). split.
+      - exists (w2, wq). split; last split.
+        + simpl. reflexivity.
+        + assumption.
+        + apply propsMN, HQ. omega.
+      - now rewrite -assoc.
     Qed.
 
     (* RJ this should now be captured by the generic instance for discrete metrics.
