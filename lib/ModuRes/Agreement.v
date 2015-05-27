@@ -28,7 +28,7 @@ Section Agreement.
   Global Instance ra_agree_unit : RA_unit ra_agree := fun x => x.
   Global Program Instance cmra_agree_valid : CMRA_valid _ :=
     fun x => match x with
-             | ag_inj valid _ _ => valid
+             | ag_inj v _ _ => v
              end.
   Global Instance ra_agree_valid : RA_valid _ := compose valid_sp cmra_agree_valid.
 
@@ -445,7 +445,13 @@ Section Agreement.
   { exact HVal2. }
   Qed.
 
-  Lemma ra_ag_inj_unInj x n {HVal: cmra_valid x n} t d:
+  Lemma ra_ag_unInj_pi x n {HVal1: cmra_valid x n} {HVal2: cmra_valid x n}:
+    ra_ag_unInj x n (HVal:=HVal1) = ra_ag_unInj x n (HVal:=HVal2).
+  Proof.
+    ra_ag_destr. rewrite /ra_ag_unInj. pi.
+  Qed.
+
+  Lemma ra_ag_inj_unInj_ext x n {HVal: cmra_valid x n} t d:
     d · ra_ag_inj t = n = x -> ra_ag_unInj x n (HVal:=HVal) = n = t.
   Proof.
     rewrite comm.

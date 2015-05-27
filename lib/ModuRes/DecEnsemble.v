@@ -76,9 +76,13 @@ Notation "de1 \ de2"  := (de_minus de1 de2) (at level 35) : de_scope.
 Notation "de1 # de2" := (de1 ∩ de2 == de_emp) (at level 70) : de_scope.
 
 (* Some automation *)
-Ltac de_unfold := unfold de_cap, de_cup, de_minus, de_compl; unlock.
-Ltac de_in_destr := repeat progress (simpl; unfold const;
-                                    repeat (match goal with [ |- context[?t ∈ ?de] ] => destruct (t ∈ de) end)).
+Ltac de_unfold := unfold de_cap, de_cup, de_minus, de_compl; unlock; simpl.
+Ltac de_in_destr := repeat progress
+                           (simpl; unfold const;
+                            repeat (match goal with
+                                    | [ |- context[?t ∈ ?de] ] => destruct (t ∈ de)
+                                    | [ |- context[dec_eq ?i ?j] ] => destruct (dec_eq i j); first try subst j; try contradiction_eq
+                                    end)).
 Ltac de_tauto := de_unfold; de_in_destr; rewrite ?de_ft_eq ?de_tf_eq ?de_tt_eq ?de_ff_eq; repeat (split || intro); (reflexivity || discriminate || tauto).
 Ltac de_auto_eq := destruct_conjs;
       let t := fresh "t" in move=>t;
@@ -148,6 +152,54 @@ Section DecEnsembleProps.
   Global Instance de_compl_equiv: Proper (equiv ==> equiv) (@de_compl T).
   Proof. do 3 intro. de_auto_eq. Qed.
 
+  Lemma de_in_true de t: (* This looks stupid, but it is useful to get de_tauto started. *)
+    t ∈ de = true -> t ∈ de = true.
+  Proof.
+    tauto.
+  Qed.
+
+  Lemma de_in_false de t: (* This looks stupid, but it is useful to get de_tauto started. *)
+    t ∈ de = false -> t ∈ de = false.
+  Proof.
+    tauto.
+  Qed.
+
+  Lemma de_union_true de1 de2 t:
+    t ∈ de1 = true -> t ∈ (de1 ∪ de2) = true.
+  Proof.
+    intros. de_tauto.
+  Qed.
+
+  Lemma de_union_true2 de1 de2 t:
+    t ∈ de2 = true -> t ∈ (de1 ∪ de2) = true.
+  Proof.
+    intros. de_tauto.
+  Qed.
+
+  Lemma de_union_false de1 de2 t:
+    t ∈ de1 = false -> t ∈ de2 = false -> t ∈ (de1 ∪ de2) = false.
+  Proof.
+    intros. de_tauto.
+  Qed.
+  
+  Lemma de_isect_true de1 de2 t:
+    t ∈ de1 = true -> t ∈ de2 = true -> t ∈ (de1 ∩ de2) = true.
+  Proof.
+    intros. de_tauto.
+  Qed.
+
+  Lemma de_isect_false de1 de2 t:
+    t ∈ de1 = false -> t ∈ (de1 ∩ de2) = false.
+  Proof.
+    intros. de_tauto.
+  Qed.
+
+  Lemma de_isect_false2 de1 de2 t:
+    t ∈ de2 = false -> t ∈ (de1 ∩ de2) = false.
+  Proof.
+    intros. de_tauto.
+  Qed.
+
 End DecEnsembleProps.
 
 Section DecEqEnsemble.
@@ -161,21 +213,19 @@ Section DecEqEnsemble.
   Lemma de_sing_union de t:
     de_sing t ∪ de == de_set de t true.
   Proof.
-    move=>t'. rewrite /de_sing /de_set /=. de_unfold =>/=. destruct (dec_eq t t'); de_tauto.
+    de_auto_eq.
   Qed.
 
   Lemma de_set_eq de t b:
     t ∈ de_set de t b = b.
   Proof.
-    simpl. rewrite DecEq_refl. reflexivity.
+    de_tauto.
   Qed.
 
   Lemma de_set_neq de t b t':
     t <> t' -> t' ∈ de_set de t b = t' ∈ de.
   Proof.
-    move=>Hneq. simpl.
-    destruct (dec_eq t t') as [EQ|NEQ]; first contradiction.
-    reflexivity.
+    intros. de_tauto.
   Qed.
 
 End DecEqEnsemble.

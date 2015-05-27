@@ -56,6 +56,10 @@ Proof.
   move=>n1 n2. decide equality.
 Qed.
 
+Ltac contradiction_eq := match goal with
+                         | [ H : ?i <> ?i |- _ ] => exfalso; now apply H
+                         end.
+
 (* Well-founded induction. *)
 Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
 

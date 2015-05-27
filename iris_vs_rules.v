@@ -1,6 +1,6 @@
-Require Import Ssreflect.ssreflect Omega.
+Require Import Ssreflect.ssreflect Ssreflect.ssrfun Omega.
 Require Import world_prop core_lang iris_core iris_plog.
-Require Import ModuRes.RA ModuRes.DecEnsemble ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap.
+Require Import ModuRes.RA ModuRes.DecEnsemble ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.Agreement ModuRes.CMRA.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -10,6 +10,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
   Local Open Scope ra_scope.
   Local Open Scope bi_scope.
   Local Open Scope iris_scope.
+  Local Open Scope de_scope.
 
   Implicit Types (P Q R : Props) (w : Wld) (n i k : nat) (m : DecEnsemble nat) (r : res) (σ : state) (g : RL.res).
 
@@ -35,95 +36,94 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       destruct n; first exact:bpred. intros ?; intros.
       destruct HInv as [Pr HInv].
       destruct HE as [rs [pv [HS HM]]].
-      assert (Hle:=comp_finmap_le (w · wf) (de_sing i ∪ mf)%de rs).
-      destruct w as [I [St g]], wf as [If [Stf gf]]. simpl in HInv.
-      destruct (I i) as [μ |] eqn: HLu; [| contradiction]. simpl in HInv.
-      edestruct finmap_invs_le as [μ' [Hμ Hlu]]; first eexact HLu.
-      { clear HM HS. rewrite /ra_op /= in Hle. apply ra_pord_iff_prod_pord in Hle.
-        destruct Hle as [Hle _]. simpl in Hle. apply ra_pord_iff_ext_pord.
-        etransitivity; last eexact Hle. exists If. now rewrite comm. }
-      move:(HM _ _ Hlu) => /= Hi.
-      destruct (rs i) as [wi |] eqn: HLr; last contradiction Hi.
-      exists ((I, (St, g)) · wi). split.
-      { destruct Hμ as [μ'' Hμ].
-        eapply propsMW; first (eexists; reflexivity). eapply spredNE, Hi.
-        erewrite Agreement.ra_ag_inj_unInj; last first.
-        - rewrite <-Hμ. instantiate (2:=μ'' · Pr). rewrite -assoc. apply CMRA.cmra_op_dist; first reflexivity.
-          symmetry. eapply mono_dist, HInv. omega.
-        - rewrite isoR. simpl. reflexivity. }
-      clear μ μ' Hle Hμ HLu HInv Hlu Hi.
-      exists rs.
-      assert (Heqwt: (comp_finmap ((I, (St, g)) · wi · (If, (Stf, gf)))
-                                  (de_emp ∪ mf)%de rs) ==
-                     (comp_finmap ((I, (St, g)) · (If, (Stf, gf))) (de_sing i ∪ mf)%de rs)).
-      { rewrite -assoc (comm wi) assoc comp_finmap_move.
-        rewrite (comm de_emp) de_emp_union de_sing_union.
-        symmetry. apply comp_finmap_remove.
-        - move:(HD i). clear. de_unfold. simpl. unfold const. rewrite Util.DecEq_refl.
-          destruct (i ∈ mf)%de; simpl; tauto || discriminate.
-        - now rewrite HLr. }
-      eexists. split.
-      - rewrite <-HS. apply pordR. destruct Heqwt as [_ [Heqwt _]]. assumption.
-      - 
-          
-      - rewrite ->comp_map_remove with (i := i) (r := ri) in HE by now eapply equivR.
-        rewrite ->assoc, <- (assoc r), (comm rf), assoc in HE.
-        exists w' (r · ri).
-        split; [reflexivity |].
-        split.
-        + simpl. apply halve_eq in HInv. eapply HInv; [now auto with arith |].
-          eapply uni_pred, HM with i;
-            [| exists r | | | rewrite HLr]; try reflexivity.
-          * left; unfold mask_sing, mask_set.
-            destruct (Peano_dec.eq_nat_dec i i); tauto.
-          * specialize (HSub i); rewrite HLu in HSub.
-            symmetry; destruct (w' i); [assumption | contradiction].
-        + exists (fdRemove i rs); split; [assumption | intros j Hm].
-          destruct Hm as [| Hm]; [contradiction |]; specialize (HD j); simpl in HD.
-          unfold mask_sing, mask_set, mcup in HD; destruct (Peano_dec.eq_nat_dec i j);
-          [subst j; contradiction HD; tauto | clear HD].
-          rewrite fdLookup_in; setoid_rewrite (fdRemove_neq _ n0); rewrite <- fdLookup_in; unfold mcup in HM; now auto.
-      - rewrite <- fdLookup_notin_strong in HLr; contradiction HLr; clear HLr.
-        specialize (HSub i); rewrite HLu in HSub; clear - HM HSub.
-        destruct (HM i) as [HD _]; [left | rewrite ->HD, fdLookup_in_strong; destruct (w' i); [eexists; reflexivity | contradiction] ].
-        clear; unfold mask_sing, mask_set.
-        destruct (Peano_dec.eq_nat_dec i i); tauto.
+      case HLu:(Invs w i) => [μ |] ; simpl in HInv; last first.
+      { exfalso. rewrite HLu in HInv. destruct HInv. }
+      move:(HM i (ra_ag_inj (ı' (halved P)))). case/(_ _)/Wrap; last move=>Heq.
+      { clear -HLu HInv pv HLe. eapply world_invs_extract; first assumption; last first.
+        - eapply mono_dist, HInv. omega.
+        - etransitivity; last eapply comp_finmap_le. exists wf. now rewrite comm. }
+      rewrite /de_sing. erewrite de_in_true by de_tauto.
+      destruct (rs i) as [wi |] eqn: HLr; last by move=>[]. move=>HP.
+      exists (w · wi). split.
+      { simpl. eapply propsMW; first (eexists; reflexivity). eapply spredNE, HP.
+        simpl. rewrite isoR. reflexivity. }
+      clear HLu HInv HP.
+      exists (fdStrongUpdate i None rs). intros wt.
+      assert (Heqwt:  comp_finmap (w · wf) rs == wt).
+      { rewrite /wt -assoc (comm wi) assoc (comp_finmap_move wi).
+        rewrite -comp_finmap_remove; last now rewrite HLr. reflexivity. }
+      assert (pv': (cmra_valid wt) (S k)).
+      { eapply spredNE, pv. rewrite -Heqwt. reflexivity. }
+      exists pv'. split.
+      - rewrite /State -Heqwt. assumption.
+      - move=>j agP Hlu. rewrite (comm de_emp) de_emp_union. move:(HM j agP)=>{HM}.
+        case/(_ _)/Wrap; last move=>Heq'.
+        { rewrite /Invs Heqwt. exact Hlu. }
+        destruct (j ∈ mf) eqn:Hm.
+        + erewrite de_in_true by de_tauto.
+          destruct (dec_eq i j) as [EQ|NEQ].
+          { exfalso. subst j. move:(HD i) Hm. clear. de_tauto. }
+          erewrite fdStrongUpdate_neq by assumption. destruct (rs j); last tauto.
+          simpl=>H. erewrite ra_ag_unInj_pi. eassumption.
+        + destruct (dec_eq i j) as [EQ|NEQ].
+          { move=>_. subst j. rewrite fdStrongUpdate_eq. exact I. }
+          erewrite de_in_false by de_tauto.
+          erewrite fdStrongUpdate_neq by assumption. tauto.
     Qed.
 
     Lemma pvsClose i P :
-      (inv i P ∧ ▹P) ⊑ pvs mask_emp (mask_sing i) ⊤.
+      (inv i P ∧ ▹P) ⊑ pvs de_emp (de_sing i) ⊤.
     Proof.
-      intros w n r [HInv HP] w'; intros.
-      change (match w i with Some x => x = S n = ı' (halved P) | None => False end) in HInv.
-      destruct (w i) as [μ |] eqn: HLu; [| contradiction].
-      apply ı in HInv; rewrite ->(isoR (halved P)) in HInv.
-      apply halve_eq in HInv.
-      destruct HE as [rs [HE HM] ].
-      exists w' 1; split; [reflexivity | split; [exact I |] ].
-      rewrite ->(comm r), <-assoc in HE.
-      remember (match rs i with Some ri => ri | None => 1 end) as ri eqn: EQri.
-      pose (rri := (ri · r)).
-      exists (fdUpdate i rri rs); split; [| intros j Hm].
-      - simpl. erewrite ra_op_unit by apply _.
-        clear - HE EQri. destruct (rs i) as [rsi |] eqn: EQrsi.
-        + subst rsi. erewrite <-comp_map_insert_old; [ eassumption | eapply equivR; eassumption | reflexivity ].
-        + unfold rri. subst ri. simpl. erewrite <-comp_map_insert_new; [|now eapply equivR]. simpl.
-          erewrite ra_op_unit by apply _. assumption.
-      - specialize (HD j); unfold mask_sing, mask_set, mcup in *; simpl in Hm, HD.
-        destruct (Peano_dec.eq_nat_dec i j);
-          [subst j; clear Hm |
-           destruct Hm as [Hm | Hm]; [contradiction | rewrite ->fdLookup_in_strong, fdUpdate_neq, <- fdLookup_in_strong by assumption; now auto] ].
-        rewrite ->!fdLookup_in_strong, fdUpdate_eq.
-        destruct n as [| n]; [now inversion HLe | simpl in HP].
-        rewrite ->HSub in HP; specialize (HSub i); rewrite HLu in HSub.
-        destruct (w' i) as [π' |]; [| contradiction].
-        split; [intuition now eauto | intros].
-        simpl in HLw, HSub. change (rri == ri0) in HLrs. rewrite <- HLw, <- HSub.
-        apply HInv; [now auto with arith |].
-        eapply uni_pred, HP; [now auto with arith |].
-        rewrite <-HLrs. clear dependent ri0.
-        exists (ri).
-        subst rri. reflexivity.
+      intros w n [HInv HP] wf; intros. destruct n; first by inversion HLe.
+      destruct HInv as [Pr HInv].
+      destruct HE as [rs [pv [HS HM]]].
+      case HLu:(Invs w i) => [μ |] ; simpl in HInv; last first.
+      { exfalso. rewrite HLu in HInv. destruct HInv. }
+      exists (1 w). split; first exact I.
+      exists (fdStrongUpdate i (Some w) rs). intros wt.
+      assert (HeqP: (Invs (comp_finmap (w · wf) rs)) i = S k =
+                    Some (ra_ag_inj (ı' (halved P)))).
+      { eapply world_invs_extract; first assumption; last first.
+        - etransitivity; first (eapply mono_dist, HInv; omega). reflexivity.
+        - rewrite <-comp_finmap_le. exists wf. now rewrite comm. }
+      assert (Heqwt: comp_finmap (w · wf) rs == wt).
+      { rewrite /wt. erewrite <-comp_finmap_add; last first.
+        { move:(HM i (ra_ag_inj (ı' (halved P))) HeqP).
+          erewrite de_in_false; last first.
+          { move:(HD i). clear. de_tauto. }
+          destruct (rs i); first move=> [].
+          move=>_. reflexivity. }
+        rewrite -(comp_finmap_move w) -assoc (comm wf) assoc ra_op_unit.
+        reflexivity. }
+      assert (pv': (cmra_valid wt) (S k)).
+      { eapply spredNE, pv. rewrite -Heqwt. reflexivity. }
+      exists pv'. split.
+      - rewrite /State -Heqwt. assumption.
+      - move=>j agP Hlu. destruct (dec_eq i j) as [EQ|NEQ].
+        + subst j. erewrite de_in_true by de_tauto.
+          rewrite fdStrongUpdate_eq. clear HS HM. simpl in *.
+          eapply spredNE, dpred, HP; last omega.
+          rewrite ->Heqwt, ->Hlu in HeqP. simpl in HeqP.
+          etransitivity; last first.
+          * assert(Heq:=halve_eq (T:=Props) k). apply Heq=>{Heq}.
+            eapply (met_morph_nonexp ı). eapply ra_ag_unInj_dist.
+            symmetry. eexact HeqP.
+          * simpl. rewrite isoR. reflexivity.
+        + move:(HM j agP)=>{HM}. case/(_ _)/Wrap; last move=>Heq'.
+          { rewrite Heqwt. assumption. }
+          rewrite comm de_emp_union. destruct (j ∈ mf) eqn:Hjin.
+          * erewrite de_in_true by de_tauto. erewrite fdStrongUpdate_neq by assumption.
+            destruct (rs j); last tauto. simpl.
+            move=>H. erewrite ra_ag_unInj_pi. eassumption.
+          * erewrite de_in_false by de_tauto. erewrite fdStrongUpdate_neq by assumption.
+            tauto.
+    Grab Existential Variables.
+    { eapply cmra_valid_ord.
+      - exists Pr. reflexivity.
+      - eapply world_invs_valid; first eassumption; last first.
+        + eapply mono_dist, HInv. omega.
+        + rewrite -Heqwt. etransitivity; last by eapply comp_finmap_le.
+          exists wf. now rewrite comm. }
     Qed.
 
     Lemma pvsTrans P m1 m2 m3 (HMS : m2 ⊆ m1 ∪ m3) :

@@ -252,23 +252,6 @@ Section FinDom.
       now apply HEqf.
     Qed.
 
-    Lemma fdLookup_in_dist_strong {f1 f2 : K -f> V} {n k v}:
-      f1 k = Some v -> f1 = S n = f2 ->
-      exists v', f2 k = Some v' /\ v = S n = v'.
-    Proof.
-      move=>EQk EQf. specialize (EQf k). rewrite EQk in EQf.
-      destruct (f2 k) as [v'|].
-      - exists v'. split; first reflexivity. exact EQf.
-      - destruct EQf.
-    Qed.
-
-    Lemma fdLookup_notin_dist_strong {f1 f2 : K -f> V} {n k}:
-      f1 k = None -> f1 = S n = f2 -> f2 k = None.
-    Proof.
-      move=>EQk EQf. specialize (EQf k). rewrite EQk in EQf.
-      destruct (f2 k); last reflexivity. destruct EQf.
-    Qed.
-
     Definition finmap_chainx (σ : chain (K -f> V)) {σc : cchain σ} x : chain (option V) :=
       fun n => (σ n) x.
 

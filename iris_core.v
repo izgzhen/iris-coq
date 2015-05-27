@@ -87,11 +87,11 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
   Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (r : res) (g : RL.res) (σ : state).
 
-  Definition Invs (w: Wld) := fst w.
+  Definition Invs (w: Wld) := Mfst w.
   Arguments Invs !w /.
-  Definition State (w: Wld) := fst (snd w).
+  Definition State (w: Wld) := Mfst (Msnd w).
   Arguments State !w /.
-  Definition Res (w: Wld) := snd (snd w).
+  Definition Res (w: Wld) := Msnd (Msnd w).
   Arguments Res !w /.
 
   (* Simple view lemmas. *)
@@ -175,12 +175,38 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       reflexivity.
     Qed.
 
-    Lemma finmap_invs_le (I1 I2: nat -f> ra_agree PreProp) i (μ: ra_agree PreProp):
-      I1 i = Some μ -> I1 ⊑ I2 ->
-      exists μ', μ ⊑ μ' /\ I2 i = Some μ'.
+    Lemma world_invs_valid w1 w2 μ i n:
+      cmra_valid w1 n -> w2 ⊑ w1 -> Invs w2 i = n = Some μ -> cmra_valid μ n.
     Proof.
-      move=>Heq Hord. specialize (Hord i). rewrite Heq in Hord. destruct (I2 i) as [μ'|]; last contradiction.
-      exists μ'. split; last reflexivity. exact Hord.
+      move=>Hval Hle Heq. destruct w1 as [I1 [S1 g1]], w2 as [I2 [S2 g2]]. destruct Hval as [Hval _]. simpl in Heq. apply ra_pord_iff_prod_pord in Hle.
+      destruct Hle as [Hle _]. simpl in Hle.
+      apply ra_pord_iff_ext_pord in Hle.
+      clear S1 g1 S2 g2. specialize (Hval i). specialize (Hle i).
+      destruct n; first exact:bpred.
+      destruct (I2 i); last contradiction Heq.
+      destruct (I1 i); last contradiction Hle. simpl in Hle.
+      simpl in Heq. eapply spredNE.
+      - rewrite -Heq. reflexivity.
+      - eapply cmra_valid_ord; eassumption.
+    Qed.
+
+    Lemma world_invs_extract w1 w2 μ μ' i n:
+      cmra_valid w1 n -> w2 ⊑ w1 -> Invs w2 i = n = Some (μ' · μ) ->
+      Invs w1 i = n = Some μ.
+    Proof.
+      move=> Hval [w' Hleq] Hlu. unfold Invs. rewrite -Hleq.
+      simpl morph. rewrite ra_op_prod_fst {1}/ra_op /ra_op_finprod fdComposeRed.
+      destruct n; first exact:dist_bound.
+      rewrite /Invs /= in Hlu.  destruct (fst w2 i) as [μ2|] eqn:Hw2; last contradiction Hlu.
+      destruct (fst w' i) as [μ1|] eqn:Hw1; simpl in *.
+      - rewrite Hlu assoc (comm _ μ). apply ra_ag_prod_dist. eapply world_invs_valid; first eexact Hval; first reflexivity.
+        rewrite -Hleq. rewrite /Invs. simpl morph. instantiate (1:=i).
+        rewrite ra_op_prod_fst {1}/ra_op /ra_op_finprod fdComposeRed. rewrite Hw2 Hw1. simpl.
+        now rewrite Hlu (comm μ) assoc.
+      - rewrite Hlu comm. apply ra_ag_prod_dist. eapply world_invs_valid; first eexact Hval; first reflexivity.
+        rewrite -Hleq. rewrite /Invs. simpl morph. instantiate (1:=i).
+        rewrite ra_op_prod_fst {1}/ra_op /ra_op_finprod fdComposeRed. rewrite Hw2 Hw1. simpl.
+        now rewrite comm.
     Qed.
   End FinmapInvs.
 
@@ -556,9 +582,9 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         { rewrite /snd ra_op_unit. reflexivity. }
         simpl. move=>j. rewrite /ra_op /ra_op_finprod fdComposeRed.
         destruct (dec_eq i j).
-        + subst j. rewrite fdStrongUpdate_eq. unfold Invs, fst in Heq.
+        + subst j. rewrite fdStrongUpdate_eq. simpl in Heq.
           destruct (I i) as [Ii|]; last contradiction Heq.
-          rewrite /finprod_op. do 3 red. do 3 red in Heq.
+          rewrite /finprod_op. simpl in *.
           rewrite Heq=>{Heq}. apply dist_refl. rewrite assoc (comm _ Pr) -assoc.
           rewrite ra_ag_dupl. reflexivity.
         + erewrite fdStrongUpdate_neq by assumption. destruct (I j); reflexivity.

@@ -1,4 +1,4 @@
-Require Import Ssreflect.ssreflect Omega.
+Require Import Ssreflect.ssreflect Ssreflect.ssrfun Omega.
 Require Import world_prop core_lang lang iris_core.
 Require Import ModuRes.DecEnsemble ModuRes.RA ModuRes.CMRA ModuRes.SPred ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr ModuRes.Agreement ModuRes.Lists.
 
@@ -73,7 +73,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
           rewrite /comp_finmap in IH. apply IH.
     Qed.
 
-    Lemma comp_finmap_move w0 w1 f:
+    Lemma comp_finmap_move w1 w0 f:
       comp_finmap (w0 · w1) f == comp_finmap w0 f · w1.
     Proof.
       rewrite /comp_finmap. revert f. apply:fdRect.
@@ -123,13 +123,15 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     
     Lemma world_inv_val {w} {s : nat -f> Wld} {n}:
       let wt := comp_finmap w s in
-      forall (pv: cmra_valid wt n) {i agP} (Heq: (Invs wt) i = Some agP), cmra_valid agP n.
+      forall (pv: cmra_valid wt n) {i agP} (Heq: (Invs wt) i = n = Some agP), cmra_valid agP n.
     Proof.
       intros wt pv i agP Heq.
       destruct wt as [I O]. destruct pv as [HIval _]. specialize (HIval i).
       simpl Invs in Heq. destruct (I i).
-      - eapply spredNE, HIval. apply cmra_valid_dist. inversion Heq. reflexivity.
-      - discriminate.
+      - eapply spredNE, HIval. apply cmra_valid_dist.
+        destruct n; first exact:dist_bound.
+        exact Heq.
+      - destruct n; first exact:bpred. destruct Heq.
     Qed.
 
     (* It may be possible to use "later_sp" here, but let's avoid indirections where possible. *)
@@ -140,7 +142,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
                   let wt := comp_finmap w s in
                   exists pv : (cmra_valid wt n),
                     (State wt ⊑ ex_own σ) /\
-                    forall i agP (Heq: (Invs wt) i = Some agP),
+                    forall i agP (Heq: (Invs wt) i = n = Some agP),
                       match (i ∈ m)%de, s i with
                       | true , Some w => let P := ra_ag_unInj agP n (HVal:=world_inv_val pv Heq) in
                                          unhalved (ı P) w n'
@@ -157,12 +159,20 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       intros (s & pv & Hσ & H).
       exists s. exists (dpred (m := S n2) HLe pv).
       split; [assumption|]. move => {Hσ} i agP Heq.
-      move:(H i agP Heq)=>{H}.
+      case HagP':(Invs (comp_finmap w s) i) => [agP'|]; last first.
+      { exfalso. rewrite HagP' in Heq. exact Heq. }
+      move:(H i agP'). case/(_ _)/Wrap; last move=>{H} Heq'.
+      { now apply equivR. }
       destruct (s i) as [ws|], (i ∈ m)%de; simpl; tauto || (try contradiction); []=>H.
       eapply spredNE; last first.
       - eapply dpred; last exact H. omega.
       - specialize (halve_eq (T:=Props) n2)=>Huneq. apply Huneq=>{Huneq H ws}.
-        apply met_morph_nonexp. symmetry. apply ra_ag_unInj_move. omega.
+        apply met_morph_nonexp. move:(Heq). rewrite HagP' in Heq=>Heq''.
+        etransitivity.
+        + symmetry. eapply ra_ag_unInj_move. omega.
+        + eapply ra_ag_unInj_dist. simpl in Heq'. exact Heq.
+    Grab Existential Variables.
+    { eapply dpred; first eassumption. eapply world_inv_val; eassumption. }
     Qed.
 
     Global Instance wsat_dist n σ : Proper (equiv ==> dist n ==> dist n) (wsat σ).
@@ -179,15 +189,11 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       { rewrite <-HS. apply pordR. destruct Hwt as [_ [HwtS _]].
         symmetry. exact HwtS. }
       move=>i agP Heq.
-      edestruct (fdLookup_in_dist_strong (f2 := Invs (comp_finmap w1 s)) (n:=m) Heq) as [agP' [Heq' HagPeq]].
-      { rewrite -Hwt. reflexivity. }
-      specialize (HI _ _ Heq'). rewrite -EQm. destruct (i ∈ m1)%de; last exact HI.
+      move:(HI i agP). case/(_ _)/Wrap; last move=>{HI} Heq' HI.
+      { rewrite -Heq. rewrite Hwt. reflexivity. }
+      rewrite -EQm. destruct (i ∈ m1)%de; last exact HI.
       destruct (s i); last exact HI.
-      simpl. simpl in HI.
-      eapply spredNE, HI.
-      specialize (halve_eq (T:=Props) m)=>Huneq. apply Huneq=>{Huneq HS}.
-      apply met_morph_nonexp. eapply ra_ag_unInj_dist.
-      symmetry. assumption.
+      simpl. simpl in HI. erewrite ra_ag_unInj_pi. eassumption.
     Qed.
 
     Global Instance wsat_equiv σ : Proper (equiv ==> equiv ==> equiv) (wsat σ).
