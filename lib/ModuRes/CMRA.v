@@ -317,7 +317,7 @@ Section MonotoneExtCBI.
     fun P Q => mclose (lift_bin impl P Q).
 
   Global Program Instance sc_mm  : scBI (T -m> B) :=
-    fun P Q => m[(fun t:T => xist n[(fun ts:T*T => ((Mfst ts · Msnd ts) === t) ∧ (P (Mfst ts) * Q (Msnd ts)))])].
+    fun P Q => m[(fun t:T => xist n[(fun ts:T*T => (Mfst ts · Msnd ts) === t ∧ (P (Mfst ts) * Q (Msnd ts)))])].
   Next Obligation.
     move=>t1 t2 EQt. rewrite /= -/dist. eapply xist_dist. move=>[ts1 ts2] /=. rewrite -/dist.
     rewrite EQt. reflexivity.
@@ -396,7 +396,7 @@ Section MonotoneExtCBI.
     lift_bin and (umconst ((u1 · u2) === t)) (lift_bin sc (umconst (f1 u1)) n[(fun ts => ((fst ts · snd ts) === u2) ∧ (f2 (fst ts) * f3 (snd ts)))]).
 
   Program Definition sc_mm_assoc_f2 u1 u2 t (f1 f2 f3: T -n> B) :=
-    lift_bin and (umconst ((u1 · u2) === t)) (lift_bin sc n[(fun ts => ((fst ts · snd ts) === u1) ∧ (f1 (fst ts) * f2 (snd ts)))] (umconst (f3 u2))).
+    lift_bin and (umconst ((u1 · u2) === t)) (lift_bin sc n[(fun ts => (fst ts · snd ts) === u1 ∧ (f1 (fst ts) * f2 (snd ts)))] (umconst (f3 u2))).
 
   Existing Instance sc_equiv.
 

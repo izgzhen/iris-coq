@@ -106,13 +106,13 @@ Notation "p ∧ q" := (and p q) (at level 39, right associativity) : bi_scope.
 Notation "p ∨ q" := (or p q) (at level 51, right associativity) : bi_scope.
 Notation "p * q" := (sc p q) (at level 40, left associativity) : bi_scope.
 Notation "p → q" := (impl p q) (at level 55, right associativity) : bi_scope.
-Notation "P ↔ Q" := ((P → Q) ∧ (Q → P))%bi (at level 95, no associativity) : bi_scope.
+Notation "P ↔ Q" := ((P → Q) ∧ (Q → P))%bi (at level 57, no associativity) : bi_scope.
 Notation "p '-*' q" := (si p q) (at level 55, right associativity) : bi_scope.
 Notation "∀ x , p" := (all n[(fun x => p)]) (at level 60, x ident, right associativity) : bi_scope.
 Notation "∃ x , p" := (xist n[(fun x => p)]) (at level 60, x ident, right associativity) : bi_scope.
 Notation "∀ x : T , p" := (all n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
 Notation "∃ x : T , p" := (xist n[(fun x : T => p)]) (at level 60, x ident, right associativity) : bi_scope.
-Notation "t1 '===' t2" := (intEq t1 t2) (at level 30) : bi_scope.
+Notation "t1 '===' t2" := (intEq t1 t2) (at level 35) : bi_scope.
 
 Local Open Scope bi_scope.
 
@@ -322,7 +322,7 @@ Section EqBIProps.
   Lemma intEq_rewrite_goal {T} `{cmetric T} (t1 t2: T) P (φ: _ -n> B):
     P ⊑ t1 === t2 -> P ⊑ φ t1 -> P ⊑ φ t2.
   Proof.
-    move=>HEQ Hφ. transitivity ((t1 === t2) ∧ φ t1).
+    move=>HEQ Hφ. transitivity (t1 === t2 ∧ φ t1).
     - apply and_R. split; assumption.
     - move=>{P HEQ Hφ}. rewrite -/pord. apply and_impl. rewrite intEq_leibnitz /bi_leibnitz.
       apply (all_L φ). simpl morph. reflexivity. 

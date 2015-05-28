@@ -256,6 +256,8 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       - eapply HL. exact IHn.
     Qed.
 
+    (* TODO RJ: show loeb under a context *)
+
     Lemma later_true: (⊤:Props) == ▹⊤.
     Proof.
       move=> w n.
@@ -348,6 +350,26 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       intros w n. 
       split; tauto.
     Qed.
+
+    Lemma box_star P Q :
+      □(P * Q) == □P * □Q.
+    Proof.
+      intros w n. split; (destruct n; first (intro; exact:bpred)); intros [[wP wQ] [Heq [HP HQ]]]; simpl in *.
+      - exists (1 w, w). split_conjs; simpl.
+        + now rewrite ra_op_unit.
+        + rewrite ra_unit_idem. eapply propsNE; first eexact Heq.
+          eapply propsMW, HP. eexists; now erewrite comm.
+        + eapply propsNE; first eexact Heq.
+          eapply propsMW, HQ. eexists; now erewrite comm.
+      - exists (1 w, 1 w). split_conjs.
+        + rewrite /fst /snd. rewrite -{1}(ra_unit_idem w). rewrite ra_op_unit. reflexivity.
+        + simpl. eapply propsNE; first (eapply cmra_unit_dist; eexact Heq).
+          eapply propsMW, HP. apply ra_unit_proper_pord. exists wQ; now rewrite comm.
+        + simpl. eapply propsNE; first (eapply cmra_unit_dist; eexact Heq).
+          eapply propsMW, HQ. apply ra_unit_proper_pord. exists wP; now rewrite comm.
+    Qed.
+
+    (* TODO RJ: show relation to implication *)
 
     Lemma box_dup P :
       □P == □P * □P.
