@@ -1,13 +1,11 @@
 Module Type CORE_LANG.
-  Delimit Scope lang_scope with lang.
-  Local Open Scope lang_scope.
 
   (******************************************************************)
   (** ** Syntax, machine state, and atomic reductions **)
   (******************************************************************)
 
   (** Expressions and values **)
-  Parameter expr : Type.	(* PDS: setoid. *)
+  Parameter expr : Type.
 
   Parameter is_value : expr -> Prop.
   Definition value : Type := {e: expr | is_value e}.
@@ -24,32 +22,51 @@ Module Type CORE_LANG.
                      fork e1 = fork e2 -> e1 = e2.
 
   (** Evaluation contexts **)
-  Parameter ectx : Type.	(* PDS: setoid. *)
+  Parameter ectx : Type.
   Parameter empty_ctx : ectx.
   Parameter comp_ctx : ectx -> ectx -> ectx.
   Parameter fill : ectx -> expr -> expr.
+(*
+	All of
+		comp_ctx_assoc
+		comp_ctx_inj_r
+		comp_ctx_emp_r
+	arise only in the proof of
 
-  Notation "'ε'"    := empty_ctx : lang_scope.
-  Notation "K1 ∘ K2"  := (comp_ctx K1 K2) (at level 40, left associativity) : lang_scope.
-  (* We used to also have notation for filling, but registering any of "[[", "]]", "])" as keyword
-     is bound to become annoying in Ltac. *)
-  Axiom fill_empty : forall e, fill ε e = e.
-  Axiom fill_comp  : forall K1 K2 e, fill K1 (fill K2 e) = fill (K1 ∘ K2) e.
-  Axiom fill_inj1  : forall K1 K2 e, (* left-Cancellativity*)
-                       fill K1 e = fill K2 e -> K1 = K2.
-  Axiom fill_inj2  : forall K e1 e2, (* right-cancellativity *)
-                       fill K e1 = fill K e2 -> e1 = e2.
-  Axiom fill_noinv: forall K1 K2, (* positivity *)
-                       K1 ∘ K2 = ε -> K1 = ε /\ K2 = ε.
-  Axiom fill_value : forall K e,
-                       is_value (fill K e) ->
-                       K = ε.
-  Axiom fill_fork  : forall K e e',
-                       fork e' = fill K e ->
-                       K = ε.
+		step_same_ctx K K' e e' :
+			fill K e = fill K' e' ->
+			reducible e  ->
+			reducible e' ->
+			K = K'.
+
+	Moreover, comp_ctx_positive gets used only in step_same_ctx
+	and
+
+		atomic_fill e K :
+			atomic (fill K e) ->
+			~ is_value e ->
+			K = empty_ctx.
+	
+	It might be simpler to (prove and) assume these two rather
+	than those four.
+*)
+  Axiom comp_ctx_emp_r : forall K,
+    comp_ctx K empty_ctx = K.
+  Axiom comp_ctx_assoc : forall K0 K1 K2,
+    comp_ctx K0 (comp_ctx K1 K2) = comp_ctx (comp_ctx K0 K1) K2.
+  Axiom comp_ctx_inj_r : forall K K1 K2,
+    comp_ctx K K1 = comp_ctx K K2 -> K1 = K2.
+  Axiom comp_ctx_positive : forall K1 K2,
+    comp_ctx K1 K2 = empty_ctx -> K1 = empty_ctx /\ K2 = empty_ctx.
+
+  Axiom fill_empty : forall e, fill empty_ctx e = e.
+  Axiom fill_comp  : forall K1 K2 e, fill K1 (fill K2 e) = fill (comp_ctx K1 K2) e.
+  Axiom fill_inj_r  : forall K e1 e2, fill K e1 = fill K e2 -> e1 = e2.
+  Axiom fill_value : forall K e, is_value (fill K e) -> is_value e.
+  Axiom fill_fork : forall K e e', fork e' = fill K e -> K = empty_ctx.
 
   (** Shared machine state (e.g., the heap) **)
-  Parameter state : Type.	(* PDS: setoid. *)
+  Parameter state : Type.
 
   (** Primitive (single thread) machine configurations **)
   Definition prim_cfg : Type := (expr * state)%type.
@@ -80,14 +97,14 @@ Module Type CORE_LANG.
       fill K e = fill K' e' ->
       reducible e' ->
       ~ is_value e ->
-      exists K'', K' = K ∘ K''.
+      exists K'', K' = comp_ctx K K''.
   (* Similar to above, buth with a fork instead of a reducible
      expression *)
   Axiom fork_by_value :
     forall K K' e e',
       fill K e = fill K' (fork e') ->
       ~ is_value e ->
-      exists K'', K' = K ∘ K''.
+      exists K'', K' = comp_ctx K K''.
 
   (** Atomic expressions **)
   Parameter atomic : expr -> Prop.

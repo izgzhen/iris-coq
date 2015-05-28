@@ -32,9 +32,7 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
         simpl; reflexivity.
       - contradiction (values_stuck HV HDec).
         repeat eexists; eassumption.
-      - subst e; assert (HT := fill_value HV); subst K.
-        revert HV; rewrite fill_empty; intros.
-        contradiction (fork_not_value _ HV).
+      - subst e; contradiction (fork_not_value (fill_value HV)).
       - unfold safeExpr. auto.
     Qed.
 
@@ -64,17 +62,17 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
         change (wp safe m (fill K e) φ w' (S (S k))) in Hφ.
         rewrite ->unfold_wp in Hφ. eapply Hφ ; [omega | de_auto_eq | eassumption ].
       - intros wf; intros; edestruct He as [_ [HS [HF HS'] ] ]; try eassumption; [].
-        split; [intros HVal; contradiction HNVal; assert (HT := fill_value HVal);
-                subst K; rewrite fill_empty in HVal; assumption | split; [| split]; intros].
+        split; [ | split; [| split]; intros].
+        + intros HVal; contradiction (HNVal (fill_value HVal)).
         + clear He HF HE; edestruct step_by_value as [K' EQK];
           [eassumption | repeat eexists; eassumption | eassumption |].
-          subst K0; rewrite <- fill_comp in HDec; apply fill_inj2 in HDec.
+          subst K0; rewrite <- fill_comp in HDec; apply fill_inj_r in HDec.
           edestruct HS as [w' [He HE]]; try eassumption; [].
           subst e; clear HStep HS.
           eexists. split; last eassumption.
           rewrite <- fill_comp. apply IH; assumption.
         + clear He HS HE; edestruct fork_by_value as [K' EQK]; try eassumption; [].
-          subst K0; rewrite <- fill_comp in HDec; apply fill_inj2 in HDec.
+          subst K0; rewrite <- fill_comp in HDec; apply fill_inj_r in HDec.
           edestruct HF as [wfk [wret [HWR [HWF HE]]]];
             try eassumption; []; subst e; clear HF.
           do 2 eexists; split; [| split; eassumption].
@@ -197,8 +195,8 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
         + assumption.
         + omega.
       - intros. exfalso. eapply values_stuck; [.. | repeat eexists]; eassumption.
-      - intros. exfalso. clear - HDec HVal; subst; assert (HT := fill_value HVal); subst.
-        rewrite ->fill_empty in HVal; now apply fork_not_value in HVal.
+      - intros. exfalso. clear - HDec HVal. subst.
+        contradiction (fork_not_value (fill_value HVal)).
       - intros; left; assumption.
     Qed.
 
@@ -309,9 +307,7 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           exists r1'' r2; split; [reflexivity | split; [assumption |] ].
           unfold lt in HLt; rewrite <- HLt, HSw, HSw' in HLR; apply HLR.
         + eapply values_stuck; [.. | repeat eexists]; eassumption.
-        + subst; clear -HVal.
-          assert (HT := fill_value HVal); subst K; rewrite ->fill_empty in HVal.
-          contradiction (fork_not_value e').
+        + subst; clear -HVal. contradiction (fork_not_value (fill_value HVal)).
         + unfold safeExpr. now auto.
       - subst; eapply fork_not_atomic; eassumption.
       - rewrite <- EQr, <- assoc in HE; rewrite ->unfold_wp in Hwp.
@@ -321,12 +317,13 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
 
     (** Fork **)
     Lemma wpFork safe m R e :
-      ▹wp safe m e (umconst ⊤) * ▹R ⊑ wp safe m (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).
+      ▹wp safe m e (umconst ⊤) * ▹R ⊑ wp safe m (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).	(* PDS: Why sc not and? *)
     Proof.
       intros w n r [r1 [r2 [EQr [Hwp HLR] ] ] ].
       destruct n as [| n]; [apply wpO |].
       rewrite ->unfold_wp; intros w'; intros.
-      split; [intros; contradiction (fork_not_value e) | split; intros; [exfalso | split; intros ] ].
+      split; [| split; intros; [exfalso | split; intros ] ].
+      - intros. contradiction (fork_not_value HV).
       - assert (HT := fill_fork HDec); subst K; rewrite ->fill_empty in HDec; subst.
         eapply fork_stuck with (K := ε); [| repeat eexists; eassumption ]; reflexivity.
       - assert (HT := fill_fork HDec); subst K; rewrite ->fill_empty in HDec.
@@ -342,8 +339,7 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           simpl; reflexivity.
         + eapply values_stuck; [exact fork_ret_is_value | eassumption | repeat eexists; eassumption].
         + assert (HV := fork_ret_is_value); rewrite ->HDec in HV; clear HDec.
-          assert (HT := fill_value HV);subst K; rewrite ->fill_empty in HV.
-          eapply fork_not_value; eassumption.
+          contradiction (fork_not_value (fill_value HV)).
         + left; apply fork_ret_is_value.
       - right; right; exists e empty_ctx; rewrite ->fill_empty; reflexivity.
     Qed.

@@ -56,6 +56,17 @@ Module StupidLang : CORE_LANG.
 
   Local Open Scope lang_scope.
   
+  Lemma comp_ctx_assoc K0 K1 K2 : (K0 ∘ K1) ∘ K2 = K0 ∘ (K1 ∘ K2).
+  Proof. reflexivity. Qed.
+
+  Lemma comp_ctx_emp_r K : K ∘ ε = K.
+  Proof. destruct K. reflexivity. Qed.
+
+  Lemma comp_ctx_inj_r K K1 K2 : K ∘ K1 = K ∘ K2 -> K1 = K2.
+  Proof.
+    destruct K1, K2. now tauto.
+  Qed.
+
   Lemma fill_empty e : ε [[ e ]] = e.
   Proof.
     reflexivity.
@@ -65,23 +76,18 @@ Module StupidLang : CORE_LANG.
   Proof.
     reflexivity.
   Qed.
-  Lemma fill_inj1 K1 K2 e :
-    K1 [[ e ]] = K2 [[ e ]] -> K1 = K2.
-  Proof.
-    intros _. destruct K1, K2. reflexivity.
-  Qed.
-  Lemma fill_inj2 K e1 e2 :
+  Lemma fill_inj_r K e1 e2 :
     K [[ e1 ]] = K [[ e2 ]] -> e1 = e2.
   Proof.
     tauto.
   Qed.
-  Lemma fill_noinv K1 K2:
+  Lemma comp_ctx_positive K1 K2:
     K1 ∘ K2 = ε -> K1 = ε /\ K2 = ε.
   Proof.
     destruct K1, K2. intros _. split; reflexivity.
   Qed.
   Lemma fill_value K e:
-    is_value (K [[ e ]]) -> K = ε.
+    is_value (K [[ e ]]) -> is_value e.
   Proof.
     destruct K. now auto.
   Qed.
