@@ -165,19 +165,19 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     (* It may be possible to use "later_sp" here, but let's avoid indirections where possible. *)
     Definition wsatF σ m w n :=
       match n with
-      | O => True
-      | S n' => exists s : nat -f> Wld,
-                           let wt := comp_finmap w s in
-                           wsatTotal n' σ s m wt
+      | S (S n') => exists s : nat -f> Wld,
+                               let wt := comp_finmap w s in
+                               wsatTotal (S n') σ s m wt
+      | _        => True
       end.
 
     Program Definition wsat σ m w : SPred :=
       mkSPred (wsatF σ m w) _ _.
     Next Obligation.
-      intros n1 n2 HLe. destruct n2; first (intro; exact I).
-      destruct n1; first (exfalso; omega).
+      intros n1 n2 HLe. do 2 (destruct n2; first (intro; exact I)).
+      do 2 (destruct n1; first (exfalso; omega)).
       intros (s & pv & Hσ & H).
-      exists s. exists (dpred (m := S n2) HLe pv).
+      exists s. exists (dpred (m := S (S n2)) HLe pv).
       split; [assumption|]. move => {Hσ} i agP Heq.
       case HagP':(Invs (comp_finmap w s) i) => [agP'|]; last first.
       { exfalso. rewrite HagP' in Heq. exact Heq. }
@@ -186,7 +186,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       destruct (s i) as [ws|], (i ∈ m)%de; simpl; tauto || (try contradiction); []=>H.
       eapply spredNE; last first.
       - eapply dpred; last exact H. omega.
-      - specialize (halve_eq (T:=Props) n2)=>Huneq. apply Huneq=>{Huneq H ws}.
+      - specialize (halve_eq (T:=Props) (S n2))=>Huneq. apply Huneq=>{Huneq H ws}.
         apply met_morph_nonexp. move:(Heq). rewrite HagP' in Heq=>Heq''.
         etransitivity.
         + symmetry. eapply ra_ag_unInj_move. omega.
@@ -198,8 +198,9 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Global Instance wsat_dist n σ : Proper (equiv ==> dist n ==> dist n) (wsat σ).
     Proof.
       eapply dist_spred_simpl2; try apply _; [].
-      intros m1 m2 w1 w2 m Hlt EQm EQw. destruct m; first reflexivity.
-      destruct n as [| n]; [now inversion Hlt |].
+      intros m1 m2 w1 w2 m Hlt EQm EQw.
+      do 2 (destruct m; first reflexivity).
+      do 2 (destruct n as [| n]; [now inversion Hlt |]).
       intros [s HwsT]; exists s; intro wt.
       eapply wsatTotal_proper, HwsT; symmetry; first assumption.
       rewrite /wt. eapply comp_finmap_dist; last reflexivity.
@@ -213,9 +214,8 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     Lemma wsat_valid {σ m w k} :
-      wsat σ m w k -> cmra_valid w k.
+      wsat σ m w (S (S k)) -> cmra_valid w (S (S k)).
     Proof.
-      destruct k; first (intro; exact:bpred).
       move=> [s [pv _]]. eapply cmra_valid_ord, pv.
       exact:comp_finmap_le.
     Qed.
@@ -442,6 +442,11 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       wp safe m == (wpF safe m) (wp safe m).
     Proof.
       unfold wp; apply fixp_eq.
+    Qed.
+
+    Lemma wp1 {safe m e φ w} : wp safe m e φ w (1%nat).
+    Proof.
+      rewrite unfold_wp; intros w'; intros; now inversion HLt.
     Qed.
 
   End WeakestPre.
