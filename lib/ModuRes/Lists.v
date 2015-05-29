@@ -143,7 +143,7 @@ End FilterDup.
 Section ListMax.
   Definition list_max := fold_right max 0.
 
-  Lemma list_gax_ge l n:
+  Lemma list_max_ge l n:
     In n l -> n <= list_max l.
   Proof.
     revert n. induction l; intros n HIn.

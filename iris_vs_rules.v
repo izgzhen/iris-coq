@@ -118,12 +118,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           * erewrite de_in_false by de_tauto. erewrite fdStrongUpdate_neq by assumption.
             tauto.
     Grab Existential Variables.
-    { eapply cmra_valid_ord.
-      - exists Pr. reflexivity.
-      - eapply world_invs_valid; first eassumption; last first.
-        + eapply mono_dist, HInv. omega.
-        + rewrite -Heqwt. etransitivity; last by eapply comp_finmap_le.
-          exists wf. now rewrite comm. }
+    { exact I. }
     Qed.
 
     Lemma pvsTrans P m1 m2 m3 (HMS : m2 ⊑ m1 ∪ m3) :
@@ -222,8 +217,8 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           move=>H. erewrite ra_ag_unInj_pi. eassumption.
     Qed.
 
-    Program Definition inv' m : Props -n> {n : nat | m n} -n> Props :=
-      n[(fun P => n[(fun n : {n | m n} => inv n P)])].
+    Program Definition inv' m : Props -n> {n : nat | n ∈ m = true } -n> Props :=
+      n[(fun P => n[(fun N => inv (proj1_sig N) P)])].
     Next Obligation.
       intros i i' EQi; destruct n as [| n]; [apply dist_bound |].
       simpl in EQi; rewrite EQi; reflexivity.
@@ -233,78 +228,84 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       apply (inv (` i)); assumption.
     Qed.
 
-    Lemma fresh_region (w : Wld) m (HInf : mask_infinite m) :
-      exists i, m i /\ w i = None.
+    Lemma fresh_region (w : Wld) (s: nat -f> Wld) m (HInf : de_infinite m) :
+      exists i, i ∈ m = true /\ Invs w i = None /\ s i = None.
     Proof.
-      destruct (HInf (S (List.last (dom w) 0%nat))) as [i [HGe Hm] ];
+      pose (l := (dom (Invs w) ++ dom s)%list).
+      pose (j := Lists.list_max l).
+      destruct (HInf (S j)) as [i [HGe Hm] ].
       exists i; split; [assumption |]; clear - HGe.
-      rewrite <- fdLookup_notin_strong.
-      destruct w as [ [| [n v] w] wP]; unfold dom in *; simpl findom_t in *; [tauto |].
-      simpl List.map in *; rewrite last_cons in HGe.
-      unfold ge in HGe; intros HIn; eapply Gt.gt_not_le, HGe.
-      apply Le.le_n_S, SS_last_le; assumption.
+      specialize (Lists.list_max_ge l i)=>Hin. subst l.
+      split; apply fdLookup_notin_strong=>Hin'; move:Hin.
+      - case/(_ _)/Wrap; first (apply List.in_app_iff; tauto).
+        intros Hle. subst j. omega.
+      - case/(_ _)/Wrap; first (apply List.in_app_iff; tauto).
+        intros Hle. subst j. omega.
     Qed.
 
-    (* RJ this should now be captured by the generic instance for discrete metrics.
-    Instance LP_mask m : LimitPreserving m.
-    Proof.
-      intros σ σc Hp; apply Hp.
-    Qed. *)
-
-    Lemma pvsNewInv P m (HInf : mask_infinite m) :
+    Lemma pvsNewInv P m (HInf : de_infinite m) :
       ▹P ⊑ pvs m m (xist (inv' m P)).
     Proof.
-      intros w n r HP w'; intros.
+      intros w n HP wf; intros.
       destruct n as [| n]; [now inversion HLe | simpl in HP].
-      rewrite ->HSub in HP; clear w HSub; rename w' into w.
-      destruct (fresh_region w m HInf) as [i [Hm HLi] ].
-      assert (HSub : w ⊑ fdUpdate i (ı' (halved P)) w).
-      { intros j; destruct (Peano_dec.eq_nat_dec i j); [subst j; rewrite HLi; exact I|].
-        now rewrite ->fdUpdate_neq by assumption.
-      }
-      exists (fdUpdate i (ı' (halved P)) w) 1; split; [assumption | split].
-      - exists (exist _ i Hm).
-        change (((fdUpdate i (ı' (halved P)) w) i) = S (S k) = (Some (ı' (halved P)))).
-        rewrite fdUpdate_eq; reflexivity.
-      - erewrite ra_op_unit by apply _.
-        destruct HE as [rs [HE HM] ].
-        exists (fdUpdate i r rs).
-        assert (HRi : rs i = None).
-        { destruct (HM i) as [HDom _]; unfold mcup; [tauto |].
-          rewrite <- fdLookup_notin_strong, HDom, fdLookup_notin_strong; assumption.
-        }
-        split.
-        {
-          rewrite <-comp_map_insert_new by now eapply equivR.
-          rewrite ->assoc, (comm rf). assumption.
-        }
-        intros j Hm'.
-        rewrite !fdLookup_in_strong; destruct (Peano_dec.eq_nat_dec i j).
-        + subst j; rewrite !fdUpdate_eq; split; [intuition now eauto | intros].
-          simpl in HLw. do 3 red in HLrs. rewrite <- HLw, isoR, <- HSub.
-          eapply uni_pred, HP; [now auto with arith |]. rewrite HLrs. reflexivity.
-        + rewrite ->!fdUpdate_neq, <- !fdLookup_in_strong by assumption.
-          setoid_rewrite <- HSub.
-          apply HM; assumption.
+      case:HE=>rs. cbv zeta. rewrite comp_finmap_move. move =>[pv [HS HI]].
+      destruct (fresh_region (w · comp_finmap wf rs) rs m HInf) as [i [Hm [HLi Hrsi]]].
+      pose (w' := (fdStrongUpdate i (Some (ra_ag_inj (ı' (halved P)))) fdEmpty, 1 (snd w))).
+      exists w'. split.
+      { eexists (exist _ i Hm). eexists. rewrite /w' /= DecEq_refl /=.
+        apply dist_refl. symmetry. eapply ra_ag_dupl. }
+      exists (fdStrongUpdate i (Some w) rs). simpl. simpl in HLi.
+      rewrite comp_finmap_move. erewrite <-comp_finmap_add by (now apply equivR). rewrite (comm _ w).
+      assert (pv': cmra_valid (w' · (w · comp_finmap wf rs)) (S (S k))).
+      { destruct pv as [pvI pvR]. split.
+        -  rewrite /w' /=. move=>j /=. destruct (dec_eq i j).
+           + subst j. rewrite HLi /=. exact I.
+           + exact:(pvI j).
+        - rewrite assoc /w' /= !ra_op_unit. exact pvR. }
+      exists pv'. split.
+      - rewrite /State assoc /w' /= ra_op_unit. assumption.
+      - move=>j agP Heq. destruct (dec_eq i j) as [EQ|NEQ].
+        + subst j. erewrite de_in_true by de_tauto. rewrite fdStrongUpdate_eq.
+          move:(Heq)=>Heq'. move:Heq. rewrite /= DecEq_refl HLi /==>Heq.
+          eapply spredNE, dpred, HP; last omega.
+          eapply mmorph_proper; last reflexivity.
+          etransitivity; last first.
+          * assert(Hheq:=halve_eq (T:=Props) (S k)). apply Hheq=>{Hheq}.
+            eapply (met_morph_nonexp ı). eapply ra_ag_unInj_dist.
+            eexact Heq.
+          * simpl. rewrite isoR. reflexivity.
+        + erewrite fdStrongUpdate_neq by assumption.
+          move:(HI j agP)=>{HI Hrsi HLi Hm}. case/(_ _)/Wrap; last move=>Heq'.
+          { rewrite -Heq. simpl. destruct (dec_eq i j); last reflexivity.
+            contradiction. }
+          destruct (j ∈ (m ∪ mf)); last tauto.
+          destruct (rs j); last tauto.
+          move=>/= H. erewrite ra_ag_unInj_pi. eassumption.
+    Grab Existential Variables.
+    { exact I. }
     Qed.
 
-    Lemma pvsNotOwnInvalid m1 m2 g
-      (Hnval: ~↓r):
-      ownL g ⊑ pvs m1 m2 ⊥.
+    Lemma pvsNotOwnInvalid m1 m2 w:
+      (pcmconst (cmra_valid w) → ⊥) ∧ own w ⊑ pvs m1 m2 ⊥.
     Proof.
-      intros w0 n0 r0 [rs Heq] w' rf mf σ k _ _ _ [ ri [ [ Hval _ ] ] ].
-      exfalso.
-      apply Hnval. rewrite <-Heq in Hval.
-      eapply ra_op_valid2, ra_op_valid, ra_op_valid; last eassumption; now apply _.
+      intros w0 n. destruct n; first (intro; exact:bpred).
+      move=>[Hinval [wr Heq]] wf; intros. exfalso.
+      change ((⊥:Props) w0 (S (S k))).
+      eapply (applyImpl Hinval); [reflexivity|omega|].
+      rewrite /= /const. destruct HE as [rs [pv _]].
+      eapply cmra_valid_ord, spredNE, dpred, pv; last omega; last first.
+      - apply cmra_valid_dist. simpl in Heq. rewrite comp_finmap_move.
+        eapply cmra_op_dist; last reflexivity.
+        symmetry. eapply mono_dist, Heq. omega.
+      - eexists. erewrite (comm _ w), <-assoc. reflexivity.
     Qed.
 
-    (* TODO: can always get ownL of some unit *)
-    (* TODO: ownS * ownS => ⊥ *)
+    (* TODO: can always get own of some unit *)
 
   End ViewShiftProps.
 
 End IRIS_VS_RULES.
 
-Module IrisVSRules (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE): IRIS_VS_RULES RL C R WP CORE PLOG.
+Module IrisVSRules (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE): IRIS_VS_RULES RL C R WP CORE PLOG.
   Include IRIS_VS_RULES RL C R WP CORE PLOG.
 End IrisVSRules.

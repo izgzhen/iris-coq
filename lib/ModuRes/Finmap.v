@@ -850,11 +850,12 @@ Section RA.
     fdMapRaw ra_unit.
 
   Definition finprod_op (s1 s2: option S) :=
-    match s1, s2 with
-    | Some s1, Some s2 => Some (s1 · s2)
-    | Some s1, None    => Some s1
-    | None   , Some s2 => Some s2
-    | None   , None    => None
+    match s1 with
+    | None => s2
+    | Some s1 => match s2 with
+                   Some s2 => Some (s1 · s2)
+                 | None    => Some s1
+                 end
     end.
   Global Program Instance ra_op_finprod : RA_op (I -f> S) :=
     fdCompose finprod_op.                                
