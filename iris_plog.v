@@ -26,7 +26,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Definition comp_finmap w0 : (nat -f> Wld) -> Wld :=
       fdFold w0 (fun k w' wt => wt · w').
 
-    Global Instance comp_finmap_nexp n: Proper (dist n ==> dist n ==> dist n) comp_finmap.
+    Global Instance comp_finmap_dist n: Proper (dist n ==> dist n ==> dist n) comp_finmap.
     Proof.
       move=>w01 w02 EQw0 s1 s2 EQs. rewrite /comp_finmap.
       etransitivity.
@@ -45,7 +45,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Global Instance comp_finmap_ext: Proper (equiv ==> equiv ==> equiv) comp_finmap.
     Proof.
       move=>w01 w02 EQw0 s1 s2 EQs. apply dist_refl=>n.
-      apply comp_finmap_nexp; assumption || apply dist_refl; assumption.
+      apply comp_finmap_dist; assumption || apply dist_refl; assumption.
     Qed.
 
     Lemma comp_finmap_remove w0 (s: nat -f> Wld) i w:
@@ -73,17 +73,17 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
           rewrite /comp_finmap in IH. apply IH.
     Qed.
 
-    Lemma comp_finmap_move w1 w0 f:
-      comp_finmap (w0 · w1) f == comp_finmap w0 f · w1.
+    Lemma comp_finmap_move w0 w1 f:
+      comp_finmap (w0 · w1) f == w0 · comp_finmap w1 f.
     Proof.
       rewrite /comp_finmap. revert f. apply:fdRect.
       - move=>f1 f2 EQf IH.
         etransitivity; last (etransitivity; first eapply IH).
         + now rewrite EQf.
-        + apply ra_op_proper; last reflexivity. now rewrite EQf.
+        + f_equiv. now rewrite EQf.
       - rewrite !fdFoldEmpty. reflexivity.
       - move=>k v f Hnew IH. erewrite !fdFoldAdd by assumption.
-        rewrite -assoc (comm v) assoc. apply ra_op_proper; last reflexivity.
+        rewrite assoc. apply ra_op_proper; last reflexivity.
         eapply IH.
     Qed.
 
@@ -115,17 +115,16 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       w0 ⊑ comp_finmap w0 s.
     Proof.
       exists (comp_finmap (1 w0) s).
-      rewrite -comp_finmap_move ra_op_unit. reflexivity.
+      rewrite comm -comp_finmap_move comm ra_op_unit. reflexivity.
     Qed.
 
     (* Go through some struggle to even write down world satisfaction... *)
     Local Open Scope finmap_scope.
     
-    Lemma world_inv_val {w} {s : nat -f> Wld} {n}:
-      let wt := comp_finmap w s in
+    Lemma world_inv_val {wt n}:
       forall (pv: cmra_valid wt n) {i agP} (Heq: (Invs wt) i = n = Some agP), cmra_valid agP n.
     Proof.
-      intros wt pv i agP Heq.
+      intros pv i agP Heq.
       destruct wt as [I O]. destruct pv as [HIval _]. specialize (HIval i).
       simpl Invs in Heq. destruct (I i).
       - eapply spredNE, HIval. apply cmra_valid_dist.
@@ -134,21 +133,42 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       - destruct n; first exact:bpred. destruct Heq.
     Qed.
 
+    Definition wsatTotal n' σ s m wt :=
+      exists pv : (cmra_valid wt (S n')),
+        (State wt ⊑ ex_own σ) /\
+        forall i agP (Heq: (Invs wt) i = S n' = Some agP),
+          match (i ∈ m)%de, s i with
+          | true , Some w => let P := ra_ag_unInj agP (S n') (HVal:=world_inv_val pv Heq) in
+                             unhalved (ı P) w n'
+          | false, None   => True
+          | _    , _      => False
+          end.
+
+    Global Instance wsatTotal_proper n' σ s:
+      Proper (equiv ==> dist (S n') ==> equiv) (wsatTotal n' σ s).
+    Proof.
+      apply proper_sym_impl_iff_2; try apply _; [].
+      move=>m1 m2 EQm wt1 wt2 EQwt. move=>[pv [HS HI]].
+      assert (pv': cmra_valid wt2 (S n')).
+      { eapply spredNE, pv. apply cmra_valid_dist. assumption. }
+      exists pv'. split.
+      { rewrite <-HS. apply pordR. destruct EQwt as [_ [HwtS _]].
+        symmetry. exact HwtS. }
+      move=>i agP Heq.
+      move:(HI i agP). case/(_ _)/Wrap; last move=>{HI} Heq' HI.
+      { rewrite -Heq. rewrite EQwt. reflexivity. }
+      rewrite -EQm. destruct (i ∈ m1)%de; last exact HI.
+      destruct (s i); last exact HI.
+      simpl. simpl in HI. erewrite ra_ag_unInj_pi. eassumption.
+    Qed.
+
     (* It may be possible to use "later_sp" here, but let's avoid indirections where possible. *)
     Definition wsatF σ m w n :=
       match n with
       | O => True
       | S n' => exists s : nat -f> Wld,
-                  let wt := comp_finmap w s in
-                  exists pv : (cmra_valid wt n),
-                    (State wt ⊑ ex_own σ) /\
-                    forall i agP (Heq: (Invs wt) i = n = Some agP),
-                      match (i ∈ m)%de, s i with
-                      | true , Some w => let P := ra_ag_unInj agP n (HVal:=world_inv_val pv Heq) in
-                                         unhalved (ı P) w n'
-                      | false, None   => True
-                      | _    , _      => False
-                      end
+                           let wt := comp_finmap w s in
+                           wsatTotal n' σ s m wt
       end.
 
     Program Definition wsat σ m w : SPred :=
@@ -180,20 +200,10 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       eapply dist_spred_simpl2; try apply _; [].
       intros m1 m2 w1 w2 m Hlt EQm EQw. destruct m; first reflexivity.
       destruct n as [| n]; [now inversion Hlt |].
-      intros [s [pv [HS HI]]]; exists s; intro wt.
-      assert (Hwt: comp_finmap w1 s = S m = wt).
-      { subst wt. rewrite EQw. reflexivity. }
-      assert (pv': cmra_valid wt (S m)).
-      { eapply spredNE, pv. apply cmra_valid_dist. assumption. }
-      exists pv'. split.
-      { rewrite <-HS. apply pordR. destruct Hwt as [_ [HwtS _]].
-        symmetry. exact HwtS. }
-      move=>i agP Heq.
-      move:(HI i agP). case/(_ _)/Wrap; last move=>{HI} Heq' HI.
-      { rewrite -Heq. rewrite Hwt. reflexivity. }
-      rewrite -EQm. destruct (i ∈ m1)%de; last exact HI.
-      destruct (s i); last exact HI.
-      simpl. simpl in HI. erewrite ra_ag_unInj_pi. eassumption.
+      intros [s HwsT]; exists s; intro wt.
+      eapply wsatTotal_proper, HwsT; symmetry; first assumption.
+      rewrite /wt. eapply comp_finmap_dist; last reflexivity.
+      eapply mono_dist, EQw. omega.
     Qed.
 
     Global Instance wsat_equiv σ : Proper (equiv ==> equiv ==> equiv) (wsat σ).

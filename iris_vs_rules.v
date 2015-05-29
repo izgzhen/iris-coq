@@ -50,8 +50,8 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       clear HLu HInv HP.
       exists (fdStrongUpdate i None rs). intros wt.
       assert (Heqwt:  comp_finmap (w · wf) rs == wt).
-      { rewrite /wt -assoc (comm wi) assoc (comp_finmap_move wi).
-        rewrite -comp_finmap_remove; last now rewrite HLr. reflexivity. }
+      { rewrite /wt (comm _ wi) -assoc (comp_finmap_move wi).
+        rewrite (comm wi) -comp_finmap_remove; last now rewrite HLr. reflexivity. }
       assert (pv': (cmra_valid wt) (S (S k))).
       { eapply spredNE, pv. rewrite -Heqwt. reflexivity. }
       exists pv'. split.
@@ -93,7 +93,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           { move:(HD i). clear. de_tauto. }
           destruct (rs i); first move=> [].
           move=>_. reflexivity. }
-        rewrite -(comp_finmap_move w) -assoc (comm wf) assoc ra_op_unit.
+        rewrite -(comm w) -(comp_finmap_move w) assoc (comm _ (1w)) ra_op_unit.
         reflexivity. }
       assert (pv': (cmra_valid wt) (S (S k))).
       { eapply spredNE, pv. rewrite -Heqwt. reflexivity. }
@@ -101,9 +101,9 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       - rewrite /State -Heqwt. assumption.
       - move=>j agP Hlu. destruct (dec_eq i j) as [EQ|NEQ].
         + subst j. erewrite de_in_true by de_tauto.
-          rewrite fdStrongUpdate_eq. clear HS HM. simpl in *.
+          rewrite fdStrongUpdate_eq. clear HS HM. simpl in HP.
           eapply spredNE, dpred, HP; last omega.
-          rewrite ->Heqwt, ->Hlu in HeqP. simpl in HeqP.
+          rewrite ->Heqwt, ->Hlu in HeqP. simpl. simpl in HeqP.
           etransitivity; last first.
           * assert(Heq:=halve_eq (T:=Props) (S k)). apply Heq=>{Heq}.
             eapply (met_morph_nonexp ı). eapply ra_ag_unInj_dist.
@@ -144,7 +144,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       eapply propsMN, HP. omega.
     Qed.
 
-    Lemma pvsImpl P Q m1 m2 :
+    Lemma pvsImpl P Q m1 m2 : (* RJ TODO: Using box_conj_star, this can be weakened to a monotonicity statement. *)
       □ (P → Q) ∧ pvs m1 m2 P ⊑ pvs m1 m2 Q.
     Proof.
       move => w0 n [HPQ HvsP].
@@ -182,7 +182,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
         eapply mono_dist, HEr. omega. }
       exists (w2 · wq). split.
       - exists (w2, wq). split; last split.
-        + simpl. reflexivity.
+        + rewrite [ra_op]lock. simpl. reflexivity.
         + assumption.
         + apply propsMN, HQ. omega.
       - now rewrite -assoc.
@@ -198,28 +198,28 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
     Definition ownLP (P : RL.res -> Prop) : {s : RL.res | P s} -n> Props :=
       ownL <M< inclM.
 
-    Lemma pvsGhostUpd m rl (P : RL.res -> Prop) (HU : rl ⇝∈ P) :
-      ownL rl ⊑ pvs m m (xist (ownLP P)).
+    Lemma pvsGhostUpd m g (P : RL.res -> Prop) (HU : g ⇝∈ P) :
+      ownL g ⊑ pvs m m (xist (ownLP P)).
     Proof.
-      unfold ownLP. intros w n [rp' rl'] HG w'; intros.
-      destruct HE as [rs [ Hsat HE] ]. rewrite <-assoc in Hsat. destruct Hsat as [Hval Hst].
-      destruct HG as [ [rdp rdl] [_ EQrl] ]. simpl in EQrl. clear rdp.
-      destruct (HU (rdl · snd(rf · comp_map rs))) as [rsl [HPrsl HCrsl] ].
-      - clear - Hval EQrl. eapply ra_prod_valid in Hval. destruct Hval as [_ Hsnd].
-        rewrite ->assoc, (comm rl), EQrl.
-        rewrite ra_op_prod_snd in Hsnd. exact Hsnd.
-      - exists w' (rp', rsl).
-        split; first reflexivity. split.
-        + exists (exist _ rsl HPrsl). simpl.
-          exists (rp', 1:RL.res). simpl.
-          rewrite ra_op_unit ra_op_unit2. split; reflexivity.
-        + exists rs. split; [| assumption]; clear HE. rewrite <-assoc. split; [eapply ra_prod_valid; split|].
-          * clear - Hval. eapply ra_prod_valid in Hval. destruct Hval as [Hfst _].
-            rewrite ra_op_prod_fst in Hfst.
-            rewrite ra_op_prod_fst. exact Hfst.
-          * clear -HCrsl. rewrite ->!assoc, (comm rsl), <-assoc in HCrsl.
-            apply ra_op_valid2 in HCrsl. rewrite ra_op_prod_snd. exact HCrsl.
-          * clear -Hst. rewrite ra_op_prod_fst. rewrite ra_op_prod_fst in Hst. exact Hst.
+      unfold ownLP. intros w n. destruct n; first (intros; exact:bpred).
+      intros [g' Hg'] wf; intros.
+      destruct HE as [rs HwsT ]. simpl in HwsT. rewrite ->comp_finmap_move in HwsT.
+      destruct HwsT as [pv [HS HI]]. move:(pv). move/cmra_prod_valid=>[HIval]. move/cmra_prod_valid=>[HSval Hgval].
+      destruct w as [I0 [S0 g0]]. simpl in Hg'.
+      destruct (HU (g' · Res (comp_finmap wf rs))) as [g1 [HP HVal1] ].
+      - clear - Hgval Hg'. simpl in Hgval. now rewrite assoc (comm g) Hg'.
+      - exists (I0, (S0, g1 · g')). split.
+        + simpl. exists (exist _ _ HP). simpl.
+          eexists. now erewrite comm.
+        + exists rs. simpl. rewrite comp_finmap_move. clear HP Hgval.
+          assert (pv':(cmra_valid ((I0, (S0, g1 · g')) · comp_finmap wf rs)) (S (S k))).
+          { split; last split; try assumption; [].
+            now rewrite ->assoc in HVal1. }
+          exists pv'. split; first assumption.
+          move=>i agP Heq. move:(HI i agP Heq). 
+          destruct (i ∈ _); last tauto.
+          destruct (rs i); last tauto.
+          move=>H. erewrite ra_ag_unInj_pi. eassumption.
     Qed.
 
     Program Definition inv' m : Props -n> {n : nat | m n} -n> Props :=

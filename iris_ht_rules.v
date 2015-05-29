@@ -87,7 +87,7 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
     Qed.
 
     (** Consequence **)
-    Lemma wpImpl safe m e φ φ':
+    Lemma wpImpl safe m e φ φ': (* RJ TODO: Using box_conj_star, this can be weakened to a monotonicity statement. *)
       (□all (lift_bin BI.impl φ φ')) ∧ wp safe m e φ ⊑ wp safe m e φ'.
     Proof.
       move=>w n. move: n w e. elim/wf_nat_ind=>n0 IH w0 e [Himpl Hwp].

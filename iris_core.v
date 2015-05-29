@@ -195,17 +195,17 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       Invs w1 i = n = Some μ.
     Proof.
       move=> Hval [w' Hleq] Hlu. unfold Invs. rewrite -Hleq.
-      simpl morph. rewrite ra_op_prod_fst {1}/ra_op /ra_op_finprod fdComposeRed.
+      simpl morph. rewrite {1}/ra_op /ra_op_finprod fdComposeRed.
       destruct n; first exact:dist_bound.
       rewrite /Invs /= in Hlu.  destruct (fst w2 i) as [μ2|] eqn:Hw2; last contradiction Hlu.
       destruct (fst w' i) as [μ1|] eqn:Hw1; simpl in *.
       - rewrite Hlu assoc (comm _ μ). apply ra_ag_prod_dist. eapply world_invs_valid; first eexact Hval; first reflexivity.
         rewrite -Hleq. rewrite /Invs. simpl morph. instantiate (1:=i).
-        rewrite ra_op_prod_fst {1}/ra_op /ra_op_finprod fdComposeRed. rewrite Hw2 Hw1. simpl.
+        rewrite {1}/ra_op /ra_op_finprod fdComposeRed. rewrite Hw2 Hw1. simpl.
         now rewrite Hlu (comm μ) assoc.
       - rewrite Hlu comm. apply ra_ag_prod_dist. eapply world_invs_valid; first eexact Hval; first reflexivity.
         rewrite -Hleq. rewrite /Invs. simpl morph. instantiate (1:=i).
-        rewrite ra_op_prod_fst {1}/ra_op /ra_op_finprod fdComposeRed. rewrite Hw2 Hw1. simpl.
+        rewrite {1}/ra_op /ra_op_finprod fdComposeRed. rewrite Hw2 Hw1. simpl.
         now rewrite comm.
     Qed.
   End FinmapInvs.
@@ -354,19 +354,31 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Lemma box_star P Q :
       □(P * Q) == □P * □Q.
     Proof.
-      intros w n. split; (destruct n; first (intro; exact:bpred)); intros [[wP wQ] [Heq [HP HQ]]]; simpl in *.
-      - exists (1 w, w). split_conjs; simpl.
+      intros w n. split; (destruct n; first (intro; exact:bpred)); intros [[wP wQ] [Heq [HP HQ]]]. 
+      - rewrite (lock (1 w)) in Heq; simpl in Heq; unlock in Heq.
+        exists (1 w, w). simpl; split_conjs; simpl.
         + now rewrite ra_op_unit.
         + rewrite ra_unit_idem. eapply propsNE; first eexact Heq.
           eapply propsMW, HP. eexists; now erewrite comm.
         + eapply propsNE; first eexact Heq.
-          eapply propsMW, HQ. eexists; now erewrite comm.
-      - exists (1 w, 1 w). split_conjs.
+          eapply propsMW, HQ. simpl. eexists; now erewrite comm.
+      - simpl in Heq. exists (1 w, 1 w). rewrite (lock (1w)); simpl; unlock; split_conjs.
         + rewrite /fst /snd. rewrite -{1}(ra_unit_idem w). rewrite ra_op_unit. reflexivity.
         + simpl. eapply propsNE; first (eapply cmra_unit_dist; eexact Heq).
           eapply propsMW, HP. apply ra_unit_proper_pord. exists wQ; now rewrite comm.
         + simpl. eapply propsNE; first (eapply cmra_unit_dist; eexact Heq).
           eapply propsMW, HQ. apply ra_unit_proper_pord. exists wP; now rewrite comm.
+    Qed.
+
+    Lemma box_conj_star P Q :
+      □P * Q == □P ∧ Q.
+    Proof.
+      apply pord_antisym; first by eapply sc_and.
+      intros w n [HP HQ]. destruct n; first exact I. exists (1w, w).
+      split; last split; simpl.
+      - now rewrite ra_op_unit.
+      - rewrite ra_unit_idem. assumption.
+      - assumption.
     Qed.
 
     (* TODO RJ: show relation to implication *)

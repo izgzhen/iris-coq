@@ -189,13 +189,11 @@ Section Pairs.
 
   Global Instance ra_unit_prod : RA_unit (S * T) := fun st => (1 (fst st), 1 (snd st)).
   Global Instance ra_op_prod : RA_op (S * T) :=
-    fun st1 st2 =>
-      match st1, st2 with
-        | (s1, t1), (s2, t2) => (s1 · s2, t1 · t2)
-      end.
+    fun st1 st2 => (fst st1 · fst st2, snd st1 · snd st2).
+  Arguments ra_op_prod !st1 !st2 /.
   Global Instance ra_valid_prod : RA_valid (S * T) :=
-    fun st => match st with (s, t) => ra_valid s /\ ra_valid t
-              end.
+    fun st => ra_valid (fst st) /\ ra_valid (snd st).
+  Arguments ra_valid_prod !st /.
   Global Instance ra_prod : RA (S * T).
   Proof.
     split.

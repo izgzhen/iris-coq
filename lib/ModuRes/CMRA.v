@@ -117,6 +117,11 @@ Section PairsCMRA.
       + move=>n. split; eapply cmra_ra_valid; eapply H.
     - move=>[s1 t1] [s2 t2] n H. split; eapply cmra_op_valid; eapply H.
   Qed.
+
+  Lemma cmra_prod_valid {p n} :
+    cmra_valid p n <-> cmra_valid (fst p) n /\ cmra_valid (snd p) n.
+  Proof. by move: p=>[s t]. Qed.
+
 End PairsCMRA.
 
 Section PairsMap.

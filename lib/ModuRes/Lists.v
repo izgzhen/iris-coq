@@ -1,5 +1,5 @@
 Require Import Ssreflect.ssreflect.
-Require Import CSetoid List ListSet.
+Require Import Omega CSetoid List ListSet.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -139,6 +139,20 @@ Section FilterDup.
   Qed.
 
 End FilterDup.
+
+Section ListMax.
+  Definition list_max := fold_right max 0.
+
+  Lemma list_gax_ge l n:
+    In n l -> n <= list_max l.
+  Proof.
+    revert n. induction l; intros n HIn.
+    - destruct HIn.
+    - simpl. apply NPeano.Nat.max_le_iff. destruct HIn as [Heq|HIn].
+      + left. subst. reflexivity.
+      + right. now apply IHl.
+  Qed.
+End ListMax.
 
 Section Fold.
   Context {V T: Type} {eqT: relation T} {eqRT: Equivalence eqT}.
