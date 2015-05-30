@@ -92,11 +92,18 @@ Module WorldProp (Res : CMRA_T) : WORLD_PROP Res.
   Instance Wld_cm    : cmetric Wld := _.
   Instance Wld_preo  : preoType Wld := _.
   Instance Wld_pcm   : pcmType Wld := _.
+  Instance Wld_unit  : RA_unit Wld := _.
+  Instance Wld_op    : RA_op Wld := _.
+  Instance Wld_valid : RA_valid Wld := _.
   Instance Wld_RA    : RA Wld := _.
+  Instance Wld_CMRAval:CMRA_valid Wld := _.
   Instance Wld_CMRA  : CMRA Wld := _.
 
   (* Define propositions *)
   Definition Props   := FProp PreProp.
+  Instance Props_ty    : Setoid Props := _.
+  Instance Props_m     : metric Props := _.
+  Instance Props_cm    : cmetric Props := _.
 
   (* Establish the isomorphism *)
   Definition ı  : DInfO -t> halveCM (cmfromType Props) := Unfold.

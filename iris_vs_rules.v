@@ -178,13 +178,6 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       - now rewrite -assoc.
     Qed.
 
-    (* RJ this should now be captured by the generic instance for discrete metrics.
-    Instance LP_res (P : RL.res -> Prop) : LimitPreserving P.
-    Proof.
-      intros σ σc HPc; simpl. unfold discreteCompl.
-      now auto.
-    Qed.*)
-
     Definition ownLP (P : RL.res -> Prop) : {s : RL.res | P s} -n> Props :=
       ownL <M< inclM.
 

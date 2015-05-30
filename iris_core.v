@@ -81,6 +81,19 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       the complete BI class can be found for Props (and binds it with
       a low priority to potentially speed up the proof search).
    *)
+  (* RJ: For some reason, these terms do not (all) use the Wld_op, Wld_RA, ... instances.
+     I have no idea, why. *)
+  Instance Props_valid : validBI Props | 0 := _.
+  Instance Props_top : topBI Props | 0 := _.
+  Instance Props_bot : botBI Props | 0 := _.
+  Instance Props_and : andBI Props | 0 := _.
+  Instance Props_or : orBI Props | 0 := _.
+  Instance Props_impl : implBI Props | 0 := _.
+  Instance Props_sc : scBI Props | 0 := _.
+  Instance Props_si : siBI Props | 0 := _.
+  Instance Props_eq : eqBI Props | 0 := _.
+  Instance Props_all : allBI Props | 0 := _.
+  Instance Props_xist : xistBI Props | 0 := _.
   Instance Props_Lattice : Lattice Props | 0 := _.
   Instance Props_CBI : ComplBI Props | 0 := _.
   Instance Props_Eq : EqBI Props | 0 := _.
@@ -250,13 +263,11 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       simpl. eapply dpred; last eassumption. omega.
     Qed.
 
-    Lemma loeb t (HL: later t ⊑ t): valid t.
+    Lemma loeb P (HL: later P ⊑ P): valid P.
       intros w n. induction n.
       - eapply HL. exact I.
       - eapply HL. exact IHn.
     Qed.
-
-    (* TODO RJ: show loeb under a context *)
 
     Lemma later_true: (⊤:Props) == ▹⊤.
     Proof.
@@ -266,14 +277,25 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       - reflexivity.
     Qed.
 
-    Lemma laterM {P Q: Props}:
-      (P → Q) ∧ ▹P ⊑ ▹Q.
+    Lemma later_impl P Q:
+      ▹(P → Q) == ▹P → ▹Q.
     Proof.
-      move=>w0 n0 [HPQ HLP].
-      destruct n0 as [|n0]; first by auto.
-      simpl. simpl in HLP. eapply (applyImpl HPQ);[reflexivity|now eauto|assumption].
+      intros w n. split; (destruct n; first (intro; exact:bpred)); intro H.
+      - simpl in H. move=>wf /= m Hle HP.
+        destruct m; first exact I. apply H; assumption || omega.
+      - move=>wf /= m Hle HP. apply (H wf (S m)); assumption || omega.
     Qed.
 
+    Lemma strong_loeb P: (▹P → P) ⊑ P.
+    Proof.
+      transitivity (⊤ ∧ (▹P → P)).
+      { apply and_R; split; last reflexivity. apply top_true. }
+      apply and_impl. apply top_valid. apply loeb. apply and_impl.
+      eapply modus_ponens; last by apply and_projR.
+      rewrite later_impl. eapply modus_ponens; last by eapply and_projL.
+      rewrite->and_projR. apply later_mon.
+    Qed.
+      
   End LaterProps.
 
   Section Necessitation.
@@ -428,7 +450,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
     Remark valid_biimp_intEq {P Q} : valid(P ↔ Q) -> valid(P === Q).
     Proof.
-      move=> H nz wz n HLt.
+      move=> H _ nz wz n HLt.
       move/(_ wz n): H => [Hpq Hqp]. split.
       - move/(_ (1 wz) n _) : Hpq => Hpq. by rewrite -(ra_op_unit2 (t:=wz)).
       - move/(_ (1 wz) n _) : Hqp => Hqp. by rewrite -(ra_op_unit2 (t:=wz)).
@@ -595,7 +617,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       apply pord_antisym; last by apply:box_elim.
       intros [u r] n. destruct n; first (intro; exact:bpred).
       case=>Pr. move/sp_eq_iff=>Heq. exists Pr. apply sp_eq_iff.
-      rewrite -Heq. unfold ra_unit, ra_unit_prod, Invs, fst. now rewrite finmap_invs_unit.
+      rewrite -Heq. unfold ra_unit, Wld_unit, ra_unit_prod, Invs, fst. now rewrite finmap_invs_unit.
     Qed.
 
     Program Definition inv_own i P: Props :=

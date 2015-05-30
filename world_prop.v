@@ -22,11 +22,18 @@ Module Type WORLD_PROP (Res : CMRA_T).
   Instance Wld_cm    : cmetric Wld := _.
   Instance Wld_preo  : preoType Wld := pord_ra. (* disambiguate the order *)
   Instance Wld_pcm   : pcmType Wld := _.
+  Instance Wld_unit  : RA_unit Wld := _.
+  Instance Wld_op    : RA_op Wld := _.
+  Instance Wld_valid : RA_valid Wld := _.
   Instance Wld_RA    : RA Wld := _.
+  Instance Wld_CMRAval:CMRA_valid Wld := _.
   Instance Wld_CMRA  : CMRA Wld := _.
 
   (* Now we are ready to define Propositions. *)
   Definition Props    := Wld -m> SPred.
+  Instance Props_ty    : Setoid Props := _.
+  Instance Props_m     : metric Props := _.
+  Instance Props_cm    : cmetric Props := _.
 
   (* Require recursion isomorphisms *)
   Parameter ı  : PreProp -n> halve Props.
