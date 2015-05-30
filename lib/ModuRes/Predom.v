@@ -40,6 +40,7 @@ Section Monotone_Morphisms.
 End Monotone_Morphisms.
 
 Global Arguments mkMMorph [T U] {_ pT _ pU} _ _.
+Arguments mono_morph [T U] {_ _ _ _} !_ /.
 Arguments mono_mono {_ _} {_ _ _ _} _ {_ _} _.
 
 Notation "T -m> U" := (monotone_morphism T U) (at level 45, right associativity) : predom_scope.
@@ -73,7 +74,7 @@ Section MMorphProps1.
   Qed.
     
   Global Instance pord_mono :
-    Proper (pord ==> pord ==> pord) (mono_morph T U).
+    Proper (pord ==> pord ==> pord) (mono_morph (T:=T) (U:=U)).
   Proof.
     intros f g HSub x y HSub'; etransitivity; [apply HSub | apply g, HSub'].
   Qed.
@@ -109,7 +110,7 @@ Section MMorphProps2.
   Program Definition lift2m (f : T -=> U -=> V) p q : T -m> U -m> V :=
     (mkMMorph (mkMorph (fun t : T => mkMMorph (f t) (p t)) _) q).
   Next Obligation.
-    move=> t1 t2 EQt u /=; rewrite EQt; reflexivity.
+    move=> t1 t2 EQt u /=. rewrite EQt; reflexivity.
   Qed.
 
 End MMorphProps2.
@@ -230,7 +231,7 @@ Section MonoExponentials.
     mkMMorph s[(fun p => f (fst p) (snd p))] _.
   Next Obligation.
     move=> [t1 u1] [t2 u2] [/= Ht ->].
-    exact: (morph_resp (mono_morph _ _ f)).
+    by eapply (morph_resp f).
   Qed.
   Next Obligation.
     move=> [t1 u1] [t2 u2] [/= Ht Hu].

@@ -76,13 +76,14 @@ Notation "de1 \ de2"  := (de_minus de1 de2) (at level 35) : de_scope.
 Notation "de1 # de2" := (de1 ∩ de2 == de_emp) (at level 70) : de_scope.
 
 (* Some automation *)
-Ltac de_unfold := unfold de_cap, de_cup, de_minus, de_compl; unlock; simpl.
-Ltac de_in_destr := repeat progress
-                           (simpl; unfold const;
-                            repeat (match goal with
-                                    | [ |- context[?t ∈ ?de] ] => destruct (t ∈ de)
-                                    | [ |- context[dec_eq ?i ?j] ] => destruct (dec_eq i j); first try subst j; try contradiction_eq
-                                    end)).
+Ltac de_unfold := unfold de_cap, de_cup, de_minus, de_compl, const; unlock; simpl.
+Ltac de_in_destr := simpl; 
+    repeat (match goal with
+            | [ |- context[dec_eq ?i ?j] ] => destruct (dec_eq i j); first try subst j; try contradiction_eq; simpl
+            end);
+    repeat (match goal with
+            | [ |- context[?t ∈ ?de] ] => destruct (t ∈ de); simpl
+            end).
 Ltac de_tauto := de_unfold; de_in_destr; rewrite ?de_ft_eq ?de_tf_eq ?de_tt_eq ?de_ff_eq; repeat (split || intro); (reflexivity || discriminate || tauto).
 Ltac de_auto_eq := destruct_conjs;
       let t := fresh "t" in move=>t;

@@ -35,13 +35,14 @@ Class Commutative {T} `{eqT : Setoid T} (op : T -> T -> T) :=
 
 (** A morphism between two types is an actual function together with a
     proof that it preserves equality. *)
-Record morphism S T `{eqS : Setoid S} `{eqT : Setoid T} :=
+Record morphism T U `{eqT : Setoid T} `{eqU : Setoid U} :=
   mkMorph {
-    morph :> S -> T;
+    morph :> T -> U;
     morph_resp : Proper (equiv ==> equiv) morph}.
 
-Arguments mkMorph [S T eqS eqT] _ _.
-Arguments morph_resp [S T eqS eqT] _ _ _ _.
+Arguments mkMorph [T U] {_ _} _ _.
+Arguments morph [T U] {_ _} !_ _ /.
+Arguments morph_resp [T U] {_ _} _ _ _ _.
 
 Infix "-=>" := morphism (at level 45, right associativity).
 Notation "'s[(' f ')]'" := (mkMorph f _).
@@ -75,7 +76,7 @@ Section Morphisms.
   (** The application of [morphsm] to its argument preserves equality
       in both the function and the argument. *)
   Global Instance equiv_morph :
-    Proper (equiv ==> equiv ==> equiv) (morph T U).
+    Proper (equiv ==> equiv ==> equiv) (morph (T:=T) (U:=U)).
   Proof.
     intros f g HEq x y HEq'; etransitivity; [apply HEq | apply g, HEq'].
   Qed.

@@ -21,7 +21,7 @@ Record monoMet_morphism T U `{pcmT : pcmType T} `{pcmU : pcmType U} := mkMUMorph
     mu_mono  :  Proper (pord ==> pord) mu_morph}.
 
 Arguments mkMUMorph [T U] {_ _ _ _ _ _ _ _ _ _} _ _.
-Arguments mu_morph  [T U] {_ _ _ _ _ _ _ _ _ _} _.
+Arguments mu_morph  [T U] {_ _ _ _ _ _ _ _ _ _} !_ /.
 Arguments mu_mono  {_ _} {_ _ _ _ _ _ _ _ _ _} _ {_ _} _.
 
 Infix "-m>" := monoMet_morphism (at level 45, right associativity) : pumet_scope.
@@ -183,7 +183,7 @@ Section PUMMorphProps1.
   Qed.
 
   Global Instance pord_morph :
-    Proper (ordS ==> equiv ==> pord) (morph T U).
+    Proper (ordS ==> equiv ==> pord) (morph (T:=T) (U:=U)).
   Proof.
     intros f g HS x y HS'; etransitivity; [apply HS |].
     eapply preoC; try assumption; [reflexivity | apply g; rewrite <- HS' |]; reflexivity.

@@ -88,11 +88,11 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
   Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (r : res) (g : RL.res) (σ : state).
 
   Definition Invs (w: Wld) := Mfst w.
-  Arguments Invs !w /.
+  Arguments Invs w /.
   Definition State (w: Wld) := Mfst (Msnd w).
-  Arguments State !w /.
+  Arguments State w /.
   Definition Res (w: Wld) := Msnd (Msnd w).
-  Arguments Res !w /.
+  Arguments Res w /.
 
   (* Simple view lemmas. *)
 
@@ -355,14 +355,14 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       □(P * Q) == □P * □Q.
     Proof.
       intros w n. split; (destruct n; first (intro; exact:bpred)); intros [[wP wQ] [Heq [HP HQ]]]. 
-      - rewrite (lock (1 w)) in Heq; simpl in Heq; unlock in Heq.
+      - rewrite (lock (1 w)) /= -lock in Heq.
         exists (1 w, w). simpl; split_conjs; simpl.
         + now rewrite ra_op_unit.
         + rewrite ra_unit_idem. eapply propsNE; first eexact Heq.
           eapply propsMW, HP. eexists; now erewrite comm.
         + eapply propsNE; first eexact Heq.
           eapply propsMW, HQ. simpl. eexists; now erewrite comm.
-      - simpl in Heq. exists (1 w, 1 w). rewrite (lock (1w)); simpl; unlock; split_conjs.
+      - simpl in Heq. exists (1 w, 1 w). rewrite (lock (1w)) /= -lock; split_conjs.
         + rewrite /fst /snd. rewrite -{1}(ra_unit_idem w). rewrite ra_op_unit. reflexivity.
         + simpl. eapply propsNE; first (eapply cmra_unit_dist; eexact Heq).
           eapply propsMW, HP. apply ra_unit_proper_pord. exists wQ; now rewrite comm.
@@ -410,8 +410,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
       Program Definition box_all_lhs : Props := ∀t, □φ t.
       Next Obligation.
-        move=> t t' HEq w k HLt.
-        simpl morph; simpl spred.
+        move=> t t' HEq w k HLt. simpl.
         split.
         - apply spredNE. eapply mono_dist; last by rewrite HEq. omega.
         - apply spredNE. eapply mono_dist; last by rewrite HEq. omega.
@@ -481,13 +480,12 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Next Obligation.
       intros w1 w2 EQw k; simpl. intros HLt.
       split; intros HT w' m HSw HLt' Hp.
-      - destruct HSw as [wr HSw].
-        have Hwr : wr · w1 = n = w'. 
-        { rewrite -HSw. apply cmra_op_dist; [reflexivity|assumption]. }
-        apply: propsNE; [|eapply mono_dist; last eassumption; omega|].
-        apply: HT; [exists wr; reflexivity|omega|].
-        apply: propsNE; [|symmetry; eapply mono_dist; last eassumption; omega|].
-        assumption.
+      - destruct HSw as [wr HSw]. rewrite -HSw.
+        eapply (propsNE (w1:=wr·w1)), HT, propsNE, Hp.
+        + apply cmra_op_dist; first reflexivity. eapply mono_dist, EQw. omega.
+        + eexists. now reflexivity.
+        + assumption.
+        + rewrite -HSw. apply cmra_op_dist; first reflexivity. symmetry. eapply mono_dist, EQw. omega.
       - destruct HSw as [wr HSw].
         have Hwr : wr · w2 = n = w'. 
         { rewrite -HSw. apply cmra_op_dist; [reflexivity|symmetry; assumption]. }
@@ -541,7 +539,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       destruct k; first reflexivity.
       split; move => [wr Hwr];
         exists wr. 
-      - eapply spredNE, Hwr. simpl morph. eapply intEq_dist; first reflexivity.
+      - eapply spredNE, Hwr. simpl morph. eapply intEq_dist; first reflexivity. (* RJ: another instance of simpl going too far *)
         eapply mono_dist, EQw. assumption.
       - eapply spredNE, Hwr. simpl morph. eapply intEq_dist; first reflexivity.
         symmetry. eapply mono_dist, EQw. assumption.
@@ -571,7 +569,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Next Obligation.
       move => i P w1 w2 [wd Hw] n. simpl morph. destruct n; first reflexivity.
       move=>[Pr HPr]. simpl morph in HPr. destruct w1 as [I1 R1], w2 as [I2 R2], wd as [Id Rd].
-      destruct Hw as [EQI _]. simpl in *. simpl. clear R1 R2 Rd. specialize (EQI i).
+      destruct Hw as [EQI _]. simpl in *. clear R1 R2 Rd. specialize (EQI i).
       simpl in EQI. destruct (Id i) as [Pd|].
       - exists (Pd · Pr). change (I2 i = S n = (Some (Pd · Pr · ra_ag_inj (ı' (halved P))))).
         etransitivity; first (eapply dist_refl; symmetry; exact:EQI).
@@ -611,24 +609,24 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       inv i P == inv_own i P.
     Proof.
       move=>w n. destruct n; first reflexivity. split.
-      - case=>Pr. move/sp_eq_iff=>Heq. exists (1 (snd w)). exists w. apply sp_eq_iff.
+      - case=>Pr /= Heq. exists (1 (snd w)). exists w.
         destruct w as [I R]. unfold ra_op, ra_op_prod. split; last first.
-        { rewrite /snd ra_op_unit. reflexivity. }
+        { rewrite /= ra_op_unit. reflexivity. }
         simpl. move=>j. rewrite /ra_op /ra_op_finprod fdComposeRed.
         destruct (dec_eq i j).
         + subst j. rewrite fdStrongUpdate_eq. simpl in Heq.
           destruct (I i) as [Ii|]; last contradiction Heq.
-          rewrite /finprod_op. simpl in *.
+          simpl in *.
           rewrite Heq=>{Heq}. apply dist_refl. rewrite assoc (comm _ Pr) -assoc.
           rewrite ra_ag_dupl. reflexivity.
         + erewrite fdStrongUpdate_neq by assumption. destruct (I j); reflexivity.
-      - case=>r. case=>wf. move/sp_eq_iff=>Heq. destruct w as [I R], wf as [If Rf].
-        destruct Heq as [HeqI _]. rewrite /ra_op /ra_op_prod /fst in HeqI. specialize (HeqI i).
+      - case=>r. case=>wf /= Heq. destruct w as [I R], wf as [If Rf].
+        destruct Heq as [HeqI _]. simpl in HeqI. specialize (HeqI i).
         rewrite /ra_op /ra_op_finprod fdComposeRed fdStrongUpdate_eq in HeqI.
         destruct (If i) as [Ifi|].
-        + exists Ifi. apply sp_eq_iff. unfold Invs, fst. rewrite -HeqI /finprod_op.
+        + exists Ifi. unfold Invs, fst. rewrite -HeqI /finprod_op.
           rewrite comm. reflexivity.
-        + exists (1 (ra_ag_inj (ı' (halved P)))). apply sp_eq_iff. unfold Invs, fst.
+        + exists (1 (ra_ag_inj (ı' (halved P)))). unfold Invs, fst.
           rewrite -HeqI /finprod_op. rewrite ra_op_unit. reflexivity.
     Qed.
     
@@ -738,14 +736,14 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Lemma ownL_sc (g1 g2 : RL.res) :
       ownL (g1 · g2) == ownL g1 * ownL g2.
     Proof.
-      intros [I [S g]] n. destruct n; first (split; intro; exact:bpred). split.
-      - simpl. move => [gd Heq]. exists ((I, (S, gd · g1)), (1 I, (1 S, g2))). simpl. split_conjs.
+      intros [I [S g]] n. destruct n; first (split; intro; exact:bpred). split; simpl.
+      - move => [gd Heq]. exists ((I, (S, gd · g1)), (1 I, (1 S, g2))). simpl. split_conjs.
         + rewrite ra_op_unit2. reflexivity.
         + rewrite ra_op_unit2. reflexivity.
         + rewrite -assoc. apply dist_refl. assumption.
         + exists gd. reflexivity.
         + reflexivity.
-      - simpl. move=>[[[I1 [S1 g'1]] [I2 [S2 g'2]]] /= [[_ [_ Heq]] [Hg1 Hg2]]].
+      - move=>[[[I1 [S1 g'1]] [I2 [S2 g'2]]] /= [[_ [_ Heq]] [Hg1 Hg2]]].
         rewrite ->Hg1, Hg2. apply pordR. exact Heq.
     Qed.
 

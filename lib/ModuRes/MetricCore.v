@@ -190,8 +190,8 @@ Record metric_morphism T U `{mT : metric T} `{mU : metric U} :=
     { met_morph :> T -=> U;
       met_morph_nonexp n : Proper (dist n ==> dist n) met_morph}.
 
-Arguments mkUMorph [T U eqT mT eqT0 mU] _ _.
-Arguments met_morph [T U] {eqT mT eqT0 mU} _.
+Arguments mkUMorph [T U] {eqT mT eqT0 mU} _ _.
+Arguments met_morph [T U] {eqT mT eqT0 mU} !_ /.
 Arguments met_morph_nonexp {_ _} {_ _ _ _} _ {_} {_ _} _.
 Infix "-n>" := metric_morphism (at level 45, right associativity).
 
@@ -267,7 +267,7 @@ Definition distS `{eqT : Setoid T} `{mU : metric U} n (f g : T -=> U) :=
   forall x, f x = n = g x.
 
 Instance mmorph_properS n `{mT : metric T} `{mU : metric U} :
-  Proper (distS n ==> equiv ==> dist n) (morph T U).
+  Proper (distS n ==> equiv ==> dist n) (morph (T:=T) (U:=U)).
 Proof.
   intros f g HEq x y HEq'; rewrite HEq'; apply HEq.
 Qed.
