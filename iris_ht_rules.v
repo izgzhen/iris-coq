@@ -111,40 +111,21 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
 
     (** Consequence **)
     Lemma wpImpl safe m e φ φ': (* RJ TODO: Using box_conj_star, this can be weakened to a monotonicity statement. *)
-      (□all (lift_bin BI.impl φ φ')) ∧ wp safe m e φ ⊑ wp safe m e φ'.
+      φ ⊑ φ' -> wp safe m e φ ⊑ wp safe m e φ'.
     Proof.
-      move=>w n. move: n w e. elim/wf_nat_ind=>n0 IH w0 e [Himpl Hwp].
+      move=>Himpl w n. move: n w e. elim/wf_nat_ind=>n0 IH w0 e Hwp.
       rewrite ->unfold_wp in Hwp. rewrite unfold_wp. intros wf; intros.
-      edestruct (Hwp (1 w0 · wf)) as [Hval [Hstep [Hfork Hsafe]]]; try eassumption; [|].
-      { rewrite assoc (comm w0) ra_op_unit. eassumption. }
-      split; last split; last split.
+      edestruct (Hwp wf) as [Hval [Hstep [Hfork Hsafe]]]; try eassumption; [].
+      split; last split; last split; last assumption.
       - move=>Hisval. destruct (Hval Hisval) as [w2 [Hφ Hsat]]=>{Hval Hstep Hfork Hsafe}.
-        exists (w2 · 1 w0). split.
-        + eapply (applyImpl (Himpl (exist _ e Hisval))), propsMW, Hφ.
-          * exists w2. reflexivity.
-          * omega.
-          * exists (1 w0). now rewrite comm.
-        + now rewrite -assoc.
+        exists w2. split; last assumption.
+        eapply Himpl, Hφ.
       - move=>σ' ei ei' K Hfill Hpstep. destruct (Hstep _ _ _ _ Hfill Hpstep) as [w2 [Hnext Hsat]]=>{Hval Hstep Hfork Hsafe}.
-        exists (w2 · 1 w0). split.
-        + eapply IH; last split.
-          * omega.
-          * eapply (propsM (w':=1(w2 · 1 w0)) (w:=1 w0)); last eexact Himpl; last omega.
-            destruct (ra_unit_mono (1 w0) w2) as [w' Heq]. rewrite comm Heq ra_unit_idem.
-            exists w'. now rewrite comm.
-          * eapply propsMW, Hnext. eexists; now erewrite comm.
-        + now rewrite -assoc.
+        exists w2. split; last assumption.
+        eapply IH; assumption.
       - move=>? ? Heq. destruct (Hfork _ _ Heq) as (wfk & wret & Hnext1 & Hnext2 & Hsat)=>{Hval Hstep Hfork Hsafe}.
-        exists wfk (wret · 1 w0). split; last split.
-        + eapply IH; last split.
-          * omega.
-          * eapply (propsM (w':=1(wret · 1 w0)) (w:=1 w0)); last eexact Himpl; last omega.
-            destruct (ra_unit_mono (1 w0) wret) as [w' Heq']. rewrite comm Heq' ra_unit_idem.
-            exists w'. now rewrite comm.
-          * eapply propsMW, Hnext1. eexists; now erewrite comm.
-        + assumption.
-        + rewrite -!assoc. rewrite <-!assoc in Hsat. assumption.
-      - assumption.
+        exists wfk wret. split; last (split; assumption).
+        eapply IH; assumption.
     Qed.
 
     Lemma wpPreVS m safe e φ:

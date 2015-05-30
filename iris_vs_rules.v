@@ -55,10 +55,10 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       assert (pv': (cmra_valid wt) (S (S k))).
       { eapply spredNE, pv. rewrite -Heqwt. reflexivity. }
       exists pv'. split.
-      - rewrite /State -Heqwt. assumption.
+      - rewrite /= -Heqwt. assumption.
       - move=>j agP Hlu. rewrite (comm de_emp) de_emp_union. move:(HM j agP)=>{HM}.
         case/(_ _)/Wrap; last move=>Heq'.
-        { rewrite /Invs Heqwt. exact Hlu. }
+        { rewrite Heqwt. exact Hlu. }
         destruct (j ∈ mf) eqn:Hm.
         + erewrite de_in_true by de_tauto.
           destruct (dec_eq i j) as [EQ|NEQ].
@@ -139,19 +139,14 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       eapply propsMN, HP. omega.
     Qed.
 
-    Lemma pvsImpl P Q m1 m2 : (* RJ TODO: Using box_conj_star, this can be weakened to a monotonicity statement. *)
-      □ (P → Q) ∧ pvs m1 m2 P ⊑ pvs m1 m2 Q.
+    Lemma pvsMon P Q m1 m2 : 
+      P ⊑ Q -> pvs m1 m2 P ⊑ pvs m1 m2 Q.
     Proof.
-      move => w0 n [HPQ HvsP].
+      move => HPQ w0 n HvsP.
       intros wf k mf σ Hlt HD HSat.
-      destruct (HvsP (1 w0 · wf ) _ mf σ Hlt) as (w1 & HP & HSat2); [de_auto_eq| |].
-      { rewrite assoc (comm w0) ra_op_unit. assumption. }
-      exists (w1 · 1 w0). split.
-      - eapply (applyImpl HPQ).
-        + exists w1. reflexivity.
-        + omega.
-        + eapply propsMW, HP. eexists. erewrite comm. reflexivity.
-      - now rewrite -assoc.
+      destruct (HvsP wf _ mf σ Hlt) as (w1 & HP & HSat2); [de_auto_eq|assumption|].
+      exists w1. split; last assumption.
+      eapply HPQ, HP.
     Qed.
       
     Lemma pvsFrameMask P m1 m2 mf (HDisj : mf # m1 ∪ m2) :

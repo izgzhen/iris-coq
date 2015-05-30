@@ -287,6 +287,18 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       apply EQp; assumption || omega.
     Qed.
 
+    Global Instance pvs_mproper:
+      Proper (equiv ==> equiv ==> equiv) pvs.
+    Proof.
+      move=>m11 m12 EQm1 m21 m22 EQm2 P w n. split=>Hvs.
+      - move=>wf; intros.
+        destruct (Hvs wf k mf σ) as [w' [HP HW]]; [assumption|de_auto_eq|now rewrite EQm1|].
+        exists w'. split; first assumption. now rewrite <-EQm2.
+      - move=>wf; intros.
+        destruct (Hvs wf k mf σ) as [w' [HP HW]]; [assumption|de_auto_eq|now rewrite <-EQm1|].
+        exists w'. split; first assumption. now rewrite EQm2.
+    Qed.
+
   End PrimitiveViewShifts.
 
 
@@ -449,6 +461,44 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       rewrite unfold_wp; intros w'; intros; now inversion HLt.
     Qed.
 
+    Global Instance wp_mproper safe:
+      Proper (equiv ==> equiv) (wp safe).
+    Proof.
+      move=>m1 m2 EQm e φ w n. move:n φ w e. induction n using wf_nat_ind; intros; rename H into IH.
+      rewrite [wp safe m1]unfold_wp [wp safe m2]unfold_wp.
+      split=>Hwp.
+      - move=>wf; intros.
+        destruct (Hwp wf k mf σ) as (Hval & Hstep & Hfork & Hsafe); [assumption|de_auto_eq|now rewrite EQm|].
+        split; last split; last split; last assumption.
+        + move=>HV. specialize (Hval HV). destruct Hval as (w' & HP & HW).
+          exists w'. split; first assumption. now rewrite -EQm.
+        + move=>? ? ? ? Hfill Hpstep. specialize (Hstep _ _ _ _ Hfill Hpstep).
+          destruct Hstep as (w' & Hwp' & HW). exists w'. split.
+          * erewrite <-IH by assumption. assumption.
+          * now rewrite -EQm.
+        + move=>? ? Hfill. specialize (Hfork _ _ Hfill).
+          destruct Hfork as (wfk & wret & Hwp' & Hwp'' & HW).
+          exists wfk wret. split; last split.
+          * erewrite <-IH by assumption. assumption.
+          * erewrite <-IH by assumption. assumption.
+          * now rewrite -EQm.
+      - move=>wf; intros.
+        destruct (Hwp wf k mf σ) as (Hval & Hstep & Hfork & Hsafe); [assumption|de_auto_eq|now rewrite -EQm|].
+        split; last split; last split; last assumption.
+        + move=>HV. specialize (Hval HV). destruct Hval as (w' & HP & HW).
+          exists w'. split; first assumption. now rewrite EQm.
+        + move=>? ? ? ? Hfill Hpstep. specialize (Hstep _ _ _ _ Hfill Hpstep).
+          destruct Hstep as (w' & Hwp' & HW). exists w'. split.
+          * erewrite ->IH by assumption. assumption.
+          * now rewrite EQm.
+        + move=>? ? Hfill. specialize (Hfork _ _ Hfill).
+          destruct Hfork as (wfk & wret & Hwp' & Hwp'' & HW).
+          exists wfk wret. split; last split.
+          * erewrite ->IH by assumption. assumption.
+          * erewrite ->IH by assumption. assumption.
+          * now rewrite EQm.
+    Qed.
+
   End WeakestPre.
 
   Section DerivedForms.
@@ -457,21 +507,22 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Definition vs m1 m2 P Q : Props :=
       □(P → pvs m1 m2 Q).
 
-    Global Instance vsProper m1 m2: Proper (equiv ==> equiv ==> equiv) (vs m1 m2).
+    Global Instance vsProper: Proper (equiv ==> equiv ==> equiv ==> equiv ==> equiv) vs.
     Proof.
-      move=>P1 P2 EQP Q1 Q2 EQQ. unfold vs. apply morph_resp. apply impl_equiv; first assumption.
-      now rewrite EQQ.
+      move=>m11 m12 EQm1 m21 m22 EQm2 P1 P2 EQP Q1 Q2 EQQ. unfold vs.
+      apply morph_resp. apply impl_equiv; first assumption.
+      apply equiv_morph; last assumption.
+      now rewrite EQm1 EQm2.
     Qed.
 
     Definition ht safe m P e Q := □(P → wp safe m e Q).
 
-    Global Instance ht_proper safe m: Proper (equiv ==> equiv ==> equiv ==> equiv) (ht safe m).
+    Global Instance ht_proper safe: Proper (equiv ==> equiv ==> equiv ==> equiv ==> equiv) (ht safe).
     Proof.
-      move=> P0 P1 HEQP e0 e1 HEQe Q0 Q1 HEQQ.
-      (* TODO these rewrites are *slow* *)
+      move=>m0 m1 EQm P0 P1 HEQP e0 e1 HEQe Q0 Q1 HEQQ.
       unfold ht. apply morph_resp. apply impl_equiv; first assumption.
       apply equiv_morph; last assumption.
-      hnf in HEQe. subst e1. reflexivity.
+      hnf in HEQe. subst e1. now rewrite EQm.
     Qed.
 
   End DerivedForms.
