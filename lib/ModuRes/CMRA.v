@@ -56,6 +56,14 @@ Section CMRAProps.
   
 End CMRAProps.
 
+Section CMRAExt.
+  Context (T: Type).
+
+  Class CMRAExt `{cmraT: CMRA T}: Prop :=
+    cmra_extend: forall n (t1 t11 t12 t2: T) (EQt: t1 = n = t2) (EQt1: t1 == t11 · t12),
+      exists t21 t22, t2 == t21 · t22 /\ (t11, t12) = n = (t21, t22).
+End CMRAExt.
+
 Section DiscreteCMRA.
   Context {T: Type} `{raT: RA T}.
   Existing Instance discreteMetric.
@@ -82,6 +90,15 @@ Section DiscreteCMRA.
       + move=>H n. simpl. destruct n; simpl; tauto.
     - move=>t1 t2 n. destruct n; first reflexivity.
       exact: ra_op_valid.
+  Qed.
+
+  Instance discreteCMRAExt : CMRAExt T.
+  Proof.
+    move=>n; intros. destruct n.
+    { exists (1 t2) t2. split; last exact:dist_bound.
+      now rewrite ra_op_unit. }
+    exists t11 t12. split; last reflexivity. rewrite /dist /= in EQt.
+    rewrite -EQt EQt1. reflexivity.
   Qed.
 End DiscreteCMRA.
 

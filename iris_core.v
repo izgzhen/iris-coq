@@ -74,6 +74,12 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
   Instance vPred_metr  : metric vPred  := _.
   Instance vPred_cmetr : cmetric vPred := _.
 
+  (* FIXME TODO RJ: This should hold. But the construction is not entirely trivial. And of course it should not be proven here. *)
+  Local Instance Wld_Ext: CMRAExt Wld.
+  Proof.
+    admit.
+  Qed.
+
   (** The final thing we'd like to check is that the space of
       propositions does indeed form a complete BI algebra.
 
@@ -286,6 +292,41 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       - move=>wf /= m Hle HP. apply (H wf (S m)); assumption || omega.
     Qed.
 
+    Lemma later_top P:
+      ▹⊤ == ⊤.
+    Proof.
+      intros w [|n]; split; simpl; tauto.
+    Qed.
+
+     Lemma later_disj P Q :
+      ▹(P ∨ Q) == ▹P ∨ ▹Q.
+    Proof.
+      intros w [|n]; split; simpl; tauto.
+    Qed.
+    
+    Lemma later_conj P Q :
+      ▹(P ∧ Q) == ▹P ∧ ▹Q.
+    Proof.
+      intros w [|n]; split; simpl; tauto.
+    Qed.
+    
+    Lemma later_star P Q:
+      ▹(P * Q) == ▹P * ▹Q.
+    Proof.
+      intros w n; split; (destruct n; first tauto).
+      - destruct n.
+        { move=>_. exists (1 w, w). simpl.
+          split; last (split; exact:bpred).
+          now rewrite ra_op_unit. }
+        move=>[[w1 w2] [/= Heq [HP HQ]]].
+        edestruct Wld_Ext as [w'1 [w'2 [Heq' [Hdist1 Hdist2]]]]; first eexact Heq; first reflexivity.
+        exists (w'1, w'2). split; first now rewrite Heq'. simpl in *.
+        split; (eapply propsNE; last eassumption); assumption.
+      - move=>[[w1 w2] [Heq [HP HQ]]]. destruct n; first exact I.
+        exists (w1, w2). simpl in *. split; last tauto.
+        now apply dist_mono.
+    Qed.
+
     Lemma strong_loeb P: (▹P → P) ⊑ P.
     Proof.
       transitivity (⊤ ∧ (▹P → P)).
@@ -354,7 +395,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       exists w. now rewrite comm ra_op_unit.
     Qed.
 
-    Lemma box_top : ⊤ == □⊤.
+    Lemma box_top : □⊤ == ⊤.
     Proof.
       now auto.
     Qed.
@@ -430,15 +471,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       Context {T} `{cT : cmetric T}.
       Context (φ : T -n> Props).
 
-      Program Definition box_all_lhs : Props := ∀t, □φ t.
-      Next Obligation.
-        move=> t t' HEq w k HLt. simpl.
-        split.
-        - apply spredNE. eapply mono_dist; last by rewrite HEq. omega.
-        - apply spredNE. eapply mono_dist; last by rewrite HEq. omega.
-      Qed.
-
-      Lemma box_all : □all φ == box_all_lhs.
+      Lemma box_all : □all φ == all (box <M< φ).
       Proof. done. Qed.
     End BoxAll.
   End NecessitationProps.

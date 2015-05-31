@@ -247,6 +247,35 @@ Section ComplBIProps.
     move=>f1 f2 Hf. apply pord_antisym; eapply all_pord; rewrite Hf; reflexivity.
   Qed.
 
+  Lemma all_and U `{cmU : cmetric U} : (* the converse does not hold for empty U *)
+    forall (P : U -n> B) Q, (all P) ∧ Q ⊑ all (lift_bin and P (umconst Q)).
+  Proof.
+    move=>P Q.
+    apply all_R=>u. apply and_impl. apply (all_L u). apply and_impl. reflexivity.
+  Qed.
+
+  Lemma all_sc U `{cmU : cmetric U} :
+    forall (P : U -n> B) Q, (all P) * Q ⊑ all (lift_bin sc P (umconst Q)).
+  Proof.
+    move=>P Q. apply all_R=>u. apply sc_si.
+    apply (all_L u). apply sc_si. reflexivity.
+  Qed.
+
+  Lemma all_sc_r U `{cmU : cmetric U} :
+    forall (P : U -n> B) Q, Q * (all P) ⊑ all (lift_bin sc (umconst Q) P).
+  Proof.
+    move=>P Q. rewrite (comm Q). etransitivity; first eapply all_sc.
+    eapply all_pord. move=>u. simpl morph. rewrite comm. reflexivity.
+  Qed.
+
+  Lemma all_and_r U `{cmU : cmetric U} :
+    forall (P : U -n> B) Q, Q ∧ (all P) ⊑ all (lift_bin and (umconst Q) P).
+  Proof.
+    move=>P Q. rewrite (comm Q). etransitivity; first eapply all_and.
+    eapply all_pord. move=>u. simpl morph. rewrite comm. reflexivity.
+  Qed.
+
+
   Lemma xist_R {U} `{cmU : cmetric U} u P (Q: U -n> B):
     P ⊑ Q u -> P ⊑ xist Q.
   Proof.

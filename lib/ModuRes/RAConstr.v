@@ -92,6 +92,15 @@ Section Exclusive.
   Proof.
     exists ex_unit. exact I.
   Qed.
+
+  Lemma ex_own_le t r t':
+    ex_own t ⊑ r -> r ⊑ ex_own t' ->
+    t == t'.
+  Proof.
+    move=>[r1 Heq1] [r2 Heq2]. destruct r1, r2, r; simpl in *; try contradiction; [].
+    rewrite Heq1 Heq2. reflexivity.
+  Qed.
+
 End Exclusive.
 Arguments ex T : clear implicits.
 

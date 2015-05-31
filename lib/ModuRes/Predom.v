@@ -157,7 +157,7 @@ Section MonotoneProducts.
     intros [a1 b1] [a2 b2] [Ha Hb]; assumption.
   Qed.
 
-  Global Instance msnd_proper : Proper (pord ==> pord) (@snd U V).
+  Global Instance mmsnd_proper : Proper (pord ==> pord) (@snd U V).
   Proof.
     intros [a1 b1] [a2 b2] [Ha Hb]; assumption.
   Qed.
