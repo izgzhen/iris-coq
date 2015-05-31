@@ -1,6 +1,5 @@
 Require Import ssreflect.
 Require Import MetricCore.
-Require Import Axioms.
 Require Import PreoMet.
 Require Import RA CMRA SPred.
 Require Import Arith Min Max List ListSet Lists.
@@ -152,6 +151,14 @@ Section FinDom.
       - rewrite /fdLookup_indom. ddes (f k) at 1 3 4 as [v'|] deqn:EQf.
         + by move=>[EQ].
         + move=>?. discriminate.
+    Qed.
+
+    Lemma fdLookup_indom_pi f k (Hindom1: k ∈ dom f) (Hindom2: k ∈ dom f):
+      fdLookup_indom f k Hindom1 = fdLookup_indom f k Hindom2.
+    Proof.
+      rewrite /fdLookup_indom. ddes (f k) at 1 3 7 as [v|] deqn:EQf.
+      - reflexivity.
+      - exfalso. apply fdLookup_in_strong in Hindom1. apply Hindom1. now rewrite -EQf.
     Qed.
 
   End Props.
@@ -575,7 +582,7 @@ Section FinDom.
     End Recursion.
 
     (* No need to restrict this Lemma to fdRectInner - that just messes up the details. *)
-    Lemma fdRectInner_eqL l l' f (Heq: dom f = l) (Heq': dom f = l')
+(*    Lemma fdRectInner_eqL l l' f (Heq: dom f = l) (Heq': dom f = l')
           (T: (K -f> V) -> Type) (F: forall l (f: K -f> V), dom f = l -> T f) :
       F l f Heq = F l' f Heq'.
     Proof.
@@ -585,8 +592,8 @@ Section FinDom.
       refine (match Heql in eq _ l'' return (forall Heq' : dom f = l'', F l f Heq = F l'' f Heq') with
               | eq_refl => _
               end).
-      move=>Heq'. f_equal. apply ProofIrrelevance.
-    Qed.
+      move=>Heq'. reflexivity.
+    Qed. *)
 
     Section Fold.
       Context {T: Type}.
@@ -609,7 +616,18 @@ Section FinDom.
         move=>Heql. assert (Heq': dom f2 = l1).
         { now subst l2. }
         transitivity (fdRectInner (fun _ => T) (fun _ _ _ => id) (Temp) (fun k v _ _ => Tstep k v) l1 f2 Heq'); last first.
-        { rewrite (fdRectInner_eqL l1 l2). reflexivity. }
+        { revert f2 f1 Heq' Heq1 Heq2 H. revert l2 Heql. induction l1; intros.
+          - destruct l2; last discriminate. simpl. reflexivity.
+          - destruct l2; first discriminate.
+            inversion Heql; subst; clear Heql.
+            simpl. intros. f_equal. f_equal.
+            + apply fdLookup_indom_pi.
+            + eapply IHl1; last first.
+              * instantiate (1:= (f2 \ k)). intros. reflexivity.
+              * rewrite /fdStrongUpdate /dom /=. rewrite Heq' DecEq_refl.
+                eapply filter_dupes_id. simpl.
+                move:(dom_nodup f2). rewrite Heq'. intros Hnd. inversion Hnd; subst. assumption.
+              * reflexivity. }
         subst l2. clear Heql. revert f1 f2 Heq1 Heq' H. induction l1; intros f1 f2 Heq1 Heq2 Heqf.
         - reflexivity.
         - simpl. unfold id.
