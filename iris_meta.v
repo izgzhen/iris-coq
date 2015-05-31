@@ -441,11 +441,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
           - simpl in HSt. rewrite HSt. exact I. }
         exists pv'. split.
         + rewrite HSt. reflexivity.
-        + move=>{HS HSt} i agP Heq.
-          move:(HI i agP Heq).
-          destruct (i ∈ (m ∪ mf))%de; last tauto.
-          destruct (rs i); last tauto. simpl=>H.
-          erewrite ra_ag_unInj_pi. eassumption.
+        + assumption.
     Qed.
 
     (* The "nicer looking" (ht-based) lemma is now a derived form. *)

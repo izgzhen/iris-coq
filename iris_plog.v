@@ -138,8 +138,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         (State wt ⊑ ex_own σ) /\
         forall i agP (Heq: (Invs wt) i = S n' = Some agP),
           match (i ∈ m)%de, s i with
-          | true , Some w => let P := ra_ag_unInj agP (S n') (HVal:=world_inv_val pv Heq) in
-                             unhalved (ı P) w n'
+          | true , Some w => let P := ra_ag_unInj agP (S n') in unhalved (ı P) w n'
           | false, None   => True
           | _    , _      => False
           end.
@@ -155,11 +154,9 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       { rewrite <-HS. apply pordR. destruct EQwt as [_ [HwtS _]].
         symmetry. exact HwtS. }
       move=>i agP Heq.
-      move:(HI i agP). case/(_ _)/Wrap; last move=>{HI} Heq' HI.
+      move:(HI i agP). case/(_ _)/Wrap; last move=>{HI} HI.
       { rewrite -Heq. rewrite EQwt. reflexivity. }
-      rewrite -EQm. destruct (i ∈ m1)%de; last exact HI.
-      destruct (s i); last exact HI.
-      simpl. simpl in HI. erewrite ra_ag_unInj_pi. eassumption.
+      rewrite -EQm. assumption.
     Qed.
 
     Lemma wsatTotal_dclosed n'1 n'2 σ s m wt:
@@ -173,7 +170,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       split; [assumption|]. move => {Hσ} i agP Heq.
       case HagP':(Invs wt i) => [agP'|]; last first.
       { exfalso. rewrite HagP' in Heq. exact Heq. }
-      move:(H i agP'). case/(_ _)/Wrap; last move=>{H} Heq'.
+      move:(H i agP'). case/(_ _)/Wrap; last move=>{H}.
       { now apply equivR. }
       destruct (s i) as [ws|], (i ∈ m)%de; simpl; tauto || (try contradiction); []=>H.
       eapply spredNE; last first.
@@ -182,10 +179,10 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         apply met_morph_nonexp. move:(Heq). rewrite HagP' in Heq=>Heq''.
         etransitivity.
         + symmetry. eapply ra_ag_unInj_move. omega.
-        + eapply ra_ag_unInj_dist. simpl in Heq'. exact Heq.
-    Grab Existential Variables.
-    { eapply world_invs_valid; first eexact pv'; first reflexivity.
-      rewrite Heq. eassumption. }
+          eapply world_inv_val; first eassumption. apply equivR. eassumption.
+        + eapply ra_ag_unInj_dist; last assumption. 
+          eapply world_invs_valid; first eexact pv'; first reflexivity.
+          rewrite Heq. eassumption.
     Qed.  
 
     (* It may be possible to use "later_sp" here, but let's avoid indirections where possible. *)

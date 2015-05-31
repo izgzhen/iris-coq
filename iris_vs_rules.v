@@ -38,7 +38,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       destruct HE as [rs [pv [HS HM]]].
       case HLu:(Invs w i) => [μ |] ; simpl in HInv; last first.
       { exfalso. rewrite HLu in HInv. destruct HInv. }
-      move:(HM i (ra_ag_inj (ı' (halved P)))). case/(_ _)/Wrap; last move=>Heq.
+      move:(HM i (ra_ag_inj (ı' (halved P)))). case/(_ _)/Wrap.
       { clear -HLu HInv pv HLe. eapply world_invs_extract; first assumption; last first.
         - eapply mono_dist, HInv. omega.
         - etransitivity; last eapply comp_finmap_le. exists wf. now rewrite comm. }
@@ -57,14 +57,13 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       exists pv'. split.
       - rewrite /= -Heqwt. assumption.
       - move=>j agP Hlu. rewrite (comm de_emp) de_emp_union. move:(HM j agP)=>{HM}.
-        case/(_ _)/Wrap; last move=>Heq'.
+        case/(_ _)/Wrap.
         { rewrite Heqwt. exact Hlu. }
         destruct (j ∈ mf) eqn:Hm.
         + erewrite de_in_true by de_tauto.
           destruct (dec_eq i j) as [EQ|NEQ].
           { exfalso. subst j. move:(HD i) Hm. clear. de_tauto. }
-          erewrite fdStrongUpdate_neq by assumption. destruct (rs j); last tauto.
-          simpl=>H. erewrite ra_ag_unInj_pi. eassumption.
+          erewrite fdStrongUpdate_neq by assumption. tauto.
         + destruct (dec_eq i j) as [EQ|NEQ].
           { move=>_. subst j. rewrite fdStrongUpdate_eq. exact I. }
           erewrite de_in_false by de_tauto.
@@ -106,19 +105,14 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           rewrite ->Heqwt, ->Hlu in HeqP. simpl. simpl in HeqP.
           etransitivity; last first.
           * assert(Heq:=halve_eq (T:=Props) (S k)). apply Heq=>{Heq}.
-            eapply (met_morph_nonexp ı). eapply ra_ag_unInj_dist.
-            symmetry. eexact HeqP.
+            eapply (met_morph_nonexp ı). eapply ra_ag_unInj_dist; last (symmetry; eexact HeqP).
+            exact I.
           * simpl. rewrite isoR. reflexivity.
-        + move:(HM j agP)=>{HM}. case/(_ _)/Wrap; last move=>Heq'.
+        + move:(HM j agP)=>{HM}. case/(_ _)/Wrap.
           { rewrite Heqwt. assumption. }
           rewrite comm de_emp_union. destruct (j ∈ mf) eqn:Hjin.
-          * erewrite de_in_true by de_tauto. erewrite fdStrongUpdate_neq by assumption.
-            destruct (rs j); last tauto. simpl.
-            move=>H. erewrite ra_ag_unInj_pi. eassumption.
-          * erewrite de_in_false by de_tauto. erewrite fdStrongUpdate_neq by assumption.
-            tauto.
-    Grab Existential Variables.
-    { exact I. }
+          * erewrite de_in_true by de_tauto. erewrite fdStrongUpdate_neq by assumption. tauto.
+          * erewrite de_in_false by de_tauto. erewrite fdStrongUpdate_neq by assumption. tauto.
     Qed.
 
     Lemma pvsTrans P m1 m2 m3 (HMS : m2 ⊑ m1 ∪ m3) :
@@ -198,11 +192,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           assert (pv':(cmra_valid ((I0, (S0, g1 · g')) · comp_finmap wf rs)) (S (S k))).
           { split; last split; try assumption; [].
             now rewrite ->assoc in HVal1. }
-          exists pv'. split; first assumption.
-          move=>i agP Heq. move:(HI i agP Heq). 
-          destruct (i ∈ _); last tauto.
-          destruct (rs i); last tauto.
-          move=>H. erewrite ra_ag_unInj_pi. eassumption.
+          exists pv'. split; assumption.
     Qed.
 
     Program Definition inv' m : Props -n> {n : nat | n ∈ m = true } -n> Props :=
@@ -259,18 +249,14 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           eapply mmorph_proper; last reflexivity.
           etransitivity; last first.
           * assert(Hheq:=halve_eq (T:=Props) (S k)). apply Hheq=>{Hheq}.
-            eapply (met_morph_nonexp ı). eapply ra_ag_unInj_dist.
-            eexact Heq.
+            eapply (met_morph_nonexp ı). eapply ra_ag_unInj_dist; last eexact Heq.
+            exact I.
           * simpl. rewrite isoR. reflexivity.
         + erewrite fdStrongUpdate_neq by assumption.
-          move:(HI j agP)=>{HI Hrsi HLi Hm}. case/(_ _)/Wrap; last move=>Heq'.
+          move:(HI j agP)=>{HI Hrsi HLi Hm}. case/(_ _)/Wrap.
           { rewrite -Heq. simpl. destruct (dec_eq i j); last reflexivity.
             contradiction. }
-          destruct (j ∈ (m ∪ mf)); last tauto.
-          destruct (rs j); last tauto.
-          move=>/= H. erewrite ra_ag_unInj_pi. eassumption.
-    Grab Existential Variables.
-    { exact I. }
+          tauto.
     Qed.
 
     Lemma pvsNotOwnInvalid m1 m2 w:
