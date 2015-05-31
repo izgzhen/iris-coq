@@ -403,11 +403,11 @@ Section FinDom.
 
     (* The nicest solution here would be to have a map on option... *)
     Program Definition fdMapRaw (m : U -> V) : (K -f> U) -> (K -f> V) :=
-      fun f => mkFDbound (fdMap_pre m f) (findom f) _.
+      fun f => mkFD (fdMap_pre m f) (findom f) _.
     Next Obligation.
-      unfold fdMap_pre. move=>k /= Hneq; destruct (f k) eqn:EQf.
-      - apply findom_b. rewrite EQf. discriminate.
-      - exfalso. now apply Hneq.
+      unfold fdMap_pre, findom_approx. move=>k. rewrite -(findom_b f).
+      destruct (f k); last tauto.
+      split; discriminate.
     Qed.
     
     Program Definition fdMapMorph (m : U -n> V) : (K -f> U) -n> (K -f> V) :=
@@ -613,36 +613,29 @@ Section FinDom.
         fdRectInner (fun _ => T) (fun _ _ _ => id) (Temp) (fun k v _ _ => Tstep k v) l1 f1 Heq1 =
         fdRectInner (fun _ => T) (fun _ _ _ => id) (Temp) (fun k v _ _ => Tstep k v) l2 f2 Heq2.
       Proof.
-        move=>Heql. assert (Heq': dom f2 = l1).
+        move=>Heql Heqf. assert (Heq': dom f2 = l1).
         { now subst l2. }
-        transitivity (fdRectInner (fun _ => T) (fun _ _ _ => id) (Temp) (fun k v _ _ => Tstep k v) l1 f2 Heq'); last first.
-        { revert f2 f1 Heq' Heq1 Heq2 H. revert l2 Heql. induction l1; intros.
-          - destruct l2; last discriminate. simpl. reflexivity.
-          - destruct l2; first discriminate.
-            inversion Heql; subst; clear Heql.
-            simpl. intros. f_equal. f_equal.
-            + apply fdLookup_indom_pi.
-            + eapply IHl1; last first.
-              * instantiate (1:= (f2 \ k)). intros. reflexivity.
-              * rewrite /fdStrongUpdate /dom /=. rewrite Heq' DecEq_refl.
-                eapply filter_dupes_id. simpl.
-                move:(dom_nodup f2). rewrite Heq'. intros Hnd. inversion Hnd; subst. assumption.
-              * reflexivity. }
-        subst l2. clear Heql. revert f1 f2 Heq1 Heq' H. induction l1; intros f1 f2 Heq1 Heq2 Heqf.
-        - reflexivity.
-        - simpl. unfold id.
-          assert (Hf: exists v, f1 a = Some v /\ f2 a = Some v).
-          { destruct (f1 a) as [v|] eqn:EQf.
+        revert f1 f2 l2 Heq' Heq1 Heq2 Heql Heqf. induction l1; intros.
+        - destruct l2; last discriminate. reflexivity.
+        - destruct l2; first discriminate. inversion Heql; subst; clear Heql.
+          assert (Hf: exists v, f1 k = Some v /\ f2 k = Some v).
+          { destruct (f1 k) as [v|] eqn:EQf.
             - exists v. split; first reflexivity. rewrite -Heqf. assumption.
             - exfalso. apply fdLookup_notin_strong in EQf. apply EQf. rewrite Heq1.
               left. reflexivity. }
           destruct Hf as [v [Heqf1 Heqf2]].
-          eapply fdLookup_indom_corr in Heqf1. erewrite Heqf1.
-          eapply fdLookup_indom_corr in Heqf2. erewrite Heqf2.
-          f_equal. eapply IHl1. move=>k.
-          destruct (dec_eq a k) as [EQ|NEQ].
-          + subst a. rewrite !fdStrongUpdate_eq. reflexivity.
-          + erewrite !fdStrongUpdate_neq by assumption. now apply Heqf.
+          simpl. f_equal. f_equal.
+          + eapply fdLookup_indom_corr in Heqf1. erewrite Heqf1.
+            eapply fdLookup_indom_corr in Heqf2. erewrite Heqf2.
+            reflexivity.
+          + apply IHl1.
+            * rewrite /fdStrongUpdate /dom /=. rewrite Heq' DecEq_refl.
+              eapply filter_dupes_id. simpl.
+              move:(dom_nodup f2). rewrite Heq'. intros Hnd. inversion Hnd; subst. assumption.
+            * reflexivity.
+            * intros. destruct (dec_eq k k0) as [EQ|NEQ].
+              { subst k0. rewrite !fdStrongUpdate_eq. reflexivity. }
+              erewrite !fdStrongUpdate_neq by assumption. now apply Heqf.
       Qed.
 
       Global Instance fdFoldExtF:
@@ -965,7 +958,7 @@ End VIRA.
 
 Section CMRA.
   Context {I : Type} `{eqI : DecEq I}.
-  Context {T: Type} `{cmraS: CMRA T}.
+  Context {T: Type} `{cmraT: CMRA T}.
   
   Local Open Scope ra_scope.
   Local Open Scope finmap_scope.
@@ -1024,6 +1017,103 @@ Section CMRA.
       rewrite /=. destruct (t1 i), (t2 i); simpl; try tauto; [].
       apply cmra_op_valid.
   Qed.
+
+  Section CMRAExt.
+    Context {cmraText: CMRAExt T}.
+
+    (* It is crucial for the lower cmra_extend function to be called only once per element
+       (or we would need proof irrelevance). So we first define both witnesses at once, and then
+       show their projections constitute a finite partial function. *)
+    Program Definition finmap_cmra_extend {n} {f1 f11 f12 f2: I -f> T}
+            (EQf: f1 = S n = f2) (EQf1: f1 == f11 · f12) i : option T * option T :=
+      match f1 i, f2 i with
+      | Some t1, Some t2 => match f11 i, f12 i with
+                            | Some t11, Some t12 => let E := cmra_extend (S n) t1 t11 t12 t2 _ _ in
+                                                    (Some (projT1 E), Some (projT1 (projT2 E)))
+                            | Some t11, None     => (Some t2, None)
+                            | None    , Some t12 => (None, Some t2)
+                            | None    , None     => (None, None) end
+      (* Unfortunately, Program does not like us to use a wildcard here. *)
+      | Some _ , None    => (None, None)
+      | None   , Some _  => (None, None)
+      | None   , None    => (None, None) end.
+    Next Obligation.
+      specialize (EQf i). rewrite -Heq_anonymous -Heq_anonymous0 in EQf.
+      exact EQf.
+    Qed.
+    Next Obligation.
+      specialize (EQf1 i). rewrite /ra_op /= -Heq_anonymous -Heq_anonymous1 -Heq_anonymous2 /= in EQf1.
+      exact EQf1.
+    Qed.
+
+    Program Definition finmap_cmra_extend_t21 {n} {f1 f11 f12 f2: I -f> T}
+            (EQf: f1 = S n = f2) (EQf1: f1 == f11 · f12) : I -f> T :=
+      mkFDbound (fun i => fst (finmap_cmra_extend EQf EQf1 i)) (findom f1) _.
+    Next Obligation.
+      move=>k. rewrite -(findom_b f1) /finmap_cmra_extend.
+      ddes (f1 k) at 1 3 11 as [v1|] deqn:EQf1v.
+      - ddes (f2 k) at 1 3 as [v2|] deqn:EQf2v; last discriminate.
+        ddes (f11 k) at 1 3 as [v11|] deqn:EQf11v.
+        + ddes (f12 k) at 1 3 as [v12|] deqn:EQf12v; discriminate.
+        + ddes (f12 k) at 1 3 as [v12|] deqn:EQf12v; discriminate.
+      - ddes (f2 k) at 1 3 as [v2|] deqn:EQf2v; tauto.
+    Qed.
+
+    Program Definition finmap_cmra_extend_t22 {n} {f1 f11 f12 f2: I -f> T}
+            (EQf: f1 = S n = f2) (EQf1: f1 == f11 · f12) : I -f> T :=
+      mkFDbound (fun i => snd (finmap_cmra_extend EQf EQf1 i)) (findom f1) _.
+    Next Obligation.
+      move=>k. rewrite /findom_approx -(findom_b f1) /finmap_cmra_extend.
+      ddes (f1 k) at 1 3 11 as [v1|] deqn:EQf1v.
+      - ddes (f2 k) at 1 3 as [v2|] deqn:EQf2v.
+        + ddes (f11 k) at 1 3 as [v11|] deqn:EQf11v; last discriminate.
+          ddes (f12 k) at 1 3 as [v12|] deqn:EQf12v; discriminate.
+        + discriminate.
+      - ddes (f2 k) at 1 3 as [v2|] deqn:EQf2v; tauto.
+    Qed.
+
+    Global Instance finmap_CMRAExt: CMRAExt (I -f> T).
+    Proof.
+      intros n f1 f11 f12 f2 EQf EQf1. destruct n.
+      { exists (1 f2) f2. split; last exact:dist_bound. now rewrite ra_op_unit. }
+      exists (finmap_cmra_extend_t21 EQf EQf1).
+      exists (finmap_cmra_extend_t22 EQf EQf1).
+      cut (forall i, f2 i ==
+                     finprod_op (finmap_cmra_extend_t21 EQf EQf1 i) (finmap_cmra_extend_t22 EQf EQf1 i) /\
+                     f11 i = S n = finmap_cmra_extend_t21 EQf EQf1 i /\
+                     f12 i = S n = finmap_cmra_extend_t22 EQf EQf1 i).
+      { move=>Heq. split; last split.
+        - move=>i. specialize (Heq i). tauto.
+        - move=>i. specialize (Heq i). tauto.
+        - move=>i. specialize (Heq i). tauto. }
+      move=>i. rewrite /= /finmap_cmra_extend /=.
+      ddes (f1 i) at 1 3 11 19 27 as [v1|] deqn:EQf1v.
+      - ddes (f2 i) at 1 3 4 8 12 16 as [v2|] deqn:EQf2v; last first.
+        { exfalso. specialize (EQf i). rewrite -EQf1v -EQf2v in EQf. exact EQf. }
+        ddes (f11 i) at 1 3 11 19 20 28 as [v11|] deqn:EQf11v.
+        + ddes (f12 i) at 1 3 7 11 15 16 as [v12|] deqn:EQf12v; simpl; last first.
+          { specialize (EQf1 i). rewrite /ra_op /= -EQf1v -EQf11v -EQf12v /= in EQf1.
+            specialize (EQf i). rewrite -EQf1v -EQf2v /= in EQf. split; first reflexivity.
+            split; last tauto. rewrite -EQf1. assumption. }
+          destruct (cmra_extend (S n) v1 v11 v12 v2
+                                (finmap_cmra_extend_obligation_1 n f1 f11 f12 f2 EQf EQf1 i v1 v2
+                                                                 EQf1v EQf2v v11 v12 EQf11v EQf12v)
+                                (finmap_cmra_extend_obligation_2 n f1 f11 f12 f2 EQf EQf1 i v1 v2
+                                                                 EQf1v EQf2v v11 v12 EQf11v EQf12v)) as [t21 [t22 [EQ2 [EQd1 EQd2]]]].
+          simpl. split_conjs; assumption.
+        + ddes (f12 i) at 1 3 7 11 15 16 as [v12|] deqn:EQf12v; simpl.
+          { specialize (EQf1 i). rewrite /ra_op /= -EQf1v -EQf11v -EQf12v /= in EQf1.
+            specialize (EQf i). rewrite -EQf1v -EQf2v /= in EQf. split; first reflexivity.
+            split; first tauto. rewrite -EQf1. assumption. }
+          exfalso. specialize (EQf1 i). rewrite /ra_op /= -EQf1v -EQf11v -EQf12v /= in EQf1. exact EQf1.
+      - ddes (f2 i) at 1 3 4 8 12 16 as [v2|] deqn:EQf2v.
+        + exfalso. specialize (EQf i). rewrite -EQf1v -EQf2v /= in EQf. exact EQf.
+        + simpl. split; first tauto.
+          specialize (EQf1 i). rewrite /ra_op /= -EQf1v /= in EQf1.
+          destruct (f11 i), (f12 i); contradiction || split; reflexivity.
+    Qed.
+    
+  End CMRAExt.
   
 End CMRA.
 

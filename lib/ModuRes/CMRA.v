@@ -59,10 +59,13 @@ End CMRAProps.
 Section CMRAExt.
   Context (T: Type).
 
-  Class CMRAExt `{cmraT: CMRA T}: Prop :=
+  Class CMRAExt `{cmraT: CMRA T} :=
+    (* For infprod, this needs to be informative. For Agreement, the equalities are needed to even
+       construct the witnesses. *)
     cmra_extend: forall n (t1 t11 t12 t2: T) (EQt: t1 = n = t2) (EQt1: t1 == t11 · t12),
-      exists t21 t22, t2 == t21 · t22 /\ (t11, t12) = n = (t21, t22).
+      { t21 : T & { t22 | t2 == t21 · t22 /\ (t11, t12) = n = (t21, t22) } }.
 End CMRAExt.
+Arguments cmra_extend {T} {_ _ _ _ _ _ _ _ _ _ _} n _ _ _ _ _ _.
 
 Section DiscreteCMRA.
   Context {T: Type} `{raT: RA T}.
@@ -139,6 +142,18 @@ Section PairsCMRA.
     cmra_valid p n <-> cmra_valid (fst p) n /\ cmra_valid (snd p) n.
   Proof. by move: p=>[s t]. Qed.
 
+  Section PairsCMRAExt.
+    Context {cmraSe: CMRAExt S} {cmraTe: CMRAExt T}.
+
+    Global Instance ra_prod_ext: CMRAExt (S * T).
+    Proof.
+      move=>n [s1 t1] [s11 t11] [s12 t12] [s2 t2] [EQs EQt] [EQs1 EQt1].
+      destruct (cmra_extend n s1 s11 s12 s2) as [s21 [s22 [EQs2 [EQss1 EQss2]]]]; [assumption|assumption|].
+      destruct (cmra_extend n t1 t11 t12 t2) as [t21 [t22 [EQt2 [EQtt1 EQtt2]]]]; [assumption|assumption|].
+      exists (s21, t21) (s22, t22). repeat split; assumption.
+    Qed.
+  End PairsCMRAExt.
+  
 End PairsCMRA.
 
 Section PairsMap.
