@@ -143,6 +143,19 @@ Section LatticeProps.
     move=>b1 b2. apply pord_antisym; now apply and_pcomm.
   Qed.
 
+  Global Instance and_assoc: Associative and.
+  Proof.
+    move=>b1 b2 b3. apply pord_antisym.
+    - apply and_R; split; first (apply and_R; split).
+      + apply and_projL.
+      + rewrite ->and_projR. apply and_projL.
+      + rewrite ->and_projR. apply and_projR.
+    - apply and_R; split; last (apply and_R; split).
+      + rewrite ->and_projL. apply and_projL.
+      + rewrite ->and_projL. apply and_projR.
+      + apply and_projR.
+  Qed.
+
   Lemma or_L P Q R: (P ⊑ R /\ Q ⊑ R) <-> or P Q ⊑ R.
   Proof.
     split.
@@ -162,6 +175,19 @@ Section LatticeProps.
   Global Instance or_comm: Commutative or.
   Proof.
     move=>b1 b2. apply pord_antisym; now apply or_pcomm.
+  Qed.
+
+  Global Instance or_assoc: Associative or.
+  Proof.
+    move=>b1 b2 b3. apply pord_antisym.
+    - apply or_L; split; last (apply or_L; split).
+      + rewrite <-or_injL. apply or_injL.
+      + rewrite <-or_injL. apply or_injR.
+      + apply or_injR.
+    - apply or_L; split; first (apply or_L; split).
+      + apply or_injL.
+      + rewrite <-or_injR. apply or_injL.
+      + rewrite <-or_injR. apply or_injR.
   Qed.
 End LatticeProps.
 

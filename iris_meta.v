@@ -518,69 +518,81 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
   Section StatelessLifting.
 
-    Implicit Types (P : Props) (n k : nat) (safe : bool) (m : mask) (e : expr) (r : res) (σ : state) (w : Wld).
+    Implicit Types (P : Props) (n k : nat) (safe : bool) (m : DecEnsemble nat) (e : expr) (r : res) (σ : state) (w : Wld).
     Implicit Types (Q R: vPred) (φ : expr -=> Prop).
     
     Program Definition lift_ePred (φ : expr -=> Prop) : expr -n> Props :=
-      n[(fun v => pcmconst (mkUPred (fun n r => φ v) _))].
+      n[(fun v => pcmconst (sp_const (φ v)))].
     Next Obligation.
-      firstorder.
-    Qed.
-    Next Obligation.
-      intros x y H_xy P m r. simpl in H_xy. destruct n.
-      - intros LEZ. exfalso. omega.
-      - intros _. simpl. assert(H_xy': x == y) by assumption. rewrite H_xy'. tauto.
+      move=>e1 e2 EQe.
+      destruct n; first exact:dist_bound.
+      cbv in EQe. subst. reflexivity.
     Qed.
 
     Program Definition plug_ePred safe m φ P Q: expr -n> Props :=
-      n[(fun e' => (lift_ePred φ e') → (ht safe m P e' Q))].
+      n[(fun e' =>  (ht safe m (lift_ePred φ e' ∧ P) e' Q))].
     Next Obligation.
-      intros e1 e2 Heq w n' r HLt.
-      destruct n as [|n]; [now inversion HLt | simpl in *].
-      subst e2; tauto.
+      intros e1 e2 EQe. destruct n; first exact:dist_bound.
+      cbv in EQe. subst. reflexivity.
     Qed.
 
-    Theorem lift_pure_step safe m e (φ : expr -=> Prop) P Q
+    Program Definition plug_ePredWp φ safe m P Q: expr -n> Props :=
+      n[(fun e' => lift_ePred φ e' ∧ P → wp safe m e' Q)].
+    Next Obligation.
+      intros e1 e2 EQe. destruct n; first exact:dist_bound.
+      cbv in EQe. subst. reflexivity.
+    Qed.
+
+    Lemma lift_pure_step_wp {safe m e} {φ : expr -=> Prop} P Q
+            (RED  : reducible e)
+            (STEP : forall σ e2 σ2, prim_step (e, σ) (e2, σ2) -> σ2 = σ /\ φ e2)
+            (SAFE : forall σ, if safe then safeExpr e σ else True):
+      (forall e', lift_ePred φ e' ∧ P ⊑ wp safe m e' Q) ->
+      ▹P ⊑ wp safe m e Q.
+    Proof.
+      intros Hwpe' w n. destruct n; first (intro; exact:bpred).
+      simpl. intros HP. rewrite ->unfold_wp. intros wf; intros.
+      split; [| split; [| split ]]; first 2 last.
+      { move=> e' K HDec; exfalso; exact: (reducible_not_fork RED HDec). }
+      { by move: SAFE {Hwpe'} ; case: safe. }
+      { move=> HV; exfalso. apply: reducible_not_value; eassumption. }
+      (* The step-case of WP. *)
+      move=>σ' ei ei' K Hfill Hstep.
+      have HK: K = ε.
+      { eapply step_same_ctx; first 2 last.
+        - eassumption.
+        - rewrite fill_empty. symmetry. eassumption.
+        - do 2 eexists. eassumption. }
+      subst K. rewrite fill_empty in Hfill. subst ei. rewrite fill_empty.
+      specialize (STEP _ _ _ Hstep). destruct STEP as [Hσ Hφ]. subst σ'.
+      exists w. split; last (eapply dpred, HE; omega).
+      eapply Hwpe'. split.
+      - exact Hφ.
+      - eapply dpred, HP. omega.
+    Qed.
+
+    (* Again, the "ht-based" theorem is a derived form. *)
+    Theorem lift_pure_step {safe m e} {φ : expr -=> Prop} P Q
             (RED  : reducible e)
             (STEP : forall σ e2 σ2, prim_step (e, σ) (e2, σ2) -> σ2 = σ /\ φ e2)
             (SAFE : forall σ, if safe then safeExpr e σ else True):
       (all (plug_ePred safe m φ P Q)) ⊑ ht safe m (▹P) e Q.
     Proof.
-      move=> w0 n0 r0 Hfrom w1 Hw01 n1 r1 Hn01 _ HlaterP.
-      rewrite unfold_wp => w2 n2 rf mf σ Hw12 Hn12 Hmask Hsat.
-      (* The four cases of WP *)
-      split; last split; last split.
-      - move=>HV. exfalso. eapply reducible_not_value; eauto.
-      - move=>σ' ei ei' K Hfill Hstep.
-        have HK: K = ε.
-        { eapply step_same_ctx; first 2 last.
-          - eassumption.
-          - rewrite fill_empty. symmetry. eassumption.
-          - do 2 eexists. eassumption. }
-        subst K. rewrite fill_empty in Hfill. subst ei. rewrite fill_empty.
-        specialize (STEP _ _ _ Hstep). destruct STEP as [Hσ Hφ]. subst σ'.
-        exists w2 r1.
-        split; first reflexivity.
-        split; last by (eapply wsatM, Hsat; omega).
-        (* Now we just want to apply Hfrom. TODO: Is there a less annoying way to do that? *)
-        assert (Hht: ht safe m P ei' Q w1 n1 r1).
-        { move: Hfrom.
-          move/(_ ei' _ Hw01 _ _ Hn01 (prefl _)).
-          apply. simpl. apply Hφ. }
-        clear Hfrom Hφ RED SAFE.
-        destruct n1 as [|n1']; first by (exfalso; omega).
-        specialize (Hht _ Hw12 n2 r1).
-        eapply Hht.
-        + omega.
-        + apply: unit_min.
-        + change (P w1 n1' r1) in HlaterP.
-          eapply propsMWN, HlaterP.
-          * assumption.
-          * omega.
-      - move=>e' K Hfill. exfalso.
-        eapply reducible_not_fork; first by eexact RED.
-        eassumption.
-      - move=>Heq. subst safe. by apply SAFE.
+      etransitivity; first (etransitivity; eapply pordR; last by (symmetry; eapply (box_all (plug_ePredWp φ safe m P Q)))).
+      { apply all_equiv. move=>e'. reflexivity. }
+      apply htIntro. rewrite -box_conj_star. rewrite ->(later_mon (□_)).
+      rewrite -later_star. apply (lift_pure_step_wp (φ:=φ)); try assumption; [].
+      move=>e'. rewrite box_all. rewrite ->all_sc, ->all_and_r.
+      apply (all_L e').
+      change ((lift_ePred φ) e' ∧
+              (□((lift_ePred φ) e' ∧ P → wp safe m e' Q) * P)
+                ⊑ ((wp safe m) e') Q).
+      rewrite ->box_elim.
+      eapply modus_ponens; last first.
+      - rewrite ->and_projR, sc_projL. reflexivity.
+      - apply and_R; split.
+        + apply and_projL.
+        + rewrite ->and_projR. apply sc_projR.
     Qed.
 
     Lemma lift_pure_det_step safe m e e' P Q
@@ -589,20 +601,24 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
           (SAFE : forall σ, if safe then safeExpr e σ else True):
       ht safe m P e' Q ⊑ ht safe m (▹P) e Q.
     Proof.
-      move=> w0 n0 r0 Hfrom.
       pose(φ := s[(fun e => e = e')]).
-      eapply lift_pure_step with (φ := φ).
-      - assumption.
-      - move=>? ? ? Hstep. simpl. apply STEP. assumption.
-      - assumption.
-      - move=>e2 {RED STEP SAFE} w1 Hw01 n1 r1 Hn01 Hr01 Hφ.
-        hnf in Hφ. subst e2. eapply propsM, Hfrom; eassumption.
+      etransitivity; last first.
+      - eapply (lift_pure_step (φ := φ)); assumption.
+      - apply all_R=>e''.
+        change (ht safe m P e' Q ⊑ (ht safe m (lift_ePred φ e'' ∧ P) e'' Q)).
+        rewrite {1}/ht. apply htIntro.
+        transitivity ((wp safe m e' Q) ∧ (lift_ePred φ) e'').
+        { rewrite (comm _ P) assoc. apply and_pord; last reflexivity.
+          rewrite ->box_elim. apply and_impl. reflexivity. }
+        (* Now we fall back into the model. *)
+        move=>w n [Hwp Heq]. destruct n; first exact:bpred.
+        cbv in Heq. subst e''. assumption.
     Qed.
 
   End StatelessLifting.
 
 End IRIS_META.
 
-Module IrisMeta (RL : RA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE) : IRIS_META RL C R WP CORE PLOG.
+Module IrisMeta (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE) : IRIS_META RL C R WP CORE PLOG.
   Include IRIS_META RL C R WP CORE PLOG.
 End IrisMeta.

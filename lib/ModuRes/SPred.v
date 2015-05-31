@@ -363,9 +363,6 @@ Section SPredBI.
     - intros [HP HQ]; eapply HH; eassumption || reflexivity.
   Qed.
   Next Obligation.
-    intros P Q R n; split; simpl; tauto.
-  Qed.
-  Next Obligation.
     intros n; split; simpl; tauto.
   Qed.
   Next Obligation.
