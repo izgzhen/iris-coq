@@ -24,31 +24,6 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       intros v1 v2 EQv. apply intEq_dist; reflexivity || assumption.
     Qed.
 
-    Lemma wpValuePvs e (HV : is_value e) safe m φ :
-      pvs m m (φ (exist _ e HV)) ⊑ wp safe m e φ.
-    Proof.
-      intros w n Hvs.
-      rewrite unfold_wp; intros wf; intros; split; [| split; [| split] ]; intros.
-      - edestruct (Hvs wf k mf) as [w' [Hφ HE']]; try eassumption; first de_auto_eq; [].
-        exists w'. split; last assumption.
-        eapply spredNE, dpred, Hφ; last omega.
-        apply (met_morph_nonexp φ). apply dist_refl. 
-        now rewrite_pi HV HV0.
-      - contradiction (values_stuck HV HDec).
-        repeat eexists; eassumption.
-      - subst e; contradiction (fork_not_value (fill_value HV)).
-      - unfold safeExpr. auto.
-    Qed.
-
-    Lemma wpValue e (HV : is_value e) safe m φ :
-      φ (exist _ e HV) ⊑ wp safe m e φ.
-    Proof.
-      rewrite <-wpValuePvs.
-      move=>w n Hφ wf; intros. exists w.
-      split; last assumption.
-      eapply propsMN, Hφ; assumption.
-    Qed.
-
     Lemma wpRet e (HV : is_value e) safe m :
       valid (wp safe m e (eqV (exist _ e HV))).
     Proof.

@@ -27,25 +27,6 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       rewrite comm box_conj_star. apply and_impl, box_elim.
     Qed.
 
-    Lemma vsIntro R m1 m2 P Q:
-      □R ⊑ vs m1 m2 P Q <-> □R ∧ P ⊑ pvs m1 m2 Q.
-    Proof.
-      split=>H.
-      - unfold vs in H.
-        apply and_impl. etransitivity; last by eapply box_elim. assumption.
-      - unfold vs; apply box_intro. rewrite <-and_impl. assumption.
-    Qed.
-
-    Lemma vsValid m1 m2 P Q:
-      valid (vs m1 m2 P Q) <-> P ⊑ pvs m1 m2 Q.
-    Proof.
-      rewrite ->top_valid, box_top. split=>H.
-      - etransitivity; last by erewrite <-vsIntro. apply and_R; split; last reflexivity.
-        rewrite <-box_top. apply top_true.
-      - etransitivity; first apply vsIntro; last reflexivity.
-        rewrite <-H. apply and_projR.
-    Qed.
-
     Lemma vsFalse m1 m2 :
       valid (vs m1 m2 ⊥ ⊥).
     Proof.
@@ -172,25 +153,6 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
 
     Implicit Types (P : Props) (i : nat) (m : DecEnsemble nat) (e : expr) (r : res) (φ Q : vPred) (w : Wld) (n k : nat).
 
-    Lemma htIntro R safe m e P Q:
-      □R ⊑ ht safe m P e Q <-> □R ∧ P ⊑ wp safe m e Q.
-    Proof.
-      split=>H.
-      - unfold ht in H.
-        apply and_impl. etransitivity; last by eapply box_elim. assumption.
-      - unfold ht; apply box_intro. rewrite <-and_impl. assumption.
-    Qed.
-
-    Lemma htValid safe m e P Q:
-      valid (ht safe m P e Q) <-> P ⊑ wp safe m e Q.
-    Proof.
-      rewrite ->top_valid, box_top. split=>H.
-      - etransitivity; last by erewrite <-htIntro. apply and_R; split; last reflexivity.
-        rewrite <-box_top. apply top_true.
-      - etransitivity; first apply htIntro; last reflexivity.
-        rewrite <-H. apply and_projR.
-    Qed.
-
     Lemma wpImpl safe m e φ φ':
       (□all (lift_bin BI.impl φ φ')) ∧ wp safe m e φ ⊑ wp safe m e φ'.
     Proof.
@@ -222,6 +184,8 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
         rewrite EQv; reflexivity.
     Qed.
 
+    (* RJ: To use box_all, we need a name for "plugCtxHt without the box
+       at the beginning". I found no way to let Coq infer that term. *)
     Program Definition plugCtxWp safe m Q Q' K :=
       n[(fun v : value => Q v → wp safe m (fill K v) Q' )].
     Next Obligation.
@@ -236,7 +200,7 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
     Proof.
       rewrite /plugCtxHt {1 2}/ht. etransitivity; last eapply htIntro.
       { erewrite box_conj. apply and_pord; first reflexivity.
-        apply pordR. symmetry. erewrite (box_all (plugCtxWp safe m Q R K)). unfold box_all_lhs. apply all_equiv=>v.
+        apply pordR. symmetry. erewrite (box_all (plugCtxWp safe m Q R K)). apply all_equiv=>v.
         reflexivity. }
       etransitivity; last by eapply wpBind.
       etransitivity; last eapply wpImpl with (φ:=Q). apply and_R; split.
@@ -274,7 +238,7 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       □all (pvsLift m' m φ φ') == all (vsLift m' m φ φ').
     Proof.
       etransitivity; first by eapply (box_all (pvsLift m' m φ φ')).
-      unfold box_all_lhs. apply all_equiv=>v. reflexivity.
+      apply all_equiv=>v. reflexivity.
     Qed.
 
     Lemma wpPvsCompose {safe m m' e φ φ'}:

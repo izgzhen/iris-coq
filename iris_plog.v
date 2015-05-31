@@ -162,6 +162,32 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       simpl. simpl in HI. erewrite ra_ag_unInj_pi. eassumption.
     Qed.
 
+    Lemma wsatTotal_dclosed n'1 n'2 σ s m wt:
+      n'1 <= n'2 -> wsatTotal n'2 σ s m wt ->
+      wsatTotal n'1 σ s m wt.
+    Proof.
+      intros HLe (pv & Hσ & H).
+      assert (pv': cmra_valid wt (S n'1)).
+      { eapply dpred, pv. omega. }
+      exists pv'.
+      split; [assumption|]. move => {Hσ} i agP Heq.
+      case HagP':(Invs wt i) => [agP'|]; last first.
+      { exfalso. rewrite HagP' in Heq. exact Heq. }
+      move:(H i agP'). case/(_ _)/Wrap; last move=>{H} Heq'.
+      { now apply equivR. }
+      destruct (s i) as [ws|], (i ∈ m)%de; simpl; tauto || (try contradiction); []=>H.
+      eapply spredNE; last first.
+      - eapply dpred; last exact H. omega.
+      - specialize (halve_eq (T:=Props) n'1)=>Huneq. apply Huneq=>{Huneq H ws}.
+        apply met_morph_nonexp. move:(Heq). rewrite HagP' in Heq=>Heq''.
+        etransitivity.
+        + symmetry. eapply ra_ag_unInj_move. omega.
+        + eapply ra_ag_unInj_dist. simpl in Heq'. exact Heq.
+    Grab Existential Variables.
+    { eapply world_invs_valid; first eexact pv'; first reflexivity.
+      rewrite Heq. eassumption. }
+    Qed.  
+
     (* It may be possible to use "later_sp" here, but let's avoid indirections where possible. *)
     Definition wsatF σ m w n :=
       match n with
@@ -176,23 +202,8 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Next Obligation.
       intros n1 n2 HLe. do 2 (destruct n2; first (intro; exact I)).
       do 2 (destruct n1; first (exfalso; omega)).
-      intros (s & pv & Hσ & H).
-      exists s. exists (dpred (m := S (S n2)) HLe pv).
-      split; [assumption|]. move => {Hσ} i agP Heq.
-      case HagP':(Invs (comp_finmap w s) i) => [agP'|]; last first.
-      { exfalso. rewrite HagP' in Heq. exact Heq. }
-      move:(H i agP'). case/(_ _)/Wrap; last move=>{H} Heq'.
-      { now apply equivR. }
-      destruct (s i) as [ws|], (i ∈ m)%de; simpl; tauto || (try contradiction); []=>H.
-      eapply spredNE; last first.
-      - eapply dpred; last exact H. omega.
-      - specialize (halve_eq (T:=Props) (S n2))=>Huneq. apply Huneq=>{Huneq H ws}.
-        apply met_morph_nonexp. move:(Heq). rewrite HagP' in Heq=>Heq''.
-        etransitivity.
-        + symmetry. eapply ra_ag_unInj_move. omega.
-        + eapply ra_ag_unInj_dist. simpl in Heq'. exact Heq.
-    Grab Existential Variables.
-    { eapply dpred; first eassumption. eapply world_inv_val; eassumption. }
+      intros (s & HWT). exists s.
+      eapply wsatTotal_dclosed, HWT. omega.
     Qed.
 
     Global Instance wsat_dist n σ : Proper (equiv ==> dist n ==> dist n) (wsat σ).
@@ -456,11 +467,6 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       unfold wp; apply fixp_eq.
     Qed.
 
-    Lemma wp1 {safe m e φ w} : wp safe m e φ w (1%nat).
-    Proof.
-      rewrite unfold_wp; intros w'; intros; now inversion HLt.
-    Qed.
-
     Global Instance wp_mproper safe:
       Proper (equiv ==> equiv) (wp safe).
     Proof.
@@ -498,12 +504,46 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
           * erewrite ->IH by assumption. assumption.
           * now rewrite EQm.
     Qed.
+    
+    Global Opaque wp.
+
+    (* Some commonly needed properties are already proven here. *)
+    Lemma wp1 {safe m e φ w} : wp safe m e φ w (1%nat).
+    Proof.
+      rewrite unfold_wp; intros w'; intros; now inversion HLt.
+    Qed.
+
+    Lemma wpValuePvs e (HV : is_value e) safe m φ :
+      pvs m m (φ (exist _ e HV)) ⊑ wp safe m e φ.
+    Proof.
+      intros w n Hvs.
+      rewrite unfold_wp; intros wf; intros; split; [| split; [| split] ]; intros.
+      - edestruct (Hvs wf k mf) as [w' [Hφ HE']]; try eassumption; first de_auto_eq; [].
+        exists w'. split; last assumption.
+        eapply spredNE, dpred, Hφ; last omega.
+        apply (met_morph_nonexp φ). apply dist_refl.
+        reflexivity.
+      - contradiction (values_stuck HV HDec).
+        repeat eexists; eassumption.
+      - subst e; contradiction (fork_not_value (fill_value HV)).
+      - unfold safeExpr. auto.
+    Qed.
+
+    Lemma wpValue e (HV : is_value e) safe m φ :
+      φ (exist _ e HV) ⊑ wp safe m e φ.
+    Proof.
+      rewrite <-wpValuePvs.
+      move=>w n Hφ wf; intros. exists w.
+      split; last assumption.
+      eapply propsMN, Hφ; assumption.
+    Qed.
 
   End WeakestPre.
 
   Section DerivedForms.
-    (* There will be no base rules concerning these derived forms - but there's a bunch of derived rules in iris_derived_rules.v *)
+    (* We define the derived forms here, so that iris_meta can also use them. *)
 
+    (** View Shifts **)
     Definition vs m1 m2 P Q : Props :=
       □(P → pvs m1 m2 Q).
 
@@ -515,6 +555,26 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       now rewrite EQm1 EQm2.
     Qed.
 
+    Lemma vsIntro R m1 m2 P Q:
+      □R ⊑ vs m1 m2 P Q <-> □R ∧ P ⊑ pvs m1 m2 Q.
+    Proof.
+      split=>H.
+      - unfold vs in H.
+        apply and_impl. etransitivity; last by eapply box_elim. assumption.
+      - unfold vs; apply box_intro. rewrite <-and_impl. assumption.
+    Qed.
+
+    Lemma vsValid m1 m2 P Q:
+      valid (vs m1 m2 P Q) <-> P ⊑ pvs m1 m2 Q.
+    Proof.
+      rewrite ->top_valid, <-box_top. split=>H.
+      - etransitivity; last by erewrite <-vsIntro. apply and_R; split; last reflexivity.
+        rewrite ->box_top. apply top_true.
+      - etransitivity; first apply vsIntro; last reflexivity.
+        rewrite <-H. apply and_projR.
+    Qed.
+
+    (** Hoare Triples **)
     Definition ht safe m P e Q := □(P → wp safe m e Q).
 
     Global Instance ht_proper safe: Proper (equiv ==> equiv ==> equiv ==> equiv ==> equiv) (ht safe).
@@ -525,9 +585,26 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       hnf in HEQe. subst e1. now rewrite EQm.
     Qed.
 
-  End DerivedForms.
+    Lemma htIntro R safe m e P Q:
+      □R ⊑ ht safe m P e Q <-> □R ∧ P ⊑ wp safe m e Q.
+    Proof.
+      split=>H.
+      - unfold ht in H.
+        apply and_impl. etransitivity; last by eapply box_elim. assumption.
+      - unfold ht; apply box_intro. rewrite <-and_impl. assumption.
+    Qed.
 
-  Global Opaque wp.
+    Lemma htValid safe m e P Q:
+      valid (ht safe m P e Q) <-> P ⊑ wp safe m e Q.
+    Proof.
+      rewrite ->top_valid, <-box_top. split=>H.
+      - etransitivity; last by erewrite <-htIntro. apply and_R; split; last reflexivity.
+        rewrite ->box_top. apply top_true.
+      - etransitivity; first apply htIntro; last reflexivity.
+        rewrite <-H. apply and_projR.
+    Qed.
+
+  End DerivedForms.
 
 End IRIS_PLOG.
 
