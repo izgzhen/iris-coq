@@ -5,7 +5,7 @@ Require Import ModuRes.CatBasics ModuRes.MetricRec ModuRes.CBUltInst.
 Require Import world_prop.
 
 (* Now we come to the actual implementation *)
-Module WorldProp (Res : CMRA_T) : WORLD_PROP Res.
+Module WorldProp (Res : CMRA_EXT_T) : WORLD_PROP Res.
   (** The construction is parametric in the monoid we choose *)
 
   (** We need to build a functor that would describe the following
@@ -98,6 +98,7 @@ Module WorldProp (Res : CMRA_T) : WORLD_PROP Res.
   Instance Wld_RA    : RA Wld := _.
   Instance Wld_CMRAval:CMRA_valid Wld := _.
   Instance Wld_CMRA  : CMRA Wld := _.
+  Instance Wld_CMRAExt:CMRAExt Wld := _.
 
   (* Define propositions *)
   Definition Props   := FProp PreProp.

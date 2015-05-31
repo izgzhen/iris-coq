@@ -82,8 +82,7 @@ Section DiscreteCMRA.
       destruct n as [|n]; first by exact I.
       simpl in *. rewrite EQa EQb. reflexivity.
     - move=>n a1 a2 EQa.
-      destruct n as [|n]; first by exact I.
-      simpl in *. rewrite EQa. reflexivity.
+      destruct n as [|n]; first by exact I. rewrite EQa. reflexivity.
     - move=>n t1 t2 EQt. destruct n as [|n]; first exact: dist_bound.
       simpl in EQt. move=>m Hle. simpl.
       destruct m; first reflexivity. simpl.
@@ -617,7 +616,7 @@ Module Type CMRA_T <: RA_T.
   Declare Instance res_cmra : CMRA res.
 End CMRA_T.
 
-Module Type CMVIRA_T <: VIRA_T <: CMRA_T.
+Module Type CMRA_EXT_T <: CMRA_T.
   Include CMRA_T.
-  Declare Instance res_vira : VIRA res.
-End CMVIRA_T.
+  Declare Instance res_cmra_ext : CMRAExt res.
+End CMRA_EXT_T.

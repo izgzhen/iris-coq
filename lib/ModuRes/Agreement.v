@@ -5,6 +5,7 @@ Set Bullet Behavior "Strict Subproofs".
 
 Local Open Scope ra_scope.
 Local Open Scope predom_scope.
+Local Open Scope general_if_scope.
 
 Section Agreement.
   (* This is more complex than above, and it does not require a decidable equality. However, it needs
@@ -21,12 +22,17 @@ Section Agreement.
   CoInductive ra_agree : Type :=
     ag_inj (v: SPred) (ts: chain T) (tsx: cvChain v ts).
 
+  Local Ltac ra_ag_destr := repeat (match goal with [ x : ra_agree |- _ ] => destruct x end).
+
+  Definition ra_ag_ts : ra_agree -> chain T :=
+    fun x => match x with ag_inj _ ts _ => ts end.
+
   Global Instance ra_agree_unit : RA_unit ra_agree := fun x => x.
-  Global Instance cmra_agree_valid : CMRA_valid _ :=
+  Global Instance ra_ag_v : CMRA_valid _ :=
     fun x => match x with
              | ag_inj v _ _ => v
              end.
-  Global Instance ra_agree_valid : RA_valid _ := compose valid_sp cmra_agree_valid.
+  Global Instance ra_agree_valid : RA_valid _ := compose valid_sp ra_ag_v.
 
 (*  Local Ltac ra_ag_pi := match goal with
                            [H: dist ?n (?ts1 ?pv11) (?ts2 ?pv21) |- dist ?n (?ts1 ?pv12) (?ts2 ?pv22) ] =>
@@ -36,9 +42,8 @@ Section Agreement.
                          end. *)
 
 
-  Program Definition ra_ag_compinj_valid {v1 v2} (ts1 ts2: chain T) (ts1x: cvChain v1 ts1) (ts2x: cvChain v2 ts2): SPred :=
-    mkSPred (fun n => v1 n /\ v2 n /\ ts1 n = n = ts2 n) _ _.
-  (* This has to be n-bounded equality for the operation to be non-expansive: A full equality at all step-indices here would become a proof obligation that we have to show based on just n-equality of our arguments. *)
+  Global Program Instance ra_ag_op : RA_op _ :=
+    fun x y => ag_inj (mkSPred (fun n => ra_ag_v x n /\ ra_ag_v y n /\ ra_ag_ts x n = n = ra_ag_ts y n) _ _) (ra_ag_ts x) _.
   Next Obligation.
     split; last split; exact:dist_bound||exact:bpred.
   Qed.
@@ -46,24 +51,18 @@ Section Agreement.
     intros n m ? (pv1 & pv2 & EQ). split; last split.
     - eapply dpred, pv1. assumption.
     - eapply dpred, pv2. assumption.
-    - transitivity (ts2 n); last by eapply ts2x.
-      transitivity (ts1 n); first by (symmetry; eapply ts1x).
+    - ra_ag_destr. simpl.
+      transitivity (ts n); last by eapply tsx.
+      transitivity (ts0 n); first by (symmetry; eapply tsx0).
       eapply mono_dist; eassumption.
   Qed.
-
-  Lemma ra_ag_compinj_tsx {v1 v2} (ts1: chain T) (ts2: chain T) (ts1x: cvChain v1 ts1) (ts2x: cvChain v2 ts2):
-    cvChain (ra_ag_compinj_valid ts1 ts2 ts1x ts2x) ts1.
-  Proof.
+  Next Obligation.
     move=> n i HLe [pv1 [pv2 EQ]].
-    eapply ts1x; assumption.
+    destruct x as [v ts tsx].
+    eapply tsx; assumption.
   Qed.
 
-  Global Instance ra_ag_op : RA_op _ :=
-    fun x y => match x, y with
-               | ag_inj v1 ts1 ts1x, ag_inj v2 ts2 ts2x =>
-                 ag_inj (ra_ag_compinj_valid ts1 ts2 ts1x ts2x) ts1
-                        (ra_ag_compinj_tsx ts1 ts2 ts1x ts2x)
-               end.
+  
   Program Definition ra_ag_inj (t: T): ra_agree :=
     ag_inj top_sp (fun _ => t) (fun _ _ _ _ => _).
   Next Obligation.
@@ -83,8 +82,6 @@ Section Agreement.
        commutativity breaks: n-valid here means that the arguments were
        n-equal. *)
     end.
-
-  Local Ltac ra_ag_destr := repeat (match goal with [ x : ra_agree |- _ ] => destruct x end).
 
   Global Instance ra_agree_eq_equiv : Equivalence ra_agree_eq.
   Proof.
@@ -114,22 +111,22 @@ Section Agreement.
       destruct H as (HeqV1 & HeqT1), H0 as (HeqV2 & HeqT2).
       split.
       + split; intros (pv1 & pv2 & Heq).
-        * move:(pv1)(pv2)=>pv1' pv2'. rewrite ->HeqV1 in pv1'. rewrite ->HeqV2 in pv2'.
+        * move:(pv1)(pv2)=>pv1' pv2'. simpl in *. rewrite ->HeqV1 in pv1'. rewrite ->HeqV2 in pv2'.
           split; first assumption. split; first assumption.
           erewrite <-HeqT1, <-HeqT2 by assumption. eapply Heq; eassumption.
-        * move:(pv1)(pv2)=>pv1' pv2'. rewrite <-HeqV1 in pv1'. rewrite <-HeqV2 in pv2'.
+        * move:(pv1)(pv2)=>pv1' pv2'. simpl in *. rewrite <-HeqV1 in pv1'. rewrite <-HeqV2 in pv2'.
           split; first assumption. split; first assumption.
           rewrite ->HeqT1, ->HeqT2 by assumption. eapply Heq; eassumption.
       + intros n [pv1 [pv1' _]]. by apply: HeqT1.
     - ra_ag_destr; []. split.
-      + intros n. rewrite /ra_ag_compinj_valid /=. split.
+      + intros n. rewrite /=. split.
         * intros [pv1 [[pv2 [pv3 EQ']] EQ]].
           split_conjs; try assumption; []. by rewrite EQ.
         * intros [[pv1 [pv2 EQ']] [pv3 EQ]]. split_conjs; try assumption; [].
           by rewrite -EQ'.
       + intros n _. reflexivity.
     - ra_ag_destr. unfold ra_op, ra_ag_op. split.
-      + intros n. rewrite /ra_ag_compinj_valid /=. split; intros; split_conjs; try tauto; symmetry; tauto.
+      + intros n. rewrite /=. split; intros; split_conjs; try tauto; symmetry; tauto.
       + intros n [pv1 [pv2 EQ]]. assumption.
     - eapply ra_ag_dupl.
     - ra_ag_destr; unfold ra_valid, ra_agree_valid in *; firstorder.
@@ -377,6 +374,96 @@ Section Agreement.
       move=>n [pv _]. exact pv.
   Qed.
 
+  (* We need to provide a CMRAExt. *)
+  Program Definition ra_ag_cmra_extend_elem (me they part rem: ra_agree) n (Hdist: me = n = they) (Heq: they == rem · part) :=
+    ag_inj (mkSPred (fun m => ra_ag_v me m \/ (m <= n /\ ra_ag_v part m)) _ _)
+           (fun m => if le_lt_dec m n then ra_ag_ts part m else ra_ag_ts me m) _.
+  Next Obligation.
+    left. exact:bpred.
+  Qed.
+  Next Obligation.
+    move=>m j Hlej [Hme|[Hlem Hpart]].
+    - left. eapply dpred, Hme. assumption.
+    - right. split; first omega. eapply dpred, Hpart. assumption.
+  Qed.
+  Next Obligation.
+    move=>m j Hle.
+    destruct part as [pv pts ptsx], me as [mv mts mtsx], they as [tv tts ttsx].
+    move=>/= [Hme|[Hlem Hpart]].
+    - simpl.
+      destruct (le_lt_dec j n) as [Hle_jn|Hlt_jn].
+      + destruct (le_lt_dec m n); last (exfalso; omega).
+        destruct n.
+        { destruct m; last omega. exact:dist_bound. }
+        apply ptsx; first assumption. destruct Hdist as [Heqv1 _].
+        destruct Heq as [Heqv2 _]. apply (Heqv2 j)=>{Heqv2}.
+        eapply spredNE, Hme. eapply mono_dist, Heqv1. assumption.
+      + destruct (le_lt_dec m n) as [Hle_mn|Hlt_mn].
+        * transitivity (mts m).
+          { eapply mono_dist, mtsx; assumption || omega. }
+          destruct n.
+          { destruct m; last omega. exact:dist_bound. }
+          destruct Hdist as [Heqv1 Heqts1]. destruct Heq as [Heqv2 Heqts2].
+          etransitivity; first (now eapply Heqts1, dpred, Hme).
+          specialize (Heqts2 m). specialize (Heqv2 m). simpl in *.
+          assert (Hthey: tv m).
+          { eapply spredNE, dpred, Hme; last assumption.
+            eapply mono_dist, Heqv1. assumption. }
+          etransitivity; first (now apply Heqts2).
+          apply Heqv2. assumption.
+        * eapply mtsx; assumption.
+    - destruct n.
+      { destruct j; last (exfalso; omega).
+        destruct m; last (exfalso; omega). exact:dist_bound. }
+      destruct Hdist as [Heqv _], Heq as [Heqv' _].
+      destruct (le_lt_dec j (S n)) as [Hle_jn|Hlt_jn]; last omega.
+      destruct (le_lt_dec m (S n)) as [Hle_mn|Hlt_mn]; last omega.
+      apply ptsx; assumption.
+  Qed.
+
+  Global Instance ra_ag_cmra_extend: CMRAExt ra_agree.
+  Proof.
+    move=>n; intros. symmetry in EQt. assert (EQt1': t1 == t12 · t11) by now rewrite comm.
+    exists (ra_ag_cmra_extend_elem t2 t1 t11 _ _ EQt EQt1').
+    exists (ra_ag_cmra_extend_elem t2 t1 t12 _ _ EQt EQt1).
+    destruct t11 as [t11v t11ts t11tsx], t12 as [t12v t12ts t12tsx], t1 as [t1v t1ts t1tsx], t2 as [t2v t2ts t2tsx].
+    split; last split.
+    - split.
+      + move=>m. simpl. clear EQt1'. split.
+        * move=>Hval. split; first tauto. split; first tauto.
+          destruct (le_lt_dec m n) as [Hle_mn|Hlt_mn]; last reflexivity.
+          destruct n.
+          { destruct m; last omega. exact:dist_bound. }
+          apply EQt1. apply EQt; assumption.
+        * case. move=>[Hval|[Hle Hval1]]; first tauto.
+          case. move=>[Hval|[_ Hval2]]; first tauto.
+          destruct (le_lt_dec m n) as [Hle_mn|Hlt_mn]; last (exfalso; omega).
+          move=>Heq.
+          destruct n.
+          { destruct m; last omega. exact:bpred. }
+          apply EQt; first assumption. apply EQt1. simpl. tauto.
+      + move=>m Hval. simpl.
+        destruct (le_lt_dec m n) as [Hle_mn|Hlt_mn]; last reflexivity.
+        destruct n.
+        { destruct m; last omega. exact:dist_bound. }
+        transitivity (t1ts m); first (eapply EQt; assumption).
+        apply EQt1. apply EQt; assumption.
+    - destruct n; first exact:dist_bound. split.
+      + move=>m Hle. simpl. split; first tauto.
+        move=>[Hval|?]; last tauto.
+        apply EQt1. apply EQt; assumption.
+      + intros m; intros.
+        destruct (le_lt_dec m (S n)) as [Hle_mn|Hlt_mn]; last (exfalso; omega).
+        simpl. reflexivity.
+    - destruct n; first exact:dist_bound. split.
+      + move=>m Hle. simpl. split; first tauto.
+        move=>[Hval|?]; last tauto.
+        apply EQt1. apply EQt; assumption.
+      + intros m; intros.
+        destruct (le_lt_dec m (S n)) as [Hle_mn|Hlt_mn]; last (exfalso; omega).
+        simpl. reflexivity.
+  Qed.    
+
   (* Provide a way to get an n-approximation of the element out of an n-valid agreement. *)
   Definition ra_ag_unInj x n: T :=
     match x with
@@ -479,7 +566,7 @@ Section AgreementMap.
     destruct EQxy as [EQv EQts]. split; first split.
     - intros (pv1 & pv2 & _). assumption.
     - move=>pv. move/EQv:(pv)=>[pv1 [pv2 EQ]]. do 2 (split; first assumption).
-      unfold compose. rewrite EQ. reflexivity.
+      unfold compose. simpl in *. rewrite EQ. reflexivity.
     - unfold compose. intros n [pv1 [pv2 EQ]]. reflexivity.
   Qed.
 

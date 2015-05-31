@@ -230,7 +230,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       destruct (fresh_region (w · comp_finmap wf rs) rs m HInf) as [i [Hm [HLi Hrsi]]].
       pose (w' := (fdStrongUpdate i (Some (ra_ag_inj (ı' (halved P)))) fdEmpty, 1 (snd w))).
       exists w'. split.
-      { eexists (exist _ i Hm). eexists. rewrite /w' /= DecEq_refl /=.
+      { eexists (exist _ i Hm). eexists. rewrite /w' /= DecEq_refl.
         apply dist_refl. symmetry. eapply ra_ag_dupl. }
       exists (fdStrongUpdate i (Some w) rs). simpl. simpl in HLi.
       rewrite comp_finmap_move. erewrite <-comp_finmap_add by (now apply equivR). rewrite (comm _ w).

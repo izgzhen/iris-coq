@@ -6,7 +6,7 @@ Require Import ModuRes.RA ModuRes.CMRA ModuRes.Agreement ModuRes.SPred.
 Local Open Scope type.
 
 (* This interface keeps some of the details of the solution opaque *)
-Module Type WORLD_PROP (Res : CMRA_T).
+Module Type WORLD_PROP (Res : CMRA_EXT_T).
   (* PreProp: The solution to the recursive equation. Equipped with a discrete order. *)
   Parameter PreProp    : Type.
   Declare Instance PProp_t  : Setoid PreProp.
@@ -28,6 +28,7 @@ Module Type WORLD_PROP (Res : CMRA_T).
   Instance Wld_RA    : RA Wld := _.
   Instance Wld_CMRAval:CMRA_valid Wld := _.
   Instance Wld_CMRA  : CMRA Wld := _.
+  Instance Wld_CMRAExt:CMRAExt Wld := _.
 
   (* Now we are ready to define Propositions. *)
   Definition Props    := Wld -m> SPred.

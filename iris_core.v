@@ -9,17 +9,19 @@ Set Bullet Behavior "Strict Subproofs".
    The hack that involves least work is to duplicate the definition of our final
    resource type as a module type (which is how we can use it, circumventing the
    Coq restrictions) and as a module (to show the type can be instantiated). *)
-Module Type IRIS_RES (RL : VIRA_T) (C : CORE_LANG) <: CMRA_T.
+Module Type IRIS_RES (RL : VIRA_T) (C : CORE_LANG) <: CMRA_EXT_T.
   Instance state_type : Setoid C.state := discreteType.
   Instance state_metr : metric (ex C.state) := discreteMetric.
   Instance state_cmetr : cmetric (ex C.state) := discreteCMetric.
   Instance state_cmra_valid : CMRA_valid (ex C.state) := discreteCMRA_valid. 
-  Instance state_cmra : CMRA (ex C.state) := discreteCMRA. 
+  Instance state_cmra : CMRA (ex C.state) := discreteCMRA.
+  Instance state_cmra_ext : CMRAExt (ex C.state) := discreteCMRAExt. 
 
   Instance logR_metr : metric RL.res := discreteMetric.
   Instance logR_cmetr : cmetric RL.res := discreteCMetric.
   Instance logR_cmra_valid : CMRA_valid RL.res := discreteCMRA_valid. 
-  Instance logR_cmra : CMRA RL.res := discreteCMRA. 
+  Instance logR_cmra : CMRA RL.res := discreteCMRA.
+  Instance logR_cmra_ext : CMRAExt RL.res := discreteCMRAExt.
 
   Definition res := (ex C.state * RL.res)%type.
   Instance res_type : Setoid res := _.
@@ -35,6 +37,7 @@ Module Type IRIS_RES (RL : VIRA_T) (C : CORE_LANG) <: CMRA_T.
 
   Instance res_cmra_valid : CMRA_valid res := _.
   Instance res_cmra : CMRA res := _.
+  Instance res_cmra_ext : CMRAExt res := _.
   Instance res_vira : VIRA res := _.
 
 End IRIS_RES.
@@ -73,12 +76,6 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
   Instance vPred_type  : Setoid vPred  := _.
   Instance vPred_metr  : metric vPred  := _.
   Instance vPred_cmetr : cmetric vPred := _.
-
-  (* FIXME TODO RJ: This should hold. But the construction is not entirely trivial. And of course it should not be proven here. *)
-  Local Instance Wld_Ext: CMRAExt Wld.
-  Proof.
-    admit.
-  Qed.
 
   (** The final thing we'd like to check is that the space of
       propositions does indeed form a complete BI algebra.
@@ -220,7 +217,8 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       destruct (fst w' i) as [μ1|] eqn:Hw1; simpl in *.
       - rewrite Hlu assoc (comm _ μ). apply ra_ag_prod_dist. eapply world_invs_valid; first eexact Hval; first reflexivity.
         rewrite -Hleq. rewrite /Invs. simpl morph. instantiate (1:=i).
-        rewrite {1}/ra_op /ra_op_finprod fdComposeRed. rewrite Hw2 Hw1. simpl.
+        rewrite {1}/ra_op /ra_op_finprod fdComposeRed. rewrite Hw2 Hw1. rewrite /finprod_op.
+        apply option_dist_Some.
         now rewrite Hlu (comm μ) assoc.
       - rewrite Hlu comm. apply ra_ag_prod_dist. eapply world_invs_valid; first eexact Hval; first reflexivity.
         rewrite -Hleq. rewrite /Invs. simpl morph. instantiate (1:=i).
@@ -319,7 +317,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
           split; last (split; exact:bpred).
           now rewrite ra_op_unit. }
         move=>[[w1 w2] [/= Heq [HP HQ]]].
-        edestruct Wld_Ext as [w'1 [w'2 [Heq' [Hdist1 Hdist2]]]]; first eexact Heq; first reflexivity.
+        edestruct Wld_CMRAExt as [w'1 [w'2 [Heq' [Hdist1 Hdist2]]]]; first eexact Heq; first reflexivity.
         exists (w'1, w'2). split; first now rewrite Heq'. simpl in *.
         split; (eapply propsNE; last eassumption); assumption.
       - move=>[[w1 w2] [Heq [HP HQ]]]. destruct n; first exact I.
@@ -615,7 +613,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       n[(fun P => m[(fun w => ∃Pr, Invs w i === Some (Pr · (ra_ag_inj (ı' (halved P)))) )] )].
     Next Obligation.
       intros. move=>Pr1 Pr2 EQPr. apply intEq_dist; first reflexivity.
-      simpl. apply ra_ag_op_dist; last reflexivity. assumption.
+      apply option_dist_Some. apply ra_ag_op_dist; last reflexivity. assumption.
     Qed.
     Next Obligation.
       move=>i P n w1 w2 EQw. apply xist_dist=>Pr. simpl morph. apply intEq_dist; last reflexivity.
