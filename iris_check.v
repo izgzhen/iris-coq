@@ -1,5 +1,5 @@
 Require Import Arith Ssreflect.ssreflect.
-Require Import world_prop world_prop_recdom core_lang lang masks iris_core iris_plog iris_meta iris_vs_rules iris_ht_rules.
+Require Import world_prop world_prop_recdom core_lang lang iris_core iris_plog iris_meta iris_vs_rules iris_ht_rules.
 Require Import ModuRes.RA ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr.
 
 Set Bullet Behavior "Strict Subproofs".
@@ -171,13 +171,14 @@ Module StupidLang : CORE_LANG.
 
 End StupidLang.
 
-Module TrivialRA : RA_T.
+Module TrivialRA : VIRA_T.
   Definition res := ex unit.
   Instance res_type : Setoid res := _.
   Instance res_op   : RA_op res := _.
   Instance res_unit : RA_unit res := _.
   Instance res_valid: RA_valid res := _.
   Instance res_ra   : RA res := _.
+  Instance res_vira : VIRA res := _.
 End TrivialRA.
 
 (* Now we can instantiate all the things *)
@@ -186,27 +187,22 @@ Module World := WorldProp Res.
 Module Import Core := IrisCore TrivialRA StupidLang Res World.
 Module Import Plog := IrisPlog TrivialRA StupidLang Res World Core.
 Module Import Meta := IrisMeta TrivialRA StupidLang Res World Core Plog.
-Module Import HTRules := IrisHTRules TrivialRA StupidLang Res World Core Plog.
 Module Import VSRules := IrisVSRules TrivialRA StupidLang Res World Core Plog.
+Module Import HTRules := IrisHTRules TrivialRA StupidLang Res World Core Plog.
 
 (* And now we check for axioms *)
 Print Assumptions adequacy_obs.
 Print Assumptions adequacy_safe.
-Print Assumptions robust_safety.
 
 Print Assumptions lift_atomic_det_step.
 Print Assumptions lift_pure_det_step.
 
+(* We just check some rules here - listing all of them
+   (including the base logic) would take too long. *)
 Print Assumptions pvsOpen.
 Print Assumptions pvsClose.
-Print Assumptions pvsNewInv.
-Print Assumptions pvsFrameMask.
-Print Assumptions pvsFrameRes.
-Print Assumptions pvsTrans.
 Print Assumptions pvsGhostUpd.
 
-Print Assumptions wpRet.
-Print Assumptions wpBind.
-Print Assumptions wpPreVS.
 Print Assumptions wpPostVS.
 Print Assumptions wpACons.
+Print Assumptions wpBind.
