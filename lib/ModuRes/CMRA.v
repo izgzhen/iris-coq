@@ -59,6 +59,15 @@ End CMRAProps.
 Section CMRAExt.
   Context (T: Type).
 
+  (* "Extend" allows carrying separation over an n-equality:
+     Imagine you have some n-equal elements a, b: a = n = b
+     and you know that a can be factored: a = a1 · a2.
+     With cmra_extend, you can "carry over" the separation,
+     obtaining elements b1, b2 which factor b: b = b1 · b2
+     in the "n-same way" that a was factored: (a1, a2) = n = (b1, b2).
+     You can also see this as filling a square, with a, b and a1 · a2
+     being the three given corners, and b1 · b2 being the missing corner.
+  *)
   Class CMRAExt `{cmraT: CMRA T} :=
     (* For infprod, this needs to be informative. For Agreement, the equalities are needed to even
        construct the witnesses. *)

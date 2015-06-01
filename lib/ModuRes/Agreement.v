@@ -21,6 +21,19 @@ Section Agreement.
 
   CoInductive ra_agree : Type :=
     ag_inj (v: SPred) (ts: chain T) (tsx: cvChain v ts).
+  (* To understand why we need a chain of Ts, imagine for a moment that we would not.
+     How would we define the limit of a chain of ra_agree? Clearly, we would have
+     to take the limit of the embedded Ts to get the T of the limit. To call the
+     limit function on Ts, we need to prove that the chain of Ts converges.
+     However, that is, in general, not the case: Because of the way (dist n)
+     on ra_agree is defined (which is motived by needing a commutative multiplication),
+     the Ts of a convering ra_agree chain converge only insofar as the ra_agree are valid.
+     By using a chain of Ts here, we can entirely avoid even calling the limit function
+     on T, sidestepping the issue.
+     RJ: The only alternative I see is to declare that the limit function always has to return
+     something, no matter whether the chain converges. Of course, only for converging chains
+     it needs to produce anything sensible. However, it is unclear to me how to define
+     limits of sigma-types in that setting. *)
 
   Local Ltac ra_ag_destr := repeat (match goal with [ x : ra_agree |- _ ] => destruct x end).
 
@@ -33,14 +46,6 @@ Section Agreement.
              | ag_inj v _ _ => v
              end.
   Global Instance ra_agree_valid : RA_valid _ := compose valid_sp ra_ag_v.
-
-(*  Local Ltac ra_ag_pi := match goal with
-                           [H: dist ?n (?ts1 ?pv11) (?ts2 ?pv21) |- dist ?n (?ts1 ?pv12) (?ts2 ?pv22) ] =>
-                           (* Also try with less rewrites, as some of the pvs apeparing in the goal may be existentials. *)
-                           first [rewrite_pi pv12 pv11; rewrite_pi pv22 pv21; eexact H |
-                                  rewrite_pi pv22 pv21; eexact H | rewrite_pi pv12 pv11; eexact H]
-                         end. *)
-
 
   Global Program Instance ra_ag_op : RA_op _ :=
     fun x y => ag_inj (mkSPred (fun n => ra_ag_v x n /\ ra_ag_v y n /\ ra_ag_ts x n = n = ra_ag_ts y n) _ _) (ra_ag_ts x) _.
@@ -79,8 +84,10 @@ Section Agreement.
     match x, y with
     | ag_inj v1 ts1 _, ag_inj v2 ts2 _ => v1 == v2 /\ (forall n, v1 n -> ts1 n = n = ts2 n)
     (* Also, only the n-valid elements have to be only n-equal. Otherwise,
-       commutativity breaks: n-valid here means that the arguments were
-       n-equal. *)
+       commutativity breaks: Beyond the end of validity of the product,
+       the two factors can differ, so using either one for the chain of
+       the product means the result changes when the order of factors
+       is changed. *)
     end.
 
   Global Instance ra_agree_eq_equiv : Equivalence ra_agree_eq.
@@ -159,6 +166,7 @@ Section Agreement.
                         | ag_inj v1 ts1 _, ag_inj v2 ts2 _ =>
                           v1 = n = v2 /\ (forall n', n' <= n -> v1 n' -> ts1 n' = n' = ts2 n')
                         end
+            (* Since == has to imply (dist n), we cannot ask for equality beyond validity *)
     end.
 
   Global Program Instance ra_agree_metric : metric ra_agree := mkMetr ra_agree_dist.

@@ -12,6 +12,15 @@ Ltac find_rewrite2 t0 t1 t2 := find_rewrite1 t0 t1; find_rewrite1 t1 t2.
 Ltac find_rewrite3 t0 t1 t2 t3 := find_rewrite2 t0 t1 t2; find_rewrite1 t2 t3.
 
 
+(* A tactic for dependant destruct. Essentially, the tactic allows you to declare which
+   occurences of a term you want to be replaced by the destructed form. If you choose
+   correctly, the result will be a well-typed term.
+   Usually, you can obtain the list of indices as follows:
+   * List the indices of occurences of T that are *outisde* of the return function
+     of a dependant match.
+   * Increrment every index by 2, and add 1 to the list
+   The last step is necessary because ddes adds two more occurences of the term before doing
+   the actual pattern-matching, of which you only want to replace the first. *)
 Tactic Notation "ddes" constr(T) "at" integer_list(pos) "as" simple_intropattern(pat) "deqn:" ident(EQ) :=
   (generalize (@eq_refl _ (T)) as EQ; pattern (T) at pos;
    destruct (T) as pat; move => EQ).

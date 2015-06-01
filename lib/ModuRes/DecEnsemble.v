@@ -75,7 +75,26 @@ Notation "de1 ∪ de2" := (de_cup de1 de2) (at level 50) : de_scope.
 Notation "de1 \ de2"  := (de_minus de1 de2) (at level 35) : de_scope.
 Notation "de1 # de2" := (de1 ∩ de2 == de_emp) (at level 70) : de_scope.
 
-(* Some automation *)
+(* Some automation.
+
+   de_tauto is designed to solve equalities of the form "t ∈ <de> = <bool>".
+   It begins by unfolding <de>, then it performs the necessary case distinctions
+   to simplify the term. In particular, it supports equalities (as introduced
+   by de_set) and nested membership tests (as introduced by de_union, ...).
+   "contradiction_eq" solves the goal if we have both "i = j" and "i <> j"
+   in context, so that de_tauto can make use of existing proofs of (in)equalities.
+   Equalities are destructed first, because the "subst" can make two terms structurally
+   equal that used to be different, and hence can extend the effect of a destruct
+   of membership.
+
+   de_auto_eq is a higher-level tactic, designed to solve (in)equalities between <de>s:
+   <de1> = <de2>, <de1> # <de2>, <de1> ⊑ <de2>
+   Since equality is defined pointwise, it simply introduces the name of the point,
+   specializies all suitable (in)equalities from the context to that point, and calls de_tauto.
+   Note that this sometimes throws away too much, e.g. if there is an (in)equality known
+   in the context that also occurs in one of the <de>s. In this case, it can help to
+   do the specialization manually, and call de_tauto directly.
+ *)
 Ltac de_unfold := unfold de_cap, de_cup, de_minus, de_compl, const; unlock; simpl.
 Ltac de_in_destr := simpl; 
     repeat (match goal with
