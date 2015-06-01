@@ -133,6 +133,9 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       - destruct n; first exact:bpred. destruct Heq.
     Qed.
 
+    (* RJ: Possible simplification: Could we match on (Invs wt i) instead of asking for
+       a proof of an equality? The proofs end up having to reason about an equality
+       anyway, so it may or may not end up actually simplifying anything. *)
     Definition wsatTotal n' σ s m wt :=
       exists pv : (cmra_valid wt (S n')),
         (State wt ⊑ ex_own σ) /\

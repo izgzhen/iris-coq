@@ -69,8 +69,8 @@ Section CMRAExt.
      being the three given corners, and b1 · b2 being the missing corner.
   *)
   Class CMRAExt `{cmraT: CMRA T} :=
-    (* For infprod, this needs to be informative. For Agreement, the equalities are needed to even
-       construct the witnesses. *)
+    (* For finprod and infprod, this needs to be informative. For Agreement, the equalities
+       are needed to even construct the witnesses. *)
     cmra_extend: forall n (t1 t11 t12 t2: T) (EQt: t1 = n = t2) (EQt1: t1 == t11 · t12),
       { t21 : T & { t22 | t2 == t21 · t22 /\ (t11, t12) = n = (t21, t22) } }.
 End CMRAExt.
