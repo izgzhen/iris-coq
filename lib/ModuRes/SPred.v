@@ -408,19 +408,16 @@ Section SPredEq.
       symmetry. eapply mono_dist; last eassumption. omega.
   Qed.
 
-  Global Program Instance eqbi_sp : EqBI SPred.
-  Next Obligation.
-    move=>u1 u2 EQu t1 t2 EQt n. simpl. rewrite ->EQu, EQt. reflexivity.
-  Qed.
-  Next Obligation.
-    move=>n. rewrite /= -/dist. split.
-    - move=>EQ P m HLe HP.
-      assert (P u1 = n = P u2) by now rewrite EQ. apply H; first omega. assumption.
-    - move=>HP. pose(φ := n[(sp_eq _ _ _ _ u1)]). specialize (HP φ n (le_refl _)). eapply HP.
-      simpl. reflexivity.
-  Qed.
-  Next Obligation.
-    move=>?. simpl. tauto.
+  Global Instance eqbi_sp : EqBI SPred.
+  Proof.
+    split; intros.
+    - move=>u1 u2 EQu t1 t2 EQt n. simpl. rewrite ->EQu, EQt. reflexivity.
+    - apply _.
+    - move=>n. rewrite /= -/dist. split.
+      + move=>EQ P m HLe HP.
+        assert (P u1 = n = P u2) by now rewrite EQ. apply H; first omega. assumption.
+      + move=>HP. pose(φ := n[(sp_eq _ _ _ _ u1)]). specialize (HP φ n (le_refl _)). eapply HP.
+        simpl. reflexivity.
   Qed.
 
   Lemma sp_eq_iff U `{cmU: cmetric U} {u1 u2: U} n:

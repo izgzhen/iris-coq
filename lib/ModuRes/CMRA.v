@@ -608,9 +608,6 @@ Section MonotoneExtEQ.
         apply (all_L n[(φ)]). simpl morph. apply (all_L x)%ra. simpl morph. unfold const. apply impl_pord.
         * reflexivity.
         * reflexivity.
-    - move=>t. simpl morph. unfold const. apply (xist_R (1 t%ra, t)). simpl morph.
-      apply and_R; split; last now eapply intEq_sc.
-      apply intEqR. now rewrite ra_op_unit.
   Qed.
 
 End MonotoneExtEQ.

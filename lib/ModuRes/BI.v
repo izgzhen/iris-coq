@@ -78,8 +78,7 @@ Section CompleteBI.
   Class EqBI `{BCBI: ComplBI} {BIEQ: eqBI}: Prop :=
     { intEq_equiv  U `{cmU : cmetric U}   :> Proper (equiv ==> equiv ==> equiv) intEq;
       intEq_dist   U `{cmU : cmetric U} n :> Proper (dist n ==> dist n ==> dist n) intEq;
-      intEq_leibnitz {U} `{cmU : cmetric U} (u1 u2: U) : intEq u1 u2 == bi_leibnitz u1 u2;
-      intEq_sc       {U} `{cmU : cmetric U} (u1 u2: U) P : and (intEq u1 u2) P ⊑ sc (intEq u1 u2) P
+      intEq_leibnitz {U} `{cmU : cmetric U} (u1 u2: U) : intEq u1 u2 == bi_leibnitz u1 u2
     }.
 
 End CompleteBI.

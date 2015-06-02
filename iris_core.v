@@ -334,7 +334,33 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       rewrite later_impl. eapply modus_ponens; last by eapply and_projL.
       rewrite->and_projR. apply later_mon.
     Qed.
-      
+
+    Section LaterQuant.
+      Context {T} `{cT : cmetric T}.
+      Context (φ : T -n> Props).
+
+      Lemma later_all : ▹all φ == all (n[(later)] <M< φ).
+      Proof.
+        intros w n; split; intros H; (destruct n; first exact:bpred); intros t; simpl in *; apply H.
+      Qed.
+
+      Lemma xist_later : xist (n[(later)] <M< φ) ⊑ ▹xist φ. (* The other direction does not hold for empty T. *)
+      Proof.
+        intros w n H. do 2 (destruct n; first exact I). exact H.
+      Qed.
+
+      Lemma later_xist (HI: inhabited T):
+        ▹xist φ ⊑ xist (n[(later)] <M< φ).
+      Proof.
+        move=>w n /= H. destruct n; first exact I.
+        destruct n.
+        - destruct HI as [t]. exists t. simpl. exact:bpred.
+        - destruct H as [t H]. exists t. exact H.
+      Qed.
+
+    End LaterQuant.
+    
+    
   End LaterProps.
 
   Section Necessitation.
@@ -344,8 +370,8 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
 (*    Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances. *)
 
-    Program Definition box : Props -n> Props :=
-      n[(fun P => m[(fun w => mkSPred (fun n => P (1 w) n) _ _)])].
+    Program Definition box : Props -> Props :=
+      fun P => m[(fun w => mkSPred (fun n => P (1 w) n) _ _)].
     Next Obligation.
       exact: bpred.
     Qed.
@@ -368,7 +394,9 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       }
       tauto.
     Qed.
-    Next Obligation.
+
+    Global Instance box_dist n: Proper (dist n ==> dist n) box.
+    Proof.
       intros p1 p2 EQp w m HLt.
       by apply EQp.
     Qed.
@@ -442,7 +470,12 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       - assumption.
     Qed.
 
-    (* TODO RJ: show relation to implication *)
+    Lemma box_impl P Q:
+      □(P → Q) ⊑ □P → □Q. (* The backwards direction does NOT hold. *)
+    Proof.
+      apply and_impl. rewrite -box_conj. apply box_intro.
+      rewrite ->box_elim. apply and_impl. reflexivity.
+    Qed.
 
     Lemma box_dup P :
       □P == □P * □P.
@@ -465,13 +498,31 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       - apply box_intro. reflexivity.
     Qed.
 
-    Section BoxAll.
+    Lemma box_later P:
+      (▹□P) == □▹P.
+    Proof.
+      move=>w n; split; intros H; exact H.
+    Qed.
+
+    Section BoxQuant.
       Context {T} `{cT : cmetric T}.
+
+      Lemma box_eq (t1 t2: T):
+        t1 === t2 == □(t1 === t2).
+      Proof.
+        apply pord_antisym; last exact:box_elim.
+        move=>w n H. exact H.
+      Qed.
+      
       Context (φ : T -n> Props).
 
-      Lemma box_all : □all φ == all (box <M< φ).
+      Lemma box_all : □all φ == all (n[(box)] <M< φ).
       Proof. done. Qed.
-    End BoxAll.
+
+      Lemma box_xist : □xist φ == xist (n[(box)] <M< φ).
+      Proof. done. Qed.
+
+    End BoxQuant.
   End NecessitationProps.
 
   Section IntEqProps.
