@@ -136,24 +136,24 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     (* RJ: Possible simplification: Could we match on (Invs wt i) instead of asking for
        a proof of an equality? The proofs end up having to reason about an equality
        anyway, so it may or may not end up actually simplifying anything. *)
-    Definition wsatTotal n' σ s m wt :=
-      exists pv : (cmra_valid wt (S n')),
-        (State wt ⊑ ex_own σ) /\
-        forall i agP (Heq: (Invs wt) i = S n' = Some agP),
-          match (i ∈ m)%de, s i with
-          | true , Some w => let P := ra_ag_unInj agP (S n') in unhalved (ı P) w n'
-          | false, None   => True
-          | _    , _      => False
-          end.
+    Definition wsatTotal n' σ (s: nat -f> Wld) m wt :=
+      (cmra_valid wt (S n')) /\
+      (State wt ⊑ ex_own σ) /\
+      forall i agP (Heq: (Invs wt) i = S n' = Some agP),
+        match (i ∈ m)%de, s i with
+        | true , Some w => let P := ra_ag_unInj agP (S n') in unhalved (ı P) w n'
+        | false, None   => True
+        | _    , _      => False
+        end.
 
     Global Instance wsatTotal_proper n' σ s:
       Proper (equiv ==> dist (S n') ==> equiv) (wsatTotal n' σ s).
     Proof.
       apply proper_sym_impl_iff_2; try apply _; [].
       move=>m1 m2 EQm wt1 wt2 EQwt. move=>[pv [HS HI]].
-      assert (pv': cmra_valid wt2 (S n')).
+      split.
       { eapply spredNE, pv. apply cmra_valid_dist. assumption. }
-      exists pv'. split.
+      split.
       { rewrite <-HS. apply pordR. destruct EQwt as [_ [HwtS _]].
         symmetry. exact HwtS. }
       move=>i agP Heq.
@@ -169,7 +169,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       intros HLe (pv & Hσ & H).
       assert (pv': cmra_valid wt (S n'1)).
       { eapply dpred, pv. omega. }
-      exists pv'.
+      split; first assumption.
       split; [assumption|]. move => {Hσ} i agP Heq.
       case HagP':(Invs wt i) => [agP'|]; last first.
       { exfalso. rewrite HagP' in Heq. exact Heq. }
@@ -230,15 +230,6 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       move=> [s [pv _]]. eapply cmra_valid_ord, pv.
       exact:comp_finmap_le.
     Qed.
-
-(*    Lemma wsat_state {σ m u w k} :
-      wsat σ m u w (S k) -> fst u == ex_own σ \/ fst u == 1.
-    Proof.
-      move: u=>[ux ug]; move=>[rs [ [ Hv Heq] _] ] {m w k}; move: Hv Heq.
-      move: (comp_map _)=> [rsx rsg] [Hv _] {rs}; move: Hv.
-      rewrite ra_op_prod_fst 2![fst _]/=.
-      by case: ux; case: rsx; auto.
-    Qed.*)
 
   End WorldSatisfaction.
 
@@ -314,12 +305,6 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
 
   Section WeakestPre.
-
-    (* RJ this should now be captured by the generic instance for discrete metrics.
-    Instance LP_isval : LimitPreserving is_value.
-    Proof.
-      intros σ σc HC; apply HC.
-    Qed. *)
 
     Local Obligation Tactic := intros; eauto with typeclass_instances.
 

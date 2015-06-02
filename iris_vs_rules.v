@@ -33,28 +33,26 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       (inv i P) ⊑ pvs (de_sing i) de_emp (▹P).
     Proof.
       intros w n HInv.
-      destruct n; first exact:bpred. intros ?; intros.
+      destruct n; first exact:bpred. repeat intro.
       destruct HInv as [Pr HInv].
-      destruct HE as [rs [pv [HS HM]]].
-      case HLu:(Invs w i) => [μ |] ; simpl in HInv; last first.
-      { exfalso. rewrite HLu in HInv. destruct HInv. }
+      destruct HE as [rs [pv [HS HM]]]. simpl in HInv.
       move:(HM i (ra_ag_inj (ı' (halved P)))). case/(_ _)/Wrap.
-      { clear -HLu HInv pv HLe. eapply world_invs_extract; first assumption; last first.
+      { clear -HInv pv HLe. eapply world_invs_extract; first assumption; last first.
         - eapply mono_dist, HInv. omega.
         - etransitivity; last eapply comp_finmap_le. exists wf. now rewrite comm. }
-      rewrite /de_sing. erewrite de_in_true by de_tauto.
+      erewrite de_in_true by de_tauto.
       destruct (rs i) as [wi |] eqn: HLr; last by move=>[]. move=>HP.
       exists (w · wi). split.
       { simpl. eapply propsMW; first (eexists; reflexivity). eapply spredNE, HP.
         simpl. rewrite isoR. reflexivity. }
-      clear HLu HInv HP.
+      clear HInv HP.
       exists (fdStrongUpdate i None rs). intros wt.
       assert (Heqwt:  comp_finmap (w · wf) rs == wt).
       { rewrite /wt (comm _ wi) -assoc (comp_finmap_move wi).
         rewrite (comm wi) -comp_finmap_remove; last now rewrite HLr. reflexivity. }
-      assert (pv': (cmra_valid wt) (S (S k))).
+      split.
       { eapply spredNE, pv. rewrite -Heqwt. reflexivity. }
-      exists pv'. split.
+      split.
       - rewrite /= -Heqwt. assumption.
       - move=>j agP Hlu. rewrite (comm de_emp) de_emp_union. move:(HM j agP)=>{HM}.
         case/(_ _)/Wrap.
@@ -63,11 +61,11 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
         + erewrite de_in_true by de_tauto.
           destruct (dec_eq i j) as [EQ|NEQ].
           { exfalso. subst j. move:(HD i) Hm. clear. de_tauto. }
-          erewrite fdStrongUpdate_neq by assumption. tauto.
+          erewrite fdStrongUpdate_neq by assumption. done.
         + destruct (dec_eq i j) as [EQ|NEQ].
-          { move=>_. subst j. rewrite fdStrongUpdate_eq. exact I. }
+          { move=>_. subst j. rewrite fdStrongUpdate_eq. done. }
           erewrite de_in_false by de_tauto.
-          erewrite fdStrongUpdate_neq by assumption. tauto.
+          erewrite fdStrongUpdate_neq by assumption. done.
     Qed.
 
     Lemma pvsClose i P :
@@ -94,9 +92,9 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           move=>_. reflexivity. }
         rewrite -(comm w) -(comp_finmap_move w) assoc (comm _ (1w)) ra_op_unit.
         reflexivity. }
-      assert (pv': (cmra_valid wt) (S (S k))).
+      split.
       { eapply spredNE, pv. rewrite -Heqwt. reflexivity. }
-      exists pv'. split.
+      split.
       - rewrite /State -Heqwt. assumption.
       - move=>j agP Hlu. destruct (dec_eq i j) as [EQ|NEQ].
         + subst j. erewrite de_in_true by de_tauto.
@@ -111,8 +109,8 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
         + move:(HM j agP)=>{HM}. case/(_ _)/Wrap.
           { rewrite Heqwt. assumption. }
           rewrite comm de_emp_union. destruct (j ∈ mf) eqn:Hjin.
-          * erewrite de_in_true by de_tauto. erewrite fdStrongUpdate_neq by assumption. tauto.
-          * erewrite de_in_false by de_tauto. erewrite fdStrongUpdate_neq by assumption. tauto.
+          * erewrite de_in_true by de_tauto. by erewrite fdStrongUpdate_neq.
+          * erewrite de_in_false by de_tauto. by erewrite fdStrongUpdate_neq.
     Qed.
 
     Lemma pvsTrans P m1 m2 m3 (HMS : m2 ⊑ m1 ∪ m3) :
@@ -189,10 +187,10 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
         + simpl. exists (exist _ _ HP). simpl.
           eexists. now erewrite comm.
         + exists rs. simpl. rewrite comp_finmap_move. clear HP Hgval.
-          assert (pv':(cmra_valid ((I0, (S0, g1 · g')) · comp_finmap wf rs)) (S (S k))).
+          split.
           { split; last split; try assumption; [].
             now rewrite ->assoc in HVal1. }
-          exists pv'. split; assumption.
+          done.
     Qed.
 
     Program Definition inv' m : Props -n> {n : nat | n ∈ m = true } -n> Props :=
@@ -234,13 +232,13 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
         apply dist_refl. symmetry. eapply ra_ag_dupl. }
       exists (fdStrongUpdate i (Some w) rs). simpl. simpl in HLi.
       rewrite comp_finmap_move. erewrite <-comp_finmap_add by (now apply equivR). rewrite (comm _ w).
-      assert (pv': cmra_valid (w' · (w · comp_finmap wf rs)) (S (S k))).
-      { destruct pv as [pvI pvR]. split.
-        -  rewrite /w' /=. move=>j /=. destruct (dec_eq i j).
-           + subst j. rewrite HLi /=. exact I.
+      split.
+      {  destruct pv as [pvI pvR]. split.
+        -  rewrite /w' /= =>j /=. destruct (dec_eq i j).
+           + subst j. rewrite HLi /=. done.
            + exact:(pvI j).
         - rewrite assoc /w' /= !ra_op_unit. exact pvR. }
-      exists pv'. split.
+      split.
       - rewrite /State assoc /w' /= ra_op_unit. assumption.
       - move=>j agP Heq. destruct (dec_eq i j) as [EQ|NEQ].
         + subst j. erewrite de_in_true by de_tauto. rewrite fdStrongUpdate_eq.

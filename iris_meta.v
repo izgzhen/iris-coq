@@ -169,12 +169,12 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       edestruct (adequacy_ht (w:=w) (k:=S k') HT HSN') as [ws' [φs' [HSWTP HWS]]]; clear HT HSN'.
       - rewrite -!plus_n_Sm. eexists ex_unit. reflexivity.
       - rewrite -!plus_n_Sm. hnf. eexists fdEmpty. intro.
-        assert (pv: (CMRA.cmra_valid wt) (S (n + k'))).
+        split.
         { rewrite /wt /=. split_conjs.
           - move=>i. exact I.
           - exact I.
           - assumption. }
-        exists pv. split.
+        split.
         + rewrite /wt. reflexivity.
         + move=>i agP Heq. exfalso. rewrite /wt /= in Heq. exact Heq.
       - do 3 eexists. split; [eassumption|]. eassumption.
@@ -432,14 +432,13 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         { clear -HStUnit. rewrite /State (comm w1) -assoc. simpl. simpl in HStUnit.
           rewrite HStUnit. reflexivity. }
         clear HStUnit.
-        assert (pv': cmra_valid (w1 · w2' · comp_finmap wf rs) (S (S k))).
-        { clear- pv HSt Heqw HLt.
+        split; last split.
+        + clear- pv HSt Heqw HLt.
           destruct pv as [HIVal [HSVal HRVal]]. rewrite /w2'.
           split; last split; last 1 first.
-          - assumption.
-          - assumption.
-          - simpl in HSt. rewrite HSt. exact I. }
-        exists pv'. split.
+          * assumption.
+          * assumption.
+          * simpl in HSt. by rewrite HSt.
         + rewrite HSt. reflexivity.
         + assumption.
     Qed.

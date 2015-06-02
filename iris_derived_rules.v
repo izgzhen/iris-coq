@@ -55,8 +55,7 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       □(timeless P) ⊑ vs m m (▹P) P.
     Proof.
       apply vsIntro. etransitivity; last by eapply pvsTimeless.
-      apply and_pord; last reflexivity.
-      apply box_elim.
+      rewrite ->box_elim. reflexivity.
     Qed.
 
     Lemma vsTrans P Q R m1 m2 m3 (HMS : m2 ⊑ m1 ∪ m3) :
