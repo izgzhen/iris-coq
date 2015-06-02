@@ -535,7 +535,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Global Instance vsProper: Proper (equiv ==> equiv ==> equiv ==> equiv ==> equiv) vs.
     Proof.
       move=>m11 m12 EQm1 m21 m22 EQm2 P1 P2 EQP Q1 Q2 EQQ. unfold vs.
-      apply morph_resp. apply impl_equiv; first assumption.
+      apply box_equiv. apply impl_equiv; first assumption.
       apply equiv_morph; last assumption.
       now rewrite EQm1 EQm2.
     Qed.
@@ -565,7 +565,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Global Instance ht_proper safe: Proper (equiv ==> equiv ==> equiv ==> equiv ==> equiv) (ht safe).
     Proof.
       move=>m0 m1 EQm P0 P1 HEQP e0 e1 HEQe Q0 Q1 HEQQ.
-      unfold ht. apply morph_resp. apply impl_equiv; first assumption.
+      unfold ht. apply box_equiv. apply impl_equiv; first assumption.
       apply equiv_morph; last assumption.
       hnf in HEQe. subst e1. now rewrite EQm.
     Qed.

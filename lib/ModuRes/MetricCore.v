@@ -195,19 +195,27 @@ Arguments met_morph [T U] {eqT mT eqT0 mU} !_ /.
 Arguments met_morph_nonexp {_ _} {_ _ _ _} _ {_} {_ _} _.
 Infix "-n>" := metric_morphism (at level 45, right associativity).
 
-Global Instance metric_morphism_proper T U `{mT : metric T} `{mU : metric U} n (f: T -n> U):
+(*Global Instance metric_morphism_proper T U `{mT : metric T} `{mU : metric U} n (f: T -n> U):
   Proper (dist n ==> dist n) f.
 Proof.
   now eapply met_morph_nonexp.
+Qed.*)
+
+Lemma dist_equiv T U `{mT : metric T} `{mU : metric U} (f: T -> U)
+      (NEXP : forall n, Proper (dist n ==> dist n) f):
+  Proper (equiv ==> equiv) f.
+Proof.
+  intros x y Heq.
+  eapply dist_refl. intros n.
+  eapply NEXP. rewrite Heq. reflexivity.
 Qed.
+
 
 Program Definition mkNMorph T U `{mT : metric T} `{mU : metric U} (f: T -> U)
         (NEXP : forall n, Proper (dist n ==> dist n) f) :=
   mkUMorph s[(f)] _.
 Next Obligation.
-  intros x y Heq.
-  eapply dist_refl. intros n.
-  eapply NEXP. rewrite Heq. reflexivity.
+  now eapply dist_equiv.
 Qed.
 Arguments mkNMorph [T U eqT mT eqT0 mU] _ _.
 Notation "'n[(' f ')]'" := (mkNMorph f _).

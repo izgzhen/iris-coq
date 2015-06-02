@@ -25,7 +25,6 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       destruct n as [| n]; first omega.
       eapply propsMN, HTL, Hp.
       - omega.
-      - reflexivity.
       - omega.
     Qed.
 

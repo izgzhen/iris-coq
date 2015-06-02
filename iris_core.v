@@ -254,7 +254,12 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       pose (lf := contractive_nonexp later _).
       move=> ? ? ?.
         by apply: (met_morph_nonexp lf).
-    Qed.    
+    Qed.
+
+    Global Instance later_equiv : Proper (equiv ==> equiv) later.
+    Proof.
+      eapply dist_equiv; now apply _.
+    Qed.
   End Later.
   Notation " ▹ p " := (later p) (at level 35) : iris_scope.
 
@@ -346,16 +351,16 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
       Lemma xist_later : xist (n[(later)] <M< φ) ⊑ ▹xist φ. (* The other direction does not hold for empty T. *)
       Proof.
-        intros w n H. do 2 (destruct n; first exact I). exact H.
+        intros w n H. do 2 (destruct n; first done). exact H.
       Qed.
 
       Lemma later_xist (HI: inhabited T):
         ▹xist φ ⊑ xist (n[(later)] <M< φ).
       Proof.
-        move=>w n /= H. destruct n; first exact I.
+        move=>w n /= H. destruct n; first done.
         destruct n.
         - destruct HI as [t]. exists t. simpl. exact:bpred.
-        - destruct H as [t H]. exists t. exact H.
+        - destruct H as [t H]. by exists t.
       Qed.
 
     End LaterQuant.
@@ -399,6 +404,11 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Proof.
       intros p1 p2 EQp w m HLt.
       by apply EQp.
+    Qed.
+
+    Global Instance box_equiv : Proper (equiv ==> equiv) box.
+    Proof.
+      eapply dist_equiv; now apply _.
     Qed.
 
   End Necessitation.
@@ -568,9 +578,8 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
   Section Timeless.
 
-    (* RJ TODO: Make this a modality. *)
     Definition timelessP P w n :=
-      forall w' k (HSw : w ⊑ w') (HLt : (S k) < n) (Hp : P w' (S k)), P w' (S (S k)).
+      forall w' k (HLt : (S k) < n) (Hp : P w' (S k)), P w' (S (S k)).
 
     Program Definition timeless P : Props :=
       m[(fun w => mkSPred (fun n => timelessP P w n) _ _)].
@@ -578,38 +587,93 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       move=>? ? ? ?. exfalso. omega.
     Qed.
     Next Obligation.
-      intros n1 n2 HLe HP w' k HSub HLt. eapply HP; [eassumption |].
+      intros n1 n2 HLe HP w' k HLt. eapply HP.
       omega.
     Qed.
     Next Obligation.
       intros w1 w2 EQw k; simpl. intros HLt.
-      split; intros HT w' m HSw HLt' Hp.
-      - destruct HSw as [wr HSw]. rewrite -HSw.
-        eapply (propsNE (w1:=wr·w1)), HT, propsNE, Hp.
-        + apply cmra_op_dist; first reflexivity. eapply mono_dist, EQw. omega.
-        + eexists. now reflexivity.
-        + assumption.
-        + rewrite -HSw. apply cmra_op_dist; first reflexivity. symmetry. eapply mono_dist, EQw. omega.
-      - destruct HSw as [wr HSw].
-        have Hwr : wr · w2 = n = w'. 
-        { rewrite -HSw. apply cmra_op_dist; [reflexivity|symmetry; assumption]. }
-        apply: propsNE; [|eapply mono_dist; last eassumption; omega|].
-        apply: HT; [exists wr; reflexivity|omega|].
-        apply: propsNE; [|symmetry; eapply mono_dist; last eassumption; omega|].
-        assumption.
+      split; intros HT w' m HLt' Hp.
+      - eapply HT; done.
+      - eapply HT; done.
     Qed.
     Next Obligation.
-      intros w1 w2 HSw n; simpl; intros HT w' m HSw' HLt Hp.
-      eapply HT, Hp; [etransitivity |]; eassumption.
+      intros w1 w2 Hsub n; simpl; intros HT w' m HLt Hp.
+      eapply HT, Hp; done.
     Qed.
 
-    Lemma xist_timeless {T:Type} `{cmetric T} (P : T -n> Props) :
-      (forall t, valid(timeless(P t))) -> valid (timeless (xist P)).
+    Global Instance timeless_dist n:
+      Proper (dist n ==> dist n) timeless.
     Proof.
-      intros.
-      move => w n w' k HSub HLt [t /H0 Ht].
-      exists t. apply: Ht; [| |eassumption|eassumption].
+      apply dist_props_simpl; first apply _.
+      move=>P1 P2 w m Hle Heq HT; repeat intro.
+      eapply spredNE, HT; try eassumption; [|].
+      - eapply mmorph_proper; last reflexivity. eapply mono_dist, Heq. omega.
+      - eapply spredNE, Hp. eapply mmorph_proper; last reflexivity.
+        symmetry. eapply mono_dist, Heq. omega.
     Qed.
+
+    Lemma timeless_boxed P:
+      timeless P == □timeless P.
+    Proof.
+      apply pord_antisym; last exact:box_elim.
+      move=>w n H. exact H.
+    Qed.
+
+    Lemma timeless_conj P Q:
+      timeless P ∧ timeless Q ⊑ timeless (P ∧ Q).
+    Proof.
+      move=>w n [HTP HTQ] /=. repeat intro. split.
+      - eapply HTP, Hp; done.
+      - eapply HTQ, Hp; done.
+    Qed.
+
+    Lemma timeless_disj P Q:
+      timeless P ∧ timeless Q ⊑ timeless (P ∨ Q).
+    Proof.
+      move=>w n [HTP HTQ] /=. repeat intro. destruct Hp.
+      - left. eapply HTP; done.
+      - right. eapply HTQ; done.
+    Qed.
+
+    Lemma timeless_star P Q:
+      timeless P ∧ timeless Q ⊑ timeless (P * Q).
+    Proof.
+      move=>w n [HTP HTQ] /=. repeat intro. destruct Hp as [[w1 w2] [Heq [HP HQ]]]. simpl in *.
+      edestruct Wld_CMRAExt as [w'1 [w'2 [Heq' [Hdist1 Hdist2]]]]; first eexact Heq; first reflexivity.
+      exists (w'1, w'2). simpl in *. split_conjs.
+      - now rewrite Heq'.
+      - eapply HTP; first done. eapply spredNE, HP.
+        eapply met_morph_nonexp, Hdist1.
+      - eapply HTQ; first done. eapply spredNE, HQ.
+        eapply met_morph_nonexp, Hdist2.
+    Qed.
+
+    Lemma timeless_box P:
+      timeless P ⊑ timeless(□P).
+    Proof.
+      intros w n HTP. repeat intro.
+      simpl. eapply HTP; done.
+    Qed.
+
+    Section TimelessQuant.
+      Context {T} `{cT : cmetric T}.
+      Context (φ : T -n> Props).
+
+      Lemma all_timeless :
+        all (n[(timeless)] <M< φ) ⊑ timeless (all φ).
+      Proof.
+        move => w n HAT. simpl in *. repeat intro. simpl.
+        eapply HAT; first done. apply Hp.
+      Qed.
+
+      Lemma xist_timeless :
+        all (n[(timeless)] <M< φ) ⊑ timeless (xist φ).
+      Proof.
+        move => w n HAT. simpl in *. repeat intro. simpl.
+        destruct Hp as [t Hφ]. exists t. eapply HAT; first done.
+        exact Hφ.
+      Qed.
+    End TimelessQuant.
 
   End Timeless.
 
