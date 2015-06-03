@@ -33,23 +33,34 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       apply vsValid. apply bot_false.
     Qed.
 
-    Lemma vsNotOwnInvalid m1 m2 l
-       (Hnval: ~↓l):
-      valid (vs m1 m2 (ownL l) ⊥).
+    Lemma vsOwnValid m l:
+      valid (vs m m (ownL l) (ownL l ∧ pcmconst (sp_const (↓l)))).
     Proof.
       apply vsValid. etransitivity.
       { rewrite ownL_iff /own_ghost. reflexivity. }
       apply xist_L=>I. apply xist_L=>S. rewrite {1}/met_morph /mkNMorph {1}/morph. 
-      etransitivity; last by eapply pvsNotOwnInvalid.
-      apply and_R; split; last reflexivity.
-      apply and_impl.
-      (* We now prove this in the model. It does not really warrant it's own metatheory... *)
-      move=>w n. destruct n; first (intro; exact:bpred).
-      intros [[Hw' Heq] Hval]. simpl in *.
-      tauto.
+      etransitivity; first by eapply pvsOwnValid.
+      eapply pvsMon. apply and_pord.
+      - rewrite ownL_iff. apply (xist_R I). apply (xist_R S). reflexivity.
+      - (* We now prove this in the model. It does not really warrant it's own metatheory... *)
+        move=>w n. destruct n; first (intro; exact:bpred). simpl. tauto.
     Qed.
 
-    (* TODO RJ: ownS * ownS => ⊥ *)
+    Lemma vsOwnSTwice m σ1 σ2:
+      valid (vs m m (ownS σ1 * ownS σ2) ⊥).
+    Proof.
+      apply vsValid. etransitivity.
+      { rewrite !ownS_iff /own_state. reflexivity. }
+      etransitivity; first apply xist_sc. apply xist_L=>I1. simpl.
+      etransitivity; first apply xist_sc. apply xist_L=>g1. simpl.
+      etransitivity; first apply xist_sc_r. apply xist_L=>I2. simpl.
+      etransitivity; first apply xist_sc_r. apply xist_L=>g2. simpl.
+      rewrite /const. rewrite- own_sc. etransitivity; first eapply pvsOwnValid.
+      eapply pvsMon. rewrite ->and_projR.
+      (* We now prove this in the model. It does not really warrant it's own metatheory... *)
+      move=>w n [_ [HSval _]]. destruct n; first exact:bpred.
+      destruct HSval.
+    Qed.
 
     Lemma vsTimeless m P : (* TODO RJ: the box is missing in the appendix? timeless will become a modality anyway. *)
       □(timeless P) ⊑ vs m m (▹P) P.

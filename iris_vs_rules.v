@@ -256,24 +256,23 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           tauto.
     Qed.
 
-    Lemma pvsNotOwnInvalid m1 m2 w:
-      (pcmconst (cmra_valid w) → ⊥) ∧ own w ⊑ pvs m1 m2 ⊥.
+    Lemma pvsOwnValid m w:
+      own w ⊑ pvs m m (own w ∧ pcmconst (cmra_valid w)).
     Proof.
       intros w0 n. destruct n; first (intro; exact:bpred).
-      move=>[Hinval [wr Heq]] wf; intros. exfalso.
-      change ((⊥:Props) w0 (S (S k))).
-      eapply (applyImpl Hinval); [reflexivity|omega|].
-      rewrite /= /const. destruct HE as [rs [pv _]].
-      eapply cmra_valid_ord, spredNE, dpred, pv; last omega; last first.
-      - apply cmra_valid_dist. simpl in Heq. rewrite comp_finmap_move.
-        eapply cmra_op_dist; last reflexivity.
-        symmetry. eapply mono_dist, Heq. omega.
-      - eexists. erewrite (comm _ w), <-assoc. reflexivity.
+      move=>Hown wf; intros. exists w0.
+      split; last done. split; first (eapply propsMN, Hown; omega).
+      destruct HE as [rs [pv _]]. simpl. destruct Hown as [wr Heq]. simpl in Heq.
+      eapply cmra_valid_ord, spredNE, pv; last first.
+      - eapply cmra_valid_dist. erewrite comp_finmap_move. 
+        eapply cmra_op_dist; last reflexivity. symmetry. eapply mono_dist, Heq. omega.
+      - rewrite -assoc. eexists. now erewrite (comm _ w).
     Qed.
 
-    (* TODO: can always get own of some unit *)
-
   End ViewShiftProps.
+
+  Global Opaque pvs.
+  Global Opaque wpF.
 
 End IRIS_VS_RULES.
 

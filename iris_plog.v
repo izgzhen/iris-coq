@@ -198,7 +198,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       end.
 
     Program Definition wsat σ m w : SPred :=
-      mkSPred (wsatF σ m w) _ _.
+      p[(wsatF σ m w)].
     Next Obligation.
       intros n1 n2 HLe. do 2 (destruct n2; first (intro; exact I)).
       do 2 (destruct n1; first (exfalso; omega)).
@@ -242,11 +242,11 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Local Obligation Tactic := intros.
 
     Program Definition preVS m1 m2 P w : SPred :=
-      mkSPred (fun n => forall (wf: Wld) k mf σ (HLe : S k < n)
+      p[(fun n => forall (wf: Wld) k mf σ (HLe : S k < n)
                                (HD : mf # m1 ∪ m2)
                                (HE : wsat σ (m1 ∪ mf) (w · wf) (S (S k))),
                    exists w', P w' (S (S k))
-                              /\ wsat σ (m2 ∪ mf) (w' · wf) (S (S k))) _ _.
+                              /\ wsat σ (m2 ∪ mf) (w' · wf) (S (S k)))].
     Next Obligation.
       inversion HLe.
     Qed.
@@ -350,7 +350,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
     (* Define the function wp will be a fixed-point of *)
     Program Definition wpF safe m : (expr -n> vPred -n> Props) -> (expr -n> vPred -n> Props) :=
-      fun WP => n[(fun e => n[(fun φ => m[(fun w => mkSPred (wpFP safe m WP e φ w) _ _)])])].
+      fun WP => n[(fun e => n[(fun φ => m[(fun w => p[(wpFP safe m WP e φ w)] )])])].
     Next Obligation.
       intro. intros. inversion HLt.
     Qed.

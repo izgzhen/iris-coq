@@ -308,6 +308,9 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
 
   End HoareTripleProperties.
 
+  Global Opaque pvs.
+  Global Opaque wpF.
+
 End IRIS_HT_RULES.
 
 Module IrisHTRules (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE) : IRIS_HT_RULES RL C R WP CORE PLOG.
