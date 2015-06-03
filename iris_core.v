@@ -655,6 +655,16 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       simpl. eapply HTP; done.
     Qed.
 
+    Lemma timeless_impl P Q:
+      timeless Q ⊑ timeless (P → Q).
+    Proof.
+      move=>w n HTQ /= w' k Ltk HPQ w'' [|[|m]] Lem HP; first exact: bpred.
+      { apply HPQ, HP. omega. }
+      eapply HTQ, HPQ; [omega|omega|].
+      eapply dpred, HP. omega.
+    Qed.
+
+
     Section TimelessQuant.
       Context {T} `{cT : cmetric T}.
       Context (φ : T -n> Props).
