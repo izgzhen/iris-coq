@@ -10,12 +10,18 @@ Section Definitions.
              bpred    :  spred 0;
              dpred    :  dclosed spred }.
 
+End Definitions.
+Arguments dpred {s} {n m} _ _.
+Arguments mkSPred _ _ _.
+Notation "'p[(' f ')]'" := (mkSPred f _ _).
+
+Section Props.
   Definition sp_constF (P: Prop) :=
     fun n => match n with
              | O => True
              | S _ => P end.
   Program Definition sp_const P :=
-    mkSPred (sp_constF P) _ _.
+    p[(sp_constF P)].
   Next Obligation.
     move=>n m Hle. destruct m, n; simpl; tauto || inversion Hle.
   Qed.
@@ -63,7 +69,7 @@ Section Definitions.
   Proof. by apply EQP. Qed.
 
   Program Definition sp_compl (σ : chain SPred) (σc : cchain σ) :=
-    mkSPred (fun n => σ n n) _ _.
+    p[(fun n => σ n n)].
   Next Obligation.
     apply bpred.
   Qed.
@@ -115,7 +121,7 @@ Section Definitions.
       | S n => p n
     end.
   Program Definition later_sp (p : SPred) :=
-    mkSPred (laterF p) _ _.
+    p[(laterF p)].
   Next Obligation.
     intros [| m] [| n] HLe; simpl; try tauto; [now inversion HLe |].
     intros HP; eapply dpred; [| eassumption]; auto with arith.
@@ -168,16 +174,14 @@ Section Definitions.
     eapply HP; eassumption || symmetry; eassumption.
   Qed.
   
-End Definitions.
-
-Arguments dpred {s} {n m} _ _.
+End Props.
 
 Section SPredBI.
   Local Obligation Tactic := intros; eauto with typeclass_instances.
 
   (* Standard interpretations of propositional connectives. *)
   Global Program Instance top_sp : topBI SPred :=
-    mkSPred (fun _ => True) _ _. (* this behaves nicer than sp_c *)
+    p[(fun _ => True)]. (* this behaves nicer than sp_c *)
   Next Obligation.
     repeat intro. exact I.
   Qed.
@@ -189,7 +193,7 @@ Section SPredBI.
 
   Global Program Instance and_sp : andBI SPred :=
     fun P Q =>
-      mkSPred (fun n => P n /\ Q n) _ _.
+      p[(fun n => P n /\ Q n)].
   Next Obligation.
     split; now apply bpred.
   Qed.
@@ -198,7 +202,7 @@ Section SPredBI.
   Qed.
   Global Program Instance or_sp : orBI SPred :=
     fun P Q =>
-      mkSPred (fun n => P n \/ Q n) _ _.
+      p[(fun n => P n \/ Q n)].
   Next Obligation.
     left. now apply bpred.
   Qed.
@@ -278,7 +282,7 @@ Section SPredBI.
   
   Global Program Instance impl_sp : implBI SPred :=
     fun P Q =>
-      mkSPred (fun n => forall m, m <= n -> P m -> Q m) _ _.
+      p[(fun n => forall m, m <= n -> P m -> Q m)].
   Next Obligation.
     destruct m; last omega.
     apply bpred.
@@ -310,7 +314,7 @@ Section SPredBI.
   (* Quantifiers. *)
   Global Program Instance all_sp : allBI SPred :=
     fun T eqT mT cmT R =>
-      mkSPred (fun n => forall t, R t n) _ _.
+      p[(fun n => forall t, R t n)].
   Next Obligation.
     apply bpred.
   Qed.
@@ -325,7 +329,7 @@ Section SPredBI.
     end.
   Global Program Instance xist_sp : xistBI SPred :=
     fun T eqT mT cmT R =>
-      mkSPred (xist_spF R) _ _.
+      p[(xist_spF R)].
   Next Obligation.
     exact I.
   Qed.
@@ -387,7 +391,7 @@ End SPredBI.
 
 Section SPredEq.
   Global Program Instance sp_eq : eqBI SPred :=
-    fun U {eqU mU cmU u1 u2} => mkSPred (fun n => u1 = n = u2) _ _.
+    fun U {eqU mU cmU u1 u2} => p[(fun n => u1 = n = u2)].
   Next Obligation.
     exact:dist_bound.
   Qed.

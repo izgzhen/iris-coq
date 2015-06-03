@@ -26,6 +26,7 @@ Qed.
 
 Notation "'mkType' R" := (@Build_Setoid _ R _) (at level 10).
 Arguments equiv {_ _} !_ !_ /.
+Arguments const {_ _} _ _ /.
 
 Class Associative {T} `{eqT : Setoid T} (op : T -> T -> T) :=
   assoc : forall t1 t2 t3, op t1 (op t2 t3) == op (op t1 t2) t3.

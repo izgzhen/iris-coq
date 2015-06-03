@@ -48,7 +48,7 @@ Section Agreement.
   Global Instance ra_agree_valid : RA_valid _ := compose valid_sp ra_ag_v.
 
   Global Program Instance ra_ag_op : RA_op _ :=
-    fun x y => ag_inj (mkSPred (fun n => ra_ag_v x n /\ ra_ag_v y n /\ ra_ag_ts x n = n = ra_ag_ts y n) _ _) (ra_ag_ts x) _.
+    fun x y => ag_inj p[(fun n => ra_ag_v x n /\ ra_ag_v y n /\ ra_ag_ts x n = n = ra_ag_ts y n)] (ra_ag_ts x) _.
   Next Obligation.
     split; last split; exact:dist_bound||exact:bpred.
   Qed.
@@ -384,7 +384,7 @@ Section Agreement.
 
   (* We need to provide a CMRAExt. *)
   Program Definition ra_ag_cmra_extend_elem (me they part rem: ra_agree) n (Hdist: me = n = they) (Heq: they == rem · part) :=
-    ag_inj (mkSPred (fun m => ra_ag_v me m \/ (m <= n /\ ra_ag_v part m)) _ _)
+    ag_inj p[(fun m => ra_ag_v me m \/ (m <= n /\ ra_ag_v part m))]
            (fun m => if le_lt_dec m n then ra_ag_ts part m else ra_ag_ts me m) _.
   Next Obligation.
     left. exact:bpred.

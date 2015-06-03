@@ -376,7 +376,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 (*    Local Obligation Tactic := intros; resp_set || eauto with typeclass_instances. *)
 
     Program Definition box : Props -> Props :=
-      fun P => m[(fun w => mkSPred (fun n => P (1 w) n) _ _)].
+      fun P => m[(fun w => p[(fun n => P (1 w) n)] )].
     Next Obligation.
       exact: bpred.
     Qed.
@@ -582,7 +582,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       forall w' k (HLt : (S k) < n) (Hp : P w' (S k)), P w' (S (S k)).
 
     Program Definition timeless P : Props :=
-      m[(fun w => mkSPred (fun n => timelessP P w n) _ _)].
+      m[(fun w => p[(fun n => timelessP P w n)] )].
     Next Obligation.
       move=>? ? ? ?. exfalso. omega.
     Qed.
@@ -696,8 +696,8 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Local Obligation Tactic := idtac.
 
     (** General Ownership - used to show that the other assertions make sense **)
-    Program Definition own: Wld -n> Props :=
-      n[(fun w0 => m[(fun w => ∃ wr, (w0 · wr) === w )] )].
+    Program Definition own: Wld -> Props :=
+      fun w0 => m[(fun w => ∃ wr, (w0 · wr) === w )].
     Next Obligation.
       intros. move=>wr0 wr1 EQwr. apply intEq_dist; last reflexivity.
       apply cmra_op_dist; first reflexivity. assumption.
@@ -718,12 +718,39 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       apply sp_eq_iff. rewrite -Hequ. rewrite assoc (comm w) -assoc.
       apply cmra_op_dist; first reflexivity. assumption.
     Qed.
-    Next Obligation.
-      move=>n w0 w1 Heq w m HLt. destruct m; first reflexivity.
+    Arguments own _ : simpl never.
+
+    Global Instance own_dist n:
+      Proper (dist n ==> dist n) own.
+    Proof.
+      move=>w0 w1 Heq w m HLt. destruct m; first reflexivity.
       split; case=>wd; move/sp_eq_iff=>Heqd; exists wd; apply sp_eq_iff; rewrite -Heqd;
         (apply cmra_op_dist; last reflexivity); eapply mono_dist; first eassumption; eassumption || symmetry; eassumption.
     Qed.
-    
+
+    Global Instance own_equiv : Proper (equiv ==> equiv) own.
+    Proof.
+      eapply dist_equiv; now apply _.
+    Qed.
+
+    Lemma own_sc (u v : Wld):
+      own (u · v) == own u * own v.
+    Proof.
+      move => w n; destruct n; first (split; intro; exact:bpred). split; simpl.
+      - move => [wr Hwr].
+        exists (u, v · wr); split; last split.
+        + split; now rewrite -Hwr -assoc.
+        + exists (1u). now rewrite ra_op_unit2.
+        + exists wr; reflexivity.
+      - move : w => [wu wr] [[w1 w2] [Hw] [[w1r Hw1r] [w2r Hw2r]]].
+        exists (w1r · w2r). rewrite -assoc (assoc v) (comm v) -assoc. rewrite -Hw. split.
+        (* RJ: Simplification here is not nice... *)
+        + rewrite [ra_op]lock /= -lock. simpl in Hw1r, Hw2r. rewrite -Hw1r -Hw2r.
+          rewrite !assoc. reflexivity.
+        + rewrite [ra_op]lock /=. simpl in Hw1r, Hw2r. rewrite -Hw1r -Hw2r.
+          rewrite !assoc. split; reflexivity.
+    Qed.
+   
     Program Definition inv i : Props -n> Props := 
       n[(fun P => m[(fun w => ∃Pr, Invs w i === Some (Pr · (ra_ag_inj (ı' (halved P)))) )] )].
     Next Obligation.
@@ -769,7 +796,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Program Definition inv_own i P: Props :=
       ∃ r, own (fdStrongUpdate i (Some (ra_ag_inj (ı' (halved P)))) fdEmpty, r).
     Next Obligation.
-      intros. move=>r1 r2 EQr. apply (met_morph_nonexp own). split; first reflexivity.
+      intros. move=>r1 r2 EQr. apply (own_dist). split; first reflexivity.
       exact EQr.
     Qed.
 
@@ -825,14 +852,13 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Program Definition own_state σ: Props :=
       ∃ I, ∃ g, own (I, (ex_own σ, g)).
     Next Obligation.
-      intros. move=>g1 g2 EQg. cbv beta. apply met_morph_nonexp.
+      intros. move=>g1 g2 EQg. cbv beta. apply own_dist.
       split; first reflexivity. split; first reflexivity.
       simpl. assumption.
     Qed.
     Next Obligation.
       intros. move=>I1 I2 EQI. cbv beta. apply xist_dist=>r.
-      rewrite {1 3}/met_morph /mkNMorph {1 4}/morph.
-      apply met_morph_nonexp.
+      apply own_dist.
       split; last reflexivity. simpl. assumption.
     Qed.
 
@@ -877,14 +903,13 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Program Definition own_ghost g: Props :=
       ∃ I, ∃ S, own (I, (S, g)).
     Next Obligation.
-      intros. move=>g1 g2 EQr. cbv beta. apply met_morph_nonexp.
+      intros. move=>g1 g2 EQr. apply own_dist.
       split; first reflexivity. split; last reflexivity.
       simpl. assumption.
     Qed.
     Next Obligation.
       intros. move=>I1 I2 EQI. cbv beta. apply xist_dist=>S.
-      rewrite {1 3}/met_morph /mkNMorph {1 4}/morph.
-      apply met_morph_nonexp.
+      apply own_dist.
       split; last reflexivity. simpl. assumption.
     Qed.
 
@@ -913,6 +938,13 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         + reflexivity.
       - move=>[[[I1 [S1 g'1]] [I2 [S2 g'2]]] /= [[_ [_ Heq]] [Hg1 Hg2]]].
         rewrite ->Hg1, Hg2. apply pordR. exact Heq.
+    Qed.
+
+    Lemma ownL_something:
+      valid(xist ownL).
+    Proof.
+      move=>w n. destruct n; first exact:bpred. exists (Res w).
+      simpl. reflexivity.
     Qed.
 
   End Ownership.
