@@ -187,7 +187,7 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
     Program Definition plugCtxHt safe m Q Q' K :=
       n[(fun v : value => ht safe m (Q v) (fill K v) Q' )].
     Next Obligation.
-      intros v1 v2 EQv; unfold ht; eapply (met_morph_nonexp box).
+      intros v1 v2 EQv; unfold ht; eapply box_dist.
       eapply impl_dist.
       - apply Q; assumption.
       - destruct n as [| n]; [apply dist_bound | hnf in EQv].
@@ -257,7 +257,7 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       rewrite -vsLiftBox /vs.
       rewrite comm. etransitivity; last by apply wpImpl.
       eapply and_pord; last reflexivity. apply pordR.
-      apply morph_resp. apply all_equiv=>v. reflexivity.
+      apply box_equiv. apply all_equiv=>v. reflexivity.
     Qed.
 
     Lemma htCons P P' Q Q' safe m e :
