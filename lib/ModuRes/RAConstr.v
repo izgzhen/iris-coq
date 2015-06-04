@@ -1,5 +1,5 @@
 Require Import Ssreflect.ssreflect Omega.
-Require Import CSetoid PreoMet RA DecEnsemble Relations.
+Require Import CSetoid Predom RA DecEnsemble ModuRes.Relations.
 
 Local Open Scope ra_scope.
 Local Open Scope predom_scope.
