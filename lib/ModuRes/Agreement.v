@@ -254,16 +254,16 @@ Section Agreement.
   Qed.
 
   Program Definition ra_ag_vchain (σ: chain ra_agree) {σc: cchain σ} : chain SPred :=
-    fun i => match σ (S i) with
+    fun i => match σ i with
              | ag_inj v' _ _ => v'
              end.
 
   Instance ra_ag_vchain_c (σ: chain ra_agree) {σc: cchain σ} : cchain (ra_ag_vchain σ).
   Proof.
     intros n j m HLe1 HLe2. destruct n as [|n]; first by apply: dist_bound. unfold ra_ag_vchain.
-    ddes (σ (S j)) at 1 3 as [v1 ts1 tsx1] deqn:EQ1.
-    ddes (σ (S m)) at 1 3 as [v2 ts2 tsx2] deqn:EQ2.
-    cchain_eleq σ at (S j) (S m) lvl:(S n); move=>[EQv _].
+    ddes (σ j) at 1 3 as [v1 ts1 tsx1] deqn:EQ1.
+    ddes (σ m) at 1 3 as [v2 ts2 tsx2] deqn:EQ2.
+    cchain_eleq σ at j m lvl:(S n); move=>[EQv _].
     assumption.
   Qed.
 
@@ -275,33 +275,34 @@ Section Agreement.
     assert (HTv := conv_cauchy (ra_ag_vchain σ) (S n) _ (le_refl _)).
     apply HTv in pv; last by omega.
     clear HTv. move:pv. unfold ra_ag_vchain.
-    ddes (σ (S (S n))) at 1 3 as [v1 ts1 tsx1] deqn:EQ1.
-    ddes (σ (S k)) at 1 3 as [v2 ts2 tsx2] deqn:EQ2=>pv.
-    cchain_eleq σ at (S (S n)) (S k) lvl:(S m); move=>[EQv _].
+    ddes (σ (S n)) at 1 3 as [v1 ts1 tsx1] deqn:EQ1.
+    ddes (σ k) at 1 3 as [v2 ts2 tsx2] deqn:EQ2=>pv.
+    destruct m; first exact:bpred.
+    cchain_eleq σ at (S n) k lvl:(S m); move=>[EQv _].
     apply EQv; first omega. eapply dpred; eassumption.
   Qed.
 
   Lemma ra_ag_vchain_ucompl_n (σ: chain ra_agree) {σc: cchain σ} n:
-    ra_ag_vchain σ (S n) n ->
+    ra_ag_vchain σ n n ->
     compl (ra_ag_vchain σ) n.
   Proof.
     move=>pv.
-    assert (HTv := conv_cauchy (ra_ag_vchain σ) (S n) _ (le_refl _)).
+    assert (HTv := conv_cauchy (ra_ag_vchain σ) n _ (le_refl _)).
     apply HTv in pv; last by omega. assumption.
   Qed.
 
   Lemma ra_ag_vchain_n (σ: chain ra_agree) {σc: cchain σ} n m:
-    ra_ag_vchain σ n m -> forall v' ts' tsx', σ (S n) = ag_inj v' ts' tsx' -> v' m.
+    ra_ag_vchain σ n m -> forall v' ts' tsx', σ n = ag_inj v' ts' tsx' -> v' m.
   Proof.
     move=>pv v' ts' tsx' EQ. move:pv EQ.
     unfold ra_ag_vchain.
-    ddes (σ (S n)) at 1 3 as [vSn tsSn tsxSSn] deqn:EQSSn.
+    ddes (σ n) at 1 3 as [vSn tsSn tsxSSn] deqn:EQSSn.
     move=>pv EQ. rewrite EQ in EQSSn. injection EQSSn=>{EQSSn EQ}EQ. destruct EQ.
     move=><-. assumption.
   Qed.
 
   Definition ra_ag_tsdiag_n (σ : chain ra_agree) n: T :=
-    match σ (S n) with
+    match σ n with
     | ag_inj v' ts' tsx' => ts' n
     end.
 
@@ -313,15 +314,15 @@ Section Agreement.
     assert (pvc: compl (ra_ag_vchain σ) i) by assumption.
     destruct n as [|n]; first by apply: dist_bound.
     unfold ra_ag_tsdiag_n.
-    ddes (σ (S i)) at 1 3 as [vSi tsSi tsxSi] deqn:EQSi.
-    ddes (σ (S (S n))) at 1 3 as [vSSn tsSSn tsxSSn] deqn:EQSSn.
-    cchain_eleq σ at (S i) (S (S n)) lvl:(S (S n)); move=>[EQv EQts].
-    assert (pv': vSi i).
+    ddes (σ i) at 1 3 as [vi tsi tsxi] deqn:EQi.
+    ddes (σ (S n)) at 1 3 as [vSn tsSn tsxSn] deqn:EQSn.
+    cchain_eleq σ at i (S n) lvl:(S n); move=>[EQv EQts].
+    assert (pv': vi i).
     { move:pvc. move/ra_ag_vchain_compl_n. case/(_ i i _ _)/Wrap; [omega|].
       move/ra_ag_vchain_n=>H. eapply H. symmetry. eassumption. }
     etransitivity; last first.
     { eapply EQts; first omega. eapply dpred, pv'. assumption. }
-    move:(tsxSi (S n) i). move/(_ _ pv')=>EQ.
+    move:(tsxi (S n) i). move/(_ _ pv')=>EQ.
     etransitivity; last eassumption. reflexivity.
   Qed.
 
@@ -331,14 +332,14 @@ Section Agreement.
     intros i HLe. destruct (σ i) as [vi] eqn: EQi; split.
     - assert (HT:=conv_cauchy (ra_ag_vchain σ)).
       rewrite (HT (S n)). unfold ra_ag_vchain.
-      ddes (σ (S i)) at 1 3 as [vSi tsSi tsxSi] deqn:EQSi.
-      cchain_eleq σ at (S i) i lvl: (S n); move=>[EQv _]. assumption.
+      ddes (σ i) at 1 3 as [vSi tsSi tsxSi] deqn:EQSi.
+      inversion EQi; subst. reflexivity.
     - move=>j HLej pv1.
       destruct j as [|j]; first by apply: dist_bound.
       unfold ra_ag_tsdiag_n.
       rewrite /ra_ag_vchain /= in pv1. move:pv1.
-      ddes (σ (S (S j))) at 1 3 6 as [vSSj tsSSj tsxSSj] deqn:EQSSj.
-      intros pv1. cchain_eleq σ at (S (S j)) i lvl: (S j); move=>[EQv EQts].
+      ddes (σ (S j)) at 1 3 6 as [vSSj tsSSj tsxSSj] deqn:EQSSj.
+      intros pv1. cchain_eleq σ at (S j) i lvl:(S j); move=>[EQv EQts].
       eapply EQts; first reflexivity. assumption.
   Qed.
 
@@ -349,21 +350,21 @@ Section Agreement.
     assert (HT: forall n, ra_ag_vchain ρ n n -> ra_ag_tsdiag_n σ n = n = ra_ag_tsdiag_n ρ n).
     { move=>n pv. destruct n as [|n]; first by apply: dist_bound.
       unfold ra_ag_tsdiag_n.
-      ddes (σ (S (S n))) at 1 3 as [vσn tsσn tsxσn] deqn:EQσn.
-      ddes (ρ (S (S n))) at 1 3 as [vρn tsρn tsxρn] deqn:EQρn.
-      specialize (H (S (S n))). rewrite ->ra_ag_pord in H.
+      ddes (σ (S n)) at 1 3 as [vσn tsσn tsxσn] deqn:EQσn.
+      ddes (ρ (S n)) at 1 3 as [vρn tsρn tsxρn] deqn:EQρn.
+      specialize (H (S n)). rewrite ->ra_ag_pord in H.
       rewrite <-EQσn, <-EQρn, comm in H. destruct H as [EQv EQts].
       apply EQts. rewrite EQv. rewrite /ra_ag_vchain -EQρn in pv. assumption.
     }
     split.
     - move=>n. split; first by (intros (pv1 & pv2 & _); tauto).
       simpl. move=>pv. move:(pv). rewrite {1}/ra_ag_vchain. simpl.
-      ddes (ρ (S n)) at 1 3 as [vρn tsρn tsxρn] deqn:EQρn.
+      ddes (ρ n) at 1 3 as [vρn tsρn tsxρn] deqn:EQρn.
       move=>pvρ.
       assert (pvσ: (ra_ag_vchain σ n) n).
       { unfold ra_ag_vchain.
-        ddes (σ (S n)) at 1 3 as [vσn tsσn tsxσn] deqn:EQσn.
-        specialize (H (S n)). rewrite ->ra_ag_pord, <-EQρn, <-EQσn, comm in H.
+        ddes (σ n) at 1 3 as [vσn tsσn tsxσn] deqn:EQσn.
+        specialize (H n). rewrite ->ra_ag_pord, <-EQρn, <-EQσn, comm in H.
         destruct H as [EQv _]. rewrite <-EQv in pvρ. destruct pvρ as [pv1 _]. assumption. }
       do 2 (split; first assumption). symmetry. apply HT. assumption.
     - intros n (pv1 & pv2 & EQ). reflexivity.
@@ -383,7 +384,7 @@ Section Agreement.
   Qed.
 
   (* We need to provide a CMRAExt. *)
-  Program Definition ra_ag_cmra_extend_elem (me they part rem: ra_agree) n (Hdist: me = n = they) (Heq: they == rem · part) :=
+  Program Definition ra_ag_cmra_extend_elem (me part rem: ra_agree) n (Hdist: me = n = rem · part) :=
     ag_inj p[(fun m => ra_ag_v me m \/ (m <= n /\ ra_ag_v part m))]
            (fun m => if le_lt_dec m n then ra_ag_ts part m else ra_ag_ts me m) _.
   Next Obligation.
@@ -396,7 +397,7 @@ Section Agreement.
   Qed.
   Next Obligation.
     move=>m j Hle.
-    destruct part as [pv pts ptsx], me as [mv mts mtsx], they as [tv tts ttsx].
+    destruct part as [pv pts ptsx], me as [mv mts mtsx].
     move=>/= [Hme|[Hlem Hpart]].
     - simpl.
       destruct (le_lt_dec j n) as [Hle_jn|Hlt_jn].
@@ -404,26 +405,21 @@ Section Agreement.
         destruct n.
         { destruct m; last omega. exact:dist_bound. }
         apply ptsx; first assumption. destruct Hdist as [Heqv1 _].
-        destruct Heq as [Heqv2 _]. apply (Heqv2 j)=>{Heqv2}.
-        eapply spredNE, Hme. eapply mono_dist, Heqv1. assumption.
+        eapply Heqv1; assumption.
       + destruct (le_lt_dec m n) as [Hle_mn|Hlt_mn].
         * transitivity (mts m).
           { eapply mono_dist, mtsx; assumption || omega. }
           destruct n.
           { destruct m; last omega. exact:dist_bound. }
-          destruct Hdist as [Heqv1 Heqts1]. destruct Heq as [Heqv2 Heqts2].
+          destruct Hdist as [Heqv1 Heqts1].
           etransitivity; first (now eapply Heqts1, dpred, Hme).
-          specialize (Heqts2 m). specialize (Heqv2 m). simpl in *.
-          assert (Hthey: tv m).
-          { eapply spredNE, dpred, Hme; last assumption.
-            eapply mono_dist, Heqv1. assumption. }
-          etransitivity; first (now apply Heqts2).
-          apply Heqv2. assumption.
+          apply Heqv1; first assumption.
+          eapply dpred, Hme. assumption.
         * eapply mtsx; assumption.
     - destruct n.
       { destruct j; last (exfalso; omega).
         destruct m; last (exfalso; omega). exact:dist_bound. }
-      destruct Hdist as [Heqv _], Heq as [Heqv' _].
+      destruct Hdist as [Heqv _].
       destruct (le_lt_dec j (S n)) as [Hle_jn|Hlt_jn]; last omega.
       destruct (le_lt_dec m (S n)) as [Hle_mn|Hlt_mn]; last omega.
       apply ptsx; assumption.
@@ -431,13 +427,15 @@ Section Agreement.
 
   Global Instance ra_ag_cmra_extend: CMRAExt ra_agree.
   Proof.
-    move=>n; intros. symmetry in EQt. assert (EQt1': t1 == t12 · t11) by now rewrite comm.
-    exists (ra_ag_cmra_extend_elem t2 t1 t11 _ _ EQt EQt1').
-    exists (ra_ag_cmra_extend_elem t2 t1 t12 _ _ EQt EQt1).
+    move=>n; intros.
+    assert (EQt1_1: t2 = n = t12 · t11) by now rewrite ->comm, <-EQt1.
+    exists (ra_ag_cmra_extend_elem t2 t11 _ _ EQt1_1).
+    assert (EQt1_2: t2 = n = t11 · t12) by now rewrite <-EQt1.
+    exists (ra_ag_cmra_extend_elem t2 t12 _ _ EQt1_2).
     destruct t11 as [t11v t11ts t11tsx], t12 as [t12v t12ts t12tsx], t1 as [t1v t1ts t1tsx], t2 as [t2v t2ts t2tsx].
     split; last split.
     - split.
-      + move=>m. simpl. clear EQt1'. split.
+      + move=>m. simpl. clear EQt1_1 EQt1_2. split.
         * move=>Hval. split; first tauto. split; first tauto.
           destruct (le_lt_dec m n) as [Hle_mn|Hlt_mn]; last reflexivity.
           destruct n.
@@ -454,6 +452,7 @@ Section Agreement.
         destruct (le_lt_dec m n) as [Hle_mn|Hlt_mn]; last reflexivity.
         destruct n.
         { destruct m; last omega. exact:dist_bound. }
+        symmetry in EQt.
         transitivity (t1ts m); first (eapply EQt; assumption).
         apply EQt1. apply EQt; assumption.
     - destruct n; first exact:dist_bound. split.
