@@ -1,4 +1,4 @@
-Require Import ssreflect.
+Require Import Ssreflect.ssreflect.
 Require Import world_prop core_lang lang iris_core iris_plog iris_vs_rules iris_ht_rules.
 Require Import ModuRes.RA ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.CMRA ModuRes.DecEnsemble.
 

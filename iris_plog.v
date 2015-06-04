@@ -248,7 +248,8 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
                    exists w', P w' (S (S k))
                               /\ wsat σ (m2 ∪ mf) (w' · wf) (S (S k)))].
     Next Obligation.
-      inversion HLe.
+      repeat intro.
+      by inversion HLe.
     Qed.
     Next Obligation.
       intros n1 n2 HLe HP wf; intros.

@@ -71,5 +71,3 @@ Ltac contradiction_eq := match goal with
 
 (* Well-founded induction. *)
 Definition wf_nat_ind := well_founded_induction Wf_nat.lt_wf.
-
-  

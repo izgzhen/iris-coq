@@ -165,7 +165,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       - exists (w2, wq). split; last split.
         + rewrite [ra_op]lock. simpl. reflexivity.
         + assumption.
-        + apply propsMN, HQ. omega.
+        + eapply propsMN, HQ. omega.
       - now rewrite -assoc.
     Qed.
 

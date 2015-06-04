@@ -1,8 +1,8 @@
-Require Import ssreflect.
+Require Import Ssreflect.ssreflect Omega.
+Require Import Arith Min Max List ListSet Lists.
 Require Import MetricCore.
 Require Import PreoMet.
 Require Import RA CMRA SPred.
-Require Import Arith Min Max List ListSet Lists.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -548,11 +548,11 @@ Section FinDom.
         refine (fix F (l: list K) :=
                   match l as l return (forall f, dom f = l -> T f) with
                   | [] => fun f Hdom => Text fdEmpty f _ Temp
-                  | k::l => fun f Hdom => let f' := f \ k in
-                                          let Hindom: k ∈ dom f := _ in
-                                          let v' := fdLookup_indom f k Hindom in
-                                          Text (fdStrongUpdate k (Some v') f') f _
-                                               (Tstep k v' f' _ (F l f' _))
+                  | k::l' => fun f Hdom => let f' := f \ k in
+                                           let Hindom: k ∈ dom f := _ in
+                                           let v' := fdLookup_indom f k Hindom in
+                                           Text (fdStrongUpdate k (Some v') f') f _
+                                                (Tstep k v' f' _ (F l' f' _))
                   end); clear F.
         - split.
           + move=>k /=. symmetry. apply fdLookup_notin_strong. rewrite Hdom. tauto.
@@ -566,7 +566,7 @@ Section FinDom.
           + rewrite Hdom /dom /=. f_equal. rewrite /dom /= Hdom.
             rewrite DecEq_refl.
             assert (Hnod := dom_nodup f). rewrite Hdom in Hnod.
-            assert (Hfilt1: (filter_dupes [] l0) = l0).
+            assert (Hfilt1: (filter_dupes [] l') = l').
             { apply filter_dupes_id. simpl. inversion Hnod; subst. assumption. }
             rewrite Hfilt1. apply filter_dupes_id. assumption.
         - subst f'. apply fdLookup_notin. rewrite fdStrongUpdate_eq. reflexivity.
@@ -580,20 +580,6 @@ Section FinDom.
       Definition fdRect: forall f, T f :=
         fun f => fdRectInner (dom f) f eq_refl.
     End Recursion.
-
-    (* No need to restrict this Lemma to fdRectInner - that just messes up the details. *)
-(*    Lemma fdRectInner_eqL l l' f (Heq: dom f = l) (Heq': dom f = l')
-          (T: (K -f> V) -> Type) (F: forall l (f: K -f> V), dom f = l -> T f) :
-      F l f Heq = F l' f Heq'.
-    Proof.
-      assert (Heql: l = l').
-      { transitivity (dom f); first symmetry; assumption. }
-      revert Heq'.
-      refine (match Heql in eq _ l'' return (forall Heq' : dom f = l'', F l f Heq = F l'' f Heq') with
-              | eq_refl => _
-              end).
-      move=>Heq'. reflexivity.
-    Qed. *)
 
     Section Fold.
       Context {T: Type}.
