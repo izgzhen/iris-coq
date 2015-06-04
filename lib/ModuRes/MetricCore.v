@@ -7,9 +7,9 @@
     are equivalent for bisected metric spaces. *)
 
 Require Import Ssreflect.ssreflect.
-Require Export CSetoid.
 Require Import Omega.
 Require Import Min Max.
+Require Export CSetoid.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -508,7 +508,7 @@ Section Iteration.
 
   (** Iteration of a non-expansive function again gives a non-expansive function. *)
   Program Definition itern n (f : T -n> T) : T -n> T :=
-    n[(nat_iter n f)].
+    n[(fun x => iter_nat n _ f x)].
   Next Obligation.
     induction n; simpl.
     - intros x y EQ. assumption.
@@ -518,13 +518,13 @@ Section Iteration.
   (** If a function is contractive then after sufficiently many iterations it
   maps all elements closer than 2⁻ⁿ. *)
   Lemma bounded_contractive_n f {HC : contractive f} n m x y (HLe : n <= m) :
-    nat_iter m f x = n = nat_iter m f y.
+    iter_nat m _ f x = n = iter_nat m _ f y.
   Proof.
     revert m x y HLe; induction n; intros; [apply dist_bound |].
     destruct m; [inversion HLe |]; simpl; apply HC, IHn; omega.
   Qed.
 
-  Global Instance cfix f {HC : contractive f} x : cchain (fun n => nat_iter n f x).
+  Global Instance cfix f {HC : contractive f} x : cchain (fun n => iter_nat n _ f x).
   Proof.
     unfold cchain; intros.
     cutrewrite (i = n + (i - n)); [rewrite -> nat_iter_plus | omega].
@@ -539,7 +539,7 @@ Section Fixpoints.
 
   (** A fixed point of a contractive f is the limit of the iterations of the
   function. This seemingly depends on the starting point x. *)
-  Definition fixp f {HC : contractive f} x := compl (fun n => nat_iter n f x).
+  Definition fixp f {HC : contractive f} x := compl (fun n => iter_nat n _ f x).
 
   (** Stating that the proposed fixed point is in fact a fixed point. *)
   Lemma fixp_eq f x {HC : contractive f} : fixp f x == f (fixp f x).
@@ -547,14 +547,14 @@ Section Fixpoints.
     pose (f' := contractive_nonexp _ HC).
     change (fixp f' x == f' (fixp f' x)).
     rewrite <- dist_refl; intros n; unfold fixp.
-    assert (Hm:=conv_cauchy (fun n => nat_iter n f' x) n).
+    assert (Hm:=conv_cauchy (fun n => iter_nat n _ f' x) n).
     rewrite ->(Hm (S n)), (Hm n) at 1 by omega. simpl. reflexivity.
   Qed.
 
-  Lemma fixp_iter f x i {HC : contractive f} : fixp f x == nat_iter i f (fixp f x).
+  Lemma fixp_iter f x i {HC : contractive f} : fixp f x == iter_nat i _ f (fixp f x).
   Proof.
     pose (f' := contractive_nonexp _ HC).
-    change (fixp f' x == nat_iter i f' (fixp f' x)).
+    change (fixp f' x == iter_nat i _ f' (fixp f' x)).
     induction i; [reflexivity |].
     etransitivity; [eapply fixp_eq|].
     rewrite ->IHi at 1. reflexivity.
@@ -564,8 +564,8 @@ Section Fixpoints.
   Lemma fixp_unique f x y {HC : contractive f} : fixp f x == fixp f y.
   Proof.
     rewrite <- dist_refl; intros n; unfold fixp.
-    assert (Hmx:=conv_cauchy (fun n => nat_iter n f x) n).
-    assert (Hmy:=conv_cauchy (fun n => nat_iter n f y) n).
+    assert (Hmx:=conv_cauchy (fun n => iter_nat n _ f x) n).
+    assert (Hmy:=conv_cauchy (fun n => iter_nat n _ f y) n).
     rewrite ->(Hmx n), Hmy;
       [ rewrite ->bounded_contractive_n | ..]; reflexivity || apply _.
   Qed.
@@ -575,8 +575,8 @@ Section Fixpoints.
     fixp f x = n = fixp f' x'.
   Proof.
     rewrite ->fixp_unique with (x := x') (y := x).
-    clear x'; unfold fixp; assert (Hm:=conv_cauchy (fun n => nat_iter n f x) n).
-    assert (Hk:=conv_cauchy (fun n => nat_iter n f' x) n).
+    clear x'; unfold fixp; assert (Hm:=conv_cauchy (fun n => iter_nat n _ f x) n).
+    assert (Hk:=conv_cauchy (fun n => iter_nat n _ f' x) n).
     rewrite ->(Hm n), (Hk n); try apply _; [].
     clear Hm Hk. induction n; simpl; [reflexivity |].
     etransitivity.
