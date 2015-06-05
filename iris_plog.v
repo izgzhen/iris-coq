@@ -50,7 +50,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
     Lemma comp_finmap_remove w0 (s: nat -f> Wld) i w:
       s i == Some w ->
-      comp_finmap w0 s == comp_finmap w0 (fdStrongUpdate i None s) · w.
+      comp_finmap w0 s == comp_finmap w0 (s \ i) · w.
     Proof.
       revert s i w. apply:fdRect.
       - move=>s1 s2 EQs IH i w Hindom.
@@ -89,7 +89,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
     Lemma comp_finmap_add w0 s i w:
       s i == None ->
-      comp_finmap w0 s · w == comp_finmap w0 (fdStrongUpdate i (Some w) s).
+      comp_finmap w0 s · w == comp_finmap w0 (s + [fd  i  <- w] ).
     Proof.
       revert s. apply:fdRect.
       - move=>f1 f2 EQf IH Hnew. rewrite -{2}EQf. rewrite -IH=>{IH}; last first.
@@ -119,7 +119,9 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     (* Go through some struggle to even write down world satisfaction... *)
+    (*
     Local Open Scope finmap_scope.
+    *)
     
     Lemma world_inv_val {wt n}:
       forall (pv: cmra_valid wt n) {i agP} (Heq: (Invs wt) i = n = Some agP), cmra_valid agP n.

@@ -12,6 +12,8 @@ Local Open Scope finmap_scope.
 Local Open Scope general_if_scope.
 Infix "∈" := In (at level 31, no associativity) : finmap_scope.
 
+
+
 Section Def.
   Context {K V : Type}.
 
@@ -27,7 +29,7 @@ Section Def.
 
   Context `{eqK : DecEq K}.
 
-  Definition dom (f: FinMap) := filter_dupes [] (findom f).
+  Definition dom (f: FinMap) := filter_dupes ([]%list) (findom f).
 
   Lemma dom_nodup (f: FinMap): NoDup (dom f).
   Proof.
@@ -85,6 +87,8 @@ Arguments findom [K V] {eqK} _.
 Arguments dom [K V] {eqK} _.
 Arguments findom_b [K V] {eqK} _ {k}.
 Notation "K '-f>' V" := (FinMap K V) (at level 45).
+(* TODO: find out what this does if anything *)
+Bind Scope finmap_scope with FinMap.
 
 Section FinDom.
   Context {K} `{eqK : DecEq K}.
@@ -331,7 +335,7 @@ Section FinDom.
       match v with
       | Some _ => k::(dom f)
       | None => match (dom f) with [] => []
-                          | k'::dom' => if dec_eq k k' then dom' else filter_dupes [k] (dom f) end
+                          | k'::dom' => if dec_eq k k' then dom' else filter_dupes ([k]%list) (dom f) end
       end.
     Program Definition fdStrongUpdate k v (f : K -f> V) : K -f> V :=
       mkFD (fun k' => if dec_eq k k' then v else f k')
@@ -457,8 +461,14 @@ Section FinDom.
 
   End Map.
 
-  Notation "fd [ x -> v ]" := (fdStrongUpdate x (Some v) fd) (at level 50, x at next level) : finmap_scope.
-  Notation "fd \ x" := (fdStrongUpdate x None fd) (at level 50) : finmap_scope.
+End FinDom.
+
+Notation "f + '[fd' k <- v ']'" := (fdStrongUpdate k (Some v) f) (at level 0) : finmap_scope.
+Notation "f \ x" := (fdStrongUpdate x None f) (at level 35) : finmap_scope.
+
+Section FinDom2.
+  
+  Context {K} `{eqK : DecEq K}.
 
   Section MapProps.
 
@@ -540,8 +550,7 @@ Section FinDom.
       Context (T: (K -f> V) -> Type)
               (Text: forall (f1 f2: K -f> V), equal_fd f1 f2 -> T f1 -> T f2)
               (Temp: T fdEmpty).
-      (* TODO: Why can't I use the sugar for finmaps?? *)
-      Context (Tstep: forall (k:K) (v:V) (f: K -f> V), ~(k ∈ dom f) -> T f -> T (fdStrongUpdate k (Some v) f)).
+      Context (Tstep: forall (k:K) (v:V) (f: K -f> V), ~(k ∈ dom f) -> T f -> T (f + [fd k <- v ] )).
 
       Definition fdRectInner: forall l f, dom f = l -> T f.
       Proof.
@@ -551,7 +560,7 @@ Section FinDom.
                   | k::l' => fun f Hdom => let f' := f \ k in
                                            let Hindom: k ∈ dom f := _ in
                                            let v' := fdLookup_indom f k Hindom in
-                                           Text (fdStrongUpdate k (Some v') f') f _
+                                           Text (f' + [fd k <- v' ]) f _
                                                 (Tstep k v' f' _ (F l' f' _))
                   end); clear F.
         - split.
@@ -566,7 +575,7 @@ Section FinDom.
           + rewrite Hdom /dom /=. f_equal. rewrite /dom /= Hdom.
             rewrite DecEq_refl.
             assert (Hnod := dom_nodup f). rewrite Hdom in Hnod.
-            assert (Hfilt1: (filter_dupes [] l') = l').
+            assert (Hfilt1: (filter_dupes ([])%list l') = l').
             { apply filter_dupes_id. simpl. inversion Hnod; subst. assumption. }
             rewrite Hfilt1. apply filter_dupes_id. assumption.
         - subst f'. apply fdLookup_notin. rewrite fdStrongUpdate_eq. reflexivity.
@@ -632,10 +641,10 @@ Section FinDom.
 
       Lemma fdFoldAdd f k v:
         ~k ∈ (dom f) ->
-        fdFold (fdStrongUpdate k (Some v) f) = Tstep k v (fdFold f).
+        fdFold (f + [fd k <- v ] ) = Tstep k v (fdFold f).
       Proof.
         move=>Hindom. rewrite /fdFold /fdRect {2}/dom /=.
-        assert (Hl: fdStrongUpdate k (Some v) f k = Some v).
+        assert (Hl: f + [fd k <- v ] k = Some v).
         { apply fdStrongUpdate_eq. }
         eapply fdLookup_indom_corr in Hl. erewrite Hl.
         unfold id. f_equal.
@@ -650,7 +659,7 @@ Section FinDom.
 
       Lemma fdFoldRedundantRemove f k:
         ~k ∈ (dom f) ->
-        fdFold (fdStrongUpdate k None f) = fdFold f.
+        fdFold (f \ k) = fdFold f.
       Proof.
         move=>Hindom. eapply fdFoldExtF. split.
         - move=>k'. simpl. apply fdLookup_notin_strong in Hindom.
@@ -658,7 +667,7 @@ Section FinDom.
           + subst. now rewrite Hindom.
           + reflexivity.
         - rewrite /fdStrongUpdate /dom /= /dom. rewrite /dom in Hindom.
-          destruct (filter_dupes [] (findom f)) as [|k' dom'] eqn:Hdom'.
+          destruct (filter_dupes ([])%list (findom f)) as [|k' dom'] eqn:Hdom'.
           + reflexivity.
           + destruct (dec_eq k k') as [EQ|NEQ].
             * subst k'. exfalso. apply Hindom. now left.
@@ -831,7 +840,7 @@ Section FinDom.
 
   End Compose.
 
-End FinDom.
+End FinDom2.
 
 (*Arguments fdMap {K cT ord equ preo ord_part compK U V eqT mT cmT pTA pcmU eqT0 mT0 cmT0 pTA0 cmV} _.*)
 
@@ -911,19 +920,19 @@ Section RA.
     - move=>f Hle. exists (fdEmpty (V:=S)). move=>k. simpl.
       specialize (Hle k). destruct (f k); last reflexivity.
       contradiction Hle.
-    - move=>k v f Hnin IH g Hle. destruct (IH (fdStrongUpdate k None g)) as [h Hh]=>{IH}.
+    - move=>k v f Hnin IH g Hle. destruct (IH (g \ k)) as [h Hh]=>{IH}.
       + move=>i. destruct (dec_eq k i) as [EQ|NEQ].
         * subst i. rewrite fdStrongUpdate_eq. exact Logic.I.
         * erewrite fdStrongUpdate_neq by assumption.
           etransitivity; first now apply Hle.
           erewrite fdStrongUpdate_neq by assumption. reflexivity.
       + specialize (Hle k). rewrite fdStrongUpdate_eq in Hle. destruct (g k) eqn:EQg; last first.
-        { exists (fdStrongUpdate k (Some v) h). move=>i /= {Hle}. specialize (Hh i). simpl in Hh.
+        { exists (h + [fd k <-  v ] ). move=>i /= {Hle}. specialize (Hh i). simpl in Hh.
           destruct (dec_eq k i) as [EQ|NEQ].
           - subst i. rewrite EQg. reflexivity.
           - assumption. }
-        destruct Hle as [h' Hle].
-        exists (fdStrongUpdate k (Some h') h). move=>i /=.
+        destruct Hle as [s' Hle].
+        exists (h + [fd k <- s'] ). move=>i /=.
         specialize (Hh i). simpl in Hh. destruct (dec_eq k i) as [EQ|NEQ].
         * subst i. rewrite EQg. simpl. assumption.
         * assumption.
