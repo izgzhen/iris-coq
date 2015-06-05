@@ -950,6 +950,16 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         rewrite ->Hg1, Hg2. apply pordR. exact Heq.
     Qed.
 
+    Lemma ownL_box (g: RL.res) :
+      ownL (1 g) == □ownL (1 g).
+    Proof.
+      apply pord_antisym; last exact:box_elim.
+      move=>w n. destruct n; first (intro; exact:bpred).
+      case=>[gr Heq]. simpl. destruct (ra_unit_mono (1 g) gr) as [g' Heq'].
+      simpl in Heq. rewrite -Heq. exists g'.
+      rewrite (comm gr) Heq' ra_unit_idem comm. reflexivity.
+    Qed.
+
     Lemma ownL_something:
       valid(xist ownL).
     Proof.
