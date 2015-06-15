@@ -20,6 +20,7 @@ Section Props.
     fun n => match n with
              | O => True
              | S _ => P end.
+  Global Arguments sp_constF _ !n /.
   Program Definition sp_const P :=
     p[(sp_constF P)].
   Next Obligation.
