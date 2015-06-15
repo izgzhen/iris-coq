@@ -184,7 +184,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       n[(fun v => pcmconst (sp_const (Q v)))].
     Next Obligation.
       move=>v1 v2 EQv. destruct n; first exact:dist_bound.
-      intros w m Hlt. rewrite /= /sp_constF. destruct m; first reflexivity.
+      intros w m Hlt. rewrite /=. destruct m; first reflexivity.
       rewrite EQv. reflexivity.
     Qed.
 
@@ -379,7 +379,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         apply top_valid. apply htValid. rewrite sc_top_unit.
         (* Now fall back to proving this in the model. *)
         move=>w n. destruct n; first (intro;exact:bpred).
-        rewrite /= /sp_constF. move=>[[Hφ Hval] HownS].
+        rewrite /=. move=>[[Hφ Hval] HownS].
         eapply wpValue; [].
         simpl. exists σ'. split; assumption.
     Grab Existential Variables.

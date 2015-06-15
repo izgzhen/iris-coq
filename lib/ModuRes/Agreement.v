@@ -301,19 +301,14 @@ Section Agreement.
     move=><-. assumption.
   Qed.
 
-  Definition ra_ag_tsdiag_n (σ : chain ra_agree) n: T :=
-    match σ n with
-    | ag_inj v' ts' tsx' => ts' n
-    end.
-
   Program Definition ra_ag_compl (σ : chain ra_agree) {σc : cchain σ} :=
     ag_inj (compl (ra_ag_vchain σ))
-           (fun n => ra_ag_tsdiag_n σ n) _.
+           (fun n => match σ n return _ with
+                     | ag_inj v' ts' tsx' => ts' n end) _.
   Next Obligation.
     move=>n i HLe pv. simpl. rewrite -/dist.    
     assert (pvc: compl (ra_ag_vchain σ) i) by assumption.
     destruct n as [|n]; first by apply: dist_bound.
-    unfold ra_ag_tsdiag_n.
     ddes (σ i) at 1 3 as [vi tsi tsxi] deqn:EQi.
     ddes (σ (S n)) at 1 3 as [vSn tsSn tsxSn] deqn:EQSn.
     cchain_eleq σ at i (S n) lvl:(S n); move=>[EQv EQts].
@@ -336,7 +331,6 @@ Section Agreement.
       inversion EQi; subst. reflexivity.
     - move=>j HLej pv1.
       destruct j as [|j]; first by apply: dist_bound.
-      unfold ra_ag_tsdiag_n.
       rewrite /ra_ag_vchain /= in pv1. move:pv1.
       ddes (σ (S j)) at 1 3 6 as [vSSj tsSSj tsxSSj] deqn:EQSSj.
       intros pv1. cchain_eleq σ at (S j) i lvl:(S j); move=>[EQv EQts].
@@ -347,15 +341,6 @@ Section Agreement.
   Global Instance ra_ag_pcm: pcmType ra_agree.
   Proof.
     split. repeat intro. eapply ra_ag_pord. unfold compl, ra_ag_cmt, ra_ag_compl.
-    assert (HT: forall n, ra_ag_vchain ρ n n -> ra_ag_tsdiag_n σ n = n = ra_ag_tsdiag_n ρ n).
-    { move=>n pv. destruct n as [|n]; first by apply: dist_bound.
-      unfold ra_ag_tsdiag_n.
-      ddes (σ (S n)) at 1 3 as [vσn tsσn tsxσn] deqn:EQσn.
-      ddes (ρ (S n)) at 1 3 as [vρn tsρn tsxρn] deqn:EQρn.
-      specialize (H (S n)). rewrite ->ra_ag_pord in H.
-      rewrite <-EQσn, <-EQρn, comm in H. destruct H as [EQv EQts].
-      apply EQts. rewrite EQv. rewrite /ra_ag_vchain -EQρn in pv. assumption.
-    }
     split.
     - move=>n. split; first by (intros (pv1 & pv2 & _); tauto).
       simpl. move=>pv. move:(pv). rewrite {1}/ra_ag_vchain. simpl.
@@ -366,7 +351,12 @@ Section Agreement.
         ddes (σ n) at 1 3 as [vσn tsσn tsxσn] deqn:EQσn.
         specialize (H n). rewrite ->ra_ag_pord, <-EQρn, <-EQσn, comm in H.
         destruct H as [EQv _]. rewrite <-EQv in pvρ. destruct pvρ as [pv1 _]. assumption. }
-      do 2 (split; first assumption). symmetry. apply HT. assumption.
+      do 2 (split; first assumption). symmetry.
+      destruct n as [|n]; first by apply: dist_bound.
+      rewrite -EQρn. destruct (σ (S n)) as [vσn tsσn rsxσn] eqn:EQσn.
+      specialize (H (S n)). rewrite ->ra_ag_pord in H.
+      rewrite ->EQσn, <-EQρn, comm in H. destruct H as [EQv EQts].
+      apply EQts. rewrite EQv. rewrite /ra_ag_vchain -EQρn in pv. assumption.
     - intros n (pv1 & pv2 & EQ). reflexivity.
   Qed.
 

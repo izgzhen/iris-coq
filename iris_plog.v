@@ -118,11 +118,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       rewrite comm -comp_finmap_move comm ra_op_unit. reflexivity.
     Qed.
 
-    (* Go through some struggle to even write down world satisfaction... *)
-    (*
-    Local Open Scope finmap_scope.
-    *)
-    
+    (** Now we define world satisfaction **)
     Lemma world_inv_val {wt n}:
       forall (pv: cmra_valid wt n) {i agP} (Heq: (Invs wt) i = n = Some agP), cmra_valid agP n.
     Proof.
@@ -191,16 +187,13 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.  
 
     (* It may be possible to use "later_sp" here, but let's avoid indirections where possible. *)
-    Definition wsatF σ m w n :=
-      match n with
-      | S (S n') => exists s : nat -f> Wld,
-                               let wt := comp_finmap w s in
-                               wsatTotal (S n') σ s m wt
-      | _        => True
-      end.
-
     Program Definition wsat σ m w : SPred :=
-      p[(wsatF σ m w)].
+      p[(fun n => match n return _ with
+                  | S (S n') => exists s : nat -f> Wld,
+                                           let wt := comp_finmap w s in
+                                           wsatTotal (S n') σ s m wt
+                  | _        => True
+                  end)].
     Next Obligation.
       intros n1 n2 HLe. do 2 (destruct n2; first (intro; exact I)).
       do 2 (destruct n1; first (exfalso; omega)).
