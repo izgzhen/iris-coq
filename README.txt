@@ -71,20 +71,16 @@ REQUIREMENTS
   8GB ram + 4GB swap
 
   We have tested the development using Coq v. 8.4pl4 on Linux and Mac
-  machines with at least 8GB RAM + 4GB swap.  The entire compilation
-  took around 3 hours.
+  machines.  The entire compilation took less than 30 minutes.
   
 
 HOW TO COMPILE
 
   To compile the development, run
   
-  > make 
+  > make -j
 
   in the folder containing this README. 
-
-  Be aware that iris.v takes a long time to check and needs
-  significant amounts of RAM!
   
 
 
