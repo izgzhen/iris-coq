@@ -3,6 +3,6 @@
 
 ((coq-mode
   (coq-load-path
-   (rec "lib/ModuRes/" "ModuRes"))))
+   (rec "." "_"))))
 
 
