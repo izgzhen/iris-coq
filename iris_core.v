@@ -295,6 +295,15 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       - move=>wf /= m Hle HP. apply (H wf (S m)); assumption || omega.
     Qed.
 
+    Lemma later_wand P Q:
+      ▹(P -* Q) == ▹P -* ▹Q.
+    Proof.
+      intros w n. split; (destruct n; first (intro; exact:bpred)); intro H.
+      - simpl in H. move=>wf /= m Hle HP.
+        destruct m; first exact I. apply H; assumption || omega.
+      - move=>wf /= m Hle HP. apply (H wf (S m)); assumption || omega.
+    Qed.
+
     Lemma later_top P:
       ▹⊤ == ⊤.
     Proof.
@@ -481,12 +490,32 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     Lemma box_impl P Q:
-      □(P → Q) ⊑ □P → □Q. (* The backwards direction does NOT hold. *)
+      □(P → Q) ⊑ □P → □Q.
+    (* The backwards direction does NOT hold: We can have □⊤ → own m
+       without having □(⊤ → own m).  *)
     Proof.
       apply and_impl. rewrite -box_conj. apply box_intro.
       rewrite ->box_elim. apply and_impl. reflexivity.
     Qed.
 
+    Lemma box_wand P Q:
+      □(P -* Q) ⊑ □P -* □Q.
+    (* The backwards direction does NOT hold: We can have □⊤ -* own m
+       without having □(⊤ -* own m).  *)
+    Proof.
+      apply sc_si. rewrite -box_star. apply box_intro.
+      rewrite ->box_elim. apply sc_si. reflexivity.
+    Qed.
+
+    Lemma box_impl_si P Q:
+      □(P → Q) == □(P -* Q).
+    Proof.
+      apply pord_antisym.
+      { apply box_intro. rewrite ->box_elim. apply impl_si. }
+      apply box_intro. apply and_impl. rewrite <-box_conj_star.
+      rewrite ->box_elim. apply sc_si. reflexivity.
+    Qed.
+    
     Lemma box_dup P :
       □P == □P * □P.
     Proof.
@@ -663,7 +692,15 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       eapply HTQ, HPQ; [omega|omega|].
       eapply dpred, HP. omega.
     Qed.
-
+    
+    Lemma timeless_si P Q:
+      timeless Q ⊑ timeless (P -* Q).
+    Proof.
+      move=>w n HTQ /= w' k Ltk HPQ w'' [|[|m]] Lem HP; first exact: bpred.
+      { apply HPQ, HP. omega. }
+      eapply HTQ, HPQ; [omega|omega|].
+      eapply dpred, HP. omega.
+    Qed.
 
     Section TimelessQuant.
       Context {T} `{cT : cmetric T}.
