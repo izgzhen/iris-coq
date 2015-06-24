@@ -308,7 +308,7 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       
     Lemma htAFrame safe m m' P R e Q
           (HD  : m # m')
-          (HAt : atomic e) :
+          (HNv : ~is_value e) :
       ht safe m P e Q ⊑ ht safe (m ∪ m') (P * ▹R) e (lift_bin sc Q (umconst R)).
     Proof.
       rewrite {1}/ht. apply htIntro.

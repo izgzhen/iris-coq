@@ -84,6 +84,37 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
             exists e' (K ∘ K0). rewrite -> HE, fill_comp. auto. }
     Qed.
 
+    (** Fork **)
+    Lemma wpFork safe m R e :
+      ▹wp safe m e (umconst ⊤) * ▹R ⊑ wp safe m (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).	(* PDS: Why sc not and? RJ: 'cause sc is stronger. *)
+    Proof.
+      intros w n. destruct n; first (intro; exact:bpred).
+      intros [[w1 w2] [EQw [Hwp HLR]]].
+      rewrite ->unfold_wp; intros w'; intros.
+      split; [| split; intros; [exfalso | split; intros ] ].
+      - intros. contradiction (fork_not_value HV).
+      - assert (HT := fill_fork HDec); subst K; rewrite ->fill_empty in HDec; subst.
+        eapply fork_stuck with (K := ε); [| repeat eexists; eassumption ]; reflexivity.
+      - assert (HT := fill_fork HDec); subst K; rewrite ->fill_empty in HDec.
+        apply fork_inj in HDec; subst e'. simpl in EQw.
+        unfold lt in HLt. simpl in Hwp.
+        simpl in HLR; rewrite <- Le.le_n_Sn in HE.
+        do 2 eexists. split; last first.
+        { split.
+          - eapply propsMN, Hwp. omega.
+          - eapply wsat_dist, HE; try reflexivity; [].
+            apply cmra_op_dist; last reflexivity.
+            eapply mono_dist, EQw; omega. }
+        rewrite ->fill_empty; rewrite <- (le_S_n _ _ HLt) in HLR.
+        eapply wpValue. exists (1 w2, w2). simpl. split_conjs.
+        + now rewrite ra_op_unit.
+        + reflexivity.
+        + eexact HLR.
+      - right; right; exists e empty_ctx; rewrite ->fill_empty; reflexivity.
+    Grab Existential Variables.
+    { exact:fork_ret_is_value. }
+    Qed.
+
     (** Consequence **)
     Lemma wpMon safe m e φ φ':
       φ ⊑ φ' -> wp safe m e φ ⊑ wp safe m e φ'.
@@ -225,72 +256,37 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
     Qed.
 
     Lemma wpAFrameRes safe m R e φ
-          (HAt : atomic e) :
+          (HNv : ~is_value e) :
       (wp safe m e φ) * ▹R ⊑ wp safe m e (lift_bin sc φ (umconst R)).
     Proof.
       intros w n. destruct n; first (intro; exact:bpred).
       move=>[[w1 w2] [/= EQr [Hwp HLR]]].
       rewrite->unfold_wp; intros wf; intros.
       rewrite ->unfold_wp in Hwp. 
-      edestruct (Hwp (w2 · wf) k mf) as [_ [HeS [_ Hsafe]]]; [omega|assumption| |].
+      edestruct (Hwp (w2 · wf) k mf) as [_ [HeS [HeF Hsafe]]]; [omega|assumption| |].
       { eapply wsat_dist, HE; first reflexivity; last reflexivity.
         rewrite assoc. apply cmra_op_dist; last reflexivity.
         eapply mono_dist, EQr. omega. }
-      split; [intros; exfalso | split; intros; [| split; intros; [exfalso| ] ] ].
-      - contradiction (atomic_not_value e).
+      split; [intros; exfalso | split; intros; [| split; intros  ] ].
+      - contradiction.
       - edestruct HeS as [w'' [He' HE']]; try eassumption; [].
-        clear HE Hwp HeS; rewrite ->assoc in HE'.
-        exists (w'' · w2). split; [| eassumption].
-        assert (HNV : ~ is_value ei)
-          by (intros HV; eapply (values_stuck HV); [symmetry; apply fill_empty | repeat eexists; eassumption]).
-        subst e; assert (HT := atomic_fill HAt HNV); subst K; clear HNV.
-        rewrite ->fill_empty in *. unfold lt in HLt.
-        assert (HV := atomic_step HAt HStep).
-        clear - He' HV HLR HLt; rename w'' into w.
-        eapply wpValuePvs. move=>wf; intros.
-        rewrite ->unfold_wp in He'. rewrite <-assoc in HE.
-        edestruct He' as [HVal _]; try eassumption; first de_auto_eq; [].
-        specialize (HVal HV); destruct HVal as [w'' [Hφ HE']].
-        exists (w'' · w2). split; [| now rewrite -assoc].
-        exists (w'', w2); split; simpl morph.
-        { rewrite [ra_op]lock /= -lock. reflexivity. }
-        split; first eassumption.
-        rewrite /const /=. eapply propsMN, HLR. omega.
-      - subst; eapply fork_not_atomic; eassumption.
+        clear HE Hwp HeS HeF; rewrite ->assoc in HE'.
+        exists (w'' · w2). split; [| eassumption]. subst e.
+        eapply wpFrameRes. exists (w'', w2).
+        split; first (apply sp_eq_iff; reflexivity).
+        split; first assumption.
+        eapply dpred, HLR. omega.
+      - edestruct HeF as [wfk [wret [He' [Ht' HE']]]]; try eassumption; [].
+        clear HE Hwp HeS HeF; rewrite ->assoc in HE'. subst e.
+        exists wfk (wret · w2). split; [| split; rewrite ->?assoc; eassumption].
+        eapply wpFrameRes. exists (wret, w2).
+        split; first (apply sp_eq_iff; reflexivity).
+        split; first assumption.
+        eapply dpred, HLR. omega.
       - now auto.
     Qed.
 
-    (** Fork **)
-    Lemma wpFork safe m R e :
-      ▹wp safe m e (umconst ⊤) * ▹R ⊑ wp safe m (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).	(* PDS: Why sc not and? RJ: 'cause sc is stronger. *)
-    Proof.
-      intros w n. destruct n; first (intro; exact:bpred).
-      intros [[w1 w2] [EQw [Hwp HLR]]].
-      rewrite ->unfold_wp; intros w'; intros.
-      split; [| split; intros; [exfalso | split; intros ] ].
-      - intros. contradiction (fork_not_value HV).
-      - assert (HT := fill_fork HDec); subst K; rewrite ->fill_empty in HDec; subst.
-        eapply fork_stuck with (K := ε); [| repeat eexists; eassumption ]; reflexivity.
-      - assert (HT := fill_fork HDec); subst K; rewrite ->fill_empty in HDec.
-        apply fork_inj in HDec; subst e'. simpl in EQw.
-        unfold lt in HLt. simpl in Hwp.
-        simpl in HLR; rewrite <- Le.le_n_Sn in HE.
-        do 2 eexists. split; last first.
-        { split.
-          - eapply propsMN, Hwp. omega.
-          - eapply wsat_dist, HE; try reflexivity; [].
-            apply cmra_op_dist; last reflexivity.
-            eapply mono_dist, EQw; omega. }
-        rewrite ->fill_empty; rewrite <- (le_S_n _ _ HLt) in HLR.
-        eapply wpValue. exists (1 w2, w2). simpl. split_conjs.
-        + now rewrite ra_op_unit.
-        + reflexivity.
-        + eexact HLR.
-      - right; right; exists e empty_ctx; rewrite ->fill_empty; reflexivity.
-    Grab Existential Variables.
-    { exact:fork_ret_is_value. }
-    Qed.
-
+    (* Unsafe and safe weakest-pre *)
     Lemma wpUnsafe {m e φ} : wp true m e φ ⊑ wp false m e φ.
     Proof.
       move=> w n. move: n w e φ; elim/wf_nat_ind. move=> n IH w e φ He.
