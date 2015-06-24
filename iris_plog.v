@@ -494,20 +494,27 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       rewrite unfold_wp; intros w'; intros; now inversion HLt.
     Qed.
 
+    (* The two definitions are actually closely related. *)
     Lemma wpValuePvs e (HV : is_value e) safe m φ :
-      pvs m m (φ (exist _ e HV)) ⊑ wp safe m e φ.
+      pvs m m (φ (exist _ e HV)) == wp safe m e φ.
     Proof.
-      intros w n Hvs.
-      rewrite unfold_wp; intros wf; intros; split; [| split; [| split] ]; intros.
-      - edestruct (Hvs wf k mf) as [w' [Hφ HE']]; try eassumption; first de_auto_eq; [].
-        exists w'. split; last assumption.
-        eapply spredNE, dpred, Hφ; last omega.
-        apply (met_morph_nonexp φ). apply dist_refl.
-        reflexivity.
-      - contradiction (values_stuck HV HDec).
-        repeat eexists; eassumption.
-      - subst e; contradiction (fork_not_value (fill_value HV)).
-      - unfold safeExpr. auto.
+      intros w n. split.
+      - intros Hvs.
+        rewrite unfold_wp; intros wf; intros; split; [| split; [| split] ]; intros.
+        + edestruct (Hvs wf k mf) as [w' [Hφ HE']]; try eassumption; first de_auto_eq; [].
+          exists w'. split; last assumption.
+          eapply spredNE, dpred, Hφ; last omega.
+          apply (met_morph_nonexp φ). apply dist_refl.
+          reflexivity.
+        + contradiction (values_stuck HV HDec).
+          repeat eexists; eassumption.
+        + subst e; contradiction (fork_not_value (fill_value HV)).
+        + unfold safeExpr. auto.
+      - move=>Hwp. intros wf; intros.
+        rewrite ->unfold_wp in Hwp.
+        edestruct (Hwp wf k mf) as [HVal _]; try eassumption; first de_auto_eq; [].
+        destruct (HVal HV) as [w' [Hφ Hws]].
+        exists w'. split; assumption.
     Qed.
 
     Lemma wpValue e (HV : is_value e) safe m φ :
