@@ -95,7 +95,7 @@ Notation "de1 # de2" := (de1 ∩ de2 == de_emp) (at level 70) : de_scope.
    in the context that also occurs in one of the <de>s. In this case, it can help to
    do the specialization manually, and call de_tauto directly.
  *)
-Ltac de_unfold := unfold de_cap, de_cup, de_minus, de_compl, const; unlock; simpl.
+Ltac de_unfold := unfold de_cap, de_cup, de_minus, de_compl; unlock; simpl.
 Ltac de_in_destr := simpl; 
     repeat (match goal with
             | [ |- context[dec_eq ?i ?j] ] => destruct (dec_eq i j); first try subst j; try contradiction_eq; simpl

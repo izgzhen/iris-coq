@@ -252,6 +252,13 @@ Section ComplBIProps.
     - apply or_injR.
   Qed.
 
+  Lemma impl_si P Q:
+    P → Q ⊑ P -* Q.
+  Proof.
+    apply sc_si. rewrite ->sc_and.
+    apply and_impl. reflexivity.
+  Qed.
+
   Lemma all_L {U} `{cmU : cmetric U} u (P: U -n> B) Q:
     P u ⊑ Q -> all P ⊑ Q.
   Proof.

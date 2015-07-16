@@ -16,12 +16,10 @@ Arguments mkSPred _ _ _.
 Notation "'p[(' f ')]'" := (mkSPred f _ _).
 
 Section Props.
-  Definition sp_constF (P: Prop) :=
-    fun n => match n with
-             | O => True
-             | S _ => P end.
   Program Definition sp_const P :=
-    p[(sp_constF P)].
+    p[(fun n => match n return _ with
+                | O => True
+                | S _ => P end)].
   Next Obligation.
     move=>n m Hle. destruct m, n; simpl; tauto || inversion Hle.
   Qed.

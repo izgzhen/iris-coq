@@ -552,39 +552,46 @@ Section FinDom2.
               (Temp: T fdEmpty).
       Context (Tstep: forall (k:K) (v:V) (f: K -f> V), ~(k ∈ dom f) -> T f -> T (f + [fd k <- v ] )).
 
-      Definition fdRectInner: forall l f, dom f = l -> T f.
-      Proof.
-        refine (fix F (l: list K) :=
-                  match l as l return (forall f, dom f = l -> T f) with
-                  | [] => fun f Hdom => Text fdEmpty f _ Temp
-                  | k::l' => fun f Hdom => let f' := f \ k in
-                                           let Hindom: k ∈ dom f := _ in
-                                           let v' := fdLookup_indom f k Hindom in
-                                           Text (f' + [fd k <- v' ]) f _
-                                                (Tstep k v' f' _ (F l' f' _))
-                  end); clear F.
-        - split.
-          + move=>k /=. symmetry. apply fdLookup_notin_strong. rewrite Hdom. tauto.
-          + rewrite Hdom. reflexivity.
-        - rewrite Hdom. left. reflexivity.
-        - subst f'. split.
-          + move=>k'. destruct (dec_eq k k') as [EQ|NEQ].
-            * subst k'. rewrite fdStrongUpdate_eq. subst v'. symmetry. eapply fdLookup_indom_corr.
-              reflexivity.
-            * erewrite !fdStrongUpdate_neq by assumption. reflexivity.
-          + rewrite Hdom /dom /=. f_equal. rewrite /dom /= Hdom.
-            rewrite DecEq_refl.
-            assert (Hnod := dom_nodup f). rewrite Hdom in Hnod.
-            assert (Hfilt1: (filter_dupes ([])%list l') = l').
-            { apply filter_dupes_id. simpl. inversion Hnod; subst. assumption. }
-            rewrite Hfilt1. apply filter_dupes_id. assumption.
-        - subst f'. apply fdLookup_notin. rewrite fdStrongUpdate_eq. reflexivity.
-        - subst f'. rewrite /dom /fdStrongUpdate /=.
-          rewrite Hdom. destruct (dec_eq k k) as [_|NEQ]; last (exfalso; now apply NEQ).
-          apply filter_dupes_id with (dupes:=[]); simpl.
-          assert (Hno:= dom_nodup f). rewrite Hdom in Hno.
-          inversion Hno; subst. assumption.
-      Defined.
+      Program Fixpoint fdRectInner l: forall f, dom f = l -> T f :=
+        match l as l return (forall f, dom f = l -> T f) with
+        | [] => fun f Hdom => Text fdEmpty f _ Temp
+        | k::l' => fun f Hdom => let f' := f \ k in
+                                 let Hindom: k ∈ dom f := _ in
+                                 let v' := fdLookup_indom f k Hindom in
+                                 Text (f' + [fd k <- v' ]) f _
+                                      (Tstep k v' f' _ (fdRectInner l' f' _))
+        end.
+      Next Obligation.
+        split.
+        - move=>k /=. symmetry. apply fdLookup_notin_strong. rewrite Hdom. tauto.
+        - rewrite Hdom. reflexivity.
+      Qed.
+      Next Obligation.
+        rewrite Hdom. left. reflexivity.
+      Qed.
+      Next Obligation.
+        split.
+        - move=>k'. destruct (dec_eq k k') as [EQ|NEQ].
+          + subst k'. rewrite fdStrongUpdate_eq. symmetry. eapply fdLookup_indom_corr.
+            reflexivity.
+          + erewrite !fdStrongUpdate_neq by assumption. reflexivity.
+        - rewrite Hdom /dom /=. f_equal. rewrite /dom /= Hdom.
+          rewrite DecEq_refl.
+          assert (Hnod := dom_nodup f). rewrite Hdom in Hnod.
+          assert (Hfilt1: (filter_dupes ([])%list l') = l').
+          { apply filter_dupes_id. simpl. inversion Hnod; subst. assumption. }
+          rewrite Hfilt1. apply filter_dupes_id. assumption.
+      Qed.
+      Next Obligation.
+        apply fdLookup_notin. rewrite fdStrongUpdate_eq. reflexivity.
+      Qed.
+      Next Obligation.
+        rewrite /dom /fdStrongUpdate /=.
+        rewrite Hdom. destruct (dec_eq k k) as [_|NEQ]; last (exfalso; now apply NEQ).
+        apply filter_dupes_id with (dupes:=[]); simpl.
+        assert (Hno:= dom_nodup f). rewrite Hdom in Hno.
+        inversion Hno; subst. assumption.
+      Qed.
 
       Definition fdRect: forall f, T f :=
         fun f => fdRectInner (dom f) f eq_refl.

@@ -184,7 +184,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       n[(fun v => pcmconst (sp_const (Q v)))].
     Next Obligation.
       move=>v1 v2 EQv. destruct n; first exact:dist_bound.
-      intros w m Hlt. rewrite /= /sp_constF. destruct m; first reflexivity.
+      intros w m Hlt. rewrite /=. destruct m; first reflexivity.
       rewrite EQv. reflexivity.
     Qed.
 
@@ -226,129 +226,6 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
   End Adequacy.
-
-  (* Section RobustSafety.
-
-    Implicit Types (P : Props) (i n k : nat) (safe : bool) (m : mask) (e : expr) (v : value) (Q : vPred) (r : res) (w : Wld) (σ : state).
-
-    Implicit Types (E : expr -n> Props) (Θ : Props).
-
-    Program Definition restrictV E : vPred :=
-      n[(fun v => E (` v))].
-    Next Obligation.
-      move=> v v' Hv w k r; move: Hv.
-      case: n=>[_ Hk | n]; first by exfalso; omega.
-      by move=> /= ->.
-    Qed.
-
-    Definition pure e := ~ atomic e /\ forall σ e' σ',
-      prim_step (e,σ) (e',σ') ->
-      σ = σ'.
-    
-    Definition restrict_lang := forall e,
-      reducible e ->
-      atomic e \/ pure e.
-
-    Definition fork_compat E Θ := forall e,
-      Θ ⊑ (E (fork e) → E e).
-    
-    Definition fill_compat E Θ := forall K e,
-      Θ ⊑ (E (fill K e) ↔ E e * E (fill K fork_ret)).
-
-    Definition atomic_compat E Θ m := forall e,
-      atomic e ->
-      Θ ⊑ ht false m (E e) e (restrictV E).
-
-    Definition pure_compat E Θ m := forall e σ e',
-      prim_step (e,σ) (e',σ) ->
-      Θ ⊑ vs m m (E e) (E e').
-
-    Lemma robust_safety {E Θ e m}
-        (LANG : restrict_lang)
-        (FORK : fork_compat E Θ)
-        (FILL : fill_compat E Θ)
-        (HT : atomic_compat E Θ m)
-        (VS : pure_compat E Θ m) :
-      □Θ ⊑ ht false m (E e) e (restrictV E).
-    Proof.
-      move=> wz nz rz HΘ w HSw n r HLe _ He.
-      have {HΘ wz nz rz HSw HLe} HΘ: Θ w n 1 by rewrite/= in HΘ; exact: propsMWN HΘ.
-      (* generalize IH's post-condition for the fork case *)
-      pose post Q := forall v w n r, (E (`v)) w n r -> (Q v) w n r.
-      set Q := restrictV E; have HQ: post Q by done.
-      move: HΘ He HQ; move: n e w r Q; elim/wf_nat_ind => n IH e w r Q HΘ He HQ.
-      rewrite unfold_wp; move=> w' k rf mf σ HSw HLt HD HW.
-      (* specialize a bit *)
-      move/(_ _ _ _ _ HΘ): FORK => FORK.
-      move/(_ _ _ _ _ _ HΘ): FILL => FILL.
-      move/(_ _ _)/biimpL: (FILL) => SPLIT; move/(_ _ _)/biimpR: FILL => FILL.
-      move/(_ _ _ _ _ _ HΘ): HT => HT.
-      move/(_ _ _ _ _ _ _ _ HΘ): VS => VS.
-      have {IH HΘ Θ} IH: forall e w' r Q,
-        w ⊑ w' -> (E e) w' k r -> post Q -> ((wp false m e) Q) w' k r.
-      { move=> ? ? ? ? HSw'; move/(propsMWN HSw' (lelt HLt)): HΘ => HΘ. exact: IH. }
-      have HLe: S k <= n by omega.
-      split.
-      (* e value *)
-      { move=> HV {FORK FILL LANG HT VS IH}.
-        exists w' r. split; [by reflexivity | split; [| done]].
-        apply: HQ. exact: propsMWN He. }
-      split; [| split; [| done]]; first last.
-      (* e forks *)
-      { move=> e' K HDec {LANG FILL HT VS}; rewrite HDec {HDec} in He.
-        move/(SPLIT _ _ _ (prefl w) _ _ (lerefl n) unit_min)
-          /(propsMWN HSw (lelt HLt)): He => [re' [rK [Hr [He' HK]]]] {SPLIT}.
-        move/(FORK _ _ HSw _ _ (lelt HLt) unit_min): He' => He' {FORK}.
-        exists w' re' rK. split; [by reflexivity | split; [exact: IH | split; [exact: IH |]]].
-        move: HW; rewrite -Hr. exact: wsatM. }
-      (* e steps *)
-      (* both forthcoming cases work at step-indices S k and (for the IH) k. *)
-      have HLt': k < S k by done.
-      move=> σ' ei ei' K HDec HStep; rewrite HDec {HDec} in He.
-      move/(SPLIT _ _ _ (prefl w) _ _ (lerefl n) unit_min)
-        /(propsMWN HSw HLe): He => [rei [rK [Hr [Hei HK]]]] {SPLIT}.
-      move: HW; rewrite -Hr -assoc => HW {Hr r}.
-      have HRed: reducible ei by exists σ (ei',σ').
-      case: (LANG ei HRed)=>[HA {VS} | [_ HP] {HT}] {LANG HRed}; last first.
-      (* pure step *)
-      { move/(_ _ _ _ HStep): HP => HP; move: HStep HW. rewrite HP => HStep HW {HP σ}.
-        move/(_ _ _ _ HStep _ HSw _ _ HLe unit_min Hei): VS => VS {HStep HLe Hei}.
-        move: HD; rewrite -{1}(mask_union_idem m) => HD.
-        move/(_ _ _ _ _ _ (prefl w') HLt' HD HW): VS => [w'' [r' [HSw' [Hei' HW']]]] {HLt' HD HW}.
-        have HLe': k <= S k by omega.
-        exists w'' (r' · rK). split; [done | split; [| by move/(wsatM HLe'): HW'; rewrite assoc]].
-        set HwSw'' := ptrans HSw HSw'.
-        apply: IH; [done | | done].
-        apply: (FILL _ _ _ HwSw'' _ _ (lelt HLt) unit_min).
-        exists r' rK. split; first by reflexivity.
-        split; [ exact: propsMN Hei' | exact: propsMWN HK ]. }
-      (* atomic step *)
-      move/(_ _ HA _ HSw (S k) _ HLe unit_min Hei): HT => {Hei HLe} Hei.
-      (* unroll wp(ei,E)—step case—to get wp(ei',E) *)
-      move: Hei; rewrite {1}unfold_wp => Hei.
-      move/(_ _ _ _ _ _ (prefl w') HLt' HD HW): Hei => [_ [HS _]] {HLt' HW}.
-      have Hεei: ei = fill ε ei by rewrite fill_empty.
-      move/(_ _ _ _ _ Hεei HStep): HS => [w'' [r' [HSw' [Hei' HW']]]] {Hεei}.
-      (* unroll wp(ei',E)—value case—to get E ei' *)
-      move: Hei'; rewrite (fill_empty ei') {1}unfold_wp => Hei'.
-      move: IH HLt HK HW' Hei'; case: k => [| k'] IH HLt HK HW' Hei'.
-      { exists w'' r'. by split; [done | split; [exact: wpO | done]]. }
-      have HLt': k' < S k' by done.
-      move/(_ _ _ _ _ _ (prefl w'') HLt' HD HW'): Hei' => [Hv _] {HLt' HD HW'}.
-      move: (atomic_step HA HStep) => HV {HA HStep}.
-      move/(_ HV): Hv => [w''' [rei' [HSw'' [Hei' HW]]]].
-      move: HW; rewrite assoc => HW.
-      set Hw'Sw''' := ptrans HSw' HSw''.
-      set HwSw''' := ptrans HSw Hw'Sw'''.
-      exists w''' (rei' · rK). split; [done | split; [| done]].
-      apply: IH; [done | | done].
-      apply: (FILL _ _ _ HwSw''' _ _ (lelt HLt) unit_min).
-      exists rei' rK. split; [by reflexivity | split; [done |]].
-      have HLe: S k' <= S (S k') by omega.
-      exact: propsMWN HK.
-    Qed.
-
-  End RobustSafety. *)
 
   Section StatefulLifting.
 
@@ -502,7 +379,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         apply top_valid. apply htValid. rewrite sc_top_unit.
         (* Now fall back to proving this in the model. *)
         move=>w n. destruct n; first (intro;exact:bpred).
-        rewrite /= /sp_constF. move=>[[Hφ Hval] HownS].
+        rewrite /=. move=>[[Hφ Hval] HownS].
         eapply wpValue; [].
         simpl. exists σ'. split; assumption.
     Grab Existential Variables.

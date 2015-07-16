@@ -51,19 +51,23 @@ CONTENTS
   * lang.v defines the threadpool reduction and derives some lemmas
     from core_lang.v
   
-  * masks.v introduces some lemmas about masks
+  * world_prop_recdom.v uses the ModuRes Coq library to construct the domain
+    for Iris propositions, satisfying the interface to the Iris domain
+    defined in world_prop.v
   
-  * world_prop.v uses the ModuRes Coq library to construct the domain
-    for Iris propositions
+  * iris_core.v constructs the BI structure on the Iris domain, and defines
+    some additional connectives (box, later, ownership).
   
-  * iris_core.v defines world satisfaction and the simpler assertions
+  * iris_plog.v adds the programming logic: World satisfaction, primitive view shifts,
+    weakest precondition.
   
-  * iris_vs.v defines view shifts and proves their rules
+  * iris_vs_rules.v and iris_wp_rules.v contain proofs of the primitive proof
+    rules for primitive view shifts and weakest precondition, respectively.
   
-  * iris_wp.v defines weakest preconditions and proves the rules for
-    Hoare triples
+  * iris_derived_rules.v derives rules for Hoare triples and view shifts
+    (as presented in the appendix).
   
-  * iris_meta.v proves adequacy, robust safety, and the lifting lemmas
+  * iris_meta.v proves adequacy and the lifting lemmas
 
   The development uses ModuRes, a Coq library by Sieczkowski et al. to
   solve the recursive domain equation (see the paper for a reference)
@@ -76,7 +80,7 @@ REQUIREMENTS
   Coq 
 
   We have tested the development using Coq 8.4pl4 on Linux and Mac
-  machines. The entire compilation took less than an hour.
+  machines. The entire compilation took less than 15 minutes.
   
 
 HOW TO COMPILE
@@ -95,23 +99,23 @@ OVERVIEW OF LEMMAS
 
   RULE         Coq lemma
   -----------------------
-  VSTimeless   iris_vs.v:/vsTimeless
-  NewInv       iris_vs.v:/vsNewInv
-  InvOpen      iris_vs.v:/vsOpen
-  InvClose     iris_vs.v:/vsClose
-  VSTrans      iris_vs.v:/vsTrans
-  VSImp        iris_vs.v:/vsEnt
-  VSFrame      iris_vs.v:/vsFrame
-  FpUpd        iris_vs.v:/vsGhostUpd
+  VSTimeless   iris_derived_rules.v:vsTimeless
+  NewInv       iris_derived_rules.v:vsNewInv
+  InvOpen      iris_derived_rules.v:vsOpen
+  InvClose     iris_derived_rules.v:vsClose
+  VSTrans      iris_derived_rules.v:vsTrans
+  VSImp        iris_derived_rules.v:vsEnt
+  VSFrame      iris_derived_rules.v:vsFrame
+  FpUpd        iris_derived_rules.v:vsGhostUpd
 
-  Ret          iris_wp.v:/htRet
-  Bind         iris_wp.v:/htBind
-  Frame        iris_wp.v:/htFrame
-  AFrame       iris_wp.v:/htAFrame
-  Csq          iris_wp.v:/htCons
-  ACSQ         iris_wp.v:/htACons
-  Fork         iris_wp.v:/htFork
+  Ret          iris_derived_rules.v:htRet
+  Bind         iris_derived_rules.v:htBind
+  Frame        iris_derived_rules.v:htFrame
+  AFrame       iris_derived_rules.v:htAFrame
+  Csq          iris_derived_rules.v:htCons
+  ACSQ         iris_derived_rules.v:htACons
+  Fork         iris_derived_rules.v:htFork
 
   The main adequacy result is expressed by Theorem
-  iris_wp.v:/adequacy_obs.
+  iris_meta.v:adequacy_obs.
 
