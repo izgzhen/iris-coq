@@ -794,6 +794,15 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       simpl. apply dist_mono. assumption.
     Qed.
 
+    Lemma inv_contractive i : contractive (inv i).
+    Proof.
+      move => n P1 P2 EQP w [|k /le_S_n Hk] //; split; move => [p /= EQwi]; simpl;
+      exists p; rewrite EQwi {EQwi} /dist /option_metric /option_dist;
+      rewrite (_ : ra_ag_inj _ = S k = ra_ag_inj _); [reflexivity| |reflexivity|]; 
+      split; try reflexivity; move => [|m] Hm _; apply met_morph_nonexp => //;
+      eapply (mono_dist _ _ _ (S _)); [|exact: EQP| |symmetry; exact EQP]; omega.
+    Qed.
+
     Lemma inv_box i P:
       inv i P == □inv i P.
     Proof.
