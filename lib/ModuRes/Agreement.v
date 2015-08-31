@@ -160,18 +160,15 @@ Section Agreement.
 
   (* We also have a metric *)
   Definition ra_agree_dist n :=
-    match n with
-    | O => fun _ _ => True
-    | S _ => fun x y => match x, y with
-                        | ag_inj v1 ts1 _, ag_inj v2 ts2 _ =>
-                          v1 = n = v2 /\ (forall n', n' <= n -> v1 n' -> ts1 n' = n' = ts2 n')
-                        end
+    fun x y => match x, y with
+               | ag_inj v1 ts1 _, ag_inj v2 ts2 _ =>
+                 v1 = n = v2 /\ (forall n', n' <= n -> v1 n' -> ts1 n' = n' = ts2 n')
             (* Since == has to imply (dist n), we cannot ask for equality beyond validity *)
-    end.
+               end.
 
   Global Program Instance ra_agree_metric : metric ra_agree := mkMetr ra_agree_dist.
   Next Obligation.
-    repeat intro. destruct n as [|n]; first by auto.
+    repeat intro.
     ra_ag_destr. destruct H as [EQv1 EQts1], H0 as [EQv2 EQts2]. split; move=>[EQv EQts]; split.
     - rewrite -EQv1 -EQv2. assumption.
     - move=> n' HLe pv1. etransitivity; first (symmetry; eapply EQts1; by apply EQv1).
@@ -190,24 +187,29 @@ Section Agreement.
         assumption.
       + intros n pv1. specialize (Hall (S n)). destruct n as [|n]; first by apply: dist_bound.
         now firstorder.
-    - repeat intro. destruct n as [|n]; first by auto. ra_ag_destr; now firstorder.
+    - repeat intro. ra_ag_destr; now firstorder.
   Qed.
   Next Obligation.
-    repeat intro. destruct n as [|n]; first by auto.
+    repeat intro.
     ra_ag_destr; now firstorder.
   Qed.
   Next Obligation.
-    repeat intro. destruct n as [|n]; first by auto.
+    repeat intro.
     ra_ag_destr.
     destruct H as [EQv1 EQts1], H0 as [EQv2 EQts2].
     split; first now firstorder. intros.
     etransitivity; first by eapply EQts1. by eapply EQts2, EQv1.
   Qed.
   Next Obligation.
-    repeat intro. destruct n as [|n]; first by auto.
+    repeat intro.
     ra_ag_destr. destruct H as [EQv EQts]. split.
     - move=>n' HLe. eapply EQv. omega.
     - move=>n'' HLe pv1. eapply EQts, pv1. omega.
+  Qed.
+  Next Obligation.
+    repeat intro; ra_ag_destr. split.
+    - apply dist_bound.
+    - intros. eapply mono_dist, dist_bound. assumption.
   Qed.
 
   Global Instance ra_ag_op_dist n:
