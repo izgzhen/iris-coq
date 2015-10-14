@@ -173,7 +173,7 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       pvs m m' (wp safe m' e ((pvs m' m) <M< φ)) ⊑ wp safe m e φ.
     Proof.
       move=>w0 n0 Hvswpvs. rewrite->unfold_wp. intros wf; intros.
-      split; [intros HV; contradiction (atomic_not_value e) |].
+      split; [intros HV; now contradiction (atomic_not_value e) |].
       edestruct (Hvswpvs wf k mf) as (w2 & Hwpvs & Hsat2);[eassumption|de_auto_eq|eassumption|].
       rewrite->unfold_wp in Hwpvs.
       edestruct (Hwpvs wf k mf) as (Hwpval & Hwpstep & Hwpfork & Hwpsafe);[|de_auto_eq|eassumption|]; first omega.
@@ -192,6 +192,38 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       edestruct (Hvs wf k mf) as (w5 & Hφ & Hsat5); [| |eassumption|]=>{Hvs Hsat4}; first omega; first de_auto_eq.
       exists w5. split; last assumption.
       eapply wpValue. eassumption.
+    Qed.
+
+    Lemma wpAConsFork safe m m' e φ
+          (HSub  : m' ⊑ m) :
+      pvs m m' (wp safe m' (fork e) ((pvs m' m) <M< φ)) ⊑ wp safe m (fork e) φ.
+    Proof.
+      move=>w0 n0 Hvswpvs. rewrite->unfold_wp. intros wf; intros.
+      split; [intros HV; now contradiction (@fork_not_value e) |].
+      edestruct (Hvswpvs wf k mf) as (w2 & Hwpvs & Hsat2);[eassumption|de_auto_eq|eassumption|].
+      rewrite->unfold_wp in Hwpvs.
+      edestruct (Hwpvs wf k mf) as (Hwpval & Hwpstep & Hwpfork & Hwpsafe);[|de_auto_eq|eassumption|]; first omega.
+      split.
+      { move=>? ? ? ? Hfill Hstep. exfalso. eapply (fork_stuck empty_ctx e).
+        - rewrite Hfill. erewrite fill_comp. reflexivity.
+        - do 2 eexists; eassumption. }
+      split; last assumption.
+      move=>ei' K Hfill {Hwpval Hwpstep Hwpsafe Hvswpvs Hwpvs Hsat2 HE}.
+      destruct (Hwpfork _ _ Hfill) as (w3 & w3' & Hwpvs & Hwpforked & Hsat3)=>{Hwpfork}.
+      move:(fill_fork Hfill) =>Hctx. subst K.
+      rewrite fill_empty in Hfill. apply fork_inj in Hfill. subst ei'.
+      destruct k.
+      { exists w3 w3'. split; first exact:wp1. split; first assumption. exact I. }
+      rewrite->unfold_wp in Hwpvs.
+      move: Hsat3. rewrite (comm w3) -(assoc) => Hsat3.
+      edestruct Hwpvs as (Hwpval & _); [| |eassumption|]=>{Hwpvs Hsat3}; first omega; first de_auto_eq.
+      move:  Hwpval. rewrite fill_empty=>Hwpval.
+      destruct (Hwpval fork_ret_is_value) as (w4 & Hvs & Hsat4)=>{Hwpval}.
+      edestruct (Hvs (w3 · wf) k mf) as (w5 & Hφ & Hsat5); [| |eassumption|]=>{Hvs Hsat4}; first omega; first de_auto_eq.
+      exists w3 w5. split; last split.
+      - eapply wpValue. eassumption.
+      - assumption.
+      - rewrite (comm w3) -assoc. assumption.
     Qed.
 
     (** Framing **)
