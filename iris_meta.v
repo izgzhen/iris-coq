@@ -20,25 +20,25 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
 
     (* weakest-pre for a threadpool *)
-    Inductive wptp (safe : bool) m n : tpool -> list Wld -> list vPred -> Prop :=
-    | wp_emp : wptp safe m n nil nil nil
+    Inductive wptp (safe : bool) n : tpool -> list Wld -> list vPred -> Prop :=
+    | wp_emp : wptp safe n nil nil nil
     | wp_cons e φ tp w ws φs
-              (WPE  : wp safe m e φ w n)
-              (WPTP : wptp safe m n tp ws φs) :
-        wptp safe m n (e :: tp) (w :: ws) (φ :: φs).
+              (WPE  : wp safe de_full e φ w n)
+              (WPTP : wptp safe n tp ws φs) :
+        wptp safe n (e :: tp) (w :: ws) (φ :: φs).
 
     (* Trivial lemmas about split over append *)
-    Lemma wptp_app safe m n tp1 tp2 ws1 ws2 φs1 φs2
-          (HW1 : wptp safe m n tp1 ws1 φs1)
-          (HW2 : wptp safe m n tp2 ws2 φs2) :
-      wptp safe m n (tp1 ++ tp2) (ws1 ++ ws2) (φs1 ++ φs2).
+    Lemma wptp_app safe n tp1 tp2 ws1 ws2 φs1 φs2
+          (HW1 : wptp safe n tp1 ws1 φs1)
+          (HW2 : wptp safe n tp2 ws2 φs2) :
+      wptp safe n (tp1 ++ tp2) (ws1 ++ ws2) (φs1 ++ φs2).
     Proof.
       induction HW1; [| constructor]; now trivial.
     Qed.
 
-    Lemma wptp_app_tp safe m n t1 t2 ws φs
-          (HW : wptp safe m n (t1 ++ t2) ws φs) :
-      exists ws1 ws2 φs1 φs2, ws1 ++ ws2 = ws /\ φs1 ++ φs2 = φs /\ wptp safe m n t1 ws1 φs1 /\ wptp safe m n t2 ws2 φs2.
+    Lemma wptp_app_tp safe n t1 t2 ws φs
+          (HW : wptp safe n (t1 ++ t2) ws φs) :
+      exists ws1 ws2 φs1 φs2, ws1 ++ ws2 = ws /\ φs1 ++ φs2 = φs /\ wptp safe n t1 ws1 φs1 /\ wptp safe n t2 ws2 φs2.
     Proof.
       revert ws φs HW; induction t1; intros; inversion HW; simpl in *; subst; clear HW.
       - do 4 eexists. split; [|split; [|split; now econstructor]]; reflexivity.
@@ -48,10 +48,10 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     (* Closure under smaller steps *)
-    Lemma wptp_closure safe m n1 n2 tp ws φs
+    Lemma wptp_closure safe n1 n2 tp ws φs
           (HLe : n2 <= n1)
-          (HW : wptp safe m n1 tp ws φs) :
-      wptp safe m n2 tp ws φs.
+          (HW : wptp safe n1 tp ws φs) :
+      wptp safe n2 tp ws φs.
     Proof.
       induction HW; constructor; [| assumption].
       eapply dpred, WPE. assumption.
@@ -76,12 +76,12 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         reflexivity.
     Qed.
 
-    Lemma preserve_wptp w0 safe m n k tp tp' σ σ' ws φs
+    Lemma preserve_wptp w0 safe n k tp tp' σ σ' ws φs
           (HSN  : stepn n (tp, σ) (tp', σ'))
-          (HWTP : wptp safe m (n + (S k)) tp ws φs)
-          (HE   : wsat σ m (comp_wlist ws w0) (n + (S k))) :
+          (HWTP : wptp safe (n + (S k)) tp ws φs)
+          (HE   : wsat σ de_full (comp_wlist ws w0) (n + (S k))) :
       exists ws' φs',
-        wptp safe m (S k) tp' ws' (φs ++ φs') /\ wsat σ' m (comp_wlist ws' w0) (S k).
+        wptp safe (S k) tp' ws' (φs ++ φs') /\ wsat σ' de_full (comp_wlist ws' w0) (S k).
     Proof.
       revert tp σ w0 ws φs HSN HWTP HE. induction n; intros; inversion HSN; subst; clear HSN.
       (* no step is taken *)
@@ -145,13 +145,15 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
             (HT  : valid (ht safe m P e Q))
             (HSN : stepn n ([e], σ) (tp', σ'))
             (HP  : P w (n + S k))
-            (HE  : wsat σ m w (n + S k)) :
+            (HE  : wsat σ de_full w (n + S k)) :
       exists ws' φs',
-        wptp safe m (S k) tp' ws' (Q :: φs') /\ wsat σ' m (comp_wlist ws' (1 w)) (S k).
+        wptp safe (S k) tp' ws' (Q :: φs') /\ wsat σ' de_full (comp_wlist ws' (1 w)) (S k).
     Proof.
       edestruct (preserve_wptp (1 w)) with (ws := [w]) as [ws' [φs' [HSWTP' HSWS']]]; first eassumption.
       - specialize (HT w (n + S k)). apply (applyImpl HT) in HP; try reflexivity; [|now apply unit_min].
-        econstructor; [|now econstructor]. eassumption.
+        econstructor; [|now econstructor].
+        eapply wpWeakenMask; last eassumption.
+        de_auto_eq.
       - simpl comp_wlist. rewrite ra_op_unit. eassumption.
       - exists ws' φs'. now auto.
     Qed.
@@ -161,7 +163,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
             (HT  : valid (ht safe m (ownS σ) e Q))
             (HSN : steps ([e], σ) (tp', σ')):
       exists w0 ws' φs',
-        wptp safe m (S (S k')) tp' ws' (Q :: φs') /\ wsat σ' m (comp_wlist ws' w0) (S (S k')).
+        wptp safe (S (S k')) tp' ws' (Q :: φs') /\ wsat σ' de_full (comp_wlist ws' w0) (S (S k')).
     Proof.
       destruct (refl_trans_n _ HSN) as [n HSN']. clear HSN.
       destruct (RL.res_vira) as [l Hval].
@@ -207,7 +209,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     (* Adequacy for safe triples *)
-    Theorem adequacy_safe m e (Q : vPred) tp' σ σ' e'
+    Theorem adequacy_safe_expr m e (Q : vPred) tp' σ σ' e'
             (HT  : valid (ht true m (ownS σ) e Q))
             (HSN : steps ([e], σ) (tp', σ'))
             (HE  : e' ∈ tp'):
@@ -224,6 +226,14 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         rewrite /comp_wlist !fold_left_app. rewrite comp_wlist_tofront. reflexivity.
       - apply HSafe. reflexivity.
     Qed.
+
+    Theorem adequacy_safe m e (Q : vPred) tp' σ σ' e'
+            (HT  : valid (ht true m (ownS σ) e Q))
+            (HSN : steps ([e], σ) (tp', σ')):
+      (forall e', e' ∈ tp' -> is_value e') \/ exists tp'' σ'', step (tp', σ') (tp'', σ'').
+    Proof.
+      (* TODO: Prove this. *)
+    Abort.
 
   End Adequacy.
 

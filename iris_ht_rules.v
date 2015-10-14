@@ -86,7 +86,7 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
 
     (** Fork **)
     Lemma wpFork safe m R e :
-      ▹wp safe m e (umconst ⊤) * ▹R ⊑ wp safe m (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).	(* PDS: Why sc not and? RJ: 'cause sc is stronger. *)
+      ▹wp safe de_full e (umconst ⊤) * ▹R ⊑ wp safe m (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).	(* PDS: Why sc not and? RJ: 'cause sc is stronger. *)
     Proof.
       intros w n. destruct n; first (intro; exact:bpred).
       intros [[w1 w2] [EQw [Hwp HLR]]].
@@ -195,24 +195,10 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
     Qed.
 
     (** Framing **)
-    Lemma wpFrameMask safe m1 m2 e φ (HD : m1 # m2) :
+    Lemma wpFrameMask safe m1 m2 e φ (*HD : m1 # m2*) :
       wp safe m1 e φ ⊑ wp safe (m1 ∪ m2) e φ.
     Proof.
-      intros w n; revert w e φ; induction n using wf_nat_ind; rename H into HInd; intros w e φ HW.
-      rewrite unfold_wp; rewrite ->unfold_wp in HW; intros wf; intros.
-      edestruct HW with (mf := mf ∪ m2) as [HV [HS [HF HS'] ] ]; try eassumption;
-      [| eapply wsat_equiv, HE; try reflexivity; de_auto_eq |]; first de_auto_eq.
-      clear HW HE; split; [intros HVal; clear HS HF HInd | split; [intros; clear HV HF | split; [intros; clear HV HS | intros; clear HV HS HF] ] ].
-      - specialize (HV HVal); destruct HV as [w'' [Hφ HE]].
-        eexists. split; [eassumption |].
-        eapply wsat_equiv, HE; try reflexivity; clear; de_auto_eq.
-      - edestruct HS as [w'' [HW HE]]; try eassumption; []; clear HS.
-        eexists; split; [eapply HInd, HW; assumption |].
-        eapply wsat_equiv, HE; try reflexivity; clear; de_auto_eq.
-      - destruct (HF _ _ HDec) as [wfk [wret [HWR [HWF HE]]]]; clear HF.
-        do 2 eexists; do 2 (split; [apply HInd; eassumption |]).
-        eapply wsat_equiv, HE; try reflexivity; clear; de_auto_eq.
-      - auto.
+      eapply wpWeakenMask. de_auto_eq.
     Qed.
 
     Lemma wpFrameRes safe m e φ R:
@@ -289,7 +275,7 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
     (* Unsafe and safe weakest-pre *)
     Lemma wpUnsafe {m e φ} : wp true m e φ ⊑ wp false m e φ.
     Proof.
-      move=> w n. move: n w e φ; elim/wf_nat_ind. move=> n IH w e φ He.
+      move=> w n. move: n w e φ m; elim/wf_nat_ind. move=> n IH w e φ m He.
       rewrite unfold_wp; move=> wf k mf σ HLt HD HW.
       move/(_ _ HLt): IH => IH.
       move/unfold_wp/(_ _ _ _ _ HLt HD HW): He => [HV [HS [HF _] ] ] {HLt HD HW}.

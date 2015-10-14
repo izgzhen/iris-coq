@@ -1,7 +1,7 @@
 Require Import Ssreflect.ssreflect Omega.
 Require Import world_prop core_lang.
 Require Import ModuRes.RA ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr ModuRes.Agreement.
-Require Import ModuRes.CMRA.
+Require Import ModuRes.CMRA ModuRes.DecEnsemble.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -60,12 +60,18 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
   Local Open Scope iris_scope.
 
   (** Instances for a bunch of types (some don't even have Setoids) *)
+  Instance state_type : Setoid C.state := _.
   Instance state_metr : metric C.state := discreteMetric.
   Instance state_cmetr : cmetric C.state := discreteCMetric.
   
   Instance nat_type : Setoid nat := discreteType.
   Instance nat_metr : metric nat := discreteMetric.
   Instance nat_cmetr : cmetric nat := discreteCMetric.
+
+  Definition mask := DecEnsemble nat.
+  Instance mask_type : Setoid mask := _.
+  Instance mask_metr : metric mask := discreteMetric.
+  Instance mask_cmetr : cmetric mask := discreteCMetric.
 
   Instance expr_type : Setoid expr := discreteType.
   Instance expr_metr : metric expr := discreteMetric.

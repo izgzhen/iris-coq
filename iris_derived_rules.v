@@ -295,13 +295,21 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
           rewrite ->and_projL, box_elim, and_projR. apply and_projL.
     Qed.
 
-    Lemma htFrame safe m m' P R e Q (HD : m # m') :
-      ht safe m P e Q ⊑ ht safe (m ∪ m') (P * R) e (lift_bin sc Q (umconst R)).
+    Lemma htWeakenMask safe m m' P e Q (HD: m ⊑ m'):
+      ht safe m P e Q ⊑ ht safe m' P e Q.
     Proof.
       rewrite {1}/ht. apply htIntro.
+      etransitivity; last by eapply wpWeakenMask.
+      apply and_impl, box_elim.
+    Qed.
+
+    Lemma htFrame safe m m' P R e Q (*HD: m # m' *):
+      ht safe m P e Q ⊑ ht safe (m ∪ m') (P * R) e (lift_bin sc Q (umconst R)).
+    Proof.
+      etransitivity; first eapply htWeakenMask with (m' := m ∪ m').
+      { de_auto_eq. }
+      rewrite {1}/ht. apply htIntro.
       etransitivity; last by eapply wpFrameRes.
-      etransitivity; last first.
-      { eapply sc_pord; last reflexivity. eapply wpFrameMask. assumption. }
       rewrite -box_conj_star assoc. apply sc_pord; last reflexivity.
       rewrite box_conj_star. apply and_impl, box_elim.
     Qed.
@@ -314,13 +322,13 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       rewrite {1}/ht. apply htIntro.
       etransitivity; last (eapply wpAFrameRes; assumption).
       etransitivity; last first.
-      { eapply sc_pord; last reflexivity. eapply wpFrameMask. assumption. }
+      { eapply sc_pord; last reflexivity. eapply wpFrameMask. }
       rewrite -box_conj_star assoc. apply sc_pord; last reflexivity.
       rewrite box_conj_star. apply and_impl, box_elim.
     Qed.
 
     Lemma htFork safe m P R e :
-      ht safe m P e (umconst ⊤) ⊑ ht safe m (▹P * ▹R) (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).
+      ht safe de_full P e (umconst ⊤) ⊑ ht safe m (▹P * ▹R) (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).
     Proof.
       rewrite {1}/ht. apply htIntro.
       etransitivity; last by eapply wpFork.

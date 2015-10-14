@@ -192,7 +192,7 @@ Module Import HTRules := IrisHTRules TrivialRA StupidLang Res World Core Plog.
 
 (* And now we check for axioms *)
 Print Assumptions adequacy_obs.
-Print Assumptions adequacy_safe.
+(* TODO enable this once it is proven Print Assumptions adequacy_safe. *)
 
 Print Assumptions lift_atomic_det_step.
 Print Assumptions lift_pure_det_step.
