@@ -2,13 +2,14 @@
 set -e
 
 TIME() {
-    rm -f "$1" && time make "$1"
+    echo "# Preparing $1"
+    make -j $(cat "$1".v.d | sed 's/^.*: //')
+    rm -f "$1".vo
+    echo "# Benchmarking $1"
+    time make "$1.vo"
+    echo
 }
 
-make -j lib/ModuRes/{RA,UPred}.vo # BI dependencies
-TIME lib/ModuRes/BI.vo
-
-make -j {lang,masks,iris_core}.vo # iris_plog dependencies
-TIME iris_plog.vo
-TIME iris_meta.vo
-TIME iris_ht_rules.vo
+TIME iris_plog
+TIME iris_meta
+TIME iris_ht_rules
