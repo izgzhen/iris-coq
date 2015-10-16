@@ -209,7 +209,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     (* Adequacy for safe triples *)
-    Theorem adequacy_safe_expr m e (Q : vPred) tp' σ σ' e'
+    Lemma adequacy_safe_expr m e (Q : vPred) tp' σ σ' e'
             (HT  : valid (ht true m (ownS σ) e Q))
             (HSN : steps ([e], σ) (tp', σ'))
             (HE  : e' ∈ tp'):
@@ -227,13 +227,37 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       - apply HSafe. reflexivity.
     Qed.
 
-    Theorem adequacy_safe m e (Q : vPred) tp' σ σ' e'
+    Theorem adequacy_safe m e (Q : vPred) tp' σ σ'
             (HT  : valid (ht true m (ownS σ) e Q))
             (HSN : steps ([e], σ) (tp', σ')):
       (forall e', e' ∈ tp' -> is_value e') \/ exists tp'' σ'', step (tp', σ') (tp'', σ'').
     Proof.
-      (* TODO: Prove this. *)
-    Abort.
+      assert (Hsafe: forall e', e' ∈ tp' -> safeExpr e' σ').
+      { move=>e' HE. eapply adequacy_safe_expr; eassumption. }
+      clear -Hsafe. induction tp' as [|e tp' IH].
+      - left. move=>? [].
+      - move:IH. case/(_ _)/Wrap.
+        { move=>e' Hin. apply Hsafe. right. assumption. }
+        case=>IH; last first.
+        { destruct IH as [tp'' [σ'' Hstep]]. right.
+          destruct Hstep.
+          - inversion H0=>{H0}; inversion H1=>{H1}; subst.
+            do 2 eexists. eapply step_atomic; first eassumption; last reflexivity.
+            rewrite app_comm_cons. reflexivity.
+          - inversion H=>{H}; inversion H0=>{H0}; subst.
+            do 2 eexists. eapply step_fork; last reflexivity.
+            rewrite app_comm_cons. reflexivity.
+        }
+        move:(Hsafe e)=>{Hsafe}. case/(_ _)/Wrap; first by left.
+        case=>[Hsafe|[[σ'' [ei [ei' [K [Hfill Hstep]]]]]|[e' [K Hfill]]]].
+        + left. move=>e'. case.
+          * by move =><-.
+          * by auto.
+        + right. do 2 eexists. eapply step_atomic with (t1:=[]); first eassumption; last reflexivity.
+          rewrite Hfill. reflexivity.
+        + right. do 2 eexists. eapply step_fork with (t1:=[]); last reflexivity.
+          rewrite Hfill. reflexivity.
+    Qed.
 
   End Adequacy.
 
