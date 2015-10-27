@@ -122,14 +122,6 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       exists w3; split; assumption.
     Qed.
     
-    Lemma pvsEnt P m :
-      P ⊑ pvs m m P.
-    Proof.
-      intros w0 n HP wf; intros.
-      exists w0. split; last assumption.
-      eapply propsMN, HP. omega.
-    Qed.
-
     Lemma pvsMon P Q m1 m2 : 
       P ⊑ Q -> pvs m1 m2 P ⊑ pvs m1 m2 Q.
     Proof.

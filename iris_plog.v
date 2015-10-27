@@ -296,6 +296,14 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         exists w'. split; first assumption. now rewrite EQm2.
     Qed.
 
+    Lemma pvsEnt P m :
+      P ⊑ pvs m m P.
+    Proof.
+      intros w0 n HP wf; intros.
+      exists w0. split; last assumption.
+      eapply propsMN, HP. omega.
+    Qed.
+
   End PrimitiveViewShifts.
 
 
