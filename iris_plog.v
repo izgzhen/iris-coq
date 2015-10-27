@@ -12,7 +12,6 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
   Export CORE.
   Module Export L  := Lang C.
 
-  Local Open Scope lang_scope.
   Local Open Scope ra_scope.
   Local Open Scope bi_scope.
   Local Open Scope iris_scope.
@@ -306,73 +305,57 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
     Definition safeExpr e σ :=
       is_value e \/
-         (exists σ' e' oe, prim_step (e, σ) (e', σ') oe).
-
-    (* Show that this definition makes some sense *)
-    Lemma tp_safe e tp σ
-          (SAFE  : safeExpr e σ)
-          (INPOOL: (e ∈ tp)%list):
-      is_value e \/ exists tp' σ', step (tp, σ) (tp', σ').
-    Proof.
-      apply List.in_split in INPOOL.
-      destruct INPOOL as [tp1 [tp2 Htp]].
-      destruct SAFE as [Hval|[σ' [e' [[ef|] Hstep]]]].
-      - left. assumption.
-      - right; eexists; exists σ'. eapply step_atomic_fork; last eassumption; now rewrite Htp. 
-      - right; eexists; exists σ'. eapply step_atomic; last eassumption; now rewrite Htp.
-    Qed.
+         (exists σ' e' ef, prim_step (e, σ) (e', σ') ef).
 
     Definition wpFP safe (WP : mask -n> expr -n> vPred -n> Props) m e φ w n :=
+      (forall (HV : is_value e),
+          φ (exist _ e HV) w n) /\
       forall wf k mf σ (HLt : S k < n) (HD : mf # m)
              (HE : wsat σ (m ∪ mf) (w · wf) (S (S k))),
-        (forall (HV : is_value e),
-         exists w', φ (exist _ e HV) w' (S (S k))
-                    /\ wsat σ (m ∪ mf) (w' · wf) (S (S k))) /\
-        (forall e' σ' eo (HStep : prim_step (e, σ) (e', σ') eo),
-            exists wfk wret, WP m e' φ wret (S k)
-                             /\ (forall ef, (eo = Some ef) -> WP de_full ef (umconst ⊤) wfk (S k))
-                             /\ wsat σ (m ∪ mf) (wfk · wret · wf) (S k)) /\
+        (forall e' σ' ef (HStep : prim_step (e, σ) (e', σ') ef),
+            exists wret wfk, WP m e' φ wret (S k)
+                             /\ match ef with None => True |
+                                         Some ef' => WP de_full ef' (umconst ⊤) wfk (S k) end
+                             /\ wsat σ' (m ∪ mf) (wfk · wret · wf) (S k)) /\
         (forall HSafe : safe = true, safeExpr e σ).
 
     (* Define the function wp will be a fixed-point of *)
     Program Definition wpF safe : (mask -n> expr -n> vPred -n> Props) -> (mask -n> expr -n> vPred -n> Props) :=
       fun WP => n[(fun m => n[(fun e => n[(fun φ => m[(fun w => p[(wpFP safe WP m e φ w)] )])])])].
     Next Obligation.
-      intro. intros. inversion HLt.
+      split.
+      - intros. exact: bpred.
+      - intros. inversion HLt.
     Qed.
     Next Obligation.
-      intros n1 n2 HLe Hwp wf k mf σ HLt HD HE.
-      destruct (Hwp wf k mf σ) as [HV [HS HS' ]]; first omega; try assumption; [].
-      split; [clear HS | split; [clear HV | ] ]; intros.
-      - specialize (HV HV0); destruct HV as [w'' [Hφ HE']].
-        exists w''. split; assumption.
-      - specialize (HS _ _ _ HStep); destruct HS as [w'' [HWP HE']].
+      intros n1 n2 HLe Hwp. split.
+      { intros. destruct Hwp as [Hwp _]. eapply dpred, Hwp. assumption. }
+      intros  wf k mf σ HLt HD HE. destruct Hwp as [_ Hwp]. 
+      destruct (Hwp wf k mf σ) as [HSt HSf]; first omega; try assumption; [].
+      split; intros.
+      - specialize (HSt _ _ _ HStep); destruct HSt as [w'' [HWP HE']].
         exists w''. eexists. eassumption.
       - now auto.
     Qed.
     Next Obligation.
       eapply dist_spred_simpl; first now apply _.
-      intros w1 w2 n' HLt EQw; simpl; destruct n as [| n]; [now inversion HLt |]. intros Hwp wf; intros.
-      edestruct (Hwp wf) as [HV [HS HS'] ]; try eassumption;
+      intros w1 w2 n' HLt EQw [HV Hwp]; simpl. split.
+      { intros. eapply spredNE, HV. rewrite EQw. reflexivity. }
+      intros. edestruct (Hwp wf) as [HS HSf]; try eassumption;
       [eapply wsat_dist, HE; [reflexivity| eapply cmra_op_dist; eassumption || reflexivity |  omega] |].
-      split; [clear HS | split; [clear HV | ] ]; intros.
-      - specialize (HV HV0); destruct HV as [w1'' [Hφ HE']]. exists w1''.
-        split; assumption.
+      split; intros.
       - specialize (HS _ _ _ HStep); destruct HS as [w1'' [HWP HE']]. exists w1''.
         eexists; eassumption.
       - now auto.
     Qed.
     Next Obligation.
-      intros w1 w2 [wd EQw] n. simpl; intros Hwp wf; intros.
-      edestruct (Hwp (wd · wf) k mf) as [HV [HS HS'] ]; try assumption; [|].
+      intros w1 w2 [wd EQw] n. simpl; intros [HV Hwp]. split; intros.
+      { eapply propsMW, HV. eexists. eassumption. }
+      edestruct (Hwp (wd · wf) k mf) as [HS HSf]; try assumption; [|].
       { eapply wsat_dist, HE; try reflexivity. now rewrite -EQw assoc (comm w1). }
-      split; [clear HS | split; [clear HV | ] ]; intros.
-      - specialize (HV HV0); destruct HV as [w'' [Hφ HE']].
-        exists (w'' · wd). split.
-        + eapply propsMW, Hφ. exists wd; now rewrite comm.
-        + eapply wsat_dist, HE'; try reflexivity. now rewrite assoc.
-      - specialize (HS _ _ _ HStep); destruct HS as [wfk [wret [HWR [HWF HE']]]].
-        exists wfk. exists (wret · wd). split; [|split].
+      split; intros.
+      - specialize (HS _ _ _ HStep); destruct HS as [wret [wfk [HWR [HWF HE']]]].
+        exists (wret · wd). exists wfk. split; [|split].
         + eapply propsMW, HWR. exists wd; now rewrite comm.
         + assumption.
         + eapply wsat_dist, HE'; try reflexivity. now rewrite !assoc.
@@ -380,14 +363,12 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
     Next Obligation.
       eapply dist_props_simpl; first now apply _.
-      intros φ1 φ2 w k HLt EQφ; simpl; destruct n as [| n]; [now inversion HLt |].
-      intros Hp w'; intros; edestruct Hp as [HV [HS HS' ] ]; try eassumption; [].
-      split; [clear HS | split; [clear HV | ] ]; intros.
-      - specialize (HV HV0); destruct HV as [w'' [Hφ HE']].
-        exists w''. split; last assumption.
-        apply EQφ, Hφ; omega.
-      - specialize (HS _ _ _ HStep); destruct HS as [wfk [wret [HWR [HWF HE']]]].
-        exists wfk wret. split; last tauto.
+      intros φ1 φ2 w k HLt EQφ [HV Hwp]; simpl; split; intros.
+      { eapply spredNE, HV. eapply mmorph_proper; last reflexivity. eapply mono_dist, EQφ. assumption. }
+      clear HV. edestruct Hwp as [HS HSf]; try eassumption; [].
+      split; intros.
+      - specialize (HS _ _ _ HStep); destruct HS as [wret [wfk [HWR [HWF HE']]]].
+        exists wret wfk. split; last tauto.
         eapply (met_morph_nonexp (WP _ _)), HWR; [symmetry; eassumption | omega].
       - now auto.
     Qed.
@@ -397,54 +378,50 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
     Next Obligation.
       move=>m1 m2 EQm e φ w. destruct n; first exact:dist_bound.
-      move:φ w e. split=>Hwp.
-      - move=>wf; intros.
-        destruct (Hwp wf k mf σ) as (Hval & Hstep & Hsafe); [assumption|de_auto_eq|now rewrite EQm|].
-        split; last split; last assumption.
-        + move=>HV. specialize (Hval HV). destruct Hval as (w' & HP & HW).
-          exists w'. split; first assumption. now rewrite -EQm.
-        + move=>? ? ? Hprim. specialize (Hstep _ _ _ Hprim).
-          destruct Hstep as (wfk & wret & Hwp' & Hwp'' & HW).
-          exists wfk wret. split; last split.
-          * eapply spredNE, Hwp'. eapply mmorph_proper; last reflexivity.
-            eapply pcm_dist_inherit, mmorph_proper; last reflexivity.
-            eapply mmorph_proper; last reflexivity. eapply met_morph_nonexp.
-            eapply dist_mono, EQm.
-          * assumption. 
-          * now rewrite -EQm.
-      - move=>wf; intros.
-        destruct (Hwp wf k mf σ) as (Hval & Hstep & Hsafe); [assumption|de_auto_eq|now rewrite -EQm|].
-        split; last split; last assumption.
-        + move=>HV. specialize (Hval HV). destruct Hval as (w' & HP & HW).
-          exists w'. split; first assumption. now rewrite EQm.
-        + move=>? ? ? Hprim. specialize (Hstep _ _ _ Hprim).
-          destruct Hstep as (wfk & wret & Hwp' & Hwp'' & HW).
-          exists wfk wret. split; last split.
-          * eapply spredNE, Hwp'. eapply mmorph_proper; last reflexivity.
-            eapply pcm_dist_inherit, mmorph_proper; last reflexivity.
-            eapply mmorph_proper; last reflexivity. eapply met_morph_nonexp.
-            symmetry. eapply dist_mono, EQm.
-          * assumption.
-          * now rewrite EQm.
+      move:φ w e. split=>[] [HV Hwp]; split; intros.
+      - eapply HV.
+      - destruct (Hwp wf k mf σ) as (Hstep & Hsafe); [assumption|de_auto_eq|now rewrite EQm|].
+        split; last assumption.
+        move=>? ? ? Hprim. specialize (Hstep _ _ _ Hprim).
+        destruct Hstep as (wfk & wret & Hwp' & Hwp'' & HW).
+        exists wfk wret. split; last split.
+        + eapply spredNE, Hwp'. eapply mmorph_proper; last reflexivity.
+          eapply pcm_dist_inherit, mmorph_proper; last reflexivity.
+          eapply mmorph_proper; last reflexivity. eapply met_morph_nonexp.
+          eapply dist_mono, EQm.
+        + assumption. 
+        + now rewrite -EQm.
+      - eapply HV.
+      - destruct (Hwp wf k mf σ) as (Hstep & Hsafe); [assumption|de_auto_eq|now rewrite -EQm|].
+        split; last assumption.
+        move=>? ? ? Hprim. specialize (Hstep _ _ _ Hprim).
+        destruct Hstep as (wret & wfk & Hwp' & Hwp'' & HW).
+        exists wret wfk. split; last split.
+        + eapply spredNE, Hwp'. eapply mmorph_proper; last reflexivity.
+          eapply pcm_dist_inherit, mmorph_proper; last reflexivity.
+          eapply mmorph_proper; last reflexivity. eapply met_morph_nonexp.
+          symmetry. eapply dist_mono, EQm.
+        + assumption.
+        + now rewrite EQm.
     Qed.
 
     Instance contr_wpF safe : contractive (wpF safe).
     Proof.
       intros n WP1 WP2 EQWP m e φ w k HLt.
-      split; intros Hp w'; intros; edestruct Hp as [HV [HS HS' ] ]; try eassumption; [|].
-      - split; [assumption | split; intros].
-        + clear HV; specialize (HS _  _ _ HStep); destruct HS as [wfk [wret [HWR [HWF HE']]]].
-          exists wfk wret.
+      split; intros [HV Hwp]; (split; first by auto); intros; edestruct Hwp as [HS HSf]; try eassumption; [|].
+      - split; intros.
+        + clear HV; specialize (HS _  _ _ HStep); destruct HS as [wret [wfk [HWR [HWF HE']]]].
+          exists wret wfk.
           split; [| split; [| assumption] ].
           * eapply EQWP; try eassumption; omega.
-          * intros. eapply EQWP, HWF; try assumption; omega.
+          * intros. destruct ef; last done. eapply EQWP, HWF; try assumption; omega.
         + now auto.
-      - split; [assumption | split; intros].
-        + clear HV; specialize (HS _ _ _ HStep); destruct HS as [wfk [wret [HWR [HWF HE']]]].
-          exists wfk wret.
+      - split; intros.
+        + clear HV; specialize (HS _ _ _ HStep); destruct HS as [wret [wfk [HWR [HWF HE']]]].
+          exists wret wfk.
           split; [| split; [| assumption] ].
           * eapply EQWP; try eassumption; omega.
-          * intros. eapply EQWP, HWF; try assumption; omega.
+          * intros. destruct ef; last done. eapply EQWP, HWF; try assumption; omega.
         + now auto.
     Qed.
 
@@ -459,55 +436,28 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     
     Global Opaque wp.
 
-    (* Some commonly needed properties are already proven here. *)
-    Lemma wp1 {safe m e φ w} : wp safe m e φ w (1%nat).
-    Proof.
-      rewrite unfold_wp; intros w'; intros; now inversion HLt.
-    Qed.
-
-    (* The two definitions are actually closely related. *)
-    Lemma wpValuePvs e (HV : is_value e) safe m φ :
-      pvs m m (φ (exist _ e HV)) == wp safe m e φ.
-    Proof.
-      intros w n. split.
-      - intros Hvs.
-        rewrite unfold_wp; intros wf; intros; split; [| split ]; intros.
-        + edestruct (Hvs wf k mf) as [w' [Hφ HE']]; try eassumption; first de_auto_eq; [].
-          exists w'. split; last assumption.
-          eapply spredNE, dpred, Hφ; last omega.
-          apply (met_morph_nonexp φ). apply dist_refl.
-          reflexivity.
-        + contradiction (values_stuck _ HV).
-          repeat eexists. eassumption.
-        + unfold safeExpr. auto.
-      - move=>Hwp. intros wf; intros.
-        rewrite ->unfold_wp in Hwp.
-        edestruct (Hwp wf k mf) as [HVal _]; try eassumption; first de_auto_eq; [].
-        destruct (HVal HV) as [w' [Hφ Hws]].
-        exists w'. split; assumption.
-    Qed.
-
+    (* Some global properties are proven here directly. *)
     Lemma wpValue e (HV : is_value e) safe m φ :
-      φ (exist _ e HV) ⊑ wp safe m e φ.
+      wp safe m e φ == φ (exist _ e HV).
     Proof.
-      rewrite <-wpValuePvs.
-      move=>w n Hφ wf; intros. exists w.
-      split; last assumption.
-      eapply propsMN, Hφ; assumption.
+      rewrite unfold_wp. split.
+      - intros [HVl _]. apply HVl.
+      - intros Hφ. split; last (intros; split; intros).
+        + intros. eapply spredNE, Hφ. eapply mmorph_proper; last reflexivity.
+          apply (met_morph_nonexp φ). destruct n; first done. reflexivity.
+        + contradiction (values_stuck _ HV). repeat eexists. eassumption.
+        + unfold safeExpr. auto.
     Qed.
 
     Lemma wpWeakenMask safe m1 m2 e φ (HD : m1 ⊑ m2) :
       wp safe m1 e φ ⊑ wp safe m2 e φ.
     Proof.
-      intros w n; revert w e φ; induction n using wf_nat_ind; rename H into HInd; intros w e φ HW.
-      rewrite unfold_wp; rewrite ->unfold_wp in HW; intros wf; intros.
-      edestruct HW with (mf := mf ∪ (m2 \ m1)) as [HV [HS HS'] ]; try eassumption;
+      intros w n; revert w e φ; induction n using wf_nat_ind; rename H into HInd; intros w e φ.
+      rewrite unfold_wp. intros [HV HW]. split; intros; first done.
+      edestruct HW with (mf := mf ∪ (m2 \ m1)) as [HS HSf]; try eassumption;
       [| eapply wsat_equiv, HE; try reflexivity; de_auto_eq |]; first de_auto_eq.
-      clear HW HE; split; [intros HVal; clear HS HInd | split; [intros; clear HV | intros; clear HV HS] ].
-      - specialize (HV HVal); destruct HV as [w'' [Hφ HE]].
-        eexists. split; [eassumption |].
-        eapply wsat_equiv, HE; try reflexivity; clear; de_auto_eq.
-      - destruct (HS _ _ _ HStep) as [wfk [wret [HWR [HWF HE]]]]; clear HS.
+      clear HW HE; split; [intros; clear HV | intros; clear HV HS].
+      - destruct (HS _ _ _ HStep) as [wret [wfk [HWR [HWF HE]]]]; clear HS.
         do 2 eexists. split; [eapply HInd; eassumption|].
         split; first eassumption.
         eapply wsat_equiv, HE; try reflexivity; clear; de_auto_eq.
@@ -551,20 +501,22 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     (** Hoare Triples **)
-    Definition ht safe m P e Q := □(P → wp safe m e Q).
+    Definition ht safe m P e Q := □(P → wp safe m e (pvs m m <M< Q)).
 
     Global Instance ht_proper safe: Proper (equiv ==> equiv ==> equiv ==> equiv ==> equiv) (ht safe).
     Proof.
       move=>m0 m1 EQm P0 P1 HEQP e0 e1 HEQe Q0 Q1 HEQQ.
       unfold ht. apply box_equiv. apply impl_equiv; first assumption.
-      apply equiv_morph; last assumption.
-      hnf in HEQe. subst e1.
-      eapply mmorph_inherit. eapply equiv_morph; last reflexivity.
-      eapply mmorph_inherit, morph_resp. assumption.
+      apply equiv_morph.
+      - hnf in HEQe. subst e1.
+        eapply mmorph_inherit. eapply equiv_morph; last reflexivity.
+        eapply mmorph_inherit, morph_resp. assumption.
+      - eapply dist_refl=>n. eapply ndist_umcomp; eapply dist_refl; last assumption.
+        rewrite EQm. reflexivity.
     Qed.
 
     Lemma htIntro R safe m e P Q:
-      □R ⊑ ht safe m P e Q <-> □R ∧ P ⊑ wp safe m e Q.
+      □R ⊑ ht safe m P e Q <-> □R ∧ P ⊑ wp safe m e (pvs m m <M< Q).
     Proof.
       split=>H.
       - unfold ht in H.
@@ -573,7 +525,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     Lemma htValid safe m e P Q:
-      valid (ht safe m P e Q) <-> P ⊑ wp safe m e Q.
+      valid (ht safe m P e Q) <-> P ⊑ wp safe m e (pvs m m <M< Q).
     Proof.
       rewrite ->top_valid, <-box_top. split=>H.
       - etransitivity; last by erewrite <-htIntro. apply and_R; split; last reflexivity.

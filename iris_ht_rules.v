@@ -34,6 +34,11 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
     { assumption. }  
     Qed.
 
+    Lemma wp1 {safe m e φ w} : wp safe m e φ w (1%nat).
+    Proof.
+      rewrite unfold_wp; intros w'; intros; now inversion HLt.
+    Qed.
+
     (** Bind **)
 
     (** Quantification in the logic works over nonexpansive maps, so

@@ -7,7 +7,6 @@ Set Bullet Behavior "Strict Subproofs".
 Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE).
   Export PLOG.
 
-  Local Open Scope lang_scope.
   Local Open Scope ra_scope.
   Local Open Scope bi_scope.
   Local Open Scope iris_scope.
@@ -92,53 +91,41 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       }
       rewrite -plus_n_Sm in HWTP, HE.
       inversion HS; subst; clear HS.
-      (* atomic step *)
-      { inversion H0; subst; clear H0.
-        apply wptp_app_tp in HWTP. destruct HWTP as [ws1 [ws2 [φs1 [φs2 [EQws [EQφs [HWTP1 HWTP2]]]]]]].
-        inversion HWTP2; subst; clear HWTP2; rewrite ->unfold_wp in WPE.
-        edestruct (WPE (comp_wlist (ws1 ++ ws0) w0) (n + k) de_emp) as [_ [HS _]].
-        + omega.
+      (* a step is taken *)
+      inversion H; subst; clear H.
+      apply wptp_app_tp in HWTP. destruct HWTP as [ws1 [ws2 [φs1 [φs2 [EQws [EQφs [HWTP1 HWTP2]]]]]]].
+      inversion HWTP2; subst; clear HWTP2; rewrite ->unfold_wp in WPE. destruct WPE as [_ WPE].
+      edestruct (WPE (comp_wlist (ws1 ++ ws0) w0) (n + k) de_emp) as [HS _].
+      - omega.
+      - clear; de_auto_eq.
+      - eapply spredNE, HE.
+        apply dist_refl. eapply wsat_equiv.
         + clear; de_auto_eq.
-        + eapply spredNE, HE.
-          apply dist_refl. eapply wsat_equiv.
-          * clear; de_auto_eq.
-          * rewrite /comp_wlist !fold_left_app /= comp_wlist_tofront /comp_wlist /=. reflexivity.  
-        + edestruct HS as [w' [WPE' HE']];
-          [reflexivity | eassumption | clear WPE HS].
-          eapply IHn; clear IHn.
-          * eassumption.
+        + rewrite /comp_wlist !fold_left_app /= comp_wlist_tofront /comp_wlist /=. reflexivity.  
+      - edestruct HS as (w' & wfk' & HE' & HE'' & HWS); [eassumption | clear WPE HS]. destruct ef as [ef|].
+        + edestruct IHn as [ws'' [φs'' [HSWTP'' HSE'']]]; first eassumption; first 2 last.
+          * exists ws'' ([umconst ⊤] ++ φs''). split; last eassumption.
+            rewrite List.app_assoc. eassumption.
+          * rewrite -List.app_assoc. apply wptp_app.
+            { eapply wptp_closure, HWTP1; omega. }
+            rewrite -plus_n_Sm.
+            constructor; [eassumption|].
+            apply wptp_app; [eapply wptp_closure, WPTP; omega |].
+            constructor; [|now constructor]. eassumption.
+          * rewrite -plus_n_Sm. eapply spredNE, HWS.
+            apply dist_refl. eapply wsat_equiv; first de_auto_eq.
+            rewrite /comp_wlist !fold_left_app /= !fold_left_app. simpl fold_left.
+            rewrite (comm _ wfk') -assoc. apply ra_op_proper; first reflexivity.
+            rewrite comp_wlist_tofront /comp_wlist /=. reflexivity.
+        + eapply IHn; clear IHn; first eassumption.
           * apply wptp_app.
             { eapply wptp_closure, HWTP1. omega. }
-            rewrite -plus_n_Sm.
-            constructor; [eassumption | eapply wptp_closure, WPTP; omega].
-          * rewrite -plus_n_Sm. eapply spredNE, HE'.
+            rewrite -plus_n_Sm. simpl. rewrite app_nil_r.
+            constructor; last (eapply wptp_closure, WPTP; omega).
+            eapply propsMW, HE'. exists wfk'. reflexivity.
+          * rewrite -plus_n_Sm. eapply spredNE, HWS.
             apply dist_refl. eapply wsat_equiv; first de_auto_eq.
             rewrite /comp_wlist !fold_left_app /= comp_wlist_tofront /comp_wlist /=. reflexivity.  
-      }
-      (* fork *)
-      inversion H; subst; clear H.
-      apply wptp_app_tp in HWTP; destruct HWTP as [ws1 [ws2 [φs1 [φs2 [EQws [EQφs [HWTP1 HWTP2]]]]]]].
-      inversion HWTP2; subst; clear HWTP2; rewrite ->unfold_wp in WPE.
-      edestruct (WPE (comp_wlist (ws1 ++ ws0) w0) (n + k) de_emp)  as [_ [_ [HF _]]].
-      + omega.
-      + clear; de_auto_eq.
-      + eapply spredNE, HE. apply dist_refl. eapply wsat_equiv; first de_auto_eq.
-        rewrite /comp_wlist !fold_left_app /= comp_wlist_tofront /comp_wlist /=. reflexivity.
-      + specialize (HF _ _ eq_refl); destruct HF as [wfk [wret [WPE' [WPS HE']]]]; clear WPE.
-        edestruct IHn as [ws'' [φs'' [HSWTP'' HSE'']]]; first eassumption; first 2 last.
-        * exists ws'' ([umconst ⊤] ++ φs''). split; last eassumption.
-          rewrite List.app_assoc. eassumption.
-        * rewrite -List.app_assoc. apply wptp_app.
-          { eapply wptp_closure, HWTP1; omega. }
-          rewrite -plus_n_Sm.
-          constructor; [eassumption|].
-          apply wptp_app; [eapply wptp_closure, WPTP; omega |].
-          constructor; [|now constructor]. eassumption.
-        * rewrite -plus_n_Sm. eapply spredNE, HE'.
-          apply dist_refl. eapply wsat_equiv; first de_auto_eq.
-          rewrite /comp_wlist !fold_left_app /= !fold_left_app. simpl fold_left.
-          rewrite (comm _ wfk) -assoc. apply ra_op_proper; first reflexivity.
-          rewrite comp_wlist_tofront /comp_wlist /=. reflexivity.
     Qed.
 
     Lemma adequacy_ht {safe m e P Q n k tp' σ σ' w}
@@ -147,7 +134,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
             (HP  : P w (n + S k))
             (HE  : wsat σ de_full w (n + S k)) :
       exists ws' φs',
-        wptp safe (S k) tp' ws' (Q :: φs') /\ wsat σ' de_full (comp_wlist ws' (1 w)) (S k).
+        wptp safe (S k) tp' ws' ((pvs m m <M< Q) :: φs') /\ wsat σ' de_full (comp_wlist ws' (1 w)) (S k).
     Proof.
       edestruct (preserve_wptp (1 w)) with (ws := [w]) as [ws' [φs' [HSWTP' HSWS']]]; first eassumption.
       - specialize (HT w (n + S k)). apply (applyImpl HT) in HP; try reflexivity; [|now apply unit_min].
@@ -163,7 +150,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
             (HT  : valid (ht safe m (ownS σ) e Q))
             (HSN : steps ([e], σ) (tp', σ')):
       exists w0 ws' φs',
-        wptp safe (S (S k')) tp' ws' (Q :: φs') /\ wsat σ' de_full (comp_wlist ws' w0) (S (S k')).
+        wptp safe (S (S k')) tp' ws' ((pvs m m <M< Q) :: φs') /\ wsat σ' de_full (comp_wlist ws' w0) (S (S k')).
     Proof.
       destruct (refl_trans_n _ HSN) as [n HSN']. clear HSN.
       destruct (RL.res_vira) as [l Hval].
@@ -199,13 +186,14 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Proof.
       edestruct adequacy_glob as [w0 [ws' [φs' [HSWTP HWS]]]]; try eassumption; [].
       inversion HSWTP; subst; clear HSWTP WPTP.
-      rewrite ->unfold_wp in WPE.
-      edestruct (WPE (comp_wlist ws w0) O de_emp) as [HVal _].
+      rewrite ->unfold_wp in WPE. destruct WPE as [WPV _].
+      edestruct (WPV HV (comp_wlist ws w0) O (de_minus de_full m)) as (w' & HQ & HWS').
       - unfold lt. reflexivity.
       - clear; de_auto_eq.
-      - rewrite de_emp_union comp_wlist_tofront. eassumption.
-      - destruct (HVal HV) as [w' [Hφ'' HE'']].
-        exact Hφ''.
+      - eapply spredNE, HWS. eapply dist_refl. eapply wsat_equiv.
+        + clear; de_auto_eq.
+        + rewrite comp_wlist_tofront. reflexivity.
+      - clear- HQ HWS'. exact HQ.
     Qed.
 
     (* Adequacy for safe triples *)
@@ -219,8 +207,8 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       destruct (List.in_split _ _ HE) as [tp1 [tp2 HTP]]. clear HE. subst tp'.
       apply wptp_app_tp in HSWTP; destruct HSWTP as [ws1 [ws2 [_ [φs2 [EQrs [_ [_ HWTP2]]]]]]].
       inversion HWTP2; subst; clear HWTP2 WPTP.
-      rewrite ->unfold_wp in WPE.
-      edestruct (WPE (comp_wlist (ws1++ws) w') O de_emp) as [_ [_ [_ HSafe]]]; [unfold lt; reflexivity | de_auto_eq | |].
+      rewrite ->unfold_wp in WPE. destruct WPE as [_ WPE].
+      edestruct (WPE (comp_wlist (ws1++ws) w') O de_emp) as [_ HSafe]; [unfold lt; reflexivity | de_auto_eq | |].
       - rewrite de_emp_union.
         eapply wsat_equiv, HWS; try reflexivity.
         rewrite /comp_wlist !fold_left_app. rewrite comp_wlist_tofront. reflexivity.
@@ -231,7 +219,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
             (HT  : valid (ht true m (ownS σ) e Q))
             (HSN : steps ([e], σ) (tp', σ')):
       (forall e', e' ∈ tp' -> is_value e') \/ exists tp'' σ'', step (tp', σ') (tp'', σ'').
-    Proof.
+    Proof. (* FIXME TODO use tp_safe *)
       assert (Hsafe: forall e', e' ∈ tp' -> safeExpr e' σ').
       { move=>e' HE. eapply adequacy_safe_expr; eassumption. }
       clear -Hsafe. induction tp' as [|e tp' IH].
@@ -241,22 +229,17 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         case=>IH; last first.
         { destruct IH as [tp'' [σ'' Hstep]]. right.
           destruct Hstep.
-          - inversion H0=>{H0}; inversion H1=>{H1}; subst.
-            do 2 eexists. eapply step_atomic; first eassumption; last reflexivity.
-            rewrite app_comm_cons. reflexivity.
-          - inversion H=>{H}; inversion H0=>{H0}; subst.
-            do 2 eexists. eapply step_fork; last reflexivity.
-            rewrite app_comm_cons. reflexivity.
+          inversion H0=>{H0}; inversion H=>{H}; subst.
+          do 2 eexists. eapply step_atomic; last eassumption; last reflexivity.
+          rewrite app_comm_cons. reflexivity.
         }
         move:(Hsafe e)=>{Hsafe}. case/(_ _)/Wrap; first by left.
-        case=>[Hsafe|[[σ'' [ei [ei' [K [Hfill Hstep]]]]]|[e' [K Hfill]]]].
+        case=>[Hsafe|[σ'' [e'' [ef Hstep]]]].
         + left. move=>e'. case.
           * by move =><-.
           * by auto.
-        + right. do 2 eexists. eapply step_atomic with (t1:=[]); first eassumption; last reflexivity.
-          rewrite Hfill. reflexivity.
-        + right. do 2 eexists. eapply step_fork with (t1:=[]); last reflexivity.
-          rewrite Hfill. reflexivity.
+        + right. do 2 eexists. eapply step_atomic with (t1:=[]); last eassumption; last reflexivity.
+          reflexivity.
     Qed.
 
   End Adequacy.
