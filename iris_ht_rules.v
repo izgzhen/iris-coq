@@ -94,12 +94,6 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
     Qed.
 
     (** Framing **)
-    Lemma wpFrameMask safe m1 m2 e φ (*HD : m1 # m2*) :
-      wp safe m1 e φ ⊑ wp safe (m1 ∪ m2) e φ.
-    Proof.
-      eapply wpWeakenMask. de_auto_eq.
-    Qed.
-
     Lemma wpFrameRes safe m e φ R:
       (wp safe m e φ) * R ⊑ wp safe m e (lift_bin sc φ (umconst R)).
     Proof.

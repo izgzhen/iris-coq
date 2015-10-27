@@ -8,7 +8,6 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
   Export VS_RULES.
   Export HT_RULES.
 
-  Local Open Scope lang_scope.
   Local Open Scope ra_scope.
   Local Open Scope de_scope.
   Local Open Scope bi_scope.
@@ -25,6 +24,13 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
     Proof.
       rewrite -box_conj_star comm. rewrite ->pvsFrameRes. eapply pvsMon.
       rewrite comm box_conj_star. apply and_impl, box_elim.
+    Qed.
+
+    Lemma pvsWeakenMask P m m' (HIncl: m ⊑ m'):
+      pvs m m P ⊑ pvs m' m' P.
+    Proof.
+      etransitivity; first eapply pvsFrameMask with (mf := m' \ m); first by de_auto_eq.
+      apply pordR. eapply pvs_mproper; de_auto_eq.
     Qed.
 
     Lemma vsFalse m1 m2 :
@@ -175,49 +181,18 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       apply (all_L v). reflexivity.
     Qed.
 
+    Lemma wpFrameMask safe m1 m2 e φ (*HD : m1 # m2*) :
+      wp safe m1 e φ ⊑ wp safe (m1 ∪ m2) e φ.
+    Proof.
+      eapply wpWeakenMask. de_auto_eq.
+    Qed.
+
     Lemma htRet e (HV : is_value e) safe m :
       valid (ht safe m ⊤ e (eqV (exist _ e HV))).
     Proof.
-      apply htValid. apply top_valid. apply wpRet.
-    Qed.
-    
-    (** Quantification in the logic works over nonexpansive maps, so
-        we need to show that plugging the value into the postcondition
-        and context is nonexpansive. *)
-    Program Definition plugCtxHt safe m Q Q' K :=
-      n[(fun v : value => ht safe m (Q v) (fill K v) Q' )].
-    Next Obligation.
-      intros v1 v2 EQv; unfold ht; eapply box_dist.
-      eapply impl_dist.
-      - apply Q; assumption.
-      - destruct n as [| n]; [apply dist_bound | hnf in EQv].
-        rewrite EQv; reflexivity.
-    Qed.
-
-    (* RJ: To use box_all, we need a name for "plugCtxHt without the box
-       at the beginning". I found no way to let Coq infer that term. *)
-    Program Definition plugCtxWp safe m Q Q' K :=
-      n[(fun v : value => Q v → wp safe m (fill K v) Q' )].
-    Next Obligation.
-      intros v1 v2 EQv. eapply impl_dist.
-      - apply Q; assumption.
-      - destruct n as [| n]; [apply dist_bound | hnf in EQv].
-        rewrite EQv; reflexivity.
-    Qed.
-
-    Lemma htBind P Q R K e safe m :
-      ht safe m P e Q ∧ all (plugCtxHt safe m Q R K) ⊑ ht safe m P (fill K e) R.
-    Proof.
-      rewrite /plugCtxHt {1 2}/ht. etransitivity; last eapply htIntro.
-      { erewrite box_conj. apply and_pord; first reflexivity.
-        apply pordR. symmetry. erewrite (box_all (plugCtxWp safe m Q R K)). apply all_equiv=>v.
-        reflexivity. }
-      etransitivity; last by eapply wpBind.
-      etransitivity; last eapply wpImpl with (φ:=Q). apply and_R; split.
-      - rewrite ->and_projL. apply box_intro. rewrite ->box_elim, ->and_projR.
-        apply all_pord=>v. reflexivity.
-      - eapply modus_ponens; first by apply and_projR.
-        rewrite ->and_projL, ->box_elim. apply and_projL.
+      apply htValid. etransitivity; last eapply wpMon.
+      - apply top_valid. eapply wpRet.
+      - intros v. eapply pvsEnt.
     Qed.
 
     (** Much like in the case of the plugging, we need to show that
@@ -238,7 +213,7 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
     Qed.
 
     Lemma pvsWpCompose {safe m m' P e φ}:
-      pvs m m' P ∧ ht safe m' P e φ ⊑ pvs m m' (wp safe m' e φ).
+      pvs m m' P ∧ ht safe m' P e φ ⊑ pvs m m' (wp safe m' e (pvs m' m' <M< φ)).
     Proof.
       rewrite /ht comm. etransitivity; first by apply pvsImpl.
       apply pvsMon. reflexivity.
@@ -260,20 +235,36 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       apply box_equiv. apply all_equiv=>v. reflexivity.
     Qed.
 
+    (* pvs before and after the hoare triple can be collapsed into it *)
+    Lemma htMCons m m' safe e P P' Q Q':
+      □((P → (pvs m m') P')
+        ∧ (P' → (((wp safe) m') e) (pvs m' m' <M< Q')) ∧ all (pvsLift m' m Q' Q))
+      ∧ P ⊑ (pvs m m') ((((wp safe) m') e) (pvs m' m <M< Q)).
+    Proof. (* Stupid Coq makes me write out these things... *)
+      transitivity ((pvs m m') P' ∧ □((P' → (((wp safe) m') e) (pvs m' m' <M< Q')) ∧ all (pvsLift m' m Q' Q))). 
+      - apply and_R; split.
+        + apply and_impl. rewrite ->box_elim. apply and_projL.
+        + rewrite ->and_projL. apply box_intro. rewrite ->box_elim. apply and_projR.
+      - etransitivity; last eapply pvsImpl. apply and_R; split; last by apply and_projL.
+        rewrite ->and_projR. apply box_intro. rewrite ->box_conj, ->box_elim. rewrite -and_impl.
+        transitivity ((□all (pvsLift m' m Q' Q)) ∧ (((wp safe) m') e) (pvs m' m' <M< Q') ).
+        + apply and_R; split.
+          * rewrite ->and_projL. apply and_projR.
+          * apply and_impl. apply and_projL.
+        + etransitivity; last eapply wpImpl. apply and_R; split; last by apply and_projR.
+          rewrite ->and_projL. apply box_intro. apply all_R. intros v.
+          apply and_impl. etransitivity; last eapply pvsTrans with (m2:=m'); last by de_auto_eq.
+          etransitivity; last eapply pvsImpl. apply and_R; split; last first.
+          * apply and_projR.
+          * rewrite ->and_projL. apply box_intro. rewrite ->box_elim. apply (all_L v). reflexivity.
+    Qed.
+
     Lemma htCons P P' Q Q' safe m e :
       vs m m P P' ∧ ht safe m P' e Q' ∧ all (vsLift m m Q' Q) ⊑ ht safe m P e Q.
     Proof.
       rewrite /vs {1}/ht -vsLiftBox -!box_conj. apply htIntro.
-      etransitivity; last by eapply wpPostVS.
-      etransitivity; last by eapply wpPvsCompose. apply and_R; split; last first.
-      - rewrite ->and_projL, !box_conj, vsLiftBox, !and_projR. reflexivity.
-      - etransitivity; last by eapply wpPreVS.
-        etransitivity; last by eapply pvsWpCompose. apply and_R; split.
-        + eapply modus_ponens; last first.
-          * rewrite ->box_elim, !and_projL. reflexivity.
-          * apply and_projR.
-        + rewrite /ht. rewrite ->and_projL. apply box_intro.
-          rewrite ->box_elim, and_projR, and_projL. reflexivity.
+      etransitivity; first by eapply htMCons. etransitivity; first by eapply wpPreVS.
+      eapply wpMon. intros v. eapply pvsTrans. de_auto_eq.
     Qed.
 
     Lemma htACons safe m m' e P P' Q Q'
@@ -283,16 +274,7 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
     Proof.
       rewrite /vs {1}/ht -vsLiftBox -!box_conj. apply htIntro.
       etransitivity; last (eapply wpACons; eassumption).
-      etransitivity; last eapply pvsWpCompose. apply and_R; split.
-      - eapply modus_ponens.
-        + apply and_projR.
-        + rewrite ->and_projL, box_elim, !and_projL. reflexivity.
-      - rewrite ->and_projL. apply htIntro.
-        etransitivity; last eapply wpPvsCompose. apply and_R; split; last first.
-        + erewrite <-vsLiftBox, and_projL. apply box_intro.
-          rewrite ->box_elim, !and_projR. reflexivity.
-        + eapply modus_ponens; first by apply and_projR.
-          rewrite ->and_projL, box_elim, and_projR. apply and_projL.
+      eapply htMCons.
     Qed.
 
     Lemma htWeakenMask safe m m' P e Q (HD: m ⊑ m'):
@@ -300,7 +282,9 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
     Proof.
       rewrite {1}/ht. apply htIntro.
       etransitivity; last by eapply wpWeakenMask.
-      apply and_impl, box_elim.
+      etransitivity.
+      - eapply and_impl. eapply box_elim.
+      - eapply wpMon. intros v. by eapply pvsWeakenMask.
     Qed.
 
     Lemma htFrame safe m m' P R e Q (*HD: m # m' *):
@@ -309,32 +293,30 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       etransitivity; first eapply htWeakenMask with (m' := m ∪ m').
       { de_auto_eq. }
       rewrite {1}/ht. apply htIntro.
-      etransitivity; last by eapply wpFrameRes.
+      transitivity ((wp safe (m ∪ m') e) (lift_bin sc (pvs (m ∪ m') (m ∪ m') <M< Q) (umconst R))); last first.
+      { eapply wpMon. intros v. transitivity ((pvs (m ∪ m') (m ∪ m') (Q v) * R)); first reflexivity. (* ARGH! *)
+        etransitivity; first eapply pvsFrameRes. reflexivity. }
+      etransitivity; last eapply wpFrameRes.
       rewrite -box_conj_star assoc. apply sc_pord; last reflexivity.
       rewrite box_conj_star. apply and_impl, box_elim.
     Qed.
       
-    Lemma htAFrame safe m m' P R e Q
+    Lemma htSFrame safe m m' P R e Q
           (HD  : m # m')
           (HNv : ~is_value e) :
       ht safe m P e Q ⊑ ht safe (m ∪ m') (P * ▹R) e (lift_bin sc Q (umconst R)).
     Proof.
       rewrite {1}/ht. apply htIntro.
-      etransitivity; last (eapply wpAFrameRes; assumption).
+      transitivity ((wp safe (m ∪ m') e) (lift_bin sc (pvs (m ∪ m') (m ∪ m') <M< Q) (umconst R))); last first.
+      { eapply wpMon. intros v. transitivity ((pvs (m ∪ m') (m ∪ m') (Q v) * R)); first reflexivity. (* ARGH! *)
+        etransitivity; first eapply pvsFrameRes. reflexivity. }
+      etransitivity; last (eapply wpSFrameRes; assumption).
       etransitivity; last first.
       { eapply sc_pord; last reflexivity. eapply wpFrameMask. }
       rewrite -box_conj_star assoc. apply sc_pord; last reflexivity.
-      rewrite box_conj_star. apply and_impl, box_elim.
-    Qed.
-
-    Lemma htFork safe m P R e :
-      ht safe de_full P e (umconst ⊤) ⊑ ht safe m (▹P * ▹R) (fork e) (lift_bin sc (eqV (exist _ fork_ret fork_ret_is_value)) (umconst R)).
-    Proof.
-      rewrite {1}/ht. apply htIntro.
-      etransitivity; last by eapply wpFork.
-      rewrite -box_conj_star assoc. apply sc_pord; last reflexivity.
-      rewrite box_conj_star. apply and_impl. rewrite <-later_impl, ->box_elim.
-      apply later_mon.
+      rewrite box_conj_star. etransitivity.
+      - eapply and_impl. eapply box_elim.
+      - eapply wpMon. intros v. eapply pvsWeakenMask. de_auto_eq.
     Qed.
 
     Lemma htUnsafe {m P e Q} :
