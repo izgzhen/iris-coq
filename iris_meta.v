@@ -248,46 +248,41 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
     Implicit Types (P : Props) (n k : nat) (safe : bool) (m : DecEnsemble nat) (e : expr) (r : res) (σ : state) (w : Wld).
 
-    Implicit Types (φ : expr * state -=> Prop).
+    Implicit Types (φ : expr * state * option expr -=> Prop).
     Implicit Types (Q : vPred).
 
     (* Obligation common to lift_pred and lemma statement. *)
-    Program Definition lift_esPred φ : expr * state -n> Props :=
+    Program Definition lift_esPred φ : expr * state * option expr -n> Props :=
       n[(fun c => pcmconst(sp_const(φ c)))].
     Next Obligation.
-      move=>[e1 σ1] [e2 σ2] [EQe EQσ].
+      move=>[[e1 σ1] ef1] [[e2 σ2] ef2] [[EQe EQσ] EQef].
       destruct n; first exact:dist_bound.
-      cbv in EQe, EQσ. subst. reflexivity.
+      destruct ef1, ef2; cbv in EQe, EQσ, EQef; subst; now destruct EQef || reflexivity.
     Qed.
 
-    Program Definition plug_esPred φ safe m P Q: expr * state -n> Props :=
-      n[(fun c => let: (e',σ') := c in ht safe m (lift_esPred φ (e',σ') ∧ (P * ownS σ')) e' Q)].
+    Program Definition lift_step_wp_quant safe m φ Q : expr * state * option expr -n> Props :=
+      n[(fun c => let: (e',σ',ef) := c in
+                  (lift_esPred φ c ∧ ownS σ') -*
+                    (wp safe m e' Q * match ef with None => ⊤ | Some ef => wp safe de_full ef (umconst ⊤) end)  )].
     Next Obligation.
-      move=>[e1 σ1] [e2 σ2] [EQe EQσ].
+      move=>[[e1 σ1] ef1] [[e2 σ2] ef2] [[EQe EQσ] EQef].
       destruct n; first exact:dist_bound.
-      cbv in EQe, EQσ. subst. reflexivity.
-    Qed.
-
-    Program Definition plug_esPredWp φ safe m P Q: expr * state -n> Props :=
-      n[(fun c => let: (e',σ') := c in (lift_esPred φ (e',σ') ∧ (P * ownS σ')) → wp safe m e' Q)].
-    Next Obligation.
-      move=>[e1 σ1] [e2 σ2] [EQe EQσ].
-      destruct n; first exact:dist_bound.
-      cbv in EQe, EQσ. subst. reflexivity.
+      destruct ef1, ef2; cbv in EQe, EQσ, EQef; subst; now destruct EQef || reflexivity.
     Qed.
 
     Lemma lift_step_wp {m safe e σ φ P Q}
-        (RED : reducible e)
-        (STEP : forall e' σ', prim_step (e,σ) (e',σ') -> φ(e',σ'))
+        (NVAL : ~is_value e)
+        (STEP : forall e' σ' ef, prim_step (e,σ) (e',σ') ef -> φ(e',σ',ef))
         (SAFE : if safe then safeExpr e σ else True) :
-      (forall e' σ', lift_esPred φ (e',σ') ∧ (P * ownS σ') ⊑ wp safe m e' Q) ->
-      ▹P * ownS σ ⊑ wp safe m e Q.
+      (ownS σ * ▹(all (lift_step_wp_quant safe m φ Q))) ⊑ wp safe m e Q.
     Proof.
-      intros Hwpe' w n. destruct n; first (intro; exact:bpred).
-      intros [[w1 w2] [Heqw [HP HoS]]]. simpl in Heqw, HP.
-      rewrite ->unfold_wp; move=> wf k mf σi HLt HD [rs HWT].
+      intros w n. destruct n; first (intro; exact:bpred).
+      intros [[w1 w2] [Heqw [HoS Hwpe]]]. simpl in Heqw, Hwpe.
+      rewrite ->unfold_wp. split; intros.
+      { contradiction. }
+      destruct HE as [rs HWT]. rename σ0 into σi.
       cbv zeta in HWT. rewrite ->comp_finmap_move in HWT.
-      have Hσ: σ = σi /\ State (w1 · comp_finmap wf rs) = ex_unit.
+      have Hσ: σ = σi /\ State (w2 · comp_finmap wf rs) = ex_unit.
       { clear - HoS Heqw HWT HLt. destruct HWT as [[_ [pv _]] [HS _]].
         destruct HoS as [t Heq]. destruct Heqw as [_ [HeqS _]]. simpl in *.
         destruct HS as [t' HS].
@@ -296,39 +291,38 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         destruct (fst (snd (comp_finmap wf rs))), t'; simpl in *; try tauto; [].
         split; last reflexivity. rewrite -HS -HeqS -Heq. reflexivity. }
       destruct Hσ as [Hσ HStUnit]. clear HoS. subst σi.
-      split; [| split; [| split ]]; first 2 last.
-      { move=> e' K HDec; exfalso; exact: (reducible_not_fork RED HDec). }
-      { by move: SAFE {Hwpe'} ; case: safe. }
-      { move=> HV; exfalso. apply: reducible_not_value; eassumption. }
-      move=> σ' ei e' K HDec HStep {SAFE}.
-      have HK: K = ε.
-      { move: HDec; rewrite -(fill_empty e) => HDec.
-        have HRed1: reducible ei by exists σ (e',σ').
-        eapply step_same_ctx; first (symmetry; eassumption); eassumption. }
-      subst K. move: HDec HStep; rewrite 2!fill_empty. move=><- HStep {ei RED}.
-      pose (w2' := (Invs w2, (ex_own σ', Res w2))).
-      eexists (w1 · w2'). split.
-      - (* We can now apply the wp we got. *)
-        apply (Hwpe' e' σ'). split.
-        { simpl. eapply STEP. assumption. }
-        exists (w1, w2'). split; first (apply sp_eq_iff; reflexivity).
-        split; simpl.
-        * simpl. eapply propsMN, HP. omega.
-        * eexists ex_unit. reflexivity.
+      split; last first.
+      { by move: SAFE {Hwpe} ; case: safe. }
+      move=> e' σ' ef HStep {SAFE NVAL}.
+      pose (w1' := (Invs w1, (ex_own σ', Res w1))).
+      move: (Hwpe (e', σ', ef) w1' n (le_refl _))=>{Hwpe}. destruct n; first by (exfalso; omega).
+      case; last move=>[w3e w3f] [Hw3 [Hwpe Hwpf]].
+      { split; first by apply STEP. simpl. eexists ex_unit. reflexivity. }
+      eexists w3e, w3f. split; last split.
+      - eapply propsMN, Hwpe. omega.
+      - destruct ef; last done. eapply propsMN, Hwpf. omega.
       - (* wsat σ' follows from wsat σ (by the construction of the new world). *)
-        destruct k; first exact I. simpl.
+        destruct k; first done. simpl.
+        exists rs. rewrite comp_finmap_move.
+        (* Rewrite Heqw in HWT - needs manual work *)
         assert(HWT': wsatTotal (S k) σ rs (m ∪ mf)%de (w1 · w2 · comp_finmap wf rs)).
         { eapply wsatTotal_proper, wsatTotal_dclosed, HWT; try reflexivity; last omega; [].
           apply cmra_op_dist; last reflexivity. eapply mono_dist, Heqw. omega. }
-        clear HWT. destruct HWT' as [pv [HS HI]].
-        exists rs. rewrite comp_finmap_move.
-        assert (HSt: State (w1 · w2' · comp_finmap wf rs) == ex_own σ').
-        { clear -HStUnit. rewrite /State (comm w1) -assoc. simpl. simpl in HStUnit.
+        clear HWT. destruct HWT' as [pv [HS HI]]. 
+        (* Rewrite Hw3 in the goal - needs manual work *)
+        rewrite /Mfst /Msnd in Hw3. simpl morph in Hw3. apply sp_eq_iff in Hw3.
+        cut (wsatTotal (S k) σ' rs (m ∪ mf)%de (w1' · w2 · comp_finmap wf rs)).
+        { eapply wsatTotal_proper; first reflexivity. apply cmra_op_dist; last reflexivity.
+          rewrite (comm w1') (comm w3f). eapply mono_dist, Hw3. omega. }
+        (* Get the projection to the physical state *)
+        assert (HSt: State (w1' · w2 · comp_finmap wf rs) == ex_own σ').
+        { clear -HStUnit. simpl in HStUnit. rewrite /State -assoc. simpl.
           rewrite HStUnit. reflexivity. }
         clear HStUnit.
+        (* Now, finally, prove the actual thing *)
         split; last split.
         + clear- pv HSt Heqw HLt.
-          destruct pv as [HIVal [HSVal HRVal]]. rewrite /w2'.
+          destruct pv as [HIVal [HSVal HRVal]]. rewrite /w1'.
           split; last split; last 1 first.
           * assumption.
           * assumption.
@@ -338,6 +332,23 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     (* The "nicer looking" (ht-based) lemma is now a derived form. *)
+    Program Definition plug_esPred φ safe m P P' Q: expr * state * option expr -n> Props :=
+      n[(fun c => let: (e',σ',ef) := c in ht safe m (lift_esPred φ c ∧ (P * ownS σ')) e' Q ∧ match ef with None => ⊤ | Some ef => ht safe m (lift_esPred φ c ∧ P') ef (umconst ⊤) end )].
+    Next Obligation.
+      move=>[[e1 σ1] ef1] [[e2 σ2] ef2] [[EQe EQσ] EQef].
+      destruct n; first exact:dist_bound.
+      destruct ef1, ef2; cbv in EQe, EQσ, EQef; subst; now destruct EQef || reflexivity.
+    Qed.
+
+    (* This is a temporary definition, used only in the proof of lift_step *)
+    Program Definition plug_esPredWp φ safe m P Q: expr * state * option expr -n> Props :=
+      n[(fun c => let: (e',σ',ef) := c in (lift_esPred φ c ∧ (P * ownS σ')) → wp safe m e' Q)].
+    Next Obligation.
+      move=>[[e1 σ1] ef1] [[e2 σ2] ef2] [[EQe EQσ] EQef].
+      destruct n; first exact:dist_bound.
+      destruct ef1, ef2; cbv in EQe, EQσ, EQef; subst; now destruct EQef || reflexivity.
+    Qed.
+
     Lemma lift_step {m safe e σ φ P Q}
         (RED : reducible e)
         (STEP : forall e' σ', prim_step (e,σ) (e',σ') -> φ(e',σ'))
@@ -372,7 +383,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       hnf in HEq. eapply xist_dist=>σ' w. rewrite [dist]lock /= HEq -lock. reflexivity.
     Qed.
 
-    Lemma lift_atomic_det_step {m safe e σ φ P Q}
+    Lemma lift_atomic_step {m safe e σ φ P Q}
         (AT : atomic e)
         (STEP : forall e' σ', prim_step (e,σ) (e',σ') -> φ(e',σ'))
         (SAFE : if safe then safeExpr e σ else True) :
