@@ -16,6 +16,20 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
 
     Implicit Types (P : Props) (i : nat) (safe : bool) (m : DecEnsemble nat) (e : expr) (Q φ : vPred) (r : res) (σ : state) (g : RL.res).
 
+    Lemma wpMon safe m e φ φ':
+      φ ⊑ φ' -> wp safe m e φ ⊑ wp safe m e φ'.
+    Proof.
+      move=>Himpl w n. move: n w e. elim/wf_nat_ind=>n0 IH w0 e.
+      rewrite ->unfold_wp. intros [HV Hwp]. split; intros.
+      { eapply Himpl, HV. }
+      edestruct (Hwp wf) as [Hstep Hsafe]; try eassumption; [].
+      split; last assumption.
+      move=>σ' ei' ef Hpstep. destruct (Hstep _ _ _ Hpstep) as (w2 & w2f & Hnext & Hnextf & Hsat)=>{Hstep Hsafe}.
+      exists w2 w2f. split; last (split; last assumption).
+      - eapply IH; assumption.
+      - assumption.
+    Qed.
+
     (** Ret **)
     Program Definition eqV v : vPred :=
       n[(fun v' : value => v === v')].
@@ -34,20 +48,6 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
     Qed.
 
     (** Consequence **)
-    Lemma wpMon safe m e φ φ':
-      φ ⊑ φ' -> wp safe m e φ ⊑ wp safe m e φ'.
-    Proof.
-      move=>Himpl w n. move: n w e. elim/wf_nat_ind=>n0 IH w0 e.
-      rewrite ->unfold_wp. intros [HV Hwp]. split; intros.
-      { eapply Himpl, HV. }
-      edestruct (Hwp wf) as [Hstep Hsafe]; try eassumption; [].
-      split; last assumption.
-      move=>σ' ei' ef Hpstep. destruct (Hstep _ _ _ Hpstep) as (w2 & w2f & Hnext & Hnextf & Hsat)=>{Hstep Hsafe}.
-      exists w2 w2f. split; last (split; last assumption).
-      - eapply IH; assumption.
-      - assumption.
-    Qed.
-
     Lemma wpPreVS m safe e φ:
       pvs m m (wp safe m e φ) ⊑ wp safe m e (pvs m m <M< φ).
     Proof.
@@ -91,6 +91,22 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
         rewrite assoc (comm _ w4). reflexivity.
     Grab Existential Variables.
     { assumption. }
+    Qed.
+
+    (** Mask weakening **)
+    Lemma wpWeakenMask safe m1 m2 e φ (HD : m1 ⊑ m2) :
+      wp safe m1 e φ ⊑ wp safe m2 e φ.
+    Proof.
+      intros w n; revert w e φ; induction n using wf_nat_ind; rename H into HInd; intros w e φ.
+      rewrite unfold_wp. intros [HV HW]. split; intros; first done.
+      edestruct HW with (mf := mf ∪ (m2 \ m1)) as [HS HSf]; try eassumption;
+      [| eapply wsat_equiv, HE; try reflexivity; de_auto_eq |]; first de_auto_eq.
+      clear HW HE; split; [intros; clear HV | intros; clear HV HS].
+      - destruct (HS _ _ _ HStep) as [wret [wfk [HWR [HWF HE]]]]; clear HS.
+        do 2 eexists. split; [eapply HInd; eassumption|].
+        split; first eassumption.
+        eapply wsat_equiv, HE; try reflexivity; clear; de_auto_eq.
+      - now auto.
     Qed.
 
     (** Framing **)

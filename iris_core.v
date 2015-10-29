@@ -109,12 +109,16 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
   Implicit Types (P Q : Props) (w : Wld) (n i k : nat) (r : res) (g : RL.res) (σ : state).
 
+  (* Helpful when dealing with Iris propositions *)
   Definition Invs (w: Wld) := Mfst w.
   Arguments Invs w /.
   Definition State (w: Wld) := Mfst (Msnd w).
   Arguments State w /.
   Definition Res (w: Wld) := Msnd (Msnd w).
   Arguments Res w /.
+
+  (* This probably doesn't reduce in helpful ways. But re-defining the entire thing here is too annoying. *)
+  Definition pconst (p: Prop): Props := pcmconst(sp_const p).
 
   (* Simple view lemmas. *)
 
@@ -154,6 +158,23 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Proof.
       apply spredNE. by rewrite EQw.
     Qed.
+
+    Lemma pure_to_ctx (P: Prop) (Q R: Props):
+      (P -> Q ⊑ R) -> pconst P ∧ Q ⊑ R.
+    Proof.
+      intros H.
+      intros w n [p q]. destruct n; first exact:bpred.
+      apply H; assumption.
+    Qed.
+
+    Lemma ctx_to_pure (P: Prop) (Q R: Props):
+      pconst P ∧ Q ⊑ R -> (P -> Q ⊑ R).
+    Proof.
+      intros H.
+      intros p w n q. destruct n; first exact:bpred.
+      apply H. split; assumption.
+    Qed.
+
       
   End Views.
 
@@ -266,6 +287,11 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Proof.
       eapply dist_equiv; now apply _.
     Qed.
+
+    Global Instance later_pord: Proper (pord ++> pord) later.
+    Proof.
+      move=>P Q HPQ w n HP. destruct n; first done. simpl in *. by apply HPQ.
+    Qed.
   End Later.
   Notation " ▹ p " := (later p) (at level 35) : iris_scope.
 
@@ -282,14 +308,6 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       intros w n. induction n.
       - eapply HL. exact I.
       - eapply HL. exact IHn.
-    Qed.
-
-    Lemma later_true: (⊤:Props) == ▹⊤.
-    Proof.
-      move=> w n.
-      case:n=>[|n].
-      - reflexivity.
-      - reflexivity.
     Qed.
 
     Lemma later_impl P Q:

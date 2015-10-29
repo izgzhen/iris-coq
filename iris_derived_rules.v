@@ -282,9 +282,8 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
     Proof.
       rewrite {1}/ht. apply htIntro.
       etransitivity; last by eapply wpWeakenMask.
-      etransitivity.
-      - eapply and_impl. eapply box_elim.
-      - eapply wpMon. intros v. by eapply pvsWeakenMask.
+      eapply and_impl. rewrite ->box_elim. eapply impl_pord; first reflexivity.
+      eapply wpMon. intros v. by eapply pvsWeakenMask.
     Qed.
 
     Lemma htFrame safe m m' P R e Q (*HD: m # m' *):
@@ -314,17 +313,16 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       etransitivity; last first.
       { eapply sc_pord; last reflexivity. eapply wpFrameMask. }
       rewrite -box_conj_star assoc. apply sc_pord; last reflexivity.
-      rewrite box_conj_star. etransitivity.
-      - eapply and_impl. eapply box_elim.
-      - eapply wpMon. intros v. eapply pvsWeakenMask. de_auto_eq.
+      rewrite box_conj_star. eapply and_impl. rewrite ->box_elim. eapply impl_pord; first reflexivity.
+      eapply wpMon. intros v. eapply pvsWeakenMask. de_auto_eq.
     Qed.
 
     Lemma htUnsafe {m P e Q} :
       ht true m P e Q ⊑ ht false m P e Q.
     Proof.
-      rewrite {1}/ht. apply htIntro.
-      etransitivity; last by eapply wpUnsafe.
-      rewrite ->box_elim. apply and_impl. reflexivity.
+      rewrite {1}/ht. apply htIntro. eapply and_impl. rewrite ->box_elim.
+      eapply impl_pord; first reflexivity.
+      by eapply wpUnsafe.
     Qed.
 
   End DerivedHTRules.

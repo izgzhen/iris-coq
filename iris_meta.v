@@ -1,11 +1,11 @@
 Require Import Ssreflect.ssreflect Ssreflect.ssrfun Omega List.
-Require Import core_lang world_prop iris_core iris_plog.
+Require Import core_lang world_prop iris_core iris_plog iris_ht_rules.
 Require Import ModuRes.RA ModuRes.CMRA ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr ModuRes.DecEnsemble ModuRes.Agreement ModuRes.Lists ModuRes.Relations.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE).
-  Export PLOG.
+Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE) (HT_RULES: IRIS_HT_RULES RL C R WP CORE PLOG).
+  Export HT_RULES.
 
   Local Open Scope ra_scope.
   Local Open Scope bi_scope.
@@ -248,12 +248,12 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
     Implicit Types (P : Props) (n k : nat) (safe : bool) (m : DecEnsemble nat) (e : expr) (r : res) (σ : state) (w : Wld).
 
-    Implicit Types (φ : expr * state * option expr -=> Prop).
+    Implicit Types (φ : expr * state * option expr -> Prop).
     Implicit Types (Q : vPred).
 
     (* Obligation common to lift_pred and lemma statement. *)
     Program Definition lift_esPred φ : expr * state * option expr -n> Props :=
-      n[(fun c => pcmconst(sp_const(φ c)))].
+      n[(fun c => pconst (φ c))].
     Next Obligation.
       move=>[[e1 σ1] ef1] [[e2 σ2] ef2] [[EQe EQσ] EQef].
       destruct n; first exact:dist_bound.
@@ -262,15 +262,15 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
     Program Definition lift_step_wp_quant safe m φ Q : expr * state * option expr -n> Props :=
       n[(fun c => let: (e',σ',ef) := c in
-                  (lift_esPred φ c ∧ ownS σ') -*
-                    (wp safe m e' Q * match ef with None => ⊤ | Some ef => wp safe de_full ef (umconst ⊤) end)  )].
+                  ((□lift_esPred φ c) ∧ ownS σ') -*
+                    (wp safe m e' Q * match ef return _ with None => ⊤ | Some ef => wp safe de_full ef (umconst ⊤) end)  )].
     Next Obligation.
       move=>[[e1 σ1] ef1] [[e2 σ2] ef2] [[EQe EQσ] EQef].
       destruct n; first exact:dist_bound.
       destruct ef1, ef2; cbv in EQe, EQσ, EQef; subst; now destruct EQef || reflexivity.
     Qed.
 
-    Lemma lift_step_wp {m safe e σ φ P Q}
+    Lemma lift_step_wp {m safe e σ φ Q}
         (NVAL : ~is_value e)
         (STEP : forall e' σ' ef, prim_step (e,σ) (e',σ') ef -> φ(e',σ',ef))
         (SAFE : if safe then safeExpr e σ else True) :
@@ -333,7 +333,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
     (* The "nicer looking" (ht-based) lemma is now a derived form. *)
     Program Definition plug_esPred φ safe m P P' Q: expr * state * option expr -n> Props :=
-      n[(fun c => let: (e',σ',ef) := c in ht safe m (lift_esPred φ c ∧ (P * ownS σ')) e' Q ∧ match ef with None => ⊤ | Some ef => ht safe m (lift_esPred φ c ∧ P') ef (umconst ⊤) end )].
+      n[(fun c => let: (e',σ',ef) := c in ht safe m (lift_esPred φ c ∧ (P * ownS σ')) e' Q ∧ match ef return _ with None => ⊤ | Some ef => ht safe de_full (lift_esPred φ c ∧ P') ef (umconst ⊤) end )].
     Next Obligation.
       move=>[[e1 σ1] ef1] [[e2 σ2] ef2] [[EQe EQσ] EQef].
       destruct n; first exact:dist_bound.
@@ -341,42 +341,57 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     (* This is a temporary definition, used only in the proof of lift_step *)
-    Program Definition plug_esPredWp φ safe m P Q: expr * state * option expr -n> Props :=
-      n[(fun c => let: (e',σ',ef) := c in (lift_esPred φ c ∧ (P * ownS σ')) → wp safe m e' Q)].
+    Program Definition plug_esPredWp φ safe m P P' Q: expr * state * option expr -n> Props :=
+      n[(fun c => let: (e',σ',ef) := c in ((lift_esPred φ c ∧ (P * ownS σ')) → wp safe m e' (pvs m m <M< Q)) ∧ match ef return _ with None => ⊤ | Some ef => (lift_esPred φ c ∧ P') → wp safe de_full ef (pvs de_full de_full <M< (umconst ⊤)) end )].
     Next Obligation.
       move=>[[e1 σ1] ef1] [[e2 σ2] ef2] [[EQe EQσ] EQef].
       destruct n; first exact:dist_bound.
       destruct ef1, ef2; cbv in EQe, EQσ, EQef; subst; now destruct EQef || reflexivity.
     Qed.
 
-    Lemma lift_step {m safe e σ φ P Q}
-        (RED : reducible e)
-        (STEP : forall e' σ', prim_step (e,σ) (e',σ') -> φ(e',σ'))
+    Lemma lift_step {m safe e σ φ P P' Q}
+        (NVAL : ~is_value e)
+        (STEP : forall e' σ' ef, prim_step (e,σ) (e',σ') ef -> φ(e',σ',ef))
         (SAFE : if safe then safeExpr e σ else True) :
-      all (plug_esPred φ safe m P Q) ⊑ ht safe m (▹P * ownS σ) e Q.
+      all (plug_esPred φ safe m P P' Q) ⊑ ht safe m (▹(P * P') * ownS σ) e Q.
     Proof.
-      etransitivity; first (etransitivity; eapply pordR; last by (symmetry; eapply (box_all (plug_esPredWp φ safe m P Q)))).
-      { apply all_equiv. move=>[e' σ']. reflexivity. }
-      apply htIntro. rewrite -box_conj_star assoc. rewrite ->(later_mon (□_)).
-      rewrite -later_star. apply (lift_step_wp (φ:=φ)); try assumption; [].
-      move=>e' σ'. rewrite box_all. rewrite <-assoc, ->all_sc, ->all_and_r.
-      apply (all_L (e', σ')).
-      change ((lift_esPred φ) (e', σ') ∧
-              (□((lift_esPred φ) (e', σ') ∧ (P * ownS σ') → wp safe m e' Q) * (P * ownS σ'))
-                ⊑ ((wp safe m) e') Q).
-      rewrite ->box_elim.
-      eapply modus_ponens; last first.
-      - rewrite ->and_projR, sc_projL. reflexivity.
-      - apply and_R; split.
-        + apply and_projL.
-        + rewrite ->and_projR. apply sc_projR.
+      etransitivity; first (etransitivity; eapply pordR; last by (symmetry; eapply (box_all (plug_esPredWp φ safe m P P' Q)))).
+      { apply all_equiv. move=>[[e' σ'] ef]. simpl morph. rewrite box_conj. destruct ef; first reflexivity.
+        by rewrite box_top. }
+      apply htIntro. etransitivity; last eapply (lift_step_wp (φ:=φ)); try eassumption; [].
+      clear NVAL STEP SAFE.
+      rewrite -box_conj_star assoc (comm _ (ownS _)). apply sc_pord; first by reflexivity.
+      rewrite ->(later_mon (□_)). rewrite -later_star. apply later_pord.
+      rewrite box_all. rewrite ->all_sc. apply all_pord.
+      move=>[[e' σ'] ef]. simpl morph. rewrite -sc_si.
+      rewrite ->(and_self (□_)), ->(and_self (□pconst _)).
+      rewrite -!box_conj_star -(box_star (pcmconst _)) -box_conj_star box_star.
+      rewrite !assoc (comm _ P) !assoc (comm _ (□pconst _)) comm.
+      rewrite -!assoc. rewrite assoc assoc assoc. rewrite ->!box_elim. apply sc_pord.
+      - eapply modus_ponens; last first.
+        + rewrite ->sc_projR, and_projL. reflexivity.
+        + rewrite ->sc_projL. apply and_R; split.
+          { rewrite ->sc_projL. apply sc_projR. }
+          rewrite (comm P). apply sc_pord; last reflexivity. apply sc_projL.
+      - destruct ef; last exact:top_true. eapply modus_ponens; last first.
+        + rewrite ->sc_projL, and_projR. eapply impl_pord; first reflexivity.
+          eapply wpMon. move=>v. apply top_true.
+        + rewrite ->sc_projR. rewrite comm. apply sc_and.
     Qed.
 
-    Program Definition lift_esPost φ : value -n> Props :=
-      n[(fun v:value => ∃σ', ownS σ' ∧ lift_esPred φ (v, σ'))].
+    Program Definition plug_atomic_esPred φ safe P': expr * state * option expr -n> Props :=
+      n[(fun c => let: (e',σ',ef) := c in match ef return _ with None => ⊤ | Some ef => ht safe de_full (lift_esPred φ c ∧ P') ef (umconst ⊤) end )].
     Next Obligation.
-      move=> σ σ' HEq. destruct n; first exact:dist_bound.
-      hnf in HEq. subst. reflexivity.
+      move=>[[e1 σ1] ef1] [[e2 σ2] ef2] [[EQe EQσ] EQef].
+      destruct n; first exact:dist_bound.
+      destruct ef1, ef2; cbv in EQe, EQσ, EQef; subst; now destruct EQef || reflexivity.
+    Qed.
+
+    Program Definition plug_atomic_esPost φ : value -n> Props :=
+      n[(fun v:value => xist n[(fun c:state*option expr => ownS (Mfst c) ∧ lift_esPred φ (v, Mfst c, Msnd c))] )].
+    Next Obligation.
+      move=> [σ ef] [σ' ef'] [HEq1 HEq2]. destruct n; first exact:dist_bound.
+      destruct ef, ef'; cbv in HEq1, HEq2; subst; now destruct HEq2 || reflexivity.
     Qed.
     Next Obligation.
       move=> v v' HEq. destruct n; first exact:dist_bound.
@@ -384,34 +399,27 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     Lemma lift_atomic_step {m safe e σ φ P Q}
-        (AT : atomic e)
-        (STEP : forall e' σ', prim_step (e,σ) (e',σ') -> φ(e',σ'))
+        (AT   : atomic e)
+        (STEP : forall e' σ' ef, prim_step (e,σ) (e',σ') ef -> φ(e',σ',ef))
         (SAFE : if safe then safeExpr e σ else True) :
-      valid(ht safe m (ownS σ) e (lift_esPost φ)).
+      all (plug_atomic_esPred φ safe P) ⊑ ht safe m (▹P * ownS σ) e (plug_atomic_esPost φ).
     Proof.
-      apply top_valid.
-      assert (HEQ: ownS σ == ▹⊤ * ownS σ).
-      { rewrite <-later_true. symmetry. by apply: sc_top_unit. }
-      rewrite HEQ=>{HEQ}.
-      pose(φ' := fun (c : expr*state) => let (e', σ') := c in φ c /\ is_value e').
-      assert(Mφ': Proper (equiv ==> equiv) φ').
-      { clear. move=>[e0 σ0] [e1 σ1] /= [HEQe HEQσ]. hnf in HEQe, HEQσ. subst. reflexivity. }
-      etransitivity; last first.
-      - eapply (lift_step (φ := mkMorph φ' Mφ')); last assumption.
-        + by apply: atomic_reducible.
-        + move=> e' σ' Hstep /=.
-          split; first by apply: STEP.
-          eapply atomic_step, Hstep. assumption.
-      - clear STEP SAFE. apply all_R=>[] [e' σ'].
-        change (⊤ ⊑ ht safe m (lift_esPred s[(φ')] (e',σ') ∧ (⊤ * ownS σ')) e' (lift_esPost φ)).
-        apply top_valid. apply htValid. rewrite sc_top_unit.
-        (* Now fall back to proving this in the model. *)
-        move=>w n. destruct n; first (intro;exact:bpred).
-        rewrite /=. move=>[[Hφ Hval] HownS].
-        eapply wpValue; [].
-        simpl. exists σ'. split; assumption.
-    Grab Existential Variables.
-    { assumption. }
+      pose(φ' := fun (c : expr*state*option expr) => let: (e', σ', ef) := c in φ c /\ is_value e').
+      rewrite -{2}(sc_top_unit P). etransitivity; last eapply (lift_step (φ := φ')); try (eassumption || exact: atomic_not_value); [|]; last first.
+      { intros. split; first by exact:STEP. eapply atomic_step; eassumption. }
+      apply all_pord. move=>[[e' σ' ef]]. simpl morph. apply and_R; split.
+      - transitivity ⊤; first by exact:top_true. apply top_valid. apply htValid.
+        apply pure_to_ctx=>[] [Hφ Hval]. rewrite sc_top_unit. erewrite (wpValue _ Hval).
+        etransitivity; last by eapply pvsEnt. rewrite /plug_atomic_esPost. simpl morph.
+        apply (xist_R (σ', ef)). simpl morph. apply and_R; split; first reflexivity.
+        move: Hφ. apply ctx_to_pure. apply and_projL.
+      - destruct ef; last reflexivity.
+        rewrite {1}/ht. apply htIntro. rewrite ->box_elim. eapply modus_ponens; last first.
+        + apply and_projL.
+        + apply and_R; split.
+          * rewrite ->and_projR. apply pure_to_ctx=>[] [Hφ _]. move:Hφ. apply ctx_to_pure.
+            apply and_projL.
+          * rewrite ->and_projR. apply and_projR.
     Qed.
 
   End StatefulLifting.

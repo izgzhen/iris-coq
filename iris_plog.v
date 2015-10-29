@@ -296,6 +296,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         exists w'. split; first assumption. now rewrite EQm2.
     Qed.
 
+    (* Some global properties are proven here directly. *)
     Lemma pvsEnt P m :
       P ⊑ pvs m m P.
     Proof.
@@ -455,21 +456,6 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
           apply (met_morph_nonexp φ). destruct n; first done. reflexivity.
         + contradiction (values_stuck _ HV). repeat eexists. eassumption.
         + unfold safeExpr. auto.
-    Qed.
-
-    Lemma wpWeakenMask safe m1 m2 e φ (HD : m1 ⊑ m2) :
-      wp safe m1 e φ ⊑ wp safe m2 e φ.
-    Proof.
-      intros w n; revert w e φ; induction n using wf_nat_ind; rename H into HInd; intros w e φ.
-      rewrite unfold_wp. intros [HV HW]. split; intros; first done.
-      edestruct HW with (mf := mf ∪ (m2 \ m1)) as [HS HSf]; try eassumption;
-      [| eapply wsat_equiv, HE; try reflexivity; de_auto_eq |]; first de_auto_eq.
-      clear HW HE; split; [intros; clear HV | intros; clear HV HS].
-      - destruct (HS _ _ _ HStep) as [wret [wfk [HWR [HWF HE]]]]; clear HS.
-        do 2 eexists. split; [eapply HInd; eassumption|].
-        split; first eassumption.
-        eapply wsat_equiv, HE; try reflexivity; clear; de_auto_eq.
-      - now auto.
     Qed.
 
   End WeakestPre.
