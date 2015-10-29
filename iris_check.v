@@ -87,7 +87,7 @@ Module Import Meta := IrisMeta TrivialRA StupidLang Res World Core Plog HTRules.
 Print Assumptions adequacy_obs.
 Print Assumptions adequacy_safe.
 
-Print Assumptions lift_atomic_det_step.
+Print Assumptions lift_atomic_step.
 Print Assumptions lift_pure_det_step.
 
 (* We just check some rules here - listing all of them
@@ -96,6 +96,7 @@ Print Assumptions pvsOpen.
 Print Assumptions pvsClose.
 Print Assumptions pvsGhostUpd.
 
-Print Assumptions wpPostVS.
+Print Assumptions wpPreVS.
 Print Assumptions wpACons.
-Print Assumptions wpBind.
+Print Assumptions wpFrameRes.
+
