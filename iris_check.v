@@ -83,6 +83,15 @@ Module Import VSRules := IrisVSRules TrivialRA StupidLang Res World Core Plog.
 Module Import HTRules := IrisHTRules TrivialRA StupidLang Res World Core Plog.
 Module Import Meta := IrisMeta TrivialRA StupidLang Res World Core Plog HTRules.
 
+(* Make sure the precondition of Bind can actually be met. *)
+Lemma id_is_fill: IsFill (fun e => e).
+Proof.
+  split; last split.
+  - by firstorder.
+  - by firstorder.
+  - intros. eexists. reflexivity.
+Qed.
+
 (* And now we check for axioms *)
 Print Assumptions adequacy_obs.
 Print Assumptions adequacy_safe.
@@ -94,9 +103,11 @@ Print Assumptions lift_pure_det_step.
    (including the base logic) would take too long. *)
 Print Assumptions pvsOpen.
 Print Assumptions pvsClose.
+Print Assumptions pvsTrans.
 Print Assumptions pvsGhostUpd.
 
 Print Assumptions wpPreVS.
 Print Assumptions wpACons.
 Print Assumptions wpFrameRes.
+Print Assumptions wpBind.
 

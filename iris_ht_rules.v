@@ -95,14 +95,13 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
 
     (** Bind - in general **)
     Section Bind.
-      Parameter fill: expr -> expr.
-      Axiom fill_step: forall e1 σ1 e2 σ2 ef,
-          prim_step (e1, σ1) (e2, σ2) ef <-> prim_step (fill e1, σ1) (fill e2, σ2) ef.
-      Axiom fill_step_all: forall e1 σ1 e2 σ2 ef,
-          prim_step (fill e1, σ1) (e2, σ2) ef -> exists e2', e2 = fill e2'.
-      Axiom fill_val: forall e, is_value (fill e) -> is_value e.
+      Definition IsFill (fill: expr -> expr): Prop :=
+        (forall e, is_value (fill e) -> is_value e) /\
+        forall e1 σ1 e2 σ2 ef,
+          (prim_step (e1, σ1) (e2, σ2) ef <-> prim_step (fill e1, σ1) (fill e2, σ2) ef) /\
+          (prim_step (fill e1, σ1) (e2, σ2) ef -> exists e2', e2 = fill e2').
 
-      Program Definition plug_bind safe m φ :=
+      Program Definition plug_bind (fill: expr -> expr) safe m φ :=
         n[(fun v : value => wp safe m (fill v) φ )].
       Next Obligation.
         intros v1 v2 EQv.
@@ -110,22 +109,23 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
         hnf in EQv. now rewrite EQv.
       Qed.
 
-      Lemma wpBind φ e safe m :
-        wp safe m e (plug_bind safe m φ) ⊑ wp safe m (fill e) φ.
+      Lemma wpBind (fill: expr -> expr) φ e safe m (HFill: IsFill fill):
+        wp safe m e (plug_bind fill safe m φ) ⊑ wp safe m (fill e) φ.
       Proof.
-        intros w n He.
+        intros w n He. destruct HFill as [HFillValue HFillStep].
         revert e w He; induction n using wf_nat_ind; intros; rename H into IH.
         destruct (is_value_dec e) as [HVal | HNVal]; [clear IH |].
         - eapply (wpValue _ HVal) in He. exact:He.
         - rewrite ->unfold_wp in He; rewrite unfold_wp. split; intros.
-          { exfalso. apply HNVal, fill_val, HV. }
+          { exfalso. apply HNVal, HFillValue, HV. }
           edestruct He as [_ He']; try eassumption; []; clear He.
           edestruct He' as [HS HSf]; try eassumption; []; clear He' HE HD.
           split; last first.
           { intros Heq. destruct (HSf Heq) as [?|[σ' [e' [ef Hstep]]]]; first contradiction.
-            right. do 3 eexists. erewrite <-fill_step. eapply Hstep. }
-          intros. destruct (fill_step_all _ _ _ _ _ HStep) as [e'' Heq]. subst e'.
-          rewrite <-fill_step in HStep.
+            right. do 3 eexists. edestruct HFillStep as [HFillStepEq _]. erewrite <-HFillStepEq. eapply Hstep. }
+          intros. edestruct (HFillStep e σ e' σ' ef) as [_ HFillStepEx].
+          destruct (HFillStepEx HStep) as [e'' Heq]. subst e'.
+          edestruct HFillStep as [HFillStepEq _]. erewrite <-HFillStepEq in HStep.
           destruct (HS _ _ _ HStep) as (wret & wfk & Hret & Hfk & HE).
           exists wret wfk. split; last tauto.
           clear Hfk HE. eapply IH; assumption.

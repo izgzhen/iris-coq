@@ -235,6 +235,13 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       apply box_equiv. apply all_equiv=>v. reflexivity.
     Qed.
 
+    Lemma wpPreVS' m safe e φ:
+      pvs m m (wp safe m e (pvs m m <M< φ)) ⊑ wp safe m e (pvs m m <M< φ).
+    Proof.
+      etransitivity; first eapply wpPreVS. eapply wpMon=>v. simpl morph. eapply pvsTrans.
+      de_auto_eq.
+    Qed.
+
     (* pvs before and after the hoare triple can be collapsed into it *)
     Lemma htMCons m m' safe e P P' Q Q':
       □((P → (pvs m m') P')
@@ -263,8 +270,8 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       vs m m P P' ∧ ht safe m P' e Q' ∧ all (vsLift m m Q' Q) ⊑ ht safe m P e Q.
     Proof.
       rewrite /vs {1}/ht -vsLiftBox -!box_conj. apply htIntro.
-      etransitivity; first by eapply htMCons. etransitivity; first by eapply wpPreVS.
-      eapply wpMon. intros v. eapply pvsTrans. de_auto_eq.
+      etransitivity; first by eapply htMCons. etransitivity; first by eapply wpPreVS'.
+      reflexivity.
     Qed.
 
     Lemma htACons safe m m' e P P' Q Q'
@@ -276,6 +283,39 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       etransitivity; last (eapply wpACons; eassumption).
       eapply htMCons.
     Qed.
+
+
+    Section Bind.
+      (** Quantification in the logic works over nonexpansive maps, so
+        we need to show that plugging the value into the postcondition
+        and context is nonexpansive. *)
+      Program Definition plug_bind (fill: expr -> expr) safe m Q Q' :=
+        n[(fun v : value => ht safe m (Q v) (fill v) Q' )].
+      Next Obligation.
+        intros v1 v2 EQv; unfold ht; eapply box_dist.
+        eapply impl_dist.
+        - apply Q; assumption.
+        - destruct n as [| n]; [apply dist_bound | hnf in EQv].
+          rewrite EQv; reflexivity.
+      Qed.
+
+      Lemma htBind fill P Q R e safe m (HFill: IsFill fill) :
+        ht safe m P e Q ∧ all (plug_bind fill safe m Q R) ⊑ ht safe m P (fill e) R.
+      Proof.
+        rewrite /plug_bind {1 2}/ht. etransitivity; last eapply htIntro.
+        { erewrite box_conj. apply and_pord; first reflexivity.
+          erewrite (box_all (plug_bind fill safe m (pvs m m <M< Q) R)). apply all_pord=>v. simpl morph.
+          rewrite /ht. apply box_intro, box_intro. apply and_impl.
+          etransitivity; last eapply wpPreVS'. etransitivity; first by eapply pvsImpl. reflexivity.  }
+        etransitivity; last by eapply wpBind.
+        etransitivity; last eapply wpImpl with (φ:=pvs m m <M< Q). apply and_R; split.
+        - rewrite ->and_projL. apply box_intro. rewrite ->box_elim, ->and_projR.
+          apply all_pord=>v. simpl morph. rewrite /ht. rewrite ->box_elim. reflexivity.
+        - eapply modus_ponens; first by apply and_projR.
+          rewrite ->and_projL, ->box_elim, and_projL. reflexivity.
+      Qed.
+    End Bind.
+
 
     Lemma htWeakenMask safe m m' P e Q (HD: m ⊑ m'):
       ht safe m P e Q ⊑ ht safe m' P e Q.
