@@ -97,7 +97,7 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
     Section Bind.
       Definition IsFill (fill: expr -> expr): Prop :=
         (forall e, is_value (fill e) -> is_value e) /\
-        forall e1 σ1 e2 σ2 ef,
+        forall e1 σ1 e2 σ2 ef, ~is_value e1 ->
           (prim_step (e1, σ1) (e2, σ2) ef <-> prim_step (fill e1, σ1) (fill e2, σ2) ef) /\
           (prim_step (fill e1, σ1) (e2, σ2) ef -> exists e2', e2 = fill e2').
 
@@ -122,10 +122,10 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
           edestruct He' as [HS HSf]; try eassumption; []; clear He' HE HD.
           split; last first.
           { intros Heq. destruct (HSf Heq) as [?|[σ' [e' [ef Hstep]]]]; first contradiction.
-            right. do 3 eexists. edestruct HFillStep as [HFillStepEq _]. erewrite <-HFillStepEq. eapply Hstep. }
-          intros. edestruct (HFillStep e σ e' σ' ef) as [_ HFillStepEx].
+            right. do 3 eexists. edestruct HFillStep as [HFillStepEq _]; last erewrite <-HFillStepEq; first assumption. eapply Hstep. }
+          intros. edestruct (HFillStep e σ e' σ' ef) as [_ HFillStepEx]; first done.
           destruct (HFillStepEx HStep) as [e'' Heq]. subst e'.
-          edestruct HFillStep as [HFillStepEq _]. erewrite <-HFillStepEq in HStep.
+          edestruct HFillStep as [HFillStepEq _]; last erewrite <-HFillStepEq in HStep; first done.
           destruct (HS _ _ _ HStep) as (wret & wfk & Hret & Hfk & HE).
           exists wret wfk. split; last tauto.
           clear Hfk HE. eapply IH; assumption.
