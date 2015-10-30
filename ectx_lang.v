@@ -23,35 +23,6 @@ Module Type ECTX_LANG.
   Parameter empty_ctx : ectx.
   Parameter comp_ctx : ectx -> ectx -> ectx.
   Parameter fill : ectx -> expr -> expr.
-(*
-	All of
-		comp_ctx_assoc
-		comp_ctx_inj_r
-		comp_ctx_emp_r
-	arise only in the proof of
-
-		step_same_ctx K K' e e' :
-			fill K e = fill K' e' ->
-			reducible e  ->
-			reducible e' ->
-			K = K'.
-
-	Moreover, comp_ctx_positive gets used only in step_same_ctx
-	and
-
-		
-	
-	It might be simpler to (prove and) assume these two rather
-	than those four.
-*)
-(*  Axiom comp_ctx_emp_r : forall K,
-    comp_ctx K empty_ctx = K.
-  Axiom comp_ctx_assoc : forall K0 K1 K2,
-    comp_ctx K0 (comp_ctx K1 K2) = comp_ctx (comp_ctx K0 K1) K2.
-  Axiom comp_ctx_inj_r : forall K K1 K2,
-    comp_ctx K K1 = comp_ctx K K2 -> K1 = K2.
-  Axiom comp_ctx_positive : forall K1 K2,
-    comp_ctx K1 K2 = empty_ctx -> K1 = empty_ctx /\ K2 = empty_ctx. *)
 
   Axiom fill_empty : forall e, fill empty_ctx e = e.
   Axiom fill_comp  : forall K1 K2 e, fill K1 (fill K2 e) = fill (comp_ctx K1 K2) e.
@@ -118,45 +89,6 @@ Module EctxCoreLang (C: ECTX_LANG) <: CORE_LANG.
 
   Definition state := C.state.
   Definition prim_cfg := C.prim_cfg.
-
-  (** Some derived properties **)
-(*  Section Derived.
-    Import C.
-
-    Lemma reducible_not_value {e} :
-      reducible e -> ~is_value e.
-    Proof.
-      intros H_red H_val.
-      eapply values_stuck; try eassumption.
-      now erewrite fill_empty.
-    Qed.
-    
-(*    Lemma step_same_ctx {K K' e e'} :
-      fill K e = fill K' e' ->
-      reducible e  ->
-      reducible e' ->
-      K = K'.
-    Proof.
-      intros H_fill H_red H_red'.
-      edestruct (step_by_value K K' e e') as [K'' H_K''].
-      - assumption.
-      - assumption.
-      - now apply reducible_not_value.
-      - edestruct (step_by_value K' K e' e) as [K''' H_K'''].
-        + now symmetry.
-        + assumption.
-        + now apply reducible_not_value.
-        + subst K.
-          rewrite <- comp_ctx_assoc in H_K''.
-          assert (H_emp := comp_ctx_neut_emp_r H_K'').
-          apply comp_ctx_positive in H_emp.
-          destruct H_emp as[H_K'''_emp H_K''_emp].
-          subst K'' K'''.
-          now rewrite comp_ctx_emp_r.
-    Qed. *)
-
-  End Derived.
-*)
 
   (** Base reduction **)
   Definition prim_step (c1 c2: prim_cfg) (ef: option expr) :=
