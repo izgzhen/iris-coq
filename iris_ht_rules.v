@@ -95,12 +95,6 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
 
     (** Bind - in general **)
     Section Bind.
-      Definition IsCtx (ctx: expr -> expr): Prop :=
-        (forall e, is_value (ctx e) -> is_value e) /\
-        (forall e1 σ1 e2 σ2 ef, prim_step (e1, σ1) (e2, σ2) ef -> prim_step (ctx e1, σ1) (ctx e2, σ2) ef) /\
-        (forall e1 σ1 e2 σ2 ef, ~is_value e1 -> prim_step (ctx e1, σ1) (e2, σ2) ef ->
-                                exists e2', e2 = ctx e2' /\ prim_step (e1, σ1) (e2', σ2) ef).
-
       Program Definition plug_bind (ctx: expr -> expr) safe m φ :=
         n[(fun v : value => wp safe m (ctx v) φ )].
       Next Obligation.
@@ -109,7 +103,7 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
         hnf in EQv. now rewrite EQv.
       Qed.
 
-      Lemma wpBind ctx φ e safe m (HCtx: IsCtx ctx):
+      Lemma wpBind ctx φ e safe m (HCtx: is_ctx ctx):
         wp safe m e (plug_bind ctx safe m φ) ⊑ wp safe m (ctx e) φ.
       Proof.
         intros w n He. destruct HCtx as (HCval & HCstep & HCfstep).

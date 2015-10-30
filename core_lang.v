@@ -24,15 +24,19 @@ Module Type CORE_LANG.
   Definition reducible e: Prop :=
     exists sigma cfg' ef, prim_step (e, sigma) cfg' ef.
 
-  Definition stuck (e : expr) : Prop :=
-      ~reducible e.
+  Definition is_ctx (ctx : expr -> expr) : Prop :=
+    (forall e, is_value (ctx e) -> is_value e) /\
+    (forall e1 σ1 e2 σ2 ef, prim_step (e1, σ1) (e2, σ2) ef -> prim_step (ctx e1, σ1) (ctx e2, σ2) ef) /\
+    (forall e1 σ1 e2 σ2 ef, ~is_value e1 -> prim_step (ctx e1, σ1) (e2, σ2) ef ->
+                            exists e2', e2 = ctx e2' /\ prim_step (e1, σ1) (e2', σ2) ef).
+
 
   (** Atomic expressions **)
   Parameter atomic : expr -> Prop.
 
   (** Things ought to make sense. **)
   Axiom values_stuck :
-    forall e, is_value e -> stuck e.
+    forall e, is_value e -> ~reducible e.
 
   Axiom atomic_not_value :
     forall e, atomic e -> ~is_value e.

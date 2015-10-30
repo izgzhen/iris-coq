@@ -80,28 +80,34 @@ Module Type ECTX_LANG.
 			K = empty_ctx.
 End ECTX_LANG.
 
-Module EctxCoreLang (C: ECTX_LANG) <: CORE_LANG.
+Module EctxCoreLang (E: ECTX_LANG) <: CORE_LANG.
 
-  Definition expr := C.expr.
-  Definition is_value := C.is_value.
-  Definition value := C.value.
-  Definition is_value_dec := C.is_value_dec.
+  Definition expr := E.expr.
+  Definition is_value := E.is_value.
+  Definition value := E.value.
+  Definition is_value_dec := E.is_value_dec.
 
-  Definition state := C.state.
-  Definition prim_cfg := C.prim_cfg.
+  Definition state := E.state.
+  Definition prim_cfg := E.prim_cfg.
 
   (** Base reduction **)
   Definition prim_step (c1 c2: prim_cfg) (ef: option expr) :=
     match c1, c2 with
-    | (e1, σ1), (e2, σ2) => exists K e1' e2', e1 = C.fill K e1' /\ e2 = C.fill K e2' /\
-                                              C.prim_step (e1', σ1) (e2', σ2) ef
+    | (e1, σ1), (e2, σ2) => exists K e1' e2', e1 = E.fill K e1' /\ e2 = E.fill K e2' /\
+                                              E.prim_step (e1', σ1) (e2', σ2) ef
     end.
 
   Definition reducible e: Prop :=
     exists sigma cfg' ef, prim_step (e, sigma) cfg' ef.
-  Definition stuck e := ~reducible e.
 
-  Lemma reducible_eq e: reducible e <-> exists K e', e = C.fill K e' /\ C.reducible e'.
+  
+  Definition is_ctx (ctx : expr -> expr) : Prop :=
+    (forall e, is_value (ctx e) -> is_value e) /\
+    (forall e1 σ1 e2 σ2 ef, prim_step (e1, σ1) (e2, σ2) ef -> prim_step (ctx e1, σ1) (ctx e2, σ2) ef) /\
+    (forall e1 σ1 e2 σ2 ef, ~is_value e1 -> prim_step (ctx e1, σ1) (e2, σ2) ef ->
+                            exists e2', e2 = ctx e2' /\ prim_step (e1, σ1) (e2', σ2) ef).
+
+  Lemma reducible_eq e: reducible e <-> exists K e', e = E.fill K e' /\ E.reducible e'.
   Proof.
     split.
     - intros (σ & c2 & ef & Hstep). destruct c2 as [e2 σ2].
@@ -109,29 +115,23 @@ Module EctxCoreLang (C: ECTX_LANG) <: CORE_LANG.
       exists K e'. split; first assumption. exists σ (e2', σ2) ef.
       assumption.
     - intros (K & e' & Heq & Hred). destruct Hred as (σ & c2 & ef & Hred). destruct c2 as [e2 σ2].
-      exists σ (C.fill K e2, σ2) ef. exists K e' e2. split; last split; assumption || reflexivity.
-  Qed.
-
-  Lemma stuck_eq e: stuck e <-> C.stuck e.
-  Proof.
-    split; intros H1.
-    - intros K e' Heq Hred. apply H1, reducible_eq. do 2 eexists. split; eassumption.
-    - intros H. apply reducible_eq in H. destruct H as (K & e' & Heq & Hred). eapply H1; eassumption.
+      exists σ (E.fill K e2, σ2) ef. exists K e' e2. split; last split; assumption || reflexivity.
   Qed.
 
   Lemma values_stuck :
-    forall e, is_value e -> stuck e.
+    forall e, is_value e -> ~reducible e.
   Proof.
-    intros. apply stuck_eq, C.values_stuck. assumption.
+    intros. intros HRed. apply reducible_eq in HRed. destruct HRed as (K & e' & Heq & HRed).
+    eapply E.values_stuck; eassumption.
   Qed.
 
   (** Atomic **)
-  Definition atomic := C.atomic.
+  Definition atomic := E.atomic.
 
   Lemma atomic_not_value :
     forall e, atomic e -> ~is_value e.
   Proof.
-    exact C.atomic_not_value.
+    exact E.atomic_not_value.
   Qed.
 
   Lemma atomic_step: forall e σ e' σ' ef,
@@ -140,13 +140,13 @@ Module EctxCoreLang (C: ECTX_LANG) <: CORE_LANG.
       is_value e'.
   Proof.
     intros ? ? ? ? ? Hatomic (K & e1' & e2' & Heq1 & Heq2 & Hstep).
-    move:(C.atomic_fill e1' K). subst. case/(_ _ _)/Wrap.
+    move:(E.atomic_fill e1' K). subst. case/(_ _ _)/Wrap.
     - assumption.
-    - intros Hval. eapply C.values_stuck; [eassumption|erewrite C.fill_empty;reflexivity|].
+    - intros Hval. eapply E.values_stuck; [eassumption|erewrite E.fill_empty;reflexivity|].
       do 3 eexists. eassumption.
     - intros Heq. subst.
-      eapply C.atomic_step; first eassumption.
-      erewrite !C.fill_empty. eassumption.
+      eapply E.atomic_step; first eassumption.
+      erewrite !E.fill_empty. eassumption.
   Qed.
 
 End EctxCoreLang.
@@ -177,7 +177,7 @@ Module ECTX_IRIS (RL : VIRA_T) (E : ECTX_LANG) (R: ECTX_RES RL E) (WP: WORLD_PRO
   Local Open Scope iris_scope.
 
   (** We can hae bind with evaluation contexts **)
-  Lemma fill_is_ctx K: IsCtx (E.fill K).
+  Lemma fill_is_ctx K: is_ctx (E.fill K).
   Proof.
     split; last split.
     - intros ? Hval. eapply E.fill_value. eassumption.

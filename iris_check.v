@@ -34,15 +34,18 @@ Module StupidLang : CORE_LANG.
   Definition reducible e: Prop :=
     exists sigma cfg' ef, prim_step (e, sigma) cfg' ef.
 
-  Definition stuck (e : expr) : Prop :=
-      ~reducible e.
+  Definition is_ctx (ctx : expr -> expr) : Prop :=
+    (forall e, is_value (ctx e) -> is_value e) /\
+    (forall e1 σ1 e2 σ2 ef, prim_step (e1, σ1) (e2, σ2) ef -> prim_step (ctx e1, σ1) (ctx e2, σ2) ef) /\
+    (forall e1 σ1 e2 σ2 ef, ~is_value e1 -> prim_step (ctx e1, σ1) (e2, σ2) ef ->
+                            exists e2', e2 = ctx e2' /\ prim_step (e1, σ1) (e2', σ2) ef).
 
   (** Atomic expressions **)
   Definition atomic e := False.
 
   (** Properties *)
   Lemma values_stuck :
-    forall e, is_value e -> stuck e.
+    forall e, is_value e -> ~reducible e.
   Proof.
     firstorder.
   Qed.
@@ -84,7 +87,7 @@ Module Import HTRules := IrisHTRules TrivialRA StupidLang Res World Core Plog.
 Module Import Meta := IrisMeta TrivialRA StupidLang Res World Core Plog HTRules.
 
 (* Make sure the precondition of Bind can actually be met. *)
-Lemma id_is_ctx: IsCtx (fun e => e).
+Lemma id_is_ctx: is_ctx (fun e => e).
 Proof.
   split; last split.
   - by firstorder.

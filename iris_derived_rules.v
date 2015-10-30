@@ -299,7 +299,7 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
           rewrite EQv; reflexivity.
       Qed.
 
-      Lemma htBind ctx P Q R e safe m (HCtx: IsCtx ctx) :
+      Lemma htBind ctx P Q R e safe m (HCtx: is_ctx ctx) :
         ht safe m P e Q ∧ all (plug_bind ctx safe m Q R) ⊑ ht safe m P (ctx e) R.
       Proof.
         rewrite /plug_bind {1 2}/ht. etransitivity; last eapply htIntro.
