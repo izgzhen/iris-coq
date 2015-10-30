@@ -1,5 +1,5 @@
 Require Import Arith Ssreflect.ssreflect Ssreflect.ssrfun.
-Require Import world_prop world_prop_recdom core_lang lang iris_core iris_plog iris_ht_rules.
+Require Import world_prop world_prop_recdom core_lang lang iris_core iris_plog iris_ht_rules iris_vs_rules iris_derived_rules.
 Require Import ModuRes.RA ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr ModuRes.CMRA.
 
 Set Bullet Behavior "Strict Subproofs".
@@ -168,6 +168,13 @@ Module ECTX_IRIS (RL : VIRA_T) (E : ECTX_LANG) (R: ECTX_RES RL E) (WP: WORLD_PRO
   Module Import Core := IrisCore RL Lang Res World.
   Module Import Plog := IrisPlog RL Lang Res World Core.
   Module Import HTRules := IrisHTRules RL Lang Res World Core Plog.
+  Module Import VSRules := IrisVSRules RL Lang Res World Core Plog.
+  Module Import DerivedRules := IrisDerivedRules RL Lang Res World Core Plog VSRules HTRules.
+
+  Local Open Scope ra_scope.
+  Local Open Scope de_scope.
+  Local Open Scope bi_scope.
+  Local Open Scope iris_scope.
 
   (** We can hae bind with evaluation contexts **)
   Lemma fill_is_fill K: IsFill (E.fill K).
@@ -193,9 +200,16 @@ Module ECTX_IRIS (RL : VIRA_T) (E : ECTX_LANG) (R: ECTX_RES RL E) (WP: WORLD_PRO
   Qed.
         
   Lemma wpBind φ K e safe m :
-    wp safe m e (plug_bind (E.fill K) safe m φ) ⊑ wp safe m (E.fill K e) φ.
+    wp safe m e (HTRules.plug_bind (E.fill K) safe m φ) ⊑ wp safe m (E.fill K e) φ.
   Proof.
     apply wpBind. apply fill_is_fill.
   Qed.
+
+  Lemma htBind K P Q R e safe m :
+    ht safe m P e Q ∧ all (plug_bind (E.fill K) safe m Q R) ⊑ ht safe m P (E.fill K e) R.
+  Proof.
+    apply htBind. apply fill_is_fill.
+  Qed.
+  
 
 End ECTX_IRIS.
