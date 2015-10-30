@@ -179,24 +179,18 @@ Module ECTX_IRIS (RL : VIRA_T) (E : ECTX_LANG) (R: ECTX_RES RL E) (WP: WORLD_PRO
   (** We can hae bind with evaluation contexts **)
   Lemma fill_is_fill K: IsFill (E.fill K).
   Proof.
-    split; intros; last (split; intros; first split).
-    - eapply E.fill_value. eassumption.
-    - intros (K' & e1' & e2' & Heq1 & Heq2 & Hstep).
+    split; last split.
+    - intros ? Hval. eapply E.fill_value. eassumption.
+    - intros ? ? ? ? ? (K' & e1' & e2' & Heq1 & Heq2 & Hstep).
       exists (E.comp_ctx K K') e1' e2'. rewrite -!E.fill_comp Heq1 Heq2.
       split; last split; reflexivity || assumption.
-    - intros (K' & e1' & e2' & Heq1 & Heq2 & Hstep).
+    - intros ? ? ? ? ? Hnval (K' & e1' & e2' & Heq1 & Heq2 & Hstep).
       destruct (E.step_by_value _ _ _ _ Heq1) as [K'' HeqK].
       + do 3 eexists. eassumption.
       + assumption.
-      + exists K''. subst K'. rewrite -!E.fill_comp in Heq1, Heq2.
-        apply E.fill_inj_r in Heq1. apply E.fill_inj_r in Heq2.
-        do 2 eexists. split; last split; eassumption.
-    - destruct H0 as (K' & e1' & e2' & Heq1 & Heq2 & Hstep).
-      destruct (E.step_by_value _ _ _ _ Heq1) as [K'' HeqK].
-      + do 3 eexists. eassumption.
-      + assumption.
-      + subst K'. rewrite -E.fill_comp in Heq2.
-        eexists. eassumption.
+      + subst e2 K'. rewrite -E.fill_comp in Heq1. apply E.fill_inj_r in Heq1. subst e1.
+        exists (E.fill K'' e2'). split; first by rewrite -E.fill_comp.
+        do 3 eexists. split; last split; eassumption || reflexivity.
   Qed.
         
   Lemma wpBind φ K e safe m :
@@ -211,5 +205,4 @@ Module ECTX_IRIS (RL : VIRA_T) (E : ECTX_LANG) (R: ECTX_RES RL E) (WP: WORLD_PRO
     apply htBind. apply fill_is_fill.
   Qed.
   
-
 End ECTX_IRIS.

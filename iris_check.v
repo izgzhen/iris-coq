@@ -89,7 +89,7 @@ Proof.
   split; last split.
   - by firstorder.
   - by firstorder.
-  - intros. eexists. reflexivity.
+  - intros. eexists. split; reflexivity || eassumption.
 Qed.
 
 (* And now we check for axioms *)
