@@ -114,6 +114,8 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       Proof.
         intros w n He. destruct HFill as (HFval & HFstep & HFfstep).
         revert e w He; induction n using wf_nat_ind; intros; rename H into IH.
+        (* We need to actually decide whether e is a value, to establish safety in the case that
+           it is not. *)
         destruct (is_value_dec e) as [HVal | HNVal]; [clear IH |].
         - eapply (wpValue _ HVal) in He. exact:He.
         - rewrite ->unfold_wp in He; rewrite unfold_wp. split; intros.
