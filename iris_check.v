@@ -84,7 +84,7 @@ Module Import HTRules := IrisHTRules TrivialRA StupidLang Res World Core Plog.
 Module Import Meta := IrisMeta TrivialRA StupidLang Res World Core Plog HTRules.
 
 (* Make sure the precondition of Bind can actually be met. *)
-Lemma id_is_fill: IsFill (fun e => e).
+Lemma id_is_ctx: IsCtx (fun e => e).
 Proof.
   split; last split.
   - by firstorder.

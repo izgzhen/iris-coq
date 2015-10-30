@@ -95,37 +95,37 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
 
     (** Bind - in general **)
     Section Bind.
-      Definition IsFill (fill: expr -> expr): Prop :=
-        (forall e, is_value (fill e) -> is_value e) /\
-        (forall e1 σ1 e2 σ2 ef, prim_step (e1, σ1) (e2, σ2) ef -> prim_step (fill e1, σ1) (fill e2, σ2) ef) /\
-        (forall e1 σ1 e2 σ2 ef, ~is_value e1 -> prim_step (fill e1, σ1) (e2, σ2) ef ->
-                                exists e2', e2 = fill e2' /\ prim_step (e1, σ1) (e2', σ2) ef).
+      Definition IsCtx (ctx: expr -> expr): Prop :=
+        (forall e, is_value (ctx e) -> is_value e) /\
+        (forall e1 σ1 e2 σ2 ef, prim_step (e1, σ1) (e2, σ2) ef -> prim_step (ctx e1, σ1) (ctx e2, σ2) ef) /\
+        (forall e1 σ1 e2 σ2 ef, ~is_value e1 -> prim_step (ctx e1, σ1) (e2, σ2) ef ->
+                                exists e2', e2 = ctx e2' /\ prim_step (e1, σ1) (e2', σ2) ef).
 
-      Program Definition plug_bind (fill: expr -> expr) safe m φ :=
-        n[(fun v : value => wp safe m (fill v) φ )].
+      Program Definition plug_bind (ctx: expr -> expr) safe m φ :=
+        n[(fun v : value => wp safe m (ctx v) φ )].
       Next Obligation.
         intros v1 v2 EQv.
         destruct n as [|n]; first by apply: dist_bound.
         hnf in EQv. now rewrite EQv.
       Qed.
 
-      Lemma wpBind (fill: expr -> expr) φ e safe m (HFill: IsFill fill):
-        wp safe m e (plug_bind fill safe m φ) ⊑ wp safe m (fill e) φ.
+      Lemma wpBind ctx φ e safe m (HCtx: IsCtx ctx):
+        wp safe m e (plug_bind ctx safe m φ) ⊑ wp safe m (ctx e) φ.
       Proof.
-        intros w n He. destruct HFill as (HFval & HFstep & HFfstep).
+        intros w n He. destruct HCtx as (HCval & HCstep & HCfstep).
         revert e w He; induction n using wf_nat_ind; intros; rename H into IH.
         (* We need to actually decide whether e is a value, to establish safety in the case that
            it is not. *)
         destruct (is_value_dec e) as [HVal | HNVal]; [clear IH |].
         - eapply (wpValue _ HVal) in He. exact:He.
         - rewrite ->unfold_wp in He; rewrite unfold_wp. split; intros.
-          { exfalso. apply HNVal, HFval, HV. }
+          { exfalso. apply HNVal, HCval, HV. }
           edestruct He as [_ He']; try eassumption; []; clear He.
           edestruct He' as [HS HSf]; try eassumption; []; clear He' HE HD.
           split; last first.
           { intros Heq. destruct (HSf Heq) as [?|[σ' [e' [ef Hstep]]]]; first contradiction.
-            right. do 3 eexists. eapply HFstep. eassumption. }
-          intros. edestruct (HFfstep e σ e' σ' ef) as (e'' & Heq' & Hstep'); first done; first done.
+            right. do 3 eexists. eapply HCstep. eassumption. }
+          intros. edestruct (HCfstep e σ e' σ' ef) as (e'' & Heq' & Hstep'); first done; first done.
           destruct (HS _ _ _ Hstep') as (wret & wfk & Hret & Hfk & HE). subst e'.
           exists wret wfk. split; last tauto.
           clear Hfk HE. eapply IH; assumption.

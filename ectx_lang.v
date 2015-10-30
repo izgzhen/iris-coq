@@ -177,7 +177,7 @@ Module ECTX_IRIS (RL : VIRA_T) (E : ECTX_LANG) (R: ECTX_RES RL E) (WP: WORLD_PRO
   Local Open Scope iris_scope.
 
   (** We can hae bind with evaluation contexts **)
-  Lemma fill_is_fill K: IsFill (E.fill K).
+  Lemma fill_is_ctx K: IsCtx (E.fill K).
   Proof.
     split; last split.
     - intros ? Hval. eapply E.fill_value. eassumption.
@@ -196,13 +196,13 @@ Module ECTX_IRIS (RL : VIRA_T) (E : ECTX_LANG) (R: ECTX_RES RL E) (WP: WORLD_PRO
   Lemma wpBind φ K e safe m :
     wp safe m e (HTRules.plug_bind (E.fill K) safe m φ) ⊑ wp safe m (E.fill K e) φ.
   Proof.
-    apply wpBind. apply fill_is_fill.
+    apply wpBind. apply fill_is_ctx.
   Qed.
 
   Lemma htBind K P Q R e safe m :
     ht safe m P e Q ∧ all (plug_bind (E.fill K) safe m Q R) ⊑ ht safe m P (E.fill K e) R.
   Proof.
-    apply htBind. apply fill_is_fill.
+    apply htBind. apply fill_is_ctx.
   Qed.
   
 End ECTX_IRIS.

@@ -289,8 +289,8 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
       (** Quantification in the logic works over nonexpansive maps, so
         we need to show that plugging the value into the postcondition
         and context is nonexpansive. *)
-      Program Definition plug_bind (fill: expr -> expr) safe m Q Q' :=
-        n[(fun v : value => ht safe m (Q v) (fill v) Q' )].
+      Program Definition plug_bind (ctx: expr -> expr) safe m Q Q' :=
+        n[(fun v : value => ht safe m (Q v) (ctx v) Q' )].
       Next Obligation.
         intros v1 v2 EQv; unfold ht; eapply box_dist.
         eapply impl_dist.
@@ -299,12 +299,12 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
           rewrite EQv; reflexivity.
       Qed.
 
-      Lemma htBind fill P Q R e safe m (HFill: IsFill fill) :
-        ht safe m P e Q ∧ all (plug_bind fill safe m Q R) ⊑ ht safe m P (fill e) R.
+      Lemma htBind ctx P Q R e safe m (HCtx: IsCtx ctx) :
+        ht safe m P e Q ∧ all (plug_bind ctx safe m Q R) ⊑ ht safe m P (ctx e) R.
       Proof.
         rewrite /plug_bind {1 2}/ht. etransitivity; last eapply htIntro.
         { erewrite box_conj. apply and_pord; first reflexivity.
-          erewrite (box_all (plug_bind fill safe m (pvs m m <M< Q) R)). apply all_pord=>v. simpl morph.
+          erewrite (box_all (plug_bind ctx safe m (pvs m m <M< Q) R)). apply all_pord=>v. simpl morph.
           rewrite /ht. apply box_intro, box_intro. apply and_impl.
           etransitivity; last eapply wpPreVS'. etransitivity; first by eapply pvsImpl. reflexivity.  }
         etransitivity; last by eapply wpBind.
