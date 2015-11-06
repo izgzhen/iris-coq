@@ -1,10 +1,11 @@
 Require Import Ssreflect.ssreflect Ssreflect.ssrfun Omega List.
-Require Import core_lang world_prop iris_core iris_plog iris_ht_rules.
+Require Import core_lang world_prop iris_core iris_plog iris_ht_rules iris_vs_rules.
 Require Import ModuRes.RA ModuRes.CMRA ModuRes.SPred ModuRes.BI ModuRes.PreoMet ModuRes.Finmap ModuRes.RAConstr ModuRes.DecEnsemble ModuRes.Agreement ModuRes.Lists ModuRes.Relations.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE) (HT_RULES: IRIS_HT_RULES RL C R WP CORE PLOG).
+Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE) (VS_RULES: IRIS_VS_RULES RL C R WP CORE PLOG) (HT_RULES: IRIS_HT_RULES RL C R WP CORE PLOG).
+  Export VS_RULES.
   Export HT_RULES.
 
   Local Open Scope ra_scope.
@@ -335,43 +336,53 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     (* The "nicer looking" (ht-based) lemma is now a derived form. *)
-    Program Definition plug_step safe m φ P P' Q: expr * state * option expr -n> Props :=
-      n[(fun c => let: (e',σ',ef) := c in ht safe m (lift_esPred φ c ∧ (P * ownS σ')) e' Q ∧ match ef return _ with None => ⊤ | Some ef => ht safe de_full (lift_esPred φ c ∧ P') ef (umconst ⊤) end )].
+    Program Definition plug_step safe m1 m2 φ F (R R': expr * state * option expr -n> Props) Q:
+      expr * state * option expr -n> Props :=
+      n[(fun c => let: (e',σ',ef) := c in vs m1 m2 (□lift_esPred φ c ∧ (F * ownS σ')) (R c * R' c) ∧ ht safe m2 (R c) e' Q ∧ match ef return _ with None => ⊤ | Some ef => ht safe de_full (R' c) ef (umconst ⊤) end )].
     Next Obligation.
       move=>[[e1 σ1] ef1] [[e2 σ2] ef2] [[EQe EQσ] EQef].
       destruct n; first exact:dist_bound.
       destruct ef1, ef2; cbv in EQe, EQσ, EQef; subst; now destruct EQef || reflexivity.
     Qed.
 
-    Theorem lift_step {m safe e σ φ P P' Q}
-        (NVAL : ~is_value e)
+    Theorem lift_step {m1 m2 safe e σ φ P F R R' Q}
+        (NVAL : ~is_value e) (MASK : m1 ⊑ m2)
         (STEP : forall e' σ' ef, prim_step (e,σ) (e',σ') ef -> φ(e',σ',ef))
         (SAFE : if safe then safeExpr e σ else True) :
-      all (plug_step safe m φ P P' Q) ⊑ ht safe m (▹(P * P') * ownS σ) e Q.
+      (vs m2 m1 P (▹F * ownS σ)) ∧ all (plug_step safe m1 m2 φ F R R' Q) ⊑ ht safe m2 P e Q.
     Proof.
-      etransitivity; first (etransitivity; last by (eapply pordR; symmetry; eapply (box_all (plug_step safe m φ P P' Q)))).
-      { apply all_pord. move=>[[e' σ'] ef]. simpl morph. rewrite box_conj. rewrite /ht box_box.
+      rewrite /vs.
+      etransitivity; first (etransitivity; last eapply and_pord; first reflexivity; first reflexivity).
+      { etransitivity; last by (eapply pordR; symmetry; eapply (box_all (plug_step safe m1 m2 φ F R R' Q))).
+        apply all_pord. move=>[[e' σ'] ef]. simpl morph. rewrite !box_conj. rewrite /ht /vs !box_box.
         destruct ef; last by (rewrite box_top; reflexivity). rewrite box_box. reflexivity. }
-      apply htIntro. etransitivity; last eapply (lift_step_wp (φ:=φ)); try eassumption; [].
-      clear NVAL STEP SAFE.
-      rewrite -box_conj_star assoc (comm _ (ownS _)). apply sc_pord; first by reflexivity.
+      rewrite -box_conj. apply htIntro. etransitivity; last eapply (lift_step_wp (φ:=φ)); try eassumption; [].
+      clear NVAL STEP SAFE. rewrite box_conj. etransitivity.
+      { rewrite (comm _ P) assoc. eapply and_pord; last reflexivity.
+        rewrite comm. apply and_impl. apply box_elim. }
+      rewrite comm -box_conj_star comm. etransitivity; first eapply pvsFrameRes. eapply pvsMon.
+      rewrite (comm (▹F)) -assoc. apply sc_pord; first reflexivity.
       rewrite ->(later_mon (□_)). rewrite -later_star. apply later_pord.
-      rewrite box_all. rewrite ->all_sc. apply all_pord.
-      move=>[[e' σ'] ef]. simpl morph. rewrite -sc_si.
-      rewrite ->(and_self (□_)), ->(and_self (□pconst _)).
-      rewrite -!box_conj_star -(box_star (pcmconst _)) -box_conj_star !box_star box_box.
-      rewrite !assoc (comm _ P) !assoc (comm _ (□pconst _)) comm. (* Move the right things to the front *)
-      rewrite -!assoc  3!assoc. (* Get the parenthesis right: Last four items to the right *)
-      rewrite ->!box_elim. apply sc_pord.
-      - eapply modus_ponens; last first.
-        + rewrite ->sc_projR. reflexivity.
-        + rewrite ->sc_projL. apply and_R; split.
-          { rewrite ->sc_projL. apply sc_projR. }
-          rewrite (comm P). apply sc_pord; last reflexivity. apply sc_projL.
-      - destruct ef; last exact:top_true. eapply modus_ponens; last first.
-        + rewrite ->sc_projL. rewrite /ht. rewrite ->box_elim. eapply impl_pord; first reflexivity.
+      rewrite box_all. rewrite ->comm, ->all_sc. apply all_pord.
+      move=>[[e' σ'] ef]. simpl morph. rewrite -sc_si /vs !box_conj.
+      rewrite {1}[□pconst _]lock -!box_conj_star. unlock.
+      rewrite !assoc (comm _ F) !assoc (comm _ (□pconst _)) !assoc comm.
+      rewrite -!assoc 3!assoc. etransitivity.
+      { eapply sc_pord; last reflexivity. eapply modus_ponens; last first.
+        - rewrite ->sc_projR. etransitivity; first by eapply box_elim. eapply box_elim.
+        - rewrite ->sc_projL. apply and_R; split.
+          + rewrite ->sc_projL, sc_projR. reflexivity.
+          + rewrite (comm F). apply sc_pord; last reflexivity.
+            apply sc_projL. }
+      etransitivity; first eapply pvsFrameRes. eapply pvsMon.
+      rewrite !assoc (comm _ (□ht _ _ _ _ _)). rewrite -!assoc 1!assoc. eapply sc_pord.
+      - rewrite /ht. rewrite ->!box_elim. eapply modus_ponens; last eapply sc_projL.
+        apply sc_projR.
+      - destruct ef; last exact:top_true. rewrite /ht. rewrite ->!box_elim.
+        eapply modus_ponens; last first.
+        + rewrite ->sc_projR. eapply impl_pord; first reflexivity.
           eapply wpMon. move=>v. apply top_true.
-        + rewrite ->sc_projR, sc_projR, sc_projR. rewrite comm. apply sc_and.
+        + apply sc_projL.
     Qed.
 
     Program Definition plug_atomic_step φ safe P': expr * state * option expr -n> Props :=
@@ -400,11 +411,22 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       all (plug_atomic_step φ safe P) ⊑ ht safe m (▹P * ownS σ) e (plug_atomic_step_post φ).
     Proof.
       pose(φ' := fun (c : expr*state*option expr) => let: (e', σ', ef) := c in φ c /\ is_value e').
-      rewrite -{2}(sc_top_unit P). etransitivity; last eapply (lift_step (φ := φ')); try (eassumption || exact: atomic_not_value); [|]; last first.
+      rewrite -{2}(sc_top_unit P). etransitivity;
+        last eapply (lift_step (φ := φ') (R':=lift_bin and (lift_esPred φ') (umconst P)) (R:=lift_bin and (lift_esPred φ') (ownS <M< Msnd <M< Mfst)));
+        try (eassumption || exact: atomic_not_value); [|reflexivity|]; last first.
       { intros. split; first by exact:STEP. eapply atomic_step; eassumption. }
-      apply all_pord. move=>[[e' σ' ef]]. simpl morph. apply and_R; split.
+      apply and_R; split.
+      { etransitivity; first exact:top_true. apply top_valid. apply vsValid.
+        etransitivity; last eapply pvsEnt. rewrite ->sc_top_unit. reflexivity. }
+      apply all_pord. move=>[[e' σ' ef]]. simpl morph. apply and_R; split; last (apply and_R; split).
+      - transitivity ⊤; first by exact:top_true. apply top_valid. apply vsValid.
+        etransitivity; last eapply pvsEnt. rewrite ->(and_self (□pconst _)).
+        rewrite -!box_conj_star -box_star -!box_conj_star. rewrite ->box_elim.
+        rewrite !assoc (comm _ P)  -!assoc 1!assoc comm. apply sc_pord.
+        + apply sc_and.
+        + rewrite comm. apply sc_and.
       - transitivity ⊤; first by exact:top_true. apply top_valid. apply htValid.
-        apply pure_to_ctx=>[] [Hφ Hval]. rewrite sc_top_unit. erewrite (wpValue _ Hval).
+        apply pure_to_ctx=>[] [Hφ Hval]. etransitivity; last by eapply (wpValue _ Hval).
         etransitivity; last by eapply pvsEnt. rewrite /plug_atomic_step_post. simpl morph.
         apply (xist_R (σ', ef)). simpl morph. apply and_R; split; first reflexivity.
         move: Hφ. apply ctx_to_pure. apply and_projL.
@@ -539,6 +561,6 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
 End IRIS_META.
 
-Module IrisMeta (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE) (HT_RULES: IRIS_HT_RULES RL C R WP CORE PLOG) : IRIS_META RL C R WP CORE PLOG HT_RULES.
-  Include IRIS_META RL C R WP CORE PLOG HT_RULES.
+Module IrisMeta (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORLD_PROP R) (CORE: IRIS_CORE RL C R WP) (PLOG: IRIS_PLOG RL C R WP CORE) (VS_RULES: IRIS_VS_RULES RL C R WP CORE PLOG) (HT_RULES: IRIS_HT_RULES RL C R WP CORE PLOG) : IRIS_META RL C R WP CORE PLOG VS_RULES HT_RULES.
+  Include IRIS_META RL C R WP CORE PLOG VS_RULES HT_RULES.
 End IrisMeta.
