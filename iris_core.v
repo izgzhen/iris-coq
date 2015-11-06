@@ -822,8 +822,8 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
           rewrite !assoc. split; reflexivity.
     Qed.
    
-    Program Definition inv i : Props -n> Props := 
-      n[(fun P => m[(fun w => ∃Pr, Invs w i === Some (Pr · (ra_ag_inj (ı' (halved P)))) )] )].
+    Program Definition inv i : Props -> Props := 
+      fun P => m[(fun w => ∃Pr, Invs w i === Some (Pr · (ra_ag_inj (ı' (halved P)))) )].
     Next Obligation.
       intros. move=>Pr1 Pr2 EQPr. apply intEq_dist; first reflexivity.
       apply option_dist_Some. apply ra_ag_op_dist; last reflexivity. assumption.
@@ -847,21 +847,20 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
         destruct (I1 i) as [P1|]; last contradiction HPr.
         exact EQI.
     Qed.
-    Next Obligation.
-      move => i n P1 P2 EQP. destruct n; first exact: dist_bound.
-      intros w. apply xist_dist=>Pr. simpl morph. apply intEq_dist; first reflexivity.
-      do 3 red. apply cmra_op_dist; first reflexivity.
-      apply ra_ag_inj_dist. apply met_morph_nonexp.
-      simpl. apply dist_mono. assumption.
-    Qed.
 
-    Lemma inv_contractive i : contractive (inv i).
+    Global Instance inv_contractive i : contractive (inv i).
     Proof.
       move => n P1 P2 EQP w [|k /le_S_n Hk] //; split; move => [p /= EQwi]; simpl;
       exists p; rewrite EQwi {EQwi} /dist /option_metric /option_dist;
       rewrite (_ : ra_ag_inj _ = S k = ra_ag_inj _); [reflexivity| |reflexivity|]; 
       split; try reflexivity; move => [|m] Hm _; apply met_morph_nonexp => //;
       eapply (mono_dist _ _ _ (S _)); [|exact: EQP| |symmetry; exact EQP]; omega.
+    Qed.
+
+    Global Instance inv_dist i n: Proper (dist n ==> dist n) (inv i).
+    Proof.
+      pose (f' := contractive_nonexp _ (inv_contractive i)).
+      move=>P1 P2 EQP. exact: (met_morph_nonexp f').
     Qed.
 
     Lemma inv_box i P:
@@ -906,8 +905,8 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
     
     (** Proper physical state: ownership of the machine state **)
-    Program Definition ownS : state -n> Props :=
-      n[(fun σ => m[(fun w => sp_const (ex_own σ ⊑ State w) )] )].
+    Program Definition ownS : state -> Props :=
+      fun σ => m[(fun w => sp_const (ex_own σ ⊑ State w) )].
     Next Obligation.
       intros σ n w1 w2 EQw; destruct n as [| n]; [exact:dist_bound |].
       move=>m HLt. destruct m; first reflexivity. simpl.
@@ -919,8 +918,10 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       simpl. destruct n; first reflexivity. simpl=>Hle. rewrite <-EQσ, Hle.
       exists σ3. reflexivity.
     Qed.
-    Next Obligation.
-      move=>n σ1 σ2 EQσ w. simpl morph. destruct n; first exact:dist_bound.
+
+    Global Instance ownS_dist n: Proper (dist n ==> dist n) ownS.
+    Proof.
+      move=>σ1 σ2 EQσ w. simpl morph. destruct n; first exact:dist_bound.
       hnf in EQσ. subst. reflexivity.
     Qed.
     
@@ -956,8 +957,8 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     (** Proper ghost state: ownership of logical **)
-    Program Definition ownL : RL.res -n> Props :=
-      n[(fun g => m[(fun w => sp_const (g ⊑ Res w) )] )].
+    Program Definition ownL : RL.res -> Props :=
+      fun g => m[(fun w => sp_const (g ⊑ Res w) )].
     Next Obligation.
       intros r n w1 w2 EQw; destruct n as [| n]; [exact:dist_bound |].
       move=>m HLt. destruct m; first reflexivity. simpl.
@@ -969,8 +970,10 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       simpl. destruct n; first reflexivity. simpl=>Hle. rewrite <-EQg, Hle.
       exists g3. reflexivity.
     Qed.
-    Next Obligation.
-      move=>n g1 g2 EQg w. simpl morph. destruct n; first exact:dist_bound.
+
+    Global Instance ownL_dist n: Proper (dist n ==> dist n) ownL.
+    Proof.
+      move=>g1 g2 EQg w. simpl morph. destruct n; first exact:dist_bound.
       move=>m Hle. simpl. destruct m; first reflexivity. simpl.
       rewrite EQg. reflexivity.
     Qed.
@@ -1031,7 +1034,7 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
     Lemma ownL_something:
-      valid(xist ownL).
+      valid(xist n[(ownL)]).
     Proof.
       move=>w n. destruct n; first exact:bpred. exists (Res w).
       simpl. reflexivity.

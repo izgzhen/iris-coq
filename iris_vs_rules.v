@@ -152,7 +152,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
     Qed.
 
     Definition ownLP (P : RL.res -> Prop) : {s : RL.res | P s} -n> Props :=
-      ownL <M< inclM.
+      n[(ownL)] <M< inclM.
 
     Lemma pvsGhostUpd m g (P : RL.res -> Prop) (HU : g ⇝∈ P) :
       ownL g ⊑ pvs m m (xist (ownLP P)).
@@ -177,12 +177,12 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
     Program Definition inv' m : Props -n> {n : nat | n ∈ m = true } -n> Props :=
       n[(fun P => n[(fun N => inv (proj1_sig N) P)])].
     Next Obligation.
-      intros i i' EQi; destruct n as [| n]; [apply dist_bound |].
-      simpl in EQi; rewrite EQi; reflexivity.
+      intros [i Hi] [i' Hi'] EQi; destruct n as [| n]; [apply dist_bound |].
+      cbv in EQi. subst i'. apply dist_refl; reflexivity.
     Qed.
     Next Obligation.
       intros p1 p2 EQp i; simpl morph.
-      apply (inv (` i)); assumption.
+      apply inv_dist. assumption.
     Qed.
 
     Lemma fresh_region (w : Wld) (s: nat -f> Wld) m (HInf : de_infinite m) :

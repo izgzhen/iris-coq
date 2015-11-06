@@ -412,7 +412,7 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Proof.
       pose(φ' := fun (c : expr*state*option expr) => let: (e', σ', ef) := c in φ c /\ is_value e').
       rewrite -{2}(sc_top_unit P). etransitivity;
-        last eapply (lift_step (φ := φ') (R':=lift_bin and (lift_esPred φ') (umconst P)) (R:=lift_bin and (lift_esPred φ') (ownS <M< Msnd <M< Mfst)));
+        last eapply (lift_step (φ := φ') (R':=lift_bin and (lift_esPred φ') (umconst P)) (R:=lift_bin and (lift_esPred φ') (n[(ownS)] <M< Msnd <M< Mfst)));
         try (eassumption || exact: atomic_not_value); [|reflexivity|]; last first.
       { intros. split; first by exact:STEP. eapply atomic_step; eassumption. }
       apply and_R; split.

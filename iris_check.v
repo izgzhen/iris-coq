@@ -84,7 +84,7 @@ Module Import Core := IrisCore TrivialRA StupidLang Res World.
 Module Import Plog := IrisPlog TrivialRA StupidLang Res World Core.
 Module Import VSRules := IrisVSRules TrivialRA StupidLang Res World Core Plog.
 Module Import HTRules := IrisHTRules TrivialRA StupidLang Res World Core Plog.
-Module Import Meta := IrisMeta TrivialRA StupidLang Res World Core Plog HTRules.
+Module Import Meta := IrisMeta TrivialRA StupidLang Res World Core Plog VSRules HTRules.
 
 (* Make sure the precondition of Bind can actually be met. *)
 Lemma id_is_ctx: is_ctx (fun e => e).
