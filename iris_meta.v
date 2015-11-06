@@ -184,11 +184,12 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
             (HV : is_value e') :
         Q (exist _ e' HV).
     Proof.
-      edestruct adequacy_glob as [w0 [ws' [φs' [HSWTP HWS]]]]; try eassumption; [].
+      edestruct adequacy_glob with (k':=0) as [w0 [ws' [φs' [HSWTP HWS]]]]; try eassumption; [].
       inversion HSWTP; subst; clear HSWTP WPTP.
       rewrite ->unfold_wp in WPE. destruct WPE as [WPV _].
-      edestruct (WPV HV (comp_wlist ws w0) O (de_minus de_full m)) as (w' & HQ & HWS').
-      - unfold lt. reflexivity.
+      move:WPV. case/(_ HV _ (comp_wlist ws w0) O (de_minus de_full m) σ' _ _ _)/Wrap; last intros (w' & HQ & HWS').
+      - omega.
+      - omega.
       - clear; de_auto_eq.
       - eapply spredNE, HWS. eapply dist_refl. eapply wsat_equiv.
         + clear; de_auto_eq.
@@ -260,75 +261,77 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       destruct ef1, ef2; cbv in EQe, EQσ, EQef; subst; now destruct EQef || reflexivity.
     Qed.
 
-    Program Definition plug_step_wp safe m φ Q : expr * state * option expr -n> Props :=
+    Program Definition plug_step_wp safe m1 m2 φ Q : expr * state * option expr -n> Props :=
       n[(fun c => let: (e',σ',ef) := c in
-                  ((□lift_esPred φ c) ∧ ownS σ') -*
-                    (wp safe m e' Q * match ef return _ with None => ⊤ | Some ef => wp safe de_full ef (umconst ⊤) end)  )].
+                  ((□lift_esPred φ c) ∧ ownS σ') -* pvs m1 m2
+                    (wp safe m2 e' Q * match ef return _ with None => ⊤ | Some ef => wp safe de_full ef (umconst ⊤) end)  )].
     Next Obligation.
       move=>[[e1 σ1] ef1] [[e2 σ2] ef2] [[EQe EQσ] EQef].
       destruct n; first exact:dist_bound.
       destruct ef1, ef2; cbv in EQe, EQσ, EQef; subst; now destruct EQef || reflexivity.
     Qed.
 
-    Lemma lift_step_wp {m safe e σ φ Q}
-        (NVAL : ~is_value e)
+    Lemma lift_step_wp {m1 m2 safe e σ φ Q}
+        (NVAL : ~is_value e) (MASK : m1 ⊑ m2)
         (STEP : forall e' σ' ef, prim_step (e,σ) (e',σ') ef -> φ(e',σ',ef))
         (SAFE : if safe then safeExpr e σ else True) :
-      (ownS σ * ▹(all (plug_step_wp safe m φ Q))) ⊑ wp safe m e Q.
+      pvs m2 m1 (ownS σ * ▹(all (plug_step_wp safe m1 m2 φ Q))) ⊑ wp safe m2 e Q.
     Proof.
       intros w n. destruct n; first (intro; exact:bpred).
-      intros [[w1 w2] [Heqw [HoS Hwpe]]]. simpl in Heqw, Hwpe.
-      rewrite ->unfold_wp. split; intros.
+      intros Hpvs. rewrite ->unfold_wp. split; intros.
       { contradiction. }
-      destruct HE as [rs HWT]. rename σ0 into σi.
+      edestruct (Hpvs wf k mf) as (w1 & Hsep & HE1);[assumption|de_auto_eq|eassumption|].
+      destruct Hsep as [[w2 w2'] [Heqw [HoS Hwpe]]]. clear Hpvs HE. simpl in Heqw, Hwpe.
+      destruct HE1 as [rs HWT]. rename σ0 into σi.
       cbv zeta in HWT. rewrite ->comp_finmap_move in HWT.
-      have Hσ: σ = σi /\ State (w2 · comp_finmap wf rs) = ex_unit.
+      have Hσ: σ = σi /\ State (w2' · comp_finmap wf rs) = ex_unit.
       { clear - HoS Heqw HWT HLt. destruct HWT as [[_ [pv _]] [HS _]].
         destruct HoS as [t Heq]. destruct Heqw as [_ [HeqS _]]. simpl in *.
         destruct HS as [t' HS].
         unfold ra_op, ra_valid in *.
-        destruct (fst (snd w1)), (fst (snd w2)), (fst (snd w)), t; simpl in *; try tauto; [].
+        destruct (fst (snd w2)), (fst (snd w2')), (fst (snd w1)), t; simpl in *; try tauto; [].
         destruct (fst (snd (comp_finmap wf rs))), t'; simpl in *; try tauto; [].
         split; last reflexivity. rewrite -HS -HeqS -Heq. reflexivity. }
       destruct Hσ as [Hσ HStUnit]. clear HoS. subst σi.
       split; last first.
       { by move: SAFE {Hwpe} ; case: safe. }
       move=> e' σ' ef HStep {SAFE NVAL}.
-      pose (w1' := (Invs w1, (ex_own σ', Res w1))).
-      move: (Hwpe (e', σ', ef) w1' n (le_refl _))=>{Hwpe}. destruct n; first by (exfalso; omega).
-      case; last move=>[w3e w3f] [Hw3 [Hwpe Hwpf]].
-      { split; first by apply STEP. simpl. eexists ex_unit. reflexivity. }
-      eexists w3e, w3f. split; last split.
-      - eapply propsMN, Hwpe. omega.
-      - destruct ef; last done. eapply propsMN, Hwpf. omega.
+      pose (w2'' := (Invs w2, (ex_own σ', Res w2))).
+      move: (Hwpe (e', σ', ef) w2'' _ (le_refl _))=>{Hwpe}. destruct n; first by (exfalso; omega).
+      destruct k.
+      { intros _. exists w1 w1. (* Witnesses do not matter. *)
+        split; last split; done || destruct ef; done || exact:wp1. }
+      case/(_ _ wf k mf σ' _ _ _)/Wrap; last move=>[w3 [[[w3e w3f] [Hw3 [Hwpe Hwpf]]] HE3]].
+      - split; first by apply STEP. simpl. eexists ex_unit. reflexivity.
+      - omega.
+      - de_auto_eq.
       - (* wsat σ' follows from wsat σ (by the construction of the new world). *)
-        destruct k; first done. simpl.
-        exists rs. rewrite comp_finmap_move.
+        exists rs. cbv zeta. rewrite comp_finmap_move.
         (* Rewrite Heqw in HWT - needs manual work *)
-        assert(HWT': wsatTotal (S k) σ rs (m ∪ mf)%de (w1 · w2 · comp_finmap wf rs)).
+        assert(HWT': wsatTotal (S k) σ rs (m1 ∪ mf)%de (w2' · w2 · comp_finmap wf rs)).
         { eapply wsatTotal_proper, wsatTotal_dclosed, HWT; try reflexivity; last omega; [].
-          apply cmra_op_dist; last reflexivity. eapply mono_dist, Heqw. omega. }
+          apply cmra_op_dist; last reflexivity. rewrite comm. eapply mono_dist, Heqw. omega. }
         clear HWT. destruct HWT' as [pv [HS HI]]. 
-        (* Rewrite Hw3 in the goal - needs manual work *)
-        rewrite /Mfst /Msnd in Hw3. simpl morph in Hw3. apply sp_eq_iff in Hw3.
-        cut (wsatTotal (S k) σ' rs (m ∪ mf)%de (w1' · w2 · comp_finmap wf rs)).
-        { eapply wsatTotal_proper; first reflexivity. apply cmra_op_dist; last reflexivity.
-          rewrite (comm w1') (comm w3f). eapply mono_dist, Hw3. omega. }
         (* Get the projection to the physical state *)
-        assert (HSt: State (w1' · w2 · comp_finmap wf rs) == ex_own σ').
+        assert (HSt: State (w2' · w2'' · comp_finmap wf rs) == ex_own σ').
         { clear -HStUnit. simpl in HStUnit. rewrite /State -assoc. simpl.
-          rewrite HStUnit. reflexivity. }
+          rewrite (comm (ex_own _)) assoc HStUnit. reflexivity. }
         clear HStUnit.
         (* Now, finally, prove the actual thing *)
         split; last split.
         + clear- pv HSt Heqw HLt.
-          destruct pv as [HIVal [HSVal HRVal]]. rewrite /w1'.
+          destruct pv as [HIVal [HSVal HRVal]]. rewrite /w2''.
           split; last split; last 1 first.
           * assumption.
           * assumption.
           * simpl in HSt. by rewrite HSt.
         + rewrite HSt. reflexivity.
         + assumption.
+      - exists w3e w3f. split; first assumption. split; first (destruct ef; assumption).
+        (* Rewrite Hw3 in the goal - needs manual work *)
+        rewrite /Mfst /Msnd in Hw3. simpl morph in Hw3. apply sp_eq_iff in Hw3.
+        eapply wsat_dist, HE3; first reflexivity; last reflexivity.
+        apply cmra_op_dist; last reflexivity. rewrite (comm w3f). exact: Hw3.
     Qed.
 
     (* The "nicer looking" (ht-based) lemma is now a derived form. *)
