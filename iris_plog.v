@@ -305,6 +305,16 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       eapply propsMN, HP. omega.
     Qed.
 
+    Lemma pvsMon P Q m1 m2 : 
+      P ⊑ Q -> pvs m1 m2 P ⊑ pvs m1 m2 Q.
+    Proof.
+      move => HPQ w0 n HvsP.
+      intros wf k mf σ Hlt HD HSat.
+      destruct (HvsP wf _ mf σ Hlt) as (w1 & HP & HSat2); [de_auto_eq|assumption|].
+      exists w1. split; last assumption.
+      eapply HPQ, HP.
+    Qed.
+
   End PrimitiveViewShifts.
 
 
@@ -318,7 +328,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
     Definition wpFP safe (WP : mask -n> expr -n> vPred -n> Props) m e φ w n :=
       (forall (HV : is_value e),
-          φ (exist _ e HV) w n) /\
+          n > 1 -> φ (exist _ e HV) w n) /\
       forall wf k mf σ (HLt : S k < n) (HD : mf # m)
              (HE : wsat σ (m ∪ mf) (w · wf) (S (S k))),
         (forall e' σ' ef (HStep : prim_step (e, σ) (e', σ') ef),
@@ -338,7 +348,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
     Next Obligation.
       intros n1 n2 HLe Hwp. split.
-      { intros. destruct Hwp as [Hwp _]. eapply dpred, Hwp. assumption. }
+      { intros. destruct Hwp as [Hwp _]. eapply dpred, Hwp; assumption || omega. }
       intros  wf k mf σ HLt HD HE. destruct Hwp as [_ Hwp]. 
       destruct (Hwp wf k mf σ) as [HSt HSf]; first omega; try assumption; [].
       split; intros.
@@ -349,7 +359,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Next Obligation.
       eapply dist_spred_simpl; first now apply _.
       intros w1 w2 n' HLt EQw [HV Hwp]; simpl. split.
-      { intros. eapply spredNE, HV. rewrite EQw. reflexivity. }
+      { intros. eapply spredNE, HV; last by assumption. rewrite EQw. reflexivity. }
       intros. edestruct (Hwp wf) as [HS HSf]; try eassumption;
       [eapply wsat_dist, HE; [reflexivity| eapply cmra_op_dist; eassumption || reflexivity |  omega] |].
       split; intros.
@@ -359,7 +369,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
     Next Obligation.
       intros w1 w2 [wd EQw] n. simpl; intros [HV Hwp]. split; intros.
-      { eapply propsMW, HV. eexists. eassumption. }
+      { eapply propsMW, HV; last by assumption. eexists. eassumption. }
       edestruct (Hwp (wd · wf) k mf) as [HS HSf]; try assumption; [|].
       { eapply wsat_dist, HE; try reflexivity. now rewrite -EQw assoc (comm w1). }
       split; intros.
@@ -373,7 +383,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Next Obligation.
       eapply dist_props_simpl; first now apply _.
       intros φ1 φ2 w k HLt EQφ [HV Hwp]; simpl; split; intros.
-      { eapply spredNE, HV. eapply mmorph_proper; last reflexivity. eapply mono_dist, EQφ. assumption. }
+      { eapply spredNE, HV; last by assumption. eapply mmorph_proper; last reflexivity. eapply mono_dist, EQφ. assumption. }
       clear HV. edestruct Hwp as [HS HSf]; try eassumption; [].
       split; intros.
       - specialize (HS _ _ _ HStep); destruct HS as [wret [wfk [HWR [HWF HE']]]].
@@ -388,7 +398,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Next Obligation.
       move=>m1 m2 EQm e φ w. destruct n; first exact:dist_bound.
       move:φ w e. split=>[] [HV Hwp]; split; intros.
-      - eapply HV.
+      - eapply HV. assumption.
       - destruct (Hwp wf k mf σ) as (Hstep & Hsafe); [assumption|de_auto_eq|now rewrite EQm|].
         split; last assumption.
         move=>? ? ? Hprim. specialize (Hstep _ _ _ Hprim).
@@ -400,7 +410,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
           eapply dist_mono, EQm.
         + assumption. 
         + now rewrite -EQm.
-      - eapply HV.
+      - eapply HV. assumption.
       - destruct (Hwp wf k mf σ) as (Hstep & Hsafe); [assumption|de_auto_eq|now rewrite -EQm|].
         split; last assumption.
         move=>? ? ? Hprim. specialize (Hstep _ _ _ Hprim).
@@ -446,16 +456,21 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Global Opaque wp.
 
     (* Some global properties are proven here directly. *)
-    Lemma wpValue e (HV : is_value e) safe m φ :
-      wp safe m e φ == φ (exist _ e HV).
+    Lemma wp1 safe m e φ w:
+      wp safe m e φ w 1%nat.
     Proof.
-      rewrite unfold_wp. split.
-      - intros [HVl _]. apply HVl.
-      - intros Hφ. split; last (intros; split; intros).
-        + intros. eapply spredNE, Hφ. eapply mmorph_proper; last reflexivity.
-          apply (met_morph_nonexp φ). destruct n; first done. reflexivity.
-        + contradiction (values_stuck _ HV). repeat eexists. eassumption.
-        + unfold safeExpr. auto.
+      split; intros; exfalso; omega.
+    Qed.
+
+    Lemma wpValue e (HV : is_value e) safe m φ :
+      φ (exist _ e HV) ⊑ wp safe m e φ.
+    Proof.
+      rewrite unfold_wp.
+      intros w n Hφ. split; last (intros; split; intros).
+      - intros. eapply spredNE, Hφ. eapply mmorph_proper; last reflexivity.
+        apply (met_morph_nonexp φ). destruct n; first done. reflexivity.
+      - contradiction (values_stuck _ HV). repeat eexists. eassumption.
+      - unfold safeExpr. auto.
     Qed.
 
   End WeakestPre.

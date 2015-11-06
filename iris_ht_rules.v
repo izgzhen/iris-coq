@@ -21,7 +21,7 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
     Proof.
       move=>Himpl w n. move: n w e. elim/wf_nat_ind=>n0 IH w0 e.
       rewrite ->unfold_wp. intros [HV Hwp]. split; intros.
-      { eapply Himpl, HV. }
+      { eapply Himpl, HV. assumption. }
       edestruct (Hwp wf) as [Hstep Hsafe]; try eassumption; [].
       split; last assumption.
       move=>σ' ei' ef Hpstep. destruct (Hstep _ _ _ Hpstep) as (w2 & w2f & Hnext & Hnextf & Hsat)=>{Hstep Hsafe}.
@@ -52,7 +52,9 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       pvs m m (wp safe m e φ) ⊑ wp safe m e (pvs m m <M< φ).
     Proof.
       move=>w0 n0 Hvswp. rewrite ->unfold_wp. split; intros.
-      { rewrite ->wpValue in Hvswp. eapply spredNE, Hvswp. eapply dist_refl. simpl. reflexivity. }
+      { intros w; intros. edestruct (Hvswp w k mf σ) as [w2 [Hφ HE2]];try assumption;[].
+        exists w2. split; last assumption. rewrite ->unfold_wp in Hφ.
+        destruct Hφ as [Hφ _]. eapply Hφ. omega. }
       move:Hvswp. case/(_ wf k mf σ HLt _ HE); last move=>w2 [Hwp Hsat].
       { de_auto_eq. }
       assert (Hwp': wp safe m e (pvs m m <M< φ) w2 (S (S k))).
@@ -67,7 +69,7 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
     Lemma wpACons safe m m' e φ
           (HAt   : atomic e)
           (HSub  : m' ⊑ m) :
-      pvs m m' (wp safe m' e ((pvs m' m) <M< φ)) ⊑ wp safe m e (pvs m m <M< φ).
+      pvs m m' (wp safe m' e ((pvs m' m) <M< φ)) ⊑ wp safe m e φ.
     Proof.
       move=>w0 n0 Hvswpvs. rewrite->unfold_wp. split; intros.
       { contradiction (atomic_not_value e). }
@@ -80,17 +82,16 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       assert (HVal := atomic_step _ HAt Hstep)=>{Hstep e HAt σ}.
       edestruct Hwpvs as (Hvs & _)=>{Hwpvs}. specialize (Hvs HVal).
       destruct k.
-      { exists w3 w3f. split; last (split; [assumption|exact I]). rewrite wpValue. intro; intros.
-        exfalso. omega. }
-      edestruct (Hvs (w3f · wf) k mf) as (w4 & Hφ & Hsat4); first omega; first de_auto_eq.
+      { exists w3 w3f. (* Witnesses do not matter *)
+        split; last split; done || destruct ef'; exact:wp1. }
+      move:Hvs. case/(_ _ (w3f · wf) k mf σ' _ _ _)/Wrap; last intros (w4 & Hφ & Hsat4);
+       first omega; first omega; first de_auto_eq.
       { eapply spredNE, Hsat3. eapply dist_refl, wsat_equiv; first reflexivity.
         rewrite assoc (comm _ w3). reflexivity. }
       exists w4 w3f. split; last (split; first assumption).
-      - rewrite wpValue. eapply pvsEnt. eassumption.
+      - eapply wpValue. eassumption.
       - eapply spredNE, Hsat4. eapply dist_refl, wsat_equiv; first reflexivity.
         rewrite assoc (comm _ w4). reflexivity.
-    Grab Existential Variables.
-    { assumption. }
     Qed.
 
     (** Bind - in general **)
@@ -111,7 +112,9 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
         (* We need to actually decide whether e is a value, to establish safety in the case that
            it is not. *)
         destruct (is_value_dec e) as [HVal | HNVal]; [clear IH |].
-        - eapply (wpValue _ HVal) in He. exact:He.
+        - rewrite ->unfold_wp in He. destruct He as [HeV _].
+          destruct n; first exact:dpred. destruct n; first exact:wp1.
+          eapply (HeV HVal). omega.
         - rewrite ->unfold_wp in He; rewrite unfold_wp. split; intros.
           { exfalso. apply HNVal, HCval, HV. }
           edestruct He as [_ He']; try eassumption; []; clear He.
@@ -131,7 +134,7 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       wp safe m1 e φ ⊑ wp safe m2 e φ.
     Proof.
       intros w n; revert w e φ; induction n using wf_nat_ind; rename H into HInd; intros w e φ.
-      rewrite unfold_wp. intros [HV HW]. split; intros; first done.
+      rewrite unfold_wp. intros [HV HW]. split; intros; first exact:HV.
       edestruct HW with (mf := mf ∪ (m2 \ m1)) as [HS HSf]; try eassumption;
       [| eapply wsat_equiv, HE; try reflexivity; de_auto_eq |]; first de_auto_eq.
       clear HW HE; split; [intros; clear HV | intros; clear HV HS].
@@ -151,7 +154,7 @@ Module Type IRIS_HT_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
       rewrite unfold_wp; rewrite ->unfold_wp in HW.
       destruct HW as [[w1 w2] [EQw [[HV Hwp] HR]]].
       split; intros.
-      { exists (w1, w2). split; first assumption. split; last exact HR. apply HV. }
+      { exists (w1, w2). split; first assumption. split; last exact HR. exact:HV. }
       simpl in EQw. pose (wf' := w2 · wf).
       edestruct Hwp with (wf:=wf') as [HS HSf]; try eassumption; [|].
       { eapply wsat_dist, HE; first reflexivity; last reflexivity.

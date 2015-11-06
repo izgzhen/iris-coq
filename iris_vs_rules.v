@@ -121,17 +121,7 @@ Module Type IRIS_VS_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: 
         [ omega | de_auto_eq | auto | ].
       exists w3; split; assumption.
     Qed.
-    
-    Lemma pvsMon P Q m1 m2 : 
-      P ⊑ Q -> pvs m1 m2 P ⊑ pvs m1 m2 Q.
-    Proof.
-      move => HPQ w0 n HvsP.
-      intros wf k mf σ Hlt HD HSat.
-      destruct (HvsP wf _ mf σ Hlt) as (w1 & HP & HSat2); [de_auto_eq|assumption|].
-      exists w1. split; last assumption.
-      eapply HPQ, HP.
-    Qed.
-      
+          
     Lemma pvsFrameMask P m1 m2 mf (HDisj : mf # m1 ∪ m2) :
       pvs m1 m2 P ⊑ pvs (m1 ∪ mf) (m2 ∪ mf) P.
     Proof.

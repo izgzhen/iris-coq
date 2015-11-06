@@ -281,7 +281,8 @@ Module Type IRIS_DERIVED_RULES (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) 
     Proof.
       rewrite /vs {1}/ht -vsLiftBox -!box_conj. apply htIntro.
       etransitivity; last (eapply wpACons; eassumption).
-      eapply htMCons.
+      etransitivity; first by eapply htMCons.
+      eapply pvsMon. eapply wpMon=>v. eapply pvsMon. eapply pvsEnt.
     Qed.
 
 
