@@ -288,10 +288,9 @@ Module Type IRIS_META (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       have Hσ: σ = σi /\ State (w2' · comp_finmap wf rs) = ex_unit.
       { clear - HoS Heqw HWT HLt. destruct HWT as [[_ [pv _]] [HS _]].
         destruct HoS as [t Heq]. destruct Heqw as [_ [HeqS _]]. simpl in *.
-        destruct HS as [t' HS].
         unfold ra_op, ra_valid in *.
         destruct (fst (snd w2)), (fst (snd w2')), (fst (snd w1)), t; simpl in *; try tauto; [].
-        destruct (fst (snd (comp_finmap wf rs))), t'; simpl in *; try tauto; [].
+        destruct (fst (snd (comp_finmap wf rs))); simpl in *; try tauto; [].
         split; last reflexivity. rewrite -HS -HeqS -Heq. reflexivity. }
       destruct Hσ as [Hσ HStUnit]. clear HoS. subst σi.
       split; last first.

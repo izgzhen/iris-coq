@@ -135,7 +135,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
        anyway, so it may or may not end up actually simplifying anything. *)
     Definition wsatTotal n' σ (s: nat -f> Wld) m wt :=
       (cmra_valid wt (S n')) /\
-      (State wt ⊑ ex_own σ) /\
+      (State wt == ex_own σ) /\
       forall i agP (Heq: (Invs wt) i = S n' = Some agP),
         match (i ∈ m)%de, s i with
         | true , Some w => let P := ra_ag_unInj agP (S n') in unhalved (ı P) w n'
@@ -151,7 +151,7 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
       split.
       { eapply spredNE, pv. apply cmra_valid_dist. assumption. }
       split.
-      { rewrite <-HS. apply pordR. destruct EQwt as [_ [HwtS _]].
+      { rewrite <-HS. destruct EQwt as [_ [HwtS _]].
         symmetry. exact HwtS. }
       move=>i agP Heq.
       move:(HI i agP). case/(_ _)/Wrap; last move=>{HI} HI.
@@ -226,11 +226,6 @@ Module Type IRIS_PLOG (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
     Qed.
 
   End WorldSatisfaction.
-
-  (* Simple view lemma. *)
-  Lemma wsatM {σ m} {w n k} (HLe : k <= n) :
-    wsat σ m w n -> wsat σ m w k.
-  Proof. by exact: (dpred HLe). Qed.
 
   Section PrimitiveViewShifts.
     Local Obligation Tactic := intros.
