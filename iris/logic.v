@@ -92,7 +92,7 @@ Solve Obligations with naive_solver eauto 2 using (dist_le (A:=B)).
 Program Definition iprop_sep {A} (P Q : iProp A) : iProp A :=
   {| iprop_holds n x := ∃ x1 x2, x ={n}= x1 ⋅ x2 ∧ P n x1 ∧ Q n x2 |}.
 Next Obligation.
-  by intros A P Q x y n (x1&x2&?&?&?) Hxy; exists x1 x2; rewrite <-Hxy.
+  by intros A P Q x y n (x1&x2&?&?&?) Hxy; exists x1, x2; rewrite <-Hxy.
 Qed.
 Next Obligation.
   intros A P Q x y n1 n2 Hxy ?? (x1&x2&Hx&?&?).
@@ -100,7 +100,7 @@ Next Obligation.
   { rewrite ra_included_spec in Hxy; destruct Hxy as [z Hy].
     exists (x2 ⋅ z); split; eauto using ra_included_l.
     apply dist_le with n1; auto. by rewrite (associative op), <-Hx, Hy. }
-  exists x1 x2'; split_ands; auto.
+  exists x1, x2'; split_ands; auto.
   * apply iprop_weaken with x1 n1; auto.
     by apply cmra_valid_op_l with x2'; rewrite <-Hy.
   * apply iprop_weaken with x2 n1; auto.
@@ -194,7 +194,7 @@ Global Instance iprop_sep_ne n :
   Proper (dist n ==> dist n ==> dist n) (@iprop_sep A).
 Proof.
   intros P P' HP Q Q' HQ x n' ? Hx'; split; intros (x1&x2&Hx&?&?);
-    exists x1 x2; rewrite  Hx in Hx'; split_ands; try apply HP; try apply HQ;
+    exists x1, x2; rewrite  Hx in Hx'; split_ands; try apply HP; try apply HQ;
     eauto using cmra_valid_op_l, cmra_valid_op_r.
 Qed.
 Global Instance iprop_wand_ne n :
@@ -262,27 +262,27 @@ Proof.
   intros P x n Hvalid; split.
   * intros (x1&x2&Hx&_&?); rewrite Hx in Hvalid |- *.
     apply iprop_weaken with x2 n; auto using ra_included_r.
-  * by intros ?; exists (unit x) x; rewrite ra_unit_l.
+  * by intros ?; exists (unit x), x; rewrite ra_unit_l.
 Qed. 
 Global Instance iprop_sep_commutative : Commutative (≡) (@iprop_sep A).
 Proof.
   by intros P Q x n ?; split;
-    intros (x1&x2&?&?&?); exists x2 x1; rewrite (commutative op).
+    intros (x1&x2&?&?&?); exists x2, x1; rewrite (commutative op).
 Qed.
 Global Instance iprop_sep_associative : Associative (≡) (@iprop_sep A).
 Proof.
   intros P Q R x n ?; split.
-  * intros (x1&x2&Hx&?&y1&y2&Hy&?&?); exists (x1 ⋅ y1) y2; split_ands; auto.
+  * intros (x1&x2&Hx&?&y1&y2&Hy&?&?); exists (x1 ⋅ y1), y2; split_ands; auto.
     + by rewrite <-(associative op), <-Hy, <-Hx.
-    + by exists x1 y1.
-  * intros (x1&x2&Hx&(y1&y2&Hy&?&?)&?); exists y1 (y2 ⋅ x2); split_ands; auto.
+    + by exists x1, y1.
+  * intros (x1&x2&Hx&(y1&y2&Hy&?&?)&?); exists y1, (y2 ⋅ x2); split_ands; auto.
     + by rewrite (associative op), <-Hy, <-Hx.
-    + by exists y2 x2.
+    + by exists y2, x2.
 Qed.
 Lemma iprop_wand_intro P Q R : (R ★ P)%I ⊆ Q → R ⊆ (P -★ Q)%I.
 Proof.
   intros HPQ x n ?? x' n' ???; apply HPQ; auto.
-  exists x x'; split_ands; auto.
+  exists x, x'; split_ands; auto.
   eapply iprop_weaken with x n; eauto using cmra_valid_op_l.
 Qed.
 Lemma iprop_wand_elim P Q : ((P -★ Q) ★ P)%I ⊆ Q.
@@ -291,21 +291,21 @@ Proof.
 Qed.
 Lemma iprop_sep_or P Q R : ((P ∨ Q) ★ R)%I ≡ ((P ★ R) ∨ (Q ★ R))%I.
 Proof.
-  split; [by intros (x1&x2&Hx&[?|?]&?); [left|right]; exists x1 x2|].
-  intros [(x1&x2&Hx&?&?)|(x1&x2&Hx&?&?)]; exists x1 x2; split_ands;
+  split; [by intros (x1&x2&Hx&[?|?]&?); [left|right]; exists x1, x2|].
+  intros [(x1&x2&Hx&?&?)|(x1&x2&Hx&?&?)]; exists x1, x2; split_ands;
     first [by left | by right | done].
 Qed.
 Lemma iprop_sep_and P Q R : ((P ∧ Q) ★ R)%I ⊆ ((P ★ R) ∧ (Q ★ R))%I.
-Proof. by intros x n ? (x1&x2&Hx&[??]&?); split; exists x1 x2. Qed.
+Proof. by intros x n ? (x1&x2&Hx&[??]&?); split; exists x1, x2. Qed.
 Lemma iprop_sep_exist {B} (P : B → iProp A) Q :
   ((∃ b, P b) ★ Q)%I ≡ (∃ b, P b ★ Q)%I.
 Proof.
-  split; [by intros (x1&x2&Hx&[b ?]&?); exists b x1 x2|].
-  intros [b (x1&x2&Hx&?&?)]; exists x1 x2; split_ands; by try exists b.
+  split; [by intros (x1&x2&Hx&[b ?]&?); exists b, x1, x2|].
+  intros [b (x1&x2&Hx&?&?)]; exists x1, x2; split_ands; by try exists b.
 Qed.
 Lemma iprop_sep_forall `(P : B → iProp A) Q :
   ((∀ b, P b) ★ Q)%I ⊆ (∀ b, P b ★ Q)%I.
-Proof. by intros x n ? (x1&x2&Hx&?&?); intros b; exists x1 x2. Qed.
+Proof. by intros x n ? (x1&x2&Hx&?&?); intros b; exists x1, x2. Qed.
 
 (* Later *)
 Global Instance iprop_later_contractive : Contractive (@iprop_later A).
@@ -345,12 +345,12 @@ Qed.
 Lemma iprop_later_sep P Q : (▷ (P ★ Q))%I ≡ (▷ P ★ ▷ Q)%I.
 Proof.
   intros x n ?; split.
-  * destruct n as [|n]; simpl; [by exists x x|intros (x1&x2&Hx&?&?)].
+  * destruct n as [|n]; simpl; [by exists x, x|intros (x1&x2&Hx&?&?)].
     destruct (cmra_extend_op x x1 x2 n)
       as ([y1 y2]&Hx'&Hy1&Hy2); auto using cmra_valid_S; simpl in *.
-    exists y1 y2; split; [by rewrite Hx'|by rewrite Hy1, Hy2].
+    exists y1, y2; split; [by rewrite Hx'|by rewrite Hy1, Hy2].
   * destruct n as [|n]; simpl; [done|intros (x1&x2&Hx&?&?)].
-    exists x1 x2; eauto using (dist_S (A:=A)).
+    exists x1, x2; eauto using (dist_S (A:=A)).
 Qed.
 
 (* Always *)
@@ -378,7 +378,7 @@ Lemma iprop_always_exist `(P : B → iProp A) : (□ ∃ b, P b)%I ≡ (∃ b, �
 Proof. done. Qed.
 Lemma iprop_always_and_always_box P Q : (□ P ∧ Q)%I ⊆ (□ P ★ Q)%I.
 Proof.
-  intros x n ? [??]; exists (unit x) x; simpl in *.
+  intros x n ? [??]; exists (unit x), x; simpl in *.
   by rewrite ra_unit_l, ra_unit_idempotent.
 Qed.
 
