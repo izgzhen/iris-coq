@@ -68,7 +68,8 @@ Global Instance cmra_valid_proper : Proper ((≡) ==> iff) (validN n).
 Proof. by intros n x1 x2 Hx; apply cmra_valid_ne', equiv_dist. Qed.
 Global Instance cmra_ra : RA A.
 Proof.
-  split; try by (destruct cmra; eauto with typeclass_instances).
+  split; try by (destruct cmra;
+    eauto using ne_proper, ne_proper_2 with typeclass_instances).
   * by intros x1 x2 Hx; rewrite !cmra_valid_validN; intros ? n; rewrite <-Hx.
   * intros x y; rewrite !cmra_valid_validN; intros ? n.
     by apply cmra_valid_op_l with y.
@@ -87,14 +88,14 @@ Proof.
   intros x1 x2 Hx y1 y2 Hy.
   by rewrite Hy, (commutative _ x1), Hx, (commutative _ y2).
 Qed.
+Lemma cmra_unit_valid x n : validN n x → validN n (unit x).
+Proof. rewrite <-(cmra_unit_l x) at 1; apply cmra_valid_op_l. Qed.
 Lemma cmra_included_dist_l x1 x2 x1' n :
   x1 ≼ x2 → x1' ={n}= x1 → ∃ x2', x1' ≼ x2' ∧ x2' ={n}= x2.
 Proof.
   rewrite ra_included_spec; intros [z Hx2] Hx1; exists (x1' ⋅ z); split.
   apply ra_included_l. by rewrite Hx1, Hx2.
 Qed.
-Lemma cmra_unit_valid x n : validN n x → validN n (unit x).
-Proof. rewrite <-(cmra_unit_l x) at 1; apply cmra_valid_op_l. Qed.
 End cmra.
 
 (* Also via [cmra_cofe; cofe_equivalence] *)

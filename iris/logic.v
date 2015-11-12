@@ -179,17 +179,23 @@ Global Instance iprop_and_ne n :
 Proof.
   intros P P' HP Q Q' HQ; split; intros [??]; split; by apply HP || by apply HQ.
 Qed.
+Global Instance iprop_and_proper :
+  Proper ((≡) ==> (≡) ==> (≡)) (@iprop_and A) := ne_proper_2 _.
 Global Instance iprop_or_ne n :
   Proper (dist n ==> dist n ==> dist n) (@iprop_or A).
 Proof.
   intros P P' HP Q Q' HQ; split; intros [?|?];
     first [by left; apply HP | by right; apply HQ].
 Qed.
+Global Instance iprop_or_proper :
+  Proper ((≡) ==> (≡) ==> (≡)) (@iprop_or A) := ne_proper_2 _.
 Global Instance iprop_impl_ne n :
   Proper (dist n ==> dist n ==> dist n) (@iprop_impl A).
 Proof.
   intros P P' HP Q Q' HQ; split; intros HPQ x' n'' ????; apply HQ,HPQ,HP; auto.
 Qed.
+Global Instance iprop_impl_proper :
+  Proper ((≡) ==> (≡) ==> (≡)) (@iprop_impl A) := ne_proper_2 _.
 Global Instance iprop_sep_ne n :
   Proper (dist n ==> dist n ==> dist n) (@iprop_sep A).
 Proof.
@@ -197,12 +203,16 @@ Proof.
     exists x1, x2; rewrite  Hx in Hx'; split_ands; try apply HP; try apply HQ;
     eauto using cmra_valid_op_l, cmra_valid_op_r.
 Qed.
+Global Instance iprop_sep_proper :
+  Proper ((≡) ==> (≡) ==> (≡)) (@iprop_sep A) := ne_proper_2 _.
 Global Instance iprop_wand_ne n :
   Proper (dist n ==> dist n ==> dist n) (@iprop_wand A).
 Proof.
   intros P P' HP Q Q' HQ x n' ??; split; intros HPQ x' n'' ???;
     apply HQ, HPQ, HP; eauto using cmra_valid_op_r.
 Qed.
+Global Instance iprop_wand_proper :
+  Proper ((≡) ==> (≡) ==> (≡)) (@iprop_wand A) := ne_proper_2 _.
 Global Instance iprop_eq_ne {B : cofeT} n :
   Proper (dist n ==> dist n ==> dist n) (@iprop_eq A B).
 Proof.
@@ -210,13 +220,23 @@ Proof.
   * by rewrite <-(dist_le _ _ _ _ Hx), <-(dist_le _ _ _ _ Hy) by auto.
   * by rewrite (dist_le _ _ _ _ Hx), (dist_le _ _ _ _ Hy) by auto.
 Qed.
+Global Instance iprop_eq_proper {B : cofeT} :
+  Proper ((≡) ==> (≡) ==> (≡)) (@iprop_eq A B) := ne_proper_2 _.
 Global Instance iprop_forall_ne {B : cofeT} :
   Proper (pointwise_relation _ (dist n) ==> dist n) (@iprop_forall B A).
 Proof. by intros n P1 P2 HP12 x n'; split; intros HP a; apply HP12. Qed.
+Global Instance iprop_forall_proper {B : cofeT} :
+  Proper (pointwise_relation _ (≡) ==> (≡)) (@iprop_forall B A).
+Proof. by intros P1 P2 HP12 x n'; split; intros HP a; apply HP12. Qed.
 Global Instance iprop_exists_ne {B : cofeT} :
   Proper (pointwise_relation _ (dist n) ==> dist n) (@iprop_exist B A).
 Proof.
   by intros n P1 P2 HP12 x n'; split; intros [a HP]; exists a; apply HP12.
+Qed.
+Global Instance iprop_exist_proper {B : cofeT} :
+  Proper (pointwise_relation _ (≡) ==> (≡)) (@iprop_exist B A).
+Proof.
+  by intros P1 P2 HP12 x n'; split; intros [a HP]; exists a; apply HP12.
 Qed.
 
 (** Introduction and elimination rules *)

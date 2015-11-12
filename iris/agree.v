@@ -91,6 +91,8 @@ Proof.
 Qed.
 Instance: Proper (dist n ==> dist n ==> dist n) op.
 Proof. by intros n x1 x2 Hx y1 y2 Hy; rewrite Hy,!(commutative _ _ y2), Hx. Qed.
+Instance: Proper ((≡) ==> (≡) ==> (≡)) op := ne_proper_2 _.
+
 Global Instance agree_cmra : CMRA (agree A).
 Proof.
   split; try (apply _ || done).
@@ -133,6 +135,7 @@ Section agree_map.
   Next Obligation. by intros x n i ??; simpl; rewrite (agree_cauchy x n i). Qed.
   Global Instance agree_map_ne n : Proper (dist n ==> dist n) agree_map.
   Proof. by intros x1 x2 Hx; split; simpl; intros; [apply Hx|apply Hf, Hx]. Qed.
+  Global Instance agree_map_proper: Proper ((≡)==>(≡)) agree_map := ne_proper _.
   Global Instance agree_map_preserving : CMRAPreserving agree_map.
   Proof.
     split; [|by intros n ?].

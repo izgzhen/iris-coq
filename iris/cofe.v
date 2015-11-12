@@ -3,7 +3,7 @@ Obligation Tactic := idtac.
 
 (** Unbundeled version *)
 Class Dist A := dist : nat → relation A.
-Instance: Params (@dist) 2.
+Instance: Params (@dist) 3.
 Notation "x ={ n }= y" := (dist n x y)
   (at level 70, n at next level, format "x  ={ n }=  y").
 Hint Extern 0 (?x ={_}= ?x) => reflexivity.
@@ -65,13 +65,10 @@ Section cofe.
   Proof. by apply dist_proper. Qed.
   Lemma dist_le x y n n' : x ={n}= y → n' ≤ n → x ={n'}= y.
   Proof. induction 2; eauto using dist_S. Qed.
-  Global Instance contractive_ne `{Cofe B} (f : A → B) `{!Contractive f} n :
-    Proper (dist n ==> dist n) f | 100.
-  Proof. by intros x1 x2 ?; apply dist_S, contractive. Qed.
-  Global Instance ne_proper `{Cofe B} (f : A → B)
+  Instance ne_proper `{Cofe B} (f : A → B)
     `{!∀ n, Proper (dist n ==> dist n) f} : Proper ((≡) ==> (≡)) f | 100.
   Proof. by intros x1 x2; rewrite !equiv_dist; intros Hx n; rewrite (Hx n). Qed.
-  Global Instance ne_proper_2 `{Cofe B, Cofe C} (f : A → B → C)
+  Instance ne_proper_2 `{Cofe B, Cofe C} (f : A → B → C)
     `{!∀ n, Proper (dist n ==> dist n ==> dist n) f} :
     Proper ((≡) ==> (≡) ==> (≡)) f | 100.
   Proof.
@@ -82,6 +79,11 @@ Section cofe.
   Proof. intros. by rewrite (conv_compl c1 n), (conv_compl c2 n). Qed.
   Lemma compl_ext (c1 c2 : chain A) : (∀ i, c1 i ≡ c2 i) → compl c1 ≡ compl c2.
   Proof. setoid_rewrite equiv_dist; naive_solver eauto using compl_ne. Qed.
+  Global Instance contractive_ne `{Cofe B} (f : A → B) `{!Contractive f} n :
+    Proper (dist n ==> dist n) f | 100.
+  Proof. by intros x1 x2 ?; apply dist_S, contractive. Qed.
+  Global Instance contractive_proper `{Cofe B} (f : A → B) `{!Contractive f} :
+    Proper ((≡) ==> (≡)) f | 100 := _.
 End cofe.
 
 (** Fixpoint *)
@@ -153,9 +155,11 @@ Proof.
   * intros c n x; simpl.
     rewrite (conv_compl (fun_chain c x) n); apply (chain_cauchy c); lia.
 Qed.
-Instance cofe_mor_car_proper :
-  Proper ((≡) ==> (≡) ==> (≡)) (@cofe_mor_car A B).
-Proof. intros A B f g Hfg x y Hx; rewrite Hx; apply Hfg. Qed.
+Instance cofe_mor_car_ne A B n :
+  Proper (dist n ==> dist n ==> dist n) (@cofe_mor_car A B).
+Proof. intros f g Hfg x y Hx; rewrite Hx; apply Hfg. Qed.
+Instance cofe_mor_car_proper A B :
+  Proper ((≡) ==> (≡) ==> (≡)) (@cofe_mor_car A B) := ne_proper_2 _.
 Lemma cofe_mor_ext {A B} (f g : cofeMor A B) : f ≡ g ↔ ∀ x, f x ≡ g x.
 Proof. done. Qed.
 Canonical Structure cofe_mor (A B : cofeT) : cofeT := CofeT (cofeMor A B).
