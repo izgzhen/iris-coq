@@ -314,7 +314,8 @@ Section DecAgreement.
     | dag_unit
     | dag_inj (t : T).
 
-  Global Instance ra_unit_dagree : RA_unit _ := fun _ => dag_unit.
+  Global Instance ra_unit_dagree : RA_unit _ :=
+    fun x => if x isn't dag_unit then x else dag_unit.
   Global Instance ra_valid_dag : RA_valid _ :=
            fun x => match x with dag_bottom => False | _ => True end.
   Global Instance ra_op_dag : RA_op _ :=
@@ -353,13 +354,29 @@ Section DecAgreement.
       destruct (eq_dec t0 t), (eq_dec t1 t0), (eq_dec t1 t); simpl; auto; exfalso; apply n; congruence.
     - destruct t1, t2; try reflexivity; compute; destruct (eq_dec t0 t), (eq_dec t t0);
       try reflexivity; auto; try contradiction; symmetry in e; contradiction.
-    - destruct t; reflexivity.
+    - destruct t; try reflexivity; []. rewrite/ra_unit/ra_op/=. by case: (eq_dec t t). 
     - destruct x, y; simpl; firstorder; now inversion H.
-    - by exists dag_unit.
+    - case Ht: t => [|| t1]; [by exists dag_unit | by exists (1 t'); case: t' |].
+      case Ht': t' => [|| t2]; rewrite/ra_unit/ra_op/=.
+      + by exists dag_bottom.
+      + by exists (dag_inj t1); case: (eq_dec t1 t1).
+      + case: (eq_dec t1 t2); [by exists dag_unit|by exists dag_bottom].
     - destruct t; reflexivity.
     - destruct x, y; simpl; firstorder; now inversion H.
     - destruct t1, t2; try contradiction; now constructor.
   Qed.
+
+  Lemma ra_sep_dag_gen {t r} : ↓dag_inj t · r -> r = dag_unit \/ r = dag_inj t.
+  Proof.
+    case: r; [done | by left|] => t' Hv; right; f_equal; move: Hv.
+    by rewrite/ra_op/=; case: (eq_dec t t').
+  Qed.
+
+  Lemma ra_sep_dag {t t'} : ↓dag_inj t · dag_inj t' -> t = t'.
+  Proof. by move/ra_sep_dag_gen => [? | [->]]. Qed.
+
+  Global Instance ra_vira_dag : VIRA ra_dagree.
+  Proof. by exists dag_unit. Qed.
 
 End DecAgreement.
 
