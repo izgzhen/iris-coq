@@ -137,6 +137,17 @@ Next Obligation.
     auto using ra_unit_preserving, cmra_unit_valid.
 Qed.
 
+Program Definition iprop_own {A : cmraT} (a : A) : iProp A :=
+  {| iprop_holds n x := ∃ a', x ={n}= a ⋅ a' |}.
+Next Obligation. by intros A a x1 x2 n [a' Hx] ?; exists a'; rewrite <-Hx. Qed.
+Next Obligation.
+  intros A a x1 x n1 n2; rewrite ra_included_spec; intros [x2 Hx] ?? [a' Hx1].
+  exists (a' ⋅ x2). by rewrite (associative op), <-(dist_le _ _ _ _ Hx1), Hx.
+Qed.
+Program Definition iprop_valid {A : cmraT} (a : A) : iProp A :=
+  {| iprop_holds n x := validN n a |}.
+Solve Obligations with naive_solver eauto 2 using cmra_valid_le.
+
 Definition iprop_fixpoint {A} (P : iProp A → iProp A)
   `{!Contractive P} : iProp A := fixpoint P (iprop_const True).
 
@@ -402,9 +413,24 @@ Proof.
   by rewrite ra_unit_l, ra_unit_idempotent.
 Qed.
 
+(* Own *)
+Lemma iprop_own_op (a1 a2 : A) :
+  iprop_own (a1 ⋅ a2) ≡ (iprop_own a1 ★ iprop_own a2)%I.
+Proof.
+  intros x n ?; split.
+  * intros [z ?]; exists a1, (a2 ⋅ z); split; [by rewrite (associative op)|].
+    split. by exists (unit a1); rewrite ra_unit_r. by exists z.
+  * intros (y1&y2&Hx&[z1 Hy1]&[z2 Hy2]); exists (z1 ⋅ z2).
+    rewrite (associative op), <-(commutative op z1), <-!(associative op), <-Hy2.
+    by rewrite (associative op), (commutative op z1), <-Hy1.
+Qed.
+Lemma iprop_own_valid (a : A) : iprop_own a ⊆ iprop_valid a.
+Proof.
+  intros x n Hv [a' Hx]; simpl; rewrite Hx in Hv; eauto using cmra_valid_op_l.
+Qed.
+
 (* Fix *)
 Lemma iprop_fixpoint_unfold (P : iProp A → iProp A) `{!Contractive P} :
   iprop_fixpoint P ≡ P (iprop_fixpoint P).
 Proof. apply fixpoint_unfold. Qed.
 End logic.
-
