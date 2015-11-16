@@ -124,7 +124,7 @@ Proof.
 Qed.
 End agree.
 
-Canonical Structure agreeC (A : cmraT) : cmraT := CMRAT (agree A).
+Canonical Structure agreeRA (A : cofeT) : cmraT := CMRAT (agree A).
 
 Section agree_map.
   Context `{Cofe A, Cofe B} (f: A → B) `{Hf: ∀ n, Proper (dist n ==> dist n) f}.
@@ -147,3 +147,6 @@ Section agree_map.
         try apply Hxy; eauto using agree_valid_le.
   Qed.
 End agree_map.
+
+Definition agreeRA_map {A B} (f : A -n> B) : agreeRA A -n> agreeRA B :=
+  CofeMor (agree_map f : agreeRA A → agreeRA B).
