@@ -98,5 +98,94 @@ Proof.
 Qed.
 End cmra.
 
+Instance cmra_preserving_id `{CMRA A} : CMRAPreserving (@id A).
+Proof. by split. Qed.
+
 (* Also via [cmra_cofe; cofe_equivalence] *)
 Hint Cut [!*; ra_equivalence; cmra_ra] : typeclass_instances.
+
+(** Discrete *)
+Section discrete.
+  Context `{ra : RA A}.
+  Existing Instances discrete_dist discrete_compl.
+  Let discrete_cofe' : Cofe A := discrete_cofe.
+  Instance discrete_validN : ValidN A := λ n x,
+    match n with 0 => True | S n => valid x end.
+  Instance discrete_cmra : CMRA A.
+  Proof.
+    split; try by (destruct ra; auto).
+    * by intros [|n]; try apply ra_op_proper.
+    * by intros [|n]; try apply ra_unit_proper.
+    * by intros [|n]; try apply ra_valid_proper.
+    * by intros [|n]; try apply ra_minus_proper.
+    * by intros [|n].
+    * intros x; split; intros Hvalid. by intros [|n]. apply (Hvalid 1).
+    * by intros [|n]; try apply ra_valid_op_l.
+  Qed.
+  Instance discrete_extend : CMRAExtend A.
+  Proof.
+    intros x y1 y2 [|n] ??; [|by exists (y1,y2)].
+    by exists (x,unit x); simpl; rewrite ra_unit_r.
+  Qed.
+  Definition discreteC : cmraT := CMRAT A.
+End discrete.
+
+(** Product *)
+Instance prod_op `{Op A, Op B} : Op (A * B) := λ x y, (x.1 ⋅ y.1, x.2 ⋅ y.2).
+Instance prod_empty `{Empty A, Empty B} : Empty (A * B) := (∅, ∅).
+Instance prod_unit `{Unit A, Unit B} : Unit (A * B) := λ x,
+  (unit (x.1), unit (x.2)).
+Instance prod_valid `{Valid A, Valid B} : Valid (A * B) := λ x,
+  valid (x.1) ∧ valid (x.2).
+Instance prod_validN `{ValidN A, ValidN B} : ValidN (A * B) := λ n x,
+  validN n (x.1) ∧ validN n (x.2).
+Instance prod_included `{Included A, Included B} : Included (A * B) :=
+  prod_relation (≼) (≼).
+Instance prod_minus `{Minus A, Minus B} : Minus (A * B) := λ x y,
+  (x.1 ⩪ y.1, x.2 ⩪ y.2).
+
+Instance prod_cmra `{CMRA A, CMRA B} : CMRA (A * B).
+Proof.
+  split; try apply _.
+  * by intros n x y1 y2 [Hy1 Hy2]; split; simpl in *; rewrite ?Hy1, ?Hy2.
+  * by intros n y1 y2 [Hy1 Hy2]; split; simpl in *; rewrite ?Hy1, ?Hy2.
+  * by intros n y1 y2 [Hy1 Hy2] [??]; split; simpl in *; rewrite <-?Hy1, <-?Hy2.
+  * by intros n x1 x2 [Hx1 Hx2] y1 y2 [Hy1 Hy2];
+      split; simpl in *; rewrite ?Hx1, ?Hx2, ?Hy1, ?Hy2.
+  * by intros x y1 y2 [Hy1 Hy2] [??]; split; simpl in *; rewrite <-?Hy1, <-?Hy2.
+  * split; apply cmra_valid_0.
+  * by intros n x [??]; split; apply cmra_valid_S.
+  * intros x; split; [by intros [??] n; split; apply cmra_valid_validN|].
+    intros Hvalid; split; apply cmra_valid_validN; intros n; apply Hvalid.
+  * split; simpl; apply (associative _).
+  * split; simpl; apply (commutative _).
+  * split; simpl; apply ra_unit_l.
+  * split; simpl; apply ra_unit_idempotent.
+  * split; apply ra_unit_weaken.
+  * intros n x y [??]; split; simpl in *; eapply cmra_valid_op_l; eauto.
+  * split; apply cmra_included_l.
+  * by intros x y [??]; split; apply cmra_op_minus.
+Qed.
+Instance prod_ra_empty `{RAEmpty A, RAEmpty B} : RAEmpty (A * B).
+Proof.
+  repeat split; simpl; repeat apply ra_empty_valid; repeat apply (left_id _ _).
+Qed.
+Instance prod_cmra_extend `{CMRAExtend A, CMRAExtend B} : CMRAExtend (A * B).
+Proof.
+  intros x y1 y2 n [??] [??]; simpl in *.
+  destruct (cmra_extend_op (x.1) (y1.1) (y2.1) n) as (z1&?&?&?); auto.
+  destruct (cmra_extend_op (x.2) (y1.2) (y2.2) n) as (z2&?&?&?); auto.
+  by exists ((z1.1,z2.1),(z1.2,z2.2)).
+Qed.
+Canonical Structure prodRA (A B : cmraT) : cmraT := CMRAT (A * B).
+Instance prod_map_cmra_preserving `{CMRA A, CMRA A', CMRA B, CMRA B'}
+  (f : A → A') (g : B → B') `{!CMRAPreserving f, !CMRAPreserving g} :
+  CMRAPreserving (prod_map f g).
+Proof.
+  split.
+  * by intros x1 x2 [??]; split; simpl; apply included_preserving.
+  * by intros n x [??]; split; simpl; apply validN_preserving.
+Qed.
+Definition prodRA_map {A A' B B' : cmraT}
+    (f : A -n> A') (g : B -n> B') : prodRA A B -n> prodRA A' B' :=
+  CofeMor (prod_map f g : prodRA A B → prodRA A' B').
