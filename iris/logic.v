@@ -43,13 +43,22 @@ Proof. by intros x1 x2 Hx; apply iprop_holds_ne, equiv_dist. Qed.
 Definition iPropC (A : cmraT) : cofeT := CofeT (iProp A).
 
 (** functor *)
-Program Definition iProp_map {A B : cmraT} (f: B -n> A) `{!CMRAPreserving f}
+Program Definition iprop_map {A B : cmraT} (f : B → A)
+  `{!∀ n, Proper (dist n ==> dist n) f, !CMRAPreserving f}
   (P : iProp A) : iProp B := {| iprop_holds n x := P n (f x) |}.
-Next Obligation. by intros A B f ? P y1 y2 n ? Hy; simpl; rewrite <-Hy. Qed.
+Next Obligation. by intros A B f ?? P y1 y2 n ? Hy; simpl; rewrite <-Hy. Qed.
 Next Obligation.
-  by intros A B f ? P y1 y2 n i ???; simpl; apply iprop_weaken; auto;
+  by intros A B f ?? P y1 y2 n i ???; simpl; apply iprop_weaken; auto;
     apply validN_preserving || apply included_preserving.
 Qed.
+Instance iprop_map_ne {A B : cmraT} (f : B → A)
+  `{!∀ n, Proper (dist n ==> dist n) f, !CMRAPreserving f} :
+  Proper (dist n ==> dist n) (iprop_map f).
+Proof.
+  by intros n x1 x2 Hx y n'; split; apply Hx; try apply validN_preserving.
+Qed.
+Definition ipropC_map {A B : cmraT} (f : B -n> A) `{!CMRAPreserving f} :
+  iPropC A -n> iPropC B := CofeMor (iprop_map f : iPropC A → iPropC B).
 
 (** logical entailement *)
 Instance iprop_entails {A} : SubsetEq (iProp A) := λ P Q, ∀ x n,
@@ -249,6 +258,24 @@ Global Instance iprop_exist_proper {B : cofeT} :
 Proof.
   by intros P1 P2 HP12 x n'; split; intros [a HP]; exists a; apply HP12.
 Qed.
+Global Instance iprop_later_contractive : Contractive (@iprop_later A).
+Proof.
+  intros n P Q HPQ x [|n'] ??; simpl; [done|].
+  apply HPQ; eauto using cmra_valid_S.
+Qed.
+Global Instance iprop_later_proper :
+  Proper ((≡) ==> (≡)) (@iprop_later A) := ne_proper _.
+Global Instance iprop_always_ne n: Proper (dist n ==> dist n) (@iprop_always A).
+Proof. intros P1 P2 HP x n'; split; apply HP; eauto using cmra_unit_valid. Qed.
+Global Instance iprop_always_proper :
+  Proper ((≡) ==> (≡)) (@iprop_always A) := ne_proper _.
+Global Instance iprop_own_ne n : Proper (dist n ==> dist n) (@iprop_own A).
+Proof.
+  by intros a1 a2 Ha x n'; split; intros [a' ?]; exists a'; simpl; first
+    [rewrite <-(dist_le _ _ _ _ Ha) by lia|rewrite (dist_le _ _ _ _ Ha) by lia].
+Qed.
+Global Instance iprop_own_proper :
+  Proper ((≡) ==> (≡)) (@iprop_own A) := ne_proper _.
 
 (** Introduction and elimination rules *)
 Lemma iprop_True_intro P : P ⊆ True%I.
@@ -339,11 +366,6 @@ Lemma iprop_sep_forall `(P : B → iProp A) Q :
 Proof. by intros x n ? (x1&x2&Hx&?&?); intros b; exists x1, x2. Qed.
 
 (* Later *)
-Global Instance iprop_later_contractive : Contractive (@iprop_later A).
-Proof.
-  intros n P Q HPQ x [|n'] ??; simpl; [done|].
-  apply HPQ; eauto using cmra_valid_S.
-Qed.
 Lemma iprop_later_weaken P : P ⊆ (▷ P)%I.
 Proof.
   intros x [|n] ??; simpl in *; [done|].
