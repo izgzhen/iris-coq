@@ -4,7 +4,7 @@ Local Hint Extern 1 (_ ≼ _) => etransitivity; [|eassumption].
 Local Hint Extern 10 (_ ≤ _) => omega.
 
 Structure uPred (M : cmraT) : Type := IProp {
-  uPred_holds :> nat → M -> Prop;
+  uPred_holds :> nat → M → Prop;
   uPred_ne x1 x2 n : uPred_holds n x1 → x1 ={n}= x2 → uPred_holds n x2;
   uPred_weaken x1 x2 n1 n2 :
     x1 ≼ x2 → n2 ≤ n1 → validN n2 x2 → uPred_holds n1 x1 → uPred_holds n2 x2
@@ -59,6 +59,12 @@ Proof.
 Qed.
 Definition uPredC_map {M1 M2 : cmraT} (f : M2 -n> M1) `{!CMRAPreserving f} :
   uPredC M1 -n> uPredC M2 := CofeMor (uPred_map f : uPredC M1 → uPredC M2).
+Lemma upredC_map_ne {M1 M2 : cmraT} (f g : M2 -n> M1)
+    `{!CMRAPreserving f, !CMRAPreserving g} n :
+  f ={n}= g → uPredC_map f ={n}= uPredC_map g.
+Proof.
+  by intros Hfg P y n' ??; simpl; rewrite (dist_le _ _ _ _(Hfg y)) by lia.
+Qed.
 
 (** logical entailement *)
 Instance uPred_entails {M} : SubsetEq (uPred M) := λ P Q, ∀ x n,

@@ -56,6 +56,14 @@ Proof.
   * by exists (None,Some x); inversion Hx'; repeat constructor.
   * exists (None,None); repeat constructor.
 Qed.
+Instance option_fmap_cmra_preserving `{CMRA A, CMRA B} (f : A → B)
+  `{!CMRAPreserving f} : CMRAPreserving (fmap f : option A → option B).
+Proof.
+  split.
+  * by destruct 1 as [|[?|]]; constructor; apply included_preserving.
+  * by intros n [x|] ?;
+      unfold validN, option_validN; simpl; try apply validN_preserving.
+Qed.
 
 (** fin maps *)
 Section map.
@@ -123,12 +131,36 @@ Section map.
       by destruct (m1 !! i), (m2 !! i); inversion_clear Hm12''.
   Qed.
   Definition mapRA (A : cmraT) : cmraT := CMRAT (M A).
+  Global Instance map_fmap_cmra_preserving `{CMRA A, CMRA B} (f : A → B)
+    `{!CMRAPreserving f} : CMRAPreserving (fmap f : M A → M B).
+  Proof.
+    split.
+    * by intros m1 m2 Hm i; rewrite !lookup_fmap; apply included_preserving.
+    * by intros n m ? i; rewrite lookup_fmap; apply validN_preserving.
+  Qed.
+  Local Hint Extern 0 => simpl; apply map_fmap_ne : typeclass_instances.
+  Definition mapRA_map {A B : cmraT} (f : A -n> B) : mapRA A -n> mapRA B :=
+    CofeMor (fmap f : mapRA A → mapRA B).
+  Global Instance mapRA_map_ne {A B} n :
+    Proper (dist n ==> dist n) (@mapRA_map A B) := mapC_map_ne n.
+  Global Instance mapRA_mapcmra_preserving {A B : cmraT} (f : A -n> B)
+    `{!CMRAPreserving f} : CMRAPreserving (mapRA_map f) := _.
 End map.
 
 Arguments mapRA {_} _ {_ _ _ _ _ _ _ _ _} _.
 
 Canonical Structure natmapRA := mapRA natmap.
+Definition natmapRA_map {A B : cmraT}
+  (f : A -n> B) : natmapRA A -n> natmapRA B := mapRA_map f.
 Canonical Structure PmapRA := mapRA Pmap.
+Definition PmapRA_map {A B : cmraT}
+  (f : A -n> B) : PmapRA A -n> PmapRA B := mapRA_map f.
 Canonical Structure NmapRA := mapRA Nmap.
+Definition NmapC_map {A B : cmraT}
+  (f : A -n> B) : NmapRA A -n> NmapRA B := mapRA_map f.
 Canonical Structure ZmapRA := mapRA Zmap.
+Definition ZmapRA_map {A B : cmraT}
+  (f : A -n> B) : ZmapRA A -n> ZmapRA B := mapRA_map f.
 Canonical Structure stringmapRA := mapRA stringmap.
+Definition stringmapRA_map {A B : cmraT}
+  (f : A -n> B) : stringmapRA A -n> stringmapRA B := mapRA_map f.

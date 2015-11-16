@@ -290,6 +290,6 @@ Section later.
   Proof. by destruct x. Qed.
   Definition laterC_map {A B} (f : A -n> B) : laterC A -n> laterC B :=
     CofeMor (fmap f : laterC A → laterC B).
-  Instance laterC_contractive (A B : cofeT) : Contractive (@laterC_map A B).
+  Instance laterC_map_contractive (A B : cofeT) : Contractive (@laterC_map A B).
   Proof. intros n f g Hf n'; apply Hf. Qed.
 End later.

@@ -189,3 +189,5 @@ Qed.
 Definition prodRA_map {A A' B B' : cmraT}
     (f : A -n> A') (g : B -n> B') : prodRA A B -n> prodRA A' B' :=
   CofeMor (prod_map f g : prodRA A B → prodRA A' B').
+Instance prodRA_map_ne {A A' B B'} n :
+  Proper (dist n==> dist n==> dist n) (@prodRA_map A A' B B') := prodC_map_ne n.

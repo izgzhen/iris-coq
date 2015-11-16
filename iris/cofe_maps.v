@@ -85,10 +85,10 @@ Section map.
   Definition mapC (A : cofeT) : cofeT := CofeT (M A).
   Definition mapC_map {A B} (f: A -n> B) : mapC A -n> mapC B :=
     CofeMor (fmap f : mapC A → mapC B).
-  Global Instance mapC_map_ne (A B : cofeT) :
+  Global Instance mapC_map_ne {A B} n :
     Proper (dist n ==> dist n) (@mapC_map A B).
   Proof.
-    intros n f g Hf m k; simpl; rewrite !lookup_fmap.
+    intros f g Hf m k; simpl; rewrite !lookup_fmap.
     destruct (_ !! k) eqn:?; simpl; constructor; apply Hf.
   Qed.
 End map.
