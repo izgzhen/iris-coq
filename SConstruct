@@ -3,7 +3,7 @@
 import os, glob, string
 
 modules = ["prelude", "iris"]
-Rs = '-R . iris'
+Rs = ' '.join(['-Q ' + x + ' ' + x for x in modules])
 env = DefaultEnvironment(ENV = os.environ,tools=['default', 'Coq'], COQFLAGS=Rs)
 
 # Coq dependencies
@@ -15,4 +15,4 @@ ParseDepends('deps')
 for v in vs: env.Coq(v)
 
 # Coqidescript
-env.CoqIdeScript('coqidescript', [])
+env.CoqIdeScript('coqidescript', [], COQFLAGS=Rs)

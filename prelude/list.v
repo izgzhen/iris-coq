@@ -3,7 +3,7 @@
 (** This file collects general purpose definitions and theorems on lists that
 are not in the Coq standard library. *)
 Require Export Permutation.
-Require Export numbers base decidable option.
+Require Export prelude.numbers prelude.base prelude.decidable prelude.option.
 
 Arguments length {_} _.
 Arguments cons {_} _ _.

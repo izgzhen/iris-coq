@@ -3,7 +3,7 @@
 (** This file provides an axiomatization of the domain function of finite
 maps. We provide such an axiomatization, instead of implementing the domain
 function in a generic way, to allow more efficient implementations. *)
-Require Export collections fin_maps.
+Require Export prelude.collections prelude.fin_maps.
 
 Class FinMapDom K M D `{FMap M,
     ∀ A, Lookup K A (M A), ∀ A, Empty (M A), ∀ A, PartialAlter K A (M A),

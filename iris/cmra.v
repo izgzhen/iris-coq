@@ -1,4 +1,4 @@
-Require Export ra cofe cofe_instances.
+Require Export iris.ra iris.cofe.
 
 Class ValidN (A : Type) := validN : nat → A → Prop.
 Instance: Params (@validN) 3.

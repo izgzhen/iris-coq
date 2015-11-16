@@ -1,4 +1,4 @@
-Require Export cmra.
+Require Export iris.cmra.
 Local Arguments disjoint _ _ !_ !_ /.
 Local Arguments included _ _ !_ !_ /.
 

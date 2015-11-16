@@ -1,7 +1,7 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
-Require Import mapset.
-Require Export prelude fin_maps.
+Require Import prelude.mapset.
+Require Export prelude.prelude prelude.fin_maps.
 
 Record optionmap (M : Type → Type) (A : Type) : Type :=
   OptionMap { optionmap_None : option A; optionmap_Some : M A }.

@@ -2,7 +2,7 @@
 (* This file is distributed under the terms of the BSD license. *)
 (** This file implements finite set as unordered lists without duplicates
 removed. This implementation forms a monad. *)
-Require Export base decidable collections list.
+Require Export prelude.base prelude.decidable prelude.collections prelude.list.
 
 Record listset A := Listset { listset_car: list A }.
 Arguments listset_car {_} _.

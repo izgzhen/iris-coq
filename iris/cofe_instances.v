@@ -1,5 +1,5 @@
-Require Export cofe.
-Require Import fin_maps pmap nmap zmap stringmap.
+Require Export iris.cofe.
+Require Import prelude.fin_maps prelude.pmap prelude.nmap prelude.zmap prelude.stringmap.
 
 (** Discrete cofe *)
 Section discrete_cofe.

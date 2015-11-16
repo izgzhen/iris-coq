@@ -1,4 +1,4 @@
-Require Export cofe.
+Require Export iris.cofe.
 
 Section solver.
 Context (F : cofeT → cofeT → cofeT).

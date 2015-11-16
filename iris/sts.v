@@ -1,5 +1,5 @@
-Require Export ra.
-Require Import sets stringmap dra.
+Require Export iris.ra.
+Require Import prelude.sets prelude.stringmap iris.dra.
 Local Arguments valid _ _ !_ /.
 Local Arguments op _ _ !_ !_ /.
 Local Arguments unit _ _ !_ /.

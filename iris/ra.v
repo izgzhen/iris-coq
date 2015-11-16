@@ -1,4 +1,4 @@
-Require Export collections relations.
+Require Export prelude.collections prelude.relations.
 
 Class Valid (A : Type) := valid : A → Prop.
 Instance: Params (@valid) 2.

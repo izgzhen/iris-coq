@@ -1,6 +1,6 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
-Require Export tactics.
+Require Export prelude.tactics.
 
 CoInductive stream (A : Type) : Type := scons : A → stream A → stream A.
 Arguments scons {_} _ _.

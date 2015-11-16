@@ -6,8 +6,8 @@ main advantage of these association lists compared to search trees, is that it
 has canonical representatives and thus extensional Leibniz equality. Compared
 to a naive unordered association list, the merge operation (used for unions,
 intersections, and difference) is also linear-time. *)
-Require Import mapset.
-Require Export fin_maps.
+Require Import prelude.mapset.
+Require Export prelude.fin_maps.
 
 (** Because the association list is sorted using [strict lexico] instead of
 [lexico], it automatically guarantees that no duplicates exist. *)

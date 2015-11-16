@@ -3,7 +3,7 @@
 (** This file collects definitions and theorems on collections. Most
 importantly, it implements some tactics to automatically solve goals involving
 collections. *)
-Require Export base tactics orders.
+Require Export prelude.base prelude.tactics prelude.orders.
 
 Instance collection_subseteq `{ElemOf A C} : SubsetEq C := λ X Y,
   ∀ x, x ∈ X → x ∈ Y.

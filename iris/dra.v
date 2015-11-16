@@ -1,4 +1,4 @@
-Require Export ra.
+Require Export iris.ra.
 
 (** From disjoint pcm *)
 Record validity {A} (P : A → Prop) : Type := Validity {

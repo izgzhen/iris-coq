@@ -1,4 +1,4 @@
-Require Export prelude.
+Require Export prelude.prelude.
 Obligation Tactic := idtac.
 
 (** Unbundeled version *)

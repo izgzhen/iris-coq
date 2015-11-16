@@ -4,8 +4,8 @@
 range over Coq's data type of strings [string]. The implementation uses radix-2
 search trees (uncompressed Patricia trees) as implemented in the file [pmap]
 and guarantees logarithmic-time operations. *)
-Require Export fin_maps pretty.
-Require Import Ascii String list pmap mapset.
+Require Export prelude.fin_maps prelude.pretty.
+Require Import Ascii String prelude.list prelude.pmap prelude.mapset.
 
 (** * Encoding and decoding *)
 (** In order to reuse or existing implementation of radix-2 search trees over

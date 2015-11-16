@@ -3,7 +3,7 @@
 (** This files gives an implementation of finite sets using finite maps with
 elements of the unit type. Since maps enjoy extensional equality, the
 constructed finite sets do so as well. *)
-Require Export fin_map_dom.
+Require Export prelude.fin_map_dom.
 
 Record mapset (M : Type → Type) : Type :=
   Mapset { mapset_car: M (unit : Type) }.

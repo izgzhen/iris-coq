@@ -1,4 +1,4 @@
-Require Export cmra.
+Require Export iris.cmra.
 Local Hint Extern 10 (_ ≤ _) => omega.
 
 Record agree A `{Dist A} := Agree {

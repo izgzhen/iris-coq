@@ -3,7 +3,7 @@
 (** This file collects common properties of pre-orders and semi lattices. This
 theory will mainly be used for the theory on collections and finite maps. *)
 Require Export Sorted.
-Require Export base decidable tactics list.
+Require Export prelude.base prelude.decidable prelude.tactics prelude.list.
 
 (** * Arbitrary pre-, parial and total orders *)
 (** Properties about arbitrary pre-, partial, and total orders. We do not use

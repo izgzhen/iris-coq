@@ -3,7 +3,7 @@
 (** This files implements a type [natmap A] of finite maps whose keys range
 over Coq's data type of unary natural numbers [nat]. The implementation equips
 a list with a proof of canonicity. *)
-Require Import fin_maps mapset.
+Require Import prelude.fin_maps prelude.mapset.
 
 Notation natmap_raw A := (list (option A)).
 Definition natmap_wf {A} (l : natmap_raw A) :=

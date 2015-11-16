@@ -2,7 +2,7 @@
 (* This file is distributed under the terms of the BSD license. *)
 (** This files defines a lexicographic order on various common data structures
 and proves that it is a partial order having a strong variant of trichotomy. *)
-Require Import numbers.
+Require Import prelude.numbers.
 
 Notation cast_trichotomy T :=
   match T with

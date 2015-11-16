@@ -3,8 +3,8 @@
 (** This file implements finite set using hash maps. Hash sets are represented
 using radix-2 search trees. Each hash bucket is thus indexed using an binary
 integer of type [Z], and contains an unordered list without duplicates. *)
-Require Export fin_maps listset.
-Require Import zmap.
+Require Export prelude.fin_maps prelude.listset.
+Require Import prelude.zmap.
 
 Record hashset {A} (hash : A → Z) := Hashset {
   hashset_car : Zmap (list A);

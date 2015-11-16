@@ -5,7 +5,7 @@ natural numbers, and the type [Z] for integers. It also declares some useful
 notations. *)
 Require Export Eqdep PArith NArith ZArith NPeano.
 Require Import QArith Qcanon.
-Require Export base decidable.
+Require Export prelude.base prelude.decidable.
 Open Scope nat_scope.
 
 Coercion Z.of_nat : nat >-> Z.

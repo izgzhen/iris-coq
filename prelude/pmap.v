@@ -7,8 +7,8 @@ trees (uncompressed Patricia trees) and guarantees logarithmic-time operations.
 However, we extend Leroy's implementation by packing the trees into a Sigma
 type such that canonicity of representation is ensured. This is necesarry for
 Leibniz equality to become extensional. *)
-Require Import PArith mapset.
-Require Export fin_maps.
+Require Import PArith prelude.mapset.
+Require Export prelude.fin_maps.
 
 Local Open Scope positive_scope.
 Local Hint Extern 0 (@eq positive _ _) => congruence.

@@ -3,7 +3,7 @@
 (** This file collects general purpose tactics that are used throughout
 the development. *)
 Require Export Psatz.
-Require Export base.
+Require Export prelude.base.
 
 Lemma f_equal_dep {A B} (f g : ∀ x : A, B x) x : f = g → f x = g x.
 Proof. intros ->; reflexivity. Qed.

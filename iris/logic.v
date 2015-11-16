@@ -1,4 +1,4 @@
-Require Import cmra cofe_instances.
+Require Import iris.cmra.
 Local Hint Extern 1 (_ ≼ _) => etransitivity; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etransitivity; [|eassumption].
 Local Hint Extern 10 (_ ≤ _) => omega.

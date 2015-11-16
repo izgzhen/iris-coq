@@ -3,7 +3,7 @@
 (** This file collects theorems, definitions, tactics, related to propositions
 with a decidable equality. Such propositions are collected by the [Decision]
 type class. *)
-Require Export proof_irrel.
+Require Export prelude.proof_irrel.
 
 Hint Extern 200 (Decision _) => progress (lazy beta) : typeclass_instances.
 
