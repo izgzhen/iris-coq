@@ -1,5 +1,6 @@
 Require Import Ssreflect.ssreflect Omega.
 Require Import CSetoid Predom RA DecEnsemble ModuRes.Relations.
+Require Import Coq.Logic.Eqdep_dec.
 
 Local Open Scope ra_scope.
 Local Open Scope predom_scope.
@@ -746,7 +747,7 @@ End STS.
 
 Section IndexedProduct.
   (* I is the index type (domain), S the type of the components (codomain) *)
-  Context {I : Type} {S : forall (i : I), Type}
+  Context {I : Type} {eq_dec : DecEq I} {S : forall (i : I), Type}
           {tyS : forall i, Setoid (S i)}
           {uS : forall i, RA_unit (S i)}
           {opS : forall i, RA_op (S i)}
@@ -781,6 +782,41 @@ Section IndexedProduct.
     - compute; intros; split; intros; by move/(_ i): H0; rewrite (H i).
     - eapply (ra_op_valid (RA := raS i)); now eauto.
   Qed.
+
+  Definition ra_infprod_upd (f : ra_res_infprod) (i : I) (si : S i) : ra_res_infprod :=
+    fun i' => if eq_dec i i' is left Heq then eq_rect _ _ si _ Heq else f i'.
+  
+  Lemma ra_infprod_upd_eq f i si : ra_infprod_upd f i si i = si.
+  Proof.
+    rewrite/ra_infprod_upd. case: (eq_dec i i); last done.
+    move=> Heq. symmetry. apply: eq_rect_eq_dec. exact: eq_dec.
+  Qed.
+  
+  Lemma ra_infprod_upd_neq {i i'} (Hneq : i <> i') f si : ra_infprod_upd f i si i' = f i'.
+  Proof. rewrite/ra_infprod_upd. by case: (eq_dec i i'). Qed.
+
+  Lemma ra_infprod_upd_valid {f i si g} (Hv : ↓f · g) (Hvi : ↓si · g i) : ↓ra_infprod_upd f i si · g.
+  Proof.
+    move=> i'; rewrite/ra_op/ra_op_infprod; case: (eq_dec i i') => [Heq | Hneq].
+    - rewrite -Heq ra_infprod_upd_eq. exact: Hvi.
+    - rewrite (ra_infprod_upd_neq Hneq). exact: Hv.
+  Qed.
+  
+  Lemma ra_fpu_infprod {f i P} (Hi : f i ⇝∈ P) :
+    f ⇝∈ (fun f' => exists si, P si /\ f' = ra_infprod_upd f i si).
+  Proof.
+    move=> g Hv; move/(_ (g i) (Hv i)): Hi => [si [Pi Hvi]].
+    exists (ra_infprod_upd f i si). split; first by exists si. exact: ra_infprod_upd_valid.
+  Qed.
+
+  Lemma ra_fps_infprod {f i si} (Hi : f i ⇝ si) : f ⇝ ra_infprod_upd f i si.
+  Proof.
+    move=> g Hv i'; move/(_ i'): Hv. rewrite/ra_op/ra_op_infprod/=.
+    case: (eq_dec i i') => [Heq | Hneq].
+    - rewrite -Heq ra_infprod_upd_eq. exact: Hi.
+    - by rewrite (ra_infprod_upd_neq Hneq).
+  Qed.
+
 End IndexedProduct.
 Arguments ra_res_infprod : default implicits.
 
