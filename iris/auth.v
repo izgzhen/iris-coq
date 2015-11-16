@@ -9,6 +9,7 @@ Arguments own {_} _.
 Notation "∘ x" := (Auth ExclUnit x) (at level 20).
 Notation "∙ x" := (Auth (Excl x) ∅) (at level 20).
 
+Instance auth_empty `{Empty A} : Empty (auth A) := Auth ∅ ∅.
 Instance auth_valid `{Valid A, Included A} : Valid (auth A) := λ x,
   valid (authorative x) ∧ excl_above (own x) (authorative x).
 Instance auth_equiv `{Equiv A} : Equiv (auth A) := λ x y,
@@ -44,7 +45,9 @@ Proof.
     by apply excl_above_weaken with (own x ⋅ own y)
       (authorative x ⋅ authorative y); try apply ra_included_l.
   * split; simpl; apply ra_included_l.
-  * by intros ?? [??]; split; simpl; apply ra_op_difference.
+  * by intros ?? [??]; split; simpl; apply ra_op_minus.
 Qed.
+Instance auth_ra_empty `{RA A, Empty A, !RAEmpty A} : RAEmpty (auth A).
+Proof. split. done. by intros x; constructor; simpl; rewrite (left_id _ _). Qed.
 Lemma auth_frag_op `{RA A} a b : ∘(a ⋅ b) ≡ ∘a ⋅ ∘b.
 Proof. done. Qed.

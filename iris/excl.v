@@ -4,20 +4,22 @@ Local Arguments included _ _ !_ !_ /.
 
 Inductive excl (A : Type) :=
   | Excl : A → excl A
-  | ExclUnit : excl A
+  | ExclUnit : Empty (excl A)
   | ExclBot : excl A.
 Arguments Excl {_} _.
 Arguments ExclUnit {_}.
 Arguments ExclBot {_}.
+Existing Instance ExclUnit.
 
 Inductive excl_equiv `{Equiv A} : Equiv (excl A) :=
   | Excl_equiv (x y : A) : x ≡ y → Excl x ≡ Excl y
-  | ExclUnit_equiv : ExclUnit ≡ ExclUnit
+  | ExclUnit_equiv : ∅ ≡ ∅
   | ExclBot_equiv : ExclBot ≡ ExclBot.
 Existing Instance excl_equiv.
 Instance excl_valid {A} : Valid (excl A) := λ x,
   match x with Excl _ | ExclUnit => True | ExclBot => False end.
-Instance excl_unit {A} : Unit (excl A) := λ _, ExclUnit.
+Instance excl_empty {A} : Empty (excl A) := ExclUnit.
+Instance excl_unit {A} : Unit (excl A) := λ _, ∅.
 Instance excl_op {A} : Op (excl A) := λ x y,
   match x, y with
   | Excl x, ExclUnit | ExclUnit, Excl x => Excl x
@@ -60,6 +62,8 @@ Proof.
   * by intros [?| |] [?| |]; simpl; try constructor.
   * by intros [?| |] [?| |] ?; try constructor.
 Qed.
+Instance excl_empty_ra `{Equiv A, !Equivalence (@equiv A _)} : RAEmpty (excl A).
+Proof. split. done. by intros []. Qed.
 Lemma excl_update {A} (x : A) y : valid y → Excl x ⇝ y.
 Proof. by destruct y; intros ? [?| |]. Qed.
 

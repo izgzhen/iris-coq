@@ -24,7 +24,7 @@ Class CMRA A `{Equiv A, Compl A,
   cmra_unit_weaken x y : unit x ≼ unit (x ⋅ y);
   cmra_valid_op_l n x y : validN n (x ⋅ y) → validN n x;
   cmra_included_l x y : x ≼ x ⋅ y;
-  cmra_op_difference x y : x ≼ y → x ⋅ y ⩪ x ≡ y
+  cmra_op_minus x y : x ≼ y → x ⋅ y ⩪ x ≡ y
 }.
 Class CMRAExtend A `{Equiv A, Dist A, Op A, ValidN A} :=
   cmra_extend_op x y1 y2 n :

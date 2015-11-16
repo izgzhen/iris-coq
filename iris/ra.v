@@ -37,7 +37,11 @@ Class RA A `{Equiv A, Valid A, Unit A, Op A, Included A, Minus A} : Prop := {
   ra_unit_weaken x y : unit x ≼ unit (x ⋅ y);
   ra_valid_op_l x y : valid (x ⋅ y) → valid x;
   ra_included_l x y : x ≼ x ⋅ y;
-  ra_op_difference x y : x ≼ y → x ⋅ y ⩪ x ≡ y
+  ra_op_minus x y : x ≼ y → x ⋅ y ⩪ x ≡ y
+}.
+Class RAEmpty A `{Equiv A, Valid A, Op A, Empty A} : Prop := {
+  ra_empty_valid : valid ∅;
+  ra_empty_l :> LeftId (≡) ∅ (⋅)
 }.
 
 (** Updates *)
@@ -72,7 +76,7 @@ Proof. by rewrite (commutative _ x), ra_unit_l. Qed.
 (** ** Order *)
 Lemma ra_included_spec x y : x ≼ y ↔ ∃ z, y ≡ x ⋅ z.
 Proof.
-  split; [by exists (y ⩪ x); rewrite ra_op_difference|].
+  split; [by exists (y ⩪ x); rewrite ra_op_minus|].
   intros [z Hz]; rewrite Hz; apply ra_included_l.
 Qed.
 Global Instance ra_included_proper' : Proper ((≡) ==> (≡) ==> iff) (≼).
@@ -106,4 +110,14 @@ Qed.
 (** ** Properties of [(⇝)] relation *)
 Global Instance ra_update_preorder : PreOrder ra_update.
 Proof. split. by intros x y. intros x y y' ?? z ?; naive_solver. Qed.
+
+(** ** RAs with empty element *)
+Context `{Empty A, !RAEmpty A}.
+
+Global Instance ra_empty_r : RightId (≡) ∅ (⋅).
+Proof. by intros x; rewrite (commutative op), (left_id _ _). Qed.
+Lemma ra_unit_empty x : unit ∅ ≡ ∅.
+Proof. by rewrite <-(ra_unit_l ∅) at 2; rewrite (right_id _ _). Qed.
+Lemma ra_empty_least x : ∅ ≼ x.
+Proof. by rewrite ra_included_spec; exists x; rewrite (left_id _ _). Qed.
 End ra.
