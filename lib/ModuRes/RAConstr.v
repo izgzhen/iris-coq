@@ -8,6 +8,7 @@ Local Open Scope predom_scope.
 Set Bullet Behavior "Strict Subproofs".
 
 (** These constructions are only for RA, so their equality is also defined locally. *)
+	(* PDS: Huh? *)
 
 (** The exclusive RA. *)
 Section Exclusive.
@@ -122,6 +123,98 @@ Section ExTests.
   Goal forall t u1 u2, u1 == u2 -> (ex_own t,u1) == (ex_own t,u2).
   Proof. move=> t u1 u2 ->. reflexivity. Qed.
 End ExTests.
+
+(** Adjoining a valid unit element onto an RA. *)
+Section AddUnit.
+  Context {T : Type} `{raT : RA T}.
+  
+  Inductive ra_add_unit :=
+  | au_inj of T
+  | au_unit.
+  
+  Implicit Types (t : T) (r s : ra_add_unit).
+  
+  Let ra_au_eq r s : Prop :=
+    match r, s with
+    | au_inj t, au_inj t' => t == t'
+    | au_unit, au_unit => True
+    | _, _ => False
+    end.
+
+  Global Instance ra_equiv_au : Equivalence ra_au_eq.
+  Proof.
+    split; rewrite/ra_au_eq.
+    - by move=>[] // t; reflexivity.
+    - by move=>[] // t [] // t'; symmetry.
+    - move=> [?|] [t2|] [?|] //; []; by transitivity t2.
+  Qed.
+
+  Global Instance ra_type_au : Setoid ra_add_unit := mkType ra_au_eq.
+
+  Global Instance ra_au_compat : Proper (equiv ==> equiv) au_inj.
+  Proof. by []. Qed.
+
+  Global Instance ra_unit_au : RA_unit ra_add_unit :=
+    fun r => if r is au_inj t then au_inj (1 t) else r.
+
+  Global Instance ra_op_au : RA_op ra_add_unit := fun r s =>
+    match r, s with
+    | au_inj t, au_inj t' => au_inj (t · t')
+    | au_unit, _ => s
+    | _, au_unit => r
+    end.
+
+  Global Instance ra_valid_au : RA_valid ra_add_unit :=
+    fun r => if r is au_inj t then ↓t else True.
+
+  Global Instance ra_au : RA ra_add_unit.
+  Proof.
+    split.
+    - move=> [t1|] [t'1|] /= EQ1 [t2|] [t'2|] /= EQ2 //; []. rewrite EQ1 EQ2. by reflexivity.
+    - move=> [t1|] [t2|] [t3|] /=; try reflexivity; []. rewrite assoc. by reflexivity.
+    - move=> [t1|] [t2|] /=; try reflexivity; []. rewrite comm. by reflexivity.
+    - move=> [t|] //=; []. rewrite ra_op_unit. by reflexivity.
+    - move=> [t1|] [t2|] /= EQt //=; []. exact: ra_unit_proper.
+    - move=> [t1|] [t2|] /=; try (exists au_unit; by reflexivity).
+      + case: (ra_unit_mono t1 t2) => [t3 Ht]. by exists (au_inj t3).
+      + exists (au_inj (1 t2)). by reflexivity.
+    - move=> [t1|] //=; []. exact: ra_unit_idem.
+    - move=> [t1|] [t2|] /= EQt //; []. rewrite/ra_valid/ra_valid_au. exact: ra_valid_proper.
+    - move=> [t1|] [t2|] /= EQt //; []. rewrite/ra_valid/ra_valid_au. exact: ra_op_valid.
+  Qed.
+
+  Lemma ra_unit_min_au r : au_unit ⊑ r.
+  Proof. by exists r; case: r; reflexivity. Qed.
+
+  Lemma ra_unit_auE t : 1 (au_inj t) = au_inj (1 t).
+  Proof. by []. Qed.
+
+  Lemma ra_valid_auE r : ↓r -> (exists t, r = au_inj t /\ ↓t) \/ r = au_unit.
+  Proof.
+    case: r; last by right. move=> t Hv. by left; exists t.
+  Qed.
+
+  Lemma ra_sep_au {t r} : ↓au_inj t · r -> if r is au_inj t' then ↓t · t' else ↓t.
+  Proof. by case: r. Qed.
+
+  Lemma ra_fpu_au {t P} (Hupd : t ⇝∈ P) :
+    au_inj t ⇝∈ (fun r => if r is au_inj t' then P t' else False).
+  Proof.
+    case=>[tf |].
+    { move/ra_sep_au/(Hupd tf) => [t' [HP Hv]]. by exists (au_inj t'). }
+    move/ra_sep_au; rewrite -(ra_op_unit2 (t:=t)) =>/(Hupd (1 t)) [t' [HP Hv]].
+    exists (au_inj t'). split; first done.
+    rewrite/ra_op/ra_op_au/ra_valid/ra_valid_au. exact: ra_op_valid Hv.
+  Qed.
+
+  Lemma ra_fps_au {t t'} (Hstep : t ⇝ t') : au_inj t ⇝ au_inj t'.
+  Proof.
+    case=> [tf |] /ra_sep_au; first exact: Hstep.
+    rewrite -(ra_op_unit2 (t:=t)). by move/Hstep/ra_op_valid.
+  Qed.
+
+End AddUnit.
+Arguments ra_add_unit : clear implicits.
 
 (** The authoritative RA. *)
 Section Authoritative.
