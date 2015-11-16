@@ -399,20 +399,20 @@ and fmap. We use these type classes merely for convenient overloading of
 notations and do not formalize any theory on monads (we do not even define a
 class with the monad laws). *)
 Class MRet (M : Type → Type) := mret: ∀ {A}, A → M A.
-Instance: Params (@mret) 3.
 Arguments mret {_ _ _} _.
+Instance: Params (@mret) 3.
 Class MBind (M : Type → Type) := mbind : ∀ {A B}, (A → M B) → M A → M B.
 Arguments mbind {_ _ _ _} _ !_ /.
-Instance: Params (@mbind) 5.
+Instance: Params (@mbind) 4.
 Class MJoin (M : Type → Type) := mjoin: ∀ {A}, M (M A) → M A.
-Instance: Params (@mjoin) 3.
 Arguments mjoin {_ _ _} !_ /.
+Instance: Params (@mjoin) 3.
 Class FMap (M : Type → Type) := fmap : ∀ {A B}, (A → B) → M A → M B.
-Instance: Params (@fmap) 6.
 Arguments fmap {_ _ _ _} _ !_ /.
+Instance: Params (@fmap) 4.
 Class OMap (M : Type → Type) := omap: ∀ {A B}, (A → option B) → M A → M B.
-Instance: Params (@omap) 6.
 Arguments omap {_ _ _ _} _ !_ /.
+Instance: Params (@omap) 4.
 
 Notation "m ≫= f" := (mbind f m) (at level 60, right associativity) : C_scope.
 Notation "( m ≫=)" := (λ f, mbind f m) (only parsing) : C_scope.
