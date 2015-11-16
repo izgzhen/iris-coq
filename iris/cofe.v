@@ -214,7 +214,7 @@ Proof.
     apply (conv_compl (snd_chain c) n).
 Qed.
 Canonical Structure prodC (A B : cofeT) : cofeT := CofeT (A * B).
-Local Instance prod_map_ne `{Dist A, Dist A', Dist B, Dist B'} n :
+Instance prod_map_ne `{Dist A, Dist A', Dist B, Dist B'} n :
   Proper ((dist n ==> dist n) ==> (dist n ==> dist n) ==>
            dist n ==> dist n) (@prod_map A A' B B').
 Proof. by intros f f' Hf g g' Hg ?? [??]; split; [apply Hf|apply Hg]. Qed.
@@ -229,3 +229,67 @@ Instance pair_ne `{Dist A, Dist B} :
 Instance fst_ne `{Dist A, Dist B} : Proper (dist n ==> dist n) (@fst A B) := _.
 Instance snd_ne `{Dist A, Dist B} : Proper (dist n ==> dist n) (@snd A B) := _.
 Typeclasses Opaque prod_dist.
+
+(** Discrete cofe *)
+Section discrete_cofe.
+  Context `{Equiv A, @Equivalence A (≡)}.
+  Instance discrete_dist : Dist A := λ n x y,
+    match n with 0 => True | S n => x ≡ y end.
+  Instance discrete_compl : Compl A := λ c, c 1.
+  Instance discrete_cofe : Cofe A.
+  Proof.
+    split.
+    * intros x y; split; [by intros ? []|intros Hn; apply (Hn 1)].
+    * intros [|n]; [done|apply _].
+    * by intros [|n].
+    * done.
+    * intros c [|n]; [done|apply (chain_cauchy c 1 (S n)); lia].
+  Qed.
+  Definition discrete_cofeC : cofeT := CofeT A.
+End discrete_cofe.
+Arguments discrete_cofeC _ {_ _}.
+
+(** Later *)
+Inductive later (A : Type) : Type := Later { later_car : A }.
+Arguments Later {_} _.
+Arguments later_car {_} _.
+Section later.
+  Instance later_equiv `{Equiv A} : Equiv (later A) := λ x y,
+    later_car x ≡ later_car y.
+  Instance later_dist `{Dist A} : Dist (later A) := λ n x y,
+    match n with 0 => True | S n => later_car x ={n}= later_car y end.
+  Program Definition later_chain `{Dist A} (c : chain (later A)) : chain A :=
+    {| chain_car n := later_car (c (S n)) |}.
+  Next Obligation. intros A ? c n i ?; apply (chain_cauchy c (S n)); lia. Qed.
+  Instance later_compl `{Compl A} : Compl (later A) := λ c,
+    Later (compl (later_chain c)).
+  Instance later_cofe `{Cofe A} : Cofe (later A).
+  Proof.
+    split.
+    * intros x y; unfold equiv, later_equiv; rewrite !equiv_dist.
+      split. intros Hxy [|n]; [done|apply Hxy]. intros Hxy n; apply (Hxy (S n)).
+    * intros [|n]; [by split|split]; unfold dist, later_dist.
+      + by intros [x].
+      + by intros [x] [y].
+      + by intros [x] [y] [z] ??; transitivity y.
+    * intros [|n] [x] [y] ?; [done|]; unfold dist, later_dist; by apply dist_S.
+    * done.
+    * intros c [|n]; [done|by apply (conv_compl (later_chain c) n)].
+  Qed.
+  Canonical Structure laterC (A : cofeT) : cofeT := CofeT (later A).
+
+  Instance later_fmap : FMap later := λ A B f x, Later (f (later_car x)).
+  Instance later_fmap_ne `{Cofe A, Cofe B} (f : A → B) :
+    (∀ n, Proper (dist n ==> dist n) f) →
+    ∀ n, Proper (dist n ==> dist n) (fmap f : later A → later B).
+  Proof. intros Hf [|n] [x] [y] ?; do 2 red; simpl. done. by apply Hf. Qed.
+  Lemma later_fmap_id {A} (x : later A) : id <$> x = x.
+  Proof. by destruct x. Qed.
+  Lemma later_fmap_compose {A B C} (f : A → B) (g : B → C) (x : later A) :
+    g ∘ f <$> x = g <$> f <$> x.
+  Proof. by destruct x. Qed.
+  Definition laterC_map {A B} (f : A -n> B) : laterC A -n> laterC B :=
+    CofeMor (fmap f : laterC A → laterC B).
+  Instance laterC_contractive (A B : cofeT) : Contractive (@laterC_map A B).
+  Proof. intros n f g Hf n'; apply Hf. Qed.
+End later.
