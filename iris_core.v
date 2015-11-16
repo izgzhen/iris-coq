@@ -201,9 +201,8 @@ Module Type IRIS_CORE (RL : VIRA_T) (C : CORE_LANG) (R: IRIS_RES RL C) (WP: WORL
 
   Section Resources.
 
-    Lemma state_sep {σ g rf} (Hv : ↓(ex_own σ, g) · rf) : fst rf == 1 (ex_own σ)
-.
-    Proof. move: (ra_sep_prod Hv) => [Hs _]; exact: ra_sep_ex Hs. Qed.
+    Lemma state_sep {σ g rf} (Hv : ↓(ex_own σ, g) · rf) : fst rf == 1 (ex_own σ).
+    Proof. move: (ra_sep_prod Hv) => [Hs _]. by rewrite (ra_sep_ex Hs). Qed.
 
     Lemma state_fps {σ g σ' rf} (Hv : ↓(ex_own σ, g) · rf) : ↓(ex_own σ', g) · rf.
     Proof. exact: (ra_fps_fst (ra_fps_ex σ σ') rf). Qed.

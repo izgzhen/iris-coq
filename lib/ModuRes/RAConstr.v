@@ -73,7 +73,7 @@ Section Exclusive.
     - intros [t1| |] [t2| |]; unfold ra_valid; simpl; now auto.
   Qed.
 
-  Lemma ra_sep_ex {t r} : ↓ex_own t · r -> r == 1 r.
+  Lemma ra_sep_ex {t r} : ↓ex_own t · r -> r = 1 r.
   Proof. by case: r. Qed.
 
   Lemma ra_fps_ex_any t {r} (Hr : ↓r) : ex_own t ⇝ r.
