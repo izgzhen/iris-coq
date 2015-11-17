@@ -6,35 +6,39 @@ Local Hint Extern 10 (_ ≤ _) => omega.
 Structure uPred (M : cmraT) : Type := IProp {
   uPred_holds :> nat → M → Prop;
   uPred_ne x1 x2 n : uPred_holds n x1 → x1 ={n}= x2 → uPred_holds n x2;
+  uPred_0 x : uPred_holds 0 x;
   uPred_weaken x1 x2 n1 n2 :
     x1 ≼ x2 → n2 ≤ n1 → validN n2 x2 → uPred_holds n1 x1 → uPred_holds n2 x2
 }.
+Arguments uPred_holds {_} _ _ _.
+Hint Resolve uPred_0.
 Add Printing Constructor uPred.
 Instance: Params (@uPred_holds) 3.
 
 Instance uPred_equiv (M : cmraT) : Equiv (uPred M) := λ P Q, ∀ x n,
   validN n x → P n x ↔ Q n x.
 Instance uPred_dist (M : cmraT) : Dist (uPred M) := λ n P Q, ∀ x n',
-  n' < n → validN n' x → P n' x ↔ Q n' x.
+  n' ≤ n → validN n' x → P n' x ↔ Q n' x.
 Program Instance uPred_compl (M : cmraT) : Compl (uPred M) := λ c,
-  {| uPred_holds n x := c (S n) n x |}.
+  {| uPred_holds n x := c n n x |}.
 Next Obligation. by intros M c x y n ??; simpl in *; apply uPred_ne with x. Qed.
+Next Obligation. by intros M c x; simpl. Qed.
 Next Obligation.
   intros M c x1 x2 n1 n2 ????; simpl in *.
-  apply (chain_cauchy c (S n2) (S n1)); eauto using uPred_weaken, cmra_valid_le.
+  apply (chain_cauchy c n2 n1); eauto using uPred_weaken.
 Qed.
 Instance uPred_cofe (M : cmraT) : Cofe (uPred M).
 Proof.
   split.
   * intros P Q; split; [by intros HPQ n x i ??; apply HPQ|].
-    intros HPQ x n ?; apply HPQ with (S n); auto.
+    intros HPQ x n ?; apply HPQ with n; auto.
   * intros n; split.
     + by intros P x i.
     + by intros P Q HPQ x i ??; symmetry; apply HPQ.
     + by intros P Q Q' HP HQ x i ??; transitivity (Q i x); [apply HP|apply HQ].
   * intros n P Q HPQ x i ??; apply HPQ; auto.
-  * intros P Q x i ??; lia.
-  * intros c n x i ??; apply (chain_cauchy c (S i) n); auto.
+  * intros P Q x i; rewrite Nat.le_0_r; intros ->; split; intros; apply uPred_0.
+  * by intros c n x i ??; apply (chain_cauchy c i n).
 Qed.
 Instance uPred_holds_ne {M} (P : uPred M) n : Proper (dist n ==> iff) (P n).
 Proof. intros x1 x2 Hx; split; eauto using uPred_ne. Qed.
@@ -47,6 +51,7 @@ Program Definition uPred_map {M1 M2 : cmraT} (f : M2 → M1)
   `{!∀ n, Proper (dist n ==> dist n) f, !CMRAPreserving f}
   (P : uPred M1) : uPred M2 := {| uPred_holds n x := P n (f x) |}.
 Next Obligation. by intros M1 M2 f ?? P y1 y2 n ? Hy; simpl; rewrite <-Hy. Qed.
+Next Obligation. intros M1 M2 f _ _ P x; apply uPred_0. Qed.
 Next Obligation.
   by intros M1 M2 f ?? P y1 y2 n i ???; simpl; apply uPred_weaken; auto;
     apply validN_preserving || apply included_preserving.
@@ -72,8 +77,9 @@ Instance uPred_entails {M} : SubsetEq (uPred M) := λ P Q, ∀ x n,
 
 (** logical connectives *)
 Program Definition uPred_const {M} (P : Prop) : uPred M :=
-  {| uPred_holds n x := P |}.
+  {| uPred_holds n x := match n return _ with 0 => True | _ => P end |}.
 Solve Obligations with done.
+Next Obligation. intros M P x1 x2 [|n1] [|n2]; auto with lia. Qed.
 Instance uPred_inhabited M : Inhabited (uPred M) := populate (uPred_const True).
 
 Program Definition uPred_and {M} (P Q : uPred M) : uPred M :=
@@ -92,14 +98,20 @@ Next Obligation.
   assert (validN n2 x2') by (by rewrite Hx2'); rewrite <-Hx2'.
   by apply HPQ, uPred_weaken with x2' n2, uPred_ne with x2.
 Qed.
+Next Obligation. intros M P Q x1 x2 [|n]; auto with lia. Qed.
 Next Obligation. naive_solver eauto 2 with lia. Qed.
 
 Program Definition uPred_forall {M A} (P : A → uPred M) : uPred M :=
   {| uPred_holds n x := ∀ a, P a n x |}.
 Solve Obligations with naive_solver eauto 2 using uPred_ne, uPred_weaken.
 Program Definition uPred_exist {M A} (P : A → uPred M) : uPred M :=
-  {| uPred_holds n x := ∃ a, P a n x |}.
-Solve Obligations with naive_solver eauto 2 using uPred_ne, uPred_weaken.
+  {| uPred_holds n x :=
+       match n return _ with 0 => True | _ => ∃ a, P a n x end |}.
+Next Obligation. intros M A P x y [|n]; naive_solver eauto using uPred_ne. Qed.
+Next Obligation. done. Qed.
+Next Obligation.
+  intros M A P x y [|n] [|n']; naive_solver eauto 2 using uPred_weaken with lia.
+Qed.
 
 Program Definition uPred_eq {M} {A : cofeT} (a1 a2 : A) : uPred M :=
   {| uPred_holds n x := a1 ={n}= a2 |}.
@@ -110,6 +122,7 @@ Program Definition uPred_sep {M} (P Q : uPred M) : uPred M :=
 Next Obligation.
   by intros M P Q x y n (x1&x2&?&?&?) Hxy; exists x1, x2; rewrite <-Hxy.
 Qed.
+Next Obligation. by intros M P Q x; exists x, x. Qed.
 Next Obligation.
   intros M P Q x y n1 n2 Hxy ?? (x1&x2&Hx&?&?).
   assert (∃ x2', y ={n2}= x1 ⋅ x2' ∧ x2 ≼ x2') as (x2'&Hy&?).
@@ -131,6 +144,7 @@ Next Obligation.
   rewrite <-(dist_le _ _ _ _ Hx) by done; apply HPQ; auto.
   by rewrite (dist_le _ _ _ n2 Hx).
 Qed.
+Next Obligation. intros M P Q x1 x2 [|n]; auto with lia. Qed.
 Next Obligation.
   intros M P Q x1 x2 n1 n2 ??? HPQ x3 n3 ???; simpl in *.
   apply uPred_weaken with (x1 ⋅ x3) n3; auto using ra_preserving_r.
@@ -141,6 +155,7 @@ Qed.
 Program Definition uPred_later {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := match n return _ with 0 => True | S n' => P n' x end |}.
 Next Obligation. intros M P ?? [|n]; eauto using uPred_ne,(dist_le (A:=M)). Qed.
+Next Obligation. done. Qed.
 Next Obligation.
   intros M P x1 x2 [|n1] [|n2] ????; auto with lia.
   apply uPred_weaken with x1 n1; eauto using cmra_valid_S.
@@ -148,6 +163,7 @@ Qed.
 Program Definition uPred_always {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n (unit x) |}.
 Next Obligation. by intros M P x1 x2 n ? Hx; simpl in *; rewrite <-Hx. Qed.
+Next Obligation. by intros; simpl. Qed.
 Next Obligation.
   intros M P x1 x2 n1 n2 ????; eapply uPred_weaken with (unit x1) n1;
     auto using ra_unit_preserving, cmra_unit_valid.
@@ -156,13 +172,14 @@ Qed.
 Program Definition uPred_own {M : cmraT} (a : M) : uPred M :=
   {| uPred_holds n x := ∃ a', x ={n}= a ⋅ a' |}.
 Next Obligation. by intros M a x1 x2 n [a' Hx] ?; exists a'; rewrite <-Hx. Qed.
+Next Obligation. by intros M a x; exists x. Qed.
 Next Obligation.
   intros M a x1 x n1 n2; rewrite ra_included_spec; intros [x2 Hx] ?? [a' Hx1].
   exists (a' ⋅ x2). by rewrite (associative op), <-(dist_le _ _ _ _ Hx1), Hx.
 Qed.
 Program Definition uPred_valid {M : cmraT} (a : M) : uPred M :=
   {| uPred_holds n x := validN n a |}.
-Solve Obligations with naive_solver eauto 2 using cmra_valid_le.
+Solve Obligations with naive_solver eauto 2 using cmra_valid_le, cmra_valid_0.
 
 Delimit Scope uPred_scope with I.
 Bind Scope uPred_scope with uPred.
@@ -205,7 +222,7 @@ Qed.
 
 (** Non-expansiveness *)
 Global Instance uPred_const_proper : Proper (iff ==> (≡)) (@uPred_const M).
-Proof. intros P Q HPQ ???; apply HPQ. Qed.
+Proof. by intros P Q HPQ ? [|n] ?; try apply HPQ. Qed.
 Global Instance uPred_and_ne n :
   Proper (dist n ==> dist n ==> dist n) (@uPred_and M).
 Proof.
@@ -263,12 +280,12 @@ Proof. by intros P1 P2 HP12 x n'; split; intros HP a; apply HP12. Qed.
 Global Instance uPred_exists_ne {A : cofeT} :
   Proper (pointwise_relation _ (dist n) ==> dist n) (@uPred_exist M A).
 Proof.
-  by intros n P1 P2 HP12 x n'; split; intros [a HP]; exists a; apply HP12.
+  by intros n P1 P2 HP x [|n']; [|split; intros [a ?]; exists a; apply HP].
 Qed.
 Global Instance uPred_exist_proper {A : cofeT} :
   Proper (pointwise_relation _ (≡) ==> (≡)) (@uPred_exist M A).
 Proof.
-  by intros P1 P2 HP12 x n'; split; intros [a HP]; exists a; apply HP12.
+  by intros P1 P2 HP x [|n']; [|split; intros [a ?]; exists a; apply HP].
 Qed.
 Global Instance uPred_later_contractive : Contractive (@uPred_later M).
 Proof.
@@ -291,11 +308,11 @@ Global Instance uPred_own_proper :
 
 (** Introduction and elimination rules *)
 Lemma uPred_const_intro P (Q : Prop) : Q → P ⊆ uPred_const Q.
-Proof. by intros ???. Qed.
+Proof. by intros ?? [|?]. Qed.
 Lemma uPred_True_intro P : P ⊆ True%I.
-Proof. done. Qed.
+Proof. by apply uPred_const_intro. Qed.
 Lemma uPred_False_elim P : False%I ⊆ P.
-Proof. by intros x n ?. Qed.
+Proof. by intros x [|n] ?. Qed.
 Lemma uPred_and_elim_l P Q : (P ∧ Q)%I ⊆ P.
 Proof. by intros x n ? [??]. Qed.
 Lemma uPred_and_elim_r P Q : (P ∧ Q)%I ⊆ Q.
@@ -319,9 +336,9 @@ Proof. by intros HPQ x n ?? a; apply HPQ. Qed.
 Lemma uPred_forall_elim `(P : A → uPred M) a : (∀ a, P a)%I ⊆ P a.
 Proof. intros x n ? HP; apply HP. Qed.
 Lemma uPred_exist_intro `(P : A → uPred M) a : P a ⊆ (∃ a, P a)%I.
-Proof. by intros x n ??; exists a. Qed.
+Proof. by intros x [|n] ??; [done|exists a]. Qed.
 Lemma uPred_exist_elim `(P : A → uPred M) Q : (∀ a, P a ⊆ Q) → (∃ a, P a)%I ⊆ Q.
-Proof. by intros HPQ x n ? [a ?]; apply HPQ with a. Qed.
+Proof. by intros HPQ x [|n] ?; [|intros [a ?]; apply HPQ with a]. Qed.
 
 (* BI connectives *)
 Lemma uPred_sep_elim_l P Q : (P ★ Q)%I ⊆ P.
@@ -334,7 +351,7 @@ Proof.
   intros P x n Hvalid; split.
   * intros (x1&x2&Hx&_&?); rewrite Hx in Hvalid |- *.
     apply uPred_weaken with x2 n; auto using ra_included_r.
-  * by intros ?; exists (unit x), x; rewrite ra_unit_l.
+  * by destruct n as [|n]; [|intros ?; exists (unit x), x; rewrite ra_unit_l].
 Qed. 
 Global Instance uPred_sep_commutative : Commutative (≡) (@uPred_sep M).
 Proof.
@@ -372,7 +389,7 @@ Proof. by intros x n ? (x1&x2&Hx&[??]&?); split; exists x1, x2. Qed.
 Lemma uPred_sep_exist `(P : A → uPred M) Q :
   ((∃ b, P b) ★ Q)%I ≡ (∃ b, P b ★ Q)%I.
 Proof.
-  split; [by intros (x1&x2&Hx&[a ?]&?); exists a, x1, x2|].
+  intros x [|n]; [done|split; [by intros (x1&x2&Hx&[a ?]&?); exists a,x1,x2|]].
   intros [a (x1&x2&Hx&?&?)]; exists x1, x2; split_ands; by try exists a.
 Qed.
 Lemma uPred_sep_forall `(P : A → uPred M) Q :
@@ -402,13 +419,10 @@ Proof. intros x [|n]; simpl; tauto. Qed.
 Lemma uPred_later_forall `(P : A → uPred M) : (▷ ∀ a, P a)%I ≡ (∀ a, ▷ P a)%I.
 Proof. by intros x [|n]. Qed.
 Lemma uPred_later_exist `(P : A → uPred M) : (∃ a, ▷ P a)%I ⊆ (▷ ∃ a, P a)%I.
-Proof. by intros x [|n]. Qed.
+Proof. by intros x [|[|n]]. Qed.
 Lemma uPred_later_exist' `{Inhabited A} (P : A → uPred M) :
   (▷ ∃ a, P a)%I ≡ (∃ a, ▷ P a)%I.
-Proof.
-  intros x [|n]; split; try done.
-  by destruct (_ : Inhabited A) as [a]; exists a.
-Qed.
+Proof. intros x [|[|n]]; split; done || by exists inhabitant; simpl. Qed.
 Lemma uPred_later_sep P Q : (▷ (P ★ Q))%I ≡ (▷ P ★ ▷ Q)%I.
 Proof.
   intros x n ?; split.
