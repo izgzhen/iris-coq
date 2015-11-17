@@ -129,7 +129,7 @@ Arguments decide _ {_}.
 
 (** ** Inhabited types *)
 (** This type class collects types that are inhabited. *)
-Class Inhabited (A : Type) : Prop := populate { _ : A }.
+Class Inhabited (A : Type) : Type := populate { inhabitant : A }.
 Arguments populate {_} _.
 
 Instance unit_inhabited: Inhabited unit := populate ().

@@ -69,7 +69,7 @@ Proof.
 Qed.
 Lemma finite_inhabited A `{finA: Finite A} : 0 < card A → Inhabited A.
 Proof.
-  unfold card. destruct finA as [[|x ?] ??]; simpl; auto with lia.
+  unfold card; intros. destruct finA as [[|x ?] ??]; simpl in *; [exfalso;lia|].
   constructor; exact x.
 Qed.
 Lemma finite_injective_contains `{finA: Finite A} `{finB: Finite B} (f: A → B)
