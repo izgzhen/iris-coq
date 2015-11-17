@@ -8,6 +8,12 @@ Notation "x ={ n }= y" := (dist n x y)
   (at level 70, n at next level, format "x  ={ n }=  y").
 Hint Extern 0 (?x ={_}= ?x) => reflexivity.
 Hint Extern 0 (_ ={_}= _) => symmetry; assumption.
+Ltac cofe_subst :=
+  repeat match goal with
+  | _ => progress simplify_equality'
+  | H: @dist _ ?d ?n ?x _ |- _ => setoid_subst_aux (@dist _ d n) x
+  | H: @dist _ ?d ?n _ ?x |- _ => symmetry in H;setoid_subst_aux (@dist _ d n) x
+  end.
 
 Record chain (A : Type) `{Dist A} := {
   chain_car :> nat → A;
