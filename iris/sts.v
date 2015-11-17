@@ -1,34 +1,34 @@
 Require Export iris.ra.
-Require Import prelude.sets prelude.listset iris.dra.
+Require Import prelude.sets prelude.bsets iris.dra.
 Local Arguments valid _ _ !_ /.
 Local Arguments op _ _ !_ !_ /.
 Local Arguments unit _ _ !_ /.
 
 Module sts.
-Inductive t {A B} (R : relation A) (tok : A → listset B) :=
-  | auth : A → listset B → t R tok
-  | frag : set A → listset B → t R tok.
+Inductive t {A B} (R : relation A) (tok : A → bset B) :=
+  | auth : A → bset B → t R tok
+  | frag : set A → bset B → t R tok.
 Arguments auth {_ _ _ _} _ _.
 Arguments frag {_ _ _ _} _ _.
 
 Section sts_core.
 Context {A B : Type} `{∀ x y : B, Decision (x = y)}.
-Context (R : relation A) (tok : A → listset B).
+Context (R : relation A) (tok : A → bset B).
 
 Inductive sts_equiv : Equiv (t R tok) :=
   | auth_equiv s T1 T2 : T1 ≡ T2 → auth s T1 ≡ auth s T2
   | frag_equiv S1 S2 T1 T2 : T1 ≡ T2 → S1 ≡ S2 → frag S1 T1 ≡ frag S2 T2.
 Global Existing Instance sts_equiv.
-Inductive step : relation (A * listset B) :=
+Inductive step : relation (A * bset B) :=
   | Step s1 s2 T1 T2 :
      R s1 s2 → tok s1 ∩ T1 ≡ ∅ → tok s2 ∩ T2 ≡ ∅ → tok s1 ∪ T1 ≡ tok s2 ∪ T2 →
      step (s1,T1) (s2,T2).
 Hint Resolve Step.
-Inductive frame_step (T : listset B) (s1 s2 : A) : Prop :=
+Inductive frame_step (T : bset B) (s1 s2 : A) : Prop :=
   | Frame_step T1 T2 :
      T1 ∩ (tok s1 ∪ T) ≡ ∅ → step (s1,T1) (s2,T2) → frame_step T s1 s2.
 Hint Resolve Frame_step.
-Record closed (T : listset B) (S : set A) : Prop := Closed {
+Record closed (T : bset B) (S : set A) : Prop := Closed {
   closed_disjoint s : s ∈ S → tok s ∩ T ≡ ∅;
   closed_step s1 s2 : s1 ∈ S → frame_step T s1 s2 → s2 ∈ S
 }.
@@ -37,8 +37,8 @@ Lemma closed_steps S T s1 s2 :
 Proof. induction 3; eauto using closed_step. Qed.
 Global Instance sts_valid : Valid (t R tok) := λ x,
   match x with auth s T => tok s ∩ T ≡ ∅ | frag S' T => closed T S' end.
-Definition up (T : listset B) (s : A) : set A := mkSet (rtc (frame_step T) s).
-Definition up_set (T : listset B) (S : set A) : set A := S ≫= up T.
+Definition up (T : bset B) (s : A) : set A := mkSet (rtc (frame_step T) s).
+Definition up_set (T : bset B) (S : set A) : set A := S ≫= up T.
 Global Instance sts_unit : Unit (t R tok) := λ x,
   match x with
   | frag S' _ => frag (up_set ∅ S') ∅ | auth s _ => frag (up ∅ s) ∅
@@ -70,7 +70,7 @@ Global Instance sts_minus : Minus (t R tok) := λ x1 x2,
   end.
 
 Hint Extern 5 (equiv (A:=set _) _ _) => esolve_elem_of : sts.
-Hint Extern 5 (equiv (A:=listset _) _ _) => esolve_elem_of : sts.
+Hint Extern 5 (equiv (A:=bset _) _ _) => esolve_elem_of : sts.
 Hint Extern 5 (_ ∈ _) => esolve_elem_of : sts.
 Hint Extern 5 (_ ⊆ _) => esolve_elem_of : sts.
 Instance: Equivalence ((≡) : relation (t R tok)).
@@ -198,7 +198,7 @@ End sts.
 
 Section sts_ra.
 Context {A B : Type} `{∀ x y : B, Decision (x = y)}.
-Context (R : relation A) (tok : A → listset B).
+Context (R : relation A) (tok : A → bset B).
 
 Definition sts := validity (valid : sts.t R tok → Prop).
 Global Instance sts_unit : Unit sts := validity_unit _.
@@ -206,8 +206,8 @@ Global Instance sts_op : Op sts := validity_op _.
 Global Instance sts_included : Included sts := validity_included _.
 Global Instance sts_minus : Minus sts := validity_minus _.
 Global Instance sts_ra : RA sts := validity_ra _.
-Definition sts_auth (s : A) (T : listset B) : sts := to_validity (sts.auth s T).
-Definition sts_frag (S : set A) (T : listset B) : sts :=
+Definition sts_auth (s : A) (T : bset B) : sts := to_validity (sts.auth s T).
+Definition sts_frag (S : set A) (T : bset B) : sts :=
   to_validity (sts.frag S T).
 Lemma sts_update s1 s2 T1 T2 :
   sts.step R tok (s1,T1) (s2,T2) → sts_auth s1 T1 ⇝ sts_auth s2 T2.
