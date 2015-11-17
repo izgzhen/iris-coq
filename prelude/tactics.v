@@ -207,9 +207,9 @@ Ltac f_lia :=
   end.
 Ltac f_lia' := csimpl in *; f_lia.
 
-Ltac setoid_subst_l x :=
+Ltac setoid_subst_aux R x :=
   match goal with
-  | H : x ≡ ?y |- _ =>
+  | H : R x ?y |- _ =>
      is_var x;
      try match y with x _ => fail 2 end;
      repeat match goal with
@@ -223,8 +223,8 @@ Ltac setoid_subst_l x :=
 Ltac setoid_subst :=
   repeat match goal with
   | _ => progress simplify_equality'
-  | H : ?x ≡ _ |- _ => setoid_subst_l x
-  | H : _ ≡ ?x |- _ => symmetry in H; setoid_subst_l x
+  | H : @equiv _ ?e ?x _ |- _ => setoid_subst_aux (@equiv _ e) x
+  | H : @equiv _ ?e _ ?x |- _ => symmetry in H; setoid_subst_aux (@equiv _ e) x
   end.
 
 (** Given a tactic [tac2] generating a list of terms, [iter tac1 tac2]
