@@ -164,9 +164,6 @@ Program Definition uPred_valid {M : cmraT} (a : M) : uPred M :=
   {| uPred_holds n x := validN n a |}.
 Solve Obligations with naive_solver eauto 2 using cmra_valid_le.
 
-Definition uPred_fixpoint {M} (P : uPred M → uPred M)
-  `{!Contractive P} : uPred M := fixpoint P (uPred_const True).
-
 Delimit Scope uPred_scope with I.
 Bind Scope uPred_scope with uPred.
 Arguments uPred_holds {_} _%I _ _.
@@ -184,6 +181,7 @@ Notation "∃ x .. y , P" :=
   (uPred_exist (λ x, .. (uPred_exist (λ y, P)) ..)) : uPred_scope.
 Notation "▷ P" := (uPred_later P) (at level 20) : uPred_scope.
 Notation "□ P" := (uPred_always P) (at level 20) : uPred_scope.
+Infix "≡" := uPred_eq : uPred_scope.
 
 Section logic.
 Context {M : cmraT}.
@@ -196,6 +194,13 @@ Proof.
   split.
   * intros HPQ; split; intros x i; apply HPQ.
   * by intros [HPQ HQP]; intros x i ?; split; [apply HPQ|apply HQP].
+Qed.
+Global Instance uPred_entails_proper :
+  Proper ((≡) ==> (≡) ==> iff) ((⊆) : relation (uPred M)).
+Proof.
+  intros P1 P2 HP Q1 Q2 HQ; rewrite uPred_equiv_spec in HP, HQ; split; intros.
+  * by rewrite (proj2 HP), <-(proj1 HQ).
+  * by rewrite (proj1 HP), <-(proj2 HQ).
 Qed.
 
 (** Non-expansiveness *)
@@ -285,6 +290,8 @@ Global Instance uPred_own_proper :
   Proper ((≡) ==> (≡)) (@uPred_own M) := ne_proper _.
 
 (** Introduction and elimination rules *)
+Lemma uPred_const_intro P (Q : Prop) : Q → P ⊆ uPred_const Q.
+Proof. by intros ???. Qed.
 Lemma uPred_True_intro P : P ⊆ True%I.
 Proof. done. Qed.
 Lemma uPred_False_elim P : False%I ⊆ P.
@@ -457,9 +464,4 @@ Lemma uPred_own_valid (a : M) : uPred_own a ⊆ uPred_valid a.
 Proof.
   intros x n Hv [a' Hx]; simpl; rewrite Hx in Hv; eauto using cmra_valid_op_l.
 Qed.
-
-(* Fix *)
-Lemma uPred_fixpoint_unfold (P : uPred M → uPred M) `{!Contractive P} :
-  uPred_fixpoint P ≡ P (uPred_fixpoint P).
-Proof. apply fixpoint_unfold. Qed.
 End logic.
