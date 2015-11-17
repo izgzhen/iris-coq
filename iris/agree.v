@@ -58,25 +58,10 @@ Next Obligation. naive_solver eauto using agree_valid_S, dist_S. Qed.
 Global Instance agree_unit : Unit (agree A) := id.
 Global Instance agree_minus : Minus (agree A) := λ x y, x.
 Global Instance agree_included : Included (agree A) := λ x y, y ≡ x ⋅ y.
-Instance: Associative (≡) (@op (agree A) _).
-Proof.
-  intros x y z; split; [split|done].
-  * intros (?&(?&?&Hyz)&Hxy); repeat (intros (?&?&?) || intro || split);
-      eauto using agree_valid_le; try apply Hxy; auto.
-    etransitivity; [by apply Hxy|by apply Hyz].
-  * intros ((?&?&Hxy)&?&Hxz); repeat split;
-      try apply Hxy; eauto using agree_valid_le;
-      by etransitivity; [symmetry; apply Hxy|apply Hxz];
-       repeat (intro || split); eauto using agree_valid_le; apply Hxy; auto.
-Qed.
 Instance: Commutative (≡) (@op (agree A) _).
-Proof.
-  intros x y; split; [split|intros n (?&?&Hxy); apply Hxy; auto];
-    intros (?&?&Hxy); repeat split; eauto using agree_valid_le;
-    intros n' ??; symmetry; apply Hxy; eauto using agree_valid_le.
-Qed.
+Proof. intros x y; split; [naive_solver|by intros n (?&?&Hxy); apply Hxy]. Qed.
 Definition agree_idempotent (x : agree A) : x ⋅ x ≡ x.
-Proof. split; [split;[by intros (?&?&?)|done]|done]. Qed.
+Proof. split; naive_solver. Qed.
 Instance: ∀ x : agree A, Proper (dist n ==> dist n) (op x).
 Proof.
   intros n x y1 y2 [Hy' Hy]; split; [|done].
@@ -89,7 +74,12 @@ Qed.
 Instance: Proper (dist n ==> dist n ==> dist n) op.
 Proof. by intros n x1 x2 Hx y1 y2 Hy; rewrite Hy,!(commutative _ _ y2), Hx. Qed.
 Instance: Proper ((≡) ==> (≡) ==> (≡)) op := ne_proper_2 _.
-
+Instance: Associative (≡) (@op (agree A) _).
+Proof.
+  intros x y z; split; simpl; intuition;
+    repeat match goal with H : agree_is_valid _ _ |- _ => clear H end;
+    by cofe_subst; rewrite !agree_idempotent.
+Qed.
 Global Instance agree_cmra : CMRA (agree A).
 Proof.
   split; try (apply _ || done).
