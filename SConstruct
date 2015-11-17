@@ -3,7 +3,7 @@
 import os, glob, string
 
 modules = ["prelude", "iris"]
-Rs = ' '.join(['-Q ' + x + ' ' + x for x in modules])
+Rs = '-Q . ""'
 env = DefaultEnvironment(ENV = os.environ,tools=['default', 'Coq'], COQFLAGS=Rs)
 
 # Coq dependencies
