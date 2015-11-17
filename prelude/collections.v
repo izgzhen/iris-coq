@@ -313,7 +313,7 @@ Section collection.
   End leibniz.
 
   Section dec.
-    Context `{∀ X Y : C, Decision (X ⊆ Y)}.
+    Context `{∀ (x : A) (X : C), Decision (x ∈ X)}.
     Lemma not_elem_of_intersection x X Y : x ∉ X ∩ Y ↔ x ∉ X ∨ x ∉ Y.
     Proof. rewrite elem_of_intersection. destruct (decide (x ∈ X)); tauto. Qed.
     Lemma not_elem_of_difference x X Y : x ∉ X ∖ Y ↔ x ∉ X ∨ x ∈ Y.
