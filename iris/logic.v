@@ -74,6 +74,7 @@ Instance uPred_entails {M} : SubsetEq (uPred M) := λ P Q, ∀ x n,
 Program Definition uPred_const {M} (P : Prop) : uPred M :=
   {| uPred_holds n x := P |}.
 Solve Obligations with done.
+Instance uPred_inhabited M : Inhabited (uPred M) := populate (uPred_const True).
 
 Program Definition uPred_and {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := P n x ∧ Q n x |}.

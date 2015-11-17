@@ -93,35 +93,36 @@ Section cofe.
 End cofe.
 
 (** Fixpoint *)
-Program Definition fixpoint_chain `{Cofe A} (f : A → A) `{!Contractive f}
-  (x : A) : chain A := {| chain_car i := Nat.iter i f x |}.
+Program Definition fixpoint_chain `{Cofe A, Inhabited A} (f : A → A)
+  `{!Contractive f} : chain A := {| chain_car i := Nat.iter i f inhabitant |}.
 Next Obligation.
   intros A ???? f ? x n; induction n as [|n IH]; intros i ?; [done|].
   destruct i as [|i]; simpl; try lia; apply contractive, IH; auto with lia.
 Qed.
-Program Definition fixpoint `{Cofe A} (f : A → A) `{!Contractive f}
-  (x : A) : A := compl (fixpoint_chain f x).
+Program Definition fixpoint `{Cofe A, Inhabited A} (f : A → A)
+  `{!Contractive f} : A := compl (fixpoint_chain f).
 
 Section fixpoint.
-  Context `{Cofe A} (f : A → A) `{!Contractive f}.
-  Lemma fixpoint_unfold x : fixpoint f x ≡ f (fixpoint f x).
+  Context `{Cofe A, Inhabited A} (f : A → A) `{!Contractive f}.
+  Lemma fixpoint_unfold : fixpoint f ≡ f (fixpoint f).
   Proof.
     apply equiv_dist; intros n; unfold fixpoint.
-    rewrite (conv_compl (fixpoint_chain f x) n).
-    by rewrite (chain_cauchy (fixpoint_chain f x) n (S n)) at 1 by lia.
+    rewrite (conv_compl (fixpoint_chain f) n).
+    by rewrite (chain_cauchy (fixpoint_chain f) n (S n)) at 1 by lia.
   Qed.
-  Lemma fixpoint_ne (g : A → A) `{!Contractive g} x y n :
-    (∀ z, f z ={n}= g z) → fixpoint f x ={n}= fixpoint g y.
+  Lemma fixpoint_ne (g : A → A) `{!Contractive g} n :
+    (∀ z, f z ={n}= g z) → fixpoint f ={n}= fixpoint g.
   Proof.
-    intros Hfg; unfold fixpoint; rewrite (conv_compl (fixpoint_chain f x) n),
-      (conv_compl (fixpoint_chain g y) n).
+    intros Hfg; unfold fixpoint.
+    rewrite (conv_compl (fixpoint_chain f) n),(conv_compl (fixpoint_chain g) n).
     induction n as [|n IH]; simpl in *; [done|].
     rewrite Hfg; apply contractive, IH; auto using dist_S.
   Qed.
-  Lemma fixpoint_proper (g : A → A) `{!Contractive g} x :
-    (∀ x, f x ≡ g x) → fixpoint f x ≡ fixpoint g x.
+  Lemma fixpoint_proper (g : A → A) `{!Contractive g} :
+    (∀ x, f x ≡ g x) → fixpoint f ≡ fixpoint g.
   Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint_ne. Qed.
 End fixpoint.
+Global Opaque fixpoint.
 
 (** Function space *)
 Structure cofeMor (A B : cofeT) : Type := CofeMor {
@@ -170,6 +171,8 @@ Lemma cofe_mor_ext {A B} (f g : cofeMor A B) : f ≡ g ↔ ∀ x, f x ≡ g x.
 Proof. done. Qed.
 Canonical Structure cofe_mor (A B : cofeT) : cofeT := CofeT (cofeMor A B).
 Infix "-n>" := cofe_mor (at level 45, right associativity).
+Instance cofe_more_inhabited (A B : cofeT)
+  `{Inhabited B} : Inhabited (A -n> B) := populate (CofeMor (λ _, inhabitant)).
 
 (** Identity and composition *)
 Definition cid {A} : A -n> A := CofeMor id.

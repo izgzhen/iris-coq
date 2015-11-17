@@ -2,7 +2,7 @@ Require Export iris.cofe.
 
 Section solver.
 Context (F : cofeT → cofeT → cofeT).
-Context (p : F (CofeT unit) (CofeT unit)).
+Context `{Finhab : Inhabited (F (CofeT unit) (CofeT unit))}.
 Context (map : ∀ {A1 A2 B1 B2 : cofeT},
   ((A2 -n> A1) * (B1 -n> B2)) → (F A1 B1 -n> F A2 B2)).
 Arguments map {_ _ _ _} _.
@@ -22,7 +22,7 @@ Proof. by rewrite <-!cofe_mor_ext; intros Hf Hg Hx; rewrite Hf, Hg, Hx. Qed.
 Fixpoint A (k : nat) : cofeT :=
   match k with 0 => CofeT unit | S k => F (A k) (A k) end.
 Fixpoint f {k} : A k -n> A (S k) :=
-  match k with 0 => CofeMor (λ _, p) | S k => map (g,f) end
+  match k with 0 => CofeMor (λ _, inhabitant) | S k => map (g,f) end
 with g {k} : A (S k) -n> A k :=
   match k with 0 => CofeMor (λ _, () : CofeT ()) | S k => map (f,g) end.
 Definition f_S k (x : A (S k)) : f x = map (g,f) x := eq_refl.
