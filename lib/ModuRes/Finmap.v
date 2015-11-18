@@ -370,7 +370,7 @@ Section FinDom.
       simpl finmap. rewrite DecEq_refl. reflexivity.
     Qed.
 
-    Lemma fdStrongUpdate_neq k k' v f (Hneq : k <> k') : fdStrongUpdate k v f k' = f k'.
+    Lemma fdStrongUpdate_neq v f {k k'} (Hneq : k <> k') : fdStrongUpdate k v f k' = f k'.
     Proof.
       simpl finmap. destruct (dec_eq k k') as [EQ|NEQ]; first contradiction. reflexivity.
     Qed.
@@ -394,6 +394,11 @@ Section FinDom.
       move=>f1 f2 [Hf Hdom]. split.
       - move=>k'. simpl. rewrite Hf. reflexivity.
       - rewrite /fdStrongUpdate /dom /= /fdStrongUpdate_dom. rewrite Hdom. reflexivity.
+    Qed.
+
+    Global Instance fdStrongUpdate_equiv i : Proper(equiv ==> equiv ==> equiv) (fun v => fun f => fdStrongUpdate i v f).
+    Proof.
+      move=>v v' EQv f f' EQf i' /=. case: (dec_eq i i')=>_; [done | exact: EQf].
     Qed.
 
   End Update.
@@ -463,7 +468,7 @@ Section FinDom.
 
 End FinDom.
 
-Notation "f + '[fd' k <- v ']'" := (fdStrongUpdate k (Some v) f) (at level 0) : finmap_scope.
+Notation "f + '[fd'  k <- v ']'" := (fdStrongUpdate k (Some v) f) (at level 0) : finmap_scope.
 Notation "f \ x" := (fdStrongUpdate x None f) (at level 35) : finmap_scope.
 
 Section FinDom2.
@@ -853,7 +858,7 @@ End FinDom2.
 
 Section RA.
   Context {I : Type} {S : Type} `{eqI : DecEq I} `{RAS : RA S}.
-  Implicit Type (i : I) (s : S) (f g : I -f> S).
+  Implicit Types (i : I) (s : S) (f g : I -f> S).
 
   Local Open Scope ra_scope.
   Local Open Scope finmap_scope.
@@ -943,6 +948,31 @@ Section RA.
         specialize (Hh i). simpl in Hh. destruct (dec_eq k i) as [EQ|NEQ].
         * subst i. rewrite EQg. simpl. assumption.
         * assumption.
+  Qed.
+
+  Lemma ra_fpu_fpfn f i {s} {P : S -> Prop} (Hupd : s ⇝∈ P) :
+    f + [fd i <- s] ⇝∈ (fun f' => exists s', P s' /\ f' = f + [fd i <- s']).
+  Proof.
+    have compupd : forall f g i i' s, (f + [fd i <- s] · g) i' = finprod_op (f + [fd i <- s] i') (g i').
+    { by move=> ? ? ? ? ?; rewrite/ra_op/ra_op_finprod fdComposeRed. }
+    move=>g Hv. pose (sf := if finmap g i is Some sf then sf else 1 s).
+    have: ↓s · sf.
+    { move: (Hv i). rewrite compupd fdStrongUpdate_eq.
+      case Hgi: (finmap g i) => [sf'|]; rewrite/sf !Hgi/=; first done.
+      by rewrite (ra_op_unit2 (t:=s)).
+    }
+    move/Hupd => [s' [HP Hsep]]. exists (f + [fd i <- s']). split; first by exists s'. 
+    rewrite/ra_op/ra_op_finprod => i'; rewrite compupd.
+    case: (dec_eq i i') Hsep => [EQ | NEQ].
+    - rewrite/sf -EQ /= (DecEq_refl i). case: (g i) =>//=. exact: ra_op_valid.
+    - move: (Hv i'). by rewrite compupd !(fdStrongUpdate_neq _ _ NEQ).
+  Qed.
+
+  Lemma ra_fps_fpfn f i {s s'} : s ⇝ s' -> f + [fd i <- s] ⇝ f + [fd i <- s'].
+  Proof.
+    move=> /ra_fps_fpu/(ra_fpu_fpfn f i) => Hupd.
+    apply: ra_fpu_fps => g Hsep. move/(_ g Hsep): Hupd => [f' [[s'' [EQs' EQf']] Hsep']].
+    exists f'. split; last done. rewrite EQf' EQs'. reflexivity.
   Qed.
 End RA.
 
