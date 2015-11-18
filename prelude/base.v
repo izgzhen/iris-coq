@@ -767,6 +767,15 @@ Infix "=.>*" := (Forall2 bool_le) (at level 70).
 Instance: PartialOrder bool_le.
 Proof. repeat split; repeat intros [|]; compute; tauto. Qed.
 
+Lemma andb_True b1 b2 : b1 && b2 ↔ b1 ∧ b2.
+Proof. destruct b1, b2; simpl; tauto. Qed.
+Lemma orb_True b1 b2 : b1 || b2 ↔ b1 ∨ b2.
+Proof. destruct b1, b2; simpl; tauto. Qed.
+Lemma negb_True b : negb b ↔ ¬b.
+Proof. destruct b; simpl; tauto. Qed.
+Lemma Is_true_false (b : bool) : b = false → ¬b.
+Proof. now intros -> ?. Qed.
+
 (** * Miscellaneous *)
 Class Half A := half: A → A.
 Notation "½" := half : C_scope.
