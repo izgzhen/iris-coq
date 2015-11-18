@@ -274,15 +274,15 @@ Instance Pmap_eq_dec `{∀ x y : A, Decision (x = y)}
 Instance Pempty {A} : Empty (Pmap A) := PMap ∅ I.
 Instance Plookup {A} : Lookup positive A (Pmap A) := λ i m, pmap_car m !! i.
 Instance Ppartial_alter {A} : PartialAlter positive A (Pmap A) := λ f i m,
-  PMap (partial_alter f i (pmap_car m)) (Ppartial_alter_wf f i _ (pmap_prf m)).
+  let (t,Ht) := m in PMap (partial_alter f i t) (Ppartial_alter_wf f i _ Ht).
 Instance Pfmap : FMap Pmap := λ A B f m,
-  PMap (f <$> pmap_car m) (Pfmap_wf f _ (pmap_prf m)).
+  let (t,Ht) := m in PMap (f <$> t) (Pfmap_wf f _ Ht).
 Instance Pto_list {A} : FinMapToList positive A (Pmap A) := λ m,
-  Pto_list_raw 1 (pmap_car m) [].
+  let (t,Ht) := m in Pto_list_raw 1 t [].
 Instance Pomap : OMap Pmap := λ A B f m,
-  PMap (omap f (pmap_car m)) (Pomap_wf f _ (pmap_prf m)).
+  let (t,Ht) := m in PMap (omap f t) (Pomap_wf f _ Ht).
 Instance Pmerge : Merge Pmap := λ A B C f m1 m2,
-  PMap _ (Pmerge_wf f _ _ (pmap_prf m1) (pmap_prf m2)).
+  let (t1,Ht1) := m1 in let (t2,Ht2) := m2 in PMap _ (Pmerge_wf f _ _ Ht1 Ht2).
 
 Instance Pmap_finmap : FinMap positive Pmap.
 Proof.

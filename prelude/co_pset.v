@@ -151,12 +151,14 @@ Instance coPset_elem_of : ElemOf positive coPset := λ p X, e_of p (`X).
 Instance coPset_empty : Empty coPset := coPLeaf false ↾ I.
 Definition coPset_all : coPset := coPLeaf true ↾ I.
 Instance coPset_union : Union coPset := λ X Y,
-  (`X ∪ `Y) ↾ coPset_union_wf _ _ (proj2_sig X) (proj2_sig Y).
+  let (t1,Ht1) := X in let (t2,Ht2) := Y in
+  (t1 ∪ t2) ↾ coPset_union_wf _ _ Ht1 Ht2.
 Instance coPset_intersection : Intersection coPset := λ X Y,
-  (`X ∩ `Y) ↾ coPset_intersection_wf _ _ (proj2_sig X) (proj2_sig Y).
+  let (t1,Ht1) := X in let (t2,Ht2) := Y in
+  (t1 ∩ t2) ↾ coPset_intersection_wf _ _ Ht1 Ht2.
 Instance coPset_difference : Difference coPset := λ X Y,
-  (`X ∩ coPset_opp_raw (`Y)) ↾
-    coPset_intersection_wf _ _ (proj2_sig X) (coPset_opp_wf _).
+  let (t1,Ht1) := X in let (t2,Ht2) := Y in
+  (t1 ∩ coPset_opp_raw t2) ↾ coPset_intersection_wf _ _ Ht1 (coPset_opp_wf _).
 
 Instance coPset_elem_of_dec (p : positive) (X : coPset) : Decision (p ∈ X) := _.
 Instance coPset_collection : Collection positive coPset.
@@ -164,11 +166,11 @@ Proof.
   split; [split| |].
   * by intros ??.
   * intros p q. apply elem_of_coPset_singleton.
-  * intros X Y p; unfold elem_of, coPset_elem_of, coPset_union; simpl.
+  * intros [t] [t'] p; unfold elem_of, coPset_elem_of, coPset_union; simpl.
     by rewrite elem_of_coPset_union, orb_True.
-  * intros X Y p; unfold elem_of, coPset_elem_of, coPset_intersection; simpl.
+  * intros [t] [t'] p; unfold elem_of,coPset_elem_of,coPset_intersection; simpl.
     by rewrite elem_of_coPset_intersection, andb_True.
-  * intros X Y p; unfold elem_of, coPset_elem_of, coPset_difference; simpl.
+  * intros [t] [t'] p; unfold elem_of, coPset_elem_of, coPset_difference; simpl.
     by rewrite elem_of_coPset_intersection,
       elem_of_coPset_opp, andb_True, negb_True.
 Qed.
@@ -208,8 +210,10 @@ Lemma coPset_l_wf t : coPset_wf (coPset_l_raw t).
 Proof. induction t as [[]|]; simpl; auto. Qed.
 Lemma coPset_r_wf t : coPset_wf (coPset_r_raw t).
 Proof. induction t as [[]|]; simpl; auto. Qed.
-Definition coPset_l (X : coPset) : coPset := coPset_l_raw (`X) ↾ coPset_l_wf _.
-Definition coPset_r (X : coPset) : coPset := coPset_r_raw (`X) ↾ coPset_r_wf _.
+Definition coPset_l (X : coPset) : coPset :=
+  let (t,Ht) := X in coPset_l_raw t ↾ coPset_l_wf _.
+Definition coPset_r (X : coPset) : coPset :=
+  let (t,Ht) := X in coPset_r_raw t ↾ coPset_r_wf _.
 
 Lemma coPset_lr_disjoint X : coPset_l X ∩ coPset_r X = ∅.
 Proof.
@@ -255,7 +259,7 @@ Proof.
       rewrite ?andb_True; rewrite ?andb_True in IHl, IHr; intuition.
 Qed.
 Definition to_coPset (X : Pset) : coPset :=
-  to_coPset_raw (pmap_car (mapset_car X)) ↾ to_coPset_raw_wf _ (pmap_prf _).
+  let (m) := X in let (t,Ht) := m in to_coPset_raw t ↾ to_coPset_raw_wf _ Ht.
 Lemma elem_of_to_coPset X i : i ∈ to_coPset X ↔ i ∈ X.
 Proof.
   destruct X as [[t Ht]]; change (e_of i (to_coPset_raw t) ↔ t !! i = Some ()).
