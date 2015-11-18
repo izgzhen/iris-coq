@@ -471,6 +471,15 @@ Proof.
     rewrite (associative op), <-(commutative op z1), <-!(associative op), <-Hy2.
     by rewrite (associative op), (commutative op z1), <-Hy1.
 Qed.
+Lemma uPred_own_unit (a : M) : uPred_own (unit a) ≡ (□ uPred_own (unit a))%I.
+Proof.
+  intros x n; split; [intros [a' Hx]|by apply uPred_always_necessity].
+  assert (∃ a'', unit (unit a ⋅ a') ≡ unit (unit a) ⋅ a'') as [a'' Ha]
+    by (rewrite <-ra_included_spec; auto using ra_unit_weaken).
+  by exists a''; rewrite Hx, Ha, ra_unit_idempotent.
+Qed.
+Lemma uPred_own_empty `{Empty M, !RAEmpty M} : True%I ⊆ uPred_own ∅.
+Proof. intros x [|n] ??; [done|]. by  exists x; rewrite (left_id _ _). Qed.
 Lemma uPred_own_valid (a : M) : uPred_own a ⊆ uPred_valid a.
 Proof.
   intros x n Hv [a' Hx]; simpl; rewrite Hx in Hv; eauto using cmra_valid_op_l.
