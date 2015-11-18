@@ -89,10 +89,9 @@ Definition option_relation {A B} (R: A → B → Prop) (P: A → Prop) (Q: B →
 
 (** Setoids *)
 Section setoids.
-  Context `{Equiv A}.
+  Context `{Equiv A} `{!Equivalence ((≡) : relation A)}.
   Global Instance option_equiv : Equiv (option A) := option_Forall2 (≡).
-  Global Instance option_equivalence `{!Equivalence ((≡) : relation A)} :
-    Equivalence ((≡) : relation (option A)).
+  Global Instance option_equivalence : Equivalence ((≡) : relation (option A)).
   Proof.
     split.
     * by intros []; constructor.
@@ -106,6 +105,11 @@ Section setoids.
     intros x y; split; [destruct 1; fold_leibniz; congruence|].
     by intros <-; destruct x; constructor; fold_leibniz.
   Qed.
+  Lemma equiv_None (mx : option A) : mx ≡ None ↔ mx = None.
+  Proof. split; [by inversion_clear 1|by intros ->]. Qed.
+  Lemma equiv_Some (mx my : option A) x :
+    mx ≡ my → mx = Some x → ∃ y, my = Some y ∧ x ≡ y.
+  Proof. destruct 1; naive_solver. Qed.
 End setoids.
 
 (** Equality on [option] is decidable. *)

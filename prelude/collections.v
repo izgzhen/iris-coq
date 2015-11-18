@@ -11,6 +11,8 @@ Instance collection_subseteq `{ElemOf A C} : SubsetEq C := λ X Y,
 (** * Basic theorems *)
 Section simple_collection.
   Context `{SimpleCollection A C}.
+  Implicit Types x y : A.
+  Implicit Types X Y : C.
 
   Lemma elem_of_empty x : x ∈ ∅ ↔ False.
   Proof. split. apply not_elem_of_empty. done. Qed.
@@ -47,9 +49,10 @@ Section simple_collection.
     * intros ??. rewrite elem_of_singleton. by intros ->.
     * intros Ex. by apply (Ex x), elem_of_singleton.
   Qed.
-  Global Instance singleton_proper : Proper ((=) ==> (≡)) singleton.
+  Global Instance singleton_proper : Proper ((=) ==> (≡)) (singleton (B:=C)).
   Proof. by repeat intro; subst. Qed.
-  Global Instance elem_of_proper: Proper ((=) ==> (≡) ==> iff) (∈) | 5.
+  Global Instance elem_of_proper :
+    Proper ((=) ==> (≡) ==> iff) ((∈) : A → C → Prop) | 5.
   Proof. intros ???; subst. firstorder. Qed.
   Lemma elem_of_union_list Xs x : x ∈ ⋃ Xs ↔ ∃ X, X ∈ Xs ∧ x ∈ X.
   Proof.
@@ -59,7 +62,7 @@ Section simple_collection.
     * intros [X []]. induction 1; simpl; [by apply elem_of_union_l |].
       intros. apply elem_of_union_r; auto.
   Qed.
-  Lemma non_empty_singleton x : {[ x ]} ≢ ∅.
+  Lemma non_empty_singleton x : ({[ x ]} : C) ≢ ∅.
   Proof. intros [E _]. by apply (elem_of_empty x), E, elem_of_singleton. Qed.
   Lemma not_elem_of_singleton x y : x ∉ {[ y ]} ↔ x ≠ y.
   Proof. by rewrite elem_of_singleton. Qed.
@@ -266,19 +269,21 @@ Tactic Notation "esolve_elem_of" tactic3(tac) :=
   unfold_elem_of;
   naive_solver tac.
 Tactic Notation "esolve_elem_of" := esolve_elem_of eauto.
- 
+
 (** * More theorems *)
 Section collection.
   Context `{Collection A C}.
+  Implicit Types X Y : C.
 
   Global Instance: Lattice C.
   Proof. split. apply _. firstorder auto. solve_elem_of. Qed.
-  Global Instance difference_proper : Proper ((≡) ==> (≡) ==> (≡)) (∖).
+  Global Instance difference_proper :
+     Proper ((≡) ==> (≡) ==> (≡)) (@difference C _).
   Proof.
     intros X1 X2 HX Y1 Y2 HY; apply elem_of_equiv; intros x.
     by rewrite !elem_of_difference, HX, HY.
   Qed.
-  Lemma intersection_singletons x : {[x]} ∩ {[x]} ≡ {[x]}.
+  Lemma intersection_singletons x : ({[x]} : C) ∩ {[x]} ≡ {[x]}.
   Proof. esolve_elem_of. Qed.
   Lemma difference_twice X Y : (X ∖ Y) ∖ Y ≡ X ∖ Y.
   Proof. esolve_elem_of. Qed.
@@ -475,10 +480,12 @@ Inductive Forall_fresh `{ElemOf A C} (X : C) : list A → Prop :=
 
 Section fresh.
   Context `{FreshSpec A C}.
+  Implicit Types X Y : C.
 
-  Global Instance fresh_proper: Proper ((≡) ==> (=)) fresh.
+  Global Instance fresh_proper: Proper ((≡) ==> (=)) (fresh (C:=C)).
   Proof. intros ???. by apply fresh_proper_alt, elem_of_equiv. Qed.
-  Global Instance fresh_list_proper: Proper ((=) ==> (≡) ==> (=)) fresh_list.
+  Global Instance fresh_list_proper:
+    Proper ((=) ==> (≡) ==> (=)) (fresh_list (C:=C)).
   Proof.
     intros ? n ->. induction n as [|n IH]; intros ?? E; f_equal'; [by rewrite E|].
     apply IH. by rewrite E.
@@ -539,7 +546,7 @@ Section collection_monad.
   Proof. esolve_elem_of. Qed.
   Lemma collection_guard_True {A} `{Decision P} (X : M A) : P → guard P; X ≡ X.
   Proof. esolve_elem_of. Qed.
-  Lemma collection_fmap_compose {A B C} (f : A → B) (g : B → C) X :
+  Lemma collection_fmap_compose {A B C} (f : A → B) (g : B → C) (X : M A) :
     g ∘ f <$> X ≡ g <$> (f <$> X).
   Proof. esolve_elem_of. Qed.
   Lemma elem_of_fmap_1 {A B} (f : A → B) (X : M A) (y : B) :

@@ -12,15 +12,16 @@ Definition collection_fold `{Elements A C} {B}
 
 Section fin_collection.
 Context `{FinCollection A C}.
+Implicit Types X Y : C.
 
-Global Instance elements_proper: Proper ((≡) ==> (≡ₚ)) elements.
+Global Instance elements_proper: Proper ((≡) ==> (≡ₚ)) (elements (C:=C)).
 Proof.
   intros ?? E. apply NoDup_Permutation.
   * apply NoDup_elements.
   * apply NoDup_elements.
   * intros. by rewrite !elem_of_elements, E.
 Qed.
-Global Instance collection_size_proper: Proper ((≡) ==> (=)) size.
+Global Instance collection_size_proper: Proper ((≡) ==> (=)) (@size C _).
 Proof. intros ?? E. apply Permutation_length. by rewrite E. Qed.
 Lemma size_empty : size (∅ : C) = 0.
 Proof.
@@ -148,7 +149,7 @@ Qed.
 Lemma collection_fold_proper {B} (R : relation B) `{!Equivalence R}
     (f : A → B → B) (b : B) `{!Proper ((=) ==> R ==> R) f}
     (Hf : ∀ a1 a2 b, R (f a1 (f a2 b)) (f a2 (f a1 b))) :
-  Proper ((≡) ==> R) (collection_fold f b).
+  Proper ((≡) ==> R) (collection_fold f b : C → B).
 Proof. intros ?? E. apply (foldr_permutation R f b); auto. by rewrite E. Qed.
 Global Instance set_Forall_dec `(P : A → Prop)
   `{∀ x, Decision (P x)} X : Decision (set_Forall P X) | 100.

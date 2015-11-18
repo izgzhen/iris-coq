@@ -309,7 +309,7 @@ End merge_sort_correct.
 (** We extend the canonical pre-order [⊆] to a partial order by defining setoid
 equality as [λ X Y, X ⊆ Y ∧ Y ⊆ X]. We prove that this indeed gives rise to a
 setoid. *)
-Instance preorder_equiv `{SubsetEq A} : Equiv A := λ X Y, X ⊆ Y ∧ Y ⊆ X.
+Instance preorder_equiv `{SubsetEq A} : Equiv A | 20 := λ X Y, X ⊆ Y ∧ Y ⊆ X.
 
 Section preorder.
   Context `{SubsetEq A, !PreOrder (@subseteq A _)}.
@@ -321,13 +321,13 @@ Section preorder.
     * by intros ?? [??].
     * by intros X Y Z [??] [??]; split; transitivity Y.
   Qed.
-  Global Instance: Proper ((≡) ==> (≡) ==> iff) (⊆).
+  Global Instance: Proper ((≡) ==> (≡) ==> iff) ((⊆) : relation A).
   Proof.
     unfold equiv, preorder_equiv. intros X1 Y1 ? X2 Y2 ?. split; intro.
     * transitivity X1. tauto. transitivity X2; tauto.
     * transitivity Y1. tauto. transitivity Y2; tauto.
   Qed.
-  Lemma subset_spec X Y : X ⊂ Y ↔ X ⊆ Y ∧ X ≢ Y.
+  Lemma subset_spec (X Y : A) : X ⊂ Y ↔ X ⊆ Y ∧ X ≢ Y.
   Proof.
     split.
     * intros [? HYX]. split. done. contradict HYX. by rewrite <-HYX.
@@ -388,20 +388,20 @@ Section join_semi_lattice.
   Proof. auto. Qed.
   Lemma union_empty X : X ∪ ∅ ⊆ X.
   Proof. by apply union_least. Qed.
-  Global Instance union_proper : Proper ((≡) ==> (≡) ==> (≡)) (∪).
+  Global Instance union_proper : Proper ((≡) ==> (≡) ==> (≡)) (@union A _).
   Proof.
     unfold equiv, preorder_equiv.
     split; apply union_preserving; simpl in *; tauto.
   Qed.
-  Global Instance: Idempotent (≡) (∪).
+  Global Instance: Idempotent ((≡) : relation A) (∪).
   Proof. split; eauto. Qed.
-  Global Instance: LeftId (≡) ∅ (∪).
+  Global Instance: LeftId ((≡) : relation A) ∅ (∪).
   Proof. split; eauto. Qed.
-  Global Instance: RightId (≡) ∅ (∪).
+  Global Instance: RightId ((≡) : relation A) ∅ (∪).
   Proof. split; eauto. Qed.
-  Global Instance: Commutative (≡) (∪).
+  Global Instance: Commutative ((≡) : relation A) (∪).
   Proof. split; auto. Qed.
-  Global Instance: Associative (≡) (∪).
+  Global Instance: Associative ((≡) : relation A) (∪).
   Proof. split; auto. Qed.
   Lemma subseteq_union X Y : X ⊆ Y ↔ X ∪ Y ≡ Y.
   Proof. repeat split; eauto. intros HXY. rewrite <-HXY. auto. Qed.
@@ -411,8 +411,8 @@ Section join_semi_lattice.
   Proof. apply subseteq_union. Qed.
   Lemma equiv_empty X : X ⊆ ∅ → X ≡ ∅.
   Proof. split; eauto. Qed.
-  Global Instance union_list_proper: Proper (Forall2 (≡) ==> (≡)) union_list.
-  Proof. induction 1; simpl. done. by apply union_proper. Qed.
+  Global Instance union_list_proper: Proper ((≡) ==> (≡)) (union_list (A:=A)).
+  Proof. by induction 1; simpl; try apply union_proper. Qed.
   Lemma union_list_nil : ⋃ @nil A = ∅.
   Proof. done. Qed.
   Lemma union_list_cons X Xs : ⋃ (X :: Xs) = X ∪ ⋃ Xs.
@@ -514,16 +514,16 @@ Section meet_semi_lattice.
   Lemma intersection_preserving X1 X2 Y1 Y2 :
     X1 ⊆ X2 → Y1 ⊆ Y2 → X1 ∩ Y1 ⊆ X2 ∩ Y2.
   Proof. auto. Qed.
-  Global Instance: Proper ((≡) ==> (≡) ==> (≡)) (∩).
+  Global Instance: Proper ((≡) ==> (≡) ==> (≡)) (@intersection A _).
   Proof.
     unfold equiv, preorder_equiv. split;
       apply intersection_preserving; simpl in *; tauto.
   Qed.
-  Global Instance: Idempotent (≡) (∩).
+  Global Instance: Idempotent ((≡) : relation A) (∩).
   Proof. split; eauto. Qed.
-  Global Instance: Commutative (≡) (∩).
+  Global Instance: Commutative ((≡) : relation A) (∩).
   Proof. split; auto. Qed.
-  Global Instance: Associative (≡) (∩).
+  Global Instance: Associative ((≡) : relation A) (∩).
   Proof. split; auto. Qed.
   Lemma subseteq_intersection X Y : X ⊆ Y ↔ X ∩ Y ≡ X.
   Proof. repeat split; eauto. intros HXY. rewrite <-HXY. auto. Qed.
@@ -553,11 +553,11 @@ End meet_semi_lattice.
 Section lattice.
   Context `{Empty A, Lattice A, !EmptySpec A}.
 
-  Global Instance: LeftAbsorb (≡) ∅ (∩).
+  Global Instance: LeftAbsorb ((≡) : relation A) ∅ (∩).
   Proof. split. by apply intersection_subseteq_l. by apply subseteq_empty. Qed.
-  Global Instance: RightAbsorb (≡) ∅ (∩).
+  Global Instance: RightAbsorb ((≡) : relation A) ∅ (∩).
   Proof. intros ?. by rewrite (commutative _), (left_absorb _ _). Qed.
-  Global Instance: LeftDistr (≡) (∪) (∩).
+  Global Instance: LeftDistr ((≡) : relation A) (∪) (∩).
   Proof.
     intros X Y Z. split; [|apply lattice_distr].
     apply union_least.
@@ -566,9 +566,9 @@ Section lattice.
     * apply union_subseteq_r_transitive, intersection_subseteq_l.
     * apply union_subseteq_r_transitive, intersection_subseteq_r.
   Qed.
-  Global Instance: RightDistr (≡) (∪) (∩).
+  Global Instance: RightDistr ((≡) : relation A) (∪) (∩).
   Proof. intros X Y Z. by rewrite !(commutative _ _ Z), (left_distr _ _). Qed.
-  Global Instance: LeftDistr (≡) (∩) (∪).
+  Global Instance: LeftDistr ((≡) : relation A) (∩) (∪).
   Proof.
     intros X Y Z. split.
     * rewrite (left_distr (∪) (∩)).
@@ -582,7 +582,7 @@ Section lattice.
       + apply intersection_subseteq_r_transitive, union_subseteq_l.
       + apply intersection_subseteq_r_transitive, union_subseteq_r.
   Qed.
-  Global Instance: RightDistr (≡) (∩) (∪).
+  Global Instance: RightDistr ((≡) : relation A) (∩) (∪).
   Proof. intros X Y Z. by rewrite !(commutative _ _ Z), (left_distr _ _). Qed.
 
   Section leibniz.

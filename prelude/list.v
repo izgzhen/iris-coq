@@ -35,6 +35,12 @@ Notation "( x ≢ₚ)" := (λ y, x ≢ₚ y) (only parsing) : C_scope.
 Notation "(≢ₚ x )" := (λ y, y ≢ₚ x) (only parsing) : C_scope.
 
 (** * Definitions *)
+(** Setoid equality lifted to lists *)
+Inductive list_equiv `{Equiv A} : Equiv (list A) :=
+  | nil_equiv : [] ≡ []
+  | cons_equiv x y l k : x ≡ y → l ≡ k → x :: l ≡ y :: k.
+Existing Instance list_equiv.
+
 (** The operation [l !! i] gives the [i]th element of the list [l], or [None]
 in case [i] is out of bounds. *)
 Instance list_lookup {A} : Lookup nat A (list A) :=
@@ -355,6 +361,30 @@ Section general_properties.
 Context {A : Type}.
 Implicit Types x y z : A.
 Implicit Types l k : list A.
+
+Section setoid.
+  Context `{Equiv A} `{!Equivalence ((≡) : relation A)}.
+  Global Instance map_equivalence : Equivalence ((≡) : relation (list A)).
+  Proof.
+    split.
+    * intros l; induction l; constructor; auto.
+    * induction 1; constructor; auto.
+    * intros l1 l2 l3 Hl; revert l3.
+      induction Hl; inversion_clear 1; constructor; try etransitivity; eauto.
+  Qed.
+  Global Instance cons_proper : Proper ((≡) ==> (≡) ==> (≡)) (@cons A).
+  Proof. by constructor. Qed.
+  Global Instance app_proper : Proper ((≡) ==> (≡) ==> (≡)) (@app A).
+  Proof.
+    induction 1 as [|x y l k ?? IH]; intros ?? Htl; simpl; auto.
+    by apply cons_equiv, IH.
+  Qed.
+  Global Instance list_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (list A).
+  Proof.
+    intros l1 l2; split; [|by intros <-].
+    induction 1; f_equal; fold_leibniz; auto.
+  Qed.
+End setoid.
 
 Global Instance: Injective2 (=) (=) (=) (@cons A).
 Proof. by injection 1. Qed.

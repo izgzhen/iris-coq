@@ -71,8 +71,8 @@ Instance map_intersection_with `{Merge M} {A} : IntersectionWith A (M A) :=
 Instance map_difference_with `{Merge M} {A} : DifferenceWith A (M A) :=
   λ f, merge (difference_with f).
 
-Instance map_equiv `{∀ A, Lookup K A (M A), Equiv A} : Equiv (M A) | 1 := λ m1 m2,
-  ∀ i, m1 !! i ≡ m2 !! i.
+Instance map_equiv `{∀ A, Lookup K A (M A), Equiv A} : Equiv (M A) | 18 :=
+  λ m1 m2, ∀ i, m1 !! i ≡ m2 !! i.
 
 (** The relation [intersection_forall R] on finite maps describes that the
 relation [R] holds for each pair in the intersection. *)
@@ -117,9 +117,8 @@ Context `{FinMap K M}.
 
 (** ** Setoids *)
 Section setoid.
-  Context `{Equiv A}.
-  Global Instance map_equivalence `{!Equivalence ((≡) : relation A)} :
-    Equivalence ((≡) : relation (M A)).
+  Context `{Equiv A} `{!Equivalence ((≡) : relation A)}.
+  Global Instance map_equivalence : Equivalence ((≡) : relation (M A)).
   Proof.
     split.
     * by intros m i.
@@ -130,7 +129,7 @@ Section setoid.
     Proper ((≡) ==> (≡)) (lookup (M:=M A) i).
   Proof. by intros m1 m2 Hm. Qed.
   Global Instance partial_alter_proper :
-    Proper (((≡) ==> (≡)) ==> (=) ==> (≡) ==> (≡)) partial_alter.
+    Proper (((≡) ==> (≡)) ==> (=) ==> (≡) ==> (≡)) (partial_alter (M:=M A)).
   Proof.
     by intros f1 f2 Hf i ? <- m1 m2 Hm j; destruct (decide (i = j)) as [->|];
       rewrite ?lookup_partial_alter, ?lookup_partial_alter_ne by done;
@@ -151,12 +150,12 @@ Section setoid.
   Lemma merge_ext f g
       `{!PropHolds (f None None = None), !PropHolds (g None None = None)} :
     ((≡) ==> (≡) ==> (≡))%signature f g →
-    ((≡) ==> (≡) ==> (≡))%signature (merge f) (merge g).
+    ((≡) ==> (≡) ==> (≡))%signature (merge (M:=M) f) (merge g).
   Proof.
     by intros Hf ?? Hm1 ?? Hm2 i; rewrite !lookup_merge by done; apply Hf.
   Qed.
   Global Instance union_with_proper :
-    Proper (((≡) ==> (≡) ==> (≡)) ==> (≡) ==> (≡) ==> (≡)) union_with.
+    Proper (((≡) ==> (≡) ==> (≡)) ==> (≡) ==> (≡) ==>(≡)) (union_with (M:=M A)).
   Proof.
     intros ?? Hf ?? Hm1 ?? Hm2 i; apply (merge_ext _ _); auto.
     by do 2 destruct 1; first [apply Hf | constructor].
@@ -166,6 +165,16 @@ Section setoid.
     intros m1 m2; split.
     * by intros Hm; apply map_eq; intros i; unfold_leibniz; apply lookup_proper.
     * by intros <-; intros i; fold_leibniz.
+  Qed.
+  Lemma map_equiv_empty (m : M A) : m ≡ ∅ ↔ m = ∅.
+  Proof.
+    split; [intros Hm; apply map_eq; intros i|by intros ->].
+    by rewrite lookup_empty, <-equiv_None, Hm, lookup_empty.
+  Qed.
+  Lemma map_equiv_lookup (m1 m2 : M A) i x :
+    m1 ≡ m2 → m1 !! i = Some x → ∃ y, m2 !! i = Some y ∧ x ≡ y.
+  Proof.
+    intros Hm ?. destruct (equiv_Some (m1 !! i) (m2 !! i) x) as (y&?&?); eauto.
   Qed.
 End setoid.
 
