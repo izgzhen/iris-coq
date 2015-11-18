@@ -200,6 +200,8 @@ Notation "▷ P" := (uPred_later P) (at level 20) : uPred_scope.
 Notation "□ P" := (uPred_always P) (at level 20) : uPred_scope.
 Infix "≡" := uPred_eq : uPred_scope.
 
+Class TimelessP {M} (P : uPred M) := timelessP x n : validN 1 x → P 1 x → P n x.
+
 Section logic.
 Context {M : cmraT}.
 Implicit Types P Q : uPred M.
@@ -477,5 +479,53 @@ Qed.
 Lemma uPred_own_valid (a : M) : uPred_own a ⊆ uPred_valid a.
 Proof.
   intros x n Hv [a' Hx]; simpl; rewrite Hx in Hv; eauto using cmra_valid_op_l.
+Qed.
+
+(* Timeless *)
+Global Instance uPred_const_timeless (P : Prop) : TimelessP (@uPred_const M P).
+Proof. by intros x [|n]. Qed.
+Global Instance uPred_and_timeless P Q :
+  TimelessP P → TimelessP Q → TimelessP (P ∧ Q).
+Proof. intros ?? x n ? [??]; split; auto. Qed.
+Global Instance uPred_or_timeless P Q :
+  TimelessP P → TimelessP Q → TimelessP (P ∨ Q).
+Proof. intros ?? x n ? [?|?]; [left|right]; auto. Qed.
+Global Instance uPred_impl_timeless P Q : TimelessP Q → TimelessP (P → Q).
+Proof.
+  intros ? x [|n] ? HPQ x' [|n'] ????; auto.
+  apply timelessP, HPQ, uPred_weaken with x' (S n'); eauto using cmra_valid_le.
+Qed.
+Global Instance uPred_sep_timeless P Q :
+  TimelessP P → TimelessP Q → TimelessP (P ★ Q).
+Proof.
+  intros ?? x [|n] Hvalid (x1&x2&Hx12&?&?); [done|].
+  destruct (cmra_extend_op x x1 x2 1) as ([y1 y2]&Hx&Hy1&Hy2); auto; simpl in *.
+  rewrite Hx12 in Hvalid; exists y1, y2; split_ands; [by rewrite Hx| |].
+  * apply timelessP; rewrite Hy1; eauto using cmra_valid_op_l.
+  * apply timelessP; rewrite Hy2; eauto using cmra_valid_op_r.
+Qed.
+Global Instance uPred_wand_timeless P Q : TimelessP Q → TimelessP (P -★ Q).
+Proof.
+  intros ? x [|n] ? HPQ x' [|n'] ???; auto.
+  apply timelessP, HPQ, uPred_weaken with x' (S n');
+    eauto 3 using cmra_valid_le, cmra_valid_op_r.
+Qed.
+Global Instance uPred_forall_timeless {A} (P : A → uPred M) :
+  (∀ x, TimelessP (P x)) → TimelessP (∀ x, P x).
+Proof. by intros ? x n ? HP a; apply timelessP. Qed.
+Global Instance uPred_exist_timeless {A} (P : A → uPred M) :
+  (∀ x, TimelessP (P x)) → TimelessP (∃ x, P x).
+Proof. by intros ? x [|n] ?; [|intros [a ?]; exists a; apply timelessP]. Qed.
+Global Instance uPred_always_timeless P : TimelessP P → TimelessP (□ P).
+Proof. intros ? x n ??; simpl; apply timelessP; auto using cmra_unit_valid. Qed.
+Global Instance uPred_eq_timeless {A : cofeT} (a b : A) :
+  Timeless a → TimelessP (a ≡ b : uPred M).
+Proof. by intros ? x n ??; apply equiv_dist, timeless. Qed.
+Global Instance uPred_own_timeless (a : M) :
+  Timeless a → TimelessP (uPred_own a).
+Proof.
+  intros ? x n ? [a' ?].
+  destruct (cmra_extend_op x a a' 1) as ([b b']&Hx&Hb&Hb'); auto; simpl in *.
+  by exists b'; rewrite Hx, (timeless a b) by done.
 Qed.
 End logic.
