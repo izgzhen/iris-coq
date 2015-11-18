@@ -8,7 +8,7 @@ Structure uPred (M : cmraT) : Type := IProp {
   uPred_ne x1 x2 n : uPred_holds n x1 → x1 ={n}= x2 → uPred_holds n x2;
   uPred_0 x : uPred_holds 0 x;
   uPred_weaken x1 x2 n1 n2 :
-    x1 ≼ x2 → n2 ≤ n1 → validN n2 x2 → uPred_holds n1 x1 → uPred_holds n2 x2
+    uPred_holds n1 x1 → x1 ≼ x2 → n2 ≤ n1 → validN n2 x2 → uPred_holds n2 x2
 }.
 Arguments uPred_holds {_} _ _ _.
 Hint Resolve uPred_0.
@@ -53,14 +53,13 @@ Program Definition uPred_map {M1 M2 : cmraT} (f : M2 → M1)
 Next Obligation. by intros M1 M2 f ?? P y1 y2 n ? Hy; simpl; rewrite <-Hy. Qed.
 Next Obligation. intros M1 M2 f _ _ P x; apply uPred_0. Qed.
 Next Obligation.
-  by intros M1 M2 f ?? P y1 y2 n i ???; simpl; apply uPred_weaken; auto;
-    apply validN_preserving || apply included_preserving.
+  naive_solver eauto using uPred_weaken, included_preserving, validN_preserving.
 Qed.
 Instance uPred_map_ne {M1 M2 : cmraT} (f : M2 → M1)
   `{!∀ n, Proper (dist n ==> dist n) f, !CMRAPreserving f} :
   Proper (dist n ==> dist n) (uPred_map f).
 Proof.
-  by intros n x1 x2 Hx y n'; split; apply Hx; try apply validN_preserving.
+  by intros n x1 x2 Hx y n'; split; apply Hx; auto using validN_preserving.
 Qed.
 Definition uPredC_map {M1 M2 : cmraT} (f : M2 -n> M1) `{!CMRAPreserving f} :
   uPredC M1 -n> uPredC M2 := CofeMor (uPred_map f : uPredC M1 → uPredC M2).
@@ -96,7 +95,7 @@ Next Obligation.
   destruct (cmra_included_dist_l x1 x2 x1' n1) as (x2'&?&Hx2); auto.
   assert (x2' ={n2}= x2) as Hx2' by (by apply dist_le with n1).
   assert (validN n2 x2') by (by rewrite Hx2'); rewrite <-Hx2'.
-  by apply HPQ, uPred_weaken with x2' n2, uPred_ne with x2.
+  eauto using uPred_weaken, uPred_ne.
 Qed.
 Next Obligation. intros M P Q x1 x2 [|n]; auto with lia. Qed.
 Next Obligation. naive_solver eauto 2 with lia. Qed.
@@ -124,16 +123,14 @@ Next Obligation.
 Qed.
 Next Obligation. by intros M P Q x; exists x, x. Qed.
 Next Obligation.
-  intros M P Q x y n1 n2 Hxy ?? (x1&x2&Hx&?&?).
+  intros M P Q x y n1 n2 (x1&x2&Hx&?&?) Hxy ? Hvalid.
   assert (∃ x2', y ={n2}= x1 ⋅ x2' ∧ x2 ≼ x2') as (x2'&Hy&?).
   { rewrite ra_included_spec in Hxy; destruct Hxy as [z Hy].
     exists (x2 ⋅ z); split; eauto using ra_included_l.
     apply dist_le with n1; auto. by rewrite (associative op), <-Hx, Hy. }
-  exists x1, x2'; split_ands; auto.
-  * apply uPred_weaken with x1 n1; auto.
-    by apply cmra_valid_op_l with x2'; rewrite <-Hy.
-  * apply uPred_weaken with x2 n1; auto.
-    by apply cmra_valid_op_r with x1; rewrite <-Hy.
+  rewrite Hy in Hvalid; exists x1, x2'; split_ands; auto.
+  * apply uPred_weaken with x1 n1; eauto using cmra_valid_op_l.
+  * apply uPred_weaken with x2 n1; eauto using cmra_valid_op_r.
 Qed.
 
 Program Definition uPred_wand {M} (P Q : uPred M) : uPred M :=
@@ -146,10 +143,9 @@ Next Obligation.
 Qed.
 Next Obligation. intros M P Q x1 x2 [|n]; auto with lia. Qed.
 Next Obligation.
-  intros M P Q x1 x2 n1 n2 ??? HPQ x3 n3 ???; simpl in *.
-  apply uPred_weaken with (x1 ⋅ x3) n3; auto using ra_preserving_r.
-  apply HPQ; auto.
-  apply cmra_valid_included with (x2 ⋅ x3); auto using ra_preserving_r.
+  intros M P Q x1 x2 n1 n2 HPQ ??? x3 n3 ???; simpl in *.
+  apply uPred_weaken with (x1 ⋅ x3) n3;
+    eauto using cmra_valid_included, ra_preserving_r.
 Qed.
 
 Program Definition uPred_later {M} (P : uPred M) : uPred M :=
@@ -157,8 +153,7 @@ Program Definition uPred_later {M} (P : uPred M) : uPred M :=
 Next Obligation. intros M P ?? [|n]; eauto using uPred_ne,(dist_le (A:=M)). Qed.
 Next Obligation. done. Qed.
 Next Obligation.
-  intros M P x1 x2 [|n1] [|n2] ????; auto with lia.
-  apply uPred_weaken with x1 n1; eauto using cmra_valid_S.
+  intros M P x1 x2 [|n1] [|n2]; eauto using uPred_weaken, cmra_valid_S.
 Qed.
 Program Definition uPred_always {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n (unit x) |}.
@@ -174,7 +169,7 @@ Program Definition uPred_own {M : cmraT} (a : M) : uPred M :=
 Next Obligation. by intros M a x1 x2 n [a' Hx] ?; exists a'; rewrite <-Hx. Qed.
 Next Obligation. by intros M a x; exists x. Qed.
 Next Obligation.
-  intros M a x1 x n1 n2; rewrite ra_included_spec; intros [x2 Hx] ?? [a' Hx1].
+  intros M a x1 x n1 n2; rewrite ra_included_spec; intros [a' Hx1] [x2 Hx] ??.
   exists (a' ⋅ x2). by rewrite (associative op), <-(dist_le _ _ _ _ Hx1), Hx.
 Qed.
 Program Definition uPred_valid {M : cmraT} (a : M) : uPred M :=
@@ -346,13 +341,13 @@ Proof. by intros HPQ x [|n] ?; [|intros [a ?]; apply HPQ with a]. Qed.
 Lemma uPred_sep_elim_l P Q : (P ★ Q)%I ⊆ P.
 Proof.
   intros x n Hvalid (x1&x2&Hx&?&?); rewrite Hx in Hvalid |- *.
-  by apply uPred_weaken with x1 n; auto using ra_included_l.
+  eauto using uPred_weaken, ra_included_l.
 Qed.
 Global Instance uPred_sep_left_id : LeftId (≡) True%I (@uPred_sep M).
 Proof.
   intros P x n Hvalid; split.
   * intros (x1&x2&Hx&_&?); rewrite Hx in Hvalid |- *.
-    apply uPred_weaken with x2 n; auto using ra_included_r.
+    eauto using uPred_weaken, ra_included_r.
   * by destruct n as [|n]; [|intros ?; exists (unit x), x; rewrite ra_unit_l].
 Qed. 
 Global Instance uPred_sep_commutative : Commutative (≡) (@uPred_sep M).
