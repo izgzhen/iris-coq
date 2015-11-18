@@ -466,7 +466,7 @@ Arguments lookup _ _ _ _ !_ !_ / : simpl nomatch.
 (** The function insert [<[k:=a]>m] should update the element at key [k] with
 value [a] in [m]. *)
 Class Insert (K A M : Type) := insert: K → A → M → M.
-Instance: Params (@insert) 4.
+Instance: Params (@insert) 5.
 Notation "<[ k := a ]>" := (insert k a)
   (at level 5, right associativity, format "<[ k := a ]>") : C_scope.
 Arguments insert _ _ _ _ !_ _ !_ / : simpl nomatch.
@@ -475,7 +475,7 @@ Arguments insert _ _ _ _ !_ _ !_ / : simpl nomatch.
 [m]. If the key [k] is not a member of [m], the original map should be
 returned. *)
 Class Delete (K M : Type) := delete: K → M → M.
-Instance: Params (@delete) 3.
+Instance: Params (@delete) 4.
 Arguments delete _ _ _ !_ !_ / : simpl nomatch.
 
 (** The function [alter f k m] should update the value at key [k] using the
@@ -537,7 +537,7 @@ Notation "(!!{ Γ } )" := (lookupE Γ) (only parsing, Γ at level 1) : C_scope.
 Arguments lookupE _ _ _ _ _ _ !_ !_ / : simpl nomatch.
 
 Class InsertE (E K A M : Type) := insertE: E → K → A → M → M.
-Instance: Params (@insert) 6.
+Instance: Params (@insertE) 6.
 Notation "<[ k := a ]{ Γ }>" := (insertE Γ k a)
   (at level 5, right associativity, format "<[ k := a ]{ Γ }>") : C_scope.
 Arguments insertE _ _ _ _ _ _ !_ _ !_ / : simpl nomatch.

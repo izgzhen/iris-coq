@@ -92,6 +92,10 @@ Section cofe.
     Proper ((≡) ==> (≡)) f | 100 := _.
 End cofe.
 
+(** Timeless elements *)
+Class Timeless `{Dist A, Equiv A} (x : A) := timeless y : x ={1}= y → x ≡ y.
+Arguments timeless {_ _ _} _ {_} _ _.
+
 (** Fixpoint *)
 Program Definition fixpoint_chain `{Cofe A, Inhabited A} (f : A → A)
   `{!Contractive f} : chain A := {| chain_car i := Nat.iter i f inhabitant |}.
@@ -222,6 +226,9 @@ Proof.
   * intros c n; split. apply (conv_compl (fst_chain c) n).
     apply (conv_compl (snd_chain c) n).
 Qed.
+Instance pair_timeless `{Dist A, Equiv A, Dist B, Equiv B} (x : A) (y : B) :
+  Timeless x → Timeless y → Timeless (x,y).
+Proof. by intros ?? [x' y'] [??]; split; apply (timeless _). Qed.
 Canonical Structure prodC (A B : cofeT) : cofeT := CofeT (A * B).
 Instance prod_map_ne `{Dist A, Dist A', Dist B, Dist B'} n :
   Proper ((dist n ==> dist n) ==> (dist n ==> dist n) ==>
@@ -254,6 +261,8 @@ Section discrete_cofe.
     * done.
     * intros c [|n]; [done|apply (chain_cauchy c 1 (S n)); lia].
   Qed.
+  Global Instance discrete_timeless (x : A) : Timeless x.
+  Proof. by intros y. Qed.
   Definition discrete_cofeC : cofeT := CofeT A.
 End discrete_cofe.
 Arguments discrete_cofeC _ {_ _}.

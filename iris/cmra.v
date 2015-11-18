@@ -96,6 +96,14 @@ Proof.
   rewrite ra_included_spec; intros [z Hx2] Hx1; exists (x1' ⋅ z); split.
   apply ra_included_l. by rewrite Hx1, Hx2.
 Qed.
+Lemma cmra_op_timeless `{!CMRAExtend A} x1 x2 :
+  validN 1 (x1 ⋅ x2) → Timeless x1 → Timeless x2 → Timeless (x1 ⋅ x2).
+Proof.
+  intros ??? z Hz.
+  destruct (cmra_extend_op z x1 x2 1) as ([y1 y2]&Hz'&?&?); auto; simpl in *.
+  { by rewrite <-?Hz. }
+  by rewrite Hz', (timeless x1 y1), (timeless x2 y2).
+Qed.
 End cmra.
 
 Instance cmra_preserving_id `{CMRA A} : CMRAPreserving (@id A).

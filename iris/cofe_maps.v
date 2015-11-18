@@ -45,6 +45,10 @@ Proof.
 Qed.
 Instance Some_ne `{Dist A} : Proper (dist n ==> dist n) Some.
 Proof. by constructor. Qed.
+Instance None_timeless `{Dist A, Equiv A} : Timeless (@None A).
+Proof. inversion_clear 1; constructor. Qed.
+Instance Some_timeless `{Dist A, Equiv A} x : Timeless x → Timeless (Some x).
+Proof. by intros ?; inversion_clear 1; constructor; apply timeless. Qed.
 Instance option_fmap_ne `{Dist A, Dist B} (f : A → B) n:
   Proper (dist n ==> dist n) f → Proper (dist n==>dist n) (fmap (M:=option) f).
 Proof. by intros Hf; destruct 1; constructor; apply Hf. Qed.
@@ -79,6 +83,39 @@ Section map.
   Global Instance lookup_ne `{Dist A} n k :
     Proper (dist n ==> dist n) (lookup k : M A → option A).
   Proof. by intros m1 m2. Qed.
+  Global Instance insert_ne `{Dist A} (i : K) n :
+    Proper (dist n ==> dist n ==> dist n) (insert (M:=M A) i).
+  Proof.
+    intros x y ? m m' ? j; destruct (decide (i = j)); simplify_map_equality;
+      [by constructor|by apply lookup_ne].
+  Qed.
+  Global Instance delete_ne `{Dist A} (i : K) n :
+    Proper (dist n ==> dist n) (delete (M:=M A) i).
+  Proof.
+    intros m m' ? j; destruct (decide (i = j)); simplify_map_equality;
+      [by constructor|by apply lookup_ne].
+  Qed.
+  Global Instance map_empty_timeless `{Dist A, Equiv A} : Timeless (∅ : M A).
+  Proof.
+    intros m Hm i; specialize (Hm i); rewrite lookup_empty in Hm |- *.
+    inversion_clear Hm; constructor.
+  Qed.
+  Global Instance map_lookup_timeless `{Cofe A} (m : M A) i :
+    Timeless m → Timeless (m !! i).
+  Proof.
+    intros ? [x|] Hx; [|by symmetry; apply (timeless _)].
+    rewrite (timeless m (<[i:=x]>m)), lookup_insert; auto.
+    by symmetry in Hx; inversion Hx; cofe_subst; rewrite insert_id.
+  Qed.
+  Global Instance map_ra_insert_timeless `{Cofe A} (m : M A) i x :
+    Timeless x → Timeless m → Timeless (<[i:=x]>m).
+  Proof.
+    intros ?? m' Hm j; destruct (decide (i = j)); simplify_map_equality.
+    { by apply (timeless _); rewrite <-Hm, lookup_insert. }
+    by apply (timeless _); rewrite <-Hm, lookup_insert_ne by done.
+  Qed.
+  Global Instance map_ra_singleton_timeless `{Cofe A} (i : K) (x : A) :
+    Timeless x → Timeless ({[ i, x ]} : M A) := _.
   Instance map_fmap_ne `{Dist A, Dist B} (f : A → B) n :
     Proper (dist n ==> dist n) f → Proper (dist n ==> dist n) (fmap (M:=M) f).
   Proof. by intros ? m m' Hm k; rewrite !lookup_fmap; apply option_fmap_ne. Qed.
