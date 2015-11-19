@@ -11,14 +11,6 @@ Instance: Params (@op) 2.
 Infix "⋅" := op (at level 50, left associativity) : C_scope.
 Notation "(⋅)" := op (only parsing) : C_scope.
 
-Fixpoint big_op `{Op A, Empty A} (xs : list A) : A :=
-  match xs with [] => ∅ | x :: xs => x ⋅ big_op xs end.
-Arguments big_op _ _ _ !_ /.
-Instance: Params (@big_op) 3.
-Definition big_opM `{FinMapToList K A M, Op A, Empty A} (m : M) : A :=
-  big_op (snd <$> map_to_list m).
-Instance: Params (@big_opM) 4.
-
 Class Included (A : Type) := included : relation A.
 Instance: Params (@included) 2.
 Infix "≼" := included (at level 70) : C_scope.
@@ -51,6 +43,16 @@ Class RAEmpty A `{Equiv A, Valid A, Op A, Empty A} : Prop := {
   ra_empty_valid : valid ∅;
   ra_empty_l :> LeftId (≡) ∅ (⋅)
 }.
+
+(** Big ops *)
+Fixpoint big_op `{Op A, Empty A} (xs : list A) : A :=
+  match xs with [] => ∅ | x :: xs => x ⋅ big_op xs end.
+Arguments big_op _ _ _ !_ /.
+Instance: Params (@big_op) 3.
+
+Definition big_opM `{FinMapToList K A M, Op B, Empty B}
+  (f : K → A → list B) (m : M) : B := big_op (map_to_list m ≫= curry f).
+Instance: Params (@big_opM) 4.
 
 (** Updates *)
 Definition ra_update_set `{Op A, Valid A} (x : A) (P : A → Prop) :=
@@ -147,21 +149,26 @@ Proof.
 Qed.
 
 Context `{FinMap K M}.
-Lemma big_opM_empty : big_opM (∅ : M A) ≡ ∅.
-Proof. unfold big_opM. by rewrite map_to_list_empty. Qed.
-Lemma big_opM_insert (m : M A) i x :
-  m !! i = None → big_opM (<[i:=x]> m) ≡ x ⋅ big_opM m.
-Proof. intros ?; unfold big_opM. by rewrite map_to_list_insert by done. Qed.
-Lemma big_opM_singleton i x : big_opM ({[i,x]} : M A) ≡ x.
+Context `{Equiv B} `{!Equivalence ((≡) : relation B)} (f : K → B → list A).
+Lemma big_opM_empty : big_opM f (∅ : M B) ≡ ∅.
+Proof. by unfold big_opM; rewrite map_to_list_empty. Qed.
+Lemma big_opM_insert (m : M B) i (y : B) :
+  m !! i = None → big_opM f (<[i:=y]> m) ≡ big_op (f i y) ⋅ big_opM f m.
+Proof.
+  intros ?; unfold big_opM.
+  by rewrite map_to_list_insert, bind_cons, big_op_app by done.
+Qed.
+Lemma big_opM_singleton i (y : B) : big_opM f ({[i,y]} : M B) ≡ big_op (f i y).
 Proof.
   unfold singleton, map_singleton.
   rewrite big_opM_insert by auto using lookup_empty; simpl.
   by rewrite big_opM_empty, (right_id _ _).
 Qed.
-Global Instance big_opM_proper : Proper ((≡) ==> (≡)) (big_opM : M A → _).
+Global Instance big_opM_proper :
+  (∀ i, Proper ((≡) ==> (≡)) (f i)) → Proper ((≡) ==> (≡)) (big_opM f: M B → A).
 Proof.
-  intros m1; induction m1 as [|i x m1 ? IH] using map_ind.
-  { by intros m2; rewrite (symmetry_iff (≡)), map_equiv_empty; intros ->. }
+  intros Hf m1; induction m1 as [|i x m1 ? IH] using map_ind.
+  { by intros m2; rewrite (symmetry_iff (≡) ∅), map_equiv_empty; intros ->. }
   intros m2 Hm2; rewrite big_opM_insert by done.
   rewrite (IH (delete i m2)) by (by rewrite <-Hm2, delete_insert).
   destruct (map_equiv_lookup (<[i:=x]> m1) m2 i x)
