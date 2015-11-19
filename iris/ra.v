@@ -83,6 +83,8 @@ Proof. rewrite (commutative _ x); apply ra_valid_op_l. Qed.
 (** ** Units *)
 Lemma ra_unit_r x : x ⋅ unit x ≡ x.
 Proof. by rewrite (commutative _ x), ra_unit_l. Qed.
+Lemma ra_unit_unit x : unit x ⋅ unit x ≡ unit x.
+Proof. by rewrite <-(ra_unit_idempotent x) at 2; rewrite ra_unit_r. Qed.
 
 (** ** Order *)
 Lemma ra_included_spec x y : x ≼ y ↔ ∃ z, y ≡ x ⋅ z.
