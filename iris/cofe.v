@@ -272,6 +272,8 @@ Section discrete_cofe.
 End discrete_cofe.
 Arguments discrete_cofeC _ {_ _}.
 
+Definition leibniz_cofeC (A : Type) : cofeT := @discrete_cofeC A equivL _.
+
 (** Later *)
 Inductive later (A : Type) : Type := Later { later_car : A }.
 Arguments Later {_} _.

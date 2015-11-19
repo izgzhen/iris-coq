@@ -194,6 +194,8 @@ Ltac unfold_leibniz := repeat
     setoid_rewrite <-(leibniz_equiv (A:=A))
   end.
 
+Definition equivL {A} : Equiv A := (=).
+
 (** A [Params f n] instance forces the setoid rewriting mechanism not to
 rewrite in the first [n] arguments of the function [f]. We will declare such
 instances for all operational type classes in this development. *)
