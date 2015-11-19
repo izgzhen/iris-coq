@@ -45,6 +45,11 @@ Structure cofeT := CofeT {
 Arguments CofeT _ {_ _ _ _}.
 Add Printing Constructor cofeT.
 Existing Instances cofe_equiv cofe_dist cofe_compl cofe_cofe.
+Arguments cofe_car _ : simpl never.
+Arguments cofe_equiv _ _ _ : simpl never.
+Arguments cofe_dist _ _ _ _ : simpl never.
+Arguments cofe_compl _ _ : simpl never.
+Arguments cofe_cofe _ : simpl never.
 
 (** General properties *)
 Section cofe.

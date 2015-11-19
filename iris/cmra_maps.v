@@ -138,7 +138,7 @@ Section map.
     * by intros m1 m2 Hm i; rewrite !lookup_fmap; apply included_preserving.
     * by intros n m ? i; rewrite lookup_fmap; apply validN_preserving.
   Qed.
-  Local Hint Extern 0 => simpl; apply map_fmap_ne : typeclass_instances.
+  Hint Resolve (map_fmap_ne (M:=M)) : typeclass_instances.
   Definition mapRA_map {A B : cmraT} (f : A -n> B) : mapRA A -n> mapRA B :=
     CofeMor (fmap f : mapRA A → mapRA B).
   Global Instance mapRA_map_ne {A B} n :

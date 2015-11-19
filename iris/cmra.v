@@ -52,6 +52,17 @@ Structure cmraT := CMRAT {
   cmra_extend : CMRAExtend cmra_car
 }.
 Arguments CMRAT _ {_ _ _ _ _ _ _ _ _ _ _}.
+Arguments cmra_car _ : simpl never.
+Arguments cmra_equiv _ _ _ : simpl never.
+Arguments cmra_dist _ _ _ _ : simpl never.
+Arguments cmra_compl _ _ : simpl never.
+Arguments cmra_unit _ _ : simpl never.
+Arguments cmra_op _ _ _ : simpl never.
+Arguments cmra_valid _ _ : simpl never.
+Arguments cmra_validN _ _ _ : simpl never.
+Arguments cmra_included _ _ _ : simpl never.
+Arguments cmra_minus _ _ _ : simpl never.
+Arguments cmra_cmra _ : simpl never.
 Add Printing Constructor cmraT.
 Existing Instances cmra_equiv cmra_dist cmra_compl cmra_unit cmra_op
   cmra_valid cmra_validN cmra_included cmra_minus cmra_cmra cmra_extend.
