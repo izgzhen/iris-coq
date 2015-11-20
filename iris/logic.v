@@ -48,7 +48,7 @@ Canonical Structure uPredC (M : cmraT) : cofeT := CofeT (uPred M).
 
 (** functor *)
 Program Definition uPred_map {M1 M2 : cmraT} (f : M2 → M1)
-  `{!∀ n, Proper (dist n ==> dist n) f, !CMRAPreserving f}
+  `{!∀ n, Proper (dist n ==> dist n) f, !CMRAMonotone f}
   (P : uPred M1) : uPred M2 := {| uPred_holds n x := P n (f x) |}.
 Next Obligation. by intros M1 M2 f ?? P y1 y2 n ? Hy; simpl; rewrite <-Hy. Qed.
 Next Obligation. intros M1 M2 f _ _ P x; apply uPred_0. Qed.
@@ -56,15 +56,15 @@ Next Obligation.
   naive_solver eauto using uPred_weaken, included_preserving, validN_preserving.
 Qed.
 Instance uPred_map_ne {M1 M2 : cmraT} (f : M2 → M1)
-  `{!∀ n, Proper (dist n ==> dist n) f, !CMRAPreserving f} :
+  `{!∀ n, Proper (dist n ==> dist n) f, !CMRAMonotone f} :
   Proper (dist n ==> dist n) (uPred_map f).
 Proof.
   by intros n x1 x2 Hx y n'; split; apply Hx; auto using validN_preserving.
 Qed.
-Definition uPredC_map {M1 M2 : cmraT} (f : M2 -n> M1) `{!CMRAPreserving f} :
+Definition uPredC_map {M1 M2 : cmraT} (f : M2 -n> M1) `{!CMRAMonotone f} :
   uPredC M1 -n> uPredC M2 := CofeMor (uPred_map f : uPredC M1 → uPredC M2).
 Lemma upredC_map_ne {M1 M2 : cmraT} (f g : M2 -n> M1)
-    `{!CMRAPreserving f, !CMRAPreserving g} n :
+    `{!CMRAMonotone f, !CMRAMonotone g} n :
   f ={n}= g → uPredC_map f ={n}= uPredC_map g.
 Proof.
   by intros Hfg P y n' ??; simpl; rewrite (dist_le _ _ _ _(Hfg y)) by lia.
@@ -125,8 +125,7 @@ Next Obligation. by intros M P Q x; exists x, x. Qed.
 Next Obligation.
   intros M P Q x y n1 n2 (x1&x2&Hx&?&?) Hxy ? Hvalid.
   assert (∃ x2', y ={n2}= x1 ⋅ x2' ∧ x2 ≼ x2') as (x2'&Hy&?).
-  { rewrite ra_included_spec in Hxy; destruct Hxy as [z Hy].
-    exists (x2 ⋅ z); split; eauto using ra_included_l.
+  { destruct Hxy as [z Hy]; exists (x2 ⋅ z); split; eauto using ra_included_l.
     apply dist_le with n1; auto. by rewrite (associative op), <-Hx, Hy. }
   rewrite Hy in Hvalid; exists x1, x2'; split_ands; auto.
   * apply uPred_weaken with x1 n1; eauto using cmra_valid_op_l.
@@ -165,11 +164,11 @@ Next Obligation.
 Qed.
 
 Program Definition uPred_own {M : cmraT} (a : M) : uPred M :=
-  {| uPred_holds n x := ∃ a', x ={n}= a ⋅ a' |}.
-Next Obligation. by intros M a x1 x2 n [a' Hx] ?; exists a'; rewrite <-Hx. Qed.
+  {| uPred_holds n x := a ≼{n} x |}.
+Next Obligation. by intros M a x1 x2 n [a' ?] Hx; exists a'; rewrite <-Hx. Qed.
 Next Obligation. by intros M a x; exists x. Qed.
 Next Obligation.
-  intros M a x1 x n1 n2; rewrite ra_included_spec; intros [a' Hx1] [x2 Hx] ??.
+  intros M a x1 x n1 n2 [a' Hx1] [x2 Hx] ??.
   exists (a' ⋅ x2). by rewrite (associative op), <-(dist_le _ _ _ _ Hx1), Hx.
 Qed.
 Program Definition uPred_valid {M : cmraT} (a : M) : uPred M :=
@@ -571,7 +570,7 @@ Lemma uPred_later_sep P Q : (▷ (P ★ Q))%I ≡ (▷ P ★ ▷ Q)%I.
 Proof.
   intros x n ?; split.
   * destruct n as [|n]; simpl; [by exists x, x|intros (x1&x2&Hx&?&?)].
-    destruct (cmra_extend_op x x1 x2 n)
+    destruct (cmra_extend_op n x x1 x2)
       as ([y1 y2]&Hx'&Hy1&Hy2); auto using cmra_valid_S; simpl in *.
     exists y1, y2; split; [by rewrite Hx'|by rewrite Hy1, Hy2].
   * destruct n as [|n]; simpl; [done|intros (x1&x2&Hx&?&?)].
@@ -682,10 +681,9 @@ Proof.
 Qed.
 Lemma uPred_own_unit (a : M) : uPred_own (unit a) ≡ (□ uPred_own (unit a))%I.
 Proof.
-  intros x n; split; [intros [a' Hx]|by apply uPred_always_elim].
-  assert (∃ a'', unit (unit a ⋅ a') ≡ unit (unit a) ⋅ a'') as [a'' Ha]
-    by (rewrite <-ra_included_spec; auto using ra_unit_weaken).
-  by exists a''; rewrite Hx, Ha, ra_unit_idempotent.
+  intros x n; split; [intros [a' Hx]|by apply uPred_always_elim]. simpl.
+  rewrite <-(ra_unit_idempotent a), Hx.
+  apply cmra_unit_preserving, cmra_included_l.
 Qed.
 Lemma uPred_own_empty `{Empty M, !RAEmpty M} : True%I ⊆ uPred_own ∅.
 Proof. intros x [|n] ??; [done|]. by  exists x; rewrite (left_id _ _). Qed.
@@ -712,7 +710,7 @@ Global Instance uPred_sep_timeless P Q :
   TimelessP P → TimelessP Q → TimelessP (P ★ Q).
 Proof.
   intros ?? x [|n] Hvalid (x1&x2&Hx12&?&?); [done|].
-  destruct (cmra_extend_op x x1 x2 1) as ([y1 y2]&Hx&Hy1&Hy2); auto; simpl in *.
+  destruct (cmra_extend_op 1 x x1 x2) as ([y1 y2]&Hx&Hy1&Hy2); auto; simpl in *.
   rewrite Hx12 in Hvalid; exists y1, y2; split_ands; [by rewrite Hx| |].
   * apply timelessP; rewrite Hy1; eauto using cmra_valid_op_l.
   * apply timelessP; rewrite Hy2; eauto using cmra_valid_op_r.
@@ -738,7 +736,7 @@ Global Instance uPred_own_timeless (a : M) :
   Timeless a → TimelessP (uPred_own a).
 Proof.
   intros ? x n ? [a' ?].
-  destruct (cmra_extend_op x a a' 1) as ([b b']&Hx&Hb&Hb'); auto; simpl in *.
+  destruct (cmra_extend_op 1 x a a') as ([b b']&Hx&Hb&Hb'); auto; simpl in *.
   by exists b'; rewrite Hx, (timeless a b) by done.
 Qed.
 End logic.

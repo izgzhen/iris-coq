@@ -11,37 +11,41 @@ Instance: Params (@op) 2.
 Infix "⋅" := op (at level 50, left associativity) : C_scope.
 Notation "(⋅)" := op (only parsing) : C_scope.
 
-Class Included (A : Type) := included : relation A.
-Instance: Params (@included) 2.
+Definition included `{Equiv A, Op A} (x y : A) := ∃ z, y ≡ x ⋅ z.
 Infix "≼" := included (at level 70) : C_scope.
 Notation "(≼)" := included (only parsing) : C_scope.
 Hint Extern 0 (?x ≼ ?x) => reflexivity.
+Instance: Params (@included) 3.
 
 Class Minus (A : Type) := minus : A → A → A.
 Instance: Params (@minus) 2.
 Infix "⩪" := minus (at level 40) : C_scope.
 
-Class RA A `{Equiv A, Valid A, Unit A, Op A, Included A, Minus A} : Prop := {
+Class RA A `{Equiv A, Valid A, Unit A, Op A, Minus A} : Prop := {
   (* setoids *)
   ra_equivalence :> Equivalence ((≡) : relation A);
   ra_op_proper x :> Proper ((≡) ==> (≡)) (op x);
   ra_unit_proper :> Proper ((≡) ==> (≡)) unit;
   ra_valid_proper :> Proper ((≡) ==> impl) valid;
   ra_minus_proper :> Proper ((≡) ==> (≡) ==> (≡)) minus;
-  ra_included_proper x :> Proper ((≡) ==> impl) (included x);
   (* monoid *)
   ra_associative :> Associative (≡) (⋅);
   ra_commutative :> Commutative (≡) (⋅);
   ra_unit_l x : unit x ⋅ x ≡ x;
   ra_unit_idempotent x : unit (unit x) ≡ unit x;
-  ra_unit_weaken x y : unit x ≼ unit (x ⋅ y);
+  ra_unit_preserving x y : x ≼ y → unit x ≼ unit y;
   ra_valid_op_l x y : valid (x ⋅ y) → valid x;
-  ra_included_l x y : x ≼ x ⋅ y;
   ra_op_minus x y : x ≼ y → x ⋅ y ⩪ x ≡ y
 }.
 Class RAEmpty A `{Equiv A, Valid A, Op A, Empty A} : Prop := {
   ra_empty_valid : valid ∅;
   ra_empty_l :> LeftId (≡) ∅ (⋅)
+}.
+
+Class RAMonotone
+    `{Equiv A, Op A, Valid A, Equiv B, Op B, Valid B} (f : A → B) := {
+  included_preserving x y : x ≼ y → f x ≼ f y;
+  valid_preserving x : valid x → valid (f x)
 }.
 
 (** Big ops *)
@@ -87,38 +91,27 @@ Lemma ra_unit_unit x : unit x ⋅ unit x ≡ unit x.
 Proof. by rewrite <-(ra_unit_idempotent x) at 2; rewrite ra_unit_r. Qed.
 
 (** ** Order *)
-Lemma ra_included_spec x y : x ≼ y ↔ ∃ z, y ≡ x ⋅ z.
-Proof.
-  split; [by exists (y ⩪ x); rewrite ra_op_minus|].
-  intros [z Hz]; rewrite Hz; apply ra_included_l.
-Qed.
-Global Instance ra_included_proper' : Proper ((≡) ==> (≡) ==> iff) (≼).
-Proof.
-  intros x1 x2 Hx y1 y2 Hy; rewrite !ra_included_spec.
-  by setoid_rewrite Hx; setoid_rewrite Hy.
-Qed.
+Instance ra_included_proper' : Proper ((≡) ==> (≡) ==> impl) (≼).
+Proof. intros x1 x2 Hx y1 y2 Hy [z Hz]; exists z. by rewrite <-Hy, Hz, Hx. Qed.
+Global Instance ra_included_proper : Proper ((≡) ==> (≡) ==> iff) (≼).
+Proof. by split; apply ra_included_proper'. Qed.
+Lemma ra_included_l x y : x ≼ x ⋅ y.
+Proof. by exists y. Qed.
+Lemma ra_included_r x y : y ≼ x ⋅ y.
+Proof. rewrite (commutative op); apply ra_included_l. Qed.
 Global Instance: PreOrder included.
 Proof.
   split.
-  * by intros x; rewrite ra_included_spec; exists (unit x); rewrite ra_unit_r.
-  * intros x y z; rewrite ?ra_included_spec; intros [z1 Hy] [z2 Hz].
-    exists (z1 ⋅ z2). by rewrite (associative _), <-Hy, <-Hz.
+  * by intros x; exists (unit x); rewrite ra_unit_r.
+  * intros x y z [z1 Hy] [z2 Hz]; exists (z1 ⋅ z2).
+    by rewrite (associative _), <-Hy, <-Hz.
 Qed.
 Lemma ra_included_unit x : unit x ≼ x.
-Proof. by rewrite ra_included_spec; exists x; rewrite ra_unit_l. Qed.
-Lemma ra_included_r x y : y ≼ x ⋅ y.
-Proof. rewrite (commutative _); apply ra_included_l. Qed.
+Proof. by exists x; rewrite ra_unit_l. Qed.
 Lemma ra_preserving_l x y z : x ≼ y → z ⋅ x ≼ z ⋅ y.
-Proof.
-  rewrite !ra_included_spec.
-  by intros (z1&Hz1); exists z1; rewrite Hz1, (associative (⋅)).
-Qed.
+Proof. by intros [z1 Hz1]; exists z1; rewrite Hz1, (associative (⋅)). Qed.
 Lemma ra_preserving_r x y z : x ≼ y → x ⋅ z ≼ y ⋅ z.
 Proof. by intros; rewrite <-!(commutative _ z); apply ra_preserving_l. Qed.
-Lemma ra_unit_preserving x y : x ≼ y → unit x ≼ unit y.
-Proof.
-  rewrite ra_included_spec; intros [z Hy]; rewrite Hy; apply ra_unit_weaken.
-Qed.
 
 (** ** Properties of [(⇝)] relation *)
 Global Instance ra_update_preorder : PreOrder ra_update.
@@ -132,7 +125,7 @@ Proof. by intros x; rewrite (commutative op), (left_id _ _). Qed.
 Lemma ra_unit_empty x : unit ∅ ≡ ∅.
 Proof. by rewrite <-(ra_unit_l ∅) at 2; rewrite (right_id _ _). Qed.
 Lemma ra_empty_least x : ∅ ≼ x.
-Proof. by rewrite ra_included_spec; exists x; rewrite (left_id _ _). Qed.
+Proof. by exists x; rewrite (left_id _ _). Qed.
 
 (** * Big ops *)
 Global Instance big_op_permutation : Proper ((≡ₚ) ==> (≡)) big_op.

@@ -297,6 +297,8 @@ Section collection.
   Proof. esolve_elem_of. Qed.
   Lemma difference_intersection_distr_l X Y Z : (X ∩ Y) ∖ Z ≡ X ∖ Z ∩ Y ∖ Z.
   Proof. esolve_elem_of. Qed.
+  Lemma disjoint_union_difference X Y : X ∩ Y ≡ ∅ → (X ∪ Y) ∖ X ≡ Y.
+  Proof. esolve_elem_of. Qed.
 
   Section leibniz.
     Context `{!LeibnizEquiv C}.
@@ -315,6 +317,8 @@ Section collection.
     Lemma difference_intersection_distr_l_L X Y Z :
       (X ∩ Y) ∖ Z = X ∖ Z ∩ Y ∖ Z.
     Proof. unfold_leibniz. apply difference_intersection_distr_l. Qed.
+    Lemma disjoint_union_difference_L X Y : X ∩ Y = ∅ → (X ∪ Y) ∖ X = Y.
+    Proof. unfold_leibniz. apply disjoint_union_difference. Qed.
   End leibniz.
 
   Section dec.

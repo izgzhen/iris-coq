@@ -57,7 +57,6 @@ Next Obligation. by intros; simpl; split_ands; try apply agree_valid_0. Qed.
 Next Obligation. naive_solver eauto using agree_valid_S, dist_S. Qed.
 Global Instance agree_unit : Unit (agree A) := id.
 Global Instance agree_minus : Minus (agree A) := λ x y, x.
-Global Instance agree_included : Included (agree A) := λ x y, y ≡ x ⋅ y.
 Instance: Commutative (≡) (@op (agree A) _).
 Proof. intros x y; split; [naive_solver|by intros n (?&?&Hxy); apply Hxy]. Qed.
 Definition agree_idempotent (x : agree A) : x ⋅ x ≡ x.
@@ -80,6 +79,11 @@ Proof.
     repeat match goal with H : agree_is_valid _ _ |- _ => clear H end;
     by cofe_subst; rewrite !agree_idempotent.
 Qed.
+Lemma agree_includedN (x y : agree A) n : x ≼{n} y ↔ y ={n}= x ⋅ y.
+Proof.
+  split; [|by intros ?; exists y].
+  by intros [z Hz]; rewrite Hz, (associative _), agree_idempotent.
+Qed.
 Global Instance agree_cmra : CMRA (agree A).
 Proof.
   split; try (apply _ || done).
@@ -87,23 +91,20 @@ Proof.
     rewrite <-(proj2 Hxy n'), (Hx n') by eauto using agree_valid_le.
     by apply dist_le with n; try apply Hxy.
   * by intros n x1 x2 Hx y1 y2 Hy.
-  * by intros x y1 y2 Hy ?; do 2 red; rewrite <-Hy.
   * intros x; split; [apply agree_valid_0|].
     by intros n'; rewrite Nat.le_0_r; intros ->.
   * intros n x [? Hx]; split; [by apply agree_valid_S|intros n' ?].
     rewrite (Hx n') by auto; symmetry; apply dist_le with n; try apply Hx; auto.
   * intros x; apply agree_idempotent.
-  * intros x y; change (x ⋅ y ≡ x ⋅ (x ⋅ y)).
-    by rewrite (associative _), agree_idempotent.
   * by intros x y n [(?&?&?) ?].
-  * by intros x y; do 2 red; rewrite (associative _), agree_idempotent.
+  * by intros x y n; rewrite agree_includedN.
 Qed.
 Lemma agree_op_inv (x y1 y2 : agree A) n :
   validN n x → x ={n}= y1 ⋅ y2 → y1 ={n}= y2.
 Proof. by intros [??] Hxy; apply Hxy. Qed.
 Global Instance agree_extend : CMRAExtend (agree A).
 Proof.
-  intros x y1 y2 n ? Hx; exists (x,x); simpl; split.
+  intros n x y1 y2 ? Hx; exists (x,x); simpl; split.
   * by rewrite agree_idempotent.
   * by rewrite Hx, (agree_op_inv x y1 y2), agree_idempotent by done.
 Qed.
@@ -131,15 +132,13 @@ Section agree_map.
   Global Instance agree_map_ne n : Proper (dist n ==> dist n) agree_map.
   Proof. by intros x1 x2 Hx; split; simpl; intros; [apply Hx|apply Hf, Hx]. Qed.
   Global Instance agree_map_proper: Proper ((≡)==>(≡)) agree_map := ne_proper _.
-  Global Instance agree_map_preserving : CMRAPreserving agree_map.
+  Global Instance agree_map_monotone : CMRAMonotone agree_map.
   Proof.
     split; [|by intros n x [? Hx]; split; simpl; [|by intros n' ?; rewrite Hx]].
-    intros x y; unfold included, agree_included; intros Hy; rewrite Hy.
-    split; [split|done].
-    * by intros (?&?&Hxy); repeat (intro || split);
-        try apply Hxy; try apply Hf; eauto using @agree_valid_le.
-    * by intros (?&(?&?&Hxy)&_); repeat split;
-        try apply Hxy; eauto using agree_valid_le.
+    intros x y n; rewrite !agree_includedN; intros Hy; rewrite Hy.
+    split; [split; simpl; try tauto|done].
+    by intros (?&?&Hxy); repeat split; intros;
+       try apply Hxy; try apply Hf; eauto using @agree_valid_le.
   Qed.
 End agree_map.
 Lemma agree_map_id `{Cofe A} (x : agree A) : agree_map id x = x.

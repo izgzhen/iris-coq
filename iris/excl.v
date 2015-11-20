@@ -1,6 +1,5 @@
 Require Export iris.cmra.
 Local Arguments disjoint _ _ !_ !_ /.
-Local Arguments included _ _ !_ !_ /.
 
 Inductive excl (A : Type) :=
   | Excl : A → excl A
@@ -32,15 +31,6 @@ Instance excl_minus {A} : Minus (excl A) := λ x y,
   | Excl _, Excl _ => ExclUnit
   | _, _ => ExclBot
   end.
-Instance excl_included `{Equiv A} : Included (excl A) := λ x y,
-  match x, y with
-  | Excl x, Excl y => x ≡ y
-  | ExclUnit, _ => True
-  | _, ExclBot => True
-  | _, _ => False
-  end.
-Definition excl_above `{Included A} (x : A) (y : excl A) : Prop :=
-  match y with Excl y' => x ≼ y' | ExclUnit => True | ExclBot => False end.
 Instance excl_ra `{Equiv A, !Equivalence (@equiv A _)} : RA (excl A).
 Proof.
   split.
@@ -52,20 +42,22 @@ Proof.
   * constructor.
   * by destruct 1.
   * by do 2 destruct 1; constructor.
-  * by intros []; destruct 1; simpl; try (intros Hx; rewrite Hx).
   * by intros [?| |] [?| |] [?| |]; constructor.
   * by intros [?| |] [?| |]; constructor.
   * by intros [?| |]; constructor.
   * constructor.
+  * intros [?| |] [?| |]; exists ∅; constructor.
   * by intros [?| |] [?| |].
-  * by intros [?| |] [?| |].
-  * by intros [?| |] [?| |]; simpl; try constructor.
-  * by intros [?| |] [?| |] ?; try constructor.
+  * by intros [?| |] [?| |] [[?| |] Hz]; inversion_clear Hz; constructor.
 Qed.
 Instance excl_empty_ra `{Equiv A, !Equivalence (@equiv A _)} : RAEmpty (excl A).
 Proof. split. done. by intros []. Qed.
 Lemma excl_update {A} (x : A) y : valid y → Excl x ⇝ y.
 Proof. by destruct y; intros ? [?| |]. Qed.
+
+Definition excl_above `{Equiv A, Op A} (x : A) (y : excl A) : Prop :=
+  match y with Excl y' => x ≼ y' | ExclUnit => True | ExclBot => False end.
+Instance: Params (@excl_above) 3.
 
 Section excl_above.
   Context `{RA A}.
@@ -74,7 +66,8 @@ Section excl_above.
   Lemma excl_above_weaken (a b : A) x y :
     excl_above b y → a ≼ b → x ≼ y → excl_above a x.
   Proof.
-    destruct x as [a'| |], y as [b'| |]; simpl; intros ??; try done.
-    by intros Hab; rewrite Hab; transitivity b.
+    destruct x as [a'| |], y as [b'| |];
+      intros ?? [[] Hz]; inversion_clear Hz; simpl in *; try done.
+    by setoid_subst; transitivity b.
   Qed.
 End excl_above.
