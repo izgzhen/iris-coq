@@ -97,6 +97,12 @@ Section cofe.
     Proper ((≡) ==> (≡)) f | 100 := _.
 End cofe.
 
+(** Mapping a chain *)
+Program Definition chain_map `{Dist A, Dist B} (f : A → B)
+    `{!∀ n, Proper (dist n ==> dist n) f} (c : chain A) : chain B :=
+  {| chain_car n := f (c n) |}.
+Next Obligation. by intros A ? B ? f Hf c n i ?; apply Hf, chain_cauchy. Qed.
+
 (** Timeless elements *)
 Class Timeless `{Dist A, Equiv A} (x : A) := timeless y : x ={1}= y → x ≡ y.
 Arguments timeless {_ _ _} _ {_} _ _.
@@ -212,14 +218,12 @@ Proof. by repeat split; try exists 0. Qed.
 (** Product *)
 Instance prod_dist `{Dist A, Dist B} : Dist (A * B) := λ n,
   prod_relation (dist n) (dist n).
-Program Definition fst_chain `{Dist A, Dist B} (c : chain (A * B)) : chain A :=
-  {| chain_car n := fst (c n) |}.
-Next Obligation. by intros A ? B ? c n i ?; apply (chain_cauchy c n). Qed.
-Program Definition snd_chain `{Dist A, Dist B} (c : chain (A * B)) : chain B :=
-  {| chain_car n := snd (c n) |}.
-Next Obligation. by intros A ? B ? c n i ?; apply (chain_cauchy c n). Qed.
+Instance pair_ne `{Dist A, Dist B} :
+  Proper (dist n ==> dist n ==> dist n) (@pair A B) := _.
+Instance fst_ne `{Dist A, Dist B} : Proper (dist n ==> dist n) (@fst A B) := _.
+Instance snd_ne `{Dist A, Dist B} : Proper (dist n ==> dist n) (@snd A B) := _.
 Instance prod_compl `{Compl A, Compl B} : Compl (A * B) := λ c,
-  (compl (fst_chain c), compl (snd_chain c)).
+  (compl (chain_map fst c), compl (chain_map snd c)).
 Instance prod_cofe `{Cofe A, Cofe B} : Cofe (A * B).
 Proof.
   split.
@@ -228,8 +232,8 @@ Proof.
   * apply _.
   * by intros n [x1 y1] [x2 y2] [??]; split; apply dist_S.
   * by split.
-  * intros c n; split. apply (conv_compl (fst_chain c) n).
-    apply (conv_compl (snd_chain c) n).
+  * intros c n; split. apply (conv_compl (chain_map fst c) n).
+    apply (conv_compl (chain_map snd c) n).
 Qed.
 Instance pair_timeless `{Dist A, Equiv A, Dist B, Equiv B} (x : A) (y : B) :
   Timeless x → Timeless y → Timeless (x,y).
@@ -245,10 +249,6 @@ Instance prodC_map_ne {A A' B B'} n :
   Proper (dist n ==> dist n ==> dist n) (@prodC_map A A' B B').
 Proof. intros f f' Hf g g' Hg [??]; split; [apply Hf|apply Hg]. Qed.
 
-Instance pair_ne `{Dist A, Dist B} :
-  Proper (dist n ==> dist n ==> dist n) (@pair A B) := _.
-Instance fst_ne `{Dist A, Dist B} : Proper (dist n ==> dist n) (@fst A B) := _.
-Instance snd_ne `{Dist A, Dist B} : Proper (dist n ==> dist n) (@snd A B) := _.
 Typeclasses Opaque prod_dist.
 
 (** Discrete cofe *)
@@ -268,11 +268,11 @@ Section discrete_cofe.
   Qed.
   Global Instance discrete_timeless (x : A) : Timeless x.
   Proof. by intros y. Qed.
-  Definition discrete_cofeC : cofeT := CofeT A.
+  Definition discreteC : cofeT := CofeT A.
 End discrete_cofe.
-Arguments discrete_cofeC _ {_ _}.
+Arguments discreteC _ {_ _}.
 
-Definition leibniz_cofeC (A : Type) : cofeT := @discrete_cofeC A equivL _.
+Definition leibnizC (A : Type) : cofeT := @discreteC A equivL _.
 
 (** Later *)
 Inductive later (A : Type) : Type := Later { later_car : A }.

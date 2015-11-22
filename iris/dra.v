@@ -1,4 +1,4 @@
-Require Export iris.ra.
+Require Export iris.ra iris.cmra.
 
 (** From disjoint pcm *)
 Record validity {A} (P : A → Prop) : Type := Validity {
@@ -88,17 +88,20 @@ Hint Immediate dra_disjoint_move_l dra_disjoint_move_r.
 Hint Unfold dra_included.
 
 Notation T := (validity (valid : A → Prop)).
+Lemma validity_valid_car_valid (z : T) : V z → V (validity_car z).
+Proof. apply validity_prf. Qed.
+Hint Resolve validity_valid_car_valid.
 Program Instance validity_unit : Unit T := λ x,
   Validity (unit (validity_car x)) (V x) _.
-Next Obligation. by apply dra_unit_valid, validity_prf. Qed.
+Solve Obligations with naive_solver auto using dra_unit_valid.
 Program Instance validity_op : Op T := λ x y,
   Validity (validity_car x ⋅ validity_car y)
            (V x ∧ V y ∧ validity_car x ⊥ validity_car y) _.
-Next Obligation. by apply dra_op_valid; try apply validity_prf. Qed.
+Solve Obligations with naive_solver auto using dra_op_valid.
 Program Instance validity_minus : Minus T := λ x y,
   Validity (validity_car x ⩪ validity_car y)
            (V x ∧ V y ∧ validity_car y ≼ validity_car x) _.
-Next Obligation. by apply dra_minus_valid; try apply validity_prf. Qed.
+Solve Obligations with naive_solver auto using dra_minus_valid.
 Instance validity_ra : RA T.
 Proof.
   split.
@@ -130,10 +133,11 @@ Proof.
   * intros [x px ?] [y py ?] [[z pz ?] [??]]; split; simpl in *;
       intuition eauto 10 using dra_disjoint_minus, dra_op_minus.
 Qed.
-Definition dra_update (x y : T) :
+Definition validityRA : cmraT := discreteRA T.
+Definition validity_update (x y : validityRA) :
   (∀ z, V x → V z → validity_car x ⊥ z → V y ∧ validity_car y ⊥ z) → x ⇝ y.
 Proof.
-  intros Hxy z (?&?&?); split_ands'; auto;
-    eapply Hxy; eauto; by eapply validity_prf.
+  intros Hxy; apply discrete_update.
+  intros z (?&?&?); split_ands'; try eapply Hxy; eauto.
 Qed.
 End dra.

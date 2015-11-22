@@ -186,21 +186,21 @@ End sts_core.
 End sts.
 
 Section sts_ra.
-Context {A B : Type} `{∀ x y : B, Decision (x = y)}.
-Context (R : relation A) (tok : A → set B).
+Context {A B : Type} (R : relation A) (tok : A → set B).
 
 Definition sts := validity (valid : sts.t R tok → Prop).
+Global Instance sts_equiv : Equiv sts := validity_equiv _.
 Global Instance sts_unit : Unit sts := validity_unit _.
 Global Instance sts_op : Op sts := validity_op _.
 Global Instance sts_minus : Minus sts := validity_minus _.
 Global Instance sts_ra : RA sts := validity_ra _.
 Definition sts_auth (s : A) (T : set B) : sts := to_validity (sts.auth s T).
-Definition sts_frag (S : set A) (T : set B) : sts :=
-  to_validity (sts.frag S T).
+Definition sts_frag (S : set A) (T : set B) : sts := to_validity (sts.frag S T).
+Canonical Structure stsRA := validityRA (sts.t R tok).
 Lemma sts_update s1 s2 T1 T2 :
   sts.step R tok (s1,T1) (s2,T2) → sts_auth s1 T1 ⇝ sts_auth s2 T2.
 Proof.
-  intros ?; apply dra_update; inversion 3 as [|? S ? Tf|]; subst.
+  intros ?; apply validity_update; inversion 3 as [|? S ? Tf|]; subst.
   destruct (sts.step_closed R tok s1 s2 T1 T2 S Tf) as (?&?&?); auto.
   repeat (done || constructor).
 Qed.

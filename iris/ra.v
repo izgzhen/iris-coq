@@ -113,10 +113,6 @@ Proof. by intros [z1 Hz1]; exists z1; rewrite Hz1, (associative (⋅)). Qed.
 Lemma ra_preserving_r x y z : x ≼ y → x ⋅ z ≼ y ⋅ z.
 Proof. by intros; rewrite <-!(commutative _ z); apply ra_preserving_l. Qed.
 
-(** ** Properties of [(⇝)] relation *)
-Global Instance ra_update_preorder : PreOrder ra_update.
-Proof. split. by intros x y. intros x y y' ?? z ?; naive_solver. Qed.
-
 (** ** RAs with empty element *)
 Context `{Empty A, !RAEmpty A}.
 

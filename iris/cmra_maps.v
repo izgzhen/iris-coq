@@ -66,7 +66,7 @@ Proof.
   * by exists (None,Some x); inversion Hx'; repeat constructor.
   * exists (None,None); repeat constructor.
 Qed.
-Instance option_fmap_cmra_preserving `{CMRA A, CMRA B} (f : A → B)
+Instance option_fmap_cmra_monotone `{CMRA A, CMRA B} (f : A → B)
   `{!CMRAMonotone f} : CMRAMonotone (fmap f : option A → option B).
 Proof.
   split.
@@ -169,7 +169,7 @@ Section map.
     CofeMor (fmap f : mapRA A → mapRA B).
   Global Instance mapRA_map_ne {A B} n :
     Proper (dist n ==> dist n) (@mapRA_map A B) := mapC_map_ne n.
-  Global Instance mapRA_mapcmra_monotone {A B : cmraT} (f : A -n> B)
+  Global Instance mapRA_map_monotone {A B : cmraT} (f : A -n> B)
     `{!CMRAMonotone f} : CMRAMonotone (mapRA_map f) := _.
 End map.
 

@@ -7,6 +7,7 @@ Definition includedN `{Dist A, Op A} (n : nat) (x y : A) := ∃ z, y ={n}= x ⋅
 Notation "x ≼{ n } y" := (includedN n x y)
   (at level 70, format "x  ≼{ n }  y") : C_scope.
 Instance: Params (@includedN) 4.
+Hint Extern 0 (?x ≼{_} ?x) => reflexivity.
 
 Class CMRA A `{Equiv A, Compl A, Unit A, Op A, Valid A, ValidN A, Minus A} := {
   (* setoids *)
@@ -37,6 +38,8 @@ Class CMRAMonotone
   includedN_preserving n x y : x ≼{n} y → f x ≼{n} f y;
   validN_preserving n x : validN n x → validN n (f x)
 }.
+
+Hint Extern 0 (validN 0 _) => apply cmra_valid_0.
 
 (** Bundeled version *)
 Structure cmraT := CMRAT {
@@ -69,6 +72,17 @@ Existing Instances cmra_equiv cmra_dist cmra_compl cmra_unit cmra_op
 Coercion cmra_cofeC (A : cmraT) : cofeT := CofeT A.
 Canonical Structure cmra_cofeC.
 
+(** Updates *)
+Definition cmra_updateP `{Op A, ValidN A} (x : A) (P : A → Prop) :=
+  ∀ z n, validN n (x ⋅ z) → ∃ y, P y ∧ validN n (y ⋅ z).
+Instance: Params (@cmra_updateP) 3.
+Infix "⇝:" := cmra_updateP (at level 70).
+Definition cmra_update `{Op A, ValidN A} (x y : A) := ∀ z n,
+  validN n (x ⋅ z) → validN n (y ⋅ z).
+Infix "⇝" := cmra_update (at level 70).
+Instance: Params (@cmra_update) 3.
+
+(** Properties **)
 Section cmra.
 Context `{cmra : CMRA A}.
 Implicit Types x y z : A.
@@ -80,9 +94,9 @@ Proof.
   symmetry; apply cmra_op_minus, Hxy.
 Qed.
 
-Global Instance cmra_valid_ne' : Proper (dist n ==> iff) (validN n).
+Global Instance cmra_valid_ne' : Proper (dist n ==> iff) (validN n) | 1.
 Proof. by split; apply cmra_valid_ne. Qed.
-Global Instance cmra_valid_proper : Proper ((≡) ==> iff) (validN n).
+Global Instance cmra_valid_proper : Proper ((≡) ==> iff) (validN n) | 1.
 Proof. by intros n x1 x2 Hx; apply cmra_valid_ne', equiv_dist. Qed.
 Global Instance cmra_ra : RA A.
 Proof.
@@ -118,12 +132,13 @@ Qed.
 
 (** * Included *)
 Global Instance cmra_included_ne n :
-  Proper (dist n ==> dist n ==> iff) (includedN n).
+  Proper (dist n ==> dist n ==> iff) (includedN n) | 1.
 Proof.
   intros x x' Hx y y' Hy; unfold includedN.
   by setoid_rewrite Hx; setoid_rewrite Hy.
 Qed.
-Global Instance cmra_included_proper:Proper ((≡) ==> (≡) ==> iff) (includedN n).
+Global Instance cmra_included_proper : 
+  Proper ((≡) ==> (≡) ==> iff) (includedN n) | 1.
 Proof.
   intros n x x' Hx y y' Hy; unfold includedN.
   by setoid_rewrite Hx; setoid_rewrite Hy.
@@ -154,6 +169,16 @@ Proof.
   intros [z Hx2] Hx1; exists (x1' ⋅ z); split; auto using ra_included_l.
   by rewrite Hx1, Hx2.
 Qed.
+
+(** * Properties of [(⇝)] relation *)
+Global Instance cmra_update_preorder : PreOrder cmra_update.
+Proof. split. by intros x y. intros x y y' ?? z ?; naive_solver. Qed.
+Lemma cmra_update_updateP x y : x ⇝ y ↔ x ⇝: (y =).
+Proof.
+  split.
+  * by intros Hx z ?; exists y; split; [done|apply (Hx z)].
+  * by intros Hx z n ?; destruct (Hx z n) as (?&<-&?).
+Qed.
 End cmra.
 
 Instance cmra_monotone_id `{CMRA A} : CMRAMonotone (@id A).
@@ -168,6 +193,7 @@ Proof.
     by intros ? n; apply validN_preserving.
 Qed.
 
+Hint Extern 0 (_ ≼{0} _) => apply cmra_included_0.
 (* Also via [cmra_cofe; cofe_equivalence] *)
 Hint Cut [!*; ra_equivalence; cmra_ra] : typeclass_instances.
 
@@ -197,6 +223,15 @@ Section discrete.
     by exists (x,unit x); simpl; rewrite ra_unit_r.
   Qed.
   Definition discreteRA : cmraT := CMRAT A.
+  Lemma discrete_updateP (x : A) (P : A → Prop) `{!Inhabited (sig P)} :
+    (∀ z, valid (x ⋅ z) → ∃ y, P y ∧ valid (y ⋅ z)) → x ⇝: P.
+  Proof.
+    intros Hvalid z [|n]; [|apply Hvalid].
+    by destruct (_ : Inhabited (sig P)) as [[y ?]]; exists y.
+  Qed.
+  Lemma discrete_update (x y : A) :
+    (∀ z, valid (x ⋅ z) → valid (y ⋅ z)) → x ⇝ y.
+  Proof. intros Hvalid z [|n]; [done|apply Hvalid]. Qed.
 End discrete.
 Arguments discreteRA _ {_ _ _ _ _ _}.
 
