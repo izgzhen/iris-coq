@@ -4,9 +4,9 @@ Require Import prelude.stringmap prelude.natmap.
 
 (** option *)
 Instance option_valid `{Valid A} : Valid (option A) := λ mx,
-  match mx with Some x => valid x | None => True end.
+  match mx with Some x => ✓ x | None => True end.
 Instance option_validN `{ValidN A} : ValidN (option A) := λ n mx,
-  match mx with Some x => validN n x | None => True end.
+  match mx with Some x => ✓{n} x | None => True end.
 Instance option_unit `{Unit A} : Unit (option A) := fmap unit.
 Instance option_op `{Op A} : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
 Instance option_minus `{Minus A} : Minus (option A) :=
@@ -34,7 +34,7 @@ Proof.
   * by destruct 1; constructor; apply (_ : Proper (dist n ==> _) _).
   * destruct 1 as [[?|] [?|]| |]; unfold validN, option_validN; simpl;
      intros ?; auto using cmra_valid_0;
-     eapply (_ : Proper (dist _ ==> impl) (validN _)); eauto.
+     eapply (_ : Proper (dist _ ==> impl) (✓{_})); eauto.
   * by destruct 1; inversion_clear 1; constructor;
       repeat apply (_ : Proper (dist _ ==> _ ==> _) _).
   * intros [x|]; unfold validN, option_validN; auto using cmra_valid_0.
@@ -82,8 +82,8 @@ Section map.
   Existing Instances map_dist map_compl map_cofe.
   Instance map_op `{Op A} : Op (M A) := merge op.
   Instance map_unit `{Unit A} : Unit (M A) := fmap unit.
-  Instance map_valid `{Valid A} : Valid (M A) := λ m, ∀ i, valid (m !! i).
-  Instance map_validN `{ValidN A} : ValidN (M A) := λ n m, ∀ i, validN n (m!!i).
+  Instance map_valid `{Valid A} : Valid (M A) := λ m, ∀ i, ✓ (m !! i).
+  Instance map_validN `{ValidN A} : ValidN (M A) := λ n m, ∀ i, ✓{n} (m!!i).
   Instance map_minus `{Minus A} : Minus (M A) := merge minus.
   Lemma lookup_op `{Op A} m1 m2 i : (m1 ⋅ m2) !! i = m1 !! i ⋅ m2 !! i.
   Proof. by apply lookup_merge. Qed.
@@ -116,7 +116,7 @@ Section map.
     * by intros n m1 m2 Hm ? i; rewrite <-(Hm i).
     * intros n m1 m1' Hm1 m2 m2' Hm2 i.
       by rewrite !lookup_minus, (Hm1 i), (Hm2 i).
-    * intros m i; apply cmra_valid_0.
+    * by intros m i.
     * intros n m Hm i; apply cmra_valid_S, Hm.
     * intros m; split; [by intros Hm n i; apply cmra_valid_validN|].
       intros Hm i; apply cmra_valid_validN; intros n; apply Hm.

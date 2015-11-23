@@ -114,7 +114,7 @@ Proof.
 Qed.
 
 (* Updates *)
-Lemma excl_update {A} (x : A) y : valid y → Excl x ⇝ y.
+Lemma excl_update {A} (x : A) y : ✓ y → Excl x ⇝ y.
 Proof. by destruct y; intros ? [?| |]. Qed.
 
 (* Functor *)

@@ -8,7 +8,7 @@ Structure uPred (M : cmraT) : Type := IProp {
   uPred_ne x1 x2 n : uPred_holds n x1 → x1 ={n}= x2 → uPred_holds n x2;
   uPred_0 x : uPred_holds 0 x;
   uPred_weaken x1 x2 n1 n2 :
-    uPred_holds n1 x1 → x1 ≼ x2 → n2 ≤ n1 → validN n2 x2 → uPred_holds n2 x2
+    uPred_holds n1 x1 → x1 ≼ x2 → n2 ≤ n1 → ✓{n2} x2 → uPred_holds n2 x2
 }.
 Arguments uPred_holds {_} _ _ _.
 Hint Resolve uPred_0.
@@ -16,9 +16,9 @@ Add Printing Constructor uPred.
 Instance: Params (@uPred_holds) 3.
 
 Instance uPred_equiv (M : cmraT) : Equiv (uPred M) := λ P Q, ∀ x n,
-  validN n x → P n x ↔ Q n x.
+  ✓{n} x → P n x ↔ Q n x.
 Instance uPred_dist (M : cmraT) : Dist (uPred M) := λ n P Q, ∀ x n',
-  n' ≤ n → validN n' x → P n' x ↔ Q n' x.
+  n' ≤ n → ✓{n'} x → P n' x ↔ Q n' x.
 Program Instance uPred_compl (M : cmraT) : Compl (uPred M) := λ c,
   {| uPred_holds n x := c n n x |}.
 Next Obligation. by intros M c x y n ??; simpl in *; apply uPred_ne with x. Qed.
@@ -72,7 +72,7 @@ Qed.
 
 (** logical entailement *)
 Instance uPred_entails {M} : SubsetEq (uPred M) := λ P Q, ∀ x n,
-  validN n x → P n x → Q n x.
+  ✓{n} x → P n x → Q n x.
 
 (** logical connectives *)
 Program Definition uPred_const {M} (P : Prop) : uPred M :=
@@ -89,12 +89,12 @@ Program Definition uPred_or {M} (P Q : uPred M) : uPred M :=
 Solve Obligations with naive_solver eauto 2 using uPred_ne, uPred_weaken.
 Program Definition uPred_impl {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ x' n',
-       x ≼ x' → n' ≤ n → validN n' x' → P n' x' → Q n' x' |}.
+       x ≼ x' → n' ≤ n → ✓{n'} x' → P n' x' → Q n' x' |}.
 Next Obligation.
   intros M P Q x1' x1 n1 HPQ Hx1 x2 n2 ????.
   destruct (cmra_included_dist_l x1 x2 x1' n1) as (x2'&?&Hx2); auto.
   assert (x2' ={n2}= x2) as Hx2' by (by apply dist_le with n1).
-  assert (validN n2 x2') by (by rewrite Hx2'); rewrite <-Hx2'.
+  assert (✓{n2} x2') by (by rewrite Hx2'); rewrite <-Hx2'.
   eauto using uPred_weaken, uPred_ne.
 Qed.
 Next Obligation. intros M P Q x1 x2 [|n]; auto with lia. Qed.
@@ -134,7 +134,7 @@ Qed.
 
 Program Definition uPred_wand {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ x' n',
-       n' ≤ n → validN n' (x ⋅ x') → P n' x' → Q n' (x ⋅ x') |}.
+       n' ≤ n → ✓{n'} (x ⋅ x') → P n' x' → Q n' (x ⋅ x') |}.
 Next Obligation.
   intros M P Q x1 x2 n1 HPQ Hx x3 n2 ???; simpl in *.
   rewrite <-(dist_le _ _ _ _ Hx) by done; apply HPQ; auto.
@@ -172,7 +172,7 @@ Next Obligation.
   exists (a' ⋅ x2). by rewrite (associative op), <-(dist_le _ _ _ _ Hx1), Hx.
 Qed.
 Program Definition uPred_valid {M : cmraT} (a : M) : uPred M :=
-  {| uPred_holds n x := validN n a |}.
+  {| uPred_holds n x := ✓{n} a |}.
 Solve Obligations with naive_solver eauto 2 using cmra_valid_le, cmra_valid_0.
 
 Delimit Scope uPred_scope with I.
@@ -196,11 +196,12 @@ Notation "∃ x .. y , P" :=
 Notation "▷ P" := (uPred_later P) (at level 20) : uPred_scope.
 Notation "□ P" := (uPred_always P) (at level 20) : uPred_scope.
 Infix "≡" := uPred_eq : uPred_scope.
+Notation "✓" := uPred_valid (at level 1) : uPred_scope.
 
 Definition uPred_iff {M} (P Q : uPred M) : uPred M := ((P → Q) ∧ (Q → P))%I.
 Infix "↔" := uPred_iff : uPred_scope.
 
-Class TimelessP {M} (P : uPred M) := timelessP x n : validN 1 x → P 1 x → P n x.
+Class TimelessP {M} (P : uPred M) := timelessP x n : ✓{1} x → P 1 x → P n x.
 
 Section logic.
 Context {M : cmraT}.
@@ -687,7 +688,7 @@ Proof.
 Qed.
 Lemma uPred_own_empty `{Empty M, !RAEmpty M} : True%I ⊆ uPred_own ∅.
 Proof. intros x [|n] ??; [done|]. by  exists x; rewrite (left_id _ _). Qed.
-Lemma uPred_own_valid (a : M) : uPred_own a ⊆ uPred_valid a.
+Lemma uPred_own_valid (a : M) : uPred_own a ⊆ (✓ a)%I.
 Proof.
   intros x n Hv [a' Hx]; simpl; rewrite Hx in Hv; eauto using cmra_valid_op_l.
 Qed.

@@ -188,7 +188,7 @@ End sts.
 Section sts_ra.
 Context {A B : Type} (R : relation A) (tok : A → set B).
 
-Definition sts := validity (valid : sts.t R tok → Prop).
+Definition sts := validity (✓ : sts.t R tok → Prop).
 Global Instance sts_equiv : Equiv sts := validity_equiv _.
 Global Instance sts_unit : Unit sts := validity_unit _.
 Global Instance sts_op : Op sts := validity_op _.

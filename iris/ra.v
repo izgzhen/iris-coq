@@ -2,6 +2,7 @@ Require Export prelude.collections prelude.relations prelude.fin_maps.
 
 Class Valid (A : Type) := valid : A → Prop.
 Instance: Params (@valid) 2.
+Notation "✓" := valid (at level 1).
 
 Class Unit (A : Type) := unit : A → A.
 Instance: Params (@unit) 2.
@@ -26,7 +27,7 @@ Class RA A `{Equiv A, Valid A, Unit A, Op A, Minus A} : Prop := {
   ra_equivalence :> Equivalence ((≡) : relation A);
   ra_op_proper x :> Proper ((≡) ==> (≡)) (op x);
   ra_unit_proper :> Proper ((≡) ==> (≡)) unit;
-  ra_valid_proper :> Proper ((≡) ==> impl) valid;
+  ra_valid_proper :> Proper ((≡) ==> impl) ✓;
   ra_minus_proper :> Proper ((≡) ==> (≡) ==> (≡)) minus;
   (* monoid *)
   ra_associative :> Associative (≡) (⋅);
@@ -34,18 +35,18 @@ Class RA A `{Equiv A, Valid A, Unit A, Op A, Minus A} : Prop := {
   ra_unit_l x : unit x ⋅ x ≡ x;
   ra_unit_idempotent x : unit (unit x) ≡ unit x;
   ra_unit_preserving x y : x ≼ y → unit x ≼ unit y;
-  ra_valid_op_l x y : valid (x ⋅ y) → valid x;
+  ra_valid_op_l x y : ✓ (x ⋅ y) → ✓ x;
   ra_op_minus x y : x ≼ y → x ⋅ y ⩪ x ≡ y
 }.
 Class RAEmpty A `{Equiv A, Valid A, Op A, Empty A} : Prop := {
-  ra_empty_valid : valid ∅;
+  ra_empty_valid : ✓ ∅;
   ra_empty_l :> LeftId (≡) ∅ (⋅)
 }.
 
 Class RAMonotone
     `{Equiv A, Op A, Valid A, Equiv B, Op B, Valid B} (f : A → B) := {
   included_preserving x y : x ≼ y → f x ≼ f y;
-  valid_preserving x : valid x → valid (f x)
+  valid_preserving x : ✓ x → ✓ (f x)
 }.
 
 (** Big ops *)
@@ -60,11 +61,11 @@ Instance: Params (@big_opM) 4.
 
 (** Updates *)
 Definition ra_update_set `{Op A, Valid A} (x : A) (P : A → Prop) :=
-  ∀ z, valid (x ⋅ z) → ∃ y, P y ∧ valid (y ⋅ z).
+  ∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z).
 Instance: Params (@ra_update_set) 3.
 Infix "⇝:" := ra_update_set (at level 70).
 Definition ra_update `{Op A, Valid A} (x y : A) := ∀ z,
-  valid (x ⋅ z) → valid (y ⋅ z).
+  ✓ (x ⋅ z) → ✓ (y ⋅ z).
 Infix "⇝" := ra_update (at level 70).
 Instance: Params (@ra_update) 3.
 
@@ -74,14 +75,14 @@ Context `{RA A}.
 Implicit Types x y z : A.
 Implicit Types xs ys zs : list A.
 
-Global Instance ra_valid_proper' : Proper ((≡) ==> iff) valid.
+Global Instance ra_valid_proper' : Proper ((≡) ==> iff) ✓.
 Proof. by intros ???; split; apply ra_valid_proper. Qed.
 Global Instance ra_op_proper' : Proper ((≡) ==> (≡) ==> (≡)) (⋅).
 Proof.
   intros x1 x2 Hx y1 y2 Hy.
   by rewrite Hy, (commutative _ x1), Hx, (commutative _ y2).
 Qed.
-Lemma ra_valid_op_r x y : valid (x ⋅ y) → valid y.
+Lemma ra_valid_op_r x y : ✓ (x ⋅ y) → ✓ y.
 Proof. rewrite (commutative _ x); apply ra_valid_op_l. Qed.
 
 (** ** Units *)

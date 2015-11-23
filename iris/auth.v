@@ -45,15 +45,15 @@ Qed.
 Instance auth_empty `{Empty A} : Empty (auth A) := Auth ∅ ∅.
 Instance auth_valid `{Equiv A, Valid A, Op A} : Valid (auth A) := λ x,
   match authoritative x with
-  | Excl a => own x ≼ a ∧ valid a
-  | ExclUnit => valid (own x)
+  | Excl a => own x ≼ a ∧ ✓ a
+  | ExclUnit => ✓ (own x)
   | ExclBot => False
   end.
 Arguments auth_valid _ _ _ _ !_ /.
 Instance auth_validN `{Dist A, ValidN A, Op A} : ValidN (auth A) := λ n x,
   match authoritative x with
-  | Excl a => own x ≼{n} a ∧ validN n a
-  | ExclUnit => validN n (own x)
+  | Excl a => own x ≼{n} a ∧ ✓{n} a
+  | ExclUnit => ✓{n} (own x)
   | ExclBot => n = 0
   end.
 Arguments auth_validN _ _ _ _ _ !_ /.
@@ -76,9 +76,9 @@ Proof.
   intros [[z1 Hz1] [z2 Hz2]]; exists (Auth z1 z2); split; auto.
 Qed.
 Lemma authoritative_validN `{CMRA A} n (x : auth A) :
-  validN n x → validN n (authoritative x).
+  ✓{n} x → ✓{n} (authoritative x).
 Proof. by destruct x as [[]]. Qed.
-Lemma own_validN `{CMRA A} n (x : auth A) : validN n x → validN n (own x).
+Lemma own_validN `{CMRA A} n (x : auth A) : ✓{n} x → ✓{n} (own x).
 Proof. destruct x as [[]]; naive_solver eauto using cmra_valid_includedN. Qed.
 Instance auth_cmra `{CMRA A} : CMRA (auth A).
 Proof.

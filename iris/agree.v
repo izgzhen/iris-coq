@@ -19,7 +19,7 @@ Global Instance agree_validN : ValidN (agree A) := λ n x,
 Lemma agree_valid_le (x : agree A) n n' :
   agree_is_valid x n → n' ≤ n → agree_is_valid x n'.
 Proof. induction 2; eauto using agree_valid_S. Qed.
-Global Instance agree_valid : Valid (agree A) := λ x, ∀ n, validN n x.
+Global Instance agree_valid : Valid (agree A) := λ x, ∀ n, ✓{n} x.
 Global Instance agree_equiv : Equiv (agree A) := λ x y,
   (∀ n, agree_is_valid x n ↔ agree_is_valid y n) ∧
   (∀ n, agree_is_valid x n → x n ={n}= y n).
@@ -100,7 +100,7 @@ Proof.
   * by intros x y n; rewrite agree_includedN.
 Qed.
 Lemma agree_op_inv (x y1 y2 : agree A) n :
-  validN n x → x ={n}= y1 ⋅ y2 → y1 ={n}= y2.
+  ✓{n} x → x ={n}= y1 ⋅ y2 → y1 ={n}= y2.
 Proof. by intros [??] Hxy; apply Hxy. Qed.
 Global Instance agree_extend : CMRAExtend (agree A).
 Proof.
@@ -113,12 +113,12 @@ Program Definition to_agree (x : A) : agree A :=
 Solve Obligations with done.
 Global Instance to_agree_ne n : Proper (dist n ==> dist n) to_agree.
 Proof. intros x1 x2 Hx; split; naive_solver eauto using @dist_le. Qed.
-Lemma agree_car_ne (x y : agree A) n : validN n x → x ={n}= y → x n ={n}= y n.
+Lemma agree_car_ne (x y : agree A) n : ✓{n} x → x ={n}= y → x n ={n}= y n.
 Proof. by intros [??] Hxy; apply Hxy. Qed.
-Lemma agree_cauchy (x : agree A) n i : n ≤ i → validN i x → x n ={n}= x i.
+Lemma agree_cauchy (x : agree A) n i : n ≤ i → ✓{i} x → x n ={n}= x i.
 Proof. by intros ? [? Hx]; apply Hx. Qed.
 Lemma agree_to_agree_inj (x y : agree A) a n :
-  validN n x → x ={n}= to_agree a ⋅ y → x n ={n}= a.
+  ✓{n} x → x ={n}= to_agree a ⋅ y → x n ={n}= a.
 Proof.
   by intros; transitivity ((to_agree a ⋅ y) n); [by apply agree_car_ne|].
 Qed.
