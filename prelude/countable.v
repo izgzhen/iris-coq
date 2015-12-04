@@ -14,6 +14,11 @@ Definition encode_nat `{Countable A} (x : A) : nat :=
   pred (Pos.to_nat (encode x)).
 Definition decode_nat `{Countable A} (i : nat) : option A :=
   decode (Pos.of_nat (S i)).
+Instance encode_injective `{Countable A} : Injective (=) (=) encode.
+Proof.
+  intros x y Hxy; apply (injective Some).
+  by rewrite <-(decode_encode x), Hxy, decode_encode.
+Qed.
 Lemma decode_encode_nat `{Countable A} x : decode_nat (encode_nat x) = Some x.
 Proof.
   pose proof (Pos2Nat.is_pos (encode x)).
