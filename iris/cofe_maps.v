@@ -1,6 +1,5 @@
 Require Export iris.cofe prelude.fin_maps.
-Require Import prelude.pmap prelude.nmap prelude.zmap.
-Require Import prelude.stringmap prelude.natmap.
+Require Import prelude.pmap prelude.gmap prelude.natmap.
 Local Obligation Tactic := idtac.
 
 (** option *)
@@ -136,10 +135,6 @@ Definition natmapC_map {A B}
   (f : A -n> B) : natmapC A -n> natmapC B := mapC_map f.
 Canonical Structure PmapC := mapC Pmap.
 Definition PmapC_map {A B} (f : A -n> B) : PmapC A -n> PmapC B := mapC_map f.
-Canonical Structure NmapC := mapC Nmap.
-Definition NmapC_map {A B} (f : A -n> B) : NmapC A -n> NmapC B := mapC_map f.
-Canonical Structure ZmapC := mapC Zmap.
-Definition ZmapC_map {A B} (f : A -n> B) : ZmapC A -n> ZmapC B := mapC_map f.
-Canonical Structure stringmapC := mapC stringmap.
-Definition stringmapC_map {A B}
-  (f : A -n> B) : stringmapC A -n> stringmapC B := mapC_map f.
+Canonical Structure gmapC K `{Countable K} := mapC (gmap K).
+Definition gmapC_map `{Countable K} {A B}
+  (f : A -n> B) : gmapC K A -n> gmapC K B := mapC_map f.

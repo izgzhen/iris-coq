@@ -1,6 +1,5 @@
 Require Export iris.cmra iris.cofe_maps.
-Require Import prelude.pmap prelude.nmap prelude.zmap.
-Require Import prelude.stringmap prelude.natmap.
+Require Import prelude.pmap prelude.natmap prelude.gmap.
 
 (** option *)
 Instance option_valid `{Valid A} : Valid (option A) := λ mx,
@@ -181,12 +180,6 @@ Definition natmapRA_map {A B : cmraT}
 Canonical Structure PmapRA := mapRA Pmap.
 Definition PmapRA_map {A B : cmraT}
   (f : A -n> B) : PmapRA A -n> PmapRA B := mapRA_map f.
-Canonical Structure NmapRA := mapRA Nmap.
-Definition NmapC_map {A B : cmraT}
-  (f : A -n> B) : NmapRA A -n> NmapRA B := mapRA_map f.
-Canonical Structure ZmapRA := mapRA Zmap.
-Definition ZmapRA_map {A B : cmraT}
-  (f : A -n> B) : ZmapRA A -n> ZmapRA B := mapRA_map f.
-Canonical Structure stringmapRA := mapRA stringmap.
-Definition stringmapRA_map {A B : cmraT}
-  (f : A -n> B) : stringmapRA A -n> stringmapRA B := mapRA_map f.
+Canonical Structure gmapRA K `{Countable K} := mapRA (gmap K).
+Definition gmapRA_map `{Countable K} {A B : cmraT}
+  (f : A -n> B) : gmapRA K A -n> gmapRA K B := mapRA_map f.
