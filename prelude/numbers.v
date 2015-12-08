@@ -144,24 +144,18 @@ Proof. intros ?? p. by induction p; intros; f_equal'. Qed.
 Global Instance: ∀ p : positive, Injective (=) (=) (++ p).
 Proof. intros p ???. induction p; simplify_equality; auto. Qed.
 
-Lemma Preverse_go_app_cont p1 p2 p3 :
-  Preverse_go (p2 ++ p1) p3 = p2 ++ Preverse_go p1 p3.
-Proof.
-  revert p1. induction p3; simpl; intros.
-  * apply (IHp3 (_~1)).
-  * apply (IHp3 (_~0)).
-  * done.
-Qed.
 Lemma Preverse_go_app p1 p2 p3 :
   Preverse_go p1 (p2 ++ p3) = Preverse_go p1 p3 ++ Preverse_go 1 p2.
 Proof.
-  revert p1. induction p3; intros p1; simpl; auto.
-  by rewrite <-Preverse_go_app_cont.
+  revert p3 p1 p2.
+  cut (∀ p1 p2 p3, Preverse_go (p2 ++ p3) p1 = p2 ++ Preverse_go p3 p1).
+  { by intros go p3; induction p3; intros p1 p2; simpl; auto; rewrite <-?go. }
+  intros p1; induction p1 as [p1 IH|p1 IH|]; intros p2 p3; simpl; auto.
+  * apply (IH _ (_~1)).
+  * apply (IH _ (_~0)).
 Qed.
-Lemma Preverse_app p1 p2 :
-  Preverse (p1 ++ p2) = Preverse p2 ++ Preverse p1.
+Lemma Preverse_app p1 p2 : Preverse (p1 ++ p2) = Preverse p2 ++ Preverse p1.
 Proof. unfold Preverse. by rewrite Preverse_go_app. Qed.
-
 Lemma Preverse_xO p : Preverse (p~0) = (1~0) ++ Preverse p.
 Proof Preverse_app p (1~0).
 Lemma Preverse_xI p : Preverse (p~1) = (1~1) ++ Preverse p.
@@ -169,8 +163,7 @@ Proof Preverse_app p (1~1).
 
 Fixpoint Plength (p : positive) : nat :=
   match p with 1 => 0%nat | p~0 | p~1 => S (Plength p) end.
-Lemma Papp_length p1 p2 :
-  Plength (p1 ++ p2) = (Plength p2 + Plength p1)%nat.
+Lemma Papp_length p1 p2 : Plength (p1 ++ p2) = (Plength p2 + Plength p1)%nat.
 Proof. by induction p2; f_equal'. Qed.
 
 Close Scope positive_scope.
