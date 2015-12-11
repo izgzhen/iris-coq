@@ -5,7 +5,7 @@ natural numbers, and the type [Z] for integers. It also declares some useful
 notations. *)
 Require Export Eqdep PArith NArith ZArith NPeano.
 Require Import QArith Qcanon.
-Require Export prelude.base prelude.decidable.
+Require Export prelude.base prelude.decidable prelude.option.
 Open Scope nat_scope.
 
 Coercion Z.of_nat : nat >-> Z.
@@ -108,6 +108,8 @@ Arguments Pos.of_nat _ : simpl never.
 Instance positive_eq_dec: ∀ x y : positive, Decision (x = y) := Pos.eq_dec.
 Instance positive_inhabited: Inhabited positive := populate 1.
 
+Instance maybe_xO : Maybe xO := λ p, match p with p~0 => Some p | _ => None end.
+Instance maybe_x1 : Maybe xI := λ p, match p with p~1 => Some p | _ => None end.
 Instance: Injective (=) (=) (~0).
 Proof. by injection 1. Qed.
 Instance: Injective (=) (=) (~1).
