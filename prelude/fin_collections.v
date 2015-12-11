@@ -14,6 +14,8 @@ Section fin_collection.
 Context `{FinCollection A C}.
 Implicit Types X Y : C.
 
+Lemma fin_collection_finite X : set_finite X.
+Proof. by exists (elements X); intros; rewrite elem_of_elements. Qed.
 Global Instance elements_proper: Proper ((≡) ==> (≡ₚ)) (elements (C:=C)).
 Proof.
   intros ?? E. apply NoDup_Permutation.
@@ -26,16 +28,16 @@ Proof. intros ?? E. apply Permutation_length. by rewrite E. Qed.
 Lemma size_empty : size (∅ : C) = 0.
 Proof.
   unfold size, collection_size. simpl.
-  rewrite (elem_of_nil_inv (elements ∅)); [done |].
-  intro. rewrite elem_of_elements. solve_elem_of.
+  rewrite (elem_of_nil_inv (elements ∅)); [done|intro].
+  rewrite elem_of_elements, elem_of_empty; auto.
 Qed.
 Lemma size_empty_inv (X : C) : size X = 0 → X ≡ ∅.
 Proof.
-  intros. apply equiv_empty. intro. rewrite <-elem_of_elements.
-  rewrite (nil_length_inv (elements X)). by rewrite elem_of_nil. done.
+  intros; apply equiv_empty; intros x; rewrite <-elem_of_elements.
+  by rewrite (nil_length_inv (elements X)), ?elem_of_nil.
 Qed.
 Lemma size_empty_iff (X : C) : size X = 0 ↔ X ≡ ∅.
-Proof. split. apply size_empty_inv. intros E. by rewrite E, size_empty. Qed.
+Proof. split. apply size_empty_inv. by intros ->; rewrite size_empty. Qed.
 Lemma size_non_empty_iff (X : C) : size X ≠ 0 ↔ X ≢ ∅.
 Proof. by rewrite size_empty_iff. Qed.
 Lemma size_singleton (x : A) : size {[ x ]} = 1.
@@ -44,19 +46,19 @@ Proof.
   apply Permutation_length, NoDup_Permutation.
   * apply NoDup_elements.
   * apply NoDup_singleton.
-  * intros. by rewrite elem_of_elements,
-      elem_of_singleton, elem_of_list_singleton.
+  * intros y.
+    by rewrite elem_of_elements, elem_of_singleton, elem_of_list_singleton.
 Qed.
 Lemma size_singleton_inv X x y : size X = 1 → x ∈ X → y ∈ X → x = y.
 Proof.
   unfold size, collection_size. simpl. rewrite <-!elem_of_elements.
   generalize (elements X). intros [|? l]; intro; simplify_equality'.
-  rewrite (nil_length_inv l), !elem_of_list_singleton by done. congruence.
+  rewrite (nil_length_inv l), !elem_of_list_singleton by done; congruence.
 Qed.
 Lemma collection_choose_or_empty X : (∃ x, x ∈ X) ∨ X ≡ ∅.
 Proof.
   destruct (elements X) as [|x l] eqn:HX; [right|left].
-  * apply equiv_empty. intros x. by rewrite <-elem_of_elements, HX, elem_of_nil.
+  * apply equiv_empty; intros x. by rewrite <-elem_of_elements, HX, elem_of_nil.
   * exists x. rewrite <-elem_of_elements, HX. by left.
 Qed.
 Lemma collection_choose X : X ≢ ∅ → ∃ x, x ∈ X.
@@ -81,8 +83,8 @@ Proof.
   apply Permutation_length, NoDup_Permutation.
   * apply NoDup_elements.
   * apply NoDup_app; repeat split; try apply NoDup_elements.
-    intros x. rewrite !elem_of_elements. esolve_elem_of.
-  * intros. rewrite elem_of_app, !elem_of_elements. solve_elem_of.
+    intros x; rewrite !elem_of_elements; esolve_elem_of.
+  * intros. by rewrite elem_of_app, !elem_of_elements, elem_of_union.
 Qed.
 Instance elem_of_dec_slow (x : A) (X : C) : Decision (x ∈ X) | 100.
 Proof.

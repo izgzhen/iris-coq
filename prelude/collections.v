@@ -590,3 +590,33 @@ Section collection_monad.
     induction Hl1; inversion_clear 1; constructor; auto.
   Qed.
 End collection_monad.
+
+(** Finite collections *)
+Definition set_finite `{ElemOf A B} (X : B) := ∃ l : list A, ∀ x, x ∈ X → x ∈ l.
+
+Section finite.
+  Context `{SimpleCollection A B}.
+  Lemma empty_finite : set_finite ∅.
+  Proof. by exists []; intros ?; rewrite elem_of_empty. Qed.
+  Lemma singleton_finite (x : A) : set_finite {[ x ]}.
+  Proof. exists [x]; intros y ->/elem_of_singleton; left. Qed.
+  Lemma union_finite X Y : set_finite X → set_finite Y → set_finite (X ∪ Y).
+  Proof.
+    intros [lX ?] [lY ?]; exists (lX ++ lY); intros x.
+    rewrite elem_of_union, elem_of_app; naive_solver.
+  Qed.
+  Lemma union_finite_inv_l X Y : set_finite (X ∪ Y) → set_finite X.
+  Proof. intros [l ?]; exists l; esolve_elem_of. Qed.
+  Lemma union_finite_inv_r X Y : set_finite (X ∪ Y) → set_finite Y.
+  Proof. intros [l ?]; exists l; esolve_elem_of. Qed.
+End finite.
+
+Section more_finite.
+  Context `{Collection A B}.
+  Lemma intersection_finite_l X Y : set_finite X → set_finite (X ∩ Y).
+  Proof. intros [l ?]; exists l; intros x [??]/elem_of_intersection; auto. Qed.
+  Lemma intersection_finite_r X Y : set_finite Y → set_finite (X ∩ Y).
+  Proof. intros [l ?]; exists l; intros x [??]/elem_of_intersection; auto. Qed.
+  Lemma difference_finite X Y : set_finite X → set_finite (X ∖ Y).
+  Proof. intros [l ?]; exists l; intros x [??]/elem_of_difference; auto. Qed.
+End more_finite.
