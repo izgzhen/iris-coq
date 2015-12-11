@@ -273,6 +273,8 @@ End discrete_cofe.
 Arguments discreteC _ {_ _}.
 
 Definition leibnizC (A : Type) : cofeT := @discreteC A equivL _.
+Canonical Structure natC := leibnizC nat.
+Canonical Structure boolC := leibnizC bool.
 
 (** Later *)
 Inductive later (A : Type) : Type := Later { later_car : A }.
