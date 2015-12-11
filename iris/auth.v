@@ -6,8 +6,8 @@ Record auth (A : Type) : Type := Auth { authoritative : excl A ; own : A }.
 Arguments Auth {_} _ _.
 Arguments authoritative {_} _.
 Arguments own {_} _.
-Notation "∘ x" := (Auth ExclUnit x) (at level 20).
-Notation "∙ x" := (Auth (Excl x) ∅) (at level 20).
+Notation "◯ x" := (Auth ExclUnit x) (at level 20).
+Notation "● x" := (Auth (Excl x) ∅) (at level 20).
 
 (* COFE *)
 Instance auth_equiv `{Equiv A} : Equiv (auth A) := λ x y,
@@ -122,7 +122,7 @@ Proof.
   split; [apply (ra_empty_valid (A:=A))|].
   by intros x; constructor; simpl; rewrite (left_id _ _).
 Qed.
-Lemma auth_frag_op `{CMRA A} a b : ∘(a ⋅ b) ≡ ∘a ⋅ ∘b.
+Lemma auth_frag_op `{CMRA A} a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.
 
 (* Functor *)
