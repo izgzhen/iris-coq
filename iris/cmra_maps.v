@@ -10,6 +10,17 @@ Instance option_unit `{Unit A} : Unit (option A) := fmap unit.
 Instance option_op `{Op A} : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
 Instance option_minus `{Minus A} : Minus (option A) :=
   difference_with (λ x y, Some (x ⩪ y)).
+Lemma option_included `{CMRA A} mx my :
+  mx ≼ my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ x ≼ y.
+Proof.
+  split.
+  * intros [mz Hmz]; destruct mx as [x|]; [right|by left].
+    destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
+    destruct mz as [z|]; inversion_clear Hmz; split_ands; auto;
+      setoid_subst; eauto using ra_included_l.
+  * intros [->|(x&y&->&->&z&Hz)]; try (by exists my; destruct my; constructor).
+    by exists (Some z); constructor.
+Qed.
 Lemma option_includedN `{CMRA A} n mx my :
   mx ≼{n} my ↔ n = 0 ∨ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ x ≼{n} y.
 Proof.
@@ -17,9 +28,8 @@ Proof.
   * intros [mz Hmz]; destruct n as [|n]; [by left|right].
     destruct mx as [x|]; [right|by left].
     destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
-    destruct mz as [z|]; inversion_clear Hmz; split_ands; auto.
-    + by exists z.
-    + by cofe_subst.
+    destruct mz as [z|]; inversion_clear Hmz; split_ands; auto;
+      cofe_subst; auto using cmra_included_l.
   * intros [->|[->|(x&y&->&->&z&Hz)]];
       try (by exists my; destruct my; constructor).
     by exists (Some z); constructor.
@@ -65,6 +75,11 @@ Proof.
   * by exists (None,Some x); inversion Hx'; repeat constructor.
   * exists (None,None); repeat constructor.
 Qed.
+Instance None_valid_timeless `{Valid A, ValidN A} : ValidTimeless (@None A).
+Proof. done. Qed.
+Instance Some_valid_timeless `{Valid A, ValidN A} x :
+  ValidTimeless x → ValidTimeless (Some x).
+Proof. by intros ? y; apply (valid_timeless x). Qed.
 Instance option_fmap_cmra_monotone `{CMRA A, CMRA B} (f : A → B)
   `{!CMRAMonotone f} : CMRAMonotone (fmap f : option A → option B).
 Proof.
@@ -153,6 +168,25 @@ Section map.
     * destruct (m !! i) as [x|] eqn:Hx; simpl; [apply (proj2_sig (f i))|].
       pose proof (Hm12' i) as Hm12''; rewrite Hx in Hm12''.
       by destruct (m1 !! i), (m2 !! i); inversion_clear Hm12''.
+  Qed.
+  Global Instance map_empty_valid_timeless `{Valid A, ValidN A} :
+    ValidTimeless (∅ : M A).
+  Proof. by intros ??; rewrite lookup_empty. Qed.
+  Global Instance map_ra_insert_valid_timeless `{Valid A,ValidN A} (m: M A) i x:
+    ValidTimeless x → ValidTimeless m → m !! i = None →
+    ValidTimeless (<[i:=x]>m).
+  Proof.
+    intros ?? Hi Hm j; destruct (decide (i = j)); simplify_map_equality.
+    { specialize (Hm j); simplify_map_equality. by apply (valid_timeless _). }
+    generalize j; clear dependent j; rapply (valid_timeless m).
+    intros j; destruct (decide (i = j)); simplify_map_equality;[by rewrite Hi|].
+    by specialize (Hm j); simplify_map_equality.
+  Qed.
+  Global Instance map_ra_singleton_timeless `{Valid A, ValidN A} (i : K) x :
+    ValidTimeless x → ValidTimeless ({[ i, x ]} : M A).
+  Proof.
+    intros ?; apply (map_ra_insert_valid_timeless _ _ _ _ _); simpl.
+    by rewrite lookup_empty.
   Qed.
   Definition mapRA (A : cmraT) : cmraT := CMRAT (M A).
   Global Instance map_fmap_cmra_monotone `{CMRA A, CMRA B} (f : A → B)

@@ -25,7 +25,6 @@ Proof. by destruct 1. Qed.
 
 Instance auth_compl `{Cofe A} : Compl (auth A) := λ c,
   Auth (compl (chain_map authoritative c)) (compl (chain_map own c)).
-
 Local Instance auth_cofe `{Cofe A} : Cofe (auth A).
 Proof.
   split.
@@ -40,6 +39,9 @@ Proof.
   * intros c n; split. apply (conv_compl (chain_map authoritative c) n).
     apply (conv_compl (chain_map own c) n).
 Qed.
+Instance Auth_timeless `{Dist A, Equiv A} (x : excl A) (y : A) :
+  Timeless x → Timeless y → Timeless (Auth x y).
+Proof. by intros ?? [??] [??]; split; apply (timeless _). Qed.
 
 (* CMRA *)
 Instance auth_empty `{Empty A} : Empty (auth A) := Auth ∅ ∅.
@@ -121,6 +123,14 @@ Instance auth_ra_empty `{CMRA A, Empty A, !RAEmpty A} : RAEmpty (auth A).
 Proof.
   split; [apply (ra_empty_valid (A:=A))|].
   by intros x; constructor; simpl; rewrite (left_id _ _).
+Qed.
+Instance auth_frag_valid_timeless `{CMRA A} (x : A) :
+  ValidTimeless x → ValidTimeless (◯ x).
+Proof. by intros ??; apply (valid_timeless x). Qed.
+Instance auth_valid_timeless `{CMRA A, Empty A, !RAEmpty A} (x : A) :
+  ValidTimeless x → ValidTimeless (● x).
+Proof.
+  by intros ? [??]; split; [apply ra_empty_least|apply (valid_timeless x)].
 Qed.
 Lemma auth_frag_op `{CMRA A} a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.

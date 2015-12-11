@@ -83,6 +83,11 @@ Definition cmra_update `{Op A, ValidN A} (x y : A) := ∀ z n,
 Infix "⇝" := cmra_update (at level 70).
 Instance: Params (@cmra_update) 3.
 
+(** Timeless elements *)
+Class ValidTimeless `{Valid A, ValidN A} (x : A) :=
+  valid_timeless : validN 1 x → valid x.
+Arguments valid_timeless {_ _ _} _ {_} _.
+
 (** Properties **)
 Section cmra.
 Context `{cmra : CMRA A}.
@@ -122,12 +127,23 @@ Proof.
 Qed.
 Lemma cmra_unit_valid x n : ✓{n} x → ✓{n} (unit x).
 Proof. rewrite <-(cmra_unit_l x) at 1; apply cmra_valid_op_l. Qed.
+
+(* Timeless *)
+Lemma cmra_timeless_included_l `{!CMRAExtend A} x y :
+  Timeless x → ✓{1} y → x ≼{1} y → x ≼ y.
+Proof.
+  intros ?? [x' ?].
+  destruct (cmra_extend_op 1 y x x') as ([z z']&Hy&Hz&Hz'); auto; simpl in *.
+  by exists z'; rewrite Hy, (timeless x z) by done.
+Qed.
+Lemma cmra_timeless_included_r n x y : Timeless y → x ≼{1} y → x ≼{n} y.
+Proof. intros ? [x' ?]. exists x'. by apply equiv_dist, (timeless y). Qed.
 Lemma cmra_op_timeless `{!CMRAExtend A} x1 x2 :
-  ✓{1} (x1 ⋅ x2) → Timeless x1 → Timeless x2 → Timeless (x1 ⋅ x2).
+  ✓ (x1 ⋅ x2) → Timeless x1 → Timeless x2 → Timeless (x1 ⋅ x2).
 Proof.
   intros ??? z Hz.
   destruct (cmra_extend_op 1 z x1 x2) as ([y1 y2]&Hz'&?&?); auto; simpl in *.
-  { by rewrite <-?Hz. }
+  { by rewrite <-?Hz; apply cmra_valid_validN. }
   by rewrite Hz', (timeless x1 y1), (timeless x2 y2).
 Qed.
 
@@ -223,6 +239,8 @@ Section discrete.
     intros [|n] x y1 y2 ??; [|by exists (y1,y2)].
     by exists (x,unit x); simpl; rewrite ra_unit_r.
   Qed.
+  Global Instance discrete_timeless (x : A) : ValidTimeless x.
+  Proof. by intros ?. Qed.
   Definition discreteRA : cmraT := CMRAT A.
   Lemma discrete_updateP (x : A) (P : A → Prop) `{!Inhabited (sig P)} :
     (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → x ⇝: P.
@@ -291,6 +309,9 @@ Proof.
   destruct (cmra_extend_op n (x.2) (y1.2) (y2.2)) as (z2&?&?&?); auto.
   by exists ((z1.1,z2.1),(z1.2,z2.2)).
 Qed.
+Instance pair_timeless `{Valid A, ValidN A, Valid B, ValidN B} (x : A) (y : B) :
+  ValidTimeless x → ValidTimeless y → ValidTimeless (x,y).
+Proof. by intros ?? [??]; split; apply (valid_timeless _). Qed.
 Canonical Structure prodRA (A B : cmraT) : cmraT := CMRAT (A * B).
 Instance prod_map_cmra_monotone `{CMRA A, CMRA A', CMRA B, CMRA B'}
   (f : A → A') (g : B → B') `{!CMRAMonotone f, !CMRAMonotone g} :

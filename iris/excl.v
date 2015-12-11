@@ -61,6 +61,13 @@ Proof.
     feed inversion (chain_cauchy c 1 n); auto with lia; constructor.
     destruct (c 1); simplify_equality'.
 Qed.
+Instance Excl_timeless `{Equiv A, Dist A} (x : excl A) :
+  Timeless x → Timeless (Excl x).
+Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
+Instance ExclUnit_timeless `{Equiv A, Dist A} : Timeless (@ExclUnit A).
+Proof. by inversion_clear 1; constructor. Qed.
+Instance ExclBot_timeless `{Equiv A, Dist A} : Timeless (@ExclBot A).
+Proof. by inversion_clear 1; constructor. Qed.
 
 (* CMRA *)
 Instance excl_valid {A} : Valid (excl A) := λ x,
@@ -112,6 +119,8 @@ Proof.
     | ExclUnit, _ => (ExclUnit, x) | _, ExclUnit => (x, ExclUnit)
     end; destruct y1, y2; inversion_clear Hx; repeat constructor.
 Qed.
+Instance excl_valid_timeless {A} (x : excl A) : ValidTimeless x.
+Proof. by destruct x; intros ?. Qed.
 
 (* Updates *)
 Lemma excl_update {A} (x : A) y : ✓ y → Excl x ⇝ y.

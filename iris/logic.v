@@ -692,6 +692,14 @@ Lemma uPred_own_valid (a : M) : uPred_own a ⊆ (✓ a)%I.
 Proof.
   intros x n Hv [a' Hx]; simpl; rewrite Hx in Hv; eauto using cmra_valid_op_l.
 Qed.
+Lemma uPred_valid_intro (a : M) : ✓ a → True%I ⊆ (✓ a)%I.
+Proof. by intros ? x n ? _; simpl; apply cmra_valid_validN. Qed.
+Lemma uPred_valid_elim_timess (a : M) :
+  ValidTimeless a → ¬ ✓ a → (✓ a)%I ⊆ False%I.
+Proof.
+  intros ? Hvalid x [|n] ??; [done|apply Hvalid].
+  apply (valid_timeless _), cmra_valid_le with (S n); auto with lia.
+Qed.
 
 (* Timeless *)
 Global Instance uPred_const_timeless (P : Prop) : TimelessP (@uPred_const M P).
@@ -733,11 +741,10 @@ Proof. intros ? x n ??; simpl; apply timelessP; auto using cmra_unit_valid. Qed.
 Global Instance uPred_eq_timeless {A : cofeT} (a b : A) :
   Timeless a → TimelessP (a ≡ b : uPred M).
 Proof. by intros ? x n ??; apply equiv_dist, timeless. Qed.
-Global Instance uPred_own_timeless (a : M) :
-  Timeless a → TimelessP (uPred_own a).
+
+(** Timeless elements *)
+Global Instance uPred_own_timeless (a: M): Timeless a → TimelessP (uPred_own a).
 Proof.
-  intros ? x n ? [a' ?].
-  destruct (cmra_extend_op 1 x a a') as ([b b']&Hx&Hb&Hb'); auto; simpl in *.
-  by exists b'; rewrite Hx, (timeless a b) by done.
+  by intros ? x n ??; apply cmra_included_includedN, cmra_timeless_included_l.
 Qed.
 End logic.
