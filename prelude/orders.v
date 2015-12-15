@@ -364,7 +364,7 @@ Hint Extern 0 (@Equivalence _ (≡)) =>
 Section partial_order.
   Context `{SubsetEq A, !PartialOrder (@subseteq A _)}.
   Global Instance: LeibnizEquiv A.
-  Proof. split. intros [??]. by apply (anti_symmetric (⊆)). by intros ->. Qed.
+  Proof. intros ?? [??]; by apply (anti_symmetric (⊆)). Qed.
 End partial_order.
 
 (** * Join semi lattices *)

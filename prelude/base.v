@@ -177,21 +177,24 @@ Notation "(≡{ Γ1 , Γ2 , .. , Γ3 } )" := (equivE (pair .. (Γ1, Γ2) .. Γ3)
 with Leibniz equality. We provide the tactic [fold_leibniz] to transform such
 setoid equalities into Leibniz equalities, and [unfold_leibniz] for the
 reverse. *)
-Class LeibnizEquiv A `{Equiv A} := leibniz_equiv x y : x ≡ y ↔ x = y.
-
+Class LeibnizEquiv A `{Equiv A} := leibniz_equiv x y : x ≡ y → x = y.
+Lemma leibniz_equiv_iff `{LeibnizEquiv A, !Reflexive (@equiv A _)} (x y : A) :
+  x ≡ y ↔ x = y.
+Proof. split. apply leibniz_equiv. intros ->; reflexivity. Qed.
+ 
 Ltac fold_leibniz := repeat
   match goal with
   | H : context [ @equiv ?A _ _ _ ] |- _ =>
-    setoid_rewrite (leibniz_equiv (A:=A)) in H
+    setoid_rewrite (leibniz_equiv_iff (A:=A)) in H
   | |- context [ @equiv ?A _ _ _ ] =>
-    setoid_rewrite (leibniz_equiv (A:=A))
+    setoid_rewrite (leibniz_equiv_iff (A:=A))
   end.
 Ltac unfold_leibniz := repeat
   match goal with
   | H : context [ @eq ?A _ _ ] |- _ =>
-    setoid_rewrite <-(leibniz_equiv (A:=A)) in H
+    setoid_rewrite <-(leibniz_equiv_iff (A:=A)) in H
   | |- context [ @eq ?A _ _ ] =>
-    setoid_rewrite <-(leibniz_equiv (A:=A))
+    setoid_rewrite <-(leibniz_equiv_iff (A:=A))
   end.
 
 Definition equivL {A} : Equiv A := (=).

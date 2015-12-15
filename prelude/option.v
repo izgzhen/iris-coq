@@ -101,10 +101,7 @@ Section setoids.
   Global Instance Some_proper : Proper ((≡) ==> (≡)) (@Some A).
   Proof. by constructor. Qed.
   Global Instance option_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (option A).
-  Proof.
-    intros x y; split; [destruct 1; fold_leibniz; congruence|].
-    by intros <-; destruct x; constructor; fold_leibniz.
-  Qed.
+  Proof. intros x y; destruct 1; fold_leibniz; congruence. Qed.
   Lemma equiv_None (mx : option A) : mx ≡ None ↔ mx = None.
   Proof. split; [by inversion_clear 1|by intros ->]. Qed.
   Lemma equiv_Some (mx my : option A) x :

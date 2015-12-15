@@ -380,10 +380,7 @@ Section setoid.
     by apply cons_equiv, IH.
   Qed.
   Global Instance list_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (list A).
-  Proof.
-    intros l1 l2; split; [|by intros <-].
-    induction 1; f_equal; fold_leibniz; auto.
-  Qed.
+  Proof. induction 1; f_equal; fold_leibniz; auto. Qed.
 End setoid.
 
 Global Instance: Injective2 (=) (=) (=) (@cons A).

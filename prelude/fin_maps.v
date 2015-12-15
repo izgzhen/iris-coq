@@ -162,9 +162,8 @@ Section setoid.
   Qed.    
   Global Instance map_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (M A).
   Proof.
-    intros m1 m2; split.
-    * by intros Hm; apply map_eq; intros i; unfold_leibniz; apply lookup_proper.
-    * by intros <-; intros i; fold_leibniz.
+    intros m1 m2 Hm; apply map_eq; intros i.
+    by unfold_leibniz; apply lookup_proper.
   Qed.
   Lemma map_equiv_empty (m : M A) : m ≡ ∅ ↔ m = ∅.
   Proof.
