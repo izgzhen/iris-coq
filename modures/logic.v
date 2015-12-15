@@ -694,7 +694,7 @@ Proof.
 Qed.
 Lemma uPred_valid_intro (a : M) : ✓ a → True%I ⊆ (✓ a)%I.
 Proof. by intros ? x n ? _; simpl; apply cmra_valid_validN. Qed.
-Lemma uPred_valid_elim_timess (a : M) :
+Lemma uPred_valid_elim_timeless (a : M) :
   ValidTimeless a → ¬ ✓ a → (✓ a)%I ⊆ False%I.
 Proof.
   intros ? Hvalid x [|n] ??; [done|apply Hvalid].

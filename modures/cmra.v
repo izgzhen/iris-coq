@@ -83,7 +83,9 @@ Definition cmra_update `{Op A, ValidN A} (x y : A) := ∀ z n,
 Infix "⇝" := cmra_update (at level 70).
 Instance: Params (@cmra_update) 3.
 
-(** Timeless elements *)
+(** Timeless validity *)
+(* Not sure whether this is useful, see the rule [uPred_valid_elim_timeless]
+in logic.v *)
 Class ValidTimeless `{Valid A, ValidN A} (x : A) :=
   valid_timeless : validN 1 x → valid x.
 Arguments valid_timeless {_ _ _} _ {_} _.
@@ -128,7 +130,7 @@ Qed.
 Lemma cmra_unit_valid x n : ✓{n} x → ✓{n} (unit x).
 Proof. rewrite <-(cmra_unit_l x) at 1; apply cmra_valid_op_l. Qed.
 
-(* Timeless *)
+(** * Timeless *)
 Lemma cmra_timeless_included_l `{!CMRAExtend A} x y :
   Timeless x → ✓{1} y → x ≼{1} y → x ≼ y.
 Proof.
