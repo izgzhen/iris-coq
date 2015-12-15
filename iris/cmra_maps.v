@@ -94,11 +94,12 @@ Qed.
 Section map.
   Context `{FinMap K M}.
   Existing Instances map_dist map_compl map_cofe.
-  Instance map_op `{Op A} : Op (M A) := merge op.
-  Instance map_unit `{Unit A} : Unit (M A) := fmap unit.
-  Instance map_valid `{Valid A} : Valid (M A) := λ m, ∀ i, ✓ (m !! i).
-  Instance map_validN `{ValidN A} : ValidN (M A) := λ n m, ∀ i, ✓{n} (m!!i).
-  Instance map_minus `{Minus A} : Minus (M A) := merge minus.
+  Global Instance map_op `{Op A} : Op (M A) := merge op.
+  Global Instance map_unit `{Unit A} : Unit (M A) := fmap unit.
+  Global Instance map_valid `{Valid A} : Valid (M A) := λ m, ∀ i, ✓ (m !! i).
+  Global Instance map_validN `{ValidN A} : ValidN (M A) := λ n m,
+    ∀ i, ✓{n} (m!!i).
+  Global Instance map_minus `{Minus A} : Minus (M A) := merge minus.
   Lemma lookup_op `{Op A} m1 m2 i : (m1 ⋅ m2) !! i = m1 !! i ⋅ m2 !! i.
   Proof. by apply lookup_merge. Qed.
   Lemma lookup_minus `{Minus A} m1 m2 i : (m1 ⩪ m2) !! i = m1 !! i ⩪ m2 !! i.
@@ -121,7 +122,7 @@ Section map.
     * intros Hm; exists (m2 ⩪ m1); intros i.
       by rewrite lookup_op, lookup_minus, cmra_op_minus.
   Qed.
-  Instance map_cmra `{CMRA A} : CMRA (M A).
+  Global Instance map_cmra `{CMRA A} : CMRA (M A).
   Proof.
     split.
     * apply _.
@@ -145,13 +146,13 @@ Section map.
     * intros x y n; rewrite map_includedN_spec; intros ? i.
       by rewrite lookup_op, lookup_minus, cmra_op_minus by done.
   Qed.
-  Instance map_ra_empty `{RA A} : RAEmpty (M A).
+  Global Instance map_ra_empty `{RA A} : RAEmpty (M A).
   Proof.
     split.
     * by intros ?; rewrite lookup_empty.
     * by intros m i; simpl; rewrite lookup_op, lookup_empty; destruct (m !! i).
   Qed.
-  Instance map_cmra_extend `{CMRA A, !CMRAExtend A} : CMRAExtend (M A).
+  Global Instance map_cmra_extend `{CMRA A, !CMRAExtend A} : CMRAExtend (M A).
   Proof.
     intros n m m1 m2 Hm Hm12.
     assert (∀ i, m !! i ={n}= m1 !! i ⋅ m2 !! i) as Hm12'
@@ -188,6 +189,12 @@ Section map.
     intros ?; apply (map_ra_insert_valid_timeless _ _ _ _ _); simpl.
     by rewrite lookup_empty.
   Qed.
+  Lemma map_insert_valid `{ValidN A} (m : M A) n i x :
+    ✓{n} x → ✓{n} m → ✓{n} (<[i:=x]>m).
+  Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_equality. Qed.
+  Lemma map_insert_op `{Op A} (m1 m2 : M A) i x :
+    m2 !! i = None →  <[i:=x]>(m1 ⋅ m2) = <[i:=x]>m1 ⋅ m2.
+  Proof. by intros Hi; apply (insert_merge_l _); rewrite Hi. Qed.
   Definition mapRA (A : cmraT) : cmraT := CMRAT (M A).
   Global Instance map_fmap_cmra_monotone `{CMRA A, CMRA B} (f : A → B)
     `{!CMRAMonotone f} : CMRAMonotone (fmap f : M A → M B).
@@ -205,8 +212,28 @@ Section map.
   Global Instance mapRA_map_monotone {A B : cmraT} (f : A -n> B)
     `{!CMRAMonotone f} : CMRAMonotone (mapRA_map f) := _.
 End map.
-
 Arguments mapRA {_} _ {_ _ _ _ _ _ _ _ _} _.
+
+Section map_dom.
+  Context `{FinMapDom K M D, Fresh K D, !FreshSpec K D}.
+  Lemma map_dom_op `{Op A} (m1 m2: M A) : dom D (m1 ⋅ m2) ≡ dom D m1 ∪ dom D m2.
+  Proof.
+    apply elem_of_equiv; intros i; rewrite elem_of_union, !elem_of_dom.
+    unfold is_Some; setoid_rewrite lookup_op.
+    destruct (m1 !! i), (m2 !! i); naive_solver.
+  Qed.
+  Lemma map_update_alloc `{CMRA A} (m : M A) x :
+    ✓ x → m ⇝: λ m', ∃ i, m' = <[i:=x]>m ∧ m !! i = None.
+  Proof.
+    intros ? mf n Hm. set (i := fresh (dom D (m ⋅ mf))).
+    assert (i ∉ dom D m ∧ i ∉ dom D mf) as [??].
+    { rewrite <-not_elem_of_union, <-map_dom_op; apply is_fresh. }
+    exists (<[i:=x]>m); split; [exists i; split; [done|]|].
+    * by apply not_elem_of_dom.
+    * rewrite <-map_insert_op by (by apply not_elem_of_dom).
+      by apply map_insert_valid; [apply cmra_valid_validN|].
+  Qed.
+End map_dom.
 
 Canonical Structure natmapRA := mapRA natmap.
 Definition natmapRA_map {A B : cmraT}
