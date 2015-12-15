@@ -124,15 +124,21 @@ Proof.
 Qed.
 End agree.
 
+Program Definition agree_map `{Dist A, Dist B}
+    (f : A → B) (x : agree A) : agree B :=
+  {| agree_car n := f (x n); agree_is_valid := agree_is_valid x |}.
+Solve Obligations with auto using agree_valid_0, agree_valid_S.
+
 Section agree_map.
-  Context `{Cofe A,Cofe B} (f : A → B) `{Hf: ∀ n, Proper (dist n ==> dist n) f}.
-  Program Definition agree_map (x : agree A) : agree B :=
-    {| agree_car n := f (x n); agree_is_valid := agree_is_valid x |}.
-  Solve Obligations with auto using agree_valid_0, agree_valid_S.
-  Global Instance agree_map_ne n : Proper (dist n ==> dist n) agree_map.
+  Context `{Cofe A, Cofe B} (f : A → B) `{Hf: ∀ n, Proper (dist n ==> dist n) f}.
+  Global Instance agree_map_ne n : Proper (dist n ==> dist n) (agree_map f).
   Proof. by intros x1 x2 Hx; split; simpl; intros; [apply Hx|apply Hf, Hx]. Qed.
-  Global Instance agree_map_proper: Proper ((≡)==>(≡)) agree_map := ne_proper _.
-  Global Instance agree_map_monotone : CMRAMonotone agree_map.
+  Global Instance agree_map_proper :
+    Proper ((≡) ==> (≡)) (agree_map f) := ne_proper _.
+  Lemma agree_map_ext (g : A → B) x :
+    (∀ x, f x ≡ g x) → agree_map f x ≡ agree_map g x.
+  Proof. by intros Hfg; split; simpl; intros; rewrite ?Hfg. Qed.
+  Global Instance agree_map_monotone : CMRAMonotone (agree_map f).
   Proof.
     split; [|by intros n x [? Hx]; split; simpl; [|by intros n' ?; rewrite Hx]].
     intros x y n; rewrite !agree_includedN; intros Hy; rewrite Hy.
