@@ -228,3 +228,5 @@ Proof.
   apply dist_S, map_contractive; split; intros Y i; apply embed_tower; lia.
 Qed.
 End solver.
+
+Global Opaque cofe_solver.T cofe_solver.fold cofe_solver.unfold.
