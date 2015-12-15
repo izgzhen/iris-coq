@@ -64,8 +64,8 @@ Section cofe.
   Global Instance dist_ne n : Proper (dist n ==> dist n ==> iff) (dist n).
   Proof.
     intros x1 x2 ? y1 y2 ?; split; intros.
-    * by transitivity x1; [done|]; transitivity y1.
-    * by transitivity x2; [done|]; transitivity y2.
+    * by transitivity x1; [|transitivity y1].
+    * by transitivity x2; [|transitivity y2].
   Qed.
   Global Instance dist_proper n : Proper ((≡) ==> (≡) ==> iff) (dist n).
   Proof.
@@ -84,7 +84,7 @@ Section cofe.
     Proper ((≡) ==> (≡) ==> (≡)) f | 100.
   Proof.
      unfold Proper, respectful; setoid_rewrite equiv_dist.
-     by intros x1 x2 Hx y1 y2 Hy n; rewrite Hx, Hy.
+     by intros x1 x2 Hx y1 y2 Hy n; rewrite (Hx n), (Hy n).
   Qed.
   Lemma compl_ne (c1 c2: chain A) n : c1 n ={n}= c2 n → compl c1 ={n}= compl c2.
   Proof. intros. by rewrite (conv_compl c1 n), (conv_compl c2 n). Qed.
@@ -140,7 +140,7 @@ End fixpoint.
 Global Opaque fixpoint.
 
 (** Function space *)
-Structure cofeMor (A B : cofeT) : Type := CofeMor {
+Record cofeMor (A B : cofeT) : Type := CofeMor {
   cofe_mor_car :> A → B;
   cofe_mor_ne n : Proper (dist n ==> dist n) cofe_mor_car
 }.
@@ -305,18 +305,19 @@ Section later.
   Qed.
   Canonical Structure laterC (A : cofeT) : cofeT := CofeT (later A).
 
-  Instance later_fmap : FMap later := λ A B f x, Later (f (later_car x)).
+  Definition later_map {A B} (f : A → B) (x : later A) : later B :=
+    Later (f (later_car x)).
   Instance later_fmap_ne `{Cofe A, Cofe B} (f : A → B) :
     (∀ n, Proper (dist n ==> dist n) f) →
-    ∀ n, Proper (dist n ==> dist n) (fmap f : later A → later B).
+    ∀ n, Proper (dist n ==> dist n) (later_map f).
   Proof. intros Hf [|n] [x] [y] ?; do 2 red; simpl. done. by apply Hf. Qed.
-  Lemma later_fmap_id {A} (x : later A) : id <$> x = x.
+  Lemma later_fmap_id {A} (x : later A) : later_map id x = x.
   Proof. by destruct x. Qed.
   Lemma later_fmap_compose {A B C} (f : A → B) (g : B → C) (x : later A) :
-    g ∘ f <$> x = g <$> f <$> x.
+    later_map (g ∘ f) x = later_map g (later_map f x).
   Proof. by destruct x. Qed.
   Definition laterC_map {A B} (f : A -n> B) : laterC A -n> laterC B :=
-    CofeMor (fmap f : laterC A → laterC B).
+    CofeMor (later_map f).
   Instance laterC_map_contractive (A B : cofeT) : Contractive (@laterC_map A B).
   Proof. intros n f g Hf n'; apply Hf. Qed.
 End later.
