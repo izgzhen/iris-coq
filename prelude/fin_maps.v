@@ -536,6 +536,12 @@ Proof. apply map_eq; intros i; by rewrite lookup_fmap, option_fmap_id. Qed.
 Lemma map_fmap_compose {A B C} (f : A → B) (g : B → C) (m : M A) :
   g ∘ f <$> m = g <$> f <$> m.
 Proof. apply map_eq; intros i; by rewrite !lookup_fmap,option_fmap_compose. Qed.
+Lemma map_fmap_setoid_ext `{Equiv A, Equiv B} (f1 f2 : A → B) m :
+  (∀ i x, m !! i = Some x → f1 x ≡ f2 x) → f1 <$> m ≡ f2 <$> m.
+Proof.
+  intros Hi i; rewrite !lookup_fmap.
+  destruct (m !! i) eqn:?; constructor; eauto.
+Qed.
 Lemma map_fmap_ext {A B} (f1 f2 : A → B) m :
   (∀ i x, m !! i = Some x → f1 x = f2 x) → f1 <$> m = f2 <$> m.
 Proof.
