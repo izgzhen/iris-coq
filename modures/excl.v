@@ -1,4 +1,4 @@
-Require Export iris.cmra.
+Require Export modures.cmra.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 

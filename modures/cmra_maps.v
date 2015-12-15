@@ -1,4 +1,4 @@
-Require Export iris.cmra iris.cofe_maps.
+Require Export modures.cmra modures.cofe_maps.
 Require Import prelude.pmap prelude.natmap prelude.gmap.
 
 (** option *)

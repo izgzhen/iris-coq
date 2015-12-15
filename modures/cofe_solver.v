@@ -1,4 +1,4 @@
-Require Export iris.cofe.
+Require Export modures.cofe.
 
 Section solver.
 Context (F : cofeT → cofeT → cofeT).

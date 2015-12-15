@@ -2,7 +2,7 @@
 # This file is distributed under the terms of the BSD license.
 import os, glob, string
 
-modules = ["prelude", "iris"]
+modules = ["prelude", "modures", "iris"]
 Rs = '-Q . ""'
 env = DefaultEnvironment(ENV = os.environ,tools=['default', 'Coq'], COQFLAGS=Rs)
 

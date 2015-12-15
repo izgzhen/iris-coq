@@ -1,4 +1,4 @@
-Require Import iris.cmra.
+Require Import modures.cmra.
 Local Hint Extern 1 (_ ≼ _) => etransitivity; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etransitivity; [|eassumption].
 Local Hint Extern 10 (_ ≤ _) => omega.

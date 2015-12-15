@@ -1,4 +1,4 @@
-Require Export iris.cmra.
+Require Export modures.cmra.
 Local Hint Extern 10 (_ ≤ _) => omega.
 
 Record agree A `{Dist A} := Agree {

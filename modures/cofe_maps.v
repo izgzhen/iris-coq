@@ -1,4 +1,4 @@
-Require Export iris.cofe prelude.fin_maps.
+Require Export modures.cofe prelude.fin_maps.
 Require Import prelude.pmap prelude.gmap prelude.natmap.
 Local Obligation Tactic := idtac.
 

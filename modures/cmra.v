@@ -1,4 +1,4 @@
-Require Export iris.ra iris.cofe.
+Require Export modures.ra modures.cofe.
 
 Class ValidN (A : Type) := validN : nat → A → Prop.
 Instance: Params (@validN) 3.
