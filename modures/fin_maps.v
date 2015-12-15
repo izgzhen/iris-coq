@@ -131,7 +131,7 @@ Proof.
   * intros x y n; rewrite map_includedN_spec; intros ? i.
     by rewrite lookup_op, lookup_minus, cmra_op_minus by done.
 Qed.
-Global Instance map_ra_empty `{RA A} : RAEmpty (M A).
+Global Instance map_ra_empty `{RA A} : RAIdentity (M A).
 Proof.
   split.
   * by intros ?; rewrite lookup_empty.

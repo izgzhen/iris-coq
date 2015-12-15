@@ -300,7 +300,7 @@ Proof.
   * intros x y n; rewrite prod_includedN; intros [??].
     by split; apply cmra_op_minus.
 Qed.
-Instance prod_ra_empty `{RAEmpty A, RAEmpty B} : RAEmpty (A * B).
+Instance prod_ra_empty `{RAIdentity A, RAIdentity B} : RAIdentity (A * B).
 Proof.
   repeat split; simpl; repeat apply ra_empty_valid; repeat apply (left_id _ _).
 Qed.

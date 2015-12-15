@@ -38,7 +38,7 @@ Class RA A `{Equiv A, Valid A, Unit A, Op A, Minus A} : Prop := {
   ra_valid_op_l x y : ✓ (x ⋅ y) → ✓ x;
   ra_op_minus x y : x ≼ y → x ⋅ y ⩪ x ≡ y
 }.
-Class RAEmpty A `{Equiv A, Valid A, Op A, Empty A} : Prop := {
+Class RAIdentity A `{Equiv A, Valid A, Op A, Empty A} : Prop := {
   ra_empty_valid : ✓ ∅;
   ra_empty_l :> LeftId (≡) ∅ (⋅)
 }.
@@ -115,7 +115,7 @@ Lemma ra_preserving_r x y z : x ≼ y → x ⋅ z ≼ y ⋅ z.
 Proof. by intros; rewrite <-!(commutative _ z); apply ra_preserving_l. Qed.
 
 (** ** RAs with empty element *)
-Context `{Empty A, !RAEmpty A}.
+Context `{Empty A, !RAIdentity A}.
 
 Global Instance ra_empty_r : RightId (≡) ∅ (⋅).
 Proof. by intros x; rewrite (commutative op), (left_id _ _). Qed.

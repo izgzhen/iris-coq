@@ -354,7 +354,7 @@ Lemma eq_rewrite {A : cofeT} P (Q : A → uPred M)
 Proof.
   intros Hab Ha x n ??; apply HQ with n a; auto. by symmetry; apply Hab with x.
 Qed.
-Lemma eq_equiv `{Empty M, !RAEmpty M} {A : cofeT} (a b : A) :
+Lemma eq_equiv `{Empty M, !RAIdentity M} {A : cofeT} (a b : A) :
   True%I ⊆ (a ≡ b : uPred M)%I → a ≡ b.
 Proof.
   intros Hab; apply equiv_dist; intros n; apply Hab with ∅.
@@ -673,7 +673,7 @@ Proof.
   rewrite <-(ra_unit_idempotent a), Hx.
   apply cmra_unit_preserving, cmra_included_l.
 Qed.
-Lemma own_empty `{Empty M, !RAEmpty M} : True%I ⊆ uPred_own ∅.
+Lemma own_empty `{Empty M, !RAIdentity M} : True%I ⊆ uPred_own ∅.
 Proof. intros x [|n] ??; [done|]. by  exists x; rewrite (left_id _ _). Qed.
 Lemma own_valid (a : M) : uPred_own a ⊆ (✓ a)%I.
 Proof.

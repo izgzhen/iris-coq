@@ -119,7 +119,7 @@ Proof.
     as (z2&?&?&?); auto using own_validN.
   by exists (Auth (z1.1) (z2.1), Auth (z1.2) (z2.2)).
 Qed.
-Instance auth_ra_empty `{CMRA A, Empty A, !RAEmpty A} : RAEmpty (auth A).
+Instance auth_ra_empty `{CMRA A, Empty A, !RAIdentity A} : RAIdentity (auth A).
 Proof.
   split; [apply (ra_empty_valid (A:=A))|].
   by intros x; constructor; simpl; rewrite (left_id _ _).
@@ -127,7 +127,7 @@ Qed.
 Instance auth_frag_valid_timeless `{CMRA A} (x : A) :
   ValidTimeless x → ValidTimeless (◯ x).
 Proof. by intros ??; apply (valid_timeless x). Qed.
-Instance auth_valid_timeless `{CMRA A, Empty A, !RAEmpty A} (x : A) :
+Instance auth_valid_timeless `{CMRA A, Empty A, !RAIdentity A} (x : A) :
   ValidTimeless x → ValidTimeless (● x).
 Proof.
   by intros ? [??]; split; [apply ra_empty_least|apply (valid_timeless x)].

@@ -108,7 +108,7 @@ Proof.
   * by intros n [?| |] [?| |].
   * by intros n [?| |] [?| |] [[?| |] Hz]; inversion_clear Hz; constructor.
 Qed.
-Instance excl_empty_ra `{Cofe A} : RAEmpty (excl A).
+Instance excl_empty_ra `{Cofe A} : RAIdentity (excl A).
 Proof. split. done. by intros []. Qed.
 Instance excl_extend `{Cofe A} : CMRAExtend (excl A).
 Proof.
