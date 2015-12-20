@@ -468,6 +468,11 @@ Notation "( m !!)" := (λ i, m !! i) (only parsing) : C_scope.
 Notation "(!! i )" := (lookup i) (only parsing) : C_scope.
 Arguments lookup _ _ _ _ !_ !_ / : simpl nomatch.
 
+(** The singleton map *)
+Class SingletonM K A M := singletonM: K → A → M.
+Instance: Params (@singletonM) 5.
+Notation "{[ x ↦ y ]}" := (singletonM x y) (at level 1) : C_scope.
+
 (** The function insert [<[k:=a]>m] should update the element at key [k] with
 value [a] in [m]. *)
 Class Insert (K A M : Type) := insert: K → A → M → M.

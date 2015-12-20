@@ -65,7 +65,7 @@ Proof.
   by apply (timeless _); rewrite <-Hm, lookup_insert_ne by done.
 Qed.
 Global Instance map_ra_singleton_timeless `{Cofe A} (i : K) (x : A) :
-  Timeless x → Timeless ({[ i, x ]} : gmap K A) := _.
+  Timeless x → Timeless ({[ i ↦ x ]} : gmap K A) := _.
 Instance map_fmap_ne `{Dist A, Dist B} (f : A → B) n :
   Proper (dist n ==> dist n) f →
   Proper (dist n ==> dist n) (fmap (M:=gmap K) f).
@@ -172,7 +172,7 @@ Proof.
   by specialize (Hm j); simplify_map_equality.
 Qed.
 Global Instance map_ra_singleton_valid_timeless `{Valid A, ValidN A} (i : K) x :
-  ValidTimeless x → ValidTimeless ({[ i, x ]} : gmap K A).
+  ValidTimeless x → ValidTimeless ({[ i ↦ x ]} : gmap K A).
 Proof.
   intros ?; apply (map_ra_insert_valid_timeless _ _ _ _ _); simpl.
   by rewrite lookup_empty.

@@ -61,11 +61,8 @@ Proof. rewrite (dom_insert _). solve_elem_of. Qed.
 Lemma dom_insert_subseteq_compat_l {A} (m : M A) i x X :
   X ⊆ dom D m → X ⊆ dom D (<[i:=x]>m).
 Proof. intros. transitivity (dom D m); eauto using dom_insert_subseteq. Qed.
-Lemma dom_singleton {A} (i : K) (x : A) : dom D {[(i, x)]} ≡ {[ i ]}.
-Proof.
-  unfold singleton at 1, map_singleton.
-  rewrite dom_insert, dom_empty. solve_elem_of.
-Qed.
+Lemma dom_singleton {A} (i : K) (x : A) : dom D {[i ↦ x]} ≡ {[ i ]}.
+Proof. rewrite <-insert_empty, dom_insert, dom_empty; solve_elem_of. Qed.
 Lemma dom_delete {A} (m : M A) i : dom D (delete i m) ≡ dom D m ∖ {[ i ]}.
 Proof.
   apply elem_of_equiv. intros j. rewrite elem_of_difference, !elem_of_dom.
@@ -121,7 +118,7 @@ Lemma dom_alter_L {A} f (m : M A) i : dom D (alter f i m) = dom D m.
 Proof. unfold_leibniz; apply dom_alter. Qed.
 Lemma dom_insert_L {A} (m : M A) i x : dom D (<[i:=x]>m) = {[ i ]} ∪ dom D m.
 Proof. unfold_leibniz; apply dom_insert. Qed.
-Lemma dom_singleton_L {A} (i : K) (x : A) : dom D {[(i, x)]} = {[ i ]}.
+Lemma dom_singleton_L {A} (i : K) (x : A) : dom D {[i ↦ x]} = {[ i ]}.
 Proof. unfold_leibniz; apply dom_singleton. Qed.
 Lemma dom_delete_L {A} (m : M A) i : dom D (delete i m) = dom D m ∖ {[ i ]}.
 Proof. unfold_leibniz; apply dom_delete. Qed.

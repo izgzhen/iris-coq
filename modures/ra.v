@@ -146,10 +146,9 @@ Proof. unfold big_opM. by rewrite map_to_list_empty. Qed.
 Lemma big_opM_insert (m : M A) i x :
   m !! i = None → big_opM (<[i:=x]> m) ≡ x ⋅ big_opM m.
 Proof. intros ?; unfold big_opM. by rewrite map_to_list_insert by done. Qed.
-Lemma big_opM_singleton i x : big_opM ({[i,x]} : M A) ≡ x.
+Lemma big_opM_singleton i x : big_opM ({[i ↦ x]} : M A) ≡ x.
 Proof.
-  unfold singleton, map_singleton.
-  rewrite big_opM_insert by auto using lookup_empty; simpl.
+  rewrite <-insert_empty, big_opM_insert by auto using lookup_empty; simpl.
   by rewrite big_opM_empty, (right_id _ _).
 Qed.
 Global Instance big_opM_proper : Proper ((≡) ==> (≡)) (big_opM : M A → _).
