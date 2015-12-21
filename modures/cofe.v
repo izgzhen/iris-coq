@@ -278,8 +278,10 @@ Canonical Structure boolC := leibnizC bool.
 
 (** Later *)
 Inductive later (A : Type) : Type := Later { later_car : A }.
+Add Printing Constructor later.
 Arguments Later {_} _.
 Arguments later_car {_} _.
+
 Section later.
   Instance later_equiv `{Equiv A} : Equiv (later A) := λ x y,
     later_car x ≡ later_car y.
@@ -305,12 +307,14 @@ Section later.
   Qed.
   Canonical Structure laterC (A : cofeT) : cofeT := CofeT (later A).
 
+  Global Instance Later_contractive `{Dist A} : Contractive (@Later A).
+  Proof. by intros n ??. Qed.
   Definition later_map {A B} (f : A → B) (x : later A) : later B :=
     Later (f (later_car x)).
-  Instance later_fmap_ne `{Cofe A, Cofe B} (f : A → B) :
-    (∀ n, Proper (dist n ==> dist n) f) →
-    ∀ n, Proper (dist n ==> dist n) (later_map f).
-  Proof. intros Hf [|n] [x] [y] ?; do 2 red; simpl. done. by apply Hf. Qed.
+  Global Instance later_map_ne `{Cofe A, Cofe B} (f : A → B) n :
+    Proper (dist (pred n) ==> dist (pred n)) f →
+    Proper (dist n ==> dist n) (later_map f) | 0.
+  Proof. destruct n as [|n]; intros Hf [x] [y] ?; do 2 red; simpl; auto. Qed.
   Lemma later_fmap_id {A} (x : later A) : later_map id x = x.
   Proof. by destruct x. Qed.
   Lemma later_fmap_compose {A B C} (f : A → B) (g : B → C) (x : later A) :
