@@ -39,6 +39,9 @@ Proof.
   intros x y ? m m' ? j; destruct (decide (i = j)); simplify_map_equality;
     [by constructor|by apply lookup_ne].
 Qed.
+Global Instance singleton_ne `{Cofe A} (i : K) n :
+  Proper (dist n ==> dist n) (singletonM i : A → gmap K A).
+Proof. by intros ???; apply insert_ne. Qed.
 Global Instance delete_ne `{Dist A} (i : K) n :
   Proper (dist n ==> dist n) (delete (M:=gmap K A) i).
 Proof.
@@ -66,7 +69,7 @@ Proof.
 Qed.
 Global Instance map_ra_singleton_timeless `{Cofe A} (i : K) (x : A) :
   Timeless x → Timeless ({[ i ↦ x ]} : gmap K A) := _.
-Instance map_fmap_ne `{Dist A, Dist B} (f : A → B) n :
+Global Instance map_fmap_ne `{Dist A, Dist B} (f : A → B) n :
   Proper (dist n ==> dist n) f →
   Proper (dist n ==> dist n) (fmap (M:=gmap K) f).
 Proof. by intros ? m m' Hm k; rewrite !lookup_fmap; apply option_fmap_ne. Qed.
@@ -183,6 +186,10 @@ Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_equality. Qed.
 Lemma map_insert_op `{Op A} (m1 m2 : gmap K A) i x :
   m2 !! i = None →  <[i:=x]>(m1 ⋅ m2) = <[i:=x]>m1 ⋅ m2.
 Proof. by intros Hi; apply (insert_merge_l _); rewrite Hi. Qed.
+Lemma map_singleton_op `{Op A} (i : K) (x y : A) :
+  ({[ i ↦ x ⋅ y ]} : gmap K A) = {[ i ↦ x ]} ⋅ {[ i ↦ y ]}.
+Proof. by apply symmetry, merge_singleton. Qed.
+
 Canonical Structure mapRA (A : cmraT) : cmraT := CMRAT (gmap K A).
 Global Instance map_fmap_cmra_monotone `{CMRA A, CMRA B} (f : A → B)
   `{!CMRAMonotone f} : CMRAMonotone (fmap f : gmap K A → gmap K B).
