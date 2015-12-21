@@ -49,6 +49,8 @@ Proof. by intros ?; inversion_clear 1; constructor; apply timeless. Qed.
 Instance option_fmap_ne `{Dist A, Dist B} (f : A → B) n:
   Proper (dist n ==> dist n) f → Proper (dist n==>dist n) (fmap (M:=option) f).
 Proof. by intros Hf; destruct 1; constructor; apply Hf. Qed.
+Instance is_Some_ne `{Dist A} : Proper (dist (S n) ==> iff) (@is_Some A).
+Proof. intros n; inversion_clear 1; split; eauto. Qed.
 
 (* CMRA *)
 Instance option_valid `{Valid A} : Valid (option A) := λ mx,
