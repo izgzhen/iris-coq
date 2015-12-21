@@ -1,15 +1,15 @@
 Require Export modures.cmra.
 Local Hint Extern 10 (_ ≤ _) => omega.
 
-Record agree A `{Dist A} := Agree {
+Record agree (A : Type) : Type := Agree {
   agree_car :> nat → A;
   agree_is_valid : nat → Prop;
   agree_valid_0 : agree_is_valid 0;
   agree_valid_S n : agree_is_valid (S n) → agree_is_valid n
 }.
-Arguments Agree {_ _} _ _ _ _.
-Arguments agree_car {_ _} _ _.
-Arguments agree_is_valid {_ _} _ _.
+Arguments Agree {_} _ _ _ _.
+Arguments agree_car {_} _ _.
+Arguments agree_is_valid {_} _ _.
 
 Section agree.
 Context `{Cofe A}.
@@ -124,8 +124,7 @@ Proof.
 Qed.
 End agree.
 
-Program Definition agree_map `{Dist A, Dist B}
-    (f : A → B) (x : agree A) : agree B :=
+Program Definition agree_map {A B} (f : A → B) (x : agree A) : agree B :=
   {| agree_car n := f (x n); agree_is_valid := agree_is_valid x |}.
 Solve Obligations with auto using agree_valid_0, agree_valid_S.
 
@@ -147,10 +146,10 @@ Section agree_map.
        try apply Hxy; try apply Hf; eauto using @agree_valid_le.
   Qed.
 End agree_map.
-Lemma agree_map_id `{Cofe A} (x : agree A) : agree_map id x = x.
+Lemma agree_map_id {A} (x : agree A) : agree_map id x = x.
 Proof. by destruct x. Qed.
-Lemma agree_map_compose `{Cofe A, Cofe B, Cofe C} (f : A → B) (g : B → C)
-  (x : agree A) : agree_map (g ∘ f) x = agree_map g (agree_map f x).
+Lemma agree_map_compose {A B C} (f : A → B) (g : B → C) (x : agree A) :
+  agree_map (g ∘ f) x = agree_map g (agree_map f x).
 Proof. done. Qed.
 
 Canonical Structure agreeRA (A : cofeT) : cmraT := CMRAT (agree A).
