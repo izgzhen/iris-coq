@@ -119,7 +119,7 @@ Context `{Empty A, !RAIdentity A}.
 
 Global Instance ra_empty_r : RightId (≡) ∅ (⋅).
 Proof. by intros x; rewrite (commutative op), (left_id _ _). Qed.
-Lemma ra_unit_empty x : unit ∅ ≡ ∅.
+Lemma ra_unit_empty : unit ∅ ≡ ∅.
 Proof. by rewrite <-(ra_unit_l ∅) at 2; rewrite (right_id _ _). Qed.
 Lemma ra_empty_least x : ∅ ≼ x.
 Proof. by exists x; rewrite (left_id _ _). Qed.
