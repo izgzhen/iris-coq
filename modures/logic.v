@@ -3,7 +3,7 @@ Local Hint Extern 1 (_ ≼ _) => etransitivity; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etransitivity; [|eassumption].
 Local Hint Extern 10 (_ ≤ _) => omega.
 
-Structure uPred (M : cmraT) : Type := IProp {
+Record uPred (M : cmraT) : Type := IProp {
   uPred_holds :> nat → M → Prop;
   uPred_ne x1 x2 n : uPred_holds n x1 → x1 ={n}= x2 → uPred_holds n x2;
   uPred_0 x : uPred_holds 0 x;
@@ -171,7 +171,7 @@ Next Obligation.
   intros M a x1 x n1 n2 [a' Hx1] [x2 Hx] ??.
   exists (a' ⋅ x2). by rewrite (associative op), <-(dist_le _ _ _ _ Hx1), Hx.
 Qed.
-Program Definition uPred_valid {M : cmraT} (a : M) : uPred M :=
+Program Definition uPred_valid {M A : cmraT} (a : A) : uPred M :=
   {| uPred_holds n x := ✓{n} a |}.
 Solve Obligations with naive_solver eauto 2 using cmra_valid_le, cmra_valid_0.
 
@@ -667,22 +667,24 @@ Proof.
     rewrite (associative op), <-(commutative op z1), <-!(associative op), <-Hy2.
     by rewrite (associative op), (commutative op z1), <-Hy1.
 Qed.
-Lemma own_unit (a : M) : uPred_own (unit a) ≡ (□ uPred_own (unit a))%I.
+Lemma box_own_unit (a : M) : (□ uPred_own (unit a))%I ≡ uPred_own (unit a).
 Proof.
-  intros x n; split; [intros [a' Hx]|by apply always_elim]. simpl.
+  intros x n; split; [by apply always_elim|intros [a' Hx]]; simpl.
   rewrite <-(ra_unit_idempotent a), Hx.
   apply cmra_unit_preserving, cmra_included_l.
 Qed.
+Lemma box_own (a : M) : unit a ≡ a → (□ uPred_own a)%I ≡ uPred_own a.
+Proof. by intros <-; rewrite box_own_unit. Qed.
 Lemma own_empty `{Empty M, !RAIdentity M} : True%I ⊆ uPred_own ∅.
 Proof. intros x [|n] ??; [done|]. by  exists x; rewrite (left_id _ _). Qed.
 Lemma own_valid (a : M) : uPred_own a ⊆ (✓ a)%I.
 Proof.
   intros x n Hv [a' Hx]; simpl; rewrite Hx in Hv; eauto using cmra_valid_op_l.
 Qed.
-Lemma valid_intro (a : M) : ✓ a → True%I ⊆ (✓ a)%I.
+Lemma valid_intro {A : cmraT} (a : A) : ✓ a → True%I ⊆ (✓ a : uPred M)%I.
 Proof. by intros ? x n ? _; simpl; apply cmra_valid_validN. Qed.
-Lemma valid_elim_timeless (a : M) :
-  ValidTimeless a → ¬ ✓ a → (✓ a)%I ⊆ False%I.
+Lemma valid_elim_timeless {A : cmraT} (a : A) :
+  ValidTimeless a → ¬ ✓ a → (✓ a : uPred M)%I ⊆ False%I.
 Proof.
   intros ? Hvalid x [|n] ??; [done|apply Hvalid].
   apply (valid_timeless _), cmra_valid_le with (S n); auto with lia.
