@@ -1,4 +1,4 @@
-Require Import modures.cmra.
+Require Export modures.cmra.
 Local Hint Extern 1 (_ ≼ _) => etransitivity; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etransitivity; [|eassumption].
 Local Hint Extern 10 (_ ≤ _) => omega.
@@ -188,11 +188,12 @@ Notation "(∨)" := uPred_or (only parsing) : uPred_scope.
 Infix "→" := uPred_impl : uPred_scope.
 Infix "★" := uPred_sep (at level 80, right associativity) : uPred_scope.
 Notation "(★)" := uPred_sep (only parsing) : uPred_scope.
-Infix "-★" := uPred_wand (at level 90) : uPred_scope.
+Notation "P -★ Q" := (uPred_wand P Q)
+  (at level 90, Q at level 200, right associativity) : uPred_scope.
 Notation "∀ x .. y , P" :=
-  (uPred_forall (λ x, .. (uPred_forall (λ y, P)) ..)) : uPred_scope.
+  (uPred_forall (λ x, .. (uPred_forall (λ y, P)) ..)%I) : uPred_scope.
 Notation "∃ x .. y , P" :=
-  (uPred_exist (λ x, .. (uPred_exist (λ y, P)) ..)) : uPred_scope.
+  (uPred_exist (λ x, .. (uPred_exist (λ y, P)) ..)%I) : uPred_scope.
 Notation "▷ P" := (uPred_later P) (at level 20) : uPred_scope.
 Notation "□ P" := (uPred_always P) (at level 20) : uPred_scope.
 Infix "≡" := uPred_eq : uPred_scope.
