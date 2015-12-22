@@ -1,11 +1,20 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
-(** This files implements an efficient implementation of finite maps whose keys
-range over Coq's data type of strings [string]. The implementation uses radix-2
-search trees (uncompressed Patricia trees) as implemented in the file [pmap]
-and guarantees logarithmic-time operations. *)
-Require Export prelude.fin_maps prelude.pretty.
-Require Import Ascii String prelude.gmap.
+Require Import Ascii.
+Require Export String prelude.countable.
+
+(** * Fix scopes *)
+Open Scope string_scope.
+Open Scope list_scope.
+Infix "+:+" := String.append (at level 60, right associativity) : C_scope.
+Arguments String.append _ _ : simpl never.
+
+(** * Decision of equality *)
+Instance assci_eq_dec : ∀ a1 a2, Decision (a1 = a2) := ascii_dec.
+Instance string_eq_dec (s1 s2 : string) : Decision (s1 = s2).
+Proof. solve_decision. Defined.
+Instance: Injective (=) (=) (String.append s1).
+Proof. intros s1 ???. induction s1; simplify_equality'; f_equal'; auto. Qed.
 
 (** * Encoding and decoding *)
 (** In order to reuse or existing implementation of radix-2 search trees over
@@ -54,43 +63,3 @@ Program Instance string_countable : Countable string := {|
 |}.
 Solve Obligations with naive_solver eauto using string_of_to_pos with f_equal.
 
-(** * Maps and sets *)
-Notation stringmap := (gmap string).
-Notation stringset := (gset string).
-
-(** * Generating fresh strings *)
-Local Open Scope N_scope.
-Let R {A} (s : string) (m : stringmap A) (n1 n2 : N) :=
-  n2 < n1 ∧ is_Some (m !! (s +:+ pretty (n1 - 1))).
-Lemma fresh_string_step {A} s (m : stringmap A) n x :
-  m !! (s +:+ pretty n) = Some x → R s m (1 + n) n.
-Proof. split; [lia|]. replace (1 + n - 1) with n by lia; eauto. Qed.
-Lemma fresh_string_R_wf {A} s (m : stringmap A) : wf (R s m).
-Proof.
-  induction (map_wf m) as [m _ IH]. intros n1; constructor; intros n2 [Hn Hs].
-  specialize (IH _ (delete_subset m (s +:+ pretty (n2 - 1)) Hs) n2).
-  cut (n2 - 1 < n2); [|lia]. clear n1 Hn Hs; revert IH; generalize (n2 - 1).
-  intros n1. induction 1 as [n2 _ IH]; constructor; intros n3 [??].
-  apply IH; [|lia]; split; [lia|].
-  by rewrite lookup_delete_ne by (intros ?; simplify_equality'; lia).
-Qed.
-Definition fresh_string_go {A} (s : string) (m : stringmap A) (n : N)
-    (go : ∀ n', R s m n' n → string) : string :=
-  let s' := s +:+ pretty n in
-  match Some_dec (m !! s') with
-  | inleft (_↾Hs') => go (1 + n)%N (fresh_string_step s m n _ Hs')
-  | inright _ => s'
-  end.
-Definition fresh_string {A} (m : stringmap A) (s : string) : string :=
-  match m !! s with
-  | None => s
-  | Some _ =>
-     Fix_F _ (fresh_string_go s m) (wf_guard 32 (fresh_string_R_wf s m) 0)
-  end.
-Lemma fresh_string_fresh {A} (m : stringmap A) s : m !! fresh_string m s = None.
-Proof.
-  unfold fresh_string. destruct (m !! s) as [a|] eqn:Hs; [clear a Hs|done].
-  generalize 0 (wf_guard 32 (fresh_string_R_wf s m) 0); revert m.
-  fix 3; intros m n [?]; simpl; unfold fresh_string_go at 1; simpl.
-  destruct (Some_dec (m !! _)) as [[??]|?]; auto.
-Qed.

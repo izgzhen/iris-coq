@@ -1,16 +1,8 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
-Require Export prelude.numbers prelude.option.
-Require Import Ascii String prelude.relations.
-
-Infix "+:+" := String.append (at level 60, right associativity) : C_scope.
-Arguments String.append _ _ : simpl never.
-
-Instance assci_eq_dec : ∀ a1 a2, Decision (a1 = a2) := ascii_dec.
-Instance string_eq_dec (s1 s2 : string) : Decision (s1 = s2).
-Proof. solve_decision. Defined.
-Instance: Injective (=) (=) (String.append s1).
-Proof. intros s1 ???. induction s1; simplify_equality'; f_equal'; auto. Qed.
+Require Export prelude.strings.
+Require Import prelude.relations.
+Require Import Ascii.
 
 Class Pretty A := pretty : A → string.
 Definition pretty_N_char (x : N) : ascii :=
@@ -50,9 +42,9 @@ Proof.
     pretty_N_char x =  pretty_N_char y → x = y)%N.
   { compute; intros. by repeat (discriminate || case_match). }
   cut (∀ x y s s', pretty_N_go x s = pretty_N_go y s' →
-    length s = length s' → x = y ∧ s = s').
+    String.length s = String.length s' → x = y ∧ s = s').
   { intros help x y ?. eapply help; eauto. }
-  assert (∀ x s, ¬length (pretty_N_go x s) < length s) as help.
+  assert (∀ x s, ¬String.length (pretty_N_go x s) < String.length s) as help.
   { setoid_rewrite <-Nat.le_ngt.
     intros x; induction (N.lt_wf_0 x) as [x _ IH]; intros s.
     assert (x = 0 ∨ 0 < x)%N as [->|?] by lia; [by rewrite pretty_N_go_0|].
