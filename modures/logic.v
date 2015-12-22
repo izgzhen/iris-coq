@@ -202,6 +202,11 @@ Notation "✓" := uPred_valid (at level 1) : uPred_scope.
 Definition uPred_iff {M} (P Q : uPred M) : uPred M := ((P → Q) ∧ (Q → P))%I.
 Infix "↔" := uPred_iff : uPred_scope.
 
+Fixpoint uPred_big_and {M} (Ps : list (uPred M)) :=
+  match Ps with [] => True | P :: Ps => P ∧ uPred_big_and Ps end%I.
+Fixpoint uPred_big_sep {M} (Ps : list (uPred M)) :=
+  match Ps with [] => True | P :: Ps => P ★ uPred_big_sep Ps end%I.
+
 Class TimelessP {M} (P : uPred M) := timelessP x n : ✓{1} x → P 1 x → P n x.
 
 Module uPred. Section uPred_logic.
