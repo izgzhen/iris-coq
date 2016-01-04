@@ -57,10 +57,19 @@ Proof.
 Qed.
 
 Lemma e2e e v:
-  e2v e = Some v -> v2e v = e.
+  e2v e = Some v -> e = v2e v.
 Proof.
-  (* TODO: First figure out how to best state this. *)
-Abort.
+  revert v; induction e; intros v; simpl; try discriminate.
+  - intros Heq. injection Heq. clear Heq. intros Heq. subst. reflexivity.
+  - intros Heq. injection Heq. clear Heq. intros Heq. subst. reflexivity.
+  - destruct (e2v e1); simpl; [|discriminate].
+    destruct (e2v e2); simpl; [|discriminate].
+    intros Heq. injection Heq. clear Heq. intros Heq. subst. simpl. eauto using f_equal2.
+  - destruct (e2v e); simpl; [|discriminate].
+    intros Heq. injection Heq. clear Heq. intros Heq. subst. simpl. eauto using f_equal.
+  - destruct (e2v e); simpl; [|discriminate].
+    intros Heq. injection Heq. clear Heq. intros Heq. subst. simpl. eauto using f_equal.
+Qed.
 
 Inductive ectx :=
 | EmptyCtx
@@ -131,16 +140,16 @@ Qed.
 Definition state := unit.
 
 Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
-| Beta e1 e2 v2 σ : e2v e2 = Some v2 ->
-                    prim_step (App (Lam e1) e2) σ (e1.[e2/]) σ None
-| FstS e1 v1 e2 v2 σ : e2v e1 = Some v1 -> e2v e2 = Some v2 ->
-                       prim_step (Fst (Pair e1 e2)) σ e1 σ None
-| SndS e1 v1 e2 v2 σ : e2v e1 = Some v1 -> e2v e2 = Some v2 ->
-                       prim_step (Fst (Pair e1 e2)) σ e2 σ None
-| CaseL e0 v0 e1 e2 σ : e2v e0 = Some v0 ->
-                        prim_step (Case (InjL e0) e1 e2) σ (e1.[e0/]) σ None
-| CaseR e0 v0 e1 e2 σ : e2v e0 = Some v0 ->
-                        prim_step (Case (InjR e0) e1 e2) σ (e2.[e0/]) σ None.
+| Beta e1 e2 v2 σ (Hv2 : e2v e2 = Some v2):
+    prim_step (App (Lam e1) e2) σ (e1.[e2/]) σ None
+| FstS e1 v1 e2 v2 σ (Hv1 : e2v e1 = Some v1) (Hv2 : e2v e2 = Some v2):
+    prim_step (Fst (Pair e1 e2)) σ e1 σ None
+| SndS e1 v1 e2 v2 σ (Hv1 : e2v e1 = Some v1) (Hv2 : e2v e2 = Some v2):
+    prim_step (Snd (Pair e1 e2)) σ e2 σ None
+| CaseL e0 v0 e1 e2 σ (Hv0 : e2v e0 = Some v0):
+    prim_step (Case (InjL e0) e1 e2) σ (e1.[e0/]) σ None
+| CaseR e0 v0 e1 e2 σ (Hv0 : e2v e0 = Some v0):
+    prim_step (Case (InjR e0) e1 e2) σ (e2.[e0/]) σ None.
 
 Definition reducible e: Prop :=
   exists σ e' σ' ef, prim_step e σ e' σ' ef.
@@ -158,3 +167,174 @@ Proof.
   { by rewrite <-Heq, v2v. }
   clear -Hv'. intros (σ' & e'' & σ'' & ef & Hstep). destruct Hstep; simpl in *; discriminate.
 Qed.
+
+(* TODO RJ: Isn't there a shorter way to define this? Or maybe we don't need it? *)
+Fixpoint find_redex (e : expr) : option (ectx * expr) :=
+  match e with
+  | Var _ => None
+  | Lit _ _ => None
+  | App e1 e2 => match find_redex e1 with
+                 | Some (K', e') => Some (AppLCtx K' e2, e')
+                 | None => match find_redex e2, e2v e1 with
+                           | Some (K', e'), Some v1 => Some (AppRCtx v1 K', e')
+                           | None, Some (LamV e1') => match e2v e2 with
+                                                      | Some v2 => Some (EmptyCtx, App e1 e2)
+                                                      | None    => None
+                                                      end
+                           | _, _ => None (* cannot happen *)
+                           end
+                 end
+  | Lam _ => None
+  | Pair e1 e2 => match find_redex e1 with
+                 | Some (K', e') => Some (PairLCtx K' e2, e')
+                 | None => match find_redex e2, e2v e1 with
+                           | Some (K', e'), Some v1 => Some (PairRCtx v1 K', e')
+                           | _, _ => None
+                           end
+                 end
+  | Fst e => match find_redex e with
+             | Some (K', e') => Some (FstCtx K', e')
+             | None => match e2v e with
+                       | Some (PairV v1 v2) => Some (EmptyCtx, Fst e)
+                       | _ => None
+                       end
+             end
+  | Snd e => match find_redex e with
+             | Some (K', e') => Some (SndCtx K', e')
+             | None => match e2v e with
+                       | Some (PairV v1 v2) => Some (EmptyCtx, Snd e)
+                       | _ => None
+                       end
+             end
+  | InjL e => '(e', K') ← find_redex e; Some (InjLCtx e', K')
+  | InjR e => '(e', K') ← find_redex e; Some (InjRCtx e', K')
+  | Case e0 e1 e2 => match find_redex e0 with
+                     | Some (K', e') => Some (CaseCtx K' e1 e2, e')
+                     | None => match e2v e0 with
+                               | Some (InjLV v0') => Some (EmptyCtx, Case e0 e1 e2)
+                               | Some (InjRV v0') => Some (EmptyCtx, Case e0 e1 e2)
+                               | _ => None
+                               end
+                     end
+  end.
+
+Lemma find_redex_found e K' e' :
+  find_redex e = Some (K', e') -> reducible e' /\ e = fill K' e'.
+Proof.
+  revert K' e'; induction e; intros K' e'; simpl; try discriminate.
+  - destruct (find_redex e1) as [[K1' e1']|].
+    + intros Heq; inversion Heq. edestruct IHe1; [reflexivity|].
+      simpl; subst; eauto.
+    + destruct (find_redex e2) as [[K2' e2']|].
+      * case_eq (e2v e1); [|discriminate]; intros v1 Hv1.
+        intros Heq; inversion Heq. edestruct IHe2; [reflexivity|].
+        simpl; subst; eauto using f_equal2, e2e.
+      * case_eq (e2v e1); [|discriminate]; intros v1 Hv1; destruct v1; try discriminate; [].
+        case_eq (e2v e2); [|discriminate]; intros v2 Hv2. apply e2e in Hv1. apply e2e in Hv2.
+        intros Heq; inversion Heq; subst. split; [|reflexivity].
+        do 4 eexists. eapply Beta with (σ := tt), v2v.
+  - destruct (find_redex e1) as [[K1' e1']|].
+    + intros Heq; inversion Heq. edestruct IHe1; [reflexivity|].
+      simpl; subst; eauto.
+    + destruct (find_redex e2) as [[K2' e2']|]; [|discriminate].
+      case_eq (e2v e1); [|discriminate]; intros v1 Hv1.
+      intros Heq; inversion Heq. edestruct IHe2; [reflexivity|].
+      simpl; subst; eauto using f_equal2, e2e.
+  - destruct (find_redex e) as [[K1' e1']|].
+    + intros Heq; inversion Heq. edestruct IHe; [reflexivity|].
+      simpl; subst; eauto.
+    + case_eq (e2v e); [|discriminate]; intros v1 Hv1; destruct v1; try discriminate; []. apply e2e in Hv1.
+      intros Heq; inversion Heq; subst. split; [|reflexivity].
+      do 4 eexists. eapply FstS with (σ := tt); fold v2e; eapply v2v. (* RJ: Why do I have to fold here? *)
+  - destruct (find_redex e) as [[K1' e1']|].
+    + intros Heq; inversion Heq. edestruct IHe; [reflexivity|].
+      simpl; subst; eauto.
+    + case_eq (e2v e); [|discriminate]; intros v1 Hv1; destruct v1; try discriminate; []. apply e2e in Hv1.
+      intros Heq; inversion Heq; subst. split; [|reflexivity].
+      do 4 eexists. eapply SndS with (σ := tt); fold v2e; eapply v2v. (* RJ: Why do I have to fold here? *)
+  - destruct (find_redex e) as [[K1' e1']|]; simpl; [|discriminate].
+    intros Heq; inversion Heq. edestruct IHe; [reflexivity|].
+    simpl; subst; eauto.
+  - destruct (find_redex e) as [[K1' e1']|]; simpl; [|discriminate].
+    intros Heq; inversion Heq. edestruct IHe; [reflexivity|].
+    simpl; subst; eauto.
+  - destruct (find_redex e) as [[K1' e1']|]; simpl.
+    + intros Heq; inversion Heq. edestruct IHe; [reflexivity|].
+      simpl; subst; eauto.
+    + case_eq (e2v e); [|discriminate]; intros v1 Hv1; destruct v1; try discriminate; [|]; apply e2e in Hv1.
+      * intros Heq; inversion Heq; subst. split; [|reflexivity].
+        do 4 eexists. eapply CaseL with (σ := tt), v2v.
+      * intros Heq; inversion Heq; subst. split; [|reflexivity].
+        do 4 eexists. eapply CaseR with (σ := tt), v2v.
+Qed.
+
+Lemma find_redex_reducible e K' e' :
+  find_redex e = Some (K', e') -> reducible e'.
+Proof.
+  eapply find_redex_found.
+Qed.
+
+Lemma find_redex_fill e K' e' :
+  find_redex e = Some (K', e') -> e = fill K' e'.
+Proof.
+  eapply find_redex_found.
+Qed.
+
+Lemma stuck_find_redex e :
+  stuck e -> find_redex e = None.
+Proof.
+  intros Hstuck. case_eq (find_redex e); [|reflexivity]. intros [K' e'] Hfind. exfalso.
+  eapply Hstuck; eauto using find_redex_fill, find_redex_reducible.
+Qed.
+
+Lemma find_redex_val e v :
+  e2v e = Some v -> find_redex e = None.
+Proof.
+  intros Heq. apply e2e in Heq. subst. eauto using stuck_find_redex, values_stuck.
+Qed.
+
+Lemma reducible_find_redex e K' e' :
+  e = fill K' e' -> reducible e' -> find_redex e = Some (K', e').
+Proof.
+  revert e; induction K'; intros e Hfill Hred; subst e; simpl.
+  - (* Base case: Empty context *)
+    destruct Hred as (σ' & e'' & σ'' & ef & Hstep). destruct Hstep; simpl.
+    + erewrite find_redex_val by eassumption. by rewrite Hv2.
+    + erewrite find_redex_val by eassumption. erewrite find_redex_val by eassumption.
+      by rewrite Hv1, Hv2.
+    + erewrite find_redex_val by eassumption. erewrite find_redex_val by eassumption.
+      by rewrite Hv1, Hv2.
+    + erewrite find_redex_val by eassumption. by rewrite Hv0.
+    + erewrite find_redex_val by eassumption. by rewrite Hv0.
+  - by erewrite IHK'.
+  - erewrite find_redex_val by eapply v2v. by erewrite IHK'; rewrite ?v2v.
+  - by erewrite IHK'.
+  - erewrite find_redex_val by eapply v2v. by erewrite IHK'; rewrite ?v2v.
+  - by erewrite IHK'.
+  - by erewrite IHK'.
+  - by erewrite IHK'.
+  - by erewrite IHK'.
+  - by erewrite IHK'.
+Qed.
+
+Lemma find_redex_stuck e :
+  find_redex e = None -> stuck e.
+Proof.
+  intros Hfind K' e' Hstuck Hred.
+  cut (find_redex e = Some (K', e')).
+  { by rewrite Hfind. }
+  by eapply reducible_find_redex.
+Qed.
+
+(* When something does a step, and another decomposition of the same
+     expression has a non-value e in the hole, then K is a left
+     sub-context of K' - in other words, e also contains the reducible
+     expression *)
+Lemma step_by_value K K' e e' :
+  fill K e = fill K' e' ->
+  reducible e' ->
+  e2v e = None ->
+  exists K'', K' = comp_ctx K K''.
+Proof.
+  (* TODO *)
+Abort.
