@@ -9,6 +9,10 @@ This version is known to compile with:
 BUILDING INSTRUCTIONS
 ---------------------
 
+First, make sure you checked out all submodules:
+
+  git submodule update --init --recursive
+
 Say "scons" to build the full library, or "scons some_module.vo" to just 
 build some_module.vo (and its dependencies).
 
