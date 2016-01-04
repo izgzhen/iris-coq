@@ -1,5 +1,8 @@
+Require Import mathcomp.ssreflect.ssreflect.
 Require Import Autosubst.Autosubst.
 Require Import prelude.option.
+
+Set Bullet Behavior "Strict Subproofs".
 
 Inductive expr :=
 | Var (x : var)
@@ -53,7 +56,7 @@ Fixpoint e2v (e : expr) : option value :=
 Lemma v2v v:
   e2v (v2e v) = Some v.
 Proof.
-  induction v; simpl; rewrite ?IHv, ?IHv1; simpl; rewrite ?IHv2; reflexivity.
+  induction v; simpl; rewrite ?IHv ?IHv1 /= ?IHv2; reflexivity.
 Qed.
 
 Lemma e2e e v:
@@ -64,11 +67,11 @@ Proof.
   - intros Heq. injection Heq. clear Heq. intros Heq. subst. reflexivity.
   - destruct (e2v e1); simpl; [|discriminate].
     destruct (e2v e2); simpl; [|discriminate].
-    intros Heq. injection Heq. clear Heq. intros Heq. subst. simpl. eauto using f_equal2.
+    case =><-. simpl. eauto using f_equal2.
   - destruct (e2v e); simpl; [|discriminate].
-    intros Heq. injection Heq. clear Heq. intros Heq. subst. simpl. eauto using f_equal.
+    case =><-. simpl. eauto using f_equal.
   - destruct (e2v e); simpl; [|discriminate].
-    intros Heq. injection Heq. clear Heq. intros Heq. subst. simpl. eauto using f_equal.
+    case =><-. simpl. eauto using f_equal.
 Qed.
 
 Inductive ectx :=
@@ -120,20 +123,20 @@ Qed.
 Lemma fill_comp K1 K2 e :
   fill K1 (fill K2 e) = fill (comp_ctx K1 K2) e.
 Proof.
-  revert K2 e; induction K1; intros K2 e; simpl; rewrite ?IHK1, ?IHK2; reflexivity.
+  revert K2 e; induction K1 => K2 e /=; rewrite ?IHK1 ?IHK2; reflexivity.
 Qed.
 
 Lemma fill_inj_r K e1 e2 :
   fill K e1 = fill K e2 -> e1 = e2.
 Proof.
-  revert e1 e2; induction K; intros el er; simpl;
-     intros Heq; try apply IHK; inversion Heq; reflexivity.
+  revert e1 e2; induction K => el er /=;
+     (move=><-; reflexivity) || (case => /IHK <-; reflexivity).
 Qed.
 
 Lemma fill_value K e v':
   e2v (fill K e) = Some v' -> exists v, e2v e = Some v.
 Proof.
-  revert v'; induction K; intros v'; simpl; try discriminate;
+  revert v'; induction K => v' /=; try discriminate;
     try destruct (e2v (fill K e)); rewrite ?v2v; eauto.
 Qed.
 
@@ -293,7 +296,7 @@ Proof.
   intros Heq. apply e2e in Heq. subst. eauto using stuck_find_redex, values_stuck.
 Qed.
 
-Lemma reducible_find_redex e K' e' :
+Lemma reducible_find_redex {e K' e'} :
   e = fill K' e' -> reducible e' -> find_redex e = Some (K', e').
 Proof.
   revert e; induction K'; intros e Hfill Hred; subst e; simpl.
@@ -301,9 +304,9 @@ Proof.
     destruct Hred as (σ' & e'' & σ'' & ef & Hstep). destruct Hstep; simpl.
     + erewrite find_redex_val by eassumption. by rewrite Hv2.
     + erewrite find_redex_val by eassumption. erewrite find_redex_val by eassumption.
-      by rewrite Hv1, Hv2.
+      by rewrite Hv1 Hv2.
     + erewrite find_redex_val by eassumption. erewrite find_redex_val by eassumption.
-      by rewrite Hv1, Hv2.
+      by rewrite Hv1 Hv2.
     + erewrite find_redex_val by eassumption. by rewrite Hv0.
     + erewrite find_redex_val by eassumption. by rewrite Hv0.
   - by erewrite IHK'.
@@ -336,5 +339,6 @@ Lemma step_by_value K K' e e' :
   e2v e = None ->
   exists K'', K' = comp_ctx K K''.
 Proof.
-  (* TODO *)
+  intros Hfill Hred Hnval.
+  assert (Hfind := reducible_find_redex Hfill Hred).
 Abort.
