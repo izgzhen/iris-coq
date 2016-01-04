@@ -121,23 +121,29 @@ Proof.
      intros Heq; try apply IHK; inversion Heq; reflexivity.
 Qed.
 
-Definition state := unit.
-Definition prim_cfg : Type := (expr * state)%type.
+Lemma fill_value K e v':
+  e2v (fill K e) = Some v' -> exists v, e2v e = Some v.
+Proof.
+  revert v'; induction K; intros v'; simpl; try discriminate;
+    try destruct (e2v (fill K e)); rewrite ?v2v; eauto.
+Qed.
 
-Inductive prim_step : prim_cfg -> prim_cfg -> option expr -> Prop :=
+Definition state := unit.
+
+Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
 | Beta e1 e2 v2 σ : e2v e2 = Some v2 ->
-                    prim_step (App (Lam e1) e2, σ) (e1.[e2/], σ) None
+                    prim_step (App (Lam e1) e2) σ (e1.[e2/]) σ None
 | FstS e1 v1 e2 v2 σ : e2v e1 = Some v1 -> e2v e2 = Some v2 ->
-                       prim_step (Fst (Pair e1 e2), σ) (e1, σ) None
+                       prim_step (Fst (Pair e1 e2)) σ e1 σ None
 | SndS e1 v1 e2 v2 σ : e2v e1 = Some v1 -> e2v e2 = Some v2 ->
-                       prim_step (Fst (Pair e1 e2), σ) (e2, σ) None
+                       prim_step (Fst (Pair e1 e2)) σ e2 σ None
 | CaseL e0 v0 e1 e2 σ : e2v e0 = Some v0 ->
-                        prim_step (Case (InjL e0) e1 e2, σ) (e1.[e0/], σ) None
+                        prim_step (Case (InjL e0) e1 e2) σ (e1.[e0/]) σ None
 | CaseR e0 v0 e1 e2 σ : e2v e0 = Some v0 ->
-                        prim_step (Case (InjR e0) e1 e2, σ) (e2.[e0/], σ) None.
+                        prim_step (Case (InjR e0) e1 e2) σ (e2.[e0/]) σ None.
 
 Definition reducible e: Prop :=
-  exists σ cfg' ef, prim_step (e, σ) cfg' ef.
+  exists σ e' σ' ef, prim_step e σ e' σ' ef.
 
 Definition stuck (e : expr) : Prop :=
   forall K e',
@@ -147,5 +153,8 @@ Definition stuck (e : expr) : Prop :=
 Lemma values_stuck v :
   stuck (v2e v).
 Proof.
-  (* TODO this seems like a rather ugly proof. *)
-Abort.  
+  intros ?? Heq.
+  edestruct (fill_value K) as [v' Hv'].
+  { by rewrite <-Heq, v2v. }
+  clear -Hv'. intros (σ' & e'' & σ'' & ef & Hstep). destruct Hstep; simpl in *; discriminate.
+Qed.
