@@ -599,7 +599,7 @@ Section finite.
   Lemma empty_finite : set_finite ∅.
   Proof. by exists []; intros ?; rewrite elem_of_empty. Qed.
   Lemma singleton_finite (x : A) : set_finite {[ x ]}.
-  Proof. exists [x]; intros y ->/elem_of_singleton; left. Qed.
+  Proof. exists [x]; intros y ->%elem_of_singleton; left. Qed.
   Lemma union_finite X Y : set_finite X → set_finite Y → set_finite (X ∪ Y).
   Proof.
     intros [lX ?] [lY ?]; exists (lX ++ lY); intros x.
@@ -614,9 +614,9 @@ End finite.
 Section more_finite.
   Context `{Collection A B}.
   Lemma intersection_finite_l X Y : set_finite X → set_finite (X ∩ Y).
-  Proof. intros [l ?]; exists l; intros x [??]/elem_of_intersection; auto. Qed.
+  Proof. intros [l ?]; exists l; intros x [??]%elem_of_intersection; auto. Qed.
   Lemma intersection_finite_r X Y : set_finite Y → set_finite (X ∩ Y).
-  Proof. intros [l ?]; exists l; intros x [??]/elem_of_intersection; auto. Qed.
+  Proof. intros [l ?]; exists l; intros x [??]%elem_of_intersection; auto. Qed.
   Lemma difference_finite X Y : set_finite X → set_finite (X ∖ Y).
-  Proof. intros [l ?]; exists l; intros x [??]/elem_of_difference; auto. Qed.
+  Proof. intros [l ?]; exists l; intros x [??]%elem_of_difference; auto. Qed.
 End more_finite.
