@@ -1,4 +1,5 @@
 Require Import Autosubst.Autosubst.
+Require Import prelude.option.
 
 Inductive expr :=
 | Var (x : var)
@@ -24,7 +25,7 @@ Inductive value :=
 | InjLV (v : value)
 | InjRV (v : value).
 
-Fixpoint v2e (v : value): expr :=
+Fixpoint v2e (v : value) : expr :=
   match v with
   | LitV T t => Lit T t
   | LamV e   => Lam e
@@ -32,6 +33,34 @@ Fixpoint v2e (v : value): expr :=
   | InjLV v => InjL (v2e v)
   | InjRV v => InjR (v2e v)
   end.
+
+Fixpoint e2v (e : expr) : option value :=
+  match e with
+  | Var _ => None
+  | Lit T t => Some (LitV T t)
+  | App _ _ => None
+  | Lam e => Some (LamV e)
+  | Pair e1 e2 => v1 ← e2v e1;
+                  v2 ← e2v e2;
+                  Some (PairV v1 v2)
+  | Fst e => None
+  | Snd e => None
+  | InjL e => InjLV <$> e2v e
+  | InjR e => InjRV <$> e2v e
+  | Case e0 e1 e2 => None
+  end.
+
+Lemma v2v v:
+  e2v (v2e v) = Some v.
+Proof.
+  induction v; simpl; rewrite ?IHv, ?IHv1; simpl; rewrite ?IHv2; reflexivity.
+Qed.
+
+Lemma e2e e v:
+  e2v e = Some v -> v2e v = e.
+Proof.
+  (* TODO: First figure out how to best state this. *)
+Abort.
 
 Inductive ectx :=
 | EmptyCtx
@@ -92,9 +121,31 @@ Proof.
      intros Heq; try apply IHK; inversion Heq; reflexivity.
 Qed.
 
-Inductive step : expr -> expr -> Prop :=
-| Beta e v : step (App (Lam e) (v2e v)) (e.[(v2e v)/])
-| FstS v1 v2  : step (Fst (Pair (v2e v1) (v2e v2))) (v2e v1)
-| SndS v1 v2  : step (Fst (Pair (v2e v1) (v2e v2))) (v2e v2)
-| CaseL v0 e1 e2 : step (Case (InjL (v2e v0)) e1 e2) (e1.[(v2e v0)/])
-| CaseR v0 e1 e2 : step (Case (InjR (v2e v0)) e1 e2) (e2.[(v2e v0)/]).
+Definition state := unit.
+Definition prim_cfg : Type := (expr * state)%type.
+
+Inductive prim_step : prim_cfg -> prim_cfg -> option expr -> Prop :=
+| Beta e1 e2 v2 σ : e2v e2 = Some v2 ->
+                    prim_step (App (Lam e1) e2, σ) (e1.[e2/], σ) None
+| FstS e1 v1 e2 v2 σ : e2v e1 = Some v1 -> e2v e2 = Some v2 ->
+                       prim_step (Fst (Pair e1 e2), σ) (e1, σ) None
+| SndS e1 v1 e2 v2 σ : e2v e1 = Some v1 -> e2v e2 = Some v2 ->
+                       prim_step (Fst (Pair e1 e2), σ) (e2, σ) None
+| CaseL e0 v0 e1 e2 σ : e2v e0 = Some v0 ->
+                        prim_step (Case (InjL e0) e1 e2, σ) (e1.[e0/], σ) None
+| CaseR e0 v0 e1 e2 σ : e2v e0 = Some v0 ->
+                        prim_step (Case (InjR e0) e1 e2, σ) (e2.[e0/], σ) None.
+
+Definition reducible e: Prop :=
+  exists σ cfg' ef, prim_step (e, σ) cfg' ef.
+
+Definition stuck (e : expr) : Prop :=
+  forall K e',
+    e = fill K e' ->
+    ~reducible e'.
+
+Lemma values_stuck v :
+  stuck (v2e v).
+Proof.
+  (* TODO this seems like a rather ugly proof. *)
+Abort.  
