@@ -4,11 +4,32 @@ Require Import prelude.option.
 
 Set Bullet Behavior "Strict Subproofs".
 
+(** Some tactics useful when dealing with equality of sigma-like types: existT T0 t0 = existT T1 t1.
+    They all assume such an equality is the first thing on the "stack" (goal). *)
+Ltac case_depeq1 := let Heq := fresh "Heq" in
+  case=>_ /EqdepFacts.eq_sigT_sig_eq=>Heq;
+  destruct Heq as (->,<-).
+Ltac case_depeq2 := let Heq := fresh "Heq" in
+  case=>_ _ /EqdepFacts.eq_sigT_sig_eq=>Heq;
+  destruct Heq as (->,Heq);
+  case:Heq=>_ /EqdepFacts.eq_sigT_sig_eq=>Heq;
+  destruct Heq as (->,<-).
+Ltac case_depeq3 := let Heq := fresh "Heq" in
+  case=>_ _ _ /EqdepFacts.eq_sigT_sig_eq=>Heq;
+  destruct Heq as (->,Heq);
+  case:Heq=>_ _ /EqdepFacts.eq_sigT_sig_eq=>Heq;
+  destruct Heq as (->,Heq);
+  case:Heq=>_ /EqdepFacts.eq_sigT_sig_eq=>Heq;
+  destruct Heq as (->,<-).
+
+(** Expressions and values. *)
 Inductive expr :=
 | Var (x : var)
-| Lit (T : Type) (t: T)  (* arbitrary Coq values become literals *)
-| App (e1 e2 : expr)
 | Lam (e : {bind expr})
+| App (e1 e2 : expr)
+| Lit {T : Type} (t: T)  (* arbitrary Coq values become literals *)
+| Op1  {T1 To : Type} (f : T1 -> To) (e1 : expr)
+| Op2  {T1 T2 To : Type} (f : T1 -> T2 -> To) (e1 : expr) (e2 : expr)
 | Pair (e1 e2 : expr)
 | Fst (e : expr)
 | Snd (e : expr)
@@ -16,21 +37,23 @@ Inductive expr :=
 | InjR (e : expr)
 | Case (e0 : expr) (e1 : {bind expr}) (e2 : {bind expr}).
 
+Definition state := unit.
+
 Instance Ids_expr : Ids expr. derive. Defined.
 Instance Rename_expr : Rename expr. derive. Defined.
 Instance Subst_expr : Subst expr. derive. Defined.
 Instance SubstLemmas_expr : SubstLemmas expr. derive. Qed.
 
 Inductive value :=
-| LitV (T : Type) (t : T)  (* arbitrary Coq values become literals *)
 | LamV (e : {bind expr})
+| LitV (T : Type) (t : T)  (* arbitrary Coq values become literals *)
 | PairV (v1 v2 : value)
 | InjLV (v : value)
 | InjRV (v : value).
 
 Fixpoint v2e (v : value) : expr :=
   match v with
-  | LitV T t => Lit T t
+  | LitV _ t => Lit t
   | LamV e   => Lam e
   | PairV v1 v2 => Pair (v2e v1) (v2e v2)
   | InjLV v => InjL (v2e v)
@@ -40,9 +63,11 @@ Fixpoint v2e (v : value) : expr :=
 Fixpoint e2v (e : expr) : option value :=
   match e with
   | Var _ => None
-  | Lit T t => Some (LitV T t)
-  | App _ _ => None
   | Lam e => Some (LamV e)
+  | App _ _ => None
+  | Lit T t => Some (LitV T t)
+  | Op1 _ _ _ _ => None
+  | Op2 _ _ _ _ _ _ => None
   | Pair e1 e2 => v1 ← e2v e1;
                   v2 ← e2v e2;
                   Some (PairV v1 v2)
@@ -74,28 +99,21 @@ Proof.
 Qed.
 End e2e.
 
-Definition eq_transport (T1 T2: Type) (Heq: T1 = T2):
-  T1 -> T2. (* RJ: I am *sure* this is already defined somewhere... *)
-intros t1. rewrite -Heq. exact t1.
-Defined.
-
-Lemma eq_transport_id T (t: T) :
-  t = eq_transport T T eq_refl t.
-Proof.
-  reflexivity.
-Qed.
-
 Lemma v2e_inj v1 v2:
   v2e v1 = v2e v2 -> v1 = v2.
 Proof.
-  revert v2; induction v1=>v2; destruct v2; simpl; try discriminate; case; eauto using f_equal, f_equal2.
-  - intros _. move/EqdepFacts.eq_sigT_sig_eq=>H. destruct H as (->,<-). reflexivity.
+  revert v2; induction v1=>v2; destruct v2; simpl; try discriminate;
+    first [case_depeq3 | case_depeq2 | case_depeq1 | case]; eauto using f_equal, f_equal2.
 Qed.
 
+(** Evaluation contexts *)
 Inductive ectx :=
 | EmptyCtx
 | AppLCtx (K1 : ectx) (e2 : expr)
 | AppRCtx (v1 : value) (K2 : ectx)
+| Op1Ctx {T1 To : Type} (f : T1 -> To) (K : ectx)
+| Op2LCtx {T1 T2 To : Type} (f : T1 -> T2 -> To) (K1 : ectx) (e2 : expr)
+| Op2RCtx {T1 T2 To : Type} (f : T1 -> T2 -> To) (v1 : value) (K2 : ectx)
 | PairLCtx (K1 : ectx) (e2 : expr)
 | PairRCtx (v1 : value) (K2 : ectx)
 | FstCtx (K : ectx)
@@ -109,6 +127,9 @@ Fixpoint fill (K : ectx) (e : expr) :=
   | EmptyCtx => e
   | AppLCtx K1 e2 => App (fill K1 e) e2
   | AppRCtx v1 K2 => App (v2e v1) (fill K2 e)
+  | Op1Ctx _ _ f K => Op1 f (fill K e)
+  | Op2LCtx _ _ _ f K1 e2 => Op2 f (fill K1 e) e2
+  | Op2RCtx _ _ _ f v1 K2 => Op2 f (v2e v1) (fill K2 e)
   | PairLCtx K1 e2 => Pair (fill K1 e) e2
   | PairRCtx v1 K2 => Pair (v2e v1) (fill K2 e)
   | FstCtx K => Fst (fill K e)
@@ -123,6 +144,9 @@ Fixpoint comp_ctx (Ko : ectx) (Ki : ectx) :=
   | EmptyCtx => Ki
   | AppLCtx K1 e2 => AppLCtx (comp_ctx K1 Ki) e2
   | AppRCtx v1 K2 => AppRCtx v1 (comp_ctx K2 Ki)
+  | Op1Ctx _ _ f K => Op1Ctx f (comp_ctx K Ki)
+  | Op2LCtx _ _ _ f K1 e2 => Op2LCtx f (comp_ctx K1 Ki) e2
+  | Op2RCtx _ _ _ f v1 K2 => Op2RCtx f v1 (comp_ctx K2 Ki)
   | PairLCtx K1 e2 => PairLCtx (comp_ctx K1 Ki) e2
   | PairRCtx v1 K2 => PairRCtx v1 (comp_ctx K2 Ki)
   | FstCtx K => FstCtx (comp_ctx K Ki)
@@ -158,11 +182,32 @@ Proof.
     try destruct (e2v (fill K e)); rewrite ?v2v; eauto.
 Qed.
 
-Definition state := unit.
+Lemma fill_not_value e K :
+  e2v e = None -> e2v (fill K e) = None.
+Proof.
+  intros Hnval.  induction K =>/=; try reflexivity.
+  - done.
+  - by rewrite IHK /=.
+  - by rewrite v2v /= IHK /=.
+  - by rewrite IHK /=.
+  - by rewrite IHK /=.
+Qed.
 
+Lemma fill_not_value2 e K v :
+  e2v e = None -> e2v (fill K e) = Some v -> False.
+Proof.
+  intros Hnval Hval. erewrite fill_not_value in Hval by assumption. discriminate.
+Qed.
+
+
+(** The stepping relation *)
 Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
 | Beta e1 e2 v2 σ (Hv2 : e2v e2 = Some v2):
     prim_step (App (Lam e1) e2) σ (e1.[e2/]) σ None
+| Op1S T1 To (f : T1 -> To) t σ:
+    prim_step (Op1 f (Lit t)) σ (Lit (f t)) σ None
+| Op2S T1 T2 To (f : T1 -> T2 -> To) t1 t2 σ:
+    prim_step (Op2 f (Lit t1) (Lit t2)) σ (Lit (f t1 t2)) σ None
 | FstS e1 v1 e2 v2 σ (Hv1 : e2v e1 = Some v1) (Hv2 : e2v e2 = Some v2):
     prim_step (Fst (Pair e1 e2)) σ e1 σ None
 | SndS e1 v1 e2 v2 σ (Hv1 : e2v e1 = Some v1) (Hv2 : e2v e2 = Some v2):
@@ -190,23 +235,6 @@ Proof.
 Qed.
 
 
-Lemma fill_not_value e K :
-  e2v e = None -> e2v (fill K e) = None.
-Proof.
-  intros Hnval.  induction K =>/=; try reflexivity.
-  - done.
-  - by rewrite IHK /=.
-  - by rewrite v2v /= IHK /=.
-  - by rewrite IHK /=.
-  - by rewrite IHK /=.
-Qed.
-
-Lemma fill_not_value2 e K v :
-  e2v e = None -> e2v (fill K e) = Some v -> False.
-Proof.
-  intros Hnval Hval. erewrite fill_not_value in Hval by assumption. discriminate.
-Qed.
-
 Section step_by_value.
 (* When something does a step, and another decomposition of the same
      expression has a non-value e in the hole, then K is a left
@@ -218,9 +246,10 @@ Lemma step_by_value K K' e e' :
   e2v e = None ->
   exists K'', K' = comp_ctx K K''.
 Proof.
-  Ltac bad_fill1 Hfill := exfalso; case: Hfill => Hfill; intros; subst; eapply fill_not_value2; first eassumption;
-                          by erewrite Hfill, ?v2v.
-  Ltac bad_fill2 Hfill := exfalso; case: Hfill => Hfill; intros; subst; eapply values_stuck; eassumption.
+  Ltac bad_fill Hfill := exfalso; move: Hfill; first [case_depeq3 | case_depeq2 | case_depeq1 | case] =>Hfill;
+                         intros; subst;
+                         (eapply values_stuck; eassumption) || (eapply fill_not_value2; first eassumption;
+                         by erewrite ?Hfill, ?v2v).
   Ltac bad_red   Hfill e' Hred := exfalso; destruct e'; try discriminate; [];
       case: Hfill; intros; subst; destruct Hred as (σ' & e'' & σ'' & ef & Hstep);
       inversion Hstep; done || (clear Hstep; subst;
@@ -228,19 +257,28 @@ Proof.
         try match goal with [ H : _ = fill _ _ |- _ ] => erewrite <-H end; simpl;
         repeat match goal with [ H : e2v _ = _ |- _ ] => erewrite H; simpl end
       ); eassumption || done).
-  Ltac good Hfill IH := case: Hfill => Hfill; intros; subst; 
+  Ltac good Hfill IH := move: Hfill; first [case_depeq3 | case_depeq2 | case_depeq1 | case]; intros; subst; 
     let K'' := fresh "K''" in edestruct IH as [K'' Hcomp]; first eassumption;
     exists K''; by eauto using f_equal, f_equal2, f_equal3, v2e_inj.
 
   intros Hfill Hred Hnval. 
-  revert K' Hfill; induction K=>K' /= Hfill; try first [
+  Time revert K' Hfill; induction K=>K' /= Hfill; try first [
     now eexists; reflexivity
   | destruct K'; simpl; try discriminate; try first [
       bad_red Hfill e' Hred
-    | bad_fill1 Hfill
-    | bad_fill2 Hfill
+    | bad_fill Hfill
     | good Hfill IHK
     ]
   ].
 Qed.
 End step_by_value.
+
+Module Tests.
+  Definition lit := Lit 21.
+  Definition term := Op2 plus lit lit.
+
+  Goal forall σ, prim_step term σ (Lit 42) σ None.
+  Proof.
+    apply Op2S.
+  Qed.
+End Tests.
