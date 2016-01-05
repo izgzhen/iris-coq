@@ -176,7 +176,7 @@ Proof.
 Qed.
 
 Lemma fill_value K e v':
-  e2v (fill K e) = Some v' -> exists v, e2v e = Some v.
+  e2v (fill K e) = Some v' -> is_Some (e2v e).
 Proof.
   revert v'; induction K => v' /=; try discriminate;
     try destruct (e2v (fill K e)); rewrite ?v2v; eauto.
@@ -240,7 +240,7 @@ Section step_by_value.
      expression has a non-value e in the hole, then K is a left
      sub-context of K' - in other words, e also contains the reducible
      expression *)
-Lemma step_by_value K K' e e' :
+Lemma step_by_value {K K' e e'} :
   fill K e = fill K' e' ->
   reducible e' ->
   e2v e = None ->
@@ -295,10 +295,10 @@ End Tests.
 Section Language.
   Local Obligation Tactic := idtac.
 
-  Definition ctx_step e1 σ1 e2 σ2 (ef: option expr) :=
+  Definition ectx_step e1 σ1 e2 σ2 (ef: option expr) :=
     exists K e1' e2', e1 = fill K e1' /\ e2 = fill K e2' /\ prim_step e1' σ1 e2' σ2 ef.
 
-  Instance heap_lang : Language expr value state := Build_Language v2e e2v atomic ctx_step.
+  Instance heap_lang : Language expr value state := Build_Language v2e e2v atomic ectx_step.
   Proof.
     - exact v2v.
     - exact e2e.
@@ -308,5 +308,23 @@ Section Language.
       eapply e2e. eassumption.
     - intros. contradiction.
     - intros. contradiction.
+  Defined.
+
+  (** We can have bind with arbitrary evaluation contexts **)
+  Lemma fill_is_ctx K: is_ctx (fill K).
+  Proof.
+    split; last split.
+    - intros ? [v Hval]. eapply fill_value. eassumption.
+    - intros ? ? ? ? ? (K' & e1' & e2' & Heq1 & Heq2 & Hstep).
+      exists (comp_ctx K K'), e1', e2'. rewrite -!fill_comp Heq1 Heq2.
+      split; last split; reflexivity || assumption.
+    - intros ? ? ? ? ? Hnval (K'' & e1'' & e2'' & Heq1 & Heq2 & Hstep).
+      destruct (step_by_value Heq1) as [K' HeqK].
+      + do 4 eexists. eassumption.
+      + assumption.
+      + subst e2 K''. rewrite -fill_comp in Heq1. apply fill_inj_r in Heq1. subst e1'.
+        exists (fill K' e2''). split; first by rewrite -fill_comp.
+        do 3 eexists. split; last split; eassumption || reflexivity.
   Qed.
+
 End Language.
