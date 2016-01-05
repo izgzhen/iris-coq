@@ -181,12 +181,7 @@ Qed.
 Lemma fill_not_value e K :
   e2v e = None -> e2v (fill K e) = None.
 Proof.
-  intros Hnval.  induction K =>/=; try reflexivity.
-  - done.
-  - by rewrite IHK /=.
-  - by rewrite v2v /= IHK /=.
-  - by rewrite IHK /=.
-  - by rewrite IHK /=.
+  intros Hnval.  induction K =>/=; by rewrite ?v2v /= ?IHK /=.
 Qed.
 
 Lemma fill_not_value2 e K v :
