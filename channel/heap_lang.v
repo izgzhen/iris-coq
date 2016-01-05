@@ -59,19 +59,37 @@ Proof.
   induction v; simpl; rewrite ?IHv ?IHv1 /= ?IHv2; reflexivity.
 Qed.
 
+Section e2e. (* To get local tactics. *)
 Lemma e2e e v:
   e2v e = Some v -> e = v2e v.
 Proof.
-  revert v; induction e; intros v; simpl; try discriminate.
-  - intros Heq. injection Heq. clear Heq. intros Heq. subst. reflexivity.
-  - intros Heq. injection Heq. clear Heq. intros Heq. subst. reflexivity.
-  - destruct (e2v e1); simpl; [|discriminate].
-    destruct (e2v e2); simpl; [|discriminate].
-    case =><-. simpl. eauto using f_equal2.
-  - destruct (e2v e); simpl; [|discriminate].
-    case =><-. simpl. eauto using f_equal.
-  - destruct (e2v e); simpl; [|discriminate].
-    case =><-. simpl. eauto using f_equal.
+  Ltac case0 := case =><-; simpl; eauto using f_equal, f_equal2.
+  Ltac case1 e1 := destruct (e2v e1); simpl; [|discriminate];
+                   case0.
+  Ltac case2 e1 e2 := destruct (e2v e1); simpl; [|discriminate];
+                      destruct (e2v e2); simpl; [|discriminate];
+                      case0.
+
+  revert v; induction e; intros v; simpl; try discriminate; by (case2 e1 e2 || case1 e || case0).
+Qed.
+End e2e.
+
+Definition eq_transport (T1 T2: Type) (Heq: T1 = T2):
+  T1 -> T2. (* RJ: I am *sure* this is already defined somewhere... *)
+intros t1. rewrite -Heq. exact t1.
+Defined.
+
+Lemma eq_transport_id T (t: T) :
+  t = eq_transport T T eq_refl t.
+Proof.
+  reflexivity.
+Qed.
+
+Lemma v2e_inj v1 v2:
+  v2e v1 = v2e v2 -> v1 = v2.
+Proof.
+  revert v2; induction v1=>v2; destruct v2; simpl; try discriminate; case; eauto using f_equal, f_equal2.
+  - intros _. move/EqdepFacts.eq_sigT_sig_eq=>H. destruct H as (->,<-). reflexivity.
 Qed.
 
 Inductive ectx :=
@@ -299,7 +317,7 @@ Qed.
 Lemma reducible_find_redex {e K' e'} :
   e = fill K' e' -> reducible e' -> find_redex e = Some (K', e').
 Proof.
-  revert e; induction K'; intros e Hfill Hred; subst e; simpl.
+  revert e; induction K' => e Hfill Hred; subst e; simpl.
   - (* Base case: Empty context *)
     destruct Hred as (σ' & e'' & σ'' & ef & Hstep). destruct Hstep; simpl.
     + erewrite find_redex_val by eassumption. by rewrite Hv2.
@@ -329,6 +347,24 @@ Proof.
   by eapply reducible_find_redex.
 Qed.
 
+Lemma fill_not_value e K :
+  e2v e = None -> e2v (fill K e) = None.
+Proof.
+  intros Hnval.  induction K =>/=; try reflexivity.
+  - done.
+  - by rewrite IHK /=.
+  - by rewrite v2v /= IHK /=.
+  - by rewrite IHK /=.
+  - by rewrite IHK /=.
+Qed.
+
+Lemma fill_not_value2 e K v :
+  e2v e = None -> e2v (fill K e) = Some v -> False.
+Proof.
+  intros Hnval Hval. erewrite fill_not_value in Hval by assumption. discriminate.
+Qed.
+
+Section step_by_value.
 (* When something does a step, and another decomposition of the same
      expression has a non-value e in the hole, then K is a left
      sub-context of K' - in other words, e also contains the reducible
@@ -339,6 +375,29 @@ Lemma step_by_value K K' e e' :
   e2v e = None ->
   exists K'', K' = comp_ctx K K''.
 Proof.
-  intros Hfill Hred Hnval.
-  assert (Hfind := reducible_find_redex Hfill Hred).
-Abort.
+  Ltac bad_fill1 Hfill := exfalso; case: Hfill => Hfill; intros; subst; eapply fill_not_value2; first eassumption;
+                          by erewrite Hfill, ?v2v.
+  Ltac bad_fill2 Hfill := exfalso; case: Hfill => Hfill; intros; subst; eapply values_stuck; eassumption.
+  Ltac bad_red   Hfill e' Hred := exfalso; destruct e'; try discriminate; [];
+      case: Hfill; intros; subst; destruct Hred as (σ' & e'' & σ'' & ef & Hstep);
+      inversion Hstep; done || (clear Hstep; subst;
+      eapply fill_not_value2; last (
+        try match goal with [ H : _ = fill _ _ |- _ ] => erewrite <-H end; simpl;
+        repeat match goal with [ H : e2v _ = _ |- _ ] => erewrite H; simpl end
+      ); eassumption || done).
+  Ltac good Hfill IH := case: Hfill => Hfill; intros; subst; 
+    let K'' := fresh "K''" in edestruct IH as [K'' Hcomp]; first eassumption;
+    exists K''; by eauto using f_equal, f_equal2, f_equal3, v2e_inj.
+
+  intros Hfill Hred Hnval. 
+  revert K' Hfill; induction K=>K' /= Hfill; try first [
+    now eexists; reflexivity
+  | destruct K'; simpl; try discriminate; try first [
+      bad_red Hfill e' Hred
+    | bad_fill1 Hfill
+    | bad_fill2 Hfill
+    | good Hfill IHK
+    ]
+  ].
+Qed.
+End step_by_value.
