@@ -1,6 +1,6 @@
 Require Import mathcomp.ssreflect.ssreflect.
 Require Import Autosubst.Autosubst.
-Require Import prelude.option.
+Require Import prelude.option iris.language.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -86,7 +86,7 @@ Qed.
 
 Section e2e. (* To get local tactics. *)
 Lemma e2e e v:
-  e2v e = Some v -> e = v2e v.
+  e2v e = Some v -> v2e v = e.
 Proof.
   Ltac case0 := case =><-; simpl; eauto using f_equal, f_equal2.
   Ltac case1 e1 := destruct (e2v e1); simpl; [|discriminate];
@@ -273,6 +273,13 @@ Proof.
 Qed.
 End step_by_value.
 
+(** Atomic expressions *)
+Definition atomic (e: expr) :=
+  match e with
+  | _ => False
+  end.
+
+(** Tests, making sure that stuff works. *)
 Module Tests.
   Definition lit := Lit 21.
   Definition term := Op2 plus lit lit.
@@ -282,3 +289,24 @@ Module Tests.
     apply Op2S.
   Qed.
 End Tests.
+
+(** Instantiate the Iris language interface. This closes reduction under evaluation contexts.
+    We could potentially make this a generic construction. *)
+Section Language.
+  Local Obligation Tactic := idtac.
+
+  Definition ctx_step e1 σ1 e2 σ2 (ef: option expr) :=
+    exists K e1' e2', e1 = fill K e1' /\ e2 = fill K e2' /\ prim_step e1' σ1 e2' σ2 ef.
+
+  Instance heap_lang : Language expr value state := Build_Language v2e e2v atomic ctx_step.
+  Proof.
+    - exact v2v.
+    - exact e2e.
+    - intros e1 σ1 e2 σ2 ef (K & e1' & e2' & He1 & He2 & Hstep). subst e1 e2.
+      eapply fill_not_value. case Heq:(e2v e1') => [v1'|]; last done. exfalso.
+      eapply values_stuck; last by (do 4 eexists; eassumption). erewrite fill_empty.
+      eapply e2e. eassumption.
+    - intros. contradiction.
+    - intros. contradiction.
+  Qed.
+End Language.

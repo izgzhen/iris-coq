@@ -14,6 +14,7 @@ Class Language (E V S : Type) := {
     prim_step e1 σ1 e2 σ2 ef →
     is_Some (of_expr e2)
 }.
+Arguments Build_Language {_ _ _} _ _ _ _ {_ _ _ _ _}.
 
 Section Lang.
   Context `{Language E V St}.
