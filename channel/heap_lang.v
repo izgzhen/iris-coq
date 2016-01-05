@@ -35,8 +35,10 @@ Inductive expr :=
 | Snd (e : expr)
 | InjL (e : expr)
 | InjR (e : expr)
-| Case (e0 : expr) (e1 : {bind expr}) (e2 : {bind expr}).
+| Case (e0 : expr) (e1 : {bind expr}) (e2 : {bind expr})
+| Fork (e : expr).
 
+Definition lit_unit := Lit tt.
 Definition state := unit.
 
 Instance Ids_expr : Ids expr. derive. Defined.
@@ -46,7 +48,7 @@ Instance SubstLemmas_expr : SubstLemmas expr. derive. Qed.
 
 Inductive value :=
 | LamV (e : {bind expr})
-| LitV (T : Type) (t : T)  (* arbitrary Coq values become literals *)
+| LitV (T : Type) (t : T)  (* arbitrary Coq values become literal values *)
 | PairV (v1 v2 : value)
 | InjLV (v : value)
 | InjRV (v : value).
@@ -62,20 +64,14 @@ Fixpoint v2e (v : value) : expr :=
 
 Fixpoint e2v (e : expr) : option value :=
   match e with
-  | Var _ => None
   | Lam e => Some (LamV e)
-  | App _ _ => None
   | Lit T t => Some (LitV T t)
-  | Op1 _ _ _ _ => None
-  | Op2 _ _ _ _ _ _ => None
   | Pair e1 e2 => v1 ← e2v e1;
                   v2 ← e2v e2;
                   Some (PairV v1 v2)
-  | Fst e => None
-  | Snd e => None
   | InjL e => InjLV <$> e2v e
   | InjR e => InjRV <$> e2v e
-  | Case e0 e1 e2 => None
+  | _ => None
   end.
 
 Lemma v2v v:
@@ -202,7 +198,7 @@ Qed.
 
 (** The stepping relation *)
 Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
-| Beta e1 e2 v2 σ (Hv2 : e2v e2 = Some v2):
+| BetaS e1 e2 v2 σ (Hv2 : e2v e2 = Some v2):
     prim_step (App (Lam e1) e2) σ (e1.[e2/]) σ None
 | Op1S T1 To (f : T1 -> To) t σ:
     prim_step (Op1 f (Lit t)) σ (Lit (f t)) σ None
@@ -212,10 +208,12 @@ Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
     prim_step (Fst (Pair e1 e2)) σ e1 σ None
 | SndS e1 v1 e2 v2 σ (Hv1 : e2v e1 = Some v1) (Hv2 : e2v e2 = Some v2):
     prim_step (Snd (Pair e1 e2)) σ e2 σ None
-| CaseL e0 v0 e1 e2 σ (Hv0 : e2v e0 = Some v0):
+| CaseLS e0 v0 e1 e2 σ (Hv0 : e2v e0 = Some v0):
     prim_step (Case (InjL e0) e1 e2) σ (e1.[e0/]) σ None
-| CaseR e0 v0 e1 e2 σ (Hv0 : e2v e0 = Some v0):
-    prim_step (Case (InjR e0) e1 e2) σ (e2.[e0/]) σ None.
+| CaseRS e0 v0 e1 e2 σ (Hv0 : e2v e0 = Some v0):
+    prim_step (Case (InjR e0) e1 e2) σ (e2.[e0/]) σ None
+| ForkS e σ:
+    prim_step (Fork e) σ lit_unit σ (Some e).
 
 Definition reducible e: Prop :=
   exists σ e' σ' ef, prim_step e σ e' σ' ef.
