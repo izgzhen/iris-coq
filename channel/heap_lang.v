@@ -1,6 +1,6 @@
 Require Import mathcomp.ssreflect.ssreflect.
 Require Import Autosubst.Autosubst.
-Require Import prelude.option iris.language.
+Require Import prelude.option prelude.gmap iris.language.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -26,20 +26,28 @@ Ltac case_depeq3 := let Heq := fresh "Heq" in
 Definition loc := nat. (* Any countable type. *)
 
 Inductive expr :=
+(* Base lambda calculus *)
 | Var (x : var)
 | Rec (e : {bind 2 of expr}) (* These are recursive lambdas. *)
 | App (e1 e2 : expr)
-| Loc (l : loc)
+(* Embedding of Coq values and operations *)
 | Lit {T : Type} (t: T)  (* arbitrary Coq values become literals *)
 | Op1  {T1 To : Type} (f : T1 -> To) (e1 : expr)
 | Op2  {T1 T2 To : Type} (f : T1 -> T2 -> To) (e1 : expr) (e2 : expr)
+(* Products *)
 | Pair (e1 e2 : expr)
 | Fst (e : expr)
 | Snd (e : expr)
+(* Sums *)
 | InjL (e : expr)
 | InjR (e : expr)
 | Case (e0 : expr) (e1 : {bind expr}) (e2 : {bind expr})
-| Fork (e : expr).
+(* Concurrency *)
+| Fork (e : expr)
+(* Heap *)
+| Loc (l : loc)
+| Ref (e : expr)
+| Load ( e : expr).
 
 Instance Ids_expr : Ids expr. derive. Defined.
 Instance Rename_expr : Rename expr. derive. Defined.
@@ -51,32 +59,32 @@ Definition LitUnit := Lit tt.
 
 Inductive value :=
 | RecV (e : {bind 2 of expr})
-| LocV (l : loc)
 | LitV (T : Type) (t : T)  (* arbitrary Coq values become literal values *)
 | PairV (v1 v2 : value)
 | InjLV (v : value)
-| InjRV (v : value).
+| InjRV (v : value)
+| LocV (l : loc).
 
 Fixpoint v2e (v : value) : expr :=
   match v with
   | LitV _ t => Lit t
-  | LocV l => Loc l
   | RecV e   => Rec e
   | PairV v1 v2 => Pair (v2e v1) (v2e v2)
   | InjLV v => InjL (v2e v)
   | InjRV v => InjR (v2e v)
+  | LocV l => Loc l
   end.
 
 Fixpoint e2v (e : expr) : option value :=
   match e with
   | Rec e => Some (RecV e)
-  | Loc l => Some (LocV l)
   | Lit T t => Some (LitV T t)
   | Pair e1 e2 => v1 ← e2v e1;
                   v2 ← e2v e2;
                   Some (PairV v1 v2)
   | InjL e => InjLV <$> e2v e
   | InjR e => InjRV <$> e2v e
+  | Loc l => Some (LocV l)
   | _ => None
   end.
 
@@ -108,8 +116,8 @@ Proof.
     first [case_depeq3 | case_depeq2 | case_depeq1 | case]; eauto using f_equal, f_equal2.
 Qed.
 
-(** The state: heaps. *)
-Definition state := unit.
+(** The state: heaps of values. *)
+Definition state := gmap loc value.
 
 (** Evaluation contexts *)
 Inductive ectx :=
@@ -125,7 +133,9 @@ Inductive ectx :=
 | SndCtx (K : ectx)
 | InjLCtx (K : ectx)
 | InjRCtx (K : ectx)
-| CaseCtx (K : ectx) (e1 : {bind expr}) (e2 : {bind expr}).
+| CaseCtx (K : ectx) (e1 : {bind expr}) (e2 : {bind expr})
+| RefCtx (K : ectx)
+| LoadCtx (K : ectx).
 
 Fixpoint fill (K : ectx) (e : expr) :=
   match K with
@@ -142,6 +152,8 @@ Fixpoint fill (K : ectx) (e : expr) :=
   | InjLCtx K => InjL (fill K e)
   | InjRCtx K => InjR (fill K e)
   | CaseCtx K e1 e2 => Case (fill K e) e1 e2
+  | RefCtx K => Ref (fill K e)
+  | LoadCtx K => Load (fill K e)
   end.
 
 Fixpoint comp_ctx (Ko : ectx) (Ki : ectx) :=
@@ -159,6 +171,8 @@ Fixpoint comp_ctx (Ko : ectx) (Ki : ectx) :=
   | InjLCtx K => InjLCtx (comp_ctx K Ki)
   | InjRCtx K => InjRCtx (comp_ctx K Ki)
   | CaseCtx K e1 e2 => CaseCtx (comp_ctx K Ki) e1 e2
+  | RefCtx K => RefCtx (comp_ctx K Ki)
+  | LoadCtx K => LoadCtx (comp_ctx K Ki)
   end.
 
 Lemma fill_empty e :
@@ -217,10 +231,20 @@ Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
 | CaseRS e0 v0 e1 e2 σ (Hv0 : e2v e0 = Some v0):
     prim_step (Case (InjR e0) e1 e2) σ (e2.[e0/]) σ None
 | ForkS e σ:
-    prim_step (Fork e) σ LitUnit σ (Some e).
+    prim_step (Fork e) σ LitUnit σ (Some e)
+| RefS e v σ l (Hv : e2v e = Some v) (Hfresh : σ !! l = None):
+    prim_step (Ref e) σ (Loc l) (<[l:=v]>σ) None
+| LoadS l σ v (Hlookup : σ !! l = Some v):
+    prim_step (Load (Loc l)) σ (v2e v) σ None.
 
 Definition reducible e: Prop :=
   exists σ e' σ' ef, prim_step e σ e' σ' ef.
+
+Lemma reducible_not_value e:
+  reducible e -> e2v e = None.
+Proof.
+  intros (σ' & e'' & σ'' & ef & Hstep). destruct Hstep; simpl in *; reflexivity.
+Qed.
 
 Definition stuck (e : expr) : Prop :=
   forall K e',
@@ -233,9 +257,9 @@ Proof.
   intros ?? Heq.
   edestruct (fill_value K) as [v' Hv'].
   { by rewrite <-Heq, v2v. }
-  clear -Hv'. intros (σ' & e'' & σ'' & ef & Hstep). destruct Hstep; simpl in *; discriminate.
+  clear -Hv' => Hred. apply reducible_not_value in Hred.
+  destruct (e2v e'); discriminate.
 Qed.
-
 
 Section step_by_value.
 (* When something does a step, and another decomposition of the same
@@ -252,7 +276,7 @@ Proof.
                          intros; subst;
                          (eapply values_stuck; eassumption) || (eapply fill_not_value2; first eassumption;
                          by erewrite ?Hfill, ?v2v).
-  Ltac bad_red   Hfill e' Hred := exfalso; destruct e'; try discriminate; [];
+  Ltac bad_red   Hfill e' Hred := exfalso; destruct e'; try discriminate Hfill; [];
       case: Hfill; intros; subst; destruct Hred as (σ' & e'' & σ'' & ef & Hstep);
       inversion Hstep; done || (clear Hstep; subst;
       eapply fill_not_value2; last (
@@ -264,22 +288,47 @@ Proof.
     exists K''; by eauto using f_equal, f_equal2, f_equal3, v2e_inj.
 
   intros Hfill Hred Hnval. 
-  Time revert K' Hfill; induction K=>K' /= Hfill; try first [
-    now eexists; reflexivity
-  | destruct K'; simpl; try discriminate; try first [
+  revert K' Hfill; induction K=>K' /= Hfill;
+    first (now eexists; reflexivity);
+    destruct K'; simpl; try discriminate Hfill; try first [
       bad_red Hfill e' Hred
     | bad_fill Hfill
     | good Hfill IHK
-    ]
-  ].
+    ].
 Qed.
 End step_by_value.
 
 (** Atomic expressions *)
 Definition atomic (e: expr) :=
   match e with
+  | Ref e => is_Some (e2v e)
+  | Load e => is_Some (e2v e)
   | _ => False
   end.
+
+Lemma atomic_not_value e :
+  atomic e -> e2v e = None.
+Proof.
+  destruct e; simpl; contradiction || reflexivity.
+Qed.
+
+Lemma atomic_step e1 σ1 e2 σ2 ef :
+  atomic e1 ->
+  prim_step e1 σ1 e2 σ2 ef ->
+  is_Some (e2v e2).
+Proof.
+  destruct e1; simpl; intros Hatomic Hstep; inversion Hstep; try contradiction Hatomic; rewrite ?v2v /=; eexists; reflexivity.
+Qed.
+
+(* Atomics must not contain evaluation positions. *)
+Lemma atomic_fill e K :
+  atomic (fill K e) ->
+  e2v e = None ->
+  K = EmptyCtx.
+Proof.
+  destruct K; simpl; first reflexivity; intros Hatomic Hnval; exfalso; try assumption;
+    destruct Hatomic; eapply fill_not_value2; eassumption.
+Qed.
 
 (** Tests, making sure that stuff works. *)
 Module Tests.
@@ -318,11 +367,13 @@ Section Language.
     - exact v2v.
     - exact e2e.
     - intros e1 σ1 e2 σ2 ef (K & e1' & e2' & He1 & He2 & Hstep). subst e1 e2.
-      eapply fill_not_value. case Heq:(e2v e1') => [v1'|]; last done. exfalso.
-      eapply values_stuck; last by (do 4 eexists; eassumption). erewrite fill_empty.
-      eapply e2e. eassumption.
-    - intros. contradiction.
-    - intros. contradiction.
+      eapply fill_not_value. eapply reducible_not_value. do 4 eexists; eassumption.
+    - exact atomic_not_value.
+    - intros ? ? ? ? ? Hatomic (K & e1' & e2' & Heq1 & Heq2 & Hstep).
+      subst. move: (Hatomic). rewrite (atomic_fill e1' K). (* RJ: this is kind of annoying. *)
+      + rewrite !fill_empty. eauto using atomic_step.
+      + assumption.
+      + clear Hatomic. eapply reducible_not_value. do 4 eexists; eassumption.
   Defined.
 
   (** We can have bind with arbitrary evaluation contexts **)
