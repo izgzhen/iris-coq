@@ -47,7 +47,10 @@ Inductive expr :=
 (* Heap *)
 | Loc (l : loc)
 | Ref (e : expr)
-| Load ( e : expr).
+| Load (e : expr)
+| Store (e1 : expr) (e2 : expr)
+| Cas (e0 : expr) (e1 : expr) (e2 : expr)
+.
 
 Instance Ids_expr : Ids expr. derive. Defined.
 Instance Rename_expr : Rename expr. derive. Defined.
@@ -56,6 +59,8 @@ Instance SubstLemmas_expr : SubstLemmas expr. derive. Qed.
 
 Definition Lam (e: expr) := Rec (e.[up ids]).
 Definition LitUnit := Lit tt.
+Definition LitTrue := Lit true.
+Definition LitFalse := Lit false.
 
 Inductive value :=
 | RecV (e : {bind 2 of expr})
@@ -63,7 +68,8 @@ Inductive value :=
 | PairV (v1 v2 : value)
 | InjLV (v : value)
 | InjRV (v : value)
-| LocV (l : loc).
+| LocV (l : loc)
+.
 
 Fixpoint v2e (v : value) : expr :=
   match v with
@@ -113,7 +119,7 @@ Lemma v2e_inj v1 v2:
   v2e v1 = v2e v2 -> v1 = v2.
 Proof.
   revert v2; induction v1=>v2; destruct v2; simpl; try discriminate;
-    first [case_depeq3 | case_depeq2 | case_depeq1 | case]; eauto using f_equal, f_equal2.
+    first [case_depeq1 | case]; eauto using f_equal, f_equal2.
 Qed.
 
 (** The state: heaps of values. *)
@@ -122,12 +128,12 @@ Definition state := gmap loc value.
 (** Evaluation contexts *)
 Inductive ectx :=
 | EmptyCtx
-| AppLCtx (K1 : ectx) (e2 : expr)
+| AppLCtx (K1 : ectx)  (e2 : expr)
 | AppRCtx (v1 : value) (K2 : ectx)
 | Op1Ctx {T1 To : Type} (f : T1 -> To) (K : ectx)
-| Op2LCtx {T1 T2 To : Type} (f : T1 -> T2 -> To) (K1 : ectx) (e2 : expr)
+| Op2LCtx {T1 T2 To : Type} (f : T1 -> T2 -> To) (K1 : ectx)  (e2 : expr)
 | Op2RCtx {T1 T2 To : Type} (f : T1 -> T2 -> To) (v1 : value) (K2 : ectx)
-| PairLCtx (K1 : ectx) (e2 : expr)
+| PairLCtx (K1 : ectx)  (e2 : expr)
 | PairRCtx (v1 : value) (K2 : ectx)
 | FstCtx (K : ectx)
 | SndCtx (K : ectx)
@@ -135,7 +141,13 @@ Inductive ectx :=
 | InjRCtx (K : ectx)
 | CaseCtx (K : ectx) (e1 : {bind expr}) (e2 : {bind expr})
 | RefCtx (K : ectx)
-| LoadCtx (K : ectx).
+| LoadCtx (K : ectx)
+| StoreLCtx (K1 : ectx)  (e2 : expr)
+| StoreRCtx (v1 : value) (K2 : ectx)
+| CasLCtx (K0 : ectx)  (e1 : expr)  (e2 : expr)
+| CasMCtx (v0 : value) (K1 : ectx)  (e2 : expr)
+| CasRCtx (v0 : value) (v1 : value) (K2 : ectx)
+.
 
 Fixpoint fill (K : ectx) (e : expr) :=
   match K with
@@ -154,6 +166,11 @@ Fixpoint fill (K : ectx) (e : expr) :=
   | CaseCtx K e1 e2 => Case (fill K e) e1 e2
   | RefCtx K => Ref (fill K e)
   | LoadCtx K => Load (fill K e)
+  | StoreLCtx K1 e2 => Store (fill K1 e) e2
+  | StoreRCtx v1 K2 => Store (v2e v1) (fill K2 e)
+  | CasLCtx K0 e1 e2 => Cas (fill K0 e) e1 e2
+  | CasMCtx v0 K1 e2 => Cas (v2e v0) (fill K1 e) e2
+  | CasRCtx v0 v1 K2 => Cas (v2e v0) (v2e v1) (fill K2 e)
   end.
 
 Fixpoint comp_ctx (Ko : ectx) (Ki : ectx) :=
@@ -173,6 +190,11 @@ Fixpoint comp_ctx (Ko : ectx) (Ki : ectx) :=
   | CaseCtx K e1 e2 => CaseCtx (comp_ctx K Ki) e1 e2
   | RefCtx K => RefCtx (comp_ctx K Ki)
   | LoadCtx K => LoadCtx (comp_ctx K Ki)
+  | StoreLCtx K1 e2 => StoreLCtx (comp_ctx K1 Ki) e2
+  | StoreRCtx v1 K2 => StoreRCtx v1 (comp_ctx K2 Ki)
+  | CasLCtx K0 e1 e2 => CasLCtx (comp_ctx K0 Ki) e1 e2
+  | CasMCtx v0 K1 e2 => CasMCtx v0 (comp_ctx K1 Ki) e2
+  | CasRCtx v0 v1 K2 => CasRCtx v0 v1 (comp_ctx K2 Ki)
   end.
 
 Lemma fill_empty e :
@@ -234,8 +256,17 @@ Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
     prim_step (Fork e) σ LitUnit σ (Some e)
 | RefS e v σ l (Hv : e2v e = Some v) (Hfresh : σ !! l = None):
     prim_step (Ref e) σ (Loc l) (<[l:=v]>σ) None
-| LoadS l σ v (Hlookup : σ !! l = Some v):
-    prim_step (Load (Loc l)) σ (v2e v) σ None.
+| LoadS l v σ (Hlookup : σ !! l = Some v):
+    prim_step (Load (Loc l)) σ (v2e v) σ None
+| StoreS l e v σ (Hv : e2v e = Some v) (Halloc : is_Some (σ !! l)):
+    prim_step (Store (Loc l) e) σ LitUnit (<[l:=v]>σ) None
+| CasFailS l e1 v1 e2 v2 vl σ (Hv1 : e2v e1 = Some v1) (Hv2 : e2v e2 = Some v2)
+  (Hlookup : σ !! l = Some vl) (Hne : vl <> v1):
+    prim_step (Cas (Loc l) e1 e2) σ LitFalse σ None
+| CasSucS l e1 v1 e2 v2 σ (Hv1 : e2v e1 = Some v1) (Hv2 : e2v e2 = Some v2)
+  (Hlookup : σ !! l = Some v1):
+    prim_step (Cas (Loc l) e1 e2) σ LitTrue (<[l:=v2]>σ) None
+.
 
 Definition reducible e: Prop :=
   exists σ e' σ' ef, prim_step e σ e' σ' ef.
@@ -275,13 +306,14 @@ Proof.
   Ltac bad_fill Hfill := exfalso; move: Hfill; first [case_depeq3 | case_depeq2 | case_depeq1 | case] =>Hfill;
                          intros; subst;
                          (eapply values_stuck; eassumption) || (eapply fill_not_value2; first eassumption;
-                         by erewrite ?Hfill, ?v2v).
+                         try match goal with [ H : fill _ _ = _ |- _ ] => erewrite ->H end;
+                         by erewrite ?v2v).
   Ltac bad_red   Hfill e' Hred := exfalso; destruct e'; try discriminate Hfill; [];
       case: Hfill; intros; subst; destruct Hred as (σ' & e'' & σ'' & ef & Hstep);
       inversion Hstep; done || (clear Hstep; subst;
       eapply fill_not_value2; last (
         try match goal with [ H : _ = fill _ _ |- _ ] => erewrite <-H end; simpl;
-        repeat match goal with [ H : e2v _ = _ |- _ ] => erewrite H; simpl end
+        repeat match goal with [ H : e2v _ = _ |- _ ] => erewrite H; clear H; simpl end
       ); eassumption || done).
   Ltac good Hfill IH := move: Hfill; first [case_depeq3 | case_depeq2 | case_depeq1 | case]; intros; subst; 
     let K'' := fresh "K''" in edestruct IH as [K'' Hcomp]; first eassumption;
@@ -303,6 +335,8 @@ Definition atomic (e: expr) :=
   match e with
   | Ref e => is_Some (e2v e)
   | Load e => is_Some (e2v e)
+  | Store e1 e2 => is_Some (e2v e1) /\ is_Some (e2v e2)
+  | Cas e0 e1 e2 => is_Some (e2v e0) /\ is_Some (e2v e1) /\ is_Some (e2v e2)
   | _ => False
   end.
 
@@ -326,8 +360,8 @@ Lemma atomic_fill e K :
   e2v e = None ->
   K = EmptyCtx.
 Proof.
-  destruct K; simpl; first reflexivity; intros Hatomic Hnval; exfalso; try assumption;
-    destruct Hatomic; eapply fill_not_value2; eassumption.
+  destruct K; simpl; first reflexivity; unfold is_Some; intros Hatomic Hnval; exfalso; try assumption;
+    try (destruct_conjs; eapply fill_not_value2; eassumption).
 Qed.
 
 (** Tests, making sure that stuff works. *)
