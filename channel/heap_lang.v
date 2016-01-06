@@ -46,7 +46,7 @@ Inductive expr :=
 | Fork (e : expr)
 (* Heap *)
 | Loc (l : loc)
-| Ref (e : expr)
+| Alloc (e : expr)
 | Load (e : expr)
 | Store (e1 : expr) (e2 : expr)
 | Cas (e0 : expr) (e1 : expr) (e2 : expr)
@@ -140,7 +140,7 @@ Inductive ectx :=
 | InjLCtx (K : ectx)
 | InjRCtx (K : ectx)
 | CaseCtx (K : ectx) (e1 : {bind expr}) (e2 : {bind expr})
-| RefCtx (K : ectx)
+| AllocCtx (K : ectx)
 | LoadCtx (K : ectx)
 | StoreLCtx (K1 : ectx)  (e2 : expr)
 | StoreRCtx (v1 : value) (K2 : ectx)
@@ -164,7 +164,7 @@ Fixpoint fill (K : ectx) (e : expr) :=
   | InjLCtx K => InjL (fill K e)
   | InjRCtx K => InjR (fill K e)
   | CaseCtx K e1 e2 => Case (fill K e) e1 e2
-  | RefCtx K => Ref (fill K e)
+  | AllocCtx K => Alloc (fill K e)
   | LoadCtx K => Load (fill K e)
   | StoreLCtx K1 e2 => Store (fill K1 e) e2
   | StoreRCtx v1 K2 => Store (v2e v1) (fill K2 e)
@@ -188,7 +188,7 @@ Fixpoint comp_ctx (Ko : ectx) (Ki : ectx) :=
   | InjLCtx K => InjLCtx (comp_ctx K Ki)
   | InjRCtx K => InjRCtx (comp_ctx K Ki)
   | CaseCtx K e1 e2 => CaseCtx (comp_ctx K Ki) e1 e2
-  | RefCtx K => RefCtx (comp_ctx K Ki)
+  | AllocCtx K => AllocCtx (comp_ctx K Ki)
   | LoadCtx K => LoadCtx (comp_ctx K Ki)
   | StoreLCtx K1 e2 => StoreLCtx (comp_ctx K1 Ki) e2
   | StoreRCtx v1 K2 => StoreRCtx v1 (comp_ctx K2 Ki)
@@ -255,7 +255,7 @@ Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
 | ForkS e σ:
     prim_step (Fork e) σ LitUnit σ (Some e)
 | RefS e v σ l (Hv : e2v e = Some v) (Hfresh : σ !! l = None):
-    prim_step (Ref e) σ (Loc l) (<[l:=v]>σ) None
+    prim_step (Alloc e) σ (Loc l) (<[l:=v]>σ) None
 | LoadS l v σ (Hlookup : σ !! l = Some v):
     prim_step (Load (Loc l)) σ (v2e v) σ None
 | StoreS l e v σ (Hv : e2v e = Some v) (Halloc : is_Some (σ !! l)):
@@ -333,7 +333,7 @@ End step_by_value.
 (** Atomic expressions *)
 Definition atomic (e: expr) :=
   match e with
-  | Ref e => is_Some (e2v e)
+  | Alloc e => is_Some (e2v e)
   | Load e => is_Some (e2v e)
   | Store e1 e2 => is_Some (e2v e1) /\ is_Some (e2v e2)
   | Cas e0 e1 e2 => is_Some (e2v e0) /\ is_Some (e2v e1) /\ is_Some (e2v e2)
