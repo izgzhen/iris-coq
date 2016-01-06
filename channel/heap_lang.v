@@ -23,10 +23,13 @@ Ltac case_depeq3 := let Heq := fresh "Heq" in
   destruct Heq as (->,<-).
 
 (** Expressions and values. *)
+Definition loc := nat. (* Any countable type. *)
+
 Inductive expr :=
 | Var (x : var)
-| Lam (e : {bind expr})
+| Rec (e : {bind 2 of expr}) (* These are recursive lambdas. *)
 | App (e1 e2 : expr)
+| Loc (l : loc)
 | Lit {T : Type} (t: T)  (* arbitrary Coq values become literals *)
 | Op1  {T1 To : Type} (f : T1 -> To) (e1 : expr)
 | Op2  {T1 T2 To : Type} (f : T1 -> T2 -> To) (e1 : expr) (e2 : expr)
@@ -38,16 +41,17 @@ Inductive expr :=
 | Case (e0 : expr) (e1 : {bind expr}) (e2 : {bind expr})
 | Fork (e : expr).
 
-Definition lit_unit := Lit tt.
-Definition state := unit.
-
 Instance Ids_expr : Ids expr. derive. Defined.
 Instance Rename_expr : Rename expr. derive. Defined.
 Instance Subst_expr : Subst expr. derive. Defined.
 Instance SubstLemmas_expr : SubstLemmas expr. derive. Qed.
 
+Definition Lam (e: expr) := Rec (e.[up ids]).
+Definition LitUnit := Lit tt.
+
 Inductive value :=
-| LamV (e : {bind expr})
+| RecV (e : {bind 2 of expr})
+| LocV (l : loc)
 | LitV (T : Type) (t : T)  (* arbitrary Coq values become literal values *)
 | PairV (v1 v2 : value)
 | InjLV (v : value)
@@ -56,7 +60,8 @@ Inductive value :=
 Fixpoint v2e (v : value) : expr :=
   match v with
   | LitV _ t => Lit t
-  | LamV e   => Lam e
+  | LocV l => Loc l
+  | RecV e   => Rec e
   | PairV v1 v2 => Pair (v2e v1) (v2e v2)
   | InjLV v => InjL (v2e v)
   | InjRV v => InjR (v2e v)
@@ -64,7 +69,8 @@ Fixpoint v2e (v : value) : expr :=
 
 Fixpoint e2v (e : expr) : option value :=
   match e with
-  | Lam e => Some (LamV e)
+  | Rec e => Some (RecV e)
+  | Loc l => Some (LocV l)
   | Lit T t => Some (LitV T t)
   | Pair e1 e2 => v1 ← e2v e1;
                   v2 ← e2v e2;
@@ -101,6 +107,9 @@ Proof.
   revert v2; induction v1=>v2; destruct v2; simpl; try discriminate;
     first [case_depeq3 | case_depeq2 | case_depeq1 | case]; eauto using f_equal, f_equal2.
 Qed.
+
+(** The state: heaps. *)
+Definition state := unit.
 
 (** Evaluation contexts *)
 Inductive ectx :=
@@ -194,7 +203,7 @@ Qed.
 (** The stepping relation *)
 Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
 | BetaS e1 e2 v2 σ (Hv2 : e2v e2 = Some v2):
-    prim_step (App (Lam e1) e2) σ (e1.[e2/]) σ None
+    prim_step (App (Rec e1) e2) σ (e1.[e2.:(Rec e1).:ids]) σ None
 | Op1S T1 To (f : T1 -> To) t σ:
     prim_step (Op1 f (Lit t)) σ (Lit (f t)) σ None
 | Op2S T1 T2 To (f : T1 -> T2 -> To) t1 t2 σ:
@@ -208,7 +217,7 @@ Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
 | CaseRS e0 v0 e1 e2 σ (Hv0 : e2v e0 = Some v0):
     prim_step (Case (InjR e0) e1 e2) σ (e2.[e0/]) σ None
 | ForkS e σ:
-    prim_step (Fork e) σ lit_unit σ (Some e).
+    prim_step (Fork e) σ LitUnit σ (Some e).
 
 Definition reducible e: Prop :=
   exists σ e' σ' ef, prim_step e σ e' σ' ef.
@@ -274,12 +283,25 @@ Definition atomic (e: expr) :=
 
 (** Tests, making sure that stuff works. *)
 Module Tests.
-  Definition lit := Lit 21.
-  Definition term := Op2 plus lit lit.
+  Definition add := Op2 plus (Lit 21) (Lit 21).
 
-  Goal forall σ, prim_step term σ (Lit 42) σ None.
+  Goal forall σ, prim_step add σ (Lit 42) σ None.
   Proof.
     apply Op2S.
+  Qed.
+
+  Definition rec := Rec (App (Var 1) (Var 0)). (* fix f x => f x *)
+  Definition rec_app := App rec (Lit 0).
+  Goal forall σ, prim_step rec_app σ rec_app σ None.
+  Proof.
+    move=>?. eapply BetaS. (* Honestly, I have no idea why this works. *)
+    reflexivity.
+  Qed.
+
+  Definition lam := Lam (Op2 plus (Var 0) (Lit 21)).
+  Goal forall σ, prim_step (App lam (Lit 21)) σ add σ None.
+  Proof.
+    move=>?. eapply BetaS. reflexivity.
   Qed.
 End Tests.
 
