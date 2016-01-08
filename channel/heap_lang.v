@@ -57,7 +57,7 @@ Instance Rename_expr : Rename expr. derive. Defined.
 Instance Subst_expr : Subst expr. derive. Defined.
 Instance SubstLemmas_expr : SubstLemmas expr. derive. Qed.
 
-Definition Lam (e: expr) := Rec (e.[up ids]).
+Definition Lam (e: {bind expr}) := Rec (e.[up ids]).
 Definition LitUnit := Lit tt.
 Definition LitTrue := Lit true.
 Definition LitFalse := Lit false.
