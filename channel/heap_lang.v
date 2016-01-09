@@ -320,13 +320,24 @@ Proof.
     exists K''; by eauto using f_equal, f_equal2, f_equal3, v2e_inj.
 
   intros Hfill Hred Hnval. 
-  revert K' Hfill; induction K=>K' /= Hfill;
+  Time revert K' Hfill; induction K=>K' /= Hfill;
     first (now eexists; reflexivity);
-    destruct K'; simpl; try discriminate Hfill; try first [
-      bad_red Hfill e' Hred
-    | bad_fill Hfill
-    | good Hfill IHK
-    ].
+    (destruct K'; simpl;
+      (* The first case is: K' is EmpyCtx. *)
+      first (by bad_red Hfill e' Hred);
+      (* Many of the other cases result in contradicting equalities. *)
+      try discriminate Hfill;
+      (* The remaining cases are "compatible" contexts - that result in the same head symbol of the expression.
+         Test whether the context als has the same head, and use the appropriate tactic. *)
+      match goal with
+      | [ |- exists x, ?C _ = ?C _ ] => by good Hfill IHK
+      | [ |- exists x, ?C _ _ = ?C _ _ ] => by good Hfill IHK
+      | [ |- exists x, ?C _ _ _ = ?C _ _ _ ] => by good Hfill IHK
+      | [ |- exists x, ?C _ _ _ _ = ?C _ _ _ _ ] => by good Hfill IHK
+      | [ |- exists x, ?C _ _ _ _ _ = ?C _ _ _ _ _ ] => by good Hfill IHK
+      | [ |- exists x, ?C _ _ _ _ _ _ = ?C _ _ _ _ _ _ ] => by good Hfill IHK
+      | _ => by bad_fill Hfill
+      end).
 Qed.
 End step_by_value.
 
