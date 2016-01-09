@@ -303,11 +303,10 @@ Lemma step_by_value {K K' e e'} :
   e2v e = None ->
   exists K'', K' = comp_ctx K K''.
 Proof.
-  Ltac bad_fill Hfill := exfalso; move: Hfill; first [case_depeq3 | case_depeq2 | case_depeq1 | case] =>Hfill;
-                         intros; subst;
-                         (eapply values_stuck; eassumption) || (eapply fill_not_value2; first eassumption;
-                         try match goal with [ H : fill _ _ = _ |- _ ] => erewrite ->H end;
-                         by erewrite ?v2v).
+  Ltac bad_fill := intros; exfalso; subst;
+                   (eapply values_stuck; eassumption) || (eapply fill_not_value2; first eassumption;
+                    try match goal with [ H : fill _ _ = _ |- _ ] => erewrite ->H end;
+                    by erewrite ?v2v).
   Ltac bad_red   Hfill e' Hred := exfalso; destruct e'; try discriminate Hfill; [];
       case: Hfill; intros; subst; destruct Hred as (σ' & e'' & σ'' & ef & Hstep);
       inversion Hstep; done || (clear Hstep; subst;
@@ -315,7 +314,7 @@ Proof.
         try match goal with [ H : _ = fill _ _ |- _ ] => erewrite <-H end; simpl;
         repeat match goal with [ H : e2v _ = _ |- _ ] => erewrite H; clear H; simpl end
       ); eassumption || done).
-  Ltac good Hfill IH := move: Hfill; first [case_depeq3 | case_depeq2 | case_depeq1 | case]; intros; subst; 
+  Ltac good IH := intros; subst; 
     let K'' := fresh "K''" in edestruct IH as [K'' Hcomp]; first eassumption;
     exists K''; by eauto using f_equal, f_equal2, f_equal3, v2e_inj.
 
@@ -328,15 +327,19 @@ Proof.
       (* Many of the other cases result in contradicting equalities. *)
       try discriminate Hfill;
       (* The remaining cases are "compatible" contexts - that result in the same head symbol of the expression.
-         Test whether the context als has the same head, and use the appropriate tactic. *)
-      match goal with
-      | [ |- exists x, ?C _ = ?C _ ] => by good Hfill IHK
-      | [ |- exists x, ?C _ _ = ?C _ _ ] => by good Hfill IHK
-      | [ |- exists x, ?C _ _ _ = ?C _ _ _ ] => by good Hfill IHK
-      | [ |- exists x, ?C _ _ _ _ = ?C _ _ _ _ ] => by good Hfill IHK
-      | [ |- exists x, ?C _ _ _ _ _ = ?C _ _ _ _ _ ] => by good Hfill IHK
-      | [ |- exists x, ?C _ _ _ _ _ _ = ?C _ _ _ _ _ _ ] => by good Hfill IHK
-      | _ => by bad_fill Hfill
+         Test whether the context als has the same head, and use the appropriate tactic.
+         Furthermore, the Op* contexts need special treatment due to the inhomogenuous equalities
+         they induce. *)
+      by match goal with
+      | [ |- exists x, Op1Ctx _ _ = Op1Ctx _ _ ] => move: Hfill; case_depeq2; good IHK
+      | [ |- exists x, Op2LCtx _ _ _ = Op2LCtx _ _ _ ] => move: Hfill; case_depeq3; good IHK
+      | [ |- exists x, Op2RCtx _ _ _ = Op2RCtx _ _ _ ] => move: Hfill; case_depeq3; good IHK
+      | [ |- exists x, ?C _ = ?C _ ] => case: Hfill; good IHK
+      | [ |- exists x, ?C _ _ = ?C _ _ ] => case: Hfill; good IHK
+      | [ |- exists x, ?C _ _ _ = ?C _ _ _ ] => case: Hfill; good IHK
+      | [ |- exists x, Op2LCtx _ _ _ = Op2RCtx _ _ _ ] => move: Hfill; case_depeq3; bad_fill
+      | [ |- exists x, Op2RCtx _ _ _ = Op2LCtx _ _ _ ] => move: Hfill; case_depeq3; bad_fill
+      | _ => case: Hfill; bad_fill
       end).
 Qed.
 End step_by_value.
