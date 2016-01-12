@@ -1,6 +1,5 @@
 Require Export modures.cmra prelude.gmap.
 Require Import modures.option.
-Local Obligation Tactic := idtac.
 
 Section map.
 Context `{Countable K}.

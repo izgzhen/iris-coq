@@ -189,17 +189,11 @@ Proof. by injection 1. Qed.
 
 Instance N_eq_dec: ∀ x y : N, Decision (x = y) := N.eq_dec.
 Program Instance N_le_dec (x y : N) : Decision (x ≤ y)%N :=
-  match Ncompare x y with
-  | Gt => right _
-  | _ => left _
-  end.
-Next Obligation. congruence. Qed.
+  match Ncompare x y with Gt => right _ | _ => left _ end.
+Solve Obligations with naive_solver.
 Program Instance N_lt_dec (x y : N) : Decision (x < y)%N :=
-  match Ncompare x y with
-  | Lt => left _
-  | _ => right _
-  end.
-Next Obligation. congruence. Qed.
+  match Ncompare x y with Lt => left _ | _ => right _ end.
+Solve Obligations with naive_solver.
 Instance N_inhabited: Inhabited N := populate 1%N.
 Instance: PartialOrder (≤)%N.
 Proof.
@@ -340,10 +334,12 @@ Arguments Qred _ : simpl never.
 Instance Qc_eq_dec: ∀ x y : Qc, Decision (x = y) := Qc_eq_dec.
 Program Instance Qc_le_dec (x y : Qc) : Decision (x ≤ y) :=
   if Qclt_le_dec y x then right _ else left _.
-Next Obligation. by apply Qclt_not_le. Qed.
+Next Obligation. intros x y; apply Qclt_not_le. Qed.
+Next Obligation. done. Qed.
 Program Instance Qc_lt_dec (x y : Qc) : Decision (x < y) :=
   if Qclt_le_dec x y then left _ else right _.
-Next Obligation. by apply Qcle_not_lt. Qed.
+Solve Obligations with done.
+Next Obligation. intros x y; apply Qcle_not_lt. Qed.
 
 Instance: PartialOrder (≤).
 Proof.

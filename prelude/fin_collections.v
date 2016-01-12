@@ -93,15 +93,15 @@ Proof.
 Defined.
 Global Program Instance collection_subseteq_dec_slow (X Y : C) :
     Decision (X ⊆ Y) | 100 :=
-  match decide_rel (=) (size (X ∖ Y)) 0 with
-  | left E1 => left _ | right E1 => right _
+  match decide_rel (=) (size (X ∖ Y)) 0 return _ with
+  | left _ => left _ | right _ => right _
   end.
 Next Obligation.
-  intros x Ex; apply dec_stable; intro. destruct (proj1 (elem_of_empty x)).
+  intros X Y E1 x ?; apply dec_stable; intro. destruct (proj1(elem_of_empty x)).
   apply (size_empty_inv _ E1). by rewrite elem_of_difference.
 Qed.
 Next Obligation.
-  intros E2. destruct E1. apply size_empty_iff, equiv_empty. intros x.
+  intros X Y E1 E2; destruct E1. apply size_empty_iff, equiv_empty. intros x.
   rewrite elem_of_difference. intros [E3 ?]. by apply E2 in E3.
 Qed.
 Lemma size_union_alt X Y : size (X ∪ Y) = size X + size (Y ∖ X).

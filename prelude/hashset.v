@@ -25,14 +25,14 @@ Next Obligation. by intros n X; simpl_map. Qed.
 Program Instance hashset_singleton: Singleton A (hashset hash) := λ x,
   Hashset {[ hash x ↦ [x] ]} _.
 Next Obligation.
-  intros n l. rewrite lookup_singleton_Some. intros [<- <-].
+  intros x n l [<- <-]%lookup_singleton_Some.
   rewrite Forall_singleton; auto using NoDup_singleton.
 Qed.
 Program Instance hashset_union: Union (hashset hash) := λ m1 m2,
   let (m1,Hm1) := m1 in let (m2,Hm2) := m2 in
   Hashset (union_with (λ l k, Some (list_union l k)) m1 m2) _. 
 Next Obligation.
-  intros n l'. rewrite lookup_union_with_Some.
+  intros _ _ m1 Hm1 m2 Hm2 n l'; rewrite lookup_union_with_Some.
   intros [[??]|[[??]|(l&k&?&?&?)]]; simplify_equality'; auto.
   split; [apply Forall_list_union|apply NoDup_list_union];
     first [by eapply Hm1; eauto | by eapply Hm2; eauto].
@@ -42,7 +42,7 @@ Program Instance hashset_intersection: Intersection (hashset hash) := λ m1 m2,
   Hashset (intersection_with (λ l k,
     let l' := list_intersection l k in guard (l' ≠ []); Some l') m1 m2) _.
 Next Obligation.
-  intros n l'. rewrite lookup_intersection_with_Some.
+  intros _ _ m1 Hm1 m2 Hm2 n l'. rewrite lookup_intersection_with_Some.
   intros (?&?&?&?&?); simplify_option_equality.
   split; [apply Forall_list_intersection|apply NoDup_list_intersection];
     first [by eapply Hm1; eauto | by eapply Hm2; eauto].
@@ -52,7 +52,7 @@ Program Instance hashset_difference: Difference (hashset hash) := λ m1 m2,
   Hashset (difference_with (λ l k,
     let l' := list_difference l k in guard (l' ≠ []); Some l') m1 m2) _.
 Next Obligation.
-  intros n l'. rewrite lookup_difference_with_Some.
+  intros _ _ m1 Hm1 m2 Hm2 n l'. rewrite lookup_difference_with_Some.
   intros [[??]|(?&?&?&?&?)]; simplify_option_equality; auto.
   split; [apply Forall_list_difference|apply NoDup_list_difference];
     first [by eapply Hm1; eauto | by eapply Hm2; eauto].

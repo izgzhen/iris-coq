@@ -1,5 +1,4 @@
 Require Export prelude.prelude.
-Obligation Tactic := idtac.
 
 (** Unbundeled version *)
 Class Dist A := dist : nat → relation A.

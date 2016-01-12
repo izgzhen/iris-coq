@@ -405,7 +405,6 @@ End Tests.
 (** Instantiate the Iris language interface. This closes reduction under evaluation contexts.
     We could potentially make this a generic construction. *)
 Section Language.
-  Local Obligation Tactic := idtac.
 
   Definition ectx_step e1 σ1 e2 σ2 (ef: option expr) :=
     exists K e1' e2', e1 = fill K e1' /\ e2 = fill K e2' /\ prim_step e1' σ1 e2' σ2 ef.
