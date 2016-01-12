@@ -261,7 +261,7 @@ Lemma option_guard_iff {A} P Q `{Decision P, Decision Q} (x : option A) :
   (P ↔ Q) → guard P; x = guard Q; x.
 Proof. intros [??]. repeat case_option_guard; intuition. Qed.
 
-Tactic Notation "simpl_option_monad" "by" tactic3(tac) :=
+Tactic Notation "simpl_option" "by" tactic3(tac) :=
   let assert_Some_None A o H := first
     [ let x := fresh in evar (x:A); let x' := eval unfold x in x in clear x;
       assert (o = Some x') as H by tac
@@ -308,7 +308,7 @@ Tactic Notation "simpl_option_monad" "by" tactic3(tac) :=
 Tactic Notation "simplify_option_equality" "by" tactic3(tac) :=
   repeat match goal with
   | _ => progress simplify_equality'
-  | _ => progress simpl_option_monad by tac
+  | _ => progress simpl_option by tac
   | _ : maybe _ ?x = Some _ |- _ => is_var x; destruct x
   | _ : maybe2 _ ?x = Some _ |- _ => is_var x; destruct x
   | _ : maybe3 _ ?x = Some _ |- _ => is_var x; destruct x

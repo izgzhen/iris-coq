@@ -1532,7 +1532,7 @@ Tactic Notation "simplify_map_equality" "by" tactic3(tac) :=
   repeat match goal with
   | _ => progress simpl_map by tac
   | _ => progress simplify_equality
-  | _ => progress simpl_option_monad by tac
+  | _ => progress simpl_option by tac
   | H : {[ _ ↦ _ ]} !! _ = None |- _ => rewrite lookup_singleton_None in H
   | H : {[ _ ↦ _ ]} !! _ = Some _ |- _ =>
     rewrite lookup_singleton_Some in H; destruct H
