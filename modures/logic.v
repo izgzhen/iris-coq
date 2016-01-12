@@ -204,14 +204,19 @@ Infix "↔" := uPred_iff : uPred_scope.
 
 Fixpoint uPred_big_and {M} (Ps : list (uPred M)) :=
   match Ps with [] => True | P :: Ps => P ∧ uPred_big_and Ps end%I.
+Instance: Params (@uPred_big_and) 1.
+Notation "'Π∧' Ps" := (uPred_big_and Ps) (at level 20) : uPred_scope.
 Fixpoint uPred_big_sep {M} (Ps : list (uPred M)) :=
   match Ps with [] => True | P :: Ps => P ★ uPred_big_sep Ps end%I.
+Instance: Params (@uPred_big_sep) 1.
+Notation "'Π★' Ps" := (uPred_big_sep Ps) (at level 20) : uPred_scope.
 
 Class TimelessP {M} (P : uPred M) := timelessP x n : ✓{1} x → P 1 x → P n x.
 
 Module uPred. Section uPred_logic.
 Context {M : cmraT}.
 Implicit Types P Q : uPred M.
+Implicit Types Ps Qs : list (uPred M).
 Implicit Types A : Type.
 
 Global Instance: PreOrder ((⊆) : relation (uPred M)).
@@ -652,6 +657,8 @@ Proof.
   { intros n; solve_proper. }
   rewrite <-(eq_refl _ True), always_const; auto.
 Qed.
+Lemma always_and_sep_r P Q : (P ∧ □ Q)%I ⊆ (P ★ □ Q)%I.
+Proof. rewrite !(commutative _ P); apply always_and_sep_l. Qed.
 Lemma always_sep P Q : (□ (P ★ Q))%I ≡ (□ P ★ □ Q)%I.
 Proof.
   apply (anti_symmetric (⊆)).
@@ -705,6 +712,42 @@ Proof.
   intros ? Hvalid x [|n] ??; [done|apply Hvalid].
   apply (valid_timeless _), cmra_valid_le with (S n); auto with lia.
 Qed.
+
+(* Big ops *)
+Global Instance uPred_big_and_proper : Proper ((≡) ==> (≡)) (@uPred_big_and M).
+Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; simpl; rewrite ?HPQ, ?IH. Qed.
+Global Instance uPred_big_sep_proper : Proper ((≡) ==> (≡)) (@uPred_big_sep M).
+Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; simpl; rewrite ?HPQ, ?IH. Qed.
+Global Instance uPred_big_and_perm : Proper ((≡ₚ) ==> (≡)) (@uPred_big_and M).
+Proof.
+  induction 1 as [|P Ps Qs ? IH|P Q Ps|]; simpl; auto.
+  * by rewrite IH.
+  * by rewrite !(associative _), (commutative _ P).
+  * etransitivity; eauto.
+Qed.
+Global Instance uPred_big_sep_perm : Proper ((≡ₚ) ==> (≡)) (@uPred_big_sep M).
+Proof.
+  induction 1 as [|P Ps Qs ? IH|P Q Ps|]; simpl; auto.
+  * by rewrite IH.
+  * by rewrite !(associative _), (commutative _ P).
+  * etransitivity; eauto.
+Qed.
+Lemma uPred_big_and_app Ps Qs : (Π∧ (Ps ++ Qs))%I ≡ (Π∧ Ps ∧ Π∧ Qs)%I.
+Proof.
+  by induction Ps as [|P Ps IH];
+    simpl; rewrite ?(left_id _ _), <-?(associative _), ?IH.
+Qed.
+Lemma uPred_big_sep_app Ps Qs : (Π★ (Ps ++ Qs))%I ≡ (Π★ Ps ★ Π★ Qs)%I.
+Proof.
+  by induction Ps as [|P Ps IH];
+    simpl; rewrite ?(left_id _ _), <-?(associative _), ?IH.
+Qed.
+Lemma uPred_big_sep_and Ps : (Π★ Ps)%I ⊆ (Π∧ Ps)%I.
+Proof. by induction Ps as [|P Ps IH]; simpl; auto. Qed.
+Lemma uPred_big_and_elem_of Ps P : P ∈ Ps → (Π∧ Ps)%I ⊆ P.
+Proof. induction 1; simpl; auto. Qed.
+Lemma uPred_big_sep_elem_of Ps P : P ∈ Ps → (Π★ Ps)%I ⊆ P.
+Proof. induction 1; simpl; auto. Qed.
 
 (* Timeless *)
 Global Instance const_timeless (P : Prop) : TimelessP (@uPred_const M P).
