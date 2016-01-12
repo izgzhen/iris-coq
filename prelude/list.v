@@ -34,6 +34,9 @@ Notation "x ≢ₚ y":= (¬x ≡ₚ y) (at level 70, no associativity) : C_scope
 Notation "( x ≢ₚ)" := (λ y, x ≢ₚ y) (only parsing) : C_scope.
 Notation "(≢ₚ x )" := (λ y, y ≢ₚ x) (only parsing) : C_scope.
 
+Instance maybe_cons {A} : Maybe2 (@cons A) := λ l,
+  match l with x :: l => Some (x,l) | _ => None end.
+
 (** * Definitions *)
 (** Setoid equality lifted to lists *)
 Inductive list_equiv `{Equiv A} : Equiv (list A) :=
