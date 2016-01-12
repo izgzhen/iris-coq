@@ -332,10 +332,10 @@ Lemma and_elim_r P Q : (P ∧ Q)%I ⊆ Q.
 Proof. by intros x n ? [??]. Qed.
 Lemma and_intro P Q R : P ⊆ Q → P ⊆ R → P ⊆ (Q ∧ R)%I.
 Proof. intros HQ HR x n ??; split; auto. Qed.
-Lemma or_intro_l P Q R : P ⊆ Q → P ⊆ (Q ∨ R)%I.
-Proof. intros HQ x n ??; left; auto. Qed.
-Lemma or_intro_r P Q R : P ⊆ R → P ⊆ (Q ∨ R)%I.
-Proof. intros HR x n ??; right; auto. Qed.
+Lemma or_intro_l P Q : P ⊆ (P ∨ Q)%I.
+Proof. intros x n ??; left; auto. Qed.
+Lemma or_intro_r P Q : Q ⊆ (P ∨ Q)%I.
+Proof. intros x n ??; right; auto. Qed.
 Lemma or_elim R P Q : P ⊆ R → Q ⊆ R → (P ∨ Q)%I ⊆ R.
 Proof. intros HP HQ x n ? [?|?]. by apply HP. by apply HQ. Qed.
 Lemma impl_intro P Q R : (R ∧ P)%I ⊆ Q → R ⊆ (P → Q)%I.
@@ -375,8 +375,14 @@ Lemma and_elim_l' P Q R : P ⊆ R → (P ∧ Q)%I ⊆ R.
 Proof. by rewrite and_elim_l. Qed.
 Lemma and_elim_r' P Q R : Q ⊆ R → (P ∧ Q)%I ⊆ R.
 Proof. by rewrite and_elim_r. Qed.
+Lemma or_intro_l' P Q R : P ⊆ Q → P ⊆ (Q ∨ R)%I.
+Proof. intros ->; apply or_intro_l. Qed.
+Lemma or_intro_r' P Q R : P ⊆ R → P ⊆ (Q ∨ R)%I.
+Proof. intros ->; apply or_intro_r. Qed.
+Lemma exist_intro' P `(Q : A → uPred M) a : P ⊆ Q a → P ⊆ (∃ a, Q a)%I.
+Proof. intros ->; apply exist_intro. Qed.
 
-Hint Resolve or_elim or_intro_l or_intro_r.
+Hint Resolve or_elim or_intro_l' or_intro_r'.
 Hint Resolve and_intro and_elim_l' and_elim_r'.
 Hint Immediate True_intro False_elim.
 
@@ -523,11 +529,15 @@ Proof. by intros P P' HP Q Q' HQ; apply wand_mono. Qed.
 
 Global Instance sep_True : RightId (≡) True%I (@uPred_sep M).
 Proof. by intros P; rewrite (commutative _), (left_id _ _). Qed.
-Lemma sep_elim_l P Q R : P ⊆ R → (P ★ Q)%I ⊆ R.
-Proof. by intros HR; rewrite <-(right_id _ (★) R)%I, HR, (True_intro Q). Qed.
+Lemma sep_elim_l P Q : (P ★ Q)%I ⊆ P.
+Proof. by rewrite (True_intro Q), (right_id _ _). Qed.
 Lemma sep_elim_r P Q : (P ★ Q)%I ⊆ Q.
 Proof. by rewrite (commutative (★))%I; apply sep_elim_l. Qed.
-Hint Resolve sep_elim_l sep_elim_r.
+Lemma sep_elim_l' P Q R : P ⊆ R → (P ★ Q)%I ⊆ R.
+Proof. intros ->; apply sep_elim_l. Qed.
+Lemma sep_elim_r' P Q R : Q ⊆ R → (P ★ Q)%I ⊆ R.
+Proof. intros ->; apply sep_elim_r. Qed.
+Hint Resolve sep_elim_l' sep_elim_r'.
 Lemma sep_and P Q : (P ★ Q)%I ⊆ (P ∧ Q)%I.
 Proof. auto. Qed.
 Global Instance sep_False : LeftAbsorb (≡) False%I (@uPred_sep M).
