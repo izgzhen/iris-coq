@@ -33,20 +33,29 @@ Definition fresh_string_go {A} (s : string) (m : stringmap A) (n : N)
   | inleft (_↾Hs') => go (1 + n)%N (fresh_string_step s m n _ Hs')
   | inright _ => s'
   end.
-Definition fresh_string {A} (m : stringmap A) (s : string) : string :=
+Definition fresh_string {A} (s : string) (m : stringmap A) : string :=
   match m !! s with
   | None => s
   | Some _ =>
      Fix_F _ (fresh_string_go s m) (wf_guard 32 (fresh_string_R_wf s m) 0)
   end.
-Lemma fresh_string_fresh {A} (m : stringmap A) s : m !! fresh_string m s = None.
+Lemma fresh_string_fresh {A} (m : stringmap A) s : m !! fresh_string s m = None.
 Proof.
   unfold fresh_string. destruct (m !! s) as [a|] eqn:Hs; [clear a Hs|done].
   generalize 0 (wf_guard 32 (fresh_string_R_wf s m) 0); revert m.
   fix 3; intros m n [?]; simpl; unfold fresh_string_go at 1; simpl.
   destruct (Some_dec (m !! _)) as [[??]|?]; auto.
 Qed.
-Definition fresh_string_of_set (X : stringset) (s : string) : string :=
-  fresh_string (mapset.mapset_car X) s.
-Lemma fresh_string_of_set_fresh (X : stringset) s : fresh_string_of_set X s ∉ X.
+Definition fresh_string_of_set (s : string) (X : stringset) : string :=
+  fresh_string s (mapset.mapset_car X).
+Lemma fresh_string_of_set_fresh (X : stringset) s : fresh_string_of_set s X ∉ X.
 Proof. apply eq_None_ne_Some, fresh_string_fresh. Qed.
+
+Fixpoint fresh_strings_of_set
+    (s : string) (n : nat) (X : stringset) : list string :=
+  match n with
+  | 0 => []
+  | S n =>
+     let x := fresh_string_of_set s X in
+     x :: fresh_strings_of_set s n ({[ x ]} ∪ X)
+  end%nat.
