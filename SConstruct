@@ -13,6 +13,3 @@ ParseDepends('deps')
 
 # Coq files
 for v in vs: env.Coq(v)
-
-# Coqidescript
-env.CoqIdeScript('coqidescript', [], COQFLAGS=Rs)

@@ -13,19 +13,9 @@ Coq = SCons.Builder.Builder(
   emitter = coq_emitter
 )
 
-def make_coqidescript(target, source, env):
-  open('coqidescript', 'w').write('#!/bin/sh\n' +
-    env['COQIDE'] + ' ' + env['COQFLAGS'] + ' $@ \n')
-  os.chmod('coqidescript', 0755)
-  return 0
-CoqIdeScript = SCons.Builder.Builder(action = make_coqidescript)
-
 def generate(env):
   env['COQC'] = 'coqc'
-  env['COQIDE'] = 'coqide'
-  env.Append(BUILDERS = {
-    'Coq' : Coq, 'CoqIdeScript' : CoqIdeScript
-  })
+  env.Append(BUILDERS = { 'Coq' : Coq })
 
 def exists(env):
   return env.Detect('coqc')
