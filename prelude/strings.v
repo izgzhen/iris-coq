@@ -16,6 +16,14 @@ Proof. solve_decision. Defined.
 Instance: Injective (=) (=) (String.append s1).
 Proof. intros s1 ???. induction s1; simplify_equality'; f_equal'; auto. Qed.
 
+(* Reverse *)
+Fixpoint string_rev_app (s1 s2 : string) : string :=
+  match s1 with
+  | "" => s2
+  | String a s1 => string_rev_app s1 (String a s2)
+  end.
+Definition string_rev (s : string) : string := string_rev_app s "".
+
 (** * Encoding and decoding *)
 (** In order to reuse or existing implementation of radix-2 search trees over
 positive binary naturals [positive], we define an injection [string_to_pos]
