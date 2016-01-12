@@ -333,7 +333,7 @@ Tactic Notation "naive_solver" tactic(tac) :=
   | H : False |- _ => destruct H
   | H : _ ∧ _ |- _ => destruct H
   | H : ∃ _, _  |- _ => destruct H
-  | H : ?P → ?Q, H2 : ?Q |- _ => specialize (H H2)
+  | H : ?P → ?Q, H2 : ?P |- _ => specialize (H H2)
   (**i simplify and solve equalities *)
   | |- _ => progress simplify_equality'
   (**i solve the goal *)
