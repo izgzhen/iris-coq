@@ -1,4 +1,4 @@
-Require Export prelude.prelude.
+Require Export modures.base.
 
 (** Unbundeled version *)
 Class Dist A := dist : nat → relation A.
@@ -75,8 +75,7 @@ Section cofe.
   Qed.
   Global Instance dist_proper n : Proper ((≡) ==> (≡) ==> iff) (dist n).
   Proof.
-    intros x1 x2 Hx y1 y2 Hy.
-    by rewrite equiv_dist in Hx, Hy; rewrite (Hx n), (Hy n).
+    by move => x1 x2 /equiv_dist Hx y1 y2 /equiv_dist Hy; rewrite (Hx n) (Hy n).
   Qed.
   Global Instance dist_proper_2 n x : Proper ((≡) ==> iff) (dist n x).
   Proof. by apply dist_proper. Qed.
@@ -90,10 +89,10 @@ Section cofe.
     Proper ((≡) ==> (≡) ==> (≡)) f | 100.
   Proof.
      unfold Proper, respectful; setoid_rewrite equiv_dist.
-     by intros x1 x2 Hx y1 y2 Hy n; rewrite (Hx n), (Hy n).
+     by intros x1 x2 Hx y1 y2 Hy n; rewrite (Hx n) (Hy n).
   Qed.
   Lemma compl_ne (c1 c2: chain A) n : c1 n ={n}= c2 n → compl c1 ={n}= compl c2.
-  Proof. intros. by rewrite (conv_compl c1 n), (conv_compl c2 n). Qed.
+  Proof. intros. by rewrite (conv_compl c1 n) (conv_compl c2 n). Qed.
   Lemma compl_ext (c1 c2 : chain A) : (∀ i, c1 i ≡ c2 i) → compl c1 ≡ compl c2.
   Proof. setoid_rewrite equiv_dist; naive_solver eauto using compl_ne. Qed.
   Global Instance contractive_ne `{Cofe B} (f : A → B) `{!Contractive f} n :
@@ -118,7 +117,7 @@ Program Definition fixpoint_chain `{Cofe A, Inhabited A} (f : A → A)
   `{!Contractive f} : chain A := {| chain_car i := Nat.iter i f inhabitant |}.
 Next Obligation.
   intros A ???? f ? x n; induction n as [|n IH]; intros i ?; [done|].
-  destruct i as [|i]; simpl; try lia; apply contractive, IH; auto with lia.
+  destruct i as [|i]; simpl; first lia; apply contractive, IH; auto with lia.
 Qed.
 Program Definition fixpoint `{Cofe A, Inhabited A} (f : A → A)
   `{!Contractive f} : A := compl (fixpoint_chain f).
@@ -129,14 +128,14 @@ Section fixpoint.
   Proof.
     apply equiv_dist; intros n; unfold fixpoint.
     rewrite (conv_compl (fixpoint_chain f) n).
-    by rewrite (chain_cauchy (fixpoint_chain f) n (S n)) at 1 by lia.
+    by rewrite {1}(chain_cauchy (fixpoint_chain f) n (S n)); last lia.
   Qed.
   Lemma fixpoint_ne (g : A → A) `{!Contractive g} n :
     (∀ z, f z ={n}= g z) → fixpoint f ={n}= fixpoint g.
   Proof.
     intros Hfg; unfold fixpoint.
-    rewrite (conv_compl (fixpoint_chain f) n),(conv_compl (fixpoint_chain g) n).
-    induction n as [|n IH]; simpl in *; [done|].
+    rewrite (conv_compl (fixpoint_chain f) n) (conv_compl (fixpoint_chain g) n).
+    induction n as [|n IH]; simpl in *; first done.
     rewrite Hfg; apply contractive, IH; auto using dist_S.
   Qed.
   Lemma fixpoint_proper (g : A → A) `{!Contractive g} :
@@ -166,8 +165,8 @@ Program Instance cofe_mor_compl (A B : cofeT) : Compl (cofeMor A B) := λ c,
   {| cofe_mor_car x := compl (fun_chain c x) |}.
 Next Obligation.
   intros A B c n x y Hxy.
-  rewrite (conv_compl (fun_chain c x) n), (conv_compl (fun_chain c y) n).
-  simpl; rewrite Hxy; apply (chain_cauchy c); lia.
+  rewrite (conv_compl (fun_chain c x) n) (conv_compl (fun_chain c y) n) /= Hxy.
+  apply (chain_cauchy c); lia.
 Qed.
 Instance cofe_mor_cofe (A B : cofeT) : Cofe (cofeMor A B).
 Proof.
@@ -204,7 +203,7 @@ Instance: Params (@ccompose) 3.
 Infix "◎" := ccompose (at level 40, left associativity).
 Lemma ccompose_ne {A B C} (f1 f2 : B -n> C) (g1 g2 : A -n> B) n :
   f1 ={n}= f2 → g1 ={n}= g2 → f1 ◎ g1 ={n}= f2 ◎ g2.
-Proof. by intros Hf Hg x; simpl; rewrite (Hg x), (Hf (g2 x)). Qed.
+Proof. by intros Hf Hg x; rewrite /= (Hg x) (Hf (g2 x)). Qed.
 
 (** Pre-composition as a functor *)
 Local Instance ccompose_l_ne' {A B C} (f : B -n> A) n :

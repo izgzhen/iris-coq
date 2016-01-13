@@ -1,4 +1,3 @@
-Require Import mathcomp.ssreflect.ssreflect.
 Require Import Autosubst.Autosubst.
 Require Import prelude.option prelude.gmap iris.language.
 

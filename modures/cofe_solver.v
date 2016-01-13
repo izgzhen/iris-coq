@@ -17,7 +17,7 @@ Lemma map_ext {A1 A2 B1 B2 : cofeT}
   (f : A2 -n> A1) (f' : A2 -n> A1) (g : B1 -n> B2) (g' : B1 -n> B2) x x' :
   (∀ x, f x ≡ f' x) → (∀ y, g y ≡ g' y) → x ≡ x' →
   map (f,g) x ≡ map (f',g') x'.
-Proof. by rewrite <-!cofe_mor_ext; intros Hf Hg Hx; rewrite Hf, Hg, Hx. Qed.
+Proof. by rewrite -!cofe_mor_ext; intros -> -> ->. Qed.
 
 Fixpoint A (k : nat) : cofeT :=
   match k with 0 => CofeT unit | S k => F (A k) (A k) end.
@@ -30,13 +30,13 @@ Definition g_S k (x : A (S (S k))) : g x = map (f,g) x := eq_refl.
 Lemma gf {k} (x : A k) : g (f x) ≡ x.
 Proof.
   induction k as [|k IH]; simpl in *; [by destruct x|].
-  rewrite <-map_comp; rewrite <-(map_id _ _ x) at 2; by apply map_ext.
+  rewrite -map_comp -{2}(map_id _ _ x); by apply map_ext.
 Qed.
 Lemma fg {n k} (x : A (S k)) : n ≤ k → f (g x) ={n}= x.
 Proof.
   intros Hnk; apply dist_le with k; auto; clear Hnk.
   induction k as [|k IH]; simpl; [apply dist_0|].
-  rewrite <-(map_id _ _ x) at 2; rewrite <-map_comp; by apply map_contractive.
+  rewrite -{2}(map_id _ _ x) -map_comp; by apply map_contractive.
 Qed.
 Arguments A _ : simpl never.
 Arguments f {_} : simpl never.
@@ -56,8 +56,7 @@ Program Instance tower_compl : Compl tower := λ c,
 Next Obligation.
   intros c k; apply equiv_dist; intros n.
   rewrite (conv_compl (tower_chain c k) n).
-  rewrite (conv_compl (tower_chain c (S k)) n); simpl.
-  by rewrite (g_tower (c n) k).
+  by rewrite (conv_compl (tower_chain c (S k)) n) /= (g_tower (c n) k).
 Qed.
 Instance tower_cofe : Cofe tower.
 Proof.
@@ -69,9 +68,9 @@ Proof.
     + by intros X Y ? n.
     + by intros X Y Z ?? n; transitivity (Y n).
   * intros k X Y HXY n; apply dist_S.
-    by rewrite <-(g_tower X), (HXY (S n)), g_tower.
+    by rewrite -(g_tower X) (HXY (S n)) g_tower.
   * intros X Y k; apply dist_0.
-  * intros c n k; simpl; rewrite (conv_compl (tower_chain c k) n).
+  * intros c n k; rewrite /= (conv_compl (tower_chain c k) n).
     apply (chain_cauchy c); lia.
 Qed.
 Definition T : cofeT := CofeT tower.
@@ -81,16 +80,16 @@ Fixpoint ff {k} (i : nat) : A k -n> A (i + k) :=
 Fixpoint gg {k} (i : nat) : A (i + k) -n> A k :=
   match i with 0 => cid | S i => gg i ◎ g end.
 Lemma ggff {k i} (x : A k) : gg i (ff i x) ≡ x.
-Proof. induction i as [|i IH]; simpl; [done|by rewrite (gf (ff i x)),IH]. Qed.
+Proof. induction i as [|i IH]; simpl; [done|by rewrite (gf (ff i x)) IH]. Qed.
 Lemma f_tower {n k} (X : tower) : n ≤ k → f (X k) ={n}= X (S k).
-Proof. intros. by rewrite <-(fg (X (S k))), <-(g_tower X). Qed.
+Proof. intros. by rewrite -(fg (X (S k))) // -(g_tower X). Qed.
 Lemma ff_tower {n} k i (X : tower) : n ≤ k → ff i (X k) ={n}= X (i + k).
 Proof.
   intros; induction i as [|i IH]; simpl; [done|].
-  by rewrite IH, (f_tower X) by lia.
+  by rewrite IH (f_tower X); last lia.
 Qed.
 Lemma gg_tower k i (X : tower) : gg i (X (i + k)) ≡ X k.
-Proof. by induction i as [|i IH]; simpl; [done|rewrite g_tower, IH]. Qed.
+Proof. by induction i as [|i IH]; simpl; [done|rewrite g_tower IH]. Qed.
 
 Instance tower_car_ne n k : Proper (dist n ==> dist n) (λ X, tower_car X k).
 Proof. by intros X Y HX. Qed.
@@ -114,14 +113,14 @@ Lemma gg_gg {k i i1 i2 j} (H1 : k = i + j) (H2 : k = i2 + (i1 + j)) (x : A k) :
 Proof.
   assert (i = i2 + i1) by lia; simplify_equality'. revert j x H1.
   induction i2 as [|i2 IH]; intros j X H1; simplify_equality';
-    [by rewrite coerce_id|by rewrite g_coerce, IH].
+    [by rewrite coerce_id|by rewrite g_coerce IH].
 Qed.
 Lemma ff_ff {k i i1 i2 j} (H1 : i + k = j) (H2 : i1 + (i2 + k) = j) (x : A k) :
   coerce H1 (ff i x) = coerce H2 (ff i1 (ff i2 x)).
 Proof.
   assert (i = i1 + i2) by lia; simplify_equality'.
   induction i1 as [|i1 IH]; simplify_equality';
-    [by rewrite coerce_id|by rewrite coerce_f, IH].
+    [by rewrite coerce_id|by rewrite coerce_f IH].
 Qed.
 
 Definition embed' {k} (i : nat) : A k -n> A i :=
@@ -135,10 +134,10 @@ Proof.
   * symmetry; by erewrite (@gg_gg _ _ 1 (k - S i)); simpl.
   * exfalso; lia.
   * assert (i = k) by lia; subst.
-    rewrite (ff_ff _ (eq_refl (1 + (0 + k)))); simpl; rewrite gf.
+    rewrite (ff_ff _ (eq_refl (1 + (0 + k)))) /= gf.
     by rewrite (gg_gg _ (eq_refl (0 + (0 + k)))).
-  * assert (H : 1 + ((i - k) + k) = S i) by lia; rewrite (ff_ff _ H); simpl.
-    rewrite <-(gf (ff (i - k) x)) at 2; rewrite g_coerce.
+  * assert (H : 1 + ((i - k) + k) = S i) by lia.
+    rewrite (ff_ff _ H) /= -{2}(gf (ff (i - k) x)) g_coerce.
     by erewrite coerce_proper by done.
 Qed.
 Program Definition embed_inf (k : nat) (x : A k) : T :=
@@ -152,21 +151,21 @@ Proof.
   rewrite equiv_dist; intros n i.
   unfold embed_inf, embed; simpl; unfold embed'.
   destruct (le_lt_dec i (S k)), (le_lt_dec i k); simpl.
-  * assert (H : S k = S (k - i) + (0 + i)) by lia; rewrite (gg_gg _ H); simpl.
+  * assert (H : S k = S (k - i) + (0 + i)) by lia; rewrite (gg_gg _ H) /=.
     by erewrite g_coerce, gf, coerce_proper by done.
   * assert (S k = 0 + (0 + i)) as H by lia.
     rewrite (gg_gg _ H); simplify_equality'.
     by rewrite (ff_ff _ (eq_refl (1 + (0 + k)))).
   * exfalso; lia.
-  * assert (H : (i - S k) + (1 + k) = i) by lia; rewrite (ff_ff _ H); simpl.
+  * assert (H : (i - S k) + (1 + k) = i) by lia; rewrite (ff_ff _ H) /=.
     by erewrite coerce_proper by done.
 Qed.
 Lemma embed_tower j n (X : T) : n ≤ j → embed j (X j) ={n}= X.
 Proof.
   intros Hn i; simpl; unfold embed'; destruct (le_lt_dec i j) as [H|H]; simpl.
-  * rewrite <-(gg_tower i (j - i) X).
+  * rewrite -(gg_tower i (j - i) X).
     apply (_ : Proper (_ ==> _) (gg _)); by destruct (eq_sym _).
-  * rewrite (ff_tower j (i-j) X) by lia; by destruct (Nat.sub_add _ _ _).
+  * rewrite (ff_tower j (i-j) X); last lia. by destruct (Nat.sub_add _ _ _).
 Qed.
 
 Program Definition unfold_chain (X : T) : chain (F T T) :=
@@ -175,14 +174,14 @@ Next Obligation.
   intros X n i Hi.
   assert (∃ k, i = k + n) as [k ?] by (exists (i - n); lia); subst; clear Hi.
   induction k as [|k Hk]; simpl; [done|].
-  rewrite Hk, (f_tower X), f_S, <-map_comp by lia.
+  rewrite Hk (f_tower X); last lia; rewrite f_S -map_comp.
   apply dist_S, map_contractive.
   split; intros Y; symmetry; apply equiv_dist; [apply g_tower|apply embed_f].
 Qed.
 Definition unfold' (X : T) : F T T := compl (unfold_chain X).
 Instance unfold_ne : Proper (dist n ==> dist n) unfold'.
 Proof.
-  by intros n X Y HXY; unfold unfold'; apply compl_ne; simpl; rewrite (HXY n).
+  by intros n X Y HXY; unfold unfold'; apply compl_ne; rewrite /= (HXY n).
 Qed.
 Definition unfold : T -n> F T T := CofeMor unfold'.
 
@@ -190,7 +189,7 @@ Program Definition fold' (X : F T T) : T :=
   {| tower_car n := g (map (embed n,project n) X) |}.
 Next Obligation.
   intros X k; apply (_ : Proper ((≡) ==> (≡)) g).
-  rewrite <-(map_comp _ _ _ _ _ _ (embed (S k)) f (project (S k)) g).
+  rewrite -(map_comp _ _ _ _ _ _ (embed (S k)) f (project (S k)) g).
   apply map_ext; [apply embed_f|intros Y; apply g_tower|done].
 Qed.
 Instance fold_ne : Proper (dist n ==> dist n) fold'.
@@ -202,14 +201,14 @@ Proof.
   assert (map_ff_gg : ∀ i k (x : A (S i + k)) (H : S i + k = i + S k),
     map (ff i, gg i) x ≡ gg i (coerce H x)).
   { intros i; induction i as [|i IH]; intros k x H; simpl.
-    { by rewrite coerce_id, map_id. }
-    rewrite map_comp, g_coerce; apply IH. }
+    { by rewrite coerce_id map_id. }
+    rewrite map_comp g_coerce; apply IH. }
   rewrite equiv_dist; intros n k; unfold unfold, fold; simpl.
-  rewrite <-g_tower, <-(gg_tower _ n); apply (_ : Proper (_ ==> _) g).
+  rewrite -g_tower -(gg_tower _ n); apply (_ : Proper (_ ==> _) g).
   transitivity (map (ff n, gg n) (X (S (n + k)))).
   { unfold unfold'; rewrite (conv_compl (unfold_chain X) n).
-    rewrite (chain_cauchy (unfold_chain X) n (n + k)) by lia; simpl.
-    rewrite (f_tower X), <-map_comp by lia.
+    rewrite (chain_cauchy (unfold_chain X) n (n + k)) /=; last lia.
+    rewrite (f_tower X); last lia; rewrite -map_comp.
     apply dist_S. apply map_contractive; split; intros x; simpl; unfold embed'.
     * destruct (le_lt_dec _ _); simpl.
       { assert (n = 0) by lia; subst. apply dist_0. }
@@ -221,12 +220,12 @@ Proof.
 Qed.
 Definition unfold_fold X : unfold (fold X) ≡ X.
 Proof.
-  rewrite equiv_dist; intros n; unfold unfold; simpl.
-  unfold unfold'; rewrite (conv_compl (unfold_chain (fold X)) n); simpl.
-  rewrite (fg (map (embed _,project n) X)),
-    <-map_comp by lia; rewrite <-(map_id _ _ X) at 2.
+  rewrite equiv_dist; intros n.
+  rewrite /(unfold) /= /(unfold') (conv_compl (unfold_chain (fold X)) n) /=.
+  rewrite (fg (map (embed _,project n) X)); last lia.
+  rewrite -map_comp -{2}(map_id _ _ X).
   apply dist_S, map_contractive; split; intros Y i; apply embed_tower; lia.
 Qed.
 End solver.
 
-Global Opaque cofe_solver.T cofe_solver.fold cofe_solver.unfold.
+Global Opaque T fold unfold.

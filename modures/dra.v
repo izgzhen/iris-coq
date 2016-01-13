@@ -67,19 +67,17 @@ Hint Immediate dra_op_proper : typeclass_instances.
 Instance: Proper ((≡) ==> (≡) ==> iff) (⊥).
 Proof.
   intros x1 x2 Hx y1 y2 Hy; split.
-  * by rewrite Hy, (symmetry_iff (⊥) x1), (symmetry_iff (⊥) x2), Hx.
-  * by rewrite <-Hy, (symmetry_iff (⊥) x2), (symmetry_iff (⊥) x1), <-Hx.
+  * by rewrite Hy (symmetry_iff (⊥) x1) (symmetry_iff (⊥) x2) Hx.
+  * by rewrite -Hy (symmetry_iff (⊥) x2) (symmetry_iff (⊥) x1) -Hx.
 Qed.
 Lemma dra_disjoint_rl x y z : ✓ x → ✓ y → ✓ z → y ⊥ z → x ⊥ y ⋅ z → x ⊥ y.
 Proof. intros ???. rewrite !(symmetry_iff _ x). by apply dra_disjoint_ll. Qed.
 Lemma dra_disjoint_lr x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → y ⊥ z.
-Proof.
-  intros ????. rewrite dra_commutative by done. by apply dra_disjoint_ll.
-Qed.
+Proof. intros ????. rewrite dra_commutative //. by apply dra_disjoint_ll. Qed.
 Lemma dra_disjoint_move_r x y z :
   ✓ x → ✓ y → ✓ z → y ⊥ z → x ⊥ y ⋅ z → x ⋅ y ⊥ z.
 Proof.
-  intros; symmetry; rewrite dra_commutative by eauto using dra_disjoint_rl.
+  intros; symmetry; rewrite dra_commutative; eauto using dra_disjoint_rl.
   apply dra_disjoint_move_l; auto; by rewrite dra_commutative.
 Qed.
 Hint Immediate dra_disjoint_move_l dra_disjoint_move_r.
@@ -100,20 +98,21 @@ Program Instance validity_minus : Minus T := λ x y,
   Validity (validity_car x ⩪ validity_car y)
            (✓ x ∧ ✓ y ∧ validity_car y ≼ validity_car x) _.
 Solve Obligations with naive_solver auto using dra_minus_valid.
+
 Instance validity_ra : RA T.
 Proof.
   split.
   * apply _.
   * intros ??? [? Heq]; split; simpl; [|by intros (?&?&?); rewrite Heq].
     split; intros (?&?&?); split_ands';
-      first [by rewrite ?Heq by tauto|by rewrite <-?Heq by tauto|tauto].
+      first [rewrite ?Heq; tauto|rewrite -?Heq; tauto|tauto].
   * by intros ?? [? Heq]; split; [done|]; simpl; intros ?; rewrite Heq.
-  * by intros ?? Heq ?; rewrite <-Heq.
+  * by intros ?? -> ?.
   * intros x1 x2 [? Hx] y1 y2 [? Hy];
-      split; simpl; [|by intros (?&?&?); rewrite Hx, Hy].
+      split; simpl; [|by intros (?&?&?); rewrite Hx // Hy].
     split; intros (?&?&z&?&?); split_ands'; try tauto.
-    + exists z. by rewrite <-Hy, <-Hx.
-    + exists z. by rewrite Hx, Hy by tauto.
+    + exists z. by rewrite -Hy // -Hx.
+    + exists z. by rewrite Hx ?Hy; tauto.
   * intros [x px ?] [y py ?] [z pz ?]; split; simpl;
       [intuition eauto 2 using dra_disjoint_lr, dra_disjoint_rl
       |intros; apply (associative _)].

@@ -110,7 +110,7 @@ Global Instance cmra_ra : RA A.
 Proof.
   split; try by (destruct cmra;
     eauto using ne_proper, ne_proper_2 with typeclass_instances).
-  * by intros x1 x2 Hx; rewrite !cmra_valid_validN; intros ? n; rewrite <-Hx.
+  * by intros x1 x2 Hx; rewrite !cmra_valid_validN; intros ? n; rewrite -Hx.
   * intros x y; rewrite !cmra_included_includedN.
     eauto using cmra_unit_preserving.
   * intros x y; rewrite !cmra_valid_validN; intros ? n.
@@ -125,10 +125,10 @@ Proof. induction 2; eauto using cmra_valid_S. Qed.
 Global Instance ra_op_ne n : Proper (dist n ==> dist n ==> dist n) (⋅).
 Proof.
   intros x1 x2 Hx y1 y2 Hy.
-  by rewrite Hy, (commutative _ x1), Hx, (commutative _ y2).
+  by rewrite Hy (commutative _ x1) Hx (commutative _ y2).
 Qed.
 Lemma cmra_unit_valid x n : ✓{n} x → ✓{n} (unit x).
-Proof. rewrite <-(cmra_unit_l x) at 1; apply cmra_valid_op_l. Qed.
+Proof. rewrite -{1}(cmra_unit_l x); apply cmra_valid_op_l. Qed.
 
 (** * Timeless *)
 Lemma cmra_timeless_included_l `{!CMRAExtend A} x y :
@@ -136,7 +136,7 @@ Lemma cmra_timeless_included_l `{!CMRAExtend A} x y :
 Proof.
   intros ?? [x' ?].
   destruct (cmra_extend_op 1 y x x') as ([z z']&Hy&Hz&Hz'); auto; simpl in *.
-  by exists z'; rewrite Hy, (timeless x z) by done.
+  by exists z'; rewrite Hy (timeless x z).
 Qed.
 Lemma cmra_timeless_included_r n x y : Timeless y → x ≼{1} y → x ≼{n} y.
 Proof. intros ? [x' ?]. exists x'. by apply equiv_dist, (timeless y). Qed.
@@ -145,8 +145,8 @@ Lemma cmra_op_timeless `{!CMRAExtend A} x1 x2 :
 Proof.
   intros ??? z Hz.
   destruct (cmra_extend_op 1 z x1 x2) as ([y1 y2]&Hz'&?&?); auto; simpl in *.
-  { by rewrite <-?Hz; apply cmra_valid_validN. }
-  by rewrite Hz', (timeless x1 y1), (timeless x2 y2).
+  { by rewrite -?Hz; apply cmra_valid_validN. }
+  by rewrite Hz' (timeless x1 y1) // (timeless x2 y2).
 Qed.
 
 (** * Included *)
@@ -176,17 +176,17 @@ Proof.
   split.
   * by intros x; exists (unit x); rewrite ra_unit_r.
   * intros x y z [z1 Hy] [z2 Hz]; exists (z1 ⋅ z2).
-    by rewrite (associative _), <-Hy, <-Hz.
+    by rewrite (associative _) -Hy -Hz.
 Qed.
 Lemma cmra_valid_includedN x y n : ✓{n} y → x ≼{n} y → ✓{n} x.
-Proof. intros Hyv [z Hy]; rewrite Hy in Hyv; eauto using cmra_valid_op_l. Qed.
+Proof. intros Hyv [z Hy]; revert Hyv; rewrite Hy; apply cmra_valid_op_l. Qed.
 Lemma cmra_valid_included x y n : ✓{n} y → x ≼ y → ✓{n} x.
 Proof. rewrite cmra_included_includedN; eauto using cmra_valid_includedN. Qed.
 Lemma cmra_included_dist_l x1 x2 x1' n :
   x1 ≼ x2 → x1' ={n}= x1 → ∃ x2', x1' ≼ x2' ∧ x2' ={n}= x2.
 Proof.
   intros [z Hx2] Hx1; exists (x1' ⋅ z); split; auto using ra_included_l.
-  by rewrite Hx1, Hx2.
+  by rewrite Hx1 Hx2.
 Qed.
 
 (** * Properties of [(⇝)] relation *)
@@ -281,11 +281,11 @@ Qed.
 Instance prod_cmra `{CMRA A, CMRA B} : CMRA (A * B).
 Proof.
   split; try apply _.
-  * by intros n x y1 y2 [Hy1 Hy2]; split; simpl in *; rewrite ?Hy1, ?Hy2.
-  * by intros n y1 y2 [Hy1 Hy2]; split; simpl in *; rewrite ?Hy1, ?Hy2.
-  * by intros n y1 y2 [Hy1 Hy2] [??]; split; simpl in *; rewrite <-?Hy1, <-?Hy2.
+  * by intros n x y1 y2 [Hy1 Hy2]; split; simpl in *; rewrite ?Hy1 ?Hy2.
+  * by intros n y1 y2 [Hy1 Hy2]; split; simpl in *; rewrite ?Hy1 ?Hy2.
+  * by intros n y1 y2 [Hy1 Hy2] [??]; split; simpl in *; rewrite -?Hy1 -?Hy2.
   * by intros n x1 x2 [Hx1 Hx2] y1 y2 [Hy1 Hy2];
-      split; simpl in *; rewrite ?Hx1, ?Hx2, ?Hy1, ?Hy2.
+      split; simpl in *; rewrite ?Hx1 ?Hx2 ?Hy1 ?Hy2.
   * split; apply cmra_valid_0.
   * by intros n x [??]; split; apply cmra_valid_S.
   * intros x; split; [by intros [??] n; split; apply cmra_valid_validN|].

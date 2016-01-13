@@ -81,7 +81,7 @@ Proof. intros ?? HT ?? <- ?? <-; destruct 1; econstructor; eauto with sts. Qed.
 Instance closed_proper' : Proper ((≡) ==> (≡) ==> impl) closed.
 Proof.
   intros ?? HT ?? HS; destruct 1;
-    constructor; intros until 0; rewrite <-?HS, <-?HT; eauto.
+    constructor; intros until 0; rewrite -?HS -?HT; eauto.
 Qed.
 Instance closed_proper : Proper ((≡) ==> (≡) ==> iff) closed.
 Proof. by split; apply closed_proper'. Qed.
@@ -103,7 +103,7 @@ Qed.
 Instance up_proper : Proper ((≡) ==> (=) ==> (≡)) up.
 Proof. by intros ?? [??] ???; split; apply up_preserving. Qed.
 Instance up_set_proper : Proper ((≡) ==> (≡) ==> (≡)) up_set.
-Proof. by intros T1 T2 HT S1 S2 HS; unfold up_set; rewrite HS, HT. Qed.
+Proof. by intros T1 T2 HT S1 S2 HS; rewrite /up_set HS HT. Qed.
 Lemma elem_of_up s T : s ∈ up T s.
 Proof. constructor. Qed.
 Lemma subseteq_up_set S T : S ⊆ up_set T S.
@@ -124,7 +124,7 @@ Lemma closed_up_set_empty S : S ≢ ∅ → closed ∅ (up_set ∅ S).
 Proof. eauto using closed_up_set with sts. Qed.
 Lemma closed_up s T : tok s ∩ T ≡ ∅ → closed T (up T s).
 Proof.
-  intros; rewrite <-(collection_bind_singleton (up T) s).
+  intros; rewrite -(collection_bind_singleton (up T) s).
   apply closed_up_set; esolve_elem_of.
 Qed.
 Lemma closed_up_empty s : closed ∅ (up ∅ s).
@@ -162,9 +162,9 @@ Proof.
   * intros [|S T]; constructor; auto with sts.
     assert (S ⊆ up_set ∅ S); auto using subseteq_up_set with sts.
   * intros [s T|S T]; constructor; auto with sts.
-    + by rewrite (up_closed (up _ _)) by auto using closed_up with sts.
-    + by rewrite (up_closed (up_set _ _))
-        by eauto using closed_up_set, closed_ne with sts.
+    + rewrite (up_closed (up _ _)); auto using closed_up with sts.
+    + rewrite (up_closed (up_set _ _));
+        eauto using closed_up_set, closed_ne with sts.
   * intros x y ?? (z&Hy&?&Hxz); exists (unit (x ⋅ y)); split_ands.
     + destruct Hxz;inversion_clear Hy;constructor;unfold up_set;esolve_elem_of.
     + destruct Hxz; inversion_clear Hy; simpl;
@@ -185,7 +185,7 @@ Proof.
       end; auto with sts.
   * intros x y ?? (z&Hy&?&Hxz); destruct Hxz as [S1 S2 T1 T2| |];
       inversion Hy; clear Hy; constructor; setoid_subst;
-      rewrite ?disjoint_union_difference by done; auto.
+      rewrite ?disjoint_union_difference; auto.
     split; [|apply intersection_greatest; auto using subseteq_up_set with sts].
     apply intersection_greatest; [auto with sts|].
     intros s2; rewrite elem_of_intersection.

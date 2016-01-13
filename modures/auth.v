@@ -86,15 +86,15 @@ Instance auth_cmra `{CMRA A} : CMRA (auth A).
 Proof.
   split.
   * apply _.
-  * by intros n x y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy, ?Hy'.
-  * by intros n y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy, ?Hy'.
+  * by intros n x y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
+  * by intros n y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
   * intros n [x a] [y b] [Hx Ha]; simpl in *;
       destruct Hx as [[][]| | |]; intros ?; cofe_subst; auto.
   * by intros n x1 x2 [Hx Hx'] y1 y2 [Hy Hy'];
-      split; simpl; rewrite ?Hy, ?Hy', ?Hx, ?Hx'.
+      split; simpl; rewrite ?Hy ?Hy' ?Hx ?Hx'.
   * by intros [[] ?]; simpl.
   * intros n [[] ?] ?; naive_solver eauto using cmra_included_S, cmra_valid_S.
-  * destruct x as [[a| |] b]; simpl; rewrite ?cmra_included_includedN,
+  * destruct x as [[a| |] b]; simpl; rewrite ?cmra_included_includedN
       ?cmra_valid_validN; [naive_solver|naive_solver|].
     split; [done|intros Hn; discriminate (Hn 1)].
   * by split; simpl; rewrite (associative _).

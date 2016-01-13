@@ -71,7 +71,7 @@ Proof.
       eauto using agree_valid_le.
 Qed.
 Instance: Proper (dist n ==> dist n ==> dist n) op.
-Proof. by intros n x1 x2 Hx y1 y2 Hy; rewrite Hy,!(commutative _ _ y2), Hx. Qed.
+Proof. by intros n x1 x2 Hx y1 y2 Hy; rewrite Hy !(commutative _ _ y2) Hx. Qed.
 Instance: Proper ((≡) ==> (≡) ==> (≡)) op := ne_proper_2 _.
 Instance: Associative (≡) (@op (agree A) _).
 Proof.
@@ -82,19 +82,20 @@ Qed.
 Lemma agree_includedN (x y : agree A) n : x ≼{n} y ↔ y ={n}= x ⋅ y.
 Proof.
   split; [|by intros ?; exists y].
-  by intros [z Hz]; rewrite Hz, (associative _), agree_idempotent.
+  by intros [z Hz]; rewrite Hz (associative _) agree_idempotent.
 Qed.
 Global Instance agree_cmra : CMRA (agree A).
 Proof.
   split; try (apply _ || done).
   * intros n x y Hxy [? Hx]; split; [by apply Hxy|intros n' ?].
-    rewrite <-(proj2 Hxy n'), (Hx n') by eauto using agree_valid_le.
+    rewrite -(proj2 Hxy n') 1?(Hx n'); eauto using agree_valid_le.
     by apply dist_le with n; try apply Hxy.
   * by intros n x1 x2 Hx y1 y2 Hy.
   * intros x; split; [apply agree_valid_0|].
     by intros n'; rewrite Nat.le_0_r; intros ->.
   * intros n x [? Hx]; split; [by apply agree_valid_S|intros n' ?].
-    rewrite (Hx n') by auto; symmetry; apply dist_le with n; try apply Hx; auto.
+    rewrite (Hx n'); last auto.
+    symmetry; apply dist_le with n; try apply Hx; auto.
   * intros x; apply agree_idempotent.
   * by intros x y n [(?&?&?) ?].
   * by intros x y n; rewrite agree_includedN.
@@ -106,7 +107,7 @@ Global Instance agree_extend : CMRAExtend (agree A).
 Proof.
   intros n x y1 y2 ? Hx; exists (x,x); simpl; split.
   * by rewrite agree_idempotent.
-  * by rewrite Hx, (agree_op_inv x y1 y2), agree_idempotent by done.
+  * by rewrite Hx (agree_op_inv x y1 y2) // agree_idempotent.
 Qed.
 Program Definition to_agree (x : A) : agree A :=
   {| agree_car n := x; agree_is_valid n := True |}.
@@ -120,7 +121,7 @@ Proof. by intros ? [? Hx]; apply Hx. Qed.
 Lemma agree_to_agree_inj (x y : agree A) a n :
   ✓{n} x → x ={n}= to_agree a ⋅ y → x n ={n}= a.
 Proof.
-  by intros; transitivity ((to_agree a ⋅ y) n); [by apply agree_car_ne|].
+  by intros; transitivity ((to_agree a ⋅ y) n); first apply agree_car_ne.
 Qed.
 End agree.
 
@@ -141,7 +142,7 @@ Section agree_map.
   Proof.
     split; [|by intros n x [? Hx]; split; simpl; [|by intros n' ?; rewrite Hx]].
     intros x y n; rewrite !agree_includedN; intros Hy; rewrite Hy.
-    split; [split; simpl; try tauto|done].
+    split; last done; split; simpl; last tauto.
     by intros (?&?&Hxy); repeat split; intros;
        try apply Hxy; try apply Hf; eauto using @agree_valid_le.
   Qed.
@@ -157,6 +158,6 @@ Definition agreeRA_map {A B} (f : A -n> B) : agreeRA A -n> agreeRA B :=
   CofeMor (agree_map f : agreeRA A → agreeRA B).
 Instance agreeRA_map_ne A B n : Proper (dist n ==> dist n) (@agreeRA_map A B).
 Proof.
-  intros f g Hfg x; split; simpl; intros; [done|].
+  intros f g Hfg x; split; simpl; intros; first done.
   by apply dist_le with n; try apply Hfg.
 Qed.
