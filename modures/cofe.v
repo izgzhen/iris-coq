@@ -7,7 +7,14 @@ Notation "x ={ n }= y" := (dist n x y)
   (at level 70, n at next level, format "x  ={ n }=  y").
 Hint Extern 0 (?x ={_}= ?x) => reflexivity.
 Hint Extern 0 (_ ={_}= _) => symmetry; assumption.
-Ltac cofe_subst :=
+
+Tactic Notation "cofe_subst" ident(x) :=
+  repeat match goal with
+  | _ => progress simplify_equality'
+  | H:@dist ?A ?d ?n x _ |- _ => setoid_subst_aux (@dist A d n) x
+  | H:@dist ?A ?d ?n _ x |- _ => symmetry in H;setoid_subst_aux (@dist A d n) x
+  end.
+Tactic Notation "cofe_subst" :=
   repeat match goal with
   | _ => progress simplify_equality'
   | H:@dist ?A ?d ?n ?x _ |- _ => setoid_subst_aux (@dist A d n) x
