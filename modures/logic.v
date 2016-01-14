@@ -337,8 +337,11 @@ Global Instance iff_proper :
 (** Introduction and elimination rules *)
 Lemma const_intro P (Q : Prop) : Q → P ⊑ ■ Q.
 Proof. by intros ?? [|?]. Qed.
-Lemma const_elim (P : Prop) Q R : (P → Q ⊑ R) → (Q ∧ ■ P) ⊑ R.
-Proof. intros HR x [|n] ? [??]; [|apply HR]; auto. Qed.
+Lemma const_elim (P : Prop) Q R : Q ⊑ ■ P → (P → Q ⊑ R) → Q ⊑ R.
+Proof.
+  intros HQP HQR x [|n] ??; first done.
+  apply HQR; first eapply (HQP _ (S n)); eauto.
+Qed.
 Lemma True_intro P : P ⊑ True.
 Proof. by apply const_intro. Qed.
 Lemma False_elim P : False ⊑ P.
@@ -431,10 +434,14 @@ Proof. intros P Q; apply (anti_symmetric (⊑)); auto. Qed.
 Global Instance or_assoc : Associative (≡) (@uPred_or M).
 Proof. intros P Q R; apply (anti_symmetric (⊑)); auto. Qed.
 
+Lemma const_elim_l (P : Prop) Q R : (P → Q ⊑ R) → (■ P ∧ Q) ⊑ R.
+Proof. intros; apply const_elim with P; eauto. Qed.
+Lemma const_elim_r (P : Prop) Q R : (P → Q ⊑ R) → (Q ∧ ■ P) ⊑ R.
+Proof. intros; apply const_elim with P; eauto. Qed.
 Lemma const_mono (P Q: Prop) : (P → Q) → ■ P ⊑ ■ Q.
 Proof.
   intros; rewrite <-(left_id True%I _ (■ P)%I).
-  eauto using const_elim, const_intro.
+  eauto using const_elim_r, const_intro.
 Qed.
 Lemma and_mono P P' Q Q' : P ⊑ Q → P' ⊑ Q' → (P ∧ P') ⊑ (Q ∧ Q').
 Proof. auto. Qed.
@@ -694,14 +701,14 @@ Proof.
     by rewrite (associative op _ z1) -(commutative op z1) (associative op z1)
       -(associative op _ a2) (commutative op z1) -Hy1 -Hy2.
 Qed.
-Lemma box_own_unit (a : M) : (□ uPred_own (unit a))%I ≡ uPred_own (unit a).
+Lemma always_own_unit (a : M) : (□ uPred_own (unit a))%I ≡ uPred_own (unit a).
 Proof.
   intros x n; split; [by apply always_elim|intros [a' Hx]]; simpl.
   rewrite -(ra_unit_idempotent a) Hx.
   apply cmra_unit_preserving, cmra_included_l.
 Qed.
-Lemma box_own (a : M) : unit a ≡ a → (□ uPred_own a)%I ≡ uPred_own a.
-Proof. by intros <-; rewrite box_own_unit. Qed.
+Lemma always_own (a : M) : unit a ≡ a → (□ uPred_own a)%I ≡ uPred_own a.
+Proof. by intros <-; rewrite always_own_unit. Qed.
 Lemma own_empty `{Empty M, !RAIdentity M} : True ⊑ uPred_own ∅.
 Proof. intros x [|n] ??; [done|]. by  exists x; rewrite (left_id _ _). Qed.
 Lemma own_valid (a : M) : uPred_own a ⊑ (✓ a).
