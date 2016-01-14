@@ -580,10 +580,6 @@ Class LeftAbsorb {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
   left_absorb: ∀ x, R (f i x) i.
 Class RightAbsorb {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
   right_absorb: ∀ x, R (f x i) i.
-Class LeftDistr {A} (R : relation A) (f g : A → A → A) : Prop :=
-  left_distr: ∀ x y z, R (f x (g y z)) (g (f x y) (f x z)).
-Class RightDistr {A} (R : relation A) (f g : A → A → A) : Prop :=
-  right_distr: ∀ y z x, R (f (g y z) x) (g (f y x) (f z x)).
 Class AntiSymmetric {A} (R S : relation A) : Prop :=
   anti_symmetric: ∀ x y, S x y → S y x → R x y.
 Class Total {A} (R : relation A) := total x y : R x y ∨ R y x.
@@ -604,8 +600,6 @@ Arguments right_id {_ _} _ _ {_} _.
 Arguments associative {_ _} _ {_} _ _ _.
 Arguments left_absorb {_ _} _ _ {_} _.
 Arguments right_absorb {_ _} _ _ {_} _.
-Arguments left_distr {_ _} _ _ {_} _ _ _.
-Arguments right_distr {_ _} _ _ {_} _ _ _.
 Arguments anti_symmetric {_ _} _ {_} _ _ _ _.
 Arguments total {_} _ {_} _ _.
 Arguments trichotomy {_} _ {_} _ _.
@@ -634,12 +628,6 @@ Lemma left_absorb_L {A} (i : A) (f : A → A → A) `{!LeftAbsorb (=) i f} x :
 Proof. auto. Qed.
 Lemma right_absorb_L {A} (i : A) (f : A → A → A) `{!RightAbsorb (=) i f} x :
   f x i = i.
-Proof. auto. Qed.
-Lemma left_distr_L {A} (f g : A → A → A) `{!LeftDistr (=) f g} x y z :
-  f x (g y z) = g (f x y) (f x z).
-Proof. auto. Qed.
-Lemma right_distr_L {A} (f g : A → A → A) `{!RightDistr (=) f g} y z x :
-  f (g y z) x = g (f y x) (f z x).
 Proof. auto. Qed.
 
 (** ** Axiomatization of ordered structures *)
@@ -965,14 +953,6 @@ Instance: LeftId (↔) True impl.
 Proof. unfold impl. red; intuition. Qed.
 Instance: RightAbsorb (↔) True impl.
 Proof. unfold impl. red; intuition. Qed.
-Instance: LeftDistr (↔) (∧) (∨).
-Proof. red; intuition. Qed.
-Instance: RightDistr (↔) (∧) (∨).
-Proof. red; intuition. Qed.
-Instance: LeftDistr (↔) (∨) (∧).
-Proof. red; intuition. Qed.
-Instance: RightDistr (↔) (∨) (∧).
-Proof. red; intuition. Qed.
 Lemma not_injective `{Injective A B R R' f} x y : ¬R x y → ¬R' (f x) (f y).
 Proof. intuition. Qed.
 Instance injective_compose {A B C} R1 R2 R3 (f : A → B) (g : B → C) :

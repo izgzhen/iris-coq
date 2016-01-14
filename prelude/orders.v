@@ -557,24 +557,23 @@ Section lattice.
   Proof. split. by apply intersection_subseteq_l. by apply subseteq_empty. Qed.
   Global Instance: RightAbsorb ((≡) : relation A) ∅ (∩).
   Proof. intros ?. by rewrite (commutative _), (left_absorb _ _). Qed.
-  Global Instance: LeftDistr ((≡) : relation A) (∪) (∩).
+  Lemma union_intersection_l (X Y Z : A) : X ∪ (Y ∩ Z) ≡ (X ∪ Y) ∩ (X ∪ Z).
   Proof.
-    intros X Y Z. split; [|apply lattice_distr].
-    apply union_least.
+    split; [apply union_least|apply lattice_distr].
     { apply intersection_greatest; auto using union_subseteq_l. }
     apply intersection_greatest.
     * apply union_subseteq_r_transitive, intersection_subseteq_l.
     * apply union_subseteq_r_transitive, intersection_subseteq_r.
   Qed.
-  Global Instance: RightDistr ((≡) : relation A) (∪) (∩).
-  Proof. intros X Y Z. by rewrite !(commutative _ _ Z), (left_distr _ _). Qed.
-  Global Instance: LeftDistr ((≡) : relation A) (∩) (∪).
+  Lemma union_intersection_r (X Y Z : A) : (X ∩ Y) ∪ Z ≡ (X ∪ Z) ∩ (Y ∪ Z).
+  Proof. by rewrite !(commutative _ _ Z), union_intersection_l. Qed.
+  Lemma intersection_union_l (X Y Z : A) : X ∩ (Y ∪ Z) ≡ (X ∩ Y) ∪ (X ∩ Z).
   Proof.
-    intros X Y Z. split.
-    * rewrite (left_distr (∪) (∩)).
+    split.
+    * rewrite union_intersection_l.
       apply intersection_greatest.
       { apply union_subseteq_r_transitive, intersection_subseteq_l. }
-      rewrite (right_distr (∪) (∩)).
+      rewrite union_intersection_r.
       apply intersection_preserving; auto using union_subseteq_l.
     * apply intersection_greatest.
       { apply union_least; auto using intersection_subseteq_l. }
@@ -582,8 +581,8 @@ Section lattice.
       + apply intersection_subseteq_r_transitive, union_subseteq_l.
       + apply intersection_subseteq_r_transitive, union_subseteq_r.
   Qed.
-  Global Instance: RightDistr ((≡) : relation A) (∩) (∪).
-  Proof. intros X Y Z. by rewrite !(commutative _ _ Z), (left_distr _ _). Qed.
+  Lemma intersection_union_r (X Y Z : A) : (X ∪ Y) ∩ Z ≡ (X ∩ Z) ∪ (Y ∩ Z).
+  Proof. by rewrite !(commutative _ _ Z), intersection_union_l. Qed.
 
   Section leibniz.
     Context `{!LeibnizEquiv A}.
@@ -591,13 +590,13 @@ Section lattice.
     Proof. intros ?. unfold_leibniz. apply (left_absorb _ _). Qed.
     Global Instance: RightAbsorb (=) ∅ (∩).
     Proof. intros ?. unfold_leibniz. apply (right_absorb _ _). Qed.
-    Global Instance: LeftDistr (=) (∪) (∩).
-    Proof. intros ???. unfold_leibniz. apply (left_distr _ _). Qed.
-    Global Instance: RightDistr (=) (∪) (∩).
-    Proof. intros ???. unfold_leibniz. apply (right_distr _ _). Qed.
-    Global Instance: LeftDistr (=) (∩) (∪).
-    Proof. intros ???. unfold_leibniz. apply (left_distr _ _). Qed.
-    Global Instance: RightDistr (=) (∩) (∪).
-    Proof. intros ???. unfold_leibniz. apply (right_distr _ _). Qed.
+    Lemma union_intersection_l_L (X Y Z : A) : X ∪ (Y ∩ Z) = (X ∪ Y) ∩ (X ∪ Z).
+    Proof. unfold_leibniz; apply union_intersection_l. Qed.
+    Lemma union_intersection_r_L (X Y Z : A) : (X ∩ Y) ∪ Z = (X ∪ Z) ∩ (Y ∪ Z).
+    Proof. unfold_leibniz; apply union_intersection_r. Qed.
+    Lemma intersection_union_l_L (X Y Z : A) : X ∩ (Y ∪ Z) ≡ (X ∩ Y) ∪ (X ∩ Z).
+    Proof. unfold_leibniz; apply intersection_union_l. Qed.
+    Lemma intersection_union_r_L (X Y Z : A) : (X ∪ Y) ∩ Z ≡ (X ∩ Z) ∪ (Y ∩ Z).
+    Proof. unfold_leibniz; apply intersection_union_r. Qed.
   End leibniz.
 End lattice.
