@@ -234,6 +234,8 @@ Lemma map_subset_empty {A} (m : M A) : m ⊄ ∅.
 Proof.
   intros [_ []]. rewrite map_subseteq_spec. intros ??. by rewrite lookup_empty.
 Qed.
+Lemma map_fmap_empty {A B} (f : A → B) : f <$> (∅ : M A) = ∅.
+Proof. by apply map_eq; intros i; rewrite lookup_fmap, !lookup_empty. Qed.
 
 (** ** Properties of the [partial_alter] operation *)
 Lemma partial_alter_ext {A} (f g : option A → option A) (m : M A) i :
@@ -515,6 +517,10 @@ Lemma alter_singleton_ne {A} (f : A → A) i j x :
 Proof.
   intros. apply map_eq; intros i'. by destruct (decide (i = i')) as [->|?];
     rewrite ?lookup_alter, ?lookup_singleton_ne, ?lookup_alter_ne by done.
+Qed.
+Lemma map_fmap_singleton {A B} (f : A → B) i x : f <$> {[i ↦ x]} = {[i ↦ f x]}.
+Proof.
+  by unfold singletonM, map_singleton; rewrite fmap_insert, map_fmap_empty.
 Qed.
 
 (** ** Properties of the map operations *)
