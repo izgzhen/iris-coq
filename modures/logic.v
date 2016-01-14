@@ -186,6 +186,7 @@ Arguments uPred_holds {_} _%I _ _.
 Arguments uPred_entails _ _%I _%I.
 Notation "P ⊑ Q" := (uPred_entails P%I Q%I) (at level 70) : C_scope.
 Notation "(⊑)" := uPred_entails (only parsing) : C_scope.
+Notation "■ P" := (uPred_const P) (at level 20) : uPred_scope.
 Notation "'False'" := (uPred_const False) : uPred_scope.
 Notation "'True'" := (uPred_const True) : uPred_scope.
 Infix "∧" := uPred_and : uPred_scope.
@@ -332,9 +333,9 @@ Global Instance iff_proper :
   Proper ((≡) ==> (≡) ==> (≡)) (@uPred_iff M) := ne_proper_2 _.
 
 (** Introduction and elimination rules *)
-Lemma const_intro P (Q : Prop) : Q → P ⊑ uPred_const Q.
+Lemma const_intro P (Q : Prop) : Q → P ⊑ ■ Q.
 Proof. by intros ?? [|?]. Qed.
-Lemma const_elim (P : Prop) Q R : (P → Q ⊑ R) → (Q ∧ uPred_const P) ⊑ R.
+Lemma const_elim (P : Prop) Q R : (P → Q ⊑ R) → (Q ∧ ■ P) ⊑ R.
 Proof. intros HR x [|n] ? [??]; [|apply HR]; auto. Qed.
 Lemma True_intro P : P ⊑ True.
 Proof. by apply const_intro. Qed.
@@ -428,9 +429,9 @@ Proof. intros P Q; apply (anti_symmetric (⊑)); auto. Qed.
 Global Instance or_assoc : Associative (≡) (@uPred_or M).
 Proof. intros P Q R; apply (anti_symmetric (⊑)); auto. Qed.
 
-Lemma const_mono (P Q: Prop) : (P → Q) → uPred_const P ⊑ @uPred_const M Q.
+Lemma const_mono (P Q: Prop) : (P → Q) → ■ P ⊑ ■ Q.
 Proof.
-  intros; rewrite <-(left_id True%I _ (uPred_const P)).
+  intros; rewrite <-(left_id True%I _ (■ P)%I).
   eauto using const_elim, const_intro.
 Qed.
 Lemma and_mono P P' Q Q' : P ⊑ Q → P' ⊑ Q' → (P ∧ P') ⊑ (Q ∧ Q').
@@ -606,7 +607,7 @@ Lemma later_wand P Q : ▷ (P -★ Q) ⊑ (▷ P -★ ▷ Q).
 Proof. apply wand_intro; rewrite <-later_sep; apply later_mono, wand_elim. Qed.
 
 (* Always *)
-Lemma always_const (P : Prop) : (□ uPred_const P : uPred M)%I ≡ uPred_const P.
+Lemma always_const (P : Prop) : (□ ■ P : uPred M)%I ≡ (■ P)%I.
 Proof. done. Qed.
 Lemma always_elim P : □ P ⊑ P.
 Proof.
@@ -752,7 +753,7 @@ Lemma uPred_big_sep_elem_of Ps P : P ∈ Ps → (Π★ Ps) ⊑ P.
 Proof. induction 1; simpl; auto. Qed.
 
 (* Timeless *)
-Global Instance const_timeless (P : Prop) : TimelessP (@uPred_const M P).
+Global Instance const_timeless (P : Prop) : TimelessP (■ P : uPred M)%I.
 Proof. by intros x [|n]. Qed.
 Global Instance and_timeless P Q :
   TimelessP P → TimelessP Q → TimelessP (P ∧ Q).
