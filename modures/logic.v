@@ -10,7 +10,7 @@ Record uPred (M : cmraT) : Type := IProp {
   uPred_weaken x1 x2 n1 n2 :
     uPred_holds n1 x1 → x1 ≼ x2 → n2 ≤ n1 → ✓{n2} x2 → uPred_holds n2 x2
 }.
-Arguments uPred_holds {_} _ _ _.
+Arguments uPred_holds {_} _ _ _ : simpl never.
 Hint Resolve uPred_0.
 Add Printing Constructor uPred.
 Instance: Params (@uPred_holds) 3.
@@ -72,7 +72,8 @@ Lemma upredC_map_ne {M1 M2 : cmraT} (f g : M2 -n> M1)
     `{!CMRAMonotone f, !CMRAMonotone g} n :
   f ={n}= g → uPredC_map f ={n}= uPredC_map g.
 Proof.
-  by intros Hfg P y n' ??; rewrite /= (dist_le _ _ _ _(Hfg y)); last lia.
+  by intros Hfg P y n' ??;
+    rewrite /uPred_holds /= (dist_le _ _ _ _(Hfg y)); last lia.
 Qed.
 
 (** logical entailement *)
@@ -227,6 +228,7 @@ Implicit Types P Q : uPred M.
 Implicit Types Ps Qs : list (uPred M).
 Implicit Types A : Type.
 Notation "P ⊑ Q" := (@uPred_entails M P%I Q%I). (* Force implicit argument M *)
+Arguments uPred_holds {_} !_ _ _ /.
 
 Global Instance: PreOrder (@uPred_entails M).
 Proof. split. by intros P x i. by intros P Q Q' HP HQ x i ??; apply HQ, HP. Qed.

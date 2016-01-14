@@ -216,8 +216,9 @@ Definition map {Σ : iParam} {A1 A2 B1 B2 : cofeT}
 Definition result Σ : solution (F Σ).
 Proof.
   apply (solver.result _ (@map Σ)).
-  * by intros A B r n ?; rewrite /= res_map_id.
-  * by intros A1 A2 A3 B1 B2 B3 f g f' g' P r n ?; rewrite /= res_map_compose.
+  * by intros A B r n ?; rewrite /uPred_holds /= res_map_id.
+  * by intros A1 A2 A3 B1 B2 B3 f g f' g' P r n ?;
+      rewrite /= /uPred_holds /= res_map_compose.
   * by intros A1 A2 B1 B2 n f f' [??] r;
       apply upredC_map_ne, resRA_map_contractive.
 Qed.
