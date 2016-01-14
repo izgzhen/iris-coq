@@ -223,8 +223,8 @@ Ltac setoid_subst_aux R x :=
 Ltac setoid_subst :=
   repeat match goal with
   | _ => progress simplify_equality'
-  | H : @equiv _ ?e ?x _ |- _ => setoid_subst_aux (@equiv _ e) x
-  | H : @equiv _ ?e _ ?x |- _ => symmetry in H; setoid_subst_aux (@equiv _ e) x
+  | H : @equiv ?A ?e ?x _ |- _ => setoid_subst_aux (@equiv A e) x
+  | H : @equiv ?A ?e _ ?x |- _ => symmetry in H; setoid_subst_aux (@equiv A e) x
   end.
 
 (** Given a tactic [tac2] generating a list of terms, [iter tac1 tac2]
