@@ -142,12 +142,6 @@ Lemma option_op_positive_dist_l n x y : x ⋅ y ={n}= None → x ={n}= None.
 Proof. by destruct x, y; inversion_clear 1. Qed.
 Lemma option_op_positive_dist_r n x y : x ⋅ y ={n}= None → y ={n}= None.
 Proof. by destruct x, y; inversion_clear 1. Qed.
-
-Global Instance None_valid_timeless : ValidTimeless (@None A).
-Proof. done. Qed.
-Global Instance Some_valid_timeless x :
-  ValidTimeless x → ValidTimeless (Some x).
-Proof. by intros ? y; apply (valid_timeless x). Qed.
 End cmra.
 
 Arguments optionRA : clear implicits.

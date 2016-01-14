@@ -127,8 +127,6 @@ Proof.
 Qed.
 Canonical Structure exclRA : cmraT :=
   CMRAT excl_cofe_mixin excl_cmra_mixin excl_cmra_extend_mixin.
-Global Instance excl_valid_timeless (x : excl A) : ValidTimeless x.
-Proof. by destruct x; intros ?. Qed.
 
 (* Updates *)
 Lemma excl_update (x : A) y : ✓ y → Excl x ⇝ y.

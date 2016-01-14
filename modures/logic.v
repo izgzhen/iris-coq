@@ -706,12 +706,15 @@ Lemma own_valid (a : M) : uPred_own a ⊆ (✓ a)%I.
 Proof. move => x n Hv [a' ?]; cofe_subst; eauto using cmra_valid_op_l. Qed.
 Lemma valid_intro {A : cmraT} (a : A) : ✓ a → True%I ⊆ (✓ a : uPred M)%I.
 Proof. by intros ? x n ? _; simpl; apply cmra_valid_validN. Qed.
-Lemma valid_elim_timeless {A : cmraT} (a : A) :
-  ValidTimeless a → ¬ ✓ a → (✓ a : uPred M)%I ⊆ False%I.
+Lemma valid_elim {A : cmraT} (a : A) : ¬ ✓{1} a → (✓ a : uPred M)%I ⊆ False%I.
 Proof.
-  intros ? Hvalid x [|n] ??; [done|apply Hvalid].
-  apply (valid_timeless _), cmra_valid_le with (S n); auto with lia.
+  intros Ha x [|n] ??; [|apply Ha, cmra_valid_le with (S n)]; auto with lia.
 Qed.
+Lemma valid_mono {A B : cmraT} (a : A) (b : B) :
+  (∀ n, ✓{n} a → ✓{n} b) → (✓ a)%I ⊆ (✓ b : uPred M)%I.
+Proof. by intros ? x n ?; simpl; auto. Qed.
+Lemma own_invalid (a : M) : ¬ ✓{1} a → uPred_own a ⊆ False%I.
+Proof. by intros; rewrite ->own_valid, ->valid_elim. Qed.
 
 (* Big ops *)
 Global Instance uPred_big_and_proper : Proper ((≡) ==> (≡)) (@uPred_big_and M).

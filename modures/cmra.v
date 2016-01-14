@@ -116,13 +116,6 @@ Definition cmra_update {A : cmraT} (x y : A) := ∀ z n,
 Infix "⇝" := cmra_update (at level 70).
 Instance: Params (@cmra_update) 3.
 
-(** Timeless validity *)
-(* Not sure whether this is useful, see the rule [uPred_valid_elim_timeless]
-in logic.v *)
-Class ValidTimeless {A : cmraT} (x : A) :=
-  valid_timeless : validN 1 x → valid x.
-Arguments valid_timeless {_} _ {_} _.
-
 (** Properties **)
 Section cmra.
 Context {A : cmraT}.
@@ -275,8 +268,6 @@ Section discrete.
   Qed.
   Definition discreteRA : cmraT :=
     CMRAT discrete_cofe_mixin discrete_cmra_mixin discrete_extend_mixin.
-  Global Instance discrete_timeless (x : A) : ValidTimeless (x : discreteRA).
-  Proof. by intros ?. Qed.
   Lemma discrete_updateP (x : A) (P : A → Prop) `{!Inhabited (sig P)} :
     (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → (x : discreteRA) ⇝: P.
   Proof.
@@ -344,9 +335,6 @@ Section prod.
   Qed.
   Canonical Structure prodRA : cmraT :=
     CMRAT prod_cofe_mixin prod_cmra_mixin prod_cmra_extend_mixin.
-  Instance pair_timeless (x : A) (y : B) :
-    ValidTimeless x → ValidTimeless y → ValidTimeless (x,y).
-  Proof. by intros ?? [??]; split; apply (valid_timeless _). Qed.
 End prod.
 Arguments prodRA : clear implicits.
 

@@ -151,25 +151,6 @@ Proof.
 Qed.
 Canonical Structure mapRA : cmraT :=
   CMRAT map_cofe_mixin map_cmra_mixin map_cmra_extend_mixin.
-
-Global Instance map_empty_valid_timeless : ValidTimeless (∅ : gmap K A).
-Proof. by intros ??; rewrite lookup_empty. Qed.
-Global Instance map_ra_insert_valid_timeless (m : gmap K A) i x:
-  ValidTimeless x → ValidTimeless m → m !! i = None →
-  ValidTimeless (<[i:=x]>m).
-Proof.
-  intros ?? Hi Hm j; destruct (decide (i = j)); simplify_map_equality.
-  { specialize (Hm j); simplify_map_equality. by apply (valid_timeless _). }
-  generalize j; clear dependent j; rapply (valid_timeless m).
-  intros j; destruct (decide (i = j)); simplify_map_equality;[by rewrite Hi|].
-  by specialize (Hm j); simplify_map_equality.
-Qed.
-Global Instance map_ra_singleton_valid_timeless (i : K) x :
-  ValidTimeless x → ValidTimeless {[ i ↦ x ]}.
-Proof.
-  intros ?; apply (map_ra_insert_valid_timeless _ _ _ _ _).
-  by rewrite lookup_empty.
-Qed.
 End cmra.
 Arguments mapRA _ {_ _} _.
 

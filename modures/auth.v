@@ -134,14 +134,6 @@ Proof.
   split; simpl; [apply ra_empty_valid|].
   by intros x; constructor; simpl; rewrite (left_id _ _).
 Qed.
-Global Instance auth_frag_valid_timeless (x : A) :
-  ValidTimeless x → ValidTimeless (◯ x).
-Proof. by intros ??; apply (valid_timeless x). Qed.
-Global Instance auth_valid_timeless `{Empty A, !RAIdentity A} (x : A) :
-  ValidTimeless x → ValidTimeless (● x).
-Proof.
-  by intros ? [??]; split; [apply ra_empty_least|apply (valid_timeless x)].
-Qed.
 Lemma auth_frag_op (a b : A) : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.
 Lemma auth_includedN' n (x y : authC A) :
