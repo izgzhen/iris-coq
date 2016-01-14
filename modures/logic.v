@@ -15,36 +15,41 @@ Hint Resolve uPred_0.
 Add Printing Constructor uPred.
 Instance: Params (@uPred_holds) 3.
 
-Instance uPred_equiv (M : cmraT) : Equiv (uPred M) := λ P Q, ∀ x n,
-  ✓{n} x → P n x ↔ Q n x.
-Instance uPred_dist (M : cmraT) : Dist (uPred M) := λ n P Q, ∀ x n',
-  n' ≤ n → ✓{n'} x → P n' x ↔ Q n' x.
-Program Instance uPred_compl (M : cmraT) : Compl (uPred M) := λ c,
-  {| uPred_holds n x := c n n x |}.
-Next Obligation. by intros M c x y n ??; simpl in *; apply uPred_ne with x. Qed.
-Next Obligation. by intros M c x; simpl. Qed.
-Next Obligation.
-  intros M c x1 x2 n1 n2 ????; simpl in *.
-  apply (chain_cauchy c n2 n1); eauto using uPred_weaken.
-Qed.
-Instance uPred_cofe (M : cmraT) : Cofe (uPred M).
-Proof.
-  split.
-  * intros P Q; split; [by intros HPQ n x i ??; apply HPQ|].
-    intros HPQ x n ?; apply HPQ with n; auto.
-  * intros n; split.
-    + by intros P x i.
-    + by intros P Q HPQ x i ??; symmetry; apply HPQ.
-    + by intros P Q Q' HP HQ x i ??; transitivity (Q i x); [apply HP|apply HQ].
-  * intros n P Q HPQ x i ??; apply HPQ; auto.
-  * intros P Q x i; rewrite Nat.le_0_r; intros ->; split; intros; apply uPred_0.
-  * by intros c n x i ??; apply (chain_cauchy c i n).
-Qed.
+Section cofe.
+  Context {M : cmraT}.
+  Instance uPred_equiv : Equiv (uPred M) := λ P Q, ∀ x n,
+    ✓{n} x → P n x ↔ Q n x.
+  Instance uPred_dist : Dist (uPred M) := λ n P Q, ∀ x n',
+    n' ≤ n → ✓{n'} x → P n' x ↔ Q n' x.
+  Program Instance uPred_compl : Compl (uPred M) := λ c,
+    {| uPred_holds n x := c n n x |}.
+  Next Obligation. by intros c x y n ??; simpl in *; apply uPred_ne with x. Qed.
+  Next Obligation. by intros c x; simpl. Qed.
+  Next Obligation.
+    intros c x1 x2 n1 n2 ????; simpl in *.
+    apply (chain_cauchy c n2 n1); eauto using uPred_weaken.
+  Qed.
+  Definition uPred_cofe_mixin : CofeMixin (uPred M).
+  Proof.
+    split.
+    * intros P Q; split; [by intros HPQ n x i ??; apply HPQ|].
+      intros HPQ x n ?; apply HPQ with n; auto.
+    * intros n; split.
+      + by intros P x i.
+      + by intros P Q HPQ x i ??; symmetry; apply HPQ.
+      + by intros P Q Q' HP HQ x i ??; transitivity (Q i x); [apply HP|apply HQ].
+    * intros n P Q HPQ x i ??; apply HPQ; auto.
+    * intros P Q x i; rewrite Nat.le_0_r; intros ->; split; intros; apply uPred_0.
+    * by intros c n x i ??; apply (chain_cauchy c i n).
+  Qed.
+  Canonical Structure uPredC : cofeT := CofeT uPred_cofe_mixin.
+End cofe.
+Arguments uPredC : clear implicits.
+
 Instance uPred_holds_ne {M} (P : uPred M) n : Proper (dist n ==> iff) (P n).
 Proof. intros x1 x2 Hx; split; eauto using uPred_ne. Qed.
 Instance uPred_holds_proper {M} (P : uPred M) n : Proper ((≡) ==> iff) (P n).
 Proof. by intros x1 x2 Hx; apply uPred_holds_ne, equiv_dist. Qed.
-Canonical Structure uPredC (M : cmraT) : cofeT := CofeT (uPred M).
 
 (** functor *)
 Program Definition uPred_map {M1 M2 : cmraT} (f : M2 → M1)
@@ -125,7 +130,7 @@ Next Obligation. by intros M P Q x; exists x, x. Qed.
 Next Obligation.
   intros M P Q x y n1 n2 (x1&x2&Hx&?&?) Hxy ??.
   assert (∃ x2', y ={n2}= x1 ⋅ x2' ∧ x2 ≼ x2') as (x2'&Hy&?).
-  { destruct Hxy as [z Hy]; exists (x2 ⋅ z); split; eauto using ra_included_l.
+  { destruct Hxy as [z Hy]; exists (x2 ⋅ z); split; eauto using @ra_included_l.
     apply dist_le with n1; auto. by rewrite (associative op) -Hx Hy. }
   exists x1, x2'; split_ands; [done| |].
   * cofe_subst y; apply uPred_weaken with x1 n1; eauto using cmra_valid_op_l.
@@ -144,7 +149,7 @@ Next Obligation. intros M P Q x1 x2 [|n]; auto with lia. Qed.
 Next Obligation.
   intros M P Q x1 x2 n1 n2 HPQ ??? x3 n3 ???; simpl in *.
   apply uPred_weaken with (x1 ⋅ x3) n3;
-    eauto using cmra_valid_included, ra_preserving_r.
+    eauto using cmra_valid_included, @ra_preserving_r.
 Qed.
 
 Program Definition uPred_later {M} (P : uPred M) : uPred M :=
@@ -160,7 +165,7 @@ Next Obligation. by intros M P x1 x2 n ? Hx; simpl in *; rewrite <-Hx. Qed.
 Next Obligation. by intros; simpl. Qed.
 Next Obligation.
   intros M P x1 x2 n1 n2 ????; eapply uPred_weaken with (unit x1) n1;
-    auto using ra_unit_preserving, cmra_unit_valid.
+    eauto using @ra_unit_preserving, cmra_unit_valid.
 Qed.
 
 Program Definition uPred_own {M : cmraT} (a : M) : uPred M :=
@@ -480,7 +485,7 @@ Qed.
 Global Instance True_sep : LeftId (≡) True%I (@uPred_sep M).
 Proof.
   intros P x n Hvalid; split.
-  * intros (x1&x2&?&_&?); cofe_subst; eauto using uPred_weaken, ra_included_r.
+  * intros (x1&x2&?&_&?); cofe_subst; eauto using uPred_weaken, @ra_included_r.
   * by destruct n as [|n]; [|intros ?; exists (unit x), x; rewrite ra_unit_l].
 Qed. 
 Global Instance sep_commutative : Commutative (≡) (@uPred_sep M).
@@ -555,11 +560,11 @@ Proof. by apply forall_intro; intros a; rewrite ->forall_elim. Qed.
 
 (* Later *)
 Lemma later_mono P Q : P ⊆ Q → (▷ P)%I ⊆ (▷ Q)%I.
-Proof. intros HP x [|n] ??; [done|apply HP; auto using cmra_valid_S]. Qed.
+Proof. intros HP x [|n] ??; [done|apply HP; eauto using cmra_valid_S]. Qed.
 Lemma later_intro P : P ⊆ (▷ P)%I.
 Proof.
   intros x [|n] ??; simpl in *; [done|].
-  apply uPred_weaken with x (S n); auto using cmra_valid_S.
+  apply uPred_weaken with x (S n); eauto using cmra_valid_S.
 Qed.
 Lemma lub P : (▷ P → P)%I ⊆ P.
 Proof.
@@ -582,10 +587,10 @@ Proof.
   intros x n ?; split.
   * destruct n as [|n]; simpl; [by exists x, x|intros (x1&x2&Hx&?&?)].
     destruct (cmra_extend_op n x x1 x2)
-      as ([y1 y2]&Hx'&Hy1&Hy2); auto using cmra_valid_S; simpl in *.
+      as ([y1 y2]&Hx'&Hy1&Hy2); eauto using cmra_valid_S; simpl in *.
     exists y1, y2; split; [by rewrite Hx'|by rewrite Hy1 Hy2].
   * destruct n as [|n]; simpl; [done|intros (x1&x2&Hx&?&?)].
-    exists x1, x2; eauto using (dist_S (A:=M)).
+    exists x1, x2; eauto using dist_S.
 Qed.
 
 (* Later derived *)
@@ -604,7 +609,8 @@ Lemma always_const (P : Prop) : (□ uPred_const P : uPred M)%I ≡ uPred_const 
 Proof. done. Qed.
 Lemma always_elim P : (□ P)%I ⊆ P.
 Proof.
-  intros x n ??; apply uPred_weaken with (unit x) n;auto using ra_included_unit.
+  intros x n ??; apply uPred_weaken with (unit x) n;
+    eauto using @ra_included_unit.
 Qed.
 Lemma always_intro P Q : (□ P)%I ⊆ Q → (□ P)%I ⊆ (□ Q)%I.
 Proof.

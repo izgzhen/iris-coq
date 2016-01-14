@@ -12,27 +12,27 @@ Arguments agree_car {_} _ _.
 Arguments agree_is_valid {_} _ _.
 
 Section agree.
-Context `{Cofe A}.
+Context {A : cofeT}.
 
-Global Instance agree_validN : ValidN (agree A) := λ n x,
+Instance agree_validN : ValidN (agree A) := λ n x,
   agree_is_valid x n ∧ ∀ n', n' ≤ n → x n' ={n'}= x n.
 Lemma agree_valid_le (x : agree A) n n' :
   agree_is_valid x n → n' ≤ n → agree_is_valid x n'.
 Proof. induction 2; eauto using agree_valid_S. Qed.
-Global Instance agree_valid : Valid (agree A) := λ x, ∀ n, ✓{n} x.
-Global Instance agree_equiv : Equiv (agree A) := λ x y,
+Instance agree_valid : Valid (agree A) := λ x, ∀ n, ✓{n} x.
+Instance agree_equiv : Equiv (agree A) := λ x y,
   (∀ n, agree_is_valid x n ↔ agree_is_valid y n) ∧
   (∀ n, agree_is_valid x n → x n ={n}= y n).
-Global Instance agree_dist : Dist (agree A) := λ n x y,
+Instance agree_dist : Dist (agree A) := λ n x y,
   (∀ n', n' ≤ n → agree_is_valid x n' ↔ agree_is_valid y n') ∧
   (∀ n', n' ≤ n → agree_is_valid x n' → x n' ={n'}= y n').
-Global Program Instance agree_compl : Compl (agree A) := λ c,
+Program Instance agree_compl : Compl (agree A) := λ c,
   {| agree_car n := c n n; agree_is_valid n := agree_is_valid (c n) n |}.
 Next Obligation. intros; apply agree_valid_0. Qed.
 Next Obligation.
   intros c n ?; apply (chain_cauchy c n (S n)), agree_valid_S; auto.
 Qed.
-Instance agree_cofe : Cofe (agree A).
+Definition agree_cofe_mixin : CofeMixin (agree A).
 Proof.
   split.
   * intros x y; split.
@@ -49,14 +49,15 @@ Proof.
     by split; intros; apply agree_valid_0.
   * by intros c n; split; intros; apply (chain_cauchy c).
 Qed.
+Canonical Structure agreeC := CofeT agree_cofe_mixin.
 
-Global Program Instance agree_op : Op (agree A) := λ x y,
+Program Instance agree_op : Op (agree A) := λ x y,
   {| agree_car := x;
      agree_is_valid n := agree_is_valid x n ∧ agree_is_valid y n ∧ x ={n}= y |}.
 Next Obligation. by intros; simpl; split_ands; try apply agree_valid_0. Qed.
 Next Obligation. naive_solver eauto using agree_valid_S, dist_S. Qed.
-Global Instance agree_unit : Unit (agree A) := id.
-Global Instance agree_minus : Minus (agree A) := λ x y, x.
+Instance agree_unit : Unit (agree A) := id.
+Instance agree_minus : Minus (agree A) := λ x y, x.
 Instance: Commutative (≡) (@op (agree A) _).
 Proof. intros x y; split; [naive_solver|by intros n (?&?&Hxy); apply Hxy]. Qed.
 Definition agree_idempotent (x : agree A) : x ⋅ x ≡ x.
@@ -70,7 +71,7 @@ Proof.
   * etransitivity; [apply Hxy|symmetry; apply Hy, Hy'];
       eauto using agree_valid_le.
 Qed.
-Instance: Proper (dist n ==> dist n ==> dist n) op.
+Instance: Proper (dist n ==> dist n ==> dist n) (@op (agree A) _).
 Proof. by intros n x1 x2 Hx y1 y2 Hy; rewrite Hy !(commutative _ _ y2) Hx. Qed.
 Instance: Proper ((≡) ==> (≡) ==> (≡)) op := ne_proper_2 _.
 Instance: Associative (≡) (@op (agree A) _).
@@ -84,7 +85,7 @@ Proof.
   split; [|by intros ?; exists y].
   by intros [z Hz]; rewrite Hz (associative _) agree_idempotent.
 Qed.
-Global Instance agree_cmra : CMRA (agree A).
+Definition agree_cmra_mixin : CMRAMixin (agree A).
 Proof.
   split; try (apply _ || done).
   * intros n x y Hxy [? Hx]; split; [by apply Hxy|intros n' ?].
@@ -103,12 +104,15 @@ Qed.
 Lemma agree_op_inv (x y1 y2 : agree A) n :
   ✓{n} x → x ={n}= y1 ⋅ y2 → y1 ={n}= y2.
 Proof. by intros [??] Hxy; apply Hxy. Qed.
-Global Instance agree_extend : CMRAExtend (agree A).
+Definition agree_cmra_extend_mixin : CMRAExtendMixin (agree A).
 Proof.
   intros n x y1 y2 ? Hx; exists (x,x); simpl; split.
   * by rewrite agree_idempotent.
   * by rewrite Hx (agree_op_inv x y1 y2) // agree_idempotent.
 Qed.
+Canonical Structure agreeRA : cmraT :=
+  CMRAT agree_cofe_mixin agree_cmra_mixin agree_cmra_extend_mixin.
+
 Program Definition to_agree (x : A) : agree A :=
   {| agree_car n := x; agree_is_valid n := True |}.
 Solve Obligations with done.
@@ -125,12 +129,20 @@ Proof.
 Qed.
 End agree.
 
+Arguments agreeC : clear implicits.
+Arguments agreeRA : clear implicits.
+
 Program Definition agree_map {A B} (f : A → B) (x : agree A) : agree B :=
   {| agree_car n := f (x n); agree_is_valid := agree_is_valid x |}.
 Solve Obligations with auto using agree_valid_0, agree_valid_S.
+Lemma agree_map_id {A} (x : agree A) : agree_map id x = x.
+Proof. by destruct x. Qed.
+Lemma agree_map_compose {A B C} (f : A → B) (g : B → C)
+  (x : agree A) : agree_map (g ∘ f) x = agree_map g (agree_map f x).
+Proof. done. Qed.
 
 Section agree_map.
-  Context `{Cofe A, Cofe B} (f : A → B) `{Hf: ∀ n, Proper (dist n ==> dist n) f}.
+  Context {A B : cofeT} (f : A → B) `{Hf: ∀ n, Proper (dist n ==> dist n) f}.
   Global Instance agree_map_ne n : Proper (dist n ==> dist n) (agree_map f).
   Proof. by intros x1 x2 Hx; split; simpl; intros; [apply Hx|apply Hf, Hx]. Qed.
   Global Instance agree_map_proper :
@@ -147,13 +159,7 @@ Section agree_map.
        try apply Hxy; try apply Hf; eauto using @agree_valid_le.
   Qed.
 End agree_map.
-Lemma agree_map_id {A} (x : agree A) : agree_map id x = x.
-Proof. by destruct x. Qed.
-Lemma agree_map_compose {A B C} (f : A → B) (g : B → C) (x : agree A) :
-  agree_map (g ∘ f) x = agree_map g (agree_map f x).
-Proof. done. Qed.
 
-Canonical Structure agreeRA (A : cofeT) : cmraT := CMRAT (agree A).
 Definition agreeRA_map {A B} (f : A -n> B) : agreeRA A -n> agreeRA B :=
   CofeMor (agree_map f : agreeRA A → agreeRA B).
 Instance agreeRA_map_ne A B n : Proper (dist n ==> dist n) (@agreeRA_map A B).

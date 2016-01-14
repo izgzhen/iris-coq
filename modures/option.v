@@ -1,25 +1,27 @@
 Require Export modures.cmra.
 
 (* COFE *)
-Inductive option_dist `{Dist A} : Dist (option A) :=
+Section cofe.
+Context {A : cofeT}.
+Inductive option_dist : Dist (option A) :=
   | option_0_dist (x y : option A) : x ={0}= y
   | Some_dist n x y : x ={n}= y → Some x ={n}= Some y
   | None_dist n : None ={n}= None.
 Existing Instance option_dist.
-Program Definition option_chain `{Cofe A}
+Program Definition option_chain
     (c : chain (option A)) (x : A) (H : c 1 = Some x) : chain A :=
   {| chain_car n := from_option x (c n) |}.
 Next Obligation.
-  intros A ???? c x ? n i ?; simpl; destruct (decide (i = 0)) as [->|].
+  intros c x ? n i ?; simpl; destruct (decide (i = 0)) as [->|].
   { by replace n with 0 by lia. }
   feed inversion (chain_cauchy c 1 i); auto with lia congruence.
   feed inversion (chain_cauchy c n i); simpl; auto with lia congruence.
 Qed.
-Instance option_compl `{Cofe A} : Compl (option A) := λ c,
+Instance option_compl : Compl (option A) := λ c,
   match Some_dec (c 1) with
   | inleft (exist x H) => Some (compl (option_chain c x H)) | inright _ => None
   end.
-Instance option_cofe `{Cofe A} : Cofe (option A).
+Definition option_cofe_mixin : CofeMixin (option A).
 Proof.
   split.
   * intros mx my; split; [by destruct 1; constructor; apply equiv_dist|].
@@ -40,28 +42,36 @@ Proof.
       by rewrite (conv_compl (option_chain c x Hx) n); simpl; rewrite Hy. }
     feed inversion (chain_cauchy c 1 n); auto with lia congruence; constructor.
 Qed.
-Instance Some_ne `{Dist A} : Proper (dist n ==> dist n) Some.
+Canonical Structure optionC := CofeT option_cofe_mixin.
+Global Instance Some_ne : Proper (dist n ==> dist n) (@Some A).
 Proof. by constructor. Qed.
-Instance None_timeless `{Dist A, Equiv A} : Timeless (@None A).
+Global Instance None_timeless : Timeless (@None A).
 Proof. inversion_clear 1; constructor. Qed.
-Instance Some_timeless `{Dist A, Equiv A} x : Timeless x → Timeless (Some x).
+Global Instance Some_timeless x : Timeless x → Timeless (Some x).
 Proof. by intros ?; inversion_clear 1; constructor; apply timeless. Qed.
-Instance option_fmap_ne `{Dist A, Dist B} (f : A → B) n:
+End cofe.
+
+Arguments optionC : clear implicits.
+
+Instance option_fmap_ne {A B : cofeT} (f : A → B) n:
   Proper (dist n ==> dist n) f → Proper (dist n==>dist n) (fmap (M:=option) f).
 Proof. by intros Hf; destruct 1; constructor; apply Hf. Qed.
-Instance is_Some_ne `{Dist A} : Proper (dist (S n) ==> iff) (@is_Some A).
+Instance is_Some_ne `{A : cofeT} : Proper (dist (S n) ==> iff) (@is_Some A).
 Proof. intros n; inversion_clear 1; split; eauto. Qed.
 
 (* CMRA *)
-Instance option_valid `{Valid A} : Valid (option A) := λ mx,
+Section cmra.
+Context {A : cmraT}.
+
+Instance option_valid : Valid (option A) := λ mx,
   match mx with Some x => ✓ x | None => True end.
-Instance option_validN `{ValidN A} : ValidN (option A) := λ n mx,
+Instance option_validN : ValidN (option A) := λ n mx,
   match mx with Some x => ✓{n} x | None => True end.
-Instance option_unit `{Unit A} : Unit (option A) := fmap unit.
-Instance option_op `{Op A} : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
-Instance option_minus `{Minus A} : Minus (option A) :=
+Instance option_unit : Unit (option A) := fmap unit.
+Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
+Instance option_minus : Minus (option A) :=
   difference_with (λ x y, Some (x ⩪ y)).
-Lemma option_included `{CMRA A} mx my :
+Lemma option_included mx my :
   mx ≼ my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ x ≼ y.
 Proof.
   split.
@@ -72,7 +82,7 @@ Proof.
   * intros [->|(x&y&->&->&z&Hz)]; try (by exists my; destruct my; constructor).
     by exists (Some z); constructor.
 Qed.
-Lemma option_includedN `{CMRA A} n mx my :
+Lemma option_includedN n (mx my : option A) :
   mx ≼{n} my ↔ n = 0 ∨ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ x ≼{n} y.
 Proof.
   split.
@@ -80,15 +90,14 @@ Proof.
     destruct mx as [x|]; [right|by left].
     destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
     destruct mz as [z|]; inversion_clear Hmz; split_ands; auto;
-      cofe_subst; auto using cmra_included_l.
+      cofe_subst; eauto using @cmra_included_l.
   * intros [->|[->|(x&y&->&->&z&Hz)]];
       try (by exists my; destruct my; constructor).
     by exists (Some z); constructor.
 Qed.
-Instance option_cmra `{CMRA A} : CMRA (option A).
+Definition option_cmra_mixin  : CMRAMixin (option A).
 Proof.
   split.
-  * apply _.
   * by intros n [x|]; destruct 1; constructor;
       repeat apply (_ : Proper (dist _ ==> _ ==> _) _).
   * by destruct 1; constructor; apply (_ : Proper (dist n ==> _) _).
@@ -98,22 +107,22 @@ Proof.
   * by destruct 1; inversion_clear 1; constructor;
       repeat apply (_ : Proper (dist _ ==> _ ==> _) _).
   * intros [x|]; unfold validN, option_validN; auto using cmra_valid_0.
-  * intros n [x|]; unfold validN, option_validN; auto using cmra_valid_S.
+  * intros n [x|]; unfold validN, option_validN; eauto using @cmra_valid_S.
   * by intros [x|]; unfold valid, validN, option_validN, option_valid;
-      auto using cmra_valid_validN.
+      eauto using cmra_valid_validN.
   * intros [x|] [y|] [z|]; constructor; rewrite ?(associative _); auto.
   * intros [x|] [y|]; constructor; rewrite 1?(commutative _); auto.
-  * by intros [x|]; constructor; rewrite cmra_unit_l.
-  * by intros [x|]; constructor; rewrite cmra_unit_idempotent.
+  * by intros [x|]; constructor; rewrite ra_unit_l.
+  * by intros [x|]; constructor; rewrite ra_unit_idempotent.
   * intros n mx my; rewrite !option_includedN;intros [|[->|(x&y&->&->&?)]];auto.
-    do 2 right; exists (unit x), (unit y); eauto using cmra_unit_preserving.
+    do 2 right; exists (unit x), (unit y); eauto using @cmra_unit_preserving.
   * intros n [x|] [y|]; unfold validN, option_validN; simpl;
-      eauto using cmra_valid_op_l.
+      eauto using @cmra_valid_op_l.
   * intros n mx my; rewrite option_includedN.
     intros [->|[->|(x&y&->&->&?)]]; [done|by destruct my|].
     by constructor; apply cmra_op_minus.
 Qed.
-Instance option_cmra_extend `{CMRA A, !CMRAExtend A} : CMRAExtend (option A).
+Definition option_cmra_extend_mixin : CMRAExtendMixin (option A).
 Proof.
   intros n mx my1 my2; destruct (decide (n = 0)) as [->|].
   { by exists (mx, None); repeat constructor; destruct mx; constructor. }
@@ -126,17 +135,28 @@ Proof.
   * by exists (None,Some x); inversion Hx'; repeat constructor.
   * exists (None,None); repeat constructor.
 Qed.
-Instance None_valid_timeless `{Valid A, ValidN A} : ValidTimeless (@None A).
+Canonical Structure optionRA :=
+  CMRAT option_cofe_mixin option_cmra_mixin option_cmra_extend_mixin.
+
+Lemma option_op_positive_dist_l n x y : x ⋅ y ={n}= None → x ={n}= None.
+Proof. by destruct x, y; inversion_clear 1. Qed.
+Lemma option_op_positive_dist_r n x y : x ⋅ y ={n}= None → y ={n}= None.
+Proof. by destruct x, y; inversion_clear 1. Qed.
+
+Global Instance None_valid_timeless : ValidTimeless (@None A).
 Proof. done. Qed.
-Instance Some_valid_timeless `{Valid A, ValidN A} x :
+Global Instance Some_valid_timeless x :
   ValidTimeless x → ValidTimeless (Some x).
 Proof. by intros ? y; apply (valid_timeless x). Qed.
-Instance option_fmap_cmra_monotone `{CMRA A, CMRA B} (f : A → B)
-  `{!CMRAMonotone f} : CMRAMonotone (fmap f : option A → option B).
+End cmra.
+
+Arguments optionRA : clear implicits.
+
+Instance option_fmap_cmra_monotone {A B : cmraT} (f: A → B) `{!CMRAMonotone f} :
+  CMRAMonotone (fmap f : option A → option B).
 Proof.
   split.
   * intros n mx my; rewrite !option_includedN.
     intros [->|[->|(x&y&->&->&?)]]; simpl; eauto 10 using @includedN_preserving.
-  * by intros n [x|] ?;
-      unfold validN, option_validN; simpl; try apply validN_preserving.
+  * by intros n [x|] ?; rewrite /cmra_validN /=; try apply validN_preserving.
 Qed.

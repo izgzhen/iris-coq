@@ -10,37 +10,29 @@ Notation "x ≼{ n } y" := (includedN n x y)
 Instance: Params (@includedN) 4.
 Hint Extern 0 (?x ≼{_} ?x) => reflexivity.
 
-Class CMRA A `{Equiv A, Compl A, Unit A, Op A, Valid A, ValidN A, Minus A} := {
+Record CMRAMixin A
+    `{Dist A, Equiv A, Unit A, Op A, Valid A, ValidN A, Minus A} := {
   (* setoids *)
-  cmra_cofe :> Cofe A;
-  cmra_op_ne n x :> Proper (dist n ==> dist n) (op x);
-  cmra_unit_ne n :> Proper (dist n ==> dist n) unit;
-  cmra_valid_ne n :> Proper (dist n ==> impl) (✓{n});
-  cmra_minus_ne n :> Proper (dist n ==> dist n ==> dist n) minus;
+  mixin_cmra_op_ne n (x : A) : Proper (dist n ==> dist n) (op x);
+  mixin_cmra_unit_ne n : Proper (dist n ==> dist n) unit;
+  mixin_cmra_valid_ne n : Proper (dist n ==> impl) (✓{n});
+  mixin_cmra_minus_ne n : Proper (dist n ==> dist n ==> dist n) minus;
   (* valid *)
-  cmra_valid_0 x : ✓{0} x;
-  cmra_valid_S n x : ✓{S n} x → ✓{n} x;
-  cmra_valid_validN x : ✓ x ↔ ∀ n, ✓{n} x;
+  mixin_cmra_valid_0 x : ✓{0} x;
+  mixin_cmra_valid_S n x : ✓{S n} x → ✓{n} x;
+  mixin_cmra_valid_validN x : ✓ x ↔ ∀ n, ✓{n} x;
   (* monoid *)
-  cmra_associative : Associative (≡) (⋅);
-  cmra_commutative : Commutative (≡) (⋅);
-  cmra_unit_l x : unit x ⋅ x ≡ x;
-  cmra_unit_idempotent x : unit (unit x) ≡ unit x;
-  cmra_unit_preserving n x y : x ≼{n} y → unit x ≼{n} unit y;
-  cmra_valid_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
-  cmra_op_minus n x y : x ≼{n} y → x ⋅ y ⩪ x ={n}= y
+  mixin_cmra_associative : Associative (≡) (⋅);
+  mixin_cmra_commutative : Commutative (≡) (⋅);
+  mixin_cmra_unit_l x : unit x ⋅ x ≡ x;
+  mixin_cmra_unit_idempotent x : unit (unit x) ≡ unit x;
+  mixin_cmra_unit_preserving n x y : x ≼{n} y → unit x ≼{n} unit y;
+  mixin_cmra_valid_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
+  mixin_cmra_op_minus n x y : x ≼{n} y → x ⋅ y ⩪ x ={n}= y
 }.
-Class CMRAExtend A `{Equiv A, Dist A, Op A, ValidN A} :=
-  cmra_extend_op n x y1 y2 :
-    ✓{n} x → x ={n}= y1 ⋅ y2 → { z | x ≡ z.1 ⋅ z.2 ∧ z ={n}= (y1,y2) }.
-
-Class CMRAMonotone
-    `{Dist A, Op A, ValidN A, Dist B, Op B, ValidN B} (f : A → B) := {
-  includedN_preserving n x y : x ≼{n} y → f x ≼{n} f y;
-  validN_preserving n x : ✓{n} x → ✓{n} (f x)
-}.
-
-Hint Extern 0 (✓{0} _) => apply cmra_valid_0.
+Definition CMRAExtendMixin A `{Equiv A, Dist A, Op A, ValidN A} := ∀ n x y1 y2,
+  ✓{n} x → x ={n}= y1 ⋅ y2 →
+  { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ={n}= y1 ∧ z.2 ={n}= y2 }.
 
 (** Bundeled version *)
 Structure cmraT := CMRAT {
@@ -53,32 +45,73 @@ Structure cmraT := CMRAT {
   cmra_valid : Valid cmra_car;
   cmra_validN : ValidN cmra_car;
   cmra_minus : Minus cmra_car;
-  cmra_cmra : CMRA cmra_car;
-  cmra_extend : CMRAExtend cmra_car
+  cmra_cofe_mixin : CofeMixin cmra_car;
+  cmra_mixin : CMRAMixin cmra_car;
+  cmra_extend_mixin : CMRAExtendMixin cmra_car
 }.
-Arguments CMRAT _ {_ _ _ _ _ _ _ _ _ _}.
-Arguments cmra_car _ : simpl never.
-Arguments cmra_equiv _ _ _ : simpl never.
-Arguments cmra_dist _ _ _ _ : simpl never.
-Arguments cmra_compl _ _ : simpl never.
-Arguments cmra_unit _ _ : simpl never.
-Arguments cmra_op _ _ _ : simpl never.
-Arguments cmra_valid _ _ : simpl never.
-Arguments cmra_validN _ _ _ : simpl never.
-Arguments cmra_minus _ _ _ : simpl never.
-Arguments cmra_cmra _ : simpl never.
+Arguments CMRAT {_ _ _ _ _ _ _ _ _} _ _ _.
+Arguments cmra_car : simpl never.
+Arguments cmra_equiv : simpl never.
+Arguments cmra_dist : simpl never.
+Arguments cmra_compl : simpl never.
+Arguments cmra_unit : simpl never.
+Arguments cmra_op : simpl never.
+Arguments cmra_valid : simpl never.
+Arguments cmra_validN : simpl never.
+Arguments cmra_minus : simpl never.
+Arguments cmra_cofe_mixin : simpl never.
+Arguments cmra_mixin : simpl never.
+Arguments cmra_extend_mixin : simpl never.
 Add Printing Constructor cmraT.
-Existing Instances cmra_equiv cmra_dist cmra_compl cmra_unit cmra_op
-  cmra_valid cmra_validN cmra_minus cmra_cmra cmra_extend.
-Coercion cmra_cofeC (A : cmraT) : cofeT := CofeT A.
+Existing Instances cmra_unit cmra_op cmra_valid cmra_validN cmra_minus.
+Coercion cmra_cofeC (A : cmraT) : cofeT := CofeT (cmra_cofe_mixin A).
 Canonical Structure cmra_cofeC.
 
+(** Lifting properties from the mixin *)
+Section cmra_mixin.
+  Context {A : cmraT}.
+  Implicit Types x y : A.
+  Global Instance cmra_op_ne n (x : A) : Proper (dist n ==> dist n) (op x).
+  Proof. apply (mixin_cmra_op_ne _ (cmra_mixin A)). Qed.
+  Global Instance cmra_unit_ne n : Proper (dist n ==> dist n) (@unit A _).
+  Proof. apply (mixin_cmra_unit_ne _ (cmra_mixin A)). Qed.
+  Global Instance cmra_valid_ne n : Proper (dist n ==> impl) (@validN A _ n).
+  Proof. apply (mixin_cmra_valid_ne _ (cmra_mixin A)). Qed.
+  Global Instance cmra_minus_ne n :
+    Proper (dist n ==> dist n ==> dist n) (@minus A _).
+  Proof. apply (mixin_cmra_minus_ne _ (cmra_mixin A)). Qed.
+  Lemma cmra_valid_0 x : ✓{0} x.
+  Proof. apply (mixin_cmra_valid_0 _ (cmra_mixin A)). Qed.
+  Lemma cmra_valid_S n x : ✓{S n} x → ✓{n} x.
+  Proof. apply (mixin_cmra_valid_S _ (cmra_mixin A)). Qed.
+  Lemma cmra_valid_validN x : ✓ x ↔ ∀ n, ✓{n} x.
+  Proof. apply (mixin_cmra_valid_validN _ (cmra_mixin A)). Qed.
+  Lemma cmra_unit_preserving n x y : x ≼{n} y → unit x ≼{n} unit y.
+  Proof. apply (mixin_cmra_unit_preserving _ (cmra_mixin A)). Qed.
+  Lemma cmra_valid_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x.
+  Proof. apply (mixin_cmra_valid_op_l _ (cmra_mixin A)). Qed.
+  Lemma cmra_op_minus n x y : x ≼{n} y → x ⋅ y ⩪ x ={n}= y.
+  Proof. apply (mixin_cmra_op_minus _ (cmra_mixin A)). Qed.
+  Lemma cmra_extend_op n x y1 y2 :
+    ✓{n} x → x ={n}= y1 ⋅ y2 →
+    { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ={n}= y1 ∧ z.2 ={n}= y2 }.
+  Proof. apply (cmra_extend_mixin A). Qed.
+End cmra_mixin.
+
+Hint Extern 0 (✓{0} _) => apply cmra_valid_0.
+
+(** Morphisms *)
+Class CMRAMonotone {A B : cmraT} (f : A → B) := {
+  includedN_preserving n x y : x ≼{n} y → f x ≼{n} f y;
+  validN_preserving n x : ✓{n} x → ✓{n} (f x)
+}.
+
 (** Updates *)
-Definition cmra_updateP `{Op A, ValidN A} (x : A) (P : A → Prop) := ∀ z n,
+Definition cmra_updateP {A : cmraT} (x : A) (P : A → Prop) := ∀ z n,
   ✓{n} (x ⋅ z) → ∃ y, P y ∧ ✓{n} (y ⋅ z).
 Instance: Params (@cmra_updateP) 3.
 Infix "⇝:" := cmra_updateP (at level 70).
-Definition cmra_update `{Op A, ValidN A} (x y : A) := ∀ z n,
+Definition cmra_update {A : cmraT} (x y : A) := ∀ z n,
   ✓{n} (x ⋅ z) → ✓{n} (y ⋅ z).
 Infix "⇝" := cmra_update (at level 70).
 Instance: Params (@cmra_update) 3.
@@ -86,13 +119,13 @@ Instance: Params (@cmra_update) 3.
 (** Timeless validity *)
 (* Not sure whether this is useful, see the rule [uPred_valid_elim_timeless]
 in logic.v *)
-Class ValidTimeless `{Valid A, ValidN A} (x : A) :=
+Class ValidTimeless {A : cmraT} (x : A) :=
   valid_timeless : validN 1 x → valid x.
-Arguments valid_timeless {_ _ _} _ {_} _.
+Arguments valid_timeless {_} _ {_} _.
 
 (** Properties **)
 Section cmra.
-Context `{cmra : CMRA A}.
+Context {A : cmraT}.
 Implicit Types x y z : A.
 
 Lemma cmra_included_includedN x y : x ≼ y ↔ ∀ n, x ≼{n} y.
@@ -102,17 +135,17 @@ Proof.
   symmetry; apply cmra_op_minus, Hxy.
 Qed.
 
-Global Instance cmra_valid_ne' : Proper (dist n ==> iff) (✓{n}) | 1.
+Global Instance cmra_valid_ne' : Proper (dist n ==> iff) (✓{n} : A → _) | 1.
 Proof. by split; apply cmra_valid_ne. Qed.
-Global Instance cmra_valid_proper : Proper ((≡) ==> iff) (✓{n}) | 1.
+Global Instance cmra_valid_proper : Proper ((≡) ==> iff) (✓{n} : A → _) | 1.
 Proof. by intros n x1 x2 Hx; apply cmra_valid_ne', equiv_dist. Qed.
 Global Instance cmra_ra : RA A.
 Proof.
-  split; try by (destruct cmra;
+  split; try by (destruct (@cmra_mixin A);
     eauto using ne_proper, ne_proper_2 with typeclass_instances).
   * by intros x1 x2 Hx; rewrite !cmra_valid_validN; intros ? n; rewrite -Hx.
   * intros x y; rewrite !cmra_included_includedN.
-    eauto using cmra_unit_preserving.
+    eauto using @cmra_unit_preserving.
   * intros x y; rewrite !cmra_valid_validN; intros ? n.
     by apply cmra_valid_op_l with y.
   * intros x y [z Hz]; apply equiv_dist; intros n.
@@ -122,17 +155,16 @@ Lemma cmra_valid_op_r x y n : ✓{n} (x ⋅ y) → ✓{n} y.
 Proof. rewrite (commutative _ x); apply cmra_valid_op_l. Qed.
 Lemma cmra_valid_le x n n' : ✓{n} x → n' ≤ n → ✓{n'} x.
 Proof. induction 2; eauto using cmra_valid_S. Qed.
-Global Instance ra_op_ne n : Proper (dist n ==> dist n ==> dist n) (⋅).
+Global Instance ra_op_ne n : Proper (dist n ==> dist n ==> dist n) (@op A _).
 Proof.
   intros x1 x2 Hx y1 y2 Hy.
   by rewrite Hy (commutative _ x1) Hx (commutative _ y2).
 Qed.
 Lemma cmra_unit_valid x n : ✓{n} x → ✓{n} (unit x).
-Proof. rewrite -{1}(cmra_unit_l x); apply cmra_valid_op_l. Qed.
+Proof. rewrite -{1}(ra_unit_l x); apply cmra_valid_op_l. Qed.
 
 (** * Timeless *)
-Lemma cmra_timeless_included_l `{!CMRAExtend A} x y :
-  Timeless x → ✓{1} y → x ≼{1} y → x ≼ y.
+Lemma cmra_timeless_included_l x y : Timeless x → ✓{1} y → x ≼{1} y → x ≼ y.
 Proof.
   intros ?? [x' ?].
   destruct (cmra_extend_op 1 y x x') as ([z z']&Hy&Hz&Hz'); auto; simpl in *.
@@ -140,7 +172,7 @@ Proof.
 Qed.
 Lemma cmra_timeless_included_r n x y : Timeless y → x ≼{1} y → x ≼{n} y.
 Proof. intros ? [x' ?]. exists x'. by apply equiv_dist, (timeless y). Qed.
-Lemma cmra_op_timeless `{!CMRAExtend A} x1 x2 :
+Lemma cmra_op_timeless x1 x2 :
   ✓ (x1 ⋅ x2) → Timeless x1 → Timeless x2 → Timeless (x1 ⋅ x2).
 Proof.
   intros ??? z Hz.
@@ -151,13 +183,13 @@ Qed.
 
 (** * Included *)
 Global Instance cmra_included_ne n :
-  Proper (dist n ==> dist n ==> iff) (includedN n) | 1.
+  Proper (dist n ==> dist n ==> iff) (includedN n : relation A) | 1.
 Proof.
   intros x x' Hx y y' Hy; unfold includedN.
   by setoid_rewrite Hx; setoid_rewrite Hy.
 Qed.
 Global Instance cmra_included_proper : 
-  Proper ((≡) ==> (≡) ==> iff) (includedN n) | 1.
+  Proper ((≡) ==> (≡) ==> iff) (includedN n : relation A) | 1.
 Proof.
   intros n x x' Hx y y' Hy; unfold includedN.
   by setoid_rewrite Hx; setoid_rewrite Hy.
@@ -171,7 +203,7 @@ Lemma cmra_included_l n x y : x ≼{n} x ⋅ y.
 Proof. by exists y. Qed.
 Lemma cmra_included_r n x y : y ≼{n} x ⋅ y.
 Proof. rewrite (commutative op); apply cmra_included_l. Qed.
-Global Instance cmra_included_ord n : PreOrder (includedN n).
+Global Instance cmra_included_ord n : PreOrder (includedN n : relation A).
 Proof.
   split.
   * by intros x; exists (unit x); rewrite ra_unit_r.
@@ -179,9 +211,9 @@ Proof.
     by rewrite (associative _) -Hy -Hz.
 Qed.
 Lemma cmra_valid_includedN x y n : ✓{n} y → x ≼{n} y → ✓{n} x.
-Proof. intros Hyv [z Hy]; revert Hyv; rewrite Hy; apply cmra_valid_op_l. Qed.
+Proof. intros Hyv [z ?]; cofe_subst y; eauto using @cmra_valid_op_l. Qed.
 Lemma cmra_valid_included x y n : ✓{n} y → x ≼ y → ✓{n} x.
-Proof. rewrite cmra_included_includedN; eauto using cmra_valid_includedN. Qed.
+Proof. rewrite cmra_included_includedN; eauto using @cmra_valid_includedN. Qed.
 Lemma cmra_included_dist_l x1 x2 x1' n :
   x1 ≼ x2 → x1' ={n}= x1 → ∃ x2', x1' ≼ x2' ∧ x2' ={n}= x2.
 Proof.
@@ -190,7 +222,7 @@ Proof.
 Qed.
 
 (** * Properties of [(⇝)] relation *)
-Global Instance cmra_update_preorder : PreOrder cmra_update.
+Global Instance cmra_update_preorder : PreOrder (@cmra_update A).
 Proof. split. by intros x y. intros x y y' ?? z ?; naive_solver. Qed.
 Lemma cmra_update_updateP x y : x ⇝ y ↔ x ⇝: (y =).
 Proof.
@@ -200,9 +232,14 @@ Proof.
 Qed.
 End cmra.
 
-Instance cmra_monotone_id `{CMRA A} : CMRAMonotone (@id A).
+Hint Resolve cmra_ra.
+Hint Extern 0 (_ ≼{0} _) => apply cmra_included_0.
+(* Also via [cmra_cofe; cofe_equivalence] *)
+Hint Cut [!*; ra_equivalence; cmra_ra] : typeclass_instances.
+
+Instance cmra_monotone_id {A : cmraT} : CMRAMonotone (@id A).
 Proof. by split. Qed.
-Instance cmra_monotone_ra_monotone `{CMRA A, CMRA B} (f : A → B) :
+Instance cmra_monotone_ra_monotone {A B : cmraT} (f : A → B) :
   CMRAMonotone f → RAMonotone f.
 Proof.
   split.
@@ -212,18 +249,13 @@ Proof.
     by intros ? n; apply validN_preserving.
 Qed.
 
-Hint Extern 0 (_ ≼{0} _) => apply cmra_included_0.
-(* Also via [cmra_cofe; cofe_equivalence] *)
-Hint Cut [!*; ra_equivalence; cmra_ra] : typeclass_instances.
-
 (** Discrete *)
 Section discrete.
   Context `{ra : RA A}.
   Existing Instances discrete_dist discrete_compl.
-  Let discrete_cofe' : Cofe A := discrete_cofe.
   Instance discrete_validN : ValidN A := λ n x,
     match n with 0 => True | S n => ✓ x end.
-  Instance discrete_cmra : CMRA A.
+  Definition discrete_cmra_mixin : CMRAMixin A.
   Proof.
     split; try by (destruct ra; auto).
     * by intros [|n]; try apply ra_op_proper.
@@ -236,91 +268,93 @@ Section discrete.
     * by intros [|n]; try apply ra_valid_op_l.
     * by intros [|n] x y; try apply ra_op_minus.
   Qed.
-  Instance discrete_extend : CMRAExtend A.
+  Definition discrete_extend_mixin : CMRAExtendMixin A.
   Proof.
-    intros [|n] x y1 y2 ??; [|by exists (y1,y2)].
+    intros [|n] x y1 y2 ??; [|by exists (y1,y2); rewrite /dist /discrete_dist].
     by exists (x,unit x); simpl; rewrite ra_unit_r.
   Qed.
-  Global Instance discrete_timeless (x : A) : ValidTimeless x.
+  Definition discreteRA : cmraT :=
+    CMRAT discrete_cofe_mixin discrete_cmra_mixin discrete_extend_mixin.
+  Global Instance discrete_timeless (x : A) : ValidTimeless (x : discreteRA).
   Proof. by intros ?. Qed.
-  Definition discreteRA : cmraT := CMRAT A.
   Lemma discrete_updateP (x : A) (P : A → Prop) `{!Inhabited (sig P)} :
-    (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → x ⇝: P.
+    (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → (x : discreteRA) ⇝: P.
   Proof.
     intros Hvalid z [|n]; [|apply Hvalid].
     by destruct (_ : Inhabited (sig P)) as [[y ?]]; exists y.
   Qed.
-  Lemma discrete_update (x y : A) : (∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z)) → x ⇝ y.
+  Lemma discrete_update (x y : A) :
+    (∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z)) → (x : discreteRA) ⇝ y.
   Proof. intros Hvalid z [|n]; [done|apply Hvalid]. Qed.
 End discrete.
 Arguments discreteRA _ {_ _ _ _ _ _}.
 
 (** Product *)
-Instance prod_op `{Op A, Op B} : Op (A * B) := λ x y, (x.1 ⋅ y.1, x.2 ⋅ y.2).
-Instance prod_empty `{Empty A, Empty B} : Empty (A * B) := (∅, ∅).
-Instance prod_unit `{Unit A, Unit B} : Unit (A * B) := λ x,
-  (unit (x.1), unit (x.2)).
-Instance prod_valid `{Valid A, Valid B} : Valid (A * B) := λ x,
-  ✓ (x.1) ∧ ✓ (x.2).
-Instance prod_validN `{ValidN A, ValidN B} : ValidN (A * B) := λ n x,
-  ✓{n} (x.1) ∧ ✓{n} (x.2).
-Instance prod_minus `{Minus A, Minus B} : Minus (A * B) := λ x y,
-  (x.1 ⩪ y.1, x.2 ⩪ y.2).
-Lemma prod_included `{Equiv A, Equiv B, Op A, Op B} (x y : A * B) :
-  x ≼ y ↔ x.1 ≼ y.1 ∧ x.2 ≼ y.2.
-Proof.
-  split; [intros [z Hz]; split; [exists (z.1)|exists (z.2)]; apply Hz|].
-  intros [[z1 Hz1] [z2 Hz2]]; exists (z1,z2); split; auto.
-Qed.
-Lemma prod_includedN `{Dist A, Dist B, Op A, Op B} (x y : A * B) n :
-  x ≼{n} y ↔ x.1 ≼{n} y.1 ∧ x.2 ≼{n} y.2.
-Proof.
-  split; [intros [z Hz]; split; [exists (z.1)|exists (z.2)]; apply Hz|].
-  intros [[z1 Hz1] [z2 Hz2]]; exists (z1,z2); split; auto.
-Qed.
-Instance prod_cmra `{CMRA A, CMRA B} : CMRA (A * B).
-Proof.
-  split; try apply _.
-  * by intros n x y1 y2 [Hy1 Hy2]; split; simpl in *; rewrite ?Hy1 ?Hy2.
-  * by intros n y1 y2 [Hy1 Hy2]; split; simpl in *; rewrite ?Hy1 ?Hy2.
-  * by intros n y1 y2 [Hy1 Hy2] [??]; split; simpl in *; rewrite -?Hy1 -?Hy2.
-  * by intros n x1 x2 [Hx1 Hx2] y1 y2 [Hy1 Hy2];
-      split; simpl in *; rewrite ?Hx1 ?Hx2 ?Hy1 ?Hy2.
-  * split; apply cmra_valid_0.
-  * by intros n x [??]; split; apply cmra_valid_S.
-  * intros x; split; [by intros [??] n; split; apply cmra_valid_validN|].
-    intros Hvalid; split; apply cmra_valid_validN; intros n; apply Hvalid.
-  * split; simpl; apply (associative _).
-  * split; simpl; apply (commutative _).
-  * split; simpl; apply ra_unit_l.
-  * split; simpl; apply ra_unit_idempotent.
-  * intros n x y; rewrite !prod_includedN.
-    by intros [??]; split; apply cmra_unit_preserving.
-  * intros n x y [??]; split; simpl in *; eapply cmra_valid_op_l; eauto.
-  * intros x y n; rewrite prod_includedN; intros [??].
-    by split; apply cmra_op_minus.
-Qed.
-Instance prod_ra_empty `{RAIdentity A, RAIdentity B} : RAIdentity (A * B).
-Proof.
-  repeat split; simpl; repeat apply ra_empty_valid; repeat apply (left_id _ _).
-Qed.
-Instance prod_cmra_extend `{CMRAExtend A, CMRAExtend B} : CMRAExtend (A * B).
-Proof.
-  intros n x y1 y2 [??] [??]; simpl in *.
-  destruct (cmra_extend_op n (x.1) (y1.1) (y2.1)) as (z1&?&?&?); auto.
-  destruct (cmra_extend_op n (x.2) (y1.2) (y2.2)) as (z2&?&?&?); auto.
-  by exists ((z1.1,z2.1),(z1.2,z2.2)).
-Qed.
-Instance pair_timeless `{Valid A, ValidN A, Valid B, ValidN B} (x : A) (y : B) :
-  ValidTimeless x → ValidTimeless y → ValidTimeless (x,y).
-Proof. by intros ?? [??]; split; apply (valid_timeless _). Qed.
-Canonical Structure prodRA (A B : cmraT) : cmraT := CMRAT (A * B).
-Instance prod_map_cmra_monotone `{CMRA A, CMRA A', CMRA B, CMRA B'}
-  (f : A → A') (g : B → B') `{!CMRAMonotone f, !CMRAMonotone g} :
-  CMRAMonotone (prod_map f g).
+Section prod.
+  Context {A B : cmraT}.
+  Instance prod_op : Op (A * B) := λ x y, (x.1 ⋅ y.1, x.2 ⋅ y.2).
+  Global Instance prod_empty `{Empty A, Empty B} : Empty (A * B) := (∅, ∅).
+  Instance prod_unit : Unit (A * B) := λ x, (unit (x.1), unit (x.2)).
+  Instance prod_valid : Valid (A * B) := λ x, ✓ (x.1) ∧ ✓ (x.2).
+  Instance prod_validN : ValidN (A * B) := λ n x, ✓{n} (x.1) ∧ ✓{n} (x.2).
+  Instance prod_minus : Minus (A * B) := λ x y, (x.1 ⩪ y.1, x.2 ⩪ y.2).
+  Lemma prod_included (x y : A * B) : x ≼ y ↔ x.1 ≼ y.1 ∧ x.2 ≼ y.2.
+  Proof.
+    split; [intros [z Hz]; split; [exists (z.1)|exists (z.2)]; apply Hz|].
+    intros [[z1 Hz1] [z2 Hz2]]; exists (z1,z2); split; auto.
+  Qed.
+  Lemma prod_includedN (x y : A * B) n : x ≼{n} y ↔ x.1 ≼{n} y.1 ∧ x.2 ≼{n} y.2.
+  Proof.
+    split; [intros [z Hz]; split; [exists (z.1)|exists (z.2)]; apply Hz|].
+    intros [[z1 Hz1] [z2 Hz2]]; exists (z1,z2); split; auto.
+  Qed.
+  Definition prod_cmra_mixin : CMRAMixin (A * B).
+  Proof.
+    split; try apply _.
+    * by intros n x y1 y2 [Hy1 Hy2]; split; rewrite /= ?Hy1 ?Hy2.
+    * by intros n y1 y2 [Hy1 Hy2]; split; rewrite /= ?Hy1 ?Hy2.
+    * by intros n y1 y2 [Hy1 Hy2] [??]; split; rewrite /= -?Hy1 -?Hy2.
+    * by intros n x1 x2 [Hx1 Hx2] y1 y2 [Hy1 Hy2];
+        split; rewrite /= ?Hx1 ?Hx2 ?Hy1 ?Hy2.
+    * split; apply cmra_valid_0.
+    * by intros n x [??]; split; apply cmra_valid_S.
+    * intros x; split; [by intros [??] n; split; apply cmra_valid_validN|].
+      intros Hvalid; split; apply cmra_valid_validN; intros n; apply Hvalid.
+    * split; simpl; apply (associative _).
+    * split; simpl; apply (commutative _).
+    * split; simpl; apply ra_unit_l.
+    * split; simpl; apply ra_unit_idempotent.
+    * intros n x y; rewrite !prod_includedN.
+      by intros [??]; split; apply cmra_unit_preserving.
+    * intros n x y [??]; split; simpl in *; eapply cmra_valid_op_l; eauto.
+    * intros x y n; rewrite prod_includedN; intros [??].
+      by split; apply cmra_op_minus.
+  Qed.
+  Global Instance prod_ra_empty `{Empty A, Empty B} :
+    RAIdentity A → RAIdentity B → RAIdentity (A * B).
+  Proof.
+    repeat split; simpl; repeat (apply ra_empty_valid || apply (left_id _ _)).
+  Qed.
+  Definition prod_cmra_extend_mixin : CMRAExtendMixin (A * B).
+  Proof.
+    intros n x y1 y2 [??] [??]; simpl in *.
+    destruct (cmra_extend_op n (x.1) (y1.1) (y2.1)) as (z1&?&?&?); auto.
+    destruct (cmra_extend_op n (x.2) (y1.2) (y2.2)) as (z2&?&?&?); auto.
+    by exists ((z1.1,z2.1),(z1.2,z2.2)).
+  Qed.
+  Canonical Structure prodRA : cmraT :=
+    CMRAT prod_cofe_mixin prod_cmra_mixin prod_cmra_extend_mixin.
+  Instance pair_timeless (x : A) (y : B) :
+    ValidTimeless x → ValidTimeless y → ValidTimeless (x,y).
+  Proof. by intros ?? [??]; split; apply (valid_timeless _). Qed.
+End prod.
+Arguments prodRA : clear implicits.
+
+Instance prod_map_cmra_monotone {A A' B B' : cmraT} (f : A → A') (g : B → B') :
+  CMRAMonotone f → CMRAMonotone g → CMRAMonotone (prod_map f g).
 Proof.
   split.
-  * intros n x1 x2; rewrite !prod_includedN; intros [??]; simpl.
+  * intros n x y; rewrite !prod_includedN; intros [??]; simpl.
     by split; apply includedN_preserving.
   * by intros n x [??]; split; simpl; apply validN_preserving.
 Qed.

@@ -2,7 +2,7 @@ Require Export modures.cofe.
 
 Section solver.
 Context (F : cofeT → cofeT → cofeT).
-Context `{Finhab : Inhabited (F (CofeT unit) (CofeT unit))}.
+Context `{Finhab : Inhabited (F unitC unitC)}.
 Context (map : ∀ {A1 A2 B1 B2 : cofeT},
   ((A2 -n> A1) * (B1 -n> B2)) → (F A1 B1 -n> F A2 B2)).
 Arguments map {_ _ _ _} _.
@@ -20,11 +20,11 @@ Lemma map_ext {A1 A2 B1 B2 : cofeT}
 Proof. by rewrite -!cofe_mor_ext; intros -> -> ->. Qed.
 
 Fixpoint A (k : nat) : cofeT :=
-  match k with 0 => CofeT unit | S k => F (A k) (A k) end.
+  match k with 0 => unitC | S k => F (A k) (A k) end.
 Fixpoint f {k} : A k -n> A (S k) :=
   match k with 0 => CofeMor (λ _, inhabitant) | S k => map (g,f) end
 with g {k} : A (S k) -n> A k :=
-  match k with 0 => CofeMor (λ _, () : CofeT ()) | S k => map (f,g) end.
+  match k with 0 => CofeMor (λ _, () : unitC) | S k => map (f,g) end.
 Definition f_S k (x : A (S k)) : f x = map (g,f) x := eq_refl.
 Definition g_S k (x : A (S (S k))) : g x = map (f,g) x := eq_refl.
 Lemma gf {k} (x : A k) : g (f x) ≡ x.
@@ -58,7 +58,7 @@ Next Obligation.
   rewrite (conv_compl (tower_chain c k) n).
   by rewrite (conv_compl (tower_chain c (S k)) n) /= (g_tower (c n) k).
 Qed.
-Instance tower_cofe : Cofe tower.
+Definition tower_cofe_mixin : CofeMixin tower.
 Proof.
   split.
   * intros X Y; split; [by intros HXY n k; apply equiv_dist|].
@@ -73,7 +73,7 @@ Proof.
   * intros c n k; rewrite /= (conv_compl (tower_chain c k) n).
     apply (chain_cauchy c); lia.
 Qed.
-Definition T : cofeT := CofeT tower.
+Definition T : cofeT := CofeT tower_cofe_mixin.
 
 Fixpoint ff {k} (i : nat) : A k -n> A (i + k) :=
   match i with 0 => cid | S i => f ◎ ff i end.
