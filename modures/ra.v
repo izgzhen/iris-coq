@@ -146,6 +146,11 @@ Proof. unfold big_opM. by rewrite map_to_list_empty. Qed.
 Lemma big_opM_insert (m : M A) i x :
   m !! i = None → big_opM (<[i:=x]> m) ≡ x ⋅ big_opM m.
 Proof. intros ?; by rewrite /big_opM map_to_list_insert. Qed.
+Lemma big_opM_delete (m : M A) i x :
+  m !! i = Some x → x ⋅ big_opM (delete i m) ≡ big_opM m.
+Proof.
+  intros. by rewrite -{2}(insert_delete m i x) // big_opM_insert ?lookup_delete.
+Qed.
 Lemma big_opM_singleton i x : big_opM ({[i ↦ x]} : M A) ≡ x.
 Proof.
   rewrite -insert_empty big_opM_insert /=; last auto using lookup_empty.
