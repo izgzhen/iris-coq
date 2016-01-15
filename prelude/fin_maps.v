@@ -337,6 +337,9 @@ Proof.
       rewrite ?lookup_delete, ?lookup_delete_ne; intuition congruence.
   * intros [??]. by rewrite lookup_delete_ne.
 Qed.
+Lemma lookup_delete_is_Some {A} (m : M A) i j :
+  is_Some (delete i m !! j) ↔ i ≠ j ∧ is_Some (m !! j).
+Proof. unfold is_Some; setoid_rewrite lookup_delete_Some; naive_solver. Qed.
 Lemma lookup_delete_None {A} (m : M A) i j :
   delete i m !! j = None ↔ i = j ∨ m !! j = None.
 Proof.
@@ -411,6 +414,9 @@ Proof.
       rewrite ?lookup_insert, ?lookup_insert_ne; intuition congruence.
   * intros [[-> ->]|[??]]; [apply lookup_insert|]. by rewrite lookup_insert_ne.
 Qed.
+Lemma lookup_insert_is_Some {A} (m : M A) i j x :
+  is_Some (<[i:=x]>m !! j) ↔ i = j ∨ i ≠ j ∧ is_Some (m !! j).
+Proof. unfold is_Some; setoid_rewrite lookup_insert_Some; naive_solver. Qed.
 Lemma lookup_insert_None {A} (m : M A) i j x :
   <[i:=x]>m !! j = None ↔ m !! j = None ∧ i ≠ j.
 Proof.
