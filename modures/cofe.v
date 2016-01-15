@@ -334,6 +334,8 @@ Section later.
   Canonical Structure laterC : cofeT := CofeT later_cofe_mixin.
   Global Instance Later_contractive : Contractive (@Later A).
   Proof. by intros n ??. Qed.
+  Global Instance Later_inj n : Injective (dist n) (dist (S n)) (@Later A).
+  Proof. by intros x y. Qed.
 End later.
 
 Arguments laterC : clear implicits.
