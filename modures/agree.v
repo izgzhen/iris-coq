@@ -51,6 +51,11 @@ Proof.
 Qed.
 Canonical Structure agreeC := CofeT agree_cofe_mixin.
 
+Lemma agree_car_ne (x y : agree A) n : ✓{n} x → x ={n}= y → x n ={n}= y n.
+Proof. by intros [??] Hxy; apply Hxy. Qed.
+Lemma agree_cauchy (x : agree A) n i : ✓{n} x → i ≤ n → x i ={i}= x n.
+Proof. by intros [? Hx]; apply Hx. Qed.
+
 Program Instance agree_op : Op (agree A) := λ x y,
   {| agree_car := x;
      agree_is_valid n := agree_is_valid x n ∧ agree_is_valid y n ∧ x ={n}= y |}.
@@ -62,6 +67,12 @@ Instance: Commutative (≡) (@op (agree A) _).
 Proof. intros x y; split; [naive_solver|by intros n (?&?&Hxy); apply Hxy]. Qed.
 Definition agree_idempotent (x : agree A) : x ⋅ x ≡ x.
 Proof. split; naive_solver. Qed.
+Instance: ∀ n : nat, Proper (dist n ==> impl) (@validN (agree A) _ n).
+Proof.
+  intros n x y Hxy [? Hx]; split; [by apply Hxy|intros n' ?].
+  rewrite -(proj2 Hxy n') 1?(Hx n'); eauto using agree_valid_le.
+  by apply dist_le with n; try apply Hxy.
+Qed.
 Instance: ∀ x : agree A, Proper (dist n ==> dist n) (op x).
 Proof.
   intros n x y1 y2 [Hy' Hy]; split; [|done].
@@ -88,9 +99,6 @@ Qed.
 Definition agree_cmra_mixin : CMRAMixin (agree A).
 Proof.
   split; try (apply _ || done).
-  * intros n x y Hxy [? Hx]; split; [by apply Hxy|intros n' ?].
-    rewrite -(proj2 Hxy n') 1?(Hx n'); eauto using agree_valid_le.
-    by apply dist_le with n; try apply Hxy.
   * by intros n x1 x2 Hx y1 y2 Hy.
   * intros x; split; [apply agree_valid_0|].
     by intros n'; rewrite Nat.le_0_r; intros ->.
@@ -101,14 +109,18 @@ Proof.
   * by intros x y n [(?&?&?) ?].
   * by intros x y n; rewrite agree_includedN.
 Qed.
-Lemma agree_op_inv (x y1 y2 : agree A) n :
-  ✓{n} x → x ={n}= y1 ⋅ y2 → y1 ={n}= y2.
-Proof. by intros [??] Hxy; apply Hxy. Qed.
+Lemma agree_op_inv (x1 x2 : agree A) n : ✓{n} (x1 ⋅ x2) → x1 ={n}= x2.
+Proof. intros Hxy; apply Hxy. Qed.
+Lemma agree_valid_includedN (x y : agree A) n : ✓{n} y → x ≼{n} y → x ={n}= y.
+Proof.
+  move=> Hval [z Hy]; move: Hval; rewrite Hy.
+  by move=> /agree_op_inv->; rewrite agree_idempotent.
+Qed.
 Definition agree_cmra_extend_mixin : CMRAExtendMixin (agree A).
 Proof.
-  intros n x y1 y2 ? Hx; exists (x,x); simpl; split.
+  intros n x y1 y2 Hval Hx; exists (x,x); simpl; split.
   * by rewrite agree_idempotent.
-  * by rewrite Hx (agree_op_inv x y1 y2) // agree_idempotent.
+  * by move: Hval; rewrite Hx; move=> /agree_op_inv->; rewrite agree_idempotent.
 Qed.
 Canonical Structure agreeRA : cmraT :=
   CMRAT agree_cofe_mixin agree_cmra_mixin agree_cmra_extend_mixin.
@@ -118,15 +130,9 @@ Program Definition to_agree (x : A) : agree A :=
 Solve Obligations with done.
 Global Instance to_agree_ne n : Proper (dist n ==> dist n) to_agree.
 Proof. intros x1 x2 Hx; split; naive_solver eauto using @dist_le. Qed.
-Lemma agree_car_ne (x y : agree A) n : ✓{n} x → x ={n}= y → x n ={n}= y n.
-Proof. by intros [??] Hxy; apply Hxy. Qed.
-Lemma agree_cauchy (x : agree A) n i : n ≤ i → ✓{i} x → x n ={n}= x i.
-Proof. by intros ? [? Hx]; apply Hx. Qed.
-Lemma agree_to_agree_inj (x y : agree A) a n :
-  ✓{n} x → x ={n}= to_agree a ⋅ y → x n ={n}= a.
-Proof.
-  by intros; transitivity ((to_agree a ⋅ y) n); first apply agree_car_ne.
-Qed.
+Global Instance to_agree_proper : Proper ((≡) ==> (≡)) to_agree := ne_proper _.
+Global Instance to_agree_inj n : Injective (dist n) (dist n) (to_agree).
+Proof. by intros x y [_ Hxy]; apply Hxy. Qed.
 End agree.
 
 Arguments agreeC : clear implicits.
@@ -137,8 +143,8 @@ Program Definition agree_map {A B} (f : A → B) (x : agree A) : agree B :=
 Solve Obligations with auto using agree_valid_0, agree_valid_S.
 Lemma agree_map_id {A} (x : agree A) : agree_map id x = x.
 Proof. by destruct x. Qed.
-Lemma agree_map_compose {A B C} (f : A → B) (g : B → C)
-  (x : agree A) : agree_map (g ∘ f) x = agree_map g (agree_map f x).
+Lemma agree_map_compose {A B C} (f : A → B) (g : B → C) (x : agree A) :
+  agree_map (g ∘ f) x = agree_map g (agree_map f x).
 Proof. done. Qed.
 
 Section agree_map.
