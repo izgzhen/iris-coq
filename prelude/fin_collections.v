@@ -83,7 +83,7 @@ Proof.
   apply Permutation_length, NoDup_Permutation.
   * apply NoDup_elements.
   * apply NoDup_app; repeat split; try apply NoDup_elements.
-    intros x; rewrite !elem_of_elements; esolve_elem_of.
+    intros x; rewrite !elem_of_elements; solve_elem_of.
   * intros. by rewrite elem_of_app, !elem_of_elements, elem_of_union.
 Qed.
 Instance elem_of_dec_slow (x : A) (X : C) : Decision (x ∈ X) | 100.
@@ -107,7 +107,7 @@ Qed.
 Lemma size_union_alt X Y : size (X ∪ Y) = size X + size (Y ∖ X).
 Proof.
   rewrite <-size_union by solve_elem_of.
-  setoid_replace (Y ∖ X) with ((Y ∪ X) ∖ X) by esolve_elem_of.
+  setoid_replace (Y ∖ X) with ((Y ∪ X) ∖ X) by solve_elem_of.
   rewrite <-union_difference, (commutative (∪)); solve_elem_of.
 Qed.
 Lemma subseteq_size X Y : X ⊆ Y → size X ≤ size Y.
@@ -129,7 +129,7 @@ Proof.
   { apply collection_wf. }
   intros X IH. destruct (collection_choose_or_empty X) as [[x ?]|HX].
   * rewrite (union_difference {[ x ]} X) by solve_elem_of.
-    apply Hadd. solve_elem_of. apply IH. esolve_elem_of.
+    apply Hadd. solve_elem_of. apply IH; solve_elem_of.
   * by rewrite HX.
 Qed.
 Lemma collection_fold_ind {B} (P : B → C → Prop) (f : A → B → B) (b : B) :
@@ -143,10 +143,10 @@ Proof.
     symmetry. apply elem_of_elements. }
   induction 1 as [|x l ?? IH]; simpl.
   * intros X HX. setoid_rewrite elem_of_nil in HX.
-    rewrite equiv_empty. done. esolve_elem_of.
+    rewrite equiv_empty. done. solve_elem_of.
   * intros X HX. setoid_rewrite elem_of_cons in HX.
-    rewrite (union_difference {[ x ]} X) by esolve_elem_of.
-    apply Hadd. solve_elem_of. apply IH. esolve_elem_of.
+    rewrite (union_difference {[ x ]} X) by solve_elem_of.
+    apply Hadd. solve_elem_of. apply IH. solve_elem_of.
 Qed.
 Lemma collection_fold_proper {B} (R : relation B) `{!Equivalence R}
     (f : A → B → B) (b : B) `{!Proper ((=) ==> R ==> R) f}

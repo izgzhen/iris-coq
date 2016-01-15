@@ -155,7 +155,7 @@ Proof.
   * revert x. induction l as [|y l IH]; intros x; simpl.
     { by rewrite elem_of_empty. }
     rewrite elem_of_union, elem_of_singleton. intros [->|]; [left|right]; eauto.
-  * induction 1; esolve_elem_of.
+  * induction 1; solve_elem_of.
 Qed.
 Lemma NoDup_remove_dups_fast l : NoDup (remove_dups_fast l).
 Proof.

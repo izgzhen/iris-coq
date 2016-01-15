@@ -54,7 +54,7 @@ Lemma dom_insert {A} (m : M A) i x : dom D (<[i:=x]>m) ≡ {[ i ]} ∪ dom D m.
 Proof.
   apply elem_of_equiv. intros j. rewrite elem_of_union, !elem_of_dom.
   unfold is_Some. setoid_rewrite lookup_insert_Some.
-  destruct (decide (i = j)); esolve_elem_of.
+  destruct (decide (i = j)); solve_elem_of.
 Qed.
 Lemma dom_insert_subseteq {A} (m : M A) i x : dom D m ⊆ dom D (<[i:=x]>m).
 Proof. rewrite (dom_insert _). solve_elem_of. Qed.
@@ -66,7 +66,7 @@ Proof. rewrite <-insert_empty, dom_insert, dom_empty; solve_elem_of. Qed.
 Lemma dom_delete {A} (m : M A) i : dom D (delete i m) ≡ dom D m ∖ {[ i ]}.
 Proof.
   apply elem_of_equiv. intros j. rewrite elem_of_difference, !elem_of_dom.
-  unfold is_Some. setoid_rewrite lookup_delete_Some. esolve_elem_of.
+  unfold is_Some. setoid_rewrite lookup_delete_Some. solve_elem_of.
 Qed.
 Lemma delete_partial_alter_dom {A} (m : M A) i f :
   i ∉ dom D m → delete i (partial_alter f i m) = m.
