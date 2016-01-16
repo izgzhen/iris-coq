@@ -108,6 +108,11 @@ Proof.
   rewrite !elem_of_dom, lookup_fmap, <-!not_eq_None_Some.
   destruct (m !! i); naive_solver.
 Qed.
+Lemma dom_finite {A} (m : M A) : set_finite (dom D m).
+Proof.
+  induction m using map_ind; rewrite ?dom_empty, ?dom_insert;
+    eauto using empty_finite, union_finite, singleton_finite.
+Qed.
 
 Context `{!LeibnizEquiv D}.
 Lemma dom_empty_L {A} : dom D (@empty (M A) _) = ∅.

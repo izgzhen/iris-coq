@@ -591,6 +591,11 @@ Definition set_finite `{ElemOf A B} (X : B) := ∃ l : list A, ∀ x, x ∈ X �
 
 Section finite.
   Context `{SimpleCollection A B}.
+  Global Instance set_finite_subseteq :
+     Proper (flip (⊆) ==> impl) (@set_finite A B _).
+  Proof. intros X Y HX [l Hl]; exists l; solve_elem_of. Qed.
+  Global Instance set_finite_proper : Proper ((≡) ==> iff) (@set_finite A B _).
+  Proof. by intros X Y [??]; split; apply set_finite_subseteq. Qed.
   Lemma empty_finite : set_finite ∅.
   Proof. by exists []; intros ?; rewrite elem_of_empty. Qed.
   Lemma singleton_finite (x : A) : set_finite {[ x ]}.
@@ -614,4 +619,10 @@ Section more_finite.
   Proof. intros [l ?]; exists l; intros x [??]%elem_of_intersection; auto. Qed.
   Lemma difference_finite X Y : set_finite X → set_finite (X ∖ Y).
   Proof. intros [l ?]; exists l; intros x [??]%elem_of_difference; auto. Qed.
+  Lemma difference_finite_inv X Y `{∀ x, Decision (x ∈ Y)} :
+    set_finite Y → set_finite (X ∖ Y) → set_finite X.
+  Proof.
+    intros [l ?] [k ?]; exists (l ++ k).
+    intros x ?; destruct (decide (x ∈ Y)); rewrite elem_of_app; solve_elem_of.
+  Qed.
 End more_finite.
