@@ -408,7 +408,12 @@ Section Language.
   Definition ectx_step e1 σ1 e2 σ2 (ef: option expr) :=
     exists K e1' e2', e1 = fill K e1' /\ e2 = fill K e2' /\ prim_step e1' σ1 e2' σ2 ef.
 
-  Instance heap_lang : Language expr value state := Build_Language v2e e2v atomic ectx_step.
+  Instance heap_lang : Language expr value state := {|
+    to_expr := v2e;
+    of_expr := e2v;
+    atomic := atomic;
+    prim_step := ectx_step
+  |}.
   Proof.
     - exact v2v.
     - exact e2e.
