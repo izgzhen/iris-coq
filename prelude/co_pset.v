@@ -210,6 +210,37 @@ Proof.
   refine (cast_if (decide (coPset_finite (`X)))); by rewrite coPset_finite_spec.
 Defined.
 
+(** * Pick element from infitinite sets *)
+(* just depth-first search: using this to pick elements results in very
+unbalanced trees. *)
+Fixpoint coPpick_raw (t : coPset_raw) : option positive :=
+  match t with
+  | coPLeaf true | coPNode true _ _ => Some 1
+  | coPLeaf false => None
+  | coPNode false l r =>
+     match coPpick_raw l with
+     | Some i => Some (i~0) | None => (~1) <$> coPpick_raw r
+     end
+  end.
+Definition coPpick (X : coPset) : positive := from_option 1 (coPpick_raw (`X)).
+
+Lemma coPpick_raw_elem_of t i : coPpick_raw t = Some i → e_of i t.
+Proof.
+  revert i; induction t as [[]|[] l ? r]; intros i ?; simplify_equality'; auto.
+  destruct (coPpick_raw l); simplify_option_equality; auto.
+Qed.
+Lemma coPpick_raw_None t : coPpick_raw t = None → coPset_finite t.
+Proof.
+  induction t as [[]|[] l ? r]; intros i; simplify_equality'; auto.
+  destruct (coPpick_raw l); simplify_option_equality; auto.
+Qed.
+Lemma coPpick_elem_of X : ¬set_finite X → coPpick X ∈ X.
+Proof.
+  destruct X as [t ?]; unfold coPpick; destruct (coPpick_raw _) as [j|] eqn:?.
+  * by intros; apply coPpick_raw_elem_of.
+  * by intros []; apply coPset_finite_spec, coPpick_raw_None.
+Qed.
+
 (** * Conversion to psets *)
 Fixpoint to_Pset_raw (t : coPset_raw) : Pmap_raw () :=
   match t with
