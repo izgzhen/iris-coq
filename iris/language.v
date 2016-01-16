@@ -1,18 +1,18 @@
 Require Import prelude.prelude.
 
 Class Language (E V St : Type) := {
-  to_expr : V → E;
-  of_expr : E → option V;
+  of_val : V → E;
+  to_val : E → option V;
   atomic : E → Prop;
   prim_step : E → St → E → St → option E → Prop;
-  of_to_expr v : of_expr (to_expr v) = Some v;
-  to_of_expr e v : of_expr e = Some v → to_expr v = e;
-  values_stuck e σ e' σ' ef : prim_step e σ e' σ' ef → of_expr e = None;
-  atomic_not_value e : atomic e → of_expr e = None;
+  to_of_val v : to_val (of_val v) = Some v;
+  of_to_val e v : to_val e = Some v → of_val v = e;
+  values_stuck e σ e' σ' ef : prim_step e σ e' σ' ef → to_val e = None;
+  atomic_not_value e : atomic e → to_val e = None;
   atomic_step e1 σ1 e2 σ2 ef :
     atomic e1 →
     prim_step e1 σ1 e2 σ2 ef →
-    is_Some (of_expr e2)
+    is_Some (to_val e2)
 }.
 
 Section language.
@@ -29,12 +29,13 @@ Section language.
   Definition steps := rtc step.
   Definition stepn := nsteps step.
 
-  Definition is_ctx (ctx : E → E) : Prop :=
-    (∀ e, is_Some (of_expr (ctx e)) → is_Some (of_expr e)) ∧
-    (∀ e1 σ1 e2 σ2 ef,
-      prim_step e1 σ1 e2 σ2 ef -> prim_step (ctx e1) σ1 (ctx e2) σ2 ef) ∧
-    (∀ e1' σ1 e2 σ2 ef,
-      of_expr e1' = None → prim_step (ctx e1') σ1 e2 σ2 ef →
-      ∃ e2', e2 = ctx e2' ∧ prim_step e1' σ1 e2' σ2 ef).
+  Record is_ctx (K : E → E) := IsCtx {
+    is_ctx_value e : is_Some (to_val (K e)) → is_Some (to_val e);
+    is_ctx_step_preserved e1 σ1 e2 σ2 ef :
+      prim_step e1 σ1 e2 σ2 ef → prim_step (K e1) σ1 (K e2) σ2 ef;
+    is_ctx_step e1' σ1 e2 σ2 ef :
+      to_val e1' = None → prim_step (K e1') σ1 e2 σ2 ef →
+      ∃ e2', e2 = K e2' ∧ prim_step e1' σ1 e2' σ2 ef
+  }.
 End language.
 

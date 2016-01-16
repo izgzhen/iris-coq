@@ -409,8 +409,8 @@ Section Language.
     exists K e1' e2', e1 = fill K e1' /\ e2 = fill K e2' /\ prim_step e1' σ1 e2' σ2 ef.
 
   Instance heap_lang : Language expr value state := {|
-    to_expr := v2e;
-    of_expr := e2v;
+    of_val := v2e;
+    to_val := e2v;
     atomic := atomic;
     prim_step := ectx_step
   |}.
@@ -430,7 +430,7 @@ Section Language.
   (** We can have bind with arbitrary evaluation contexts **)
   Lemma fill_is_ctx K: is_ctx (fill K).
   Proof.
-    split; last split.
+    split.
     - intros ? [v Hval]. eapply fill_value. eassumption.
     - intros ? ? ? ? ? (K' & e1' & e2' & Heq1 & Heq2 & Hstep).
       exists (comp_ctx K K'), e1', e2'. rewrite -!fill_comp Heq1 Heq2.
