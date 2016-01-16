@@ -127,6 +127,10 @@ Proof.
 Qed.
 Canonical Structure exclRA : cmraT :=
   CMRAT excl_cofe_mixin excl_cmra_mixin excl_cmra_extend_mixin.
+Lemma excl_validN_inv_l n x y : ✓{S n} (Excl x ⋅ y) → y = ∅.
+Proof. by destruct y. Qed.
+Lemma excl_validN_inv_r n x y : ✓{S n} (x ⋅ Excl y) → x = ∅.
+Proof. by destruct x. Qed.
 
 (* Updates *)
 Lemma excl_update (x : A) y : ✓ y → Excl x ⇝ y.
