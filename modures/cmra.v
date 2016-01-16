@@ -230,6 +230,16 @@ Hint Extern 0 (_ ≼{0} _) => apply cmra_included_0.
 (* Also via [cmra_cofe; cofe_equivalence] *)
 Hint Cut [!*; ra_equivalence; cmra_ra] : typeclass_instances.
 
+(* Solver for validity *)
+Ltac solve_validN :=
+  match goal with
+  | H : ✓{?n} ?y |- ✓{?n'} ?x =>
+     let Hn := fresh in let Hx := fresh in
+     assert (n' ≤ n) as Hn by omega;
+     assert (x ≼ y) as Hx by solve_included;
+     eapply cmra_valid_le, Hn; eapply cmra_valid_included, Hx; apply H
+  end.
+
 Instance cmra_monotone_id {A : cmraT} : CMRAMonotone (@id A).
 Proof. by split. Qed.
 Instance cmra_monotone_ra_monotone {A B : cmraT} (f : A → B) :
