@@ -3,7 +3,7 @@
 (** This files implements an efficient implementation of finite/cofinite sets
 of positive binary naturals [positive]. *)
 Require Export prelude.collections.
-Require Import prelude.pmap prelude.mapset.
+Require Import prelude.pmap prelude.gmap prelude.mapset.
 Local Open Scope positive_scope.
 
 (** * The tree data structure *)
@@ -274,18 +274,43 @@ Proof.
   * destruct l as [|[]], r as [|[]]; simpl in *; rewrite ?andb_true_r;
       rewrite ?andb_True; rewrite ?andb_True in IHl, IHr; intuition.
 Qed.
+Lemma elem_of_of_Pset_raw i t : e_of i (of_Pset_raw t) ↔ t !! i = Some ().
+Proof. by revert i; induction t as [|[[]|]]; intros []; simpl; auto; split. Qed.
+Lemma of_Pset_raw_finite t : coPset_finite (of_Pset_raw t).
+Proof. induction t as [|[[]|]]; simpl; rewrite ?andb_True; auto. Qed.
+
 Definition of_Pset (X : Pset) : coPset :=
   let 'Mapset (PMap t Ht) := X in of_Pset_raw t ↾ of_Pset_wf _ Ht.
 Lemma elem_of_of_Pset X i : i ∈ of_Pset X ↔ i ∈ X.
-Proof.
-  destruct X as [[t Ht]]; change (e_of i (of_Pset_raw t) ↔ t !! i = Some ()).
-  clear Ht; revert i.
-  induction t as [|[[]|] l IHl r IHr]; intros [i|i|]; simpl; auto; by split.
-Qed.
+Proof. destruct X as [[t ?]]; apply elem_of_of_Pset_raw. Qed.
 Lemma of_Pset_finite X : set_finite (of_Pset X).
 Proof.
-  rewrite coPset_finite_spec; destruct X as [[t Ht]]; simpl; clear Ht.
-  induction t as [|[[]|] l IHl r IHr]; simpl; rewrite ?andb_True; auto.
+  apply coPset_finite_spec; destruct X as [[t ?]]; apply of_Pset_raw_finite.
+Qed.
+
+(** * Conversion from gsets of positives *)
+Definition of_gset (X : gset positive) : coPset :=
+  let 'Mapset (GMap (PMap t Ht) _) := X in of_Pset_raw t ↾ of_Pset_wf _ Ht.
+Lemma elem_of_of_gset X i : i ∈ of_gset X ↔ i ∈ X.
+Proof. destruct X as [[[t ?]]]; apply elem_of_of_Pset_raw. Qed.
+Lemma of_gset_finite X : set_finite (of_gset X).
+Proof.
+  apply coPset_finite_spec; destruct X as [[[t ?]]]; apply of_Pset_raw_finite.
+Qed.
+
+(** * Domain of finite maps *)
+Instance Pmap_dom_coPset {A} : Dom (Pmap A) coPset := λ m, of_Pset (dom _ m).
+Instance Pmap_dom_coPset_spec: FinMapDom positive Pmap coPset.
+Proof.
+  split; try apply _; intros A m i; unfold dom, Pmap_dom_coPset.
+  by rewrite elem_of_of_Pset, elem_of_dom.
+Qed.
+Instance gmap_dom_coPset {A} : Dom (gmap positive A) coPset := λ m,
+  of_gset (dom _ m).
+Instance gmap_dom_coPset_spec: FinMapDom positive (gmap positive) coPset.
+Proof.
+  split; try apply _; intros A m i; unfold dom, gmap_dom_coPset.
+  by rewrite elem_of_of_gset, elem_of_dom.
 Qed.
 
 (** * Suffix sets *)
@@ -305,14 +330,6 @@ Proof.
   * revert p; induction q; intros [?|?|]; simpl;
       rewrite ?coPset_elem_of_node; naive_solver.
   * by intros [q' ->]; induction q; simpl; rewrite ?coPset_elem_of_node.
-Qed.
-
-(** * Domain of finite maps *)
-Instance Pmap_dom_Pset {A} : Dom (Pmap A) coPset := λ m, of_Pset (dom _ m).
-Instance Pmap_dom_coPset: FinMapDom positive Pmap coPset.
-Proof.
-  split; try apply _; intros A m i; unfold dom, Pmap_dom_Pset.
-  by rewrite elem_of_of_Pset, elem_of_dom.
 Qed.
 
 (** * Splitting of infinite sets *)
