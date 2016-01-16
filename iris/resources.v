@@ -2,7 +2,7 @@ Require Export modures.fin_maps modures.agree modures.excl iris.parameter.
 
 Record res (Σ : iParam) (A : cofeT) := Res {
   wld : mapRA positive (agreeRA (laterC A));
-  pst : exclRA (leibnizC (istate Σ));
+  pst : exclRA (istateC Σ);
   gst : icmra Σ (laterC A);
 }.
 Add Printing Constructor res.

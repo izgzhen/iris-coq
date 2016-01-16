@@ -23,3 +23,5 @@ Lemma icmra_map_ext (Σ : iParam) {A B} (f g : A -n> B) m :
 Proof.
   by intros ?; apply equiv_dist=> n; apply icmra_map_ne=> ?; apply equiv_dist.
 Qed.
+
+Canonical Structure istateC Σ := leibnizC (istate Σ).
