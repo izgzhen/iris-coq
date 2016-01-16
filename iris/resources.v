@@ -41,8 +41,8 @@ Global Instance pst_ne' n : Proper (dist (S n) ==> (≡)) (@pst Σ A).
 Proof.
   intros σ σ' [???]; apply (timeless _), dist_le with (S n); auto with lia.
 Qed.
-Global Instance pst_proper : Proper ((≡) ==> (≡)) (@pst Σ A).
-Proof. by destruct 1. Qed.
+Global Instance pst_proper : Proper ((≡) ==> (=)) (@pst Σ A).
+Proof. by destruct 1; unfold_leibniz. Qed.
 Global Instance gst_ne n : Proper (dist n ==> dist n) (@gst Σ A).
 Proof. by destruct 1. Qed.
 Global Instance gst_proper : Proper ((≡) ==> (≡)) (@gst Σ A).

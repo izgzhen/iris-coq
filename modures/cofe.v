@@ -300,6 +300,9 @@ End discrete_cofe.
 Arguments discreteC _ {_ _}.
 
 Definition leibnizC (A : Type) : cofeT := @discreteC A equivL _.
+Instance leibnizC_leibniz : LeibnizEquiv (leibnizC A).
+Proof. by intros A x y. Qed.
+
 Canonical Structure natC := leibnizC nat.
 Canonical Structure boolC := leibnizC bool.
 

@@ -45,6 +45,8 @@ Canonical Structure authC := CofeT auth_cofe_mixin.
 Instance Auth_timeless (x : excl A) (y : A) :
   Timeless x → Timeless y → Timeless (Auth x y).
 Proof. by intros ?? [??] [??]; split; simpl in *; apply (timeless _). Qed.
+Global Instance auth_leibniz : LeibnizEquiv A → LeibnizEquiv (auth A).
+Proof. by intros ? [??] [??] [??]; f_equal'; apply leibniz_equiv. Qed.
 End cofe.
 
 Arguments authC : clear implicits.

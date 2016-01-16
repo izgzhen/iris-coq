@@ -75,6 +75,8 @@ Proof. by inversion_clear 1; constructor. Qed.
 Global Instance excl_timeless :
   (∀ x : A, Timeless x) → ∀ x : excl A, Timeless x.
 Proof. intros ? []; apply _. Qed.
+Global Instance excl_leibniz : LeibnizEquiv A → LeibnizEquiv (excl A).
+Proof. by destruct 2; f_equal; apply leibniz_equiv. Qed.
 
 (* CMRA *)
 Instance excl_valid : Valid (excl A) := λ x,
