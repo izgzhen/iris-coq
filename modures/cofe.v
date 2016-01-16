@@ -5,7 +5,7 @@ Class Dist A := dist : nat → relation A.
 Instance: Params (@dist) 3.
 Notation "x ={ n }= y" := (dist n x y)
   (at level 70, n at next level, format "x  ={ n }=  y").
-Hint Extern 0 (?x ={_}= ?x) => reflexivity.
+Hint Extern 0 (?x ={_}= ?y) => reflexivity.
 Hint Extern 0 (_ ={_}= _) => symmetry; assumption.
 
 Tactic Notation "cofe_subst" ident(x) :=

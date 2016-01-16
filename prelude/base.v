@@ -209,9 +209,9 @@ Instance: Params (@equiv) 2.
 (for types that have an [Equiv] instance) rather than the standard Leibniz
 equality. *)
 Instance equiv_default_relation `{Equiv A} : DefaultRelation (≡) | 3.
-Hint Extern 0 (_ ≡ _) => reflexivity.
+Hint Extern 0 (?x ≡ ?y) => reflexivity.
 Hint Extern 0 (_ ≡ _) => symmetry; assumption.
-Hint Extern 0 (_ ≡{_} _) => reflexivity.
+Hint Extern 0 (?x ≡{_} ?y) => reflexivity.
 Hint Extern 0 (_ ≡{_} _) => symmetry; assumption.
 
 (** ** Operations on collections *)

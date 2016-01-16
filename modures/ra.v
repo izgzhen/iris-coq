@@ -16,7 +16,7 @@ Notation "(⋅)" := op (only parsing) : C_scope.
 Definition included `{Equiv A, Op A} (x y : A) := ∃ z, y ≡ x ⋅ z.
 Infix "≼" := included (at level 70) : C_scope.
 Notation "(≼)" := included (only parsing) : C_scope.
-Hint Extern 0 (?x ≼ ?x) => reflexivity.
+Hint Extern 0 (?x ≼ ?y) => reflexivity.
 Instance: Params (@included) 3.
 
 Class Minus (A : Type) := minus : A → A → A.

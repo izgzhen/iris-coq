@@ -8,7 +8,7 @@ Definition includedN `{Dist A, Op A} (n : nat) (x y : A) := ∃ z, y ={n}= x ⋅
 Notation "x ≼{ n } y" := (includedN n x y)
   (at level 70, format "x  ≼{ n }  y") : C_scope.
 Instance: Params (@includedN) 4.
-Hint Extern 0 (?x ≼{_} ?x) => reflexivity.
+Hint Extern 0 (?x ≼{_} ?y) => reflexivity.
 
 Record CMRAMixin A
     `{Dist A, Equiv A, Unit A, Op A, Valid A, ValidN A, Minus A} := {
