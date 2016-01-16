@@ -360,7 +360,7 @@ Lemma or_intro_r P Q : Q ⊑ (P ∨ Q).
 Proof. intros x n ??; right; auto. Qed.
 Lemma or_elim P Q R : P ⊑ R → Q ⊑ R → (P ∨ Q) ⊑ R.
 Proof. intros HP HQ x n ? [?|?]. by apply HP. by apply HQ. Qed.
-Lemma impl_intro P Q R : (P ∧ Q) ⊑ R → P ⊑ (Q → R).
+Lemma impl_intro_r P Q R : (P ∧ Q) ⊑ R → P ⊑ (Q → R).
 Proof.
   intros HQ x n ?? x' n' ????; apply HQ; naive_solver eauto using uPred_weaken.
 Qed.
@@ -407,6 +407,8 @@ Hint Resolve or_elim or_intro_l' or_intro_r'.
 Hint Resolve and_intro and_elim_l' and_elim_r'.
 Hint Immediate True_intro False_elim.
 
+Lemma impl_intro_l P Q R : (Q ∧ P) ⊑ R → P ⊑ (Q → R).
+Proof. intros HR; apply impl_intro_r; rewrite -HR; auto. Qed.
 Lemma impl_elim_l P Q : ((P → Q) ∧ P) ⊑ Q.
 Proof. apply impl_elim with P; auto. Qed.
 Lemma impl_elim_r P Q : (P ∧ (P → Q)) ⊑ Q.
@@ -436,7 +438,7 @@ Lemma or_mono P P' Q Q' : P ⊑ Q → P' ⊑ Q' → (P ∨ P') ⊑ (Q ∨ Q').
 Proof. auto. Qed.
 Lemma impl_mono P P' Q Q' : Q ⊑ P → P' ⊑ Q' → (P → P') ⊑ (Q → Q').
 Proof.
-  intros HP HQ'; apply impl_intro; rewrite -HQ'.
+  intros HP HQ'; apply impl_intro_l; rewrite -HQ'.
   apply impl_elim with P; eauto.
 Qed.
 Lemma forall_mono {A} (P Q : A → uPred M) :
@@ -494,15 +496,14 @@ Proof. intros P Q R; apply (anti_symmetric (⊑)); auto. Qed.
 Lemma or_and_l P Q R : (P ∨ Q ∧ R)%I ≡ ((P ∨ Q) ∧ (P ∨ R))%I.
 Proof.
   apply (anti_symmetric (⊑)); first auto.
-  apply impl_elim_l', or_elim; apply impl_intro; first auto.
-  apply impl_elim_r', or_elim; apply impl_intro; auto.
+  do 2 (apply impl_elim_l', or_elim; apply impl_intro_l); auto.
 Qed.
 Lemma or_and_r P Q R : (P ∧ Q ∨ R)%I ≡ ((P ∨ R) ∧ (Q ∨ R))%I.
 Proof. by rewrite -!(commutative _ R) or_and_l. Qed.
 Lemma and_or_l P Q R : (P ∧ (Q ∨ R))%I ≡ (P ∧ Q ∨ P ∧ R)%I.
 Proof.
   apply (anti_symmetric (⊑)); last auto.
-  apply impl_elim_r', or_elim; apply impl_intro; auto.
+  apply impl_elim_r', or_elim; apply impl_intro_l; auto.
 Qed.
 Lemma and_or_r P Q R : ((P ∨ Q) ∧ R)%I ≡ (P ∧ R ∨ Q ∧ R)%I.
 Proof. by rewrite -!(commutative _ R) and_or_l. Qed.
@@ -643,7 +644,7 @@ Global Instance later_mono' : Proper ((⊑) ==> (⊑)) (@uPred_later M).
 Proof. intros P Q; apply later_mono. Qed.
 Lemma later_impl P Q : ▷ (P → Q) ⊑ (▷ P → ▷ Q).
 Proof.
-  apply impl_intro; rewrite -later_and.
+  apply impl_intro_l; rewrite -later_and.
   apply later_mono, impl_elim with P; auto.
 Qed.
 Lemma later_wand P Q : ▷ (P -★ Q) ⊑ (▷ P -★ ▷ Q).
@@ -692,7 +693,7 @@ Global Instance always_mono' : Proper ((⊑) ==> (⊑)) (@uPred_always M).
 Proof. intros P Q; apply always_mono. Qed.
 Lemma always_impl P Q : □ (P → Q) ⊑ (□ P → □ Q).
 Proof.
-  apply impl_intro; rewrite -always_and.
+  apply impl_intro_l; rewrite -always_and.
   apply always_mono, impl_elim with P; auto.
 Qed.
 Lemma always_eq {A:cofeT} (a b : A) : (□ (a ≡ b))%I ≡ (a ≡ b : uPred M)%I.
@@ -717,7 +718,7 @@ Proof. by rewrite -always_sep -always_and_sep (idempotent _). Qed.
 Lemma always_wand_impl P Q : (□ (P -★ Q))%I ≡ (□ (P → Q))%I.
 Proof.
   apply (anti_symmetric (⊑)); [|by rewrite -impl_wand].
-  apply always_intro, impl_intro.
+  apply always_intro, impl_intro_r.
   by rewrite always_and_sep_l always_elim wand_elim_l.
 Qed.
 
