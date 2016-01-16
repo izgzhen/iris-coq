@@ -100,13 +100,13 @@ End cmra_mixin.
 
 Hint Extern 0 (✓{0} _) => apply cmra_valid_0.
 
-(** Morphisms *)
+(** * Morphisms *)
 Class CMRAMonotone {A B : cmraT} (f : A → B) := {
   includedN_preserving n x y : x ≼{n} y → f x ≼{n} f y;
   validN_preserving n x : ✓{n} x → ✓{n} (f x)
 }.
 
-(** Updates *)
+(** * Updates *)
 Definition cmra_updateP {A : cmraT} (x : A) (P : A → Prop) := ∀ z n,
   ✓{n} (x ⋅ z) → ∃ y, P y ∧ ✓{n} (y ⋅ z).
 Instance: Params (@cmra_updateP) 3.
@@ -116,7 +116,7 @@ Definition cmra_update {A : cmraT} (x y : A) := ∀ z n,
 Infix "⇝" := cmra_update (at level 70).
 Instance: Params (@cmra_update) 3.
 
-(** Properties **)
+(** * Properties **)
 Section cmra.
 Context {A : cmraT}.
 Implicit Types x y z : A.
@@ -156,7 +156,7 @@ Qed.
 Lemma cmra_unit_valid x n : ✓{n} x → ✓{n} (unit x).
 Proof. rewrite -{1}(ra_unit_l x); apply cmra_valid_op_l. Qed.
 
-(** * Timeless *)
+(** ** Timeless *)
 Lemma cmra_timeless_included_l x y : Timeless x → ✓{1} y → x ≼{1} y → x ≼ y.
 Proof.
   intros ?? [x' ?].
@@ -174,7 +174,7 @@ Proof.
   by rewrite Hz' (timeless x1 y1) // (timeless x2 y2).
 Qed.
 
-(** * Included *)
+(** ** Order *)
 Global Instance cmra_included_ne n :
   Proper (dist n ==> dist n ==> iff) (includedN n : relation A) | 1.
 Proof.
@@ -191,6 +191,8 @@ Lemma cmra_included_0 x y : x ≼{0} y.
 Proof. by exists (unit x). Qed.
 Lemma cmra_included_S x y n : x ≼{S n} y → x ≼{n} y.
 Proof. by intros [z Hz]; exists z; apply dist_S. Qed.
+Lemma cmra_included_le x y n n' : x ≼{n} y → n' ≤ n → x ≼{n'} y.
+Proof. induction 2; auto using cmra_included_S. Qed.
 
 Lemma cmra_included_l n x y : x ≼{n} x ⋅ y.
 Proof. by exists y. Qed.
@@ -214,7 +216,11 @@ Proof.
   by rewrite Hx1 Hx2.
 Qed.
 
-(** * Properties of [(⇝)] relation *)
+(** ** RAs with empty element *)
+Lemma cmra_empty_least `{Empty A, !RAIdentity A} n x : ∅ ≼{n} x.
+Proof. by exists x; rewrite (left_id _ _). Qed.
+
+(** ** Properties of [(⇝)] relation *)
 Global Instance cmra_update_preorder : PreOrder (@cmra_update A).
 Proof. split. by intros x y. intros x y y' ?? z ?; naive_solver. Qed.
 Lemma cmra_update_updateP x y : x ⇝ y ↔ x ⇝: (y =).
