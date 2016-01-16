@@ -45,6 +45,10 @@ Qed.
 Canonical Structure optionC := CofeT option_cofe_mixin.
 Global Instance Some_ne : Proper (dist n ==> dist n) (@Some A).
 Proof. by constructor. Qed.
+Global Instance is_Some_ne n : Proper (dist (S n) ==> iff) (@is_Some A).
+Proof. inversion_clear 1; split; eauto. Qed.
+Global Instance Some_dist_inj : Injective (dist n) (dist n) (@Some A).
+Proof. by inversion_clear 1. Qed.
 Global Instance None_timeless : Timeless (@None A).
 Proof. inversion_clear 1; constructor. Qed.
 Global Instance Some_timeless x : Timeless x → Timeless (Some x).
@@ -56,8 +60,7 @@ Arguments optionC : clear implicits.
 Instance option_fmap_ne {A B : cofeT} (f : A → B) n:
   Proper (dist n ==> dist n) f → Proper (dist n==>dist n) (fmap (M:=option) f).
 Proof. by intros Hf; destruct 1; constructor; apply Hf. Qed.
-Instance is_Some_ne `{A : cofeT} : Proper (dist (S n) ==> iff) (@is_Some A).
-Proof. intros n; inversion_clear 1; split; eauto. Qed.
+
 
 (* CMRA *)
 Section cmra.
@@ -95,6 +98,11 @@ Proof.
       try (by exists my; destruct my; constructor).
     by exists (Some z); constructor.
 Qed.
+Lemma None_includedN n (mx : option A) : None ≼{n} mx.
+Proof. rewrite option_includedN; auto. Qed.
+Lemma Some_Some_includedN n (x y : A) : x ≼{n} y → Some x ≼{n} Some y.
+Proof. rewrite option_includedN; eauto 10. Qed.
+
 Definition option_cmra_mixin  : CMRAMixin (option A).
 Proof.
   split.
@@ -138,6 +146,10 @@ Qed.
 Canonical Structure optionRA :=
   CMRAT option_cofe_mixin option_cmra_mixin option_cmra_extend_mixin.
 
+Lemma op_is_Some x y : is_Some (x ⋅ y) ↔ is_Some x ∨ is_Some y.
+Proof.
+  destruct x, y; rewrite /op /option_op /= -!not_eq_None_Some; naive_solver.
+Qed.
 Lemma option_op_positive_dist_l n x y : x ⋅ y ={n}= None → x ={n}= None.
 Proof. by destruct x, y; inversion_clear 1. Qed.
 Lemma option_op_positive_dist_r n x y : x ⋅ y ={n}= None → y ={n}= None.

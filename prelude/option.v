@@ -107,6 +107,8 @@ Section setoids.
   Lemma equiv_Some (mx my : option A) x :
     mx ≡ my → mx = Some x → ∃ y, my = Some y ∧ x ≡ y.
   Proof. destruct 1; naive_solver. Qed.
+  Global Instance is_Some_proper : Proper ((≡) ==> iff) (@is_Some A).
+  Proof. inversion_clear 1; split; eauto. Qed.
 End setoids.
 
 (** Equality on [option] is decidable. *)
