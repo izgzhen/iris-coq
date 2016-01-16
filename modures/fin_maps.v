@@ -33,6 +33,8 @@ Canonical Structure mapC : cofeT := CofeT map_cofe_mixin.
 Global Instance lookup_ne n k :
   Proper (dist n ==> dist n) (lookup k : gmap K A → option A).
 Proof. by intros m1 m2. Qed.
+Global Instance lookup_proper k :
+  Proper ((≡) ==> (≡)) (lookup k : gmap K A → option A) := _.
 Global Instance insert_ne (i : K) n :
   Proper (dist n ==> dist n ==> dist n) (insert (M:=gmap K A) i).
 Proof.
@@ -156,10 +158,13 @@ Arguments mapRA _ {_ _} _.
 
 Section properties.
 Context `{Countable K} {A: cmraT}.
+Implicit Types m : gmap K A.
 
-Lemma map_insert_valid (m :gmap K A) n i x : ✓{n} x → ✓{n} m → ✓{n} (<[i:=x]>m).
+Lemma map_lookup_validN n m i x : ✓{n} m → m !! i ={n}= Some x → ✓{n} x.
+Proof. by move=> /(_ i) Hm Hi; move:Hm; rewrite Hi. Qed.
+Lemma map_insert_validN n m i x : ✓{n} x → ✓{n} m → ✓{n} (<[i:=x]>m).
 Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_equality. Qed.
-Lemma map_insert_op (m1 m2 : gmap K A) i x :
+Lemma map_insert_op m1 m2 i x :
   m2 !! i = None →  <[i:=x]>(m1 ⋅ m2) = <[i:=x]>m1 ⋅ m2.
 Proof. by intros Hi; apply (insert_merge_l _ m1 m2); rewrite Hi. Qed.
 Lemma map_unit_singleton (i : K) (x : A) :
@@ -168,9 +173,19 @@ Proof. apply map_fmap_singleton. Qed.
 Lemma map_op_singleton (i : K) (x y : A) :
   {[ i ↦ x ]} ⋅ {[ i ↦ y ]} = ({[ i ↦ x ⋅ y ]} : gmap K A).
 Proof. by apply (merge_singleton _ _ _ x y). Qed.
-
-Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
-
+Lemma singleton_includedN n m i x :
+  {[ i ↦ x ]} ≼{n} m ↔ ∃ y, m !! i ={n}= Some y ∧ x ≼ y.
+  (* not m !! i = Some y ∧ x ≼{n} y to deal with n = 0 *)
+Proof.
+  split.
+  * move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton=> Hm.
+    destruct (m' !! i) as [y|];
+      [exists (x ⋅ y)|exists x]; eauto using @ra_included_l.
+  * intros (y&Hi&?); rewrite map_includedN_spec=>j.
+    destruct (decide (i = j)); simplify_map_equality.
+    + by rewrite Hi; apply Some_Some_includedN, cmra_included_includedN.
+    + apply None_includedN.
+Qed.
 Lemma map_dom_op (m1 m2 : gmap K A) :
   dom (gset K) (m1 ⋅ m2) ≡ dom _ m1 ∪ dom _ m2.
 Proof.
@@ -178,6 +193,8 @@ Proof.
   unfold is_Some; setoid_rewrite lookup_op.
   destruct (m1 !! i), (m2 !! i); naive_solver.
 Qed.
+
+Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
 Lemma map_update_alloc (m : gmap K A) x :
   ✓ x → m ⇝: λ m', ∃ i, m' = <[i:=x]>m ∧ m !! i = None.
 Proof.
@@ -187,7 +204,7 @@ Proof.
   exists (<[i:=x]>m); split; [exists i; split; [done|]|].
   * by apply not_elem_of_dom.
   * rewrite -map_insert_op; last by apply not_elem_of_dom.
-    by apply map_insert_valid; [apply cmra_valid_validN|].
+    by apply map_insert_validN; [apply cmra_valid_validN|].
 Qed.
 End properties.
 
