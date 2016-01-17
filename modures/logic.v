@@ -670,11 +670,11 @@ Lemma always_forall {A} (P : A → uPred M) : (□ ∀ a, P a)%I ≡ (∀ a, □
 Proof. done. Qed.
 Lemma always_exist {A} (P : A → uPred M) : (□ ∃ a, P a)%I ≡ (∃ a, □ P a)%I.
 Proof. done. Qed.
-Lemma always_and_sep' P Q : □ (P ∧ Q) ⊑ □ (P ★ Q).
+Lemma always_and_sep_1 P Q : □ (P ∧ Q) ⊑ □ (P ★ Q).
 Proof.
   intros x n ? [??]; exists (unit x), (unit x); rewrite ra_unit_unit; auto.
 Qed.
-Lemma always_and_sep_l P Q : (□ P ∧ Q) ⊑ (□ P ★ Q).
+Lemma always_and_sep_l_1 P Q : (□ P ∧ Q) ⊑ (□ P ★ Q).
 Proof.
   intros x n ? [??]; exists (unit x), x; simpl in *.
   by rewrite ra_unit_l ra_unit_idempotent.
@@ -702,21 +702,18 @@ Proof.
   { intros n; solve_proper. }
   rewrite -(eq_refl _ True) always_const; auto.
 Qed.
-Lemma always_and_sep_r P Q : (P ∧ □ Q) ⊑ (P ★ □ Q).
+Lemma always_and_sep P Q : (□ (P ∧ Q))%I ≡ (□ (P ★ Q))%I.
+Proof. apply (anti_symmetric (⊑)); auto using always_and_sep_1. Qed.
+Lemma always_and_sep_l P Q : (□ P ∧ Q)%I ≡ (□ P ★ Q)%I.
+Proof. apply (anti_symmetric (⊑)); auto using always_and_sep_l_1. Qed.
+Lemma always_and_sep_r P Q : (P ∧ □ Q)%I ≡ (P ★ □ Q)%I.
 Proof. rewrite !(commutative _ P); apply always_and_sep_l. Qed.
 Lemma always_sep P Q : (□ (P ★ Q))%I ≡ (□ P ★ □ Q)%I.
-Proof.
-  apply (anti_symmetric (⊑)).
-  * rewrite -always_and_sep_l; auto.
-  * rewrite -always_and_sep' always_and; auto.
-Qed.
+Proof. by rewrite -always_and_sep -always_and_sep_l always_and. Qed.
 Lemma always_wand P Q : □ (P -★ Q) ⊑ (□ P -★ □ Q).
 Proof. by apply wand_intro; rewrite -always_sep wand_elim_l. Qed.
-
-Lemma always_sep_and P Q : (□ (P ★ Q))%I ≡ (□ (P ∧ Q))%I.
-Proof. apply (anti_symmetric (⊑)); auto using always_and_sep'. Qed.
 Lemma always_sep_dup P : (□ P)%I ≡ (□ P ★ □ P)%I.
-Proof. by rewrite -always_sep always_sep_and (idempotent _). Qed.
+Proof. by rewrite -always_sep -always_and_sep (idempotent _). Qed.
 Lemma always_wand_impl P Q : (□ (P -★ Q))%I ≡ (□ (P → Q))%I.
 Proof.
   apply (anti_symmetric (⊑)); [|by rewrite -impl_wand].
