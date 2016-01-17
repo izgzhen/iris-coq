@@ -1,4 +1,4 @@
-Require Import prelude.prelude.
+Require Export modures.base.
 
 Class Language (E V St : Type) := {
   of_val : V → E;
@@ -18,6 +18,13 @@ Class Language (E V St : Type) := {
 Section language.
   Context `{Language E V St}.
 
+  Lemma atomic_of_val v : ¬atomic (of_val v).
+  Proof.
+    by intros Hat; apply atomic_not_value in Hat; rewrite to_of_val in Hat.
+  Qed.
+  Global Instance: Injective (=) (=) of_val.
+  Proof. by intros v v' Hv; apply (injective Some); rewrite -!to_of_val Hv. Qed.
+
   Definition cfg : Type := (list E * St)%type.
   Inductive step (ρ1 ρ2 : cfg) : Prop :=
     | step_atomic e1 σ1 e2 σ2 ef t1 t2 :
@@ -30,7 +37,7 @@ Section language.
   Definition stepn := nsteps step.
 
   Record is_ctx (K : E → E) := IsCtx {
-    is_ctx_value e : is_Some (to_val (K e)) → is_Some (to_val e);
+    is_ctx_value e : to_val e = None → to_val (K e) = None;
     is_ctx_step_preserved e1 σ1 e2 σ2 ef :
       prim_step e1 σ1 e2 σ2 ef → prim_step (K e1) σ1 (K e2) σ2 ef;
     is_ctx_step e1' σ1 e2 σ2 ef :
