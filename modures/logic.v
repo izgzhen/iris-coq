@@ -538,7 +538,7 @@ Proof.
     + by rewrite (associative op) -Hy -Hx.
     + by exists y2, x2.
 Qed.
-Lemma wand_intro P Q R : (P ★ Q) ⊑ R → P ⊑ (Q -★ R).
+Lemma wand_intro_r P Q R : (P ★ Q) ⊑ R → P ⊑ (Q -★ R).
 Proof.
   intros HPQR x n ?? x' n' ???; apply HPQR; auto.
   exists x, x'; split_ands; auto.
@@ -556,7 +556,7 @@ Hint Resolve sep_mono.
 Global Instance sep_mono' : Proper ((⊑) ==> (⊑) ==> (⊑)) (@uPred_sep M).
 Proof. by intros P P' HP Q Q' HQ; apply sep_mono. Qed.
 Lemma wand_mono P P' Q Q' : Q ⊑ P → P' ⊑ Q' → (P -★ P') ⊑ (Q -★ Q').
-Proof. intros HP HQ; apply wand_intro; rewrite HP -HQ; apply wand_elim_l. Qed.
+Proof. intros HP HQ; apply wand_intro_r; rewrite HP -HQ; apply wand_elim_l. Qed.
 Global Instance wand_mono' : Proper (flip (⊑) ==> (⊑) ==> (⊑)) (@uPred_wand M).
 Proof. by intros P P' HP Q Q' HQ; apply wand_mono. Qed.
 
@@ -571,6 +571,8 @@ Proof. intros ->; apply sep_elim_l. Qed.
 Lemma sep_elim_r' P Q R : Q ⊑ R → (P ★ Q) ⊑ R.
 Proof. intros ->; apply sep_elim_r. Qed.
 Hint Resolve sep_elim_l' sep_elim_r'.
+Lemma wand_intro_l P Q R : (Q ★ P) ⊑ R → P ⊑ (Q -★ R).
+Proof. rewrite (commutative _); apply wand_intro_r. Qed.
 Lemma wand_elim_r P Q : (P ★ (P -★ Q)) ⊑ Q.
 Proof. rewrite (commutative _ P); apply wand_elim_l. Qed.
 Lemma wand_elim_l' P Q R : P ⊑ (Q -★ R) → (P ★ Q) ⊑ R.
@@ -580,7 +582,7 @@ Proof. intros ->; apply wand_elim_r. Qed.
 Lemma sep_and P Q : (P ★ Q) ⊑ (P ∧ Q).
 Proof. auto. Qed.
 Lemma impl_wand P Q : (P → Q) ⊑ (P -★ Q).
-Proof. apply wand_intro, impl_elim with P; auto. Qed.
+Proof. apply wand_intro_r, impl_elim with P; auto. Qed.
 
 Global Instance sep_False : LeftAbsorb (≡) False%I (@uPred_sep M).
 Proof. intros P; apply (anti_symmetric _); auto. Qed.
@@ -651,7 +653,7 @@ Proof.
   apply later_mono, impl_elim with P; auto.
 Qed.
 Lemma later_wand P Q : ▷ (P -★ Q) ⊑ (▷ P -★ ▷ Q).
-Proof. apply wand_intro; rewrite -later_sep; apply later_mono,wand_elim_l. Qed.
+Proof. apply wand_intro_r;rewrite -later_sep; apply later_mono,wand_elim_l. Qed.
 
 (* Always *)
 Lemma always_const φ : (□ ■ φ : uPred M)%I ≡ (■ φ)%I.
@@ -713,7 +715,7 @@ Proof. by rewrite !(commutative _ P) always_and_sep_l. Qed.
 Lemma always_sep P Q : (□ (P ★ Q))%I ≡ (□ P ★ □ Q)%I.
 Proof. by rewrite -always_and_sep -always_and_sep_l always_and. Qed.
 Lemma always_wand P Q : □ (P -★ Q) ⊑ (□ P -★ □ Q).
-Proof. by apply wand_intro; rewrite -always_sep wand_elim_l. Qed.
+Proof. by apply wand_intro_r; rewrite -always_sep wand_elim_l. Qed.
 Lemma always_sep_dup P : (□ P)%I ≡ (□ P ★ □ P)%I.
 Proof. by rewrite -always_sep -always_and_sep (idempotent _). Qed.
 Lemma always_wand_impl P Q : (□ (P -★ Q))%I ≡ (□ (P → Q))%I.
@@ -821,8 +823,9 @@ Qed.
 Global Instance sep_timeless P Q: TimelessP P → TimelessP Q → TimelessP (P ★ Q).
 Proof.
   intros; rewrite /TimelessP later_sep (timelessP P) (timelessP Q).
-  apply wand_elim_l',or_elim;apply wand_intro; auto.
-  apply wand_elim_r',or_elim;apply wand_intro; rewrite ?(commutative _ Q); auto.
+  apply wand_elim_l', or_elim; apply wand_intro_r; auto.
+  apply wand_elim_r', or_elim; apply wand_intro_r; auto.
+  rewrite ?(commutative _ Q); auto.
 Qed.
 Global Instance wand_timeless P Q : TimelessP Q → TimelessP (P -★ Q).
 Proof.
