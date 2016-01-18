@@ -1,17 +1,10 @@
-Require Export iris.hoare.
+Require Export iris.weakestpre.
 Require Import iris.wsat.
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 100 (@eq coPset _ _) => solve_elem_of.
 Local Hint Extern 10 (✓{_} _) =>
   repeat match goal with H : wsat _ _ _ _ |- _ => apply wsat_valid in H end;
   solve_validN.
-
-Local Notation "{{ P } } ef ?@ E {{ Q } }" :=
-  (default True%I ef (λ e, ht E P e Q))
-  (at level 74, format "{{  P  } }  ef  ?@  E  {{  Q  } }") : uPred_scope.
-Local Notation "{{ P } } ef ?@ E {{ Q } }" :=
-  (True ⊑ default True ef (λ e, ht E P e Q))
-  (at level 74, format "{{  P  } }  ef  ?@  E  {{  Q  } }") : C_scope.
 
 Section lifting.
 Context {Σ : iParam}.
