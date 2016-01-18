@@ -63,6 +63,11 @@ Proof.
       (cmra_included_includedN _ P'),HP; apply map_lookup_validN with (wld r) i.
   * intros ?; split_ands; try apply cmra_empty_least; eauto.
 Qed.
+Lemma ownP_spec r n σ : ✓{n} r → (ownP σ) n r ↔ pst r ={n}= Excl σ.
+Proof.
+  intros (?&?&?); rewrite /uPred_holds /= res_includedN /= Excl_includedN //.
+  naive_solver (apply cmra_empty_least).
+Qed.
 Lemma ownG_spec r n m : (ownG m) n r ↔ m ≼{n} gst r.
 Proof.
   rewrite /uPred_holds /= res_includedN; naive_solver (apply cmra_empty_least).
