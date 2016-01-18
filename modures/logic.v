@@ -134,9 +134,9 @@ Next Obligation.
   assert (∃ x2', y ={n2}= x1 ⋅ x2' ∧ x2 ≼ x2') as (x2'&Hy&?).
   { destruct Hxy as [z Hy]; exists (x2 ⋅ z); split; eauto using @ra_included_l.
     apply dist_le with n1; auto. by rewrite (associative op) -Hx Hy. }
-  exists x1, x2'; split_ands; [done| |].
-  * cofe_subst y; apply uPred_weaken with x1 n1; eauto using cmra_valid_op_l.
-  * cofe_subst y; apply uPred_weaken with x2 n1; eauto using cmra_valid_op_r.
+  clear Hxy; cofe_subst y; exists x1, x2'; split_ands; [done| |].
+  * apply uPred_weaken with x1 n1; eauto using cmra_valid_op_l.
+  * apply uPred_weaken with x2 n1; eauto using cmra_valid_op_r.
 Qed.
 
 Program Definition uPred_wand {M} (P Q : uPred M) : uPred M :=

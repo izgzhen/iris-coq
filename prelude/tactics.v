@@ -218,7 +218,7 @@ Ltac setoid_subst_aux R x :=
         try match H' with H => fail 2 end;
         setoid_rewrite H in H'
      end;
-     clear H
+     clear x H
   end.
 Ltac setoid_subst :=
   repeat match goal with
