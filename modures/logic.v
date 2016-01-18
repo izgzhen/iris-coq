@@ -223,6 +223,8 @@ Notation "'Π★' Ps" := (uPred_big_sep Ps) (at level 20) : uPred_scope.
 
 Class TimelessP {M} (P : uPred M) := timelessP : ▷ P ⊑ (P ∨ ▷ False).
 Arguments timelessP {_} _ {_} _ _ _ _.
+Class AlwaysStable {M} (P : uPred M) := always_stable : P ⊑ □ P.
+Arguments always_stable {_} _ {_} _ _ _ _.
 
 Module uPred. Section uPred_logic.
 Context {M : cmraT}.
@@ -685,8 +687,6 @@ Lemma always_later P : (□ ▷ P)%I ≡ (▷ □ P)%I.
 Proof. done. Qed.
 
 (* Always derived *)
-Lemma always_always P : (□ □ P)%I ≡ (□ P)%I.
-Proof. apply (anti_symmetric (⊑)); auto using always_elim, always_intro. Qed.
 Lemma always_mono P Q : P ⊑ Q → □ P ⊑ □ Q.
 Proof. intros. apply always_intro. by rewrite always_elim. Qed.
 Hint Resolve always_mono.
@@ -709,7 +709,7 @@ Proof. apply (anti_symmetric (⊑)); auto using always_and_sep_1. Qed.
 Lemma always_and_sep_l P Q : (□ P ∧ Q)%I ≡ (□ P ★ Q)%I.
 Proof. apply (anti_symmetric (⊑)); auto using always_and_sep_l_1. Qed.
 Lemma always_and_sep_r P Q : (P ∧ □ Q)%I ≡ (P ★ □ Q)%I.
-Proof. rewrite !(commutative _ P); apply always_and_sep_l. Qed.
+Proof. by rewrite !(commutative _ P) always_and_sep_l. Qed.
 Lemma always_sep P Q : (□ (P ★ Q))%I ≡ (□ P ★ □ Q)%I.
 Proof. by rewrite -always_and_sep -always_and_sep_l always_and. Qed.
 Lemma always_wand P Q : □ (P -★ Q) ⊑ (□ P -★ □ Q).
@@ -755,6 +755,8 @@ Qed.
 Lemma valid_mono {A B : cmraT} (a : A) (b : B) :
   (∀ n, ✓{n} a → ✓{n} b) → (✓ a) ⊑ (✓ b).
 Proof. by intros ? x n ?; simpl; auto. Qed.
+Lemma always_valid {A : cmraT} (a : A) : (□ (✓ a))%I ≡ (✓ a : uPred M)%I.
+Proof. done. Qed.
 Lemma own_invalid (a : M) : ¬ ✓{1} a → uPred_own a ⊑ False.
 Proof. by intros; rewrite own_valid valid_elim. Qed.
 
@@ -850,4 +852,45 @@ Proof.
   intro; apply timelessP_spec=> x [|n] ?? //; apply cmra_included_includedN,
     cmra_timeless_included_l; eauto using cmra_valid_le.
 Qed.
+
+(* Always stable *)
+Notation AS := AlwaysStable.
+Global Instance const_always_stable φ : AS (■ φ : uPred M)%I.
+Proof. by rewrite /AlwaysStable always_const. Qed.
+Global Instance always_always_stable P : AS (□ P).
+Proof. by intros; apply always_intro. Qed.
+Global Instance and_always_stable P Q: AS P → AS Q → AS (P ∧ Q).
+Proof. by intros; rewrite /AlwaysStable always_and; apply and_mono. Qed.
+Global Instance or_always_stable P Q : AS P → AS Q → AS (P ∨ Q).
+Proof. by intros; rewrite /AlwaysStable always_or; apply or_mono. Qed.
+Global Instance sep_always_stable P Q: AS P → AS Q → AS (P ★ Q).
+Proof. by intros; rewrite /AlwaysStable always_sep; apply sep_mono. Qed.
+Global Instance forall_always_stable {A} (P : A → uPred M) :
+  (∀ x, AS (P x)) → AS (∀ x, P x).
+Proof. by intros; rewrite /AlwaysStable always_forall; apply forall_mono. Qed.
+Global Instance exist_always_stable {A} (P : A → uPred M) :
+  (∀ x, AS (P x)) → AS (∃ x, P x).
+Proof. by intros; rewrite /AlwaysStable always_exist; apply exist_mono. Qed.
+Global Instance eq_always_stable {A : cofeT} (a b : A) : AS (a ≡ b : uPred M)%I.
+Proof. by intros; rewrite /AlwaysStable always_eq. Qed.
+Global Instance valid_always_stable {A : cmraT} (a : A) : AS (✓ a : uPred M)%I.
+Proof. by intros; rewrite /AlwaysStable always_valid. Qed.
+Global Instance later_always_stable P : AS P → AS (▷ P).
+Proof. by intros; rewrite /AlwaysStable always_later; apply later_mono. Qed.
+Global Instance own_unit_always_stable (a : M) : AS (uPred_own (unit a)).
+Proof. by rewrite /AlwaysStable always_own_unit. Qed.
+Global Instance default_always_stable {A} P (Q : A → uPred M) (mx : option A) :
+  AS P → (∀ x, AS (Q x)) → AS (default P mx Q).
+Proof. destruct mx; apply _. Qed.
+
+Lemma always_always P `{!AlwaysStable P} : (□ P)%I ≡ P.
+Proof. apply (anti_symmetric (⊑)); auto using always_elim. Qed.
+Lemma always_intro' P Q `{!AlwaysStable P} : P ⊑ Q → P ⊑ □ Q.
+Proof. rewrite -(always_always P); apply always_intro. Qed.
+Lemma always_and_sep_l' P Q `{!AlwaysStable P} : (P ∧ Q)%I ≡ (P ★ Q)%I.
+Proof. by rewrite -(always_always P) always_and_sep_l. Qed.
+Lemma always_and_sep_r' P Q `{!AlwaysStable Q} : (P ∧ Q)%I ≡ (P ★ Q)%I.
+Proof. by rewrite -(always_always Q) always_and_sep_r. Qed.
+Lemma always_sep_dup' P `{!AlwaysStable P} : P ≡ (P ★ P)%I.
+Proof. by rewrite -(always_always P) -always_sep_dup. Qed.
 End uPred_logic. End uPred.
