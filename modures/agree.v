@@ -133,6 +133,8 @@ Proof. intros x1 x2 Hx; split; naive_solver eauto using @dist_le. Qed.
 Global Instance to_agree_proper : Proper ((≡) ==> (≡)) to_agree := ne_proper _.
 Global Instance to_agree_inj n : Injective (dist n) (dist n) (to_agree).
 Proof. by intros x y [_ Hxy]; apply Hxy. Qed.
+Lemma to_agree_car n (x : agree A) : ✓{n} x → to_agree (x n) ={n}= x.
+Proof. intros [??]; split; naive_solver eauto using agree_valid_le. Qed.
 End agree.
 
 Arguments agreeC : clear implicits.
