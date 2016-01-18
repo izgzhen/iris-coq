@@ -6,9 +6,9 @@ Definition ht {Σ} (E : coPset) (P : iProp Σ)
 Instance: Params (@ht) 2.
 
 Notation "{{ P } } e @ E {{ Q } }" := (ht E P e Q)
-  (at level 74, format "{{  P  } }  e  @  E  {{  Q  } }") : C_scope.
+  (at level 74, format "{{  P  } }  e  @  E  {{  Q  } }") : uPred_scope.
 Notation "{{ P } } e @ E {{ Q } }" := (True ⊑ ht E P e Q)
-  (at level 74, format "{{  P  } }  e  @  E  {{  Q  } }") : type_scope.
+  (at level 74, format "{{  P  } }  e  @  E  {{  Q  } }") : C_scope.
 
 Section hoare.
 Context {Σ : iParam}.
