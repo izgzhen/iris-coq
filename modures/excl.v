@@ -66,6 +66,10 @@ Proof.
 Qed.
 Canonical Structure exclC : cofeT := CofeT excl_cofe_mixin.
 
+Global Instance Excl_inj : Injective (≡) (≡) (@Excl A).
+Proof. by inversion_clear 1. Qed.
+Global Instance Excl_dist_inj n : Injective (dist n) (dist n) (@Excl A).
+Proof. by inversion_clear 1. Qed.
 Global Instance Excl_timeless (x : A) : Timeless x → Timeless (Excl x).
 Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
 Global Instance ExclUnit_timeless : Timeless (@ExclUnit A).
@@ -133,6 +137,11 @@ Lemma excl_validN_inv_l n x y : ✓{S n} (Excl x ⋅ y) → y = ∅.
 Proof. by destruct y. Qed.
 Lemma excl_validN_inv_r n x y : ✓{S n} (x ⋅ Excl y) → x = ∅.
 Proof. by destruct x. Qed.
+Lemma Excl_includedN n x y : ✓{n} y → Excl x ≼{n} y ↔ y ={n}= Excl x.
+Proof.
+  intros Hvalid; split; [destruct n as [|n]; [done|]|by intros ->].
+  by intros [z ?]; cofe_subst; rewrite (excl_validN_inv_l n x z).
+Qed.
 
 (* Updates *)
 Lemma excl_update (x : A) y : ✓ y → Excl x ⇝ y.
