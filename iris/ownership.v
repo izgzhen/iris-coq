@@ -25,15 +25,14 @@ Proof.
   apply (_: Proper (_ ==> _) iProp_unfold), Later_contractive in HPQ.
   by unfold inv; rewrite HPQ.
 Qed.
-Lemma inv_duplicate i P : inv i P ≡ (inv i P ★ inv i P)%I.
-Proof.
-  by rewrite /inv -uPred.own_op Res_op
-    map_op_singleton agree_idempotent !(left_id _ _).
-Qed.
 Lemma always_inv i P : (□ inv i P)%I ≡ inv i P.
 Proof.
   by apply uPred.always_own; rewrite Res_unit !ra_unit_empty map_unit_singleton.
 Qed.
+Global Instance inv_always_stable i P : AlwaysStable (inv i P).
+Proof. by rewrite /AlwaysStable always_inv. Qed.
+Lemma inv_sep_dup i P : inv i P ≡ (inv i P ★ inv i P)%I.
+Proof. apply (uPred.always_sep_dup' _). Qed.
 
 (* physical state *)
 Lemma ownP_twice σ1 σ2 : (ownP σ1 ★ ownP σ2 : iProp Σ) ⊑ False.
