@@ -11,6 +11,7 @@ Context {Σ : iParam}.
 Implicit Types v : ival Σ.
 Implicit Types e : iexpr Σ.
 Implicit Types σ : istate Σ.
+Transparent uPred_holds.
 
 Lemma wp_lift_step E1 E2
     (φ : iexpr Σ → istate Σ → option (iexpr Σ) → Prop) Q e1 σ1 :

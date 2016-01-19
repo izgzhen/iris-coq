@@ -58,6 +58,7 @@ Implicit Types P : iProp Σ.
 Implicit Types Q : ival Σ → iProp Σ.
 Implicit Types v : ival Σ.
 Implicit Types e : iexpr Σ.
+Transparent uPred_holds.
 
 Lemma wp_weaken E1 E2 e Q1 Q2 r n n' :
   E1 ⊆ E2 → (∀ v r n', n' ≤ n → ✓{n'} r → Q1 v n' r → Q2 v n' r) →

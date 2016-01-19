@@ -30,6 +30,7 @@ Section pvs.
 Context {Σ : iParam}.
 Implicit Types P Q : iProp Σ.
 Implicit Types m : icmra' Σ.
+Transparent uPred_holds.
 
 Global Instance pvs_ne E1 E2 n : Proper (dist n ==> dist n) (@pvs Σ E1 E2).
 Proof.

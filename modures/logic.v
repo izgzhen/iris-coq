@@ -11,6 +11,8 @@ Record uPred (M : cmraT) : Type := IProp {
     uPred_holds n1 x1 → x1 ≼ x2 → n2 ≤ n1 → ✓{n2} x2 → uPred_holds n2 x2
 }.
 Arguments uPred_holds {_} _ _ _ : simpl never.
+Global Opaque uPred_holds.
+Local Transparent uPred_holds.
 Hint Resolve uPred_0.
 Add Printing Constructor uPred.
 Instance: Params (@uPred_holds) 3.
