@@ -3,6 +3,7 @@ Local Arguments valid _ _ !_ /.
 Local Arguments validN _ _ _ !_ /.
 
 Record auth (A : Type) : Type := Auth { authoritative : excl A ; own : A }.
+Add Printing Constructor auth.
 Arguments Auth {_} _ _.
 Arguments authoritative {_} _.
 Arguments own {_} _.
@@ -151,6 +152,12 @@ Arguments authRA : clear implicits.
 (* Functor *)
 Instance auth_fmap : FMap auth := λ A B f x,
   Auth (f <$> authoritative x) (f (own x)).
+Arguments auth_fmap _ _ _ !_ /.
+Lemma auth_fmap_id {A} (x : auth A) : id <$> x = x.
+Proof. by destruct x; rewrite /= excl_fmap_id. Qed.
+Lemma excl_fmap_compose {A B C} (f : A → B) (g : B → C) (x : auth A) :
+  g ∘ f <$> x = g <$> f <$> x.
+Proof. by destruct x; rewrite /= excl_fmap_compose. Qed.
 Instance auth_fmap_cmra_ne {A B : cmraT} n :
   Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@fmap auth _ A B).
 Proof.

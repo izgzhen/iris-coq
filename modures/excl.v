@@ -156,6 +156,11 @@ Instance excl_fmap : FMap excl := λ A B f x,
   match x with
   | Excl a => Excl (f a) | ExclUnit => ExclUnit | ExclBot => ExclBot
   end.
+Lemma excl_fmap_id {A} (x : excl A) : id <$> x = x.
+Proof. by destruct x. Qed.
+Lemma excl_fmap_compose {A B C} (f : A → B) (g : B → C) (x : excl A) :
+  g ∘ f <$> x = g <$> f <$> x.
+Proof. by destruct x. Qed.
 Instance excl_fmap_cmra_ne {A B : cofeT} n :
   Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@fmap excl _ A B).
 Proof. by intros f f' Hf; destruct 1; constructor; apply Hf. Qed.
