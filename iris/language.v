@@ -34,12 +34,9 @@ Section language.
   Inductive step (ρ1 ρ2 : cfg) : Prop :=
     | step_atomic e1 σ1 e2 σ2 ef t1 t2 :
        ρ1 = (t1 ++ e1 :: t2, σ1) →
-       ρ1 = (t1 ++ e2 :: t2 ++ option_list ef, σ2) →
+       ρ2 = (t1 ++ e2 :: t2 ++ option_list ef, σ2) →
        prim_step e1 σ1 e2 σ2 ef →
        step ρ1 ρ2.
-
-  Definition steps := rtc step.
-  Definition stepn := nsteps step.
 
   Record is_ctx (K : E → E) := IsCtx {
     is_ctx_value e : to_val e = None → to_val (K e) = None;
