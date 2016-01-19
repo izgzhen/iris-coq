@@ -14,6 +14,7 @@ Class Language (E V St : Type) := {
     prim_step e1 σ1 e2 σ2 ef →
     is_Some (to_val e2)
 }.
+Arguments Build_Language {_ _ _} _ _ _ _ {_ _ _ _ _}.
 
 Section language.
   Context `{Language E V St}.

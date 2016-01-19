@@ -17,7 +17,7 @@ Record iParam := IParam {
     icmra_map (g ◎ f) x ≡ icmra_map g (icmra_map f x);
   icmra_map_mono {A B} (f : A -n> B) : CMRAMonotone (icmra_map f)
 }.
-Arguments IParam _ _ _ _ _ {_ _} _ {_ _ _ _}.
+Arguments IParam {_ _ _} _ _ {_ _} _ {_ _ _ _}.
 Existing Instances ilanguage.
 Existing Instances icmra_empty icmra_empty_spec icmra_map_ne icmra_map_mono.
 
@@ -27,13 +27,12 @@ Proof.
   by intros ?; apply equiv_dist=> n; apply icmra_map_ne=> ?; apply equiv_dist.
 Qed.
 
-Definition IParamConst (iexpr ival istate : Type)
+Definition IParamConst {iexpr ival istate : Type}
            (ilanguage : Language iexpr ival istate)
            (icmra : cmraT) {icmra_empty : Empty icmra}
            {icmra_empty_spec : RAIdentity icmra}:
   iParam.
-eapply (IParam iexpr ival istate ilanguage
-                   (fun _ => icmra) (fun _ _ _ => cid)).
+eapply (IParam ilanguage (fun _ => icmra) (fun _ _ _ => cid)).
 Unshelve.
 - by intros.
 - by intros.
