@@ -58,6 +58,7 @@ Implicit Types P : iProp Σ.
 Implicit Types Q : ival Σ → iProp Σ.
 Implicit Types v : ival Σ.
 Implicit Types e : iexpr Σ.
+Transparent uPred_holds.
 
 Lemma wp_weaken E1 E2 e Q1 Q2 r n n' :
   E1 ⊆ E2 → (∀ v r n', n' ≤ n → ✓{n'} r → Q1 v n' r → Q2 v n' r) →
@@ -177,10 +178,12 @@ Proof.
   rewrite (commutative _ (▷ R)%I); setoid_rewrite (commutative _ R).
   apply wp_frame_later_r.
 Qed.
-Lemma wp_always_l E e Q R : (□ R ∧ wp E e Q) ⊑ wp E e (λ v, □ R ∧ Q v).
-Proof. by setoid_rewrite always_and_sep_l; rewrite wp_frame_l. Qed.
-Lemma wp_always_r E e Q R : (wp E e Q ∧ □ R) ⊑ wp E e (λ v, Q v ∧ □ R).
-Proof. by setoid_rewrite always_and_sep_r; rewrite wp_frame_r. Qed.
+Lemma wp_always_l E e Q R `{!AlwaysStable R} :
+  (R ∧ wp E e Q) ⊑ wp E e (λ v, R ∧ Q v).
+Proof. by setoid_rewrite (always_and_sep_l' _ _); rewrite wp_frame_l. Qed.
+Lemma wp_always_r E e Q R `{!AlwaysStable R} :
+  (wp E e Q ∧ R) ⊑ wp E e (λ v, Q v ∧ R).
+Proof. by setoid_rewrite (always_and_sep_r' _ _); rewrite wp_frame_r. Qed.
 Lemma wp_impl_l E e Q1 Q2 : ((□ ∀ v, Q1 v → Q2 v) ∧ wp E e Q1) ⊑ wp E e Q2.
 Proof.
   rewrite wp_always_l; apply wp_mono=> v.

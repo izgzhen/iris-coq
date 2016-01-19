@@ -161,6 +161,8 @@ Lemma lookup_wld_op_r n r1 r2 i P :
 Proof.
   rewrite (commutative _ r1) (commutative _ (wld r1)); apply lookup_wld_op_l.
 Qed.
+Global Instance Res_timeless eσ m : Timeless m → Timeless (Res ∅ eσ m).
+Proof. by intros ? ? [???]; constructor; apply (timeless _). Qed.
 End res.
 Arguments resRA : clear implicits.
 

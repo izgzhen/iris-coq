@@ -66,6 +66,10 @@ Proof.
 Qed.
 Canonical Structure exclC : cofeT := CofeT excl_cofe_mixin.
 
+Global Instance Excl_inj : Injective (≡) (≡) (@Excl A).
+Proof. by inversion_clear 1. Qed.
+Global Instance Excl_dist_inj n : Injective (dist n) (dist n) (@Excl A).
+Proof. by inversion_clear 1. Qed.
 Global Instance Excl_timeless (x : A) : Timeless x → Timeless (Excl x).
 Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
 Global Instance ExclUnit_timeless : Timeless (@ExclUnit A).
@@ -133,6 +137,11 @@ Lemma excl_validN_inv_l n x y : ✓{S n} (Excl x ⋅ y) → y = ∅.
 Proof. by destruct y. Qed.
 Lemma excl_validN_inv_r n x y : ✓{S n} (x ⋅ Excl y) → x = ∅.
 Proof. by destruct x. Qed.
+Lemma Excl_includedN n x y : ✓{n} y → Excl x ≼{n} y ↔ y ={n}= Excl x.
+Proof.
+  intros Hvalid; split; [destruct n as [|n]; [done|]|by intros ->].
+  by intros [z ?]; cofe_subst; rewrite (excl_validN_inv_l n x z).
+Qed.
 
 (* Updates *)
 Lemma excl_update (x : A) y : ✓ y → Excl x ⇝ y.
@@ -147,6 +156,11 @@ Instance excl_fmap : FMap excl := λ A B f x,
   match x with
   | Excl a => Excl (f a) | ExclUnit => ExclUnit | ExclBot => ExclBot
   end.
+Lemma excl_fmap_id {A} (x : excl A) : id <$> x = x.
+Proof. by destruct x. Qed.
+Lemma excl_fmap_compose {A B C} (f : A → B) (g : B → C) (x : excl A) :
+  g ∘ f <$> x = g <$> f <$> x.
+Proof. by destruct x. Qed.
 Instance excl_fmap_cmra_ne {A B : cofeT} n :
   Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@fmap excl _ A B).
 Proof. by intros f f' Hf; destruct 1; constructor; apply Hf. Qed.

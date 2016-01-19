@@ -220,6 +220,17 @@ Qed.
 Lemma cmra_empty_least `{Empty A, !RAIdentity A} n x : ∅ ≼{n} x.
 Proof. by exists x; rewrite (left_id _ _). Qed.
 
+(** ** big ops *)
+Section bigop.
+  Context `{Empty A, !RAIdentity A, FinMap K M}.
+  Lemma big_opM_lookup_valid n m i x :
+    ✓{n} (big_opM m) → m !! i = Some x → ✓{n} x.
+  Proof.
+    intros Hm ?; revert Hm; rewrite -(big_opM_delete _ i x) //.
+    apply cmra_valid_op_l.
+  Qed.
+End bigop.
+
 (** ** Properties of [(⇝)] relation *)
 Global Instance cmra_update_preorder : PreOrder (@cmra_update A).
 Proof. split. by intros x y. intros x y y' ?? z ?; naive_solver. Qed.

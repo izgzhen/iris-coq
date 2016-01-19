@@ -9,9 +9,12 @@ Instance: Params (@inv) 2.
 Instance: Params (@ownP) 1.
 Instance: Params (@ownG) 1.
 
+Typeclasses Opaque inv ownG ownP.
+
 Section ownership.
 Context {Σ : iParam}.
 Implicit Types r : res' Σ.
+Implicit Types σ : istate Σ.
 Implicit Types P : iProp Σ.
 Implicit Types m : icmra' Σ.
 
@@ -22,15 +25,14 @@ Proof.
   apply (_: Proper (_ ==> _) iProp_unfold), Later_contractive in HPQ.
   by unfold inv; rewrite HPQ.
 Qed.
-Lemma inv_duplicate i P : inv i P ≡ (inv i P ★ inv i P)%I.
-Proof.
-  by rewrite /inv -uPred.own_op Res_op
-    map_op_singleton agree_idempotent !(left_id _ _).
-Qed.
 Lemma always_inv i P : (□ inv i P)%I ≡ inv i P.
 Proof.
   by apply uPred.always_own; rewrite Res_unit !ra_unit_empty map_unit_singleton.
 Qed.
+Global Instance inv_always_stable i P : AlwaysStable (inv i P).
+Proof. by rewrite /AlwaysStable always_inv. Qed.
+Lemma inv_sep_dup i P : inv i P ≡ (inv i P ★ inv i P)%I.
+Proof. apply (uPred.always_sep_dup' _). Qed.
 
 (* physical state *)
 Lemma ownP_twice σ1 σ2 : (ownP σ1 ★ ownP σ2 : iProp Σ) ⊑ False.
@@ -38,6 +40,8 @@ Proof.
   rewrite /ownP -uPred.own_op Res_op.
   by apply uPred.own_invalid; intros (_&?&_).
 Qed.
+Global Instance ownP_timeless σ : TimelessP (ownP σ).
+Proof. rewrite /ownP; apply _. Qed.
 
 (* ghost state *)
 Global Instance ownG_ne n : Proper (dist n ==> dist n) (@ownG Σ).
@@ -51,6 +55,8 @@ Proof.
 Qed.
 Lemma ownG_valid m : (ownG m) ⊑ (✓ m).
 Proof. by rewrite /ownG uPred.own_valid; apply uPred.valid_mono=> n [? []]. Qed.
+Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
+Proof. rewrite /ownG; apply _. Qed.
 
 (* inversion lemmas *)
 Lemma inv_spec r n i P :
@@ -62,6 +68,11 @@ Proof.
     by apply Some_dist, symmetry, agree_valid_includedN,
       (cmra_included_includedN _ P'),HP; apply map_lookup_validN with (wld r) i.
   * intros ?; split_ands; try apply cmra_empty_least; eauto.
+Qed.
+Lemma ownP_spec r n σ : ✓{n} r → (ownP σ) n r ↔ pst r ={n}= Excl σ.
+Proof.
+  intros (?&?&?); rewrite /uPred_holds /= res_includedN /= Excl_includedN //.
+  naive_solver (apply cmra_empty_least).
 Qed.
 Lemma ownG_spec r n m : (ownG m) n r ↔ m ≼{n} gst r.
 Proof.

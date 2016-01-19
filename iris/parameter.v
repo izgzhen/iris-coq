@@ -10,6 +10,7 @@ Record iParam := IParam {
   icmra : cofeT → cmraT;
   icmra_empty A : Empty (icmra A);
   icmra_empty_spec A : RAIdentity (icmra A);
+  icmra_empty_timeless A : Timeless (∅ : icmra A);
   icmra_map {A B} (f : A -n> B) : icmra A -n> icmra B;
   icmra_map_ne {A B} n : Proper (dist n ==> dist n) (@icmra_map A B);
   icmra_map_id {A : cofeT} (x : icmra A) : icmra_map cid x ≡ x;
@@ -19,7 +20,8 @@ Record iParam := IParam {
 }.
 Arguments IParam {_ _ _} _ _ {_ _} _ {_ _ _ _}.
 Existing Instances ilanguage.
-Existing Instances icmra_empty icmra_empty_spec icmra_map_ne icmra_map_mono.
+Existing Instances icmra_empty icmra_empty_spec icmra_empty_timeless.
+Existing Instances icmra_map_ne icmra_map_mono.
 
 Lemma icmra_map_ext (Σ : iParam) {A B} (f g : A -n> B) m :
   (∀ x, f x ≡ g x) → icmra_map Σ f m ≡ icmra_map Σ g m.

@@ -1,4 +1,5 @@
 Require Export iris.model prelude.co_pset.
+Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 10 (✓{_} _) => solve_validN.
 Local Hint Extern 1 (✓{_} (gst _)) => apply gst_validN.
 Local Hint Extern 1 (✓{_} (wld _)) => apply wld_validN.
@@ -21,6 +22,7 @@ Arguments wsat_pre_wld {_ _ _ _ _ _} _ _ _ _ _.
 Definition wsat {Σ} (n : nat) (E : coPset) (σ : istate Σ) (r : res' Σ) : Prop :=
   match n with 0 => True | S n => ∃ rs, wsat_pre n E σ rs (r ⋅ big_opM rs) end.
 Instance: Params (@wsat) 4.
+Arguments wsat : simpl never.
 
 Section wsat.
 Context {Σ : iParam}.
@@ -38,7 +40,25 @@ Global Instance wsat_ne n : Proper (dist n ==> iff) (wsat (Σ:=Σ) n E σ) | 1.
 Proof. by intros E σ w1 w2 Hw; split; apply wsat_ne'. Qed.
 Global Instance wsat_proper n : Proper ((≡) ==> iff) (wsat (Σ:=Σ) n E σ) | 1.
 Proof. by intros E σ w1 w2 Hw; apply wsat_ne, equiv_dist. Qed.
-Lemma wsat_valid n E σ (r : res' Σ) : wsat n E σ r → ✓{n} r.
+Lemma wsat_le n n' E σ r : wsat n E σ r → n' ≤ n → wsat n' E σ r.
+Proof.
+  destruct n as [|n], n' as [|n']; simpl; try by (auto with lia).
+  intros [rs [Hval Hσ HE Hwld]] ?; exists rs; constructor; auto.
+  intros i P ? HiP; destruct (wld (r ⋅ big_opM rs) !! i) as [P'|] eqn:HP';
+    [apply (injective Some) in HiP|inversion_clear HiP].
+  assert (P' ={S n}= to_agree $ Later $ iProp_unfold $
+                       iProp_fold $ later_car $ P' (S n)) as HPiso.
+  { rewrite iProp_unfold_fold later_eta to_agree_car //.
+    apply (map_lookup_validN _ (wld (r ⋅ big_opM rs)) i); rewrite ?HP'; auto. }
+  assert (P ={n'}= iProp_fold (later_car (P' (S n)))) as HPP'.
+  { apply (injective iProp_unfold), (injective Later), (injective to_agree).
+    by rewrite -HiP -(dist_le _ _ _ _ HPiso). }
+  destruct (Hwld i (iProp_fold (later_car (P' (S n))))) as (r'&?&?); auto.
+  { by rewrite HP' -HPiso. }
+  assert (✓{S n} r') by (apply (big_opM_lookup_valid _ rs i); auto).
+  exists r'; split; [done|apply HPP', uPred_weaken with r' n; auto].
+Qed.
+Lemma wsat_valid n E σ r : wsat n E σ r → ✓{n} r.
 Proof.
   destruct n; [intros; apply cmra_valid_0|intros [rs ?]].
   eapply cmra_valid_op_l, wsat_pre_valid; eauto.
@@ -78,13 +98,19 @@ Proof.
     + intros. destruct (Hwld j P') as (r'&?&?); auto.
       exists r'; rewrite lookup_insert_ne; naive_solver.
 Qed.
-Lemma wsat_update_pst n E σ1 σ2 r :
-  pst r ={S n}= Excl σ1 → wsat (S n) E σ1 r → wsat (S n) E σ2 (update_pst σ2 r).
+Lemma wsat_update_pst n E σ1 σ1' r rf :
+  pst r ={S n}= Excl σ1 → wsat (S n) E σ1' (r ⋅ rf) →
+  σ1' = σ1 ∧ ∀ σ2, wsat (S n) E σ2 (update_pst σ2 r ⋅ rf).
 Proof.
-  intros Hr [rs [(?&Hpst&?) Hσ HE Hwld]]; simpl in *.
-  assert (pst (big_opM rs) = ∅) as Hpst_rs.
-  { by apply: (excl_validN_inv_l n σ1); rewrite -Hr. }
-  by exists rs; constructor; split_ands'; rewrite /= ?Hpst_rs.
+  intros Hpst_r [rs [(?&?&?) Hpst HE Hwld]]; simpl in *.
+  assert (pst rf ⋅ pst (big_opM rs) = ∅) as Hpst'.
+  { by apply: (excl_validN_inv_l n σ1); rewrite -Hpst_r (associative _). }
+  assert (σ1' = σ1) as ->.
+  { apply leibniz_equiv, (timeless _), dist_le with (S n); auto.
+    apply (injective Excl).
+    by rewrite -Hpst_r -Hpst -(associative _) Hpst' (right_id _). }
+  split; [done|exists rs].
+  by constructor; split_ands'; try (rewrite /= -(associative _) Hpst').
 Qed.
 Lemma wsat_update_gst n E σ r rf m1 (P : icmra' Σ → Prop) :
   m1 ≼{S n} gst r → m1 ⇝: P →
