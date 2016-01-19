@@ -16,7 +16,7 @@ Transparent uPred_holds.
 Lemma wp_lift_step E1 E2
     (φ : iexpr Σ → istate Σ → option (iexpr Σ) → Prop) Q e1 σ1 :
   E1 ⊆ E2 → to_val e1 = None →
-  (∃ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef) →
+  reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
   pvs E2 E1 (ownP σ1 ★ ▷ ∀ e2 σ2 ef, (■ φ e2 σ2 ef ∧ ownP σ2) -★
     pvs E1 E2 (wp E2 e2 Q ★ default True ef (flip (wp coPset_all) (λ _, True))))
@@ -37,7 +37,7 @@ Proof.
 Qed.
 Lemma wp_lift_pure_step E (φ : iexpr Σ → option (iexpr Σ) → Prop) Q e1 :
   to_val e1 = None →
-  (∀ σ1, ∃ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef) →
+  (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →
   (▷ ∀ e2 ef, ■ φ e2 ef →
     wp E e2 Q ★ default True ef (flip (wp coPset_all) (λ _, True)))

@@ -18,6 +18,11 @@ Class Language (E V St : Type) := {
 Section language.
   Context `{Language E V St}.
 
+  Definition reducible (e : E) (σ : St) :=
+    ∃ e' σ' ef, prim_step e σ e' σ' ef.
+  Lemma reducible_not_val e σ : reducible e σ → to_val e = None.
+  Proof. intros (?&?&?&?); eauto using values_stuck. Qed.
+
   Lemma atomic_of_val v : ¬atomic (of_val v).
   Proof.
     by intros Hat; apply atomic_not_value in Hat; rewrite to_of_val in Hat.

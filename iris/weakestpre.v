@@ -9,7 +9,7 @@ Local Hint Extern 10 (✓{_} _) =>
 
 Record wp_go {Σ} (E : coPset) (Q Qfork : iexpr Σ → nat → res' Σ → Prop)
     (k : nat) (rf : res' Σ) (e1 : iexpr Σ) (σ1 : istate Σ) := {
-  wf_safe : ∃ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef;
+  wf_safe : reducible e1 σ1;
   wp_step e2 σ2 ef :
     prim_step e1 σ1 e2 σ2 ef →
     ∃ r2 r2',

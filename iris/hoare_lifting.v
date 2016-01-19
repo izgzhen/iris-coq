@@ -15,7 +15,7 @@ Import uPred.
 Lemma ht_lift_step E1 E2
     (φ : iexpr Σ → istate Σ → option (iexpr Σ) → Prop) P P' Q1 Q2 R e1 σ1 :
   E1 ⊆ E2 → to_val e1 = None →
-  (∃ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef) →
+  reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
   (P >{E2,E1}> (ownP σ1 ★ ▷ P') ∧ ∀ e2 σ2 ef,
     (■ φ e2 σ2 ef ★ ownP σ2 ★ P') >{E1,E2}> (Q1 e2 σ2 ef ★ Q2 e2 σ2 ef) ∧
@@ -45,7 +45,7 @@ Qed.
 Lemma ht_lift_atomic E
     (φ : iexpr Σ → istate Σ → option (iexpr Σ) → Prop) P e1 σ1 :
   atomic e1 →
-  (∃ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef) →
+  reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
   (∀ e2 σ2 ef, {{ ■ φ e2 σ2 ef ★ P }} ef ?@ coPset_all {{ λ _, True }}) ⊑
   {{ ownP σ1 ★ ▷ P }} e1 @ E {{ λ v, ∃ σ2 ef, ownP σ2 ★ ■ φ (of_val v) σ2 ef }}.
@@ -71,7 +71,7 @@ Proof.
 Qed.
 Lemma ht_lift_pure_step E (φ : iexpr Σ → option (iexpr Σ) → Prop) P P' Q e1 :
   to_val e1 = None →
-  (∀ σ1, ∃ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef) →
+  (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →
   (∀ e2 ef,
     {{ ■ φ e2 ef ★ P }} e2 @ E {{ Q }} ∧
@@ -97,7 +97,7 @@ Qed.
 Lemma ht_lift_pure_determistic_step E
     (φ : iexpr Σ → option (iexpr Σ) → Prop) P P' Q e1 e2 ef :
   to_val e1 = None →
-  (∀ σ1, prim_step e1 σ1 e2 σ1 ef) →
+  (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2' σ2 ef', prim_step e1 σ1 e2' σ2 ef' → σ1 = σ2 ∧ e2 = e2' ∧ ef = ef')→
   ({{ P }} e2 @ E {{ Q }} ∧ {{ P' }} ef ?@ coPset_all {{ λ _, True }})
   ⊑ {{ ▷(P ★ P') }} e1 @ E {{ Q }}.
