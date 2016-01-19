@@ -9,9 +9,12 @@ Instance: Params (@inv) 2.
 Instance: Params (@ownP) 1.
 Instance: Params (@ownG) 1.
 
+Typeclasses Opaque inv ownG ownP.
+
 Section ownership.
 Context {Σ : iParam}.
 Implicit Types r : res' Σ.
+Implicit Types σ : istate Σ.
 Implicit Types P : iProp Σ.
 Implicit Types m : icmra' Σ.
 
@@ -38,6 +41,8 @@ Proof.
   rewrite /ownP -uPred.own_op Res_op.
   by apply uPred.own_invalid; intros (_&?&_).
 Qed.
+Global Instance ownP_timeless σ : TimelessP (ownP σ).
+Proof. rewrite /ownP; apply _. Qed.
 
 (* ghost state *)
 Global Instance ownG_ne n : Proper (dist n ==> dist n) (@ownG Σ).
@@ -51,6 +56,8 @@ Proof.
 Qed.
 Lemma ownG_valid m : (ownG m) ⊑ (✓ m).
 Proof. by rewrite /ownG uPred.own_valid; apply uPred.valid_mono=> n [? []]. Qed.
+Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
+Proof. rewrite /ownG; apply _. Qed.
 
 (* inversion lemmas *)
 Lemma inv_spec r n i P :
