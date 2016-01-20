@@ -83,6 +83,17 @@ Proof.
   by intros Q Q' ?; apply equiv_dist=>n; apply wp_ne=>v; apply equiv_dist.
 Qed.
 
+Lemma wp_value_inv E Q v n r : wp E (of_val v) Q n r → Q v n r.
+Proof.
+  inversion 1 as [| |??? He]; simplify_equality; auto.
+  by rewrite ?to_of_val in He.
+Qed.
+Lemma wp_step_inv E Ef Q e k n σ r rf :
+  to_val e = None → 1 < k < n → E ∩ Ef = ∅ →
+  wp E e Q n r → wsat (S k) (E ∪ Ef) σ (r ⋅ rf) →
+  wp_go (E ∪ Ef) (λ e, wp E e Q) (λ e, wp coPset_all e (λ _, True%I)) k rf e σ.
+Proof. intros He; destruct 3; [lia|by rewrite ?to_of_val in He|eauto]. Qed.
+
 Lemma wp_value E Q v : Q v ⊑ wp E (of_val v) Q.
 Proof. by constructor. Qed.
 Lemma wp_mono E e Q1 Q2 : (∀ v, Q1 v ⊑ Q2 v) → wp E e Q1 ⊑ wp E e Q2.
@@ -91,9 +102,7 @@ Lemma wp_pvs E e Q : pvs E E (wp E e Q) ⊑ wp E e (λ v, pvs E E (Q v)).
 Proof.
   intros r [|n] ?; [done|]; intros Hvs.
   destruct (to_val e) as [v|] eqn:He; [apply of_to_val in He; subst|].
-  { constructor; eapply pvs_mono, Hvs; auto; clear.
-    intros r n ?; inversion 1 as [| |??? He]; simplify_equality; auto.
-    by rewrite ?to_of_val in He. }
+  { by constructor; eapply pvs_mono, Hvs; [intros ???; apply wp_value_inv|]. }
   constructor; [done|intros rf k Ef σ1 ???].
   destruct (Hvs rf (S k) Ef σ1) as (r'&Hwp&?); auto.
   inversion Hwp as [| |???? Hgo]; subst; [by rewrite to_of_val in He|].
