@@ -1,5 +1,5 @@
 Require Import Autosubst.Autosubst.
-Require Import prelude.option prelude.gmap iris.language.
+Require Import prelude.option prelude.gmap iris.language iris.parameter.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -318,7 +318,7 @@ Proof.
     exists K''; by eauto using f_equal, f_equal2, f_equal3, v2e_inj.
 
   intros Hfill Hred Hnval. 
-  Time revert K' Hfill; induction K=>K' /= Hfill;
+  revert K' Hfill; induction K=>K' /= Hfill;
     first (now eexists; reflexivity);
     (destruct K'; simpl;
       (* The first case is: K' is EmpyCtx. *)
@@ -408,12 +408,7 @@ Section Language.
   Definition ectx_step e1 σ1 e2 σ2 (ef: option expr) :=
     exists K e1' e2', e1 = fill K e1' /\ e2 = fill K e2' /\ prim_step e1' σ1 e2' σ2 ef.
 
-  Instance heap_lang : Language expr value state := {|
-    of_val := v2e;
-    to_val := e2v;
-    atomic := atomic;
-    prim_step := ectx_step
-  |}.
+  Instance heap_lang : Language expr value state := Build_Language v2e e2v atomic ectx_step.
   Proof.
     - exact v2v.
     - exact e2e.
@@ -431,7 +426,7 @@ Section Language.
   Lemma fill_is_ctx K: is_ctx (fill K).
   Proof.
     split.
-    - intros ? [v Hval]. eapply fill_value. eassumption.
+    - intros ? Hnval. by eapply fill_not_value.
     - intros ? ? ? ? ? (K' & e1' & e2' & Heq1 & Heq2 & Hstep).
       exists (comp_ctx K K'), e1', e2'. rewrite -!fill_comp Heq1 Heq2.
       split; last split; reflexivity || assumption.
@@ -445,3 +440,9 @@ Section Language.
   Qed.
 
 End Language.
+
+(* This is just to demonstrate that we can instantiate IParam. *)
+Module IParam.
+  Definition Σ := IParamConst heap_lang unitRA.
+  Print Assumptions Σ.
+End IParam.

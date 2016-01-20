@@ -307,6 +307,9 @@ Section discrete.
 End discrete.
 Arguments discreteRA _ {_ _ _ _ _ _}.
 
+(** CMRA for the unit type *)
+Canonical Structure unitRA : cmraT := discreteRA ().
+
 (** Product *)
 Section prod.
   Context {A B : cmraT}.

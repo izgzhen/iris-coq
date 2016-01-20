@@ -238,3 +238,21 @@ Ltac solve_included :=
   ra_reflection.quote;
   apply ra_reflection.flatten_correct, (bool_decide_unpack _);
   vm_compute; apply I.
+
+(** An RA for the unit type *)
+Instance unit_valid : Valid () := λ x, True.
+Instance unit_unit : Unit () := λ x, x.
+Instance unit_op : Op () := λ x y, tt.
+Instance unit_minus : Minus () := λ x y, tt.
+
+Instance unit_ra : RA ().
+Proof.
+  split; done.
+Qed.
+
+
+Instance unit_empty : Empty () := tt.
+Instance unit_empty_ra : RAIdentity().
+Proof.
+  split; done.
+Qed.
