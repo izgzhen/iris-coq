@@ -125,6 +125,10 @@ Lemma ra_empty_least x : ∅ ≼ x.
 Proof. by exists x; rewrite (left_id _ _). Qed.
 
 (** * Big ops *)
+Lemma big_op_nil : big_op (@nil A) = ∅.
+Proof. done. Qed.
+Lemma big_op_cons x xs : big_op (x :: xs) = x ⋅ big_op xs.
+Proof. done. Qed.
 Global Instance big_op_permutation : Proper ((≡ₚ) ==> (≡)) big_op.
 Proof.
   induction 1 as [|x xs1 xs2 ? IH|x y xs|xs1 xs2 xs3]; simpl; auto.
@@ -147,6 +151,9 @@ Proof.
   * by transitivity (big_op ys); [|apply ra_included_r].
   * by transitivity (big_op ys).
 Qed.
+Lemma big_op_delete xs i x :
+  xs !! i = Some x → x ⋅ big_op (delete i xs) ≡ big_op xs.
+Proof. by intros; rewrite {2}(delete_Permutation xs i x). Qed.
 
 Context `{FinMap K M}.
 Lemma big_opM_empty : big_opM (∅ : M A) ≡ ∅.
