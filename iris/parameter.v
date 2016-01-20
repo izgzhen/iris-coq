@@ -1,7 +1,5 @@
 Require Export modures.cmra iris.language.
 
-Set Bullet Behavior "Strict Subproofs".
-
 Record iParam := IParam {
   iexpr : Type;
   ival : Type;
@@ -29,6 +27,8 @@ Proof.
   by intros ?; apply equiv_dist=> n; apply icmra_map_ne=> ?; apply equiv_dist.
 Qed.
 
+Canonical Structure istateC Σ := leibnizC (istate Σ).
+
 Definition IParamConst {iexpr ival istate : Type}
            (ilanguage : Language iexpr ival istate)
            (icmra : cmraT) {icmra_empty : Empty icmra}
@@ -39,5 +39,3 @@ Unshelve.
 - by intros.
 - by intros.
 Defined.
-
-Canonical Structure istateC Σ := leibnizC (istate Σ).
