@@ -4,7 +4,7 @@ Definition inv {Σ} (i : positive) (P : iProp Σ) : iProp Σ :=
   uPred_own (Res {[ i ↦ to_agree (Later (iProp_unfold P)) ]} ∅ ∅).
 Arguments inv {_} _ _%I.
 Definition ownP {Σ} (σ : istate Σ) : iProp Σ := uPred_own (Res ∅ (Excl σ) ∅).
-Definition ownG {Σ} (m : iCMRA Σ) : iProp Σ := uPred_own (Res ∅ ∅ m).
+Definition ownG {Σ} (m : iGst Σ) : iProp Σ := uPred_own (Res ∅ ∅ m).
 Instance: Params (@inv) 2.
 Instance: Params (@ownP) 1.
 Instance: Params (@ownG) 1.
@@ -16,7 +16,7 @@ Context {Σ : iParam}.
 Implicit Types r : iRes Σ.
 Implicit Types σ : istate Σ.
 Implicit Types P : iProp Σ.
-Implicit Types m : iCMRA Σ.
+Implicit Types m : iGst Σ.
 
 (* Invariants *)
 Global Instance inv_contractive i : Contractive (@inv Σ i).

@@ -120,7 +120,7 @@ Proof.
   split; [done|exists rs].
   by constructor; split_ands'; try (rewrite /= -(associative _) Hpst').
 Qed.
-Lemma wsat_update_gst n E σ r rf m1 (P : iCMRA Σ → Prop) :
+Lemma wsat_update_gst n E σ r rf m1 (P : iGst Σ → Prop) :
   m1 ≼{S n} gst r → m1 ⇝: P →
   wsat (S n) E σ (r ⋅ rf) → ∃ m2, wsat (S n) E σ (update_gst m2 r ⋅ rf) ∧ P m2.
 Proof.

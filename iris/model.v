@@ -24,7 +24,9 @@ End iProp.
 Definition iPreProp (Σ : iParam) : cofeT := iProp.result Σ.
 Notation iRes Σ := (res Σ (laterC (iPreProp Σ))).
 Notation iResRA Σ := (resRA Σ (laterC (iPreProp Σ))).
-Notation iCMRA Σ := (icmra Σ (laterC (iPreProp Σ))).
+Notation iWld Σ := (mapRA positive (agreeRA (laterC (iPreProp Σ)))).
+Notation iPst Σ := (exclRA (istateC Σ)).
+Notation iGst Σ := (icmra Σ (laterC (iPreProp Σ))).
 Definition iProp (Σ : iParam) : cofeT := uPredC (iResRA Σ).
 Definition iProp_unfold {Σ} : iProp Σ -n> iPreProp Σ := solution_fold _.
 Definition iProp_fold {Σ} : iPreProp Σ -n> iProp Σ := solution_unfold _.
@@ -38,3 +40,7 @@ Instance iProp_fold_inj n Σ : Injective (dist n) (dist n) (@iProp_fold Σ).
 Proof. by intros X Y H; rewrite -(iProp_unfold_fold X) H iProp_unfold_fold. Qed.
 Instance iProp_unfold_inj n Σ : Injective (dist n) (dist n) (@iProp_unfold Σ).
 Proof. by intros X Y H; rewrite -(iProp_fold_unfold X) H iProp_fold_unfold. Qed.
+
+Module Test. (* Make sure we got the notations right. *)
+  Definition iResTest (Σ : iParam) (w : iWld Σ) (p : iPst Σ) (g : iGst Σ) : iRes Σ := Res w p g.
+End Test.
