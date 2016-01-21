@@ -108,7 +108,8 @@ Proof.
                       destruct (e2v e2); simpl; [|discriminate];
                       case0.
 
-  revert v; induction e; intros v; simpl; try discriminate; by (case2 e1 e2 || case1 e || case0).
+  revert v; induction e; intros v; simpl; try discriminate;
+    by (case2 e1 e2 || case1 e || case0).
 Qed.
 End e2e.
 
@@ -301,15 +302,21 @@ Lemma step_by_value {K K' e e'} :
   exists K'', K' = comp_ctx K K''.
 Proof.
   Ltac bad_fill := intros; exfalso; subst;
-                   (eapply values_stuck; eassumption) || (eapply fill_not_value2; first eassumption;
-                    try match goal with [ H : fill _ _ = _ |- _ ] => erewrite ->H end;
-                    by erewrite ?v2v).
-  Ltac bad_red   Hfill e' Hred := exfalso; destruct e'; try discriminate Hfill; [];
+                   (eapply values_stuck; eassumption) ||
+                     (eapply fill_not_value2; first eassumption;
+                      try match goal with
+                        [ H : fill _ _ = _ |- _ ] => erewrite ->H
+                      end;
+                      by erewrite ?v2v).
+  Ltac bad_red   Hfill e' Hred := exfalso; destruct e';
+      try discriminate Hfill; [];
       case: Hfill; intros; subst; destruct Hred as (σ' & e'' & σ'' & ef & Hstep);
       inversion Hstep; done || (clear Hstep; subst;
       eapply fill_not_value2; last (
         try match goal with [ H : _ = fill _ _ |- _ ] => erewrite <-H end; simpl;
-        repeat match goal with [ H : e2v _ = _ |- _ ] => erewrite H; clear H; simpl end
+        repeat match goal with [ H : e2v _ = _ |- _ ] =>
+          erewrite H; clear H; simpl
+        end
       ); eassumption || done).
   Ltac good IH := intros; subst; 
     let K'' := fresh "K''" in edestruct IH as [K'' Hcomp]; first eassumption;
@@ -323,19 +330,28 @@ Proof.
       first (by bad_red Hfill e' Hred);
       (* Many of the other cases result in contradicting equalities. *)
       try discriminate Hfill;
-      (* The remaining cases are "compatible" contexts - that result in the same head symbol of the expression.
-         Test whether the context als has the same head, and use the appropriate tactic.
-         Furthermore, the Op* contexts need special treatment due to the inhomogenuous equalities
-         they induce. *)
+      (* The remaining cases are "compatible" contexts - that result in the same
+         head symbol of the expression.
+         Test whether the context als has the same head, and use the appropriate
+         tactic. Furthermore, the Op* contexts need special treatment due to the
+         inhomogenuous equalities they induce. *)
       by match goal with
-      | [ |- exists x, Op1Ctx _ _ = Op1Ctx _ _ ] => move: Hfill; case_depeq2; good IHK
-      | [ |- exists x, Op2LCtx _ _ _ = Op2LCtx _ _ _ ] => move: Hfill; case_depeq3; good IHK
-      | [ |- exists x, Op2RCtx _ _ _ = Op2RCtx _ _ _ ] => move: Hfill; case_depeq3; good IHK
-      | [ |- exists x, ?C _ = ?C _ ] => case: Hfill; good IHK
-      | [ |- exists x, ?C _ _ = ?C _ _ ] => case: Hfill; good IHK
-      | [ |- exists x, ?C _ _ _ = ?C _ _ _ ] => case: Hfill; good IHK
-      | [ |- exists x, Op2LCtx _ _ _ = Op2RCtx _ _ _ ] => move: Hfill; case_depeq3; bad_fill
-      | [ |- exists x, Op2RCtx _ _ _ = Op2LCtx _ _ _ ] => move: Hfill; case_depeq3; bad_fill
+      | [ |- exists x, Op1Ctx _ _ = Op1Ctx _ _ ] =>
+        move: Hfill; case_depeq2; good IHK
+      | [ |- exists x, Op2LCtx _ _ _ = Op2LCtx _ _ _ ] =>
+        move: Hfill; case_depeq3; good IHK
+      | [ |- exists x, Op2RCtx _ _ _ = Op2RCtx _ _ _ ] =>
+        move: Hfill; case_depeq3; good IHK
+      | [ |- exists x, ?C _ = ?C _ ] =>
+        case: Hfill; good IHK
+      | [ |- exists x, ?C _ _ = ?C _ _ ] =>
+        case: Hfill; good IHK
+      | [ |- exists x, ?C _ _ _ = ?C _ _ _ ] =>
+        case: Hfill; good IHK
+      | [ |- exists x, Op2LCtx _ _ _ = Op2RCtx _ _ _ ] =>
+        move: Hfill; case_depeq3; bad_fill
+      | [ |- exists x, Op2RCtx _ _ _ = Op2LCtx _ _ _ ] =>
+        move: Hfill; case_depeq3; bad_fill
       | _ => case: Hfill; bad_fill
       end).
 Qed.
@@ -362,7 +378,8 @@ Lemma atomic_step e1 σ1 e2 σ2 ef :
   prim_step e1 σ1 e2 σ2 ef ->
   is_Some (e2v e2).
 Proof.
-  destruct e1; simpl; intros Hatomic Hstep; inversion Hstep; try contradiction Hatomic; rewrite ?v2v /=; eexists; reflexivity.
+  destruct e1; simpl; intros Hatomic Hstep; inversion Hstep;
+    try contradiction Hatomic; rewrite ?v2v /=; eexists; reflexivity.
 Qed.
 
 (* Atomics must not contain evaluation positions. *)
@@ -371,7 +388,8 @@ Lemma atomic_fill e K :
   e2v e = None ->
   K = EmptyCtx.
 Proof.
-  destruct K; simpl; first reflexivity; unfold is_Some; intros Hatomic Hnval; exfalso; try assumption;
+  destruct K; simpl; first reflexivity; unfold is_Some; intros Hatomic Hnval;
+    exfalso; try assumption;
     try (destruct_conjs; eapply fill_not_value2; eassumption).
 Qed.
 
@@ -399,12 +417,14 @@ Module Tests.
   Qed.
 End Tests.
 
-(** Instantiate the Iris language interface. This closes reduction under evaluation contexts.
+(** Instantiate the Iris language interface. This closes reduction under
+    evaluation contexts.
     We could potentially make this a generic construction. *)
 Section Language.
 
   Definition ectx_step e1 σ1 e2 σ2 (ef: option expr) :=
-    exists K e1' e2', e1 = fill K e1' /\ e2 = fill K e2' /\ prim_step e1' σ1 e2' σ2 ef.
+    exists K e1' e2', e1 = fill K e1' /\ e2 = fill K e2' /\
+                      prim_step e1' σ1 e2' σ2 ef.
 
   Program Instance heap_lang : Language expr value state := {|
     of_val := v2e;
@@ -439,8 +459,8 @@ Section Language.
       destruct (step_by_value Heq1) as [K' HeqK].
       + do 4 eexists. eassumption.
       + assumption.
-      + subst e2 K''. rewrite -fill_comp in Heq1. apply fill_inj_r in Heq1. subst e1'.
-        exists (fill K' e2''). split; first by rewrite -fill_comp.
+      + subst e2 K''. rewrite -fill_comp in Heq1. apply fill_inj_r in Heq1.
+        subst e1'. exists (fill K' e2''). split; first by rewrite -fill_comp.
         do 3 eexists. split; last split; eassumption || reflexivity.
   Qed.
 
