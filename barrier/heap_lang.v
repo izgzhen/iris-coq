@@ -1,7 +1,5 @@
 Require Import Autosubst.Autosubst.
-Require Import prelude.option prelude.gmap iris.language iris.parameter.
-
-Set Bullet Behavior "Strict Subproofs".
+Require Import prelude.option prelude.gmap iris.parameter.
 
 (** Some tactics useful when dealing with equality of sigma-like types: existT T0 t0 = existT T1 t1.
     They all assume such an equality is the first thing on the "stack" (goal). *)

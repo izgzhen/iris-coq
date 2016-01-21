@@ -1372,6 +1372,11 @@ Proof.
   induction l as [|x l IH]; [done|].
   by rewrite reverse_cons, (commutative (++)), IH.
 Qed.
+Lemma delete_Permutation l i x : l !! i = Some x → l ≡ₚ x :: delete i l.
+Proof.
+  revert i; induction l as [|y l IH]; intros [|i] ?; simplify_equality'; auto.
+  by rewrite Permutation_swap, <-(IH i).
+Qed.
 
 (** ** Properties of the [prefix_of] and [suffix_of] predicates *)
 Global Instance: PreOrder (@prefix_of A).
@@ -2522,59 +2527,85 @@ End Forall2_order.
 Section Forall3.
   Context {A B C} (P : A → B → C → Prop).
   Hint Extern 0 (Forall3 _ _ _ _) => constructor.
-  Lemma Forall3_app l1 k1 k1' l2 k2 k2' :
+  Lemma Forall3_app l1 l2 k1 k2 k1' k2' :
     Forall3 P l1 k1 k1' → Forall3 P l2 k2 k2' →
     Forall3 P (l1 ++ l2) (k1 ++ k2) (k1' ++ k2').
   Proof. induction 1; simpl; auto. Qed.
-  Lemma Forall3_cons_inv_m l y l2' k :
-    Forall3 P l (y :: l2') k → ∃ x l2 z k2,
-      l = x :: l2 ∧ k = z :: k2 ∧ P x y z ∧ Forall3 P l2 l2' k2.
+  Lemma Forall3_cons_inv_l x l k k' :
+    Forall3 P (x :: l) k k' → ∃ y k2 z k2',
+      k = y :: k2 ∧ k' = z :: k2' ∧ P x y z ∧ Forall3 P l k2 k2'.
   Proof. inversion_clear 1; naive_solver. Qed.
-  Lemma Forall3_app_inv_m l l1' l2' k :
-    Forall3 P l (l1' ++ l2') k → ∃ l1 l2 k1 k2,
-      l = l1 ++ l2 ∧ k = k1 ++ k2 ∧ Forall3 P l1 l1' k1 ∧ Forall3 P l2 l2' k2.
+  Lemma Forall3_app_inv_l l1 l2 k k' :
+    Forall3 P (l1 ++ l2) k k' → ∃ k1 k2 k1' k2',
+     k = k1 ++ k2 ∧ k' = k1' ++ k2' ∧ Forall3 P l1 k1 k1' ∧ Forall3 P l2 k2 k2'.
   Proof.
-    revert l k. induction l1' as [|x l1' IH]; simpl; inversion_clear 1.
+    revert k k'. induction l1 as [|x l1 IH]; simpl; inversion_clear 1.
     * by repeat eexists; eauto.
     * by repeat eexists; eauto.
     * edestruct IH as (?&?&?&?&?&?&?&?); eauto; naive_solver.
   Qed.
-  Lemma Forall3_impl (Q : A → B → C → Prop) l l' k :
-    Forall3 P l l' k → (∀ x y z, P x y z → Q x y z) → Forall3 Q l l' k.
-  Proof. intros Hl ?. induction Hl; auto. Defined.
-  Lemma Forall3_length_lm l l' k : Forall3 P l l' k → length l = length l'.
+  Lemma Forall3_cons_inv_m l y k k' :
+    Forall3 P l (y :: k) k' → ∃ x l2 z k2',
+      l = x :: l2 ∧ k' = z :: k2' ∧ P x y z ∧ Forall3 P l2 k k2'.
+  Proof. inversion_clear 1; naive_solver. Qed.
+  Lemma Forall3_app_inv_m l k1 k2 k' :
+    Forall3 P l (k1 ++ k2) k' → ∃ l1 l2 k1' k2',
+     l = l1 ++ l2 ∧ k' = k1' ++ k2' ∧ Forall3 P l1 k1 k1' ∧ Forall3 P l2 k2 k2'.
+  Proof.
+    revert l k'. induction k1 as [|x k1 IH]; simpl; inversion_clear 1.
+    * by repeat eexists; eauto.
+    * by repeat eexists; eauto.
+    * edestruct IH as (?&?&?&?&?&?&?&?); eauto; naive_solver.
+  Qed.
+  Lemma Forall3_cons_inv_r l k z k' :
+    Forall3 P l k (z :: k') → ∃ x l2 y k2,
+      l = x :: l2 ∧ k = y :: k2 ∧ P x y z ∧ Forall3 P l2 k2 k'.
+  Proof. inversion_clear 1; naive_solver. Qed.
+  Lemma Forall3_app_inv_r l k k1' k2' :
+    Forall3 P l k (k1' ++ k2') → ∃ l1 l2 k1 k2,
+      l = l1 ++ l2 ∧ k = k1 ++ k2 ∧ Forall3 P l1 k1 k1' ∧ Forall3 P l2 k2 k2'.
+  Proof.
+    revert l k. induction k1' as [|x k1' IH]; simpl; inversion_clear 1.
+    * by repeat eexists; eauto.
+    * by repeat eexists; eauto.
+    * edestruct IH as (?&?&?&?&?&?&?&?); eauto; naive_solver.
+  Qed.
+  Lemma Forall3_impl (Q : A → B → C → Prop) l k k' :
+    Forall3 P l k k' → (∀ x y z, P x y z → Q x y z) → Forall3 Q l k k'.
+  Proof. intros Hl ?; induction Hl; auto. Defined.
+  Lemma Forall3_length_lm l k k' : Forall3 P l k k' → length l = length k.
   Proof. by induction 1; f_equal'. Qed.
-  Lemma Forall3_length_lr l l' k : Forall3 P l l' k → length l = length k.
+  Lemma Forall3_length_lr l k k' : Forall3 P l k k' → length l = length k'.
   Proof. by induction 1; f_equal'. Qed.
-  Lemma Forall3_lookup_lmr l l' k i x y z :
-    Forall3 P l l' k →
-    l !! i = Some x → l' !! i = Some y → k !! i = Some z → P x y z.
+  Lemma Forall3_lookup_lmr l k k' i x y z :
+    Forall3 P l k k' →
+    l !! i = Some x → k !! i = Some y → k' !! i = Some z → P x y z.
   Proof.
     intros H. revert i. induction H; intros [|?] ???; simplify_equality'; eauto.
   Qed.
-  Lemma Forall3_lookup_l l l' k i x :
-    Forall3 P l l' k → l !! i = Some x →
-    ∃ y z, l' !! i = Some y ∧ k !! i = Some z ∧ P x y z.
+  Lemma Forall3_lookup_l l k k' i x :
+    Forall3 P l k k' → l !! i = Some x →
+    ∃ y z, k !! i = Some y ∧ k' !! i = Some z ∧ P x y z.
   Proof.
     intros H. revert i. induction H; intros [|?] ?; simplify_equality'; eauto.
   Qed.
-  Lemma Forall3_lookup_m l l' k i y :
-    Forall3 P l l' k → l' !! i = Some y →
-    ∃ x z, l !! i = Some x ∧ k !! i = Some z ∧ P x y z.
+  Lemma Forall3_lookup_m l k k' i y :
+    Forall3 P l k k' → k !! i = Some y →
+    ∃ x z, l !! i = Some x ∧ k' !! i = Some z ∧ P x y z.
   Proof.
     intros H. revert i. induction H; intros [|?] ?; simplify_equality'; eauto.
   Qed.
-  Lemma Forall3_lookup_r l l' k i z :
-    Forall3 P l l' k → k !! i = Some z →
-    ∃ x y, l !! i = Some x ∧ l' !! i = Some y ∧ P x y z.
+  Lemma Forall3_lookup_r l k k' i z :
+    Forall3 P l k k' → k' !! i = Some z →
+    ∃ x y, l !! i = Some x ∧ k !! i = Some y ∧ P x y z.
   Proof.
     intros H. revert i. induction H; intros [|?] ?; simplify_equality'; eauto.
   Qed.
-  Lemma Forall3_alter_lm f g l l' k i :
-    Forall3 P l l' k →
-    (∀ x y z, l !! i = Some x → l' !! i = Some y → k !! i = Some z →
+  Lemma Forall3_alter_lm f g l k k' i :
+    Forall3 P l k k' →
+    (∀ x y z, l !! i = Some x → k !! i = Some y → k' !! i = Some z →
       P x y z → P (f x) (g y) z) →
-    Forall3 P (alter f i l) (alter g i l') k.
+    Forall3 P (alter f i l) (alter g i k) k'.
   Proof. intros Hl. revert i. induction Hl; intros [|]; auto. Qed.
 End Forall3.
 
