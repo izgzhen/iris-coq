@@ -2,14 +2,14 @@ Require Export modures.logic iris.resources.
 Require Import modures.cofe_solver.
 
 Module iProp.
-Definition F (Σ : iParam) (A B : cofeT) : cofeT := uPredC (resRA Σ (laterC A)).
+Definition F (Σ : iParam) (A B : cofeT) : cofeT := uPredC (resRA Σ A).
 Definition map {Σ : iParam} {A1 A2 B1 B2 : cofeT}
     (f : (A2 -n> A1) * (B1 -n> B2)) : F Σ A1 B1 -n> F Σ A2 B2 :=
-  uPredC_map (resRA_map (laterC_map (f.1))).
+  uPredC_map (resRA_map (f.1)).
 Definition result Σ : solution (F Σ).
 Proof.
   apply (solver.result _ (@map Σ)).
-  * intros A B r n ?; rewrite /uPred_holds /= /laterC_map /=. later_map_id res_map_id.
+  * by intros A B r n ?; rewrite /uPred_holds /= res_map_id.
   * by intros A1 A2 A3 B1 B2 B3 f g f' g' P r n ?;
       rewrite /= /uPred_holds /= res_map_compose.
   * by intros A1 A2 B1 B2 n f f' [??] r;
