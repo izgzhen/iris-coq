@@ -406,19 +406,26 @@ Section Language.
   Definition ectx_step e1 σ1 e2 σ2 (ef: option expr) :=
     exists K e1' e2', e1 = fill K e1' /\ e2 = fill K e2' /\ prim_step e1' σ1 e2' σ2 ef.
 
-  Instance heap_lang : Language expr value state := Build_Language v2e e2v atomic ectx_step.
-  Proof.
-    - exact v2v.
-    - exact e2e.
-    - intros e1 σ1 e2 σ2 ef (K & e1' & e2' & He1 & He2 & Hstep). subst e1 e2.
-      eapply fill_not_value. eapply reducible_not_value. do 4 eexists; eassumption.
-    - exact atomic_not_value.
-    - intros ? ? ? ? ? Hatomic (K & e1' & e2' & Heq1 & Heq2 & Hstep).
-      subst. move: (Hatomic). rewrite (atomic_fill e1' K). (* RJ: this is kind of annoying. *)
-      + rewrite !fill_empty. eauto using atomic_step.
-      + assumption.
-      + clear Hatomic. eapply reducible_not_value. do 4 eexists; eassumption.
-  Defined.
+  Program Instance heap_lang : Language expr value state := {|
+    of_val := v2e;
+    to_val := e2v;
+    language.atomic := atomic;
+    language.prim_step := ectx_step;
+    to_of_val := v2v;
+    of_to_val := e2e;
+    language.atomic_not_value := atomic_not_value
+  |}.
+  Next Obligation.
+    intros e1 σ1 e2 σ2 ef (K & e1' & e2' & He1 & He2 & Hstep). subst e1 e2.
+    eapply fill_not_value. eapply reducible_not_value. do 4 eexists; eassumption.
+  Qed.
+  Next Obligation.
+    intros ? ? ? ? ? Hatomic (K & e1' & e2' & Heq1 & Heq2 & Hstep).
+    subst. move: (Hatomic). rewrite (atomic_fill e1' K).
+    - rewrite !fill_empty. eauto using atomic_step.
+    - assumption.
+    - clear Hatomic. eapply reducible_not_value. do 4 eexists; eassumption.
+  Qed.
 
   (** We can have bind with arbitrary evaluation contexts **)
   Lemma fill_is_ctx K: is_ctx (fill K).
