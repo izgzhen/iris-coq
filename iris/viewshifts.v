@@ -16,7 +16,7 @@ Notation "P >{ E }> Q" := (True ⊑ vs E E P%I Q%I)
 Section vs.
 Context {Σ : iParam}.
 Implicit Types P Q : iProp Σ.
-Implicit Types m : icmra' Σ.
+Implicit Types m : iCMRA Σ.
 Import uPred.
 
 Lemma vs_alt E1 E2 P Q : P ⊑ pvs E1 E2 Q → P >{E1,E2}> Q.
@@ -85,7 +85,7 @@ Proof.
   intros; rewrite -{1}(left_id_L ∅ (∪) E) -vs_mask_frame; last solve_elem_of.
   apply vs_close.
 Qed.
-Lemma vs_updateP E m (P : icmra' Σ → Prop) :
+Lemma vs_updateP E m (P : iCMRA Σ → Prop) :
   m ⇝: P → ownG m >{E}> (∃ m', ■ P m' ∧ ownG m').
 Proof. by intros; apply vs_alt, pvs_updateP. Qed.
 Lemma vs_update E m m' : m ⇝ m' → ownG m >{E}> ownG m'.

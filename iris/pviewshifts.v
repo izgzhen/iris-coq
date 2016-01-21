@@ -29,7 +29,7 @@ Instance: Params (@pvs) 3.
 Section pvs.
 Context {Σ : iParam}.
 Implicit Types P Q : iProp Σ.
-Implicit Types m : icmra' Σ.
+Implicit Types m : iCMRA Σ.
 Transparent uPred_holds.
 
 Global Instance pvs_ne E1 E2 n : Proper (dist n ==> dist n) (@pvs Σ E1 E2).
@@ -96,7 +96,7 @@ Proof.
   * by rewrite -(left_id_L ∅ (∪) Ef).
   * apply uPred_weaken with r n; auto.
 Qed.
-Lemma pvs_updateP E m (P : icmra' Σ → Prop) :
+Lemma pvs_updateP E m (P : iCMRA Σ → Prop) :
   m ⇝: P → ownG m ⊑ pvs E E (∃ m', ■ P m' ∧ ownG m').
 Proof.
   intros Hup r [|n] ? Hinv%ownG_spec rf [|k] Ef σ ???; try lia.

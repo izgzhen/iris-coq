@@ -2,26 +2,30 @@ Require Export modures.logic iris.resources.
 Require Import modures.cofe_solver.
 
 Module iProp.
-Definition F (Σ : iParam) (A B : cofeT) : cofeT := uPredC (resRA Σ A).
+Definition F (Σ : iParam) (A B : cofeT) : cofeT := uPredC (resRA Σ (laterC A)).
 Definition map {Σ : iParam} {A1 A2 B1 B2 : cofeT}
     (f : (A2 -n> A1) * (B1 -n> B2)) : F Σ A1 B1 -n> F Σ A2 B2 :=
-  uPredC_map (resRA_map (f.1)).
+  uPredC_map (resRA_map (laterC_map (f.1))).
 Definition result Σ : solution (F Σ).
 Proof.
   apply (solver.result _ (@map Σ)).
-  * by intros A B r n ?; rewrite /uPred_holds /= res_map_id.
-  * by intros A1 A2 A3 B1 B2 B3 f g f' g' P r n ?;
-      rewrite /= /uPred_holds /= res_map_compose.
-  * by intros A1 A2 B1 B2 n f f' [??] r;
-      apply upredC_map_ne, resRA_map_contractive.
+  * intros A B P. rewrite /map /= -{2}(uPred_map_id P). apply uPred_map_ext=>r {P} /=.
+    rewrite -{2}(res_map_id r). apply res_map_ext=>{r} r /=. by rewrite later_map_id.
+  * intros A1 A2 A3 B1 B2 B3 f g f' g' P. rewrite /map /=.
+    rewrite -uPred_map_compose. apply uPred_map_ext=>{P} r /=.
+    rewrite -res_map_compose. apply res_map_ext=>{r} r /=.
+    by rewrite -later_map_compose.
+  * intros A1 A2 B1 B2 n f f' [??] P.
+    by apply upredC_map_ne, resRA_map_ne, laterC_map_contractive.
 Qed.
 End iProp.
 
 (* Solution *)
 Definition iPreProp (Σ : iParam) : cofeT := iProp.result Σ.
-Notation res' Σ := (res Σ (iPreProp Σ)).
-Notation icmra' Σ := (icmra Σ (laterC (iPreProp Σ))).
-Definition iProp (Σ : iParam) : cofeT := uPredC (resRA Σ (iPreProp Σ)).
+Notation iRes Σ := (res Σ (laterC (iPreProp Σ))).
+Notation iResRA Σ := (resRA Σ (laterC (iPreProp Σ))).
+Notation iCMRA Σ := (icmra Σ (laterC (iPreProp Σ))).
+Definition iProp (Σ : iParam) : cofeT := uPredC (iResRA Σ).
 Definition iProp_unfold {Σ} : iProp Σ -n> iPreProp Σ := solution_fold _.
 Definition iProp_fold {Σ} : iPreProp Σ -n> iProp Σ := solution_unfold _.
 Lemma iProp_fold_unfold {Σ} (P : iProp Σ) : iProp_fold (iProp_unfold P) ≡ P.

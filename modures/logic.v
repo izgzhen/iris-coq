@@ -54,20 +54,31 @@ Instance uPred_holds_proper {M} (P : uPred M) n : Proper ((≡) ==> iff) (P n).
 Proof. by intros x1 x2 Hx; apply uPred_holds_ne, equiv_dist. Qed.
 
 (** functor *)
-Program Definition uPred_map {M1 M2 : cmraT} (f : M2 → M1)
-  `{!∀ n, Proper (dist n ==> dist n) f, !CMRAMonotone f}
-  (P : uPred M1) : uPred M2 := {| uPred_holds n x := P n (f x) |}.
-Next Obligation. by intros M1 M2 f ?? P y1 y2 n ? Hy; rewrite /= -Hy. Qed.
-Next Obligation. intros M1 M2 f _ _ P x; apply uPred_0. Qed.
+Program Definition uPred_map {M1 M2 : cmraT} (f : M2 -n> M1)
+  `{!CMRAMonotone f} (P : uPred M1) :
+  uPred M2 := {| uPred_holds n x := P n (f x) |}.
+Next Obligation. by intros M1 M2 f ? P y1 y2 n ? Hy; rewrite /= -Hy. Qed.
+Next Obligation. intros M1 M2 f _ P x; apply uPred_0. Qed.
 Next Obligation.
   naive_solver eauto using uPred_weaken, included_preserving, validN_preserving.
 Qed.
-Instance uPred_map_ne {M1 M2 : cmraT} (f : M2 → M1)
-  `{!∀ n, Proper (dist n ==> dist n) f, !CMRAMonotone f} :
+Instance uPred_map_ne {M1 M2 : cmraT} (f : M2 -n> M1)
+  `{!CMRAMonotone f} :
   Proper (dist n ==> dist n) (uPred_map f).
 Proof.
   by intros n x1 x2 Hx y n'; split; apply Hx; auto using validN_preserving.
 Qed.
+Lemma uPred_map_id {M : cmraT} (P : uPred M): uPred_map cid P ≡ P.
+Proof. by intros x n ?. Qed.
+Lemma uPred_map_compose {M1 M2 M3 : cmraT} (f : M1 -n> M2) (g : M2 -n> M3)
+      `{!CMRAMonotone f} `{!CMRAMonotone g}
+      (P : uPred M3):
+  uPred_map (g ◎ f) P ≡ uPred_map f (uPred_map g P).
+Proof. by intros x n Hx. Qed.
+Lemma uPred_map_ext {M1 M2 : cmraT} (f g : M1 -n> M2)
+      `{!CMRAMonotone f} `{!CMRAMonotone g}:
+  (∀ x, f x ≡ g x) -> ∀ x, uPred_map f x ≡ uPred_map g x.
+Proof. move=> H x P n Hx /=. by rewrite /uPred_holds /= H. Qed.
 Definition uPredC_map {M1 M2 : cmraT} (f : M2 -n> M1) `{!CMRAMonotone f} :
   uPredC M1 -n> uPredC M2 := CofeMor (uPred_map f : uPredC M1 → uPredC M2).
 Lemma upredC_map_ne {M1 M2 : cmraT} (f g : M2 -n> M1)
