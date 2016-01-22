@@ -105,6 +105,13 @@ Class CMRAMonotone {A B : cmraT} (f : A → B) := {
   includedN_preserving n x y : x ≼{n} y → f x ≼{n} f y;
   validN_preserving n x : ✓{n} x → ✓{n} (f x)
 }.
+Instance compose_cmra_monotone {A B C : cmraT} (f : A -n> B) (g : B -n> C) :
+  CMRAMonotone f → CMRAMonotone g → CMRAMonotone (g ◎ f).
+Proof.
+  split.
+  - move=> n x y Hxy /=. eapply includedN_preserving, includedN_preserving; done.
+  - move=> n x Hx /=. eapply validN_preserving, validN_preserving; done.
+Qed.
 
 (** * Updates *)
 Definition cmra_updateP {A : cmraT} (x : A) (P : A → Prop) := ∀ z n,

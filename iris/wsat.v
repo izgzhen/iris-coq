@@ -5,7 +5,7 @@ Local Hint Extern 1 (✓{_} (gst _)) => apply gst_validN.
 Local Hint Extern 1 (✓{_} (wld _)) => apply wld_validN.
 
 Record wsat_pre {Σ} (n : nat) (E : coPset)
-    (σ : istate Σ) (rs : gmap positive (res' Σ)) (r : res' Σ) := {
+    (σ : istate Σ) (rs : gmap positive (iRes Σ)) (r : iRes Σ) := {
   wsat_pre_valid : ✓{S n} r;
   wsat_pre_state : pst r ≡ Excl σ;
   wsat_pre_dom i : is_Some (rs !! i) → i ∈ E ∧ is_Some (wld r !! i);
@@ -19,7 +19,7 @@ Arguments wsat_pre_state {_ _ _ _ _ _} _.
 Arguments wsat_pre_dom {_ _ _ _ _ _} _ _ _.
 Arguments wsat_pre_wld {_ _ _ _ _ _} _ _ _ _ _.
 
-Definition wsat {Σ} (n : nat) (E : coPset) (σ : istate Σ) (r : res' Σ) : Prop :=
+Definition wsat {Σ} (n : nat) (E : coPset) (σ : istate Σ) (r : iRes Σ) : Prop :=
   match n with 0 => True | S n => ∃ rs, wsat_pre n E σ rs (r ⋅ big_opM rs) end.
 Instance: Params (@wsat) 4.
 Arguments wsat : simpl never.
@@ -27,8 +27,8 @@ Arguments wsat : simpl never.
 Section wsat.
 Context {Σ : iParam}.
 Implicit Types σ : istate Σ.
-Implicit Types r : res' Σ.
-Implicit Types rs : gmap positive (res' Σ).
+Implicit Types r : iRes Σ.
+Implicit Types rs : gmap positive (iRes Σ).
 Implicit Types P : iProp Σ.
 
 Instance wsat_ne' : Proper (dist n ==> impl) (wsat (Σ:=Σ) n E σ).
@@ -120,7 +120,7 @@ Proof.
   split; [done|exists rs].
   by constructor; split_ands'; try (rewrite /= -(associative _) Hpst').
 Qed.
-Lemma wsat_update_gst n E σ r rf m1 (P : icmra' Σ → Prop) :
+Lemma wsat_update_gst n E σ r rf m1 (P : iGst Σ → Prop) :
   m1 ≼{S n} gst r → m1 ⇝: P →
   wsat (S n) E σ (r ⋅ rf) → ∃ m2, wsat (S n) E σ (update_gst m2 r ⋅ rf) ∧ P m2.
 Proof.

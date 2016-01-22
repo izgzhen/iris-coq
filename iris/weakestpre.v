@@ -7,8 +7,8 @@ Local Hint Extern 10 (✓{_} _) =>
   repeat match goal with H : wsat _ _ _ _ |- _ => apply wsat_valid in H end;
   solve_validN.
 
-Record wp_go {Σ} (E : coPset) (Q Qfork : iexpr Σ → nat → res' Σ → Prop)
-    (k : nat) (rf : res' Σ) (e1 : iexpr Σ) (σ1 : istate Σ) := {
+Record wp_go {Σ} (E : coPset) (Q Qfork : iexpr Σ → nat → iRes Σ → Prop)
+    (k : nat) (rf : iRes Σ) (e1 : iexpr Σ) (σ1 : istate Σ) := {
   wf_safe : reducible e1 σ1;
   wp_step e2 σ2 ef :
     prim_step e1 σ1 e2 σ2 ef →
@@ -18,7 +18,7 @@ Record wp_go {Σ} (E : coPset) (Q Qfork : iexpr Σ → nat → res' Σ → Prop)
       ∀ e', ef = Some e' → Qfork e' k r2'
 }.
 CoInductive wp_pre {Σ} (E : coPset)
-     (Q : ival Σ → iProp Σ) : iexpr Σ → nat → res' Σ → Prop :=
+     (Q : ival Σ → iProp Σ) : iexpr Σ → nat → iRes Σ → Prop :=
   | wp_pre_0 e r : wp_pre E Q e 0 r
   | wp_pre_value n r v : Q v n r → wp_pre E Q (of_val v) n r
   | wp_pre_step n r1 e1 :

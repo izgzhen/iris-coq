@@ -1,9 +1,9 @@
 Require Export modures.fin_maps modures.agree modures.excl iris.parameter.
 
 Record res (Σ : iParam) (A : cofeT) := Res {
-  wld : mapRA positive (agreeRA (laterC A));
+  wld : mapRA positive (agreeRA A);
   pst : exclRA (istateC Σ);
-  gst : icmra Σ (laterC A);
+  gst : icmra Σ A;
 }.
 Add Printing Constructor res.
 Arguments Res {_ _} _ _ _.
@@ -137,7 +137,7 @@ Canonical Structure resRA : cmraT :=
 
 Definition update_pst (σ : istate Σ) (r : res Σ A) : res Σ A :=
   Res (wld r) (Excl σ) (gst r).
-Definition update_gst (m : icmra Σ (laterC A)) (r : res Σ A) : res Σ A :=
+Definition update_gst (m : icmra Σ A) (r : res Σ A) : res Σ A :=
   Res (wld r) (pst r) m.
 
 Lemma wld_validN n r : ✓{n} r → ✓{n} (wld r).
@@ -167,9 +167,9 @@ End res.
 Arguments resRA : clear implicits.
 
 Definition res_map {Σ A B} (f : A -n> B) (r : res Σ A) : res Σ B :=
-  Res (agree_map (later_map f) <$> (wld r))
+  Res (agree_map f <$> (wld r))
       (pst r)
-      (icmra_map Σ (laterC_map f) (gst r)).
+      (icmra_map Σ f (gst r)).
 Instance res_map_ne Σ (A B : cofeT) (f : A -n> B) :
   (∀ n, Proper (dist n ==> dist n) f) →
   ∀ n, Proper (dist n ==> dist n) (@res_map Σ _ _ f).
@@ -178,20 +178,22 @@ Lemma res_map_id {Σ A} (r : res Σ A) : res_map cid r ≡ r.
 Proof.
   constructor; simpl; [|done|].
   * rewrite -{2}(map_fmap_id (wld r)); apply map_fmap_setoid_ext=> i y ? /=.
-    rewrite -{2}(agree_map_id y); apply agree_map_ext=> y' /=.
-    by rewrite later_map_id.
-  * rewrite -{2}(icmra_map_id Σ (gst r)); apply icmra_map_ext=> m /=.
-    by rewrite later_map_id.
+    by rewrite -{2}(agree_map_id y); apply agree_map_ext=> y' /=.
+  * by rewrite -{2}(icmra_map_id Σ (gst r)); apply icmra_map_ext=> m /=.
 Qed.
 Lemma res_map_compose {Σ A B C} (f : A -n> B) (g : B -n> C) (r : res Σ A) :
   res_map (g ◎ f) r ≡ res_map g (res_map f r).
 Proof.
   constructor; simpl; [|done|].
   * rewrite -map_fmap_compose; apply map_fmap_setoid_ext=> i y _ /=.
-    rewrite -agree_map_compose; apply agree_map_ext=> y' /=.
-    by rewrite later_map_compose.
-  * rewrite -icmra_map_compose; apply icmra_map_ext=> m /=.
-    by rewrite later_map_compose.
+    by rewrite -agree_map_compose; apply agree_map_ext=> y' /=.
+  * by rewrite -icmra_map_compose; apply icmra_map_ext=> m /=.
+Qed.
+Lemma res_map_ext {Σ A B} (f g : A -n> B) :
+  (∀ r, f r ≡ g r) -> ∀ r : res Σ A, res_map f r ≡ res_map g r.
+Proof.
+  move=>H r. split; simpl;
+    [apply map_fmap_setoid_ext; intros; apply agree_map_ext | | apply icmra_map_ext]; done.
 Qed.
 Definition resRA_map {Σ A B} (f : A -n> B) : resRA Σ A -n> resRA Σ B :=
   CofeMor (res_map f : resRA Σ A → resRA Σ B).
@@ -203,10 +205,10 @@ Proof.
       intros (?&?&?); split_ands'; simpl; try apply includedN_preserving.
   * by intros n r (?&?&?); split_ands'; simpl; try apply validN_preserving.
 Qed.
-Instance resRA_map_contractive {Σ A B} : Contractive (@resRA_map Σ A B).
+Lemma resRA_map_ne {Σ A B} (f g : A -n> B) n :
+  f ={n}= g → resRA_map (Σ := Σ) f ={n}= resRA_map g.
 Proof.
-  intros n f g ? r; constructor; simpl; [|done|].
-  * by apply (mapRA_map_ne _ (agreeRA_map (laterC_map f))
-      (agreeRA_map (laterC_map g))), agreeRA_map_ne, laterC_map_contractive.
-  * by apply icmra_map_ne, laterC_map_contractive.
+  intros ? r. split; simpl;
+    [apply (mapRA_map_ne _ (agreeRA_map f) (agreeRA_map g)), agreeRA_map_ne
+     | | apply icmra_map_ne]; done.
 Qed.
