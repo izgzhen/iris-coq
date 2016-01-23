@@ -19,7 +19,7 @@ Implicit Types P Q : iProp Σ.
 Implicit Types m : iGst Σ.
 Import uPred.
 
-Lemma vs_alt E1 E2 P Q : P ⊑ pvs E1 E2 Q → P >{E1,E2}> Q.
+Lemma vs_alt E1 E2 P Q : (P ⊑ pvs E1 E2 Q) → P >{E1,E2}> Q.
 Proof.
   intros; rewrite -{1}always_const; apply always_intro, impl_intro_l.
   by rewrite always_const (right_id _ _).
