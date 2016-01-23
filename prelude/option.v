@@ -306,6 +306,10 @@ Tactic Notation "simpl_option" "by" tactic3(tac) :=
   | _ => rewrite decide_False by tac
   | _ => rewrite option_guard_True by tac
   | _ => rewrite option_guard_False by tac
+  | H : context [None ∪ _] |- _ => rewrite (left_id_L None (∪)) in H
+  | H : context [_ ∪ None] |- _ => rewrite (right_id_L None (∪)) in H
+  | |- context [None ∪ _] => rewrite (left_id_L None (∪))
+  | |- context [_ ∪ None] => rewrite (right_id_L None (∪))
   end.
 Tactic Notation "simplify_option_equality" "by" tactic3(tac) :=
   repeat match goal with
