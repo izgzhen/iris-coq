@@ -63,11 +63,12 @@ Proof.
   destruct n; [intros; apply cmra_valid_0|intros [rs ?]].
   eapply cmra_valid_op_l, wsat_pre_valid; eauto.
 Qed.
-Lemma wsat_init k E σ : wsat (S k) E σ (Res ∅ (Excl σ) ∅).
+Lemma wsat_init k E σ m : ✓{S k} m → wsat (S k) E σ (Res ∅ (Excl σ) m).
 Proof.
-  exists ∅; constructor; auto.
+  intros Hv. exists ∅; constructor; auto.
   * rewrite big_opM_empty right_id.
-    split_ands'; try (apply cmra_valid_validN, ra_empty_valid); constructor.
+    split_ands'; try (apply cmra_valid_validN, ra_empty_valid);
+      constructor || apply Hv.
   * by intros i; rewrite lookup_empty=>-[??].
   * intros i P ?; rewrite /= (left_id _ _) lookup_empty; inversion_clear 1.
 Qed.

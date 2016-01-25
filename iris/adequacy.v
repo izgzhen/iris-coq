@@ -63,46 +63,58 @@ Proof.
   apply Hht with r1 (k + n); eauto using @ra_included_unit.
   by destruct (k + n).
 Qed.
-Theorem ht_adequacy_result E φ e v t2 σ1 σ2 :
-  {{ ownP σ1 }} e @ E {{ λ v', ■ φ v' }} →
+Lemma ht_adequacy_own Q e1 t2 σ1 m σ2 :
+  ✓m →
+  {{ ownP σ1 ★ ownG m }} e1 @ coPset_all {{ Q }} →
+  rtc step ([e1],σ1) (t2,σ2) →
+  ∃ rs2 Qs', wptp 3 t2 ((λ v, pvs coPset_all coPset_all (Q v)) :: Qs') rs2 ∧
+             wsat 3 coPset_all σ2 (big_op rs2).
+Proof.
+  intros Hv ? [k ?]%rtc_nsteps. eapply ht_adequacy_steps with (r1 := (Res ∅ (Excl σ1) m)); eauto; [|].
+  - by rewrite Nat.add_comm; apply wsat_init, cmra_valid_validN.
+  - exists (Res ∅ (Excl σ1) ∅), (Res ∅ ∅ m). split_ands.
+    + by rewrite /op /cmra_op /= /res_op /= !ra_empty_l ra_empty_r.
+    + by rewrite /uPred_holds /=.
+    + by apply ownG_spec.
+Qed.
+Theorem ht_adequacy_result E φ e v t2 σ1 m σ2 :
+  ✓m →
+  {{ ownP σ1 ★ ownG m }} e @ E {{ λ v', ■ φ v' }} →
   rtc step ([e], σ1) (of_val v :: t2, σ2) →
   φ v.
 Proof.
-  intros ? [k ?]%rtc_nsteps.
-  destruct (ht_adequacy_steps (ownP σ1) (λ v', ■ φ v')%I k 2 e
-    (of_val v :: t2) σ1 σ2 (Res ∅ (Excl σ1) ∅)) as (rs2&Qs&Hwptp&?); auto.
+  intros Hv ? Hs.
+  destruct (ht_adequacy_own (λ v', ■ φ v')%I e (of_val v :: t2) σ1 m σ2)
+             as (rs2&Qs&Hwptp&?); auto.
   { by rewrite -(ht_mask_weaken E coPset_all). }
-  { rewrite Nat.add_comm; apply wsat_init. }
-  { by rewrite /uPred_holds /=. }
   inversion Hwptp as [|?? r ?? rs Hwp _]; clear Hwptp; subst.
-  apply wp_value_inv in Hwp; destruct (Hwp (big_op rs) 2 ∅ σ2) as [r' []]; auto.
+  apply wp_value_inv in Hwp; destruct (Hwp (big_op rs) 3 ∅ σ2) as [r' []]; auto.
   by rewrite right_id_L.
 Qed.
-Lemma ht_adequacy_reducible E Q e1 e2 t2 σ1 σ2 :
-  {{ ownP σ1 }} e1 @ E {{ Q }} →
+Lemma ht_adequacy_reducible E Q e1 e2 t2 σ1 m σ2 :
+  ✓m →
+  {{ ownP σ1 ★ ownG m }} e1 @ E {{ Q }} →
   rtc step ([e1], σ1) (t2, σ2) →
   e2 ∈ t2 → to_val e2 = None → reducible e2 σ2.
 Proof.
-  intros ? [k ?]%rtc_nsteps [i ?]%elem_of_list_lookup He.
-  destruct (ht_adequacy_steps (ownP σ1) Q k 3 e1
-    t2 σ1 σ2 (Res ∅ (Excl σ1) ∅)) as (rs2&Qs&?&?); auto.
+  intros Hv ? Hs [i ?]%elem_of_list_lookup He.
+  destruct (ht_adequacy_own Q e1 t2 σ1 m σ2) as (rs2&Qs&?&?); auto.
   { by rewrite -(ht_mask_weaken E coPset_all). }
-  { rewrite Nat.add_comm; apply wsat_init. }
-  { by rewrite /uPred_holds /=. }
   destruct (Forall3_lookup_l (λ e Q r, wp coPset_all e Q 3 r) t2
     (pvs coPset_all coPset_all ∘ Q :: Qs) rs2 i e2) as (Q'&r2&?&?&Hwp); auto.
   destruct (wp_step_inv coPset_all ∅ Q' e2 2 3 σ2 r2 (big_op (delete i rs2)));
     rewrite ?right_id_L ?big_op_delete; auto.
 Qed.
-Theorem ht_adequacy_safe E Q e1 t2 σ1 σ2 :
-  {{ ownP σ1 }} e1 @ E {{ Q }} →
+Theorem ht_adequacy_safe E Q e1 t2 σ1 m σ2 :
+  ✓m →
+  {{ ownP σ1 ★ ownG m }} e1 @ E {{ Q }} →
   rtc step ([e1], σ1) (t2, σ2) →
   Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ t3 σ3, step (t2, σ2) (t3, σ3).
 Proof.
   intros.
   destruct (decide (Forall (λ e, is_Some (to_val e)) t2)) as [|Ht2]; [by left|].
   apply (not_Forall_Exists _), Exists_exists in Ht2; destruct Ht2 as (e2&?&He2).
-  destruct (ht_adequacy_reducible E Q e1 e2 t2 σ1 σ2) as (e3&σ3&ef&?);
+  destruct (ht_adequacy_reducible E Q e1 e2 t2 σ1 m σ2) as (e3&σ3&ef&?);
     rewrite ?eq_None_not_Some; auto.
   destruct (elem_of_list_split t2 e2) as (t2'&t2''&->); auto.
   right; exists (t2' ++ e3 :: t2'' ++ option_list ef), σ3; econstructor; eauto.
