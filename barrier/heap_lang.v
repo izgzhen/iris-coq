@@ -58,18 +58,21 @@ Definition Lam (e: {bind expr}) := Rec (e.[up ids]).
 Definition Let' (e1: expr) (e2: {bind expr}) := App (Lam e2) e1.
 Definition Seq (e1 e2: expr) := Let' e1 (e2.[up ids]).
 
-Definition LitUnit := Lit tt.
-Definition LitTrue := Lit true.
-Definition LitFalse := Lit false.
-
 Inductive value :=
 | RecV (e : {bind 2 of expr})
-| LitV (T : Type) (t : T)  (* arbitrary Coq values become literal values *)
+| LitV {T : Type} (t : T)  (* arbitrary Coq values become literal values *)
 | PairV (v1 v2 : value)
 | InjLV (v : value)
 | InjRV (v : value)
 | LocV (l : loc)
 .
+
+Definition LitUnit := Lit tt.
+Definition LitVUnit := LitV tt.
+Definition LitTrue := Lit true.
+Definition LitVTrue := LitV true.
+Definition LitFalse := Lit false.
+Definition LitVFalse := LitV false.
 
 Fixpoint v2e (v : value) : expr :=
   match v with
@@ -84,7 +87,7 @@ Fixpoint v2e (v : value) : expr :=
 Fixpoint e2v (e : expr) : option value :=
   match e with
   | Rec e => Some (RecV e)
-  | Lit T t => Some (LitV T t)
+  | Lit _ t => Some (LitV t)
   | Pair e1 e2 => v1 ← e2v e1;
                   v2 ← e2v e2;
                   Some (PairV v1 v2)

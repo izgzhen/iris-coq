@@ -63,3 +63,4 @@ iris/hoare.v
 iris/parameter.v
 barrier/heap_lang.v
 barrier/parameter.v
+barrier/lifting.v
