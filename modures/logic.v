@@ -454,6 +454,18 @@ Proof.
   intros H; apply impl_intro_l. by rewrite -H and_elim_l.
 Qed.
 
+Lemma const_intro_l φ Q R :
+  φ → (■φ ∧ Q) ⊑ R → Q ⊑ R.
+Proof.
+  intros ? <-. apply and_intro; last done.
+  by apply const_intro.
+Qed.
+Lemma const_intro_r φ Q R : φ → (Q ∧ ■φ) ⊑ R → Q ⊑ R.
+Proof.
+  (* FIXME RJ: Why does this not work? rewrite (commutative uPred_and Q (■φ)%I). *)
+  intros ? <-. apply and_intro; first done.
+  by apply const_intro.
+Qed.
 Lemma const_elim_l φ Q R : (φ → Q ⊑ R) → (■ φ ∧ Q) ⊑ R.
 Proof. intros; apply const_elim with φ; eauto. Qed.
 Lemma const_elim_r φ Q R : (φ → Q ⊑ R) → (Q ∧ ■ φ) ⊑ R.

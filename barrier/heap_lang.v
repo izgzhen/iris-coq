@@ -280,22 +280,20 @@ Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
     prim_step (Cas (Loc l) e1 e2) σ LitTrue (<[l:=v2]>σ) None
 .
 
-Definition reducible e: Prop :=
-  exists σ e' σ' ef, prim_step e σ e' σ' ef.
+Definition reducible e σ : Prop :=
+  ∃ e' σ' ef, prim_step e σ e' σ' ef.
 
-Lemma reducible_not_value e:
-  reducible e -> e2v e = None.
+Lemma reducible_not_value e σ :
+  reducible e σ → e2v e = None.
 Proof.
-  intros (σ' & e'' & σ'' & ef & Hstep). destruct Hstep; simpl in *; reflexivity.
+  intros (e' & σ' & ef & Hstep). destruct Hstep; simpl in *; reflexivity.
 Qed.
 
-Definition stuck (e : expr) : Prop :=
-  forall K e',
-    e = fill K e' ->
-    ~reducible e'.
+Definition stuck (e : expr) σ : Prop :=
+  ∀ K e', e = fill K e' → ~reducible e' σ.
 
-Lemma values_stuck v :
-  stuck (v2e v).
+Lemma values_stuck v σ :
+  stuck (v2e v) σ.
 Proof.
   intros ?? Heq.
   edestruct (fill_value K) as [v' Hv'].
@@ -309,9 +307,9 @@ Section step_by_value.
      expression has a non-value e in the hole, then K is a left
      sub-context of K' - in other words, e also contains the reducible
      expression *)
-Lemma step_by_value {K K' e e'} :
+Lemma step_by_value {K K' e e' σ} :
   fill K e = fill K' e' ->
-  reducible e' ->
+  reducible e' σ ->
   e2v e = None ->
   exists K'', K' = comp_ctx K K''.
 Proof.
@@ -324,7 +322,7 @@ Proof.
                       by erewrite ?v2v).
   Ltac bad_red   Hfill e' Hred := exfalso; destruct e';
       try discriminate Hfill; [];
-      case: Hfill; intros; subst; destruct Hred as (σ' & e'' & σ'' & ef & Hstep);
+      case: Hfill; intros; subst; destruct Hred as (e'' & σ'' & ef & Hstep);
       inversion Hstep; done || (clear Hstep; subst;
       eapply fill_not_value2; last (
         try match goal with [ H : _ = fill _ _ |- _ ] => erewrite <-H end; simpl;
@@ -451,14 +449,14 @@ Section Language.
   |}.
   Next Obligation.
     intros e1 σ1 e2 σ2 ef (K & e1' & e2' & He1 & He2 & Hstep). subst e1 e2.
-    eapply fill_not_value. eapply reducible_not_value. do 4 eexists; eassumption.
+    eapply fill_not_value. eapply reducible_not_value. do 3 eexists; eassumption.
   Qed.
   Next Obligation.
     intros ? ? ? ? ? Hatomic (K & e1' & e2' & Heq1 & Heq2 & Hstep).
     subst. move: (Hatomic). rewrite (atomic_fill e1' K).
     - rewrite !fill_empty. eauto using atomic_step.
     - assumption.
-    - clear Hatomic. eapply reducible_not_value. do 4 eexists; eassumption.
+    - clear Hatomic. eapply reducible_not_value. do 3 eexists; eassumption.
   Qed.
 
   (** We can have bind with arbitrary evaluation contexts **)
@@ -470,8 +468,8 @@ Section Language.
       exists (comp_ctx K K'), e1', e2'. rewrite -!fill_comp Heq1 Heq2.
       split; last split; reflexivity || assumption.
     - intros ? ? ? ? ? Hnval (K'' & e1'' & e2'' & Heq1 & Heq2 & Hstep).
-      destruct (step_by_value Heq1) as [K' HeqK].
-      + do 4 eexists. eassumption.
+      destruct (step_by_value (σ:=σ1) Heq1) as [K' HeqK].
+      + do 3 eexists. eassumption.
       + assumption.
       + subst e2 K''. rewrite -fill_comp in Heq1. apply fill_inj_r in Heq1.
         subst e1'. exists (fill K' e2''). split; first by rewrite -fill_comp.
@@ -479,15 +477,15 @@ Section Language.
   Qed.
 
   Lemma prim_ectx_step e1 σ1 e2 σ2 ef :
-    reducible e1 →
+    reducible e1 σ1 →
     ectx_step e1 σ1 e2 σ2 ef →
     prim_step e1 σ1 e2 σ2 ef.
   Proof.
     intros Hred (K' & e1' & e2' & Heq1 & Heq2 & Hstep).
-    destruct (@step_by_value K' EmptyCtx e1' e1) as [K'' [HK' HK'']%comp_empty].
+    destruct (@step_by_value K' EmptyCtx e1' e1 σ1) as [K'' [HK' HK'']%comp_empty].
     - by rewrite fill_empty.
     - done.
-    - apply reducible_not_value. do 4 eexists; eassumption.
+    - eapply reducible_not_value. do 3 eexists; eassumption.
     - subst K' K'' e1 e2. by rewrite !fill_empty.
   Qed.
 
