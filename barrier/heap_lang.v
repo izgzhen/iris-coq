@@ -1,5 +1,5 @@
 Require Import Autosubst.Autosubst.
-Require Import prelude.option prelude.gmap iris.parameter.
+Require Import prelude.option prelude.gmap iris.language.
 
 (** Some tactics useful when dealing with equality of sigma-like types: existT T0 t0 = existT T1 t1.
     They all assume such an equality is the first thing on the "stack" (goal). *)
@@ -55,6 +55,9 @@ Instance Subst_expr : Subst expr. derive. Defined.
 Instance SubstLemmas_expr : SubstLemmas expr. derive. Qed.
 
 Definition Lam (e: {bind expr}) := Rec (e.[up ids]).
+Definition Let' (e1: expr) (e2: {bind expr}) := App (Lam e2) e1.
+Definition Seq (e1 e2: expr) := Let' e1 (e2.[up ids]).
+
 Definition LitUnit := Lit tt.
 Definition LitTrue := Lit true.
 Definition LitFalse := Lit false.
@@ -233,6 +236,14 @@ Proof.
   intros Hnval Hval. erewrite fill_not_value in Hval by assumption. discriminate.
 Qed.
 
+Lemma comp_empty K K' :
+  EmptyCtx = comp_ctx K K' →
+  K = EmptyCtx ∧ K' = EmptyCtx.
+Proof.
+  destruct K; try discriminate.
+  destruct K'; try discriminate.
+  done.
+Qed.
 
 (** The stepping relation *)
 Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
@@ -252,7 +263,7 @@ Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
     prim_step (Case (InjR e0) e1 e2) σ (e2.[e0/]) σ None
 | ForkS e σ:
     prim_step (Fork e) σ LitUnit σ (Some e)
-| RefS e v σ l (Hv : e2v e = Some v) (Hfresh : σ !! l = None):
+| AllocS e v σ l (Hv : e2v e = Some v) (Hfresh : σ !! l = None):
     prim_step (Alloc e) σ (Loc l) (<[l:=v]>σ) None
 | LoadS l v σ (Hlookup : σ !! l = Some v):
     prim_step (Load (Loc l)) σ (v2e v) σ None
@@ -426,7 +437,7 @@ Section Language.
     exists K e1' e2', e1 = fill K e1' /\ e2 = fill K e2' /\
                       prim_step e1' σ1 e2' σ2 ef.
 
-  Program Instance heap_lang : Language expr value state := {|
+  Global Program Instance heap_lang : Language expr value state := {|
     of_val := v2e;
     to_val := e2v;
     language.atomic := atomic;
@@ -464,10 +475,17 @@ Section Language.
         do 3 eexists. split; last split; eassumption || reflexivity.
   Qed.
 
-End Language.
+  Lemma prim_ectx_step e1 σ1 e2 σ2 ef :
+    reducible e1 →
+    ectx_step e1 σ1 e2 σ2 ef →
+    prim_step e1 σ1 e2 σ2 ef.
+  Proof.
+    intros Hred (K' & e1' & e2' & Heq1 & Heq2 & Hstep).
+    destruct (@step_by_value K' EmptyCtx e1' e1) as [K'' [HK' HK'']%comp_empty].
+    - by rewrite fill_empty.
+    - done.
+    - apply reducible_not_value. do 4 eexists; eassumption.
+    - subst K' K'' e1 e2. by rewrite !fill_empty.
+  Qed.
 
-(* This is just to demonstrate that we can instantiate IParam. *)
-Module IParam.
-  Definition Σ := IParamConst heap_lang unitRA.
-  Print Assumptions Σ.
-End IParam.
+End Language.

@@ -177,10 +177,18 @@ Proof.
 Qed.
 
 (* Derived rules *)
+Opaque uPred_holds.
 Import uPred.
 Global Instance wp_mono' E e :
   Proper (pointwise_relation _ (⊑) ==> (⊑)) (wp E e).
 Proof. by intros Q Q' ?; apply wp_mono. Qed.
+Lemma wp_value' E Q e v : 
+  to_val e = Some v →
+  Q v ⊑ wp E e Q.
+Proof.
+  intros Hv. apply of_to_val in Hv.
+  rewrite -Hv. by apply wp_value.
+Qed.
 Lemma wp_frame_l E e Q R : (R ★ wp E e Q) ⊑ wp E e (λ v, R ★ Q v).
 Proof. setoid_rewrite (commutative _ R); apply wp_frame_r. Qed.
 Lemma wp_frame_later_l E e Q R :
