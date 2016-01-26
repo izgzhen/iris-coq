@@ -21,8 +21,8 @@ Lemma wp_lift_step E1 E2 (φ : expr → state → Prop) Q e1 σ1 :
     pvs E1 E2 (wp (Σ:=Σ) E2 e2 Q))
   ⊑ wp (Σ:=Σ) E2 e1 Q.
 Proof.
-  (* RJ FIXME WTF the bound names of wp_lift_step *changed*?!?? *)
   intros ? He Hsafe Hstep.
+  (* RJ: working around https://coq.inria.fr/bugs/show_bug.cgi?id=4536 *)
   etransitivity; last eapply wp_lift_step with (σ2 := σ1)
     (φ0 := λ e' σ' ef, ef = None ∧ φ e' σ'); last first.
   - intros e2 σ2 ef Hstep'%prim_ectx_step; last done.
