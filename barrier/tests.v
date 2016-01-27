@@ -40,7 +40,7 @@ Module LiftingTests.
     rewrite -(wp_bind _ _ (LetCtx EmptyCtx e2)). rewrite -wp_mono.
     { eapply wp_alloc; done. }
     move=>v; apply exist_elim=>l. apply const_elim_l; move=>[-> _] {v}.
-    rewrite (later_intro (ownP _)); apply wp_lam. asimpl.
+    rewrite -wp_lam -later_intro. asimpl.
     rewrite -(wp_bind _ _ (SeqCtx (StoreRCtx (LocV _)
                                    (PlusLCtx EmptyCtx _)) (Load (Loc _)))).
     rewrite -wp_mono.
@@ -52,7 +52,7 @@ Module LiftingTests.
     rewrite -wp_mono.
     { eapply wp_store; first reflexivity. apply: lookup_insert. }
     move=>v; apply const_elim_l; move=>-> {v}.
-    rewrite (later_intro (ownP _)); apply wp_lam. asimpl.
+    rewrite -wp_lam -later_intro. asimpl.
     rewrite -wp_mono.
     { eapply wp_load. apply: lookup_insert. }
     move=>v; apply const_elim_l; move=>-> {v}.

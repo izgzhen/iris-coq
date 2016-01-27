@@ -164,11 +164,9 @@ Proof.
     rewrite right_id. done.
 Qed.
 
-Lemma wp_rec' E e v P Q :
-  P ⊑ wp (Σ:=Σ) E (e.[Rec e, v2e v /]) Q →
-  ▷P ⊑ wp (Σ:=Σ) E (App (Rec e) (v2e v)) Q.
+Lemma wp_rec' E e v Q :
+  ▷wp (Σ:=Σ) E (e.[Rec e, v2e v /]) Q ⊑ wp (Σ:=Σ) E (App (Rec e) (v2e v)) Q.
 Proof.
-  intros HP.
   etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = e.[Rec e, v2e v /]); last first.
   - intros ? ? ? ? Hstep. inversion_clear Hstep. done.
@@ -178,11 +176,10 @@ Proof.
     apply const_elim_l=>->. done.
 Qed.
 
-Lemma wp_lam E e v P Q :
-  P ⊑ wp (Σ:=Σ) E (e.[v2e v/]) Q →
-  ▷P ⊑ wp (Σ:=Σ) E (App (Lam e) (v2e v)) Q.
+Lemma wp_lam E e v Q :
+  ▷wp (Σ:=Σ) E (e.[v2e v/]) Q ⊑ wp (Σ:=Σ) E (App (Lam e) (v2e v)) Q.
 Proof.
-  intros HP. rewrite -wp_rec'; first (intros; apply later_mono; eassumption).
+  rewrite -wp_rec'.
   (* RJ: This pulls in functional extensionality. If that bothers us, we have
      to talk to the Autosubst guys. *)
   by asimpl.
