@@ -1,25 +1,6 @@
 Require Export Autosubst.Autosubst.
 Require Import prelude.option prelude.gmap iris.language.
 
-(** Some tactics useful when dealing with equality of sigma-like types:
-    existT T0 t0 = existT T1 t1.
-    They all assume such an equality is the first thing on the "stack" (goal). *)
-Ltac case_depeq1 := let Heq := fresh "Heq" in
-  case=>_ /EqdepFacts.eq_sigT_sig_eq=>Heq;
-  destruct Heq as (->,<-).
-Ltac case_depeq2 := let Heq := fresh "Heq" in
-  case=>_ _ /EqdepFacts.eq_sigT_sig_eq=>Heq;
-  destruct Heq as (->,Heq);
-  case:Heq=>_ /EqdepFacts.eq_sigT_sig_eq=>Heq;
-  destruct Heq as (->,<-).
-Ltac case_depeq3 := let Heq := fresh "Heq" in
-  case=>_ _ _ /EqdepFacts.eq_sigT_sig_eq=>Heq;
-  destruct Heq as (->,Heq);
-  case:Heq=>_ _ /EqdepFacts.eq_sigT_sig_eq=>Heq;
-  destruct Heq as (->,Heq);
-  case:Heq=>_ /EqdepFacts.eq_sigT_sig_eq=>Heq;
-  destruct Heq as (->,<-).
-
 (** Expressions and values. *)
 Definition loc := positive. (* Really, any countable type. *)
 
@@ -28,10 +9,11 @@ Inductive expr :=
 | Var (x : var)
 | Rec (e : {bind 2 of expr}) (* These are recursive lambdas. The *inner* binder is the recursive call! *)
 | App (e1 e2 : expr)
-(* Embedding of Coq values and operations *)
-| Lit {T : Type} (t: T)  (* arbitrary Coq values become literals *)
-| Op1  {T1 To : Type} (f : T1 → To) (e1 : expr)
-| Op2  {T1 T2 To : Type} (f : T1 → T2 → To) (e1 : expr) (e2 : expr)
+(* Natural numbers *) (* RJ TODO: Either add minus and le, or replace Plus by a NatCase : nat -> () + nat *)
+| LitNat (n : nat)
+| Plus (e1 e2 : expr)
+(* Unit *)
+| LitUnit
 (* Products *)
 | Pair (e1 e2 : expr)
 | Fst (e : expr)
@@ -55,30 +37,32 @@ Instance Rename_expr : Rename expr. derive. Defined.
 Instance Subst_expr : Subst expr. derive. Defined.
 Instance SubstLemmas_expr : SubstLemmas expr. derive. Qed.
 
-Definition Lam (e: {bind expr}) := Rec (e.[ren(+1)]).
-Definition Let' (e1: expr) (e2: {bind expr}) := App (Lam e2) e1.
-Definition Seq (e1 e2: expr) := Let' e1 (e2.[ren(+1)]).
+Definition Lam (e : {bind expr}) := Rec (e.[ren(+1)]).
+Definition Let (e1 : expr) (e2: {bind expr}) := App (Lam e2) e1.
+Definition Seq (e1 e2 : expr) := Let e1 (e2.[ren(+1)]).
 
 Inductive value :=
 | RecV (e : {bind 2 of expr})
-| LitV {T : Type} (t : T)  (* arbitrary Coq values become literal values *)
+| LitNatV (n : nat) (* These are recursive lambdas. The *inner* binder is the recursive call! *)
+| LitUnitV
 | PairV (v1 v2 : value)
 | InjLV (v : value)
 | InjRV (v : value)
 | LocV (l : loc)
 .
 
-Definition LitUnit := Lit tt.
-Definition LitVUnit := LitV tt.
-Definition LitTrue := Lit true.
-Definition LitVTrue := LitV true.
-Definition LitFalse := Lit false.
-Definition LitVFalse := LitV false.
+Definition LamV (e : {bind expr}) := RecV (e.[ren(+1)]).
+
+Definition LitTrue := InjL LitUnit.
+Definition LitVTrue := InjLV LitUnitV.
+Definition LitFalse := InjR LitUnit.
+Definition LitVFalse := InjRV LitUnitV.
 
 Fixpoint v2e (v : value) : expr :=
   match v with
-  | LitV _ t => Lit t
   | RecV e   => Rec e
+  | LitNatV n => LitNat n
+  | LitUnitV => LitUnit
   | PairV v1 v2 => Pair (v2e v1) (v2e v2)
   | InjLV v => InjL (v2e v)
   | InjRV v => InjR (v2e v)
@@ -88,7 +72,8 @@ Fixpoint v2e (v : value) : expr :=
 Fixpoint e2v (e : expr) : option value :=
   match e with
   | Rec e => Some (RecV e)
-  | Lit _ t => Some (LitV t)
+  | LitNat n => Some (LitNatV n)
+  | LitUnit => Some LitUnitV
   | Pair e1 e2 => v1 ← e2v e1;
                   v2 ← e2v e2;
                   Some (PairV v1 v2)
@@ -123,8 +108,8 @@ End e2e.
 Lemma v2e_inj v1 v2:
   v2e v1 = v2e v2 → v1 = v2.
 Proof.
-  revert v2; induction v1=>v2; destruct v2; simpl; try discriminate;
-    first [case_depeq1 | case]; eauto using f_equal, f_equal2.
+  revert v2; induction v1=>v2; destruct v2; simpl; try done;
+    case; eauto using f_equal, f_equal2.
 Qed.
 
 (** The state: heaps of values. *)
@@ -135,9 +120,8 @@ Inductive ectx :=
 | EmptyCtx
 | AppLCtx (K1 : ectx)  (e2 : expr)
 | AppRCtx (v1 : value) (K2 : ectx)
-| Op1Ctx {T1 To : Type} (f : T1 -> To) (K : ectx)
-| Op2LCtx {T1 T2 To : Type} (f : T1 -> T2 -> To) (K1 : ectx)  (e2 : expr)
-| Op2RCtx {T1 T2 To : Type} (f : T1 -> T2 -> To) (v1 : value) (K2 : ectx)
+| PlusLCtx (K1 : ectx)  (e2 : expr)
+| PlusRCtx (v1 : value) (K2 : ectx)
 | PairLCtx (K1 : ectx)  (e2 : expr)
 | PairRCtx (v1 : value) (K2 : ectx)
 | FstCtx (K : ectx)
@@ -159,9 +143,8 @@ Fixpoint fill (K : ectx) (e : expr) :=
   | EmptyCtx => e
   | AppLCtx K1 e2 => App (fill K1 e) e2
   | AppRCtx v1 K2 => App (v2e v1) (fill K2 e)
-  | Op1Ctx _ _ f K => Op1 f (fill K e)
-  | Op2LCtx _ _ _ f K1 e2 => Op2 f (fill K1 e) e2
-  | Op2RCtx _ _ _ f v1 K2 => Op2 f (v2e v1) (fill K2 e)
+  | PlusLCtx K1 e2 => Plus (fill K1 e) e2
+  | PlusRCtx v1 K2 => Plus (v2e v1) (fill K2 e)
   | PairLCtx K1 e2 => Pair (fill K1 e) e2
   | PairRCtx v1 K2 => Pair (v2e v1) (fill K2 e)
   | FstCtx K => Fst (fill K e)
@@ -183,9 +166,8 @@ Fixpoint comp_ctx (Ko : ectx) (Ki : ectx) :=
   | EmptyCtx => Ki
   | AppLCtx K1 e2 => AppLCtx (comp_ctx K1 Ki) e2
   | AppRCtx v1 K2 => AppRCtx v1 (comp_ctx K2 Ki)
-  | Op1Ctx _ _ f K => Op1Ctx f (comp_ctx K Ki)
-  | Op2LCtx _ _ _ f K1 e2 => Op2LCtx f (comp_ctx K1 Ki) e2
-  | Op2RCtx _ _ _ f v1 K2 => Op2RCtx f v1 (comp_ctx K2 Ki)
+  | PlusLCtx K1 e2 => PlusLCtx (comp_ctx K1 Ki) e2
+  | PlusRCtx v1 K2 => PlusRCtx v1 (comp_ctx K2 Ki)
   | PairLCtx K1 e2 => PairLCtx (comp_ctx K1 Ki) e2
   | PairRCtx v1 K2 => PairRCtx v1 (comp_ctx K2 Ki)
   | FstCtx K => FstCtx (comp_ctx K Ki)
@@ -201,6 +183,9 @@ Fixpoint comp_ctx (Ko : ectx) (Ki : ectx) :=
   | CasMCtx v0 K1 e2 => CasMCtx v0 (comp_ctx K1 Ki) e2
   | CasRCtx v0 v1 K2 => CasRCtx v0 v1 (comp_ctx K2 Ki)
   end.
+
+Definition LetCtx (K1 : ectx) (e2 : {bind expr}) := AppRCtx (LamV e2) K1.
+Definition SeqCtx (K1 : ectx) (e2 : expr) := LetCtx K1 (e2.[ren(+1)]).
 
 Lemma fill_empty e :
   fill EmptyCtx e = e.
@@ -253,10 +238,8 @@ Qed.
 Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
 | BetaS e1 e2 v2 σ (Hv2 : e2v e2 = Some v2):
     prim_step (App (Rec e1) e2) σ (e1.[(Rec e1),e2/]) σ None
-| Op1S T1 To (f : T1 -> To) t σ:
-    prim_step (Op1 f (Lit t)) σ (Lit (f t)) σ None
-| Op2S T1 T2 To (f : T1 -> T2 -> To) t1 t2 σ:
-    prim_step (Op2 f (Lit t1) (Lit t2)) σ (Lit (f t1 t2)) σ None
+| PlusS n1 n2 σ:
+    prim_step (Plus (LitNat n1) (LitNat n2)) σ (LitNat (n1 + n2)) σ None
 | FstS e1 v1 e2 v2 σ (Hv1 : e2v e1 = Some v1) (Hv2 : e2v e2 = Some v2):
     prim_step (Fst (Pair e1 e2)) σ e1 σ None
 | SndS e1 v1 e2 v2 σ (Hv1 : e2v e1 = Some v1) (Hv2 : e2v e2 = Some v2):
@@ -346,25 +329,14 @@ Proof.
       (* The remaining cases are "compatible" contexts - that result in the same
          head symbol of the expression.
          Test whether the context als has the same head, and use the appropriate
-         tactic. Furthermore, the Op* contexts need special treatment due to the
-         inhomogenuous equalities they induce. *)
+         tactic. *)
       by match goal with
-      | [ |- exists x, Op1Ctx _ _ = Op1Ctx _ _ ] =>
-        move: Hfill; case_depeq2; good IHK
-      | [ |- exists x, Op2LCtx _ _ _ = Op2LCtx _ _ _ ] =>
-        move: Hfill; case_depeq3; good IHK
-      | [ |- exists x, Op2RCtx _ _ _ = Op2RCtx _ _ _ ] =>
-        move: Hfill; case_depeq3; good IHK
       | [ |- exists x, ?C _ = ?C _ ] =>
         case: Hfill; good IHK
       | [ |- exists x, ?C _ _ = ?C _ _ ] =>
         case: Hfill; good IHK
       | [ |- exists x, ?C _ _ _ = ?C _ _ _ ] =>
         case: Hfill; good IHK
-      | [ |- exists x, Op2LCtx _ _ _ = Op2RCtx _ _ _ ] =>
-        move: Hfill; case_depeq3; bad_fill
-      | [ |- exists x, Op2RCtx _ _ _ = Op2LCtx _ _ _ ] =>
-        move: Hfill; case_depeq3; bad_fill
       | _ => case: Hfill; bad_fill
       end).
 Qed.
