@@ -1,5 +1,5 @@
 Require Import prelude.gmap iris.lifting.
-Require Export barrier.parameter.
+Require Export iris.weakestpre barrier.parameter.
 Import uPred.
 
 (* TODO RJ: Figure out a way to to always use our Σ. *)
@@ -43,19 +43,20 @@ Qed.
 
 (* TODO RJ: Figure out some better way to make the
    postcondition a predicate over a *location* *)
-Lemma wp_alloc E σ v:
-  ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Alloc (v2e v))
+Lemma wp_alloc E σ e v:
+  e2v e = Some v →
+  ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Alloc e)
        (λ v', ∃ l, ■(v' = LocV l ∧ σ !! l = None) ∧ ownP (Σ:=Σ) (<[l:=v]>σ)).
 Proof.
   (* RJ FIXME (also for most other lemmas in this file): rewrite would be nicer... *)
-  etransitivity; last eapply wp_lift_step with (σ1 := σ)
+  intros Hvl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
     (φ := λ e' σ', ∃ l, e' = Loc l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None);
     last first.
   - intros e2 σ2 ef Hstep. inversion_clear Hstep. split; first done.
-    rewrite v2v in Hv. inversion_clear Hv.
+    rewrite Hv in Hvl. inversion_clear Hvl.
     eexists; split_ands; done.
   - set (l := fresh $ dom (gset loc) σ).
-    exists (Loc l), ((<[l:=v]>)σ), None. eapply AllocS; first by rewrite v2v.
+    exists (Loc l), ((<[l:=v]>)σ), None. eapply AllocS; first done.
     apply (not_elem_of_dom (D := gset loc)). apply is_fresh.
   - reflexivity.
   - reflexivity.
@@ -79,7 +80,7 @@ Proof.
     (φ := λ e' σ', e' = v2e v ∧ σ' = σ); last first.
   - intros e2 σ2 ef Hstep. move: Hl. inversion_clear Hstep=>{σ}.
     rewrite Hlookup. case=>->. done.
-  - do 3 eexists. eapply LoadS; eassumption.
+  - do 3 eexists. econstructor; eassumption.
   - reflexivity.
   - reflexivity.
   - rewrite -pvs_intro. rewrite -{1}[ownP σ](@right_id _ _ _ _ uPred.sep_True).
@@ -92,16 +93,17 @@ Proof.
     + done.
 Qed.
 
-Lemma wp_store E σ l v v':
+Lemma wp_store E σ l e v v':
+  e2v e = Some v →
   σ !! l = Some v' →
-  ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Store (Loc l) (v2e v))
-       (λ v', ■(v' = LitVUnit) ∧ ownP (Σ:=Σ) (<[l:=v]>σ)).
+  ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Store (Loc l) e)
+       (λ v', ■(v' = LitUnitV) ∧ ownP (Σ:=Σ) (<[l:=v]>σ)).
 Proof.
-  intros Hl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
+  intros Hvl Hl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
     (φ := λ e' σ', e' = LitUnit ∧ σ' = <[l:=v]>σ); last first.
   - intros e2 σ2 ef Hstep. move: Hl. inversion_clear Hstep=>{σ2}.
-    rewrite v2v in Hv. inversion_clear Hv. done.
-  - do 3 eexists. eapply StoreS; last (eexists; eassumption). by rewrite v2v.
+    rewrite Hvl in Hv. inversion_clear Hv. done.
+  - do 3 eexists. eapply StoreS; last (eexists; eassumption). eassumption.
   - reflexivity.
   - reflexivity.
   - rewrite -pvs_intro. rewrite -{1}[ownP σ](@right_id _ _ _ _ uPred.sep_True).
@@ -117,7 +119,7 @@ Qed.
 (** Base axioms for core primitives of the language: Stateless reductions *)
 
 Lemma wp_fork E e :
-  ▷ wp (Σ:=Σ) coPset_all e (λ _, True) ⊑ wp (Σ:=Σ) E (Fork e) (λ _, True).
+  ▷ wp (Σ:=Σ) coPset_all e (λ _, True) ⊑ wp (Σ:=Σ) E (Fork e) (λ v, ■(v = LitUnitV)).
 Proof.
   etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e' ef, e' = LitUnit ∧ ef = Some e);
@@ -136,7 +138,8 @@ Proof.
     transitivity (True ★ wp coPset_all e (λ _ : ival Σ, True))%I;
       first by rewrite left_id.
     apply sep_mono; last reflexivity.
-    rewrite -wp_value'; reflexivity.
+    rewrite -wp_value'; last reflexivity.
+    by apply const_intro.
 Qed.
 
 Lemma wp_lift_pure_step E (φ : expr → Prop) Q e1 :
@@ -185,3 +188,17 @@ Proof.
   by asimpl.
 Qed.
 
+Lemma wp_plus n1 n2 E P Q :
+  P ⊑ Q (LitNatV (n1 + n2)) →
+  ▷P ⊑ wp (Σ:=Σ) E (Plus (LitNat n1) (LitNat n2)) Q.
+Proof.
+  intros HP.
+  etransitivity; last eapply wp_lift_pure_step with
+    (φ := λ e', e' = LitNat (n1 + n2)); last first.
+  - intros ? ? ? ? Hstep. inversion_clear Hstep; done.
+  - intros ?. do 3 eexists. econstructor.
+  - reflexivity.
+  - apply later_mono, forall_intro=>e2. apply impl_intro_l.
+    apply const_elim_l=>->.
+    rewrite -wp_value'; last reflexivity; done.
+Qed.
