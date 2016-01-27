@@ -43,8 +43,6 @@ Qed.
 
 (* TODO RJ: Figure out some better way to make the
    postcondition a predicate over a *location* *)
-(* TODO RJ: There is probably a specialized version of the lifting
-   lemma that would be useful here. *)
 Lemma wp_alloc E σ v:
   ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Alloc (v2e v))
        (λ v', ∃ l, ■(v' = LocV l ∧ σ !! l = None) ∧ ownP (Σ:=Σ) (<[l:=v]>σ)).
@@ -139,4 +137,26 @@ Proof.
       first by rewrite left_id.
     apply sep_mono; last reflexivity.
     rewrite -wp_value'; reflexivity.
+Qed.
+
+Lemma wp_lift_pure_step E (φ : expr → Prop) Q e1 :
+  to_val e1 = None →
+  (∀ σ1, reducible e1 σ1) →
+  (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ ef = None ∧ φ e2) →
+  (▷ ∀ e2, ■ φ e2 → wp (Σ:=Σ) E e2 Q) ⊑ wp (Σ:=Σ) E e1 Q.
+Proof.
+  intros He Hsafe Hstep.
+  (* RJ: working around https://coq.inria.fr/bugs/show_bug.cgi?id=4536 *)
+  etransitivity; last eapply wp_lift_pure_step with
+    (φ0 := λ e' ef, ef = None ∧ φ e'); last first.
+  - intros σ1 e2 σ2 ef Hstep'%prim_ectx_step; last done.
+    by apply Hstep.
+  - intros σ1. destruct (Hsafe σ1) as (e' & σ' & ? & ?).
+    do 3 eexists. exists EmptyCtx. do 2 eexists.
+    split_ands; try (by rewrite fill_empty); eassumption.
+  - done.
+  - apply later_mono. apply forall_mono=>e2. apply forall_intro=>ef.
+    apply impl_intro_l. apply const_elim_l; move=>[-> Hφ].
+    eapply const_intro_l; first eexact Hφ. rewrite impl_elim_r.
+    rewrite right_id. done.
 Qed.
