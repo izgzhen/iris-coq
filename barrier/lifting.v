@@ -188,11 +188,9 @@ Proof.
   by asimpl.
 Qed.
 
-Lemma wp_plus n1 n2 E P Q :
-  P ⊑ Q (LitNatV (n1 + n2)) →
-  ▷P ⊑ wp (Σ:=Σ) E (Plus (LitNat n1) (LitNat n2)) Q.
+Lemma wp_plus n1 n2 E Q :
+  ▷Q (LitNatV (n1 + n2)) ⊑ wp (Σ:=Σ) E (Plus (LitNat n1) (LitNat n2)) Q.
 Proof.
-  intros HP.
   etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = LitNat (n1 + n2)); last first.
   - intros ? ? ? ? Hstep. inversion_clear Hstep; done.

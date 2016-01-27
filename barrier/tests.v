@@ -47,7 +47,7 @@ Module LiftingTests.
     { eapply wp_load. apply: lookup_insert. } (* RJ TODO: figure out why apply and eapply fail. *)
     move=>v; apply const_elim_l; move=>-> {v}.
     rewrite -(wp_bind _ _ (SeqCtx (StoreRCtx (LocV _) EmptyCtx) (Load (Loc _)))).
-    rewrite (later_intro (ownP _)); apply wp_plus.
+    rewrite -wp_plus -later_intro.
     rewrite -(wp_bind _ _ (SeqCtx EmptyCtx (Load (Loc _)))).
     rewrite -wp_mono.
     { eapply wp_store; first reflexivity. apply: lookup_insert. }
