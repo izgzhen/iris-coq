@@ -1,5 +1,5 @@
+Require Import prelude.gmap iris.lifting.
 Require Export barrier.parameter.
-Require Import prelude.gmap iris.lifting barrier.heap_lang.
 Import uPred.
 
 (* TODO RJ: Figure out a way to to always use our Σ. *)

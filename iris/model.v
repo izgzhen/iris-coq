@@ -40,7 +40,3 @@ Instance iProp_fold_inj n Σ : Injective (dist n) (dist n) (@iProp_fold Σ).
 Proof. by intros X Y H; rewrite -(iProp_unfold_fold X) H iProp_unfold_fold. Qed.
 Instance iProp_unfold_inj n Σ : Injective (dist n) (dist n) (@iProp_unfold Σ).
 Proof. by intros X Y H; rewrite -(iProp_fold_unfold X) H iProp_fold_unfold. Qed.
-
-Module Test. (* Make sure we got the notations right. *)
-  Definition iResTest (Σ : iParam) (w : iWld Σ) (p : iPst Σ) (g : iGst Σ) : iRes Σ := Res w p g.
-End Test.
