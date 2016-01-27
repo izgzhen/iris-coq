@@ -30,8 +30,8 @@ Inductive expr :=
 | App (e1 e2 : expr)
 (* Embedding of Coq values and operations *)
 | Lit {T : Type} (t: T)  (* arbitrary Coq values become literals *)
-| Op1  {T1 To : Type} (f : T1 -> To) (e1 : expr)
-| Op2  {T1 T2 To : Type} (f : T1 -> T2 -> To) (e1 : expr) (e2 : expr)
+| Op1  {T1 To : Type} (f : T1 → To) (e1 : expr)
+| Op2  {T1 T2 To : Type} (f : T1 → T2 → To) (e1 : expr) (e2 : expr)
 (* Products *)
 | Pair (e1 e2 : expr)
 | Fst (e : expr)
@@ -106,7 +106,7 @@ Qed.
 
 Section e2e. (* To get local tactics. *)
 Lemma e2e e v:
-  e2v e = Some v -> v2e v = e.
+  e2v e = Some v → v2e v = e.
 Proof.
   Ltac case0 := case =><-; simpl; eauto using f_equal, f_equal2.
   Ltac case1 e1 := destruct (e2v e1); simpl; [|discriminate];
@@ -121,7 +121,7 @@ Qed.
 End e2e.
 
 Lemma v2e_inj v1 v2:
-  v2e v1 = v2e v2 -> v1 = v2.
+  v2e v1 = v2e v2 → v1 = v2.
 Proof.
   revert v2; induction v1=>v2; destruct v2; simpl; try discriminate;
     first [case_depeq1 | case]; eauto using f_equal, f_equal2.
@@ -215,27 +215,27 @@ Proof.
 Qed.
 
 Lemma fill_inj_r K e1 e2 :
-  fill K e1 = fill K e2 -> e1 = e2.
+  fill K e1 = fill K e2 → e1 = e2.
 Proof.
   revert e1 e2; induction K => el er /=;
      (move=><-; reflexivity) || (case => /IHK <-; reflexivity).
 Qed.
 
 Lemma fill_value K e v':
-  e2v (fill K e) = Some v' -> is_Some (e2v e).
+  e2v (fill K e) = Some v' → is_Some (e2v e).
 Proof.
   revert v'; induction K => v' /=; try discriminate;
     try destruct (e2v (fill K e)); rewrite ?v2v; eauto.
 Qed.
 
 Lemma fill_not_value e K :
-  e2v e = None -> e2v (fill K e) = None.
+  e2v e = None → e2v (fill K e) = None.
 Proof.
   intros Hnval.  induction K =>/=; by rewrite ?v2v /= ?IHK /=.
 Qed.
 
 Lemma fill_not_value2 e K v :
-  e2v e = None -> e2v (fill K e) = Some v -> False.
+  e2v e = None → e2v (fill K e) = Some v -> False.
 Proof.
   intros Hnval Hval. erewrite fill_not_value in Hval by assumption. discriminate.
 Qed.
@@ -309,10 +309,10 @@ Section step_by_value.
      sub-context of K' - in other words, e also contains the reducible
      expression *)
 Lemma step_by_value {K K' e e' σ} :
-  fill K e = fill K' e' ->
-  reducible e' σ ->
-  e2v e = None ->
-  exists K'', K' = comp_ctx K K''.
+  fill K e = fill K' e' →
+  reducible e' σ →
+  e2v e = None →
+  ∃ K'', K' = comp_ctx K K''.
 Proof.
   Ltac bad_fill := intros; exfalso; subst;
                    (eapply values_stuck; eassumption) ||
@@ -375,8 +375,8 @@ Definition atomic (e: expr) :=
   match e with
   | Alloc e => is_Some (e2v e)
   | Load e => is_Some (e2v e)
-  | Store e1 e2 => is_Some (e2v e1) /\ is_Some (e2v e2)
-  | Cas e0 e1 e2 => is_Some (e2v e0) /\ is_Some (e2v e1) /\ is_Some (e2v e2)
+  | Store e1 e2 => is_Some (e2v e1) ∧ is_Some (e2v e2)
+  | Cas e0 e1 e2 => is_Some (e2v e0) ∧ is_Some (e2v e1) ∧ is_Some (e2v e2)
   | _ => False
   end.
 
@@ -387,8 +387,8 @@ Proof.
 Qed.
 
 Lemma atomic_step e1 σ1 e2 σ2 ef :
-  atomic e1 ->
-  prim_step e1 σ1 e2 σ2 ef ->
+  atomic e1 →
+  prim_step e1 σ1 e2 σ2 ef →
   is_Some (e2v e2).
 Proof.
   destruct e1; simpl; intros Hatomic Hstep; inversion Hstep;
@@ -397,8 +397,8 @@ Qed.
 
 (* Atomics must not contain evaluation positions. *)
 Lemma atomic_fill e K :
-  atomic (fill K e) ->
-  e2v e = None ->
+  atomic (fill K e) →
+  e2v e = None →
   K = EmptyCtx.
 Proof.
   destruct K; simpl; first reflexivity; unfold is_Some; intros Hatomic Hnval;
@@ -412,8 +412,8 @@ Qed.
 Section Language.
 
   Definition ectx_step e1 σ1 e2 σ2 (ef: option expr) :=
-    exists K e1' e2', e1 = fill K e1' /\ e2 = fill K e2' /\
-                      prim_step e1' σ1 e2' σ2 ef.
+    ∃ K e1' e2', e1 = fill K e1' ∧ e2 = fill K e2' ∧
+                 prim_step e1' σ1 e2' σ2 ef.
 
   Global Program Instance heap_lang : Language expr value state := {|
     of_val := v2e;
