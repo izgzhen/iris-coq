@@ -1,6 +1,6 @@
 (** This file is essentially a bunch of testcases. *)
 Require Import modures.base.
-Require Import barrier.lifting.
+Require Import barrier.parameter.
 
 Module LangTests.
   Definition add := Op2 plus (Lit 21) (Lit 21).
@@ -10,11 +10,11 @@ Module LangTests.
     apply Op2S.
   Qed.
 
-  Definition rec := Rec (App (Var 1) (Var 0)). (* fix f x => f x *)
+  Definition rec := Rec (App (Var 0) (Var 1)). (* fix f x => f x *)
   Definition rec_app := App rec (Lit 0).
   Goal ∀ σ, prim_step rec_app σ rec_app σ None.
   Proof.
-    move=>?. eapply BetaS. (* Honestly, I have no idea why this works. *)
+    move=>?. eapply BetaS.
     reflexivity.
   Qed.
 

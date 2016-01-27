@@ -6,7 +6,7 @@ Import uPred.
 
 (** Bind. *)
 Lemma wp_bind E e K Q :
-  wp E e (λ v, wp (Σ:=Σ) E (fill K (of_val v)) Q) ⊑ wp (Σ:=Σ) E (fill K e) Q.
+  wp (Σ:=Σ) E e (λ v, wp (Σ:=Σ) E (fill K (v2e v)) Q) ⊑ wp (Σ:=Σ) E (fill K e) Q.
 Proof.
   by apply (wp_bind (Σ:=Σ) (K := fill K)), fill_is_ctx.
 Qed.
@@ -47,7 +47,7 @@ Lemma wp_alloc E σ v:
   ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Alloc (v2e v))
        (λ v', ∃ l, ■(v' = LocV l ∧ σ !! l = None) ∧ ownP (Σ:=Σ) (<[l:=v]>σ)).
 Proof.
-  (* RJ FIXME: rewrite would be nicer... *)
+  (* RJ FIXME (also for most other lemmas in this file): rewrite would be nicer... *)
   etransitivity; last eapply wp_lift_step with (σ1 := σ)
     (φ := λ e' σ', ∃ l, e' = Loc l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None);
     last first.
@@ -160,3 +160,28 @@ Proof.
     eapply const_intro_l; first eexact Hφ. rewrite impl_elim_r.
     rewrite right_id. done.
 Qed.
+
+Lemma wp_rec' E e v P Q :
+  P ⊑ wp (Σ:=Σ) E (e.[Rec e, v2e v /]) Q →
+  ▷P ⊑ wp (Σ:=Σ) E (App (Rec e) (v2e v)) Q.
+Proof.
+  intros HP.
+  etransitivity; last eapply wp_lift_pure_step with
+    (φ := λ e', e' = e.[Rec e, v2e v /]); last first.
+  - intros ? ? ? ? Hstep. inversion_clear Hstep. done.
+  - intros ?. do 3 eexists. eapply BetaS. by rewrite v2v.
+  - reflexivity.
+  - apply later_mono, forall_intro=>e2. apply impl_intro_l.
+    apply const_elim_l=>->. done.
+Qed.
+
+Lemma wp_lam E e v P Q :
+  P ⊑ wp (Σ:=Σ) E (e.[v2e v/]) Q →
+  ▷P ⊑ wp (Σ:=Σ) E (App (Lam e) (v2e v)) Q.
+Proof.
+  intros HP. rewrite -wp_rec'; first (intros; apply later_mono; eassumption).
+  (* RJ: This pulls in functional extensionality. If that bothers us, we have
+     to talk to the Autosubst guys. *)
+  by asimpl.
+Qed.
+

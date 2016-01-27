@@ -1,4 +1,4 @@
-Require Import Autosubst.Autosubst.
+Require Export Autosubst.Autosubst.
 Require Import prelude.option prelude.gmap iris.language.
 
 (** Some tactics useful when dealing with equality of sigma-like types:
@@ -26,7 +26,7 @@ Definition loc := positive. (* Really, any countable type. *)
 Inductive expr :=
 (* Base lambda calculus *)
 | Var (x : var)
-| Rec (e : {bind 2 of expr}) (* These are recursive lambdas. *)
+| Rec (e : {bind 2 of expr}) (* These are recursive lambdas. The *inner* binder is the recursive call! *)
 | App (e1 e2 : expr)
 (* Embedding of Coq values and operations *)
 | Lit {T : Type} (t: T)  (* arbitrary Coq values become literals *)
@@ -55,9 +55,9 @@ Instance Rename_expr : Rename expr. derive. Defined.
 Instance Subst_expr : Subst expr. derive. Defined.
 Instance SubstLemmas_expr : SubstLemmas expr. derive. Qed.
 
-Definition Lam (e: {bind expr}) := Rec (e.[up ids]).
+Definition Lam (e: {bind expr}) := Rec (e.[ren(+1)]).
 Definition Let' (e1: expr) (e2: {bind expr}) := App (Lam e2) e1.
-Definition Seq (e1 e2: expr) := Let' e1 (e2.[up ids]).
+Definition Seq (e1 e2: expr) := Let' e1 (e2.[ren(+1)]).
 
 Inductive value :=
 | RecV (e : {bind 2 of expr})
@@ -252,7 +252,7 @@ Qed.
 (** The stepping relation *)
 Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
 | BetaS e1 e2 v2 σ (Hv2 : e2v e2 = Some v2):
-    prim_step (App (Rec e1) e2) σ (e1.[e2.:(Rec e1).:ids]) σ None
+    prim_step (App (Rec e1) e2) σ (e1.[(Rec e1),e2/]) σ None
 | Op1S T1 To (f : T1 -> To) t σ:
     prim_step (Op1 f (Lit t)) σ (Lit (f t)) σ None
 | Op2S T1 T2 To (f : T1 -> T2 -> To) t1 t2 σ:
