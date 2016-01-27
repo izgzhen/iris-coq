@@ -1,7 +1,8 @@
 Require Import Autosubst.Autosubst.
 Require Import prelude.option prelude.gmap iris.language.
 
-(** Some tactics useful when dealing with equality of sigma-like types: existT T0 t0 = existT T1 t1.
+(** Some tactics useful when dealing with equality of sigma-like types:
+    existT T0 t0 = existT T1 t1.
     They all assume such an equality is the first thing on the "stack" (goal). *)
 Ltac case_depeq1 := let Heq := fresh "Heq" in
   case=>_ /EqdepFacts.eq_sigT_sig_eq=>Heq;
@@ -20,7 +21,7 @@ Ltac case_depeq3 := let Heq := fresh "Heq" in
   destruct Heq as (->,<-).
 
 (** Expressions and values. *)
-Definition loc := nat. (* Any countable type. *)
+Definition loc := positive. (* Really, any countable type. *)
 
 Inductive expr :=
 (* Base lambda calculus *)

@@ -117,3 +117,20 @@ Notation gset K := (mapset (gmap K)).
 Instance gset_dom `{Countable K} {A} : Dom (gmap K A) (gset K) := mapset_dom.
 Instance gset_dom_spec `{Countable K} :
   FinMapDom K (gmap K) (gset K) := mapset_dom_spec.
+
+(** * Fresh positive *)
+Definition Gfresh {A} (m : gmap positive A) : positive :=
+  Pfresh $ gmap_car m.
+Lemma Gfresh_fresh {A} (m : gmap positive A) : m !! Gfresh m = None.
+Proof. destruct m as [[]]. apply Pfresh_fresh; done. Qed. 
+
+Instance Gset_fresh : Fresh positive (gset positive) := λ X,
+  let (m) := X in Gfresh m.
+Instance Gset_fresh_spec : FreshSpec positive (gset positive).
+Proof.
+  split.
+  * apply _.
+  * intros X Y; rewrite <-elem_of_equiv_L. by intros ->.
+  * unfold elem_of, mapset_elem_of, fresh; intros [m]; simpl.
+    by rewrite Gfresh_fresh.
+Qed.

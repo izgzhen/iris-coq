@@ -56,7 +56,9 @@ Proof.
   - intros e2 σ2 ef Hstep. inversion_clear Hstep. split; first done.
     rewrite v2v in Hv. inversion_clear Hv.
     eexists; split_ands; done.
-  - (* RJ FIXME: Need to find a fresh location. *) admit.
+  - set (l := fresh $ dom (gset loc) σ).
+    exists (Loc l), ((<[l:=v]>)σ), None. eapply AllocS; first by rewrite v2v.
+    apply (not_elem_of_dom (D := gset loc)). apply is_fresh.
   - reflexivity.
   - reflexivity.
   - (* RJ FIXME I am sure there is a better way to invoke right_id, but I could not find it. *)
@@ -69,7 +71,7 @@ Proof.
     erewrite <-exist_intro with (a := l). apply and_intro.
     + by apply const_intro.
     + done.
-Abort.
+Qed.
 
 Lemma wp_load E σ l v:
   σ !! l = Some v →
