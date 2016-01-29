@@ -38,23 +38,23 @@ Module LiftingTests.
   Proof.
     move=> σ E. rewrite /e.
     rewrite -(wp_bind _ _ (LetCtx EmptyCtx e2)). rewrite -wp_mono.
-    { eapply wp_alloc; done. }
+    { eapply wp_alloc_pst; done. }
     move=>v; apply exist_elim=>l. apply const_elim_l; move=>[-> _] {v}.
     rewrite -wp_lam -later_intro. asimpl.
     rewrite -(wp_bind _ _ (SeqCtx (StoreRCtx (LocV _)
                                    (PlusLCtx EmptyCtx _)) (Load (Loc _)))).
     rewrite -wp_mono.
-    { eapply wp_load. apply: lookup_insert. } (* RJ TODO: figure out why apply and eapply fail. *)
+    { eapply wp_load_pst. apply: lookup_insert. } (* RJ TODO: figure out why apply and eapply fail. *)
     move=>v; apply const_elim_l; move=>-> {v}.
     rewrite -(wp_bind _ _ (SeqCtx (StoreRCtx (LocV _) EmptyCtx) (Load (Loc _)))).
     rewrite -wp_plus -later_intro.
     rewrite -(wp_bind _ _ (SeqCtx EmptyCtx (Load (Loc _)))).
     rewrite -wp_mono.
-    { eapply wp_store; first reflexivity. apply: lookup_insert. }
+    { eapply wp_store_pst; first reflexivity. apply: lookup_insert. }
     move=>v; apply const_elim_l; move=>-> {v}.
     rewrite -wp_lam -later_intro. asimpl.
     rewrite -wp_mono.
-    { eapply wp_load. apply: lookup_insert. }
+    { eapply wp_load_pst. apply: lookup_insert. }
     move=>v; apply const_elim_l; move=>-> {v}.
     by apply const_intro.
   Qed.

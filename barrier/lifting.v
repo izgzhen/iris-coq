@@ -11,7 +11,9 @@ Proof.
   by apply (wp_bind (Σ:=Σ) (K := fill K)), fill_is_ctx.
 Qed.
 
-(** Base axioms for core primitives of the language: Stateful reductions *)
+(** Base axioms for core primitives of the language: Stateful reductions.
+    These are the lemmas basd on the physical state; we will derive versions
+    based on a ghost "mapsto"-predicate later. *)
 
 Lemma wp_lift_step E1 E2 (φ : expr → state → Prop) Q e1 σ1 :
   E1 ⊆ E2 → to_val e1 = None →
@@ -43,7 +45,7 @@ Qed.
 
 (* TODO RJ: Figure out some better way to make the
    postcondition a predicate over a *location* *)
-Lemma wp_alloc E σ e v:
+Lemma wp_alloc_pst E σ e v:
   e2v e = Some v →
   ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Alloc e)
        (λ v', ∃ l, ■(v' = LocV l ∧ σ !! l = None) ∧ ownP (Σ:=Σ) (<[l:=v]>σ)).
@@ -72,7 +74,7 @@ Proof.
     + done.
 Qed.
 
-Lemma wp_load E σ l v:
+Lemma wp_load_pst E σ l v:
   σ !! l = Some v →
   ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Load (Loc l)) (λ v', ■(v' = v) ∧ ownP (Σ:=Σ) σ).
 Proof.
@@ -93,7 +95,7 @@ Proof.
     + done.
 Qed.
 
-Lemma wp_store E σ l e v v':
+Lemma wp_store_pst E σ l e v v':
   e2v e = Some v →
   σ !! l = Some v' →
   ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Store (Loc l) e)
