@@ -251,3 +251,57 @@ Proof.
     apply const_elim_l=>->.
     rewrite -wp_value'; last reflexivity; done.
 Qed.
+
+Lemma wp_fst e1 v1 e2 v2 E Q :
+  e2v e1 = Some v1 → e2v e2 = Some v2 →
+  ▷Q v1 ⊑ wp (Σ:=Σ) E (Fst (Pair e1 e2)) Q.
+Proof.
+  intros Hv1 Hv2. etransitivity; last eapply wp_lift_pure_step with
+    (φ := λ e', e' = e1); last first.
+  - intros ? ? ? ? Hstep. inversion_clear Hstep. done.
+  - intros ?. do 3 eexists. econstructor; eassumption.
+  - reflexivity.
+  - apply later_mono, forall_intro=>e2'. apply impl_intro_l.
+    apply const_elim_l=>->.
+    rewrite -wp_value'; last eassumption; done.
+Qed.
+
+Lemma wp_snd e1 v1 e2 v2 E Q :
+  e2v e1 = Some v1 → e2v e2 = Some v2 →
+  ▷Q v2 ⊑ wp (Σ:=Σ) E (Snd (Pair e1 e2)) Q.
+Proof.
+  intros Hv1 Hv2. etransitivity; last eapply wp_lift_pure_step with
+    (φ := λ e', e' = e2); last first.
+  - intros ? ? ? ? Hstep. inversion_clear Hstep; done.
+  - intros ?. do 3 eexists. econstructor; eassumption.
+  - reflexivity.
+  - apply later_mono, forall_intro=>e2'. apply impl_intro_l.
+    apply const_elim_l=>->.
+    rewrite -wp_value'; last eassumption; done.
+Qed.
+
+Lemma wp_case_inl e0 v0 e1 e2 E Q :
+  e2v e0 = Some v0 →
+  ▷wp (Σ:=Σ) E (e1.[e0/]) Q ⊑ wp (Σ:=Σ) E (Case (InjL e0) e1 e2) Q.
+Proof.
+  intros Hv0. etransitivity; last eapply wp_lift_pure_step with
+    (φ := λ e', e' = e1.[e0/]); last first.
+  - intros ? ? ? ? Hstep. inversion_clear Hstep; done.
+  - intros ?. do 3 eexists. econstructor; eassumption.
+  - reflexivity.
+  - apply later_mono, forall_intro=>e1'. apply impl_intro_l.
+    by apply const_elim_l=>->.
+Qed.
+
+Lemma wp_case_inr e0 v0 e1 e2 E Q :
+  e2v e0 = Some v0 →
+  ▷wp (Σ:=Σ) E (e2.[e0/]) Q ⊑ wp (Σ:=Σ) E (Case (InjR e0) e1 e2) Q.
+Proof.
+  intros Hv0. etransitivity; last eapply wp_lift_pure_step with
+    (φ := λ e', e' = e2.[e0/]); last first.
+  - intros ? ? ? ? Hstep. inversion_clear Hstep; done.
+  - intros ?. do 3 eexists. econstructor; eassumption.
+  - reflexivity.
+  - apply later_mono, forall_intro=>e2'. apply impl_intro_l.
+    by apply const_elim_l=>->.
+Qed.
