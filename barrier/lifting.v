@@ -118,6 +118,58 @@ Proof.
     + done.
 Qed.
 
+Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' :
+  e2v e1 = Some v1 → e2v e2 = Some v2 →
+  σ !! l = Some v' → v' <> v1 →
+  ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Cas (Loc l) e1 e2)
+       (λ v', ■(v' = LitFalseV) ∧ ownP (Σ:=Σ) σ).
+Proof.
+  intros Hvl Hl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
+    (φ := λ e' σ', e' = LitFalse ∧ σ' = σ); last first.
+  - intros e2' σ2' ef Hstep. inversion_clear Hstep; first done.
+    (* FIXME this rewriting is rather ugly. *)
+    exfalso. rewrite Hvl in Hv1. case:Hv1=>?; subst v1. rewrite Hlookup in H.
+    case:H=>?; subst v'. done.
+  - do 3 eexists. eapply CasFailS; eassumption.
+  - reflexivity.
+  - reflexivity.
+  - rewrite -pvs_intro. rewrite -{1}[ownP σ](@right_id _ _ _ _ uPred.sep_True).
+    apply sep_mono; first done. rewrite -later_intro.
+    apply forall_intro=>e2'. apply forall_intro=>σ2'.
+    apply wand_intro_l. rewrite right_id. rewrite -pvs_intro.
+    apply const_elim_l. intros [-> ->].
+    rewrite -wp_value'; last reflexivity. apply and_intro.
+    + by apply const_intro.
+    + done.
+Qed.
+
+Lemma wp_cas_suc_pst E σ l e1 v1 e2 v2 :
+  e2v e1 = Some v1 → e2v e2 = Some v2 →
+  σ !! l = Some v1 →
+  ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Cas (Loc l) e1 e2)
+       (λ v', ■(v' = LitTrueV) ∧ ownP (Σ:=Σ) (<[l:=v2]>σ)).
+Proof.
+  intros Hvl Hl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
+    (φ := λ e' σ', e' = LitTrue ∧ σ' = <[l:=v2]>σ); last first.
+  - intros e2' σ2' ef Hstep. move:H. inversion_clear Hstep=>H.
+    (* FIXME this rewriting is rather ugly. *)
+    + exfalso. rewrite H in Hlookup. case:Hlookup=>?; subst vl.
+      rewrite Hvl in Hv1. case:Hv1=>?; subst v1. done.
+    + rewrite H in Hlookup. case:Hlookup=>?; subst v1.
+      rewrite Hl in Hv2. case:Hv2=>?; subst v2. done.
+  - do 3 eexists. eapply CasSucS; eassumption.
+  - reflexivity.
+  - reflexivity.
+  - rewrite -pvs_intro. rewrite -{1}[ownP σ](@right_id _ _ _ _ uPred.sep_True).
+    apply sep_mono; first done. rewrite -later_intro.
+    apply forall_intro=>e2'. apply forall_intro=>σ2'.
+    apply wand_intro_l. rewrite right_id. rewrite -pvs_intro.
+    apply const_elim_l. intros [-> ->].
+    rewrite -wp_value'; last reflexivity. apply and_intro.
+    + by apply const_intro.
+    + done.
+Qed.
+
 (** Base axioms for core primitives of the language: Stateless reductions *)
 
 Lemma wp_fork E e :

@@ -54,9 +54,9 @@ Inductive value :=
 Definition LamV (e : {bind expr}) := RecV (e.[ren(+1)]).
 
 Definition LitTrue := InjL LitUnit.
-Definition LitVTrue := InjLV LitUnitV.
+Definition LitTrueV := InjLV LitUnitV.
 Definition LitFalse := InjR LitUnit.
-Definition LitVFalse := InjRV LitUnitV.
+Definition LitFalseV := InjRV LitUnitV.
 
 Fixpoint v2e (v : value) : expr :=
   match v with
