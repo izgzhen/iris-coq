@@ -38,10 +38,10 @@ Instance Rename_expr : Rename expr. derive. Defined.
 Instance Subst_expr : Subst expr. derive. Defined.
 Instance SubstLemmas_expr : SubstLemmas expr. derive. Qed.
 
-Definition Lam (e : {bind expr}) := Rec (e.[ren(+1)]).
+Definition Lam (e : {bind expr}) := Rec e.[ren(+1)].
 Definition Let (e1 : expr) (e2: {bind expr}) := App (Lam e2) e1.
-Definition Seq (e1 e2 : expr) := Let e1 (e2.[ren(+1)]).
-Definition If (e0 e1 e2 : expr) := Case e0 (e1.[ren(+1)]) (e2.[ren(+1)]).
+Definition Seq (e1 e2 : expr) := Let e1 e2.[ren(+1)].
+Definition If (e0 e1 e2 : expr) := Case e0 e1.[ren(+1)] e2.[ren(+1)].
 
 Inductive value :=
 | RecV (e : {bind 2 of expr})
@@ -53,7 +53,7 @@ Inductive value :=
 | LocV (l : loc)
 .
 
-Definition LamV (e : {bind expr}) := RecV (e.[ren(+1)]).
+Definition LamV (e : {bind expr}) := RecV e.[ren(+1)].
 
 Definition LitTrue := InjL LitUnit.
 Definition LitTrueV := InjLV LitUnitV.
@@ -245,7 +245,7 @@ Qed.
 (** The stepping relation *)
 Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
 | BetaS e1 e2 v2 σ (Hv2 : e2v e2 = Some v2):
-    prim_step (App (Rec e1) e2) σ (e1.[(Rec e1),e2/]) σ None
+    prim_step (App (Rec e1) e2) σ e1.[(Rec e1),e2/] σ None
 | PlusS n1 n2 σ:
     prim_step (Plus (LitNat n1) (LitNat n2)) σ (LitNat (n1 + n2)) σ None
 | LeTrueS n1 n2 σ (Hle : n1 ≤ n2):
@@ -257,9 +257,9 @@ Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
 | SndS e1 v1 e2 v2 σ (Hv1 : e2v e1 = Some v1) (Hv2 : e2v e2 = Some v2):
     prim_step (Snd (Pair e1 e2)) σ e2 σ None
 | CaseLS e0 v0 e1 e2 σ (Hv0 : e2v e0 = Some v0):
-    prim_step (Case (InjL e0) e1 e2) σ (e1.[e0/]) σ None
+    prim_step (Case (InjL e0) e1 e2) σ e1.[e0/] σ None
 | CaseRS e0 v0 e1 e2 σ (Hv0 : e2v e0 = Some v0):
-    prim_step (Case (InjR e0) e1 e2) σ (e2.[e0/]) σ None
+    prim_step (Case (InjR e0) e1 e2) σ e2.[e0/] σ None
 | ForkS e σ:
     prim_step (Fork e) σ LitUnit σ (Some e)
 | AllocS e v σ l (Hv : e2v e = Some v) (Hfresh : σ !! l = None):

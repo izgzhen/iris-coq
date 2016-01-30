@@ -11,9 +11,7 @@ Proof.
   by apply (wp_bind (Σ:=Σ) (K := fill K)), fill_is_ctx.
 Qed.
 
-(** Base axioms for core primitives of the language: Stateful reductions.
-    These are the lemmas basd on the physical state; we will derive versions
-    based on a ghost "mapsto"-predicate later. *)
+(** Base axioms for core primitives of the language: Stateful reductions. *)
 
 Lemma wp_lift_step E1 E2 (φ : expr → state → Prop) Q e1 σ1 :
   E1 ⊆ E2 → to_val e1 = None →
@@ -209,22 +207,24 @@ Proof.
     rewrite right_id. done.
 Qed.
 
-Lemma wp_rec E e v Q :
-  ▷wp (Σ:=Σ) E (e.[Rec e, v2e v /]) Q ⊑ wp (Σ:=Σ) E (App (Rec e) (v2e v)) Q.
+Lemma wp_rec E ef e v Q :
+  e2v e = Some v →
+  ▷wp (Σ:=Σ) E ef.[Rec ef, e /] Q ⊑ wp (Σ:=Σ) E (App (Rec ef) e) Q.
 Proof.
   etransitivity; last eapply wp_lift_pure_step with
-    (φ := λ e', e' = e.[Rec e, v2e v /]); last first.
+    (φ := λ e', e' = ef.[Rec ef, e /]); last first.
   - intros ? ? ? ? Hstep. inversion_clear Hstep. done.
-  - intros ?. do 3 eexists. eapply BetaS. by rewrite v2v.
+  - intros ?. do 3 eexists. eapply BetaS; eassumption.
   - reflexivity.
   - apply later_mono, forall_intro=>e2. apply impl_intro_l.
     apply const_elim_l=>->. done.
 Qed.
 
-Lemma wp_lam E e v Q :
-  ▷wp (Σ:=Σ) E (e.[v2e v/]) Q ⊑ wp (Σ:=Σ) E (App (Lam e) (v2e v)) Q.
+Lemma wp_lam E ef e v Q :
+  e2v e = Some v →
+  ▷wp (Σ:=Σ) E ef.[e/] Q ⊑ wp (Σ:=Σ) E (App (Lam ef) e) Q.
 Proof.
-  rewrite -wp_rec.
+  intros Hv. rewrite -wp_rec; last eassumption.
   (* RJ: This pulls in functional extensionality. If that bothers us, we have
      to talk to the Autosubst guys. *)
   by asimpl.
@@ -303,7 +303,7 @@ Qed.
 
 Lemma wp_case_inl e0 v0 e1 e2 E Q :
   e2v e0 = Some v0 →
-  ▷wp (Σ:=Σ) E (e1.[e0/]) Q ⊑ wp (Σ:=Σ) E (Case (InjL e0) e1 e2) Q.
+  ▷wp (Σ:=Σ) E e1.[e0/] Q ⊑ wp (Σ:=Σ) E (Case (InjL e0) e1 e2) Q.
 Proof.
   intros Hv0. etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = e1.[e0/]); last first.
@@ -316,7 +316,7 @@ Qed.
 
 Lemma wp_case_inr e0 v0 e1 e2 E Q :
   e2v e0 = Some v0 →
-  ▷wp (Σ:=Σ) E (e2.[e0/]) Q ⊑ wp (Σ:=Σ) E (Case (InjR e0) e1 e2) Q.
+  ▷wp (Σ:=Σ) E e2.[e0/] Q ⊑ wp (Σ:=Σ) E (Case (InjR e0) e1 e2) Q.
 Proof.
   intros Hv0. etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = e2.[e0/]); last first.
@@ -325,4 +325,13 @@ Proof.
   - reflexivity.
   - apply later_mono, forall_intro=>e2'. apply impl_intro_l.
     by apply const_elim_l=>->.
+Qed.
+
+(** Some stateless axioms that incorporate bind *)
+
+Lemma wp_let e1 e2 E Q :
+  wp (Σ:=Σ) E e1 (λ v, ▷wp (Σ:=Σ) E (e2.[v2e v/]) Q) ⊑ wp (Σ:=Σ) E (Let e1 e2) Q.
+Proof.
+  rewrite -(wp_bind _ _ (LetCtx EmptyCtx e2)). apply wp_mono=>v.
+  rewrite -wp_lam //. by rewrite v2v.
 Qed.
