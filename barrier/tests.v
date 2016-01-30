@@ -93,9 +93,29 @@ Module LiftingTests.
       eapply impl_elim; first by eapply and_elim_l. apply and_intro.
       + apply const_intro; omega.
       + by rewrite !and_elim_r.
-    - rewrite -wp_le_false; last by omega.
-      rewrite -wp_case_inr // -!later_intro -wp_value' //.
+    - rewrite -wp_le_false /= // -wp_case_inr //.
+      rewrite -!later_intro -wp_value' //.
       rewrite and_elim_r. apply const_elim_l=>Hle.
-      assert (Heq: n1 = pred n2) by omega. by subst n1=>{Hle Hgt}.
+      assert (Heq: n1 = pred n2) by omega. by subst n1.
+  Qed.
+
+  Definition Pred := Lam (If (Le (Var 0) (LitNat 0))
+                             (LitNat 0)
+                             (App (FindPred (Var 0)) (LitNat 0))
+                         ).
+  Lemma Pred_spec n E Q :
+    ▷Q (LitNatV $ pred n) ⊑ wp (Σ:=Σ) E (App Pred (LitNat n)) Q.
+  Proof.
+    rewrite -wp_lam //. asimpl.
+    rewrite -(wp_bind _ _ (CaseCtx EmptyCtx _ _)).
+    assert (Decision (n ≤ 0)) as Hn by apply _.
+    destruct Hn as [Hle|Hgt].
+    - rewrite -wp_le_true /= //. rewrite -wp_case_inl //.
+      apply later_mono. rewrite -!later_intro -wp_value' //.
+      assert (Heq: n = 0) by omega. by subst n.
+    - rewrite -wp_le_false /= // -wp_case_inr //.
+      apply later_mono. rewrite -!later_intro -FindPred_spec. apply and_intro.
+      + by apply const_intro; omega.
+      + done.
   Qed.
 End LiftingTests.

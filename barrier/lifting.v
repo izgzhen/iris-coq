@@ -259,14 +259,14 @@ Proof.
 Qed.
 
 Lemma wp_le_false n1 n2 E Q :
-  n1 > n2 →
+  ~(n1 ≤ n2) →
   ▷Q LitFalseV ⊑ wp (Σ:=Σ) E (Le (LitNat n1) (LitNat n2)) Q.
 Proof.
   intros Hle. etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = LitFalse); last first.
   - intros ? ? ? ? Hstep. inversion_clear Hstep; last done.
-    exfalso. eapply le_not_gt with (n := n1); eassumption.
-  - intros ?. do 3 eexists. econstructor; done.
+    exfalso. omega.
+  - intros ?. do 3 eexists. econstructor; omega.
   - reflexivity.
   - apply later_mono, forall_intro=>e2. apply impl_intro_l.
     apply const_elim_l=>->.
