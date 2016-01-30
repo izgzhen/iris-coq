@@ -65,4 +65,5 @@ iris/tests.v
 barrier/heap_lang.v
 barrier/parameter.v
 barrier/lifting.v
+barrier/sugar.v
 barrier/tests.v

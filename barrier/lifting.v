@@ -220,16 +220,6 @@ Proof.
     apply const_elim_l=>->. done.
 Qed.
 
-Lemma wp_lam E ef e v Q :
-  e2v e = Some v →
-  ▷wp (Σ:=Σ) E ef.[e/] Q ⊑ wp (Σ:=Σ) E (App (Lam ef) e) Q.
-Proof.
-  intros Hv. rewrite -wp_rec; last eassumption.
-  (* RJ: This pulls in functional extensionality. If that bothers us, we have
-     to talk to the Autosubst guys. *)
-  by asimpl.
-Qed.
-
 Lemma wp_plus n1 n2 E Q :
   ▷Q (LitNatV (n1 + n2)) ⊑ wp (Σ:=Σ) E (Plus (LitNat n1) (LitNat n2)) Q.
 Proof.
@@ -328,13 +318,6 @@ Proof.
 Qed.
 
 (** Some derived stateless axioms *)
-
-Lemma wp_let e1 e2 E Q :
-  wp (Σ:=Σ) E e1 (λ v, ▷wp (Σ:=Σ) E (e2.[v2e v/]) Q) ⊑ wp (Σ:=Σ) E (Let e1 e2) Q.
-Proof.
-  rewrite -(wp_bind (LetCtx EmptyCtx e2)). apply wp_mono=>v.
-  rewrite -wp_lam //. by rewrite v2v.
-Qed.
 
 Lemma wp_le n1 n2 E P Q :
   (n1 ≤ n2 → P ⊑ ▷Q LitTrueV) →

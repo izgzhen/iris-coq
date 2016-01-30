@@ -1,6 +1,6 @@
 (** This file is essentially a bunch of testcases. *)
 Require Import modures.logic.
-Require Import barrier.lifting.
+Require Import barrier.lifting barrier.sugar.
 Import uPred.
 
 Module LangTests.
@@ -62,7 +62,6 @@ Module LiftingTests.
 
   Import Nat.
 
-  Definition Lt e1 e2 := Le (Plus e1 $ LitNat 1) e2.
   Definition FindPred' n1 Sn1 n2 f := If (Lt Sn1 n2)
                                       (App f Sn1)
                                       n1.
@@ -87,10 +86,12 @@ Module LiftingTests.
     rewrite -(wp_let _ (FindPred' (LitNat n1) (Var 0) (LitNat n2) (FindPred $ LitNat n2))).
     rewrite -wp_plus. asimpl.
     rewrite -(wp_bind (CaseCtx EmptyCtx _ _)).
-    rewrite -(wp_bind (LeLCtx EmptyCtx _)).
-    rewrite -wp_plus -!later_intro. simpl.
-    apply wp_le; intros Hn12.
-    - rewrite -wp_case_inl //.
+    rewrite -!later_intro. simpl.
+    apply wp_lt; intros Hn12.
+    - (* TODO RJ: It would be better if we could use wp_if_true here
+         (and below). But we cannot, because the substitutions in there
+         got already unfolded. *)
+      rewrite -wp_case_inl //.
       rewrite -!later_intro. asimpl.
       rewrite (forall_elim (S n1)).
       eapply impl_elim; first by eapply and_elim_l. apply and_intro.

@@ -38,10 +38,9 @@ Instance Rename_expr : Rename expr. derive. Defined.
 Instance Subst_expr : Subst expr. derive. Defined.
 Instance SubstLemmas_expr : SubstLemmas expr. derive. Qed.
 
-Definition Lam (e : {bind expr}) := Rec e.[ren(+1)].
-Definition Let (e1 : expr) (e2: {bind expr}) := App (Lam e2) e1.
-Definition Seq (e1 e2 : expr) := Let e1 e2.[ren(+1)].
-Definition If (e0 e1 e2 : expr) := Case e0 e1.[ren(+1)] e2.[ren(+1)].
+(* This sugar is used by primitive reduction riles (<=, CAS) and hence defined here. *)
+Definition LitTrue := InjL LitUnit.
+Definition LitFalse := InjR LitUnit.
 
 Inductive value :=
 | RecV (e : {bind 2 of expr})
@@ -53,11 +52,7 @@ Inductive value :=
 | LocV (l : loc)
 .
 
-Definition LamV (e : {bind expr}) := RecV e.[ren(+1)].
-
-Definition LitTrue := InjL LitUnit.
 Definition LitTrueV := InjLV LitUnitV.
-Definition LitFalse := InjR LitUnit.
 Definition LitFalseV := InjRV LitUnitV.
 
 Fixpoint v2e (v : value) : expr :=
@@ -191,9 +186,6 @@ Fixpoint comp_ctx (Ko : ectx) (Ki : ectx) :=
   | CasMCtx v0 K1 e2 => CasMCtx v0 (comp_ctx K1 Ki) e2
   | CasRCtx v0 v1 K2 => CasRCtx v0 v1 (comp_ctx K2 Ki)
   end.
-
-Definition LetCtx (K1 : ectx) (e2 : {bind expr}) := AppRCtx (LamV e2) K1.
-Definition SeqCtx (K1 : ectx) (e2 : expr) := LetCtx K1 (e2.[ren(+1)]).
 
 Lemma fill_empty e :
   fill EmptyCtx e = e.
