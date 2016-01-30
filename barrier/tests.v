@@ -115,4 +115,11 @@ Module LiftingTests.
       + by apply const_intro; omega.
       + done.
   Qed.
+
+  Goal ∀ E, True ⊑ wp (Σ:=Σ) E (Let (App Pred (LitNat 42)) (App Pred (Var 0))) (λ v, ■(v = LitNatV 40)).
+  Proof.
+    intros E. rewrite -wp_let. rewrite -Pred_spec -!later_intro.
+    asimpl. (* TODO RJ: Can we somehow make it so that Pred gets folded again? *)
+    rewrite -Pred_spec -later_intro. by apply const_intro.
+  Qed.
 End LiftingTests.
