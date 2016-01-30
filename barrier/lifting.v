@@ -5,7 +5,7 @@ Import uPred.
 (* TODO RJ: Figure out a way to to always use our Σ. *)
 
 (** Bind. *)
-Lemma wp_bind E e K Q :
+Lemma wp_bind {E e} K Q :
   wp (Σ:=Σ) E e (λ v, wp (Σ:=Σ) E (fill K (v2e v)) Q) ⊑ wp (Σ:=Σ) E (fill K e) Q.
 Proof.
   by apply (wp_bind (Σ:=Σ) (K := fill K)), fill_is_ctx.
@@ -65,7 +65,7 @@ Proof.
     apply wand_intro_l. rewrite -pvs_intro.
     rewrite always_and_sep_l' -associative -always_and_sep_l'.
     apply const_elim_l. intros [l [-> [-> Hl]]].
-    rewrite (forall_elim _ l). eapply const_intro_l; first eexact Hl.
+    rewrite (forall_elim l). eapply const_intro_l; first eexact Hl.
     rewrite always_and_sep_l' associative -always_and_sep_l' wand_elim_r.
     rewrite -wp_value'; done.
 Qed.
@@ -332,6 +332,6 @@ Qed.
 Lemma wp_let e1 e2 E Q :
   wp (Σ:=Σ) E e1 (λ v, ▷wp (Σ:=Σ) E (e2.[v2e v/]) Q) ⊑ wp (Σ:=Σ) E (Let e1 e2) Q.
 Proof.
-  rewrite -(wp_bind _ _ (LetCtx EmptyCtx e2)). apply wp_mono=>v.
+  rewrite -(wp_bind (LetCtx EmptyCtx e2)). apply wp_mono=>v.
   rewrite -wp_lam //. by rewrite v2v.
 Qed.

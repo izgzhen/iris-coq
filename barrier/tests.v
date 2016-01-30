@@ -42,14 +42,13 @@ Module LiftingTests.
     rewrite -later_intro. apply forall_intro=>l.
     apply wand_intro_l. rewrite right_id. apply const_elim_l; move=>_.
     rewrite -later_intro. asimpl.
-    rewrite -(wp_bind _ _ (SeqCtx (StoreRCtx (LocV _)
-                                   (PlusLCtx EmptyCtx _)) (Load (Loc _)))).
+    rewrite -(wp_bind (SeqCtx EmptyCtx (Load (Loc _)))).
+    rewrite -(wp_bind (StoreRCtx (LocV _) EmptyCtx)).
+    rewrite -(wp_bind (PlusLCtx EmptyCtx _)).
     rewrite -wp_load_pst; first (apply sep_intro_True_r; first done); last first.
     { apply: lookup_insert. } (* RJ TODO: figure out why apply and eapply fail. *)
     rewrite -later_intro. apply wand_intro_l. rewrite right_id.
-    rewrite -(wp_bind _ _ (SeqCtx (StoreRCtx (LocV _) EmptyCtx) (Load (Loc _)))).
     rewrite -wp_plus -later_intro.
-    rewrite -(wp_bind _ _ (SeqCtx EmptyCtx (Load (Loc _)))).
     rewrite -wp_store_pst; first (apply sep_intro_True_r; first done); last first.
     { apply: lookup_insert. }
     { reflexivity. }
@@ -82,14 +81,14 @@ Module LiftingTests.
     (* Go on. *)
     rewrite -(wp_let _ (FindPred' (LitNat n1) (Var 0) (LitNat n2) (FindPred $ LitNat n2))).
     rewrite -wp_plus. asimpl.
-    rewrite -(wp_bind _ _ (CaseCtx EmptyCtx _ _)).
-    rewrite -(wp_bind _ _ (LeLCtx EmptyCtx _)).
+    rewrite -(wp_bind (CaseCtx EmptyCtx _ _)).
+    rewrite -(wp_bind (LeLCtx EmptyCtx _)).
     rewrite -wp_plus -!later_intro. simpl.
     assert (Decision (S n1 + 1 ≤ n2)) as Hn12 by apply _.
     destruct Hn12 as [Hle|Hgt].
     - rewrite -wp_le_true /= //. rewrite -wp_case_inl //.
       rewrite -!later_intro. asimpl.
-      rewrite (forall_elim _ (S n1)).
+      rewrite (forall_elim (S n1)).
       eapply impl_elim; first by eapply and_elim_l. apply and_intro.
       + apply const_intro; omega.
       + by rewrite !and_elim_r.
@@ -107,7 +106,7 @@ Module LiftingTests.
     ▷Q (LitNatV $ pred n) ⊑ wp (Σ:=Σ) E (App Pred (LitNat n)) Q.
   Proof.
     rewrite -wp_lam //. asimpl.
-    rewrite -(wp_bind _ _ (CaseCtx EmptyCtx _ _)).
+    rewrite -(wp_bind (CaseCtx EmptyCtx _ _)).
     assert (Decision (n ≤ 0)) as Hn by apply _.
     destruct Hn as [Hle|Hgt].
     - rewrite -wp_le_true /= //. rewrite -wp_case_inl //.

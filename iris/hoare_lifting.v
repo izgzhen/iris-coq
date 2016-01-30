@@ -29,7 +29,7 @@ Proof.
   rewrite always_and_sep_r' -associative; apply sep_mono; first done.
   rewrite (later_intro (∀ _, _)) -later_sep; apply later_mono.
   apply forall_intro=>e2; apply forall_intro=>σ2; apply forall_intro=>ef.
-  rewrite (forall_elim _ e2) (forall_elim _ σ2) (forall_elim _ ef).
+  rewrite (forall_elim e2) (forall_elim σ2) (forall_elim ef).
   apply wand_intro_l; rewrite !always_and_sep_l'.
   rewrite (associative _ _ P') -(associative _ _ _ P') associative.
   rewrite {1}/vs -always_wand_impl always_elim wand_elim_r.
@@ -56,8 +56,7 @@ Proof.
     (λ e2 σ2 ef, ■ φ e2 σ2 ef ★ P)%I);
     try by (rewrite /φ'; eauto using atomic_not_value, atomic_step).
   apply and_intro; [by rewrite -vs_reflexive; apply const_intro|].
-  apply forall_intro=>e2; apply forall_intro=>σ2; apply forall_intro=>ef.
-  rewrite (forall_elim _ e2) (forall_elim _ σ2) (forall_elim _ ef).
+  apply forall_mono=>e2; apply forall_mono=>σ2; apply forall_mono=>ef.
   apply and_intro; [|apply and_intro; [|done]].
   * rewrite -vs_impl; apply (always_intro' _ _),impl_intro_l;rewrite and_elim_l.
     rewrite !associative; apply sep_mono; last done.
@@ -66,7 +65,7 @@ Proof.
   * apply (always_intro' _ _), impl_intro_l; rewrite and_elim_l.
     rewrite -always_and_sep_r'; apply const_elim_r=>-[[v Hv] ?].
     rewrite -(of_to_val e2 v) // -wp_value -pvs_intro.
-    rewrite -(exist_intro _ σ2) -(exist_intro _ ef) (of_to_val e2) //.
+    rewrite -(exist_intro σ2) -(exist_intro ef) (of_to_val e2) //.
     by rewrite -always_and_sep_r'; apply and_intro; try apply const_intro.
 Qed.
 Lemma ht_lift_pure_step E (φ : iexpr Σ → option (iexpr Σ) → Prop) P P' Q e1 :
@@ -82,7 +81,7 @@ Proof.
   rewrite -(wp_lift_pure_step E φ _ e1) //.
   rewrite (later_intro (∀ _, _)) -later_and; apply later_mono.
   apply forall_intro=>e2; apply forall_intro=>ef; apply impl_intro_l.
-  rewrite (forall_elim _ e2) (forall_elim _ ef).
+  rewrite (forall_elim e2) (forall_elim ef).
   rewrite always_and_sep_l' !always_and_sep_r' {1}(always_sep_dup' (■ _)).
   rewrite {1}(associative _ (_ ★ _)%I) -(associative _ (■ _)%I).
   rewrite (associative _ (■ _)%I P) -{1}(commutative _ P) -(associative _ P).

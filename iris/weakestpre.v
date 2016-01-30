@@ -206,7 +206,7 @@ Proof. by setoid_rewrite (always_and_sep_r' _ _); rewrite wp_frame_r. Qed.
 Lemma wp_impl_l E e Q1 Q2 : ((□ ∀ v, Q1 v → Q2 v) ∧ wp E e Q1) ⊑ wp E e Q2.
 Proof.
   rewrite wp_always_l; apply wp_mono=> v.
-  by rewrite always_elim (forall_elim _ v) impl_elim_l.
+  by rewrite always_elim (forall_elim v) impl_elim_l.
 Qed.
 Lemma wp_impl_r E e Q1 Q2 : (wp E e Q1 ∧ □ ∀ v, Q1 v → Q2 v) ⊑ wp E e Q2.
 Proof. by rewrite (commutative _) wp_impl_l. Qed.

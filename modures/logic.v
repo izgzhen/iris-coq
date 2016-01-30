@@ -395,9 +395,9 @@ Lemma impl_elim P Q R : P ⊑ (Q → R) → P ⊑ Q → P ⊑ R.
 Proof. by intros HP HP' x n ??; apply HP with x n, HP'. Qed.
 Lemma forall_intro {A} P (Q : A → uPred M): (∀ a, P ⊑ Q a) → P ⊑ (∀ a, Q a).
 Proof. by intros HPQ x n ?? a; apply HPQ. Qed.
-Lemma forall_elim {A} (P : A → uPred M) a : (∀ a, P a) ⊑ P a.
+Lemma forall_elim {A} {P : A → uPred M} a : (∀ a, P a) ⊑ P a.
 Proof. intros x n ? HP; apply HP. Qed.
-Lemma exist_intro {A} (P : A → uPred M) a : P a ⊑ (∃ a, P a).
+Lemma exist_intro {A} {P : A → uPred M} a : P a ⊑ (∃ a, P a).
 Proof. by intros x [|n] ??; [done|exists a]. Qed.
 Lemma exist_elim {A} (P : A → uPred M) Q : (∀ a, P a ⊑ Q) → (∃ a, P a) ⊑ Q.
 Proof. by intros HPQ x [|n] ?; [|intros [a ?]; apply HPQ with a]. Qed.
@@ -713,7 +713,7 @@ Lemma löb_all_1 {A} (P Q : A → uPred M) :
   (∀ a, (▷(∀ b, P b → Q b) ∧ P a) ⊑ Q a) → ∀ a, P a ⊑ Q a.
 Proof.
   intros Hlöb a. apply impl_entails. transitivity (∀ a, P a → Q a)%I; last first.
-  { by rewrite (forall_elim _ a). } clear a.
+  { by rewrite (forall_elim a). } clear a.
   etransitivity; last by eapply löb.
   apply impl_intro_l, forall_intro=>a. rewrite right_id. by apply impl_intro_r.
 Qed.

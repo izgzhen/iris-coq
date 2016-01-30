@@ -44,7 +44,7 @@ Proof.
   rewrite (associative _ P) {1}/vs always_elim impl_elim_r.
   rewrite (associative _) pvs_impl_r pvs_always_r wp_always_r.
   rewrite wp_pvs; apply wp_mono=> v.
-  by rewrite (forall_elim _ v) pvs_impl_r !pvs_trans'.
+  by rewrite (forall_elim v) pvs_impl_r !pvs_trans'.
 Qed.
 Lemma ht_atomic E1 E2 P P' Q Q' e :
   E2 ⊆ E1 → atomic e →
@@ -55,7 +55,7 @@ Proof.
   rewrite (associative _ P) {1}/vs always_elim impl_elim_r.
   rewrite (associative _) pvs_impl_r pvs_always_r wp_always_r.
   rewrite -(wp_atomic E1 E2) //; apply pvs_mono, wp_mono=> v.
-  rewrite (forall_elim _ v) pvs_impl_r -(pvs_intro E1) pvs_trans; solve_elem_of.
+  rewrite (forall_elim v) pvs_impl_r -(pvs_intro E1) pvs_trans; solve_elem_of.
 Qed.
 Lemma ht_bind `(HK : is_ctx K) E P Q Q' e :
   ({{ P }} e @ E {{ Q }} ∧ ∀ v, {{ Q v }} K (of_val v) @ E {{ Q' }})
@@ -64,7 +64,7 @@ Proof.
   intros; apply (always_intro' _ _), impl_intro_l.
   rewrite (associative _ P) {1}/ht always_elim impl_elim_r.
   rewrite wp_always_r -wp_bind //; apply wp_mono=> v.
-  rewrite (forall_elim _ v) pvs_impl_r wp_pvs; apply wp_mono=> v'.
+  rewrite (forall_elim v) pvs_impl_r wp_pvs; apply wp_mono=> v'.
   by rewrite pvs_trans'.
 Qed.
 Lemma ht_mask_weaken E1 E2 P Q e :
