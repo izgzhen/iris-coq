@@ -252,6 +252,36 @@ Proof.
     rewrite -wp_value'; last reflexivity; done.
 Qed.
 
+Lemma wp_le_true n1 n2 E Q :
+  n1 ≤ n2 →
+  ▷Q LitTrueV ⊑ wp (Σ:=Σ) E (Le (LitNat n1) (LitNat n2)) Q.
+Proof.
+  intros Hle. etransitivity; last eapply wp_lift_pure_step with
+    (φ := λ e', e' = LitTrue); last first.
+  - intros ? ? ? ? Hstep. inversion_clear Hstep; first done.
+    exfalso. eapply le_not_gt with (n := n1); eassumption.
+  - intros ?. do 3 eexists. econstructor; done.
+  - reflexivity.
+  - apply later_mono, forall_intro=>e2. apply impl_intro_l.
+    apply const_elim_l=>->.
+    rewrite -wp_value'; last reflexivity; done.
+Qed.
+
+Lemma wp_le_false n1 n2 E Q :
+  n1 > n2 →
+  ▷Q LitFalseV ⊑ wp (Σ:=Σ) E (Le (LitNat n1) (LitNat n2)) Q.
+Proof.
+  intros Hle. etransitivity; last eapply wp_lift_pure_step with
+    (φ := λ e', e' = LitFalse); last first.
+  - intros ? ? ? ? Hstep. inversion_clear Hstep; last done.
+    exfalso. eapply le_not_gt with (n := n1); eassumption.
+  - intros ?. do 3 eexists. econstructor; done.
+  - reflexivity.
+  - apply later_mono, forall_intro=>e2. apply impl_intro_l.
+    apply const_elim_l=>->.
+    rewrite -wp_value'; last reflexivity; done.
+Qed.
+
 Lemma wp_fst e1 v1 e2 v2 E Q :
   e2v e1 = Some v1 → e2v e2 = Some v2 →
   ▷Q v1 ⊑ wp (Σ:=Σ) E (Fst (Pair e1 e2)) Q.

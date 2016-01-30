@@ -9,9 +9,10 @@ Inductive expr :=
 | Var (x : var)
 | Rec (e : {bind 2 of expr}) (* These are recursive lambdas. The *inner* binder is the recursive call! *)
 | App (e1 e2 : expr)
-(* Natural numbers *) (* RJ TODO: Either add minus and le, or replace Plus by a NatCase : nat -> () + nat *)
+(* Natural numbers *)
 | LitNat (n : nat)
 | Plus (e1 e2 : expr)
+| Le (e1 e2 : expr)
 (* Unit *)
 | LitUnit
 (* Products *)
@@ -40,6 +41,7 @@ Instance SubstLemmas_expr : SubstLemmas expr. derive. Qed.
 Definition Lam (e : {bind expr}) := Rec (e.[ren(+1)]).
 Definition Let (e1 : expr) (e2: {bind expr}) := App (Lam e2) e1.
 Definition Seq (e1 e2 : expr) := Let e1 (e2.[ren(+1)]).
+Definition If (e0 e1 e2 : expr) := Case e0 (e1.[ren(+1)]) (e2.[ren(+1)]).
 
 Inductive value :=
 | RecV (e : {bind 2 of expr})
@@ -122,6 +124,8 @@ Inductive ectx :=
 | AppRCtx (v1 : value) (K2 : ectx)
 | PlusLCtx (K1 : ectx)  (e2 : expr)
 | PlusRCtx (v1 : value) (K2 : ectx)
+| LeLCtx (K1 : ectx)  (e2 : expr)
+| LeRCtx (v1 : value) (K2 : ectx)
 | PairLCtx (K1 : ectx)  (e2 : expr)
 | PairRCtx (v1 : value) (K2 : ectx)
 | FstCtx (K : ectx)
@@ -145,6 +149,8 @@ Fixpoint fill (K : ectx) (e : expr) :=
   | AppRCtx v1 K2 => App (v2e v1) (fill K2 e)
   | PlusLCtx K1 e2 => Plus (fill K1 e) e2
   | PlusRCtx v1 K2 => Plus (v2e v1) (fill K2 e)
+  | LeLCtx K1 e2 => Le (fill K1 e) e2
+  | LeRCtx v1 K2 => Le (v2e v1) (fill K2 e)
   | PairLCtx K1 e2 => Pair (fill K1 e) e2
   | PairRCtx v1 K2 => Pair (v2e v1) (fill K2 e)
   | FstCtx K => Fst (fill K e)
@@ -168,6 +174,8 @@ Fixpoint comp_ctx (Ko : ectx) (Ki : ectx) :=
   | AppRCtx v1 K2 => AppRCtx v1 (comp_ctx K2 Ki)
   | PlusLCtx K1 e2 => PlusLCtx (comp_ctx K1 Ki) e2
   | PlusRCtx v1 K2 => PlusRCtx v1 (comp_ctx K2 Ki)
+  | LeLCtx K1 e2 => LeLCtx (comp_ctx K1 Ki) e2
+  | LeRCtx v1 K2 => LeRCtx v1 (comp_ctx K2 Ki)
   | PairLCtx K1 e2 => PairLCtx (comp_ctx K1 Ki) e2
   | PairRCtx v1 K2 => PairRCtx v1 (comp_ctx K2 Ki)
   | FstCtx K => FstCtx (comp_ctx K Ki)
@@ -240,6 +248,10 @@ Inductive prim_step : expr -> state -> expr -> state -> option expr -> Prop :=
     prim_step (App (Rec e1) e2) σ (e1.[(Rec e1),e2/]) σ None
 | PlusS n1 n2 σ:
     prim_step (Plus (LitNat n1) (LitNat n2)) σ (LitNat (n1 + n2)) σ None
+| LeTrueS n1 n2 σ (Hle : n1 ≤ n2):
+    prim_step (Le (LitNat n1) (LitNat n2)) σ LitTrue σ None
+| LeFalseS n1 n2 σ (Hle : n1 > n2):
+    prim_step (Le (LitNat n1) (LitNat n2)) σ LitFalse σ None
 | FstS e1 v1 e2 v2 σ (Hv1 : e2v e1 = Some v1) (Hv2 : e2v e2 = Some v2):
     prim_step (Fst (Pair e1 e2)) σ e1 σ None
 | SndS e1 v1 e2 v2 σ (Hv1 : e2v e1 = Some v1) (Hv2 : e2v e2 = Some v2):
