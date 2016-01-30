@@ -672,7 +672,7 @@ Proof.
   intros x [|n] ??; simpl in *; [done|].
   apply uPred_weaken with x (S n); eauto using cmra_valid_S.
 Qed.
-Lemma lub P : (▷ P → P) ⊑ P.
+Lemma löb P : (▷ P → P) ⊑ P.
 Proof.
   intros x n ? HP; induction n as [|n IH]; [by apply HP|].
   apply HP, IH, uPred_weaken with x (S n); eauto using cmra_valid_S.
@@ -709,6 +709,14 @@ Proof.
 Qed.
 Lemma later_wand P Q : ▷ (P -★ Q) ⊑ (▷ P -★ ▷ Q).
 Proof. apply wand_intro_r;rewrite -later_sep; apply later_mono,wand_elim_l. Qed.
+Lemma löb_all_1 {A} (P Q : A → uPred M) :
+  (∀ a, (▷(∀ b, P b → Q b) ∧ P a) ⊑ Q a) → ∀ a, P a ⊑ Q a.
+Proof.
+  intros Hlöb a. apply impl_entails. transitivity (∀ a, P a → Q a)%I; last first.
+  { by rewrite (forall_elim _ a). } clear a.
+  etransitivity; last by eapply löb.
+  apply impl_intro_l, forall_intro=>a. rewrite right_id. by apply impl_intro_r.
+Qed.
 
 (* Always *)
 Lemma always_const φ : (□ ■ φ : uPred M)%I ≡ (■ φ)%I.
