@@ -68,6 +68,11 @@ Module LiftingTests.
                                       n1.
   Definition FindPred n2 := Rec (Let (Plus (Var 1) (LitNat 1))
                                      (FindPred' (Var 2) (Var 0) n2.[ren(+3)] (Var 1))).
+  Definition Pred := Lam (If (Le (Var 0) (LitNat 0))
+                             (LitNat 0)
+                             (App (FindPred (Var 0)) (LitNat 0))
+                         ).
+
   Lemma FindPred_spec n1 n2 E Q :
     (■(n1 < n2) ∧ Q (LitNatV $ pred n2)) ⊑
        wp (Σ:=Σ) E (App (FindPred (LitNat n2)) (LitNat n1)) Q.
@@ -97,10 +102,6 @@ Module LiftingTests.
       assert (Heq: n1 = pred n2) by omega. by subst n1.
   Qed.
 
-  Definition Pred := Lam (If (Le (Var 0) (LitNat 0))
-                             (LitNat 0)
-                             (App (FindPred (Var 0)) (LitNat 0))
-                         ).
   Lemma Pred_spec n E Q :
     ▷Q (LitNatV $ pred n) ⊑ wp (Σ:=Σ) E (App Pred (LitNat n)) Q.
   Proof.
