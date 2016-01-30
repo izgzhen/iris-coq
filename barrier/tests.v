@@ -37,25 +37,27 @@ Module LiftingTests.
   Goal ∀ σ E, (ownP (Σ:=Σ) σ) ⊑ (wp (Σ:=Σ) E e (λ v, ■(v = LitNatV 2))).
   Proof.
     move=> σ E. rewrite /e.
-    rewrite -(wp_bind _ _ (LetCtx EmptyCtx e2)). rewrite -wp_mono.
-    { eapply wp_alloc_pst; done. }
-    move=>v; apply exist_elim=>l. apply const_elim_l; move=>[-> _] {v}.
+    rewrite -(wp_bind _ _ (LetCtx EmptyCtx e2)). rewrite -wp_alloc_pst; last done.
+    apply sep_intro_True_r; first done.
+    rewrite -later_intro. apply forall_intro=>l.
+    apply wand_intro_l. rewrite right_id. apply const_elim_l; move=>_.
     rewrite -wp_lam -later_intro. asimpl.
     rewrite -(wp_bind _ _ (SeqCtx (StoreRCtx (LocV _)
                                    (PlusLCtx EmptyCtx _)) (Load (Loc _)))).
-    rewrite -wp_mono.
-    { eapply wp_load_pst. apply: lookup_insert. } (* RJ TODO: figure out why apply and eapply fail. *)
-    move=>v; apply const_elim_l; move=>-> {v}.
+    rewrite -wp_load_pst; first (apply sep_intro_True_r; first done); last first.
+    { apply: lookup_insert. } (* RJ TODO: figure out why apply and eapply fail. *)
+    rewrite -later_intro. apply wand_intro_l. rewrite right_id.
     rewrite -(wp_bind _ _ (SeqCtx (StoreRCtx (LocV _) EmptyCtx) (Load (Loc _)))).
     rewrite -wp_plus -later_intro.
     rewrite -(wp_bind _ _ (SeqCtx EmptyCtx (Load (Loc _)))).
-    rewrite -wp_mono.
-    { eapply wp_store_pst; first reflexivity. apply: lookup_insert. }
-    move=>v; apply const_elim_l; move=>-> {v}.
+    rewrite -wp_store_pst; first (apply sep_intro_True_r; first done); last first.
+    { apply: lookup_insert. }
+    { reflexivity. }
+    rewrite -later_intro. apply wand_intro_l. rewrite right_id.
     rewrite -wp_lam -later_intro. asimpl.
-    rewrite -wp_mono.
-    { eapply wp_load_pst. apply: lookup_insert. }
-    move=>v; apply const_elim_l; move=>-> {v}.
+    rewrite -wp_load_pst; first (apply sep_intro_True_r; first done); last first.
+    { apply: lookup_insert. }
+    rewrite -later_intro. apply wand_intro_l. rewrite right_id.
     by apply const_intro.
   Qed.
 End LiftingTests.

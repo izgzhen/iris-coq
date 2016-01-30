@@ -616,6 +616,16 @@ Proof. intros ->; apply sep_elim_l. Qed.
 Lemma sep_elim_r' P Q R : Q ⊑ R → (P ★ Q) ⊑ R.
 Proof. intros ->; apply sep_elim_r. Qed.
 Hint Resolve sep_elim_l' sep_elim_r'.
+Lemma sep_intro_True_l P Q R : True ⊑ P → R ⊑ Q → R ⊑ (P ★ Q).
+Proof.
+  intros HP HQ. etransitivity; last (eapply sep_mono; eassumption).
+  by rewrite left_id.
+Qed.
+Lemma sep_intro_True_r P Q R : R ⊑ P → True ⊑ Q → R ⊑ (P ★ Q).
+Proof.
+  intros HP HQ. etransitivity; last (eapply sep_mono; eassumption).
+  by rewrite right_id.
+Qed.
 Lemma wand_intro_l P Q R : (Q ★ P) ⊑ R → P ⊑ (Q -★ R).
 Proof. rewrite (commutative _); apply wand_intro_r. Qed.
 Lemma wand_elim_r P Q : (P ★ (P -★ Q)) ⊑ Q.

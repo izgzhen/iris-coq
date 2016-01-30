@@ -45,10 +45,10 @@ Qed.
 
 (* TODO RJ: Figure out some better way to make the
    postcondition a predicate over a *location* *)
-Lemma wp_alloc_pst E σ e v:
+Lemma wp_alloc_pst E σ e v Q :
   e2v e = Some v →
-  ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Alloc e)
-       (λ v', ∃ l, ■(v' = LocV l ∧ σ !! l = None) ∧ ownP (Σ:=Σ) (<[l:=v]>σ)).
+  (ownP (Σ:=Σ) σ ★ ▷(∀ l, ■(σ !! l = None) ∧ ownP (Σ:=Σ) (<[l:=v]>σ) -★ Q (LocV l)))
+       ⊑ wp (Σ:=Σ) E (Alloc e) Q.
 Proof.
   (* RJ FIXME (also for most other lemmas in this file): rewrite would be nicer... *)
   intros Hvl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
@@ -62,21 +62,19 @@ Proof.
     apply (not_elem_of_dom (D := gset loc)). apply is_fresh.
   - reflexivity.
   - reflexivity.
-  - (* RJ FIXME I am sure there is a better way to invoke right_id, but I could not find it. *)
-    rewrite -pvs_intro. rewrite -{1}[ownP σ](@right_id _ _ _ _ uPred.sep_True).
-    apply sep_mono; first done. rewrite -later_intro.
+  - rewrite -pvs_intro. apply sep_mono; first done. apply later_mono.
     apply forall_intro=>e2. apply forall_intro=>σ2.
-    apply wand_intro_l. rewrite right_id. rewrite -pvs_intro.
+    apply wand_intro_l. rewrite -pvs_intro.
+    rewrite always_and_sep_l' -associative -always_and_sep_l'.
     apply const_elim_l. intros [l [-> [-> Hl]]].
-    rewrite -wp_value'; last reflexivity.
-    erewrite <-exist_intro with (a := l). apply and_intro.
-    + by apply const_intro.
-    + done.
+    rewrite (forall_elim _ l). eapply const_intro_l; first eexact Hl.
+    rewrite always_and_sep_l' associative -always_and_sep_l' wand_elim_r.
+    rewrite -wp_value'; done.
 Qed.
 
-Lemma wp_load_pst E σ l v:
+Lemma wp_load_pst E σ l v Q :
   σ !! l = Some v →
-  ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Load (Loc l)) (λ v', ■(v' = v) ∧ ownP (Σ:=Σ) σ).
+  (ownP (Σ:=Σ) σ ★ ▷(ownP σ -★ Q v)) ⊑ wp (Σ:=Σ) E (Load (Loc l)) Q.
 Proof.
   intros Hl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
     (φ := λ e' σ', e' = v2e v ∧ σ' = σ); last first.
@@ -85,21 +83,19 @@ Proof.
   - do 3 eexists. econstructor; eassumption.
   - reflexivity.
   - reflexivity.
-  - rewrite -pvs_intro. rewrite -{1}[ownP σ](@right_id _ _ _ _ uPred.sep_True).
-    apply sep_mono; first done. rewrite -later_intro.
+  - rewrite -pvs_intro.
+    apply sep_mono; first done. apply later_mono.
     apply forall_intro=>e2. apply forall_intro=>σ2.
-    apply wand_intro_l. rewrite right_id. rewrite -pvs_intro.
+    apply wand_intro_l. rewrite -pvs_intro.
+    rewrite always_and_sep_l' -associative -always_and_sep_l'.
     apply const_elim_l. intros [-> ->].
-    rewrite -wp_value. apply and_intro.
-    + by apply const_intro.
-    + done.
+    by rewrite wand_elim_r -wp_value.
 Qed.
 
-Lemma wp_store_pst E σ l e v v':
+Lemma wp_store_pst E σ l e v v' Q :
   e2v e = Some v →
   σ !! l = Some v' →
-  ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Store (Loc l) e)
-       (λ v', ■(v' = LitUnitV) ∧ ownP (Σ:=Σ) (<[l:=v]>σ)).
+  (ownP (Σ:=Σ) σ ★ ▷(ownP (<[l:=v]>σ) -★ Q LitUnitV)) ⊑ wp (Σ:=Σ) E (Store (Loc l) e) Q.
 Proof.
   intros Hvl Hl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
     (φ := λ e' σ', e' = LitUnit ∧ σ' = <[l:=v]>σ); last first.
@@ -108,21 +104,19 @@ Proof.
   - do 3 eexists. eapply StoreS; last (eexists; eassumption). eassumption.
   - reflexivity.
   - reflexivity.
-  - rewrite -pvs_intro. rewrite -{1}[ownP σ](@right_id _ _ _ _ uPred.sep_True).
-    apply sep_mono; first done. rewrite -later_intro.
+  - rewrite -pvs_intro.
+    apply sep_mono; first done. apply later_mono.
     apply forall_intro=>e2. apply forall_intro=>σ2.
-    apply wand_intro_l. rewrite right_id. rewrite -pvs_intro.
+    apply wand_intro_l. rewrite -pvs_intro.
+    rewrite always_and_sep_l' -associative -always_and_sep_l'.
     apply const_elim_l. intros [-> ->].
-    rewrite -wp_value'; last reflexivity. apply and_intro.
-    + by apply const_intro.
-    + done.
+    by rewrite wand_elim_r -wp_value'.
 Qed.
 
-Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' :
+Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' Q :
   e2v e1 = Some v1 → e2v e2 = Some v2 →
   σ !! l = Some v' → v' <> v1 →
-  ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Cas (Loc l) e1 e2)
-       (λ v', ■(v' = LitFalseV) ∧ ownP (Σ:=Σ) σ).
+  (ownP (Σ:=Σ) σ ★ ▷(ownP σ -★ Q LitFalseV)) ⊑ wp (Σ:=Σ) E (Cas (Loc l) e1 e2) Q.
 Proof.
   intros Hvl Hl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
     (φ := λ e' σ', e' = LitFalse ∧ σ' = σ); last first.
@@ -133,21 +127,19 @@ Proof.
   - do 3 eexists. eapply CasFailS; eassumption.
   - reflexivity.
   - reflexivity.
-  - rewrite -pvs_intro. rewrite -{1}[ownP σ](@right_id _ _ _ _ uPred.sep_True).
-    apply sep_mono; first done. rewrite -later_intro.
+  - rewrite -pvs_intro.
+    apply sep_mono; first done. apply later_mono.
     apply forall_intro=>e2'. apply forall_intro=>σ2'.
-    apply wand_intro_l. rewrite right_id. rewrite -pvs_intro.
+    apply wand_intro_l. rewrite -pvs_intro.
+    rewrite always_and_sep_l' -associative -always_and_sep_l'.
     apply const_elim_l. intros [-> ->].
-    rewrite -wp_value'; last reflexivity. apply and_intro.
-    + by apply const_intro.
-    + done.
+    by rewrite wand_elim_r -wp_value'.
 Qed.
 
-Lemma wp_cas_suc_pst E σ l e1 v1 e2 v2 :
+Lemma wp_cas_suc_pst E σ l e1 v1 e2 v2 Q :
   e2v e1 = Some v1 → e2v e2 = Some v2 →
   σ !! l = Some v1 →
-  ownP (Σ:=Σ) σ ⊑ wp (Σ:=Σ) E (Cas (Loc l) e1 e2)
-       (λ v', ■(v' = LitTrueV) ∧ ownP (Σ:=Σ) (<[l:=v2]>σ)).
+  (ownP (Σ:=Σ) σ ★ ▷(ownP (<[l:=v2]>σ) -★ Q LitTrueV)) ⊑ wp (Σ:=Σ) E (Cas (Loc l) e1 e2) Q.
 Proof.
   intros Hvl Hl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
     (φ := λ e' σ', e' = LitTrue ∧ σ' = <[l:=v2]>σ); last first.
@@ -160,14 +152,13 @@ Proof.
   - do 3 eexists. eapply CasSucS; eassumption.
   - reflexivity.
   - reflexivity.
-  - rewrite -pvs_intro. rewrite -{1}[ownP σ](@right_id _ _ _ _ uPred.sep_True).
-    apply sep_mono; first done. rewrite -later_intro.
+  - rewrite -pvs_intro.
+    apply sep_mono; first done. apply later_mono.
     apply forall_intro=>e2'. apply forall_intro=>σ2'.
-    apply wand_intro_l. rewrite right_id. rewrite -pvs_intro.
+    apply wand_intro_l. rewrite -pvs_intro.
+    rewrite always_and_sep_l' -associative -always_and_sep_l'.
     apply const_elim_l. intros [-> ->].
-    rewrite -wp_value'; last reflexivity. apply and_intro.
-    + by apply const_intro.
-    + done.
+    by rewrite wand_elim_r -wp_value'.
 Qed.
 
 (** Base axioms for core primitives of the language: Stateless reductions *)
@@ -218,7 +209,7 @@ Proof.
     rewrite right_id. done.
 Qed.
 
-Lemma wp_rec' E e v Q :
+Lemma wp_rec E e v Q :
   ▷wp (Σ:=Σ) E (e.[Rec e, v2e v /]) Q ⊑ wp (Σ:=Σ) E (App (Rec e) (v2e v)) Q.
 Proof.
   etransitivity; last eapply wp_lift_pure_step with
@@ -233,7 +224,7 @@ Qed.
 Lemma wp_lam E e v Q :
   ▷wp (Σ:=Σ) E (e.[v2e v/]) Q ⊑ wp (Σ:=Σ) E (App (Lam e) (v2e v)) Q.
 Proof.
-  rewrite -wp_rec'.
+  rewrite -wp_rec.
   (* RJ: This pulls in functional extensionality. If that bothers us, we have
      to talk to the Autosubst guys. *)
   by asimpl.
