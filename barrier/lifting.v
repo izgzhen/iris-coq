@@ -259,14 +259,14 @@ Proof.
 Qed.
 
 Lemma wp_le_false n1 n2 E Q :
-  ~(n1 ≤ n2) →
+  n1 > n2 →
   ▷Q LitFalseV ⊑ wp (Σ:=Σ) E (Le (LitNat n1) (LitNat n2)) Q.
 Proof.
   intros Hle. etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = LitFalse); last first.
   - intros ? ? ? ? Hstep. inversion_clear Hstep; last done.
-    exfalso. omega.
-  - intros ?. do 3 eexists. econstructor; omega.
+    exfalso. eapply le_not_gt with (n := n1); eassumption.
+  - intros ?. do 3 eexists. econstructor; done.
   - reflexivity.
   - apply later_mono, forall_intro=>e2. apply impl_intro_l.
     apply const_elim_l=>->.
@@ -327,11 +327,23 @@ Proof.
     by apply const_elim_l=>->.
 Qed.
 
-(** Some stateless axioms that incorporate bind *)
+(** Some derived stateless axioms *)
 
 Lemma wp_let e1 e2 E Q :
   wp (Σ:=Σ) E e1 (λ v, ▷wp (Σ:=Σ) E (e2.[v2e v/]) Q) ⊑ wp (Σ:=Σ) E (Let e1 e2) Q.
 Proof.
   rewrite -(wp_bind (LetCtx EmptyCtx e2)). apply wp_mono=>v.
   rewrite -wp_lam //. by rewrite v2v.
+Qed.
+
+Lemma wp_le n1 n2 E P Q :
+  (n1 ≤ n2 → P ⊑ ▷Q LitTrueV) →
+  (n1 > n2 → P ⊑ ▷Q LitFalseV) →
+  P ⊑ wp (Σ:=Σ) E (Le (LitNat n1) (LitNat n2)) Q.
+Proof.
+  intros HPle HPgt.
+  assert (Decision (n1 ≤ n2)) as Hn12 by apply _.
+  destruct Hn12 as [Hle|Hgt].
+  - rewrite -wp_le_true; auto.
+  - assert (n1 > n2) by omega. rewrite -wp_le_false; auto.
 Qed.

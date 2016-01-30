@@ -84,15 +84,14 @@ Module LiftingTests.
     rewrite -(wp_bind (CaseCtx EmptyCtx _ _)).
     rewrite -(wp_bind (LeLCtx EmptyCtx _)).
     rewrite -wp_plus -!later_intro. simpl.
-    assert (Decision (S n1 + 1 ≤ n2)) as Hn12 by apply _.
-    destruct Hn12 as [Hle|Hgt].
-    - rewrite -wp_le_true /= //. rewrite -wp_case_inl //.
+    apply wp_le; intros Hn12.
+    - rewrite -wp_case_inl //.
       rewrite -!later_intro. asimpl.
       rewrite (forall_elim (S n1)).
       eapply impl_elim; first by eapply and_elim_l. apply and_intro.
       + apply const_intro; omega.
       + by rewrite !and_elim_r.
-    - rewrite -wp_le_false /= // -wp_case_inr //.
+    - rewrite -wp_case_inr //.
       rewrite -!later_intro -wp_value' //.
       rewrite and_elim_r. apply const_elim_l=>Hle.
       assert (Heq: n1 = pred n2) by omega. by subst n1.
@@ -107,13 +106,12 @@ Module LiftingTests.
   Proof.
     rewrite -wp_lam //. asimpl.
     rewrite -(wp_bind (CaseCtx EmptyCtx _ _)).
-    assert (Decision (n ≤ 0)) as Hn by apply _.
-    destruct Hn as [Hle|Hgt].
-    - rewrite -wp_le_true /= //. rewrite -wp_case_inl //.
-      apply later_mono. rewrite -!later_intro -wp_value' //.
+    apply later_mono, wp_le; intros Hn.
+    - rewrite -wp_case_inl //.
+      rewrite -!later_intro -wp_value' //.
       assert (Heq: n = 0) by omega. by subst n.
-    - rewrite -wp_le_false /= // -wp_case_inr //.
-      apply later_mono. rewrite -!later_intro -FindPred_spec. apply and_intro.
+    - rewrite -wp_case_inr //.
+      rewrite -!later_intro -FindPred_spec. apply and_intro.
       + by apply const_intro; omega.
       + done.
   Qed.
