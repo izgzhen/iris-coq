@@ -118,19 +118,16 @@ Instance gset_dom `{Countable K} {A} : Dom (gmap K A) (gset K) := mapset_dom.
 Instance gset_dom_spec `{Countable K} :
   FinMapDom K (gmap K) (gset K) := mapset_dom_spec.
 
-(** * Fresh positive *)
-Definition Gfresh {A} (m : gmap positive A) : positive :=
-  Pfresh $ gmap_car m.
-Lemma Gfresh_fresh {A} (m : gmap positive A) : m !! Gfresh m = None.
-Proof. destruct m as [[]]. apply Pfresh_fresh; done. Qed. 
-
-Instance Gset_fresh : Fresh positive (gset positive) := λ X,
-  let (m) := X in Gfresh m.
-Instance Gset_fresh_spec : FreshSpec positive (gset positive).
+(** * Fresh elements *)
+(* This is pretty ad-hoc and just for the case of [gset positive]. We need a
+notion of countable non-finite types to generalize this. *)
+Instance gset_positive_fresh : Fresh positive (gset positive) := λ X,
+  let 'Mapset (GMap m _) := X in fresh (dom _ m).
+Instance gset_positive_fresh_spec : FreshSpec positive (gset positive).
 Proof.
   split.
   * apply _.
-  * intros X Y; rewrite <-elem_of_equiv_L. by intros ->.
-  * unfold elem_of, mapset_elem_of, fresh; intros [m]; simpl.
-    by rewrite Gfresh_fresh.
+  * by intros X Y; rewrite <-elem_of_equiv_L; intros ->.
+  * intros [[m Hm]]; unfold fresh; simpl.
+    by intros ?; apply (is_fresh (dom Pset m)), elem_of_dom_2 with ().
 Qed.
