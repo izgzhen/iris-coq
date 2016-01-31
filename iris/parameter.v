@@ -1,6 +1,6 @@
 Require Export modures.cmra iris.language.
 
-Record iParam := IParam {
+Structure iParam := IParam {
   iexpr : Type;
   ival : Type;
   istate : Type;

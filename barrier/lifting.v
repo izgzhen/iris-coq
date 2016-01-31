@@ -2,14 +2,14 @@ Require Import prelude.gmap iris.lifting.
 Require Export iris.weakestpre barrier.parameter.
 Import uPred.
 
-(* TODO RJ: Figure out a way to to always use our Σ. *)
+Section lifting.
+Implicit Types P : iProp Σ.
+Implicit Types Q : ival Σ → iProp Σ.
 
 (** Bind. *)
 Lemma wp_bind {E e} K Q :
-  wp (Σ:=Σ) E e (λ v, wp (Σ:=Σ) E (fill K (v2e v)) Q) ⊑ wp (Σ:=Σ) E (fill K e) Q.
-Proof.
-  by apply (wp_bind (Σ:=Σ) (K := fill K)), fill_is_ctx.
-Qed.
+  wp E e (λ v, wp E (fill K (v2e v)) Q) ⊑ wp E (fill K e) Q.
+Proof. apply (wp_bind (K:=fill K)), fill_is_ctx. Qed.
 
 (** Base axioms for core primitives of the language: Stateful reductions. *)
 
@@ -17,9 +17,9 @@ Lemma wp_lift_step E1 E2 (φ : expr → state → Prop) Q e1 σ1 :
   E1 ⊆ E2 → to_val e1 = None →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → ef = None ∧ φ e2 σ2) →
-  pvs E2 E1 (ownP (Σ:=Σ) σ1 ★ ▷ ∀ e2 σ2, (■ φ e2 σ2 ∧ ownP (Σ:=Σ) σ2) -★
-    pvs E1 E2 (wp (Σ:=Σ) E2 e2 Q))
-  ⊑ wp (Σ:=Σ) E2 e1 Q.
+  pvs E2 E1 (ownP σ1 ★ ▷ ∀ e2 σ2, (■ φ e2 σ2 ∧ ownP σ2) -★
+    pvs E1 E2 (wp E2 e2 Q))
+  ⊑ wp E2 e1 Q.
 Proof.
   intros ? He Hsafe Hstep.
   (* RJ: working around https://coq.inria.fr/bugs/show_bug.cgi?id=4536 *)
@@ -45,8 +45,8 @@ Qed.
    postcondition a predicate over a *location* *)
 Lemma wp_alloc_pst E σ e v Q :
   e2v e = Some v →
-  (ownP (Σ:=Σ) σ ★ ▷(∀ l, ■(σ !! l = None) ∧ ownP (Σ:=Σ) (<[l:=v]>σ) -★ Q (LocV l)))
-       ⊑ wp (Σ:=Σ) E (Alloc e) Q.
+  (ownP σ ★ ▷(∀ l, ■(σ !! l = None) ∧ ownP (<[l:=v]>σ) -★ Q (LocV l)))
+       ⊑ wp E (Alloc e) Q.
 Proof.
   (* RJ FIXME (also for most other lemmas in this file): rewrite would be nicer... *)
   intros Hvl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
@@ -72,7 +72,7 @@ Qed.
 
 Lemma wp_load_pst E σ l v Q :
   σ !! l = Some v →
-  (ownP (Σ:=Σ) σ ★ ▷(ownP σ -★ Q v)) ⊑ wp (Σ:=Σ) E (Load (Loc l)) Q.
+  (ownP σ ★ ▷(ownP σ -★ Q v)) ⊑ wp E (Load (Loc l)) Q.
 Proof.
   intros Hl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
     (φ := λ e' σ', e' = v2e v ∧ σ' = σ); last first.
@@ -93,7 +93,7 @@ Qed.
 Lemma wp_store_pst E σ l e v v' Q :
   e2v e = Some v →
   σ !! l = Some v' →
-  (ownP (Σ:=Σ) σ ★ ▷(ownP (<[l:=v]>σ) -★ Q LitUnitV)) ⊑ wp (Σ:=Σ) E (Store (Loc l) e) Q.
+  (ownP σ ★ ▷(ownP (<[l:=v]>σ) -★ Q LitUnitV)) ⊑ wp E (Store (Loc l) e) Q.
 Proof.
   intros Hvl Hl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
     (φ := λ e' σ', e' = LitUnit ∧ σ' = <[l:=v]>σ); last first.
@@ -114,7 +114,7 @@ Qed.
 Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' Q :
   e2v e1 = Some v1 → e2v e2 = Some v2 →
   σ !! l = Some v' → v' <> v1 →
-  (ownP (Σ:=Σ) σ ★ ▷(ownP σ -★ Q LitFalseV)) ⊑ wp (Σ:=Σ) E (Cas (Loc l) e1 e2) Q.
+  (ownP σ ★ ▷(ownP σ -★ Q LitFalseV)) ⊑ wp E (Cas (Loc l) e1 e2) Q.
 Proof.
   intros Hvl Hl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
     (φ := λ e' σ', e' = LitFalse ∧ σ' = σ); last first.
@@ -137,7 +137,7 @@ Qed.
 Lemma wp_cas_suc_pst E σ l e1 v1 e2 v2 Q :
   e2v e1 = Some v1 → e2v e2 = Some v2 →
   σ !! l = Some v1 →
-  (ownP (Σ:=Σ) σ ★ ▷(ownP (<[l:=v2]>σ) -★ Q LitTrueV)) ⊑ wp (Σ:=Σ) E (Cas (Loc l) e1 e2) Q.
+  (ownP σ ★ ▷(ownP (<[l:=v2]>σ) -★ Q LitTrueV)) ⊑ wp E (Cas (Loc l) e1 e2) Q.
 Proof.
   intros Hvl Hl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
     (φ := λ e' σ', e' = LitTrue ∧ σ' = <[l:=v2]>σ); last first.
@@ -162,7 +162,7 @@ Qed.
 (** Base axioms for core primitives of the language: Stateless reductions *)
 
 Lemma wp_fork E e :
-  ▷ wp (Σ:=Σ) coPset_all e (λ _, True) ⊑ wp (Σ:=Σ) E (Fork e) (λ v, ■(v = LitUnitV)).
+  ▷ wp coPset_all e (λ _, True) ⊑ wp E (Fork e) (λ v, ■(v = LitUnitV)).
 Proof.
   etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e' ef, e' = LitUnit ∧ ef = Some e);
@@ -189,7 +189,7 @@ Lemma wp_lift_pure_step E (φ : expr → Prop) Q e1 :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ ef = None ∧ φ e2) →
-  (▷ ∀ e2, ■ φ e2 → wp (Σ:=Σ) E e2 Q) ⊑ wp (Σ:=Σ) E e1 Q.
+  (▷ ∀ e2, ■ φ e2 → wp E e2 Q) ⊑ wp E e1 Q.
 Proof.
   intros He Hsafe Hstep.
   (* RJ: working around https://coq.inria.fr/bugs/show_bug.cgi?id=4536 *)
@@ -209,7 +209,7 @@ Qed.
 
 Lemma wp_rec E ef e v Q :
   e2v e = Some v →
-  ▷wp (Σ:=Σ) E ef.[Rec ef, e /] Q ⊑ wp (Σ:=Σ) E (App (Rec ef) e) Q.
+  ▷wp E ef.[Rec ef, e /] Q ⊑ wp E (App (Rec ef) e) Q.
 Proof.
   etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = ef.[Rec ef, e /]); last first.
@@ -221,7 +221,7 @@ Proof.
 Qed.
 
 Lemma wp_plus n1 n2 E Q :
-  ▷Q (LitNatV (n1 + n2)) ⊑ wp (Σ:=Σ) E (Plus (LitNat n1) (LitNat n2)) Q.
+  ▷Q (LitNatV (n1 + n2)) ⊑ wp E (Plus (LitNat n1) (LitNat n2)) Q.
 Proof.
   etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = LitNat (n1 + n2)); last first.
@@ -235,7 +235,7 @@ Qed.
 
 Lemma wp_le_true n1 n2 E Q :
   n1 ≤ n2 →
-  ▷Q LitTrueV ⊑ wp (Σ:=Σ) E (Le (LitNat n1) (LitNat n2)) Q.
+  ▷Q LitTrueV ⊑ wp E (Le (LitNat n1) (LitNat n2)) Q.
 Proof.
   intros Hle. etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = LitTrue); last first.
@@ -250,7 +250,7 @@ Qed.
 
 Lemma wp_le_false n1 n2 E Q :
   n1 > n2 →
-  ▷Q LitFalseV ⊑ wp (Σ:=Σ) E (Le (LitNat n1) (LitNat n2)) Q.
+  ▷Q LitFalseV ⊑ wp E (Le (LitNat n1) (LitNat n2)) Q.
 Proof.
   intros Hle. etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = LitFalse); last first.
@@ -265,7 +265,7 @@ Qed.
 
 Lemma wp_fst e1 v1 e2 v2 E Q :
   e2v e1 = Some v1 → e2v e2 = Some v2 →
-  ▷Q v1 ⊑ wp (Σ:=Σ) E (Fst (Pair e1 e2)) Q.
+  ▷Q v1 ⊑ wp E (Fst (Pair e1 e2)) Q.
 Proof.
   intros Hv1 Hv2. etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = e1); last first.
@@ -279,7 +279,7 @@ Qed.
 
 Lemma wp_snd e1 v1 e2 v2 E Q :
   e2v e1 = Some v1 → e2v e2 = Some v2 →
-  ▷Q v2 ⊑ wp (Σ:=Σ) E (Snd (Pair e1 e2)) Q.
+  ▷Q v2 ⊑ wp E (Snd (Pair e1 e2)) Q.
 Proof.
   intros Hv1 Hv2. etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = e2); last first.
@@ -293,7 +293,7 @@ Qed.
 
 Lemma wp_case_inl e0 v0 e1 e2 E Q :
   e2v e0 = Some v0 →
-  ▷wp (Σ:=Σ) E e1.[e0/] Q ⊑ wp (Σ:=Σ) E (Case (InjL e0) e1 e2) Q.
+  ▷wp E e1.[e0/] Q ⊑ wp E (Case (InjL e0) e1 e2) Q.
 Proof.
   intros Hv0. etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = e1.[e0/]); last first.
@@ -306,7 +306,7 @@ Qed.
 
 Lemma wp_case_inr e0 v0 e1 e2 E Q :
   e2v e0 = Some v0 →
-  ▷wp (Σ:=Σ) E e2.[e0/] Q ⊑ wp (Σ:=Σ) E (Case (InjR e0) e1 e2) Q.
+  ▷wp E e2.[e0/] Q ⊑ wp E (Case (InjR e0) e1 e2) Q.
 Proof.
   intros Hv0. etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e', e' = e2.[e0/]); last first.
@@ -322,7 +322,7 @@ Qed.
 Lemma wp_le n1 n2 E P Q :
   (n1 ≤ n2 → P ⊑ ▷Q LitTrueV) →
   (n1 > n2 → P ⊑ ▷Q LitFalseV) →
-  P ⊑ wp (Σ:=Σ) E (Le (LitNat n1) (LitNat n2)) Q.
+  P ⊑ wp E (Le (LitNat n1) (LitNat n2)) Q.
 Proof.
   intros HPle HPgt.
   assert (Decision (n1 ≤ n2)) as Hn12 by apply _.
@@ -330,3 +330,4 @@ Proof.
   - rewrite -wp_le_true; auto.
   - assert (n1 > n2) by omega. rewrite -wp_le_false; auto.
 Qed.
+End lifting.
