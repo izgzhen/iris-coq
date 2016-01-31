@@ -7,11 +7,35 @@
 \usepackage{amsthm}
 \usepackage{amssymb}
 \usepackage{stmaryrd}
-\SetSymbolFont{stmry}{bold}{U}{stmry}{m}{n} % this fixes warnings when \boldsymbol is used with stmaryrd included
 
 \usepackage{mathpartir}
 
-\usepackage{array}\extrarowheight=\jot	% else, arrays are scrunched compared to, say, aligned
+\usepackage{array}
+\usepackage{tabu}
+
+\usepackage{dashbox}
+
+\usepackage{pftools}
+
+\usepackage{xcolor}  % for print version
+
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{scalerel}
+
+\usepackage{rotating}
+\usepackage{xparse}
+\usepackage{xstring}
+\usepackage{semantic}
+\usepackage{csquotes}
+
+\usepackage{hyperref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SETUP
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\extrarowheight=\jot	% else, arrays are scrunched compared to, say, aligned
 \newcolumntype{.}{@{}}
 % Array {rMcMl} modifies array {rcl}, putting mathrel-style spacing
 % around the centered column. (We used this, for example, in laying
@@ -20,45 +44,6 @@
 % The capital M stands for THICKMuskip. The smaller medmuskip would be
 % right for mathbin-style spacing.
 \newcolumntype{M}{@{\mskip\thickmuskip}}
-\usepackage{tabu}%\tabulinesep=_0pt^\jot
-
-\usepackage{dashbox}
-%\usepackage{arydshln}
-%\setlength{\dashlinegap}{1pt}
-%\setlength{\dashlinedash}{3pt}
-
-\usepackage{hyperref}
-\hypersetup{%
-  linktocpage=true, pdfstartview=FitV,
-  breaklinks=true, pageanchor=true, pdfpagemode=UseOutlines,
-  plainpages=false, bookmarksnumbered, bookmarksopen=true, bookmarksopenlevel=3,
-  hypertexnames=true, pdfhighlight=/O,
-  colorlinks=true,linkcolor=LinkColor,citecolor=CiteColor,
-  urlcolor=LinkColor
-}
-
-\newcommand*{\Sref}[1]{\hyperref[#1]{\S\ref*{#1}}}
-\newcommand*{\secref}[1]{\hyperref[#1]{Section~\ref*{#1}}}
-\newcommand*{\lemref}[1]{\hyperref[#1]{Lemma~\ref*{#1}}}
-\newcommand{\corref}[1]{\hyperref[#1]{Cor.~\ref*{#1}}}
-\newcommand*{\defref}[1]{\hyperref[#1]{Definition~\ref*{#1}}}
-\newcommand*{\egref}[1]{\hyperref[#1]{Example~\ref*{#1}}}
-\newcommand*{\appendixref}[1]{\hyperref[#1]{Appendix~\ref*{#1}}}
-\newcommand*{\figref}[1]{\hyperref[#1]{Figure~\ref*{#1}}}
-\newcommand*{\tabref}[1]{\hyperref[#1]{Table~\ref*{#1}}}
-
-\usepackage{pftools}
-
-%\usepackage{pfsteps}
-%\newcommand*{\pflab}[1]{\steppfcounter[#1](\thepfcounter)}
-%\newcommand*{\pftag}[1]{\steppfcounter[#1]\tag{\thepfcounter}}
-%\renewcommand\byCasesEveryCase{}  % turn off counter reset on cases
-%\renewcommand\byCasesEveryOtherwise{}
-
-%\usepackage[monochrome]{color}  % for print version
-\usepackage{xcolor}  % for print version
-
-\usepackage{graphicx}
 
 \definecolor{StringRed}{rgb}{.637,0.082,0.082}
 \definecolor{CommentGreen}{rgb}{0.0,0.55,0.3}
@@ -67,7 +52,6 @@
 \definecolor{CiteColor}{rgb}{0.55,0.0,0.3}
 \definecolor{HighlightColor}{rgb}{0.0,0.0,0.0}
 
-\usepackage{tikz}
 \usetikzlibrary{shapes}
 %\usetikzlibrary{snakes}
 \usetikzlibrary{arrows}
@@ -80,12 +64,16 @@
 
 \definecolor{grey}{rgb}{0.5,0.5,0.5}
 \definecolor{red}{rgb}{1,0,0}
-%\renewcommand{\pfcounteranchor}[1]
-%  {{\scriptsize#1\color{grey}.}\ \ }
-%  {{\scriptsize{\color{grey}(}#1{\color{grey})}}\ \ }
 
-% \usepackage[all,cmtip]{xy}
-% \usepackage{diagxy}
+\hypersetup{%
+  linktocpage=true, pdfstartview=FitV,
+  breaklinks=true, pageanchor=true, pdfpagemode=UseOutlines,
+  plainpages=false, bookmarksnumbered, bookmarksopen=true, bookmarksopenlevel=3,
+  hypertexnames=true, pdfhighlight=/O,
+  colorlinks=true,linkcolor=LinkColor,citecolor=CiteColor,
+  urlcolor=LinkColor
+}
+
 
 %\theoremstyle{definition}
 %\newtheorem{prop}{Prop}
@@ -96,16 +84,30 @@
 \newtheorem{thm}{Theorem}
 
 \newtheorem{exercise}{Exercise}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FONTS & FORMATTING
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\SetSymbolFont{stmry}{bold}{U}{stmry}{m}{n} % this fixes warnings when \boldsymbol is used with stmaryrd included
 
-\usepackage{rotating}
-\usepackage{xparse}
-\usepackage{xstring}
-\usepackage{semantic}
-\usepackage{csquotes}
+\newcommand{\textdom}[1]{\textit{#1}}
+\newcommand{\textlog}[1]{\textsf{#1}}
+\newcommand{\textsort}[1]{\textlog{#1}}
+\newcommand{\textlang}[1]{\texttt{#1}}
+\newcommand{\textmon}[1]{\textsc{#1}}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% MACROS
+% GENERIC MACROS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand*{\Sref}[1]{\hyperref[#1]{\S\ref*{#1}}}
+\newcommand*{\secref}[1]{\hyperref[#1]{Section~\ref*{#1}}}
+\newcommand*{\lemref}[1]{\hyperref[#1]{Lemma~\ref*{#1}}}
+\newcommand{\corref}[1]{\hyperref[#1]{Cor.~\ref*{#1}}}
+\newcommand*{\defref}[1]{\hyperref[#1]{Definition~\ref*{#1}}}
+\newcommand*{\egref}[1]{\hyperref[#1]{Example~\ref*{#1}}}
+\newcommand*{\appendixref}[1]{\hyperref[#1]{Appendix~\ref*{#1}}}
+\newcommand*{\figref}[1]{\hyperref[#1]{Figure~\ref*{#1}}}
+\newcommand*{\tabref}[1]{\hyperref[#1]{Table~\ref*{#1}}}
 
 \newcommand{\changes}{{\bf\color{red}{Changes}}}
 \newcommand{\TODO}{\vskip 4pt {\color{red}\bf TODO}}
@@ -117,7 +119,6 @@
 
 \newcommand*{\sep}[1][]{\mathrel{\#_{#1}}}	% bad name; it's a different "sep"
 
-\newcommand{\kw}[1]{\textbf{\textsf{#1}}}
 \newcommand{\ALT}{\ |\ }
 
 \newenvironment{pf}
@@ -133,6 +134,14 @@
 
 
 \newcommand{\upclose}{\mathord{\uparrow}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LANGUAGE-LEVEL SYNTAX AND SEMANTICS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\cfg}[2]{{#1};{#2}}
+\newcommand{\fork}[1]{\textlang{fork}\;{#1}}
+
    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % METAVARIABLES
@@ -168,10 +177,10 @@
 
 \newcommand{\subst}{\gamma}
 
-\newcommand{\island}{I}
+%\newcommand{\island}{I}
 \newcommand{\sisland}{\iota}
 %\newcommand{\islands}{\omega}
-\newcommand{\islands}{\mathbf{\island}}
+%\newcommand{\islands}{\mathbf{\island}}
 
 \newcommand{\predinterp}{\PRED}
 \newcommand{\propinterp}{\mathcal{P}}
@@ -186,7 +195,7 @@
 \newcommand{\restypes}{\boldsymbol{\theta}}
 
 
-\newcommand{\aprop}{{\color{red}A}}
+%\newcommand{\aprop}{{\color{red}A}}
 
 \newcommand{\prop}{P}
 \newcommand{\propB}{Q}
@@ -195,12 +204,6 @@
 \newcommand{\pred}{\varphi}
 \newcommand{\predB}{\psi}
 \newcommand{\predC}{\zeta}
-
-\newcommand{\Prop}{\textlog{Prop}}
-\newcommand{\Pred}{\textlog{Pred}}
-
-\newcommand{\PropDom}{\textit{Prop}}
-\newcommand{\PredDom}{\textit{Pred}}
 
 % \newcommand{\Prop}{\mathbb{B}}
 % \newcommand{\Pred}{\mathbb{P}}
@@ -214,23 +217,6 @@
 \newcommand{\vctx}{\Gamma}
 \newcommand{\pfctx}{\Theta}
 
-\newcommand{\PCLCTX}{Prop context}
-\newcommand{\PCVARS}{Variables}
-
-\newcommand{\PContextStyle}[1]{\fbox{\extrasepB{0.5pt}\color{CommentGreen}$#1$}}
-%\newcommand{\PContextStyle}[1]{\ensuremath{\color{CommentGreen}\left[#1\right]}}
-\newcommand{\PContext}[1]{\PContextStyle{\begin{array}{@{}l@{}}\textbf{\PCLCTX: }\\#1\end{array}}}
-\newcommand{\PContextB}[2]{\PContextStyle{\begin{array}{@{}l@{}}
-    \textbf{\PCLCTX: }\hspace{\stretch{1}}\textbf{\PCVARS: }{#1}
-    \\#2
-  \end{array}}}
-\newcommand{\PContextC}[2]{\PContextStyle{\begin{array}{@{}l@{}}
-    \textbf{\PCLCTX: }\qquad\textbf{\PCVARS: }{#1}
-    \\#2
-  \end{array}}}
-\newcommand{\PContextD}[2]{\PContextStyle{
-    \textbf{\PCLCTX: }{#2}\qquad\textbf{\PCVARS: }{#1}}}
-\newcommand{\PContextE}[1]{\PContextStyle{\textbf{\PCVARS: }{#1}}}
 
 \newcommand{\assert}{\varphi}
 \newcommand{\assertB}{\psi}
@@ -247,17 +233,10 @@
 \newcommand{\inv}{I}
 \newcommand{\invs}{\mathcal{I}}
 \newcommand{\mask}{\mathcal{E}}
-\newcommand{\consistent}{\textsf{consistent}}
-
-\newcommand{\fullSat}[4]{#1 \models_{#2} #3; #4}
-\newcommand{\fullNSat}[6]{#2 \models_{#3}^{#1} #4; #5; #6}
 
 \newcommand{\state}{\varsigma}
 \newcommand{\prescar}{\Pi}
 \newcommand{\pres}{\pi}
-
-\newcommand{\erasestate}[1]{|#1|_\state}
-\newcommand{\eraseexp}[1]{|#1|_\expr}
 
 \newcommand{\var}{x}
 \newcommand{\varB}{y}
@@ -280,11 +259,7 @@
 \newcommand{\ttokSet}{I}
 
 \newcommand{\monoid}{M}
-\newcommand{\mcar}[1]{|#1|}
-\newcommand{\mcarp}[1]{\mcar{#1}^{+}}
-\newcommand{\mzero}{\bot}
-\newcommand{\munit}{\mathord{\varepsilon}}
-\newcommand{\mtimes}{\mathbin{\cdot}}
+
 %\newcommand{\mvar}{a}
 %\newcommand{\mvarB}{b}
 \newcommand{\melt}{a}
@@ -293,46 +268,23 @@
 \newcommand{\melts}{A}
 \newcommand{\meltsB}{B}
 \newcommand{\ghostRes}{g}
-\newcommand{\gtimes}{\bullet}
-\newcommand{\monoids}{\textrm{ProdMonoid}}
+
 \newcommand{\gname}{\gamma}
-\newcommand{\valid}{\textsf{valid}}
-\newcommand{\textmon}[1]{\textsc{#1}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% IDENTIFIERS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\newcommand{\textstate}[1]{\textsf{#1}}
-\newcommand{\texttok}[1]{\textsc{#1}}
+\newcommand{\Prop}{\textlog{Prop}}
+\newcommand{\Pred}{\textlog{Pred}}
 
-\newcommand{\atlas}{A}
-
-
-\newcommand{\chmap}{C}
-\newcommand{\bag}{M}
-\newcommand{\chan}{c}
-\newcommand{\chanmaps}{\Yleft}
-\newcommand{\fchanmaps}[1][-]{\stackrel{#1}{\chanmaps}}
-
-
-\newcommand{\msg}{m}
-\newcommand{\dest}{d}
-\let\mkbag=\bag
-\newcommand{\bagB}{N}
-\newcommand{\emptybag}{\emptyset}
-\newcommand{\MASK}{InvMask}
-\newcommand{\CHAN}{Chan}
-\newcommand{\VAR}{Var}
-\newcommand{\VAL}{Val}
-\newcommand{\EXP}{Exp}
-\newcommand{\ECTX}{Ctx}
-\newcommand{\hole}{[]}
-\newcommand{\BAG}{Bag}
-\newcommand{\STATE}{State}
-\newcommand{\rvar}{r}
-
+\newcommand{\PropDom}{\textdom{Prop}}
+\newcommand{\PredDom}{\textdom{Pred}}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SYNTAX
+% SYMBOLS, NOTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \def\All #1.{\forall #1.\;}%
@@ -344,149 +296,21 @@
 \newcommand{\any}{{\rule[-.2ex]{1ex}{.4pt}}}%
 \newcommand{\unitval}{()}%
 
-%\newcommand{\emptytenv}{\bullet}
-%\newcommand{\fn}[2]{\lambda {#1}. {#2}}
-%\newcommand{\app}[2]{{#1}\;{#2}}
-%\newcommand{\pair}[1]{\llparenthesis #1 \rrparenthesis}
-%\newcommand{\true}{\kw{true}}
-%\newcommand{\false}{\kw{false}}
-%\newcommand{\ite}[3]{\kw{if}\ #1\ \kw{then}\ #2\ \kw{else}\ #3}
-%\newcommand{\new}{\kw{new}\;}
-%\newcommand{\deref}[1]{\kw{get}\;{#1}}
-%\newcommand{\assign}[2]{{#1}\;:=\;{#2}}
-%\newcommand{\cas}{\kw{CAS}}
-%\newcommand{\unfold}{\kw{unfold}\ }
-%\newcommand{\fold}{\kw{fold}\ }
-%\newcommand{\unroll}{\kw{unroll}\ }
-%\newcommand{\roll}{\kw{roll}\ }
-%\newcommand{\rec}[2]{\kw{rec}\; {#1}.{#2}}
-%\newcommand{\recf}[3]{\kw{rec}\;{#1}({#2}).{#3}}
-%\newcommand{\recf}[3]{\mu{#1}({#2}).{#3}}
-%\newcommand{\fix}[2]{\kw{fix}\ {#1}.{#2}}
-%\newcommand{\pack}[1]{\kw{pack}\;{#1}}
-%\newcommand{\unpack}[3]{\kw{unpack}\ #1\ \kw{as}\ #2\ \kw{in}\ #3}
-%\newcommand{\atomic}[1]{\kw{atomic}\;{#1}}
-%\newcommand{\inatomic}[1]{\kw{inatomic}\;{#1}}
-%\newcommand{\bind}[2]{\kw{let}\;{#1}\;\kw{in}\;{#2}}
-%
-%\newcommand{\lnew}{\kw{newLcl}}
-%\newcommand{\lderef}[1]{\kw{getLcl}({#1})}
-%\newcommand{\lassign}[2]{\kw{setLcl}({#1},{#2})}
-%
-%\newcommand{\makeAtomic}{\textsf{mkAtomic}}
-%\newcommand{\withLock}{\textsf{withLock}}
 
-\newcommand{\inj}[2]{\kw{inj}_{#1}\;#2}
-\newcommand{\inl}[1]{\inj{1}{#1}}
-\newcommand{\inr}[1]{\inj{2}{#1}}
+\newcommand{\fullSat}[4]{#1 \models_{#2} #3; #4}
+\newcommand{\fullNSat}[6]{#2 \models_{#3}^{#1} #4; #5; #6}
 
-\newcommand{\prj}[2]{\kw{prj}_{#1}\;#2}
-\newcommand{\prl}[1]{\prj{1}{#1}}
-\newcommand{\prr}[1]{\prj{2}{#1}}
+\newcommand{\erasestate}[1]{|#1|_\state}
+\newcommand{\eraseexp}[1]{|#1|_\expr}
 
-%% \newcommand{\match}[5]{\kw{case}\;{#1}\;\kw{of}\;
-%%         \inl{#2} \Rightarrow {#3}\;|\;
-%%         \inr{#4} \Rightarrow {#5}}
-\newcommand{\match}[5]{
-  \kw{case}({#1}, #2 \Rightarrow {#3}, {#4} \Rightarrow {#5})}
-\newcommand{\tabs}[1]{\Lambda. {#1}}
-\newcommand{\tapp}[1]{{#1}\;\any}
-\newcommand{\fork}[1]{\kw{fork}\;{#1}}
-\newcommand{\forkid}[1]{\textsf{forkID}\;{#1}}
-\newcommand{\join}[1]{\textsf{join}\;{#1}}
-\newcommand{\tryAcq}{\textsf{tryAcq}}
-\newcommand{\acq}{\textsf{acq}}
-\newcommand{\rel}{\textsf{rel}}
-%\newcommand{\sync}[2]{\textsf{sync}(#1)\;\{\;{#2}\;\}}
-\newcommand{\sync}{\textsf{sync}}
-\newcommand{\mkSync}{\textsf{mkSync}}
+\newcommand{\mcar}[1]{|#1|}
+\newcommand{\mcarp}[1]{\mcar{#1}^{+}}
+\newcommand{\mzero}{\bot}
+\newcommand{\munit}{\mathord{\varepsilon}}
+\newcommand{\mtimes}{\mathbin{\cdot}}
 
-\definecolor{Erased}{rgb}{0.35,0.35,0.35}
-\definecolor{ErasedLight}{rgb}{0.5,0.5,0.5}
-\newcommand{\erased}[1]{{\color{ErasedLight}[}{\color{Erased}#1}{\color{ErasedLight}]}}
-%\newcommand{\erased}[1]{\underline{#1}}
+\newcommand{\gtimes}{\bullet}
 
-\newcommand{\bool}{\kw{B}}
-\newcommand{\nat}{\kw{N}}
-\newcommand{\unit}{\kw{1}}
-%% \newcommand{\b\ool}{\kw{bool}}
-%% \newcommand{\nat}{\kw{nat}}
-%% \newcommand{\unit}{\kw{unit}}
-%\newcommand{\refTy}[1]{\kw{ref}\;{#1}}
-%\newcommand{\lrefTy}[1]{\kw{refLcl}\;{#1}}
-
-%\newcommand{\optrefTy}[1]{\kw{ref}_{?}({#1})}
-%\newcommand{\optTy}[1]{{#1}_{?}}
-%\newcommand{\none}{\textsf{none}}
-%\newcommand{\some}{\textsf{some}}
-
-%\newcommand{\threadTy}[1]{\kw{thread}\;{#1}}
-%\newcommand{\all}[2]{\forall {#1}.{#2}}
-%\newcommand{\ex}[2]{\exists {#1}.{#2}}
-%\newcommand{\recTy}[2]{\mu {#1}.{#2}}
-%\newcommand{\thread}[1]{\kw{thread}\;{#1}}
-%
-%\newcommand{\derefi}[2]{\kw{get}({#1}[{#2}])}
-%\newcommand{\assigni}[3]{{#1}[#2]\;:=\;{#3}}
-%\newcommand{\casi}[4]{\cas({#1}[{#2}], #3, #4)}
-%
-%\newcommand{\casF}[3]{\cas({#1}, #2, #3)}
-
-%% \newcommand{\mpair}[2]{#1 \otimes #2}
-%% \newcommand{\assignL}[2]{{#1}\;:=_1\;{#2}}
-%% \newcommand{\assignR}[2]{{#1}\;:=_2\;{#2}}
-
-\newcommand{\emptyivar}{\bot}
-
-\newcommand{\cfg}[2]{{#1};{#2}}
-\newcommand{\acfg}[3]{{#1};\;{#2};\;{#3}}
-\newcommand{\enables}[2]{#1\mbox{ enables }#2}
-
-\newcommand{\R}[1]{\mbox{$\{\;\begin{array}[t]{@{}l@{}}{#1}\;\}\end{array}$}}
-
-\newcommand{\id}{\bot}
-
-\newcommand{\isvar}{N}
-\newcommand{\iset}{N}
-
-
-%\newcommand*\kwd[1]{\textup{\textbf{\texttt{#1}}}}
-\let\kwd\kw
-\newcommand*\dform[1]{\textsf{#1}}
-\newcommand*{\ide}[1]{\mathit{#1}}
-
-\reservestyle{\keyword}{\kw}
-\reservestyle{\langop}{\mathrm}
-\reservestyle{\derivedform}{\dform}
-\reservestyle{\identifier}{\ide}
-
-\keyword{let[let\:],let*[let],in[\:in\:],if[if\:],then[\:then\:],else[\:else\:],skip,skip*[skip]}
-\keyword{case[case\:],of[\:of\:]}%
-\keyword{rec[rec\:],rec*[rec]}
-\def\Rec #1.{\<rec>{#1}.\;}
-\keyword{fork[fork\:],newch,newch*[newch],send,send*[send],tryrecv[tryrecv\:],tryrecv*[tryrecv]}%
-\derivedform{recv[recv\:],recv*[recv]}%
-\derivedform{cas,cas*[cas],ref[ref\:],ref*[ref]}
-%\newcommand{\cas}{\<cas*>}%	override setup's \kw{CAS}
-\langop{!,:=}
-\derivedform{true,false}
-\derivedform{Some,None}
-\derivedform{null}
-\identifier{reply}%
-\derivedform{srv,rpc,rpc*[rpc],Get,Set,Cas}%
-\derivedform{spawn,join}
-
-\newcommand\parcomp{\mathrel{||}}
-
-\identifier{loop}%
-\newcommand*{\Esend}[2]{\<send>(#1, #2)}
-\newcommand{\Eref}{\mask_\textsf{ref}}
-\newcommand*{\refmaps}{\mapsto}
-\newcommand{\Echan}{\mask_\mathsf{chan}}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ASSERTIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 \newcommand{\protAt}[3]{\mbox{$
@@ -618,131 +442,6 @@
 \newcommand{\gmapsto}{\hookrightarrow}%
 \newcommand{\fgmapsto}[1][-]{\stackrel{#1}{\gmapsto}}%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% EXAMPLES
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newcommand{\onemany}[3]{
-  \draw[thick,->] (#1) to node [swap] {#2} (#3)
-%  \draw[-,thick] (#1) to node [swap] {#2} (#3)
-}
-\newcommand{\onemanyB}[3]{
-  \draw[thick,->] (#1) to node {#2} (#3)
-%  \draw[-,thick] (#1) to node [swap] {#2} (#3)
-}
-\newcommand{\onemanyabove}[3]{
-  \draw[thick,->] (#1) to [out=90,in=90] node [swap] {#2} (#3)
-%  \draw[-,thick] (#1) to [out=90,in=90] node [swap] {#2}  (#3)
-}
-
-\newcommand{\ret}{\textsf{ret}}
-
-\newcommand{\try}{\textsf{try}}
-
-%\newcommand{\lock}{\textsf{lock}}
-%\newcommand{\unlock}{\textsf{unlock}}
-%\newcommand{\newlock}{\textsf{newlock}}
-\newcommand{\head}{\textsf{hd}}
-
-\newcommand{\optionTy}{\textsf{option}}
-
-\newcommand{\extract}[1]{\textsf{getVal}(#1)}
-
-\newcommand{\listTy}{\textsf{list}}
-\newcommand{\cons}{\textsf{cons}}
-\newcommand{\nil}{\textsf{nil}}
-\newcommand{\nullv}{\textsf{null}}
-%\newcommand{\nil}{\none}
-\newcommand{\setNext}{\textsf{setNext}}
-
-\newcommand{\consAtI}[3]{{#1} \propto_\simpl \cons({#2}, {#3})}
-\newcommand{\consAtS}[3]{{#1} \propto_\sspec \cons({#2}, {#3})}
-
-%\newcommand{\consAt}[3]{\cons({#1}, {#2})@{#3}}
-
-\newcommand{\enq}{\textsf{enq}}
-%\newcommand{\tryDeq}{\textsf{tryDeq}}
-\newcommand{\deq}{\textsf{deq}}
-
-\newcommand{\live}{\textsf{Live}}
-\newcommand{\dead}{\textsf{Dead}}
-\newcommand{\sentinel}{\textsf{Sentinel}}
-
-\newcommand{\link}{\textlog{Link}}
-
-%\newcommand{\lateChoice}{\textsf{lateChoice}}
-%\newcommand{\earlyChoice}{\textsf{earlyChoice}}
-%\newcommand{\rand}{\textsf{rand}}
-
-%\newcommand{\redFlag}{\textsf{redFlag}}
-%\newcommand{\blueFlag}{\textsf{blueFlag}}
-%\newcommand{\flag}{\textit{flag}}
-%\newcommand{\chan}{\textit{chan}}
-%\newcommand{\flip}{\textsf{flip}}
-%\newcommand{\flipBody}{\textsf{flipBody}}
-%\newcommand{\read}{\textsf{read}}
-
-%\newcommand{\install}{\textsf{install}}
-%\newcommand{\commit}{\textsf{commit}}
-%\newcommand{\abort}{\textsf{abort}}
-%\newcommand{\complete}{\textsf{complete}}
-
-\newcommand{\undecided}{\textsf{U}}
-\newcommand{\committed}{\textsf{C}}
-\newcommand{\aborted}{\textsf{A}}
-
-\newcommand{\descriptor}{\textsf{descriptor}}
-
-\newcommand{\ccas}{\widehat{\textsf{ccas}}}
-\newcommand{\ccasCAS}{\widehat{\textsf{cas}}}
-\newcommand{\ccasRead}{\widehat{\textsf{read}}}
-
-\newcommand{\Empty}{\textsf{Empty}}
-\newcommand{\Offered}{\textsf{Offered}}
-\newcommand{\Accepted}{\textsf{Accepted}}
-
-\newcommand{\counter}{\textsf{counter}}
-\newcommand{\fun}{\textsf{fun}}
-\newcommand{\get}{\textsf{get}}
-\newcommand{\complete}{\textsf{complete}}
-\newcommand{\setFlag}{\textsf{setFlag}}
-\newcommand{\condInc}{\textsf{cinc}}
-
-\newcommand{\Signaled}{\textsf{Signaled}}
-\newcommand{\Speculated}{\textsf{Speculated}}
-\newcommand{\Completed}{\textsf{Done}}
-\newcommand{\Withdrawn}{\textsf{Gone}}
-
-\newcommand{\Upd}{\textsf{Upd}}
-\newcommand{\Const}{\textsf{Const}}
-
-\newcommand{\reach}{\textsf{reach}}
-
-\newcommand{\ann}[1]{
-  {\color{KeywordBlue}\ensuremath{
-  \{
-    \begin{array}[t]{@{}l@{}}
-      #1 
-    \end{array}
-  \}}}
-}
-
-\newcommand{\annB}[1]{
-  {\color{KeywordBlue}\ensuremath{
-  \left\{
-    \begin{array}{@{}l@{}}
-      #1 
-    \end{array}
-  \right\}}}
-}
-
-\newcommand{\aann}[1]{
-  {\color{KeywordBlue}
-   \begin{array}{@{}l@{}}
-     \llparenthesis #1 \rrparenthesis
-   \end{array}}
-}
-
-\newcommand{\sortOf}{\textlog{sort}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % JUDGMENTS
@@ -761,43 +460,8 @@
 \newcommand{\isAtomic}[2]{\cfg{#1}{#2}\ \textrm{atomic}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% MATH
+% MATH SYMBOLS & NOTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\newcommand{\pabs}{\lambda}
-
-\newcommand{\textdom}[1]{\textit{#1}}
-%\newcommand{\texttok}[1]{\textit{#1}}
-\newcommand{\textlog}[1]{\textsf{#1}}
-\newcommand{\textsort}[1]{\textlog{#1}}
-\newcommand{\textvar}[1]{\textit{#1}}
-
-\newcommand{\erase}[1]{\lfloor #1 \rfloor}
-\newcommand{\UNLIMITED}{\textdom{UWorld}}
-
-\newcommand{\sat}[3]{(#1,#2) : {#3}}
-\newcommand{\satw}[3]{#1, #2 : #3}
-\newcommand{\satwi}[4]{#1, #2 : #3, #4}
-\newcommand{\satwiB}[3]{#1 : #2, #3}
-
-\newcommand{\satall}[5]{#1, #2 \models_{#3} #4, #5}
-
-\newcommand{\ftv}[1]{\mathrm{ftv}(#1)}
-\newcommand{\tv}[1]{\mathrm{tyvars}(#1)}
-\newcommand{\vars}[1]{\mathrm{vars}(#1)}
-\newcommand{\threads}[1]{\mathrm{threads}(#1)}
-\newcommand{\spec}[2]{\mathrm{spec}(#1,#2)}
-
-\newcommand{\refisland}[2]{\mathrm{ref}(#1, #2)}
-\newcommand{\hvalisland}[2]{\mathrm{hval}(#1, #2)}
-\newcommand{\halloc}[2]{\mathrm{halloc}\left(#1, #2\right)}
-
-\newcommand{\withIsland}{\blacktriangleleft}
-\newcommand{\withIslands}{\blacktriangleleft}
-\newcommand{\wimplspecextend}[2]{#1 \blacktriangleleft #2}
-\newcommand{\whvalalloc}[3]{#1 \blacktriangleleft_{#2} #3}
-
-\newcommand{\wok}[1]{{#1}\;\mbox{valid}}  % ``World OK''
 
 \newcommand{\pfn}{\rightharpoonup}
 \newcommand{\fpfn}{\stackrel{\textrm{fin}}{\rightharpoonup}}
@@ -806,54 +470,11 @@
 \newcommand{\Lra}{\Leftrightarrow}
 \newcommand{\monra}{\stackrel{\textrm{mon}}{\rightarrow}}
 %\newcommand{\res}{\upharpoonright}
-
-\newcommand{\restr}[2]{\lfloor #1 \rfloor_{#2}}
-
-\newcommand{\zipTo}{\upharpoonright}
-
-\newcommand{\OLDPRIMSTEP}[1]{{\color{red}\hookrightarrow}}
-
-\newcommand{\reachable}{\diamond}
-\newcommand{\cstep}{\rightrightarrows}
-\newcommand{\primstep}[1]{\stackrel{#1}{\rightarrow}}
-\newcommand{\purestep}{\stackrel{\textrm{pure}}{\rightarrow}}%
 \newcommand{\step}{\ra}
-\newcommand{\lstep}[1]{\stackrel{#1}{\step}}
-\newcommand{\starstep}{\step^{*}}
-\newcommand{\stepstar}{\starstep}
-\newcommand{\resstep}[3]{#1 \vdash #2 \step #3}
-\newcommand{\lresstep}[4]{#1 \vdash #2 \lstep{#4} #3}
-
-\newcommand{\heapOf}{\textrm{heap}}
-
-\newcommand{\mstep}[1]{\stackrel{#1}{\leadsto}}
-
-\newcommand{\exclusive}[1]{\textrm{ex}(#1)}
-\newcommand{\tpalg}[1]{\overline{\wp}(#1)}
-\newcommand{\optional}[1]{{#1}_\id}
-\newcommand{\tsys}[1]{\textrm{trans}(#1)}
-
-\newcommand{\pstep}{\leadsto}
-\newcommand{\lpstep}[1]{\stackrel{#1}{\pstep}}
-\newcommand{\downto}{\searrow}
-
-\newcommand{\wstep}[5]{\langle#1, #2\rangle \stackrel{#3}{\rightarrow} \langle#4, #5\rangle}
-
-\newcommand{\wsplit}{\bullet}
-\newcommand{\rsplit}{\bullet}
-
-\newcommand{\issplit}{\otimes}
-\newcommand{\ssplit}{\otimes}
-\newcommand{\orspec}{\oplus}
-\newcommand{\withCtx}{\triangleleft}
-
-\newcommand{\protStatus}{E}
-\newcommand{\disabled}{\textsf{disabled}}
-\newcommand{\enabled}{\textsf{enabled}}
-
 %\newcommand{\monora}{\stackrel{\textrm{mono}}{\longrightarrow}}
 \newcommand{\monora}{\Rightarrow}
 
+\newcommand{\restr}[2]{\lfloor #1 \rfloor_{#2}}
 % LB
 \newcommand{\nequiv}[1]{\ensuremath{\mathrel{\stackrel{#1}{=}}}}
 \newcommand{\notnequiv}[1]{\ensuremath{\mathrel{\stackrel{#1}{\neq}}}}
@@ -913,7 +534,6 @@
 \newcommand{\pvsA}[3]{\textlog{vs}_{#2}^{#3}({#1})}
 
 
-\usepackage{scalerel}
 % \hoaresizebox pre post
 % \hoarescalebox char sizebox
 \newcommand*{\hoaresizebox}[1]{%
@@ -1013,32 +633,6 @@
 
 \newcommand{\geqIS}{\sqsupseteq}
 
-\newcommand{\relyguar}{\textrm{rg}}
-\newcommand{\leqRG}{\stackrel{\relyguar}{\sqsubseteq}}
-\newcommand{\leqRGB}[1]{\stackrel{\textrm{rg}}{\sqsubseteq_{#1}}}
-
-\newcommand{\geqAll}{\sqsupseteq}
-\newcommand{\geqRely}{\stackrel{\textrm{rely}}{\sqsupseteq}}
-\newcommand{\geqRelyB}[1]{\stackrel{\textrm{rely}}{\sqsupseteq_{#1}}}
-\newcommand{\geqRelyC}[1]{\sqsupseteq^{\textrm{rely}}_{#1}}
-\newcommand{\geqGuar}{\stackrel{\textrm{guar}}{\sqsupseteq}}
-\newcommand{\geqGuarB}[1]{\stackrel{\textrm{guar}}{\sqsupseteq_{#1}}}
-\newcommand{\geqGuarC}[1]{\sqsupseteq^{\textrm{guar}}_{#1}}
-
-\newcommand{\leqRely}{\stackrel{\textrm{rely}}{\sqsubseteq}}
-\newcommand{\leqRelyB}[1]{\stackrel{\textrm{rely}}{\sqsubseteq_{#1}}}
-\newcommand{\leqRelyC}[1]{\sqsubseteq^{\textrm{rely}}_{#1}}
-\newcommand{\leqGuar}{\stackrel{\textrm{guar}}{\sqsubseteq}}
-\newcommand{\leqGuarB}[1]{\stackrel{\textrm{guar}}{\sqsubseteq_{#1}}}
-\newcommand{\leqGuarC}[1]{\sqsubseteq^{\textrm{guar}}_{#1}}
-
-\newcommand{\intleq}{\stackrel{\textrm{int}}{\sqsubseteq}}
-\newcommand{\extleq}{\stackrel{\textrm{ext}}{\sqsubseteq}}
-\newcommand{\intgeq}{\stackrel{\textrm{int}}{\sqsupseteq}}
-\newcommand{\extgeq}{\stackrel{\textrm{ext}}{\sqsupseteq}}
-
-\newcommand{\withframe}{\ \mbox{${<}\!\!*$}\ }
-
 \newcommand{\proves}{\vdash}
 \newcommand{\provesalways}{\vdash_{\!\!\boxempty}}
 \newcommand{\refines}{\leq}
@@ -1046,102 +640,14 @@
 
 \newcommand{\hasHVal}[3]{#1 \Ra \textrm{hval}(#2, #3)}
 
-\newcommand{\multi}[1]{\!\!\!\begin{array}[t]{l}
-#1
-\end{array}
-}
-\newcommand{\multic}[1]{\!\!\!\begin{array}[c]{l}
-#1
-\end{array}
-}
-
-\newcommand{\pureleq}{\preceq_{\textrm{pure}}}
-\newcommand{\logleq}[4]{#1 \proves #2 \preceq #3 : #4}
-\newcommand{\semleq}[4]{#1 \models #2 \preceq #3 : #4}
-
-\newcommand{\hypleq}[6]{{#1}; {#2} \models {#3} \proves {#4} \preceq {#5} : {#6}}
-
-\newcommand{\progleq}[4]{#1 \models #2 \stackrel{\textrm{prog}}{\preceq} #3 : #4}
-\newcommand{\specleq}[4]{#1 \models #2 \stackrel{\textrm{spec}}{\preceq} #3 : #4}
-\newcommand{\mixleq}[4]{#1 \models #2 \stackrel{\textrm{mix}}{\preceq} #3 : #4}
-
-\newcommand{\result}[2]{\pbrk
-\begin{quotation}
-\hskip -0.25in
-$\begin{array}{@{}ll}
-   \textrm{If} & #1 \\
-   \textrm{then} & #2
- \end{array}$
-\end{quotation}
-}
-\newcommand{\resrule}[2]{\pbrk
-\begin{quotation}
-\hskip -0.25in
-$\infer{#1}{#2}$
-\end{quotation}
-}
-%\newcommand{\rand}{\\&}
-\newcommand{\randB}{\qquad}
-
-%\renewcommand{\labelitemi}{$\bullet$}
-%\renewcommand{\labelitemii}{$\bullet$}
-%\renewcommand{\labelitemiii}{$\bullet$}
-%\renewcommand{\labelitemiv}{$\bullet$}
-
-\newcommand{\mc}[1]{\multicolumn{2}{@{}l}{#1}}
-\newcommand{\mcl}[2]{\multicolumn{#1}{@{}l}{#2}}
-
-\newcommand{\citem}[1]{\item\textit{Case: } \fbox{$#1$}\quad}
-\newcommand{\cand}{\textrm{ and }}
-
-\newcommand{\claim}[1]{\vskip 5pt \noindent \mbox{\textit{Claim: } \fbox{$#1$}}\quad}
-\newcommand{\case}[1]{\vskip 5pt \noindent \textit{Case: } \fbox{$#1$}\quad}
-\newcommand{\casec}[1]{\vskip 5pt \noindent \mbox{\textit{Case \textsc{#1}}: \ }}
-\newcommand{\subcase}[1]{\vskip 5pt \textit{Subcase: } \fbox{$#1$}\ }
-\newcommand{\subcasec}[1]{\vskip 5pt \noindent \qquad \mbox{\textit{Subcase \textsc{#1}}: \ }}
-\newcommand{\subcasen}{\vskip 5pt \noindent \qquad \mbox{\textit{Subcase: } \ }}
-
-\newcommand{\have}[1]{$\begin{array}[t]{@{}l} #1 \end{array}$}
-
-\newcommand{\TIME}{\textrm{time}}
-\newcommand{\MAP}{\textrm{map}}
 
 \newcommand{\dom}{\textrm{dom}}
 \newcommand{\rng}{\textrm{rng}}
 \newcommand{\cod}{\textrm{cod}}
 
-\newcommand{\elide}[1]{}
-
-\newcommand{\ov}[1]{\overline{#1}}
-\newcommand{\CR}{\mathcal{R}}
-\newcommand{\CS}{\mathcal{S}}
 
 \newcommand{\IF}{\mathrel{\text{if}}}
-\newcommand{\OW}{\text{otherwise}}	% not a relation
 \newcommand{\WHEN}{\textrm{when }}
-\newcommand{\FIX}{\textrm{Fix }}
-\newcommand{\LET}{\textrm{Let }}
-\newcommand{\IN}{\textrm{ in }}
-\newcommand{\SUPPOSE}{\textrm{Suppose }}
-\newcommand{\HAVE}{\textrm{Have }}
-\newcommand{\RAND}{\textrm{ and }}
-\newcommand{\WHERE}{\mathrel{\text{where}}}
-\newcommand{\ASSUMPTION}{\textrm{assumption}}
-\newcommand{\THEN}{\textrm{Then }}
-\newcommand{\WRITE}{\textrm{Write }}
-\newcommand{\PICK}{\textrm{Pick }}
-\newcommand{\WITH}{\textrm{ with }}
-\newcommand{\WLOG}{\textrm{ WLOG}}
-%newcommand{\STS}{\textrm{Suffices to show }}
-
-\newcommand{\extrasep}{\setlength{\extrarowheight}{1.5pt}}
-\newcommand{\extrasepB}[1]{\setlength{\extrarowheight}{#1}}
-\newcommand{\medextrasep}{\setlength{\extrarowheight}{2pt}}
-\newcommand{\bigextrasep}{\setlength{\extrarowheight}{3pt}}
-\newcommand{\hugeextrasep}{\setlength{\extrarowheight}{5pt}}
-\newcommand{\noextrasep}{\setlength{\extrarowheight}{0pt}}
-
-\newcommand{\iffrule}{\mprset{fraction={===}}}
 
 \newcommand{\ie}{\emph{i.e.,} }
 \newcommand{\eg}{\emph{e.g.,} }

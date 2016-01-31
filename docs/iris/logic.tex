@@ -22,20 +22,20 @@
   expression then so is $\fork{\expr}$.  We moreover assume a value
   \textsf{fRet} (giving the intended return value of a fork), and we assume that
   \begin{align*}
-   \fork{\expr} &\notin \textdom{Val} \\
-   \fork{\expr_1} = \fork{\expr_2} &\implies \expr_1 = \expr_2
+    \fork{\expr} &\notin \textdom{Val} \\
+    \fork{\expr_1} = \fork{\expr_2} &\implies \expr_1 = \expr_2
   \end{align*}
 \item A set $\textdom{Ectx}$ of \emph{evaluation contexts} ($\ectx$) that includes the empty context $[\; ]$,
   a plugging operation $\ectx[\expr]$ that produces an expression, and context composition $\circ$
   satisfying the following axioms:
   \begin{align*}
-   [\; ][ \expr ] &= \expr \\
-   \ectx_1[\ectx_2[\expr]] &= (\ectx_1 \circ \ectx_2) [\expr] \\
-   \ectx_1[\expr] = \ectx_2[\expr] &\implies \ectx_1 = \ectx_2 \\
-   \ectx[\expr_1] = \ectx[\expr_2] &\implies \expr_1 = \expr_2 \\
-   \ectx_1 \circ \ectx_2 = [\; ] &\implies \ectx_1 = \ectx_2 = [\; ] \\
-   \ectx[\expr] \in \textdom{Val} &\implies \ectx = [\;] \\
-   \ectx[\expr] = \fork{\expr'} &\implies \ectx = [\;]
+    [\; ][ \expr ] &= \expr \\
+    \ectx_1[\ectx_2[\expr]] &= (\ectx_1 \circ \ectx_2) [\expr] \\
+    \ectx_1[\expr] = \ectx_2[\expr] &\implies \ectx_1 = \ectx_2 \\
+    \ectx[\expr_1] = \ectx[\expr_2] &\implies \expr_1 = \expr_2 \\
+    \ectx_1 \circ \ectx_2 = [\; ] &\implies \ectx_1 = \ectx_2 = [\; ] \\
+    \ectx[\expr] \in \textdom{Val} &\implies \ectx = [\;] \\
+    \ectx[\expr] = \fork{\expr'} &\implies \ectx = [\;]
   \end{align*}
 
 \item A set \textdom{State} of shared machine states (\eg heaps), metavariable $\state$.
@@ -45,7 +45,7 @@
 and notions of an expression to be \emph{reducible} or \emph{stuck}, such that
 \begin{align*}
   \textlog{reducible}(\expr) &\iff \Exists \state, \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \\
-  \textlog{stuck}(\expr) &\iff \All \ectx, \expr'. \expr = \ectx[\expr'] \implies
+%  \textlog{stuck}(\expr) &\iff \All \ectx, \expr'. \expr = \ectx[\expr'] \implies
    \lnot \textlog{reducible}(\expr')
 \end{align*}
 and the following hold
@@ -340,14 +340,13 @@ Axioms $\prop \Ra \propB$ stand for judgments $\vctx \mid \cdot \proves \prop \R
 % 
 % Proof rules implicitly assume well-sortedness.  
 
-\subsection{Laws of intuitionistic higher-order logic with guarded recursion over a simply-typed lambda calculus}\label{sec:HOL}
+% e\subsection{Laws of intuitionistic higher-order logic with guarded recursion over a simply-typed lambda calculus}\label{sec:HOL}
 
-Standard.
+This is entirely standard.
 
 Soundness follows from the theorem that ${\cal U}(\any, \textdom{Prop})
-: {\cal U}^\textrm{op} \to \textrm{Poset}$ is a hyperdoctrine. 
+: {\cal U}^{\textrm{op}} \to \textrm{Poset}$ is a hyperdoctrine. 
 
-\elide{
 \begin{mathpar}
 \inferH{Asm}
   {\prop \in \pfctx}
@@ -357,87 +356,86 @@ Soundness follows from the theorem that ${\cal U}(\any, \textdom{Prop})
   {\pfctx \proves \prop(\term) \\ \pfctx \proves \term = \term'}
   {\pfctx \proves \prop(\term')}
 \and
-\inferH{$\wedge$I}
+\infer[$\wedge$I]
   {\pfctx \proves \prop \\ \pfctx \proves \propB}
   {\pfctx \proves \prop \wedge \propB}
 \and
-\inferH{$\wedge$EL}
+\infer[$\wedge$EL]
   {\pfctx \proves \prop \wedge \propB}
   {\pfctx \proves \prop}
 \and
-\inferH{$\wedge$ER}
+\infer[$\wedge$ER]
   {\pfctx \proves \prop \wedge \propB}
   {\pfctx \proves \propB}
 \and
-\inferH{$\vee$E}
+\infer[$\vee$E]
   {\pfctx \proves \prop \vee \propB \\
    \pfctx, \prop \proves \propC \\
    \pfctx, \propB \proves \propC}
   {\pfctx \proves \propC}
 \and
-\inferH{$\vee$IL}
+\infer[$\vee$IL]
   {\pfctx \proves \prop }
   {\pfctx \proves \prop \vee \propB}
 \and
-\inferH{$\vee$IR}
+\infer[$\vee$IR]
   {\pfctx \proves \propB}
   {\pfctx \proves \prop \vee \propB}
 \and
-\inferH{$\Ra$I}
+\infer[$\Ra$I]
   {\pfctx, \prop \proves \propB}
   {\pfctx \proves \prop \Ra \propB}
 \and
-\inferH{$\Ra$E}
+\infer[$\Ra$E]
   {\pfctx \proves \prop \Ra \propB \\ \pfctx \proves \prop}
   {\pfctx \proves \propB}
 \and
-\inferH{$\forall_1$I}
+\infer[$\forall_1$I]
   {\pfctx, x : \sort \proves \prop}
   {\pfctx \proves \forall x: \sort.\; \prop}
 \and
-\inferH{$\forall_1$E}
+\infer[$\forall_1$E]
   {\pfctx \proves \forall X \in \sort.\; \prop \\
    \pfctx \proves \term: \sort}
   {\pfctx \proves \prop[\term/X]}
 \and
-\inferH{$\exists_1$E}
+\infer[$\exists_1$E]
   {\pfctx \proves \exists X\in \sort.\; \prop \\
    \pfctx, X : \sort, \prop \proves \propB}
   {\pfctx \proves \propB}
 \and
-\inferH{$\exists_1$I}
+\infer[$\exists_1$I]
   {\pfctx \proves \prop[\term/X] \\
    \pfctx \proves \term: \sort}
   {\pfctx \proves \exists X: \sort. \prop}
 \and
-\inferH{$\forall_2$I}
+\infer[$\forall_2$I]
   {\pfctx, \pvar: \Pred(\sort) \proves \prop}
   {\pfctx \proves \forall \pvar\in \Pred(\sort).\; \prop}
 \and
-\inferH{$\forall_2$E}
+\infer[$\forall_2$E]
   {\pfctx \proves \forall \pvar. \prop \\
    \pfctx \proves \propB: \Prop}
   {\pfctx \proves \prop[\propB/\pvar]}
 \and
-\inferH{$\exists_2$E}
+\infer[$\exists_2$E]
   {\pfctx \proves \exists \pvar \in \Pred(\sort).\prop \\
    \pfctx, \pvar : \Pred(\sort), \prop \proves \propB}
   {\pfctx \proves \propB}
 \and
-\inferH{$\exists_2$I}
+\infer[$\exists_2$I]
   {\pfctx \proves \prop[\propB/\pvar] \\
    \pfctx \proves \propB: \Prop}
   {\pfctx \proves \exists \pvar. \prop}
 \and
-\inferHB{Elem}
+\inferB[Elem]
   {\pfctx \proves \term \in (X \in \sort). \prop}
   {\pfctx \proves \prop[\term/X]}
 \and
-\inferHB{Elem-$\mu$}
+\inferB[Elem-$\mu$]
   {\pfctx \proves \term \in (\mu\pvar \in \Pred(\sort). \pred)}
   {\pfctx \proves \term \in \pred[\mu\pvar \in \Pred(\sort). \pred/\pvar]}
 \end{mathpar}
-}
 
 \subsection{Axioms from the logic of (affine) bunched implications}
 \begin{mathpar}
@@ -807,3 +805,8 @@ The following specializations cover all cases of a heap-manipulating lambda calc
 The first is restricted to deterministic pure reductions, like $\beta$-reduction.
 The second is suited to proving triples for (possibly non-deterministic) atomic expressions; for example, with $\expr \eqdef \;!\ell$ (dereferencing $\ell$) and $\state \eqdef h \mtimes \ell \mapsto \valB$ and $\pred(\val, \state') \eqdef \state' = (h \mtimes \ell \mapsto \valB) \land \val = \valB$, one obtains the axiom $\All h, \ell, \valB. \hoare{\ownPhys{h \mtimes \ell \mapsto \valB}}{!\ell}{\Ret\val. \val = \valB \land \ownPhys{h \mtimes \ell \mapsto \valB} }$.
 %Axioms for CAS-like operations can be obtained by first deriving rules for the two possible cases, and then using the disjunction rule.
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "iris"
+%%% End:

@@ -84,7 +84,7 @@ action on morphisms).
 \textdom{Res} &\eqdef&
 \{\, \rs = (\pres, \ghostRes) \mid
 \pres \in \textdom{State} \uplus \{\munit\} \land \ghostRes \in \mcarp{\monoid} \,\} \\[0.5em]
-(\pres, \ghostRes) \rsplit
+(\pres, \ghostRes) \rtimes
 (\pres', \ghostRes') &\eqdef&
 \begin{cases}
 (\pres, \ghostRes \mtimes \ghostRes')  & \mbox{if $\pres' = \munit$ and $\ghostRes \mtimes \ghostRes' \neq \mzero$} \\
@@ -93,7 +93,7 @@ action on morphisms).
 \\[0.5em]
 %
 \rs \leq \rs' & \eqdef &
-\Exists \rs''. \rs' = \rs \rsplit \rs''\\[1em]
+\Exists \rs''. \rs' = \rs \rtimes \rs''\\[1em]
 %
 \UPred(\textdom{Res}) &\eqdef& 
 \{\, p \subseteq \mathbb{N} \times \textdom{Res} \mid
@@ -149,7 +149,7 @@ For a set $X$, write $\Delta X$ for the discrete c.o.f.e.\ with $x \nequiv{n}
 x'$ iff $n = 0$ or $x = x'$
 \[
 \begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
-\semSort{\unit} &\eqdef& \Delta \{ \star \} \\
+\semSort{\textsort{Unit}} &\eqdef& \Delta \{ \star \} \\
 \semSort{\textsort{InvName}} &\eqdef& \Delta \mathbb{N}  \\
 \semSort{\textsort{InvMask}} &\eqdef& \Delta \pset{\mathbb{N}} \\
 \semSort{\textsort{Monoid}} &\eqdef& \Delta |\monoid|
@@ -234,7 +234,7 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 \begin{align*}
 	\fullSat{\state}{\mask}{\rs}{W} &=
 	\begin{aligned}[t]
-		\{\, n + 1 \in \mathbb{N} \mid &\Exists  \rsB:\mathbb{N} \fpfn \textdom{Res}. (\rs \rsplit \rsB).\pres = \state \land{}\\
+		\{\, n + 1 \in \mathbb{N} \mid &\Exists  \rsB:\mathbb{N} \fpfn \textdom{Res}. (\rs \rtimes \rsB).\pres = \state \land{}\\
 		&\quad \All \iota \in \dom(W). \iota \in \dom(W) \leftrightarrow \iota \in \dom(\rsB) \land {}\\
 		&\quad\quad \iota \in \mask \ra (n, \rsB(\iota)) \in \wIso^{-1}(W(\iota))(W) \,\} \cup \{ 0 \}
 	\end{aligned}
@@ -295,9 +295,9 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 	\begin{aligned}[t]
 		\{\, (n, \rs) &\mid \All W_F \geq W. \All \rs_F, \mask_F, \state. \All k \leq n.\\
 		&\qquad 
-		k \in (\fullSat{\state}{\mask_1 \cup \mask_F}{\rs \rsplit \rs_F}{W_F}) \land k > 0 \land \mask_F \sep (\mask_1 \cup \mask_2) \implies{} \\
+		k \in (\fullSat{\state}{\mask_1 \cup \mask_F}{\rs \rtimes \rs_F}{W_F}) \land k > 0 \land \mask_F \sep (\mask_1 \cup \mask_2) \implies{} \\
 		&\qquad
-		\Exists W' \geq W_F. \Exists \rs'. k \in (\fullSat{\state}{\mask_2 \cup \mask_F}{\rs' \rsplit \rs_F}{W'}) \land (k, \rs') \in q(W')
+		\Exists W' \geq W_F. \Exists \rs'. k \in (\fullSat{\state}{\mask_2 \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k, \rs') \in q(W')
 		\,\}
 	\end{aligned}
 \end{align*}
@@ -392,19 +392,19 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 \begin{align*}
 	\mathit{wp}_\mask(\expr, q) &\eqdef \Lam W.
 	\begin{aligned}[t]
-		\{\, (n, \rs) &\mid \All W_F \geq W; k \leq n; \rs_F; \state; \mask_F \sep \mask. k > 0 \land k \in (\fullSat{\state}{\mask \cup \mask_F}{\rs \rsplit \rs_F}{W_F}) \implies{}\\
+		\{\, (n, \rs) &\mid \All W_F \geq W; k \leq n; \rs_F; \state; \mask_F \sep \mask. k > 0 \land k \in (\fullSat{\state}{\mask \cup \mask_F}{\rs \rtimes \rs_F}{W_F}) \implies{}\\
 		&\qquad
 		(\expr \in \textdom{Val} \implies \Exists W' \geq W_F. \Exists \rs'. \\
 		&\qquad\qquad
-		k \in (\fullSat{\state}{\mask \cup \mask_F}{\rs' \rsplit \rs_F}{W'}) \land (k, \rs') \in q(\expr)(W'))~\land \\
+		k \in (\fullSat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k, \rs') \in q(\expr)(W'))~\land \\
 		&\qquad
 		(\All\ectx,\expr_0,\expr'_0,\state'. \expr = \ectx[\expr_0] \land \cfg{\state}{\expr_0} \step \cfg{\state'}{\expr'_0} \implies \Exists W' \geq W_F. \Exists \rs'. \\
 		&\qquad\qquad
-		k - 1 \in (\fullSat{\state'}{\mask \cup \mask_F}{\rs' \rsplit \rs_F}{W'}) \land (k-1, \rs') \in wp_\mask(\ectx[\expr_0'], q)(W'))~\land \\
+		k - 1 \in (\fullSat{\state'}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k-1, \rs') \in wp_\mask(\ectx[\expr_0'], q)(W'))~\land \\
 		&\qquad
 		(\All\ectx,\expr'. \expr = \ectx[\fork{\expr'}] \implies \Exists W' \geq W_F. \Exists \rs', \rs_1', \rs_2'. \\
 		&\qquad\qquad
-		k - 1 \in (\fullSat{\state}{\mask \cup \mask_F}{\rs' \rsplit \rs_F}{W'}) \land \rs' = \rs_1' \rsplit \rs_2'~\land \\
+		k - 1 \in (\fullSat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land \rs' = \rs_1' \rtimes \rs_2'~\land \\
 		&\qquad\qquad
 		(k-1, \rs_1') \in \mathit{wp}_\mask(\ectx[\textsf{fRet}], q)(W') \land
 		(k-1, \rs_2') \in \mathit{wp}_\top(\expr', \Lam\any. \top)(W'))
@@ -520,3 +520,8 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 \implies (n, \rs) \in \semTerm{\vctx \proves \prop : \Prop}_\gamma(W)
 \end{aligned}
 \]
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "iris"
+%%% End:
