@@ -27,56 +27,6 @@
 %\setlength{\dashlinegap}{1pt}
 %\setlength{\dashlinedash}{3pt}
 
-% \biimp above below
-% The double lines obtained by the simpler
-% "\mprset{fraction={===}}" overlap the conclusion (e.g., the
-% mask E_M in an atomic triple).
-\newcommand*{\biimp}[2]{%
-	\hbox{%
-		\ooalign{%
-			$\genfrac{}{}{1.6pt}1{#1}{#2}$\cr%
-			$\color{white}\genfrac{}{}{.8pt}1{\phantom{#1}}{\phantom{#2}}$%
-		}%
-	}%
-}
-\newcommand{\BIIMP}{\mprset{myfraction=\biimp}}
-\newcommand{\infern}[3]{\inferrule[#1]{#2}{#3}}
-\newcommand{\infernB}[3]{{\BIIMP\inferrule*[right={#1}]{#2}{#3}}}
-\newcommand{\inferB}[2]{{\BIIMP\infer{#1}{#2}}}
-
-%% inferH is infern with hyperlinks.
-% \savelabel lab text: Arrange for \ref{lab} to print text and to link to the current spot.
-\makeatletter
-	\newcommand*{\savelabel}[2]{%
-		% Think @currentlabel : text ref.
-		\edef\@currentlabel{#2}% Save text
-		\phantomsection% Correct hyper reference link
-		\label{#1}% Print text and store name↦text.
-	}
-\makeatother
-% \textlabel label text: Print and label text.
-\newcommand*{\textlabel}[2]{{#2}\savelabel{#1}{#2}}
-% \rulenamestyle visible
-\newcommand*{\rulenamestyle}[1]{{\TirNameStyle{#1}}}	% From mathpartir.sty.
-% \ruleref [discharged] lab
-\def\optionaldischarge#1{%
-	\if\relax\detokenize{#1}\relax\else\ensuremath{^{#1}}\fi}
-\newcommand*{\ruleref}[2][]{\rulenamestyle{\ref{#2}}\optionaldischarge{#1}}
-\newcommand*{\fakeruleref}[2][]{\rulenamestyle{#2}\optionaldischarge{#1}}
-% \rulename label
-\newcommand*{\rulename}[1]{\rulenamestyle{\textlabel{#1}{#1}}}
-% \inferhref name lab premise conclusion
-\newcommand*{\inferhref}[4]{%
-	\inferrule*[lab=\textlabel{#2}{#1}]{#3}{#4}%
-}
-% \infernH name premise conclusion, if name a valid label.
-\newcommand*{\inferH}[3]{\inferhref{#1}{#1}{#2}{#3}}
-\newcommand*{\axiom}[1]{\infer{}{#1}}
-\newcommand*{\axiomhref}[3]{\inferhref{#1}{#2}{}{#3}}
-\newcommand*{\axiomH}[2]{\inferH{#1}{}{#2}}
-\newcommand*{\inferhrefB}[4]{{\BIIMP\inferhref{#1}{#2}{#3}{#4}}}
-\newcommand*{\inferHB}[3]{{\BIIMP\inferH{#1}{#2}{#3}}}
-
 \usepackage{hyperref}
 \hypersetup{%
   linktocpage=true, pdfstartview=FitV,
@@ -97,7 +47,7 @@
 \newcommand*{\figref}[1]{\hyperref[#1]{Figure~\ref*{#1}}}
 \newcommand*{\tabref}[1]{\hyperref[#1]{Table~\ref*{#1}}}
 
-\usepackage{multicol}
+\usepackage{pftools}
 
 %\usepackage{pfsteps}
 %\newcommand*{\pflab}[1]{\steppfcounter[#1](\thepfcounter)}
@@ -255,8 +205,8 @@
 % \newcommand{\Prop}{\mathbb{B}}
 % \newcommand{\Pred}{\mathbb{P}}
 
-\newcommand{\res}{r}
-\newcommand{\resB}{s}
+\newcommand{\rs}{r}
+\newcommand{\rsB}{s}
 
 %\newcommand{\propSet}{\mathcal{P}}
 %\newcommand{\apropSet}{\mathcal{A}}

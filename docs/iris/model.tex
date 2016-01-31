@@ -82,7 +82,7 @@ action on morphisms).
 \begin{array}[t]{rcl}
 %  \protStatus &::=& \enabled \ALT \disabled \\[0.4em]
 \textdom{Res} &\eqdef&
-\{\, \res = (\pres, \ghostRes) \mid
+\{\, \rs = (\pres, \ghostRes) \mid
 \pres \in \textdom{State} \uplus \{\munit\} \land \ghostRes \in \mcarp{\monoid} \,\} \\[0.5em]
 (\pres, \ghostRes) \rsplit
 (\pres', \ghostRes') &\eqdef&
@@ -92,17 +92,17 @@ action on morphisms).
 \end{cases}
 \\[0.5em]
 %
-\res \leq \res' & \eqdef &
-\Exists \res''. \res' = \res \rsplit \res''\\[1em]
+\rs \leq \rs' & \eqdef &
+\Exists \rs''. \rs' = \rs \rsplit \rs''\\[1em]
 %
 \UPred(\textdom{Res}) &\eqdef& 
 \{\, p \subseteq \mathbb{N} \times \textdom{Res} \mid
-\All (k,\res) \in p.
+\All (k,\rs) \in p.
 \All j\leq k.
-\All \res' \geq \res.
-(j,\res')\in p \,\}\\[0.5em]
+\All \rs' \geq \rs.
+(j,\rs')\in p \,\}\\[0.5em]
 \restr{p}{k} &\eqdef& 
-\{\, (j, \res) \in p \mid j < k \,\}\\[0.5em]
+\{\, (j, \rs) \in p \mid j < k \,\}\\[0.5em]
 p \nequiv{n} q & \eqdef & \restr{p}{n} = \restr{q}{n}\\[1em]
 %
 \textdom{PreProp} & \cong  &
@@ -187,7 +187,7 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 %\typedsection{Validity}{valid : \pset{\textdom{Prop}} \in Sets}
 %
 %\begin{align*}
-%valid(p) &\iff \All n \in \mathbb{N}. \All \res \in \textdom{Res}. \All W \in \textdom{World}. (n, \res) \in p(W)
+%valid(p) &\iff \All n \in \mathbb{N}. \All \rs \in \textdom{Res}. \All W \in \textdom{World}. (n, \rs) \in p(W)
 %\end{align*}
 
 \typedsection{Later modality}{\later : \textdom{Prop} \to \textdom{Prop} \in {\cal U}}
@@ -213,7 +213,7 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 %\begin{align*}
 %&\forall p, q \in \textdom{Prop}.~\\
 %&\qquad
-%  (\forall n \in \mathbb{N}.~\forall \res \in \textdom{Res}.~\forall W \in \textdom{World}.~(n, \res) \in p(W) \Rightarrow (n, \res) \in q(W)) \Leftrightarrow~valid(\always{(p \Rightarrow q)})
+%  (\forall n \in \mathbb{N}.~\forall \rs \in \textdom{Res}.~\forall W \in \textdom{World}.~(n, \rs) \in p(W) \Rightarrow (n, \rs) \in q(W)) \Leftrightarrow~valid(\always{(p \Rightarrow q)})
 %\end{align*}
 %\end{lem}
 
@@ -232,11 +232,11 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 	\textdom{World} \to \psetdown{\mathbb{N}} \in {\cal U}}
 \ralf{Make this Dave-compatible: Explicitly compose all the things in $s$}
 \begin{align*}
-	\fullSat{\state}{\mask}{\res}{W} &=
+	\fullSat{\state}{\mask}{\rs}{W} &=
 	\begin{aligned}[t]
-		\{\, n + 1 \in \mathbb{N} \mid &\Exists  \resB:\mathbb{N} \fpfn \textdom{Res}. (\res \rsplit \resB).\pres = \state \land{}\\
-		&\quad \All \iota \in \dom(W). \iota \in \dom(W) \leftrightarrow \iota \in \dom(\resB) \land {}\\
-		&\quad\quad \iota \in \mask \ra (n, \resB(\iota)) \in \wIso^{-1}(W(\iota))(W) \,\} \cup \{ 0 \}
+		\{\, n + 1 \in \mathbb{N} \mid &\Exists  \rsB:\mathbb{N} \fpfn \textdom{Res}. (\rs \rsplit \rsB).\pres = \state \land{}\\
+		&\quad \All \iota \in \dom(W). \iota \in \dom(W) \leftrightarrow \iota \in \dom(\rsB) \land {}\\
+		&\quad\quad \iota \in \mask \ra (n, \rsB(\iota)) \in \wIso^{-1}(W(\iota))(W) \,\} \cup \{ 0 \}
 	\end{aligned}
 \end{align*}
 \begin{lem}\label{lem:fullsat-nonexpansive}
@@ -248,9 +248,9 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 		\MoveEqLeft
 		\All \state \in \Delta(\textdom{State}).
 		\All \mask_1, \mask_2 \in \Delta(\pset{\mathbb{N}}).
-		\All \res, \resB \in \Delta(\textdom{Res}).
+		\All \rs, \rsB \in \Delta(\textdom{Res}).
 		\All W \in \textdom{World}. \\&
-		\mask_1 \subseteq \mask_2 \implies (\fullSat{\state}{\mask_2}{\res}{W}) \subseteq (\fullSat{\state}{\mask_1}{\res}{W})
+		\mask_1 \subseteq \mask_2 \implies (\fullSat{\state}{\mask_2}{\rs}{W}) \subseteq (\fullSat{\state}{\mask_1}{\rs}{W})
 	\end{align*}
 \end{lem}
 
@@ -293,11 +293,11 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 \begin{align*}
 	\mathit{vs}_{\mask_1}^{\mask_2}(q) &= \Lam W.
 	\begin{aligned}[t]
-		\{\, (n, \res) &\mid \All W_F \geq W. \All \res_F, \mask_F, \state. \All k \leq n.\\
+		\{\, (n, \rs) &\mid \All W_F \geq W. \All \rs_F, \mask_F, \state. \All k \leq n.\\
 		&\qquad 
-		k \in (\fullSat{\state}{\mask_1 \cup \mask_F}{\res \rsplit \res_F}{W_F}) \land k > 0 \land \mask_F \sep (\mask_1 \cup \mask_2) \implies{} \\
+		k \in (\fullSat{\state}{\mask_1 \cup \mask_F}{\rs \rsplit \rs_F}{W_F}) \land k > 0 \land \mask_F \sep (\mask_1 \cup \mask_2) \implies{} \\
 		&\qquad
-		\Exists W' \geq W_F. \Exists \res'. k \in (\fullSat{\state}{\mask_2 \cup \mask_F}{\res' \rsplit \res_F}{W'}) \land (k, \res') \in q(W')
+		\Exists W' \geq W_F. \Exists \rs'. k \in (\fullSat{\state}{\mask_2 \cup \mask_F}{\rs' \rsplit \rs_F}{W'}) \land (k, \rs') \in q(W')
 		\,\}
 	\end{aligned}
 \end{align*}
@@ -338,10 +338,10 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 %  \All \iota \in \mathbb{N}.
 %  \All p \in \textdom{Prop}.
 %  \All W \in \textdom{World}.
-%  \All \res \in \textdom{Res}.
+%  \All \rs \in \textdom{Res}.
 %  \All n \in \mathbb{N}. \\
 %&
-%  (n, \res) \in inv(\iota, p)(W) \implies (n, \res) \in vs_{\{ \iota \}}^{\emptyset}(\later p)(W)
+%  (n, \rs) \in inv(\iota, p)(W) \implies (n, \rs) \in vs_{\{ \iota \}}^{\emptyset}(\later p)(W)
 %\end{align*}
 %\end{lem}
 
@@ -352,10 +352,10 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 %  \forall \iota \in \mathbb{N}.~
 %  \forall p \in \textdom{Prop}.~
 %  \forall W \in \textdom{World}.~
-%  \forall \res \in \textdom{Res}.~
+%  \forall \rs \in \textdom{Res}.~
 %  \forall n \in \mathbb{N}.~\\
 %&\qquad
-%  (n, \res) \in (inv(\iota, p) * \later p)(W) \Rightarrow (n, \res) \in vs^{\{ \iota \}}_{\emptyset}(\top)(W)
+%  (n, \rs) \in (inv(\iota, p) * \later p)(W) \Rightarrow (n, \rs) \in vs^{\{ \iota \}}_{\emptyset}(\top)(W)
 %\end{align*}
 %\end{lem}
 
@@ -392,22 +392,22 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 \begin{align*}
 	\mathit{wp}_\mask(\expr, q) &\eqdef \Lam W.
 	\begin{aligned}[t]
-		\{\, (n, \res) &\mid \All W_F \geq W; k \leq n; \res_F; \state; \mask_F \sep \mask. k > 0 \land k \in (\fullSat{\state}{\mask \cup \mask_F}{\res \rsplit \res_F}{W_F}) \implies{}\\
+		\{\, (n, \rs) &\mid \All W_F \geq W; k \leq n; \rs_F; \state; \mask_F \sep \mask. k > 0 \land k \in (\fullSat{\state}{\mask \cup \mask_F}{\rs \rsplit \rs_F}{W_F}) \implies{}\\
 		&\qquad
-		(\expr \in \textdom{Val} \implies \Exists W' \geq W_F. \Exists \res'. \\
+		(\expr \in \textdom{Val} \implies \Exists W' \geq W_F. \Exists \rs'. \\
 		&\qquad\qquad
-		k \in (\fullSat{\state}{\mask \cup \mask_F}{\res' \rsplit \res_F}{W'}) \land (k, \res') \in q(\expr)(W'))~\land \\
+		k \in (\fullSat{\state}{\mask \cup \mask_F}{\rs' \rsplit \rs_F}{W'}) \land (k, \rs') \in q(\expr)(W'))~\land \\
 		&\qquad
-		(\All\ectx,\expr_0,\expr'_0,\state'. \expr = \ectx[\expr_0] \land \cfg{\state}{\expr_0} \step \cfg{\state'}{\expr'_0} \implies \Exists W' \geq W_F. \Exists \res'. \\
+		(\All\ectx,\expr_0,\expr'_0,\state'. \expr = \ectx[\expr_0] \land \cfg{\state}{\expr_0} \step \cfg{\state'}{\expr'_0} \implies \Exists W' \geq W_F. \Exists \rs'. \\
 		&\qquad\qquad
-		k - 1 \in (\fullSat{\state'}{\mask \cup \mask_F}{\res' \rsplit \res_F}{W'}) \land (k-1, \res') \in wp_\mask(\ectx[\expr_0'], q)(W'))~\land \\
+		k - 1 \in (\fullSat{\state'}{\mask \cup \mask_F}{\rs' \rsplit \rs_F}{W'}) \land (k-1, \rs') \in wp_\mask(\ectx[\expr_0'], q)(W'))~\land \\
 		&\qquad
-		(\All\ectx,\expr'. \expr = \ectx[\fork{\expr'}] \implies \Exists W' \geq W_F. \Exists \res', \res_1', \res_2'. \\
+		(\All\ectx,\expr'. \expr = \ectx[\fork{\expr'}] \implies \Exists W' \geq W_F. \Exists \rs', \rs_1', \rs_2'. \\
 		&\qquad\qquad
-		k - 1 \in (\fullSat{\state}{\mask \cup \mask_F}{\res' \rsplit \res_F}{W'}) \land \res' = \res_1' \rsplit \res_2'~\land \\
+		k - 1 \in (\fullSat{\state}{\mask \cup \mask_F}{\rs' \rsplit \rs_F}{W'}) \land \rs' = \rs_1' \rsplit \rs_2'~\land \\
 		&\qquad\qquad
-		(k-1, \res_1') \in \mathit{wp}_\mask(\ectx[\textsf{fRet}], q)(W') \land
-		(k-1, \res_2') \in \mathit{wp}_\top(\expr', \Lam\any. \top)(W'))
+		(k-1, \rs_1') \in \mathit{wp}_\mask(\ectx[\textsf{fRet}], q)(W') \land
+		(k-1, \rs_2') \in \mathit{wp}_\top(\expr', \Lam\any. \top)(W'))
 		\,\}
 	\end{aligned}
 \end{align*}
@@ -491,9 +491,9 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 	\semTerm{\vctx \proves \knowInv{\iname}{\prop} : \Prop}_\gamma &=
 	inv(\semTerm{\vctx \proves \iname : \textsort{InvName}}_\gamma, \semTerm{\vctx \proves \prop : \Prop}_\gamma) \\
 	\semTerm{\vctx \proves \ownGGhost{\melt} : \Prop}_\gamma &=
-	\Lam W. \{\, (n, \res) \mid \res.\ghostRes \geq \semTerm{\vctx \proves \melt : \textsort{Monoid}}_\gamma \,\} \\
+	\Lam W. \{\, (n, \rs) \mid \rs.\ghostRes \geq \semTerm{\vctx \proves \melt : \textsort{Monoid}}_\gamma \,\} \\
 	\semTerm{\vctx \proves \ownPhys{\state} : \Prop}_\gamma &=
-	\Lam W. \{\, (n, \res) \mid \res.\pres = \semTerm{\vctx \proves \state : \textsort{State}}_\gamma \,\}
+	\Lam W. \{\, (n, \rs) \mid \rs.\pres = \semTerm{\vctx \proves \state : \textsort{State}}_\gamma \,\}
 \end{align*}
 %
 \begin{align*}
@@ -513,10 +513,10 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 \MoveEqLeft
 \forall n \in \mathbb{N}.\;
 \forall W \in \textdom{World}.\;
-\forall \res \in \textdom{Res}.\; 
+\forall \rs \in \textdom{Res}.\; 
 \forall \gamma \in \semSort{\vctx},\;
 \\&
-\bigl(\All \propB \in \pfctx. (n, \res) \in \semTerm{\vctx \proves \propB : \Prop}_\gamma(W)\bigr)
-\implies (n, \res) \in \semTerm{\vctx \proves \prop : \Prop}_\gamma(W)
+\bigl(\All \propB \in \pfctx. (n, \rs) \in \semTerm{\vctx \proves \propB : \Prop}_\gamma(W)\bigr)
+\implies (n, \rs) \in \semTerm{\vctx \proves \prop : \Prop}_\gamma(W)
 \end{aligned}
 \]
