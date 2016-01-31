@@ -56,7 +56,7 @@ Qed.
 Lemma ownG_valid m : (ownG m) ⊑ (✓ m).
 Proof. by rewrite /ownG uPred.own_valid; apply uPred.valid_mono=> n [? []]. Qed.
 Lemma ownG_valid_r m : (ownG m) ⊑ (ownG m ★ ✓ m).
-Proof. apply uPred.always_entails_r', ownG_valid; by apply _. Qed.
+Proof. apply (uPred.always_entails_r' _ _), ownG_valid. Qed.
 Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
 Proof. rewrite /ownG; apply _. Qed.
 

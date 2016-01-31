@@ -55,14 +55,10 @@ Proof. by intros x1 x2 Hx; apply uPred_ne', equiv_dist. Qed.
 
 Lemma uPred_holds_ne {M} (P1 P2 : uPred M) n x :
   P1 ={n}= P2 → ✓{n} x → P1 n x → P2 n x.
-Proof.
-  intros HP ?. apply HP; by auto.
-Qed.
+Proof. intros HP ?; apply HP; auto. Qed.
 Lemma uPred_weaken' {M} (P : uPred M) x1 x2 n1 n2 :
   x1 ≼ x2 → n2 ≤ n1 → ✓{n2} x2 → P n1 x1 → P n2 x2.
-Proof.
-  intros; eauto using uPred_weaken.
-Qed.
+Proof. eauto using uPred_weaken. Qed.
 
 (** functor *)
 Program Definition uPred_map {M1 M2 : cmraT} (f : M2 -n> M1)
@@ -445,27 +441,14 @@ Proof. intros; apply impl_elim with Q; auto. Qed.
 Lemma impl_elim_r' P Q R : Q ⊑ (P → R) → (P ∧ Q) ⊑ R.
 Proof. intros; apply impl_elim with P; auto. Qed.
 Lemma impl_entails P Q : True ⊑ (P → Q) → P ⊑ Q.
-Proof.
-  intros H; eapply impl_elim; last reflexivity. rewrite -H.
-  by apply True_intro.
-Qed.
+Proof. intros HPQ; apply impl_elim with P; rewrite -?HPQ; auto. Qed.
 Lemma entails_impl P Q : (P ⊑ Q) → True ⊑ (P → Q).
-Proof.
-  intros H; apply impl_intro_l. by rewrite -H and_elim_l.
-Qed.
+Proof. auto using impl_intro_l. Qed.
 
-Lemma const_intro_l φ Q R :
-  φ → (■φ ∧ Q) ⊑ R → Q ⊑ R.
-Proof.
-  intros ? <-. apply and_intro; last done.
-  by apply const_intro.
-Qed.
+Lemma const_intro_l φ Q R : φ → (■φ ∧ Q) ⊑ R → Q ⊑ R.
+Proof. intros ? <-; auto using const_intro. Qed.
 Lemma const_intro_r φ Q R : φ → (Q ∧ ■φ) ⊑ R → Q ⊑ R.
-Proof.
-  (* FIXME RJ: Why does this not work? rewrite (commutative uPred_and Q (■φ)%I). *)
-  intros ? <-. apply and_intro; first done.
-  by apply const_intro.
-Qed.
+Proof. intros ? <-; auto using const_intro. Qed.
 Lemma const_elim_l φ Q R : (φ → Q ⊑ R) → (■ φ ∧ Q) ⊑ R.
 Proof. intros; apply const_elim with φ; eauto. Qed.
 Lemma const_elim_r φ Q R : (φ → Q ⊑ R) → (Q ∧ ■ φ) ⊑ R.
@@ -617,15 +600,9 @@ Lemma sep_elim_r' P Q R : Q ⊑ R → (P ★ Q) ⊑ R.
 Proof. intros ->; apply sep_elim_r. Qed.
 Hint Resolve sep_elim_l' sep_elim_r'.
 Lemma sep_intro_True_l P Q R : True ⊑ P → R ⊑ Q → R ⊑ (P ★ Q).
-Proof.
-  intros HP HQ. etransitivity; last (eapply sep_mono; eassumption).
-  by rewrite left_id.
-Qed.
+Proof. by intros; rewrite -(left_id True%I uPred_sep R); apply sep_mono. Qed.
 Lemma sep_intro_True_r P Q R : R ⊑ P → True ⊑ Q → R ⊑ (P ★ Q).
-Proof.
-  intros HP HQ. etransitivity; last (eapply sep_mono; eassumption).
-  by rewrite right_id.
-Qed.
+Proof. by intros; rewrite -(right_id True%I uPred_sep R); apply sep_mono. Qed.
 Lemma wand_intro_l P Q R : (Q ★ P) ⊑ R → P ⊑ (Q -★ R).
 Proof. rewrite (commutative _); apply wand_intro_r. Qed.
 Lemma wand_elim_r P Q : (P ★ (P -★ Q)) ⊑ Q.
@@ -787,26 +764,10 @@ Proof.
   apply always_intro, impl_intro_r.
   by rewrite always_and_sep_l always_elim wand_elim_l.
 Qed.
-Lemma always_impl_l P Q : (P → □ Q) ⊑ (P → □ Q ★ P).
-Proof.
-  rewrite -always_and_sep_l. apply impl_intro_l, and_intro.
-  - by rewrite impl_elim_r.
-  - by rewrite and_elim_l.
-Qed.
-Lemma always_impl_r P Q : (P → □ Q) ⊑ (P → P ★ □ Q).
-Proof.
-  by rewrite commutative always_impl_l.
-Qed.
 Lemma always_entails_l P Q : (P ⊑ □ Q) → P ⊑ (□ Q ★ P).
-Proof.
-  intros H. apply impl_entails. rewrite -always_impl_l.
-  by apply entails_impl.
-Qed.
+Proof. intros; rewrite -always_and_sep_l; auto. Qed.
 Lemma always_entails_r P Q : (P ⊑ □ Q) → P ⊑ (P ★ □ Q).
-Proof.
-  intros H. apply impl_entails. rewrite -always_impl_r.
-  by apply entails_impl.
-Qed.
+Proof. intros; rewrite -always_and_sep_r; auto. Qed.
 
 (* Own *)
 Lemma own_op (a1 a2 : M) :
@@ -979,10 +940,6 @@ Lemma always_and_sep_r' P Q `{!AlwaysStable Q} : (P ∧ Q)%I ≡ (P ★ Q)%I.
 Proof. by rewrite -(always_always Q) always_and_sep_r. Qed.
 Lemma always_sep_dup' P `{!AlwaysStable P} : P ≡ (P ★ P)%I.
 Proof. by rewrite -(always_always P) -always_sep_dup. Qed.
-Lemma always_impl_l' P Q `{!AlwaysStable Q} : (P → Q) ⊑ (P → Q ★ P).
-Proof. by rewrite -(always_always Q) always_impl_l. Qed.
-Lemma always_impl_r' P Q `{!AlwaysStable Q} : (P → Q) ⊑ (P → P ★ Q).
-Proof. by rewrite -(always_always Q) always_impl_r. Qed.
 Lemma always_entails_l' P Q `{!AlwaysStable Q} : (P ⊑ Q) → P ⊑ (Q ★ P).
 Proof. by rewrite -(always_always Q); apply always_entails_l. Qed.
 Lemma always_entails_r' P Q `{!AlwaysStable Q} : (P ⊑ Q) → P ⊑ (P ★ Q).
