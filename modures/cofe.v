@@ -235,6 +235,8 @@ Section unit.
   Definition unit_cofe_mixin : CofeMixin unit.
   Proof. by repeat split; try exists 0. Qed.
   Canonical Structure unitC : cofeT := CofeT unit_cofe_mixin.
+  Global Instance unit_timeless (x : ()) : Timeless x.
+  Proof. done. Qed.
 End unit.
 
 (** Product *)
