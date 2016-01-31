@@ -66,25 +66,12 @@ Proof. by intros Hf; destruct 1; constructor; apply Hf. Qed.
 Section cmra.
 Context {A : cmraT}.
 
-Instance option_valid : Valid (option A) := λ mx,
-  match mx with Some x => ✓ x | None => True end.
 Instance option_validN : ValidN (option A) := λ n mx,
   match mx with Some x => ✓{n} x | None => True end.
 Instance option_unit : Unit (option A) := fmap unit.
 Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
 Instance option_minus : Minus (option A) :=
   difference_with (λ x y, Some (x ⩪ y)).
-Lemma option_included mx my :
-  mx ≼ my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ x ≼ y.
-Proof.
-  split.
-  * intros [mz Hmz]; destruct mx as [x|]; [right|by left].
-    destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
-    destruct mz as [z|]; inversion_clear Hmz; split_ands; auto;
-      setoid_subst; eauto using ra_included_l.
-  * intros [->|(x&y&->&->&z&Hz)]; try (by exists my; destruct my; constructor).
-    by exists (Some z); constructor.
-Qed.
 Lemma option_includedN n (mx my : option A) :
   mx ≼{n} my ↔ n = 0 ∨ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ x ≼{n} y.
 Proof.
@@ -93,7 +80,7 @@ Proof.
     destruct mx as [x|]; [right|by left].
     destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
     destruct mz as [z|]; inversion_clear Hmz; split_ands; auto;
-      cofe_subst; eauto using @cmra_included_l.
+      cofe_subst; eauto using cmra_includedN_l.
   * intros [->|[->|(x&y&->&->&z&Hz)]];
       try (by exists my; destruct my; constructor).
     by exists (Some z); constructor.
@@ -110,22 +97,20 @@ Proof.
       repeat apply (_ : Proper (dist _ ==> _ ==> _) _).
   * by destruct 1; constructor; apply (_ : Proper (dist n ==> _) _).
   * destruct 1 as [[?|] [?|]| |]; unfold validN, option_validN; simpl;
-     intros ?; auto using cmra_valid_0;
+     intros ?; auto using cmra_validN_0;
      eapply (_ : Proper (dist _ ==> impl) (✓{_})); eauto.
   * by destruct 1; inversion_clear 1; constructor;
       repeat apply (_ : Proper (dist _ ==> _ ==> _) _).
-  * intros [x|]; unfold validN, option_validN; auto using cmra_valid_0.
-  * intros n [x|]; unfold validN, option_validN; eauto using @cmra_valid_S.
-  * by intros [x|]; unfold valid, validN, option_validN, option_valid;
-      eauto using cmra_valid_validN.
-  * intros [x|] [y|] [z|]; constructor; rewrite ?(associative _); auto.
-  * intros [x|] [y|]; constructor; rewrite 1?(commutative _); auto.
-  * by intros [x|]; constructor; rewrite ra_unit_l.
-  * by intros [x|]; constructor; rewrite ra_unit_idempotent.
+  * intros [x|]; unfold validN, option_validN; auto using cmra_validN_0.
+  * intros n [x|]; unfold validN, option_validN; eauto using cmra_validN_S.
+  * intros [x|] [y|] [z|]; constructor; rewrite ?associative; auto.
+  * intros [x|] [y|]; constructor; rewrite 1?commutative; auto.
+  * by intros [x|]; constructor; rewrite cmra_unit_l.
+  * by intros [x|]; constructor; rewrite cmra_unit_idempotent.
   * intros n mx my; rewrite !option_includedN;intros [|[->|(x&y&->&->&?)]];auto.
-    do 2 right; exists (unit x), (unit y); eauto using @cmra_unit_preserving.
-  * intros n [x|] [y|]; unfold validN, option_validN; simpl;
-      eauto using @cmra_valid_op_l.
+    do 2 right; exists (unit x), (unit y); eauto using cmra_unit_preservingN.
+  * intros n [x|] [y|]; rewrite /validN /option_validN /=;
+      eauto using cmra_validN_op_l.
   * intros n mx my; rewrite option_includedN.
     intros [->|[->|(x&y&->&->&?)]]; [done|by destruct my|].
     by constructor; apply cmra_op_minus.

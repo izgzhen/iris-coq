@@ -77,7 +77,6 @@ Instance res_op : Op (res Σ A) := λ r1 r2,
 Global Instance res_empty : Empty (res Σ A) := Res ∅ ∅ ∅.
 Instance res_unit : Unit (res Σ A) := λ r,
   Res (unit (wld r)) (unit (pst r)) (unit (gst r)).
-Instance res_valid : Valid (res Σ A) := λ r, ✓ (wld r) ∧ ✓ (pst r) ∧ ✓ (gst r).
 Instance res_validN : ValidN (res Σ A) := λ n r,
   ✓{n} (wld r) ∧ ✓{n} (pst r) ∧ ✓{n} (gst r).
 Instance res_minus : Minus (res Σ A) := λ r1 r2,
@@ -105,25 +104,18 @@ Proof.
   * by intros n [???] ? [???] [???] ? [???];
       constructor; simpl in *; cofe_subst.
   * done.
-  * by intros n ? (?&?&?); split_ands'; apply cmra_valid_S.
-  * intros r; unfold valid, res_valid, validN, res_validN.
-    rewrite !cmra_valid_validN; naive_solver.
+  * by intros n ? (?&?&?); split_ands'; apply cmra_validN_S.
   * intros ???; constructor; simpl; apply (associative _).
   * intros ??; constructor; simpl; apply (commutative _).
-  * intros ?; constructor; simpl; apply ra_unit_l.
-  * intros ?; constructor; simpl; apply ra_unit_idempotent.
+  * intros ?; constructor; simpl; apply cmra_unit_l.
+  * intros ?; constructor; simpl; apply cmra_unit_idempotent.
   * intros n r1 r2; rewrite !res_includedN.
-    by intros (?&?&?); split_ands'; apply cmra_unit_preserving.
+    by intros (?&?&?); split_ands'; apply cmra_unit_preservingN.
   * intros n r1 r2 (?&?&?);
-      split_ands'; simpl in *; eapply cmra_valid_op_l; eauto.
+      split_ands'; simpl in *; eapply cmra_validN_op_l; eauto.
   * intros n r1 r2; rewrite res_includedN; intros (?&?&?).
     by constructor; apply cmra_op_minus.
 Qed.
-Global Instance res_ra_empty : RAIdentity (res Σ A).
-Proof.
-  by repeat split; simpl; repeat apply ra_empty_valid; rewrite (left_id _ _).
-Qed.
-
 Definition res_cmra_extend_mixin : CMRAExtendMixin (res Σ A).
 Proof.
   intros n r r1 r2 (?&?&?) [???]; simpl in *.
@@ -134,6 +126,13 @@ Proof.
 Qed.
 Canonical Structure resRA : cmraT :=
   CMRAT res_cofe_mixin res_cmra_mixin res_cmra_extend_mixin.
+Global Instance res_cmra_identity : CMRAIdentity resRA.
+Proof.
+  split.
+  * intros n; split_ands'; apply cmra_empty_valid.
+  * by split; rewrite /= (left_id _ _).
+  * apply _.
+Qed.
 
 Definition update_pst (σ : istate Σ) (r : res Σ A) : res Σ A :=
   Res (wld r) (Excl σ) (gst r).
@@ -153,7 +152,7 @@ Lemma lookup_wld_op_l n r1 r2 i P :
   ✓{n} (r1⋅r2) → wld r1 !! i ={n}= Some P → (wld r1 ⋅ wld r2) !! i ={n}= Some P.
 Proof.
   move=>/wld_validN /(_ i) Hval Hi1P; move: Hi1P Hval; rewrite lookup_op.
-  destruct (wld r2 !! i) as [P'|] eqn:Hi; rewrite !Hi ?(right_id _ _) // =>-> ?.
+  destruct (wld r2 !! i) as [P'|] eqn:Hi; rewrite !Hi ?right_id // =>-> ?.
   by constructor; rewrite (agree_op_inv P P') // agree_idempotent.
 Qed.
 Lemma lookup_wld_op_r n r1 r2 i P :
@@ -189,11 +188,12 @@ Proof.
     by rewrite -agree_map_compose; apply agree_map_ext=> y' /=.
   * by rewrite -icmra_map_compose; apply icmra_map_ext=> m /=.
 Qed.
-Lemma res_map_ext {Σ A B} (f g : A -n> B) :
-  (∀ r, f r ≡ g r) -> ∀ r : res Σ A, res_map f r ≡ res_map g r.
+Lemma res_map_ext {Σ A B} (f g : A -n> B) (r : res Σ A) :
+  (∀ x, f x ≡ g x) → res_map f r ≡ res_map g r.
 Proof.
-  move=>H r. split; simpl;
-    [apply map_fmap_setoid_ext; intros; apply agree_map_ext | | apply icmra_map_ext]; done.
+  intros Hfg; split; simpl; auto.
+  * by apply map_fmap_setoid_ext=>i x ?; apply agree_map_ext.
+  * by apply icmra_map_ext.
 Qed.
 Definition resRA_map {Σ A B} (f : A -n> B) : resRA Σ A -n> resRA Σ B :=
   CofeMor (res_map f : resRA Σ A → resRA Σ B).
@@ -205,10 +205,9 @@ Proof.
       intros (?&?&?); split_ands'; simpl; try apply includedN_preserving.
   * by intros n r (?&?&?); split_ands'; simpl; try apply validN_preserving.
 Qed.
-Lemma resRA_map_ne {Σ A B} (f g : A -n> B) n :
-  f ={n}= g → resRA_map (Σ := Σ) f ={n}= resRA_map g.
+Instance resRA_map_ne {Σ A B} n : Proper (dist n ==> dist n) (@resRA_map Σ A B).
 Proof.
-  intros ? r. split; simpl;
-    [apply (mapRA_map_ne _ (agreeRA_map f) (agreeRA_map g)), agreeRA_map_ne
-     | | apply icmra_map_ne]; done.
+  intros f g Hfg r; split; simpl; auto.
+  * by apply (mapRA_map_ne _ (agreeRA_map f) (agreeRA_map g)), agreeRA_map_ne.
+  * by apply icmra_map_ne.
 Qed.

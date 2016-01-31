@@ -47,10 +47,10 @@ Next Obligation.
   * constructor; eauto using uPred_weaken.
   * intros [rf' Hr] ??; constructor; [done|intros rf k Ef σ1 ???].
     destruct (Hgo (rf' ⋅ rf) k Ef σ1) as [Hsafe Hstep];
-      rewrite ?(associative _) -?Hr; auto; constructor; [done|].
+      rewrite ?associative -?Hr; auto; constructor; [done|].
     intros e2 σ2 ef ?; destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
-    exists r2, (r2' ⋅ rf'); split_ands; eauto 10 using (IH k), @ra_included_l.
-    by rewrite -!(associative _) (associative _ r2).
+    exists r2, (r2' ⋅ rf'); split_ands; eauto 10 using (IH k), cmra_included_l.
+    by rewrite -!associative (associative _ r2).
 Qed.
 Instance: Params (@wp) 3.
 
@@ -70,7 +70,7 @@ Proof.
   destruct 3 as [|n' r e1 ? Hgo]; constructor; eauto.
   intros rf k Ef σ1 ???.
   assert (E2 ∪ Ef = E1 ∪ (E2 ∖ E1 ∪ Ef)) as HE'.
-  { by rewrite (associative_L _) -union_difference_L. }
+  { by rewrite associative_L -union_difference_L. }
   destruct (Hgo rf k ((E2 ∖ E1) ∪ Ef) σ1) as [Hsafe Hstep]; rewrite -?HE'; auto.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
@@ -143,7 +143,7 @@ Proof.
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
   exists (r2 ⋅ rR), r2'; split_ands; auto.
   * by rewrite -(associative _ r2)
-      (commutative _ rR) !(associative _) -(associative _ _ rR).
+      (commutative _ rR) !associative -(associative _ _ rR).
   * apply IH; eauto using uPred_weaken.
 Qed.
 Lemma wp_frame_later_r E e Q R :
@@ -157,7 +157,7 @@ Proof.
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
   exists (r2 ⋅ rR), r2'; split_ands; auto.
   * by rewrite -(associative _ r2)
-      (commutative _ rR) !(associative _) -(associative _ _ rR).
+      (commutative _ rR) !associative -(associative _ _ rR).
   * apply wp_frame_r; [auto|exists r2, rR; split_ands; auto].
     eapply uPred_weaken with rR n; eauto.
 Qed.
@@ -182,13 +182,8 @@ Import uPred.
 Global Instance wp_mono' E e :
   Proper (pointwise_relation _ (⊑) ==> (⊑)) (wp E e).
 Proof. by intros Q Q' ?; apply wp_mono. Qed.
-Lemma wp_value' E Q e v : 
-  to_val e = Some v →
-  Q v ⊑ wp E e Q.
-Proof.
-  intros Hv. apply of_to_val in Hv.
-  rewrite -Hv. by apply wp_value.
-Qed.
+Lemma wp_value' E Q e v : to_val e = Some v → Q v ⊑ wp E e Q.
+Proof. intros; rewrite -(of_to_val e v) //; by apply wp_value. Qed.
 Lemma wp_frame_l E e Q R : (R ★ wp E e Q) ⊑ wp E e (λ v, R ★ Q v).
 Proof. setoid_rewrite (commutative _ R); apply wp_frame_r. Qed.
 Lemma wp_frame_later_l E e Q R :
@@ -209,5 +204,5 @@ Proof.
   by rewrite always_elim (forall_elim v) impl_elim_l.
 Qed.
 Lemma wp_impl_r E e Q1 Q2 : (wp E e Q1 ∧ □ ∀ v, Q1 v → Q2 v) ⊑ wp E e Q2.
-Proof. by rewrite (commutative _) wp_impl_l. Qed.
+Proof. by rewrite commutative wp_impl_l. Qed.
 End wp.

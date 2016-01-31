@@ -1,5 +1,4 @@
 Require Export modures.excl.
-Local Arguments valid _ _ !_ /.
 Local Arguments validN _ _ _ !_ /.
 
 Record auth (A : Type) : Type := Auth { authoritative : excl A ; own : A }.
@@ -57,13 +56,6 @@ Section cmra.
 Context {A : cmraT}.
 
 Global Instance auth_empty `{Empty A} : Empty (auth A) := Auth ∅ ∅.
-Instance auth_valid : Valid (auth A) := λ x,
-  match authoritative x with
-  | Excl a => own x ≼ a ∧ ✓ a
-  | ExclUnit => ✓ (own x)
-  | ExclBot => False
-  end.
-Global Arguments auth_valid !_ /.
 Instance auth_validN : ValidN (auth A) := λ n x,
   match authoritative x with
   | Excl a => own x ≼{n} a ∧ ✓{n} a
@@ -92,7 +84,7 @@ Qed.
 Lemma authoritative_validN n (x : auth A) : ✓{n} x → ✓{n} (authoritative x).
 Proof. by destruct x as [[]]. Qed.
 Lemma own_validN n (x : auth A) : ✓{n} x → ✓{n} (own x).
-Proof. destruct x as [[]]; naive_solver eauto using cmra_valid_includedN. Qed.
+Proof. destruct x as [[]]; naive_solver eauto using cmra_validN_includedN. Qed.
 
 Definition auth_cmra_mixin : CMRAMixin (auth A).
 Proof.
@@ -104,20 +96,17 @@ Proof.
   * by intros n x1 x2 [Hx Hx'] y1 y2 [Hy Hy'];
       split; simpl; rewrite ?Hy ?Hy' ?Hx ?Hx'.
   * by intros [[] ?]; simpl.
-  * intros n [[] ?] ?; naive_solver eauto using cmra_included_S, cmra_valid_S.
-  * destruct x as [[a| |] b]; simpl; rewrite ?cmra_included_includedN
-      ?cmra_valid_validN; [naive_solver|naive_solver|].
-    split; [done|intros Hn; discriminate (Hn 1)].
-  * by split; simpl; rewrite (associative _).
-  * by split; simpl; rewrite (commutative _).
-  * by split; simpl; rewrite ?(ra_unit_l _).
-  * by split; simpl; rewrite ?(ra_unit_idempotent _).
+  * intros n [[] ?] ?; naive_solver eauto using cmra_includedN_S, cmra_validN_S.
+  * by split; simpl; rewrite associative.
+  * by split; simpl; rewrite commutative.
+  * by split; simpl; rewrite ?cmra_unit_l.
+  * by split; simpl; rewrite ?cmra_unit_idempotent.
   * intros n ??; rewrite! auth_includedN; intros [??].
-    by split; simpl; apply cmra_unit_preserving.
+    by split; simpl; apply cmra_unit_preservingN.
   * assert (∀ n (a b1 b2 : A), b1 ⋅ b2 ≼{n} a → b1 ≼{n} a).
-    { intros n a b1 b2 <-; apply cmra_included_l. }
+    { intros n a b1 b2 <-; apply cmra_includedN_l. }
    intros n [[a1| |] b1] [[a2| |] b2];
-     naive_solver eauto using cmra_valid_op_l, cmra_valid_includedN.
+     naive_solver eauto using cmra_validN_op_l, cmra_validN_includedN.
   * by intros n ??; rewrite auth_includedN;
       intros [??]; split; simpl; apply cmra_op_minus.
 Qed.
@@ -132,10 +121,12 @@ Proof.
 Qed.
 Canonical Structure authRA : cmraT :=
   CMRAT auth_cofe_mixin auth_cmra_mixin auth_cmra_extend_mixin.
-Instance auth_ra_empty `{Empty A} : RAIdentity A → RAIdentity (auth A).
+Instance auth_cmra_identity `{Empty A} : CMRAIdentity A → CMRAIdentity authRA.
 Proof.
-  split; simpl; [apply ra_empty_valid|].
-  by intros x; constructor; simpl; rewrite (left_id _ _).
+  split; simpl.
+  * by apply (@cmra_empty_valid A _).
+  * by intros x; constructor; rewrite /= left_id.
+  * apply Auth_timeless; apply _.
 Qed.
 Lemma auth_frag_op (a b : A) : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.

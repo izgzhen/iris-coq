@@ -36,6 +36,8 @@ prelude/list.v
 prelude/error.v
 modures/option.v
 modures/cmra.v
+modures/cmra_big_op.v
+modures/cmra_tactics.v
 modures/sts.v
 modures/auth.v
 modures/fin_maps.v
@@ -45,7 +47,6 @@ modures/base.v
 modures/dra.v
 modures/cofe_solver.v
 modures/agree.v
-modures/ra.v
 modures/excl.v
 iris/model.v
 iris/adequacy.v

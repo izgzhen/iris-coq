@@ -129,6 +129,11 @@ Next Obligation. by intros ? A ? B f Hf c n i ?; apply Hf, chain_cauchy. Qed.
 (** Timeless elements *)
 Class Timeless {A : cofeT} (x : A) := timeless y : x ={1}= y → x ≡ y.
 Arguments timeless {_} _ {_} _ _.
+Lemma timeless_S {A : cofeT} (x y : A) n : Timeless x → x ≡ y ↔ x ={S n}= y.
+Proof.
+  split; intros; [by apply equiv_dist|].
+  apply (timeless _), dist_le with (S n); auto with lia.
+Qed.
 
 (** Fixpoint *)
 Program Definition fixpoint_chain {A : cofeT} `{Inhabited A} (f : A → A)

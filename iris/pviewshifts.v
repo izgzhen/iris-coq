@@ -21,7 +21,7 @@ Next Obligation.
   intros Σ E1 E2 P r1 r2 n1 n2 HP [r3 ?] Hn ? rf k Ef σ ?? Hws; setoid_subst.
   destruct (HP (r3⋅rf) k Ef σ) as (r'&?&Hws'); rewrite ?(associative op); auto.
   exists (r' ⋅ r3); rewrite -(associative _); split; last done.
-  apply uPred_weaken with r' k; eauto using @ra_included_l.
+  apply uPred_weaken with r' k; eauto using cmra_included_l.
 Qed.
 Arguments pvs {_} _ _ _%I : simpl never.
 Instance: Params (@pvs) 3.
@@ -55,7 +55,7 @@ Lemma pvs_timeless E P : TimelessP P → (▷ P) ⊑ pvs E E P.
 Proof.
   rewrite uPred.timelessP_spec=> HP r [|n] ? HP' rf k Ef σ ???; first lia.
   exists r; split; last done.
-  apply HP, uPred_weaken with r n; eauto using cmra_valid_le.
+  apply HP, uPred_weaken with r n; eauto using cmra_validN_le.
 Qed.
 Lemma pvs_trans E1 E2 E3 P :
   E2 ⊆ E1 ∪ E3 → pvs E1 E2 (pvs E2 E3 P) ⊑ pvs E1 E3 P.
@@ -85,7 +85,7 @@ Proof.
   destruct (wsat_open k Ef σ (r ⋅ rf) i P) as (rP&?&?); auto.
   { rewrite lookup_wld_op_l ?Hinv; eauto; apply dist_le with (S n); eauto. }
   exists (rP ⋅ r); split; last by rewrite (left_id_L _ _) -(associative _).
-  eapply uPred_weaken with rP (S k); eauto using @ra_included_l.
+  eapply uPred_weaken with rP (S k); eauto using cmra_included_l.
 Qed.
 Lemma pvs_close i P : (inv i P ∧ ▷ P) ⊑ pvs ∅ {[ i ]} True.
 Proof.
@@ -101,7 +101,7 @@ Lemma pvs_updateP E m (P : iGst Σ → Prop) :
 Proof.
   intros Hup r [|n] ? Hinv%ownG_spec rf [|k] Ef σ ???; try lia.
   destruct (wsat_update_gst k (E ∪ Ef) σ r rf m P)
-    as (m'&?&?); eauto using cmra_included_le.
+    as (m'&?&?); eauto using cmra_includedN_le.
   by exists (update_gst m' r); split; [exists m'; split; [|apply ownG_spec]|].
 Qed.
 Lemma pvs_alloc E P : ¬set_finite E → ▷ P ⊑ pvs E E (∃ i, ■ (i ∈ E) ∧ inv i P).
@@ -114,6 +114,7 @@ Proof.
 Qed.
 
 (* Derived rules *)
+Opaque uPred_holds.
 Import uPred.
 Global Instance pvs_mono' E1 E2 : Proper ((⊑) ==> (⊑)) (@pvs Σ E1 E2).
 Proof. intros P Q; apply pvs_mono. Qed.
