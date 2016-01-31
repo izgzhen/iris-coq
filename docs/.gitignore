@@ -10,3 +10,5 @@
 *.blg
 *.bcf
 *.run.xml
+_*_.tex
+auto/*.el
