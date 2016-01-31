@@ -149,36 +149,36 @@ For a set $X$, write $\Delta X$ for the discrete c.o.f.e.\ with $x \nequiv{n}
 x'$ iff $n = 0$ or $x = x'$
 \[
 \begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
-\semSort{\textsort{Unit}} &\eqdef& \Delta \{ \star \} \\
-\semSort{\textsort{InvName}} &\eqdef& \Delta \mathbb{N}  \\
-\semSort{\textsort{InvMask}} &\eqdef& \Delta \pset{\mathbb{N}} \\
-\semSort{\textsort{Monoid}} &\eqdef& \Delta |\monoid|
+\Sem{\textsort{Unit}} &\eqdef& \Delta \{ \star \} \\
+\Sem{\textsort{InvName}} &\eqdef& \Delta \mathbb{N}  \\
+\Sem{\textsort{InvMask}} &\eqdef& \Delta \pset{\mathbb{N}} \\
+\Sem{\textsort{Monoid}} &\eqdef& \Delta |\monoid|
 \end{array}
 \qquad\qquad
 \begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
-\semSort{\textsort{Val}} &\eqdef& \Delta \textdom{Val} \\
-\semSort{\textsort{Exp}} &\eqdef& \Delta \textdom{Exp} \\
-\semSort{\textsort{Ectx}} &\eqdef& \Delta \textdom{Ectx} \\
-\semSort{\textsort{State}} &\eqdef& \Delta \textdom{State} \\
+\Sem{\textsort{Val}} &\eqdef& \Delta \textdom{Val} \\
+\Sem{\textsort{Exp}} &\eqdef& \Delta \textdom{Exp} \\
+\Sem{\textsort{Ectx}} &\eqdef& \Delta \textdom{Ectx} \\
+\Sem{\textsort{State}} &\eqdef& \Delta \textdom{State} \\
 \end{array}
 \qquad\qquad
 \begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
-\semSort{\sort \times \sort'} &\eqdef& \semSort{\sort} \times \semSort{\sort} \\
-\semSort{\sort \to \sort'} &\eqdef& \semSort{\sort} \to \semSort{\sort} \\
-\semSort{\Prop} &\eqdef& \textdom{Prop} \\
+\Sem{\sort \times \sort'} &\eqdef& \Sem{\sort} \times \Sem{\sort} \\
+\Sem{\sort \to \sort'} &\eqdef& \Sem{\sort} \to \Sem{\sort} \\
+\Sem{\Prop} &\eqdef& \textdom{Prop} \\
 \end{array}
 \]
 
-The balance of our signature $\SigNat$ is interpreted as follows.
+The balance of our signature $\Sig$ is interpreted as follows.
 For each base type $\type$ not covered by the preceding table, we pick an object $X_\type$ in $\cal U$ and define
 \[
-\semSort{\type} \eqdef X_\type
+\Sem{\type} \eqdef X_\type
 \]
-For each function symbol $\sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \SigFn$, we pick an arrow $\Sem{\sigfn} : \semSort{\type_1} \times \dots \times \semSort{\type_n} \to \semSort{\type_{n+1}}$ in $\cal U$.
+For each function symbol $\sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \SigFn$, we pick an arrow $\Sem{\sigfn} : \Sem{\type_1} \times \dots \times \Sem{\type_n} \to \Sem{\type_{n+1}}$ in $\cal U$.
 
 An environment $\vctx$ is interpreted as the set of
 maps $\rho$, with $\dom(\rho) = \dom(\vctx)$ and
-$\rho(x)\in\semSort{\vctx(x)}$,
+$\rho(x)\in\Sem{\vctx(x)}$,
 and 
 $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 \All x\in\dom(\rho). \rho(x) \nequiv{n} \rho'(x)\bigr)$.
@@ -420,89 +420,89 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 	\[ \mathit{wp}_\mask(\val, q) = \mathit{vs}_{\mask}^{\mask}(q \: \val)  \]
 \end{lem}
 
-\typedsection{Interpretation of terms}{\Sem{\vctx \proves \term : \sort} : \Sem{\vctx} \to \semSort{\sort} \in {\cal U}}
+\typedsection{Interpretation of terms}{\Sem{\vctx \proves \term : \sort} : \Sem{\vctx} \to \Sem{\sort} \in {\cal U}}
 
-%A term $\vctx \proves \term : \sort$ is interpreted as a non-expansive map from $\Sem{\vctx}$ to $\semSort{\sort}$.
+%A term $\vctx \proves \term : \sort$ is interpreted as a non-expansive map from $\Sem{\vctx}$ to $\Sem{\sort}$.
 
 \begin{align*}
-	\semTerm{\vctx \proves x : \sort}_\gamma &= \gamma(x) \\
-	\semTerm{\vctx \proves \sigfn(\term_1, \dots, \term_n) : \type_{n+1}}_\gamma &= \Sem{\sigfn}(\semTerm{\vctx \proves \term_1 : \type_1}_\gamma, \dots, \semTerm{\vctx \proves \term_n : \type_n}_\gamma) \ \WHEN \sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \SigFn \\
-	\semTerm{\vctx \proves \Lam x. \term : \sort \to \sort'}_\gamma &=
-	\Lam v : \semSort{\sort}. \semTerm{\vctx, x : \sort \proves \term : \sort'}_{\gamma[x \mapsto v]} \\
-	\semTerm{\vctx \proves \term~\termB : \sort'}_\gamma &=
-	\semTerm{\vctx \proves \term : \sort \to \sort'}_\gamma(\semTerm{\vctx \proves \termB : \sort}_\gamma) \\
-	\semTerm{\vctx \proves \unitterm : \unitsort}_\gamma &= \star \\
-	\semTerm{\vctx \proves (\term_1, \term_2) : \sort_1 \times \sort_2}_\gamma &= (\semTerm{\vctx \proves \term_1 : \sort_1}_\gamma, \semTerm{\vctx \proves \term_2 : \sort_2}_\gamma) \\
-	\semTerm{\vctx \proves \pi_i~\term : \sort_1}_\gamma &= \pi_i(\semTerm{\vctx \proves \term : \sort_1 \times \sort_2}_\gamma)
+	\Sem{\vctx \proves x : \sort}_\gamma &= \gamma(x) \\
+	\Sem{\vctx \proves \sigfn(\term_1, \dots, \term_n) : \type_{n+1}}_\gamma &= \Sem{\sigfn}(\Sem{\vctx \proves \term_1 : \type_1}_\gamma, \dots, \Sem{\vctx \proves \term_n : \type_n}_\gamma) \ \WHEN \sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \SigFn \\
+	\Sem{\vctx \proves \Lam x. \term : \sort \to \sort'}_\gamma &=
+	\Lam v : \Sem{\sort}. \Sem{\vctx, x : \sort \proves \term : \sort'}_{\gamma[x \mapsto v]} \\
+	\Sem{\vctx \proves \term~\termB : \sort'}_\gamma &=
+	\Sem{\vctx \proves \term : \sort \to \sort'}_\gamma(\Sem{\vctx \proves \termB : \sort}_\gamma) \\
+	\Sem{\vctx \proves \unitterm : \unitsort}_\gamma &= \star \\
+	\Sem{\vctx \proves (\term_1, \term_2) : \sort_1 \times \sort_2}_\gamma &= (\Sem{\vctx \proves \term_1 : \sort_1}_\gamma, \Sem{\vctx \proves \term_2 : \sort_2}_\gamma) \\
+	\Sem{\vctx \proves \pi_i~\term : \sort_1}_\gamma &= \pi_i(\Sem{\vctx \proves \term : \sort_1 \times \sort_2}_\gamma)
 \end{align*}
 %
 \begin{align*}
-	\semTerm{\vctx \proves \mzero : \textsort{Monoid}}_\gamma &= \mzero \\
-	\semTerm{\vctx \proves \munit : \textsort{Monoid}}_\gamma &= \munit \\
-	\semTerm{\vctx \proves \melt \mtimes \meltB : \textsort{Monoid}}_\gamma &=
-	\semTerm{\vctx \proves \melt : \textsort{Monoid}}_\gamma \mtimes \semTerm{\vctx \proves \meltB : \textsort{Monoid}}_\gamma
+	\Sem{\vctx \proves \mzero : \textsort{Monoid}}_\gamma &= \mzero \\
+	\Sem{\vctx \proves \munit : \textsort{Monoid}}_\gamma &= \munit \\
+	\Sem{\vctx \proves \melt \mtimes \meltB : \textsort{Monoid}}_\gamma &=
+	\Sem{\vctx \proves \melt : \textsort{Monoid}}_\gamma \mtimes \Sem{\vctx \proves \meltB : \textsort{Monoid}}_\gamma
 \end{align*}
 %
 \begin{align*}
-	\semTerm{\vctx \proves t =_\sort u : \Prop}_\gamma &=
-	\Lam W. \{\, (n, r) \mid \semTerm{\vctx \proves t : \sort}_\gamma \nequiv{n+1} \semTerm{\vctx \proves u : \sort}_\gamma \,\} \\
-	\semTerm{\vctx \proves \FALSE : \Prop}_\gamma &= \Lam W. \emptyset \\
-	\semTerm{\vctx \proves \TRUE : \Prop}_\gamma &= \Lam W. \mathbb{N} \times \textdom{Res} \\
-	\semTerm{\vctx \proves P \land Q : \Prop}_\gamma &=
-	\Lam W. \semTerm{\vctx \proves P : \Prop}_\gamma(W) \cap \semTerm{\vctx \proves Q : \Prop}_\gamma(W) \\
-	\semTerm{\vctx \proves P \lor Q : \Prop}_\gamma &=
-	\Lam W. \semTerm{\vctx \proves P : \Prop}_\gamma(W) \cup \semTerm{\vctx \proves Q : \Prop}_\gamma(W) \\
-	\semTerm{\vctx \proves P \Ra Q : \Prop}_\gamma &=
+	\Sem{\vctx \proves t =_\sort u : \Prop}_\gamma &=
+	\Lam W. \{\, (n, r) \mid \Sem{\vctx \proves t : \sort}_\gamma \nequiv{n+1} \Sem{\vctx \proves u : \sort}_\gamma \,\} \\
+	\Sem{\vctx \proves \FALSE : \Prop}_\gamma &= \Lam W. \emptyset \\
+	\Sem{\vctx \proves \TRUE : \Prop}_\gamma &= \Lam W. \mathbb{N} \times \textdom{Res} \\
+	\Sem{\vctx \proves P \land Q : \Prop}_\gamma &=
+	\Lam W. \Sem{\vctx \proves P : \Prop}_\gamma(W) \cap \Sem{\vctx \proves Q : \Prop}_\gamma(W) \\
+	\Sem{\vctx \proves P \lor Q : \Prop}_\gamma &=
+	\Lam W. \Sem{\vctx \proves P : \Prop}_\gamma(W) \cup \Sem{\vctx \proves Q : \Prop}_\gamma(W) \\
+	\Sem{\vctx \proves P \Ra Q : \Prop}_\gamma &=
 	\Lam W. \begin{aligned}[t]
 		\{\, (n, r) &\mid \All n' \leq n. \All W' \geq W. \All r' \geq r. \\
 		&\qquad
-		(n', r') \in \semTerm{\vctx \proves P : \Prop}_\gamma(W')~ \\
+		(n', r') \in \Sem{\vctx \proves P : \Prop}_\gamma(W')~ \\
 		&\qquad 
-		\implies (n', r') \in \semTerm{\vctx \proves Q : \Prop}_\gamma(W') \,\}
+		\implies (n', r') \in \Sem{\vctx \proves Q : \Prop}_\gamma(W') \,\}
 	\end{aligned} \\
-	\semTerm{\vctx \proves \All x : \sort. P : \Prop}_\gamma &=
-	\Lam W. \{\, (n, r) \mid \All v \in \semSort{\sort}. (n, r) \in \semTerm{\vctx, x : \sort \proves P : \Prop}_{\gamma[x \mapsto v]}(W) \,\} \\
-	\semTerm{\vctx \proves \Exists x : \sort. P : \Prop}_\gamma &=
-	\Lam W. \{\, (n, r) \mid \Exists v \in \semSort{\sort}. (n, r) \in \semTerm{\vctx, x : \sort \proves P : \Prop}_{\gamma[x \mapsto v]}(W) \,\}
+	\Sem{\vctx \proves \All x : \sort. P : \Prop}_\gamma &=
+	\Lam W. \{\, (n, r) \mid \All v \in \Sem{\sort}. (n, r) \in \Sem{\vctx, x : \sort \proves P : \Prop}_{\gamma[x \mapsto v]}(W) \,\} \\
+	\Sem{\vctx \proves \Exists x : \sort. P : \Prop}_\gamma &=
+	\Lam W. \{\, (n, r) \mid \Exists v \in \Sem{\sort}. (n, r) \in \Sem{\vctx, x : \sort \proves P : \Prop}_{\gamma[x \mapsto v]}(W) \,\}
 \end{align*}
 %
 \begin{align*}
-	\semTerm{\vctx \proves \always{\prop} : \Prop}_\gamma &= \always{\semTerm{\vctx \proves \prop : \Prop}_\gamma} \\
-	\semTerm{\vctx \proves \later{\prop} : \Prop}_\gamma &= \later \semTerm{\vctx \proves \prop : \Prop}_\gamma\\
-	\semTerm{\vctx \proves \MU x. \pred : \sort \to \Prop}_\gamma &=
-	\mathit{fix}(\Lam v : \semSort{\sort \to \Prop}. \semTerm{\vctx, x : \sort \to \Prop \proves \pred : \sort \to \Prop}_{\gamma[x \mapsto v]}) \\
-	\semTerm{\vctx \proves \prop * \propB : \Prop}_\gamma &=
+	\Sem{\vctx \proves \always{\prop} : \Prop}_\gamma &= \always{\Sem{\vctx \proves \prop : \Prop}_\gamma} \\
+	\Sem{\vctx \proves \later{\prop} : \Prop}_\gamma &= \later \Sem{\vctx \proves \prop : \Prop}_\gamma\\
+	\Sem{\vctx \proves \MU x. \pred : \sort \to \Prop}_\gamma &=
+	\mathit{fix}(\Lam v : \Sem{\sort \to \Prop}. \Sem{\vctx, x : \sort \to \Prop \proves \pred : \sort \to \Prop}_{\gamma[x \mapsto v]}) \\
+	\Sem{\vctx \proves \prop * \propB : \Prop}_\gamma &=
 	\begin{aligned}[t]
 		\Lam W. \{\, (n, r) &\mid \Exists r_1, r_2. r = r_1 \bullet r_2 \land{} \\
 		&\qquad
-		(n, r_1) \in \semTerm{\vctx \proves \prop : \Prop}_\gamma \land{} \\
+		(n, r_1) \in \Sem{\vctx \proves \prop : \Prop}_\gamma \land{} \\
 		&\qquad
-		(n, r_2) \in \semTerm{\vctx \proves \propB : \Prop}_\gamma \,\}
+		(n, r_2) \in \Sem{\vctx \proves \propB : \Prop}_\gamma \,\}
 	\end{aligned} \\
-	\semTerm{\vctx \proves \prop \wand \propB : \Prop}_\gamma &=
+	\Sem{\vctx \proves \prop \wand \propB : \Prop}_\gamma &=
 	\begin{aligned}[t]
 		\Lam W. \{\, (n, r) &\mid \All n' \leq n. \All W' \geq W. \All r'. \\
 		&\qquad
-		(n', r') \in \semTerm{\vctx \proves \prop : \Prop}_\gamma(W') \land r \sep r' \\
+		(n', r') \in \Sem{\vctx \proves \prop : \Prop}_\gamma(W') \land r \sep r' \\
 		&\qquad
-		\implies (n', r \bullet r') \in \semTerm{\vctx \proves \propB : \Prop}_\gamma(W')
+		\implies (n', r \bullet r') \in \Sem{\vctx \proves \propB : \Prop}_\gamma(W')
 		\}
 	\end{aligned} \\
-	\semTerm{\vctx \proves \knowInv{\iname}{\prop} : \Prop}_\gamma &=
-	inv(\semTerm{\vctx \proves \iname : \textsort{InvName}}_\gamma, \semTerm{\vctx \proves \prop : \Prop}_\gamma) \\
-	\semTerm{\vctx \proves \ownGGhost{\melt} : \Prop}_\gamma &=
-	\Lam W. \{\, (n, \rs) \mid \rs.\ghostRes \geq \semTerm{\vctx \proves \melt : \textsort{Monoid}}_\gamma \,\} \\
-	\semTerm{\vctx \proves \ownPhys{\state} : \Prop}_\gamma &=
-	\Lam W. \{\, (n, \rs) \mid \rs.\pres = \semTerm{\vctx \proves \state : \textsort{State}}_\gamma \,\}
+	\Sem{\vctx \proves \knowInv{\iname}{\prop} : \Prop}_\gamma &=
+	inv(\Sem{\vctx \proves \iname : \textsort{InvName}}_\gamma, \Sem{\vctx \proves \prop : \Prop}_\gamma) \\
+	\Sem{\vctx \proves \ownGGhost{\melt} : \Prop}_\gamma &=
+	\Lam W. \{\, (n, \rs) \mid \rs.\ghostRes \geq \Sem{\vctx \proves \melt : \textsort{Monoid}}_\gamma \,\} \\
+	\Sem{\vctx \proves \ownPhys{\state} : \Prop}_\gamma &=
+	\Lam W. \{\, (n, \rs) \mid \rs.\pres = \Sem{\vctx \proves \state : \textsort{State}}_\gamma \,\}
 \end{align*}
 %
 \begin{align*}
-	\semTerm{\vctx \proves \pvsA{\prop}{\mask_1}{\mask_2} : \Prop}_\gamma &=
-	\textdom{vs}^{\semTerm{\vctx \proves \mask_2 : \textsort{InvMask}}_\gamma}_{\semTerm{\vctx \proves \mask_1 : \textsort{InvMask}}_\gamma}(\semTerm{\vctx \proves \prop : \Prop}_\gamma) \\
-	\semTerm{\vctx \proves \dynA{\expr}{\pred}{\mask} : \Prop}_\gamma &=
-	\textdom{wp}_{\semTerm{\vctx \proves \mask : \textsort{InvMask}}_\gamma}(\semTerm{\vctx \proves \expr : \textsort{Exp}}_\gamma, \semTerm{\vctx \proves \pred : \textsort{Val} \to \Prop}_\gamma) \\
-	\semTerm{\vctx \proves \wtt{\timeless{\prop}}{\Prop}}_\gamma &=
-	\textdom{timeless}(\semTerm{\vctx \proves \prop : \Prop}_\gamma)
+	\Sem{\vctx \proves \pvsA{\prop}{\mask_1}{\mask_2} : \Prop}_\gamma &=
+	\textdom{vs}^{\Sem{\vctx \proves \mask_2 : \textsort{InvMask}}_\gamma}_{\Sem{\vctx \proves \mask_1 : \textsort{InvMask}}_\gamma}(\Sem{\vctx \proves \prop : \Prop}_\gamma) \\
+	\Sem{\vctx \proves \dynA{\expr}{\pred}{\mask} : \Prop}_\gamma &=
+	\textdom{wp}_{\Sem{\vctx \proves \mask : \textsort{InvMask}}_\gamma}(\Sem{\vctx \proves \expr : \textsort{Exp}}_\gamma, \Sem{\vctx \proves \pred : \textsort{Val} \to \Prop}_\gamma) \\
+	\Sem{\vctx \proves \wtt{\timeless{\prop}}{\Prop}}_\gamma &=
+	\textdom{timeless}(\Sem{\vctx \proves \prop : \Prop}_\gamma)
 \end{align*}
 
 \typedsection{Interpretation of entailment}{\Sem{\vctx \mid \pfctx \proves \prop} : 2 \in \mathit{Sets}}
@@ -514,10 +514,10 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 \forall n \in \mathbb{N}.\;
 \forall W \in \textdom{World}.\;
 \forall \rs \in \textdom{Res}.\; 
-\forall \gamma \in \semSort{\vctx},\;
+\forall \gamma \in \Sem{\vctx},\;
 \\&
-\bigl(\All \propB \in \pfctx. (n, \rs) \in \semTerm{\vctx \proves \propB : \Prop}_\gamma(W)\bigr)
-\implies (n, \rs) \in \semTerm{\vctx \proves \prop : \Prop}_\gamma(W)
+\bigl(\All \propB \in \pfctx. (n, \rs) \in \Sem{\vctx \proves \propB : \Prop}_\gamma(W)\bigr)
+\implies (n, \rs) \in \Sem{\vctx \proves \prop : \Prop}_\gamma(W)
 \end{aligned}
 \]
 

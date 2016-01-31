@@ -93,27 +93,27 @@ Using these view shifts, we can prove STS variants of the invariant rules \ruler
  This holds by our premise.
 \end{proof}
 
-\begin{proof}[Proof of \ruleref{VSSts}]
-This is similar to above, so we only give the proof in short notation:
+% \begin{proof}[Proof of \ruleref{VSSts}]
+% This is similar to above, so we only give the proof in short notation:
 
-\hproof{%
-	Context: $\knowInv\iname{\STSInv(\STSS, \pred, \gname)}$ \\
-	\pline[\mask_1 \uplus \{\iname\}]{
-		\ownGhost\gname{(s_0, T)} * P
-	} \\
-	\pline[\mask_1]{%
-		\Exists s. \later\pred(s) * \ownGhost\gname{(s, S, T)} * P
-	} \qquad by \ruleref{StsOpen} \\
-	Context: $s \in S \eqdef \upclose(\{s_0\}, T)$ \\
-	\pline[\mask_2]{%
-		 \Exists s', T'. \later\pred(s') * Q(s', T') * \ownGhost\gname{(s, S, T)}
-	} \qquad by premiss \\
-	Context: $(s, T) \ststrans (s', T')$ \\
-	\pline[\mask_2 \uplus \{\iname\}]{
-		\ownGhost\gname{(s', T')} * Q(s', T')
-	} \qquad by \ruleref{StsClose}
-}
-\end{proof}
+% \hproof{%
+% 	Context: $\knowInv\iname{\STSInv(\STSS, \pred, \gname)}$ \\
+% 	\pline[\mask_1 \uplus \{\iname\}]{
+% 		\ownGhost\gname{(s_0, T)} * P
+% 	} \\
+% 	\pline[\mask_1]{%
+% 		\Exists s. \later\pred(s) * \ownGhost\gname{(s, S, T)} * P
+% 	} \qquad by \ruleref{StsOpen} \\
+% 	Context: $s \in S \eqdef \upclose(\{s_0\}, T)$ \\
+% 	\pline[\mask_2]{%
+% 		 \Exists s', T'. \later\pred(s') * Q(s', T') * \ownGhost\gname{(s, S, T)}
+% 	} \qquad by premiss \\
+% 	Context: $(s, T) \ststrans (s', T')$ \\
+% 	\pline[\mask_2 \uplus \{\iname\}]{
+% 		\ownGhost\gname{(s', T')} * Q(s', T')
+% 	} \qquad by \ruleref{StsClose}
+% }
+% \end{proof}
 
 \subsection{Authoritative monoids with interpretation}\label{sec:authinterp}
 
@@ -185,3 +185,8 @@ The view shifts in the specification follow immediately from \ruleref{GhostUpd} 
 The first implication is immediate from the definition.
 The second implication follows by case distinction on $q_1 + q_2 \in (0, 1]$.
 
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "iris"
+%%% End:

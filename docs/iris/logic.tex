@@ -106,7 +106,7 @@ Let $\mcarp{M} \eqdef |\monoid| \setminus \{\mzero\}$.
 
 \paragraph{Signatures.}
 We use a signature to account syntactically for the logic's parameters.
-A \emph{signature} $\SigNat = (\SigType, \SigFn)$ comprises a set
+A \emph{signature} $\Sig = (\SigType, \SigFn)$ comprises a set
 \[
 	\SigType \supseteq \{ \textsort{Val}, \textsort{Exp}, \textsort{Ectx}, \textsort{State}, \textsort{Monoid}, \textsort{InvName}, \textsort{InvMask}, \Prop \}
 \]
@@ -120,7 +120,7 @@ to express that $\sigfn$ is a function symbol with the indicated arity.
 \dave{Say something not-too-shabby about adequacy: We don't spell out what it means.}
 
 \paragraph{Syntax.}
-Iris syntax is built up from a signature $\SigNat$ and a countably infinite set $\textdom{Var}$ of variables (ranged over by metavariables $x$, $y$, $z$, and $\pvar$):
+Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\textdom{Var}$ of variables (ranged over by metavariables $x$, $y$, $z$):
 \newcommand{\unitterm}{()}%
 \newcommand{\unitsort}{1}%	\unit is bold.
 \begin{align*}
@@ -145,9 +145,9 @@ Iris syntax is built up from a signature $\SigNat$ and a countably infinite set 
     \prop * \prop \mid
     \prop \wand \prop \mid
 \\&
-    \MU \pvar. \pred  \mid
-    \Exists x:\sort. \prop \mid
-    \All x:\sort. \prop \mid
+    \MU \var. \pred  \mid
+    \Exists \var:\sort. \prop \mid
+    \All \var:\sort. \prop \mid
 \\&
     \knowInv{\term}{\prop} \mid
     \ownGGhost{\term} \mid
@@ -164,7 +164,7 @@ Iris syntax is built up from a signature $\SigNat$ and a countably infinite set 
       \sort \times \sort \mid
       \sort \to \sort
 \end{align*}
-Recursive predicates must be \emph{guarded}: in $\MU \pvar. \pred$, the variable $\pvar$ can only appear under the later $\later$ modality.
+Recursive predicates must be \emph{guarded}: in $\MU \var. \pred$, the variable $\var$ can only appear under the later $\later$ modality.
 
 \paragraph{Metavariable conventions.}
 We introduce additional metavariables ranging over terms and generally let the choice of metavariable indicate the term's sort:
@@ -196,13 +196,13 @@ We omit type annotations in binders, when the type is clear from context.
 \subsection{Types}\label{sec:types}
 
 Iris terms are simply-typed.
-The judgment $\vctx \proves_\SigNat \wtt{\term}{\sort}$ expresses that, in signature $\SigNat$ and variable context $\vctx$, the term $\term$ has sort $\sort$.
+The judgment $\vctx \proves_\Sig \wtt{\term}{\sort}$ expresses that, in signature $\Sig$ and variable context $\vctx$, the term $\term$ has sort $\sort$.
 In giving the rules for this judgment, we omit the signature (which does not change).
 
 A variable context, $\vctx = x_1:\sort_1, \dots, x_n:\sort_n$, declares a list of variables and their sorts.
 In writing $\vctx, x:\sort$, we presuppose that $x$ is not already declared in $\vctx$.
 
-\judgment{Well-typed terms}{\vctx \proves_\SigNat \wtt{\term}{\sort}}
+\judgment{Well-typed terms}{\vctx \proves_\Sig \wtt{\term}{\sort}}
 \begin{mathparpagebreakable}
 %%% variables and function symbols
 	\axiom{x : \sort \proves \wtt{x}{\sort}}
@@ -274,10 +274,10 @@ In writing $\vctx, x:\sort$, we presuppose that $x$ is not already declared in $
 		{\vctx \proves \wtt{\prop \wand \propB}{\Prop}}
 \and
 	\infer{
-		\vctx, \pvar:\sort\to\Prop \proves \wtt{\pred}{\sort\to\Prop} \and
-		\text{$\pvar$ is guarded in $\pred$}
+		\vctx, \var:\sort\to\Prop \proves \wtt{\pred}{\sort\to\Prop} \and
+		\text{$\var$ is guarded in $\pred$}
 	}{
-		\vctx \proves \wtt{\MU \pvar. \pred}{\sort\to\Prop}
+		\vctx \proves \wtt{\MU \var. \pred}{\sort\to\Prop}
 	}
 \and
 	\infer{\vctx, x:\sort \proves \wtt{\prop}{\Prop}}
@@ -410,31 +410,31 @@ Soundness follows from the theorem that ${\cal U}(\any, \textdom{Prop})
   {\pfctx \proves \exists X: \sort. \prop}
 \and
 \infer[$\forall_2$I]
-  {\pfctx, \pvar: \Pred(\sort) \proves \prop}
-  {\pfctx \proves \forall \pvar\in \Pred(\sort).\; \prop}
+  {\pfctx, \var: \Pred(\sort) \proves \prop}
+  {\pfctx \proves \forall \var\in \Pred(\sort).\; \prop}
 \and
 \infer[$\forall_2$E]
-  {\pfctx \proves \forall \pvar. \prop \\
+  {\pfctx \proves \forall \var. \prop \\
    \pfctx \proves \propB: \Prop}
-  {\pfctx \proves \prop[\propB/\pvar]}
+  {\pfctx \proves \prop[\propB/\var]}
 \and
 \infer[$\exists_2$E]
-  {\pfctx \proves \exists \pvar \in \Pred(\sort).\prop \\
-   \pfctx, \pvar : \Pred(\sort), \prop \proves \propB}
+  {\pfctx \proves \exists \var \in \Pred(\sort).\prop \\
+   \pfctx, \var : \Pred(\sort), \prop \proves \propB}
   {\pfctx \proves \propB}
 \and
 \infer[$\exists_2$I]
-  {\pfctx \proves \prop[\propB/\pvar] \\
+  {\pfctx \proves \prop[\propB/\var] \\
    \pfctx \proves \propB: \Prop}
-  {\pfctx \proves \exists \pvar. \prop}
+  {\pfctx \proves \exists \var. \prop}
 \and
 \inferB[Elem]
   {\pfctx \proves \term \in (X \in \sort). \prop}
   {\pfctx \proves \prop[\term/X]}
 \and
 \inferB[Elem-$\mu$]
-  {\pfctx \proves \term \in (\mu\pvar \in \Pred(\sort). \pred)}
-  {\pfctx \proves \term \in \pred[\mu\pvar \in \Pred(\sort). \pred/\pvar]}
+  {\pfctx \proves \term \in (\mu\var \in \Pred(\sort). \pred)}
+  {\pfctx \proves \term \in \pred[\mu\var \in \Pred(\sort). \pred/\var]}
 \end{mathpar}
 
 \subsection{Axioms from the logic of (affine) bunched implications}
