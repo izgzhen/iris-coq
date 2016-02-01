@@ -453,6 +453,8 @@ Lemma const_elim_l φ Q R : (φ → Q ⊑ R) → (■ φ ∧ Q) ⊑ R.
 Proof. intros; apply const_elim with φ; eauto. Qed.
 Lemma const_elim_r φ Q R : (φ → Q ⊑ R) → (Q ∧ ■ φ) ⊑ R.
 Proof. intros; apply const_elim with φ; eauto. Qed.
+Lemma const_equiv (φ : Prop) : φ → (■ φ : uPred M)%I ≡ True%I.
+Proof. intros; apply (anti_symmetric _); auto using const_intro. Qed.
 Lemma equiv_eq {A : cofeT} P (a b : A) : a ≡ b → P ⊑ (a ≡ b).
 Proof. intros ->; apply eq_refl. Qed.
 Lemma eq_sym {A : cofeT} (a b : A) : (a ≡ b) ⊑ (b ≡ a).
@@ -524,6 +526,12 @@ Global Instance or_comm : Commutative (≡) (@uPred_or M).
 Proof. intros P Q; apply (anti_symmetric (⊑)); auto. Qed.
 Global Instance or_assoc : Associative (≡) (@uPred_or M).
 Proof. intros P Q R; apply (anti_symmetric (⊑)); auto. Qed.
+Global Instance True_impl : LeftId (≡) True%I (@uPred_impl M).
+Proof.
+  intros P; apply (anti_symmetric (⊑)).
+  * by rewrite -(left_id True%I uPred_and (_ → _)%I) impl_elim_r.
+  * by apply impl_intro_l; rewrite left_id.
+Qed.
 Lemma or_and_l P Q R : (P ∨ Q ∧ R)%I ≡ ((P ∨ Q) ∧ (P ∨ R))%I.
 Proof.
   apply (anti_symmetric (⊑)); first auto.
