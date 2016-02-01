@@ -10,7 +10,7 @@ Implicit Types Q : val heap_lang → iProp heap_lang Σ.
 (** Bind. *)
 Lemma wp_bind {E e} K Q :
   wp E e (λ v, wp E (fill K (v2e v)) Q) ⊑ wp E (fill K e) Q.
-Proof. apply (wp_bind (K:=fill K)), fill_is_ctx. Qed.
+Proof. apply wp_bind. Qed.
 
 (** Base axioms for core primitives of the language: Stateful reductions. *)
 

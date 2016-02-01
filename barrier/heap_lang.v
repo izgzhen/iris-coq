@@ -414,15 +414,15 @@ Section Language.
     - clear Hatomic. eapply reducible_not_value. do 3 eexists; eassumption.
   Qed.
 
-  (** We can have bind with arbitrary evaluation contexts **)
-  Lemma fill_is_ctx K: is_ctx (fill K).
+  Global Instance heap_lang_fill : Fill ectx expr := fill.
+  Global Instance heap_lang_ctx : CtxLanguage heap_lang ectx.
   Proof.
     split.
-    - intros ? Hnval. by eapply fill_not_value.
-    - intros ? ? ? ? ? (K' & e1' & e2' & Heq1 & Heq2 & Hstep).
+    - intros K ? Hnval. by eapply fill_not_value.
+    - intros K ? ? ? ? ? (K' & e1' & e2' & Heq1 & Heq2 & Hstep).
       exists (comp_ctx K K'), e1', e2'. rewrite -!fill_comp Heq1 Heq2.
       split; last split; reflexivity || assumption.
-    - intros ? ? ? ? ? Hnval (K'' & e1'' & e2'' & Heq1 & Heq2 & Hstep).
+    - intros K ? ? ? ? ? Hnval (K'' & e1'' & e2'' & Heq1 & Heq2 & Hstep).
       destruct (step_by_value (σ:=σ1) Heq1) as [K' HeqK].
       + do 3 eexists. eassumption.
       + assumption.

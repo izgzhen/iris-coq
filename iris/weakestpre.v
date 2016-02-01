@@ -161,17 +161,17 @@ Proof.
   * apply wp_frame_r; [auto|exists r2, rR; split_ands; auto].
     eapply uPred_weaken with rR n; eauto.
 Qed.
-Lemma wp_bind `(HK : is_ctx K) E e Q :
-  wp E e (λ v, wp E (K (of_val v)) Q) ⊑ wp E (K e) Q.
+Lemma wp_bind `{CtxLanguage Λ C} E K e Q :
+  wp E e (λ v, wp E (fill K (of_val v)) Q) ⊑ wp E (fill K e) Q.
 Proof.
   intros r n; revert e r; induction n as [n IH] using lt_wf_ind; intros e r ?.
   destruct 1 as [|n r e ? Hgo]; [|constructor]; auto using is_ctx_value.
   intros rf k Ef σ1 ???; destruct (Hgo rf k Ef σ1) as [Hsafe Hstep]; auto.
   split.
   { destruct Hsafe as (e2&σ2&ef&?).
-    by exists (K e2), σ2, ef; apply is_ctx_step_preserved. }
+    by exists (fill K e2), σ2, ef; apply is_ctx_step_preserved. }
   intros e2 σ2 ef ?.
-  destruct (is_ctx_step _ HK e σ1 e2 σ2 ef) as (e2'&->&?); auto.
+  destruct (is_ctx_step K e σ1 e2 σ2 ef) as (e2'&->&?); auto.
   destruct (Hstep e2' σ2 ef) as (r2&r2'&?&?&?); auto.
   exists r2, r2'; split_ands; try eapply IH; eauto.
 Qed.
