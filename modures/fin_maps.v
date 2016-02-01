@@ -50,7 +50,7 @@ Proof.
   intros m m' ? j; destruct (decide (i = j)); simplify_map_equality;
     [by constructor|by apply lookup_ne].
 Qed.
-Global Instance map_empty_timeless : Timeless (∅ : gmap K A).
+Instance map_empty_timeless : Timeless (∅ : gmap K A).
 Proof.
   intros m Hm i; specialize (Hm i); rewrite lookup_empty in Hm |- *.
   inversion_clear Hm; constructor.
@@ -81,7 +81,6 @@ Context `{Countable K} {A : cmraT}.
 
 Instance map_op : Op (gmap K A) := merge op.
 Instance map_unit : Unit (gmap K A) := fmap unit.
-Instance map_valid : Valid (gmap K A) := λ m, ∀ i, ✓ (m !! i).
 Instance map_validN : ValidN (gmap K A) := λ n m, ∀ i, ✓{n} (m!!i).
 Instance map_minus : Minus (gmap K A) := merge minus.
 Lemma lookup_op m1 m2 i : (m1 ⋅ m2) !! i = m1 !! i ⋅ m2 !! i.
@@ -95,7 +94,7 @@ Proof.
   split.
   * by intros [m Hm]; intros i; exists (m !! i); rewrite -lookup_op Hm.
   * intros Hm; exists (m2 ⩪ m1); intros i.
-    by rewrite lookup_op lookup_minus ra_op_minus.
+    by rewrite lookup_op lookup_minus cmra_op_minus'.
 Qed.
 Lemma map_includedN_spec (m1 m2 : gmap K A) n :
   m1 ≼{n} m2 ↔ ∀ i, m1 !! i ≼{n} m2 !! i.
@@ -113,25 +112,17 @@ Proof.
   * by intros n m1 m2 Hm ? i; rewrite -(Hm i).
   * by intros n m1 m1' Hm1 m2 m2' Hm2 i; rewrite !lookup_minus (Hm1 i) (Hm2 i).
   * by intros m i.
-  * intros n m Hm i; apply cmra_valid_S, Hm.
-  * intros m; split; [by intros Hm n i; apply cmra_valid_validN|].
-    intros Hm i; apply cmra_valid_validN; intros n; apply Hm.
-  * by intros m1 m2 m3 i; rewrite !lookup_op (associative _).
-  * by intros m1 m2 i; rewrite !lookup_op (commutative _).
-  * by intros m i; rewrite lookup_op !lookup_unit ra_unit_l.
-  * by intros m i; rewrite !lookup_unit ra_unit_idempotent.
+  * intros n m Hm i; apply cmra_validN_S, Hm.
+  * by intros m1 m2 m3 i; rewrite !lookup_op associative.
+  * by intros m1 m2 i; rewrite !lookup_op commutative.
+  * by intros m i; rewrite lookup_op !lookup_unit cmra_unit_l.
+  * by intros m i; rewrite !lookup_unit cmra_unit_idempotent.
   * intros n x y; rewrite !map_includedN_spec; intros Hm i.
-    by rewrite !lookup_unit; apply cmra_unit_preserving.
-  * intros n m1 m2 Hm i; apply cmra_valid_op_l with (m2 !! i).
+    by rewrite !lookup_unit; apply cmra_unit_preservingN.
+  * intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
-  * intros x y n; rewrite map_includedN_spec; intros ? i.
+  * intros x y n; rewrite map_includedN_spec=> ? i.
     by rewrite lookup_op lookup_minus cmra_op_minus.
-Qed.
-Global Instance map_ra_empty : RAIdentity (gmap K A).
-Proof.
-  split.
-  * by intros ?; rewrite lookup_empty.
-  * by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
 Qed.
 Definition map_cmra_extend_mixin : CMRAExtendMixin (gmap K A).
 Proof.
@@ -153,6 +144,14 @@ Proof.
 Qed.
 Canonical Structure mapRA : cmraT :=
   CMRAT map_cofe_mixin map_cmra_mixin map_cmra_extend_mixin.
+Global Instance map_cmra_identity : CMRAIdentity mapRA.
+Proof.
+  split.
+  * by intros ? n; rewrite lookup_empty.
+  * by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
+  * apply map_empty_timeless.
+Qed.
+
 End cmra.
 Arguments mapRA _ {_ _} _.
 
@@ -180,7 +179,7 @@ Proof.
   split.
   * move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton=> Hm.
     destruct (m' !! i) as [y|];
-      [exists (x ⋅ y)|exists x]; eauto using @ra_included_l.
+      [exists (x ⋅ y)|exists x]; eauto using cmra_included_l.
   * intros (y&Hi&?); rewrite map_includedN_spec=>j.
     destruct (decide (i = j)); simplify_map_equality.
     + by rewrite Hi; apply Some_Some_includedN, cmra_included_includedN.

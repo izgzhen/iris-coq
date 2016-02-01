@@ -1,9 +1,9 @@
 Require Export iris.weakestpre iris.viewshifts.
 
-Definition ht {Σ} (E : coPset) (P : iProp Σ)
-    (e : iexpr Σ) (Q : ival Σ → iProp Σ) : iProp Σ :=
+Definition ht {Λ Σ} (E : coPset) (P : iProp Λ Σ)
+    (e : expr Λ) (Q : val Λ → iProp Λ Σ) : iProp Λ Σ :=
   (□ (P → wp E e (λ v, pvs E E (Q v))))%I.
-Instance: Params (@ht) 2.
+Instance: Params (@ht) 3.
 
 Notation "{{ P } } e @ E {{ Q } }" := (ht E P e Q)
   (at level 74, format "{{  P  } }  e  @  E  {{  Q  } }") : uPred_scope.
@@ -11,27 +11,27 @@ Notation "{{ P } } e @ E {{ Q } }" := (True ⊑ ht E P e Q)
   (at level 74, format "{{  P  } }  e  @  E  {{  Q  } }") : C_scope.
 
 Section hoare.
-Context {Σ : iParam}.
-Implicit Types P : iProp Σ.
-Implicit Types Q : ival Σ → iProp Σ.
-Implicit Types v : ival Σ.
+Context {Λ : language} {Σ : iFunctor}.
+Implicit Types P : iProp Λ Σ.
+Implicit Types Q : val Λ → iProp Λ Σ.
+Implicit Types v : val Λ.
 Import uPred.
 
 Global Instance ht_ne E n :
-  Proper (dist n ==> eq ==> pointwise_relation _ (dist n) ==> dist n) (@ht Σ E).
+  Proper (dist n ==> eq==>pointwise_relation _ (dist n) ==> dist n) (@ht Λ Σ E).
 Proof. by intros P P' HP e ? <- Q Q' HQ; rewrite /ht HP; setoid_rewrite HQ. Qed.
 Global Instance ht_proper E :
-  Proper ((≡) ==> eq ==> pointwise_relation _ (≡) ==> (≡)) (@ht Σ E).
+  Proper ((≡) ==> eq ==> pointwise_relation _ (≡) ==> (≡)) (@ht Λ Σ E).
 Proof. by intros P P' HP e ? <- Q Q' HQ; rewrite /ht HP; setoid_rewrite HQ. Qed.
 Lemma ht_mono E P P' Q Q' e :
   P ⊑ P' → (∀ v, Q' v ⊑ Q v) → {{ P' }} e @ E {{ Q' }} ⊑ {{ P }} e @ E {{ Q }}.
 Proof. by intros HP HQ; rewrite /ht -HP; setoid_rewrite HQ. Qed.
 Global Instance ht_mono' E :
-  Proper (flip (⊑) ==> eq ==> pointwise_relation _ (⊑) ==> (⊑)) (@ht Σ E).
+  Proper (flip (⊑) ==> eq ==> pointwise_relation _ (⊑) ==> (⊑)) (@ht Λ Σ E).
 Proof. by intros P P' HP e ? <- Q Q' HQ; apply ht_mono. Qed.
 
 Lemma ht_val E v :
-  {{ True }} of_val v @ E {{ λ v', ■ (v = v') }}.
+  {{ True : iProp Λ Σ }} of_val v @ E {{ λ v', ■ (v = v') }}.
 Proof.
   apply (always_intro' _ _), impl_intro_l.
   by rewrite -wp_value -pvs_intro; apply const_intro.

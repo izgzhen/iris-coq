@@ -2,5 +2,6 @@
 Require Import iris.model.
 
 Module ModelTest. (* Make sure we got the notations right. *)
-  Definition iResTest (Σ : iParam) (w : iWld Σ) (p : iPst Σ) (g : iGst Σ) : iRes Σ := Res w p g.
+  Definition iResTest {Λ : language} {Σ : iFunctor}
+    (w : iWld Λ Σ) (p : iPst Λ) (g : iGst Λ Σ) : iRes Λ Σ := Res w p g.
 End ModelTest.

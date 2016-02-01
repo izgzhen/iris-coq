@@ -83,8 +83,6 @@ Global Instance excl_leibniz : LeibnizEquiv A → LeibnizEquiv (excl A).
 Proof. by destruct 2; f_equal; apply leibniz_equiv. Qed.
 
 (* CMRA *)
-Instance excl_valid : Valid (excl A) := λ x,
-  match x with Excl _ | ExclUnit => True | ExclBot => False end.
 Instance excl_validN : ValidN (excl A) := λ n x,
   match x with Excl _ | ExclUnit => True | ExclBot => n = 0 end.
 Global Instance excl_empty : Empty (excl A) := ExclUnit.
@@ -110,8 +108,6 @@ Proof.
   * by destruct 1; inversion_clear 1; constructor.
   * by intros [].
   * intros n [?| |]; simpl; auto with lia.
-  * intros x; split; [by intros ? [|n]; destruct x|].
-    by intros Hx; specialize (Hx 1); destruct x.
   * by intros [?| |] [?| |] [?| |]; constructor.
   * by intros [?| |] [?| |]; constructor.
   * by intros [?| |]; constructor.
@@ -120,8 +116,6 @@ Proof.
   * by intros n [?| |] [?| |].
   * by intros n [?| |] [?| |] [[?| |] Hz]; inversion_clear Hz; constructor.
 Qed.
-Global Instance excl_empty_ra : RAIdentity (excl A).
-Proof. split. done. by intros []. Qed.
 Definition excl_cmra_extend_mixin : CMRAExtendMixin (excl A).
 Proof.
   intros [|n] x y1 y2 ? Hx; [by exists (x,∅); destruct x|].
@@ -133,6 +127,8 @@ Proof.
 Qed.
 Canonical Structure exclRA : cmraT :=
   CMRAT excl_cofe_mixin excl_cmra_mixin excl_cmra_extend_mixin.
+Global Instance excl_cmra_identity : CMRAIdentity exclRA.
+Proof. split. done. by intros []. apply _. Qed.
 Lemma excl_validN_inv_l n x y : ✓{S n} (Excl x ⋅ y) → y = ∅.
 Proof. by destruct y. Qed.
 Lemma excl_validN_inv_r n x y : ✓{S n} (x ⋅ Excl y) → x = ∅.

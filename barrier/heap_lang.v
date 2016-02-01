@@ -390,8 +390,10 @@ Section Language.
   Definition ectx_step e1 σ1 e2 σ2 (ef: option expr) :=
     ∃ K e1' e2', e1 = fill K e1' ∧ e2 = fill K e2' ∧
                  prim_step e1' σ1 e2' σ2 ef.
-
-  Global Program Instance heap_lang : Language expr value state := {|
+  Program Canonical Structure heap_lang : language := {|
+    language.expr := expr;
+    language.val := value;
+    language.state := state;
     of_val := v2e;
     to_val := e2v;
     language.atomic := atomic;

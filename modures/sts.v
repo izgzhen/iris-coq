@@ -1,21 +1,21 @@
-Require Export modures.ra.
+Require Export modures.cmra.
 Require Import prelude.sets modures.dra.
 Local Arguments valid _ _ !_ /.
 Local Arguments op _ _ !_ !_ /.
 Local Arguments unit _ _ !_ /.
 
-Module sts.
-Inductive t {A B} (R : relation A) (tok : A → set B) :=
-  | auth : A → set B → t R tok
-  | frag : set A → set B → t R tok.
+Inductive sts {A B} (R : relation A) (tok : A → set B) :=
+  | auth : A → set B → sts R tok
+  | frag : set A → set B → sts R tok.
 Arguments auth {_ _ _ _} _ _.
 Arguments frag {_ _ _ _} _ _.
 
+Module sts.
 Section sts_core.
 Context {A B : Type} (R : relation A) (tok : A → set B).
 Infix "≼" := dra_included.
 
-Inductive sts_equiv : Equiv (t R tok) :=
+Inductive sts_equiv : Equiv (sts R tok) :=
   | auth_equiv s T1 T2 : T1 ≡ T2 → auth s T1 ≡ auth s T2
   | frag_equiv S1 S2 T1 T2 : T1 ≡ T2 → S1 ≡ S2 → frag S1 T1 ≡ frag S2 T2.
 Global Existing Instance sts_equiv.
@@ -36,28 +36,28 @@ Record closed (T : set B) (S : set A) : Prop := Closed {
 Lemma closed_steps S T s1 s2 :
   closed T S → s1 ∈ S → rtc (frame_step T) s1 s2 → s2 ∈ S.
 Proof. induction 3; eauto using closed_step. Qed.
-Global Instance sts_valid : Valid (t R tok) := λ x,
+Global Instance sts_valid : Valid (sts R tok) := λ x,
   match x with auth s T => tok s ∩ T ≡ ∅ | frag S' T => closed T S' end.
 Definition up (T : set B) (s : A) : set A := mkSet (rtc (frame_step T) s).
 Definition up_set (T : set B) (S : set A) : set A := S ≫= up T.
-Global Instance sts_unit : Unit (t R tok) := λ x,
+Global Instance sts_unit : Unit (sts R tok) := λ x,
   match x with
   | frag S' _ => frag (up_set ∅ S') ∅ | auth s _ => frag (up ∅ s) ∅
   end.
-Inductive sts_disjoint : Disjoint (t R tok) :=
+Inductive sts_disjoint : Disjoint (sts R tok) :=
   | frag_frag_disjoint S1 S2 T1 T2 :
      S1 ∩ S2 ≢ ∅ → T1 ∩ T2 ≡ ∅ → frag S1 T1 ⊥ frag S2 T2
   | auth_frag_disjoint s S T1 T2 : s ∈ S → T1 ∩ T2 ≡ ∅ → auth s T1 ⊥ frag S T2
   | frag_auth_disjoint s S T1 T2 : s ∈ S → T1 ∩ T2 ≡ ∅ → frag S T1 ⊥ auth s T2.
 Global Existing Instance sts_disjoint.
-Global Instance sts_op : Op (t R tok) := λ x1 x2,
+Global Instance sts_op : Op (sts R tok) := λ x1 x2,
   match x1, x2 with
   | frag S1 T1, frag S2 T2 => frag (S1 ∩ S2) (T1 ∪ T2)
   | auth s T1, frag _ T2 => auth s (T1 ∪ T2)
   | frag _ T1, auth s T2 => auth s (T1 ∪ T2)
   | auth s T1, auth _ T2 => auth s (T1 ∪ T2) (* never happens *)
   end.
-Global Instance sts_minus : Minus (t R tok) := λ x1 x2,
+Global Instance sts_minus : Minus (sts R tok) := λ x1 x2,
   match x1, x2 with
   | frag S1 T1, frag S2 T2 => frag (up_set (T1 ∖ T2) S1) (T1 ∖ T2)
   | auth s T1, frag _ T2 => auth s (T1 ∖ T2)
@@ -69,7 +69,7 @@ Hint Extern 10 (equiv (A:=set _) _ _) => solve_elem_of : sts.
 Hint Extern 10 (¬(equiv (A:=set _) _ _)) => solve_elem_of : sts.
 Hint Extern 10 (_ ∈ _) => solve_elem_of : sts.
 Hint Extern 10 (_ ⊆ _) => solve_elem_of : sts.
-Instance: Equivalence ((≡) : relation (t R tok)).
+Instance: Equivalence ((≡) : relation (sts R tok)).
 Proof.
   split.
   * by intros []; constructor.
@@ -135,7 +135,7 @@ Proof.
   unfold up_set; rewrite elem_of_bind; intros (s'&Hstep&?).
   induction Hstep; eauto using closed_step.
 Qed.
-Global Instance sts_dra : DRA (t R tok).
+Global Instance sts_dra : DRA (sts R tok).
 Proof.
   split.
   * apply _.
@@ -203,18 +203,12 @@ Qed.
 End sts_core.
 End sts.
 
-Section sts_ra.
+Section stsRA.
 Context {A B : Type} (R : relation A) (tok : A → set B).
 
-Definition sts := validity (✓ : sts.t R tok → Prop).
-Global Instance sts_equiv : Equiv sts := validity_equiv _.
-Global Instance sts_unit : Unit sts := validity_unit _.
-Global Instance sts_op : Op sts := validity_op _.
-Global Instance sts_minus : Minus sts := validity_minus _.
-Global Instance sts_ra : RA sts := validity_ra _.
-Definition sts_auth (s : A) (T : set B) : sts := to_validity (sts.auth s T).
-Definition sts_frag (S : set A) (T : set B) : sts := to_validity (sts.frag S T).
-Canonical Structure stsRA := validityRA (sts.t R tok).
+Canonical Structure stsRA := validityRA (sts R tok).
+Definition sts_auth (s : A) (T : set B) : stsRA := to_validity (auth s T).
+Definition sts_frag (S : set A) (T : set B) : stsRA := to_validity (frag S T).
 Lemma sts_update s1 s2 T1 T2 :
   sts.step R tok (s1,T1) (s2,T2) → sts_auth s1 T1 ⇝ sts_auth s2 T2.
 Proof.
@@ -222,4 +216,4 @@ Proof.
   destruct (sts.step_closed R tok s1 s2 T1 T2 S Tf) as (?&?&?); auto.
   repeat (done || constructor).
 Qed.
-End sts_ra.
+End stsRA.

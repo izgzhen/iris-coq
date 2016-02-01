@@ -19,7 +19,6 @@ Instance agree_validN : ValidN (agree A) := λ n x,
 Lemma agree_valid_le (x : agree A) n n' :
   agree_is_valid x n → n' ≤ n → agree_is_valid x n'.
 Proof. induction 2; eauto using agree_valid_S. Qed.
-Instance agree_valid : Valid (agree A) := λ x, ∀ n, ✓{n} x.
 Instance agree_equiv : Equiv (agree A) := λ x y,
   (∀ n, agree_is_valid x n ↔ agree_is_valid y n) ∧
   (∀ n, agree_is_valid x n → x n ={n}= y n).

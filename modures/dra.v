@@ -1,4 +1,4 @@
-Require Export modures.ra modures.cmra.
+Require Export modures.cmra.
 
 (** From disjoint pcm *)
 Record validity {A} (P : A → Prop) : Type := Validity {
@@ -99,10 +99,9 @@ Program Instance validity_minus : Minus T := λ x y,
            (✓ x ∧ ✓ y ∧ validity_car y ≼ validity_car x) _.
 Solve Obligations with naive_solver auto using dra_minus_valid.
 
-Instance validity_ra : RA T.
+Definition validity_ra : RA (discreteC T).
 Proof.
   split.
-  * apply _.
   * intros ??? [? Heq]; split; simpl; [|by intros (?&?&?); rewrite Heq].
     split; intros (?&?&?); split_ands';
       first [rewrite ?Heq; tauto|rewrite -?Heq; tauto|tauto].
@@ -130,11 +129,11 @@ Proof.
   * intros [x px ?] [y py ?] [[z pz ?] [??]]; split; simpl in *;
       intuition eauto 10 using dra_disjoint_minus, dra_op_minus.
 Qed.
-Definition validityRA : cmraT := discreteRA T.
+Definition validityRA : cmraT := discreteRA validity_ra.
 Definition validity_update (x y : validityRA) :
   (∀ z, ✓ x → ✓ z → validity_car x ⊥ z → ✓ y ∧ validity_car y ⊥ z) → x ⇝ y.
 Proof.
-  intros Hxy; apply discrete_update.
+  intros Hxy. apply discrete_update.
   intros z (?&?&?); split_ands'; try eapply Hxy; eauto.
 Qed.
 End dra.

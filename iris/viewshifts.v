@@ -1,9 +1,9 @@
 Require Export iris.pviewshifts.
 
-Definition vs {Σ} (E1 E2 : coPset) (P Q : iProp Σ) : iProp Σ :=
+Definition vs {Λ Σ} (E1 E2 : coPset) (P Q : iProp Λ Σ) : iProp Λ Σ :=
   (□ (P → pvs E1 E2 Q))%I.
-Arguments vs {_} _ _ _%I _%I.
-Instance: Params (@vs) 3.
+Arguments vs {_ _} _ _ _%I _%I.
+Instance: Params (@vs) 4.
 Notation "P >{ E1 , E2 }> Q" := (vs E1 E2 P%I Q%I)
   (at level 69, E1 at level 1, format "P  >{ E1 , E2 }>  Q") : uPred_scope.
 Notation "P >{ E1 , E2 }> Q" := (True ⊑ vs E1 E2 P%I Q%I)
@@ -14,9 +14,9 @@ Notation "P >{ E }> Q" := (True ⊑ vs E E P%I Q%I)
   (at level 69, E at level 1, format "P  >{ E }>  Q") : C_scope.
 
 Section vs.
-Context {Σ : iParam}.
-Implicit Types P Q : iProp Σ.
-Implicit Types m : iGst Σ.
+Context {Λ : language} {Σ : iFunctor}.
+Implicit Types P Q : iProp Λ Σ.
+Implicit Types m : iGst Λ Σ.
 Import uPred.
 
 Lemma vs_alt E1 E2 P Q : (P ⊑ pvs E1 E2 Q) → P >{E1,E2}> Q.
@@ -25,14 +25,15 @@ Proof.
   by rewrite always_const (right_id _ _).
 Qed.
 Global Instance vs_ne E1 E2 n :
-  Proper (dist n ==> dist n ==> dist n) (@vs Σ E1 E2).
+  Proper (dist n ==> dist n ==> dist n) (@vs Λ Σ E1 E2).
 Proof. by intros P P' HP Q Q' HQ; rewrite /vs HP HQ. Qed.
-Global Instance vs_proper E1 E2 : Proper ((≡) ==> (≡) ==> (≡)) (@vs Σ E1 E2).
+Global Instance vs_proper E1 E2 : Proper ((≡) ==> (≡) ==> (≡)) (@vs Λ Σ E1 E2).
 Proof. apply ne_proper_2, _. Qed.
 Lemma vs_mono E1 E2 P P' Q Q' :
   P ⊑ P' → Q' ⊑ Q → P' >{E1,E2}> Q' ⊑ P >{E1,E2}> Q.
 Proof. by intros HP HQ; rewrite /vs -HP HQ. Qed.
-Global Instance vs_mono' E1 E2: Proper (flip (⊑) ==> (⊑) ==> (⊑)) (@vs Σ E1 E2).
+Global Instance vs_mono' E1 E2 :
+  Proper (flip (⊑) ==> (⊑) ==> (⊑)) (@vs Λ Σ E1 E2).
 Proof. by intros until 2; apply vs_mono. Qed.
 
 Lemma vs_false_elim E1 E2 P : False >{E1,E2}> P.
@@ -85,7 +86,7 @@ Proof.
   intros; rewrite -{1}(left_id_L ∅ (∪) E) -vs_mask_frame; last solve_elem_of.
   apply vs_close.
 Qed.
-Lemma vs_updateP E m (P : iGst Σ → Prop) :
+Lemma vs_updateP E m (P : iGst Λ Σ → Prop) :
   m ⇝: P → ownG m >{E}> (∃ m', ■ P m' ∧ ownG m').
 Proof. by intros; apply vs_alt, pvs_updateP. Qed.
 Lemma vs_update E m m' : m ⇝ m' → ownG m >{E}> ownG m'.

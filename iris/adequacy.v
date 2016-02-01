@@ -7,9 +7,10 @@ Local Hint Extern 10 (✓{_} _) =>
   solve_validN.
 
 Section adequacy.
-Context {Σ : iParam}.
-Implicit Types e : iexpr Σ.
-Implicit Types Q : ival Σ → iProp Σ.
+Context {Λ : language} {Σ : iFunctor}.
+Implicit Types e : expr Λ.
+Implicit Types Q : val Λ → iProp Λ Σ.
+Implicit Types m : iGst Λ Σ.
 Transparent uPred_holds.
 
 Notation wptp n := (Forall3 (λ e Q r, uPred_holds (wp coPset_all e Q) n r)).
@@ -46,7 +47,7 @@ Proof.
   * apply (IH (Qs1 ++ Q :: Qs2) (rs1 ++ r2 ⋅ r2' :: rs2)).
     { rewrite /option_list right_id_L.
       apply Forall3_app, Forall3_cons; eauto using wptp_le.
-      apply uPred_weaken with r2 (k + n); eauto using @ra_included_l. }
+      apply uPred_weaken with r2 (k + n); eauto using cmra_included_l. }
     by rewrite -Permutation_middle /= big_op_app.
 Qed.
 Lemma ht_adequacy_steps P Q k n e1 t2 σ1 σ2 r1 :
@@ -60,7 +61,7 @@ Proof.
   intros Hht ????; apply (nsteps_wptp [pvs coPset_all coPset_all ∘ Q] k n
     ([e1],σ1) (t2,σ2) [r1]); rewrite /big_op ?right_id; auto.
   constructor; last constructor.
-  apply Hht with r1 (k + n); eauto using @ra_included_unit.
+  apply Hht with r1 (k + n); eauto using cmra_included_unit.
   by destruct (k + n).
 Qed.
 Lemma ht_adequacy_own Q e1 t2 σ1 m σ2 :
@@ -70,15 +71,16 @@ Lemma ht_adequacy_own Q e1 t2 σ1 m σ2 :
   ∃ rs2 Qs', wptp 3 t2 ((λ v, pvs coPset_all coPset_all (Q v)) :: Qs') rs2 ∧
              wsat 3 coPset_all σ2 (big_op rs2).
 Proof.
-  intros Hv ? [k ?]%rtc_nsteps. eapply ht_adequacy_steps with (r1 := (Res ∅ (Excl σ1) m)); eauto; [|].
-  - by rewrite Nat.add_comm; apply wsat_init, cmra_valid_validN.
-  - exists (Res ∅ (Excl σ1) ∅), (Res ∅ ∅ m). split_ands.
-    + by rewrite /op /cmra_op /= /res_op /= !ra_empty_l ra_empty_r.
-    + by rewrite /uPred_holds /=.
-    + by apply ownG_spec.
+  intros Hv ? [k ?]%rtc_nsteps.
+  eapply ht_adequacy_steps with (r1 := (Res ∅ (Excl σ1) m)); eauto; [|].
+  { by rewrite Nat.add_comm; apply wsat_init, cmra_valid_validN. }
+  exists (Res ∅ (Excl σ1) ∅), (Res ∅ ∅ m); split_ands.
+  * by rewrite Res_op ?left_id ?right_id.
+  * by rewrite /uPred_holds /=.
+  * by apply ownG_spec.
 Qed.
 Theorem ht_adequacy_result E φ e v t2 σ1 m σ2 :
-  ✓m →
+  ✓ m →
   {{ ownP σ1 ★ ownG m }} e @ E {{ λ v', ■ φ v' }} →
   rtc step ([e], σ1) (of_val v :: t2, σ2) →
   φ v.
@@ -92,7 +94,7 @@ Proof.
   by rewrite right_id_L.
 Qed.
 Lemma ht_adequacy_reducible E Q e1 e2 t2 σ1 m σ2 :
-  ✓m →
+  ✓ m →
   {{ ownP σ1 ★ ownG m }} e1 @ E {{ Q }} →
   rtc step ([e1], σ1) (t2, σ2) →
   e2 ∈ t2 → to_val e2 = None → reducible e2 σ2.
@@ -106,7 +108,7 @@ Proof.
     rewrite ?right_id_L ?big_op_delete; auto.
 Qed.
 Theorem ht_adequacy_safe E Q e1 t2 σ1 m σ2 :
-  ✓m →
+  ✓ m →
   {{ ownP σ1 ★ ownG m }} e1 @ E {{ Q }} →
   rtc step ([e1], σ1) (t2, σ2) →
   Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ t3 σ3, step (t2, σ2) (t3, σ3).

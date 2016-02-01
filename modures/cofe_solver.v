@@ -34,7 +34,7 @@ Fixpoint A (k : nat) : cofeT :=
 Fixpoint f {k} : A k -n> A (S k) :=
   match k with 0 => CofeMor (λ _, inhabitant) | S k => map (g,f) end
 with g {k} : A (S k) -n> A k :=
-  match k with 0 => CofeMor (λ _, () : unitC) | S k => map (f,g) end.
+  match k with 0 => CofeMor (λ _, ()) | S k => map (f,g) end.
 Definition f_S k (x : A (S k)) : f x = map (g,f) x := eq_refl.
 Definition g_S k (x : A (S (S k))) : g x = map (f,g) x := eq_refl.
 Lemma gf {k} (x : A k) : g (f x) ≡ x.

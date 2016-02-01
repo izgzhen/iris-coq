@@ -129,6 +129,11 @@ Next Obligation. by intros ? A ? B f Hf c n i ?; apply Hf, chain_cauchy. Qed.
 (** Timeless elements *)
 Class Timeless {A : cofeT} (x : A) := timeless y : x ={1}= y → x ≡ y.
 Arguments timeless {_} _ {_} _ _.
+Lemma timeless_S {A : cofeT} (x y : A) n : Timeless x → x ≡ y ↔ x ={S n}= y.
+Proof.
+  split; intros; [by apply equiv_dist|].
+  apply (timeless _), dist_le with (S n); auto with lia.
+Qed.
 
 (** Fixpoint *)
 Program Definition fixpoint_chain {A : cofeT} `{Inhabited A} (f : A → A)
@@ -235,6 +240,8 @@ Section unit.
   Definition unit_cofe_mixin : CofeMixin unit.
   Proof. by repeat split; try exists 0. Qed.
   Canonical Structure unitC : cofeT := CofeT unit_cofe_mixin.
+  Global Instance unit_timeless (x : ()) : Timeless x.
+  Proof. done. Qed.
 End unit.
 
 (** Product *)
