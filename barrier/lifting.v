@@ -118,14 +118,9 @@ Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' Q :
   (ownP σ ★ ▷(ownP σ -★ Q LitFalseV)) ⊑ wp E (Cas (Loc l) e1 e2) Q.
 Proof.
   intros Hvl Hl. etransitivity; last eapply wp_lift_step with (σ1 := σ)
-    (φ := λ e' σ', e' = LitFalse ∧ σ' = σ); last first.
-  - intros e2' σ2' ef Hstep. inversion_clear Hstep; first done.
-    (* FIXME this rewriting is rather ugly. *)
-    exfalso. rewrite Hvl in Hv1. case:Hv1=>?; subst v1. rewrite Hlookup in H.
-    case:H=>?; subst v'. done.
-  - do 3 eexists. eapply CasFailS; eassumption.
-  - reflexivity.
-  - reflexivity.
+    (φ := λ e' σ', e' = LitFalse ∧ σ' = σ) (E1:=E); auto; last first.
+  - by inversion_clear 1; simplify_map_equality.
+  - do 3 eexists; econstructor; eauto.
   - rewrite -pvs_intro.
     apply sep_mono; first done. apply later_mono.
     apply forall_intro=>e2'. apply forall_intro=>σ2'.
@@ -177,14 +172,9 @@ Proof.
     eapply ForkS.
   - reflexivity.
   - apply later_mono.
-    apply forall_intro=>e2. apply forall_intro=>ef.
-    apply impl_intro_l. apply const_elim_l. intros [-> ->].
-    (* FIXME RJ This is ridicolous. *)
-    transitivity (True ★ wp coPset_all e (λ _, True : iProp heap_lang Σ))%I;
-      first by rewrite left_id.
-    apply sep_mono; last reflexivity.
-    rewrite -wp_value'; last reflexivity.
-    by apply const_intro.
+    apply forall_intro=>e2; apply forall_intro=>ef.
+    apply impl_intro_l, const_elim_l=>-[-> ->] /=; apply sep_intro_True_l; auto.
+    by rewrite -wp_value' //; apply const_intro.
 Qed.
 
 Lemma wp_lift_pure_step E (φ : expr → Prop) Q e1 :
