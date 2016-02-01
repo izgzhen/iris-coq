@@ -1,18 +1,3 @@
-% CONVENTION:
-%	Use \Ra/Lra for the logic and \implies/\iff for the metalogic.
-
-% This short (for now) note lays out a \emph{generic} separation logic which
-% manages sharing through invariants and ownership through (partial commutative)
-% monoids.  The logic is generic in that the actual language it applies to is
-% taken as a parameter, giving in particular the atomic (per-thread) reduction
-% relation.  Over this, we layer concurrency (by giving a semantics to \kw{fork}
-% and lifting to thread pools).  The generic logic provides numerous logical
-% connectives and the semantics of Hoare triples and view shifts, together with a
-% large portion of the proof theory---including, in particular, the structural
-% rules for Hoare logic.  Ultimately, these are proved sound relative to some
-% simple assumptions about the language.  It should be possible, moreover, to give
-% a generic adequacy proof for Hoare triples as applied to the lifted thread-pool
-% semantics.
 
 \section{Parameters to the logic}
 
