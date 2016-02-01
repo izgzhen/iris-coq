@@ -1,10 +1,11 @@
 Require Import prelude.gmap iris.lifting.
-Require Export iris.weakestpre barrier.parameter.
+Require Export iris.weakestpre barrier.heap_lang.
 Import uPred.
 
 Section lifting.
-Implicit Types P : iProp Σ.
-Implicit Types Q : ival Σ → iProp Σ.
+Context {Σ : iFunctor}.
+Implicit Types P : iProp heap_lang Σ.
+Implicit Types Q : val heap_lang → iProp heap_lang Σ.
 
 (** Bind. *)
 Lemma wp_bind {E e} K Q :
@@ -162,7 +163,8 @@ Qed.
 (** Base axioms for core primitives of the language: Stateless reductions *)
 
 Lemma wp_fork E e :
-  ▷ wp coPset_all e (λ _, True) ⊑ wp E (Fork e) (λ v, ■(v = LitUnitV)).
+  ▷ wp coPset_all e (λ _, True : iProp heap_lang Σ)
+  ⊑ wp E (Fork e) (λ v, ■(v = LitUnitV)).
 Proof.
   etransitivity; last eapply wp_lift_pure_step with
     (φ := λ e' ef, e' = LitUnit ∧ ef = Some e);
@@ -178,7 +180,7 @@ Proof.
     apply forall_intro=>e2. apply forall_intro=>ef.
     apply impl_intro_l. apply const_elim_l. intros [-> ->].
     (* FIXME RJ This is ridicolous. *)
-    transitivity (True ★ wp coPset_all e (λ _ : ival Σ, True))%I;
+    transitivity (True ★ wp coPset_all e (λ _, True : iProp heap_lang Σ))%I;
       first by rewrite left_id.
     apply sep_mono; last reflexivity.
     rewrite -wp_value'; last reflexivity.

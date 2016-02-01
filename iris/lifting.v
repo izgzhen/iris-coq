@@ -7,14 +7,15 @@ Local Hint Extern 10 (✓{_} _) =>
   solve_validN.
 
 Section lifting.
-Context {Σ : iParam}.
-Implicit Types v : ival Σ.
-Implicit Types e : iexpr Σ.
-Implicit Types σ : istate Σ.
+Context {Λ : language} {Σ : iFunctor}.
+Implicit Types v : val Λ.
+Implicit Types e : expr Λ.
+Implicit Types σ : state Λ.
+Implicit Types Q : val Λ → iProp Λ Σ.
 Transparent uPred_holds.
 
 Lemma wp_lift_step E1 E2
-    (φ : iexpr Σ → istate Σ → option (iexpr Σ) → Prop) Q e1 σ1 :
+    (φ : expr Λ → state Λ → option (expr Λ) → Prop) Q e1 σ1 :
   E1 ⊆ E2 → to_val e1 = None →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
@@ -35,7 +36,7 @@ Proof.
   { rewrite (commutative _ r2) -(associative _); eauto using wsat_le. }
   by exists r1', r2'; split_ands; [| |by intros ? ->].
 Qed.
-Lemma wp_lift_pure_step E (φ : iexpr Σ → option (iexpr Σ) → Prop) Q e1 :
+Lemma wp_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) Q e1 :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →

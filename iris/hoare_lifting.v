@@ -8,12 +8,14 @@ Local Notation "{{ P } } ef ?@ E {{ Q } }" :=
   (at level 74, format "{{  P  } }  ef  ?@  E  {{  Q  } }") : C_scope.
 
 Section lifting.
-Context {Σ : iParam}.
-Implicit Types e : iexpr Σ.
+Context {Λ : language} {Σ : iFunctor}.
+Implicit Types e : expr Λ.
+Implicit Types P : iProp Λ Σ.
+Implicit Types R : val Λ → iProp Λ Σ.
 Import uPred.
 
 Lemma ht_lift_step E1 E2
-    (φ : iexpr Σ → istate Σ → option (iexpr Σ) → Prop) P P' Q1 Q2 R e1 σ1 :
+    (φ : expr Λ → state Λ → option (expr Λ) → Prop) P P' Q1 Q2 R e1 σ1 :
   E1 ⊆ E2 → to_val e1 = None →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
@@ -42,8 +44,7 @@ Proof.
   rewrite {1}/ht -always_wand_impl always_elim wand_elim_r; apply wp_mono=>v.
   by apply const_intro.
 Qed.
-Lemma ht_lift_atomic E
-    (φ : iexpr Σ → istate Σ → option (iexpr Σ) → Prop) P e1 σ1 :
+Lemma ht_lift_atomic E (φ : expr Λ → state Λ → option (expr Λ) → Prop) P e1 σ1 :
   atomic e1 →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
@@ -68,7 +69,7 @@ Proof.
     rewrite -(exist_intro σ2) -(exist_intro ef) (of_to_val e2) //.
     by rewrite -always_and_sep_r'; apply and_intro; try apply const_intro.
 Qed.
-Lemma ht_lift_pure_step E (φ : iexpr Σ → option (iexpr Σ) → Prop) P P' Q e1 :
+Lemma ht_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) P P' Q e1 :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →
@@ -94,7 +95,7 @@ Proof.
   by apply const_intro.
 Qed.
 Lemma ht_lift_pure_determistic_step E
-    (φ : iexpr Σ → option (iexpr Σ) → Prop) P P' Q e1 e2 ef :
+    (φ : expr Λ → option (expr Λ) → Prop) P P' Q e1 e2 ef :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2' σ2 ef', prim_step e1 σ1 e2' σ2 ef' → σ1 = σ2 ∧ e2 = e2' ∧ ef = ef')→

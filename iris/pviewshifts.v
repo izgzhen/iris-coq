@@ -7,38 +7,38 @@ Local Hint Extern 10 (✓{_} _) =>
   repeat match goal with H : wsat _ _ _ _ |- _ => apply wsat_valid in H end;
   solve_validN.
 
-Program Definition pvs {Σ} (E1 E2 : coPset) (P : iProp Σ) : iProp Σ :=
+Program Definition pvs {Λ Σ} (E1 E2 : coPset) (P : iProp Λ Σ) : iProp Λ Σ :=
   {| uPred_holds n r1 := ∀ rf k Ef σ,
        1 < k ≤ n → (E1 ∪ E2) ∩ Ef = ∅ →
        wsat k (E1 ∪ Ef) σ (r1 ⋅ rf) →
        ∃ r2, P k r2 ∧ wsat k (E2 ∪ Ef) σ (r2 ⋅ rf) |}.
 Next Obligation.
-  intros Σ E1 E2 P r1 r2 n HP Hr rf k Ef σ ?? Hwsat; simpl in *.
+  intros Λ Σ E1 E2 P r1 r2 n HP Hr rf k Ef σ ?? Hwsat; simpl in *.
   apply HP; auto. by rewrite (dist_le _ _ _ _ Hr); last lia.
 Qed.
-Next Obligation. intros Σ E1 E2 P r rf k Ef σ; simpl in *; lia. Qed.
+Next Obligation. intros Λ Σ E1 E2 P r rf k Ef σ; simpl in *; lia. Qed.
 Next Obligation.
-  intros Σ E1 E2 P r1 r2 n1 n2 HP [r3 ?] Hn ? rf k Ef σ ?? Hws; setoid_subst.
+  intros Λ Σ E1 E2 P r1 r2 n1 n2 HP [r3 ?] Hn ? rf k Ef σ ?? Hws; setoid_subst.
   destruct (HP (r3⋅rf) k Ef σ) as (r'&?&Hws'); rewrite ?(associative op); auto.
   exists (r' ⋅ r3); rewrite -(associative _); split; last done.
   apply uPred_weaken with r' k; eauto using cmra_included_l.
 Qed.
-Arguments pvs {_} _ _ _%I : simpl never.
-Instance: Params (@pvs) 3.
+Arguments pvs {_ _} _ _ _%I : simpl never.
+Instance: Params (@pvs) 4.
 
 Section pvs.
-Context {Σ : iParam}.
-Implicit Types P Q : iProp Σ.
-Implicit Types m : iGst Σ.
+Context {Λ : language} {Σ : iFunctor}.
+Implicit Types P Q : iProp Λ Σ.
+Implicit Types m : iGst Λ Σ.
 Transparent uPred_holds.
 
-Global Instance pvs_ne E1 E2 n : Proper (dist n ==> dist n) (@pvs Σ E1 E2).
+Global Instance pvs_ne E1 E2 n : Proper (dist n ==> dist n) (@pvs Λ Σ E1 E2).
 Proof.
   intros P Q HPQ r1 n' ??; simpl; split; intros HP rf k Ef σ ???;
     destruct (HP rf k Ef σ) as (r2&?&?); auto;
     exists r2; split_ands; auto; apply HPQ; eauto.
 Qed.
-Global Instance pvs_proper E1 E2 : Proper ((≡) ==> (≡)) (@pvs Σ E1 E2).
+Global Instance pvs_proper E1 E2 : Proper ((≡) ==> (≡)) (@pvs Λ Σ E1 E2).
 Proof. apply ne_proper, _. Qed.
 
 Lemma pvs_intro E P : P ⊑ pvs E E P.
@@ -96,7 +96,7 @@ Proof.
   * by rewrite -(left_id_L ∅ (∪) Ef).
   * apply uPred_weaken with r n; auto.
 Qed.
-Lemma pvs_updateP E m (P : iGst Σ → Prop) :
+Lemma pvs_updateP E m (P : iGst Λ Σ → Prop) :
   m ⇝: P → ownG m ⊑ pvs E E (∃ m', ■ P m' ∧ ownG m').
 Proof.
   intros Hup r [|n] ? Hinv%ownG_spec rf [|k] Ef σ ???; try lia.
@@ -116,7 +116,7 @@ Qed.
 (* Derived rules *)
 Opaque uPred_holds.
 Import uPred.
-Global Instance pvs_mono' E1 E2 : Proper ((⊑) ==> (⊑)) (@pvs Σ E1 E2).
+Global Instance pvs_mono' E1 E2 : Proper ((⊑) ==> (⊑)) (@pvs Λ Σ E1 E2).
 Proof. intros P Q; apply pvs_mono. Qed.
 Lemma pvs_trans' E P : pvs E E (pvs E E P) ⊑ pvs E E P.
 Proof. apply pvs_trans; solve_elem_of. Qed.

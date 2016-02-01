@@ -5,8 +5,8 @@ Local Hint Extern 10 (✓{_} _) => solve_validN.
 Local Hint Extern 1 (✓{_} (gst _)) => apply gst_validN.
 Local Hint Extern 1 (✓{_} (wld _)) => apply wld_validN.
 
-Record wsat_pre {Σ} (n : nat) (E : coPset)
-    (σ : istate Σ) (rs : gmap positive (iRes Σ)) (r : iRes Σ) := {
+Record wsat_pre {Λ Σ} (n : nat) (E : coPset)
+    (σ : state Λ) (rs : gmap positive (iRes Λ Σ)) (r : iRes Λ Σ) := {
   wsat_pre_valid : ✓{S n} r;
   wsat_pre_state : pst r ≡ Excl σ;
   wsat_pre_dom i : is_Some (rs !! i) → i ∈ E ∧ is_Some (wld r !! i);
@@ -15,31 +15,33 @@ Record wsat_pre {Σ} (n : nat) (E : coPset)
     wld r !! i ={S n}= Some (to_agree (Later (iProp_unfold P))) →
     ∃ r', rs !! i = Some r' ∧ P n r'
 }.
-Arguments wsat_pre_valid {_ _ _ _ _ _} _.
-Arguments wsat_pre_state {_ _ _ _ _ _} _.
-Arguments wsat_pre_dom {_ _ _ _ _ _} _ _ _.
-Arguments wsat_pre_wld {_ _ _ _ _ _} _ _ _ _ _.
+Arguments wsat_pre_valid {_ _ _ _ _ _ _} _.
+Arguments wsat_pre_state {_ _ _ _ _ _ _} _.
+Arguments wsat_pre_dom {_ _ _ _ _ _ _} _ _ _.
+Arguments wsat_pre_wld {_ _ _ _ _ _ _} _ _ _ _ _.
 
-Definition wsat {Σ} (n : nat) (E : coPset) (σ : istate Σ) (r : iRes Σ) : Prop :=
+Definition wsat {Λ Σ}
+  (n : nat) (E : coPset) (σ : state Λ) (r : iRes Λ Σ) : Prop :=
   match n with 0 => True | S n => ∃ rs, wsat_pre n E σ rs (r ⋅ big_opM rs) end.
-Instance: Params (@wsat) 4.
+Instance: Params (@wsat) 5.
 Arguments wsat : simpl never.
 
 Section wsat.
-Context {Σ : iParam}.
-Implicit Types σ : istate Σ.
-Implicit Types r : iRes Σ.
-Implicit Types rs : gmap positive (iRes Σ).
-Implicit Types P : iProp Σ.
+Context {Λ : language} {Σ : iFunctor}.
+Implicit Types σ : state Λ.
+Implicit Types r : iRes Λ Σ.
+Implicit Types rs : gmap positive (iRes Λ Σ).
+Implicit Types P : iProp Λ Σ.
+Implicit Types m : iGst Λ Σ.
 
-Instance wsat_ne' : Proper (dist n ==> impl) (wsat (Σ:=Σ) n E σ).
+Instance wsat_ne' : Proper (dist n ==> impl) (@wsat Λ Σ n E σ).
 Proof.
   intros [|n] E σ r1 r2 Hr; first done; intros [rs [Hdom Hv Hs Hinv]].
   exists rs; constructor; intros until 0; setoid_rewrite <-Hr; eauto.
 Qed.
-Global Instance wsat_ne n : Proper (dist n ==> iff) (wsat (Σ:=Σ) n E σ) | 1.
+Global Instance wsat_ne n : Proper (dist n ==> iff) (@wsat Λ Σ n E σ) | 1.
 Proof. by intros E σ w1 w2 Hw; split; apply wsat_ne'. Qed.
-Global Instance wsat_proper n : Proper ((≡) ==> iff) (wsat (Σ:=Σ) n E σ) | 1.
+Global Instance wsat_proper n : Proper ((≡) ==> iff) (@wsat Λ Σ n E σ) | 1.
 Proof. by intros E σ w1 w2 Hw; apply wsat_ne, equiv_dist. Qed.
 Lemma wsat_le n n' E σ r : wsat n E σ r → n' ≤ n → wsat n' E σ r.
 Proof.
@@ -122,7 +124,7 @@ Proof.
   split; [done|exists rs].
   by constructor; split_ands'; try (rewrite /= -associative Hpst').
 Qed.
-Lemma wsat_update_gst n E σ r rf m1 (P : iGst Σ → Prop) :
+Lemma wsat_update_gst n E σ r rf m1 (P : iGst Λ Σ → Prop) :
   m1 ≼{S n} gst r → m1 ⇝: P →
   wsat (S n) E σ (r ⋅ rf) → ∃ m2, wsat (S n) E σ (update_gst m2 r ⋅ rf) ∧ P m2.
 Proof.

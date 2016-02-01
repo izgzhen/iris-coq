@@ -7,9 +7,10 @@ Local Hint Extern 10 (✓{_} _) =>
   solve_validN.
 
 Section adequacy.
-Context {Σ : iParam}.
-Implicit Types e : iexpr Σ.
-Implicit Types Q : ival Σ → iProp Σ.
+Context {Λ : language} {Σ : iFunctor}.
+Implicit Types e : expr Λ.
+Implicit Types Q : val Λ → iProp Λ Σ.
+Implicit Types m : iGst Λ Σ.
 Transparent uPred_holds.
 
 Notation wptp n := (Forall3 (λ e Q r, uPred_holds (wp coPset_all e Q) n r)).

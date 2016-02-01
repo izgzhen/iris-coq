@@ -1,25 +1,25 @@
 Require Export iris.model.
 
-Definition inv {Σ} (i : positive) (P : iProp Σ) : iProp Σ :=
+Definition inv {Λ Σ} (i : positive) (P : iProp Λ Σ) : iProp Λ Σ :=
   uPred_own (Res {[ i ↦ to_agree (Later (iProp_unfold P)) ]} ∅ ∅).
-Arguments inv {_} _ _%I.
-Definition ownP {Σ} (σ : istate Σ) : iProp Σ := uPred_own (Res ∅ (Excl σ) ∅).
-Definition ownG {Σ} (m : iGst Σ) : iProp Σ := uPred_own (Res ∅ ∅ m).
-Instance: Params (@inv) 2.
-Instance: Params (@ownP) 1.
-Instance: Params (@ownG) 1.
+Arguments inv {_ _} _ _%I.
+Definition ownP {Λ Σ} (σ: state Λ) : iProp Λ Σ := uPred_own (Res ∅ (Excl σ) ∅).
+Definition ownG {Λ Σ} (m : iGst Λ Σ) : iProp Λ Σ := uPred_own (Res ∅ ∅ m).
+Instance: Params (@inv) 3.
+Instance: Params (@ownP) 2.
+Instance: Params (@ownG) 2.
 
 Typeclasses Opaque inv ownG ownP.
 
 Section ownership.
-Context {Σ : iParam}.
-Implicit Types r : iRes Σ.
-Implicit Types σ : istate Σ.
-Implicit Types P : iProp Σ.
-Implicit Types m : iGst Σ.
+Context {Λ : language} {Σ : iFunctor}.
+Implicit Types r : iRes Λ Σ.
+Implicit Types σ : state Λ.
+Implicit Types P : iProp Λ Σ.
+Implicit Types m : iGst Λ Σ.
 
 (* Invariants *)
-Global Instance inv_contractive i : Contractive (@inv Σ i).
+Global Instance inv_contractive i : Contractive (@inv Λ Σ i).
 Proof.
   intros n P Q HPQ.
   apply (_: Proper (_ ==> _) iProp_unfold), Later_contractive in HPQ.
@@ -36,18 +36,18 @@ Lemma inv_sep_dup i P : inv i P ≡ (inv i P ★ inv i P)%I.
 Proof. apply (uPred.always_sep_dup' _). Qed.
 
 (* physical state *)
-Lemma ownP_twice σ1 σ2 : (ownP σ1 ★ ownP σ2 : iProp Σ) ⊑ False.
+Lemma ownP_twice σ1 σ2 : (ownP σ1 ★ ownP σ2 : iProp Λ Σ) ⊑ False.
 Proof.
   rewrite /ownP -uPred.own_op Res_op.
   by apply uPred.own_invalid; intros (_&?&_).
 Qed.
-Global Instance ownP_timeless σ : TimelessP (ownP σ).
+Global Instance ownP_timeless σ : TimelessP (@ownP Λ Σ σ).
 Proof. rewrite /ownP; apply _. Qed.
 
 (* ghost state *)
-Global Instance ownG_ne n : Proper (dist n ==> dist n) (@ownG Σ).
+Global Instance ownG_ne n : Proper (dist n ==> dist n) (@ownG Λ Σ).
 Proof. by intros m m' Hm; unfold ownG; rewrite Hm. Qed.
-Global Instance ownG_proper : Proper ((≡) ==> (≡)) (@ownG Σ) := ne_proper _.
+Global Instance ownG_proper : Proper ((≡) ==> (≡)) (@ownG Λ Σ) := ne_proper _.
 Lemma ownG_op m1 m2 : ownG (m1 ⋅ m2) ≡ (ownG m1 ★ ownG m2)%I.
 Proof. by rewrite /ownG -uPred.own_op Res_op !(left_id _ _). Qed.
 Lemma always_ownG_unit m : (□ ownG (unit m))%I ≡ ownG (unit m).

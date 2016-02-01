@@ -25,19 +25,16 @@ Module LangTests.
   Qed.
 End LangTests.
 
-Module ParamTests.
-  Print Assumptions Σ.
-End ParamTests.
-
 Module LiftingTests.
-  Implicit Types P : iProp Σ.
-  Implicit Types Q : ival Σ → iProp Σ.
+  Context {Σ : iFunctor}.
+  Implicit Types P : iProp heap_lang Σ.
+  Implicit Types Q : val heap_lang → iProp heap_lang Σ.
 
   (* TODO RJ: Some syntactic sugar for language expressions would be nice. *)
   Definition e3 := Load (Var 0).
   Definition e2 := Seq (Store (Var 0) (Plus (Load $ Var 0) (LitNat 1))) e3.
   Definition e := Let (Alloc (LitNat 1)) e2.
-  Goal ∀ σ E, (ownP σ) ⊑ (wp E e (λ v, ■(v = LitNatV 2))).
+  Goal ∀ σ E, (ownP σ : iProp heap_lang Σ) ⊑ (wp E e (λ v, ■(v = LitNatV 2))).
   Proof.
     move=> σ E. rewrite /e.
     rewrite -wp_let. rewrite -wp_alloc_pst; last done.
@@ -121,7 +118,9 @@ Module LiftingTests.
       + done.
   Qed.
 
-  Goal ∀ E, True ⊑ wp E (Let (App Pred (LitNat 42)) (App Pred (Var 0))) (λ v, ■(v = LitNatV 40)).
+  Goal ∀ E,
+    (True : iProp heap_lang Σ)
+    ⊑ wp E (Let (App Pred (LitNat 42)) (App Pred (Var 0))) (λ v, ■(v = LitNatV 40)).
   Proof.
     intros E. rewrite -wp_let. rewrite -Pred_spec -!later_intro.
     asimpl. (* TODO RJ: Can we somehow make it so that Pred gets folded again? *)

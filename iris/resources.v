@@ -1,56 +1,57 @@
-Require Export modures.fin_maps modures.agree modures.excl iris.parameter.
+Require Export modures.fin_maps modures.agree modures.excl.
+Require Export iris.language iris.functor.
 
-Record res (Σ : iParam) (A : cofeT) := Res {
+Record res (Λ : language) (Σ : iFunctor) (A : cofeT) := Res {
   wld : mapRA positive (agreeRA A);
-  pst : exclRA (istateC Σ);
-  gst : icmra Σ A;
+  pst : exclRA (istateC Λ);
+  gst : Σ A;
 }.
 Add Printing Constructor res.
-Arguments Res {_ _} _ _ _.
-Arguments wld {_ _} _.
-Arguments pst {_ _} _.
-Arguments gst {_ _} _.
-Instance: Params (@Res) 2.
-Instance: Params (@wld) 2.
-Instance: Params (@pst) 2.
-Instance: Params (@gst) 2.
+Arguments Res {_ _ _} _ _ _.
+Arguments wld {_ _ _} _.
+Arguments pst {_ _ _} _.
+Arguments gst {_ _ _} _.
+Instance: Params (@Res) 3.
+Instance: Params (@wld) 3.
+Instance: Params (@pst) 3.
+Instance: Params (@gst) 3.
 
 Section res.
-Context {Σ : iParam} {A : cofeT}.
-Implicit Types r : res Σ A.
+Context {Λ : language} {Σ : iFunctor} {A : cofeT}.
+Implicit Types r : res Λ Σ A.
 
-Inductive res_equiv' (r1 r2 : res Σ A) := Res_equiv :
+Inductive res_equiv' (r1 r2 : res Λ Σ A) := Res_equiv :
   wld r1 ≡ wld r2 → pst r1 ≡ pst r2 → gst r1 ≡ gst r2 → res_equiv' r1 r2.
-Instance res_equiv : Equiv (res Σ A) := res_equiv'.
-Inductive res_dist' (n : nat) (r1 r2 : res Σ A) := Res_dist :
+Instance res_equiv : Equiv (res Λ Σ A) := res_equiv'.
+Inductive res_dist' (n : nat) (r1 r2 : res Λ Σ A) := Res_dist :
   wld r1 ={n}= wld r2 → pst r1 ={n}= pst r2 → gst r1 ={n}= gst r2 →
   res_dist' n r1 r2.
-Instance res_dist : Dist (res Σ A) := res_dist'.
+Instance res_dist : Dist (res Λ Σ A) := res_dist'.
 Global Instance Res_ne n :
-  Proper (dist n ==> dist n ==> dist n ==> dist n) (@Res Σ A).
+  Proper (dist n ==> dist n ==> dist n ==> dist n) (@Res Λ Σ A).
 Proof. done. Qed.
-Global Instance Res_proper : Proper ((≡) ==> (≡) ==> (≡) ==> (≡)) (@Res Σ A).
+Global Instance Res_proper : Proper ((≡) ==> (≡) ==> (≡) ==> (≡)) (@Res Λ Σ A).
 Proof. done. Qed.
-Global Instance wld_ne n : Proper (dist n ==> dist n) (@wld Σ A).
+Global Instance wld_ne n : Proper (dist n ==> dist n) (@wld Λ Σ A).
 Proof. by destruct 1. Qed.
-Global Instance wld_proper : Proper ((≡) ==> (≡)) (@wld Σ A).
+Global Instance wld_proper : Proper ((≡) ==> (≡)) (@wld Λ Σ A).
 Proof. by destruct 1. Qed.
-Global Instance pst_ne n : Proper (dist n ==> dist n) (@pst Σ A).
+Global Instance pst_ne n : Proper (dist n ==> dist n) (@pst Λ Σ A).
 Proof. by destruct 1. Qed.
-Global Instance pst_ne' n : Proper (dist (S n) ==> (≡)) (@pst Σ A).
+Global Instance pst_ne' n : Proper (dist (S n) ==> (≡)) (@pst Λ Σ A).
 Proof.
   intros σ σ' [???]; apply (timeless _), dist_le with (S n); auto with lia.
 Qed.
-Global Instance pst_proper : Proper ((≡) ==> (=)) (@pst Σ A).
+Global Instance pst_proper : Proper ((≡) ==> (=)) (@pst Λ Σ A).
 Proof. by destruct 1; unfold_leibniz. Qed.
-Global Instance gst_ne n : Proper (dist n ==> dist n) (@gst Σ A).
+Global Instance gst_ne n : Proper (dist n ==> dist n) (@gst Λ Σ A).
 Proof. by destruct 1. Qed.
-Global Instance gst_proper : Proper ((≡) ==> (≡)) (@gst Σ A).
+Global Instance gst_proper : Proper ((≡) ==> (≡)) (@gst Λ Σ A).
 Proof. by destruct 1. Qed.
-Instance res_compl : Compl (res Σ A) := λ c,
+Instance res_compl : Compl (res Λ Σ A) := λ c,
   Res (compl (chain_map wld c))
       (compl (chain_map pst c)) (compl (chain_map gst c)).
-Definition res_cofe_mixin : CofeMixin (res Σ A).
+Definition res_cofe_mixin : CofeMixin (res Λ Σ A).
 Proof.
   split.
   * intros w1 w2; split.
@@ -72,30 +73,30 @@ Global Instance res_timeless r :
   Timeless (wld r) → Timeless (gst r) → Timeless r.
 Proof. by destruct 3; constructor; try apply (timeless _). Qed.
 
-Instance res_op : Op (res Σ A) := λ r1 r2,
+Instance res_op : Op (res Λ Σ A) := λ r1 r2,
   Res (wld r1 ⋅ wld r2) (pst r1 ⋅ pst r2) (gst r1 ⋅ gst r2).
-Global Instance res_empty : Empty (res Σ A) := Res ∅ ∅ ∅.
-Instance res_unit : Unit (res Σ A) := λ r,
+Global Instance res_empty : Empty (res Λ Σ A) := Res ∅ ∅ ∅.
+Instance res_unit : Unit (res Λ Σ A) := λ r,
   Res (unit (wld r)) (unit (pst r)) (unit (gst r)).
-Instance res_validN : ValidN (res Σ A) := λ n r,
+Instance res_validN : ValidN (res Λ Σ A) := λ n r,
   ✓{n} (wld r) ∧ ✓{n} (pst r) ∧ ✓{n} (gst r).
-Instance res_minus : Minus (res Σ A) := λ r1 r2,
+Instance res_minus : Minus (res Λ Σ A) := λ r1 r2,
   Res (wld r1 ⩪ wld r2) (pst r1 ⩪ pst r2) (gst r1 ⩪ gst r2).
-Lemma res_included (r1 r2 : res Σ A) :
+Lemma res_included (r1 r2 : res Λ Σ A) :
   r1 ≼ r2 ↔ wld r1 ≼ wld r2 ∧ pst r1 ≼ pst r2 ∧ gst r1 ≼ gst r2.
 Proof.
   split; [|by intros ([w ?]&[σ ?]&[m ?]); exists (Res w σ m)].
   intros [r Hr]; split_ands;
     [exists (wld r)|exists (pst r)|exists (gst r)]; apply Hr.
 Qed.
-Lemma res_includedN (r1 r2 : res Σ A) n :
+Lemma res_includedN (r1 r2 : res Λ Σ A) n :
   r1 ≼{n} r2 ↔ wld r1 ≼{n} wld r2 ∧ pst r1 ≼{n} pst r2 ∧ gst r1 ≼{n} gst r2.
 Proof.
   split; [|by intros ([w ?]&[σ ?]&[m ?]); exists (Res w σ m)].
   intros [r Hr]; split_ands;
     [exists (wld r)|exists (pst r)|exists (gst r)]; apply Hr.
 Qed.
-Definition res_cmra_mixin : CMRAMixin (res Σ A).
+Definition res_cmra_mixin : CMRAMixin (res Λ Σ A).
 Proof.
   split.
   * by intros n x [???] ? [???]; constructor; simpl in *; cofe_subst.
@@ -116,7 +117,7 @@ Proof.
   * intros n r1 r2; rewrite res_includedN; intros (?&?&?).
     by constructor; apply cmra_op_minus.
 Qed.
-Definition res_cmra_extend_mixin : CMRAExtendMixin (res Σ A).
+Definition res_cmra_extend_mixin : CMRAExtendMixin (res Λ Σ A).
 Proof.
   intros n r r1 r2 (?&?&?) [???]; simpl in *.
   destruct (cmra_extend_op n (wld r) (wld r1) (wld r2)) as ([w w']&?&?&?),
@@ -134,13 +135,13 @@ Proof.
   * apply _.
 Qed.
 
-Definition update_pst (σ : istate Σ) (r : res Σ A) : res Σ A :=
+Definition update_pst (σ : state Λ) (r : res Λ Σ A) : res Λ Σ A :=
   Res (wld r) (Excl σ) (gst r).
-Definition update_gst (m : icmra Σ A) (r : res Σ A) : res Σ A :=
+Definition update_gst (m : Σ A) (r : res Λ Σ A) : res Λ Σ A :=
   Res (wld r) (pst r) m.
 
 Lemma wld_validN n r : ✓{n} r → ✓{n} (wld r).
-Proof. by intros (?&?&?). Qed. 
+Proof. by intros (?&?&?). Qed.
 Lemma gst_validN n r : ✓{n} r → ✓{n} (gst r).
 Proof. by intros (?&?&?). Qed.
 Lemma Res_op w1 w2 σ1 σ2 m1 m2 :
@@ -165,49 +166,50 @@ Proof. by intros ? ? [???]; constructor; apply (timeless _). Qed.
 End res.
 Arguments resRA : clear implicits.
 
-Definition res_map {Σ A B} (f : A -n> B) (r : res Σ A) : res Σ B :=
+Definition res_map {Λ Σ A B} (f : A -n> B) (r : res Λ Σ A) : res Λ Σ B :=
   Res (agree_map f <$> (wld r))
       (pst r)
-      (icmra_map Σ f (gst r)).
-Instance res_map_ne Σ (A B : cofeT) (f : A -n> B) :
+      (ifunctor_map Σ f (gst r)).
+Instance res_map_ne Λ Σ (A B : cofeT) (f : A -n> B) :
   (∀ n, Proper (dist n ==> dist n) f) →
-  ∀ n, Proper (dist n ==> dist n) (@res_map Σ _ _ f).
+  ∀ n, Proper (dist n ==> dist n) (@res_map Λ Σ _ _ f).
 Proof. by intros Hf n [] ? [???]; constructor; simpl in *; cofe_subst. Qed.
-Lemma res_map_id {Σ A} (r : res Σ A) : res_map cid r ≡ r.
+Lemma res_map_id {Λ Σ A} (r : res Λ Σ A) : res_map cid r ≡ r.
 Proof.
   constructor; simpl; [|done|].
   * rewrite -{2}(map_fmap_id (wld r)); apply map_fmap_setoid_ext=> i y ? /=.
     by rewrite -{2}(agree_map_id y); apply agree_map_ext=> y' /=.
-  * by rewrite -{2}(icmra_map_id Σ (gst r)); apply icmra_map_ext=> m /=.
+  * by rewrite -{2}(ifunctor_map_id Σ (gst r)); apply ifunctor_map_ext=> m /=.
 Qed.
-Lemma res_map_compose {Σ A B C} (f : A -n> B) (g : B -n> C) (r : res Σ A) :
+Lemma res_map_compose {Λ Σ A B C} (f : A -n> B) (g : B -n> C) (r : res Λ Σ A) :
   res_map (g ◎ f) r ≡ res_map g (res_map f r).
 Proof.
   constructor; simpl; [|done|].
   * rewrite -map_fmap_compose; apply map_fmap_setoid_ext=> i y _ /=.
     by rewrite -agree_map_compose; apply agree_map_ext=> y' /=.
-  * by rewrite -icmra_map_compose; apply icmra_map_ext=> m /=.
+  * by rewrite -ifunctor_map_compose; apply ifunctor_map_ext=> m /=.
 Qed.
-Lemma res_map_ext {Σ A B} (f g : A -n> B) (r : res Σ A) :
+Lemma res_map_ext {Λ Σ A B} (f g : A -n> B) (r : res Λ Σ A) :
   (∀ x, f x ≡ g x) → res_map f r ≡ res_map g r.
 Proof.
   intros Hfg; split; simpl; auto.
   * by apply map_fmap_setoid_ext=>i x ?; apply agree_map_ext.
-  * by apply icmra_map_ext.
+  * by apply ifunctor_map_ext.
 Qed.
-Definition resRA_map {Σ A B} (f : A -n> B) : resRA Σ A -n> resRA Σ B :=
-  CofeMor (res_map f : resRA Σ A → resRA Σ B).
-Instance res_map_cmra_monotone {Σ} {A B : cofeT} (f : A -n> B) :
-  CMRAMonotone (@res_map Σ _ _ f).
+Definition resRA_map {Λ Σ A B} (f : A -n> B) : resRA Λ Σ A -n> resRA Λ Σ B :=
+  CofeMor (res_map f : resRA Λ Σ A → resRA Λ Σ B).
+Instance res_map_cmra_monotone {Λ Σ} {A B : cofeT} (f : A -n> B) :
+  CMRAMonotone (@res_map Λ Σ _ _ f).
 Proof.
   split.
   * by intros n r1 r2; rewrite !res_includedN;
       intros (?&?&?); split_ands'; simpl; try apply includedN_preserving.
   * by intros n r (?&?&?); split_ands'; simpl; try apply validN_preserving.
 Qed.
-Instance resRA_map_ne {Σ A B} n : Proper (dist n ==> dist n) (@resRA_map Σ A B).
+Instance resRA_map_ne {Λ Σ A B} n :
+  Proper (dist n ==> dist n) (@resRA_map Λ Σ A B).
 Proof.
   intros f g Hfg r; split; simpl; auto.
   * by apply (mapRA_map_ne _ (agreeRA_map f) (agreeRA_map g)), agreeRA_map_ne.
-  * by apply icmra_map_ne.
+  * by apply ifunctor_map_ne.
 Qed.

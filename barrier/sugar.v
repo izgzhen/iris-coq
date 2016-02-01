@@ -17,8 +17,9 @@ Definition LetCtx (K1 : ectx) (e2 : {bind expr}) := AppRCtx (LamV e2) K1.
 Definition SeqCtx (K1 : ectx) (e2 : expr) := LetCtx K1 (e2.[ren(+1)]).
 
 Section suger.
-Implicit Types P : iProp Σ.
-Implicit Types Q : ival Σ → iProp Σ.
+Context {Σ : iFunctor}.
+Implicit Types P : iProp heap_lang Σ.
+Implicit Types Q : val heap_lang → iProp heap_lang Σ.
 
 (** Proof rules for the sugar *)
 Lemma wp_lam E ef e v Q :

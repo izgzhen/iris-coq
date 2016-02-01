@@ -7,8 +7,8 @@ Local Hint Extern 10 (✓{_} _) =>
   repeat match goal with H : wsat _ _ _ _ |- _ => apply wsat_valid in H end;
   solve_validN.
 
-Record wp_go {Σ} (E : coPset) (Q Qfork : iexpr Σ → nat → iRes Σ → Prop)
-    (k : nat) (rf : iRes Σ) (e1 : iexpr Σ) (σ1 : istate Σ) := {
+Record wp_go {Λ Σ} (E : coPset) (Q Qfork : expr Λ → nat → iRes Λ Σ → Prop)
+    (k : nat) (rf : iRes Λ Σ) (e1 : expr Λ) (σ1 : state Λ) := {
   wf_safe : reducible e1 σ1;
   wp_step e2 σ2 ef :
     prim_step e1 σ1 e2 σ2 ef →
@@ -17,8 +17,8 @@ Record wp_go {Σ} (E : coPset) (Q Qfork : iexpr Σ → nat → iRes Σ → Prop)
       Q e2 k r2 ∧
       ∀ e', ef = Some e' → Qfork e' k r2'
 }.
-CoInductive wp_pre {Σ} (E : coPset)
-     (Q : ival Σ → iProp Σ) : iexpr Σ → nat → iRes Σ → Prop :=
+CoInductive wp_pre {Λ Σ} (E : coPset)
+     (Q : val Λ → iProp Λ Σ) : expr Λ → nat → iRes Λ Σ → Prop :=
   | wp_pre_value n r v : Q v n r → wp_pre E Q (of_val v) n r
   | wp_pre_step n r1 e1 :
      to_val e1 = None →
@@ -28,20 +28,20 @@ CoInductive wp_pre {Σ} (E : coPset)
        wp_go (E ∪ Ef) (wp_pre E Q)
                       (wp_pre coPset_all (λ _, True%I)) k rf e1 σ1) →
      wp_pre E Q e1 n r1.
-Program Definition wp {Σ} (E : coPset) (e : iexpr Σ)
-  (Q : ival Σ → iProp Σ) : iProp Σ := {| uPred_holds := wp_pre E Q e |}.
+Program Definition wp {Λ Σ} (E : coPset) (e : expr Λ)
+  (Q : val Λ → iProp Λ Σ) : iProp Λ Σ := {| uPred_holds := wp_pre E Q e |}.
 Next Obligation.
-  intros Σ E e Q r1 r2 n Hwp Hr.
+  intros Λ Σ E e Q r1 r2 n Hwp Hr.
   destruct Hwp as [|n r1 e2 ? Hgo]; constructor; rewrite -?Hr; auto.
   intros rf k Ef σ1 ?; rewrite -(dist_le _ _ _ _ Hr); naive_solver.
 Qed.
 Next Obligation.
-  intros Σ E e Q r; destruct (to_val e) as [v|] eqn:?.
+  intros Λ Σ E e Q r; destruct (to_val e) as [v|] eqn:?.
   * by rewrite -(of_to_val e v) //; constructor.
   * constructor; auto with lia.
 Qed.
 Next Obligation.
-  intros Σ E e Q r1 r2 n1; revert Q E e r1 r2.
+  intros Λ Σ E e Q r1 r2 n1; revert Q E e r1 r2.
   induction n1 as [n1 IH] using lt_wf_ind; intros Q E e r1 r1' n2.
   destruct 1 as [|n1 r1 e1 ? Hgo].
   * constructor; eauto using uPred_weaken.
@@ -52,14 +52,14 @@ Next Obligation.
     exists r2, (r2' ⋅ rf'); split_ands; eauto 10 using (IH k), cmra_included_l.
     by rewrite -!associative (associative _ r2).
 Qed.
-Instance: Params (@wp) 3.
+Instance: Params (@wp) 4.
 
 Section wp.
-Context {Σ : iParam}.
-Implicit Types P : iProp Σ.
-Implicit Types Q : ival Σ → iProp Σ.
-Implicit Types v : ival Σ.
-Implicit Types e : iexpr Σ.
+Context {Λ : language} {Σ : iFunctor}.
+Implicit Types P : iProp Λ Σ.
+Implicit Types Q : val Λ → iProp Λ Σ.
+Implicit Types v : val Λ.
+Implicit Types e : expr Λ.
 Transparent uPred_holds.
 
 Lemma wp_weaken E1 E2 e Q1 Q2 r n n' :
@@ -77,10 +77,10 @@ Proof.
   exists r2, r2'; split_ands; [rewrite HE'|eapply IH|]; eauto.
 Qed.
 Global Instance wp_ne E e n :
-  Proper (pointwise_relation _ (dist n) ==> dist n) (wp E e).
+  Proper (pointwise_relation _ (dist n) ==> dist n) (@wp Λ Σ E e).
 Proof. by intros Q Q' HQ; split; apply wp_weaken with n; try apply HQ. Qed.
 Global Instance wp_proper E e :
-  Proper (pointwise_relation _ (≡) ==> (≡)) (wp E e).
+  Proper (pointwise_relation _ (≡) ==> (≡)) (@wp Λ Σ E e).
 Proof.
   by intros Q Q' ?; apply equiv_dist=>n; apply wp_ne=>v; apply equiv_dist.
 Qed.
@@ -180,7 +180,7 @@ Qed.
 Opaque uPred_holds.
 Import uPred.
 Global Instance wp_mono' E e :
-  Proper (pointwise_relation _ (⊑) ==> (⊑)) (wp E e).
+  Proper (pointwise_relation _ (⊑) ==> (⊑)) (@wp Λ Σ E e).
 Proof. by intros Q Q' ?; apply wp_mono. Qed.
 Lemma wp_value' E Q e v : to_val e = Some v → Q v ⊑ wp E e Q.
 Proof. intros; rewrite -(of_to_val e v) //; by apply wp_value. Qed.

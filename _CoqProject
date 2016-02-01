@@ -57,14 +57,13 @@ iris/viewshifts.v
 iris/wsat.v
 iris/ownership.v
 iris/weakestpre.v
-iris/language.v
 iris/pviewshifts.v
 iris/resources.v
 iris/hoare.v
-iris/parameter.v
+iris/language.v
+iris/functor.v
 iris/tests.v
 barrier/heap_lang.v
-barrier/parameter.v
 barrier/lifting.v
 barrier/sugar.v
 barrier/tests.v
