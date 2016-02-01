@@ -34,6 +34,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SETUP
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\SetSymbolFont{stmry}{bold}{U}{stmry}{m}{n} % this fixes warnings when \boldsymbol is used with stmaryrd included
 
 \extrarowheight=\jot	% else, arrays are scrunched compared to, say, aligned
 \newcolumntype{.}{@{}}
@@ -84,17 +85,6 @@
 \newtheorem{thm}{Theorem}
 
 \newtheorem{exercise}{Exercise}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% FONTS & FORMATTING
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\SetSymbolFont{stmry}{bold}{U}{stmry}{m}{n} % this fixes warnings when \boldsymbol is used with stmaryrd included
-
-\newcommand{\textdom}[1]{\textit{#1}}
-\newcommand{\textlog}[1]{\textsf{#1}}
-\newcommand{\textsort}[1]{\textlog{#1}}
-\newcommand{\textlang}[1]{\texttt{#1}}
-\newcommand{\textmon}[1]{\textsc{#1}}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% GENERIC MACROS
@@ -217,6 +207,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CMRA (RESOURCE ALGEBRA) SYMBOLS & NOTATION & IDENTIFIERS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\textmon}[1]{\textsc{#1}}
+
 \newcommand{\monoid}{M}
 
 \newcommand{\melt}{a}
@@ -238,6 +230,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MODEL-SPECIFIC SYMBOLS & NOTATION & IDENTIFIERS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\textdom}[1]{\textit{#1}}
 
 \newcommand{\wIso}{\xi}
 
@@ -245,7 +238,7 @@
 \newcommand{\rsB}{s}
 
 \newcommand{\pres}{\pi}
-
+\newcommand{\wld}{w}
 \newcommand{\ghostRes}{g}
 
 %% Various pieces of syntax
@@ -276,6 +269,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LOGIC SYMBOLS & NOTATION & IDENTIFIERS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\textlog}[1]{\textsf{#1}}
+\newcommand{\textsort}[1]{\textlog{#1}}
 
 \newcommand{\Sig}{\mathcal{S}}
 \newcommand{\SigType}{\mathcal{T}}
@@ -421,7 +416,7 @@
 \newcommand{\FALSE}{\textlog{False}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% LANGUAGE-LEVEL SYNTAX AND SEMANTICS
+% LANGUAGE SYNTAX AND SEMANTICS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand{\expr}{e}
 \newcommand{\val}{v}
@@ -433,7 +428,6 @@
 \newcommand{\tpool}{T}
 
 \newcommand{\cfg}[2]{{#1};{#2}}
-\newcommand{\fork}[1]{\textlang{fork}\;{#1}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DERIVED CONSTRUCTIONS

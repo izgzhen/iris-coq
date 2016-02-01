@@ -2,14 +2,14 @@
 \section{Parameters to the logic}
 
 \begin{itemize}
-\item A set \textdom{Exp} of \emph{expressions} (metavariable $\expr$) with a
-  subset \textdom{Val} of values ($\val$).  We assume that if $\expr$ is an
-  expression then so is $\fork{\expr}$.  We moreover assume a value
-  \textsf{fRet} (giving the intended return value of a fork), and we assume that
-  \begin{align*}
-    \fork{\expr} &\notin \textdom{Val} \\
-    \fork{\expr_1} = \fork{\expr_2} &\implies \expr_1 = \expr_2
-  \end{align*}
+% \item A set \textdom{Exp} of \emph{expressions} (metavariable $\expr$) with a
+%   subset \textdom{Val} of values ($\val$).  We assume that if $\expr$ is an
+%   expression then so is $\fork{\expr}$.  We moreover assume a value
+%   \textsf{fRet} (giving the intended return value of a fork), and we assume that
+%   \begin{align*}
+%     \fork{\expr} &\notin \textdom{Val} \\
+%     \fork{\expr_1} = \fork{\expr_2} &\implies \expr_1 = \expr_2
+%   \end{align*}
 \item A set $\textdom{Ectx}$ of \emph{evaluation contexts} ($\ectx$) that includes the empty context $[\; ]$,
   a plugging operation $\ectx[\expr]$ that produces an expression, and context composition $\circ$
   satisfying the following axioms:
@@ -20,7 +20,7 @@
     \ectx[\expr_1] = \ectx[\expr_2] &\implies \expr_1 = \expr_2 \\
     \ectx_1 \circ \ectx_2 = [\; ] &\implies \ectx_1 = \ectx_2 = [\; ] \\
     \ectx[\expr] \in \textdom{Val} &\implies \ectx = [\;] \\
-    \ectx[\expr] = \fork{\expr'} &\implies \ectx = [\;]
+%    \ectx[\expr] = \fork{\expr'} &\implies \ectx = [\;]
   \end{align*}
 
 \item A set \textdom{State} of shared machine states (\eg heaps), metavariable $\state$.
@@ -34,14 +34,14 @@ and notions of an expression to be \emph{reducible} or \emph{stuck}, such that
    \lnot \textlog{reducible}(\expr')
 \end{align*}
 and the following hold
-\begin{align*}
-&\textlog{stuck}(\fork{\expr})& \\
- &\textlog{stuck}(\val)&\\
- &\ectx[\expr] = \ectx'[\expr'] \implies \textlog{reducible}(\expr') \implies
-  \expr \notin \textdom{Val} \implies \Exists \ectx''. \ectx' = \ectx \circ \ectx'' &\mbox{(step-by-value)} \\
- &\ectx[\expr] = \ectx'[\fork{\expr'}] \implies
-  \expr \notin \textdom{Val} \implies \Exists \ectx''. \ectx' = \ectx \circ \ectx'' &\mbox{(fork-by-value)} \\
-\end{align*}
+% \begin{align*}
+% &\textlog{stuck}(\fork{\expr})& \\
+%  &\textlog{stuck}(\val)&\\
+%  &\ectx[\expr] = \ectx'[\expr'] \implies \textlog{reducible}(\expr') \implies
+%   \expr \notin \textdom{Val} \implies \Exists \ectx''. \ectx' = \ectx \circ \ectx'' &\mbox{(step-by-value)} \\
+%  &\ectx[\expr] = \ectx'[\fork{\expr'}] \implies
+%   \expr \notin \textdom{Val} \implies \Exists \ectx''. \ectx' = \ectx \circ \ectx'' &\mbox{(fork-by-value)} \\
+% \end{align*}
 
 \item A predicate \textlog{atomic} on expressions satisfying
   \begin{align*}
@@ -78,11 +78,11 @@ Let $\mcarp{M} \eqdef |\monoid| \setminus \{\mzero\}$.
   {\cfg{\state}{\expr} \step \cfg{\state'}{\expr'}}
   {\cfg{\state}{\tpool [i \mapsto \ectx[\expr]]} \step
      \cfg{\state'}{\tpool [i \mapsto \ectx[\expr']]}}
-\and
-\infer
-  {}
-  {\cfg{\state}{\tpool [i \mapsto \ectx[\fork{\expr}]]} \step
-    \cfg{\state}{\tpool [i \mapsto \ectx[\textsf{fRet}]] [j \mapsto \expr]}}
+% \and
+% \infer
+%   {}
+%   {\cfg{\state}{\tpool [i \mapsto \ectx[\fork{\expr}]]} \step
+%     \cfg{\state}{\tpool [i \mapsto \ectx[\textsf{fRet}]] [j \mapsto \expr]}}
 \end{mathpar}
 
 \section{Syntax}
@@ -567,10 +567,10 @@ We write $\provesalways$ to denote judgments that can only be extended with a bo
   {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask] \and \text{$\expr$ not a value}
   }
   {\hoare{\prop * \later\propC}{\expr}{\Ret\val. \propB * \propC}[\mask \uplus \mask']}
-\and
-\inferH{Fork}
-  {\hoare{\prop}{\expr}{\Ret\any. \TRUE}[\top]}
-  {\hoare{\later\prop * \later\propB}{\fork{\expr}}{\Ret\val. \val = \textsf{fRet} \land \propB}[\mask]}
+% \and
+% \inferH{Fork}
+%   {\hoare{\prop}{\expr}{\Ret\any. \TRUE}[\top]}
+%   {\hoare{\later\prop * \later\propB}{\fork{\expr}}{\Ret\val. \val = \textsf{fRet} \land \propB}[\mask]}
 \and
 \inferH{ACsq}
   {\prop \vs[\mask \uplus \mask'][\mask] \prop' \\

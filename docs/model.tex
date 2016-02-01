@@ -389,28 +389,28 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 
 \typedsection{Weakest precondition}{\mathit{wp} : \Delta(\pset{\mathbb{N}}) \times \Delta(\textdom{Exp}) \times (\Delta(\textdom{Val}) \to \textdom{Prop}) \to \textdom{Prop} \in {\cal U}}
 
-\begin{align*}
-	\mathit{wp}_\mask(\expr, q) &\eqdef \Lam W.
-	\begin{aligned}[t]
-		\{\, (n, \rs) &\mid \All W_F \geq W; k \leq n; \rs_F; \state; \mask_F \sep \mask. k > 0 \land k \in (\fullSat{\state}{\mask \cup \mask_F}{\rs \rtimes \rs_F}{W_F}) \implies{}\\
-		&\qquad
-		(\expr \in \textdom{Val} \implies \Exists W' \geq W_F. \Exists \rs'. \\
-		&\qquad\qquad
-		k \in (\fullSat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k, \rs') \in q(\expr)(W'))~\land \\
-		&\qquad
-		(\All\ectx,\expr_0,\expr'_0,\state'. \expr = \ectx[\expr_0] \land \cfg{\state}{\expr_0} \step \cfg{\state'}{\expr'_0} \implies \Exists W' \geq W_F. \Exists \rs'. \\
-		&\qquad\qquad
-		k - 1 \in (\fullSat{\state'}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k-1, \rs') \in wp_\mask(\ectx[\expr_0'], q)(W'))~\land \\
-		&\qquad
-		(\All\ectx,\expr'. \expr = \ectx[\fork{\expr'}] \implies \Exists W' \geq W_F. \Exists \rs', \rs_1', \rs_2'. \\
-		&\qquad\qquad
-		k - 1 \in (\fullSat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land \rs' = \rs_1' \rtimes \rs_2'~\land \\
-		&\qquad\qquad
-		(k-1, \rs_1') \in \mathit{wp}_\mask(\ectx[\textsf{fRet}], q)(W') \land
-		(k-1, \rs_2') \in \mathit{wp}_\top(\expr', \Lam\any. \top)(W'))
-		\,\}
-	\end{aligned}
-\end{align*}
+% \begin{align*}
+% 	\mathit{wp}_\mask(\expr, q) &\eqdef \Lam W.
+% 	\begin{aligned}[t]
+% 		\{\, (n, \rs) &\mid \All W_F \geq W; k \leq n; \rs_F; \state; \mask_F \sep \mask. k > 0 \land k \in (\fullSat{\state}{\mask \cup \mask_F}{\rs \rtimes \rs_F}{W_F}) \implies{}\\
+% 		&\qquad
+% 		(\expr \in \textdom{Val} \implies \Exists W' \geq W_F. \Exists \rs'. \\
+% 		&\qquad\qquad
+% 		k \in (\fullSat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k, \rs') \in q(\expr)(W'))~\land \\
+% 		&\qquad
+% 		(\All\ectx,\expr_0,\expr'_0,\state'. \expr = \ectx[\expr_0] \land \cfg{\state}{\expr_0} \step \cfg{\state'}{\expr'_0} \implies \Exists W' \geq W_F. \Exists \rs'. \\
+% 		&\qquad\qquad
+% 		k - 1 \in (\fullSat{\state'}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k-1, \rs') \in wp_\mask(\ectx[\expr_0'], q)(W'))~\land \\
+% 		&\qquad
+% 		(\All\ectx,\expr'. \expr = \ectx[\fork{\expr'}] \implies \Exists W' \geq W_F. \Exists \rs', \rs_1', \rs_2'. \\
+% 		&\qquad\qquad
+% 		k - 1 \in (\fullSat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land \rs' = \rs_1' \rtimes \rs_2'~\land \\
+% 		&\qquad\qquad
+% 		(k-1, \rs_1') \in \mathit{wp}_\mask(\ectx[\textsf{fRet}], q)(W') \land
+% 		(k-1, \rs_2') \in \mathit{wp}_\top(\expr', \Lam\any. \top)(W'))
+% 		\,\}
+% 	\end{aligned}
+% \end{align*}
 \begin{lem}
 	$\mathit{wp}$ is well-defined: $\mathit{wp}_{\mask}(\expr, q)$ is a valid proposition, and $\mathit{wp}$ is a non-expansive map. Besides, the dependency on the recursive occurrence is contractive, so $\mathit{wp}$ has a fixed-point.
 \end{lem}
