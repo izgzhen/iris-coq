@@ -24,7 +24,7 @@ Lemma wp_alloc_pst E σ e v Q :
 Proof.
   intros; set (φ e' σ' ef := ∃ l, e' = Loc l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None
                                 ∧ ef = (None : option expr)).
-  rewrite -(wp_lift_step E E φ _ _  σ) // /φ; last (by intros; inv_step; eauto); [].
+  rewrite -(wp_lift_step E E φ _ _  σ) // /φ; last (by intros; inv_step; eauto).
   rewrite -pvs_intro. apply sep_mono, later_mono; first done.
   apply forall_intro=>e2; apply forall_intro=>σ2; apply forall_intro=>ef.
   apply wand_intro_l.
@@ -41,9 +41,9 @@ Lemma wp_lift_atomic_det_step {E Q e1} σ1 v2 σ2 :
   (ownP σ1 ★ ▷ (ownP σ2 -★ Q v2)) ⊑ wp E e1 Q.
 Proof.
   intros He Hsafe Hstep.
-  rewrite -(wp_lift_step E E (λ e' σ' ef, ef = None ∧ e' = of_val v2 ∧ σ' = σ2) _ e1 σ1) //; last first. 
-  { intros. by apply Hstep, prim_head_step. }
-  { by apply head_reducible_reducible. }
+  rewrite -(wp_lift_step E E (λ e' σ' ef,
+    ef = None ∧ e' = of_val v2 ∧ σ' = σ2) _ e1 σ1) //;
+    eauto using prim_head_step, head_reducible_reducible.
   rewrite -pvs_intro. apply sep_mono, later_mono; first done.
   apply forall_intro=>e2'; apply forall_intro=>σ2'.
   apply forall_intro=>ef; apply wand_intro_l.
