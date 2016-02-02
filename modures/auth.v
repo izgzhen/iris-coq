@@ -6,12 +6,14 @@ Add Printing Constructor auth.
 Arguments Auth {_} _ _.
 Arguments authoritative {_} _.
 Arguments own {_} _.
-Notation "◯ x" := (Auth ExclUnit x) (at level 20).
-Notation "● x" := (Auth (Excl x) ∅) (at level 20).
+Notation "◯ a" := (Auth ExclUnit a) (at level 20).
+Notation "● a" := (Auth (Excl a) ∅) (at level 20).
 
 (* COFE *)
 Section cofe.
 Context {A : cofeT}.
+Implicit Types a b : A.
+Implicit Types x y : auth A.
 
 Instance auth_equiv : Equiv (auth A) := λ x y,
   authoritative x ≡ authoritative y ∧ own x ≡ own y.
@@ -20,9 +22,15 @@ Instance auth_dist : Dist (auth A) := λ n x y,
 
 Global Instance Auth_ne : Proper (dist n ==> dist n ==> dist n) (@Auth A).
 Proof. by split. Qed.
+Global Instance Auth_proper : Proper ((≡) ==> (≡) ==> (≡)) (@Auth A).
+Proof. by split. Qed.
 Global Instance authoritative_ne: Proper (dist n ==> dist n) (@authoritative A).
 Proof. by destruct 1. Qed.
+Global Instance authoritative_proper : Proper ((≡) ==> (≡)) (@authoritative A).
+Proof. by destruct 1. Qed.
 Global Instance own_ne : Proper (dist n ==> dist n) (@own A).
+Proof. by destruct 1. Qed.
+Global Instance own_proper : Proper ((≡) ==> (≡)) (@own A).
 Proof. by destruct 1. Qed.
 
 Instance auth_compl : Compl (auth A) := λ c,
@@ -36,14 +44,14 @@ Proof.
     + by intros ?; split.
     + by intros ?? [??]; split; symmetry.
     + intros ??? [??] [??]; split; etransitivity; eauto.
-  * by intros n [x1 y1] [x2 y2] [??]; split; apply dist_S.
+  * by intros ? [??] [??] [??]; split; apply dist_S.
   * by split.
   * intros c n; split. apply (conv_compl (chain_map authoritative c) n).
     apply (conv_compl (chain_map own c) n).
 Qed.
 Canonical Structure authC := CofeT auth_cofe_mixin.
-Instance Auth_timeless (x : excl A) (y : A) :
-  Timeless x → Timeless y → Timeless (Auth x y).
+Instance Auth_timeless (ea : excl A) (b : A) :
+  Timeless ea → Timeless b → Timeless (Auth ea b).
 Proof. by intros ?? [??] [??]; split; simpl in *; apply (timeless _). Qed.
 Global Instance auth_leibniz : LeibnizEquiv A → LeibnizEquiv (auth A).
 Proof. by intros ? [??] [??] [??]; f_equal'; apply leibniz_equiv. Qed.
@@ -54,6 +62,8 @@ Arguments authC : clear implicits.
 (* CMRA *)
 Section cmra.
 Context {A : cmraT}.
+Implicit Types a b : A.
+Implicit Types x y : auth A.
 
 Global Instance auth_empty `{Empty A} : Empty (auth A) := Auth ∅ ∅.
 Instance auth_validN : ValidN (auth A) := λ n x,
@@ -114,22 +124,46 @@ Definition auth_cmra_extend_mixin : CMRAExtendMixin (auth A).
 Proof.
   intros n x y1 y2 ? [??]; simpl in *.
   destruct (cmra_extend_op n (authoritative x) (authoritative y1)
-    (authoritative y2)) as (z1&?&?&?); auto using authoritative_validN.
+    (authoritative y2)) as (ea&?&?&?); auto using authoritative_validN.
   destruct (cmra_extend_op n (own x) (own y1) (own y2))
-    as (z2&?&?&?); auto using own_validN.
-  by exists (Auth (z1.1) (z2.1), Auth (z1.2) (z2.2)).
+    as (b&?&?&?); auto using own_validN.
+  by exists (Auth (ea.1) (b.1), Auth (ea.2) (b.2)).
 Qed.
 Canonical Structure authRA : cmraT :=
   CMRAT auth_cofe_mixin auth_cmra_mixin auth_cmra_extend_mixin.
-Instance auth_cmra_identity `{Empty A} : CMRAIdentity A → CMRAIdentity authRA.
+
+(** The notations ◯ and ● only work for CMRAs with an empty element. So, in
+what follows, we assume we have an empty element. *)
+Context `{Empty A, !CMRAIdentity A}.
+
+Global Instance auth_cmra_identity : CMRAIdentity authRA.
 Proof.
   split; simpl.
   * by apply (@cmra_empty_valid A _).
   * by intros x; constructor; rewrite /= left_id.
   * apply Auth_timeless; apply _.
 Qed.
-Lemma auth_frag_op (a b : A) : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
+Lemma auth_frag_op a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.
+
+Lemma auth_update a a' b b' :
+  (∀ n af, ✓{n} a → a ={n}= a' ⋅ af → b ={n}= b' ⋅ af ∧ ✓{n} b) →
+  ● a ⋅ ◯ a' ⇝ ● b ⋅ ◯ b'.
+Proof.
+  move=> Hab [[] bf1] n // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
+  destruct (Hab (S n) (bf1 ⋅ bf2)) as [Ha' ?]; auto.
+  { by rewrite Ha left_id associative. }
+  split; [by rewrite Ha' left_id associative; apply cmra_includedN_l|done].
+Qed.
+Lemma auth_update_op_l a a' b :
+  ✓ (b ⋅ a) → ● a ⋅ ◯ a' ⇝ ● (b ⋅ a) ⋅ ◯ (b ⋅ a').
+Proof.
+  intros; apply auth_update.
+  by intros n af ? Ha; split; [by rewrite Ha associative|].
+Qed.
+Lemma auth_update_op_r a a' b :
+  ✓ (a ⋅ b) → ● a ⋅ ◯ a' ⇝ ● (a ⋅ b) ⋅ ◯ (a' ⋅ b).
+Proof. rewrite -!(commutative _ b); apply auth_update_op_l. Qed.
 End cmra.
 
 Arguments authRA : clear implicits.
