@@ -208,6 +208,7 @@ Proof.
 Qed.
 Instance: Injective (=) (=) of_val.
 Proof. by intros ?? Hv; apply (injective Some); rewrite -!to_of_val Hv. Qed.
+
 Instance ectx_item_fill_inj Ki : Injective (=) (=) (ectx_item_fill Ki).
 Proof. destruct Ki; intros ???; simplify_equality'; auto with f_equal. Qed.
 Instance ectx_fill_inj K : Injective (=) (=) (fill K).
@@ -221,11 +222,13 @@ Proof.
 Qed.
 Lemma fill_not_val K e : to_val e = None → to_val (fill K e) = None.
 Proof. rewrite !eq_None_not_Some; eauto using fill_val. Qed.
+
 Lemma values_head_stuck e1 σ1 e2 σ2 ef :
   head_step e1 σ1 e2 σ2 ef → to_val e1 = None.
 Proof. destruct 1; naive_solver. Qed.
 Lemma values_stuck e1 σ1 e2 σ2 ef : prim_step e1 σ1 e2 σ2 ef → to_val e1 = None.
 Proof. intros [??? -> -> ?]; eauto using fill_not_val, values_head_stuck. Qed.
+
 Lemma atomic_not_val e : atomic e → to_val e = None.
 Proof. destruct e; naive_solver. Qed.
 Lemma atomic_fill K e : atomic (fill K e) → to_val e = None → K = [].
@@ -243,9 +246,11 @@ Proof.
   assert (K = []) as -> by eauto 10 using atomic_fill, values_head_stuck.
   naive_solver eauto using atomic_head_step.
 Qed.
+
 Lemma head_ctx_step_val Ki e σ1 e2 σ2 ef :
   head_step (ectx_item_fill Ki e) σ1 e2 σ2 ef → is_Some (to_val e).
 Proof. destruct Ki; inversion_clear 1; simplify_option_equality; eauto. Qed.
+
 Lemma fill_item_inj Ki1 Ki2 e1 e2 :
   to_val e1 = None → to_val e2 = None →
   ectx_item_fill Ki1 e1 = ectx_item_fill Ki2 e2 → Ki1 = Ki2.
@@ -270,6 +275,7 @@ Proof.
   cut (Ki = Ki'); [naive_solver eauto using prefix_of_cons|].
   eauto using fill_item_inj, values_head_stuck, fill_not_val.
 Qed.
+
 Lemma alloc_fresh e v σ :
   let l := fresh (dom _ σ) in
   to_val e = Some v → head_step (Alloc e) σ (Loc l) (<[l:=v]>σ) None.
