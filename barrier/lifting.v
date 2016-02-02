@@ -23,7 +23,7 @@ Lemma wp_alloc_pst E σ e v Q :
 Proof.
   intros. set (φ v' σ' := ∃ l, v' = LocV l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None).
   rewrite -(wp_lift_atomic_step (Alloc e) φ σ) // /φ;
-    last by intros; inv_step; eauto 10.
+    last by intros; inv_step; eauto 8.
   apply sep_mono, later_mono; first done.
   apply forall_intro=>e2; apply forall_intro=>σ2; apply wand_intro_l.
   rewrite always_and_sep_l' -associative -always_and_sep_l'.
