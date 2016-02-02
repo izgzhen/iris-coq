@@ -100,7 +100,7 @@ Lemma wp_le_true E n1 n2 Q :
   ▷ Q LitTrueV ⊑ wp E (Le (LitNat n1) (LitNat n2)) Q.
 Proof.
   intros; rewrite -(wp_lift_pure_det_step (Le _ _) LitTrue None) ?right_id //;
-    last by intros; inv_step; eauto with lia.
+    last by intros; inv_step; eauto with omega.
   by rewrite -wp_value'.
 Qed.
 
@@ -109,7 +109,7 @@ Lemma wp_le_false E n1 n2 Q :
   ▷ Q LitFalseV ⊑ wp E (Le (LitNat n1) (LitNat n2)) Q.
 Proof.
   intros; rewrite -(wp_lift_pure_det_step (Le _ _) LitFalse None) ?right_id //;
-    last by intros; inv_step; eauto with lia.
+    last by intros; inv_step; eauto with omega.
   by rewrite -wp_value'.
 Qed.
 
@@ -155,7 +155,7 @@ Lemma wp_le E n1 n2 P Q :
 Proof.
   intros; destruct (decide (n1 ≤ n2)).
   * rewrite -wp_le_true; auto.
-  * rewrite -wp_le_false; auto with lia.
+  * rewrite -wp_le_false; auto with omega.
 Qed.
 
 End lifting.

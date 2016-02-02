@@ -2,6 +2,7 @@
 (* This file is distributed under the terms of the BSD license. *)
 (** This file collects general purpose tactics that are used throughout
 the development. *)
+Require Import Omega.
 Require Export Psatz.
 Require Export prelude.base.
 
@@ -24,6 +25,7 @@ to be combined in combination with other hint database. *)
 Hint Extern 998 (_ = _) => f_equal : f_equal.
 Hint Extern 999 => congruence : congruence.
 Hint Extern 1000 => lia : lia.
+Hint Extern 1000 => omega : omega.
 
 (** The tactic [intuition] expands to [intuition auto with *] by default. This
 is rather efficient when having big hint databases, or expensive [Hint Extern]

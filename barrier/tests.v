@@ -90,7 +90,7 @@ Module LiftingTests.
     * rewrite -wp_case_inr //.
       rewrite -!later_intro -wp_value' //.
       rewrite and_elim_r. apply const_elim_l=>Hle.
-      by replace n1 with (pred n2) by lia.
+      by replace n1 with (pred n2) by omega.
   Qed.
 
   Lemma Pred_spec n E Q :
@@ -101,10 +101,10 @@ Module LiftingTests.
     apply later_mono, wp_le=> Hn.
     - rewrite -wp_case_inl //.
       rewrite -!later_intro -wp_value' //.
-      by replace n with 0 by lia.
+      by replace n with 0 by omega.
     - rewrite -wp_case_inr //.
       rewrite -!later_intro -FindPred_spec.
-      auto using and_intro, const_intro with lia.
+      auto using and_intro, const_intro with omega.
   Qed.
 
   Goal ∀ E,
