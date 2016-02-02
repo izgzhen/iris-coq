@@ -21,16 +21,21 @@ Lemma wp_alloc_pst E σ e v Q :
   (ownP σ ★ ▷ (∀ l, ■(σ !! l = None) ∧ ownP (<[l:=v]>σ) -★ Q (LocV l)))
        ⊑ wp E (Alloc e) Q.
 Proof.
-  intros; set (φ e' σ' ef := ∃ l, e' = Loc l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None
-                                ∧ ef = (None : option expr)).
-  rewrite -(wp_lift_step E E φ _ _  σ) // /φ; last (by intros; inv_step; eauto); [].
-  rewrite -pvs_intro. apply sep_mono, later_mono; first done.
-  apply forall_intro=>e2; apply forall_intro=>σ2; apply forall_intro=>ef.
+  intros.
+  (* FIXME RJ: ssreflect rewrite does not work. *)
+  rewrite <-(wp_lift_atomic_step (Alloc e)
+    (λ v' σ', ∃ l, v' = LocV l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None) σ)=> //;
+    last first.
+  { (* TODO RJ: Somehow automation used to kill all this...?? *)
+    intros. inv_step. eexists; split_ands; try done; [].
+    eexists; done. }
+  apply sep_mono, later_mono; first done.
+  apply forall_intro=>e2; apply forall_intro=>σ2.
   apply wand_intro_l.
-  rewrite -pvs_intro always_and_sep_l' -associative -always_and_sep_l'.
-  apply const_elim_l=>-[l [-> [-> [? ->]]]].
-  rewrite right_id (forall_elim l) const_equiv //.
-  by rewrite left_id wand_elim_r -wp_value'.
+  rewrite always_and_sep_l' -associative -always_and_sep_l'.
+  apply const_elim_l=>-[l [-> [-> ?]]].
+  rewrite (forall_elim l) const_equiv //.
+  by rewrite left_id wand_elim_r.
 Qed.
 
 Lemma wp_load_pst E σ l v Q :

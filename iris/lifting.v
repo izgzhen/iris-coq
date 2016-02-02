@@ -55,6 +55,26 @@ Qed.
 (** Derived lifting lemmas. *)
 Opaque uPred_holds.
 Import uPred.
+
+Lemma wp_lift_atomic_step {E Q} e1 (φ : val Λ → state Λ → Prop) σ1 :
+  to_val e1 = None →
+  reducible e1 σ1 →
+  (∀ e' σ' ef, prim_step e1 σ1 e' σ' ef → ∃ v', ef = None ∧ to_val e' = Some v' ∧ φ v' σ') →
+  (ownP σ1 ★ ▷ ∀ v2 σ2, (■ φ v2 σ2 ∧ ownP σ2 -★ Q v2)) ⊑ wp E e1 Q.
+Proof.
+  intros He Hsafe Hstep.
+  rewrite -(wp_lift_step E E
+    (λ e' σ' ef, ∃ v', ef = None ∧ to_val e' = Some v' ∧ φ v' σ') _ e1 σ1) //; [].
+  rewrite -pvs_intro. apply sep_mono, later_mono; first done.
+  apply forall_intro=>e2'; apply forall_intro=>σ2'.
+  apply forall_intro=>ef; apply wand_intro_l.
+  rewrite always_and_sep_l' -associative -always_and_sep_l'.
+  apply const_elim_l=>-[v2' [-> [Hv ?]]] /=.
+  rewrite -pvs_intro right_id -wp_value'; last by eassumption.
+  rewrite (forall_elim v2') (forall_elim σ2') const_equiv //.
+  by rewrite left_id wand_elim_r.
+Qed.
+
 Lemma wp_lift_atomic_det_step {E Q e1} σ1 v2 σ2 :
   to_val e1 = None →
   reducible e1 σ1 →
@@ -62,14 +82,14 @@ Lemma wp_lift_atomic_det_step {E Q e1} σ1 v2 σ2 :
   (ownP σ1 ★ ▷ (ownP σ2 -★ Q v2)) ⊑ wp E e1 Q.
 Proof.
   intros He Hsafe Hstep.
-  rewrite -(wp_lift_step E E (λ e' σ' ef,
-    ef = None ∧ e' = of_val v2 ∧ σ' = σ2) _ e1 σ1) //; [].
-  rewrite -pvs_intro. apply sep_mono, later_mono; first done.
+  rewrite -(wp_lift_atomic_step _ (λ v' σ', v' = v2 ∧ σ' = σ2) σ1) //; last first.
+  { intros. exists v2. apply Hstep in H. destruct_conjs; subst.
+    eauto using to_of_val. }
+  apply sep_mono, later_mono; first done.
   apply forall_intro=>e2'; apply forall_intro=>σ2'.
-  apply forall_intro=>ef; apply wand_intro_l.
+  apply wand_intro_l.
   rewrite always_and_sep_l' -associative -always_and_sep_l'.
-  apply const_elim_l=>-[-> [-> ->]] /=.
-  rewrite -pvs_intro right_id -wp_value.
+  apply const_elim_l=>-[-> ->] /=.
   by rewrite wand_elim_r.
 Qed.
 
