@@ -52,17 +52,13 @@ Section language.
   Proof. by intros v v' Hv; apply (injective Some); rewrite -!to_of_val Hv. Qed.
 End language.
 
-Class Fill C E := fill : C → E → E.
-Instance: Params (@fill) 3.
-Arguments fill {_ _ _} !_ _ / : simpl nomatch.
-
-Class CtxLanguage (Λ : language) (C : Type) `{Fill C (expr Λ)} := {
-  fill_not_val K e :
-    to_val e = None → to_val (fill K e) = None;
-  fill_step K e1 σ1 e2 σ2 ef :
+Class LanguageCtx (Λ : language) (K : expr Λ → expr Λ) := {
+  fill_not_val e :
+    to_val e = None → to_val (K e) = None;
+  fill_step e1 σ1 e2 σ2 ef :
     prim_step e1 σ1 e2 σ2 ef →
-    prim_step (fill K e1) σ1 (fill K e2) σ2 ef;
-  fill_step_inv K e1' σ1 e2 σ2 ef :
-    to_val e1' = None → prim_step (fill K e1') σ1 e2 σ2 ef →
-    ∃ e2', e2 = fill K e2' ∧ prim_step e1' σ1 e2' σ2 ef
+    prim_step (K e1) σ1 (K e2) σ2 ef;
+  fill_step_inv e1' σ1 e2 σ2 ef :
+    to_val e1' = None → prim_step (K e1') σ1 e2 σ2 ef →
+    ∃ e2', e2 = K e2' ∧ prim_step e1' σ1 e2' σ2 ef
 }.
