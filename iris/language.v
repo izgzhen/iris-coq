@@ -1,4 +1,4 @@
-Require Export modures.cmra.
+Require Export modures.cofe.
 
 Structure language := Language {
   expr : Type;
