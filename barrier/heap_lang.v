@@ -309,7 +309,6 @@ Program Canonical Structure heap_lang : language := {|
 |}.
 Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,
   heap_lang.values_stuck, heap_lang.atomic_not_val, heap_lang.atomic_step.
-Import heap_lang.
 
 Global Instance heap_lang_ctx K :
   LanguageCtx heap_lang (heap_lang.fill K).
@@ -322,6 +321,6 @@ Proof.
     destruct (heap_lang.step_by_val
       K K'' e1 e1'' σ1 e2'' σ2 ef) as [K' ->]; eauto.
     rewrite heap_lang.fill_app in Heq1; apply (injective _) in Heq1.
-    exists (fill K' e2''); rewrite heap_lang.fill_app; split; auto.
+    exists (heap_lang.fill K' e2''); rewrite heap_lang.fill_app; split; auto.
     econstructor; eauto.
 Qed.
