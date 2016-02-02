@@ -263,7 +263,7 @@ Lemma fill_item_no_val_inj Ki1 Ki2 e1 e2 :
   fill_item Ki1 e1 = fill_item Ki2 e2 → Ki1 = Ki2.
 Proof.
   destruct Ki1, Ki2; intros; try discriminate; simplify_equality';
-    repeat match goal with
+    try match goal with
     | H : to_val (of_val _) = None |- _ => by rewrite to_of_val in H
     end; auto.
 Qed.
@@ -278,7 +278,7 @@ Proof.
   intros Hfill Hred Hnval; revert K' Hfill.
   induction K as [|Ki K IH]; simpl; intros K' Hfill; auto using prefix_of_nil.
   destruct K' as [|Ki' K']; simplify_equality'.
-  { destruct (proj1 (eq_None_not_Some (to_val (fill K e1))));
+  { exfalso; apply (eq_None_not_Some (to_val (fill K e1)));
       eauto using fill_not_val, head_ctx_step_val. }
   cut (Ki = Ki'); [naive_solver eauto using prefix_of_cons|].
   eauto using fill_item_no_val_inj, values_head_stuck, fill_not_val.
