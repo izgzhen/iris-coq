@@ -61,7 +61,6 @@ Instance option_fmap_ne {A B : cofeT} (f : A → B) n:
   Proper (dist n ==> dist n) f → Proper (dist n==>dist n) (fmap (M:=option) f).
 Proof. by intros Hf; destruct 1; constructor; apply Hf. Qed.
 
-
 (* CMRA *)
 Section cmra.
 Context {A : cmraT}.
@@ -131,14 +130,28 @@ Qed.
 Canonical Structure optionRA :=
   CMRAT option_cofe_mixin option_cmra_mixin option_cmra_extend_mixin.
 
-Lemma op_is_Some x y : is_Some (x ⋅ y) ↔ is_Some x ∨ is_Some y.
+Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my.
 Proof.
-  destruct x, y; rewrite /op /option_op /= -!not_eq_None_Some; naive_solver.
+  destruct mx, my; rewrite /op /option_op /= -!not_eq_None_Some; naive_solver.
 Qed.
-Lemma option_op_positive_dist_l n x y : x ⋅ y ={n}= None → x ={n}= None.
-Proof. by destruct x, y; inversion_clear 1. Qed.
-Lemma option_op_positive_dist_r n x y : x ⋅ y ={n}= None → y ={n}= None.
-Proof. by destruct x, y; inversion_clear 1. Qed.
+Lemma option_op_positive_dist_l n mx my : mx ⋅ my ={n}= None → mx ={n}= None.
+Proof. by destruct mx, my; inversion_clear 1. Qed.
+Lemma option_op_positive_dist_r n mx my : mx ⋅ my ={n}= None → my ={n}= None.
+Proof. by destruct mx, my; inversion_clear 1. Qed.
+
+Lemma option_updateP (P : A → Prop) (Q : option A → Prop) x :
+  x ⇝: P → (∀ y, P y → Q (Some y)) → Some x ⇝: Q.
+Proof.
+  intros Hx Hy [y|] n ?.
+  { destruct (Hx y n) as (y'&?&?); auto. exists (Some y'); auto. }
+  destruct (Hx (unit x) n) as (y'&?&?); rewrite ?cmra_unit_r; auto.
+  by exists (Some y'); split; [auto|apply cmra_validN_op_l with (unit x)].
+Qed.
+Lemma option_update x y : x ⇝ y → Some x ⇝ Some y.
+Proof.
+  intros; apply cmra_update_updateP, (option_updateP (y=)); [|naive_solver].
+  by apply cmra_update_updateP.
+Qed.
 End cmra.
 
 Arguments optionRA : clear implicits.
