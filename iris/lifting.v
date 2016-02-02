@@ -1,7 +1,5 @@
 Require Export iris.weakestpre.
 Require Import iris.wsat.
-Import uPred.
-
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 100 (@eq coPset _ _) => solve_elem_of.
 Local Hint Extern 10 (✓{_} _) =>
@@ -55,6 +53,8 @@ Proof.
 Qed.
 
 (** Derived lifting lemmas. *)
+Opaque uPred_holds.
+Import uPred.
 Lemma wp_lift_atomic_det_step {E Q e1} σ1 v2 σ2 :
   to_val e1 = None →
   reducible e1 σ1 →
