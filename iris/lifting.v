@@ -1,5 +1,7 @@
 Require Export iris.weakestpre.
 Require Import iris.wsat.
+Import uPred.
+
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 100 (@eq coPset _ _) => solve_elem_of.
 Local Hint Extern 10 (✓{_} _) =>
@@ -36,6 +38,7 @@ Proof.
   { rewrite (commutative _ r2) -(associative _); eauto using wsat_le. }
   by exists r1', r2'; split_ands; [| |by intros ? ->].
 Qed.
+
 Lemma wp_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) Q e1 :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
@@ -50,4 +53,36 @@ Proof.
   destruct (Hwp e2 ef r k) as (r1&r2&Hr&?&?); auto; [by destruct k|].
   exists r1,r2; split_ands; [rewrite -Hr| |by intros ? ->]; eauto using wsat_le.
 Qed.
+
+(** Derived lifting lemmas. *)
+Lemma wp_lift_atomic_det_step {E Q e1} σ1 v2 σ2 :
+  to_val e1 = None →
+  reducible e1 σ1 →
+  (∀ e' σ' ef, prim_step e1 σ1 e' σ' ef → ef = None ∧ e' = of_val v2 ∧ σ' = σ2) →
+  (ownP σ1 ★ ▷ (ownP σ2 -★ Q v2)) ⊑ wp E e1 Q.
+Proof.
+  intros He Hsafe Hstep.
+  rewrite -(wp_lift_step E E (λ e' σ' ef,
+    ef = None ∧ e' = of_val v2 ∧ σ' = σ2) _ e1 σ1) //; [].
+  rewrite -pvs_intro. apply sep_mono, later_mono; first done.
+  apply forall_intro=>e2'; apply forall_intro=>σ2'.
+  apply forall_intro=>ef; apply wand_intro_l.
+  rewrite always_and_sep_l' -associative -always_and_sep_l'.
+  apply const_elim_l=>-[-> [-> ->]] /=.
+  rewrite -pvs_intro right_id -wp_value.
+  by rewrite wand_elim_r.
+Qed.
+
+Lemma wp_lift_pure_det_step {E Q} e1 e2 :
+  to_val e1 = None →
+  (∀ σ1, reducible e1 σ1) →
+  (∀ σ1 e' σ' ef, prim_step e1 σ1 e' σ' ef → σ1 = σ' ∧ ef = None ∧ e' = e2) →
+  (▷ wp E e2 Q) ⊑ wp E e1 Q.
+Proof.
+  intros. rewrite -(wp_lift_pure_step E (λ e' ef, ef = None ∧ e' = e2) _ e1) //=.
+  apply later_mono, forall_intro=>e'; apply forall_intro=>ef.
+  apply impl_intro_l, const_elim_l=>-[-> ->] /=.
+  by rewrite right_id.
+Qed.
+
 End lifting.

@@ -62,15 +62,11 @@ Ltac reshape_expr e tac :=
 
 Ltac do_step tac :=
   try match goal with |- language.reducible _ _ => eexists _, _, _ end;
-  try match goal with |- head_reducible _ _ => eexists _, _, _ end;
   simpl;
   match goal with
   | |- prim_step ?e1 ?σ1 ?e2 ?σ2 ?ef =>
      reshape_expr e1 ltac:(fun K e1' =>
        eapply Ectx_step with K e1' _); [reflexivity|reflexivity|];
-       first [apply alloc_fresh|econstructor];
-       rewrite ?to_of_val; tac; fail
-  | |- head_step ?e1 ?σ1 ?e2 ?σ2 ?ef =>
        first [apply alloc_fresh|econstructor];
        rewrite ?to_of_val; tac; fail
   end.
