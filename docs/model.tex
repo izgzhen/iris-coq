@@ -11,7 +11,7 @@ an equivalence relation over $X$ satisfying
 	\item $\All x,x',n. x \nequiv{n+1} x' \implies x \nequiv{n} x',$
 	\item $\All x,x'. (\All n. x\nequiv{n} x') \implies x = x'.$
 \end{itemize}
-
+\a
 Let $(X,(\nequivset{n}{X})_{n\in\mathbb{N}})$ and
 $(Y,(\nequivset{n}{Y})_{n\in\mathbb{N}})$ be o.f.e.'s. A function $f:
 X\to Y$ is \emph{non-expansive} if,   for all $x$, $x'$ and $n$,
@@ -431,7 +431,7 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 	\Lam v : \Sem{\sort}. \Sem{\vctx, x : \sort \proves \term : \sort'}_{\gamma[x \mapsto v]} \\
 	\Sem{\vctx \proves \term~\termB : \sort'}_\gamma &=
 	\Sem{\vctx \proves \term : \sort \to \sort'}_\gamma(\Sem{\vctx \proves \termB : \sort}_\gamma) \\
-	\Sem{\vctx \proves \unitterm : \unitsort}_\gamma &= \star \\
+	\Sem{\vctx \proves \unitval : \unitsort}_\gamma &= \star \\
 	\Sem{\vctx \proves (\term_1, \term_2) : \sort_1 \times \sort_2}_\gamma &= (\Sem{\vctx \proves \term_1 : \sort_1}_\gamma, \Sem{\vctx \proves \term_2 : \sort_2}_\gamma) \\
 	\Sem{\vctx \proves \pi_i~\term : \sort_1}_\gamma &= \pi_i(\Sem{\vctx \proves \term : \sort_1 \times \sort_2}_\gamma)
 \end{align*}
