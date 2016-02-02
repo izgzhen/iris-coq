@@ -135,8 +135,10 @@ Definition ectx_item_fill (Ki : ectx_item) (e : expr) : expr :=
   | CasRCtx v0 v1 => Cas (of_val v0) (of_val v1) e
   end.
 
-Instance ectx_fill : Fill ectx expr :=
-  fix go K e := let _ : Fill _ _ := @go in
+Fixpoint fill K e :=
+  (* FIXME RJ: This really is fold_left, but if I use that all automation breaks:
+       fold_left (fun e Ki => ectx_item_fill Ki e).
+     Or maybe we even have a combinator somewhere to swap the arguments? *)
   match K with [] => e | Ki :: K => ectx_item_fill Ki (fill K e) end.
 
 (** The stepping relation *)
@@ -305,16 +307,18 @@ Program Canonical Structure heap_lang : language := {|
   of_val := heap_lang.of_val; to_val := heap_lang.to_val;
   atomic := heap_lang.atomic; prim_step := heap_lang.prim_step;
 |}.
-
 Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,
   heap_lang.values_stuck, heap_lang.atomic_not_val, heap_lang.atomic_step.
-Global Instance heap_lang_ctx : CtxLanguage heap_lang heap_lang.ectx.
+Import heap_lang.
+
+Global Instance heap_lang_ctx K :
+  LanguageCtx heap_lang (heap_lang.fill K).
 Proof.
   split.
   * eauto using heap_lang.fill_not_val.
-  * intros K ????? [K' e1' e2' Heq1 Heq2 Hstep].
+  * intros ????? [K' e1' e2' Heq1 Heq2 Hstep].
     by exists (K ++ K') e1' e2'; rewrite ?heap_lang.fill_app ?Heq1 ?Heq2.
-  * intros K e1 σ1 e2 σ2 ? Hnval [K'' e1'' e2'' Heq1 -> Hstep].
+  * intros e1 σ1 e2 σ2 ? Hnval [K'' e1'' e2'' Heq1 -> Hstep].
     destruct (heap_lang.step_by_val
       K K'' e1 e1'' σ1 e2'' σ2 ef) as [K' ->]; eauto.
     rewrite heap_lang.fill_app in Heq1; apply (injective _) in Heq1.

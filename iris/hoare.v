@@ -57,9 +57,9 @@ Proof.
   rewrite -(wp_atomic E1 E2) //; apply pvs_mono, wp_mono=> v.
   rewrite (forall_elim v) pvs_impl_r -(pvs_intro E1) pvs_trans; solve_elem_of.
 Qed.
-Lemma ht_bind `{CtxLanguage Λ C} K E P Q Q' e :
-  ({{ P }} e @ E {{ Q }} ∧ ∀ v, {{ Q v }} fill K (of_val v) @ E {{ Q' }})
-  ⊑ {{ P }} fill K e @ E {{ Q' }}.
+Lemma ht_bind `{LanguageCtx Λ K} E P Q Q' e :
+  ({{ P }} e @ E {{ Q }} ∧ ∀ v, {{ Q v }} K (of_val v) @ E {{ Q' }})
+  ⊑ {{ P }} K e @ E {{ Q' }}.
 Proof.
   intros; apply (always_intro' _ _), impl_intro_l.
   rewrite (associative _ P) {1}/ht always_elim impl_elim_r.
