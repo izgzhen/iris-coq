@@ -55,7 +55,7 @@ Proof.
   rewrite -(ht_lift_step E E φ'  _ P
     (λ e2 σ2 ef, ownP σ2 ★ ■ (φ' e2 σ2 ef))%I
     (λ e2 σ2 ef, ■ φ e2 σ2 ef ★ P)%I);
-    try by (rewrite /φ'; eauto using atomic_not_value, atomic_step).
+    try by (rewrite /φ'; eauto using atomic_not_val, atomic_step).
   apply and_intro; [by rewrite -vs_reflexive; apply const_intro|].
   apply forall_mono=>e2; apply forall_mono=>σ2; apply forall_mono=>ef.
   apply and_intro; [|apply and_intro; [|done]].

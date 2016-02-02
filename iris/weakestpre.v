@@ -117,7 +117,7 @@ Qed.
 Lemma wp_atomic E1 E2 e Q :
   E2 ⊆ E1 → atomic e → pvs E1 E2 (wp E2 e (λ v, pvs E2 E1 (Q v))) ⊑ wp E1 e Q.
 Proof.
-  intros ? He r n ? Hvs; constructor; eauto using atomic_not_value.
+  intros ? He r n ? Hvs; constructor; eauto using atomic_not_val.
   intros rf k Ef σ1 ???.
   destruct (Hvs rf (S k) Ef σ1) as (r'&Hwp&?); auto.
   inversion Hwp as [|???? Hgo]; subst; [by destruct (atomic_of_val v)|].
@@ -165,13 +165,13 @@ Lemma wp_bind `{CtxLanguage Λ C} E K e Q :
   wp E e (λ v, wp E (fill K (of_val v)) Q) ⊑ wp E (fill K e) Q.
 Proof.
   intros r n; revert e r; induction n as [n IH] using lt_wf_ind; intros e r ?.
-  destruct 1 as [|n r e ? Hgo]; [|constructor]; auto using is_ctx_value.
+  destruct 1 as [|n r e ? Hgo]; [|constructor]; auto using fill_not_val.
   intros rf k Ef σ1 ???; destruct (Hgo rf k Ef σ1) as [Hsafe Hstep]; auto.
   split.
   { destruct Hsafe as (e2&σ2&ef&?).
-    by exists (fill K e2), σ2, ef; apply is_ctx_step_preserved. }
+    by exists (fill K e2), σ2, ef; apply fill_step. }
   intros e2 σ2 ef ?.
-  destruct (is_ctx_step K e σ1 e2 σ2 ef) as (e2'&->&?); auto.
+  destruct (fill_step_inv K e σ1 e2 σ2 ef) as (e2'&->&?); auto.
   destruct (Hstep e2' σ2 ef) as (r2&r2'&?&?&?); auto.
   exists r2, r2'; split_ands; try eapply IH; eauto.
 Qed.
