@@ -136,7 +136,9 @@ Definition ectx_item_fill (Ki : ectx_item) (e : expr) : expr :=
   end.
 
 Fixpoint fill K e :=
-  (* FIXME RJ: This really is fold_left, but if I use that all automation breaks. *)
+  (* FIXME RJ: This really is fold_left, but if I use that all automation breaks:
+       fold_left (fun e Ki => ectx_item_fill Ki e).
+     Or maybe we even have a combinator somewhere to swap the arguments? *)
   match K with [] => e | Ki :: K => ectx_item_fill Ki (fill K e) end.
 
 (** The stepping relation *)
