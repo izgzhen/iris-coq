@@ -318,6 +318,15 @@ Proof.
   * by intros Hx z ?; exists y; split; [done|apply (Hx z)].
   * by intros Hx z n ?; destruct (Hx z n) as (?&<-&?).
 Qed.
+Lemma ra_updateP_id (P : A → Prop) x : P x → x ⇝: P.
+Proof. by intros ? z n ?; exists x. Qed.
+Lemma ra_updateP_compose (P Q : A → Prop) x :
+  x ⇝: P → (∀ y, P y → y ⇝: Q) → x ⇝: Q.
+Proof.
+  intros Hx Hy z n ?. destruct (Hx z n) as (y&?&?); auto. by apply (Hy y).
+Qed.
+Lemma ra_updateP_weaken (P Q : A → Prop) x : x ⇝: P → (∀ y, P y → Q y) → x ⇝: Q.
+Proof. eauto using ra_updateP_compose, ra_updateP_id. Qed.
 End cmra.
 
 Hint Extern 0 (_ ≼{0} _) => apply cmra_includedN_0.
@@ -384,14 +393,14 @@ Section discrete.
   Qed.
   Definition discreteRA : cmraT :=
     CMRAT (cofe_mixin A) discrete_cmra_mixin discrete_extend_mixin.
-  Lemma discrete_updateP (x : A) (P : A → Prop) `{!Inhabited (sig P)} :
-    (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → (x : discreteRA) ⇝: P.
+  Lemma discrete_updateP (x : discreteRA) (P : A → Prop) `{!Inhabited (sig P)} :
+    (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → x ⇝: P.
   Proof.
     intros Hvalid z [|n]; [|apply Hvalid].
     by destruct (_ : Inhabited (sig P)) as [[y ?]]; exists y.
   Qed.
-  Lemma discrete_update (x y : A) :
-    (∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z)) → (x : discreteRA) ⇝ y.
+  Lemma discrete_update (x y : discreteRA) :
+    (∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z)) → x ⇝ y.
   Proof. intros Hvalid z [|n]; [done|apply Hvalid]. Qed.
 End discrete.
 
@@ -464,6 +473,15 @@ Section prod.
     * split; apply cmra_empty_valid.
     * by split; rewrite /=left_id.
     * by intros ? [??]; split; apply (timeless _).
+  Qed.
+  Lemma prod_update x y : x.1 ⇝ y.1 → x.2 ⇝ y.2 → x ⇝ y.
+  Proof. intros ?? z n [??]; split; simpl in *; auto. Qed.
+  Lemma prod_updateP (P : A * B → Prop) P1 P2 x :
+    x.1 ⇝: P1 → x.2 ⇝: P2 → (∀ y, P1 (y.1) → P2 (y.2) → P y) → x ⇝: P.
+  Proof.
+    intros Hx1 Hx2 HP z n [??]; simpl in *.
+    destruct (Hx1 (z.1) n) as (a&?&?), (Hx2 (z.2) n) as (b&?&?); auto.
+    exists (a,b); repeat split; auto.
   Qed.
 End prod.
 Arguments prodRA : clear implicits.
