@@ -56,53 +56,60 @@ Qed.
 Opaque uPred_holds.
 Import uPred.
 
-Lemma wp_lift_atomic_step {E Q} e1 (φ : val Λ → state Λ → Prop) σ1 :
+Lemma wp_lift_atomic_step {E Q} e1 (φ : val Λ → state Λ → option (expr Λ) → Prop) σ1 :
   to_val e1 = None →
   reducible e1 σ1 →
-  (∀ e' σ' ef, prim_step e1 σ1 e' σ' ef → ∃ v', ef = None ∧ to_val e' = Some v' ∧ φ v' σ') →
-  (ownP σ1 ★ ▷ ∀ v2 σ2, (■ φ v2 σ2 ∧ ownP σ2 -★ Q v2)) ⊑ wp E e1 Q.
+  (∀ e' σ' ef, prim_step e1 σ1 e' σ' ef → ∃ v', to_val e' = Some v' ∧ φ v' σ' ef) →
+  (ownP σ1 ★ ▷ ∀ v2 σ2 ef, ■ φ v2 σ2 ef ∧ ownP σ2 -★
+     Q v2 ★ default True ef (flip (wp coPset_all) (λ _, True)))
+    ⊑ wp E e1 Q.
 Proof.
   intros He Hsafe Hstep.
   rewrite -(wp_lift_step E E
-    (λ e' σ' ef, ∃ v', ef = None ∧ to_val e' = Some v' ∧ φ v' σ') _ e1 σ1) //; [].
+    (λ e' σ' ef, ∃ v', to_val e' = Some v' ∧ φ v' σ' ef) _ e1 σ1) //; [].
   rewrite -pvs_intro. apply sep_mono, later_mono; first done.
   apply forall_intro=>e2'; apply forall_intro=>σ2'.
   apply forall_intro=>ef; apply wand_intro_l.
   rewrite always_and_sep_l' -associative -always_and_sep_l'.
-  apply const_elim_l=>-[v2' [-> [Hv ?]]] /=.
-  rewrite -pvs_intro right_id -wp_value'; last by eassumption.
-  rewrite (forall_elim v2') (forall_elim σ2') const_equiv //.
-  by rewrite left_id wand_elim_r.
+  apply const_elim_l=>-[v2' [Hv ?]] /=.
+  rewrite -pvs_intro.
+  rewrite (forall_elim v2') (forall_elim σ2') (forall_elim ef) const_equiv //.
+  rewrite left_id wand_elim_r. apply sep_mono; last done.
+  (* FIXME RJ why can't I do this rewrite before doing sep_mono? *)
+  by rewrite -(wp_value' _ _ e2').
 Qed.
 
-Lemma wp_lift_atomic_det_step {E Q e1} σ1 v2 σ2 :
+Lemma wp_lift_atomic_det_step {E Q e1} σ1 v2 σ2 ef :
   to_val e1 = None →
   reducible e1 σ1 →
-  (∀ e' σ' ef, prim_step e1 σ1 e' σ' ef → ef = None ∧ e' = of_val v2 ∧ σ' = σ2) →
-  (ownP σ1 ★ ▷ (ownP σ2 -★ Q v2)) ⊑ wp E e1 Q.
+  (∀ e' σ' ef', prim_step e1 σ1 e' σ' ef' → ef' = ef ∧ e' = of_val v2 ∧ σ' = σ2) →
+  (ownP σ1 ★ ▷ (ownP σ2 -★ Q v2 ★
+                       default True ef (flip (wp coPset_all) (λ _, True))))
+    ⊑ wp E e1 Q.
 Proof.
   intros He Hsafe Hstep.
-  rewrite -(wp_lift_atomic_step _ (λ v' σ', v' = v2 ∧ σ' = σ2) σ1) //; last first.
+  rewrite -(wp_lift_atomic_step _ (λ v' σ' ef', v' = v2 ∧ σ' = σ2 ∧ ef' = ef) σ1) //;
+    last first.
   { intros. exists v2. apply Hstep in H. destruct_conjs; subst.
     eauto using to_of_val. }
   apply sep_mono, later_mono; first done.
-  apply forall_intro=>e2'; apply forall_intro=>σ2'.
+  apply forall_intro=>e2'; apply forall_intro=>σ2'; apply forall_intro=>ef'.
   apply wand_intro_l.
   rewrite always_and_sep_l' -associative -always_and_sep_l'.
-  apply const_elim_l=>-[-> ->] /=.
+  apply const_elim_l=>-[-> [-> ->]] /=.
   by rewrite wand_elim_r.
 Qed.
 
-Lemma wp_lift_pure_det_step {E Q} e1 e2 :
+Lemma wp_lift_pure_det_step {E Q} e1 e2 ef :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
-  (∀ σ1 e' σ' ef, prim_step e1 σ1 e' σ' ef → σ1 = σ' ∧ ef = None ∧ e' = e2) →
-  (▷ wp E e2 Q) ⊑ wp E e1 Q.
+  (∀ σ1 e' σ' ef', prim_step e1 σ1 e' σ' ef' → σ1 = σ' ∧ ef' = ef ∧ e' = e2) →
+  ▷ (wp E e2 Q ★ default True ef (flip (wp coPset_all) (λ _, True))) ⊑ wp E e1 Q.
 Proof.
-  intros. rewrite -(wp_lift_pure_step E (λ e' ef, ef = None ∧ e' = e2) _ e1) //=.
-  apply later_mono, forall_intro=>e'; apply forall_intro=>ef.
-  apply impl_intro_l, const_elim_l=>-[-> ->] /=.
-  by rewrite right_id.
+  intros. rewrite -(wp_lift_pure_step E (λ e' ef', ef' = ef ∧ e' = e2) _ e1) //=.
+  apply later_mono, forall_intro=>e'; apply forall_intro=>ef'.
+  apply impl_intro_l, const_elim_l=>-[-> ->] /=; done.
 Qed.
 
 End lifting.
+
