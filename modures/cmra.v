@@ -527,3 +527,49 @@ Definition prodRA_map {A A' B B' : cmraT}
   CofeMor (prod_map f g : prodRA A B → prodRA A' B').
 Instance prodRA_map_ne {A A' B B'} n :
   Proper (dist n==> dist n==> dist n) (@prodRA_map A A' B B') := prodC_map_ne n.
+
+(** ** Indexed product *)
+Section iprod_cmra.
+  Context {A} {B : A → cmraT}.
+  Instance iprod_op : Op (iprod B) := λ f g x, f x ⋅ g x.
+  Instance iprod_unit : Unit (iprod B) := λ f x, unit (f x).
+  Instance iprod_validN : ValidN (iprod B) := λ n f, ∀ x, ✓{n} (f x).
+  Instance iprod_minus : Minus (iprod B) := λ f g x, f x ⩪ g x.
+  Lemma iprod_includedN_spec (f g : iprod B) n : f ≼{n} g ↔ ∀ x, f x ≼{n} g x.
+  Proof.
+    split.
+    * by intros [h Hh] x; exists (h x); rewrite /op /iprod_op (Hh x).
+    * intros Hh; exists (g ⩪ f)=> x; specialize (Hh x).
+      by rewrite /op /iprod_op /minus /iprod_minus cmra_op_minus.
+  Qed.
+  Definition iprod_cmra_mixin : CMRAMixin (iprod B).
+  Proof.
+    split.
+    * by intros n f1 f2 f3 Hf x; rewrite /op /iprod_op (Hf x).
+    * by intros n f1 f2 Hf x; rewrite /unit /iprod_unit (Hf x).
+    * by intros n f1 f2 Hf ? x; rewrite -(Hf x).
+    * by intros n f f' Hf g g' Hg i; rewrite /minus /iprod_minus (Hf i) (Hg i).
+    * by intros f x.
+    * intros n f Hf x; apply cmra_validN_S, Hf.
+    * by intros f1 f2 f3 x; rewrite /op /iprod_op associative.
+    * by intros f1 f2 x; rewrite /op /iprod_op commutative.
+    * by intros f x; rewrite /op /iprod_op /unit /iprod_unit cmra_unit_l.
+    * by intros f x; rewrite /unit /iprod_unit cmra_unit_idempotent.
+    * intros n f1 f2; rewrite !iprod_includedN_spec=> Hf x.
+      by rewrite /unit /iprod_unit; apply cmra_unit_preservingN, Hf.
+    * intros n f1 f2 Hf x; apply cmra_validN_op_l with (f2 x), Hf.
+    * intros n f1 f2; rewrite iprod_includedN_spec=> Hf x.
+      by rewrite /op /iprod_op /minus /iprod_minus cmra_op_minus; try apply Hf.
+  Qed.
+  Definition iprod_cmra_extend_mixin : CMRAExtendMixin (iprod B).
+  Proof.
+    intros n f f1 f2 Hf Hf12.
+    set (g x := cmra_extend_op n (f x) (f1 x) (f2 x) (Hf x) (Hf12 x)).
+    exists ((λ x, (proj1_sig (g x)).1), (λ x, (proj1_sig (g x)).2)).
+    split_ands; intros x; apply (proj2_sig (g x)).
+  Qed.
+  Canonical Structure iprodRA : cmraT :=
+    CMRAT iprod_cofe_mixin iprod_cmra_mixin iprod_cmra_extend_mixin.
+End iprod_cmra.
+
+Arguments iprodRA : clear implicits.

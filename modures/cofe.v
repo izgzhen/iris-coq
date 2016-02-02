@@ -195,8 +195,8 @@ Section cofe_mor.
   Definition cofe_mor_cofe_mixin : CofeMixin (cofeMor A B).
   Proof.
     split.
-    * intros X Y; split; [intros HXY n k; apply equiv_dist, HXY|].
-      intros HXY k; apply equiv_dist; intros n; apply HXY.
+    * intros f g; split; [intros Hfg n k; apply equiv_dist, Hfg|].
+      intros Hfg k; apply equiv_dist; intros n; apply Hfg.
     * intros n; split.
       + by intros f x.
       + by intros f g ? x.
@@ -367,3 +367,36 @@ Definition laterC_map {A B} (f : A -n> B) : laterC A -n> laterC B :=
   CofeMor (later_map f).
 Instance laterC_map_contractive (A B : cofeT) : Contractive (@laterC_map A B).
 Proof. intros n f g Hf n'; apply Hf. Qed.
+
+(** Indexed product *)
+(** Need to put this in a definition to make canonical structures to work. *)
+Definition iprod {A} (B : A → cofeT) := ∀ x, B x.
+
+Section iprod_cofe.
+  Context {A} {B : A → cofeT}.
+  Instance iprod_equiv : Equiv (iprod B) := λ f g, ∀ x, f x ≡ g x.
+  Instance iprod_dist : Dist (iprod B) := λ n f g, ∀ x, f x ={n}= g x.
+  Program Definition iprod_chain (c : chain (iprod B)) (x : A) : chain (B x) :=
+    {| chain_car n := c n x |}.
+  Next Obligation. by intros c x n i ?; apply (chain_cauchy c). Qed.
+  Program Instance iprod_compl : Compl (iprod B) := λ c x,
+    compl (iprod_chain c x).
+  Definition iprod_cofe_mixin : CofeMixin (iprod B).
+  Proof.
+    split.
+    * intros f g; split; [intros Hfg n k; apply equiv_dist, Hfg|].
+      intros Hfg k; apply equiv_dist; intros n; apply Hfg.
+    * intros n; split.
+      + by intros f x.
+      + by intros f g ? x.
+      + by intros f g h ?? x; transitivity (g x).
+    * intros n f g Hfg x; apply dist_S, Hfg.
+    * by intros f g x.
+    * intros c n x.
+      rewrite /compl /iprod_compl (conv_compl (iprod_chain c x) n).
+      apply (chain_cauchy c); lia.
+  Qed.
+  Canonical Structure iprodC : cofeT := CofeT iprod_cofe_mixin.
+End iprod_cofe.
+
+Arguments iprodC : clear implicits.
