@@ -130,12 +130,6 @@ Proof.
 Qed.
 Lemma auth_frag_op (a b : A) : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.
-Lemma auth_includedN' n (x y : authC A) :
-  x ≼{n} y ↔ authoritative x ≼{n} authoritative y ∧ own x ≼{n} own y.
-Proof.
-  split; [intros [[z1 z2] Hz]; split; [exists z1|exists z2]; apply Hz|].
-  intros [[z1 Hz1] [z2 Hz2]]; exists (Auth z1 z2); split; auto.
-Qed.
 End cmra.
 
 Arguments authRA : clear implicits.
