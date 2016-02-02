@@ -327,6 +327,20 @@ Proof.
 Qed.
 Lemma ra_updateP_weaken (P Q : A → Prop) x : x ⇝: P → (∀ y, P y → Q y) → x ⇝: Q.
 Proof. eauto using ra_updateP_compose, ra_updateP_id. Qed.
+
+Lemma ra_updateP_op (P1 P2 Q : A → Prop) x1 x2 :
+  x1 ⇝: P1 → x2 ⇝: P2 → (∀ y1 y2, P1 y1 → P2 y2 → Q (y1 ⋅ y2)) → x1 ⋅ x2 ⇝: Q.
+Proof.
+  intros Hx1 Hx2 Hy z n ?.
+  destruct (Hx1 (x2 ⋅ z) n) as (y1&?&?); first by rewrite associative.
+  destruct (Hx2 (y1 ⋅ z) n) as (y2&?&?);
+    first by rewrite associative (commutative _ x2) -associative.
+  exists (y1 ⋅ y2); split; last rewrite (commutative _ y1) -associative; auto.
+Qed.
+Lemma ra_update_op x1 x2 y1 y2 : x1 ⇝ y1 → x2 ⇝ y2 → x1 ⋅ x2 ⇝ y1 ⋅ y2.
+Proof.
+  rewrite !cmra_update_updateP; eauto using ra_updateP_op with congruence.
+Qed.
 End cmra.
 
 Hint Extern 0 (_ ≼{0} _) => apply cmra_includedN_0.
