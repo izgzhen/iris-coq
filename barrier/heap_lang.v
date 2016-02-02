@@ -108,9 +108,6 @@ Inductive ectx_item :=
 
 Notation ectx := (list ectx_item).
 
-Implicit Types Ki : ectx_item.
-Implicit Types K : ectx.
-
 Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   match Ki with
   | AppLCtx e2 => App e e2
@@ -195,7 +192,7 @@ Definition atomic (e: expr) :=
 We could potentially make this a generic construction. *)
 Inductive prim_step
     (e1 : expr) (σ1 : state) (e2 : expr) (σ2: state) (ef: option expr) : Prop :=
-  Ectx_step (K : ectx) e1' e2' :
+  Ectx_step K e1' e2' :
     e1 = fill K e1' → e2 = fill K e2' →
     head_step e1' σ1 e2' σ2 ef → prim_step e1 σ1 e2 σ2 ef.
 
