@@ -38,17 +38,17 @@
 %\clearpage
 \tableofcontents
 
-\clearpage
+\clearpage\begingroup
 \input{algebra}
-\clearpage
+\endgroup\clearpage\begingroup
 \input{constructions}
-\clearpage
+\endgroup\clearpage\begingroup
 \input{logic}
-\clearpage
+\endgroup\clearpage\begingroup
 \input{model}
-\clearpage
+\endgroup\clearpage\begingroup
 \input{derived}
-
-\clearpage\printbibliography	% If we want biblatex
+\endgroup\clearpage\begingroup
+\printbibliography
 
 \end{document}

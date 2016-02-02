@@ -106,13 +106,12 @@ to express that $\sigfn$ is a function symbol with the indicated arity.
 
 \paragraph{Syntax.}
 Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\textdom{Var}$ of variables (ranged over by metavariables $x$, $y$, $z$):
-\newcommand{\unitterm}{()}%
-\newcommand{\unitsort}{1}%	\unit is bold.
+
 \begin{align*}
   \term, \prop, \pred ::={}&
       x \mid
       \sigfn(\term_1, \dots, \term_n) \mid
-      \unitterm \mid
+      \unitval \mid
       (\term, \term) \mid
       \pi_i\; \term \mid
       \Lam x.\term \mid
@@ -174,7 +173,7 @@ We introduce additional metavariables ranging over terms and generally let the c
 \]
 
 \paragraph{Variable conventions.}
-We often abuse notation, using the preceding \emph{term} metavariables to range over (bound) \emph{variables}.
+We often abuse notation, using the preceding \emph{term} meta-variables to range over (bound) \emph{variables}.
 We omit type annotations in binders, when the type is clear from context.
 
 
@@ -211,7 +210,7 @@ In writing $\vctx, x:\sort$, we presuppose that $x$ is not already declared in $
 	}
 %%% products
 \and
-	\axiom{\vctx \proves \wtt{\unitterm}{\unitsort}}
+	\axiom{\vctx \proves \wtt{\unitval}{\unitsort}}
 \and
 	\infer{\vctx \proves \wtt{\term}{\sort_1} \and \vctx \proves \wtt{\termB}{\sort_2}}
 		{\vctx \proves \wtt{(\term,\termB)}{\sort_1 \times \sort_2}}
