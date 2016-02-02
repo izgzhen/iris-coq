@@ -129,7 +129,7 @@ Lemma wsat_update_gst n E σ r rf m1 (P : iGst Λ Σ → Prop) :
   wsat (S n) E σ (r ⋅ rf) → ∃ m2, wsat (S n) E σ (update_gst m2 r ⋅ rf) ∧ P m2.
 Proof.
   intros [mf Hr] Hup [rs [(?&?&?) Hσ HE Hwld]].
-  destruct (Hup (mf ⋅ gst (rf ⋅ big_opM rs)) (S n)) as (m2&?&Hval').
+  destruct (Hup (mf ⋅ gst (rf ⋅ big_opM rs)) n) as (m2&?&Hval').
   { by rewrite /= (associative _ m1) -Hr (associative _). }
   exists m2; split; [exists rs; split; split_ands'; auto|done].
 Qed.
