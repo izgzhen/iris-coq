@@ -105,7 +105,9 @@ Inductive ectx_item :=
   | CasLCtx (e1 : expr)  (e2 : expr)
   | CasMCtx (v0 : val) (e2 : expr)
   | CasRCtx (v0 : val) (v1 : val).
+
 Notation ectx := (list ectx_item).
+
 Implicit Types Ki : ectx_item.
 Implicit Types K : ectx.
 
@@ -132,6 +134,7 @@ Definition ectx_item_fill (Ki : ectx_item) (e : expr) : expr :=
   | CasMCtx v0 e2 => Cas (of_val v0) e e2
   | CasRCtx v0 v1 => Cas (of_val v0) (of_val v1) e
   end.
+
 Instance ectx_fill : Fill ectx expr :=
   fix go K e := let _ : Fill _ _ := @go in
   match K with [] => e | Ki :: K => ectx_item_fill Ki (fill K e) end.
@@ -181,6 +184,9 @@ Inductive head_step : expr -> state -> expr -> state -> option expr -> Prop :=
      σ !! l = Some v1 →
      head_step (Cas (Loc l) e1 e2) σ LitTrue (<[l:=v2]>σ) None.
 
+Definition head_reducible e σ : Prop :=
+  ∃ e' σ' ef, head_step e σ e' σ' ef.
+
 (** Atomic expressions *)
 Definition atomic (e: expr) :=
   match e with
@@ -202,40 +208,53 @@ Inductive prim_step
 (** Basic properties about the language *)
 Lemma to_of_val v : to_val (of_val v) = Some v.
 Proof. by induction v; simplify_option_equality. Qed.
+
 Lemma of_to_val e v : to_val e = Some v → of_val v = e.
 Proof.
   revert v; induction e; intros; simplify_option_equality; auto with f_equal.
 Qed.
+
 Instance: Injective (=) (=) of_val.
 Proof. by intros ?? Hv; apply (injective Some); rewrite -!to_of_val Hv. Qed.
+
 Instance ectx_item_fill_inj Ki : Injective (=) (=) (ectx_item_fill Ki).
 Proof. destruct Ki; intros ???; simplify_equality'; auto with f_equal. Qed.
+
 Instance ectx_fill_inj K : Injective (=) (=) (fill K).
 Proof. red; induction K as [|Ki K IH]; naive_solver. Qed.
+
 Lemma fill_app K1 K2 e : fill (K1 ++ K2) e = fill K1 (fill K2 e).
 Proof. revert e; induction K1; simpl; auto with f_equal. Qed.
+
 Lemma fill_val K e : is_Some (to_val (fill K e)) → is_Some (to_val e).
 Proof.
   intros [v' Hv']; revert v' Hv'.
   induction K as [|[]]; intros; simplify_option_equality; eauto.
 Qed.
+
 Lemma fill_not_val K e : to_val e = None → to_val (fill K e) = None.
 Proof. rewrite !eq_None_not_Some; eauto using fill_val. Qed.
+
 Lemma values_head_stuck e1 σ1 e2 σ2 ef :
   head_step e1 σ1 e2 σ2 ef → to_val e1 = None.
 Proof. destruct 1; naive_solver. Qed.
+
 Lemma values_stuck e1 σ1 e2 σ2 ef : prim_step e1 σ1 e2 σ2 ef → to_val e1 = None.
 Proof. intros [??? -> -> ?]; eauto using fill_not_val, values_head_stuck. Qed.
+
 Lemma atomic_not_val e : atomic e → to_val e = None.
 Proof. destruct e; naive_solver. Qed.
+
 Lemma atomic_fill K e : atomic (fill K e) → to_val e = None → K = [].
 Proof.
   rewrite eq_None_not_Some.
   destruct K as [|[]]; naive_solver eauto using fill_val.
 Qed.
+
 Lemma atomic_head_step e1 σ1 e2 σ2 ef :
   atomic e1 → head_step e1 σ1 e2 σ2 ef → is_Some (to_val e2).
 Proof. destruct 2; simpl; rewrite ?to_of_val; naive_solver. Qed.
+
 Lemma atomic_step e1 σ1 e2 σ2 ef :
   atomic e1 → prim_step e1 σ1 e2 σ2 ef → is_Some (to_val e2).
 Proof.
@@ -243,9 +262,11 @@ Proof.
   assert (K = []) as -> by eauto 10 using atomic_fill, values_head_stuck.
   naive_solver eauto using atomic_head_step.
 Qed.
+
 Lemma head_ctx_step_val Ki e σ1 e2 σ2 ef :
   head_step (ectx_item_fill Ki e) σ1 e2 σ2 ef → is_Some (to_val e).
 Proof. destruct Ki; inversion_clear 1; simplify_option_equality; eauto. Qed.
+
 Lemma fill_item_inj Ki1 Ki2 e1 e2 :
   to_val e1 = None → to_val e2 = None →
   ectx_item_fill Ki1 e1 = ectx_item_fill Ki2 e2 → Ki1 = Ki2.
@@ -255,6 +276,7 @@ Proof.
     | H : to_val (of_val _) = None |- _ => by rewrite to_of_val in H
     end; auto.
 Qed.
+
 (* When something does a step, and another decomposition of the same expression
 has a non-val [e] in the hole, then [K] is a left sub-context of [K'] - in
 other words, [e] also contains the reducible expression *)
@@ -270,12 +292,29 @@ Proof.
   cut (Ki = Ki'); [naive_solver eauto using prefix_of_cons|].
   eauto using fill_item_inj, values_head_stuck, fill_not_val.
 Qed.
+
+Lemma prim_head_step e1 σ1 e2 σ2 ef :
+  head_reducible e1 σ1 →
+  prim_step e1 σ1 e2 σ2 ef →
+  head_step e1 σ1 e2 σ2 ef.
+Proof.
+  intros (e2'' & σ2'' & ef'' & Hstep'')  [K' e1' e2' Heq1 Heq2  Hstep].
+  assert (K' `prefix_of` []) as Hemp.
+  { eapply step_by_val; last first.
+    - eexact Hstep''.
+    - eapply values_head_stuck. eexact Hstep.
+    - done. }
+  destruct K'; last by (exfalso; eapply prefix_of_nil_not; eassumption).
+  by subst e1 e2.
+Qed.
+
 Lemma alloc_fresh e v σ :
   let l := fresh (dom _ σ) in
   to_val e = Some v → head_step (Alloc e) σ (Loc l) (<[l:=v]>σ) None.
 Proof.
   by intros; apply AllocS, (not_elem_of_dom (D:=gset positive)), is_fresh.
 Qed.
+
 End heap_lang.
 
 (** Language *)
@@ -284,6 +323,7 @@ Program Canonical Structure heap_lang : language := {|
   of_val := heap_lang.of_val; to_val := heap_lang.to_val;
   atomic := heap_lang.atomic; prim_step := heap_lang.prim_step;
 |}.
+
 Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,
   heap_lang.values_stuck, heap_lang.atomic_not_val, heap_lang.atomic_step.
 Global Instance heap_lang_ctx : CtxLanguage heap_lang heap_lang.ectx.
@@ -298,4 +338,12 @@ Proof.
     rewrite heap_lang.fill_app in Heq1; apply (injective _) in Heq1.
     exists (fill K' e2''); rewrite heap_lang.fill_app; split; auto.
     econstructor; eauto.
+Qed.
+
+Lemma head_reducible_reducible e σ :
+  heap_lang.head_reducible e σ → reducible e σ.
+Proof.
+  intros H. destruct H; destruct_conjs.
+  do 3 eexists.
+  eapply heap_lang.Ectx_step with (K:=[]); last eassumption; done.
 Qed.
