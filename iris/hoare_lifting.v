@@ -44,7 +44,8 @@ Proof.
   rewrite {1}/ht -always_wand_impl always_elim wand_elim_r; apply wp_mono=>v.
   by apply const_intro.
 Qed.
-Lemma ht_lift_atomic E (φ : expr Λ → state Λ → option (expr Λ) → Prop) P e1 σ1 :
+Lemma ht_lift_atomic_step
+    E (φ : expr Λ → state Λ → option (expr Λ) → Prop) P e1 σ1 :
   atomic e1 →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
@@ -94,8 +95,8 @@ Proof.
   rewrite {1}/ht -always_wand_impl always_elim wand_elim_r; apply wp_mono=>v.
   by apply const_intro.
 Qed.
-Lemma ht_lift_pure_determistic_step E
-    (φ : expr Λ → option (expr Λ) → Prop) P P' Q e1 e2 ef :
+Lemma ht_lift_pure_det_step
+    E (φ : expr Λ → option (expr Λ) → Prop) P P' Q e1 e2 ef :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2' σ2 ef', prim_step e1 σ1 e2' σ2 ef' → σ1 = σ2 ∧ e2 = e2' ∧ ef = ef')→
