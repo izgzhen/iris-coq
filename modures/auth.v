@@ -20,9 +20,15 @@ Instance auth_dist : Dist (auth A) := λ n x y,
 
 Global Instance Auth_ne : Proper (dist n ==> dist n ==> dist n) (@Auth A).
 Proof. by split. Qed.
+Global Instance Auth_proper : Proper ((≡) ==> (≡) ==> (≡)) (@Auth A).
+Proof. by split. Qed.
 Global Instance authoritative_ne: Proper (dist n ==> dist n) (@authoritative A).
 Proof. by destruct 1. Qed.
+Global Instance authoritative_proper : Proper ((≡) ==> (≡)) (@authoritative A).
+Proof. by destruct 1. Qed.
 Global Instance own_ne : Proper (dist n ==> dist n) (@own A).
+Proof. by destruct 1. Qed.
+Global Instance own_proper : Proper ((≡) ==> (≡)) (@own A).
 Proof. by destruct 1. Qed.
 
 Instance auth_compl : Compl (auth A) := λ c,

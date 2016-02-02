@@ -143,12 +143,12 @@ Class CMRAMonotone {A B : cmraT} (f : A → B) := {
 (** * Frame preserving updates *)
 Definition cmra_updateP {A : cmraT} (x : A) (P : A → Prop) := ∀ z n,
   ✓{S n} (x ⋅ z) → ∃ y, P y ∧ ✓{S n} (y ⋅ z).
-Instance: Params (@cmra_updateP) 3.
+Instance: Params (@cmra_updateP) 1.
 Infix "⇝:" := cmra_updateP (at level 70).
 Definition cmra_update {A : cmraT} (x y : A) := ∀ z n,
   ✓{S n} (x ⋅ z) → ✓{S n} (y ⋅ z).
 Infix "⇝" := cmra_update (at level 70).
-Instance: Params (@cmra_update) 3.
+Instance: Params (@cmra_update) 1.
 
 (** * Properties **)
 Section cmra.
@@ -192,6 +192,17 @@ Global Instance cmra_included_proper :
 Proof.
   intros x x' Hx y y' Hy.
   by split; intros [z ?]; exists z; [rewrite -Hx -Hy|rewrite Hx Hy].
+Qed.
+Global Instance cmra_update_proper :
+  Proper ((≡) ==> (≡) ==> iff) (@cmra_update A).
+Proof.
+  intros x1 x2 Hx y1 y2 Hy; split=>? z n; [rewrite -Hx -Hy|rewrite Hx Hy]; auto.
+Qed.
+Global Instance cmra_updateP_proper :
+  Proper ((≡) ==> pointwise_relation _ iff ==> iff) (@cmra_updateP A).
+Proof.
+  intros x1 x2 Hx P1 P2 HP; split=>Hup z n;
+    [rewrite -Hx; setoid_rewrite <-HP|rewrite Hx; setoid_rewrite HP]; auto.
 Qed.
 
 (** ** Validity *)

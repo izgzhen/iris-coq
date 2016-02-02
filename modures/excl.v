@@ -27,6 +27,14 @@ Inductive excl_dist `{Dist A} : Dist (excl A) :=
   | ExclUnit_dist n : ExclUnit ={n}= ExclUnit
   | ExclBot_dist n : ExclBot ={n}= ExclBot.
 Existing Instance excl_dist.
+Global Instance Excl_ne : Proper (dist n ==> dist n) (@Excl A).
+Proof. by constructor. Qed.
+Global Instance Excl_proper : Proper ((≡) ==> (≡)) (@Excl A).
+Proof. by constructor. Qed.
+Global Instance Excl_inj : Injective (≡) (≡) (@Excl A).
+Proof. by inversion_clear 1. Qed.
+Global Instance Excl_dist_inj n : Injective (dist n) (dist n) (@Excl A).
+Proof. by inversion_clear 1. Qed.
 Program Definition excl_chain
     (c : chain (excl A)) (x : A) (H : maybe Excl (c 1) = Some x) : chain A :=
   {| chain_car n := match c n return _ with Excl y => y | _ => x end |}.
@@ -66,10 +74,6 @@ Proof.
 Qed.
 Canonical Structure exclC : cofeT := CofeT excl_cofe_mixin.
 
-Global Instance Excl_inj : Injective (≡) (≡) (@Excl A).
-Proof. by inversion_clear 1. Qed.
-Global Instance Excl_dist_inj n : Injective (dist n) (dist n) (@Excl A).
-Proof. by inversion_clear 1. Qed.
 Global Instance Excl_timeless (x : A) : Timeless x → Timeless (Excl x).
 Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
 Global Instance ExclUnit_timeless : Timeless (@ExclUnit A).
