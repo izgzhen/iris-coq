@@ -287,9 +287,7 @@ Qed.
 Lemma alloc_fresh e v σ :
   let l := fresh (dom _ σ) in
   to_val e = Some v → head_step (Alloc e) σ (Loc l) (<[l:=v]>σ) None.
-Proof.
-  by intros; apply AllocS, (not_elem_of_dom (D:=gset positive)), is_fresh.
-Qed.
+Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset _)), is_fresh. Qed.
 
 End heap_lang.
 
@@ -302,8 +300,7 @@ Program Canonical Structure heap_lang : language := {|
 Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,
   heap_lang.values_stuck, heap_lang.atomic_not_val, heap_lang.atomic_step.
 
-Global Instance heap_lang_ctx K :
-  LanguageCtx heap_lang (heap_lang.fill K).
+Global Instance heap_lang_ctx K : LanguageCtx heap_lang (heap_lang.fill K).
 Proof.
   split.
   * eauto using heap_lang.fill_not_val.
