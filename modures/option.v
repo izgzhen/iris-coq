@@ -147,10 +147,12 @@ Proof.
   destruct (Hx (unit x) n) as (y'&?&?); rewrite ?cmra_unit_r; auto.
   by exists (Some y'); split; [auto|apply cmra_validN_op_l with (unit x)].
 Qed.
+Lemma option_updateP' (P : A → Prop) x :
+  x ⇝: P → Some x ⇝: λ y, default False y P.
+Proof. eauto using option_updateP. Qed.
 Lemma option_update x y : x ⇝ y → Some x ⇝ Some y.
 Proof.
-  intros; apply cmra_update_updateP, (option_updateP (y=)); [|naive_solver].
-  by apply cmra_update_updateP.
+  rewrite !cmra_update_updateP; eauto using option_updateP with congruence.
 Qed.
 End cmra.
 

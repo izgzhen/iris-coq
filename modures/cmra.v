@@ -318,15 +318,32 @@ Proof.
   * by intros Hx z ?; exists y; split; [done|apply (Hx z)].
   * by intros Hx z n ?; destruct (Hx z n) as (?&<-&?).
 Qed.
-Lemma ra_updateP_id (P : A → Prop) x : P x → x ⇝: P.
+Lemma cmra_updateP_id (P : A → Prop) x : P x → x ⇝: P.
 Proof. by intros ? z n ?; exists x. Qed.
-Lemma ra_updateP_compose (P Q : A → Prop) x :
+Lemma cmra_updateP_compose (P Q : A → Prop) x :
   x ⇝: P → (∀ y, P y → y ⇝: Q) → x ⇝: Q.
 Proof.
   intros Hx Hy z n ?. destruct (Hx z n) as (y&?&?); auto. by apply (Hy y).
 Qed.
-Lemma ra_updateP_weaken (P Q : A → Prop) x : x ⇝: P → (∀ y, P y → Q y) → x ⇝: Q.
-Proof. eauto using ra_updateP_compose, ra_updateP_id. Qed.
+Lemma cmra_updateP_weaken (P Q : A → Prop) x : x ⇝: P → (∀ y, P y → Q y) → x ⇝: Q.
+Proof. eauto using cmra_updateP_compose, cmra_updateP_id. Qed.
+
+Lemma cmra_updateP_op (P1 P2 Q : A → Prop) x1 x2 :
+  x1 ⇝: P1 → x2 ⇝: P2 → (∀ y1 y2, P1 y1 → P2 y2 → Q (y1 ⋅ y2)) → x1 ⋅ x2 ⇝: Q.
+Proof.
+  intros Hx1 Hx2 Hy z n ?.
+  destruct (Hx1 (x2 ⋅ z) n) as (y1&?&?); first by rewrite associative.
+  destruct (Hx2 (y1 ⋅ z) n) as (y2&?&?);
+    first by rewrite associative (commutative _ x2) -associative.
+  exists (y1 ⋅ y2); split; last rewrite (commutative _ y1) -associative; auto.
+Qed.
+Lemma cmra_updateP_op' (P1 P2 : A → Prop) x1 x2 :
+  x1 ⇝: P1 → x2 ⇝: P2 → x1 ⋅ x2 ⇝: λ y, ∃ y1 y2, y = y1 ⋅ y2 ∧ P1 y1 ∧ P2 y2.
+Proof. eauto 10 using cmra_updateP_op. Qed.
+Lemma cmra_update_op x1 x2 y1 y2 : x1 ⇝ y1 → x2 ⇝ y2 → x1 ⋅ x2 ⇝ y1 ⋅ y2.
+Proof.
+  rewrite !cmra_update_updateP; eauto using cmra_updateP_op with congruence.
+Qed.
 End cmra.
 
 Hint Extern 0 (_ ≼{0} _) => apply cmra_includedN_0.
@@ -473,13 +490,16 @@ Section prod.
   Qed.
   Lemma prod_update x y : x.1 ⇝ y.1 → x.2 ⇝ y.2 → x ⇝ y.
   Proof. intros ?? z n [??]; split; simpl in *; auto. Qed.
-  Lemma prod_updateP (P : A * B → Prop) P1 P2 x :
-    x.1 ⇝: P1 → x.2 ⇝: P2 → (∀ a b, P1 a → P2 b → P (a,b)) → x ⇝: P.
+  Lemma prod_updateP P1 P2 (Q : A * B → Prop)  x :
+    x.1 ⇝: P1 → x.2 ⇝: P2 → (∀ a b, P1 a → P2 b → Q (a,b)) → x ⇝: Q.
   Proof.
     intros Hx1 Hx2 HP z n [??]; simpl in *.
     destruct (Hx1 (z.1) n) as (a&?&?), (Hx2 (z.2) n) as (b&?&?); auto.
     exists (a,b); repeat split; auto.
   Qed.
+  Lemma prod_updateP' P1 P2 x :
+    x.1 ⇝: P1 → x.2 ⇝: P2 → x ⇝: λ y, P1 (y.1) ∧ P2 (y.2).
+  Proof. eauto using prod_updateP. Qed.
 End prod.
 Arguments prodRA : clear implicits.
 

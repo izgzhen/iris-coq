@@ -164,7 +164,7 @@ Proof. by move=> /(_ i) Hm Hi; move:Hm; rewrite Hi. Qed.
 Lemma map_insert_validN n m i x : ✓{n} x → ✓{n} m → ✓{n} (<[i:=x]>m).
 Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_equality. Qed.
 Lemma map_insert_op m1 m2 i x :
-  m2 !! i = None →  <[i:=x]>(m1 ⋅ m2) = <[i:=x]>m1 ⋅ m2.
+  m2 !! i = None → <[i:=x]>(m1 ⋅ m2) = <[i:=x]>m1 ⋅ m2.
 Proof. by intros Hi; apply (insert_merge_l _ m1 m2); rewrite Hi. Qed.
 Lemma map_unit_singleton (i : K) (x : A) :
   unit ({[ i ↦ x ]} : gmap K A) = {[ i ↦ unit x ]}.
@@ -185,26 +185,45 @@ Proof.
     + by rewrite Hi; apply Some_Some_includedN, cmra_included_includedN.
     + apply None_includedN.
 Qed.
-Lemma map_dom_op (m1 m2 : gmap K A) :
-  dom (gset K) (m1 ⋅ m2) ≡ dom _ m1 ∪ dom _ m2.
+Lemma map_dom_op m1 m2 : dom (gset K) (m1 ⋅ m2) ≡ dom _ m1 ∪ dom _ m2.
 Proof.
   apply elem_of_equiv; intros i; rewrite elem_of_union !elem_of_dom.
   unfold is_Some; setoid_rewrite lookup_op.
   destruct (m1 !! i), (m2 !! i); naive_solver.
 Qed.
 
-Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
-Lemma map_update_alloc (m : gmap K A) x :
-  ✓ x → m ⇝: λ m', ∃ i, m' = <[i:=x]>m ∧ m !! i = None.
+Lemma map_insert_updateP (P : A → Prop) (Q : gmap K A → Prop) m i x :
+  x ⇝: P → (∀ y, P y → Q (<[i:=y]>m)) → <[i:=x]>m ⇝: Q.
 Proof.
-  intros ? mf n Hm. set (i := fresh (dom (gset K) (m ⋅ mf))).
+  intros Hx%option_updateP' HP mf n Hm.
+  destruct (Hx (mf !! i) n) as ([y|]&?&?); try done.
+  { by generalize (Hm i); rewrite lookup_op; simplify_map_equality. }
+  exists (<[i:=y]> m); split; first by auto.
+  intros j; move: (Hm j)=>{Hm}; rewrite !lookup_op=>Hm.
+  destruct (decide (i = j)); simplify_map_equality'; auto.
+Qed.
+Lemma map_insert_updateP' (P : A → Prop) (Q : gmap K A → Prop) m i x :
+  x ⇝: P → <[i:=x]>m ⇝: λ m', ∃ y, m' = <[i:=y]>m ∧ P y.
+Proof. eauto using map_insert_updateP. Qed.
+Lemma map_insert_update m i x y : x ⇝ y → <[i:=x]>m ⇝ <[i:=y]>m.
+Proof.
+  rewrite !cmra_update_updateP; eauto using map_insert_updateP with congruence.
+Qed.
+
+Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
+Lemma map_updateP_alloc (Q : gmap K A → Prop) m x :
+  ✓ x → (∀ i, m !! i = None → Q (<[i:=x]>m)) → m ⇝: Q.
+Proof.
+  intros ? HQ mf n Hm. set (i := fresh (dom (gset K) (m ⋅ mf))).
   assert (i ∉ dom (gset K) m ∧ i ∉ dom (gset K) mf) as [??].
   { rewrite -not_elem_of_union -map_dom_op; apply is_fresh. }
-  exists (<[i:=x]>m); split; [exists i; split; [done|]|].
-  * by apply not_elem_of_dom.
-  * rewrite -map_insert_op; last by apply not_elem_of_dom.
-    by apply map_insert_validN; [apply cmra_valid_validN|].
+  exists (<[i:=x]>m); split; first by apply HQ, not_elem_of_dom.
+  rewrite -map_insert_op; last by apply not_elem_of_dom.
+  by apply map_insert_validN; [apply cmra_valid_validN|].
 Qed.
+Lemma map_updateP_alloc' m x :
+  ✓ x → m ⇝: λ m', ∃ i, m' = <[i:=x]>m ∧ m !! i = None.
+Proof. eauto using map_updateP_alloc. Qed.
 End properties.
 
 Instance map_fmap_ne `{Countable K} {A B : cofeT} (f : A → B) n :
