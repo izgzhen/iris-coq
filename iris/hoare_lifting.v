@@ -44,6 +44,7 @@ Proof.
   rewrite {1}/ht -always_wand_impl always_elim wand_elim_r; apply wp_mono=>v.
   by apply const_intro.
 Qed.
+
 Lemma ht_lift_atomic_step
     E (φ : expr Λ → state Λ → option (expr Λ) → Prop) P e1 σ1 :
   atomic e1 →
@@ -70,6 +71,7 @@ Proof.
     rewrite -(exist_intro σ2) -(exist_intro ef) (of_to_val e2) //.
     by rewrite -always_and_sep_r'; apply and_intro; try apply const_intro.
 Qed.
+
 Lemma ht_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) P P' Q e1 :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
@@ -95,6 +97,7 @@ Proof.
   rewrite {1}/ht -always_wand_impl always_elim wand_elim_r; apply wp_mono=>v.
   by apply const_intro.
 Qed.
+
 Lemma ht_lift_pure_det_step
     E (φ : expr Λ → option (expr Λ) → Prop) P P' Q e1 e2 ef :
   to_val e1 = None →
@@ -114,4 +117,5 @@ Proof.
     rewrite -always_and_sep_l' -associative; apply const_elim_l=>-[??]; subst.
     by rewrite /= /ht always_elim impl_elim_r.
 Qed.
+
 End lifting.
