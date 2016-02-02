@@ -142,6 +142,8 @@ Qed.
 (* Updates *)
 Lemma excl_update (x : A) y : ✓ y → Excl x ⇝ y.
 Proof. by destruct y; intros ? [?| |]. Qed.
+Lemma excl_updateP (P : excl A → Prop) x y : ✓ y → P y → Excl x ⇝: P.
+Proof. intros ?? z n ?; exists y. by destruct y, z as [?| |]. Qed.
 End excl.
 
 Arguments exclC : clear implicits.
