@@ -142,11 +142,11 @@ Class CMRAMonotone {A B : cmraT} (f : A → B) := {
 
 (** * Frame preserving updates *)
 Definition cmra_updateP {A : cmraT} (x : A) (P : A → Prop) := ∀ z n,
-  ✓{n} (x ⋅ z) → ∃ y, P y ∧ ✓{n} (y ⋅ z).
+  ✓{S n} (x ⋅ z) → ∃ y, P y ∧ ✓{S n} (y ⋅ z).
 Instance: Params (@cmra_updateP) 3.
 Infix "⇝:" := cmra_updateP (at level 70).
 Definition cmra_update {A : cmraT} (x y : A) := ∀ z n,
-  ✓{n} (x ⋅ z) → ✓{n} (y ⋅ z).
+  ✓{S n} (x ⋅ z) → ✓{S n} (y ⋅ z).
 Infix "⇝" := cmra_update (at level 70).
 Instance: Params (@cmra_update) 3.
 
@@ -393,15 +393,12 @@ Section discrete.
   Qed.
   Definition discreteRA : cmraT :=
     CMRAT (cofe_mixin A) discrete_cmra_mixin discrete_extend_mixin.
-  Lemma discrete_updateP (x : discreteRA) (P : A → Prop) `{!Inhabited (sig P)} :
+  Lemma discrete_updateP (x : discreteRA) (P : A → Prop) :
     (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → x ⇝: P.
-  Proof.
-    intros Hvalid z [|n]; [|apply Hvalid].
-    by destruct (_ : Inhabited (sig P)) as [[y ?]]; exists y.
-  Qed.
+  Proof. intros Hvalid z n; apply Hvalid. Qed.
   Lemma discrete_update (x y : discreteRA) :
     (∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z)) → x ⇝ y.
-  Proof. intros Hvalid z [|n]; [done|apply Hvalid]. Qed.
+  Proof. intros Hvalid z n; apply Hvalid. Qed.
 End discrete.
 
 (** ** CMRA for the unit type *)
@@ -477,7 +474,7 @@ Section prod.
   Lemma prod_update x y : x.1 ⇝ y.1 → x.2 ⇝ y.2 → x ⇝ y.
   Proof. intros ?? z n [??]; split; simpl in *; auto. Qed.
   Lemma prod_updateP (P : A * B → Prop) P1 P2 x :
-    x.1 ⇝: P1 → x.2 ⇝: P2 → (∀ y, P1 (y.1) → P2 (y.2) → P y) → x ⇝: P.
+    x.1 ⇝: P1 → x.2 ⇝: P2 → (∀ a b, P1 a → P2 b → P (a,b)) → x ⇝: P.
   Proof.
     intros Hx1 Hx2 HP z n [??]; simpl in *.
     destruct (Hx1 (z.1) n) as (a&?&?), (Hx2 (z.2) n) as (b&?&?); auto.
