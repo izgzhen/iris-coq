@@ -66,7 +66,7 @@ Ltac do_step tac :=
   match goal with
   | |- prim_step ?e1 ?σ1 ?e2 ?σ2 ?ef =>
      reshape_expr e1 ltac:(fun K e1' =>
-       eapply Ectx_step with K e1' _); [reflexivity|reflexivity|];
+       eapply Ectx_step with K e1' _; [reflexivity|reflexivity|];
        first [apply alloc_fresh|econstructor];
-       rewrite ?to_of_val; tac; fail
+       rewrite ?to_of_val; tac; fail)
   end.
