@@ -1,4 +1,4 @@
-s-Q . ""
+-Q . ""
 prelude/option.v
 prelude/fin_map_dom.v
 prelude/bsets.v
