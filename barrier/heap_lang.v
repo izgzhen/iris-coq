@@ -111,7 +111,7 @@ Notation ectx := (list ectx_item).
 Implicit Types Ki : ectx_item.
 Implicit Types K : ectx.
 
-Definition ectx_item_fill (Ki : ectx_item) (e : expr) : expr :=
+Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   match Ki with
   | AppLCtx e2 => App e e2
   | AppRCtx v1 => App (of_val v1) e
@@ -134,12 +134,7 @@ Definition ectx_item_fill (Ki : ectx_item) (e : expr) : expr :=
   | CasMCtx v0 e2 => Cas (of_val v0) e e2
   | CasRCtx v0 v1 => Cas (of_val v0) (of_val v1) e
   end.
-
-Fixpoint fill K e :=
-  (* FIXME RJ: This really is fold_left, but if I use that all automation breaks:
-       fold_left (fun e Ki => ectx_item_fill Ki e).
-     Or maybe we even have a combinator somewhere to swap the arguments? *)
-  match K with [] => e | Ki :: K => ectx_item_fill Ki (fill K e) end.
+Definition fill (K : ectx) (e : expr) : expr := fold_right fill_item e K.
 
 (** The stepping relation *)
 Inductive head_step : expr -> state -> expr -> state -> option expr -> Prop :=
@@ -216,7 +211,7 @@ Qed.
 Instance: Injective (=) (=) of_val.
 Proof. by intros ?? Hv; apply (injective Some); rewrite -!to_of_val Hv. Qed.
 
-Instance ectx_item_fill_inj Ki : Injective (=) (=) (ectx_item_fill Ki).
+Instance fill_item_inj Ki : Injective (=) (=) (fill_item Ki).
 Proof. destruct Ki; intros ???; simplify_equality'; auto with f_equal. Qed.
 
 Instance ectx_fill_inj K : Injective (=) (=) (fill K).
@@ -263,12 +258,12 @@ Proof.
 Qed.
 
 Lemma head_ctx_step_val Ki e σ1 e2 σ2 ef :
-  head_step (ectx_item_fill Ki e) σ1 e2 σ2 ef → is_Some (to_val e).
+  head_step (fill_item Ki e) σ1 e2 σ2 ef → is_Some (to_val e).
 Proof. destruct Ki; inversion_clear 1; simplify_option_equality; eauto. Qed.
 
-Lemma fill_item_inj Ki1 Ki2 e1 e2 :
+Lemma fill_item_no_val_inj Ki1 Ki2 e1 e2 :
   to_val e1 = None → to_val e2 = None →
-  ectx_item_fill Ki1 e1 = ectx_item_fill Ki2 e2 → Ki1 = Ki2.
+  fill_item Ki1 e1 = fill_item Ki2 e2 → Ki1 = Ki2.
 Proof.
   destruct Ki1, Ki2; intros; try discriminate; simplify_equality';
     repeat match goal with
@@ -289,7 +284,7 @@ Proof.
   { destruct (proj1 (eq_None_not_Some (to_val (fill K e1))));
       eauto using fill_not_val, head_ctx_step_val. }
   cut (Ki = Ki'); [naive_solver eauto using prefix_of_cons|].
-  eauto using fill_item_inj, values_head_stuck, fill_not_val.
+  eauto using fill_item_no_val_inj, values_head_stuck, fill_not_val.
 Qed.
 
 Lemma alloc_fresh e v σ :
