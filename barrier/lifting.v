@@ -126,7 +126,7 @@ Proof.
     Q (App (Rec ef) e)) //=; last by intros; inv_step; eauto.
   by apply later_mono, forall_intro=>e2; apply impl_intro_l, const_elim_l=>->.
 Qed.
-Lemma wp_plus n1 n2 E Q :
+Lemma wp_plus E n1 n2 Q :
   ▷ Q (LitNatV (n1 + n2)) ⊑ wp E (Plus (LitNat n1) (LitNat n2)) Q.
 Proof.
   rewrite -(wp_lift_pure_step E (λ e', e' = LitNat (n1 + n2))) //=;
@@ -134,7 +134,7 @@ Proof.
   apply later_mono, forall_intro=>e2; apply impl_intro_l, const_elim_l=>->.
   by rewrite -wp_value'.
 Qed.
-Lemma wp_le_true n1 n2 E Q :
+Lemma wp_le_true E n1 n2 Q :
   n1 ≤ n2 →
   ▷ Q LitTrueV ⊑ wp E (Le (LitNat n1) (LitNat n2)) Q.
 Proof.
@@ -143,7 +143,7 @@ Proof.
   apply later_mono, forall_intro=>e2; apply impl_intro_l, const_elim_l=>->.
   by rewrite -wp_value'.
 Qed.
-Lemma wp_le_false n1 n2 E Q :
+Lemma wp_le_false E n1 n2 Q :
   n1 > n2 →
   ▷ Q LitFalseV ⊑ wp E (Le (LitNat n1) (LitNat n2)) Q.
 Proof.
@@ -152,7 +152,7 @@ Proof.
   apply later_mono, forall_intro=>e2; apply impl_intro_l, const_elim_l=>->.
   by rewrite -wp_value'.
 Qed.
-Lemma wp_fst e1 v1 e2 v2 E Q :
+Lemma wp_fst E e1 v1 e2 v2 Q :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
   ▷Q v1 ⊑ wp E (Fst (Pair e1 e2)) Q.
 Proof.
@@ -161,7 +161,7 @@ Proof.
   apply later_mono, forall_intro=>e2'; apply impl_intro_l, const_elim_l=>->.
   by rewrite -wp_value'.
 Qed.
-Lemma wp_snd e1 v1 e2 v2 E Q :
+Lemma wp_snd E e1 v1 e2 v2 Q :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
   ▷ Q v2 ⊑ wp E (Snd (Pair e1 e2)) Q.
 Proof.
@@ -170,7 +170,7 @@ Proof.
   apply later_mono, forall_intro=>e2'; apply impl_intro_l, const_elim_l=>->.
   by rewrite -wp_value'.
 Qed.
-Lemma wp_case_inl e0 v0 e1 e2 E Q :
+Lemma wp_case_inl E e0 v0 e1 e2 Q :
   to_val e0 = Some v0 →
   ▷ wp E e1.[e0/] Q ⊑ wp E (Case (InjL e0) e1 e2) Q.
 Proof.
@@ -178,7 +178,7 @@ Proof.
     (Case (InjL e0) e1 e2)) //=; last by intros; inv_step; eauto.
   by apply later_mono, forall_intro=>e1'; apply impl_intro_l, const_elim_l=>->.
 Qed.
-Lemma wp_case_inr e0 v0 e1 e2 E Q :
+Lemma wp_case_inr E e0 v0 e1 e2 Q :
   to_val e0 = Some v0 →
   ▷ wp E e2.[e0/] Q ⊑ wp E (Case (InjR e0) e1 e2) Q.
 Proof.
@@ -188,7 +188,7 @@ Proof.
 Qed.
 
 (** Some derived stateless axioms *)
-Lemma wp_le n1 n2 E P Q :
+Lemma wp_le E n1 n2 P Q :
   (n1 ≤ n2 → P ⊑ ▷ Q LitTrueV) →
   (n1 > n2 → P ⊑ ▷ Q LitFalseV) →
   P ⊑ wp E (Le (LitNat n1) (LitNat n2)) Q.

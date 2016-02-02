@@ -73,7 +73,7 @@ Module LiftingTests.
     { apply and_mono; first done. by rewrite -later_intro. }
     apply later_mono.
     (* Go on. *)
-    rewrite -(wp_let _ (FindPred' (LitNat n1) (Var 0) (LitNat n2) (FindPred $ LitNat n2))).
+    rewrite -(wp_let _ _ (FindPred' (LitNat n1) (Var 0) (LitNat n2) (FindPred $ LitNat n2))).
     rewrite -wp_plus. asimpl.
     rewrite -(wp_bind [CaseCtx _ _]).
     rewrite -!later_intro /=.

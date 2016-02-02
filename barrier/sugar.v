@@ -31,17 +31,17 @@ Proof.
      to talk to the Autosubst guys. *)
   by asimpl.
 Qed.
-Lemma wp_let e1 e2 E Q :
+Lemma wp_let E e1 e2 Q :
   wp E e1 (λ v, ▷wp E (e2.[of_val v/]) Q) ⊑ wp E (Let e1 e2) Q.
 Proof.
   rewrite -(wp_bind [LetCtx e2]). apply wp_mono=>v.
   by rewrite -wp_lam //= to_of_val.
 Qed.
-Lemma wp_if_true e1 e2 E Q : ▷ wp E e1 Q ⊑ wp E (If LitTrue e1 e2) Q.
+Lemma wp_if_true E e1 e2 Q : ▷ wp E e1 Q ⊑ wp E (If LitTrue e1 e2) Q.
 Proof. rewrite -wp_case_inl //. by asimpl. Qed.
-Lemma wp_if_false e1 e2 E Q : ▷ wp E e2 Q ⊑ wp E (If LitFalse e1 e2) Q.
+Lemma wp_if_false E e1 e2 Q : ▷ wp E e2 Q ⊑ wp E (If LitFalse e1 e2) Q.
 Proof. rewrite -wp_case_inr //. by asimpl. Qed.
-Lemma wp_lt n1 n2 E P Q :
+Lemma wp_lt E n1 n2 P Q :
   (n1 < n2 → P ⊑ ▷ Q LitTrueV) →
   (n1 ≥ n2 → P ⊑ ▷ Q LitFalseV) →
   P ⊑ wp E (Lt (LitNat n1) (LitNat n2)) Q.
@@ -49,7 +49,7 @@ Proof.
   intros; rewrite -(wp_bind [LeLCtx _]) -wp_plus -later_intro /=.
   auto using wp_le with lia.
 Qed.
-Lemma wp_eq n1 n2 E P Q :
+Lemma wp_eq E n1 n2 P Q :
   (n1 = n2 → P ⊑ ▷ Q LitTrueV) →
   (n1 ≠ n2 → P ⊑ ▷ Q LitFalseV) →
   P ⊑ wp E (Eq (LitNat n1) (LitNat n2)) Q.
