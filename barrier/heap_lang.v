@@ -184,9 +184,6 @@ Inductive head_step : expr -> state -> expr -> state -> option expr -> Prop :=
      σ !! l = Some v1 →
      head_step (Cas (Loc l) e1 e2) σ LitTrue (<[l:=v2]>σ) None.
 
-Definition head_reducible e σ : Prop :=
-  ∃ e' σ' ef, head_step e σ e' σ' ef.
-
 (** Atomic expressions *)
 Definition atomic (e: expr) :=
   match e with
@@ -293,21 +290,6 @@ Proof.
   eauto using fill_item_inj, values_head_stuck, fill_not_val.
 Qed.
 
-Lemma prim_head_step e1 σ1 e2 σ2 ef :
-  head_reducible e1 σ1 →
-  prim_step e1 σ1 e2 σ2 ef →
-  head_step e1 σ1 e2 σ2 ef.
-Proof.
-  intros (e2'' & σ2'' & ef'' & Hstep'')  [K' e1' e2' Heq1 Heq2  Hstep].
-  assert (K' `prefix_of` []) as Hemp.
-  { eapply step_by_val; last first.
-    - eexact Hstep''.
-    - eapply values_head_stuck. eexact Hstep.
-    - done. }
-  destruct K'; last by (exfalso; eapply prefix_of_nil_not; eassumption).
-  by subst e1 e2.
-Qed.
-
 Lemma alloc_fresh e v σ :
   let l := fresh (dom _ σ) in
   to_val e = Some v → head_step (Alloc e) σ (Loc l) (<[l:=v]>σ) None.
@@ -338,12 +320,4 @@ Proof.
     rewrite heap_lang.fill_app in Heq1; apply (injective _) in Heq1.
     exists (fill K' e2''); rewrite heap_lang.fill_app; split; auto.
     econstructor; eauto.
-Qed.
-
-Lemma head_reducible_reducible e σ :
-  heap_lang.head_reducible e σ → reducible e σ.
-Proof.
-  intros H. destruct H; destruct_conjs.
-  do 3 eexists.
-  eapply heap_lang.Ectx_step with (K:=[]); last eassumption; done.
 Qed.
