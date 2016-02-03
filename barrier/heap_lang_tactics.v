@@ -83,4 +83,7 @@ Ltac do_step tac :=
        eapply Ectx_step with K e1' _; [reflexivity|reflexivity|];
        first [apply alloc_fresh|econstructor];
        rewrite ?to_of_val; tac; fail)
+  | |- head_step ?e1 ?σ1 ?e2 ?σ2 ?ef =>
+     first [apply alloc_fresh|econstructor];
+     rewrite ?to_of_val; tac; fail
   end.
