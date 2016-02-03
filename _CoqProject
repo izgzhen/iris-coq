@@ -63,8 +63,8 @@ iris/hoare.v
 iris/language.v
 iris/functor.v
 iris/tests.v
-barrier/heap_lang.v
-barrier/heap_lang_tactics.v
-barrier/lifting.v
-barrier/sugar.v
-barrier/tests.v
+heap_lang/heap_lang.v
+heap_lang/heap_lang_tactics.v
+heap_lang/lifting.v
+heap_lang/sugar.v
+heap_lang/tests.v
