@@ -313,3 +313,10 @@ Proof.
     exists (heap_lang.fill K' e2''); rewrite heap_lang.fill_app; split; auto.
     econstructor; eauto.
 Qed.
+
+Global Instance heap_lang_ctx_item Ki :
+  LanguageCtx heap_lang (heap_lang.fill_item Ki).
+Proof.
+  change (LanguageCtx heap_lang (heap_lang.fill [Ki])).
+  by apply _.
+Qed.

@@ -13,7 +13,11 @@ Implicit Types K : ectx.
 (** Bind. *)
 Lemma wp_bind {E e} K Q :
   wp E e (λ v, wp E (fill K (of_val v)) Q) ⊑ wp E (fill K e) Q.
-Proof. apply wp_bind. Qed.
+Proof. apply weakestpre.wp_bind. Qed.
+
+Lemma wp_bindi {E e} Ki Q :
+  wp E e (λ v, wp E (fill_item Ki (of_val v)) Q) ⊑ wp E (fill_item Ki e) Q.
+Proof. apply weakestpre.wp_bind. Qed.
 
 (** Base axioms for core primitives of the language: Stateful reductions. *)
 Lemma wp_alloc_pst E σ e v Q :

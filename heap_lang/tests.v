@@ -34,9 +34,9 @@ Module LiftingTests.
     rewrite -later_intro. apply forall_intro=>l.
     apply wand_intro_l. rewrite right_id. apply const_elim_l; move=>_.
     rewrite -later_intro. asimpl.
-    rewrite -(wp_bind [SeqCtx (Load (Loc _))]).
-    rewrite -(wp_bind [StoreRCtx (LocV _)]).
-    rewrite -(wp_bind [PlusLCtx _]).
+    rewrite -(wp_bindi (SeqCtx (Load (Loc _)))).
+    rewrite -(wp_bindi (StoreRCtx (LocV _))).
+    rewrite -(wp_bindi (PlusLCtx _)).
     rewrite -wp_load_pst; first (apply sep_intro_True_r; first done); last first.
     { by rewrite lookup_insert. } (* RJ TODO: figure out why apply and eapply fail. *)
     rewrite -later_intro. apply wand_intro_l. rewrite right_id.
@@ -75,7 +75,7 @@ Module LiftingTests.
     (* Go on. *)
     rewrite -(wp_let _ _ (FindPred' (LitNat n1) (Var 0) (LitNat n2) (FindPred $ LitNat n2))).
     rewrite -wp_plus. asimpl.
-    rewrite -(wp_bind [CaseCtx _ _]).
+    rewrite -(wp_bindi (CaseCtx _ _)).
     rewrite -!later_intro /=.
     apply wp_lt; intros Hn12.
     * (* TODO RJ: It would be better if we could use wp_if_true here
@@ -97,7 +97,7 @@ Module LiftingTests.
     ▷Q (LitNatV $ pred n) ⊑ wp E (App Pred (LitNat n)) Q.
   Proof.
     rewrite -wp_lam //. asimpl.
-    rewrite -(wp_bind [CaseCtx _ _]).
+    rewrite -(wp_bindi (CaseCtx _ _)).
     apply later_mono, wp_le=> Hn.
     - rewrite -wp_case_inl //.
       rewrite -!later_intro -wp_value' //.
