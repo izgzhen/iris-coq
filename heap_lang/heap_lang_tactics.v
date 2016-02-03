@@ -1,4 +1,4 @@
-Require Export barrier.heap_lang.
+Require Export heap_lang.heap_lang.
 Require Import prelude.fin_maps.
 Import heap_lang.
 

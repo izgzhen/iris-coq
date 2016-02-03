@@ -1,4 +1,4 @@
-Require Export barrier.heap_lang barrier.lifting.
+Require Export heap_lang.heap_lang heap_lang.lifting.
 Import uPred.
 Import heap_lang.
 

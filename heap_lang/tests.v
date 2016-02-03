@@ -1,6 +1,6 @@
 (** This file is essentially a bunch of testcases. *)
 Require Import modures.logic.
-Require Import barrier.lifting barrier.sugar.
+Require Import heap_lang.lifting heap_lang.sugar.
 Import heap_lang.
 Import uPred.
 
