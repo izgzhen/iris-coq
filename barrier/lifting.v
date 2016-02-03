@@ -21,10 +21,8 @@ Lemma wp_alloc_pst E σ e v Q :
   (ownP σ ★ ▷ (∀ l, ■(σ !! l = None) ∧ ownP (<[l:=v]>σ) -★ Q (LocV l)))
        ⊑ wp E (Alloc e) Q.
 Proof.
-  (* TODO RJ: Without the set, ssreflect rewrite doesn't work. Figure out why or
-     reprot a bug. *)
-  intros. set (φ v' σ' ef := ∃ l, ef = @None expr ∧ v' = LocV l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None).
-  rewrite -(wp_lift_atomic_step (Alloc e) φ σ) // /φ;
+  intros; rewrite -(wp_lift_atomic_step (Alloc e) (λ v' σ' ef,
+    ∃ l, ef = None ∧ v' = LocV l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None) σ) //;
     last by intros; inv_step; eauto 8.
   apply sep_mono, later_mono; first done.
   apply forall_intro=>e2; apply forall_intro=>σ2; apply forall_intro=>ef.
