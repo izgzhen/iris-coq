@@ -148,7 +148,7 @@ Proof. done. Qed.
 
 Lemma auth_update a a' b b' :
   (∀ n af, ✓{n} a → a ={n}= a' ⋅ af → b ={n}= b' ⋅ af ∧ ✓{n} b) →
-  ● a ⋅ ◯ a' ⇝ ● b ⋅ ◯ b'.
+  ● a ⋅ ◯ a' ~~> ● b ⋅ ◯ b'.
 Proof.
   move=> Hab [[] bf1] n // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
   destruct (Hab (S n) (bf1 ⋅ bf2)) as [Ha' ?]; auto.
@@ -156,13 +156,13 @@ Proof.
   split; [by rewrite Ha' left_id associative; apply cmra_includedN_l|done].
 Qed.
 Lemma auth_update_op_l a a' b :
-  ✓ (b ⋅ a) → ● a ⋅ ◯ a' ⇝ ● (b ⋅ a) ⋅ ◯ (b ⋅ a').
+  ✓ (b ⋅ a) → ● a ⋅ ◯ a' ~~> ● (b ⋅ a) ⋅ ◯ (b ⋅ a').
 Proof.
   intros; apply auth_update.
   by intros n af ? Ha; split; [by rewrite Ha associative|].
 Qed.
 Lemma auth_update_op_r a a' b :
-  ✓ (a ⋅ b) → ● a ⋅ ◯ a' ⇝ ● (a ⋅ b) ⋅ ◯ (a' ⋅ b).
+  ✓ (a ⋅ b) → ● a ⋅ ◯ a' ~~> ● (a ⋅ b) ⋅ ◯ (a' ⋅ b).
 Proof. rewrite -!(commutative _ b); apply auth_update_op_l. Qed.
 End cmra.
 

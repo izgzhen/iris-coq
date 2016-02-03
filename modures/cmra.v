@@ -144,10 +144,10 @@ Class CMRAMonotone {A B : cmraT} (f : A → B) := {
 Definition cmra_updateP {A : cmraT} (x : A) (P : A → Prop) := ∀ z n,
   ✓{S n} (x ⋅ z) → ∃ y, P y ∧ ✓{S n} (y ⋅ z).
 Instance: Params (@cmra_updateP) 1.
-Infix "⇝:" := cmra_updateP (at level 70).
+Infix "~~>:" := cmra_updateP (at level 70).
 Definition cmra_update {A : cmraT} (x y : A) := ∀ z n,
   ✓{S n} (x ⋅ z) → ✓{S n} (y ⋅ z).
-Infix "⇝" := cmra_update (at level 70).
+Infix "~~>" := cmra_update (at level 70).
 Instance: Params (@cmra_update) 1.
 
 (** * Properties **)
@@ -323,24 +323,24 @@ End identity.
 (** ** Updates *)
 Global Instance cmra_update_preorder : PreOrder (@cmra_update A).
 Proof. split. by intros x y. intros x y y' ?? z ?; naive_solver. Qed.
-Lemma cmra_update_updateP x y : x ⇝ y ↔ x ⇝: (y =).
+Lemma cmra_update_updateP x y : x ~~> y ↔ x ~~>: (y =).
 Proof.
   split.
   * by intros Hx z ?; exists y; split; [done|apply (Hx z)].
   * by intros Hx z n ?; destruct (Hx z n) as (?&<-&?).
 Qed.
-Lemma cmra_updateP_id (P : A → Prop) x : P x → x ⇝: P.
+Lemma cmra_updateP_id (P : A → Prop) x : P x → x ~~>: P.
 Proof. by intros ? z n ?; exists x. Qed.
 Lemma cmra_updateP_compose (P Q : A → Prop) x :
-  x ⇝: P → (∀ y, P y → y ⇝: Q) → x ⇝: Q.
+  x ~~>: P → (∀ y, P y → y ~~>: Q) → x ~~>: Q.
 Proof.
   intros Hx Hy z n ?. destruct (Hx z n) as (y&?&?); auto. by apply (Hy y).
 Qed.
-Lemma cmra_updateP_weaken (P Q : A → Prop) x : x ⇝: P → (∀ y, P y → Q y) → x ⇝: Q.
+Lemma cmra_updateP_weaken (P Q : A → Prop) x : x ~~>: P → (∀ y, P y → Q y) → x ~~>: Q.
 Proof. eauto using cmra_updateP_compose, cmra_updateP_id. Qed.
 
 Lemma cmra_updateP_op (P1 P2 Q : A → Prop) x1 x2 :
-  x1 ⇝: P1 → x2 ⇝: P2 → (∀ y1 y2, P1 y1 → P2 y2 → Q (y1 ⋅ y2)) → x1 ⋅ x2 ⇝: Q.
+  x1 ~~>: P1 → x2 ~~>: P2 → (∀ y1 y2, P1 y1 → P2 y2 → Q (y1 ⋅ y2)) → x1 ⋅ x2 ~~>: Q.
 Proof.
   intros Hx1 Hx2 Hy z n ?.
   destruct (Hx1 (x2 ⋅ z) n) as (y1&?&?); first by rewrite associative.
@@ -349,9 +349,9 @@ Proof.
   exists (y1 ⋅ y2); split; last rewrite (commutative _ y1) -associative; auto.
 Qed.
 Lemma cmra_updateP_op' (P1 P2 : A → Prop) x1 x2 :
-  x1 ⇝: P1 → x2 ⇝: P2 → x1 ⋅ x2 ⇝: λ y, ∃ y1 y2, y = y1 ⋅ y2 ∧ P1 y1 ∧ P2 y2.
+  x1 ~~>: P1 → x2 ~~>: P2 → x1 ⋅ x2 ~~>: λ y, ∃ y1 y2, y = y1 ⋅ y2 ∧ P1 y1 ∧ P2 y2.
 Proof. eauto 10 using cmra_updateP_op. Qed.
-Lemma cmra_update_op x1 x2 y1 y2 : x1 ⇝ y1 → x2 ⇝ y2 → x1 ⋅ x2 ⇝ y1 ⋅ y2.
+Lemma cmra_update_op x1 x2 y1 y2 : x1 ~~> y1 → x2 ~~> y2 → x1 ⋅ x2 ~~> y1 ⋅ y2.
 Proof.
   rewrite !cmra_update_updateP; eauto using cmra_updateP_op with congruence.
 Qed.
@@ -422,10 +422,10 @@ Section discrete.
   Definition discreteRA : cmraT :=
     CMRAT (cofe_mixin A) discrete_cmra_mixin discrete_extend_mixin.
   Lemma discrete_updateP (x : discreteRA) (P : A → Prop) :
-    (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → x ⇝: P.
+    (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → x ~~>: P.
   Proof. intros Hvalid z n; apply Hvalid. Qed.
   Lemma discrete_update (x y : discreteRA) :
-    (∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z)) → x ⇝ y.
+    (∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z)) → x ~~> y.
   Proof. intros Hvalid z n; apply Hvalid. Qed.
 End discrete.
 
@@ -499,17 +499,17 @@ Section prod.
     * by split; rewrite /=left_id.
     * by intros ? [??]; split; apply (timeless _).
   Qed.
-  Lemma prod_update x y : x.1 ⇝ y.1 → x.2 ⇝ y.2 → x ⇝ y.
+  Lemma prod_update x y : x.1 ~~> y.1 → x.2 ~~> y.2 → x ~~> y.
   Proof. intros ?? z n [??]; split; simpl in *; auto. Qed.
   Lemma prod_updateP P1 P2 (Q : A * B → Prop)  x :
-    x.1 ⇝: P1 → x.2 ⇝: P2 → (∀ a b, P1 a → P2 b → Q (a,b)) → x ⇝: Q.
+    x.1 ~~>: P1 → x.2 ~~>: P2 → (∀ a b, P1 a → P2 b → Q (a,b)) → x ~~>: Q.
   Proof.
     intros Hx1 Hx2 HP z n [??]; simpl in *.
     destruct (Hx1 (z.1) n) as (a&?&?), (Hx2 (z.2) n) as (b&?&?); auto.
     exists (a,b); repeat split; auto.
   Qed.
   Lemma prod_updateP' P1 P2 x :
-    x.1 ⇝: P1 → x.2 ⇝: P2 → x ⇝: λ y, P1 (y.1) ∧ P2 (y.2).
+    x.1 ~~>: P1 → x.2 ~~>: P2 → x ~~>: λ y, P1 (y.1) ∧ P2 (y.2).
   Proof. eauto using prod_updateP. Qed.
 End prod.
 Arguments prodRA : clear implicits.

@@ -131,7 +131,7 @@ Proof.
 Qed.
 Definition validityRA : cmraT := discreteRA validity_ra.
 Definition validity_update (x y : validityRA) :
-  (∀ z, ✓ x → ✓ z → validity_car x ⊥ z → ✓ y ∧ validity_car y ⊥ z) → x ⇝ y.
+  (∀ z, ✓ x → ✓ z → validity_car x ⊥ z → ✓ y ∧ validity_car y ⊥ z) → x ~~> y.
 Proof.
   intros Hxy. apply discrete_update.
   intros z (?&?&?); split_ands'; try eapply Hxy; eauto.

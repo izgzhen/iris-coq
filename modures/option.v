@@ -140,7 +140,7 @@ Lemma option_op_positive_dist_r n mx my : mx ⋅ my ={n}= None → my ={n}= None
 Proof. by destruct mx, my; inversion_clear 1. Qed.
 
 Lemma option_updateP (P : A → Prop) (Q : option A → Prop) x :
-  x ⇝: P → (∀ y, P y → Q (Some y)) → Some x ⇝: Q.
+  x ~~>: P → (∀ y, P y → Q (Some y)) → Some x ~~>: Q.
 Proof.
   intros Hx Hy [y|] n ?.
   { destruct (Hx y n) as (y'&?&?); auto. exists (Some y'); auto. }
@@ -148,9 +148,9 @@ Proof.
   by exists (Some y'); split; [auto|apply cmra_validN_op_l with (unit x)].
 Qed.
 Lemma option_updateP' (P : A → Prop) x :
-  x ⇝: P → Some x ⇝: λ y, default False y P.
+  x ~~>: P → Some x ~~>: λ y, default False y P.
 Proof. eauto using option_updateP. Qed.
-Lemma option_update x y : x ⇝ y → Some x ⇝ Some y.
+Lemma option_update x y : x ~~> y → Some x ~~> Some y.
 Proof.
   rewrite !cmra_update_updateP; eauto using option_updateP with congruence.
 Qed.

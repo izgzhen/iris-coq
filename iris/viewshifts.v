@@ -87,9 +87,9 @@ Proof.
   apply vs_close.
 Qed.
 Lemma vs_updateP E m (P : iGst Λ Σ → Prop) :
-  m ⇝: P → ownG m >{E}> (∃ m', ■ P m' ∧ ownG m').
+  m ~~>: P → ownG m >{E}> (∃ m', ■ P m' ∧ ownG m').
 Proof. by intros; apply vs_alt, pvs_updateP. Qed.
-Lemma vs_update E m m' : m ⇝ m' → ownG m >{E}> ownG m'.
+Lemma vs_update E m m' : m ~~> m' → ownG m >{E}> ownG m'.
 Proof. by intros; apply vs_alt, pvs_update. Qed.
 Lemma vs_alloc E P : ¬set_finite E → ▷ P >{E}> (∃ i, ■ (i ∈ E) ∧ inv i P).
 Proof. by intros; apply vs_alt, pvs_alloc. Qed.

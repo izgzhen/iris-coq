@@ -97,7 +97,7 @@ Proof.
   * apply uPred_weaken with r n; auto.
 Qed.
 Lemma pvs_updateP E m (P : iGst Λ Σ → Prop) :
-  m ⇝: P → ownG m ⊑ pvs E E (∃ m', ■ P m' ∧ ownG m').
+  m ~~>: P → ownG m ⊑ pvs E E (∃ m', ■ P m' ∧ ownG m').
 Proof.
   intros Hup r [|n] ? Hinv%ownG_spec rf [|k] Ef σ ???; try lia.
   destruct (wsat_update_gst k (E ∪ Ef) σ r rf m P)
@@ -136,7 +136,7 @@ Lemma pvs_mask_weaken E1 E2 P : E1 ⊆ E2 → pvs E1 E1 P ⊑ pvs E2 E2 P.
 Proof.
   intros; rewrite (union_difference_L E1 E2) //; apply pvs_mask_frame; auto.
 Qed.
-Lemma pvs_update E m m' : m ⇝ m' → ownG m ⊑ pvs E E (ownG m').
+Lemma pvs_update E m m' : m ~~> m' → ownG m ⊑ pvs E E (ownG m').
 Proof.
   intros; rewrite ->(pvs_updateP E _ (m' =)); last by apply cmra_update_updateP.
   by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.const_elim_l=> ->.

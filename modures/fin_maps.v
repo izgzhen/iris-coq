@@ -193,7 +193,7 @@ Proof.
 Qed.
 
 Lemma map_insert_updateP (P : A → Prop) (Q : gmap K A → Prop) m i x :
-  x ⇝: P → (∀ y, P y → Q (<[i:=y]>m)) → <[i:=x]>m ⇝: Q.
+  x ~~>: P → (∀ y, P y → Q (<[i:=y]>m)) → <[i:=x]>m ~~>: Q.
 Proof.
   intros Hx%option_updateP' HP mf n Hm.
   destruct (Hx (mf !! i) n) as ([y|]&?&?); try done.
@@ -203,16 +203,16 @@ Proof.
   destruct (decide (i = j)); simplify_map_equality'; auto.
 Qed.
 Lemma map_insert_updateP' (P : A → Prop) (Q : gmap K A → Prop) m i x :
-  x ⇝: P → <[i:=x]>m ⇝: λ m', ∃ y, m' = <[i:=y]>m ∧ P y.
+  x ~~>: P → <[i:=x]>m ~~>: λ m', ∃ y, m' = <[i:=y]>m ∧ P y.
 Proof. eauto using map_insert_updateP. Qed.
-Lemma map_insert_update m i x y : x ⇝ y → <[i:=x]>m ⇝ <[i:=y]>m.
+Lemma map_insert_update m i x y : x ~~> y → <[i:=x]>m ~~> <[i:=y]>m.
 Proof.
   rewrite !cmra_update_updateP; eauto using map_insert_updateP with congruence.
 Qed.
 
 Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
 Lemma map_updateP_alloc (Q : gmap K A → Prop) m x :
-  ✓ x → (∀ i, m !! i = None → Q (<[i:=x]>m)) → m ⇝: Q.
+  ✓ x → (∀ i, m !! i = None → Q (<[i:=x]>m)) → m ~~>: Q.
 Proof.
   intros ? HQ mf n Hm. set (i := fresh (dom (gset K) (m ⋅ mf))).
   assert (i ∉ dom (gset K) m ∧ i ∉ dom (gset K) mf) as [??].
@@ -222,7 +222,7 @@ Proof.
   by apply map_insert_validN; [apply cmra_valid_validN|].
 Qed.
 Lemma map_updateP_alloc' m x :
-  ✓ x → m ⇝: λ m', ∃ i, m' = <[i:=x]>m ∧ m !! i = None.
+  ✓ x → m ~~>: λ m', ∃ i, m' = <[i:=x]>m ∧ m !! i = None.
 Proof. eauto using map_updateP_alloc. Qed.
 End properties.
 

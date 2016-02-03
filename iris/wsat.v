@@ -125,7 +125,7 @@ Proof.
   by constructor; split_ands'; try (rewrite /= -associative Hpst').
 Qed.
 Lemma wsat_update_gst n E σ r rf m1 (P : iGst Λ Σ → Prop) :
-  m1 ≼{S n} gst r → m1 ⇝: P →
+  m1 ≼{S n} gst r → m1 ~~>: P →
   wsat (S n) E σ (r ⋅ rf) → ∃ m2, wsat (S n) E σ (update_gst m2 r ⋅ rf) ∧ P m2.
 Proof.
   intros [mf Hr] Hup [rs [(?&?&?) Hσ HE Hwld]].

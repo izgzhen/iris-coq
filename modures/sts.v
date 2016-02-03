@@ -210,7 +210,7 @@ Canonical Structure stsRA := validityRA (sts R tok).
 Definition sts_auth (s : A) (T : set B) : stsRA := to_validity (auth s T).
 Definition sts_frag (S : set A) (T : set B) : stsRA := to_validity (frag S T).
 Lemma sts_update s1 s2 T1 T2 :
-  sts.step R tok (s1,T1) (s2,T2) → sts_auth s1 T1 ⇝ sts_auth s2 T2.
+  sts.step R tok (s1,T1) (s2,T2) → sts_auth s1 T1 ~~> sts_auth s2 T2.
 Proof.
   intros ?; apply validity_update; inversion 3 as [|? S ? Tf|]; subst.
   destruct (sts.step_closed R tok s1 s2 T1 T2 S Tf) as (?&?&?); auto.
