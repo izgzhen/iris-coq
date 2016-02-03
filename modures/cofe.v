@@ -399,4 +399,4 @@ Section iprod_cofe.
   Canonical Structure iprodC : cofeT := CofeT iprod_cofe_mixin.
 End iprod_cofe.
 
-Arguments iprodC : clear implicits.
+Arguments iprodC {_} _.

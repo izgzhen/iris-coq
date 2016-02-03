@@ -572,4 +572,4 @@ Section iprod_cmra.
     CMRAT iprod_cofe_mixin iprod_cmra_mixin iprod_cmra_extend_mixin.
 End iprod_cmra.
 
-Arguments iprodRA : clear implicits.
+Arguments iprodRA {_} _.
