@@ -522,11 +522,6 @@ Proof.
     by split; apply includedN_preserving.
   * by intros n x [??]; split; simpl; apply validN_preserving.
 Qed.
-Definition prodRA_map {A A' B B' : cmraT}
-    (f : A -n> A') (g : B -n> B') : prodRA A B -n> prodRA A' B' :=
-  CofeMor (prod_map f g : prodRA A B → prodRA A' B').
-Instance prodRA_map_ne {A A' B B'} n :
-  Proper (dist n==> dist n==> dist n) (@prodRA_map A A' B B') := prodC_map_ne n.
 
 (** ** Indexed product *)
 Section iprod_cmra.
@@ -631,7 +626,3 @@ Proof.
     rewrite /iprod_map; apply includedN_preserving, Hf.
   * intros n g Hg x; rewrite /iprod_map; apply validN_preserving, Hg.
 Qed.
-Definition iprodRA_map {A} {B1 B2: A → cmraT} (f : iprod (λ x, B1 x -n> B2 x)) :
-  iprodRA B1 -n> iprodRA B2 := CofeMor (iprod_map f).
-Instance laterRA_map_ne {A} {B1 B2 : A → cmraT} n :
-  Proper (dist n ==> dist n) (@iprodRA_map A B1 B2) := _.

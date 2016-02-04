@@ -174,7 +174,7 @@ Proof.
     by destruct x, z; constructor.
   * by intros n [a| |].
 Qed.
-Definition exclRA_map {A B} (f : A -n> B) : exclRA A -n> exclRA B :=
+Definition exclC_map {A B} (f : A -n> B) : exclC A -n> exclC B :=
   CofeMor (fmap f : exclRA A → exclRA B).
-Lemma exclRA_map_ne A B n : Proper (dist n ==> dist n) (@exclRA_map A B).
+Instance exclC_map_ne A B n : Proper (dist n ==> dist n) (@exclC_map A B).
 Proof. by intros f f' Hf []; constructor; apply Hf. Qed.

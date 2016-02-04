@@ -226,18 +226,10 @@ Lemma map_updateP_alloc' m x :
 Proof. eauto using map_updateP_alloc. Qed.
 End properties.
 
+(** Functor *)
 Instance map_fmap_ne `{Countable K} {A B : cofeT} (f : A → B) n :
   Proper (dist n ==> dist n) f → Proper (dist n ==>dist n) (fmap (M:=gmap K) f).
 Proof. by intros ? m m' Hm k; rewrite !lookup_fmap; apply option_fmap_ne. Qed.
-Definition mapC_map `{Countable K} {A B} (f: A -n> B) : mapC K A -n> mapC K B :=
-  CofeMor (fmap f : mapC K A → mapC K B).
-Instance mapC_map_ne `{Countable K} {A B} n :
-  Proper (dist n ==> dist n) (@mapC_map K _ _ A B).
-Proof.
-  intros f g Hf m k; rewrite /= !lookup_fmap.
-  destruct (_ !! k) eqn:?; simpl; constructor; apply Hf.
-Qed.
-
 Instance map_fmap_cmra_monotone `{Countable K} {A B : cmraT} (f : A → B)
   `{!CMRAMonotone f} : CMRAMonotone (fmap f : gmap K A → gmap K B).
 Proof.
@@ -246,9 +238,11 @@ Proof.
     by rewrite !lookup_fmap; apply: includedN_preserving.
   * by intros n m ? i; rewrite lookup_fmap; apply validN_preserving.
 Qed.
-Definition mapRA_map `{Countable K} {A B : cmraT} (f : A -n> B) :
-  mapRA K A -n> mapRA K B := CofeMor (fmap f : mapRA K A → mapRA K B).
-Instance mapRA_map_ne `{Countable K} {A B} n :
-  Proper (dist n ==> dist n) (@mapRA_map K _ _ A B) := mapC_map_ne n.
-Instance mapRA_map_monotone `{Countable K} {A B : cmraT} (f : A -n> B)
-  `{!CMRAMonotone f} : CMRAMonotone (mapRA_map f) := _.
+Definition mapC_map `{Countable K} {A B} (f: A -n> B) : mapC K A -n> mapC K B :=
+  CofeMor (fmap f : mapC K A → mapC K B).
+Instance mapC_map_ne `{Countable K} {A B} n :
+  Proper (dist n ==> dist n) (@mapC_map K _ _ A B).
+Proof.
+  intros f g Hf m k; rewrite /= !lookup_fmap.
+  destruct (_ !! k) eqn:?; simpl; constructor; apply Hf.
+Qed.

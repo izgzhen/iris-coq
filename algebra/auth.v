@@ -177,7 +177,7 @@ Proof. by destruct x; rewrite /= excl_fmap_id. Qed.
 Lemma excl_fmap_compose {A B C} (f : A → B) (g : B → C) (x : auth A) :
   g ∘ f <$> x = g <$> f <$> x.
 Proof. by destruct x; rewrite /= excl_fmap_compose. Qed.
-Instance auth_fmap_cmra_ne {A B : cmraT} n :
+Instance auth_fmap_cmra_ne {A B : cofeT} n :
   Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@fmap auth _ A B).
 Proof.
   intros f g Hf [??] [??] [??]; split; [by apply excl_fmap_cmra_ne|by apply Hf].
@@ -192,7 +192,7 @@ Proof.
   * intros n [[a| |] b]; rewrite /= /cmra_validN;
       naive_solver eauto using @includedN_preserving, @validN_preserving.
 Qed.
-Definition authRA_map {A B : cmraT} (f : A -n> B) : authRA A -n> authRA B :=
-  CofeMor (fmap f : authRA A → authRA B).
-Lemma authRA_map_ne A B n : Proper (dist n ==> dist n) (@authRA_map A B).
+Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=
+  CofeMor (fmap f : authC A → authC B).
+Lemma authC_map_ne A B n : Proper (dist n ==> dist n) (@authC_map A B).
 Proof. intros f f' Hf [[a| |] b]; repeat constructor; apply Hf. Qed.

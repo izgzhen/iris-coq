@@ -57,10 +57,6 @@ End cofe.
 
 Arguments optionC : clear implicits.
 
-Instance option_fmap_ne {A B : cofeT} (f : A → B) n:
-  Proper (dist n ==> dist n) f → Proper (dist n==>dist n) (fmap (M:=option) f).
-Proof. by intros Hf; destruct 1; constructor; apply Hf. Qed.
-
 (* CMRA *)
 Section cmra.
 Context {A : cmraT}.
@@ -158,6 +154,10 @@ End cmra.
 
 Arguments optionRA : clear implicits.
 
+(** Functor *)
+Instance option_fmap_ne {A B : cofeT} (f : A → B) n:
+  Proper (dist n ==> dist n) f → Proper (dist n==>dist n) (fmap (M:=option) f).
+Proof. by intros Hf; destruct 1; constructor; apply Hf. Qed.
 Instance option_fmap_cmra_monotone {A B : cmraT} (f: A → B) `{!CMRAMonotone f} :
   CMRAMonotone (fmap f : option A → option B).
 Proof.
@@ -166,3 +166,7 @@ Proof.
     intros [->|[->|(x&y&->&->&?)]]; simpl; eauto 10 using @includedN_preserving.
   * by intros n [x|] ?; rewrite /cmra_validN /=; try apply validN_preserving.
 Qed.
+Definition optionC_map {A B} (f : A -n> B) : optionC A -n> optionC B :=
+  CofeMor (fmap f : optionC A → optionC B).
+Instance optionC_map_ne A B n : Proper (dist n ==> dist n) (@optionC_map A B).
+Proof. by intros f f' Hf []; constructor; apply Hf. Qed.

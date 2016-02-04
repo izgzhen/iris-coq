@@ -39,9 +39,7 @@ Proof. by destruct 1. Qed.
 Global Instance pst_ne n : Proper (dist n ==> dist n) (@pst Λ Σ A).
 Proof. by destruct 1. Qed.
 Global Instance pst_ne' n : Proper (dist (S n) ==> (≡)) (@pst Λ Σ A).
-Proof.
-  intros σ σ' [???]; apply (timeless _), dist_le with (S n); auto with lia.
-Qed.
+Proof. destruct 1; apply (timeless _), dist_le with (S n); auto with lia. Qed.
 Global Instance pst_proper : Proper ((≡) ==> (=)) (@pst Λ Σ A).
 Proof. by destruct 1; unfold_leibniz. Qed.
 Global Instance gst_ne n : Proper (dist n ==> dist n) (@gst Λ Σ A).
@@ -164,6 +162,8 @@ Qed.
 Global Instance Res_timeless eσ m : Timeless m → Timeless (Res ∅ eσ m).
 Proof. by intros ? ? [???]; constructor; apply (timeless _). Qed.
 End res.
+
+Arguments resC : clear implicits.
 Arguments resRA : clear implicits.
 
 Definition res_map {Λ Σ A B} (f : A -n> B) (r : res Λ Σ A) : res Λ Σ B :=
@@ -196,8 +196,6 @@ Proof.
   * by apply map_fmap_setoid_ext=>i x ?; apply agree_map_ext.
   * by apply ifunctor_map_ext.
 Qed.
-Definition resRA_map {Λ Σ A B} (f : A -n> B) : resRA Λ Σ A -n> resRA Λ Σ B :=
-  CofeMor (res_map f : resRA Λ Σ A → resRA Λ Σ B).
 Instance res_map_cmra_monotone {Λ Σ} {A B : cofeT} (f : A -n> B) :
   CMRAMonotone (@res_map Λ Σ _ _ f).
 Proof.
@@ -206,10 +204,12 @@ Proof.
       intros (?&?&?); split_ands'; simpl; try apply includedN_preserving.
   * by intros n r (?&?&?); split_ands'; simpl; try apply validN_preserving.
 Qed.
-Instance resRA_map_ne {Λ Σ A B} n :
-  Proper (dist n ==> dist n) (@resRA_map Λ Σ A B).
+Definition resC_map {Λ Σ A B} (f : A -n> B) : resC Λ Σ A -n> resC Λ Σ B :=
+  CofeMor (res_map f : resRA Λ Σ A → resRA Λ Σ B).
+Instance resC_map_ne {Λ Σ A B} n :
+  Proper (dist n ==> dist n) (@resC_map Λ Σ A B).
 Proof.
   intros f g Hfg r; split; simpl; auto.
-  * by apply (mapRA_map_ne _ (agreeRA_map f) (agreeRA_map g)), agreeRA_map_ne.
+  * by apply (mapC_map_ne _ (agreeC_map f) (agreeC_map g)), agreeC_map_ne.
   * by apply ifunctor_map_ne.
 Qed.

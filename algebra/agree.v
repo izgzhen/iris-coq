@@ -167,9 +167,9 @@ Section agree_map.
   Qed.
 End agree_map.
 
-Definition agreeRA_map {A B} (f : A -n> B) : agreeRA A -n> agreeRA B :=
-  CofeMor (agree_map f : agreeRA A → agreeRA B).
-Instance agreeRA_map_ne A B n : Proper (dist n ==> dist n) (@agreeRA_map A B).
+Definition agreeC_map {A B} (f : A -n> B) : agreeC A -n> agreeC B :=
+  CofeMor (agree_map f : agreeC A → agreeC B).
+Instance agreeC_map_ne A B n : Proper (dist n ==> dist n) (@agreeC_map A B).
 Proof.
   intros f g Hfg x; split; simpl; intros; first done.
   by apply dist_le with n; try apply Hfg.

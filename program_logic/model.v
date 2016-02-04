@@ -6,7 +6,7 @@ Definition F (Λ : language) (Σ : iFunctor) (A B : cofeT) : cofeT :=
   uPredC (resRA Λ Σ (laterC A)).
 Definition map {Λ : language} {Σ : iFunctor} {A1 A2 B1 B2 : cofeT}
     (f : (A2 -n> A1) * (B1 -n> B2)) : F Λ Σ A1 B1 -n> F Λ Σ A2 B2 :=
-  uPredC_map (resRA_map (laterC_map (f.1))).
+  uPredC_map (resC_map (laterC_map (f.1))).
 Definition result Λ Σ : solution (F Λ Σ).
 Proof.
   apply (solver.result _ (@map Λ Σ)).
@@ -18,7 +18,7 @@ Proof.
     rewrite -res_map_compose. apply res_map_ext=>{r} r /=.
     by rewrite -later_map_compose.
   * intros A1 A2 B1 B2 n f f' [??] P.
-    by apply upredC_map_ne, resRA_map_ne, laterC_map_contractive.
+    by apply upredC_map_ne, resC_map_ne, laterC_map_contractive.
 Qed.
 End iProp.
 
