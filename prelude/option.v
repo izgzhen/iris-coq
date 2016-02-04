@@ -148,6 +148,12 @@ Proof. by destruct x. Qed.
 Lemma option_fmap_compose {A B} (f : A → B) {C} (g : B → C) x :
   g ∘ f <$> x = g <$> f <$> x.
 Proof. by destruct x. Qed.
+Lemma option_fmap_ext {A B} (f g : A → B) x :
+  (∀ y, f y = g y) → f <$> x = g <$> x.
+Proof. destruct x; simpl; auto with f_equal. Qed.
+Lemma option_fmap_setoid_ext `{Equiv A, Equiv B} (f g : A → B) x :
+  (∀ y, f y ≡ g y) → f <$> x ≡ g <$> x.
+Proof. destruct x; constructor; auto. Qed.
 Lemma option_fmap_bind {A B C} (f : A → B) (g : B → option C) x :
   (f <$> x) ≫= g = x ≫= g ∘ f.
 Proof. by destruct x. Qed.
