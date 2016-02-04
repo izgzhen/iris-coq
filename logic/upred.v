@@ -812,9 +812,7 @@ Proof. move => x n Hv [a' ?]; cofe_subst; eauto using cmra_validN_op_l. Qed.
 Lemma valid_intro {A : cmraT} (a : A) : ✓ a → True ⊑ (✓ a).
 Proof. by intros ? x n ? _; simpl; apply cmra_valid_validN. Qed.
 Lemma valid_elim {A : cmraT} (a : A) : ¬ ✓{1} a → (✓ a) ⊑ False.
-Proof.
-  intros Ha x [|n] ??; [|apply Ha, cmra_validN_le with (S n)]; auto with lia.
-Qed.
+Proof. intros Ha x [|n] ??; [|apply Ha, cmra_validN_le with (S n)]; auto. Qed.
 Lemma valid_mono {A B : cmraT} (a : A) (b : B) :
   (∀ n, ✓{n} a → ✓{n} b) → (✓ a) ⊑ (✓ b).
 Proof. by intros ? x n ?; simpl; auto. Qed.
@@ -832,26 +830,20 @@ Global Instance uPred_big_and_perm : Proper ((≡ₚ) ==> (≡)) (@uPred_big_and
 Proof.
   induction 1 as [|P Ps Qs ? IH|P Q Ps|]; simpl; auto.
   * by rewrite IH.
-  * by rewrite !(associative _) (commutative _ P).
+  * by rewrite !associative (commutative _ P).
   * etransitivity; eauto.
 Qed.
 Global Instance uPred_big_sep_perm : Proper ((≡ₚ) ==> (≡)) (@uPred_big_sep M).
 Proof.
   induction 1 as [|P Ps Qs ? IH|P Q Ps|]; simpl; auto.
   * by rewrite IH.
-  * by rewrite !(associative _) (commutative _ P).
+  * by rewrite !associative (commutative _ P).
   * etransitivity; eauto.
 Qed.
 Lemma uPred_big_and_app Ps Qs : (Π∧ (Ps ++ Qs))%I ≡ (Π∧ Ps ∧ Π∧ Qs)%I.
-Proof.
-  by induction Ps as [|P Ps IH];
-    rewrite /= ?(left_id _ _) -?(associative _) ?IH.
-Qed.
+Proof. by induction Ps as [|?? IH]; rewrite /= ?left_id -?associative ?IH. Qed.
 Lemma uPred_big_sep_app Ps Qs : (Π★ (Ps ++ Qs))%I ≡ (Π★ Ps ★ Π★ Qs)%I.
-Proof.
-  by induction Ps as [|P Ps IH];
-    rewrite /= ?(left_id _ _) -?(associative _) ?IH.
-Qed.
+Proof. by induction Ps as [|?? IH]; rewrite /= ?left_id -?associative ?IH. Qed.
 Lemma uPred_big_sep_and Ps : (Π★ Ps) ⊑ (Π∧ Ps).
 Proof. by induction Ps as [|P Ps IH]; simpl; auto. Qed.
 Lemma uPred_big_and_elem_of Ps P : P ∈ Ps → (Π∧ Ps) ⊑ P.
