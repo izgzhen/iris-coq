@@ -100,8 +100,8 @@ Lemma pvs_updateP E m (P : iGst Λ Σ → Prop) :
   m ~~>: P → ownG m ⊑ pvs E E (∃ m', ■ P m' ∧ ownG m').
 Proof.
   intros Hup r [|n] ? Hinv%ownG_spec rf [|k] Ef σ ???; try lia.
-  destruct (wsat_update_gst k (E ∪ Ef) σ r rf m P)
-    as (m'&?&?); eauto using cmra_includedN_le.
+  destruct (wsat_update_gst k (E ∪ Ef) σ r rf m P) as (m'&?&?); auto.
+  { apply cmra_includedN_le with (S n); auto. }
   by exists (update_gst m' r); split; [exists m'; split; [|apply ownG_spec]|].
 Qed.
 Lemma pvs_alloc E P : ¬set_finite E → ▷ P ⊑ pvs E E (∃ i, ■ (i ∈ E) ∧ inv i P).

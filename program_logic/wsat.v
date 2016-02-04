@@ -33,6 +33,7 @@ Implicit Types r : iRes Λ Σ.
 Implicit Types rs : gmap positive (iRes Λ Σ).
 Implicit Types P : iProp Λ Σ.
 Implicit Types m : iGst Λ Σ.
+Implicit Types mm : option (iGst Λ Σ).
 
 Instance wsat_ne' : Proper (dist n ==> impl) (@wsat Λ Σ n E σ).
 Proof.
@@ -66,7 +67,7 @@ Proof.
   destruct n; [done|intros [rs ?]].
   eapply cmra_validN_op_l, wsat_pre_valid; eauto.
 Qed.
-Lemma wsat_init k E σ m : ✓{S k} m → wsat (S k) E σ (Res ∅ (Excl σ) m).
+Lemma wsat_init k E σ mm : ✓{S k} mm → wsat (S k) E σ (Res ∅ (Excl σ) mm).
 Proof.
   intros Hv. exists ∅; constructor; auto.
   * rewrite big_opM_empty right_id.
@@ -125,12 +126,12 @@ Proof.
   by constructor; split_ands'; try (rewrite /= -associative Hpst').
 Qed.
 Lemma wsat_update_gst n E σ r rf m1 (P : iGst Λ Σ → Prop) :
-  m1 ≼{S n} gst r → m1 ~~>: P →
+  Some m1 ≼{S n} gst r → m1 ~~>: P →
   wsat (S n) E σ (r ⋅ rf) → ∃ m2, wsat (S n) E σ (update_gst m2 r ⋅ rf) ∧ P m2.
 Proof.
-  intros [mf Hr] Hup [rs [(?&?&?) Hσ HE Hwld]].
-  destruct (Hup (mf ⋅ gst (rf ⋅ big_opM rs)) n) as (m2&?&Hval').
-  { by rewrite /= (associative _ m1) -Hr (associative _). }
+  intros [mf Hr] Hup%option_updateP' [rs [(?&?&?) Hσ HE Hwld]].
+  destruct (Hup (mf ⋅ gst (rf ⋅ big_opM rs)) n) as ([m2|]&?&Hval'); try done.
+  { by rewrite /= (associative _ (Some m1)) -Hr associative. }
   exists m2; split; [exists rs; split; split_ands'; auto|done].
 Qed.
 Lemma wsat_alloc n E1 E2 σ r P rP :

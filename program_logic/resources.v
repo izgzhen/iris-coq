@@ -4,7 +4,7 @@ Require Export program_logic.language program_logic.functor.
 Record res (Λ : language) (Σ : iFunctor) (A : cofeT) := Res {
   wld : mapRA positive (agreeRA A);
   pst : exclRA (istateC Λ);
-  gst : Σ A;
+  gst : optionRA (Σ A);
 }.
 Add Printing Constructor res.
 Arguments Res {_ _ _} _ _ _.
@@ -136,7 +136,7 @@ Qed.
 Definition update_pst (σ : state Λ) (r : res Λ Σ A) : res Λ Σ A :=
   Res (wld r) (Excl σ) (gst r).
 Definition update_gst (m : Σ A) (r : res Λ Σ A) : res Λ Σ A :=
-  Res (wld r) (pst r) m.
+  Res (wld r) (pst r) (Some m).
 
 Lemma wld_validN n r : ✓{n} r → ✓{n} (wld r).
 Proof. by intros (?&?&?). Qed.
@@ -167,9 +167,9 @@ Arguments resC : clear implicits.
 Arguments resRA : clear implicits.
 
 Definition res_map {Λ Σ A B} (f : A -n> B) (r : res Λ Σ A) : res Λ Σ B :=
-  Res (agree_map f <$> (wld r))
+  Res (agree_map f <$> wld r)
       (pst r)
-      (ifunctor_map Σ f (gst r)).
+      (ifunctor_map Σ f <$> gst r).
 Instance res_map_ne Λ Σ (A B : cofeT) (f : A -n> B) :
   (∀ n, Proper (dist n ==> dist n) f) →
   ∀ n, Proper (dist n ==> dist n) (@res_map Λ Σ _ _ f).
@@ -178,23 +178,25 @@ Lemma res_map_id {Λ Σ A} (r : res Λ Σ A) : res_map cid r ≡ r.
 Proof.
   constructor; simpl; [|done|].
   * rewrite -{2}(map_fmap_id (wld r)); apply map_fmap_setoid_ext=> i y ? /=.
-    by rewrite -{2}(agree_map_id y); apply agree_map_ext=> y' /=.
-  * by rewrite -{2}(ifunctor_map_id Σ (gst r)); apply ifunctor_map_ext=> m /=.
+    by rewrite -{2}(agree_map_id y); apply agree_map_ext.
+  * rewrite -{2}(option_fmap_id (gst r)); apply option_fmap_setoid_ext=> m /=.
+    by rewrite -{2}(ifunctor_map_id Σ m); apply ifunctor_map_ext.
 Qed.
 Lemma res_map_compose {Λ Σ A B C} (f : A -n> B) (g : B -n> C) (r : res Λ Σ A) :
   res_map (g ◎ f) r ≡ res_map g (res_map f r).
 Proof.
   constructor; simpl; [|done|].
   * rewrite -map_fmap_compose; apply map_fmap_setoid_ext=> i y _ /=.
-    by rewrite -agree_map_compose; apply agree_map_ext=> y' /=.
-  * by rewrite -ifunctor_map_compose; apply ifunctor_map_ext=> m /=.
+    by rewrite -agree_map_compose; apply agree_map_ext.
+  * rewrite -option_fmap_compose; apply option_fmap_setoid_ext=> m /=.
+    by rewrite -ifunctor_map_compose; apply ifunctor_map_ext.
 Qed.
 Lemma res_map_ext {Λ Σ A B} (f g : A -n> B) (r : res Λ Σ A) :
   (∀ x, f x ≡ g x) → res_map f r ≡ res_map g r.
 Proof.
   intros Hfg; split; simpl; auto.
   * by apply map_fmap_setoid_ext=>i x ?; apply agree_map_ext.
-  * by apply ifunctor_map_ext.
+  * by apply option_fmap_setoid_ext=>m; apply ifunctor_map_ext.
 Qed.
 Instance res_map_cmra_monotone {Λ Σ} {A B : cofeT} (f : A -n> B) :
   CMRAMonotone (@res_map Λ Σ _ _ f).
@@ -211,5 +213,5 @@ Instance resC_map_ne {Λ Σ A B} n :
 Proof.
   intros f g Hfg r; split; simpl; auto.
   * by apply (mapC_map_ne _ (agreeC_map f) (agreeC_map g)), agreeC_map_ne.
-  * by apply ifunctor_map_ne.
+  * by apply optionC_map_ne, ifunctor_map_ne.
 Qed.

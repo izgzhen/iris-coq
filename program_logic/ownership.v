@@ -4,7 +4,7 @@ Definition inv {Λ Σ} (i : positive) (P : iProp Λ Σ) : iProp Λ Σ :=
   uPred_own (Res {[ i ↦ to_agree (Later (iProp_unfold P)) ]} ∅ ∅).
 Arguments inv {_ _} _ _%I.
 Definition ownP {Λ Σ} (σ: state Λ) : iProp Λ Σ := uPred_own (Res ∅ (Excl σ) ∅).
-Definition ownG {Λ Σ} (m : iGst Λ Σ) : iProp Λ Σ := uPred_own (Res ∅ ∅ m).
+Definition ownG {Λ Σ} (m: iGst Λ Σ) : iProp Λ Σ := uPred_own (Res ∅ ∅ (Some m)).
 Instance: Params (@inv) 3.
 Instance: Params (@ownP) 2.
 Instance: Params (@ownG) 2.
@@ -53,7 +53,7 @@ Proof. by rewrite /ownG -uPred.own_op Res_op !(left_id _ _). Qed.
 Lemma always_ownG_unit m : (□ ownG (unit m))%I ≡ ownG (unit m).
 Proof.
   apply uPred.always_own.
-  by rewrite Res_unit !cmra_unit_empty cmra_unit_idempotent.
+  by rewrite Res_unit !cmra_unit_empty -{2}(cmra_unit_idempotent m).
 Qed.
 Lemma ownG_valid m : (ownG m) ⊑ (✓ m).
 Proof. by rewrite /ownG uPred.own_valid; apply uPred.valid_mono=> n [? []]. Qed.
@@ -78,7 +78,7 @@ Proof.
   intros (?&?&?); rewrite /uPred_holds /= res_includedN /= Excl_includedN //.
   naive_solver (apply cmra_empty_leastN).
 Qed.
-Lemma ownG_spec r n m : (ownG m) n r ↔ m ≼{n} gst r.
+Lemma ownG_spec r n m : (ownG m) n r ↔ Some m ≼{n} gst r.
 Proof.
   rewrite /uPred_holds /= res_includedN; naive_solver (apply cmra_empty_leastN).
 Qed.

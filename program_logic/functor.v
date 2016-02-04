@@ -2,8 +2,6 @@ Require Export algebra.cmra.
 
 Structure iFunctor := IFunctor {
   ifunctor_car :> cofeT → cmraT;
-  ifunctor_empty A : Empty (ifunctor_car A);
-  ifunctor_identity A : CMRAIdentity (ifunctor_car A);
   ifunctor_map {A B} (f : A -n> B) : ifunctor_car A -n> ifunctor_car B;
   ifunctor_map_ne {A B} n : Proper (dist n ==> dist n) (@ifunctor_map A B);
   ifunctor_map_id {A : cofeT} (x : ifunctor_car A) : ifunctor_map cid x ≡ x;
@@ -11,7 +9,6 @@ Structure iFunctor := IFunctor {
     ifunctor_map (g ◎ f) x ≡ ifunctor_map g (ifunctor_map f x);
   ifunctor_map_mono {A B} (f : A -n> B) : CMRAMonotone (ifunctor_map f)
 }.
-Existing Instances ifunctor_empty ifunctor_identity.
 Existing Instances ifunctor_map_ne ifunctor_map_mono.
 
 Lemma ifunctor_map_ext (Σ : iFunctor) {A B} (f g : A -n> B) m :
