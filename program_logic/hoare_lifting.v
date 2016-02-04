@@ -1,4 +1,5 @@
 Require Export program_logic.hoare program_logic.lifting.
+Import uPred.
 
 Local Notation "{{ P } } ef ?@ E {{ Q } }" :=
   (default True%I ef (λ e, ht E P e Q))
@@ -12,7 +13,6 @@ Context {Λ : language} {Σ : iFunctor}.
 Implicit Types e : expr Λ.
 Implicit Types P : iProp Λ Σ.
 Implicit Types R : val Λ → iProp Λ Σ.
-Import uPred.
 
 Lemma ht_lift_step E1 E2
     (φ : expr Λ → state Λ → option (expr Λ) → Prop) P P' Q1 Q2 R e1 σ1 :

@@ -14,13 +14,15 @@ Implicit Types σ : state Λ.
 Implicit Types Q : val Λ → iProp Λ Σ.
 Transparent uPred_holds.
 
+Notation wp_fork ef := (default True ef (flip (wp coPset_all) (λ _, True)))%I.
+
 Lemma wp_lift_step E1 E2
     (φ : expr Λ → state Λ → option (expr Λ) → Prop) Q e1 σ1 :
   E1 ⊆ E2 → to_val e1 = None →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  pvs E2 E1 (ownP σ1 ★ ▷ ∀ e2 σ2 ef, (■ φ e2 σ2 ef ∧ ownP σ2) -★
-    pvs E1 E2 (wp E2 e2 Q ★ default True ef (flip (wp coPset_all) (λ _, True))))
+  pvs E2 E1 (ownP σ1 ★ ▷ ∀ e2 σ2 ef,
+    (■ φ e2 σ2 ef ∧ ownP σ2) -★ pvs E1 E2 (wp E2 e2 Q ★ wp_fork ef))
   ⊑ wp E2 e1 Q.
 Proof.
   intros ? He Hsafe Hstep r n ? Hvs; constructor; auto.
@@ -41,9 +43,7 @@ Lemma wp_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) Q e1 :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →
-  (▷ ∀ e2 ef, ■ φ e2 ef →
-    wp E e2 Q ★ default True ef (flip (wp coPset_all) (λ _, True)))
-  ⊑ wp E e1 Q.
+  (▷ ∀ e2 ef, ■ φ e2 ef → wp E e2 Q ★ wp_fork ef) ⊑ wp E e1 Q.
 Proof.
   intros He Hsafe Hstep r [|n] ?; [done|]; intros Hwp; constructor; auto.
   intros rf k Ef σ1 ???; split; [done|].
@@ -56,17 +56,17 @@ Qed.
 Opaque uPred_holds.
 Import uPred.
 
-Lemma wp_lift_atomic_step {E Q} e1 (φ : val Λ → state Λ → option (expr Λ) → Prop) σ1 :
+Lemma wp_lift_atomic_step {E Q} e1
+    (φ : val Λ → state Λ → option (expr Λ) → Prop) σ1 :
   to_val e1 = None →
   reducible e1 σ1 →
-  (∀ e' σ' ef, prim_step e1 σ1 e' σ' ef → ∃ v', to_val e' = Some v' ∧ φ v' σ' ef) →
-  (ownP σ1 ★ ▷ ∀ v2 σ2 ef, ■ φ v2 σ2 ef ∧ ownP σ2 -★
-     Q v2 ★ default True ef (flip (wp coPset_all) (λ _, True)))
-    ⊑ wp E e1 Q.
+  (∀ e2 σ2 ef,
+    prim_step e1 σ1 e2 σ2 ef → ∃ v2, to_val e2 = Some v2 ∧ φ v2 σ2 ef) →
+  (ownP σ1 ★ ▷ ∀ v2 σ2 ef, ■ φ v2 σ2 ef ∧ ownP σ2 -★ Q v2 ★ wp_fork ef)
+  ⊑ wp E e1 Q.
 Proof.
-  intros He Hsafe Hstep.
-  rewrite -(wp_lift_step E E
-    (λ e' σ' ef, ∃ v', to_val e' = Some v' ∧ φ v' σ' ef) _ e1 σ1) //; [].
+  intros. rewrite -(wp_lift_step E E (λ e2 σ2 ef, ∃ v2,
+    to_val e2 = Some v2 ∧ φ v2 σ2 ef) _ e1 σ1) //; [].
   rewrite -pvs_intro. apply sep_mono, later_mono; first done.
   apply forall_intro=>e2'; apply forall_intro=>σ2'.
   apply forall_intro=>ef; apply wand_intro_l.
@@ -80,33 +80,29 @@ Qed.
 Lemma wp_lift_atomic_det_step {E Q e1} σ1 v2 σ2 ef :
   to_val e1 = None →
   reducible e1 σ1 →
-  (∀ e' σ' ef', prim_step e1 σ1 e' σ' ef' → ef' = ef ∧ e' = of_val v2 ∧ σ' = σ2) →
-  (ownP σ1 ★ ▷ (ownP σ2 -★ Q v2 ★
-                       default True ef (flip (wp coPset_all) (λ _, True))))
-    ⊑ wp E e1 Q.
+  (∀ e2' σ2' ef', prim_step e1 σ1 e2' σ2' ef' →
+    σ2 = σ2' ∧ to_val e2' = Some v2 ∧ ef = ef') →
+  (ownP σ1 ★ ▷ (ownP σ2 -★ Q v2 ★ wp_fork ef)) ⊑ wp E e1 Q.
 Proof.
-  intros He Hsafe Hstep.
-  rewrite -(wp_lift_atomic_step _ (λ v' σ' ef', v' = v2 ∧ σ' = σ2 ∧ ef' = ef) σ1) //;
-    last first.
-  { intros. exists v2. apply Hstep in H. destruct_conjs; subst.
-    eauto using to_of_val. }
+  intros. rewrite -(wp_lift_atomic_step _ (λ v2' σ2' ef',
+    σ2 = σ2' ∧ v2 = v2' ∧ ef = ef') σ1) //; last naive_solver.
   apply sep_mono, later_mono; first done.
   apply forall_intro=>e2'; apply forall_intro=>σ2'; apply forall_intro=>ef'.
   apply wand_intro_l.
   rewrite always_and_sep_l' -associative -always_and_sep_l'.
-  apply const_elim_l=>-[-> [-> ->]] /=.
-  by rewrite wand_elim_r.
+  apply const_elim_l=>-[-> [-> ->]] /=. by rewrite wand_elim_r.
 Qed.
 
 Lemma wp_lift_pure_det_step {E Q} e1 e2 ef :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
-  (∀ σ1 e' σ' ef', prim_step e1 σ1 e' σ' ef' → σ1 = σ' ∧ ef' = ef ∧ e' = e2) →
-  ▷ (wp E e2 Q ★ default True ef (flip (wp coPset_all) (λ _, True))) ⊑ wp E e1 Q.
+  (∀ σ1 e2' σ2 ef', prim_step e1 σ1 e2' σ2 ef' → σ1 = σ2 ∧ e2 = e2' ∧ ef = ef')→
+  ▷ (wp E e2 Q ★ wp_fork ef) ⊑ wp E e1 Q.
 Proof.
-  intros. rewrite -(wp_lift_pure_step E (λ e' ef', ef' = ef ∧ e' = e2) _ e1) //=.
+  intros.
+  rewrite -(wp_lift_pure_step E (λ e2' ef', e2 = e2' ∧ ef = ef') _ e1) //=.
   apply later_mono, forall_intro=>e'; apply forall_intro=>ef'.
-  apply impl_intro_l, const_elim_l=>-[-> ->] /=; done.
+  by apply impl_intro_l, const_elim_l=>-[-> ->].
 Qed.
 
 End lifting.
