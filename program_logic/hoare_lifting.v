@@ -1,4 +1,4 @@
-Require Export iris.hoare iris.lifting.
+Require Export program_logic.hoare program_logic.lifting.
 
 Local Notation "{{ P } } ef ?@ E {{ Q } }" :=
   (default True%I ef (λ e, ht E P e Q))

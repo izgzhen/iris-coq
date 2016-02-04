@@ -1,5 +1,5 @@
 Require Export Autosubst.Autosubst.
-Require Export iris.language.
+Require Export program_logic.language.
 Require Import prelude.gmap.
 
 Module heap_lang.

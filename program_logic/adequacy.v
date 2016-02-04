@@ -1,5 +1,5 @@
-Require Export iris.hoare.
-Require Import iris.wsat.
+Require Export program_logic.hoare.
+Require Import program_logic.wsat.
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 100 (@eq coPset _ _) => eassumption || solve_elem_of.
 Local Hint Extern 10 (✓{_} _) =>

@@ -1,5 +1,5 @@
-Require Import prelude.gmap iris.lifting.
-Require Export iris.weakestpre heap_lang.heap_lang_tactics.
+Require Import prelude.gmap program_logic.lifting.
+Require Export program_logic.weakestpre heap_lang.heap_lang_tactics.
 Import uPred.
 Import heap_lang.
 Local Hint Extern 0 (language.reducible _ _) => do_step ltac:(eauto 2).

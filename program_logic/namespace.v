@@ -1,4 +1,4 @@
-Require Export modures.base prelude.countable prelude.co_pset.
+Require Export algebra.base prelude.countable prelude.co_pset.
 
 Definition namespace := list positive.
 Definition nnil : namespace := nil.

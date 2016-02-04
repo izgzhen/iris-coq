@@ -1,5 +1,5 @@
-Require Export modures.cmra.
-Require Import prelude.sets modures.dra.
+Require Export algebra.cmra.
+Require Import prelude.sets algebra.dra.
 Local Arguments valid _ _ !_ /.
 Local Arguments op _ _ !_ !_ /.
 Local Arguments unit _ _ !_ /.

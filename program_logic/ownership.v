@@ -1,4 +1,4 @@
-Require Export iris.model.
+Require Export program_logic.model.
 
 Definition inv {Λ Σ} (i : positive) (P : iProp Λ Σ) : iProp Λ Σ :=
   uPred_own (Res {[ i ↦ to_agree (Later (iProp_unfold P)) ]} ∅ ∅).

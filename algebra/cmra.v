@@ -1,4 +1,4 @@
-Require Export modures.cofe.
+Require Export algebra.cofe.
 
 Class Unit (A : Type) := unit : A → A.
 Instance: Params (@unit) 2.

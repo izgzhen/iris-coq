@@ -1,4 +1,4 @@
-Require Export modures.base.
+Require Export algebra.base.
 
 (** Unbundeled version *)
 Class Dist A := dist : nat → relation A.

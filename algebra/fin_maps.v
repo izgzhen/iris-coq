@@ -1,4 +1,4 @@
-Require Export modures.cmra prelude.gmap modures.option.
+Require Export algebra.cmra prelude.gmap algebra.option.
 
 Section cofe.
 Context `{Countable K} {A : cofeT}.

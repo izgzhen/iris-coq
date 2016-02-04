@@ -1,4 +1,4 @@
-Require Export iris.pviewshifts.
+Require Export program_logic.pviewshifts.
 
 Definition vs {Λ Σ} (E1 E2 : coPset) (P Q : iProp Λ Σ) : iProp Λ Σ :=
   (□ (P → pvs E1 E2 Q))%I.

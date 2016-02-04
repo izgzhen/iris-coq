@@ -1,4 +1,4 @@
-Require Export modures.cmra.
+Require Export algebra.cmra.
 
 (* COFE *)
 Section cofe.

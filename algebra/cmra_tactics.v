@@ -1,5 +1,5 @@
-Require Export modures.cmra.
-Require Import modures.cmra_big_op.
+Require Export algebra.cmra.
+Require Import algebra.cmra_big_op.
 
 (** * Simple solver for validity and inclusion by reflection *)
 Module ra_reflection. Section ra_reflection.

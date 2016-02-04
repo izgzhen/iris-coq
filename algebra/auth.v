@@ -1,4 +1,4 @@
-Require Export modures.excl.
+Require Export algebra.excl.
 Local Arguments validN _ _ _ !_ /.
 
 Record auth (A : Type) : Type := Auth { authoritative : excl A ; own : A }.

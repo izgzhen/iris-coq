@@ -1,4 +1,4 @@
-Require Export modures.cmra.
+Require Export algebra.cmra.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 

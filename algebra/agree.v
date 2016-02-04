@@ -1,4 +1,4 @@
-Require Export modures.cmra.
+Require Export algebra.cmra.
 Local Hint Extern 10 (_ ≤ _) => omega.
 
 Record agree (A : Type) : Type := Agree {

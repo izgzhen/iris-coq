@@ -1,5 +1,5 @@
-Require Export modures.logic iris.resources.
-Require Import modures.cofe_solver.
+Require Export logic.upred program_logic.resources.
+Require Import algebra.cofe_solver.
 
 Module iProp.
 Definition F (Λ : language) (Σ : iFunctor) (A B : cofeT) : cofeT :=

@@ -1,4 +1,4 @@
-Require Export modures.cmra.
+Require Export algebra.cmra.
 Require Import prelude.fin_maps.
 
 Fixpoint big_op {A : cmraT} `{Empty A} (xs : list A) : A :=

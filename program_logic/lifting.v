@@ -1,5 +1,5 @@
-Require Export iris.weakestpre.
-Require Import iris.wsat.
+Require Export program_logic.weakestpre.
+Require Import program_logic.wsat.
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 100 (@eq coPset _ _) => solve_elem_of.
 Local Hint Extern 10 (✓{_} _) =>

@@ -1,5 +1,5 @@
-Require Export iris.model prelude.co_pset.
-Require Export modures.cmra_big_op modures.cmra_tactics.
+Require Export program_logic.model prelude.co_pset.
+Require Export algebra.cmra_big_op algebra.cmra_tactics.
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 10 (✓{_} _) => solve_validN.
 Local Hint Extern 1 (✓{_} (gst _)) => apply gst_validN.

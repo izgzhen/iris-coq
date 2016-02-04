@@ -1,4 +1,4 @@
-Require Export modures.cofe.
+Require Export algebra.cofe.
 
 Record solution (F : cofeT → cofeT → cofeT) := Solution {
   solution_car :> cofeT;

@@ -1,4 +1,4 @@
-Require Export modures.cofe.
+Require Export algebra.cofe.
 
 Structure language := Language {
   expr : Type;
