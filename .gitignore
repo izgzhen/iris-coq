@@ -1,6 +1,10 @@
-*.v~
 *.vo
 *.v.d
 *.glob
-guide
-html
+*.cache
+*.aux
+\#*\#
+*~
+*.bak
+.coq-native/
+Makefile

@@ -1,0 +1,466 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PACKAGES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{mathtools}
+%\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+
+\usepackage{mathpartir}
+
+\usepackage{array}
+\usepackage{tabu}
+
+\usepackage{dashbox}
+
+\usepackage{pftools}
+
+\usepackage{xcolor}  % for print version
+
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{scalerel}
+
+\usepackage{rotating}
+\usepackage{xparse}
+\usepackage{xstring}
+\usepackage{semantic}
+\usepackage{csquotes}
+
+\usepackage{hyperref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% SETUP
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\SetSymbolFont{stmry}{bold}{U}{stmry}{m}{n} % this fixes warnings when \boldsymbol is used with stmaryrd included
+
+\extrarowheight=\jot	% else, arrays are scrunched compared to, say, aligned
+\newcolumntype{.}{@{}}
+% Array {rMcMl} modifies array {rcl}, putting mathrel-style spacing
+% around the centered column. (We used this, for example, in laying
+% out some of Iris' axioms. Generally, aligned is simpler but aligned
+% does not work in mathpar because \\ inherits mathpar's 2em vskip.)
+% The capital M stands for THICKMuskip. The smaller medmuskip would be
+% right for mathbin-style spacing.
+\newcolumntype{M}{@{\mskip\thickmuskip}}
+
+\definecolor{StringRed}{rgb}{.637,0.082,0.082}
+\definecolor{CommentGreen}{rgb}{0.0,0.55,0.3}
+\definecolor{KeywordBlue}{rgb}{0.0,0.3,0.55}
+\definecolor{LinkColor}{rgb}{0.55,0.0,0.3}
+\definecolor{CiteColor}{rgb}{0.55,0.0,0.3}
+\definecolor{HighlightColor}{rgb}{0.0,0.0,0.0}
+
+\usetikzlibrary{shapes}
+%\usetikzlibrary{snakes}
+\usetikzlibrary{arrows}
+\usetikzlibrary{calc}
+\usetikzlibrary{arrows.meta}
+\tikzstyle{state}=[circle, draw, minimum size=1.2cm, align=center]
+\tikzstyle{trans}=[arrows={->[scale=1.4]}]
+
+\tikzstyle{layer}=[rounded corners=2pt, thin, align=center, draw, minimum width=4.2cm,minimum height=0.8cm]
+
+\definecolor{grey}{rgb}{0.5,0.5,0.5}
+\definecolor{red}{rgb}{1,0,0}
+
+\hypersetup{%
+  linktocpage=true, pdfstartview=FitV,
+  breaklinks=true, pageanchor=true, pdfpagemode=UseOutlines,
+  plainpages=false, bookmarksnumbered, bookmarksopen=true, bookmarksopenlevel=3,
+  hypertexnames=true, pdfhighlight=/O,
+  colorlinks=true,linkcolor=LinkColor,citecolor=CiteColor,
+  urlcolor=LinkColor
+}
+
+
+%\theoremstyle{definition}
+%\newtheorem{prop}{Prop}
+\newtheorem{defn}{Definition}
+\newtheorem{cor}{Corollary}
+\newtheorem{conj}{Conj}
+\newtheorem{lem}{Lemma}
+\newtheorem{thm}{Theorem}
+
+\newtheorem{exercise}{Exercise}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% GENERIC MACROS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand*{\Sref}[1]{\hyperref[#1]{\S\ref*{#1}}}
+\newcommand*{\secref}[1]{\hyperref[#1]{Section~\ref*{#1}}}
+\newcommand*{\lemref}[1]{\hyperref[#1]{Lemma~\ref*{#1}}}
+\newcommand{\corref}[1]{\hyperref[#1]{Cor.~\ref*{#1}}}
+\newcommand*{\defref}[1]{\hyperref[#1]{Definition~\ref*{#1}}}
+\newcommand*{\egref}[1]{\hyperref[#1]{Example~\ref*{#1}}}
+\newcommand*{\appendixref}[1]{\hyperref[#1]{Appendix~\ref*{#1}}}
+\newcommand*{\figref}[1]{\hyperref[#1]{Figure~\ref*{#1}}}
+\newcommand*{\tabref}[1]{\hyperref[#1]{Table~\ref*{#1}}}
+
+\newcommand{\changes}{{\bf\color{red}{Changes}}}
+\newcommand{\TODO}{\vskip 4pt {\color{red}\bf TODO}}
+
+
+\newcommand{\ie}{\emph{i.e.,} }
+\newcommand{\eg}{\emph{e.g.,} }
+\newcommand{\etal}{\emph{et~al.}}
+\newcommand{\wrt}{w.r.t.~}
+
+\newcommand{\aaron}[1]{{\color{red}\textbf{AT: #1}}}
+\newcommand{\derek}[1]{{\color{red}\textbf{DD: #1}}}
+\newcommand{\lars}[1]{{\color{red}\textbf{LB: #1}}}
+\newcommand{\kasper}[1]{{\color{red}\textbf{KS: #1}}}
+\newcommand{\ralf}[1]{{\color{red}\textbf{RJ: #1}}}
+\newcommand{\dave}[1]{{\color{red}\textbf{PDS: #1}}}
+\newcommand{\hush}[1]{}
+\newcommand{\relaxguys}{%
+	\let\aaron\hush%
+	\let\derek\hush%
+	\let\lars\hush%
+	\let\kasper\hush%
+	\let\ralf\hush%
+	\let\dave\hush%
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% MATH SYMBOLS & NOTATION & IDENTIFIERS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% superscript to the left
+\def\presuper#1#2%
+  {\mathop{}%
+   \mathopen{\vphantom{#2}}^{#1}%
+   \kern-\scriptspace%
+   #2}
+
+\DeclareMathOperator*{\Sep}{\scalerel*{\ast}{\sum}}
+\newcommand{\bigast}{\Sep}
+
+\newcommand*{\sep}[1][]{\mathrel{\#_{#1}}}	% bad name; it's a different "sep"
+
+\newcommand{\ALT}{\ |\ }
+
+
+\newcommand{\upclose}{\mathord{\uparrow}}
+
+\def\All #1.{\forall #1.\;}%
+\def\Exists #1.{\exists #1.\;}%
+\def\Ret #1.{#1.\;}%
+
+\newcommand{\any}{{\rule[-.2ex]{1ex}{.4pt}}}%
+\newcommand{\unitval}{()}%
+
+\newcommand{\judgment}[2]{\paragraph{#1}\hspace{\stretch{1}}\fbox{$#2$}}
+
+\newcommand{\pfn}{\rightharpoonup}
+\newcommand{\fpfn}{\stackrel{\textrm{fin}}{\rightharpoonup}}
+\newcommand{\ra}{\rightarrow}
+\newcommand{\Ra}{\Rightarrow}
+\newcommand{\Lra}{\Leftrightarrow}
+\newcommand{\monra}{\stackrel{\textrm{mon}}{\rightarrow}}
+
+\newcommand{\eqdef}{\triangleq}
+
+\newcommand{\restr}[2]{\lfloor #1 \rfloor_{#2}}
+\newcommand{\pset}[1]{\wp(#1)} % Powerset
+\newcommand{\psetdown}[1]{\wp^\downarrow(#1)}
+
+\newcommand{\dom}{\textrm{dom}}
+%\newcommand{\rng}{\textrm{rng}}
+%\newcommand{\cod}{\textrm{cod}}
+
+
+\newcommand{\IF}{\mathrel{\text{if}}}
+\newcommand{\WHEN}{\textrm{when }}
+
+
+
+\newcommand{\SET}[2]{
+\left\{%
+#1%
+\;\middle|\;%
+#2%
+\right\}
+}
+\newcommand{\SETB}[1]{
+\left\{%
+#1%
+\right\}
+}
+\newcommand{\SETC}[2]{#1 & #2}
+
+\newenvironment{inbox}[1][]{
+  \begin{array}[#1]{@{}l@{}}
+}{
+  \end{array}
+}
+
+\newcommand{\tabubox}[2][]{%
+  \begin{tabu}{@{#1}X[1,l,m]@{}}%
+    #2 %
+  \end{tabu}%
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CMRA (RESOURCE ALGEBRA) SYMBOLS & NOTATION & IDENTIFIERS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\textmon}[1]{\textsc{#1}}
+
+\newcommand{\monoid}{M}
+
+\newcommand{\melt}{a}
+\newcommand{\meltB}{b}
+\newcommand{\meltC}{c}
+\newcommand{\melts}{A}
+\newcommand{\meltsB}{B}
+
+\newcommand{\mcar}[1]{|#1|}
+\newcommand{\mcarp}[1]{\mcar{#1}^{+}}
+\newcommand{\mzero}{\bot}
+\newcommand{\munit}{\mathord{\varepsilon}}
+\newcommand{\mtimes}{\mathbin{\cdot}}
+
+\newcommand{\mupd}{\rightsquigarrow}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% MODEL-SPECIFIC SYMBOLS & NOTATION & IDENTIFIERS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\textdom}[1]{\textit{#1}}
+
+\newcommand{\wIso}{\xi}
+
+\newcommand{\rs}{r}
+\newcommand{\rsB}{s}
+
+\newcommand{\pres}{\pi}
+\newcommand{\wld}{w}
+\newcommand{\ghostRes}{g}
+
+%% Various pieces of syntax
+\newcommand{\fullSat}[4]{#1 \models_{#2} #3; #4}
+
+\newcommand{\wtt}[2]{#1 : #2} % well-typed term
+
+\newcommand{\nequiv}[1]{\ensuremath{\mathrel{\stackrel{#1}{=}}}}
+\newcommand{\notnequiv}[1]{\ensuremath{\mathrel{\stackrel{#1}{\neq}}}}
+\newcommand{\nequivset}[2]{\ensuremath{\mathrel{\stackrel{#1}{=}_{#2}}}}
+\newcommand{\nequivB}[1]{\ensuremath{\mathrel{\stackrel{#1}{\equiv}}}}
+\newcommand{\latert}{\mathord{\blacktriangleright}}
+
+\newcommand{\Sem}[1]{\llbracket #1 \rrbracket}
+
+\newcommand{\sembox}[1]{\hfill \normalfont \mbox{\fbox{\(#1\)}}}
+\newcommand{\typedsection}[2]{\subsubsection*{\rm\em #1 \sembox{#2}}}
+
+
+%% Some commonly used identifiers
+\newcommand{\UPred}{\textdom{UPred}}
+\newcommand{\SPred}{\textdom{SPred}}
+
+\newcommand{\PropDom}{\textdom{Prop}}
+\newcommand{\PredDom}{\textdom{Pred}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% LOGIC SYMBOLS & NOTATION & IDENTIFIERS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\textlog}[1]{\textsf{#1}}
+\newcommand{\textsort}[1]{\textlog{#1}}
+
+\newcommand{\Sig}{\mathcal{S}}
+\newcommand{\SigType}{\mathcal{T}}
+\newcommand{\SigFn}{\mathcal{F}}
+\newcommand{\sigfn}{F}
+
+\newcommand{\type}{\tau}
+
+\newcommand{\var}{x}
+\newcommand{\varB}{y}
+\newcommand{\varC}{z}
+
+\newcommand{\term}{t}
+\newcommand{\termB}{u}
+\newcommand{\termVal}{V}
+
+\newcommand{\sort}{\Sigma}
+
+\newcommand{\vctx}{\Gamma}
+\newcommand{\pfctx}{\Theta}
+
+\newcommand{\prop}{P}
+\newcommand{\propB}{Q}
+\newcommand{\propC}{R}
+
+\newcommand{\pred}{\varphi}
+\newcommand{\predB}{\psi}
+\newcommand{\predC}{\zeta}
+
+\newcommand{\gname}{\gamma}
+\newcommand{\iname}{\iota}
+\newcommand{\inameB}{\iota'}
+
+\newcommand{\mask}{\mathcal{E}}
+
+%% various pieces of Syntax
+\newcommand{\unitsort}{1}%	\unit is bold.
+
+\def\MU #1.{\mu #1.\;}%
+\def\Lam #1.{\lambda #1.\;}%
+
+\newcommand{\proves}{\vdash}
+\newcommand{\provesalways}{\vdash_{\!\!\boxempty}}
+
+\newcommand{\wand}{\;{{\mbox{---}}\!\!{*}}\;}
+
+\newcommand{\fmapsto}[1][-]{\stackrel{#1}{\mapsto}}
+\newcommand{\gmapsto}{\hookrightarrow}%
+\newcommand{\fgmapsto}[1][-]{\stackrel{#1}{\gmapsto}}%
+
+\newcommand{\dyn}[2]{\textlog{wp}({#1}, {#2})}
+\newcommand{\adyn}[2]{{#1}\;\llparenthesis{#2}\rrparenthesis}
+\newcommand{\dynpred}[2]{\textdom{wp}({#1}, {#2})}
+\newcommand{\dynA}[3]{\textlog{wp}_{#3}({#1}, {#2})}
+\newcommand{\pvs}[1]{\textlog{vs}({#1})}
+\newcommand{\pvsA}[3]{\textlog{vs}_{#2}^{#3}({#1})}
+
+\newcommand{\later}{\mathord{\triangleright}}
+\newcommand{\always}{\Box{}}
+
+%% Invariants and Ghost ownership
+% PDS: Was 0pt inner, 2pt outer.
+% \boxedassert [tikzoptions] contents [name]
+\tikzstyle{boxedassert_border} = [sharp corners,line width=0.2pt]
+\NewDocumentCommand \boxedassert {O{} m o}{%
+	\tikz[baseline=(m.base)]{
+		%	  \node[rectangle, draw,inner sep=0.8pt,anchor=base,#1] (m) {${#2}\mathstrut$};
+		\node[rectangle,inner sep=0.8pt,outer sep=0.2pt,anchor=base] (m) {${#2}\mathstrut$};
+		\draw[#1,boxedassert_border] ($(m.south west) + (0,0.65pt)$) rectangle ($(m.north east) + (0, 0.7pt)$);
+	}\IfNoValueF{#3}{^{\,#3}}%
+}
+\newcommand*{\knowInv}[2]{\boxedassert{#2}[#1]}
+\newcommand*{\ownGhost}[2]{\boxedassert[densely dashed]{#2}[#1]}
+\newcommand*{\ownGGhost}[1]{\boxedassert[densely dashed]{#1}}
+
+\newcommand{\ownPhys}[1]{\lfloor#1\rfloor}
+
+%% View Shifts
+\NewDocumentCommand \vsGen {O{} m O{}}%
+  {\mathrel{%
+    \ifthenelse{\equal{#3}{}}{%
+      % Just one mask, or none
+      {#2}_{#1}%
+    }{%
+      % Two masks
+      \presuper{#1}{#2}^{#3}
+    }%
+  }}%
+\NewDocumentCommand \vs {O{} O{}} {\vsGen[#1]{\Rrightarrow}[#2]}
+\NewDocumentCommand \vsL {O{} O{}} {\vsGen[#1]{\Lleftarrow}[#2]}
+\NewDocumentCommand \vsE {O{} O{}} %
+  {\vsGen[#1]{\Lleftarrow\!\!\!\Rrightarrow}[#2]}
+
+%% Hoare Triples
+\newcommand*{\hoaresizebox}[1]{%
+  \hbox{$\mathsurround=0pt{#1}\mathstrut$}}
+\newcommand*{\hoarescalebox}[2]{%
+  \hbox{\scalerel*[1ex]{#1}{#2}}}
+\newcommand{\triple}[5]{%
+  \setbox0=\hoaresizebox{{#3}{#5}}%
+  \setbox1=\hoarescalebox{#1}{\copy0}%
+  \setbox2=\hoarescalebox{#2}{\copy0}%
+  \copy1{#3}\copy2%
+  \;{#4}\;%
+  \copy1{#5}\copy2}
+\NewDocumentCommand \hoare {m m m O{}}{
+	\triple\{\}{#1}{#2}{#3}%
+	_{#4}%
+}
+
+\newcommand{\bracket}[4][]{%
+  \setbox0=\hbox{$\mathsurround=0pt{#1}{#4}\mathstrut$}%
+  \scalerel*[1ex]{#2}{\copy0}%
+  {#4}%
+  \scalerel*[1ex]{#3}{\copy0}}
+% \curlybracket[other] x
+\newcommand{\curlybracket}[2][]{\bracket[{#1}]\{\}{#2}}
+\newcommand{\anglebracket}[2][]{\bracket[{#1}]\langle\rangle{#2}}
+% \hoareV[t] pre c post [mask]
+\NewDocumentCommand \hoareV {O{c} m m m O{}}{
+		{\begin{aligned}[#1]
+		&\curlybracket{#2} \\
+		&\quad{#3} \\
+		&{\curlybracket{#4}}_{#5}
+		\end{aligned}}%
+}
+% \hoareHV[t] pre c post [mask]
+\NewDocumentCommand \hoareHV {O{c} m m m O{}}{
+	{\begin{aligned}[#1]
+	&\curlybracket{#2} \; {#3} \\
+	&{\curlybracket{#4}}_{#5}
+	\end{aligned}}%
+}
+
+
+%% Some commonly used identifiers
+\newcommand{\timeless}[1]{\textlog{timeless}(#1)}
+\newcommand{\physatomic}[1]{\textlog{$#1$ phys.\ atomic}}
+\newcommand{\infinite}{\textlog{infinite}}
+
+\newcommand{\Prop}{\textlog{Prop}}
+\newcommand{\Pred}{\textlog{Pred}}
+
+\newcommand{\TRUE}{\textlog{True}}
+\newcommand{\FALSE}{\textlog{False}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LANGUAGE SYNTAX AND SEMANTICS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\expr}{e}
+\newcommand{\val}{v}
+\newcommand{\valB}{w}
+\newcommand{\state}{\sigma}
+\newcommand{\step}{\ra}
+
+\newcommand{\ectx}{K}
+\newcommand{\tpool}{T}
+
+\newcommand{\cfg}[2]{{#1};{#2}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DERIVED CONSTRUCTIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Commonly used identifiers
+\newcommand{\FHeap}{\textsc{FHeap}}
+\newcommand{\AFHeap}{\textsc{AFHeap}}
+
+\newcommand{\auth}[1]{\ensuremath{\textsc{Auth}(#1)}}
+\newcommand{\authfull}{\mathord{\bullet}\,}
+\newcommand{\authfrag}{\mathord{\circ}\,}
+
+\newcommand{\fpfunm}[2]{\ensuremath{\textsc{FpFun}(#1, #2)}}
+\newcommand{\fracm}[1]{\ensuremath{\textsc{Frac}(#1)}}
+\newcommand{\exm}[1]{\ensuremath{\textsc{Ex}(#1)}}
+\newcommand{\agm}[1]{\ensuremath{\textsc{Ag}(#1)}}
+
+
+\newcommand{\STSMon}[1]{\textsc{Sts}_{#1}}
+\newcommand{\STSInv}{\textsf{STSInv}}
+\newcommand{\STS}{\textsf{STS}}
+\newcommand{\STSS}{\mathcal{S}} % states
+\newcommand{\STST}{\mathcal{T}} % tokens
+\newcommand{\STSL}{\mathcal{L}} % labels
+\newcommand{\ststrans}{\ra^{*}}%	the relation relevant to the STS rules
+
+\newcommand{\AuthInv}{\textsf{AuthInv}}
+\newcommand{\Auth}{\textsf{Auth}}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "iris"
+%%% End:

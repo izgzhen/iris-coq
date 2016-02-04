@@ -1,0 +1,386 @@
+% !TEX root = ./appendix.tex
+
+\section{Monoid constructions}
+
+We will use the notation $\mcarp{M} \eqdef |M| \setminus \{\mzero_M\}$ for the carrier of monoid $M$ without zero. When we define a carrier, a zero element is always implicitly added (we do not explicitly give it), and all cases of multiplication that are not defined (including those involving a zero element) go to that element.
+
+To disambiguate which monoid an element is part of, we use the notation $a : M$ to denote an $a$ s.t.\ $a \in |M|$.
+
+When defining a monoid, we will show some \emph{frame-preserving updates} $\melt \mupd \meltsB$ that it supports.
+Remember that
+\[
+	\melt \mupd \meltsB \eqdef \always\All \melt_f. \melt \sep \melt_f \Ra \Exists \meltB \in \meltsB. \meltB \sep \melt_f.
+\]
+The rule \ruleref{FpUpd} (and, later, \ruleref{GhostUpd}) allows us to use such updates in Hoare proofs.
+The following principles generally hold for frame-preserving updates.
+\begin{mathpar}
+	\infer{
+		\melt \mupd \meltsB
+	}{
+		\melt \mupd \meltsB \cup \meltsB'
+	}
+	\and
+	\infer{
+		\melt \mupd \meltsB
+	}{
+		\melt \mtimes \melt_f \mupd \{ \meltB \mtimes \melt_f \mid \meltB \in \meltsB \}
+	}
+\end{mathpar}
+
+Some of our constructions require or preserve \emph{cancellativity}:
+\[
+	\text{$\monoid$ cancellative} \eqdef
+	\All \melt_f, \melt, \meltB \in \mcar{\monoid}. \melt_f \mtimes \melt = \melt_f \mtimes \meltB \neq \mzero \Ra \melt = \meltB
+\]
+
+
+\subsection{Exclusive monoid}
+
+Given a set $X$, we define a monoid such that at most one $x \in X$ can be owned.
+Let $\exm{X}$ be the monoid with carrier $X \uplus \{ \munit \}$ and multiplication
+\[
+\melt \cdot \meltB \;\eqdef\;
+\begin{cases}
+  \melt & \mbox{if } \meltB = \munit \\
+  \meltB & \mbox{if } \melt = \munit
+\end{cases}
+\]
+
+The frame-preserving update
+\begin{mathpar}
+\inferH{ExUpd}
+  {x \in X}
+  {x \mupd \melt}
+\end{mathpar}
+is easily shown, as the only possible frame for $x$ is $\munit$.
+
+Exclusive monoids are cancellative.
+\begin{proof}[Proof of cancellativity]
+If $\melt_f = \munit$, then the statement is trivial.
+If $\melt_f \neq \munit$, then we must have $\melt = \meltB = \munit$, as otherwise one of the two products would be $\mzero$.
+\end{proof}
+
+\subsection{Agreement monoid}
+
+Given a set $X$, we define a monoid such that everybody agrees on which $x \in X$ has been chosen.
+Let $\agm{X}$ be the monoid with carrier $X \uplus \{ \munit \}$ and multiplication
+\[
+\melt \cdot \meltB \;\eqdef\;
+\begin{cases}
+\melt & \mbox{if } \meltB = \munit \lor \melt = \meltB \\
+\meltB & \mbox{if } \melt = \munit
+\end{cases}
+\]
+
+Agreement monoids are cancellative.
+\begin{proof}[Proof of cancellativity]
+	If $\melt_f = \munit$, then the statement is trivial.
+	If $\melt_f \neq \munit$, then if $\melt = \munit$, we must have $\meltB = \munit$ and we are done.
+	Similar so for $\meltB = \munit$.
+	So let $\melt \neq \munit \neq \meltB$ and $\melt_f \mtimes \melt = \melt_f \mtimes \meltB \neq \mzero$.
+	It follows immediately that $\melt = \melt_f = \meltB$.
+\end{proof}
+
+\subsection{Finite Powerset Monoid}
+
+Given an infinite set $X$, we define a monoid $\textmon{PowFin}$ with carrier $\mathcal{P}^{\textrm{fin}}(X)$ as follows:
+\[
+\melt \cdot \meltB \;\eqdef\; \melt \cup \meltB \quad \mbox{if } \melt \cap \meltB = \emptyset
+\]
+
+We obtain:
+\begin{mathpar}
+	\inferH{PowFinUpd}{}
+		{\emptyset \mupd \{ \{x\} \mid x \in X  \}}
+\end{mathpar}
+
+\begin{proof}[Proof of \ruleref{PowFinUpd}]
+	Assume some frame $\melt_f \sep \emptyset$. Since $\melt_f$ is finite and $X$ is infinite, there exists an $x \notin \melt_f$.
+	Pick that for the result.
+\end{proof}
+
+The powerset monoids is cancellative.
+\begin{proof}[Proof of cancellativity]
+	Let $\melt_f \mtimes \melt = \melt_f \mtimes \meltB \neq \mzero$.
+	So we have $\melt_f \sep \melt$ and $\melt_f \sep \meltB$, and we have to show $\melt = \meltB$.
+	Assume $x \in \melt$. Hence $x \in \melt_f \mtimes \melt$ and thus $x \in \melt_f \mtimes \meltB$.
+	By disjointness, $x \notin \melt_f$ and hence $x \in meltB$.
+	The other direction works the same way.
+\end{proof}
+
+\subsection{Product monoid}
+\label{sec:prodm}
+
+Given a family $(M_i)_{i \in I}$ of monoids ($I$ countable), we construct a product monoid.
+Let $\prod_{i \in I} M_i$ be the monoid with carrier $\prod_{i \in I} \mcarp{M_i}$ and point-wise multiplication, non-zero when \emph{all} individual multiplications are non-zero.
+For $f \in \prod_{i \in I} \mcarp{M_i}$, we write $f[i \mapsto a]$ for the disjoint union $f \uplus [i \mapsto a]$.
+
+Frame-preserving updates on the $M_i$ lift to the product:
+\begin{mathpar}
+  \inferH{ProdUpd}
+  {a \mupd_{M_i} B}
+  {f[i \mapsto a] \mupd \{ f[i \mapsto b] \mid b \in B\}}
+\end{mathpar}
+\begin{proof}[Proof of \ruleref{ProdUpd}]
+Assume some frame $g$ and let $c \eqdef g(i)$.
+Since $f[i \mapsto a] \sep g$, we get $f \sep g$ and $a \sep_{M_i} c$.
+Thus there exists $b \in B$ such that $b \sep_{M_i} c$.
+It suffices to show $f[i \mapsto b] \sep g$.
+Since multiplication is defined pointwise, this is the case if all components are compatible.
+For $i$, we know this from $b \sep_{M_i} c$.
+For all the other components, from $f \sep g$.
+\end{proof}
+
+If every $M_i$ is cancellative, then so is $\prod_{i \in I} M_i$.
+\begin{proof}[Proof of cancellativity]
+Let $\melt, \meltB, \melt_f \in \prod_{i \in I} \mcarp{M_i}$, and assume $\melt_f \mtimes \melt = \melt_f \mtimes \meltB \neq \mzero$.
+By the definition of multiplication, this means that for all $i \in I$ we have $\melt_f(i) \mtimes \melt(i) = \melt_f(i) \mtimes \meltB(i) \neq \mzero_{M_i}$.
+As all base monoids are cancellative, we obtain $\forall i \in I.\; \melt(i) = \meltB(i)$ from which we immediately get $\melt = \meltB$.
+\end{proof}
+
+\subsection{Fractional monoid}
+\label{sec:fracm}
+
+Given a monoid $M$, we define a monoid representing fractional ownership of some piece $\melt \in M$.
+The idea is to preserve all the frame-preserving update that $M$ could have, while additionally being able to do \emph{any} update if we own the full state (as determined by the fraction being $1$).
+Let $\fracm{M}$ be the monoid with carrier $(((0, 1] \cap \mathbb{Q}) \times M) \uplus \{\munit\}$ and multiplication
+\begin{align*}
+ (q, a) \mtimes (q', a') &\eqdef (q + q', a \mtimes a') \qquad \mbox{if $q+q'\le 1$} \\
+ (q, a) \mtimes \munit &\eqdef (q,a) \\
+ \munit \mtimes (q,a) &\eqdef (q,a).
+\end{align*}
+
+We get the following frame-preserving update.
+\begin{mathpar}
+	\inferH{FracUpdFull}
+		{a, b \in M}
+		{(1, a) \mupd (1, b)}
+  \and\inferH{FracUpdLocal}
+	  {a \mupd_M B}
+	  {(q, a) \mupd \{q\} \times B}
+\end{mathpar}
+
+\begin{proof}[Proof of \ruleref{FracUpdFull}]
+Assume some $f \sep (1, a)$. This can only be $f = \munit$, so showing $f \sep (1, b)$ is trivial.
+\end{proof}
+
+\begin{proof}[Proof of \ruleref{FracUpdLocal}]
+	Assume some $f \sep (q, a)$. If $f = \munit$, then $f \sep (q, b)$ is trivial for any $b \in B$. Just pick the one we obtain by choosing $\munit_M$ as the frame for $a$.
+	
+	In the interesting case, we have $f = (q_f, a_f)$.
+	Obtain $b$ such that $b \in B \land b \sep a_f$.
+	Then $(q, b) \sep f$, and we are done.
+\end{proof}
+
+$\fracm{M}$ is cancellative if $M$ is cancellative.
+\begin{proof}[Proof of cancellativitiy]
+If $\melt_f = \munit$, we are trivially done.
+So let $\melt_f = (q_f, \melt_f')$.
+If $\melt = \munit$, then $\meltB = \munit$ as otherwise the fractions could not match up.
+Again, we are trivially done.
+Similar so for $\meltB = \munit$.
+So let $\melt = (q_a, \melt')$ and $\meltB = (q_b, \meltB')$.
+We have $(q_f + q_a, \melt_f' \mtimes \melt') = (q_f + q_b, \melt_f' \mtimes \meltB')$.
+We have to show $q_a = q_b$ and $\melt' = \meltB'$.
+The first is trivial, the second follows from cancellativitiy of $M$.
+\end{proof}
+
+\subsection{Finite partial function monoid}
+\label{sec:fpfunm}
+
+Given a countable set $X$ and a monoid $M$, we construct a monoid representing finite partial functions from $X$ to (non-unit, non-zero elements of) $M$.
+Let $\fpfunm{X}{M}$ be the product monoid $\prod_{x \in X} M$, as defined in \secref{sec:prodm} but restricting the carrier to functions $f$ where the set $\dom(f) \eqdef \{ x \mid f(x) \neq \munit_M \}$ is finite.
+This is well-defined as the set of these $f$ contains the unit and is closed under multiplication.
+(We identify finite partial functions from $X$ to $\mcarp{M}\setminus\{\munit_M\}$ and total functions from $X$ to $\mcarp{M}$ with finite $\munit_M$-support.)
+
+We use two frame-preserving updates:
+\begin{mathpar}
+  \inferH{FpFunAlloc}
+  {a \in \mcarp{M}}
+  {f \mupd \{ f[x \mapsto a] \mid x \notin \dom(f) \}}
+  \and
+  \inferH{FpFunUpd}
+  {a \mupd_M B}
+  {f[i \mapsto a] \mupd \{ f[i \mapsto b] \mid b \in B\}}
+\end{mathpar}
+Rule \ruleref{FpFunUpd} simply restates \ruleref{ProdUpd}.
+
+\begin{proof}[Proof of \ruleref{FpFunAlloc}]
+  Assume some $g \sep f$. Since $\dom(f \mtimes g)$ is finite, there will be some undefined element $x \notin \dom(f \mtimes g)$. Let $f' \eqdef f[x \mapsto a]$. This is compatible with $g$, so we are done.
+\end{proof}
+
+We write $[x \mapsto a]$ for the function mapping $x$ to $a$ and everything else in $X$ to $\munit$.
+
+%\subsection{Disposable monoid}
+%
+%Given a monoid $M$, we construct a monoid where, having full ownership of an element $\melt$ of $M$, one can throw it away, transitioning to a dead element.
+%Let \dispm{M} be the monoid with carrier $\mcarp{M} \uplus \{ \disposed \}$ and multiplication
+%% The previous unit must remain the unit of the new monoid, as is is always duplicable and hence we could not transition to \disposed if it were not composable with \disposed
+%\begin{align*}
+%  \melt \mtimes \meltB &\eqdef \melt \mtimes_M \meltB & \IF \melt \sep[M] \meltB \\
+%  \disposed \mtimes \disposed &\eqdef \disposed \\
+%  \munit_M \mtimes \disposed &\eqdef \disposed \mtimes \munit_M \eqdef \disposed
+%\end{align*}
+%The unit is the same as in $M$.
+%
+%The frame-preserving updates are
+%\begin{mathpar}
+% \inferH{DispUpd}
+%   {a \in \mcarp{M} \setminus \{\munit_M\} \and a \mupd_M B}
+%   {a \mupd B}
+% \and
+% \inferH{Dispose}
+%  {a \in \mcarp{M} \setminus \{\munit_M\} \and \All b \in \mcarp{M}. a \sep b \Ra b = \munit_M}
+%  {a \mupd \disposed}
+%\end{mathpar}
+%
+%\begin{proof}[Proof of \ruleref{DispUpd}]
+%Assume a frame $f$. If $f = \disposed$, then $a = \munit_M$, which is a contradiction.
+%Thus $f \in \mcarp{M}$ and we can use $a \mupd_M B$.
+%\end{proof}
+%
+%\begin{proof}[Proof of \ruleref{Dispose}]
+%The second premiss says that $a$ has no non-trivial frame in $M$. To show the update, assume a frame $f$ in $\dispm{M}$. Like above, we get $f \in \mcarp{M}$, and thus $f = \munit_M$. But $\disposed \sep \munit_M$ is trivial, so we are done.
+%\end{proof}
+
+\subsection{Authoritative monoid}\label{sec:auth}
+
+Given a monoid $M$, we construct a monoid modeling someone owning an \emph{authoritative} element $x$ of $M$, and others potentially owning fragments $\melt \le_M x$ of $x$.
+(If $M$ is an exclusive monoid, the construction is very similar to a half-ownership monoid with two asymmetric halves.)
+Let $\auth{M}$ be the monoid with carrier
+\[
+	\SET{ (x, \melt) }{ x \in \mcarp{\exm{\mcarp{M}}} \land \melt \in \mcarp{M} \land (x = \munit_{\exm{\mcarp{M}}} \lor \melt \leq_M x) }
+\]
+and multiplication
+\[
+(x, \melt) \mtimes (y, \meltB) \eqdef
+     (x \mtimes y, \melt \mtimes \meltB) \quad \mbox{if } x \sep y \land \melt \sep \meltB \land (x \mtimes y = \munit_{\exm{\mcarp{M}}} \lor \melt \mtimes \meltB \leq_M x \mtimes y)
+\]
+Note that $(\munit_{\exm{\mcarp{M}}}, \munit_M)$ is the unit and asserts no ownership whatsoever, but $(\munit_{M}, \munit_M)$ asserts that the authoritative element is $\munit_M$.
+
+Let $x, \melt \in \mcarp M$.
+We write $\authfull x$ for full ownership $(x, \munit_M):\auth{M}$ and $\authfrag \melt$ for fragmental ownership $(\munit_{\exm{\mcarp{M}}}, \melt)$ and $\authfull x , \authfrag \melt$ for combined ownership $(x, \melt)$.
+If $x$ or $a$ is $\mzero_{M}$, then the sugar denotes $\mzero_{\auth{M}}$.
+
+\ralf{This needs syncing with the Coq development.}
+The frame-preserving update involves a rather unwieldy side-condition:
+\begin{mathpar}
+	\inferH{AuthUpd}{
+		\All\melt_f\in\mcar{\monoid}. \melt\sep\meltB \land \melt\mtimes\melt_f \le \meltB\mtimes\melt_f \Ra \melt'\mtimes\melt_f \le \melt'\mtimes\meltB \and
+		\melt' \sep \meltB
+	}{
+		\authfull \melt \mtimes \meltB, \authfrag \melt \mupd \authfull \melt' \mtimes \meltB, \authfrag \melt'
+	}
+\end{mathpar}
+We therefore derive two special cases.
+
+\paragraph{Local frame-preserving updates.}
+
+\newcommand\authupd{f}%
+Following~\cite{scsl}, we say that $\authupd: \mcar{M} \ra \mcar{M}$ is \emph{local} if
+\[
+	\All a, b \in \mcar{M}. a \sep b \land \authupd(a) \neq \mzero \Ra \authupd(a \mtimes b) = \authupd(a) \mtimes b
+\]
+Then,
+\begin{mathpar}
+	\inferH{AuthUpdLocal}
+	{\text{$\authupd$ local} \and \authupd(\melt)\sep\meltB}
+	{\authfull \melt \mtimes \meltB, \authfrag \melt \mupd \authfull \authupd(\melt) \mtimes \meltB, \authfrag \authupd(\melt)}
+\end{mathpar}
+
+\paragraph{Frame-preserving updates on cancellative monoids.}
+
+Frame-preserving updates are also possible if we assume $M$ cancellative:
+\begin{mathpar}
+ \inferH{AuthUpdCancel}
+  {\text{$M$ cancellative} \and \melt'\sep\meltB}
+  {\authfull \melt \mtimes \meltB, \authfrag \melt \mupd \authfull \melt' \mtimes \meltB, \authfrag \melt'}
+\end{mathpar}
+
+\subsection{Fractional heap monoid}
+\label{sec:fheapm}
+
+By combining the fractional, finite partial function, and authoritative monoids, we construct two flavors of heaps with fractional permissions and mention their important frame-preserving updates.
+Hereinafter, we assume the set $\textdom{Val}$ of values is countable.
+
+Given a set $Y$, define $\FHeap(Y) \eqdef \fpfunm{\textdom{Val}}{\fracm{Y}}$ representing a fractional heap with codomain $Y$.
+From \S\S\ref{sec:fracm} and~\ref{sec:fpfunm} we obtain the following frame-preserving updates as well as the fact that $\FHeap(Y)$ is cancellative.
+\begin{mathpar}
+	\axiomH{FHeapUpd}{h[x \mapsto (1, y)] \mupd h[x \mapsto (1, y')]} \and
+	\axiomH{FHeapAlloc}{h \mupd \{\, h[x \mapsto (1, y)] \mid x \in \textdom{Val} \,\}}
+\end{mathpar}
+We will write $qh$ with $h : \textsort{Val} \fpfn Y$ for the function in $\FHeap(Y)$ mapping every $x \in \dom(h)$ to $(q, h(x))$, and everything else to $\munit$.
+
+Define $\AFHeap(Y) \eqdef \auth{\FHeap(Y)}$ representing an authoritative fractional heap with codomain $Y$.
+We easily obtain the following frame-preserving updates.
+\begin{mathpar}
+	\axiomH{AFHeapUpd}{
+		(\authfull h[x \mapsto (1, y)], \authfrag [x \mapsto (1, y)]) \mupd (\authfull h[x \mapsto (1, y')], \authfrag [x \mapsto (1, y')])
+	}
+	\and
+	\inferH{AFHeapAdd}{
+		x \notin \dom(h)
+	}{
+		\authfull h \mupd (\authfull h[x \mapsto (q, y)], \authfrag [x \mapsto (q, y)])
+	}
+	\and
+	\axiomH{AFHeapRemove}{
+		(\authfull h[x \mapsto (q, y)], \authfrag [x \mapsto (q, y)]) \mupd \authfull h
+	}
+\end{mathpar}
+
+\subsection{STS with tokens monoid}
+\label{sec:stsmon}
+
+\ralf{This needs syncing with the Coq development.}
+
+Given a state-transition system~(STS) $(\STSS, \ra)$, a set of tokens $\STSS$, and a labeling $\STSL: \STSS \ra \mathcal{P}(\STST)$ of \emph{protocol-owned} tokens for each state, we construct a monoid modeling an authoritative current state and permitting transitions given a \emph{bound} on the current state and a set of \emph{locally-owned} tokens.
+
+The construction follows the idea of STSs as described in CaReSL \cite{caresl}.
+We first lift the transition relation to $\STSS \times \mathcal{P}(\STST)$ (implementing a \emph{law of token conservation}) and define upwards closure:
+\begin{align*}
+ (s, T) \ra (s', T') \eqdef&\, s \ra s' \land \STSL(s) \uplus T = \STSL(s') \uplus T' \\
+ \textsf{frame}(s, T) \eqdef&\, (s, \STST \setminus (\STSL(s) \uplus T)) \\
+ \upclose(S, T) \eqdef&\, \SET{ s' \in \STSS}{\exists s \in S.\; \textsf{frame}(s, T) \ststrans \textsf{frame}(s', T) }
+\end{align*}
+
+\noindent
+We have
+\begin{quote}
+	If $(s, T) \ra (s', T')$\\
+	and $T_f \sep (T \uplus \STSL(s))$,\\
+	then $\textsf{frame}(s, T_f) \ra \textsf{frame}(s', T_f)$.
+\end{quote}
+\begin{proof}
+This follows directly by framing the tokens in $\STST \setminus (T_f \uplus T \uplus \STSL(s))$ around the given transition, which yields $(s, \STST \setminus (T_f \uplus \STSL{T}(s))) \ra (s', T' \uplus (\STST \setminus (T_f \uplus T \uplus \STSL{T}(s))))$.
+This is exactly what we have to show, since we know $\STSL(s) \uplus T = \STSL(s') \uplus T'$.
+\end{proof}
+
+Let $\STSMon{\STSS}$ be the monoid with carrier
+\[
+	\SET{ (s, S, T) \in \exm{\STSS} \times \mathcal{P}(\STSS) \times \mathcal{P}(\STST) }{ \begin{aligned} &(s = \munit \lor s \in S) \land \upclose(S, T) = S   \land{} \\& S \neq \emptyset \land \All s \in S. \STSL(s) \sep T  \end{aligned} }
+\]
+and multiplication
+\[
+	(s, S, T) \mtimes (s', S', T') \eqdef (s'' \eqdef s \mtimes_{\exm{\STSS}} s', S'' \eqdef S \cap S', T'' \eqdef T \cup T') \quad \text{if }\begin{aligned}[t] &(s = \munit \lor s' = \munit) \land T \sep T' \land{} \\& S'' \neq \emptyset \land (s'' \neq \munit \Ra s'' \in S'') \end{aligned}
+\]
+
+Some sugar makes it more convenient to assert being at least in a certain state and owning some tokens: $(s, T) : \STSMon{\STSS} \eqdef (\munit, \upclose(\{s\}, T), T) : \STSMon{\STSS}$, and
+$s : \STSMon{\STSS} \eqdef (s, \emptyset) : \STSMon{\STSS}$.
+
+We will need the following frame-preserving update.
+\begin{mathpar}
+	\inferH{StsStep}{(s, T) \ststrans (s', T')}
+	 {(s, S, T) \mupd (s', \upclose(\{s'\}, T'), T')}
+\end{mathpar}
+\begin{proof}[Proof of \ruleref{StsStep}]
+Assume some upwards-closed $S_f, T_f$ (the frame cannot be authoritative) s.t.\ $s \in S_f$ and $T_f \sep (T \uplus \STSL(s))$. We have to show that this frame combines with our final monoid element, which is the case if $s' \in S_f$ and $T_f \sep T'$.
+By upward-closedness, it suffices to show $\textsf{frame}(s, T_f) \ststrans \textsf{frame}(s', T_f)$.
+This follows by induction on the path $(s, T) \ststrans (s', T')$, and using the lemma proven above for each step.
+\end{proof}
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "iris"
+%%% End: 
