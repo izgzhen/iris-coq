@@ -63,6 +63,7 @@ Context {A : cmraT}.
 
 Instance option_validN : ValidN (option A) := λ n mx,
   match mx with Some x => ✓{n} x | None => True end.
+Global Instance option_empty : Empty (option A) := None.
 Instance option_unit : Unit (option A) := fmap unit.
 Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
 Instance option_minus : Minus (option A) :=
@@ -125,6 +126,8 @@ Proof.
 Qed.
 Canonical Structure optionRA :=
   CMRAT option_cofe_mixin option_cmra_mixin option_cmra_extend_mixin.
+Global Instance option_cmra_identity : CMRAIdentity optionRA.
+Proof. split. done. by intros []. by inversion_clear 1. Qed.
 
 Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my.
 Proof.
