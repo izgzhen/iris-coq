@@ -169,22 +169,24 @@ End cmra.
 Arguments authRA : clear implicits.
 
 (* Functor *)
-Instance auth_fmap : FMap auth := λ A B f x,
-  Auth (f <$> authoritative x) (f (own x)).
-Arguments auth_fmap _ _ _ !_ /.
-Lemma auth_fmap_id {A} (x : auth A) : id <$> x = x.
-Proof. by destruct x; rewrite /= excl_fmap_id. Qed.
-Lemma excl_fmap_compose {A B C} (f : A → B) (g : B → C) (x : auth A) :
-  g ∘ f <$> x = g <$> f <$> x.
-Proof. by destruct x; rewrite /= excl_fmap_compose. Qed.
-Instance auth_fmap_cmra_ne {A B : cofeT} n :
-  Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@fmap auth _ A B).
+Definition auth_map {A B} (f : A → B) (x : auth A) : auth B :=
+  Auth (excl_map f (authoritative x)) (f (own x)).
+Lemma auth_map_id {A} (x : auth A) : auth_map id x = x.
+Proof. by destruct x; rewrite /auth_map excl_map_id. Qed.
+Lemma auth_map_compose {A B C} (f : A → B) (g : B → C) (x : auth A) :
+  auth_map (g ∘ f) x = auth_map g (auth_map f x).
+Proof. by destruct x; rewrite /auth_map excl_map_compose. Qed.
+Lemma auth_map_ext {A B : cofeT} (f g : A → B) x :
+  (∀ x, f x ≡ g x) → auth_map f x ≡ auth_map g x.
+Proof. constructor; simpl; auto using excl_map_ext. Qed.
+Instance auth_map_cmra_ne {A B : cofeT} n :
+  Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@auth_map A B).
 Proof.
-  intros f g Hf [??] [??] [??]; split; [by apply excl_fmap_cmra_ne|by apply Hf].
+  intros f g Hf [??] [??] [??]; split; [by apply excl_map_cmra_ne|by apply Hf].
 Qed.
-Instance auth_fmap_cmra_monotone {A B : cmraT} (f : A → B) :
-  (∀ n, Proper (dist n ==> dist n) f) → CMRAMonotone f →
-  CMRAMonotone (fmap f : auth A → auth B).
+Instance auth_map_cmra_monotone {A B : cmraT} (f : A → B) :
+  (∀ n, Proper (dist n ==> dist n) f) →
+  CMRAMonotone f → CMRAMonotone (auth_map f).
 Proof.
   split.
   * by intros n [x a] [y b]; rewrite !auth_includedN /=;
@@ -193,6 +195,6 @@ Proof.
       naive_solver eauto using @includedN_preserving, @validN_preserving.
 Qed.
 Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=
-  CofeMor (fmap f : authC A → authC B).
+  CofeMor (auth_map f).
 Lemma authC_map_ne A B n : Proper (dist n ==> dist n) (@authC_map A B).
 Proof. intros f f' Hf [[a| |] b]; repeat constructor; apply Hf. Qed.

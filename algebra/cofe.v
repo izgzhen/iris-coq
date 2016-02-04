@@ -441,12 +441,21 @@ Arguments iprodC {_} _.
 
 Definition iprod_map {A} {B1 B2 : A → cofeT} (f : ∀ x, B1 x → B2 x)
   (g : iprod B1) : iprod B2 := λ x, f _ (g x).
+Lemma iprod_map_ext {A} {B1 B2 : A → cofeT} (f1 f2 : ∀ x, B1 x → B2 x) g :
+  (∀ x, f1 x (g x) ≡ f2 x (g x)) → iprod_map f1 g ≡ iprod_map f2 g.
+Proof. done. Qed.
+Lemma iprod_map_id {A} {B: A → cofeT} (g : iprod B) : iprod_map (λ _, id) g = g.
+Proof. done. Qed.
+Lemma iprod_map_compose {A} {B1 B2 B3 : A → cofeT}
+    (f1 : ∀ x, B1 x → B2 x) (f2 : ∀ x, B2 x → B3 x) (g : iprod B1) :
+  iprod_map (λ x, f2 x ∘ f1 x) g = iprod_map f2 (iprod_map f1 g).
+Proof. done. Qed.
 Instance iprod_map_ne {A} {B1 B2 : A → cofeT} (f : ∀ x, B1 x → B2 x) n :
   (∀ x, Proper (dist n ==> dist n) (f x)) →
   Proper (dist n ==> dist n) (iprod_map f).
 Proof. by intros ? y1 y2 Hy x; rewrite /iprod_map (Hy x). Qed.
 Definition iprodC_map {A} {B1 B2 : A → cofeT} (f : iprod (λ x, B1 x -n> B2 x)) :
   iprodC B1 -n> iprodC B2 := CofeMor (iprod_map f).
-Instance laterC_map_ne {A} {B1 B2 : A → cofeT} n :
+Instance iprodC_map_ne {A} {B1 B2 : A → cofeT} n :
   Proper (dist n ==> dist n) (@iprodC_map A B1 B2).
 Proof. intros f1 f2 Hf g x; apply Hf. Qed.

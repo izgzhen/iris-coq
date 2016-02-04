@@ -154,27 +154,30 @@ Arguments exclC : clear implicits.
 Arguments exclRA : clear implicits.
 
 (* Functor *)
-Instance excl_fmap : FMap excl := λ A B f x,
+Definition excl_map {A B} (f : A → B) (x : excl A) : excl B :=
   match x with
   | Excl a => Excl (f a) | ExclUnit => ExclUnit | ExclBot => ExclBot
   end.
-Lemma excl_fmap_id {A} (x : excl A) : id <$> x = x.
+Lemma excl_map_id {A} (x : excl A) : excl_map id x = x.
 Proof. by destruct x. Qed.
-Lemma excl_fmap_compose {A B C} (f : A → B) (g : B → C) (x : excl A) :
-  g ∘ f <$> x = g <$> f <$> x.
+Lemma excl_map_compose {A B C} (f : A → B) (g : B → C) (x : excl A) :
+  excl_map (g ∘ f) x = excl_map g (excl_map f x).
 Proof. by destruct x. Qed.
-Instance excl_fmap_cmra_ne {A B : cofeT} n :
-  Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@fmap excl _ A B).
+Lemma excl_map_ext {A B : cofeT} (f g : A → B) x :
+  (∀ x, f x ≡ g x) → excl_map f x ≡ excl_map g x.
+Proof. by destruct x; constructor. Qed.
+Instance excl_map_cmra_ne {A B : cofeT} n :
+  Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@excl_map A B).
 Proof. by intros f f' Hf; destruct 1; constructor; apply Hf. Qed.
-Instance excl_fmap_cmra_monotone {A B : cofeT} :
-  (∀ n, Proper (dist n ==> dist n) f) → CMRAMonotone (fmap f : excl A → excl B).
+Instance excl_map_cmra_monotone {A B : cofeT} (f : A → B) :
+  (∀ n, Proper (dist n ==> dist n) f) → CMRAMonotone (excl_map f).
 Proof.
   split.
-  * intros n x y [z Hy]; exists (f <$> z); rewrite Hy.
+  * intros n x y [z Hy]; exists (excl_map f z); rewrite Hy.
     by destruct x, z; constructor.
   * by intros n [a| |].
 Qed.
 Definition exclC_map {A B} (f : A -n> B) : exclC A -n> exclC B :=
-  CofeMor (fmap f : exclRA A → exclRA B).
+  CofeMor (excl_map f).
 Instance exclC_map_ne A B n : Proper (dist n ==> dist n) (@exclC_map A B).
 Proof. by intros f f' Hf []; constructor; apply Hf. Qed.
