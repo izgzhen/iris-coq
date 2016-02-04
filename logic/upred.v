@@ -486,7 +486,13 @@ Global Instance const_mono' : Proper (impl ==> (⊑)) (@uPred_const M).
 Proof. intros φ1 φ2; apply const_mono. Qed.
 Global Instance and_mono' : Proper ((⊑) ==> (⊑) ==> (⊑)) (@uPred_and M).
 Proof. by intros P P' HP Q Q' HQ; apply and_mono. Qed.
+Global Instance and_flip_mono' :
+  Proper (flip (⊑) ==> flip (⊑) ==> flip (⊑)) (@uPred_and M).
+Proof. by intros P P' HP Q Q' HQ; apply and_mono. Qed.
 Global Instance or_mono' : Proper ((⊑) ==> (⊑) ==> (⊑)) (@uPred_or M).
+Proof. by intros P P' HP Q Q' HQ; apply or_mono. Qed.
+Global Instance or_flip_mono' :
+  Proper (flip (⊑) ==> flip (⊑) ==> flip (⊑)) (@uPred_or M).
 Proof. by intros P P' HP Q Q' HQ; apply or_mono. Qed.
 Global Instance impl_mono' :
   Proper (flip (⊑) ==> (⊑) ==> (⊑)) (@uPred_impl M).
@@ -590,6 +596,9 @@ Proof. by intros x [|n] ?; [done|intros (x1&x2&?&?&[a ?]); exists a,x1,x2]. Qed.
 (* Derived BI Stuff *)
 Hint Resolve sep_mono.
 Global Instance sep_mono' : Proper ((⊑) ==> (⊑) ==> (⊑)) (@uPred_sep M).
+Proof. by intros P P' HP Q Q' HQ; apply sep_mono. Qed.
+Global Instance sep_flip_mono' :
+  Proper (flip (⊑) ==> flip (⊑) ==> flip (⊑)) (@uPred_sep M).
 Proof. by intros P P' HP Q Q' HQ; apply sep_mono. Qed.
 Lemma wand_mono P P' Q Q' : Q ⊑ P → P' ⊑ Q' → (P -★ P') ⊑ (Q -★ Q').
 Proof. intros HP HQ; apply wand_intro_r; rewrite HP -HQ; apply wand_elim_l. Qed.

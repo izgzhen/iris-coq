@@ -74,9 +74,7 @@ Proof.
   apply const_elim_l=>-[v2' [Hv ?]] /=.
   rewrite -pvs_intro.
   rewrite (forall_elim v2') (forall_elim σ2') (forall_elim ef) const_equiv //.
-  rewrite left_id wand_elim_r. apply sep_mono; last done.
-  (* FIXME RJ why can't I do this rewrite before doing sep_mono? *)
-  by rewrite -(wp_value' _ _ e2').
+  by rewrite left_id wand_elim_r -(wp_value' _ _ e2').
 Qed.
 
 Lemma wp_lift_atomic_det_step {E Q e1} σ1 v2 σ2 ef :
