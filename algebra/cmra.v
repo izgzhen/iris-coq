@@ -602,7 +602,14 @@ Section iprod_cmra.
       eauto using iprod_insert_updateP with congruence.
   Qed.
 
-  Context `{∀ x, Empty (B x)}.
+  Context `{∀ x, Empty (B x)} `{∀ x, CMRAIdentity (B x)}.
+  Lemma iprod_op_singleton (x : A) (y1 y2 : B x) :
+    iprod_singleton x y1 ⋅ iprod_singleton x y2 ≡ iprod_singleton x (y1 ⋅ y2).
+  Proof.
+    intros x'; destruct (decide (x' = x)) as [->|].
+    * by rewrite iprod_lookup_op !iprod_lookup_singleton.
+    * by rewrite iprod_lookup_op !iprod_lookup_singleton_ne // left_id.
+  Qed.
   Lemma iprod_singleton_updateP x (P : B x → Prop) (Q : iprod B → Prop) y1 :
     y1 ~~>: P → (∀ y2, P y2 → Q (iprod_singleton x y2)) →
     iprod_singleton x y1 ~~>: Q.
