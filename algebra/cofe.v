@@ -371,9 +371,17 @@ Proof. intros n f g Hf n'; apply Hf. Qed.
 (** Indexed product *)
 (** Need to put this in a definition to make canonical structures to work. *)
 Definition iprod {A} (B : A → cofeT) := ∀ x, B x.
+Definition iprod_insert `{∀ x x' : A, Decision (x = x')} {B : A → cofeT}
+    (x : A) (y : B x) (f : iprod B) : iprod B := λ x',
+  match decide (x = x') with left H => eq_rect _ B y _ H | right _ => f x' end.
+Definition iprod_singleton
+    `{∀ x x' : A, Decision (x = x')} {B : A → cofeT} `{∀ x : A, Empty (B x)}
+  (x : A) (y : B x) : iprod B := iprod_insert x y (λ _, ∅).
 
 Section iprod_cofe.
   Context {A} {B : A → cofeT}.
+  Implicit Types x : A.
+  Implicit Types f g : iprod B.
   Instance iprod_equiv : Equiv (iprod B) := λ f g, ∀ x, f x ≡ g x.
   Instance iprod_dist : Dist (iprod B) := λ n f g, ∀ x, f x ={n}= g x.
   Program Definition iprod_chain (c : chain (iprod B)) (x : A) : chain (B x) :=
@@ -397,6 +405,48 @@ Section iprod_cofe.
       apply (chain_cauchy c); lia.
   Qed.
   Canonical Structure iprodC : cofeT := CofeT iprod_cofe_mixin.
+
+  Context `{∀ x x' : A, Decision (x = x')}.
+  Global Instance iprod_insert_ne x n :
+    Proper (dist n ==> dist n ==> dist n) (iprod_insert x).
+  Proof.
+    intros y1 y2 ? f1 f2 ? x'; rewrite /iprod_insert.
+    by destruct (decide _) as [[]|].
+  Qed.
+  Global Instance iprod_insert_proper x :
+    Proper ((≡) ==> (≡) ==> (≡)) (iprod_insert x) := ne_proper_2 _.
+  Lemma iprod_lookup_insert f x y : (iprod_insert x y f) x = y.
+  Proof.
+    rewrite /iprod_insert; destruct (decide _) as [Hx|]; last done.
+    by rewrite (proof_irrel Hx eq_refl).
+  Qed.
+  Lemma iprod_lookup_insert_ne f x x' y :
+    x ≠ x' → (iprod_insert x y f) x' = f x'.
+  Proof. by rewrite /iprod_insert; destruct (decide _). Qed.
+
+  Context `{∀ x : A, Empty (B x)}.
+  Global Instance iprod_singleton_ne x n :
+    Proper (dist n ==> dist n) (iprod_singleton x).
+  Proof. by intros y1 y2 Hy; rewrite /iprod_singleton Hy. Qed.
+  Global Instance iprod_singleton_proper x :
+    Proper ((≡) ==> (≡)) (iprod_singleton x) := ne_proper _.
+  Lemma iprod_lookup_singleton x y : (iprod_singleton x y) x = y.
+  Proof. by rewrite /iprod_singleton iprod_lookup_insert. Qed.
+  Lemma iprod_lookup_singleton_ne x x' y :
+    x ≠ x' → (iprod_singleton x y) x' = ∅.
+  Proof. intros; by rewrite /iprod_singleton iprod_lookup_insert_ne. Qed.
 End iprod_cofe.
 
 Arguments iprodC {_} _.
+
+Definition iprod_map {A} {B1 B2 : A → cofeT} (f : ∀ x, B1 x → B2 x)
+  (g : iprod B1) : iprod B2 := λ x, f _ (g x).
+Instance iprod_map_ne {A} {B1 B2 : A → cofeT} (f : ∀ x, B1 x → B2 x) n :
+  (∀ x, Proper (dist n ==> dist n) (f x)) →
+  Proper (dist n ==> dist n) (iprod_map f).
+Proof. by intros ? y1 y2 Hy x; rewrite /iprod_map (Hy x). Qed.
+Definition iprodC_map {A} {B1 B2 : A → cofeT} (f : iprod (λ x, B1 x -n> B2 x)) :
+  iprodC B1 -n> iprodC B2 := CofeMor (iprod_map f).
+Instance laterC_map_ne {A} {B1 B2 : A → cofeT} n :
+  Proper (dist n ==> dist n) (@iprodC_map A B1 B2).
+Proof. intros f1 f2 Hf g x; apply Hf. Qed.

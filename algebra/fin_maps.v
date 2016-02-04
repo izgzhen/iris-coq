@@ -202,7 +202,7 @@ Proof.
   intros j; move: (Hm j)=>{Hm}; rewrite !lookup_op=>Hm.
   destruct (decide (i = j)); simplify_map_equality'; auto.
 Qed.
-Lemma map_insert_updateP' (P : A → Prop) (Q : gmap K A → Prop) m i x :
+Lemma map_insert_updateP' (P : A → Prop) m i x :
   x ~~>: P → <[i:=x]>m ~~>: λ m', ∃ y, m' = <[i:=y]>m ∧ P y.
 Proof. eauto using map_insert_updateP. Qed.
 Lemma map_insert_update m i x y : x ~~> y → <[i:=x]>m ~~> <[i:=y]>m.

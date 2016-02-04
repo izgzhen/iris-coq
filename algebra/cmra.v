@@ -531,10 +531,15 @@ Instance prodRA_map_ne {A A' B B'} n :
 (** ** Indexed product *)
 Section iprod_cmra.
   Context {A} {B : A → cmraT}.
+  Implicit Types f g : iprod B.
   Instance iprod_op : Op (iprod B) := λ f g x, f x ⋅ g x.
+  Definition iprod_lookup_op f g x : (f ⋅ g) x = f x ⋅ g x := eq_refl.
   Instance iprod_unit : Unit (iprod B) := λ f x, unit (f x).
+  Definition iprod_lookup_unit f x : (unit f) x = unit (f x) := eq_refl.
+  Global Instance iprod_empty `{∀ x, Empty (B x)} : Empty (iprod B) := λ x, ∅.
   Instance iprod_validN : ValidN (iprod B) := λ n f, ∀ x, ✓{n} (f x).
   Instance iprod_minus : Minus (iprod B) := λ f g x, f x ⩪ g x.
+  Definition iprod_lookup_minus f g x : (f ⩪ g) x = f x ⩪ g x := eq_refl.
   Lemma iprod_includedN_spec (f g : iprod B) n : f ≼{n} g ↔ ∀ x, f x ≼{n} g x.
   Proof.
     split.
@@ -545,21 +550,21 @@ Section iprod_cmra.
   Definition iprod_cmra_mixin : CMRAMixin (iprod B).
   Proof.
     split.
-    * by intros n f1 f2 f3 Hf x; rewrite /op /iprod_op (Hf x).
-    * by intros n f1 f2 Hf x; rewrite /unit /iprod_unit (Hf x).
+    * by intros n f1 f2 f3 Hf x; rewrite iprod_lookup_op (Hf x).
+    * by intros n f1 f2 Hf x; rewrite iprod_lookup_unit (Hf x).
     * by intros n f1 f2 Hf ? x; rewrite -(Hf x).
-    * by intros n f f' Hf g g' Hg i; rewrite /minus /iprod_minus (Hf i) (Hg i).
+    * by intros n f f' Hf g g' Hg i; rewrite iprod_lookup_minus (Hf i) (Hg i).
     * by intros f x.
     * intros n f Hf x; apply cmra_validN_S, Hf.
-    * by intros f1 f2 f3 x; rewrite /op /iprod_op associative.
-    * by intros f1 f2 x; rewrite /op /iprod_op commutative.
-    * by intros f x; rewrite /op /iprod_op /unit /iprod_unit cmra_unit_l.
-    * by intros f x; rewrite /unit /iprod_unit cmra_unit_idempotent.
+    * by intros f1 f2 f3 x; rewrite iprod_lookup_op associative.
+    * by intros f1 f2 x; rewrite iprod_lookup_op commutative.
+    * by intros f x; rewrite iprod_lookup_op iprod_lookup_unit cmra_unit_l.
+    * by intros f x; rewrite iprod_lookup_unit cmra_unit_idempotent.
     * intros n f1 f2; rewrite !iprod_includedN_spec=> Hf x.
-      by rewrite /unit /iprod_unit; apply cmra_unit_preservingN, Hf.
+      by rewrite iprod_lookup_unit; apply cmra_unit_preservingN, Hf.
     * intros n f1 f2 Hf x; apply cmra_validN_op_l with (f2 x), Hf.
     * intros n f1 f2; rewrite iprod_includedN_spec=> Hf x.
-      by rewrite /op /iprod_op /minus /iprod_minus cmra_op_minus; try apply Hf.
+      by rewrite iprod_lookup_op iprod_lookup_minus cmra_op_minus; try apply Hf.
   Qed.
   Definition iprod_cmra_extend_mixin : CMRAExtendMixin (iprod B).
   Proof.
@@ -570,6 +575,63 @@ Section iprod_cmra.
   Qed.
   Canonical Structure iprodRA : cmraT :=
     CMRAT iprod_cofe_mixin iprod_cmra_mixin iprod_cmra_extend_mixin.
+  Global Instance iprod_cmra_identity `{∀ x, Empty (B x)} :
+    (∀ x, CMRAIdentity (B x)) → CMRAIdentity iprodRA.
+  Proof.
+    intros ?; split.
+    * intros n x; apply cmra_empty_valid.
+    * by intros f x; rewrite iprod_lookup_op left_id.
+    * by intros f Hf x; apply (timeless _).
+  Qed.
+
+  Context `{∀ x x' : A, Decision (x = x')}.
+  Lemma iprod_insert_updateP x (P : B x → Prop) (Q : iprod B → Prop) g y1 :
+    y1 ~~>: P → (∀ y2, P y2 → Q (iprod_insert x y2 g)) →
+    iprod_insert x y1 g ~~>: Q.
+  Proof.
+    intros Hy1 HP gf n Hg. destruct (Hy1 (gf x) n) as (y2&?&?).
+    { move: (Hg x). by rewrite iprod_lookup_op iprod_lookup_insert. }
+    exists (iprod_insert x y2 g); split; [auto|].
+    intros x'; destruct (decide (x' = x)) as [->|];
+      rewrite iprod_lookup_op ?iprod_lookup_insert //.
+    move: (Hg x'). by rewrite iprod_lookup_op !iprod_lookup_insert_ne.
+  Qed.
+  Lemma iprod_insert_updateP' x (P : B x → Prop) g y1 :
+    y1 ~~>: P →
+    iprod_insert x y1 g ~~>: λ g', ∃ y2, g' = iprod_insert x y2 g ∧ P y2.
+  Proof. eauto using iprod_insert_updateP. Qed.
+  Lemma iprod_insert_update g x y1 y2 :
+    y1 ~~> y2 → iprod_insert x y1 g ~~> iprod_insert x y2 g.
+  Proof.
+    rewrite !cmra_update_updateP;
+      eauto using iprod_insert_updateP with congruence.
+  Qed.
+
+  Context `{∀ x, Empty (B x)}.
+  Lemma iprod_singleton_updateP x (P : B x → Prop) (Q : iprod B → Prop) y1 :
+    y1 ~~>: P → (∀ y2, P y2 → Q (iprod_singleton x y2)) →
+    iprod_singleton x y1 ~~>: Q.
+  Proof. rewrite /iprod_singleton; eauto using iprod_insert_updateP. Qed.
+  Lemma iprod_singleton_updateP' x (P : B x → Prop) y1 :
+    y1 ~~>: P →
+    iprod_singleton x y1 ~~>: λ g', ∃ y2, g' = iprod_singleton x y2 ∧ P y2.
+  Proof. eauto using iprod_singleton_updateP. Qed.
+  Lemma iprod_singleton_update x y1 y2 :
+    y1 ~~> y2 → iprod_singleton x y1 ~~> iprod_singleton x y2.
+  Proof. by intros; apply iprod_insert_update. Qed.
 End iprod_cmra.
 
 Arguments iprodRA {_} _.
+
+Instance iprod_map_cmra_monotone {A} {B1 B2: A → cmraT} (f : ∀ x, B1 x → B2 x) :
+  (∀ x, CMRAMonotone (f x)) → CMRAMonotone (iprod_map f).
+Proof.
+  split.
+  * intros n g1 g2; rewrite !iprod_includedN_spec=> Hf x.
+    rewrite /iprod_map; apply includedN_preserving, Hf.
+  * intros n g Hg x; rewrite /iprod_map; apply validN_preserving, Hg.
+Qed.
+Definition iprodRA_map {A} {B1 B2: A → cmraT} (f : iprod (λ x, B1 x -n> B2 x)) :
+  iprodRA B1 -n> iprodRA B2 := CofeMor (iprod_map f).
+Instance laterRA_map_ne {A} {B1 B2 : A → cmraT} n :
+  Proper (dist n ==> dist n) (@iprodRA_map A B1 B2) := _.
