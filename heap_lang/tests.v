@@ -9,8 +9,8 @@ Module LangTests.
   Goal ∀ σ, prim_step add σ 42 σ None.
   Proof. intros; do_step done. Qed.
   (* FIXME RJ why do I need the %L ? *)
-  Definition rec : expr := (rec:: #0 $ #1)%L. (* fix f x => f x *)
-  Definition rec_app : expr := rec $ 0.
+  Definition rec : expr := (rec:: #0 #1)%L. (* fix f x => f x *)
+  Definition rec_app : expr := rec 0.
   Goal ∀ σ, prim_step rec_app σ rec_app σ None.
   Proof. Set Printing All. intros; do_step done. Qed.
   Definition lam : expr := (λ: #0 + 21)%L.
@@ -23,11 +23,9 @@ Module LiftingTests.
   Implicit Types P : iProp heap_lang Σ.
   Implicit Types Q : val → iProp heap_lang Σ.
 
-  Definition e3 : expr := ★ #0.
   (* FIXME: Fix levels so that we do not need the parenthesis here. *)
-  Definition e2 : expr := (#0 <- ★ #0 + 1) ; e3.
-  Definition e  : expr := let: new 1 in e2.
-  Goal ∀ σ E, (ownP σ : iProp heap_lang Σ) ⊑ (wp E e (λ v, ■(v = LitNatV 2))).
+  Definition e  : expr := let: new 1 in (#0 <- ★#0 + 1 ; ★#0)%L.
+  Goal ∀ σ E, (ownP σ : iProp heap_lang Σ) ⊑ (wp E e (λ v, ■(v = 2))).
   Proof.
     move=> σ E. rewrite /e.
     rewrite -wp_let. rewrite -wp_alloc_pst; last done.
@@ -55,19 +53,22 @@ Module LiftingTests.
     by apply const_intro.
   Qed.
 
-  Definition FindPred' n1 Sn1 n2 f : expr := if (Sn1 < n2)
-                                             then f $ Sn1
+  (* TODO: once asimpl preserves notation, we don't need
+     FindPred' anymore. *)
+  (* FIXME: fix notation so that we do not need parenthesis or %L *)
+  Definition FindPred' n1 Sn1 n2 f : expr := if Sn1 < n2
+                                             then f Sn1
                                              else n1.
-  Definition FindPred n2 : expr := Rec (let: (#1 + 1) in
-                                        (FindPred' (#2) (#0) n2.[ren(+3)] (#1)))%L.
+  Definition FindPred n2 : expr := rec:: (let: (#1 + 1) in
+                                     FindPred' #2 #0 n2.[ren(+3)] #1)%L.
   Definition Pred : expr := λ: (if #0 ≤ 0
                                 then 0
-                                else (FindPred (#0)) $ 0
+                                else FindPred (#0) 0
                                )%L.
 
   Lemma FindPred_spec n1 n2 E Q :
-    (■(n1 < n2) ∧ Q (LitNatV $ pred n2)) ⊑
-       wp E (App (FindPred (LitNat n2)) (LitNat n1)) Q.
+    (■(n1 < n2) ∧ Q (pred n2)) ⊑
+       wp E (FindPred n2 n1) Q.
   Proof.
     revert n1. apply löb_all_1=>n1.
     rewrite -wp_rec //. asimpl.
@@ -76,7 +77,7 @@ Module LiftingTests.
     { apply and_mono; first done. by rewrite -later_intro. }
     apply later_mono.
     (* Go on. *)
-    rewrite -(wp_let _ _ (FindPred' (LitNat n1) (Var 0) (LitNat n2) (FindPred (LitNat n2)))).
+    rewrite -(wp_let _ _ (FindPred' n1 #0 n2 (FindPred n2))).
     rewrite -wp_plus. asimpl.
     rewrite -(wp_bindi (CaseCtx _ _)).
     rewrite -!later_intro /=.
@@ -97,7 +98,7 @@ Module LiftingTests.
   Qed.
 
   Lemma Pred_spec n E Q :
-    ▷Q (LitNatV (pred n)) ⊑ wp E (App Pred (LitNat n)) Q.
+    ▷Q (pred n) ⊑ wp E (Pred n) Q.
   Proof.
     rewrite -wp_lam //. asimpl.
     rewrite -(wp_bindi (CaseCtx _ _)).
@@ -113,7 +114,7 @@ Module LiftingTests.
   Goal ∀ E,
     True ⊑ wp (Σ:=Σ) E
          (* FIXME why do we need %L here? *)
-      (let: Pred $ 42 in Pred $ #0)%L (λ v, ■(v = LitNatV 40)).
+      (let: Pred 42 in Pred #0)%L (λ v, ■(v = 40)).
   Proof.
     intros E. rewrite -wp_let. rewrite -Pred_spec -!later_intro.
     asimpl. (* TODO RJ: Can we somehow make it so that Pred gets folded again? *)
