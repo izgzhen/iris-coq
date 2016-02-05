@@ -786,7 +786,7 @@ Proof. intros; rewrite -always_and_sep_l; auto. Qed.
 Lemma always_entails_r P Q : (P ⊑ □ Q) → P ⊑ (P ★ □ Q).
 Proof. intros; rewrite -always_and_sep_r; auto. Qed.
 
-(* Own *)
+(* Own and valid *)
 Lemma own_op (a1 a2 : M) :
   uPred_own (a1 ⋅ a2) ≡ (uPred_own a1 ★ uPred_own a2)%I.
 Proof.
@@ -805,6 +805,8 @@ Proof.
 Qed.
 Lemma always_own (a : M) : unit a ≡ a → (□ uPred_own a)%I ≡ uPred_own a.
 Proof. by intros <-; rewrite always_own_unit. Qed.
+Lemma own_something : True ⊑ ∃ a, uPred_own a.
+Proof. intros x [|n] ??; [done|]. by exists x; simpl. Qed.
 Lemma own_empty `{Empty M, !CMRAIdentity M} : True ⊑ uPred_own ∅.
 Proof. intros x [|n] ??; [done|]. by  exists x; rewrite (left_id _ _). Qed.
 Lemma own_valid (a : M) : uPred_own a ⊑ (✓ a).
