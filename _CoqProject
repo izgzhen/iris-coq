@@ -41,13 +41,13 @@ algebra/cmra_tactics.v
 algebra/sts.v
 algebra/auth.v
 algebra/fin_maps.v
-logic/upred.v
 algebra/cofe.v
 algebra/base.v
 algebra/dra.v
 algebra/cofe_solver.v
 algebra/agree.v
 algebra/excl.v
+program_logic/upred.v
 program_logic/model.v
 program_logic/adequacy.v
 program_logic/hoare_lifting.v

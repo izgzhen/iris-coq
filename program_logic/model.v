@@ -1,4 +1,4 @@
-Require Export logic.upred program_logic.resources.
+Require Export program_logic.upred program_logic.resources.
 Require Import algebra.cofe_solver.
 
 Module iProp.
