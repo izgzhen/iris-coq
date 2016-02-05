@@ -1,5 +1,5 @@
-Require Export algebra.fin_maps algebra.agree algebra.excl.
-Require Export program_logic.language program_logic.functor.
+Require Export algebra.fin_maps algebra.agree algebra.excl algebra.functor.
+Require Export program_logic.language.
 
 Record res (Λ : language) (Σ : iFunctor) (A : cofeT) := Res {
   wld : mapRA positive (agreeRA A);

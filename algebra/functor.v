@@ -1,12 +1,7 @@
 Require Export algebra.cmra.
-Require Import algebra.agree algebra.excl algebra.auth.
-Require Import algebra.option algebra.fin_maps.
 
 (** * Functors from COFE to CMRA *)
-(* The Iris program logic is parametrized by a functor from the category of
-COFEs to the category of CMRAs, which is instantiated with [laterC iProp]. The
-[laterC iProp] can be used to construct impredicate CMRAs, such as the stored
-propositions using the agreement CMRA. *)
+(* TODO RJ: Maybe find a better name for this? It is not PL-specific any more. *)
 Structure iFunctor := IFunctor {
   ifunctor_car :> cofeT → cmraT;
   ifunctor_map {A B} (f : A -n> B) : ifunctor_car A -n> ifunctor_car B;
@@ -59,58 +54,4 @@ Qed.
 Next Obligation.
   intros A Σ B1 B2 B3 f1 f2 g. rewrite /= -iprod_map_compose.
   apply iprod_map_ext=> y; apply ifunctor_map_compose.
-Qed.
-
-Program Definition agreeF : iFunctor :=
-  {| ifunctor_car := agreeRA; ifunctor_map := @agreeC_map |}.
-Solve Obligations with done.
-
-Program Definition exclF : iFunctor :=
-  {| ifunctor_car := exclRA; ifunctor_map := @exclC_map |}.
-Next Obligation. by intros A x; rewrite /= excl_map_id. Qed.
-Next Obligation. by intros A B C f g x; rewrite /= excl_map_compose. Qed.
-
-Program Definition authF (Σ : iFunctor) : iFunctor := {|
-  ifunctor_car := authRA ∘ Σ; ifunctor_map A B := authC_map ∘ ifunctor_map Σ
-|}.
-Next Obligation.
-  by intros Σ A B n f g Hfg; apply authC_map_ne, ifunctor_map_ne.
-Qed.
-Next Obligation.
-  intros Σ A x. rewrite /= -{2}(auth_map_id x).
-  apply auth_map_ext=>y; apply ifunctor_map_id.
-Qed.
-Next Obligation.
-  intros Σ A B C f g x. rewrite /= -auth_map_compose.
-  apply auth_map_ext=>y; apply ifunctor_map_compose.
-Qed.
-
-Program Definition optionF (Σ : iFunctor) : iFunctor := {|
-  ifunctor_car := optionRA ∘ Σ; ifunctor_map A B := optionC_map ∘ ifunctor_map Σ
-|}.
-Next Obligation.
-  by intros Σ A B n f g Hfg; apply optionC_map_ne, ifunctor_map_ne.
-Qed.
-Next Obligation.
-  intros Σ A x. rewrite /= -{2}(option_fmap_id x).
-  apply option_fmap_setoid_ext=>y; apply ifunctor_map_id.
-Qed.
-Next Obligation.
-  intros Σ A B C f g x. rewrite /= -option_fmap_compose.
-  apply option_fmap_setoid_ext=>y; apply ifunctor_map_compose.
-Qed.
-
-Program Definition mapF K `{Countable K} (Σ : iFunctor) : iFunctor := {|
-  ifunctor_car := mapRA K ∘ Σ; ifunctor_map A B := mapC_map ∘ ifunctor_map Σ
-|}.
-Next Obligation.
-  by intros K ?? Σ A B n f g Hfg; apply mapC_map_ne, ifunctor_map_ne.
-Qed.
-Next Obligation.
-  intros K ?? Σ A x. rewrite /= -{2}(map_fmap_id x).
-  apply map_fmap_setoid_ext=> ? y _; apply ifunctor_map_id.
-Qed.
-Next Obligation.
-  intros K ?? Σ A B C f g x. rewrite /= -map_fmap_compose.
-  apply map_fmap_setoid_ext=> ? y _; apply ifunctor_map_compose.
 Qed.

@@ -1,4 +1,5 @@
 Require Export algebra.cmra.
+Require Import algebra.functor.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 
@@ -181,3 +182,9 @@ Definition exclC_map {A B} (f : A -n> B) : exclC A -n> exclC B :=
   CofeMor (excl_map f).
 Instance exclC_map_ne A B n : Proper (dist n ==> dist n) (@exclC_map A B).
 Proof. by intros f f' Hf []; constructor; apply Hf. Qed.
+
+Program Definition exclF : iFunctor :=
+  {| ifunctor_car := exclRA; ifunctor_map := @exclC_map |}.
+Next Obligation. by intros A x; rewrite /= excl_map_id. Qed.
+Next Obligation. by intros A B C f g x; rewrite /= excl_map_compose. Qed.
+

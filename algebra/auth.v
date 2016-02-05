@@ -1,4 +1,5 @@
 Require Export algebra.excl.
+Require Import algebra.functor.
 Local Arguments validN _ _ _ !_ /.
 
 Record auth (A : Type) : Type := Auth { authoritative : excl A ; own : A }.
@@ -198,3 +199,19 @@ Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=
   CofeMor (auth_map f).
 Lemma authC_map_ne A B n : Proper (dist n ==> dist n) (@authC_map A B).
 Proof. intros f f' Hf [[a| |] b]; repeat constructor; apply Hf. Qed.
+
+Program Definition authF (Σ : iFunctor) : iFunctor := {|
+  ifunctor_car := authRA ∘ Σ; ifunctor_map A B := authC_map ∘ ifunctor_map Σ
+|}.
+Next Obligation.
+  by intros Σ A B n f g Hfg; apply authC_map_ne, ifunctor_map_ne.
+Qed.
+Next Obligation.
+  intros Σ A x. rewrite /= -{2}(auth_map_id x).
+  apply auth_map_ext=>y; apply ifunctor_map_id.
+Qed.
+Next Obligation.
+  intros Σ A B C f g x. rewrite /= -auth_map_compose.
+  apply auth_map_ext=>y; apply ifunctor_map_compose.
+Qed.
+

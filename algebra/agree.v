@@ -1,4 +1,5 @@
 Require Export algebra.cmra.
+Require Import algebra.functor.
 Local Hint Extern 10 (_ ≤ _) => omega.
 
 Record agree (A : Type) : Type := Agree {
@@ -174,3 +175,8 @@ Proof.
   intros f g Hfg x; split; simpl; intros; first done.
   by apply dist_le with n; try apply Hfg.
 Qed.
+
+Program Definition agreeF : iFunctor :=
+  {| ifunctor_car := agreeRA; ifunctor_map := @agreeC_map |}.
+Solve Obligations with done.
+

@@ -1,6 +1,11 @@
 Require Export program_logic.upred program_logic.resources.
 Require Import algebra.cofe_solver.
 
+(* The Iris program logic is parametrized by a functor from the category of
+COFEs to the category of CMRAs, which is instantiated with [laterC iProp]. The
+[laterC iProp] can be used to construct impredicate CMRAs, such as the stored
+propositions using the agreement CMRA. *)
+
 Module iProp.
 Definition F (Λ : language) (Σ : iFunctor) (A B : cofeT) : cofeT :=
   uPredC (resRA Λ Σ (laterC A)).

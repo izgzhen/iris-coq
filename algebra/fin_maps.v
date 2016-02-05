@@ -1,4 +1,5 @@
 Require Export algebra.cmra prelude.gmap algebra.option.
+Require Import algebra.functor.
 
 Section cofe.
 Context `{Countable K} {A : cofeT}.
@@ -245,4 +246,19 @@ Instance mapC_map_ne `{Countable K} {A B} n :
 Proof.
   intros f g Hf m k; rewrite /= !lookup_fmap.
   destruct (_ !! k) eqn:?; simpl; constructor; apply Hf.
+Qed.
+
+Program Definition mapF K `{Countable K} (Σ : iFunctor) : iFunctor := {|
+  ifunctor_car := mapRA K ∘ Σ; ifunctor_map A B := mapC_map ∘ ifunctor_map Σ
+|}.
+Next Obligation.
+  by intros K ?? Σ A B n f g Hfg; apply mapC_map_ne, ifunctor_map_ne.
+Qed.
+Next Obligation.
+  intros K ?? Σ A x. rewrite /= -{2}(map_fmap_id x).
+  apply map_fmap_setoid_ext=> ? y _; apply ifunctor_map_id.
+Qed.
+Next Obligation.
+  intros K ?? Σ A B C f g x. rewrite /= -map_fmap_compose.
+  apply map_fmap_setoid_ext=> ? y _; apply ifunctor_map_compose.
 Qed.

@@ -47,6 +47,7 @@ algebra/dra.v
 algebra/cofe_solver.v
 algebra/agree.v
 algebra/excl.v
+algebra/functor.v
 program_logic/upred.v
 program_logic/model.v
 program_logic/adequacy.v
@@ -61,7 +62,6 @@ program_logic/pviewshifts.v
 program_logic/resources.v
 program_logic/hoare.v
 program_logic/language.v
-program_logic/functor.v
 program_logic/tests.v
 heap_lang/heap_lang.v
 heap_lang/heap_lang_tactics.v

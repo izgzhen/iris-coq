@@ -1,4 +1,5 @@
 Require Export algebra.cmra.
+Require Import algebra.functor.
 
 (* COFE *)
 Section cofe.
@@ -173,3 +174,19 @@ Definition optionC_map {A B} (f : A -n> B) : optionC A -n> optionC B :=
   CofeMor (fmap f : optionC A → optionC B).
 Instance optionC_map_ne A B n : Proper (dist n ==> dist n) (@optionC_map A B).
 Proof. by intros f f' Hf []; constructor; apply Hf. Qed.
+
+Program Definition optionF (Σ : iFunctor) : iFunctor := {|
+  ifunctor_car := optionRA ∘ Σ; ifunctor_map A B := optionC_map ∘ ifunctor_map Σ
+|}.
+Next Obligation.
+  by intros Σ A B n f g Hfg; apply optionC_map_ne, ifunctor_map_ne.
+Qed.
+Next Obligation.
+  intros Σ A x. rewrite /= -{2}(option_fmap_id x).
+  apply option_fmap_setoid_ext=>y; apply ifunctor_map_id.
+Qed.
+Next Obligation.
+  intros Σ A B C f g x. rewrite /= -option_fmap_compose.
+  apply option_fmap_setoid_ext=>y; apply ifunctor_map_compose.
+Qed.
+
