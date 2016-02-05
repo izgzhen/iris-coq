@@ -17,6 +17,43 @@ Definition LamV (e : {bind expr}) := RecV e.[ren(+1)].
 Definition LetCtx (e2 : {bind expr}) := AppRCtx (LamV e2).
 Definition SeqCtx (e2 : expr) := LetCtx (e2.[ren(+1)]).
 
+Delimit Scope lang_scope with L.
+Bind Scope lang_scope with expr.
+Arguments wp {_ _} _ _%L _.
+(* TODO: The levels are all random. Also maybe we should not
+   make 'new' a keyword. What about Arguments for hoare triples?. *)
+(* The colons indicate binders. "let" is not consistent here though,
+   thing are only bound in the "in". *)
+Notation "'rec::' e" := (Rec e) (at level 100) : lang_scope.
+Notation "'λ:' e" := (Lam e) (at level 100) : lang_scope.
+Notation "'let:' e1 'in' e2" := (Let e1 e2) (at level 70) : lang_scope.
+Notation "e1 ';' e2" := (Seq e1 e2) (at level 70) : lang_scope.
+Notation "'if' e1 'then' e2 'else' e3" := (If e1 e2 e3) : lang_scope.
+
+Notation "#0" := (Var 0) (at level 0) : lang_scope.
+Notation "#1" := (Var 1) (at level 0) : lang_scope.
+Notation "#2" := (Var 2) (at level 0) : lang_scope.
+Notation "#3" := (Var 3) (at level 0) : lang_scope.
+Notation "#4" := (Var 4) (at level 0) : lang_scope.
+Notation "#5" := (Var 5) (at level 0) : lang_scope.
+Notation "#6" := (Var 6) (at level 0) : lang_scope.
+Notation "#7" := (Var 7) (at level 0) : lang_scope.
+Notation "#8" := (Var 8) (at level 0) : lang_scope.
+Notation "#9" := (Var 9) (at level 0) : lang_scope.
+
+Notation "'★' e" := (Load e) (at level 30) : lang_scope.
+Notation "e1 '<-' e2" := (Store e1 e2) (at level 60) : lang_scope.
+Notation "'new' e" := (Alloc e) (at level 60) : lang_scope.
+Notation "e1 '+' e2" := (Plus e1 e2) : lang_scope.
+Notation "e1 '≤' e2" := (Le e1 e2) : lang_scope.
+Notation "e1 '<' e2" := (Lt e1 e2) : lang_scope.
+
+Coercion LitNat : nat >-> expr.
+Coercion LitNatV : nat >-> val.
+Coercion Loc : loc >-> expr.
+Coercion LocV : loc >-> val.
+Coercion App : expr >-> Funclass.
+
 Section suger.
 Context {Σ : iFunctor}.
 Implicit Types P : iProp heap_lang Σ.
