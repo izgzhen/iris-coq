@@ -6,6 +6,7 @@ COFEs to the category of CMRAs, which is instantiated with [laterC iProp]. The
 [laterC iProp] can be used to construct impredicate CMRAs, such as the stored
 propositions using the agreement CMRA. *)
 
+(* TODO RJ: Can we make use of resF, the resource functor? *)
 Module iProp.
 Definition F (Λ : language) (Σ : iFunctor) (A B : cofeT) : cofeT :=
   uPredC (resRA Λ Σ (laterC A)).

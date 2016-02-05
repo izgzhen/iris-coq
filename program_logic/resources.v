@@ -215,3 +215,14 @@ Proof.
   * by apply (mapC_map_ne _ (agreeC_map f) (agreeC_map g)), agreeC_map_ne.
   * by apply optionC_map_ne, ifunctor_map_ne.
 Qed.
+
+Program Definition resF {Λ Σ} : iFunctor := {|
+  ifunctor_car := resRA Λ Σ;
+  ifunctor_map A B := resC_map
+|}.
+Next Obligation.
+  intros Λ Σ A x. by rewrite /= res_map_id.
+Qed.
+Next Obligation.
+  intros Λ Σ A B C f g x. by rewrite /= res_map_compose.
+Qed.
