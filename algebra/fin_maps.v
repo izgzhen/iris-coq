@@ -164,15 +164,27 @@ Lemma map_lookup_validN n m i x : ✓{n} m → m !! i ={n}= Some x → ✓{n} x.
 Proof. by move=> /(_ i) Hm Hi; move:Hm; rewrite Hi. Qed.
 Lemma map_insert_validN n m i x : ✓{n} x → ✓{n} m → ✓{n} (<[i:=x]>m).
 Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_equality. Qed.
+
 Lemma map_insert_op m1 m2 i x :
   m2 !! i = None → <[i:=x]>(m1 ⋅ m2) = <[i:=x]>m1 ⋅ m2.
 Proof. by intros Hi; apply (insert_merge_l _ m1 m2); rewrite Hi. Qed.
+
+Lemma map_validN_singleton n (i : K) (x : A) :
+  ✓{n} x <-> ✓{n} ({[ i ↦ x ]} : gmap K A).
+Proof.
+  split.
+  - move=>Hx j. destruct (decide (i = j)); simplify_map_equality; done.
+  - move=>Hm. move: (Hm i). by simplify_map_equality.
+Qed.
+
 Lemma map_unit_singleton (i : K) (x : A) :
   unit ({[ i ↦ x ]} : gmap K A) = {[ i ↦ unit x ]}.
 Proof. apply map_fmap_singleton. Qed.
+
 Lemma map_op_singleton (i : K) (x y : A) :
   {[ i ↦ x ]} ⋅ {[ i ↦ y ]} = ({[ i ↦ x ⋅ y ]} : gmap K A).
 Proof. by apply (merge_singleton _ _ _ x y). Qed.
+
 Lemma singleton_includedN n m i x :
   {[ i ↦ x ]} ≼{n} m ↔ ∃ y, m !! i ={n}= Some y ∧ x ≼ y.
   (* not m !! i = Some y ∧ x ≼{n} y to deal with n = 0 *)

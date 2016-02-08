@@ -7,9 +7,10 @@ Definition iprod {A} (B : A → cofeT) := ∀ x, B x.
 Definition iprod_insert `{∀ x x' : A, Decision (x = x')} {B : A → cofeT}
     (x : A) (y : B x) (f : iprod B) : iprod B := λ x',
   match decide (x = x') with left H => eq_rect _ B y _ H | right _ => f x' end.
+Global Instance iprod_empty {A} {B : A → cofeT} `{∀ x, Empty (B x)} : Empty (iprod B) := λ x, ∅.
 Definition iprod_singleton
     `{∀ x x' : A, Decision (x = x')} {B : A → cofeT} `{∀ x : A, Empty (B x)}
-  (x : A) (y : B x) : iprod B := iprod_insert x y (λ _, ∅).
+  (x : A) (y : B x) : iprod B := iprod_insert x y ∅.
 
 Section iprod_cofe.
   Context {A} {B : A → cofeT}.
@@ -100,7 +101,6 @@ Section iprod_cmra.
   Definition iprod_lookup_op f g x : (f ⋅ g) x = f x ⋅ g x := eq_refl.
   Instance iprod_unit : Unit (iprod B) := λ f x, unit (f x).
   Definition iprod_lookup_unit f x : (unit f) x = unit (f x) := eq_refl.
-  Global Instance iprod_empty `{∀ x, Empty (B x)} : Empty (iprod B) := λ x, ∅.
   Instance iprod_validN : ValidN (iprod B) := λ n f, ∀ x, ✓{n} (f x).
   Instance iprod_minus : Minus (iprod B) := λ f g x, f x ⩪ g x.
   Definition iprod_lookup_minus f g x : (f ⩪ g) x = f x ⩪ g x := eq_refl.
@@ -148,7 +148,9 @@ Section iprod_cmra.
     * by intros f Hf x; apply (timeless _).
   Qed.
 
+  (** Properties of iprod_update. *)
   Context `{∀ x x' : A, Decision (x = x')}.
+
   Lemma iprod_insert_updateP x (P : B x → Prop) (Q : iprod B → Prop) g y1 :
     y1 ~~>: P → (∀ y2, P y2 → Q (iprod_insert x y2 g)) →
     iprod_insert x y1 g ~~>: Q.
@@ -173,7 +175,20 @@ Section iprod_cmra.
       eauto using iprod_insert_updateP with congruence.
   Qed.
 
+  (** Properties of iprod_singleton. *)
   Context `{∀ x, Empty (B x)} `{∀ x, CMRAIdentity (B x)}.
+
+  Lemma iprod_validN_singleton n x (y : B x) :
+    ✓{n} y <-> ✓{n} (iprod_singleton x y).
+  Proof.
+    split.
+    - move=>Hx x'. destruct (decide (x = x')).
+      + subst x'. by rewrite iprod_lookup_singleton.
+      + rewrite iprod_lookup_singleton_ne //; [].
+        by apply cmra_empty_valid.
+    - move=>Hm. move: (Hm x). by rewrite iprod_lookup_singleton.
+  Qed.
+
   Lemma iprod_op_singleton (x : A) (y1 y2 : B x) :
     iprod_singleton x y1 ⋅ iprod_singleton x y2 ≡ iprod_singleton x (y1 ⋅ y2).
   Proof.
