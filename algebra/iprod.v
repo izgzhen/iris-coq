@@ -8,6 +8,7 @@ Definition iprod_insert `{∀ x x' : A, Decision (x = x')} {B : A → cofeT}
     (x : A) (y : B x) (f : iprod B) : iprod B := λ x',
   match decide (x = x') with left H => eq_rect _ B y _ H | right _ => f x' end.
 Global Instance iprod_empty {A} {B : A → cofeT} `{∀ x, Empty (B x)} : Empty (iprod B) := λ x, ∅.
+Definition iprod_lookup_empty {A} {B : A → cofeT} `{∀ x, Empty (B x)} x : ∅ x = ∅ := eq_refl.
 Definition iprod_singleton
     `{∀ x x' : A, Decision (x = x')} {B : A → cofeT} `{∀ x : A, Empty (B x)}
   (x : A) (y : B x) : iprod B := iprod_insert x y ∅.
@@ -40,24 +41,54 @@ Section iprod_cofe.
   Qed.
   Canonical Structure iprodC : cofeT := CofeT iprod_cofe_mixin.
 
+  (** Properties of iprod_insert. *)
   Context `{∀ x x' : A, Decision (x = x')}.
+
   Global Instance iprod_insert_ne x n :
     Proper (dist n ==> dist n ==> dist n) (iprod_insert x).
   Proof.
     intros y1 y2 ? f1 f2 ? x'; rewrite /iprod_insert.
     by destruct (decide _) as [[]|].
   Qed.
+
   Global Instance iprod_insert_proper x :
     Proper ((≡) ==> (≡) ==> (≡)) (iprod_insert x) := ne_proper_2 _.
+
   Lemma iprod_lookup_insert f x y : (iprod_insert x y f) x = y.
   Proof.
     rewrite /iprod_insert; destruct (decide _) as [Hx|]; last done.
     by rewrite (proof_irrel Hx eq_refl).
   Qed.
+
   Lemma iprod_lookup_insert_ne f x x' y :
     x ≠ x' → (iprod_insert x y f) x' = f x'.
   Proof. by rewrite /iprod_insert; destruct (decide _). Qed.
 
+  Global Instance iprod_lookup_timeless f x :
+    Timeless f → Timeless (f x).
+  Proof.
+    intros ? y Hf.
+    cut (f ≡ iprod_insert x y f).
+    { move=>{Hf} Hf. by rewrite (Hf x) iprod_lookup_insert. }
+    apply timeless; first by apply _.
+    move=>x'. destruct (decide (x = x')).
+    - subst x'. rewrite iprod_lookup_insert; done.
+    - rewrite iprod_lookup_insert_ne //.
+  Qed.
+
+  Global Instance iprod_insert_timeless f x y :
+    Timeless f → Timeless y → Timeless (iprod_insert x y f).
+  Proof.
+    intros ?? g Heq x'. destruct (decide (x = x')).
+    - subst x'. rewrite iprod_lookup_insert.
+      apply (timeless _).
+      rewrite -(Heq x) iprod_lookup_insert; done.
+    - rewrite iprod_lookup_insert_ne //.
+      apply (timeless _).
+      rewrite -(Heq x') iprod_lookup_insert_ne; done.
+  Qed.
+
+  (** Properties of iprod_singletom. *)
   Context `{∀ x : A, Empty (B x)}.
   Global Instance iprod_singleton_ne x n :
     Proper (dist n ==> dist n) (iprod_singleton x).
@@ -69,6 +100,14 @@ Section iprod_cofe.
   Lemma iprod_lookup_singleton_ne x x' y :
     x ≠ x' → (iprod_singleton x y) x' = ∅.
   Proof. intros; by rewrite /iprod_singleton iprod_lookup_insert_ne. Qed.
+
+  Context `{∀ x : A, Timeless (∅ : B x)}.
+  Instance iprod_empty_timeless : Timeless (∅ : iprod B).
+  Proof. intros f Hf x. by apply (timeless _). Qed.
+
+  Global Instance iprod_singleton_timeless x (y : B x) :
+    Timeless y → Timeless (iprod_singleton x y) := _.
+
 End iprod_cofe.
 
 Arguments iprodC {_} _.
@@ -148,7 +187,7 @@ Section iprod_cmra.
     * by intros f Hf x; apply (timeless _).
   Qed.
 
-  (** Properties of iprod_update. *)
+  (** Properties of iprod_insert. *)
   Context `{∀ x x' : A, Decision (x = x')}.
 
   Lemma iprod_insert_updateP x (P : B x → Prop) (Q : iprod B → Prop) g y1 :
@@ -168,7 +207,6 @@ Section iprod_cmra.
     iprod_insert x y1 g ~~>: λ g', ∃ y2, g' = iprod_insert x y2 g ∧ P y2.
   Proof. eauto using iprod_insert_updateP. Qed.
   Lemma iprod_insert_update g x y1 y2 :
-
     y1 ~~> y2 → iprod_insert x y1 g ~~> iprod_insert x y2 g.
   Proof.
     rewrite !cmra_update_updateP;
@@ -187,6 +225,15 @@ Section iprod_cmra.
       + rewrite iprod_lookup_singleton_ne //; [].
         by apply cmra_empty_valid.
     - move=>Hm. move: (Hm x). by rewrite iprod_lookup_singleton.
+  Qed.
+
+  Lemma iprod_unit_singleton x (y : B x) :
+    unit (iprod_singleton x y) ≡ iprod_singleton x (unit y).
+  Proof.
+    move=>x'. rewrite iprod_lookup_unit. destruct (decide (x = x')).
+    - subst x'. by rewrite !iprod_lookup_singleton.
+    - rewrite !iprod_lookup_singleton_ne //; [].
+      by apply cmra_unit_empty.
   Qed.
 
   Lemma iprod_op_singleton (x : A) (y1 y2 : B x) :

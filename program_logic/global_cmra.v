@@ -39,6 +39,22 @@ Proof.
   by rewrite /to_Σ; destruct inG.
 Qed.
 
+Lemma globalC_unit γ a :
+  unit (to_globalC i γ a) ≡ to_globalC i γ (unit a).
+Proof.
+  rewrite /to_globalC.
+  rewrite iprod_unit_singleton map_unit_singleton.
+  apply iprod_singleton_proper, (fin_maps.singleton_proper (M:=gmap _)).
+  by rewrite /to_Σ; destruct inG.
+Qed.
+
+Global Instance globalC_timeless γ m : Timeless m → Timeless (to_globalC i γ m).
+Proof.
+  rewrite /to_globalC => ?.
+  apply iprod_singleton_timeless, map_singleton_timeless.
+  by rewrite /to_Σ; destruct inG.
+Qed.
+
 (* Properties of own *)
 
 Global Instance own_ne γ n : Proper (dist n ==> dist n) (own i γ).
@@ -69,9 +85,7 @@ Proof.
 Qed.
 
 Lemma always_own_unit γ m : (□ own i γ (unit m))%I ≡ own i γ (unit m).
-Proof.
-  rewrite /own.
-Admitted.
+Proof. rewrite /own -globalC_unit. by apply always_ownG_unit. Qed.
 
 Lemma own_valid γ m : (own i γ m) ⊑ (✓ m).
 Proof.
@@ -84,7 +98,7 @@ Proof. apply (uPred.always_entails_r' _ _), own_valid. Qed.
 
 Global Instance ownG_timeless γ m : Timeless m → TimelessP (own i γ m).
 Proof.
-  intros. apply ownG_timeless.
-Admitted.
+  intros. apply ownG_timeless. apply _.
+Qed.
 
 End global.

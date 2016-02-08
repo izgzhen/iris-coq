@@ -64,14 +64,14 @@ Proof.
     by (by symmetry in Hx; inversion Hx; cofe_subst; rewrite insert_id).
   by rewrite (timeless m (<[i:=x]>m)) // lookup_insert.
 Qed.
-Global Instance map_ra_insert_timeless (m : gmap K A) i x :
+Global Instance map_insert_timeless (m : gmap K A) i x :
   Timeless x → Timeless m → Timeless (<[i:=x]>m).
 Proof.
   intros ?? m' Hm j; destruct (decide (i = j)); simplify_map_equality.
   { by apply (timeless _); rewrite -Hm lookup_insert. }
   by apply (timeless _); rewrite -Hm lookup_insert_ne.
 Qed.
-Global Instance map_ra_singleton_timeless (i : K) (x : A) :
+Global Instance map_singleton_timeless (i : K) (x : A) :
   Timeless x → Timeless ({[ i ↦ x ]} : gmap K A) := _.
 End cofe.
 Arguments mapC _ {_ _} _.
