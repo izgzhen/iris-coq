@@ -393,6 +393,35 @@ Section cmra_monotone.
   Proof. rewrite !cmra_valid_validN; eauto using validN_preserving. Qed.
 End cmra_monotone.
 
+(** * Transporting a CMRA equality *)
+Definition cmra_transport {A B : cmraT} (H : A = B) (x : A) : B :=
+  eq_rect A id x _ H.
+
+Section cmra_transport.
+  Context {A B : cmraT} (H : A = B).
+  Notation T := (cmra_transport H).
+  Global Instance cmra_transport_ne n : Proper (dist n ==> dist n) T.
+  Proof. by intros ???; destruct H. Qed.
+  Global Instance cmra_transport_proper : Proper ((≡) ==> (≡)) T.
+  Proof. by intros ???; destruct H. Qed.
+  Lemma cmra_transport_op x y : T (x ⋅ y) = T x ⋅ T y.
+  Proof. by destruct H. Qed.
+  Lemma cmra_transport_unit x : T (unit x) = unit (T x).
+  Proof. by destruct H. Qed.
+  Lemma cmra_transport_validN n x : ✓{n} (T x) ↔ ✓{n} x.
+  Proof. by destruct H. Qed.
+  Lemma cmra_transport_valid x : ✓ (T x) ↔ ✓ x.
+  Proof. by destruct H. Qed.
+  Global Instance cmra_transport_timeless x : Timeless x → Timeless (T x).
+  Proof. by destruct H. Qed.
+  Lemma cmra_transport_updateP (P : A → Prop) (Q : B → Prop) x :
+    x ~~>: P → (∀ y, P y → Q (T y)) → T x ~~>: Q.
+  Proof. destruct H; eauto using cmra_updateP_weaken. Qed.
+  Lemma cmra_transport_updateP' (P : A → Prop) x :
+    x ~~>: P → T x ~~>: λ y, ∃ y', y = cmra_transport H y' ∧ P y'.
+  Proof. eauto using cmra_transport_updateP. Qed.
+End cmra_transport.
+
 (** * Instances *)
 (** ** Discrete CMRA *)
 Class RA A `{Equiv A, Unit A, Op A, Valid A, Minus A} := {
