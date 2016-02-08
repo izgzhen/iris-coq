@@ -99,9 +99,20 @@ Qed.
 Lemma pvs_updateP E m (P : iGst Λ Σ → Prop) :
   m ~~>: P → ownG m ⊑ pvs E E (∃ m', ■ P m' ∧ ownG m').
 Proof.
-  intros Hup r [|n] ? Hinv%ownG_spec rf [|k] Ef σ ???; try lia.
-  destruct (wsat_update_gst k (E ∪ Ef) σ r rf m P) as (m'&?&?); auto.
+  intros Hup%option_updateP' r [|n] ? Hinv%ownG_spec rf [|k] Ef σ ???; try lia.
+  destruct (wsat_update_gst k (E ∪ Ef) σ r rf (Some m) P) as (m'&?&?); eauto.
   { apply cmra_includedN_le with (S n); auto. }
+  by exists (update_gst m' r); split; [exists m'; split; [|apply ownG_spec]|].
+Qed.
+Lemma pvs_updateP_empty `{Empty (iGst Λ Σ), !CMRAIdentity (iGst Λ Σ)}
+    E (P : iGst Λ Σ → Prop) :
+  ∅ ~~>: P → True ⊑ pvs E E (∃ m', ■ P m' ∧ ownG m').
+Proof.
+  intros Hup r [|n] ? _ rf [|k] Ef σ ???; try lia.
+  destruct (wsat_update_gst k (E ∪ Ef) σ r rf ∅ P) as (m'&?&?); eauto.
+  { apply cmra_empty_leastN. }
+  { apply cmra_updateP_compose_l with (Some ∅), option_updateP with P;
+      auto using option_update_None. }
   by exists (update_gst m' r); split; [exists m'; split; [|apply ownG_spec]|].
 Qed.
 Lemma pvs_alloc E P : ¬set_finite E → ▷ P ⊑ pvs E E (∃ i, ■ (i ∈ E) ∧ inv i P).
@@ -138,7 +149,7 @@ Proof.
 Qed.
 Lemma pvs_update E m m' : m ~~> m' → ownG m ⊑ pvs E E (ownG m').
 Proof.
-  intros; rewrite ->(pvs_updateP E _ (m' =)); last by apply cmra_update_updateP.
+  intros; rewrite (pvs_updateP E _ (m' =)); last by apply cmra_update_updateP.
   by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.const_elim_l=> ->.
 Qed.
 End pvs.

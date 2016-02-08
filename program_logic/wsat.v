@@ -125,13 +125,13 @@ Proof.
   split; [done|exists rs].
   by constructor; split_ands'; try (rewrite /= -associative Hpst').
 Qed.
-Lemma wsat_update_gst n E σ r rf m1 (P : iGst Λ Σ → Prop) :
-  Some m1 ≼{S n} gst r → m1 ~~>: P →
+Lemma wsat_update_gst n E σ r rf mm1 (P : iGst Λ Σ → Prop) :
+  mm1 ≼{S n} gst r → mm1 ~~>: (λ mm2, default False mm2 P) →
   wsat (S n) E σ (r ⋅ rf) → ∃ m2, wsat (S n) E σ (update_gst m2 r ⋅ rf) ∧ P m2.
 Proof.
-  intros [mf Hr] Hup%option_updateP' [rs [(?&?&?) Hσ HE Hwld]].
+  intros [mf Hr] Hup [rs [(?&?&?) Hσ HE Hwld]].
   destruct (Hup (mf ⋅ gst (rf ⋅ big_opM rs)) n) as ([m2|]&?&Hval'); try done.
-  { by rewrite /= (associative _ (Some m1)) -Hr associative. }
+  { by rewrite /= (associative _ mm1) -Hr associative. }
   exists m2; split; [exists rs; split; split_ands'; auto|done].
 Qed.
 Lemma wsat_alloc n E1 E2 σ r P rP :
