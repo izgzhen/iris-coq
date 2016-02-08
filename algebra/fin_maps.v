@@ -223,6 +223,19 @@ Proof.
   rewrite !cmra_update_updateP; eauto using map_insert_updateP with congruence.
 Qed.
 
+Lemma map_singleton_updateP (P : A → Prop) (Q : gmap K A → Prop) i x :
+  x ~~>: P → (∀ y, P y → Q {[ i ↦ y ]}) → {[ i ↦ x ]} ~~>: Q.
+Proof. apply map_insert_updateP. Qed.
+Lemma map_singleton_updateP' (P : A → Prop) i x :
+  x ~~>: P → {[ i ↦ x ]} ~~>: λ m', ∃ y, m' = {[ i ↦ y ]} ∧ P y.
+Proof. eauto using map_singleton_updateP. Qed.
+Lemma map_singleton_update i (x y : A) : x ~~> y → {[ i ↦ x ]} ~~> {[ i ↦ y ]}.
+Proof.
+  rewrite !cmra_update_updateP=>?. eapply map_singleton_updateP; first eassumption.
+  by move=>? ->.
+Qed.
+
+
 Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
 Lemma map_updateP_alloc (Q : gmap K A → Prop) m x :
   ✓ x → (∀ i, m !! i = None → Q (<[i:=x]>m)) → m ~~>: Q.

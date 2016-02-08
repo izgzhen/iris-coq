@@ -97,7 +97,7 @@ Proof.
   * by rewrite -(left_id_L ∅ (∪) Ef).
   * apply uPred_weaken with r n; auto.
 Qed.
-Lemma pvs_updateP E m (P : iGst Λ Σ → Prop) :
+Lemma pvs_ownG_updateP E m (P : iGst Λ Σ → Prop) :
   m ~~>: P → ownG m ⊑ pvs E E (∃ m', ■ P m' ∧ ownG m').
 Proof.
   intros Hup%option_updateP' r [|n] ? Hinv%ownG_spec rf [|k] Ef σ ???; try lia.
@@ -105,7 +105,7 @@ Proof.
   { apply cmra_includedN_le with (S n); auto. }
   by exists (update_gst m' r); split; [exists m'; split; [|apply ownG_spec]|].
 Qed.
-Lemma pvs_updateP_empty `{Empty (iGst Λ Σ), !CMRAIdentity (iGst Λ Σ)}
+Lemma pvs_ownG_updateP_empty `{Empty (iGst Λ Σ), !CMRAIdentity (iGst Λ Σ)}
     E (P : iGst Λ Σ → Prop) :
   ∅ ~~>: P → True ⊑ pvs E E (∃ m', ■ P m' ∧ ownG m').
 Proof.
@@ -148,9 +148,9 @@ Lemma pvs_mask_weaken E1 E2 P : E1 ⊆ E2 → pvs E1 E1 P ⊑ pvs E2 E2 P.
 Proof.
   intros; rewrite (union_difference_L E1 E2) //; apply pvs_mask_frame; auto.
 Qed.
-Lemma pvs_update E m m' : m ~~> m' → ownG m ⊑ pvs E E (ownG m').
+Lemma pvs_ownG_update E m m' : m ~~> m' → ownG m ⊑ pvs E E (ownG m').
 Proof.
-  intros; rewrite (pvs_updateP E _ (m' =)); last by apply cmra_update_updateP.
+  intros; rewrite (pvs_ownG_updateP E _ (m' =)); last by apply cmra_update_updateP.
   by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.const_elim_l=> ->.
 Qed.
 End pvs.
