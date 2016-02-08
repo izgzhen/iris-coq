@@ -39,19 +39,3 @@ Next Obligation. by intros Σ1 Σ2 A [??]; rewrite /= !ifunctor_map_id. Qed.
 Next Obligation.
   by intros Σ1 Σ2 A B C f g [??]; rewrite /= !ifunctor_map_compose.
 Qed.
-
-Program Definition iprodF {A} (Σ : A → iFunctor) : iFunctor := {|
-  ifunctor_car B := iprodRA (λ x, Σ x B);
-  ifunctor_map B1 B2 f := iprodC_map (λ x, ifunctor_map (Σ x) f);
-|}.
-Next Obligation.
-  by intros A Σ B1 B2 n f f' ? g; apply iprodC_map_ne=>x; apply ifunctor_map_ne.
-Qed.
-Next Obligation.
-  intros A Σ B g. rewrite /= -{2}(iprod_map_id g).
-  apply iprod_map_ext=> x; apply ifunctor_map_id.
-Qed.
-Next Obligation.
-  intros A Σ B1 B2 B3 f1 f2 g. rewrite /= -iprod_map_compose.
-  apply iprod_map_ext=> y; apply ifunctor_map_compose.
-Qed.

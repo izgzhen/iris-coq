@@ -47,6 +47,7 @@ algebra/dra.v
 algebra/cofe_solver.v
 algebra/agree.v
 algebra/excl.v
+algebra/iprod.v
 algebra/functor.v
 program_logic/upred.v
 program_logic/model.v
