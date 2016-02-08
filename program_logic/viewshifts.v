@@ -72,16 +72,16 @@ Proof.
 Qed.
 Lemma vs_mask_frame' E Ef P Q : Ef ∩ E = ∅ → P >{E}> Q ⊑ P >{E ∪ Ef}> Q.
 Proof. intros; apply vs_mask_frame; solve_elem_of. Qed.
-Lemma vs_open i P : inv i P >{{[i]},∅}> ▷ P.
+Lemma vs_open i P : ownI i P >{{[i]},∅}> ▷ P.
 Proof. intros; apply vs_alt, pvs_open. Qed.
-Lemma vs_open' E i P : i ∉ E → inv i P >{{[i]} ∪ E,E}> ▷ P.
+Lemma vs_open' E i P : i ∉ E → ownI i P >{{[i]} ∪ E,E}> ▷ P.
 Proof.
   intros; rewrite -{2}(left_id_L ∅ (∪) E) -vs_mask_frame; last solve_elem_of.
   apply vs_open.
 Qed.
-Lemma vs_close i P : (inv i P ∧ ▷ P) >{∅,{[i]}}> True.
+Lemma vs_close i P : (ownI i P ∧ ▷ P) >{∅,{[i]}}> True.
 Proof. intros; apply vs_alt, pvs_close. Qed.
-Lemma vs_close' E i P : i ∉ E → (inv i P ∧ ▷ P) >{E,{[i]} ∪ E}> True.
+Lemma vs_close' E i P : i ∉ E → (ownI i P ∧ ▷ P) >{E,{[i]} ∪ E}> True.
 Proof.
   intros; rewrite -{1}(left_id_L ∅ (∪) E) -vs_mask_frame; last solve_elem_of.
   apply vs_close.
@@ -95,6 +95,6 @@ Lemma vs_updateP_empty `{Empty (iGst Λ Σ), !CMRAIdentity (iGst Λ Σ)}
 Proof. by intros; apply vs_alt, pvs_updateP_empty. Qed.
 Lemma vs_update E m m' : m ~~> m' → ownG m >{E}> ownG m'.
 Proof. by intros; apply vs_alt, pvs_update. Qed.
-Lemma vs_alloc E P : ¬set_finite E → ▷ P >{E}> (∃ i, ■ (i ∈ E) ∧ inv i P).
+Lemma vs_alloc E P : ¬set_finite E → ▷ P >{E}> (∃ i, ■ (i ∈ E) ∧ ownI i P).
 Proof. by intros; apply vs_alt, pvs_alloc. Qed.
 End vs.

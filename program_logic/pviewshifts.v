@@ -78,7 +78,7 @@ Proof.
   exists (r' ⋅ r2); split; last by rewrite -(associative _).
   exists r', r2; split_ands; auto; apply uPred_weaken with r2 n; auto.
 Qed.
-Lemma pvs_open i P : inv i P ⊑ pvs {[ i ]} ∅ (▷ P).
+Lemma pvs_open i P : ownI i P ⊑ pvs {[ i ]} ∅ (▷ P).
 Proof.
   intros r [|n] ? Hinv rf [|k] Ef σ ???; try lia.
   apply inv_spec in Hinv; last auto.
@@ -87,7 +87,7 @@ Proof.
   exists (rP ⋅ r); split; last by rewrite (left_id_L _ _) -(associative _).
   eapply uPred_weaken with rP (S k); eauto using cmra_included_l.
 Qed.
-Lemma pvs_close i P : (inv i P ∧ ▷ P) ⊑ pvs ∅ {[ i ]} True.
+Lemma pvs_close i P : (ownI i P ∧ ▷ P) ⊑ pvs ∅ {[ i ]} True.
 Proof.
   intros r [|n] ? [? HP] rf [|k] Ef σ ? HE ?; try lia; exists ∅; split; [done|].
   rewrite (left_id _ _); apply wsat_close with P r.
@@ -115,7 +115,7 @@ Proof.
       auto using option_update_None. }
   by exists (update_gst m' r); split; [exists m'; split; [|apply ownG_spec]|].
 Qed.
-Lemma pvs_alloc E P : ¬set_finite E → ▷ P ⊑ pvs E E (∃ i, ■ (i ∈ E) ∧ inv i P).
+Lemma pvs_alloc E P : ¬set_finite E → ▷ P ⊑ pvs E E (∃ i, ■ (i ∈ E) ∧ ownI i P).
 Proof.
   intros ? r [|n] ? HP rf [|k] Ef σ ???; try lia.
   destruct (wsat_alloc k E Ef σ rf P r) as (i&?&?&?); auto.

@@ -1,27 +1,29 @@
 Require Export algebra.base prelude.countable prelude.co_pset.
+Require Export program_logic.ownership program_logic.pviewshifts.
 
 Definition namespace := list positive.
 Definition nnil : namespace := nil.
-Definition ndot `{Countable A} (I : namespace) (x : A) : namespace :=
-  encode x :: I.
-Definition nclose (I : namespace) : coPset := coPset_suffixes (encode I).
+Definition ndot `{Countable A} (N : namespace) (x : A) : namespace :=
+  encode x :: N.
+Definition nclose (N : namespace) : coPset := coPset_suffixes (encode N).
+Coercion nclose : namespace >-> coPset.
 
 Instance ndot_injective `{Countable A} : Injective2 (=) (=) (=) (@ndot A _ _).
-Proof. by intros I1 x1 I2 x2 ?; simplify_equality. Qed.
+Proof. by intros N1 x1 N2 x2 ?; simplify_equality. Qed.
 Lemma nclose_nnil : nclose nnil = coPset_all.
 Proof. by apply (sig_eq_pi _). Qed.
-Lemma encode_nclose I : encode I ∈ nclose I.
+Lemma encode_nclose N : encode N ∈ nclose N.
 Proof. by apply elem_coPset_suffixes; exists xH; rewrite (left_id_L _ _). Qed.
-Lemma nclose_subseteq `{Countable A} I x : nclose (ndot I x) ⊆ nclose I.
+Lemma nclose_subseteq `{Countable A} N x : nclose (ndot N x) ⊆ nclose N.
 Proof.
   intros p; rewrite /nclose !elem_coPset_suffixes; intros [q ->].
-  destruct (list_encode_suffix I (ndot I x)) as [q' ?]; [by exists [encode x]|].
+  destruct (list_encode_suffix N (ndot N x)) as [q' ?]; [by exists [encode x]|].
   by exists (q ++ q')%positive; rewrite <-(associative_L _); f_equal.
 Qed.
-Lemma ndot_nclose `{Countable A} I x : encode (ndot I x) ∈ nclose I.
+Lemma ndot_nclose `{Countable A} N x : encode (ndot N x) ∈ nclose N.
 Proof. apply nclose_subseteq with x, encode_nclose. Qed.
-Lemma nclose_disjoint `{Countable A} I (x y : A) :
-  x ≠ y → nclose (ndot I x) ∩ nclose (ndot I y) = ∅.
+Lemma nclose_disjoint `{Countable A} N (x y : A) :
+  x ≠ y → nclose (ndot N x) ∩ nclose (ndot N y) = ∅.
 Proof.
   intros Hxy; apply elem_of_equiv_empty_L=> p; unfold nclose, ndot.
   rewrite elem_of_intersection !elem_coPset_suffixes; intros [[q ->] [q' Hq]].
@@ -31,3 +33,8 @@ Proof.
   generalize (encode_nat (encode y)).
   induction (encode_nat (encode x)); intros [|?] ?; f_equal'; naive_solver.
 Qed.
+
+(** Derived forms and lemmas about them. *)
+Definition inv {Λ Σ} (N : namespace) (P : iProp Λ Σ) : iProp Λ Σ :=
+  ownI (encode N) P.
+(* TODO: Add lemmas about inv here. *)

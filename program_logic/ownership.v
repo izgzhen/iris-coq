@@ -1,15 +1,15 @@
 Require Export program_logic.model.
 
-Definition inv {Λ Σ} (i : positive) (P : iProp Λ Σ) : iProp Λ Σ :=
+Definition ownI {Λ Σ} (i : positive) (P : iProp Λ Σ) : iProp Λ Σ :=
   uPred_own (Res {[ i ↦ to_agree (Later (iProp_unfold P)) ]} ∅ ∅).
-Arguments inv {_ _} _ _%I.
+Arguments ownI {_ _} _ _%I.
 Definition ownP {Λ Σ} (σ: state Λ) : iProp Λ Σ := uPred_own (Res ∅ (Excl σ) ∅).
 Definition ownG {Λ Σ} (m: iGst Λ Σ) : iProp Λ Σ := uPred_own (Res ∅ ∅ (Some m)).
-Instance: Params (@inv) 3.
+Instance: Params (@ownI) 3.
 Instance: Params (@ownP) 2.
 Instance: Params (@ownG) 2.
 
-Typeclasses Opaque inv ownG ownP.
+Typeclasses Opaque ownI ownG ownP.
 
 Section ownership.
 Context {Λ : language} {Σ : iFunctor}.
@@ -19,20 +19,20 @@ Implicit Types P : iProp Λ Σ.
 Implicit Types m : iGst Λ Σ.
 
 (* Invariants *)
-Global Instance inv_contractive i : Contractive (@inv Λ Σ i).
+Global Instance inv_contractive i : Contractive (@ownI Λ Σ i).
 Proof.
   intros n P Q HPQ.
   apply (_: Proper (_ ==> _) iProp_unfold), Later_contractive in HPQ.
-  by unfold inv; rewrite HPQ.
+  by unfold ownI; rewrite HPQ.
 Qed.
-Lemma always_inv i P : (□ inv i P)%I ≡ inv i P.
+Lemma always_inv i P : (□ ownI i P)%I ≡ ownI i P.
 Proof.
   apply uPred.always_own.
   by rewrite Res_unit !cmra_unit_empty map_unit_singleton.
 Qed.
-Global Instance inv_always_stable i P : AlwaysStable (inv i P).
+Global Instance inv_always_stable i P : AlwaysStable (ownI i P).
 Proof. by rewrite /AlwaysStable always_inv. Qed.
-Lemma inv_sep_dup i P : inv i P ≡ (inv i P ★ inv i P)%I.
+Lemma inv_sep_dup i P : ownI i P ≡ (ownI i P ★ ownI i P)%I.
 Proof. apply (uPred.always_sep_dup' _). Qed.
 
 (* physical state *)
@@ -65,7 +65,7 @@ Proof. rewrite /ownG; apply _. Qed.
 (* inversion lemmas *)
 Lemma inv_spec r n i P :
   ✓{n} r →
-  (inv i P) n r ↔ wld r !! i ={n}= Some (to_agree (Later (iProp_unfold P))).
+  (ownI i P) n r ↔ wld r !! i ={n}= Some (to_agree (Later (iProp_unfold P))).
 Proof.
   intros [??]; rewrite /uPred_holds/=res_includedN/=singleton_includedN; split.
   * intros [(P'&Hi&HP) _]; rewrite Hi.
