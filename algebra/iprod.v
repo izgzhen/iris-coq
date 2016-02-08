@@ -4,7 +4,7 @@ Require Import algebra.functor.
 (** * Indexed product *)
 (** Need to put this in a definition to make canonical structures to work. *)
 Definition iprod {A} (B : A → cofeT) := ∀ x, B x.
-Definition iprod_insert `{∀ x x' : A, Decision (x = x')} {B : A → cofeT}
+Definition iprod_insert {A} {B : A → cofeT} `{∀ x x' : A, Decision (x = x')}
     (x : A) (y : B x) (f : iprod B) : iprod B := λ x',
   match decide (x = x') with left H => eq_rect _ B y _ H | right _ => f x' end.
 Global Instance iprod_empty {A} {B : A → cofeT}
@@ -12,6 +12,8 @@ Global Instance iprod_empty {A} {B : A → cofeT}
 Definition iprod_singleton {A} {B : A → cofeT} 
     `{∀ x x' : A, Decision (x = x'), ∀ x : A, Empty (B x)}
   (x : A) (y : B x) : iprod B := iprod_insert x y ∅.
+Instance: Params (@iprod_insert) 4.
+Instance: Params (@iprod_singleton) 5.
 
 Section iprod_cofe.
   Context {A} {B : A → cofeT}.
