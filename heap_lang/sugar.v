@@ -32,7 +32,7 @@ Module notations.
   (* What about Arguments for hoare triples?. *)
   (* The colons indicate binders. "let" is not consistent here though,
      thing are only bound in the "in". *)
-  Notation "# n" := (Var n) (at level 1, format "# n") : lang_scope.
+  Notation "# n" := (ids (term:=expr) n) (at level 1, format "# n") : lang_scope.
   Notation "! e" := (Load e%L) (at level 10, format "! e") : lang_scope.
   Notation "'ref' e" := (Alloc e%L) (at level 30) : lang_scope.
   Notation "e1 + e2" := (Plus e1%L e2%L)
@@ -41,12 +41,14 @@ Module notations.
   Notation "e1 < e2" := (Lt e1%L e2%L) (at level 70) : lang_scope.
   (* The unicode ← is already part of the notation "_ ← _; _" for bind. *)
   Notation "e1 <- e2" := (Store e1%L e2%L) (at level 80) : lang_scope.
-  Notation "e1 ; e2" := (Seq e1%L e2%L) (at level 100) : lang_scope.
-  Notation "'let:' e1 'in' e2" := (Let e1%L e2%L) (at level 102) : lang_scope.
-  Notation "'λ:' e" := (Lam e%L) (at level 102) : lang_scope.
-  Notation "'rec::' e" := (Rec e%L) (at level 102) : lang_scope.
+  Notation "e1 ; e2" := (Seq e1%L e2%L)
+    (at level 100, e2 at level 200) : lang_scope.
+  Notation "'let:' e1 'in' e2" := (Let e1%L e2%L)
+    (at level 102, e2 at level 200) : lang_scope.
+  Notation "'λ:' e" := (Lam e%L) (at level 102, e at level 200) : lang_scope.
+  Notation "'rec::' e" := (Rec e%L) (at level 102, e at level 200) : lang_scope.
   Notation "'if' e1 'then' e2 'else' e3" := (If e1%L e2%L e3%L)
-    (at level 200, e1, e2, e3 at level 200, only parsing) : lang_scope.
+    (at level 200, e1, e2, e3 at level 200) : lang_scope.
 End notations.
 
 Section suger.
