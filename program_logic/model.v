@@ -1,4 +1,4 @@
-Require Export program_logic.upred program_logic.resources.
+Require Export algebra.upred program_logic.resources.
 Require Import algebra.cofe_solver.
 
 (* The Iris program logic is parametrized by a functor from the category of
