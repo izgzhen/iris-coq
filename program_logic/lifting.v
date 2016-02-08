@@ -1,5 +1,5 @@
 Require Export program_logic.weakestpre.
-Require Import program_logic.wsat.
+Require Import program_logic.wsat program_logic.ownership.
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 100 (@eq coPset _ _) => solve_elem_of.
 Local Hint Extern 10 (✓{_} _) =>

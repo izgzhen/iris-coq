@@ -1,24 +1,25 @@
-Require Export algebra.iprod program_logic.ownership program_logic.pviewshifts.
+Require Export algebra.iprod program_logic.pviewshifts.
+Require Import program_logic.ownership.
 Import uPred.
 
 Definition gid := positive.
-Definition globalC (Δ : gid → iFunctor) : iFunctor :=
-  iprodF (λ i, mapF gid (Δ i)).
+Definition globalC (Σ : gid → iFunctor) : iFunctor :=
+  iprodF (λ i, mapF gid (Σ i)).
 
-Class InG Λ (Δ : gid → iFunctor) (i : gid) (A : cmraT) :=
-  inG : A = Δ i (laterC (iPreProp Λ (globalC Δ))).
-Definition to_funC {Λ} {Δ : gid → iFunctor} (i : gid) 
-           `{!InG Λ Δ i A} (a : A) : Δ i (laterC (iPreProp Λ (globalC Δ))) :=
+Class InG Λ (Σ : gid → iFunctor) (i : gid) (A : cmraT) :=
+  inG : A = Σ i (laterC (iPreProp Λ (globalC Σ))).
+Definition to_Σ {Λ} {Σ : gid → iFunctor} (i : gid) 
+           `{!InG Λ Σ i A} (a : A) : Σ i (laterC (iPreProp Λ (globalC Σ))) :=
   eq_rect A id a _ inG.
-Definition to_globalC {Λ} {Δ : gid → iFunctor}
-           (i : gid) (γ : gid) `{!InG Λ Δ i A} (a : A) : iGst Λ (globalC Δ) :=
-  iprod_singleton i {[ γ ↦ to_funC _ a ]}.
-Definition own {Λ} {Δ : gid → iFunctor}
-    (i : gid) `{!InG Λ Δ i A} (γ : gid) (a : A) : iProp Λ (globalC Δ) :=
-  ownG (Σ:=globalC Δ) (to_globalC i γ a).
+Definition to_globalC {Λ} {Σ : gid → iFunctor}
+           (i : gid) (γ : gid) `{!InG Λ Σ i A} (a : A) : iGst Λ (globalC Σ) :=
+  iprod_singleton i {[ γ ↦ to_Σ _ a ]}.
+Definition own {Λ} {Σ : gid → iFunctor}
+    (i : gid) `{!InG Λ Σ i A} (γ : gid) (a : A) : iProp Λ (globalC Σ) :=
+  ownG (to_globalC i γ a).
 
 Section global.
-Context {Λ : language} {Δ : gid → iFunctor} (i : gid) `{!InG Λ Δ i A}.
+Context {Λ : language} {Σ : gid → iFunctor} (i : gid) `{!InG Λ Σ i A}.
 Implicit Types a : A.
 
 (* Proeprties of to_globalC *)
@@ -27,7 +28,7 @@ Lemma globalC_op γ a1 a2 :
 Proof.
   rewrite /to_globalC iprod_op_singleton map_op_singleton.
   apply iprod_singleton_proper, (fin_maps.singleton_proper (M:=gmap _)).
-  by rewrite /to_funC; destruct inG.
+  by rewrite /to_Σ; destruct inG.
 Qed.
 
 Lemma globalC_validN n γ a :
@@ -35,7 +36,7 @@ Lemma globalC_validN n γ a :
 Proof.
   rewrite /to_globalC.
   rewrite -iprod_validN_singleton -map_validN_singleton.
-  by rewrite /to_funC; destruct inG.
+  by rewrite /to_Σ; destruct inG.
 Qed.
 
 (* Properties of own *)
@@ -43,7 +44,7 @@ Qed.
 Global Instance own_ne γ n : Proper (dist n ==> dist n) (own i γ).
 Proof.
   intros m m' Hm; apply ownG_ne, iprod_singleton_ne, singleton_ne.
-  by rewrite /to_globalC /to_funC; destruct inG.
+  by rewrite /to_globalC /to_Σ; destruct inG.
 Qed.
 
 Global Instance own_proper γ : Proper ((≡) ==> (≡)) (own i γ) := ne_proper _.
@@ -54,14 +55,14 @@ Proof. rewrite /own -ownG_op. apply ownG_proper, globalC_op. Qed.
 (* TODO: This also holds if we just have ✓a at the current step-idx, as Iris
    assertion. However, the map_updateP_alloc does not suffice to show this. *)
 Lemma own_alloc E a :
-  ✓a → True ⊑ pvs E E (∃ γ, own (Δ:=Δ) i γ a).
+  ✓a → True ⊑ pvs E E (∃ γ, own i γ a).
 Proof.
-  intros Hm. set (P m := ∃ γ, m = to_globalC (Δ:=Δ) i γ a).
+  intros Hm. set (P m := ∃ γ, m = to_globalC i γ a).
   rewrite -(pvs_mono _ _ (∃ m, ■P m ∧ ownG m)%I).
   - rewrite -pvs_updateP_empty //; [].
     subst P. eapply (iprod_singleton_updateP_empty i).
-    + eapply map_updateP_alloc' with (x:=to_funC i a).
-      by rewrite /to_funC; destruct inG.
+    + eapply map_updateP_alloc' with (x:=to_Σ i a).
+      by rewrite /to_Σ; destruct inG.
     + simpl. move=>? [γ [-> ?]]. exists γ. done.
   - apply exist_elim=>m. apply const_elim_l.
     move=>[p ->] {P}. by rewrite -(exist_intro p).

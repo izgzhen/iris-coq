@@ -1,5 +1,6 @@
 Require Export algebra.base prelude.countable prelude.co_pset.
-Require Export program_logic.ownership program_logic.pviewshifts.
+Require Import program_logic.ownership.
+Require Export program_logic.pviewshifts.
 
 Definition namespace := list positive.
 Definition nnil : namespace := nil.

@@ -1,4 +1,4 @@
-Require Import prelude.gmap program_logic.lifting.
+Require Import prelude.gmap program_logic.lifting program_logic.ownership.
 Require Export program_logic.weakestpre heap_lang.heap_lang_tactics.
 Import uPred heap_lang.
 Local Hint Extern 0 (language.reducible _ _) => do_step ltac:(eauto 2).

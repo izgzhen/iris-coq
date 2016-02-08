@@ -1,4 +1,5 @@
 Require Export program_logic.pviewshifts.
+Require Import program_logic.ownership.
 
 Definition vs {Λ Σ} (E1 E2 : coPset) (P Q : iProp Λ Σ) : iProp Λ Σ :=
   (□ (P → pvs E1 E2 Q))%I.

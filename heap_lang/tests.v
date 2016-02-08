@@ -1,5 +1,5 @@
 (** This file is essentially a bunch of testcases. *)
-Require Import program_logic.upred.
+Require Import program_logic.upred program_logic.ownership.
 Require Import heap_lang.lifting heap_lang.sugar.
 Import heap_lang uPred notations.
 
