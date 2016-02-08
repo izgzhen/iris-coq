@@ -154,8 +154,12 @@ Lemma option_update x y : x ~~> y → Some x ~~> Some y.
 Proof.
   rewrite !cmra_update_updateP; eauto using option_updateP with congruence.
 Qed.
+Lemma option_update_None `{Empty A, !CMRAIdentity A} : ∅ ~~> Some ∅.
+Proof.
+  intros [x|] n ?; rewrite /op /cmra_op /validN /cmra_validN /= ?left_id;
+    auto using cmra_empty_valid.
+Qed.
 End cmra.
-
 Arguments optionRA : clear implicits.
 
 (** Functor *)
@@ -189,4 +193,3 @@ Next Obligation.
   intros Σ A B C f g x. rewrite /= -option_fmap_compose.
   apply option_fmap_setoid_ext=>y; apply ifunctor_map_compose.
 Qed.
-

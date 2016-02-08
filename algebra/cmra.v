@@ -336,6 +336,11 @@ Lemma cmra_updateP_compose (P Q : A → Prop) x :
 Proof.
   intros Hx Hy z n ?. destruct (Hx z n) as (y&?&?); auto. by apply (Hy y).
 Qed.
+Lemma cmra_updateP_compose_l (Q : A → Prop) x y : x ~~> y → y ~~>: Q → x ~~>: Q.
+Proof.
+  rewrite cmra_update_updateP.
+  intros; apply cmra_updateP_compose with (y =); intros; subst; auto.
+Qed.
 Lemma cmra_updateP_weaken (P Q : A → Prop) x : x ~~>: P → (∀ y, P y → Q y) → x ~~>: Q.
 Proof. eauto using cmra_updateP_compose, cmra_updateP_id. Qed.
 
@@ -355,6 +360,14 @@ Lemma cmra_update_op x1 x2 y1 y2 : x1 ~~> y1 → x2 ~~> y2 → x1 ⋅ x2 ~~> y1 
 Proof.
   rewrite !cmra_update_updateP; eauto using cmra_updateP_op with congruence.
 Qed.
+
+Section identity_updates.
+  Context `{Empty A, !CMRAIdentity A}.
+  Lemma cmra_update_empty x : x ~~> ∅.
+  Proof. intros z n; rewrite left_id; apply cmra_validN_op_r. Qed.
+  Lemma cmra_update_empty_alt y : ∅ ~~> y ↔ ∀ x, x ~~> y.
+  Proof. split; [intros; transitivity ∅|]; auto using cmra_update_empty. Qed.
+End identity_updates.
 End cmra.
 
 Hint Extern 0 (_ ≼{0} _) => apply cmra_includedN_0.
