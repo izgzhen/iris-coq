@@ -1,22 +1,23 @@
 Require Export algebra.cmra.
 Require Import algebra.functor.
 
-(** Indexed product *)
+(** * Indexed product *)
 (** Need to put this in a definition to make canonical structures to work. *)
 Definition iprod {A} (B : A → cofeT) := ∀ x, B x.
 Definition iprod_insert `{∀ x x' : A, Decision (x = x')} {B : A → cofeT}
     (x : A) (y : B x) (f : iprod B) : iprod B := λ x',
   match decide (x = x') with left H => eq_rect _ B y _ H | right _ => f x' end.
-Global Instance iprod_empty {A} {B : A → cofeT} `{∀ x, Empty (B x)} : Empty (iprod B) := λ x, ∅.
-Definition iprod_lookup_empty {A} {B : A → cofeT} `{∀ x, Empty (B x)} x : ∅ x = ∅ := eq_refl.
-Definition iprod_singleton
-    `{∀ x x' : A, Decision (x = x')} {B : A → cofeT} `{∀ x : A, Empty (B x)}
+Global Instance iprod_empty {A} {B : A → cofeT}
+  `{∀ x, Empty (B x)} : Empty (iprod B) := λ x, ∅.
+Definition iprod_singleton {A} {B : A → cofeT} 
+    `{∀ x x' : A, Decision (x = x'), ∀ x : A, Empty (B x)}
   (x : A) (y : B x) : iprod B := iprod_insert x y ∅.
 
 Section iprod_cofe.
   Context {A} {B : A → cofeT}.
   Implicit Types x : A.
   Implicit Types f g : iprod B.
+
   Instance iprod_equiv : Equiv (iprod B) := λ f g, ∀ x, f x ≡ g x.
   Instance iprod_dist : Dist (iprod B) := λ n f g, ∀ x, f x ={n}= g x.
   Program Definition iprod_chain (c : chain (iprod B)) (x : A) : chain (B x) :=
@@ -41,6 +42,15 @@ Section iprod_cofe.
   Qed.
   Canonical Structure iprodC : cofeT := CofeT iprod_cofe_mixin.
 
+  (** Properties of empty *)
+  Section empty.
+    Context `{∀ x, Empty (B x)}.
+    Definition iprod_lookup_empty  x : ∅ x = ∅ := eq_refl.
+    Instance iprod_empty_timeless :
+      (∀ x : A, Timeless (∅ : B x)) → Timeless (∅ : iprod B).
+    Proof. intros ? f Hf x. by apply (timeless _). Qed.
+  End empty.
+
   (** Properties of iprod_insert. *)
   Context `{∀ x x' : A, Decision (x = x')}.
 
@@ -50,7 +60,6 @@ Section iprod_cofe.
     intros y1 y2 ? f1 f2 ? x'; rewrite /iprod_insert.
     by destruct (decide _) as [[]|].
   Qed.
-
   Global Instance iprod_insert_proper x :
     Proper ((≡) ==> (≡) ==> (≡)) (iprod_insert x) := ne_proper_2 _.
 
@@ -59,90 +68,62 @@ Section iprod_cofe.
     rewrite /iprod_insert; destruct (decide _) as [Hx|]; last done.
     by rewrite (proof_irrel Hx eq_refl).
   Qed.
-
   Lemma iprod_lookup_insert_ne f x x' y :
     x ≠ x' → (iprod_insert x y f) x' = f x'.
   Proof. by rewrite /iprod_insert; destruct (decide _). Qed.
 
-  Global Instance iprod_lookup_timeless f x :
-    Timeless f → Timeless (f x).
+  Global Instance iprod_lookup_timeless f x : Timeless f → Timeless (f x).
   Proof.
-    intros ? y Hf.
+    intros ? y ?.
     cut (f ≡ iprod_insert x y f).
-    { move=>{Hf} Hf. by rewrite (Hf x) iprod_lookup_insert. }
-    apply timeless; first by apply _.
-    move=>x'. destruct (decide (x = x')).
-    - subst x'. rewrite iprod_lookup_insert; done.
-    - rewrite iprod_lookup_insert_ne //.
+    { by move=> /(_ x)->; rewrite iprod_lookup_insert. }
+    by apply (timeless _)=>x'; destruct (decide (x = x')) as [->|];
+      rewrite ?iprod_lookup_insert ?iprod_lookup_insert_ne.
   Qed.
-
   Global Instance iprod_insert_timeless f x y :
     Timeless f → Timeless y → Timeless (iprod_insert x y f).
   Proof.
-    intros ?? g Heq x'. destruct (decide (x = x')).
-    - subst x'. rewrite iprod_lookup_insert.
-      apply (timeless _).
-      rewrite -(Heq x) iprod_lookup_insert; done.
-    - rewrite iprod_lookup_insert_ne //.
-      apply (timeless _).
-      rewrite -(Heq x') iprod_lookup_insert_ne; done.
+    intros ?? g Heq x'; destruct (decide (x = x')) as [->|].
+    * rewrite iprod_lookup_insert.
+      apply (timeless _). by rewrite -(Heq x') iprod_lookup_insert.
+    * rewrite iprod_lookup_insert_ne //.
+      apply (timeless _). by rewrite -(Heq x') iprod_lookup_insert_ne.
   Qed.
 
   (** Properties of iprod_singletom. *)
   Context `{∀ x : A, Empty (B x)}.
+
   Global Instance iprod_singleton_ne x n :
     Proper (dist n ==> dist n) (iprod_singleton x).
   Proof. by intros y1 y2 Hy; rewrite /iprod_singleton Hy. Qed.
   Global Instance iprod_singleton_proper x :
     Proper ((≡) ==> (≡)) (iprod_singleton x) := ne_proper _.
+
   Lemma iprod_lookup_singleton x y : (iprod_singleton x y) x = y.
   Proof. by rewrite /iprod_singleton iprod_lookup_insert. Qed.
-  Lemma iprod_lookup_singleton_ne x x' y :
-    x ≠ x' → (iprod_singleton x y) x' = ∅.
+  Lemma iprod_lookup_singleton_ne x x' y: x ≠ x' → (iprod_singleton x y) x' = ∅.
   Proof. intros; by rewrite /iprod_singleton iprod_lookup_insert_ne. Qed.
 
-  Context `{∀ x : A, Timeless (∅ : B x)}.
-  Instance iprod_empty_timeless : Timeless (∅ : iprod B).
-  Proof. intros f Hf x. by apply (timeless _). Qed.
-
   Global Instance iprod_singleton_timeless x (y : B x) :
-    Timeless y → Timeless (iprod_singleton x y) := _.
-
+    (∀ x : A, Timeless (∅ : B x)) → Timeless y → Timeless (iprod_singleton x y).
+  Proof. eauto using iprod_insert_timeless, iprod_empty_timeless. Qed.
 End iprod_cofe.
 
 Arguments iprodC {_} _.
 
-Definition iprod_map {A} {B1 B2 : A → cofeT} (f : ∀ x, B1 x → B2 x)
-  (g : iprod B1) : iprod B2 := λ x, f _ (g x).
-Lemma iprod_map_ext {A} {B1 B2 : A → cofeT} (f1 f2 : ∀ x, B1 x → B2 x) g :
-  (∀ x, f1 x (g x) ≡ f2 x (g x)) → iprod_map f1 g ≡ iprod_map f2 g.
-Proof. done. Qed.
-Lemma iprod_map_id {A} {B: A → cofeT} (g : iprod B) : iprod_map (λ _, id) g = g.
-Proof. done. Qed.
-Lemma iprod_map_compose {A} {B1 B2 B3 : A → cofeT}
-    (f1 : ∀ x, B1 x → B2 x) (f2 : ∀ x, B2 x → B3 x) (g : iprod B1) :
-  iprod_map (λ x, f2 x ∘ f1 x) g = iprod_map f2 (iprod_map f1 g).
-Proof. done. Qed.
-Instance iprod_map_ne {A} {B1 B2 : A → cofeT} (f : ∀ x, B1 x → B2 x) n :
-  (∀ x, Proper (dist n ==> dist n) (f x)) →
-  Proper (dist n ==> dist n) (iprod_map f).
-Proof. by intros ? y1 y2 Hy x; rewrite /iprod_map (Hy x). Qed.
-Definition iprodC_map {A} {B1 B2 : A → cofeT} (f : iprod (λ x, B1 x -n> B2 x)) :
-  iprodC B1 -n> iprodC B2 := CofeMor (iprod_map f).
-Instance iprodC_map_ne {A} {B1 B2 : A → cofeT} n :
-  Proper (dist n ==> dist n) (@iprodC_map A B1 B2).
-Proof. intros f1 f2 Hf g x; apply Hf. Qed.
-
 Section iprod_cmra.
   Context {A} {B : A → cmraT}.
   Implicit Types f g : iprod B.
+
   Instance iprod_op : Op (iprod B) := λ f g x, f x ⋅ g x.
-  Definition iprod_lookup_op f g x : (f ⋅ g) x = f x ⋅ g x := eq_refl.
   Instance iprod_unit : Unit (iprod B) := λ f x, unit (f x).
-  Definition iprod_lookup_unit f x : (unit f) x = unit (f x) := eq_refl.
   Instance iprod_validN : ValidN (iprod B) := λ n f, ∀ x, ✓{n} (f x).
   Instance iprod_minus : Minus (iprod B) := λ f g x, f x ⩪ g x.
+
+  Definition iprod_lookup_op f g x : (f ⋅ g) x = f x ⋅ g x := eq_refl.
+  Definition iprod_lookup_unit f x : (unit f) x = unit (f x) := eq_refl.
   Definition iprod_lookup_minus f g x : (f ⩪ g) x = f x ⩪ g x := eq_refl.
+
   Lemma iprod_includedN_spec (f g : iprod B) n : f ≼{n} g ↔ ∀ x, f x ≼{n} g x.
   Proof.
     split.
@@ -150,6 +131,7 @@ Section iprod_cmra.
     * intros Hh; exists (g ⩪ f)=> x; specialize (Hh x).
       by rewrite /op /iprod_op /minus /iprod_minus cmra_op_minus.
   Qed.
+
   Definition iprod_cmra_mixin : CMRAMixin (iprod B).
   Proof.
     split.
@@ -209,31 +191,27 @@ Section iprod_cmra.
   Lemma iprod_insert_update g x y1 y2 :
     y1 ~~> y2 → iprod_insert x y1 g ~~> iprod_insert x y2 g.
   Proof.
-    rewrite !cmra_update_updateP;
-      eauto using iprod_insert_updateP with congruence.
+    rewrite !cmra_update_updateP; eauto using iprod_insert_updateP with subst.
   Qed.
 
   (** Properties of iprod_singleton. *)
-  Context `{∀ x, Empty (B x)} `{∀ x, CMRAIdentity (B x)}.
+  Context `{∀ x, Empty (B x), ∀ x, CMRAIdentity (B x)}.
 
-  Lemma iprod_validN_singleton n x (y : B x) :
-    ✓{n} y <-> ✓{n} (iprod_singleton x y).
+  Lemma iprod_singleton_validN n x (y : B x) :
+    ✓{n} (iprod_singleton x y) ↔ ✓{n} y.
   Proof.
-    split.
-    - move=>Hx x'. destruct (decide (x = x')).
-      + subst x'. by rewrite iprod_lookup_singleton.
-      + rewrite iprod_lookup_singleton_ne //; [].
-        by apply cmra_empty_valid.
-    - move=>Hm. move: (Hm x). by rewrite iprod_lookup_singleton.
+    split; [by move=>/(_ x); rewrite iprod_lookup_singleton|].
+    move=>Hx x'; destruct (decide (x = x')) as [->|];
+      rewrite ?iprod_lookup_singleton ?iprod_lookup_singleton_ne //.
+    by apply cmra_empty_valid.
   Qed.
 
   Lemma iprod_unit_singleton x (y : B x) :
     unit (iprod_singleton x y) ≡ iprod_singleton x (unit y).
   Proof.
-    move=>x'. rewrite iprod_lookup_unit. destruct (decide (x = x')).
-    - subst x'. by rewrite !iprod_lookup_singleton.
-    - rewrite !iprod_lookup_singleton_ne //; [].
-      by apply cmra_unit_empty.
+    by move=>x'; destruct (decide (x = x')) as [->|];
+      rewrite iprod_lookup_unit ?iprod_lookup_singleton
+      ?iprod_lookup_singleton_ne // cmra_unit_empty.
   Qed.
 
   Lemma iprod_op_singleton (x : A) (y1 y2 : B x) :
@@ -248,32 +226,45 @@ Section iprod_cmra.
     y1 ~~>: P → (∀ y2, P y2 → Q (iprod_singleton x y2)) →
     iprod_singleton x y1 ~~>: Q.
   Proof. rewrite /iprod_singleton; eauto using iprod_insert_updateP. Qed.
-
   Lemma iprod_singleton_updateP' x (P : B x → Prop) y1 :
     y1 ~~>: P →
     iprod_singleton x y1 ~~>: λ g', ∃ y2, g' = iprod_singleton x y2 ∧ P y2.
   Proof. eauto using iprod_singleton_updateP. Qed.
-
-  Lemma iprod_singleton_updateP_empty x (P : B x → Prop) (Q : iprod B → Prop) :
-    (∅ ~~>: P) → (∀ y2, P y2 → Q (iprod_singleton x y2)) →
-    ∅ ~~>: Q.
-  Proof.
-    intros Hx HQ gf n Hg. destruct (Hx (gf x) n) as (y2&?&?).
-    { apply: Hg. }
-    exists (iprod_singleton x y2).
-    split; first by apply HQ.
-    intros x'; destruct (decide (x' = x)) as [->|];
-      rewrite iprod_lookup_op /iprod_singleton ?iprod_lookup_insert //; [].
-    move:(Hg x'). by rewrite iprod_lookup_insert_ne // left_id.
-  Qed.
-
   Lemma iprod_singleton_update x y1 y2 :
     y1 ~~> y2 → iprod_singleton x y1 ~~> iprod_singleton x y2.
-  Proof. by intros; apply iprod_insert_update. Qed.
+  Proof. eauto using iprod_insert_update. Qed.
+
+  Lemma iprod_singleton_updateP_empty x (P : B x → Prop) (Q : iprod B → Prop) :
+    ∅ ~~>: P → (∀ y2, P y2 → Q (iprod_singleton x y2)) → ∅ ~~>: Q.
+  Proof.
+    intros Hx HQ gf n Hg. destruct (Hx (gf x) n) as (y2&?&?); first apply Hg.
+    exists (iprod_singleton x y2); split; [by apply HQ|].
+    intros x'; destruct (decide (x' = x)) as [->|].
+    * by rewrite iprod_lookup_op iprod_lookup_singleton.
+    * rewrite iprod_lookup_op iprod_lookup_singleton_ne //. apply Hg.
+  Qed.
 End iprod_cmra.
 
 Arguments iprodRA {_} _.
 
+(** * Functor *)
+Definition iprod_map {A} {B1 B2 : A → cofeT} (f : ∀ x, B1 x → B2 x)
+  (g : iprod B1) : iprod B2 := λ x, f _ (g x).
+
+Lemma iprod_map_ext {A} {B1 B2 : A → cofeT} (f1 f2 : ∀ x, B1 x → B2 x) g :
+  (∀ x, f1 x (g x) ≡ f2 x (g x)) → iprod_map f1 g ≡ iprod_map f2 g.
+Proof. done. Qed.
+Lemma iprod_map_id {A} {B: A → cofeT} (g : iprod B) : iprod_map (λ _, id) g = g.
+Proof. done. Qed.
+Lemma iprod_map_compose {A} {B1 B2 B3 : A → cofeT}
+    (f1 : ∀ x, B1 x → B2 x) (f2 : ∀ x, B2 x → B3 x) (g : iprod B1) :
+  iprod_map (λ x, f2 x ∘ f1 x) g = iprod_map f2 (iprod_map f1 g).
+Proof. done. Qed.
+
+Instance iprod_map_ne {A} {B1 B2 : A → cofeT} (f : ∀ x, B1 x → B2 x) n :
+  (∀ x, Proper (dist n ==> dist n) (f x)) →
+  Proper (dist n ==> dist n) (iprod_map f).
+Proof. by intros ? y1 y2 Hy x; rewrite /iprod_map (Hy x). Qed.
 Instance iprod_map_cmra_monotone {A} {B1 B2: A → cmraT} (f : ∀ x, B1 x → B2 x) :
   (∀ x, CMRAMonotone (f x)) → CMRAMonotone (iprod_map f).
 Proof.
@@ -282,6 +273,12 @@ Proof.
     rewrite /iprod_map; apply includedN_preserving, Hf.
   * intros n g Hg x; rewrite /iprod_map; apply validN_preserving, Hg.
 Qed.
+
+Definition iprodC_map {A} {B1 B2 : A → cofeT} (f : iprod (λ x, B1 x -n> B2 x)) :
+  iprodC B1 -n> iprodC B2 := CofeMor (iprod_map f).
+Instance iprodC_map_ne {A} {B1 B2 : A → cofeT} n :
+  Proper (dist n ==> dist n) (@iprodC_map A B1 B2).
+Proof. intros f1 f2 Hf g x; apply Hf. Qed.
 
 Program Definition iprodF {A} (Σ : A → iFunctor) : iFunctor := {|
   ifunctor_car B := iprodRA (λ x, Σ x B);

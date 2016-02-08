@@ -6,7 +6,7 @@ Definition gid := positive.
 Definition globalC (Σ : gid → iFunctor) : iFunctor :=
   iprodF (λ i, mapF gid (Σ i)).
 
-Class InG Λ (Σ : gid → iFunctor) (i : gid) (A : cmraT) :=
+Class InG (Λ : language) (Σ : gid → iFunctor) (i : gid) (A : cmraT) :=
   inG : A = Σ i (laterC (iPreProp Λ (globalC Σ))).
 
 Section global.
@@ -41,11 +41,9 @@ Proof.
   by rewrite /to_Σ; destruct inG.
 Qed.
 
-Lemma globalC_validN n γ a :
-  ✓{n} (to_globalC γ a) <-> ✓{n} a.
+Lemma globalC_validN n γ a : ✓{n} (to_globalC γ a) ↔ ✓{n} a.
 Proof.
-  rewrite /to_globalC.
-  rewrite -iprod_validN_singleton -map_validN_singleton.
+  rewrite /to_globalC iprod_singleton_validN map_singleton_validN.
   by rewrite /to_Σ; destruct inG.
 Qed.
 
@@ -61,7 +59,7 @@ Qed.
 Global Instance globalC_timeless γ m : Timeless m → Timeless (to_globalC γ m).
 Proof.
   rewrite /to_globalC => ?.
-  apply iprod_singleton_timeless, map_singleton_timeless.
+  apply (iprod_singleton_timeless _ _ _), map_singleton_timeless.
   by rewrite /to_Σ; destruct inG.
 Qed.
 
