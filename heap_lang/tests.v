@@ -7,12 +7,11 @@ Module LangTests.
   Definition add := (21 + 21)%L.
   Goal ∀ σ, prim_step add σ 42 σ None.
   Proof. intros; do_step done. Qed.
-  (* FIXME RJ why do I need the %L ? *)
-  Definition rec : expr := (rec:: #0 #1)%L. (* fix f x => f x *)
+  Definition rec : expr := rec:: #0 #1. (* fix f x => f x *)
   Definition rec_app : expr := rec 0.
   Goal ∀ σ, prim_step rec_app σ rec_app σ None.
   Proof. Set Printing All. intros; do_step done. Qed.
-  Definition lam : expr := (λ: #0 + 21)%L.
+  Definition lam : expr := λ: #0 + 21.
   Goal ∀ σ, prim_step (App lam (LitNat 21)) σ add σ None.
   Proof. intros; do_step done. Qed.
 End LangTests.
@@ -23,7 +22,7 @@ Module LiftingTests.
   Implicit Types Q : val → iProp heap_lang Σ.
 
   (* FIXME: Fix levels so that we do not need the parenthesis here. *)
-  Definition e  : expr := (let: ref 1 in #0 <- !#0 + 1; !#0)%L.
+  Definition e  : expr := let: ref 1 in #0 <- !#0 + 1; !#0.
   Goal ∀ σ E, (ownP σ : iProp heap_lang Σ) ⊑ (wp E e (λ v, ■(v = 2))).
   Proof.
     move=> σ E. rewrite /e.
