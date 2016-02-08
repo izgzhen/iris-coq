@@ -1,8 +1,7 @@
 (** This file is essentially a bunch of testcases. *)
 Require Import program_logic.upred.
 Require Import heap_lang.lifting heap_lang.sugar.
-Import heap_lang.
-Import uPred.
+Import heap_lang uPred notations.
 
 Module LangTests.
   Definition add := (21 + 21)%L.
@@ -24,7 +23,7 @@ Module LiftingTests.
   Implicit Types Q : val → iProp heap_lang Σ.
 
   (* FIXME: Fix levels so that we do not need the parenthesis here. *)
-  Definition e  : expr := let: new 1 in (#0 <- ★#0 + 1 ; ★#0)%L.
+  Definition e  : expr := (let: ref 1 in #0 <- !#0 + 1; !#0)%L.
   Goal ∀ σ E, (ownP σ : iProp heap_lang Σ) ⊑ (wp E e (λ v, ■(v = 2))).
   Proof.
     move=> σ E. rewrite /e.
@@ -56,15 +55,12 @@ Module LiftingTests.
   (* TODO: once asimpl preserves notation, we don't need
      FindPred' anymore. *)
   (* FIXME: fix notation so that we do not need parenthesis or %L *)
-  Definition FindPred' n1 Sn1 n2 f : expr := if Sn1 < n2
-                                             then f Sn1
-                                             else n1.
-  Definition FindPred n2 : expr := rec:: (let: (#1 + 1) in
-                                     FindPred' #2 #0 n2.[ren(+3)] #1)%L.
-  Definition Pred : expr := λ: (if #0 ≤ 0
-                                then 0
-                                else FindPred (#0) 0
-                               )%L.
+  Definition FindPred' n1 Sn1 n2 f : expr :=
+    if Sn1 < n2 then f Sn1 else n1.
+  Definition FindPred n2 : expr :=
+    rec:: (let: #1 + 1 in FindPred' #2 #0 n2.[ren(+3)] #1)%L.
+  Definition Pred : expr :=
+    λ: (if #0 ≤ 0 then 0 else FindPred #0 0)%L.
 
   Lemma FindPred_spec n1 n2 E Q :
     (■(n1 < n2) ∧ Q (pred n2)) ⊑
@@ -112,9 +108,7 @@ Module LiftingTests.
   Qed.
 
   Goal ∀ E,
-    True ⊑ wp (Σ:=Σ) E
-         (* FIXME why do we need %L here? *)
-      (let: Pred 42 in Pred #0)%L (λ v, ■(v = 40)).
+    True ⊑ wp (Σ:=Σ) E (let: Pred 42 in Pred #0) (λ v, ■(v = 40)).
   Proof.
     intros E. rewrite -wp_let. rewrite -Pred_spec -!later_intro.
     asimpl. (* TODO RJ: Can we somehow make it so that Pred gets folded again? *)
