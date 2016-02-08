@@ -1,5 +1,6 @@
-Require Export algebra.auth.
-Require Import program_logic.functor program_logic.language program_logic.weakestpre.
+Require Export algebra.auth algebra.functor.
+Require Import program_logic.language program_logic.weakestpre.
+Import uPred.
 
 (* RJ: This is a work-in-progress playground.
    FIXME: Finish or remove. *)
@@ -42,20 +43,22 @@ Section auth.
     rewrite /tr' /tr. by destruct Ci.
   Qed.
 
-  Definition Tr j {H : i = j} (c: C i) : C j.
-  rewrite -H. exact c. Defined.
+  Lemma A_val a :
+    ✓a = ✓(tr a).
+  Proof.
+    rewrite /tr. by destruct Ci.
+  Qed.
 
   (* FIXME RJ: I'd rather not have to specify Σ by hand here. *)
-  Definition ownNothing : iProp Λ Σ := ownG (Σ:=Σ) (fun j => (∅ : mapRA positive (C j))).
+  Definition A2m (p : positive) (a : authRA A) : iGst Λ Σ :=
+    iprod_singleton i (<[p:=tr a]>∅).
   Definition ownA (p : positive) (a : authRA A) : iProp Λ Σ :=
-    ownG (Σ:=Σ) (fun j => match decide (i = j) with
-                                | left Heq => <[p:=Tr j (H:=Heq) $ tr a]>∅
-                                | right Hneq => ∅ end).
+    ownG (Σ:=Σ) (A2m p a).
 
   Lemma ownA_op p a1 a2 :
     (ownA p a1 ★ ownA p a2)%I ≡ ownA p (a1 ⋅ a2).
   Proof.
-    rewrite /ownA -ownG_op. apply ownG_proper=>j /=.
+    rewrite /ownA /A2m /iprod_singleton /iprod_insert -ownG_op. apply ownG_proper=>j /=.
     rewrite iprod_lookup_op. destruct (decide (i = j)).
     - move=>q. destruct e. rewrite lookup_op /=.
       destruct (decide (p = q)); first subst q.
@@ -67,6 +70,22 @@ Section auth.
     - by rewrite left_id.
   Qed.
 
+  (* TODO: This also holds if we just have ✓a at the current step-idx, as Iris
+     assertion. However, the map_updateP_alloc does not suffice to show this. *)
+  Lemma ownA_alloc E a :
+    ✓a → True ⊑ pvs E E (∃ p, ownA p a).
+  Proof.
+    intros Ha. set (P m := ∃ p, m = A2m p a).
+    set (a' := tr a).
+    rewrite -(pvs_mono _ _ (∃ m, ■P m ∧ ownG m)%I).
+    - rewrite -pvs_updateP_empty //; [].
+      subst P. eapply (iprod_singleton_updateP_empty i).
+      + eapply map_updateP_alloc' with (x:=a'). subst a'.
+        by rewrite -A_val.
+      + simpl. move=>? [p [-> ?]]. exists p. done.
+    - apply exist_elim=>m. apply const_elim_l.
+      move=>[p ->] {P}. by rewrite -(exist_intro p).
+  Qed.      
+    
 End auth.
 
-    

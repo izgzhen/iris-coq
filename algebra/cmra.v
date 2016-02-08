@@ -601,14 +601,16 @@ Section iprod_cmra.
     { move: (Hg x). by rewrite iprod_lookup_op iprod_lookup_insert. }
     exists (iprod_insert x y2 g); split; [auto|].
     intros x'; destruct (decide (x' = x)) as [->|];
-      rewrite iprod_lookup_op ?iprod_lookup_insert //.
+      rewrite iprod_lookup_op ?iprod_lookup_insert //; [].
     move: (Hg x'). by rewrite iprod_lookup_op !iprod_lookup_insert_ne.
   Qed.
+
   Lemma iprod_insert_updateP' x (P : B x → Prop) g y1 :
     y1 ~~>: P →
     iprod_insert x y1 g ~~>: λ g', ∃ y2, g' = iprod_insert x y2 g ∧ P y2.
   Proof. eauto using iprod_insert_updateP. Qed.
   Lemma iprod_insert_update g x y1 y2 :
+
     y1 ~~> y2 → iprod_insert x y1 g ~~> iprod_insert x y2 g.
   Proof.
     rewrite !cmra_update_updateP;
@@ -623,14 +625,30 @@ Section iprod_cmra.
     * by rewrite iprod_lookup_op !iprod_lookup_singleton.
     * by rewrite iprod_lookup_op !iprod_lookup_singleton_ne // left_id.
   Qed.
+
   Lemma iprod_singleton_updateP x (P : B x → Prop) (Q : iprod B → Prop) y1 :
     y1 ~~>: P → (∀ y2, P y2 → Q (iprod_singleton x y2)) →
     iprod_singleton x y1 ~~>: Q.
   Proof. rewrite /iprod_singleton; eauto using iprod_insert_updateP. Qed.
+
   Lemma iprod_singleton_updateP' x (P : B x → Prop) y1 :
     y1 ~~>: P →
     iprod_singleton x y1 ~~>: λ g', ∃ y2, g' = iprod_singleton x y2 ∧ P y2.
   Proof. eauto using iprod_singleton_updateP. Qed.
+
+  Lemma iprod_singleton_updateP_empty x (P : B x → Prop) (Q : iprod B → Prop) :
+    (∅ ~~>: P) → (∀ y2, P y2 → Q (iprod_singleton x y2)) →
+    ∅ ~~>: Q.
+  Proof.
+    intros Hx HQ gf n Hg. destruct (Hx (gf x) n) as (y2&?&?).
+    { apply: Hg. }
+    exists (iprod_singleton x y2).
+    split; first by apply HQ.
+    intros x'; destruct (decide (x' = x)) as [->|];
+      rewrite iprod_lookup_op /iprod_singleton ?iprod_lookup_insert //; [].
+    move:(Hg x'). by rewrite iprod_lookup_insert_ne // left_id.
+  Qed.
+
   Lemma iprod_singleton_update x y1 y2 :
     y1 ~~> y2 → iprod_singleton x y1 ~~> iprod_singleton x y2.
   Proof. by intros; apply iprod_insert_update. Qed.
