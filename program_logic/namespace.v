@@ -5,8 +5,7 @@ Definition namespace := list positive.
 Definition nnil : namespace := nil.
 Definition ndot `{Countable A} (N : namespace) (x : A) : namespace :=
   encode x :: N.
-Definition nclose (N : namespace) : coPset := coPset_suffixes (encode N).
-Coercion nclose : namespace >-> coPset.
+Coercion nclose (N : namespace) : coPset := coPset_suffixes (encode N).
 
 Instance ndot_injective `{Countable A} : Injective2 (=) (=) (=) (@ndot A _ _).
 Proof. by intros N1 x1 N2 x2 ?; simplify_equality. Qed.
