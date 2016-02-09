@@ -53,9 +53,9 @@ Module LiftingTests.
   Qed.
 
   Definition FindPred (n2 : expr) : expr :=
-    rec:: (let: #1 + Lit 1 in if #0 < n2.[ren(+3)] then #1 #0 else #2).
+    rec:: let: #1 + Lit 1 in if #0 < n2.[ren(+3)] then #1 #0 else #2.
   Definition Pred : expr :=
-    λ: (if #0 ≤ Lit 0 then Lit 0 else FindPred #0 (Lit 0))%L.
+    λ: if #0 ≤ Lit 0 then Lit 0 else FindPred #0 (Lit 0).
 
   Lemma FindPred_spec n1 n2 E Q :
     (■ (n1 < n2) ∧ Q (LitV $ pred n2)) ⊑ wp E (FindPred (Lit n2) (Lit n1)) Q.
