@@ -560,8 +560,11 @@ Proof.
   - apply exist_elim=>a. apply and_intro; first by rewrite and_elim_l.
     by rewrite -(exist_intro a) and_elim_r.
 Qed.
-Lemma and_exist_r {A} P (Q : A → uPred M) : (P ∧ ∃ a, Q a)%I ≡ (∃ a, P ∧ Q a)%I.
-Proof. by rewrite (commutative _ P) -and_exist_l (commutative _ P). Qed.
+Lemma and_exist_r {A} P (Q : A → uPred M) : ((∃ a, Q a) ∧ P)%I ≡ (∃ a, Q a ∧ P)%I.
+Proof.
+  rewrite -(commutative _ P) and_exist_l.
+  apply exist_proper=>a. by rewrite commutative.
+Qed.
 
 (* BI connectives *)
 Lemma sep_mono P P' Q Q' : P ⊑ Q → P' ⊑ Q' → (P ★ P') ⊑ (Q ★ Q').
