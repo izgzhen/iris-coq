@@ -148,9 +148,9 @@ Proof. by rewrite (commutative _) pvs_impl_l. Qed.
 Lemma pvs_mask_frame' E1 E1' E2 E2' P :
   E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' → pvs E1' E2' P ⊑ pvs E1 E2 P.
 Proof.
-  intros HE1 HE2 HEE. rewrite (pvs_mask_frame _ _ (E1 ∖ E1')).
-  - rewrite {2}HEE =>{HEE}. by rewrite -!union_difference_L.
-  - solve_elem_of.
+  intros HE1 HE2 HEE.
+  rewrite (pvs_mask_frame _ _ (E1 ∖ E1')); last solve_elem_of.
+  by rewrite {2}HEE -!union_difference_L.
 Qed. 
 
 Lemma pvs_mask_frame_mono E1 E1' E2 E2' P Q :
@@ -165,14 +165,10 @@ Proof. intros HE1 HE2 HEE ->. by apply pvs_mask_frame'. Qed.
    where that would be useful. *)
 Lemma pvs_trans3 E1 E2 Q :
   E2 ⊆ E1 → pvs E1 E2 (pvs E2 E2 (pvs E2 E1 Q)) ⊑ pvs E1 E1 Q.
-Proof.
-  move=>HE. rewrite !pvs_trans; first done; solve_elem_of.
-Qed.
+Proof. intros HE. rewrite !pvs_trans; solve_elem_of. Qed.
 
 Lemma pvs_mask_weaken E1 E2 P : E1 ⊆ E2 → pvs E1 E1 P ⊑ pvs E2 E2 P.
-Proof.
-  intros. apply pvs_mask_frame'; solve_elem_of.
-Qed.
+Proof. auto using pvs_mask_frame'. Qed.
 
 Lemma pvs_ownG_update E m m' : m ~~> m' → ownG m ⊑ pvs E E (ownG m').
 Proof.
