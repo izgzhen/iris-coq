@@ -1,5 +1,4 @@
-Require Export Autosubst.Autosubst.
-Require Export program_logic.language.
+Require Export program_logic.language prelude.strings.
 Require Import prelude.gmap.
 
 Module heap_lang.
@@ -15,9 +14,8 @@ Inductive bin_op : Set :=
 
 Inductive expr :=
   (* Base lambda calculus *)
-  | Var (x : var)
-  | Rec (e : {bind 2 of expr}) (* These are recursive lambdas.
-                                  The *inner* binder is the recursive call! *)
+  | Var (x : string)
+  | Rec (f x : string) (e : expr)
   | App (e1 e2 : expr)
   (* Base types and their operations *)
   | Lit (l : base_lit)
@@ -31,7 +29,7 @@ Inductive expr :=
   (* Sums *)
   | InjL (e : expr)
   | InjR (e : expr)
-  | Case (e0 : expr) (e1 : {bind expr}) (e2 : {bind expr})
+  | Case (e0 : expr) (x1 : string) (e1 : expr) (x2 : string) (e2 : expr)
   (* Concurrency *)
   | Fork (e : expr)
   (* Heap *)
@@ -41,14 +39,8 @@ Inductive expr :=
   | Store (e1 : expr) (e2 : expr)
   | Cas (e0 : expr) (e1 : expr) (e2 : expr).
 
-Instance Ids_expr : Ids expr. derive. Defined.
-Instance Rename_expr : Rename expr. derive. Defined.
-Instance Subst_expr : Subst expr. derive. Defined.
-Instance SubstLemmas_expr : SubstLemmas expr. derive. Qed.
-
 Inductive val :=
-  | RecV (e : {bind 2 of expr}) (* These are recursive lambdas.
-                                   The *inner* binder is the recursive call! *)
+  | RecV (f x : string) (e : expr) (* e should be closed *)
   | LitV (l : base_lit)
   | PairV (v1 v2 : val)
   | InjLV (v : val)
@@ -57,7 +49,7 @@ Inductive val :=
 
 Fixpoint of_val (v : val) : expr :=
   match v with
-  | RecV e => Rec e
+  | RecV f x e => Rec f x e
   | LitV l => Lit l
   | PairV v1 v2 => Pair (of_val v1) (of_val v2)
   | InjLV v => InjL (of_val v)
@@ -66,7 +58,7 @@ Fixpoint of_val (v : val) : expr :=
   end.
 Fixpoint to_val (e : expr) : option val :=
   match e with
-  | Rec e => Some (RecV e)
+  | Rec f x e => Some (RecV f x e)
   | Lit l => Some (LitV l)
   | Pair e1 e2 => v1 ← to_val e1; v2 ← to_val e2; Some (PairV v1 v2)
   | InjL e => InjLV <$> to_val e
@@ -92,7 +84,7 @@ Inductive ectx_item :=
   | SndCtx
   | InjLCtx
   | InjRCtx
-  | CaseCtx (e1 : {bind expr}) (e2 : {bind expr})
+  | CaseCtx (x1 : string) (e1 : expr) (x2 : string) (e2 : expr)
   | AllocCtx
   | LoadCtx
   | StoreLCtx (e2 : expr)
@@ -117,7 +109,7 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   | SndCtx => Snd e
   | InjLCtx => InjL e
   | InjRCtx => InjR e
-  | CaseCtx e1 e2 => Case e e1 e2
+  | CaseCtx x1 e1 x2 e2 => Case e x1 e1 x2 e2
   | AllocCtx => Alloc e
   | LoadCtx => Load e
   | StoreLCtx e2 => Store e e2
@@ -128,49 +120,78 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   end.
 Definition fill (K : ectx) (e : expr) : expr := fold_right fill_item e K.
 
+(** Substitution *)
+(** We have [subst e "" v = e] to deal with anonymous binders *)
+Fixpoint subst (e : expr) (x : string) (v : val) : expr :=
+  match e with
+  | Var y => if decide (x = y ∧ x ≠ "") then of_val v else Var y
+  | Rec f y e => Rec f y (if decide (x ≠ f ∧ x ≠ y) then subst e x v else e)
+  | App e1 e2 => App (subst e1 x v) (subst e2 x v)
+  | Lit l => Lit l
+  | UnOp op e => UnOp op (subst e x v)
+  | BinOp op e1 e2 => BinOp op (subst e1 x v) (subst e2 x v)
+  | If e0 e1 e2 => If (subst e0 x v) (subst e1 x v) (subst e2 x v)
+  | Pair e1 e2 => Pair (subst e1 x v) (subst e2 x v)
+  | Fst e => Fst (subst e x v)
+  | Snd e => Snd (subst e x v)
+  | InjL e => InjL (subst e x v)
+  | InjR e => InjR (subst e x v)
+  | Case e0 x1 e1 x2 e2 =>
+     Case (subst e0 x v)
+       x1 (if decide (x ≠ x1) then subst e1 x v else e1)
+       x2 (if decide (x ≠ x2) then subst e2 x v else e2)
+  | Fork e => Fork (subst e x v)
+  | Loc l => Loc l
+  | Alloc e => Alloc (subst e x v)
+  | Load e => Load (subst e x v)
+  | Store e1 e2 => Store (subst e1 x v) (subst e2 x v)
+  | Cas e0 e1 e2 => Cas (subst e0 x v) (subst e1 x v) (subst e2 x v)
+  end.
+
 (** The stepping relation *)
 Definition un_op_eval (op : un_op) (l : base_lit) : option base_lit :=
   match op, l with
-  | NegOp, LitBool b => Some $ LitBool (negb b)
+  | NegOp, LitBool b => Some (LitBool (negb b))
   | _, _ => None
   end.
 
 Definition bin_op_eval (op : bin_op) (l1 l2 : base_lit) : option base_lit :=
   match op, l1, l2 with
-  | PlusOp, LitNat n1, LitNat n2 => Some $ LitNat (n1 + n2)
-  | MinusOp, LitNat n1, LitNat n2 => Some $ LitNat (n1 - n2)
-  | LeOp, LitNat n1, LitNat n2 => Some $ LitBool $ bool_decide (n1 ≤ n2)
-  | LtOp, LitNat n1, LitNat n2 => Some $ LitBool $ bool_decide (n1 < n2)
-  | EqOp, LitNat n1, LitNat n2 => Some $ LitBool $ bool_decide (n1 = n2)
+  | PlusOp, LitNat n1, LitNat n2 => Some (LitNat (n1 + n2))
+  | MinusOp, LitNat n1, LitNat n2 => Some (LitNat (n1 - n2))
+  | LeOp, LitNat n1, LitNat n2 => Some (LitBool (bool_decide (n1 ≤ n2)))
+  | LtOp, LitNat n1, LitNat n2 => Some (LitBool (bool_decide (n1 < n2)))
+  | EqOp, LitNat n1, LitNat n2 => Some (LitBool (bool_decide (n1 = n2)))
   | _, _, _ => None
   end.
 
 Inductive head_step : expr -> state -> expr -> state -> option expr -> Prop :=
-  | BetaS e1 e2 v2 σ :
+  | BetaS f x e1 e2 v2 σ :
      to_val e2 = Some v2 →
-     head_step (App (Rec e1) e2) σ e1.[(Rec e1),e2/] σ None
-  | UnOpS op l l' σ: 
+     head_step (App (Rec f x e1) e2) σ
+       (subst (subst e1 f (RecV f x e1)) x v2) σ None
+  | UnOpS op l l' σ :
      un_op_eval op l = Some l' → 
      head_step (UnOp op (Lit l)) σ (Lit l') σ None
-  | BinOpS op l1 l2 l' σ: 
+  | BinOpS op l1 l2 l' σ :
      bin_op_eval op l1 l2 = Some l' → 
      head_step (BinOp op (Lit l1) (Lit l2)) σ (Lit l') σ None
   | IfTrueS e1 e2 σ :
-     head_step (If (Lit $ LitBool true) e1 e2) σ e1 σ None
+     head_step (If (Lit (LitBool true)) e1 e2) σ e1 σ None
   | IfFalseS e1 e2 σ :
-     head_step (If (Lit $ LitBool false) e1 e2) σ e2 σ None
+     head_step (If (Lit (LitBool false)) e1 e2) σ e2 σ None
   | FstS e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      head_step (Fst (Pair e1 e2)) σ e1 σ None
   | SndS e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      head_step (Snd (Pair e1 e2)) σ e2 σ None
-  | CaseLS e0 v0 e1 e2 σ :
+  | CaseLS e0 v0 x1 e1 x2 e2 σ :
      to_val e0 = Some v0 →
-     head_step (Case (InjL e0) e1 e2) σ e1.[e0/] σ None
-  | CaseRS e0 v0 e1 e2 σ :
+     head_step (Case (InjL e0) x1 e1 x2 e2) σ (subst e1 x1 v0) σ None
+  | CaseRS e0 v0 x1 e1 x2 e2 σ :
      to_val e0 = Some v0 →
-     head_step (Case (InjR e0) e1 e2) σ e2.[e0/] σ None
+     head_step (Case (InjR e0) x1 e1 x2 e2) σ (subst e2 x2 v0) σ None
   | ForkS e σ:
      head_step (Fork e) σ (Lit LitUnit) σ (Some e)
   | AllocS e v σ l :
@@ -185,14 +206,14 @@ Inductive head_step : expr -> state -> expr -> state -> option expr -> Prop :=
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some vl → vl ≠ v1 →
-     head_step (Cas (Loc l) e1 e2) σ (Lit $ LitBool false)  σ None
+     head_step (Cas (Loc l) e1 e2) σ (Lit (LitBool false)) σ None
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some v1 →
-     head_step (Cas (Loc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) None.
+     head_step (Cas (Loc l) e1 e2) σ (Lit (LitBool true)) (<[l:=v2]>σ) None.
 
 (** Atomic expressions *)
-Definition atomic (e: expr) :=
+Definition atomic (e: expr) : Prop :=
   match e with
   | Alloc e => is_Some (to_val e)
   | Load e => is_Some (to_val e)
@@ -302,6 +323,8 @@ Lemma alloc_fresh e v σ :
   to_val e = Some v → head_step (Alloc e) σ (Loc l) (<[l:=v]>σ) None.
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset _)), is_fresh. Qed.
 
+Lemma subst_empty e v : subst e "" v = e.
+Proof. induction e; simpl; repeat case_decide; intuition auto with f_equal. Qed.
 End heap_lang.
 
 (** Language *)

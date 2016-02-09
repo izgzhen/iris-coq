@@ -80,12 +80,13 @@ Proof.
   by rewrite -(wp_value' _ _ (Lit _)) //; apply const_intro.
 Qed.
 
-Lemma wp_rec E erec e v Q :
-  to_val e = Some v →
-  ▷ wp E erec.[Rec erec, e /] Q ⊑ wp E (App (Rec erec) e) Q.
+Lemma wp_rec E f x e1 e2 v Q :
+  to_val e2 = Some v →
+  ▷ wp E (subst (subst e1 f (RecV f x e1)) x v) Q ⊑ wp E (App (Rec f x e1) e2) Q.
 Proof.
-  intros. rewrite -(wp_lift_pure_det_step (App _ _) erec.[Rec erec, e /] None)
-    ?right_id //=; last by intros; inv_step; eauto.
+  intros. rewrite -(wp_lift_pure_det_step (App _ _)
+    (subst (subst e1 f (RecV f x e1)) x v) None) ?right_id //=;
+    last by intros; inv_step; eauto.
 Qed.
 
 Lemma wp_un_op E op l l' Q :
@@ -138,19 +139,19 @@ Proof.
   by rewrite -wp_value'.
 Qed.
 
-Lemma wp_case_inl E e0 v0 e1 e2 Q :
+Lemma wp_case_inl E e0 v0 x1 e1 x2 e2 Q :
   to_val e0 = Some v0 →
-  ▷ wp E e1.[e0/] Q ⊑ wp E (Case (InjL e0) e1 e2) Q.
+  ▷ wp E (subst e1 x1 v0) Q ⊑ wp E (Case (InjL e0) x1 e1 x2 e2) Q.
 Proof.
-  intros. rewrite -(wp_lift_pure_det_step (Case _ _ _) e1.[e0/] None)
+  intros. rewrite -(wp_lift_pure_det_step (Case _ _ _ _ _) (subst e1 x1 v0) None)
     ?right_id //; last by intros; inv_step; eauto.
 Qed.
 
-Lemma wp_case_inr E e0 v0 e1 e2 Q :
+Lemma wp_case_inr E e0 v0 x1 e1 x2 e2 Q :
   to_val e0 = Some v0 →
-  ▷ wp E e2.[e0/] Q ⊑ wp E (Case (InjR e0) e1 e2) Q.
+  ▷ wp E (subst e2 x2 v0) Q ⊑ wp E (Case (InjR e0) x1 e1 x2 e2) Q.
 Proof.
-  intros. rewrite -(wp_lift_pure_det_step (Case _ _ _) e2.[e0/] None)
+  intros. rewrite -(wp_lift_pure_det_step (Case _ _ _ _ _) (subst e2 x2 v0) None)
     ?right_id //; last by intros; inv_step; eauto.
 Qed.
 
