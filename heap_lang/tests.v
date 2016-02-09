@@ -28,7 +28,7 @@ Module LiftingTests.
 
   Definition e  : expr :=
     let: "x" := ref (Lit 1) in "x" <- !"x" + Lit 1; !"x".
-  Goal ∀ σ E, (ownP σ : iProp heap_lang Σ) ⊑ (wp E e (λ v, ■ (v = LitV 2))).
+  Goal ∀ σ E, ownP (Σ:=Σ) σ ⊑ wp E e (λ v, v = LitV 2).
   Proof.
     move=> σ E. rewrite /e.
     rewrite -wp_let /= -wp_alloc_pst //=.
@@ -97,7 +97,7 @@ Module LiftingTests.
 
   Goal ∀ E,
     True ⊑ wp (Σ:=Σ) E (let: "x" := Pred (Lit 42) in Pred "x")
-                       (λ v, ■ (v = LitV 40)).
+                       (λ v, v = LitV 40).
   Proof.
     intros E. rewrite -wp_let. rewrite -Pred_spec -!later_intro /=.
     rewrite -Pred_spec -later_intro. by apply const_intro.

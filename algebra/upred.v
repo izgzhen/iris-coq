@@ -209,6 +209,7 @@ Arguments uPred_entails _ _%I _%I.
 Notation "P ⊑ Q" := (uPred_entails P%I Q%I) (at level 70) : C_scope.
 Notation "(⊑)" := uPred_entails (only parsing) : C_scope.
 Notation "■ φ" := (uPred_const φ%type) (at level 20) : uPred_scope.
+Notation "x = y" := (uPred_const (x%type = y%type)) : uPred_scope.
 Notation "'False'" := (uPred_const False) : uPred_scope.
 Notation "'True'" := (uPred_const True) : uPred_scope.
 Infix "∧" := uPred_and : uPred_scope.

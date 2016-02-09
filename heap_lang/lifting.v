@@ -22,7 +22,7 @@ Proof. apply weakestpre.wp_bind. Qed.
 (** Base axioms for core primitives of the language: Stateful reductions. *)
 Lemma wp_alloc_pst E σ e v Q :
   to_val e = Some v →
-  (ownP σ ★ ▷ (∀ l, ■(σ !! l = None) ∧ ownP (<[l:=v]>σ) -★ Q (LocV l)))
+  (ownP σ ★ ▷ (∀ l, σ !! l = None ∧ ownP (<[l:=v]>σ) -★ Q (LocV l)))
        ⊑ wp E (Alloc e) Q.
 Proof.
   (* TODO RJ: This works around ssreflect bug #22. *)
@@ -48,7 +48,7 @@ Qed.
 
 Lemma wp_store_pst E σ l e v v' Q :
   to_val e = Some v → σ !! l = Some v' →
-  (ownP σ ★ ▷ (ownP (<[l:=v]>σ) -★ Q $ LitV LitUnit)) ⊑ wp E (Store (Loc l) e) Q.
+  (ownP σ ★ ▷ (ownP (<[l:=v]>σ) -★ Q (LitV LitUnit))) ⊑ wp E (Store (Loc l) e) Q.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_step σ (LitV LitUnit) (<[l:=v]>σ) None)
     ?right_id //; last by intros; inv_step; eauto.
@@ -73,7 +73,7 @@ Qed.
 
 (** Base axioms for core primitives of the language: Stateless reductions *)
 Lemma wp_fork E e :
-  ▷ wp (Σ:=Σ) coPset_all e (λ _, True) ⊑ wp E (Fork e) (λ v, ■(v = LitV LitUnit)).
+  ▷ wp (Σ:=Σ) coPset_all e (λ _, True) ⊑ wp E (Fork e) (λ v, v = LitV LitUnit).
 Proof.
   rewrite -(wp_lift_pure_det_step (Fork e) (Lit LitUnit) (Some e)) //=;
     last by intros; inv_step; eauto.
