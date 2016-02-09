@@ -56,23 +56,24 @@ Qed.
 
 Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' Q :
   to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v' → v' ≠ v1 →
-  (ownP σ ★ ▷ (ownP σ -★ Q $ LitV $ LitBool false)) ⊑ wp E (Cas (Loc l) e1 e2) Q.
+  (ownP σ ★ ▷ (ownP σ -★ Q (LitV LitFalse))) ⊑ wp E (Cas (Loc l) e1 e2) Q.
 Proof.
-  intros. rewrite -(wp_lift_atomic_det_step σ (LitV $ LitBool false) σ None) ?right_id //;
-    last by intros; inv_step; eauto.
+  intros. rewrite -(wp_lift_atomic_det_step σ (LitV LitFalse) σ None)
+    ?right_id //; last by intros; inv_step; eauto.
 Qed.
 
 Lemma wp_cas_suc_pst E σ l e1 v1 e2 v2 Q :
   to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v1 →
-  (ownP σ ★ ▷ (ownP (<[l:=v2]>σ) -★ Q $ LitV $ LitBool true)) ⊑ wp E (Cas (Loc l) e1 e2) Q.
+  (ownP σ ★ ▷ (ownP (<[l:=v2]>σ) -★ Q (LitV LitTrue)))
+  ⊑ wp E (Cas (Loc l) e1 e2) Q.
 Proof.
-  intros. rewrite -(wp_lift_atomic_det_step σ (LitV $ LitBool true) (<[l:=v2]>σ) None)
+  intros. rewrite -(wp_lift_atomic_det_step σ (LitV LitTrue) (<[l:=v2]>σ) None)
     ?right_id //; last by intros; inv_step; eauto.
 Qed.
 
 (** Base axioms for core primitives of the language: Stateless reductions *)
 Lemma wp_fork E e :
-  ▷ wp (Σ:=Σ) coPset_all e (λ _, True) ⊑ wp E (Fork e) (λ v, ■(v = LitV $ LitUnit)).
+  ▷ wp (Σ:=Σ) coPset_all e (λ _, True) ⊑ wp E (Fork e) (λ v, ■(v = LitV LitUnit)).
 Proof.
   rewrite -(wp_lift_pure_det_step (Fork e) (Lit LitUnit) (Some e)) //=;
     last by intros; inv_step; eauto.
@@ -107,15 +108,13 @@ Proof.
   by rewrite -wp_value'.
 Qed.
 
-Lemma wp_if_true E e1 e2 Q :
-  ▷ wp E e1 Q ⊑ wp E (If (Lit $ LitBool true) e1 e2) Q.
+Lemma wp_if_true E e1 e2 Q : ▷ wp E e1 Q ⊑ wp E (If (Lit LitTrue) e1 e2) Q.
 Proof.
   rewrite -(wp_lift_pure_det_step (If _ _ _) e1 None)
     ?right_id //; last by intros; inv_step; eauto.
 Qed.
 
-Lemma wp_if_false E e1 e2 Q :
-  ▷ wp E e2 Q ⊑ wp E (If (Lit $ LitBool false) e1 e2) Q.
+Lemma wp_if_false E e1 e2 Q : ▷ wp E e2 Q ⊑ wp E (If (Lit LitFalse) e1 e2) Q.
 Proof.
   rewrite -(wp_lift_pure_det_step (If _ _ _) e2 None)
     ?right_id //; last by intros; inv_step; eauto.
@@ -123,7 +122,7 @@ Qed.
 
 Lemma wp_fst E e1 v1 e2 v2 Q :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
-  ▷Q v1 ⊑ wp E (Fst (Pair e1 e2)) Q.
+  ▷ Q v1 ⊑ wp E (Fst (Pair e1 e2)) Q.
 Proof.
   intros. rewrite -(wp_lift_pure_det_step (Fst _) e1 None) ?right_id //;
     last by intros; inv_step; eauto.

@@ -7,6 +7,8 @@ Definition loc := positive. (* Really, any countable type. *)
 
 Inductive base_lit : Set :=
   | LitNat (n : nat) | LitBool (b : bool) | LitUnit.
+Notation LitTrue := (LitBool true).
+Notation LitFalse := (LitBool false).
 Inductive un_op : Set :=
   | NegOp.
 Inductive bin_op : Set :=
@@ -177,9 +179,9 @@ Inductive head_step : expr -> state -> expr -> state -> option expr -> Prop :=
      bin_op_eval op l1 l2 = Some l' → 
      head_step (BinOp op (Lit l1) (Lit l2)) σ (Lit l') σ None
   | IfTrueS e1 e2 σ :
-     head_step (If (Lit (LitBool true)) e1 e2) σ e1 σ None
+     head_step (If (Lit LitTrue) e1 e2) σ e1 σ None
   | IfFalseS e1 e2 σ :
-     head_step (If (Lit (LitBool false)) e1 e2) σ e2 σ None
+     head_step (If (Lit LitFalse) e1 e2) σ e2 σ None
   | FstS e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      head_step (Fst (Pair e1 e2)) σ e1 σ None
@@ -206,11 +208,11 @@ Inductive head_step : expr -> state -> expr -> state -> option expr -> Prop :=
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some vl → vl ≠ v1 →
-     head_step (Cas (Loc l) e1 e2) σ (Lit (LitBool false)) σ None
+     head_step (Cas (Loc l) e1 e2) σ (Lit LitFalse) σ None
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some v1 →
-     head_step (Cas (Loc l) e1 e2) σ (Lit (LitBool true)) (<[l:=v2]>σ) None.
+     head_step (Cas (Loc l) e1 e2) σ (Lit LitTrue) (<[l:=v2]>σ) None.
 
 (** Atomic expressions *)
 Definition atomic (e: expr) : Prop :=
