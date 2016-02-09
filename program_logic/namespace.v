@@ -1,6 +1,6 @@
 Require Export algebra.base prelude.countable prelude.co_pset.
 Require Import program_logic.ownership.
-Require Export program_logic.pviewshifts.
+Require Export program_logic.pviewshifts program_logic.weakestpre.
 Import uPred.
 
 Local Hint Extern 100 (@eq coPset _ _) => solve_elem_of.
@@ -69,6 +69,7 @@ Proof. by rewrite always_always. Qed.
    any more. But that's okay; all this means is that sugar like the atomic
    triples will have to prove its own version of the open_close rule
    by unfolding `inv`. *)
+(* TODO Can we prove something that helps for both open_close lemmas? *)
 Lemma pvs_open_close E N P Q R :
   nclose N ⊆ E →
   P ⊑ (inv N R ∧ (▷R -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷R ★ Q)))%I →
@@ -77,18 +78,34 @@ Proof.
   move=>HN -> {P}.
   rewrite /inv and_exist_r. apply exist_elim=>i.
   rewrite -associative. apply const_elim_l=>HiN.
+  rewrite -(pvs_trans3 E (E ∖ {[encode i]})) //; last by solve_elem_of+.
   (* Add this to the local context, so that solve_elem_of finds it. *)
   assert ({[encode i]} ⊆ nclose N) by eauto.
   rewrite always_and_sep_l' (always_sep_dup' (ownI _ _)).
   rewrite {1}pvs_openI !pvs_frame_r.
-  (* TODO is there a common pattern here in the way we combine pvs_trans
-     and pvs_mask_frame_mono? *)
-  rewrite -(pvs_trans E (E ∖ {[ encode i ]}));
-    last by solve_elem_of. (* FIXME: Shouldn't eauto work, since I added a Hint Extern? *)
-  apply pvs_mask_frame_mono; [solve_elem_of..|].
+  apply pvs_mask_frame_mono ; [solve_elem_of..|].
   rewrite (commutative _ (▷R)%I) -associative wand_elim_r pvs_frame_l.
-  rewrite -(pvs_trans _ (E ∖ {[ encode i ]}) E); last by solve_elem_of.
   apply pvs_mask_frame_mono; [solve_elem_of..|].
+  rewrite associative -always_and_sep_l' pvs_closeI pvs_frame_r left_id.
+  apply pvs_mask_frame'; solve_elem_of.
+Qed.
+
+Lemma wp_open_close E e N P (Q : val Λ → iProp Λ Σ) R :
+  atomic e → nclose N ⊆ E →
+  P ⊑ (inv N R ∧ (▷R -★ wp (E ∖ nclose N) e (λ v, ▷R ★ Q v)))%I →
+  P ⊑ wp E e Q.
+Proof.
+  move=>He HN -> {P}.
+  rewrite /inv and_exist_r. apply exist_elim=>i.
+  rewrite -associative. apply const_elim_l=>HiN.
+  rewrite -(wp_atomic E (E ∖ {[encode i]})) //; last by solve_elem_of+.
+  (* Add this to the local context, so that solve_elem_of finds it. *)
+  assert ({[encode i]} ⊆ nclose N) by eauto.
+  rewrite always_and_sep_l' (always_sep_dup' (ownI _ _)).
+  rewrite {1}pvs_openI !pvs_frame_r.
+  apply pvs_mask_frame_mono; [solve_elem_of..|].
+  rewrite (commutative _ (▷R)%I) -associative wand_elim_r wp_frame_l.
+  apply wp_mask_frame_mono; [solve_elem_of..|]=>v.
   rewrite associative -always_and_sep_l' pvs_closeI pvs_frame_r left_id.
   apply pvs_mask_frame'; solve_elem_of.
 Qed.

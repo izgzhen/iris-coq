@@ -158,6 +158,12 @@ Lemma pvs_mask_frame_mono E1 E1' E2 E2' P Q :
   P ⊑ Q → pvs E1' E2' P ⊑ pvs E1 E2 Q.
 Proof. intros HE1 HE2 HEE ->. by apply pvs_mask_frame'. Qed.
 
+Lemma pvs_trans3 E1 E2 Q :
+  E2 ⊆ E1 → pvs E1 E2 (pvs E2 E2 (pvs E2 E1 Q)) ⊑ pvs E1 E1 Q.
+Proof.
+  move=>HE. rewrite !pvs_trans; first done; solve_elem_of.
+Qed.
+
 Lemma pvs_mask_weaken E1 E2 P : E1 ⊆ E2 → pvs E1 E1 P ⊑ pvs E2 E2 P.
 Proof.
   intros. apply pvs_mask_frame'; solve_elem_of.

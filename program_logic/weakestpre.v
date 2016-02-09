@@ -186,6 +186,13 @@ Lemma wp_value' E Q e v : to_val e = Some v → Q v ⊑ wp E e Q.
 Proof. intros; rewrite -(of_to_val e v) //; by apply wp_value. Qed.
 Lemma wp_frame_l E e Q R : (R ★ wp E e Q) ⊑ wp E e (λ v, R ★ Q v).
 Proof. setoid_rewrite (commutative _ R); apply wp_frame_r. Qed.
+Lemma wp_mask_frame_mono E E' e (P Q : val Λ → iProp Λ Σ) :
+  E' ⊆ E →
+  (∀ v, P v ⊑ Q v) → wp E' e P ⊑ wp E e Q.
+Proof.
+  intros HE HPQ. rewrite wp_mask_weaken; last eexact HE.
+  by apply wp_mono.
+Qed.
 Lemma wp_frame_later_l E e Q R :
   to_val e = None → (▷ R ★ wp E e Q) ⊑ wp E e (λ v, R ★ Q v).
 Proof.
