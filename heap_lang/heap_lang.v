@@ -6,18 +6,24 @@ Module heap_lang.
 (** Expressions and vals. *)
 Definition loc := positive. (* Really, any countable type. *)
 
+Inductive base_lit : Set :=
+  | LitNat (n : nat) | LitBool (b : bool) | LitUnit.
+Inductive un_op : Set :=
+  | NegOp.
+Inductive bin_op : Set :=
+  | PlusOp | MinusOp | LeOp | LtOp | EqOp.
+
 Inductive expr :=
   (* Base lambda calculus *)
   | Var (x : var)
   | Rec (e : {bind 2 of expr}) (* These are recursive lambdas.
                                   The *inner* binder is the recursive call! *)
   | App (e1 e2 : expr)
-  (* Natural numbers *)
-  | LitNat (n : nat)
-  | Plus (e1 e2 : expr)
-  | Le (e1 e2 : expr)
-  (* Unit *)
-  | LitUnit
+  (* Base types and their operations *)
+  | Lit (l : base_lit)
+  | UnOp (op : un_op) (e : expr)
+  | BinOp (op : bin_op) (e1 e2 : expr)
+  | If (e0 e1 e2 : expr)
   (* Products *)
   | Pair (e1 e2 : expr)
   | Fst (e : expr)
@@ -40,29 +46,19 @@ Instance Rename_expr : Rename expr. derive. Defined.
 Instance Subst_expr : Subst expr. derive. Defined.
 Instance SubstLemmas_expr : SubstLemmas expr. derive. Qed.
 
-(* This sugar is used by primitive reduction riles (<=, CAS) and hence
-defined here. *)
-Notation LitTrue := (InjL LitUnit).
-Notation LitFalse := (InjR LitUnit).
-
 Inductive val :=
   | RecV (e : {bind 2 of expr}) (* These are recursive lambdas.
                                    The *inner* binder is the recursive call! *)
-  | LitNatV (n : nat)
-  | LitUnitV
+  | LitV (l : base_lit)
   | PairV (v1 v2 : val)
   | InjLV (v : val)
   | InjRV (v : val)
   | LocV (l : loc).
 
-Definition LitTrueV := InjLV LitUnitV.
-Definition LitFalseV := InjRV LitUnitV.
-
 Fixpoint of_val (v : val) : expr :=
   match v with
   | RecV e => Rec e
-  | LitNatV n => LitNat n
-  | LitUnitV => LitUnit
+  | LitV l => Lit l
   | PairV v1 v2 => Pair (of_val v1) (of_val v2)
   | InjLV v => InjL (of_val v)
   | InjRV v => InjR (of_val v)
@@ -71,8 +67,7 @@ Fixpoint of_val (v : val) : expr :=
 Fixpoint to_val (e : expr) : option val :=
   match e with
   | Rec e => Some (RecV e)
-  | LitNat n => Some (LitNatV n)
-  | LitUnit => Some LitUnitV
+  | Lit l => Some (LitV l)
   | Pair e1 e2 => v1 ← to_val e1; v2 ← to_val e2; Some (PairV v1 v2)
   | InjL e => InjLV <$> to_val e
   | InjR e => InjRV <$> to_val e
@@ -87,10 +82,10 @@ Definition state := gmap loc val.
 Inductive ectx_item :=
   | AppLCtx (e2 : expr)
   | AppRCtx (v1 : val)
-  | PlusLCtx (e2 : expr)
-  | PlusRCtx (v1 : val)
-  | LeLCtx (e2 : expr)
-  | LeRCtx (v1 : val)
+  | UnOpCtx (op : un_op)
+  | BinOpLCtx (op : bin_op) (e2 : expr)
+  | BinOpRCtx (op : bin_op) (v1 : val)
+  | IfCtx (e1 e2 : expr)
   | PairLCtx (e2 : expr)
   | PairRCtx (v1 : val)
   | FstCtx
@@ -112,10 +107,10 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   match Ki with
   | AppLCtx e2 => App e e2
   | AppRCtx v1 => App (of_val v1) e
-  | PlusLCtx e2 => Plus e e2
-  | PlusRCtx v1 => Plus (of_val v1) e
-  | LeLCtx e2 => Le e e2
-  | LeRCtx v1 => Le (of_val v1) e
+  | UnOpCtx op => UnOp op e
+  | BinOpLCtx op e2 => BinOp op e e2
+  | BinOpRCtx op v1 => BinOp op (of_val v1) e
+  | IfCtx e1 e2 => If e e1 e2
   | PairLCtx e2 => Pair e e2
   | PairRCtx v1 => Pair (of_val v1) e
   | FstCtx => Fst e
@@ -134,18 +129,43 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
 Definition fill (K : ectx) (e : expr) : expr := fold_right fill_item e K.
 
 (** The stepping relation *)
+Definition un_op_eval (op : un_op) (l : base_lit) : option base_lit :=
+  match op, l with
+  | NegOp, LitBool b => Some $ LitBool (negb b)
+  | _, _ => None
+  end.
+
+(* FIXME RJ I am *sure* this already exists somewhere... but I can't find it. *)
+Definition sum2bool {A B} (x : { A } + { B }) : bool :=
+  match x with
+  | left _ => true
+  | right _ => false
+  end.
+
+Definition bin_op_eval (op : bin_op) (l1 l2 : base_lit) : option base_lit :=
+  match op, l1, l2 with
+  | PlusOp, LitNat n1, LitNat n2 => Some $ LitNat (n1 + n2)
+  | MinusOp, LitNat n1, LitNat n2 => Some $ LitNat (n1 - n2)
+  | LeOp, LitNat n1, LitNat n2 => Some $ LitBool $ sum2bool $ decide (n1 ≤ n2)
+  | LtOp, LitNat n1, LitNat n2 => Some $ LitBool $ sum2bool $ decide (n1 < n2)
+  | EqOp, LitNat n1, LitNat n2 => Some $ LitBool $ sum2bool $ decide (n1 = n2)
+  | _, _, _ => None
+  end.
+
 Inductive head_step : expr -> state -> expr -> state -> option expr -> Prop :=
   | BetaS e1 e2 v2 σ :
      to_val e2 = Some v2 →
      head_step (App (Rec e1) e2) σ e1.[(Rec e1),e2/] σ None
-  | PlusS n1 n2 σ:
-     head_step (Plus (LitNat n1) (LitNat n2)) σ (LitNat (n1 + n2)) σ None
-  | LeTrueS n1 n2 σ :
-     n1 ≤ n2 →
-     head_step (Le (LitNat n1) (LitNat n2)) σ LitTrue σ None
-  | LeFalseS n1 n2 σ :
-     n1 > n2 →
-     head_step (Le (LitNat n1) (LitNat n2)) σ LitFalse σ None
+  | UnOpS op l l' σ: 
+     un_op_eval op l = Some l' → 
+     head_step (UnOp op (Lit l)) σ (Lit l') σ None
+  | BinOpS op l1 l2 l' σ: 
+     bin_op_eval op l1 l2 = Some l' → 
+     head_step (BinOp op (Lit l1) (Lit l2)) σ (Lit l') σ None
+  | IfTrueS e1 e2 σ :
+     head_step (If (Lit $ LitBool true) e1 e2) σ e1 σ None
+  | IfFalseS e1 e2 σ :
+     head_step (If (Lit $ LitBool false) e1 e2) σ e2 σ None
   | FstS e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      head_step (Fst (Pair e1 e2)) σ e1 σ None
@@ -159,7 +179,7 @@ Inductive head_step : expr -> state -> expr -> state -> option expr -> Prop :=
      to_val e0 = Some v0 →
      head_step (Case (InjR e0) e1 e2) σ e2.[e0/] σ None
   | ForkS e σ:
-     head_step (Fork e) σ LitUnit σ (Some e)
+     head_step (Fork e) σ (Lit LitUnit) σ (Some e)
   | AllocS e v σ l :
      to_val e = Some v → σ !! l = None →
      head_step (Alloc e) σ (Loc l) (<[l:=v]>σ) None
@@ -168,15 +188,15 @@ Inductive head_step : expr -> state -> expr -> state -> option expr -> Prop :=
      head_step (Load (Loc l)) σ (of_val v) σ None
   | StoreS l e v σ :
      to_val e = Some v → is_Some (σ !! l) →
-     head_step (Store (Loc l) e) σ LitUnit (<[l:=v]>σ) None
+     head_step (Store (Loc l) e) σ (Lit LitUnit) (<[l:=v]>σ) None
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some vl → vl ≠ v1 →
-     head_step (Cas (Loc l) e1 e2) σ LitFalse σ None
+     head_step (Cas (Loc l) e1 e2) σ (Lit $ LitBool false)  σ None
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some v1 →
-     head_step (Cas (Loc l) e1 e2) σ LitTrue (<[l:=v2]>σ) None.
+     head_step (Cas (Loc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) None.
 
 (** Atomic expressions *)
 Definition atomic (e: expr) :=
@@ -263,7 +283,7 @@ Lemma fill_item_no_val_inj Ki1 Ki2 e1 e2 :
   fill_item Ki1 e1 = fill_item Ki2 e2 → Ki1 = Ki2.
 Proof.
   destruct Ki1, Ki2; intros; try discriminate; simplify_equality';
-    try match goal with
+    repeat match goal with
     | H : to_val (of_val _) = None |- _ => by rewrite to_of_val in H
     end; auto.
 Qed.

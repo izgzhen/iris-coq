@@ -5,11 +5,6 @@ Import uPred heap_lang.
 Definition Lam (e : {bind expr}) := Rec e.[ren(+1)].
 Definition Let (e1 : expr) (e2: {bind expr}) := App (Lam e2) e1.
 Definition Seq (e1 e2 : expr) := Let e1 e2.[ren(+1)].
-Definition If (e0 e1 e2 : expr) := Case e0 e1.[ren(+1)] e2.[ren(+1)].
-Definition Lt e1 e2 := Le (Plus e1 $ LitNat 1) e2.
-Definition Eq e1 e2 :=
-  Let e1 (Let e2.[ren(+1)]
-         (If (Le (Var 0) (Var 1)) (Le (Var 1) (Var 0)) LitFalse)).
 
 Definition LamV (e : {bind expr}) := RecV e.[ren(+1)].
 
@@ -21,8 +16,10 @@ Module notations.
   Bind Scope lang_scope with expr.
   Arguments wp {_ _} _ _%L _.
 
-  Coercion LitNat : nat >-> expr.
-  Coercion LitNatV : nat >-> val.
+  Coercion LitNat : nat >-> base_lit.
+  Coercion LitBool : bool >-> base_lit.
+  (* No coercion from base_lit to expr. This makes is slightly easier to tell
+     apart language and Coq expressions. *)
   Coercion Loc : loc >-> expr.
   Coercion LocV : loc >-> val.
   Coercion App : expr >-> Funclass.
@@ -35,10 +32,13 @@ Module notations.
   Notation "# n" := (Var n) (at level 1, format "# n") : lang_scope.
   Notation "! e" := (Load e%L) (at level 10, format "! e") : lang_scope.
   Notation "'ref' e" := (Alloc e%L) (at level 30) : lang_scope.
-  Notation "e1 + e2" := (Plus e1%L e2%L)
+  Notation "e1 + e2" := (BinOp PlusOp e1%L e2%L)
     (at level 50, left associativity) : lang_scope.
-  Notation "e1 ≤ e2" := (Le e1%L e2%L) (at level 70) : lang_scope.
-  Notation "e1 < e2" := (Lt e1%L e2%L) (at level 70) : lang_scope.
+  Notation "e1 - e2" := (BinOp MinusOp e1%L e2%L)
+    (at level 50, left associativity) : lang_scope.
+  Notation "e1 ≤ e2" := (BinOp LeOp e1%L e2%L) (at level 70) : lang_scope.
+  Notation "e1 < e2" := (BinOp LtOp e1%L e2%L) (at level 70) : lang_scope.
+  Notation "e1 = e2" := (BinOp EqOp e1%L e2%L) (at level 70) : lang_scope.
   (* The unicode ← is already part of the notation "_ ← _; _" for bind. *)
   Notation "e1 <- e2" := (Store e1%L e2%L) (at level 80) : lang_scope.
   Notation "e1 ; e2" := (Seq e1%L e2%L) (at level 100) : lang_scope.
@@ -46,7 +46,7 @@ Module notations.
   Notation "'λ:' e" := (Lam e%L) (at level 102) : lang_scope.
   Notation "'rec::' e" := (Rec e%L) (at level 102) : lang_scope.
   Notation "'if' e1 'then' e2 'else' e3" := (If e1%L e2%L e3%L)
-    (at level 200, e1, e2, e3 at level 200, only parsing) : lang_scope.
+    (at level 200, e1, e2, e3 at level 200) : lang_scope.
 End notations.
 
 Section suger.
@@ -63,35 +63,39 @@ Proof.
      to talk to the Autosubst guys. *)
   by asimpl.
 Qed.
+
 Lemma wp_let E e1 e2 Q :
   wp E e1 (λ v, ▷wp E (e2.[of_val v/]) Q) ⊑ wp E (Let e1 e2) Q.
 Proof.
   rewrite -(wp_bind [LetCtx e2]). apply wp_mono=>v.
   by rewrite -wp_lam //= to_of_val.
 Qed.
-Lemma wp_if_true E e1 e2 Q : ▷ wp E e1 Q ⊑ wp E (If LitTrue e1 e2) Q.
-Proof. rewrite -wp_case_inl //. by asimpl. Qed.
-Lemma wp_if_false E e1 e2 Q : ▷ wp E e2 Q ⊑ wp E (If LitFalse e1 e2) Q.
-Proof. rewrite -wp_case_inr //. by asimpl. Qed.
-Lemma wp_lt E n1 n2 P Q :
-  (n1 < n2 → P ⊑ ▷ Q LitTrueV) →
-  (n1 ≥ n2 → P ⊑ ▷ Q LitFalseV) →
-  P ⊑ wp E (Lt (LitNat n1) (LitNat n2)) Q.
+
+Lemma wp_le E (n1 n2 : nat) P Q :
+  (n1 ≤ n2 → P ⊑ ▷ Q (LitV true)) →
+  (n1 > n2 → P ⊑ ▷ Q (LitV false)) →
+  P ⊑ wp E (BinOp LeOp (Lit n1) (Lit n2)) Q.
 Proof.
-  intros; rewrite -(wp_bind [LeLCtx _]) -wp_plus -later_intro /=.
-  auto using wp_le with lia.
+  intros ? ?. rewrite -wp_bin_op //; [].
+  destruct (decide _); by eauto with omega.
 Qed.
-Lemma wp_eq E n1 n2 P Q :
-  (n1 = n2 → P ⊑ ▷ Q LitTrueV) →
-  (n1 ≠ n2 → P ⊑ ▷ Q LitFalseV) →
-  P ⊑ wp E (Eq (LitNat n1) (LitNat n2)) Q.
+
+Lemma wp_lt E (n1 n2 : nat) P Q :
+  (n1 < n2 → P ⊑ ▷ Q (LitV true)) →
+  (n1 ≥ n2 → P ⊑ ▷ Q (LitV false)) →
+  P ⊑ wp E (BinOp LtOp (Lit n1) (Lit n2)) Q.
 Proof.
-  intros HPeq HPne.
-  rewrite -wp_let -wp_value' // -later_intro; asimpl.
-  rewrite -wp_rec //; asimpl.
-  rewrite -(wp_bind [CaseCtx _ _]) -later_intro; asimpl.
-  apply wp_le; intros; asimpl.
-  * rewrite -wp_case_inl // -!later_intro. apply wp_le; auto with lia.
-  * rewrite -wp_case_inr // -later_intro -wp_value' //; auto with lia.
+  intros ? ?. rewrite -wp_bin_op //; [].
+  destruct (decide _); by eauto with omega.
 Qed.
+
+Lemma wp_eq E (n1 n2 : nat) P Q :
+  (n1 = n2 → P ⊑ ▷ Q (LitV true)) →
+  (n1 ≠ n2 → P ⊑ ▷ Q (LitV false)) →
+  P ⊑ wp E (BinOp EqOp (Lit n1) (Lit n2)) Q.
+Proof.
+  intros ? ?. rewrite -wp_bin_op //; [].
+  destruct (decide _); by eauto with omega.
+Qed.
+
 End suger.

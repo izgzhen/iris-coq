@@ -38,14 +38,13 @@ Ltac reshape_expr e tac :=
      lazymatch e1 with
      | of_val ?v1 => go (AppRCtx v1 :: K) e2 | _ => go (AppLCtx e2 :: K) e1
      end
-  | Plus ?e1 ?e2 =>
+  | UnOp ?op ?e =>
+     go (UnOpCtx op :: K) e
+  | BinOp ?op ?e1 ?e2 =>
      lazymatch e1 with
-     | of_val ?v1 => go (PlusRCtx v1 :: K) e2 | _ => go (PlusLCtx e2 :: K) e1
+     | of_val ?v1 => go (BinOpRCtx op v1 :: K) e2 | _ => go (BinOpLCtx op e2 :: K) e1
      end
-  | Le ?e1 ?e2 =>
-     lazymatch e1 with
-     | of_val ?v1 => go (LeRCtx v1 :: K) e2 | _ => go (LeLCtx e2 :: K) e1
-     end
+  | If ?e0 ?e1 ?e2 => go (IfCtx e1 e2 :: K) e0
   | Pair ?e1 ?e2 =>
      lazymatch e1 with
      | of_val ?v1 => go (PairRCtx v1 :: K) e2 | _ => go (PairLCtx e2 :: K) e1
