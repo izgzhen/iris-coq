@@ -144,6 +144,7 @@ Lemma pvs_impl_l E1 E2 P Q : (□ (P → Q) ∧ pvs E1 E2 P) ⊑ pvs E1 E2 Q.
 Proof. by rewrite pvs_always_l always_elim impl_elim_l. Qed.
 Lemma pvs_impl_r E1 E2 P Q : (pvs E1 E2 P ∧ □ (P → Q)) ⊑ pvs E1 E2 Q.
 Proof. by rewrite (commutative _) pvs_impl_l. Qed.
+
 Lemma pvs_mask_frame' E1 E1' E2 E2' P :
   E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' → pvs E1' E2' P ⊑ pvs E1 E2 P.
 Proof.
@@ -151,13 +152,21 @@ Proof.
   - rewrite {2}HEE =>{HEE}. by rewrite -!union_difference_L.
   - solve_elem_of.
 Qed. 
+
+Lemma pvs_mask_frame_mono E1 E1' E2 E2' P Q :
+  E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' →
+  P ⊑ Q → pvs E1' E2' P ⊑ pvs E1 E2 Q.
+Proof. intros HE1 HE2 HEE ->. by apply pvs_mask_frame'. Qed.
+
 Lemma pvs_mask_weaken E1 E2 P : E1 ⊆ E2 → pvs E1 E1 P ⊑ pvs E2 E2 P.
 Proof.
   intros. apply pvs_mask_frame'; solve_elem_of.
 Qed.
+
 Lemma pvs_ownG_update E m m' : m ~~> m' → ownG m ⊑ pvs E E (ownG m').
 Proof.
   intros; rewrite (pvs_ownG_updateP E _ (m' =)); last by apply cmra_update_updateP.
   by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.const_elim_l=> ->.
 Qed.
+
 End pvs.
