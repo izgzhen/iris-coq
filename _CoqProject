@@ -49,7 +49,7 @@ algebra/agree.v
 algebra/excl.v
 algebra/iprod.v
 algebra/functor.v
-program_logic/upred.v
+algebra/upred.v
 program_logic/model.v
 program_logic/adequacy.v
 program_logic/hoare_lifting.v
