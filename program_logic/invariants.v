@@ -64,12 +64,13 @@ Global Instance inv_always_stable N P : AlwaysStable (inv N P) := _.
 Lemma always_inv N P : (□ inv N P)%I ≡ inv N P.
 Proof. by rewrite always_always. Qed.
 
-(* We actually pretty much lose the abolity to deal with mask-changing view
-   shifts when using `inv`. This is because we cannot exactly name the invariants
-   any more. But that's okay; all this means is that sugar like the atomic
-   triples will have to prove its own version of the open_close rule
-   by unfolding `inv`. *)
-(* TODO Can we prove something that helps for both open_close lemmas? *)
+(* There is not really a way to provide versions of pvs_openI and pvs_closeI
+   that work with inv. The issue is that these rules track the exact current
+   mask too precisely. However, we *can* provide abstract rules by
+   performing both the opening and the closing of the invariant in the rule,
+   and then implicitly framing all the unused invariants around the
+   "inner" view shift provided by the client. *)
+
 Lemma pvs_open_close E N P Q :
   nclose N ⊆ E →
   (inv N P ∧ (▷P -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷P ★ Q))) ⊑ pvs E E Q.
