@@ -332,6 +332,12 @@ Proof.
   * by intros [q' ->]; induction q; simpl; rewrite ?coPset_elem_of_node.
 Qed.
 
+Lemma coPset_suffixes_infinite p : ¬set_finite (coPset_suffixes p).
+Proof.
+  rewrite coPset_finite_spec; simpl.
+  (* FIXME no time to finish right now, but I think it holds *)
+Abort. 
+
 (** * Splitting of infinite sets *)
 Fixpoint coPset_l_raw (t : coPset_raw) : coPset_raw :=
   match t with
