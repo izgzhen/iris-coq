@@ -74,21 +74,39 @@ Proof.
     by rewrite -(exist_intro γ).
 Qed.
 
-Lemma pvs_updateP E γ a P :
+Lemma own_updateP E γ a P :
   a ~~>: P → own i γ a ⊑ pvs E E (∃ a', ■ P a' ∧ own i γ a').
 Proof.
   intros Ha.
-  rewrite -(pvs_mono _ _ (∃ m, ■ (∃ b, m = to_globalC i γ b ∧ P b) ∧ ownG m)%I).
+  rewrite -(pvs_mono _ _ (∃ m, ■ (∃ a', m = to_globalC i γ a' ∧ P a') ∧ ownG m)%I).
   * eapply pvs_ownG_updateP, iprod_singleton_updateP;
-      first (eapply map_singleton_updateP', cmra_transport_updateP', Ha).
+      first by (eapply map_singleton_updateP', cmra_transport_updateP', Ha).
     naive_solver.
   * apply exist_elim=>m; apply const_elim_l=>-[a' [-> HP]].
     rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
 Qed.
 
-Lemma pvs_update E γ a a' : a ~~> a' → own i γ a ⊑ pvs E E (own i γ a').
+Lemma own_updateP_empty `{Empty A, !CMRAIdentity A} E γ a P :
+  ∅ ~~>: P → True ⊑ pvs E E (∃ a, ■ P a ∧ own i γ a).
 Proof.
-  intros; rewrite (pvs_updateP E _ _ (a' =)); last by apply cmra_update_updateP.
+  intros Hemp.
+  rewrite -(pvs_mono _ _ (∃ m, ■ (∃ a', m = to_globalC i γ a' ∧ P a') ∧ ownG m)%I).
+  * eapply pvs_ownG_updateP_empty, iprod_singleton_updateP_empty with (x:=i);
+      first by (eapply map_singleton_updateP_empty', cmra_transport_updateP', Hemp).
+    naive_solver.
+  * apply exist_elim=>m; apply const_elim_l=>-[a' [-> HP]].
+    rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
+Unshelve.
+(* We have to prove that we actually follow the identity laws on the "other side". *)
+split.
+- apply cmra_transport_valid, cmra_empty_valid.
+- move=>b. by rewrite -cmra_transport_back_op_r left_id cmra_transport_back_and.
+- apply _. 
+Qed.
+
+Lemma own_update E γ a a' : a ~~> a' → own i γ a ⊑ pvs E E (own i γ a').
+Proof.
+  intros; rewrite (own_updateP E _ _ (a' =)); last by apply cmra_update_updateP.
   by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.const_elim_l=> ->.
 Qed.
 End global.
