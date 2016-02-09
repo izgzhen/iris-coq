@@ -3,8 +3,8 @@ Require Import algebra.functor.
 
 Section cofe.
 Context `{Countable K} {A : cofeT}.
+Implicit Types m : gmap K A.
 
-(* COFE *)
 Instance map_dist : Dist (gmap K A) := λ n m1 m2,
   ∀ i, m1 !! i ={n}= m2 !! i.
 Program Definition map_chain (c : chain (gmap K A))
@@ -36,44 +36,45 @@ Global Instance lookup_ne n k :
 Proof. by intros m1 m2. Qed.
 Global Instance lookup_proper k :
   Proper ((≡) ==> (≡)) (lookup k : gmap K A → option A) := _.
-Global Instance insert_ne (i : K) n :
+Global Instance insert_ne i n :
   Proper (dist n ==> dist n ==> dist n) (insert (M:=gmap K A) i).
 Proof.
   intros x y ? m m' ? j; destruct (decide (i = j)); simplify_map_equality;
     [by constructor|by apply lookup_ne].
 Qed.
-Global Instance singleton_ne (i : K) n :
+Global Instance singleton_ne i n :
   Proper (dist n ==> dist n) (singletonM i : A → gmap K A).
 Proof. by intros ???; apply insert_ne. Qed.
-Global Instance delete_ne (i : K) n :
+Global Instance delete_ne i n :
   Proper (dist n ==> dist n) (delete (M:=gmap K A) i).
 Proof.
   intros m m' ? j; destruct (decide (i = j)); simplify_map_equality;
     [by constructor|by apply lookup_ne].
 Qed.
+
 Instance map_empty_timeless : Timeless (∅ : gmap K A).
 Proof.
   intros m Hm i; specialize (Hm i); rewrite lookup_empty in Hm |- *.
   inversion_clear Hm; constructor.
 Qed.
-Global Instance map_lookup_timeless (m : gmap K A) i :
-  Timeless m → Timeless (m !! i).
+Global Instance map_lookup_timeless m i : Timeless m → Timeless (m !! i).
 Proof.
   intros ? [x|] Hx; [|by symmetry; apply (timeless _)].
   assert (m ={1}= <[i:=x]> m)
     by (by symmetry in Hx; inversion Hx; cofe_subst; rewrite insert_id).
   by rewrite (timeless m (<[i:=x]>m)) // lookup_insert.
 Qed.
-Global Instance map_insert_timeless (m : gmap K A) i x :
+Global Instance map_insert_timeless m i x :
   Timeless x → Timeless m → Timeless (<[i:=x]>m).
 Proof.
   intros ?? m' Hm j; destruct (decide (i = j)); simplify_map_equality.
   { by apply (timeless _); rewrite -Hm lookup_insert. }
   by apply (timeless _); rewrite -Hm lookup_insert_ne.
 Qed.
-Global Instance map_singleton_timeless (i : K) (x : A) :
+Global Instance map_singleton_timeless i x :
   Timeless x → Timeless ({[ i ↦ x ]} : gmap K A) := _.
 End cofe.
+
 Arguments mapC _ {_ _} _.
 
 (* CMRA *)
@@ -84,12 +85,14 @@ Instance map_op : Op (gmap K A) := merge op.
 Instance map_unit : Unit (gmap K A) := fmap unit.
 Instance map_validN : ValidN (gmap K A) := λ n m, ∀ i, ✓{n} (m!!i).
 Instance map_minus : Minus (gmap K A) := merge minus.
+
 Lemma lookup_op m1 m2 i : (m1 ⋅ m2) !! i = m1 !! i ⋅ m2 !! i.
 Proof. by apply lookup_merge. Qed.
 Lemma lookup_minus m1 m2 i : (m1 ⩪ m2) !! i = m1 !! i ⩪ m2 !! i.
 Proof. by apply lookup_merge. Qed.
 Lemma lookup_unit m i : unit m !! i = unit (m !! i).
 Proof. by apply lookup_fmap. Qed.
+
 Lemma map_included_spec (m1 m2 : gmap K A) : m1 ≼ m2 ↔ ∀ i, m1 !! i ≼ m2 !! i.
 Proof.
   split.
@@ -105,6 +108,7 @@ Proof.
   * intros Hm; exists (m2 ⩪ m1); intros i.
     by rewrite lookup_op lookup_minus cmra_op_minus.
 Qed.
+
 Definition map_cmra_mixin : CMRAMixin (gmap K A).
 Proof.
   split.
@@ -152,35 +156,32 @@ Proof.
   * by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
   * apply map_empty_timeless.
 Qed.
-
 End cmra.
+
 Arguments mapRA _ {_ _} _.
 
 Section properties.
-Context `{Countable K} {A: cmraT}.
+Context `{Countable K} {A : cmraT}.
 Implicit Types m : gmap K A.
+Implicit Types i : K.
+Implicit Types a : A.
 
 Lemma map_lookup_validN n m i x : ✓{n} m → m !! i ={n}= Some x → ✓{n} x.
 Proof. by move=> /(_ i) Hm Hi; move:Hm; rewrite Hi. Qed.
 Lemma map_insert_validN n m i x : ✓{n} x → ✓{n} m → ✓{n} (<[i:=x]>m).
 Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_equality. Qed.
+Lemma map_singleton_validN n i x : ✓{n} ({[ i ↦ x ]} : gmap K A) ↔ ✓{n} x.
+Proof.
+  split; [|by intros; apply map_insert_validN, cmra_empty_valid].
+  by move=>/(_ i); simplify_map_equality.
+Qed.
 
 Lemma map_insert_op m1 m2 i x :
   m2 !! i = None → <[i:=x]>(m1 ⋅ m2) = <[i:=x]>m1 ⋅ m2.
 Proof. by intros Hi; apply (insert_merge_l _ m1 m2); rewrite Hi. Qed.
-
-Lemma map_validN_singleton n (i : K) (x : A) :
-  ✓{n} x <-> ✓{n} ({[ i ↦ x ]} : gmap K A).
-Proof.
-  split.
-  - move=>Hx j. destruct (decide (i = j)); simplify_map_equality; done.
-  - move=>Hm. move: (Hm i). by simplify_map_equality.
-Qed.
-
 Lemma map_unit_singleton (i : K) (x : A) :
   unit ({[ i ↦ x ]} : gmap K A) = {[ i ↦ unit x ]}.
 Proof. apply map_fmap_singleton. Qed.
-
 Lemma map_op_singleton (i : K) (x y : A) :
   {[ i ↦ x ]} ⋅ {[ i ↦ y ]} = ({[ i ↦ x ⋅ y ]} : gmap K A).
 Proof. by apply (merge_singleton _ _ _ x y). Qed.
@@ -220,7 +221,7 @@ Lemma map_insert_updateP' (P : A → Prop) m i x :
 Proof. eauto using map_insert_updateP. Qed.
 Lemma map_insert_update m i x y : x ~~> y → <[i:=x]>m ~~> <[i:=y]>m.
 Proof.
-  rewrite !cmra_update_updateP; eauto using map_insert_updateP with congruence.
+  rewrite !cmra_update_updateP; eauto using map_insert_updateP with subst.
 Qed.
 
 Lemma map_singleton_updateP (P : A → Prop) (Q : gmap K A → Prop) i x :
@@ -228,13 +229,9 @@ Lemma map_singleton_updateP (P : A → Prop) (Q : gmap K A → Prop) i x :
 Proof. apply map_insert_updateP. Qed.
 Lemma map_singleton_updateP' (P : A → Prop) i x :
   x ~~>: P → {[ i ↦ x ]} ~~>: λ m', ∃ y, m' = {[ i ↦ y ]} ∧ P y.
-Proof. eauto using map_singleton_updateP. Qed.
+Proof. apply map_insert_updateP'. Qed.
 Lemma map_singleton_update i (x y : A) : x ~~> y → {[ i ↦ x ]} ~~> {[ i ↦ y ]}.
-Proof.
-  rewrite !cmra_update_updateP=>?. eapply map_singleton_updateP; first eassumption.
-  by move=>? ->.
-Qed.
-
+Proof. apply map_insert_update. Qed.
 
 Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
 Lemma map_updateP_alloc (Q : gmap K A → Prop) m x :

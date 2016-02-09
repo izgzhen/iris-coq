@@ -53,16 +53,15 @@ Module LiftingTests.
   (* TODO: once asimpl preserves notation, we don't need
      FindPred' anymore. *)
   (* FIXME: fix notation so that we do not need parenthesis or %L *)
-  Definition FindPred' n1 Sn1 n2 f : expr :=
+  Definition FindPred' (n1 Sn1 n2 f : expr) : expr :=
     if Sn1 < n2 then f Sn1 else n1.
-  Definition FindPred n2 : expr :=
+  Definition FindPred (n2 : expr) : expr :=
     rec:: (let: #1 + Lit 1 in FindPred' #2 #0 n2.[ren(+3)] #1)%L.
   Definition Pred : expr :=
     λ: (if #0 ≤ Lit 0 then Lit 0 else FindPred #0 (Lit 0))%L.
 
   Lemma FindPred_spec n1 n2 E Q :
-    (■(n1 < n2) ∧ Q $ LitV (pred n2)) ⊑
-       wp E (FindPred (Lit n2) (Lit n1)) Q.
+    (■ (n1 < n2) ∧ Q (LitV $ pred n2)) ⊑ wp E (FindPred (Lit n2) (Lit n1)) Q.
   Proof.
     revert n1. apply löb_all_1=>n1.
     rewrite -wp_rec //. asimpl.
@@ -70,8 +69,12 @@ Module LiftingTests.
     etransitivity; first (etransitivity; last eapply equiv_spec, later_and).
     { apply and_mono; first done. by rewrite -later_intro. }
     apply later_mono.
-    (* Go on. *)
-    rewrite -(wp_let _ _ (FindPred' (Lit n1) #0 (Lit n2) (FindPred (Lit n2)))).
+    (* Go on *)
+    (* FIXME "rewrite -(wp_let _ _ (FindPred' n1 #0 n2 (FindPred n2)))" started to
+    fail after we changed # n to use ids instead of Var *)
+    pose proof (wp_let (Σ:=Σ) E (Lit n1 + Lit 1)%L
+                   (FindPred' (Lit n1) #0 (Lit n2) (FindPred (Lit n2))) Q).
+    unfold Let, Lam in H; rewrite -H.
     rewrite -wp_bin_op //. asimpl.
     rewrite -(wp_bindi (IfCtx _ _)).
     rewrite -!later_intro /=.
