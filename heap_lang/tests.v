@@ -9,14 +9,10 @@ Module LangTests.
   Proof. intros; do_step done. Qed.
   Definition rec_app : expr := (rec:: #0 #1) (Lit 0).
   Goal ∀ σ, prim_step rec_app σ rec_app σ None.
-  Proof. Set Printing All. intros; do_step done. Qed.
+  Proof. intros; do_step done. Qed.
   Definition lam : expr := λ: #0 + Lit 21.
   Goal ∀ σ, prim_step (lam (Lit 21)) σ add σ None.
-  Proof.
-    (* FIXME WTF why does it print all the "S (S (S..."?? *)
-    rewrite /lam /Lam.
-    intros; do_step done.
-  Qed.
+  Proof. rewrite /lam /Lam. intros; do_step done. Qed.
 End LangTests.
 
 Module LiftingTests.
