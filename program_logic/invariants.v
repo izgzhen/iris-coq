@@ -70,12 +70,11 @@ Proof. by rewrite always_always. Qed.
    triples will have to prove its own version of the open_close rule
    by unfolding `inv`. *)
 (* TODO Can we prove something that helps for both open_close lemmas? *)
-Lemma pvs_open_close E N P Q R :
+Lemma pvs_open_close E N P Q :
   nclose N ⊆ E →
-  P ⊑ (inv N R ∧ (▷R -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷R ★ Q)))%I →
-  P ⊑ pvs E E Q.
+  (inv N P ∧ (▷P -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷P ★ Q))) ⊑ pvs E E Q.
 Proof.
-  move=>HN -> {P}.
+  move=>HN.
   rewrite /inv and_exist_r. apply exist_elim=>i.
   rewrite -associative. apply const_elim_l=>HiN.
   rewrite -(pvs_trans3 E (E ∖ {[encode i]})) //; last by solve_elem_of+.
@@ -84,18 +83,17 @@ Proof.
   rewrite always_and_sep_l' (always_sep_dup' (ownI _ _)).
   rewrite {1}pvs_openI !pvs_frame_r.
   apply pvs_mask_frame_mono ; [solve_elem_of..|].
-  rewrite (commutative _ (▷R)%I) -associative wand_elim_r pvs_frame_l.
+  rewrite (commutative _ (▷_)%I) -associative wand_elim_r pvs_frame_l.
   apply pvs_mask_frame_mono; [solve_elem_of..|].
   rewrite associative -always_and_sep_l' pvs_closeI pvs_frame_r left_id.
   apply pvs_mask_frame'; solve_elem_of.
 Qed.
 
-Lemma wp_open_close E e N P (Q : val Λ → iProp Λ Σ) R :
+Lemma wp_open_close E e N P (Q : val Λ → iProp Λ Σ) :
   atomic e → nclose N ⊆ E →
-  P ⊑ (inv N R ∧ (▷R -★ wp (E ∖ nclose N) e (λ v, ▷R ★ Q v)))%I →
-  P ⊑ wp E e Q.
+  (inv N P ∧ (▷P -★ wp (E ∖ nclose N) e (λ v, ▷P ★ Q v)))%I ⊑ wp E e Q.
 Proof.
-  move=>He HN -> {P}.
+  move=>He HN.
   rewrite /inv and_exist_r. apply exist_elim=>i.
   rewrite -associative. apply const_elim_l=>HiN.
   rewrite -(wp_atomic E (E ∖ {[encode i]})) //; last by solve_elem_of+.
@@ -104,7 +102,7 @@ Proof.
   rewrite always_and_sep_l' (always_sep_dup' (ownI _ _)).
   rewrite {1}pvs_openI !pvs_frame_r.
   apply pvs_mask_frame_mono; [solve_elem_of..|].
-  rewrite (commutative _ (▷R)%I) -associative wand_elim_r wp_frame_l.
+  rewrite (commutative _ (▷_)%I) -associative wand_elim_r wp_frame_l.
   apply wp_mask_frame_mono; [solve_elem_of..|]=>v.
   rewrite associative -always_and_sep_l' pvs_closeI pvs_frame_r left_id.
   apply pvs_mask_frame'; solve_elem_of.

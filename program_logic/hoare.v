@@ -37,7 +37,7 @@ Proof.
   by rewrite -wp_value -pvs_intro; apply const_intro.
 Qed.
 Lemma ht_vs E P P' Q Q' e :
-  (P >{E}> P' ∧ {{ P' }} e @ E {{ Q' }} ∧ ∀ v, Q' v >{E}> Q v)
+  (P ={E}=> P' ∧ {{ P' }} e @ E {{ Q' }} ∧ ∀ v, Q' v ={E}=> Q v)
   ⊑ {{ P }} e @ E {{ Q }}.
 Proof.
   apply (always_intro' _ _), impl_intro_l.
@@ -48,7 +48,7 @@ Proof.
 Qed.
 Lemma ht_atomic E1 E2 P P' Q Q' e :
   E2 ⊆ E1 → atomic e →
-  (P >{E1,E2}> P' ∧ {{ P' }} e @ E2 {{ Q' }} ∧ ∀ v, Q' v >{E2,E1}> Q v)
+  (P ={E1,E2}=> P' ∧ {{ P' }} e @ E2 {{ Q' }} ∧ ∀ v, Q' v ={E2,E1}=> Q v)
   ⊑ {{ P }} e @ E1 {{ Q }}.
 Proof.
   intros ??; apply (always_intro' _ _), impl_intro_l.
