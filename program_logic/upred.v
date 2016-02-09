@@ -552,6 +552,16 @@ Proof.
 Qed.
 Lemma and_or_r P Q R : ((P ∨ Q) ∧ R)%I ≡ (P ∧ R ∨ Q ∧ R)%I.
 Proof. by rewrite -!(commutative _ R) and_or_l. Qed.
+Lemma and_exist_l {A} P (Q : A → uPred M) : (P ∧ ∃ a, Q a)%I ≡ (∃ a, P ∧ Q a)%I.
+Proof.
+  apply (anti_symmetric (⊑)).
+  - apply impl_elim_r'. apply exist_elim=>a. apply impl_intro_l.
+    by rewrite -(exist_intro a).
+  - apply exist_elim=>a. apply and_intro; first by rewrite and_elim_l.
+    by rewrite -(exist_intro a) and_elim_r.
+Qed.
+Lemma and_exist_r {A} P (Q : A → uPred M) : (P ∧ ∃ a, Q a)%I ≡ (∃ a, P ∧ Q a)%I.
+Proof. by rewrite (commutative _ P) -and_exist_l (commutative _ P). Qed.
 
 (* BI connectives *)
 Lemma sep_mono P P' Q Q' : P ⊑ Q → P' ⊑ Q' → (P ★ P') ⊑ (Q ★ Q').
@@ -588,10 +598,6 @@ Proof.
 Qed.
 Lemma wand_elim_l P Q : ((P -★ Q) ★ P) ⊑ Q.
 Proof. by intros x n ? (x1&x2&Hx&HPQ&?); cofe_subst; apply HPQ. Qed.
-Lemma sep_or_l_1 P Q R : (P ★ (Q ∨ R)) ⊑ (P ★ Q ∨ P ★ R).
-Proof. by intros x n ? (x1&x2&Hx&?&[?|?]); [left|right]; exists x1, x2. Qed.
-Lemma sep_exist_l_1 {A} P (Q : A → uPred M) : (P ★ ∃ b, Q b) ⊑ (∃ b, P ★ Q b).
-Proof. by intros x [|n] ?; [done|intros (x1&x2&?&?&[a ?]); exists a,x1,x2]. Qed.
 
 (* Derived BI Stuff *)
 Hint Resolve sep_mono.
@@ -643,13 +649,20 @@ Proof. auto. Qed.
 Lemma sep_and_r P Q R : ((P ∧ Q) ★ R) ⊑ ((P ★ R) ∧ (Q ★ R)).
 Proof. auto. Qed.
 Lemma sep_or_l P Q R : (P ★ (Q ∨ R))%I ≡ ((P ★ Q) ∨ (P ★ R))%I.
-Proof. apply (anti_symmetric (⊑)); eauto 10 using sep_or_l_1. Qed.
+Proof.
+  apply (anti_symmetric (⊑)); last by eauto 8.
+  apply wand_elim_r', or_elim; apply wand_intro_l.
+  - by apply or_intro_l.
+  - by apply or_intro_r.
+Qed.
 Lemma sep_or_r P Q R : ((P ∨ Q) ★ R)%I ≡ ((P ★ R) ∨ (Q ★ R))%I.
 Proof. by rewrite -!(commutative _ R) sep_or_l. Qed.
 Lemma sep_exist_l {A} P (Q : A → uPred M) : (P ★ ∃ a, Q a)%I ≡ (∃ a, P ★ Q a)%I.
 Proof.
-  intros; apply (anti_symmetric (⊑)); eauto using sep_exist_l_1.
-  apply exist_elim=> a; apply sep_mono; auto using exist_intro.
+  intros; apply (anti_symmetric (⊑)).
+  - apply wand_elim_r', exist_elim=>a. apply wand_intro_l.
+    by rewrite -(exist_intro a).
+  - apply exist_elim=> a; apply sep_mono; auto using exist_intro.
 Qed.
 Lemma sep_exist_r {A} (P: A → uPred M) Q: ((∃ a, P a) ★ Q)%I ≡ (∃ a, P a ★ Q)%I.
 Proof. setoid_rewrite (commutative _ _ Q); apply sep_exist_l. Qed.
