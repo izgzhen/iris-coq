@@ -148,11 +148,11 @@ Lemma auth_frag_op a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.
 
 Lemma auth_update a a' b b' :
-  (∀ n af, ✓{n} a → a ={n}= a' ⋅ af → b ={n}= b' ⋅ af ∧ ✓{n} b) →
+  (∀ n af, ✓{S n} a → a ={S n}= a' ⋅ af → b ={S n}= b' ⋅ af ∧ ✓{S n} b) →
   ● a ⋅ ◯ a' ~~> ● b ⋅ ◯ b'.
 Proof.
-  move=> Hab [[] bf1] n // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
-  destruct (Hab (S n) (bf1 ⋅ bf2)) as [Ha' ?]; auto.
+  move=> Hab [[?| |] bf1] n // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
+  destruct (Hab n (bf1 ⋅ bf2)) as [Ha' ?]; auto.
   { by rewrite Ha left_id associative. }
   split; [by rewrite Ha' left_id associative; apply cmra_includedN_l|done].
 Qed.
