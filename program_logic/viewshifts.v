@@ -87,7 +87,7 @@ Qed.
 Lemma vs_mask_frame' E Ef P Q : Ef ∩ E = ∅ → P >{E}> Q ⊑ P >{E ∪ Ef}> Q.
 Proof. intros; apply vs_mask_frame; solve_elem_of. Qed.
 Lemma vs_open i P : ownI i P >{{[i]},∅}> ▷ P.
-Proof. intros; apply vs_alt, pvs_open. Qed.
+Proof. intros; apply vs_alt, pvs_openI. Qed.
 
 Lemma vs_open' E i P : i ∉ E → ownI i P >{{[i]} ∪ E,E}> ▷ P.
 Proof.
@@ -96,7 +96,7 @@ Proof.
 Qed.
 
 Lemma vs_close i P : (ownI i P ∧ ▷ P) >{∅,{[i]}}> True.
-Proof. intros; apply vs_alt, pvs_close. Qed.
+Proof. intros; apply vs_alt, pvs_closeI. Qed.
 
 Lemma vs_close' E i P : i ∉ E → (ownI i P ∧ ▷ P) >{E,{[i]} ∪ E}> True.
 Proof.
@@ -116,6 +116,6 @@ Proof. by intros; apply vs_alt, pvs_ownG_updateP_empty. Qed.
 Lemma vs_update E m m' : m ~~> m' → ownG m >{E}> ownG m'.
 Proof. by intros; apply vs_alt, pvs_ownG_update. Qed.
 Lemma vs_alloc E P : ¬set_finite E → ▷ P >{E}> (∃ i, ■ (i ∈ E) ∧ ownI i P).
-Proof. by intros; apply vs_alt, pvs_alloc. Qed.
+Proof. by intros; apply vs_alt, pvs_allocI. Qed.
 
 End vs.
