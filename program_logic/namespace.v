@@ -44,7 +44,7 @@ Local Hint Resolve nclose_subseteq ndot_nclose.
 
 (** Derived forms and lemmas about them. *)
 Definition inv {Λ Σ} (N : namespace) (P : iProp Λ Σ) : iProp Λ Σ :=
-  (∃ i : positive, ownI (encode $ ndot N i) P)%I.
+  (∃ i : positive, ■(i ∈ nclose N) ∧ ownI i P)%I.
 
 Section inv.
 Context {Λ : language} {Σ : iFunctor}.
@@ -55,6 +55,7 @@ Implicit Types P Q R : iProp Λ Σ.
 Global Instance inv_contractive N : Contractive (@inv Λ Σ N).
 Proof.
   intros n ? ? EQ. apply exists_ne=>i.
+  apply and_ne; first done.
   by apply ownI_contractive.
 Qed.
 
@@ -75,17 +76,18 @@ Lemma pvs_open_close E N P Q R :
 Proof.
   move=>HN -> {P}.
   rewrite /inv and_exist_r. apply exist_elim=>i.
+  rewrite -associative. apply const_elim_l=>HiN.
   (* Add this to the local context, so that solve_elem_of finds it. *)
-  assert ({[encode (ndot N i)]} ⊆ nclose N) by eauto.
+  assert ({[encode i]} ⊆ nclose N) by eauto.
   rewrite always_and_sep_l' (always_sep_dup' (ownI _ _)).
   rewrite {1}pvs_openI !pvs_frame_r.
   (* TODO is there a common pattern here in the way we combine pvs_trans
      and pvs_mask_frame_mono? *)
-  rewrite -(pvs_trans E (E ∖ {[ (encode (ndot N i)) ]}));
+  rewrite -(pvs_trans E (E ∖ {[ encode i ]}));
     last by solve_elem_of. (* FIXME: Shouldn't eauto work, since I added a Hint Extern? *)
   apply pvs_mask_frame_mono; [solve_elem_of..|].
   rewrite (commutative _ (▷R)%I) -associative wand_elim_r pvs_frame_l.
-  rewrite -(pvs_trans _ (E ∖ {[ (encode (ndot N i)) ]}) E); last by solve_elem_of.
+  rewrite -(pvs_trans _ (E ∖ {[ encode i ]}) E); last by solve_elem_of.
   apply pvs_mask_frame_mono; [solve_elem_of..|].
   rewrite associative -always_and_sep_l' pvs_closeI pvs_frame_r left_id.
   apply pvs_mask_frame'; solve_elem_of.
@@ -93,8 +95,8 @@ Qed.
 
 Lemma pvs_alloc N P : ▷ P ⊑ pvs N N (inv N P).
 Proof.
-  (* FIXME: Can we have the E that contains exactly all (encode $ ndot N i) for all i?
-     If not, then we have to change the def. of inv. *)
+  rewrite /inv (pvs_allocI N); first done.
+  (* FIXME use coPset_suffixes_infinite. *)
 Abort.
 
 End inv.
