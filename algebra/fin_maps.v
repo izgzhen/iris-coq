@@ -176,9 +176,23 @@ Proof.
   by move=>/(_ i); simplify_map_equality.
 Qed.
 
-Lemma map_insert_op m1 m2 i x :
+Lemma map_insert_op_None m1 m2 i x :
   m2 !! i = None → <[i:=x]>(m1 ⋅ m2) = <[i:=x]>m1 ⋅ m2.
 Proof. by intros Hi; apply (insert_merge_l _ m1 m2); rewrite Hi. Qed.
+Lemma map_insert_op_unit m1 m2 i x :
+  m2 !! i ≡ Some (unit x) → <[i:=x]>(m1 ⋅ m2) ≡ <[i:=x]>m1 ⋅ m2.
+Proof.
+  intros Hu j; destruct (decide (i = j)) as [->|].
+  * by rewrite lookup_insert lookup_op lookup_insert Hu cmra_unit_r.
+  * by rewrite lookup_insert_ne // !lookup_op lookup_insert_ne.
+Qed.
+Lemma map_insert_op m1 m2 i x :
+  m2 !! i = None ∨ m2 !! i ≡ Some (unit x) →
+  <[i:=x]>(m1 ⋅ m2) ≡ <[i:=x]>m1 ⋅ m2.
+Proof.
+  by intros [?|?]; [rewrite map_insert_op_None|rewrite map_insert_op_unit].
+Qed.
+
 Lemma map_unit_singleton (i : K) (x : A) :
   unit ({[ i ↦ x ]} : gmap K A) = {[ i ↦ unit x ]}.
 Proof. apply map_fmap_singleton. Qed.
@@ -261,7 +275,7 @@ Proof.
   assert (i ∉ dom (gset K) m ∧ i ∉ dom (gset K) mf) as [??].
   { rewrite -not_elem_of_union -map_dom_op; apply is_fresh. }
   exists (<[i:=x]>m); split; first by apply HQ, not_elem_of_dom.
-  rewrite -map_insert_op; last by apply not_elem_of_dom.
+  rewrite -map_insert_op_None; last by apply not_elem_of_dom.
   by apply map_insert_validN; [apply cmra_valid_validN|].
 Qed.
 Lemma map_updateP_alloc' m x :
