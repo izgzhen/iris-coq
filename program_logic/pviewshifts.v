@@ -79,20 +79,20 @@ Proof.
   exists (r' ⋅ r2); split; last by rewrite -(associative _).
   exists r', r2; split_ands; auto; apply uPred_weaken with r2 n; auto.
 Qed.
-Lemma pvs_open i P : ownI i P ⊑ pvs {[ i ]} ∅ (▷ P).
+Lemma pvs_openI i P : ownI i P ⊑ pvs {[ i ]} ∅ (▷ P).
 Proof.
   intros r [|n] ? Hinv rf [|k] Ef σ ???; try lia.
-  apply inv_spec in Hinv; last auto.
+  apply ownI_spec in Hinv; last auto.
   destruct (wsat_open k Ef σ (r ⋅ rf) i P) as (rP&?&?); auto.
   { rewrite lookup_wld_op_l ?Hinv; eauto; apply dist_le with (S n); eauto. }
   exists (rP ⋅ r); split; last by rewrite (left_id_L _ _) -(associative _).
   eapply uPred_weaken with rP (S k); eauto using cmra_included_l.
 Qed.
-Lemma pvs_close i P : (ownI i P ∧ ▷ P) ⊑ pvs ∅ {[ i ]} True.
+Lemma pvs_closeI i P : (ownI i P ∧ ▷ P) ⊑ pvs ∅ {[ i ]} True.
 Proof.
   intros r [|n] ? [? HP] rf [|k] Ef σ ? HE ?; try lia; exists ∅; split; [done|].
   rewrite (left_id _ _); apply wsat_close with P r.
-  * apply inv_spec, uPred_weaken with r (S n); auto.
+  * apply ownI_spec, uPred_weaken with r (S n); auto.
   * solve_elem_of +HE.
   * by rewrite -(left_id_L ∅ (∪) Ef).
   * apply uPred_weaken with r n; auto.
@@ -116,7 +116,7 @@ Proof.
       auto using option_update_None. }
   by exists (update_gst m' r); split; [exists m'; split; [|apply ownG_spec]|].
 Qed.
-Lemma pvs_alloc E P : ¬set_finite E → ▷ P ⊑ pvs E E (∃ i, ■ (i ∈ E) ∧ ownI i P).
+Lemma pvs_allocI E P : ¬set_finite E → ▷ P ⊑ pvs E E (∃ i, ■ (i ∈ E) ∧ ownI i P).
 Proof.
   intros ? r [|n] ? HP rf [|k] Ef σ ???; try lia.
   destruct (wsat_alloc k E Ef σ rf P r) as (i&?&?&?); auto.
@@ -144,13 +144,29 @@ Lemma pvs_impl_l E1 E2 P Q : (□ (P → Q) ∧ pvs E1 E2 P) ⊑ pvs E1 E2 Q.
 Proof. by rewrite pvs_always_l always_elim impl_elim_l. Qed.
 Lemma pvs_impl_r E1 E2 P Q : (pvs E1 E2 P ∧ □ (P → Q)) ⊑ pvs E1 E2 Q.
 Proof. by rewrite (commutative _) pvs_impl_l. Qed.
+
+Lemma pvs_mask_frame' E1 E1' E2 E2' P :
+  E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' → pvs E1' E2' P ⊑ pvs E1 E2 P.
+Proof.
+  intros HE1 HE2 HEE. rewrite (pvs_mask_frame _ _ (E1 ∖ E1')).
+  - rewrite {2}HEE =>{HEE}. by rewrite -!union_difference_L.
+  - solve_elem_of.
+Qed. 
+
+Lemma pvs_mask_frame_mono E1 E1' E2 E2' P Q :
+  E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' →
+  P ⊑ Q → pvs E1' E2' P ⊑ pvs E1 E2 Q.
+Proof. intros HE1 HE2 HEE ->. by apply pvs_mask_frame'. Qed.
+
 Lemma pvs_mask_weaken E1 E2 P : E1 ⊆ E2 → pvs E1 E1 P ⊑ pvs E2 E2 P.
 Proof.
-  intros; rewrite (union_difference_L E1 E2) //; apply pvs_mask_frame; auto.
+  intros. apply pvs_mask_frame'; solve_elem_of.
 Qed.
+
 Lemma pvs_ownG_update E m m' : m ~~> m' → ownG m ⊑ pvs E E (ownG m').
 Proof.
   intros; rewrite (pvs_ownG_updateP E _ (m' =)); last by apply cmra_update_updateP.
   by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.const_elim_l=> ->.
 Qed.
+
 End pvs.

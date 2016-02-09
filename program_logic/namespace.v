@@ -1,6 +1,12 @@
 Require Export algebra.base prelude.countable prelude.co_pset.
 Require Import program_logic.ownership.
 Require Export program_logic.pviewshifts.
+Import uPred.
+
+Local Hint Extern 100 (@eq coPset _ _) => solve_elem_of.
+Local Hint Extern 100 (@subseteq coPset _ _) => solve_elem_of.
+Local Hint Extern 100 (_ ∉ _) => solve_elem_of.
+Local Hint Extern 99 ({[ _ ]} ⊆ _) => apply elem_of_subseteq_singleton.
 
 Definition namespace := list positive.
 Definition nnil : namespace := nil.
@@ -34,7 +40,63 @@ Proof.
   induction (encode_nat (encode x)); intros [|?] ?; f_equal'; naive_solver.
 Qed.
 
+Local Hint Resolve nclose_subseteq ndot_nclose.
+
 (** Derived forms and lemmas about them. *)
 Definition inv {Λ Σ} (N : namespace) (P : iProp Λ Σ) : iProp Λ Σ :=
-  ownI (encode N) P.
-(* TODO: Add lemmas about inv here. *)
+  (∃ i : positive, ■(i ∈ nclose N) ∧ ownI i P)%I.
+
+Section inv.
+Context {Λ : language} {Σ : iFunctor}.
+Implicit Types i : positive.
+Implicit Types N : namespace.
+Implicit Types P Q R : iProp Λ Σ.
+
+Global Instance inv_contractive N : Contractive (@inv Λ Σ N).
+Proof.
+  intros n ? ? EQ. apply exists_ne=>i.
+  apply and_ne; first done.
+  by apply ownI_contractive.
+Qed.
+
+Global Instance inv_always_stable N P : AlwaysStable (inv N P) := _.
+
+Lemma always_inv N P : (□ inv N P)%I ≡ inv N P.
+Proof. by rewrite always_always. Qed.
+
+(* We actually pretty much lose the abolity to deal with mask-changing view
+   shifts when using `inv`. This is because we cannot exactly name the invariants
+   any more. But that's okay; all this means is that sugar like the atomic
+   triples will have to prove its own version of the open_close rule
+   by unfolding `inv`. *)
+Lemma pvs_open_close E N P Q R :
+  nclose N ⊆ E →
+  P ⊑ (inv N R ∧ (▷R -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷R ★ Q)))%I →
+  P ⊑ pvs E E Q.
+Proof.
+  move=>HN -> {P}.
+  rewrite /inv and_exist_r. apply exist_elim=>i.
+  rewrite -associative. apply const_elim_l=>HiN.
+  (* Add this to the local context, so that solve_elem_of finds it. *)
+  assert ({[encode i]} ⊆ nclose N) by eauto.
+  rewrite always_and_sep_l' (always_sep_dup' (ownI _ _)).
+  rewrite {1}pvs_openI !pvs_frame_r.
+  (* TODO is there a common pattern here in the way we combine pvs_trans
+     and pvs_mask_frame_mono? *)
+  rewrite -(pvs_trans E (E ∖ {[ encode i ]}));
+    last by solve_elem_of. (* FIXME: Shouldn't eauto work, since I added a Hint Extern? *)
+  apply pvs_mask_frame_mono; [solve_elem_of..|].
+  rewrite (commutative _ (▷R)%I) -associative wand_elim_r pvs_frame_l.
+  rewrite -(pvs_trans _ (E ∖ {[ encode i ]}) E); last by solve_elem_of.
+  apply pvs_mask_frame_mono; [solve_elem_of..|].
+  rewrite associative -always_and_sep_l' pvs_closeI pvs_frame_r left_id.
+  apply pvs_mask_frame'; solve_elem_of.
+Qed.
+
+Lemma pvs_alloc N P : ▷ P ⊑ pvs N N (inv N P).
+Proof.
+  rewrite /inv (pvs_allocI N); first done.
+  (* FIXME use coPset_suffixes_infinite. *)
+Abort.
+
+End inv.

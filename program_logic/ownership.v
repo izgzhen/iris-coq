@@ -19,20 +19,20 @@ Implicit Types P : iProp Λ Σ.
 Implicit Types m : iGst Λ Σ.
 
 (* Invariants *)
-Global Instance inv_contractive i : Contractive (@ownI Λ Σ i).
+Global Instance ownI_contractive i : Contractive (@ownI Λ Σ i).
 Proof.
   intros n P Q HPQ.
   apply (_: Proper (_ ==> _) iProp_unfold), Later_contractive in HPQ.
   by unfold ownI; rewrite HPQ.
 Qed.
-Lemma always_inv i P : (□ ownI i P)%I ≡ ownI i P.
+Lemma always_ownI i P : (□ ownI i P)%I ≡ ownI i P.
 Proof.
   apply uPred.always_own.
   by rewrite Res_unit !cmra_unit_empty map_unit_singleton.
 Qed.
-Global Instance inv_always_stable i P : AlwaysStable (ownI i P).
-Proof. by rewrite /AlwaysStable always_inv. Qed.
-Lemma inv_sep_dup i P : ownI i P ≡ (ownI i P ★ ownI i P)%I.
+Global Instance ownI_always_stable i P : AlwaysStable (ownI i P).
+Proof. by rewrite /AlwaysStable always_ownI. Qed.
+Lemma ownI_sep_dup i P : ownI i P ≡ (ownI i P ★ ownI i P)%I.
 Proof. apply (uPred.always_sep_dup' _). Qed.
 
 (* physical state *)
@@ -63,7 +63,7 @@ Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
 Proof. rewrite /ownG; apply _. Qed.
 
 (* inversion lemmas *)
-Lemma inv_spec r n i P :
+Lemma ownI_spec r n i P :
   ✓{n} r →
   (ownI i P) n r ↔ wld r !! i ={n}= Some (to_agree (Later (iProp_unfold P))).
 Proof.

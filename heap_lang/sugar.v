@@ -11,6 +11,22 @@ Definition LamV (e : {bind expr}) := RecV e.[ren(+1)].
 Definition LetCtx (e2 : {bind expr}) := AppRCtx (LamV e2).
 Definition SeqCtx (e2 : expr) := LetCtx (e2.[ren(+1)]).
 
+(* Prove and "register" compatibility with substitution. *)
+Lemma Lam_subst e s : (Lam e).[s] = Lam e.[up s].
+Proof. by unfold Lam; asimpl. Qed.
+Hint Rewrite Lam_subst : autosubst.
+Global Opaque Lam.
+
+Lemma Let_subst e1 e2 s : (Let e1 e2).[s] = Let e1.[s] e2.[up s].
+Proof. by unfold Let; asimpl. Qed.
+Hint Rewrite Let_subst : autosubst.
+Global Opaque Let.
+
+Lemma Seq_subst e1 e2 s : (Seq e1 e2).[s] = Seq e1.[s] e2.[s].
+Proof. by unfold Seq; asimpl. Qed.
+Hint Rewrite Seq_subst : autosubst.
+Global Opaque Seq.
+
 Module notations.
   Delimit Scope lang_scope with L.
   Bind Scope lang_scope with expr.
@@ -71,6 +87,12 @@ Lemma wp_let E e1 e2 Q :
 Proof.
   rewrite -(wp_bind [LetCtx e2]). apply wp_mono=>v.
   by rewrite -wp_lam //= to_of_val.
+Qed.
+
+Lemma wp_seq E e1 e2 Q :
+  wp E e1 (λ _, ▷wp E e2 Q) ⊑ wp E (Seq e1 e2) Q.
+Proof.
+  rewrite -wp_let. apply wp_mono=>v. by asimpl.
 Qed.
 
 Lemma wp_le E (n1 n2 : nat) P Q :
