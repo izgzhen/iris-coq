@@ -55,21 +55,19 @@ Lemma ht_adequacy_steps P Q k n e1 t2 σ1 σ2 r1 :
   nsteps step k ([e1],σ1) (t2,σ2) →
   1 < n → wsat (k + n) coPset_all σ1 r1 →
   P (k + n) r1 →
-  ∃ rs2 Qs', wptp n t2 ((λ v, pvs coPset_all coPset_all (Q v)) :: Qs') rs2 ∧
-             wsat n coPset_all σ2 (big_op rs2).
+  ∃ rs2 Qs', wptp n t2 (Q :: Qs') rs2 ∧ wsat n coPset_all σ2 (big_op rs2).
 Proof.
-  intros Hht ????; apply (nsteps_wptp [pvs coPset_all coPset_all ∘ Q] k n
-    ([e1],σ1) (t2,σ2) [r1]); rewrite /big_op ?right_id; auto.
+  intros Hht ????; apply (nsteps_wptp [Q] k n ([e1],σ1) (t2,σ2) [r1]);
+    rewrite /big_op ?right_id; auto.
   constructor; last constructor.
   apply Hht with r1 (k + n); eauto using cmra_included_unit.
-  by destruct (k + n).
+  eapply uPred.const_intro; eauto.
 Qed.
 Lemma ht_adequacy_own Q e1 t2 σ1 m σ2 :
   ✓m →
   {{ ownP σ1 ★ ownG m }} e1 @ coPset_all {{ Q }} →
   rtc step ([e1],σ1) (t2,σ2) →
-  ∃ rs2 Qs', wptp 3 t2 ((λ v, pvs coPset_all coPset_all (Q v)) :: Qs') rs2 ∧
-             wsat 3 coPset_all σ2 (big_op rs2).
+  ∃ rs2 Qs', wptp 3 t2 (Q :: Qs') rs2 ∧ wsat 3 coPset_all σ2 (big_op rs2).
 Proof.
   intros Hv ? [k ?]%rtc_nsteps.
   eapply ht_adequacy_steps with (r1 := (Res ∅ (Excl σ1) (Some m))); eauto; [|].
@@ -103,7 +101,7 @@ Proof.
   destruct (ht_adequacy_own Q e1 t2 σ1 m σ2) as (rs2&Qs&?&?); auto.
   { by rewrite -(ht_mask_weaken E coPset_all). }
   destruct (Forall3_lookup_l (λ e Q r, wp coPset_all e Q 3 r) t2
-    (pvs coPset_all coPset_all ∘ Q :: Qs) rs2 i e2) as (Q'&r2&?&?&Hwp); auto.
+    (Q :: Qs) rs2 i e2) as (Q'&r2&?&?&Hwp); auto.
   destruct (wp_step_inv coPset_all ∅ Q' e2 2 3 σ2 r2 (big_op (delete i rs2)));
     rewrite ?right_id_L ?big_op_delete; auto.
 Qed.

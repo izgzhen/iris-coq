@@ -1,8 +1,7 @@
 Require Export program_logic.weakestpre program_logic.viewshifts.
 
 Definition ht {Λ Σ} (E : coPset) (P : iProp Λ Σ)
-    (e : expr Λ) (Q : val Λ → iProp Λ Σ) : iProp Λ Σ :=
-  (□ (P → wp E e (λ v, pvs E E (Q v))))%I.
+    (e : expr Λ) (Q : val Λ → iProp Λ Σ) : iProp Λ Σ := (□ (P → wp E e Q))%I.
 Instance: Params (@ht) 3.
 
 Notation "{{ P } } e @ E {{ Q } }" := (ht E P e Q)
@@ -25,16 +24,16 @@ Global Instance ht_proper E :
 Proof. by intros P P' HP e ? <- Q Q' HQ; rewrite /ht HP; setoid_rewrite HQ. Qed.
 Lemma ht_mono E P P' Q Q' e :
   P ⊑ P' → (∀ v, Q' v ⊑ Q v) → {{ P' }} e @ E {{ Q' }} ⊑ {{ P }} e @ E {{ Q }}.
-Proof. by intros HP HQ; rewrite /ht -HP; setoid_rewrite HQ. Qed.
+Proof. by intros; apply always_mono, impl_mono, wp_mono. Qed.
 Global Instance ht_mono' E :
   Proper (flip (⊑) ==> eq ==> pointwise_relation _ (⊑) ==> (⊑)) (@ht Λ Σ E).
 Proof. by intros P P' HP e ? <- Q Q' HQ; apply ht_mono. Qed.
 
 Lemma ht_val E v :
-  {{ True : iProp Λ Σ }} of_val v @ E {{ λ v', ■ (v = v') }}.
+  {{ True : iProp Λ Σ }} of_val v @ E {{ λ v', v = v' }}.
 Proof.
   apply (always_intro' _ _), impl_intro_l.
-  by rewrite -wp_value -pvs_intro; apply const_intro.
+  by rewrite -wp_value; apply const_intro.
 Qed.
 Lemma ht_vs E P P' Q Q' e :
   (P ={E}=> P' ∧ {{ P' }} e @ E {{ Q' }} ∧ ∀ v, Q' v ={E}=> Q v)
@@ -42,9 +41,9 @@ Lemma ht_vs E P P' Q Q' e :
 Proof.
   apply (always_intro' _ _), impl_intro_l.
   rewrite (associative _ P) {1}/vs always_elim impl_elim_r.
-  rewrite (associative _) pvs_impl_r pvs_always_r wp_always_r.
-  rewrite wp_pvs; apply wp_mono=> v.
-  by rewrite (forall_elim v) pvs_impl_r !pvs_trans'.
+  rewrite associative pvs_impl_r pvs_always_r wp_always_r.
+  rewrite -(pvs_wp E e Q) -(wp_pvs E e Q); apply pvs_mono, wp_mono=> v.
+  by rewrite (forall_elim v) {1}/vs always_elim impl_elim_r.
 Qed.
 Lemma ht_atomic E1 E2 P P' Q Q' e :
   E2 ⊆ E1 → atomic e →
@@ -55,7 +54,7 @@ Proof.
   rewrite (associative _ P) {1}/vs always_elim impl_elim_r.
   rewrite (associative _) pvs_impl_r pvs_always_r wp_always_r.
   rewrite -(wp_atomic E1 E2) //; apply pvs_mono, wp_mono=> v.
-  rewrite (forall_elim v) pvs_impl_r -(pvs_intro E1) pvs_trans; solve_elem_of.
+  by rewrite (forall_elim v) {1}/vs always_elim impl_elim_r.
 Qed.
 Lemma ht_bind `{LanguageCtx Λ K} E P Q Q' e :
   ({{ P }} e @ E {{ Q }} ∧ ∀ v, {{ Q v }} K (of_val v) @ E {{ Q' }})
@@ -64,21 +63,17 @@ Proof.
   intros; apply (always_intro' _ _), impl_intro_l.
   rewrite (associative _ P) {1}/ht always_elim impl_elim_r.
   rewrite wp_always_r -wp_bind //; apply wp_mono=> v.
-  rewrite (forall_elim v) pvs_impl_r wp_pvs; apply wp_mono=> v'.
-  by rewrite pvs_trans'.
+  by rewrite (forall_elim v) /ht always_elim impl_elim_r.
 Qed.
 Lemma ht_mask_weaken E1 E2 P Q e :
   E1 ⊆ E2 → {{ P }} e @ E1 {{ Q }} ⊑ {{ P }} e @ E2 {{ Q }}.
-Proof.
-  intros; apply always_mono, impl_intro_l; rewrite impl_elim_r.
-  by rewrite -(wp_mask_weaken E1) //; apply wp_mono=> v; apply pvs_mask_weaken.
-Qed.
+Proof. intros. by apply always_mono, impl_mono, wp_mask_frame_mono. Qed.
 Lemma ht_frame_l E P Q R e :
   {{ P }} e @ E {{ Q }} ⊑ {{ R ★ P }} e @ E {{ λ v, R ★ Q v }}.
 Proof.
   apply always_intro, impl_intro_l.
   rewrite always_and_sep_r -(associative _) (sep_and P) always_elim impl_elim_r.
-  by rewrite wp_frame_l; apply wp_mono=>v; rewrite pvs_frame_l.
+  by rewrite wp_frame_l.
 Qed.
 Lemma ht_frame_r E P Q R e :
   {{ P }} e @ E {{ Q }} ⊑ {{ P ★ R }} e @ E {{ λ v, Q v ★ R }}.

@@ -110,9 +110,6 @@ Proof.
 Qed.
 
 Lemma pvs_alloc N P : ▷ P ⊑ pvs N N (inv N P).
-Proof.
-  rewrite /inv (pvs_allocI N); first done.
-  apply coPset_suffixes_infinite.
-Qed.
+Proof. by rewrite /inv (pvs_allocI N); last apply coPset_suffixes_infinite. Qed.
 
 End inv.
