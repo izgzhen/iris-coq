@@ -101,7 +101,7 @@ Lemma wp_le E (n1 n2 : nat) P Q :
   P ⊑ wp E (BinOp LeOp (Lit n1) (Lit n2)) Q.
 Proof.
   intros ? ?. rewrite -wp_bin_op //; [].
-  destruct (decide _); by eauto with omega.
+  destruct (bool_decide_reflect (n1 ≤ n2)); by eauto with omega.
 Qed.
 
 Lemma wp_lt E (n1 n2 : nat) P Q :
@@ -110,7 +110,7 @@ Lemma wp_lt E (n1 n2 : nat) P Q :
   P ⊑ wp E (BinOp LtOp (Lit n1) (Lit n2)) Q.
 Proof.
   intros ? ?. rewrite -wp_bin_op //; [].
-  destruct (decide _); by eauto with omega.
+  destruct (bool_decide_reflect (n1 < n2)); by eauto with omega.
 Qed.
 
 Lemma wp_eq E (n1 n2 : nat) P Q :
@@ -119,7 +119,7 @@ Lemma wp_eq E (n1 n2 : nat) P Q :
   P ⊑ wp E (BinOp EqOp (Lit n1) (Lit n2)) Q.
 Proof.
   intros ? ?. rewrite -wp_bin_op //; [].
-  destruct (decide _); by eauto with omega.
+  destruct (bool_decide_reflect (n1 = n2)); by eauto with omega.
 Qed.
 
 End suger.
