@@ -12,7 +12,11 @@ Module LangTests.
   Proof. Set Printing All. intros; do_step done. Qed.
   Definition lam : expr := λ: #0 + Lit 21.
   Goal ∀ σ, prim_step (lam (Lit 21)) σ add σ None.
-  Proof. intros; do_step done. Qed.
+  Proof.
+    (* FIXME WTF why does it print all the "S (S (S..."?? *)
+    rewrite /lam /Lam.
+    intros; do_step done.
+  Qed.
 End LangTests.
 
 Module LiftingTests.
@@ -20,7 +24,6 @@ Module LiftingTests.
   Implicit Types P : iProp heap_lang Σ.
   Implicit Types Q : val → iProp heap_lang Σ.
 
-  (* FIXME: Fix levels so that we do not need the parenthesis here. *)
   Definition e  : expr := let: ref (Lit 1) in #0 <- !#0 + Lit 1; !#0.
   Goal ∀ σ E, (ownP σ : iProp heap_lang Σ) ⊑ (wp E e (λ v, ■(v = LitV 2))).
   Proof.
@@ -30,9 +33,8 @@ Module LiftingTests.
     rewrite -later_intro. apply forall_intro=>l.
     apply wand_intro_l. rewrite right_id. apply const_elim_l; move=>_.
     rewrite -later_intro. asimpl.
-    (* TODO RJ: If you go here, you can see how the sugar does not print
-       all so nicely. *)
     rewrite -(wp_bindi (SeqCtx (Load (Loc _)))).
+    (* FIXME: doing simpl here kills the Seq, turns it all the way into Rec *)
     rewrite -(wp_bindi (StoreRCtx (LocV _))).
     rewrite -(wp_bindi (BinOpLCtx PlusOp _)).
     rewrite -wp_load_pst; first (apply sep_intro_True_r; first done); last first.
@@ -43,20 +45,15 @@ Module LiftingTests.
     { by rewrite lookup_insert. }
     { done. }
     rewrite -later_intro. apply wand_intro_l. rewrite right_id.
-    rewrite -wp_lam // -later_intro. asimpl.
+    rewrite -wp_seq -wp_value -later_intro.
     rewrite -wp_load_pst; first (apply sep_intro_True_r; first done); last first.
     { by rewrite lookup_insert. }
     rewrite -later_intro. apply wand_intro_l. rewrite right_id.
     by apply const_intro.
   Qed.
 
-  (* TODO: once asimpl preserves notation, we don't need
-     FindPred' anymore. *)
-  (* FIXME: fix notation so that we do not need parenthesis or %L *)
-  Definition FindPred' (n1 Sn1 n2 f : expr) : expr :=
-    if Sn1 < n2 then f Sn1 else n1.
   Definition FindPred (n2 : expr) : expr :=
-    rec:: (let: #1 + Lit 1 in FindPred' #2 #0 n2.[ren(+3)] #1)%L.
+    rec:: (let: #1 + Lit 1 in if #0 < n2.[ren(+3)] then #1 #0 else #2).
   Definition Pred : expr :=
     λ: (if #0 ≤ Lit 0 then Lit 0 else FindPred #0 (Lit 0))%L.
 
@@ -70,11 +67,7 @@ Module LiftingTests.
     { apply and_mono; first done. by rewrite -later_intro. }
     apply later_mono.
     (* Go on *)
-    (* FIXME "rewrite -(wp_let _ _ (FindPred' n1 #0 n2 (FindPred n2)))" started to
-    fail after we changed # n to use ids instead of Var *)
-    pose proof (wp_let (Σ:=Σ) E (Lit n1 + Lit 1)%L
-                   (FindPred' (Lit n1) #0 (Lit n2) (FindPred (Lit n2))) Q).
-    unfold Let, Lam in H; rewrite -H.
+    rewrite -wp_let.
     rewrite -wp_bin_op //. asimpl.
     rewrite -(wp_bindi (IfCtx _ _)).
     rewrite -!later_intro /=.
