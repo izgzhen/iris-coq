@@ -48,7 +48,7 @@ Section iprod_cofe.
   Section empty.
     Context `{∀ x, Empty (B x)}.
     Definition iprod_lookup_empty  x : ∅ x = ∅ := eq_refl.
-    Instance iprod_empty_timeless :
+    Global Instance iprod_empty_timeless :
       (∀ x : A, Timeless (∅ : B x)) → Timeless (∅ : iprod B).
     Proof. intros ? f Hf x. by apply (timeless _). Qed.
   End empty.
@@ -168,7 +168,7 @@ Section iprod_cmra.
     intros ?; split.
     * intros n x; apply cmra_empty_valid.
     * by intros f x; rewrite iprod_lookup_op left_id.
-    * by intros f Hf x; apply (timeless _).
+    * by apply _.
   Qed.
 
   (** Properties of iprod_insert. *)
@@ -230,7 +230,7 @@ Section iprod_cmra.
   Proof. rewrite /iprod_singleton; eauto using iprod_insert_updateP. Qed.
   Lemma iprod_singleton_updateP' x (P : B x → Prop) y1 :
     y1 ~~>: P →
-    iprod_singleton x y1 ~~>: λ g', ∃ y2, g' = iprod_singleton x y2 ∧ P y2.
+    iprod_singleton x y1 ~~>: λ g, ∃ y2, g = iprod_singleton x y2 ∧ P y2.
   Proof. eauto using iprod_singleton_updateP. Qed.
   Lemma iprod_singleton_update x y1 y2 :
     y1 ~~> y2 → iprod_singleton x y1 ~~> iprod_singleton x y2.
@@ -245,6 +245,9 @@ Section iprod_cmra.
     * by rewrite iprod_lookup_op iprod_lookup_singleton.
     * rewrite iprod_lookup_op iprod_lookup_singleton_ne //. apply Hg.
   Qed.
+  Lemma iprod_singleton_updateP_empty' x (P : B x → Prop) :
+    ∅ ~~>: P → ∅ ~~>: λ g, ∃ y2, g = iprod_singleton x y2 ∧ P y2.
+  Proof. eauto using iprod_singleton_updateP_empty. Qed.
 End iprod_cmra.
 
 Arguments iprodRA {_} _.

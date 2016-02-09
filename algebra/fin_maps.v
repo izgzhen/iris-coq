@@ -228,10 +228,30 @@ Lemma map_singleton_updateP (P : A → Prop) (Q : gmap K A → Prop) i x :
   x ~~>: P → (∀ y, P y → Q {[ i ↦ y ]}) → {[ i ↦ x ]} ~~>: Q.
 Proof. apply map_insert_updateP. Qed.
 Lemma map_singleton_updateP' (P : A → Prop) i x :
-  x ~~>: P → {[ i ↦ x ]} ~~>: λ m', ∃ y, m' = {[ i ↦ y ]} ∧ P y.
+  x ~~>: P → {[ i ↦ x ]} ~~>: λ m, ∃ y, m = {[ i ↦ y ]} ∧ P y.
 Proof. apply map_insert_updateP'. Qed.
 Lemma map_singleton_update i (x y : A) : x ~~> y → {[ i ↦ x ]} ~~> {[ i ↦ y ]}.
 Proof. apply map_insert_update. Qed.
+
+Lemma map_singleton_updateP_empty `{Empty A, !CMRAIdentity A}
+      (P : A → Prop) (Q : gmap K A → Prop) i :
+  ∅ ~~>: P → (∀ y, P y → Q {[ i ↦ y ]}) → ∅ ~~>: Q.
+  Proof.
+    intros Hx HQ gf n Hg.
+    destruct (Hx (default ∅ (gf !! i) id) n) as (y&?&Hy).
+    { move:(Hg i). rewrite !left_id. case _: (gf !! i); first done.
+      intros. apply cmra_empty_valid. }
+    exists {[ i ↦ y]}. split; first by apply HQ.
+    intros i'. rewrite lookup_op.
+    destruct (decide (i' = i)).
+    - subst i'. rewrite lookup_singleton. move:Hy.
+      case _: (gf !! i); first done.
+      by rewrite right_id.
+    - move:(Hg i'). rewrite lookup_singleton_ne // !left_id. done.
+Qed.
+Lemma map_singleton_updateP_empty' `{Empty A, !CMRAIdentity A} (P : A → Prop) i :
+  ∅ ~~>: P → ∅ ~~>: λ m, ∃ y, m = {[ i ↦ y ]} ∧ P y.
+Proof. eauto using map_singleton_updateP_empty. Qed.
 
 Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
 Lemma map_updateP_alloc (Q : gmap K A → Prop) m x :

@@ -396,15 +396,26 @@ End cmra_monotone.
 (** * Transporting a CMRA equality *)
 Definition cmra_transport {A B : cmraT} (H : A = B) (x : A) : B :=
   eq_rect A id x _ H.
+Definition cmra_transport_back {A B : cmraT} (H : A = B) (x : B) : A :=
+  eq_rect B id x _ (eq_sym H).
 
 Section cmra_transport.
   Context {A B : cmraT} (H : A = B).
   Notation T := (cmra_transport H).
+  Notation T' := (cmra_transport_back H).
   Global Instance cmra_transport_ne n : Proper (dist n ==> dist n) T.
   Proof. by intros ???; destruct H. Qed.
   Global Instance cmra_transport_proper : Proper ((≡) ==> (≡)) T.
   Proof. by intros ???; destruct H. Qed.
+  Lemma cmra_transport_and_back x : T' (T x) = x.
+  Proof. by destruct H. Qed.
+  Lemma cmra_transport_back_and x : T (T' x) = x.
+  Proof. by destruct H. Qed.
   Lemma cmra_transport_op x y : T (x ⋅ y) = T x ⋅ T y.
+  Proof. by destruct H. Qed.
+  Lemma cmra_transport_back_op_r y x : T (x ⋅ T' y) = T x ⋅ y.
+  Proof. by destruct H. Qed.
+  Lemma cmra_transport_back_op_l y x : T (T' x ⋅ y) = x ⋅ T y.
   Proof. by destruct H. Qed.
   Lemma cmra_transport_unit x : T (unit x) = unit (T x).
   Proof. by destruct H. Qed.
