@@ -125,7 +125,7 @@ Proof.
   by split; [by exists i; split; rewrite /uPred_holds /=|].
 Qed.
 
-(* Derived rules *)
+(** * Derived rules *)
 Opaque uPred_holds.
 Import uPred.
 Global Instance pvs_mono' E1 E2 : Proper ((⊑) ==> (⊑)) (@pvs Λ Σ E1 E2).
@@ -158,10 +158,10 @@ Lemma pvs_mask_frame_mono E1 E1' E2 E2' P Q :
   P ⊑ Q → pvs E1' E2' P ⊑ pvs E1 E2 Q.
 Proof. intros HE1 HE2 HEE ->. by apply pvs_mask_frame'. Qed.
 
-(* It should be possible to give a stronger version of this rule
+(** It should be possible to give a stronger version of this rule
    that does not force the conclusion view shift to have twice the
    same mask. However, even expressing the side-conditions on the
-   mask becomes really ugly then, and we have now found an instance
+   mask becomes really ugly then, and we have not found an instance
    where that would be useful. *)
 Lemma pvs_trans3 E1 E2 Q :
   E2 ⊆ E1 → pvs E1 E2 (pvs E2 E2 (pvs E2 E1 Q)) ⊑ pvs E1 E1 Q.
