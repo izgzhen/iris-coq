@@ -24,6 +24,7 @@ Module notations.
   (** Syntax inspired by Coq/Ocaml. Constructions with higher precedence come
   first. *)
   (* What about Arguments for hoare triples?. *)
+  Notation "' l" := (Lit l) (at level 8, format "' l") : lang_scope.
   Notation "! e" := (Load e%L) (at level 10, format "! e") : lang_scope.
   Notation "'ref' e" := (Alloc e%L) (at level 30) : lang_scope.
   Notation "e1 + e2" := (BinOp PlusOp e1%L e2%L)
