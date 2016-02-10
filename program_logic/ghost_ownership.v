@@ -69,7 +69,7 @@ Lemma own_valid γ a : own i γ a ⊑ ✓ a.
 Proof.
   rewrite /own ownG_valid; apply valid_mono=> ?; apply to_globalC_validN.
 Qed.
-Lemma own_valid_r' γ a : own i γ a ⊑ (own i γ a ★ ✓ a).
+Lemma own_valid_r γ a : own i γ a ⊑ (own i γ a ★ ✓ a).
 Proof. apply (uPred.always_entails_r' _ _), own_valid. Qed.
 Global Instance own_timeless γ a : Timeless a → TimelessP (own i γ a).
 Proof. unfold own; apply _. Qed.
