@@ -2,18 +2,22 @@ Require Export algebra.iprod program_logic.pviewshifts.
 Require Import program_logic.ownership.
 Import uPred.
 
-Definition gid := positive.
+(** Index of a CMRA in the product of global CMRAs. *)
+Definition gid := nat.
+(** Name of one instance of a particular CMRA in the ghost state. *)
+Definition gname := positive.
+(** The global CMRA: Indexed product over a gid i to (gname --fin--> Σ i) *)
 Definition globalC (Σ : gid → iFunctor) : iFunctor :=
-  iprodF (λ i, mapF gid (Σ i)).
+  iprodF (λ i, mapF gname (Σ i)).
 
 Class InG (Λ : language) (Σ : gid → iFunctor) (i : gid) (A : cmraT) :=
   inG : A = Σ i (laterC (iPreProp Λ (globalC Σ))).
 
 Definition to_globalC {Λ Σ A}
-    (i : gid) `{!InG Λ Σ i A} (γ : gid) (a : A) : iGst Λ (globalC Σ) :=
+    (i : gid) `{!InG Λ Σ i A} (γ : gname) (a : A) : iGst Λ (globalC Σ) :=
   iprod_singleton i {[ γ ↦ cmra_transport inG a ]}.
 Definition own {Λ Σ A}
-    (i : gid) `{!InG Λ Σ i A} (γ : gid) (a : A) : iProp Λ (globalC Σ) :=
+    (i : gid) `{!InG Λ Σ i A} (γ : gname) (a : A) : iProp Λ (globalC Σ) :=
   ownG (to_globalC i γ a).
 Instance: Params (@to_globalC) 6.
 Instance: Params (@own) 6.
@@ -76,7 +80,7 @@ Proof. unfold own; apply _. Qed.
 
 (* TODO: This also holds if we just have ✓ a at the current step-idx, as Iris
    assertion. However, the map_updateP_alloc does not suffice to show this. *)
-Lemma own_alloc E a : ✓ a → True ⊑ pvs E E (∃ γ, own i γ a).
+Lemma own_alloc a E : ✓ a → True ⊑ pvs E E (∃ γ, own i γ a).
 Proof.
   intros Ha.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ γ, m = to_globalC i γ a) ∧ ownG m)%I).
@@ -86,7 +90,7 @@ Proof.
     by rewrite -(exist_intro γ).
 Qed.
 
-Lemma own_updateP E γ a P :
+Lemma own_updateP γ a P E :
   a ~~>: P → own i γ a ⊑ pvs E E (∃ a', ■ P a' ∧ own i γ a').
 Proof.
   intros Ha.
@@ -98,7 +102,7 @@ Proof.
     rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
 Qed.
 
-Lemma own_updateP_empty `{Empty A, !CMRAIdentity A} E γ a P :
+Lemma own_updateP_empty `{Empty A, !CMRAIdentity A} γ a P E :
   ∅ ~~>: P → True ⊑ pvs E E (∃ a, ■ P a ∧ own i γ a).
 Proof.
   intros Hemp.
@@ -110,9 +114,9 @@ Proof.
     rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
 Qed.
 
-Lemma own_update E γ a a' : a ~~> a' → own i γ a ⊑ pvs E E (own i γ a').
+Lemma own_update γ a a' E : a ~~> a' → own i γ a ⊑ pvs E E (own i γ a').
 Proof.
-  intros; rewrite (own_updateP E _ _ (a' =)); last by apply cmra_update_updateP.
+  intros; rewrite (own_updateP _ _ (a' =)); last by apply cmra_update_updateP.
   by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.const_elim_l=> ->.
 Qed.
 End global.
