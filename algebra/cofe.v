@@ -23,7 +23,7 @@ Tactic Notation "cofe_subst" :=
 
 Record chain (A : Type) `{Dist A} := {
   chain_car :> nat → A;
-  chain_cauchy n i : n ≤ i → chain_car n ≡{n}≡ chain_car i
+  chain_cauchy n i : n < i → chain_car i ≡{n}≡ chain_car (S n)
 }.
 Arguments chain_car {_ _} _ _.
 Arguments chain_cauchy {_ _} _ _ _ _.
@@ -33,11 +33,10 @@ Record CofeMixin A `{Equiv A, Compl A} := {
   mixin_equiv_dist x y : x ≡ y ↔ ∀ n, x ≡{n}≡ y;
   mixin_dist_equivalence n : Equivalence (dist n);
   mixin_dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y;
-  mixin_dist_0 x y : x ≡{0}≡ y;
-  mixin_conv_compl (c : chain A) n : compl c ≡{n}≡ c n
+  mixin_conv_compl (c : chain A) n : compl c ≡{n}≡ c (S n)
 }.
 Class Contractive `{Dist A, Dist B} (f : A -> B) :=
-  contractive n : Proper (dist n ==> dist (S n)) f.
+  contractive n x y : (∀ i, i < n → x ≡{i}≡ y) → f x ≡{n}≡ f y.
 
 (** Bundeled version *)
 Structure cofeT := CofeT {
@@ -66,13 +65,9 @@ Section cofe_mixin.
   Proof. apply (mixin_dist_equivalence _ (cofe_mixin A)). Qed.
   Lemma dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y.
   Proof. apply (mixin_dist_S _ (cofe_mixin A)). Qed.
-  Lemma dist_0 x y : x ≡{0}≡ y.
-  Proof. apply (mixin_dist_0 _ (cofe_mixin A)). Qed.
-  Lemma conv_compl (c : chain A) n : compl c ≡{n}≡ c n.
+  Lemma conv_compl (c : chain A) n : compl c ≡{n}≡ c (S n).
   Proof. apply (mixin_conv_compl _ (cofe_mixin A)). Qed.
 End cofe_mixin.
-
-Hint Extern 0 (_ ≡{0}≡ _) => apply dist_0.
 
 (** General properties *)
 Section cofe.
@@ -109,13 +104,12 @@ Section cofe.
      unfold Proper, respectful; setoid_rewrite equiv_dist.
      by intros x1 x2 Hx y1 y2 Hy n; rewrite (Hx n) (Hy n).
   Qed.
-  Lemma compl_ne (c1 c2: chain A) n : c1 n ≡{n}≡ c2 n → compl c1 ≡{n}≡ compl c2.
-  Proof. intros. by rewrite (conv_compl c1 n) (conv_compl c2 n). Qed.
-  Lemma compl_ext (c1 c2 : chain A) : (∀ i, c1 i ≡ c2 i) → compl c1 ≡ compl c2.
-  Proof. setoid_rewrite equiv_dist; naive_solver eauto using compl_ne. Qed.
+  Lemma contractive_S {B : cofeT} {f : A → B} `{!Contractive f} n x y :
+    x ≡{n}≡ y → f x ≡{S n}≡ f y.
+  Proof. eauto using contractive, dist_le with omega. Qed.
   Global Instance contractive_ne {B : cofeT} (f : A → B) `{!Contractive f} n :
     Proper (dist n ==> dist n) f | 100.
-  Proof. by intros x1 x2 ?; apply dist_S, contractive. Qed.
+  Proof. by intros x y ?; apply dist_S, contractive_S. Qed.
   Global Instance contractive_proper {B : cofeT} (f : A → B) `{!Contractive f} :
     Proper ((≡) ==> (≡)) f | 100 := _.
 End cofe.
@@ -127,20 +121,21 @@ Program Definition chain_map `{Dist A, Dist B} (f : A → B)
 Next Obligation. by intros ? A ? B f Hf c n i ?; apply Hf, chain_cauchy. Qed.
 
 (** Timeless elements *)
-Class Timeless {A : cofeT} (x : A) := timeless y : x ≡{1}≡ y → x ≡ y.
+Class Timeless {A : cofeT} (x : A) := timeless y : x ≡{0}≡ y → x ≡ y.
 Arguments timeless {_} _ {_} _ _.
-Lemma timeless_S {A : cofeT} (x y : A) n : Timeless x → x ≡ y ↔ x ≡{S n}≡ y.
+Lemma timeless_iff {A : cofeT} (x y : A) n : Timeless x → x ≡ y ↔ x ≡{n}≡ y.
 Proof.
   split; intros; [by apply equiv_dist|].
-  apply (timeless _), dist_le with (S n); auto with lia.
+  apply (timeless _), dist_le with n; auto with lia.
 Qed.
 
 (** Fixpoint *)
 Program Definition fixpoint_chain {A : cofeT} `{Inhabited A} (f : A → A)
-  `{!Contractive f} : chain A := {| chain_car i := Nat.iter i f inhabitant |}.
+  `{!Contractive f} : chain A := {| chain_car i := Nat.iter (S i) f inhabitant |}.
 Next Obligation.
-  intros A ? f ? n; induction n as [|n IH]; intros i ?; first done.
-  destruct i as [|i]; simpl; first lia; apply contractive, IH; auto with lia.
+  intros A ? f ? n. induction n as [|n IH]; intros [|i] ?; simpl; try omega.
+  * apply contractive; auto with omega.
+  * apply contractive_S, IH; auto with omega.
 Qed.
 Program Definition fixpoint {A : cofeT} `{Inhabited A} (f : A → A)
   `{!Contractive f} : A := compl (fixpoint_chain f).
@@ -149,17 +144,16 @@ Section fixpoint.
   Context {A : cofeT} `{Inhabited A} (f : A → A) `{!Contractive f}.
   Lemma fixpoint_unfold : fixpoint f ≡ f (fixpoint f).
   Proof.
-    apply equiv_dist; intros n; unfold fixpoint.
-    rewrite (conv_compl (fixpoint_chain f) n).
-    by rewrite {1}(chain_cauchy (fixpoint_chain f) n (S n)); last lia.
+    apply equiv_dist=>n; rewrite /fixpoint (conv_compl (fixpoint_chain f) n) //.
+    induction n as [|n IH]; simpl; eauto using contractive, dist_le with omega.
   Qed.
   Lemma fixpoint_ne (g : A → A) `{!Contractive g} n :
     (∀ z, f z ≡{n}≡ g z) → fixpoint f ≡{n}≡ fixpoint g.
   Proof.
-    intros Hfg; unfold fixpoint.
-    rewrite (conv_compl (fixpoint_chain f) n) (conv_compl (fixpoint_chain g) n).
-    induction n as [|n IH]; simpl in *; first done.
-    rewrite Hfg; apply contractive, IH; auto using dist_S.
+    intros Hfg. rewrite /fixpoint
+      (conv_compl (fixpoint_chain f) n) (conv_compl (fixpoint_chain g) n) /=.
+    induction n as [|n IH]; simpl in *; [by rewrite !Hfg|].
+    rewrite Hfg; apply contractive_S, IH; auto using dist_S.
   Qed.
   Lemma fixpoint_proper (g : A → A) `{!Contractive g} :
     (∀ x, f x ≡ g x) → fixpoint f ≡ fixpoint g.
@@ -188,9 +182,8 @@ Section cofe_mor.
   Program Instance cofe_mor_compl : Compl (cofeMor A B) := λ c,
     {| cofe_mor_car x := compl (fun_chain c x) |}.
   Next Obligation.
-    intros c n x y Hx.
-    rewrite (conv_compl (fun_chain c x) n) (conv_compl (fun_chain c y) n) /= Hx.
-    apply (chain_cauchy c); lia.
+    intros c n x y Hx. by rewrite (conv_compl (fun_chain c x) n)
+      (conv_compl (fun_chain c y) n) /= Hx.
   Qed.
   Definition cofe_mor_cofe_mixin : CofeMixin (cofeMor A B).
   Proof.
@@ -202,9 +195,8 @@ Section cofe_mor.
       + by intros f g ? x.
       + by intros f g h ?? x; transitivity (g x).
     * by intros n f g ? x; apply dist_S.
-    * by intros f g x.
     * intros c n x; simpl.
-      rewrite (conv_compl (fun_chain c x) n); apply (chain_cauchy c); lia.
+      by rewrite (conv_compl (fun_chain c x) n) /=.
   Qed.
   Canonical Structure cofe_mor : cofeT := CofeT cofe_mor_cofe_mixin.
 
@@ -262,7 +254,6 @@ Section product.
       rewrite !equiv_dist; naive_solver.
     * apply _.
     * by intros n [x1 y1] [x2 y2] [??]; split; apply dist_S.
-    * by split.
     * intros c n; split. apply (conv_compl (chain_map fst c) n).
       apply (conv_compl (chain_map snd c) n).
   Qed.
@@ -288,17 +279,16 @@ Proof. intros f f' Hf g g' Hg [??]; split; [apply Hf|apply Hg]. Qed.
 (** Discrete cofe *)
 Section discrete_cofe.
   Context `{Equiv A, @Equivalence A (≡)}.
-  Instance discrete_dist : Dist A := λ n x y,
-    match n with 0 => True | S n => x ≡ y end.
+  Instance discrete_dist : Dist A := λ n x y, x ≡ y.
   Instance discrete_compl : Compl A := λ c, c 1.
   Definition discrete_cofe_mixin : CofeMixin A.
   Proof.
     split.
-    * intros x y; split; [by intros ? []|intros Hn; apply (Hn 1)].
-    * intros [|n]; [done|apply _].
-    * by intros [|n].
+    * intros x y; split; [done|intros Hn; apply (Hn 0)].
     * done.
-    * intros c [|n]; [done|apply (chain_cauchy c 1 (S n)); lia].
+    * done.
+    * intros c n. rewrite /compl /discrete_compl /=.
+      symmetry; apply (chain_cauchy c 0 (S n)); omega.
   Qed.
   Definition discreteC : cofeT := CofeT discrete_cofe_mixin.
   Global Instance discrete_timeless (x : A) : Timeless (x : discreteC).
@@ -314,11 +304,11 @@ Canonical Structure natC := leibnizC nat.
 Canonical Structure boolC := leibnizC bool.
 
 (** Later *)
-Inductive later (A : Type) : Type := Later { later_car : A }.
+Inductive later (A : Type) : Type := Next { later_car : A }.
 Add Printing Constructor later.
-Arguments Later {_} _.
+Arguments Next {_} _.
 Arguments later_car {_} _.
-Lemma later_eta {A} (x : later A) : Later (later_car x) = x.
+Lemma later_eta {A} (x : later A) : Next (later_car x) = x.
 Proof. by destruct x. Qed.
 
 Section later.
@@ -329,7 +319,7 @@ Section later.
   Program Definition later_chain (c : chain (later A)) : chain A :=
     {| chain_car n := later_car (c (S n)) |}.
   Next Obligation. intros c n i ?; apply (chain_cauchy c (S n)); lia. Qed.
-  Instance later_compl : Compl (later A) := λ c, Later (compl (later_chain c)).
+  Instance later_compl : Compl (later A) := λ c, Next (compl (later_chain c)).
   Definition later_cofe_mixin : CofeMixin (later A).
   Proof.
     split.
@@ -340,20 +330,19 @@ Section later.
       + by intros [x] [y].
       + by intros [x] [y] [z] ??; transitivity y.
     * intros [|n] [x] [y] ?; [done|]; unfold dist, later_dist; by apply dist_S.
-    * done.
     * intros c [|n]; [done|by apply (conv_compl (later_chain c) n)].
   Qed.
   Canonical Structure laterC : cofeT := CofeT later_cofe_mixin.
-  Global Instance Later_contractive : Contractive (@Later A).
-  Proof. by intros n ??. Qed.
-  Global Instance Later_inj n : Injective (dist n) (dist (S n)) (@Later A).
+  Global Instance Next_contractive : Contractive (@Next A).
+  Proof. intros [|n] x y Hxy; [done|]; apply Hxy; lia. Qed.
+  Global Instance Later_inj n : Injective (dist n) (dist (S n)) (@Next A).
   Proof. by intros x y. Qed.
 End later.
 
 Arguments laterC : clear implicits.
 
 Definition later_map {A B} (f : A → B) (x : later A) : later B :=
-  Later (f (later_car x)).
+  Next (f (later_car x)).
 Instance later_map_ne {A B : cofeT} (f : A → B) n :
   Proper (dist (pred n) ==> dist (pred n)) f →
   Proper (dist n ==> dist n) (later_map f) | 0.
@@ -366,4 +355,4 @@ Proof. by destruct x. Qed.
 Definition laterC_map {A B} (f : A -n> B) : laterC A -n> laterC B :=
   CofeMor (later_map f).
 Instance laterC_map_contractive (A B : cofeT) : Contractive (@laterC_map A B).
-Proof. intros n f g Hf n'; apply Hf. Qed.
+Proof. intros [|n] f g Hf n'; [done|]; apply Hf; lia. Qed.

@@ -3,8 +3,9 @@ Require Import program_logic.wsat program_logic.ownership.
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 100 (@eq coPset _ _) => eassumption || solve_elem_of.
 Local Hint Extern 10 (✓{_} _) =>
-  repeat match goal with H : wsat _ _ _ _ |- _ => apply wsat_valid in H end;
-  solve_validN.
+  repeat match goal with
+  | H : wsat _ _ _ _ |- _ => apply wsat_valid in H; last omega
+  end; solve_validN.
 
 Section adequacy.
 Context {Λ : language} {Σ : iFunctor}.
@@ -67,7 +68,7 @@ Lemma ht_adequacy_own Q e1 t2 σ1 m σ2 :
   ✓m →
   {{ ownP σ1 ★ ownG m }} e1 @ coPset_all {{ Q }} →
   rtc step ([e1],σ1) (t2,σ2) →
-  ∃ rs2 Qs', wptp 3 t2 (Q :: Qs') rs2 ∧ wsat 3 coPset_all σ2 (big_op rs2).
+  ∃ rs2 Qs', wptp 2 t2 (Q :: Qs') rs2 ∧ wsat 2 coPset_all σ2 (big_op rs2).
 Proof.
   intros Hv ? [k ?]%rtc_nsteps.
   eapply ht_adequacy_steps with (r1 := (Res ∅ (Excl σ1) (Some m))); eauto; [|].
@@ -88,7 +89,7 @@ Proof.
              as (rs2&Qs&Hwptp&?); auto.
   { by rewrite -(ht_mask_weaken E coPset_all). }
   inversion Hwptp as [|?? r ?? rs Hwp _]; clear Hwptp; subst.
-  apply wp_value_inv in Hwp; destruct (Hwp (big_op rs) 3 ∅ σ2) as [r' []]; auto.
+  apply wp_value_inv in Hwp; destruct (Hwp (big_op rs) 2 ∅ σ2) as [r' []]; auto.
   by rewrite right_id_L.
 Qed.
 Lemma ht_adequacy_reducible E Q e1 e2 t2 σ1 m σ2 :
@@ -100,9 +101,9 @@ Proof.
   intros Hv ? Hs [i ?]%elem_of_list_lookup He.
   destruct (ht_adequacy_own Q e1 t2 σ1 m σ2) as (rs2&Qs&?&?); auto.
   { by rewrite -(ht_mask_weaken E coPset_all). }
-  destruct (Forall3_lookup_l (λ e Q r, wp coPset_all e Q 3 r) t2
+  destruct (Forall3_lookup_l (λ e Q r, wp coPset_all e Q 2 r) t2
     (Q :: Qs) rs2 i e2) as (Q'&r2&?&?&Hwp); auto.
-  destruct (wp_step_inv coPset_all ∅ Q' e2 2 3 σ2 r2 (big_op (delete i rs2)));
+  destruct (wp_step_inv coPset_all ∅ Q' e2 1 2 σ2 r2 (big_op (delete i rs2)));
     rewrite ?right_id_L ?big_op_delete; auto.
 Qed.
 Theorem ht_adequacy_safe E Q e1 t2 σ1 m σ2 :

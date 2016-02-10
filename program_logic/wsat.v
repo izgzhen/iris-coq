@@ -12,7 +12,7 @@ Record wsat_pre {Λ Σ} (n : nat) (E : coPset)
   wsat_pre_dom i : is_Some (rs !! i) → i ∈ E ∧ is_Some (wld r !! i);
   wsat_pre_wld i P :
     i ∈ E →
-    wld r !! i ≡{S n}≡ Some (to_agree (Later (iProp_unfold P))) →
+    wld r !! i ≡{S n}≡ Some (to_agree (Next (iProp_unfold P))) →
     ∃ r', rs !! i = Some r' ∧ P n r'
 }.
 Arguments wsat_pre_valid {_ _ _ _ _ _ _} _.
@@ -50,22 +50,22 @@ Proof.
   intros [rs [Hval Hσ HE Hwld]] ?; exists rs; constructor; auto.
   intros i P ? HiP; destruct (wld (r ⋅ big_opM rs) !! i) as [P'|] eqn:HP';
     [apply (injective Some) in HiP|inversion_clear HiP].
-  assert (P' ≡{S n}≡ to_agree $ Later $ iProp_unfold $
+  assert (P' ≡{S n}≡ to_agree $ Next $ iProp_unfold $
                        iProp_fold $ later_car $ P' (S n)) as HPiso.
   { rewrite iProp_unfold_fold later_eta to_agree_car //.
     apply (map_lookup_validN _ (wld (r ⋅ big_opM rs)) i); rewrite ?HP'; auto. }
   assert (P ≡{n'}≡ iProp_fold (later_car (P' (S n)))) as HPP'.
-  { apply (injective iProp_unfold), (injective Later), (injective to_agree).
+  { apply (injective iProp_unfold), (injective Next), (injective to_agree).
     by rewrite -HiP -(dist_le _ _ _ _ HPiso). }
   destruct (Hwld i (iProp_fold (later_car (P' (S n))))) as (r'&?&?); auto.
   { by rewrite HP' -HPiso. }
   assert (✓{S n} r') by (apply (big_opM_lookup_valid _ rs i); auto).
   exists r'; split; [done|apply HPP', uPred_weaken with r' n; auto].
 Qed.
-Lemma wsat_valid n E σ r : wsat n E σ r → ✓{n} r.
+Lemma wsat_valid n E σ r : n ≠ 0 → wsat n E σ r → ✓{n} r.
 Proof.
-  destruct n; [done|intros [rs ?]].
-  eapply cmra_validN_op_l, wsat_pre_valid; eauto.
+  destruct n; first done.
+  intros _ [rs ?]; eapply cmra_validN_op_l, wsat_pre_valid; eauto.
 Qed.
 Lemma wsat_init k E σ mm : ✓{S k} mm → wsat (S k) E σ (Res ∅ (Excl σ) mm).
 Proof.
@@ -77,7 +77,7 @@ Proof.
   * intros i P ?; rewrite /= left_id lookup_empty; inversion_clear 1.
 Qed.
 Lemma wsat_open n E σ r i P :
-  wld r !! i ≡{S n}≡ Some (to_agree (Later (iProp_unfold P))) → i ∉ E →
+  wld r !! i ≡{S n}≡ Some (to_agree (Next (iProp_unfold P))) → i ∉ E →
   wsat (S n) ({[i]} ∪ E) σ r → ∃ rP, wsat (S n) E σ (rP ⋅ r) ∧ P n rP.
 Proof.
   intros HiP Hi [rs [Hval Hσ HE Hwld]].
@@ -92,7 +92,7 @@ Proof.
     apply Hwld; [solve_elem_of +Hj|done].
 Qed.
 Lemma wsat_close n E σ r i P rP :
-  wld rP !! i ≡{S n}≡ Some (to_agree (Later (iProp_unfold P))) → i ∉ E →
+  wld rP !! i ≡{S n}≡ Some (to_agree (Next (iProp_unfold P))) → i ∉ E →
   wsat (S n) E σ (rP ⋅ r) → P n rP → wsat (S n) ({[i]} ∪ E) σ r.
 Proof.
   intros HiP HiE [rs [Hval Hσ HE Hwld]] ?.
@@ -106,7 +106,7 @@ Proof.
   * intros j P'; rewrite Hr elem_of_union elem_of_singleton=>-[?|?]; subst.
     + rewrite !lookup_wld_op_l ?HiP; auto=> HP.
       apply (injective Some), (injective to_agree),
-        (injective Later), (injective iProp_unfold) in HP.
+        (injective Next), (injective iProp_unfold) in HP.
       exists rP; split; [rewrite lookup_insert|apply HP]; auto.
     + intros. destruct (Hwld j P') as (r'&?&?); auto.
       exists r'; rewrite lookup_insert_ne; naive_solver.
@@ -117,7 +117,7 @@ Lemma wsat_update_pst n E σ1 σ1' r rf :
 Proof.
   intros Hpst_r [rs [(?&?&?) Hpst HE Hwld]]; simpl in *.
   assert (pst rf ⋅ pst (big_opM rs) = ∅) as Hpst'.
-  { by apply: (excl_validN_inv_l n σ1); rewrite -Hpst_r associative. }
+  { by apply: (excl_validN_inv_l (S n) σ1); rewrite -Hpst_r associative. }
   assert (σ1' = σ1) as ->.
   { apply leibniz_equiv, (timeless _), dist_le with (S n); auto.
     apply (injective Excl).
@@ -130,14 +130,14 @@ Lemma wsat_update_gst n E σ r rf mm1 (P : iGst Λ Σ → Prop) :
   wsat (S n) E σ (r ⋅ rf) → ∃ m2, wsat (S n) E σ (update_gst m2 r ⋅ rf) ∧ P m2.
 Proof.
   intros [mf Hr] Hup [rs [(?&?&?) Hσ HE Hwld]].
-  destruct (Hup (mf ⋅ gst (rf ⋅ big_opM rs)) n) as ([m2|]&?&Hval'); try done.
+  destruct (Hup (mf ⋅ gst (rf ⋅ big_opM rs)) (S n)) as ([m2|]&?&Hval'); try done.
   { by rewrite /= (associative _ mm1) -Hr associative. }
   exists m2; split; [exists rs; split; split_ands'; auto|done].
 Qed.
 Lemma wsat_alloc n E1 E2 σ r P rP :
   ¬set_finite E1 → P n rP → wsat (S n) (E1 ∪ E2) σ (rP ⋅ r) →
   ∃ i, wsat (S n) (E1 ∪ E2) σ
-         (Res {[i ↦ to_agree (Later (iProp_unfold P))]} ∅ ∅ ⋅ r) ∧
+         (Res {[i ↦ to_agree (Next (iProp_unfold P))]} ∅ ∅ ⋅ r) ∧
        wld r !! i = None ∧ i ∈ E1.
 Proof.
   intros HE1 ? [rs [Hval Hσ HE Hwld]].
@@ -167,7 +167,7 @@ Proof.
   * intros j P'; rewrite -associative Hr; destruct (decide (j=i)) as [->|].
     + rewrite /= !lookup_op Hri HrPi Hrsi right_id lookup_singleton=>? HP.
       apply (injective Some), (injective to_agree),
-        (injective Later), (injective iProp_unfold) in HP.
+        (injective Next), (injective iProp_unfold) in HP.
       exists rP; rewrite lookup_insert; split; [|apply HP]; auto.
     + rewrite /= lookup_op lookup_singleton_ne // left_id=> ??.
       destruct (Hwld j P') as [r' ?]; auto.

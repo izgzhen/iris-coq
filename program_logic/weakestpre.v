@@ -5,8 +5,9 @@ Local Hint Extern 100 (@eq coPset _ _) => eassumption || solve_elem_of.
 Local Hint Extern 100 (_ ∉ _) => solve_elem_of.
 Local Hint Extern 100 (@subseteq coPset _ _ _) => solve_elem_of.
 Local Hint Extern 10 (✓{_} _) =>
-  repeat match goal with H : wsat _ _ _ _ |- _ => apply wsat_valid in H end;
-  solve_validN.
+  repeat match goal with
+  | H : wsat _ _ _ _ |- _ => apply wsat_valid in H; last omega
+  end; solve_validN.
 
 Record wp_go {Λ Σ} (E : coPset) (Q Qfork : expr Λ → nat → iRes Λ Σ → Prop)
     (k : nat) (rf : iRes Λ Σ) (e1 : expr Λ) (σ1 : state Λ) := {
@@ -24,7 +25,7 @@ CoInductive wp_pre {Λ Σ} (E : coPset)
   | wp_pre_step n r1 e1 :
      to_val e1 = None →
      (∀ rf k Ef σ1,
-       1 < k < n → E ∩ Ef = ∅ →
+       0 < k < n → E ∩ Ef = ∅ →
        wsat (S k) (E ∪ Ef) σ1 (r1 ⋅ rf) →
        wp_go (E ∪ Ef) (wp_pre E Q)
                       (wp_pre coPset_all (λ _, True%I)) k rf e1 σ1) →
@@ -35,11 +36,6 @@ Next Obligation.
   intros Λ Σ E e Q r1 r2 n Hwp Hr.
   destruct Hwp as [|n r1 e2 ? Hgo]; constructor; rewrite -?Hr; auto.
   intros rf k Ef σ1 ?; rewrite -(dist_le _ _ _ _ Hr); naive_solver.
-Qed.
-Next Obligation.
-  intros Λ Σ E e Q r; destruct (to_val e) as [v|] eqn:?.
-  * by rewrite -(of_to_val e v) //; constructor.
-  * constructor; auto with lia.
 Qed.
 Next Obligation.
   intros Λ Σ E e Q r1 r2 n1; revert Q E e r1 r2.
@@ -104,7 +100,7 @@ Proof.
   by inversion 1 as [|??? He]; [|rewrite ?to_of_val in He]; simplify_equality.
 Qed.
 Lemma wp_step_inv E Ef Q e k n σ r rf :
-  to_val e = None → 1 < k < n → E ∩ Ef = ∅ →
+  to_val e = None → 0 < k < n → E ∩ Ef = ∅ →
   wp E e Q n r → wsat (S k) (E ∪ Ef) σ (r ⋅ rf) →
   wp_go (E ∪ Ef) (λ e, wp E e Q) (λ e, wp coPset_all e (λ _, True%I)) k rf e σ.
 Proof. intros He; destruct 3; [by rewrite ?to_of_val in He|eauto]. Qed.
@@ -113,7 +109,7 @@ Lemma wp_value E Q v : Q v ⊑ wp E (of_val v) Q.
 Proof. by constructor; apply pvs_intro. Qed.
 Lemma pvs_wp E e Q : pvs E E (wp E e Q) ⊑ wp E e Q.
 Proof.
-  intros r [|n] ?; [done|]; intros Hvs.
+  intros r n ? Hvs.
   destruct (to_val e) as [v|] eqn:He; [apply of_to_val in He; subst|].
   { constructor; eapply pvs_trans', pvs_mono, Hvs; eauto.
     intros ???; apply wp_value_inv. }
@@ -171,8 +167,8 @@ Lemma wp_frame_later_r E e Q R :
   to_val e = None → (wp E e Q ★ ▷ R) ⊑ wp E e (λ v, Q v ★ R).
 Proof.
   intros He r' n Hvalid (r&rR&Hr&Hwp&?); revert Hvalid; rewrite Hr; clear Hr.
-  destruct Hwp as [|[|n] r e ? Hgo]; [by rewrite to_of_val in He|done|].
-  constructor; [done|intros rf k Ef σ1 ???].
+  destruct Hwp as [|n r e ? Hgo]; [by rewrite to_of_val in He|].
+  constructor; [done|]=>rf k Ef σ1 ???; destruct n as [|n]; first omega.
   destruct (Hgo (rR⋅rf) k Ef σ1) as [Hsafe Hstep];rewrite ?(associative _);auto.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.

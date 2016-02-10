@@ -37,7 +37,6 @@ Section iprod_cofe.
       + by intros f g ? x.
       + by intros f g h ?? x; transitivity (g x).
     * intros n f g Hfg x; apply dist_S, Hfg.
-    * by intros f g x.
     * intros c n x.
       rewrite /compl /iprod_compl (conv_compl (iprod_chain c x) n).
       apply (chain_cauchy c); lia.
@@ -141,7 +140,6 @@ Section iprod_cmra.
     * by intros n f1 f2 Hf x; rewrite iprod_lookup_unit (Hf x).
     * by intros n f1 f2 Hf ? x; rewrite -(Hf x).
     * by intros n f f' Hf g g' Hg i; rewrite iprod_lookup_minus (Hf i) (Hg i).
-    * by intros f x.
     * intros n f Hf x; apply cmra_validN_S, Hf.
     * by intros f1 f2 f3 x; rewrite iprod_lookup_op associative.
     * by intros f1 f2 x; rewrite iprod_lookup_op commutative.

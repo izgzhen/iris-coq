@@ -23,11 +23,9 @@ Proof.
     + by intros m1 m2 ? k.
     + by intros m1 m2 m3 ?? k; transitivity (m2 !! k).
   * by intros n m1 m2 ? k; apply dist_S.
-  * by intros m1 m2 k.
-  * intros c n k; unfold compl, map_compl; rewrite lookup_imap.
-    destruct (decide (n = 0)) as [->|]; [constructor|].
-    feed inversion (λ H, chain_cauchy c 1 n H k); simpl; auto with lia.
-    by rewrite conv_compl; simpl; apply reflexive_eq.
+  * intros c n k; rewrite /compl /map_compl lookup_imap.
+    feed inversion (λ H, chain_cauchy c 0 (S n) H k); simpl; auto with lia.
+    by rewrite conv_compl /=; apply reflexive_eq.
 Qed.
 Canonical Structure mapC : cofeT := CofeT map_cofe_mixin.
 
@@ -60,7 +58,7 @@ Qed.
 Global Instance map_lookup_timeless m i : Timeless m → Timeless (m !! i).
 Proof.
   intros ? [x|] Hx; [|by symmetry; apply (timeless _)].
-  assert (m ≡{1}≡ <[i:=x]> m)
+  assert (m ≡{0}≡ <[i:=x]> m)
     by (by symmetry in Hx; inversion Hx; cofe_subst; rewrite insert_id).
   by rewrite (timeless m (<[i:=x]>m)) // lookup_insert.
 Qed.
@@ -116,7 +114,6 @@ Proof.
   * by intros n m1 m2 Hm i; rewrite !lookup_unit (Hm i).
   * by intros n m1 m2 Hm ? i; rewrite -(Hm i).
   * by intros n m1 m1' Hm1 m2 m2' Hm2 i; rewrite !lookup_minus (Hm1 i) (Hm2 i).
-  * by intros m i.
   * intros n m Hm i; apply cmra_validN_S, Hm.
   * by intros m1 m2 m3 i; rewrite !lookup_op associative.
   * by intros m1 m2 i; rewrite !lookup_op commutative.

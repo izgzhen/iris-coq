@@ -3,8 +3,9 @@ Require Import program_logic.wsat program_logic.ownership.
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 100 (@eq coPset _ _) => solve_elem_of.
 Local Hint Extern 10 (✓{_} _) =>
-  repeat match goal with H : wsat _ _ _ _ |- _ => apply wsat_valid in H end;
-  solve_validN.
+  repeat match goal with
+  | H : wsat _ _ _ _ |- _ => apply wsat_valid in H; last omega
+  end; solve_validN.
 
 Section lifting.
 Context {Λ : language} {Σ : iFunctor}.
@@ -45,10 +46,10 @@ Lemma wp_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) Q e1 :
   (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →
   (▷ ∀ e2 ef, ■ φ e2 ef → wp E e2 Q ★ wp_fork ef) ⊑ wp E e1 Q.
 Proof.
-  intros He Hsafe Hstep r [|n] ?; [done|]; intros Hwp; constructor; auto.
-  intros rf k Ef σ1 ???; split; [done|].
+  intros He Hsafe Hstep r n ? Hwp; constructor; auto.
+  intros rf k Ef σ1 ???; split; [done|]. destruct n as [|n]; first lia.
   intros e2 σ2 ef ?; destruct (Hstep σ1 e2 σ2 ef); auto; subst.
-  destruct (Hwp e2 ef r k) as (r1&r2&Hr&?&?); auto; [by destruct k|].
+  destruct (Hwp e2 ef r k) as (r1&r2&Hr&?&?); auto.
   exists r1,r2; split_ands; [rewrite -Hr| |by intros ? ->]; eauto using wsat_le.
 Qed.
 
@@ -106,4 +107,3 @@ Proof.
 Qed.
 
 End lifting.
-
