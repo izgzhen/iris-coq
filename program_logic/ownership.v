@@ -1,7 +1,7 @@
 Require Export program_logic.model.
 
 Definition ownI {Λ Σ} (i : positive) (P : iProp Λ Σ) : iProp Λ Σ :=
-  uPred_own (Res {[ i ↦ to_agree (Later (iProp_unfold P)) ]} ∅ ∅).
+  uPred_own (Res {[ i ↦ to_agree (Next (iProp_unfold P)) ]} ∅ ∅).
 Arguments ownI {_ _} _ _%I.
 Definition ownP {Λ Σ} (σ: state Λ) : iProp Λ Σ := uPred_own (Res ∅ (Excl σ) ∅).
 Definition ownG {Λ Σ} (m: iGst Λ Σ) : iProp Λ Σ := uPred_own (Res ∅ ∅ (Some m)).
@@ -21,9 +21,9 @@ Implicit Types m : iGst Λ Σ.
 (* Invariants *)
 Global Instance ownI_contractive i : Contractive (@ownI Λ Σ i).
 Proof.
-  intros n P Q HPQ.
-  apply (_: Proper (_ ==> _) iProp_unfold), Later_contractive in HPQ.
-  by unfold ownI; rewrite HPQ.
+  intros n P Q HPQ. rewrite /ownI.
+  apply uPred.own_ne, Res_ne; auto; apply singleton_ne, to_agree_ne.
+  by apply Next_contractive=> j ?; rewrite (HPQ j).
 Qed.
 Lemma always_ownI i P : (□ ownI i P)%I ≡ ownI i P.
 Proof.
@@ -65,7 +65,7 @@ Proof. rewrite /ownG; apply _. Qed.
 (* inversion lemmas *)
 Lemma ownI_spec r n i P :
   ✓{n} r →
-  (ownI i P) n r ↔ wld r !! i ≡{n}≡ Some (to_agree (Later (iProp_unfold P))).
+  (ownI i P) n r ↔ wld r !! i ≡{n}≡ Some (to_agree (Next (iProp_unfold P))).
 Proof.
   intros [??]; rewrite /uPred_holds/=res_includedN/=singleton_includedN; split.
   * intros [(P'&Hi&HP) _]; rewrite Hi.

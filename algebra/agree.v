@@ -5,10 +5,9 @@ Local Hint Extern 10 (_ ≤ _) => omega.
 Record agree (A : Type) : Type := Agree {
   agree_car :> nat → A;
   agree_is_valid : nat → Prop;
-  agree_valid_0 : agree_is_valid 0;
   agree_valid_S n : agree_is_valid (S n) → agree_is_valid n
 }.
-Arguments Agree {_} _ _ _ _.
+Arguments Agree {_} _ _ _.
 Arguments agree_car {_} _ _.
 Arguments agree_is_valid {_} _ _.
 
@@ -27,10 +26,9 @@ Instance agree_dist : Dist (agree A) := λ n x y,
   (∀ n', n' ≤ n → agree_is_valid x n' ↔ agree_is_valid y n') ∧
   (∀ n', n' ≤ n → agree_is_valid x n' → x n' ≡{n'}≡ y n').
 Program Instance agree_compl : Compl (agree A) := λ c,
-  {| agree_car n := c n n; agree_is_valid n := agree_is_valid (c n) n |}.
-Next Obligation. intros; apply agree_valid_0. Qed.
+  {| agree_car n := c (S n) n; agree_is_valid n := agree_is_valid (c (S n)) n |}.
 Next Obligation.
-  intros c n ?; apply (chain_cauchy c n (S n)), agree_valid_S; auto.
+  intros c n ?. apply (chain_cauchy c n (S (S n))), agree_valid_S; auto.
 Qed.
 Definition agree_cofe_mixin : CofeMixin (agree A).
 Proof.
@@ -45,9 +43,8 @@ Proof.
       - transitivity (agree_is_valid y n'). by apply Hxy. by apply Hyz.
       - transitivity (y n'). by apply Hxy. by apply Hyz, Hxy.
   * intros n x y Hxy; split; intros; apply Hxy; auto.
-  * intros x y; split; intros n'; rewrite Nat.le_0_r; intros ->; [|done].
-    by split; intros; apply agree_valid_0.
-  * by intros c n; split; intros; apply (chain_cauchy c).
+  * intros c n; apply and_wlog_r; intros;
+      symmetry; apply (chain_cauchy c); naive_solver.
 Qed.
 Canonical Structure agreeC := CofeT agree_cofe_mixin.
 
@@ -59,7 +56,6 @@ Proof. by intros [? Hx]; apply Hx. Qed.
 Program Instance agree_op : Op (agree A) := λ x y,
   {| agree_car := x;
      agree_is_valid n := agree_is_valid x n ∧ agree_is_valid y n ∧ x ≡{n}≡ y |}.
-Next Obligation. by intros; simpl; split_ands; try apply agree_valid_0. Qed.
 Next Obligation. naive_solver eauto using agree_valid_S, dist_S. Qed.
 Instance agree_unit : Unit (agree A) := id.
 Instance agree_minus : Minus (agree A) := λ x y, x.
@@ -100,8 +96,6 @@ Definition agree_cmra_mixin : CMRAMixin (agree A).
 Proof.
   split; try (apply _ || done).
   * by intros n x1 x2 Hx y1 y2 Hy.
-  * intros x; split; [apply agree_valid_0|].
-    by intros n'; rewrite Nat.le_0_r; intros ->.
   * intros n x [? Hx]; split; [by apply agree_valid_S|intros n' ?].
     rewrite (Hx n'); last auto.
     symmetry; apply dist_le with n; try apply Hx; auto.
@@ -142,7 +136,7 @@ Arguments agreeRA : clear implicits.
 
 Program Definition agree_map {A B} (f : A → B) (x : agree A) : agree B :=
   {| agree_car n := f (x n); agree_is_valid := agree_is_valid x |}.
-Solve Obligations with auto using agree_valid_0, agree_valid_S.
+Solve Obligations with auto using agree_valid_S.
 Lemma agree_map_id {A} (x : agree A) : agree_map id x = x.
 Proof. by destruct x. Qed.
 Lemma agree_map_compose {A B C} (f : A → B) (g : B → C) (x : agree A) :
@@ -179,4 +173,3 @@ Qed.
 Program Definition agreeF : iFunctor :=
   {| ifunctor_car := agreeRA; ifunctor_map := @agreeC_map |}.
 Solve Obligations with done.
-

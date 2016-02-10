@@ -40,7 +40,6 @@ Record CMRAMixin A `{Dist A, Equiv A, Unit A, Op A, ValidN A, Minus A} := {
   mixin_cmra_validN_ne n : Proper (dist n ==> impl) (✓{n});
   mixin_cmra_minus_ne n : Proper (dist n ==> dist n ==> dist n) minus;
   (* valid *)
-  mixin_cmra_validN_0 x : ✓{0} x;
   mixin_cmra_validN_S n x : ✓{S n} x → ✓{n} x;
   (* monoid *)
   mixin_cmra_associative : Associative (≡) (⋅);
@@ -99,8 +98,6 @@ Section cmra_mixin.
   Global Instance cmra_minus_ne n :
     Proper (dist n ==> dist n ==> dist n) (@minus A _).
   Proof. apply (mixin_cmra_minus_ne _ (cmra_mixin A)). Qed.
-  Lemma cmra_validN_0 x : ✓{0} x.
-  Proof. apply (mixin_cmra_validN_0 _ (cmra_mixin A)). Qed.
   Lemma cmra_validN_S n x : ✓{S n} x → ✓{n} x.
   Proof. apply (mixin_cmra_validN_S _ (cmra_mixin A)). Qed.
   Global Instance cmra_associative : Associative (≡) (@op A _).
@@ -123,8 +120,6 @@ Section cmra_mixin.
   Proof. apply (cmra_extend_mixin A). Qed.
 End cmra_mixin.
 
-Hint Extern 0 (✓{0} _) => apply cmra_validN_0.
-
 (** * CMRAs with a global identity element *)
 (** We use the notation ∅ because for most instances (maps, sets, etc) the
 `empty' element is the global identity. *)
@@ -142,11 +137,11 @@ Class CMRAMonotone {A B : cmraT} (f : A → B) := {
 
 (** * Frame preserving updates *)
 Definition cmra_updateP {A : cmraT} (x : A) (P : A → Prop) := ∀ z n,
-  ✓{S n} (x ⋅ z) → ∃ y, P y ∧ ✓{S n} (y ⋅ z).
+  ✓{n} (x ⋅ z) → ∃ y, P y ∧ ✓{n} (y ⋅ z).
 Instance: Params (@cmra_updateP) 1.
 Infix "~~>:" := cmra_updateP (at level 70).
 Definition cmra_update {A : cmraT} (x y : A) := ∀ z n,
-  ✓{S n} (x ⋅ z) → ✓{S n} (y ⋅ z).
+  ✓{n} (x ⋅ z) → ✓{n} (y ⋅ z).
 Infix "~~>" := cmra_update (at level 70).
 Instance: Params (@cmra_update) 1.
 
@@ -251,8 +246,6 @@ Proof. intros Hyv [z ?]; cofe_subst y; eauto using cmra_validN_op_l. Qed.
 Lemma cmra_validN_included x y n : ✓{n} y → x ≼ y → ✓{n} x.
 Proof. rewrite cmra_included_includedN; eauto using cmra_validN_includedN. Qed.
 
-Lemma cmra_includedN_0 x y : x ≼{0} y.
-Proof. by exists (unit x). Qed.
 Lemma cmra_includedN_S x y n : x ≼{S n} y → x ≼{n} y.
 Proof. by intros [z Hz]; exists z; apply dist_S. Qed.
 Lemma cmra_includedN_le x y n n' : x ≼{n} y → n' ≤ n → x ≼{n'} y.
@@ -290,19 +283,19 @@ Proof.
 Qed.
 
 (** ** Timeless *)
-Lemma cmra_timeless_included_l x y : Timeless x → ✓{1} y → x ≼{1} y → x ≼ y.
+Lemma cmra_timeless_included_l x y : Timeless x → ✓{0} y → x ≼{0} y → x ≼ y.
 Proof.
   intros ?? [x' ?].
-  destruct (cmra_extend_op 1 y x x') as ([z z']&Hy&Hz&Hz'); auto; simpl in *.
+  destruct (cmra_extend_op 0 y x x') as ([z z']&Hy&Hz&Hz'); auto; simpl in *.
   by exists z'; rewrite Hy (timeless x z).
 Qed.
-Lemma cmra_timeless_included_r n x y : Timeless y → x ≼{1} y → x ≼{n} y.
+Lemma cmra_timeless_included_r n x y : Timeless y → x ≼{0} y → x ≼{n} y.
 Proof. intros ? [x' ?]. exists x'. by apply equiv_dist, (timeless y). Qed.
 Lemma cmra_op_timeless x1 x2 :
   ✓ (x1 ⋅ x2) → Timeless x1 → Timeless x2 → Timeless (x1 ⋅ x2).
 Proof.
   intros ??? z Hz.
-  destruct (cmra_extend_op 1 z x1 x2) as ([y1 y2]&Hz'&?&?); auto; simpl in *.
+  destruct (cmra_extend_op 0 z x1 x2) as ([y1 y2]&Hz'&?&?); auto; simpl in *.
   { by rewrite -?Hz. }
   by rewrite Hz' (timeless x1 y1) // (timeless x2 y2).
 Qed.
@@ -369,8 +362,6 @@ Section identity_updates.
   Proof. split; [intros; transitivity ∅|]; auto using cmra_update_empty. Qed.
 End identity_updates.
 End cmra.
-
-Hint Extern 0 (_ ≼{0} _) => apply cmra_includedN_0.
 
 (** * Properties about monotone functions *)
 Instance cmra_monotone_id {A : cmraT} : CMRAMonotone (@id A).
@@ -444,22 +435,16 @@ Section discrete.
   Context {A : cofeT} `{∀ x : A, Timeless x}.
   Context `{Unit A, Op A, Valid A, Minus A} (ra : RA A).
 
-  Instance discrete_validN : ValidN A := λ n x,
-    match n with 0 => True | S n => ✓ x end.
+  Instance discrete_validN : ValidN A := λ n x, ✓ x.
   Definition discrete_cmra_mixin : CMRAMixin A.
   Proof.
-    destruct ra; split; unfold Proper, respectful, includedN;
-      repeat match goal with
-      | |- ∀ n : nat, _ => intros [|?]
-      end; try setoid_rewrite <-(timeless_S _ _ _ _); try done.
-    by intros x y ?; exists x.
+    by destruct ra; split; unfold Proper, respectful, includedN;
+      try setoid_rewrite <-(timeless_iff _ _ _ _).
   Qed.
   Definition discrete_extend_mixin : CMRAExtendMixin A.
   Proof.
-    intros [|n] x y1 y2 ??.
-    * by exists (unit x, x); rewrite /= ra_unit_l.
-    * exists (y1,y2); split_ands; auto.
-      apply (timeless _), dist_le with (S n); auto with lia.
+    intros n x y1 y2 ??; exists (y1,y2); split_ands; auto.
+    apply (timeless _), dist_le with n; auto with lia.
   Qed.
   Definition discreteRA : cmraT :=
     CMRAT (cofe_mixin A) discrete_cmra_mixin discrete_extend_mixin.
@@ -512,7 +497,6 @@ Section prod.
     * by intros n y1 y2 [Hy1 Hy2] [??]; split; rewrite /= -?Hy1 -?Hy2.
     * by intros n x1 x2 [Hx1 Hx2] y1 y2 [Hy1 Hy2];
         split; rewrite /= ?Hx1 ?Hx2 ?Hy1 ?Hy2.
-    * by split.
     * by intros n x [??]; split; apply cmra_validN_S.
     * split; simpl; apply (associative _).
     * split; simpl; apply (commutative _).

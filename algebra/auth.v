@@ -46,7 +46,6 @@ Proof.
     + by intros ?? [??]; split; symmetry.
     + intros ??? [??] [??]; split; etransitivity; eauto.
   * by intros ? [??] [??] [??]; split; apply dist_S.
-  * by split.
   * intros c n; split. apply (conv_compl (chain_map authoritative c) n).
     apply (conv_compl (chain_map own c) n).
 Qed.
@@ -71,7 +70,7 @@ Instance auth_validN : ValidN (auth A) := λ n x,
   match authoritative x with
   | Excl a => own x ≼{n} a ∧ ✓{n} a
   | ExclUnit => ✓{n} (own x)
-  | ExclBot => n = 0
+  | ExclBot => False
   end.
 Global Arguments auth_validN _ !_ /.
 Instance auth_unit : Unit (auth A) := λ x,
@@ -103,10 +102,9 @@ Proof.
   * by intros n x y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
   * by intros n y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
   * intros n [x a] [y b] [Hx Ha]; simpl in *;
-      destruct Hx as [[][]| | |]; intros ?; cofe_subst; auto.
+      destruct Hx; intros ?; cofe_subst; auto.
   * by intros n x1 x2 [Hx Hx'] y1 y2 [Hy Hy'];
       split; simpl; rewrite ?Hy ?Hy' ?Hx ?Hx'.
-  * by intros [[] ?]; simpl.
   * intros n [[] ?] ?; naive_solver eauto using cmra_includedN_S, cmra_validN_S.
   * by split; simpl; rewrite associative.
   * by split; simpl; rewrite commutative.
@@ -150,7 +148,7 @@ Lemma auth_both_op a b : Auth (Excl a) b ≡ ● a ⋅ ◯ b.
 Proof. by rewrite /op /auth_op /= left_id. Qed.
 
 Lemma auth_update a a' b b' :
-  (∀ n af, ✓{S n} a → a ≡{S n}≡ a' ⋅ af → b ≡{S n}≡ b' ⋅ af ∧ ✓{S n} b) →
+  (∀ n af, ✓{n} a → a ≡{n}≡ a' ⋅ af → b ≡{n}≡ b' ⋅ af ∧ ✓{n} b) →
   ● a ⋅ ◯ a' ~~> ● b ⋅ ◯ b'.
 Proof.
   move=> Hab [[?| |] bf1] n // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
@@ -216,4 +214,3 @@ Next Obligation.
   intros Σ A B C f g x. rewrite /= -auth_map_compose.
   apply auth_map_ext=>y; apply ifunctor_map_compose.
 Qed.
-

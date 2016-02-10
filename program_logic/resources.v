@@ -38,8 +38,8 @@ Global Instance wld_proper : Proper ((≡) ==> (≡)) (@wld Λ Σ A).
 Proof. by destruct 1. Qed.
 Global Instance pst_ne n : Proper (dist n ==> dist n) (@pst Λ Σ A).
 Proof. by destruct 1. Qed.
-Global Instance pst_ne' n : Proper (dist (S n) ==> (≡)) (@pst Λ Σ A).
-Proof. destruct 1; apply (timeless _), dist_le with (S n); auto with lia. Qed.
+Global Instance pst_ne' n : Proper (dist n ==> (≡)) (@pst Λ Σ A).
+Proof. destruct 1; apply (timeless _), dist_le with n; auto with lia. Qed.
 Global Instance pst_proper : Proper ((≡) ==> (=)) (@pst Λ Σ A).
 Proof. by destruct 1; unfold_leibniz. Qed.
 Global Instance gst_ne n : Proper (dist n ==> dist n) (@gst Λ Σ A).
@@ -60,7 +60,6 @@ Proof.
     + by destruct 1; constructor.
     + do 2 destruct 1; constructor; etransitivity; eauto.
   * by destruct 1; constructor; apply dist_S.
-  * done.
   * intros c n; constructor.
     + apply (conv_compl (chain_map wld c) n).
     + apply (conv_compl (chain_map pst c) n).
@@ -102,7 +101,6 @@ Proof.
   * by intros n [???] ? [???] (?&?&?); split_ands'; simpl in *; cofe_subst.
   * by intros n [???] ? [???] [???] ? [???];
       constructor; simpl in *; cofe_subst.
-  * done.
   * by intros n ? (?&?&?); split_ands'; apply cmra_validN_S.
   * intros ???; constructor; simpl; apply (associative _).
   * intros ??; constructor; simpl; apply (commutative _).
@@ -220,9 +218,5 @@ Program Definition resF {Λ Σ} : iFunctor := {|
   ifunctor_car := resRA Λ Σ;
   ifunctor_map A B := resC_map
 |}.
-Next Obligation.
-  intros Λ Σ A x. by rewrite /= res_map_id.
-Qed.
-Next Obligation.
-  intros Λ Σ A B C f g x. by rewrite /= res_map_compose.
-Qed.
+Next Obligation. intros Λ Σ A x. by rewrite /= res_map_id. Qed.
+Next Obligation. intros Λ Σ A B C f g x. by rewrite /= res_map_compose. Qed.

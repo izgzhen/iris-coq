@@ -5,19 +5,19 @@ Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 100 (@eq coPset _ _) => solve_elem_of.
 Local Hint Extern 100 (_ ∉ _) => solve_elem_of.
 Local Hint Extern 10 (✓{_} _) =>
-  repeat match goal with H : wsat _ _ _ _ |- _ => apply wsat_valid in H end;
-  solve_validN.
+  repeat match goal with
+  | H : wsat _ _ _ _ |- _ => apply wsat_valid in H; last omega
+  end; solve_validN.
 
 Program Definition pvs {Λ Σ} (E1 E2 : coPset) (P : iProp Λ Σ) : iProp Λ Σ :=
   {| uPred_holds n r1 := ∀ rf k Ef σ,
-       1 < k ≤ n → (E1 ∪ E2) ∩ Ef = ∅ →
+       0 < k ≤ n → (E1 ∪ E2) ∩ Ef = ∅ →
        wsat k (E1 ∪ Ef) σ (r1 ⋅ rf) →
        ∃ r2, P k r2 ∧ wsat k (E2 ∪ Ef) σ (r2 ⋅ rf) |}.
 Next Obligation.
   intros Λ Σ E1 E2 P r1 r2 n HP Hr rf k Ef σ ?? Hwsat; simpl in *.
   apply HP; auto. by rewrite (dist_le _ _ _ _ Hr); last lia.
 Qed.
-Next Obligation. intros Λ Σ E1 E2 P r rf k Ef σ; simpl in *; lia. Qed.
 Next Obligation.
   intros Λ Σ E1 E2 P r1 r2 n1 n2 HP [r3 ?] Hn ? rf k Ef σ ?? Hws; setoid_subst.
   destruct (HP (r3⋅rf) k Ef σ) as (r'&?&Hws'); rewrite ?(associative op); auto.
@@ -121,7 +121,7 @@ Proof.
   intros ? r [|n] ? HP rf [|k] Ef σ ???; try lia.
   destruct (wsat_alloc k E Ef σ rf P r) as (i&?&?&?); auto.
   { apply uPred_weaken with r n; eauto. }
-  exists (Res {[ i ↦ to_agree (Later (iProp_unfold P)) ]} ∅ ∅).
+  exists (Res {[ i ↦ to_agree (Next (iProp_unfold P)) ]} ∅ ∅).
   by split; [by exists i; split; rewrite /uPred_holds /=|].
 Qed.
 
