@@ -1,91 +1,53 @@
 Require Export algebra.auth algebra.functor.
-Require Import program_logic.language program_logic.weakestpre.
-Import uPred.
-
-(* RJ: This is a work-in-progress playground.
-   FIXME: Finish or remove. *)
+Require Export program_logic.invariants program_logic.ghost_ownership.
+Import uPred ghost_ownership.
 
 Section auth.
-  (* TODO what should be implicit, what explicit? *)
-  Context {Λ : language}.
-  Context {C : nat → cmraT}.
-  Context (i : nat).
-  Context {A : cmraT}.
+  Context {A : cmraT} `{Empty A, !CMRAIdentity A}.
+  Context {Λ : language} {Σ : gid → iFunctor} (AuthI : gid) `{!InG Λ Σ AuthI (authRA A)}.
+  (* TODO: Come up with notation for "iProp Λ (globalC Σ)". *)
+  Context (N : namespace) (φ : A → iProp Λ (globalC Σ)).
+  Implicit Types P Q R : iProp Λ (globalC Σ).
+  Implicit Types a b : A.
+  Implicit Types γ : gname.
 
-  Hypothesis Ci : C i = authRA A.
-  Let Σ : iFunctor := iprodF (mapF positive ∘ constF ∘ C).
+  (* TODO: Need this to be proven somewhere. *)
+  (* FIXME ✓ binds too strong, I need parenthesis here. *)
+  Hypothesis auth_valid :
+    forall a b, (✓(Auth (Excl a) b) : iProp Λ (globalC Σ)) ⊑ (∃ b', a ≡ b ⋅ b').
 
-  Definition tr (a : authRA A) : C i.
-  rewrite Ci. exact a. Defined.
-  Definition tr' (c : C i) : authRA A.
-  rewrite -Ci. exact c. Defined.
+  (* FIXME how much would break if we had a global instance from ∅ to Inhabited? *)
+  Local Instance auth_inhabited : Inhabited A.
+  Proof. split. exact ∅. Qed.
 
-  Lemma tr'_tr a :
-    tr' $ tr a = a.
+  Definition auth_inv (γ : gname) : iProp Λ (globalC Σ) :=
+    (∃ a, own AuthI γ (●a) ★ φ a)%I.
+  Definition auth_own (γ : gname) (a : A) := own AuthI γ (◯a).
+  Definition auth_ctx (γ : gname) := inv N (auth_inv γ).
+
+  Lemma auth_alloc a :
+    ✓a → φ a ⊑ pvs N N (∃ γ, auth_ctx γ ∧ auth_own γ a).
   Proof.
-    rewrite /tr' /tr. by destruct Ci.
+    intros Ha. rewrite -(right_id True%I (★)%I (φ _)).
+    rewrite (own_alloc AuthI (Auth (Excl a) a) N) //; [].
+    rewrite pvs_frame_l. apply pvs_strip_pvs.
+    rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
+    transitivity (▷auth_inv γ ★ auth_own γ a)%I.
+    { rewrite /auth_inv -later_intro -(exist_intro a).
+      rewrite (commutative _ _ (φ _)) -associative. apply sep_mono; first done.
+      rewrite /auth_own -own_op auth_both_op. done. }
+    rewrite (inv_alloc N) /auth_ctx pvs_frame_r. apply pvs_mono.
+    by rewrite always_and_sep_l'.
   Qed.
 
-  Lemma tr_tr' c :
-    tr $ tr' c = c.
+  Lemma auth_opened a γ :
+    (▷auth_inv γ ★ auth_own γ a) ⊑ (▷∃ a', φ (a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a)).
   Proof.
-    rewrite /tr' /tr. by destruct Ci.
-  Qed.
-
-  Lemma tr_proper : Proper ((≡) ==> (≡)) tr.
-  Proof.
-    move=>a1 a2 Heq. rewrite /tr. by destruct Ci.
-  Qed.
-
-  Lemma Ci_op (c1 c2: C i) :
-    c1 ⋅ c2 = tr (tr' c1 ⋅ tr' c2).
-  Proof.
-    rewrite /tr' /tr. by destruct Ci.
-  Qed.
-
-  Lemma A_val a :
-    ✓a = ✓(tr a).
-  Proof.
-    rewrite /tr. by destruct Ci.
-  Qed.
-
-  (* FIXME RJ: I'd rather not have to specify Σ by hand here. *)
-  Definition A2m (p : positive) (a : authRA A) : iGst Λ Σ :=
-    iprod_singleton i (<[p:=tr a]>∅).
-  Definition ownA (p : positive) (a : authRA A) : iProp Λ Σ :=
-    ownG (Σ:=Σ) (A2m p a).
-
-  Lemma ownA_op p a1 a2 :
-    (ownA p a1 ★ ownA p a2)%I ≡ ownA p (a1 ⋅ a2).
-  Proof.
-    rewrite /ownA /A2m /iprod_singleton /iprod_insert -ownG_op. apply ownG_proper=>j /=.
-    rewrite iprod_lookup_op. destruct (decide (i = j)).
-    - move=>q. destruct e. rewrite lookup_op /=.
-      destruct (decide (p = q)); first subst q.
-      + rewrite !lookup_insert.
-        rewrite /op /cmra_op /=. f_equiv.
-        rewrite Ci_op. apply tr_proper.
-        rewrite !tr'_tr. reflexivity.
-      + by rewrite !lookup_insert_ne //.
-    - by rewrite left_id.
-  Qed.
-
-  (* TODO: This also holds if we just have ✓a at the current step-idx, as Iris
-     assertion. However, the map_updateP_alloc does not suffice to show this. *)
-  Lemma ownA_alloc E a :
-    ✓a → True ⊑ pvs E E (∃ p, ownA p a).
-  Proof.
-    intros Ha. set (P m := ∃ p, m = A2m p a).
-    set (a' := tr a).
-    rewrite -(pvs_mono _ _ (∃ m, ■P m ∧ ownG m)%I).
-    - rewrite -pvs_updateP_empty //; [].
-      subst P. eapply (iprod_singleton_updateP_empty i).
-      + eapply map_updateP_alloc' with (x:=a'). subst a'.
-        by rewrite -A_val.
-      + simpl. move=>? [p [-> ?]]. exists p. done.
-    - apply exist_elim=>m. apply const_elim_l.
-      move=>[p ->] {P}. by rewrite -(exist_intro p).
-  Qed.      
-    
+    rewrite /auth_inv. rewrite [auth_own _ _]later_intro -later_sep.
+    apply later_mono. rewrite sep_exist_r. apply exist_elim=>b.
+    rewrite /auth_own [(_ ★ φ _)%I]commutative -associative -own_op.
+    rewrite own_valid_r auth_valid !sep_exist_l /=. apply exist_elim=>a'.
+    rewrite [∅ ⋅ _]left_id -(exist_intro a').
+  Abort.
 End auth.
 

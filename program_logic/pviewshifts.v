@@ -132,6 +132,8 @@ Global Instance pvs_mono' E1 E2 : Proper ((⊑) ==> (⊑)) (@pvs Λ Σ E1 E2).
 Proof. intros P Q; apply pvs_mono. Qed.
 Lemma pvs_trans' E P : pvs E E (pvs E E P) ⊑ pvs E E P.
 Proof. apply pvs_trans; solve_elem_of. Qed.
+Lemma pvs_strip_pvs E P Q : P ⊑ pvs E E Q → pvs E E P ⊑ pvs E E Q.
+Proof. move=>->. by rewrite pvs_trans'. Qed.
 Lemma pvs_frame_l E1 E2 P Q : (P ★ pvs E1 E2 Q) ⊑ pvs E1 E2 (P ★ Q).
 Proof. rewrite !(commutative _ P); apply pvs_frame_r. Qed.
 Lemma pvs_always_l E1 E2 P Q `{!AlwaysStable P} :

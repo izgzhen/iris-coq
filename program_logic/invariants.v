@@ -8,6 +8,7 @@ Local Hint Extern 100 (@subseteq coPset _ _) => solve_elem_of.
 Local Hint Extern 100 (_ ∉ _) => solve_elem_of.
 Local Hint Extern 99 ({[ _ ]} ⊆ _) => apply elem_of_subseteq_singleton.
 
+
 Definition namespace := list positive.
 Definition nnil : namespace := nil.
 Definition ndot `{Countable A} (N : namespace) (x : A) : namespace :=
@@ -91,7 +92,7 @@ Qed.
 
 Lemma wp_open_close E e N P (Q : val Λ → iProp Λ Σ) :
   atomic e → nclose N ⊆ E →
-  (inv N P ∧ (▷P -★ wp (E ∖ nclose N) e (λ v, ▷P ★ Q v)))%I ⊑ wp E e Q.
+  (inv N P ∧ (▷P -★ wp (E ∖ nclose N) e (λ v, ▷P ★ Q v))) ⊑ wp E e Q.
 Proof.
   move=>He HN.
   rewrite /inv and_exist_r. apply exist_elim=>i.
@@ -108,7 +109,7 @@ Proof.
   apply pvs_mask_frame'; solve_elem_of.
 Qed.
 
-Lemma pvs_alloc N P : ▷ P ⊑ pvs N N (inv N P).
+Lemma inv_alloc N P : ▷ P ⊑ pvs N N (inv N P).
 Proof. by rewrite /inv (pvs_allocI N); last apply coPset_suffixes_infinite. Qed.
 
 End inv.

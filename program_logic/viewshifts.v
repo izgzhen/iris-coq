@@ -100,7 +100,7 @@ Proof.
 Qed.
 
 Lemma vs_alloc (N : namespace) P : ▷ P ={N}=> inv N P.
-Proof. by intros; apply vs_alt, pvs_alloc. Qed.
+Proof. by intros; apply vs_alt, inv_alloc. Qed.
 
 End vs.
 

@@ -146,6 +146,8 @@ Proof.
 Qed.
 Lemma auth_frag_op a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.
+Lemma auth_both_op a b : Auth (Excl a) b ≡ ● a ⋅ ◯ b.
+Proof. by rewrite /op /auth_op /= left_id. Qed.
 
 Lemma auth_update a a' b b' :
   (∀ n af, ✓{S n} a → a ≡{S n}≡ a' ⋅ af → b ≡{S n}≡ b' ⋅ af ∧ ✓{S n} b) →
