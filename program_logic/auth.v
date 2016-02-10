@@ -40,6 +40,8 @@ Section auth.
     by rewrite always_and_sep_l'.
   Qed.
 
+  Context {Hφ : ∀ n, Proper (dist n ==> dist n) φ}.
+
   Lemma auth_opened a γ :
     (▷auth_inv γ ★ auth_own γ a) ⊑ (▷∃ a', φ (a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a)).
   Proof.
@@ -48,6 +50,13 @@ Section auth.
     rewrite /auth_own [(_ ★ φ _)%I]commutative -associative -own_op.
     rewrite own_valid_r auth_valid !sep_exist_l /=. apply exist_elim=>a'.
     rewrite [∅ ⋅ _]left_id -(exist_intro a').
-  Abort.
+    apply (eq_rewrite b (a ⋅ a')
+              (λ x, φ x ★ own AuthI γ (● x ⋅ ◯ a))%I).
+    { (* TODO this asks for automation. *)
+      move=>n a1 a2 Ha. by rewrite !Ha. }
+    { by rewrite !sep_elim_r. }
+    apply sep_mono; first done.
+    by rewrite sep_elim_l.
+  Qed.
 End auth.
 
