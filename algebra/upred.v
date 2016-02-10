@@ -220,7 +220,7 @@ Infix "→" := uPred_impl : uPred_scope.
 Infix "★" := uPred_sep (at level 80, right associativity) : uPred_scope.
 Notation "(★)" := uPred_sep (only parsing) : uPred_scope.
 Notation "P -★ Q" := (uPred_wand P Q)
-  (at level 90, Q at level 200, right associativity) : uPred_scope.
+  (at level 199, Q at level 200, right associativity) : uPred_scope.
 Notation "∀ x .. y , P" :=
   (uPred_forall (λ x, .. (uPred_forall (λ y, P)) ..)%I) : uPred_scope.
 Notation "∃ x .. y , P" :=
