@@ -66,7 +66,7 @@ Transparent uPred_holds.
 Global Instance wp_ne E e n :
   Proper (pointwise_relation _ (dist n) ==> dist n) (@wp Λ Σ E e).
 Proof.
-  cut (∀ Q1 Q2, (∀ v, Q1 v ={n}= Q2 v) →
+  cut (∀ Q1 Q2, (∀ v, Q1 v ≡{n}≡ Q2 v) →
     ∀ r n', n' ≤ n → ✓{n'} r → wp E e Q1 n' r → wp E e Q2 n' r).
   { by intros help Q Q' HQ; split; apply help. }
   intros Q1 Q2 HQ r n'; revert e r.

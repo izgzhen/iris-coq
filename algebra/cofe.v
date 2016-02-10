@@ -3,10 +3,10 @@ Require Export algebra.base.
 (** Unbundeled version *)
 Class Dist A := dist : nat → relation A.
 Instance: Params (@dist) 3.
-Notation "x ={ n }= y" := (dist n x y)
-  (at level 70, n at next level, format "x  ={ n }=  y").
-Hint Extern 0 (?x ={_}= ?y) => reflexivity.
-Hint Extern 0 (_ ={_}= _) => symmetry; assumption.
+Notation "x ≡{ n }≡ y" := (dist n x y)
+  (at level 70, n at next level, format "x  ≡{ n }≡  y").
+Hint Extern 0 (?x ≡{_}≡ ?y) => reflexivity.
+Hint Extern 0 (_ ≡{_}≡ _) => symmetry; assumption.
 
 Tactic Notation "cofe_subst" ident(x) :=
   repeat match goal with
@@ -23,18 +23,18 @@ Tactic Notation "cofe_subst" :=
 
 Record chain (A : Type) `{Dist A} := {
   chain_car :> nat → A;
-  chain_cauchy n i : n ≤ i → chain_car n ={n}= chain_car i
+  chain_cauchy n i : n ≤ i → chain_car n ≡{n}≡ chain_car i
 }.
 Arguments chain_car {_ _} _ _.
 Arguments chain_cauchy {_ _} _ _ _ _.
 Class Compl A `{Dist A} := compl : chain A → A.
 
 Record CofeMixin A `{Equiv A, Compl A} := {
-  mixin_equiv_dist x y : x ≡ y ↔ ∀ n, x ={n}= y;
+  mixin_equiv_dist x y : x ≡ y ↔ ∀ n, x ≡{n}≡ y;
   mixin_dist_equivalence n : Equivalence (dist n);
-  mixin_dist_S n x y : x ={S n}= y → x ={n}= y;
-  mixin_dist_0 x y : x ={0}= y;
-  mixin_conv_compl (c : chain A) n : compl c ={n}= c n
+  mixin_dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y;
+  mixin_dist_0 x y : x ≡{0}≡ y;
+  mixin_conv_compl (c : chain A) n : compl c ≡{n}≡ c n
 }.
 Class Contractive `{Dist A, Dist B} (f : A -> B) :=
   contractive n : Proper (dist n ==> dist (S n)) f.
@@ -60,19 +60,19 @@ Arguments cofe_mixin : simpl never.
 Section cofe_mixin.
   Context {A : cofeT}.
   Implicit Types x y : A.
-  Lemma equiv_dist x y : x ≡ y ↔ ∀ n, x ={n}= y.
+  Lemma equiv_dist x y : x ≡ y ↔ ∀ n, x ≡{n}≡ y.
   Proof. apply (mixin_equiv_dist _ (cofe_mixin A)). Qed.
   Global Instance dist_equivalence n : Equivalence (@dist A _ n).
   Proof. apply (mixin_dist_equivalence _ (cofe_mixin A)). Qed.
-  Lemma dist_S n x y : x ={S n}= y → x ={n}= y.
+  Lemma dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y.
   Proof. apply (mixin_dist_S _ (cofe_mixin A)). Qed.
-  Lemma dist_0 x y : x ={0}= y.
+  Lemma dist_0 x y : x ≡{0}≡ y.
   Proof. apply (mixin_dist_0 _ (cofe_mixin A)). Qed.
-  Lemma conv_compl (c : chain A) n : compl c ={n}= c n.
+  Lemma conv_compl (c : chain A) n : compl c ≡{n}≡ c n.
   Proof. apply (mixin_conv_compl _ (cofe_mixin A)). Qed.
 End cofe_mixin.
 
-Hint Extern 0 (_ ={0}= _) => apply dist_0.
+Hint Extern 0 (_ ≡{0}≡ _) => apply dist_0.
 
 (** General properties *)
 Section cofe.
@@ -97,7 +97,7 @@ Section cofe.
   Qed.
   Global Instance dist_proper_2 n x : Proper ((≡) ==> iff) (dist n x).
   Proof. by apply dist_proper. Qed.
-  Lemma dist_le (x y : A) n n' : x ={n}= y → n' ≤ n → x ={n'}= y.
+  Lemma dist_le (x y : A) n n' : x ≡{n}≡ y → n' ≤ n → x ≡{n'}≡ y.
   Proof. induction 2; eauto using dist_S. Qed.
   Instance ne_proper {B : cofeT} (f : A → B)
     `{!∀ n, Proper (dist n ==> dist n) f} : Proper ((≡) ==> (≡)) f | 100.
@@ -109,7 +109,7 @@ Section cofe.
      unfold Proper, respectful; setoid_rewrite equiv_dist.
      by intros x1 x2 Hx y1 y2 Hy n; rewrite (Hx n) (Hy n).
   Qed.
-  Lemma compl_ne (c1 c2: chain A) n : c1 n ={n}= c2 n → compl c1 ={n}= compl c2.
+  Lemma compl_ne (c1 c2: chain A) n : c1 n ≡{n}≡ c2 n → compl c1 ≡{n}≡ compl c2.
   Proof. intros. by rewrite (conv_compl c1 n) (conv_compl c2 n). Qed.
   Lemma compl_ext (c1 c2 : chain A) : (∀ i, c1 i ≡ c2 i) → compl c1 ≡ compl c2.
   Proof. setoid_rewrite equiv_dist; naive_solver eauto using compl_ne. Qed.
@@ -127,9 +127,9 @@ Program Definition chain_map `{Dist A, Dist B} (f : A → B)
 Next Obligation. by intros ? A ? B f Hf c n i ?; apply Hf, chain_cauchy. Qed.
 
 (** Timeless elements *)
-Class Timeless {A : cofeT} (x : A) := timeless y : x ={1}= y → x ≡ y.
+Class Timeless {A : cofeT} (x : A) := timeless y : x ≡{1}≡ y → x ≡ y.
 Arguments timeless {_} _ {_} _ _.
-Lemma timeless_S {A : cofeT} (x y : A) n : Timeless x → x ≡ y ↔ x ={S n}= y.
+Lemma timeless_S {A : cofeT} (x y : A) n : Timeless x → x ≡ y ↔ x ≡{S n}≡ y.
 Proof.
   split; intros; [by apply equiv_dist|].
   apply (timeless _), dist_le with (S n); auto with lia.
@@ -154,7 +154,7 @@ Section fixpoint.
     by rewrite {1}(chain_cauchy (fixpoint_chain f) n (S n)); last lia.
   Qed.
   Lemma fixpoint_ne (g : A → A) `{!Contractive g} n :
-    (∀ z, f z ={n}= g z) → fixpoint f ={n}= fixpoint g.
+    (∀ z, f z ≡{n}≡ g z) → fixpoint f ≡{n}≡ fixpoint g.
   Proof.
     intros Hfg; unfold fixpoint.
     rewrite (conv_compl (fixpoint_chain f) n) (conv_compl (fixpoint_chain g) n).
@@ -181,7 +181,7 @@ Section cofe_mor.
   Global Instance cofe_mor_proper (f : cofeMor A B) : Proper ((≡) ==> (≡)) f.
   Proof. apply ne_proper, cofe_mor_ne. Qed.
   Instance cofe_mor_equiv : Equiv (cofeMor A B) := λ f g, ∀ x, f x ≡ g x.
-  Instance cofe_mor_dist : Dist (cofeMor A B) := λ n f g, ∀ x, f x ={n}= g x.
+  Instance cofe_mor_dist : Dist (cofeMor A B) := λ n f g, ∀ x, f x ≡{n}≡ g x.
   Program Definition fun_chain `(c : chain (cofeMor A B)) (x : A) : chain B :=
     {| chain_car n := c n x |}.
   Next Obligation. intros c x n i ?. by apply (chain_cauchy c). Qed.
@@ -230,7 +230,7 @@ Definition ccompose {A B C}
 Instance: Params (@ccompose) 3.
 Infix "◎" := ccompose (at level 40, left associativity).
 Lemma ccompose_ne {A B C} (f1 f2 : B -n> C) (g1 g2 : A -n> B) n :
-  f1 ={n}= f2 → g1 ={n}= g2 → f1 ◎ g1 ={n}= f2 ◎ g2.
+  f1 ≡{n}≡ f2 → g1 ≡{n}≡ g2 → f1 ◎ g1 ≡{n}≡ f2 ◎ g2.
 Proof. by intros Hf Hg x; rewrite /= (Hg x) (Hf (g2 x)). Qed.
 
 (** unit *)
@@ -325,7 +325,7 @@ Section later.
   Context {A : cofeT}.
   Instance later_equiv : Equiv (later A) := λ x y, later_car x ≡ later_car y.
   Instance later_dist : Dist (later A) := λ n x y,
-    match n with 0 => True | S n => later_car x ={n}= later_car y end.
+    match n with 0 => True | S n => later_car x ≡{n}≡ later_car y end.
   Program Definition later_chain (c : chain (later A)) : chain A :=
     {| chain_car n := later_car (c (S n)) |}.
   Next Obligation. intros c n i ?; apply (chain_cauchy c (S n)); lia. Qed.

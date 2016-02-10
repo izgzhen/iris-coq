@@ -24,7 +24,7 @@ Inductive res_equiv' (r1 r2 : res Λ Σ A) := Res_equiv :
   wld r1 ≡ wld r2 → pst r1 ≡ pst r2 → gst r1 ≡ gst r2 → res_equiv' r1 r2.
 Instance res_equiv : Equiv (res Λ Σ A) := res_equiv'.
 Inductive res_dist' (n : nat) (r1 r2 : res Λ Σ A) := Res_dist :
-  wld r1 ={n}= wld r2 → pst r1 ={n}= pst r2 → gst r1 ={n}= gst r2 →
+  wld r1 ≡{n}≡ wld r2 → pst r1 ≡{n}≡ pst r2 → gst r1 ≡{n}≡ gst r2 →
   res_dist' n r1 r2.
 Instance res_dist : Dist (res Λ Σ A) := res_dist'.
 Global Instance Res_ne n :
@@ -148,14 +148,14 @@ Proof. done. Qed.
 Lemma Res_unit w σ m : unit (Res w σ m) = Res (unit w) (unit σ) (unit m).
 Proof. done. Qed.
 Lemma lookup_wld_op_l n r1 r2 i P :
-  ✓{n} (r1⋅r2) → wld r1 !! i ={n}= Some P → (wld r1 ⋅ wld r2) !! i ={n}= Some P.
+  ✓{n} (r1⋅r2) → wld r1 !! i ≡{n}≡ Some P → (wld r1 ⋅ wld r2) !! i ≡{n}≡ Some P.
 Proof.
   move=>/wld_validN /(_ i) Hval Hi1P; move: Hi1P Hval; rewrite lookup_op.
   destruct (wld r2 !! i) as [P'|] eqn:Hi; rewrite !Hi ?right_id // =>-> ?.
   by constructor; rewrite (agree_op_inv P P') // agree_idempotent.
 Qed.
 Lemma lookup_wld_op_r n r1 r2 i P :
-  ✓{n} (r1⋅r2) → wld r2 !! i ={n}= Some P → (wld r1 ⋅ wld r2) !! i ={n}= Some P.
+  ✓{n} (r1⋅r2) → wld r2 !! i ≡{n}≡ Some P → (wld r1 ⋅ wld r2) !! i ≡{n}≡ Some P.
 Proof.
   rewrite (commutative _ r1) (commutative _ (wld r1)); apply lookup_wld_op_l.
 Qed.

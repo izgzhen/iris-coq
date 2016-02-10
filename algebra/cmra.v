@@ -27,7 +27,7 @@ Instance: Params (@valid) 2.
 Notation "✓" := valid (at level 1).
 Instance validN_valid `{ValidN A} : Valid A := λ x, ∀ n, ✓{n} x.
 
-Definition includedN `{Dist A, Op A} (n : nat) (x y : A) := ∃ z, y ={n}= x ⋅ z.
+Definition includedN `{Dist A, Op A} (n : nat) (x y : A) := ∃ z, y ≡{n}≡ x ⋅ z.
 Notation "x ≼{ n } y" := (includedN n x y)
   (at level 70, format "x  ≼{ n }  y") : C_scope.
 Instance: Params (@includedN) 4.
@@ -49,11 +49,11 @@ Record CMRAMixin A `{Dist A, Equiv A, Unit A, Op A, ValidN A, Minus A} := {
   mixin_cmra_unit_idempotent x : unit (unit x) ≡ unit x;
   mixin_cmra_unit_preservingN n x y : x ≼{n} y → unit x ≼{n} unit y;
   mixin_cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
-  mixin_cmra_op_minus n x y : x ≼{n} y → x ⋅ y ⩪ x ={n}= y
+  mixin_cmra_op_minus n x y : x ≼{n} y → x ⋅ y ⩪ x ≡{n}≡ y
 }.
 Definition CMRAExtendMixin A `{Equiv A, Dist A, Op A, ValidN A} := ∀ n x y1 y2,
-  ✓{n} x → x ={n}= y1 ⋅ y2 →
-  { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ={n}= y1 ∧ z.2 ={n}= y2 }.
+  ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
+  { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ≡{n}≡ y1 ∧ z.2 ≡{n}≡ y2 }.
 
 (** Bundeled version *)
 Structure cmraT := CMRAT {
@@ -115,11 +115,11 @@ Section cmra_mixin.
   Proof. apply (mixin_cmra_unit_preservingN _ (cmra_mixin A)). Qed.
   Lemma cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x.
   Proof. apply (mixin_cmra_validN_op_l _ (cmra_mixin A)). Qed.
-  Lemma cmra_op_minus n x y : x ≼{n} y → x ⋅ y ⩪ x ={n}= y.
+  Lemma cmra_op_minus n x y : x ≼{n} y → x ⋅ y ⩪ x ≡{n}≡ y.
   Proof. apply (mixin_cmra_op_minus _ (cmra_mixin A)). Qed.
   Lemma cmra_extend_op n x y1 y2 :
-    ✓{n} x → x ={n}= y1 ⋅ y2 →
-    { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ={n}= y1 ∧ z.2 ={n}= y2 }.
+    ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
+    { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ≡{n}≡ y1 ∧ z.2 ≡{n}≡ y2 }.
   Proof. apply (cmra_extend_mixin A). Qed.
 End cmra_mixin.
 
@@ -277,7 +277,7 @@ Lemma cmra_preserving_r x y z : x ≼ y → x ⋅ z ≼ y ⋅ z.
 Proof. by intros; rewrite -!(commutative _ z); apply cmra_preserving_l. Qed.
 
 Lemma cmra_included_dist_l x1 x2 x1' n :
-  x1 ≼ x2 → x1' ={n}= x1 → ∃ x2', x1' ≼ x2' ∧ x2' ={n}= x2.
+  x1 ≼ x2 → x1' ≡{n}≡ x1 → ∃ x2', x1' ≼ x2' ∧ x2' ≡{n}≡ x2.
 Proof.
   intros [z Hx2] Hx1; exists (x1' ⋅ z); split; auto using cmra_included_l.
   by rewrite Hx1 Hx2.

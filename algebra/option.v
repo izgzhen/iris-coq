@@ -5,9 +5,9 @@ Require Import algebra.functor.
 Section cofe.
 Context {A : cofeT}.
 Inductive option_dist : Dist (option A) :=
-  | option_0_dist (x y : option A) : x ={0}= y
-  | Some_dist n x y : x ={n}= y → Some x ={n}= Some y
-  | None_dist n : None ={n}= None.
+  | option_0_dist (x y : option A) : x ≡{0}≡ y
+  | Some_dist n x y : x ≡{n}≡ y → Some x ≡{n}≡ Some y
+  | None_dist n : None ≡{n}≡ None.
 Existing Instance option_dist.
 Program Definition option_chain
     (c : chain (option A)) (x : A) (H : c 1 = Some x) : chain A :=
@@ -134,9 +134,9 @@ Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my.
 Proof.
   destruct mx, my; rewrite /op /option_op /= -!not_eq_None_Some; naive_solver.
 Qed.
-Lemma option_op_positive_dist_l n mx my : mx ⋅ my ={n}= None → mx ={n}= None.
+Lemma option_op_positive_dist_l n mx my : mx ⋅ my ≡{n}≡ None → mx ≡{n}≡ None.
 Proof. by destruct mx, my; inversion_clear 1. Qed.
-Lemma option_op_positive_dist_r n mx my : mx ⋅ my ={n}= None → my ={n}= None.
+Lemma option_op_positive_dist_r n mx my : mx ⋅ my ≡{n}≡ None → my ≡{n}≡ None.
 Proof. by destruct mx, my; inversion_clear 1. Qed.
 
 Lemma option_updateP (P : A → Prop) (Q : option A → Prop) x :

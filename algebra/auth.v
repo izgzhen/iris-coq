@@ -19,7 +19,7 @@ Implicit Types x y : auth A.
 Instance auth_equiv : Equiv (auth A) := λ x y,
   authoritative x ≡ authoritative y ∧ own x ≡ own y.
 Instance auth_dist : Dist (auth A) := λ n x y,
-  authoritative x ={n}= authoritative y ∧ own x ={n}= own y.
+  authoritative x ≡{n}≡ authoritative y ∧ own x ≡{n}≡ own y.
 
 Global Instance Auth_ne : Proper (dist n ==> dist n ==> dist n) (@Auth A).
 Proof. by split. Qed.
@@ -148,7 +148,7 @@ Lemma auth_frag_op a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.
 
 Lemma auth_update a a' b b' :
-  (∀ n af, ✓{S n} a → a ={S n}= a' ⋅ af → b ={S n}= b' ⋅ af ∧ ✓{S n} b) →
+  (∀ n af, ✓{S n} a → a ≡{S n}≡ a' ⋅ af → b ≡{S n}≡ b' ⋅ af ∧ ✓{S n} b) →
   ● a ⋅ ◯ a' ~~> ● b ⋅ ◯ b'.
 Proof.
   move=> Hab [[?| |] bf1] n // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.

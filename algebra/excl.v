@@ -23,10 +23,10 @@ Inductive excl_equiv : Equiv (excl A) :=
   | ExclBot_equiv : ExclBot ≡ ExclBot.
 Existing Instance excl_equiv.
 Inductive excl_dist `{Dist A} : Dist (excl A) :=
-  | excl_dist_0 (x y : excl A) : x ={0}= y
-  | Excl_dist (x y : A) n : x ={n}= y → Excl x ={n}= Excl y
-  | ExclUnit_dist n : ExclUnit ={n}= ExclUnit
-  | ExclBot_dist n : ExclBot ={n}= ExclBot.
+  | excl_dist_0 (x y : excl A) : x ≡{0}≡ y
+  | Excl_dist (x y : A) n : x ≡{n}≡ y → Excl x ≡{n}≡ Excl y
+  | ExclUnit_dist n : ExclUnit ≡{n}≡ ExclUnit
+  | ExclBot_dist n : ExclBot ≡{n}≡ ExclBot.
 Existing Instance excl_dist.
 Global Instance Excl_ne : Proper (dist n ==> dist n) (@Excl A).
 Proof. by constructor. Qed.
@@ -138,7 +138,7 @@ Lemma excl_validN_inv_l n x y : ✓{S n} (Excl x ⋅ y) → y = ∅.
 Proof. by destruct y. Qed.
 Lemma excl_validN_inv_r n x y : ✓{S n} (x ⋅ Excl y) → x = ∅.
 Proof. by destruct x. Qed.
-Lemma Excl_includedN n x y : ✓{n} y → Excl x ≼{n} y ↔ y ={n}= Excl x.
+Lemma Excl_includedN n x y : ✓{n} y → Excl x ≼{n} y ↔ y ≡{n}≡ Excl x.
 Proof.
   intros Hvalid; split; [destruct n as [|n]; [done|]|by intros ->].
   by intros [z ?]; cofe_subst; rewrite (excl_validN_inv_l n x z).

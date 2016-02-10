@@ -16,16 +16,16 @@ Section agree.
 Context {A : cofeT}.
 
 Instance agree_validN : ValidN (agree A) := λ n x,
-  agree_is_valid x n ∧ ∀ n', n' ≤ n → x n' ={n'}= x n.
+  agree_is_valid x n ∧ ∀ n', n' ≤ n → x n' ≡{n'}≡ x n.
 Lemma agree_valid_le (x : agree A) n n' :
   agree_is_valid x n → n' ≤ n → agree_is_valid x n'.
 Proof. induction 2; eauto using agree_valid_S. Qed.
 Instance agree_equiv : Equiv (agree A) := λ x y,
   (∀ n, agree_is_valid x n ↔ agree_is_valid y n) ∧
-  (∀ n, agree_is_valid x n → x n ={n}= y n).
+  (∀ n, agree_is_valid x n → x n ≡{n}≡ y n).
 Instance agree_dist : Dist (agree A) := λ n x y,
   (∀ n', n' ≤ n → agree_is_valid x n' ↔ agree_is_valid y n') ∧
-  (∀ n', n' ≤ n → agree_is_valid x n' → x n' ={n'}= y n').
+  (∀ n', n' ≤ n → agree_is_valid x n' → x n' ≡{n'}≡ y n').
 Program Instance agree_compl : Compl (agree A) := λ c,
   {| agree_car n := c n n; agree_is_valid n := agree_is_valid (c n) n |}.
 Next Obligation. intros; apply agree_valid_0. Qed.
@@ -51,14 +51,14 @@ Proof.
 Qed.
 Canonical Structure agreeC := CofeT agree_cofe_mixin.
 
-Lemma agree_car_ne (x y : agree A) n : ✓{n} x → x ={n}= y → x n ={n}= y n.
+Lemma agree_car_ne (x y : agree A) n : ✓{n} x → x ≡{n}≡ y → x n ≡{n}≡ y n.
 Proof. by intros [??] Hxy; apply Hxy. Qed.
-Lemma agree_cauchy (x : agree A) n i : ✓{n} x → i ≤ n → x i ={i}= x n.
+Lemma agree_cauchy (x : agree A) n i : ✓{n} x → i ≤ n → x i ≡{i}≡ x n.
 Proof. by intros [? Hx]; apply Hx. Qed.
 
 Program Instance agree_op : Op (agree A) := λ x y,
   {| agree_car := x;
-     agree_is_valid n := agree_is_valid x n ∧ agree_is_valid y n ∧ x ={n}= y |}.
+     agree_is_valid n := agree_is_valid x n ∧ agree_is_valid y n ∧ x ≡{n}≡ y |}.
 Next Obligation. by intros; simpl; split_ands; try apply agree_valid_0. Qed.
 Next Obligation. naive_solver eauto using agree_valid_S, dist_S. Qed.
 Instance agree_unit : Unit (agree A) := id.
@@ -91,7 +91,7 @@ Proof.
     repeat match goal with H : agree_is_valid _ _ |- _ => clear H end;
     by cofe_subst; rewrite !agree_idempotent.
 Qed.
-Lemma agree_includedN (x y : agree A) n : x ≼{n} y ↔ y ={n}= x ⋅ y.
+Lemma agree_includedN (x y : agree A) n : x ≼{n} y ↔ y ≡{n}≡ x ⋅ y.
 Proof.
   split; [|by intros ?; exists y].
   by intros [z Hz]; rewrite Hz (associative _) agree_idempotent.
@@ -109,9 +109,9 @@ Proof.
   * by intros x y n [(?&?&?) ?].
   * by intros x y n; rewrite agree_includedN.
 Qed.
-Lemma agree_op_inv (x1 x2 : agree A) n : ✓{n} (x1 ⋅ x2) → x1 ={n}= x2.
+Lemma agree_op_inv (x1 x2 : agree A) n : ✓{n} (x1 ⋅ x2) → x1 ≡{n}≡ x2.
 Proof. intros Hxy; apply Hxy. Qed.
-Lemma agree_valid_includedN (x y : agree A) n : ✓{n} y → x ≼{n} y → x ={n}= y.
+Lemma agree_valid_includedN (x y : agree A) n : ✓{n} y → x ≼{n} y → x ≡{n}≡ y.
 Proof.
   move=> Hval [z Hy]; move: Hval; rewrite Hy.
   by move=> /agree_op_inv->; rewrite agree_idempotent.
@@ -133,7 +133,7 @@ Proof. intros x1 x2 Hx; split; naive_solver eauto using @dist_le. Qed.
 Global Instance to_agree_proper : Proper ((≡) ==> (≡)) to_agree := ne_proper _.
 Global Instance to_agree_inj n : Injective (dist n) (dist n) (to_agree).
 Proof. by intros x y [_ Hxy]; apply Hxy. Qed.
-Lemma to_agree_car n (x : agree A) : ✓{n} x → to_agree (x n) ={n}= x.
+Lemma to_agree_car n (x : agree A) : ✓{n} x → to_agree (x n) ≡{n}≡ x.
 Proof. intros [??]; split; naive_solver eauto using agree_valid_le. Qed.
 End agree.
 

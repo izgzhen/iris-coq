@@ -21,7 +21,7 @@ Section iprod_cofe.
   Implicit Types f g : iprod B.
 
   Instance iprod_equiv : Equiv (iprod B) := λ f g, ∀ x, f x ≡ g x.
-  Instance iprod_dist : Dist (iprod B) := λ n f g, ∀ x, f x ={n}= g x.
+  Instance iprod_dist : Dist (iprod B) := λ n f g, ∀ x, f x ≡{n}≡ g x.
   Program Definition iprod_chain (c : chain (iprod B)) (x : A) : chain (B x) :=
     {| chain_car n := c n x |}.
   Next Obligation. by intros c x n i ?; apply (chain_cauchy c). Qed.

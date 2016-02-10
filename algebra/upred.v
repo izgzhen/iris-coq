@@ -5,7 +5,7 @@ Local Hint Extern 10 (_ ≤ _) => omega.
 
 Record uPred (M : cmraT) : Type := IProp {
   uPred_holds :> nat → M → Prop;
-  uPred_ne x1 x2 n : uPred_holds n x1 → x1 ={n}= x2 → uPred_holds n x2;
+  uPred_ne x1 x2 n : uPred_holds n x1 → x1 ≡{n}≡ x2 → uPred_holds n x2;
   uPred_0 x : uPred_holds 0 x;
   uPred_weaken x1 x2 n1 n2 :
     uPred_holds n1 x1 → x1 ≼ x2 → n2 ≤ n1 → ✓{n2} x2 → uPred_holds n2 x2
@@ -54,7 +54,7 @@ Instance uPred_proper {M} (P : uPred M) n : Proper ((≡) ==> iff) (P n).
 Proof. by intros x1 x2 Hx; apply uPred_ne', equiv_dist. Qed.
 
 Lemma uPred_holds_ne {M} (P1 P2 : uPred M) n x :
-  P1 ={n}= P2 → ✓{n} x → P1 n x → P2 n x.
+  P1 ≡{n}≡ P2 → ✓{n} x → P1 n x → P2 n x.
 Proof. intros HP ?; apply HP; auto. Qed.
 Lemma uPred_weaken' {M} (P : uPred M) x1 x2 n1 n2 :
   x1 ≼ x2 → n2 ≤ n1 → ✓{n2} x2 → P n1 x1 → P n2 x2.
@@ -90,7 +90,7 @@ Definition uPredC_map {M1 M2 : cmraT} (f : M2 -n> M1) `{!CMRAMonotone f} :
   uPredC M1 -n> uPredC M2 := CofeMor (uPred_map f : uPredC M1 → uPredC M2).
 Lemma upredC_map_ne {M1 M2 : cmraT} (f g : M2 -n> M1)
     `{!CMRAMonotone f, !CMRAMonotone g} n :
-  f ={n}= g → uPredC_map f ={n}= uPredC_map g.
+  f ≡{n}≡ g → uPredC_map f ≡{n}≡ uPredC_map g.
 Proof.
   by intros Hfg P y n' ??;
     rewrite /uPred_holds /= (dist_le _ _ _ _(Hfg y)); last lia.
@@ -120,7 +120,7 @@ Program Definition uPred_impl {M} (P Q : uPred M) : uPred M :=
 Next Obligation.
   intros M P Q x1' x1 n1 HPQ Hx1 x2 n2 ????.
   destruct (cmra_included_dist_l x1 x2 x1' n1) as (x2'&?&Hx2); auto.
-  assert (x2' ={n2}= x2) as Hx2' by (by apply dist_le with n1).
+  assert (x2' ≡{n2}≡ x2) as Hx2' by (by apply dist_le with n1).
   assert (✓{n2} x2') by (by rewrite Hx2'); rewrite -Hx2'.
   eauto using uPred_weaken, uPred_ne.
 Qed.
@@ -140,18 +140,18 @@ Next Obligation.
 Qed.
 
 Program Definition uPred_eq {M} {A : cofeT} (a1 a2 : A) : uPred M :=
-  {| uPred_holds n x := a1 ={n}= a2 |}.
+  {| uPred_holds n x := a1 ≡{n}≡ a2 |}.
 Solve Obligations with naive_solver eauto 2 using (dist_le (A:=A)).
 
 Program Definition uPred_sep {M} (P Q : uPred M) : uPred M :=
-  {| uPred_holds n x := ∃ x1 x2, x ={n}= x1 ⋅ x2 ∧ P n x1 ∧ Q n x2 |}.
+  {| uPred_holds n x := ∃ x1 x2, x ≡{n}≡ x1 ⋅ x2 ∧ P n x1 ∧ Q n x2 |}.
 Next Obligation.
   by intros M P Q x y n (x1&x2&?&?&?) Hxy; exists x1, x2; rewrite -Hxy.
 Qed.
 Next Obligation. by intros M P Q x; exists x, x. Qed.
 Next Obligation.
   intros M P Q x y n1 n2 (x1&x2&Hx&?&?) Hxy ??.
-  assert (∃ x2', y ={n2}= x1 ⋅ x2' ∧ x2 ≼ x2') as (x2'&Hy&?).
+  assert (∃ x2', y ≡{n2}≡ x1 ⋅ x2' ∧ x2 ≼ x2') as (x2'&Hy&?).
   { destruct Hxy as [z Hy]; exists (x2 ⋅ z); split; eauto using cmra_included_l.
     apply dist_le with n1; auto. by rewrite (associative op) -Hx Hy. }
   clear Hxy; cofe_subst y; exists x1, x2'; split_ands; [done| |].

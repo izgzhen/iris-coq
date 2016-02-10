@@ -12,7 +12,7 @@ Record wsat_pre {Λ Σ} (n : nat) (E : coPset)
   wsat_pre_dom i : is_Some (rs !! i) → i ∈ E ∧ is_Some (wld r !! i);
   wsat_pre_wld i P :
     i ∈ E →
-    wld r !! i ={S n}= Some (to_agree (Later (iProp_unfold P))) →
+    wld r !! i ≡{S n}≡ Some (to_agree (Later (iProp_unfold P))) →
     ∃ r', rs !! i = Some r' ∧ P n r'
 }.
 Arguments wsat_pre_valid {_ _ _ _ _ _ _} _.
@@ -50,11 +50,11 @@ Proof.
   intros [rs [Hval Hσ HE Hwld]] ?; exists rs; constructor; auto.
   intros i P ? HiP; destruct (wld (r ⋅ big_opM rs) !! i) as [P'|] eqn:HP';
     [apply (injective Some) in HiP|inversion_clear HiP].
-  assert (P' ={S n}= to_agree $ Later $ iProp_unfold $
+  assert (P' ≡{S n}≡ to_agree $ Later $ iProp_unfold $
                        iProp_fold $ later_car $ P' (S n)) as HPiso.
   { rewrite iProp_unfold_fold later_eta to_agree_car //.
     apply (map_lookup_validN _ (wld (r ⋅ big_opM rs)) i); rewrite ?HP'; auto. }
-  assert (P ={n'}= iProp_fold (later_car (P' (S n)))) as HPP'.
+  assert (P ≡{n'}≡ iProp_fold (later_car (P' (S n)))) as HPP'.
   { apply (injective iProp_unfold), (injective Later), (injective to_agree).
     by rewrite -HiP -(dist_le _ _ _ _ HPiso). }
   destruct (Hwld i (iProp_fold (later_car (P' (S n))))) as (r'&?&?); auto.
@@ -77,7 +77,7 @@ Proof.
   * intros i P ?; rewrite /= left_id lookup_empty; inversion_clear 1.
 Qed.
 Lemma wsat_open n E σ r i P :
-  wld r !! i ={S n}= Some (to_agree (Later (iProp_unfold P))) → i ∉ E →
+  wld r !! i ≡{S n}≡ Some (to_agree (Later (iProp_unfold P))) → i ∉ E →
   wsat (S n) ({[i]} ∪ E) σ r → ∃ rP, wsat (S n) E σ (rP ⋅ r) ∧ P n rP.
 Proof.
   intros HiP Hi [rs [Hval Hσ HE Hwld]].
@@ -92,7 +92,7 @@ Proof.
     apply Hwld; [solve_elem_of +Hj|done].
 Qed.
 Lemma wsat_close n E σ r i P rP :
-  wld rP !! i ={S n}= Some (to_agree (Later (iProp_unfold P))) → i ∉ E →
+  wld rP !! i ≡{S n}≡ Some (to_agree (Later (iProp_unfold P))) → i ∉ E →
   wsat (S n) E σ (rP ⋅ r) → P n rP → wsat (S n) ({[i]} ∪ E) σ r.
 Proof.
   intros HiP HiE [rs [Hval Hσ HE Hwld]] ?.
@@ -112,7 +112,7 @@ Proof.
       exists r'; rewrite lookup_insert_ne; naive_solver.
 Qed.
 Lemma wsat_update_pst n E σ1 σ1' r rf :
-  pst r ={S n}= Excl σ1 → wsat (S n) E σ1' (r ⋅ rf) →
+  pst r ≡{S n}≡ Excl σ1 → wsat (S n) E σ1' (r ⋅ rf) →
   σ1' = σ1 ∧ ∀ σ2, wsat (S n) E σ2 (update_pst σ2 r ⋅ rf).
 Proof.
   intros Hpst_r [rs [(?&?&?) Hpst HE Hwld]]; simpl in *.

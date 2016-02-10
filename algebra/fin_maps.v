@@ -6,7 +6,7 @@ Context `{Countable K} {A : cofeT}.
 Implicit Types m : gmap K A.
 
 Instance map_dist : Dist (gmap K A) := λ n m1 m2,
-  ∀ i, m1 !! i ={n}= m2 !! i.
+  ∀ i, m1 !! i ≡{n}≡ m2 !! i.
 Program Definition map_chain (c : chain (gmap K A))
   (k : K) : chain (option A) := {| chain_car n := c n !! k |}.
 Next Obligation. by intros c k n i ?; apply (chain_cauchy c). Qed.
@@ -60,7 +60,7 @@ Qed.
 Global Instance map_lookup_timeless m i : Timeless m → Timeless (m !! i).
 Proof.
   intros ? [x|] Hx; [|by symmetry; apply (timeless _)].
-  assert (m ={1}= <[i:=x]> m)
+  assert (m ≡{1}≡ <[i:=x]> m)
     by (by symmetry in Hx; inversion Hx; cofe_subst; rewrite insert_id).
   by rewrite (timeless m (<[i:=x]>m)) // lookup_insert.
 Qed.
@@ -132,7 +132,7 @@ Qed.
 Definition map_cmra_extend_mixin : CMRAExtendMixin (gmap K A).
 Proof.
   intros n m m1 m2 Hm Hm12.
-  assert (∀ i, m !! i ={n}= m1 !! i ⋅ m2 !! i) as Hm12'
+  assert (∀ i, m !! i ≡{n}≡ m1 !! i ⋅ m2 !! i) as Hm12'
     by (by intros i; rewrite -lookup_op).
   set (f i := cmra_extend_op n (m !! i) (m1 !! i) (m2 !! i) (Hm i) (Hm12' i)).
   set (f_proj i := proj1_sig (f i)).
@@ -166,7 +166,7 @@ Implicit Types m : gmap K A.
 Implicit Types i : K.
 Implicit Types a : A.
 
-Lemma map_lookup_validN n m i x : ✓{n} m → m !! i ={n}= Some x → ✓{n} x.
+Lemma map_lookup_validN n m i x : ✓{n} m → m !! i ≡{n}≡ Some x → ✓{n} x.
 Proof. by move=> /(_ i) Hm Hi; move:Hm; rewrite Hi. Qed.
 Lemma map_insert_validN n m i x : ✓{n} x → ✓{n} m → ✓{n} (<[i:=x]>m).
 Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_equality. Qed.
@@ -201,7 +201,7 @@ Lemma map_op_singleton (i : K) (x y : A) :
 Proof. by apply (merge_singleton _ _ _ x y). Qed.
 
 Lemma singleton_includedN n m i x :
-  {[ i ↦ x ]} ≼{n} m ↔ ∃ y, m !! i ={n}= Some y ∧ x ≼ y.
+  {[ i ↦ x ]} ≼{n} m ↔ ∃ y, m !! i ≡{n}≡ Some y ∧ x ≼ y.
   (* not m !! i = Some y ∧ x ≼{n} y to deal with n = 0 *)
 Proof.
   split.

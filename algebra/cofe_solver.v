@@ -42,7 +42,7 @@ Proof.
   induction k as [|k IH]; simpl in *; [by destruct x|].
   rewrite -map_comp -{2}(map_id _ _ x); by apply map_ext.
 Qed.
-Lemma fg {n k} (x : A (S k)) : n ≤ k → f (g x) ={n}= x.
+Lemma fg {n k} (x : A (S k)) : n ≤ k → f (g x) ≡{n}≡ x.
 Proof.
   intros Hnk; apply dist_le with k; auto; clear Hnk.
   induction k as [|k IH]; simpl; [apply dist_0|].
@@ -57,7 +57,7 @@ Record tower := {
   g_tower k : g (tower_car (S k)) ≡ tower_car k
 }.
 Instance tower_equiv : Equiv tower := λ X Y, ∀ k, X k ≡ Y k.
-Instance tower_dist : Dist tower := λ n X Y, ∀ k, X k ={n}= Y k.
+Instance tower_dist : Dist tower := λ n X Y, ∀ k, X k ≡{n}≡ Y k.
 Program Definition tower_chain (c : chain tower) (k : nat) : chain (A k) :=
   {| chain_car i := c i k |}.
 Next Obligation. intros c k n i ?; apply (chain_cauchy c n); lia. Qed.
@@ -91,9 +91,9 @@ Fixpoint gg {k} (i : nat) : A (i + k) -n> A k :=
   match i with 0 => cid | S i => gg i ◎ g end.
 Lemma ggff {k i} (x : A k) : gg i (ff i x) ≡ x.
 Proof. induction i as [|i IH]; simpl; [done|by rewrite (gf (ff i x)) IH]. Qed.
-Lemma f_tower {n k} (X : tower) : n ≤ k → f (X k) ={n}= X (S k).
+Lemma f_tower {n k} (X : tower) : n ≤ k → f (X k) ≡{n}≡ X (S k).
 Proof. intros. by rewrite -(fg (X (S k))) // -(g_tower X). Qed.
-Lemma ff_tower {n} k i (X : tower) : n ≤ k → ff i (X k) ={n}= X (i + k).
+Lemma ff_tower {n} k i (X : tower) : n ≤ k → ff i (X k) ≡{n}≡ X (i + k).
 Proof.
   intros; induction i as [|i IH]; simpl; [done|].
   by rewrite IH (f_tower X); last lia.
@@ -170,7 +170,7 @@ Proof.
   * assert (H : (i - S k) + (1 + k) = i) by lia; rewrite (ff_ff _ H) /=.
     by erewrite coerce_proper by done.
 Qed.
-Lemma embed_tower j n (X : T) : n ≤ j → embed j (X j) ={n}= X.
+Lemma embed_tower j n (X : T) : n ≤ j → embed j (X j) ≡{n}≡ X.
 Proof.
   move=> Hn i; rewrite /= /embed'; destruct (le_lt_dec i j) as [H|H]; simpl.
   * rewrite -(gg_tower i (j - i) X).
