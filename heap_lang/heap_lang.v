@@ -165,11 +165,11 @@ Definition un_op_eval (op : un_op) (l : base_lit) : option base_lit :=
 
 Definition bin_op_eval (op : bin_op) (l1 l2 : base_lit) : option base_lit :=
   match op, l1, l2 with
-  | PlusOp, LitNat n1, LitNat n2 => Some (LitNat (n1 + n2))
-  | MinusOp, LitNat n1, LitNat n2 => Some (LitNat (n1 - n2))
-  | LeOp, LitNat n1, LitNat n2 => Some (LitBool (bool_decide (n1 ≤ n2)))
-  | LtOp, LitNat n1, LitNat n2 => Some (LitBool (bool_decide (n1 < n2)))
-  | EqOp, LitNat n1, LitNat n2 => Some (LitBool (bool_decide (n1 = n2)))
+  | PlusOp, LitNat n1, LitNat n2 => Some $ LitNat (n1 + n2)
+  | MinusOp, LitNat n1, LitNat n2 => Some $ LitNat (n1 - n2)
+  | LeOp, LitNat n1, LitNat n2 => Some $ LitBool $ bool_decide (n1 ≤ n2)
+  | LtOp, LitNat n1, LitNat n2 => Some $ LitBool $ bool_decide (n1 < n2)
+  | EqOp, LitNat n1, LitNat n2 => Some $ LitBool $ bool_decide (n1 = n2)
   | _, _, _ => None
   end.
 

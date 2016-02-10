@@ -130,7 +130,7 @@ Qed.
 
 Lemma wp_fst E e1 v1 e2 v2 Q :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
-  ▷ Q v1 ⊑ wp E (Fst (Pair e1 e2)) Q.
+  ▷ Q v1 ⊑ wp E (Fst $ Pair e1 e2) Q.
 Proof.
   intros. rewrite -(wp_lift_pure_det_step (Fst _) e1 None) ?right_id //;
     last by intros; inv_step; eauto.
@@ -139,7 +139,7 @@ Qed.
 
 Lemma wp_snd E e1 v1 e2 v2 Q :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
-  ▷ Q v2 ⊑ wp E (Snd (Pair e1 e2)) Q.
+  ▷ Q v2 ⊑ wp E (Snd $ Pair e1 e2) Q.
 Proof.
   intros. rewrite -(wp_lift_pure_det_step (Snd _) e2 None) ?right_id //;
     last by intros; inv_step; eauto.
