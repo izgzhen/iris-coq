@@ -826,17 +826,19 @@ Lemma own_something : True ⊑ ∃ a, uPred_own a.
 Proof. intros x [|n] ??; [done|]. by exists x; simpl. Qed.
 Lemma own_empty `{Empty M, !CMRAIdentity M} : True ⊑ uPred_own ∅.
 Proof. intros x [|n] ??; [done|]. by  exists x; rewrite (left_id _ _). Qed.
-Lemma own_valid (a : M) : uPred_own a ⊑ (✓ a).
-Proof. move => x n Hv [a' ?]; cofe_subst; eauto using cmra_validN_op_l. Qed.
-Lemma valid_intro {A : cmraT} (a : A) : ✓ a → True ⊑ (✓ a).
+Lemma own_valid (a : M) : uPred_own a ⊑ ✓ a.
+Proof. intros x n Hv [a' ?]; cofe_subst; eauto using cmra_validN_op_l. Qed.
+Lemma valid_intro {A : cmraT} (a : A) : ✓ a → True ⊑ ✓ a.
 Proof. by intros ? x n ? _; simpl; apply cmra_valid_validN. Qed.
-Lemma valid_elim {A : cmraT} (a : A) : ¬ ✓{1} a → (✓ a) ⊑ False.
+Lemma valid_elim {A : cmraT} (a : A) : ¬ ✓{1} a → ✓ a ⊑ False.
 Proof. intros Ha x [|n] ??; [|apply Ha, cmra_validN_le with (S n)]; auto. Qed.
 Lemma valid_mono {A B : cmraT} (a : A) (b : B) :
-  (∀ n, ✓{n} a → ✓{n} b) → (✓ a) ⊑ (✓ b).
+  (∀ n, ✓{n} a → ✓{n} b) → ✓ a ⊑ ✓ b.
 Proof. by intros ? x n ?; simpl; auto. Qed.
 Lemma always_valid {A : cmraT} (a : A) : (□ (✓ a))%I ≡ (✓ a : uPred M)%I.
 Proof. done. Qed.
+
+(* Own and valid derived *)
 Lemma own_invalid (a : M) : ¬ ✓{1} a → uPred_own a ⊑ False.
 Proof. by intros; rewrite own_valid valid_elim. Qed.
 
