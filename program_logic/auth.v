@@ -58,14 +58,8 @@ Section auth.
     by rewrite sep_elim_l.
   Qed.
 
-  (* TODO: This notion should probably be defined in algebra/,
-     with instances proven for the important constructions. *)
-  Definition auth_step a b :=
-    (∀ n a' af, ✓{n} (a ⋅ a') → a ⋅ a' ≡{n}≡ af ⋅ a →
-                b ⋅ a' ≡{n}≡ b ⋅ af ∧ ✓{n} (b ⋅ a')).
-
   Lemma auth_closing a a' b γ :
-    auth_step a b →
+    auth_step (a ⋅ a') a (b ⋅ a') b →
     (φ (b ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a))
       ⊑ pvs N N (auth_inv γ ★ auth_own γ b).
   Proof.
@@ -73,8 +67,7 @@ Section auth.
     rewrite [(_ ★ φ _)%I]commutative -associative.
     rewrite -pvs_frame_l. apply sep_mono; first done.
     rewrite -own_op. apply own_update.
-    apply auth_update=>n af Ha Heq. apply Hstep; first done.
-    by rewrite [af ⋅ _]commutative.
+    by apply auth_update.
   Qed.
 
 End auth.

@@ -147,8 +147,12 @@ Proof. done. Qed.
 Lemma auth_both_op a b : Auth (Excl a) b ≡ ● a ⋅ ◯ b.
 Proof. by rewrite /op /auth_op /= left_id. Qed.
 
+(* FIXME tentative name. Or maybe remove this notion entirely. *)
+Definition auth_step a a' b b' :=
+  ∀ n af, ✓{n} a → a ≡{n}≡ a' ⋅ af → b ≡{n}≡ b' ⋅ af ∧ ✓{n} b.
+
 Lemma auth_update a a' b b' :
-  (∀ n af, ✓{n} a → a ≡{n}≡ a' ⋅ af → b ≡{n}≡ b' ⋅ af ∧ ✓{n} b) →
+  auth_step a a' b b' →
   ● a ⋅ ◯ a' ~~> ● b ⋅ ◯ b'.
 Proof.
   move=> Hab [[?| |] bf1] n // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
