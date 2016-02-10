@@ -43,10 +43,9 @@ Section auth.
   Context {Hφ : ∀ n, Proper (dist n ==> dist n) φ}.
 
   Lemma auth_opened a γ :
-    (▷auth_inv γ ★ auth_own γ a) ⊑ (▷∃ a', φ (a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a)).
+    (auth_inv γ ★ auth_own γ a) ⊑ (∃ a', φ (a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a)).
   Proof.
-    rewrite /auth_inv. rewrite [auth_own _ _]later_intro -later_sep.
-    apply later_mono. rewrite sep_exist_r. apply exist_elim=>b.
+    rewrite /auth_inv. rewrite sep_exist_r. apply exist_elim=>b.
     rewrite /auth_own [(_ ★ φ _)%I]commutative -associative -own_op.
     rewrite own_valid_r auth_valid !sep_exist_l /=. apply exist_elim=>a'.
     rewrite [∅ ⋅ _]left_id -(exist_intro a').
@@ -58,5 +57,25 @@ Section auth.
     apply sep_mono; first done.
     by rewrite sep_elim_l.
   Qed.
+
+  (* TODO: This notion should probably be defined in algebra/,
+     with instances proven for the important constructions. *)
+  Definition auth_step a b :=
+    (∀ n a' af, ✓{S n} (a ⋅ a') → a ⋅ a' ≡{S n}≡ af ⋅ a →
+                b ⋅ a' ≡{S n}≡ b ⋅ af ∧ ✓{S n} (b ⋅ a')).
+
+  Lemma auth_closing a a' b γ :
+    auth_step a b →
+    (φ (b ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a))
+      ⊑ pvs N N (auth_inv γ ★ auth_own γ b).
+  Proof.
+    intros Hstep. rewrite /auth_inv /auth_own -(exist_intro (b ⋅ a')).
+    rewrite [(_ ★ φ _)%I]commutative -associative.
+    rewrite -pvs_frame_l. apply sep_mono; first done.
+    rewrite -own_op. apply own_update.
+    apply auth_update=>n af Ha Heq. apply Hstep; first done.
+    by rewrite [af ⋅ _]commutative.
+  Qed.
+
 End auth.
 
