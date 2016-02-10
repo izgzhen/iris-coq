@@ -44,7 +44,9 @@ Local Hint Resolve nclose_subseteq ndot_nclose.
 
 (** Derived forms and lemmas about them. *)
 Definition inv {Λ Σ} (N : namespace) (P : iProp Λ Σ) : iProp Λ Σ :=
-  (∃ i : positive, ■(i ∈ nclose N) ∧ ownI i P)%I.
+  (∃ i, ■ (i ∈ nclose N) ∧ ownI i P)%I.
+Instance: Params (@inv) 3.
+Typeclasses Opaque inv.
 
 Section inv.
 Context {Λ : language} {Σ : iFunctor}.
@@ -53,13 +55,10 @@ Implicit Types N : namespace.
 Implicit Types P Q R : iProp Λ Σ.
 
 Global Instance inv_contractive N : Contractive (@inv Λ Σ N).
-Proof.
-  intros n ? ? EQ. apply exists_ne=>i.
-  apply and_ne; first done.
-  by apply ownI_contractive.
-Qed.
+Proof. intros n ???. apply exists_ne=>i. by apply and_ne, ownI_contractive. Qed.
 
-Global Instance inv_always_stable N P : AlwaysStable (inv N P) := _.
+Global Instance inv_always_stable N P : AlwaysStable (inv N P).
+Proof. rewrite /inv; apply _. Qed.
 
 Lemma always_inv N P : (□ inv N P)%I ≡ inv N P.
 Proof. by rewrite always_always. Qed.
