@@ -3,8 +3,10 @@ Import uPred heap_lang.
 
 (** Define some syntactic sugar. LitTrue and LitFalse are defined in heap_lang.v. *)
 Notation Lam x e := (Rec "" x e).
+Notation Let x e1 e2 := (App (Lam x e2) e1).
 Notation Seq e1 e2 := (Let "" e1 e2).
 Notation LamV x e := (RecV "" x e).
+Notation LetCtx x e2 := (AppRCtx (LamV x e2)).
 Notation SeqCtx e2 := (LetCtx "" e2).
 
 Module notations.
@@ -14,7 +16,7 @@ Module notations.
 
   Coercion LitNat : nat >-> base_lit.
   Coercion LitBool : bool >-> base_lit.
-  (* No coercion from base_lit to expr. This makes is slightly easier to tell
+  (** No coercion from base_lit to expr. This makes is slightly easier to tell
      apart language and Coq expressions. *)
   Coercion Var : string >-> expr.
   Coercion App : expr >-> Funclass.
@@ -33,18 +35,21 @@ Module notations.
   Notation "e1 = e2" := (BinOp EqOp e1%L e2%L) (at level 70) : lang_scope.
   (* The unicode ← is already part of the notation "_ ← _; _" for bind. *)
   Notation "e1 <- e2" := (Store e1%L e2%L) (at level 80) : lang_scope.
-  Notation "'let:' x := e1 'in' e2" := (Let x e1%L e2%L)
-    (at level 102, x at level 1, e1 at level 1, e2 at level 200) : lang_scope.
-  Notation "e1 ; e2" := (Seq e1%L e2%L)
-    (at level 100, e2 at level 200) : lang_scope.
   Notation "'rec:' f x := e" := (Rec f x e%L)
     (at level 102, f at level 1, x at level 1, e at level 200) : lang_scope.
   Notation "'if' e1 'then' e2 'else' e3" := (If e1%L e2%L e3%L)
     (at level 200, e1, e2, e3 at level 200) : lang_scope.
 
-  (* derived notions, in order of declaration *)
+  (** Derived notions, in order of declaration. The notations for let and seq
+  are stated explicitly instead of relying on the Notations Let and Seq as
+  defined above. This is needed because App is now a coercion, and these
+  notations are otherwise not pretty printed back accordingly. *)
   Notation "λ: x , e" := (Lam x e%L)
     (at level 102, x at level 1, e at level 200) : lang_scope.
+  Notation "'let:' x := e1 'in' e2" := (Lam x e2%L e1%L)
+    (at level 102, x at level 1, e1 at level 1, e2 at level 200) : lang_scope.
+  Notation "e1 ; e2" := (Lam "" e2%L e1%L)
+    (at level 100, e2 at level 200) : lang_scope.
 End notations.
 
 Section suger.
@@ -56,6 +61,10 @@ Implicit Types Q : val → iProp heap_lang Σ.
 Lemma wp_lam E x ef e v Q :
   to_val e = Some v → ▷ wp E (subst ef x v) Q ⊑ wp E (App (Lam x ef) e) Q.
 Proof. intros. by rewrite -wp_rec ?subst_empty; eauto. Qed.
+
+Lemma wp_let E x e1 e2 v Q :
+  to_val e1 = Some v → ▷ wp E (subst e2 x v) Q ⊑ wp E (Let x e1 e2) Q.
+Proof. apply wp_lam. Qed.
 
 Lemma wp_seq E e1 e2 Q : wp E e1 (λ _, ▷ wp E e2 Q) ⊑ wp E (Seq e1 e2) Q.
 Proof.
