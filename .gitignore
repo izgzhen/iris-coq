@@ -4,6 +4,7 @@
 *.cache
 *.aux
 \#*\#
+.\#*
 *~
 *.bak
 .coq-native/
