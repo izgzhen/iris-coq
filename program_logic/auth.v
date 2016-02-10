@@ -61,8 +61,8 @@ Section auth.
   (* TODO: This notion should probably be defined in algebra/,
      with instances proven for the important constructions. *)
   Definition auth_step a b :=
-    (∀ n a' af, ✓{S n} (a ⋅ a') → a ⋅ a' ≡{S n}≡ af ⋅ a →
-                b ⋅ a' ≡{S n}≡ b ⋅ af ∧ ✓{S n} (b ⋅ a')).
+    (∀ n a' af, ✓{n} (a ⋅ a') → a ⋅ a' ≡{n}≡ af ⋅ a →
+                b ⋅ a' ≡{n}≡ b ⋅ af ∧ ✓{n} (b ⋅ a')).
 
   Lemma auth_closing a a' b γ :
     auth_step a b →
