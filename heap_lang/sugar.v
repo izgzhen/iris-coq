@@ -3,10 +3,8 @@ Import uPred heap_lang.
 
 (** Define some syntactic sugar. LitTrue and LitFalse are defined in heap_lang.v. *)
 Notation Lam x e := (Rec "" x e).
-Notation Let x e1 e2 := (App (Lam x e2) e1).
 Notation Seq e1 e2 := (Let "" e1 e2).
 Notation LamV x e := (RecV "" x e).
-Notation LetCtx x e2 := (AppRCtx (LamV x e2)).
 Notation SeqCtx e2 := (LetCtx "" e2).
 
 Module notations.
@@ -35,6 +33,10 @@ Module notations.
   Notation "e1 = e2" := (BinOp EqOp e1%L e2%L) (at level 70) : lang_scope.
   (* The unicode ← is already part of the notation "_ ← _; _" for bind. *)
   Notation "e1 <- e2" := (Store e1%L e2%L) (at level 80) : lang_scope.
+  Notation "'let:' x := e1 'in' e2" := (Let x e1%L e2%L)
+    (at level 102, x at level 1, e1 at level 1, e2 at level 200) : lang_scope.
+  Notation "e1 ; e2" := (Seq e1%L e2%L)
+    (at level 100, e2 at level 200) : lang_scope.
   Notation "'rec:' f x := e" := (Rec f x e%L)
     (at level 102, f at level 1, x at level 1, e at level 200) : lang_scope.
   Notation "'if' e1 'then' e2 'else' e3" := (If e1%L e2%L e3%L)
@@ -43,11 +45,6 @@ Module notations.
   (* derived notions, in order of declaration *)
   Notation "λ: x , e" := (Lam x e%L)
     (at level 102, x at level 1, e at level 200) : lang_scope.
-  (* FIXME: the ones below are not being pretty printed *)
-  Notation "'let:' x := e1 'in' e2" := (Let x e1%L e2%L)
-    (at level 102, x at level 1, e1 at level 1, e2 at level 200) : lang_scope.
-  Notation "e1 ; e2" := (Seq e1%L e2%L)
-    (at level 100, e2 at level 200) : lang_scope.
 End notations.
 
 Section suger.
@@ -60,15 +57,11 @@ Lemma wp_lam E x ef e v Q :
   to_val e = Some v → ▷ wp E (subst ef x v) Q ⊑ wp E (App (Lam x ef) e) Q.
 Proof. intros. by rewrite -wp_rec ?subst_empty; eauto. Qed.
 
-Lemma wp_let E x e1 e2 Q :
-  wp E e1 (λ v, ▷ wp E (subst e2 x v) Q) ⊑ wp E (Let x e1 e2) Q.
+Lemma wp_seq E e1 e2 Q : wp E e1 (λ _, ▷ wp E e2 Q) ⊑ wp E (Seq e1 e2) Q.
 Proof.
-  rewrite -(wp_bind [LetCtx x e2]). apply wp_mono=>v.
-  by rewrite -wp_lam //= to_of_val.
+  rewrite -(wp_bind [LetCtx "" e2]). apply wp_mono=>v.
+  by rewrite -wp_let //= ?subst_empty ?to_of_val.
 Qed.
-
-Lemma wp_seq E e1 e2 Q : wp E e1 (λ _, ▷wp E e2 Q) ⊑ wp E (Seq e1 e2) Q.
-Proof. rewrite -wp_let. apply wp_mono=>v. by rewrite subst_empty. Qed.
 
 Lemma wp_le E (n1 n2 : nat) P Q :
   (n1 ≤ n2 → P ⊑ ▷ Q (LitV true)) →

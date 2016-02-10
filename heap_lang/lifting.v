@@ -90,11 +90,19 @@ Proof.
     last by intros; inv_step; eauto.
 Qed.
 
+Lemma wp_let E x e1 e2 v Q :
+  to_val e1 = Some v →
+  ▷ wp E (subst e2 x v) Q ⊑ wp E (Let x e1 e2) Q.
+Proof.
+  intros. rewrite -(wp_lift_pure_det_step (Let _ _ _)
+    (subst e2 x v) None) ?right_id //=; intros; inv_step; eauto.
+Qed.
+
 Lemma wp_un_op E op l l' Q :
   un_op_eval op l = Some l' →
   ▷ Q (LitV l') ⊑ wp E (UnOp op (Lit l)) Q.
 Proof.
-  intros Heval. rewrite -(wp_lift_pure_det_step (UnOp op _) (Lit l') None)
+  intros. rewrite -(wp_lift_pure_det_step (UnOp op _) (Lit l') None)
     ?right_id //; last by intros; inv_step; eauto.
   by rewrite -wp_value'.
 Qed.

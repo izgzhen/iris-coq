@@ -31,13 +31,12 @@ Module LiftingTests.
   Goal ∀ σ E, ownP (Σ:=Σ) σ ⊑ wp E e (λ v, v = LitV 2).
   Proof.
     move=> σ E. rewrite /e.
-    rewrite -wp_let /= -wp_alloc_pst //=.
+    rewrite -(wp_bindi (LetCtx _ _)) -wp_alloc_pst //=.
     apply sep_intro_True_r; first done.
     rewrite -later_intro; apply forall_intro=>l; apply wand_intro_l.
     rewrite right_id; apply const_elim_l=> _.
-    rewrite -later_intro.
-    rewrite -(wp_bindi (SeqCtx (Load (Loc _)))) /=.
-    (* FIXME: doing simpl here kills the Seq, turns it all the way into Rec *)
+    rewrite -wp_let //= -later_intro.
+    rewrite -(wp_bindi (SeqCtx (Load (Loc _)))) /=. 
     rewrite -(wp_bindi (StoreRCtx (LocV _))) /=.
     rewrite -(wp_bindi (BinOpLCtx PlusOp _)) /=.
     rewrite -wp_load_pst; first (apply sep_intro_True_r; first done); last first.
@@ -72,7 +71,8 @@ Module LiftingTests.
     rewrite ->(later_intro (Q _)).
     rewrite -!later_and; apply later_mono.
     (* Go on *)
-    rewrite -wp_let -wp_bin_op //= -(wp_bindi (IfCtx _ _)) /= -!later_intro.
+    rewrite -(wp_bindi (LetCtx _ _)) -wp_bin_op //= -wp_let //=.
+    rewrite -(wp_bindi (IfCtx _ _)) /= -!later_intro.
     apply wp_lt=> ?.
     - rewrite -wp_if_true.
       rewrite -!later_intro (forall_elim (n1 + 1)) const_equiv; last omega.
@@ -99,7 +99,8 @@ Module LiftingTests.
     True ⊑ wp (Σ:=Σ) E (let: "x" := Pred (Lit 42) in Pred "x")
                        (λ v, v = LitV 40).
   Proof.
-    intros E. rewrite -wp_let. rewrite -Pred_spec -!later_intro /=.
-    rewrite -Pred_spec -later_intro. by apply const_intro.
+    intros E.
+    rewrite -(wp_bindi (LetCtx _ _)) -Pred_spec //= -wp_let //=.
+    rewrite -Pred_spec -!later_intro /=. by apply const_intro.
   Qed.
 End LiftingTests.
