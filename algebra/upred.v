@@ -400,8 +400,8 @@ Lemma exist_elim {A} (P : A → uPred M) Q : (∀ a, P a ⊑ Q) → (∃ a, P a)
 Proof. by intros HPQ x [|n] ?; [|intros [a ?]; apply HPQ with a]. Qed.
 Lemma eq_refl {A : cofeT} (a : A) P : P ⊑ (a ≡ a).
 Proof. by intros x n ??; simpl. Qed.
-Lemma eq_rewrite {A : cofeT} P (Q : A → uPred M)
-  `{HQ:∀ n, Proper (dist n ==> dist n) Q} a b : P ⊑ (a ≡ b) → P ⊑ Q a → P ⊑ Q b.
+Lemma eq_rewrite {A : cofeT} a b (Q : A → uPred M) P
+  `{HQ:∀ n, Proper (dist n ==> dist n) Q} : P ⊑ (a ≡ b) → P ⊑ Q a → P ⊑ Q b.
 Proof.
   intros Hab Ha x n ??; apply HQ with n a; auto. by symmetry; apply Hab with x.
 Qed.
@@ -460,7 +460,7 @@ Lemma equiv_eq {A : cofeT} P (a b : A) : a ≡ b → P ⊑ (a ≡ b).
 Proof. intros ->; apply eq_refl. Qed.
 Lemma eq_sym {A : cofeT} (a b : A) : (a ≡ b) ⊑ (b ≡ a).
 Proof.
-  refine (eq_rewrite _ (λ b, b ≡ a)%I a b _ _); auto using eq_refl.
+  apply (eq_rewrite a b (λ b, b ≡ a)%I); auto using eq_refl.
   intros n; solve_proper.
 Qed.
 
@@ -776,7 +776,7 @@ Qed.
 Lemma always_eq {A:cofeT} (a b : A) : (□ (a ≡ b))%I ≡ (a ≡ b : uPred M)%I.
 Proof.
   apply (anti_symmetric (⊑)); auto using always_elim.
-  refine (eq_rewrite _ (λ b, □ (a ≡ b))%I a b _ _); auto.
+  apply (eq_rewrite a b (λ b, □ (a ≡ b))%I); auto.
   { intros n; solve_proper. }
   rewrite -(eq_refl _ True) always_const; auto.
 Qed.
