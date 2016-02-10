@@ -163,17 +163,6 @@ Notation "X ≢ Y":= (¬X ≡ Y) (at level 70, no associativity) : C_scope.
 Notation "( X ≢)" := (λ Y, X ≢ Y) (only parsing) : C_scope.
 Notation "(≢ X )" := (λ Y, Y ≢ X) (only parsing) : C_scope.
 
-Class EquivE E A := equivE: E → relation A.
-Instance: Params (@equivE) 4.
-Notation "X ≡{ Γ } Y" := (equivE Γ X Y)
-  (at level 70, format "X  ≡{ Γ }  Y") : C_scope.
-Notation "(≡{ Γ } )" := (equivE Γ) (only parsing, Γ at level 1) : C_scope.
-Notation "X ≡{ Γ1 , Γ2 , .. , Γ3 } Y" :=
-  (equivE (pair .. (Γ1, Γ2) .. Γ3) X Y)
-  (at level 70, format "'[' X  ≡{ Γ1 , Γ2 , .. , Γ3 }  '/' Y ']'") : C_scope.
-Notation "(≡{ Γ1 , Γ2 , .. , Γ3 } )" := (equivE (pair .. (Γ1, Γ2) .. Γ3))
-  (only parsing, Γ1 at level 1) : C_scope.
-
 (** The type class [LeibnizEquiv] collects setoid equalities that coincide
 with Leibniz equality. We provide the tactic [fold_leibniz] to transform such
 setoid equalities into Leibniz equalities, and [unfold_leibniz] for the
@@ -211,8 +200,6 @@ equality. *)
 Instance equiv_default_relation `{Equiv A} : DefaultRelation (≡) | 3.
 Hint Extern 0 (?x ≡ ?y) => reflexivity.
 Hint Extern 0 (_ ≡ _) => symmetry; assumption.
-Hint Extern 0 (?x ≡{_} ?y) => reflexivity.
-Hint Extern 0 (_ ≡{_} _) => symmetry; assumption.
 
 (** ** Operations on collections *)
 (** We define operational type classes for the traditional operations and
@@ -291,35 +278,6 @@ Infix "⊆2**" := (Forall2 (λ p q, p.2 ⊆* q.2)) (at level 70) : C_scope.
 Hint Extern 0 (_ ⊆ _) => reflexivity.
 Hint Extern 0 (_ ⊆* _) => reflexivity.
 Hint Extern 0 (_ ⊆** _) => reflexivity.
-
-Class SubsetEqE E A := subseteqE: E → relation A.
-Instance: Params (@subseteqE) 4.
-Notation "X ⊆{ Γ } Y" := (subseteqE Γ X Y)
-  (at level 70, format "X  ⊆{ Γ }  Y") : C_scope.
-Notation "(⊆{ Γ } )" := (subseteqE Γ) (only parsing, Γ at level 1) : C_scope.
-Notation "X ⊈{ Γ } Y" := (¬X ⊆{Γ} Y)
-  (at level 70, format "X  ⊈{ Γ }  Y") : C_scope.
-Notation "(⊈{ Γ } )" := (λ X Y, X ⊈{Γ} Y)
-  (only parsing, Γ at level 1) : C_scope.
-Notation "Xs ⊆{ Γ }* Ys" := (Forall2 (⊆{Γ}) Xs Ys)
-  (at level 70, format "Xs  ⊆{ Γ }*  Ys") : C_scope.
-Notation "(⊆{ Γ }* )" := (Forall2 (⊆{Γ}))
-  (only parsing, Γ at level 1) : C_scope.
-Notation "X ⊆{ Γ1 , Γ2 , .. , Γ3 } Y" :=
-  (subseteqE (pair .. (Γ1, Γ2) .. Γ3) X Y)
-  (at level 70, format "'[' X  ⊆{ Γ1 , Γ2 , .. , Γ3 }  '/' Y ']'") : C_scope.
-Notation "(⊆{ Γ1 , Γ2 , .. , Γ3 } )" := (subseteqE (pair .. (Γ1, Γ2) .. Γ3))
-  (only parsing, Γ1 at level 1) : C_scope.
-Notation "X ⊈{ Γ1 , Γ2 , .. , Γ3 } Y" := (¬X ⊆{pair .. (Γ1, Γ2) .. Γ3} Y)
-  (at level 70, format "X  ⊈{ Γ1 , Γ2 , .. , Γ3 }  Y") : C_scope.
-Notation "(⊈{ Γ1 , Γ2 , .. , Γ3 } )" := (λ X Y, X ⊈{pair .. (Γ1, Γ2) .. Γ3} Y)
-  (only parsing) : C_scope.
-Notation "Xs ⊆{ Γ1 , Γ2 , .. , Γ3 }* Ys" :=
-  (Forall2 (⊆{pair .. (Γ1, Γ2) .. Γ3}) Xs Ys)
-  (at level 70, format "Xs  ⊆{ Γ1 , Γ2 , .. , Γ3 }*  Ys") : C_scope.
-Notation "(⊆{ Γ1 , Γ2 , .. , Γ3 }* )" := (Forall2 (⊆{pair .. (Γ1, Γ2) .. Γ3}))
-  (only parsing, Γ1 at level 1) : C_scope.
-Hint Extern 0 (_ ⊆{_} _) => reflexivity.
 
 Definition strict {A} (R : relation A) : relation A := λ X Y, R X Y ∧ ¬R Y X.
 Instance: Params (@strict) 2.
