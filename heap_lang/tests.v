@@ -4,20 +4,20 @@ Require Import heap_lang.lifting heap_lang.sugar.
 Import heap_lang uPred notations.
 
 Module LangTests.
-  Definition add := (Lit 21 + Lit 21)%L.
-  Goal ∀ σ, prim_step add σ (Lit 42) σ None.
+  Definition add := ('21 + '21)%L.
+  Goal ∀ σ, prim_step add σ ('42) σ None.
   Proof. intros; do_step done. Qed.
-  Definition rec_app : expr := (rec: "f" "x" := "f" "x") (Lit 0).
+  Definition rec_app : expr := ((rec: "f" "x" := "f" "x") '0)%L.
   Goal ∀ σ, prim_step rec_app σ rec_app σ None.
   Proof.
     intros. rewrite /rec_app. (* FIXME: do_step does not work here *)
     by eapply (Ectx_step  _ _ _ _ _ []), (BetaS _ _ _ _ (LitV (LitNat 0))).
   Qed.
-  Definition lam : expr := λ: "x", "x" + Lit 21.
-  Goal ∀ σ, prim_step (lam (Lit 21)) σ add σ None.
+  Definition lam : expr := λ: "x", "x" + '21.
+  Goal ∀ σ, prim_step (lam '21)%L σ add σ None.
   Proof.
     intros. rewrite /lam. (* FIXME: do_step does not work here *)
-    by eapply (Ectx_step  _ _ _ _ _ []), (BetaS "" "x" ("x" + Lit 21) _ (LitV 21)).
+    by eapply (Ectx_step  _ _ _ _ _ []), (BetaS "" "x" ("x" + '21) _ (LitV 21)).
   Qed.
 End LangTests.
 
@@ -27,7 +27,7 @@ Module LiftingTests.
   Implicit Types Q : val → iProp heap_lang Σ.
 
   Definition e  : expr :=
-    let: "x" := ref (Lit 1) in "x" <- !"x" + Lit 1; !"x".
+    let: "x" := ref '1 in "x" <- !"x" + '1; !"x".
   Goal ∀ σ E, ownP (Σ:=Σ) σ ⊑ wp E e (λ v, v = LitV 2).
   Proof.
     move=> σ E. rewrite /e.
@@ -56,13 +56,13 @@ Module LiftingTests.
 
   Definition FindPred (n2 : expr) : expr :=
     rec: "pred" "y" :=
-      let: "yp" := "y" + Lit 1 in
+      let: "yp" := "y" + '1 in
       if "yp" < n2 then "pred" "yp" else "y".
   Definition Pred : expr :=
-    λ: "x", if "x" ≤ Lit 0 then Lit 0 else FindPred "x" (Lit 0).
+    λ: "x", if "x" ≤ '0 then '0 else FindPred "x" '0.
 
   Lemma FindPred_spec n1 n2 E Q :
-    (■ (n1 < n2) ∧ Q (LitV (pred n2))) ⊑ wp E (FindPred (Lit n2) (Lit n1)) Q.
+    (■ (n1 < n2) ∧ Q (LitV (pred n2))) ⊑ wp E (FindPred 'n2 'n1)%L Q.
   Proof.
     revert n1. apply löb_all_1=>n1.
     rewrite (commutative uPred_and (■ _)%I) associative; apply const_elim_r=>?.
@@ -82,7 +82,7 @@ Module LiftingTests.
       by rewrite -!later_intro -wp_value' // and_elim_r.
   Qed.
 
-  Lemma Pred_spec n E Q : ▷ Q (LitV (pred n)) ⊑ wp E (Pred (Lit n)) Q.
+  Lemma Pred_spec n E Q : ▷ Q (LitV (pred n)) ⊑ wp E (Pred 'n)%L Q.
   Proof.
     rewrite -wp_lam //=.
     rewrite -(wp_bindi (IfCtx _ _)).
@@ -96,7 +96,7 @@ Module LiftingTests.
   Qed.
 
   Goal ∀ E,
-    True ⊑ wp (Σ:=Σ) E (let: "x" := Pred (Lit 42) in Pred "x")
+    True ⊑ wp (Σ:=Σ) E (let: "x" := Pred '42 in Pred "x")
                        (λ v, v = LitV 40).
   Proof.
     intros E.

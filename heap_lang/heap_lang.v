@@ -19,8 +19,6 @@ Inductive expr :=
   | Var (x : string)
   | Rec (f x : string) (e : expr)
   | App (e1 e2 : expr)
-  (* Let *)
-  | Let (x : string) (e1 e2 : expr)
   (* Base types and their operations *)
   | Lit (l : base_lit)
   | UnOp (op : un_op) (e : expr)
@@ -78,7 +76,6 @@ Definition state := gmap loc val.
 Inductive ectx_item :=
   | AppLCtx (e2 : expr)
   | AppRCtx (v1 : val)
-  | LetCtx (x : string) (e2 : expr)
   | UnOpCtx (op : un_op)
   | BinOpLCtx (op : bin_op) (e2 : expr)
   | BinOpRCtx (op : bin_op) (v1 : val)
@@ -104,7 +101,6 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   match Ki with
   | AppLCtx e2 => App e e2
   | AppRCtx v1 => App (of_val v1) e
-  | LetCtx x e2 => Let x e e2
   | UnOpCtx op => UnOp op e
   | BinOpLCtx op e2 => BinOp op e e2
   | BinOpRCtx op v1 => BinOp op (of_val v1) e
@@ -133,8 +129,6 @@ Fixpoint subst (e : expr) (x : string) (v : val) : expr :=
   | Var y => if decide (x = y ∧ x ≠ "") then of_val v else Var y
   | Rec f y e => Rec f y (if decide (x ≠ f ∧ x ≠ y) then subst e x v else e)
   | App e1 e2 => App (subst e1 x v) (subst e2 x v)
-  | Let y e1 e2 =>
-     Let y (subst e1 x v) (if decide (x ≠ y) then subst e2 x v else e2)
   | Lit l => Lit l
   | UnOp op e => UnOp op (subst e x v)
   | BinOp op e1 e2 => BinOp op (subst e1 x v) (subst e2 x v)
@@ -178,9 +172,6 @@ Inductive head_step : expr -> state -> expr -> state -> option expr -> Prop :=
      to_val e2 = Some v2 →
      head_step (App (Rec f x e1) e2) σ
        (subst (subst e1 f (RecV f x e1)) x v2) σ None
-  | DeltaS x e1 e2 v1 σ :
-     to_val e1 = Some v1 →
-     head_step (Let x e1 e2) σ (subst e2 x v1) σ None
   | UnOpS op l l' σ :
      un_op_eval op l = Some l' → 
      head_step (UnOp op (Lit l)) σ (Lit l') σ None
