@@ -384,6 +384,7 @@ Section cmra_monotone.
   Proof. rewrite !cmra_valid_validN; eauto using validN_preserving. Qed.
 End cmra_monotone.
 
+
 (** * Transporting a CMRA equality *)
 Definition cmra_transport {A B : cmraT} (H : A = B) (x : A) : B :=
   eq_rect A id x _ H.
