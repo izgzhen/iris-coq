@@ -23,7 +23,7 @@ Section global.
 Context {Λ : language} {Σ : gid → iFunctor} (i : gid) `{!InG Λ Σ i A}.
 Implicit Types a : A.
 
-(* Properties of to_globalC *)
+(** * Properties of to_globalC *)
 Instance to_globalC_ne γ n : Proper (dist n ==> dist n) (to_globalC i γ).
 Proof. by intros a a' Ha; apply iprod_singleton_ne; rewrite Ha. Qed.
 Lemma to_globalC_validN n γ a : ✓{n} (to_globalC i γ a) ↔ ✓{n} a.
@@ -44,7 +44,19 @@ Qed.
 Instance to_globalC_timeless γ m : Timeless m → Timeless (to_globalC i γ m).
 Proof. rewrite /to_globalC; apply _. Qed.
 
-(* Properties of own *)
+(** * Transport empty *)
+Instance inG_empty `{Empty A} : Empty (Σ i (laterC (iPreProp Λ (globalC Σ)))) :=
+  cmra_transport inG ∅.
+Instance inG_empty_spec `{Empty A} :
+  CMRAIdentity A → CMRAIdentity (Σ i (laterC (iPreProp Λ (globalC Σ)))).
+Proof.
+  split.
+  * apply cmra_transport_valid, cmra_empty_valid.
+  * intros x; rewrite /empty /inG_empty; destruct inG. by rewrite left_id.
+  * apply _.
+Qed.
+
+(** * Properties of own *)
 Global Instance own_ne γ n : Proper (dist n ==> dist n) (own i γ).
 Proof. by intros m m' Hm; rewrite /own Hm. Qed.
 Global Instance own_proper γ : Proper ((≡) ==> (≡)) (own i γ) := ne_proper _.
@@ -91,17 +103,11 @@ Lemma own_updateP_empty `{Empty A, !CMRAIdentity A} E γ a P :
 Proof.
   intros Hemp.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ a', m = to_globalC i γ a' ∧ P a') ∧ ownG m)%I).
-  * eapply pvs_ownG_updateP_empty, iprod_singleton_updateP_empty with (x:=i);
-      first by (eapply map_singleton_updateP_empty', cmra_transport_updateP', Hemp).
+  * eapply pvs_ownG_updateP_empty, iprod_singleton_updateP_empty;
+      first eapply map_singleton_updateP_empty', cmra_transport_updateP', Hemp.
     naive_solver.
   * apply exist_elim=>m; apply const_elim_l=>-[a' [-> HP]].
     rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
-Unshelve.
-(* We have to prove that we actually follow the identity laws on the "other side". *)
-split.
-- apply cmra_transport_valid, cmra_empty_valid.
-- move=>b. by rewrite -cmra_transport_back_op_r left_id cmra_transport_back_and.
-- apply _. 
 Qed.
 
 Lemma own_update E γ a a' : a ~~> a' → own i γ a ⊑ pvs E E (own i γ a').
