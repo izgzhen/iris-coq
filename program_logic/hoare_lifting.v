@@ -20,8 +20,8 @@ Lemma ht_lift_step E1 E2
   E1 ⊆ E2 → to_val e1 = None →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  (P ={E2,E1}=> (ownP σ1 ★ ▷ P') ∧ ∀ e2 σ2 ef,
-    (■ φ e2 σ2 ef ★ ownP σ2 ★ P') ={E1,E2}=> (Q1 e2 σ2 ef ★ Q2 e2 σ2 ef) ∧
+  ((P >{E2,E1}=> ownP σ1 ★ ▷ P') ∧ ∀ e2 σ2 ef,
+    (■ φ e2 σ2 ef ★ ownP σ2 ★ P' >{E1,E2}=> Q1 e2 σ2 ef ★ Q2 e2 σ2 ef) ∧
     {{ Q1 e2 σ2 ef }} e2 @ E2 {{ R }} ∧
     {{ Q2 e2 σ2 ef }} ef ?@ coPset_all {{ λ _, True }})
   ⊑ {{ P }} e1 @ E2 {{ R }}.
