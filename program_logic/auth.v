@@ -1,6 +1,6 @@
 Require Export algebra.auth algebra.functor.
 Require Export program_logic.invariants program_logic.ghost_ownership.
-Import uPred ghost_ownership.
+Import uPred.
 
 Section auth.
   Context {A : cmraT} `{Empty A, !CMRAIdentity A}.

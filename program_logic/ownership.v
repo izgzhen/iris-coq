@@ -27,7 +27,7 @@ Proof.
 Qed.
 Lemma always_ownI i P : (□ ownI i P)%I ≡ ownI i P.
 Proof.
-  apply uPred.always_own.
+  apply uPred.always_ownM.
   by rewrite Res_unit !cmra_unit_empty map_unit_singleton.
 Qed.
 Global Instance ownI_always_stable i P : AlwaysStable (ownI i P).
@@ -38,8 +38,8 @@ Proof. apply (uPred.always_sep_dup' _). Qed.
 (* physical state *)
 Lemma ownP_twice σ1 σ2 : (ownP σ1 ★ ownP σ2 : iProp Λ Σ) ⊑ False.
 Proof.
-  rewrite /ownP -uPred.own_op Res_op.
-  by apply uPred.own_invalid; intros (_&?&_).
+  rewrite /ownP -uPred.ownM_op Res_op.
+  by apply uPred.ownM_invalid; intros (_&?&_).
 Qed.
 Global Instance ownP_timeless σ : TimelessP (@ownP Λ Σ σ).
 Proof. rewrite /ownP; apply _. Qed.
@@ -49,14 +49,14 @@ Global Instance ownG_ne n : Proper (dist n ==> dist n) (@ownG Λ Σ).
 Proof. by intros m m' Hm; unfold ownG; rewrite Hm. Qed.
 Global Instance ownG_proper : Proper ((≡) ==> (≡)) (@ownG Λ Σ) := ne_proper _.
 Lemma ownG_op m1 m2 : ownG (m1 ⋅ m2) ≡ (ownG m1 ★ ownG m2)%I.
-Proof. by rewrite /ownG -uPred.own_op Res_op !(left_id _ _). Qed.
+Proof. by rewrite /ownG -uPred.ownM_op Res_op !(left_id _ _). Qed.
 Lemma always_ownG_unit m : (□ ownG (unit m))%I ≡ ownG (unit m).
 Proof.
-  apply uPred.always_own.
+  apply uPred.always_ownM.
   by rewrite Res_unit !cmra_unit_empty -{2}(cmra_unit_idempotent m).
 Qed.
 Lemma ownG_valid m : (ownG m) ⊑ (✓ m).
-Proof. by rewrite /ownG uPred.own_valid; apply uPred.valid_mono=> n [? []]. Qed.
+Proof. by rewrite /ownG uPred.ownM_valid; apply uPred.valid_mono=> n [? []]. Qed.
 Lemma ownG_valid_r m : (ownG m) ⊑ (ownG m ★ ✓ m).
 Proof. apply (uPred.always_entails_r' _ _), ownG_valid. Qed.
 Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
