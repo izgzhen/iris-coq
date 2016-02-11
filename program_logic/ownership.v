@@ -1,10 +1,10 @@
 Require Export program_logic.model.
 
 Definition ownI {Λ Σ} (i : positive) (P : iProp Λ Σ) : iProp Λ Σ :=
-  uPred_own (Res {[ i ↦ to_agree (Next (iProp_unfold P)) ]} ∅ ∅).
+  uPred_ownM (Res {[ i ↦ to_agree (Next (iProp_unfold P)) ]} ∅ ∅).
 Arguments ownI {_ _} _ _%I.
-Definition ownP {Λ Σ} (σ: state Λ) : iProp Λ Σ := uPred_own (Res ∅ (Excl σ) ∅).
-Definition ownG {Λ Σ} (m: iGst Λ Σ) : iProp Λ Σ := uPred_own (Res ∅ ∅ (Some m)).
+Definition ownP {Λ Σ} (σ: state Λ) : iProp Λ Σ := uPred_ownM (Res ∅ (Excl σ) ∅).
+Definition ownG {Λ Σ} (m: iGst Λ Σ) : iProp Λ Σ := uPred_ownM (Res ∅ ∅ (Some m)).
 Instance: Params (@ownI) 3.
 Instance: Params (@ownP) 2.
 Instance: Params (@ownG) 2.

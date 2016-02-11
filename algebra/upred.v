@@ -174,7 +174,7 @@ Next Obligation.
     eauto using cmra_unit_preserving, cmra_unit_validN.
 Qed.
 
-Program Definition uPred_own {M : cmraT} (a : M) : uPred M :=
+Program Definition uPred_ownM {M : cmraT} (a : M) : uPred M :=
   {| uPred_holds n x := a ≼{n} x |}.
 Next Obligation. by intros M a x1 x2 n [a' ?] Hx; exists a'; rewrite -Hx. Qed.
 Next Obligation.
@@ -327,13 +327,13 @@ Global Instance always_ne n: Proper (dist n ==> dist n) (@uPred_always M).
 Proof. intros P1 P2 HP x n'; split; apply HP; eauto using cmra_unit_validN. Qed.
 Global Instance always_proper :
   Proper ((≡) ==> (≡)) (@uPred_always M) := ne_proper _.
-Global Instance own_ne n : Proper (dist n ==> dist n) (@uPred_own M).
+Global Instance own_ne n : Proper (dist n ==> dist n) (@uPred_ownM M).
 Proof.
   by intros a1 a2 Ha x n'; split; intros [a' ?]; exists a'; simpl; first
     [rewrite -(dist_le _ _ _ _ Ha); last lia
     |rewrite (dist_le _ _ _ _ Ha); last lia].
 Qed.
-Global Instance own_proper : Proper ((≡) ==> (≡)) (@uPred_own M) := ne_proper _.
+Global Instance own_proper : Proper ((≡) ==> (≡)) (@uPred_ownM M) := ne_proper _.
 Global Instance iff_ne n : Proper (dist n ==> dist n ==> dist n) (@uPred_iff M).
 Proof. unfold uPred_iff; solve_proper. Qed.
 Global Instance iff_proper :
@@ -785,7 +785,7 @@ Proof. intros; rewrite -always_and_sep_r; auto. Qed.
 
 (* Own and valid *)
 Lemma ownM_op (a1 a2 : M) :
-  uPred_own (a1 ⋅ a2) ≡ (uPred_own a1 ★ uPred_own a2)%I.
+  uPred_ownM (a1 ⋅ a2) ≡ (uPred_ownM a1 ★ uPred_ownM a2)%I.
 Proof.
   intros x n ?; split.
   * intros [z ?]; exists a1, (a2 ⋅ z); split; [by rewrite (associative op)|].
@@ -794,19 +794,19 @@ Proof.
     by rewrite (associative op _ z1) -(commutative op z1) (associative op z1)
       -(associative op _ a2) (commutative op z1) -Hy1 -Hy2.
 Qed.
-Lemma always_ownM_unit (a : M) : (□ uPred_own (unit a))%I ≡ uPred_own (unit a).
+Lemma always_ownM_unit (a : M) : (□ uPred_ownM (unit a))%I ≡ uPred_ownM (unit a).
 Proof.
   intros x n; split; [by apply always_elim|intros [a' Hx]]; simpl.
   rewrite -(cmra_unit_idempotent a) Hx.
   apply cmra_unit_preservingN, cmra_includedN_l.
 Qed.
-Lemma always_ownM (a : M) : unit a ≡ a → (□ uPred_own a)%I ≡ uPred_own a.
+Lemma always_ownM (a : M) : unit a ≡ a → (□ uPred_ownM a)%I ≡ uPred_ownM a.
 Proof. by intros <-; rewrite always_ownM_unit. Qed.
-Lemma ownM_something : True ⊑ ∃ a, uPred_own a.
+Lemma ownM_something : True ⊑ ∃ a, uPred_ownM a.
 Proof. intros x n ??. by exists x; simpl. Qed.
-Lemma ownM_empty `{Empty M, !CMRAIdentity M} : True ⊑ uPred_own ∅.
+Lemma ownM_empty `{Empty M, !CMRAIdentity M} : True ⊑ uPred_ownM ∅.
 Proof. intros x n ??; by  exists x; rewrite (left_id _ _). Qed.
-Lemma ownM_valid (a : M) : uPred_own a ⊑ ✓ a.
+Lemma ownM_valid (a : M) : uPred_ownM a ⊑ ✓ a.
 Proof. intros x n Hv [a' ?]; cofe_subst; eauto using cmra_validN_op_l. Qed.
 Lemma valid_intro {A : cmraT} (a : A) : ✓ a → True ⊑ ✓ a.
 Proof. by intros ? x n ? _; simpl; apply cmra_valid_validN. Qed.
@@ -819,7 +819,7 @@ Lemma always_valid {A : cmraT} (a : A) : (□ (✓ a))%I ≡ (✓ a : uPred M)%I
 Proof. done. Qed.
 
 (* Own and valid derived *)
-Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_own a ⊑ False.
+Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_ownM a ⊑ False.
 Proof. by intros; rewrite ownM_valid valid_elim. Qed.
 
 (* Big ops *)
@@ -904,7 +904,7 @@ Qed.
 Global Instance eq_timeless {A : cofeT} (a b : A) :
   Timeless a → TimelessP (a ≡ b : uPred M)%I.
 Proof. by intro; apply timelessP_spec=> x n ??; apply equiv_dist, timeless. Qed.
-Global Instance own_timeless (a : M) : Timeless a → TimelessP (uPred_own a).
+Global Instance own_timeless (a : M) : Timeless a → TimelessP (uPred_ownM a).
 Proof.
   intros ?; apply timelessP_spec=> x [|n] ?? //; apply cmra_included_includedN,
     cmra_timeless_included_l; eauto using cmra_validN_le.
@@ -934,7 +934,7 @@ Global Instance valid_always_stable {A : cmraT} (a : A) : AS (✓ a : uPred M)%I
 Proof. by intros; rewrite /AlwaysStable always_valid. Qed.
 Global Instance later_always_stable P : AS P → AS (▷ P).
 Proof. by intros; rewrite /AlwaysStable always_later; apply later_mono. Qed.
-Global Instance own_unit_always_stable (a : M) : AS (uPred_own (unit a)).
+Global Instance own_unit_always_stable (a : M) : AS (uPred_ownM (unit a)).
 Proof. by rewrite /AlwaysStable always_ownM_unit. Qed.
 Global Instance default_always_stable {A} P (Q : A → uPred M) (mx : option A) :
   AS P → (∀ x, AS (Q x)) → AS (default P mx Q).
