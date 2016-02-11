@@ -288,10 +288,6 @@ End freshness.
 
 (* Deallocation is not a local update. The trouble is that if we own {[ i ↦ x ]},
    then the frame could always own "unit x", and prevent deallocation. *)
-(*
-Lemma option_fmap_op {B : cmraT} (f : A → B) (mx my : option A) : f <$> mx ⋅ my = (f <$> mx) ⋅ (f <$> my).
-Proof. destruct mx, my; simpl; try done.
-*)
 Global Instance map_alter_update `{!LocalUpdate P f} i :
   LocalUpdate (λ m, ∃ x, m !! i = Some x ∧ P x) (alter f i).
 Proof.
