@@ -2,13 +2,15 @@ Require Export program_logic.language prelude.strings.
 Require Import prelude.gmap.
 
 Module heap_lang.
+Open Scope Z_scope.
+
 (** Expressions and vals. *)
 Definition loc := positive. (* Really, any countable type. *)
 
 Inductive base_lit : Set :=
-  | LitNat (n : nat) | LitBool (b : bool) | LitUnit.
+  | LitInt (n : Z) | LitBool (b : bool) | LitUnit.
 Inductive un_op : Set :=
-  | NegOp.
+  | NegOp | MinusUnOp.
 Inductive bin_op : Set :=
   | PlusOp | MinusOp | LeOp | LtOp | EqOp.
 
@@ -152,16 +154,17 @@ Fixpoint subst (e : expr) (x : string) (v : val) : expr :=
 Definition un_op_eval (op : un_op) (l : base_lit) : option base_lit :=
   match op, l with
   | NegOp, LitBool b => Some (LitBool (negb b))
+  | MinusUnOp, LitInt n => Some (LitInt (- n))
   | _, _ => None
   end.
 
 Definition bin_op_eval (op : bin_op) (l1 l2 : base_lit) : option base_lit :=
   match op, l1, l2 with
-  | PlusOp, LitNat n1, LitNat n2 => Some $ LitNat (n1 + n2)
-  | MinusOp, LitNat n1, LitNat n2 => Some $ LitNat (n1 - n2)
-  | LeOp, LitNat n1, LitNat n2 => Some $ LitBool $ bool_decide (n1 ≤ n2)
-  | LtOp, LitNat n1, LitNat n2 => Some $ LitBool $ bool_decide (n1 < n2)
-  | EqOp, LitNat n1, LitNat n2 => Some $ LitBool $ bool_decide (n1 = n2)
+  | PlusOp, LitInt n1, LitInt n2 => Some $ LitInt (n1 + n2)
+  | MinusOp, LitInt n1, LitInt n2 => Some $ LitInt (n1 - n2)
+  | LeOp, LitInt n1, LitInt n2 => Some $ LitBool $ bool_decide (n1 ≤ n2)
+  | LtOp, LitInt n1, LitInt n2 => Some $ LitBool $ bool_decide (n1 < n2)
+  | EqOp, LitInt n1, LitInt n2 => Some $ LitBool $ bool_decide (n1 = n2)
   | _, _, _ => None
   end.
 

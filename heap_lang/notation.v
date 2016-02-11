@@ -4,7 +4,7 @@ Delimit Scope lang_scope with L.
 Bind Scope lang_scope with expr val.
 Arguments wp {_ _} _ _%L _.
 
-Coercion LitNat : nat >-> base_lit.
+Coercion LitInt : Z >-> base_lit.
 Coercion LitBool : bool >-> base_lit.
 (** No coercion from base_lit to expr. This makes is slightly easier to tell
    apart language and Coq expressions. *)
@@ -22,6 +22,8 @@ Notation "e1 + e2" := (BinOp PlusOp e1%L e2%L)
   (at level 50, left associativity) : lang_scope.
 Notation "e1 - e2" := (BinOp MinusOp e1%L e2%L)
   (at level 50, left associativity) : lang_scope.
+Notation "- e" := (UnOp MinusUnOp e%L) (at level 35, right associativity) : lang_scope.
+Notation "~ e" := (UnOp NegOp e%L) (at level 75, right associativity) : lang_scope.
 Notation "e1 ≤ e2" := (BinOp LeOp e1%L e2%L) (at level 70) : lang_scope.
 Notation "e1 < e2" := (BinOp LtOp e1%L e2%L) (at level 70) : lang_scope.
 Notation "e1 = e2" := (BinOp EqOp e1%L e2%L) (at level 70) : lang_scope.

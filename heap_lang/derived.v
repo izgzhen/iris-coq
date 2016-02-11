@@ -32,28 +32,28 @@ Proof.
   by rewrite -wp_let //= ?gsubst_correct ?subst_empty ?to_of_val.
 Qed.
 
-Lemma wp_le E (n1 n2 : nat) P Q :
+Lemma wp_le E (n1 n2 : Z) P Q :
   (n1 ≤ n2 → P ⊑ ▷ Q (LitV $ LitBool true)) →
   (n2 < n1 → P ⊑ ▷ Q (LitV $ LitBool false)) →
-  P ⊑ wp E (BinOp LeOp (Lit $ LitNat n1) (Lit $ LitNat n2)) Q.
+  P ⊑ wp E (BinOp LeOp (Lit $ LitInt n1) (Lit $ LitInt n2)) Q.
 Proof.
   intros. rewrite -wp_bin_op //; [].
   destruct (bool_decide_reflect (n1 ≤ n2)); by eauto with omega.
 Qed.
 
-Lemma wp_lt E (n1 n2 : nat) P Q :
+Lemma wp_lt E (n1 n2 : Z) P Q :
   (n1 < n2 → P ⊑ ▷ Q (LitV $ LitBool true)) →
   (n2 ≤ n1 → P ⊑ ▷ Q (LitV $ LitBool false)) →
-  P ⊑ wp E (BinOp LtOp (Lit $ LitNat n1) (Lit $ LitNat n2)) Q.
+  P ⊑ wp E (BinOp LtOp (Lit $ LitInt n1) (Lit $ LitInt n2)) Q.
 Proof.
   intros. rewrite -wp_bin_op //; [].
   destruct (bool_decide_reflect (n1 < n2)); by eauto with omega.
 Qed.
 
-Lemma wp_eq E (n1 n2 : nat) P Q :
+Lemma wp_eq E (n1 n2 : Z) P Q :
   (n1 = n2 → P ⊑ ▷ Q (LitV $ LitBool true)) →
   (n1 ≠ n2 → P ⊑ ▷ Q (LitV $ LitBool false)) →
-  P ⊑ wp E (BinOp EqOp (Lit $ LitNat n1) (Lit $ LitNat n2)) Q.
+  P ⊑ wp E (BinOp EqOp (Lit $ LitInt n1) (Lit $ LitInt n2)) Q.
 Proof.
   intros. rewrite -wp_bin_op //; [].
   destruct (bool_decide_reflect (n1 = n2)); by eauto with omega.
