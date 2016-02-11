@@ -80,7 +80,7 @@ Qed.
 
 Lemma wp_le E (n1 n2 : nat) P Q :
   (n1 ≤ n2 → P ⊑ ▷ Q (LitV true)) →
-  (n1 > n2 → P ⊑ ▷ Q (LitV false)) →
+  (n2 < n1 → P ⊑ ▷ Q (LitV false)) →
   P ⊑ wp E ('n1 ≤ 'n2) Q.
 Proof.
   intros. rewrite -wp_bin_op //; [].
@@ -89,7 +89,7 @@ Qed.
 
 Lemma wp_lt E (n1 n2 : nat) P Q :
   (n1 < n2 → P ⊑ ▷ Q (LitV true)) →
-  (n1 ≥ n2 → P ⊑ ▷ Q (LitV false)) →
+  (n2 ≤ n1 → P ⊑ ▷ Q (LitV false)) →
   P ⊑ wp E ('n1 < 'n2) Q.
 Proof.
   intros. rewrite -wp_bin_op //; [].
