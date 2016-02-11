@@ -28,6 +28,10 @@ Notation "x ≤ y ≤ z ≤ z'" := (x ≤ y ∧ y ≤ z ∧ z ≤ z')%nat : nat_
 Notation "(≤)" := le (only parsing) : nat_scope.
 Notation "(<)" := lt (only parsing) : nat_scope.
 
+Infix "≥" := ge : nat_scope.
+Notation "(≥)" := ge (only parsing) : nat_scope.
+Notation "(>)" := gt (only parsing) : nat_scope.
+
 Infix "`div`" := Nat.div (at level 35) : nat_scope.
 Infix "`mod`" := Nat.modulo (at level 35) : nat_scope.
 
@@ -104,6 +108,10 @@ Notation "(<)" := Pos.lt (only parsing) : positive_scope.
 Notation "(~0)" := xO (only parsing) : positive_scope.
 Notation "(~1)" := xI (only parsing) : positive_scope.
 
+Infix "≥" := Pos.ge : positive_scope.
+Notation "(≥)" := Pos.ge (only parsing) : positive_scope.
+Notation "(>)" := Pos.gt (only parsing) : positive_scope.
+
 Arguments Pos.of_nat _ : simpl never.
 Instance positive_eq_dec: ∀ x y : positive, Decision (x = y) := Pos.eq_dec.
 Instance positive_inhabited: Inhabited positive := populate 1.
@@ -179,6 +187,11 @@ Notation "x < y ≤ z" := (x < y ∧ y ≤ z)%N : N_scope.
 Notation "x ≤ y ≤ z ≤ z'" := (x ≤ y ∧ y ≤ z ∧ z ≤ z')%N : N_scope.
 Notation "(≤)" := N.le (only parsing) : N_scope.
 Notation "(<)" := N.lt (only parsing) : N_scope.
+
+Infix "≥" := N.ge : N_scope.
+Notation "(≥)" := N.ge (only parsing) : N_scope.
+Notation "(>)" := N.gt (only parsing) : N_scope.
+
 Infix "`div`" := N.div (at level 35) : N_scope.
 Infix "`mod`" := N.modulo (at level 35) : N_scope.
 
@@ -212,6 +225,10 @@ Notation "x < y ≤ z" := (x < y ∧ y ≤ z) : Z_scope.
 Notation "x ≤ y ≤ z ≤ z'" := (x ≤ y ∧ y ≤ z ∧ z ≤ z') : Z_scope.
 Notation "(≤)" := Z.le (only parsing) : Z_scope.
 Notation "(<)" := Z.lt (only parsing) : Z_scope.
+
+Infix "≥" := Z.ge : Z_scope.
+Notation "(≥)" := Z.ge (only parsing) : Z_scope.
+Notation "(>)" := Z.gt (only parsing) : Z_scope.
 
 Infix "`div`" := Z.div (at level 35) : Z_scope.
 Infix "`mod`" := Z.modulo (at level 35) : Z_scope.
@@ -327,6 +344,10 @@ Notation "x < y ≤ z" := (x < y ∧ y ≤ z) : Qc_scope.
 Notation "x ≤ y ≤ z ≤ z'" := (x ≤ y ∧ y ≤ z ∧ z ≤ z') : Qc_scope.
 Notation "(≤)" := Qcle (only parsing) : Qc_scope.
 Notation "(<)" := Qclt (only parsing) : Qc_scope.
+
+Infix "≥" := Qcge : Qc_scope.
+Notation "(≥)" := Qcge (only parsing) : Qc_scope.
+Notation "(>)" := Qcgt (only parsing) : Qc_scope.
 
 Hint Extern 1 (_ ≤ _) => reflexivity || discriminate.
 Arguments Qred _ : simpl never.
