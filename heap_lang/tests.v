@@ -27,7 +27,7 @@ Module LiftingTests.
   Implicit Types Q : val → iProp heap_lang Σ.
 
   Definition e  : expr :=
-    let: "x" := ref '1 in "x" <- !"x" + '1; !"x".
+    let: "x" := ref '1 in "x" <- !"x" + '1;; !"x".
   Goal ∀ σ E, ownP (Σ:=Σ) σ ⊑ wp E e (λ v, v = ('2)%L).
   Proof.
     move=> σ E. rewrite /e.
@@ -86,10 +86,6 @@ Module LiftingTests.
       by rewrite -!later_intro -wp_value' // and_elim_r.
   Qed.
 
-  (* FIXME : For now apparent reason, I cannot prove this inline. *)
-  Lemma Pred_sub_helper n : n - 1 = - (- n + 2 - 1).
-  Proof. intros. omega. Qed.
-
   Lemma Pred_spec n E Q : ▷ Q (LitV (n - 1)) ⊑ wp E (Pred 'n)%L Q.
   Proof.
     rewrite -wp_lam //=.
@@ -97,8 +93,7 @@ Module LiftingTests.
     apply later_mono, wp_le=> Hn.
     - rewrite -wp_if_true.
       rewrite -(wp_bindi (UnOpCtx _)).
-      (* FIXME use list notation. *)
-      rewrite -(wp_bind ((AppLCtx _)::(AppRCtx FindPred)::nil)).
+      rewrite -(wp_bind [AppLCtx _; AppRCtx FindPred]).
       rewrite -(wp_bindi (BinOpLCtx _ _)).
       rewrite -wp_un_op //=.
       rewrite -wp_bin_op //= -!later_intro.
