@@ -191,7 +191,8 @@ Arguments uPred_holds {_} _%I _ _.
 Arguments uPred_entails _ _%I _%I.
 Notation "P ⊑ Q" := (uPred_entails P%I Q%I) (at level 70) : C_scope.
 Notation "(⊑)" := uPred_entails (only parsing) : C_scope.
-Notation "■ φ" := (uPred_const φ%C%type) (at level 20) : uPred_scope.
+Notation "■ φ" := (uPred_const φ%C%type)
+  (at level 20, right associativity) : uPred_scope.
 Notation "x = y" := (uPred_const (x%C%type = y%C%type)) : uPred_scope.
 Notation "'False'" := (uPred_const False) : uPred_scope.
 Notation "'True'" := (uPred_const True) : uPred_scope.
@@ -208,8 +209,10 @@ Notation "∀ x .. y , P" :=
   (uPred_forall (λ x, .. (uPred_forall (λ y, P)) ..)%I) : uPred_scope.
 Notation "∃ x .. y , P" :=
   (uPred_exist (λ x, .. (uPred_exist (λ y, P)) ..)%I) : uPred_scope.
-Notation "▷ P" := (uPred_later P) (at level 20) : uPred_scope.
-Notation "□ P" := (uPred_always P) (at level 20) : uPred_scope.
+Notation "▷ P" := (uPred_later P)
+  (at level 20, right associativity) : uPred_scope.
+Notation "□ P" := (uPred_always P)
+  (at level 20, right associativity) : uPred_scope.
 Infix "≡" := uPred_eq : uPred_scope.
 Notation "✓ x" := (uPred_valid x) (at level 20) : uPred_scope.
 
