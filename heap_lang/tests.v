@@ -55,9 +55,9 @@ Module LiftingTests.
   Qed.
 
   Definition FindPred : val :=
-    λ: "x", (rec: "pred" "y" :=
+    λ: "x", rec: "pred" "y" :=
       let: "yp" := "y" + '1 in
-      if "yp" < "x" then "pred" "yp" else "y").
+      if "yp" < "x" then "pred" "yp" else "y".
   Definition Pred : val :=
     λ: "x", if "x" ≤ '0 then -FindPred (-"x" + '2) '0 else FindPred "x" '0.
 
