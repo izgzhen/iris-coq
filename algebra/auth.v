@@ -147,12 +147,8 @@ Proof. done. Qed.
 Lemma auth_both_op a b : Auth (Excl a) b ≡ ● a ⋅ ◯ b.
 Proof. by rewrite /op /auth_op /= left_id. Qed.
 
-(* FIXME tentative name. Or maybe remove this notion entirely. *)
-Definition auth_step (a a' b b' : A) : Prop :=
-  ∀ n af, ✓{n} a → a ≡{n}≡ a' ⋅ af → b ≡{n}≡ b' ⋅ af ∧ ✓{n} b.
-
 Lemma auth_update a a' b b' :
-  auth_step a a' b b' →
+  (∀ n af, ✓{n} a → a ≡{n}≡ a' ⋅ af → b ≡{n}≡ b' ⋅ af ∧ ✓{n} b) →
   ● a ⋅ ◯ a' ~~> ● b ⋅ ◯ b'.
 Proof.
   move=> Hab [[?| |] bf1] n // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
@@ -161,20 +157,11 @@ Proof.
   split; [by rewrite Ha' left_id associative; apply cmra_includedN_l|done].
 Qed.
 
-(* FIXME: are the following lemmas derivable from each other? *)
-Lemma auth_local_update_l f `{!LocalUpdate P f} a a' :
-  P a → ✓ (f a ⋅ a') →
-  ● (a ⋅ a') ⋅ ◯ a ~~> ● (f a ⋅ a') ⋅ ◯ f a.
-Proof.
-  intros; apply auth_update=>n af ? EQ; split; last done.
-  by rewrite -(local_updateN f) // EQ -(local_updateN f) // -EQ.
-Qed.
-
 Lemma auth_local_update f `{!LocalUpdate P f} a a' :
   P a → ✓ (f a') →
   ● a' ⋅ ◯ a ~~> ● f a' ⋅ ◯ f a.
 Proof.
-  intros; apply auth_update=>n af ? EQ; split; last done.
+  intros. apply auth_update=>n af ? EQ; split; last done.
   by rewrite EQ (local_updateN f) // -EQ.
 Qed.
 
@@ -184,6 +171,18 @@ Proof. by intros; apply (auth_local_update _). Qed.
 Lemma auth_update_op_r a a' b :
   ✓ (a ⋅ b) → ● a ⋅ ◯ a' ~~> ● (a ⋅ b) ⋅ ◯ (a' ⋅ b).
 Proof. rewrite -!(commutative _ b); apply auth_update_op_l. Qed.
+
+(* This does not seem to follow from auth_local_update.
+   The trouble is that given ✓ (f a ⋅ a'), P a
+   we need ✓ (a ⋅ a'). I think this should hold for every local update,
+   but adding an extra axiom to local updates just for this is silly. *)
+Lemma auth_local_update_l f `{!LocalUpdate P f} a a' :
+  P a → ✓ (f a ⋅ a') →
+  ● (a ⋅ a') ⋅ ◯ a ~~> ● (f a ⋅ a') ⋅ ◯ f a.
+Proof.
+  intros. apply auth_update=>n af ? EQ; split; last done.
+  by rewrite -(local_updateN f) // EQ -(local_updateN f) // -EQ.
+Qed.
 
 End cmra.
 
