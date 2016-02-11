@@ -1,7 +1,7 @@
 (** This file is essentially a bunch of testcases. *)
 Require Import program_logic.ownership.
 Require Import heap_lang.lifting heap_lang.sugar.
-Import heap_lang uPred notations.
+Import heap_lang uPred.
 
 Module LangTests.
   Definition add := ('21 + '21)%L.
@@ -11,13 +11,13 @@ Module LangTests.
   Goal ∀ σ, prim_step rec_app σ rec_app σ None.
   Proof.
     intros. rewrite /rec_app. (* FIXME: do_step does not work here *)
-    by eapply (Ectx_step  _ _ _ _ _ []), (BetaS _ _ _ _ (LitV (LitNat 0))).
+    by eapply (Ectx_step  _ _ _ _ _ []), (BetaS _ _ _ _ '0)%L.
   Qed.
   Definition lam : expr := λ: "x", "x" + '21.
   Goal ∀ σ, prim_step (lam '21)%L σ add σ None.
   Proof.
     intros. rewrite /lam. (* FIXME: do_step does not work here *)
-    by eapply (Ectx_step  _ _ _ _ _ []), (BetaS "" "x" ("x" + '21) _ (LitV 21)).
+    by eapply (Ectx_step  _ _ _ _ _ []), (BetaS "" "x" ("x" + '21) _ '21)%L.
   Qed.
 End LangTests.
 
@@ -28,7 +28,7 @@ Module LiftingTests.
 
   Definition e  : expr :=
     let: "x" := ref '1 in "x" <- !"x" + '1; !"x".
-  Goal ∀ σ E, ownP (Σ:=Σ) σ ⊑ wp E e (λ v, v = LitV 2).
+  Goal ∀ σ E, ownP (Σ:=Σ) σ ⊑ wp E e (λ v, v = ('2)%L).
   Proof.
     move=> σ E. rewrite /e.
     rewrite -(wp_bindi (LetCtx _ _)) -wp_alloc_pst //=.
@@ -97,7 +97,7 @@ Module LiftingTests.
 
   Goal ∀ E,
     True ⊑ wp (Σ:=Σ) E (let: "x" := Pred '42 in Pred "x")
-                       (λ v, v = LitV 40).
+                       (λ v, v = ('40)%L).
   Proof.
     intros E.
     rewrite -(wp_bindi (LetCtx _ _)) -Pred_spec //= -wp_let //=.

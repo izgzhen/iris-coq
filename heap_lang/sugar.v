@@ -1,7 +1,7 @@
 Require Export heap_lang.heap_lang heap_lang.lifting.
 Import uPred heap_lang.
 
-(** Define some syntactic sugar. LitTrue and LitFalse are defined in heap_lang.v. *)
+(** Define some syntactic sugar. *)
 Notation Lam x e := (Rec "" x e).
 Notation Let x e1 e2 := (App (Lam x e2) e1).
 Notation Seq e1 e2 := (Let "" e1 e2).
@@ -11,7 +11,7 @@ Notation SeqCtx e2 := (LetCtx "" e2).
 
 Module notations.
   Delimit Scope lang_scope with L.
-  Bind Scope lang_scope with expr.
+  Bind Scope lang_scope with expr val.
   Arguments wp {_ _} _ _%L _.
 
   Coercion LitNat : nat >-> base_lit.
@@ -20,11 +20,12 @@ Module notations.
      apart language and Coq expressions. *)
   Coercion Var : string >-> expr.
   Coercion App : expr >-> Funclass.
+  Coercion of_val : val >-> expr.
 
   (** Syntax inspired by Coq/Ocaml. Constructions with higher precedence come
   first. *)
   (* What about Arguments for hoare triples?. *)
-  Notation "' l" := (Lit l) (at level 8, format "' l") : lang_scope.
+  Notation "' l" := (LitV l) (at level 8, format "' l") : lang_scope.
   Notation "! e" := (Load e%L) (at level 10, format "! e") : lang_scope.
   Notation "'ref' e" := (Alloc e%L) (at level 30) : lang_scope.
   Notation "e1 + e2" := (BinOp PlusOp e1%L e2%L)
@@ -52,8 +53,9 @@ Module notations.
   Notation "e1 ; e2" := (Lam "" e2%L e1%L)
     (at level 100, e2 at level 200) : lang_scope.
 End notations.
+Export notations.
 
-Section suger.
+Section sugar.
 Context {Σ : iFunctor}.
 Implicit Types P : iProp heap_lang Σ.
 Implicit Types Q : val → iProp heap_lang Σ.
@@ -79,7 +81,7 @@ Qed.
 Lemma wp_le E (n1 n2 : nat) P Q :
   (n1 ≤ n2 → P ⊑ ▷ Q (LitV true)) →
   (n1 > n2 → P ⊑ ▷ Q (LitV false)) →
-  P ⊑ wp E (BinOp LeOp (Lit n1) (Lit n2)) Q.
+  P ⊑ wp E ('n1 ≤ 'n2) Q.
 Proof.
   intros. rewrite -wp_bin_op //; [].
   destruct (bool_decide_reflect (n1 ≤ n2)); by eauto with omega.
@@ -88,7 +90,7 @@ Qed.
 Lemma wp_lt E (n1 n2 : nat) P Q :
   (n1 < n2 → P ⊑ ▷ Q (LitV true)) →
   (n1 ≥ n2 → P ⊑ ▷ Q (LitV false)) →
-  P ⊑ wp E (BinOp LtOp (Lit n1) (Lit n2)) Q.
+  P ⊑ wp E ('n1 < 'n2) Q.
 Proof.
   intros. rewrite -wp_bin_op //; [].
   destruct (bool_decide_reflect (n1 < n2)); by eauto with omega.
@@ -97,10 +99,10 @@ Qed.
 Lemma wp_eq E (n1 n2 : nat) P Q :
   (n1 = n2 → P ⊑ ▷ Q (LitV true)) →
   (n1 ≠ n2 → P ⊑ ▷ Q (LitV false)) →
-  P ⊑ wp E (BinOp EqOp (Lit n1) (Lit n2)) Q.
+  P ⊑ wp E ('n1 = 'n2) Q.
 Proof.
   intros. rewrite -wp_bin_op //; [].
   destruct (bool_decide_reflect (n1 = n2)); by eauto with omega.
 Qed.
 
-End suger.
+End sugar.
