@@ -39,7 +39,7 @@ Section auth.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     transitivity (▷auth_inv γ ★ auth_own γ a)%I.
     { rewrite /auth_inv -later_intro -(exist_intro a).
-      rewrite (commutative _ _ (φ _)) -associative. apply sep_mono; first done.
+      rewrite [(_ ★ φ _)%I]commutative -associative. apply sep_mono; first done.
       rewrite /auth_own -own_op auth_both_op. done. }
     rewrite (inv_alloc N) /auth_ctx pvs_frame_r. apply pvs_mono.
     by rewrite always_and_sep_l'.
