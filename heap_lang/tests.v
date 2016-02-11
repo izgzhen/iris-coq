@@ -62,11 +62,11 @@ Module LiftingTests.
     λ: "x", if "x" ≤ '0 then '0 else FindPred "x" '0.
 
   Lemma FindPred_spec n1 n2 E Q :
-    (■ (n1 < n2) ∧ Q (LitV (pred n2))) ⊑ wp E (FindPred 'n2 'n1)%L Q.
+    (■ (n1 < n2) ∧ Q (LitV (n2 - 1))) ⊑ wp E (FindPred 'n2 'n1)%L Q.
   Proof.
     revert n1. apply löb_all_1=>n1.
     rewrite (commutative uPred_and (■ _)%I) associative; apply const_elim_r=>?.
-    rewrite -wp_rec //=.
+    rewrite -wp_rec' // =>-/=.
     (* FIXME: ssr rewrite fails with "Error: _pattern_value_ is used in conclusion." *)
     rewrite ->(later_intro (Q _)).
     rewrite -!later_and; apply later_mono.
@@ -77,15 +77,15 @@ Module LiftingTests.
     - rewrite -wp_if_true.
       rewrite -!later_intro (forall_elim (n1 + 1)) const_equiv; last omega.
       by rewrite left_id impl_elim_l.
-    - assert (n1 = pred n2) as -> by omega.
+    - assert (n1 = n2 - 1) as -> by omega.
       rewrite -wp_if_false.
       by rewrite -!later_intro -wp_value' // and_elim_r.
   Qed.
 
-  Lemma Pred_spec n E Q : ▷ Q (LitV (pred n)) ⊑ wp E (Pred 'n)%L Q.
+  Lemma Pred_spec n E Q : ▷ Q (LitV (n - 1)) ⊑ wp E (Pred 'n)%L Q.
   Proof.
     rewrite -wp_lam //=.
-    rewrite -(wp_bindi (IfCtx _ _)).
+    rewrite -(wp_bindi (IfCtx _ _)) /=.
     apply later_mono, wp_le=> Hn.
     - rewrite -wp_if_true.
       rewrite -!later_intro -wp_value' //=.
