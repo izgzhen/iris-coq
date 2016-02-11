@@ -20,9 +20,8 @@ Section auth.
   Qed.
 
   (* TODO: Need this to be proven somewhere. *)
-  (* FIXME ✓ binds too strong, I need parenthesis here. *)
   Hypothesis auth_valid :
-    forall a b, (✓ (Auth (Excl a) b) : iPropG Λ Σ) ⊑ (∃ b', a ≡ b ⋅ b').
+    forall a b, (✓ Auth (Excl a) b : iPropG Λ Σ) ⊑ (∃ b', a ≡ b ⋅ b').
 
   Definition auth_inv (γ : gname) : iPropG Λ Σ :=
     (∃ a, own AuthI γ (● a) ★ φ a)%I.

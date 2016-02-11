@@ -76,7 +76,7 @@ Global Instance res_empty : Empty (res Λ Σ A) := Res ∅ ∅ ∅.
 Instance res_unit : Unit (res Λ Σ A) := λ r,
   Res (unit (wld r)) (unit (pst r)) (unit (gst r)).
 Instance res_validN : ValidN (res Λ Σ A) := λ n r,
-  ✓{n} (wld r) ∧ ✓{n} (pst r) ∧ ✓{n} (gst r).
+  ✓{n} wld r ∧ ✓{n} pst r ∧ ✓{n} gst r.
 Instance res_minus : Minus (res Λ Σ A) := λ r1 r2,
   Res (wld r1 ⩪ wld r2) (pst r1 ⩪ pst r2) (gst r1 ⩪ gst r2).
 Lemma res_included (r1 r2 : res Λ Σ A) :
@@ -136,9 +136,9 @@ Definition update_pst (σ : state Λ) (r : res Λ Σ A) : res Λ Σ A :=
 Definition update_gst (m : Σ A) (r : res Λ Σ A) : res Λ Σ A :=
   Res (wld r) (pst r) (Some m).
 
-Lemma wld_validN n r : ✓{n} r → ✓{n} (wld r).
+Lemma wld_validN n r : ✓{n} r → ✓{n} wld r.
 Proof. by intros (?&?&?). Qed.
-Lemma gst_validN n r : ✓{n} r → ✓{n} (gst r).
+Lemma gst_validN n r : ✓{n} r → ✓{n} gst r.
 Proof. by intros (?&?&?). Qed.
 Lemma Res_op w1 w2 σ1 σ2 m1 m2 :
   Res w1 σ1 m1 ⋅ Res w2 σ2 m2 = Res (w1 ⋅ w2) (σ1 ⋅ σ2) (m1 ⋅ m2).

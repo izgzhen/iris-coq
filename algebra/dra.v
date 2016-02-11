@@ -26,7 +26,7 @@ Proof.
     split; [|intros; transitivity y]; tauto.
 Qed.
 Instance validity_valid_proper `{Equiv A} (P : A → Prop) :
-  Proper ((≡) ==> iff) (✓ : validity P → Prop).
+  Proper ((≡) ==> iff) (valid : validity P → Prop).
 Proof. intros ?? [??]; naive_solver. Qed.
 
 Definition dra_included `{Equiv A, Valid A, Disjoint A, Op A} := λ x y,
@@ -43,7 +43,7 @@ Class DRA A `{Equiv A, Valid A, Unit A, Disjoint A, Op A, Minus A} := {
   dra_minus_proper :> Proper ((≡) ==> (≡) ==> (≡)) minus;
   (* validity *)
   dra_op_valid x y : ✓ x → ✓ y → x ⊥ y → ✓ (x ⋅ y);
-  dra_unit_valid x : ✓ x → ✓ (unit x);
+  dra_unit_valid x : ✓ x → ✓ unit x;
   dra_minus_valid x y : ✓ x → ✓ y → x ≼ y → ✓ (y ⩪ x);
   (* monoid *)
   dra_associative :> Associative (≡) (⋅);
@@ -83,8 +83,8 @@ Qed.
 Hint Immediate dra_disjoint_move_l dra_disjoint_move_r.
 Hint Unfold dra_included.
 
-Notation T := (validity (✓ : A → Prop)).
-Lemma validity_valid_car_valid (z : T) : ✓ z → ✓ (validity_car z).
+Notation T := (validity (valid : A → Prop)).
+Lemma validity_valid_car_valid (z : T) : ✓ z → ✓ validity_car z.
 Proof. apply validity_prf. Qed.
 Hint Resolve validity_valid_car_valid.
 Program Instance validity_unit : Unit T := λ x,

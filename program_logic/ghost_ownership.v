@@ -33,7 +33,7 @@ Implicit Types a : A.
 (** * Properties of to_globalC *)
 Instance to_globalF_ne γ n : Proper (dist n ==> dist n) (to_globalF i γ).
 Proof. by intros a a' Ha; apply iprod_singleton_ne; rewrite Ha. Qed.
-Lemma to_globalF_validN n γ a : ✓{n} (to_globalF i γ a) ↔ ✓{n} a.
+Lemma to_globalF_validN n γ a : ✓{n} to_globalF i γ a ↔ ✓{n} a.
 Proof.
   by rewrite /to_globalF
     iprod_singleton_validN map_singleton_validN cmra_transport_validN.

@@ -20,11 +20,12 @@ Infix "⩪" := minus (at level 40) : C_scope.
 
 Class ValidN (A : Type) := validN : nat → A → Prop.
 Instance: Params (@validN) 3.
-Notation "✓{ n }" := (validN n) (at level 1, format "✓{ n }").
+Notation "✓{ n } x" := (validN n x)
+  (at level 20, n at level 1, format "✓{ n }  x").
 
 Class Valid (A : Type) := valid : A → Prop.
 Instance: Params (@valid) 2.
-Notation "✓" := valid (at level 1) : C_scope.
+Notation "✓ x" := (valid x) (at level 20) : C_scope.
 Instance validN_valid `{ValidN A} : Valid A := λ x, ∀ n, ✓{n} x.
 
 Definition includedN `{Dist A, Op A} (n : nat) (x y : A) := ∃ z, y ≡{n}≡ x ⋅ z.
@@ -37,7 +38,7 @@ Record CMRAMixin A `{Dist A, Equiv A, Unit A, Op A, ValidN A, Minus A} := {
   (* setoids *)
   mixin_cmra_op_ne n (x : A) : Proper (dist n ==> dist n) (op x);
   mixin_cmra_unit_ne n : Proper (dist n ==> dist n) unit;
-  mixin_cmra_validN_ne n : Proper (dist n ==> impl) (✓{n});
+  mixin_cmra_validN_ne n : Proper (dist n ==> impl) (validN n);
   mixin_cmra_minus_ne n : Proper (dist n ==> dist n ==> dist n) minus;
   (* valid *)
   mixin_cmra_validN_S n x : ✓{S n} x → ✓{n} x;
@@ -133,7 +134,7 @@ Instance cmra_identity_inhabited `{CMRAIdentity A} : Inhabited A := populate ∅
 (** * Morphisms *)
 Class CMRAMonotone {A B : cmraT} (f : A → B) := {
   includedN_preserving n x y : x ≼{n} y → f x ≼{n} f y;
-  validN_preserving n x : ✓{n} x → ✓{n} (f x)
+  validN_preserving n x : ✓{n} x → ✓{n} f x
 }.
 
 (** * Local updates *)
@@ -225,9 +226,9 @@ Lemma cmra_unit_r x : x ⋅ unit x ≡ x.
 Proof. by rewrite (commutative _ x) cmra_unit_l. Qed.
 Lemma cmra_unit_unit x : unit x ⋅ unit x ≡ unit x.
 Proof. by rewrite -{2}(cmra_unit_idempotent x) cmra_unit_r. Qed.
-Lemma cmra_unit_validN x n : ✓{n} x → ✓{n} (unit x).
+Lemma cmra_unit_validN x n : ✓{n} x → ✓{n} unit x.
 Proof. rewrite -{1}(cmra_unit_l x); apply cmra_validN_op_l. Qed.
-Lemma cmra_unit_valid x : ✓ x → ✓ (unit x).
+Lemma cmra_unit_valid x : ✓ x → ✓ unit x.
 Proof. rewrite -{1}(cmra_unit_l x); apply cmra_valid_op_l. Qed.
 
 (** ** Order *)
@@ -404,7 +405,7 @@ Section cmra_monotone.
   Proof.
     rewrite !cmra_included_includedN; eauto using includedN_preserving.
   Qed.
-  Lemma valid_preserving x : ✓ x → ✓ (f x).
+  Lemma valid_preserving x : ✓ x → ✓ f x.
   Proof. rewrite !cmra_valid_validN; eauto using validN_preserving. Qed.
 End cmra_monotone.
 
@@ -424,9 +425,9 @@ Section cmra_transport.
   Proof. by destruct H. Qed.
   Lemma cmra_transport_unit x : T (unit x) = unit (T x).
   Proof. by destruct H. Qed.
-  Lemma cmra_transport_validN n x : ✓{n} (T x) ↔ ✓{n} x.
+  Lemma cmra_transport_validN n x : ✓{n} T x ↔ ✓{n} x.
   Proof. by destruct H. Qed.
-  Lemma cmra_transport_valid x : ✓ (T x) ↔ ✓ x.
+  Lemma cmra_transport_valid x : ✓ T x ↔ ✓ x.
   Proof. by destruct H. Qed.
   Global Instance cmra_transport_timeless x : Timeless x → Timeless (T x).
   Proof. by destruct H. Qed.
@@ -444,7 +445,7 @@ Class RA A `{Equiv A, Unit A, Op A, Valid A, Minus A} := {
   (* setoids *)
   ra_op_ne (x : A) : Proper ((≡) ==> (≡)) (op x);
   ra_unit_ne :> Proper ((≡) ==> (≡)) unit;
-  ra_validN_ne :> Proper ((≡) ==> impl) ✓;
+  ra_validN_ne :> Proper ((≡) ==> impl) valid;
   ra_minus_ne :> Proper ((≡) ==> (≡) ==> (≡)) minus;
   (* monoid *)
   ra_associative :> Associative (≡) (⋅);
@@ -502,7 +503,7 @@ Section prod.
   Instance prod_op : Op (A * B) := λ x y, (x.1 ⋅ y.1, x.2 ⋅ y.2).
   Global Instance prod_empty `{Empty A, Empty B} : Empty (A * B) := (∅, ∅).
   Instance prod_unit : Unit (A * B) := λ x, (unit (x.1), unit (x.2)).
-  Instance prod_validN : ValidN (A * B) := λ n x, ✓{n} (x.1) ∧ ✓{n} (x.2).
+  Instance prod_validN : ValidN (A * B) := λ n x, ✓{n} x.1 ∧ ✓{n} x.2.
   Instance prod_minus : Minus (A * B) := λ x y, (x.1 ⩪ y.1, x.2 ⩪ y.2).
   Lemma prod_included (x y : A * B) : x ≼ y ↔ x.1 ≼ y.1 ∧ x.2 ≼ y.2.
   Proof.
