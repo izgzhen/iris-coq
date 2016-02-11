@@ -77,13 +77,12 @@ Section auth.
   (* Notice how the user has to prove that `b⋅a'` is valid at all
      step-indices. However, since A is timeless, that should not be
      a restriction.  *)
-  (* TODO The form of the lemma, with a very specific post-condition, is not ideal. *)
-  Lemma auth_pvs `{!LocalUpdate Lv L} E P (Q : A → iProp Λ (globalC Σ)) γ a :
+  Lemma auth_pvs `{!LocalUpdate Lv L} E P Q γ a :
     nclose N ⊆ E →
     (auth_ctx γ ★ auth_own γ a ★ (∀ a', ▷φ (a ⋅ a') -★
           pvs (E ∖ nclose N) (E ∖ nclose N)
-            (■(Lv a ∧ ✓(L a⋅a')) ★ ▷φ (L a ⋅ a') ★ Q (L a))))
-      ⊑ pvs E E (auth_own γ (L a) ★ Q (L a)).
+            (■(Lv a ∧ ✓(L a⋅a')) ★ ▷φ (L a ⋅ a') ★ (auth_own γ (L a) -★ Q))))
+      ⊑ pvs E E Q.
   Proof.
     rewrite /auth_ctx=>HN.
     rewrite -[pvs E E _]pvs_open_close; last eassumption.
@@ -91,11 +90,11 @@ Section auth.
     rewrite associative auth_opened !pvs_frame_r !sep_exist_r.
     apply pvs_strip_pvs. apply exist_elim=>a'.
     rewrite (forall_elim a'). rewrite [(▷_ ★ _)%I]commutative.
-    rewrite -[((_ ★ ▷_) ★ _)%I]associative wand_elim_r pvs_frame_l. apply pvs_strip_pvs.
-    rewrite commutative -!associative. apply const_elim_sep_l=>-[HL Hv].
-    rewrite associative [(_ ★ Q _)%I]commutative -associative auth_closing //; [].
-    erewrite pvs_frame_l. apply pvs_mono.
-    rewrite associative [(_ ★ Q _)%I]commutative associative.
-    apply sep_mono; last done. by rewrite commutative.
+    rewrite -[((_ ★ ▷_) ★ _)%I]associative wand_elim_r pvs_frame_l.
+    apply pvs_strip_pvs. rewrite commutative -!associative.
+    apply const_elim_sep_l=>-[HL Hv].
+    rewrite associative [(_ ★ (_ -★ _))%I]commutative -associative.
+    rewrite auth_closing //; []. erewrite pvs_frame_l. apply pvs_mono.
+    by rewrite associative [(_ ★ ▷_)%I]commutative -associative wand_elim_l.
   Qed.
 End auth.
