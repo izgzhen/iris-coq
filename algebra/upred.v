@@ -341,13 +341,13 @@ Global Instance iff_proper :
 
 (** Introduction and elimination rules *)
 Lemma const_intro φ P : φ → P ⊑ ■ φ.
-Proof. by intros ?? [|?]. Qed.
+Proof. by intros ???. Qed.
 Lemma const_elim φ Q R : Q ⊑ ■ φ → (φ → Q ⊑ R) → Q ⊑ R.
 Proof. intros HQP HQR x n ??; apply HQR; first eapply (HQP _ n); eauto. Qed.
 Lemma True_intro P : P ⊑ True.
 Proof. by apply const_intro. Qed.
 Lemma False_elim P : False ⊑ P.
-Proof. by intros x [|n] ?. Qed.
+Proof. by intros x n ?. Qed.
 Lemma and_elim_l P Q : (P ∧ Q) ⊑ P.
 Proof. by intros x n ? [??]. Qed.
 Lemma and_elim_r P Q : (P ∧ Q) ⊑ Q.
