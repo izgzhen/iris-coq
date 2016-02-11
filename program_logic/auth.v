@@ -3,13 +3,22 @@ Require Export program_logic.invariants program_logic.ghost_ownership.
 Import uPred.
 
 Section auth.
-  Context {A : cmraT} `{Empty A, !CMRAIdentity A}.
+  Context {A : cmraT} `{Empty A, !CMRAIdentity A} `{!∀ a : A, Timeless a}.
   Context {Λ : language} {Σ : gid → iFunctor} (AuthI : gid) `{!InG Λ Σ AuthI (authRA A)}.
   (* TODO: Come up with notation for "iProp Λ (globalC Σ)". *)
   Context (N : namespace) (φ : A → iProp Λ (globalC Σ)).
+
   Implicit Types P Q R : iProp Λ (globalC Σ).
   Implicit Types a b : A.
   Implicit Types γ : gname.
+
+  (* Adding this locally only, since it overlaps with Auth_timelss in algebra/auth.v.
+     TODO: Would moving this to auth.v and making it global break things? *)
+  Local Instance AuthA_timeless (x : auth A) : Timeless x.
+  Proof.
+    (* FIXME: "destruct x; auto with typeclass_instances" should find this through Auth, right? *)
+    destruct x. apply Auth_timeless; apply _.
+  Qed.
 
   (* TODO: Need this to be proven somewhere. *)
   (* FIXME ✓ binds too strong, I need parenthesis here. *)
@@ -38,15 +47,16 @@ Section auth.
 
   Context {Hφ : ∀ n, Proper (dist n ==> dist n) φ}.
 
-  Lemma auth_opened a γ :
-    (auth_inv γ ★ auth_own γ a) ⊑ (∃ a', φ (a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a)).
+  Lemma auth_opened E a γ :
+    (▷auth_inv γ ★ auth_own γ a) ⊑ pvs E E (∃ a', ▷φ (a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a)).
   Proof.
-    rewrite /auth_inv. rewrite sep_exist_r. apply exist_elim=>b.
-    rewrite /auth_own [(_ ★ φ _)%I]commutative -associative -own_op.
+    rewrite /auth_inv. rewrite later_exist sep_exist_r. apply exist_elim=>b.
+    rewrite later_sep [(▷own _ _ _)%I]pvs_timeless !pvs_frame_r. apply pvs_mono.
+    rewrite /auth_own [(_ ★ ▷φ _)%I]commutative -associative -own_op.
     rewrite own_valid_r auth_valid !sep_exist_l /=. apply exist_elim=>a'.
     rewrite [∅ ⋅ _]left_id -(exist_intro a').
     apply (eq_rewrite b (a ⋅ a')
-              (λ x, φ x ★ own AuthI γ (● x ⋅ ◯ a))%I).
+              (λ x, ▷φ x ★ own AuthI γ (● x ⋅ ◯ a))%I).
     { (* TODO this asks for automation. *)
       move=>n a1 a2 Ha. by rewrite !Ha. }
     { by rewrite !sep_elim_r. }
@@ -66,13 +76,11 @@ Section auth.
     by apply own_update, (auth_local_update_l L).
   Qed.
 
-  (* FIXME it should be enough to assume that A is all-timeless. *)
   (* Notice how the user has to prove that `b⋅a'` is valid at all
-     step-indices. This is because the side-conditions for frame-preserving
-     updates have to be shown on the meta-level. *)
+     step-indices. However, since A is timeless, that should not be
+     a restriction.  *)
   (* TODO The form of the lemma, with a very specific post-condition, is not ideal. *)
-  Lemma auth_pvs `{!∀ a : authRA A, Timeless a}`{!LocalUpdate Lv L}
-        E P (Q : A → iProp Λ (globalC Σ)) γ a :
+  Lemma auth_pvs `{!LocalUpdate Lv L} E P (Q : A → iProp Λ (globalC Σ)) γ a :
     nclose N ⊆ E →
     (auth_ctx γ ★ auth_own γ a ★ (∀ a', ▷φ (a ⋅ a') -★
           pvs (E ∖ nclose N) (E ∖ nclose N)
@@ -82,12 +90,11 @@ Section auth.
     rewrite /auth_ctx=>HN.
     rewrite -[pvs E E _]pvs_open_close; last eassumption.
     apply sep_mono; first done. apply wand_intro_l.
-    rewrite [auth_own _ _]later_intro associative -later_sep.
-    rewrite auth_opened later_exist sep_exist_r. apply exist_elim=>a'.
-    rewrite (forall_elim a'). rewrite [(▷_ ★ _)%I]commutative later_sep.
-    rewrite associative wand_elim_l pvs_frame_r. apply pvs_strip_pvs.
-    rewrite [(▷own _ _ _)%I]pvs_timeless pvs_frame_l. apply pvs_strip_pvs.
-    rewrite -!associative. apply const_elim_sep_l=>-[HL Hv].
+    rewrite associative auth_opened !pvs_frame_r !sep_exist_r.
+    apply pvs_strip_pvs. apply exist_elim=>a'.
+    rewrite (forall_elim a'). rewrite [(▷_ ★ _)%I]commutative.
+    rewrite -[((_ ★ ▷_) ★ _)%I]associative wand_elim_r pvs_frame_l. apply pvs_strip_pvs.
+    rewrite commutative -!associative. apply const_elim_sep_l=>-[HL Hv].
     rewrite associative [(_ ★ Q _)%I]commutative -associative auth_closing //; [].
     erewrite pvs_frame_l. apply pvs_mono.
     rewrite associative [(_ ★ Q _)%I]commutative associative.
