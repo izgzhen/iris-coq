@@ -1,6 +1,7 @@
 Require Import prelude.gmap program_logic.lifting program_logic.ownership.
 Require Export program_logic.weakestpre heap_lang.heap_lang_tactics.
-Import uPred heap_lang.
+Export heap_lang. (* Prefer heap_lang names over language names. *)
+Import uPred.
 Local Hint Extern 0 (language.reducible _ _) => do_step ltac:(eauto 2).
 
 (** The substitution operation [gsubst e x ev] behaves just as [subst] but

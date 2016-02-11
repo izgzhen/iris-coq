@@ -69,5 +69,6 @@ program_logic/ghost_ownership.v
 heap_lang/heap_lang.v
 heap_lang/heap_lang_tactics.v
 heap_lang/lifting.v
-heap_lang/sugar.v
+heap_lang/derived.v
+heap_lang/notation.v
 heap_lang/tests.v

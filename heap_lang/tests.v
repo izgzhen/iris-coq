@@ -1,7 +1,7 @@
 (** This file is essentially a bunch of testcases. *)
 Require Import program_logic.ownership.
-Require Import heap_lang.lifting heap_lang.sugar.
-Import heap_lang uPred.
+Require Import heap_lang.notation.
+Import uPred.
 
 Module LangTests.
   Definition add := ('21 + '21)%L.
