@@ -87,7 +87,7 @@ Context `{Countable K} {A : cmraT}.
 
 Instance map_op : Op (gmap K A) := merge op.
 Instance map_unit : Unit (gmap K A) := fmap unit.
-Instance map_validN : ValidN (gmap K A) := λ n m, ∀ i, ✓{n} (m!!i).
+Instance map_validN : ValidN (gmap K A) := λ n m, ∀ i, ✓{n} (m !! i).
 Instance map_minus : Minus (gmap K A) := merge minus.
 
 Lemma lookup_op m1 m2 i : (m1 ⋅ m2) !! i = m1 !! i ⋅ m2 !! i.
@@ -171,7 +171,7 @@ Implicit Types a : A.
 
 Lemma map_lookup_validN n m i x : ✓{n} m → m !! i ≡{n}≡ Some x → ✓{n} x.
 Proof. by move=> /(_ i) Hm Hi; move:Hm; rewrite Hi. Qed.
-Lemma map_insert_validN n m i x : ✓{n} x → ✓{n} m → ✓{n} (<[i:=x]>m).
+Lemma map_insert_validN n m i x : ✓{n} x → ✓{n} m → ✓{n} <[i:=x]>m.
 Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_equality. Qed.
 Lemma map_singleton_validN n i x : ✓{n} ({[ i ↦ x ]} : gmap K A) ↔ ✓{n} x.
 Proof.

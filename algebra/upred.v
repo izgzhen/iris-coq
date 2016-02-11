@@ -211,7 +211,7 @@ Notation "∃ x .. y , P" :=
 Notation "▷ P" := (uPred_later P) (at level 20) : uPred_scope.
 Notation "□ P" := (uPred_always P) (at level 20) : uPred_scope.
 Infix "≡" := uPred_eq : uPred_scope.
-Notation "✓" := uPred_valid (at level 1) : uPred_scope.
+Notation "✓ x" := (uPred_valid x) (at level 20) : uPred_scope.
 
 Definition uPred_iff {M} (P Q : uPred M) : uPred M := ((P → Q) ∧ (Q → P))%I.
 Infix "↔" := uPred_iff : uPred_scope.

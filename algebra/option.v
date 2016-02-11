@@ -87,13 +87,10 @@ Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl.
 Definition option_cmra_mixin  : CMRAMixin (option A).
 Proof.
   split.
-  * by intros n [x|]; destruct 1; constructor;
-      repeat apply (_ : Proper (dist _ ==> _ ==> _) _).
-  * by destruct 1; constructor; apply (_ : Proper (dist n ==> _) _).
-  * destruct 1; rewrite /validN /option_validN //=.
-    eapply (_ : Proper (dist _ ==> impl) (✓{_})); eauto.
-  * by destruct 1; inversion_clear 1; constructor;
-      repeat apply (_ : Proper (dist _ ==> _ ==> _) _).
+  * by intros n [x|]; destruct 1; constructor; cofe_subst.
+  * by destruct 1; constructor; cofe_subst.
+  * by destruct 1; rewrite /validN /option_validN //=; cofe_subst.
+  * by destruct 1; inversion_clear 1; constructor; cofe_subst.
   * intros n [x|]; unfold validN, option_validN; eauto using cmra_validN_S.
   * intros [x|] [y|] [z|]; constructor; rewrite ?associative; auto.
   * intros [x|] [y|]; constructor; rewrite 1?commutative; auto.

@@ -118,7 +118,7 @@ Section iprod_cmra.
 
   Instance iprod_op : Op (iprod B) := λ f g x, f x ⋅ g x.
   Instance iprod_unit : Unit (iprod B) := λ f x, unit (f x).
-  Instance iprod_validN : ValidN (iprod B) := λ n f, ∀ x, ✓{n} (f x).
+  Instance iprod_validN : ValidN (iprod B) := λ n f, ∀ x, ✓{n} f x.
   Instance iprod_minus : Minus (iprod B) := λ f g x, f x ⩪ g x.
 
   Definition iprod_lookup_op f g x : (f ⋅ g) x = f x ⋅ g x := eq_refl.
@@ -197,8 +197,7 @@ Section iprod_cmra.
   (** Properties of iprod_singleton. *)
   Context `{∀ x, Empty (B x), ∀ x, CMRAIdentity (B x)}.
 
-  Lemma iprod_singleton_validN n x (y : B x) :
-    ✓{n} (iprod_singleton x y) ↔ ✓{n} y.
+  Lemma iprod_singleton_validN n x (y: B x) : ✓{n} iprod_singleton x y ↔ ✓{n} y.
   Proof.
     split; [by move=>/(_ x); rewrite iprod_lookup_singleton|].
     move=>Hx x'; destruct (decide (x = x')) as [->|];

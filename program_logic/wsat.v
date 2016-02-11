@@ -2,8 +2,8 @@ Require Export program_logic.model prelude.co_pset.
 Require Export algebra.cmra_big_op algebra.cmra_tactics.
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 10 (✓{_} _) => solve_validN.
-Local Hint Extern 1 (✓{_} (gst _)) => apply gst_validN.
-Local Hint Extern 1 (✓{_} (wld _)) => apply wld_validN.
+Local Hint Extern 1 (✓{_} gst _) => apply gst_validN.
+Local Hint Extern 1 (✓{_} wld _) => apply wld_validN.
 
 Record wsat_pre {Λ Σ} (n : nat) (E : coPset)
     (σ : state Λ) (rs : gmap positive (iRes Λ Σ)) (r : iRes Λ Σ) := {

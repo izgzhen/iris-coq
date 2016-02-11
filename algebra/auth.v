@@ -69,7 +69,7 @@ Global Instance auth_empty `{Empty A} : Empty (auth A) := Auth ∅ ∅.
 Instance auth_validN : ValidN (auth A) := λ n x,
   match authoritative x with
   | Excl a => own x ≼{n} a ∧ ✓{n} a
-  | ExclUnit => ✓{n} (own x)
+  | ExclUnit => ✓{n} own x
   | ExclBot => False
   end.
 Global Arguments auth_validN _ !_ /.
@@ -91,9 +91,9 @@ Proof.
   split; [intros [[z1 z2] Hz]; split; [exists z1|exists z2]; apply Hz|].
   intros [[z1 Hz1] [z2 Hz2]]; exists (Auth z1 z2); split; auto.
 Qed.
-Lemma authoritative_validN n (x : auth A) : ✓{n} x → ✓{n} (authoritative x).
+Lemma authoritative_validN n (x : auth A) : ✓{n} x → ✓{n} authoritative x.
 Proof. by destruct x as [[]]. Qed.
-Lemma own_validN n (x : auth A) : ✓{n} x → ✓{n} (own x).
+Lemma own_validN n (x : auth A) : ✓{n} x → ✓{n} own x.
 Proof. destruct x as [[]]; naive_solver eauto using cmra_validN_includedN. Qed.
 
 Definition auth_cmra_mixin : CMRAMixin (auth A).
@@ -158,7 +158,7 @@ Proof.
 Qed.
 
 Lemma auth_local_update L `{!LocalUpdate Lv L} a a' :
-  Lv a → ✓ (L a') →
+  Lv a → ✓ L a' →
   ● a' ⋅ ◯ a ~~> ● L a' ⋅ ◯ L a.
 Proof.
   intros. apply auth_update=>n af ? EQ; split; last done.

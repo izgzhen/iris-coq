@@ -71,8 +71,7 @@ Proof.
   rewrite Hxy -big_opM_insert; last auto using lookup_delete.
   by rewrite insert_delete.
 Qed.
-Lemma big_opM_lookup_valid n m i x :
-  ✓{n} (big_opM m) → m !! i = Some x → ✓{n} x.
+Lemma big_opM_lookup_valid n m i x : ✓{n} big_opM m → m !! i = Some x → ✓{n} x.
 Proof.
   intros Hm ?; revert Hm; rewrite -(big_opM_delete _ i x) //.
   apply cmra_validN_op_l.
