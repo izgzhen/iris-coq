@@ -179,3 +179,61 @@ Proof.
 Qed.
 
 End pvs.
+
+(** * Frame Shift Assertions. *)
+Section fsa.
+Context {Λ : language} {Σ : iFunctor} {A : Type}.
+Implicit Types P : iProp Λ Σ.
+Implicit Types Q : A → iProp Λ Σ.
+
+(* Yes, the name is horrible...
+   Frame Shift Assertions take a mask and a predicate over some type (that's
+   their "postcondition"). They support weakening the mask, framing resources
+   into the postcondition, and composition witn mask-changing view shifts. *)
+Class FrameShiftAssertion (FSA : coPset → (A → iProp Λ Σ) → iProp Λ Σ) := {
+  fsa_mask_frame_mono E1 E2 Q Q' :> E1 ⊆ E2 →
+                                 (∀ a, Q a ⊑ Q' a) → FSA E1 Q ⊑ FSA E2 Q';
+  fsa_trans3 E1 E2 Q : E2 ⊆ E1 →
+                     pvs E1 E2 (FSA E2 (λ a, pvs E2 E1 (Q a))) ⊑ FSA E1 Q;
+  fsa_frame_r E P Q : (FSA E Q ★ P) ⊑ FSA E (λ a, Q a ★ P)
+}.
+
+Context FSA `{FrameShiftAssertion FSA}.
+Lemma fsa_mono E Q Q' : (∀ a, Q a ⊑ Q' a) → FSA E Q ⊑ FSA E Q'.
+Proof. apply fsa_mask_frame_mono; auto. Qed.
+Lemma fsa_mask_weaken E1 E2 Q : E1 ⊆ E2 → FSA E1 Q ⊑ FSA E2 Q.
+Proof. intros. apply fsa_mask_frame_mono; auto. Qed.
+Lemma fsa_frame_l E P Q :
+  (P ★ FSA E Q) ⊑ FSA E (λ a, P ★ Q a).
+Proof.
+  rewrite commutative fsa_frame_r. apply fsa_mono=>a.
+  by rewrite commutative.
+Qed.
+Lemma fsa_strip_pvs E P Q : P ⊑ FSA E Q → pvs E E P ⊑ FSA E Q.
+Proof.
+  move=>->. rewrite -{2}fsa_trans3; last reflexivity.
+  apply pvs_mono, fsa_mono=>a. apply pvs_intro.  
+Qed.
+Lemma fsa_mono_pvs E Q Q' : (∀ a, Q a ⊑ pvs E E (Q' a)) → FSA E Q ⊑ FSA E Q'.
+Proof.
+  move=>HQ. rewrite -[FSA E Q']fsa_trans3; last reflexivity.
+  rewrite -pvs_intro. by apply fsa_mono.
+Qed.
+
+End fsa.
+
+(** View shifts are a FSA. *)
+Section pvs_fsa.
+Context {Λ : language} {Σ : iFunctor}.
+Implicit Types P : iProp Λ Σ.
+Implicit Types Q : () → iProp Λ Σ.
+
+Global Instance pvs_fsa : FrameShiftAssertion (λ E Q, pvs E E (Q ())).
+Proof.
+  split; intros.
+  - apply pvs_mask_frame_mono; auto.
+  - apply pvs_trans3; auto.
+  - apply pvs_frame_r; auto.
+Qed.
+
+End pvs_fsa.

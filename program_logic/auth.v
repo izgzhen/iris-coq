@@ -77,21 +77,21 @@ Section auth.
   (* Notice how the user has to prove that `b⋅a'` is valid at all
      step-indices. However, since A is timeless, that should not be
      a restriction.  *)
-  Lemma auth_pvs `{!LocalUpdate Lv L} E P Q γ a :
+  Lemma auth_fsa {X : Type} {FSA} (FSAs : FrameShiftAssertion (A:=X) FSA)
+        `{!LocalUpdate Lv L} E P (Q : X → iProp Λ (globalC Σ)) γ a :
     nclose N ⊆ E →
     (auth_ctx γ ★ auth_own γ a ★ (∀ a', ▷φ (a ⋅ a') -★
-          pvs (E ∖ nclose N) (E ∖ nclose N)
-            (■(Lv a ∧ ✓(L a⋅a')) ★ ▷φ (L a ⋅ a') ★ (auth_own γ (L a) -★ Q))))
-      ⊑ pvs E E Q.
+        FSA (E ∖ nclose N) (λ x, ■(Lv a ∧ ✓(L a⋅a')) ★ ▷φ (L a ⋅ a') ★ (auth_own γ (L a) -★ Q x))))
+      ⊑ FSA E Q.
   Proof.
     rewrite /auth_ctx=>HN.
-    rewrite -[pvs E E _]pvs_open_close; last eassumption.
+    rewrite -inv_fsa; last eassumption.
     apply sep_mono; first done. apply wand_intro_l.
     rewrite associative auth_opened !pvs_frame_r !sep_exist_r.
-    apply pvs_strip_pvs. apply exist_elim=>a'.
+    apply fsa_strip_pvs; first done. apply exist_elim=>a'.
     rewrite (forall_elim a'). rewrite [(▷_ ★ _)%I]commutative.
-    rewrite -[((_ ★ ▷_) ★ _)%I]associative wand_elim_r pvs_frame_l.
-    apply pvs_strip_pvs. rewrite commutative -!associative.
+    rewrite -[((_ ★ ▷_) ★ _)%I]associative wand_elim_r fsa_frame_l.
+    apply fsa_mono_pvs; first done. intros x. rewrite commutative -!associative.
     apply const_elim_sep_l=>-[HL Hv].
     rewrite associative [(_ ★ (_ -★ _))%I]commutative -associative.
     rewrite auth_closing //; []. erewrite pvs_frame_l. apply pvs_mono.

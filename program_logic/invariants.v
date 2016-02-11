@@ -64,50 +64,39 @@ Proof. rewrite /inv; apply _. Qed.
 Lemma always_inv N P : (□ inv N P)%I ≡ inv N P.
 Proof. by rewrite always_always. Qed.
 
-(* There is not really a way to provide versions of pvs_openI and pvs_closeI
-   that work with inv. The issue is that these rules track the exact current
-   mask too precisely. However, we *can* provide abstract rules by
-   performing both the opening and the closing of the invariant in the rule,
-   and then implicitly framing all the unused invariants around the
-   "inner" view shift provided by the client. *)
-
-Lemma pvs_open_close E N P Q :
+(** Invariants can be opened around any frame-shifting assertion. *)
+Lemma inv_fsa {A : Type} {FSA} (FSAs : FrameShiftAssertion (A:=A) FSA)
+      E N P (Q : A → iProp Λ Σ) :
   nclose N ⊆ E →
-  (inv N P ★ (▷P -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷P ★ Q))) ⊑ pvs E E Q.
+  (inv N P ★ (▷P -★ FSA (E ∖ nclose N) (λ a, ▷P ★ Q a))) ⊑ FSA E Q.
 Proof.
   move=>HN.
   rewrite /inv sep_exist_r. apply exist_elim=>i.
   rewrite always_and_sep_l' -associative. apply const_elim_sep_l=>HiN.
-  rewrite -(pvs_trans3 E (E ∖ {[encode i]})) //; last by solve_elem_of+.
+  rewrite -(fsa_trans3 E (E ∖ {[encode i]})) //; last by solve_elem_of+.
   (* Add this to the local context, so that solve_elem_of finds it. *)
   assert ({[encode i]} ⊆ nclose N) by eauto.
   rewrite (always_sep_dup' (ownI _ _)).
   rewrite {1}pvs_openI !pvs_frame_r.
   apply pvs_mask_frame_mono ; [solve_elem_of..|].
-  rewrite (commutative _ (▷_)%I) -associative wand_elim_r pvs_frame_l.
-  apply pvs_mask_frame_mono; [solve_elem_of..|].
+  rewrite (commutative _ (▷_)%I) -associative wand_elim_r fsa_frame_l.
+  apply fsa_mask_frame_mono; [solve_elem_of..|]. intros a.
   rewrite associative -always_and_sep_l' pvs_closeI pvs_frame_r left_id.
   apply pvs_mask_frame'; solve_elem_of.
 Qed.
+
+(* Derive the concrete forms for pvs and wp, because they are useful. *)
+
+Lemma pvs_open_close E N P Q :
+  nclose N ⊆ E →
+  (inv N P ★ (▷P -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷P ★ Q))) ⊑ pvs E E Q.
+Proof. move=>HN. by rewrite (inv_fsa pvs_fsa). Qed.
 
 Lemma wp_open_close E e N P (Q : val Λ → iProp Λ Σ) :
   atomic e → nclose N ⊆ E →
   (inv N P ★ (▷P -★ wp (E ∖ nclose N) e (λ v, ▷P ★ Q v))) ⊑ wp E e Q.
 Proof.
-  move=>He HN.
-  rewrite /inv sep_exist_r. apply exist_elim=>i.
-  rewrite always_and_sep_l' -associative. apply const_elim_sep_l=>HiN.
-  rewrite -(wp_atomic E (E ∖ {[encode i]})) //; last by solve_elem_of+.
-  (* Add this to the local context, so that solve_elem_of finds it. *)
-  assert ({[encode i]} ⊆ nclose N) by eauto.
-  rewrite (always_sep_dup' (ownI _ _)).
-  rewrite {1}pvs_openI !pvs_frame_r.
-  apply pvs_mask_frame_mono; [solve_elem_of..|].
-  rewrite (commutative _ (▷_)%I) -associative wand_elim_r wp_frame_l.
-  apply wp_mask_frame_mono; [solve_elem_of..|]=>v.
-  rewrite associative -always_and_sep_l' pvs_closeI pvs_frame_r left_id.
-  apply pvs_mask_frame'; solve_elem_of.
-Qed.
+  move=>He HN. by rewrite (inv_fsa (wp_fsa e _)). Qed.
 
 Lemma inv_alloc N P : ▷ P ⊑ pvs N N (inv N P).
 Proof. by rewrite /inv (pvs_allocI N); last apply coPset_suffixes_infinite. Qed.

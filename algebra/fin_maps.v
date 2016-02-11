@@ -286,8 +286,12 @@ Lemma map_updateP_alloc' m x :
 Proof. eauto using map_updateP_alloc. Qed.
 End freshness.
 
-(* Deallocation is not a local update. The trouble is that if we own {[ i ↦ x ]},
-   then the frame could always own "unit x", and prevent deallocation. *)
+(* Allocation is a local update: Just use composition with a singleton map. *)
+(* Deallocation is *not* a local update. The trouble is that if we
+   own {[ i ↦ x ]}, then the frame could always own "unit x", and prevent
+   deallocation. *)
+
+(* Applying a local update at a position we own is a local update. *)
 Global Instance map_alter_update `{!LocalUpdate Lv L} i :
   LocalUpdate (λ m, ∃ x, m !! i = Some x ∧ Lv x) (alter L i).
 Proof.

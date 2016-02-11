@@ -194,7 +194,7 @@ Proof.
   exists r2, r2'; split_ands; try eapply IH; eauto.
 Qed.
 
-(* Derived rules *)
+(** * Derived rules *)
 Opaque uPred_holds.
 Import uPred.
 Lemma wp_mono E e Q1 Q2 : (∀ v, Q1 v ⊑ Q2 v) → wp E e Q1 ⊑ wp E e Q2.
@@ -227,4 +227,16 @@ Proof.
 Qed.
 Lemma wp_impl_r E e Q1 Q2 : (wp E e Q1 ∧ □ ∀ v, Q1 v → Q2 v) ⊑ wp E e Q2.
 Proof. by rewrite commutative wp_impl_l. Qed.
+Lemma wp_mask_weaken E1 E2 e Q : E1 ⊆ E2 → wp E1 e Q ⊑ wp E2 e Q.
+Proof. auto using wp_mask_frame_mono. Qed.
+
+(** * Weakest-pre is a FSA. *)
+Global Instance wp_fsa e : atomic e → FrameShiftAssertion (λ E Q, wp E e Q).
+Proof.
+  split; intros.
+  - apply wp_mask_frame_mono; auto.
+  - apply wp_atomic; auto.
+  - apply wp_frame_r; auto.
+Qed.
+
 End wp.
