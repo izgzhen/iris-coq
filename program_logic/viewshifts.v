@@ -105,9 +105,9 @@ Proof. by intros; apply vs_alt, inv_alloc. Qed.
 End vs.
 
 Section vs_ghost.
-Context {Λ : language} {Σ : gid → iFunctor} (i : gid) `{!InG Λ Σ i A}.
+Context {Λ : language} {Σ : iFunctorG} (i : gid) `{!InG Λ Σ i A}.
 Implicit Types a : A.
-Implicit Types P Q R : iProp Λ (globalC Σ).
+Implicit Types P Q R : iPropG Λ Σ.
 
 Lemma vs_own_updateP E γ a φ :
   a ~~>: φ → own i γ a ={E}=> ∃ a', ■ φ a' ∧ own i γ a'.

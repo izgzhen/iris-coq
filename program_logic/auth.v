@@ -4,11 +4,10 @@ Import uPred.
 
 Section auth.
   Context {A : cmraT} `{Empty A, !CMRAIdentity A} `{!∀ a : A, Timeless a}.
-  Context {Λ : language} {Σ : gid → iFunctor} (AuthI : gid) `{!InG Λ Σ AuthI (authRA A)}.
-  (* TODO: Come up with notation for "iProp Λ (globalC Σ)". *)
-  Context (N : namespace) (φ : A → iProp Λ (globalC Σ)).
+  Context {Λ : language} {Σ : iFunctorG} (AuthI : gid) `{!InG Λ Σ AuthI (authRA A)}.
+  Context (N : namespace) (φ : A → iPropG Λ Σ).
 
-  Implicit Types P Q R : iProp Λ (globalC Σ).
+  Implicit Types P Q R : iPropG Λ Σ.
   Implicit Types a b : A.
   Implicit Types γ : gname.
 
@@ -23,12 +22,12 @@ Section auth.
   (* TODO: Need this to be proven somewhere. *)
   (* FIXME ✓ binds too strong, I need parenthesis here. *)
   Hypothesis auth_valid :
-    forall a b, (✓ (Auth (Excl a) b) : iProp Λ (globalC Σ)) ⊑ (∃ b', a ≡ b ⋅ b').
+    forall a b, (✓ (Auth (Excl a) b) : iPropG Λ Σ) ⊑ (∃ b', a ≡ b ⋅ b').
 
-  Definition auth_inv (γ : gname) : iProp Λ (globalC Σ) :=
+  Definition auth_inv (γ : gname) : iPropG Λ Σ :=
     (∃ a, own AuthI γ (● a) ★ φ a)%I.
-  Definition auth_own (γ : gname) (a : A) : iProp Λ (globalC Σ) := own AuthI γ (◯ a).
-  Definition auth_ctx (γ : gname) : iProp Λ (globalC Σ) := inv N (auth_inv γ).
+  Definition auth_own (γ : gname) (a : A) : iPropG Λ Σ := own AuthI γ (◯ a).
+  Definition auth_ctx (γ : gname) : iPropG Λ Σ := inv N (auth_inv γ).
 
   Lemma auth_alloc a :
     ✓a → φ a ⊑ pvs N N (∃ γ, auth_ctx γ ∧ auth_own γ a).
@@ -78,7 +77,7 @@ Section auth.
      step-indices. However, since A is timeless, that should not be
      a restriction.  *)
   Lemma auth_fsa {X : Type} {FSA} (FSAs : FrameShiftAssertion (A:=X) FSA)
-        `{!LocalUpdate Lv L} E P (Q : X → iProp Λ (globalC Σ)) γ a :
+        `{!LocalUpdate Lv L} E P (Q : X → iPropG Λ Σ) γ a :
     nclose N ⊆ E →
     (auth_ctx γ ★ auth_own γ a ★ (∀ a', ▷φ (a ⋅ a') -★
         FSA (E ∖ nclose N) (λ x, ■(Lv a ∧ ✓(L a⋅a')) ★ ▷φ (L a ⋅ a') ★ (auth_own γ (L a) -★ Q x))))
