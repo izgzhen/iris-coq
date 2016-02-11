@@ -288,14 +288,14 @@ End freshness.
 
 (* Deallocation is not a local update. The trouble is that if we own {[ i ↦ x ]},
    then the frame could always own "unit x", and prevent deallocation. *)
-Global Instance map_alter_update `{!LocalUpdate P f} i :
-  LocalUpdate (λ m, ∃ x, m !! i = Some x ∧ P x) (alter f i).
+Global Instance map_alter_update `{!LocalUpdate Lv L} i :
+  LocalUpdate (λ m, ∃ x, m !! i = Some x ∧ Lv x) (alter L i).
 Proof.
   split; first apply _.
   intros n m1 m2 (x&Hix&?) Hm j; destruct (decide (i = j)) as [->|].
   - rewrite lookup_alter !lookup_op lookup_alter Hix /=.
     move: (Hm j); rewrite lookup_op Hix.
-    case: (m2 !! j)=>[y|] //=; constructor. by apply (local_updateN f).
+    case: (m2 !! j)=>[y|] //=; constructor. by apply (local_updateN L).
   - by rewrite lookup_op !lookup_alter_ne // lookup_op.
 Qed.
 End properties.

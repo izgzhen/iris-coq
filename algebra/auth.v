@@ -157,12 +157,12 @@ Proof.
   split; [by rewrite Ha' left_id associative; apply cmra_includedN_l|done].
 Qed.
 
-Lemma auth_local_update f `{!LocalUpdate P f} a a' :
-  P a → ✓ (f a') →
-  ● a' ⋅ ◯ a ~~> ● f a' ⋅ ◯ f a.
+Lemma auth_local_update L `{!LocalUpdate Lv L} a a' :
+  Lv a → ✓ (L a') →
+  ● a' ⋅ ◯ a ~~> ● L a' ⋅ ◯ L a.
 Proof.
   intros. apply auth_update=>n af ? EQ; split; last done.
-  by rewrite EQ (local_updateN f) // -EQ.
+  by rewrite EQ (local_updateN L) // -EQ.
 Qed.
 
 Lemma auth_update_op_l a a' b :
@@ -173,15 +173,15 @@ Lemma auth_update_op_r a a' b :
 Proof. rewrite -!(commutative _ b); apply auth_update_op_l. Qed.
 
 (* This does not seem to follow from auth_local_update.
-   The trouble is that given ✓ (f a ⋅ a'), P a
+   The trouble is that given ✓ (L a ⋅ a'), Lv a
    we need ✓ (a ⋅ a'). I think this should hold for every local update,
    but adding an extra axiom to local updates just for this is silly. *)
-Lemma auth_local_update_l f `{!LocalUpdate P f} a a' :
-  P a → ✓ (f a ⋅ a') →
-  ● (a ⋅ a') ⋅ ◯ a ~~> ● (f a ⋅ a') ⋅ ◯ f a.
+Lemma auth_local_update_l L `{!LocalUpdate Lv L} a a' :
+  Lv a → ✓ (L a ⋅ a') →
+  ● (a ⋅ a') ⋅ ◯ a ~~> ● (L a ⋅ a') ⋅ ◯ L a.
 Proof.
   intros. apply auth_update=>n af ? EQ; split; last done.
-  by rewrite -(local_updateN f) // EQ -(local_updateN f) // -EQ.
+  by rewrite -(local_updateN L) // EQ -(local_updateN L) // -EQ.
 Qed.
 
 End cmra.

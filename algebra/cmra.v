@@ -137,9 +137,9 @@ Class CMRAMonotone {A B : cmraT} (f : A → B) := {
 }.
 
 (** * Local updates *)
-Class LocalUpdate {A : cmraT} (P : A → Prop) (f : A → A) := {
-  local_update_ne n :> Proper (dist n ==> dist n) f;
-  local_updateN n x y : P x → ✓{n} (x ⋅ y) → f (x ⋅ y) ≡{n}≡ f x ⋅ y
+Class LocalUpdate {A : cmraT} (Lv : A → Prop) (L : A → A) := {
+  local_update_ne n :> Proper (dist n ==> dist n) L;
+  local_updateN n x y : Lv x → ✓{n} (x ⋅ y) → L (x ⋅ y) ≡{n}≡ L x ⋅ y
 }.
 Arguments local_updateN {_ _} _ {_} _ _ _ _ _.
 
@@ -322,13 +322,13 @@ Section identity.
 End identity.
 
 (** ** Local updates *)
-Global Instance local_update_proper P (f : A → A) :
-  LocalUpdate P f → Proper ((≡) ==> (≡)) f.
+Global Instance local_update_proper Lv (L : A → A) :
+  LocalUpdate Lv L → Proper ((≡) ==> (≡)) L.
 Proof. intros; apply (ne_proper _). Qed.
 
-Lemma local_update f `{!LocalUpdate P f} x y :
-  P x → ✓ (x ⋅ y) → f (x ⋅ y) ≡ f x ⋅ y.
-Proof. by rewrite equiv_dist=>?? n; apply (local_updateN f). Qed.
+Lemma local_update L `{!LocalUpdate Lv L} x y :
+  Lv x → ✓ (x ⋅ y) → L (x ⋅ y) ≡ L x ⋅ y.
+Proof. by rewrite equiv_dist=>?? n; apply (local_updateN L). Qed.
 
 Global Instance local_update_op x : LocalUpdate (λ _, True) (op x).
 Proof. split. apply _. by intros n y1 y2 _ _; rewrite associative. Qed.
