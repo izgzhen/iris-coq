@@ -56,9 +56,7 @@ Section auth.
     rewrite own_valid_r auth_valid !sep_exist_l /=. apply exist_elim=>a'.
     rewrite [∅ ⋅ _]left_id -(exist_intro a').
     apply (eq_rewrite b (a ⋅ a')
-              (λ x, ▷φ x ★ own AuthI γ (● x ⋅ ◯ a))%I).
-    { (* TODO this asks for automation. *)
-      move=>n a1 a2 Ha. by rewrite !Ha. }
+              (λ x, ▷φ x ★ own AuthI γ (● x ⋅ ◯ a))%I); first by solve_ne.
     { by rewrite !sep_elim_r. }
     apply sep_mono; first done.
     by rewrite sep_elim_l.
