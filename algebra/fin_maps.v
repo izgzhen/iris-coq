@@ -34,6 +34,12 @@ Global Instance lookup_ne n k :
 Proof. by intros m1 m2. Qed.
 Global Instance lookup_proper k :
   Proper ((≡) ==> (≡)) (lookup k : gmap K A → option A) := _.
+Global Instance alter_ne f k n :
+  Proper (dist n ==> dist n) f → Proper (dist n ==> dist n) (alter f k).
+Proof.
+  intros ? m m' Hm k'.
+  by destruct (decide (k = k')); simplify_map_equality; rewrite (Hm k').
+Qed.
 Global Instance insert_ne i n :
   Proper (dist n ==> dist n ==> dist n) (insert (M:=gmap K A) i).
 Proof.
@@ -280,47 +286,18 @@ Lemma map_updateP_alloc' m x :
 Proof. eauto using map_updateP_alloc. Qed.
 End freshness.
 
-Section local.
-Definition map_local_alloc i x : LocalUpdate (mapRA K A) :=
-  local_update_op {[ i ↦ x ]}.
-
 (* Deallocation is not a local update. The trouble is that if we own {[ i ↦ x ]},
    then the frame could always own "unit x", and prevent deallocation. *)
-
-Context (L : LocalUpdate A) `{!LocalUpdateSpec L}.
-Definition map_local_update i : LocalUpdate (mapRA K A) :=
-  λ m, x ← m !! i; y ← L x; Some (<[i:=y]>m).
-Global Instance map_local_update_spec i : LocalUpdateSpec (map_local_update i).
+Global Instance map_alter_update `{!LocalUpdate P f} i :
+  LocalUpdate (λ m, ∃ x, m !! i = Some x ∧ P x) (alter f i).
 Proof.
-  rewrite /map_local_update. split.
-  - (* FIXME Oh wow, this is harder than expected... *)
-    move=>n f g EQ. move:(EQ i).
-    case _:(f !! i)=>[fi|]; case _:(g !! i)=>[gi|]; move=>EQi;
-      inversion EQi; subst; simpl; last done.
-    assert (EQL : L fi ≡{n}≡ L gi) by (by apply local_update_ne). move: EQL.
-    case _:(L fi)=>[Lfi|] /=; case _:(L gi)=>[Lgi|]; move=>EQL;
-      inversion EQL; subst; simpl; last done.
-    apply Some_ne, insert_ne; done.
-  - move=>f g n [b Hlv] Hv. rewrite lookup_op. move:Hlv.
-    case EQf:(f !! i)=>[fi|]; simpl; last discriminate.
-    case EQL:(L fi)=>[Lfi|]; simpl; last discriminate.
-    case=>?. subst b.
-    case EQg:(g !! i)=>[gi|]; simpl.
-    + assert (L (fi ⋅ gi) ≡{n}≡ L fi ⋅ Some gi) as EQLi.
-      { apply local_update_spec; first by eauto.
-        move:(Hv i). rewrite lookup_op EQf EQg -Some_op. done. }
-      rewrite EQL -Some_op in EQLi.
-      destruct (L (fi ⋅ gi)) as [Lfgi|]; inversion EQLi; subst; simpl.
-      rewrite -Some_op. apply Some_ne. move=>j. rewrite lookup_op.
-      destruct (decide (i = j)); simplify_map_equality; last by rewrite lookup_op.
-      rewrite EQg -Some_op. apply Some_ne. done.
-    + rewrite EQL /=.
-      rewrite -Some_op. apply Some_ne. move=>j. rewrite lookup_op.
-      destruct (decide (i = j)); simplify_map_equality; last by rewrite lookup_op.
-      by rewrite EQg.
+  split; first apply _.
+  intros n m1 m2 (x&Hix&?) Hm j; destruct (decide (i = j)) as [->|].
+  - rewrite lookup_alter !lookup_op lookup_alter Hix /=.
+    move: (Hm j); rewrite lookup_op Hix.
+    case: (m2 !! j)=>[y|] //=; constructor. by apply (local_updateN f).
+  - by rewrite lookup_op !lookup_alter_ne // lookup_op.
 Qed.
-End local.
-
 End properties.
 
 (** Functor *)
@@ -358,4 +335,3 @@ Next Obligation.
   intros K ?? Σ A B C f g x. rewrite /= -map_fmap_compose.
   apply map_fmap_setoid_ext=> ? y _; apply ifunctor_map_compose.
 Qed.
-
