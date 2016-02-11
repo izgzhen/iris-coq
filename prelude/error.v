@@ -47,7 +47,7 @@ Lemma error_fmap_bind {S E A B C} (f : A → B) (g : B → error S E C) x s :
   ((f <$> x) ≫= g) s = (x ≫= g ∘ f) s.
 Proof. by compute; destruct (x s) as [|[??]]. Qed.
 
-Lemma error_associative {S E A B C} (f : A → error S E B) (g : B → error S E C) x s :
+Lemma error_assoc {S E A B C} (f : A → error S E B) (g : B → error S E C) x s :
   ((x ≫= f) ≫= g) s = (a ← x; f a ≫= g) s.
 Proof. by compute; destruct (x s) as [|[??]]. Qed.
 Lemma error_of_option_bind {S E A B} (f : A → option B) o e :
@@ -114,7 +114,7 @@ Tactic Notation "error_proceed" :=
   | H : (gets _ ≫= _) _ = _ |- _ => rewrite error_left_gets in H
   | H : (modify _ ≫= _) _ = _ |- _ => rewrite error_left_modify in H
   | H : ((_ <$> _) ≫= _) _ = _ |- _ => rewrite error_fmap_bind in H
-  | H : ((_ ≫= _) ≫= _) _ = _ |- _ => rewrite error_associative in H
+  | H : ((_ ≫= _) ≫= _) _ = _ |- _ => rewrite error_assoc in H
   | H : (error_guard _ _ _) _ = _ |- _ =>
      let H' := fresh in apply error_guard_ret in H; destruct H as [H' H]
   | _ => progress simplify_equality'

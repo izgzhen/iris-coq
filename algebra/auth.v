@@ -106,10 +106,10 @@ Proof.
   * by intros n x1 x2 [Hx Hx'] y1 y2 [Hy Hy'];
       split; simpl; rewrite ?Hy ?Hy' ?Hx ?Hx'.
   * intros n [[] ?] ?; naive_solver eauto using cmra_includedN_S, cmra_validN_S.
-  * by split; simpl; rewrite associative.
-  * by split; simpl; rewrite commutative.
+  * by split; simpl; rewrite assoc.
+  * by split; simpl; rewrite comm.
   * by split; simpl; rewrite ?cmra_unit_l.
-  * by split; simpl; rewrite ?cmra_unit_idempotent.
+  * by split; simpl; rewrite ?cmra_unit_idemp.
   * intros n ??; rewrite! auth_includedN; intros [??].
     by split; simpl; apply cmra_unit_preservingN.
   * assert (∀ n (a b1 b2 : A), b1 ⋅ b2 ≼{n} a → b1 ≼{n} a).
@@ -153,8 +153,8 @@ Lemma auth_update a a' b b' :
 Proof.
   move=> Hab [[?| |] bf1] n // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
   destruct (Hab n (bf1 ⋅ bf2)) as [Ha' ?]; auto.
-  { by rewrite Ha left_id associative. }
-  split; [by rewrite Ha' left_id associative; apply cmra_includedN_l|done].
+  { by rewrite Ha left_id assoc. }
+  split; [by rewrite Ha' left_id assoc; apply cmra_includedN_l|done].
 Qed.
 
 Lemma auth_local_update L `{!LocalUpdate Lv L} a a' :
@@ -170,7 +170,7 @@ Lemma auth_update_op_l a a' b :
 Proof. by intros; apply (auth_local_update _). Qed.
 Lemma auth_update_op_r a a' b :
   ✓ (a ⋅ b) → ● a ⋅ ◯ a' ~~> ● (a ⋅ b) ⋅ ◯ (a' ⋅ b).
-Proof. rewrite -!(commutative _ b); apply auth_update_op_l. Qed.
+Proof. rewrite -!(comm _ b); apply auth_update_op_l. Qed.
 
 (* This does not seem to follow from auth_local_update.
    The trouble is that given ✓ (L a ⋅ a'), Lv a

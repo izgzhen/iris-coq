@@ -15,7 +15,7 @@ Definition ndot `{Countable A} (N : namespace) (x : A) : namespace :=
   encode x :: N.
 Coercion nclose (N : namespace) : coPset := coPset_suffixes (encode N).
 
-Instance ndot_injective `{Countable A} : Injective2 (=) (=) (=) (@ndot A _ _).
+Instance ndot_inj `{Countable A} : Inj2 (=) (=) (=) (@ndot A _ _).
 Proof. by intros N1 x1 N2 x2 ?; simplify_equality. Qed.
 Lemma nclose_nnil : nclose nnil = coPset_all.
 Proof. by apply (sig_eq_pi _). Qed.
@@ -25,7 +25,7 @@ Lemma nclose_subseteq `{Countable A} N x : nclose (ndot N x) ⊆ nclose N.
 Proof.
   intros p; rewrite /nclose !elem_coPset_suffixes; intros [q ->].
   destruct (list_encode_suffix N (ndot N x)) as [q' ?]; [by exists [encode x]|].
-  by exists (q ++ q')%positive; rewrite <-(associative_L _); f_equal.
+  by exists (q ++ q')%positive; rewrite <-(assoc_L _); f_equal.
 Qed.
 Lemma ndot_nclose `{Countable A} N x : encode (ndot N x) ∈ nclose N.
 Proof. apply nclose_subseteq with x, encode_nclose. Qed.
@@ -34,9 +34,9 @@ Lemma nclose_disjoint `{Countable A} N (x y : A) :
 Proof.
   intros Hxy; apply elem_of_equiv_empty_L=> p; unfold nclose, ndot.
   rewrite elem_of_intersection !elem_coPset_suffixes; intros [[q ->] [q' Hq]].
-  apply Hxy, (injective encode), (injective encode_nat); revert Hq.
+  apply Hxy, (inj encode), (inj encode_nat); revert Hq.
   rewrite !(list_encode_cons (encode _)).
-  rewrite !(associative_L _) (injective_iff (++ _)%positive) /=.
+  rewrite !(assoc_L _) (inj_iff (++ _)%positive) /=.
   generalize (encode_nat (encode y)).
   induction (encode_nat (encode x)); intros [|?] ?; f_equal'; naive_solver.
 Qed.
@@ -72,16 +72,16 @@ Lemma inv_fsa {A : Type} {FSA} (FSAs : FrameShiftAssertion (A:=A) FSA)
 Proof.
   move=>HN.
   rewrite /inv sep_exist_r. apply exist_elim=>i.
-  rewrite always_and_sep_l' -associative. apply const_elim_sep_l=>HiN.
+  rewrite always_and_sep_l' -assoc. apply const_elim_sep_l=>HiN.
   rewrite -(fsa_trans3 E (E ∖ {[encode i]})) //; last by solve_elem_of+.
   (* Add this to the local context, so that solve_elem_of finds it. *)
   assert ({[encode i]} ⊆ nclose N) by eauto.
   rewrite (always_sep_dup' (ownI _ _)).
   rewrite {1}pvs_openI !pvs_frame_r.
   apply pvs_mask_frame_mono ; [solve_elem_of..|].
-  rewrite (commutative _ (▷_)%I) -associative wand_elim_r fsa_frame_l.
+  rewrite (comm _ (▷_)%I) -assoc wand_elim_r fsa_frame_l.
   apply fsa_mask_frame_mono; [solve_elem_of..|]. intros a.
-  rewrite associative -always_and_sep_l' pvs_closeI pvs_frame_r left_id.
+  rewrite assoc -always_and_sep_l' pvs_closeI pvs_frame_r left_id.
   apply pvs_mask_frame'; solve_elem_of.
 Qed.
 

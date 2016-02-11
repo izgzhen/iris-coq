@@ -178,14 +178,14 @@ Proof.
     * rewrite elem_of_cons. intros [?|?]; simplify_equality.
       { left; exists 1. by rewrite (left_id_L 1 (++))%positive. }
       destruct (IHl (j~0) (Pto_list_raw j~1 r acc)) as [(i'&->&?)|?]; auto.
-      { left; exists (i' ~ 0). by rewrite Preverse_xO, (associative_L _). }
+      { left; exists (i' ~ 0). by rewrite Preverse_xO, (assoc_L _). }
       destruct (IHr (j~1) acc) as [(i'&->&?)|?]; auto.
-      left; exists (i' ~ 1). by rewrite Preverse_xI, (associative_L _).
+      left; exists (i' ~ 1). by rewrite Preverse_xI, (assoc_L _).
     * intros.
       destruct (IHl (j~0) (Pto_list_raw j~1 r acc)) as [(i'&->&?)|?]; auto.
-      { left; exists (i' ~ 0). by rewrite Preverse_xO, (associative_L _). }
+      { left; exists (i' ~ 0). by rewrite Preverse_xO, (assoc_L _). }
       destruct (IHr (j~1) acc) as [(i'&->&?)|?]; auto.
-      left; exists (i' ~ 1). by rewrite Preverse_xI, (associative_L _). }
+      left; exists (i' ~ 1). by rewrite Preverse_xI, (assoc_L _). }
   revert t j i acc. assert (∀ t j i acc,
     (i, x) ∈ acc → (i, x) ∈ Pto_list_raw j t acc) as help.
   { intros t; induction t as [|[y|] l IHl r IHr]; intros j i acc;
@@ -195,15 +195,15 @@ Proof.
   * done.
   * rewrite elem_of_cons. destruct i as [i|i|]; simplify_equality'.
     + right. apply help. specialize (IHr (j~1) i).
-      rewrite Preverse_xI, (associative_L _) in IHr. by apply IHr.
+      rewrite Preverse_xI, (assoc_L _) in IHr. by apply IHr.
     + right. specialize (IHl (j~0) i).
-      rewrite Preverse_xO, (associative_L _) in IHl. by apply IHl.
+      rewrite Preverse_xO, (assoc_L _) in IHl. by apply IHl.
     + left. by rewrite (left_id_L 1 (++))%positive.
   * destruct i as [i|i|]; simplify_equality'.
     + apply help. specialize (IHr (j~1) i).
-      rewrite Preverse_xI, (associative_L _) in IHr. by apply IHr.
+      rewrite Preverse_xI, (assoc_L _) in IHr. by apply IHr.
     + specialize (IHl (j~0) i).
-      rewrite Preverse_xO, (associative_L _) in IHl. by apply IHl.
+      rewrite Preverse_xO, (assoc_L _) in IHl. by apply IHl.
 Qed.
 Lemma Pto_list_nodup {A} j (t : Pmap_raw A) acc :
   (∀ i x, (i ++ Preverse j, x) ∈ acc → t !! i = None) →
@@ -222,18 +222,18 @@ Proof.
       discriminate (Hin Hj). }
    apply IHl.
    { intros i x. rewrite Pelem_of_to_list. intros [(?&Hi&?)|Hi].
-     + rewrite Preverse_xO, Preverse_xI, !(associative_L _) in Hi.
-       by apply (injective (++ _)) in Hi.
-     + apply (Hin (i~0) x). by rewrite Preverse_xO, (associative_L _) in Hi. }
+     + rewrite Preverse_xO, Preverse_xI, !(assoc_L _) in Hi.
+       by apply (inj (++ _)) in Hi.
+     + apply (Hin (i~0) x). by rewrite Preverse_xO, (assoc_L _) in Hi. }
    apply IHr; auto. intros i x Hi.
-   apply (Hin (i~1) x). by rewrite Preverse_xI, (associative_L _) in Hi.
+   apply (Hin (i~1) x). by rewrite Preverse_xI, (assoc_L _) in Hi.
  * apply IHl.
    { intros i x. rewrite Pelem_of_to_list. intros [(?&Hi&?)|Hi].
-     + rewrite Preverse_xO, Preverse_xI, !(associative_L _) in Hi.
-       by apply (injective (++ _)) in Hi.
-     + apply (Hin (i~0) x). by rewrite Preverse_xO, (associative_L _) in Hi. }
+     + rewrite Preverse_xO, Preverse_xI, !(assoc_L _) in Hi.
+       by apply (inj (++ _)) in Hi.
+     + apply (Hin (i~0) x). by rewrite Preverse_xO, (assoc_L _) in Hi. }
    apply IHr; auto. intros i x Hi.
-   apply (Hin (i~1) x). by rewrite Preverse_xI, (associative_L _) in Hi.
+   apply (Hin (i~1) x). by rewrite Preverse_xI, (assoc_L _) in Hi.
 Qed.
 Lemma Pomap_lookup {A B} (f : A → option B) t i :
   Pomap_raw f t !! i = t !! i ≫= f.

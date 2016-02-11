@@ -49,13 +49,13 @@ Proof.
   destruct n as [|n], n' as [|n']; simpl; try by (auto with lia).
   intros [rs [Hval Hσ HE Hwld]] ?; exists rs; constructor; auto.
   intros i P ? HiP; destruct (wld (r ⋅ big_opM rs) !! i) as [P'|] eqn:HP';
-    [apply (injective Some) in HiP|inversion_clear HiP].
+    [apply (inj Some) in HiP|inversion_clear HiP].
   assert (P' ≡{S n}≡ to_agree $ Next $ iProp_unfold $
                        iProp_fold $ later_car $ P' (S n)) as HPiso.
   { rewrite iProp_unfold_fold later_eta to_agree_car //.
     apply (map_lookup_validN _ (wld (r ⋅ big_opM rs)) i); rewrite ?HP'; auto. }
   assert (P ≡{n'}≡ iProp_fold (later_car (P' (S n)))) as HPP'.
-  { apply (injective iProp_unfold), (injective Next), (injective to_agree).
+  { apply (inj iProp_unfold), (inj Next), (inj to_agree).
     by rewrite -HiP -(dist_le _ _ _ _ HPiso). }
   destruct (Hwld i (iProp_fold (later_car (P' (S n))))) as (r'&?&?); auto.
   { by rewrite HP' -HPiso. }
@@ -83,7 +83,7 @@ Proof.
   intros HiP Hi [rs [Hval Hσ HE Hwld]].
   destruct (Hwld i P) as (rP&?&?); [solve_elem_of +|by apply lookup_wld_op_l|].
   assert (rP ⋅ r ⋅ big_opM (delete i rs) ≡ r ⋅ big_opM rs) as Hr.
-  { by rewrite (commutative _ rP) -associative big_opM_delete. }
+  { by rewrite (comm _ rP) -assoc big_opM_delete. }
   exists rP; split; [exists (delete i rs); constructor; rewrite ?Hr|]; auto.
   * intros j; rewrite lookup_delete_is_Some Hr.
     generalize (HE j); solve_elem_of +Hi.
@@ -98,15 +98,14 @@ Proof.
   intros HiP HiE [rs [Hval Hσ HE Hwld]] ?.
   assert (rs !! i = None) by (apply eq_None_not_Some; naive_solver).
   assert (r ⋅ big_opM (<[i:=rP]> rs) ≡ rP ⋅ r ⋅ big_opM rs) as Hr.
-  { by rewrite (commutative _ rP) -associative big_opM_insert. }
+  { by rewrite (comm _ rP) -assoc big_opM_insert. }
   exists (<[i:=rP]>rs); constructor; rewrite ?Hr; auto.
   * intros j; rewrite Hr lookup_insert_is_Some=>-[?|[??]]; subst.
     + rewrite !lookup_op HiP !op_is_Some; solve_elem_of -.
     + destruct (HE j) as [Hj Hj']; auto; solve_elem_of +Hj Hj'.
   * intros j P'; rewrite Hr elem_of_union elem_of_singleton=>-[?|?]; subst.
     + rewrite !lookup_wld_op_l ?HiP; auto=> HP.
-      apply (injective Some), (injective to_agree),
-        (injective Next), (injective iProp_unfold) in HP.
+      apply (inj Some), (inj to_agree), (inj Next), (inj iProp_unfold) in HP.
       exists rP; split; [rewrite lookup_insert|apply HP]; auto.
     + intros. destruct (Hwld j P') as (r'&?&?); auto.
       exists r'; rewrite lookup_insert_ne; naive_solver.
@@ -117,13 +116,13 @@ Lemma wsat_update_pst n E σ1 σ1' r rf :
 Proof.
   intros Hpst_r [rs [(?&?&?) Hpst HE Hwld]]; simpl in *.
   assert (pst rf ⋅ pst (big_opM rs) = ∅) as Hpst'.
-  { by apply: (excl_validN_inv_l (S n) σ1); rewrite -Hpst_r associative. }
+  { by apply: (excl_validN_inv_l (S n) σ1); rewrite -Hpst_r assoc. }
   assert (σ1' = σ1) as ->.
   { apply leibniz_equiv, (timeless _), dist_le with (S n); auto.
-    apply (injective Excl).
-    by rewrite -Hpst_r -Hpst -associative Hpst' (right_id _). }
+    apply (inj Excl).
+    by rewrite -Hpst_r -Hpst -assoc Hpst' right_id. }
   split; [done|exists rs].
-  by constructor; split_ands'; try (rewrite /= -associative Hpst').
+  by constructor; split_ands'; try (rewrite /= -assoc Hpst').
 Qed.
 Lemma wsat_update_gst n E σ r rf mm1 (P : iGst Λ Σ → Prop) :
   mm1 ≼{S n} gst r → mm1 ~~>: (λ mm2, default False mm2 P) →
@@ -131,7 +130,7 @@ Lemma wsat_update_gst n E σ r rf mm1 (P : iGst Λ Σ → Prop) :
 Proof.
   intros [mf Hr] Hup [rs [(?&?&?) Hσ HE Hwld]].
   destruct (Hup (mf ⋅ gst (rf ⋅ big_opM rs)) (S n)) as ([m2|]&?&Hval'); try done.
-  { by rewrite /= (associative _ mm1) -Hr associative. }
+  { by rewrite /= (assoc _ mm1) -Hr assoc. }
   exists m2; split; [exists rs; split; split_ands'; auto|done].
 Qed.
 Lemma wsat_alloc n E1 E2 σ r P rP :
@@ -152,22 +151,21 @@ Proof.
   { apply eq_None_not_Some=>?; destruct (HE i) as [_ Hri']; auto; revert Hri'.
     rewrite /= !lookup_op !op_is_Some -!not_eq_None_Some; tauto. }
   assert (r ⋅ big_opM (<[i:=rP]> rs) ≡ rP ⋅ r ⋅ big_opM rs) as Hr.
-  { by rewrite (commutative _ rP) -associative big_opM_insert. }
+  { by rewrite (comm _ rP) -assoc big_opM_insert. }
   exists i; split_ands; [exists (<[i:=rP]>rs); constructor| |]; auto.
-  * destruct Hval as (?&?&?);  rewrite -associative Hr.
+  * destruct Hval as (?&?&?);  rewrite -assoc Hr.
     split_ands'; rewrite /= ?left_id; [|eauto|eauto].
     intros j; destruct (decide (j = i)) as [->|].
-    + by rewrite !lookup_op Hri HrPi Hrsi !(right_id _ _) lookup_singleton.
-    + by rewrite lookup_op lookup_singleton_ne // (left_id _ _).
-  * by rewrite -associative Hr /= left_id.
-  * intros j; rewrite -associative Hr; destruct (decide (j = i)) as [->|].
+    + by rewrite !lookup_op Hri HrPi Hrsi !right_id lookup_singleton.
+    + by rewrite lookup_op lookup_singleton_ne // left_id.
+  * by rewrite -assoc Hr /= left_id.
+  * intros j; rewrite -assoc Hr; destruct (decide (j = i)) as [->|].
     + rewrite /= !lookup_op lookup_singleton !op_is_Some; solve_elem_of +Hi.
     + rewrite lookup_insert_ne //.
       rewrite lookup_op lookup_singleton_ne // left_id; eauto.
-  * intros j P'; rewrite -associative Hr; destruct (decide (j=i)) as [->|].
+  * intros j P'; rewrite -assoc Hr; destruct (decide (j=i)) as [->|].
     + rewrite /= !lookup_op Hri HrPi Hrsi right_id lookup_singleton=>? HP.
-      apply (injective Some), (injective to_agree),
-        (injective Next), (injective iProp_unfold) in HP.
+      apply (inj Some), (inj to_agree), (inj Next), (inj iProp_unfold) in HP.
       exists rP; rewrite lookup_insert; split; [|apply HP]; auto.
     + rewrite /= lookup_op lookup_singleton_ne // left_id=> ??.
       destruct (Hwld j P') as [r' ?]; auto.

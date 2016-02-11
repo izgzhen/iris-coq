@@ -71,27 +71,27 @@ Proof.
   unfold card; intros. destruct finA as [[|x ?] ??]; simpl in *; [exfalso;lia|].
   constructor; exact x.
 Qed.
-Lemma finite_injective_contains `{finA: Finite A} `{finB: Finite B} (f: A → B)
-  `{!Injective (=) (=) f} : f <$> enum A `contains` enum B.
+Lemma finite_inj_contains `{finA: Finite A} `{finB: Finite B} (f: A → B)
+  `{!Inj (=) (=) f} : f <$> enum A `contains` enum B.
 Proof.
   intros. destruct finA, finB. apply NoDup_contains; auto using NoDup_fmap_2.
 Qed.
-Lemma finite_injective_Permutation `{Finite A} `{Finite B} (f : A → B)
-  `{!Injective (=) (=) f} : card A = card B → f <$> enum A ≡ₚ enum B.
+Lemma finite_inj_Permutation `{Finite A} `{Finite B} (f : A → B)
+  `{!Inj (=) (=) f} : card A = card B → f <$> enum A ≡ₚ enum B.
 Proof.
   intros. apply contains_Permutation_length_eq.
   * by rewrite fmap_length.
-  * by apply finite_injective_contains.
+  * by apply finite_inj_contains.
 Qed.
-Lemma finite_injective_surjective `{Finite A} `{Finite B} (f : A → B)
-  `{!Injective (=) (=) f} : card A = card B → Surjective (=) f.
+Lemma finite_inj_surj `{Finite A} `{Finite B} (f : A → B)
+  `{!Inj (=) (=) f} : card A = card B → Surj (=) f.
 Proof.
   intros HAB y. destruct (elem_of_list_fmap_2 f (enum A) y) as (x&?&?); eauto.
-  rewrite finite_injective_Permutation; auto using elem_of_enum.
+  rewrite finite_inj_Permutation; auto using elem_of_enum.
 Qed.
 
-Lemma finite_surjective A `{Finite A} B `{Finite B} :
-  0 < card A ≤ card B → ∃ g : B → A, Surjective (=) g.
+Lemma finite_surj A `{Finite A} B `{Finite B} :
+  0 < card A ≤ card B → ∃ g : B → A, Surj (=) g.
 Proof.
   intros [??]. destruct (finite_inhabited A) as [x']; auto with lia.
   exists (λ y : B, from_option x' (decode_nat (encode_nat y))).
@@ -99,38 +99,38 @@ Proof.
   { pose proof (encode_lt_card x); lia. }
   exists y. by rewrite Hy2, decode_encode_nat.
 Qed.
-Lemma finite_injective A `{Finite A} B `{Finite B} :
-  card A ≤ card B ↔ ∃ f : A → B, Injective (=) (=) f.
+Lemma finite_inj A `{Finite A} B `{Finite B} :
+  card A ≤ card B ↔ ∃ f : A → B, Inj (=) (=) f.
 Proof.
   split.
   * intros. destruct (decide (card A = 0)) as [HA|?].
     { exists (card_0_inv B HA). intros y. apply (card_0_inv _ HA y). }
-    destruct (finite_surjective A B) as (g&?); auto with lia.
-    destruct (surjective_cancel g) as (f&?). exists f. apply cancel_injective.
+    destruct (finite_surj A B) as (g&?); auto with lia.
+    destruct (surj_cancel g) as (f&?). exists f. apply cancel_inj.
   * intros [f ?]. unfold card. rewrite <-(fmap_length f).
-    by apply contains_length, (finite_injective_contains f).
+    by apply contains_length, (finite_inj_contains f).
 Qed.
 Lemma finite_bijective A `{Finite A} B `{Finite B} :
-  card A = card B ↔ ∃ f : A → B, Injective (=) (=) f ∧ Surjective (=) f.
+  card A = card B ↔ ∃ f : A → B, Inj (=) (=) f ∧ Surj (=) f.
 Proof.
   split.
-  * intros; destruct (proj1 (finite_injective A B)) as [f ?]; auto with lia.
-    exists f; auto using (finite_injective_surjective f).
-  * intros (f&?&?). apply (anti_symmetric (≤)); apply finite_injective.
+  * intros; destruct (proj1 (finite_inj A B)) as [f ?]; auto with lia.
+    exists f; auto using (finite_inj_surj f).
+  * intros (f&?&?). apply (anti_symm (≤)); apply finite_inj.
     + by exists f.
-    + destruct (surjective_cancel f) as (g&?); eauto using cancel_injective.
+    + destruct (surj_cancel f) as (g&?); eauto using cancel_inj.
 Qed.
-Lemma injective_card `{Finite A} `{Finite B} (f : A → B)
-  `{!Injective (=) (=) f} : card A ≤ card B.
-Proof. apply finite_injective. eauto. Qed.
-Lemma surjective_card `{Finite A} `{Finite B} (f : A → B)
-  `{!Surjective (=) f} : card B ≤ card A.
+Lemma inj_card `{Finite A} `{Finite B} (f : A → B)
+  `{!Inj (=) (=) f} : card A ≤ card B.
+Proof. apply finite_inj. eauto. Qed.
+Lemma surj_card `{Finite A} `{Finite B} (f : A → B)
+  `{!Surj (=) f} : card B ≤ card A.
 Proof.
-  destruct (surjective_cancel f) as (g&?).
-  apply injective_card with g, cancel_injective.
+  destruct (surj_cancel f) as (g&?).
+  apply inj_card with g, cancel_inj.
 Qed.
 Lemma bijective_card `{Finite A} `{Finite B} (f : A → B)
-  `{!Injective (=) (=) f} `{!Surjective (=) f} : card A = card B.
+  `{!Inj (=) (=) f} `{!Surj (=) f} : card A = card B.
 Proof. apply finite_bijective. eauto. Qed.
 
 (** Decidability of quantification over finite types *)
@@ -180,7 +180,7 @@ End enc_finite.
 
 Section bijective_finite.
   Context `{Finite A, ∀ x y : B, Decision (x = y)} (f : A → B) (g : B → A).
-  Context `{!Injective (=) (=) f, !Cancel (=) f g}.
+  Context `{!Inj (=) (=) f, !Cancel (=) f g}.
 
   Program Instance bijective_finite: Finite B := {| enum := f <$> enum A |}.
   Next Obligation. apply (NoDup_fmap_2 _), NoDup_enum. Qed.

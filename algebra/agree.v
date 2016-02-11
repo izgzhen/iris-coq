@@ -59,9 +59,9 @@ Program Instance agree_op : Op (agree A) := λ x y,
 Next Obligation. naive_solver eauto using agree_valid_S, dist_S. Qed.
 Instance agree_unit : Unit (agree A) := id.
 Instance agree_minus : Minus (agree A) := λ x y, x.
-Instance: Commutative (≡) (@op (agree A) _).
+Instance: Comm (≡) (@op (agree A) _).
 Proof. intros x y; split; [naive_solver|by intros n (?&?&Hxy); apply Hxy]. Qed.
-Definition agree_idempotent (x : agree A) : x ⋅ x ≡ x.
+Definition agree_idemp (x : agree A) : x ⋅ x ≡ x.
 Proof. split; naive_solver. Qed.
 Instance: ∀ n : nat, Proper (dist n ==> impl) (@validN (agree A) _ n).
 Proof.
@@ -79,18 +79,18 @@ Proof.
       eauto using agree_valid_le.
 Qed.
 Instance: Proper (dist n ==> dist n ==> dist n) (@op (agree A) _).
-Proof. by intros n x1 x2 Hx y1 y2 Hy; rewrite Hy !(commutative _ _ y2) Hx. Qed.
+Proof. by intros n x1 x2 Hx y1 y2 Hy; rewrite Hy !(comm _ _ y2) Hx. Qed.
 Instance: Proper ((≡) ==> (≡) ==> (≡)) op := ne_proper_2 _.
-Instance: Associative (≡) (@op (agree A) _).
+Instance: Assoc (≡) (@op (agree A) _).
 Proof.
   intros x y z; split; simpl; intuition;
     repeat match goal with H : agree_is_valid _ _ |- _ => clear H end;
-    by cofe_subst; rewrite !agree_idempotent.
+    by cofe_subst; rewrite !agree_idemp.
 Qed.
 Lemma agree_includedN (x y : agree A) n : x ≼{n} y ↔ y ≡{n}≡ x ⋅ y.
 Proof.
   split; [|by intros ?; exists y].
-  by intros [z Hz]; rewrite Hz (associative _) agree_idempotent.
+  by intros [z Hz]; rewrite Hz assoc agree_idemp.
 Qed.
 Definition agree_cmra_mixin : CMRAMixin (agree A).
 Proof.
@@ -99,7 +99,7 @@ Proof.
   * intros n x [? Hx]; split; [by apply agree_valid_S|intros n' ?].
     rewrite (Hx n'); last auto.
     symmetry; apply dist_le with n; try apply Hx; auto.
-  * intros x; apply agree_idempotent.
+  * intros x; apply agree_idemp.
   * by intros x y n [(?&?&?) ?].
   * by intros x y n; rewrite agree_includedN.
 Qed.
@@ -108,13 +108,13 @@ Proof. intros Hxy; apply Hxy. Qed.
 Lemma agree_valid_includedN (x y : agree A) n : ✓{n} y → x ≼{n} y → x ≡{n}≡ y.
 Proof.
   move=> Hval [z Hy]; move: Hval; rewrite Hy.
-  by move=> /agree_op_inv->; rewrite agree_idempotent.
+  by move=> /agree_op_inv->; rewrite agree_idemp.
 Qed.
 Definition agree_cmra_extend_mixin : CMRAExtendMixin (agree A).
 Proof.
   intros n x y1 y2 Hval Hx; exists (x,x); simpl; split.
-  * by rewrite agree_idempotent.
-  * by move: Hval; rewrite Hx; move=> /agree_op_inv->; rewrite agree_idempotent.
+  * by rewrite agree_idemp.
+  * by move: Hval; rewrite Hx; move=> /agree_op_inv->; rewrite agree_idemp.
 Qed.
 Canonical Structure agreeRA : cmraT :=
   CMRAT agree_cofe_mixin agree_cmra_mixin agree_cmra_extend_mixin.
@@ -125,7 +125,7 @@ Solve Obligations with done.
 Global Instance to_agree_ne n : Proper (dist n ==> dist n) to_agree.
 Proof. intros x1 x2 Hx; split; naive_solver eauto using @dist_le. Qed.
 Global Instance to_agree_proper : Proper ((≡) ==> (≡)) to_agree := ne_proper _.
-Global Instance to_agree_inj n : Injective (dist n) (dist n) (to_agree).
+Global Instance to_agree_inj n : Inj (dist n) (dist n) (to_agree).
 Proof. by intros x y [_ Hxy]; apply Hxy. Qed.
 Lemma to_agree_car n (x : agree A) : ✓{n} x → to_agree (x n) ≡{n}≡ x.
 Proof. intros [??]; split; naive_solver eauto using agree_valid_le. Qed.

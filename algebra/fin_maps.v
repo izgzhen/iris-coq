@@ -121,10 +121,10 @@ Proof.
   * by intros n m1 m2 Hm ? i; rewrite -(Hm i).
   * by intros n m1 m1' Hm1 m2 m2' Hm2 i; rewrite !lookup_minus (Hm1 i) (Hm2 i).
   * intros n m Hm i; apply cmra_validN_S, Hm.
-  * by intros m1 m2 m3 i; rewrite !lookup_op associative.
-  * by intros m1 m2 i; rewrite !lookup_op commutative.
+  * by intros m1 m2 m3 i; rewrite !lookup_op assoc.
+  * by intros m1 m2 i; rewrite !lookup_op comm.
   * by intros m i; rewrite lookup_op !lookup_unit cmra_unit_l.
-  * by intros m i; rewrite !lookup_unit cmra_unit_idempotent.
+  * by intros m i; rewrite !lookup_unit cmra_unit_idemp.
   * intros n x y; rewrite !map_includedN_spec; intros Hm i.
     by rewrite !lookup_unit; apply cmra_unit_preservingN.
   * intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).

@@ -41,10 +41,10 @@ Proof.
       (rs1 ++ r2 :: rs2 ++ [r2'])) as (rs'&Qs'&?&?).
     { apply Forall3_app, Forall3_cons,
         Forall3_app, Forall3_cons, Forall3_nil; eauto using wptp_le. }
-    { by rewrite -Permutation_middle /= (associative (++))
-        (commutative (++)) /= associative big_op_app. }
+    { by rewrite -Permutation_middle /= (assoc (++))
+        (comm (++)) /= assoc big_op_app. }
     exists rs', ([λ _, True%I] ++ Qs'); split; auto.
-    by rewrite (associative _ _ _ Qs') -(associative _ Qs1).
+    by rewrite (assoc _ _ _ Qs') -(assoc _ Qs1).
   * apply (IH (Qs1 ++ Q :: Qs2) (rs1 ++ r2 ⋅ r2' :: rs2)).
     { rewrite /option_list right_id_L.
       apply Forall3_app, Forall3_cons; eauto using wptp_le.

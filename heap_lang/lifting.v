@@ -99,7 +99,7 @@ Proof.
   apply sep_mono, later_mono; first done.
   apply forall_intro=>e2; apply forall_intro=>σ2; apply forall_intro=>ef.
   apply wand_intro_l.
-  rewrite always_and_sep_l' -associative -always_and_sep_l'.
+  rewrite always_and_sep_l' -assoc -always_and_sep_l'.
   apply const_elim_l=>-[l [-> [-> [-> ?]]]].
   by rewrite (forall_elim l) right_id const_equiv // left_id wand_elim_r.
 Qed.

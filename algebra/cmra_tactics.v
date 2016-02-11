@@ -25,7 +25,7 @@ Module ra_reflection. Section ra_reflection.
     eval Σ e ≡ big_op ((λ n, from_option ∅ (Σ !! n)) <$> flatten e).
   Proof.
     by induction e as [| |e1 IH1 e2 IH2];
-      rewrite /= ?(right_id _ _) ?fmap_app ?big_op_app ?IH1 ?IH2.
+      rewrite /= ?right_id ?fmap_app ?big_op_app ?IH1 ?IH2.
   Qed.
   Lemma flatten_correct Σ e1 e2 :
     flatten e1 `contains` flatten e2 → eval Σ e1 ≼ eval Σ e2.

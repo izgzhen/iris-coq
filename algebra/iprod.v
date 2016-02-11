@@ -141,10 +141,10 @@ Section iprod_cmra.
     * by intros n f1 f2 Hf ? x; rewrite -(Hf x).
     * by intros n f f' Hf g g' Hg i; rewrite iprod_lookup_minus (Hf i) (Hg i).
     * intros n f Hf x; apply cmra_validN_S, Hf.
-    * by intros f1 f2 f3 x; rewrite iprod_lookup_op associative.
-    * by intros f1 f2 x; rewrite iprod_lookup_op commutative.
+    * by intros f1 f2 f3 x; rewrite iprod_lookup_op assoc.
+    * by intros f1 f2 x; rewrite iprod_lookup_op comm.
     * by intros f x; rewrite iprod_lookup_op iprod_lookup_unit cmra_unit_l.
-    * by intros f x; rewrite iprod_lookup_unit cmra_unit_idempotent.
+    * by intros f x; rewrite iprod_lookup_unit cmra_unit_idemp.
     * intros n f1 f2; rewrite !iprod_includedN_spec=> Hf x.
       by rewrite iprod_lookup_unit; apply cmra_unit_preservingN, Hf.
     * intros n f1 f2 Hf x; apply cmra_validN_op_l with (f2 x), Hf.

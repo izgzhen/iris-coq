@@ -514,71 +514,71 @@ Arguments insertE _ _ _ _ _ _ !_ _ !_ / : simpl nomatch.
 (** ** Common properties *)
 (** These operational type classes allow us to refer to common mathematical
 properties in a generic way. For example, for injectivity of [(k ++)] it
-allows us to write [injective (k ++)] instead of [app_inv_head k]. *)
-Class Injective {A B} (R : relation A) (S : relation B) (f : A → B) : Prop :=
-  injective: ∀ x y, S (f x) (f y) → R x y.
-Class Injective2 {A B C} (R1 : relation A) (R2 : relation B)
+allows us to write [inj (k ++)] instead of [app_inv_head k]. *)
+Class Inj {A B} (R : relation A) (S : relation B) (f : A → B) : Prop :=
+  inj x y : S (f x) (f y) → R x y.
+Class Inj2 {A B C} (R1 : relation A) (R2 : relation B)
     (S : relation C) (f : A → B → C) : Prop :=
-  injective2: ∀ x1 x2  y1 y2, S (f x1 x2) (f y1 y2) → R1 x1 y1 ∧ R2 x2 y2.
+  inj2 x1 x2 y1 y2 : S (f x1 x2) (f y1 y2) → R1 x1 y1 ∧ R2 x2 y2.
 Class Cancel {A B} (S : relation B) (f : A → B) (g : B → A) : Prop :=
-  cancel: ∀ x, S (f (g x)) x.
-Class Surjective {A B} (R : relation B) (f : A → B) :=
-  surjective : ∀ y, ∃ x, R (f x) y.
-Class Idempotent {A} (R : relation A) (f : A → A → A) : Prop :=
-  idempotent: ∀ x, R (f x x) x.
-Class Commutative {A B} (R : relation A) (f : B → B → A) : Prop :=
-  commutative: ∀ x y, R (f x y) (f y x).
+  cancel : ∀ x, S (f (g x)) x.
+Class Surj {A B} (R : relation B) (f : A → B) :=
+  surj y : ∃ x, R (f x) y.
+Class IdemP {A} (R : relation A) (f : A → A → A) : Prop :=
+  idemp x : R (f x x) x.
+Class Comm {A B} (R : relation A) (f : B → B → A) : Prop :=
+  comm x y : R (f x y) (f y x).
 Class LeftId {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
-  left_id: ∀ x, R (f i x) x.
+  left_id x : R (f i x) x.
 Class RightId {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
-  right_id: ∀ x, R (f x i) x.
-Class Associative {A} (R : relation A) (f : A → A → A) : Prop :=
-  associative: ∀ x y z, R (f x (f y z)) (f (f x y) z).
+  right_id x : R (f x i) x.
+Class Assoc {A} (R : relation A) (f : A → A → A) : Prop :=
+  assoc x y z : R (f x (f y z)) (f (f x y) z).
 Class LeftAbsorb {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
-  left_absorb: ∀ x, R (f i x) i.
+  left_absorb x : R (f i x) i.
 Class RightAbsorb {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
-  right_absorb: ∀ x, R (f x i) i.
-Class AntiSymmetric {A} (R S : relation A) : Prop :=
-  anti_symmetric: ∀ x y, S x y → S y x → R x y.
+  right_absorb x : R (f x i) i.
+Class AntiSymm {A} (R S : relation A) : Prop :=
+  anti_symm x y : S x y → S y x → R x y.
 Class Total {A} (R : relation A) := total x y : R x y ∨ R y x.
 Class Trichotomy {A} (R : relation A) :=
-  trichotomy : ∀ x y, R x y ∨ x = y ∨ R y x.
+  trichotomy x y : R x y ∨ x = y ∨ R y x.
 Class TrichotomyT {A} (R : relation A) :=
-  trichotomyT : ∀ x y, {R x y} + {x = y} + {R y x}.
+  trichotomyT x y : {R x y} + {x = y} + {R y x}.
 
 Arguments irreflexivity {_} _ {_} _ _.
-Arguments injective {_ _ _ _} _ {_} _ _ _.
-Arguments injective2 {_ _ _ _ _ _} _ {_} _ _ _ _ _.
+Arguments inj {_ _ _ _} _ {_} _ _ _.
+Arguments inj2 {_ _ _ _ _ _} _ {_} _ _ _ _ _.
 Arguments cancel {_ _ _} _ _ {_} _.
-Arguments surjective {_ _ _} _ {_} _.
-Arguments idempotent {_ _} _ {_} _.
-Arguments commutative {_ _ _} _ {_} _ _.
+Arguments surj {_ _ _} _ {_} _.
+Arguments idemp {_ _} _ {_} _.
+Arguments comm {_ _ _} _ {_} _ _.
 Arguments left_id {_ _} _ _ {_} _.
 Arguments right_id {_ _} _ _ {_} _.
-Arguments associative {_ _} _ {_} _ _ _.
+Arguments assoc {_ _} _ {_} _ _ _.
 Arguments left_absorb {_ _} _ _ {_} _.
 Arguments right_absorb {_ _} _ _ {_} _.
-Arguments anti_symmetric {_ _} _ {_} _ _ _ _.
+Arguments anti_symm {_ _} _ {_} _ _ _ _.
 Arguments total {_} _ {_} _ _.
 Arguments trichotomy {_} _ {_} _ _.
 Arguments trichotomyT {_} _ {_} _ _.
 
-Instance id_injective {A} : Injective (=) (=) (@id A).
+Instance id_inj {A} : Inj (=) (=) (@id A).
 Proof. intros ??; auto. Qed.
 
 (** The following lemmas are specific versions of the projections of the above
 type classes for Leibniz equality. These lemmas allow us to enforce Coq not to
 use the setoid rewriting mechanism. *)
-Lemma idempotent_L {A} (f : A → A → A) `{!Idempotent (=) f} x : f x x = x.
+Lemma idemp_L {A} (f : A → A → A) `{!IdemP (=) f} x : f x x = x.
 Proof. auto. Qed.
-Lemma commutative_L {A B} (f : B → B → A) `{!Commutative (=) f} x y :
+Lemma comm_L {A B} (f : B → B → A) `{!Comm (=) f} x y :
   f x y = f y x.
 Proof. auto. Qed.
 Lemma left_id_L {A} (i : A) (f : A → A → A) `{!LeftId (=) i f} x : f i x = x.
 Proof. auto. Qed.
 Lemma right_id_L {A} (i : A) (f : A → A → A) `{!RightId (=) i f} x : f x i = x.
 Proof. auto. Qed.
-Lemma associative_L {A} (f : A → A → A) `{!Associative (=) f} x y z :
+Lemma assoc_L {A} (f : A → A → A) `{!Assoc (=) f} x y z :
   f x (f y z) = f (f x y) z.
 Proof. auto. Qed.
 Lemma left_absorb_L {A} (i : A) (f : A → A → A) `{!LeftAbsorb (=) i f} x :
@@ -593,7 +593,7 @@ Proof. auto. Qed.
 relation [R] instead of [⊆] to support multiple orders on the same type. *)
 Class PartialOrder {A} (R : relation A) : Prop := {
   partial_order_pre :> PreOrder R;
-  partial_order_anti_symmetric :> AntiSymmetric (=) R
+  partial_order_anti_symm :> AntiSymm (=) R
 }.
 Class TotalOrder {A} (R : relation A) : Prop := {
   total_order_partial :> PartialOrder R;
@@ -746,31 +746,17 @@ Proof. intuition. Qed.
 Lemma symmetry_iff `(R : relation A) `{!Symmetric R} x y : R x y ↔ R y x.
 Proof. intuition. Qed.
 
-(** ** Pointwise relations *)
-(** These instances are in Coq trunk since revision 15455, but are not in Coq
-8.4 yet. *)
-Instance pointwise_reflexive {A} `{R : relation B} :
-  Reflexive R → Reflexive (pointwise_relation A R) | 9.
-Proof. firstorder. Qed.
-Instance pointwise_symmetric {A} `{R : relation B} :
-  Symmetric R → Symmetric (pointwise_relation A R) | 9.
-Proof. firstorder. Qed.
-Instance pointwise_transitive {A} `{R : relation B} :
-  Transitive R → Transitive (pointwise_relation A R) | 9.
-Proof. firstorder. Qed.
-
 (** ** Unit *)
 Instance unit_equiv : Equiv unit := λ _ _, True.
 Instance unit_equivalence : Equivalence (@equiv unit _).
 Proof. repeat split. Qed.
 
 (** ** Products *)
-Instance prod_map_injective {A A' B B'} (f : A → A') (g : B → B') :
-  Injective (=) (=) f → Injective (=) (=) g →
-  Injective (=) (=) (prod_map f g).
+Instance prod_map_inj {A A' B B'} (f : A → A') (g : B → B') :
+  Inj (=) (=) f → Inj (=) (=) g → Inj (=) (=) (prod_map f g).
 Proof.
   intros ?? [??] [??] ?; simpl in *; f_equal;
-    [apply (injective f)|apply (injective g)]; congruence.
+    [apply (inj f)|apply (inj g)]; congruence.
 Qed.
 
 Definition prod_relation {A B} (R1 : relation A) (R2 : relation B) :
@@ -815,17 +801,17 @@ Lemma and_wlog_l (P Q : Prop) : (Q → P) → Q → (P ∧ Q).
 Proof. tauto. Qed.
 Lemma and_wlog_r (P Q : Prop) : P → (P → Q) → (P ∧ Q).
 Proof. tauto. Qed.
-Instance: ∀ A B (x : B), Commutative (=) (λ _ _ : A, x).
+Instance: ∀ A B (x : B), Comm (=) (λ _ _ : A, x).
 Proof. red. trivial. Qed.
-Instance: ∀ A (x : A), Associative (=) (λ _ _ : A, x).
+Instance: ∀ A (x : A), Assoc (=) (λ _ _ : A, x).
 Proof. red. trivial. Qed.
-Instance: ∀ A, Associative (=) (λ x _ : A, x).
+Instance: ∀ A, Assoc (=) (λ x _ : A, x).
 Proof. red. trivial. Qed.
-Instance: ∀ A, Associative (=) (λ _ x : A, x).
+Instance: ∀ A, Assoc (=) (λ _ x : A, x).
 Proof. red. trivial. Qed.
-Instance: ∀ A, Idempotent (=) (λ x _ : A, x).
+Instance: ∀ A, IdemP (=) (λ x _ : A, x).
 Proof. red. trivial. Qed.
-Instance: ∀ A, Idempotent (=) (λ _ x : A, x).
+Instance: ∀ A, IdemP (=) (λ _ x : A, x).
 Proof. red. trivial. Qed.
 
 Instance left_id_propholds {A} (R : relation A) i f :
@@ -841,7 +827,7 @@ Instance right_absorb_propholds {A} (R : relation A) i f :
   RightAbsorb R i f → ∀ x, PropHolds (R (f x i) i).
 Proof. red. trivial. Qed.
 Instance idem_propholds {A} (R : relation A) f :
-  Idempotent R f → ∀ x, PropHolds (R (f x x) x).
+  IdemP R f → ∀ x, PropHolds (R (f x x) x).
 Proof. red. trivial. Qed.
 
 Instance: ∀ `{R1 : relation A, R2 : relation B} (x : B),
@@ -849,47 +835,47 @@ Instance: ∀ `{R1 : relation A, R2 : relation B} (x : B),
 Proof. intros A R1 B R2 x ? y1 y2; reflexivity. Qed.
 Instance: @PreOrder A (=).
 Proof. split; repeat intro; congruence. Qed.
-Lemma injective_iff {A B} {R : relation A} {S : relation B} (f : A → B)
-  `{!Injective R S f} `{!Proper (R ==> S) f} x y : S (f x) (f y) ↔ R x y.
+Lemma inj_iff {A B} {R : relation A} {S : relation B} (f : A → B)
+  `{!Inj R S f} `{!Proper (R ==> S) f} x y : S (f x) (f y) ↔ R x y.
 Proof. firstorder. Qed.
-Instance: Injective (=) (=) (@inl A B).
+Instance: Inj (=) (=) (@inl A B).
 Proof. injection 1; auto. Qed.
-Instance: Injective (=) (=) (@inr A B).
+Instance: Inj (=) (=) (@inr A B).
 Proof. injection 1; auto. Qed.
-Instance: Injective2 (=) (=) (=) (@pair A B).
+Instance: Inj2 (=) (=) (=) (@pair A B).
 Proof. injection 1; auto. Qed.
-Instance: ∀ `{Injective2 A B C R1 R2 R3 f} y, Injective R1 R3 (λ x, f x y).
-Proof. repeat intro; edestruct (injective2 f); eauto. Qed.
-Instance: ∀ `{Injective2 A B C R1 R2 R3 f} x, Injective R2 R3 (f x).
-Proof. repeat intro; edestruct (injective2 f); eauto. Qed.
+Instance: ∀ `{Inj2 A B C R1 R2 R3 f} y, Inj R1 R3 (λ x, f x y).
+Proof. repeat intro; edestruct (inj2 f); eauto. Qed.
+Instance: ∀ `{Inj2 A B C R1 R2 R3 f} x, Inj R2 R3 (f x).
+Proof. repeat intro; edestruct (inj2 f); eauto. Qed.
 
-Lemma cancel_injective `{Cancel A B R1 f g}
-  `{!Equivalence R1} `{!Proper (R2 ==> R1) f} : Injective R1 R2 g.
+Lemma cancel_inj `{Cancel A B R1 f g}
+  `{!Equivalence R1} `{!Proper (R2 ==> R1) f} : Inj R1 R2 g.
 Proof.
   intros x y E. rewrite <-(cancel f g x), <-(cancel f g y), E. reflexivity.
 Qed.
-Lemma cancel_surjective `{Cancel A B R1 f g} : Surjective R1 f.
+Lemma cancel_surj `{Cancel A B R1 f g} : Surj R1 f.
 Proof. intros y. exists (g y). auto. Qed.
 
 Lemma impl_transitive (P Q R : Prop) : (P → Q) → (Q → R) → (P → R).
 Proof. tauto. Qed.
-Instance: Commutative (↔) (@eq A).
+Instance: Comm (↔) (@eq A).
 Proof. red; intuition. Qed.
-Instance: Commutative (↔) (λ x y, @eq A y x).
+Instance: Comm (↔) (λ x y, @eq A y x).
 Proof. red; intuition. Qed.
-Instance: Commutative (↔) (↔).
+Instance: Comm (↔) (↔).
 Proof. red; intuition. Qed.
-Instance: Commutative (↔) (∧).
+Instance: Comm (↔) (∧).
 Proof. red; intuition. Qed.
-Instance: Associative (↔) (∧).
+Instance: Assoc (↔) (∧).
 Proof. red; intuition. Qed.
-Instance: Idempotent (↔) (∧).
+Instance: IdemP (↔) (∧).
 Proof. red; intuition. Qed.
-Instance: Commutative (↔) (∨).
+Instance: Comm (↔) (∨).
 Proof. red; intuition. Qed.
-Instance: Associative (↔) (∨).
+Instance: Assoc (↔) (∨).
 Proof. red; intuition. Qed.
-Instance: Idempotent (↔) (∨).
+Instance: IdemP (↔) (∨).
 Proof. red; intuition. Qed.
 Instance: LeftId (↔) True (∧).
 Proof. red; intuition. Qed.
@@ -911,26 +897,26 @@ Instance: LeftId (↔) True impl.
 Proof. unfold impl. red; intuition. Qed.
 Instance: RightAbsorb (↔) True impl.
 Proof. unfold impl. red; intuition. Qed.
-Lemma not_injective `{Injective A B R R' f} x y : ¬R x y → ¬R' (f x) (f y).
+Lemma not_inj `{Inj A B R R' f} x y : ¬R x y → ¬R' (f x) (f y).
 Proof. intuition. Qed.
-Instance injective_compose {A B C} R1 R2 R3 (f : A → B) (g : B → C) :
-  Injective R1 R2 f → Injective R2 R3 g → Injective R1 R3 (g ∘ f).
+Instance inj_compose {A B C} R1 R2 R3 (f : A → B) (g : B → C) :
+  Inj R1 R2 f → Inj R2 R3 g → Inj R1 R3 (g ∘ f).
 Proof. red; intuition. Qed.
-Instance surjective_compose {A B C} R (f : A → B) (g : B → C) :
-  Surjective (=) f → Surjective R g → Surjective R (g ∘ f).
+Instance surj_compose {A B C} R (f : A → B) (g : B → C) :
+  Surj (=) f → Surj R g → Surj R (g ∘ f).
 Proof.
-  intros ?? x. unfold compose. destruct (surjective g x) as [y ?].
-  destruct (surjective f y) as [z ?]. exists z. congruence.
+  intros ?? x. unfold compose. destruct (surj g x) as [y ?].
+  destruct (surj f y) as [z ?]. exists z. congruence.
 Qed.
 
 Section sig_map.
   Context `{P : A → Prop} `{Q : B → Prop} (f : A → B) (Hf : ∀ x, P x → Q (f x)).
   Definition sig_map (x : sig P) : sig Q := f (`x) ↾ Hf _ (proj2_sig x).
-  Global Instance sig_map_injective:
-    (∀ x, ProofIrrel (P x)) → Injective (=) (=) f → Injective (=) (=) sig_map.
+  Global Instance sig_map_inj:
+    (∀ x, ProofIrrel (P x)) → Inj (=) (=) f → Inj (=) (=) sig_map.
   Proof.
     intros ?? [x Hx] [y Hy]. injection 1. intros Hxy.
-    apply (injective f) in Hxy; subst. rewrite (proof_irrel _ Hy). auto.
+    apply (inj f) in Hxy; subst. rewrite (proof_irrel _ Hy). auto.
   Qed.
 End sig_map.
 Arguments sig_map _ _ _ _ _ _ !_ /.

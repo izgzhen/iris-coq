@@ -49,11 +49,11 @@ Global Instance ownG_ne n : Proper (dist n ==> dist n) (@ownG Λ Σ).
 Proof. by intros m m' Hm; unfold ownG; rewrite Hm. Qed.
 Global Instance ownG_proper : Proper ((≡) ==> (≡)) (@ownG Λ Σ) := ne_proper _.
 Lemma ownG_op m1 m2 : ownG (m1 ⋅ m2) ≡ (ownG m1 ★ ownG m2)%I.
-Proof. by rewrite /ownG -uPred.ownM_op Res_op !(left_id _ _). Qed.
+Proof. by rewrite /ownG -uPred.ownM_op Res_op !left_id. Qed.
 Lemma always_ownG_unit m : (□ ownG (unit m))%I ≡ ownG (unit m).
 Proof.
   apply uPred.always_ownM.
-  by rewrite Res_unit !cmra_unit_empty -{2}(cmra_unit_idempotent m).
+  by rewrite Res_unit !cmra_unit_empty -{2}(cmra_unit_idemp m).
 Qed.
 Lemma ownG_valid m : (ownG m) ⊑ (✓ m).
 Proof. by rewrite /ownG uPred.ownM_valid; apply uPred.valid_mono=> n [? []]. Qed.

@@ -89,7 +89,7 @@ Proof.
   * done.
   * intros A f [m Hm] i; apply (lookup_partial_alter f m).
   * intros A f [m Hm] i j Hs; apply (lookup_partial_alter_ne f m).
-    by contradict Hs; apply (injective encode).
+    by contradict Hs; apply (inj encode).
   * intros A B f [m Hm] i; apply (lookup_fmap f m).
   * intros A [m Hm]; unfold map_to_list; simpl.
     apply bool_decide_unpack, map_Forall_to_list in Hm; revert Hm.

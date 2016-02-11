@@ -22,21 +22,21 @@ Global Instance big_op_permutation : Proper ((≡ₚ) ==> (≡)) big_op.
 Proof.
   induction 1 as [|x xs1 xs2 ? IH|x y xs|xs1 xs2 xs3]; simpl; auto.
   * by rewrite IH.
-  * by rewrite !(associative _) (commutative _ x).
+  * by rewrite !assoc (comm _ x).
   * by transitivity (big_op xs2).
 Qed.
 Global Instance big_op_proper : Proper ((≡) ==> (≡)) big_op.
 Proof. by induction 1; simpl; repeat apply (_ : Proper (_ ==> _ ==> _) op). Qed.
 Lemma big_op_app xs ys : big_op (xs ++ ys) ≡ big_op xs ⋅ big_op ys.
 Proof.
-  induction xs as [|x xs IH]; simpl; first by rewrite ?(left_id _ _).
-  by rewrite IH (associative _).
+  induction xs as [|x xs IH]; simpl; first by rewrite ?left_id.
+  by rewrite IH assoc.
 Qed.
 Lemma big_op_contains xs ys : xs `contains` ys → big_op xs ≼ big_op ys.
 Proof.
   induction 1 as [|x xs ys|x y xs|x xs ys|xs ys zs]; rewrite //=.
   * by apply cmra_preserving_l.
-  * by rewrite !associative (commutative _ y).
+  * by rewrite !assoc (comm _ y).
   * by transitivity (big_op ys); last apply cmra_included_r.
   * by transitivity (big_op ys).
 Qed.
@@ -58,7 +58,7 @@ Qed.
 Lemma big_opM_singleton i x : big_opM ({[i ↦ x]} : M A) ≡ x.
 Proof.
   rewrite -insert_empty big_opM_insert /=; last auto using lookup_empty.
-  by rewrite big_opM_empty (right_id _ _).
+  by rewrite big_opM_empty right_id.
 Qed.
 Global Instance big_opM_proper : Proper ((≡) ==> (≡)) (big_opM : M A → _).
 Proof.

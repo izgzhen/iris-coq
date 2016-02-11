@@ -68,7 +68,7 @@ Module LiftingTests.
     rewrite /FindPred.
     rewrite -(wp_bindi (AppLCtx _)) -wp_let //=.
     revert n1. apply löb_all_1=>n1.
-    rewrite (commutative uPred_and (■ _)%I) associative; apply const_elim_r=>?.
+    rewrite (comm uPred_and (■ _)%I) assoc; apply const_elim_r=>?.
     rewrite -wp_value' //.
     rewrite -wp_rec' // =>-/=.
     (* FIXME: ssr rewrite fails with "Error: _pattern_value_ is used in conclusion." *)
