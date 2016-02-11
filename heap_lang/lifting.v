@@ -8,6 +8,7 @@ Local Hint Extern 0 (language.reducible _ _) => do_step ltac:(eauto 2).
 in case [e] does not contain the free variable [x] it will return [e] in a
 way that is syntactically equal (i.e. without any Coq-level delta reduction
 performed) *)
+Arguments of_val : simpl never.
 Definition gsubst_lift {A B C} (f : A → B → C)
     (x : A) (y : B) (mx : option A) (my : option B) : option C :=
   match mx, my with

@@ -92,15 +92,14 @@ Module LiftingTests.
     rewrite -(wp_bindi (IfCtx _ _)) /=.
     apply later_mono, wp_le=> Hn.
     - rewrite -wp_if_true.
-      rewrite -(wp_bindi (UnOpCtx _)).
-      rewrite -(wp_bind [AppLCtx _; AppRCtx FindPred]).
-      rewrite -(wp_bindi (BinOpLCtx _ _)).
+      rewrite -(wp_bindi (UnOpCtx _)) /=.
+      rewrite -(wp_bind [AppLCtx _; AppRCtx _]) /=.
+      rewrite -(wp_bindi (BinOpLCtx _ _)) /=.
       rewrite -wp_un_op //=.
       rewrite -wp_bin_op //= -!later_intro.
       rewrite -FindPred_spec. apply and_intro; first by (apply const_intro; omega).
       rewrite -wp_un_op //= -later_intro.
-      assert (n - 1 = - (- n + 2 - 1)) as EQ by omega.
-      by rewrite EQ.
+      by assert (n - 1 = - (- n + 2 - 1)) as -> by omega.
     - rewrite -wp_if_false.
       rewrite -!later_intro -FindPred_spec.
       auto using and_intro, const_intro with omega.
@@ -112,6 +111,6 @@ Module LiftingTests.
   Proof.
     intros E.
     rewrite -(wp_bindi (LetCtx _ _)) -Pred_spec //= -wp_let //=.
-    rewrite -Pred_spec -!later_intro /=. by apply const_intro.
+    by rewrite -Pred_spec -!later_intro /=.
   Qed.
 End LiftingTests.
