@@ -16,10 +16,6 @@ Section auth.
   Hypothesis auth_valid :
     forall a b, (✓ (Auth (Excl a) b) : iProp Λ (globalC Σ)) ⊑ (∃ b', a ≡ b ⋅ b').
 
-  (* FIXME how much would break if we had a global instance from ∅ to Inhabited? *)
-  Local Instance auth_inhabited : Inhabited A.
-  Proof. split. exact ∅. Qed.
-
   Definition auth_inv (γ : gname) : iProp Λ (globalC Σ) :=
     (∃ a, own AuthI γ (● a) ★ φ a)%I.
   Definition auth_own (γ : gname) (a : A) : iProp Λ (globalC Σ) := own AuthI γ (◯ a).

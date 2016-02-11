@@ -128,6 +128,7 @@ Class CMRAIdentity (A : cmraT) `{Empty A} : Prop := {
   cmra_empty_left_id :> LeftId (≡) ∅ (⋅);
   cmra_empty_timeless :> Timeless ∅
 }.
+Instance cmra_identity_inhabited `{CMRAIdentity A} : Inhabited A := populate ∅.
 
 (** * Morphisms *)
 Class CMRAMonotone {A B : cmraT} (f : A → B) := {
