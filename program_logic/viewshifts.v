@@ -88,14 +88,14 @@ Proof. intros; apply vs_mask_frame; solve_elem_of. Qed.
 
 Lemma vs_open_close N E P Q R :
   nclose N ⊆ E →
-  (inv N R ∧ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q)) ⊑ (P ={E}=> Q).
+  (inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q)) ⊑ (P ={E}=> Q).
 Proof.
   intros; apply (always_intro' _ _), impl_intro_l.
-  rewrite associative (commutative _ P) -associative.
-  rewrite -(pvs_open_close E N) //; apply and_mono; first done.
+  rewrite always_and_sep_r' associative [(P ★ _)%I]commutative -associative.
+  rewrite -(pvs_open_close E N) //. apply sep_mono; first done.
   apply wand_intro_l.
   (* Oh wow, this is annyoing... *)
-  rewrite always_and_sep_r' associative -always_and_sep_r'.
+  rewrite associative -always_and_sep_r'.
   by rewrite /vs always_elim impl_elim_r.
 Qed.
 

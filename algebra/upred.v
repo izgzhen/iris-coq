@@ -191,8 +191,8 @@ Arguments uPred_holds {_} _%I _ _.
 Arguments uPred_entails _ _%I _%I.
 Notation "P ⊑ Q" := (uPred_entails P%I Q%I) (at level 70) : C_scope.
 Notation "(⊑)" := uPred_entails (only parsing) : C_scope.
-Notation "■ φ" := (uPred_const φ%type) (at level 20) : uPred_scope.
-Notation "x = y" := (uPred_const (x%type = y%type)) : uPred_scope.
+Notation "■ φ" := (uPred_const φ%C%type) (at level 20) : uPred_scope.
+Notation "x = y" := (uPred_const (x%C%type = y%C%type)) : uPred_scope.
 Notation "'False'" := (uPred_const False) : uPred_scope.
 Notation "'True'" := (uPred_const True) : uPred_scope.
 Infix "∧" := uPred_and : uPred_scope.
@@ -617,6 +617,10 @@ Lemma sep_and P Q : (P ★ Q) ⊑ (P ∧ Q).
 Proof. auto. Qed.
 Lemma impl_wand P Q : (P → Q) ⊑ (P -★ Q).
 Proof. apply wand_intro_r, impl_elim with P; auto. Qed.
+Lemma const_elim_sep_l φ Q R : (φ → Q ⊑ R) → (■ φ ★ Q) ⊑ R.
+Proof. intros; apply const_elim with φ; eauto. Qed.
+Lemma const_elim_sep_r φ Q R : (φ → Q ⊑ R) → (Q ★ ■ φ) ⊑ R.
+Proof. intros; apply const_elim with φ; eauto. Qed.
 
 Global Instance sep_False : LeftAbsorb (≡) False%I (@uPred_sep M).
 Proof. intros P; apply (anti_symmetric _); auto. Qed.
@@ -669,9 +673,9 @@ Lemma later_or P Q : (▷ (P ∨ Q))%I ≡ (▷ P ∨ ▷ Q)%I.
 Proof. intros x [|n]; simpl; tauto. Qed.
 Lemma later_forall {A} (P : A → uPred M) : (▷ ∀ a, P a)%I ≡ (∀ a, ▷ P a)%I.
 Proof. by intros x [|n]. Qed.
-Lemma later_exist {A} (P : A → uPred M) : (∃ a, ▷ P a) ⊑ (▷ ∃ a, P a).
+Lemma later_exist_1 {A} (P : A → uPred M) : (∃ a, ▷ P a) ⊑ (▷ ∃ a, P a).
 Proof. by intros x [|[|n]]. Qed.
-Lemma later_exist' `{Inhabited A} (P : A → uPred M) :
+Lemma later_exist `{Inhabited A} (P : A → uPred M) :
   (▷ ∃ a, P a)%I ≡ (∃ a, ▷ P a)%I.
 Proof. intros x [|[|n]]; split; done || by exists inhabitant; simpl. Qed.
 Lemma later_sep P Q : (▷ (P ★ Q))%I ≡ (▷ P ★ ▷ Q)%I.

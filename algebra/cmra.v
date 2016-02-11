@@ -24,7 +24,7 @@ Notation "✓{ n }" := (validN n) (at level 1, format "✓{ n }").
 
 Class Valid (A : Type) := valid : A → Prop.
 Instance: Params (@valid) 2.
-Notation "✓" := valid (at level 1).
+Notation "✓" := valid (at level 1) : C_scope.
 Instance validN_valid `{ValidN A} : Valid A := λ x, ∀ n, ✓{n} x.
 
 Definition includedN `{Dist A, Op A} (n : nat) (x y : A) := ∃ z, y ≡{n}≡ x ⋅ z.

@@ -73,15 +73,15 @@ Proof. by rewrite always_always. Qed.
 
 Lemma pvs_open_close E N P Q :
   nclose N ⊆ E →
-  (inv N P ∧ (▷P -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷P ★ Q))) ⊑ pvs E E Q.
+  (inv N P ★ (▷P -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷P ★ Q))) ⊑ pvs E E Q.
 Proof.
   move=>HN.
-  rewrite /inv and_exist_r. apply exist_elim=>i.
-  rewrite -associative. apply const_elim_l=>HiN.
+  rewrite /inv sep_exist_r. apply exist_elim=>i.
+  rewrite always_and_sep_l' -associative. apply const_elim_sep_l=>HiN.
   rewrite -(pvs_trans3 E (E ∖ {[encode i]})) //; last by solve_elem_of+.
   (* Add this to the local context, so that solve_elem_of finds it. *)
   assert ({[encode i]} ⊆ nclose N) by eauto.
-  rewrite always_and_sep_l' (always_sep_dup' (ownI _ _)).
+  rewrite (always_sep_dup' (ownI _ _)).
   rewrite {1}pvs_openI !pvs_frame_r.
   apply pvs_mask_frame_mono ; [solve_elem_of..|].
   rewrite (commutative _ (▷_)%I) -associative wand_elim_r pvs_frame_l.
@@ -92,15 +92,15 @@ Qed.
 
 Lemma wp_open_close E e N P (Q : val Λ → iProp Λ Σ) :
   atomic e → nclose N ⊆ E →
-  (inv N P ∧ (▷P -★ wp (E ∖ nclose N) e (λ v, ▷P ★ Q v))) ⊑ wp E e Q.
+  (inv N P ★ (▷P -★ wp (E ∖ nclose N) e (λ v, ▷P ★ Q v))) ⊑ wp E e Q.
 Proof.
   move=>He HN.
-  rewrite /inv and_exist_r. apply exist_elim=>i.
-  rewrite -associative. apply const_elim_l=>HiN.
+  rewrite /inv sep_exist_r. apply exist_elim=>i.
+  rewrite always_and_sep_l' -associative. apply const_elim_sep_l=>HiN.
   rewrite -(wp_atomic E (E ∖ {[encode i]})) //; last by solve_elem_of+.
   (* Add this to the local context, so that solve_elem_of finds it. *)
   assert ({[encode i]} ⊆ nclose N) by eauto.
-  rewrite always_and_sep_l' (always_sep_dup' (ownI _ _)).
+  rewrite (always_sep_dup' (ownI _ _)).
   rewrite {1}pvs_openI !pvs_frame_r.
   apply pvs_mask_frame_mono; [solve_elem_of..|].
   rewrite (commutative _ (▷_)%I) -associative wand_elim_r wp_frame_l.
