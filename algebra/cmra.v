@@ -272,8 +272,12 @@ Lemma cmra_unit_preserving x y : x ≼ y → unit x ≼ unit y.
 Proof. rewrite !cmra_included_includedN; eauto using cmra_unit_preservingN. Qed.
 Lemma cmra_included_unit x : unit x ≼ x.
 Proof. by exists x; rewrite cmra_unit_l. Qed.
+Lemma cmra_preservingN_l n x y z : x ≼{n} y → z ⋅ x ≼{n} z ⋅ y.
+Proof. by intros [z1 Hz1]; exists z1; rewrite Hz1 (associative op). Qed.
 Lemma cmra_preserving_l x y z : x ≼ y → z ⋅ x ≼ z ⋅ y.
 Proof. by intros [z1 Hz1]; exists z1; rewrite Hz1 (associative op). Qed.
+Lemma cmra_preservingN_r n x y z : x ≼{n} y → x ⋅ z ≼{n} y ⋅ z.
+Proof. by intros; rewrite -!(commutative _ z); apply cmra_preservingN_l. Qed.
 Lemma cmra_preserving_r x y z : x ≼ y → x ⋅ z ≼ y ⋅ z.
 Proof. by intros; rewrite -!(commutative _ z); apply cmra_preserving_l. Qed.
 
