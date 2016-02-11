@@ -187,28 +187,3 @@ Next Obligation.
   intros Σ A B C f g x. rewrite /= -option_fmap_compose.
   apply option_fmap_setoid_ext=>y; apply ifunctor_map_compose.
 Qed.
-
-(** * Local CMRA Updates *)
-(* FIXME: These need the CMRA structure on option, hence they are defined here. Or maybe moe option to cmra.v? *)
-(* TODO: Probably needs some more magic flags. What about notation? *)
-Section local_update.
-  Context {A : cmraT}.
-  (* Do we need more step-indexing here? *)
-  Definition LocalUpdate := A → option A.
-  Class LocalUpdateSpec (L : LocalUpdate) := {
-    local_update_ne n :> Proper ((dist n) ==> (dist n)) L;
-    local_update_spec a b n : is_Some (L a) → ✓{n}(a ⋅ b) → L (a ⋅ b) ≡{n}≡ (L a) ⋅ Some b
-  }.
-
-  Definition local_update_op (b : A) : LocalUpdate
-    := λ a, Some (b ⋅ a).
-  Global Instance local_update_op_spec b : LocalUpdateSpec (local_update_op b).
-  Proof.
-    rewrite /local_update_op. split.
-    - move=>? ? ? EQ /=. by rewrite EQ.
-    - move=>a a' n Hlv Hv /=. by rewrite associative.
-  Qed.
-End local_update.
-Arguments LocalUpdate : clear implicits.
-
-

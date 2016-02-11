@@ -14,16 +14,16 @@ Section auth.
   (* TODO: Need this to be proven somewhere. *)
   (* FIXME ✓ binds too strong, I need parenthesis here. *)
   Hypothesis auth_valid :
-    forall a b, (✓(Auth (Excl a) b) : iProp Λ (globalC Σ)) ⊑ (∃ b', a ≡ b ⋅ b').
+    forall a b, (✓ (Auth (Excl a) b) : iProp Λ (globalC Σ)) ⊑ (∃ b', a ≡ b ⋅ b').
 
   (* FIXME how much would break if we had a global instance from ∅ to Inhabited? *)
   Local Instance auth_inhabited : Inhabited A.
   Proof. split. exact ∅. Qed.
 
   Definition auth_inv (γ : gname) : iProp Λ (globalC Σ) :=
-    (∃ a, own AuthI γ (●a) ★ φ a)%I.
-  Definition auth_own (γ : gname) (a : A) := own AuthI γ (◯a).
-  Definition auth_ctx (γ : gname) := inv N (auth_inv γ).
+    (∃ a, own AuthI γ (● a) ★ φ a)%I.
+  Definition auth_own (γ : gname) (a : A) : iProp Λ (globalC Σ) := own AuthI γ (◯ a).
+  Definition auth_ctx (γ : gname) : iProp Λ (globalC Σ) := inv N (auth_inv γ).
 
   Lemma auth_alloc a :
     ✓a → φ a ⊑ pvs N N (∃ γ, auth_ctx γ ∧ auth_own γ a).
@@ -58,18 +58,15 @@ Section auth.
     by rewrite sep_elim_l.
   Qed.
 
-  Context (L : LocalUpdate A) `{!LocalUpdateSpec L}.
-  Lemma auth_closing  a a' b γ :
-    L a = Some b → ✓(b ⋅ a') →
-    (φ (b ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a))
-      ⊑ pvs N N (auth_inv γ ★ auth_own γ b).
+  Lemma auth_closing `{!LocalUpdate φf f} a a' γ :
+    φf a → ✓ (f a ⋅ a') →
+    (φ (f a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a))
+    ⊑ pvs N N (auth_inv γ ★ auth_own γ (f a)).
   Proof.
-    intros HL Hv. rewrite /auth_inv /auth_own -(exist_intro (b ⋅ a')).
+    intros HL Hv. rewrite /auth_inv /auth_own -(exist_intro (f a ⋅ a')).
     rewrite [(_ ★ φ _)%I]commutative -associative.
-    rewrite -pvs_frame_l. apply sep_mono; first done.
-    rewrite -own_op. apply own_update.
-    by apply (auth_local_update L).
+    rewrite -pvs_frame_l -own_op; apply sep_mono; first done.
+    by apply own_update, (auth_local_update_l f).
   Qed.
 
 End auth.
-

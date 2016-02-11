@@ -1,5 +1,5 @@
 Require Export algebra.cmra.
-Require Import algebra.functor algebra.option.
+Require Import algebra.functor.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 
@@ -138,23 +138,16 @@ Proof.
   by intros [z ?]; cofe_subst; rewrite (excl_validN_inv_l n x z).
 Qed.
 
-(* Updates *)
+(** ** Local updates *)
+Global Instance excl_local_update b :
+  LocalUpdate (λ a, if a is Excl _ then True else False) (λ _, Excl b).
+Proof. split. by intros n y1 y2 Hy. by intros n [a| |] [b'| |]. Qed.
+
+(** Updates *)
 Lemma excl_update (x : A) y : ✓ y → Excl x ~~> y.
 Proof. by destruct y; intros ? [?| |]. Qed.
 Lemma excl_updateP (P : excl A → Prop) x y : ✓ y → P y → Excl x ~~>: P.
 Proof. intros ?? z n ?; exists y. by destruct y, z as [?| |]. Qed.
-
-Definition excl_local_update_to (b : A) : LocalUpdate exclRA :=
-  λ a, if a is Excl _ then Some (Excl b) else None.
-Global Instance excl_local_update_to_spec b :
-  LocalUpdateSpec (excl_local_update_to b).
-Proof.
-  split.
-  - move=>? a a' EQ. destruct EQ; done.
-  - move=>a a' n [b' Hlv] Hv /=. destruct a; try discriminate Hlv; [].
-    destruct a'; try contradiction Hv; []. reflexivity.
-Qed.
-
 End excl.
 
 Arguments exclC : clear implicits.

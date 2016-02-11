@@ -135,6 +135,13 @@ Class CMRAMonotone {A B : cmraT} (f : A → B) := {
   validN_preserving n x : ✓{n} x → ✓{n} (f x)
 }.
 
+(** * Local updates *)
+Class LocalUpdate {A : cmraT} (P : A → Prop) (f : A → A) := {
+  local_update_ne n :> Proper (dist n ==> dist n) f;
+  local_updateN n x y : P x → ✓{n} (x ⋅ y) → f (x ⋅ y) ≡{n}≡ f x ⋅ y
+}.
+Arguments local_updateN {_ _} _ {_} _ _ _ _ _.
+
 (** * Frame preserving updates *)
 Definition cmra_updateP {A : cmraT} (x : A) (P : A → Prop) := ∀ z n,
   ✓{n} (x ⋅ z) → ∃ y, P y ∧ ✓{n} (y ⋅ z).
@@ -312,6 +319,18 @@ Section identity.
   Lemma cmra_unit_empty : unit ∅ ≡ ∅.
   Proof. by rewrite -{2}(cmra_unit_l ∅) right_id. Qed.
 End identity.
+
+(** ** Local updates *)
+Global Instance local_update_proper P (f : A → A) :
+  LocalUpdate P f → Proper ((≡) ==> (≡)) f.
+Proof. intros; apply (ne_proper _). Qed.
+
+Lemma local_update f `{!LocalUpdate P f} x y :
+  P x → ✓ (x ⋅ y) → f (x ⋅ y) ≡ f x ⋅ y.
+Proof. by rewrite equiv_dist=>?? n; apply (local_updateN f). Qed.
+
+Global Instance local_update_op x : LocalUpdate (λ _, True) (op x).
+Proof. split. apply _. by intros n y1 y2 _ _; rewrite associative. Qed.
 
 (** ** Updates *)
 Global Instance cmra_update_preorder : PreOrder (@cmra_update A).
