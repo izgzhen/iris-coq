@@ -55,9 +55,9 @@ Module LiftingTests.
   Qed.
 
   Definition FindPred : val :=
-    λ: "x", rec: "pred" "y" :=
+    rec: "pred" "x" := λ: "y", 
       let: "yp" := "y" + '1 in
-      if "yp" < "x" then "pred" "yp" else "y".
+      if "yp" < "x" then "pred" "x" "yp" else "y".
   Definition Pred : val :=
     λ: "x", if "x" ≤ '0 then -FindPred (-"x" + '2) '0 else FindPred "x" '0.
 
@@ -65,22 +65,22 @@ Module LiftingTests.
     (■ (n1 < n2) ∧ Q (LitV (n2 - 1))) ⊑ wp E (FindPred 'n2 'n1)%L Q.
   Proof.
     (* FIXME there are some annoying scopes shown here: %Z, %L. *)
-    rewrite /FindPred.
-    rewrite -(wp_bindi (AppLCtx _)) -wp_let //=.
-    revert n1. apply löb_all_1=>n1.
+    revert n1; apply löb_all_1=>n1.
     rewrite (comm uPred_and (■ _)%I) assoc; apply const_elim_r=>?.
-    rewrite -wp_value' //.
-    rewrite -wp_rec' // =>-/=.
+    (* first need to do the rec to get a later *)
+    rewrite -(wp_bindi (AppLCtx _)).
+    rewrite -wp_rec' // =>-/=; rewrite -wp_value' //=.
     (* FIXME: ssr rewrite fails with "Error: _pattern_value_ is used in conclusion." *)
     rewrite ->(later_intro (Q _)).
     rewrite -!later_and; apply later_mono.
     (* Go on *)
+    rewrite -wp_let //= -later_intro.
     rewrite -(wp_bindi (LetCtx _ _)) -wp_bin_op //= -wp_let //=.
     rewrite -(wp_bindi (IfCtx _ _)) /= -!later_intro.
     apply wp_lt=> ?.
     - rewrite -wp_if_true.
-      rewrite -later_intro (forall_elim (n1 + 1)) const_equiv; last omega.
-      rewrite left_id impl_elim_l. by rewrite -(wp_bindi (AppLCtx _)).
+      rewrite -!later_intro (forall_elim (n1 + 1)) const_equiv; last omega.
+      by rewrite left_id impl_elim_l.
     - assert (n1 = n2 - 1) as -> by omega.
       rewrite -wp_if_false.
       by rewrite -!later_intro -wp_value' // and_elim_r.
