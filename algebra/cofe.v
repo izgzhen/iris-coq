@@ -21,7 +21,7 @@ Tactic Notation "cofe_subst" :=
   | H:@dist ?A ?d ?n _ ?x |- _ => symmetry in H;setoid_subst_aux (@dist A d n) x
   end.
 
-Tactic Notation "solve_ne" := move=>n; solve_proper.
+Tactic Notation "solve_ne" := intros; solve_proper.
 
 Record chain (A : Type) `{Dist A} := {
   chain_car :> nat → A;
