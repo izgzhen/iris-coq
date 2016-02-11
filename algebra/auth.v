@@ -1,5 +1,5 @@
 Require Export algebra.excl.
-Require Import algebra.functor.
+Require Import algebra.functor algebra.option.
 Local Arguments validN _ _ _ !_ /.
 
 Record auth (A : Type) : Type := Auth { authoritative : excl A ; own : A }.
@@ -169,6 +169,18 @@ Qed.
 Lemma auth_update_op_r a a' b :
   ✓ (a ⋅ b) → ● a ⋅ ◯ a' ~~> ● (a ⋅ b) ⋅ ◯ (a' ⋅ b).
 Proof. rewrite -!(commutative _ b); apply auth_update_op_l. Qed.
+
+Lemma auth_local_update (L : LocalUpdate A) `{!LocalUpdateSpec L} a a' b :
+  L a = Some b → ✓(b ⋅ a') →
+  ● (a ⋅ a') ⋅ ◯ a ~~> ● (b ⋅ a') ⋅ ◯ b.
+Proof.
+  intros Hlv Hv. apply auth_update=>n af Hab EQ.
+  split; last done.
+  apply (injective (R:=(≡)) Some).
+  rewrite !Some_op -Hlv.
+  rewrite -!local_update_spec //; eauto; last by rewrite -EQ; [].
+  by rewrite EQ.
+Qed.
 End cmra.
 
 Arguments authRA : clear implicits.

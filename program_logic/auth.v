@@ -58,16 +58,17 @@ Section auth.
     by rewrite sep_elim_l.
   Qed.
 
-  Lemma auth_closing a a' b γ :
-    auth_step (a ⋅ a') a (b ⋅ a') b →
+  Context (L : LocalUpdate A) `{!LocalUpdateSpec L}.
+  Lemma auth_closing  a a' b γ :
+    L a = Some b → ✓(b ⋅ a') →
     (φ (b ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a))
       ⊑ pvs N N (auth_inv γ ★ auth_own γ b).
   Proof.
-    intros Hstep. rewrite /auth_inv /auth_own -(exist_intro (b ⋅ a')).
+    intros HL Hv. rewrite /auth_inv /auth_own -(exist_intro (b ⋅ a')).
     rewrite [(_ ★ φ _)%I]commutative -associative.
     rewrite -pvs_frame_l. apply sep_mono; first done.
     rewrite -own_op. apply own_update.
-    by apply auth_update.
+    by apply (auth_local_update L).
   Qed.
 
 End auth.

@@ -263,6 +263,7 @@ Lemma map_singleton_updateP_empty' `{Empty A, !CMRAIdentity A} (P: A → Prop) i
   ∅ ~~>: P → ∅ ~~>: λ m, ∃ y, m = {[ i ↦ y ]} ∧ P y.
 Proof. eauto using map_singleton_updateP_empty. Qed.
 
+Section freshness.
 Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
 Lemma map_updateP_alloc (Q : gmap K A → Prop) m x :
   ✓ x → (∀ i, m !! i = None → Q (<[i:=x]>m)) → m ~~>: Q.
@@ -277,6 +278,49 @@ Qed.
 Lemma map_updateP_alloc' m x :
   ✓ x → m ~~>: λ m', ∃ i, m' = <[i:=x]>m ∧ m !! i = None.
 Proof. eauto using map_updateP_alloc. Qed.
+End freshness.
+
+Section local.
+Definition map_local_alloc i x : LocalUpdate (mapRA K A) :=
+  local_update_op {[ i ↦ x ]}.
+
+(* Deallocation is not a local update. The trouble is that if we own {[ i ↦ x ]},
+   then the frame could always own "unit x", and prevent deallocation. *)
+
+Context (L : LocalUpdate A) `{!LocalUpdateSpec L}.
+Definition map_local_update i : LocalUpdate (mapRA K A) :=
+  λ m, x ← m !! i; y ← L x; Some (<[i:=y]>m).
+Global Instance map_local_update_spec i : LocalUpdateSpec (map_local_update i).
+Proof.
+  rewrite /map_local_update. split.
+  - (* FIXME Oh wow, this is harder than expected... *)
+    move=>n f g EQ. move:(EQ i).
+    case _:(f !! i)=>[fi|]; case _:(g !! i)=>[gi|]; move=>EQi;
+      inversion EQi; subst; simpl; last done.
+    assert (EQL : L fi ≡{n}≡ L gi) by (by apply local_update_ne). move: EQL.
+    case _:(L fi)=>[Lfi|] /=; case _:(L gi)=>[Lgi|]; move=>EQL;
+      inversion EQL; subst; simpl; last done.
+    apply Some_ne, insert_ne; done.
+  - move=>f g n [b Hlv] Hv. rewrite lookup_op. move:Hlv.
+    case EQf:(f !! i)=>[fi|]; simpl; last discriminate.
+    case EQL:(L fi)=>[Lfi|]; simpl; last discriminate.
+    case=>?. subst b.
+    case EQg:(g !! i)=>[gi|]; simpl.
+    + assert (L (fi ⋅ gi) ≡{n}≡ L fi ⋅ Some gi) as EQLi.
+      { apply local_update_spec; first by eauto.
+        move:(Hv i). rewrite lookup_op EQf EQg -Some_op. done. }
+      rewrite EQL -Some_op in EQLi.
+      destruct (L (fi ⋅ gi)) as [Lfgi|]; inversion EQLi; subst; simpl.
+      rewrite -Some_op. apply Some_ne. move=>j. rewrite lookup_op.
+      destruct (decide (i = j)); simplify_map_equality; last by rewrite lookup_op.
+      rewrite EQg -Some_op. apply Some_ne. done.
+    + rewrite EQL /=.
+      rewrite -Some_op. apply Some_ne. move=>j. rewrite lookup_op.
+      destruct (decide (i = j)); simplify_map_equality; last by rewrite lookup_op.
+      by rewrite EQg.
+Qed.
+End local.
+
 End properties.
 
 (** Functor *)
@@ -314,3 +358,4 @@ Next Obligation.
   intros K ?? Σ A B C f g x. rewrite /= -map_fmap_compose.
   apply map_fmap_setoid_ext=> ? y _; apply ifunctor_map_compose.
 Qed.
+
