@@ -1,6 +1,13 @@
+
+\makeatletter%
+\@ifundefined{basedir}{%
+\newcommand\basedir{}%
+}{}%
+\makeatother%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PACKAGES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \usepackage{mathtools}
 %\usepackage{amsmath}
 \usepackage{amsfonts}
@@ -8,14 +15,14 @@
 \usepackage{amssymb}
 \usepackage{stmaryrd}
 
-\usepackage{mathpartir}
+\usepackage{\basedir mathpartir}
 
 \usepackage{array}
 \usepackage{tabu}
 
 \usepackage{dashbox}
 
-\usepackage{pftools}
+\usepackage{\basedir pftools}
 
 \usepackage{xcolor}  % for print version
 
@@ -459,8 +466,3 @@
 
 \newcommand{\AuthInv}{\textsf{AuthInv}}
 \newcommand{\Auth}{\textsf{Auth}}
-
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "iris"
-%%% End:

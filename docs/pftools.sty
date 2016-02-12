@@ -1,11 +1,15 @@
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{pftools}
 
+\@ifundefined{basedir}{%
 \RequirePackage{locallabel}
+}{%
+\RequirePackage{\basedir locallabel}
+}%
+
 \RequirePackage{Tabbing}	% Avoid the standard tabbing environment. Its \< conflicts with the semantic package.
 \RequirePackage{xparse}
 \RequirePackage{xcolor}
-\RequirePackage{locallabel}
 
 %% Biimplication inference rules
 % \biimp above below
