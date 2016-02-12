@@ -143,6 +143,10 @@ Global Instance excl_local_update b :
   LocalUpdate (λ a, if a is Excl _ then True else False) (λ _, Excl b).
 Proof. split. by intros n y1 y2 Hy. by intros n [a| |] [b'| |]. Qed.
 
+Global Instance excl_local_update_del :
+LocalUpdate (λ a, if a is Excl _ then True else False) (λ _, ExclUnit).
+Proof. split. by intros n y1 y2 Hy. by intros n [a| |] [b'| |]. Qed.
+
 (** Updates *)
 Lemma excl_update (x : A) y : ✓ y → Excl x ~~> y.
 Proof. by destruct y; intros ? [?| |]. Qed.
