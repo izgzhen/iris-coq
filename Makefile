@@ -1,4 +1,5 @@
-# Makefile originally by Christian Doczkal <doczkal@ps.uni-saarland.de>
+# Makefile taken from coq-club, Christian Doczkal <doczkal@ps.uni-saarland.de>,
+# who adapted it from "somewhere".
 all: Makefile.coq
 	+make -f Makefile.coq all
 
