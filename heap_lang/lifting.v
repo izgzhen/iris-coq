@@ -1,60 +1,10 @@
-Require Import prelude.gmap program_logic.lifting program_logic.ownership.
-Require Export program_logic.weakestpre heap_lang.heap_lang_tactics.
+Require Export program_logic.weakestpre heap_lang.heap_lang.
+Require Import program_logic.lifting.
+Require Import program_logic.ownership. (* for ownP *)
+Require Import heap_lang.heap_lang_tactics.
 Export heap_lang. (* Prefer heap_lang names over language names. *)
 Import uPred.
 Local Hint Extern 0 (language.reducible _ _) => do_step ltac:(eauto 2).
-
-(** The substitution operation [gsubst e x ev] behaves just as [subst] but
-in case [e] does not contain the free variable [x] it will return [e] in a
-way that is syntactically equal (i.e. without any Coq-level delta reduction
-performed) *)
-Arguments of_val : simpl never.
-Definition gsubst_lift {A B C} (f : A → B → C)
-    (x : A) (y : B) (mx : option A) (my : option B) : option C :=
-  match mx, my with
-  | Some x, Some y => Some (f x y)
-  | Some x, None => Some (f x y)
-  | None, Some y => Some (f x y)
-  | None, None => None
-  end.
-Fixpoint gsubst_go (e : expr) (x : string) (ev : expr) : option expr :=
-  match e with
-  | Var y => if decide (x = y ∧ x ≠ "") then Some ev else None
-  | Rec f y e =>
-     if decide (x ≠ f ∧ x ≠ y) then Rec f y <$> gsubst_go e x ev else None
-  | App e1 e2 => gsubst_lift App e1 e2 (gsubst_go e1 x ev) (gsubst_go e2 x ev)
-  | Lit l => None
-  | UnOp op e => UnOp op <$> gsubst_go e x ev
-  | BinOp op e1 e2 =>
-     gsubst_lift (BinOp op) e1 e2 (gsubst_go e1 x ev) (gsubst_go e2 x ev)
-  | If e0 e1 e2 =>
-     gsubst_lift id (If e0 e1) e2
-       (gsubst_lift If e0 e1 (gsubst_go e0 x ev) (gsubst_go e1 x ev))
-       (gsubst_go e2 x ev)
-  | Pair e1 e2 => gsubst_lift Pair e1 e2 (gsubst_go e1 x ev) (gsubst_go e2 x ev)
-  | Fst e => Fst <$> gsubst_go e x ev
-  | Snd e => Snd <$> gsubst_go e x ev
-  | InjL e => InjL <$> gsubst_go e x ev
-  | InjR e => InjR <$> gsubst_go e x ev
-  | Case e0 x1 e1 x2 e2 =>
-     gsubst_lift id (Case e0 x1 e1 x2) e2
-       (gsubst_lift (λ e0' e1', Case e0' x1 e1' x2) e0 e1
-         (gsubst_go e0 x ev)
-         (if decide (x ≠ x1) then gsubst_go e1 x ev else None))
-       (if decide (x ≠ x2) then gsubst_go e2 x ev else None)
-  | Fork e => Fork <$> gsubst_go e x ev
-  | Loc l => None
-  | Alloc e => Alloc <$> gsubst_go e x ev
-  | Load e => Load <$> gsubst_go e x ev
-  | Store e1 e2 => gsubst_lift Store e1 e2 (gsubst_go e1 x ev) (gsubst_go e2 x ev)
-  | Cas e0 e1 e2 =>
-     gsubst_lift id (Cas e0 e1) e2
-       (gsubst_lift Cas e0 e1 (gsubst_go e0 x ev) (gsubst_go e1 x ev))
-       (gsubst_go e2 x ev)
-  end.
-Definition gsubst (e : expr) (x : string) (ev : expr) : expr :=
-  from_option e (gsubst_go e x ev).
-Arguments gsubst !_ _ _/.
 
 Section lifting.
 Context {Σ : iFunctor}.
@@ -62,20 +12,6 @@ Implicit Types P : iProp heap_lang Σ.
 Implicit Types Q : val → iProp heap_lang Σ.
 Implicit Types K : ectx.
 Implicit Types ef : option expr.
-
-Lemma gsubst_None e x v : gsubst_go e x (of_val v) = None → e = subst e x v.
-Proof.
-  induction e; simpl; unfold gsubst_lift; intros;
-    repeat (simplify_option_equality || case_match); f_equal; auto.
-Qed.
-Lemma gsubst_correct e x v : gsubst e x (of_val v) = subst e x v.
-Proof.
-  unfold gsubst; destruct (gsubst_go e x (of_val v)) as [e'|] eqn:He; simpl;
-    last by apply gsubst_None.
-  revert e' He; induction e; simpl; unfold gsubst_lift; intros;
-    repeat (simplify_option_equality || case_match);
-    f_equal; auto using gsubst_None.
-Qed.
 
 (** Bind. *)
 Lemma wp_bind {E e} K Q :
@@ -150,18 +86,12 @@ Qed.
 
 Lemma wp_rec E f x e1 e2 v Q :
   to_val e2 = Some v →
-  ▷ wp E (gsubst (gsubst e1 f (Rec f x e1)) x e2) Q ⊑ wp E (App (Rec f x e1) e2) Q.
+  ▷ wp E (subst (subst e1 f (RecV f x e1)) x v) Q ⊑ wp E (App (Rec f x e1) e2) Q.
 Proof.
-  intros <-%of_to_val; rewrite gsubst_correct (gsubst_correct _ _ (RecV _ _ _)).
-  rewrite -(wp_lift_pure_det_step (App _ _)
+  intros. rewrite -(wp_lift_pure_det_step (App _ _)
     (subst (subst e1 f (RecV f x e1)) x v) None) ?right_id //=;
     intros; inv_step; eauto.
 Qed.
-Lemma wp_rec' E e1 f x erec e2 v Q :
-  e1 = Rec f x erec →
-  to_val e2 = Some v →
-  ▷ wp E (gsubst (gsubst erec f e1) x e2) Q ⊑ wp E (App e1 e2) Q.
-Proof. intros ->; apply wp_rec. Qed.
 
 Lemma wp_un_op E op l l' Q :
   un_op_eval op l = Some l' →
@@ -209,20 +139,18 @@ Qed.
 
 Lemma wp_case_inl E e0 v0 x1 e1 x2 e2 Q :
   to_val e0 = Some v0 →
-  ▷ wp E (gsubst e1 x1 e0) Q ⊑ wp E (Case (InjL e0) x1 e1 x2 e2) Q.
+  ▷ wp E (subst e1 x1 v0) Q ⊑ wp E (Case (InjL e0) x1 e1 x2 e2) Q.
 Proof.
-  intros <-%of_to_val; rewrite gsubst_correct.
-  rewrite -(wp_lift_pure_det_step (Case _ _ _ _ _) (subst e1 x1 v0) None)
-    ?right_id //; intros; inv_step; eauto.
+  intros. rewrite -(wp_lift_pure_det_step (Case _ _ _ _ _)
+    (subst e1 x1 v0) None) ?right_id //; intros; inv_step; eauto.
 Qed.
 
 Lemma wp_case_inr E e0 v0 x1 e1 x2 e2 Q :
   to_val e0 = Some v0 →
-  ▷ wp E (gsubst e2 x2 e0) Q ⊑ wp E (Case (InjR e0) x1 e1 x2 e2) Q.
+  ▷ wp E (subst e2 x2 v0) Q ⊑ wp E (Case (InjR e0) x1 e1 x2 e2) Q.
 Proof.
-  intros <-%of_to_val; rewrite gsubst_correct.
-  rewrite -(wp_lift_pure_det_step (Case _ _ _ _ _) (subst e2 x2 v0) None)
-    ?right_id //; intros; inv_step; eauto.
+  intros. rewrite -(wp_lift_pure_det_step (Case _ _ _ _ _)
+    (subst e2 x2 v0) None) ?right_id //; intros; inv_step; eauto.
 Qed.
 
 End lifting.
