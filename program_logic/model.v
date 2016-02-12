@@ -46,8 +46,8 @@ Lemma iProp_unfold_fold {Λ Σ} (P : iPreProp Λ Σ) :
 Proof. apply solution_fold_unfold. Qed.
 Bind Scope uPred_scope with iProp.
 
-Instance iProp_fold_inj n Λ Σ : Injective (dist n) (dist n) (@iProp_fold Λ Σ).
+Instance iProp_fold_inj n Λ Σ : Inj (dist n) (dist n) (@iProp_fold Λ Σ).
 Proof. by intros X Y H; rewrite -(iProp_unfold_fold X) H iProp_unfold_fold. Qed.
 Instance iProp_unfold_inj n Λ Σ :
-  Injective (dist n) (dist n) (@iProp_unfold Λ Σ).
+  Inj (dist n) (dist n) (@iProp_unfold Λ Σ).
 Proof. by intros X Y H; rewrite -(iProp_fold_unfold X) H iProp_fold_unfold. Qed.

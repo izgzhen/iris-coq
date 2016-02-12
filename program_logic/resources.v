@@ -102,10 +102,10 @@ Proof.
   * by intros n [???] ? [???] [???] ? [???];
       constructor; simpl in *; cofe_subst.
   * by intros n ? (?&?&?); split_ands'; apply cmra_validN_S.
-  * intros ???; constructor; simpl; apply (associative _).
-  * intros ??; constructor; simpl; apply (commutative _).
-  * intros ?; constructor; simpl; apply cmra_unit_l.
-  * intros ?; constructor; simpl; apply cmra_unit_idempotent.
+  * by intros ???; constructor; rewrite /= assoc.
+  * by intros ??; constructor; rewrite /= comm.
+  * by intros ?; constructor; rewrite /= cmra_unit_l.
+  * by intros ?; constructor; rewrite /= cmra_unit_idemp.
   * intros n r1 r2; rewrite !res_includedN.
     by intros (?&?&?); split_ands'; apply cmra_unit_preservingN.
   * intros n r1 r2 (?&?&?);
@@ -127,7 +127,7 @@ Global Instance res_cmra_identity : CMRAIdentity resRA.
 Proof.
   split.
   * intros n; split_ands'; apply cmra_empty_valid.
-  * by split; rewrite /= (left_id _ _).
+  * by split; rewrite /= left_id.
   * apply _.
 Qed.
 
@@ -150,12 +150,12 @@ Lemma lookup_wld_op_l n r1 r2 i P :
 Proof.
   move=>/wld_validN /(_ i) Hval Hi1P; move: Hi1P Hval; rewrite lookup_op.
   destruct (wld r2 !! i) as [P'|] eqn:Hi; rewrite !Hi ?right_id // =>-> ?.
-  by constructor; rewrite (agree_op_inv P P') // agree_idempotent.
+  by constructor; rewrite (agree_op_inv P P') // agree_idemp.
 Qed.
 Lemma lookup_wld_op_r n r1 r2 i P :
   ✓{n} (r1⋅r2) → wld r2 !! i ≡{n}≡ Some P → (wld r1 ⋅ wld r2) !! i ≡{n}≡ Some P.
 Proof.
-  rewrite (commutative _ r1) (commutative _ (wld r1)); apply lookup_wld_op_l.
+  rewrite (comm _ r1) (comm _ (wld r1)); apply lookup_wld_op_l.
 Qed.
 Global Instance Res_timeless eσ m : Timeless m → Timeless (Res ∅ eσ m).
 Proof. by intros ? ? [???]; constructor; apply (timeless _). Qed.

@@ -12,7 +12,7 @@ Proof. firstorder. Qed.
 
 Lemma Is_true_reflect (b : bool) : reflect b b.
 Proof. destruct b. by left. right. intros []. Qed.
-Instance: Injective (=) (↔) Is_true.
+Instance: Inj (=) (↔) Is_true.
 Proof. intros [] []; simpl; intuition. Qed.
 
 (** We introduce [decide_rel] to avoid inefficienct computation due to eager

@@ -20,8 +20,8 @@ Next Obligation.
 Qed.
 Next Obligation.
   intros Λ Σ E1 E2 P r1 r2 n1 n2 HP [r3 ?] Hn ? rf k Ef σ ?? Hws; setoid_subst.
-  destruct (HP (r3⋅rf) k Ef σ) as (r'&?&Hws'); rewrite ?(associative op); auto.
-  exists (r' ⋅ r3); rewrite -(associative _); split; last done.
+  destruct (HP (r3⋅rf) k Ef σ) as (r'&?&Hws'); rewrite ?(assoc op); auto.
+  exists (r' ⋅ r3); rewrite -assoc; split; last done.
   apply uPred_weaken with r' k; eauto using cmra_included_l.
 Qed.
 Arguments pvs {_ _} _ _ _%I : simpl never.
@@ -68,15 +68,15 @@ Lemma pvs_mask_frame E1 E2 Ef P :
   Ef ∩ (E1 ∪ E2) = ∅ → pvs E1 E2 P ⊑ pvs (E1 ∪ Ef) (E2 ∪ Ef) P.
 Proof.
   intros ? r n ? HP rf k Ef' σ ???.
-  destruct (HP rf k (Ef∪Ef') σ) as (r'&?&?); rewrite ?(associative_L _); eauto.
-  by exists r'; rewrite -(associative_L _).
+  destruct (HP rf k (Ef∪Ef') σ) as (r'&?&?); rewrite ?(assoc_L _); eauto.
+  by exists r'; rewrite -(assoc_L _).
 Qed.
 Lemma pvs_frame_r E1 E2 P Q : (pvs E1 E2 P ★ Q) ⊑ pvs E1 E2 (P ★ Q).
 Proof.
   intros r n ? (r1&r2&Hr&HP&?) rf k Ef σ ???.
   destruct (HP (r2 ⋅ rf) k Ef σ) as (r'&?&?); eauto.
-  { by rewrite (associative _) -(dist_le _ _ _ _ Hr); last lia. }
-  exists (r' ⋅ r2); split; last by rewrite -(associative _).
+  { by rewrite assoc -(dist_le _ _ _ _ Hr); last lia. }
+  exists (r' ⋅ r2); split; last by rewrite -assoc.
   exists r', r2; split_ands; auto; apply uPred_weaken with r2 n; auto.
 Qed.
 Lemma pvs_openI i P : ownI i P ⊑ pvs {[ i ]} ∅ (▷ P).
@@ -85,13 +85,13 @@ Proof.
   apply ownI_spec in Hinv; last auto.
   destruct (wsat_open k Ef σ (r ⋅ rf) i P) as (rP&?&?); auto.
   { rewrite lookup_wld_op_l ?Hinv; eauto; apply dist_le with (S n); eauto. }
-  exists (rP ⋅ r); split; last by rewrite (left_id_L _ _) -(associative _).
+  exists (rP ⋅ r); split; last by rewrite (left_id_L _ _) -assoc.
   eapply uPred_weaken with rP (S k); eauto using cmra_included_l.
 Qed.
 Lemma pvs_closeI i P : (ownI i P ∧ ▷ P) ⊑ pvs ∅ {[ i ]} True.
 Proof.
   intros r [|n] ? [? HP] rf [|k] Ef σ ? HE ?; try lia; exists ∅; split; [done|].
-  rewrite (left_id _ _); apply wsat_close with P r.
+  rewrite left_id; apply wsat_close with P r.
   * apply ownI_spec, uPred_weaken with r (S n); auto.
   * solve_elem_of +HE.
   * by rewrite -(left_id_L ∅ (∪) Ef).
@@ -135,7 +135,7 @@ Proof. apply pvs_trans; solve_elem_of. Qed.
 Lemma pvs_strip_pvs E P Q : P ⊑ pvs E E Q → pvs E E P ⊑ pvs E E Q.
 Proof. move=>->. by rewrite pvs_trans'. Qed.
 Lemma pvs_frame_l E1 E2 P Q : (P ★ pvs E1 E2 Q) ⊑ pvs E1 E2 (P ★ Q).
-Proof. rewrite !(commutative _ P); apply pvs_frame_r. Qed.
+Proof. rewrite !(comm _ P); apply pvs_frame_r. Qed.
 Lemma pvs_always_l E1 E2 P Q `{!AlwaysStable P} :
   (P ∧ pvs E1 E2 Q) ⊑ pvs E1 E2 (P ∧ Q).
 Proof. by rewrite !always_and_sep_l' pvs_frame_l. Qed.
@@ -145,7 +145,7 @@ Proof. by rewrite !always_and_sep_r' pvs_frame_r. Qed.
 Lemma pvs_impl_l E1 E2 P Q : (□ (P → Q) ∧ pvs E1 E2 P) ⊑ pvs E1 E2 Q.
 Proof. by rewrite pvs_always_l always_elim impl_elim_l. Qed.
 Lemma pvs_impl_r E1 E2 P Q : (pvs E1 E2 P ∧ □ (P → Q)) ⊑ pvs E1 E2 Q.
-Proof. by rewrite (commutative _) pvs_impl_l. Qed.
+Proof. by rewrite comm pvs_impl_l. Qed.
 
 Lemma pvs_mask_frame' E1 E1' E2 E2' P :
   E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' → pvs E1' E2' P ⊑ pvs E1 E2 P.
@@ -206,8 +206,8 @@ Proof. intros. apply fsa_mask_frame_mono; auto. Qed.
 Lemma fsa_frame_l E P Q :
   (P ★ FSA E Q) ⊑ FSA E (λ a, P ★ Q a).
 Proof.
-  rewrite commutative fsa_frame_r. apply fsa_mono=>a.
-  by rewrite commutative.
+  rewrite comm fsa_frame_r. apply fsa_mono=>a.
+  by rewrite comm.
 Qed.
 Lemma fsa_strip_pvs E P Q : P ⊑ FSA E Q → pvs E E P ⊑ FSA E Q.
 Proof.

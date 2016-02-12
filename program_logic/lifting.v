@@ -31,12 +31,12 @@ Proof.
     as (r'&(r1&r2&?&?&Hwp)&Hws); auto; clear Hvs; cofe_subst r'.
   destruct (wsat_update_pst k (E1 ∪ Ef) σ1 σ1' r1 (r2 ⋅ rf)) as [-> Hws'].
   { by apply ownP_spec; auto. }
-  { by rewrite (associative _). }
+  { by rewrite assoc. }
   constructor; [done|intros e2 σ2 ef ?; specialize (Hws' σ2)].
   destruct (λ H1 H2 H3, Hwp e2 σ2 ef (update_pst σ2 r1) k H1 H2 H3 rf k Ef σ2)
     as (r'&(r1'&r2'&?&?&?)&?); auto; cofe_subst r'.
   { split. destruct k; try eapply Hstep; eauto. apply ownP_spec; auto. }
-  { rewrite (commutative _ r2) -(associative _); eauto using wsat_le. }
+  { rewrite (comm _ r2) -assoc; eauto using wsat_le. }
   by exists r1', r2'; split_ands; [| |by intros ? ->].
 Qed.
 
@@ -71,7 +71,7 @@ Proof.
   rewrite -pvs_intro. apply sep_mono, later_mono; first done.
   apply forall_intro=>e2'; apply forall_intro=>σ2'.
   apply forall_intro=>ef; apply wand_intro_l.
-  rewrite always_and_sep_l' -associative -always_and_sep_l'.
+  rewrite always_and_sep_l' -assoc -always_and_sep_l'.
   apply const_elim_l=>-[v2' [Hv ?]] /=.
   rewrite -pvs_intro.
   rewrite (forall_elim v2') (forall_elim σ2') (forall_elim ef) const_equiv //.
@@ -90,7 +90,7 @@ Proof.
   apply sep_mono, later_mono; first done.
   apply forall_intro=>e2'; apply forall_intro=>σ2'; apply forall_intro=>ef'.
   apply wand_intro_l.
-  rewrite always_and_sep_l' -associative -always_and_sep_l'.
+  rewrite always_and_sep_l' -assoc -always_and_sep_l'.
   apply const_elim_l=>-[-> [-> ->]] /=. by rewrite wand_elim_r.
 Qed.
 

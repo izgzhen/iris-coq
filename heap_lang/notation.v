@@ -2,6 +2,8 @@ Require Export heap_lang.derived.
 
 Delimit Scope lang_scope with L.
 Bind Scope lang_scope with expr val.
+
+(* What about Arguments for hoare triples?. *)
 Arguments wp {_ _} _ _%L _.
 
 Coercion LitInt : Z >-> base_lit.
@@ -16,13 +18,16 @@ Coercion of_val : val >-> expr.
     first. *)
 (* We have overlapping notation for values and expressions, with the expressions
    coming first. This way, parsing as a value will be preferred. If an expression
-   was needed, the coercion of_val will be called. *)
-(* What about Arguments for hoare triples?. *)
-Notation "' l" := (Lit l) (at level 8, format "' l") : lang_scope.
-Notation "' l" := (LitV l) (at level 8, format "' l") : lang_scope.
-Notation "! e" := (Load e%L) (at level 10, format "! e") : lang_scope.
-Notation "'ref' e" := (Alloc e%L) (at level 30) : lang_scope.
-Notation "- e" := (UnOp MinusUnOp e%L) (at level 35, right associativity) : lang_scope.
+   was needed, the coercion of_val will be called. The notations for literals
+   are not put in any scope so as to avoid lots of annoying %L scopes while
+   pretty printing. *)
+Notation "' l" := (Lit l%Z) (at level 8, format "' l").
+Notation "' l" := (LitV l%Z) (at level 8, format "' l").
+Notation "! e" := (Load e%L) (at level 10, right associativity) : lang_scope.
+Notation "'ref' e" := (Alloc e%L)
+  (at level 30, right associativity) : lang_scope.
+Notation "- e" := (UnOp MinusUnOp e%L)
+  (at level 35, right associativity) : lang_scope.
 Notation "e1 + e2" := (BinOp PlusOp e1%L e2%L)
   (at level 50, left associativity) : lang_scope.
 Notation "e1 - e2" := (BinOp MinusOp e1%L e2%L)
@@ -50,5 +55,14 @@ Notation "λ: x , e" := (LamV x e%L)
   (at level 102, x at level 1, e at level 200) : lang_scope.
 Notation "'let:' x := e1 'in' e2" := (Lam x e2%L e1%L)
   (at level 102, x at level 1, e1, e2 at level 200) : lang_scope.
-Notation "e1 ; e2" := (Lam "" e2%L e1%L)
+Notation "e1 ;; e2" := (Lam "" e2%L e1%L)
   (at level 100, e2 at level 200) : lang_scope.
+
+Notation "'rec:' f x y := e" := (Rec f x (Lam y e%L))
+  (at level 102, f, x, y at level 1, e at level 200) : lang_scope.
+Notation "'rec:' f x y := e" := (RecV f x (Lam y e%L))
+  (at level 102, f, x, y at level 1, e at level 200) : lang_scope.
+Notation "'rec:' f x y z := e" := (Rec f x (Lam y (Lam z e%L)))
+  (at level 102, f, x, y, z at level 1, e at level 200) : lang_scope.
+Notation "'rec:' f x y z := e" := (RecV f x (Lam y (Lam z e%L)))
+  (at level 102, f, x, y, z at level 1, e at level 200) : lang_scope.

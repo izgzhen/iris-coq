@@ -16,7 +16,7 @@ Lemma Some_ne_None {A} (a : A) : Some a ≠ None.
 Proof. congruence. Qed.
 Lemma eq_None_ne_Some {A} (x : option A) a : x = None → x ≠ Some a.
 Proof. congruence. Qed.
-Instance Some_inj {A} : Injective (=) (=) (@Some A).
+Instance Some_inj {A} : Inj (=) (=) (@Some A).
 Proof. congruence. Qed.
 
 (** The non dependent elimination principle on the option type. *)
@@ -232,14 +232,14 @@ Section option_union_intersection_difference.
   Proof. by intros [?|]. Qed.
   Global Instance: RightId (=) None (union_with f).
   Proof. by intros [?|]. Qed.
-  Global Instance: Commutative (=) f → Commutative (=) (union_with f).
-  Proof. by intros ? [?|] [?|]; compute; rewrite 1?(commutative f). Qed.
+  Global Instance: Comm (=) f → Comm (=) (union_with f).
+  Proof. by intros ? [?|] [?|]; compute; rewrite 1?(comm f). Qed.
   Global Instance: LeftAbsorb (=) None (intersection_with f).
   Proof. by intros [?|]. Qed.
   Global Instance: RightAbsorb (=) None (intersection_with f).
   Proof. by intros [?|]. Qed.
-  Global Instance: Commutative (=) f → Commutative (=) (intersection_with f).
-  Proof. by intros ? [?|] [?|]; compute; rewrite 1?(commutative f). Qed.
+  Global Instance: Comm (=) f → Comm (=) (intersection_with f).
+  Proof. by intros ? [?|] [?|]; compute; rewrite 1?(comm f). Qed.
   Global Instance: RightId (=) None (difference_with f).
   Proof. by intros [?|]. Qed.
 End option_union_intersection_difference.

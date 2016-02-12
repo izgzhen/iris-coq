@@ -50,8 +50,8 @@ Proof.
     apply (conv_compl (chain_map own c) n).
 Qed.
 Canonical Structure authC := CofeT auth_cofe_mixin.
-Instance Auth_timeless (ea : excl A) (b : A) :
-  Timeless ea → Timeless b → Timeless (Auth ea b).
+Global Instance auth_timeless (x : auth A) :
+  Timeless (authoritative x) → Timeless (own x) → Timeless x.
 Proof. by intros ?? [??] [??]; split; simpl in *; apply (timeless _). Qed.
 Global Instance auth_leibniz : LeibnizEquiv A → LeibnizEquiv (auth A).
 Proof. by intros ? [??] [??] [??]; f_equal'; apply leibniz_equiv. Qed.
@@ -106,10 +106,10 @@ Proof.
   * by intros n x1 x2 [Hx Hx'] y1 y2 [Hy Hy'];
       split; simpl; rewrite ?Hy ?Hy' ?Hx ?Hx'.
   * intros n [[] ?] ?; naive_solver eauto using cmra_includedN_S, cmra_validN_S.
-  * by split; simpl; rewrite associative.
-  * by split; simpl; rewrite commutative.
+  * by split; simpl; rewrite assoc.
+  * by split; simpl; rewrite comm.
   * by split; simpl; rewrite ?cmra_unit_l.
-  * by split; simpl; rewrite ?cmra_unit_idempotent.
+  * by split; simpl; rewrite ?cmra_unit_idemp.
   * intros n ??; rewrite! auth_includedN; intros [??].
     by split; simpl; apply cmra_unit_preservingN.
   * assert (∀ n (a b1 b2 : A), b1 ⋅ b2 ≼{n} a → b1 ≼{n} a).
@@ -140,7 +140,7 @@ Proof.
   split; simpl.
   * by apply (@cmra_empty_valid A _).
   * by intros x; constructor; rewrite /= left_id.
-  * apply Auth_timeless; apply _.
+  * apply _.
 Qed.
 Lemma auth_frag_op a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.
@@ -153,8 +153,8 @@ Lemma auth_update a a' b b' :
 Proof.
   move=> Hab [[?| |] bf1] n // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
   destruct (Hab n (bf1 ⋅ bf2)) as [Ha' ?]; auto.
-  { by rewrite Ha left_id associative. }
-  split; [by rewrite Ha' left_id associative; apply cmra_includedN_l|done].
+  { by rewrite Ha left_id assoc. }
+  split; [by rewrite Ha' left_id assoc; apply cmra_includedN_l|done].
 Qed.
 
 Lemma auth_local_update L `{!LocalUpdate Lv L} a a' :
@@ -170,7 +170,7 @@ Lemma auth_update_op_l a a' b :
 Proof. by intros; apply (auth_local_update _). Qed.
 Lemma auth_update_op_r a a' b :
   ✓ (a ⋅ b) → ● a ⋅ ◯ a' ~~> ● (a ⋅ b) ⋅ ◯ (a' ⋅ b).
-Proof. rewrite -!(commutative _ b); apply auth_update_op_l. Qed.
+Proof. rewrite -!(comm _ b); apply auth_update_op_l. Qed.
 
 (* This does not seem to follow from auth_local_update.
    The trouble is that given ✓ (L a ⋅ a'), Lv a

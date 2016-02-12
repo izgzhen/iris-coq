@@ -151,7 +151,7 @@ Proof.
   * intros ???? (z&Hy&?&Hxz); destruct Hxz; inversion Hy;clear Hy; setoid_subst;
       rewrite ?disjoint_union_difference; auto using closed_up with sts.
     eapply closed_up_set; eauto 2 using closed_disjoint with sts.
-  * intros [] [] []; constructor; rewrite ?(associative _); auto with sts.
+  * intros [] [] []; constructor; rewrite ?assoc; auto with sts.
   * destruct 4; inversion_clear 1; constructor; auto with sts.
   * destruct 4; inversion_clear 1; constructor; auto with sts.
   * destruct 1; constructor; auto with sts.

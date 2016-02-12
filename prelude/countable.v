@@ -15,13 +15,13 @@ Definition encode_nat `{Countable A} (x : A) : nat :=
   pred (Pos.to_nat (encode x)).
 Definition decode_nat `{Countable A} (i : nat) : option A :=
   decode (Pos.of_nat (S i)).
-Instance encode_injective `{Countable A} : Injective (=) (=) encode.
+Instance encode_inj `{Countable A} : Inj (=) (=) encode.
 Proof.
-  intros x y Hxy; apply (injective Some).
+  intros x y Hxy; apply (inj Some).
   by rewrite <-(decode_encode x), Hxy, decode_encode.
 Qed.
-Instance encode_nat_injective `{Countable A} : Injective (=) (=) encode_nat.
-Proof. unfold encode_nat; intros x y Hxy; apply (injective encode); lia. Qed.
+Instance encode_nat_inj `{Countable A} : Inj (=) (=) encode_nat.
+Proof. unfold encode_nat; intros x y Hxy; apply (inj encode); lia. Qed.
 Lemma decode_encode_nat `{Countable A} x : decode_nat (encode_nat x) = Some x.
 Proof.
   pose proof (Pos2Nat.is_pos (encode x)).
@@ -70,11 +70,11 @@ Section choice.
   Definition choice (HA : ∃ x, P x) : { x | P x } := _↾choose_correct HA.
 End choice.
 
-Lemma surjective_cancel `{Countable A} `{∀ x y : B, Decision (x = y)}
-  (f : A → B) `{!Surjective (=) f} : { g : B → A & Cancel (=) f g }.
+Lemma surj_cancel `{Countable A} `{∀ x y : B, Decision (x = y)}
+  (f : A → B) `{!Surj (=) f} : { g : B → A & Cancel (=) f g }.
 Proof.
-  exists (λ y, choose (λ x, f x = y) (surjective f y)).
-  intros y. by rewrite (choose_correct (λ x, f x = y) (surjective f y)).
+  exists (λ y, choose (λ x, f x = y) (surj f y)).
+  intros y. by rewrite (choose_correct (λ x, f x = y) (surj f y)).
 Qed.
 
 (** * Instances *)
@@ -197,7 +197,7 @@ Lemma list_encode_app' `{Countable A} (l1 l2 : list A) acc :
 Proof.
   revert acc; induction l1; simpl; auto.
   induction l2 as [|x l IH]; intros acc; simpl; [by rewrite ?(left_id_L _ _)|].
-  by rewrite !(IH (Nat.iter _ _ _)), (associative_L _), x0_iter_x1.
+  by rewrite !(IH (Nat.iter _ _ _)), (assoc_L _), x0_iter_x1.
 Qed.
 Program Instance list_countable `{Countable A} : Countable (list A) :=
   {| encode := list_encode 1; decode := list_decode [] 0 |}.
@@ -211,7 +211,7 @@ Next Obligation.
   { by intros help l; rewrite help, (right_id_L _ _). }
   induction l as [|x l IH] using @rev_ind; intros acc; [done|].
   rewrite list_encode_app'; simpl; rewrite <-x0_iter_x1, decode_iter; simpl.
-  by rewrite decode_encode_nat; simpl; rewrite IH, <-(associative_L _).
+  by rewrite decode_encode_nat; simpl; rewrite IH, <-(assoc_L _).
 Qed.
 Lemma list_encode_app `{Countable A} (l1 l2 : list A) :
   encode (l1 ++ l2)%list = encode l1 ++ encode l2.

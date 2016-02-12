@@ -242,13 +242,13 @@ Proof.
   revert v; induction e; intros; simplify_option_equality; auto with f_equal.
 Qed.
 
-Instance: Injective (=) (=) of_val.
-Proof. by intros ?? Hv; apply (injective Some); rewrite -!to_of_val Hv. Qed.
+Instance: Inj (=) (=) of_val.
+Proof. by intros ?? Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
 
-Instance fill_item_inj Ki : Injective (=) (=) (fill_item Ki).
+Instance fill_item_inj Ki : Inj (=) (=) (fill_item Ki).
 Proof. destruct Ki; intros ???; simplify_equality'; auto with f_equal. Qed.
 
-Instance ectx_fill_inj K : Injective (=) (=) (fill K).
+Instance ectx_fill_inj K : Inj (=) (=) (fill K).
 Proof. red; induction K as [|Ki K IH]; naive_solver. Qed.
 
 Lemma fill_app K1 K2 e : fill (K1 ++ K2) e = fill K1 (fill K2 e).
@@ -348,7 +348,7 @@ Proof.
   * intros e1 σ1 e2 σ2 ? Hnval [K'' e1'' e2'' Heq1 -> Hstep].
     destruct (heap_lang.step_by_val
       K K'' e1 e1'' σ1 e2'' σ2 ef) as [K' ->]; eauto.
-    rewrite heap_lang.fill_app in Heq1; apply (injective _) in Heq1.
+    rewrite heap_lang.fill_app in Heq1; apply (inj _) in Heq1.
     exists (heap_lang.fill K' e2''); rewrite heap_lang.fill_app; split; auto.
     econstructor; eauto.
 Qed.

@@ -35,7 +35,7 @@ Instance nat_eq_dec: ∀ x y : nat, Decision (x = y) := eq_nat_dec.
 Instance nat_le_dec: ∀ x y : nat, Decision (x ≤ y) := le_dec.
 Instance nat_lt_dec: ∀ x y : nat, Decision (x < y) := lt_dec.
 Instance nat_inhabited: Inhabited nat := populate 0%nat.
-Instance: Injective (=) (=) S.
+Instance: Inj (=) (=) S.
 Proof. by injection 1. Qed.
 Instance: PartialOrder (≤).
 Proof. repeat split; repeat intro; auto with lia. Qed.
@@ -110,9 +110,9 @@ Instance positive_inhabited: Inhabited positive := populate 1.
 
 Instance maybe_xO : Maybe xO := λ p, match p with p~0 => Some p | _ => None end.
 Instance maybe_x1 : Maybe xI := λ p, match p with p~1 => Some p | _ => None end.
-Instance: Injective (=) (=) (~0).
+Instance: Inj (=) (=) (~0).
 Proof. by injection 1. Qed.
-Instance: Injective (=) (=) (~1).
+Instance: Inj (=) (=) (~1).
 Proof. by injection 1. Qed.
 
 (** Since [positive] represents lists of bits, we define list operations
@@ -141,9 +141,9 @@ Global Instance: LeftId (=) 1 (++).
 Proof. intros p. by induction p; intros; f_equal'. Qed.
 Global Instance: RightId (=) 1 (++).
 Proof. done. Qed.
-Global Instance: Associative (=) (++).
+Global Instance: Assoc (=) (++).
 Proof. intros ?? p. by induction p; intros; f_equal'. Qed.
-Global Instance: ∀ p : positive, Injective (=) (=) (++ p).
+Global Instance: ∀ p : positive, Inj (=) (=) (++ p).
 Proof. intros p ???. induction p; simplify_equality; auto. Qed.
 
 Lemma Preverse_go_app p1 p2 p3 :
@@ -184,7 +184,7 @@ Infix "`mod`" := N.modulo (at level 35) : N_scope.
 
 Arguments N.add _ _ : simpl never.
 
-Instance: Injective (=) (=) Npos.
+Instance: Inj (=) (=) Npos.
 Proof. by injection 1. Qed.
 
 Instance N_eq_dec: ∀ x y : N, Decision (x = y) := N.eq_dec.
@@ -220,9 +220,9 @@ Infix "`rem`" := Z.rem (at level 35) : Z_scope.
 Infix "≪" := Z.shiftl (at level 35) : Z_scope.
 Infix "≫" := Z.shiftr (at level 35) : Z_scope.
 
-Instance: Injective (=) (=) Zpos.
+Instance: Inj (=) (=) Zpos.
 Proof. by injection 1. Qed.
-Instance: Injective (=) (=) Zneg.
+Instance: Inj (=) (=) Zneg.
 Proof. by injection 1. Qed.
 
 Instance Z_eq_dec: ∀ x y : Z, Decision (x = y) := Z.eq_dec.
@@ -371,18 +371,18 @@ Lemma Qcplus_lt_mono_l (x y z : Qc) : x < y ↔ z + x < z + y.
 Proof. by rewrite !Qclt_nge, <-Qcplus_le_mono_l. Qed.
 Lemma Qcplus_lt_mono_r (x y z : Qc) : x < y ↔ x + z < y + z.
 Proof. by rewrite !Qclt_nge, <-Qcplus_le_mono_r. Qed.
-Instance: Injective (=) (=) Qcopp.
+Instance: Inj (=) (=) Qcopp.
 Proof.
   intros x y H. by rewrite <-(Qcopp_involutive x), H, Qcopp_involutive.
 Qed.
-Instance: ∀ z, Injective (=) (=) (Qcplus z).
+Instance: ∀ z, Inj (=) (=) (Qcplus z).
 Proof.
-  intros z x y H. by apply (anti_symmetric (≤));
+  intros z x y H. by apply (anti_symm (≤));
     rewrite (Qcplus_le_mono_l _ _ z), H.
 Qed.
-Instance: ∀ z, Injective (=) (=) (λ x, x + z).
+Instance: ∀ z, Inj (=) (=) (λ x, x + z).
 Proof.
-  intros z x y H. by apply (anti_symmetric (≤));
+  intros z x y H. by apply (anti_symm (≤));
     rewrite (Qcplus_le_mono_r _ _ z), H.
 Qed.
 Lemma Qcplus_pos_nonneg (x y : Qc) : 0 < x → 0 ≤ y → 0 < x + y.

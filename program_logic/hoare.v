@@ -40,8 +40,8 @@ Lemma ht_vs E P P' Q Q' e :
   ⊑ {{ P }} e @ E {{ Q }}.
 Proof.
   apply (always_intro' _ _), impl_intro_l.
-  rewrite (associative _ P) {1}/vs always_elim impl_elim_r.
-  rewrite associative pvs_impl_r pvs_always_r wp_always_r.
+  rewrite (assoc _ P) {1}/vs always_elim impl_elim_r.
+  rewrite assoc pvs_impl_r pvs_always_r wp_always_r.
   rewrite -(pvs_wp E e Q) -(wp_pvs E e Q); apply pvs_mono, wp_mono=> v.
   by rewrite (forall_elim v) {1}/vs always_elim impl_elim_r.
 Qed.
@@ -51,8 +51,8 @@ Lemma ht_atomic E1 E2 P P' Q Q' e :
   ⊑ {{ P }} e @ E1 {{ Q }}.
 Proof.
   intros ??; apply (always_intro' _ _), impl_intro_l.
-  rewrite (associative _ P) {1}/vs always_elim impl_elim_r.
-  rewrite (associative _) pvs_impl_r pvs_always_r wp_always_r.
+  rewrite (assoc _ P) {1}/vs always_elim impl_elim_r.
+  rewrite assoc pvs_impl_r pvs_always_r wp_always_r.
   rewrite -(wp_atomic E1 E2) //; apply pvs_mono, wp_mono=> v.
   by rewrite (forall_elim v) {1}/vs always_elim impl_elim_r.
 Qed.
@@ -61,7 +61,7 @@ Lemma ht_bind `{LanguageCtx Λ K} E P Q Q' e :
   ⊑ {{ P }} K e @ E {{ Q' }}.
 Proof.
   intros; apply (always_intro' _ _), impl_intro_l.
-  rewrite (associative _ P) {1}/ht always_elim impl_elim_r.
+  rewrite (assoc _ P) {1}/ht always_elim impl_elim_r.
   rewrite wp_always_r -wp_bind //; apply wp_mono=> v.
   by rewrite (forall_elim v) /ht always_elim impl_elim_r.
 Qed.
@@ -72,25 +72,25 @@ Lemma ht_frame_l E P Q R e :
   {{ P }} e @ E {{ Q }} ⊑ {{ R ★ P }} e @ E {{ λ v, R ★ Q v }}.
 Proof.
   apply always_intro, impl_intro_l.
-  rewrite always_and_sep_r -(associative _) (sep_and P) always_elim impl_elim_r.
+  rewrite always_and_sep_r -assoc (sep_and P) always_elim impl_elim_r.
   by rewrite wp_frame_l.
 Qed.
 Lemma ht_frame_r E P Q R e :
   {{ P }} e @ E {{ Q }} ⊑ {{ P ★ R }} e @ E {{ λ v, Q v ★ R }}.
-Proof. setoid_rewrite (commutative _ _ R); apply ht_frame_l. Qed.
+Proof. setoid_rewrite (comm _ _ R); apply ht_frame_l. Qed.
 Lemma ht_frame_later_l E P R e Q :
   to_val e = None →
   {{ P }} e @ E {{ Q }} ⊑ {{ ▷ R ★ P }} e @ E {{ λ v, R ★ Q v }}.
 Proof.
   intros; apply always_intro, impl_intro_l.
-  rewrite always_and_sep_r -(associative _) (sep_and P) always_elim impl_elim_r.
+  rewrite always_and_sep_r -assoc (sep_and P) always_elim impl_elim_r.
   by rewrite wp_frame_later_l //; apply wp_mono=>v; rewrite pvs_frame_l.
 Qed.
 Lemma ht_frame_later_r E P R e Q :
   to_val e = None →
   {{ P }} e @ E {{ Q }} ⊑ {{ P ★ ▷ R }} e @ E {{ λ v, Q v ★ R }}.
 Proof.
-  rewrite (commutative _ _ (▷ R)%I); setoid_rewrite (commutative _ _ R).
+  rewrite (comm _ _ (▷ R)%I); setoid_rewrite (comm _ _ R).
   apply ht_frame_later_l.
 Qed.
 End hoare.

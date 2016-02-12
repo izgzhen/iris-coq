@@ -44,10 +44,10 @@ Next Obligation.
   * constructor; eauto using uPred_weaken.
   * intros [rf' Hr] ??; constructor; [done|intros rf k Ef σ1 ???].
     destruct (Hgo (rf' ⋅ rf) k Ef σ1) as [Hsafe Hstep];
-      rewrite ?associative -?Hr; auto; constructor; [done|].
+      rewrite ?assoc -?Hr; auto; constructor; [done|].
     intros e2 σ2 ef ?; destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
     exists r2, (r2' ⋅ rf'); split_ands; eauto 10 using (IH k), cmra_included_l.
-    by rewrite -!associative (associative _ r2).
+    by rewrite -!assoc (assoc _ r2).
 Qed.
 Instance: Params (@wp) 4.
 
@@ -88,7 +88,7 @@ Proof.
   { constructor; eapply pvs_mask_frame_mono, HpvsQ; eauto. }
   constructor; [done|]=> rf k Ef σ1 ???.
   assert (E2 ∪ Ef = E1 ∪ (E2 ∖ E1 ∪ Ef)) as HE'.
-  { by rewrite associative_L -union_difference_L. }
+  { by rewrite assoc_L -union_difference_L. }
   destruct (Hgo rf k ((E2 ∖ E1) ∪ Ef) σ1) as [Hsafe Hstep]; rewrite -?HE'; auto.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
@@ -141,9 +141,9 @@ Proof.
   destruct Hwp' as [k r2 v Hvs'|k r2 e2 Hgo];
     [|destruct (atomic_step e σ1 e2 σ2 ef); naive_solver].
   apply pvs_trans in Hvs'; auto.
-  destruct (Hvs' (r2' ⋅ rf) k Ef σ2) as (r3&[]); rewrite ?(associative _); auto.
+  destruct (Hvs' (r2' ⋅ rf) k Ef σ2) as (r3&[]); rewrite ?assoc; auto.
   exists r3, r2'; split_ands; last done.
-  * by rewrite -(associative _).
+  * by rewrite -assoc.
   * constructor; apply pvs_intro; auto.
 Qed.
 Lemma wp_frame_r E e Q R : (wp E e Q ★ R) ⊑ wp E e (λ v, Q v ★ R).
@@ -155,12 +155,12 @@ Proof.
   { constructor; apply pvs_frame_r; auto. exists r, rR; eauto. }
   constructor; [done|]=> rf k Ef σ1 ???.
   destruct (Hgo (rR⋅rf) k Ef σ1) as [Hsafe Hstep]; auto.
-  { by rewrite (associative _). }
+  { by rewrite assoc. }
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
   exists (r2 ⋅ rR), r2'; split_ands; auto.
-  * by rewrite -(associative _ r2)
-      (commutative _ rR) !associative -(associative _ _ rR).
+  * by rewrite -(assoc _ r2)
+      (comm _ rR) !assoc -(assoc _ _ rR).
   * apply IH; eauto using uPred_weaken.
 Qed.
 Lemma wp_frame_later_r E e Q R :
@@ -169,12 +169,12 @@ Proof.
   intros He r' n Hvalid (r&rR&Hr&Hwp&?); revert Hvalid; rewrite Hr; clear Hr.
   destruct Hwp as [|n r e ? Hgo]; [by rewrite to_of_val in He|].
   constructor; [done|]=>rf k Ef σ1 ???; destruct n as [|n]; first omega.
-  destruct (Hgo (rR⋅rf) k Ef σ1) as [Hsafe Hstep];rewrite ?(associative _);auto.
+  destruct (Hgo (rR⋅rf) k Ef σ1) as [Hsafe Hstep];rewrite ?assoc;auto.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
   exists (r2 ⋅ rR), r2'; split_ands; auto.
-  * by rewrite -(associative _ r2)
-      (commutative _ rR) !associative -(associative _ _ rR).
+  * by rewrite -(assoc _ r2)
+      (comm _ rR) !assoc -(assoc _ _ rR).
   * apply wp_frame_r; [auto|exists r2, rR; split_ands; auto].
     eapply uPred_weaken with rR n; eauto.
 Qed.
@@ -207,11 +207,11 @@ Proof. move=>->. by rewrite pvs_wp. Qed.
 Lemma wp_value' E Q e v : to_val e = Some v → Q v ⊑ wp E e Q.
 Proof. intros; rewrite -(of_to_val e v) //; by apply wp_value. Qed.
 Lemma wp_frame_l E e Q R : (R ★ wp E e Q) ⊑ wp E e (λ v, R ★ Q v).
-Proof. setoid_rewrite (commutative _ R); apply wp_frame_r. Qed.
+Proof. setoid_rewrite (comm _ R); apply wp_frame_r. Qed.
 Lemma wp_frame_later_l E e Q R :
   to_val e = None → (▷ R ★ wp E e Q) ⊑ wp E e (λ v, R ★ Q v).
 Proof.
-  rewrite (commutative _ (▷ R)%I); setoid_rewrite (commutative _ R).
+  rewrite (comm _ (▷ R)%I); setoid_rewrite (comm _ R).
   apply wp_frame_later_r.
 Qed.
 Lemma wp_always_l E e Q R `{!AlwaysStable R} :
@@ -226,7 +226,7 @@ Proof.
   by rewrite always_elim (forall_elim v) impl_elim_l.
 Qed.
 Lemma wp_impl_r E e Q1 Q2 : (wp E e Q1 ∧ □ ∀ v, Q1 v → Q2 v) ⊑ wp E e Q2.
-Proof. by rewrite commutative wp_impl_l. Qed.
+Proof. by rewrite comm wp_impl_l. Qed.
 Lemma wp_mask_weaken E1 E2 e Q : E1 ⊆ E2 → wp E1 e Q ⊑ wp E2 e Q.
 Proof. auto using wp_mask_frame_mono. Qed.
 

@@ -108,7 +108,7 @@ Lemma size_union_alt X Y : size (X ∪ Y) = size X + size (Y ∖ X).
 Proof.
   rewrite <-size_union by solve_elem_of.
   setoid_replace (Y ∖ X) with ((Y ∪ X) ∖ X) by solve_elem_of.
-  rewrite <-union_difference, (commutative (∪)); solve_elem_of.
+  rewrite <-union_difference, (comm (∪)); solve_elem_of.
 Qed.
 Lemma subseteq_size X Y : X ⊆ Y → size X ≤ size Y.
 Proof. intros. rewrite (union_difference X Y), size_union_alt by done. lia. Qed.

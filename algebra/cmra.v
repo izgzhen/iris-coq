@@ -43,10 +43,10 @@ Record CMRAMixin A `{Dist A, Equiv A, Unit A, Op A, ValidN A, Minus A} := {
   (* valid *)
   mixin_cmra_validN_S n x : ✓{S n} x → ✓{n} x;
   (* monoid *)
-  mixin_cmra_associative : Associative (≡) (⋅);
-  mixin_cmra_commutative : Commutative (≡) (⋅);
+  mixin_cmra_assoc : Assoc (≡) (⋅);
+  mixin_cmra_comm : Comm (≡) (⋅);
   mixin_cmra_unit_l x : unit x ⋅ x ≡ x;
-  mixin_cmra_unit_idempotent x : unit (unit x) ≡ unit x;
+  mixin_cmra_unit_idemp x : unit (unit x) ≡ unit x;
   mixin_cmra_unit_preservingN n x y : x ≼{n} y → unit x ≼{n} unit y;
   mixin_cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
   mixin_cmra_op_minus n x y : x ≼{n} y → x ⋅ y ⩪ x ≡{n}≡ y
@@ -101,14 +101,14 @@ Section cmra_mixin.
   Proof. apply (mixin_cmra_minus_ne _ (cmra_mixin A)). Qed.
   Lemma cmra_validN_S n x : ✓{S n} x → ✓{n} x.
   Proof. apply (mixin_cmra_validN_S _ (cmra_mixin A)). Qed.
-  Global Instance cmra_associative : Associative (≡) (@op A _).
-  Proof. apply (mixin_cmra_associative _ (cmra_mixin A)). Qed.
-  Global Instance cmra_commutative : Commutative (≡) (@op A _).
-  Proof. apply (mixin_cmra_commutative _ (cmra_mixin A)). Qed.
+  Global Instance cmra_assoc : Assoc (≡) (@op A _).
+  Proof. apply (mixin_cmra_assoc _ (cmra_mixin A)). Qed.
+  Global Instance cmra_comm : Comm (≡) (@op A _).
+  Proof. apply (mixin_cmra_comm _ (cmra_mixin A)). Qed.
   Lemma cmra_unit_l x : unit x ⋅ x ≡ x.
   Proof. apply (mixin_cmra_unit_l _ (cmra_mixin A)). Qed.
-  Lemma cmra_unit_idempotent x : unit (unit x) ≡ unit x.
-  Proof. apply (mixin_cmra_unit_idempotent _ (cmra_mixin A)). Qed.
+  Lemma cmra_unit_idemp x : unit (unit x) ≡ unit x.
+  Proof. apply (mixin_cmra_unit_idemp _ (cmra_mixin A)). Qed.
   Lemma cmra_unit_preservingN n x y : x ≼{n} y → unit x ≼{n} unit y.
   Proof. apply (mixin_cmra_unit_preservingN _ (cmra_mixin A)). Qed.
   Lemma cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x.
@@ -166,7 +166,7 @@ Proof. apply (ne_proper _). Qed.
 Global Instance cmra_op_ne' n : Proper (dist n ==> dist n ==> dist n) (@op A _).
 Proof.
   intros x1 x2 Hx y1 y2 Hy.
-  by rewrite Hy (commutative _ x1) Hx (commutative _ y2).
+  by rewrite Hy (comm _ x1) Hx (comm _ y2).
 Qed.
 Global Instance ra_op_proper' : Proper ((≡) ==> (≡) ==> (≡)) (@op A _).
 Proof. apply (ne_proper_2 _). Qed.
@@ -217,15 +217,15 @@ Proof. induction 2; eauto using cmra_validN_S. Qed.
 Lemma cmra_valid_op_l x y : ✓ (x ⋅ y) → ✓ x.
 Proof. rewrite !cmra_valid_validN; eauto using cmra_validN_op_l. Qed.
 Lemma cmra_validN_op_r x y n : ✓{n} (x ⋅ y) → ✓{n} y.
-Proof. rewrite (commutative _ x); apply cmra_validN_op_l. Qed.
+Proof. rewrite (comm _ x); apply cmra_validN_op_l. Qed.
 Lemma cmra_valid_op_r x y : ✓ (x ⋅ y) → ✓ y.
 Proof. rewrite !cmra_valid_validN; eauto using cmra_validN_op_r. Qed.
 
 (** ** Units *)
 Lemma cmra_unit_r x : x ⋅ unit x ≡ x.
-Proof. by rewrite (commutative _ x) cmra_unit_l. Qed.
+Proof. by rewrite (comm _ x) cmra_unit_l. Qed.
 Lemma cmra_unit_unit x : unit x ⋅ unit x ≡ unit x.
-Proof. by rewrite -{2}(cmra_unit_idempotent x) cmra_unit_r. Qed.
+Proof. by rewrite -{2}(cmra_unit_idemp x) cmra_unit_r. Qed.
 Lemma cmra_unit_validN x n : ✓{n} x → ✓{n} unit x.
 Proof. rewrite -{1}(cmra_unit_l x); apply cmra_validN_op_l. Qed.
 Lemma cmra_unit_valid x : ✓ x → ✓ unit x.
@@ -243,7 +243,7 @@ Proof.
   split.
   * by intros x; exists (unit x); rewrite cmra_unit_r.
   * intros x y z [z1 Hy] [z2 Hz]; exists (z1 ⋅ z2).
-    by rewrite (associative _) -Hy -Hz.
+    by rewrite assoc -Hy -Hz.
 Qed.
 Global Instance cmra_included_preorder: PreOrder (@included A _ _).
 Proof.
@@ -265,22 +265,22 @@ Proof. by exists y. Qed.
 Lemma cmra_included_l x y : x ≼ x ⋅ y.
 Proof. by exists y. Qed.
 Lemma cmra_includedN_r n x y : y ≼{n} x ⋅ y.
-Proof. rewrite (commutative op); apply cmra_includedN_l. Qed.
+Proof. rewrite (comm op); apply cmra_includedN_l. Qed.
 Lemma cmra_included_r x y : y ≼ x ⋅ y.
-Proof. rewrite (commutative op); apply cmra_included_l. Qed.
+Proof. rewrite (comm op); apply cmra_included_l. Qed.
 
 Lemma cmra_unit_preserving x y : x ≼ y → unit x ≼ unit y.
 Proof. rewrite !cmra_included_includedN; eauto using cmra_unit_preservingN. Qed.
 Lemma cmra_included_unit x : unit x ≼ x.
 Proof. by exists x; rewrite cmra_unit_l. Qed.
 Lemma cmra_preservingN_l n x y z : x ≼{n} y → z ⋅ x ≼{n} z ⋅ y.
-Proof. by intros [z1 Hz1]; exists z1; rewrite Hz1 (associative op). Qed.
+Proof. by intros [z1 Hz1]; exists z1; rewrite Hz1 (assoc op). Qed.
 Lemma cmra_preserving_l x y z : x ≼ y → z ⋅ x ≼ z ⋅ y.
-Proof. by intros [z1 Hz1]; exists z1; rewrite Hz1 (associative op). Qed.
+Proof. by intros [z1 Hz1]; exists z1; rewrite Hz1 (assoc op). Qed.
 Lemma cmra_preservingN_r n x y z : x ≼{n} y → x ⋅ z ≼{n} y ⋅ z.
-Proof. by intros; rewrite -!(commutative _ z); apply cmra_preservingN_l. Qed.
+Proof. by intros; rewrite -!(comm _ z); apply cmra_preservingN_l. Qed.
 Lemma cmra_preserving_r x y z : x ≼ y → x ⋅ z ≼ y ⋅ z.
-Proof. by intros; rewrite -!(commutative _ z); apply cmra_preserving_l. Qed.
+Proof. by intros; rewrite -!(comm _ z); apply cmra_preserving_l. Qed.
 
 Lemma cmra_included_dist_l x1 x2 x1' n :
   x1 ≼ x2 → x1' ≡{n}≡ x1 → ∃ x2', x1' ≼ x2' ∧ x2' ≡{n}≡ x2.
@@ -321,7 +321,7 @@ Section identity.
   Lemma cmra_empty_least x : ∅ ≼ x.
   Proof. by exists x; rewrite left_id. Qed.
   Global Instance cmra_empty_right_id : RightId (≡) ∅ (⋅).
-  Proof. by intros x; rewrite (commutative op) left_id. Qed.
+  Proof. by intros x; rewrite (comm op) left_id. Qed.
   Lemma cmra_unit_empty : unit ∅ ≡ ∅.
   Proof. by rewrite -{2}(cmra_unit_l ∅) right_id. Qed.
 End identity.
@@ -336,7 +336,7 @@ Lemma local_update L `{!LocalUpdate Lv L} x y :
 Proof. by rewrite equiv_dist=>?? n; apply (local_updateN L). Qed.
 
 Global Instance local_update_op x : LocalUpdate (λ _, True) (op x).
-Proof. split. apply _. by intros n y1 y2 _ _; rewrite associative. Qed.
+Proof. split. apply _. by intros n y1 y2 _ _; rewrite assoc. Qed.
 
 (** ** Updates *)
 Global Instance cmra_update_preorder : PreOrder (@cmra_update A).
@@ -366,10 +366,10 @@ Lemma cmra_updateP_op (P1 P2 Q : A → Prop) x1 x2 :
   x1 ~~>: P1 → x2 ~~>: P2 → (∀ y1 y2, P1 y1 → P2 y2 → Q (y1 ⋅ y2)) → x1 ⋅ x2 ~~>: Q.
 Proof.
   intros Hx1 Hx2 Hy z n ?.
-  destruct (Hx1 (x2 ⋅ z) n) as (y1&?&?); first by rewrite associative.
+  destruct (Hx1 (x2 ⋅ z) n) as (y1&?&?); first by rewrite assoc.
   destruct (Hx2 (y1 ⋅ z) n) as (y2&?&?);
-    first by rewrite associative (commutative _ x2) -associative.
-  exists (y1 ⋅ y2); split; last rewrite (commutative _ y1) -associative; auto.
+    first by rewrite assoc (comm _ x2) -assoc.
+  exists (y1 ⋅ y2); split; last rewrite (comm _ y1) -assoc; auto.
 Qed.
 Lemma cmra_updateP_op' (P1 P2 : A → Prop) x1 x2 :
   x1 ~~>: P1 → x2 ~~>: P2 → x1 ⋅ x2 ~~>: λ y, ∃ y1 y2, y = y1 ⋅ y2 ∧ P1 y1 ∧ P2 y2.
@@ -448,10 +448,10 @@ Class RA A `{Equiv A, Unit A, Op A, Valid A, Minus A} := {
   ra_validN_ne :> Proper ((≡) ==> impl) valid;
   ra_minus_ne :> Proper ((≡) ==> (≡) ==> (≡)) minus;
   (* monoid *)
-  ra_associative :> Associative (≡) (⋅);
-  ra_commutative :> Commutative (≡) (⋅);
+  ra_assoc :> Assoc (≡) (⋅);
+  ra_comm :> Comm (≡) (⋅);
   ra_unit_l x : unit x ⋅ x ≡ x;
-  ra_unit_idempotent x : unit (unit x) ≡ unit x;
+  ra_unit_idemp x : unit (unit x) ≡ unit x;
   ra_unit_preserving x y : x ≼ y → unit x ≼ unit y;
   ra_valid_op_l x y : ✓ (x ⋅ y) → ✓ x;
   ra_op_minus x y : x ≼ y → x ⋅ y ⩪ x ≡ y
@@ -524,10 +524,10 @@ Section prod.
     * by intros n x1 x2 [Hx1 Hx2] y1 y2 [Hy1 Hy2];
         split; rewrite /= ?Hx1 ?Hx2 ?Hy1 ?Hy2.
     * by intros n x [??]; split; apply cmra_validN_S.
-    * split; simpl; apply (associative _).
-    * split; simpl; apply (commutative _).
-    * split; simpl; apply cmra_unit_l.
-    * split; simpl; apply cmra_unit_idempotent.
+    * by split; rewrite /= assoc.
+    * by split; rewrite /= comm.
+    * by split; rewrite /= cmra_unit_l.
+    * by split; rewrite /= cmra_unit_idemp.
     * intros n x y; rewrite !prod_includedN.
       by intros [??]; split; apply cmra_unit_preservingN.
     * intros n x y [??]; split; simpl in *; eauto using cmra_validN_op_l.

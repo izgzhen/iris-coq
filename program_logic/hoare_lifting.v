@@ -27,19 +27,19 @@ Lemma ht_lift_step E1 E2
   ⊑ {{ P }} e1 @ E2 {{ R }}.
 Proof.
   intros ?? Hsafe Hstep; apply (always_intro' _ _), impl_intro_l.
-  rewrite (associative _ P) {1}/vs always_elim impl_elim_r pvs_always_r.
+  rewrite (assoc _ P) {1}/vs always_elim impl_elim_r pvs_always_r.
   rewrite -(wp_lift_step E1 E2 φ _ e1 σ1) //; apply pvs_mono.
-  rewrite always_and_sep_r' -associative; apply sep_mono; first done.
+  rewrite always_and_sep_r' -assoc; apply sep_mono; first done.
   rewrite (later_intro (∀ _, _)) -later_sep; apply later_mono.
   apply forall_intro=>e2; apply forall_intro=>σ2; apply forall_intro=>ef.
   rewrite (forall_elim e2) (forall_elim σ2) (forall_elim ef).
   apply wand_intro_l; rewrite !always_and_sep_l'.
-  rewrite (associative _ _ P') -(associative _ _ _ P') associative.
+  rewrite (assoc _ _ P') -(assoc _ _ _ P') assoc.
   rewrite {1}/vs -always_wand_impl always_elim wand_elim_r.
   rewrite pvs_frame_r; apply pvs_mono.
-  rewrite (commutative _ (Q1 _ _ _)) -associative (associative _ (Q1 _ _ _)).
+  rewrite (comm _ (Q1 _ _ _)) -assoc (assoc _ (Q1 _ _ _)).
   rewrite {1}/ht -always_wand_impl always_elim wand_elim_r.
-  rewrite associative (commutative _ _ (wp _ _ _)) -associative.
+  rewrite assoc (comm _ _ (wp _ _ _)) -assoc.
   apply sep_mono; first done.
   destruct ef as [e'|]; simpl; [|by apply const_intro].
   rewrite {1}/ht -always_wand_impl always_elim wand_elim_r; apply wp_mono=>v.
@@ -63,7 +63,7 @@ Proof.
   apply forall_mono=>e2; apply forall_mono=>σ2; apply forall_mono=>ef.
   apply and_intro; [|apply and_intro; [|done]].
   * rewrite -vs_impl; apply (always_intro' _ _),impl_intro_l;rewrite and_elim_l.
-    rewrite !associative; apply sep_mono; last done.
+    rewrite !assoc; apply sep_mono; last done.
     rewrite -!always_and_sep_l' -!always_and_sep_r'; apply const_elim_l=>-[??].
     by repeat apply and_intro; try apply const_intro.
   * apply (always_intro' _ _), impl_intro_l; rewrite and_elim_l.
@@ -88,12 +88,12 @@ Proof.
   apply forall_intro=>e2; apply forall_intro=>ef; apply impl_intro_l.
   rewrite (forall_elim e2) (forall_elim ef).
   rewrite always_and_sep_l' !always_and_sep_r' {1}(always_sep_dup' (■ _)).
-  rewrite {1}(associative _ (_ ★ _)%I) -(associative _ (■ _)%I).
-  rewrite (associative _ (■ _)%I P) -{1}(commutative _ P) -(associative _ P).
-  rewrite (associative _ (■ _)%I) associative -(associative _ (■ _ ★ P))%I.
-  rewrite (commutative _ (■ _ ★ P'))%I associative.
+  rewrite {1}(assoc _ (_ ★ _)%I) -(assoc _ (■ _)%I).
+  rewrite (assoc _ (■ _)%I P) -{1}(comm _ P) -(assoc _ P).
+  rewrite (assoc _ (■ _)%I) assoc -(assoc _ (■ _ ★ P))%I.
+  rewrite (comm _ (■ _ ★ P'))%I assoc.
   rewrite {1}/ht -always_wand_impl always_elim wand_elim_r.
-  rewrite -associative; apply sep_mono; first done.
+  rewrite -assoc; apply sep_mono; first done.
   destruct ef as [e'|]; simpl; [|by apply const_intro].
   rewrite {1}/ht -always_wand_impl always_elim wand_elim_r; apply wp_mono=>v.
   by apply const_intro.
@@ -111,11 +111,11 @@ Proof.
   rewrite -(ht_lift_pure_step _ (λ e2' ef', e2 = e2' ∧ ef = ef')); eauto.
   apply forall_intro=>e2'; apply forall_intro=>ef'; apply and_mono.
   * apply (always_intro' _ _), impl_intro_l.
-    rewrite -always_and_sep_l' -associative; apply const_elim_l=>-[??]; subst.
+    rewrite -always_and_sep_l' -assoc; apply const_elim_l=>-[??]; subst.
     by rewrite /ht always_elim impl_elim_r.
   * destruct ef' as [e'|]; simpl; [|by apply const_intro].
     apply (always_intro' _ _), impl_intro_l.
-    rewrite -always_and_sep_l' -associative; apply const_elim_l=>-[??]; subst.
+    rewrite -always_and_sep_l' -assoc; apply const_elim_l=>-[??]; subst.
     by rewrite /= /ht always_elim impl_elim_r.
 Qed.
 

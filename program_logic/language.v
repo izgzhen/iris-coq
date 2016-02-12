@@ -48,8 +48,8 @@ Section language.
   Proof. intros (?&?&?&?); eauto using values_stuck. Qed.
   Lemma atomic_of_val v : ¬atomic (of_val v).
   Proof. by intros Hat%atomic_not_val; rewrite to_of_val in Hat. Qed.
-  Global Instance: Injective (=) (=) (@of_val Λ).
-  Proof. by intros v v' Hv; apply (injective Some); rewrite -!to_of_val Hv. Qed.
+  Global Instance: Inj (=) (=) (@of_val Λ).
+  Proof. by intros v v' Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
 End language.
 
 Class LanguageCtx (Λ : language) (K : expr Λ → expr Λ) := {

@@ -46,14 +46,14 @@ Class DRA A `{Equiv A, Valid A, Unit A, Disjoint A, Op A, Minus A} := {
   dra_unit_valid x : ✓ x → ✓ unit x;
   dra_minus_valid x y : ✓ x → ✓ y → x ≼ y → ✓ (y ⩪ x);
   (* monoid *)
-  dra_associative :> Associative (≡) (⋅);
+  dra_assoc :> Assoc (≡) (⋅);
   dra_disjoint_ll x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ z;
   dra_disjoint_move_l x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ y ⋅ z;
   dra_symmetric :> Symmetric (@disjoint A _);
-  dra_commutative x y : ✓ x → ✓ y → x ⊥ y → x ⋅ y ≡ y ⋅ x;
+  dra_comm x y : ✓ x → ✓ y → x ⊥ y → x ⋅ y ≡ y ⋅ x;
   dra_unit_disjoint_l x : ✓ x → unit x ⊥ x;
   dra_unit_l x : ✓ x → unit x ⋅ x ≡ x;
-  dra_unit_idempotent x : ✓ x → unit (unit x) ≡ unit x;
+  dra_unit_idemp x : ✓ x → unit (unit x) ≡ unit x;
   dra_unit_preserving x y : ✓ x → ✓ y → x ≼ y → unit x ≼ unit y;
   dra_disjoint_minus x y : ✓ x → ✓ y → x ≼ y → x ⊥ y ⩪ x;
   dra_op_minus x y : ✓ x → ✓ y → x ≼ y → x ⋅ y ⩪ x ≡ y
@@ -73,12 +73,12 @@ Qed.
 Lemma dra_disjoint_rl x y z : ✓ x → ✓ y → ✓ z → y ⊥ z → x ⊥ y ⋅ z → x ⊥ y.
 Proof. intros ???. rewrite !(symmetry_iff _ x). by apply dra_disjoint_ll. Qed.
 Lemma dra_disjoint_lr x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → y ⊥ z.
-Proof. intros ????. rewrite dra_commutative //. by apply dra_disjoint_ll. Qed.
+Proof. intros ????. rewrite dra_comm //. by apply dra_disjoint_ll. Qed.
 Lemma dra_disjoint_move_r x y z :
   ✓ x → ✓ y → ✓ z → y ⊥ z → x ⊥ y ⋅ z → x ⋅ y ⊥ z.
 Proof.
-  intros; symmetry; rewrite dra_commutative; eauto using dra_disjoint_rl.
-  apply dra_disjoint_move_l; auto; by rewrite dra_commutative.
+  intros; symmetry; rewrite dra_comm; eauto using dra_disjoint_rl.
+  apply dra_disjoint_move_l; auto; by rewrite dra_comm.
 Qed.
 Hint Immediate dra_disjoint_move_l dra_disjoint_move_r.
 Hint Unfold dra_included.
@@ -114,11 +114,11 @@ Proof.
     + exists z. by rewrite Hx ?Hy; tauto.
   * intros [x px ?] [y py ?] [z pz ?]; split; simpl;
       [intuition eauto 2 using dra_disjoint_lr, dra_disjoint_rl
-      |intros; apply (associative _)].
-  * intros [x px ?] [y py ?]; split; naive_solver eauto using dra_commutative.
+      |by intros; rewrite assoc].
+  * intros [x px ?] [y py ?]; split; naive_solver eauto using dra_comm.
   * intros [x px ?]; split;
       naive_solver eauto using dra_unit_l, dra_unit_disjoint_l.
-  * intros [x px ?]; split; naive_solver eauto using dra_unit_idempotent.
+  * intros [x px ?]; split; naive_solver eauto using dra_unit_idemp.
   * intros x y Hxy; exists (unit y ⩪ unit x).
     destruct x as [x px ?], y as [y py ?], Hxy as [[z pz ?] [??]]; simpl in *.
     assert (py → unit x ≼ unit y)

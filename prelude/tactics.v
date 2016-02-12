@@ -186,8 +186,8 @@ Ltac simplify_equality := repeat
   | H : ?x = _ |- _ => subst x
   | H : _ = ?x |- _ => subst x
   | H : _ = _ |- _ => discriminate H
-  | H : ?f _ = ?f _ |- _ => apply (injective f) in H
-  | H : ?f _ _ = ?f _ _ |- _ => apply (injective2 f) in H; destruct H
+  | H : ?f _ = ?f _ |- _ => apply (inj f) in H
+  | H : ?f _ _ = ?f _ _ |- _ => apply (inj2 f) in H; destruct H
     (* before [injection'] to circumvent bug #2939 in some situations *)
   | H : ?f _ = ?f _ |- _ => injection' H
   | H : ?f _ _ = ?f _ _ |- _ => injection' H

@@ -36,7 +36,7 @@ Proof.
   by destruct (decide (0 < x)%N); auto using pretty_N_go_help_irrel.
 Qed.
 Instance pretty_N : Pretty N := λ x, pretty_N_go x ""%string.
-Instance pretty_N_injective : Injective (@eq N) (=) pretty.
+Instance pretty_N_inj : Inj (@eq N) (=) pretty.
 Proof.
   assert (∀ x y, x < 10 → y < 10 →
     pretty_N_char x =  pretty_N_char y → x = y)%N.

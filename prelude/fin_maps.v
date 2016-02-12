@@ -820,28 +820,28 @@ Proof.
   intros ??. apply map_eq. intros.
   by rewrite !(lookup_merge f), lookup_empty, (right_id_L None f).
 Qed.
-Lemma merge_commutative m1 m2 :
+Lemma merge_comm m1 m2 :
   (∀ i, f (m1 !! i) (m2 !! i) = f (m2 !! i) (m1 !! i)) →
   merge f m1 m2 = merge f m2 m1.
 Proof. intros. apply map_eq. intros. by rewrite !(lookup_merge f). Qed.
-Global Instance: Commutative (=) f → Commutative (=) (merge f).
+Global Instance: Comm (=) f → Comm (=) (merge f).
 Proof.
-  intros ???. apply merge_commutative. intros. by apply (commutative f).
+  intros ???. apply merge_comm. intros. by apply (comm f).
 Qed.
-Lemma merge_associative m1 m2 m3 :
+Lemma merge_assoc m1 m2 m3 :
   (∀ i, f (m1 !! i) (f (m2 !! i) (m3 !! i)) =
         f (f (m1 !! i) (m2 !! i)) (m3 !! i)) →
   merge f m1 (merge f m2 m3) = merge f (merge f m1 m2) m3.
 Proof. intros. apply map_eq. intros. by rewrite !(lookup_merge f). Qed.
-Global Instance: Associative (=) f → Associative (=) (merge f).
+Global Instance: Assoc (=) f → Assoc (=) (merge f).
 Proof.
-  intros ????. apply merge_associative. intros. by apply (associative_L f).
+  intros ????. apply merge_assoc. intros. by apply (assoc_L f).
 Qed.
-Lemma merge_idempotent m1 :
+Lemma merge_idemp m1 :
   (∀ i, f (m1 !! i) (m1 !! i) = m1 !! i) → merge f m1 m1 = m1.
 Proof. intros. apply map_eq. intros. by rewrite !(lookup_merge f). Qed.
-Global Instance: Idempotent (=) f → Idempotent (=) (merge f).
-Proof. intros ??. apply merge_idempotent. intros. by apply (idempotent f). Qed.
+Global Instance: IdemP (=) f → IdemP (=) (merge f).
+Proof. intros ??. apply merge_idemp. intros. by apply (idemp f). Qed.
 End merge.
 
 Section more_merge.
@@ -1033,19 +1033,19 @@ Global Instance: LeftId (@eq (M A)) ∅ (union_with f).
 Proof. unfold union_with, map_union_with. apply _. Qed.
 Global Instance: RightId (@eq (M A)) ∅ (union_with f).
 Proof. unfold union_with, map_union_with. apply _. Qed.
-Lemma union_with_commutative m1 m2 :
+Lemma union_with_comm m1 m2 :
   (∀ i x y, m1 !! i = Some x → m2 !! i = Some y → f x y = f y x) →
   union_with f m1 m2 = union_with f m2 m1.
 Proof.
-  intros. apply (merge_commutative _). intros i.
+  intros. apply (merge_comm _). intros i.
   destruct (m1 !! i) eqn:?, (m2 !! i) eqn:?; simpl; eauto.
 Qed.
-Global Instance: Commutative (=) f → Commutative (@eq (M A)) (union_with f).
-Proof. intros ???. apply union_with_commutative. eauto. Qed.
-Lemma union_with_idempotent m :
+Global Instance: Comm (=) f → Comm (@eq (M A)) (union_with f).
+Proof. intros ???. apply union_with_comm. eauto. Qed.
+Lemma union_with_idemp m :
   (∀ i x, m !! i = Some x → f x x = Some x) → union_with f m m = m.
 Proof.
-  intros. apply (merge_idempotent _). intros i.
+  intros. apply (merge_idemp _). intros i.
   destruct (m !! i) eqn:?; simpl; eauto.
 Qed.
 Lemma alter_union_with (g : A → A) m1 m2 i :
@@ -1100,14 +1100,14 @@ End union_with.
 (** ** Properties of the [union] operation *)
 Global Instance: LeftId (@eq (M A)) ∅ (∪) := _.
 Global Instance: RightId (@eq (M A)) ∅ (∪) := _.
-Global Instance: Associative (@eq (M A)) (∪).
+Global Instance: Assoc (@eq (M A)) (∪).
 Proof.
   intros A m1 m2 m3. unfold union, map_union, union_with, map_union_with.
-  apply (merge_associative _). intros i.
+  apply (merge_assoc _). intros i.
   by destruct (m1 !! i), (m2 !! i), (m3 !! i).
 Qed.
-Global Instance: Idempotent (@eq (M A)) (∪).
-Proof. intros A ?. by apply union_with_idempotent. Qed.
+Global Instance: IdemP (@eq (M A)) (∪).
+Proof. intros A ?. by apply union_with_idemp. Qed.
 Lemma lookup_union_Some_raw {A} (m1 m2 : M A) i x :
   (m1 ∪ m2) !! i = Some x ↔
     m1 !! i = Some x ∨ (m1 !! i = None ∧ m2 !! i = Some x).
@@ -1140,9 +1140,9 @@ Proof. intro. rewrite lookup_union_Some_raw; intuition. Qed.
 Lemma lookup_union_Some_r {A} (m1 m2 : M A) i x :
   m1 ⊥ₘ m2 → m2 !! i = Some x → (m1 ∪ m2) !! i = Some x.
 Proof. intro. rewrite lookup_union_Some; intuition. Qed.
-Lemma map_union_commutative {A} (m1 m2 : M A) : m1 ⊥ₘ m2 → m1 ∪ m2 = m2 ∪ m1.
+Lemma map_union_comm {A} (m1 m2 : M A) : m1 ⊥ₘ m2 → m1 ∪ m2 = m2 ∪ m1.
 Proof.
-  intros Hdisjoint. apply (merge_commutative (union_with (λ x _, Some x))).
+  intros Hdisjoint. apply (merge_comm (union_with (λ x _, Some x))).
   intros i. specialize (Hdisjoint i).
   destruct (m1 !! i), (m2 !! i); compute; naive_solver.
 Qed.
@@ -1160,7 +1160,7 @@ Proof.
 Qed.
 Lemma map_union_subseteq_r {A} (m1 m2 : M A) : m1 ⊥ₘ m2 → m2 ⊆ m1 ∪ m2.
 Proof.
-  intros. rewrite map_union_commutative by done. by apply map_union_subseteq_l.
+  intros. rewrite map_union_comm by done. by apply map_union_subseteq_l.
 Qed.
 Lemma map_union_subseteq_l_alt {A} (m1 m2 m3 : M A) : m1 ⊆ m2 → m1 ⊆ m2 ∪ m3.
 Proof. intros. transitivity m2; auto using map_union_subseteq_l. Qed.
@@ -1175,7 +1175,7 @@ Qed.
 Lemma map_union_preserving_r {A} (m1 m2 m3 : M A) :
   m2 ⊥ₘ m3 → m1 ⊆ m2 → m1 ∪ m3 ⊆ m2 ∪ m3.
 Proof.
-  intros. rewrite !(map_union_commutative _ m3)
+  intros. rewrite !(map_union_comm _ m3)
     by eauto using map_disjoint_weaken_l.
   by apply map_union_preserving_l.
 Qed.
@@ -1189,19 +1189,19 @@ Qed.
 Lemma map_union_reflecting_r {A} (m1 m2 m3 : M A) :
   m1 ⊥ₘ m3 → m2 ⊥ₘ m3 → m1 ∪ m3 ⊆ m2 ∪ m3 → m1 ⊆ m2.
 Proof.
-  intros ??. rewrite !(map_union_commutative _ m3) by done.
+  intros ??. rewrite !(map_union_comm _ m3) by done.
   by apply map_union_reflecting_l.
 Qed.
 Lemma map_union_cancel_l {A} (m1 m2 m3 : M A) :
   m1 ⊥ₘ m3 → m2 ⊥ₘ m3 → m3 ∪ m1 = m3 ∪ m2 → m1 = m2.
 Proof.
-  intros. apply (anti_symmetric (⊆));
+  intros. apply (anti_symm (⊆));
     apply map_union_reflecting_l with m3; auto using (reflexive_eq (R:=(⊆))).
 Qed.
 Lemma map_union_cancel_r {A} (m1 m2 m3 : M A) :
   m1 ⊥ₘ m3 → m2 ⊥ₘ m3 → m1 ∪ m3 = m2 ∪ m3 → m1 = m2.
 Proof.
-  intros. apply (anti_symmetric (⊆));
+  intros. apply (anti_symm (⊆));
     apply map_union_reflecting_r with m3; auto using (reflexive_eq (R:=(⊆))).
 Qed.
 Lemma map_disjoint_union_l {A} (m1 m2 m3 : M A) :
@@ -1231,7 +1231,7 @@ Qed.
 Lemma insert_union_singleton_r {A} (m : M A) i x :
   m !! i = None → <[i:=x]>m = m ∪ {[i ↦ x]}.
 Proof.
-  intro. rewrite insert_union_singleton_l, map_union_commutative; [done |].
+  intro. rewrite insert_union_singleton_l, map_union_comm; [done |].
   by apply map_disjoint_singleton_l.
 Qed.
 Lemma map_disjoint_insert_l {A} (m1 m2 : M A) i x :
@@ -1254,12 +1254,12 @@ Lemma map_disjoint_insert_r_2 {A} (m1 m2 : M A) i x :
 Proof. by rewrite map_disjoint_insert_r. Qed.
 Lemma insert_union_l {A} (m1 m2 : M A) i x :
   <[i:=x]>(m1 ∪ m2) = <[i:=x]>m1 ∪ m2.
-Proof. by rewrite !insert_union_singleton_l, (associative_L (∪)). Qed.
+Proof. by rewrite !insert_union_singleton_l, (assoc_L (∪)). Qed.
 Lemma insert_union_r {A} (m1 m2 : M A) i x :
   m1 !! i = None → <[i:=x]>(m1 ∪ m2) = m1 ∪ <[i:=x]>m2.
 Proof.
-  intro. rewrite !insert_union_singleton_l, !(associative_L (∪)).
-  rewrite (map_union_commutative m1); [done |].
+  intro. rewrite !insert_union_singleton_l, !(assoc_L (∪)).
+  rewrite (map_union_comm m1); [done |].
   by apply map_disjoint_singleton_r.
 Qed.
 Lemma foldr_insert_union {A} (m : M A) l :

@@ -31,9 +31,9 @@ Global Instance Excl_ne : Proper (dist n ==> dist n) (@Excl A).
 Proof. by constructor. Qed.
 Global Instance Excl_proper : Proper ((≡) ==> (≡)) (@Excl A).
 Proof. by constructor. Qed.
-Global Instance Excl_inj : Injective (≡) (≡) (@Excl A).
+Global Instance Excl_inj : Inj (≡) (≡) (@Excl A).
 Proof. by inversion_clear 1. Qed.
-Global Instance Excl_dist_inj n : Injective (dist n) (dist n) (@Excl A).
+Global Instance Excl_dist_inj n : Inj (dist n) (dist n) (@Excl A).
 Proof. by inversion_clear 1. Qed.
 Program Definition excl_chain
     (c : chain (excl A)) (x : A) (H : maybe Excl (c 1) = Some x) : chain A :=

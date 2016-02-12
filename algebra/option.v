@@ -45,7 +45,7 @@ Global Instance Some_ne : Proper (dist n ==> dist n) (@Some A).
 Proof. by constructor. Qed.
 Global Instance is_Some_ne n : Proper (dist n ==> iff) (@is_Some A).
 Proof. inversion_clear 1; split; eauto. Qed.
-Global Instance Some_dist_inj : Injective (dist n) (dist n) (@Some A).
+Global Instance Some_dist_inj : Inj (dist n) (dist n) (@Some A).
 Proof. by inversion_clear 1. Qed.
 Global Instance None_timeless : Timeless (@None A).
 Proof. inversion_clear 1; constructor. Qed.
@@ -92,10 +92,10 @@ Proof.
   * by destruct 1; rewrite /validN /option_validN //=; cofe_subst.
   * by destruct 1; inversion_clear 1; constructor; cofe_subst.
   * intros n [x|]; unfold validN, option_validN; eauto using cmra_validN_S.
-  * intros [x|] [y|] [z|]; constructor; rewrite ?associative; auto.
-  * intros [x|] [y|]; constructor; rewrite 1?commutative; auto.
+  * intros [x|] [y|] [z|]; constructor; rewrite ?assoc; auto.
+  * intros [x|] [y|]; constructor; rewrite 1?comm; auto.
   * by intros [x|]; constructor; rewrite cmra_unit_l.
-  * by intros [x|]; constructor; rewrite cmra_unit_idempotent.
+  * by intros [x|]; constructor; rewrite cmra_unit_idemp.
   * intros n mx my; rewrite !option_includedN;intros [->|(x&y&->&->&?)]; auto.
     right; exists (unit x), (unit y); eauto using cmra_unit_preservingN.
   * intros n [x|] [y|]; rewrite /validN /option_validN /=;
