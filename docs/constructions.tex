@@ -249,7 +249,7 @@ Given a monoid $M$, we construct a monoid modeling someone owning an \emph{autho
 (If $M$ is an exclusive monoid, the construction is very similar to a half-ownership monoid with two asymmetric halves.)
 Let $\auth{M}$ be the monoid with carrier
 \[
-	\SET{ (x, \melt) }{ x \in \mcarp{\exm{\mcarp{M}}} \land \melt \in \mcarp{M} \land (x = \munit_{\exm{\mcarp{M}}} \lor \melt \leq_M x) }
+	\setComp{ (x, \melt) }{ x \in \mcarp{\exm{\mcarp{M}}} \land \melt \in \mcarp{M} \land (x = \munit_{\exm{\mcarp{M}}} \lor \melt \leq_M x) }
 \]
 and multiplication
 \[
@@ -341,7 +341,7 @@ We first lift the transition relation to $\STSS \times \mathcal{P}(\STST)$ (impl
 \begin{align*}
  (s, T) \ra (s', T') \eqdef&\, s \ra s' \land \STSL(s) \uplus T = \STSL(s') \uplus T' \\
  \textsf{frame}(s, T) \eqdef&\, (s, \STST \setminus (\STSL(s) \uplus T)) \\
- \upclose(S, T) \eqdef&\, \SET{ s' \in \STSS}{\exists s \in S.\; \textsf{frame}(s, T) \ststrans \textsf{frame}(s', T) }
+ \upclose(S, T) \eqdef&\, \setComp{ s' \in \STSS}{\exists s \in S.\; \textsf{frame}(s, T) \ststrans \textsf{frame}(s', T) }
 \end{align*}
 
 \noindent
@@ -358,7 +358,7 @@ This is exactly what we have to show, since we know $\STSL(s) \uplus T = \STSL(s
 
 Let $\STSMon{\STSS}$ be the monoid with carrier
 \[
-	\SET{ (s, S, T) \in \exm{\STSS} \times \mathcal{P}(\STSS) \times \mathcal{P}(\STST) }{ \begin{aligned} &(s = \munit \lor s \in S) \land \upclose(S, T) = S   \land{} \\& S \neq \emptyset \land \All s \in S. \STSL(s) \sep T  \end{aligned} }
+	\setComp{ (s, S, T) \in \exm{\STSS} \times \mathcal{P}(\STSS) \times \mathcal{P}(\STST) }{ \begin{aligned} &(s = \munit \lor s \in S) \land \upclose(S, T) = S   \land{} \\& S \neq \emptyset \land \All s \in S. \STSL(s) \sep T  \end{aligned} }
 \]
 and multiplication
 \[

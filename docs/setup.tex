@@ -152,9 +152,11 @@
 
 \newcommand{\upclose}{\mathord{\uparrow}}
 
-\def\All #1.{\forall #1.\;}%
-\def\Exists #1.{\exists #1.\;}%
-\def\Ret #1.{#1.\;}%
+\newcommand{\spac}{\;} % a space
+
+\def\All #1.{\forall #1.\spac}%
+\def\Exists #1.{\exists #1.\spac}%
+\def\Ret #1.{#1.\spac}%
 
 \newcommand{\any}{{\rule[-.2ex]{1ex}{.4pt}}}%
 \newcommand{\unitval}{()}%
@@ -182,21 +184,8 @@
 \newcommand{\IF}{\mathrel{\text{if}}}
 \newcommand{\WHEN}{\textrm{when }}
 
-
-
-\newcommand{\SET}[2]{
-\left\{%
-#1%
-\;\middle|\;%
-#2%
-\right\}
-}
-\newcommand{\SETB}[1]{
-\left\{%
-#1%
-\right\}
-}
-\newcommand{\SETC}[2]{#1 & #2}
+\newcommand*\setComp[2]{\left\{#1\spac\middle|\spac#2\right\}}
+\newcommand*\set[1]{\left\{#1\right\}}
 
 \newenvironment{inbox}[1][]{
   \begin{array}[#1]{@{}l@{}}
@@ -317,8 +306,8 @@
 %% various pieces of Syntax
 \newcommand{\unitsort}{1}%	\unit is bold.
 
-\def\MU #1.{\mu #1.\;}%
-\def\Lam #1.{\lambda #1.\;}%
+\def\MU #1.{\mu #1.\spac}%
+\def\Lam #1.{\lambda #1.\spac}%
 
 \newcommand{\proves}{\vdash}
 \newcommand{\provesalways}{\vdash_{\!\!\boxempty}}
