@@ -2,6 +2,8 @@ Require Export heap_lang.derived.
 
 Delimit Scope lang_scope with L.
 Bind Scope lang_scope with expr val.
+
+(* What about Arguments for hoare triples?. *)
 Arguments wp {_ _} _ _%L _.
 
 Coercion LitInt : Z >-> base_lit.
@@ -16,10 +18,11 @@ Coercion of_val : val >-> expr.
     first. *)
 (* We have overlapping notation for values and expressions, with the expressions
    coming first. This way, parsing as a value will be preferred. If an expression
-   was needed, the coercion of_val will be called. *)
-(* What about Arguments for hoare triples?. *)
-Notation "' l" := (Lit l) (at level 8, format "' l") : lang_scope.
-Notation "' l" := (LitV l) (at level 8, format "' l") : lang_scope.
+   was needed, the coercion of_val will be called. The notations for literals
+   are not put in any scope so as to avoid lots of annoying %L scopes while
+   pretty printing. *)
+Notation "' l" := (Lit l%Z) (at level 8, format "' l").
+Notation "' l" := (LitV l%Z) (at level 8, format "' l").
 Notation "! e" := (Load e%L) (at level 10, right associativity) : lang_scope.
 Notation "'ref' e" := (Alloc e%L)
   (at level 30, right associativity) : lang_scope.

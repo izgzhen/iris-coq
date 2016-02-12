@@ -62,13 +62,12 @@ Module LiftingTests.
     λ: "x", if "x" ≤ '0 then -FindPred (-"x" + '2) '0 else FindPred "x" '0.
 
   Lemma FindPred_spec n1 n2 E Q :
-    (■ (n1 < n2) ∧ Q (LitV (n2 - 1))) ⊑ wp E (FindPred 'n2 'n1)%L Q.
+    (■ (n1 < n2) ∧ Q '(n2 - 1)) ⊑ wp E (FindPred 'n2 'n1)%L Q.
   Proof.
-    (* FIXME there are some annoying scopes shown here: %Z, %L. *)
     revert n1; apply löb_all_1=>n1.
     rewrite (comm uPred_and (■ _)%I) assoc; apply const_elim_r=>?.
     (* first need to do the rec to get a later *)
-    rewrite -(wp_bindi (AppLCtx _)).
+    rewrite -(wp_bindi (AppLCtx _)) /=.
     rewrite -wp_rec' // =>-/=; rewrite -wp_value' //=.
     (* FIXME: ssr rewrite fails with "Error: _pattern_value_ is used in conclusion." *)
     rewrite ->(later_intro (Q _)).
@@ -106,8 +105,7 @@ Module LiftingTests.
   Qed.
 
   Goal ∀ E,
-    True ⊑ wp (Σ:=Σ) E (let: "x" := Pred '42 in Pred "x")
-                       (λ v, v = ('40)%L).
+    True ⊑ wp (Σ:=Σ) E (let: "x" := Pred '42 in Pred "x") (λ v, v = '40).
   Proof.
     intros E.
     rewrite -(wp_bindi (LetCtx _ _)) -Pred_spec //= -wp_let //=.
