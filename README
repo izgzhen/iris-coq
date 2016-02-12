@@ -15,7 +15,6 @@ fixed version of Ssreflect.
 BUILDING INSTRUCTIONS
 ---------------------
 
-Run the following commands to build the full development:
+Run the following command to build the full development:
 
-  ./configure
   make
