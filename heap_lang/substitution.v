@@ -12,6 +12,10 @@ unfolding any Coq definitions. For example:
 >>
 
 For [gsubst e x ev] to work, [e] should not contain any opaque parts.
+Fundamentally, the way this works is that [gsubst] tests whether a subterm
+needs substitution, before it traverses into the term. This way, unaffected
+sub-terms are returned directly, rather than their tree structure being
+deconstructed and composed again.
 
 The function [gsubst e x ev] differs in yet another way from [subst e x v].
 The function [gsubst] substitutes an expression [ev] whereas [subst]
