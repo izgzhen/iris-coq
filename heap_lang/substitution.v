@@ -120,32 +120,32 @@ Implicit Types P : iProp heap_lang Σ.
 Implicit Types Q : val → iProp heap_lang Σ.
 Hint Resolve to_of_val.
 
-Lemma wp_rec' E e1 f x erec e2 v Q :
+Lemma wp_rec E e1 f x erec e2 v Q :
   e1 = Rec f x erec →
   to_val e2 = Some v →
   ▷ wp E (gsubst (gsubst erec f e1) x e2) Q ⊑ wp E (App e1 e2) Q.
 Proof.
   intros -> <-%of_to_val.
   rewrite (gsubst_correct _ _ (RecV _ _ _)) gsubst_correct.
-  by apply wp_rec.
+  by apply wp_rec'.
 Qed.
 
-Lemma wp_lam' E x ef e v Q :
+Lemma wp_lam E x ef e v Q :
   to_val e = Some v → ▷ wp E (gsubst ef x e) Q ⊑ wp E (App (Lam x ef) e) Q.
-Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_lam. Qed.
+Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_lam'. Qed.
 
-Lemma wp_let' E x e1 e2 v Q :
+Lemma wp_let E x e1 e2 v Q :
   to_val e1 = Some v → ▷ wp E (gsubst e2 x e1) Q ⊑ wp E (Let x e1 e2) Q.
-Proof. apply wp_lam'. Qed.
+Proof. apply wp_lam. Qed.
 
-Lemma wp_case_inl' E e0 v0 x1 e1 x2 e2 Q :
+Lemma wp_case_inl E e0 v0 x1 e1 x2 e2 Q :
   to_val e0 = Some v0 →
   ▷ wp E (gsubst e1 x1 e0) Q ⊑ wp E (Case (InjL e0) x1 e1 x2 e2) Q.
-Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_case_inl. Qed.
+Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_case_inl'. Qed.
 
-Lemma wp_case_inr' E e0 v0 x1 e1 x2 e2 Q :
+Lemma wp_case_inr E e0 v0 x1 e1 x2 e2 Q :
   to_val e0 = Some v0 →
   ▷ wp E (gsubst e2 x2 e0) Q ⊑ wp E (Case (InjR e0) x1 e1 x2 e2) Q.
-Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_case_inr. Qed.
+Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_case_inr'. Qed.
 End wp.
 

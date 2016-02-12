@@ -69,12 +69,12 @@ Module LiftingTests.
     rewrite (comm uPred_and (■ _)%I) assoc; apply const_elim_r=>?.
     (* first need to do the rec to get a later *)
     rewrite -(wp_bindi (AppLCtx _)) /=.
-    rewrite -wp_rec' // =>-/=; rewrite -wp_value' //=.
+    rewrite -wp_rec // =>-/=; rewrite -wp_value' //=.
     (* FIXME: ssr rewrite fails with "Error: _pattern_value_ is used in conclusion." *)
     rewrite ->(later_intro (Q _)).
     rewrite -!later_and; apply later_mono.
     (* Go on *)
-    rewrite -wp_let' //= -later_intro.
+    rewrite -wp_let //= -later_intro.
     rewrite -(wp_bindi (LetCtx _ _)) -wp_bin_op //= -wp_let' //= -!later_intro.
     rewrite -(wp_bindi (IfCtx _ _)) /=.
     apply wp_lt=> ?.
@@ -88,7 +88,7 @@ Module LiftingTests.
 
   Lemma Pred_spec n E Q : ▷ Q (LitV (n - 1)) ⊑ wp E (Pred 'n)%L Q.
   Proof.
-    rewrite -wp_lam' //=.
+    rewrite -wp_lam //=.
     rewrite -(wp_bindi (IfCtx _ _)) /=.
     apply later_mono, wp_le=> Hn.
     - rewrite -wp_if_true.
