@@ -23,19 +23,6 @@ Context (map_comp : ∀ {A1 A2 A3 B1 B2 B3 : cofeT}
   map (f ◎ g, g' ◎ f') x ≡ map (g,g') (map (f,f') x)).
 Context (map_contractive : ∀ {A1 A2 B1 B2}, Contractive (@map A1 A2 B1 B2)).
 
-Lemma map_ext {A1 A2 B1 B2 : cofeT}
-  (f : A2 -n> A1) (f' : A2 -n> A1) (g : B1 -n> B2) (g' : B1 -n> B2) x x' :
-  (∀ x, f x ≡ f' x) → (∀ y, g y ≡ g' y) → x ≡ x' →
-  map (f,g) x ≡ map (f',g') x'.
-Proof. by rewrite -!cofe_mor_ext; intros -> -> ->. Qed.
-Lemma map_ne {A1 A2 B1 B2 : cofeT}
-  (f : A2 -n> A1) (f' : A2 -n> A1) (g : B1 -n> B2) (g' : B1 -n> B2) n x :
-  (∀ x, f x ≡{n}≡ f' x) → (∀ y, g y ≡{n}≡ g' y) →
-  map (f,g) x ≡{n}≡ map (f',g') x.
-Proof.
-  intros. by apply map_contractive=> i ?; apply dist_le with n; last lia.
-Qed.
-
 Fixpoint A (k : nat) : cofeT :=
   match k with 0 => unitC | S k => F (A k) (A k) end.
 Fixpoint f (k : nat) : A k -n> A (S k) :=
@@ -51,16 +38,13 @@ Arguments g : simpl never.
 Lemma gf {k} (x : A k) : g k (f k x) ≡ x.
 Proof.
   induction k as [|k IH]; simpl in *; [by destruct x|].
-  rewrite -map_comp -{2}(map_id _ _ x); by apply map_ext.
+  rewrite -map_comp -{2}(map_id _ _ x). by apply (contractive_proper map).
 Qed.
 Lemma fg {k} (x : A (S (S k))) : f (S k) (g (S k) x) ≡{k}≡ x.
 Proof.
   induction k as [|k IH]; simpl.
-  * rewrite f_S g_S -{2}(map_id _ _ x) -map_comp.
-    apply map_contractive=> i ?; omega.
-  * rewrite f_S g_S -{2}(map_id _ _ x) -map_comp.
-    apply map_contractive=> i ?; apply dist_le with k; [|omega].
-    split=> x' /=; apply IH.
+  * rewrite f_S g_S -{2}(map_id _ _ x) -map_comp. apply (contractive_0 map).
+  * rewrite f_S g_S -{2}(map_id _ _ x) -map_comp. by apply (contractive_S map).
 Qed.
 
 Record tower := {
@@ -197,10 +181,10 @@ Next Obligation.
   assert (∃ k, i = k + n) as [k ?] by (exists (i - n); lia); subst; clear Hi.
   induction k as [|k IH]; simpl.
   { rewrite -f_tower f_S -map_comp.
-    apply map_ne=> Y /=. by rewrite g_tower. by rewrite embed_f. }
+    by apply (contractive_ne map); split=> Y /=; rewrite ?g_tower ?embed_f. }
   rewrite -IH -(dist_le _ _ _ _ (f_tower (k + n) _)); last lia.
   rewrite f_S -map_comp.
-  apply map_ne=> Y /=. by rewrite g_tower. by rewrite embed_f.
+  by apply (contractive_ne map); split=> Y /=; rewrite ?g_tower ?embed_f.
 Qed.
 Definition unfold (X : T) : F T T := compl (unfold_chain X).
 Instance unfold_ne : Proper (dist n ==> dist n) unfold.
@@ -214,7 +198,7 @@ Program Definition fold (X : F T T) : T :=
 Next Obligation.
   intros X k. apply (_ : Proper ((≡) ==> (≡)) (g k)).
   rewrite g_S -map_comp.
-  apply map_ext; [apply embed_f|intros Y; apply g_tower|done].
+  apply (contractive_proper map); split=> Y; [apply embed_f|apply g_tower].
 Qed.
 Instance fold_ne : Proper (dist n ==> dist n) fold.
 Proof. by intros n X Y HXY k; rewrite /fold /= HXY. Qed.
@@ -229,7 +213,7 @@ Proof.
     { rewrite /unfold (conv_compl (unfold_chain X) n).
       rewrite -(chain_cauchy (unfold_chain X) n (S (n + k))) /=; last lia.
       rewrite -(dist_le _ _ _ _ (f_tower (n + k) _)); last lia.
-      rewrite f_S -!map_comp; apply map_ne; fold A=> Y.
+      rewrite f_S -!map_comp; apply (contractive_ne map); split=> Y.
       + rewrite /embed' /= /embed_coerce.
         destruct (le_lt_dec _ _); simpl; [exfalso; lia|].
         by rewrite (ff_ff _ (eq_refl (S n + (0 + k)))) /= gf.
@@ -246,7 +230,8 @@ Proof.
     apply (_ : Proper (_ ==> _) (gg _)); by destruct H.
   * intros X; rewrite equiv_dist=> n /=.
     rewrite /unfold /= (conv_compl (unfold_chain (fold X)) n) /=.
-    rewrite g_S -!map_comp -{2}(map_id _ _ X); apply map_ne=> Y /=.
+    rewrite g_S -!map_comp -{2}(map_id _ _ X).
+    apply (contractive_ne map); split => Y /=.
     + apply dist_le with n; last omega.
       rewrite f_tower. apply dist_S. by rewrite embed_tower.
     + etransitivity; [apply embed_ne, equiv_dist, g_tower|apply embed_tower].

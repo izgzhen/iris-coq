@@ -106,9 +106,12 @@ Section cofe.
      unfold Proper, respectful; setoid_rewrite equiv_dist.
      by intros x1 x2 Hx y1 y2 Hy n; rewrite (Hx n) (Hy n).
   Qed.
-  Lemma contractive_S {B : cofeT} {f : A → B} `{!Contractive f} n x y :
+  Lemma contractive_S {B : cofeT} (f : A → B) `{!Contractive f} n x y :
     x ≡{n}≡ y → f x ≡{S n}≡ f y.
   Proof. eauto using contractive, dist_le with omega. Qed.
+  Lemma contractive_0 {B : cofeT} (f : A → B) `{!Contractive f} x y :
+    f x ≡{0}≡ f y.
+  Proof. eauto using contractive with omega. Qed.
   Global Instance contractive_ne {B : cofeT} (f : A → B) `{!Contractive f} n :
     Proper (dist n ==> dist n) f | 100.
   Proof. by intros x y ?; apply dist_S, contractive_S. Qed.
@@ -136,8 +139,8 @@ Program Definition fixpoint_chain {A : cofeT} `{Inhabited A} (f : A → A)
   `{!Contractive f} : chain A := {| chain_car i := Nat.iter (S i) f inhabitant |}.
 Next Obligation.
   intros A ? f ? n. induction n as [|n IH]; intros [|i] ?; simpl; try omega.
-  * apply contractive; auto with omega.
-  * apply contractive_S, IH; auto with omega.
+  * apply (contractive_0 f).
+  * apply (contractive_S f), IH; auto with omega.
 Qed.
 Program Definition fixpoint {A : cofeT} `{Inhabited A} (f : A → A)
   `{!Contractive f} : A := compl (fixpoint_chain f).
@@ -147,7 +150,7 @@ Section fixpoint.
   Lemma fixpoint_unfold : fixpoint f ≡ f (fixpoint f).
   Proof.
     apply equiv_dist=>n; rewrite /fixpoint (conv_compl (fixpoint_chain f) n) //.
-    induction n as [|n IH]; simpl; eauto using contractive, dist_le with omega.
+    induction n as [|n IH]; simpl; eauto using contractive_0, contractive_S.
   Qed.
   Lemma fixpoint_ne (g : A → A) `{!Contractive g} n :
     (∀ z, f z ≡{n}≡ g z) → fixpoint f ≡{n}≡ fixpoint g.
