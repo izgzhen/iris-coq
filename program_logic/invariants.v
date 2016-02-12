@@ -72,16 +72,16 @@ Lemma inv_fsa {A : Type} {FSA} (FSAs : FrameShiftAssertion (A:=A) FSA)
 Proof.
   move=>HN.
   rewrite /inv sep_exist_r. apply exist_elim=>i.
-  rewrite always_and_sep_l' -assoc. apply const_elim_sep_l=>HiN.
+  rewrite always_and_sep_l -assoc. apply const_elim_sep_l=>HiN.
   rewrite -(fsa_trans3 E (E ∖ {[encode i]})) //; last by solve_elem_of+.
   (* Add this to the local context, so that solve_elem_of finds it. *)
   assert ({[encode i]} ⊆ nclose N) by eauto.
-  rewrite (always_sep_dup' (ownI _ _)).
+  rewrite (always_sep_dup (ownI _ _)).
   rewrite {1}pvs_openI !pvs_frame_r.
   apply pvs_mask_frame_mono ; [solve_elem_of..|].
   rewrite (comm _ (▷_)%I) -assoc wand_elim_r fsa_frame_l.
   apply fsa_mask_frame_mono; [solve_elem_of..|]. intros a.
-  rewrite assoc -always_and_sep_l' pvs_closeI pvs_frame_r left_id.
+  rewrite assoc -always_and_sep_l pvs_closeI pvs_frame_r left_id.
   apply pvs_mask_frame'; solve_elem_of.
 Qed.
 

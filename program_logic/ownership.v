@@ -33,7 +33,7 @@ Qed.
 Global Instance ownI_always_stable i P : AlwaysStable (ownI i P).
 Proof. by rewrite /AlwaysStable always_ownI. Qed.
 Lemma ownI_sep_dup i P : ownI i P ≡ (ownI i P ★ ownI i P)%I.
-Proof. apply (uPred.always_sep_dup' _). Qed.
+Proof. apply (uPred.always_sep_dup _). Qed.
 
 (* physical state *)
 Lemma ownP_twice σ1 σ2 : (ownP σ1 ★ ownP σ2 : iProp Λ Σ) ⊑ False.
@@ -58,7 +58,7 @@ Qed.
 Lemma ownG_valid m : (ownG m) ⊑ (✓ m).
 Proof. by rewrite /ownG uPred.ownM_valid; apply uPred.valid_mono=> n [? []]. Qed.
 Lemma ownG_valid_r m : (ownG m) ⊑ (ownG m ★ ✓ m).
-Proof. apply (uPred.always_entails_r' _ _), ownG_valid. Qed.
+Proof. apply (uPred.always_entails_r _ _), ownG_valid. Qed.
 Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
 Proof. rewrite /ownG; apply _. Qed.
 

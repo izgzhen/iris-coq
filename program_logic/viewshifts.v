@@ -23,7 +23,7 @@ Implicit Types P Q R : iProp Λ Σ.
 
 Lemma vs_alt E1 E2 P Q : (P ⊑ pvs E1 E2 Q) → P ={E1,E2}=> Q.
 Proof.
-  intros; rewrite -{1}always_const; apply always_intro, impl_intro_l.
+  intros; rewrite -{1}always_const. apply (always_intro _ _), impl_intro_l.
   by rewrite always_const right_id.
 Qed.
 
@@ -50,7 +50,7 @@ Proof. by intros ?; apply vs_alt, pvs_timeless. Qed.
 Lemma vs_transitive E1 E2 E3 P Q R :
   E2 ⊆ E1 ∪ E3 → ((P ={E1,E2}=> Q) ∧ (Q ={E2,E3}=> R)) ⊑ (P ={E1,E3}=> R).
 Proof.
-  intros; rewrite -always_and; apply always_intro, impl_intro_l.
+  intros; rewrite -always_and; apply (always_intro _ _), impl_intro_l.
   rewrite always_and assoc (always_elim (P → _)) impl_elim_r.
   by rewrite pvs_impl_r; apply pvs_trans.
 Qed.
@@ -62,13 +62,13 @@ Proof. apply vs_alt, pvs_intro. Qed.
 
 Lemma vs_impl E P Q : □ (P → Q) ⊑ (P ={E}=> Q).
 Proof.
-  apply always_intro, impl_intro_l.
+  apply always_intro', impl_intro_l.
   by rewrite always_elim impl_elim_r -pvs_intro.
 Qed.
 
 Lemma vs_frame_l E1 E2 P Q R : (P ={E1,E2}=> Q) ⊑ (R ★ P ={E1,E2}=> R ★ Q).
 Proof.
-  apply always_intro, impl_intro_l.
+  apply always_intro', impl_intro_l.
   rewrite -pvs_frame_l always_and_sep_r -always_wand_impl -assoc.
   by rewrite always_elim wand_elim_r.
 Qed.
@@ -79,7 +79,7 @@ Proof. rewrite !(comm _ _ R); apply vs_frame_l. Qed.
 Lemma vs_mask_frame E1 E2 Ef P Q :
   Ef ∩ (E1 ∪ E2) = ∅ → (P ={E1,E2}=> Q) ⊑ (P ={E1 ∪ Ef,E2 ∪ Ef}=> Q).
 Proof.
-  intros ?; apply always_intro, impl_intro_l; rewrite (pvs_mask_frame _ _ Ef)//.
+  intros ?; apply always_intro', impl_intro_l; rewrite (pvs_mask_frame _ _ Ef)//.
   by rewrite always_elim impl_elim_r.
 Qed.
 
@@ -90,8 +90,8 @@ Lemma vs_open_close N E P Q R :
   nclose N ⊆ E →
   (inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q)) ⊑ (P ={E}=> Q).
 Proof.
-  intros; apply (always_intro' _ _), impl_intro_l.
-  rewrite always_and_sep_r' assoc [(P ★ _)%I]comm -assoc.
+  intros; apply (always_intro _ _), impl_intro_l.
+  rewrite always_and_sep_r assoc [(P ★ _)%I]comm -assoc.
   rewrite -(pvs_open_close E N) //. apply sep_mono; first done.
   apply wand_intro_l.
   (* Oh wow, this is annyoing... *)

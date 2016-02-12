@@ -71,7 +71,7 @@ Proof.
   rewrite -pvs_intro. apply sep_mono, later_mono; first done.
   apply forall_intro=>e2'; apply forall_intro=>σ2'.
   apply forall_intro=>ef; apply wand_intro_l.
-  rewrite always_and_sep_l' -assoc -always_and_sep_l'.
+  rewrite always_and_sep_l -assoc -always_and_sep_l.
   apply const_elim_l=>-[v2' [Hv ?]] /=.
   rewrite -pvs_intro.
   rewrite (forall_elim v2') (forall_elim σ2') (forall_elim ef) const_equiv //.
@@ -90,7 +90,7 @@ Proof.
   apply sep_mono, later_mono; first done.
   apply forall_intro=>e2'; apply forall_intro=>σ2'; apply forall_intro=>ef'.
   apply wand_intro_l.
-  rewrite always_and_sep_l' -assoc -always_and_sep_l'.
+  rewrite always_and_sep_l -assoc -always_and_sep_l.
   apply const_elim_l=>-[-> [-> ->]] /=. by rewrite wand_elim_r.
 Qed.
 

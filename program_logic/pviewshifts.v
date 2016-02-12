@@ -138,10 +138,10 @@ Lemma pvs_frame_l E1 E2 P Q : (P ★ pvs E1 E2 Q) ⊑ pvs E1 E2 (P ★ Q).
 Proof. rewrite !(comm _ P); apply pvs_frame_r. Qed.
 Lemma pvs_always_l E1 E2 P Q `{!AlwaysStable P} :
   (P ∧ pvs E1 E2 Q) ⊑ pvs E1 E2 (P ∧ Q).
-Proof. by rewrite !always_and_sep_l' pvs_frame_l. Qed.
+Proof. by rewrite !always_and_sep_l pvs_frame_l. Qed.
 Lemma pvs_always_r E1 E2 P Q `{!AlwaysStable Q} :
   (pvs E1 E2 P ∧ Q) ⊑ pvs E1 E2 (P ∧ Q).
-Proof. by rewrite !always_and_sep_r' pvs_frame_r. Qed.
+Proof. by rewrite !always_and_sep_r pvs_frame_r. Qed.
 Lemma pvs_impl_l E1 E2 P Q : (□ (P → Q) ∧ pvs E1 E2 P) ⊑ pvs E1 E2 Q.
 Proof. by rewrite pvs_always_l always_elim impl_elim_l. Qed.
 Lemma pvs_impl_r E1 E2 P Q : (pvs E1 E2 P ∧ □ (P → Q)) ⊑ pvs E1 E2 Q.

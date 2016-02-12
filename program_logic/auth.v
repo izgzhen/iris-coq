@@ -32,7 +32,7 @@ Section auth.
       rewrite [(_ ★ φ _)%I]comm -assoc. apply sep_mono; first done.
       rewrite /auth_own -own_op auth_both_op. done. }
     rewrite (inv_alloc N) /auth_ctx pvs_frame_r. apply pvs_mono.
-    by rewrite always_and_sep_l'.
+    by rewrite always_and_sep_l.
   Qed.
 
   Context {Hφ : ∀ n, Proper (dist n ==> dist n) φ}.
