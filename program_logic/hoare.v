@@ -33,7 +33,7 @@ Lemma ht_val E v :
   {{ True : iProp Λ Σ }} of_val v @ E {{ λ v', v = v' }}.
 Proof.
   apply (always_intro _ _), impl_intro_l.
-  by rewrite -wp_value; apply const_intro.
+  by rewrite -wp_value'; apply const_intro.
 Qed.
 Lemma ht_vs E P P' Q Q' e :
   ((P ={E}=> P') ∧ {{ P' }} e @ E {{ Q' }} ∧ ∀ v, Q' v ={E}=> Q v)

@@ -68,7 +68,7 @@ Proof.
     by repeat apply and_intro; try apply const_intro.
   * apply (always_intro _ _), impl_intro_l; rewrite and_elim_l.
     rewrite -always_and_sep_r; apply const_elim_r=>-[[v Hv] ?].
-    rewrite -(of_to_val e2 v) // -wp_value.
+    rewrite -(of_to_val e2 v) // -wp_value'; [].
     rewrite -(exist_intro σ2) -(exist_intro ef) (of_to_val e2) //.
     by rewrite -always_and_sep_r; apply and_intro; try apply const_intro.
 Qed.

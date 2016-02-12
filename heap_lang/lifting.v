@@ -81,7 +81,7 @@ Proof.
   rewrite -(wp_lift_pure_det_step (Fork e) (Lit LitUnit) (Some e)) //=;
     last by intros; inv_step; eauto.
   apply later_mono, sep_intro_True_l; last done.
-  by rewrite -(wp_value' _ _ (Lit _)) //; apply const_intro.
+  by rewrite -(wp_value _ _ (Lit _)) //; apply const_intro.
 Qed.
 
 (* For the lemmas involving substitution, we only derive a preliminary version.
@@ -100,7 +100,7 @@ Lemma wp_un_op E op l l' Q :
   ▷ Q (LitV l') ⊑ wp E (UnOp op (Lit l)) Q.
 Proof.
   intros. rewrite -(wp_lift_pure_det_step (UnOp op _) (Lit l') None)
-    ?right_id -?wp_value' //; intros; inv_step; eauto.
+    ?right_id -?wp_value //; intros; inv_step; eauto.
 Qed.
 
 Lemma wp_bin_op E op l1 l2 l' Q :
@@ -108,7 +108,7 @@ Lemma wp_bin_op E op l1 l2 l' Q :
   ▷ Q (LitV l') ⊑ wp E (BinOp op (Lit l1) (Lit l2)) Q.
 Proof.
   intros Heval. rewrite -(wp_lift_pure_det_step (BinOp op _ _) (Lit l') None)
-    ?right_id -?wp_value' //; intros; inv_step; eauto.
+    ?right_id -?wp_value //; intros; inv_step; eauto.
 Qed.
 
 Lemma wp_if_true E e1 e2 Q : ▷ wp E e1 Q ⊑ wp E (If (Lit $ LitBool true) e1 e2) Q.
@@ -128,7 +128,7 @@ Lemma wp_fst E e1 v1 e2 v2 Q :
   ▷ Q v1 ⊑ wp E (Fst $ Pair e1 e2) Q.
 Proof.
   intros. rewrite -(wp_lift_pure_det_step (Fst _) e1 None)
-    ?right_id -?wp_value' //; intros; inv_step; eauto.
+    ?right_id -?wp_value //; intros; inv_step; eauto.
 Qed.
 
 Lemma wp_snd E e1 v1 e2 v2 Q :
@@ -136,7 +136,7 @@ Lemma wp_snd E e1 v1 e2 v2 Q :
   ▷ Q v2 ⊑ wp E (Snd $ Pair e1 e2) Q.
 Proof.
   intros. rewrite -(wp_lift_pure_det_step (Snd _) e2 None)
-    ?right_id -?wp_value' //; intros; inv_step; eauto.
+    ?right_id -?wp_value //; intros; inv_step; eauto.
 Qed.
 
 Lemma wp_case_inl' E e0 v0 x1 e1 x2 e2 Q :

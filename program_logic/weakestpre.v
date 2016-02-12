@@ -105,7 +105,7 @@ Lemma wp_step_inv E Ef Q e k n σ r rf :
   wp_go (E ∪ Ef) (λ e, wp E e Q) (λ e, wp coPset_all e (λ _, True%I)) k rf e σ.
 Proof. intros He; destruct 3; [by rewrite ?to_of_val in He|eauto]. Qed.
 
-Lemma wp_value E Q v : Q v ⊑ wp E (of_val v) Q.
+Lemma wp_value' E Q v : Q v ⊑ wp E (of_val v) Q.
 Proof. by constructor; apply pvs_intro. Qed.
 Lemma pvs_wp E e Q : pvs E E (wp E e Q) ⊑ wp E e Q.
 Proof.
@@ -204,8 +204,8 @@ Global Instance wp_mono' E e :
 Proof. by intros Q Q' ?; apply wp_mono. Qed.
 Lemma wp_strip_pvs E e P Q : P ⊑ wp E e Q → pvs E E P ⊑ wp E e Q.
 Proof. move=>->. by rewrite pvs_wp. Qed.
-Lemma wp_value' E Q e v : to_val e = Some v → Q v ⊑ wp E e Q.
-Proof. intros; rewrite -(of_to_val e v) //; by apply wp_value. Qed.
+Lemma wp_value E Q e v : to_val e = Some v → Q v ⊑ wp E e Q.
+Proof. intros; rewrite -(of_to_val e v) //; by apply wp_value'. Qed.
 Lemma wp_frame_l E e Q R : (R ★ wp E e Q) ⊑ wp E e (λ v, R ★ Q v).
 Proof. setoid_rewrite (comm _ R); apply wp_frame_r. Qed.
 Lemma wp_frame_later_l E e Q R :
