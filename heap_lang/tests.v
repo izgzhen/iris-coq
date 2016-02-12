@@ -7,17 +7,17 @@ Module LangTests.
   Definition add := ('21 + '21)%L.
   Goal ∀ σ, prim_step add σ ('42) σ None.
   Proof. intros; do_step done. Qed.
-  Definition rec_app : expr := ((rec: "f" "x" := "f" "x") '0)%L.
+  Definition rec_app : expr := ((rec: "f" "x" := "f" "x") '0).
   Goal ∀ σ, prim_step rec_app σ rec_app σ None.
   Proof.
     intros. rewrite /rec_app. (* FIXME: do_step does not work here *)
-    by eapply (Ectx_step  _ _ _ _ _ []), (BetaS _ _ _ _ '0)%L.
+    by eapply (Ectx_step  _ _ _ _ _ []), (BetaS _ _ _ _ '0).
   Qed.
   Definition lam : expr := λ: "x", "x" + '21.
   Goal ∀ σ, prim_step (lam '21)%L σ add σ None.
   Proof.
     intros. rewrite /lam. (* FIXME: do_step does not work here *)
-    by eapply (Ectx_step  _ _ _ _ _ []), (BetaS "" "x" ("x" + '21) _ '21)%L.
+    by eapply (Ectx_step  _ _ _ _ _ []), (BetaS "" "x" ("x" + '21) _ '21).
   Qed.
 End LangTests.
 
@@ -28,7 +28,7 @@ Module LiftingTests.
 
   Definition e  : expr :=
     let: "x" := ref '1 in "x" <- !"x" + '1;; !"x".
-  Goal ∀ σ E, ownP (Σ:=Σ) σ ⊑ wp E e (λ v, v = ('2)%L).
+  Goal ∀ σ E, ownP (Σ:=Σ) σ ⊑ wp E e (λ v, v = '2).
   Proof.
     move=> σ E. rewrite /e.
     rewrite -(wp_bindi (LetCtx _ _)) -wp_alloc_pst //=.
@@ -63,7 +63,7 @@ Module LiftingTests.
       if "x" ≤ '0 then -FindPred (-"x" + '2) '0 else FindPred "x" '0.
 
   Lemma FindPred_spec n1 n2 E Q :
-    (■ (n1 < n2) ∧ Q '(n2 - 1)) ⊑ wp E (FindPred 'n2 'n1)%L Q.
+    (■ (n1 < n2) ∧ Q '(n2 - 1)) ⊑ wp E (FindPred 'n2 'n1) Q.
   Proof.
     revert n1; apply löb_all_1=>n1.
     rewrite (comm uPred_and (■ _)%I) assoc; apply const_elim_r=>?.
