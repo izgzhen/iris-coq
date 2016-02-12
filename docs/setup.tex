@@ -162,11 +162,11 @@
 \newcommand{\judgment}[2]{\paragraph{#1}\hspace{\stretch{1}}\fbox{$#2$}}
 
 \newcommand{\pfn}{\rightharpoonup}
-\newcommand{\fpfn}{\stackrel{\textrm{fin}}{\rightharpoonup}}
+\newcommand\fpfn{}%\xrightharpoonup{\kern-0.25ex\textrm{fin}\kern-0.25ex}}
 \newcommand{\ra}{\rightarrow}
 \newcommand{\Ra}{\Rightarrow}
 \newcommand{\Lra}{\Leftrightarrow}
-\newcommand{\monra}{\stackrel{\textrm{mon}}{\rightarrow}}
+\newcommand\monra{}%\xrightarrow{\kern-0.25ex\textrm{mon}\kern-0.25ex}}
 
 \newcommand{\eqdef}{\triangleq}
 
@@ -325,9 +325,10 @@
 
 \newcommand{\wand}{\;{{\mbox{---}}\!\!{*}}\;}
 
-\newcommand{\fmapsto}[1][-]{\stackrel{#1}{\mapsto}}
+% oh my... I have to wrap the "-" in a \mathrm, otherwise all hell breaks lose...
+\newcommand{\fmapsto}[1][\mathrm{-}]{\xmapsto{#1}}
 \newcommand{\gmapsto}{\hookrightarrow}%
-\newcommand{\fgmapsto}[1][-]{\stackrel{#1}{\gmapsto}}%
+\newcommand{\fgmapsto}[1][\mathrm{-}]{\xhookrightarrow{#1}}%
 
 \newcommand{\dyn}[2]{\textlog{wp}({#1}, {#2})}
 \newcommand{\adyn}[2]{{#1}\;\llparenthesis{#2}\rrparenthesis}
