@@ -15,6 +15,10 @@ Local Transparent uPred_holds.
 Add Printing Constructor uPred.
 Instance: Params (@uPred_holds) 3.
 
+Delimit Scope uPred_scope with I.
+Bind Scope uPred_scope with uPred.
+Arguments uPred_holds {_} _%I _ _.
+
 Section cofe.
   Context {M : cmraT}.
   Instance uPred_equiv : Equiv (uPred M) := λ P Q, ∀ x n,
@@ -185,10 +189,6 @@ Program Definition uPred_valid {M A : cmraT} (a : A) : uPred M :=
   {| uPred_holds n x := ✓{n} a |}.
 Solve Obligations with naive_solver eauto 2 using cmra_validN_le.
 
-Delimit Scope uPred_scope with I.
-Bind Scope uPred_scope with uPred.
-Arguments uPred_holds {_} _%I _ _.
-Arguments uPred_entails _ _%I _%I.
 Notation "P ⊑ Q" := (uPred_entails P%I Q%I) (at level 70) : C_scope.
 Notation "(⊑)" := uPred_entails (only parsing) : C_scope.
 Notation "■ φ" := (uPred_const φ%C%type)

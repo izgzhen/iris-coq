@@ -1,8 +1,5 @@
 Require Export heap_lang.derived.
 
-Delimit Scope lang_scope with L.
-Bind Scope lang_scope with expr val.
-
 (* What about Arguments for hoare triples?. *)
 Arguments wp {_ _} _ _%L _.
 

@@ -49,6 +49,9 @@ Inductive val :=
   | InjRV (v : val)
   | LocV (l : loc).
 
+Delimit Scope lang_scope with L.
+Bind Scope lang_scope with expr val.
+
 Fixpoint of_val (v : val) : expr :=
   match v with
   | RecV f x e => Rec f x e
