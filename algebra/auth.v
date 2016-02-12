@@ -50,8 +50,8 @@ Proof.
     apply (conv_compl (chain_map own c) n).
 Qed.
 Canonical Structure authC := CofeT auth_cofe_mixin.
-Instance Auth_timeless (ea : excl A) (b : A) :
-  Timeless ea → Timeless b → Timeless (Auth ea b).
+Global Instance auth_timeless (x : auth A) :
+  Timeless (authoritative x) → Timeless (own x) → Timeless x.
 Proof. by intros ?? [??] [??]; split; simpl in *; apply (timeless _). Qed.
 Global Instance auth_leibniz : LeibnizEquiv A → LeibnizEquiv (auth A).
 Proof. by intros ? [??] [??] [??]; f_equal'; apply leibniz_equiv. Qed.
@@ -140,7 +140,7 @@ Proof.
   split; simpl.
   * by apply (@cmra_empty_valid A _).
   * by intros x; constructor; rewrite /= left_id.
-  * apply Auth_timeless; apply _.
+  * apply _.
 Qed.
 Lemma auth_frag_op a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.

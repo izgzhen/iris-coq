@@ -11,14 +11,6 @@ Section auth.
   Implicit Types a b : A.
   Implicit Types γ : gname.
 
-  (* Adding this locally only, since it overlaps with Auth_timelss in algebra/auth.v.
-     TODO: Would moving this to auth.v and making it global break things? *)
-  Local Instance AuthA_timeless (x : auth A) : Timeless x.
-  Proof.
-    (* FIXME: "destruct x; auto with typeclass_instances" should find this through Auth, right? *)
-    destruct x. apply Auth_timeless; apply _.
-  Qed.
-
   (* TODO: Need this to be proven somewhere. *)
   Hypothesis auth_valid :
     forall a b, (✓ Auth (Excl a) b : iPropG Λ Σ) ⊑ (∃ b', a ≡ b ⋅ b').
