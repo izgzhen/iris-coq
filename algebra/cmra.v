@@ -138,6 +138,8 @@ Class CMRAMonotone {A B : cmraT} (f : A → B) := {
 }.
 
 (** * Local updates *)
+(** The idea is that lemams taking this class will usually have L explicit,
+    and leave Lv implicit - it will be inferred by the typeclass machinery. *)
 Class LocalUpdate {A : cmraT} (Lv : A → Prop) (L : A → A) := {
   local_update_ne n :> Proper (dist n ==> dist n) L;
   local_updateN n x y : Lv x → ✓{n} (x ⋅ y) → L (x ⋅ y) ≡{n}≡ L x ⋅ y
