@@ -85,7 +85,7 @@ Section heap.
     P ⊑ wp E (Load (Loc l)) Q.
   Proof.
     rewrite /heap_ctx /heap_own. intros Hl HN Hctx HP.
-    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) id); simpl; eauto.
+    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) (λ _:(), id)); simpl; eauto.
     rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
     apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
     rewrite -assoc. apply const_elim_sep_l=>Hv /=.
@@ -93,7 +93,8 @@ Section heap.
     rewrite -wp_load_pst; first (apply sep_mono; first done); last first.
     { move: (Hv 0%nat l). rewrite lookup_omap lookup_op lookup_fmap Hl /=.
       case _:(hf !! l)=>[[?||]|]; by auto. }
-    apply later_mono, wand_intro_l. rewrite left_id const_equiv // left_id.
+    apply later_mono, wand_intro_l.
+    rewrite -(exist_intro ()) left_id const_equiv // left_id.
     by rewrite -later_intro.
   Qed.
 
@@ -115,7 +116,7 @@ Section heap.
     P ⊑ wp E (Store (Loc l) e) Q.
   Proof.
     rewrite /heap_ctx /heap_own. intros Hl Hval HN Hctx HP.
-    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) (alter (λ _, Excl v) l)); simpl; eauto.
+    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) (λ _:(), alter (λ _, Excl v) l)); simpl; eauto.
     rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
     apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
     rewrite -assoc. apply const_elim_sep_l=>Hv /=.
@@ -123,7 +124,8 @@ Section heap.
     rewrite -wp_store_pst; first (apply sep_mono; first done); try eassumption; last first.
     { move: (Hv 0%nat l). rewrite lookup_omap lookup_op lookup_fmap Hl /=.
       case _:(hf !! l)=>[[?||]|]; by auto. }
-    apply later_mono, wand_intro_l. rewrite const_equiv //; last first.
+    apply later_mono, wand_intro_l.
+    rewrite -(exist_intro ()) const_equiv //; last first.
     (* TODO I think there are some general fin_map lemmas hiding in here. *)
     { split.
       - exists (Excl v'). by rewrite lookup_fmap Hl.
@@ -165,7 +167,7 @@ Section heap.
     P ⊑ wp E (Cas (Loc l) e1 e2) Q.
   Proof.
     rewrite /heap_ctx /heap_own. intros He1 He2 Hl Hne HN Hctx HP.
-    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) id); simpl; eauto.
+    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) (λ _:(), id)); simpl; eauto.
     { split_ands; eexists; eauto. }
     rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
     apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
@@ -174,7 +176,8 @@ Section heap.
     rewrite -wp_cas_fail_pst; first (apply sep_mono; first done); try eassumption; last first.
     { move: (Hv 0%nat l). rewrite lookup_omap lookup_op lookup_fmap Hl /=.
       case _:(hf !! l)=>[[?||]|]; by auto. }
-    apply later_mono, wand_intro_l. rewrite left_id const_equiv // left_id.
+    apply later_mono, wand_intro_l.
+    rewrite -(exist_intro ()) left_id const_equiv // left_id.
     by rewrite -later_intro.
   Qed.
 
