@@ -51,6 +51,8 @@ Global Instance None_timeless : Timeless (@None A).
 Proof. inversion_clear 1; constructor. Qed.
 Global Instance Some_timeless x : Timeless x → Timeless (Some x).
 Proof. by intros ?; inversion_clear 1; constructor; apply timeless. Qed.
+Global Instance option_timeless `{!∀ a : A, Timeless a} (mx : option A) : Timeless mx.
+Proof. destruct mx; auto with typeclass_instances. Qed.
 End cofe.
 
 Arguments optionC : clear implicits.

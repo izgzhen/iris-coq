@@ -57,6 +57,11 @@ Proof.
     [by constructor|by apply lookup_ne].
 Qed.
 
+Global Instance map_timeless `{!∀ a : A, Timeless a} (g : gmap K A) : Timeless g.
+Proof.
+  intros m Hm i. apply timeless; eauto with typeclass_instances.
+Qed.
+
 Instance map_empty_timeless : Timeless (∅ : gmap K A).
 Proof.
   intros m Hm i; specialize (Hm i); rewrite lookup_empty in Hm |- *.

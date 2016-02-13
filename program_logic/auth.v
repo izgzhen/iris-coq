@@ -62,7 +62,7 @@ Section auth.
     apply (eq_rewrite b (a ⋅ a')
               (λ x, ■✓x ★ ▷φ x ★ own AuthI γ (● x ⋅ ◯ a))%I).
     { by move=>n ? ? /timeless_iff ->. }
-    { apply sep_elim_l', sep_elim_r'. done. (* FIXME why does "eauto using I" not work? *) }
+    { by eauto with I. }
     rewrite const_equiv // left_id comm.
     apply sep_mono; first done.
     by rewrite sep_elim_l.
@@ -84,7 +84,7 @@ Section auth.
      step-indices. However, since A is timeless, that should not be
      a restriction.  *)
   Lemma auth_fsa {X : Type} {FSA} (FSAs : FrameShiftAssertion (A:=X) FSA)
-        `{!LocalUpdate Lv L} N E P (Q : X → iPropG Λ Σ) γ a :
+        L `{!LocalUpdate Lv L} N E P (Q : X → iPropG Λ Σ) γ a :
     nclose N ⊆ E →
     P ⊑ auth_ctx AuthI γ N φ →
     P ⊑ (auth_own AuthI γ a ★ (∀ a', ■✓(a ⋅ a') ★ ▷φ (a ⋅ a') -★
