@@ -16,7 +16,7 @@ Section auth.
     forall a b, (✓ Auth (Excl a) b : iPropG Λ Σ) ⊑ (∃ b', a ≡ b ⋅ b').
 
   Definition auth_inv (γ : gname) : iPropG Λ Σ :=
-    (∃ a, own AuthI γ (● a) ★ φ a)%I.
+    (∃ a, (■✓a ∧ own AuthI γ (● a)) ★ φ a)%I.
   Definition auth_own (γ : gname) (a : A) : iPropG Λ Σ := own AuthI γ (◯ a).
   Definition auth_ctx (γ : gname) : iPropG Λ Σ := inv N (auth_inv γ).
 
@@ -29,6 +29,7 @@ Section auth.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     transitivity (▷auth_inv γ ★ auth_own γ a)%I.
     { rewrite /auth_inv -later_intro -(exist_intro a).
+      rewrite const_equiv // left_id.
       rewrite [(_ ★ φ _)%I]comm -assoc. apply sep_mono; first done.
       rewrite /auth_own -own_op auth_both_op. done. }
     rewrite (inv_alloc N) /auth_ctx pvs_frame_r. apply pvs_mono.
@@ -39,19 +40,23 @@ Section auth.
     True ⊑ pvs E E (auth_own γ ∅).
   Proof. by rewrite own_update_empty /auth_own. Qed.
 
-  Context {Hφ : ∀ n, Proper (dist n ==> dist n) φ}.
+  Context {φ_ne : ∀ n, Proper (dist n ==> dist n) φ}.
+  Local Instance φ_proper : Proper ((≡) ==> (≡)) φ := ne_proper _.
 
   Lemma auth_opened E a γ :
-    (▷auth_inv γ ★ auth_own γ a) ⊑ pvs E E (∃ a', ▷φ (a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a)).
+    (▷auth_inv γ ★ auth_own γ a) ⊑ pvs E E (∃ a', ■✓(a ⋅ a') ★ ▷φ (a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a)).
   Proof.
     rewrite /auth_inv. rewrite later_exist sep_exist_r. apply exist_elim=>b.
-    rewrite later_sep [(▷own _ _ _)%I]pvs_timeless !pvs_frame_r. apply pvs_mono.
-    rewrite /auth_own [(_ ★ ▷φ _)%I]comm -assoc -own_op.
-    rewrite own_valid_r auth_valid !sep_exist_l /=. apply exist_elim=>a'.
+    rewrite later_sep [(▷(_ ∧ _))%I]pvs_timeless !pvs_frame_r. apply pvs_mono.
+    rewrite always_and_sep_l -!assoc. apply const_elim_sep_l=>Hv.
+    rewrite /auth_own [(▷φ _ ★ _)%I]comm assoc -own_op.
+    rewrite own_valid_r auth_valid sep_exist_l sep_exist_r /=. apply exist_elim=>a'.
     rewrite [∅ ⋅ _]left_id -(exist_intro a').
     apply (eq_rewrite b (a ⋅ a')
-              (λ x, ▷φ x ★ own AuthI γ (● x ⋅ ◯ a))%I); first by solve_ne.
-    { by rewrite !sep_elim_r. }
+              (λ x, ■✓x ★ ▷φ x ★ own AuthI γ (● x ⋅ ◯ a))%I).
+    { by move=>n ? ? /timeless_iff ->. }
+    { apply sep_elim_l', sep_elim_r'. done. (* FIXME why does "eauto using I not work? *) }
+    rewrite const_equiv // left_id comm.
     apply sep_mono; first done.
     by rewrite sep_elim_l.
   Qed.
@@ -64,7 +69,7 @@ Section auth.
     intros HL Hv. rewrite /auth_inv /auth_own -(exist_intro (L a ⋅ a')).
     rewrite later_sep [(_ ★ ▷φ _)%I]comm -assoc.
     rewrite -pvs_frame_l. apply sep_mono; first done.
-    rewrite -later_intro -own_op.
+    rewrite const_equiv // left_id -later_intro -own_op.
     by apply own_update, (auth_local_update_l L).
   Qed.
 
@@ -72,20 +77,22 @@ Section auth.
      step-indices. However, since A is timeless, that should not be
      a restriction.  *)
   Lemma auth_fsa {X : Type} {FSA} (FSAs : FrameShiftAssertion (A:=X) FSA)
-        `{!LocalUpdate Lv L} E P (Q : X → iPropG Λ Σ) R γ a :
+        `{!LocalUpdate Lv L} E P (Q : X → iPropG Λ Σ) γ a :
     nclose N ⊆ E →
-    R ⊑ auth_ctx γ →
-    R ⊑ (auth_own γ a ★ (∀ a', ▷φ (a ⋅ a') -★
+    P ⊑ auth_ctx γ →
+    P ⊑ (auth_own γ a ★ (∀ a', ■✓(a ⋅ a') ★ ▷φ (a ⋅ a') -★
         FSA (E ∖ nclose N) (λ x, ■(Lv a ∧ ✓(L a⋅a')) ★ ▷φ (L a ⋅ a') ★ (auth_own γ (L a) -★ Q x)))) →
-    R ⊑ FSA E Q.
+    P ⊑ FSA E Q.
   Proof.
     rewrite /auth_ctx=>HN Hinv Hinner.
-    eapply inv_fsa; [eassumption..|]. rewrite Hinner=>{Hinner Hinv R}.
+    eapply inv_fsa; [eassumption..|]. rewrite Hinner=>{Hinner Hinv P}.
     apply wand_intro_l.
     rewrite assoc auth_opened !pvs_frame_r !sep_exist_r.
     apply fsa_strip_pvs; first done. apply exist_elim=>a'.
     rewrite (forall_elim a'). rewrite [(▷_ ★ _)%I]comm.
-    rewrite -[((_ ★ ▷_) ★ _)%I]assoc wand_elim_r fsa_frame_l.
+    (* Getting this wand eliminated is really annoying. *)
+    rewrite [(■_ ★ _)%I]comm -!assoc [(▷φ _ ★ _ ★ _)%I]assoc [(▷φ _ ★ _)%I]comm.
+    rewrite wand_elim_r fsa_frame_l.
     apply fsa_mono_pvs; first done. intros x. rewrite comm -!assoc.
     apply const_elim_sep_l=>-[HL Hv].
     rewrite assoc [(_ ★ (_ -★ _))%I]comm -assoc.
