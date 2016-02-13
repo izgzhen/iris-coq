@@ -1,6 +1,6 @@
 (** This file is essentially a bunch of testcases. *)
 Require Import program_logic.ownership.
-Require Import heap_lang.substitution heap_lang.tactics heap_lang.notation.
+From heap_lang Require Import substitution tactics notation.
 Import uPred.
 
 Module LangTests.
