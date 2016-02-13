@@ -84,8 +84,7 @@ Section heap.
     P ⊑ wp E (Load (Loc l)) Q.
   Proof.
     rewrite /heap_ctx /heap_own. intros HN Hl Hctx HP.
-    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _ _) id).
-    { eassumption. } { eassumption. }
+    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) id); simpl; eauto.
     rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
     apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
     rewrite -assoc. apply const_elim_sep_l=>Hv /=.
@@ -95,9 +94,6 @@ Section heap.
       case _:(hf !! l)=>[[?||]|]; by auto. }
     apply later_mono, wand_intro_l. rewrite left_id const_equiv // left_id.
     by rewrite -later_intro.
-  Unshelve.
-  (* TODO Make it so that this becomes a goal, not shelved. *)
-  { eexists; eauto. }
   Qed.
 
   Lemma wp_load N E γ l v P Q :
@@ -118,8 +114,7 @@ Section heap.
     P ⊑ wp E (Store (Loc l) e) Q.
   Proof.
     rewrite /heap_ctx /heap_own. intros HN Hval Hl Hctx HP.
-    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _ _) (alter (λ _, Excl v) l)).
-    { eassumption. } { eassumption. }
+    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) (alter (λ _, Excl v) l)); simpl; eauto.
     rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
     apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
     rewrite -assoc. apply const_elim_sep_l=>Hv /=.
@@ -147,9 +142,6 @@ Section heap.
       case (hf !! l')=>[[?||]|]; auto; contradiction.
     - rewrite /from_heap /to_heap lookup_insert_ne // !lookup_omap !lookup_op !lookup_fmap.
       rewrite lookup_insert_ne //.
-  Unshelve.
-  (* TODO Make it so that this becomes a goal, not shelved. *)
-  { eexists; eauto. }
   Qed.
 
   Lemma wp_store N E γ l e v v' P Q :
