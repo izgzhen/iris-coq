@@ -1,5 +1,5 @@
 (** This file tests a bunch of things. *)
-Require Import program_logic.model.
+From program_logic Require Import model.
 
 Module ModelTest. (* Make sure we got the notations right. *)
   Definition iResTest {Λ : language} {Σ : iFunctor}

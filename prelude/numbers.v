@@ -3,9 +3,9 @@
 (** This file collects some trivial facts on the Coq types [nat] and [N] for
 natural numbers, and the type [Z] for integers. It also declares some useful
 notations. *)
-Require Export Eqdep PArith NArith ZArith NPeano.
-Require Import QArith Qcanon.
-Require Export prelude.base prelude.decidable prelude.option.
+From Coq Require Export Eqdep PArith NArith ZArith NPeano.
+From Coq Require Import QArith Qcanon.
+From prelude Require Export base decidable option.
 Open Scope nat_scope.
 
 Coercion Z.of_nat : nat >-> Z.
@@ -50,7 +50,7 @@ Proof.
     * clear nat_le_pi. intros; exfalso; auto with lia.
     * injection 1. intros Hy. by case (nat_le_pi x y p y' q Hy). }
   intros x y p q.
-  by apply (eq_dep_eq_dec (λ x y, decide (x = y))), aux.
+  by apply (Eqdep_dec.eq_dep_eq_dec (λ x y, decide (x = y))), aux.
 Qed.
 Instance nat_lt_pi: ∀ x y : nat, ProofIrrel (x < y).
 Proof. apply _. Qed.

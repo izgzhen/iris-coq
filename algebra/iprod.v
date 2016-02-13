@@ -1,5 +1,5 @@
-Require Export algebra.cmra.
-Require Import algebra.functor.
+From algebra Require Export cmra.
+From algebra Require Import functor.
 
 (** * Indexed product *)
 (** Need to put this in a definition to make canonical structures to work. *)

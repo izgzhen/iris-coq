@@ -1,5 +1,5 @@
-Require Import program_logic.ownership.
-Require Export program_logic.pviewshifts program_logic.invariants program_logic.ghost_ownership.
+From program_logic Require Import ownership.
+From program_logic Require Export pviewshifts invariants ghost_ownership.
 Import uPred.
 
 Definition vs {Λ Σ} (E1 E2 : coPset) (P Q : iProp Λ Σ) : iProp Λ Σ :=

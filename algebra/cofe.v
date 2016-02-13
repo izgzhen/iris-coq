@@ -1,4 +1,4 @@
-Require Export algebra.base.
+From algebra Require Export base.
 
 (** Unbundeled version *)
 Class Dist A := dist : nat → relation A.

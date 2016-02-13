@@ -1,7 +1,7 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
 (** This file implements bsets as functions into Prop. *)
-Require Export prelude.prelude.
+From prelude Require Export prelude.
 
 Record bset (A : Type) : Type := mkBSet { bset_car : A → bool }.
 Arguments mkBSet {_} _.

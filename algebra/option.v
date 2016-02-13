@@ -1,5 +1,5 @@
-Require Export algebra.cmra.
-Require Import algebra.functor.
+From algebra Require Export cmra.
+From algebra Require Import functor.
 
 (* COFE *)
 Section cofe.

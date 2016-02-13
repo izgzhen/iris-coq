@@ -1,4 +1,4 @@
-Require Export program_logic.model.
+From program_logic Require Export model.
 
 Definition ownI {Λ Σ} (i : positive) (P : iProp Λ Σ) : iProp Λ Σ :=
   uPred_ownM (Res {[ i ↦ to_agree (Next (iProp_unfold P)) ]} ∅ ∅).

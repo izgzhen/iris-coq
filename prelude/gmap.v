@@ -2,8 +2,8 @@
 (* This file is distributed under the terms of the BSD license. *)
 (** This file implements finite maps and finite sets with keys of any countable
 type. The implementation is based on [Pmap]s, radix-2 search trees. *)
-Require Export prelude.countable prelude.fin_maps prelude.fin_map_dom.
-Require Import prelude.pmap prelude.mapset.
+From prelude Require Export countable fin_maps fin_map_dom.
+From prelude Require Import pmap mapset.
 
 (** * The data structure *)
 (** We pack a [Pmap] together with a proof that ensures that all keys correspond

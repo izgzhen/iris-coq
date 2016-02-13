@@ -1,4 +1,4 @@
-Require Export algebra.cofe.
+From algebra Require Export cofe.
 
 Structure language := Language {
   expr : Type;

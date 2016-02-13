@@ -1,5 +1,6 @@
-Require Export algebra.cmra prelude.gmap algebra.option.
-Require Import algebra.functor.
+From algebra Require Export cmra option.
+From prelude Require Export gmap.
+From algebra Require Import functor.
 
 Section cofe.
 Context `{Countable K} {A : cofeT}.

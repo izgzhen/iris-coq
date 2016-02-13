@@ -1,5 +1,5 @@
-Require Export algebra.excl.
-Require Import algebra.functor.
+From algebra Require Export excl.
+From algebra Require Import functor.
 Local Arguments validN _ _ _ !_ /.
 
 Record auth (A : Type) : Type := Auth { authoritative : excl A ; own : A }.

@@ -1,5 +1,6 @@
-Require Export program_logic.language prelude.strings.
-Require Import prelude.gmap.
+From program_logic Require Export language.
+From prelude Require Export strings.
+From prelude Require Import gmap.
 
 Module heap_lang.
 Open Scope Z_scope.

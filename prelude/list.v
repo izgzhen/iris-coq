@@ -2,8 +2,8 @@
 (* This file is distributed under the terms of the BSD license. *)
 (** This file collects general purpose definitions and theorems on lists that
 are not in the Coq standard library. *)
-Require Export Permutation.
-Require Export prelude.numbers prelude.base prelude.decidable prelude.option.
+From Coq Require Export Permutation.
+From prelude Require Export numbers base decidable option.
 
 Arguments length {_} _.
 Arguments cons {_} _ _.

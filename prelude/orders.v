@@ -2,8 +2,8 @@
 (* This file is distributed under the terms of the BSD license. *)
 (** This file collects common properties of pre-orders and semi lattices. This
 theory will mainly be used for the theory on collections and finite maps. *)
-Require Export Sorted.
-Require Export prelude.base prelude.decidable prelude.tactics prelude.list.
+From Coq Require Export Sorted.
+From prelude Require Export base decidable tactics list.
 
 (** * Arbitrary pre-, parial and total orders *)
 (** Properties about arbitrary pre-, partial, and total orders. We do not use

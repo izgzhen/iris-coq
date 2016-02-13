@@ -1,5 +1,5 @@
-Require Export algebra.cmra.
-Require Import prelude.fin_maps.
+From algebra Require Export cmra.
+From prelude Require Import fin_maps.
 
 Fixpoint big_op {A : cmraT} `{Empty A} (xs : list A) : A :=
   match xs with [] => ∅ | x :: xs => x ⋅ big_op xs end.

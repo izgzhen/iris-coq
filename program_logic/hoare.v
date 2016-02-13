@@ -1,4 +1,4 @@
-Require Export program_logic.weakestpre program_logic.viewshifts.
+From program_logic Require Export weakestpre viewshifts.
 
 Definition ht {Λ Σ} (E : coPset) (P : iProp Λ Σ)
     (e : expr Λ) (Q : val Λ → iProp Λ Σ) : iProp Λ Σ := (□ (P → wp E e Q))%I.

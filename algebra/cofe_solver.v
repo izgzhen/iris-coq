@@ -1,4 +1,4 @@
-Require Export algebra.cofe.
+From algebra Require Export cofe.
 
 Record solution (F : cofeT → cofeT → cofeT) := Solution {
   solution_car :> cofeT;

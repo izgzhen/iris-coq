@@ -1,4 +1,4 @@
-Require Export algebra.cmra.
+From algebra Require Export cmra.
 
 (** From disjoint pcm *)
 Record validity {A} (P : A → Prop) : Type := Validity {

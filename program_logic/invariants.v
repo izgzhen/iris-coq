@@ -1,6 +1,7 @@
-Require Export algebra.base prelude.countable prelude.co_pset.
-Require Import program_logic.ownership.
-Require Export program_logic.pviewshifts program_logic.weakestpre.
+From algebra Require Export base.
+From prelude Require Export countable co_pset.
+From program_logic Require Import ownership.
+From program_logic Require Export pviewshifts weakestpre.
 Import uPred.
 
 Local Hint Extern 100 (@eq coPset _ _) => solve_elem_of.

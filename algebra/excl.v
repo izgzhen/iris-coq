@@ -1,5 +1,5 @@
-Require Export algebra.cmra.
-Require Import algebra.functor.
+From algebra Require Export cmra.
+From algebra Require Import functor.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 

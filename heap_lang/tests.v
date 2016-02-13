@@ -1,5 +1,5 @@
 (** This file is essentially a bunch of testcases. *)
-Require Import program_logic.ownership.
+From program_logic Require Import ownership.
 From heap_lang Require Import substitution tactics notation.
 Import uPred.
 

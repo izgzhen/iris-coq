@@ -1,7 +1,8 @@
-Require Export program_logic.weakestpre heap_lang.heap_lang.
-Require Import program_logic.lifting.
-Require Import program_logic.ownership. (* for ownP *)
-Require Import heap_lang.tactics.
+From program_logic Require Export weakestpre.
+From heap_lang Require Export heap_lang.
+From program_logic Require Import lifting.
+From program_logic Require Import ownership. (* for ownP *)
+From heap_lang Require Import tactics.
 Export heap_lang. (* Prefer heap_lang names over language names. *)
 Import uPred.
 Local Hint Extern 0 (language.reducible _ _) => do_step ltac:(eauto 2).

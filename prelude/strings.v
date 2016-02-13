@@ -1,7 +1,8 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
-Require Import Ascii.
-Require Export String prelude.countable.
+From Coq Require Import Ascii.
+From Coq Require Export String.
+From prelude Require Export countable.
 
 (** * Fix scopes *)
 Open Scope string_scope.

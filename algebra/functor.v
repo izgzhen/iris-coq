@@ -1,4 +1,4 @@
-Require Export algebra.cmra.
+From algebra Require Export cmra.
 
 (** * Functors from COFE to CMRA *)
 (* TODO RJ: Maybe find a better name for this? It is not PL-specific any more. *)

@@ -1,5 +1,6 @@
-Require Export algebra.iprod program_logic.pviewshifts.
-Require Import program_logic.ownership.
+From algebra Require Export iprod.
+From program_logic Require Export pviewshifts.
+From program_logic Require Import ownership.
 Import uPred.
 
 (** Index of a CMRA in the product of global CMRAs. *)

@@ -3,8 +3,9 @@
 (** This file collects definitions and theorems on finite collections. Most
 importantly, it implements a fold and size function and some useful induction
 principles on finite collections . *)
-Require Import Permutation prelude.relations prelude.listset.
-Require Export prelude.numbers prelude.collections.
+From Coq Require Import Permutation.
+From prelude Require Import relations listset.
+From prelude Require Export numbers collections.
 
 Instance collection_size `{Elements A C} : Size C := length ∘ elements.
 Definition collection_fold `{Elements A C} {B}

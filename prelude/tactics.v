@@ -2,9 +2,9 @@
 (* This file is distributed under the terms of the BSD license. *)
 (** This file collects general purpose tactics that are used throughout
 the development. *)
-Require Import Omega.
-Require Export Psatz.
-Require Export prelude.base.
+From Coq Require Import Omega.
+From Coq Require Export Psatz.
+From prelude Require Export base.
 
 Lemma f_equal_dep {A B} (f g : ∀ x : A, B x) x : f = g → f x = g x.
 Proof. intros ->; reflexivity. Qed.

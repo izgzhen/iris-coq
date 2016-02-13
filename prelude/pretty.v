@@ -1,8 +1,8 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
-Require Export prelude.strings.
-Require Import prelude.relations.
-Require Import Ascii.
+From prelude Require Export strings.
+From prelude Require Import relations.
+From Coq Require Import Ascii.
 
 Class Pretty A := pretty : A → string.
 Definition pretty_N_char (x : N) : ascii :=

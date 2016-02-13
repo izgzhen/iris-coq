@@ -4,8 +4,8 @@
 These are particularly useful as we define the operational semantics as a
 small step semantics. This file defines a hint database [ars] containing
 some theorems on abstract rewriting systems. *)
-Require Import Wf_nat.
-Require Export prelude.tactics prelude.base.
+From Coq Require Import Wf_nat.
+From prelude Require Export tactics base.
 
 (** * Definitions *)
 Section definitions.

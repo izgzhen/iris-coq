@@ -1,6 +1,6 @@
-Require Export prelude.co_pset.
-Require Export program_logic.model.
-Require Import program_logic.ownership program_logic.wsat.
+From prelude Require Export co_pset.
+From program_logic Require Export model.
+From program_logic Require Import ownership wsat.
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 100 (@eq coPset _ _) => solve_elem_of.
 Local Hint Extern 100 (_ ∉ _) => solve_elem_of.

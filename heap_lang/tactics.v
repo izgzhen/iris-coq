@@ -1,5 +1,5 @@
-Require Export heap_lang.heap_lang.
-Require Import prelude.fin_maps.
+From heap_lang Require Export heap_lang.
+From prelude Require Import fin_maps.
 Import heap_lang.
 
 (** The tactic [inv_step] performs inversion on hypotheses of the shape

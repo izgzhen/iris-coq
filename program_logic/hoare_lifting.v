@@ -1,5 +1,5 @@
-Require Export program_logic.hoare program_logic.lifting.
-Require Import program_logic.ownership.
+From program_logic Require Export hoare lifting.
+From program_logic Require Import ownership.
 Import uPred.
 
 Local Notation "{{ P } } ef ?@ E {{ Q } }" :=

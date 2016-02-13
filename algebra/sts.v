@@ -1,5 +1,6 @@
-Require Export algebra.cmra.
-Require Import prelude.sets algebra.dra.
+From algebra Require Export cmra.
+From prelude Require Import sets.
+From algebra Require Import dra.
 Local Arguments valid _ _ !_ /.
 Local Arguments op _ _ !_ !_ /.
 Local Arguments unit _ _ !_ /.

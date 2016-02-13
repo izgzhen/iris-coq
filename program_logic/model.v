@@ -1,5 +1,6 @@
-Require Export algebra.upred program_logic.resources.
-Require Import algebra.cofe_solver.
+From algebra Require Export upred.
+From program_logic Require Export resources.
+From algebra Require Import cofe_solver.
 
 (* The Iris program logic is parametrized by a functor from the category of
 COFEs to the category of CMRAs, which is instantiated with [laterC iProp]. The

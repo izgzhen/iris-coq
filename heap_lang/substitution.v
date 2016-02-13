@@ -1,4 +1,4 @@
-Require Export heap_lang.derived.
+From heap_lang Require Export derived.
 
 (** We define an alternative notion of substitution [gsubst e x ev] that
 preserves the expression [e] syntactically in case the variable [x] does not

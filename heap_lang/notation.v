@@ -1,4 +1,4 @@
-Require Export heap_lang.derived.
+From heap_lang Require Export derived.
 
 (* What about Arguments for hoare triples?. *)
 Arguments wp {_ _} _ _%L _.

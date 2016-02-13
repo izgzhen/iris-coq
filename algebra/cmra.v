@@ -1,4 +1,4 @@
-Require Export algebra.cofe.
+From algebra Require Export cofe.
 
 Class Unit (A : Type) := unit : A → A.
 Instance: Params (@unit) 2.

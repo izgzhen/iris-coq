@@ -1,4 +1,4 @@
-Require Export heap_lang.lifting.
+From heap_lang Require Export lifting.
 Import uPred.
 
 (** Define some derived forms, and derived lemmas about them. *)

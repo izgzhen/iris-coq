@@ -1,4 +1,4 @@
-Require Export algebra.cmra.
+From algebra Require Export cmra.
 Local Hint Extern 1 (_ ≼ _) => etransitivity; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etransitivity; [|eassumption].
 Local Hint Extern 10 (_ ≤ _) => omega.
