@@ -92,8 +92,8 @@ Lemma vs_open_close N E P Q R :
 Proof.
   intros; apply (always_intro _ _), impl_intro_l.
   rewrite always_and_sep_r assoc [(P ★ _)%I]comm -assoc.
-  rewrite -(pvs_open_close E N) //. apply sep_mono; first done.
-  apply wand_intro_l.
+  apply: (pvs_open_close E N); [by eauto using sep_elim_l..|].
+  rewrite sep_elim_r. apply wand_intro_l.
   (* Oh wow, this is annyoing... *)
   rewrite assoc -always_and_sep_r'.
   by rewrite /vs always_elim impl_elim_r.

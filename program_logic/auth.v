@@ -72,15 +72,16 @@ Section auth.
      step-indices. However, since A is timeless, that should not be
      a restriction.  *)
   Lemma auth_fsa {X : Type} {FSA} (FSAs : FrameShiftAssertion (A:=X) FSA)
-        `{!LocalUpdate Lv L} E P (Q : X → iPropG Λ Σ) γ a :
+        `{!LocalUpdate Lv L} E P (Q : X → iPropG Λ Σ) R γ a :
     nclose N ⊆ E →
-    (auth_ctx γ ★ auth_own γ a ★ (∀ a', ▷φ (a ⋅ a') -★
-        FSA (E ∖ nclose N) (λ x, ■(Lv a ∧ ✓(L a⋅a')) ★ ▷φ (L a ⋅ a') ★ (auth_own γ (L a) -★ Q x))))
-      ⊑ FSA E Q.
+    R ⊑ auth_ctx γ →
+    R ⊑ (auth_own γ a ★ (∀ a', ▷φ (a ⋅ a') -★
+        FSA (E ∖ nclose N) (λ x, ■(Lv a ∧ ✓(L a⋅a')) ★ ▷φ (L a ⋅ a') ★ (auth_own γ (L a) -★ Q x)))) →
+    R ⊑ FSA E Q.
   Proof.
-    rewrite /auth_ctx=>HN.
-    rewrite -inv_fsa; last eassumption.
-    apply sep_mono; first done. apply wand_intro_l.
+    rewrite /auth_ctx=>HN Hinv Hinner.
+    eapply inv_fsa; [eassumption..|]. rewrite Hinner=>{Hinner Hinv R}.
+    apply wand_intro_l.
     rewrite assoc auth_opened !pvs_frame_r !sep_exist_r.
     apply fsa_strip_pvs; first done. apply exist_elim=>a'.
     rewrite (forall_elim a'). rewrite [(▷_ ★ _)%I]comm.

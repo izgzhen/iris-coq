@@ -66,12 +66,14 @@ Proof. by rewrite always_always. Qed.
 
 (** Invariants can be opened around any frame-shifting assertion. *)
 Lemma inv_fsa {A : Type} {FSA} (FSAs : FrameShiftAssertion (A:=A) FSA)
-      E N P (Q : A → iProp Λ Σ) :
+      E N P (Q : A → iProp Λ Σ) R :
   nclose N ⊆ E →
-  (inv N P ★ (▷P -★ FSA (E ∖ nclose N) (λ a, ▷P ★ Q a))) ⊑ FSA E Q.
+  R ⊑ inv N P →
+  R ⊑ (▷P -★ FSA (E ∖ nclose N) (λ a, ▷P ★ Q a)) →
+  R ⊑ FSA E Q.
 Proof.
-  move=>HN.
-  rewrite /inv sep_exist_r. apply exist_elim=>i.
+  move=>HN Hinv Hinner. rewrite -[R](idemp (∧)%I) {1}Hinv Hinner =>{Hinv Hinner R}.
+  rewrite always_and_sep_l /inv sep_exist_r. apply exist_elim=>i.
   rewrite always_and_sep_l -assoc. apply const_elim_sep_l=>HiN.
   rewrite -(fsa_trans3 E (E ∖ {[encode i]})) //; last by solve_elem_of+.
   (* Add this to the local context, so that solve_elem_of finds it. *)
@@ -87,16 +89,20 @@ Qed.
 
 (* Derive the concrete forms for pvs and wp, because they are useful. *)
 
-Lemma pvs_open_close E N P Q :
+Lemma pvs_open_close E N P Q R :
   nclose N ⊆ E →
-  (inv N P ★ (▷P -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷P ★ Q))) ⊑ pvs E E Q.
-Proof. move=>HN. by rewrite (inv_fsa pvs_fsa). Qed.
+  R ⊑ inv N P →
+  R ⊑ (▷P -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷P ★ Q)) →
+  R ⊑ pvs E E Q.
+Proof. move=>HN ? ?. apply: (inv_fsa pvs_fsa); eassumption. Qed.
 
-Lemma wp_open_close E e N P (Q : val Λ → iProp Λ Σ) :
+Lemma wp_open_close E e N P (Q : val Λ → iProp Λ Σ) R :
   atomic e → nclose N ⊆ E →
-  (inv N P ★ (▷P -★ wp (E ∖ nclose N) e (λ v, ▷P ★ Q v))) ⊑ wp E e Q.
+  R ⊑ inv N P →
+  R ⊑ (▷P -★ wp (E ∖ nclose N) e (λ v, ▷P ★ Q v)) →
+  R ⊑ wp E e Q.
 Proof.
-  move=>He HN. by rewrite (inv_fsa (wp_fsa e _)). Qed.
+  move=>He HN ? ?. apply: (inv_fsa (wp_fsa e _)); eassumption. Qed.
 
 Lemma inv_alloc N P : ▷ P ⊑ pvs N N (inv N P).
 Proof. by rewrite /inv (pvs_allocI N); last apply coPset_suffixes_infinite. Qed.
