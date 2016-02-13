@@ -14,9 +14,6 @@ Proof. split; apply _. Qed.
 Definition to_heap : state → heapRA := fmap Excl.
 Definition from_heap : heapRA → state := omap (maybe Excl).
 
-Lemma from_to_heap σ : from_heap (to_heap σ) = σ.
-Proof. apply map_eq=> l. rewrite lookup_omap lookup_fmap. by case (σ !! l). Qed.
-
 (* TODO: Do we want to expose heap ownership based on the state, or the heapRA?
    The former does not expose the annoying "Excl", so for now I am going for
    that. We should be able to derive the lemmas we want for this, too. *)
@@ -37,16 +34,22 @@ Section heap.
   Implicit Types h g : heapRA.
   Implicit Types γ : gname.
 
-  Global Instance heap_inv_proper : Proper ((≡) ==> (≡)) (heap_inv HeapI).
+  Lemma from_to_heap σ : from_heap (to_heap σ) = σ.
   Proof.
-    move=>? ? EQ. rewrite /heap_inv /from_heap.
-    (* TODO I guess we need some lemma about omap? *)
-  Admitted. (* FIXME... I can't make progress otherwise... *)
+    apply map_eq=>l. rewrite lookup_omap lookup_fmap. by case (σ !! l).
+  Qed.
+  Lemma to_heap_valid σ : ✓ to_heap σ.
+  Proof. intros n l. rewrite lookup_fmap. by case (σ !! l). Qed.
+  Hint Resolve to_heap_valid.
+
+  Global Instance heap_inv_proper : Proper ((≡) ==> (≡)) (heap_inv HeapI).
+  Proof. by intros h1 h2; fold_leibniz=> ->. Qed.
 
   Lemma heap_own_op γ σ1 σ2 :
     (heap_own HeapI γ σ1 ★ heap_own HeapI γ σ2)%I
     ≡ (■ (σ1 ⊥ₘ σ2) ∧ heap_own HeapI γ (σ1 ∪ σ2))%I.
-  Proof. (* TODO. *)
+  Proof.
+ (* TODO. *)
   Abort.
 
   Lemma heap_own_mapsto γ σ l v :
@@ -60,11 +63,7 @@ Section heap.
 
   Lemma heap_alloc N σ :
     ownP σ ⊑ pvs N N (∃ γ, heap_ctx HeapI γ N ∧ heap_own HeapI γ σ).
-  Proof.
-    rewrite -{1}[σ]from_to_heap.
-    rewrite -(auth_alloc _ N); first done.
-    move=>n l. rewrite lookup_fmap. by case _:(σ !! l)=>[v|] /=.
-  Qed.
+  Proof. by rewrite -{1}[σ]from_to_heap -(auth_alloc _ N). Qed.
 
   Lemma wp_load_heap N E γ σ l v P Q :
     nclose N ⊆ E →
