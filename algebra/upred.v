@@ -97,7 +97,7 @@ Qed.
 
 (** logical entailement *)
 Definition uPred_entails {M} (P Q : uPred M) := ∀ x n, ✓{n} x → P n x → Q n x.
-Hint Extern 0 (uPred_entails ?P ?P) => reflexivity.
+Hint Extern 0 (uPred_entails _ _) => reflexivity.
 Instance uPred_entails_rewrite_relation M : RewriteRelation (@uPred_entails M).
 
 (** logical connectives *)

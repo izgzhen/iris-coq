@@ -11,7 +11,7 @@ Notation "(⋅)" := op (only parsing) : C_scope.
 Definition included `{Equiv A, Op A} (x y : A) := ∃ z, y ≡ x ⋅ z.
 Infix "≼" := included (at level 70) : C_scope.
 Notation "(≼)" := included (only parsing) : C_scope.
-Hint Extern 0 (?x ≼ ?y) => reflexivity.
+Hint Extern 0 (_ ≼ _) => reflexivity.
 Instance: Params (@included) 3.
 
 Class Minus (A : Type) := minus : A → A → A.
@@ -32,7 +32,7 @@ Definition includedN `{Dist A, Op A} (n : nat) (x y : A) := ∃ z, y ≡{n}≡ x
 Notation "x ≼{ n } y" := (includedN n x y)
   (at level 70, format "x  ≼{ n }  y") : C_scope.
 Instance: Params (@includedN) 4.
-Hint Extern 0 (?x ≼{_} ?y) => reflexivity.
+Hint Extern 0 (_ ≼{_} _) => reflexivity.
 
 Record CMRAMixin A `{Dist A, Equiv A, Unit A, Op A, ValidN A, Minus A} := {
   (* setoids *)

@@ -53,7 +53,7 @@ Notation "(≠)" := (λ x y, x ≠ y) (only parsing) : C_scope.
 Notation "( x ≠)" := (λ y, x ≠ y) (only parsing) : C_scope.
 Notation "(≠ x )" := (λ y, y ≠ x) (only parsing) : C_scope.
 
-Hint Extern 0 (?x = ?x) => reflexivity.
+Hint Extern 0 (_ = _) => reflexivity.
 Hint Extern 100 (_ ≠ _) => discriminate.
 
 Notation "(→)" := (λ A B, A → B) (only parsing) : C_scope.
@@ -198,7 +198,7 @@ Instance: Params (@equiv) 2.
 (for types that have an [Equiv] instance) rather than the standard Leibniz
 equality. *)
 Instance equiv_default_relation `{Equiv A} : DefaultRelation (≡) | 3.
-Hint Extern 0 (?x ≡ ?y) => reflexivity.
+Hint Extern 0 (_ ≡ _) => reflexivity.
 Hint Extern 0 (_ ≡ _) => symmetry; assumption.
 
 (** ** Operations on collections *)

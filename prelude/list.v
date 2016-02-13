@@ -220,8 +220,8 @@ Definition suffix_of {A} : relation (list A) := λ l1 l2, ∃ k, l2 = k ++ l1.
 Definition prefix_of {A} : relation (list A) := λ l1 l2, ∃ k, l2 = l1 ++ k.
 Infix "`suffix_of`" := suffix_of (at level 70) : C_scope.
 Infix "`prefix_of`" := prefix_of (at level 70) : C_scope.
-Hint Extern 0 (?x `prefix_of` ?y) => reflexivity.
-Hint Extern 0 (?x `suffix_of` ?y) => reflexivity.
+Hint Extern 0 (_ `prefix_of` _) => reflexivity.
+Hint Extern 0 (_ `suffix_of` _) => reflexivity.
 
 Section prefix_suffix_ops.
   Context `{∀ x y : A, Decision (x = y)}.
@@ -249,7 +249,7 @@ Inductive sublist {A} : relation (list A) :=
   | sublist_skip x l1 l2 : sublist l1 l2 → sublist (x :: l1) (x :: l2)
   | sublist_cons x l1 l2 : sublist l1 l2 → sublist l1 (x :: l2).
 Infix "`sublist`" := sublist (at level 70) : C_scope.
-Hint Extern 0 (?x `sublist` ?y) => reflexivity.
+Hint Extern 0 (_ `sublist` _) => reflexivity.
 
 (** A list [l2] contains a list [l1] if [l2] is obtained by removing elements
 from [l1] while possiblity changing the order. *)
@@ -260,7 +260,7 @@ Inductive contains {A} : relation (list A) :=
   | contains_cons x l1 l2 : contains l1 l2 → contains l1 (x :: l2)
   | contains_trans l1 l2 l3 : contains l1 l2 → contains l2 l3 → contains l1 l3.
 Infix "`contains`" := contains (at level 70) : C_scope.
-Hint Extern 0 (?x `contains` ?y) => reflexivity.
+Hint Extern 0 (_ `contains` _) => reflexivity.
 
 Section contains_dec_help.
   Context {A} {dec : ∀ x y : A, Decision (x = y)}.
