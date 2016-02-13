@@ -65,6 +65,17 @@ Section heap.
     ownP σ ⊑ pvs N N (∃ γ, heap_ctx HeapI γ N ∧ heap_own HeapI γ σ).
   Proof. by rewrite -{1}[σ]from_to_heap -(auth_alloc _ N). Qed.
 
+  Lemma wp_alloc_heap N E γ σ e v P Q :
+    nclose N ⊆ E →  to_val e = Some v →
+    P ⊑ heap_ctx HeapI γ N →
+    P ⊑ (heap_own HeapI γ σ ★
+         ▷ (∀ l, σ !! l = None ∧ heap_own HeapI γ (<[l:=v]>σ) -★ Q (LocV l))) →
+    P ⊑ wp E (Alloc e) Q.
+  Proof.
+    rewrite /heap_ctx /heap_own. intros HN Hval Hl Hctx HP.
+    Fail eapply (auth_fsa (heap_inv HeapI) (wp_fsa _ _) (alter (λ _, Excl v) l)).
+  Abort.
+
   Lemma wp_load_heap N E γ σ l v P Q :
     nclose N ⊆ E →
     σ !! l = Some v →
