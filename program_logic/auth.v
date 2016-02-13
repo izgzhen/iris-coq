@@ -84,7 +84,7 @@ Section auth.
      step-indices. However, since A is timeless, that should not be
      a restriction.  *)
   Lemma auth_fsa {B C} (fsa : FSA Λ (globalF Σ) B) `{!FrameShiftAssertion fsaV fsa}
-       L `{!∀ c:C, LocalUpdate (Lv c) (L c)} N E P (Q : B → iPropG Λ Σ) γ a :
+       L {Lv} {LU : ∀ c:C, LocalUpdate (Lv c) (L c)} N E P (Q : B → iPropG Λ Σ) γ a :
     fsaV →
     nclose N ⊆ E →
     P ⊑ auth_ctx AuthI γ N φ →

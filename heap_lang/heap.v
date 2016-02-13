@@ -73,9 +73,42 @@ Section heap.
          ▷ (∀ l, σ !! l = None ∧ heap_own HeapI γ (<[l:=v]>σ) -★ Q (LocV l))) →
     P ⊑ wp E (Alloc e) Q.
   Proof.
-    rewrite /heap_ctx /heap_own. intros HN Hval Hl Hctx HP.
-    Fail eapply (auth_fsa (heap_inv HeapI) (wp_fsa _ _) (alter (λ _, Excl v) l)).
-  Abort.
+    rewrite /heap_ctx /heap_own. intros HN Hval Hctx HP.
+    set (LU (l : loc) := local_update_op (A:=heapRA) ({[ l ↦ Excl v ]})).
+    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) _ (LU := LU)); simpl.
+    { by eauto. } { by eauto. } { by eauto. }
+    rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
+    apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
+    rewrite -assoc. apply const_elim_sep_l=>Hv /=.
+    rewrite {1}[(▷ownP _)%I]pvs_timeless !pvs_frame_r. apply wp_strip_pvs.
+    rewrite -wp_alloc_pst; first (apply sep_mono; first done); try eassumption.
+    apply later_mono, forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
+    rewrite -(exist_intro l) !left_id. rewrite always_and_sep_l -assoc.
+    apply const_elim_sep_l=>Hfresh.
+    assert (σ !! l = None) as Hfresh_σ.
+    { move: Hfresh (Hv 0%nat l). rewrite /from_heap /to_heap lookup_omap.
+      rewrite lookup_op !lookup_fmap.
+      case _:(σ !! l)=>[v'|]/=; case _:(hf !! l)=>[[?||]|]/=; done. }
+    rewrite const_equiv // const_equiv; last first.
+    { move=>n l'. move:(Hv n l') Hfresh.
+      rewrite /from_heap /to_heap !lookup_omap !lookup_op !lookup_fmap !Hfresh_σ /=.
+      destruct (decide (l=l')).
+      - subst l'. rewrite lookup_singleton !Hfresh_σ.
+        case _:(hf !! l)=>[[?||]|]/=; done.
+      - rewrite lookup_singleton_ne //.
+        case _:(σ !! l')=>[?|]/=; case _:(hf !! l')=>[[?||]|]/=; done. }
+    rewrite !left_id -later_intro.
+    assert ({[l ↦ Excl v]} ⋅ to_heap σ = to_heap (<[l:=v]> σ)) as EQ.
+    { apply: map_eq=>l'. rewrite lookup_op !lookup_fmap.
+      destruct (decide (l=l')); simplify_map_equality.
+      - rewrite lookup_insert. done.
+      - rewrite !lookup_insert_ne // lookup_empty left_id. done. }
+    rewrite EQ. apply sep_mono; last done. f_equiv. apply: map_eq=>l'. 
+    move:(Hv 0%nat l') Hfresh. destruct (decide (l=l')); simplify_map_equality.
+    - rewrite lookup_insert !lookup_omap !lookup_op !lookup_fmap lookup_insert.
+      case _:(σ !! l')=>[?|]/=; case _:(hf !! l')=>[[?||]|]/=; done.
+    - rewrite lookup_insert_ne // !lookup_omap !lookup_op !lookup_fmap lookup_insert_ne //.
+  Qed.
 
   Lemma wp_load_heap N E γ σ l v P Q :
     σ !! l = Some v →
