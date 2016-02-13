@@ -231,12 +231,10 @@ Lemma wp_mask_weaken E1 E2 e Q : E1 ⊆ E2 → wp E1 e Q ⊑ wp E2 e Q.
 Proof. auto using wp_mask_frame_mono. Qed.
 
 (** * Weakest-pre is a FSA. *)
-Global Instance wp_fsa e : atomic e → FrameShiftAssertion (λ E Q, wp E e Q).
+Definition wp_fsa (e : expr Λ) : FSA Λ Σ (val Λ) := λ E, wp E e.
+Global Instance wp_fsa_prf : FrameShiftAssertion (atomic e) (wp_fsa e).
 Proof.
-  split; intros.
-  - apply wp_mask_frame_mono; auto.
-  - apply wp_atomic; auto.
-  - apply wp_frame_r; auto.
+  rewrite /wp_fsa; split; auto using wp_mask_frame_mono, wp_atomic, wp_frame_r.
+  intros E Q. by rewrite -(pvs_wp E e Q) -(wp_pvs E e Q).
 Qed.
-
 End wp.

@@ -66,22 +66,24 @@ Lemma always_inv N P : (□ inv N P)%I ≡ inv N P.
 Proof. by rewrite always_always. Qed.
 
 (** Invariants can be opened around any frame-shifting assertion. *)
-Lemma inv_fsa {A : Type} {FSA} (FSAs : FrameShiftAssertion (A:=A) FSA)
-      E N P (Q : A → iProp Λ Σ) R :
+Lemma inv_fsa {A} (fsa : FSA Λ Σ A) `{!FrameShiftAssertion fsaV fsa}
+    E N P (Q : A → iProp Λ Σ) R :
+  fsaV →
   nclose N ⊆ E →
   R ⊑ inv N P →
-  R ⊑ (▷P -★ FSA (E ∖ nclose N) (λ a, ▷P ★ Q a)) →
-  R ⊑ FSA E Q.
+  R ⊑ (▷ P -★ fsa (E ∖ nclose N) (λ a, ▷ P ★ Q a)) →
+  R ⊑ fsa E Q.
 Proof.
-  move=>HN Hinv Hinner. rewrite -[R](idemp (∧)%I) {1}Hinv Hinner =>{Hinv Hinner R}.
+  intros ? HN Hinv Hinner.
+  rewrite -[R](idemp (∧)%I) {1}Hinv Hinner =>{Hinv Hinner R}.
   rewrite always_and_sep_l /inv sep_exist_r. apply exist_elim=>i.
   rewrite always_and_sep_l -assoc. apply const_elim_sep_l=>HiN.
-  rewrite -(fsa_trans3 E (E ∖ {[encode i]})) //; last by solve_elem_of+.
+  rewrite -(fsa_open_close E (E ∖ {[encode i]})) //; last by solve_elem_of+.
   (* Add this to the local context, so that solve_elem_of finds it. *)
   assert ({[encode i]} ⊆ nclose N) by eauto.
   rewrite (always_sep_dup (ownI _ _)).
   rewrite {1}pvs_openI !pvs_frame_r.
-  apply pvs_mask_frame_mono ; [solve_elem_of..|].
+  apply pvs_mask_frame_mono; [solve_elem_of..|].
   rewrite (comm _ (▷_)%I) -assoc wand_elim_r fsa_frame_l.
   apply fsa_mask_frame_mono; [solve_elem_of..|]. intros a.
   rewrite assoc -always_and_sep_l pvs_closeI pvs_frame_r left_id.
@@ -95,15 +97,14 @@ Lemma pvs_open_close E N P Q R :
   R ⊑ inv N P →
   R ⊑ (▷P -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷P ★ Q)) →
   R ⊑ pvs E E Q.
-Proof. move=>HN ? ?. apply: (inv_fsa pvs_fsa); eassumption. Qed.
+Proof. intros. by apply: (inv_fsa pvs_fsa); try eassumption. Qed.
 
 Lemma wp_open_close E e N P (Q : val Λ → iProp Λ Σ) R :
   atomic e → nclose N ⊆ E →
   R ⊑ inv N P →
   R ⊑ (▷P -★ wp (E ∖ nclose N) e (λ v, ▷P ★ Q v)) →
   R ⊑ wp E e Q.
-Proof.
-  move=>He HN ? ?. apply: (inv_fsa (wp_fsa e _)); eassumption. Qed.
+Proof. intros. apply: (inv_fsa (wp_fsa e)); eassumption. Qed.
 
 Lemma inv_alloc N P : ▷ P ⊑ pvs N N (inv N P).
 Proof. by rewrite /inv (pvs_allocI N); last apply coPset_suffixes_infinite. Qed.
