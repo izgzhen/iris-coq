@@ -66,6 +66,8 @@ Section heap.
     ownP σ ⊑ pvs N N (∃ γ, heap_ctx HeapI γ N ∧ heap_own HeapI γ σ).
   Proof. by rewrite -{1}[σ]from_to_heap -(auth_alloc _ N). Qed.
 
+  (* TODO: Clearly, this is not the right way to obtain these properties about
+     fin_maps. This is horrible. *)
   Lemma wp_alloc_heap N E γ σ e v P Q :
     nclose N ⊆ E →  to_val e = Some v →
     P ⊑ heap_ctx HeapI γ N →
@@ -109,6 +111,15 @@ Section heap.
       case _:(σ !! l')=>[?|]/=; case _:(hf !! l')=>[[?||]|]/=; done.
     - rewrite lookup_insert_ne // !lookup_omap !lookup_op !lookup_fmap lookup_insert_ne //.
   Qed.
+
+  Lemma wp_alloc N E γ e v P Q :
+    nclose N ⊆ E →  to_val e = Some v →
+    P ⊑ heap_ctx HeapI γ N →
+    P ⊑ (▷ (∀ l, heap_mapsto HeapI γ l v -★ Q (LocV l))) →
+    P ⊑ wp E (Alloc e) Q.
+  Proof.
+    intros HN ? ? HP. eapply wp_alloc_heap with (σ:=∅); try eassumption.
+    rewrite HP. rewrite left_id.
 
   Lemma wp_load_heap N E γ σ l v P Q :
     σ !! l = Some v →
@@ -223,5 +234,45 @@ Section heap.
   Proof.
     rewrite /heap_mapsto=>???. eapply wp_cas_fail_heap; try eassumption.
     by simplify_map_equality.
+  Qed.
+
+  Lemma wp_cas_suc_heap N E γ σ l e1 v1 e2 v2 P Q :
+    to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v1 → 
+    nclose N ⊆ E →
+    P ⊑ heap_ctx HeapI γ N →
+    P ⊑ (heap_own HeapI γ σ ★ ▷ (heap_own HeapI γ (<[l:=v2]>σ) -★ Q 'true)) →
+    P ⊑ wp E (Cas (Loc l) e1 e2) Q.
+  Proof.
+    rewrite /heap_ctx /heap_own. intros Hv1 Hv2 Hl HN Hctx HP.
+    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) (λ _:(), alter (λ _, Excl v2) l)); simpl; eauto.
+    { split_ands; eexists; eauto. }
+    rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
+    apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
+    rewrite -assoc. apply const_elim_sep_l=>Hv /=.
+    rewrite {1}[(▷ownP _)%I]pvs_timeless !pvs_frame_r. apply wp_strip_pvs.
+    rewrite -wp_cas_suc_pst; first (apply sep_mono; first done); try eassumption; last first.
+    { move: (Hv 0%nat l). rewrite lookup_omap lookup_op lookup_fmap Hl /=.
+      case _:(hf !! l)=>[[?||]|]; by auto. }
+    apply later_mono, wand_intro_l.
+    rewrite -(exist_intro ()) const_equiv //; last first.
+    (* TODO I think there are some general fin_map lemmas hiding in here. *)
+    { split.
+      - exists (Excl v1). by rewrite lookup_fmap Hl.
+      - move=>n l'. move: (Hv n l'). rewrite !lookup_op.
+        destruct (decide (l=l')); simplify_map_equality.
+        + rewrite lookup_alter lookup_fmap Hl /=. case (hf !! l')=>[[?||]|]; by auto.
+        + rewrite lookup_alter_ne //. }
+    rewrite left_id -later_intro.
+    assert (alter (λ _ : excl val, Excl v2) l (to_heap σ) = to_heap (<[l:=v2]> σ)) as EQ.
+    { apply: map_eq=>l'. destruct (decide (l=l')); simplify_map_equality.
+      + by rewrite lookup_alter /to_heap !lookup_fmap lookup_insert Hl /=.
+      + rewrite lookup_alter_ne // !lookup_fmap lookup_insert_ne //. }
+    rewrite !EQ. apply sep_mono; last done.
+    f_equiv. apply: map_eq=>l'. move: (Hv 0%nat l'). destruct (decide (l=l')); simplify_map_equality.
+    - rewrite /from_heap /to_heap lookup_insert lookup_omap !lookup_op.
+      rewrite !lookup_fmap lookup_insert Hl.
+      case (hf !! l')=>[[?||]|]; auto; contradiction.
+    - rewrite /from_heap /to_heap lookup_insert_ne // !lookup_omap !lookup_op !lookup_fmap.
+      rewrite lookup_insert_ne //.
   Qed.
 End heap.
