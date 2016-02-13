@@ -30,6 +30,10 @@ Proof.
 Qed.
 Canonical Structure mapC : cofeT := CofeT map_cofe_mixin.
 
+(* why doesn't this go automatic? *)
+Global Instance mapC_leibniz: LeibnizEquiv A → LeibnizEquiv mapC.
+Proof. intros; change (LeibnizEquiv (gmap K A)); apply _. Qed.
+
 Global Instance lookup_ne n k :
   Proper (dist n ==> dist n) (lookup k : gmap K A → option A).
 Proof. by intros m1 m2. Qed.
@@ -164,6 +168,8 @@ Proof.
   * by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
   * apply map_empty_timeless.
 Qed.
+Global Instance mapRA_leibniz : LeibnizEquiv A → LeibnizEquiv mapRA.
+Proof. intros; change (LeibnizEquiv (gmap K A)); apply _. Qed.
 
 (** Internalized properties *)
 Lemma map_equivI {M} m1 m2 : (m1 ≡ m2)%I ≡ (∀ i, m1 !! i ≡ m2 !! i : uPred M)%I.
