@@ -8,6 +8,7 @@ Notation Seq e1 e2 := (Let "" e1 e2).
 Notation LamV x e := (RecV "" x e).
 Notation LetCtx x e2 := (AppRCtx (LamV x e2)).
 Notation SeqCtx e2 := (LetCtx "" e2).
+Notation Skip := (Seq (Lit LitUnit) (Lit LitUnit)).
 
 Section derived.
 Context {Σ : iFunctor}.
@@ -28,6 +29,9 @@ Proof.
   rewrite -(wp_bind [LetCtx "" e2]). apply wp_mono=>v.
   by rewrite -wp_let' //= ?to_of_val ?subst_empty.
 Qed.
+
+Lemma wp_skip E Q : ▷(Q (LitV LitUnit))  ⊑ wp E Skip Q.
+Proof. rewrite -wp_seq -wp_value // -wp_value //. Qed.
 
 Lemma wp_le E (n1 n2 : Z) P Q :
   (n1 ≤ n2 → P ⊑ ▷ Q (LitV $ LitBool true)) →
