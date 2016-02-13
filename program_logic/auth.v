@@ -1,4 +1,4 @@
-From algebra Require Export auth functor.
+From algebra Require Export auth.
 From program_logic Require Export invariants ghost_ownership.
 Import uPred.
 
