@@ -21,13 +21,11 @@ Instance: Params (@auth_ctx) 8.
 
 Section auth.
   Context `{AuthInG Λ Σ AuthI A}.
-  Context (φ : A → iPropG Λ Σ) {φ_ne : ∀ n, Proper (dist n ==> dist n) φ}.
+  Context (φ : A → iPropG Λ Σ) {φ_proper : Proper ((≡) ==> (≡)) φ}.
   Implicit Types N : namespace.
   Implicit Types P Q R : iPropG Λ Σ.
   Implicit Types a b : A.
   Implicit Types γ : gname.
-
-  Local Instance φ_proper : Proper ((≡) ==> (≡)) φ := ne_proper _.
 
   Lemma auth_alloc N a :
     ✓ a → φ a ⊑ pvs N N (∃ γ, auth_ctx AuthI γ N φ ∧ auth_own AuthI γ a).
@@ -84,7 +82,7 @@ Section auth.
      step-indices. However, since A is timeless, that should not be
      a restriction.  *)
   Lemma auth_fsa {X : Type} {FSA} (FSAs : FrameShiftAssertion (A:=X) FSA)
-        L `{!LocalUpdate Lv L} N E P (Q : X → iPropG Λ Σ) γ a :
+        Lv L `{!LocalUpdate Lv L} N E P (Q : X → iPropG Λ Σ) γ a :
     nclose N ⊆ E →
     P ⊑ auth_ctx AuthI γ N φ →
     P ⊑ (auth_own AuthI γ a ★ (∀ a', ■✓(a ⋅ a') ★ ▷φ (a ⋅ a') -★

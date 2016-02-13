@@ -70,6 +70,7 @@ heap_lang/heap_lang.v
 heap_lang/tactics.v
 heap_lang/lifting.v
 heap_lang/derived.v
+heap_lang/heap.v
 heap_lang/notation.v
 heap_lang/tests.v
 heap_lang/substitution.v
