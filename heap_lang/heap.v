@@ -44,7 +44,7 @@ Section heap.
   Definition heap_ctx (γ : gname) : iPropG heap_lang Σ :=
     auth_ctx HeapI γ N heap_inv.
 
-  Global Instance heap_inv_ne : Proper ((≡) ==> (≡)) heap_inv.
+  Global Instance heap_inv_proper : Proper ((≡) ==> (≡)) heap_inv.
   Proof.
     move=>? ? EQ. rewrite /heap_inv /from_heap.
     (* TODO I guess we need some lemma about omap? *)
@@ -91,8 +91,8 @@ Section heap.
     apply later_mono, wand_intro_l. rewrite left_id const_equiv // left_id.
     by rewrite -later_intro.
   Unshelve.
+  (* TODO Make it so that this becomes a goal, not shelved. *)
   { eexists. eauto. }
-  { split; first by apply _. done. }
   Qed.
 
 End heap.

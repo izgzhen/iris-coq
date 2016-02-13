@@ -338,6 +338,9 @@ Proof. by rewrite equiv_dist=>?? n; apply (local_updateN L). Qed.
 Global Instance local_update_op x : LocalUpdate (λ _, True) (op x).
 Proof. split. apply _. by intros n y1 y2 _ _; rewrite assoc. Qed.
 
+Global Instance local_update_id : LocalUpdate (λ _, True) (@id A).
+Proof. split; auto with typeclass_instances. Qed.
+
 (** ** Updates *)
 Global Instance cmra_update_preorder : PreOrder (@cmra_update A).
 Proof. split. by intros x y. intros x y y' ?? z ?; naive_solver. Qed.
