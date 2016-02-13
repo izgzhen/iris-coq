@@ -980,4 +980,14 @@ Proof. by rewrite -(always_always Q); apply always_entails_l'. Qed.
 Lemma always_entails_r P Q `{!AlwaysStable Q} : (P ⊑ Q) → P ⊑ (P ★ Q).
 Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
 
-End uPred_logic. End uPred.
+End uPred_logic.
+
+(* uPred Hint DB *)
+Create HintDb uPred.
+Hint Resolve or_elim or_intro_l' or_intro_r' : uPred.
+Hint Resolve and_intro and_elim_l' and_elim_r' : uPred.
+Hint Resolve always_mono : uPred.
+Hint Resolve sep_elim_l' sep_elim_r' sep_mono : uPred.
+Hint Immediate True_intro False_elim : uPred.
+
+End uPred.
