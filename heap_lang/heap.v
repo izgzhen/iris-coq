@@ -43,7 +43,7 @@ Section heap.
   Hint Resolve to_heap_valid.
 
   Global Instance heap_inv_proper : Proper ((≡) ==> (≡)) (heap_inv HeapI).
-  Proof. by intros h1 h2; fold_leibniz=> ->. Qed.
+  Proof. intros h1 h2. by fold_leibniz=> ->. Qed.
 
   Lemma heap_own_op γ σ1 σ2 :
     (heap_own HeapI γ σ1 ★ heap_own HeapI γ σ2)%I
@@ -59,7 +59,7 @@ Section heap.
   Proof. (* TODO. *)
   Abort.
 
-  (* TODO: Prove equivalence to a big sum. *)
+  (* TODO: Do we want equivalence to a big sum? *)
 
   Lemma heap_alloc N σ :
     ownP σ ⊑ pvs N N (∃ γ, heap_ctx HeapI γ N ∧ heap_own HeapI γ σ).
@@ -73,7 +73,7 @@ Section heap.
     P ⊑ wp E (Load (Loc l)) Q.
   Proof.
     rewrite /heap_ctx /heap_own. intros HN Hl Hctx HP.
-    eapply (auth_fsa (heap_inv HeapI) (wp_fsa (Load _) _) (λ _, True) id).
+    eapply (auth_fsa (heap_inv HeapI) (wp_fsa (Load _) _) id).
     { eassumption. } { eassumption. }
     rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
     apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
