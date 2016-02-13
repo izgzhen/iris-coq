@@ -8,6 +8,8 @@ Class AuthInG Λ Σ (i : gid) (A : cmraT) `{Empty A} := {
   auth_timeless (a : A) :> Timeless a;
 }.
 
+(* TODO: Once we switched to RAs, it is no longer necessary to remember that a is
+   constantly valid. *)
 Definition auth_inv {Λ Σ A} (i : gid) `{AuthInG Λ Σ i A}
   (γ : gname) (φ : A → iPropG Λ Σ) : iPropG Λ Σ := (∃ a, (■✓a ∧ own i γ (● a)) ★ φ a)%I.
 Definition auth_own {Λ Σ A} (i : gid) `{AuthInG Λ Σ i A}
