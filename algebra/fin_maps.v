@@ -192,6 +192,13 @@ Proof.
   by move=>/(_ i); simplify_map_equality.
 Qed.
 
+Lemma map_lookup_valid m i x : ✓ m → m !! i ≡ Some x → ✓ x.
+Proof. move=>Hm Hi n. move:(Hm n i). by rewrite Hi. Qed.
+Lemma map_insert_valid m i x : ✓ x → ✓ m → ✓ <[i:=x]>m.
+Proof. intros ?? n j; apply map_insert_validN; auto. Qed.
+Lemma map_singleton_valid i x : ✓ ({[ i ↦ x ]} : gmap K A) ↔ ✓ x.
+Proof. split; intros ? n; eapply map_singleton_validN; eauto. Qed.
+
 Lemma map_insert_op_None m1 m2 i x :
   m2 !! i = None → <[i:=x]>(m1 ⋅ m2) = <[i:=x]>m1 ⋅ m2.
 Proof. by intros Hi; apply (insert_merge_l _ m1 m2); rewrite Hi. Qed.
