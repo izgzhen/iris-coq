@@ -35,6 +35,10 @@ Section auth.
     by rewrite always_and_sep_l.
   Qed.
 
+  Lemma auth_empty γ E :
+    True ⊑ pvs E E (auth_own γ ∅).
+  Proof. by rewrite own_update_empty /auth_own. Qed.
+
   Context {Hφ : ∀ n, Proper (dist n ==> dist n) φ}.
 
   Lemma auth_opened E a γ :

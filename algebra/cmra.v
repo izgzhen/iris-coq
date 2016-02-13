@@ -378,6 +378,8 @@ Lemma cmra_update_op x1 x2 y1 y2 : x1 ~~> y1 → x2 ~~> y2 → x1 ⋅ x2 ~~> y1 
 Proof.
   rewrite !cmra_update_updateP; eauto using cmra_updateP_op with congruence.
 Qed.
+Lemma cmra_update_id x : x ~~> x.
+Proof. intro. auto. Qed.
 
 Section identity_updates.
   Context `{Empty A, !CMRAIdentity A}.

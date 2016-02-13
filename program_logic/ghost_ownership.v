@@ -93,7 +93,7 @@ Proof.
     by rewrite -(exist_intro γ).
 Qed.
 
-Lemma own_updateP γ a P E :
+Lemma own_updateP P γ a E :
   a ~~>: P → own i γ a ⊑ pvs E E (∃ a', ■ P a' ∧ own i γ a').
 Proof.
   intros Ha.
@@ -105,7 +105,7 @@ Proof.
     rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
 Qed.
 
-Lemma own_updateP_empty `{Empty A, !CMRAIdentity A} γ a P E :
+Lemma own_updateP_empty `{Empty A, !CMRAIdentity A} P γ E :
   ∅ ~~>: P → True ⊑ pvs E E (∃ a, ■ P a ∧ own i γ a).
 Proof.
   intros Hemp.
@@ -119,7 +119,14 @@ Qed.
 
 Lemma own_update γ a a' E : a ~~> a' → own i γ a ⊑ pvs E E (own i γ a').
 Proof.
-  intros; rewrite (own_updateP _ _ (a' =)); last by apply cmra_update_updateP.
-  by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.const_elim_l=> ->.
+  intros; rewrite (own_updateP (a' =)); last by apply cmra_update_updateP.
+  by apply pvs_mono, exist_elim=> a''; apply const_elim_l=> ->.
+Qed.
+
+Lemma own_update_empty `{Empty A, !CMRAIdentity A} γ E :
+  True ⊑ pvs E E (own i γ ∅).
+Proof.
+  rewrite (own_updateP_empty (∅ =)); last by apply cmra_updateP_id.
+  apply pvs_mono, exist_elim=>a. by apply const_elim_l=>->.
 Qed.
 End global.
