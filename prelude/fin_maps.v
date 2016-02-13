@@ -558,6 +558,12 @@ Proof.
   intros Hi; apply map_eq; intros i; rewrite !lookup_fmap.
   by destruct (m !! i) eqn:?; simpl; erewrite ?Hi by eauto.
 Qed.
+Lemma omap_ext {A B} (f1 f2 : A → option B) m :
+  (∀ i x, m !! i = Some x → f1 x = f2 x) → omap f1 m = omap f2 m.
+Proof.
+  intros Hi; apply map_eq; intros i; rewrite !lookup_omap.
+  by destruct (m !! i) eqn:?; simpl; erewrite ?Hi by eauto.
+Qed.
 
 (** ** Properties of conversion to lists *)
 Lemma map_to_list_unique {A} (m : M A) i x y :
