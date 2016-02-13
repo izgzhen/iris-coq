@@ -1,5 +1,6 @@
 From heap_lang Require Export derived.
 From program_logic Require Import ownership auth.
+From heap_lang Require Import notation.
 Import uPred.
 (* TODO: The entire construction could be generalized to arbitrary languages that have
    a finmap as their state. Or maybe even beyond "as their state", i.e. arbitrary
@@ -77,13 +78,13 @@ Section heap.
   Abort.
 
   Lemma wp_load_heap N E γ σ l v P Q :
-    nclose N ⊆ E →
     σ !! l = Some v →
+    nclose N ⊆ E →
     P ⊑ heap_ctx HeapI γ N →
     P ⊑ (heap_own HeapI γ σ ★ ▷ (heap_own HeapI γ σ -★ Q v)) →
     P ⊑ wp E (Load (Loc l)) Q.
   Proof.
-    rewrite /heap_ctx /heap_own. intros HN Hl Hctx HP.
+    rewrite /heap_ctx /heap_own. intros Hl HN Hctx HP.
     eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) id); simpl; eauto.
     rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
     apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
@@ -102,18 +103,18 @@ Section heap.
     P ⊑ (heap_mapsto HeapI γ l v ★ ▷ (heap_mapsto HeapI γ l v -★ Q v)) →
     P ⊑ wp E (Load (Loc l)) Q.
   Proof.
-    intros HN. rewrite /heap_mapsto. apply wp_load_heap; first done.
+    intros HN. rewrite /heap_mapsto. apply wp_load_heap; last done.
     by simplify_map_equality.
   Qed.
 
-  Lemma wp_store_heap N E γ σ l e v v' P Q :
-    nclose N ⊆ E → to_val e = Some v → 
-    σ !! l = Some v' →
+  Lemma wp_store_heap N E γ σ l v' e v P Q :
+    σ !! l = Some v' → to_val e = Some v → 
+    nclose N ⊆ E →
     P ⊑ heap_ctx HeapI γ N →
     P ⊑ (heap_own HeapI γ σ ★ ▷ (heap_own HeapI γ (<[l:=v]>σ) -★ Q (LitV LitUnit))) →
     P ⊑ wp E (Store (Loc l) e) Q.
   Proof.
-    rewrite /heap_ctx /heap_own. intros HN Hval Hl Hctx HP.
+    rewrite /heap_ctx /heap_own. intros Hl Hval HN Hctx HP.
     eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) (alter (λ _, Excl v) l)); simpl; eauto.
     rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
     apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
@@ -144,14 +145,47 @@ Section heap.
       rewrite lookup_insert_ne //.
   Qed.
 
-  Lemma wp_store N E γ l e v v' P Q :
-    nclose N ⊆ E → to_val e = Some v → 
+  Lemma wp_store N E γ l v' e v P Q :
+    to_val e = Some v → 
+    nclose N ⊆ E → 
     P ⊑ heap_ctx HeapI γ N →
     P ⊑ (heap_mapsto HeapI γ l v' ★ ▷ (heap_mapsto HeapI γ l v -★ Q (LitV LitUnit))) →
     P ⊑ wp E (Store (Loc l) e) Q.
   Proof.
-    intros HN. rewrite /heap_mapsto=>Hval Hctx HP. eapply wp_store_heap; try eassumption; last first.
+    rewrite /heap_mapsto=>Hval HN Hctx HP. eapply wp_store_heap; try eassumption; last first.
     - rewrite HP. apply sep_mono; first done. by rewrite insert_singleton.
     - by rewrite lookup_insert.
+  Qed.
+
+  Lemma wp_cas_fail_heap N E γ σ l v' e1 v1 e2 v2 P Q :
+    to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v' → v' ≠ v1 →
+    nclose N ⊆ E →
+    P ⊑ heap_ctx HeapI γ N →
+    P ⊑ (heap_own HeapI γ σ ★ ▷ (heap_own HeapI γ σ -★ Q 'false)) →
+    P ⊑ wp E (Cas (Loc l) e1 e2) Q.
+  Proof.
+    rewrite /heap_ctx /heap_own. intros He1 He2 Hl Hne HN Hctx HP.
+    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) id); simpl; eauto.
+    { split_ands; eexists; eauto. }
+    rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
+    apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
+    rewrite -assoc. apply const_elim_sep_l=>Hv /=.
+    rewrite {1}[(▷ownP _)%I]pvs_timeless !pvs_frame_r. apply wp_strip_pvs.
+    rewrite -wp_cas_fail_pst; first (apply sep_mono; first done); try eassumption; last first.
+    { move: (Hv 0%nat l). rewrite lookup_omap lookup_op lookup_fmap Hl /=.
+      case _:(hf !! l)=>[[?||]|]; by auto. }
+    apply later_mono, wand_intro_l. rewrite left_id const_equiv // left_id.
+    by rewrite -later_intro.
+  Qed.
+
+  Lemma wp_cas_fail N E γ l v' e1 v1 e2 v2 P Q :
+    to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 →
+    nclose N ⊆ E →
+    P ⊑ heap_ctx HeapI γ N →
+    P ⊑ (heap_mapsto HeapI γ l v' ★ ▷ (heap_mapsto HeapI γ l v' -★ Q 'false)) →
+    P ⊑ wp E (Cas (Loc l) e1 e2) Q.
+  Proof.
+    rewrite /heap_mapsto=>???. eapply wp_cas_fail_heap; try eassumption.
+    by simplify_map_equality.
   Qed.
 End heap.
