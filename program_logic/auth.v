@@ -3,17 +3,15 @@ From program_logic Require Export invariants ghost_ownership.
 Import uPred.
 
 Section auth.
+  Context {Λ : language} {Σ : iFunctorG}.
   Context {A : cmraT} `{Empty A, !CMRAIdentity A} `{!∀ a : A, Timeless a}.
-  Context {Λ : language} {Σ : iFunctorG} (AuthI : gid) `{!InG Λ Σ AuthI (authRA A)}.
-  Context (N : namespace) (φ : A → iPropG Λ Σ).
+  Context (AuthI : gid) `{!InG Λ Σ AuthI (authRA A)}.
+  Context (N : namespace).
+  Context (φ : A → iPropG Λ Σ) {Hφ : ∀ n, Proper (dist n ==> dist n) φ}.
 
   Implicit Types P Q R : iPropG Λ Σ.
   Implicit Types a b : A.
   Implicit Types γ : gname.
-
-  (* TODO: Need this to be proven somewhere. *)
-  Hypothesis auth_valid :
-    forall a b, (✓ Auth (Excl a) b : iPropG Λ Σ) ⊑ (∃ b', a ≡ b ⋅ b').
 
   Definition auth_inv (γ : gname) : iPropG Λ Σ :=
     (∃ a, own AuthI γ (● a) ★ φ a)%I.
@@ -39,15 +37,14 @@ Section auth.
     True ⊑ pvs E E (auth_own γ ∅).
   Proof. by rewrite own_update_empty /auth_own. Qed.
 
-  Context {Hφ : ∀ n, Proper (dist n ==> dist n) φ}.
-
   Lemma auth_opened E a γ :
     (▷auth_inv γ ★ auth_own γ a) ⊑ pvs E E (∃ a', ▷φ (a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a)).
   Proof.
     rewrite /auth_inv. rewrite later_exist sep_exist_r. apply exist_elim=>b.
     rewrite later_sep [(▷own _ _ _)%I]pvs_timeless !pvs_frame_r. apply pvs_mono.
     rewrite /auth_own [(_ ★ ▷φ _)%I]comm -assoc -own_op.
-    rewrite own_valid_r auth_valid !sep_exist_l /=. apply exist_elim=>a'.
+    rewrite own_valid_r auth_validI /= and_elim_l !sep_exist_l /=.
+    apply exist_elim=>a'.
     rewrite [∅ ⋅ _]left_id -(exist_intro a').
     apply (eq_rewrite b (a ⋅ a')
               (λ x, ▷φ x ★ own AuthI γ (● x ⋅ ◯ a))%I); first by solve_ne.
@@ -58,7 +55,7 @@ Section auth.
 
   Lemma auth_closing E `{!LocalUpdate Lv L} a a' γ :
     Lv a → ✓ (L a ⋅ a') →
-    (▷φ (L a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a))
+    (▷ φ (L a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a))
     ⊑ pvs E E (▷auth_inv γ ★ auth_own γ (L a)).
   Proof.
     intros HL Hv. rewrite /auth_inv /auth_own -(exist_intro (L a ⋅ a')).

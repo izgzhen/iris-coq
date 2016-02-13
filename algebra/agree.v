@@ -131,7 +131,7 @@ Lemma to_agree_car n (x : agree A) : ✓{n} x → to_agree (x n) ≡{n}≡ x.
 Proof. intros [??]; split; naive_solver eauto using agree_valid_le. Qed.
 
 (** Internalized properties *)
-Lemma agree_valid_uPred {M} x y : ✓ (x ⋅ y) ⊑ (x ≡ y : uPred M).
+Lemma agree_validI {M} x y : ✓ (x ⋅ y) ⊑ (x ≡ y : uPred M).
 Proof. by intros r n _ ?; apply: agree_op_inv. Qed.
 End agree.
 

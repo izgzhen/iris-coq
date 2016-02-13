@@ -1,4 +1,5 @@
 From algebra Require Export fin_maps agree excl functor.
+From algebra Require Import upred.
 From program_logic Require Export language.
 
 Record res (Λ : language) (Σ : iFunctor) (A : cofeT) := Res {
@@ -154,20 +155,23 @@ Proof.
 Qed.
 Lemma lookup_wld_op_r n r1 r2 i P :
   ✓{n} (r1⋅r2) → wld r2 !! i ≡{n}≡ Some P → (wld r1 ⋅ wld r2) !! i ≡{n}≡ Some P.
-Proof.
-  rewrite (comm _ r1) (comm _ (wld r1)); apply lookup_wld_op_l.
-Qed.
+Proof. rewrite (comm _ r1) (comm _ (wld r1)); apply lookup_wld_op_l. Qed.
 Global Instance Res_timeless eσ m : Timeless m → Timeless (Res ∅ eσ m).
 Proof. by intros ? ? [???]; constructor; apply (timeless _). Qed.
+
+(** Internalized properties *)
+Lemma res_equivI {M} r1 r2 :
+  (r1 ≡ r2)%I ≡ (wld r1 ≡ wld r2 ∧ pst r1 ≡ pst r2 ∧ gst r1 ≡ gst r2: uPred M)%I.
+Proof. split. by destruct 1. by intros (?&?&?); constructor. Qed.
+Lemma res_validI {M} r : (✓ r)%I ≡ (✓ wld r ∧ ✓ pst r ∧ ✓ gst r : uPred M)%I.
+Proof. done. Qed.
 End res.
 
 Arguments resC : clear implicits.
 Arguments resRA : clear implicits.
 
 Definition res_map {Λ Σ A B} (f : A -n> B) (r : res Λ Σ A) : res Λ Σ B :=
-  Res (agree_map f <$> wld r)
-      (pst r)
-      (ifunctor_map Σ f <$> gst r).
+  Res (agree_map f <$> wld r) (pst r) (ifunctor_map Σ f <$> gst r).
 Instance res_map_ne Λ Σ (A B : cofeT) (f : A -n> B) :
   (∀ n, Proper (dist n ==> dist n) f) →
   ∀ n, Proper (dist n ==> dist n) (@res_map Λ Σ _ _ f).

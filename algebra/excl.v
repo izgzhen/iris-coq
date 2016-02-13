@@ -1,5 +1,5 @@
 From algebra Require Export cmra.
-From algebra Require Import functor.
+From algebra Require Import functor upred.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 
@@ -137,6 +137,18 @@ Proof.
   intros Hvalid; split; [|by intros ->].
   by intros [z ?]; cofe_subst; rewrite (excl_validN_inv_l n x z).
 Qed.
+
+(** Internalized properties *)
+Lemma excl_equivI {M} (x y : excl A) :
+  (x ≡ y)%I ≡ (match x, y with
+               | Excl a, Excl b => a ≡ b
+               | ExclUnit, ExclUnit | ExclBot, ExclBot => True
+               | _, _ => False
+               end : uPred M)%I.
+Proof. split. by destruct 1. by destruct x, y; try constructor. Qed.
+Lemma excl_validI {M} (x : excl A) :
+  (✓ x)%I ≡ (if x is ExclBot then False else True : uPred M)%I.
+Proof. by destruct x. Qed.
 
 (** ** Local updates *)
 Global Instance excl_local_update b :

@@ -1,5 +1,5 @@
 From algebra Require Export excl.
-From algebra Require Import functor.
+From algebra Require Import functor upred.
 Local Arguments validN _ _ _ !_ /.
 
 Record auth (A : Type) : Type := Auth { authoritative : excl A ; own : A }.
@@ -130,6 +130,18 @@ Proof.
 Qed.
 Canonical Structure authRA : cmraT :=
   CMRAT auth_cofe_mixin auth_cmra_mixin auth_cmra_extend_mixin.
+
+(** Internalized properties *)
+Lemma auth_equivI {M} (x y : auth A) :
+  (x ≡ y)%I ≡ (authoritative x ≡ authoritative y ∧ own x ≡ own y : uPred M)%I.
+Proof. done. Qed.
+Lemma auth_validI {M} (x : auth A) :
+  (✓ x)%I ≡ (match authoritative x with
+             | Excl a => (∃ b, a ≡ own x ⋅ b) ∧ ✓ a
+             | ExclUnit => ✓ own x
+             | ExclBot => False
+             end : uPred M)%I.
+Proof. by destruct x as [[]]. Qed.
 
 (** The notations ◯ and ● only work for CMRAs with an empty element. So, in
 what follows, we assume we have an empty element. *)

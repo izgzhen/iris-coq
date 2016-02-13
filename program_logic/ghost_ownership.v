@@ -34,11 +34,6 @@ Implicit Types a : A.
 (** * Properties of to_globalC *)
 Instance to_globalF_ne γ n : Proper (dist n ==> dist n) (to_globalF i γ).
 Proof. by intros a a' Ha; apply iprod_singleton_ne; rewrite Ha. Qed.
-Lemma to_globalF_validN n γ a : ✓{n} to_globalF i γ a ↔ ✓{n} a.
-Proof.
-  by rewrite /to_globalF
-    iprod_singleton_validN map_singleton_validN cmra_transport_validN.
-Qed.
 Lemma to_globalF_op γ a1 a2 :
   to_globalF i γ (a1 ⋅ a2) ≡ to_globalF i γ a1 ⋅ to_globalF i γ a2.
 Proof.
@@ -75,7 +70,10 @@ Lemma always_own_unit γ a : (□ own i γ (unit a))%I ≡ own i γ (unit a).
 Proof. by rewrite /own -to_globalF_unit always_ownG_unit. Qed.
 Lemma own_valid γ a : own i γ a ⊑ ✓ a.
 Proof.
-  rewrite /own ownG_valid; apply valid_mono=> ?; apply to_globalF_validN.
+  rewrite /own ownG_valid /to_globalF.
+  rewrite iprod_validI (forall_elim i) iprod_lookup_singleton.
+  rewrite map_validI (forall_elim γ) lookup_singleton option_validI.
+  by destruct inG.
 Qed.
 Lemma own_valid_r γ a : own i γ a ⊑ (own i γ a ★ ✓ a).
 Proof. apply (uPred.always_entails_r _ _), own_valid. Qed.

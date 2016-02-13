@@ -1,6 +1,6 @@
 From algebra Require Export cmra option.
 From prelude Require Export gmap.
-From algebra Require Import functor.
+From algebra Require Import functor upred.
 
 Section cofe.
 Context `{Countable K} {A : cofeT}.
@@ -85,6 +85,7 @@ Arguments mapC _ {_ _} _.
 (* CMRA *)
 Section cmra.
 Context `{Countable K} {A : cmraT}.
+Implicit Types m : gmap K A.
 
 Instance map_op : Op (gmap K A) := merge op.
 Instance map_unit : Unit (gmap K A) := fmap unit.
@@ -160,6 +161,12 @@ Proof.
   * by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
   * apply map_empty_timeless.
 Qed.
+
+(** Internalized properties *)
+Lemma map_equivI {M} m1 m2 : (m1 ≡ m2)%I ≡ (∀ i, m1 !! i ≡ m2 !! i : uPred M)%I.
+Proof. done. Qed.
+Lemma map_validI {M} m : (✓ m)%I ≡ (∀ i, ✓ (m !! i) : uPred M)%I.
+Proof. done. Qed.
 End cmra.
 
 Arguments mapRA _ {_ _} _.

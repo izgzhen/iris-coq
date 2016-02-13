@@ -1,5 +1,5 @@
 From algebra Require Export cmra.
-From algebra Require Import functor.
+From algebra Require Import functor upred.
 
 (* COFE *)
 Section cofe.
@@ -121,6 +121,7 @@ Canonical Structure optionRA :=
 Global Instance option_cmra_identity : CMRAIdentity optionRA.
 Proof. split. done. by intros []. by inversion_clear 1. Qed.
 
+(** Misc *)
 Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my.
 Proof.
   destruct mx, my; rewrite /op /option_op /= -!not_eq_None_Some; naive_solver.
@@ -130,6 +131,17 @@ Proof. by destruct mx, my; inversion_clear 1. Qed.
 Lemma option_op_positive_dist_r n mx my : mx ⋅ my ≡{n}≡ None → my ≡{n}≡ None.
 Proof. by destruct mx, my; inversion_clear 1. Qed.
 
+(** Internalized properties *)
+Lemma option_equivI {M} (x y : option A) :
+  (x ≡ y)%I ≡ (match x, y with
+               | Some a, Some b => a ≡ b | None, None => True | _, _ => False
+               end : uPred M)%I.
+Proof. split. by destruct 1. by destruct x, y; try constructor. Qed.
+Lemma option_validI {M} (x : option A) :
+  (✓ x)%I ≡ (match x with Some a => ✓ a | None => True end : uPred M)%I.
+Proof. by destruct x. Qed.
+
+(** Updates *)
 Lemma option_updateP (P : A → Prop) (Q : option A → Prop) x :
   x ~~>: P → (∀ y, P y → Q (Some y)) → Some x ~~>: Q.
 Proof.
