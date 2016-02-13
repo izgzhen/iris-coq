@@ -521,6 +521,9 @@ Proof.
   * by rewrite -(left_id True%I uPred_and (_ → _)%I) impl_elim_r.
   * by apply impl_intro_l; rewrite left_id.
 Qed.
+Lemma iff_refl Q P : Q ⊑ (P ↔ P).
+Proof. rewrite /uPred_iff; apply and_intro; apply impl_intro_l; auto. Qed.
+
 Lemma or_and_l P Q R : (P ∨ Q ∧ R)%I ≡ ((P ∨ Q) ∧ (P ∨ R))%I.
 Proof.
   apply (anti_symm (⊑)); first auto.
@@ -790,7 +793,7 @@ Proof. intros; rewrite -always_and_sep_l'; auto. Qed.
 Lemma always_entails_r' P Q : (P ⊑ □ Q) → P ⊑ (P ★ □ Q).
 Proof. intros; rewrite -always_and_sep_r'; auto. Qed.
 
-(* Own and valid *)
+(* Own *)
 Lemma ownM_op (a1 a2 : M) :
   uPred_ownM (a1 ⋅ a2) ≡ (uPred_ownM a1 ★ uPred_ownM a2)%I.
 Proof.
@@ -813,16 +816,27 @@ Lemma ownM_something : True ⊑ ∃ a, uPred_ownM a.
 Proof. intros x n ??. by exists x; simpl. Qed.
 Lemma ownM_empty `{Empty M, !CMRAIdentity M} : True ⊑ uPred_ownM ∅.
 Proof. intros x n ??; by  exists x; rewrite left_id. Qed.
+
+(* Valid *)
 Lemma ownM_valid (a : M) : uPred_ownM a ⊑ ✓ a.
 Proof. intros x n Hv [a' ?]; cofe_subst; eauto using cmra_validN_op_l. Qed.
 Lemma valid_intro {A : cmraT} (a : A) : ✓ a → True ⊑ ✓ a.
 Proof. by intros ? x n ? _; simpl; apply cmra_valid_validN. Qed.
 Lemma valid_elim {A : cmraT} (a : A) : ¬ ✓{0} a → ✓ a ⊑ False.
 Proof. intros Ha x n ??; apply Ha, cmra_validN_le with n; auto. Qed.
-Lemma valid_mono {A B : cmraT} (a : A) (b : B) :
-  (∀ n, ✓{n} a → ✓{n} b) → ✓ a ⊑ ✓ b.
-Proof. by intros ? x n ?; simpl; auto. Qed.
 Lemma always_valid {A : cmraT} (a : A) : (□ (✓ a))%I ≡ (✓ a : uPred M)%I.
+Proof. done. Qed.
+Lemma valid_weaken {A : cmraT} (a b : A) : ✓ (a ⋅ b) ⊑ ✓ a.
+Proof. intros r n _; apply cmra_validN_op_l. Qed.
+
+Lemma prod_equivI {A B : cofeT} (x y : A * B) :
+  (x ≡ y)%I ≡ (x.1 ≡ y.1 ∧ x.2 ≡ y.2 : uPred M)%I.
+Proof. done. Qed.
+Lemma prod_validI {A B : cmraT} (x : A * B) :
+  (✓ x)%I ≡ (✓ x.1 ∧ ✓ x.2 : uPred M)%I.
+Proof. done. Qed.
+Lemma later_equivI {A : cofeT} (x y : later A) :
+  (x ≡ y)%I ≡ (▷ (later_car x ≡ later_car y) : uPred M)%I.
 Proof. done. Qed.
 
 (* Own and valid derived *)
@@ -989,5 +1003,5 @@ Hint Resolve and_intro and_elim_l' and_elim_r' : I.
 Hint Resolve always_mono : I.
 Hint Resolve sep_elim_l' sep_elim_r' sep_mono : I.
 Hint Immediate True_intro False_elim : I.
-
+Hint Immediate iff_refl : I.
 End uPred.

@@ -1,33 +1,42 @@
-From algebra Require Export auth functor.
+From algebra Require Export auth.
 From program_logic Require Export invariants ghost_ownership.
 Import uPred.
 
-Section auth.
-  Context {A : cmraT} `{Empty A, !CMRAIdentity A} `{!∀ a : A, Timeless a}.
-  Context {Λ : language} {Σ : iFunctorG} (AuthI : gid) `{!InG Λ Σ AuthI (authRA A)}.
-  Context (N : namespace) (φ : A → iPropG Λ Σ).
+Class AuthInG Λ Σ (i : gid) (A : cmraT) `{Empty A} := {
+  auth_inG :> InG Λ Σ i (authRA A);
+  auth_identity :> CMRAIdentity A;
+  auth_timeless (a : A) :> Timeless a;
+}.
 
+Definition auth_inv {Λ Σ A} (i : gid) `{AuthInG Λ Σ i A}
+  (γ : gname) (φ : A → iPropG Λ Σ) : iPropG Λ Σ := (∃ a, (■✓a ∧ own i γ (● a)) ★ φ a)%I.
+Definition auth_own {Λ Σ A} (i : gid) `{AuthInG Λ Σ i A}
+  (γ : gname) (a : A) : iPropG Λ Σ := own i γ (◯ a).
+Definition auth_ctx {Λ Σ A} (i : gid) `{AuthInG Λ Σ i A}
+    (γ : gname) (N : namespace) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
+  inv N (auth_inv i γ φ).
+Instance: Params (@auth_inv) 7.
+Instance: Params (@auth_own) 7.
+Instance: Params (@auth_ctx) 8.
+
+Section auth.
+  Context `{AuthInG Λ Σ AuthI A}.
+  Context (φ : A → iPropG Λ Σ) {φ_ne : ∀ n, Proper (dist n ==> dist n) φ}.
+  Implicit Types N : namespace.
   Implicit Types P Q R : iPropG Λ Σ.
   Implicit Types a b : A.
   Implicit Types γ : gname.
 
-  (* TODO: Need this to be proven somewhere. *)
-  Hypothesis auth_valid :
-    forall a b, (✓ Auth (Excl a) b : iPropG Λ Σ) ⊑ (∃ b', a ≡ b ⋅ b').
+  Local Instance φ_proper : Proper ((≡) ==> (≡)) φ := ne_proper _.
 
-  Definition auth_inv (γ : gname) : iPropG Λ Σ :=
-    (∃ a, (■✓a ∧ own AuthI γ (● a)) ★ φ a)%I.
-  Definition auth_own (γ : gname) (a : A) : iPropG Λ Σ := own AuthI γ (◯ a).
-  Definition auth_ctx (γ : gname) : iPropG Λ Σ := inv N (auth_inv γ).
-
-  Lemma auth_alloc a :
-    ✓a → φ a ⊑ pvs N N (∃ γ, auth_ctx γ ∧ auth_own γ a).
+  Lemma auth_alloc N a :
+    ✓ a → φ a ⊑ pvs N N (∃ γ, auth_ctx AuthI γ N φ ∧ auth_own AuthI γ a).
   Proof.
     intros Ha. rewrite -(right_id True%I (★)%I (φ _)).
     rewrite (own_alloc AuthI (Auth (Excl a) a) N) //; [].
     rewrite pvs_frame_l. apply pvs_strip_pvs.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
-    transitivity (▷auth_inv γ ★ auth_own γ a)%I.
+    transitivity (▷ auth_inv AuthI γ φ ★ auth_own AuthI γ a)%I.
     { rewrite /auth_inv -later_intro -(exist_intro a).
       rewrite const_equiv // left_id.
       rewrite [(_ ★ φ _)%I]comm -assoc. apply sep_mono; first done.
@@ -36,26 +45,24 @@ Section auth.
     by rewrite always_and_sep_l.
   Qed.
 
-  Lemma auth_empty γ E :
-    True ⊑ pvs E E (auth_own γ ∅).
+  Lemma auth_empty γ E : True ⊑ pvs E E (auth_own AuthI γ ∅).
   Proof. by rewrite own_update_empty /auth_own. Qed.
 
-  Context {φ_ne : ∀ n, Proper (dist n ==> dist n) φ}.
-  Local Instance φ_proper : Proper ((≡) ==> (≡)) φ := ne_proper _.
-
   Lemma auth_opened E a γ :
-    (▷auth_inv γ ★ auth_own γ a) ⊑ pvs E E (∃ a', ■✓(a ⋅ a') ★ ▷φ (a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a)).
+    (▷ auth_inv AuthI γ φ ★ auth_own AuthI γ a)
+    ⊑ pvs E E (∃ a', ■✓(a ⋅ a') ★ ▷ φ (a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a)).
   Proof.
     rewrite /auth_inv. rewrite later_exist sep_exist_r. apply exist_elim=>b.
     rewrite later_sep [(▷(_ ∧ _))%I]pvs_timeless !pvs_frame_r. apply pvs_mono.
     rewrite always_and_sep_l -!assoc. apply const_elim_sep_l=>Hv.
     rewrite /auth_own [(▷φ _ ★ _)%I]comm assoc -own_op.
-    rewrite own_valid_r auth_valid sep_exist_l sep_exist_r /=. apply exist_elim=>a'.
-    rewrite [∅ ⋅ _]left_id -(exist_intro a').
+    rewrite own_valid_r auth_validI /= and_elim_l sep_exist_l sep_exist_r /=.
+    apply exist_elim=>a'.
+    rewrite left_id -(exist_intro a').
     apply (eq_rewrite b (a ⋅ a')
               (λ x, ■✓x ★ ▷φ x ★ own AuthI γ (● x ⋅ ◯ a))%I).
     { by move=>n ? ? /timeless_iff ->. }
-    { apply sep_elim_l', sep_elim_r'. done. (* FIXME why does "eauto using I not work? *) }
+    { apply sep_elim_l', sep_elim_r'. done. (* FIXME why does "eauto using I" not work? *) }
     rewrite const_equiv // left_id comm.
     apply sep_mono; first done.
     by rewrite sep_elim_l.
@@ -63,8 +70,8 @@ Section auth.
 
   Lemma auth_closing E `{!LocalUpdate Lv L} a a' γ :
     Lv a → ✓ (L a ⋅ a') →
-    (▷φ (L a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a))
-    ⊑ pvs E E (▷auth_inv γ ★ auth_own γ (L a)).
+    (▷ φ (L a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a))
+    ⊑ pvs E E (▷ auth_inv AuthI γ φ ★ auth_own AuthI γ (L a)).
   Proof.
     intros HL Hv. rewrite /auth_inv /auth_own -(exist_intro (L a ⋅ a')).
     rewrite later_sep [(_ ★ ▷φ _)%I]comm -assoc.
@@ -77,11 +84,11 @@ Section auth.
      step-indices. However, since A is timeless, that should not be
      a restriction.  *)
   Lemma auth_fsa {X : Type} {FSA} (FSAs : FrameShiftAssertion (A:=X) FSA)
-        `{!LocalUpdate Lv L} E P (Q : X → iPropG Λ Σ) γ a :
+        `{!LocalUpdate Lv L} N E P (Q : X → iPropG Λ Σ) γ a :
     nclose N ⊆ E →
-    P ⊑ auth_ctx γ →
-    P ⊑ (auth_own γ a ★ (∀ a', ■✓(a ⋅ a') ★ ▷φ (a ⋅ a') -★
-        FSA (E ∖ nclose N) (λ x, ■(Lv a ∧ ✓(L a⋅a')) ★ ▷φ (L a ⋅ a') ★ (auth_own γ (L a) -★ Q x)))) →
+    P ⊑ auth_ctx AuthI γ N φ →
+    P ⊑ (auth_own AuthI γ a ★ (∀ a', ■✓(a ⋅ a') ★ ▷φ (a ⋅ a') -★
+        FSA (E ∖ nclose N) (λ x, ■(Lv a ∧ ✓(L a⋅a')) ★ ▷φ (L a ⋅ a') ★ (auth_own AuthI γ (L a) -★ Q x)))) →
     P ⊑ FSA E Q.
   Proof.
     rewrite /auth_ctx=>HN Hinv Hinner.

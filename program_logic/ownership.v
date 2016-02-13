@@ -55,9 +55,11 @@ Proof.
   apply uPred.always_ownM.
   by rewrite Res_unit !cmra_unit_empty -{2}(cmra_unit_idemp m).
 Qed.
-Lemma ownG_valid m : (ownG m) ⊑ (✓ m).
-Proof. by rewrite /ownG uPred.ownM_valid; apply uPred.valid_mono=> n [? []]. Qed.
-Lemma ownG_valid_r m : (ownG m) ⊑ (ownG m ★ ✓ m).
+Lemma ownG_valid m : ownG m ⊑ ✓ m.
+Proof.
+  rewrite /ownG uPred.ownM_valid res_validI /= option_validI; auto with I.
+Qed.
+Lemma ownG_valid_r m : ownG m ⊑ (ownG m ★ ✓ m).
 Proof. apply (uPred.always_entails_r _ _), ownG_valid. Qed.
 Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
 Proof. rewrite /ownG; apply _. Qed.
