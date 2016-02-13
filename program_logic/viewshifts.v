@@ -86,13 +86,18 @@ Qed.
 Lemma vs_mask_frame' E Ef P Q : Ef ∩ E = ∅ → (P ={E}=> Q) ⊑ (P ={E ∪ Ef}=> Q).
 Proof. intros; apply vs_mask_frame; solve_elem_of. Qed.
 
+(* FIXME: This is needed to make eauto solve [inv N R ⊑ inv N ?c]. *)
+Local Hint Extern 100 (_ ⊑ _) => reflexivity.
+
 Lemma vs_open_close N E P Q R :
   nclose N ⊆ E →
   (inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q)) ⊑ (P ={E}=> Q).
 Proof.
   intros; apply (always_intro _ _), impl_intro_l.
   rewrite always_and_sep_r assoc [(P ★ _)%I]comm -assoc.
-  apply: (pvs_open_close E N); [by eauto using sep_elim_l..|].
+  (* FIXME sep_elim_l' is already added to the DB in upred.v. Why do
+     I have to mention it here again? *)
+  apply: (pvs_open_close E N); [by eauto using sep_elim_l'..|].
   rewrite sep_elim_r. apply wand_intro_l.
   (* Oh wow, this is annyoing... *)
   rewrite assoc -always_and_sep_r'.
