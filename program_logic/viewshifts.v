@@ -92,9 +92,7 @@ Lemma vs_open_close N E P Q R :
 Proof.
   intros; apply (always_intro _ _), impl_intro_l.
   rewrite always_and_sep_r assoc [(P ★ _)%I]comm -assoc.
-  (* FIXME sep_elim_l' is already added to the DB in upred.v. Why do
-     I have to mention it here again? *)
-  apply: (pvs_open_close E N); [by eauto using sep_elim_l'..|].
+  eapply pvs_open_close; [by eauto using sep_elim_l'..|].
   rewrite sep_elim_r. apply wand_intro_l.
   (* Oh wow, this is annyoing... *)
   rewrite assoc -always_and_sep_r'.
