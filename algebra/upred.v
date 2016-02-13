@@ -521,6 +521,9 @@ Proof.
   * by rewrite -(left_id True%I uPred_and (_ → _)%I) impl_elim_r.
   * by apply impl_intro_l; rewrite left_id.
 Qed.
+Lemma iff_refl Q P : Q ⊑ (P ↔ P).
+Proof. rewrite /uPred_iff; apply and_intro; apply impl_intro_l; auto. Qed.
+
 Lemma or_and_l P Q R : (P ∨ Q ∧ R)%I ≡ ((P ∨ Q) ∧ (P ∨ R))%I.
 Proof.
   apply (anti_symm (⊑)); first auto.
@@ -832,7 +835,6 @@ Proof. done. Qed.
 Lemma prod_validI {A B : cmraT} (x : A * B) :
   (✓ x)%I ≡ (✓ x.1 ∧ ✓ x.2 : uPred M)%I.
 Proof. done. Qed.
-Print later.
 Lemma later_equivI {A : cofeT} (x y : later A) :
   (x ≡ y)%I ≡ (▷ (later_car x ≡ later_car y) : uPred M)%I.
 Proof. done. Qed.
@@ -1001,5 +1003,5 @@ Hint Resolve and_intro and_elim_l' and_elim_r' : I.
 Hint Resolve always_mono : I.
 Hint Resolve sep_elim_l' sep_elim_r' sep_mono : I.
 Hint Immediate True_intro False_elim : I.
-
+Hint Immediate iff_refl : I.
 End uPred.
