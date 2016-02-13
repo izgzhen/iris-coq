@@ -95,4 +95,13 @@ Section heap.
   { eexists. eauto. }
   Qed.
 
+  Lemma wp_load E γ l v P Q :
+    nclose N ⊆ E →
+    P ⊑ heap_ctx γ →
+    P ⊑ (heap_mapsto γ l v ★ ▷ (heap_mapsto γ l v -★ Q v)) →
+    P ⊑ wp E (Load (Loc l)) Q.
+  Proof.
+    intros HN. rewrite /heap_mapsto. apply wp_load_heap; first done.
+    by simplify_map_equality.
+  Qed.
 End heap.
