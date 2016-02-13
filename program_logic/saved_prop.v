@@ -10,7 +10,7 @@ Definition saved_prop_own {Λ Σ} (i : gid) `{SavedPropInG Λ Σ i}
   own i γ (to_agree (Next (iProp_unfold P))).
 Instance: Params (@saved_prop_own) 5.
 
-Section stored_prop.
+Section saved_prop.
   Context `{SavedPropInG Λ Σ SPI}.
   Implicit Types P Q : iPropG Λ Σ.
   Implicit Types γ : gname.
@@ -28,4 +28,4 @@ Section stored_prop.
     apply (eq_rewrite (iProp_unfold P) (iProp_unfold Q) (λ Q' : iPreProp Λ _,
       iProp_fold (iProp_unfold P) ↔ iProp_fold Q')%I); solve_ne || auto with I.
   Qed.
-End stored_prop.
+End saved_prop.
