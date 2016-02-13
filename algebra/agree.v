@@ -1,5 +1,5 @@
 From algebra Require Export cmra.
-From algebra Require Import functor.
+From algebra Require Import functor upred.
 Local Hint Extern 10 (_ ≤ _) => omega.
 
 Record agree (A : Type) : Type := Agree {
@@ -129,6 +129,10 @@ Global Instance to_agree_inj n : Inj (dist n) (dist n) (to_agree).
 Proof. by intros x y [_ Hxy]; apply Hxy. Qed.
 Lemma to_agree_car n (x : agree A) : ✓{n} x → to_agree (x n) ≡{n}≡ x.
 Proof. intros [??]; split; naive_solver eauto using agree_valid_le. Qed.
+
+(** Internalized properties *)
+Lemma agree_valid_uPred {M} x y : ✓ (x ⋅ y) ⊑ (x ≡ y : uPred M).
+Proof. by intros r n _ ?; apply: agree_op_inv. Qed.
 End agree.
 
 Arguments agreeC : clear implicits.
