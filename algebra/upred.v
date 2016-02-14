@@ -615,6 +615,10 @@ Lemma sep_intro_True_l P Q R : True ⊑ P → R ⊑ Q → R ⊑ (P ★ Q).
 Proof. by intros; rewrite -(left_id True%I uPred_sep R); apply sep_mono. Qed.
 Lemma sep_intro_True_r P Q R : R ⊑ P → True ⊑ Q → R ⊑ (P ★ Q).
 Proof. by intros; rewrite -(right_id True%I uPred_sep R); apply sep_mono. Qed.
+Lemma sep_elim_True_l P Q R : True ⊑ P → (P ★ R) ⊑ Q → R ⊑ Q.
+Proof. by intros HP; rewrite -HP left_id. Qed.
+Lemma sep_elim_True_r P Q R : True ⊑ P → (R ★ P) ⊑ Q → R ⊑ Q.
+Proof. by intros HP; rewrite -HP right_id. Qed.
 Lemma wand_intro_l P Q R : (Q ★ P) ⊑ R → P ⊑ (Q -★ R).
 Proof. rewrite comm; apply wand_intro_r. Qed.
 Lemma wand_elim_r P Q : (P ★ (P -★ Q)) ⊑ Q.
