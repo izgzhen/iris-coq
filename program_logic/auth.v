@@ -32,8 +32,8 @@ Section auth.
   Lemma auth_alloc N a :
     ✓ a → φ a ⊑ pvs N N (∃ γ, auth_ctx AuthI γ N φ ∧ auth_own AuthI γ a).
   Proof.
-    intros Ha. rewrite -(right_id True%I (★)%I (φ _)).
-    rewrite (own_alloc AuthI (Auth (Excl a) a) N) //; [].
+    intros Ha. eapply sep_elim_True_r.
+    { by eapply (own_alloc AuthI (Auth (Excl a) a) N). }
     rewrite pvs_frame_l. apply pvs_strip_pvs.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     transitivity (▷ auth_inv AuthI γ φ ★ auth_own AuthI γ a)%I.

@@ -119,8 +119,10 @@ Section heap.
     P ⊑ (▷ (∀ l, heap_mapsto HeapI γ l v -★ Q (LocV l))) →
     P ⊑ wp E (Alloc e) Q.
   Proof.
-    intros HN ? Hctx HP. rewrite -(right_id True%I (★)%I (P)) (auth_empty γ) pvs_frame_l.
-    apply wp_strip_pvs. eapply wp_alloc_heap with (σ:=∅); try eassumption.
+    intros HN ? Hctx HP. eapply sep_elim_True_r.
+    { eapply (auth_empty γ). }
+    rewrite pvs_frame_l. apply wp_strip_pvs.
+    eapply wp_alloc_heap with (σ:=∅); try eassumption.
     { eauto with I. }
     rewrite HP comm. apply sep_mono.
     - rewrite /heap_own. f_equiv. apply: map_eq=>l. by rewrite lookup_fmap !lookup_empty.
@@ -166,7 +168,8 @@ Section heap.
     P ⊑ wp E (Store (Loc l) e) Q.
   Proof.
     rewrite /heap_ctx /heap_own. intros Hl Hval HN Hctx HP.
-    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _) (λ _:(), alter (λ _, Excl v) l)); simpl; eauto.
+    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _)
+                     (λ _:(), alter (λ _, Excl v) l)); simpl; eauto.
     rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
     apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
     rewrite -assoc. apply const_elim_sep_l=>Hv /=.
@@ -189,12 +192,13 @@ Section heap.
       + by rewrite lookup_alter /to_heap !lookup_fmap lookup_insert Hl /=.
       + rewrite lookup_alter_ne // !lookup_fmap lookup_insert_ne //. }
     rewrite !EQ. apply sep_mono; last done.
-    f_equiv. apply: map_eq=>l'. move: (Hv 0%nat l'). destruct (decide (l=l')); simplify_map_equality.
+    f_equiv. apply: map_eq=>l'. move: (Hv 0%nat l').
+    destruct (decide (l=l')); simplify_map_equality.
     - rewrite /from_heap /to_heap lookup_insert lookup_omap !lookup_op.
       rewrite !lookup_fmap lookup_insert Hl.
       case (hf !! l')=>[[?||]|]; auto; contradiction.
-    - rewrite /from_heap /to_heap lookup_insert_ne // !lookup_omap !lookup_op !lookup_fmap.
-      rewrite lookup_insert_ne //.
+    - rewrite /from_heap /to_heap lookup_insert_ne // !lookup_omap.
+      rewrite !lookup_op !lookup_fmap lookup_insert_ne //.
   Qed.
 
   Lemma wp_store N E γ l v' e v P Q :
@@ -204,7 +208,8 @@ Section heap.
     P ⊑ (heap_mapsto HeapI γ l v' ★ ▷ (heap_mapsto HeapI γ l v -★ Q (LitV LitUnit))) →
     P ⊑ wp E (Store (Loc l) e) Q.
   Proof.
-    rewrite /heap_mapsto=>Hval HN Hctx HP. eapply wp_store_heap; try eassumption; last first.
+    rewrite /heap_mapsto=>Hval HN Hctx HP.
+    eapply wp_store_heap; try eassumption; last first.
     - rewrite HP. apply sep_mono; first done. by rewrite insert_singleton.
     - by rewrite lookup_insert.
   Qed.
