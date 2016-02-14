@@ -403,6 +403,8 @@ Lemma lookup_insert_rev {A}  (m : M A) i x y : <[i:=x]>m !! i = Some y → x = y
 Proof. rewrite lookup_insert. congruence. Qed.
 Lemma lookup_insert_ne {A} (m : M A) i j x : i ≠ j → <[i:=x]>m !! j = m !! j.
 Proof. unfold insert. apply lookup_partial_alter_ne. Qed.
+Lemma insert_insert {A} (m : M A) i x y : <[i:=x]>(<[i:=y]>m) = <[i:=x]>m.
+Proof. unfold insert, map_insert. by rewrite <-partial_alter_compose. Qed.
 Lemma insert_commute {A} (m : M A) i j x y :
   i ≠ j → <[i:=x]>(<[j:=y]>m) = <[j:=y]>(<[i:=x]>m).
 Proof. apply partial_alter_commute. Qed.
