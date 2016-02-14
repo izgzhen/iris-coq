@@ -1,4 +1,4 @@
-From heap_lang Require Export derived.
+From heap_lang Require Export lifting.
 From program_logic Require Export invariants ghost_ownership.
 From program_logic Require Import ownership auth.
 Import uPred.
@@ -18,10 +18,9 @@ Definition from_heap : heapRA → state := omap (maybe Excl).
 (* TODO: Do we want to expose heap ownership based on the state, or the heapRA?
    The former does not expose the annoying "Excl", so for now I am going for
    that. We should be able to derive the lemmas we want for this, too. *)
-Definition heap_own {Σ} (i : gid) `{HeapInG Σ i}
-  (γ : gname) (σ : state) : iPropG heap_lang Σ := auth_own i γ (to_heap σ).
 Definition heap_mapsto {Σ} (i : gid) `{HeapInG Σ i}
-  (γ : gname) (l : loc) (v : val) : iPropG heap_lang Σ := heap_own i γ {[ l ↦ v ]}.
+    (γ : gname) (l : loc) (v : val) : iPropG heap_lang Σ :=
+  auth_own i γ {[ l ↦ Excl v ]}.
 Definition heap_inv {Σ} (i : gid) `{HeapInG Σ i}
   (h : heapRA) : iPropG heap_lang Σ := ownP (from_heap h).
 Definition heap_ctx {Σ} (i : gid) `{HeapInG Σ i}
@@ -35,117 +34,79 @@ Section heap.
   Implicit Types h g : heapRA.
   Implicit Types γ : gname.
 
+  (** Conversion to heaps and back *)
+  Global Instance from_heap_proper : Proper ((≡) ==> (=)) from_heap.
+  Proof. by intros ??; fold_leibniz=>->. Qed.
   Lemma from_to_heap σ : from_heap (to_heap σ) = σ.
   Proof.
     apply map_eq=>l. rewrite lookup_omap lookup_fmap. by case (σ !! l).
   Qed.
   Lemma to_heap_valid σ : ✓ to_heap σ.
   Proof. intros n l. rewrite lookup_fmap. by case (σ !! l). Qed.
-  Hint Resolve to_heap_valid.
+  Lemma insert_from_heap l v h :
+    <[l:=v]> (from_heap h) = from_heap (<[l:=Excl v]> h).
+  Proof. by rewrite /from_heap -(omap_insert _ _ _ (Excl v)). Qed.
+  Lemma from_heap_None h l :
+    ✓ h → from_heap h !! l = None → h !! l = None ∨ h !! l ≡ Some ExclUnit.
+  Proof.
+    move=> /(_ O l). rewrite /from_heap lookup_omap.
+    by case: (h !! l)=> [[]|]; auto.
+  Qed.
+  Lemma heap_singleton_inv_l h l v :
+    ✓ ({[l ↦ Excl v]} ⋅ h) → h !! l = None ∨ h !! l ≡ Some ExclUnit.
+  Proof.
+    move=> /(_ O l). rewrite lookup_op lookup_singleton.
+    by case: (h !! l)=> [[]|]; auto.
+  Qed.
 
+  (** Propers *)
   Global Instance heap_inv_proper : Proper ((≡) ==> (≡)) (heap_inv HeapI).
   Proof. intros h1 h2. by fold_leibniz=> ->. Qed.
 
-  Lemma heap_own_op γ σ1 σ2 :
-    (heap_own HeapI γ σ1 ★ heap_own HeapI γ σ2)%I
-    ≡ (■ (σ1 ⊥ₘ σ2) ∧ heap_own HeapI γ (σ1 ∪ σ2))%I.
+  (** General properties of mapsto *)
+  Lemma heap_mapsto_disjoint γ l v1 v2 :
+    (heap_mapsto HeapI γ l v1 ★ heap_mapsto HeapI γ l v2)%I ⊑ False.
   Proof.
- (* TODO. *)
-  Abort.
+    rewrite /heap_mapsto -auto_own_op auto_own_valid map_op_singleton.
+    rewrite map_validI (forall_elim l) lookup_singleton.
+    by rewrite option_validI excl_validI.
+  Qed.
 
-  Lemma heap_own_mapsto γ σ l v :
-    (* TODO: Is this the best way to express "l ∉ dom σ"? *)
-    (heap_own HeapI γ σ ★ heap_mapsto HeapI γ l v)%I
-    ≡ (■ (σ !! l = None) ∧ heap_own HeapI γ (<[l:=v]>σ))%I.
-  Proof. (* TODO. *)
-  Abort.
+  (* Rather weak, we need big separation to state something better here *)
+  Lemma heap_alloc N σ : ownP σ ⊑ pvs N N (∃ γ, heap_ctx HeapI γ N).
+  Proof.
+    rewrite -{1}(from_to_heap σ).
+    etransitivity;
+      first apply (auth_alloc (ownP ∘ from_heap) N (to_heap σ)), to_heap_valid.
+    apply pvs_mono, exist_mono; auto with I.
+  Qed.
 
-  (* TODO: Do we want equivalence to a big sum? *)
-
-  Lemma heap_alloc N σ :
-    ownP σ ⊑ pvs N N (∃ γ, heap_ctx HeapI γ N ∧ heap_own HeapI γ σ).
-  Proof. by rewrite -{1}[σ]from_to_heap -(auth_alloc _ N). Qed.
-
-  (* TODO: Clearly, this is not the right way to obtain these properties about
-     fin_maps. This is horrible. *)
-  Lemma wp_alloc_heap N E γ σ e v P Q :
-    nclose N ⊆ E →  to_val e = Some v →
+  (** Weakest precondition *)
+  Lemma wp_alloc N E γ e v P Q :
+    to_val e = Some v → nclose N ⊆ E →
     P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_own HeapI γ σ ★
-         ▷ (∀ l, σ !! l = None ∧ heap_own HeapI γ (<[l:=v]>σ) -★ Q (LocV l))) →
+    P ⊑ (▷ ∀ l, heap_mapsto HeapI γ l v -★ Q (LocV l)) →
     P ⊑ wp E (Alloc e) Q.
   Proof.
-    rewrite /heap_ctx /heap_own. intros HN Hval Hctx HP.
-    eapply (auth_fsa (heap_inv HeapI) (wp_fsa _)); simpl; eauto.
-    rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
-    apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
-    rewrite -assoc. apply const_elim_sep_l=>Hv /=.
-    rewrite {1}[(▷ownP _)%I]pvs_timeless !pvs_frame_r. apply wp_strip_pvs.
-    rewrite -wp_alloc_pst; first (apply sep_mono; first done); try done; [].
-    apply later_mono, forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
+    rewrite /heap_ctx /heap_inv /heap_mapsto=> ?? Hctx HP.
+    transitivity (pvs E E (auth_own HeapI γ ∅ ★ P))%I.
+    { by rewrite -pvs_frame_r -(auth_empty E γ) left_id. }
+    apply wp_strip_pvs, (auth_fsa (heap_inv HeapI) (wp_fsa (Alloc e)))
+      with N γ ∅; simpl; eauto with I.
+    apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
+    rewrite -assoc left_id; apply const_elim_sep_l=> ?.
+    rewrite {1}[(▷ownP _)%I]pvs_timeless pvs_frame_r; apply wp_strip_pvs.
+    rewrite /wp_fsa -(wp_alloc_pst _ (from_heap h)) //.
+    apply sep_mono_r; rewrite HP; apply later_mono.
+    apply forall_intro=> l; apply wand_intro_l; rewrite (forall_elim l).
+    rewrite always_and_sep_l -assoc; apply const_elim_sep_l=> ?.
     rewrite -(exist_intro (op {[ l ↦ Excl v ]})).
     repeat erewrite <-exist_intro by apply _; simpl.
-    rewrite always_and_sep_l -assoc.
-    apply const_elim_sep_l=>Hfresh.
-    assert (σ !! l = None) as Hfresh_σ.
-    { move: Hfresh (Hv 0%nat l). rewrite /from_heap /to_heap lookup_omap.
-      rewrite lookup_op !lookup_fmap.
-      case _:(σ !! l)=>[v'|]/=; case _:(hf !! l)=>[[?||]|]/=; done. }
-    rewrite const_equiv // const_equiv; last first.
-    { split; first done. move=>n l'. move:(Hv n l') Hfresh.
-      rewrite /from_heap /to_heap !lookup_omap !lookup_op !lookup_fmap !Hfresh_σ /=.
-      destruct (decide (l=l')).
-      - subst l'. rewrite lookup_singleton !Hfresh_σ.
-        case _:(hf !! l)=>[[?||]|]/=; done.
-      - rewrite lookup_singleton_ne //.
-        case _:(σ !! l')=>[?|]/=; case _:(hf !! l')=>[[?||]|]/=; done. }
-    rewrite !left_id -later_intro.
-    assert ({[l ↦ Excl v]} ⋅ to_heap σ = to_heap (<[l:=v]> σ)) as EQ.
-    { apply: map_eq=>l'. rewrite lookup_op !lookup_fmap.
-      destruct (decide (l=l')); simplify_map_equality.
-      - rewrite lookup_insert. done.
-      - rewrite !lookup_insert_ne // lookup_empty left_id. done. }
-    rewrite EQ. apply sep_mono; last done. f_equiv. apply: map_eq=>l'. 
-    move:(Hv 0%nat l') Hfresh. destruct (decide (l=l')); simplify_map_equality.
-    - rewrite lookup_insert !lookup_omap !lookup_op !lookup_fmap lookup_insert.
-      case _:(σ !! l')=>[?|]/=; case _:(hf !! l')=>[[?||]|]/=; done.
-    - rewrite lookup_insert_ne // !lookup_omap !lookup_op !lookup_fmap lookup_insert_ne //.
-  Qed.
-
-  Lemma wp_alloc N E γ e v P Q :
-    nclose N ⊆ E →  to_val e = Some v →
-    P ⊑ heap_ctx HeapI γ N →
-    P ⊑ ▷ (∀ l, heap_mapsto HeapI γ l v -★ Q (LocV l)) →
-    P ⊑ wp E (Alloc e) Q.
-  Proof.
-    intros HN ? Hctx HP. eapply sep_elim_True_r.
-    { eapply (auth_empty E γ). }
-    rewrite pvs_frame_l. apply wp_strip_pvs.
-    eapply wp_alloc_heap with N γ ∅ v; eauto with I.
-    rewrite HP comm. apply sep_mono.
-    - rewrite /heap_own. f_equiv. apply: map_eq=>l. by rewrite lookup_fmap !lookup_empty.
-    - apply later_mono, forall_mono=>l. apply wand_mono; last done. eauto with I.
-  Qed.
-
-  Lemma wp_load_heap N E γ σ l v P Q :
-    σ !! l = Some v →
-    nclose N ⊆ E →
-    P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_own HeapI γ σ ★ ▷ (heap_own HeapI γ σ -★ Q v)) →
-    P ⊑ wp E (Load (Loc l)) Q.
-  Proof.
-    rewrite /heap_ctx /heap_own. intros Hl HN Hctx HP.
-    eapply (auth_fsa' (heap_inv HeapI) (wp_fsa _) id); simpl; eauto.
-    rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
-    apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
-    rewrite -assoc. apply const_elim_sep_l=>Hv /=.
-    rewrite {1}[(▷ownP _)%I]pvs_timeless !pvs_frame_r. apply wp_strip_pvs.
-    rewrite -wp_load_pst; first (apply sep_mono; first done); last first.
-    { move: (Hv 0%nat l). rewrite lookup_omap lookup_op lookup_fmap Hl /=.
-      case _:(hf !! l)=>[[?||]|]; by auto. }
-    apply later_mono, wand_intro_l.
-    rewrite left_id const_equiv // left_id.
-    by rewrite -later_intro.
+    rewrite insert_from_heap left_id right_id !assoc.
+    apply sep_mono_l.
+    rewrite -(map_insert_singleton_op h); last by apply from_heap_None.
+    rewrite const_equiv ?left_id; last by apply (map_insert_valid h).
+    apply later_intro.
   Qed.
 
   Lemma wp_load N E γ l v P Q :
@@ -154,146 +115,80 @@ Section heap.
     P ⊑ (heap_mapsto HeapI γ l v ★ ▷ (heap_mapsto HeapI γ l v -★ Q v)) →
     P ⊑ wp E (Load (Loc l)) Q.
   Proof.
-    intros HN. rewrite /heap_mapsto. apply wp_load_heap; last done.
-    by simplify_map_equality.
-  Qed.
-
-  Lemma wp_store_heap N E γ σ l v' e v P Q :
-    σ !! l = Some v' → to_val e = Some v → 
-    nclose N ⊆ E →
-    P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_own HeapI γ σ ★ ▷ (heap_own HeapI γ (<[l:=v]>σ) -★ Q (LitV LitUnit))) →
-    P ⊑ wp E (Store (Loc l) e) Q.
-  Proof.
-    rewrite /heap_ctx /heap_own. intros Hl Hval HN Hctx HP.
-    eapply (auth_fsa' (heap_inv HeapI) (wp_fsa _) (alter (λ _, Excl v) l)); simpl; eauto.
-    rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
-    apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
-    rewrite -assoc. apply const_elim_sep_l=>Hv /=.
-    rewrite {1}[(▷ownP _)%I]pvs_timeless !pvs_frame_r. apply wp_strip_pvs.
-    rewrite -wp_store_pst; first (apply sep_mono; first done); try done; last first.
-    { move: (Hv 0%nat l). rewrite lookup_omap lookup_op lookup_fmap Hl /=.
-      case _:(hf !! l)=>[[?||]|]; by auto. }
-    apply later_mono, wand_intro_l.
-    rewrite const_equiv //; last first.
-    (* TODO I think there are some general fin_map lemmas hiding in here. *)
-    { split.
-      - exists (Excl v'). by rewrite lookup_fmap Hl.
-      - move=>n l'. move: (Hv n l'). rewrite !lookup_op.
-        destruct (decide (l=l')); simplify_map_equality.
-        + rewrite lookup_alter lookup_fmap Hl /=. case (hf !! l')=>[[?||]|]; by auto.
-        + rewrite lookup_alter_ne //. }
-    rewrite left_id -later_intro.
-    assert (alter (λ _ : excl val, Excl v) l (to_heap σ) = to_heap (<[l:=v]> σ)) as EQ.
-    { apply: map_eq=>l'. destruct (decide (l=l')); simplify_map_equality.
-      + by rewrite lookup_alter /to_heap !lookup_fmap lookup_insert Hl /=.
-      + rewrite lookup_alter_ne // !lookup_fmap lookup_insert_ne //. }
-    rewrite !EQ. apply sep_mono; last done.
-    f_equiv. apply: map_eq=>l'. move: (Hv 0%nat l').
-    destruct (decide (l=l')); simplify_map_equality.
-    - rewrite /from_heap /to_heap lookup_insert lookup_omap !lookup_op.
-      rewrite !lookup_fmap lookup_insert Hl.
-      case (hf !! l')=>[[?||]|]; auto; contradiction.
-    - rewrite /from_heap /to_heap lookup_insert_ne // !lookup_omap.
-      rewrite !lookup_op !lookup_fmap lookup_insert_ne //.
+    rewrite /heap_ctx /heap_inv /heap_mapsto=>HN ? HPQ.
+    apply (auth_fsa' (heap_inv HeapI) (wp_fsa _) id)
+      with N γ {[ l ↦ Excl v ]}; simpl; eauto with I.
+    rewrite HPQ{HPQ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
+    rewrite -assoc; apply const_elim_sep_l=> ?.
+    rewrite {1}[(▷ownP _)%I]pvs_timeless pvs_frame_r; apply wp_strip_pvs.
+    rewrite -(wp_load_pst _ (<[l:=v]>(from_heap h))) ?lookup_insert //.
+    rewrite const_equiv // left_id.
+    rewrite -(map_insert_singleton_op h); last by eapply heap_singleton_inv_l.
+    rewrite insert_from_heap.
+    apply sep_mono_r, later_mono, wand_intro_l. by rewrite -later_intro.
   Qed.
 
   Lemma wp_store N E γ l v' e v P Q :
-    to_val e = Some v → 
-    nclose N ⊆ E → 
+    to_val e = Some v → nclose N ⊆ E → 
     P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_mapsto HeapI γ l v' ★ ▷ (heap_mapsto HeapI γ l v -★ Q (LitV LitUnit))) →
+    P ⊑ (heap_mapsto HeapI γ l v' ★
+          ▷ (heap_mapsto HeapI γ l v -★ Q (LitV LitUnit))) →
     P ⊑ wp E (Store (Loc l) e) Q.
   Proof.
-    rewrite /heap_mapsto=>Hval HN Hctx HP.
-    eapply wp_store_heap; try done; last first.
-    - rewrite HP. apply sep_mono; first done. by rewrite insert_singleton.
-    - by rewrite lookup_insert.
-  Qed.
-
-  Lemma wp_cas_fail_heap N E γ σ l v' e1 v1 e2 v2 P Q :
-    to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v' → v' ≠ v1 →
-    nclose N ⊆ E →
-    P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_own HeapI γ σ ★ ▷ (heap_own HeapI γ σ -★ Q (LitV (LitBool false)))) →
-    P ⊑ wp E (Cas (Loc l) e1 e2) Q.
-  Proof.
-    rewrite /heap_ctx /heap_own. intros He1 He2 Hl Hne HN Hctx HP.
-    eapply (auth_fsa' (heap_inv HeapI) (wp_fsa _) id); simpl; eauto.
-    { split_ands; eexists; eauto. }
-    rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
-    apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
-    rewrite -assoc. apply const_elim_sep_l=>Hv /=.
-    rewrite {1}[(▷ownP _)%I]pvs_timeless !pvs_frame_r. apply wp_strip_pvs.
-    rewrite -wp_cas_fail_pst; first (apply sep_mono; first done); try done; last first.
-    { move: (Hv 0%nat l). rewrite lookup_omap lookup_op lookup_fmap Hl /=.
-      case _:(hf !! l)=>[[?||]|]; by auto. }
-    apply later_mono, wand_intro_l.
-    rewrite left_id const_equiv // left_id.
-    by rewrite -later_intro.
+    rewrite /heap_ctx /heap_inv /heap_mapsto=>? HN ? HPQ.
+    apply (auth_fsa' (heap_inv HeapI) (wp_fsa _) (alter (λ _, Excl v) l))
+      with N γ {[ l ↦ Excl v' ]}; simpl; eauto with I.
+    rewrite HPQ{HPQ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
+    rewrite -assoc; apply const_elim_sep_l=> ?.
+    rewrite {1}[(▷ownP _)%I]pvs_timeless pvs_frame_r; apply wp_strip_pvs.
+    rewrite -(wp_store_pst _ (<[l:=v']>(from_heap h))) ?lookup_insert //.
+    rewrite /heap_inv alter_singleton insert_insert.
+    rewrite -!(map_insert_singleton_op h); try by eapply heap_singleton_inv_l.
+    rewrite !insert_from_heap const_equiv;
+      last (split; [naive_solver|by eapply map_insert_valid, cmra_valid_op_r]).
+    apply sep_mono_r, later_mono, wand_intro_l. by rewrite left_id -later_intro.
   Qed.
 
   Lemma wp_cas_fail N E γ l v' e1 v1 e2 v2 P Q :
     to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 →
     nclose N ⊆ E →
     P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_mapsto HeapI γ l v' ★ ▷ (heap_mapsto HeapI γ l v' -★ Q (LitV (LitBool false)))) →
+    P ⊑ (heap_mapsto HeapI γ l v' ★
+          ▷ (heap_mapsto HeapI γ l v' -★ Q (LitV (LitBool false)))) →
     P ⊑ wp E (Cas (Loc l) e1 e2) Q.
   Proof.
-    rewrite /heap_mapsto=>???. eapply wp_cas_fail_heap; try done; [].
-    by simplify_map_equality.
-  Qed.
-
-  Lemma wp_cas_suc_heap N E γ σ l e1 v1 e2 v2 P Q :
-    to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v1 → 
-    nclose N ⊆ E →
-    P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_own HeapI γ σ ★ ▷ (heap_own HeapI γ (<[l:=v2]>σ) -★ Q (LitV (LitBool true)))) →
-    P ⊑ wp E (Cas (Loc l) e1 e2) Q.
-  Proof.
-    rewrite /heap_ctx /heap_own. intros Hv1 Hv2 Hl HN Hctx HP.
-    eapply (auth_fsa' (heap_inv HeapI) (wp_fsa _) (alter (λ _, Excl v2) l)); simpl; eauto.
-    { split_ands; eexists; eauto. }
-    rewrite HP=>{HP Hctx HN}. apply sep_mono; first done.
-    apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
-    rewrite -assoc. apply const_elim_sep_l=>Hv /=.
-    rewrite {1}[(▷ownP _)%I]pvs_timeless !pvs_frame_r. apply wp_strip_pvs.
-    rewrite -wp_cas_suc_pst; first (apply sep_mono; first done); try done; last first.
-    { move: (Hv 0%nat l). rewrite lookup_omap lookup_op lookup_fmap Hl /=.
-      case _:(hf !! l)=>[[?||]|]; by auto. }
-    apply later_mono, wand_intro_l.
-    rewrite const_equiv //; last first.
-    (* TODO I think there are some general fin_map lemmas hiding in here. *)
-    { split.
-      - exists (Excl v1). by rewrite lookup_fmap Hl.
-      - move=>n l'. move: (Hv n l'). rewrite !lookup_op.
-        destruct (decide (l=l')); simplify_map_equality.
-        + rewrite lookup_alter lookup_fmap Hl /=. case (hf !! l')=>[[?||]|]; by auto.
-        + rewrite lookup_alter_ne //. }
-    rewrite left_id -later_intro.
-    assert (alter (λ _ : excl val, Excl v2) l (to_heap σ) = to_heap (<[l:=v2]> σ)) as EQ.
-    { apply: map_eq=>l'. destruct (decide (l=l')); simplify_map_equality.
-      + by rewrite lookup_alter /to_heap !lookup_fmap lookup_insert Hl /=.
-      + rewrite lookup_alter_ne // !lookup_fmap lookup_insert_ne //. }
-    rewrite !EQ. apply sep_mono; last done.
-    f_equiv. apply: map_eq=>l'. move: (Hv 0%nat l'). destruct (decide (l=l')); simplify_map_equality.
-    - rewrite /from_heap /to_heap lookup_insert lookup_omap !lookup_op.
-      rewrite !lookup_fmap lookup_insert Hl.
-      case (hf !! l')=>[[?||]|]; auto; contradiction.
-    - rewrite /from_heap /to_heap lookup_insert_ne // !lookup_omap !lookup_op !lookup_fmap.
-      rewrite lookup_insert_ne //.
+    rewrite /heap_ctx /heap_inv /heap_mapsto=>??? HN ? HPQ.
+    apply (auth_fsa' (heap_inv HeapI) (wp_fsa _) id)
+      with N γ {[ l ↦ Excl v' ]}; simpl; eauto 10 with I.
+    rewrite HPQ{HPQ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
+    rewrite -assoc; apply const_elim_sep_l=> ?.
+    rewrite {1}[(▷ownP _)%I]pvs_timeless pvs_frame_r; apply wp_strip_pvs.
+    rewrite -(wp_cas_fail_pst _ (<[l:=v']>(from_heap h))) ?lookup_insert //.
+    rewrite const_equiv // left_id.
+    rewrite -(map_insert_singleton_op h); last by eapply heap_singleton_inv_l.
+    rewrite insert_from_heap.
+    apply sep_mono_r, later_mono, wand_intro_l. by rewrite -later_intro.
   Qed.
 
   Lemma wp_cas_suc N E γ l e1 v1 e2 v2 P Q :
     to_val e1 = Some v1 → to_val e2 = Some v2 →
     nclose N ⊆ E →
     P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_mapsto HeapI γ l v1 ★ ▷ (heap_mapsto HeapI γ l v2 -★ Q (LitV (LitBool true)))) →
+    P ⊑ (heap_mapsto HeapI γ l v1 ★
+          ▷ (heap_mapsto HeapI γ l v2 -★ Q (LitV (LitBool true)))) →
     P ⊑ wp E (Cas (Loc l) e1 e2) Q.
   Proof.
-    rewrite /heap_mapsto=>???? HP. eapply wp_cas_suc_heap; try done; last first.
-    - rewrite HP. apply sep_mono; first done. by rewrite insert_singleton.
-    - by simplify_map_equality.
+    rewrite /heap_ctx /heap_inv /heap_mapsto=> ?? HN ? HPQ.
+    apply (auth_fsa' (heap_inv HeapI) (wp_fsa _) (alter (λ _, Excl v2) l))
+      with N γ {[ l ↦ Excl v1 ]}; simpl; eauto 10 with I.
+    rewrite HPQ{HPQ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
+    rewrite -assoc; apply const_elim_sep_l=> ?.
+    rewrite {1}[(▷ownP _)%I]pvs_timeless pvs_frame_r; apply wp_strip_pvs.
+    rewrite -(wp_cas_suc_pst _ (<[l:=v1]>(from_heap h))) ?lookup_insert //.
+    rewrite /heap_inv alter_singleton insert_insert.
+    rewrite -!(map_insert_singleton_op h); try by eapply heap_singleton_inv_l.
+    rewrite !insert_from_heap const_equiv;
+      last (split; [naive_solver|by eapply map_insert_valid, cmra_valid_op_r]).
+    apply sep_mono_r, later_mono, wand_intro_l. by rewrite left_id -later_intro.
   Qed.
-
 End heap.
