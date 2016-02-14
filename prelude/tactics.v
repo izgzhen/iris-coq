@@ -44,6 +44,7 @@ Ltac done :=
   [ repeat first
     [ solve [trivial]
     | solve [symmetry; trivial]
+    | eassumption
     | reflexivity
     | discriminate
     | contradiction
