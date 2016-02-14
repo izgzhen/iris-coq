@@ -162,7 +162,7 @@ Section setoid.
   Proof.
     intros ?? Hf ?? Hm1 ?? Hm2 i; apply (merge_ext _ _); auto.
     by do 2 destruct 1; first [apply Hf | constructor].
-  Qed.    
+  Qed.
   Global Instance map_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (M A).
   Proof.
     intros m1 m2 Hm; apply map_eq; intros i.
@@ -480,13 +480,6 @@ Proof.
   * eauto using insert_delete_subset.
   * by rewrite lookup_delete.
 Qed.
-Lemma fmap_insert {A B} (f : A → B) (m : M A) i x :
-  f <$> <[i:=x]>m = <[i:=f x]>(f <$> m).
-Proof.
-  apply map_eq; intros i'; destruct (decide (i' = i)) as [->|].
-  * by rewrite lookup_fmap, !lookup_insert.
-  * by rewrite lookup_fmap, !lookup_insert_ne, lookup_fmap by done.
-Qed.
 Lemma insert_empty {A} i (x : A) : <[i:=x]>∅ = {[i ↦ x]}.
 Proof. done. Qed.
 
@@ -524,22 +517,34 @@ Proof.
   intros. apply map_eq; intros i'. by destruct (decide (i = i')) as [->|?];
     rewrite ?lookup_alter, ?lookup_singleton_ne, ?lookup_alter_ne by done.
 Qed.
-Lemma map_fmap_singleton {A B} (f : A → B) i x : f <$> {[i ↦ x]} = {[i ↦ f x]}.
-Proof.
-  by unfold singletonM, map_singleton; rewrite fmap_insert, map_fmap_empty.
-Qed.
 
 (** ** Properties of the map operations *)
 Lemma fmap_empty {A B} (f : A → B) : f <$> ∅ = ∅.
 Proof. apply map_empty; intros i. by rewrite lookup_fmap, lookup_empty. Qed.
 Lemma omap_empty {A B} (f : A → option B) : omap f ∅ = ∅.
 Proof. apply map_empty; intros i. by rewrite lookup_omap, lookup_empty. Qed.
+Lemma fmap_insert {A B} (f: A → B) m i x: f <$> <[i:=x]>m = <[i:=f x]>(f <$> m).
+Proof.
+  apply map_eq; intros i'; destruct (decide (i' = i)) as [->|].
+  * by rewrite lookup_fmap, !lookup_insert.
+  * by rewrite lookup_fmap, !lookup_insert_ne, lookup_fmap by done.
+Qed.
+Lemma omap_insert {A B} (f : A → option B) m i x y :
+  f x = Some y → omap f (<[i:=x]>m) = <[i:=y]>(omap f m).
+Proof.
+  intros; apply map_eq; intros i'; destruct (decide (i' = i)) as [->|].
+  * by rewrite lookup_omap, !lookup_insert.
+  * by rewrite lookup_omap, !lookup_insert_ne, lookup_omap by done.
+Qed.
+Lemma map_fmap_singleton {A B} (f : A → B) i x : f <$> {[i ↦ x]} = {[i ↦ f x]}.
+Proof.
+  by unfold singletonM, map_singleton; rewrite fmap_insert, map_fmap_empty.
+Qed.
 Lemma omap_singleton {A B} (f : A → option B) i x y :
   f x = Some y → omap f {[ i ↦ x ]} = {[ i ↦ y ]}.
 Proof.
-  intros; apply map_eq; intros j; destruct (decide (i = j)) as [->|].
-  * by rewrite lookup_omap, !lookup_singleton.
-  * by rewrite lookup_omap, !lookup_singleton_ne.
+  intros. unfold singletonM, map_singleton.
+  by erewrite omap_insert, omap_empty by eauto.
 Qed.
 Lemma map_fmap_id {A} (m : M A) : id <$> m = m.
 Proof. apply map_eq; intros i; by rewrite lookup_fmap, option_fmap_id. Qed.
