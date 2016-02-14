@@ -11,7 +11,8 @@ Class AuthInG Λ Σ (i : gid) (A : cmraT) `{Empty A} := {
 (* TODO: Once we switched to RAs, it is no longer necessary to remember that a is
    constantly valid. *)
 Definition auth_inv {Λ Σ A} (i : gid) `{AuthInG Λ Σ i A}
-  (γ : gname) (φ : A → iPropG Λ Σ) : iPropG Λ Σ := (∃ a, (■✓a ∧ own i γ (● a)) ★ φ a)%I.
+    (γ : gname) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
+  (∃ a, (■ ✓ a ∧ own i γ (● a)) ★ φ a)%I.
 Definition auth_own {Λ Σ A} (i : gid) `{AuthInG Λ Σ i A}
   (γ : gname) (a : A) : iPropG Λ Σ := own i γ (◯ a).
 Definition auth_ctx {Λ Σ A} (i : gid) `{AuthInG Λ Σ i A}
@@ -29,6 +30,10 @@ Section auth.
   Implicit Types a b : A.
   Implicit Types γ : gname.
 
+  Lemma auto_own_op γ a b :
+    auth_own AuthI γ (a ⋅ b) ≡ (auth_own AuthI γ a ★ auth_own AuthI γ b)%I.
+  Proof. by rewrite /auth_own -own_op auth_frag_op. Qed.
+
   Lemma auth_alloc N a :
     ✓ a → φ a ⊑ pvs N N (∃ γ, auth_ctx AuthI γ N φ ∧ auth_own AuthI γ a).
   Proof.
@@ -45,12 +50,12 @@ Section auth.
     by rewrite always_and_sep_l.
   Qed.
 
-  Lemma auth_empty γ E : True ⊑ pvs E E (auth_own AuthI γ ∅).
+  Lemma auth_empty E γ : True ⊑ pvs E E (auth_own AuthI γ ∅).
   Proof. by rewrite own_update_empty /auth_own. Qed.
 
-  Lemma auth_opened E a γ :
+  Lemma auth_opened E γ a :
     (▷ auth_inv AuthI γ φ ★ auth_own AuthI γ a)
-    ⊑ pvs E E (∃ a', ■✓(a ⋅ a') ★ ▷ φ (a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a)).
+    ⊑ pvs E E (∃ a', ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a)).
   Proof.
     rewrite /auth_inv. rewrite later_exist sep_exist_r. apply exist_elim=>b.
     rewrite later_sep [(▷(_ ∧ _))%I]pvs_timeless !pvs_frame_r. apply pvs_mono.
@@ -59,8 +64,7 @@ Section auth.
     rewrite own_valid_r auth_validI /= and_elim_l sep_exist_l sep_exist_r /=.
     apply exist_elim=>a'.
     rewrite left_id -(exist_intro a').
-    apply (eq_rewrite b (a ⋅ a')
-              (λ x, ■✓x ★ ▷φ x ★ own AuthI γ (● x ⋅ ◯ a))%I).
+    apply (eq_rewrite b (a ⋅ a') (λ x, ■✓x ★ ▷φ x ★ own AuthI γ (● x ⋅ ◯ a))%I).
     { by move=>n ? ? /timeless_iff ->. }
     { by eauto with I. }
     rewrite const_equiv // left_id comm.
@@ -68,7 +72,7 @@ Section auth.
     by rewrite sep_elim_l.
   Qed.
 
-  Lemma auth_closing E `{!LocalUpdate Lv L} a a' γ :
+  Lemma auth_closing `{!LocalUpdate Lv L} E γ a a' :
     Lv a → ✓ (L a ⋅ a') →
     (▷ φ (L a ⋅ a') ★ own AuthI γ (● (a ⋅ a') ⋅ ◯ a))
     ⊑ pvs E E (▷ auth_inv AuthI γ φ ★ auth_own AuthI γ (L a)).
@@ -80,36 +84,55 @@ Section auth.
     by apply own_update, (auth_local_update_l L).
   Qed.
 
+  Context {V} (fsa : FSA Λ (globalF Σ) V) `{!FrameShiftAssertion fsaV fsa}.
+
   (* Notice how the user has to prove that `b⋅a'` is valid at all
      step-indices. However, since A is timeless, that should not be
-     a restriction.
-     "I" here is an index type, so that the proof can still have some influence on
-     which concrete action is executed *after* it saw the full, authoritative state. *)
-  Lemma auth_fsa {B I} (fsa : FSA Λ (globalF Σ) B) `{!FrameShiftAssertion fsaV fsa}
-       L {Lv} {LU : ∀ i:I, LocalUpdate (Lv i) (L i)} N E P (Q : B → iPropG Λ Σ) γ a :
+     a restriction. *)
+  Lemma auth_fsa E N P (Q : V → iPropG Λ Σ) γ a :
+    fsaV →
+    nclose N ⊆ E →
+    P ⊑ auth_ctx AuthI γ N φ →
+    P ⊑ (auth_own AuthI γ a ★ ∀ a',
+          ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
+          fsa (E ∖ nclose N) (λ x, ∃ L Lv (Hup : LocalUpdate Lv L),
+            ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
+            (auth_own AuthI γ (L a) -★ Q x))) →
+    P ⊑ fsa E Q.
+  Proof.
+    rewrite /auth_ctx=>? HN Hinv Hinner.
+    eapply (inv_fsa fsa); eauto. rewrite Hinner=>{Hinner Hinv P}.
+    apply wand_intro_l. rewrite assoc.
+    rewrite (auth_opened (E ∖ N)) !pvs_frame_r !sep_exist_r.
+    apply (fsa_strip_pvs fsa). apply exist_elim=>a'.
+    rewrite (forall_elim a'). rewrite [(▷_ ★ _)%I]comm.
+    (* Getting this wand eliminated is really annoying. *)
+    rewrite [(■_ ★ _)%I]comm -!assoc [(▷φ _ ★ _ ★ _)%I]assoc [(▷φ _ ★ _)%I]comm.
+    rewrite wand_elim_r fsa_frame_l.
+    apply (fsa_mono_pvs fsa)=> b.
+    rewrite sep_exist_l; apply exist_elim=> L.
+    rewrite sep_exist_l; apply exist_elim=> Lv.
+    rewrite sep_exist_l; apply exist_elim=> ?.
+    rewrite comm -!assoc. apply const_elim_sep_l=>-[HL Hv].
+    rewrite assoc [(_ ★ (_ -★ _))%I]comm -assoc.
+    rewrite (auth_closing (E ∖ N)) //; [].
+    rewrite pvs_frame_l. apply pvs_mono.
+    by rewrite assoc [(_ ★ ▷_)%I]comm -assoc wand_elim_l.
+  Qed.
+  Lemma auth_fsa' L `{!LocalUpdate Lv L} E N P (Q: V → iPropG Λ Σ) γ a :
     fsaV →
     nclose N ⊆ E →
     P ⊑ auth_ctx AuthI γ N φ →
     P ⊑ (auth_own AuthI γ a ★ (∀ a',
           ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
           fsa (E ∖ nclose N) (λ x,
-            ∃ i, ■ (Lv i a ∧ ✓(L i a⋅a')) ★ ▷ φ (L i a ⋅ a') ★
-            (auth_own AuthI γ (L i a) -★ Q x)))) →
+            ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
+            (auth_own AuthI γ (L a) -★ Q x)))) →
     P ⊑ fsa E Q.
   Proof.
-    rewrite /auth_ctx=>? HN Hinv Hinner.
-    eapply (inv_fsa fsa); eauto. rewrite Hinner=>{Hinner Hinv P}.
-    apply wand_intro_l.
-    rewrite assoc auth_opened !pvs_frame_r !sep_exist_r.
-    apply (fsa_strip_pvs fsa). apply exist_elim=>a'.
-    rewrite (forall_elim a'). rewrite [(▷_ ★ _)%I]comm.
-    (* Getting this wand eliminated is really annoying. *)
-    rewrite [(■_ ★ _)%I]comm -!assoc [(▷φ _ ★ _ ★ _)%I]assoc [(▷φ _ ★ _)%I]comm.
-    rewrite wand_elim_r fsa_frame_l.
-    apply (fsa_mono_pvs fsa)=> x. rewrite sep_exist_l. apply exist_elim=>i.
-    rewrite comm -!assoc. apply const_elim_sep_l=>-[HL Hv].
-    rewrite assoc [(_ ★ (_ -★ _))%I]comm -assoc.
-    rewrite auth_closing //; []. erewrite pvs_frame_l. apply pvs_mono.
-    by rewrite assoc [(_ ★ ▷_)%I]comm -assoc wand_elim_l.
+    intros ??? HP. eapply auth_fsa with N γ a; eauto.
+    rewrite HP; apply sep_mono; first done; apply forall_mono=> a'.
+    apply wand_mono; first done. apply (fsa_mono fsa)=> b.
+    rewrite -(exist_intro L). by repeat erewrite <-exist_intro by apply _.
   Qed.
 End auth.
