@@ -97,14 +97,14 @@ Lemma pvs_open_close E N P Q R :
   R ⊑ inv N P →
   R ⊑ (▷P -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷P ★ Q)) →
   R ⊑ pvs E E Q.
-Proof. intros. by apply: (inv_fsa pvs_fsa); try eassumption. Qed.
+Proof. intros. by apply: (inv_fsa pvs_fsa). Qed.
 
 Lemma wp_open_close E e N P (Q : val Λ → iProp Λ Σ) R :
   atomic e → nclose N ⊆ E →
   R ⊑ inv N P →
   R ⊑ (▷P -★ wp (E ∖ nclose N) e (λ v, ▷P ★ Q v)) →
   R ⊑ wp E e Q.
-Proof. intros. apply: (inv_fsa (wp_fsa e)); eassumption. Qed.
+Proof. intros. by apply: (inv_fsa (wp_fsa e)). Qed.
 
 Lemma inv_alloc N P : ▷ P ⊑ pvs N N (inv N P).
 Proof. by rewrite /inv (pvs_allocI N); last apply coPset_suffixes_infinite. Qed.

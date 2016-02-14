@@ -84,7 +84,7 @@ Section heap.
     apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
     rewrite -assoc. apply const_elim_sep_l=>Hv /=.
     rewrite {1}[(▷ownP _)%I]pvs_timeless !pvs_frame_r. apply wp_strip_pvs.
-    rewrite -wp_alloc_pst; first (apply sep_mono; first done); try eassumption.
+    rewrite -wp_alloc_pst; first (apply sep_mono; first done); try done; [].
     apply later_mono, forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
     rewrite -(exist_intro l) !left_id. rewrite always_and_sep_l -assoc.
     apply const_elim_sep_l=>Hfresh.
@@ -122,7 +122,7 @@ Section heap.
     intros HN ? Hctx HP. eapply sep_elim_True_r.
     { eapply (auth_empty γ). }
     rewrite pvs_frame_l. apply wp_strip_pvs.
-    eapply wp_alloc_heap with (σ:=∅); try eassumption.
+    eapply wp_alloc_heap with (σ:=∅); try done; [|].
     { eauto with I. }
     rewrite HP comm. apply sep_mono.
     - rewrite /heap_own. f_equiv. apply: map_eq=>l. by rewrite lookup_fmap !lookup_empty.
@@ -174,7 +174,7 @@ Section heap.
     apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
     rewrite -assoc. apply const_elim_sep_l=>Hv /=.
     rewrite {1}[(▷ownP _)%I]pvs_timeless !pvs_frame_r. apply wp_strip_pvs.
-    rewrite -wp_store_pst; first (apply sep_mono; first done); try eassumption; last first.
+    rewrite -wp_store_pst; first (apply sep_mono; first done); try done; last first.
     { move: (Hv 0%nat l). rewrite lookup_omap lookup_op lookup_fmap Hl /=.
       case _:(hf !! l)=>[[?||]|]; by auto. }
     apply later_mono, wand_intro_l.
@@ -209,7 +209,7 @@ Section heap.
     P ⊑ wp E (Store (Loc l) e) Q.
   Proof.
     rewrite /heap_mapsto=>Hval HN Hctx HP.
-    eapply wp_store_heap; try eassumption; last first.
+    eapply wp_store_heap; try done; last first.
     - rewrite HP. apply sep_mono; first done. by rewrite insert_singleton.
     - by rewrite lookup_insert.
   Qed.
@@ -228,7 +228,7 @@ Section heap.
     apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
     rewrite -assoc. apply const_elim_sep_l=>Hv /=.
     rewrite {1}[(▷ownP _)%I]pvs_timeless !pvs_frame_r. apply wp_strip_pvs.
-    rewrite -wp_cas_fail_pst; first (apply sep_mono; first done); try eassumption; last first.
+    rewrite -wp_cas_fail_pst; first (apply sep_mono; first done); try done; last first.
     { move: (Hv 0%nat l). rewrite lookup_omap lookup_op lookup_fmap Hl /=.
       case _:(hf !! l)=>[[?||]|]; by auto. }
     apply later_mono, wand_intro_l.
@@ -243,7 +243,7 @@ Section heap.
     P ⊑ (heap_mapsto HeapI γ l v' ★ ▷ (heap_mapsto HeapI γ l v' -★ Q 'false)) →
     P ⊑ wp E (Cas (Loc l) e1 e2) Q.
   Proof.
-    rewrite /heap_mapsto=>???. eapply wp_cas_fail_heap; try eassumption.
+    rewrite /heap_mapsto=>???. eapply wp_cas_fail_heap; try done; [].
     by simplify_map_equality.
   Qed.
 
@@ -261,7 +261,7 @@ Section heap.
     apply forall_intro=>hf. apply wand_intro_l. rewrite /heap_inv.
     rewrite -assoc. apply const_elim_sep_l=>Hv /=.
     rewrite {1}[(▷ownP _)%I]pvs_timeless !pvs_frame_r. apply wp_strip_pvs.
-    rewrite -wp_cas_suc_pst; first (apply sep_mono; first done); try eassumption; last first.
+    rewrite -wp_cas_suc_pst; first (apply sep_mono; first done); try done; last first.
     { move: (Hv 0%nat l). rewrite lookup_omap lookup_op lookup_fmap Hl /=.
       case _:(hf !! l)=>[[?||]|]; by auto. }
     apply later_mono, wand_intro_l.
@@ -294,7 +294,7 @@ Section heap.
     P ⊑ (heap_mapsto HeapI γ l v1 ★ ▷ (heap_mapsto HeapI γ l v2 -★ Q 'true)) →
     P ⊑ wp E (Cas (Loc l) e1 e2) Q.
   Proof.
-    rewrite /heap_mapsto=>???? HP. eapply wp_cas_suc_heap; try eassumption; last first.
+    rewrite /heap_mapsto=>???? HP. eapply wp_cas_suc_heap; try done; last first.
     - rewrite HP. apply sep_mono; first done. by rewrite insert_singleton.
     - by simplify_map_equality.
   Qed.
