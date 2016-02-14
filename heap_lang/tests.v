@@ -51,10 +51,10 @@ Section LiftingTests.
   Definition FindPred : val :=
     rec: "pred" "x" "y" :=
       let: "yp" := "y" + '1 in
-      if "yp" < "x" then "pred" "x" "yp" else "y".
+      if: "yp" < "x" then "pred" "x" "yp" else "y".
   Definition Pred : val :=
     λ: "x",
-      if "x" ≤ '0 then -FindPred (-"x" + '2) '0 else FindPred "x" '0.
+      if: "x" ≤ '0 then -FindPred (-"x" + '2) '0 else FindPred "x" '0.
 
   Lemma FindPred_spec n1 n2 E Q :
     (■ (n1 < n2) ∧ Q '(n2 - 1)) ⊑ wp E (FindPred 'n2 'n1) Q.

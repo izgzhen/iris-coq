@@ -39,7 +39,7 @@ Notation "'rec:' f x := e" := (Rec f x e%L)
   (at level 102, f at level 1, x at level 1, e at level 200) : lang_scope.
 Notation "'rec:' f x := e" := (RecV f x e%L)
   (at level 102, f at level 1, x at level 1, e at level 200) : lang_scope.
-Notation "'if' e1 'then' e2 'else' e3" := (If e1%L e2%L e3%L)
+Notation "'if:' e1 'then' e2 'else' e3" := (If e1%L e2%L e3%L)
   (at level 200, e1, e2, e3 at level 200) : lang_scope.
 
 (** Derived notions, in order of declaration. The notations for let and seq
