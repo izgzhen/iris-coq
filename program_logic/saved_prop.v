@@ -15,6 +15,10 @@ Section saved_prop.
   Implicit Types P Q : iPropG Λ Σ.
   Implicit Types γ : gname.
 
+  Lemma saved_prop_alloc_strong N P (G : gset gname) :
+    True ⊑ pvs N N (∃ γ, ■(γ ∉ G) ∧ saved_prop_own SPI γ P).
+  Proof. by apply own_alloc_strong. Qed.
+
   Lemma saved_prop_alloc N P :
     True ⊑ pvs N N (∃ γ, saved_prop_own SPI γ P).
   Proof. by apply own_alloc. Qed.

@@ -82,17 +82,19 @@ Section auth.
 
   (* Notice how the user has to prove that `b⋅a'` is valid at all
      step-indices. However, since A is timeless, that should not be
-     a restriction.  *)
-  Lemma auth_fsa {B C} (fsa : FSA Λ (globalF Σ) B) `{!FrameShiftAssertion fsaV fsa}
-       L {Lv} {LU : ∀ c:C, LocalUpdate (Lv c) (L c)} N E P (Q : B → iPropG Λ Σ) γ a :
+     a restriction.
+     "I" here is an index type, so that the proof can still have some influence on
+     which concrete action is executed *after* it saw the full, authoritative state. *)
+  Lemma auth_fsa {B I} (fsa : FSA Λ (globalF Σ) B) `{!FrameShiftAssertion fsaV fsa}
+       L {Lv} {LU : ∀ i:I, LocalUpdate (Lv i) (L i)} N E P (Q : B → iPropG Λ Σ) γ a :
     fsaV →
     nclose N ⊆ E →
     P ⊑ auth_ctx AuthI γ N φ →
     P ⊑ (auth_own AuthI γ a ★ (∀ a',
           ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
           fsa (E ∖ nclose N) (λ x,
-            ∃ c, ■ (Lv c a ∧ ✓(L c a⋅a')) ★ ▷ φ (L c a ⋅ a') ★
-            (auth_own AuthI γ (L c a) -★ Q x)))) →
+            ∃ i, ■ (Lv i a ∧ ✓(L i a⋅a')) ★ ▷ φ (L i a ⋅ a') ★
+            (auth_own AuthI γ (L i a) -★ Q x)))) →
     P ⊑ fsa E Q.
   Proof.
     rewrite /auth_ctx=>? HN Hinv Hinner.
@@ -104,7 +106,7 @@ Section auth.
     (* Getting this wand eliminated is really annoying. *)
     rewrite [(■_ ★ _)%I]comm -!assoc [(▷φ _ ★ _ ★ _)%I]assoc [(▷φ _ ★ _)%I]comm.
     rewrite wand_elim_r fsa_frame_l.
-    apply (fsa_mono_pvs fsa)=> x. rewrite sep_exist_l. apply exist_elim=>c.
+    apply (fsa_mono_pvs fsa)=> x. rewrite sep_exist_l. apply exist_elim=>i.
     rewrite comm -!assoc. apply const_elim_sep_l=>-[HL Hv].
     rewrite assoc [(_ ★ (_ -★ _))%I]comm -assoc.
     rewrite auth_closing //; []. erewrite pvs_frame_l. apply pvs_mono.

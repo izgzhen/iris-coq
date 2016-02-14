@@ -295,16 +295,22 @@ Proof. eauto using map_singleton_updateP_empty. Qed.
 
 Section freshness.
 Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
-Lemma map_updateP_alloc (Q : gmap K A → Prop) m x :
-  ✓ x → (∀ i, m !! i = None → Q (<[i:=x]>m)) → m ~~>: Q.
+Lemma map_updateP_alloc_strong (Q : gmap K A → Prop) (I : gset K) m x :
+  ✓ x → (∀ i, m !! i = None → i ∉ I → Q (<[i:=x]>m)) → m ~~>: Q.
 Proof.
-  intros ? HQ mf n Hm. set (i := fresh (dom (gset K) (m ⋅ mf))).
-  assert (i ∉ dom (gset K) m ∧ i ∉ dom (gset K) mf) as [??].
-  { rewrite -not_elem_of_union -map_dom_op; apply is_fresh. }
-  exists (<[i:=x]>m); split; first by apply HQ, not_elem_of_dom.
+  intros ? HQ mf n Hm. set (i := fresh (I ∪ dom (gset K) (m ⋅ mf))).
+  assert (i ∉ I ∧ i ∉ dom (gset K) m ∧ i ∉ dom (gset K) mf) as [?[??]].
+  { rewrite -not_elem_of_union -map_dom_op -not_elem_of_union; apply is_fresh. }
+  exists (<[i:=x]>m). split; first by (apply HQ; last done; apply not_elem_of_dom).
   rewrite -map_insert_op_None; last by apply not_elem_of_dom.
   by apply map_insert_validN; [apply cmra_valid_validN|].
 Qed.
+Lemma map_updateP_alloc (Q : gmap K A → Prop) m x :
+  ✓ x → (∀ i, m !! i = None → Q (<[i:=x]>m)) → m ~~>: Q.
+Proof. move=>??. eapply map_updateP_alloc_strong with (I:=∅); by eauto. Qed.
+Lemma map_updateP_alloc_strong' m x (I : gset K) :
+  ✓ x → m ~~>: λ m', ∃ i, i ∉ I ∧ m' = <[i:=x]>m ∧ m !! i = None.
+Proof. eauto using map_updateP_alloc_strong. Qed.
 Lemma map_updateP_alloc' m x :
   ✓ x → m ~~>: λ m', ∃ i, m' = <[i:=x]>m ∧ m !! i = None.
 Proof. eauto using map_updateP_alloc. Qed.
