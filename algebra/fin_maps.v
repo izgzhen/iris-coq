@@ -106,6 +106,8 @@ Proof. by apply lookup_merge. Qed.
 Lemma lookup_unit m i : unit m !! i = unit (m !! i).
 Proof. by apply lookup_fmap. Qed.
 
+Lemma map_valid_spec m : ✓ m ↔ ∀ i, ✓ (m !! i).
+Proof. split; intros Hm ??; apply Hm. Qed.
 Lemma map_included_spec (m1 m2 : gmap K A) : m1 ≼ m2 ↔ ∀ i, m1 !! i ≼ m2 !! i.
 Proof.
   split.
@@ -188,36 +190,32 @@ Implicit Types a : A.
 
 Lemma map_lookup_validN n m i x : ✓{n} m → m !! i ≡{n}≡ Some x → ✓{n} x.
 Proof. by move=> /(_ i) Hm Hi; move:Hm; rewrite Hi. Qed.
+Lemma map_lookup_valid m i x : ✓ m → m !! i ≡ Some x → ✓ x.
+Proof. move=>Hm Hi n. move:(Hm n i). by rewrite Hi. Qed.
 Lemma map_insert_validN n m i x : ✓{n} x → ✓{n} m → ✓{n} <[i:=x]>m.
 Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_equality. Qed.
+Lemma map_insert_valid m i x : ✓ x → ✓ m → ✓ <[i:=x]>m.
+Proof. intros ?? n j; apply map_insert_validN; auto. Qed.
 Lemma map_singleton_validN n i x : ✓{n} ({[ i ↦ x ]} : gmap K A) ↔ ✓{n} x.
 Proof.
   split; [|by intros; apply map_insert_validN, cmra_empty_valid].
   by move=>/(_ i); simplify_map_equality.
 Qed.
-
-Lemma map_lookup_valid m i x : ✓ m → m !! i ≡ Some x → ✓ x.
-Proof. move=>Hm Hi n. move:(Hm n i). by rewrite Hi. Qed.
-Lemma map_insert_valid m i x : ✓ x → ✓ m → ✓ <[i:=x]>m.
-Proof. intros ?? n j; apply map_insert_validN; auto. Qed.
 Lemma map_singleton_valid i x : ✓ ({[ i ↦ x ]} : gmap K A) ↔ ✓ x.
 Proof. split; intros ? n; eapply map_singleton_validN; eauto. Qed.
 
-Lemma map_insert_op_None m1 m2 i x :
-  m2 !! i = None → <[i:=x]>(m1 ⋅ m2) = <[i:=x]>m1 ⋅ m2.
-Proof. by intros Hi; apply (insert_merge_l _ m1 m2); rewrite Hi. Qed.
-Lemma map_insert_op_unit m1 m2 i x :
-  m2 !! i ≡ Some (unit x) → <[i:=x]>(m1 ⋅ m2) ≡ <[i:=x]>m1 ⋅ m2.
+Lemma map_insert_singleton_opN n m i x :
+  m !! i = None ∨ m !! i ≡{n}≡ Some (unit x) → <[i:=x]> m ≡{n}≡ {[ i ↦ x ]} ⋅ m.
 Proof.
-  intros Hu j; destruct (decide (i = j)) as [->|].
-  * by rewrite lookup_insert lookup_op lookup_insert Hu cmra_unit_r.
-  * by rewrite lookup_insert_ne // !lookup_op lookup_insert_ne.
+  intros Hi j; destruct (decide (i = j)) as [->|];
+    [|by rewrite lookup_op lookup_insert_ne // lookup_singleton_ne // left_id].
+  rewrite lookup_op lookup_insert lookup_singleton.
+  by destruct Hi as [->| ->]; constructor; rewrite ?cmra_unit_r.
 Qed.
-Lemma map_insert_op m1 m2 i x :
-  m2 !! i = None ∨ m2 !! i ≡ Some (unit x) →
-  <[i:=x]>(m1 ⋅ m2) ≡ <[i:=x]>m1 ⋅ m2.
+Lemma map_insert_singleton_op m i x :
+  m !! i = None ∨ m !! i ≡ Some (unit x) → <[i:=x]> m ≡ {[ i ↦ x ]} ⋅ m.
 Proof.
-  by intros [?|?]; [rewrite map_insert_op_None|rewrite map_insert_op_unit].
+  rewrite !equiv_dist; naive_solver eauto using map_insert_singleton_opN.
 Qed.
 
 Lemma map_unit_singleton (i : K) (x : A) :
@@ -301,8 +299,11 @@ Proof.
   intros ? HQ mf n Hm. set (i := fresh (I ∪ dom (gset K) (m ⋅ mf))).
   assert (i ∉ I ∧ i ∉ dom (gset K) m ∧ i ∉ dom (gset K) mf) as [?[??]].
   { rewrite -not_elem_of_union -map_dom_op -not_elem_of_union; apply is_fresh. }
-  exists (<[i:=x]>m). split; first by (apply HQ; last done; apply not_elem_of_dom).
-  rewrite -map_insert_op_None; last by apply not_elem_of_dom.
+  exists (<[i:=x]>m); split.
+  { by apply HQ; last done; apply not_elem_of_dom. }
+  rewrite map_insert_singleton_opN; last by left; apply not_elem_of_dom.
+  rewrite -assoc -map_insert_singleton_opN;
+    last by left; apply not_elem_of_dom; rewrite map_dom_op not_elem_of_union.
   by apply map_insert_validN; [apply cmra_valid_validN|].
 Qed.
 Lemma map_updateP_alloc (Q : gmap K A → Prop) m x :
