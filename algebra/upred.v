@@ -576,6 +576,10 @@ Proof. by intros x n ? (x1&x2&Hx&HPQ&?); cofe_subst; apply HPQ. Qed.
 
 (* Derived BI Stuff *)
 Hint Resolve sep_mono.
+Lemma sep_mono_l P P' Q : P ⊑ Q → (P ★ P') ⊑ (Q ★ P').
+Proof. by intros; apply sep_mono. Qed.
+Lemma sep_mono_r P P' Q' : P' ⊑ Q' → (P ★ P') ⊑ (P ★ Q').
+Proof. by apply sep_mono. Qed.
 Global Instance sep_mono' : Proper ((⊑) ==> (⊑) ==> (⊑)) (@uPred_sep M).
 Proof. by intros P P' HP Q Q' HQ; apply sep_mono. Qed.
 Global Instance sep_flip_mono' :
