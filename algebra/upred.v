@@ -436,8 +436,16 @@ Lemma const_mono φ1 φ2 : (φ1 → φ2) → ■ φ1 ⊑ ■ φ2.
 Proof. intros; apply const_elim with φ1; eauto using const_intro. Qed.
 Lemma and_mono P P' Q Q' : P ⊑ Q → P' ⊑ Q' → (P ∧ P') ⊑ (Q ∧ Q').
 Proof. auto. Qed.
+Lemma and_mono_l P P' Q : P ⊑ Q → (P ∧ P') ⊑ (Q ∧ P').
+Proof. by intros; apply and_mono. Qed.
+Lemma and_mono_r P P' Q' : P' ⊑ Q' → (P ∧ P') ⊑ (P ∧ Q').
+Proof. by apply and_mono. Qed.
 Lemma or_mono P P' Q Q' : P ⊑ Q → P' ⊑ Q' → (P ∨ P') ⊑ (Q ∨ Q').
 Proof. auto. Qed.
+Lemma or_mono_l P P' Q : P ⊑ Q → (P ∨ P') ⊑ (Q ∨ P').
+Proof. by intros; apply or_mono. Qed.
+Lemma or_mono_r P P' Q' : P' ⊑ Q' → (P ∨ P') ⊑ (P ∨ Q').
+Proof. by apply or_mono. Qed.
 Lemma impl_mono P P' Q Q' : Q ⊑ P → P' ⊑ Q' → (P → P') ⊑ (Q → Q').
 Proof.
   intros HP HQ'; apply impl_intro_l; rewrite -HQ'.
