@@ -118,9 +118,13 @@ Section heap.
     P ⊑ (▷ (∀ l, heap_mapsto HeapI γ l v -★ Q (LocV l))) →
     P ⊑ wp E (Alloc e) Q.
   Proof.
-    intros HN ? ? HP. eapply wp_alloc_heap with (σ:=∅); try eassumption.
-    rewrite HP. Fail rewrite left_id.
-  Abort.
+    intros HN ? Hctx HP. rewrite -(right_id True%I (★)%I (P)) (auth_empty γ) pvs_frame_l.
+    apply wp_strip_pvs. eapply wp_alloc_heap with (σ:=∅); try eassumption.
+    { eauto with I. }
+    rewrite HP comm. apply sep_mono.
+    - rewrite /heap_own. f_equiv. apply: map_eq=>l. by rewrite lookup_fmap !lookup_empty.
+    - apply later_mono, forall_mono=>l. apply wand_mono; last done. eauto with I.
+  Qed.
 
   Lemma wp_load_heap N E γ σ l v P Q :
     σ !! l = Some v →
@@ -276,4 +280,17 @@ Section heap.
     - rewrite /from_heap /to_heap lookup_insert_ne // !lookup_omap !lookup_op !lookup_fmap.
       rewrite lookup_insert_ne //.
   Qed.
+
+  Lemma wp_cas_suc N E γ l e1 v1 e2 v2 P Q :
+    to_val e1 = Some v1 → to_val e2 = Some v2 →
+    nclose N ⊆ E →
+    P ⊑ heap_ctx HeapI γ N →
+    P ⊑ (heap_mapsto HeapI γ l v1 ★ ▷ (heap_mapsto HeapI γ l v2 -★ Q 'true)) →
+    P ⊑ wp E (Cas (Loc l) e1 e2) Q.
+  Proof.
+    rewrite /heap_mapsto=>???? HP. eapply wp_cas_suc_heap; try eassumption; last first.
+    - rewrite HP. apply sep_mono; first done. by rewrite insert_singleton.
+    - by simplify_map_equality.
+  Qed.
+
 End heap.
