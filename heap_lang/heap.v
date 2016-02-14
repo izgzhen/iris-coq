@@ -1,7 +1,6 @@
 From heap_lang Require Export derived.
 From program_logic Require Export invariants ghost_ownership.
 From program_logic Require Import ownership auth.
-From heap_lang Require Import notation.
 Import uPred.
 (* TODO: The entire construction could be generalized to arbitrary languages that have
    a finmap as their state. Or maybe even beyond "as their state", i.e. arbitrary
@@ -216,7 +215,7 @@ Section heap.
     to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v' → v' ≠ v1 →
     nclose N ⊆ E →
     P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_own HeapI γ σ ★ ▷ (heap_own HeapI γ σ -★ Q 'false)) →
+    P ⊑ (heap_own HeapI γ σ ★ ▷ (heap_own HeapI γ σ -★ Q (LitV (LitBool false)))) →
     P ⊑ wp E (Cas (Loc l) e1 e2) Q.
   Proof.
     rewrite /heap_ctx /heap_own. intros He1 He2 Hl Hne HN Hctx HP.
@@ -238,7 +237,7 @@ Section heap.
     to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 →
     nclose N ⊆ E →
     P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_mapsto HeapI γ l v' ★ ▷ (heap_mapsto HeapI γ l v' -★ Q 'false)) →
+    P ⊑ (heap_mapsto HeapI γ l v' ★ ▷ (heap_mapsto HeapI γ l v' -★ Q (LitV (LitBool false)))) →
     P ⊑ wp E (Cas (Loc l) e1 e2) Q.
   Proof.
     rewrite /heap_mapsto=>???. eapply wp_cas_fail_heap; try done; [].
@@ -249,7 +248,7 @@ Section heap.
     to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v1 → 
     nclose N ⊆ E →
     P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_own HeapI γ σ ★ ▷ (heap_own HeapI γ (<[l:=v2]>σ) -★ Q 'true)) →
+    P ⊑ (heap_own HeapI γ σ ★ ▷ (heap_own HeapI γ (<[l:=v2]>σ) -★ Q (LitV (LitBool true)))) →
     P ⊑ wp E (Cas (Loc l) e1 e2) Q.
   Proof.
     rewrite /heap_ctx /heap_own. intros Hv1 Hv2 Hl HN Hctx HP.
@@ -289,7 +288,7 @@ Section heap.
     to_val e1 = Some v1 → to_val e2 = Some v2 →
     nclose N ⊆ E →
     P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_mapsto HeapI γ l v1 ★ ▷ (heap_mapsto HeapI γ l v2 -★ Q 'true)) →
+    P ⊑ (heap_mapsto HeapI γ l v1 ★ ▷ (heap_mapsto HeapI γ l v2 -★ Q (LitV (LitBool true)))) →
     P ⊑ wp E (Cas (Loc l) e1 e2) Q.
   Proof.
     rewrite /heap_mapsto=>???? HP. eapply wp_cas_suc_heap; try done; last first.
