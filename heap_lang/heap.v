@@ -15,9 +15,6 @@ Proof. split; apply _. Qed.
 Definition to_heap : state → heapRA := fmap Excl.
 Definition of_heap : heapRA → state := omap (maybe Excl).
 
-(* TODO: Do we want to expose heap ownership based on the state, or the heapRA?
-   The former does not expose the annoying "Excl", so for now I am going for
-   that. We should be able to derive the lemmas we want for this, too. *)
 Definition heap_mapsto {Σ} (i : gid) `{HeapInG Σ i}
     (γ : gname) (l : loc) (v : val) : iPropG heap_lang Σ :=
   auth_own i γ {[ l ↦ Excl v ]}.
