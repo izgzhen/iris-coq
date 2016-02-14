@@ -710,6 +710,8 @@ Proof.
 Qed.
 Lemma later_wand P Q : ▷ (P -★ Q) ⊑ (▷ P -★ ▷ Q).
 Proof. apply wand_intro_r;rewrite -later_sep; apply later_mono,wand_elim_l. Qed.
+Lemma later_iff P Q : (▷ (P ↔ Q)) ⊑ (▷P ↔ ▷Q).
+Proof. by rewrite /uPred_iff later_and !later_impl. Qed.
 Lemma löb_all_1 {A} (P Q : A → uPred M) :
   (∀ a, (▷(∀ b, P b → Q b) ∧ P a) ⊑ Q a) → ∀ a, P a ⊑ Q a.
 Proof.
