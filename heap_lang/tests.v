@@ -1,9 +1,9 @@
 (** This file is essentially a bunch of testcases. *)
 From program_logic Require Import ownership.
-From heap_lang Require Import substitution tactics notation.
+From heap_lang Require Import substitution tactics heap notation.
 Import uPred.
 
-Module LangTests.
+Section LangTests.
   Definition add := ('21 + '21)%L.
   Goal ∀ σ, prim_step add σ ('42) σ None.
   Proof. intros; do_step done. Qed.
@@ -21,36 +21,30 @@ Module LangTests.
   Qed.
 End LangTests.
 
-Module LiftingTests.
-  Context {Σ : iFunctor}.
-  Implicit Types P : iProp heap_lang Σ.
-  Implicit Types Q : val → iProp heap_lang Σ.
+Section LiftingTests.
+  Context {Σ : iFunctorG} (HeapI : gid) `{!HeapInG Σ HeapI}.
+  Implicit Types P : iPropG heap_lang Σ.
+  Implicit Types Q : val → iPropG heap_lang Σ.
 
   Definition e  : expr :=
     let: "x" := ref '1 in "x" <- !"x" + '1;; !"x".
-  Goal ∀ σ E, ownP (Σ:=Σ) σ ⊑ wp E e (λ v, v = '2).
+  Goal ∀ γh N, heap_ctx HeapI γh N ⊑ wp N e (λ v, v = '2).
   Proof.
-    move=> σ E. rewrite /e.
-    rewrite -(wp_bindi (LetCtx _ _)) -wp_alloc_pst //=.
-    apply sep_intro_True_r; first done.
+    move=> γh N. rewrite /e.
+    rewrite -(wp_bindi (LetCtx _ _)). eapply wp_alloc; eauto; [].
     rewrite -later_intro; apply forall_intro=>l; apply wand_intro_l.
-    rewrite right_id; apply const_elim_l=> _.
     rewrite -wp_let //= -later_intro.
     rewrite -(wp_bindi (SeqCtx (Load (Loc _)))) /=. 
     rewrite -(wp_bindi (StoreRCtx (LocV _))) /=.
     rewrite -(wp_bindi (BinOpLCtx PlusOp _)) /=.
-    rewrite -wp_load_pst; first (apply sep_intro_True_r; first done); last first.
-    { by rewrite lookup_insert. } (* RJ FIXME: figure out why apply and eapply fail. *)
-    rewrite -later_intro; apply wand_intro_l; rewrite right_id.
+    eapply wp_load; eauto with I; []. apply sep_mono; first done.
+    rewrite -later_intro; apply wand_intro_l.
     rewrite -wp_bin_op // -later_intro.
-    rewrite -wp_store_pst; first (apply sep_intro_True_r; first done); last first.
-    { by rewrite lookup_insert. }
-    { done. }
-    rewrite -later_intro. apply wand_intro_l. rewrite right_id.
+    eapply wp_store; eauto with I; []. apply sep_mono; first done.
+    rewrite -later_intro. apply wand_intro_l.
     rewrite -wp_seq -wp_value' -later_intro.
-    rewrite -wp_load_pst; first (apply sep_intro_True_r; first done); last first.
-    { by rewrite lookup_insert. }
-    rewrite -later_intro. apply wand_intro_l. rewrite right_id.
+    eapply wp_load; eauto with I; []. apply sep_mono; first done.
+    rewrite -later_intro. apply wand_intro_l.
     by apply const_intro.
   Qed.
 
@@ -106,7 +100,7 @@ Module LiftingTests.
   Qed.
 
   Goal ∀ E,
-    True ⊑ wp (Σ:=Σ) E (let: "x" := Pred '42 in Pred "x") (λ v, v = '40).
+    True ⊑ wp (Σ:=globalF Σ) E (let: "x" := Pred '42 in Pred "x") (λ v, v = '40).
   Proof.
     intros E.
     rewrite -(wp_bindi (LetCtx _ _)) -Pred_spec //= -wp_let' //=.

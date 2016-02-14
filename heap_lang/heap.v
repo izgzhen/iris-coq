@@ -1,4 +1,5 @@
 From heap_lang Require Export derived.
+From program_logic Require Export invariants ghost_ownership.
 From program_logic Require Import ownership auth.
 From heap_lang Require Import notation.
 Import uPred.
