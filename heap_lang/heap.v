@@ -119,7 +119,8 @@ Section heap.
     P ⊑ wp E (Alloc e) Q.
   Proof.
     intros HN ? ? HP. eapply wp_alloc_heap with (σ:=∅); try eassumption.
-    rewrite HP. rewrite left_id.
+    rewrite HP. Fail rewrite left_id.
+  Abort.
 
   Lemma wp_load_heap N E γ σ l v P Q :
     σ !! l = Some v →
