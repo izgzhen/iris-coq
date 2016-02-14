@@ -16,14 +16,14 @@ Section saved_prop.
   Implicit Types γ : gname.
 
   Lemma saved_prop_alloc_strong N P (G : gset gname) :
-    True ⊑ pvs N N (∃ γ, ■(γ ∉ G) ∧ saved_prop_own SPI γ P).
+    True ⊑ pvs N N (∃ γ, ■ (γ ∉ G) ∧ saved_prop_own SPI γ P).
   Proof. by apply own_alloc_strong. Qed.
 
   Lemma saved_prop_alloc N P :
     True ⊑ pvs N N (∃ γ, saved_prop_own SPI γ P).
   Proof. by apply own_alloc. Qed.
 
-  Lemma saved_prop_twice γ P Q :
+  Lemma saved_prop_agree γ P Q :
     (saved_prop_own SPI γ P ★ saved_prop_own SPI γ Q) ⊑ ▷ (P ↔ Q).
   Proof.
     rewrite /saved_prop_own -own_op own_valid agree_validI.
