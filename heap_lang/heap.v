@@ -13,7 +13,7 @@ Instance heap_inG_auth `{HeapInG Σ i} : AuthInG heap_lang Σ i heapRA.
 Proof. split; apply _. Qed.
 
 Definition to_heap : state → heapRA := fmap Excl.
-Definition from_heap : heapRA → state := omap (maybe Excl).
+Definition of_heap : heapRA → state := omap (maybe Excl).
 
 (* TODO: Do we want to expose heap ownership based on the state, or the heapRA?
    The former does not expose the annoying "Excl", so for now I am going for
@@ -22,7 +22,7 @@ Definition heap_mapsto {Σ} (i : gid) `{HeapInG Σ i}
     (γ : gname) (l : loc) (v : val) : iPropG heap_lang Σ :=
   auth_own i γ {[ l ↦ Excl v ]}.
 Definition heap_inv {Σ} (i : gid) `{HeapInG Σ i}
-  (h : heapRA) : iPropG heap_lang Σ := ownP (from_heap h).
+  (h : heapRA) : iPropG heap_lang Σ := ownP (of_heap h).
 Definition heap_ctx {Σ} (i : gid) `{HeapInG Σ i}
   (γ : gname) (N : namespace) : iPropG heap_lang Σ := auth_ctx i γ N (heap_inv i).
 
@@ -35,21 +35,21 @@ Section heap.
   Implicit Types γ : gname.
 
   (** Conversion to heaps and back *)
-  Global Instance from_heap_proper : Proper ((≡) ==> (=)) from_heap.
+  Global Instance of_heap_proper : Proper ((≡) ==> (=)) of_heap.
   Proof. by intros ??; fold_leibniz=>->. Qed.
-  Lemma from_to_heap σ : from_heap (to_heap σ) = σ.
+  Lemma from_to_heap σ : of_heap (to_heap σ) = σ.
   Proof.
     apply map_eq=>l. rewrite lookup_omap lookup_fmap. by case (σ !! l).
   Qed.
   Lemma to_heap_valid σ : ✓ to_heap σ.
   Proof. intros n l. rewrite lookup_fmap. by case (σ !! l). Qed.
-  Lemma insert_from_heap l v h :
-    <[l:=v]> (from_heap h) = from_heap (<[l:=Excl v]> h).
-  Proof. by rewrite /from_heap -(omap_insert _ _ _ (Excl v)). Qed.
-  Lemma from_heap_None h l :
-    ✓ h → from_heap h !! l = None → h !! l = None ∨ h !! l ≡ Some ExclUnit.
+  Lemma insert_of_heap l v h :
+    <[l:=v]> (of_heap h) = of_heap (<[l:=Excl v]> h).
+  Proof. by rewrite /of_heap -(omap_insert _ _ _ (Excl v)). Qed.
+  Lemma of_heap_None h l :
+    ✓ h → of_heap h !! l = None → h !! l = None ∨ h !! l ≡ Some ExclUnit.
   Proof.
-    move=> /(_ O l). rewrite /from_heap lookup_omap.
+    move=> /(_ O l). rewrite /of_heap lookup_omap.
     by case: (h !! l)=> [[]|]; auto.
   Qed.
   Lemma heap_singleton_inv_l h l v :
@@ -77,7 +77,7 @@ Section heap.
   Proof.
     rewrite -{1}(from_to_heap σ).
     etransitivity;
-      first apply (auth_alloc (ownP ∘ from_heap) N (to_heap σ)), to_heap_valid.
+      first apply (auth_alloc (ownP ∘ of_heap) N (to_heap σ)), to_heap_valid.
     apply pvs_mono, exist_mono; auto with I.
   Qed.
 
@@ -96,15 +96,15 @@ Section heap.
     apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
     rewrite -assoc left_id; apply const_elim_sep_l=> ?.
     rewrite {1}[(▷ownP _)%I]pvs_timeless pvs_frame_r; apply wp_strip_pvs.
-    rewrite /wp_fsa -(wp_alloc_pst _ (from_heap h)) //.
+    rewrite /wp_fsa -(wp_alloc_pst _ (of_heap h)) //.
     apply sep_mono_r; rewrite HP; apply later_mono.
     apply forall_intro=> l; apply wand_intro_l; rewrite (forall_elim l).
     rewrite always_and_sep_l -assoc; apply const_elim_sep_l=> ?.
     rewrite -(exist_intro (op {[ l ↦ Excl v ]})).
     repeat erewrite <-exist_intro by apply _; simpl.
-    rewrite insert_from_heap left_id right_id !assoc.
+    rewrite insert_of_heap left_id right_id !assoc.
     apply sep_mono_l.
-    rewrite -(map_insert_singleton_op h); last by apply from_heap_None.
+    rewrite -(map_insert_singleton_op h); last by apply of_heap_None.
     rewrite const_equiv ?left_id; last by apply (map_insert_valid h).
     apply later_intro.
   Qed.
@@ -121,10 +121,10 @@ Section heap.
     rewrite HPQ{HPQ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
     rewrite -assoc; apply const_elim_sep_l=> ?.
     rewrite {1}[(▷ownP _)%I]pvs_timeless pvs_frame_r; apply wp_strip_pvs.
-    rewrite -(wp_load_pst _ (<[l:=v]>(from_heap h))) ?lookup_insert //.
+    rewrite -(wp_load_pst _ (<[l:=v]>(of_heap h))) ?lookup_insert //.
     rewrite const_equiv // left_id.
     rewrite -(map_insert_singleton_op h); last by eapply heap_singleton_inv_l.
-    rewrite insert_from_heap.
+    rewrite insert_of_heap.
     apply sep_mono_r, later_mono, wand_intro_l. by rewrite -later_intro.
   Qed.
 
@@ -141,10 +141,10 @@ Section heap.
     rewrite HPQ{HPQ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
     rewrite -assoc; apply const_elim_sep_l=> ?.
     rewrite {1}[(▷ownP _)%I]pvs_timeless pvs_frame_r; apply wp_strip_pvs.
-    rewrite -(wp_store_pst _ (<[l:=v']>(from_heap h))) ?lookup_insert //.
+    rewrite -(wp_store_pst _ (<[l:=v']>(of_heap h))) ?lookup_insert //.
     rewrite /heap_inv alter_singleton insert_insert.
     rewrite -!(map_insert_singleton_op h); try by eapply heap_singleton_inv_l.
-    rewrite !insert_from_heap const_equiv;
+    rewrite !insert_of_heap const_equiv;
       last (split; [naive_solver|by eapply map_insert_valid, cmra_valid_op_r]).
     apply sep_mono_r, later_mono, wand_intro_l. by rewrite left_id -later_intro.
   Qed.
@@ -163,10 +163,10 @@ Section heap.
     rewrite HPQ{HPQ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
     rewrite -assoc; apply const_elim_sep_l=> ?.
     rewrite {1}[(▷ownP _)%I]pvs_timeless pvs_frame_r; apply wp_strip_pvs.
-    rewrite -(wp_cas_fail_pst _ (<[l:=v']>(from_heap h))) ?lookup_insert //.
+    rewrite -(wp_cas_fail_pst _ (<[l:=v']>(of_heap h))) ?lookup_insert //.
     rewrite const_equiv // left_id.
     rewrite -(map_insert_singleton_op h); last by eapply heap_singleton_inv_l.
-    rewrite insert_from_heap.
+    rewrite insert_of_heap.
     apply sep_mono_r, later_mono, wand_intro_l. by rewrite -later_intro.
   Qed.
 
@@ -184,10 +184,10 @@ Section heap.
     rewrite HPQ{HPQ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
     rewrite -assoc; apply const_elim_sep_l=> ?.
     rewrite {1}[(▷ownP _)%I]pvs_timeless pvs_frame_r; apply wp_strip_pvs.
-    rewrite -(wp_cas_suc_pst _ (<[l:=v1]>(from_heap h))) ?lookup_insert //.
+    rewrite -(wp_cas_suc_pst _ (<[l:=v1]>(of_heap h))) ?lookup_insert //.
     rewrite /heap_inv alter_singleton insert_insert.
     rewrite -!(map_insert_singleton_op h); try by eapply heap_singleton_inv_l.
-    rewrite !insert_from_heap const_equiv;
+    rewrite !insert_of_heap const_equiv;
       last (split; [naive_solver|by eapply map_insert_valid, cmra_valid_op_r]).
     apply sep_mono_r, later_mono, wand_intro_l. by rewrite left_id -later_intro.
   Qed.
