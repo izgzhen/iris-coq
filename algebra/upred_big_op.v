@@ -1,13 +1,21 @@
 From algebra Require Export upred.
+From prelude Require Import fin_maps.
 
-Fixpoint uPred_big_and {M} (Ps : list (uPred M)) :=
+Fixpoint uPred_big_and {M} (Ps : list (uPred M)) : uPred M:=
   match Ps with [] => True | P :: Ps => P ∧ uPred_big_and Ps end%I.
 Instance: Params (@uPred_big_and) 1.
 Notation "'Π∧' Ps" := (uPred_big_and Ps) (at level 20) : uPred_scope.
-Fixpoint uPred_big_sep {M} (Ps : list (uPred M)) :=
+Fixpoint uPred_big_sep {M} (Ps : list (uPred M)) : uPred M :=
   match Ps with [] => True | P :: Ps => P ★ uPred_big_sep Ps end%I.
 Instance: Params (@uPred_big_sep) 1.
 Notation "'Π★' Ps" := (uPred_big_sep Ps) (at level 20) : uPred_scope.
+
+Definition uPred_big_sepM {M : cmraT} `{FinMapToList K A MA}
+    (P : K → A → uPred M) (m : MA) : uPred M :=
+  uPred_big_sep (curry P <$> map_to_list m).
+Instance: Params (@uPred_big_sepM) 5.
+Notation "'Π★{' P } m" := (uPred_big_sepM P m)
+  (at level 20, P at level 10, m at level 20, format "Π★{ P }  m") : uPred_scope.
 
 Class AlwaysStableL {M} (Ps : list (uPred M)) :=
   always_stableL : Forall AlwaysStable Ps.
@@ -48,6 +56,22 @@ Lemma big_and_elem_of Ps P : P ∈ Ps → (Π∧ Ps) ⊑ P.
 Proof. induction 1; simpl; auto with I. Qed.
 Lemma big_sep_elem_of Ps P : P ∈ Ps → (Π★ Ps) ⊑ P.
 Proof. induction 1; simpl; auto with I. Qed.
+
+(* Big ops over finite maps *)
+Section fin_map.
+  Context `{FinMap K Ma} {A} (P : K → A → uPred M).
+
+  Lemma big_sepM_empty : (Π★{P} ∅)%I ≡ True%I.
+  Proof. by rewrite /uPred_big_sepM map_to_list_empty. Qed.
+  Lemma big_sepM_insert (m : Ma A) i x :
+    m !! i = None → (Π★{P} (<[i:=x]> m))%I ≡ (P i x ★ Π★{P} m)%I.
+  Proof. intros ?; by rewrite /uPred_big_sepM map_to_list_insert. Qed.
+  Lemma big_sepM_singleton i x : (Π★{P} {[i ↦ x]})%I ≡ (P i x)%I.
+  Proof.
+    rewrite -insert_empty big_sepM_insert/=; last auto using lookup_empty.
+    by rewrite big_sepM_empty right_id.
+  Qed.
+End fin_map.
 
 (* Always stable *)
 Local Notation AS := AlwaysStable.
