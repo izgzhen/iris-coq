@@ -108,7 +108,7 @@ Section auth.
     P ⊑ fsa E Q.
   Proof.
     rewrite /auth_ctx=>? HN Hinv Hinner.
-    eapply (inv_fsa fsa); eauto. rewrite Hinner=>{Hinner Hinv P}.
+    eapply (inv_fsa fsa); eauto. rewrite Hinner=>{Hinner Hinv P HN}.
     apply wand_intro_l. rewrite assoc.
     rewrite (auth_opened (E ∖ N)) !pvs_frame_r !sep_exist_r.
     apply (fsa_strip_pvs fsa). apply exist_elim=>a'.
@@ -116,7 +116,7 @@ Section auth.
     (* Getting this wand eliminated is really annoying. *)
     rewrite [(■_ ★ _)%I]comm -!assoc [(▷φ _ ★ _ ★ _)%I]assoc [(▷φ _ ★ _)%I]comm.
     rewrite wand_elim_r fsa_frame_l.
-    apply (fsa_mono_pvs fsa)=> b.
+    apply (fsa_mono_pvs fsa)=> v.
     rewrite sep_exist_l; apply exist_elim=> L.
     rewrite sep_exist_l; apply exist_elim=> Lv.
     rewrite sep_exist_l; apply exist_elim=> ?.
