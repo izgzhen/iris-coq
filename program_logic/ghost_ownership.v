@@ -66,6 +66,8 @@ Global Instance own_proper γ : Proper ((≡) ==> (≡)) (own i γ) := ne_proper
 
 Lemma own_op γ a1 a2 : own i γ (a1 ⋅ a2) ≡ (own i γ a1 ★ own i γ a2)%I.
 Proof. by rewrite /own -ownG_op to_globalF_op. Qed.
+Global Instance own_mono γ : Proper (flip (≼) ==> (⊑)) (own i γ).
+Proof. move=>a b [c H]. rewrite H own_op. eauto with I. Qed.
 Lemma always_own_unit γ a : (□ own i γ (unit a))%I ≡ own i γ (unit a).
 Proof. by rewrite /own -to_globalF_unit always_ownG_unit. Qed.
 Lemma own_valid γ a : own i γ a ⊑ ✓ a.

@@ -116,7 +116,7 @@ Section auth.
     (* Getting this wand eliminated is really annoying. *)
     rewrite [(■_ ★ _)%I]comm -!assoc [(▷φ _ ★ _ ★ _)%I]assoc [(▷φ _ ★ _)%I]comm.
     rewrite wand_elim_r fsa_frame_l.
-    apply (fsa_mono_pvs fsa)=> v.
+    apply (fsa_mono_pvs fsa)=> x.
     rewrite sep_exist_l; apply exist_elim=> L.
     rewrite sep_exist_l; apply exist_elim=> Lv.
     rewrite sep_exist_l; apply exist_elim=> ?.

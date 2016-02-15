@@ -58,11 +58,11 @@ Section sts.
       rewrite [(_ ★ φ _)%I]comm -assoc. apply sep_mono; first done.
       rewrite -own_op. apply equiv_spec, own_proper.
       split; first split; simpl.
-      - intros; solve_elem_of-.
-      - intros _. split_ands; first by solve_elem_of-.
-        + apply closed_up. solve_elem_of-.
-        + constructor; last solve_elem_of-. apply sts.elem_of_up. 
-      - intros _. constructor. solve_elem_of-. }
+      - intros; solve_elem_of+.
+      - intros _. split_ands; first by solve_elem_of+.
+        + apply closed_up. solve_elem_of+.
+        + constructor; last solve_elem_of+. apply sts.elem_of_up. 
+      - intros _. constructor. solve_elem_of+. }
     rewrite (inv_alloc N) /ctx pvs_frame_r. apply pvs_mono.
     by rewrite always_and_sep_l.
   Qed.
@@ -80,47 +80,53 @@ Section sts.
     inversion_clear Hdisj. rewrite const_equiv // left_id.
     rewrite comm. apply sep_mono; first done.
     apply equiv_spec, own_proper. split; first split; simpl.
-    - intros Hdisj. split_ands; first by solve_elem_of-.
+    - intros Hdisj. split_ands; first by solve_elem_of+.
       + done.
       + constructor; [done | solve_elem_of-].
     - intros _. by eapply closed_disjoint.
-    - intros _. constructor. solve_elem_of-.
+    - intros _. constructor. solve_elem_of+.
   Qed.
 
-  Lemma closing E γ s T s' S' T' :
-    step sts.(st) sts.(tok) (s, T) (s', T') → s' ∈ S' → closed sts.(st) sts.(tok) S' T' →
+  Lemma closing E γ s T s' T' :
+    step sts.(st) sts.(tok) (s, T) (s', T') →
     (▷ φ s' ★ own StsI γ (sts_auth sts.(st) sts.(tok) s T))
-    ⊑ pvs E E (▷ inv StsI sts γ φ ★ states StsI sts γ S' T').
+    ⊑ pvs E E (▷ inv StsI sts γ φ ★ state StsI sts γ s' T').
   Proof.
-    intros Hstep Hin Hcl. rewrite /inv /states -(exist_intro s').
+    intros Hstep. rewrite /inv /states -(exist_intro s').
     rewrite later_sep [(_ ★ ▷φ _)%I]comm -assoc.
     rewrite -pvs_frame_l. apply sep_mono; first done.
     rewrite -later_intro.
+    rewrite own_valid_l discrete_validI. apply const_elim_sep_l=>Hval. simpl in Hval.
     transitivity (pvs E E (own StsI γ (sts_auth sts.(st) sts.(tok) s' T'))).
     { by apply own_update, sts_update. }
     apply pvs_mono. rewrite -own_op. apply equiv_spec, own_proper.
     split; first split; simpl.
-    - intros _. by eapply closed_disjoint.
-    - intros ?. split_ands; first by solve_elem_of-.
-      + done.
-      + constructor; [done | solve_elem_of-].
-    - intros _. constructor. solve_elem_of-.
+    - intros _.
+      set Tf := set_all ∖ sts.(tok) s ∖ T.
+      assert (closed (st sts) (tok sts) (up sts.(st) sts.(tok) s Tf) Tf).
+      { apply closed_up. rewrite /Tf. solve_elem_of+. }
+      eapply step_closed; [done..| |].
+      + apply elem_of_up.
+      + rewrite /Tf. solve_elem_of+.
+    - intros ?. split_ands; first by solve_elem_of+.
+      + apply closed_up. done.
+      + constructor; last solve_elem_of+. apply elem_of_up.
+    - intros _. constructor. solve_elem_of+.
   Qed.
 
   Context {V} (fsa : FSA Λ (globalF Σ) V) `{!FrameShiftAssertion fsaV fsa}.
 
-  Lemma states_fsa E N P (Q : V → iPropG Λ Σ) γ S T S' T' :
-    fsaV → closed sts.(st) sts.(tok) S' T' →
-    nclose N ⊆ E →
+  Lemma states_fsa E N P (Q : V → iPropG Λ Σ) γ S T :
+    fsaV → nclose N ⊆ E →
     P ⊑ ctx StsI sts γ N φ →
     P ⊑ (states StsI sts γ S T ★ ∀ s,
           ■ (s ∈ S) ★ ▷ φ s -★
-          fsa (E ∖ nclose N) (λ x, ∃ s',
-            ■ (step sts.(st) sts.(tok) (s, T) (s', T') ∧ s' ∈ S') ★ ▷ φ s' ★
-            (states StsI sts γ S' T' -★ Q x))) →
+          fsa (E ∖ nclose N) (λ x, ∃ s' T',
+            ■ (step sts.(st) sts.(tok) (s, T) (s', T')) ★ ▷ φ s' ★
+            (state StsI sts γ s' T' -★ Q x))) →
     P ⊑ fsa E Q.
   Proof.
-    rewrite /ctx=>? Hcl HN Hinv Hinner.
+    rewrite /ctx=>? HN Hinv Hinner.
     eapply (inv_fsa fsa); eauto. rewrite Hinner=>{Hinner Hinv P HN}.
     apply wand_intro_l. rewrite assoc.
     rewrite (opened (E ∖ N)) !pvs_frame_r !sep_exist_r.
@@ -129,13 +135,27 @@ Section sts.
     (* Getting this wand eliminated is really annoying. *)
     rewrite [(■_ ★ _)%I]comm -!assoc [(▷φ _ ★ _ ★ _)%I]assoc [(▷φ _ ★ _)%I]comm.
     rewrite wand_elim_r fsa_frame_l.
-    apply (fsa_mono_pvs fsa)=> v.
+    apply (fsa_mono_pvs fsa)=> x.
     rewrite sep_exist_l; apply exist_elim=> s'.
-    rewrite comm -!assoc. apply const_elim_sep_l=>-[Hstep Hin].
+    rewrite sep_exist_l; apply exist_elim=>T'.
+    rewrite comm -!assoc. apply const_elim_sep_l=>-Hstep.
     rewrite assoc [(_ ★ (_ -★ _))%I]comm -assoc.
     rewrite (closing (E ∖ N)) //; [].
     rewrite pvs_frame_l. apply pvs_mono.
     by rewrite assoc [(_ ★ ▷_)%I]comm -assoc wand_elim_l.
+  Qed.
+
+  Lemma state_fsa E N P (Q : V → iPropG Λ Σ) γ s0 T :
+    fsaV → nclose N ⊆ E →
+    P ⊑ ctx StsI sts γ N φ →
+    P ⊑ (state StsI sts γ s0 T ★ ∀ s,
+          ■ (s ∈ up sts.(st) sts.(tok) s0 T) ★ ▷ φ s -★
+          fsa (E ∖ nclose N) (λ x, ∃ s' T',
+            ■ (step sts.(st) sts.(tok) (s, T) (s', T')) ★ ▷ φ s' ★
+            (state StsI sts γ s' T' -★ Q x))) →
+    P ⊑ fsa E Q.
+  Proof.
+    rewrite {1}/state. apply states_fsa.
   Qed.
 
 End sts.
