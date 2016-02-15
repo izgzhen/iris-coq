@@ -24,6 +24,8 @@ Section simple_collection.
   Proof. firstorder auto. Qed.
   Global Instance: JoinSemiLattice C.
   Proof. firstorder auto. Qed.
+  Global Instance: AntiSymm (≡) (@collection_subseteq A C _).
+  Proof. done. Qed.
   Lemma elem_of_subseteq X Y : X ⊆ Y ↔ ∀ x, x ∈ X → x ∈ Y.
   Proof. done. Qed.
   Lemma elem_of_equiv X Y : X ≡ Y ↔ ∀ x, x ∈ X ↔ x ∈ Y.
