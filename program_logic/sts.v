@@ -45,6 +45,23 @@ Section sts.
   Implicit Types P Q R : iPropG Λ Σ.
   Implicit Types γ : gname.
 
+  (* The same rule as implication does *not* hold, as could be shown using
+     sts_frag_included. *)
+  Lemma states_weaken E γ S1 S2 T :
+    S1 ⊆ S2 → closed sts.(st) sts.(tok) S2 T →
+    states StsI sts γ S1 T ⊑ pvs E E (states StsI sts γ S2 T).
+  Proof.
+    rewrite /states=>Hs Hcl. apply own_update, sts_update_frag; done.
+  Qed.
+
+  Lemma state_states E γ s S T :
+    s ∈ S → closed sts.(st) sts.(tok) S T →
+    state StsI sts γ s T ⊑ pvs E E (states StsI sts γ S T).
+  Proof.
+    move=>Hs Hcl. apply states_weaken; last done.
+    move=>s' Hup. eapply closed_steps in Hcl; last (hnf in Hup; eexact Hup); done.
+  Qed.
+
   Lemma alloc N s :
     φ s ⊑ pvs N N (∃ γ, ctx StsI sts γ N φ ∧ state StsI sts γ s (set_all ∖ sts.(tok) s)).
   Proof.
@@ -98,7 +115,7 @@ Section sts.
     rewrite -later_intro.
     rewrite own_valid_l discrete_validI. apply const_elim_sep_l=>Hval. simpl in Hval.
     transitivity (pvs E E (own StsI γ (sts_auth sts.(st) sts.(tok) s' T'))).
-    { by apply own_update, sts_update. }
+    { by apply own_update, sts_update_auth. }
     apply pvs_mono. rewrite -own_op. apply equiv_spec, own_proper.
     split; first split; simpl.
     - intros _.

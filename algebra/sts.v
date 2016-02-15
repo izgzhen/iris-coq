@@ -220,12 +220,21 @@ Canonical Structure stsRA := validityRA (sts R tok).
 Definition sts_auth (s : A) (T : set B) : stsRA := to_validity (auth s T).
 Definition sts_frag (S : set A) (T : set B) : stsRA := to_validity (frag S T).
 
-Lemma sts_update s1 s2 T1 T2 :
+Lemma sts_update_auth s1 s2 T1 T2 :
   sts.step R tok (s1,T1) (s2,T2) → sts_auth s1 T1 ~~> sts_auth s2 T2.
 Proof.
   intros ?; apply validity_update; inversion 3 as [|? S ? Tf|]; subst.
   destruct (sts.step_closed R tok s1 s2 T1 T2 S Tf) as (?&?&?); auto.
   repeat (done || constructor).
+Qed.
+
+Lemma sts_update_frag S1 S2 (T : set B) :
+  S1 ⊆ S2 → sts.closed R tok S2 T →
+  sts_frag S1 T ~~> sts_frag S2 T.
+Proof.
+  move=>HS Hcl. eapply validity_update; inversion 3 as [|? S ? Tf|]; subst.
+  - split; first done. constructor; last done. solve_elem_of.
+  - split; first done. constructor; solve_elem_of.
 Qed.
 
 Lemma sts_frag_included S1 S2 T1 T2 :
@@ -235,20 +244,20 @@ Lemma sts_frag_included S1 S2 T1 T2 :
 Proof.
   move=>Hcl2. split.
   - intros [xf EQ]. destruct xf as [xf vf Hvf]. destruct xf as [Sf Tf|Sf Tf].
-    { exfalso. inversion_clear EQ. apply H0 in Hcl2. simpl in Hcl2.
+    { exfalso. inversion_clear EQ as [Hv EQ']. apply EQ' in Hcl2. simpl in Hcl2.
       inversion Hcl2. }
-    inversion_clear EQ.
-    move:(H0 Hcl2)=>{H0} H0. inversion_clear H0.
-    destruct H as [H _]. move:(H Hcl2)=>{H} [/= Hcl1  [Hclf Hdisj]].
+    inversion_clear EQ as [Hv EQ'].
+    move:(EQ' Hcl2)=>{EQ'} EQ. inversion_clear EQ as [|? ? ? ? HT HS].
+    destruct Hv as [Hv _]. move:(Hv Hcl2)=>{Hv} [/= Hcl1  [Hclf Hdisj]].
     apply Hvf in Hclf. simpl in Hclf. clear Hvf.
     inversion_clear Hdisj. split; last (exists Tf; split_ands); [done..|].
     apply (anti_symm (⊆)).
-    + move=>s HS2. apply elem_of_intersection. split; first by apply H2.
+    + move=>s HS2. apply elem_of_intersection. split; first by apply HS.
       by apply sts.subseteq_up_set.
-    + move=>s /elem_of_intersection [HS1 Hscl]. apply H2. split; first done.
+    + move=>s /elem_of_intersection [HS1 Hscl]. apply HS. split; first done.
       destruct Hscl as [s' [Hsup Hs']].
       eapply sts.closed_steps; last (hnf in Hsup; eexact Hsup); first done.
-      solve_elem_of +H2 Hs'.
+      solve_elem_of +HS Hs'.
   - intros (Hcl1 & Tf & Htk & Hf & Hs). exists (sts_frag (sts.up_set R tok S2 Tf) Tf).
     split; first split; simpl;[|done|].
     + intros _. split_ands; first done.
