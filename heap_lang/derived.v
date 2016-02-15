@@ -30,7 +30,7 @@ Proof.
   by rewrite -wp_let' //= ?to_of_val ?subst_empty.
 Qed.
 
-Lemma wp_skip E Q : ▷(Q (LitV LitUnit))  ⊑ wp E Skip Q.
+Lemma wp_skip E Q : ▷ (Q (LitV LitUnit)) ⊑ wp E Skip Q.
 Proof. rewrite -wp_seq -wp_value // -wp_value //. Qed.
 
 Lemma wp_le E (n1 n2 : Z) P Q :
