@@ -50,6 +50,8 @@ Proof. by intros m m' Hm; unfold ownG; rewrite Hm. Qed.
 Global Instance ownG_proper : Proper ((≡) ==> (≡)) (@ownG Λ Σ) := ne_proper _.
 Lemma ownG_op m1 m2 : ownG (m1 ⋅ m2) ≡ (ownG m1 ★ ownG m2)%I.
 Proof. by rewrite /ownG -uPred.ownM_op Res_op !left_id. Qed.
+Global Instance ownG_mono : Proper (flip (≼) ==> (⊑)) (@ownG Λ Σ).
+Proof. move=>a b [c H]. rewrite H ownG_op. eauto with I. Qed.
 Lemma always_ownG_unit m : (□ ownG (unit m))%I ≡ ownG (unit m).
 Proof.
   apply uPred.always_ownM.
@@ -63,6 +65,7 @@ Lemma ownG_valid_r m : ownG m ⊑ (ownG m ★ ✓ m).
 Proof. apply (uPred.always_entails_r _ _), ownG_valid. Qed.
 Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
 Proof. rewrite /ownG; apply _. Qed.
+
 
 (* inversion lemmas *)
 Lemma ownI_spec r n i P :

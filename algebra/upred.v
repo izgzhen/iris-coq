@@ -846,6 +846,8 @@ Proof. done. Qed.
 (* Own and valid derived *)
 Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_ownM a ⊑ False.
 Proof. by intros; rewrite ownM_valid valid_elim. Qed.
+Global Instance ownM_mono : Proper (flip (≼) ==> (⊑)) (@uPred_ownM M).
+Proof. move=>a b [c H]. rewrite H ownM_op. eauto. Qed.
 
 (* Timeless *)
 Lemma timelessP_spec P : TimelessP P ↔ ∀ x n, ✓{n} x → P 0 x → P n x.
