@@ -8,6 +8,10 @@ Local Arguments op _ _ !_ !_ /.
 Local Arguments unit _ _ !_ /.
 
 Module sts.
+(** This module is *not* meant to be imported. Instead, just use "sts.ctx" etc.
+    like you would use "auth_ctx" etc. *)
+Export algebra.sts.sts.
+
 Record Sts {A B} := {
   st : relation A;
   tok    : A → set B;
@@ -23,7 +27,7 @@ Section definitions.
   Definition inv  (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
     (∃ s, own i γ (sts_auth sts.(st) sts.(tok) s set_empty) ★ φ s)%I.
   Definition states (S : set A) (T: set B) : iPropG Λ Σ :=
-    (■ sts.closed sts.(st) sts.(tok) S T ∧
+    (■ closed sts.(st) sts.(tok) S T ∧
      own i γ (sts_frag sts.(st) sts.(tok) S T))%I.
   Definition state (s : A) (T: set B) : iPropG Λ Σ :=
     own i γ (sts_frag sts.(st) sts.(tok) (sts.up sts.(st) sts.(tok) s T) T).
@@ -56,7 +60,7 @@ Section sts.
       split; first split; simpl.
       - intros; solve_elem_of-.
       - intros _. split_ands; first by solve_elem_of-.
-        + apply sts.closed_up. solve_elem_of-.
+        + apply closed_up. solve_elem_of-.
         + constructor; last solve_elem_of-. apply sts.elem_of_up. 
       - intros _. constructor. solve_elem_of-. }
     rewrite (inv_alloc N) /ctx pvs_frame_r. apply pvs_mono.
