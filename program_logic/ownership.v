@@ -22,7 +22,7 @@ Implicit Types m : iGst Λ Σ.
 Global Instance ownI_contractive i : Contractive (@ownI Λ Σ i).
 Proof.
   intros n P Q HPQ. rewrite /ownI.
-  apply uPred.own_ne, Res_ne; auto; apply singleton_ne, to_agree_ne.
+  apply uPred.ownM_ne, Res_ne; auto; apply singleton_ne, to_agree_ne.
   by apply Next_contractive=> j ?; rewrite (HPQ j).
 Qed.
 Lemma always_ownI i P : (□ ownI i P)%I ≡ ownI i P.

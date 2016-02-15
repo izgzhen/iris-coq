@@ -320,13 +320,13 @@ Global Instance always_ne n: Proper (dist n ==> dist n) (@uPred_always M).
 Proof. intros P1 P2 HP x n'; split; apply HP; eauto using cmra_unit_validN. Qed.
 Global Instance always_proper :
   Proper ((≡) ==> (≡)) (@uPred_always M) := ne_proper _.
-Global Instance own_ne n : Proper (dist n ==> dist n) (@uPred_ownM M).
+Global Instance ownM_ne n : Proper (dist n ==> dist n) (@uPred_ownM M).
 Proof.
   by intros a1 a2 Ha x n'; split; intros [a' ?]; exists a'; simpl; first
     [rewrite -(dist_le _ _ _ _ Ha); last lia
     |rewrite (dist_le _ _ _ _ Ha); last lia].
 Qed.
-Global Instance own_proper : Proper ((≡) ==> (≡)) (@uPred_ownM M) := ne_proper _.
+Global Instance ownM_proper : Proper ((≡) ==> (≡)) (@uPred_ownM M) := ne_proper _.
 Global Instance iff_ne n : Proper (dist n ==> dist n ==> dist n) (@uPred_iff M).
 Proof. unfold uPred_iff; solve_proper. Qed.
 Global Instance iff_proper :
@@ -899,7 +899,7 @@ Qed.
 Global Instance eq_timeless {A : cofeT} (a b : A) :
   Timeless a → TimelessP (a ≡ b : uPred M)%I.
 Proof. by intro; apply timelessP_spec=> x n ??; apply equiv_dist, timeless. Qed.
-Global Instance own_timeless (a : M) : Timeless a → TimelessP (uPred_ownM a).
+Global Instance ownM_timeless (a : M) : Timeless a → TimelessP (uPred_ownM a).
 Proof.
   intros ?; apply timelessP_spec=> x [|n] ?? //; apply cmra_included_includedN,
     cmra_timeless_included_l; eauto using cmra_validN_le.
@@ -929,7 +929,7 @@ Global Instance valid_always_stable {A : cmraT} (a : A) : AS (✓ a : uPred M)%I
 Proof. by intros; rewrite /AlwaysStable always_valid. Qed.
 Global Instance later_always_stable P : AS P → AS (▷ P).
 Proof. by intros; rewrite /AlwaysStable always_later; apply later_mono. Qed.
-Global Instance own_unit_always_stable (a : M) : AS (uPred_ownM (unit a)).
+Global Instance ownM_unit_always_stable (a : M) : AS (uPred_ownM (unit a)).
 Proof. by rewrite /AlwaysStable always_ownM_unit. Qed.
 Global Instance default_always_stable {A} P (Q : A → uPred M) (mx : option A) :
   AS P → (∀ x, AS (Q x)) → AS (default P mx Q).

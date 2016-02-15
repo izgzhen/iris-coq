@@ -466,7 +466,7 @@ Class RA A `{Equiv A, Unit A, Op A, Valid A, Minus A} := {
 
 Section discrete.
   Context {A : cofeT} `{∀ x : A, Timeless x}.
-  Context `{Unit A, Op A, Valid A, Minus A} (ra : RA A).
+  Context {v : Valid A} `{Unit A, Op A, Minus A} (ra : RA A).
 
   Instance discrete_validN : ValidN A := λ n x, ✓ x.
   Definition discrete_cmra_mixin : CMRAMixin A.
@@ -487,6 +487,8 @@ Section discrete.
   Lemma discrete_update (x y : discreteRA) :
     (∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z)) → x ~~> y.
   Proof. intros Hvalid z n; apply Hvalid. Qed.
+  Lemma discrete_valid (x : discreteRA) : v x → validN_valid x.
+  Proof. move=>Hx n. exact Hx. Qed.
 End discrete.
 
 (** ** CMRA for the unit type *)
