@@ -24,7 +24,7 @@ Tactic Notation "wp_value" :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => etransitivity; [|eapply wp_value; reflexivity]; simpl
   end.
-Tactic Notation "wp_rec" "!" :=
+Tactic Notation "wp_rec" ">" :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval cbv in e' with
@@ -32,8 +32,8 @@ Tactic Notation "wp_rec" "!" :=
        wp_bind K; etransitivity; [|eapply wp_rec; reflexivity]; wp_finish
     end)
   end.
-Tactic Notation "wp_rec" := wp_rec!; wp_strip_later.
-Tactic Notation "wp_bin_op" "!" :=
+Tactic Notation "wp_rec" := wp_rec>; wp_strip_later.
+Tactic Notation "wp_bin_op" ">" :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval cbv in e' with
@@ -45,8 +45,8 @@ Tactic Notation "wp_bin_op" "!" :=
     end)
   end.
 
-Tactic Notation "wp_bin_op" := wp_bin_op!; wp_strip_later.
-Tactic Notation "wp_un_op" "!" :=
+Tactic Notation "wp_bin_op" := wp_bin_op>; wp_strip_later.
+Tactic Notation "wp_un_op" ">" :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval cbv in e' with
@@ -54,8 +54,8 @@ Tactic Notation "wp_un_op" "!" :=
        wp_bind K; etransitivity; [|eapply wp_un_op; reflexivity]; wp_finish
     end)
   end.
-Tactic Notation "wp_un_op" := wp_un_op!; wp_strip_later.
-Tactic Notation "wp_if" "!" :=
+Tactic Notation "wp_un_op" := wp_un_op>; wp_strip_later.
+Tactic Notation "wp_if" ">" :=
   try wp_value;
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
@@ -65,7 +65,7 @@ Tactic Notation "wp_if" "!" :=
        etransitivity; [|apply wp_if_true || apply wp_if_false]; wp_finish
     end)
   end.
-Tactic Notation "wp_if" := wp_if!; wp_strip_later.
+Tactic Notation "wp_if" := wp_if>; wp_strip_later.
 Tactic Notation "wp_focus" open_constr(efoc) :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>

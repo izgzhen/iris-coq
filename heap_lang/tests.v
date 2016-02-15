@@ -62,7 +62,7 @@ Section LiftingTests.
     revert n1; apply löb_all_1=>n1.
     rewrite (comm uPred_and (■ _)%I) assoc; apply const_elim_r=>?.
     (* first need to do the rec to get a later *)
-    wp_rec!.
+    wp_rec>.
     (* FIXME: ssr rewrite fails with "Error: _pattern_value_ is used in conclusion." *)
     rewrite ->(later_intro (Q _)); rewrite -!later_and; apply later_mono.
     wp_rec. wp_bin_op. wp_rec. wp_bin_op=> ?.
@@ -74,7 +74,7 @@ Section LiftingTests.
 
   Lemma Pred_spec n E Q : ▷ Q (LitV (n - 1)) ⊑ wp E (Pred 'n)%L Q.
   Proof.
-    wp_rec!; apply later_mono; wp_bin_op=> ?.
+    wp_rec>; apply later_mono; wp_bin_op=> ?.
     - wp_if. wp_un_op. wp_bin_op.
       wp_focus (FindPred _ _); rewrite -FindPred_spec.
       apply and_intro; first auto with I omega.
