@@ -5,31 +5,47 @@ Local Arguments valid _ _ !_ /.
 Local Arguments op _ _ !_ !_ /.
 Local Arguments unit _ _ !_ /.
 
-Inductive sts {A B} (R : relation A) (tok : A → set B) :=
-  | auth : A → set B → sts R tok
-  | frag : set A → set B → sts R tok.
-Arguments auth {_ _ _ _} _ _.
-Arguments frag {_ _ _ _} _ _.
-
 Module sts.
+
+Record Sts := {
+  state : Type;
+  token : Type;
+  trans : relation state;
+  tok   : state → set token;
+}.
+
+(* The type of bounds we can give to the state of an STS. This is the type
+   that we equip with an RA structure. *)
+Inductive bound (sts : Sts) :=
+  | bound_auth : state sts → set (token sts) → bound sts
+  | bound_frag : set (state sts) → set (token sts )→ bound sts.
+Arguments bound_auth {_} _ _.
+Arguments bound_frag {_} _ _.
+
 Section sts_core.
-Context {A B : Type} (R : relation A) (tok : A → set B).
+Context (sts : Sts).
 Infix "≼" := dra_included.
 
-Inductive sts_equiv : Equiv (sts R tok) :=
-  | auth_equiv s T1 T2 : T1 ≡ T2 → auth s T1 ≡ auth s T2
-  | frag_equiv S1 S2 T1 T2 : T1 ≡ T2 → S1 ≡ S2 → frag S1 T1 ≡ frag S2 T2.
-Global Existing Instance sts_equiv.
-Inductive step : relation (A * set B) :=
+Notation state := (state sts).
+Notation token := (token sts).
+Notation trans := (trans sts).
+Notation tok := (tok sts).
+
+Inductive equiv : Equiv (bound sts) :=
+  | auth_equiv s T1 T2 : T1 ≡ T2 → bound_auth s T1 ≡ bound_auth s T2
+  | frag_equiv S1 S2 T1 T2 : T1 ≡ T2 → S1 ≡ S2 →
+                             bound_frag S1 T1 ≡ bound_frag S2 T2.
+Global Existing Instance equiv.
+Inductive step : relation (state * set token) :=
   | Step s1 s2 T1 T2 :
-     R s1 s2 → tok s1 ∩ T1 ≡ ∅ → tok s2 ∩ T2 ≡ ∅ → tok s1 ∪ T1 ≡ tok s2 ∪ T2 →
-     step (s1,T1) (s2,T2).
+     trans s1 s2 → tok s1 ∩ T1 ≡ ∅ → tok s2 ∩ T2 ≡ ∅ →
+     tok s1 ∪ T1 ≡ tok s2 ∪ T2 → step (s1,T1) (s2,T2).
 Hint Resolve Step.
-Inductive frame_step (T : set B) (s1 s2 : A) : Prop :=
+Inductive frame_step (T : set token) (s1 s2 : state) : Prop :=
   | Frame_step T1 T2 :
      T1 ∩ (tok s1 ∪ T) ≡ ∅ → step (s1,T1) (s2,T2) → frame_step T s1 s2.
 Hint Resolve Frame_step.
-Record closed (S : set A) (T : set B) : Prop := Closed {
+Record closed (S : set state) (T : set token) : Prop := Closed {
   closed_ne : S ≢ ∅;
   closed_disjoint s : s ∈ S → tok s ∩ T ≡ ∅;
   closed_step s1 s2 : s1 ∈ S → frame_step T s1 s2 → s2 ∈ S
@@ -37,40 +53,50 @@ Record closed (S : set A) (T : set B) : Prop := Closed {
 Lemma closed_steps S T s1 s2 :
   closed S T → s1 ∈ S → rtc (frame_step T) s1 s2 → s2 ∈ S.
 Proof. induction 3; eauto using closed_step. Qed.
-Global Instance sts_valid : Valid (sts R tok) := λ x,
-  match x with auth s T => tok s ∩ T ≡ ∅ | frag S' T => closed S' T end.
-Definition up (s : A) (T : set B) : set A := mkSet (rtc (frame_step T) s).
-Definition up_set (S : set A) (T : set B) : set A := S ≫= λ s, up s T.
-Global Instance sts_unit : Unit (sts R tok) := λ x,
+Global Instance valid : Valid (bound sts) := λ x,
   match x with
-  | frag S' _ => frag (up_set S' ∅ ) ∅ | auth s _ => frag (up s ∅) ∅
+  | bound_auth s T => tok s ∩ T ≡ ∅ | bound_frag S' T => closed S' T
   end.
-Inductive sts_disjoint : Disjoint (sts R tok) :=
+Definition up (s : state) (T : set token) : set state :=
+  mkSet (rtc (frame_step T) s).
+Definition up_set (S : set state) (T : set token) : set state
+  := S ≫= λ s, up s T.
+Global Instance unit : Unit (bound sts) := λ x,
+  match x with
+  | bound_frag S' _ => bound_frag (up_set S' ∅ ) ∅
+  | bound_auth s _  => bound_frag (up s ∅) ∅
+  end.
+Inductive disjoint : Disjoint (bound sts) :=
   | frag_frag_disjoint S1 S2 T1 T2 :
-     S1 ∩ S2 ≢ ∅ → T1 ∩ T2 ≡ ∅ → frag S1 T1 ⊥ frag S2 T2
-  | auth_frag_disjoint s S T1 T2 : s ∈ S → T1 ∩ T2 ≡ ∅ → auth s T1 ⊥ frag S T2
-  | frag_auth_disjoint s S T1 T2 : s ∈ S → T1 ∩ T2 ≡ ∅ → frag S T1 ⊥ auth s T2.
-Global Existing Instance sts_disjoint.
-Global Instance sts_op : Op (sts R tok) := λ x1 x2,
+     S1 ∩ S2 ≢ ∅ → T1 ∩ T2 ≡ ∅ → bound_frag S1 T1 ⊥ bound_frag S2 T2
+  | auth_frag_disjoint s S T1 T2 : s ∈ S → T1 ∩ T2 ≡ ∅ →
+                                   bound_auth s T1 ⊥ bound_frag S T2
+  | frag_auth_disjoint s S T1 T2 : s ∈ S → T1 ∩ T2 ≡ ∅ →
+                                   bound_frag S T1 ⊥ bound_auth s T2.
+Global Existing Instance disjoint.
+Global Instance op : Op (bound sts) := λ x1 x2,
   match x1, x2 with
-  | frag S1 T1, frag S2 T2 => frag (S1 ∩ S2) (T1 ∪ T2)
-  | auth s T1, frag _ T2 => auth s (T1 ∪ T2)
-  | frag _ T1, auth s T2 => auth s (T1 ∪ T2)
-  | auth s T1, auth _ T2 => auth s (T1 ∪ T2) (* never happens *)
+  | bound_frag S1 T1, bound_frag S2 T2 => bound_frag (S1 ∩ S2) (T1 ∪ T2)
+  | bound_auth s T1, bound_frag _ T2 => bound_auth s (T1 ∪ T2)
+  | bound_frag _ T1, bound_auth s T2 => bound_auth s (T1 ∪ T2)
+  | bound_auth s T1, bound_auth _ T2 =>
+    bound_auth s (T1 ∪ T2)(* never happens *)
   end.
-Global Instance sts_minus : Minus (sts R tok) := λ x1 x2,
+Global Instance minus : Minus (bound sts) := λ x1 x2,
   match x1, x2 with
-  | frag S1 T1, frag S2 T2 => frag (up_set S1 (T1 ∖ T2)) (T1 ∖ T2)
-  | auth s T1, frag _ T2 => auth s (T1 ∖ T2)
-  | frag _ T2, auth s T1 => auth s (T1 ∖ T2) (* never happens *)
-  | auth s T1, auth _ T2 => frag (up s (T1 ∖ T2)) (T1 ∖ T2)
+  | bound_frag S1 T1, bound_frag S2 T2 => bound_frag
+                                            (up_set S1 (T1 ∖ T2)) (T1 ∖ T2)
+  | bound_auth s T1, bound_frag _ T2 => bound_auth s (T1 ∖ T2)
+  | bound_frag _ T2, bound_auth s T1 =>
+    bound_auth s (T1 ∖ T2) (* never happens *)
+  | bound_auth s T1, bound_auth _ T2 => bound_frag (up s (T1 ∖ T2)) (T1 ∖ T2)
   end.
 
-Hint Extern 10 (equiv (A:=set _) _ _) => solve_elem_of : sts.
-Hint Extern 10 (¬(equiv (A:=set _) _ _)) => solve_elem_of : sts.
+Hint Extern 10 (base.equiv (A:=set _) _ _) => solve_elem_of : sts.
+Hint Extern 10 (¬(base.equiv (A:=set _) _ _)) => solve_elem_of : sts.
 Hint Extern 10 (_ ∈ _) => solve_elem_of : sts.
 Hint Extern 10 (_ ⊆ _) => solve_elem_of : sts.
-Instance: Equivalence ((≡) : relation (sts R tok)).
+Instance: Equivalence ((≡) : relation (bound sts)).
 Proof.
   split.
   * by intros []; constructor.
@@ -145,7 +171,7 @@ Proof.
   unfold up_set; rewrite elem_of_bind; intros (s'&Hstep&?).
   induction Hstep; eauto using closed_step.
 Qed.
-Global Instance sts_dra : DRA (sts R tok).
+Global Instance dra : DRA (bound sts).
 Proof.
   split.
   * apply _.
@@ -211,36 +237,38 @@ Proof.
   * solve_elem_of -Hstep Hs1 Hs2.
 Qed.
 End sts_core.
-End sts.
 
 Section stsRA.
-Context {A B : Type} (R : relation A) (tok : A → set B).
+Context (sts : Sts).
 
-Canonical Structure stsRA := validityRA (sts R tok).
-Definition sts_auth (s : A) (T : set B) : stsRA := to_validity (auth s T).
-Definition sts_frag (S : set A) (T : set B) : stsRA := to_validity (frag S T).
+Canonical Structure RA := validityRA (bound sts).
+Definition auth (s : state sts) (T : set (token sts)) : RA :=
+  to_validity (bound_auth s T).
+Definition frag (S : set (state sts)) (T : set (token sts)) : RA :=
+  to_validity (bound_frag S T).
 
-Lemma sts_update_auth s1 s2 T1 T2 :
-  sts.step R tok (s1,T1) (s2,T2) → sts_auth s1 T1 ~~> sts_auth s2 T2.
+Lemma update_auth s1 s2 T1 T2 :
+  step sts (s1,T1) (s2,T2) → auth s1 T1 ~~> auth s2 T2.
 Proof.
   intros ?; apply validity_update; inversion 3 as [|? S ? Tf|]; subst.
-  destruct (sts.step_closed R tok s1 s2 T1 T2 S Tf) as (?&?&?); auto.
+  destruct (step_closed sts s1 s2 T1 T2 S Tf) as (?&?&?); auto.
   repeat (done || constructor).
 Qed.
 
-Lemma sts_update_frag S1 S2 (T : set B) :
-  S1 ⊆ S2 → sts.closed R tok S2 T →
-  sts_frag S1 T ~~> sts_frag S2 T.
+Lemma sts_update_frag S1 S2 (T : set (token sts)) :
+  S1 ⊆ S2 → closed sts S2 T →
+  frag S1 T ~~> frag S2 T.
 Proof.
   move=>HS Hcl. eapply validity_update; inversion 3 as [|? S ? Tf|]; subst.
   - split; first done. constructor; last done. solve_elem_of.
   - split; first done. constructor; solve_elem_of.
 Qed.
 
-Lemma sts_frag_included S1 S2 T1 T2 :
-  sts.closed R tok S2 T2 →
-  sts_frag S1 T1 ≼ sts_frag S2 T2 ↔ 
-  (sts.closed R tok S1 T1 ∧ ∃ Tf, T2 ≡ T1 ∪ Tf ∧ T1 ∩ Tf ≡ ∅ ∧ S2 ≡ (S1 ∩ sts.up_set R tok S2 Tf)).
+Lemma frag_included S1 S2 T1 T2 :
+  closed sts S2 T2 →
+  frag S1 T1 ≼ frag S2 T2 ↔ 
+  (closed sts S1 T1 ∧ ∃ Tf, T2 ≡ T1 ∪ Tf ∧ T1 ∩ Tf ≡ ∅ ∧
+                            S2 ≡ (S1 ∩ up_set sts S2 Tf)).
 Proof.
   move=>Hcl2. split.
   - intros [xf EQ]. destruct xf as [xf vf Hvf]. destruct xf as [Sf Tf|Sf Tf].
@@ -258,23 +286,26 @@ Proof.
       destruct Hscl as [s' [Hsup Hs']].
       eapply sts.closed_steps; last (hnf in Hsup; eexact Hsup); first done.
       solve_elem_of +HS Hs'.
-  - intros (Hcl1 & Tf & Htk & Hf & Hs). exists (sts_frag (sts.up_set R tok S2 Tf) Tf).
+  - intros (Hcl1 & Tf & Htk & Hf & Hs).
+    exists (frag (up_set sts S2 Tf) Tf).
     split; first split; simpl;[|done|].
     + intros _. split_ands; first done.
       * apply sts.closed_up_set; last by eapply sts.closed_ne.
-        move=>s Hs2. move:(sts.closed_disjoint _ _ _ _ Hcl2 _ Hs2).
+        move=>s Hs2. move:(closed_disjoint sts _ _ Hcl2 _ Hs2).
         solve_elem_of +Htk.
       * constructor; last done. rewrite -Hs. by eapply sts.closed_ne.
     + intros _. constructor; [ solve_elem_of +Htk | done].
 Qed.
 
-Lemma sts_frag_included' S1 S2 T :
-  sts.closed R tok S2 T → sts.closed R tok S1 T →
-  S2 ≡ (S1 ∩ sts.up_set R tok S2 ∅) →
-  sts_frag S1 T ≼ sts_frag S2 T.
+Lemma frag_included' S1 S2 T :
+  closed sts S2 T → closed sts S1 T →
+  S2 ≡ (S1 ∩ sts.up_set sts S2 ∅) →
+  frag S1 T ≼ frag S2 T.
 Proof.
-  intros. apply sts_frag_included; first done.
+  intros. apply frag_included; first done.
   split; first done. exists ∅. split_ands; done || solve_elem_of+.
 Qed.
 
 End stsRA.
+
+End sts.
