@@ -103,15 +103,21 @@ Proof.
 Qed.
 Instance up_proper : Proper ((=) ==> (≡) ==> (≡)) up.
 Proof. by intros ??? ?? [??]; split; apply up_preserving. Qed.
+Instance up_set_preserving : Proper ((⊆) ==> flip (⊆) ==> (⊆)) up_set.
+Proof.
+  intros S1 S2 HS T1 T2 HT. rewrite /up_set.
+  f_equiv; last done. move =>s1 s2 Hs. simpl in HT. by apply up_preserving.
+Qed.
 Instance up_set_proper : Proper ((≡) ==> (≡) ==> (≡)) up_set.
 Proof.
-  intros S1 S2 HS T1 T2 HT. rewrite /up_set HS.
-  f_equiv=>s1 s2 Hs. by rewrite Hs HT.
+    by intros ?? EQ1 ?? EQ2; split; apply up_set_preserving; rewrite ?EQ1 ?EQ2.
 Qed.
 Lemma elem_of_up s T : s ∈ up s T.
 Proof. constructor. Qed.
 Lemma subseteq_up_set S T : S ⊆ up_set S T.
 Proof. intros s ?; apply elem_of_bind; eauto using elem_of_up. Qed.
+Lemma up_up_set s T : up s T ≡ up_set {[ s ]} T.
+Proof. by rewrite /up_set collection_bind_singleton. Qed.
 Lemma closed_up_set S T :
   (∀ s, s ∈ S → tok s ∩ T ≡ ∅) → S ≢ ∅ → closed (up_set S T) T.
 Proof.
@@ -213,6 +219,7 @@ Context {A B : Type} (R : relation A) (tok : A → set B).
 Canonical Structure stsRA := validityRA (sts R tok).
 Definition sts_auth (s : A) (T : set B) : stsRA := to_validity (auth s T).
 Definition sts_frag (S : set A) (T : set B) : stsRA := to_validity (frag S T).
+
 Lemma sts_update s1 s2 T1 T2 :
   sts.step R tok (s1,T1) (s2,T2) → sts_auth s1 T1 ~~> sts_auth s2 T2.
 Proof.
@@ -220,4 +227,24 @@ Proof.
   destruct (sts.step_closed R tok s1 s2 T1 T2 S Tf) as (?&?&?); auto.
   repeat (done || constructor).
 Qed.
+
+Lemma sts_frag_included S1 S2 T1 T2 Tdf :
+  sts.closed R tok S1 T1 → sts.closed R tok S2 T2 →
+  T2 ≡ T1 ∪ Tdf → T1 ∩ Tdf ≡ ∅ →
+  S2 ≡ (S1 ∩ sts.up_set R tok S2 Tdf) →
+  sts_frag S1 T1 ≼ sts_frag S2 T2.
+Proof.
+  move=>Hcl1 Hcl2 Htk Hdf Hs. exists (sts_frag (sts.up_set R tok S2 Tdf) Tdf).
+  split; first split; simpl.
+  - intros _. split_ands.
+    + done.
+    + apply sts.closed_up_set.
+      * move=>s Hs2. move:(sts.closed_disjoint _ _ _ _ Hcl2 _ Hs2).
+        solve_elem_of +Htk.
+      * by eapply sts.closed_ne.
+    + constructor; last done. rewrite -Hs. by eapply sts.closed_ne.
+  - done.
+  - intros _. constructor; [ solve_elem_of +Htk | done].
+Qed.  
+
 End stsRA.
