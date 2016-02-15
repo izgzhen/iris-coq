@@ -93,7 +93,20 @@ Section sts.
     (▷ φ s' ★ own StsI γ (sts_auth sts.(st) sts.(tok) s T))
     ⊑ pvs E E (▷ inv StsI sts γ φ ★ own StsI γ (sts_frag sts.(st) sts.(tok) S' T')).
   Proof.
-  Abort.
+    intros Hstep Hin Hcl. rewrite /inv -(exist_intro s').
+    rewrite later_sep [(_ ★ ▷φ _)%I]comm -assoc.
+    rewrite -pvs_frame_l. apply sep_mono; first done.
+    rewrite -later_intro.
+    transitivity (pvs E E (own StsI γ (sts_auth sts.(st) sts.(tok) s' T'))).
+    { by apply own_update, sts_update. }
+    apply pvs_mono. rewrite -own_op. apply equiv_spec, own_proper.
+    split; first split; simpl.
+    - intros _. by eapply closed_disjoint.
+    - intros ?. split_ands; first by solve_elem_of-.
+      + done.
+      + constructor; [done | solve_elem_of-].
+    - intros _. constructor. solve_elem_of-.
+  Qed.
 
 End sts.
 
