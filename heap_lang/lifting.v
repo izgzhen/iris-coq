@@ -76,13 +76,12 @@ Proof.
 Qed.
 
 (** Base axioms for core primitives of the language: Stateless reductions *)
-Lemma wp_fork E e :
-  ▷ wp (Σ:=Σ) coPset_all e (λ _, True) ⊑ wp E (Fork e) (λ v, v = LitV LitUnit).
+Lemma wp_fork E e Q :
+  (▷ Q (LitV LitUnit) ★ ▷ wp (Σ:=Σ) coPset_all e (λ _, True)) ⊑ wp E (Fork e) Q.
 Proof.
   rewrite -(wp_lift_pure_det_step (Fork e) (Lit LitUnit) (Some e)) //=;
     last by intros; inv_step; eauto.
-  apply later_mono, sep_intro_True_l; last done.
-  by rewrite -(wp_value _ _ (Lit _)) //; apply const_intro.
+  rewrite later_sep -(wp_value _ _ (Lit _)) //.
 Qed.
 
 (* For the lemmas involving substitution, we only derive a preliminary version.
