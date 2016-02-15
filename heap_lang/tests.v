@@ -1,6 +1,6 @@
 (** This file is essentially a bunch of testcases. *)
 From program_logic Require Import ownership.
-From heap_lang Require Import substitution tactics heap notation.
+From heap_lang Require Import wp_tactics heap notation.
 Import uPred.
 
 Section LangTests.
@@ -62,48 +62,31 @@ Section LiftingTests.
     revert n1; apply löb_all_1=>n1.
     rewrite (comm uPred_and (■ _)%I) assoc; apply const_elim_r=>?.
     (* first need to do the rec to get a later *)
-    rewrite -(wp_bindi (AppLCtx _)) /=.
-    rewrite -wp_rec // =>-/=; rewrite -wp_value //=.
+    wp_rec!.
     (* FIXME: ssr rewrite fails with "Error: _pattern_value_ is used in conclusion." *)
-    rewrite ->(later_intro (Q _)).
-    rewrite -!later_and; apply later_mono.
-    (* Go on *)
-    rewrite -wp_let //= -later_intro.
-    rewrite -(wp_bindi (LetCtx _ _)) -wp_bin_op //= -wp_let' //= -!later_intro.
-    rewrite -(wp_bindi (IfCtx _ _)) /=.
-    apply wp_lt=> ?.
-    - rewrite -wp_if_true -!later_intro.
-      rewrite (forall_elim (n1 + 1)) const_equiv; last omega.
+    rewrite ->(later_intro (Q _)); rewrite -!later_and; apply later_mono.
+    wp_rec. wp_bin_op. wp_rec. wp_bin_op=> ?.
+    - wp_if. rewrite (forall_elim (n1 + 1)) const_equiv; last omega.
       by rewrite left_id impl_elim_l.
     - assert (n1 = n2 - 1) as -> by omega.
-      rewrite -wp_if_false -!later_intro.
-      by rewrite -wp_value // and_elim_r.
+      wp_if. wp_value. auto with I.
   Qed.
 
   Lemma Pred_spec n E Q : ▷ Q (LitV (n - 1)) ⊑ wp E (Pred 'n)%L Q.
   Proof.
-    rewrite -wp_lam //=.
-    rewrite -(wp_bindi (IfCtx _ _)) /=.
-    apply later_mono, wp_le=> Hn.
-    - rewrite -wp_if_true.
-      rewrite -(wp_bindi (UnOpCtx _)) /=.
-      rewrite -(wp_bind [AppLCtx _; AppRCtx _]) /=.
-      rewrite -(wp_bindi (BinOpLCtx _ _)) /=.
-      rewrite -wp_un_op //=.
-      rewrite -wp_bin_op //= -!later_intro.
-      rewrite -FindPred_spec. apply and_intro; first by (apply const_intro; omega).
-      rewrite -wp_un_op //= -later_intro.
-      by assert (n - 1 = - (- n + 2 - 1)) as -> by omega.
-    - rewrite -wp_if_false -!later_intro.
-      rewrite -FindPred_spec.
-      auto using and_intro, const_intro with omega.
+    wp_rec!; apply later_mono; wp_bin_op=> ?.
+    - wp_if. wp_un_op. wp_bin_op.
+      wp_focus (FindPred _ _); rewrite -FindPred_spec.
+      apply and_intro; first auto with I omega.
+      wp_un_op. by replace (n - 1) with (- (-n + 2 - 1)) by omega.
+    - wp_if. rewrite -FindPred_spec. auto with I omega.
   Qed.
 
   Goal ∀ E,
     True ⊑ wp (Σ:=globalF Σ) E (let: "x" := Pred '42 in Pred "x") (λ v, v = '40).
   Proof.
     intros E.
-    rewrite -(wp_bindi (LetCtx _ _)) -Pred_spec //= -wp_let' //=.
-    by rewrite -Pred_spec -!later_intro /=.
+    wp_focus (Pred '42); rewrite -Pred_spec -later_intro.
+    wp_rec. rewrite -Pred_spec -later_intro; auto with I.
   Qed.
 End LiftingTests.
