@@ -901,8 +901,15 @@ Global Instance eq_timeless {A : cofeT} (a b : A) :
 Proof. by intro; apply timelessP_spec=> x n ??; apply equiv_dist, timeless. Qed.
 Global Instance ownM_timeless (a : M) : Timeless a → TimelessP (uPred_ownM a).
 Proof.
-  intros ?; apply timelessP_spec=> x [|n] ?? //; apply cmra_included_includedN,
+  intros ?; apply timelessP_spec=> x n ??; apply cmra_included_includedN,
     cmra_timeless_included_l; eauto using cmra_validN_le.
+Qed.
+Lemma timeless_eq {A : cofeT} (a b : A) :
+  Timeless a → (a ≡ b)%I ≡ (■(a ≡ b) : uPred M)%I.
+Proof.
+  intros ?. apply (anti_symm (⊑)).
+  - move=>x n ? EQ /=. eapply timeless_iff; last exact EQ. apply _. 
+  - eapply const_elim; first done. move=>->. apply eq_refl.
 Qed.
 
 (* Always stable *)
@@ -952,6 +959,21 @@ Lemma always_entails_r P Q `{!AlwaysStable Q} : (P ⊑ Q) → P ⊑ (P ★ Q).
 Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
 
 End uPred_logic.
+
+Section discrete.
+  Context {A : cofeT} `{∀ x : A, Timeless x}.
+  Context {op : Op A} {v : Valid A} `{Unit A, Minus A} (ra : RA A).
+
+  (** Internalized properties of discrete RAs *)
+  (* For equality, there already is timeless_eq *)
+  Lemma discrete_validI {M} (x : discreteRA ra) :
+    (✓ x)%I ≡ (■ ✓ x : uPred M)%I.
+  Proof.
+    apply (anti_symm (⊑)).
+    - move=>? n ?. done.
+    - move=>? n ? ?. by apply: discrete_valid. 
+  Qed.
+End discrete.
 
 (* Hint DB for the logic *)
 Create HintDb I.
