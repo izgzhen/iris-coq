@@ -228,23 +228,44 @@ Proof.
   repeat (done || constructor).
 Qed.
 
-Lemma sts_frag_included S1 S2 T1 T2 Tdf :
-  sts.closed R tok S1 T1 → sts.closed R tok S2 T2 →
-  T2 ≡ T1 ∪ Tdf → T1 ∩ Tdf ≡ ∅ →
-  S2 ≡ (S1 ∩ sts.up_set R tok S2 Tdf) →
-  sts_frag S1 T1 ≼ sts_frag S2 T2.
+Lemma sts_frag_included S1 S2 T1 T2 :
+  sts.closed R tok S2 T2 →
+  sts_frag S1 T1 ≼ sts_frag S2 T2 ↔ 
+  (sts.closed R tok S1 T1 ∧ ∃ Tf, T2 ≡ T1 ∪ Tf ∧ T1 ∩ Tf ≡ ∅ ∧ S2 ≡ (S1 ∩ sts.up_set R tok S2 Tf)).
 Proof.
-  move=>Hcl1 Hcl2 Htk Hdf Hs. exists (sts_frag (sts.up_set R tok S2 Tdf) Tdf).
-  split; first split; simpl.
-  - intros _. split_ands.
-    + done.
-    + apply sts.closed_up_set.
-      * move=>s Hs2. move:(sts.closed_disjoint _ _ _ _ Hcl2 _ Hs2).
+  move=>Hcl2. split.
+  - intros [xf EQ]. destruct xf as [xf vf Hvf]. destruct xf as [Sf Tf|Sf Tf].
+    { exfalso. inversion_clear EQ. apply H0 in Hcl2. simpl in Hcl2.
+      inversion Hcl2. }
+    inversion_clear EQ.
+    move:(H0 Hcl2)=>{H0} H0. inversion_clear H0.
+    destruct H as [H _]. move:(H Hcl2)=>{H} [/= Hcl1  [Hclf Hdisj]].
+    apply Hvf in Hclf. simpl in Hclf. clear Hvf.
+    inversion_clear Hdisj. split; last (exists Tf; split_ands); [done..|].
+    apply (anti_symm (⊆)).
+    + move=>s HS2. apply elem_of_intersection. split; first by apply H2.
+      by apply sts.subseteq_up_set.
+    + move=>s /elem_of_intersection [HS1 Hscl]. apply H2. split; first done.
+      destruct Hscl as [s' [Hsup Hs']].
+      eapply sts.closed_steps; last (hnf in Hsup; eexact Hsup); first done.
+      solve_elem_of +H2 Hs'.
+  - intros (Hcl1 & Tf & Htk & Hf & Hs). exists (sts_frag (sts.up_set R tok S2 Tf) Tf).
+    split; first split; simpl;[|done|].
+    + intros _. split_ands; first done.
+      * apply sts.closed_up_set; last by eapply sts.closed_ne.
+        move=>s Hs2. move:(sts.closed_disjoint _ _ _ _ Hcl2 _ Hs2).
         solve_elem_of +Htk.
-      * by eapply sts.closed_ne.
-    + constructor; last done. rewrite -Hs. by eapply sts.closed_ne.
-  - done.
-  - intros _. constructor; [ solve_elem_of +Htk | done].
-Qed.  
+      * constructor; last done. rewrite -Hs. by eapply sts.closed_ne.
+    + intros _. constructor; [ solve_elem_of +Htk | done].
+Qed.
+
+Lemma sts_frag_included' S1 S2 T :
+  sts.closed R tok S2 T → sts.closed R tok S1 T →
+  S2 ≡ (S1 ∩ sts.up_set R tok S2 ∅) →
+  sts_frag S1 T ≼ sts_frag S2 T.
+Proof.
+  intros. apply sts_frag_included; first done.
+  split; first done. exists ∅. split_ands; done || solve_elem_of+.
+Qed.
 
 End stsRA.
