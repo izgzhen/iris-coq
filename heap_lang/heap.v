@@ -102,7 +102,7 @@ Section heap.
     rewrite {1}[(▷ownP _)%I]pvs_timeless pvs_frame_r; apply wp_strip_pvs.
     rewrite /wp_fsa -(wp_alloc_pst _ (of_heap h)) //.
     apply sep_mono_r; rewrite HP; apply later_mono.
-    apply forall_intro=> l; apply wand_intro_l; rewrite (forall_elim l).
+    apply forall_mono=> l; apply wand_intro_l.
     rewrite always_and_sep_l -assoc; apply const_elim_sep_l=> ?.
     rewrite -(exist_intro (op {[ l ↦ Excl v ]})).
     repeat erewrite <-exist_intro by apply _; simpl.
