@@ -10,14 +10,14 @@ Class AuthInG Λ Σ (i : gid) (A : cmraT) `{Empty A} := {
 
 (* TODO: Once we switched to RAs, it is no longer necessary to remember that a is
    constantly valid. *)
-Definition auth_inv {Λ Σ A} (i : gid) `{AuthInG Λ Σ i A}
-    (γ : gname) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
-  (∃ a, (■ ✓ a ∧ own i γ (● a)) ★ φ a)%I.
-Definition auth_own {Λ Σ A} (i : gid) `{AuthInG Λ Σ i A}
-  (γ : gname) (a : A) : iPropG Λ Σ := own i γ (◯ a).
-Definition auth_ctx {Λ Σ A} (i : gid) `{AuthInG Λ Σ i A}
-    (γ : gname) (N : namespace) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
-  inv N (auth_inv i γ φ).
+Section definitions.
+  Context {Λ Σ A} (i : gid) `{AuthInG Λ Σ i A} (γ : gname).
+  Definition auth_inv (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
+    (∃ a, (■ ✓ a ∧ own i γ (● a)) ★ φ a)%I.
+  Definition auth_own (a : A) : iPropG Λ Σ := own i γ (◯ a).
+  Definition auth_ctx (N : namespace) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
+    inv N (auth_inv φ).
+End definitions.
 Instance: Params (@auth_inv) 7.
 Instance: Params (@auth_own) 7.
 Instance: Params (@auth_ctx) 8.
