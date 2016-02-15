@@ -52,6 +52,8 @@ Notation "λ: x , e" := (LamV x e%L)
   (at level 102, x at level 1, e at level 200) : lang_scope.
 Notation "'let:' x := e1 'in' e2" := (Lam x e2%L e1%L)
   (at level 102, x at level 1, e1, e2 at level 200) : lang_scope.
+Notation "'let:' x := e1 'in' e2" := (LamV x e2%L e1%L)
+  (at level 102, x at level 1, e1, e2 at level 200) : lang_scope.
 Notation "e1 ;; e2" := (Lam "" e2%L e1%L)
   (at level 100, e2 at level 200) : lang_scope.
 
