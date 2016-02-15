@@ -31,18 +31,17 @@ Section LiftingTests.
   Goal ∀ γh N, heap_ctx HeapI γh N ⊑ wp N e (λ v, v = '2).
   Proof.
     move=> γh N. rewrite /e.
-    rewrite -(wp_bindi (LetCtx _ _)). eapply wp_alloc; eauto; [].
+    wp_focus (ref '1)%L. eapply wp_alloc; eauto; [].
     rewrite -later_intro; apply forall_intro=>l; apply wand_intro_l.
-    rewrite -wp_let //= -later_intro.
-    rewrite -(wp_bindi (SeqCtx (Load (Loc _)))) /=. 
-    rewrite -(wp_bindi (StoreRCtx (LocV _))) /=.
-    rewrite -(wp_bindi (BinOpLCtx PlusOp _)) /=.
-    eapply wp_load; eauto with I; []. apply sep_mono; first done.
+    wp_rec.
+    wp_focus (! LocV l)%L.
+    eapply wp_load; eauto with I; []. apply sep_mono_r.
     rewrite -later_intro; apply wand_intro_l.
-    rewrite -wp_bin_op // -later_intro.
-    eapply wp_store; eauto with I; []. apply sep_mono; first done.
+    wp_bin_op.
+    wp_focus (_ <- _)%L.
+    eapply wp_store; eauto with I; []. apply sep_mono_r.
     rewrite -later_intro. apply wand_intro_l.
-    rewrite -wp_seq -wp_value' -later_intro.
+    wp_rec.
     eapply wp_load; eauto with I; []. apply sep_mono; first done.
     rewrite -later_intro. apply wand_intro_l.
     by apply const_intro.
