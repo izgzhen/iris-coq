@@ -28,4 +28,4 @@ Instance set_join : MJoin set := λ A (XX : set (set A)),
 Instance set_collection_monad : CollectionMonad set.
 Proof. by split; try apply _. Qed.
 
-Global Opaque set_union set_intersection.
+Global Opaque set_union set_intersection set_difference.

@@ -531,12 +531,21 @@ End fresh.
 Section collection_monad.
   Context `{CollectionMonad M}.
 
+  Global Instance collection_fmap_mono {A B} :
+    Proper (pointwise_relation _ (=) ==> (⊆) ==> (⊆)) (@fmap M _ A B).
+  Proof. intros f g ? X Y ?; solve_elem_of. Qed.
   Global Instance collection_fmap_proper {A B} :
     Proper (pointwise_relation _ (=) ==> (≡) ==> (≡)) (@fmap M _ A B).
   Proof. intros f g ? X Y [??]; split; solve_elem_of. Qed.
+  Global Instance collection_bind_mono {A B} :
+    Proper (((=) ==> (⊆)) ==> (⊆) ==> (⊆)) (@mbind M _ A B).
+  Proof. unfold respectful; intros f g Hfg X Y ?; solve_elem_of. Qed.
   Global Instance collection_bind_proper {A B} :
     Proper (((=) ==> (≡)) ==> (≡) ==> (≡)) (@mbind M _ A B).
   Proof. unfold respectful; intros f g Hfg X Y [??]; split; solve_elem_of. Qed.
+  Global Instance collection_join_mono {A} :
+    Proper ((⊆) ==> (⊆)) (@mjoin M _ A).
+  Proof. intros X Y ?; solve_elem_of. Qed.
   Global Instance collection_join_proper {A} :
     Proper ((≡) ==> (≡)) (@mjoin M _ A).
   Proof. intros X Y [??]; split; solve_elem_of. Qed.
