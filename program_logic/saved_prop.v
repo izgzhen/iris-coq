@@ -24,12 +24,12 @@ Section saved_prop.
   Proof. by apply own_alloc. Qed.
 
   Lemma saved_prop_agree γ P Q :
-    (saved_prop_own SPI γ P ★ saved_prop_own SPI γ Q) ⊑ ▷ (P ↔ Q).
+    (saved_prop_own SPI γ P ★ saved_prop_own SPI γ Q) ⊑ ▷ (P ≡ Q).
   Proof.
     rewrite /saved_prop_own -own_op own_valid agree_validI.
     rewrite agree_equivI later_equivI /=; apply later_mono.
     rewrite -{2}(iProp_fold_unfold P) -{2}(iProp_fold_unfold Q).
     apply (eq_rewrite (iProp_unfold P) (iProp_unfold Q) (λ Q' : iPreProp Λ _,
-      iProp_fold (iProp_unfold P) ↔ iProp_fold Q')%I); solve_ne || auto with I.
+      iProp_fold (iProp_unfold P) ≡ iProp_fold Q')%I); solve_ne || auto with I.
   Qed.
 End saved_prop.
