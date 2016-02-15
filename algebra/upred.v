@@ -833,21 +833,31 @@ Proof. done. Qed.
 Lemma valid_weaken {A : cmraT} (a b : A) : ✓ (a ⋅ b) ⊑ ✓ a.
 Proof. intros r n _; apply cmra_validN_op_l. Qed.
 
+(* Own and valid derived *)
+Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_ownM a ⊑ False.
+Proof. by intros; rewrite ownM_valid valid_elim. Qed.
+Global Instance ownM_mono : Proper (flip (≼) ==> (⊑)) (@uPred_ownM M).
+Proof. move=>a b [c H]. rewrite H ownM_op. eauto. Qed.
+
+(* Products *)
 Lemma prod_equivI {A B : cofeT} (x y : A * B) :
   (x ≡ y)%I ≡ (x.1 ≡ y.1 ∧ x.2 ≡ y.2 : uPred M)%I.
 Proof. done. Qed.
 Lemma prod_validI {A B : cmraT} (x : A * B) :
   (✓ x)%I ≡ (✓ x.1 ∧ ✓ x.2 : uPred M)%I.
 Proof. done. Qed.
+
+(* Later *)
 Lemma later_equivI {A : cofeT} (x y : later A) :
   (x ≡ y)%I ≡ (▷ (later_car x ≡ later_car y) : uPred M)%I.
 Proof. done. Qed.
 
-(* Own and valid derived *)
-Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_ownM a ⊑ False.
-Proof. by intros; rewrite ownM_valid valid_elim. Qed.
-Global Instance ownM_mono : Proper (flip (≼) ==> (⊑)) (@uPred_ownM M).
-Proof. move=>a b [c H]. rewrite H ownM_op. eauto. Qed.
+(* Discrete *)
+(* For equality, there already is timeless_eq *)
+Lemma discrete_validI {A : cofeT} `{∀ x : A, Timeless x}
+  `{Op A, Valid A, Unit A, Minus A} (ra : RA A) (x : discreteRA ra) :
+  (✓ x)%I ≡ (■ ✓ x : uPred M)%I.
+Proof. done. Qed.
 
 (* Timeless *)
 Lemma timelessP_spec P : TimelessP P ↔ ∀ x n, ✓{n} x → P 0 x → P n x.
@@ -962,23 +972,9 @@ Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
 
 End uPred_logic.
 
-Section discrete.
-  Context {A : cofeT} `{∀ x : A, Timeless x}.
-  Context {op : Op A} {v : Valid A} `{Unit A, Minus A} (ra : RA A).
-
-  (** Internalized properties of discrete RAs *)
-  (* For equality, there already is timeless_eq *)
-  Lemma discrete_validI {M} (x : discreteRA ra) :
-    (✓ x)%I ≡ (■ ✓ x : uPred M)%I.
-  Proof.
-    apply (anti_symm (⊑)).
-    - move=>? n ?. done.
-    - move=>? n ? ?. by apply: discrete_valid. 
-  Qed.
-End discrete.
-
 (* Hint DB for the logic *)
 Create HintDb I.
+Hint Resolve const_intro.
 Hint Resolve or_elim or_intro_l' or_intro_r' : I.
 Hint Resolve and_intro and_elim_l' and_elim_r' : I.
 Hint Resolve always_mono : I.
