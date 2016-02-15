@@ -77,6 +77,8 @@ Proof.
 Qed.
 Lemma own_valid_r γ a : own i γ a ⊑ (own i γ a ★ ✓ a).
 Proof. apply (uPred.always_entails_r _ _), own_valid. Qed.
+Lemma own_valid_l γ a : own i γ a ⊑ (✓ a ★ own i γ a).
+Proof. by rewrite comm -own_valid_r. Qed.
 Global Instance own_timeless γ a : Timeless a → TimelessP (own i γ a).
 Proof. unfold own; apply _. Qed.
 
