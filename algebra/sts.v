@@ -59,8 +59,8 @@ Global Instance valid : Valid (bound sts) := λ x,
   end.
 Definition up (s : state) (T : set token) : set state :=
   mkSet (rtc (frame_step T) s).
-Definition up_set (S : set state) (T : set token) : set state
-  := S ≫= λ s, up s T.
+Definition up_set (S : set state) (T : set token) : set state :=
+  S ≫= λ s, up s T.
 Global Instance unit : Unit (bound sts) := λ x,
   match x with
   | bound_frag S' _ => bound_frag (up_set S' ∅ ) ∅
@@ -135,9 +135,7 @@ Proof.
   f_equiv; last done. move =>s1 s2 Hs. simpl in HT. by apply up_preserving.
 Qed.
 Instance up_set_proper : Proper ((≡) ==> (≡) ==> (≡)) up_set.
-Proof.
-    by intros ?? EQ1 ?? EQ2; split; apply up_set_preserving; rewrite ?EQ1 ?EQ2.
-Qed.
+Proof. by intros S1 S2 [??] T1 T2 [??]; split; apply up_set_preserving. Qed.
 Lemma elem_of_up s T : s ∈ up s T.
 Proof. constructor. Qed.
 Lemma subseteq_up_set S T : S ⊆ up_set S T.
