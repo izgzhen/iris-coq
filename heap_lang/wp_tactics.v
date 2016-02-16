@@ -4,12 +4,12 @@ Import uPred.
 Ltac wp_strip_later :=
   match goal with
   | |- ∀ _, _ => let H := fresh in intro H; wp_strip_later; revert H
-  | |- _ ⊑ ▷ _ => etransitivity; [|apply later_intro]
+  | |- _ ⊑ ▷ _ => etransitivity; [|by apply later_intro]
   end.
 Ltac wp_bind K :=
   lazymatch eval hnf in K with
   | [] => idtac
-  | _ => etransitivity; [|apply (wp_bind K)]; simpl
+  | _ => etransitivity; [|by apply (wp_bind K)]; simpl
   end.
 Ltac wp_finish :=
   let rec go :=
@@ -44,7 +44,6 @@ Tactic Notation "wp_bin_op" ">" :=
        wp_bind K; etransitivity; [|eapply wp_bin_op; reflexivity]; wp_finish
     end)
   end.
-
 Tactic Notation "wp_bin_op" := wp_bin_op>; wp_strip_later.
 Tactic Notation "wp_un_op" ">" :=
   match goal with

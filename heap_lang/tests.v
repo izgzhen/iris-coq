@@ -84,7 +84,7 @@ Section LiftingTests.
     True ⊑ wp (Σ:=globalF Σ) E (let: "x" := Pred '42 in Pred "x") (λ v, v = '40).
   Proof.
     intros E.
-    wp_focus (Pred '42); rewrite -Pred_spec -later_intro.
+    wp_focus (Pred _); rewrite -Pred_spec -later_intro.
     wp_rec. rewrite -Pred_spec -later_intro; auto with I.
   Qed.
 End LiftingTests.
