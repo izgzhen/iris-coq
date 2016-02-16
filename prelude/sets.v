@@ -20,7 +20,7 @@ Proof. by split; [split | |]; repeat intro. Qed.
 
 Lemma mkSet_elem_of {A} (f : A → Prop) x : f x → x ∈ mkSet f.
 Proof. done. Qed.
-Lemma mkSet_not_elem_of {A} (f : A → Prop) x : ~f x → x ∉ mkSet f.
+Lemma mkSet_not_elem_of {A} (f : A → Prop) x : ¬f x → x ∉ mkSet f.
 Proof. done. Qed.
 
 Instance set_ret : MRet set := λ A (x : A), {[ x ]}.
