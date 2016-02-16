@@ -1,6 +1,7 @@
 From algebra Require Export upred_big_op.
 From program_logic Require Export sts saved_prop.
 From heap_lang Require Export derived heap wp_tactics notation.
+Import uPred.
 
 Definition newchan := (λ: "", ref '0)%L.
 Definition signal := (λ: "x", "x" <- '1)%L.
@@ -96,9 +97,13 @@ Section proof.
   Context {Σ : iFunctorG} (N : namespace).
   (* TODO: Bundle HeapI and HeapG and have notation so that we can just write
      "l ↦ '0". *)
-  Context (HeapI : gid) `{!HeapInG Σ HeapI} (HeapG : gname).
+  Context (HeapI : gid) `{!HeapInG Σ HeapI} (HeapG : gname) (HeapN : namespace).
   Context (StsI : gid) `{!STSInG heap_lang Σ StsI sts}.
   Context (SpI : gid) `{!SavedPropInG heap_lang Σ SpI}.
+
+  (* TODO: What is the best way to assert that HeapN and N are "disjoint", as
+     in, neither is a prefix of the other? This should be usable by automatic
+     proofs, e.g., that HeapN ⊆ coPset_all ∖ N. *)
 
   Notation iProp := (iPropG heap_lang Σ).
 
@@ -116,7 +121,7 @@ Section proof.
     end.
 
   Definition barrier_ctx (γ : gname) (l : loc) (P : iProp) : iProp :=
-    (heap_ctx HeapI HeapG N ★ sts_ctx StsI sts γ N (barrier_inv l P))%I.
+    (heap_ctx HeapI HeapG HeapN ★ sts_ctx StsI sts γ N (barrier_inv l P))%I.
 
   Definition send (l : loc) (P : iProp) : iProp :=
     (∃ γ, barrier_ctx γ l P ★ sts_ownS StsI sts γ low_states {[ Send ]})%I.
@@ -133,6 +138,16 @@ Section proof.
   Lemma signal_spec l P (Q : val → iProp) :
     (send l P ★ P ★ Q '()) ⊑ wp coPset_all (signal (LocV l)) Q.
   Proof.
+    rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
+    apply exist_elim=>γ. wp_rec. (* FIXME wp_let *)
+    (* I think some evars here are better than repeating *everything* *)
+    eapply (sts_fsaS sts _ (wp_fsa _)) with (N0:=N) (γ0:=γ);simpl; eauto with I.
+    { solve_elem_of+. (* FIXME eauto should do this  *) }
+    rewrite [(_ ★ sts_ownS _ _ _ _ _)%I]comm -!assoc /wp_fsa. apply sep_mono_r.
+    apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
+    apply const_elim_sep_l=>Hs. destruct p; last done.
+    rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
+    eapply wp_store.
   Abort.
 
   Lemma wait_spec l P (Q : val → iProp) :
