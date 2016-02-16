@@ -103,8 +103,8 @@ Section proof.
   Notation iProp := (iPropG heap_lang Σ).
 
   Definition waiting (P : iProp) (I : gset gname) : iProp :=
-    (∃ Q : gmap gname iProp, ▷(P -★ Π★{map Q} (λ _ Q, Q)) ★
-                             Π★{map Q} (λ i Q, saved_prop_own SpI i Q))%I.
+    (∃ Q : gname → iProp, ▷(P -★ Π★{set I} (λ i, Q i)) ★
+                             Π★{set I} (λ i, saved_prop_own SpI i (Q i)))%I.
 
   Definition ress (I : gset gname) : iProp :=
     (Π★{set I} (λ i, ∃ Q, saved_prop_own SpI i Q ★ ▷Q))%I.
