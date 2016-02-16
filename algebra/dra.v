@@ -12,22 +12,6 @@ Arguments validity_is_valid {_ _} _.
 
 Definition to_validity {A} {P : A → Prop} (x : A) : validity P :=
   Validity x (P x) id.
-Instance validity_valid {A} (P : A → Prop) : Valid (validity P) :=
-  validity_is_valid.
-Instance validity_equiv `{Equiv A} (P : A → Prop) : Equiv (validity P) := λ x y,
-  (valid x ↔ valid y) ∧ (valid x → validity_car x ≡ validity_car y).
-Instance validity_equivalence `{Equiv A,!Equivalence ((≡) : relation A)} P :
-  Equivalence ((≡) : relation (validity P)).
-Proof.
-  split; unfold equiv, validity_equiv.
-  * by intros [x px ?]; simpl.
-  * intros [x px ?] [y py ?]; naive_solver.
-  * intros [x px ?] [y py ?] [z pz ?] [? Hxy] [? Hyz]; simpl in *.
-    split; [|intros; transitivity y]; tauto.
-Qed.
-Instance validity_valid_proper `{Equiv A} (P : A → Prop) :
-  Proper ((≡) ==> iff) (valid : validity P → Prop).
-Proof. intros ?? [??]; naive_solver. Qed.
 
 Definition dra_included `{Equiv A, Valid A, Disjoint A, Op A} := λ x y,
   ∃ z, y ≡ x ⋅ z ∧ ✓ z ∧ x ⊥ z.
@@ -64,6 +48,20 @@ Context A `{DRA A}.
 Arguments valid _ _ !_ /.
 Hint Immediate dra_op_proper : typeclass_instances.
 
+Notation T := (validity (valid : A → Prop)).
+
+Instance validity_valid : Valid T := validity_is_valid.
+Instance validity_equiv : Equiv T := λ x y,
+  (valid x ↔ valid y) ∧ (valid x → validity_car x ≡ validity_car y).
+Instance validity_equivalence : Equivalence ((≡) : relation T).
+Proof.
+  split; unfold equiv, validity_equiv.
+  * by intros [x px ?]; simpl.
+  * intros [x px ?] [y py ?]; naive_solver.
+  * intros [x px ?] [y py ?] [z pz ?] [? Hxy] [? Hyz]; simpl in *.
+    split; [|intros; transitivity y]; tauto.
+Qed.
+
 Instance: Proper ((≡) ==> (≡) ==> iff) (⊥).
 Proof.
   intros x1 x2 Hx y1 y2 Hy; split.
@@ -83,7 +81,6 @@ Qed.
 Hint Immediate dra_disjoint_move_l dra_disjoint_move_r.
 Hint Unfold dra_included.
 
-Notation T := (validity (valid : A → Prop)).
 Lemma validity_valid_car_valid (z : T) : ✓ z → ✓ validity_car z.
 Proof. apply validity_prf. Qed.
 Hint Resolve validity_valid_car_valid.
@@ -106,7 +103,7 @@ Proof.
     split; intros (?&?&?); split_ands';
       first [rewrite ?Heq; tauto|rewrite -?Heq; tauto|tauto].
   * by intros ?? [? Heq]; split; [done|]; simpl; intros ?; rewrite Heq.
-  * by intros ?? -> ?.
+  * intros ?? [??]; naive_solver.
   * intros x1 x2 [? Hx] y1 y2 [? Hy];
       split; simpl; [|by intros (?&?&?); rewrite Hx // Hy].
     split; intros (?&?&z&?&?); split_ands'; try tauto.
