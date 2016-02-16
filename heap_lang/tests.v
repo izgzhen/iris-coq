@@ -64,21 +64,20 @@ Section LiftingTests.
     wp_rec>.
     (* FIXME: ssr rewrite fails with "Error: _pattern_value_ is used in conclusion." *)
     rewrite ->(later_intro (Q _)); rewrite -!later_and; apply later_mono.
-    wp_rec. wp_bin_op. wp_rec. wp_bin_op=> ?.
-    - wp_if. rewrite (forall_elim (n1 + 1)) const_equiv; last omega.
+    wp_rec. wp_bin_op. wp_rec. wp_bin_op=> ?; wp_if.
+    - rewrite (forall_elim (n1 + 1)) const_equiv; last omega.
       by rewrite left_id impl_elim_l.
-    - assert (n1 = n2 - 1) as -> by omega.
-      wp_if. auto with I.
+    - assert (n1 = n2 - 1) as -> by omega; auto with I.
   Qed.
 
   Lemma Pred_spec n E Q : ▷ Q (LitV (n - 1)) ⊑ wp E (Pred 'n)%L Q.
   Proof.
-    wp_rec>; apply later_mono; wp_bin_op=> ?.
-    - wp_if. wp_un_op. wp_bin_op.
+    wp_rec>; apply later_mono; wp_bin_op=> ?; wp_if.
+    - wp_un_op. wp_bin_op.
       wp_focus (FindPred _ _); rewrite -FindPred_spec.
       apply and_intro; first auto with I omega.
       wp_un_op. by replace (n - 1) with (- (-n + 2 - 1)) by omega.
-    - wp_if. rewrite -FindPred_spec. auto with I omega.
+    - rewrite -FindPred_spec. auto with I omega.
   Qed.
 
   Goal ∀ E,
