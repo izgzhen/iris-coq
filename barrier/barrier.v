@@ -15,7 +15,7 @@ Module barrier_proto.
   Proof. split. exact (State Low ∅). Qed.
 
   Definition change_tokens (I : gset gname) : set token :=
-    mkSet (λ t, match t with Change i => i ∈ I | Send => False end).
+    mkSet (λ t, match t with Change i => i ∉ I | Send => False end).
 
   Inductive trans : relation stateT :=
   | ChangeI p I2 I1 : trans (State p I1) (State p I2)
@@ -34,7 +34,27 @@ Module barrier_proto.
     sts.closed sts (i_states i) {[ Change i ]}.
   Proof.
     split.
-    - apply non_empty_inhabited.
+    - apply (non_empty_inhabited (State Low {[ i ]})). rewrite !mkSet_elem_of /=.
+      apply lookup_singleton.
+    - move=>[p I]. rewrite /= /tok !mkSet_elem_of /= =>HI.
+      move=>s' /elem_of_intersection. rewrite !mkSet_elem_of /=.
+      move=>[[Htok|Htok] ? ]; subst s'; first done.
+      destruct p; done.
+    - move=>s1 s2. rewrite !mkSet_elem_of /==> Hs1 Hstep.
+      (* We probably want some helper lemmas for this... *)
+      inversion_clear Hstep as [T1 T2 Hdisj Hstep'].
+      inversion_clear Hstep' as [? ? ? ? Htrans Htok1 Htok2 Htok].
+      destruct Htrans; last done; move:Hs1 Hdisj Htok1 Htok2 Htok.
+      rewrite /= /tok /=.
+      intros. apply dec_stable. 
+      assert (Change i ∉ change_tokens I1) as HI1
+        by (rewrite mkSet_not_elem_of; solve_elem_of +Hs1).
+      assert (Change i ∉ change_tokens I2) as HI2.
+      { destruct p.
+        - solve_elem_of +Htok Hdisj HI1.
+        - solve_elem_of +Htok Hdisj HI1 / discriminate. }
+      done.
+  Qed.
     
 End barrier_proto.
 
