@@ -4,12 +4,12 @@ Import uPred.
 Ltac wp_strip_later :=
   match goal with
   | |- ∀ _, _ => let H := fresh in intro H; wp_strip_later; revert H
-  | |- _ ⊑ ▷ _ => etransitivity; [|by apply later_intro]
+  | |- _ ⊑ ▷ _ => etransitivity; [|solve [ apply later_intro] ]
   end.
 Ltac wp_bind K :=
   lazymatch eval hnf in K with
   | [] => idtac
-  | _ => etransitivity; [|by apply (wp_bind K)]; simpl
+  | _ => etransitivity; [|solve [ apply (wp_bind K) ]]; simpl
   end.
 Ltac wp_finish :=
   let rec go :=
