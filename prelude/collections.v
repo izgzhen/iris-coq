@@ -280,6 +280,8 @@ Section collection.
     intros X1 X2 HX Y1 Y2 HY; apply elem_of_equiv; intros x.
     by rewrite !elem_of_difference, HX, HY.
   Qed.
+  Lemma non_empty_inhabited x X : x ∈ X → X ≢ ∅.
+  Proof. solve_elem_of. Qed.
   Lemma intersection_singletons x : ({[x]} : C) ∩ {[x]} ≡ {[x]}.
   Proof. solve_elem_of. Qed.
   Lemma difference_twice X Y : (X ∖ Y) ∖ Y ≡ X ∖ Y.
