@@ -23,6 +23,7 @@ Class DRA A `{Equiv A, Valid A, Unit A, Disjoint A, Op A, Minus A} := {
   dra_equivalence :> Equivalence ((≡) : relation A);
   dra_op_proper :> Proper ((≡) ==> (≡) ==> (≡)) (⋅);
   dra_unit_proper :> Proper ((≡) ==> (≡)) unit;
+  dra_valid_proper :> Proper ((≡) ==> impl) valid;
   dra_disjoint_proper :> ∀ x, Proper ((≡) ==> impl) (disjoint x);
   dra_minus_proper :> Proper ((≡) ==> (≡) ==> (≡)) minus;
   (* validity *)
@@ -61,7 +62,10 @@ Proof.
   * intros [x px ?] [y py ?] [z pz ?] [? Hxy] [? Hyz]; simpl in *.
     split; [|intros; transitivity y]; tauto.
 Qed.
-
+Instance dra_valid_proper' : Proper ((≡) ==> iff) (valid : A → Prop).
+Proof. by split; apply dra_valid_proper. Qed.
+Instance to_validity_proper : Proper ((≡) ==> (≡)) to_validity.
+Proof. by intros x1 x2 Hx; split; rewrite /= Hx. Qed.
 Instance: Proper ((≡) ==> (≡) ==> iff) (⊥).
 Proof.
   intros x1 x2 Hx y1 y2 Hy; split.

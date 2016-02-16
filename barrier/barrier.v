@@ -27,14 +27,14 @@ Module barrier_proto.
       change_tokens (state_I s)
     ∪ match state_phase s with Low => ∅ | High => {[ Send ]} end.
 
-  Definition sts := sts.STS trans tok.
+  Canonical Structure sts := sts.STS trans tok.
 
   (* The set of states containing some particular i *)
   Definition i_states (i : gname) : set stateT :=
     mkSet (λ s, i ∈ state_I s).
 
   Lemma i_states_closed i :
-    sts.closed sts (i_states i) {[ Change i ]}.
+    sts.closed (i_states i) {[ Change i ]}.
   Proof.
     split.
     - apply (non_empty_inhabited(State Low {[ i ]})). rewrite !mkSet_elem_of /=.
@@ -68,7 +68,7 @@ Module barrier_proto.
     mkSet (λ s, if state_phase s is Low then True else False).
   
   Lemma low_states_closed :
-    sts.closed sts low_states {[ Send ]}.
+    sts.closed low_states {[ Send ]}.
   Proof.
     split.
     - apply (non_empty_inhabited(State Low ∅)). by rewrite !mkSet_elem_of /=.
@@ -96,7 +96,7 @@ Section proof.
   (* TODO: Bundle HeapI and HeapG and have notation so that we can just write
      "l ↦ '0". *)
   Context (HeapI : gid) `{!HeapInG Σ HeapI} (HeapG : gname).
-  Context (StsI : gid) `{!sts.InG heap_lang Σ StsI sts}.
+  Context (StsI : gid) `{!STSInG heap_lang Σ StsI sts}.
   Context (SpI : gid) `{!SavedPropInG heap_lang Σ SpI}.
 
   Notation iProp := (iPropG heap_lang Σ).
@@ -114,13 +114,13 @@ Section proof.
     end.
 
   Definition barrier_ctx (γ : gname) (l : loc) (P : iProp) : iProp :=
-    (heap_ctx HeapI HeapG N ★ sts.ctx StsI sts γ N (barrier_inv l P))%I.
+    (heap_ctx HeapI HeapG N ★ sts_ctx StsI sts γ N (barrier_inv l P))%I.
 
   Definition send (l : loc) (P : iProp) : iProp :=
-    (∃ γ, barrier_ctx γ l P ★ sts.in_states StsI sts γ low_states {[ Send ]})%I.
+    (∃ γ, barrier_ctx γ l P ★ sts_ownS StsI sts γ low_states {[ Send ]})%I.
 
   Definition recv (l : loc) (R : iProp) : iProp :=
-    (∃ γ (P Q : iProp) i, barrier_ctx γ l P ★ sts.in_states StsI sts γ (i_states i) {[ Change i ]} ★
+    (∃ γ (P Q : iProp) i, barrier_ctx γ l P ★ sts_ownS StsI sts γ (i_states i) {[ Change i ]} ★
         saved_prop_own SpI i Q ★ ▷(Q -★ R))%I.
     
   Lemma newchan_spec (P : iProp) (Q : val → iProp) :
