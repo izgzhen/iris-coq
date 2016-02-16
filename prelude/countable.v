@@ -222,6 +222,26 @@ Proof. apply (list_encode_app' [_]). Qed.
 Lemma list_encode_suffix `{Countable A} (l k : list A) :
   l `suffix_of` k → ∃ q, encode k = q ++ encode l.
 Proof. intros [l' ->]; exists (encode l'); apply list_encode_app. Qed.
+Section not_serious.
+(* FIXME This can't be real... it doesn't figure out the "flip eq" instance?!? *)
+Local Instance: Assoc (flip (=)) (++).
+Proof. intros ?? p. by induction p; intros; f_equal'. Qed.
+Lemma list_encode_suffix_eq `{Countable A} q1 q2 (l1 l2 : list A) :
+  length l1 = length l2 → q1 ++ encode l1 = q2 ++ encode l2 → l1 = l2.
+Proof.
+  revert q1 q2 l2; induction l1 as [|a1 l1 IH]; intros ???;
+    destruct l2 as [|a2 l2]; simpl; try discriminate; [done|].
+  intros EQ. injection EQ. clear EQ. intros EQ.
+  rewrite !list_encode_cons. intros Hl.
+  rewrite !assoc in Hl; eauto with typeclass_instances.
+  assert (l1 = l2) as EQl. { eapply IH; done. }
+  subst l2. apply (inj (++ (encode l1))) in Hl.
+  cut (a1 = a2); [congruence|]. apply (inj encode_nat).
+  revert Hl. clear.
+  generalize (encode_nat a2). 
+  induction (encode_nat a1); intros [|?] ?; f_equal'; naive_solver.
+Qed.
+End not_serious.
 
 (** ** Numbers *)
 Instance pos_countable : Countable positive :=

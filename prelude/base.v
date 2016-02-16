@@ -899,6 +899,12 @@ Instance: RightAbsorb (↔) True impl.
 Proof. unfold impl. red; intuition. Qed.
 Lemma not_inj `{Inj A B R R' f} x y : ¬R x y → ¬R' (f x) (f y).
 Proof. intuition. Qed.
+Lemma not_inj2_1 `{Inj2 A B C R R' R'' f} x1 x2 y1 y2 :
+  ¬R x1 x2 → ¬R'' (f x1 y1) (f x2 y2).
+Proof. intros HR HR''. destruct (inj2 f x1 y1 x2 y2); auto. Qed.
+Lemma not_inj2_2 `{Inj2 A B C R R' R'' f} x1 x2 y1 y2 :
+  ¬R' y1 y2 → ¬R'' (f x1 y1) (f x2 y2).
+Proof. intros HR' HR''. destruct (inj2 f x1 y1 x2 y2); auto. Qed.
 Instance inj_compose {A B C} R1 R2 R3 (f : A → B) (g : B → C) :
   Inj R1 R2 f → Inj R2 R3 g → Inj R1 R3 (g ∘ f).
 Proof. red; intuition. Qed.
