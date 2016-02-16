@@ -67,7 +67,7 @@ Section LiftingTests.
     wp_rec. wp_bin_op. wp_rec. wp_bin_op=> ?; wp_if.
     - rewrite (forall_elim (n1 + 1)) const_equiv; last omega.
       by rewrite left_id impl_elim_l.
-    - assert (n1 = n2 - 1) as -> by omega; auto with I.
+    - wp_value. assert (n1 = n2 - 1) as -> by omega; auto with I.
   Qed.
 
   Lemma Pred_spec n E Q : ▷ Q (LitV (n - 1)) ⊑ wp E (Pred 'n)%L Q.
