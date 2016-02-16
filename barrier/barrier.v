@@ -114,11 +114,12 @@ Section proof.
   Definition ress (I : gset gname) : iProp :=
     (Π★{set I} (λ i, ∃ R, saved_prop_own SpI i R ★ ▷R))%I.
 
+  Local Notation state_to_val s :=
+    (match s with State Low _ => 0 | State High _ => 1 end).
   Definition barrier_inv (l : loc) (P : iProp) (s : stateT) : iProp :=
-    match s with
-    | State Low I' => (heap_mapsto HeapI HeapG l ('0) ★ waiting P I')%I
-    | State High I' => (heap_mapsto HeapI HeapG l ('1) ★ ress I')%I
-    end.
+    (heap_mapsto HeapI HeapG l '(state_to_val s) ★
+     match s with State Low I' => waiting P I' | State High I' => ress I' end
+    )%I.
 
   Definition barrier_ctx (γ : gname) (l : loc) (P : iProp) : iProp :=
     (heap_ctx HeapI HeapG HeapN ★ sts_ctx StsI sts γ N (barrier_inv l P))%I.
