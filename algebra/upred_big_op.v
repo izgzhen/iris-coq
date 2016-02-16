@@ -18,12 +18,12 @@ Definition uPred_big_sepM {M} `{FinMapToList K A MA}
     (m : MA) (P : K → A → uPred M) : uPred M :=
   uPred_big_sep (curry P <$> map_to_list m).
 Notation "'Π★{map' m } P" := (uPred_big_sepM m P)
-  (at level 20, m at level 10, format "Π★{map m }  P") : uPred_scope.
+  (at level 20, m at level 10, format "Π★{map  m }  P") : uPred_scope.
 
 Definition uPred_big_sepS {M} `{Elements A C}
   (X : C) (P : A → uPred M) : uPred M := uPred_big_sep (P <$> elements X).
 Notation "'Π★{set' X } P" := (uPred_big_sepS X P)
-  (at level 20, X at level 10, format "Π★{set X }  P") : uPred_scope.
+  (at level 20, X at level 10, format "Π★{set  X }  P") : uPred_scope.
 
 (** * Always stability for lists *)
 Class AlwaysStableL {M} (Ps : list (uPred M)) :=
