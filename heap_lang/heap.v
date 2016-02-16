@@ -72,7 +72,7 @@ Section heap.
   Qed.
 
   Lemma heap_alloc N σ :
-    ownP σ ⊑ pvs N N (∃ γ, heap_ctx HeapI γ N ∧ Π★{σ} heap_mapsto HeapI γ).
+    ownP σ ⊑ pvs N N (∃ γ, heap_ctx HeapI γ N ∧ Π★{map σ} heap_mapsto HeapI γ).
   Proof.
     rewrite -{1}(from_to_heap σ); etransitivity;
       first apply (auth_alloc (ownP ∘ of_heap) N (to_heap σ)), to_heap_valid.
