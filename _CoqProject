@@ -34,6 +34,7 @@ prelude/sets.v
 prelude/decidable.v
 prelude/list.v
 prelude/error.v
+prelude/functions.v
 algebra/option.v
 algebra/cmra.v
 algebra/cmra_big_op.v
