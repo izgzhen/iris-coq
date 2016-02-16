@@ -100,10 +100,10 @@ Section proof.
   Context (HeapI : gid) `{!HeapInG Σ HeapI} (HeapG : gname) (HeapN : namespace).
   Context (StsI : gid) `{!STSInG heap_lang Σ StsI sts}.
   Context (SpI : gid) `{!SavedPropInG heap_lang Σ SpI}.
-
-  (* TODO: What is the best way to assert that HeapN and N are "disjoint", as
-     in, neither is a prefix of the other? This should be usable by automatic
-     proofs, e.g., that HeapN ⊆ coPset_all ∖ N. *)
+  (* TODO We could alternatively construct the namespaces to be disjoint.
+     But that would take a lot of flexibility from the client, who probably
+     wants to also use the heap_ctx elsewhere. *)
+  Context (HeapN_disj : ndisj HeapN N).
 
   Notation iProp := (iPropG heap_lang Σ).
 
@@ -148,7 +148,23 @@ Section proof.
     apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
     apply const_elim_sep_l=>Hs. destruct p; last done.
     rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
-    eapply wp_store.
+    eapply wp_store; eauto with I.
+    { (* FIXME can we make this more automatic? *)
+      apply ndisj_disjoint in HeapN_disj. solve_elem_of. }
+    rewrite -!assoc. apply sep_mono_r. etransitivity; last eapply later_mono.
+    { (* Is this really the best way to strip the later? *)
+      erewrite later_sep. apply sep_mono_r. apply later_intro. }
+    apply wand_intro_l. rewrite -(exist_intro (State High I)).
+    rewrite -(exist_intro ∅). rewrite const_equiv /=; last first.
+    { constructor; first constructor; rewrite /= /tok /=; solve_elem_of+. }
+    rewrite left_id -later_intro {2}/barrier_inv -!assoc. apply sep_mono_r.
+    rewrite !assoc [(_ ★ P)%I]comm !assoc -2!assoc.
+    apply sep_mono; last first.
+    { apply wand_intro_l. eauto with I. }
+    (* Now we come to the core piece of the proof: Updating from waiting to ress. *)
+    rewrite /waiting /ress sep_exist_l. apply exist_elim=>{Q} Q.
+    rewrite later_wand {1}(later_intro P) !assoc wand_elim_r.
+    (* TODO: Now we need stuff about Π★{set I} *)
   Abort.
 
   Lemma wait_spec l P (Q : val → iProp) :
