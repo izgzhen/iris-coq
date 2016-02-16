@@ -16,7 +16,11 @@ Ltac wp_finish :=
   match goal with
   | |- ∀ _, _ => let H := fresh in intro H; go; revert H
   | |- _ ⊑ ▷ _ => etransitivity; [|apply later_mono; go; reflexivity]
-  | |- _ ⊑ wp _ _ _ => etransitivity; [|eapply wp_value; reflexivity]; simpl
+  | |- _ ⊑ wp _ _ _ =>
+     etransitivity; [|eapply wp_value; reflexivity];
+     (* sometimes, we will have to do a final view shift, so only apply
+     wp_value if we obtain a consecutive wp *)
+     match goal with |- _ ⊑ wp _ _ _ => simpl | _ => fail end
   | _ => idtac
   end in simpl; go.
 
@@ -55,7 +59,6 @@ Tactic Notation "wp_un_op" ">" :=
   end.
 Tactic Notation "wp_un_op" := wp_un_op>; wp_strip_later.
 Tactic Notation "wp_if" ">" :=
-  try wp_value;
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval cbv in e' with
