@@ -3,7 +3,7 @@
 (** This file implements finite maps and finite sets with keys of any countable
 type. The implementation is based on [Pmap]s, radix-2 search trees. *)
 From prelude Require Export countable fin_maps fin_map_dom.
-From prelude Require Import pmap mapset.
+From prelude Require Import pmap mapset sets.
 
 (** * The data structure *)
 (** We pack a [Pmap] together with a proof that ensures that all keys correspond
@@ -117,6 +117,10 @@ Notation gset K := (mapset (gmap K)).
 Instance gset_dom `{Countable K} {A} : Dom (gmap K A) (gset K) := mapset_dom.
 Instance gset_dom_spec `{Countable K} :
   FinMapDom K (gmap K) (gset K) := mapset_dom_spec.
+
+Definition of_gset `{Countable A} (X : gset A) : set A := mkSet (λ x, x ∈ X).
+Lemma elem_of_of_gset `{Countable A} (X : gset A) x : x ∈ of_gset X ↔ x ∈ X.
+Proof. done. Qed.
 
 (** * Fresh elements *)
 (* This is pretty ad-hoc and just for the case of [gset positive]. We need a
