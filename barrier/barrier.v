@@ -68,9 +68,8 @@ Module barrier_proto.
   (* The set of low states *)
   Definition low_states : set stateT :=
     mkSet (λ s, if state_phase s is Low then True else False).
-  
-  Lemma low_states_closed :
-    sts.closed low_states {[ Send ]}.
+
+  Lemma low_states_closed : sts.closed low_states {[ Send ]}.
   Proof.
     split.
     - apply (non_empty_inhabited(State Low ∅)). by rewrite !mkSet_elem_of /=.
@@ -97,9 +96,9 @@ Section proof.
   Context {Σ : iFunctorG} (N : namespace).
   (* TODO: Bundle HeapI and HeapG and have notation so that we can just write
      "l ↦ '0". *)
-  Context (HeapI : gid) `{!HeapInG Σ HeapI} (HeapG : gname) (HeapN : namespace).
-  Context (StsI : gid) `{!STSInG heap_lang Σ StsI sts}.
-  Context (SpI : gid) `{!SavedPropInG heap_lang Σ SpI}.
+  Context `{heapG Σ} (HeapN : namespace).
+  Context `{stsG heap_lang Σ sts}.
+  Context `{savedPropG heap_lang Σ}.
   (* TODO We could alternatively construct the namespaces to be disjoint.
      But that would take a lot of flexibility from the client, who probably
      wants to also use the heap_ctx elsewhere. *)
@@ -109,28 +108,28 @@ Section proof.
 
   Definition waiting (P : iProp) (I : gset gname) : iProp :=
     (∃ R : gname → iProp, ▷(P -★ Π★{set I} (λ i, R i)) ★
-                             Π★{set I} (λ i, saved_prop_own SpI i (R i)))%I.
+                             Π★{set I} (λ i, saved_prop_own i (R i)))%I.
 
   Definition ress (I : gset gname) : iProp :=
-    (Π★{set I} (λ i, ∃ R, saved_prop_own SpI i R ★ ▷R))%I.
+    (Π★{set I} (λ i, ∃ R, saved_prop_own i R ★ ▷R))%I.
 
   Local Notation state_to_val s :=
     (match s with State Low _ => 0 | State High _ => 1 end).
   Definition barrier_inv (l : loc) (P : iProp) (s : stateT) : iProp :=
-    (heap_mapsto HeapI HeapG l '(state_to_val s) ★
+    (l !=> '(state_to_val s) ★
      match s with State Low I' => waiting P I' | State High I' => ress I' end
     )%I.
 
   Definition barrier_ctx (γ : gname) (l : loc) (P : iProp) : iProp :=
-    (heap_ctx HeapI HeapG HeapN ★ sts_ctx StsI sts γ N (barrier_inv l P))%I.
+    (heap_ctx HeapN ★ sts_ctx γ N (barrier_inv l P))%I.
 
   Definition send (l : loc) (P : iProp) : iProp :=
-    (∃ γ, barrier_ctx γ l P ★ sts_ownS StsI sts γ low_states {[ Send ]})%I.
+    (∃ γ, barrier_ctx γ l P ★ sts_ownS γ low_states {[ Send ]})%I.
 
   Definition recv (l : loc) (R : iProp) : iProp :=
-    (∃ γ (P Q : iProp) i, barrier_ctx γ l P ★ sts_ownS StsI sts γ (i_states i) {[ Change i ]} ★
-        saved_prop_own SpI i Q ★ ▷(Q -★ R))%I.
-    
+    (∃ γ (P Q : iProp) i, barrier_ctx γ l P ★ sts_ownS γ (i_states i) {[ Change i ]} ★
+        saved_prop_own i Q ★ ▷(Q -★ R))%I.
+
   Lemma newchan_spec (P : iProp) (Q : val → iProp) :
     (∀ l, recv l P ★ send l P -★ Q (LocV l)) ⊑ wp coPset_all (newchan '()) Q.
   Proof.
@@ -142,9 +141,9 @@ Section proof.
     rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
     apply exist_elim=>γ. wp_rec. (* FIXME wp_let *)
     (* I think some evars here are better than repeating *everything* *)
-    eapply (sts_fsaS sts _ (wp_fsa _)) with (N0:=N) (γ0:=γ);simpl; eauto with I.
+    eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ);simpl; eauto with I.
     { solve_elem_of+. (* FIXME eauto should do this  *) }
-    rewrite [(_ ★ sts_ownS _ _ _ _ _)%I]comm -!assoc /wp_fsa. apply sep_mono_r.
+    rewrite [(_ ★ sts_ownS _ _ _)%I]comm -!assoc /wp_fsa. apply sep_mono_r.
     apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
     apply const_elim_sep_l=>Hs. destruct p; last done.
     rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
@@ -156,7 +155,7 @@ Section proof.
       erewrite later_sep. apply sep_mono_r. apply later_intro. }
     apply wand_intro_l. rewrite -(exist_intro (State High I)).
     rewrite -(exist_intro ∅). rewrite const_equiv /=; last first.
-    { constructor; first constructor; rewrite /= /tok /=; solve_elem_of+. }
+    { constructor; first constructor; rewrite /= /tok /=; solve_elem_of. }
     rewrite left_id -later_intro {2}/barrier_inv -!assoc. apply sep_mono_r.
     rewrite !assoc [(_ ★ P)%I]comm !assoc -2!assoc.
     apply sep_mono; last first.

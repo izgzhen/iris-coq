@@ -20,6 +20,7 @@ Notation "P ={ E }=> Q" := (True ⊑ vs E E P%I Q%I)
 Section vs.
 Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q R : iProp Λ Σ.
+Implicit Types N : namespace.
 
 Lemma vs_alt E1 E2 P Q : (P ⊑ pvs E1 E2 Q) → P ={E1,E2}=> Q.
 Proof.
@@ -99,25 +100,24 @@ Proof.
   by rewrite /vs always_elim impl_elim_r.
 Qed.
 
-Lemma vs_alloc (N : namespace) P : ▷ P ={N}=> inv N P.
+Lemma vs_alloc N P : ▷ P ={N}=> inv N P.
 Proof. by intros; apply vs_alt, inv_alloc. Qed.
 
 End vs.
 
 Section vs_ghost.
-Context {Λ : language} {Σ : iFunctorG} (i : gid) `{!InG Λ Σ i A}.
+Context `{inG Λ Σ A}.
 Implicit Types a : A.
 Implicit Types P Q R : iPropG Λ Σ.
 
 Lemma vs_own_updateP E γ a φ :
-  a ~~>: φ → own i γ a ={E}=> ∃ a', ■ φ a' ∧ own i γ a'.
+  a ~~>: φ → own γ a ={E}=> ∃ a', ■ φ a' ∧ own γ a'.
 Proof. by intros; apply vs_alt, own_updateP. Qed.
 
 Lemma vs_own_updateP_empty `{Empty A, !CMRAIdentity A} E γ φ :
-  ∅ ~~>: φ → True ={E}=> ∃ a', ■ φ a' ∧ own i γ a'.
+  ∅ ~~>: φ → True ={E}=> ∃ a', ■ φ a' ∧ own γ a'.
 Proof. by intros; eapply vs_alt, own_updateP_empty. Qed.
 
-Lemma vs_update E γ a a' : a ~~> a' → own i γ a ={E}=> own i γ a'.
+Lemma vs_update E γ a a' : a ~~> a' → own γ a ={E}=> own γ a'.
 Proof. by intros; apply vs_alt, own_update. Qed.
-
 End vs_ghost.

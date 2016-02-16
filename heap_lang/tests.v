@@ -22,15 +22,15 @@ Section LangTests.
 End LangTests.
 
 Section LiftingTests.
-  Context {Σ : iFunctorG} (HeapI : gid) `{!HeapInG Σ HeapI}.
+  Context `{heapG Σ}.
   Implicit Types P : iPropG heap_lang Σ.
   Implicit Types Q : val → iPropG heap_lang Σ.
 
   Definition e  : expr :=
     let: "x" := ref '1 in "x" <- !"x" + '1;; !"x".
-  Goal ∀ γh N, heap_ctx HeapI γh N ⊑ wp N e (λ v, v = '2).
+  Goal ∀ N, heap_ctx N ⊑ wp N e (λ v, v = '2).
   Proof.
-    move=> γh N. rewrite /e.
+    move=> N. rewrite /e.
     wp_focus (ref '1)%L. eapply wp_alloc; eauto; [].
     rewrite -later_intro; apply forall_intro=>l; apply wand_intro_l.
     wp_rec.
