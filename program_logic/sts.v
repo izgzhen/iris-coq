@@ -97,7 +97,7 @@ Section sts.
     - intros Hdisj. split_ands; first by solve_elem_of+.
       + done.
       + constructor; [done | solve_elem_of-].
-    - intros _. by eapply closed_disjoint.
+    - intros _. by eapply closed_disjoint'.
     - intros _. constructor. solve_elem_of+.
   Qed.
 

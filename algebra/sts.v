@@ -48,9 +48,15 @@ Inductive frame_step (T : set token) (s1 s2 : state) : Prop :=
 Hint Resolve Frame_step.
 Record closed (S : set state) (T : set token) : Prop := Closed {
   closed_ne : S ≢ ∅;
-  closed_disjoint s : s ∈ S → tok s ∩ T ≡ ∅;
+  closed_disjoint s : s ∈ S → tok s ∩ T ⊆ ∅;
   closed_step s1 s2 : s1 ∈ S → frame_step T s1 s2 → s2 ∈ S
 }.
+Lemma closed_disjoint' S T s :
+  closed S T → s ∈ S → tok s ∩ T ≡ ∅.
+Proof.
+  move=>Hcl Hin. move:(closed_disjoint _ _ Hcl _ Hin).
+  solve_elem_of+.
+Qed.
 Lemma closed_steps S T s1 s2 :
   closed S T → s1 ∈ S → rtc (frame_step T) s1 s2 → s2 ∈ S.
 Proof. induction 3; eauto using closed_step. Qed.
@@ -144,13 +150,13 @@ Proof. intros s ?; apply elem_of_bind; eauto using elem_of_up. Qed.
 Lemma up_up_set s T : up s T ≡ up_set {[ s ]} T.
 Proof. by rewrite /up_set collection_bind_singleton. Qed.
 Lemma closed_up_set S T :
-  (∀ s, s ∈ S → tok s ∩ T ≡ ∅) → S ≢ ∅ → closed (up_set S T) T.
+  (∀ s, s ∈ S → tok s ∩ T ⊆ ∅) → S ≢ ∅ → closed (up_set S T) T.
 Proof.
   intros HS Hne; unfold up_set; split.
   * assert (∀ s, s ∈ up s T) by eauto using elem_of_up. solve_elem_of.
   * intros s; rewrite !elem_of_bind; intros (s'&Hstep&Hs').
     specialize (HS s' Hs'); clear Hs' Hne S.
-    induction Hstep as [s|s1 s2 s3 [T1 T2 ? Hstep] ? IH]; auto.
+    induction Hstep as [s|s1 s2 s3 [T1 T2 ? Hstep] ? IH]; first done.
     inversion_clear Hstep; apply IH; clear IH; auto with sts.
   * intros s1 s2; rewrite !elem_of_bind; intros (s&?&?) ?; exists s.
     split; [eapply rtc_r|]; eauto.
