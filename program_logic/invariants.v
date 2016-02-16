@@ -9,7 +9,6 @@ Local Hint Extern 100 (@subseteq coPset _ _) => solve_elem_of.
 Local Hint Extern 100 (_ ∉ _) => solve_elem_of.
 Local Hint Extern 99 ({[ _ ]} ⊆ _) => apply elem_of_subseteq_singleton.
 
-
 Definition namespace := list positive.
 Definition nnil : namespace := nil.
 Definition ndot `{Countable A} (N : namespace) (x : A) : namespace :=
@@ -31,44 +30,38 @@ Qed.
 Lemma ndot_nclose `{Countable A} N x : encode (ndot N x) ∈ nclose N.
 Proof. apply nclose_subseteq with x, encode_nclose. Qed.
 
-Definition ndisj (N1 N2 : namespace) :=
+Instance ndisjoint : Disjoint namespace := λ N1 N2,
   ∃ N1' N2', N1' `suffix_of` N1 ∧ N2' `suffix_of` N2 ∧
              length N1' = length N2' ∧ N1' ≠ N2'.
 
-Global Instance ndisj_comm : Comm iff ndisj.
-Proof. intros N1 N2. rewrite /ndisj; naive_solver. Qed.
+Section ndisjoint.
+  Context `{Countable A}.
+  Implicit Types x y : A.
 
-Lemma ndot_ne_disj `{Countable A} N (x y : A) :
-  x ≠ y → ndisj (ndot N x) (ndot N y).
-Proof.
-  intros Hxy. exists (ndot N x), (ndot N y). split_ands; try done; [].
-  by apply not_inj2_2.
-Qed.
+  Global Instance ndisjoint_comm : Comm iff ndisjoint.
+  Proof. intros N1 N2. rewrite /disjoint /ndisjoint; naive_solver. Qed.
 
-Lemma ndot_preserve_disj_l `{Countable A} N1 N2 (x : A) :
-  ndisj N1 N2 → ndisj (ndot N1 x) N2.
-Proof.
-  intros (N1' & N2' & Hpr1 & Hpr2 & Hl & Hne). exists N1', N2'.
-  split_ands; try done; []. by apply suffix_of_cons_r.
-Qed.
+  Lemma ndot_ne_disjoint N (x y : A) : x ≠ y → ndot N x ⊥ ndot N y.
+  Proof. intros Hxy. exists (ndot N x), (ndot N y); naive_solver. Qed.
 
-Lemma ndot_preserve_disj_r `{Countable A} N1 N2 (x : A) :
-  ndisj N1 N2 → ndisj N1 (ndot N2 x).
-Proof.
-  rewrite ![ndisj N1 _]comm. apply ndot_preserve_disj_l.
-Qed.
+  Lemma ndot_preserve_disjoint_l N1 N2 x : N1 ⊥ N2 → ndot N1 x ⊥ N2.
+  Proof.
+    intros (N1' & N2' & Hpr1 & Hpr2 & Hl & Hne). exists N1', N2'.
+    split_ands; try done; []. by apply suffix_of_cons_r.
+  Qed.
 
-Lemma ndisj_disjoint N1 N2 :
-  ndisj N1 N2 → nclose N1 ∩ nclose N2 = ∅.
-Proof.
-  intros (N1' & N2' & [N1'' Hpr1] & [N2'' Hpr2] & Hl & Hne). subst N1 N2.
-  apply elem_of_equiv_empty_L=> p; unfold nclose.
-  rewrite elem_of_intersection !elem_coPset_suffixes; intros [[q ->] [q' Hq]].
-  rewrite !list_encode_app !assoc in Hq.
-  apply Hne. eapply list_encode_suffix_eq; done.
-Qed.
+  Lemma ndot_preserve_disjoint_r N1 N2 x : N1 ⊥ N2 → N1 ⊥ ndot N2 x .
+  Proof. rewrite ![N1 ⊥ _]comm. apply ndot_preserve_disjoint_l. Qed.
 
-Local Hint Resolve nclose_subseteq ndot_nclose.
+  Lemma ndisj_disjoint N1 N2 : N1 ⊥ N2 → nclose N1 ∩ nclose N2 = ∅.
+  Proof.
+    intros (N1' & N2' & [N1'' ->] & [N2'' ->] & Hl & Hne).
+    apply elem_of_equiv_empty_L=> p; unfold nclose.
+    rewrite elem_of_intersection !elem_coPset_suffixes; intros [[q ->] [q' Hq]].
+    rewrite !list_encode_app !assoc in Hq.
+    by eapply Hne, list_encode_suffix_eq.
+  Qed.
+End ndisjoint.
 
 (** Derived forms and lemmas about them. *)
 Definition inv {Λ Σ} (N : namespace) (P : iProp Λ Σ) : iProp Λ Σ :=
@@ -128,7 +121,7 @@ Proof. intros. by apply: (inv_fsa pvs_fsa). Qed.
 Lemma wp_open_close E e N P (Q : val Λ → iProp Λ Σ) R :
   atomic e → nclose N ⊆ E →
   R ⊑ inv N P →
-  R ⊑ (▷P -★ wp (E ∖ nclose N) e (λ v, ▷P ★ Q v)) →
+  R ⊑ (▷ P -★ wp (E ∖ nclose N) e (λ v, ▷P ★ Q v)) →
   R ⊑ wp E e Q.
 Proof. intros. by apply: (inv_fsa (wp_fsa e)). Qed.
 

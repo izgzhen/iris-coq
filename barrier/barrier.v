@@ -102,7 +102,7 @@ Section proof.
   (* TODO We could alternatively construct the namespaces to be disjoint.
      But that would take a lot of flexibility from the client, who probably
      wants to also use the heap_ctx elsewhere. *)
-  Context (HeapN_disj : ndisj HeapN N).
+  Context (HeapN_disj : HeapN ⊥ N).
 
   Notation iProp := (iPropG heap_lang Σ).
 
