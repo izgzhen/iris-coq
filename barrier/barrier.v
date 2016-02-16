@@ -1,11 +1,13 @@
-From program_logic Require Export sts.
+From program_logic Require Export sts saved_prop.
 From heap_lang Require Export derived heap wp_tactics notation.
 
 Definition newchan := (λ: "", ref '0)%L.
 Definition signal := (λ: "x", "x" <- '1)%L.
-Definition wait := (rec: "wait" "x" := if: !"x" = '1 then '() else "wait" "x")%L.
+Definition wait := (rec: "wait" "x" :=if: !"x" = '1 then '() else "wait" "x")%L.
 
-(** The STS describing the main barrier protocol. *)
+(** The STS describing the main barrier protocol. Every state has an index-set
+    associated with it. These indices are actually [gname], because we use them
+    with saved propositions. *)
 Module barrier_proto.
   Inductive phase := Low | High.
   Record stateT := State { state_phase : phase; state_I : gset gname }.
@@ -27,6 +29,7 @@ Module barrier_proto.
 
   Definition sts := sts.STS trans tok.
 
+  (* The set of states containing some particular i *)
   Definition i_states (i : gname) : set stateT :=
     mkSet (λ s, i ∈ state_I s).
 
@@ -34,17 +37,21 @@ Module barrier_proto.
     sts.closed sts (i_states i) {[ Change i ]}.
   Proof.
     split.
-    - apply (non_empty_inhabited (State Low {[ i ]})). rewrite !mkSet_elem_of /=.
+    - apply (non_empty_inhabited(State Low {[ i ]})). rewrite !mkSet_elem_of /=.
       apply lookup_singleton.
     - move=>[p I]. rewrite /= /tok !mkSet_elem_of /= =>HI.
       move=>s' /elem_of_intersection. rewrite !mkSet_elem_of /=.
       move=>[[Htok|Htok] ? ]; subst s'; first done.
       destruct p; done.
-    - move=>s1 s2. rewrite !mkSet_elem_of /==> Hs1 Hstep.
+    - (* If we do the destruct of the states early, and then inversion
+         on the proof of a transition, it doesn't work - we do not obtain
+         the equalities we need. So we destruct the states late, because this
+         means we can use "destruct" instead of "inversion". *)
+      move=>s1 s2. rewrite !mkSet_elem_of /==> Hs1 Hstep.
       (* We probably want some helper lemmas for this... *)
       inversion_clear Hstep as [T1 T2 Hdisj Hstep'].
-      inversion_clear Hstep' as [? ? ? ? Htrans Htok1 Htok2 Htok].
-      destruct Htrans; last done; move:Hs1 Hdisj Htok1 Htok2 Htok.
+      inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
+      destruct Htrans; last done; move:Hs1 Hdisj Htok.
       rewrite /= /tok /=.
       intros. apply dec_stable. 
       assert (Change i ∉ change_tokens I1) as HI1
@@ -55,6 +62,66 @@ Module barrier_proto.
         - solve_elem_of +Htok Hdisj HI1 / discriminate. }
       done.
   Qed.
-    
-End barrier_proto.
 
+  (* The set of low states *)
+  Definition low_states : set stateT :=
+    mkSet (λ s, if state_phase s is Low then True else False).
+  
+  Lemma low_states_closed :
+    sts.closed sts low_states {[ Send ]}.
+  Proof.
+    split.
+    - apply (non_empty_inhabited(State Low ∅)). by rewrite !mkSet_elem_of /=.
+    - move=>[p I]. rewrite /= /tok !mkSet_elem_of /= =>HI.
+      destruct p; last done. solve_elem_of+ /discriminate.
+    - move=>s1 s2. rewrite !mkSet_elem_of /==> Hs1 Hstep.
+      inversion_clear Hstep as [T1 T2 Hdisj Hstep'].
+      inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
+      destruct Htrans; move:Hs1 Hdisj Htok =>/=;
+                                first by destruct p.
+      rewrite /= /tok /=. intros. solve_elem_of +Hdisj Htok.
+  Qed.
+
+End barrier_proto.
+(* I am too lazy to type the full module name all the time. But then
+   why did we even put this into a module? Because some of the names 
+   are so general.
+   What we'd really like here is to import *some* of the names from
+   the module into our namespaces. But Coq doesn't seem to support that...?? *)
+Import barrier_proto.
+
+(** Now we come to the Iris part of the proof. *)
+Section proof.
+  Context {Σ : iFunctorG} (N : namespace).
+  (* TODO: Bundle HeapI and HeapG and have notation so that we can just write
+     "l ↦ '0". *)
+  Context (HeapI : gid) `{!HeapInG Σ HeapI} (HeapG : gname).
+  Context (StsI : gid) `{!sts.InG heap_lang Σ StsI sts}.
+  Context (SpI : gid) `{!SavedPropInG heap_lang Σ SpI}.
+
+  Notation iProp := (iPropG heap_lang Σ).
+
+  Definition waiting (P : iProp) (I : gset gname) : iProp :=
+    (∃ Q : gmap gname iProp, True)%I.
+
+  Definition ress (I : gset gname) : iProp :=
+    (True)%I.
+
+  Definition barrier_inv (l : loc) (P : iProp) (s : stateT) : iProp :=
+    match s with
+    | State Low I' => (heap_mapsto HeapI HeapG l ('0) ★ waiting P I')%I
+    | State High I' => (heap_mapsto HeapI HeapG l ('1) ★ ress I')%I
+    end.
+
+  Definition barrier_ctx (γ : gname) (l : loc) (P : iProp) : iProp :=
+    (heap_ctx HeapI HeapG N ★ sts.ctx StsI sts γ N (barrier_inv l P))%I.
+
+  Definition send (l : loc) (P : iProp) : iProp :=
+    (∃ γ, barrier_ctx γ l P ★ sts.in_states StsI sts γ low_states {[ Send ]})%I.
+
+  Definition recv (l : loc) (R : iProp) : iProp :=
+    (∃ γ (P Q : iProp) i, barrier_ctx γ l P ★ sts.in_states StsI sts γ (i_states i) {[ Change i ]} ★
+        saved_prop_own SpI i Q ★ ▷(Q -★ R))%I.
+    
+
+End proof.
