@@ -1,5 +1,24 @@
 From algebra Require Export base.
 
+(** This files defines (a shallow embedding of) the category of COFEs:
+    Complete ordered families of equivalences. This is a cartesian closed
+    category, and mathematically speaking, the entire development lives
+    in this category. However, we will generally prefer to work with raw
+    Coq functions plus some registered Proper instances for non-expansiveness.
+    This makes writing such functions much easier. It turns out that it many 
+    cases, we do not even need non-expansiveness.
+
+    In principle, it would be possible to perform a large part of the
+    development on OFEs, i.e., on bisected metric spaces that are not
+    necessary complete. This is because the function space A → B has a
+    completion if B has one - for A, the metric itself suffices.
+    That would result in a simplification of some constructions, becuase
+    no completion would have to be provided. However, on the other hand,
+    we would have to introduce the notion of OFEs into our alebraic
+    hierarchy, which we'd rather avoid. Furthermore, on paper, justifying
+    this mix of OFEs and COFEs is a little fuzzy.
+*)
+
 (** Unbundeled version *)
 Class Dist A := dist : nat → relation A.
 Instance: Params (@dist) 3.
