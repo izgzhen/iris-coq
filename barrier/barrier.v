@@ -123,5 +123,29 @@ Section proof.
     (∃ γ (P Q : iProp) i, barrier_ctx γ l P ★ sts.in_states StsI sts γ (i_states i) {[ Change i ]} ★
         saved_prop_own SpI i Q ★ ▷(Q -★ R))%I.
     
+  Lemma newchan_spec (P : iProp) (Q : val → iProp) :
+    (∀ l, recv l P ★ send l P -★ Q (LocV l)) ⊑ wp coPset_all (newchan '()) Q.
+  Proof.
+  Abort.
+
+  Lemma signal_spec l P (Q : val → iProp) :
+    (send l P ★ P ★ Q '()) ⊑ wp coPset_all (signal (LocV l)) Q.
+  Proof.
+  Abort.
+
+  Lemma wait_spec l P (Q : val → iProp) :
+    (recv l P ★ (P -★ Q '())) ⊑ wp coPset_all (wait (LocV l)) Q.
+  Proof.
+  Abort.
+
+  Lemma split_spec l P1 P2 Q :
+    (recv l (P1 ★ P2) ★ (recv l P1 ★ recv l P2 -★ Q '())) ⊑ wp coPset_all Skip Q.
+  Proof.
+  Abort.
+
+  Lemma recv_strengthen l P1 P2 :
+    (P1 -★ P2) ⊑ (recv l P1 -★ recv l P2).
+  Proof.
+  Abort.
 
 End proof.

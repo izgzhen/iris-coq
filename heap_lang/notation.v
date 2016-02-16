@@ -20,7 +20,8 @@ Coercion of_val : val >-> expr.
    pretty printing. *)
 Notation "' l" := (Lit l%Z) (at level 8, format "' l").
 Notation "' l" := (LitV l%Z) (at level 8, format "' l").
-Notation "()"  := LitUnit  (at level 0) : lang_scope.
+Notation "'()"  := (Lit LitUnit) (at level 0).
+Notation "'()"  := (LitV LitUnit) (at level 0).
 Notation "! e" := (Load e%L) (at level 10, right associativity) : lang_scope.
 Notation "'ref' e" := (Alloc e%L)
   (at level 30, right associativity) : lang_scope.
