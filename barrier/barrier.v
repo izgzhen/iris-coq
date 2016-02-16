@@ -103,11 +103,11 @@ Section proof.
   Notation iProp := (iPropG heap_lang Σ).
 
   Definition waiting (P : iProp) (I : gset gname) : iProp :=
-    (∃ Q : gname → iProp, ▷(P -★ Π★{set I} (λ i, Q i)) ★
-                             Π★{set I} (λ i, saved_prop_own SpI i (Q i)))%I.
+    (∃ R : gname → iProp, ▷(P -★ Π★{set I} (λ i, R i)) ★
+                             Π★{set I} (λ i, saved_prop_own SpI i (R i)))%I.
 
   Definition ress (I : gset gname) : iProp :=
-    (Π★{set I} (λ i, ∃ Q, saved_prop_own SpI i Q ★ ▷Q))%I.
+    (Π★{set I} (λ i, ∃ R, saved_prop_own SpI i R ★ ▷R))%I.
 
   Definition barrier_inv (l : loc) (P : iProp) (s : stateT) : iProp :=
     match s with
