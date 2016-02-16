@@ -1,3 +1,4 @@
+From algebra Require Export upred_big_op.
 From program_logic Require Export sts saved_prop.
 From heap_lang Require Export derived heap wp_tactics notation.
 
@@ -102,10 +103,11 @@ Section proof.
   Notation iProp := (iPropG heap_lang Σ).
 
   Definition waiting (P : iProp) (I : gset gname) : iProp :=
-    (∃ Q : gmap gname iProp, True)%I.
+    (∃ Q : gmap gname iProp, ▷(P -★ Π★{map Q} (λ _ Q, Q)) ★
+                             Π★{map Q} (λ i Q, saved_prop_own SpI i Q))%I.
 
   Definition ress (I : gset gname) : iProp :=
-    (True)%I.
+    (Π★{set I} (λ i, ∃ Q, saved_prop_own SpI i Q ★ ▷Q))%I.
 
   Definition barrier_inv (l : loc) (P : iProp) (s : stateT) : iProp :=
     match s with
