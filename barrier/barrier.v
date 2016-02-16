@@ -131,12 +131,12 @@ Section proof.
         saved_prop_own i Q ★ ▷(Q -★ R))%I.
 
   Lemma newchan_spec (P : iProp) (Q : val → iProp) :
-    (∀ l, recv l P ★ send l P -★ Q (LocV l)) ⊑ wp coPset_all (newchan '()) Q.
+    (∀ l, recv l P ★ send l P -★ Q (LocV l)) ⊑ wp ⊤ (newchan '()) Q.
   Proof.
   Abort.
 
   Lemma signal_spec l P (Q : val → iProp) :
-    (send l P ★ P ★ Q '()) ⊑ wp coPset_all (signal (LocV l)) Q.
+    (send l P ★ P ★ Q '()) ⊑ wp ⊤ (signal (LocV l)) Q.
   Proof.
     rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
     apply exist_elim=>γ. wp_rec. (* FIXME wp_let *)
@@ -167,12 +167,12 @@ Section proof.
   Abort.
 
   Lemma wait_spec l P (Q : val → iProp) :
-    (recv l P ★ (P -★ Q '())) ⊑ wp coPset_all (wait (LocV l)) Q.
+    (recv l P ★ (P -★ Q '())) ⊑ wp ⊤ (wait (LocV l)) Q.
   Proof.
   Abort.
 
   Lemma split_spec l P1 P2 Q :
-    (recv l (P1 ★ P2) ★ (recv l P1 ★ recv l P2 -★ Q '())) ⊑ wp coPset_all Skip Q.
+    (recv l (P1 ★ P2) ★ (recv l P1 ★ recv l P2 -★ Q '())) ⊑ wp ⊤ Skip Q.
   Proof.
   Abort.
 

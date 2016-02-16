@@ -6,7 +6,7 @@ From prelude Require Export prelude.
 Record bset (A : Type) : Type := mkBSet { bset_car : A → bool }.
 Arguments mkBSet {_} _.
 Arguments bset_car {_} _ _.
-Definition bset_all {A} : bset A := mkBSet (λ _, true).
+Instance bset_top {A} : Top (bset A) := mkBSet (λ _, true).
 Instance bset_empty {A} : Empty (bset A) := mkBSet (λ _, false).
 Instance bset_singleton {A} `{∀ x y : A, Decision (x = y)} :
   Singleton A (bset A) := λ x, mkBSet (λ y, bool_decide (y = x)).

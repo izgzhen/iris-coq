@@ -28,7 +28,7 @@ CoInductive wp_pre {Λ Σ} (E : coPset)
        0 < k < n → E ∩ Ef = ∅ →
        wsat (S k) (E ∪ Ef) σ1 (r1 ⋅ rf) →
        wp_go (E ∪ Ef) (wp_pre E Q)
-                      (wp_pre coPset_all (λ _, True%I)) k rf e1 σ1) →
+                      (wp_pre ⊤ (λ _, True%I)) k rf e1 σ1) →
      wp_pre E Q e1 n r1.
 Program Definition wp {Λ Σ} (E : coPset) (e : expr Λ)
   (Q : val Λ → iProp Λ Σ) : iProp Λ Σ := {| uPred_holds := wp_pre E Q e |}.
@@ -102,7 +102,7 @@ Qed.
 Lemma wp_step_inv E Ef Q e k n σ r rf :
   to_val e = None → 0 < k < n → E ∩ Ef = ∅ →
   wp E e Q n r → wsat (S k) (E ∪ Ef) σ (r ⋅ rf) →
-  wp_go (E ∪ Ef) (λ e, wp E e Q) (λ e, wp coPset_all e (λ _, True%I)) k rf e σ.
+  wp_go (E ∪ Ef) (λ e, wp E e Q) (λ e, wp ⊤ e (λ _, True%I)) k rf e σ.
 Proof. intros He; destruct 3; [by rewrite ?to_of_val in He|eauto]. Qed.
 
 Lemma wp_value' E Q v : Q v ⊑ wp E (of_val v) Q.

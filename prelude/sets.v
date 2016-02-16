@@ -6,7 +6,7 @@ From prelude Require Export prelude.
 Record set (A : Type) : Type := mkSet { set_car : A → Prop }.
 Arguments mkSet {_} _.
 Arguments set_car {_} _ _.
-Definition set_all {A} : set A := mkSet (λ _, True).
+Instance set_all {A} : Top (set A) := mkSet (λ _, True).
 Instance set_empty {A} : Empty (set A) := mkSet (λ _, False).
 Instance set_singleton {A} : Singleton A (set A) := λ x, mkSet (x =).
 Instance set_elem_of {A} : ElemOf A (set A) := λ x X, set_car X x.

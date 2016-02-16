@@ -23,7 +23,7 @@ Lemma ht_lift_step E1 E2
   ((P ={E2,E1}=> ownP σ1 ★ ▷ P') ∧ ∀ e2 σ2 ef,
     (■ φ e2 σ2 ef ★ ownP σ2 ★ P' ={E1,E2}=> Q1 e2 σ2 ef ★ Q2 e2 σ2 ef) ∧
     {{ Q1 e2 σ2 ef }} e2 @ E2 {{ R }} ∧
-    {{ Q2 e2 σ2 ef }} ef ?@ coPset_all {{ λ _, True }})
+    {{ Q2 e2 σ2 ef }} ef ?@ ⊤ {{ λ _, True }})
   ⊑ {{ P }} e1 @ E2 {{ R }}.
 Proof.
   intros ?? Hsafe Hstep; apply (always_intro _ _), impl_intro_l.
@@ -51,7 +51,7 @@ Lemma ht_lift_atomic_step
   atomic e1 →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  (∀ e2 σ2 ef, {{ ■ φ e2 σ2 ef ★ P }} ef ?@ coPset_all {{ λ _, True }}) ⊑
+  (∀ e2 σ2 ef, {{ ■ φ e2 σ2 ef ★ P }} ef ?@ ⊤ {{ λ _, True }}) ⊑
   {{ ownP σ1 ★ ▷ P }} e1 @ E {{ λ v, ∃ σ2 ef, ownP σ2 ★ ■ φ (of_val v) σ2 ef }}.
 Proof.
   intros ? Hsafe Hstep; set (φ' e σ ef := is_Some (to_val e) ∧ φ e σ ef).
@@ -79,7 +79,7 @@ Lemma ht_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) P P' Q e1
   (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →
   (∀ e2 ef,
     {{ ■ φ e2 ef ★ P }} e2 @ E {{ Q }} ∧
-    {{ ■ φ e2 ef ★ P' }} ef ?@ coPset_all {{ λ _, True }})
+    {{ ■ φ e2 ef ★ P' }} ef ?@ ⊤ {{ λ _, True }})
   ⊑ {{ ▷(P ★ P') }} e1 @ E {{ Q }}.
 Proof.
   intros ? Hsafe Hstep; apply (always_intro _ _), impl_intro_l.
@@ -104,7 +104,7 @@ Lemma ht_lift_pure_det_step
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2' σ2 ef', prim_step e1 σ1 e2' σ2 ef' → σ1 = σ2 ∧ e2 = e2' ∧ ef = ef')→
-  ({{ P }} e2 @ E {{ Q }} ∧ {{ P' }} ef ?@ coPset_all {{ λ _, True }})
+  ({{ P }} e2 @ E {{ Q }} ∧ {{ P' }} ef ?@ ⊤ {{ λ _, True }})
   ⊑ {{ ▷(P ★ P') }} e1 @ E {{ Q }}.
 Proof.
   intros ? Hsafe Hdet.

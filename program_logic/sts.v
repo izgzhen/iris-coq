@@ -64,16 +64,14 @@ Section sts.
   Proof. intros. by apply own_update, sts_update_frag_up. Qed.
 
   Lemma sts_alloc N s :
-    φ s ⊑ pvs N N (∃ γ, sts_ctx γ N φ ∧
-                        sts_own γ s (set_all ∖ sts.tok s)).
+    φ s ⊑ pvs N N (∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s)).
   Proof.
     eapply sep_elim_True_r.
-    { apply (own_alloc (sts_auth s (set_all ∖ sts.tok s)) N).
+    { apply (own_alloc (sts_auth s (⊤ ∖ sts.tok s)) N).
       apply sts_auth_valid; solve_elem_of. }
     rewrite pvs_frame_l. apply pvs_strip_pvs.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
-    transitivity (▷ sts_inv γ φ ★
-                    sts_own γ s (set_all ∖ sts.tok s))%I.
+    transitivity (▷ sts_inv γ φ ★ sts_own γ s (⊤ ∖ sts.tok s))%I.
     { rewrite /sts_inv -later_intro -(exist_intro s).
       rewrite [(_ ★ φ _)%I]comm -assoc. apply sep_mono_r.
       by rewrite -own_op sts_op_auth_frag_up; last solve_elem_of. }

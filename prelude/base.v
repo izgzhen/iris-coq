@@ -209,6 +209,9 @@ intersection [(∩)], and difference [(∖)], the singleton [{[_]}], the subset
 Class Empty A := empty: A.
 Notation "∅" := empty : C_scope.
 
+Class Top A := top : A.
+Notation "⊤" := top : C_scope.
+
 Class Union A := union: A → A → A.
 Instance: Params (@union) 2.
 Infix "∪" := union (at level 50, left associativity) : C_scope.
@@ -311,7 +314,7 @@ Instance: Params (@disjoint) 2.
 Infix "⊥" := disjoint (at level 70) : C_scope.
 Notation "(⊥)" := disjoint (only parsing) : C_scope.
 Notation "( X ⊥.)" := (disjoint X) (only parsing) : C_scope.
-Notation "(.⊥ X )" := (λ Y, Y ⊥  X) (only parsing) : C_scope.
+Notation "(.⊥ X )" := (λ Y, Y ⊥ X) (only parsing) : C_scope.
 Infix "⊥*" := (Forall2 (⊥)) (at level 70) : C_scope.
 Notation "(⊥*)" := (Forall2 (⊥)) (only parsing) : C_scope.
 Infix "⊥**" := (Forall2 (⊥*)) (at level 70) : C_scope.

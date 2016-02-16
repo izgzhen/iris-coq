@@ -14,16 +14,15 @@ Implicit Types Q : val Λ → iProp Λ Σ.
 Implicit Types m : iGst Λ Σ.
 Transparent uPred_holds.
 
-Notation wptp n := (Forall3 (λ e Q r, uPred_holds (wp coPset_all e Q) n r)).
+Notation wptp n := (Forall3 (λ e Q r, uPred_holds (wp ⊤ e Q) n r)).
 Lemma wptp_le Qs es rs n n' :
   ✓{n'} (big_op rs) → wptp n es Qs rs → n' ≤ n → wptp n' es Qs rs.
 Proof. induction 2; constructor; eauto using uPred_weaken. Qed.
 Lemma nsteps_wptp Qs k n tσ1 tσ2 rs1 :
   nsteps step k tσ1 tσ2 →
   1 < n → wptp (k + n) (tσ1.1) Qs rs1 →
-  wsat (k + n) coPset_all (tσ1.2) (big_op rs1) →
-  ∃ rs2 Qs', wptp n (tσ2.1) (Qs ++ Qs') rs2 ∧
-             wsat n coPset_all (tσ2.2) (big_op rs2).
+  wsat (k + n) ⊤ (tσ1.2) (big_op rs1) →
+  ∃ rs2 Qs', wptp n (tσ2.1) (Qs ++ Qs') rs2 ∧ wsat n ⊤ (tσ2.2) (big_op rs2).
 Proof.
   intros Hsteps Hn; revert Qs rs1.
   induction Hsteps as [|k ?? tσ3 [e1 σ1 e2 σ2 ef t1 t2 ?? Hstep] Hsteps IH];
@@ -31,7 +30,7 @@ Proof.
   { by intros; exists rs, []; rewrite right_id_L. }
   intros (Qs1&?&rs1&?&->&->&?&
     (Q&Qs2&r&rs2&->&->&Hwp&?)%Forall3_cons_inv_l)%Forall3_app_inv_l ?.
-  destruct (wp_step_inv coPset_all ∅ Q e1 (k + n) (S (k + n)) σ1 r
+  destruct (wp_step_inv ⊤ ∅ Q e1 (k + n) (S (k + n)) σ1 r
     (big_op (rs1 ++ rs2))) as [_ Hwpstep]; eauto using values_stuck.
   { by rewrite right_id_L -big_op_cons Permutation_middle. }
   destruct (Hwpstep e2 σ2 ef) as (r2&r2'&Hwsat&?&?); auto; clear Hwpstep.
@@ -52,11 +51,11 @@ Proof.
     by rewrite -Permutation_middle /= big_op_app.
 Qed.
 Lemma ht_adequacy_steps P Q k n e1 t2 σ1 σ2 r1 :
-  {{ P }} e1 @ coPset_all {{ Q }} →
+  {{ P }} e1 @ ⊤ {{ Q }} →
   nsteps step k ([e1],σ1) (t2,σ2) →
-  1 < n → wsat (k + n) coPset_all σ1 r1 →
+  1 < n → wsat (k + n) ⊤ σ1 r1 →
   P (k + n) r1 →
-  ∃ rs2 Qs', wptp n t2 (Q :: Qs') rs2 ∧ wsat n coPset_all σ2 (big_op rs2).
+  ∃ rs2 Qs', wptp n t2 (Q :: Qs') rs2 ∧ wsat n ⊤ σ2 (big_op rs2).
 Proof.
   intros Hht ????; apply (nsteps_wptp [Q] k n ([e1],σ1) (t2,σ2) [r1]);
     rewrite /big_op ?right_id; auto.
@@ -66,9 +65,9 @@ Proof.
 Qed.
 Lemma ht_adequacy_own Q e1 t2 σ1 m σ2 :
   ✓m →
-  {{ ownP σ1 ★ ownG m }} e1 @ coPset_all {{ Q }} →
+  {{ ownP σ1 ★ ownG m }} e1 @ ⊤ {{ Q }} →
   rtc step ([e1],σ1) (t2,σ2) →
-  ∃ rs2 Qs', wptp 2 t2 (Q :: Qs') rs2 ∧ wsat 2 coPset_all σ2 (big_op rs2).
+  ∃ rs2 Qs', wptp 2 t2 (Q :: Qs') rs2 ∧ wsat 2 ⊤ σ2 (big_op rs2).
 Proof.
   intros Hv ? [k ?]%rtc_nsteps.
   eapply ht_adequacy_steps with (r1 := (Res ∅ (Excl σ1) (Some m))); eauto; [|].
@@ -87,7 +86,7 @@ Proof.
   intros Hv ? Hs.
   destruct (ht_adequacy_own (λ v', ■ φ v')%I e (of_val v :: t2) σ1 m σ2)
              as (rs2&Qs&Hwptp&?); auto.
-  { by rewrite -(ht_mask_weaken E coPset_all). }
+  { by rewrite -(ht_mask_weaken E ⊤). }
   inversion Hwptp as [|?? r ?? rs Hwp _]; clear Hwptp; subst.
   apply wp_value_inv in Hwp; destruct (Hwp (big_op rs) 2 ∅ σ2) as [r' []]; auto.
   by rewrite right_id_L.
@@ -100,10 +99,10 @@ Lemma ht_adequacy_reducible E Q e1 e2 t2 σ1 m σ2 :
 Proof.
   intros Hv ? Hs [i ?]%elem_of_list_lookup He.
   destruct (ht_adequacy_own Q e1 t2 σ1 m σ2) as (rs2&Qs&?&?); auto.
-  { by rewrite -(ht_mask_weaken E coPset_all). }
-  destruct (Forall3_lookup_l (λ e Q r, wp coPset_all e Q 2 r) t2
+  { by rewrite -(ht_mask_weaken E ⊤). }
+  destruct (Forall3_lookup_l (λ e Q r, wp ⊤ e Q 2 r) t2
     (Q :: Qs) rs2 i e2) as (Q'&r2&?&?&Hwp); auto.
-  destruct (wp_step_inv coPset_all ∅ Q' e2 1 2 σ2 r2 (big_op (delete i rs2)));
+  destruct (wp_step_inv ⊤ ∅ Q' e2 1 2 σ2 r2 (big_op (delete i rs2)));
     rewrite ?right_id_L ?big_op_delete; auto.
 Qed.
 Theorem ht_adequacy_safe E Q e1 t2 σ1 m σ2 :
