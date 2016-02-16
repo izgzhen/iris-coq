@@ -23,7 +23,7 @@ Instance hashset_elem_of: ElemOf A (hashset hash) := λ x m, ∃ l,
 Program Instance hashset_empty: Empty (hashset hash) := Hashset ∅ _.
 Next Obligation. by intros n X; simpl_map. Qed.
 Program Instance hashset_singleton: Singleton A (hashset hash) := λ x,
-  Hashset {[ hash x ↦ [x] ]} _.
+  Hashset {[ hash x := [x] ]} _.
 Next Obligation.
   intros x n l [<- <-]%lookup_singleton_Some.
   rewrite Forall_singleton; auto using NoDup_singleton.

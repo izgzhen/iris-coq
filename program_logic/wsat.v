@@ -137,7 +137,7 @@ Qed.
 Lemma wsat_alloc n E1 E2 σ r P rP :
   ¬set_finite E1 → P n rP → wsat (S n) (E1 ∪ E2) σ (rP ⋅ r) →
   ∃ i, wsat (S n) (E1 ∪ E2) σ
-         (Res {[i ↦ to_agree (Next (iProp_unfold P))]} ∅ ∅ ⋅ r) ∧
+         (Res {[i := to_agree (Next (iProp_unfold P))]} ∅ ∅ ⋅ r) ∧
        wld r !! i = None ∧ i ∈ E1.
 Proof.
   intros HE1 ? [rs [Hval Hσ HE Hwld]].

@@ -55,7 +55,7 @@ Lemma big_opM_delete (m : M A) i x :
 Proof.
   intros. by rewrite -{2}(insert_delete m i x) // big_opM_insert ?lookup_delete.
 Qed.
-Lemma big_opM_singleton i x : big_opM ({[i ↦ x]} : M A) ≡ x.
+Lemma big_opM_singleton i x : big_opM ({[i := x]} : M A) ≡ x.
 Proof.
   rewrite -insert_empty big_opM_insert /=; last auto using lookup_empty.
   by rewrite big_opM_empty right_id.

@@ -17,7 +17,7 @@ Instance mapset_elem_of: ElemOf K (mapset M) := λ x X,
   mapset_car X !! x = Some ().
 Instance mapset_empty: Empty (mapset M) := Mapset ∅.
 Instance mapset_singleton: Singleton K (mapset M) := λ x,
-  Mapset {[ x ↦ () ]}.
+  Mapset {[ x := () ]}.
 Instance mapset_union: Union (mapset M) := λ X1 X2,
   let (m1) := X1 in let (m2) := X2 in Mapset (m1 ∪ m2).
 Instance mapset_intersection: Intersection (mapset M) := λ X1 X2,

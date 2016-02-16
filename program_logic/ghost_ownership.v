@@ -17,7 +17,7 @@ Class inG (Λ : language) (Σ : gid → iFunctor) (A : cmraT) := InG {
 }.
 
 Definition to_globalF `{inG Λ Σ A} (γ : gname) (a : A) : iGst Λ (globalF Σ) :=
-  iprod_singleton inG_id {[ γ ↦ cmra_transport inG_prf a ]}.
+  iprod_singleton inG_id {[ γ := cmra_transport inG_prf a ]}.
 Definition own `{inG Λ Σ A} (γ : gname) (a : A) : iProp Λ (globalF Σ) :=
   ownG (to_globalF γ a).
 Instance: Params (@to_globalF) 5.

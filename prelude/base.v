@@ -433,7 +433,7 @@ Arguments lookup _ _ _ _ !_ !_ / : simpl nomatch.
 (** The singleton map *)
 Class SingletonM K A M := singletonM: K → A → M.
 Instance: Params (@singletonM) 5.
-Notation "{[ x ↦ y ]}" := (singletonM x y) (at level 1) : C_scope.
+Notation "{[ k := a ]}" := (singletonM k a) (at level 1) : C_scope.
 
 (** The function insert [<[k:=a]>m] should update the element at key [k] with
 value [a] in [m]. *)
@@ -628,7 +628,6 @@ Class Lattice A `{SubsetEq A, Union A, Intersection A} : Prop := {
 (** ** Axiomatization of collections *)
 (** The class [SimpleCollection A C] axiomatizes a collection of type [C] with
 elements of type [A]. *)
-Instance: Params (@map) 3.
 Class SimpleCollection A C `{ElemOf A C,
     Empty C, Singleton A C, Union C} : Prop := {
   not_elem_of_empty (x : A) : x ∉ ∅;

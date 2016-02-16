@@ -348,7 +348,7 @@ Proof.
 Qed.
 Lemma delete_empty {A} i : delete i (∅ : M A) = ∅.
 Proof. rewrite <-(partial_alter_self ∅) at 2. by rewrite lookup_empty. Qed.
-Lemma delete_singleton {A} i (x : A) : delete i {[i ↦ x]} = ∅.
+Lemma delete_singleton {A} i (x : A) : delete i {[i := x]} = ∅.
 Proof. setoid_rewrite <-partial_alter_compose. apply delete_empty. Qed.
 Lemma delete_commute {A} (m : M A) i j :
   delete i (delete j m) = delete j (delete i m).
@@ -482,39 +482,39 @@ Proof.
   * eauto using insert_delete_subset.
   * by rewrite lookup_delete.
 Qed.
-Lemma insert_empty {A} i (x : A) : <[i:=x]>∅ = {[i ↦ x]}.
+Lemma insert_empty {A} i (x : A) : <[i:=x]>∅ = {[i := x]}.
 Proof. done. Qed.
 
 (** ** Properties of the singleton maps *)
 Lemma lookup_singleton_Some {A} i j (x y : A) :
-  {[i ↦ x]} !! j = Some y ↔ i = j ∧ x = y.
+  {[i := x]} !! j = Some y ↔ i = j ∧ x = y.
 Proof.
   rewrite <-insert_empty,lookup_insert_Some, lookup_empty; intuition congruence.
 Qed.
-Lemma lookup_singleton_None {A} i j (x : A) : {[i ↦ x]} !! j = None ↔ i ≠ j.
+Lemma lookup_singleton_None {A} i j (x : A) : {[i := x]} !! j = None ↔ i ≠ j.
 Proof. rewrite <-insert_empty,lookup_insert_None, lookup_empty; tauto. Qed.
-Lemma lookup_singleton {A} i (x : A) : {[i ↦ x]} !! i = Some x.
+Lemma lookup_singleton {A} i (x : A) : {[i := x]} !! i = Some x.
 Proof. by rewrite lookup_singleton_Some. Qed.
-Lemma lookup_singleton_ne {A} i j (x : A) : i ≠ j → {[i ↦ x]} !! j = None.
+Lemma lookup_singleton_ne {A} i j (x : A) : i ≠ j → {[i := x]} !! j = None.
 Proof. by rewrite lookup_singleton_None. Qed.
-Lemma map_non_empty_singleton {A} i (x : A) : {[i ↦ x]} ≠ ∅.
+Lemma map_non_empty_singleton {A} i (x : A) : {[i := x]} ≠ ∅.
 Proof.
   intros Hix. apply (f_equal (!! i)) in Hix.
   by rewrite lookup_empty, lookup_singleton in Hix.
 Qed.
-Lemma insert_singleton {A} i (x y : A) : <[i:=y]>{[i ↦ x]} = {[i ↦ y]}.
+Lemma insert_singleton {A} i (x y : A) : <[i:=y]>{[i := x]} = {[i := y]}.
 Proof.
   unfold singletonM, map_singleton, insert, map_insert.
   by rewrite <-partial_alter_compose.
 Qed.
-Lemma alter_singleton {A} (f : A → A) i x : alter f i {[i ↦ x]} = {[i ↦ f x]}.
+Lemma alter_singleton {A} (f : A → A) i x : alter f i {[i := x]} = {[i := f x]}.
 Proof.
   intros. apply map_eq. intros i'. destruct (decide (i = i')) as [->|?].
   * by rewrite lookup_alter, !lookup_singleton.
   * by rewrite lookup_alter_ne, !lookup_singleton_ne.
 Qed.
 Lemma alter_singleton_ne {A} (f : A → A) i j x :
-  i ≠ j → alter f i {[j ↦ x]} = {[j ↦ x]}.
+  i ≠ j → alter f i {[j := x]} = {[j := x]}.
 Proof.
   intros. apply map_eq; intros i'. by destruct (decide (i = i')) as [->|?];
     rewrite ?lookup_alter, ?lookup_singleton_ne, ?lookup_alter_ne by done.
@@ -538,12 +538,12 @@ Proof.
   * by rewrite lookup_omap, !lookup_insert.
   * by rewrite lookup_omap, !lookup_insert_ne, lookup_omap by done.
 Qed.
-Lemma map_fmap_singleton {A B} (f : A → B) i x : f <$> {[i ↦ x]} = {[i ↦ f x]}.
+Lemma map_fmap_singleton {A B} (f : A → B) i x : f <$> {[i := x]} = {[i := f x]}.
 Proof.
   by unfold singletonM, map_singleton; rewrite fmap_insert, map_fmap_empty.
 Qed.
 Lemma omap_singleton {A B} (f : A → option B) i x y :
-  f x = Some y → omap f {[ i ↦ x ]} = {[ i ↦ y ]}.
+  f x = Some y → omap f {[ i := x ]} = {[ i := y ]}.
 Proof.
   intros. unfold singletonM, map_singleton.
   by erewrite omap_insert, omap_empty by eauto.
@@ -898,7 +898,7 @@ Lemma insert_merge m1 m2 i x y z :
   <[i:=x]>(merge f m1 m2) = merge f (<[i:=y]>m1) (<[i:=z]>m2).
 Proof. by intros; apply partial_alter_merge. Qed.
 Lemma merge_singleton i x y z :
-  f (Some y) (Some z) = Some x → merge f {[i ↦ y]} {[i ↦ z]} = {[i ↦ x]}.
+  f (Some y) (Some z) = Some x → merge f {[i := y]} {[i := z]} = {[i := x]}.
 Proof.
   intros. by erewrite <-!insert_empty, <-insert_merge, merge_empty by eauto.
 Qed.
@@ -1000,23 +1000,23 @@ Proof. rewrite map_disjoint_spec, eq_None_not_Some. intros ?? [??]; eauto. Qed.
 Lemma map_disjoint_Some_r {A} (m1 m2 : M A) i x:
   m1 ⊥ₘ m2 → m2 !! i = Some x → m1 !! i = None.
 Proof. rewrite (symmetry_iff map_disjoint). apply map_disjoint_Some_l. Qed.
-Lemma map_disjoint_singleton_l {A} (m: M A) i x : {[i↦x]} ⊥ₘ m ↔ m !! i = None.
+Lemma map_disjoint_singleton_l {A} (m: M A) i x : {[i:=x]} ⊥ₘ m ↔ m !! i = None.
 Proof.
   split; [|rewrite !map_disjoint_spec].
-  * intro. apply (map_disjoint_Some_l {[i ↦ x]} _ _ x);
+  * intro. apply (map_disjoint_Some_l {[i := x]} _ _ x);
       auto using lookup_singleton.
   * intros ? j y1 y2. destruct (decide (i = j)) as [->|].
     + rewrite lookup_singleton. intuition congruence.
     + by rewrite lookup_singleton_ne.
 Qed.
 Lemma map_disjoint_singleton_r {A} (m : M A) i x :
-  m ⊥ₘ {[i ↦ x]} ↔ m !! i = None.
+  m ⊥ₘ {[i := x]} ↔ m !! i = None.
 Proof. by rewrite (symmetry_iff map_disjoint), map_disjoint_singleton_l. Qed.
 Lemma map_disjoint_singleton_l_2 {A} (m : M A) i x :
-  m !! i = None → {[i ↦ x]} ⊥ₘ m.
+  m !! i = None → {[i := x]} ⊥ₘ m.
 Proof. by rewrite map_disjoint_singleton_l. Qed.
 Lemma map_disjoint_singleton_r_2 {A} (m : M A) i x :
-  m !! i = None → m ⊥ₘ {[i ↦ x]}.
+  m !! i = None → m ⊥ₘ {[i := x]}.
 Proof. by rewrite map_disjoint_singleton_r. Qed.
 Lemma map_disjoint_delete_l {A} (m1 m2 : M A) i : m1 ⊥ₘ m2 → delete i m1 ⊥ₘ m2.
 Proof.
@@ -1233,7 +1233,7 @@ Proof. by rewrite map_disjoint_union_l. Qed.
 Lemma map_disjoint_union_r_2 {A} (m1 m2 m3 : M A) :
   m1 ⊥ₘ m2 → m1 ⊥ₘ m3 → m1 ⊥ₘ m2 ∪ m3.
 Proof. by rewrite map_disjoint_union_r. Qed.
-Lemma insert_union_singleton_l {A} (m : M A) i x : <[i:=x]>m = {[i ↦ x]} ∪ m.
+Lemma insert_union_singleton_l {A} (m : M A) i x : <[i:=x]>m = {[i := x]} ∪ m.
 Proof.
   apply map_eq. intros j. apply option_eq. intros y.
   rewrite lookup_union_Some_raw.
@@ -1242,7 +1242,7 @@ Proof.
   * rewrite !lookup_singleton_ne, lookup_insert_ne; intuition congruence.
 Qed.
 Lemma insert_union_singleton_r {A} (m : M A) i x :
-  m !! i = None → <[i:=x]>m = m ∪ {[i ↦ x]}.
+  m !! i = None → <[i:=x]>m = m ∪ {[i := x]}.
 Proof.
   intro. rewrite insert_union_singleton_l, map_union_comm; [done |].
   by apply map_disjoint_singleton_l.
@@ -1446,15 +1446,15 @@ End theorems.
 (** * Tactics *)
 (** The tactic [decompose_map_disjoint] simplifies occurrences of [disjoint]
 in the hypotheses that involve the empty map [∅], the union [(∪)] or insert
-[<[_:=_]>] operation, the singleton [{[_↦ _]}] map, and disjointness of lists of
+[<[_:=_]>] operation, the singleton [{[_:= _]}] map, and disjointness of lists of
 maps. This tactic does not yield any information loss as all simplifications
 performed are reversible. *)
 Ltac decompose_map_disjoint := repeat
   match goal with
   | H : _ ∪ _ ⊥ₘ _ |- _ => apply map_disjoint_union_l in H; destruct H
   | H : _ ⊥ₘ _ ∪ _ |- _ => apply map_disjoint_union_r in H; destruct H
-  | H : {[ _ ↦ _ ]} ⊥ₘ _ |- _ => apply map_disjoint_singleton_l in H
-  | H : _ ⊥ₘ {[ _ ↦ _ ]} |- _ =>  apply map_disjoint_singleton_r in H
+  | H : {[ _ := _ ]} ⊥ₘ _ |- _ => apply map_disjoint_singleton_l in H
+  | H : _ ⊥ₘ {[ _ := _ ]} |- _ =>  apply map_disjoint_singleton_r in H
   | H : <[_:=_]>_ ⊥ₘ _ |- _ => apply map_disjoint_insert_l in H; destruct H
   | H : _ ⊥ₘ <[_:=_]>_ |- _ => apply map_disjoint_insert_r in H; destruct H
   | H : ⋃ _ ⊥ₘ _ |- _ => apply map_disjoint_union_list_l in H
@@ -1478,9 +1478,9 @@ Ltac solve_map_disjoint :=
 Hint Extern 1 (_ ⊥ₘ _) => done : map_disjoint.
 Hint Extern 2 (∅ ⊥ₘ _) => apply map_disjoint_empty_l : map_disjoint.
 Hint Extern 2 (_ ⊥ₘ ∅) => apply map_disjoint_empty_r : map_disjoint.
-Hint Extern 2 ({[ _ ↦ _ ]} ⊥ₘ _) =>
+Hint Extern 2 ({[ _ := _ ]} ⊥ₘ _) =>
   apply map_disjoint_singleton_l_2 : map_disjoint.
-Hint Extern 2 (_ ⊥ₘ {[ _ ↦ _ ]}) =>
+Hint Extern 2 (_ ⊥ₘ {[ _ := _ ]}) =>
   apply map_disjoint_singleton_r_2 : map_disjoint.
 Hint Extern 2 (_ ∪ _ ⊥ₘ _) => apply map_disjoint_union_l_2 : map_disjoint.
 Hint Extern 2 (_ ⊥ₘ _ ∪ _) => apply map_disjoint_union_r_2 : map_disjoint.
@@ -1512,7 +1512,7 @@ Tactic Notation "simpl_map" "by" tactic3(tac) := repeat
     rewrite lookup_alter in H || rewrite lookup_alter_ne in H by tac
   | H : context[ (delete _ _) !! _] |- _ =>
     rewrite lookup_delete in H || rewrite lookup_delete_ne in H by tac
-  | H : context[ {[ _ ↦ _ ]} !! _ ] |- _ =>
+  | H : context[ {[ _ := _ ]} !! _ ] |- _ =>
     rewrite lookup_singleton in H || rewrite lookup_singleton_ne in H by tac
   | H : context[ (_ <$> _) !! _ ] |- _ => rewrite lookup_fmap in H
   | H : context[ (omap _ _) !! _ ] |- _ => rewrite lookup_omap in H
@@ -1529,7 +1529,7 @@ Tactic Notation "simpl_map" "by" tactic3(tac) := repeat
     rewrite lookup_alter || rewrite lookup_alter_ne by tac
   | |- context[ (delete _ _) !! _ ] =>
     rewrite lookup_delete || rewrite lookup_delete_ne by tac
-  | |- context[ {[ _ ↦ _ ]} !! _ ] =>
+  | |- context[ {[ _ := _ ]} !! _ ] =>
     rewrite lookup_singleton || rewrite lookup_singleton_ne by tac
   | |- context[ (_ <$> _) !! _ ] => rewrite lookup_fmap
   | |- context[ (omap _ _) !! _ ] => rewrite lookup_omap
@@ -1546,7 +1546,7 @@ Tactic Notation "simpl_map" := simpl_map by eauto with simpl_map map_disjoint.
 
 Hint Extern 80 ((_ ∪ _) !! _ = Some _) => apply lookup_union_Some_l : simpl_map.
 Hint Extern 81 ((_ ∪ _) !! _ = Some _) => apply lookup_union_Some_r : simpl_map.
-Hint Extern 80 ({[ _↦_ ]} !! _ = Some _) => apply lookup_singleton : simpl_map.
+Hint Extern 80 ({[ _:=_ ]} !! _ = Some _) => apply lookup_singleton : simpl_map.
 Hint Extern 80 (<[_:=_]> _ !! _ = Some _) => apply lookup_insert : simpl_map.
 
 (** Now we take everything together and also discharge conflicting look ups,
@@ -1558,8 +1558,8 @@ Tactic Notation "simplify_map_equality" "by" tactic3(tac) :=
   | _ => progress simpl_map by tac
   | _ => progress simplify_equality
   | _ => progress simpl_option by tac
-  | H : {[ _ ↦ _ ]} !! _ = None |- _ => rewrite lookup_singleton_None in H
-  | H : {[ _ ↦ _ ]} !! _ = Some _ |- _ =>
+  | H : {[ _ := _ ]} !! _ = None |- _ => rewrite lookup_singleton_None in H
+  | H : {[ _ := _ ]} !! _ = Some _ |- _ =>
     rewrite lookup_singleton_Some in H; destruct H
   | H1 : ?m1 !! ?i = Some ?x, H2 : ?m2 !! ?i = Some ?y |- _ =>
     let H3 := fresh in
@@ -1572,8 +1572,8 @@ Tactic Notation "simplify_map_equality" "by" tactic3(tac) :=
     apply map_union_cancel_l in H; [|by tac|by tac]
   | H : _ ∪ ?m = _ ∪ ?m |- _ =>
     apply map_union_cancel_r in H; [|by tac|by tac]
-  | H : {[?i ↦ ?x]} = ∅ |- _ => by destruct (map_non_empty_singleton i x)
-  | H : ∅ = {[?i ↦ ?x]} |- _ => by destruct (map_non_empty_singleton i x)
+  | H : {[?i := ?x]} = ∅ |- _ => by destruct (map_non_empty_singleton i x)
+  | H : ∅ = {[?i := ?x]} |- _ => by destruct (map_non_empty_singleton i x)
   | H : ?m !! ?i = Some _, H2 : ?m !! ?j = None |- _ =>
      unless (i ≠ j) by done;
      assert (i ≠ j) by (by intros ?; simplify_equality)

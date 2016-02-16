@@ -121,7 +121,7 @@ Proof.
   intros ? r [|n] ? HP rf [|k] Ef σ ???; try lia.
   destruct (wsat_alloc k E Ef σ rf P r) as (i&?&?&?); auto.
   { apply uPred_weaken with r n; eauto. }
-  exists (Res {[ i ↦ to_agree (Next (iProp_unfold P)) ]} ∅ ∅).
+  exists (Res {[ i := to_agree (Next (iProp_unfold P)) ]} ∅ ∅).
   by split; [by exists i; split; rewrite /uPred_holds /=|].
 Qed.
 

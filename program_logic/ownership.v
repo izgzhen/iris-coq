@@ -1,7 +1,7 @@
 From program_logic Require Export model.
 
 Definition ownI {Λ Σ} (i : positive) (P : iProp Λ Σ) : iProp Λ Σ :=
-  uPred_ownM (Res {[ i ↦ to_agree (Next (iProp_unfold P)) ]} ∅ ∅).
+  uPred_ownM (Res {[ i := to_agree (Next (iProp_unfold P)) ]} ∅ ∅).
 Arguments ownI {_ _} _ _%I.
 Definition ownP {Λ Σ} (σ: state Λ) : iProp Λ Σ := uPred_ownM (Res ∅ (Excl σ) ∅).
 Definition ownG {Λ Σ} (m: iGst Λ Σ) : iProp Λ Σ := uPred_ownM (Res ∅ ∅ (Some m)).
@@ -65,7 +65,6 @@ Lemma ownG_valid_r m : ownG m ⊑ (ownG m ★ ✓ m).
 Proof. apply (uPred.always_entails_r _ _), ownG_valid. Qed.
 Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
 Proof. rewrite /ownG; apply _. Qed.
-
 
 (* inversion lemmas *)
 Lemma ownI_spec r n i P :

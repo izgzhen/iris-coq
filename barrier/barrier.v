@@ -116,7 +116,7 @@ Section proof.
   Local Notation state_to_val s :=
     (match s with State Low _ => 0 | State High _ => 1 end).
   Definition barrier_inv (l : loc) (P : iProp) (s : stateT) : iProp :=
-    (l !=> '(state_to_val s) ★
+    (l ↦ '(state_to_val s) ★
      match s with State Low I' => waiting P I' | State High I' => ress I' end
     )%I.
 

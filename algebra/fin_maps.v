@@ -84,7 +84,7 @@ Proof.
   by apply (timeless _); rewrite -Hm lookup_insert_ne.
 Qed.
 Global Instance map_singleton_timeless i x :
-  Timeless x → Timeless ({[ i ↦ x ]} : gmap K A) := _.
+  Timeless x → Timeless ({[ i := x ]} : gmap K A) := _.
 End cofe.
 
 Arguments mapC _ {_ _} _.
@@ -196,16 +196,16 @@ Lemma map_insert_validN n m i x : ✓{n} x → ✓{n} m → ✓{n} <[i:=x]>m.
 Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_equality. Qed.
 Lemma map_insert_valid m i x : ✓ x → ✓ m → ✓ <[i:=x]>m.
 Proof. intros ?? n j; apply map_insert_validN; auto. Qed.
-Lemma map_singleton_validN n i x : ✓{n} ({[ i ↦ x ]} : gmap K A) ↔ ✓{n} x.
+Lemma map_singleton_validN n i x : ✓{n} ({[ i := x ]} : gmap K A) ↔ ✓{n} x.
 Proof.
   split; [|by intros; apply map_insert_validN, cmra_empty_valid].
   by move=>/(_ i); simplify_map_equality.
 Qed.
-Lemma map_singleton_valid i x : ✓ ({[ i ↦ x ]} : gmap K A) ↔ ✓ x.
+Lemma map_singleton_valid i x : ✓ ({[ i := x ]} : gmap K A) ↔ ✓ x.
 Proof. split; intros ? n; eapply map_singleton_validN; eauto. Qed.
 
 Lemma map_insert_singleton_opN n m i x :
-  m !! i = None ∨ m !! i ≡{n}≡ Some (unit x) → <[i:=x]> m ≡{n}≡ {[ i ↦ x ]} ⋅ m.
+  m !! i = None ∨ m !! i ≡{n}≡ Some (unit x) → <[i:=x]> m ≡{n}≡ {[ i := x ]} ⋅ m.
 Proof.
   intros Hi j; destruct (decide (i = j)) as [->|];
     [|by rewrite lookup_op lookup_insert_ne // lookup_singleton_ne // left_id].
@@ -213,20 +213,20 @@ Proof.
   by destruct Hi as [->| ->]; constructor; rewrite ?cmra_unit_r.
 Qed.
 Lemma map_insert_singleton_op m i x :
-  m !! i = None ∨ m !! i ≡ Some (unit x) → <[i:=x]> m ≡ {[ i ↦ x ]} ⋅ m.
+  m !! i = None ∨ m !! i ≡ Some (unit x) → <[i:=x]> m ≡ {[ i := x ]} ⋅ m.
 Proof.
   rewrite !equiv_dist; naive_solver eauto using map_insert_singleton_opN.
 Qed.
 
 Lemma map_unit_singleton (i : K) (x : A) :
-  unit ({[ i ↦ x ]} : gmap K A) = {[ i ↦ unit x ]}.
+  unit ({[ i := x ]} : gmap K A) = {[ i := unit x ]}.
 Proof. apply map_fmap_singleton. Qed.
 Lemma map_op_singleton (i : K) (x y : A) :
-  {[ i ↦ x ]} ⋅ {[ i ↦ y ]} = ({[ i ↦ x ⋅ y ]} : gmap K A).
+  {[ i := x ]} ⋅ {[ i := y ]} = ({[ i := x ⋅ y ]} : gmap K A).
 Proof. by apply (merge_singleton _ _ _ x y). Qed.
 
 Lemma singleton_includedN n m i x :
-  {[ i ↦ x ]} ≼{n} m ↔ ∃ y, m !! i ≡{n}≡ Some y ∧ x ≼ y.
+  {[ i := x ]} ≼{n} m ↔ ∃ y, m !! i ≡{n}≡ Some y ∧ x ≼ y.
   (* not m !! i = Some y ∧ x ≼{n} y to deal with n = 0 *)
 Proof.
   split.
@@ -264,23 +264,23 @@ Proof.
 Qed.
 
 Lemma map_singleton_updateP (P : A → Prop) (Q : gmap K A → Prop) i x :
-  x ~~>: P → (∀ y, P y → Q {[ i ↦ y ]}) → {[ i ↦ x ]} ~~>: Q.
+  x ~~>: P → (∀ y, P y → Q {[ i := y ]}) → {[ i := x ]} ~~>: Q.
 Proof. apply map_insert_updateP. Qed.
 Lemma map_singleton_updateP' (P : A → Prop) i x :
-  x ~~>: P → {[ i ↦ x ]} ~~>: λ m, ∃ y, m = {[ i ↦ y ]} ∧ P y.
+  x ~~>: P → {[ i := x ]} ~~>: λ m, ∃ y, m = {[ i := y ]} ∧ P y.
 Proof. apply map_insert_updateP'. Qed.
-Lemma map_singleton_update i (x y : A) : x ~~> y → {[ i ↦ x ]} ~~> {[ i ↦ y ]}.
+Lemma map_singleton_update i (x y : A) : x ~~> y → {[ i := x ]} ~~> {[ i := y ]}.
 Proof. apply map_insert_update. Qed.
 
 Lemma map_singleton_updateP_empty `{Empty A, !CMRAIdentity A}
     (P : A → Prop) (Q : gmap K A → Prop) i :
-  ∅ ~~>: P → (∀ y, P y → Q {[ i ↦ y ]}) → ∅ ~~>: Q.
+  ∅ ~~>: P → (∀ y, P y → Q {[ i := y ]}) → ∅ ~~>: Q.
 Proof.
   intros Hx HQ gf n Hg.
   destruct (Hx (from_option ∅ (gf !! i)) n) as (y&?&Hy).
   { move:(Hg i). rewrite !left_id.
     case _: (gf !! i); simpl; auto using cmra_empty_valid. }
-  exists {[ i ↦ y ]}; split; first by auto.
+  exists {[ i := y ]}; split; first by auto.
   intros i'; destruct (decide (i' = i)) as [->|].
   - rewrite lookup_op lookup_singleton.
     move:Hy; case _: (gf !! i); first done.
@@ -288,7 +288,7 @@ Proof.
   - move:(Hg i'). by rewrite !lookup_op lookup_singleton_ne // !left_id.
 Qed.
 Lemma map_singleton_updateP_empty' `{Empty A, !CMRAIdentity A} (P: A → Prop) i :
-  ∅ ~~>: P → ∅ ~~>: λ m, ∃ y, m = {[ i ↦ y ]} ∧ P y.
+  ∅ ~~>: P → ∅ ~~>: λ m, ∃ y, m = {[ i := y ]} ∧ P y.
 Proof. eauto using map_singleton_updateP_empty. Qed.
 
 Section freshness.

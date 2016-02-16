@@ -77,7 +77,7 @@ Section fin_map.
   Proof.
     intros ?; by rewrite /uPred_big_sep /uPred_big_sepM map_to_list_insert.
   Qed.
-  Lemma big_sepM_singleton i x : (Π★{map {[i ↦ x]}} P)%I ≡ (P i x)%I.
+  Lemma big_sepM_singleton i x : (Π★{map {[i := x]}} P)%I ≡ (P i x)%I.
   Proof.
     rewrite -insert_empty big_sepM_insert/=; last auto using lookup_empty.
     by rewrite big_sepM_empty right_id.
