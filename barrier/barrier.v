@@ -1,4 +1,4 @@
-From program_logic Require Export sts.
+From program_logic Require Export sts saved_prop.
 From heap_lang Require Export derived heap wp_tactics notation.
 
 Definition newchan := (λ: "", ref '0)%L.
@@ -83,4 +83,45 @@ Module barrier_proto.
   Qed.
 
 End barrier_proto.
+(* I am too lazy to type the full module name all the time. But then
+   why did we even put this into a module? Because some of the names 
+   are so general.
+   What we'd really like here is to import *some* of the names from
+   the module into our namespaces. But Coq doesn't seem to support that...?? *)
+Import barrier_proto.
 
+(** Now we come to the Iris part of the proof. *)
+Section proof.
+  Context {Σ : iFunctorG} (N : namespace).
+  (* TODO: Bundle HeapI and HeapG and have notation so that we can just write
+     "l ↦ '0". *)
+  Context (HeapI : gid) `{!HeapInG Σ HeapI} (HeapG : gname).
+  Context (StsI : gid) `{!sts.InG heap_lang Σ StsI sts}.
+  Context (SpI : gid) `{!SavedPropInG heap_lang Σ SpI}.
+
+  Notation iProp := (iPropG heap_lang Σ).
+
+  Definition waiting (P : iProp) (I : gset gname) : iProp :=
+    (∃ Q : gmap gname iProp, True)%I.
+
+  Definition ress (I : gset gname) : iProp :=
+    (True)%I.
+
+  Definition barrier_inv (l : loc) (P : iProp) (s : stateT) : iProp :=
+    match s with
+    | State Low I' => (heap_mapsto HeapI HeapG l ('0) ★ waiting P I')%I
+    | State High I' => (heap_mapsto HeapI HeapG l ('1) ★ ress I')%I
+    end.
+
+  Definition barrier_ctx (γ : gname) (l : loc) (P : iProp) : iProp :=
+    (heap_ctx HeapI HeapG N ★ sts.ctx StsI sts γ N (barrier_inv l P))%I.
+
+  Definition send (l : loc) (P : iProp) : iProp :=
+    (∃ γ, barrier_ctx γ l P ★ sts.in_states StsI sts γ low_states {[ Send ]})%I.
+
+  Definition recv (l : loc) (R : iProp) : iProp :=
+    (∃ γ (P Q : iProp) i, barrier_ctx γ l P ★ sts.in_states StsI sts γ (i_states i) {[ Change i ]} ★
+        saved_prop_own SpI i Q ★ ▷(Q -★ R))%I.
+    
+
+End proof.
