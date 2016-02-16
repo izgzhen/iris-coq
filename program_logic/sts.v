@@ -12,13 +12,13 @@ Module sts.
     like you would use "auth_ctx" etc. *)
 Export algebra.sts.sts.
 
-Class InG Λ Σ (i : gid) (sts : Sts) := {
+Class InG Λ Σ (i : gid) (sts : stsT) := {
   inG :> ghost_ownership.InG Λ Σ i (sts.RA sts);
   inh :> Inhabited (state sts);
 }.
 
 Section definitions.
-  Context {Λ Σ} (i : gid) (sts : Sts) `{!InG Λ Σ i sts} (γ : gname).
+  Context {Λ Σ} (i : gid) (sts : stsT) `{!InG Λ Σ i sts} (γ : gname).
   Definition inv  (φ : state sts → iPropG Λ Σ) : iPropG Λ Σ :=
     (∃ s, own i γ (auth sts s ∅) ★ φ s)%I.
   Definition in_states (S : set (state sts)) (T: set (token sts)) : iPropG Λ Σ:=
@@ -34,7 +34,7 @@ Instance: Params (@in_state) 6.
 Instance: Params (@ctx) 7.
 
 Section sts.
-  Context {Λ Σ} (i : gid) (sts : Sts) `{!InG Λ Σ StsI sts}.
+  Context {Λ Σ} (i : gid) (sts : stsT) `{!InG Λ Σ StsI sts}.
   Context (φ : state sts → iPropG Λ Σ).
   Implicit Types N : namespace.
   Implicit Types P Q R : iPropG Λ Σ.

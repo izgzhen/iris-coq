@@ -7,7 +7,7 @@ Local Arguments unit _ _ !_ /.
 
 Module sts.
 
-Record Sts := {
+Record stsT := STS {
   state : Type;
   token : Type;
   trans : relation state;
@@ -16,14 +16,14 @@ Record Sts := {
 
 (* The type of bounds we can give to the state of an STS. This is the type
    that we equip with an RA structure. *)
-Inductive bound (sts : Sts) :=
+Inductive bound (sts : stsT) :=
   | bound_auth : state sts → set (token sts) → bound sts
   | bound_frag : set (state sts) → set (token sts )→ bound sts.
 Arguments bound_auth {_} _ _.
 Arguments bound_frag {_} _ _.
 
 Section sts_core.
-Context (sts : Sts).
+Context (sts : stsT).
 Infix "≼" := dra_included.
 
 Notation state := (state sts).
@@ -239,7 +239,7 @@ Qed.
 End sts_core.
 
 Section stsRA.
-Context (sts : Sts).
+Context (sts : stsT).
 
 Canonical Structure RA := validityRA (bound sts).
 Definition auth (s : state sts) (T : set (token sts)) : RA :=
@@ -299,7 +299,7 @@ Qed.
 
 Lemma frag_included' S1 S2 T :
   closed sts S2 T → closed sts S1 T →
-  S2 ≡ (S1 ∩ sts.up_set sts S2 ∅) →
+  S2 ≡ S1 ∩ sts.up_set sts S2 ∅ →
   frag S1 T ≼ frag S2 T.
 Proof.
   intros. apply frag_included; first done.
