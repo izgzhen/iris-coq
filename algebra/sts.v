@@ -13,6 +13,7 @@ Record stsT := STS {
   trans : relation state;
   tok   : state → set token;
 }.
+Arguments STS {_ _} _ _.
 
 (* The type of bounds we can give to the state of an STS. This is the type
    that we equip with an RA structure. *)
