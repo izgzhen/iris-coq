@@ -18,9 +18,9 @@ Instance set_difference {A} : Difference (set A) := λ X1 X2,
 Instance set_collection : Collection A (set A).
 Proof. by split; [split | |]; repeat intro. Qed.
 
-Lemma mkSet_elem_of {A} (f : A → Prop) x : f x → x ∈ mkSet f.
+Lemma mkSet_elem_of {A} (f : A → Prop) x : (x ∈ mkSet f) = f x.
 Proof. done. Qed.
-Lemma mkSet_not_elem_of {A} (f : A → Prop) x : ~f x → x ∉ mkSet f.
+Lemma mkSet_not_elem_of {A} (f : A → Prop) x : (x ∉ mkSet f) = (~f x).
 Proof. done. Qed.
 
 Instance set_ret : MRet set := λ A (x : A), {[ x ]}.
