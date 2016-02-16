@@ -97,7 +97,7 @@ Section heap.
     { by rewrite -pvs_frame_r -(auth_empty E γ) left_id. }
     apply wp_strip_pvs, (auth_fsa (heap_inv HeapI) (wp_fsa (Alloc e)))
       with N γ ∅; simpl; eauto with I.
-    apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
+    rewrite -later_intro. apply sep_mono_r,forall_intro=> h; apply wand_intro_l.
     rewrite -assoc left_id; apply const_elim_sep_l=> ?.
     rewrite {1}[(▷ownP _)%I]pvs_timeless pvs_frame_r; apply wp_strip_pvs.
     rewrite /wp_fsa -(wp_alloc_pst _ (of_heap h)) //.
@@ -116,13 +116,13 @@ Section heap.
   Lemma wp_load N E γ l v P Q :
     nclose N ⊆ E →
     P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_mapsto HeapI γ l v ★ ▷ (heap_mapsto HeapI γ l v -★ Q v)) →
+    P ⊑ (▷ heap_mapsto HeapI γ l v ★ ▷ (heap_mapsto HeapI γ l v -★ Q v)) →
     P ⊑ wp E (Load (Loc l)) Q.
   Proof.
     rewrite /heap_ctx /heap_inv /heap_mapsto=>HN ? HPQ.
     apply (auth_fsa' (heap_inv HeapI) (wp_fsa _) id)
       with N γ {[ l ↦ Excl v ]}; simpl; eauto with I.
-    rewrite HPQ{HPQ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
+    rewrite HPQ{HPQ}. apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
     rewrite -assoc; apply const_elim_sep_l=> ?.
     rewrite {1}[(▷ownP _)%I]pvs_timeless pvs_frame_r; apply wp_strip_pvs.
     rewrite -(wp_load_pst _ (<[l:=v]>(of_heap h))) ?lookup_insert //.
@@ -135,7 +135,7 @@ Section heap.
   Lemma wp_store N E γ l v' e v P Q :
     to_val e = Some v → nclose N ⊆ E → 
     P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_mapsto HeapI γ l v' ★
+    P ⊑ (▷ heap_mapsto HeapI γ l v' ★
           ▷ (heap_mapsto HeapI γ l v -★ Q (LitV LitUnit))) →
     P ⊑ wp E (Store (Loc l) e) Q.
   Proof.
@@ -157,7 +157,7 @@ Section heap.
     to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 →
     nclose N ⊆ E →
     P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_mapsto HeapI γ l v' ★
+    P ⊑ (▷ heap_mapsto HeapI γ l v' ★
           ▷ (heap_mapsto HeapI γ l v' -★ Q (LitV (LitBool false)))) →
     P ⊑ wp E (Cas (Loc l) e1 e2) Q.
   Proof.
@@ -178,7 +178,7 @@ Section heap.
     to_val e1 = Some v1 → to_val e2 = Some v2 →
     nclose N ⊆ E →
     P ⊑ heap_ctx HeapI γ N →
-    P ⊑ (heap_mapsto HeapI γ l v1 ★
+    P ⊑ (▷ heap_mapsto HeapI γ l v1 ★
           ▷ (heap_mapsto HeapI γ l v2 -★ Q (LitV (LitBool true)))) →
     P ⊑ wp E (Cas (Loc l) e1 e2) Q.
   Proof.

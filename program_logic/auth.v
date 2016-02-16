@@ -100,7 +100,7 @@ Section auth.
     fsaV →
     nclose N ⊆ E →
     P ⊑ auth_ctx AuthI γ N φ →
-    P ⊑ (auth_own AuthI γ a ★ ∀ a',
+    P ⊑ (▷ auth_own AuthI γ a ★ ∀ a',
           ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
           fsa (E ∖ nclose N) (λ x, ∃ L Lv (Hup : LocalUpdate Lv L),
             ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
@@ -110,6 +110,8 @@ Section auth.
     rewrite /auth_ctx=>? HN Hinv Hinner.
     eapply (inv_fsa fsa); eauto. rewrite Hinner=>{Hinner Hinv P HN}.
     apply wand_intro_l. rewrite assoc.
+    rewrite (pvs_timeless (E ∖ N)) pvs_frame_l pvs_frame_r.
+    apply (fsa_strip_pvs fsa).
     rewrite (auth_opened (E ∖ N)) !pvs_frame_r !sep_exist_r.
     apply (fsa_strip_pvs fsa). apply exist_elim=>a'.
     rewrite (forall_elim a'). rewrite [(▷_ ★ _)%I]comm.
@@ -130,7 +132,7 @@ Section auth.
     fsaV →
     nclose N ⊆ E →
     P ⊑ auth_ctx AuthI γ N φ →
-    P ⊑ (auth_own AuthI γ a ★ (∀ a',
+    P ⊑ (▷ auth_own AuthI γ a ★ (∀ a',
           ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
           fsa (E ∖ nclose N) (λ x,
             ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★

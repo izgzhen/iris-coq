@@ -35,14 +35,14 @@ Section LiftingTests.
     rewrite -later_intro; apply forall_intro=>l; apply wand_intro_l.
     wp_rec.
     wp_focus (! LocV l)%L.
-    eapply wp_load; eauto with I; []. apply sep_mono_r.
+    eapply wp_load; eauto with I; []. rewrite -later_intro. apply sep_mono_r.
     rewrite -later_intro; apply wand_intro_l.
     wp_bin_op.
     wp_focus (_ <- _)%L.
-    eapply wp_store; eauto with I; []. apply sep_mono_r.
+    eapply wp_store; eauto with I; []. rewrite -later_intro. apply sep_mono_r.
     rewrite -later_intro. apply wand_intro_l.
     wp_rec.
-    eapply wp_load; eauto with I; []. apply sep_mono; first done.
+    eapply wp_load; eauto with I; []. rewrite -later_intro. apply sep_mono_r.
     rewrite -later_intro. apply wand_intro_l.
     by apply const_intro.
   Qed.
