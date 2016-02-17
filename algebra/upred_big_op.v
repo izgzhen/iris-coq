@@ -137,6 +137,15 @@ Section gmap.
     rewrite -insert_empty big_sepM_insert/=; last auto using lookup_empty.
     by rewrite big_sepM_empty right_id.
   Qed.
+
+  Lemma big_sepM_sep P Q m :
+    (Π★{map m} (λ i x, P i x ★ Q i x))%I ≡ (Π★{map m} P ★ Π★{map m} Q)%I.
+  Proof.
+    rewrite /uPred_big_sepM. induction (map_to_list m); simpl;
+      first by rewrite right_id.
+    destruct a. rewrite IHl /= -!assoc. apply uPred.sep_proper; first done.
+    rewrite !assoc [(_ ★ Q _ _)%I]comm -!assoc. apply uPred.sep_proper; done.
+  Qed.
 End gmap.
 
 (* Big ops over finite sets *)
@@ -183,6 +192,15 @@ Section gset.
   Qed.
   Lemma big_sepS_singleton P x : (Π★{set {[ x ]}} P)%I ≡ (P x)%I.
   Proof. intros. by rewrite /uPred_big_sepS elements_singleton /= right_id. Qed.
+
+  Lemma big_sepS_sep P Q X :
+    (Π★{set X} (λ x, P x ★ Q x))%I ≡ (Π★{set X} P ★ Π★{set X} Q)%I.
+  Proof.
+    rewrite /uPred_big_sepS. induction (elements X); simpl;
+      first by rewrite right_id.
+    rewrite IHl -!assoc. apply uPred.sep_proper; first done.
+    rewrite !assoc [(_ ★ Q a)%I]comm -!assoc. apply uPred.sep_proper; done.
+  Qed.
 End gset.
 
 (* Always stable *)
