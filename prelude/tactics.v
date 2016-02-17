@@ -204,13 +204,6 @@ Ltac simplify_equality := repeat
   end.
 Ltac simplify_equality' := repeat (progress csimpl in * || simplify_equality).
 Ltac f_equal' := csimpl in *; f_equal.
-Ltac f_lia :=
-  repeat lazymatch goal with
-  | |- @eq BinNums.Z _ _ => lia
-  | |- @eq nat _ _ => lia
-  | |- _ => f_equal
-  end.
-Ltac f_lia' := csimpl in *; f_lia.
 
 Ltac setoid_subst_aux R x :=
   match goal with
