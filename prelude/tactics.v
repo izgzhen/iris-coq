@@ -117,7 +117,13 @@ does the converse. *)
 Ltac var_eq x1 x2 := match x1 with x2 => idtac | _ => fail 1 end.
 Ltac var_neq x1 x2 := match x1 with x2 => fail 1 | _ => idtac end.
 
-(** Hacks to let simpl fold type class projections *)
+(** Operational type class projections in recursive calls are not folded back
+appropriately by [simpl]. The tactic [csimpl] uses the [fold_classes] tactics
+to refold recursive calls of [fmap], [mbind], [omap] and [alter]. A
+self-contained example explaining the problem can be found in the following
+Coq-club message:
+
+https://sympa.inria.fr/sympa/arc/coq-club/2012-10/msg00147.html *)
 Ltac fold_classes :=
   repeat match goal with
   | |- appcontext [ ?F ] =>
@@ -160,7 +166,7 @@ Tactic Notation "csimpl" := try (progress simpl; fold_classes).
 Tactic Notation "csimpl" "in" "*" :=
   repeat_on_hyps (fun H => csimpl in H); csimpl.
 
-(* The tactic [simplify_eq] repeatedly substitutes, discriminates,
+(** The tactic [simplify_eq] repeatedly substitutes, discriminates,
 and injects equalities, and tries to contradict impossible inequalities. *)
 Tactic Notation "simplify_eq" := repeat
   match goal with
