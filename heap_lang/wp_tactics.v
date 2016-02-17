@@ -1,11 +1,20 @@
 From heap_lang Require Export tactics substitution.
 Import uPred.
 
-Ltac wp_strip_later :=
-  match goal with
-  | |- ∀ _, _ => let H := fresh in intro H; wp_strip_later; revert H
-  | |- _ ⊑ ▷ _ => etransitivity; [|solve [ apply later_intro] ]
+Ltac revert_intros tac :=
+  lazymatch goal with
+  | |- ∀ _, _ => let H := fresh in intro H; revert_intros tac; revert H
+  | |- _ => tac
   end.
+Ltac wp_strip_later :=
+  let rec go :=
+    lazymatch goal with
+    | |- _ ⊑ (_ ★ _) => apply sep_mono; go
+    | |- _ ⊑ ▷ _ => apply later_intro
+    | |- _ ⊑ _ => reflexivity
+    end
+  in revert_intros ltac:(etransitivity; [|go]).
+
 Ltac wp_bind K :=
   lazymatch eval hnf in K with
   | [] => idtac
@@ -14,7 +23,6 @@ Ltac wp_bind K :=
 Ltac wp_finish :=
   let rec go :=
   match goal with
-  | |- ∀ _, _ => let H := fresh in intro H; go; revert H
   | |- _ ⊑ ▷ _ => etransitivity; [|apply later_mono; go; reflexivity]
   | |- _ ⊑ wp _ _ _ =>
      etransitivity; [|eapply wp_value; reflexivity];
@@ -22,7 +30,7 @@ Ltac wp_finish :=
      wp_value if we obtain a consecutive wp *)
      match goal with |- _ ⊑ wp _ _ _ => simpl | _ => fail end
   | _ => idtac
-  end in simpl; go.
+  end in simpl; revert_intros go.
 
 Tactic Notation "wp_value" :=
   match goal with
