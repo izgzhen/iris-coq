@@ -26,6 +26,7 @@ Context {sts : stsT}.
 (** ** Step relations *)
 Inductive step : relation (state sts * tokens sts) :=
   | Step s1 s2 T1 T2 :
+     (* TODO: This asks for ⊥ on sets: T1 ⊥ T2 := T1 ∩ T2 ⊆ ∅. *)
      prim_step s1 s2 → tok s1 ∩ T1 ≡ ∅ → tok s2 ∩ T2 ≡ ∅ →
      tok s1 ∪ T1 ≡ tok s2 ∪ T2 → step (s1,T1) (s2,T2).
 Inductive frame_step (T : tokens sts) (s1 s2 : state sts) : Prop :=
@@ -51,10 +52,13 @@ Hint Extern 10 (_ ∈ _) => solve_elem_of : sts.
 Hint Extern 10 (_ ⊆ _) => solve_elem_of : sts.
 
 (** ** Setoids *)
-Instance framestep_proper' : Proper ((≡) ==> (=) ==> (=) ==> impl) frame_step.
-Proof. intros ?? HT ?? <- ?? <-; destruct 1; econstructor; eauto with sts. Qed.
+Instance framestep_mono : Proper (flip (⊆) ==> (=) ==> (=) ==> impl) frame_step.
+Proof.
+  intros ?? HT ?? <- ?? <-; destruct 1; econstructor;
+    eauto with sts; solve_elem_of.
+Qed.
 Global Instance framestep_proper : Proper ((≡) ==> (=) ==> (=) ==> iff) frame_step.
-Proof. by intros ?? [??] ??????; split; apply framestep_proper'. Qed.
+Proof. by intros ?? [??] ??????; split; apply framestep_mono. Qed.
 Instance closed_proper' : Proper ((≡) ==> (≡) ==> impl) closed.
 Proof.
   intros ?? HT ?? HS; destruct 1;
@@ -327,6 +331,25 @@ Qed.
 Lemma sts_op_auth_frag_up s T :
   tok s ∩ T ≡ ∅ → sts_auth s ∅ ⋅ sts_frag_up s T ≡ sts_auth s T.
 Proof. intros; apply sts_op_auth_frag; auto using elem_of_up, closed_up. Qed.
+
+Lemma sts_op_frag S1 S2 T1 T2 :
+  T1 ∪ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
+  sts_frag (S1 ∩ S2) (T1 ∪ T2) ≡ sts_frag S1 T1 ⋅ sts_frag S2 T2.
+Proof.
+  (* Somehow I feel like a very similar proof muts have happened above, when
+     proving the DRA axioms. After all, we are just reflecting the operation here. *)
+  intros HT HS1 HS2; split; [split|constructor; solve_elem_of]; simpl.
+  - intros; split_ands; try done; []. constructor; last solve_elem_of.
+    by eapply closed_ne.
+  - intros (_ & _ & H). inversion_clear H. constructor; first done.
+    + move=>s /elem_of_intersection
+              [/(closed_disjoint _ _ HS1) Hs1 /(closed_disjoint _ _ HS2) Hs2].
+      solve_elem_of +Hs1 Hs2.
+    + move=> s1 s2 /elem_of_intersection [Hs1 Hs2] Hstep.
+      apply elem_of_intersection.
+      split; eapply closed_step; eauto; [|]; eapply framestep_mono, Hstep;
+        done || solve_elem_of.
+Qed.
 
 (** Frame preserving updates *)
 Lemma sts_update_auth s1 s2 T1 T2 :

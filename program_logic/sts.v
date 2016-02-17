@@ -63,6 +63,14 @@ Section sts.
     sts_own γ s T ⊑ pvs E E (sts_ownS γ S T).
   Proof. intros. by apply own_update, sts_update_frag_up. Qed.
 
+  Lemma sts_ownS_op γ S1 S2 T1 T2 :
+    T1 ∪ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
+    sts_ownS γ (S1 ∩ S2) (T1 ∪ T2) ≡ (sts_ownS γ S1 T1 ★ sts_ownS γ S2 T2)%I.
+  Proof.
+    intros HT HS1 HS2. rewrite /sts_ownS -own_op.
+      by apply own_proper, sts_op_frag.
+  Qed.
+
   Lemma sts_alloc E N s :
     nclose N ⊆ E →
     ▷ φ s ⊑ pvs E E (∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s)).
