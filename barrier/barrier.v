@@ -220,6 +220,12 @@ Section proof.
   Lemma recv_strengthen l P1 P2 :
     (P1 -★ P2) ⊑ (recv l P1 -★ recv l P2).
   Proof.
-  Abort.
+    apply wand_intro_l. rewrite /recv. rewrite sep_exist_r. apply exist_mono=>γ.
+    rewrite sep_exist_r. apply exist_mono=>P. rewrite sep_exist_r.
+    apply exist_mono=>Q. rewrite sep_exist_r. apply exist_mono=>i.
+    rewrite -!assoc. apply sep_mono_r, sep_mono_r, sep_mono_r, sep_mono_r.
+    rewrite (later_intro (P1 -★ _)%I) -later_sep. apply later_mono.
+    apply wand_intro_l. rewrite !assoc wand_elim_r wand_elim_r. done.
+  Qed.
 
 End proof.
