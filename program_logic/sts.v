@@ -63,13 +63,15 @@ Section sts.
     sts_own γ s T ⊑ pvs E E (sts_ownS γ S T).
   Proof. intros. by apply own_update, sts_update_frag_up. Qed.
 
-  Lemma sts_alloc N s :
-    ▷ φ s ⊑ pvs N N (∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s)).
+  Lemma sts_alloc E N s :
+    nclose N ⊆ E →
+    ▷ φ s ⊑ pvs E E (∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s)).
   Proof.
-    eapply sep_elim_True_r.
+    intros HN. eapply sep_elim_True_r.
     { apply (own_alloc (sts_auth s (⊤ ∖ sts.tok s)) N).
       apply sts_auth_valid; solve_elem_of. }
-    rewrite pvs_frame_l. apply pvs_strip_pvs.
+    rewrite pvs_frame_l. rewrite -(pvs_mask_weaken N E) //.
+    apply pvs_strip_pvs.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     transitivity (▷ sts_inv γ φ ★ sts_own γ s (⊤ ∖ sts.tok s))%I.
     { rewrite /sts_inv -(exist_intro s) later_sep.

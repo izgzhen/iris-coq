@@ -62,13 +62,14 @@ Section heap.
   Qed.
 
   (** Allocation *)
-  Lemma heap_alloc N σ :
-    authG heap_lang Σ heapRA →
-    ownP σ ⊑ pvs N N (∃ (_ : heapG Σ), heap_ctx N ∧ Π★{map σ} heap_mapsto).
+  Lemma heap_alloc E N σ :
+    authG heap_lang Σ heapRA → nclose N ⊆ E →
+    ownP σ ⊑ pvs E E (∃ (_ : heapG Σ), heap_ctx N ∧ Π★{map σ} heap_mapsto).
   Proof.
-    rewrite -{1}(from_to_heap σ). etransitivity.
+    intros. rewrite -{1}(from_to_heap σ). etransitivity.
     { rewrite [ownP _]later_intro.
-      apply (auth_alloc (ownP ∘ of_heap) N (to_heap σ)), to_heap_valid. }
+      apply (auth_alloc (ownP ∘ of_heap) E N (to_heap σ)); last done.
+      apply to_heap_valid. }
     apply pvs_mono, exist_elim=> γ.
     rewrite -(exist_intro (HeapG _ _ γ)); apply and_mono_r.
     induction σ as [|l v σ Hl IH] using map_ind.
