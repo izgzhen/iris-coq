@@ -1,11 +1,11 @@
 From algebra Require Export cmra.
-From prelude Require Import fin_maps.
+From prelude Require Import gmap.
 
 Fixpoint big_op {A : cmraT} `{Empty A} (xs : list A) : A :=
   match xs with [] => ∅ | x :: xs => x ⋅ big_op xs end.
 Arguments big_op _ _ !_ /.
 Instance: Params (@big_op) 2.
-Definition big_opM {A : cmraT} `{FinMapToList K A M, Empty A} (m : M) : A :=
+Definition big_opM `{Countable K} {A : cmraT} `{Empty A} (m : gmap K A) : A :=
   big_op (snd <$> map_to_list m).
 Instance: Params (@big_opM) 5.
 
@@ -34,33 +34,31 @@ Proof.
 Qed.
 Lemma big_op_contains xs ys : xs `contains` ys → big_op xs ≼ big_op ys.
 Proof.
-  induction 1 as [|x xs ys|x y xs|x xs ys|xs ys zs]; rewrite //=.
-  - by apply cmra_preserving_l.
-  - by rewrite !assoc (comm _ y).
-  - by transitivity (big_op ys); last apply cmra_included_r.
-  - by transitivity (big_op ys).
+  intros [xs' ->]%contains_Permutation.
+  rewrite big_op_app; apply cmra_included_l.
 Qed.
 Lemma big_op_delete xs i x :
   xs !! i = Some x → x ⋅ big_op (delete i xs) ≡ big_op xs.
 Proof. by intros; rewrite {2}(delete_Permutation xs i x). Qed.
 
-Context `{FinMap K M}.
-Lemma big_opM_empty : big_opM (∅ : M A) ≡ ∅.
+Context `{Countable K}.
+Implicit Types m : gmap K A.
+Lemma big_opM_empty : big_opM (∅ : gmap K A) ≡ ∅.
 Proof. unfold big_opM. by rewrite map_to_list_empty. Qed.
-Lemma big_opM_insert (m : M A) i x :
+Lemma big_opM_insert m i x :
   m !! i = None → big_opM (<[i:=x]> m) ≡ x ⋅ big_opM m.
 Proof. intros ?; by rewrite /big_opM map_to_list_insert. Qed.
-Lemma big_opM_delete (m : M A) i x :
+Lemma big_opM_delete m i x :
   m !! i = Some x → x ⋅ big_opM (delete i m) ≡ big_opM m.
 Proof.
   intros. by rewrite -{2}(insert_delete m i x) // big_opM_insert ?lookup_delete.
 Qed.
-Lemma big_opM_singleton i x : big_opM ({[i := x]} : M A) ≡ x.
+Lemma big_opM_singleton i x : big_opM ({[i := x]} : gmap K A) ≡ x.
 Proof.
   rewrite -insert_empty big_opM_insert /=; last auto using lookup_empty.
   by rewrite big_opM_empty right_id.
 Qed.
-Global Instance big_opM_proper : Proper ((≡) ==> (≡)) (big_opM : M A → _).
+Global Instance big_opM_proper : Proper ((≡) ==> (≡)) (big_opM : gmap K A → _).
 Proof.
   intros m1; induction m1 as [|i x m1 ? IH] using map_ind.
   { by intros m2; rewrite (symmetry_iff (≡)) map_equiv_empty; intros ->. }
