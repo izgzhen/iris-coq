@@ -74,7 +74,7 @@ Module barrier_proto.
     split.
     - apply (non_empty_inhabited(State Low ∅)). by rewrite !mkSet_elem_of /=.
     - move=>[p I]. rewrite /= /tok !mkSet_elem_of /= =>HI.
-      destruct p; last done. solve_elem_of+ /discriminate.
+      destruct p; last done. solve_elem_of.
     - move=>s1 s2. rewrite !mkSet_elem_of /==> Hs1 Hstep.
       inversion_clear Hstep as [T1 T2 Hdisj Hstep'].
       inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
@@ -147,15 +147,30 @@ Section proof.
         admit. (* TODO: singleton set bigop. *)
       + admit. (* TODO: singleton set bigop. *)
     - rewrite (sts_alloc (barrier_inv l P) ⊤ N); last by eauto. rewrite !pvs_frame_r !pvs_frame_l. 
-      rewrite pvs_trans'. apply pvs_mono. rewrite sep_exist_r sep_exist_l. apply exist_elim=>γ.
+      rewrite pvs_trans'. apply pvs_strip_pvs. rewrite sep_exist_r sep_exist_l. apply exist_elim=>γ.
       (* TODO: The record notation is rather annoying here *)
       rewrite /recv /send. rewrite -(exist_intro γ) -(exist_intro P).
       rewrite -(exist_intro P) -(exist_intro i) -(exist_intro γ).
       (* This is even more annoying than usually, since rewrite sometimes unfolds stuff... *)
       rewrite [barrier_ctx _ _ _]lock !assoc [(_ ★ locked _)%I]comm !assoc -lock.
       rewrite -always_sep_dup.
-      rewrite [(_ ★ sts_ownS _ _ _)%I]comm !assoc [(_ ★ sts_ownS _ _ _)%I]comm !assoc.
-      (* TODO: need sts_op. *)
+      rewrite [barrier_ctx _ _ _]lock always_and_sep_l -!assoc assoc -lock.
+      rewrite -pvs_frame_l. apply sep_mono_r.
+      rewrite [(saved_prop_own _ _ ★ _)%I]comm !assoc. rewrite -pvs_frame_r. apply sep_mono_l.
+      rewrite -assoc [(▷ _ ★ _)%I]comm assoc -pvs_frame_r.
+      eapply sep_elim_True_r; last eapply sep_mono_l.
+      { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
+      rewrite (sts_own_weaken ⊤ _ _ (i_states i ∩ low_states) _ ({[ Change i ]} ∪ {[ Send ]})).
+      + apply pvs_mono. rewrite sts_ownS_op; first done.
+        * solve_elem_of.
+        * apply i_states_closed.
+        * apply low_states_closed.
+      + rewrite /= /tok /=. apply elem_of_equiv=>t. rewrite elem_of_difference elem_of_union.
+        rewrite !mkSet_elem_of /change_tokens.
+        (* TODO: destruct t; solve_elem_of does not work. What is the best way to do on? *)
+        admit.
+      + apply elem_of_intersection. rewrite !mkSet_elem_of /=. solve_elem_of.
+      + (* TODO: Need lemma about closenedd os intersection / union. *) admit.
   Abort.
 
   Lemma signal_spec l P (Q : val → iProp) :
