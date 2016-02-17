@@ -671,6 +671,12 @@ Proof.
     rewrite elem_of_map_to_list in Hlookup. congruence.
   - by rewrite !map_of_to_list.
 Qed.
+Lemma map_to_list_contains {A} (m1 m2 : M A) :
+  m1 ⊆ m2 → map_to_list m1 `contains` map_to_list m2.
+Proof.
+  intros; apply NoDup_contains; auto using NoDup_map_to_list.
+  intros [i x]. rewrite !elem_of_map_to_list; eauto using lookup_weaken.
+Qed.
 Lemma map_of_list_nil {A} : map_of_list (@nil (K * A)) = ∅.
 Proof. done. Qed.
 Lemma map_of_list_cons {A} (l : list (K * A)) i x :
