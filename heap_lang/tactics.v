@@ -16,7 +16,7 @@ Ltac inv_step :=
   | H : prim_step _ _ _ _ _ |- _ => destruct H; subst
   | H : _ = fill ?K ?e |- _ =>
      destruct K as [|[]];
-     simpl in H; first [subst e|discriminate H|injection' H]
+     simpl in H; first [subst e|discriminate H|injection H as H]
      (* ensure that we make progress for each subgoal *)
   | H : head_step ?e _ _ _ _, Hv : of_val ?v = fill ?K ?e |- _ =>
     apply values_head_stuck, (fill_not_val K) in H;

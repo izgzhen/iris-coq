@@ -117,25 +117,6 @@ does the converse. *)
 Ltac var_eq x1 x2 := match x1 with x2 => idtac | _ => fail 1 end.
 Ltac var_neq x1 x2 := match x1 with x2 => fail 1 | _ => idtac end.
 
-(** The tactics [block_hyps] and [unblock_hyps] can be used to temporarily mark
-certain hypothesis as being blocked. The tactic changes all hypothesis [H: T]
-into [H: blocked T], where [blocked] is the identity function. If a hypothesis
-is already blocked, it will not be blocked again. The tactic [unblock_hyps]
-removes [blocked] everywhere. *)
-
-Ltac block_hyp H :=
-  lazymatch type of H with
-  | block _ => idtac | ?T => change T with (block T) in H
-  end.
-Ltac block_hyps := repeat_on_hyps (fun H =>
-  match type of H with block _ => idtac | ?T => change (block T) in H end).
-Ltac unblock_hyps := unfold block in * |-.
-
-(** The tactic [injection' H] is a variant of injection that introduces the
-generated equalities. *)
-Ltac injection' H :=
-  block_goal; injection H; clear H; intros H; intros; unblock_goal.
-
 (** The tactic [simplify_equality] repeatedly substitutes, discriminates,
 and injects equalities, and tries to contradict impossible inequalities. *)
 Ltac fold_classes :=
@@ -189,13 +170,14 @@ Ltac simplify_equality := repeat
   | H : _ = _ |- _ => discriminate H
   | H : ?f _ = ?f _ |- _ => apply (inj f) in H
   | H : ?f _ _ = ?f _ _ |- _ => apply (inj2 f) in H; destruct H
-    (* before [injection'] to circumvent bug #2939 in some situations *)
-  | H : ?f _ = ?f _ |- _ => injection' H
-  | H : ?f _ _ = ?f _ _ |- _ => injection' H
-  | H : ?f _ _ _ = ?f _ _ _ |- _ => injection' H
-  | H : ?f _ _ _ _ = ?f _ _ _ _ |- _ => injection' H
-  | H : ?f _ _ _ _ _ = ?f _ _ _ _ _ |- _ => injection' H
-  | H : ?f _ _ _ _ _ _ = ?f _ _ _ _ _ _ |- _ => injection' H
+    (* before [injection] to circumvent bug #2939 in some situations *)
+  | H : ?f _ = ?f _ |- _ => injection H as H
+    (* first hyp will be named [H], subsequent hyps will be given fresh names *)
+  | H : ?f _ _ = ?f _ _ |- _ => injection H as H
+  | H : ?f _ _ _ = ?f _ _ _ |- _ => injection H as H
+  | H : ?f _ _ _ _ = ?f _ _ _ _ |- _ => injection H as H
+  | H : ?f _ _ _ _ _ = ?f _ _ _ _ _ |- _ => injection H as H
+  | H : ?f _ _ _ _ _ _ = ?f _ _ _ _ _ _ |- _ => injection H as H
   | H : ?x = ?x |- _ => clear H
     (* unclear how to generalize the below *)
   | H1 : ?o = Some ?x, H2 : ?o = Some ?y |- _ =>
