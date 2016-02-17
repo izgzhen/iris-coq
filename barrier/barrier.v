@@ -144,8 +144,8 @@ Section proof.
       rewrite -(exist_intro (const P)) /=. rewrite -[saved_prop_own _ _](left_id True%I (★)%I).
       apply sep_mono.
       + rewrite -later_intro. apply wand_intro_l. rewrite right_id.
-        admit. (* TODO: singleton set bigop. *)
-      + admit. (* TODO: singleton set bigop. *)
+        by rewrite big_sepS_singleton.
+      + by rewrite big_sepS_singleton.
     - rewrite (sts_alloc (barrier_inv l P) ⊤ N); last by eauto. rewrite !pvs_frame_r !pvs_frame_l. 
       rewrite pvs_trans'. apply pvs_strip_pvs. rewrite sep_exist_r sep_exist_l. apply exist_elim=>γ.
       (* TODO: The record notation is rather annoying here *)
