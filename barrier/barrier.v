@@ -94,15 +94,9 @@ Import barrier_proto.
 (** Now we come to the Iris part of the proof. *)
 Section proof.
   Context {Σ : iFunctorG} (N : namespace).
-  (* TODO: Bundle HeapI and HeapG and have notation so that we can just write
-     "l ↦ '0". *)
   Context `{heapG Σ} (HeapN : namespace).
   Context `{stsG heap_lang Σ sts}.
   Context `{savedPropG heap_lang Σ}.
-  (* TODO We could alternatively construct the namespaces to be disjoint.
-     But that would take a lot of flexibility from the client, who probably
-     wants to also use the heap_ctx elsewhere. *)
-  Context (HeapN_disj : HeapN ⊥ N).
 
   Notation iProp := (iPropG heap_lang Σ).
 
@@ -136,20 +130,18 @@ Section proof.
   Abort.
 
   Lemma signal_spec l P (Q : val → iProp) :
-    (send l P ★ P ★ Q '()) ⊑ wp ⊤ (signal (LocV l)) Q.
+    HeapN ⊥ N → (send l P ★ P ★ Q '()) ⊑ wp ⊤ (signal (LocV l)) Q.
   Proof.
-    rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
+    intros Hdisj. rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
     apply exist_elim=>γ. wp_rec. (* FIXME wp_let *)
     (* I think some evars here are better than repeating *everything* *)
-    eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ);simpl; eauto with I.
-    { solve_elem_of+. (* FIXME eauto should do this *) }
+    eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
+      eauto with I ndisj.
     rewrite [(_ ★ sts_ownS _ _ _)%I]comm -!assoc /wp_fsa. apply sep_mono_r.
     apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
     apply const_elim_sep_l=>Hs. destruct p; last done.
     rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
-    eapply wp_store; eauto with I.
-    { (* FIXME can we make this more automatic? *)
-      apply ndisj_disjoint in HeapN_disj. solve_elem_of. }
+    eapply wp_store; eauto with I ndisj.
     rewrite -!assoc. apply sep_mono_r. etransitivity; last eapply later_mono.
     { (* Is this really the best way to strip the later? *)
       erewrite later_sep. apply sep_mono_r. apply later_intro. }
@@ -167,7 +159,7 @@ Section proof.
   Abort.
 
   Lemma wait_spec l P (Q : val → iProp) :
-    (recv l P ★ (P -★ Q '())) ⊑ wp ⊤ (wait (LocV l)) Q.
+    HeapN ⊥ N → (recv l P ★ (P -★ Q '())) ⊑ wp ⊤ (wait (LocV l)) Q.
   Proof.
   Abort.
 

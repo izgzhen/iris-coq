@@ -973,7 +973,6 @@ Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
 End uPred_logic.
 
 (* Hint DB for the logic *)
-Create HintDb I.
 Hint Resolve const_intro.
 Hint Resolve or_elim or_intro_l' or_intro_r' : I.
 Hint Resolve and_intro and_elim_l' and_elim_r' : I.
