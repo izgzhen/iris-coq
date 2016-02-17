@@ -57,6 +57,8 @@ Proof.
   apply uPred.always_ownM.
   by rewrite Res_unit !cmra_unit_empty -{2}(cmra_unit_idemp m).
 Qed.
+Lemma always_ownG m : unit m ≡ m → (□ ownG m)%I ≡ ownG m.
+Proof. by intros <-; rewrite always_ownG_unit. Qed.
 Lemma ownG_valid m : ownG m ⊑ ✓ m.
 Proof.
   rewrite /ownG uPred.ownM_valid res_validI /= option_validI; auto with I.
@@ -65,6 +67,8 @@ Lemma ownG_valid_r m : ownG m ⊑ (ownG m ★ ✓ m).
 Proof. apply (uPred.always_entails_r _ _), ownG_valid. Qed.
 Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
 Proof. rewrite /ownG; apply _. Qed.
+Global Instance ownG_unit_always_stable m : AlwaysStable (ownG (unit m)).
+Proof. by rewrite /AlwaysStable always_ownG_unit. Qed.
 
 (* inversion lemmas *)
 Lemma ownI_spec r n i P :

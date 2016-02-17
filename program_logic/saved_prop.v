@@ -15,6 +15,12 @@ Section saved_prop.
   Implicit Types P Q : iPropG Λ Σ.
   Implicit Types γ : gname.
 
+  Global Instance : ∀ P, AlwaysStable (saved_prop_own γ P).
+  Proof.
+    intros. rewrite /AlwaysStable /saved_prop_own.
+    rewrite always_own; done.
+  Qed.
+
   Lemma saved_prop_alloc_strong N P (G : gset gname) :
     True ⊑ pvs N N (∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ P).
   Proof. by apply own_alloc_strong. Qed.
