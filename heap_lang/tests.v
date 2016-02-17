@@ -31,19 +31,10 @@ Section LiftingTests.
   Goal ∀ N, heap_ctx N ⊑ wp N e (λ v, v = '2).
   Proof.
     move=> N. rewrite /e.
-    wp_focus (ref '1)%L. eapply wp_alloc; eauto; [].
-    rewrite -later_intro; apply forall_intro=>l; apply wand_intro_l.
-    wp_rec.
-    wp_focus (! LocV l)%L.
-    eapply wp_load; eauto with I; []. rewrite -later_intro. apply sep_mono_r.
-    rewrite -later_intro; apply wand_intro_l.
-    wp_bin_op.
-    wp_focus (_ <- _)%L.
-    eapply wp_store; eauto with I; []. rewrite -later_intro. apply sep_mono_r.
-    rewrite -later_intro. apply wand_intro_l.
-    wp_rec.
-    eapply wp_load; eauto with I; []. rewrite -later_intro. apply sep_mono_r.
-    rewrite -later_intro. apply wand_intro_l.
+    wp> eapply wp_alloc; eauto. apply forall_intro=>l; apply wand_intro_l.
+    wp_rec. wp> eapply wp_load; eauto with I. apply sep_mono_r, wand_intro_l.
+    wp_bin_op. wp> eapply wp_store; eauto with I. apply sep_mono_r, wand_intro_l.
+    wp_rec. wp> eapply wp_load; eauto with I. apply sep_mono_r, wand_intro_l.
     by apply const_intro.
   Qed.
 
@@ -74,17 +65,15 @@ Section LiftingTests.
   Proof.
     wp_rec>; apply later_mono; wp_bin_op=> ?; wp_if.
     - wp_un_op. wp_bin_op.
-      wp_focus (FindPred _ _); rewrite -FindPred_spec.
+      ewp apply FindPred_spec.
       apply and_intro; first auto with I omega.
       wp_un_op. by replace (n - 1) with (- (-n + 2 - 1)) by omega.
-    - rewrite -FindPred_spec. auto with I omega.
+    - ewp apply FindPred_spec. auto with I omega.
   Qed.
 
   Goal ∀ E,
     True ⊑ wp (Σ:=globalF Σ) E (let: "x" := Pred '42 in Pred "x") (λ v, v = '40).
   Proof.
-    intros E.
-    wp_focus (Pred _); rewrite -Pred_spec -later_intro.
-    wp_rec. rewrite -Pred_spec -later_intro; auto with I.
+    intros. ewp> apply Pred_spec. wp_rec. ewp> apply Pred_spec. auto with I.
   Qed.
 End LiftingTests.

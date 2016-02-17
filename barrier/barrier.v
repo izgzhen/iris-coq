@@ -129,7 +129,7 @@ Section proof.
     ⊑ wp ⊤ (newchan '()) Q.
   Proof.
     rewrite /newchan. wp_rec. (* TODO: wp_seq. *)
-    rewrite -wp_pvs. eapply wp_alloc; eauto with I ndisj. rewrite -later_intro.
+    rewrite -wp_pvs. wp> eapply wp_alloc; eauto with I ndisj.
     apply forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
     rewrite !assoc. apply pvs_wand_r.
     (* The core of this proof: Allocating the STS and the saved prop. *)
