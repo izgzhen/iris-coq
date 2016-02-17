@@ -2,16 +2,17 @@ From algebra Require Export auth.
 From program_logic Require Export invariants ghost_ownership.
 Import uPred.
 
-(* TODO: Once we switched to RAs, it is no longer necessary to remember that a
-is constantly valid. *)
 Class authG Λ Σ (A : cmraT) `{Empty A} := AuthG {
   auth_inG :> inG Λ Σ (authRA A);
   auth_identity :> CMRAIdentity A;
+  (* TODO: Once we switched to RAs, this can be removed. *)
   auth_timeless (a : A) :> Timeless a;
 }.
 
 Section definitions.
   Context `{authG Λ Σ A} (γ : gname).
+  (* TODO: Once we switched to RAs, it is no longer necessary to remember that a
+     is constantly valid. *)
   Definition auth_inv (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
     (∃ a, (■ ✓ a ∧ own γ (● a)) ★ φ a)%I.
   Definition auth_own (a : A) : iPropG Λ Σ := own γ (◯ a).
