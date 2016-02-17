@@ -1,5 +1,6 @@
 From algebra Require Export upred.
 From prelude Require Import gmap fin_collections.
+Import uPred.
 
 (** * Big ops over lists *)
 (* These are the basic building blocks for other big ops *)
@@ -77,11 +78,11 @@ Proof. by induction Ps as [|?? IH]; rewrite /= ?left_id -?assoc ?IH. Qed.
 
 Lemma big_and_contains Ps Qs : Qs `contains` Ps → (Π∧ Ps)%I ⊑ (Π∧ Qs)%I.
 Proof.
-  intros [Ps' ->]%contains_Permutation. by rewrite big_and_app uPred.and_elim_l.
+  intros [Ps' ->]%contains_Permutation. by rewrite big_and_app and_elim_l.
 Qed.
 Lemma big_sep_contains Ps Qs : Qs `contains` Ps → (Π★ Ps)%I ⊑ (Π★ Qs)%I.
 Proof.
-  intros [Ps' ->]%contains_Permutation. by rewrite big_sep_app uPred.sep_elim_l.
+  intros [Ps' ->]%contains_Permutation. by rewrite big_sep_app sep_elim_l.
 Qed.
 
 Lemma big_sep_and Ps : (Π★ Ps) ⊑ (Π∧ Ps).
@@ -138,13 +139,21 @@ Section gmap.
     by rewrite big_sepM_empty right_id.
   Qed.
 
-  Lemma big_sepM_sep P Q m :
+  Lemma big_sepM_sepM P Q m :
     (Π★{map m} (λ i x, P i x ★ Q i x))%I ≡ (Π★{map m} P ★ Π★{map m} Q)%I.
   Proof.
     rewrite /uPred_big_sepM. induction (map_to_list m); simpl;
       first by rewrite right_id.
-    destruct a. rewrite IHl /= -!assoc. apply uPred.sep_proper; first done.
-    rewrite !assoc [(_ ★ Q _ _)%I]comm -!assoc. apply uPred.sep_proper; done.
+    destruct a. rewrite IHl /= -!assoc. apply sep_proper; first done.
+    rewrite !assoc [(_ ★ Q _ _)%I]comm -!assoc. apply sep_proper; done.
+  Qed.
+
+  Lemma big_sepM_later P m :
+    (Π★{map m} (λ i x, ▷ P i x))%I ≡ (▷ Π★{map m} P)%I.
+  Proof.
+    rewrite /uPred_big_sepM. induction (map_to_list m); simpl;
+      first by rewrite later_True.
+    destruct a. by rewrite IHl later_sep.
   Qed.
 End gmap.
 
@@ -193,13 +202,21 @@ Section gset.
   Lemma big_sepS_singleton P x : (Π★{set {[ x ]}} P)%I ≡ (P x)%I.
   Proof. intros. by rewrite /uPred_big_sepS elements_singleton /= right_id. Qed.
 
-  Lemma big_sepS_sep P Q X :
+  Lemma big_sepS_sepS P Q X :
     (Π★{set X} (λ x, P x ★ Q x))%I ≡ (Π★{set X} P ★ Π★{set X} Q)%I.
   Proof.
     rewrite /uPred_big_sepS. induction (elements X); simpl;
       first by rewrite right_id.
     rewrite IHl -!assoc. apply uPred.sep_proper; first done.
-    rewrite !assoc [(_ ★ Q a)%I]comm -!assoc. apply uPred.sep_proper; done.
+    rewrite !assoc [(_ ★ Q a)%I]comm -!assoc. apply sep_proper; done.
+  Qed.
+
+  Lemma big_sepS_later P X :
+    (Π★{set X} (λ x, ▷ P x))%I ≡ (▷ Π★{set X} P)%I.
+  Proof.
+    rewrite /uPred_big_sepS. induction (elements X); simpl;
+      first by rewrite later_True.
+    by rewrite IHl later_sep.
   Qed.
 End gset.
 

@@ -679,6 +679,8 @@ Proof.
   intros x n ? HP; induction n as [|n IH]; [by apply HP|].
   apply HP, IH, uPred_weaken with x (S n); eauto using cmra_validN_S.
 Qed.
+Lemma later_True' : True ⊑ (▷ True : uPred M).
+Proof. by intros x [|n]. Qed.
 Lemma later_and P Q : (▷ (P ∧ Q))%I ≡ (▷ P ∧ ▷ Q)%I.
 Proof. by intros x [|n]; split. Qed.
 Lemma later_or P Q : (▷ (P ∨ Q))%I ≡ (▷ P ∨ ▷ Q)%I.
@@ -705,6 +707,11 @@ Qed.
 (* Later derived *)
 Global Instance later_mono' : Proper ((⊑) ==> (⊑)) (@uPred_later M).
 Proof. intros P Q; apply later_mono. Qed.
+Lemma later_True : (▷ True : uPred M)%I ≡ True%I.
+Proof.
+  apply (anti_symm (⊑)); first done.
+  apply later_True'.
+Qed.
 Lemma later_impl P Q : ▷ (P → Q) ⊑ (▷ P → ▷ Q).
 Proof.
   apply impl_intro_l; rewrite -later_and.
