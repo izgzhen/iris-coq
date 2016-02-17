@@ -94,7 +94,7 @@ Import barrier_proto.
 (** Now we come to the Iris part of the proof. *)
 Section proof.
   Context {Σ : iFunctorG} (N : namespace).
-  Context `{heapG Σ} (HeapN : namespace).
+  Context `{heapG Σ} (heapN : namespace).
   Context `{stsG heap_lang Σ sts}.
   Context `{savedPropG heap_lang Σ}.
 
@@ -115,7 +115,7 @@ Section proof.
     )%I.
 
   Definition barrier_ctx (γ : gname) (l : loc) (P : iProp) : iProp :=
-    (heap_ctx HeapN ★ sts_ctx γ N (barrier_inv l P))%I.
+    (heap_ctx heapN ★ sts_ctx γ N (barrier_inv l P))%I.
 
   Definition send (l : loc) (P : iProp) : iProp :=
     (∃ γ, barrier_ctx γ l P ★ sts_ownS γ low_states {[ Send ]})%I.
@@ -125,12 +125,41 @@ Section proof.
         saved_prop_own i Q ★ ▷(Q -★ R))%I.
 
   Lemma newchan_spec (P : iProp) (Q : val → iProp) :
-    (∀ l, recv l P ★ send l P -★ Q (LocV l)) ⊑ wp ⊤ (newchan '()) Q.
+    (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Q (LocV l))
+    ⊑ wp ⊤ (newchan '()) Q.
   Proof.
+    rewrite /newchan. wp_rec. (* TODO: wp_seq. *)
+    rewrite -wp_pvs. eapply wp_alloc; eauto with I ndisj. rewrite -later_intro.
+    apply forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
+    rewrite !assoc. apply pvs_wand_r.
+    (* The core of this proof: Allocating the STS and the saved prop. *)
+    eapply sep_elim_True_r.
+    { by eapply (saved_prop_alloc _ P). }
+    rewrite pvs_frame_l. apply pvs_strip_pvs. rewrite sep_exist_l.
+    apply exist_elim=>i.
+    transitivity (pvs ⊤ ⊤ (heap_ctx heapN ★ ▷ (barrier_inv l P (State Low {[ i ]}))  ★ saved_prop_own i P)).
+    - rewrite -pvs_intro. rewrite [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
+      rewrite {1}[saved_prop_own _ _]always_sep_dup !assoc. apply sep_mono_l.
+      rewrite /barrier_inv /waiting -later_intro. apply sep_mono_r.
+      rewrite -(exist_intro (const P)) /=. rewrite -[saved_prop_own _ _](left_id True%I (★)%I).
+      apply sep_mono.
+      + rewrite -later_intro. apply wand_intro_l. rewrite right_id.
+        admit. (* TODO: singleton set bigop. *)
+      + admit. (* TODO: singleton set bigop. *)
+    - rewrite (sts_alloc (barrier_inv l P) ⊤ N); last by eauto. rewrite !pvs_frame_r !pvs_frame_l. 
+      rewrite pvs_trans'. apply pvs_mono. rewrite sep_exist_r sep_exist_l. apply exist_elim=>γ.
+      (* TODO: The record notation is rather annoying here *)
+      rewrite /recv /send. rewrite -(exist_intro γ) -(exist_intro P).
+      rewrite -(exist_intro P) -(exist_intro i) -(exist_intro γ).
+      (* This is even more annoying than usually, since rewrite sometimes unfolds stuff... *)
+      rewrite [barrier_ctx _ _ _]lock !assoc [(_ ★ locked _)%I]comm !assoc -lock.
+      rewrite -always_sep_dup.
+      rewrite [(_ ★ sts_ownS _ _ _)%I]comm !assoc [(_ ★ sts_ownS _ _ _)%I]comm !assoc.
+      (* TODO: need sts_op. *)
   Abort.
 
   Lemma signal_spec l P (Q : val → iProp) :
-    HeapN ⊥ N → (send l P ★ P ★ Q '()) ⊑ wp ⊤ (signal (LocV l)) Q.
+    heapN ⊥ N → (send l P ★ P ★ Q '()) ⊑ wp ⊤ (signal (LocV l)) Q.
   Proof.
     intros Hdisj. rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
     apply exist_elim=>γ. wp_rec. (* FIXME wp_let *)
@@ -152,14 +181,14 @@ Section proof.
     rewrite !assoc [(_ ★ P)%I]comm !assoc -2!assoc.
     apply sep_mono; last first.
     { apply wand_intro_l. eauto with I. }
-    (* Now we come to the core piece of the proof: Updating from waiting to ress. *)
+    (* Now we come to the core of the proof: Updating from waiting to ress. *)
     rewrite /waiting /ress sep_exist_l. apply exist_elim=>{Q} Q.
     rewrite later_wand {1}(later_intro P) !assoc wand_elim_r.
     (* TODO: Now we need stuff about Π★{set I} *)
   Abort.
 
   Lemma wait_spec l P (Q : val → iProp) :
-    HeapN ⊥ N → (recv l P ★ (P -★ Q '())) ⊑ wp ⊤ (wait (LocV l)) Q.
+    heapN ⊥ N → (recv l P ★ (P -★ Q '())) ⊑ wp ⊤ (wait (LocV l)) Q.
   Proof.
   Abort.
 
