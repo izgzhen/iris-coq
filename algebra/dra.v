@@ -131,10 +131,24 @@ Proof.
       intuition eauto 10 using dra_disjoint_minus, dra_op_minus.
 Qed.
 Definition validityRA : cmraT := discreteRA validity_ra.
-Definition validity_update (x y : validityRA) :
+Lemma validity_update (x y : validityRA) :
   (∀ z, ✓ x → ✓ z → validity_car x ⊥ z → ✓ y ∧ validity_car y ⊥ z) → x ~~> y.
 Proof.
   intros Hxy. apply discrete_update.
   intros z (?&?&?); split_ands'; try eapply Hxy; eauto.
 Qed.
+
+Lemma to_validity_valid (x : A) :
+  ✓ to_validity x → ✓ x.
+Proof. intros. done. Qed.
+Lemma to_validity_op (x y : A) :
+  ✓ x → ✓ y → (✓ (x ⋅ y) → x ⊥ y) →
+  to_validity (x ⋅ y) ≡ to_validity x ⋅ to_validity y.
+Proof.
+  intros Hvalx Hvaly Hdisj. split; [split | done].
+  - simpl. auto.
+  - simpl. intros (_ & _ & ?).
+    auto using dra_op_valid, to_validity_valid.
+Qed.
+
 End dra.
