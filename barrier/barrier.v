@@ -98,6 +98,8 @@ Section proof.
   Context `{stsG heap_lang Σ sts}.
   Context `{savedPropG heap_lang Σ}.
 
+  Local Hint Immediate i_states_closed low_states_closed.
+
   Notation iProp := (iPropG heap_lang Σ).
 
   Definition waiting (P : iProp) (I : gset gname) : iProp :=
@@ -161,10 +163,7 @@ Section proof.
       eapply sep_elim_True_r; last eapply sep_mono_l.
       { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
       rewrite (sts_own_weaken ⊤ _ _ (i_states i ∩ low_states) _ ({[ Change i ]} ∪ {[ Send ]})).
-      + apply pvs_mono. rewrite sts_ownS_op; first done.
-        * set_solver.
-        * apply i_states_closed.
-        * apply low_states_closed.
+      + apply pvs_mono. rewrite sts_ownS_op; eauto; []. set_solver.
       + rewrite /= /tok /=. apply elem_of_equiv=>t. rewrite elem_of_difference elem_of_union.
         rewrite !mkSet_elem_of /change_tokens.
         (* TODO: destruct t; set_solver does not work. What is the best way to do on? *)
@@ -173,12 +172,9 @@ Section proof.
           exfalso. apply Hn. left. set_solver.
         * move=>[[EQ]|?]; last discriminate. set_solver. 
       + apply elem_of_intersection. rewrite !mkSet_elem_of /=. set_solver.
-      + apply sts.closed_op.
-        * apply i_states_closed.
-        * apply low_states_closed.
-        * set_solver.
-        * apply (non_empty_inhabited (State Low {[ i ]})). apply elem_of_intersection.
-          rewrite !mkSet_elem_of /=. set_solver.
+      + apply sts.closed_op; eauto; first set_solver; [].
+        apply (non_empty_inhabited (State Low {[ i ]})). apply elem_of_intersection.
+        rewrite !mkSet_elem_of /=. set_solver.
   Qed.
 
   Lemma signal_spec l P (Q : val → iProp) :
