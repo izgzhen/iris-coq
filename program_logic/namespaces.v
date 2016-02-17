@@ -54,3 +54,26 @@ Section ndisjoint.
     by eapply Hne, list_encode_suffix_eq.
   Qed.
 End ndisjoint.
+
+(* This tactic solves goals about inclusion and disjointness
+   of masks (i.e., coPsets) with solve_elem_of, taking
+   disjointness of namespaces into account. *)
+(* TODO: This tactic is by far now yet as powerful as it should be.
+   For example, given N1 ⊥ N2, it should be able to solve
+   nclose (ndot N1 x) ∩ N2 ≡ ∅. It should also solve
+   (ndot N x) ∩ (ndot N y) ≡ ∅ if x ≠ y is in the context or
+   follows from [discriminate]. *)
+Ltac solve_elem_of_ndisj :=
+  repeat match goal with
+         (* TODO: Restrict these to have type namespace *)
+         | [ H : (?N1 ⊥ ?N2) |-_ ] => apply ndisj_disjoint in H
+         end;
+  solve_elem_of.
+(* TODO: restrict this to match only if this is ⊆ of coPset *)
+Hint Extern 500 (_ ⊆ _) => solve_elem_of_ndisj : ndisj.
+(* The hope is that registering these will suffice to solve most goals
+   of the form N1 ⊥ N2.
+   TODO: Can this prove x ≠ y if discriminate can? *)
+Hint Resolve ndot_ne_disjoint : ndisj.
+Hint Resolve ndot_preserve_disjoint_l : ndisj.
+Hint Resolve ndot_preserve_disjoint_r : ndisj.
