@@ -178,8 +178,8 @@ Section gset.
   Lemma big_sepS_delete P X x :
     x ∈ X → (Π★{set X} P)%I ≡ (P x ★ Π★{set X ∖ {[ x ]}} P)%I.
   Proof.
-    intros. rewrite -big_sepS_insert; last solve_elem_of.
-    by rewrite -union_difference_L; last solve_elem_of.
+    intros. rewrite -big_sepS_insert; last set_solver.
+    by rewrite -union_difference_L; last set_solver.
   Qed.
   Lemma big_sepS_singleton P x : (Π★{set {[ x ]}} P)%I ≡ (P x)%I.
   Proof. intros. by rewrite /uPred_big_sepS elements_singleton /= right_id. Qed.

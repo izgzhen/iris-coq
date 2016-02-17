@@ -57,7 +57,7 @@ Proof.
 Qed.
 
 Lemma vs_transitive' E P Q R : ((P ={E}=> Q) ∧ (Q ={E}=> R)) ⊑ (P ={E}=> R).
-Proof. apply vs_transitive; solve_elem_of. Qed.
+Proof. apply vs_transitive; set_solver. Qed.
 Lemma vs_reflexive E P : P ={E}=> P.
 Proof. apply vs_alt, pvs_intro. Qed.
 
@@ -85,7 +85,7 @@ Proof.
 Qed.
 
 Lemma vs_mask_frame' E Ef P Q : Ef ∩ E = ∅ → (P ={E}=> Q) ⊑ (P ={E ∪ Ef}=> Q).
-Proof. intros; apply vs_mask_frame; solve_elem_of. Qed.
+Proof. intros; apply vs_mask_frame; set_solver. Qed.
 
 Lemma vs_open_close N E P Q R :
   nclose N ⊆ E →

@@ -75,14 +75,14 @@ Section sts.
   Proof.
     intros HN. eapply sep_elim_True_r.
     { apply (own_alloc (sts_auth s (⊤ ∖ sts.tok s)) N).
-      apply sts_auth_valid; solve_elem_of. }
+      apply sts_auth_valid; set_solver. }
     rewrite pvs_frame_l. rewrite -(pvs_mask_weaken N E) //.
     apply pvs_strip_pvs.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     transitivity (▷ sts_inv γ φ ★ sts_own γ s (⊤ ∖ sts.tok s))%I.
     { rewrite /sts_inv -(exist_intro s) later_sep.
       rewrite [(_ ★ ▷ φ _)%I]comm -assoc. apply sep_mono_r.
-      by rewrite -later_intro -own_op sts_op_auth_frag_up; last solve_elem_of. }
+      by rewrite -later_intro -own_op sts_op_auth_frag_up; last set_solver. }
     rewrite (inv_alloc N) /sts_ctx pvs_frame_r.
     by rewrite always_and_sep_l.
   Qed.

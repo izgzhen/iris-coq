@@ -36,13 +36,13 @@ Proof.
 Qed.
 Lemma dom_empty {A} : dom D (@empty (M A) _) ≡ ∅.
 Proof.
-  split; intro; [|solve_elem_of].
+  split; intro; [|set_solver].
   rewrite elem_of_dom, lookup_empty. by inversion 1.
 Qed.
 Lemma dom_empty_inv {A} (m : M A) : dom D m ≡ ∅ → m = ∅.
 Proof.
   intros E. apply map_empty. intros. apply not_elem_of_dom.
-  rewrite E. solve_elem_of.
+  rewrite E. set_solver.
 Qed.
 Lemma dom_alter {A} f (m : M A) i : dom D (alter f i m) ≡ dom D m.
 Proof.
@@ -54,19 +54,19 @@ Lemma dom_insert {A} (m : M A) i x : dom D (<[i:=x]>m) ≡ {[ i ]} ∪ dom D m.
 Proof.
   apply elem_of_equiv. intros j. rewrite elem_of_union, !elem_of_dom.
   unfold is_Some. setoid_rewrite lookup_insert_Some.
-  destruct (decide (i = j)); solve_elem_of.
+  destruct (decide (i = j)); set_solver.
 Qed.
 Lemma dom_insert_subseteq {A} (m : M A) i x : dom D m ⊆ dom D (<[i:=x]>m).
-Proof. rewrite (dom_insert _). solve_elem_of. Qed.
+Proof. rewrite (dom_insert _). set_solver. Qed.
 Lemma dom_insert_subseteq_compat_l {A} (m : M A) i x X :
   X ⊆ dom D m → X ⊆ dom D (<[i:=x]>m).
 Proof. intros. transitivity (dom D m); eauto using dom_insert_subseteq. Qed.
 Lemma dom_singleton {A} (i : K) (x : A) : dom D {[i := x]} ≡ {[ i ]}.
-Proof. rewrite <-insert_empty, dom_insert, dom_empty; solve_elem_of. Qed.
+Proof. rewrite <-insert_empty, dom_insert, dom_empty; set_solver. Qed.
 Lemma dom_delete {A} (m : M A) i : dom D (delete i m) ≡ dom D m ∖ {[ i ]}.
 Proof.
   apply elem_of_equiv. intros j. rewrite elem_of_difference, !elem_of_dom.
-  unfold is_Some. setoid_rewrite lookup_delete_Some. solve_elem_of.
+  unfold is_Some. setoid_rewrite lookup_delete_Some. set_solver.
 Qed.
 Lemma delete_partial_alter_dom {A} (m : M A) i f :
   i ∉ dom D m → delete i (partial_alter f i m) = m.

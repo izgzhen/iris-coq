@@ -82,15 +82,15 @@ Lemma wsat_open n E σ r i P :
   wsat (S n) ({[i]} ∪ E) σ r → ∃ rP, wsat (S n) E σ (rP ⋅ r) ∧ P n rP.
 Proof.
   intros HiP Hi [rs [Hval Hσ HE Hwld]].
-  destruct (Hwld i P) as (rP&?&?); [solve_elem_of +|by apply lookup_wld_op_l|].
+  destruct (Hwld i P) as (rP&?&?); [set_solver +|by apply lookup_wld_op_l|].
   assert (rP ⋅ r ⋅ big_opM (delete i rs) ≡ r ⋅ big_opM rs) as Hr.
   { by rewrite (comm _ rP) -assoc big_opM_delete. }
   exists rP; split; [exists (delete i rs); constructor; rewrite ?Hr|]; auto.
   - intros j; rewrite lookup_delete_is_Some Hr.
-    generalize (HE j); solve_elem_of +Hi.
+    generalize (HE j); set_solver +Hi.
   - intros j P'; rewrite Hr=> Hj ?.
-    setoid_rewrite lookup_delete_ne; last (solve_elem_of +Hi Hj).
-    apply Hwld; [solve_elem_of +Hj|done].
+    setoid_rewrite lookup_delete_ne; last (set_solver +Hi Hj).
+    apply Hwld; [set_solver +Hj|done].
 Qed.
 Lemma wsat_close n E σ r i P rP :
   wld rP !! i ≡{S n}≡ Some (to_agree (Next (iProp_unfold P))) → i ∉ E →
@@ -102,8 +102,8 @@ Proof.
   { by rewrite (comm _ rP) -assoc big_opM_insert. }
   exists (<[i:=rP]>rs); constructor; rewrite ?Hr; auto.
   - intros j; rewrite Hr lookup_insert_is_Some=>-[?|[??]]; subst.
-    + rewrite !lookup_op HiP !op_is_Some; solve_elem_of +.
-    + destruct (HE j) as [Hj Hj']; auto; solve_elem_of +Hj Hj'.
+    + rewrite !lookup_op HiP !op_is_Some; set_solver +.
+    + destruct (HE j) as [Hj Hj']; auto; set_solver +Hj Hj'.
   - intros j P'; rewrite Hr elem_of_union elem_of_singleton=>-[?|?]; subst.
     + rewrite !lookup_wld_op_l ?HiP; auto=> HP.
       apply (inj Some), (inj to_agree), (inj Next), (inj iProp_unfold) in HP.
@@ -161,7 +161,7 @@ Proof.
     + by rewrite lookup_op lookup_singleton_ne // left_id.
   - by rewrite -assoc Hr /= left_id.
   - intros j; rewrite -assoc Hr; destruct (decide (j = i)) as [->|].
-    + rewrite /= !lookup_op lookup_singleton !op_is_Some; solve_elem_of +Hi.
+    + rewrite /= !lookup_op lookup_singleton !op_is_Some; set_solver +Hi.
     + rewrite lookup_insert_ne //.
       rewrite lookup_op lookup_singleton_ne // left_id; eauto.
   - intros j P'; rewrite -assoc Hr; destruct (decide (j=i)) as [->|].

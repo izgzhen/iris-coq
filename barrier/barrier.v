@@ -57,11 +57,11 @@ Module barrier_proto.
       rewrite /= /tok /=.
       intros. apply dec_stable. 
       assert (Change i ∉ change_tokens I1) as HI1
-        by (rewrite mkSet_not_elem_of; solve_elem_of +Hs1).
+        by (rewrite mkSet_not_elem_of; set_solver +Hs1).
       assert (Change i ∉ change_tokens I2) as HI2.
       { destruct p.
-        - solve_elem_of +Htok Hdisj HI1.
-        - solve_elem_of +Htok Hdisj HI1 / discriminate. }
+        - set_solver +Htok Hdisj HI1.
+        - set_solver +Htok Hdisj HI1 / discriminate. }
       done.
   Qed.
 
@@ -74,13 +74,13 @@ Module barrier_proto.
     split.
     - apply (non_empty_inhabited(State Low ∅)). by rewrite !mkSet_elem_of /=.
     - move=>[p I]. rewrite /= /tok !mkSet_elem_of /= =>HI.
-      destruct p; last done. solve_elem_of.
+      destruct p; last done. set_solver.
     - move=>s1 s2. rewrite !mkSet_elem_of /==> Hs1 Hstep.
       inversion_clear Hstep as [T1 T2 Hdisj Hstep'].
       inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
       destruct Htrans; move:Hs1 Hdisj Htok =>/=;
                                 first by destruct p.
-      rewrite /= /tok /=. intros. solve_elem_of +Hdisj Htok.
+      rewrite /= /tok /=. intros. set_solver +Hdisj Htok.
   Qed.
 
 End barrier_proto.
@@ -162,23 +162,23 @@ Section proof.
       { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
       rewrite (sts_own_weaken ⊤ _ _ (i_states i ∩ low_states) _ ({[ Change i ]} ∪ {[ Send ]})).
       + apply pvs_mono. rewrite sts_ownS_op; first done.
-        * solve_elem_of.
+        * set_solver.
         * apply i_states_closed.
         * apply low_states_closed.
       + rewrite /= /tok /=. apply elem_of_equiv=>t. rewrite elem_of_difference elem_of_union.
         rewrite !mkSet_elem_of /change_tokens.
-        (* TODO: destruct t; solve_elem_of does not work. What is the best way to do on? *)
+        (* TODO: destruct t; set_solver does not work. What is the best way to do on? *)
         destruct t as [i'|]; last by naive_solver. split.
         * move=>[_ Hn]. left. destruct (decide (i = i')); first by subst i.
-          exfalso. apply Hn. left. solve_elem_of.
-        * move=>[[EQ]|?]; last discriminate. solve_elem_of. 
-      + apply elem_of_intersection. rewrite !mkSet_elem_of /=. solve_elem_of.
+          exfalso. apply Hn. left. set_solver.
+        * move=>[[EQ]|?]; last discriminate. set_solver. 
+      + apply elem_of_intersection. rewrite !mkSet_elem_of /=. set_solver.
       + apply sts.closed_op.
         * apply i_states_closed.
         * apply low_states_closed.
-        * solve_elem_of.
+        * set_solver.
         * apply (non_empty_inhabited (State Low {[ i ]})). apply elem_of_intersection.
-          rewrite !mkSet_elem_of /=. solve_elem_of.
+          rewrite !mkSet_elem_of /=. set_solver.
   Qed.
 
   Lemma signal_spec l P (Q : val → iProp) :
@@ -199,7 +199,7 @@ Section proof.
       erewrite later_sep. apply sep_mono_r. apply later_intro. }
     apply wand_intro_l. rewrite -(exist_intro (State High I)).
     rewrite -(exist_intro ∅). rewrite const_equiv /=; last first.
-    { constructor; first constructor; rewrite /= /tok /=; solve_elem_of. }
+    { constructor; first constructor; rewrite /= /tok /=; set_solver. }
     rewrite left_id -later_intro {2}/barrier_inv -!assoc. apply sep_mono_r.
     rewrite !assoc [(_ ★ P)%I]comm !assoc -2!assoc.
     apply sep_mono; last first.

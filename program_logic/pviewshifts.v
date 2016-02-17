@@ -2,8 +2,8 @@ From prelude Require Export co_pset.
 From program_logic Require Export model.
 From program_logic Require Import ownership wsat.
 Local Hint Extern 10 (_ ≤ _) => omega.
-Local Hint Extern 100 (@eq coPset _ _) => solve_elem_of.
-Local Hint Extern 100 (_ ∉ _) => solve_elem_of.
+Local Hint Extern 100 (@eq coPset _ _) => set_solver.
+Local Hint Extern 100 (_ ∉ _) => set_solver.
 Local Hint Extern 10 (✓{_} _) =>
   repeat match goal with
   | H : wsat _ _ _ _ |- _ => apply wsat_valid in H; last omega
@@ -93,7 +93,7 @@ Proof.
   intros r [|n] ? [? HP] rf [|k] Ef σ ? HE ?; try lia; exists ∅; split; [done|].
   rewrite left_id; apply wsat_close with P r.
   - apply ownI_spec, uPred_weaken with r (S n); auto.
-  - solve_elem_of +HE.
+  - set_solver +HE.
   - by rewrite -(left_id_L ∅ (∪) Ef).
   - apply uPred_weaken with r n; auto.
 Qed.
@@ -131,7 +131,7 @@ Import uPred.
 Global Instance pvs_mono' E1 E2 : Proper ((⊑) ==> (⊑)) (@pvs Λ Σ E1 E2).
 Proof. intros P Q; apply pvs_mono. Qed.
 Lemma pvs_trans' E P : pvs E E (pvs E E P) ⊑ pvs E E P.
-Proof. apply pvs_trans; solve_elem_of. Qed.
+Proof. apply pvs_trans; set_solver. Qed.
 Lemma pvs_strip_pvs E P Q : P ⊑ pvs E E Q → pvs E E P ⊑ pvs E E Q.
 Proof. move=>->. by rewrite pvs_trans'. Qed.
 Lemma pvs_frame_l E1 E2 P Q : (P ★ pvs E1 E2 Q) ⊑ pvs E1 E2 (P ★ Q).
@@ -159,7 +159,7 @@ Lemma pvs_mask_frame' E1 E1' E2 E2' P :
   E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' → pvs E1' E2' P ⊑ pvs E1 E2 P.
 Proof.
   intros HE1 HE2 HEE.
-  rewrite (pvs_mask_frame _ _ (E1 ∖ E1')); last solve_elem_of.
+  rewrite (pvs_mask_frame _ _ (E1 ∖ E1')); last set_solver.
   by rewrite {2}HEE -!union_difference_L.
 Qed. 
 
@@ -175,7 +175,7 @@ Proof. intros HE1 HE2 HEE ->. by apply pvs_mask_frame'. Qed.
    where that would be useful. *)
 Lemma pvs_trans3 E1 E2 Q :
   E2 ⊆ E1 → pvs E1 E2 (pvs E2 E2 (pvs E2 E1 Q)) ⊑ pvs E1 E1 Q.
-Proof. intros HE. rewrite !pvs_trans; solve_elem_of. Qed.
+Proof. intros HE. rewrite !pvs_trans; set_solver. Qed.
 
 Lemma pvs_mask_weaken E1 E2 P : E1 ⊆ E2 → pvs E1 E1 P ⊑ pvs E2 E2 P.
 Proof. auto using pvs_mask_frame'. Qed.

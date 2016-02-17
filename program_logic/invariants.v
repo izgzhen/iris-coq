@@ -2,9 +2,9 @@ From algebra Require Export base.
 From program_logic Require Import ownership.
 From program_logic Require Export namespaces pviewshifts weakestpre.
 Import uPred.
-Local Hint Extern 100 (@eq coPset _ _) => solve_elem_of.
-Local Hint Extern 100 (@subseteq coPset _ _) => solve_elem_of.
-Local Hint Extern 100 (_ ∉ _) => solve_elem_of.
+Local Hint Extern 100 (@eq coPset _ _) => set_solver.
+Local Hint Extern 100 (@subseteq coPset _ _) => set_solver.
+Local Hint Extern 100 (_ ∉ _) => set_solver.
 Local Hint Extern 99 ({[ _ ]} ⊆ _) => apply elem_of_subseteq_singleton.
 
 (** Derived forms and lemmas about them. *)
@@ -41,16 +41,16 @@ Proof.
   rewrite -[R](idemp (∧)%I) {1}Hinv Hinner =>{Hinv Hinner R}.
   rewrite always_and_sep_l /inv sep_exist_r. apply exist_elim=>i.
   rewrite always_and_sep_l -assoc. apply const_elim_sep_l=>HiN.
-  rewrite -(fsa_open_close E (E ∖ {[encode i]})) //; last by solve_elem_of+.
-  (* Add this to the local context, so that solve_elem_of finds it. *)
+  rewrite -(fsa_open_close E (E ∖ {[encode i]})) //; last by set_solver+.
+  (* Add this to the local context, so that set_solver finds it. *)
   assert ({[encode i]} ⊆ nclose N) by eauto.
   rewrite (always_sep_dup (ownI _ _)).
   rewrite {1}pvs_openI !pvs_frame_r.
-  apply pvs_mask_frame_mono; [solve_elem_of..|].
+  apply pvs_mask_frame_mono; [set_solver..|].
   rewrite (comm _ (▷_)%I) -assoc wand_elim_r fsa_frame_l.
-  apply fsa_mask_frame_mono; [solve_elem_of..|]. intros a.
+  apply fsa_mask_frame_mono; [set_solver..|]. intros a.
   rewrite assoc -always_and_sep_l pvs_closeI pvs_frame_r left_id.
-  apply pvs_mask_frame'; solve_elem_of.
+  apply pvs_mask_frame'; set_solver.
 Qed.
 
 (* Derive the concrete forms for pvs and wp, because they are useful. *)

@@ -41,7 +41,7 @@ Qed.
 Lemma elements_singleton x : elements {[ x ]} = [x].
 Proof.
   apply Permutation_singleton. by rewrite <-(right_id ∅ (∪) {[x]}),
-    elements_union_singleton, elements_empty by solve_elem_of.
+    elements_union_singleton, elements_empty by set_solver.
 Qed.
 Lemma elements_contains X Y : X ⊆ Y → elements X `contains` elements Y.
 Proof.
@@ -90,7 +90,7 @@ Proof.
   intros E. destruct (size_pos_elem_of X); auto with lia.
   exists x. apply elem_of_equiv. split.
   - rewrite elem_of_singleton. eauto using size_singleton_inv.
-  - solve_elem_of.
+  - set_solver.
 Qed.
 Lemma size_union X Y : X ∩ Y ≡ ∅ → size (X ∪ Y) = size X + size Y.
 Proof.
@@ -98,7 +98,7 @@ Proof.
   apply Permutation_length, NoDup_Permutation.
   - apply NoDup_elements.
   - apply NoDup_app; repeat split; try apply NoDup_elements.
-    intros x; rewrite !elem_of_elements; solve_elem_of.
+    intros x; rewrite !elem_of_elements; set_solver.
   - intros. by rewrite elem_of_app, !elem_of_elements, elem_of_union.
 Qed.
 Instance elem_of_dec_slow (x : A) (X : C) : Decision (x ∈ X) | 100.
@@ -121,15 +121,15 @@ Next Obligation.
 Qed.
 Lemma size_union_alt X Y : size (X ∪ Y) = size X + size (Y ∖ X).
 Proof.
-  rewrite <-size_union by solve_elem_of.
-  setoid_replace (Y ∖ X) with ((Y ∪ X) ∖ X) by solve_elem_of.
-  rewrite <-union_difference, (comm (∪)); solve_elem_of.
+  rewrite <-size_union by set_solver.
+  setoid_replace (Y ∖ X) with ((Y ∪ X) ∖ X) by set_solver.
+  rewrite <-union_difference, (comm (∪)); set_solver.
 Qed.
 Lemma subseteq_size X Y : X ⊆ Y → size X ≤ size Y.
 Proof. intros. rewrite (union_difference X Y), size_union_alt by done. lia. Qed.
 Lemma subset_size X Y : X ⊂ Y → size X < size Y.
 Proof.
-  intros. rewrite (union_difference X Y) by solve_elem_of.
+  intros. rewrite (union_difference X Y) by set_solver.
   rewrite size_union_alt, difference_twice.
   cut (size (Y ∖ X) ≠ 0); [lia |].
   by apply size_non_empty_iff, non_empty_difference.
@@ -143,8 +143,8 @@ Proof.
   intros ? Hemp Hadd. apply well_founded_induction with (⊂).
   { apply collection_wf. }
   intros X IH. destruct (collection_choose_or_empty X) as [[x ?]|HX].
-  - rewrite (union_difference {[ x ]} X) by solve_elem_of.
-    apply Hadd. solve_elem_of. apply IH; solve_elem_of.
+  - rewrite (union_difference {[ x ]} X) by set_solver.
+    apply Hadd. set_solver. apply IH; set_solver.
   - by rewrite HX.
 Qed.
 Lemma collection_fold_ind {B} (P : B → C → Prop) (f : A → B → B) (b : B) :
@@ -158,10 +158,10 @@ Proof.
     symmetry. apply elem_of_elements. }
   induction 1 as [|x l ?? IH]; simpl.
   - intros X HX. setoid_rewrite elem_of_nil in HX.
-    rewrite equiv_empty. done. solve_elem_of.
+    rewrite equiv_empty. done. set_solver.
   - intros X HX. setoid_rewrite elem_of_cons in HX.
-    rewrite (union_difference {[ x ]} X) by solve_elem_of.
-    apply Hadd. solve_elem_of. apply IH. solve_elem_of.
+    rewrite (union_difference {[ x ]} X) by set_solver.
+    apply Hadd. set_solver. apply IH. set_solver.
 Qed.
 Lemma collection_fold_proper {B} (R : relation B) `{!Equivalence R}
     (f : A → B → B) (b : B) `{!Proper ((=) ==> R ==> R) f}
