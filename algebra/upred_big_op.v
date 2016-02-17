@@ -142,18 +142,15 @@ Section gmap.
   Lemma big_sepM_sepM P Q m :
     (Π★{map m} (λ i x, P i x ★ Q i x))%I ≡ (Π★{map m} P ★ Π★{map m} Q)%I.
   Proof.
-    rewrite /uPred_big_sepM. induction (map_to_list m); simpl;
-      first by rewrite right_id.
-    destruct a. rewrite IHl /= -!assoc. apply sep_proper; first done.
-    rewrite !assoc [(_ ★ Q _ _)%I]comm -!assoc. apply sep_proper; done.
+    rewrite /uPred_big_sepM.
+    induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?right_id //.
+    by rewrite IH -!assoc (assoc _ (Q _ _)) [(Q _ _ ★ _)%I]comm -!assoc.
   Qed.
-
-  Lemma big_sepM_later P m :
-    (Π★{map m} (λ i x, ▷ P i x))%I ≡ (▷ Π★{map m} P)%I.
+  Lemma big_sepM_later P m : (▷ Π★{map m} P)%I ≡ (Π★{map m} (λ i x, ▷ P i x))%I.
   Proof.
-    rewrite /uPred_big_sepM. induction (map_to_list m); simpl;
-      first by rewrite later_True.
-    destruct a. by rewrite IHl later_sep.
+    rewrite /uPred_big_sepM.
+    induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?later_True //.
+    by rewrite later_sep IH.
   Qed.
 End gmap.
 
@@ -205,18 +202,16 @@ Section gset.
   Lemma big_sepS_sepS P Q X :
     (Π★{set X} (λ x, P x ★ Q x))%I ≡ (Π★{set X} P ★ Π★{set X} Q)%I.
   Proof.
-    rewrite /uPred_big_sepS. induction (elements X); simpl;
-      first by rewrite right_id.
-    rewrite IHl -!assoc. apply uPred.sep_proper; first done.
-    rewrite !assoc [(_ ★ Q a)%I]comm -!assoc. apply sep_proper; done.
+    rewrite /uPred_big_sepS.
+    induction (elements X) as [|x l IH]; csimpl; first by rewrite ?right_id.
+    by rewrite IH -!assoc (assoc _ (Q _)) [(Q _ ★ _)%I]comm -!assoc.
   Qed.
 
-  Lemma big_sepS_later P X :
-    (Π★{set X} (λ x, ▷ P x))%I ≡ (▷ Π★{set X} P)%I.
+  Lemma big_sepS_later P X : (▷ Π★{set X} P)%I ≡ (Π★{set X} (λ x, ▷ P x))%I.
   Proof.
-    rewrite /uPred_big_sepS. induction (elements X); simpl;
-      first by rewrite later_True.
-    by rewrite IHl later_sep.
+    rewrite /uPred_big_sepS.
+    induction (elements X) as [|x l IH]; csimpl; first by rewrite ?later_True.
+    by rewrite later_sep IH.
   Qed.
 End gset.
 

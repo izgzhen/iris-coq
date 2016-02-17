@@ -203,7 +203,7 @@ Section proof.
     (* Now we come to the core of the proof: Updating from waiting to ress. *)
     rewrite /waiting /ress sep_exist_l. apply exist_elim=>{Q} Q.
     rewrite later_wand {1}(later_intro P) !assoc wand_elim_r.
-    rewrite -big_sepS_later -big_sepS_sepS. apply big_sepS_mono'=>i.
+    rewrite big_sepS_later -big_sepS_sepS. apply big_sepS_mono'=>i.
     rewrite -(exist_intro (Q i)) comm. done.
   Qed.
 

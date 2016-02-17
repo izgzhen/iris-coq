@@ -708,10 +708,7 @@ Qed.
 Global Instance later_mono' : Proper ((⊑) ==> (⊑)) (@uPred_later M).
 Proof. intros P Q; apply later_mono. Qed.
 Lemma later_True : (▷ True : uPred M)%I ≡ True%I.
-Proof.
-  apply (anti_symm (⊑)); first done.
-  apply later_True'.
-Qed.
+Proof. apply (anti_symm (⊑)); auto using later_True'. Qed.
 Lemma later_impl P Q : ▷ (P → Q) ⊑ (▷ P → ▷ Q).
 Proof.
   apply impl_intro_l; rewrite -later_and.
