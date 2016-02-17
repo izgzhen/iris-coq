@@ -24,14 +24,35 @@ Proof.
   - apply NoDup_elements.
   - intros. by rewrite !elem_of_elements, E.
 Qed.
+Lemma elements_empty : elements (∅ : C) = [].
+Proof.
+  apply elem_of_nil_inv; intros x.
+  rewrite elem_of_elements, elem_of_empty; tauto.
+Qed.
+Lemma elements_union_singleton (X : C) x :
+  x ∉ X → elements ({[ x ]} ∪ X) ≡ₚ x :: elements X.
+Proof.
+  intros ?; apply NoDup_Permutation.
+  { apply NoDup_elements. }
+  { by constructor; rewrite ?elem_of_elements; try apply NoDup_elements. }
+  intros y; rewrite elem_of_elements, elem_of_union, elem_of_singleton.
+  by rewrite elem_of_cons, elem_of_elements.
+Qed.
+Lemma elements_singleton x : elements {[ x ]} = [x].
+Proof.
+  apply Permutation_singleton. by rewrite <-(right_id ∅ (∪) {[x]}),
+    elements_union_singleton, elements_empty by solve_elem_of.
+Qed.
+Lemma elements_contains X Y : X ⊆ Y → elements X `contains` elements Y.
+Proof.
+  intros; apply NoDup_contains; auto using NoDup_elements.
+  intros x. rewrite !elem_of_elements; auto.
+Qed.
+
 Global Instance collection_size_proper: Proper ((≡) ==> (=)) (@size C _).
 Proof. intros ?? E. apply Permutation_length. by rewrite E. Qed.
 Lemma size_empty : size (∅ : C) = 0.
-Proof.
-  unfold size, collection_size. simpl.
-  rewrite (elem_of_nil_inv (elements ∅)); [done|intro].
-  rewrite elem_of_elements, elem_of_empty; auto.
-Qed.
+Proof. unfold size, collection_size. simpl. by rewrite elements_empty. Qed.
 Lemma size_empty_inv (X : C) : size X = 0 → X ≡ ∅.
 Proof.
   intros; apply equiv_empty; intros x; rewrite <-elem_of_elements.
@@ -42,14 +63,7 @@ Proof. split. apply size_empty_inv. by intros ->; rewrite size_empty. Qed.
 Lemma size_non_empty_iff (X : C) : size X ≠ 0 ↔ X ≢ ∅.
 Proof. by rewrite size_empty_iff. Qed.
 Lemma size_singleton (x : A) : size {[ x ]} = 1.
-Proof.
-  change (length (elements {[ x ]}) = length [x]).
-  apply Permutation_length, NoDup_Permutation.
-  - apply NoDup_elements.
-  - apply NoDup_singleton.
-  - intros y.
-    by rewrite elem_of_elements, elem_of_singleton, elem_of_list_singleton.
-Qed.
+Proof. unfold size, collection_size. simpl. by rewrite elements_singleton. Qed.
 Lemma size_singleton_inv X x y : size X = 1 → x ∈ X → y ∈ X → x = y.
 Proof.
   unfold size, collection_size. simpl. rewrite <-!elem_of_elements.
