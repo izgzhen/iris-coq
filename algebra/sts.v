@@ -333,7 +333,7 @@ Lemma sts_op_auth_frag_up s T :
 Proof. intros; apply sts_op_auth_frag; auto using elem_of_up, closed_up. Qed.
 
 Lemma sts_op_frag S1 S2 T1 T2 :
-  T1 ∪ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
+  T1 ∩ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
   sts_frag (S1 ∩ S2) (T1 ∪ T2) ≡ sts_frag S1 T1 ⋅ sts_frag S2 T2.
 Proof.
   intros HT HS1 HS2. rewrite /sts_frag.

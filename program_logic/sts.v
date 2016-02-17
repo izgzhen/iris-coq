@@ -53,18 +53,19 @@ Section sts.
 
   (* The same rule as implication does *not* hold, as could be shown using
      sts_frag_included. *)
-  Lemma sts_ownS_weaken E γ S1 S2 T :
-    S1 ⊆ S2 → sts.closed S2 T →
-    sts_ownS γ S1 T ⊑ pvs E E (sts_ownS γ S2 T).
-  Proof. intros. by apply own_update, sts_update_frag. Qed.
+  Lemma sts_ownS_weaken E γ S1 S2 T1 T2 :
+    T1 ≡ T2 → S1 ⊆ S2 → sts.closed S2 T2 →
+    sts_ownS γ S1 T1 ⊑ pvs E E (sts_ownS γ S2 T2).
+  Proof. intros -> ? ?. by apply own_update, sts_update_frag. Qed.
 
-  Lemma sts_own_weaken E γ s S T :
-    s ∈ S → sts.closed S T →
-    sts_own γ s T ⊑ pvs E E (sts_ownS γ S T).
-  Proof. intros. by apply own_update, sts_update_frag_up. Qed.
+  Lemma sts_own_weaken E γ s S T1 T2 :
+    T1 ≡ T2 → s ∈ S → sts.closed S T2 →
+    sts_own γ s T1 ⊑ pvs E E (sts_ownS γ S T2).
+  (* FIXME for some reason, using "->" instead of "<-" does not work? *)
+  Proof. intros <- ? ?. by apply own_update, sts_update_frag_up. Qed.
 
   Lemma sts_ownS_op γ S1 S2 T1 T2 :
-    T1 ∪ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
+    T1 ∩ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
     sts_ownS γ (S1 ∩ S2) (T1 ∪ T2) ≡ (sts_ownS γ S1 T1 ★ sts_ownS γ S2 T2)%I.
   Proof. intros. by rewrite /sts_ownS -own_op sts_op_frag. Qed.
 
