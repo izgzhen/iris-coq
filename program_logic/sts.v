@@ -66,10 +66,7 @@ Section sts.
   Lemma sts_ownS_op γ S1 S2 T1 T2 :
     T1 ∪ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
     sts_ownS γ (S1 ∩ S2) (T1 ∪ T2) ≡ (sts_ownS γ S1 T1 ★ sts_ownS γ S2 T2)%I.
-  Proof.
-    intros HT HS1 HS2. rewrite /sts_ownS -own_op.
-      by apply own_proper, sts_op_frag.
-  Qed.
+  Proof. intros. by rewrite /sts_ownS -own_op sts_op_frag. Qed.
 
   Lemma sts_alloc E N s :
     nclose N ⊆ E →
