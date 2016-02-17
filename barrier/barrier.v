@@ -168,10 +168,18 @@ Section proof.
       + rewrite /= /tok /=. apply elem_of_equiv=>t. rewrite elem_of_difference elem_of_union.
         rewrite !mkSet_elem_of /change_tokens.
         (* TODO: destruct t; solve_elem_of does not work. What is the best way to do on? *)
-        admit.
+        destruct t as [i'|]; last by naive_solver. split.
+        * move=>[_ Hn]. left. destruct (decide (i = i')); first by subst i.
+          exfalso. apply Hn. left. solve_elem_of.
+        * move=>[[EQ]|?]; last discriminate. solve_elem_of. 
       + apply elem_of_intersection. rewrite !mkSet_elem_of /=. solve_elem_of.
-      + (* TODO: Need lemma about closenedd os intersection / union. *) admit.
-  Abort.
+      + apply sts.closed_op.
+        * apply i_states_closed.
+        * apply low_states_closed.
+        * solve_elem_of.
+        * apply (non_empty_inhabited (State Low {[ i ]})). apply elem_of_intersection.
+          rewrite !mkSet_elem_of /=. solve_elem_of.
+  Qed.
 
   Lemma signal_spec l P (Q : val → iProp) :
     heapN ⊥ N → (send l P ★ P ★ Q '()) ⊑ wp ⊤ (signal (LocV l)) Q.
