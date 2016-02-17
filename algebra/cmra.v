@@ -243,8 +243,8 @@ Qed.
 Global Instance cmra_includedN_preorder n : PreOrder (@includedN A _ _ n).
 Proof.
   split.
-  * by intros x; exists (unit x); rewrite cmra_unit_r.
-  * intros x y z [z1 Hy] [z2 Hz]; exists (z1 ⋅ z2).
+  - by intros x; exists (unit x); rewrite cmra_unit_r.
+  - intros x y z [z1 Hy] [z2 Hz]; exists (z1 ⋅ z2).
     by rewrite assoc -Hy -Hz.
 Qed.
 Global Instance cmra_included_preorder: PreOrder (@included A _ _).
@@ -349,8 +349,8 @@ Proof. split. by intros x y. intros x y y' ?? z ?; naive_solver. Qed.
 Lemma cmra_update_updateP x y : x ~~> y ↔ x ~~>: (y =).
 Proof.
   split.
-  * by intros Hx z ?; exists y; split; [done|apply (Hx z)].
-  * by intros Hx z n ?; destruct (Hx z n) as (?&<-&?).
+  - by intros Hx z ?; exists y; split; [done|apply (Hx z)].
+  - by intros Hx z n ?; destruct (Hx z n) as (?&<-&?).
 Qed.
 Lemma cmra_updateP_id (P : A → Prop) x : P x → x ~~>: P.
 Proof. by intros ? z n ?; exists x. Qed.
@@ -402,8 +402,8 @@ Instance cmra_monotone_compose {A B C : cmraT} (f : A → B) (g : B → C) :
   CMRAMonotone f → CMRAMonotone g → CMRAMonotone (g ∘ f).
 Proof.
   split.
-  * move=> n x y Hxy /=. by apply includedN_preserving, includedN_preserving.
-  * move=> n x Hx /=. by apply validN_preserving, validN_preserving.
+  - move=> n x y Hxy /=. by apply includedN_preserving, includedN_preserving.
+  - move=> n x Hx /=. by apply validN_preserving, validN_preserving.
 Qed.
 
 Section cmra_monotone.
@@ -527,20 +527,20 @@ Section prod.
   Definition prod_cmra_mixin : CMRAMixin (A * B).
   Proof.
     split; try apply _.
-    * by intros n x y1 y2 [Hy1 Hy2]; split; rewrite /= ?Hy1 ?Hy2.
-    * by intros n y1 y2 [Hy1 Hy2]; split; rewrite /= ?Hy1 ?Hy2.
-    * by intros n y1 y2 [Hy1 Hy2] [??]; split; rewrite /= -?Hy1 -?Hy2.
-    * by intros n x1 x2 [Hx1 Hx2] y1 y2 [Hy1 Hy2];
+    - by intros n x y1 y2 [Hy1 Hy2]; split; rewrite /= ?Hy1 ?Hy2.
+    - by intros n y1 y2 [Hy1 Hy2]; split; rewrite /= ?Hy1 ?Hy2.
+    - by intros n y1 y2 [Hy1 Hy2] [??]; split; rewrite /= -?Hy1 -?Hy2.
+    - by intros n x1 x2 [Hx1 Hx2] y1 y2 [Hy1 Hy2];
         split; rewrite /= ?Hx1 ?Hx2 ?Hy1 ?Hy2.
-    * by intros n x [??]; split; apply cmra_validN_S.
-    * by split; rewrite /= assoc.
-    * by split; rewrite /= comm.
-    * by split; rewrite /= cmra_unit_l.
-    * by split; rewrite /= cmra_unit_idemp.
-    * intros n x y; rewrite !prod_includedN.
+    - by intros n x [??]; split; apply cmra_validN_S.
+    - by split; rewrite /= assoc.
+    - by split; rewrite /= comm.
+    - by split; rewrite /= cmra_unit_l.
+    - by split; rewrite /= cmra_unit_idemp.
+    - intros n x y; rewrite !prod_includedN.
       by intros [??]; split; apply cmra_unit_preservingN.
-    * intros n x y [??]; split; simpl in *; eauto using cmra_validN_op_l.
-    * intros x y n; rewrite prod_includedN; intros [??].
+    - intros n x y [??]; split; simpl in *; eauto using cmra_validN_op_l.
+    - intros x y n; rewrite prod_includedN; intros [??].
       by split; apply cmra_op_minus.
   Qed.
   Definition prod_cmra_extend_mixin : CMRAExtendMixin (A * B).
@@ -556,9 +556,9 @@ Section prod.
     CMRAIdentity A → CMRAIdentity B → CMRAIdentity prodRA.
   Proof.
     split.
-    * split; apply cmra_empty_valid.
-    * by split; rewrite /=left_id.
-    * by intros ? [??]; split; apply (timeless _).
+    - split; apply cmra_empty_valid.
+    - by split; rewrite /=left_id.
+    - by intros ? [??]; split; apply (timeless _).
   Qed.
   Lemma prod_update x y : x.1 ~~> y.1 → x.2 ~~> y.2 → x ~~> y.
   Proof. intros ?? z n [??]; split; simpl in *; auto. Qed.
@@ -579,7 +579,7 @@ Instance prod_map_cmra_monotone {A A' B B' : cmraT} (f : A → A') (g : B → B'
   CMRAMonotone f → CMRAMonotone g → CMRAMonotone (prod_map f g).
 Proof.
   split.
-  * intros n x y; rewrite !prod_includedN; intros [??]; simpl.
+  - intros n x y; rewrite !prod_includedN; intros [??]; simpl.
     by split; apply includedN_preserving.
-  * by intros n x [??]; split; simpl; apply validN_preserving.
+  - by intros n x [??]; split; simpl; apply validN_preserving.
 Qed.

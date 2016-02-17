@@ -57,9 +57,9 @@ Instance validity_equiv : Equiv T := λ x y,
 Instance validity_equivalence : Equivalence ((≡) : relation T).
 Proof.
   split; unfold equiv, validity_equiv.
-  * by intros [x px ?]; simpl.
-  * intros [x px ?] [y py ?]; naive_solver.
-  * intros [x px ?] [y py ?] [z pz ?] [? Hxy] [? Hyz]; simpl in *.
+  - by intros [x px ?]; simpl.
+  - intros [x px ?] [y py ?]; naive_solver.
+  - intros [x px ?] [y py ?] [z pz ?] [? Hxy] [? Hyz]; simpl in *.
     split; [|intros; transitivity y]; tauto.
 Qed.
 Instance dra_valid_proper' : Proper ((≡) ==> iff) (valid : A → Prop).
@@ -69,8 +69,8 @@ Proof. by intros x1 x2 Hx; split; rewrite /= Hx. Qed.
 Instance: Proper ((≡) ==> (≡) ==> iff) (⊥).
 Proof.
   intros x1 x2 Hx y1 y2 Hy; split.
-  * by rewrite Hy (symmetry_iff (⊥) x1) (symmetry_iff (⊥) x2) Hx.
-  * by rewrite -Hy (symmetry_iff (⊥) x2) (symmetry_iff (⊥) x1) -Hx.
+  - by rewrite Hy (symmetry_iff (⊥) x1) (symmetry_iff (⊥) x2) Hx.
+  - by rewrite -Hy (symmetry_iff (⊥) x2) (symmetry_iff (⊥) x1) -Hx.
 Qed.
 Lemma dra_disjoint_rl x y z : ✓ x → ✓ y → ✓ z → y ⊥ z → x ⊥ y ⋅ z → x ⊥ y.
 Proof. intros ???. rewrite !(symmetry_iff _ x). by apply dra_disjoint_ll. Qed.
@@ -103,31 +103,31 @@ Solve Obligations with naive_solver auto using dra_minus_valid.
 Definition validity_ra : RA (discreteC T).
 Proof.
   split.
-  * intros ??? [? Heq]; split; simpl; [|by intros (?&?&?); rewrite Heq].
+  - intros ??? [? Heq]; split; simpl; [|by intros (?&?&?); rewrite Heq].
     split; intros (?&?&?); split_ands';
       first [rewrite ?Heq; tauto|rewrite -?Heq; tauto|tauto].
-  * by intros ?? [? Heq]; split; [done|]; simpl; intros ?; rewrite Heq.
-  * intros ?? [??]; naive_solver.
-  * intros x1 x2 [? Hx] y1 y2 [? Hy];
+  - by intros ?? [? Heq]; split; [done|]; simpl; intros ?; rewrite Heq.
+  - intros ?? [??]; naive_solver.
+  - intros x1 x2 [? Hx] y1 y2 [? Hy];
       split; simpl; [|by intros (?&?&?); rewrite Hx // Hy].
     split; intros (?&?&z&?&?); split_ands'; try tauto.
     + exists z. by rewrite -Hy // -Hx.
     + exists z. by rewrite Hx ?Hy; tauto.
-  * intros [x px ?] [y py ?] [z pz ?]; split; simpl;
+  - intros [x px ?] [y py ?] [z pz ?]; split; simpl;
       [intuition eauto 2 using dra_disjoint_lr, dra_disjoint_rl
       |by intros; rewrite assoc].
-  * intros [x px ?] [y py ?]; split; naive_solver eauto using dra_comm.
-  * intros [x px ?]; split;
+  - intros [x px ?] [y py ?]; split; naive_solver eauto using dra_comm.
+  - intros [x px ?]; split;
       naive_solver eauto using dra_unit_l, dra_unit_disjoint_l.
-  * intros [x px ?]; split; naive_solver eauto using dra_unit_idemp.
-  * intros x y Hxy; exists (unit y ⩪ unit x).
+  - intros [x px ?]; split; naive_solver eauto using dra_unit_idemp.
+  - intros x y Hxy; exists (unit y ⩪ unit x).
     destruct x as [x px ?], y as [y py ?], Hxy as [[z pz ?] [??]]; simpl in *.
     assert (py → unit x ≼ unit y)
       by intuition eauto 10 using dra_unit_preserving.
     constructor; [|symmetry]; simpl in *;
       intuition eauto using dra_op_minus, dra_disjoint_minus, dra_unit_valid.
-  * by intros [x px ?] [y py ?] (?&?&?).
-  * intros [x px ?] [y py ?] [[z pz ?] [??]]; split; simpl in *;
+  - by intros [x px ?] [y py ?] (?&?&?).
+  - intros [x px ?] [y py ?] [[z pz ?] [??]]; split; simpl in *;
       intuition eauto 10 using dra_disjoint_minus, dra_op_minus.
 Qed.
 Definition validityRA : cmraT := discreteRA validity_ra.

@@ -142,9 +142,9 @@ Section rtc.
     intros n p1 H. rewrite <-plus_n_Sm.
     apply (IH (S n)); [by eauto using bsteps_r |].
     intros [|m'] [??]; [lia |]. apply Pstep with x'.
-    * apply bsteps_weaken with n; intuition lia.
-    * done.
-    * apply H; intuition lia.
+    - apply bsteps_weaken with n; intuition lia.
+    - done.
+    - apply H; intuition lia.
   Qed.
 
   Lemma tc_transitive x y z : tc R x y → tc R y z → tc R x z.

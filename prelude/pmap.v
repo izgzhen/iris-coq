@@ -117,9 +117,9 @@ Lemma Pmap_wf_eq {A} (t1 t2 : Pmap_raw A) :
 Proof.
   revert t2.
   induction t1 as [|o1 l1 IHl r1 IHr]; intros [|o2 l2 r2] Ht ??; simpl; auto.
-  * discriminate (Pmap_wf_canon (PNode o2 l2 r2)); eauto.
-  * discriminate (Pmap_wf_canon (PNode o1 l1 r1)); eauto.
-  * f_equal; [apply (Ht 1)| |].
+  - discriminate (Pmap_wf_canon (PNode o2 l2 r2)); eauto.
+  - discriminate (Pmap_wf_canon (PNode o1 l1 r1)); eauto.
+  - f_equal; [apply (Ht 1)| |].
     + apply IHl; try apply (λ x, Ht (x~0)); eauto.
     + apply IHr; try apply (λ x, Ht (x~1)); eauto.
 Qed.
@@ -133,8 +133,8 @@ Lemma Ppartial_alter_wf {A} f i (t : Pmap_raw A) :
   Pmap_wf t → Pmap_wf (Ppartial_alter_raw f i t).
 Proof.
   revert i; induction t as [|o l IHl r IHr]; intros i ?; simpl.
-  * destruct (f None); auto using Psingleton_wf.
-  * destruct i; simpl; eauto.
+  - destruct (f None); auto using Psingleton_wf.
+  - destruct i; simpl; eauto.
 Qed.
 Lemma Pfmap_wf {A B} (f : A → B) t : Pmap_wf t → Pmap_wf (Pfmap_raw f t).
 Proof.
@@ -157,15 +157,15 @@ Lemma Plookup_alter {A} f i (t : Pmap_raw A) :
   Ppartial_alter_raw f i t !! i = f (t !! i).
 Proof.
   revert i; induction t as [|o l IHl r IHr]; intros i; simpl.
-  * by destruct (f None); rewrite ?Plookup_singleton.
-  * destruct i; simpl; rewrite PNode_lookup; simpl; auto.
+  - by destruct (f None); rewrite ?Plookup_singleton.
+  - destruct i; simpl; rewrite PNode_lookup; simpl; auto.
 Qed.
 Lemma Plookup_alter_ne {A} f i j (t : Pmap_raw A) :
   i ≠ j → Ppartial_alter_raw f i t !! j = t !! j.
 Proof.
   revert i j; induction t as [|o l IHl r IHr]; simpl.
-  * by intros; destruct (f None); rewrite ?Plookup_singleton_ne.
-  * by intros [?|?|] [?|?|] ?; simpl; rewrite ?PNode_lookup; simpl; auto.
+  - by intros; destruct (f None); rewrite ?Plookup_singleton_ne.
+  - by intros [?|?|] [?|?|] ?; simpl; rewrite ?PNode_lookup; simpl; auto.
 Qed.
 Lemma Plookup_fmap {A B} (f : A → B) t i : (Pfmap_raw f t) !! i = f <$> t !! i.
 Proof. revert i. by induction t; intros [?|?|]; simpl. Qed.
@@ -175,14 +175,14 @@ Lemma Pelem_of_to_list {A} (t : Pmap_raw A) j i acc x :
 Proof.
   split.
   { revert j acc. induction t as [|[y|] l IHl r IHr]; intros j acc; simpl.
-    * by right.
-    * rewrite elem_of_cons. intros [?|?]; simplify_equality.
+    - by right.
+    - rewrite elem_of_cons. intros [?|?]; simplify_equality.
       { left; exists 1. by rewrite (left_id_L 1 (++))%positive. }
       destruct (IHl (j~0) (Pto_list_raw j~1 r acc)) as [(i'&->&?)|?]; auto.
       { left; exists (i' ~ 0). by rewrite Preverse_xO, (assoc_L _). }
       destruct (IHr (j~1) acc) as [(i'&->&?)|?]; auto.
       left; exists (i' ~ 1). by rewrite Preverse_xI, (assoc_L _).
-    * intros.
+    - intros.
       destruct (IHl (j~0) (Pto_list_raw j~1 r acc)) as [(i'&->&?)|?]; auto.
       { left; exists (i' ~ 0). by rewrite Preverse_xO, (assoc_L _). }
       destruct (IHr (j~1) acc) as [(i'&->&?)|?]; auto.
@@ -193,14 +193,14 @@ Proof.
       simpl; rewrite ?elem_of_cons; auto. }
   intros t j ? acc [(i&->&Hi)|?]; [|by auto]. revert j i acc Hi.
   induction t as [|[y|] l IHl r IHr]; intros j i acc ?; simpl.
-  * done.
-  * rewrite elem_of_cons. destruct i as [i|i|]; simplify_equality'.
+  - done.
+  - rewrite elem_of_cons. destruct i as [i|i|]; simplify_equality'.
     + right. apply help. specialize (IHr (j~1) i).
       rewrite Preverse_xI, (assoc_L _) in IHr. by apply IHr.
     + right. specialize (IHl (j~0) i).
       rewrite Preverse_xO, (assoc_L _) in IHl. by apply IHl.
     + left. by rewrite (left_id_L 1 (++))%positive.
-  * destruct i as [i|i|]; simplify_equality'.
+  - destruct i as [i|i|]; simplify_equality'.
     + apply help. specialize (IHr (j~1) i).
       rewrite Preverse_xI, (assoc_L _) in IHr. by apply IHr.
     + specialize (IHl (j~0) i).
@@ -211,8 +211,8 @@ Lemma Pto_list_nodup {A} j (t : Pmap_raw A) acc :
   NoDup acc → NoDup (Pto_list_raw j t acc).
 Proof.
   revert j acc. induction t as [|[y|] l IHl r IHr]; simpl; intros j acc Hin ?.
-  * done.
-  * repeat constructor.
+  - done.
+  - repeat constructor.
     { rewrite Pelem_of_to_list. intros [(i&Hi&?)|Hj].
       { apply (f_equal Plength) in Hi.
         rewrite Preverse_xO, !Papp_length in Hi; simpl in *; lia. }
@@ -221,20 +221,20 @@ Proof.
         rewrite Preverse_xI, !Papp_length in Hi; simpl in *; lia. }
       specialize (Hin 1 y). rewrite (left_id_L 1 (++))%positive in Hin.
       discriminate (Hin Hj). }
-   apply IHl.
-   { intros i x. rewrite Pelem_of_to_list. intros [(?&Hi&?)|Hi].
-     + rewrite Preverse_xO, Preverse_xI, !(assoc_L _) in Hi.
-       by apply (inj (++ _)) in Hi.
-     + apply (Hin (i~0) x). by rewrite Preverse_xO, (assoc_L _) in Hi. }
-   apply IHr; auto. intros i x Hi.
-   apply (Hin (i~1) x). by rewrite Preverse_xI, (assoc_L _) in Hi.
- * apply IHl.
-   { intros i x. rewrite Pelem_of_to_list. intros [(?&Hi&?)|Hi].
-     + rewrite Preverse_xO, Preverse_xI, !(assoc_L _) in Hi.
-       by apply (inj (++ _)) in Hi.
-     + apply (Hin (i~0) x). by rewrite Preverse_xO, (assoc_L _) in Hi. }
-   apply IHr; auto. intros i x Hi.
-   apply (Hin (i~1) x). by rewrite Preverse_xI, (assoc_L _) in Hi.
+    apply IHl.
+    { intros i x. rewrite Pelem_of_to_list. intros [(?&Hi&?)|Hi].
+      + rewrite Preverse_xO, Preverse_xI, !(assoc_L _) in Hi.
+        by apply (inj (++ _)) in Hi.
+      + apply (Hin (i~0) x). by rewrite Preverse_xO, (assoc_L _) in Hi. }
+    apply IHr; auto. intros i x Hi.
+    apply (Hin (i~1) x). by rewrite Preverse_xI, (assoc_L _) in Hi.
+  - apply IHl.
+    { intros i x. rewrite Pelem_of_to_list. intros [(?&Hi&?)|Hi].
+      + rewrite Preverse_xO, Preverse_xI, !(assoc_L _) in Hi.
+        by apply (inj (++ _)) in Hi.
+      + apply (Hin (i~0) x). by rewrite Preverse_xO, (assoc_L _) in Hi. }
+    apply IHr; auto. intros i x Hi.
+    apply (Hin (i~1) x). by rewrite Preverse_xI, (assoc_L _) in Hi.
 Qed.
 Lemma Pomap_lookup {A B} (f : A → option B) t i :
   Pomap_raw f t !! i = t !! i ≫= f.
@@ -250,9 +250,9 @@ Proof.
   { rewrite Pomap_lookup. by destruct (t2 !! i). }
   unfold compose, flip.
   destruct t2 as [|l2 o2 r2]; rewrite PNode_lookup.
-  * by destruct i; rewrite ?Pomap_lookup; simpl; rewrite ?Pomap_lookup;
+  - by destruct i; rewrite ?Pomap_lookup; simpl; rewrite ?Pomap_lookup;
       match goal with |- ?o ≫= _ = _ => destruct o end.
-  * destruct i; rewrite ?Pomap_lookup; simpl; auto.
+  - destruct i; rewrite ?Pomap_lookup; simpl; auto.
 Qed.
 
 (** Packed version and instance of the finite map type class *)
@@ -288,18 +288,18 @@ Instance Pmerge : Merge Pmap := λ A B C f m1 m2,
 Instance Pmap_finmap : FinMap positive Pmap.
 Proof.
   split.
-  * by intros ? [t1 ?] [t2 ?] ?; apply Pmap_eq, Pmap_wf_eq.
-  * by intros ? [].
-  * intros ?? [??] ?. by apply Plookup_alter.
-  * intros ?? [??] ??. by apply Plookup_alter_ne.
-  * intros ??? [??]. by apply Plookup_fmap.
-  * intros ? [??]. apply Pto_list_nodup; [|constructor].
+  - by intros ? [t1 ?] [t2 ?] ?; apply Pmap_eq, Pmap_wf_eq.
+  - by intros ? [].
+  - intros ?? [??] ?. by apply Plookup_alter.
+  - intros ?? [??] ??. by apply Plookup_alter_ne.
+  - intros ??? [??]. by apply Plookup_fmap.
+  - intros ? [??]. apply Pto_list_nodup; [|constructor].
     intros ??. by rewrite elem_of_nil.
-  * intros ? [??] i x; unfold map_to_list, Pto_list.
+  - intros ? [??] i x; unfold map_to_list, Pto_list.
     rewrite Pelem_of_to_list, elem_of_nil.
     split. by intros [(?&->&?)|]. by left; exists i.
-  * intros ?? ? [??] ?. by apply Pomap_lookup.
-  * intros ??? ?? [??] [??] ?. by apply Pmerge_lookup.
+  - intros ?? ? [??] ?. by apply Pomap_lookup.
+  - intros ??? ?? [??] [??] ?. by apply Pmerge_lookup.
 Qed.
 
 (** * Finite sets *)
@@ -365,8 +365,8 @@ Instance Pset_fresh : Fresh positive Pset := λ X,
 Instance Pset_fresh_spec : FreshSpec positive Pset.
 Proof.
   split.
-  * apply _.
-  * intros X Y; rewrite <-elem_of_equiv_L. by intros ->.
-  * unfold elem_of, mapset_elem_of, fresh; intros [m]; simpl.
+  - apply _.
+  - intros X Y; rewrite <-elem_of_equiv_L. by intros ->.
+  - unfold elem_of, mapset_elem_of, fresh; intros [m]; simpl.
     by rewrite Pfresh_fresh.
 Qed.

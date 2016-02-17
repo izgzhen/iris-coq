@@ -63,12 +63,12 @@ Instance hashset_elems: Elements A (hashset hash) := λ m,
 Global Instance: FinCollection A (hashset hash).
 Proof.
   split; [split; [split| |]| |].
-  * intros ? (?&?&?); simplify_map_equality'.
-  * unfold elem_of, hashset_elem_of, singleton, hashset_singleton; simpl.
+  - intros ? (?&?&?); simplify_map_equality'.
+  - unfold elem_of, hashset_elem_of, singleton, hashset_singleton; simpl.
     intros x y. setoid_rewrite lookup_singleton_Some. split.
     { by intros (?&[? <-]&?); decompose_elem_of_list. }
     intros ->; eexists [y]. by rewrite elem_of_list_singleton.
-  * unfold elem_of, hashset_elem_of, union, hashset_union.
+  - unfold elem_of, hashset_elem_of, union, hashset_union.
     intros [m1 Hm1] [m2 Hm2] x; simpl; setoid_rewrite lookup_union_with_Some.
     split.
     { intros (?&[[]|[[]|(l&k&?&?&?)]]&Hx); simplify_equality'; eauto.
@@ -78,7 +78,7 @@ Proof.
       exists (list_union l k). rewrite elem_of_list_union. naive_solver.
     + destruct (m1 !! hash x) as [l|]; eauto 6.
       exists (list_union l k). rewrite elem_of_list_union. naive_solver.
-  * unfold elem_of, hashset_elem_of, intersection, hashset_intersection.
+  - unfold elem_of, hashset_elem_of, intersection, hashset_intersection.
     intros [m1 ?] [m2 ?] x; simpl.
     setoid_rewrite lookup_intersection_with_Some. split.
     { intros (?&(l&k&?&?&?)&Hx); simplify_option_equality.
@@ -87,7 +87,7 @@ Proof.
       by (by rewrite elem_of_list_intersection).
     exists (list_intersection l k); split; [exists l, k|]; split_ands; auto.
     by rewrite option_guard_True by eauto using elem_of_not_nil.
-  * unfold elem_of, hashset_elem_of, intersection, hashset_intersection.
+  - unfold elem_of, hashset_elem_of, intersection, hashset_intersection.
     intros [m1 ?] [m2 ?] x; simpl.
     setoid_rewrite lookup_difference_with_Some. split.
     { intros (l'&[[??]|(l&k&?&?&?)]&Hx); simplify_option_equality;
@@ -97,13 +97,13 @@ Proof.
     assert (x ∈ list_difference l k) by (by rewrite elem_of_list_difference).
     exists (list_difference l k); split; [right; exists l,k|]; split_ands; auto.
     by rewrite option_guard_True by eauto using elem_of_not_nil.
-  * unfold elem_of at 2, hashset_elem_of, elements, hashset_elems.
+  - unfold elem_of at 2, hashset_elem_of, elements, hashset_elems.
     intros [m Hm] x; simpl. setoid_rewrite elem_of_list_bind. split.
     { intros ([n l]&Hx&Hn); simpl in *; rewrite elem_of_map_to_list in Hn.
       cut (hash x = n); [intros <-; eauto|].
       eapply (Forall_forall (λ x, hash x = n) l); eauto. eapply Hm; eauto. }
     intros (l&?&?). exists (hash x, l); simpl. by rewrite elem_of_map_to_list.
-  * unfold elements, hashset_elems. intros [m Hm]; simpl.
+  - unfold elements, hashset_elems. intros [m Hm]; simpl.
     rewrite map_Forall_to_list in Hm. generalize (NoDup_fst_map_to_list m).
     induction Hm as [|[n l] m' [??]];
       csimpl; inversion_clear 1 as [|?? Hn]; [constructor|].
@@ -152,10 +152,10 @@ Proof.
   unfold remove_dups_fast; generalize (x1 :: x2 :: l); clear l; intros l.
   generalize (λ x, hash x `mod` (2 * length l))%Z; intros f.
   rewrite elem_of_elements; split.
-  * revert x. induction l as [|y l IH]; intros x; simpl.
+  - revert x. induction l as [|y l IH]; intros x; simpl.
     { by rewrite elem_of_empty. }
     rewrite elem_of_union, elem_of_singleton. intros [->|]; [left|right]; eauto.
-  * induction 1; solve_elem_of.
+  - induction 1; solve_elem_of.
 Qed.
 Lemma NoDup_remove_dups_fast l : NoDup (remove_dups_fast l).
 Proof.

@@ -54,9 +54,9 @@ Instance inG_empty_spec `{Empty A} :
   CMRAIdentity A → CMRAIdentity (Σ inG_id (laterC (iPreProp Λ (globalF Σ)))).
 Proof.
   split.
-  * apply cmra_transport_valid, cmra_empty_valid.
-  * intros x; rewrite /empty /inG_empty; destruct inG_prf. by rewrite left_id.
-  * apply _.
+  - apply cmra_transport_valid, cmra_empty_valid.
+  - intros x; rewrite /empty /inG_empty; destruct inG_prf. by rewrite left_id.
+  - apply _.
 Qed.
 
 (** * Properties of own *)
@@ -91,10 +91,10 @@ Lemma own_alloc_strong a E (G : gset gname) :
 Proof.
   intros Ha.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ γ, γ ∉ G ∧ m = to_globalF γ a) ∧ ownG m)%I).
-  * eapply pvs_ownG_updateP_empty, (iprod_singleton_updateP_empty inG_id);
+  - eapply pvs_ownG_updateP_empty, (iprod_singleton_updateP_empty inG_id);
       first (eapply map_updateP_alloc_strong', cmra_transport_valid, Ha);
       naive_solver.
-  * apply exist_elim=>m; apply const_elim_l=>-[γ [Hfresh ->]].
+  - apply exist_elim=>m; apply const_elim_l=>-[γ [Hfresh ->]].
     by rewrite -(exist_intro γ) const_equiv.
 Qed.
 Lemma own_alloc a E : ✓ a → True ⊑ pvs E E (∃ γ, own γ a).
@@ -108,10 +108,10 @@ Lemma own_updateP P γ a E :
 Proof.
   intros Ha.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ a', m = to_globalF γ a' ∧ P a') ∧ ownG m)%I).
-  * eapply pvs_ownG_updateP, iprod_singleton_updateP;
+  - eapply pvs_ownG_updateP, iprod_singleton_updateP;
       first by (eapply map_singleton_updateP', cmra_transport_updateP', Ha).
     naive_solver.
-  * apply exist_elim=>m; apply const_elim_l=>-[a' [-> HP]].
+  - apply exist_elim=>m; apply const_elim_l=>-[a' [-> HP]].
     rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
 Qed.
 
@@ -120,10 +120,10 @@ Lemma own_updateP_empty `{Empty A, !CMRAIdentity A} P γ E :
 Proof.
   intros Hemp.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ a', m = to_globalF γ a' ∧ P a') ∧ ownG m)%I).
-  * eapply pvs_ownG_updateP_empty, iprod_singleton_updateP_empty;
+  - eapply pvs_ownG_updateP_empty, iprod_singleton_updateP_empty;
       first eapply map_singleton_updateP_empty', cmra_transport_updateP', Hemp.
     naive_solver.
-  * apply exist_elim=>m; apply const_elim_l=>-[a' [-> HP]].
+  - apply exist_elim=>m; apply const_elim_l=>-[a' [-> HP]].
     rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
 Qed.
 

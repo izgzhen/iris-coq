@@ -37,8 +37,8 @@ Lemma gmap_partial_alter_wf `{Countable K} {A} (f : option A → option A) m i :
   gmap_wf m → gmap_wf (partial_alter f (encode i) m).
 Proof.
   intros Hm p x. destruct (decide (encode i = p)) as [<-|?].
-  * rewrite decode_encode; eauto.
-  * rewrite lookup_partial_alter_ne by done. by apply Hm.
+  - rewrite decode_encode; eauto.
+  - rewrite lookup_partial_alter_ne by done. by apply Hm.
 Qed.
 Instance gmap_partial_alter `{Countable K} {A} :
     PartialAlter K A (gmap K A) := λ f i m,
@@ -78,7 +78,7 @@ Instance gmap_to_list `{Countable K} {A} : FinMapToList K A (gmap K A) := λ m,
 Instance gmap_finmap `{Countable K} : FinMap K (gmap K).
 Proof.
   split.
-  * unfold lookup; intros A [m1 Hm1] [m2 Hm2] Hm.
+  - unfold lookup; intros A [m1 Hm1] [m2 Hm2] Hm.
     apply gmap_eq, map_eq; intros i; simpl in *.
     apply bool_decide_unpack in Hm1; apply bool_decide_unpack in Hm2.
     apply option_eq; intros x; split; intros Hi.
@@ -86,12 +86,12 @@ Proof.
       by destruct (decode i); simplify_equality'; rewrite <-Hm.
     + pose proof (Hm2 i x Hi); simpl in *.
       by destruct (decode i); simplify_equality'; rewrite Hm.
-  * done.
-  * intros A f [m Hm] i; apply (lookup_partial_alter f m).
-  * intros A f [m Hm] i j Hs; apply (lookup_partial_alter_ne f m).
+  - done.
+  - intros A f [m Hm] i; apply (lookup_partial_alter f m).
+  - intros A f [m Hm] i j Hs; apply (lookup_partial_alter_ne f m).
     by contradict Hs; apply (inj encode).
-  * intros A B f [m Hm] i; apply (lookup_fmap f m).
-  * intros A [m Hm]; unfold map_to_list; simpl.
+  - intros A B f [m Hm] i; apply (lookup_fmap f m).
+  - intros A [m Hm]; unfold map_to_list; simpl.
     apply bool_decide_unpack, map_Forall_to_list in Hm; revert Hm.
     induction (NoDup_map_to_list m) as [|[p x] l Hpx];
       inversion 1 as [|??? Hm']; simplify_equality'; [by constructor|].
@@ -99,15 +99,15 @@ Proof.
     rewrite elem_of_list_omap; intros ([p' x']&?&?); simplify_equality'.
     feed pose proof (proj1 (Forall_forall _ _) Hm' (p',x')); simpl in *; auto.
     by destruct (decode p') as [i'|]; simplify_equality'.
-  * intros A [m Hm] i x; unfold map_to_list, lookup; simpl.
+  - intros A [m Hm] i x; unfold map_to_list, lookup; simpl.
     apply bool_decide_unpack in Hm; rewrite elem_of_list_omap; split.
     + intros ([p' x']&Hp'&?); apply elem_of_map_to_list in Hp'.
       feed pose proof (Hm p' x'); simpl in *; auto.
       by destruct (decode p') as [i'|] eqn:?; simplify_equality'.
     + intros; exists (encode i,x); simpl.
       by rewrite elem_of_map_to_list, decode_encode.
-  * intros A B f [m Hm] i; apply (lookup_omap f m).
-  * intros A B C f ? [m1 Hm1] [m2 Hm2] i; unfold merge, lookup; simpl.
+  - intros A B f [m Hm] i; apply (lookup_omap f m).
+  - intros A B C f ? [m1 Hm1] [m2 Hm2] i; unfold merge, lookup; simpl.
     set (f' o1 o2 := match o1, o2 with None,None => None | _, _ => f o1 o2 end).
     by rewrite lookup_merge by done; destruct (m1 !! _), (m2 !! _).
 Qed.
@@ -130,8 +130,8 @@ Instance gset_positive_fresh : Fresh positive (gset positive) := λ X,
 Instance gset_positive_fresh_spec : FreshSpec positive (gset positive).
 Proof.
   split.
-  * apply _.
-  * by intros X Y; rewrite <-elem_of_equiv_L; intros ->.
-  * intros [[m Hm]]; unfold fresh; simpl.
+  - apply _.
+  - by intros X Y; rewrite <-elem_of_equiv_L; intros ->.
+  - intros [[m Hm]]; unfold fresh; simpl.
     by intros ?; apply (is_fresh (dom Pset m)), elem_of_dom_2 with ().
 Qed.

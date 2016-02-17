@@ -94,9 +94,9 @@ Section setoids.
   Global Instance option_equivalence : Equivalence ((≡) : relation (option A)).
   Proof.
     split.
-    * by intros []; constructor.
-    * by destruct 1; constructor.
-    * destruct 1; inversion 1; constructor; etransitivity; eauto.
+    - by intros []; constructor.
+    - by destruct 1; constructor.
+    - destruct 1; inversion 1; constructor; etransitivity; eauto.
   Qed.
   Global Instance Some_proper : Proper ((≡) ==> (≡)) (@Some A).
   Proof. by constructor. Qed.

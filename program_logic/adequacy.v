@@ -36,7 +36,7 @@ Proof.
   destruct (Hwpstep e2 σ2 ef) as (r2&r2'&Hwsat&?&?); auto; clear Hwpstep.
   revert Hwsat; rewrite big_op_app right_id_L=>Hwsat.
   destruct ef as [e'|].
-  * destruct (IH (Qs1 ++ Q :: Qs2 ++ [λ _, True%I])
+  - destruct (IH (Qs1 ++ Q :: Qs2 ++ [λ _, True%I])
       (rs1 ++ r2 :: rs2 ++ [r2'])) as (rs'&Qs'&?&?).
     { apply Forall3_app, Forall3_cons,
         Forall3_app, Forall3_cons, Forall3_nil; eauto using wptp_le. }
@@ -44,7 +44,7 @@ Proof.
         (comm (++)) /= assoc big_op_app. }
     exists rs', ([λ _, True%I] ++ Qs'); split; auto.
     by rewrite (assoc _ _ _ Qs') -(assoc _ Qs1).
-  * apply (IH (Qs1 ++ Q :: Qs2) (rs1 ++ r2 ⋅ r2' :: rs2)).
+  - apply (IH (Qs1 ++ Q :: Qs2) (rs1 ++ r2 ⋅ r2' :: rs2)).
     { rewrite /option_list right_id_L.
       apply Forall3_app, Forall3_cons; eauto using wptp_le.
       apply uPred_weaken with r2 (k + n); eauto using cmra_included_l. }
@@ -73,9 +73,9 @@ Proof.
   eapply ht_adequacy_steps with (r1 := (Res ∅ (Excl σ1) (Some m))); eauto; [|].
   { by rewrite Nat.add_comm; apply wsat_init, cmra_valid_validN. }
   exists (Res ∅ (Excl σ1) ∅), (Res ∅ ∅ (Some m)); split_ands.
-  * by rewrite Res_op ?left_id ?right_id.
-  * by rewrite /uPred_holds /=.
-  * by apply ownG_spec.
+  - by rewrite Res_op ?left_id ?right_id.
+  - by rewrite /uPred_holds /=.
+  - by apply ownG_spec.
 Qed.
 Theorem ht_adequacy_result E φ e v t2 σ1 m σ2 :
   ✓ m →

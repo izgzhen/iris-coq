@@ -47,19 +47,19 @@ Proof. solve_decision. Defined.
 Instance: Collection K (mapset M).
 Proof.
   split; [split | | ].
-  * unfold empty, elem_of, mapset_empty, mapset_elem_of.
+  - unfold empty, elem_of, mapset_empty, mapset_elem_of.
     simpl. intros. by simpl_map.
-  * unfold singleton, elem_of, mapset_singleton, mapset_elem_of.
+  - unfold singleton, elem_of, mapset_singleton, mapset_elem_of.
     simpl. by split; intros; simplify_map_equality.
-  * unfold union, elem_of, mapset_union, mapset_elem_of.
+  - unfold union, elem_of, mapset_union, mapset_elem_of.
     intros [m1] [m2] ?. simpl. rewrite lookup_union_Some_raw.
     destruct (m1 !! x) as [[]|]; tauto.
-  * unfold intersection, elem_of, mapset_intersection, mapset_elem_of.
+  - unfold intersection, elem_of, mapset_intersection, mapset_elem_of.
     intros [m1] [m2] ?. simpl. rewrite lookup_intersection_Some.
     assert (is_Some (m2 !! x) ↔ m2 !! x = Some ()).
     { split; eauto. by intros [[] ?]. }
     naive_solver.
-  * unfold difference, elem_of, mapset_difference, mapset_elem_of.
+  - unfold difference, elem_of, mapset_difference, mapset_elem_of.
     intros [m1] [m2] ?. simpl. rewrite lookup_difference_Some.
     destruct (m2 !! x) as [[]|]; intuition congruence.
 Qed.
@@ -68,12 +68,12 @@ Proof. split; try apply _. intros ????. apply mapset_eq. intuition. Qed.
 Global Instance: FinCollection K (mapset M).
 Proof.
   split.
-  * apply _.
-  * unfold elements, elem_of at 2, mapset_elems, mapset_elem_of.
+  - apply _.
+  - unfold elements, elem_of at 2, mapset_elems, mapset_elem_of.
     intros [m] x. simpl. rewrite elem_of_list_fmap. split.
     + intros ([y []] &?& Hy). subst. by rewrite <-elem_of_map_to_list.
     + intros. exists (x, ()). by rewrite elem_of_map_to_list.
-  * unfold elements, mapset_elems. intros [m]. simpl.
+  - unfold elements, mapset_elems. intros [m]. simpl.
     apply NoDup_fst_map_to_list.
 Qed.
 
@@ -101,8 +101,8 @@ Lemma elem_of_mapset_dom_with {A} (f : A → bool) m i :
 Proof.
   unfold mapset_dom_with, elem_of, mapset_elem_of.
   simpl. rewrite lookup_merge by done. destruct (m !! i) as [a|].
-  * destruct (Is_true_reflect (f a)); naive_solver.
-  * naive_solver.
+  - destruct (Is_true_reflect (f a)); naive_solver.
+  - naive_solver.
 Qed.
 Instance mapset_dom {A} : Dom (M A) (mapset M) := mapset_dom_with (λ _, true).
 Instance mapset_dom_spec: FinMapDom K M (mapset M).

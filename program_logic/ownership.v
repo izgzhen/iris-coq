@@ -72,10 +72,10 @@ Lemma ownI_spec r n i P :
   (ownI i P) n r ↔ wld r !! i ≡{n}≡ Some (to_agree (Next (iProp_unfold P))).
 Proof.
   intros [??]; rewrite /uPred_holds/=res_includedN/=singleton_includedN; split.
-  * intros [(P'&Hi&HP) _]; rewrite Hi.
+  - intros [(P'&Hi&HP) _]; rewrite Hi.
     by apply Some_dist, symmetry, agree_valid_includedN,
       (cmra_included_includedN _ P'),HP; apply map_lookup_validN with (wld r) i.
-  * intros ?; split_ands; try apply cmra_empty_leastN; eauto.
+  - intros ?; split_ands; try apply cmra_empty_leastN; eauto.
 Qed.
 Lemma ownP_spec r n σ : ✓{n} r → (ownP σ) n r ↔ pst r ≡{n}≡ Excl σ.
 Proof.

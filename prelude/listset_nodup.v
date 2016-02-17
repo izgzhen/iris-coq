@@ -39,11 +39,11 @@ Instance listset_nodup_filter: Filter A C := λ P _ l,
 Instance: Collection A C.
 Proof.
   split; [split | | ].
-  * by apply not_elem_of_nil.
-  * by apply elem_of_list_singleton.
-  * intros [??] [??] ?. apply elem_of_list_union.
-  * intros [??] [??] ?. apply elem_of_list_intersection.
-  * intros [??] [??] ?. apply elem_of_list_difference.
+  - by apply not_elem_of_nil.
+  - by apply elem_of_list_singleton.
+  - intros [??] [??] ?. apply elem_of_list_union.
+  - intros [??] [??] ?. apply elem_of_list_intersection.
+  - intros [??] [??] ?. apply elem_of_list_difference.
 Qed.
 
 Global Instance listset_nodup_elems: Elements A C := listset_nodup_car.
@@ -52,11 +52,11 @@ Proof. split. apply _. done. by intros [??]. Qed.
 Global Instance: CollectionOps A C.
 Proof.
   split.
-  * apply _.
-  * intros ? [??] [??] ?. unfold intersection_with, elem_of,
+  - apply _.
+  - intros ? [??] [??] ?. unfold intersection_with, elem_of,
       listset_nodup_intersection_with, listset_nodup_elem_of; simpl.
     rewrite elem_of_remove_dups. by apply elem_of_list_intersection_with.
-  * intros [??] ???. apply elem_of_list_filter.
+  - intros [??] ???. apply elem_of_list_filter.
 Qed.
 End list_collection.
 

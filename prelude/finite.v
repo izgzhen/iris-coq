@@ -30,8 +30,8 @@ Proof.
   destruct finA as [xs Hxs HA]; unfold encode_nat, encode, card; simpl.
   rewrite Nat2Pos.id by done; simpl.
   destruct (list_find _ xs) as [[i y]|] eqn:?; simpl.
-  * destruct (list_find_Some (x =) xs i y); eauto using lookup_lt_Some.
-  * destruct xs; simpl. exfalso; eapply not_elem_of_nil, (HA x). lia.
+  - destruct (list_find_Some (x =) xs i y); eauto using lookup_lt_Some.
+  - destruct xs; simpl. exfalso; eapply not_elem_of_nil, (HA x). lia.
 Qed.
 Lemma encode_decode A `{finA: Finite A} i :
   i < card A → ∃ x, decode_nat i = Some x ∧ encode_nat x = i.
@@ -80,8 +80,8 @@ Lemma finite_inj_Permutation `{Finite A} `{Finite B} (f : A → B)
   `{!Inj (=) (=) f} : card A = card B → f <$> enum A ≡ₚ enum B.
 Proof.
   intros. apply contains_Permutation_length_eq.
-  * by rewrite fmap_length.
-  * by apply finite_inj_contains.
+  - by rewrite fmap_length.
+  - by apply finite_inj_contains.
 Qed.
 Lemma finite_inj_surj `{Finite A} `{Finite B} (f : A → B)
   `{!Inj (=) (=) f} : card A = card B → Surj (=) f.
@@ -103,20 +103,20 @@ Lemma finite_inj A `{Finite A} B `{Finite B} :
   card A ≤ card B ↔ ∃ f : A → B, Inj (=) (=) f.
 Proof.
   split.
-  * intros. destruct (decide (card A = 0)) as [HA|?].
+  - intros. destruct (decide (card A = 0)) as [HA|?].
     { exists (card_0_inv B HA). intros y. apply (card_0_inv _ HA y). }
     destruct (finite_surj A B) as (g&?); auto with lia.
     destruct (surj_cancel g) as (f&?). exists f. apply cancel_inj.
-  * intros [f ?]. unfold card. rewrite <-(fmap_length f).
+  - intros [f ?]. unfold card. rewrite <-(fmap_length f).
     by apply contains_length, (finite_inj_contains f).
 Qed.
 Lemma finite_bijective A `{Finite A} B `{Finite B} :
   card A = card B ↔ ∃ f : A → B, Inj (=) (=) f ∧ Surj (=) f.
 Proof.
   split.
-  * intros; destruct (proj1 (finite_inj A B)) as [f ?]; auto with lia.
+  - intros; destruct (proj1 (finite_inj A B)) as [f ?]; auto with lia.
     exists f; auto using (finite_inj_surj f).
-  * intros (f&?&?). apply (anti_symm (≤)); apply finite_inj.
+  - intros (f&?&?). apply (anti_symm (≤)); apply finite_inj.
     + by exists f.
     + destruct (surj_cancel f) as (g&?); eauto using cancel_inj.
 Qed.
@@ -193,8 +193,8 @@ Program Instance option_finite `{Finite A} : Finite (option A) :=
   {| enum := None :: Some <$> enum A |}.
 Next Obligation.
   constructor.
-  * rewrite elem_of_list_fmap. by intros (?&?&?).
-  * apply (NoDup_fmap_2 _); auto using NoDup_enum.
+  - rewrite elem_of_list_fmap. by intros (?&?&?).
+  - apply (NoDup_fmap_2 _); auto using NoDup_enum.
 Qed.
 Next Obligation.
   intros ??? [x|]; [right|left]; auto.
@@ -221,9 +221,9 @@ Program Instance sum_finite `{Finite A, Finite B} : Finite (A + B)%type :=
   {| enum := (inl <$> enum A) ++ (inr <$> enum B) |}.
 Next Obligation.
   intros. apply NoDup_app; split_ands.
-  * apply (NoDup_fmap_2 _). by apply NoDup_enum.
-  * intro. rewrite !elem_of_list_fmap. intros (?&?&?) (?&?&?); congruence.
-  * apply (NoDup_fmap_2 _). by apply NoDup_enum.
+  - apply (NoDup_fmap_2 _). by apply NoDup_enum.
+  - intro. rewrite !elem_of_list_fmap. intros (?&?&?) (?&?&?); congruence.
+  - apply (NoDup_fmap_2 _). by apply NoDup_enum.
 Qed.
 Next Obligation.
   intros ?????? [x|y]; rewrite elem_of_app, !elem_of_list_fmap;
@@ -238,20 +238,20 @@ Next Obligation.
   intros ??????. induction (NoDup_enum A) as [|x xs Hx Hxs IH]; simpl.
   { constructor. }
   apply NoDup_app; split_ands.
-  * by apply (NoDup_fmap_2 _), NoDup_enum.
-  * intros [? y]. rewrite elem_of_list_fmap. intros (?&?&?); simplify_equality.
+  - by apply (NoDup_fmap_2 _), NoDup_enum.
+  - intros [? y]. rewrite elem_of_list_fmap. intros (?&?&?); simplify_equality.
     clear IH. induction Hxs as [|x' xs ?? IH]; simpl.
     { rewrite elem_of_nil. tauto. }
     rewrite elem_of_app, elem_of_list_fmap.
     intros [(?&?&?)|?]; simplify_equality.
     + destruct Hx. by left.
     + destruct IH. by intro; destruct Hx; right. auto.
-  * done.
+  - done.
 Qed.
 Next Obligation.
   intros ?????? [x y]. induction (elem_of_enum x); simpl.
-  * rewrite elem_of_app, !elem_of_list_fmap. eauto using @elem_of_enum.
-  * rewrite elem_of_app; eauto.
+  - rewrite elem_of_app, !elem_of_list_fmap. eauto using @elem_of_enum.
+  - rewrite elem_of_app; eauto.
 Qed.
 Lemma prod_card `{Finite A} `{Finite B} : card (A * B) = card A * card B.
 Proof.
@@ -272,13 +272,13 @@ Next Obligation.
   revert IH. generalize (list_enum (enum A) n). intros l Hl.
   induction (NoDup_enum A) as [|x xs Hx Hxs IH]; simpl; auto; [constructor |].
   apply NoDup_app; split_ands.
-  * by apply (NoDup_fmap_2 _).
-  * intros [k1 Hk1]. clear Hxs IH. rewrite elem_of_list_fmap.
+  - by apply (NoDup_fmap_2 _).
+  - intros [k1 Hk1]. clear Hxs IH. rewrite elem_of_list_fmap.
     intros ([k2 Hk2]&?&?) Hxk2; simplify_equality'. destruct Hx. revert Hxk2.
     induction xs as [|x' xs IH]; simpl in *; [by rewrite elem_of_nil |].
     rewrite elem_of_app, elem_of_list_fmap, elem_of_cons.
     intros [([??]&?&?)|?]; simplify_equality'; auto.
-  * apply IH.
+  - apply IH.
 Qed.
 Next Obligation.
   intros ???? [l Hl]. revert l Hl.
@@ -286,9 +286,9 @@ Next Obligation.
   { apply elem_of_list_singleton. by apply (sig_eq_pi _). }
   revert IH. generalize (list_enum (enum A) n). intros k Hk.
   induction (elem_of_enum x) as [x xs|x xs]; simpl in *.
-  * rewrite elem_of_app, elem_of_list_fmap. left. injection Hl. intros Hl'.
+  - rewrite elem_of_app, elem_of_list_fmap. left. injection Hl. intros Hl'.
     eexists (l↾Hl'). split. by apply (sig_eq_pi _). done.
-  * rewrite elem_of_app. eauto.
+  - rewrite elem_of_app. eauto.
 Qed.
 Lemma list_card `{Finite A} n : card { l | length l = n } = card A ^ n.
 Proof.

@@ -49,9 +49,9 @@ Instance prod_lexico_po `{Lexico A, Lexico B, !StrictOrder (@lexico A _)}
   `{!StrictOrder (@lexico B _)} : StrictOrder (@lexico (A * B) _).
 Proof.
   split.
-  * intros [x y]. apply prod_lexico_irreflexive.
+  - intros [x y]. apply prod_lexico_irreflexive.
     by apply (irreflexivity lexico y).
-  * intros [??] [??] [??] ??.
+  - intros [??] [??] [??] ??.
     eapply prod_lexico_transitive; eauto. apply transitivity.
 Qed.
 Instance prod_lexico_trichotomyT `{Lexico A, tA : !TrichotomyT (@lexico A _)}
@@ -119,8 +119,8 @@ Instance list_lexico_po `{Lexico A, !StrictOrder (@lexico A _)} :
   StrictOrder (@lexico (list A) _).
 Proof.
   split.
-  * intros l. induction l. by intros ?. by apply prod_lexico_irreflexive.
-  * intros l1. induction l1 as [|x1 l1]; intros [|x2 l2] [|x3 l3] ??; try done.
+  - intros l. induction l. by intros ?. by apply prod_lexico_irreflexive.
+  - intros l1. induction l1 as [|x1 l1]; intros [|x2 l2] [|x3 l3] ??; try done.
     eapply prod_lexico_transitive; eauto.
 Qed.
 Instance list_lexico_trichotomy `{Lexico A, tA : !TrichotomyT (@lexico A _)} :
@@ -142,8 +142,8 @@ Instance sig_lexico_po `{Lexico A, !StrictOrder (@lexico A _)}
   (P : A → Prop) `{∀ x, ProofIrrel (P x)} : StrictOrder (@lexico (sig P) _).
 Proof.
   unfold lexico, sig_lexico. split.
-  * intros [x ?] ?. by apply (irreflexivity lexico x). 
-  * intros [x1 ?] [x2 ?] [x3 ?] ??. by transitivity x2.
+  - intros [x ?] ?. by apply (irreflexivity lexico x). 
+  - intros [x1 ?] [x2 ?] [x3 ?] ??. by transitivity x2.
 Qed.
 Instance sig_lexico_trichotomy `{Lexico A, tA : !TrichotomyT (@lexico A _)}
   (P : A → Prop) `{∀ x, ProofIrrel (P x)} : TrichotomyT (@lexico (sig P) _).

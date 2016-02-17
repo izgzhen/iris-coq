@@ -30,14 +30,14 @@ Section iprod_cofe.
   Definition iprod_cofe_mixin : CofeMixin (iprod B).
   Proof.
     split.
-    * intros f g; split; [intros Hfg n k; apply equiv_dist, Hfg|].
+    - intros f g; split; [intros Hfg n k; apply equiv_dist, Hfg|].
       intros Hfg k; apply equiv_dist; intros n; apply Hfg.
-    * intros n; split.
+    - intros n; split.
       + by intros f x.
       + by intros f g ? x.
       + by intros f g h ?? x; transitivity (g x).
-    * intros n f g Hfg x; apply dist_S, Hfg.
-    * intros c n x.
+    - intros n f g Hfg x; apply dist_S, Hfg.
+    - intros c n x.
       rewrite /compl /iprod_compl (conv_compl (iprod_chain c x) n).
       apply (chain_cauchy c); lia.
   Qed.
@@ -85,9 +85,9 @@ Section iprod_cofe.
     Timeless f → Timeless y → Timeless (iprod_insert x y f).
   Proof.
     intros ?? g Heq x'; destruct (decide (x = x')) as [->|].
-    * rewrite iprod_lookup_insert.
+    - rewrite iprod_lookup_insert.
       apply (timeless _). by rewrite -(Heq x') iprod_lookup_insert.
-    * rewrite iprod_lookup_insert_ne //.
+    - rewrite iprod_lookup_insert_ne //.
       apply (timeless _). by rewrite -(Heq x') iprod_lookup_insert_ne.
   Qed.
 
@@ -128,27 +128,27 @@ Section iprod_cmra.
   Lemma iprod_includedN_spec (f g : iprod B) n : f ≼{n} g ↔ ∀ x, f x ≼{n} g x.
   Proof.
     split.
-    * by intros [h Hh] x; exists (h x); rewrite /op /iprod_op (Hh x).
-    * intros Hh; exists (g ⩪ f)=> x; specialize (Hh x).
+    - by intros [h Hh] x; exists (h x); rewrite /op /iprod_op (Hh x).
+    - intros Hh; exists (g ⩪ f)=> x; specialize (Hh x).
       by rewrite /op /iprod_op /minus /iprod_minus cmra_op_minus.
   Qed.
 
   Definition iprod_cmra_mixin : CMRAMixin (iprod B).
   Proof.
     split.
-    * by intros n f1 f2 f3 Hf x; rewrite iprod_lookup_op (Hf x).
-    * by intros n f1 f2 Hf x; rewrite iprod_lookup_unit (Hf x).
-    * by intros n f1 f2 Hf ? x; rewrite -(Hf x).
-    * by intros n f f' Hf g g' Hg i; rewrite iprod_lookup_minus (Hf i) (Hg i).
-    * intros n f Hf x; apply cmra_validN_S, Hf.
-    * by intros f1 f2 f3 x; rewrite iprod_lookup_op assoc.
-    * by intros f1 f2 x; rewrite iprod_lookup_op comm.
-    * by intros f x; rewrite iprod_lookup_op iprod_lookup_unit cmra_unit_l.
-    * by intros f x; rewrite iprod_lookup_unit cmra_unit_idemp.
-    * intros n f1 f2; rewrite !iprod_includedN_spec=> Hf x.
+    - by intros n f1 f2 f3 Hf x; rewrite iprod_lookup_op (Hf x).
+    - by intros n f1 f2 Hf x; rewrite iprod_lookup_unit (Hf x).
+    - by intros n f1 f2 Hf ? x; rewrite -(Hf x).
+    - by intros n f f' Hf g g' Hg i; rewrite iprod_lookup_minus (Hf i) (Hg i).
+    - intros n f Hf x; apply cmra_validN_S, Hf.
+    - by intros f1 f2 f3 x; rewrite iprod_lookup_op assoc.
+    - by intros f1 f2 x; rewrite iprod_lookup_op comm.
+    - by intros f x; rewrite iprod_lookup_op iprod_lookup_unit cmra_unit_l.
+    - by intros f x; rewrite iprod_lookup_unit cmra_unit_idemp.
+    - intros n f1 f2; rewrite !iprod_includedN_spec=> Hf x.
       by rewrite iprod_lookup_unit; apply cmra_unit_preservingN, Hf.
-    * intros n f1 f2 Hf x; apply cmra_validN_op_l with (f2 x), Hf.
-    * intros n f1 f2; rewrite iprod_includedN_spec=> Hf x.
+    - intros n f1 f2 Hf x; apply cmra_validN_op_l with (f2 x), Hf.
+    - intros n f1 f2; rewrite iprod_includedN_spec=> Hf x.
       by rewrite iprod_lookup_op iprod_lookup_minus cmra_op_minus; try apply Hf.
   Qed.
   Definition iprod_cmra_extend_mixin : CMRAExtendMixin (iprod B).
@@ -164,9 +164,9 @@ Section iprod_cmra.
     (∀ x, CMRAIdentity (B x)) → CMRAIdentity iprodRA.
   Proof.
     intros ?; split.
-    * intros n x; apply cmra_empty_valid.
-    * by intros f x; rewrite iprod_lookup_op left_id.
-    * by apply _.
+    - intros n x; apply cmra_empty_valid.
+    - by intros f x; rewrite iprod_lookup_op left_id.
+    - by apply _.
   Qed.
 
   (** Internalized properties *)
@@ -223,8 +223,8 @@ Section iprod_cmra.
     iprod_singleton x y1 ⋅ iprod_singleton x y2 ≡ iprod_singleton x (y1 ⋅ y2).
   Proof.
     intros x'; destruct (decide (x' = x)) as [->|].
-    * by rewrite iprod_lookup_op !iprod_lookup_singleton.
-    * by rewrite iprod_lookup_op !iprod_lookup_singleton_ne // left_id.
+    - by rewrite iprod_lookup_op !iprod_lookup_singleton.
+    - by rewrite iprod_lookup_op !iprod_lookup_singleton_ne // left_id.
   Qed.
 
   Lemma iprod_singleton_updateP x (P : B x → Prop) (Q : iprod B → Prop) y1 :
@@ -245,8 +245,8 @@ Section iprod_cmra.
     intros Hx HQ gf n Hg. destruct (Hx (gf x) n) as (y2&?&?); first apply Hg.
     exists (iprod_singleton x y2); split; [by apply HQ|].
     intros x'; destruct (decide (x' = x)) as [->|].
-    * by rewrite iprod_lookup_op iprod_lookup_singleton.
-    * rewrite iprod_lookup_op iprod_lookup_singleton_ne //. apply Hg.
+    - by rewrite iprod_lookup_op iprod_lookup_singleton.
+    - rewrite iprod_lookup_op iprod_lookup_singleton_ne //. apply Hg.
   Qed.
   Lemma iprod_singleton_updateP_empty' x (P : B x → Prop) :
     ∅ ~~>: P → ∅ ~~>: λ g, ∃ y2, g = iprod_singleton x y2 ∧ P y2.
@@ -277,9 +277,9 @@ Instance iprod_map_cmra_monotone {A} {B1 B2: A → cmraT} (f : ∀ x, B1 x → B
   (∀ x, CMRAMonotone (f x)) → CMRAMonotone (iprod_map f).
 Proof.
   split.
-  * intros n g1 g2; rewrite !iprod_includedN_spec=> Hf x.
+  - intros n g1 g2; rewrite !iprod_includedN_spec=> Hf x.
     rewrite /iprod_map; apply includedN_preserving, Hf.
-  * intros n g Hg x; rewrite /iprod_map; apply validN_preserving, Hg.
+  - intros n g Hg x; rewrite /iprod_map; apply validN_preserving, Hg.
 Qed.
 
 Definition iprodC_map {A} {B1 B2 : A → cofeT} (f : iprod (λ x, B1 x -n> B2 x)) :

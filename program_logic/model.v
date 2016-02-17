@@ -17,14 +17,14 @@ Definition map {Λ : language} {Σ : iFunctor} {A1 A2 B1 B2 : cofeT}
 Definition result Λ Σ : solution (F Λ Σ).
 Proof.
   apply (solver.result _ (@map Λ Σ)).
-  * intros A B P. rewrite /map /= -{2}(uPred_map_id P). apply uPred_map_ext=> r.
+  - intros A B P. rewrite /map /= -{2}(uPred_map_id P). apply uPred_map_ext=> r.
     rewrite /= -{2}(res_map_id r); apply res_map_ext=>{r} r /=.
     by rewrite later_map_id.
-  * intros A1 A2 A3 B1 B2 B3 f g f' g' P. rewrite /map /=.
+  - intros A1 A2 A3 B1 B2 B3 f g f' g' P. rewrite /map /=.
     rewrite -uPred_map_compose. apply uPred_map_ext=>{P} r /=.
     rewrite -res_map_compose. apply res_map_ext=>{r} r /=.
     by rewrite -later_map_compose.
-  * intros A1 A2 B1 B2 n f f' Hf P [???].
+  - intros A1 A2 B1 B2 n f f' Hf P [???].
     apply upredC_map_ne, resC_map_ne, laterC_map_contractive.
     by intros i ?; apply Hf.
 Qed.

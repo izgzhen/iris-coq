@@ -370,9 +370,9 @@ Section setoid.
   Global Instance map_equivalence : Equivalence ((≡) : relation (list A)).
   Proof.
     split.
-    * intros l; induction l; constructor; auto.
-    * induction 1; constructor; auto.
-    * intros l1 l2 l3 Hl; revert l3.
+    - intros l; induction l; constructor; auto.
+    - induction 1; constructor; auto.
+    - intros l1 l2 l3 Hl; revert l3.
       induction Hl; inversion_clear 1; constructor; try etransitivity; eauto.
   Qed.
   Global Instance cons_proper : Proper ((≡) ==> (≡) ==> (≡)) (@cons A).
@@ -409,10 +409,10 @@ Proof. done. Qed.
 Lemma list_eq l1 l2 : (∀ i, l1 !! i = l2 !! i) → l1 = l2.
 Proof.
   revert l2. induction l1; intros [|??] H.
-  * done.
-  * discriminate (H 0).
-  * discriminate (H 0).
-  * f_equal; [by injection (H 0)|]. apply (IHl1 _ $ λ i, H (S i)).
+  - done.
+  - discriminate (H 0).
+  - discriminate (H 0).
+  - f_equal; [by injection (H 0)|]. apply (IHl1 _ $ λ i, H (S i)).
 Qed.
 Global Instance list_eq_dec {dec : ∀ x y, Decision (x = y)} : ∀ l k,
   Decision (l = k) := list_eq_dec dec.
@@ -455,10 +455,10 @@ Lemma list_eq_same_length l1 l2 n :
   (∀ i x y, i < n → l1 !! i = Some x → l2 !! i = Some y → x = y) → l1 = l2.
 Proof.
   intros <- Hlen Hl; apply list_eq; intros i. destruct (l2 !! i) as [x|] eqn:Hx.
-  * destruct (lookup_lt_is_Some_2 l1 i) as [y Hy].
+  - destruct (lookup_lt_is_Some_2 l1 i) as [y Hy].
     { rewrite Hlen; eauto using lookup_lt_Some. }
     rewrite Hy; f_equal; apply (Hl i); eauto using lookup_lt_Some.
-  * by rewrite lookup_ge_None, Hlen, <-lookup_ge_None.
+  - by rewrite lookup_ge_None, Hlen, <-lookup_ge_None.
 Qed.
 Lemma lookup_app_l l1 l2 i : i < length l1 → (l1 ++ l2) !! i = l1 !! i.
 Proof. revert i. induction l1; intros [|?]; simpl; auto with lia. Qed.
@@ -472,10 +472,10 @@ Lemma lookup_app_Some l1 l2 i x :
     l1 !! i = Some x ∨ length l1 ≤ i ∧ l2 !! (i - length l1) = Some x.
 Proof.
   split.
-  * revert i. induction l1 as [|y l1 IH]; intros [|i] ?;
+  - revert i. induction l1 as [|y l1 IH]; intros [|i] ?;
       simplify_equality'; auto with lia.
     destruct (IH i) as [?|[??]]; auto with lia.
-  * intros [?|[??]]; auto using lookup_app_l_Some. by rewrite lookup_app_r.
+  - intros [?|[??]]; auto using lookup_app_l_Some. by rewrite lookup_app_r.
 Qed.
 Lemma list_lookup_middle l1 l2 x n :
   n = length l1 → (l1 ++ x :: l2) !! n = Some x.
@@ -505,10 +505,10 @@ Lemma list_lookup_insert_Some l i x j y :
 Proof.
   destruct (decide (i = j)) as [->|];
     [split|rewrite list_lookup_insert_ne by done; tauto].
-  * intros Hy. assert (j < length l).
+  - intros Hy. assert (j < length l).
     { rewrite <-(insert_length l j x); eauto using lookup_lt_Some. }
     rewrite list_lookup_insert in Hy by done; naive_solver.
-  * intros [(?&?&?)|[??]]; rewrite ?list_lookup_insert; naive_solver.
+  - intros [(?&?&?)|[??]]; rewrite ?list_lookup_insert; naive_solver.
 Qed.
 Lemma list_insert_commute l i j x y :
   i ≠ j → <[i:=x]>(<[j:=y]>l) = <[j:=y]>(<[i:=x]>l).
@@ -517,8 +517,8 @@ Lemma list_lookup_other l i x :
   length l ≠ 1 → l !! i = Some x → ∃ j y, j ≠ i ∧ l !! j = Some y.
 Proof.
   intros. destruct i, l as [|x0 [|x1 l]]; simplify_equality'.
-  * by exists 1, x1.
-  * by exists 0, x0.
+  - by exists 1, x1.
+  - by exists 0, x0.
 Qed.
 Lemma alter_app_l f l1 l2 i :
   i < length l1 → alter f i (l1 ++ l2) = alter f i l1 ++ l2.
@@ -594,10 +594,10 @@ Proof.
   destruct (decide (i + length k ≤ j)).
   { rewrite list_lookup_inserts_ge by done; intuition lia. }
   split.
-  * intros Hy. assert (j < length l).
+  - intros Hy. assert (j < length l).
     { rewrite <-(inserts_length l i k); eauto using lookup_lt_Some. }
     rewrite list_lookup_inserts in Hy by lia. intuition lia.
-  * intuition. by rewrite list_lookup_inserts by lia.
+  - intuition. by rewrite list_lookup_inserts by lia.
 Qed.
 Lemma list_insert_inserts_lt l i j x k :
   i < j → <[i:=x]>(list_inserts j k l) = list_inserts j k (<[i:=x]>l).
@@ -622,8 +622,8 @@ Proof. rewrite elem_of_cons. tauto. Qed.
 Lemma elem_of_app l1 l2 x : x ∈ l1 ++ l2 ↔ x ∈ l1 ∨ x ∈ l2.
 Proof.
   induction l1.
-  * split; [by right|]. intros [Hx|]; [|done]. by destruct (elem_of_nil x).
-  * simpl. rewrite !elem_of_cons, IHl1. tauto.
+  - split; [by right|]. intros [Hx|]; [|done]. by destruct (elem_of_nil x).
+  - simpl. rewrite !elem_of_cons, IHl1. tauto.
 Qed.
 Lemma not_elem_of_app l1 l2 x : x ∉ l1 ++ l2 ↔ x ∉ l1 ∧ x ∉ l2.
 Proof. rewrite elem_of_app. tauto. Qed.
@@ -651,9 +651,9 @@ Lemma elem_of_list_omap {B} (f : A → option B) l (y : B) :
   y ∈ omap f l ↔ ∃ x, x ∈ l ∧ f x = Some y.
 Proof.
   split.
-  * induction l as [|x l]; csimpl; repeat case_match; inversion 1; subst;
+  - induction l as [|x l]; csimpl; repeat case_match; inversion 1; subst;
       setoid_rewrite elem_of_cons; naive_solver.
-  * intros (x&Hx&?). by induction Hx; csimpl; repeat case_match;
+  - intros (x&Hx&?). by induction Hx; csimpl; repeat case_match;
       simplify_equality; try constructor; auto.
 Qed.
 
@@ -671,17 +671,17 @@ Proof. constructor. apply not_elem_of_nil. constructor. Qed.
 Lemma NoDup_app l k : NoDup (l ++ k) ↔ NoDup l ∧ (∀ x, x ∈ l → x ∉ k) ∧ NoDup k.
 Proof.
   induction l; simpl.
-  * rewrite NoDup_nil. setoid_rewrite elem_of_nil. naive_solver.
-  * rewrite !NoDup_cons.
+  - rewrite NoDup_nil. setoid_rewrite elem_of_nil. naive_solver.
+  - rewrite !NoDup_cons.
     setoid_rewrite elem_of_cons. setoid_rewrite elem_of_app. naive_solver.
 Qed.
 Global Instance NoDup_proper: Proper ((≡ₚ) ==> iff) (@NoDup A).
 Proof.
   induction 1 as [|x l k Hlk IH | |].
-  * by rewrite !NoDup_nil.
-  * by rewrite !NoDup_cons, IH, Hlk.
-  * rewrite !NoDup_cons, !elem_of_cons. intuition.
-  * intuition.
+  - by rewrite !NoDup_nil.
+  - by rewrite !NoDup_cons, IH, Hlk.
+  - rewrite !NoDup_cons, !elem_of_cons. intuition.
+  - intuition.
 Qed.
 Lemma NoDup_lookup l i j x :
   NoDup l → l !! i = Some x → l !! j = Some x → i = j.
@@ -696,9 +696,9 @@ Lemma NoDup_alt l :
 Proof.
   split; eauto using NoDup_lookup.
   induction l as [|x l IH]; intros Hl; constructor.
-  * rewrite elem_of_list_lookup. intros [i ?].
+  - rewrite elem_of_list_lookup. intros [i ?].
     by feed pose proof (Hl (S i) 0 x); auto.
-  * apply IH. intros i j x' ??. by apply (inj S), (Hl (S i) (S j) x').
+  - apply IH. intros i j x' ??. by apply (inj S), (Hl (S i) (S j) x').
 Qed.
 
 Section no_dup_dec.
@@ -740,9 +740,9 @@ Section list_set.
   Lemma NoDup_list_difference l k : NoDup l → NoDup (list_difference l k).
   Proof.
     induction 1; simpl; try case_decide.
-    * constructor.
-    * done.
-    * constructor. rewrite elem_of_list_difference; intuition. done.
+    - constructor.
+    - done.
+    - constructor. rewrite elem_of_list_difference; intuition. done.
   Qed.
   Lemma elem_of_list_union l k x : x ∈ list_union l k ↔ x ∈ l ∨ x ∈ k.
   Proof.
@@ -752,9 +752,9 @@ Section list_set.
   Lemma NoDup_list_union l k : NoDup l → NoDup k → NoDup (list_union l k).
   Proof.
     intros. apply NoDup_app. repeat split.
-    * by apply NoDup_list_difference.
-    * intro. rewrite elem_of_list_difference. intuition.
-    * done.
+    - by apply NoDup_list_difference.
+    - intro. rewrite elem_of_list_difference. intuition.
+    - done.
   Qed.
   Lemma elem_of_list_intersection l k x :
     x ∈ list_intersection l k ↔ x ∈ l ∧ x ∈ k.
@@ -765,23 +765,23 @@ Section list_set.
   Lemma NoDup_list_intersection l k : NoDup l → NoDup (list_intersection l k).
   Proof.
     induction 1; simpl; try case_decide.
-    * constructor.
-    * constructor. rewrite elem_of_list_intersection; intuition. done.
-    * done.
+    - constructor.
+    - constructor. rewrite elem_of_list_intersection; intuition. done.
+    - done.
   Qed.
   Lemma elem_of_list_intersection_with f l k x :
     x ∈ list_intersection_with f l k ↔ ∃ x1 x2,
       x1 ∈ l ∧ x2 ∈ k ∧ f x1 x2 = Some x.
   Proof.
     split.
-    * induction l as [|x1 l IH]; simpl; [by rewrite elem_of_nil|].
+    - induction l as [|x1 l IH]; simpl; [by rewrite elem_of_nil|].
       intros Hx. setoid_rewrite elem_of_cons.
       cut ((∃ x2, x2 ∈ k ∧ f x1 x2 = Some x)
         ∨ x ∈ list_intersection_with f l k); [naive_solver|].
       clear IH. revert Hx. generalize (list_intersection_with f l k).
       induction k; simpl; [by auto|].
       case_match; setoid_rewrite elem_of_cons; naive_solver.
-    * intros (x1&x2&Hx1&Hx2&Hx). induction Hx1 as [x1|x1 ? l ? IH]; simpl.
+    - intros (x1&x2&Hx1&Hx2&Hx). induction Hx1 as [x1|x1 ? l ? IH]; simpl.
       + generalize (list_intersection_with f l k).
         induction Hx2; simpl; [by rewrite Hx; left |].
         case_match; simpl; try setoid_rewrite elem_of_cons; auto.
@@ -917,14 +917,14 @@ Proof. revert n i. induction l; intros [|?] [|?] ?; simpl; auto with lia. Qed.
 Lemma take_alter f l n i : n ≤ i → take n (alter f i l) = take n l.
 Proof.
   intros. apply list_eq. intros j. destruct (le_lt_dec n j).
-  * by rewrite !lookup_take_ge.
-  * by rewrite !lookup_take, !list_lookup_alter_ne by lia.
+  - by rewrite !lookup_take_ge.
+  - by rewrite !lookup_take, !list_lookup_alter_ne by lia.
 Qed.
 Lemma take_insert l n i x : n ≤ i → take n (<[i:=x]>l) = take n l.
 Proof.
   intros. apply list_eq. intros j. destruct (le_lt_dec n j).
-  * by rewrite !lookup_take_ge.
-  * by rewrite !lookup_take, !list_lookup_insert_ne by lia.
+  - by rewrite !lookup_take_ge.
+  - by rewrite !lookup_take, !list_lookup_insert_ne by lia.
 Qed.
 
 (** ** Properties of the [drop] function *)
@@ -988,8 +988,8 @@ Lemma lookup_replicate n x y i :
   replicate n x !! i = Some y ↔ y = x ∧ i < n.
 Proof.
   split.
-  * revert i. induction n; intros [|?]; naive_solver auto with lia.
-  * intros [-> Hi]. revert i Hi.
+  - revert i. induction n; intros [|?]; naive_solver auto with lia.
+  - intros [-> Hi]. revert i Hi.
     induction n; intros [|?]; naive_solver auto with lia.
 Qed.
 Lemma lookup_replicate_1 n x y i :
@@ -1000,8 +1000,8 @@ Proof. by rewrite lookup_replicate. Qed.
 Lemma lookup_replicate_None n x i : n ≤ i ↔ replicate n x !! i = None.
 Proof.
   rewrite eq_None_not_Some, Nat.le_ngt. split.
-  * intros Hin [x' Hx']; destruct Hin. rewrite lookup_replicate in Hx'; tauto.
-  * intros Hx ?. destruct Hx. exists x; auto using lookup_replicate_2.
+  - intros Hin [x' Hx']; destruct Hin. rewrite lookup_replicate in Hx'; tauto.
+  - intros Hx ?. destruct Hx. exists x; auto using lookup_replicate_2.
 Qed.
 Lemma insert_replicate x n i : <[i:=x]>(replicate n x) = replicate n x.
 Proof. revert i. induction n; intros [|?]; f_equal'; auto. Qed.
@@ -1025,8 +1025,8 @@ Lemma replicate_as_elem_of x n l :
 Proof.
   split; [intros <-; eauto using elem_of_replicate_inv, replicate_length|].
   intros [<- Hl]. symmetry. induction l as [|y l IH]; f_equal'.
-  * apply Hl. by left.
-  * apply IH. intros ??. apply Hl. by right.
+  - apply Hl. by left.
+  - apply IH. intros ??. apply Hl. by right.
 Qed.
 Lemma reverse_replicate n x : reverse (replicate n x) = replicate n x.
 Proof.
@@ -1060,8 +1060,8 @@ Lemma resize_plus l n m x :
   resize (n + m) x l = resize n x l ++ resize m x (drop n l).
 Proof.
   revert n m. induction l; intros [|?] [|?]; f_equal'; auto.
-  * by rewrite Nat.add_0_r, (right_id_L [] (++)).
-  * by rewrite replicate_plus.
+  - by rewrite Nat.add_0_r, (right_id_L [] (++)).
+  - by rewrite replicate_plus.
 Qed.
 Lemma resize_plus_eq l n m x :
   length l = n → resize (n + m) x l = l ++ replicate m x.
@@ -1086,8 +1086,8 @@ Proof. revert m. induction n; intros [|?]; f_equal'; auto. Qed.
 Lemma resize_resize l n m x : n ≤ m → resize n x (resize m x l) = resize n x l.
 Proof.
   revert n m. induction l; simpl.
-  * intros. by rewrite !resize_nil, resize_replicate.
-  * intros [|?] [|?] ?; f_equal'; auto with lia.
+  - intros. by rewrite !resize_nil, resize_replicate.
+  - intros [|?] [|?] ?; f_equal'; auto with lia.
 Qed.
 Lemma resize_idemp l n x : resize n x (resize n x l) = resize n x l.
 Proof. by rewrite resize_resize. Qed.
@@ -1109,8 +1109,8 @@ Lemma drop_resize_le l n m x :
   n ≤ m → drop n (resize m x l) = resize (m - n) x (drop n l).
 Proof.
   revert n m. induction l; simpl.
-  * intros. by rewrite drop_nil, !resize_nil, drop_replicate.
-  * intros [|?] [|?] ?; simpl; try case_match; auto with lia.
+  - intros. by rewrite drop_nil, !resize_nil, drop_replicate.
+  - intros [|?] [|?] ?; simpl; try case_match; auto with lia.
 Qed.
 Lemma drop_resize_plus l n m x :
   drop n (resize (n + m) x l) = resize m x (drop n l).
@@ -1118,8 +1118,8 @@ Proof. rewrite drop_resize_le by lia. f_equal. lia. Qed.
 Lemma lookup_resize l n x i : i < n → i < length l → resize n x l !! i = l !! i.
 Proof.
   intros ??. destruct (decide (n < length l)).
-  * by rewrite resize_le, lookup_take by lia.
-  * by rewrite resize_ge, lookup_app_l by lia.
+  - by rewrite resize_le, lookup_take by lia.
+  - by rewrite resize_ge, lookup_app_l by lia.
 Qed.
 Lemma lookup_resize_new l n x i :
   length l ≤ i → i < n → resize n x l !! i = Some x.
@@ -1205,14 +1205,14 @@ Lemma sublist_lookup_reshape l i n m :
   reshape (replicate m n) l !! i = sublist_lookup (i * n) n l.
 Proof.
   intros Hn Hl. unfold sublist_lookup.  apply option_eq; intros x; split.
-  * intros Hx. case_option_guard as Hi.
+  - intros Hx. case_option_guard as Hi.
     { f_equal. clear Hi. revert i l Hl Hx.
       induction m as [|m IH]; intros [|i] l ??; simplify_equality'; auto.
       rewrite <-drop_drop. apply IH; rewrite ?drop_length; auto with lia. }
     destruct Hi. rewrite Hl, <-Nat.mul_succ_l.
     apply Nat.mul_le_mono_r, Nat.le_succ_l. apply lookup_lt_Some in Hx.
     by rewrite reshape_length, replicate_length in Hx.
-  * intros Hx. case_option_guard as Hi; simplify_equality'.
+  - intros Hx. case_option_guard as Hi; simplify_equality'.
     revert i l Hl Hi. induction m as [|m IH]; [auto with lia|].
     intros [|i] l ??; simpl; [done|]. rewrite <-drop_drop.
     rewrite IH; rewrite ?drop_length; auto with lia.
@@ -1347,8 +1347,8 @@ Proof. induction 1; simpl; auto with lia. Qed.
 Global Instance: Comm (≡ₚ) (@app A).
 Proof.
   intros l1. induction l1 as [|x l1 IH]; intros l2; simpl.
-  * by rewrite (right_id_L [] (++)).
-  * rewrite Permutation_middle, IH. simpl. by rewrite Permutation_middle.
+  - by rewrite (right_id_L [] (++)).
+  - rewrite Permutation_middle, IH. simpl. by rewrite Permutation_middle.
 Qed.
 Global Instance: ∀ x : A, Inj (≡ₚ) (≡ₚ) (x ::).
 Proof. red. eauto using Permutation_cons_inv. Qed.
@@ -1364,8 +1364,8 @@ Qed.
 Lemma replicate_Permutation n x l : replicate n x ≡ₚ l → replicate n x = l.
 Proof.
   intros Hl. apply replicate_as_elem_of. split.
-  * by rewrite <-Hl, replicate_length.
-  * intros y. rewrite <-Hl. by apply elem_of_replicate_inv.
+  - by rewrite <-Hl, replicate_length.
+  - intros y. rewrite <-Hl. by apply elem_of_replicate_inv.
 Qed.
 Lemma reverse_Permutation l : reverse l ≡ₚ l.
 Proof.
@@ -1382,8 +1382,8 @@ Qed.
 Global Instance: PreOrder (@prefix_of A).
 Proof.
   split.
-  * intros ?. eexists []. by rewrite (right_id_L [] (++)).
-  * intros ???[k1->] [k2->]. exists (k1 ++ k2). by rewrite (assoc_L (++)).
+  - intros ?. eexists []. by rewrite (right_id_L [] (++)).
+  - intros ???[k1->] [k2->]. exists (k1 ++ k2). by rewrite (assoc_L (++)).
 Qed.
 Lemma prefix_of_nil l : [] `prefix_of` l.
 Proof. by exists l. Qed.
@@ -1415,8 +1415,8 @@ Proof. intros [??]. discriminate_list_equality. Qed.
 Global Instance: PreOrder (@suffix_of A).
 Proof.
   split.
-  * intros ?. by eexists [].
-  * intros ???[k1->] [k2->]. exists (k2 ++ k1). by rewrite (assoc_L (++)).
+  - intros ?. by eexists [].
+  - intros ???[k1->] [k2->]. exists (k2 ++ k1). by rewrite (assoc_L (++)).
 Qed.
 Global Instance prefix_of_dec `{∀ x y, Decision (x = y)} : ∀ l1 l2,
     Decision (l1 `prefix_of` l2) := fix go l1 l2 :=
@@ -1488,9 +1488,9 @@ Section prefix_ops.
   Proof.
     intros Hl ->. destruct (prefix_of_snoc_not k3 x2).
     eapply max_prefix_of_max_alt; eauto.
-    * rewrite (max_prefix_of_fst_alt _ _ _ _ _ Hl).
+    - rewrite (max_prefix_of_fst_alt _ _ _ _ _ Hl).
       apply prefix_of_app, prefix_of_cons, prefix_of_nil.
-    * rewrite (max_prefix_of_snd_alt _ _ _ _ _ Hl).
+    - rewrite (max_prefix_of_snd_alt _ _ _ _ _ Hl).
       apply prefix_of_app, prefix_of_cons, prefix_of_nil.
   Qed.
 End prefix_ops.
@@ -1499,8 +1499,8 @@ Lemma prefix_suffix_reverse l1 l2 :
   l1 `prefix_of` l2 ↔ reverse l1 `suffix_of` reverse l2.
 Proof.
   split; intros [k E]; exists (reverse k).
-  * by rewrite E, reverse_app.
-  * by rewrite <-(reverse_involutive l2), E, reverse_app, reverse_involutive.
+  - by rewrite E, reverse_app.
+  - by rewrite <-(reverse_involutive l2), E, reverse_app, reverse_involutive.
 Qed.
 Lemma suffix_prefix_reverse l1 l2 :
   l1 `suffix_of` l2 ↔ reverse l1 `prefix_of` reverse l2.
@@ -1626,9 +1626,9 @@ Section max_suffix_of.
   Proof.
     intros Hl ->. destruct (suffix_of_cons_not x2 k3).
     eapply max_suffix_of_max_alt; eauto.
-    * rewrite (max_suffix_of_fst_alt _ _ _ _ _ Hl).
+    - rewrite (max_suffix_of_fst_alt _ _ _ _ _ Hl).
       by apply (suffix_of_app [x2]), suffix_of_app_r.
-    * rewrite (max_suffix_of_snd_alt _ _ _ _ _ Hl).
+    - rewrite (max_suffix_of_snd_alt _ _ _ _ _ Hl).
       by apply (suffix_of_app [x2]), suffix_of_app_r.
   Qed.
 End max_suffix_of.
@@ -1654,37 +1654,37 @@ Lemma sublist_cons_l x l k :
   x :: l `sublist` k ↔ ∃ k1 k2, k = k1 ++ x :: k2 ∧ l `sublist` k2.
 Proof.
   split.
-  * intros Hlk. induction k as [|y k IH]; inversion Hlk.
+  - intros Hlk. induction k as [|y k IH]; inversion Hlk.
     + eexists [], k. by repeat constructor.
     + destruct IH as (k1&k2&->&?); auto. by exists (y :: k1), k2.
-  * intros (k1&k2&->&?). by apply sublist_inserts_l, sublist_skip.
+  - intros (k1&k2&->&?). by apply sublist_inserts_l, sublist_skip.
 Qed.
 Lemma sublist_app_r l k1 k2 :
   l `sublist` k1 ++ k2 ↔
     ∃ l1 l2, l = l1 ++ l2 ∧ l1 `sublist` k1 ∧ l2 `sublist` k2.
 Proof.
   split.
-  * revert l k2. induction k1 as [|y k1 IH]; intros l k2; simpl.
+  - revert l k2. induction k1 as [|y k1 IH]; intros l k2; simpl.
     { eexists [], l. by repeat constructor. }
     rewrite sublist_cons_r. intros [?|(l' & ? &?)]; subst.
     + destruct (IH l k2) as (l1&l2&?&?&?); trivial; subst.
       exists l1, l2. auto using sublist_cons.
     + destruct (IH l' k2) as (l1&l2&?&?&?); trivial; subst.
       exists (y :: l1), l2. auto using sublist_skip.
-  * intros (?&?&?&?&?); subst. auto using sublist_app.
+  - intros (?&?&?&?&?); subst. auto using sublist_app.
 Qed.
 Lemma sublist_app_l l1 l2 k :
   l1 ++ l2 `sublist` k ↔
     ∃ k1 k2, k = k1 ++ k2 ∧ l1 `sublist` k1 ∧ l2 `sublist` k2.
 Proof.
   split.
-  * revert l2 k. induction l1 as [|x l1 IH]; intros l2 k; simpl.
+  - revert l2 k. induction l1 as [|x l1 IH]; intros l2 k; simpl.
     { eexists [], k. by repeat constructor. }
     rewrite sublist_cons_l. intros (k1 & k2 &?&?); subst.
     destruct (IH l2 k2) as (h1 & h2 &?&?&?); trivial; subst.
     exists (k1 ++ x :: h1), h2. rewrite <-(assoc_L (++)).
     auto using sublist_inserts_l, sublist_skip.
-  * intros (?&?&?&?&?); subst. auto using sublist_app.
+  - intros (?&?&?&?&?); subst. auto using sublist_app.
 Qed.
 Lemma sublist_app_inv_l k l1 l2 : k ++ l1 `sublist` k ++ l2 → l1 `sublist` l2.
 Proof.
@@ -1707,14 +1707,14 @@ Qed.
 Global Instance: PartialOrder (@sublist A).
 Proof.
   split; [split|].
-  * intros l. induction l; constructor; auto.
-  * intros l1 l2 l3 Hl12. revert l3. induction Hl12.
+  - intros l. induction l; constructor; auto.
+  - intros l1 l2 l3 Hl12. revert l3. induction Hl12.
     + auto using sublist_nil_l.
     + intros ?. rewrite sublist_cons_l. intros (?&?&?&?); subst.
       eauto using sublist_inserts_l, sublist_skip.
     + intros ?. rewrite sublist_cons_l. intros (?&?&?&?); subst.
       eauto using sublist_inserts_l, sublist_cons.
-  * intros l1 l2 Hl12 Hl21. apply sublist_length in Hl21.
+  - intros l1 l2 Hl12 Hl21. apply sublist_length in Hl21.
     induction Hl12; f_equal'; auto with arith.
     apply sublist_length in Hl12. lia.
 Qed.
@@ -1735,10 +1735,10 @@ Proof.
   intros Hl12. cut (∀ k, ∃ is, k ++ l1 = foldr delete (k ++ l2) is).
   { intros help. apply (help []). }
   induction Hl12 as [|x l1 l2 _ IH|x l1 l2 _ IH]; intros k.
-  * by eexists [].
-  * destruct (IH (k ++ [x])) as [is His]. exists is.
+  - by eexists [].
+  - destruct (IH (k ++ [x])) as [is His]. exists is.
     by rewrite <-!(assoc_L (++)) in His.
-  * destruct (IH k) as [is His]. exists (is ++ [length k]).
+  - destruct (IH k) as [is His]. exists (is ++ [length k]).
     rewrite fold_right_app. simpl. by rewrite delete_middle.
 Qed.
 Lemma Permutation_sublist l1 l2 l3 :
@@ -1746,16 +1746,16 @@ Lemma Permutation_sublist l1 l2 l3 :
 Proof.
   intros Hl1l2. revert l3.
   induction Hl1l2 as [|x l1 l2 ? IH|x y l1|l1 l1' l2 ? IH1 ? IH2].
-  * intros l3. by exists l3.
-  * intros l3. rewrite sublist_cons_l. intros (l3'&l3''&?&?); subst.
+  - intros l3. by exists l3.
+  - intros l3. rewrite sublist_cons_l. intros (l3'&l3''&?&?); subst.
     destruct (IH l3'') as (l4&?&Hl4); auto. exists (l3' ++ x :: l4).
     split. by apply sublist_inserts_l, sublist_skip. by rewrite Hl4.
-  * intros l3. rewrite sublist_cons_l. intros (l3'&l3''&?& Hl3); subst.
+  - intros l3. rewrite sublist_cons_l. intros (l3'&l3''&?& Hl3); subst.
     rewrite sublist_cons_l in Hl3. destruct Hl3 as (l5'&l5''&?& Hl5); subst.
     exists (l3' ++ y :: l5' ++ x :: l5''). split.
-    - by do 2 apply sublist_inserts_l, sublist_skip.
-    - by rewrite !Permutation_middle, Permutation_swap.
-  * intros l3 ?. destruct (IH2 l3) as (l3'&?&?); trivial.
+    + by do 2 apply sublist_inserts_l, sublist_skip.
+    + by rewrite !Permutation_middle, Permutation_swap.
+  - intros l3 ?. destruct (IH2 l3) as (l3'&?&?); trivial.
     destruct (IH1 l3') as (l3'' &?&?); trivial. exists l3''.
     split. done. etransitivity; eauto.
 Qed.
@@ -1764,19 +1764,19 @@ Lemma sublist_Permutation l1 l2 l3 :
 Proof.
   intros Hl1l2 Hl2l3. revert l1 Hl1l2.
   induction Hl2l3 as [|x l2 l3 ? IH|x y l2|l2 l2' l3 ? IH1 ? IH2].
-  * intros l1. by exists l1.
-  * intros l1. rewrite sublist_cons_r. intros [?|(l1'&l1''&?)]; subst.
+  - intros l1. by exists l1.
+  - intros l1. rewrite sublist_cons_r. intros [?|(l1'&l1''&?)]; subst.
     { destruct (IH l1) as (l4&?&?); trivial.
       exists l4. split. done. by constructor. }
     destruct (IH l1') as (l4&?&Hl4); auto. exists (x :: l4).
     split. by constructor. by constructor.
-  * intros l1. rewrite sublist_cons_r. intros [Hl1|(l1'&l1''&Hl1)]; subst.
+  - intros l1. rewrite sublist_cons_r. intros [Hl1|(l1'&l1''&Hl1)]; subst.
     { exists l1. split; [done|]. rewrite sublist_cons_r in Hl1.
       destruct Hl1 as [?|(l1'&?&?)]; subst; by repeat constructor. }
     rewrite sublist_cons_r in Hl1. destruct Hl1 as [?|(l1''&?&?)]; subst.
     + exists (y :: l1'). by repeat constructor.
     + exists (x :: y :: l1''). by repeat constructor.
-  * intros l1 ?. destruct (IH1 l1) as (l3'&?&?); trivial.
+  - intros l1 ?. destruct (IH1 l1) as (l3'&?&?); trivial.
     destruct (IH2 l3') as (l3'' &?&?); trivial. exists l3''.
     split; [|done]. etransitivity; eauto.
 Qed.
@@ -1794,8 +1794,8 @@ Qed.
 Global Instance: PreOrder (@contains A).
 Proof.
   split.
-  * intros l. induction l; constructor; auto.
-  * red. apply contains_trans.
+  - intros l. induction l; constructor; auto.
+  - red. apply contains_trans.
 Qed.
 Lemma Permutation_contains l1 l2 : l1 ≡ₚ l2 → l1 `contains` l2.
 Proof. induction 1; econstructor; eauto. Qed.
@@ -1805,18 +1805,18 @@ Lemma contains_Permutation l1 l2 : l1 `contains` l2 → ∃ k, l2 ≡ₚ l1 ++ k
 Proof.
   induction 1 as
     [|x y l ? [k Hk]| |x l1 l2 ? [k Hk]|l1 l2 l3 ? [k Hk] ? [k' Hk']].
-  * by eexists [].
-  * exists k. by rewrite Hk.
-  * eexists []. rewrite (right_id_L [] (++)). by constructor.
-  * exists (x :: k). by rewrite Hk, Permutation_middle.
-  * exists (k ++ k'). by rewrite Hk', Hk, (assoc_L (++)).
+  - by eexists [].
+  - exists k. by rewrite Hk.
+  - eexists []. rewrite (right_id_L [] (++)). by constructor.
+  - exists (x :: k). by rewrite Hk, Permutation_middle.
+  - exists (k ++ k'). by rewrite Hk', Hk, (assoc_L (++)).
 Qed.
 Lemma contains_Permutation_length_le l1 l2 :
   length l2 ≤ length l1 → l1 `contains` l2 → l1 ≡ₚ l2.
 Proof.
   intros Hl21 Hl12. destruct (contains_Permutation l1 l2) as [[|??] Hk]; auto.
-  * by rewrite Hk, (right_id_L [] (++)).
-  * rewrite Hk, app_length in Hl21; simpl in Hl21; lia.
+  - by rewrite Hk, (right_id_L [] (++)).
+  - rewrite Hk, app_length in Hl21; simpl in Hl21; lia.
 Qed.
 Lemma contains_Permutation_length_eq l1 l2 :
   length l2 = length l1 → l1 `contains` l2 → l1 ≡ₚ l2.
@@ -1824,9 +1824,9 @@ Proof. intro. apply contains_Permutation_length_le. lia. Qed.
 Global Instance: Proper ((≡ₚ) ==> (≡ₚ) ==> iff) (@contains A).
 Proof.
   intros l1 l2 ? k1 k2 ?. split; intros.
-  * transitivity l1. by apply Permutation_contains.
+  - transitivity l1. by apply Permutation_contains.
     transitivity k1. done. by apply Permutation_contains.
-  * transitivity l2. by apply Permutation_contains.
+  - transitivity l2. by apply Permutation_contains.
     transitivity k2. done. by apply Permutation_contains.
 Qed.
 Global Instance: AntiSymm (≡ₚ) (@contains A).
@@ -1844,11 +1844,11 @@ Lemma contains_sublist_l l1 l3 :
 Proof.
   split.
   { intros Hl13. elim Hl13; clear l1 l3 Hl13.
-    * by eexists [].
-    * intros x l1 l3 ? (l2&?&?). exists (x :: l2). by repeat constructor.
-    * intros x y l. exists (y :: x :: l). by repeat constructor.
-    * intros x l1 l3 ? (l2&?&?). exists (x :: l2). by repeat constructor.
-    * intros l1 l3 l5 ? (l2&?&?) ? (l4&?&?).
+    - by eexists [].
+    - intros x l1 l3 ? (l2&?&?). exists (x :: l2). by repeat constructor.
+    - intros x y l. exists (y :: x :: l). by repeat constructor.
+    - intros x l1 l3 ? (l2&?&?). exists (x :: l2). by repeat constructor.
+    - intros l1 l3 l5 ? (l2&?&?) ? (l4&?&?).
       destruct (Permutation_sublist l2 l3 l4) as (l3'&?&?); trivial.
       exists l3'. split; etransitivity; eauto. }
   intros (l2&?&?).
@@ -1877,41 +1877,41 @@ Lemma contains_cons_r x l k :
   l `contains` x :: k ↔ l `contains` k ∨ ∃ l', l ≡ₚ x :: l' ∧ l' `contains` k.
 Proof.
   split.
-  * rewrite contains_sublist_r. intros (l'&E&Hl').
+  - rewrite contains_sublist_r. intros (l'&E&Hl').
     rewrite sublist_cons_r in Hl'. destruct Hl' as [?|(?&?&?)]; subst.
     + left. rewrite E. eauto using sublist_contains.
     + right. eauto using sublist_contains.
-  * intros [?|(?&E&?)]; [|rewrite E]; by constructor.
+  - intros [?|(?&E&?)]; [|rewrite E]; by constructor.
 Qed.
 Lemma contains_cons_l x l k :
   x :: l `contains` k ↔ ∃ k', k ≡ₚ x :: k' ∧ l `contains` k'.
 Proof.
   split.
-  * rewrite contains_sublist_l. intros (l'&Hl'&E).
+  - rewrite contains_sublist_l. intros (l'&Hl'&E).
     rewrite sublist_cons_l in Hl'. destruct Hl' as (k1&k2&?&?); subst.
     exists (k1 ++ k2). split; eauto using contains_inserts_l, sublist_contains.
     by rewrite Permutation_middle.
-  * intros (?&E&?). rewrite E. by constructor.
+  - intros (?&E&?). rewrite E. by constructor.
 Qed.
 Lemma contains_app_r l k1 k2 :
   l `contains` k1 ++ k2 ↔ ∃ l1 l2,
     l ≡ₚ l1 ++ l2 ∧ l1 `contains` k1 ∧ l2 `contains` k2.
 Proof.
   split.
-  * rewrite contains_sublist_r. intros (l'&E&Hl').
+  - rewrite contains_sublist_r. intros (l'&E&Hl').
     rewrite sublist_app_r in Hl'. destruct Hl' as (l1&l2&?&?&?); subst.
     exists l1, l2. eauto using sublist_contains.
-  * intros (?&?&E&?&?). rewrite E. eauto using contains_app.
+  - intros (?&?&E&?&?). rewrite E. eauto using contains_app.
 Qed.
 Lemma contains_app_l l1 l2 k :
   l1 ++ l2 `contains` k ↔ ∃ k1 k2,
     k ≡ₚ k1 ++ k2 ∧ l1 `contains` k1 ∧ l2 `contains` k2.
 Proof.
   split.
-  * rewrite contains_sublist_l. intros (l'&Hl'&E).
+  - rewrite contains_sublist_l. intros (l'&Hl'&E).
     rewrite sublist_app_l in Hl'. destruct Hl' as (k1&k2&?&?&?); subst.
     exists k1, k2. split. done. eauto using sublist_contains.
-  * intros (?&?&E&?&?). rewrite E. eauto using contains_app.
+  - intros (?&?&E&?&?). rewrite E. eauto using contains_app.
 Qed.
 Lemma contains_app_inv_l l1 l2 k :
   k ++ l1 `contains` k ++ l2 → l1 `contains` l2.
@@ -1947,8 +1947,8 @@ Lemma Permutation_alt l1 l2 :
   l1 ≡ₚ l2 ↔ length l1 = length l2 ∧ l1 `contains` l2.
 Proof.
   split.
-  * by intros Hl; rewrite Hl.
-  * intros [??]; auto using contains_Permutation_length_eq.
+  - by intros Hl; rewrite Hl.
+  - intros [??]; auto using contains_Permutation_length_eq.
 Qed.
 
 Lemma NoDup_contains l k : NoDup l → (∀ x, x ∈ l → x ∈ k) → l `contains` k.
@@ -1976,12 +1976,12 @@ Section contains_dec.
   Proof.
     intros Hl. revert k1. induction Hl
       as [|y l1 l2 ? IH|y1 y2 l|l1 l2 l3 ? IH1 ? IH2]; simpl; intros k1 Hk1.
-    * done.
-    * case_decide; simplify_equality; eauto.
+    - done.
+    - case_decide; simplify_equality; eauto.
       destruct (list_remove x l1) as [l|] eqn:?; simplify_equality.
       destruct (IH l) as (?&?&?); simplify_option_equality; eauto.
-    * simplify_option_equality; eauto using Permutation_swap.
-    * destruct (IH1 k1) as (k2&?&?); trivial.
+    - simplify_option_equality; eauto using Permutation_swap.
+    - destruct (IH1 k1) as (k2&?&?); trivial.
       destruct (IH2 k2) as (k3&?&?); trivial.
       exists k3. split; eauto. by transitivity k2.
   Qed.
@@ -1994,20 +1994,20 @@ Section contains_dec.
     l ≡ₚ x :: k → ∃ k', list_remove x l = Some k' ∧ k ≡ₚ k'.
   Proof.
     intros. destruct (list_remove_Permutation (x :: k) l k x) as (k'&?&?).
-    * done.
-    * simpl; by case_decide.
-    * by exists k'.
+    - done.
+    - simpl; by case_decide.
+    - by exists k'.
   Qed.
   Lemma list_remove_list_contains l1 l2 :
     l1 `contains` l2 ↔ is_Some (list_remove_list l1 l2).
   Proof.
     split.
-    * revert l2. induction l1 as [|x l1 IH]; simpl.
+    - revert l2. induction l1 as [|x l1 IH]; simpl.
       { intros l2 _. by exists l2. }
       intros l2. rewrite contains_cons_l. intros (k&Hk&?).
       destruct (list_remove_Some_inv l2 k x) as (k2&?&Hk2); trivial.
       simplify_option_equality. apply IH. by rewrite <-Hk2.
-    * intros [k Hk]. revert l2 k Hk.
+    - intros [k Hk]. revert l2 k Hk.
       induction l1 as [|x l1 IH]; simpl; intros l2 k.
       { intros. apply contains_nil_l. }
       destruct (list_remove x l2) as [k'|] eqn:?; intros; simplify_equality.
@@ -2168,8 +2168,8 @@ Section Forall_Exists.
   Lemma Exists_exists l : Exists P l ↔ ∃ x, x ∈ l ∧ P x.
   Proof.
     split.
-    * induction 1 as [x|y ?? [x [??]]]; exists x; by repeat constructor.
-    * intros [x [Hin ?]]. induction l; [by destruct (not_elem_of_nil x)|].
+    - induction 1 as [x|y ?? [x [??]]]; exists x; by repeat constructor.
+    - intros [x [Hin ?]]. induction l; [by destruct (not_elem_of_nil x)|].
       inversion Hin; subst. by left. right; auto.
   Qed.
   Lemma Exists_inv x l : Exists P (x :: l) → P x ∨ Exists P l.
@@ -2177,8 +2177,8 @@ Section Forall_Exists.
   Lemma Exists_app l1 l2 : Exists P (l1 ++ l2) ↔ Exists P l1 ∨ Exists P l2.
   Proof.
     split.
-    * induction l1; inversion 1; intuition.
-    * intros [H|H]; [induction H | induction l1]; simpl; intuition.
+    - induction l1; inversion 1; intuition.
+    - intros [H|H]; [induction H | induction l1]; simpl; intuition.
   Qed.
   Lemma Exists_impl (Q : A → Prop) l :
     Exists P l → (∀ x, P x → Q x) → Exists Q l.
@@ -2238,9 +2238,9 @@ Lemma Forall_seq (P : nat → Prop) i n :
   Forall P (seq i n) ↔ ∀ j, i ≤ j < i + n → P j.
 Proof.
   rewrite Forall_lookup. split.
-  * intros H j [??]. apply (H (j - i)).
+  - intros H j [??]. apply (H (j - i)).
     rewrite lookup_seq; auto with f_equal lia.
-  * intros H j x Hj. apply lookup_seq_inv in Hj.
+  - intros H j x Hj. apply lookup_seq_inv in Hj.
     destruct Hj; subst. auto with lia.
 Qed.
 
@@ -2441,8 +2441,8 @@ Section Forall2.
   Proof.
     unfold sublist_lookup. intros Hlk Hl.
     exists (take i (drop n k)); simplify_option_equality.
-    * auto using Forall2_take, Forall2_drop.
-    * apply Forall2_length in Hlk; lia.
+    - auto using Forall2_take, Forall2_drop.
+    - apply Forall2_length in Hlk; lia.
   Qed.
   Lemma Forall2_sublist_lookup_r l k n i k' :
     Forall2 P l k → sublist_lookup n i k = Some k' →
@@ -2540,9 +2540,9 @@ Section Forall3.
      k = k1 ++ k2 ∧ k' = k1' ++ k2' ∧ Forall3 P l1 k1 k1' ∧ Forall3 P l2 k2 k2'.
   Proof.
     revert k k'. induction l1 as [|x l1 IH]; simpl; inversion_clear 1.
-    * by repeat eexists; eauto.
-    * by repeat eexists; eauto.
-    * edestruct IH as (?&?&?&?&?&?&?&?); eauto; naive_solver.
+    - by repeat eexists; eauto.
+    - by repeat eexists; eauto.
+    - edestruct IH as (?&?&?&?&?&?&?&?); eauto; naive_solver.
   Qed.
   Lemma Forall3_cons_inv_m l y k k' :
     Forall3 P l (y :: k) k' → ∃ x l2 z k2',
@@ -2553,9 +2553,9 @@ Section Forall3.
      l = l1 ++ l2 ∧ k' = k1' ++ k2' ∧ Forall3 P l1 k1 k1' ∧ Forall3 P l2 k2 k2'.
   Proof.
     revert l k'. induction k1 as [|x k1 IH]; simpl; inversion_clear 1.
-    * by repeat eexists; eauto.
-    * by repeat eexists; eauto.
-    * edestruct IH as (?&?&?&?&?&?&?&?); eauto; naive_solver.
+    - by repeat eexists; eauto.
+    - by repeat eexists; eauto.
+    - edestruct IH as (?&?&?&?&?&?&?&?); eauto; naive_solver.
   Qed.
   Lemma Forall3_cons_inv_r l k z k' :
     Forall3 P l k (z :: k') → ∃ x l2 y k2,
@@ -2566,9 +2566,9 @@ Section Forall3.
       l = l1 ++ l2 ∧ k = k1 ++ k2 ∧ Forall3 P l1 k1 k1' ∧ Forall3 P l2 k2 k2'.
   Proof.
     revert l k. induction k1' as [|x k1' IH]; simpl; inversion_clear 1.
-    * by repeat eexists; eauto.
-    * by repeat eexists; eauto.
-    * edestruct IH as (?&?&?&?&?&?&?&?); eauto; naive_solver.
+    - by repeat eexists; eauto.
+    - by repeat eexists; eauto.
+    - edestruct IH as (?&?&?&?&?&?&?&?); eauto; naive_solver.
   Qed.
   Lemma Forall3_impl (Q : A → B → C → Prop) l k k' :
     Forall3 P l k k' → (∀ x y z, P x y z → Q x y z) → Forall3 Q l k k'.
@@ -2682,8 +2682,8 @@ Section fmap.
   Lemma elem_of_list_fmap_2 l x : x ∈ f <$> l → ∃ y, x = f y ∧ y ∈ l.
   Proof.
     induction l as [|y l IH]; simpl; inversion_clear 1.
-    * exists y. split; [done | by left].
-    * destruct IH as [z [??]]. done. exists z. split; [done | by right].
+    - exists y. split; [done | by left].
+    - destruct IH as [z [??]]. done. exists z. split; [done | by right].
   Qed.
   Lemma elem_of_list_fmap l x : x ∈ f <$> l ↔ ∃ y, x = f y ∧ y ∈  l.
   Proof.
@@ -2750,10 +2750,10 @@ Lemma NoDup_fmap_fst {A B} (l : list (A * B)) :
   (∀ x y1 y2, (x,y1) ∈ l → (x,y2) ∈ l → y1 = y2) → NoDup l → NoDup (l.*1).
 Proof.
   intros Hunique. induction 1 as [|[x1 y1] l Hin Hnodup IH]; csimpl; constructor.
-  * rewrite elem_of_list_fmap.
+  - rewrite elem_of_list_fmap.
     intros [[x2 y2] [??]]; simpl in *; subst. destruct Hin.
     rewrite (Hunique x2 y1 y2); rewrite ?elem_of_cons; auto.
-  * apply IH. intros. eapply Hunique; rewrite ?elem_of_cons; eauto.
+  - apply IH. intros. eapply Hunique; rewrite ?elem_of_cons; eauto.
 Qed.
 
 Section bind.
@@ -2773,17 +2773,17 @@ Section bind.
   Global Instance bind_contains: Proper (contains ==> contains) (mbind f).
   Proof.
     induction 1; csimpl; auto.
-    * by apply contains_app.
-    * by rewrite !(assoc_L (++)), (comm (++) (f _)).
-    * by apply contains_inserts_l.
-    * etransitivity; eauto.
+    - by apply contains_app.
+    - by rewrite !(assoc_L (++)), (comm (++) (f _)).
+    - by apply contains_inserts_l.
+    - etransitivity; eauto.
   Qed.
   Global Instance bind_Permutation: Proper ((≡ₚ) ==> (≡ₚ)) (mbind f).
   Proof.
     induction 1; csimpl; auto.
-    * by f_equiv.
-    * by rewrite !(assoc_L (++)), (comm (++) (f _)).
-    * etransitivity; eauto.
+    - by f_equiv.
+    - by rewrite !(assoc_L (++)), (comm (++) (f _)).
+    - etransitivity; eauto.
   Qed.
   Lemma bind_cons x l : (x :: l) ≫= f = f x ++ l ≫= f.
   Proof. done. Qed.
@@ -2795,18 +2795,18 @@ Section bind.
     x ∈ l ≫= f ↔ ∃ y, x ∈ f y ∧ y ∈ l.
   Proof.
     split.
-    * induction l as [|y l IH]; csimpl; [inversion 1|].
+    - induction l as [|y l IH]; csimpl; [inversion 1|].
       rewrite elem_of_app. intros [?|?].
       + exists y. split; [done | by left].
       + destruct IH as [z [??]]. done. exists z. split; [done | by right].
-    * intros [y [Hx Hy]]. induction Hy; csimpl; rewrite elem_of_app; intuition.
+    - intros [y [Hx Hy]]. induction Hy; csimpl; rewrite elem_of_app; intuition.
   Qed.
   Lemma Forall_bind (P : B → Prop) l :
     Forall P (l ≫= f) ↔ Forall (Forall P ∘ f) l.
   Proof.
     split.
-    * induction l; csimpl; rewrite ?Forall_app; constructor; csimpl; intuition.
-    * induction 1; csimpl; rewrite ?Forall_app; auto.
+    - induction l; csimpl; rewrite ?Forall_app; constructor; csimpl; intuition.
+    - induction 1; csimpl; rewrite ?Forall_app; auto.
   Qed.
   Lemma Forall2_bind {C D} (g : C → list D) (P : B → D → Prop) l1 l2 :
     Forall2 (λ x1 x2, Forall2 P (f x1) (g x2)) l1 l2 →
@@ -2858,8 +2858,8 @@ Section mapM.
   Lemma mapM_Some_1 l k : mapM f l = Some k → Forall2 (λ x y, f x = Some y) l k.
   Proof.
     revert k. induction l as [|x l]; intros [|y k]; simpl; try done.
-    * destruct (f x); simpl; [|discriminate]. by destruct (mapM f l).
-    * destruct (f x) eqn:?; intros; simplify_option_equality; auto.
+    - destruct (f x); simpl; [|discriminate]. by destruct (mapM f l).
+    - destruct (f x) eqn:?; intros; simplify_option_equality; auto.
   Qed.
   Lemma mapM_Some_2 l k : Forall2 (λ x y, f x = Some y) l k → mapM f l = Some k.
   Proof.
@@ -2916,8 +2916,8 @@ Section permutations.
   Lemma interleave_Permutation x l l' : l' ∈ interleave x l → l' ≡ₚ x :: l.
   Proof.
     revert l'. induction l as [|y l IH]; intros l'; simpl.
-    * rewrite elem_of_list_singleton. by intros ->.
-    * rewrite elem_of_cons, elem_of_list_fmap. intros [->|[? [-> H]]]; [done|].
+    - rewrite elem_of_list_singleton. by intros ->.
+    - rewrite elem_of_cons, elem_of_list_fmap. intros [->|[? [-> H]]]; [done|].
       rewrite (IH _ H). constructor.
   Qed.
   Lemma permutations_refl l : l ∈ permutations l.
@@ -2931,8 +2931,8 @@ Section permutations.
   Lemma permutations_swap x y l : y :: x :: l ∈ permutations (x :: y :: l).
   Proof.
     simpl. apply elem_of_list_bind. exists (y :: l). split; simpl.
-    * destruct l; csimpl; rewrite !elem_of_cons; auto.
-    * apply elem_of_list_bind. simpl.
+    - destruct l; csimpl; rewrite !elem_of_cons; auto.
+    - apply elem_of_list_bind. simpl.
       eauto using interleave_cons, permutations_refl.
   Qed.
   Lemma permutations_nil l : l ∈ permutations [] ↔ l = [].
@@ -2947,12 +2947,12 @@ Section permutations.
       by rewrite (comm (++)), elem_of_list_singleton. }
     rewrite elem_of_cons, elem_of_list_fmap.
     intros Hl1 [? | [l2' [??]]]; simplify_equality'.
-    * rewrite !elem_of_cons, elem_of_list_fmap in Hl1.
+    - rewrite !elem_of_cons, elem_of_list_fmap in Hl1.
       destruct Hl1 as [? | [? | [l4 [??]]]]; subst.
       + exists (x1 :: y :: l3). csimpl. rewrite !elem_of_cons. tauto.
       + exists (x1 :: y :: l3). csimpl. rewrite !elem_of_cons. tauto.
       + exists l4. simpl. rewrite elem_of_cons. auto using interleave_cons.
-    * rewrite elem_of_cons, elem_of_list_fmap in Hl1.
+    - rewrite elem_of_cons, elem_of_list_fmap in Hl1.
       destruct Hl1 as [? | [l1' [??]]]; subst.
       + exists (x1 :: y :: l3). csimpl.
         rewrite !elem_of_cons, !elem_of_list_fmap.
@@ -2970,9 +2970,9 @@ Section permutations.
       by rewrite elem_of_list_singleton. }
     rewrite elem_of_cons, elem_of_list_fmap.
     intros Hl1 [? | [l2' [? Hl2']]]; simplify_equality'.
-    * rewrite elem_of_list_bind in Hl1.
+    - rewrite elem_of_list_bind in Hl1.
       destruct Hl1 as [l1' [??]]. by exists l1'.
-    * rewrite elem_of_list_bind in Hl1. setoid_rewrite elem_of_list_bind.
+    - rewrite elem_of_list_bind in Hl1. setoid_rewrite elem_of_list_bind.
       destruct Hl1 as [l1' [??]]. destruct (IH l1' l2') as (l1''&?&?); auto.
       destruct (interleave_interleave_toggle y x l1 l1' l1'') as (?&?&?); eauto.
   Qed.
@@ -2980,19 +2980,19 @@ Section permutations.
     l1 ∈ permutations l2 → l2 ∈ permutations l3 → l1 ∈ permutations l3.
   Proof.
     revert l1 l2. induction l3 as [|x l3 IH]; intros l1 l2; simpl.
-    * rewrite !elem_of_list_singleton. intros Hl1 ->; simpl in *.
+    - rewrite !elem_of_list_singleton. intros Hl1 ->; simpl in *.
       by rewrite elem_of_list_singleton in Hl1.
-    * rewrite !elem_of_list_bind. intros Hl1 [l2' [Hl2 Hl2']].
+    - rewrite !elem_of_list_bind. intros Hl1 [l2' [Hl2 Hl2']].
       destruct (permutations_interleave_toggle x l1 l2 l2') as [? [??]]; eauto.
   Qed.
   Lemma permutations_Permutation l l' : l' ∈ permutations l ↔ l ≡ₚ l'.
   Proof.
     split.
-    * revert l'. induction l; simpl; intros l''.
+    - revert l'. induction l; simpl; intros l''.
       + rewrite elem_of_list_singleton. by intros ->.
       + rewrite elem_of_list_bind. intros [l' [Hl'' ?]].
         rewrite (interleave_Permutation _ _ _ Hl''). constructor; auto.
-    * induction 1; eauto using permutations_refl,
+    - induction 1; eauto using permutations_refl,
         permutations_skip, permutations_swap, permutations_trans.
   Qed.
 End permutations.
@@ -3195,11 +3195,11 @@ Lemma elem_of_zipped_map {A B} (f : list A → list A → A → B) l k x :
     ∃ k' k'' y, k = k' ++ [y] ++ k'' ∧ x = f (reverse k' ++ l) k'' y.
 Proof.
   split.
-  * revert l. induction k as [|z k IH]; simpl; intros l; inversion_clear 1.
+  - revert l. induction k as [|z k IH]; simpl; intros l; inversion_clear 1.
     { by eexists [], k, z. }
     destruct (IH (z :: l)) as (k'&k''&y&->&->); [done |].
     eexists (z :: k'), k'', y. by rewrite reverse_cons, <-(assoc_L (++)).
-  * intros (k'&k''&y&->&->). revert l. induction k' as [|z k' IH]; [by left|].
+  - intros (k'&k''&y&->&->). revert l. induction k' as [|z k' IH]; [by left|].
     intros l; right. by rewrite reverse_cons, <-!(assoc_L (++)).
 Qed.
 Section zipped_list_ind.
@@ -3276,9 +3276,9 @@ Section eval.
   Lemma eval_alt t : eval E t = to_list t ≫= from_option [] ∘ (E !!).
   Proof.
     induction t; csimpl.
-    * done.
-    * by rewrite (right_id_L [] (++)).
-    * rewrite bind_app. by f_equal.
+    - done.
+    - by rewrite (right_id_L [] (++)).
+    - rewrite bind_app. by f_equal.
   Qed.
   Lemma eval_eq t1 t2 : to_list t1 = to_list t2 → eval E t1 = eval E t2.
   Proof. intros Ht. by rewrite !eval_alt, Ht. Qed.

@@ -53,15 +53,15 @@ Instance res_compl : Compl (res Λ Σ A) := λ c,
 Definition res_cofe_mixin : CofeMixin (res Λ Σ A).
 Proof.
   split.
-  * intros w1 w2; split.
+  - intros w1 w2; split.
     + by destruct 1; constructor; apply equiv_dist.
     + by intros Hw; constructor; apply equiv_dist=>n; destruct (Hw n).
-  * intros n; split.
+  - intros n; split.
     + done.
     + by destruct 1; constructor.
     + do 2 destruct 1; constructor; etransitivity; eauto.
-  * by destruct 1; constructor; apply dist_S.
-  * intros c n; constructor.
+  - by destruct 1; constructor; apply dist_S.
+  - intros c n; constructor.
     + apply (conv_compl (chain_map wld c) n).
     + apply (conv_compl (chain_map pst c) n).
     + apply (conv_compl (chain_map gst c) n).
@@ -97,21 +97,21 @@ Qed.
 Definition res_cmra_mixin : CMRAMixin (res Λ Σ A).
 Proof.
   split.
-  * by intros n x [???] ? [???]; constructor; simpl in *; cofe_subst.
-  * by intros n [???] ? [???]; constructor; simpl in *; cofe_subst.
-  * by intros n [???] ? [???] (?&?&?); split_ands'; simpl in *; cofe_subst.
-  * by intros n [???] ? [???] [???] ? [???];
+  - by intros n x [???] ? [???]; constructor; simpl in *; cofe_subst.
+  - by intros n [???] ? [???]; constructor; simpl in *; cofe_subst.
+  - by intros n [???] ? [???] (?&?&?); split_ands'; simpl in *; cofe_subst.
+  - by intros n [???] ? [???] [???] ? [???];
       constructor; simpl in *; cofe_subst.
-  * by intros n ? (?&?&?); split_ands'; apply cmra_validN_S.
-  * by intros ???; constructor; rewrite /= assoc.
-  * by intros ??; constructor; rewrite /= comm.
-  * by intros ?; constructor; rewrite /= cmra_unit_l.
-  * by intros ?; constructor; rewrite /= cmra_unit_idemp.
-  * intros n r1 r2; rewrite !res_includedN.
+  - by intros n ? (?&?&?); split_ands'; apply cmra_validN_S.
+  - by intros ???; constructor; rewrite /= assoc.
+  - by intros ??; constructor; rewrite /= comm.
+  - by intros ?; constructor; rewrite /= cmra_unit_l.
+  - by intros ?; constructor; rewrite /= cmra_unit_idemp.
+  - intros n r1 r2; rewrite !res_includedN.
     by intros (?&?&?); split_ands'; apply cmra_unit_preservingN.
-  * intros n r1 r2 (?&?&?);
+  - intros n r1 r2 (?&?&?);
       split_ands'; simpl in *; eapply cmra_validN_op_l; eauto.
-  * intros n r1 r2; rewrite res_includedN; intros (?&?&?).
+  - intros n r1 r2; rewrite res_includedN; intros (?&?&?).
     by constructor; apply cmra_op_minus.
 Qed.
 Definition res_cmra_extend_mixin : CMRAExtendMixin (res Λ Σ A).
@@ -127,9 +127,9 @@ Canonical Structure resRA : cmraT :=
 Global Instance res_cmra_identity : CMRAIdentity resRA.
 Proof.
   split.
-  * intros n; split_ands'; apply cmra_empty_valid.
-  * by split; rewrite /= left_id.
-  * apply _.
+  - intros n; split_ands'; apply cmra_empty_valid.
+  - by split; rewrite /= left_id.
+  - apply _.
 Qed.
 
 Definition update_pst (σ : state Λ) (r : res Λ Σ A) : res Λ Σ A :=
@@ -179,34 +179,34 @@ Proof. by intros Hf n [] ? [???]; constructor; simpl in *; cofe_subst. Qed.
 Lemma res_map_id {Λ Σ A} (r : res Λ Σ A) : res_map cid r ≡ r.
 Proof.
   constructor; simpl; [|done|].
-  * rewrite -{2}(map_fmap_id (wld r)); apply map_fmap_setoid_ext=> i y ? /=.
+  - rewrite -{2}(map_fmap_id (wld r)); apply map_fmap_setoid_ext=> i y ? /=.
     by rewrite -{2}(agree_map_id y); apply agree_map_ext.
-  * rewrite -{2}(option_fmap_id (gst r)); apply option_fmap_setoid_ext=> m /=.
+  - rewrite -{2}(option_fmap_id (gst r)); apply option_fmap_setoid_ext=> m /=.
     by rewrite -{2}(ifunctor_map_id Σ m); apply ifunctor_map_ext.
 Qed.
 Lemma res_map_compose {Λ Σ A B C} (f : A -n> B) (g : B -n> C) (r : res Λ Σ A) :
   res_map (g ◎ f) r ≡ res_map g (res_map f r).
 Proof.
   constructor; simpl; [|done|].
-  * rewrite -map_fmap_compose; apply map_fmap_setoid_ext=> i y _ /=.
+  - rewrite -map_fmap_compose; apply map_fmap_setoid_ext=> i y _ /=.
     by rewrite -agree_map_compose; apply agree_map_ext.
-  * rewrite -option_fmap_compose; apply option_fmap_setoid_ext=> m /=.
+  - rewrite -option_fmap_compose; apply option_fmap_setoid_ext=> m /=.
     by rewrite -ifunctor_map_compose; apply ifunctor_map_ext.
 Qed.
 Lemma res_map_ext {Λ Σ A B} (f g : A -n> B) (r : res Λ Σ A) :
   (∀ x, f x ≡ g x) → res_map f r ≡ res_map g r.
 Proof.
   intros Hfg; split; simpl; auto.
-  * by apply map_fmap_setoid_ext=>i x ?; apply agree_map_ext.
-  * by apply option_fmap_setoid_ext=>m; apply ifunctor_map_ext.
+  - by apply map_fmap_setoid_ext=>i x ?; apply agree_map_ext.
+  - by apply option_fmap_setoid_ext=>m; apply ifunctor_map_ext.
 Qed.
 Instance res_map_cmra_monotone {Λ Σ} {A B : cofeT} (f : A -n> B) :
   CMRAMonotone (@res_map Λ Σ _ _ f).
 Proof.
   split.
-  * by intros n r1 r2; rewrite !res_includedN;
+  - by intros n r1 r2; rewrite !res_includedN;
       intros (?&?&?); split_ands'; simpl; try apply includedN_preserving.
-  * by intros n r (?&?&?); split_ands'; simpl; try apply validN_preserving.
+  - by intros n r (?&?&?); split_ands'; simpl; try apply validN_preserving.
 Qed.
 Definition resC_map {Λ Σ A B} (f : A -n> B) : resC Λ Σ A -n> resC Λ Σ B :=
   CofeMor (res_map f : resRA Λ Σ A → resRA Λ Σ B).
@@ -214,8 +214,8 @@ Instance resC_map_ne {Λ Σ A B} n :
   Proper (dist n ==> dist n) (@resC_map Λ Σ A B).
 Proof.
   intros f g Hfg r; split; simpl; auto.
-  * by apply (mapC_map_ne _ (agreeC_map f) (agreeC_map g)), agreeC_map_ne.
-  * by apply optionC_map_ne, ifunctor_map_ne.
+  - by apply (mapC_map_ne _ (agreeC_map f) (agreeC_map g)), agreeC_map_ne.
+  - by apply optionC_map_ne, ifunctor_map_ne.
 Qed.
 
 Program Definition resF {Λ Σ} : iFunctor := {|

@@ -41,8 +41,8 @@ Next Obligation.
   intros Λ Σ E e Q r1 r2 n1; revert Q E e r1 r2.
   induction n1 as [n1 IH] using lt_wf_ind; intros Q E e r1 r1' n2.
   destruct 1 as [|n1 r1 e1 ? Hgo].
-  * constructor; eauto using uPred_weaken.
-  * intros [rf' Hr] ??; constructor; [done|intros rf k Ef σ1 ???].
+  - constructor; eauto using uPred_weaken.
+  - intros [rf' Hr] ??; constructor; [done|intros rf k Ef σ1 ???].
     destruct (Hgo (rf' ⋅ rf) k Ef σ1) as [Hsafe Hstep];
       rewrite ?assoc -?Hr; auto; constructor; [done|].
     intros e2 σ2 ef ?; destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
@@ -143,8 +143,8 @@ Proof.
   apply pvs_trans in Hvs'; auto.
   destruct (Hvs' (r2' ⋅ rf) k Ef σ2) as (r3&[]); rewrite ?assoc; auto.
   exists r3, r2'; split_ands; last done.
-  * by rewrite -assoc.
-  * constructor; apply pvs_intro; auto.
+  - by rewrite -assoc.
+  - constructor; apply pvs_intro; auto.
 Qed.
 Lemma wp_frame_r E e Q R : (wp E e Q ★ R) ⊑ wp E e (λ v, Q v ★ R).
 Proof.
@@ -159,9 +159,9 @@ Proof.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
   exists (r2 ⋅ rR), r2'; split_ands; auto.
-  * by rewrite -(assoc _ r2)
+  - by rewrite -(assoc _ r2)
       (comm _ rR) !assoc -(assoc _ _ rR).
-  * apply IH; eauto using uPred_weaken.
+  - apply IH; eauto using uPred_weaken.
 Qed.
 Lemma wp_frame_later_r E e Q R :
   to_val e = None → (wp E e Q ★ ▷ R) ⊑ wp E e (λ v, Q v ★ R).
@@ -173,9 +173,9 @@ Proof.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
   exists (r2 ⋅ rR), r2'; split_ands; auto.
-  * by rewrite -(assoc _ r2)
+  - by rewrite -(assoc _ r2)
       (comm _ rR) !assoc -(assoc _ _ rR).
-  * apply wp_frame_r; [auto|exists r2, rR; split_ands; auto].
+  - apply wp_frame_r; [auto|exists r2, rR; split_ands; auto].
     eapply uPred_weaken with rR n; eauto.
 Qed.
 Lemma wp_bind `{LanguageCtx Λ K} E e Q :

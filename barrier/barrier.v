@@ -142,7 +142,7 @@ Section proof.
     apply exist_elim=>γ. wp_rec. (* FIXME wp_let *)
     (* I think some evars here are better than repeating *everything* *)
     eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ);simpl; eauto with I.
-    { solve_elem_of+. (* FIXME eauto should do this  *) }
+    { solve_elem_of+. (* FIXME eauto should do this *) }
     rewrite [(_ ★ sts_ownS _ _ _)%I]comm -!assoc /wp_fsa. apply sep_mono_r.
     apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
     apply const_elim_sep_l=>Hs. destruct p; last done.

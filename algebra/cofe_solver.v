@@ -43,8 +43,8 @@ Qed.
 Lemma fg {k} (x : A (S (S k))) : f (S k) (g (S k) x) ≡{k}≡ x.
 Proof.
   induction k as [|k IH]; simpl.
-  * rewrite f_S g_S -{2}(map_id _ _ x) -map_comp. apply (contractive_0 map).
-  * rewrite f_S g_S -{2}(map_id _ _ x) -map_comp. by apply (contractive_S map).
+  - rewrite f_S g_S -{2}(map_id _ _ x) -map_comp. apply (contractive_0 map).
+  - rewrite f_S g_S -{2}(map_id _ _ x) -map_comp. by apply (contractive_S map).
 Qed.
 
 Record tower := {
@@ -66,15 +66,15 @@ Qed.
 Definition tower_cofe_mixin : CofeMixin tower.
 Proof.
   split.
-  * intros X Y; split; [by intros HXY n k; apply equiv_dist|].
+  - intros X Y; split; [by intros HXY n k; apply equiv_dist|].
     intros HXY k; apply equiv_dist; intros n; apply HXY.
-  * intros k; split.
+  - intros k; split.
     + by intros X n.
     + by intros X Y ? n.
     + by intros X Y Z ?? n; transitivity (Y n).
-  * intros k X Y HXY n; apply dist_S.
+  - intros k X Y HXY n; apply dist_S.
     by rewrite -(g_tower X) (HXY (S n)) g_tower.
-  * intros c n k; rewrite /= (conv_compl (tower_chain c k) n).
+  - intros c n k; rewrite /= (conv_compl (tower_chain c k) n).
     apply (chain_cauchy c); lia.
 Qed.
 Definition T : cofeT := CofeT tower_cofe_mixin.
@@ -136,12 +136,12 @@ Lemma g_embed_coerce {k i} (x : A k) :
   g i (embed_coerce (S i) x) ≡ embed_coerce i x.
 Proof.
   unfold embed_coerce; destruct (le_lt_dec (S i) k), (le_lt_dec i k); simpl.
-  * symmetry; by erewrite (@gg_gg _ _ 1 (k - S i)); simpl.
-  * exfalso; lia.
-  * assert (i = k) by lia; subst.
+  - symmetry; by erewrite (@gg_gg _ _ 1 (k - S i)); simpl.
+  - exfalso; lia.
+  - assert (i = k) by lia; subst.
     rewrite (ff_ff _ (eq_refl (1 + (0 + k)))) /= gf.
     by rewrite (gg_gg _ (eq_refl (0 + (0 + k)))).
-  * assert (H : 1 + ((i - k) + k) = S i) by lia.
+  - assert (H : 1 + ((i - k) + k) = S i) by lia.
     rewrite (ff_ff _ H) /= -{2}(gf (ff (i - k) x)) g_coerce.
     by erewrite coerce_proper by done.
 Qed.
@@ -156,22 +156,22 @@ Lemma embed_f k (x : A k) : embed (S k) (f k x) ≡ embed k x.
 Proof.
   rewrite equiv_dist=> n i; rewrite /embed /= /embed_coerce.
   destruct (le_lt_dec i (S k)), (le_lt_dec i k); simpl.
-  * assert (H : S k = S (k - i) + (0 + i)) by lia; rewrite (gg_gg _ H) /=.
+  - assert (H : S k = S (k - i) + (0 + i)) by lia; rewrite (gg_gg _ H) /=.
     by erewrite g_coerce, gf, coerce_proper by done.
-  * assert (S k = 0 + (0 + i)) as H by lia.
+  - assert (S k = 0 + (0 + i)) as H by lia.
     rewrite (gg_gg _ H); simplify_equality'.
     by rewrite (ff_ff _ (eq_refl (1 + (0 + k)))).
-  * exfalso; lia.
-  * assert (H : (i - S k) + (1 + k) = i) by lia; rewrite (ff_ff _ H) /=.
+  - exfalso; lia.
+  - assert (H : (i - S k) + (1 + k) = i) by lia; rewrite (ff_ff _ H) /=.
     by erewrite coerce_proper by done.
 Qed.
 Lemma embed_tower k (X : T) : embed (S k) (X (S k)) ≡{k}≡ X.
 Proof.
   intros i; rewrite /= /embed_coerce.
   destruct (le_lt_dec i (S k)) as [H|H]; simpl.
-  * rewrite -(gg_tower i (S k - i) X).
+  - rewrite -(gg_tower i (S k - i) X).
     apply (_ : Proper (_ ==> _) (gg _)); by destruct (eq_sym _).
-  * rewrite (ff_tower k (i - S k) X). by destruct (Nat.sub_add _ _ _).
+  - rewrite (ff_tower k (i - S k) X). by destruct (Nat.sub_add _ _ _).
 Qed.
 
 Program Definition unfold_chain (X : T) : chain (F T T) :=
@@ -206,7 +206,7 @@ Proof. by intros n X Y HXY k; rewrite /fold /= HXY. Qed.
 Theorem result : solution F.
 Proof.
   apply (Solution F T (CofeMor unfold) (CofeMor fold)).
-  * move=> X /=.
+  - move=> X /=.
     rewrite equiv_dist; intros n k; unfold unfold, fold; simpl.
     rewrite -g_tower -(gg_tower _ n); apply (_ : Proper (_ ==> _) (g _)).
     transitivity (map (ff n, gg n) (X (S (n + k)))).
@@ -228,7 +228,7 @@ Proof.
     assert (H: S n + k = n + S k) by lia.
     rewrite (map_ff_gg _ _ _ H).
     apply (_ : Proper (_ ==> _) (gg _)); by destruct H.
-  * intros X; rewrite equiv_dist=> n /=.
+  - intros X; rewrite equiv_dist=> n /=.
     rewrite /unfold /= (conv_compl (unfold_chain (fold X)) n) /=.
     rewrite g_S -!map_comp -{2}(map_id _ _ X).
     apply (contractive_ne map); split => Y /=.

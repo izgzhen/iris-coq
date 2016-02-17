@@ -160,15 +160,15 @@ Lemma natmap_elem_of_to_list_raw_aux {A} j (l : natmap_raw A) i x :
   (i,x) ∈ natmap_to_list_raw j l ↔ ∃ i', i = i' + j ∧ mjoin (l !! i') = Some x.
 Proof.
   split.
-  * revert j. induction l as [|[y|] l IH]; intros j; simpl.
+  - revert j. induction l as [|[y|] l IH]; intros j; simpl.
     + by rewrite elem_of_nil.
     + rewrite elem_of_cons. intros [?|?]; simplify_equality.
-      - by exists 0.
-      - destruct (IH (S j)) as (i'&?&?); auto.
+      * by exists 0.
+      * destruct (IH (S j)) as (i'&?&?); auto.
         exists (S i'); simpl; auto with lia.
     + intros. destruct (IH (S j)) as (i'&?&?); auto.
       exists (S i'); simpl; auto with lia.
-  * intros (i'&?&Hi'). subst. revert i' j Hi'.
+  - intros (i'&?&Hi'). subst. revert i' j Hi'.
     induction l as [|[y|] l IH]; intros i j ?; simpl.
     + done.
     + destruct i as [|i]; simplify_equality'; [left|].
@@ -210,7 +210,7 @@ Instance natmap_map: FMap natmap := λ A B f m,
 Instance: FinMap nat natmap.
 Proof.
   split.
-  * unfold lookup, natmap_lookup. intros A [l1 Hl1] [l2 Hl2] E.
+  - unfold lookup, natmap_lookup. intros A [l1 Hl1] [l2 Hl2] E.
     apply natmap_eq. revert l2 Hl1 Hl2 E. simpl.
     induction l1 as [|[x|] l1 IH]; intros [|[y|] l2] Hl1 Hl2 E; simpl in *.
     + done.
@@ -223,14 +223,14 @@ Proof.
     + destruct (natmap_wf_lookup (None :: l1)) as (i&?&?); auto with congruence.
     + by specialize (E 0).
     + f_equal. apply IH; eauto using natmap_wf_inv. intros i. apply (E (S i)).
-  * done.
-  * intros ?? [??] ?. apply natmap_lookup_alter_raw.
-  * intros ?? [??] ??. apply natmap_lookup_alter_raw_ne.
-  * intros ??? [??] ?. apply natmap_lookup_map_raw.
-  * intros ? [??]. by apply natmap_to_list_raw_nodup.
-  * intros ? [??] ??. by apply natmap_elem_of_to_list_raw.
-  * intros ??? [??] ?. by apply natmap_lookup_omap_raw.
-  * intros ????? [??] [??] ?. by apply natmap_lookup_merge_raw.
+  - done.
+  - intros ?? [??] ?. apply natmap_lookup_alter_raw.
+  - intros ?? [??] ??. apply natmap_lookup_alter_raw_ne.
+  - intros ??? [??] ?. apply natmap_lookup_map_raw.
+  - intros ? [??]. by apply natmap_to_list_raw_nodup.
+  - intros ? [??] ??. by apply natmap_elem_of_to_list_raw.
+  - intros ??? [??] ?. by apply natmap_lookup_omap_raw.
+  - intros ????? [??] [??] ?. by apply natmap_lookup_merge_raw.
 Qed.
 
 Fixpoint strip_Nones {A} (l : list (option A)) : list (option A) :=
@@ -353,8 +353,8 @@ Lemma natmap_push_pop {A} (m : natmap A) :
   natmap_push (m !! 0) (natmap_pop m) = m.
 Proof.
   apply map_eq. intros i. destruct i.
-  * by rewrite lookup_natmap_push_O.
-  * by rewrite lookup_natmap_push_S, lookup_natmap_pop.
+  - by rewrite lookup_natmap_push_O.
+  - by rewrite lookup_natmap_push_S, lookup_natmap_pop.
 Qed.
 Lemma natmap_pop_push {A} o (m : natmap A) : natmap_pop (natmap_push o m) = m.
 Proof. apply natmap_eq. by destruct o, m as [[|??]]. Qed.

@@ -48,8 +48,8 @@ Section simple_collection.
   Lemma elem_of_subseteq_singleton x X : x ∈ X ↔ {[ x ]} ⊆ X.
   Proof.
     split.
-    * intros ??. rewrite elem_of_singleton. by intros ->.
-    * intros Ex. by apply (Ex x), elem_of_singleton.
+    - intros ??. rewrite elem_of_singleton. by intros ->.
+    - intros Ex. by apply (Ex x), elem_of_singleton.
   Qed.
   Global Instance singleton_proper : Proper ((=) ==> (≡)) (singleton (B:=C)).
   Proof. by repeat intro; subst. Qed.
@@ -59,9 +59,9 @@ Section simple_collection.
   Lemma elem_of_union_list Xs x : x ∈ ⋃ Xs ↔ ∃ X, X ∈ Xs ∧ x ∈ X.
   Proof.
     split.
-    * induction Xs; simpl; intros HXs; [by apply elem_of_empty in HXs|].
+    - induction Xs; simpl; intros HXs; [by apply elem_of_empty in HXs|].
       setoid_rewrite elem_of_cons. apply elem_of_union in HXs. naive_solver.
-    * intros [X []]. induction 1; simpl; [by apply elem_of_union_l |].
+    - intros [X []]. induction 1; simpl; [by apply elem_of_union_l |].
       intros. apply elem_of_union_r; auto.
   Qed.
   Lemma non_empty_singleton x : ({[ x ]} : C) ≢ ∅.
@@ -113,9 +113,9 @@ Section of_option_list.
   Lemma elem_of_of_list (x : A) l : x ∈ of_list l ↔ x ∈ l.
   Proof.
     split.
-    * induction l; simpl; [by rewrite elem_of_empty|].
+    - induction l; simpl; [by rewrite elem_of_empty|].
       rewrite elem_of_union,elem_of_singleton; intros [->|?]; constructor; auto.
-    * induction 1; simpl; rewrite elem_of_union, elem_of_singleton; auto.
+    - induction 1; simpl; rewrite elem_of_union, elem_of_singleton; auto.
   Qed.
 End of_option_list.
 
@@ -356,11 +356,11 @@ Section collection_ops.
       Forall2 (∈) xs Xs ∧ y ∈ Y ∧ foldr (λ x, (≫= f x)) (Some y) xs = Some x.
   Proof.
     split.
-    * revert x. induction Xs; simpl; intros x HXs; [eexists [], x; intuition|].
+    - revert x. induction Xs; simpl; intros x HXs; [eexists [], x; intuition|].
       rewrite elem_of_intersection_with in HXs; destruct HXs as (x1&x2&?&?&?).
       destruct (IHXs x2) as (xs & y & hy & ? & ?); trivial.
       eexists (x1 :: xs), y. intuition (simplify_option_equality; auto).
-    * intros (xs & y & Hxs & ? & Hx). revert x Hx.
+    - intros (xs & y & Hxs & ? & Hx). revert x Hx.
       induction Hxs; intros; simplify_option_equality; [done |].
       rewrite elem_of_intersection_with. naive_solver.
   Qed.
@@ -389,8 +389,8 @@ Section NoDup.
   Global Instance: Proper (R ==> (≡) ==> iff) elem_of_upto.
   Proof.
     intros ?? E1 ?? E2. split; intros [z [??]]; exists z.
-    * rewrite <-E1, <-E2; intuition.
-    * rewrite E1, E2; intuition.
+    - rewrite <-E1, <-E2; intuition.
+    - rewrite E1, E2; intuition.
   Qed.
   Global Instance: Proper ((≡) ==> iff) set_NoDup.
   Proof. firstorder. Qed.
@@ -575,8 +575,8 @@ Section collection_monad.
     l ∈ mapM f k ↔ Forall2 (λ x y, x ∈ f y) l k.
   Proof.
     split.
-    * revert l. induction k; solve_elem_of.
-    * induction 1; solve_elem_of.
+    - revert l. induction k; solve_elem_of.
+    - induction 1; solve_elem_of.
   Qed.
   Lemma collection_mapM_length {A B} (f : A → M B) l k :
     l ∈ mapM f k → length l = length k.

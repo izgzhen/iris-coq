@@ -44,16 +44,16 @@ Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 Global Instance big_and_perm : Proper ((≡ₚ) ==> (≡)) (@uPred_big_and M).
 Proof.
   induction 1 as [|P Ps Qs ? IH|P Q Ps|]; simpl; auto.
-  * by rewrite IH.
-  * by rewrite !assoc (comm _ P).
-  * etransitivity; eauto.
+  - by rewrite IH.
+  - by rewrite !assoc (comm _ P).
+  - etransitivity; eauto.
 Qed.
 Global Instance big_sep_perm : Proper ((≡ₚ) ==> (≡)) (@uPred_big_sep M).
 Proof.
   induction 1 as [|P Ps Qs ? IH|P Q Ps|]; simpl; auto.
-  * by rewrite IH.
-  * by rewrite !assoc (comm _ P).
-  * etransitivity; eauto.
+  - by rewrite IH.
+  - by rewrite !assoc (comm _ P).
+  - etransitivity; eauto.
 Qed.
 Lemma big_and_app Ps Qs : (Π∧ (Ps ++ Qs))%I ≡ (Π∧ Ps ∧ Π∧ Qs)%I.
 Proof. by induction Ps as [|?? IH]; rewrite /= ?left_id -?assoc ?IH. Qed.

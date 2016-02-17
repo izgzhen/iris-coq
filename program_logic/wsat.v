@@ -71,11 +71,11 @@ Qed.
 Lemma wsat_init k E σ mm : ✓{S k} mm → wsat (S k) E σ (Res ∅ (Excl σ) mm).
 Proof.
   intros Hv. exists ∅; constructor; auto.
-  * rewrite big_opM_empty right_id.
+  - rewrite big_opM_empty right_id.
     split_ands'; try (apply cmra_valid_validN, ra_empty_valid);
       constructor || apply Hv.
-  * by intros i; rewrite lookup_empty=>-[??].
-  * intros i P ?; rewrite /= left_id lookup_empty; inversion_clear 1.
+  - by intros i; rewrite lookup_empty=>-[??].
+  - intros i P ?; rewrite /= left_id lookup_empty; inversion_clear 1.
 Qed.
 Lemma wsat_open n E σ r i P :
   wld r !! i ≡{S n}≡ Some (to_agree (Next (iProp_unfold P))) → i ∉ E →
@@ -86,9 +86,9 @@ Proof.
   assert (rP ⋅ r ⋅ big_opM (delete i rs) ≡ r ⋅ big_opM rs) as Hr.
   { by rewrite (comm _ rP) -assoc big_opM_delete. }
   exists rP; split; [exists (delete i rs); constructor; rewrite ?Hr|]; auto.
-  * intros j; rewrite lookup_delete_is_Some Hr.
+  - intros j; rewrite lookup_delete_is_Some Hr.
     generalize (HE j); solve_elem_of +Hi.
-  * intros j P'; rewrite Hr=> Hj ?.
+  - intros j P'; rewrite Hr=> Hj ?.
     setoid_rewrite lookup_delete_ne; last (solve_elem_of +Hi Hj).
     apply Hwld; [solve_elem_of +Hj|done].
 Qed.
@@ -101,10 +101,10 @@ Proof.
   assert (r ⋅ big_opM (<[i:=rP]> rs) ≡ rP ⋅ r ⋅ big_opM rs) as Hr.
   { by rewrite (comm _ rP) -assoc big_opM_insert. }
   exists (<[i:=rP]>rs); constructor; rewrite ?Hr; auto.
-  * intros j; rewrite Hr lookup_insert_is_Some=>-[?|[??]]; subst.
+  - intros j; rewrite Hr lookup_insert_is_Some=>-[?|[??]]; subst.
     + rewrite !lookup_op HiP !op_is_Some; solve_elem_of +.
     + destruct (HE j) as [Hj Hj']; auto; solve_elem_of +Hj Hj'.
-  * intros j P'; rewrite Hr elem_of_union elem_of_singleton=>-[?|?]; subst.
+  - intros j P'; rewrite Hr elem_of_union elem_of_singleton=>-[?|?]; subst.
     + rewrite !lookup_wld_op_l ?HiP; auto=> HP.
       apply (inj Some), (inj to_agree), (inj Next), (inj iProp_unfold) in HP.
       exists rP; split; [rewrite lookup_insert|apply HP]; auto.
@@ -154,17 +154,17 @@ Proof.
   assert (r ⋅ big_opM (<[i:=rP]> rs) ≡ rP ⋅ r ⋅ big_opM rs) as Hr.
   { by rewrite (comm _ rP) -assoc big_opM_insert. }
   exists i; split_ands; [exists (<[i:=rP]>rs); constructor| |]; auto.
-  * destruct Hval as (?&?&?);  rewrite -assoc Hr.
+  - destruct Hval as (?&?&?);  rewrite -assoc Hr.
     split_ands'; rewrite /= ?left_id; [|eauto|eauto].
     intros j; destruct (decide (j = i)) as [->|].
     + by rewrite !lookup_op Hri HrPi Hrsi !right_id lookup_singleton.
     + by rewrite lookup_op lookup_singleton_ne // left_id.
-  * by rewrite -assoc Hr /= left_id.
-  * intros j; rewrite -assoc Hr; destruct (decide (j = i)) as [->|].
+  - by rewrite -assoc Hr /= left_id.
+  - intros j; rewrite -assoc Hr; destruct (decide (j = i)) as [->|].
     + rewrite /= !lookup_op lookup_singleton !op_is_Some; solve_elem_of +Hi.
     + rewrite lookup_insert_ne //.
       rewrite lookup_op lookup_singleton_ne // left_id; eauto.
-  * intros j P'; rewrite -assoc Hr; destruct (decide (j=i)) as [->|].
+  - intros j P'; rewrite -assoc Hr; destruct (decide (j=i)) as [->|].
     + rewrite /= !lookup_op Hri HrPi Hrsi right_id lookup_singleton=>? HP.
       apply (inj Some), (inj to_agree), (inj Next), (inj iProp_unfold) in HP.
       exists rP; rewrite lookup_insert; split; [|apply HP]; auto.

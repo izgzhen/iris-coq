@@ -16,15 +16,15 @@ Instance map_compl : Compl (gmap K A) := λ c,
 Definition map_cofe_mixin : CofeMixin (gmap K A).
 Proof.
   split.
-  * intros m1 m2; split.
+  - intros m1 m2; split.
     + by intros Hm n k; apply equiv_dist.
     + intros Hm k; apply equiv_dist; intros n; apply Hm.
-  * intros n; split.
+  - intros n; split.
     + by intros m k.
     + by intros m1 m2 ? k.
     + by intros m1 m2 m3 ?? k; transitivity (m2 !! k).
-  * by intros n m1 m2 ? k; apply dist_S.
-  * intros c n k; rewrite /compl /map_compl lookup_imap.
+  - by intros n m1 m2 ? k; apply dist_S.
+  - intros c n k; rewrite /compl /map_compl lookup_imap.
     feed inversion (λ H, chain_cauchy c 0 (S n) H k); simpl; auto with lia.
     by rewrite conv_compl /=; apply reflexive_eq.
 Qed.
@@ -111,36 +111,36 @@ Proof. split; intros Hm ??; apply Hm. Qed.
 Lemma map_included_spec (m1 m2 : gmap K A) : m1 ≼ m2 ↔ ∀ i, m1 !! i ≼ m2 !! i.
 Proof.
   split.
-  * by intros [m Hm]; intros i; exists (m !! i); rewrite -lookup_op Hm.
-  * intros Hm; exists (m2 ⩪ m1); intros i.
+  - by intros [m Hm]; intros i; exists (m !! i); rewrite -lookup_op Hm.
+  - intros Hm; exists (m2 ⩪ m1); intros i.
     by rewrite lookup_op lookup_minus cmra_op_minus'.
 Qed.
 Lemma map_includedN_spec (m1 m2 : gmap K A) n :
   m1 ≼{n} m2 ↔ ∀ i, m1 !! i ≼{n} m2 !! i.
 Proof.
   split.
-  * by intros [m Hm]; intros i; exists (m !! i); rewrite -lookup_op Hm.
-  * intros Hm; exists (m2 ⩪ m1); intros i.
+  - by intros [m Hm]; intros i; exists (m !! i); rewrite -lookup_op Hm.
+  - intros Hm; exists (m2 ⩪ m1); intros i.
     by rewrite lookup_op lookup_minus cmra_op_minus.
 Qed.
 
 Definition map_cmra_mixin : CMRAMixin (gmap K A).
 Proof.
   split.
-  * by intros n m1 m2 m3 Hm i; rewrite !lookup_op (Hm i).
-  * by intros n m1 m2 Hm i; rewrite !lookup_unit (Hm i).
-  * by intros n m1 m2 Hm ? i; rewrite -(Hm i).
-  * by intros n m1 m1' Hm1 m2 m2' Hm2 i; rewrite !lookup_minus (Hm1 i) (Hm2 i).
-  * intros n m Hm i; apply cmra_validN_S, Hm.
-  * by intros m1 m2 m3 i; rewrite !lookup_op assoc.
-  * by intros m1 m2 i; rewrite !lookup_op comm.
-  * by intros m i; rewrite lookup_op !lookup_unit cmra_unit_l.
-  * by intros m i; rewrite !lookup_unit cmra_unit_idemp.
-  * intros n x y; rewrite !map_includedN_spec; intros Hm i.
+  - by intros n m1 m2 m3 Hm i; rewrite !lookup_op (Hm i).
+  - by intros n m1 m2 Hm i; rewrite !lookup_unit (Hm i).
+  - by intros n m1 m2 Hm ? i; rewrite -(Hm i).
+  - by intros n m1 m1' Hm1 m2 m2' Hm2 i; rewrite !lookup_minus (Hm1 i) (Hm2 i).
+  - intros n m Hm i; apply cmra_validN_S, Hm.
+  - by intros m1 m2 m3 i; rewrite !lookup_op assoc.
+  - by intros m1 m2 i; rewrite !lookup_op comm.
+  - by intros m i; rewrite lookup_op !lookup_unit cmra_unit_l.
+  - by intros m i; rewrite !lookup_unit cmra_unit_idemp.
+  - intros n x y; rewrite !map_includedN_spec; intros Hm i.
     by rewrite !lookup_unit; apply cmra_unit_preservingN.
-  * intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
+  - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
-  * intros x y n; rewrite map_includedN_spec=> ? i.
+  - intros x y n; rewrite map_includedN_spec=> ? i.
     by rewrite lookup_op lookup_minus cmra_op_minus.
 Qed.
 Definition map_cmra_extend_mixin : CMRAExtendMixin (gmap K A).
@@ -152,12 +152,12 @@ Proof.
   set (f_proj i := proj1_sig (f i)).
   exists (map_imap (λ i _, (f_proj i).1) m, map_imap (λ i _, (f_proj i).2) m);
     repeat split; intros i; rewrite /= ?lookup_op !lookup_imap.
-  * destruct (m !! i) as [x|] eqn:Hx; rewrite !Hx /=; [|constructor].
+  - destruct (m !! i) as [x|] eqn:Hx; rewrite !Hx /=; [|constructor].
     rewrite -Hx; apply (proj2_sig (f i)).
-  * destruct (m !! i) as [x|] eqn:Hx; rewrite /=; [apply (proj2_sig (f i))|].
+  - destruct (m !! i) as [x|] eqn:Hx; rewrite /=; [apply (proj2_sig (f i))|].
     pose proof (Hm12' i) as Hm12''; rewrite Hx in Hm12''.
     by symmetry; apply option_op_positive_dist_l with (m2 !! i).
-  * destruct (m !! i) as [x|] eqn:Hx; simpl; [apply (proj2_sig (f i))|].
+  - destruct (m !! i) as [x|] eqn:Hx; simpl; [apply (proj2_sig (f i))|].
     pose proof (Hm12' i) as Hm12''; rewrite Hx in Hm12''.
     by symmetry; apply option_op_positive_dist_r with (m1 !! i).
 Qed.
@@ -166,9 +166,9 @@ Canonical Structure mapRA : cmraT :=
 Global Instance map_cmra_identity : CMRAIdentity mapRA.
 Proof.
   split.
-  * by intros ? n; rewrite lookup_empty.
-  * by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
-  * apply map_empty_timeless.
+  - by intros ? n; rewrite lookup_empty.
+  - by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
+  - apply map_empty_timeless.
 Qed.
 Global Instance mapRA_leibniz : LeibnizEquiv A → LeibnizEquiv mapRA.
 Proof. intros; change (LeibnizEquiv (gmap K A)); apply _. Qed.
@@ -230,10 +230,10 @@ Lemma singleton_includedN n m i x :
   (* not m !! i = Some y ∧ x ≼{n} y to deal with n = 0 *)
 Proof.
   split.
-  * move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton=> Hm.
+  - move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton=> Hm.
     destruct (m' !! i) as [y|];
       [exists (x ⋅ y)|exists x]; eauto using cmra_included_l.
-  * intros (y&Hi&?); rewrite map_includedN_spec=>j.
+  - intros (y&Hi&?); rewrite map_includedN_spec=>j.
     destruct (decide (i = j)); simplify_map_equality.
     + by rewrite Hi; apply Some_Some_includedN, cmra_included_includedN.
     + apply None_includedN.
@@ -343,9 +343,9 @@ Instance map_fmap_cmra_monotone `{Countable K} {A B : cmraT} (f : A → B)
   `{!CMRAMonotone f} : CMRAMonotone (fmap f : gmap K A → gmap K B).
 Proof.
   split.
-  * intros m1 m2 n; rewrite !map_includedN_spec; intros Hm i.
+  - intros m1 m2 n; rewrite !map_includedN_spec; intros Hm i.
     by rewrite !lookup_fmap; apply: includedN_preserving.
-  * by intros n m ? i; rewrite lookup_fmap; apply validN_preserving.
+  - by intros n m ? i; rewrite lookup_fmap; apply validN_preserving.
 Qed.
 Definition mapC_map `{Countable K} {A B} (f: A -n> B) : mapC K A -n> mapC K B :=
   CofeMor (fmap f : mapC K A → mapC K B).

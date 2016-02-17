@@ -20,9 +20,9 @@ Proof. by exists (elements X); intros; rewrite elem_of_elements. Qed.
 Global Instance elements_proper: Proper ((≡) ==> (≡ₚ)) (elements (C:=C)).
 Proof.
   intros ?? E. apply NoDup_Permutation.
-  * apply NoDup_elements.
-  * apply NoDup_elements.
-  * intros. by rewrite !elem_of_elements, E.
+  - apply NoDup_elements.
+  - apply NoDup_elements.
+  - intros. by rewrite !elem_of_elements, E.
 Qed.
 Global Instance collection_size_proper: Proper ((≡) ==> (=)) (@size C _).
 Proof. intros ?? E. apply Permutation_length. by rewrite E. Qed.
@@ -45,9 +45,9 @@ Lemma size_singleton (x : A) : size {[ x ]} = 1.
 Proof.
   change (length (elements {[ x ]}) = length [x]).
   apply Permutation_length, NoDup_Permutation.
-  * apply NoDup_elements.
-  * apply NoDup_singleton.
-  * intros y.
+  - apply NoDup_elements.
+  - apply NoDup_singleton.
+  - intros y.
     by rewrite elem_of_elements, elem_of_singleton, elem_of_list_singleton.
 Qed.
 Lemma size_singleton_inv X x y : size X = 1 → x ∈ X → y ∈ X → x = y.
@@ -59,8 +59,8 @@ Qed.
 Lemma collection_choose_or_empty X : (∃ x, x ∈ X) ∨ X ≡ ∅.
 Proof.
   destruct (elements X) as [|x l] eqn:HX; [right|left].
-  * apply equiv_empty; intros x. by rewrite <-elem_of_elements, HX, elem_of_nil.
-  * exists x. rewrite <-elem_of_elements, HX. by left.
+  - apply equiv_empty; intros x. by rewrite <-elem_of_elements, HX, elem_of_nil.
+  - exists x. rewrite <-elem_of_elements, HX. by left.
 Qed.
 Lemma collection_choose X : X ≢ ∅ → ∃ x, x ∈ X.
 Proof. intros. by destruct (collection_choose_or_empty X). Qed.
@@ -75,17 +75,17 @@ Lemma size_1_elem_of X : size X = 1 → ∃ x, X ≡ {[ x ]}.
 Proof.
   intros E. destruct (size_pos_elem_of X); auto with lia.
   exists x. apply elem_of_equiv. split.
-  * rewrite elem_of_singleton. eauto using size_singleton_inv.
-  * solve_elem_of.
+  - rewrite elem_of_singleton. eauto using size_singleton_inv.
+  - solve_elem_of.
 Qed.
 Lemma size_union X Y : X ∩ Y ≡ ∅ → size (X ∪ Y) = size X + size Y.
 Proof.
   intros [E _]. unfold size, collection_size. simpl. rewrite <-app_length.
   apply Permutation_length, NoDup_Permutation.
-  * apply NoDup_elements.
-  * apply NoDup_app; repeat split; try apply NoDup_elements.
+  - apply NoDup_elements.
+  - apply NoDup_app; repeat split; try apply NoDup_elements.
     intros x; rewrite !elem_of_elements; solve_elem_of.
-  * intros. by rewrite elem_of_app, !elem_of_elements, elem_of_union.
+  - intros. by rewrite elem_of_app, !elem_of_elements, elem_of_union.
 Qed.
 Instance elem_of_dec_slow (x : A) (X : C) : Decision (x ∈ X) | 100.
 Proof.
@@ -129,9 +129,9 @@ Proof.
   intros ? Hemp Hadd. apply well_founded_induction with (⊂).
   { apply collection_wf. }
   intros X IH. destruct (collection_choose_or_empty X) as [[x ?]|HX].
-  * rewrite (union_difference {[ x ]} X) by solve_elem_of.
+  - rewrite (union_difference {[ x ]} X) by solve_elem_of.
     apply Hadd. solve_elem_of. apply IH; solve_elem_of.
-  * by rewrite HX.
+  - by rewrite HX.
 Qed.
 Lemma collection_fold_ind {B} (P : B → C → Prop) (f : A → B → B) (b : B) :
   Proper ((=) ==> (≡) ==> iff) P →
@@ -143,9 +143,9 @@ Proof.
   { intros help ?. apply help; [apply NoDup_elements|].
     symmetry. apply elem_of_elements. }
   induction 1 as [|x l ?? IH]; simpl.
-  * intros X HX. setoid_rewrite elem_of_nil in HX.
+  - intros X HX. setoid_rewrite elem_of_nil in HX.
     rewrite equiv_empty. done. solve_elem_of.
-  * intros X HX. setoid_rewrite elem_of_cons in HX.
+  - intros X HX. setoid_rewrite elem_of_cons in HX.
     rewrite (union_difference {[ x ]} X) by solve_elem_of.
     apply Hadd. solve_elem_of. apply IH. solve_elem_of.
 Qed.

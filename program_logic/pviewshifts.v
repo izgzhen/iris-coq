@@ -92,10 +92,10 @@ Lemma pvs_closeI i P : (ownI i P ∧ ▷ P) ⊑ pvs ∅ {[ i ]} True.
 Proof.
   intros r [|n] ? [? HP] rf [|k] Ef σ ? HE ?; try lia; exists ∅; split; [done|].
   rewrite left_id; apply wsat_close with P r.
-  * apply ownI_spec, uPred_weaken with r (S n); auto.
-  * solve_elem_of +HE.
-  * by rewrite -(left_id_L ∅ (∪) Ef).
-  * apply uPred_weaken with r n; auto.
+  - apply ownI_spec, uPred_weaken with r (S n); auto.
+  - solve_elem_of +HE.
+  - by rewrite -(left_id_L ∅ (∪) Ef).
+  - apply uPred_weaken with r n; auto.
 Qed.
 Lemma pvs_ownG_updateP E m (P : iGst Λ Σ → Prop) :
   m ~~>: P → ownG m ⊑ pvs E E (∃ m', ■ P m' ∧ ownG m').

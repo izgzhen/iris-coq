@@ -87,8 +87,8 @@ Fixpoint fin_enum (n : nat) : list (fin n) :=
 Program Instance fin_finite n : Finite (fin n) := {| enum := fin_enum n |}.
 Next Obligation.
   intros n. induction n; simpl; constructor.
-  * rewrite elem_of_list_fmap. by intros (?&?&?).
-  * by apply (NoDup_fmap _).
+  - rewrite elem_of_list_fmap. by intros (?&?&?).
+  - by apply (NoDup_fmap _).
 Qed.
 Next Obligation.
   intros n i. induction i as [|n i IH]; simpl;
@@ -148,8 +148,8 @@ Proof. apply vcons_inj. Qed.
 Lemma vec_eq {A n} (v w : vec A n) : (∀ i, v !!! i = w !!! i) → v = w.
 Proof.
   vec_double_ind v w; [done|]. intros n v w IH x y Hi. f_equal.
-  * apply (Hi 0%fin).
-  * apply IH. intros i. apply (Hi (FS i)).
+  - apply (Hi 0%fin).
+  - apply IH. intros i. apply (Hi (FS i)).
 Qed.
 
 Instance vec_dec {A} {dec : ∀ x y : A, Decision (x = y)} {n} :
@@ -238,8 +238,8 @@ Proof.
   rewrite <-vec_to_list_cons, <-vec_to_list_app in H.
   pose proof (vec_to_list_inj1 _ _ H); subst.
   apply vec_to_list_inj2 in H; subst. induction l. simpl.
-  * eexists 0%fin. simpl. by rewrite vec_to_list_of_list.
-  * destruct IHl as [i ?]. exists (FS i). simpl. intuition congruence.
+  - eexists 0%fin. simpl. by rewrite vec_to_list_of_list.
+  - destruct IHl as [i ?]. exists (FS i). simpl. intuition congruence.
 Qed.
 Lemma vec_to_list_drop_lookup {A n} (v : vec A n) (i : fin n) :
   drop i v = v !!! i :: drop (S i) v.
@@ -252,10 +252,10 @@ Lemma elem_of_vlookup {A n} (v : vec A n) x :
   x ∈ vec_to_list v ↔ ∃ i, v !!! i = x.
 Proof.
   split.
-  * induction v; simpl; [by rewrite elem_of_nil |].
+  - induction v; simpl; [by rewrite elem_of_nil |].
     inversion 1; subst; [by eexists 0%fin|].
     destruct IHv as [i ?]; trivial. by exists (FS i).
-  * intros [i ?]; subst. induction v as [|??? IH]; inv_fin i; [by left|].
+  - intros [i ?]; subst. induction v as [|??? IH]; inv_fin i; [by left|].
     right; apply IH.
 Qed.
 Lemma Forall_vlookup {A} (P : A → Prop) {n} (v : vec A n) :
@@ -275,10 +275,10 @@ Lemma Forall2_vlookup {A B} (P : A → B → Prop) {n}
   Forall2 P (vec_to_list v1) (vec_to_list v2) ↔ ∀ i, P (v1 !!! i) (v2 !!! i).
 Proof.
   split.
-  * vec_double_ind v1 v2; [intros _ i; inv_fin i |].
+  - vec_double_ind v1 v2; [intros _ i; inv_fin i |].
     intros n v1 v2 IH a b; simpl. inversion_clear 1.
     intros i. inv_fin i; simpl; auto.
-  * vec_double_ind v1 v2; [constructor|].
+  - vec_double_ind v1 v2; [constructor|].
     intros ??? IH ?? H. constructor. apply (H 0%fin). apply IH, (λ i, H (FS i)).
 Qed.
 

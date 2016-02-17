@@ -346,10 +346,10 @@ Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,
 Global Instance heap_lang_ctx K : LanguageCtx heap_lang (heap_lang.fill K).
 Proof.
   split.
-  * eauto using heap_lang.fill_not_val.
-  * intros ????? [K' e1' e2' Heq1 Heq2 Hstep].
+  - eauto using heap_lang.fill_not_val.
+  - intros ????? [K' e1' e2' Heq1 Heq2 Hstep].
     by exists (K ++ K') e1' e2'; rewrite ?heap_lang.fill_app ?Heq1 ?Heq2.
-  * intros e1 σ1 e2 σ2 ? Hnval [K'' e1'' e2'' Heq1 -> Hstep].
+  - intros e1 σ1 e2 σ2 ? Hnval [K'' e1'' e2'' Heq1 -> Hstep].
     destruct (heap_lang.step_by_val
       K K'' e1 e1'' σ1 e2'' σ2 ef) as [K' ->]; eauto.
     rewrite heap_lang.fill_app in Heq1; apply (inj _) in Heq1.

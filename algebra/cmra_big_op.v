@@ -21,9 +21,9 @@ Proof. done. Qed.
 Global Instance big_op_permutation : Proper ((≡ₚ) ==> (≡)) big_op.
 Proof.
   induction 1 as [|x xs1 xs2 ? IH|x y xs|xs1 xs2 xs3]; simpl; auto.
-  * by rewrite IH.
-  * by rewrite !assoc (comm _ x).
-  * by transitivity (big_op xs2).
+  - by rewrite IH.
+  - by rewrite !assoc (comm _ x).
+  - by transitivity (big_op xs2).
 Qed.
 Global Instance big_op_proper : Proper ((≡) ==> (≡)) big_op.
 Proof. by induction 1; simpl; repeat apply (_ : Proper (_ ==> _ ==> _) op). Qed.
@@ -35,10 +35,10 @@ Qed.
 Lemma big_op_contains xs ys : xs `contains` ys → big_op xs ≼ big_op ys.
 Proof.
   induction 1 as [|x xs ys|x y xs|x xs ys|xs ys zs]; rewrite //=.
-  * by apply cmra_preserving_l.
-  * by rewrite !assoc (comm _ y).
-  * by transitivity (big_op ys); last apply cmra_included_r.
-  * by transitivity (big_op ys).
+  - by apply cmra_preserving_l.
+  - by rewrite !assoc (comm _ y).
+  - by transitivity (big_op ys); last apply cmra_included_r.
+  - by transitivity (big_op ys).
 Qed.
 Lemma big_op_delete xs i x :
   xs !! i = Some x → x ⋅ big_op (delete i xs) ≡ big_op xs.

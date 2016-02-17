@@ -50,15 +50,15 @@ Instance excl_compl : Compl (excl A) := λ c,
 Definition excl_cofe_mixin : CofeMixin (excl A).
 Proof.
   split.
-  * intros mx my; split; [by destruct 1; constructor; apply equiv_dist|].
+  - intros mx my; split; [by destruct 1; constructor; apply equiv_dist|].
     intros Hxy; feed inversion (Hxy 1); subst; constructor; apply equiv_dist.
     by intros n; feed inversion (Hxy n).
-  * intros n; split.
+  - intros n; split.
     + by intros [x| |]; constructor.
     + by destruct 1; constructor.
     + destruct 1; inversion_clear 1; constructor; etransitivity; eauto.
-  * by inversion_clear 1; constructor; apply dist_S.
-  * intros c n; unfold compl, excl_compl.
+  - by inversion_clear 1; constructor; apply dist_S.
+  - intros c n; unfold compl, excl_compl.
     destruct (Some_dec (maybe Excl (c 1))) as [[x Hx]|].
     { assert (c 1 = Excl x) by (by destruct (c 1); simplify_equality').
       assert (∃ y, c (S n) = Excl y) as [y Hy].
@@ -102,18 +102,18 @@ Instance excl_minus : Minus (excl A) := λ x y,
 Definition excl_cmra_mixin : CMRAMixin (excl A).
 Proof.
   split.
-  * by intros n []; destruct 1; constructor.
-  * constructor.
-  * by destruct 1; intros ?.
-  * by destruct 1; inversion_clear 1; constructor.
-  * intros n [?| |]; simpl; auto with lia.
-  * by intros [?| |] [?| |] [?| |]; constructor.
-  * by intros [?| |] [?| |]; constructor.
-  * by intros [?| |]; constructor.
-  * constructor.
-  * by intros n [?| |] [?| |]; exists ∅.
-  * by intros n [?| |] [?| |].
-  * by intros n [?| |] [?| |] [[?| |] Hz]; inversion_clear Hz; constructor.
+  - by intros n []; destruct 1; constructor.
+  - constructor.
+  - by destruct 1; intros ?.
+  - by destruct 1; inversion_clear 1; constructor.
+  - intros n [?| |]; simpl; auto with lia.
+  - by intros [?| |] [?| |] [?| |]; constructor.
+  - by intros [?| |] [?| |]; constructor.
+  - by intros [?| |]; constructor.
+  - constructor.
+  - by intros n [?| |] [?| |]; exists ∅.
+  - by intros n [?| |] [?| |].
+  - by intros n [?| |] [?| |] [[?| |] Hz]; inversion_clear Hz; constructor.
 Qed.
 Definition excl_cmra_extend_mixin : CMRAExtendMixin (excl A).
 Proof.
@@ -189,9 +189,9 @@ Instance excl_map_cmra_monotone {A B : cofeT} (f : A → B) :
   (∀ n, Proper (dist n ==> dist n) f) → CMRAMonotone (excl_map f).
 Proof.
   split.
-  * intros n x y [z Hy]; exists (excl_map f z); rewrite Hy.
+  - intros n x y [z Hy]; exists (excl_map f z); rewrite Hy.
     by destruct x, z; constructor.
-  * by intros n [a| |].
+  - by intros n [a| |].
 Qed.
 Definition exclC_map {A B} (f : A -n> B) : exclC A -n> exclC B :=
   CofeMor (excl_map f).

@@ -21,9 +21,9 @@ Global Opaque listset_singleton listset_empty.
 Global Instance: SimpleCollection A (listset A).
 Proof.
   split.
-  * by apply not_elem_of_nil.
-  * by apply elem_of_list_singleton.
-  * intros [?] [?]. apply elem_of_app.
+  - by apply not_elem_of_nil.
+  - by apply elem_of_list_singleton.
+  - intros [?] [?]. apply elem_of_app.
 Qed.
 Lemma listset_empty_alt X : X ≡ ∅ ↔ listset_car X = [].
 Proof.
@@ -50,24 +50,24 @@ Instance listset_filter: Filter A (listset A) := λ P _ l,
 Instance: Collection A (listset A).
 Proof.
   split.
-  * apply _.
-  * intros [?] [?]. apply elem_of_list_intersection.
-  * intros [?] [?]. apply elem_of_list_difference.
+  - apply _.
+  - intros [?] [?]. apply elem_of_list_intersection.
+  - intros [?] [?]. apply elem_of_list_difference.
 Qed.
 Instance listset_elems: Elements A (listset A) := remove_dups ∘ listset_car.
 Global Instance: FinCollection A (listset A).
 Proof.
   split.
-  * apply _.
-  * intros. apply elem_of_remove_dups.
-  * intros. apply NoDup_remove_dups.
+  - apply _.
+  - intros. apply elem_of_remove_dups.
+  - intros. apply NoDup_remove_dups.
 Qed.
 Global Instance: CollectionOps A (listset A).
 Proof.
   split.
-  * apply _.
-  * intros ? [?] [?]. apply elem_of_list_intersection_with.
-  * intros [?] ??. apply elem_of_list_filter.
+  - apply _.
+  - intros ? [?] [?]. apply elem_of_list_intersection_with.
+  - intros [?] ??. apply elem_of_list_filter.
 Qed.
 End listset.
 
@@ -102,10 +102,10 @@ Instance listset_join: MJoin listset := λ A, mbind id.
 Instance: CollectionMonad listset.
 Proof.
   split.
-  * intros. apply _.
-  * intros ??? [?] ?. apply elem_of_list_bind.
-  * intros. apply elem_of_list_ret.
-  * intros ??? [?]. apply elem_of_list_fmap.
-  * intros ? [?] ?. unfold mjoin, listset_join, elem_of, listset_elem_of.
+  - intros. apply _.
+  - intros ??? [?] ?. apply elem_of_list_bind.
+  - intros. apply elem_of_list_ret.
+  - intros ??? [?]. apply elem_of_list_fmap.
+  - intros ? [?] ?. unfold mjoin, listset_join, elem_of, listset_elem_of.
     simpl. by rewrite elem_of_list_bind.
 Qed.

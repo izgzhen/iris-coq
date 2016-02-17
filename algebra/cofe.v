@@ -97,15 +97,15 @@ Section cofe.
   Global Instance cofe_equivalence : Equivalence ((≡) : relation A).
   Proof.
     split.
-    * by intros x; rewrite equiv_dist.
-    * by intros x y; rewrite !equiv_dist.
-    * by intros x y z; rewrite !equiv_dist; intros; transitivity y.
+    - by intros x; rewrite equiv_dist.
+    - by intros x y; rewrite !equiv_dist.
+    - by intros x y z; rewrite !equiv_dist; intros; transitivity y.
   Qed.
   Global Instance dist_ne n : Proper (dist n ==> dist n ==> iff) (@dist A _ n).
   Proof.
     intros x1 x2 ? y1 y2 ?; split; intros.
-    * by transitivity x1; [|transitivity y1].
-    * by transitivity x2; [|transitivity y2].
+    - by transitivity x1; [|transitivity y1].
+    - by transitivity x2; [|transitivity y2].
   Qed.
   Global Instance dist_proper n : Proper ((≡) ==> (≡) ==> iff) (@dist A _ n).
   Proof.
@@ -158,8 +158,8 @@ Program Definition fixpoint_chain {A : cofeT} `{Inhabited A} (f : A → A)
   `{!Contractive f} : chain A := {| chain_car i := Nat.iter (S i) f inhabitant |}.
 Next Obligation.
   intros A ? f ? n. induction n as [|n IH]; intros [|i] ?; simpl; try omega.
-  * apply (contractive_0 f).
-  * apply (contractive_S f), IH; auto with omega.
+  - apply (contractive_0 f).
+  - apply (contractive_S f), IH; auto with omega.
 Qed.
 Program Definition fixpoint {A : cofeT} `{Inhabited A} (f : A → A)
   `{!Contractive f} : A := compl (fixpoint_chain f).
@@ -212,14 +212,14 @@ Section cofe_mor.
   Definition cofe_mor_cofe_mixin : CofeMixin (cofeMor A B).
   Proof.
     split.
-    * intros f g; split; [intros Hfg n k; apply equiv_dist, Hfg|].
+    - intros f g; split; [intros Hfg n k; apply equiv_dist, Hfg|].
       intros Hfg k; apply equiv_dist; intros n; apply Hfg.
-    * intros n; split.
+    - intros n; split.
       + by intros f x.
       + by intros f g ? x.
       + by intros f g h ?? x; transitivity (g x).
-    * by intros n f g ? x; apply dist_S.
-    * intros c n x; simpl.
+    - by intros n f g ? x; apply dist_S.
+    - intros c n x; simpl.
       by rewrite (conv_compl (fun_chain c x) n) /=.
   Qed.
   Canonical Structure cofe_mor : cofeT := CofeT cofe_mor_cofe_mixin.
@@ -274,11 +274,11 @@ Section product.
   Definition prod_cofe_mixin : CofeMixin (A * B).
   Proof.
     split.
-    * intros x y; unfold dist, prod_dist, equiv, prod_equiv, prod_relation.
+    - intros x y; unfold dist, prod_dist, equiv, prod_equiv, prod_relation.
       rewrite !equiv_dist; naive_solver.
-    * apply _.
-    * by intros n [x1 y1] [x2 y2] [??]; split; apply dist_S.
-    * intros c n; split. apply (conv_compl (chain_map fst c) n).
+    - apply _.
+    - by intros n [x1 y1] [x2 y2] [??]; split; apply dist_S.
+    - intros c n; split. apply (conv_compl (chain_map fst c) n).
       apply (conv_compl (chain_map snd c) n).
   Qed.
   Canonical Structure prodC : cofeT := CofeT prod_cofe_mixin.
@@ -308,10 +308,10 @@ Section discrete_cofe.
   Definition discrete_cofe_mixin : CofeMixin A.
   Proof.
     split.
-    * intros x y; split; [done|intros Hn; apply (Hn 0)].
-    * done.
-    * done.
-    * intros c n. rewrite /compl /discrete_compl /=.
+    - intros x y; split; [done|intros Hn; apply (Hn 0)].
+    - done.
+    - done.
+    - intros c n. rewrite /compl /discrete_compl /=.
       symmetry; apply (chain_cauchy c 0 (S n)); omega.
   Qed.
   Definition discreteC : cofeT := CofeT discrete_cofe_mixin.
@@ -347,14 +347,14 @@ Section later.
   Definition later_cofe_mixin : CofeMixin (later A).
   Proof.
     split.
-    * intros x y; unfold equiv, later_equiv; rewrite !equiv_dist.
+    - intros x y; unfold equiv, later_equiv; rewrite !equiv_dist.
       split. intros Hxy [|n]; [done|apply Hxy]. intros Hxy n; apply (Hxy (S n)).
-    * intros [|n]; [by split|split]; unfold dist, later_dist.
+    - intros [|n]; [by split|split]; unfold dist, later_dist.
       + by intros [x].
       + by intros [x] [y].
       + by intros [x] [y] [z] ??; transitivity y.
-    * intros [|n] [x] [y] ?; [done|]; unfold dist, later_dist; by apply dist_S.
-    * intros c [|n]; [done|by apply (conv_compl (later_chain c) n)].
+    - intros [|n] [x] [y] ?; [done|]; unfold dist, later_dist; by apply dist_S.
+    - intros c [|n]; [done|by apply (conv_compl (later_chain c) n)].
   Qed.
   Canonical Structure laterC : cofeT := CofeT later_cofe_mixin.
   Global Instance Next_contractive : Contractive (@Next A).

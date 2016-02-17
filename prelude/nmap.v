@@ -49,34 +49,34 @@ Instance Nfmap: FMap Nmap := λ A B f t,
 Instance: FinMap N Nmap.
 Proof.
   split.
-  * intros ? [??] [??] H. f_equal; [apply (H 0)|].
+  - intros ? [??] [??] H. f_equal; [apply (H 0)|].
     apply map_eq. intros i. apply (H (Npos i)).
-  * by intros ? [|?].
-  * intros ? f [? t] [|i]; simpl; [done |]. apply lookup_partial_alter.
-  * intros ? f [? t] [|i] [|j]; simpl; try intuition congruence.
+  - by intros ? [|?].
+  - intros ? f [? t] [|i]; simpl; [done |]. apply lookup_partial_alter.
+  - intros ? f [? t] [|i] [|j]; simpl; try intuition congruence.
     intros. apply lookup_partial_alter_ne. congruence.
-  * intros ??? [??] []; simpl. done. apply lookup_fmap.
-  * intros ? [[x|] t]; unfold map_to_list; simpl.
+  - intros ??? [??] []; simpl. done. apply lookup_fmap.
+  - intros ? [[x|] t]; unfold map_to_list; simpl.
     + constructor.
-      - rewrite elem_of_list_fmap. by intros [[??] [??]].
-      - by apply (NoDup_fmap _), NoDup_map_to_list.
+      * rewrite elem_of_list_fmap. by intros [[??] [??]].
+      * by apply (NoDup_fmap _), NoDup_map_to_list.
     + apply (NoDup_fmap _), NoDup_map_to_list.
-  * intros ? t i x. unfold map_to_list. split.
+  - intros ? t i x. unfold map_to_list. split.
     + destruct t as [[y|] t]; simpl.
-      - rewrite elem_of_cons, elem_of_list_fmap.
+      * rewrite elem_of_cons, elem_of_list_fmap.
         intros [? | [[??] [??]]]; simplify_equality'; [done |].
         by apply elem_of_map_to_list.
-      - rewrite elem_of_list_fmap; intros [[??] [??]]; simplify_equality'.
+      * rewrite elem_of_list_fmap; intros [[??] [??]]; simplify_equality'.
         by apply elem_of_map_to_list.
     + destruct t as [[y|] t]; simpl.
-      - rewrite elem_of_cons, elem_of_list_fmap.
+      * rewrite elem_of_cons, elem_of_list_fmap.
         destruct i as [|i]; simpl; [intuition congruence |].
         intros. right. exists (i, x). by rewrite elem_of_map_to_list.
-      - rewrite elem_of_list_fmap.
+      * rewrite elem_of_list_fmap.
         destruct i as [|i]; simpl; [done |].
         intros. exists (i, x). by rewrite elem_of_map_to_list.
-  * intros ?? f [??] [|?]; simpl; [done|]; apply (lookup_omap f).
-  * intros ??? f ? [??] [??] [|?]; simpl; [done|]; apply (lookup_merge f).
+  - intros ?? f [??] [|?]; simpl; [done|]; apply (lookup_omap f).
+  - intros ??? f ? [??] [??] [|?]; simpl; [done|]; apply (lookup_merge f).
 Qed.
 
 (** * Finite sets *)
@@ -96,8 +96,8 @@ Instance Nset_fresh : Fresh N Nset := λ X,
 Instance Nset_fresh_spec : FreshSpec N Nset.
 Proof.
   split.
-  * apply _.
-  * intros X Y; rewrite <-elem_of_equiv_L. by intros ->.
-  * unfold elem_of, mapset_elem_of, fresh; intros [m]; simpl.
+  - apply _.
+  - intros X Y; rewrite <-elem_of_equiv_L. by intros ->.
+  - unfold elem_of, mapset_elem_of, fresh; intros [m]; simpl.
     by rewrite Nfresh_fresh.
 Qed.

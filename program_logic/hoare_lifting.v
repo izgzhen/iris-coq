@@ -62,11 +62,11 @@ Proof.
   apply and_intro; [by rewrite -vs_reflexive; apply const_intro|].
   apply forall_mono=>e2; apply forall_mono=>σ2; apply forall_mono=>ef.
   apply and_intro; [|apply and_intro; [|done]].
-  * rewrite -vs_impl; apply (always_intro _ _),impl_intro_l; rewrite and_elim_l.
+  - rewrite -vs_impl; apply (always_intro _ _),impl_intro_l; rewrite and_elim_l.
     rewrite !assoc; apply sep_mono; last done.
     rewrite -!always_and_sep_l -!always_and_sep_r; apply const_elim_l=>-[??].
     by repeat apply and_intro; try apply const_intro.
-  * apply (always_intro _ _), impl_intro_l; rewrite and_elim_l.
+  - apply (always_intro _ _), impl_intro_l; rewrite and_elim_l.
     rewrite -always_and_sep_r; apply const_elim_r=>-[[v Hv] ?].
     rewrite -(of_to_val e2 v) // -wp_value'; [].
     rewrite -(exist_intro σ2) -(exist_intro ef) (of_to_val e2) //.
@@ -110,10 +110,10 @@ Proof.
   intros ? Hsafe Hdet.
   rewrite -(ht_lift_pure_step _ (λ e2' ef', e2 = e2' ∧ ef = ef')); eauto.
   apply forall_intro=>e2'; apply forall_intro=>ef'; apply and_mono.
-  * apply (always_intro' _ _), impl_intro_l.
+  - apply (always_intro' _ _), impl_intro_l.
     rewrite -always_and_sep_l -assoc; apply const_elim_l=>-[??]; subst.
     by rewrite /ht always_elim impl_elim_r.
-  * destruct ef' as [e'|]; simpl; [|by apply const_intro].
+  - destruct ef' as [e'|]; simpl; [|by apply const_intro].
     apply (always_intro _ _), impl_intro_l.
     rewrite -always_and_sep_l -assoc; apply const_elim_l=>-[??]; subst.
     by rewrite /= /ht always_elim impl_elim_r.

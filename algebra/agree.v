@@ -33,17 +33,17 @@ Qed.
 Definition agree_cofe_mixin : CofeMixin (agree A).
 Proof.
   split.
-  * intros x y; split.
+  - intros x y; split.
     + by intros Hxy n; split; intros; apply Hxy.
     + by intros Hxy; split; intros; apply Hxy with n.
-  * split.
+  - split.
     + by split.
     + by intros x y Hxy; split; intros; symmetry; apply Hxy; auto; apply Hxy.
     + intros x y z Hxy Hyz; split; intros n'; intros.
-      - transitivity (agree_is_valid y n'). by apply Hxy. by apply Hyz.
-      - transitivity (y n'). by apply Hxy. by apply Hyz, Hxy.
-  * intros n x y Hxy; split; intros; apply Hxy; auto.
-  * intros c n; apply and_wlog_r; intros;
+      * transitivity (agree_is_valid y n'). by apply Hxy. by apply Hyz.
+      * transitivity (y n'). by apply Hxy. by apply Hyz, Hxy.
+  - intros n x y Hxy; split; intros; apply Hxy; auto.
+  - intros c n; apply and_wlog_r; intros;
       symmetry; apply (chain_cauchy c); naive_solver.
 Qed.
 Canonical Structure agreeC := CofeT agree_cofe_mixin.
@@ -74,8 +74,8 @@ Proof.
   intros n x y1 y2 [Hy' Hy]; split; [|done].
   split; intros (?&?&Hxy); repeat (intro || split);
     try apply Hy'; eauto using agree_valid_le.
-  * etransitivity; [apply Hxy|apply Hy]; eauto using agree_valid_le.
-  * etransitivity; [apply Hxy|symmetry; apply Hy, Hy'];
+  - etransitivity; [apply Hxy|apply Hy]; eauto using agree_valid_le.
+  - etransitivity; [apply Hxy|symmetry; apply Hy, Hy'];
       eauto using agree_valid_le.
 Qed.
 Instance: Proper (dist n ==> dist n ==> dist n) (@op (agree A) _).
@@ -95,13 +95,13 @@ Qed.
 Definition agree_cmra_mixin : CMRAMixin (agree A).
 Proof.
   split; try (apply _ || done).
-  * by intros n x1 x2 Hx y1 y2 Hy.
-  * intros n x [? Hx]; split; [by apply agree_valid_S|intros n' ?].
+  - by intros n x1 x2 Hx y1 y2 Hy.
+  - intros n x [? Hx]; split; [by apply agree_valid_S|intros n' ?].
     rewrite (Hx n'); last auto.
     symmetry; apply dist_le with n; try apply Hx; auto.
-  * intros x; apply agree_idemp.
-  * by intros x y n [(?&?&?) ?].
-  * by intros x y n; rewrite agree_includedN.
+  - intros x; apply agree_idemp.
+  - by intros x y n [(?&?&?) ?].
+  - by intros x y n; rewrite agree_includedN.
 Qed.
 Lemma agree_op_inv (x1 x2 : agree A) n : ✓{n} (x1 ⋅ x2) → x1 ≡{n}≡ x2.
 Proof. intros Hxy; apply Hxy. Qed.
@@ -113,8 +113,8 @@ Qed.
 Definition agree_cmra_extend_mixin : CMRAExtendMixin (agree A).
 Proof.
   intros n x y1 y2 Hval Hx; exists (x,x); simpl; split.
-  * by rewrite agree_idemp.
-  * by move: Hval; rewrite Hx; move=> /agree_op_inv->; rewrite agree_idemp.
+  - by rewrite agree_idemp.
+  - by move: Hval; rewrite Hx; move=> /agree_op_inv->; rewrite agree_idemp.
 Qed.
 Canonical Structure agreeRA : cmraT :=
   CMRAT agree_cofe_mixin agree_cmra_mixin agree_cmra_extend_mixin.

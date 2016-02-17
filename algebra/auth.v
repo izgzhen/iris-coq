@@ -39,14 +39,14 @@ Instance auth_compl : Compl (auth A) := λ c,
 Definition auth_cofe_mixin : CofeMixin (auth A).
 Proof.
   split.
-  * intros x y; unfold dist, auth_dist, equiv, auth_equiv.
+  - intros x y; unfold dist, auth_dist, equiv, auth_equiv.
     rewrite !equiv_dist; naive_solver.
-  * intros n; split.
+  - intros n; split.
     + by intros ?; split.
     + by intros ?? [??]; split; symmetry.
     + intros ??? [??] [??]; split; etransitivity; eauto.
-  * by intros ? [??] [??] [??]; split; apply dist_S.
-  * intros c n; split. apply (conv_compl (chain_map authoritative c) n).
+  - by intros ? [??] [??] [??]; split; apply dist_S.
+  - intros c n; split. apply (conv_compl (chain_map authoritative c) n).
     apply (conv_compl (chain_map own c) n).
 Qed.
 Canonical Structure authC := CofeT auth_cofe_mixin.
@@ -99,24 +99,24 @@ Proof. destruct x as [[]]; naive_solver eauto using cmra_validN_includedN. Qed.
 Definition auth_cmra_mixin : CMRAMixin (auth A).
 Proof.
   split.
-  * by intros n x y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
-  * by intros n y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
-  * intros n [x a] [y b] [Hx Ha]; simpl in *;
+  - by intros n x y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
+  - by intros n y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
+  - intros n [x a] [y b] [Hx Ha]; simpl in *;
       destruct Hx; intros ?; cofe_subst; auto.
-  * by intros n x1 x2 [Hx Hx'] y1 y2 [Hy Hy'];
+  - by intros n x1 x2 [Hx Hx'] y1 y2 [Hy Hy'];
       split; simpl; rewrite ?Hy ?Hy' ?Hx ?Hx'.
-  * intros n [[] ?] ?; naive_solver eauto using cmra_includedN_S, cmra_validN_S.
-  * by split; simpl; rewrite assoc.
-  * by split; simpl; rewrite comm.
-  * by split; simpl; rewrite ?cmra_unit_l.
-  * by split; simpl; rewrite ?cmra_unit_idemp.
-  * intros n ??; rewrite! auth_includedN; intros [??].
+  - intros n [[] ?] ?; naive_solver eauto using cmra_includedN_S, cmra_validN_S.
+  - by split; simpl; rewrite assoc.
+  - by split; simpl; rewrite comm.
+  - by split; simpl; rewrite ?cmra_unit_l.
+  - by split; simpl; rewrite ?cmra_unit_idemp.
+  - intros n ??; rewrite! auth_includedN; intros [??].
     by split; simpl; apply cmra_unit_preservingN.
-  * assert (∀ n (a b1 b2 : A), b1 ⋅ b2 ≼{n} a → b1 ≼{n} a).
+  - assert (∀ n (a b1 b2 : A), b1 ⋅ b2 ≼{n} a → b1 ≼{n} a).
     { intros n a b1 b2 <-; apply cmra_includedN_l. }
    intros n [[a1| |] b1] [[a2| |] b2];
      naive_solver eauto using cmra_validN_op_l, cmra_validN_includedN.
-  * by intros n ??; rewrite auth_includedN;
+  - by intros n ??; rewrite auth_includedN;
       intros [??]; split; simpl; apply cmra_op_minus.
 Qed.
 Definition auth_cmra_extend_mixin : CMRAExtendMixin (auth A).
@@ -150,9 +150,9 @@ Context `{Empty A, !CMRAIdentity A}.
 Global Instance auth_cmra_identity : CMRAIdentity authRA.
 Proof.
   split; simpl.
-  * by apply (@cmra_empty_valid A _).
-  * by intros x; constructor; rewrite /= left_id.
-  * apply _.
+  - by apply (@cmra_empty_valid A _).
+  - by intros x; constructor; rewrite /= left_id.
+  - apply _.
 Qed.
 Lemma auth_frag_op a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.
@@ -221,9 +221,9 @@ Instance auth_map_cmra_monotone {A B : cmraT} (f : A → B) :
   CMRAMonotone f → CMRAMonotone (auth_map f).
 Proof.
   split.
-  * by intros n [x a] [y b]; rewrite !auth_includedN /=;
+  - by intros n [x a] [y b]; rewrite !auth_includedN /=;
       intros [??]; split; simpl; apply: includedN_preserving.
-  * intros n [[a| |] b]; rewrite /= /cmra_validN;
+  - intros n [[a| |] b]; rewrite /= /cmra_validN;
       naive_solver eauto using @includedN_preserving, @validN_preserving.
 Qed.
 Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=

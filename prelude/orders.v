@@ -49,8 +49,8 @@ Section orders.
   Lemma strict_spec_alt `{!AntiSymm (=) R} X Y : X ⊂ Y ↔ X ⊆ Y ∧ X ≠ Y.
   Proof.
     split.
-    * intros [? HYX]. split. done. by intros <-.
-    * intros [? HXY]. split. done. by contradict HXY; apply (anti_symm R).
+    - intros [? HYX]. split. done. by intros <-.
+    - intros [? HXY]. split. done. by contradict HXY; apply (anti_symm R).
   Qed.
   Lemma po_eq_dec `{!PartialOrder R, ∀ X Y, Decision (X ⊆ Y)} (X Y : A) :
     Decision (X = Y).
@@ -242,8 +242,8 @@ Section merge_sort_correct.
     revert l2. induction l1 as [|x1 l1 IH1]; intros l2;
       induction l2 as [|x2 l2 IH2]; rewrite ?list_merge_cons; simpl;
       repeat case_decide; auto.
-    * by rewrite (right_id_L [] (++)).
-    * by rewrite IH2, Permutation_middle.
+    - by rewrite (right_id_L [] (++)).
+    - by rewrite IH2, Permutation_middle.
   Qed.
 
   Local Notation stack := (list (option (list A))).
@@ -292,8 +292,8 @@ Section merge_sort_correct.
     merge_sort_aux R st l ≡ₚ merge_stack_flatten st ++ l.
   Proof.
     revert st. induction l as [|?? IH]; simpl; intros.
-    * by rewrite (right_id_L [] (++)), merge_stack_Permutation.
-    * rewrite IH, merge_list_to_stack_Permutation; simpl.
+    - by rewrite (right_id_L [] (++)), merge_stack_Permutation.
+    - rewrite IH, merge_list_to_stack_Permutation; simpl.
       by rewrite Permutation_middle.
   Qed.
   Lemma Sorted_merge_sort l : Sorted R (merge_sort R l).
@@ -317,21 +317,21 @@ Section preorder.
   Instance preorder_equivalence: @Equivalence A (≡).
   Proof.
     split.
-    * done.
-    * by intros ?? [??].
-    * by intros X Y Z [??] [??]; split; transitivity Y.
+    - done.
+    - by intros ?? [??].
+    - by intros X Y Z [??] [??]; split; transitivity Y.
   Qed.
   Global Instance: Proper ((≡) ==> (≡) ==> iff) ((⊆) : relation A).
   Proof.
     unfold equiv, preorder_equiv. intros X1 Y1 ? X2 Y2 ?. split; intro.
-    * transitivity X1. tauto. transitivity X2; tauto.
-    * transitivity Y1. tauto. transitivity Y2; tauto.
+    - transitivity X1. tauto. transitivity X2; tauto.
+    - transitivity Y1. tauto. transitivity Y2; tauto.
   Qed.
   Lemma subset_spec (X Y : A) : X ⊂ Y ↔ X ⊆ Y ∧ X ≢ Y.
   Proof.
     split.
-    * intros [? HYX]. split. done. contradict HYX. by rewrite <-HYX.
-    * intros [? HXY]. split. done. by contradict HXY.
+    - intros [? HYX]. split. done. contradict HYX. by rewrite <-HYX.
+    - intros [? HXY]. split. done. by contradict HXY.
   Qed.
 
   Section dec.
@@ -435,15 +435,15 @@ Section join_semi_lattice.
   Lemma empty_union X Y : X ∪ Y ≡ ∅ ↔ X ≡ ∅ ∧ Y ≡ ∅.
   Proof.
     split.
-    * intros HXY. split; apply equiv_empty;
+    - intros HXY. split; apply equiv_empty;
         by transitivity (X ∪ Y); [auto | rewrite HXY].
-    * intros [HX HY]. by rewrite HX, HY, (left_id _ _).
+    - intros [HX HY]. by rewrite HX, HY, (left_id _ _).
   Qed.
   Lemma empty_union_list Xs : ⋃ Xs ≡ ∅ ↔ Forall (≡ ∅) Xs.
   Proof.
     split.
-    * induction Xs; simpl; rewrite ?empty_union; intuition.
-    * induction 1 as [|?? E1 ? E2]; simpl. done. by apply empty_union.
+    - induction Xs; simpl; rewrite ?empty_union; intuition.
+    - induction 1 as [|?? E1 ? E2]; simpl. done. by apply empty_union.
   Qed.
 
   Section leibniz.
@@ -562,20 +562,20 @@ Section lattice.
     split; [apply union_least|apply lattice_distr].
     { apply intersection_greatest; auto using union_subseteq_l. }
     apply intersection_greatest.
-    * apply union_subseteq_r_transitive, intersection_subseteq_l.
-    * apply union_subseteq_r_transitive, intersection_subseteq_r.
+    - apply union_subseteq_r_transitive, intersection_subseteq_l.
+    - apply union_subseteq_r_transitive, intersection_subseteq_r.
   Qed.
   Lemma union_intersection_r (X Y Z : A) : (X ∩ Y) ∪ Z ≡ (X ∪ Z) ∩ (Y ∪ Z).
   Proof. by rewrite !(comm _ _ Z), union_intersection_l. Qed.
   Lemma intersection_union_l (X Y Z : A) : X ∩ (Y ∪ Z) ≡ (X ∩ Y) ∪ (X ∩ Z).
   Proof.
     split.
-    * rewrite union_intersection_l.
+    - rewrite union_intersection_l.
       apply intersection_greatest.
       { apply union_subseteq_r_transitive, intersection_subseteq_l. }
       rewrite union_intersection_r.
       apply intersection_preserving; auto using union_subseteq_l.
-    * apply intersection_greatest.
+    - apply intersection_greatest.
       { apply union_least; auto using intersection_subseteq_l. }
       apply union_least.
       + apply intersection_subseteq_r_transitive, union_subseteq_l.

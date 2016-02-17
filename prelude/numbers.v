@@ -45,10 +45,10 @@ Proof.
   assert (∀ x y (p : x ≤ y) y' (q : x ≤ y'),
     y = y' → eq_dep nat (le x) y p y' q) as aux.
   { fix 3. intros x ? [|y p] ? [|y' q].
-    * done.
-    * clear nat_le_pi. intros; exfalso; auto with lia.
-    * clear nat_le_pi. intros; exfalso; auto with lia.
-    * injection 1. intros Hy. by case (nat_le_pi x y p y' q Hy). }
+    - done.
+    - clear nat_le_pi. intros; exfalso; auto with lia.
+    - clear nat_le_pi. intros; exfalso; auto with lia.
+    - injection 1. intros Hy. by case (nat_le_pi x y p y' q Hy). }
   intros x y p q.
   by apply (Eqdep_dec.eq_dep_eq_dec (λ x y, decide (x = y))), aux.
 Qed.
@@ -153,8 +153,8 @@ Proof.
   cut (∀ p1 p2 p3, Preverse_go (p2 ++ p3) p1 = p2 ++ Preverse_go p3 p1).
   { by intros go p3; induction p3; intros p1 p2; simpl; auto; rewrite <-?go. }
   intros p1; induction p1 as [p1 IH|p1 IH|]; intros p2 p3; simpl; auto.
-  * apply (IH _ (_~1)).
-  * apply (IH _ (_~0)).
+  - apply (IH _ (_~1)).
+  - apply (IH _ (_~0)).
 Qed.
 Lemma Preverse_app p1 p2 : Preverse (p1 ++ p2) = Preverse p2 ++ Preverse p1.
 Proof. unfold Preverse. by rewrite Preverse_go_app. Qed.
@@ -283,11 +283,11 @@ Qed.
 Lemma Nat2Z_divide n m : (Z.of_nat n | Z.of_nat m) ↔ (n | m)%nat.
 Proof.
   split.
-  * rewrite <-(Nat2Z.id m) at 2; intros [i ->]; exists (Z.to_nat i).
+  - rewrite <-(Nat2Z.id m) at 2; intros [i ->]; exists (Z.to_nat i).
     destruct (decide (0 ≤ i)%Z).
     { by rewrite Z2Nat.inj_mul, Nat2Z.id by lia. }
     by rewrite !Z_to_nat_nonpos by auto using Z.mul_nonpos_nonneg with lia.
-  * intros [i ->]. exists (Z.of_nat i). by rewrite Nat2Z.inj_mul.
+  - intros [i ->]. exists (Z.of_nat i). by rewrite Nat2Z.inj_mul.
 Qed.
 Lemma Z2Nat_divide n m :
   0 ≤ n → 0 ≤ m → (Z.to_nat n | Z.to_nat m)%nat ↔ (n | m).
@@ -360,8 +360,8 @@ Proof. split; auto using Qclt_not_le, Qcnot_le_lt. Qed.
 Lemma Qcplus_le_mono_l (x y z : Qc) : x ≤ y ↔ z + x ≤ z + y.
 Proof.
   split; intros.
-  * by apply Qcplus_le_compat.
-  * replace x with ((0 - z) + (z + x)) by ring.
+  - by apply Qcplus_le_compat.
+  - replace x with ((0 - z) + (z + x)) by ring.
     replace y with ((0 - z) + (z + y)) by ring.
     by apply Qcplus_le_compat.
 Qed.

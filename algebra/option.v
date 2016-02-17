@@ -23,15 +23,15 @@ Instance option_compl : Compl (option A) := λ c,
 Definition option_cofe_mixin : CofeMixin (option A).
 Proof.
   split.
-  * intros mx my; split; [by destruct 1; constructor; apply equiv_dist|].
+  - intros mx my; split; [by destruct 1; constructor; apply equiv_dist|].
     intros Hxy; feed inversion (Hxy 1); subst; constructor; apply equiv_dist.
     by intros n; feed inversion (Hxy n).
-  * intros n; split.
+  - intros n; split.
     + by intros [x|]; constructor.
     + by destruct 1; constructor.
     + destruct 1; inversion_clear 1; constructor; etransitivity; eauto.
-  * by inversion_clear 1; constructor; apply dist_S.
-  * intros c n; unfold compl, option_compl.
+  - by inversion_clear 1; constructor; apply dist_S.
+  - intros c n; unfold compl, option_compl.
     destruct (Some_dec (c 1)) as [[x Hx]|].
     { assert (is_Some (c (S n))) as [y Hy].
       { feed inversion (chain_cauchy c 0 (S n)); eauto with lia congruence. }
@@ -72,12 +72,12 @@ Lemma option_includedN n (mx my : option A) :
   mx ≼{n} my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ x ≼{n} y.
 Proof.
   split.
-  * intros [mz Hmz].
+  - intros [mz Hmz].
     destruct mx as [x|]; [right|by left].
     destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
     destruct mz as [z|]; inversion_clear Hmz; split_ands; auto;
       cofe_subst; eauto using cmra_includedN_l.
-  * intros [->|(x&y&->&->&z&Hz)]; try (by exists my; destruct my; constructor).
+  - intros [->|(x&y&->&->&z&Hz)]; try (by exists my; destruct my; constructor).
     by exists (Some z); constructor.
 Qed.
 Lemma None_includedN n (mx : option A) : None ≼{n} mx.
@@ -89,20 +89,20 @@ Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl.
 Definition option_cmra_mixin  : CMRAMixin (option A).
 Proof.
   split.
-  * by intros n [x|]; destruct 1; constructor; cofe_subst.
-  * by destruct 1; constructor; cofe_subst.
-  * by destruct 1; rewrite /validN /option_validN //=; cofe_subst.
-  * by destruct 1; inversion_clear 1; constructor; cofe_subst.
-  * intros n [x|]; unfold validN, option_validN; eauto using cmra_validN_S.
-  * intros [x|] [y|] [z|]; constructor; rewrite ?assoc; auto.
-  * intros [x|] [y|]; constructor; rewrite 1?comm; auto.
-  * by intros [x|]; constructor; rewrite cmra_unit_l.
-  * by intros [x|]; constructor; rewrite cmra_unit_idemp.
-  * intros n mx my; rewrite !option_includedN;intros [->|(x&y&->&->&?)]; auto.
+  - by intros n [x|]; destruct 1; constructor; cofe_subst.
+  - by destruct 1; constructor; cofe_subst.
+  - by destruct 1; rewrite /validN /option_validN //=; cofe_subst.
+  - by destruct 1; inversion_clear 1; constructor; cofe_subst.
+  - intros n [x|]; unfold validN, option_validN; eauto using cmra_validN_S.
+  - intros [x|] [y|] [z|]; constructor; rewrite ?assoc; auto.
+  - intros [x|] [y|]; constructor; rewrite 1?comm; auto.
+  - by intros [x|]; constructor; rewrite cmra_unit_l.
+  - by intros [x|]; constructor; rewrite cmra_unit_idemp.
+  - intros n mx my; rewrite !option_includedN;intros [->|(x&y&->&->&?)]; auto.
     right; exists (unit x), (unit y); eauto using cmra_unit_preservingN.
-  * intros n [x|] [y|]; rewrite /validN /option_validN /=;
+  - intros n [x|] [y|]; rewrite /validN /option_validN /=;
       eauto using cmra_validN_op_l.
-  * intros n mx my; rewrite option_includedN.
+  - intros n mx my; rewrite option_includedN.
     intros [->|(x&y&->&->&?)]; [by destruct my|].
     by constructor; apply cmra_op_minus.
 Qed.
@@ -111,12 +111,12 @@ Proof.
   intros n mx my1 my2.
   destruct mx as [x|], my1 as [y1|], my2 as [y2|]; intros Hx Hx';
     try (by exfalso; inversion Hx'; auto).
-  * destruct (cmra_extend_op n x y1 y2) as ([z1 z2]&?&?&?); auto.
+  - destruct (cmra_extend_op n x y1 y2) as ([z1 z2]&?&?&?); auto.
     { by inversion_clear Hx'. }
     by exists (Some z1, Some z2); repeat constructor.
-  * by exists (Some x,None); inversion Hx'; repeat constructor.
-  * by exists (None,Some x); inversion Hx'; repeat constructor.
-  * exists (None,None); repeat constructor.
+  - by exists (Some x,None); inversion Hx'; repeat constructor.
+  - by exists (None,Some x); inversion Hx'; repeat constructor.
+  - exists (None,None); repeat constructor.
 Qed.
 Canonical Structure optionRA :=
   CMRAT option_cofe_mixin option_cmra_mixin option_cmra_extend_mixin.
@@ -175,9 +175,9 @@ Instance option_fmap_cmra_monotone {A B : cmraT} (f: A → B) `{!CMRAMonotone f}
   CMRAMonotone (fmap f : option A → option B).
 Proof.
   split.
-  * intros n mx my; rewrite !option_includedN.
+  - intros n mx my; rewrite !option_includedN.
     intros [->|(x&y&->&->&?)]; simpl; eauto 10 using @includedN_preserving.
-  * by intros n [x|] ?; rewrite /cmra_validN /=; try apply validN_preserving.
+  - by intros n [x|] ?; rewrite /cmra_validN /=; try apply validN_preserving.
 Qed.
 Definition optionC_map {A B} (f : A -n> B) : optionC A -n> optionC B :=
   CofeMor (fmap f : optionC A → optionC B).
