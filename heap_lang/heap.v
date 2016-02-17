@@ -67,7 +67,8 @@ Section heap.
     ownP σ ⊑ pvs N N (∃ (_ : heapG Σ), heap_ctx N ∧ Π★{map σ} heap_mapsto).
   Proof.
     rewrite -{1}(from_to_heap σ). etransitivity.
-    { apply (auth_alloc (ownP ∘ of_heap) N (to_heap σ)), to_heap_valid. }
+    { rewrite [ownP _]later_intro.
+      apply (auth_alloc (ownP ∘ of_heap) N (to_heap σ)), to_heap_valid. }
     apply pvs_mono, exist_elim=> γ.
     rewrite -(exist_intro (HeapG _ _ γ)); apply and_mono_r.
     induction σ as [|l v σ Hl IH] using map_ind.

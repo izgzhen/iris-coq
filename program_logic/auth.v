@@ -42,17 +42,17 @@ Section auth.
   Proof. by rewrite /auth_own own_valid auth_validI. Qed.
 
   Lemma auth_alloc N a :
-    ✓ a → φ a ⊑ pvs N N (∃ γ, auth_ctx γ N φ ∧ auth_own γ a).
+    ✓ a → ▷ φ a ⊑ pvs N N (∃ γ, auth_ctx γ N φ ∧ auth_own γ a).
   Proof.
     intros Ha. eapply sep_elim_True_r.
     { by eapply (own_alloc (Auth (Excl a) a) N). }
     rewrite pvs_frame_l. apply pvs_strip_pvs.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     transitivity (▷ auth_inv γ φ ★ auth_own γ a)%I.
-    { rewrite /auth_inv -later_intro -(exist_intro a).
+    { rewrite /auth_inv -(exist_intro a) later_sep.
       rewrite const_equiv // left_id.
-      rewrite [(_ ★ φ _)%I]comm -assoc. apply sep_mono; first done.
-      rewrite /auth_own -own_op auth_both_op. done. }
+      rewrite [(_ ★ ▷ φ _)%I]comm -assoc. apply sep_mono; first done.
+      rewrite -later_intro /auth_own -own_op auth_both_op. done. }
     rewrite (inv_alloc N) /auth_ctx pvs_frame_r. apply pvs_mono.
     by rewrite always_and_sep_l.
   Qed.
