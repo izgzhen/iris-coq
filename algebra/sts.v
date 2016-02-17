@@ -336,19 +336,10 @@ Lemma sts_op_frag S1 S2 T1 T2 :
   T1 ∪ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
   sts_frag (S1 ∩ S2) (T1 ∪ T2) ≡ sts_frag S1 T1 ⋅ sts_frag S2 T2.
 Proof.
-  (* Somehow I feel like a very similar proof muts have happened above, when
-     proving the DRA axioms. After all, we are just reflecting the operation here. *)
-  intros HT HS1 HS2; split; [split|constructor; solve_elem_of]; simpl.
-  - intros; split_ands; try done; []. constructor; last solve_elem_of.
-    by eapply closed_ne.
-  - intros (_ & _ & H). inversion_clear H. constructor; first done.
-    + move=>s /elem_of_intersection
-              [/(closed_disjoint _ _ HS1) Hs1 /(closed_disjoint _ _ HS2) Hs2].
-      solve_elem_of +Hs1 Hs2.
-    + move=> s1 s2 /elem_of_intersection [Hs1 Hs2] Hstep.
-      apply elem_of_intersection.
-      split; eapply closed_step; eauto; [|]; eapply framestep_mono, Hstep;
-        done || solve_elem_of.
+  intros HT HS1 HS2. rewrite /sts_frag.
+  (* FIXME why does rewrite not work?? *)
+  etransitivity; last eapply to_validity_op; try done; [].
+  intros Hval. constructor; last solve_elem_of. eapply closed_ne, Hval.
 Qed.
 
 (** Frame preserving updates *)
