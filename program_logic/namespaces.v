@@ -8,7 +8,7 @@ Definition ndot `{Countable A} (N : namespace) (x : A) : namespace :=
 Coercion nclose (N : namespace) : coPset := coPset_suffixes (encode N).
 
 Instance ndot_inj `{Countable A} : Inj2 (=) (=) (=) (@ndot A _ _).
-Proof. by intros N1 x1 N2 x2 ?; simplify_equality. Qed.
+Proof. by intros N1 x1 N2 x2 ?; simplify_eq. Qed.
 Lemma nclose_nnil : nclose nnil = ⊤.
 Proof. by apply (sig_eq_pi _). Qed.
 Lemma encode_nclose N : encode N ∈ nclose N.

@@ -355,7 +355,7 @@ Lemma sts_update_frag S1 S2 T :
   closed S2 T → S1 ⊆ S2 → sts_frag S1 T ~~> sts_frag S2 T.
 Proof.
   rewrite /sts_frag=> HS Hcl. apply validity_update.
-  inversion 3 as [|? S ? Tf|]; simplify_equality'.
+  inversion 3 as [|? S ? Tf|]; simplify_eq/=.
   - split; first done. constructor; [solve_elem_of|done].
   - split; first done. constructor; solve_elem_of.
 Qed.

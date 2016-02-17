@@ -29,13 +29,13 @@ Hint Extern 0 (_ ≡{_}≡ _) => symmetry; assumption.
 
 Tactic Notation "cofe_subst" ident(x) :=
   repeat match goal with
-  | _ => progress simplify_equality'
+  | _ => progress simplify_eq/=
   | H:@dist ?A ?d ?n x _ |- _ => setoid_subst_aux (@dist A d n) x
   | H:@dist ?A ?d ?n _ x |- _ => symmetry in H;setoid_subst_aux (@dist A d n) x
   end.
 Tactic Notation "cofe_subst" :=
   repeat match goal with
-  | _ => progress simplify_equality'
+  | _ => progress simplify_eq/=
   | H:@dist ?A ?d ?n ?x _ |- _ => setoid_subst_aux (@dist A d n) x
   | H:@dist ?A ?d ?n _ ?x |- _ => symmetry in H;setoid_subst_aux (@dist A d n) x
   end.

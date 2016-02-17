@@ -73,7 +73,7 @@ Instance: Inj (=) (=) (@FS n).
 Proof. intros n i j. apply Fin.FS_inj. Qed.
 Instance: Inj (=) (=) (@fin_to_nat n).
 Proof.
-  intros n i. induction i; intros j; inv_fin j; intros; f_equal'; auto with lia.
+  intros n i. induction i; intros j; inv_fin j; intros; f_equal/=; auto with lia.
 Qed.
 Lemma fin_to_nat_lt {n} (i : fin n) : fin_to_nat i < n.
 Proof. induction i; simpl; lia. Qed.
@@ -203,9 +203,9 @@ Lemma vec_to_list_cons {A n} x (v : vec A n) :
 Proof. done. Qed.
 Lemma vec_to_list_app {A n m} (v : vec A n) (w : vec A m) :
   vec_to_list (v +++ w) = vec_to_list v ++ vec_to_list w.
-Proof. by induction v; f_equal'. Qed.
+Proof. by induction v; f_equal/=. Qed.
 Lemma vec_to_list_of_list {A} (l : list A): vec_to_list (list_to_vec l) = l.
-Proof. by induction l; f_equal'. Qed.
+Proof. by induction l; f_equal/=. Qed.
 Lemma vec_to_list_length {A n} (v : vec A n) : length (vec_to_list v) = n.
 Proof. induction v; simpl; by f_equal. Qed.
 Lemma vec_to_list_same_length {A B n} (v : vec A n) (w : vec B n) :
@@ -215,13 +215,13 @@ Lemma vec_to_list_inj1 {A n m} (v : vec A n) (w : vec A m) :
   vec_to_list v = vec_to_list w → n = m.
 Proof.
   revert m w. induction v; intros ? [|???] ?;
-    simplify_equality'; f_equal; eauto.
+    simplify_eq/=; f_equal; eauto.
 Qed.
 Lemma vec_to_list_inj2 {A n} (v : vec A n) (w : vec A n) :
   vec_to_list v = vec_to_list w → v = w.
 Proof.
   revert w. induction v; intros w; inv_vec w; intros;
-    simplify_equality'; f_equal; eauto.
+    simplify_eq/=; f_equal; eauto.
 Qed.
 Lemma vlookup_middle {A n m} (v : vec A n) (w : vec A m) x :
   ∃ i : fin (n + S m), x = (v +++ x ::: w) !!! i.
@@ -327,4 +327,4 @@ Proof.
   intros. apply IHi. congruence.
 Qed.
 Lemma vlookup_insert_self {A n} i (v : vec A n) : vinsert i (v !!! i) v = v.
-Proof. by induction v; inv_fin i; intros; f_equal'. Qed.
+Proof. by induction v; inv_fin i; intros; f_equal/=. Qed.

@@ -13,7 +13,7 @@ Program Definition option_chain
   {| chain_car n := from_option x (c n) |}.
 Next Obligation.
   intros c x ? n [|i] ?; [omega|]; simpl.
-  destruct (c 1) eqn:?; simplify_equality'.
+  destruct (c 1) eqn:?; simplify_eq/=.
   by feed inversion (chain_cauchy c n (S i)).
 Qed.
 Instance option_compl : Compl (option A) := λ c,

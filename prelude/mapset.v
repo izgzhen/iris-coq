@@ -50,7 +50,7 @@ Proof.
   - unfold empty, elem_of, mapset_empty, mapset_elem_of.
     simpl. intros. by simpl_map.
   - unfold singleton, elem_of, mapset_singleton, mapset_elem_of.
-    simpl. by split; intros; simplify_map_equality.
+    simpl. by split; intros; simplify_map_eq.
   - unfold union, elem_of, mapset_union, mapset_elem_of.
     intros [m1] [m2] ?. simpl. rewrite lookup_union_Some_raw.
     destruct (m1 !! x) as [[]|]; tauto.

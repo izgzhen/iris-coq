@@ -239,18 +239,18 @@ Inductive prim_step
 
 (** Basic properties about the language *)
 Lemma to_of_val v : to_val (of_val v) = Some v.
-Proof. by induction v; simplify_option_equality. Qed.
+Proof. by induction v; simplify_option_eq. Qed.
 
 Lemma of_to_val e v : to_val e = Some v → of_val v = e.
 Proof.
-  revert v; induction e; intros; simplify_option_equality; auto with f_equal.
+  revert v; induction e; intros; simplify_option_eq; auto with f_equal.
 Qed.
 
 Instance: Inj (=) (=) of_val.
 Proof. by intros ?? Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
 
 Instance fill_item_inj Ki : Inj (=) (=) (fill_item Ki).
-Proof. destruct Ki; intros ???; simplify_equality'; auto with f_equal. Qed.
+Proof. destruct Ki; intros ???; simplify_eq/=; auto with f_equal. Qed.
 
 Instance ectx_fill_inj K : Inj (=) (=) (fill K).
 Proof. red; induction K as [|Ki K IH]; naive_solver. Qed.
@@ -261,7 +261,7 @@ Proof. revert e; induction K1; simpl; auto with f_equal. Qed.
 Lemma fill_val K e : is_Some (to_val (fill K e)) → is_Some (to_val e).
 Proof.
   intros [v' Hv']; revert v' Hv'.
-  induction K as [|[]]; intros; simplify_option_equality; eauto.
+  induction K as [|[]]; intros; simplify_option_eq; eauto.
 Qed.
 
 Lemma fill_not_val K e : to_val e = None → to_val (fill K e) = None.
@@ -297,13 +297,13 @@ Qed.
 
 Lemma head_ctx_step_val Ki e σ1 e2 σ2 ef :
   head_step (fill_item Ki e) σ1 e2 σ2 ef → is_Some (to_val e).
-Proof. destruct Ki; inversion_clear 1; simplify_option_equality; eauto. Qed.
+Proof. destruct Ki; inversion_clear 1; simplify_option_eq; eauto. Qed.
 
 Lemma fill_item_no_val_inj Ki1 Ki2 e1 e2 :
   to_val e1 = None → to_val e2 = None →
   fill_item Ki1 e1 = fill_item Ki2 e2 → Ki1 = Ki2.
 Proof.
-  destruct Ki1, Ki2; intros; try discriminate; simplify_equality';
+  destruct Ki1, Ki2; intros; try discriminate; simplify_eq/=;
     repeat match goal with
     | H : to_val (of_val _) = None |- _ => by rewrite to_of_val in H
     end; auto.
@@ -318,7 +318,7 @@ Lemma step_by_val K K' e1 e1' σ1 e2 σ2 ef :
 Proof.
   intros Hfill Hred Hnval; revert K' Hfill.
   induction K as [|Ki K IH]; simpl; intros K' Hfill; auto using prefix_of_nil.
-  destruct K' as [|Ki' K']; simplify_equality'.
+  destruct K' as [|Ki' K']; simplify_eq/=.
   { exfalso; apply (eq_None_not_Some (to_val (fill K e1)));
       eauto using fill_not_val, head_ctx_step_val. }
   cut (Ki = Ki'); [naive_solver eauto using prefix_of_cons|].

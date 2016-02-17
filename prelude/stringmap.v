@@ -24,7 +24,7 @@ Proof.
   cut (n2 - 1 < n2); [|lia]. clear n1 Hn Hs; revert IH; generalize (n2 - 1).
   intros n1. induction 1 as [n2 _ IH]; constructor; intros n3 [??].
   apply IH; [|lia]; split; [lia|].
-  by rewrite lookup_delete_ne by (intros ?; simplify_equality'; lia).
+  by rewrite lookup_delete_ne by (intros ?; simplify_eq/=; lia).
 Qed.
 Definition fresh_string_go {A} (s : string) (m : stringmap A) (n : N)
     (go : ∀ n', R s m n' n → string) : string :=

@@ -27,7 +27,7 @@ Proof.
 Qed.
 Lemma listset_empty_alt X : X ≡ ∅ ↔ listset_car X = [].
 Proof.
-  destruct X as [l]; split; [|by intros; simplify_equality'].
+  destruct X as [l]; split; [|by intros; simplify_eq/=].
   intros [Hl _]; destruct l as [|x l]; [done|]. feed inversion (Hl x); left.
 Qed. 
 Global Instance listset_empty_dec (X : listset A) : Decision (X ≡ ∅).

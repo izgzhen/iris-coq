@@ -41,7 +41,7 @@ Lemma prod_lexico_transitive `{Lexico A, Lexico B, !Transitive (@lexico A _)}
   (lexico y1 y2 → lexico y2 y3 → lexico y1 y3) → lexico (x1,y1) (x3,y3).
 Proof.
   intros Hx12 Hx23 ?; revert Hx12 Hx23. unfold lexico, prod_lexico.
-  intros [|[??]] [?|[??]]; simplify_equality'; auto.
+  intros [|[??]] [?|[??]]; simplify_eq/=; auto.
   by left; transitivity x2.
 Qed.
 

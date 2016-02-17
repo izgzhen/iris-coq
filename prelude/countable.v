@@ -149,18 +149,18 @@ Fixpoint prod_decode_snd (p : positive) : option positive :=
 Lemma prod_decode_encode_fst p q : prod_decode_fst (prod_encode p q) = Some p.
 Proof.
   assert (∀ p, prod_decode_fst (prod_encode_fst p) = Some p).
-  { intros p'. by induction p'; simplify_option_equality. }
+  { intros p'. by induction p'; simplify_option_eq. }
   assert (∀ p, prod_decode_fst (prod_encode_snd p) = None).
-  { intros p'. by induction p'; simplify_option_equality. }
-  revert q. by induction p; intros [?|?|]; simplify_option_equality.
+  { intros p'. by induction p'; simplify_option_eq. }
+  revert q. by induction p; intros [?|?|]; simplify_option_eq.
 Qed.
 Lemma prod_decode_encode_snd p q : prod_decode_snd (prod_encode p q) = Some q.
 Proof.
   assert (∀ p, prod_decode_snd (prod_encode_snd p) = Some p).
-  { intros p'. by induction p'; simplify_option_equality. }
+  { intros p'. by induction p'; simplify_option_eq. }
   assert (∀ p, prod_decode_snd (prod_encode_fst p) = None).
-  { intros p'. by induction p'; simplify_option_equality. }
-  revert q. by induction p; intros [?|?|]; simplify_option_equality.
+  { intros p'. by induction p'; simplify_option_eq. }
+  revert q. by induction p; intros [?|?|]; simplify_option_eq.
 Qed.
 Program Instance prod_countable `{Countable A} `{Countable B} :
   Countable (A * B)%type := {|
@@ -191,7 +191,7 @@ Fixpoint list_decode `{Countable A} (acc : list A)
   | p~1 => x ← decode_nat n; list_decode (x :: acc) O p
   end.
 Lemma x0_iter_x1 n acc : Nat.iter n (~0) acc~1 = acc ++ Nat.iter n (~0) 3.
-Proof. by induction n; f_equal'. Qed.
+Proof. by induction n; f_equal/=. Qed.
 Lemma list_encode_app' `{Countable A} (l1 l2 : list A) acc :
   list_encode acc (l1 ++ l2) = list_encode acc l1 ++ list_encode 1 l2.
 Proof.
@@ -226,7 +226,7 @@ Lemma list_encode_suffix_eq `{Countable A} q1 q2 (l1 l2 : list A) :
   length l1 = length l2 → q1 ++ encode l1 = q2 ++ encode l2 → l1 = l2.
 Proof.
   revert q1 q2 l2; induction l1 as [|a1 l1 IH];
-    intros q1 q2 [|a2 l2] ?; simplify_equality'; auto.
+    intros q1 q2 [|a2 l2] ?; simplify_eq/=; auto.
   rewrite !list_encode_cons, !(assoc _); intros Hl.
   assert (l1 = l2) as <- by eauto; clear IH; f_equal.
   apply (inj encode_nat); apply (inj (++ encode l1)) in Hl; revert Hl; clear.

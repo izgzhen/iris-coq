@@ -43,12 +43,12 @@ Global Instance alter_ne f k n :
   Proper (dist n ==> dist n) f → Proper (dist n ==> dist n) (alter f k).
 Proof.
   intros ? m m' Hm k'.
-  by destruct (decide (k = k')); simplify_map_equality; rewrite (Hm k').
+  by destruct (decide (k = k')); simplify_map_eq; rewrite (Hm k').
 Qed.
 Global Instance insert_ne i n :
   Proper (dist n ==> dist n ==> dist n) (insert (M:=gmap K A) i).
 Proof.
-  intros x y ? m m' ? j; destruct (decide (i = j)); simplify_map_equality;
+  intros x y ? m m' ? j; destruct (decide (i = j)); simplify_map_eq;
     [by constructor|by apply lookup_ne].
 Qed.
 Global Instance singleton_ne i n :
@@ -57,7 +57,7 @@ Proof. by intros ???; apply insert_ne. Qed.
 Global Instance delete_ne i n :
   Proper (dist n ==> dist n) (delete (M:=gmap K A) i).
 Proof.
-  intros m m' ? j; destruct (decide (i = j)); simplify_map_equality;
+  intros m m' ? j; destruct (decide (i = j)); simplify_map_eq;
     [by constructor|by apply lookup_ne].
 Qed.
 
@@ -79,7 +79,7 @@ Qed.
 Global Instance map_insert_timeless m i x :
   Timeless x → Timeless m → Timeless (<[i:=x]>m).
 Proof.
-  intros ?? m' Hm j; destruct (decide (i = j)); simplify_map_equality.
+  intros ?? m' Hm j; destruct (decide (i = j)); simplify_map_eq.
   { by apply (timeless _); rewrite -Hm lookup_insert. }
   by apply (timeless _); rewrite -Hm lookup_insert_ne.
 Qed.
@@ -193,13 +193,13 @@ Proof. by move=> /(_ i) Hm Hi; move:Hm; rewrite Hi. Qed.
 Lemma map_lookup_valid m i x : ✓ m → m !! i ≡ Some x → ✓ x.
 Proof. move=>Hm Hi n. move:(Hm n i). by rewrite Hi. Qed.
 Lemma map_insert_validN n m i x : ✓{n} x → ✓{n} m → ✓{n} <[i:=x]>m.
-Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_equality. Qed.
+Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_eq. Qed.
 Lemma map_insert_valid m i x : ✓ x → ✓ m → ✓ <[i:=x]>m.
 Proof. intros ?? n j; apply map_insert_validN; auto. Qed.
 Lemma map_singleton_validN n i x : ✓{n} ({[ i := x ]} : gmap K A) ↔ ✓{n} x.
 Proof.
   split; [|by intros; apply map_insert_validN, cmra_empty_valid].
-  by move=>/(_ i); simplify_map_equality.
+  by move=>/(_ i); simplify_map_eq.
 Qed.
 Lemma map_singleton_valid i x : ✓ ({[ i := x ]} : gmap K A) ↔ ✓ x.
 Proof. split; intros ? n; eapply map_singleton_validN; eauto. Qed.
@@ -234,7 +234,7 @@ Proof.
     destruct (m' !! i) as [y|];
       [exists (x ⋅ y)|exists x]; eauto using cmra_included_l.
   - intros (y&Hi&?); rewrite map_includedN_spec=>j.
-    destruct (decide (i = j)); simplify_map_equality.
+    destruct (decide (i = j)); simplify_map_eq.
     + by rewrite Hi; apply Some_Some_includedN, cmra_included_includedN.
     + apply None_includedN.
 Qed.
@@ -250,10 +250,10 @@ Lemma map_insert_updateP (P : A → Prop) (Q : gmap K A → Prop) m i x :
 Proof.
   intros Hx%option_updateP' HP mf n Hm.
   destruct (Hx (mf !! i) n) as ([y|]&?&?); try done.
-  { by generalize (Hm i); rewrite lookup_op; simplify_map_equality. }
+  { by generalize (Hm i); rewrite lookup_op; simplify_map_eq. }
   exists (<[i:=y]> m); split; first by auto.
   intros j; move: (Hm j)=>{Hm}; rewrite !lookup_op=>Hm.
-  destruct (decide (i = j)); simplify_map_equality'; auto.
+  destruct (decide (i = j)); simplify_map_eq/=; auto.
 Qed.
 Lemma map_insert_updateP' (P : A → Prop) m i x :
   x ~~>: P → <[i:=x]>m ~~>: λ m', ∃ y, m' = <[i:=y]>m ∧ P y.

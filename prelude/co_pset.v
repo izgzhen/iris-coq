@@ -120,7 +120,7 @@ Lemma elem_to_Pset_singleton p q : e_of p (coPset_singleton_raw q) ↔ p = q.
 Proof.
   split; [|by intros <-; induction p; simpl; rewrite ?coPset_elem_of_node].
   by revert q; induction p; intros [?|?|]; simpl;
-    rewrite ?coPset_elem_of_node; intros; f_equal'; auto.
+    rewrite ?coPset_elem_of_node; intros; f_equal/=; auto.
 Qed.
 Lemma elem_to_Pset_union t1 t2 p : e_of p (t1 ∪ t2) = e_of p t1 || e_of p t2.
 Proof.
@@ -226,13 +226,13 @@ Definition coPpick (X : coPset) : positive := from_option 1 (coPpick_raw (`X)).
 
 Lemma coPpick_raw_elem_of t i : coPpick_raw t = Some i → e_of i t.
 Proof.
-  revert i; induction t as [[]|[] l ? r]; intros i ?; simplify_equality'; auto.
-  destruct (coPpick_raw l); simplify_option_equality; auto.
+  revert i; induction t as [[]|[] l ? r]; intros i ?; simplify_eq/=; auto.
+  destruct (coPpick_raw l); simplify_option_eq; auto.
 Qed.
 Lemma coPpick_raw_None t : coPpick_raw t = None → coPset_finite t.
 Proof.
-  induction t as [[]|[] l ? r]; intros i; simplify_equality'; auto.
-  destruct (coPpick_raw l); simplify_option_equality; auto.
+  induction t as [[]|[] l ? r]; intros i; simplify_eq/=; auto.
+  destruct (coPpick_raw l); simplify_option_eq; auto.
 Qed.
 Lemma coPpick_elem_of X : ¬set_finite X → coPpick X ∈ X.
 Proof.

@@ -15,7 +15,7 @@ Instance assci_eq_dec : ∀ a1 a2, Decision (a1 = a2) := ascii_dec.
 Instance string_eq_dec (s1 s2 : string) : Decision (s1 = s2).
 Proof. solve_decision. Defined.
 Instance: Inj (=) (=) (String.append s1).
-Proof. intros s1 ???. induction s1; simplify_equality'; f_equal'; auto. Qed.
+Proof. intros s1 ???. induction s1; simplify_eq/=; f_equal/=; auto. Qed.
 
 (* Reverse *)
 Fixpoint string_rev_app (s1 s2 : string) : string :=
@@ -65,7 +65,7 @@ Definition string_of_pos (p : positive) : string :=
   string_of_digits (digits_of_pos p).
 Lemma string_of_to_pos s : string_of_pos (string_to_pos s) = s.
 Proof.
-  unfold string_of_pos. by induction s as [|[[][][][][][][][]]]; f_equal'.
+  unfold string_of_pos. by induction s as [|[[][][][][][][][]]]; f_equal/=.
 Qed.
 Program Instance string_countable : Countable string := {|
   encode := string_to_pos; decode p := Some (string_of_pos p)

@@ -115,15 +115,15 @@ Proof. by assert (k = j) by lia; subst; rewrite !coerce_id. Qed.
 Lemma gg_gg {k i i1 i2 j} (H1 : k = i + j) (H2 : k = i2 + (i1 + j)) (x : A k) :
   gg i (coerce H1 x) = gg i1 (gg i2 (coerce H2 x)).
 Proof.
-  assert (i = i2 + i1) by lia; simplify_equality'. revert j x H1.
-  induction i2 as [|i2 IH]; intros j X H1; simplify_equality';
+  assert (i = i2 + i1) by lia; simplify_eq/=. revert j x H1.
+  induction i2 as [|i2 IH]; intros j X H1; simplify_eq/=;
     [by rewrite coerce_id|by rewrite g_coerce IH].
 Qed.
 Lemma ff_ff {k i i1 i2 j} (H1 : i + k = j) (H2 : i1 + (i2 + k) = j) (x : A k) :
   coerce H1 (ff i x) = coerce H2 (ff i1 (ff i2 x)).
 Proof.
-  assert (i = i1 + i2) by lia; simplify_equality'.
-  induction i1 as [|i1 IH]; simplify_equality';
+  assert (i = i1 + i2) by lia; simplify_eq/=.
+  induction i1 as [|i1 IH]; simplify_eq/=;
     [by rewrite coerce_id|by rewrite coerce_f IH].
 Qed.
 
@@ -159,7 +159,7 @@ Proof.
   - assert (H : S k = S (k - i) + (0 + i)) by lia; rewrite (gg_gg _ H) /=.
     by erewrite g_coerce, gf, coerce_proper by done.
   - assert (S k = 0 + (0 + i)) as H by lia.
-    rewrite (gg_gg _ H); simplify_equality'.
+    rewrite (gg_gg _ H); simplify_eq/=.
     by rewrite (ff_ff _ (eq_refl (1 + (0 + k)))).
   - exfalso; lia.
   - assert (H : (i - S k) + (1 + k) = i) by lia; rewrite (ff_ff _ H) /=.

@@ -97,7 +97,7 @@ Qed.
 
 Lemma wp_value_inv E Q v n r : wp E (of_val v) Q n r → pvs E E (Q v) n r.
 Proof.
-  by inversion 1 as [|??? He]; [|rewrite ?to_of_val in He]; simplify_equality.
+  by inversion 1 as [|??? He]; [|rewrite ?to_of_val in He]; simplify_eq.
 Qed.
 Lemma wp_step_inv E Ef Q e k n σ r rf :
   to_val e = None → 0 < k < n → E ∩ Ef = ∅ →

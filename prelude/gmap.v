@@ -19,7 +19,7 @@ Arguments gmap_car {_ _ _ _} _.
 Lemma gmap_eq `{Countable K} {A} (m1 m2 : gmap K A) :
   m1 = m2 ↔ gmap_car m1 = gmap_car m2.
 Proof.
-  split; [by intros ->|intros]. destruct m1, m2; simplify_equality'.
+  split; [by intros ->|intros]. destruct m1, m2; simplify_eq/=.
   f_equal; apply proof_irrel.
 Qed.
 Instance gmap_eq_eq `{Countable K} `{∀ x y : A, Decision (x = y)}
@@ -83,9 +83,9 @@ Proof.
     apply bool_decide_unpack in Hm1; apply bool_decide_unpack in Hm2.
     apply option_eq; intros x; split; intros Hi.
     + pose proof (Hm1 i x Hi); simpl in *.
-      by destruct (decode i); simplify_equality'; rewrite <-Hm.
+      by destruct (decode i); simplify_eq/=; rewrite <-Hm.
     + pose proof (Hm2 i x Hi); simpl in *.
-      by destruct (decode i); simplify_equality'; rewrite Hm.
+      by destruct (decode i); simplify_eq/=; rewrite Hm.
   - done.
   - intros A f [m Hm] i; apply (lookup_partial_alter f m).
   - intros A f [m Hm] i j Hs; apply (lookup_partial_alter_ne f m).
@@ -94,16 +94,16 @@ Proof.
   - intros A [m Hm]; unfold map_to_list; simpl.
     apply bool_decide_unpack, map_Forall_to_list in Hm; revert Hm.
     induction (NoDup_map_to_list m) as [|[p x] l Hpx];
-      inversion 1 as [|??? Hm']; simplify_equality'; [by constructor|].
-    destruct (decode p) as [i|] eqn:?; simplify_equality'; constructor; eauto.
-    rewrite elem_of_list_omap; intros ([p' x']&?&?); simplify_equality'.
+      inversion 1 as [|??? Hm']; simplify_eq/=; [by constructor|].
+    destruct (decode p) as [i|] eqn:?; simplify_eq/=; constructor; eauto.
+    rewrite elem_of_list_omap; intros ([p' x']&?&?); simplify_eq/=.
     feed pose proof (proj1 (Forall_forall _ _) Hm' (p',x')); simpl in *; auto.
-    by destruct (decode p') as [i'|]; simplify_equality'.
+    by destruct (decode p') as [i'|]; simplify_eq/=.
   - intros A [m Hm] i x; unfold map_to_list, lookup; simpl.
     apply bool_decide_unpack in Hm; rewrite elem_of_list_omap; split.
     + intros ([p' x']&Hp'&?); apply elem_of_map_to_list in Hp'.
       feed pose proof (Hm p' x'); simpl in *; auto.
-      by destruct (decode p') as [i'|] eqn:?; simplify_equality'.
+      by destruct (decode p') as [i'|] eqn:?; simplify_eq/=.
     + intros; exists (encode i,x); simpl.
       by rewrite elem_of_map_to_list, decode_encode.
   - intros A B f [m Hm] i; apply (lookup_omap f m).

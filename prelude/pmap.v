@@ -176,7 +176,7 @@ Proof.
   split.
   { revert j acc. induction t as [|[y|] l IHl r IHr]; intros j acc; simpl.
     - by right.
-    - rewrite elem_of_cons. intros [?|?]; simplify_equality.
+    - rewrite elem_of_cons. intros [?|?]; simplify_eq.
       { left; exists 1. by rewrite (left_id_L 1 (++))%positive. }
       destruct (IHl (j~0) (Pto_list_raw j~1 r acc)) as [(i'&->&?)|?]; auto.
       { left; exists (i' ~ 0). by rewrite Preverse_xO, (assoc_L _). }
@@ -194,13 +194,13 @@ Proof.
   intros t j ? acc [(i&->&Hi)|?]; [|by auto]. revert j i acc Hi.
   induction t as [|[y|] l IHl r IHr]; intros j i acc ?; simpl.
   - done.
-  - rewrite elem_of_cons. destruct i as [i|i|]; simplify_equality'.
+  - rewrite elem_of_cons. destruct i as [i|i|]; simplify_eq/=.
     + right. apply help. specialize (IHr (j~1) i).
       rewrite Preverse_xI, (assoc_L _) in IHr. by apply IHr.
     + right. specialize (IHl (j~0) i).
       rewrite Preverse_xO, (assoc_L _) in IHl. by apply IHl.
     + left. by rewrite (left_id_L 1 (++))%positive.
-  - destruct i as [i|i|]; simplify_equality'.
+  - destruct i as [i|i|]; simplify_eq/=.
     + apply help. specialize (IHr (j~1) i).
       rewrite Preverse_xI, (assoc_L _) in IHr. by apply IHr.
     + specialize (IHl (j~0) i).
@@ -264,7 +264,7 @@ Arguments pmap_prf {_} _.
 Lemma Pmap_eq {A} (m1 m2 : Pmap A) : m1 = m2 ↔ pmap_car m1 = pmap_car m2.
 Proof.
   split; [by intros ->|intros]; destruct m1 as [t1 ?], m2 as [t2 ?].
-  simplify_equality'; f_equal; apply proof_irrel.
+  simplify_eq/=; f_equal; apply proof_irrel.
 Qed.
 Instance Pmap_eq_dec `{∀ x y : A, Decision (x = y)}
     (m1 m2 : Pmap A) : Decision (m1 = m2) :=
@@ -341,14 +341,14 @@ Lemma Pfresh_at_depth_fresh {A} (m : Pmap_raw A) d i :
 Proof.
   revert i m; induction d as [|d IH].
   { intros i [|[] l r] ?; naive_solver. }
-  intros i [|o l r] ?; simplify_equality'.
+  intros i [|o l r] ?; simplify_eq/=.
   destruct (Pfresh_at_depth l d) as [i'|] eqn:?,
-    (Pfresh_at_depth r d) as [i''|] eqn:?; simplify_equality'; auto.
+    (Pfresh_at_depth r d) as [i''|] eqn:?; simplify_eq/=; auto.
 Qed.
 Lemma Pfresh_go_fresh {A} (m : Pmap_raw A) d i :
   Pfresh_go m d = Some i → m !! i = None.
 Proof.
-  induction d as [|d IH]; intros; simplify_equality'.
+  induction d as [|d IH]; intros; simplify_eq/=.
   destruct (Pfresh_go m d); eauto using Pfresh_at_depth_fresh.
 Qed.
 Lemma Pfresh_depth {A} (m : Pmap_raw A) :

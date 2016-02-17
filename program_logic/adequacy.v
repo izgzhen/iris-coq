@@ -26,7 +26,7 @@ Lemma nsteps_wptp Qs k n tσ1 tσ2 rs1 :
 Proof.
   intros Hsteps Hn; revert Qs rs1.
   induction Hsteps as [|k ?? tσ3 [e1 σ1 e2 σ2 ef t1 t2 ?? Hstep] Hsteps IH];
-    simplify_equality'; intros Qs rs.
+    simplify_eq/=; intros Qs rs.
   { by intros; exists rs, []; rewrite right_id_L. }
   intros (Qs1&?&rs1&?&->&->&?&
     (Q&Qs2&r&rs2&->&->&Hwp&?)%Forall3_cons_inv_l)%Forall3_app_inv_l ?.

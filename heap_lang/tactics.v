@@ -10,7 +10,7 @@ to conversions from and to values, and finite map operations. This tactic is
 slightly ad-hoc and tuned for proving our lifting lemmas. *)
 Ltac inv_step :=
   repeat match goal with
-  | _ => progress simplify_map_equality' (* simplify memory stuff *)
+  | _ => progress simplify_map_eq/= (* simplify memory stuff *)
   | H : to_val _ = Some _ |- _ => apply of_to_val in H
   | H : context [to_val (of_val _)] |- _ => rewrite to_of_val in H
   | H : prim_step _ _ _ _ _ |- _ => destruct H; subst

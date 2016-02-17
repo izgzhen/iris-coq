@@ -40,7 +40,7 @@ Program Definition excl_chain
   {| chain_car n := match c n return _ with Excl y => y | _ => x end |}.
 Next Obligation.
   intros c x ? n [|i] ?; [omega|]; simpl.
-  destruct (c 1) eqn:?; simplify_equality'.
+  destruct (c 1) eqn:?; simplify_eq/=.
   by feed inversion (chain_cauchy c n (S i)).
 Qed.
 Instance excl_compl : Compl (excl A) := λ c,
@@ -60,13 +60,13 @@ Proof.
   - by inversion_clear 1; constructor; apply dist_S.
   - intros c n; unfold compl, excl_compl.
     destruct (Some_dec (maybe Excl (c 1))) as [[x Hx]|].
-    { assert (c 1 = Excl x) by (by destruct (c 1); simplify_equality').
+    { assert (c 1 = Excl x) by (by destruct (c 1); simplify_eq/=).
       assert (∃ y, c (S n) = Excl y) as [y Hy].
       { feed inversion (chain_cauchy c 0 (S n)); eauto with lia congruence. }
       rewrite Hy; constructor.
       by rewrite (conv_compl (excl_chain c x Hx) n) /= Hy. }
     feed inversion (chain_cauchy c 0 (S n)); first lia;
-       constructor; destruct (c 1); simplify_equality'.
+       constructor; destruct (c 1); simplify_eq/=.
 Qed.
 Canonical Structure exclC : cofeT := CofeT excl_cofe_mixin.
 

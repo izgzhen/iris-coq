@@ -138,13 +138,13 @@ Fixpoint Preverse_go (p1 p2 : positive) : positive :=
 Definition Preverse : positive → positive := Preverse_go 1.
 
 Global Instance: LeftId (=) 1 (++).
-Proof. intros p. by induction p; intros; f_equal'. Qed.
+Proof. intros p. by induction p; intros; f_equal/=. Qed.
 Global Instance: RightId (=) 1 (++).
 Proof. done. Qed.
 Global Instance: Assoc (=) (++).
-Proof. intros ?? p. by induction p; intros; f_equal'. Qed.
+Proof. intros ?? p. by induction p; intros; f_equal/=. Qed.
 Global Instance: ∀ p : positive, Inj (=) (=) (++ p).
-Proof. intros p ???. induction p; simplify_equality; auto. Qed.
+Proof. intros p ???. induction p; simplify_eq; auto. Qed.
 
 Lemma Preverse_go_app p1 p2 p3 :
   Preverse_go p1 (p2 ++ p3) = Preverse_go p1 p3 ++ Preverse_go 1 p2.
@@ -166,7 +166,7 @@ Proof Preverse_app p (1~1).
 Fixpoint Plength (p : positive) : nat :=
   match p with 1 => 0%nat | p~0 | p~1 => S (Plength p) end.
 Lemma Papp_length p1 p2 : Plength (p1 ++ p2) = (Plength p2 + Plength p1)%nat.
-Proof. by induction p2; f_equal'. Qed.
+Proof. by induction p2; f_equal/=. Qed.
 
 Close Scope positive_scope.
 

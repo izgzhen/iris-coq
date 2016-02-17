@@ -87,7 +87,7 @@ Tactic Notation "simplify_error_equality" :=
   | H : (gets _ ≫= _) _ = _ |- _ => rewrite error_left_gets in H
   | H : (modify _ ≫= _) _ = _ |- _ => rewrite error_left_modify in H
   | H : error_guard _ _ _ _ = _ |- _ => apply error_guard_ret in H; destruct H
-  | _ => progress simplify_equality'
+  | _ => progress simplify_eq/=
   | H : error_of_option _ _ _ = _ |- _ =>
     apply error_of_option_ret in H; destruct H
   | H : mbind (M:=error _ _) _ _ _ = _ |- _ =>
@@ -117,7 +117,7 @@ Tactic Notation "error_proceed" :=
   | H : ((_ ≫= _) ≫= _) _ = _ |- _ => rewrite error_assoc in H
   | H : (error_guard _ _ _) _ = _ |- _ =>
      let H' := fresh in apply error_guard_ret in H; destruct H as [H' H]
-  | _ => progress simplify_equality'
+  | _ => progress simplify_eq/=
   | H : maybe _ ?x = Some _ |- _ => is_var x; destruct x
   | H : maybe2 _ ?x = Some _ |- _ => is_var x; destruct x
   | H : maybe3 _ ?x = Some _ |- _ => is_var x; destruct x

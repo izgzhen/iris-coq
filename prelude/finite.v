@@ -48,7 +48,7 @@ Lemma find_Some `{finA: Finite A} P `{∀ x, Decision (P x)} x :
   find P = Some x → P x.
 Proof.
   destruct finA as [xs Hxs HA]; unfold find, decode_nat, decode; simpl.
-  intros Hx. destruct (list_find _ _) as [[i y]|] eqn:Hi; simplify_equality'.
+  intros Hx. destruct (list_find _ _) as [[i y]|] eqn:Hi; simplify_eq/=.
   rewrite !Nat2Pos.id in Hx by done.
   destruct (list_find_Some P xs i y); naive_solver.
 Qed.
@@ -57,13 +57,13 @@ Lemma find_is_Some `{finA: Finite A} P `{∀ x, Decision (P x)} x :
 Proof.
   destruct finA as [xs Hxs HA]; unfold find, decode; simpl.
   intros Hx. destruct (list_find_elem_of P xs x) as [[i y] Hi]; auto.
-  rewrite Hi. destruct (list_find_Some P xs i y); simplify_equality'; auto.
+  rewrite Hi. destruct (list_find_Some P xs i y); simplify_eq/=; auto.
   exists y. by rewrite !Nat2Pos.id by done.
 Qed.
 
 Lemma card_0_inv P `{finA: Finite A} : card A = 0 → A → P.
 Proof.
-  intros ? x. destruct finA as [[|??] ??]; simplify_equality.
+  intros ? x. destruct finA as [[|??] ??]; simplify_eq.
   by destruct (not_elem_of_nil x).
 Qed.
 Lemma finite_inhabited A `{finA: Finite A} : 0 < card A → Inhabited A.
@@ -166,7 +166,7 @@ Section enc_finite.
   Next Obligation.
     apply NoDup_alt. intros i j x. rewrite !list_lookup_fmap. intros Hi Hj.
     destruct (seq _ _ !! i) as [i'|] eqn:Hi',
-      (seq _ _ !! j) as [j'|] eqn:Hj'; simplify_equality'.
+      (seq _ _ !! j) as [j'|] eqn:Hj'; simplify_eq/=.
     destruct (lookup_seq_inv _ _ _ _ Hi'), (lookup_seq_inv _ _ _ _ Hj'); subst.
     rewrite <-(to_of_nat i), <-(to_of_nat j) by done. by f_equal.
   Qed.
@@ -239,11 +239,11 @@ Next Obligation.
   { constructor. }
   apply NoDup_app; split_ands.
   - by apply (NoDup_fmap_2 _), NoDup_enum.
-  - intros [? y]. rewrite elem_of_list_fmap. intros (?&?&?); simplify_equality.
+  - intros [? y]. rewrite elem_of_list_fmap. intros (?&?&?); simplify_eq.
     clear IH. induction Hxs as [|x' xs ?? IH]; simpl.
     { rewrite elem_of_nil. tauto. }
     rewrite elem_of_app, elem_of_list_fmap.
-    intros [(?&?&?)|?]; simplify_equality.
+    intros [(?&?&?)|?]; simplify_eq.
     + destruct Hx. by left.
     + destruct IH. by intro; destruct Hx; right. auto.
   - done.
@@ -274,15 +274,15 @@ Next Obligation.
   apply NoDup_app; split_ands.
   - by apply (NoDup_fmap_2 _).
   - intros [k1 Hk1]. clear Hxs IH. rewrite elem_of_list_fmap.
-    intros ([k2 Hk2]&?&?) Hxk2; simplify_equality'. destruct Hx. revert Hxk2.
+    intros ([k2 Hk2]&?&?) Hxk2; simplify_eq/=. destruct Hx. revert Hxk2.
     induction xs as [|x' xs IH]; simpl in *; [by rewrite elem_of_nil |].
     rewrite elem_of_app, elem_of_list_fmap, elem_of_cons.
-    intros [([??]&?&?)|?]; simplify_equality'; auto.
+    intros [([??]&?&?)|?]; simplify_eq/=; auto.
   - apply IH.
 Qed.
 Next Obligation.
   intros ???? [l Hl]. revert l Hl.
-  induction n as [|n IH]; intros [|x l] ?; simpl; simplify_equality.
+  induction n as [|n IH]; intros [|x l] ?; simpl; simplify_eq.
   { apply elem_of_list_singleton. by apply (sig_eq_pi _). }
   revert IH. generalize (list_enum (enum A) n). intros k Hk.
   induction (elem_of_enum x) as [x xs|x xs]; simpl in *.

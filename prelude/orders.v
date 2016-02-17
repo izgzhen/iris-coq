@@ -93,7 +93,7 @@ End strict_orders.
 
 Ltac simplify_order := repeat
   match goal with
-  | _ => progress simplify_equality
+  | _ => progress simplify_eq/=
   | H : ?R ?x ?x |- _ => by destruct (irreflexivity _ _ H)
   | H1 : ?R ?x ?y |- _ =>
     match goal with
@@ -161,7 +161,7 @@ Section sorted.
     { rewrite Forall_forall in Hx1, Hx2.
       assert (x2 ∈ x1 :: l1) as Hx2' by (by rewrite E; left).
       assert (x1 ∈ x2 :: l2) as Hx1' by (by rewrite <-E; left).
-      inversion Hx1'; inversion Hx2'; simplify_equality; auto. }
+      inversion Hx1'; inversion Hx2'; simplify_eq; auto. }
     f_equal. by apply IH, (inj (x2 ::)).
   Qed.
   Lemma Sorted_unique `{!Transitive R, !AntiSymm (=) R} l1 l2 :

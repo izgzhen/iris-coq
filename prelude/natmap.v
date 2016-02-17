@@ -34,7 +34,7 @@ Lemma natmap_eq {A} (m1 m2 : natmap A) :
   m1 = m2 ↔ natmap_car m1 = natmap_car m2.
 Proof.
   split; [by intros ->|intros]; destruct m1 as [t1 ?], m2 as [t2 ?].
-  simplify_equality'; f_equal; apply proof_irrel.
+  simplify_eq/=; f_equal; apply proof_irrel.
 Qed.
 Global Instance natmap_eq_dec `{∀ x y : A, Decision (x = y)}
     (m1 m2 : natmap A) : Decision (m1 = m2) :=
@@ -51,7 +51,7 @@ Fixpoint natmap_singleton_raw {A} (i : nat) (x : A) : natmap_raw A :=
   match i with 0 => [Some x]| S i => None :: natmap_singleton_raw i x end.
 Lemma natmap_singleton_wf {A} (i : nat) (x : A) :
   natmap_wf (natmap_singleton_raw i x).
-Proof. unfold natmap_wf. induction i as [|[]]; simplify_equality'; eauto. Qed.
+Proof. unfold natmap_wf. induction i as [|[]]; simplify_eq/=; eauto. Qed.
 Lemma natmap_lookup_singleton_raw {A} (i : nat) (x : A) :
   mjoin (natmap_singleton_raw i x !! i) = Some x.
 Proof. induction i; simpl; auto. Qed.
@@ -162,7 +162,7 @@ Proof.
   split.
   - revert j. induction l as [|[y|] l IH]; intros j; simpl.
     + by rewrite elem_of_nil.
-    + rewrite elem_of_cons. intros [?|?]; simplify_equality.
+    + rewrite elem_of_cons. intros [?|?]; simplify_eq.
       * by exists 0.
       * destruct (IH (S j)) as (i'&?&?); auto.
         exists (S i'); simpl; auto with lia.
@@ -171,9 +171,9 @@ Proof.
   - intros (i'&?&Hi'). subst. revert i' j Hi'.
     induction l as [|[y|] l IH]; intros i j ?; simpl.
     + done.
-    + destruct i as [|i]; simplify_equality'; [left|].
+    + destruct i as [|i]; simplify_eq/=; [left|].
       right. rewrite <-Nat.add_succ_r. by apply (IH i (S j)).
-    + destruct i as [|i]; simplify_equality'.
+    + destruct i as [|i]; simplify_eq/=.
       rewrite <-Nat.add_succ_r. by apply (IH i (S j)).
 Qed.
 Lemma natmap_elem_of_to_list_raw {A} (l : natmap_raw A) i x :

@@ -32,7 +32,7 @@ Proof.
   intros [Hss1 Hss2]; split; [by apply subseteq_dom |].
   contradict Hss2. rewrite map_subseteq_spec. intros i x Hi.
   specialize (Hss2 i). rewrite !elem_of_dom in Hss2.
-  destruct Hss2; eauto. by simplify_map_equality.
+  destruct Hss2; eauto. by simplify_map_eq.
 Qed.
 Lemma dom_empty {A} : dom D (@empty (M A) _) ≡ ∅.
 Proof.
@@ -47,7 +47,7 @@ Qed.
 Lemma dom_alter {A} f (m : M A) i : dom D (alter f i m) ≡ dom D m.
 Proof.
   apply elem_of_equiv; intros j; rewrite !elem_of_dom; unfold is_Some.
-  destruct (decide (i = j)); simplify_map_equality'; eauto.
+  destruct (decide (i = j)); simplify_map_eq/=; eauto.
   destruct (m !! j); naive_solver.
 Qed.
 Lemma dom_insert {A} (m : M A) i x : dom D (<[i:=x]>m) ≡ {[ i ]} ∪ dom D m.

@@ -359,9 +359,9 @@ Section collection_ops.
     - revert x. induction Xs; simpl; intros x HXs; [eexists [], x; intuition|].
       rewrite elem_of_intersection_with in HXs; destruct HXs as (x1&x2&?&?&?).
       destruct (IHXs x2) as (xs & y & hy & ? & ?); trivial.
-      eexists (x1 :: xs), y. intuition (simplify_option_equality; auto).
+      eexists (x1 :: xs), y. intuition (simplify_option_eq; auto).
     - intros (xs & y & Hxs & ? & Hx). revert x Hx.
-      induction Hxs; intros; simplify_option_equality; [done |].
+      induction Hxs; intros; simplify_option_eq; [done |].
       rewrite elem_of_intersection_with. naive_solver.
   Qed.
 
@@ -371,7 +371,7 @@ Section collection_ops.
     (∀ x y z, Q x → P y → f x y = Some z → P z) →
     ∀ x, x ∈ intersection_with_list f Y Xs → P x.
   Proof.
-    intros HY HXs Hf. induction Xs; simplify_option_equality; [done |].
+    intros HY HXs Hf. induction Xs; simplify_option_eq; [done |].
     intros x Hx. rewrite elem_of_intersection_with in Hx.
     decompose_Forall. destruct Hx as (? & ? & ? & ? & ?). eauto.
   Qed.
@@ -490,7 +490,7 @@ Section fresh.
   Global Instance fresh_list_proper:
     Proper ((=) ==> (≡) ==> (=)) (fresh_list (C:=C)).
   Proof.
-    intros ? n ->. induction n as [|n IH]; intros ?? E; f_equal'; [by rewrite E|].
+    intros ? n ->. induction n as [|n IH]; intros ?? E; f_equal/=; [by rewrite E|].
     apply IH. by rewrite E.
   Qed.
 
@@ -585,7 +585,7 @@ Section collection_monad.
     Forall (λ x, ∀ y, y ∈ g x → f y = x) l → k ∈ mapM g l → fmap f k = l.
   Proof.
     intros Hl. revert k. induction Hl; simpl; intros;
-      decompose_elem_of; f_equal'; auto.
+      decompose_elem_of; f_equal/=; auto.
   Qed.
   Lemma elem_of_mapM_Forall {A B} (f : A → M B) (P : B → Prop) l k :
     l ∈ mapM f k → Forall (λ x, ∀ y, y ∈ f x → P y) k → Forall P l.

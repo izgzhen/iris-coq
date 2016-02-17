@@ -102,14 +102,14 @@ Arguments of_val : simpl never.
 Lemma gsubst_None e x v : gsubst_go e x (of_val v) = None → e = subst e x v.
 Proof.
   induction e; simpl; unfold gsubst_lift; intros;
-    repeat (simplify_option_equality || case_match); f_equal; auto.
+    repeat (simplify_option_eq || case_match); f_equal; auto.
 Qed.
 Lemma gsubst_correct e x v : gsubst e x (of_val v) = subst e x v.
 Proof.
   unfold gsubst; destruct (gsubst_go e x (of_val v)) as [e'|] eqn:He; simpl;
     last by apply gsubst_None.
   revert e' He; induction e; simpl; unfold gsubst_lift; intros;
-    repeat (simplify_option_equality || case_match);
+    repeat (simplify_option_eq || case_match);
     f_equal; auto using gsubst_None.
 Qed.
 

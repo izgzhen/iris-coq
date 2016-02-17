@@ -117,8 +117,7 @@ does the converse. *)
 Ltac var_eq x1 x2 := match x1 with x2 => idtac | _ => fail 1 end.
 Ltac var_neq x1 x2 := match x1 with x2 => fail 1 | _ => idtac end.
 
-(** The tactic [simplify_equality] repeatedly substitutes, discriminates,
-and injects equalities, and tries to contradict impossible inequalities. *)
+(** Hacks to let simpl fold type class projections *)
 Ltac fold_classes :=
   repeat match goal with
   | |- appcontext [ ?F ] =>
@@ -161,7 +160,9 @@ Tactic Notation "csimpl" := try (progress simpl; fold_classes).
 Tactic Notation "csimpl" "in" "*" :=
   repeat_on_hyps (fun H => csimpl in H); csimpl.
 
-Ltac simplify_equality := repeat
+(* The tactic [simplify_eq] repeatedly substitutes, discriminates,
+and injects equalities, and tries to contradict impossible inequalities. *)
+Tactic Notation "simplify_eq" := repeat
   match goal with
   | H : _ ≠ _ |- _ => by destruct H
   | H : _ = _ → False |- _ => by destruct H
@@ -184,8 +185,9 @@ Ltac simplify_equality := repeat
     assert (y = x) by congruence; clear H2
   | H1 : ?o = Some ?x, H2 : ?o = None |- _ => congruence
   end.
-Ltac simplify_equality' := repeat (progress csimpl in * || simplify_equality).
-Ltac f_equal' := csimpl in *; f_equal.
+Tactic Notation "simplify_eq" "/=" :=
+  repeat (progress csimpl in * || simplify_eq).
+Tactic Notation "f_equal" "/=" := csimpl in *; f_equal.
 
 Ltac setoid_subst_aux R x :=
   match goal with
@@ -202,7 +204,7 @@ Ltac setoid_subst_aux R x :=
   end.
 Ltac setoid_subst :=
   repeat match goal with
-  | _ => progress simplify_equality'
+  | _ => progress simplify_eq/=
   | H : @equiv ?A ?e ?x _ |- _ => setoid_subst_aux (@equiv A e) x
   | H : @equiv ?A ?e _ ?x |- _ => symmetry in H; setoid_subst_aux (@equiv A e) x
   end.
@@ -315,7 +317,7 @@ Tactic Notation "naive_solver" tactic(tac) :=
   | H : ∃ _, _  |- _ => destruct H
   | H : ?P → ?Q, H2 : ?P |- _ => specialize (H H2)
   (**i simplify and solve equalities *)
-  | |- _ => progress simplify_equality'
+  | |- _ => progress simplify_eq/=
   (**i solve the goal *)
   | |- _ =>
     solve

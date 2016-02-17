@@ -33,7 +33,7 @@ Program Instance hashset_union: Union (hashset hash) := λ m1 m2,
   Hashset (union_with (λ l k, Some (list_union l k)) m1 m2) _. 
 Next Obligation.
   intros _ _ m1 Hm1 m2 Hm2 n l'; rewrite lookup_union_with_Some.
-  intros [[??]|[[??]|(l&k&?&?&?)]]; simplify_equality'; auto.
+  intros [[??]|[[??]|(l&k&?&?&?)]]; simplify_eq/=; auto.
   split; [apply Forall_list_union|apply NoDup_list_union];
     first [by eapply Hm1; eauto | by eapply Hm2; eauto].
 Qed.
@@ -43,7 +43,7 @@ Program Instance hashset_intersection: Intersection (hashset hash) := λ m1 m2,
     let l' := list_intersection l k in guard (l' ≠ []); Some l') m1 m2) _.
 Next Obligation.
   intros _ _ m1 Hm1 m2 Hm2 n l'. rewrite lookup_intersection_with_Some.
-  intros (?&?&?&?&?); simplify_option_equality.
+  intros (?&?&?&?&?); simplify_option_eq.
   split; [apply Forall_list_intersection|apply NoDup_list_intersection];
     first [by eapply Hm1; eauto | by eapply Hm2; eauto].
 Qed.
@@ -53,7 +53,7 @@ Program Instance hashset_difference: Difference (hashset hash) := λ m1 m2,
     let l' := list_difference l k in guard (l' ≠ []); Some l') m1 m2) _.
 Next Obligation.
   intros _ _ m1 Hm1 m2 Hm2 n l'. rewrite lookup_difference_with_Some.
-  intros [[??]|(?&?&?&?&?)]; simplify_option_equality; auto.
+  intros [[??]|(?&?&?&?&?)]; simplify_option_eq; auto.
   split; [apply Forall_list_difference|apply NoDup_list_difference];
     first [by eapply Hm1; eauto | by eapply Hm2; eauto].
 Qed.
@@ -63,7 +63,7 @@ Instance hashset_elems: Elements A (hashset hash) := λ m,
 Global Instance: FinCollection A (hashset hash).
 Proof.
   split; [split; [split| |]| |].
-  - intros ? (?&?&?); simplify_map_equality'.
+  - intros ? (?&?&?); simplify_map_eq/=.
   - unfold elem_of, hashset_elem_of, singleton, hashset_singleton; simpl.
     intros x y. setoid_rewrite lookup_singleton_Some. split.
     { by intros (?&[? <-]&?); decompose_elem_of_list. }
@@ -71,7 +71,7 @@ Proof.
   - unfold elem_of, hashset_elem_of, union, hashset_union.
     intros [m1 Hm1] [m2 Hm2] x; simpl; setoid_rewrite lookup_union_with_Some.
     split.
-    { intros (?&[[]|[[]|(l&k&?&?&?)]]&Hx); simplify_equality'; eauto.
+    { intros (?&[[]|[[]|(l&k&?&?&?)]]&Hx); simplify_eq/=; eauto.
       rewrite elem_of_list_union in Hx; destruct Hx; eauto. }
     intros [(l&?&?)|(k&?&?)].
     + destruct (m2 !! hash x) as [k|]; eauto.
@@ -81,7 +81,7 @@ Proof.
   - unfold elem_of, hashset_elem_of, intersection, hashset_intersection.
     intros [m1 ?] [m2 ?] x; simpl.
     setoid_rewrite lookup_intersection_with_Some. split.
-    { intros (?&(l&k&?&?&?)&Hx); simplify_option_equality.
+    { intros (?&(l&k&?&?&?)&Hx); simplify_option_eq.
       rewrite elem_of_list_intersection in Hx; naive_solver. }
     intros [(l&?&?) (k&?&?)]. assert (x ∈ list_intersection l k)
       by (by rewrite elem_of_list_intersection).
@@ -90,7 +90,7 @@ Proof.
   - unfold elem_of, hashset_elem_of, intersection, hashset_intersection.
     intros [m1 ?] [m2 ?] x; simpl.
     setoid_rewrite lookup_difference_with_Some. split.
-    { intros (l'&[[??]|(l&k&?&?&?)]&Hx); simplify_option_equality;
+    { intros (l'&[[??]|(l&k&?&?&?)]&Hx); simplify_option_eq;
         rewrite ?elem_of_list_difference in Hx; naive_solver. }
     intros [(l&?&?) Hm2]; destruct (m2 !! hash x) as [k|] eqn:?; eauto.
     destruct (decide (x ∈ k)); [destruct Hm2; eauto|].

@@ -198,7 +198,7 @@ Global Instance: ∀ {A} (R : relation A), PreOrder R → PreOrder (map_included
 Proof.
   split; [intros m i; by destruct (m !! i); simpl|].
   intros m1 m2 m3 Hm12 Hm23 i; specialize (Hm12 i); specialize (Hm23 i).
-  destruct (m1 !! i), (m2 !! i), (m3 !! i); simplify_equality';
+  destruct (m1 !! i), (m2 !! i), (m3 !! i); simplify_eq/=;
     done || etransitivity; eauto.
 Qed.
 Global Instance: PartialOrder ((⊆) : relation (M A)).
@@ -288,7 +288,7 @@ Qed.
 (** ** Properties of the [alter] operation *)
 Lemma alter_ext {A} (f g : A → A) (m : M A) i :
   (∀ x, m !! i = Some x → f x = g x) → alter f i m = alter g i m.
-Proof. intro. apply partial_alter_ext. intros [x|] ?; f_equal'; auto. Qed.
+Proof. intro. apply partial_alter_ext. intros [x|] ?; f_equal/=; auto. Qed.
 Lemma lookup_alter {A} (f : A → A) m i : alter f i m !! i = f <$> m !! i.
 Proof. unfold alter. apply lookup_partial_alter. Qed.
 Lemma lookup_alter_ne {A} (f : A → A) m i j : i ≠ j → alter f i m !! j = m !! j.
@@ -307,7 +307,7 @@ Lemma lookup_alter_Some {A} (f : A → A) m i j y :
     (i = j ∧ ∃ x, m !! j = Some x ∧ y = f x) ∨ (i ≠ j ∧ m !! j = Some y).
 Proof.
   destruct (decide (i = j)) as [->|?].
-  - rewrite lookup_alter. naive_solver (simplify_option_equality; eauto).
+  - rewrite lookup_alter. naive_solver (simplify_option_eq; eauto).
   - rewrite lookup_alter_ne by done. naive_solver.
 Qed.
 Lemma lookup_alter_None {A} (f : A → A) m i j :
@@ -320,7 +320,7 @@ Lemma alter_id {A} (f : A → A) m i :
   (∀ x, m !! i = Some x → f x = x) → alter f i m = m.
 Proof.
   intros Hi; apply map_eq; intros j; destruct (decide (i = j)) as [->|?].
-  { rewrite lookup_alter; destruct (m !! j); f_equal'; auto. }
+  { rewrite lookup_alter; destruct (m !! j); f_equal/=; auto. }
   by rewrite lookup_alter_ne by done.
 Qed.
 
@@ -583,7 +583,7 @@ Lemma elem_of_map_of_list_1_help {A} (l : list (K * A)) i x :
 Proof.
   induction l as [|[j y] l IH]; csimpl; [by rewrite elem_of_nil|].
   setoid_rewrite elem_of_cons.
-  intros [?|?] Hdup; simplify_equality; [by rewrite lookup_insert|].
+  intros [?|?] Hdup; simplify_eq; [by rewrite lookup_insert|].
   destruct (decide (i = j)) as [->|].
   - rewrite lookup_insert; f_equal; eauto.
   - rewrite lookup_insert_ne by done; eauto.
@@ -616,7 +616,7 @@ Lemma not_elem_of_map_of_list_2 {A} (l : list (K * A)) i :
   map_of_list l !! i = None → i ∉ l.*1.
 Proof.
   induction l as [|[j y] l IH]; csimpl; [rewrite elem_of_nil; tauto|].
-  rewrite elem_of_cons. destruct (decide (i = j)); simplify_equality.
+  rewrite elem_of_cons. destruct (decide (i = j)); simplify_eq.
   - by rewrite lookup_insert.
   - by rewrite lookup_insert_ne; intuition.
 Qed.
@@ -708,16 +708,16 @@ Lemma lookup_imap {A B} (f : K → A → option B) m i :
   map_imap f m !! i = m !! i ≫= f i.
 Proof.
   unfold map_imap; destruct (m !! i ≫= f i) as [y|] eqn:Hi; simpl.
-  - destruct (m !! i) as [x|] eqn:?; simplify_equality'.
+  - destruct (m !! i) as [x|] eqn:?; simplify_eq/=.
     apply elem_of_map_of_list_1_help.
     { apply elem_of_list_omap; exists (i,x); split;
-        [by apply elem_of_map_to_list|by simplify_option_equality]. }
+        [by apply elem_of_map_to_list|by simplify_option_eq]. }
     intros y'; rewrite elem_of_list_omap; intros ([i' x']&Hi'&?).
-    by rewrite elem_of_map_to_list in Hi'; simplify_option_equality.
+    by rewrite elem_of_map_to_list in Hi'; simplify_option_eq.
   - apply not_elem_of_map_of_list; rewrite elem_of_list_fmap.
-    intros ([i' x]&->&Hi'); simplify_equality'.
+    intros ([i' x]&->&Hi'); simplify_eq/=.
     rewrite elem_of_list_omap in Hi'; destruct Hi' as ([j y]&Hj&?).
-    rewrite elem_of_map_to_list in Hj; simplify_option_equality.
+    rewrite elem_of_map_to_list in Hj; simplify_option_eq.
 Qed.
 
 (** ** Properties of conversion from collections *)
@@ -729,11 +729,11 @@ Proof.
   { induction (NoDup_elements X) as [|i' l]; csimpl; [constructor|].
     destruct (f i') as [x'|]; csimpl; auto; constructor; auto.
     rewrite elem_of_list_fmap. setoid_rewrite elem_of_list_omap.
-    by intros (?&?&?&?&?); simplify_option_equality. }
+    by intros (?&?&?&?&?); simplify_option_eq. }
   unfold map_of_collection; rewrite <-elem_of_map_of_list by done.
   rewrite elem_of_list_omap. setoid_rewrite elem_of_elements; split.
-  - intros (?&?&?); simplify_option_equality; eauto.
-  - intros [??]; exists i; simplify_option_equality; eauto.
+  - intros (?&?&?); simplify_option_eq; eauto.
+  - intros [??]; exists i; simplify_option_eq; eauto.
 Qed.
 
 (** ** Induction principles *)
@@ -936,9 +936,9 @@ Proof.
   split.
   - intros Hm i P'; rewrite lookup_merge by done; intros.
     specialize (Hm i). destruct (m1 !! i), (m2 !! i);
-      simplify_equality'; auto using bool_decide_pack.
+      simplify_eq/=; auto using bool_decide_pack.
   - intros Hm i. specialize (Hm i). rewrite lookup_merge in Hm by done.
-    destruct (m1 !! i), (m2 !! i); simplify_equality'; auto;
+    destruct (m1 !! i), (m2 !! i); simplify_eq/=; auto;
       by eapply bool_decide_unpack, Hm.
 Qed.
 Global Instance map_relation_dec `{∀ x y, Decision (R x y), ∀ x, Decision (P x),
@@ -961,7 +961,7 @@ Proof.
     destruct (m1 !! i), (m2 !! i); naive_solver auto 2 using bool_decide_pack.
   - unfold map_relation, option_relation.
     by intros [i[(x&y&?&?&?)|[(x&?&?&?)|(y&?&?&?)]]] Hm;
-      specialize (Hm i); simplify_option_equality.
+      specialize (Hm i); simplify_option_eq.
 Qed.
 End Forall2.
 
@@ -1081,7 +1081,7 @@ Lemma alter_union_with_l (g : A → A) m1 m2 i :
   alter g i (union_with f m1 m2) = union_with f (alter g i m1) m2.
 Proof.
   intros. apply (partial_alter_merge_l _).
-  destruct (m1 !! i) eqn:?, (m2 !! i) eqn:?; f_equal'; auto.
+  destruct (m1 !! i) eqn:?, (m2 !! i) eqn:?; f_equal/=; auto.
 Qed.
 Lemma alter_union_with_r (g : A → A) m1 m2 i :
   (∀ x y, m1 !! i = Some x → m2 !! i = Some y → g <$> f x y = f x (g y)) →
@@ -1089,7 +1089,7 @@ Lemma alter_union_with_r (g : A → A) m1 m2 i :
   alter g i (union_with f m1 m2) = union_with f m1 (alter g i m2).
 Proof.
   intros. apply (partial_alter_merge_r _).
-  destruct (m1 !! i) eqn:?, (m2 !! i) eqn:?; f_equal'; auto.
+  destruct (m1 !! i) eqn:?, (m2 !! i) eqn:?; f_equal/=; auto.
 Qed.
 Lemma delete_union_with m1 m2 i :
   delete i (union_with f m1 m2) = union_with f (delete i m1) (delete i m2).
@@ -1558,11 +1558,11 @@ Hint Extern 80 (<[_:=_]> _ !! _ = Some _) => apply lookup_insert : simpl_map.
 (** Now we take everything together and also discharge conflicting look ups,
 simplify overlapping look ups, and perform cancellations of equalities
 involving unions. *)
-Tactic Notation "simplify_map_equality" "by" tactic3(tac) :=
+Tactic Notation "simplify_map_eq" "by" tactic3(tac) :=
   decompose_map_disjoint;
   repeat match goal with
   | _ => progress simpl_map by tac
-  | _ => progress simplify_equality
+  | _ => progress simplify_eq/=
   | _ => progress simpl_option by tac
   | H : {[ _ := _ ]} !! _ = None |- _ => rewrite lookup_singleton_None in H
   | H : {[ _ := _ ]} !! _ = Some _ |- _ =>
@@ -1582,11 +1582,11 @@ Tactic Notation "simplify_map_equality" "by" tactic3(tac) :=
   | H : ∅ = {[?i := ?x]} |- _ => by destruct (map_non_empty_singleton i x)
   | H : ?m !! ?i = Some _, H2 : ?m !! ?j = None |- _ =>
      unless (i ≠ j) by done;
-     assert (i ≠ j) by (by intros ?; simplify_equality)
+     assert (i ≠ j) by (by intros ?; simplify_eq)
   end.
-Tactic Notation "simplify_map_equality'" "by" tactic3(tac) :=
-  repeat (progress csimpl in * || simplify_map_equality by tac).
-Tactic Notation "simplify_map_equality" :=
-  simplify_map_equality by eauto with simpl_map map_disjoint.
-Tactic Notation "simplify_map_equality'" :=
-  simplify_map_equality' by eauto with simpl_map map_disjoint.
+Tactic Notation "simplify_map_eq" "/=" "by" tactic3(tac) :=
+  repeat (progress csimpl in * || simplify_map_eq by tac).
+Tactic Notation "simplify_map_eq" :=
+  simplify_map_eq by eauto with simpl_map map_disjoint.
+Tactic Notation "simplify_map_eq" "/=" :=
+  simplify_map_eq/= by eauto with simpl_map map_disjoint.

@@ -162,7 +162,7 @@ Lemma option_bind_assoc {A B C} (f : A → option B)
 Proof. by destruct x; simpl. Qed.
 Lemma option_bind_ext {A B} (f g : A → option B) x y :
   (∀ a, f a = g a) → x = y → x ≫= f = y ≫= g.
-Proof. intros. destruct x, y; simplify_equality; csimpl; auto. Qed.
+Proof. intros. destruct x, y; simplify_eq; csimpl; auto. Qed.
 Lemma option_bind_ext_fun {A B} (f g : A → option B) x :
   (∀ a, f a = g a) → x ≫= f = x ≫= g.
 Proof. intros. by apply option_bind_ext. Qed.
@@ -173,7 +173,7 @@ Lemma bind_None {A B} (f : A → option B) (x : option A) :
   x ≫= f = None ↔ x = None ∨ ∃ a, x = Some a ∧ f a = None.
 Proof.
   split; [|by intros [->|(?&->&?)]].
-  destruct x; intros; simplify_equality'; eauto.
+  destruct x; intros; simplify_eq/=; eauto.
 Qed.
 Lemma bind_with_Some {A} (x : option A) : x ≫= Some = x.
 Proof. by destruct x. Qed.
@@ -224,7 +224,7 @@ Instance option_difference_with {A} : DifferenceWith A (option A) := λ f x y,
 Instance option_union {A} : Union (option A) := union_with (λ x _, Some x).
 Lemma option_union_Some {A} (x y : option A) z :
   x ∪ y = Some z → x = Some z ∨ y = Some z.
-Proof. destruct x, y; intros; simplify_equality; auto. Qed.
+Proof. destruct x, y; intros; simplify_eq; auto. Qed.
 
 Section option_union_intersection_difference.
   Context {A} (f : A → A → option A).
@@ -317,9 +317,9 @@ Tactic Notation "simpl_option" "by" tactic3(tac) :=
   | |- context [None ∪ _] => rewrite (left_id_L None (∪))
   | |- context [_ ∪ None] => rewrite (right_id_L None (∪))
   end.
-Tactic Notation "simplify_option_equality" "by" tactic3(tac) :=
+Tactic Notation "simplify_option_eq" "by" tactic3(tac) :=
   repeat match goal with
-  | _ => progress simplify_equality'
+  | _ => progress simplify_eq/=
   | _ => progress simpl_option by tac
   | _ : maybe _ ?x = Some _ |- _ => is_var x; destruct x
   | _ : maybe2 _ ?x = Some _ |- _ => is_var x; destruct x
@@ -349,4 +349,4 @@ Tactic Notation "simplify_option_equality" "by" tactic3(tac) :=
   | _ => progress case_decide
   | _ => progress case_option_guard
   end.
-Tactic Notation "simplify_option_equality" := simplify_option_equality by eauto.
+Tactic Notation "simplify_option_eq" := simplify_option_eq by eauto.
