@@ -206,6 +206,8 @@ Lemma wp_strip_pvs E e P Q : P ⊑ wp E e Q → pvs E E P ⊑ wp E e Q.
 Proof. move=>->. by rewrite pvs_wp. Qed.
 Lemma wp_value E Q e v : to_val e = Some v → Q v ⊑ wp E e Q.
 Proof. intros; rewrite -(of_to_val e v) //; by apply wp_value'. Qed.
+Lemma wp_value_pvs E Q e v : to_val e = Some v → pvs E E (Q v) ⊑ wp E e Q.
+Proof. intros. rewrite -wp_pvs. rewrite -wp_value //. Qed.
 Lemma wp_frame_l E e Q R : (R ★ wp E e Q) ⊑ wp E e (λ v, R ★ Q v).
 Proof. setoid_rewrite (comm _ R); apply wp_frame_r. Qed.
 Lemma wp_frame_later_l E e Q R :
