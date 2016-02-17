@@ -146,6 +146,14 @@ Lemma pvs_impl_l E1 E2 P Q : (□ (P → Q) ∧ pvs E1 E2 P) ⊑ pvs E1 E2 Q.
 Proof. by rewrite pvs_always_l always_elim impl_elim_l. Qed.
 Lemma pvs_impl_r E1 E2 P Q : (pvs E1 E2 P ∧ □ (P → Q)) ⊑ pvs E1 E2 Q.
 Proof. by rewrite comm pvs_impl_l. Qed.
+Lemma pvs_wand_l E1 E2 P Q R :
+  P ⊑ pvs E1 E2 Q → ((Q -★ R) ★ P) ⊑ pvs E1 E2 R.
+Proof.
+  intros ->. rewrite pvs_frame_l. apply pvs_mono, wand_elim_l.
+Qed.
+Lemma pvs_wand_r E1 E2 P Q R :
+  P ⊑ pvs E1 E2 Q → (P ★ (Q -★ R)) ⊑ pvs E1 E2 R.
+Proof. rewrite comm. apply pvs_wand_l. Qed.
 
 Lemma pvs_mask_frame' E1 E1' E2 E2' P :
   E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' → pvs E1' E2' P ⊑ pvs E1 E2 P.
