@@ -1,5 +1,5 @@
 (** This file is essentially a bunch of testcases. *)
-From program_logic Require Import ownership.
+From program_logic Require Import ownership hoare auth.
 From heap_lang Require Import wp_tactics heap notation.
 Import uPred.
 
@@ -23,19 +23,21 @@ End LangTests.
 
 Section LiftingTests.
   Context `{heapG Σ}.
-  Implicit Types P : iPropG heap_lang Σ.
-  Implicit Types Q : val → iPropG heap_lang Σ.
+  Local Notation iProp := (iPropG heap_lang Σ).
 
-  Definition e  : expr :=
+  Implicit Types P : iProp.
+  Implicit Types Q : val → iProp.
+
+  Definition heap_e  : expr :=
     let: "x" := ref '1 in "x" <- !"x" + '1;; !"x".
-  Goal ∀ N, heap_ctx N ⊑ wp N e (λ v, v = '2).
+  Lemma heap_e_spec E N : nclose N ⊆ E → heap_ctx N ⊑ wp E heap_e (λ v, v = '2).
   Proof.
-    move=> N. rewrite /e.
+    rewrite /heap_e=>HN. rewrite -(wp_mask_weaken N E) //.
     wp> eapply wp_alloc; eauto. apply forall_intro=>l; apply wand_intro_l.
     wp_rec. wp> eapply wp_load; eauto with I. apply sep_mono_r, wand_intro_l.
     wp_bin_op. wp> eapply wp_store; eauto with I. apply sep_mono_r, wand_intro_l.
     wp_rec. wp> eapply wp_load; eauto with I. apply sep_mono_r, wand_intro_l.
-    by apply const_intro.
+      by apply const_intro.
   Qed.
 
   Definition FindPred : val :=
@@ -71,9 +73,33 @@ Section LiftingTests.
     - ewp apply FindPred_spec. auto with I omega.
   Qed.
 
-  Goal ∀ E,
+  Lemma Pred_user E :
     True ⊑ wp (Σ:=globalF Σ) E (let: "x" := Pred '42 in Pred "x") (λ v, v = '40).
   Proof.
     intros. ewp> apply Pred_spec. wp_rec. ewp> apply Pred_spec. auto with I.
   Qed.
 End LiftingTests.
+
+Section ClosedProofs.
+  
+  Definition Σ : iFunctorG := λ _, authF (constF heapRA).
+
+  Local Instance : inG heap_lang Σ (authRA heapRA).
+  Proof. by exists 1%nat. Qed.
+
+  (* TODO: Why do I even have to explicitly do this? *)
+  Local Instance : authG heap_lang Σ heapRA.
+  Proof. split; by apply _. Qed.
+  
+  Local Notation iProp := (iPropG heap_lang Σ).
+
+  Lemma heap_e_hoare σ : {{ ownP σ : iProp }} heap_e @ ⊤ {{ λ v, v = '2 }}.
+  Proof.
+    apply ht_alt. rewrite (heap_alloc ⊤ nroot); last by rewrite nclose_nroot.
+    apply wp_strip_pvs, exist_elim=>?. rewrite and_elim_l.
+    rewrite -heap_e_spec; first by eauto with I. by rewrite nclose_nroot.
+  Qed.
+
+  Print Assumptions heap_e_hoare.
+    
+End ClosedProofs.  

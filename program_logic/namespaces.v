@@ -2,14 +2,14 @@ From prelude Require Export countable co_pset.
 From algebra Require Export base.
 
 Definition namespace := list positive.
-Definition nnil : namespace := nil.
+Definition nroot : namespace := nil.
 Definition ndot `{Countable A} (N : namespace) (x : A) : namespace :=
   encode x :: N.
 Coercion nclose (N : namespace) : coPset := coPset_suffixes (encode N).
 
 Instance ndot_inj `{Countable A} : Inj2 (=) (=) (=) (@ndot A _ _).
 Proof. by intros N1 x1 N2 x2 ?; simplify_eq. Qed.
-Lemma nclose_nnil : nclose nnil = ⊤.
+Lemma nclose_nroot : nclose nroot = ⊤.
 Proof. by apply (sig_eq_pi _). Qed.
 Lemma encode_nclose N : encode N ∈ nclose N.
 Proof. by apply elem_coPset_suffixes; exists xH; rewrite (left_id_L _ _). Qed.

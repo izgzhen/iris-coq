@@ -100,7 +100,7 @@ Section proof.
 
   Local Hint Immediate i_states_closed low_states_closed.
 
-  Notation iProp := (iPropG heap_lang Σ).
+  Local Notation iProp := (iPropG heap_lang Σ).
 
   Definition waiting (P : iProp) (I : gset gname) : iProp :=
     (∃ R : gname → iProp, ▷(P -★ Π★{set I} (λ i, R i)) ★
