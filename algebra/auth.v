@@ -46,8 +46,8 @@ Proof.
     + by intros ?? [??]; split; symmetry.
     + intros ??? [??] [??]; split; etransitivity; eauto.
   - by intros ? [??] [??] [??]; split; apply dist_S.
-  - intros c n; split. apply (conv_compl (chain_map authoritative c) n).
-    apply (conv_compl (chain_map own c) n).
+  - intros n c; split. apply (conv_compl n (chain_map authoritative c)).
+    apply (conv_compl n (chain_map own c)).
 Qed.
 Canonical Structure authC := CofeT auth_cofe_mixin.
 Global Instance auth_timeless (x : auth A) :
@@ -163,7 +163,7 @@ Lemma auth_update a a' b b' :
   (∀ n af, ✓{n} a → a ≡{n}≡ a' ⋅ af → b ≡{n}≡ b' ⋅ af ∧ ✓{n} b) →
   ● a ⋅ ◯ a' ~~> ● b ⋅ ◯ b'.
 Proof.
-  move=> Hab [[?| |] bf1] n // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
+  move=> Hab n [[?| |] bf1] // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
   destruct (Hab n (bf1 ⋅ bf2)) as [Ha' ?]; auto.
   { by rewrite Ha left_id assoc. }
   split; [by rewrite Ha' left_id assoc; apply cmra_includedN_l|done].

@@ -16,7 +16,7 @@ Context {A : cofeT}.
 
 Instance agree_validN : ValidN (agree A) := λ n x,
   agree_is_valid x n ∧ ∀ n', n' ≤ n → x n' ≡{n'}≡ x n.
-Lemma agree_valid_le (x : agree A) n n' :
+Lemma agree_valid_le n n' (x : agree A) :
   agree_is_valid x n → n' ≤ n → agree_is_valid x n'.
 Proof. induction 2; eauto using agree_valid_S. Qed.
 Instance agree_equiv : Equiv (agree A) := λ x y,
@@ -43,14 +43,14 @@ Proof.
       * transitivity (agree_is_valid y n'). by apply Hxy. by apply Hyz.
       * transitivity (y n'). by apply Hxy. by apply Hyz, Hxy.
   - intros n x y Hxy; split; intros; apply Hxy; auto.
-  - intros c n; apply and_wlog_r; intros;
+  - intros n c; apply and_wlog_r; intros;
       symmetry; apply (chain_cauchy c); naive_solver.
 Qed.
 Canonical Structure agreeC := CofeT agree_cofe_mixin.
 
-Lemma agree_car_ne (x y : agree A) n : ✓{n} x → x ≡{n}≡ y → x n ≡{n}≡ y n.
+Lemma agree_car_ne n (x y : agree A) : ✓{n} x → x ≡{n}≡ y → x n ≡{n}≡ y n.
 Proof. by intros [??] Hxy; apply Hxy. Qed.
-Lemma agree_cauchy (x : agree A) n i : ✓{n} x → i ≤ n → x i ≡{i}≡ x n.
+Lemma agree_cauchy n (x : agree A) i : ✓{n} x → i ≤ n → x i ≡{i}≡ x n.
 Proof. by intros [? Hx]; apply Hx. Qed.
 
 Program Instance agree_op : Op (agree A) := λ x y,
@@ -87,7 +87,7 @@ Proof.
     repeat match goal with H : agree_is_valid _ _ |- _ => clear H end;
     by cofe_subst; rewrite !agree_idemp.
 Qed.
-Lemma agree_includedN (x y : agree A) n : x ≼{n} y ↔ y ≡{n}≡ x ⋅ y.
+Lemma agree_includedN n (x y : agree A) : x ≼{n} y ↔ y ≡{n}≡ x ⋅ y.
 Proof.
   split; [|by intros ?; exists y].
   by intros [z Hz]; rewrite Hz assoc agree_idemp.
@@ -100,12 +100,12 @@ Proof.
     rewrite (Hx n'); last auto.
     symmetry; apply dist_le with n; try apply Hx; auto.
   - intros x; apply agree_idemp.
-  - by intros x y n [(?&?&?) ?].
-  - by intros x y n; rewrite agree_includedN.
+  - by intros n x y [(?&?&?) ?].
+  - by intros n x y; rewrite agree_includedN.
 Qed.
-Lemma agree_op_inv (x1 x2 : agree A) n : ✓{n} (x1 ⋅ x2) → x1 ≡{n}≡ x2.
+Lemma agree_op_inv n (x1 x2 : agree A) : ✓{n} (x1 ⋅ x2) → x1 ≡{n}≡ x2.
 Proof. intros Hxy; apply Hxy. Qed.
-Lemma agree_valid_includedN (x y : agree A) n : ✓{n} y → x ≼{n} y → x ≡{n}≡ y.
+Lemma agree_valid_includedN n (x y : agree A) : ✓{n} y → x ≼{n} y → x ≡{n}≡ y.
 Proof.
   move=> Hval [z Hy]; move: Hval; rewrite Hy.
   by move=> /agree_op_inv->; rewrite agree_idemp.
@@ -161,7 +161,7 @@ Section agree_map.
   Global Instance agree_map_monotone : CMRAMonotone (agree_map f).
   Proof.
     split; [|by intros n x [? Hx]; split; simpl; [|by intros n' ?; rewrite Hx]].
-    intros x y n; rewrite !agree_includedN; intros Hy; rewrite Hy.
+    intros n x y; rewrite !agree_includedN; intros Hy; rewrite Hy.
     split; last done; split; simpl; last tauto.
     by intros (?&?&Hxy); repeat split; intros;
        try apply Hxy; try apply Hf; eauto using @agree_valid_le.

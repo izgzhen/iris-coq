@@ -49,7 +49,7 @@ Proof.
   - apply (IH (Φs1 ++ Φ :: Φs2) (rs1 ++ r2 ⋅ r2' :: rs2)).
     { rewrite /option_list right_id_L.
       apply Forall3_app, Forall3_cons; eauto using wptp_le.
-      apply uPred_weaken with r2 (k + n); eauto using cmra_included_l. }
+      apply uPred_weaken with (k + n) r2; eauto using cmra_included_l. }
     by rewrite -Permutation_middle /= big_op_app.
 Qed.
 Lemma ht_adequacy_steps P Φ k n e1 t2 σ1 σ2 r1 :
@@ -62,7 +62,7 @@ Proof.
   intros Hht ????; apply (nsteps_wptp [Φ] k n ([e1],σ1) (t2,σ2) [r1]);
     rewrite /big_op ?right_id; auto.
   constructor; last constructor.
-  apply Hht with r1 (k + n); eauto using cmra_included_unit.
+  apply Hht with (k + n) r1; eauto using cmra_included_unit.
   eapply uPred.const_intro; eauto.
 Qed.
 Lemma ht_adequacy_own Φ e1 t2 σ1 m σ2 :

@@ -61,10 +61,10 @@ Proof.
     + by destruct 1; constructor.
     + do 2 destruct 1; constructor; etransitivity; eauto.
   - by destruct 1; constructor; apply dist_S.
-  - intros c n; constructor.
-    + apply (conv_compl (chain_map wld c) n).
-    + apply (conv_compl (chain_map pst c) n).
-    + apply (conv_compl (chain_map gst c) n).
+  - intros n c; constructor.
+    + apply (conv_compl n (chain_map wld c)).
+    + apply (conv_compl n (chain_map pst c)).
+    + apply (conv_compl n (chain_map gst c)).
 Qed.
 Canonical Structure resC : cofeT := CofeT res_cofe_mixin.
 Global Instance res_timeless r :
@@ -151,7 +151,7 @@ Lemma lookup_wld_op_l n r1 r2 i P :
 Proof.
   move=>/wld_validN /(_ i) Hval Hi1P; move: Hi1P Hval; rewrite lookup_op.
   destruct (wld r2 !! i) as [P'|] eqn:Hi; rewrite !Hi ?right_id // =>-> ?.
-  by constructor; rewrite (agree_op_inv P P') // agree_idemp.
+  by constructor; rewrite (agree_op_inv _ P P') // agree_idemp.
 Qed.
 Lemma lookup_wld_op_r n r1 r2 i P :
   ✓{n} (r1⋅r2) → wld r2 !! i ≡{n}≡ Some P → (wld r1 ⋅ wld r2) !! i ≡{n}≡ Some P.

@@ -24,7 +24,7 @@ Proof.
     + by intros m1 m2 ? k.
     + by intros m1 m2 m3 ?? k; transitivity (m2 !! k).
   - by intros n m1 m2 ? k; apply dist_S.
-  - intros c n k; rewrite /compl /map_compl lookup_imap.
+  - intros n c k; rewrite /compl /map_compl lookup_imap.
     feed inversion (λ H, chain_cauchy c 0 (S n) H k); simpl; auto with lia.
     by rewrite conv_compl /=; apply reflexive_eq.
 Qed.
@@ -61,7 +61,7 @@ Proof.
     [by constructor|by apply lookup_ne].
 Qed.
 
-Global Instance map_timeless `{∀ a : A, Timeless a} (m : gmap K A) : Timeless m.
+Global Instance map_timeless `{∀ a : A, Timeless a} m : Timeless m.
 Proof. by intros m' ? i; apply (timeless _). Qed.
 
 Instance map_empty_timeless : Timeless (∅ : gmap K A).
@@ -140,7 +140,7 @@ Proof.
     by rewrite !lookup_unit; apply cmra_unit_preservingN.
   - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
-  - intros x y n; rewrite map_includedN_spec=> ? i.
+  - intros n x y; rewrite map_includedN_spec=> ? i.
     by rewrite lookup_op lookup_minus cmra_op_minus.
 Qed.
 Definition map_cmra_extend_mixin : CMRAExtendMixin (gmap K A).
@@ -248,8 +248,8 @@ Qed.
 Lemma map_insert_updateP (P : A → Prop) (Q : gmap K A → Prop) m i x :
   x ~~>: P → (∀ y, P y → Q (<[i:=y]>m)) → <[i:=x]>m ~~>: Q.
 Proof.
-  intros Hx%option_updateP' HP mf n Hm.
-  destruct (Hx (mf !! i) n) as ([y|]&?&?); try done.
+  intros Hx%option_updateP' HP n mf Hm.
+  destruct (Hx n (mf !! i)) as ([y|]&?&?); try done.
   { by generalize (Hm i); rewrite lookup_op; simplify_map_eq. }
   exists (<[i:=y]> m); split; first by auto.
   intros j; move: (Hm j)=>{Hm}; rewrite !lookup_op=>Hm.
@@ -276,8 +276,8 @@ Lemma map_singleton_updateP_empty `{Empty A, !CMRAIdentity A}
     (P : A → Prop) (Q : gmap K A → Prop) i :
   ∅ ~~>: P → (∀ y, P y → Q {[ i := y ]}) → ∅ ~~>: Q.
 Proof.
-  intros Hx HQ gf n Hg.
-  destruct (Hx (from_option ∅ (gf !! i)) n) as (y&?&Hy).
+  intros Hx HQ n gf Hg.
+  destruct (Hx n (from_option ∅ (gf !! i))) as (y&?&Hy).
   { move:(Hg i). rewrite !left_id.
     case _: (gf !! i); simpl; auto using cmra_empty_valid. }
   exists {[ i := y ]}; split; first by auto.
@@ -296,7 +296,7 @@ Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
 Lemma map_updateP_alloc_strong (Q : gmap K A → Prop) (I : gset K) m x :
   ✓ x → (∀ i, m !! i = None → i ∉ I → Q (<[i:=x]>m)) → m ~~>: Q.
 Proof.
-  intros ? HQ mf n Hm. set (i := fresh (I ∪ dom (gset K) (m ⋅ mf))).
+  intros ? HQ n mf Hm. set (i := fresh (I ∪ dom (gset K) (m ⋅ mf))).
   assert (i ∉ I ∧ i ∉ dom (gset K) m ∧ i ∉ dom (gset K) mf) as [?[??]].
   { rewrite -not_elem_of_union -map_dom_op -not_elem_of_union; apply is_fresh. }
   exists (<[i:=x]>m); split.

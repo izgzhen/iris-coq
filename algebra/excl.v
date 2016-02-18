@@ -27,7 +27,7 @@ Inductive excl_dist `{Dist A} : Dist (excl A) :=
   | ExclUnit_dist n : ExclUnit ≡{n}≡ ExclUnit
   | ExclBot_dist n : ExclBot ≡{n}≡ ExclBot.
 Existing Instance excl_dist.
-Global Instance Excl_ne : Proper (dist n ==> dist n) (@Excl A).
+Global Instance Excl_ne n : Proper (dist n ==> dist n) (@Excl A).
 Proof. by constructor. Qed.
 Global Instance Excl_proper : Proper ((≡) ==> (≡)) (@Excl A).
 Proof. by constructor. Qed.
@@ -58,13 +58,13 @@ Proof.
     + by destruct 1; constructor.
     + destruct 1; inversion_clear 1; constructor; etransitivity; eauto.
   - by inversion_clear 1; constructor; apply dist_S.
-  - intros c n; unfold compl, excl_compl.
+  - intros n c; unfold compl, excl_compl.
     destruct (Some_dec (maybe Excl (c 1))) as [[x Hx]|].
     { assert (c 1 = Excl x) by (by destruct (c 1); simplify_eq/=).
       assert (∃ y, c (S n) = Excl y) as [y Hy].
       { feed inversion (chain_cauchy c 0 (S n)); eauto with lia congruence. }
       rewrite Hy; constructor.
-      by rewrite (conv_compl (excl_chain c x Hx) n) /= Hy. }
+      by rewrite (conv_compl n (excl_chain c x Hx)) /= Hy. }
     feed inversion (chain_cauchy c 0 (S n)); first lia;
        constructor; destruct (c 1); simplify_eq/=.
 Qed.
@@ -161,9 +161,9 @@ Proof. split. by intros n y1 y2 Hy. by intros n [a| |] [b'| |]. Qed.
 
 (** Updates *)
 Lemma excl_update (x : A) y : ✓ y → Excl x ~~> y.
-Proof. by destruct y; intros ? [?| |]. Qed.
+Proof. destruct y; by intros ?? [?| |]. Qed.
 Lemma excl_updateP (P : excl A → Prop) x y : ✓ y → P y → Excl x ~~>: P.
-Proof. intros ?? z n ?; exists y. by destruct y, z as [?| |]. Qed.
+Proof. intros ?? n z ?; exists y. by destruct y, z as [?| |]. Qed.
 End excl.
 
 Arguments exclC : clear implicits.

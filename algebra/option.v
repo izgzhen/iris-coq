@@ -31,12 +31,12 @@ Proof.
     + by destruct 1; constructor.
     + destruct 1; inversion_clear 1; constructor; etransitivity; eauto.
   - by inversion_clear 1; constructor; apply dist_S.
-  - intros c n; unfold compl, option_compl.
+  - intros n c; unfold compl, option_compl.
     destruct (Some_dec (c 1)) as [[x Hx]|].
     { assert (is_Some (c (S n))) as [y Hy].
       { feed inversion (chain_cauchy c 0 (S n)); eauto with lia congruence. }
       rewrite Hy; constructor.
-      by rewrite (conv_compl (option_chain c x Hx) n) /= Hy. }
+      by rewrite (conv_compl n (option_chain c x Hx)) /= Hy. }
     feed inversion (chain_cauchy c 0 (S n)); eauto with lia congruence.
     constructor.
 Qed.
@@ -147,9 +147,9 @@ Proof. by destruct x. Qed.
 Lemma option_updateP (P : A → Prop) (Q : option A → Prop) x :
   x ~~>: P → (∀ y, P y → Q (Some y)) → Some x ~~>: Q.
 Proof.
-  intros Hx Hy [y|] n ?.
-  { destruct (Hx y n) as (y'&?&?); auto. exists (Some y'); auto. }
-  destruct (Hx (unit x) n) as (y'&?&?); rewrite ?cmra_unit_r; auto.
+  intros Hx Hy n [y|] ?.
+  { destruct (Hx n y) as (y'&?&?); auto. exists (Some y'); auto. }
+  destruct (Hx n (unit x)) as (y'&?&?); rewrite ?cmra_unit_r; auto.
   by exists (Some y'); split; [auto|apply cmra_validN_op_l with (unit x)].
 Qed.
 Lemma option_updateP' (P : A → Prop) x :
@@ -161,7 +161,7 @@ Proof.
 Qed.
 Lemma option_update_None `{Empty A, !CMRAIdentity A} : ∅ ~~> Some ∅.
 Proof.
-  intros [x|] n ?; rewrite /op /cmra_op /validN /cmra_validN /= ?left_id;
+  intros n [x|] ?; rewrite /op /cmra_op /validN /cmra_validN /= ?left_id;
     auto using cmra_empty_valid.
 Qed.
 End cmra.

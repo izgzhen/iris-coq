@@ -61,7 +61,7 @@ Proof.
   destruct (Hwld i (iProp_fold (later_car (P' (S n))))) as (r'&?&?); auto.
   { by rewrite HP' -HPiso. }
   assert (✓{S n} r') by (apply (big_opM_lookup_valid _ rs i); auto).
-  exists r'; split; [done|apply HPP', uPred_weaken with r' n; auto].
+  exists r'; split; [done|apply HPP', uPred_weaken with n r'; auto].
 Qed.
 Lemma wsat_valid n E σ r : n ≠ 0 → wsat n E σ r → ✓{n} r.
 Proof.
@@ -130,7 +130,7 @@ Lemma wsat_update_gst n E σ r rf mm1 (P : iGst Λ Σ → Prop) :
   wsat (S n) E σ (r ⋅ rf) → ∃ m2, wsat (S n) E σ (update_gst m2 r ⋅ rf) ∧ P m2.
 Proof.
   intros [mf Hr] Hup [rs [(?&?&?) Hσ HE Hwld]].
-  destruct (Hup (mf ⋅ gst (rf ⋅ big_opM rs)) (S n)) as ([m2|]&?&Hval'); try done.
+  destruct (Hup (S n) (mf ⋅ gst (rf ⋅ big_opM rs))) as ([m2|]&?&Hval'); try done.
   { by rewrite /= (assoc _ mm1) -Hr assoc. }
   exists m2; split; [exists rs; split; split_ands'; auto|done].
 Qed.

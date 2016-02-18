@@ -54,7 +54,7 @@ Record CofeMixin A `{Equiv A, Compl A} := {
   mixin_equiv_dist x y : x ≡ y ↔ ∀ n, x ≡{n}≡ y;
   mixin_dist_equivalence n : Equivalence (dist n);
   mixin_dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y;
-  mixin_conv_compl (c : chain A) n : compl c ≡{n}≡ c (S n)
+  mixin_conv_compl n c : compl c ≡{n}≡ c (S n)
 }.
 Class Contractive `{Dist A, Dist B} (f : A -> B) :=
   contractive n x y : (∀ i, i < n → x ≡{i}≡ y) → f x ≡{n}≡ f y.
@@ -86,7 +86,7 @@ Section cofe_mixin.
   Proof. apply (mixin_dist_equivalence _ (cofe_mixin A)). Qed.
   Lemma dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y.
   Proof. apply (mixin_dist_S _ (cofe_mixin A)). Qed.
-  Lemma conv_compl (c : chain A) n : compl c ≡{n}≡ c (S n).
+  Lemma conv_compl n (c : chain A) : compl c ≡{n}≡ c (S n).
   Proof. apply (mixin_conv_compl _ (cofe_mixin A)). Qed.
 End cofe_mixin.
 
@@ -113,7 +113,7 @@ Section cofe.
   Qed.
   Global Instance dist_proper_2 n x : Proper ((≡) ==> iff) (dist n x).
   Proof. by apply dist_proper. Qed.
-  Lemma dist_le (x y : A) n n' : x ≡{n}≡ y → n' ≤ n → x ≡{n'}≡ y.
+  Lemma dist_le n n' x y : x ≡{n}≡ y → n' ≤ n → x ≡{n'}≡ y.
   Proof. induction 2; eauto using dist_S. Qed.
   Instance ne_proper {B : cofeT} (f : A → B)
     `{!∀ n, Proper (dist n ==> dist n) f} : Proper ((≡) ==> (≡)) f | 100.
@@ -147,7 +147,7 @@ Next Obligation. by intros ? A ? B f Hf c n i ?; apply Hf, chain_cauchy. Qed.
 (** Timeless elements *)
 Class Timeless {A : cofeT} (x : A) := timeless y : x ≡{0}≡ y → x ≡ y.
 Arguments timeless {_} _ {_} _ _.
-Lemma timeless_iff {A : cofeT} (x y : A) n : Timeless x → x ≡ y ↔ x ≡{n}≡ y.
+Lemma timeless_iff {A : cofeT} n (x : A) `{!Timeless x} y : x ≡ y ↔ x ≡{n}≡ y.
 Proof.
   split; intros; [by apply equiv_dist|].
   apply (timeless _), dist_le with n; auto with lia.
@@ -168,14 +168,14 @@ Section fixpoint.
   Context {A : cofeT} `{Inhabited A} (f : A → A) `{!Contractive f}.
   Lemma fixpoint_unfold : fixpoint f ≡ f (fixpoint f).
   Proof.
-    apply equiv_dist=>n; rewrite /fixpoint (conv_compl (fixpoint_chain f) n) //.
+    apply equiv_dist=>n; rewrite /fixpoint (conv_compl n (fixpoint_chain f)) //.
     induction n as [|n IH]; simpl; eauto using contractive_0, contractive_S.
   Qed.
   Lemma fixpoint_ne (g : A → A) `{!Contractive g} n :
     (∀ z, f z ≡{n}≡ g z) → fixpoint f ≡{n}≡ fixpoint g.
   Proof.
     intros Hfg. rewrite /fixpoint
-      (conv_compl (fixpoint_chain f) n) (conv_compl (fixpoint_chain g) n) /=.
+      (conv_compl n (fixpoint_chain f)) (conv_compl n (fixpoint_chain g)) /=.
     induction n as [|n IH]; simpl in *; [by rewrite !Hfg|].
     rewrite Hfg; apply contractive_S, IH; auto using dist_S.
   Qed.
@@ -206,21 +206,21 @@ Section cofe_mor.
   Program Instance cofe_mor_compl : Compl (cofeMor A B) := λ c,
     {| cofe_mor_car x := compl (fun_chain c x) |}.
   Next Obligation.
-    intros c n x y Hx. by rewrite (conv_compl (fun_chain c x) n)
-      (conv_compl (fun_chain c y) n) /= Hx.
+    intros c n x y Hx. by rewrite (conv_compl n (fun_chain c x))
+      (conv_compl n (fun_chain c y)) /= Hx.
   Qed.
   Definition cofe_mor_cofe_mixin : CofeMixin (cofeMor A B).
   Proof.
     split.
     - intros f g; split; [intros Hfg n k; apply equiv_dist, Hfg|].
-      intros Hfg k; apply equiv_dist; intros n; apply Hfg.
+      intros Hfg k; apply equiv_dist=> n; apply Hfg.
     - intros n; split.
       + by intros f x.
       + by intros f g ? x.
       + by intros f g h ?? x; transitivity (g x).
     - by intros n f g ? x; apply dist_S.
-    - intros c n x; simpl.
-      by rewrite (conv_compl (fun_chain c x) n) /=.
+    - intros n c x; simpl.
+      by rewrite (conv_compl n (fun_chain c x)) /=.
   Qed.
   Canonical Structure cofe_mor : cofeT := CofeT cofe_mor_cofe_mixin.
 
@@ -278,8 +278,8 @@ Section product.
       rewrite !equiv_dist; naive_solver.
     - apply _.
     - by intros n [x1 y1] [x2 y2] [??]; split; apply dist_S.
-    - intros c n; split. apply (conv_compl (chain_map fst c) n).
-      apply (conv_compl (chain_map snd c) n).
+    - intros n c; split. apply (conv_compl n (chain_map fst c)).
+      apply (conv_compl n (chain_map snd c)).
   Qed.
   Canonical Structure prodC : cofeT := CofeT prod_cofe_mixin.
   Global Instance pair_timeless (x : A) (y : B) :
@@ -311,7 +311,7 @@ Section discrete_cofe.
     - intros x y; split; [done|intros Hn; apply (Hn 0)].
     - done.
     - done.
-    - intros c n. rewrite /compl /discrete_compl /=.
+    - intros n c. rewrite /compl /discrete_compl /=.
       symmetry; apply (chain_cauchy c 0 (S n)); omega.
   Qed.
   Definition discreteC : cofeT := CofeT discrete_cofe_mixin.
@@ -354,7 +354,7 @@ Section later.
       + by intros [x] [y].
       + by intros [x] [y] [z] ??; transitivity y.
     - intros [|n] [x] [y] ?; [done|]; unfold dist, later_dist; by apply dist_S.
-    - intros c [|n]; [done|by apply (conv_compl (later_chain c) n)].
+    - intros [|n] c; [done|by apply (conv_compl n (later_chain c))].
   Qed.
   Canonical Structure laterC : cofeT := CofeT later_cofe_mixin.
   Global Instance Next_contractive : Contractive (@Next A).

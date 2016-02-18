@@ -37,8 +37,8 @@ Section iprod_cofe.
       + by intros f g ? x.
       + by intros f g h ?? x; transitivity (g x).
     - intros n f g Hfg x; apply dist_S, Hfg.
-    - intros c n x.
-      rewrite /compl /iprod_compl (conv_compl (iprod_chain c x) n).
+    - intros n c x.
+      rewrite /compl /iprod_compl (conv_compl n (iprod_chain c x)).
       apply (chain_cauchy c); lia.
   Qed.
   Canonical Structure iprodC : cofeT := CofeT iprod_cofe_mixin.
@@ -55,7 +55,7 @@ Section iprod_cofe.
   (** Properties of iprod_insert. *)
   Context `{∀ x x' : A, Decision (x = x')}.
 
-  Global Instance iprod_insert_ne x n :
+  Global Instance iprod_insert_ne n x :
     Proper (dist n ==> dist n ==> dist n) (iprod_insert x).
   Proof.
     intros y1 y2 ? f1 f2 ? x'; rewrite /iprod_insert.
@@ -94,7 +94,7 @@ Section iprod_cofe.
   (** Properties of iprod_singletom. *)
   Context `{∀ x : A, Empty (B x)}.
 
-  Global Instance iprod_singleton_ne x n :
+  Global Instance iprod_singleton_ne n x :
     Proper (dist n ==> dist n) (iprod_singleton x).
   Proof. by intros y1 y2 Hy; rewrite /iprod_singleton Hy. Qed.
   Global Instance iprod_singleton_proper x :
@@ -182,7 +182,7 @@ Section iprod_cmra.
     y1 ~~>: P → (∀ y2, P y2 → Q (iprod_insert x y2 g)) →
     iprod_insert x y1 g ~~>: Q.
   Proof.
-    intros Hy1 HP gf n Hg. destruct (Hy1 (gf x) n) as (y2&?&?).
+    intros Hy1 HP n gf Hg. destruct (Hy1 n (gf x)) as (y2&?&?).
     { move: (Hg x). by rewrite iprod_lookup_op iprod_lookup_insert. }
     exists (iprod_insert x y2 g); split; [auto|].
     intros x'; destruct (decide (x' = x)) as [->|];
@@ -242,7 +242,7 @@ Section iprod_cmra.
   Lemma iprod_singleton_updateP_empty x (P : B x → Prop) (Q : iprod B → Prop) :
     ∅ ~~>: P → (∀ y2, P y2 → Q (iprod_singleton x y2)) → ∅ ~~>: Q.
   Proof.
-    intros Hx HQ gf n Hg. destruct (Hx (gf x) n) as (y2&?&?); first apply Hg.
+    intros Hx HQ n gf Hg. destruct (Hx n (gf x)) as (y2&?&?); first apply Hg.
     exists (iprod_singleton x y2); split; [by apply HQ|].
     intros x'; destruct (decide (x' = x)) as [->|].
     - by rewrite iprod_lookup_op iprod_lookup_singleton.

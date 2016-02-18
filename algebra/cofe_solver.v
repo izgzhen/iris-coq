@@ -60,8 +60,8 @@ Program Instance tower_compl : Compl tower := λ c,
   {| tower_car n := compl (tower_chain c n) |}.
 Next Obligation.
   intros c k; apply equiv_dist=> n.
-  by rewrite (conv_compl (tower_chain c k) n)
-    (conv_compl (tower_chain c (S k)) n) /= (g_tower (c (S n)) k).
+  by rewrite (conv_compl n (tower_chain c k))
+    (conv_compl n (tower_chain c (S k))) /= (g_tower (c (S n)) k).
 Qed.
 Definition tower_cofe_mixin : CofeMixin tower.
 Proof.
@@ -74,7 +74,7 @@ Proof.
     + by intros X Y Z ?? n; transitivity (Y n).
   - intros k X Y HXY n; apply dist_S.
     by rewrite -(g_tower X) (HXY (S n)) g_tower.
-  - intros c n k; rewrite /= (conv_compl (tower_chain c k) n).
+  - intros n c k; rewrite /= (conv_compl n (tower_chain c k)).
     apply (chain_cauchy c); lia.
 Qed.
 Definition T : cofeT := CofeT tower_cofe_mixin.
@@ -189,8 +189,8 @@ Qed.
 Definition unfold (X : T) : F T T := compl (unfold_chain X).
 Instance unfold_ne : Proper (dist n ==> dist n) unfold.
 Proof.
-  intros n X Y HXY. by rewrite /unfold (conv_compl (unfold_chain X) n)
-    (conv_compl (unfold_chain Y) n) /= (HXY (S (S n))).
+  intros n X Y HXY. by rewrite /unfold (conv_compl n (unfold_chain X))
+    (conv_compl n (unfold_chain Y)) /= (HXY (S (S n))).
 Qed.
 
 Program Definition fold (X : F T T) : T :=
@@ -210,7 +210,7 @@ Proof.
     rewrite equiv_dist; intros n k; unfold unfold, fold; simpl.
     rewrite -g_tower -(gg_tower _ n); apply (_ : Proper (_ ==> _) (g _)).
     transitivity (map (ff n, gg n) (X (S (n + k)))).
-    { rewrite /unfold (conv_compl (unfold_chain X) n).
+    { rewrite /unfold (conv_compl n (unfold_chain X)).
       rewrite -(chain_cauchy (unfold_chain X) n (S (n + k))) /=; last lia.
       rewrite -(dist_le _ _ _ _ (f_tower (n + k) _)); last lia.
       rewrite f_S -!map_comp; apply (contractive_ne map); split=> Y.
@@ -229,7 +229,7 @@ Proof.
     rewrite (map_ff_gg _ _ _ H).
     apply (_ : Proper (_ ==> _) (gg _)); by destruct H.
   - intros X; rewrite equiv_dist=> n /=.
-    rewrite /unfold /= (conv_compl (unfold_chain (fold X)) n) /=.
+    rewrite /unfold /= (conv_compl n (unfold_chain (fold X))) /=.
     rewrite g_S -!map_comp -{2}(map_id _ _ X).
     apply (contractive_ne map); split => Y /=.
     + apply dist_le with n; last omega.

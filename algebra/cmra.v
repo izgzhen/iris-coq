@@ -147,11 +147,11 @@ Class LocalUpdate {A : cmraT} (Lv : A → Prop) (L : A → A) := {
 Arguments local_updateN {_ _} _ {_} _ _ _ _ _.
 
 (** * Frame preserving updates *)
-Definition cmra_updateP {A : cmraT} (x : A) (P : A → Prop) := ∀ z n,
+Definition cmra_updateP {A : cmraT} (x : A) (P : A → Prop) := ∀ n z,
   ✓{n} (x ⋅ z) → ∃ y, P y ∧ ✓{n} (y ⋅ z).
 Instance: Params (@cmra_updateP) 1.
 Infix "~~>:" := cmra_updateP (at level 70).
-Definition cmra_update {A : cmraT} (x y : A) := ∀ z n,
+Definition cmra_update {A : cmraT} (x y : A) := ∀ n z,
   ✓{n} (x ⋅ z) → ✓{n} (y ⋅ z).
 Infix "~~>" := cmra_update (at level 70).
 Instance: Params (@cmra_update) 1.
@@ -202,23 +202,23 @@ Qed.
 Global Instance cmra_update_proper :
   Proper ((≡) ==> (≡) ==> iff) (@cmra_update A).
 Proof.
-  intros x1 x2 Hx y1 y2 Hy; split=>? z n; [rewrite -Hx -Hy|rewrite Hx Hy]; auto.
+  intros x1 x2 Hx y1 y2 Hy; split=>? n z; [rewrite -Hx -Hy|rewrite Hx Hy]; auto.
 Qed.
 Global Instance cmra_updateP_proper :
   Proper ((≡) ==> pointwise_relation _ iff ==> iff) (@cmra_updateP A).
 Proof.
-  intros x1 x2 Hx P1 P2 HP; split=>Hup z n;
+  intros x1 x2 Hx P1 P2 HP; split=>Hup n z;
     [rewrite -Hx; setoid_rewrite <-HP|rewrite Hx; setoid_rewrite HP]; auto.
 Qed.
 
 (** ** Validity *)
 Lemma cmra_valid_validN x : ✓ x ↔ ∀ n, ✓{n} x.
 Proof. done. Qed.
-Lemma cmra_validN_le x n n' : ✓{n} x → n' ≤ n → ✓{n'} x.
+Lemma cmra_validN_le n n' x : ✓{n} x → n' ≤ n → ✓{n'} x.
 Proof. induction 2; eauto using cmra_validN_S. Qed.
 Lemma cmra_valid_op_l x y : ✓ (x ⋅ y) → ✓ x.
 Proof. rewrite !cmra_valid_validN; eauto using cmra_validN_op_l. Qed.
-Lemma cmra_validN_op_r x y n : ✓{n} (x ⋅ y) → ✓{n} y.
+Lemma cmra_validN_op_r n x y : ✓{n} (x ⋅ y) → ✓{n} y.
 Proof. rewrite (comm _ x); apply cmra_validN_op_l. Qed.
 Lemma cmra_valid_op_r x y : ✓ (x ⋅ y) → ✓ y.
 Proof. rewrite !cmra_valid_validN; eauto using cmra_validN_op_r. Qed.
@@ -228,7 +228,7 @@ Lemma cmra_unit_r x : x ⋅ unit x ≡ x.
 Proof. by rewrite (comm _ x) cmra_unit_l. Qed.
 Lemma cmra_unit_unit x : unit x ⋅ unit x ≡ unit x.
 Proof. by rewrite -{2}(cmra_unit_idemp x) cmra_unit_r. Qed.
-Lemma cmra_unit_validN x n : ✓{n} x → ✓{n} unit x.
+Lemma cmra_unit_validN n x : ✓{n} x → ✓{n} unit x.
 Proof. rewrite -{1}(cmra_unit_l x); apply cmra_validN_op_l. Qed.
 Lemma cmra_unit_valid x : ✓ x → ✓ unit x.
 Proof. rewrite -{1}(cmra_unit_l x); apply cmra_valid_op_l. Qed.
@@ -237,7 +237,7 @@ Proof. rewrite -{1}(cmra_unit_l x); apply cmra_valid_op_l. Qed.
 Lemma cmra_included_includedN x y : x ≼ y ↔ ∀ n, x ≼{n} y.
 Proof.
   split; [by intros [z Hz] n; exists z; rewrite Hz|].
-  intros Hxy; exists (y ⩪ x); apply equiv_dist; intros n.
+  intros Hxy; exists (y ⩪ x); apply equiv_dist=> n.
   symmetry; apply cmra_op_minus, Hxy.
 Qed.
 Global Instance cmra_includedN_preorder n : PreOrder (@includedN A _ _ n).
@@ -252,14 +252,14 @@ Proof.
   split; red; intros until 0; rewrite !cmra_included_includedN; first done.
   intros; etransitivity; eauto.
 Qed.
-Lemma cmra_validN_includedN x y n : ✓{n} y → x ≼{n} y → ✓{n} x.
+Lemma cmra_validN_includedN n x y : ✓{n} y → x ≼{n} y → ✓{n} x.
 Proof. intros Hyv [z ?]; cofe_subst y; eauto using cmra_validN_op_l. Qed.
-Lemma cmra_validN_included x y n : ✓{n} y → x ≼ y → ✓{n} x.
+Lemma cmra_validN_included n x y : ✓{n} y → x ≼ y → ✓{n} x.
 Proof. rewrite cmra_included_includedN; eauto using cmra_validN_includedN. Qed.
 
-Lemma cmra_includedN_S x y n : x ≼{S n} y → x ≼{n} y.
+Lemma cmra_includedN_S n x y : x ≼{S n} y → x ≼{n} y.
 Proof. by intros [z Hz]; exists z; apply dist_S. Qed.
-Lemma cmra_includedN_le x y n n' : x ≼{n} y → n' ≤ n → x ≼{n'} y.
+Lemma cmra_includedN_le n n' x y : x ≼{n} y → n' ≤ n → x ≼{n'} y.
 Proof. induction 2; auto using cmra_includedN_S. Qed.
 
 Lemma cmra_includedN_l n x y : x ≼{n} x ⋅ y.
@@ -284,7 +284,7 @@ Proof. by intros; rewrite -!(comm _ z); apply cmra_preservingN_l. Qed.
 Lemma cmra_preserving_r x y z : x ≼ y → x ⋅ z ≼ y ⋅ z.
 Proof. by intros; rewrite -!(comm _ z); apply cmra_preserving_l. Qed.
 
-Lemma cmra_included_dist_l x1 x2 x1' n :
+Lemma cmra_included_dist_l n x1 x2 x1' :
   x1 ≼ x2 → x1' ≡{n}≡ x1 → ∃ x2', x1' ≼ x2' ∧ x2' ≡{n}≡ x2.
 Proof.
   intros [z Hx2] Hx1; exists (x1' ⋅ z); split; auto using cmra_included_l.
@@ -318,7 +318,7 @@ Qed.
 (** ** RAs with an empty element *)
 Section identity.
   Context `{Empty A, !CMRAIdentity A}.
-  Lemma cmra_empty_leastN  n x : ∅ ≼{n} x.
+  Lemma cmra_empty_leastN n x : ∅ ≼{n} x.
   Proof. by exists x; rewrite left_id. Qed.
   Lemma cmra_empty_least x : ∅ ≼ x.
   Proof. by exists x; rewrite left_id. Qed.
@@ -350,14 +350,14 @@ Lemma cmra_update_updateP x y : x ~~> y ↔ x ~~>: (y =).
 Proof.
   split.
   - by intros Hx z ?; exists y; split; [done|apply (Hx z)].
-  - by intros Hx z n ?; destruct (Hx z n) as (?&<-&?).
+  - by intros Hx n z ?; destruct (Hx n z) as (?&<-&?).
 Qed.
 Lemma cmra_updateP_id (P : A → Prop) x : P x → x ~~>: P.
-Proof. by intros ? z n ?; exists x. Qed.
+Proof. by intros ? n z ?; exists x. Qed.
 Lemma cmra_updateP_compose (P Q : A → Prop) x :
   x ~~>: P → (∀ y, P y → y ~~>: Q) → x ~~>: Q.
 Proof.
-  intros Hx Hy z n ?. destruct (Hx z n) as (y&?&?); auto. by apply (Hy y).
+  intros Hx Hy n z ?. destruct (Hx n z) as (y&?&?); auto. by apply (Hy y).
 Qed.
 Lemma cmra_updateP_compose_l (Q : A → Prop) x y : x ~~> y → y ~~>: Q → x ~~>: Q.
 Proof.
@@ -370,9 +370,9 @@ Proof. eauto using cmra_updateP_compose, cmra_updateP_id. Qed.
 Lemma cmra_updateP_op (P1 P2 Q : A → Prop) x1 x2 :
   x1 ~~>: P1 → x2 ~~>: P2 → (∀ y1 y2, P1 y1 → P2 y2 → Q (y1 ⋅ y2)) → x1 ⋅ x2 ~~>: Q.
 Proof.
-  intros Hx1 Hx2 Hy z n ?.
-  destruct (Hx1 (x2 ⋅ z) n) as (y1&?&?); first by rewrite assoc.
-  destruct (Hx2 (y1 ⋅ z) n) as (y2&?&?);
+  intros Hx1 Hx2 Hy n z ?.
+  destruct (Hx1 n (x2 ⋅ z)) as (y1&?&?); first by rewrite assoc.
+  destruct (Hx2 n (y1 ⋅ z)) as (y2&?&?);
     first by rewrite assoc (comm _ x2) -assoc.
   exists (y1 ⋅ y2); split; last rewrite (comm _ y1) -assoc; auto.
 Qed.
@@ -389,7 +389,7 @@ Proof. intro. auto. Qed.
 Section identity_updates.
   Context `{Empty A, !CMRAIdentity A}.
   Lemma cmra_update_empty x : x ~~> ∅.
-  Proof. intros z n; rewrite left_id; apply cmra_validN_op_r. Qed.
+  Proof. intros n z; rewrite left_id; apply cmra_validN_op_r. Qed.
   Lemma cmra_update_empty_alt y : ∅ ~~> y ↔ ∀ x, x ~~> y.
   Proof. split; [intros; transitivity ∅|]; auto using cmra_update_empty. Qed.
 End identity_updates.
@@ -472,7 +472,7 @@ Section discrete.
   Definition discrete_cmra_mixin : CMRAMixin A.
   Proof.
     by destruct ra; split; unfold Proper, respectful, includedN;
-      try setoid_rewrite <-(timeless_iff _ _ _ _).
+      try setoid_rewrite <-(timeless_iff _ _).
   Qed.
   Definition discrete_extend_mixin : CMRAExtendMixin A.
   Proof.
@@ -483,10 +483,10 @@ Section discrete.
     CMRAT (cofe_mixin A) discrete_cmra_mixin discrete_extend_mixin.
   Lemma discrete_updateP (x : discreteRA) (P : A → Prop) :
     (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → x ~~>: P.
-  Proof. intros Hvalid z n; apply Hvalid. Qed.
+  Proof. intros Hvalid n z; apply Hvalid. Qed.
   Lemma discrete_update (x y : discreteRA) :
     (∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z)) → x ~~> y.
-  Proof. intros Hvalid z n; apply Hvalid. Qed.
+  Proof. intros Hvalid n z; apply Hvalid. Qed.
   Lemma discrete_valid (x : discreteRA) : v x → validN_valid x.
   Proof. move=>Hx n. exact Hx. Qed.
 End discrete.
@@ -540,7 +540,7 @@ Section prod.
     - intros n x y; rewrite !prod_includedN.
       by intros [??]; split; apply cmra_unit_preservingN.
     - intros n x y [??]; split; simpl in *; eauto using cmra_validN_op_l.
-    - intros x y n; rewrite prod_includedN; intros [??].
+    - intros n x y; rewrite prod_includedN; intros [??].
       by split; apply cmra_op_minus.
   Qed.
   Definition prod_cmra_extend_mixin : CMRAExtendMixin (A * B).
@@ -561,12 +561,12 @@ Section prod.
     - by intros ? [??]; split; apply (timeless _).
   Qed.
   Lemma prod_update x y : x.1 ~~> y.1 → x.2 ~~> y.2 → x ~~> y.
-  Proof. intros ?? z n [??]; split; simpl in *; auto. Qed.
+  Proof. intros ?? n z [??]; split; simpl in *; auto. Qed.
   Lemma prod_updateP P1 P2 (Q : A * B → Prop)  x :
     x.1 ~~>: P1 → x.2 ~~>: P2 → (∀ a b, P1 a → P2 b → Q (a,b)) → x ~~>: Q.
   Proof.
-    intros Hx1 Hx2 HP z n [??]; simpl in *.
-    destruct (Hx1 (z.1) n) as (a&?&?), (Hx2 (z.2) n) as (b&?&?); auto.
+    intros Hx1 Hx2 HP n z [??]; simpl in *.
+    destruct (Hx1 n (z.1)) as (a&?&?), (Hx2 n (z.2)) as (b&?&?); auto.
     exists (a,b); repeat split; auto.
   Qed.
   Lemma prod_updateP' P1 P2 x :
