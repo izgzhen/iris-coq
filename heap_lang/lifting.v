@@ -1,5 +1,5 @@
 From program_logic Require Export weakestpre.
-From heap_lang Require Export heap_lang.
+From heap_lang Require Export lang.
 From program_logic Require Import lifting.
 From program_logic Require Import ownership. (* for ownP *)
 From heap_lang Require Import tactics.

@@ -1,4 +1,4 @@
-From heap_lang Require Export heap_lang.
+From heap_lang Require Export lang.
 From prelude Require Import fin_maps.
 Import heap_lang.
 
