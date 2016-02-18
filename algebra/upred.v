@@ -319,12 +319,13 @@ Proof. intros P1 P2 HP n' x; split; apply HP; eauto using cmra_unit_validN. Qed.
 Global Instance always_proper :
   Proper ((≡) ==> (≡)) (@uPred_always M) := ne_proper _.
 Global Instance ownM_ne n : Proper (dist n ==> dist n) (@uPred_ownM M).
-Proof.
-  by intros a1 a2 Ha n' x; split; intros [a' ?]; exists a'; simpl; first
-    [rewrite -(dist_le _ _ _ _ Ha); last lia
-    |rewrite (dist_le _ _ _ _ Ha); last lia].
-Qed.
-Global Instance ownM_proper : Proper ((≡) ==> (≡)) (@uPred_ownM M) := ne_proper _.
+Proof. move=> a b Ha n' x ? /=. by rewrite (dist_le _ _ _ _ Ha); last lia. Qed.
+Global Instance ownM_proper: Proper ((≡) ==> (≡)) (@uPred_ownM M) := ne_proper _.
+Global Instance valid_ne {A : cmraT} n :
+  Proper (dist n ==> dist n) (@uPred_valid M A).
+Proof. move=> a b Ha n' x ? /=. by rewrite (dist_le _ _ _ _ Ha); last lia. Qed.
+Global Instance valid_proper {A : cmraT} :
+  Proper ((≡) ==> (≡)) (@uPred_valid M A) := ne_proper _.
 Global Instance iff_ne n : Proper (dist n ==> dist n ==> dist n) (@uPred_iff M).
 Proof. unfold uPred_iff; solve_proper. Qed.
 Global Instance iff_proper :
