@@ -118,15 +118,15 @@ Section sts.
 
   Context {V} (fsa : FSA Λ (globalF Σ) V) `{!FrameShiftAssertion fsaV fsa}.
 
-  Lemma sts_fsaS E N P (Q : V → iPropG Λ Σ) γ S T :
+  Lemma sts_fsaS E N P (Ψ : V → iPropG Λ Σ) γ S T :
     fsaV → nclose N ⊆ E →
     P ⊑ sts_ctx γ N φ →
     P ⊑ (sts_ownS γ S T ★ ∀ s,
           ■ (s ∈ S) ★ ▷ φ s -★
           fsa (E ∖ nclose N) (λ x, ∃ s' T',
             ■ sts.step (s, T) (s', T') ★ ▷ φ s' ★
-            (sts_own γ s' T' -★ Q x))) →
-    P ⊑ fsa E Q.
+            (sts_own γ s' T' -★ Ψ x))) →
+    P ⊑ fsa E Ψ.
   Proof.
     rewrite /sts_ctx=>? HN Hinv Hinner.
     eapply (inv_fsa fsa); eauto. rewrite Hinner=>{Hinner Hinv P HN}.
@@ -147,14 +147,14 @@ Section sts.
     by rewrite assoc [(_ ★ ▷_)%I]comm -assoc wand_elim_l.
   Qed.
 
-  Lemma sts_fsa E N P (Q : V → iPropG Λ Σ) γ s0 T :
+  Lemma sts_fsa E N P (Ψ : V → iPropG Λ Σ) γ s0 T :
     fsaV → nclose N ⊆ E →
     P ⊑ sts_ctx γ N φ →
     P ⊑ (sts_own γ s0 T ★ ∀ s,
           ■ (s ∈ sts.up s0 T) ★ ▷ φ s -★
           fsa (E ∖ nclose N) (λ x, ∃ s' T',
             ■ (sts.step (s, T) (s', T')) ★ ▷ φ s' ★
-            (sts_own γ s' T' -★ Q x))) →
-    P ⊑ fsa E Q.
+            (sts_own γ s' T' -★ Ψ x))) →
+    P ⊑ fsa E Ψ.
   Proof. apply sts_fsaS. Qed.
 End sts.

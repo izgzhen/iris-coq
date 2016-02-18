@@ -148,9 +148,7 @@ Lemma pvs_impl_r E1 E2 P Q : (pvs E1 E2 P ∧ □ (P → Q)) ⊑ pvs E1 E2 Q.
 Proof. by rewrite comm pvs_impl_l. Qed.
 Lemma pvs_wand_l E1 E2 P Q R :
   P ⊑ pvs E1 E2 Q → ((Q -★ R) ★ P) ⊑ pvs E1 E2 R.
-Proof.
-  intros ->. rewrite pvs_frame_l. apply pvs_mono, wand_elim_l.
-Qed.
+Proof. intros ->. rewrite pvs_frame_l. apply pvs_mono, wand_elim_l. Qed.
 Lemma pvs_wand_r E1 E2 P Q R :
   P ⊑ pvs E1 E2 Q → (P ★ (Q -★ R)) ⊑ pvs E1 E2 R.
 Proof. rewrite comm. apply pvs_wand_l. Qed.
@@ -195,34 +193,34 @@ End pvs.
    into the postcondition, and composition witn mask-changing view shifts. *)
 Notation FSA Λ Σ A := (coPset → (A → iProp Λ Σ) → iProp Λ Σ).
 Class FrameShiftAssertion {Λ Σ A} (fsaV : Prop) (fsa : FSA Λ Σ A) := {
-  fsa_mask_frame_mono E1 E2 Q Q' :
-    E1 ⊆ E2 → (∀ a, Q a ⊑ Q' a) → fsa E1 Q ⊑ fsa E2 Q';
-  fsa_trans3 E Q : pvs E E (fsa E (λ a, pvs E E (Q a))) ⊑ fsa E Q;
-  fsa_open_close E1 E2 Q :
-    fsaV → E2 ⊆ E1 → pvs E1 E2 (fsa E2 (λ a, pvs E2 E1 (Q a))) ⊑ fsa E1 Q;
-  fsa_frame_r E P Q : (fsa E Q ★ P) ⊑ fsa E (λ a, Q a ★ P)
+  fsa_mask_frame_mono E1 E2 Φ Ψ :
+    E1 ⊆ E2 → (∀ a, Φ a ⊑ Ψ a) → fsa E1 Φ ⊑ fsa E2 Ψ;
+  fsa_trans3 E Φ : pvs E E (fsa E (λ a, pvs E E (Φ a))) ⊑ fsa E Φ;
+  fsa_open_close E1 E2 Φ :
+    fsaV → E2 ⊆ E1 → pvs E1 E2 (fsa E2 (λ a, pvs E2 E1 (Φ a))) ⊑ fsa E1 Φ;
+  fsa_frame_r E P Φ : (fsa E Φ ★ P) ⊑ fsa E (λ a, Φ a ★ P)
 }.
 
 Section fsa.
 Context {Λ Σ A} (fsa : FSA Λ Σ A) `{!FrameShiftAssertion fsaV fsa}.
-Implicit Types Q : A → iProp Λ Σ.
+Implicit Types Φ Ψ : A → iProp Λ Σ.
 
-Lemma fsa_mono E Q Q' : (∀ a, Q a ⊑ Q' a) → fsa E Q ⊑ fsa E Q'.
+Lemma fsa_mono E Φ Ψ : (∀ a, Φ a ⊑ Ψ a) → fsa E Φ ⊑ fsa E Ψ.
 Proof. apply fsa_mask_frame_mono; auto. Qed.
-Lemma fsa_mask_weaken E1 E2 Q : E1 ⊆ E2 → fsa E1 Q ⊑ fsa E2 Q.
+Lemma fsa_mask_weaken E1 E2 Φ : E1 ⊆ E2 → fsa E1 Φ ⊑ fsa E2 Φ.
 Proof. intros. apply fsa_mask_frame_mono; auto. Qed.
-Lemma fsa_frame_l E P Q : (P ★ fsa E Q) ⊑ fsa E (λ a, P ★ Q a).
+Lemma fsa_frame_l E P Φ : (P ★ fsa E Φ) ⊑ fsa E (λ a, P ★ Φ a).
 Proof. rewrite comm fsa_frame_r. apply fsa_mono=>a. by rewrite comm. Qed.
-Lemma fsa_strip_pvs E P Q : P ⊑ fsa E Q → pvs E E P ⊑ fsa E Q.
+Lemma fsa_strip_pvs E P Φ : P ⊑ fsa E Φ → pvs E E P ⊑ fsa E Φ.
 Proof.
   move=>->. rewrite -{2}fsa_trans3.
   apply pvs_mono, fsa_mono=>a; apply pvs_intro.
 Qed.
-Lemma fsa_mono_pvs E Q Q' : (∀ a, Q a ⊑ pvs E E (Q' a)) → fsa E Q ⊑ fsa E Q'.
-Proof. intros. rewrite -[fsa E Q']fsa_trans3 -pvs_intro. by apply fsa_mono. Qed.
+Lemma fsa_mono_pvs E Φ Ψ : (∀ a, Φ a ⊑ pvs E E (Ψ a)) → fsa E Φ ⊑ fsa E Ψ.
+Proof. intros. rewrite -[fsa E Ψ]fsa_trans3 -pvs_intro. by apply fsa_mono. Qed.
 End fsa.
 
-Definition pvs_fsa {Λ Σ} : FSA Λ Σ () := λ E Q, pvs E E (Q ()).
+Definition pvs_fsa {Λ Σ} : FSA Λ Σ () := λ E Φ, pvs E E (Φ ()).
 Instance pvs_fsa_prf {Λ Σ} : FrameShiftAssertion True (@pvs_fsa Λ Σ).
 Proof.
   rewrite /pvs_fsa.

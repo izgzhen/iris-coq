@@ -123,12 +123,12 @@ Section proof.
     (∃ γ, barrier_ctx γ l P ★ sts_ownS γ low_states {[ Send ]})%I.
 
   Definition recv (l : loc) (R : iProp) : iProp :=
-    (∃ γ (P Q : iProp) i, barrier_ctx γ l P ★ sts_ownS γ (i_states i) {[ Change i ]} ★
+    (∃ γ P Q i, barrier_ctx γ l P ★ sts_ownS γ (i_states i) {[ Change i ]} ★
         saved_prop_own i Q ★ ▷(Q -★ R))%I.
 
-  Lemma newchan_spec (P : iProp) (Q : val → iProp) :
-    (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Q (LocV l))
-    ⊑ wp ⊤ (newchan '()) Q.
+  Lemma newchan_spec (P : iProp) (Φ : val → iProp) :
+    (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ (LocV l))
+    ⊑ wp ⊤ (newchan '()) Φ.
   Proof.
     rewrite /newchan. wp_rec. (* TODO: wp_seq. *)
     rewrite -wp_pvs. wp> eapply wp_alloc; eauto with I ndisj.
@@ -177,8 +177,8 @@ Section proof.
         rewrite !mkSet_elem_of /=. set_solver.
   Qed.
 
-  Lemma signal_spec l P (Q : val → iProp) :
-    heapN ⊥ N → (send l P ★ P ★ Q '()) ⊑ wp ⊤ (signal (LocV l)) Q.
+  Lemma signal_spec l P (Φ : val → iProp) :
+    heapN ⊥ N → (send l P ★ P ★ Φ '()) ⊑ wp ⊤ (signal (LocV l)) Φ.
   Proof.
     intros Hdisj. rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
     apply exist_elim=>γ. wp_rec. (* FIXME wp_let *)
@@ -201,19 +201,19 @@ Section proof.
     apply sep_mono; last first.
     { apply wand_intro_l. eauto with I. }
     (* Now we come to the core of the proof: Updating from waiting to ress. *)
-    rewrite /waiting /ress sep_exist_l. apply exist_elim=>{Q} Q.
+    rewrite /waiting /ress sep_exist_l. apply exist_elim=>{Φ} Φ.
     rewrite later_wand {1}(later_intro P) !assoc wand_elim_r.
     rewrite big_sepS_later -big_sepS_sepS. apply big_sepS_mono'=>i.
-    rewrite -(exist_intro (Q i)) comm. done.
+    rewrite -(exist_intro (Φ i)) comm. done.
   Qed.
 
-  Lemma wait_spec l P (Q : val → iProp) :
-    heapN ⊥ N → (recv l P ★ (P -★ Q '())) ⊑ wp ⊤ (wait (LocV l)) Q.
+  Lemma wait_spec l P (Φ : val → iProp) :
+    heapN ⊥ N → (recv l P ★ (P -★ Φ '())) ⊑ wp ⊤ (wait (LocV l)) Φ.
   Proof.
   Abort.
 
-  Lemma split_spec l P1 P2 Q :
-    (recv l (P1 ★ P2) ★ (recv l P1 ★ recv l P2 -★ Q '())) ⊑ wp ⊤ Skip Q.
+  Lemma split_spec l P1 P2 Φ :
+    (recv l (P1 ★ P2) ★ (recv l P1 ★ recv l P2 -★ Φ '())) ⊑ wp ⊤ Skip Φ.
   Proof.
   Abort.
 

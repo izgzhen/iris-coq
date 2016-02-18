@@ -116,36 +116,36 @@ Qed.
 (** * Weakest precondition rules *)
 Section wp.
 Context {Σ : iFunctor}.
-Implicit Types P : iProp heap_lang Σ.
-Implicit Types Q : val → iProp heap_lang Σ.
+Implicit Types P Q : iProp heap_lang Σ.
+Implicit Types Φ : val → iProp heap_lang Σ.
 Hint Resolve to_of_val.
 
-Lemma wp_rec E e1 f x erec e2 v Q :
+Lemma wp_rec E e1 f x erec e2 v Φ :
   e1 = Rec f x erec →
   to_val e2 = Some v →
-  ▷ wp E (gsubst (gsubst erec f e1) x e2) Q ⊑ wp E (App e1 e2) Q.
+  ▷ wp E (gsubst (gsubst erec f e1) x e2) Φ ⊑ wp E (App e1 e2) Φ.
 Proof.
   intros -> <-%of_to_val.
   rewrite (gsubst_correct _ _ (RecV _ _ _)) gsubst_correct.
   by apply wp_rec'.
 Qed.
 
-Lemma wp_lam E x ef e v Q :
-  to_val e = Some v → ▷ wp E (gsubst ef x e) Q ⊑ wp E (App (Lam x ef) e) Q.
+Lemma wp_lam E x ef e v Φ :
+  to_val e = Some v → ▷ wp E (gsubst ef x e) Φ ⊑ wp E (App (Lam x ef) e) Φ.
 Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_lam'. Qed.
 
-Lemma wp_let E x e1 e2 v Q :
-  to_val e1 = Some v → ▷ wp E (gsubst e2 x e1) Q ⊑ wp E (Let x e1 e2) Q.
+Lemma wp_let E x e1 e2 v Φ :
+  to_val e1 = Some v → ▷ wp E (gsubst e2 x e1) Φ ⊑ wp E (Let x e1 e2) Φ.
 Proof. apply wp_lam. Qed.
 
-Lemma wp_case_inl E e0 v0 x1 e1 x2 e2 Q :
+Lemma wp_case_inl E e0 v0 x1 e1 x2 e2 Φ :
   to_val e0 = Some v0 →
-  ▷ wp E (gsubst e1 x1 e0) Q ⊑ wp E (Case (InjL e0) x1 e1 x2 e2) Q.
+  ▷ wp E (gsubst e1 x1 e0) Φ ⊑ wp E (Case (InjL e0) x1 e1 x2 e2) Φ.
 Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_case_inl'. Qed.
 
-Lemma wp_case_inr E e0 v0 x1 e1 x2 e2 Q :
+Lemma wp_case_inr E e0 v0 x1 e1 x2 e2 Φ :
   to_val e0 = Some v0 →
-  ▷ wp E (gsubst e2 x2 e0) Q ⊑ wp E (Case (InjR e0) x1 e1 x2 e2) Q.
+  ▷ wp E (gsubst e2 x2 e0) Φ ⊑ wp E (Case (InjR e0) x1 e1 x2 e2) Φ.
 Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_case_inr'. Qed.
 End wp.
 

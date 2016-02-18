@@ -97,7 +97,7 @@ Section auth.
   (* Notice how the user has to prove that `b⋅a'` is valid at all
      step-indices. However, since A is timeless, that should not be
      a restriction. *)
-  Lemma auth_fsa E N P (Q : V → iPropG Λ Σ) γ a :
+  Lemma auth_fsa E N P (Ψ : V → iPropG Λ Σ) γ a :
     fsaV →
     nclose N ⊆ E →
     P ⊑ auth_ctx γ N φ →
@@ -105,8 +105,8 @@ Section auth.
           ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
           fsa (E ∖ nclose N) (λ x, ∃ L Lv (Hup : LocalUpdate Lv L),
             ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
-            (auth_own γ (L a) -★ Q x))) →
-    P ⊑ fsa E Q.
+            (auth_own γ (L a) -★ Ψ x))) →
+    P ⊑ fsa E Ψ.
   Proof.
     rewrite /auth_ctx=>? HN Hinv Hinner.
     eapply (inv_fsa fsa); eauto. rewrite Hinner=>{Hinner Hinv P HN}.
@@ -129,7 +129,7 @@ Section auth.
     rewrite pvs_frame_l. apply pvs_mono.
     by rewrite assoc [(_ ★ ▷_)%I]comm -assoc wand_elim_l.
   Qed.
-  Lemma auth_fsa' L `{!LocalUpdate Lv L} E N P (Q: V → iPropG Λ Σ) γ a :
+  Lemma auth_fsa' L `{!LocalUpdate Lv L} E N P (Ψ : V → iPropG Λ Σ) γ a :
     fsaV →
     nclose N ⊆ E →
     P ⊑ auth_ctx γ N φ →
@@ -137,8 +137,8 @@ Section auth.
           ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
           fsa (E ∖ nclose N) (λ x,
             ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
-            (auth_own γ (L a) -★ Q x)))) →
-    P ⊑ fsa E Q.
+            (auth_own γ (L a) -★ Ψ x)))) →
+    P ⊑ fsa E Ψ.
   Proof.
     intros ??? HP. eapply auth_fsa with N γ a; eauto.
     rewrite HP; apply sep_mono; first done; apply forall_mono=> a'.

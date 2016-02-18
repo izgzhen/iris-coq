@@ -18,6 +18,7 @@ Context {Λ : language} {Σ : iFunctor}.
 Implicit Types i : positive.
 Implicit Types N : namespace.
 Implicit Types P Q R : iProp Λ Σ.
+Implicit Types Φ : val Λ → iProp Λ Σ.
 
 Global Instance inv_contractive N : Contractive (@inv Λ Σ N).
 Proof. intros n ???. apply exists_ne=>i. by apply and_ne, ownI_contractive. Qed.
@@ -29,13 +30,11 @@ Lemma always_inv N P : (□ inv N P)%I ≡ inv N P.
 Proof. by rewrite always_always. Qed.
 
 (** Invariants can be opened around any frame-shifting assertion. *)
-Lemma inv_fsa {A} (fsa : FSA Λ Σ A) `{!FrameShiftAssertion fsaV fsa}
-    E N P (Q : A → iProp Λ Σ) R :
-  fsaV →
-  nclose N ⊆ E →
+Lemma inv_fsa {A} (fsa : FSA Λ Σ A) `{!FrameShiftAssertion fsaV fsa} E N P Ψ R :
+  fsaV → nclose N ⊆ E →
   R ⊑ inv N P →
-  R ⊑ (▷ P -★ fsa (E ∖ nclose N) (λ a, ▷ P ★ Q a)) →
-  R ⊑ fsa E Q.
+  R ⊑ (▷ P -★ fsa (E ∖ nclose N) (λ a, ▷ P ★ Ψ a)) →
+  R ⊑ fsa E Ψ.
 Proof.
   intros ? HN Hinv Hinner.
   rewrite -[R](idemp (∧)%I) {1}Hinv Hinner =>{Hinv Hinner R}.
@@ -58,15 +57,15 @@ Qed.
 Lemma pvs_open_close E N P Q R :
   nclose N ⊆ E →
   R ⊑ inv N P →
-  R ⊑ (▷P -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷P ★ Q)) →
+  R ⊑ (▷ P -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷ P ★ Q)) →
   R ⊑ pvs E E Q.
 Proof. intros. by apply: (inv_fsa pvs_fsa). Qed.
 
-Lemma wp_open_close E e N P (Q : val Λ → iProp Λ Σ) R :
+Lemma wp_open_close E e N P Φ R :
   atomic e → nclose N ⊆ E →
   R ⊑ inv N P →
-  R ⊑ (▷ P -★ wp (E ∖ nclose N) e (λ v, ▷P ★ Q v)) →
-  R ⊑ wp E e Q.
+  R ⊑ (▷ P -★ wp (E ∖ nclose N) e (λ v, ▷ P ★ Φ v)) →
+  R ⊑ wp E e Φ.
 Proof. intros. by apply: (inv_fsa (wp_fsa e)). Qed.
 
 Lemma inv_alloc N P : ▷ P ⊑ pvs N N (inv N P).

@@ -24,9 +24,8 @@ End LangTests.
 Section LiftingTests.
   Context `{heapG Σ}.
   Local Notation iProp := (iPropG heap_lang Σ).
-
-  Implicit Types P : iProp.
-  Implicit Types Q : val → iProp.
+  Implicit Types P Q : iPropG heap_lang Σ.
+  Implicit Types Φ : val → iPropG heap_lang Σ.
 
   Definition heap_e  : expr :=
     let: "x" := ref '1 in "x" <- !"x" + '1;; !"x".
@@ -48,22 +47,22 @@ Section LiftingTests.
     λ: "x",
       if: "x" ≤ '0 then -FindPred (-"x" + '2) '0 else FindPred "x" '0.
 
-  Lemma FindPred_spec n1 n2 E Q :
-    (■ (n1 < n2) ∧ Q '(n2 - 1)) ⊑ wp E (FindPred 'n2 'n1) Q.
+  Lemma FindPred_spec n1 n2 E Φ :
+    (■ (n1 < n2) ∧ Φ '(n2 - 1)) ⊑ wp E (FindPred 'n2 'n1) Φ.
   Proof.
     revert n1; apply löb_all_1=>n1.
     rewrite (comm uPred_and (■ _)%I) assoc; apply const_elim_r=>?.
     (* first need to do the rec to get a later *)
     wp_rec>.
     (* FIXME: ssr rewrite fails with "Error: _pattern_value_ is used in conclusion." *)
-    rewrite ->(later_intro (Q _)); rewrite -!later_and; apply later_mono.
+    rewrite ->(later_intro (Φ _)); rewrite -!later_and; apply later_mono.
     wp_rec. wp_bin_op. wp_rec. wp_bin_op=> ?; wp_if.
     - rewrite (forall_elim (n1 + 1)) const_equiv; last omega.
       by rewrite left_id impl_elim_l.
     - wp_value. assert (n1 = n2 - 1) as -> by omega; auto with I.
   Qed.
 
-  Lemma Pred_spec n E Q : ▷ Q (LitV (n - 1)) ⊑ wp E (Pred 'n)%L Q.
+  Lemma Pred_spec n E Φ : ▷ Φ (LitV (n - 1)) ⊑ wp E (Pred 'n)%L Φ.
   Proof.
     wp_rec>; apply later_mono; wp_bin_op=> ?; wp_if.
     - wp_un_op. wp_bin_op.

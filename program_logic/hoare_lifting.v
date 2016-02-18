@@ -2,29 +2,29 @@ From program_logic Require Export hoare lifting.
 From program_logic Require Import ownership.
 Import uPred.
 
-Local Notation "{{ P } } ef ?@ E {{ Q } }" :=
-  (default True%I ef (λ e, ht E P e Q))
-  (at level 74, format "{{  P  } }  ef  ?@  E  {{  Q  } }") : uPred_scope.
-Local Notation "{{ P } } ef ?@ E {{ Q } }" :=
-  (True ⊑ default True ef (λ e, ht E P e Q))
-  (at level 74, format "{{  P  } }  ef  ?@  E  {{  Q  } }") : C_scope.
+Local Notation "{{ P } } ef ?@ E {{ Φ } }" :=
+  (default True%I ef (λ e, ht E P e Φ))
+  (at level 74, format "{{  P  } }  ef  ?@  E  {{  Φ  } }") : uPred_scope.
+Local Notation "{{ P } } ef ?@ E {{ Φ } }" :=
+  (True ⊑ default True ef (λ e, ht E P e Φ))
+  (at level 74, format "{{  P  } }  ef  ?@  E  {{  Φ  } }") : C_scope.
 
 Section lifting.
 Context {Λ : language} {Σ : iFunctor}.
 Implicit Types e : expr Λ.
-Implicit Types P : iProp Λ Σ.
-Implicit Types R : val Λ → iProp Λ Σ.
+Implicit Types P Q R : iProp Λ Σ.
+Implicit Types Ψ : val Λ → iProp Λ Σ.
 
 Lemma ht_lift_step E1 E2
-    (φ : expr Λ → state Λ → option (expr Λ) → Prop) P P' Q1 Q2 R e1 σ1 :
+    (φ : expr Λ → state Λ → option (expr Λ) → Prop) P P' Φ1 Φ2 Ψ e1 σ1 :
   E1 ⊆ E2 → to_val e1 = None →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
   ((P ={E2,E1}=> ownP σ1 ★ ▷ P') ∧ ∀ e2 σ2 ef,
-    (■ φ e2 σ2 ef ★ ownP σ2 ★ P' ={E1,E2}=> Q1 e2 σ2 ef ★ Q2 e2 σ2 ef) ∧
-    {{ Q1 e2 σ2 ef }} e2 @ E2 {{ R }} ∧
-    {{ Q2 e2 σ2 ef }} ef ?@ ⊤ {{ λ _, True }})
-  ⊑ {{ P }} e1 @ E2 {{ R }}.
+    (■ φ e2 σ2 ef ★ ownP σ2 ★ P' ={E1,E2}=> Φ1 e2 σ2 ef ★ Φ2 e2 σ2 ef) ∧
+    {{ Φ1 e2 σ2 ef }} e2 @ E2 {{ Ψ }} ∧
+    {{ Φ2 e2 σ2 ef }} ef ?@ ⊤ {{ λ _, True }})
+  ⊑ {{ P }} e1 @ E2 {{ Ψ }}.
 Proof.
   intros ?? Hsafe Hstep; apply (always_intro _ _), impl_intro_l.
   rewrite (assoc _ P) {1}/vs always_elim impl_elim_r pvs_always_r.
@@ -37,7 +37,7 @@ Proof.
   rewrite (assoc _ _ P') -(assoc _ _ _ P') assoc.
   rewrite {1}/vs -always_wand_impl always_elim wand_elim_r.
   rewrite pvs_frame_r; apply pvs_mono.
-  rewrite (comm _ (Q1 _ _ _)) -assoc (assoc _ (Q1 _ _ _)).
+  rewrite (comm _ (Φ1 _ _ _)) -assoc (assoc _ (Φ1 _ _ _)).
   rewrite {1}/ht -always_wand_impl always_elim wand_elim_r.
   rewrite assoc (comm _ _ (wp _ _ _)) -assoc.
   apply sep_mono; first done.
@@ -73,14 +73,14 @@ Proof.
     by rewrite -always_and_sep_r; apply and_intro; try apply const_intro.
 Qed.
 
-Lemma ht_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) P P' Q e1 :
+Lemma ht_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) P P' Ψ e1 :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →
   (∀ e2 ef,
-    {{ ■ φ e2 ef ★ P }} e2 @ E {{ Q }} ∧
+    {{ ■ φ e2 ef ★ P }} e2 @ E {{ Ψ }} ∧
     {{ ■ φ e2 ef ★ P' }} ef ?@ ⊤ {{ λ _, True }})
-  ⊑ {{ ▷(P ★ P') }} e1 @ E {{ Q }}.
+  ⊑ {{ ▷(P ★ P') }} e1 @ E {{ Ψ }}.
 Proof.
   intros ? Hsafe Hstep; apply (always_intro _ _), impl_intro_l.
   rewrite -(wp_lift_pure_step E φ _ e1) //.
@@ -100,12 +100,12 @@ Proof.
 Qed.
 
 Lemma ht_lift_pure_det_step
-    E (φ : expr Λ → option (expr Λ) → Prop) P P' Q e1 e2 ef :
+    E (φ : expr Λ → option (expr Λ) → Prop) P P' Ψ e1 e2 ef :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2' σ2 ef', prim_step e1 σ1 e2' σ2 ef' → σ1 = σ2 ∧ e2 = e2' ∧ ef = ef')→
-  ({{ P }} e2 @ E {{ Q }} ∧ {{ P' }} ef ?@ ⊤ {{ λ _, True }})
-  ⊑ {{ ▷(P ★ P') }} e1 @ E {{ Q }}.
+  ({{ P }} e2 @ E {{ Ψ }} ∧ {{ P' }} ef ?@ ⊤ {{ λ _, True }})
+  ⊑ {{ ▷(P ★ P') }} e1 @ E {{ Ψ }}.
 Proof.
   intros ? Hsafe Hdet.
   rewrite -(ht_lift_pure_step _ (λ e2' ef', e2 = e2' ∧ ef = ef')); eauto.
