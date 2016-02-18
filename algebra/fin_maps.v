@@ -62,7 +62,7 @@ Proof.
 Qed.
 
 Global Instance map_timeless `{∀ a : A, Timeless a} m : Timeless m.
-Proof. by intros m' ? i; apply (timeless _). Qed.
+Proof. by intros m' ? i; apply: timeless. Qed.
 
 Instance map_empty_timeless : Timeless (∅ : gmap K A).
 Proof.
@@ -71,7 +71,7 @@ Proof.
 Qed.
 Global Instance map_lookup_timeless m i : Timeless m → Timeless (m !! i).
 Proof.
-  intros ? [x|] Hx; [|by symmetry; apply (timeless _)].
+  intros ? [x|] Hx; [|by symmetry; apply: timeless].
   assert (m ≡{0}≡ <[i:=x]> m)
     by (by symmetry in Hx; inversion Hx; cofe_subst; rewrite insert_id).
   by rewrite (timeless m (<[i:=x]>m)) // lookup_insert.
@@ -80,8 +80,8 @@ Global Instance map_insert_timeless m i x :
   Timeless x → Timeless m → Timeless (<[i:=x]>m).
 Proof.
   intros ?? m' Hm j; destruct (decide (i = j)); simplify_map_eq.
-  { by apply (timeless _); rewrite -Hm lookup_insert. }
-  by apply (timeless _); rewrite -Hm lookup_insert_ne.
+  { by apply: timeless; rewrite -Hm lookup_insert. }
+  by apply: timeless; rewrite -Hm lookup_insert_ne.
 Qed.
 Global Instance map_singleton_timeless i x :
   Timeless x → Timeless ({[ i := x ]} : gmap K A) := _.

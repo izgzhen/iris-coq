@@ -26,7 +26,7 @@ Lemma ht_lift_step E1 E2
     {{ Φ2 e2 σ2 ef }} ef ?@ ⊤ {{ λ _, True }})
   ⊑ {{ P }} e1 @ E2 {{ Ψ }}.
 Proof.
-  intros ?? Hsafe Hstep; apply (always_intro _ _), impl_intro_l.
+  intros ?? Hsafe Hstep; apply: always_intro. apply impl_intro_l.
   rewrite (assoc _ P) {1}/vs always_elim impl_elim_r pvs_always_r.
   rewrite -(wp_lift_step E1 E2 φ _ e1 σ1) //; apply pvs_mono.
   rewrite always_and_sep_r -assoc; apply sep_mono; first done.
@@ -62,8 +62,8 @@ Proof.
   apply and_intro; [by rewrite -vs_reflexive; apply const_intro|].
   apply forall_mono=>e2; apply forall_mono=>σ2; apply forall_mono=>ef.
   apply and_intro; [|apply and_intro; [|done]].
-  - rewrite -vs_impl; apply (always_intro _ _),impl_intro_l; rewrite and_elim_l.
-    rewrite !assoc; apply sep_mono; last done.
+  - rewrite -vs_impl; apply: always_intro. apply impl_intro_l.
+    rewrite and_elim_l !assoc; apply sep_mono; last done.
     rewrite -!always_and_sep_l -!always_and_sep_r; apply const_elim_l=>-[??].
     by repeat apply and_intro; try apply const_intro.
   - apply (always_intro _ _), impl_intro_l; rewrite and_elim_l.
@@ -82,7 +82,7 @@ Lemma ht_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) P P' Ψ e
     {{ ■ φ e2 ef ★ P' }} ef ?@ ⊤ {{ λ _, True }})
   ⊑ {{ ▷(P ★ P') }} e1 @ E {{ Ψ }}.
 Proof.
-  intros ? Hsafe Hstep; apply (always_intro _ _), impl_intro_l.
+  intros ? Hsafe Hstep; apply: always_intro. apply impl_intro_l.
   rewrite -(wp_lift_pure_step E φ _ e1) //.
   rewrite (later_intro (∀ _, _)) -later_and; apply later_mono.
   apply forall_intro=>e2; apply forall_intro=>ef; apply impl_intro_l.
@@ -110,11 +110,11 @@ Proof.
   intros ? Hsafe Hdet.
   rewrite -(ht_lift_pure_step _ (λ e2' ef', e2 = e2' ∧ ef = ef')); eauto.
   apply forall_intro=>e2'; apply forall_intro=>ef'; apply and_mono.
-  - apply (always_intro' _ _), impl_intro_l.
+  - apply: always_intro. apply impl_intro_l.
     rewrite -always_and_sep_l -assoc; apply const_elim_l=>-[??]; subst.
     by rewrite /ht always_elim impl_elim_r.
   - destruct ef' as [e'|]; simpl; [|by apply const_intro].
-    apply (always_intro _ _), impl_intro_l.
+    apply: always_intro. apply impl_intro_l.
     rewrite -always_and_sep_l -assoc; apply const_elim_l=>-[??]; subst.
     by rewrite /= /ht always_elim impl_elim_r.
 Qed.

@@ -31,7 +31,7 @@ Proof. by intros P P' HP e ? <- Φ Φ' HΦ; apply ht_mono. Qed.
 
 Lemma ht_alt E P Φ e : (P ⊑ wp E e Φ) → {{ P }} e @ E {{ Φ }}.
 Proof.
-  intros; rewrite -{1}always_const. apply (always_intro _ _), impl_intro_l.
+  intros; rewrite -{1}always_const. apply: always_intro. apply impl_intro_l.
   by rewrite always_const right_id.
 Qed.
 
@@ -43,7 +43,7 @@ Lemma ht_vs E P P' Φ Φ' e :
   ((P ={E}=> P') ∧ {{ P' }} e @ E {{ Φ' }} ∧ ∀ v, Φ' v ={E}=> Φ v)
   ⊑ {{ P }} e @ E {{ Φ }}.
 Proof.
-  apply (always_intro _ _), impl_intro_l.
+  apply: always_intro. apply impl_intro_l.
   rewrite (assoc _ P) {1}/vs always_elim impl_elim_r.
   rewrite assoc pvs_impl_r pvs_always_r wp_always_r.
   rewrite -(pvs_wp E e Φ) -(wp_pvs E e Φ); apply pvs_mono, wp_mono=> v.
@@ -55,7 +55,7 @@ Lemma ht_atomic E1 E2 P P' Φ Φ' e :
   ((P ={E1,E2}=> P') ∧ {{ P' }} e @ E2 {{ Φ' }} ∧ ∀ v, Φ' v ={E2,E1}=> Φ v)
   ⊑ {{ P }} e @ E1 {{ Φ }}.
 Proof.
-  intros ??; apply (always_intro _ _), impl_intro_l.
+  intros ??; apply: always_intro. apply impl_intro_l.
   rewrite (assoc _ P) {1}/vs always_elim impl_elim_r.
   rewrite assoc pvs_impl_r pvs_always_r wp_always_r.
   rewrite -(wp_atomic E1 E2) //; apply pvs_mono, wp_mono=> v.
@@ -66,7 +66,7 @@ Lemma ht_bind `{LanguageCtx Λ K} E P Φ Φ' e :
   ({{ P }} e @ E {{ Φ }} ∧ ∀ v, {{ Φ v }} K (of_val v) @ E {{ Φ' }})
   ⊑ {{ P }} K e @ E {{ Φ' }}.
 Proof.
-  intros; apply (always_intro _ _), impl_intro_l.
+  intros; apply: always_intro. apply impl_intro_l.
   rewrite (assoc _ P) {1}/ht always_elim impl_elim_r.
   rewrite wp_always_r -wp_bind //; apply wp_mono=> v.
   by rewrite (forall_elim v) /ht always_elim impl_elim_r.

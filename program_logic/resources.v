@@ -40,7 +40,7 @@ Proof. by destruct 1. Qed.
 Global Instance pst_ne n : Proper (dist n ==> dist n) (@pst Λ Σ A).
 Proof. by destruct 1. Qed.
 Global Instance pst_ne' n : Proper (dist n ==> (≡)) (@pst Λ Σ A).
-Proof. destruct 1; apply (timeless _), dist_le with n; auto with lia. Qed.
+Proof. destruct 1; apply: timeless; apply dist_le with n; auto with lia. Qed.
 Global Instance pst_proper : Proper ((≡) ==> (=)) (@pst Λ Σ A).
 Proof. by destruct 1; unfold_leibniz. Qed.
 Global Instance gst_ne n : Proper (dist n ==> dist n) (@gst Λ Σ A).
@@ -69,7 +69,7 @@ Qed.
 Canonical Structure resC : cofeT := CofeT res_cofe_mixin.
 Global Instance res_timeless r :
   Timeless (wld r) → Timeless (gst r) → Timeless r.
-Proof. by destruct 3; constructor; try apply (timeless _). Qed.
+Proof. by destruct 3; constructor; try apply: timeless. Qed.
 
 Instance res_op : Op (res Λ Σ A) := λ r1 r2,
   Res (wld r1 ⋅ wld r2) (pst r1 ⋅ pst r2) (gst r1 ⋅ gst r2).
@@ -157,7 +157,7 @@ Lemma lookup_wld_op_r n r1 r2 i P :
   ✓{n} (r1⋅r2) → wld r2 !! i ≡{n}≡ Some P → (wld r1 ⋅ wld r2) !! i ≡{n}≡ Some P.
 Proof. rewrite (comm _ r1) (comm _ (wld r1)); apply lookup_wld_op_l. Qed.
 Global Instance Res_timeless eσ m : Timeless m → Timeless (Res ∅ eσ m).
-Proof. by intros ? ? [???]; constructor; apply (timeless _). Qed.
+Proof. by intros ? ? [???]; constructor; apply: timeless. Qed.
 
 (** Internalized properties *)
 Lemma res_equivI {M} r1 r2 :
