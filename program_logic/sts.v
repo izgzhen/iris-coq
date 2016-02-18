@@ -42,8 +42,8 @@ Section sts.
   Proof. by intros φ1 φ2 Hφ; rewrite /sts_inv; setoid_rewrite Hφ. Qed.
   Global Instance sts_ownS_proper γ : Proper ((≡) ==> (≡) ==> (≡)) (sts_ownS γ).
   Proof. intros S1 S2 HS T1 T2 HT. by rewrite /sts_ownS HS HT. Qed.
-  Global Instance sts_own_proper γ s : Proper ((≡) ==> (≡)) (sts_ownS γ s).
-  Proof. intros T1 T2 HT. by rewrite /sts_ownS HT. Qed.
+  Global Instance sts_own_proper γ s : Proper ((≡) ==> (≡)) (sts_own γ s).
+  Proof. intros T1 T2 HT. by rewrite /sts_own HT. Qed.
   Global Instance sts_ctx_ne n γ N :
     Proper (pointwise_relation _ (dist n) ==> dist n) (sts_ctx γ N).
   Proof. by intros φ1 φ2 Hφ; rewrite /sts_ctx Hφ. Qed.
@@ -61,8 +61,7 @@ Section sts.
   Lemma sts_own_weaken E γ s S T1 T2 :
     T1 ≡ T2 → s ∈ S → sts.closed S T2 →
     sts_own γ s T1 ⊑ pvs E E (sts_ownS γ S T2).
-  (* FIXME for some reason, using "->" instead of "<-" does not work? *)
-  Proof. intros <- ? ?. by apply own_update, sts_update_frag_up. Qed.
+  Proof. intros -> ??. by apply own_update, sts_update_frag_up. Qed.
 
   Lemma sts_ownS_op γ S1 S2 T1 T2 :
     T1 ∩ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
