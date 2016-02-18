@@ -80,25 +80,18 @@ Section LiftingTests.
 End LiftingTests.
 
 Section ClosedProofs.
-  
   Definition Σ : iFunctorG := λ _, authF (constF heapRA).
+  Notation iProp := (iPropG heap_lang Σ).
 
-  Local Instance : inG heap_lang Σ (authRA heapRA).
-  Proof. by exists 1%nat. Qed.
-
-  (* TODO: Why do I even have to explicitly do this? *)
-  Local Instance : authG heap_lang Σ heapRA.
-  Proof. split; by apply _. Qed.
-  
-  Local Notation iProp := (iPropG heap_lang Σ).
+  Instance: authG heap_lang Σ heapRA.
+  Proof. split; try apply _. by exists 1%nat. Qed.
 
   Lemma heap_e_hoare σ : {{ ownP σ : iProp }} heap_e @ ⊤ {{ λ v, v = '2 }}.
   Proof.
     apply ht_alt. rewrite (heap_alloc ⊤ nroot); last by rewrite nclose_nroot.
-    apply wp_strip_pvs, exist_elim=>?. rewrite and_elim_l.
+    apply wp_strip_pvs, exist_elim=> ?. rewrite and_elim_l.
     rewrite -heap_e_spec; first by eauto with I. by rewrite nclose_nroot.
   Qed.
 
   Print Assumptions heap_e_hoare.
-    
-End ClosedProofs.  
+End ClosedProofs.
