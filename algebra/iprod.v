@@ -49,7 +49,7 @@ Section iprod_cofe.
     Definition iprod_lookup_empty  x : ∅ x = ∅ := eq_refl.
     Global Instance iprod_empty_timeless :
       (∀ x : A, Timeless (∅ : B x)) → Timeless (∅ : iprod B).
-    Proof. intros ? f Hf x. by apply (timeless _). Qed.
+    Proof. intros ? f Hf x. by apply: timeless. Qed.
   End empty.
 
   (** Properties of iprod_insert. *)
@@ -78,7 +78,7 @@ Section iprod_cofe.
     intros ? y ?.
     cut (f ≡ iprod_insert x y f).
     { by move=> /(_ x)->; rewrite iprod_lookup_insert. }
-    by apply (timeless _)=>x'; destruct (decide (x = x')) as [->|];
+    by apply: timeless=>x'; destruct (decide (x = x')) as [->|];
       rewrite ?iprod_lookup_insert ?iprod_lookup_insert_ne.
   Qed.
   Global Instance iprod_insert_timeless f x y :
@@ -86,9 +86,9 @@ Section iprod_cofe.
   Proof.
     intros ?? g Heq x'; destruct (decide (x = x')) as [->|].
     - rewrite iprod_lookup_insert.
-      apply (timeless _). by rewrite -(Heq x') iprod_lookup_insert.
+      apply: timeless. by rewrite -(Heq x') iprod_lookup_insert.
     - rewrite iprod_lookup_insert_ne //.
-      apply (timeless _). by rewrite -(Heq x') iprod_lookup_insert_ne.
+      apply: timeless. by rewrite -(Heq x') iprod_lookup_insert_ne.
   Qed.
 
   (** Properties of iprod_singletom. *)

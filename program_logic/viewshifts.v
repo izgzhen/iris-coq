@@ -24,7 +24,7 @@ Implicit Types N : namespace.
 
 Lemma vs_alt E1 E2 P Q : (P ⊑ pvs E1 E2 Q) → P ={E1,E2}=> Q.
 Proof.
-  intros; rewrite -{1}always_const. apply (always_intro _ _), impl_intro_l.
+  intros; rewrite -{1}always_const. apply: always_intro. apply impl_intro_l.
   by rewrite always_const right_id.
 Qed.
 
@@ -51,7 +51,7 @@ Proof. by intros ?; apply vs_alt, pvs_timeless. Qed.
 Lemma vs_transitive E1 E2 E3 P Q R :
   E2 ⊆ E1 ∪ E3 → ((P ={E1,E2}=> Q) ∧ (Q ={E2,E3}=> R)) ⊑ (P ={E1,E3}=> R).
 Proof.
-  intros; rewrite -always_and; apply (always_intro _ _), impl_intro_l.
+  intros; rewrite -always_and; apply: always_intro. apply impl_intro_l.
   rewrite always_and assoc (always_elim (P → _)) impl_elim_r.
   by rewrite pvs_impl_r; apply pvs_trans.
 Qed.
@@ -91,7 +91,7 @@ Lemma vs_open_close N E P Q R :
   nclose N ⊆ E →
   (inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q)) ⊑ (P ={E}=> Q).
 Proof.
-  intros; apply (always_intro _ _), impl_intro_l.
+  intros; apply: always_intro. apply impl_intro_l.
   rewrite always_and_sep_r assoc [(P ★ _)%I]comm -assoc.
   eapply pvs_open_close; [by eauto with I..|].
   rewrite sep_elim_r. apply wand_intro_l.

@@ -301,7 +301,7 @@ Proof. by intros n Ψ1 Ψ2 HΨ n' x; split; intros HP a; apply HΨ. Qed.
 Global Instance forall_proper A :
   Proper (pointwise_relation _ (≡) ==> (≡)) (@uPred_forall M A).
 Proof. by intros Ψ1 Ψ2 HΨ n' x; split; intros HP a; apply HΨ. Qed.
-Global Instance exists_ne A :
+Global Instance exist_ne A :
   Proper (pointwise_relation _ (dist n) ==> dist n) (@uPred_exist M A).
 Proof. by intros n P1 P2 HP x; split; intros [a ?]; exists a; apply HP. Qed.
 Global Instance exist_proper A :

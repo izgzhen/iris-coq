@@ -1,5 +1,6 @@
 From algebra Require Export upred_big_op.
 From program_logic Require Export sts saved_prop.
+From program_logic Require Import hoare.
 From heap_lang Require Export derived heap wp_tactics notation.
 Import uPred.
 
@@ -103,8 +104,8 @@ Section proof.
   Local Notation iProp := (iPropG heap_lang Σ).
 
   Definition waiting (P : iProp) (I : gset gname) : iProp :=
-    (∃ R : gname → iProp, ▷(P -★ Π★{set I} (λ i, R i)) ★
-                             Π★{set I} (λ i, saved_prop_own i (R i)))%I.
+    (∃ Ψ : gname → iProp, ▷(P -★ Π★{set I} (λ i, Ψ i)) ★
+                             Π★{set I} (λ i, saved_prop_own i (Ψ i)))%I.
 
   Definition ress (I : gset gname) : iProp :=
     (Π★{set I} (λ i, ∃ R, saved_prop_own i R ★ ▷R))%I.
@@ -119,12 +120,29 @@ Section proof.
   Definition barrier_ctx (γ : gname) (l : loc) (P : iProp) : iProp :=
     (heap_ctx heapN ★ sts_ctx γ N (barrier_inv l P))%I.
 
+  Global Instance barrier_ctx_ne n γ l : Proper (dist n ==> dist n) (barrier_ctx γ l).
+  Proof.
+    move=>? ? EQ. rewrite /barrier_ctx. apply sep_ne; first done. apply sts_ctx_ne.
+    move=>[p I]. rewrite /barrier_inv. destruct p; last done.
+    rewrite /waiting. by setoid_rewrite EQ.
+  Qed.
+
   Definition send (l : loc) (P : iProp) : iProp :=
     (∃ γ, barrier_ctx γ l P ★ sts_ownS γ low_states {[ Send ]})%I.
+
+  Global Instance send_ne n l : Proper (dist n ==> dist n) (send l).
+  Proof. (* TODO: This really ought to be doable by an automatic tactic. it is just application of already regostered congruence lemmas. *)
+    move=>? ? EQ. rewrite /send. apply exist_ne=>γ. by rewrite EQ.
+  Qed.
 
   Definition recv (l : loc) (R : iProp) : iProp :=
     (∃ γ P Q i, barrier_ctx γ l P ★ sts_ownS γ (i_states i) {[ Change i ]} ★
         saved_prop_own i Q ★ ▷(Q -★ R))%I.
+
+  Global Instance recv_ne n l : Proper (dist n ==> dist n) (recv l).
+  Proof.
+    move=>? ? EQ. rewrite /send. do 4 apply exist_ne=>?. by rewrite EQ.
+  Qed.
 
   Lemma newchan_spec (P : iProp) (Φ : val → iProp) :
     (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ (LocV l))
@@ -229,3 +247,35 @@ Section proof.
   Qed.
 
 End proof.
+
+Section spec.
+  Context {Σ : iFunctorG}.
+  Context `{heapG Σ}.
+  Context `{stsG heap_lang Σ barrier_proto.sts}.
+  Context `{savedPropG heap_lang Σ}.
+
+  Local Notation iProp := (iPropG heap_lang Σ).
+
+  (* TODO: Maybe notation for LocV (and Loc)? *)
+  Lemma barrier_spec (heapN N : namespace) :
+    heapN ⊥ N →
+    ∃ (recv send : loc -> iProp -n> iProp),
+      (∀ P, heap_ctx heapN ⊑ ({{ True }} newchan '() @ ⊤ {{ λ v, ∃ l, v = LocV l ★ recv l P ★ send l P }})) ∧
+      (∀ l P, {{ send l P ★ P }} signal (LocV l) @ ⊤ {{ λ _, True }}) ∧
+      (∀ l P, {{ recv l P }} wait (LocV l) @ ⊤ {{ λ _, P }}) ∧
+      (∀ l P Q, {{ recv l (P ★ Q) }} Skip @ ⊤ {{ λ _, recv l P ★ recv l Q }}) ∧
+      (∀ l P Q, (P -★ Q) ⊑ (recv l P -★ recv l Q)).
+  Proof.
+    intros HN. exists (λ l, CofeMor (recv N heapN l)). exists (λ l, CofeMor (send N heapN l)).
+    split_ands; cbn.
+    - intros. apply: always_intro. apply impl_intro_l. rewrite -newchan_spec.
+      rewrite comm always_and_sep_r. apply sep_mono_r. apply forall_intro=>l.
+      apply wand_intro_l. rewrite right_id -(exist_intro l) const_equiv // left_id.
+      done.
+    - intros. apply ht_alt. rewrite -signal_spec; first by rewrite right_id. done.
+    - admit.
+    - admit.
+    - intros. apply recv_strengthen.
+  Abort.
+
+End spec.
