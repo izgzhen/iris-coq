@@ -65,7 +65,7 @@ Section heap.
   (** Allocation *)
   Lemma heap_alloc E N σ :
     authG heap_lang Σ heapRA → nclose N ⊆ E →
-    ownP σ ⊑ (|={E}=> ∃ (_ : heapG Σ), heap_ctx N ∧ Π★{map σ} heap_mapsto).
+    ownP σ ⊑ (|={E}=> ∃ _ : heapG Σ, heap_ctx N ∧ Π★{map σ} heap_mapsto).
   Proof.
     intros. rewrite -{1}(from_to_heap σ). etransitivity.
     { rewrite [ownP _]later_intro.
@@ -100,7 +100,7 @@ Section heap.
     to_val e = Some v → nclose N ⊆ E →
     P ⊑ heap_ctx N →
     P ⊑ (▷ ∀ l, l ↦ v -★ Φ (LocV l)) →
-    P ⊑ wp E (Alloc e) Φ.
+    P ⊑ || Alloc e @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv /heap_mapsto=> ?? Hctx HP.
     transitivity (|={E}=> auth_own heap_name ∅ ★ P)%I.
@@ -127,7 +127,7 @@ Section heap.
     nclose N ⊆ E →
     P ⊑ heap_ctx N →
     P ⊑ (▷ l ↦ v ★ ▷ (l ↦ v -★ Φ v)) →
-    P ⊑ wp E (Load (Loc l)) Φ.
+    P ⊑ || Load (Loc l) @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv /heap_mapsto=>HN ? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
@@ -146,7 +146,7 @@ Section heap.
     to_val e = Some v → nclose N ⊆ E → 
     P ⊑ heap_ctx N →
     P ⊑ (▷ l ↦ v' ★ ▷ (l ↦ v -★ Φ (LitV LitUnit))) →
-    P ⊑ wp E (Store (Loc l) e) Φ.
+    P ⊑ || Store (Loc l) e @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv /heap_mapsto=>? HN ? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Excl v) l))
@@ -167,7 +167,7 @@ Section heap.
     nclose N ⊆ E →
     P ⊑ heap_ctx N →
     P ⊑ (▷ l ↦ v' ★ ▷ (l ↦ v' -★ Φ (LitV (LitBool false)))) →
-    P ⊑ wp E (Cas (Loc l) e1 e2) Φ.
+    P ⊑ || Cas (Loc l) e1 e2 @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv /heap_mapsto=>??? HN ? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
@@ -187,7 +187,7 @@ Section heap.
     nclose N ⊆ E →
     P ⊑ heap_ctx N →
     P ⊑ (▷ l ↦ v1 ★ ▷ (l ↦ v2 -★ Φ (LitV (LitBool true)))) →
-    P ⊑ wp E (Cas (Loc l) e1 e2) Φ.
+    P ⊑ || Cas (Loc l) e1 e2 @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv /heap_mapsto=> ?? HN ? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Excl v2) l))

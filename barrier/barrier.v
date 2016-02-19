@@ -146,7 +146,7 @@ Section proof.
 
   Lemma newchan_spec (P : iProp) (Φ : val → iProp) :
     (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ (LocV l))
-    ⊑ wp ⊤ (newchan '()) Φ.
+    ⊑ || newchan '() {{ Φ }}.
   Proof.
     rewrite /newchan. wp_rec. (* TODO: wp_seq. *)
     rewrite -wp_pvs. wp> eapply wp_alloc; eauto with I ndisj.
@@ -196,7 +196,7 @@ Section proof.
   Qed.
 
   Lemma signal_spec l P (Φ : val → iProp) :
-    heapN ⊥ N → (send l P ★ P ★ Φ '()) ⊑ wp ⊤ (signal (LocV l)) Φ.
+    heapN ⊥ N → (send l P ★ P ★ Φ '()) ⊑ || signal (LocV l) {{ Φ }}.
   Proof.
     intros Hdisj. rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
     apply exist_elim=>γ. wp_rec. (* FIXME wp_let *)
@@ -226,12 +226,12 @@ Section proof.
   Qed.
 
   Lemma wait_spec l P (Φ : val → iProp) :
-    heapN ⊥ N → (recv l P ★ (P -★ Φ '())) ⊑ wp ⊤ (wait (LocV l)) Φ.
+    heapN ⊥ N → (recv l P ★ (P -★ Φ '())) ⊑ || wait (LocV l) {{ Φ }}.
   Proof.
   Abort.
 
   Lemma split_spec l P1 P2 Φ :
-    (recv l (P1 ★ P2) ★ (recv l P1 ★ recv l P2 -★ Φ '())) ⊑ wp ⊤ Skip Φ.
+    (recv l (P1 ★ P2) ★ (recv l P1 ★ recv l P2 -★ Φ '())) ⊑ || Skip {{ Φ }}.
   Proof.
   Abort.
 

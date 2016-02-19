@@ -26,10 +26,10 @@ to be unfolded. For example, consider the rule [wp_rec'] from below:
 <<
   Definition foo : val := rec: "f" "x" := ... .
 
-  Lemma wp_rec' E e1 f x erec e2 v Q :
+  Lemma wp_rec E e1 f x erec e2 v Φ :
     e1 = Rec f x erec →
     to_val e2 = Some v →
-    ▷ wp E (gsubst (gsubst erec f e1) x e2) Q ⊑ wp E (App e1 e2) Q.
+    ▷ || gsubst (gsubst erec f e1) x e2 @ E {{ Φ }} ⊑ || App e1 e2 @ E {{ Φ }}.
 >>
 
 We ensure that [e1] is substituted instead of [RecV f x erec]. So, for example
@@ -123,7 +123,7 @@ Hint Resolve to_of_val.
 Lemma wp_rec E e1 f x erec e2 v Φ :
   e1 = Rec f x erec →
   to_val e2 = Some v →
-  ▷ wp E (gsubst (gsubst erec f e1) x e2) Φ ⊑ wp E (App e1 e2) Φ.
+  ▷ || gsubst (gsubst erec f e1) x e2 @ E {{ Φ }} ⊑ || App e1 e2 @ E {{ Φ }}.
 Proof.
   intros -> <-%of_to_val.
   rewrite (gsubst_correct _ _ (RecV _ _ _)) gsubst_correct.
@@ -131,21 +131,22 @@ Proof.
 Qed.
 
 Lemma wp_lam E x ef e v Φ :
-  to_val e = Some v → ▷ wp E (gsubst ef x e) Φ ⊑ wp E (App (Lam x ef) e) Φ.
+  to_val e = Some v →
+  ▷ || gsubst ef x e @ E {{ Φ }} ⊑ || App (Lam x ef) e @ E {{ Φ }}.
 Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_lam'. Qed.
 
 Lemma wp_let E x e1 e2 v Φ :
-  to_val e1 = Some v → ▷ wp E (gsubst e2 x e1) Φ ⊑ wp E (Let x e1 e2) Φ.
+  to_val e1 = Some v →
+  ▷ || gsubst e2 x e1 @ E {{ Φ }} ⊑ || Let x e1 e2 @ E {{ Φ }}.
 Proof. apply wp_lam. Qed.
 
 Lemma wp_case_inl E e0 v0 x1 e1 x2 e2 Φ :
   to_val e0 = Some v0 →
-  ▷ wp E (gsubst e1 x1 e0) Φ ⊑ wp E (Case (InjL e0) x1 e1 x2 e2) Φ.
+  ▷ || gsubst e1 x1 e0 @ E {{ Φ }} ⊑ || Case (InjL e0) x1 e1 x2 e2 @ E {{ Φ }}.
 Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_case_inl'. Qed.
 
 Lemma wp_case_inr E e0 v0 x1 e1 x2 e2 Φ :
   to_val e0 = Some v0 →
-  ▷ wp E (gsubst e2 x2 e0) Φ ⊑ wp E (Case (InjR e0) x1 e1 x2 e2) Φ.
+  ▷ || gsubst e2 x2 e0 @ E {{ Φ }} ⊑ || Case (InjR e0) x1 e1 x2 e2 @ E {{ Φ }}.
 Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_case_inr'. Qed.
 End wp.
-

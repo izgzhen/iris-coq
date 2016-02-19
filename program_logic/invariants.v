@@ -64,8 +64,8 @@ Proof. intros. by apply: (inv_fsa pvs_fsa). Qed.
 Lemma wp_open_close E e N P Φ R :
   atomic e → nclose N ⊆ E →
   R ⊑ inv N P →
-  R ⊑ (▷ P -★ wp (E ∖ nclose N) e (λ v, ▷ P ★ Φ v)) →
-  R ⊑ wp E e Φ.
+  R ⊑ (▷ P -★ || e @ E ∖ nclose N {{ λ v, ▷ P ★ Φ v }}) →
+  R ⊑ || e @ E {{ Φ }}.
 Proof. intros. by apply: (inv_fsa (wp_fsa e)). Qed.
 
 Lemma inv_alloc N P : ▷ P ⊑ pvs N N (inv N P).
