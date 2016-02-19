@@ -101,7 +101,7 @@ Lemma step_closed s1 s2 T1 T2 S Tf :
   step (s1,T1) (s2,T2) → closed S Tf → s1 ∈ S → T1 ∩ Tf ≡ ∅ →
   s2 ∈ S ∧ T2 ∩ Tf ≡ ∅ ∧ tok s2 ∩ T2 ≡ ∅.
 Proof.
-  inversion_clear 1 as [???? HR Hs1 Hs2]; intros [?? Hstep]??; split_ands; auto.
+  inversion_clear 1 as [???? HR Hs1 Hs2]; intros [?? Hstep]??; split_and?; auto.
   - eapply Hstep with s1, Frame_step with T1 T2; auto with sts.
   - set_solver -Hstep Hs1 Hs2.
 Qed.
@@ -240,7 +240,7 @@ Proof.
     + rewrite (up_closed (up _ _)); auto using closed_up with sts.
     + rewrite (up_closed (up_set _ _));
         eauto using closed_up_set, closed_ne with sts.
-  - intros x y ?? (z&Hy&?&Hxz); exists (unit (x ⋅ y)); split_ands.
+  - intros x y ?? (z&Hy&?&Hxz); exists (unit (x ⋅ y)); split_and?.
     + destruct Hxz;inversion_clear Hy;constructor;unfold up_set; set_solver.
     + destruct Hxz; inversion_clear Hy; simpl;
         auto using closed_up_set_empty, closed_up_empty with sts.
@@ -326,7 +326,7 @@ Lemma sts_op_auth_frag s S T :
 Proof.
   intros; split; [split|constructor; set_solver]; simpl.
   - intros (?&?&?); by apply closed_disjoint' with S.
-  - intros; split_ands. set_solver+. done. constructor; set_solver.
+  - intros; split_and?. set_solver+. done. constructor; set_solver.
 Qed.
 Lemma sts_op_auth_frag_up s T :
   tok s ∩ T ≡ ∅ → sts_auth s ∅ ⋅ sts_frag_up s T ≡ sts_auth s T.
@@ -381,7 +381,7 @@ when we have RAs back *)
     move:(EQ' Hcl2)=>{EQ'} EQ. inversion_clear EQ as [|? ? ? ? HT HS].
     destruct Hv as [Hv _]. move:(Hv Hcl2)=>{Hv} [/= Hcl1  [Hclf Hdisj]].
     apply Hvf in Hclf. simpl in Hclf. clear Hvf.
-    inversion_clear Hdisj. split; last (exists Tf; split_ands); [done..|].
+    inversion_clear Hdisj. split; last (exists Tf; split_and?); [done..|].
     apply (anti_symm (⊆)).
     + move=>s HS2. apply elem_of_intersection. split; first by apply HS.
       by apply subseteq_up_set.
@@ -392,7 +392,7 @@ when we have RAs back *)
   - intros (Hcl1 & Tf & Htk & Hf & Hs).
     exists (sts_frag (up_set S2 Tf) Tf).
     split; first split; simpl;[|done|].
-    + intros _. split_ands; first done.
+    + intros _. split_and?; first done.
       * apply closed_up_set; last by eapply closed_ne.
         move=>s Hs2. move:(closed_disjoint _ _ Hcl2 _ Hs2).
         set_solver +Htk.
@@ -404,7 +404,7 @@ Lemma sts_frag_included' S1 S2 T :
   closed S2 T → closed S1 T → S2 ≡ S1 ∩ up_set S2 ∅ →
   sts_frag S1 T ≼ sts_frag S2 T.
 Proof.
-  intros. apply sts_frag_included; split_ands; auto.
-  exists ∅; split_ands; done || set_solver+.
+  intros. apply sts_frag_included; split_and?; auto.
+  exists ∅; split_and?; done || set_solver+.
 Qed.
 End stsRA.

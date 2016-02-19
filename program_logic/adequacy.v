@@ -74,7 +74,7 @@ Proof.
   intros Hv ? [k ?]%rtc_nsteps.
   eapply ht_adequacy_steps with (r1 := (Res ∅ (Excl σ1) (Some m))); eauto; [|].
   { by rewrite Nat.add_comm; apply wsat_init, cmra_valid_validN. }
-  exists (Res ∅ (Excl σ1) ∅), (Res ∅ ∅ (Some m)); split_ands.
+  exists (Res ∅ (Excl σ1) ∅), (Res ∅ ∅ (Some m)); split_and?.
   - by rewrite Res_op ?left_id ?right_id.
   - by rewrite /uPred_holds /=.
   - by apply ownG_spec.

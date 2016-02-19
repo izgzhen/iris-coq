@@ -143,7 +143,7 @@ Next Obligation.
   assert (∃ x2', y ≡{n2}≡ x1 ⋅ x2' ∧ x2 ≼ x2') as (x2'&Hy&?).
   { destruct Hxy as [z Hy]; exists (x2 ⋅ z); split; eauto using cmra_included_l.
     apply dist_le with n1; auto. by rewrite (assoc op) -Hx Hy. }
-  clear Hxy; cofe_subst y; exists x1, x2'; split_ands; [done| |].
+  clear Hxy; cofe_subst y; exists x1, x2'; split_and?; [done| |].
   - apply uPred_weaken with n1 x1; eauto using cmra_validN_op_l.
   - apply uPred_weaken with n1 x2; eauto using cmra_validN_op_r.
 Qed.
@@ -273,7 +273,7 @@ Global Instance impl_proper :
 Global Instance sep_ne n : Proper (dist n ==> dist n ==> dist n) (@uPred_sep M).
 Proof.
   intros P P' HP Q Q' HQ n' x ??; split; intros (x1&x2&?&?&?); cofe_subst x;
-    exists x1, x2; split_ands; try (apply HP || apply HQ);
+    exists x1, x2; split_and?; try (apply HP || apply HQ);
     eauto using cmra_validN_op_l, cmra_validN_op_r.
 Qed.
 Global Instance sep_proper :
@@ -564,17 +564,17 @@ Qed.
 Global Instance sep_assoc : Assoc (≡) (@uPred_sep M).
 Proof.
   intros P Q R n x ?; split.
-  - intros (x1&x2&Hx&?&y1&y2&Hy&?&?); exists (x1 ⋅ y1), y2; split_ands; auto.
+  - intros (x1&x2&Hx&?&y1&y2&Hy&?&?); exists (x1 ⋅ y1), y2; split_and?; auto.
     + by rewrite -(assoc op) -Hy -Hx.
     + by exists x1, y1.
-  - intros (x1&x2&Hx&(y1&y2&Hy&?&?)&?); exists y1, (y2 ⋅ x2); split_ands; auto.
+  - intros (x1&x2&Hx&(y1&y2&Hy&?&?)&?); exists y1, (y2 ⋅ x2); split_and?; auto.
     + by rewrite (assoc op) -Hy -Hx.
     + by exists y2, x2.
 Qed.
 Lemma wand_intro_r P Q R : (P ★ Q) ⊑ R → P ⊑ (Q -★ R).
 Proof.
   intros HPQR n x ?? n' x' ???; apply HPQR; auto.
-  exists x, x'; split_ands; auto.
+  exists x, x'; split_and?; auto.
   eapply uPred_weaken with n x; eauto using cmra_validN_op_l.
 Qed.
 Lemma wand_elim_l P Q : ((P -★ Q) ★ P) ⊑ Q.

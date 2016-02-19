@@ -156,7 +156,7 @@ Section iprod_cmra.
     intros n f f1 f2 Hf Hf12.
     set (g x := cmra_extend_op n (f x) (f1 x) (f2 x) (Hf x) (Hf12 x)).
     exists ((λ x, (proj1_sig (g x)).1), (λ x, (proj1_sig (g x)).2)).
-    split_ands; intros x; apply (proj2_sig (g x)).
+    split_and?; intros x; apply (proj2_sig (g x)).
   Qed.
   Canonical Structure iprodRA : cmraT :=
     CMRAT iprod_cofe_mixin iprod_cmra_mixin iprod_cmra_extend_mixin.

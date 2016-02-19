@@ -476,7 +476,7 @@ Section discrete.
   Qed.
   Definition discrete_extend_mixin : CMRAExtendMixin A.
   Proof.
-    intros n x y1 y2 ??; exists (y1,y2); split_ands; auto.
+    intros n x y1 y2 ??; exists (y1,y2); split_and?; auto.
     apply (timeless _), dist_le with n; auto with lia.
   Qed.
   Definition discreteRA : cmraT :=

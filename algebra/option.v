@@ -75,7 +75,7 @@ Proof.
   - intros [mz Hmz].
     destruct mx as [x|]; [right|by left].
     destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
-    destruct mz as [z|]; inversion_clear Hmz; split_ands; auto;
+    destruct mz as [z|]; inversion_clear Hmz; split_and?; auto;
       cofe_subst; eauto using cmra_includedN_l.
   - intros [->|(x&y&->&->&z&Hz)]; try (by exists my; destruct my; constructor).
     by exists (Some z); constructor.

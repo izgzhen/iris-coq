@@ -72,7 +72,7 @@ Lemma wsat_init k E σ mm : ✓{S k} mm → wsat (S k) E σ (Res ∅ (Excl σ) m
 Proof.
   intros Hv. exists ∅; constructor; auto.
   - rewrite big_opM_empty right_id.
-    split_ands'; try (apply cmra_valid_validN, ra_empty_valid);
+    split_and!; try (apply cmra_valid_validN, ra_empty_valid);
       constructor || apply Hv.
   - by intros i; rewrite lookup_empty=>-[??].
   - intros i P ?; rewrite /= left_id lookup_empty; inversion_clear 1.
@@ -123,7 +123,7 @@ Proof.
     apply (inj Excl).
     by rewrite -Hpst_r -Hpst -assoc Hpst' right_id. }
   split; [done|exists rs].
-  by constructor; split_ands'; try (rewrite /= -assoc Hpst').
+  by constructor; first split_and!; try rewrite /= -assoc Hpst'.
 Qed.
 Lemma wsat_update_gst n E σ r rf mm1 (P : iGst Λ Σ → Prop) :
   mm1 ≼{S n} gst r → mm1 ~~>: (λ mm2, default False mm2 P) →
@@ -132,7 +132,8 @@ Proof.
   intros [mf Hr] Hup [rs [(?&?&?) Hσ HE Hwld]].
   destruct (Hup (S n) (mf ⋅ gst (rf ⋅ big_opM rs))) as ([m2|]&?&Hval'); try done.
   { by rewrite /= (assoc _ mm1) -Hr assoc. }
-  exists m2; split; [exists rs; split; split_ands'; auto|done].
+  exists m2; split; [exists rs|done].
+  by constructor; first split_and!; auto.
 Qed.
 Lemma wsat_alloc n E1 E2 σ r P rP :
   ¬set_finite E1 → P n rP → wsat (S n) (E1 ∪ E2) σ (rP ⋅ r) →
@@ -153,9 +154,9 @@ Proof.
     rewrite /= !lookup_op !op_is_Some -!not_eq_None_Some; tauto. }
   assert (r ⋅ big_opM (<[i:=rP]> rs) ≡ rP ⋅ r ⋅ big_opM rs) as Hr.
   { by rewrite (comm _ rP) -assoc big_opM_insert. }
-  exists i; split_ands; [exists (<[i:=rP]>rs); constructor| |]; auto.
+  exists i; split_and?; [exists (<[i:=rP]>rs); constructor| |]; auto.
   - destruct Hval as (?&?&?);  rewrite -assoc Hr.
-    split_ands'; rewrite /= ?left_id; [|eauto|eauto].
+    split_and!; rewrite /= ?left_id; [|eauto|eauto].
     intros j; destruct (decide (j = i)) as [->|].
     + by rewrite !lookup_op Hri HrPi Hrsi !right_id lookup_singleton.
     + by rewrite lookup_op lookup_singleton_ne // left_id.

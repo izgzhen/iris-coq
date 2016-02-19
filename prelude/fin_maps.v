@@ -476,7 +476,7 @@ Lemma insert_subset_inv {A} (m1 m2 : M A) i x :
   m1 !! i = None → <[i:=x]> m1 ⊂ m2 →
   ∃ m2', m2 = <[i:=x]>m2' ∧ m1 ⊂ m2' ∧ m2' !! i = None.
 Proof.
-  intros Hi Hm1m2. exists (delete i m2). split_ands.
+  intros Hi Hm1m2. exists (delete i m2). split_and?.
   - rewrite insert_delete. done. eapply lookup_weaken, strict_include; eauto.
     by rewrite lookup_insert.
   - eauto using insert_delete_subset.

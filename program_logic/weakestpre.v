@@ -46,7 +46,7 @@ Next Obligation.
     destruct (Hgo (rf' ⋅ rf) k Ef σ1) as [Hsafe Hstep];
       rewrite ?assoc -?Hr; auto; constructor; [done|].
     intros e2 σ2 ef ?; destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
-    exists r2, (r2' ⋅ rf'); split_ands; eauto 10 using (IH k), cmra_included_l.
+    exists r2, (r2' ⋅ rf'); split_and?; eauto 10 using (IH k), cmra_included_l.
     by rewrite -!assoc (assoc _ r2).
 Qed.
 Instance: Params (@wp) 4.
@@ -73,7 +73,7 @@ Proof.
   destruct (Hgo rf k Ef σ1) as [Hsafe Hstep]; auto.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
-  exists r2, r2'; split_ands; [|eapply IH|]; eauto.
+  exists r2, r2'; split_and?; [|eapply IH|]; eauto.
 Qed.
 Global Instance wp_proper E e :
   Proper (pointwise_relation _ (≡) ==> (≡)) (@wp Λ Σ E e).
@@ -92,7 +92,7 @@ Proof.
   destruct (Hgo rf k ((E2 ∖ E1) ∪ Ef) σ1) as [Hsafe Hstep]; rewrite -?HE'; auto.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
-  exists r2, r2'; split_ands; [rewrite HE'|eapply IH|]; eauto.
+  exists r2, r2'; split_and?; [rewrite HE'|eapply IH|]; eauto.
 Qed.
 
 Lemma wp_value_inv E Φ v n r : wp E (of_val v) Φ n r → (|={E}=> Φ v)%I n r.
@@ -126,7 +126,7 @@ Proof.
   destruct (wp_step_inv E Ef (pvs E E ∘ Φ) e k n σ1 r rf) as [? Hstep]; auto.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&Hwp'&?); auto.
-  exists r2, r2'; split_ands; [|apply (IH k)|]; auto.
+  exists r2, r2'; split_and?; [|apply (IH k)|]; auto.
 Qed.
 Lemma wp_atomic E1 E2 e Φ :
   E2 ⊆ E1 → atomic e → (|={E1,E2}=> wp E2 e (λ v, |={E2,E1}=> Φ v)) ⊑ wp E1 e Φ.
@@ -142,7 +142,7 @@ Proof.
     [|destruct (atomic_step e σ1 e2 σ2 ef); naive_solver].
   apply pvs_trans in Hvs'; auto.
   destruct (Hvs' (r2' ⋅ rf) k Ef σ2) as (r3&[]); rewrite ?assoc; auto.
-  exists r3, r2'; split_ands; last done.
+  exists r3, r2'; split_and?; last done.
   - by rewrite -assoc.
   - constructor; apply pvs_intro; auto.
 Qed.
@@ -158,7 +158,7 @@ Proof.
   { by rewrite assoc. }
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
-  exists (r2 ⋅ rR), r2'; split_ands; auto.
+  exists (r2 ⋅ rR), r2'; split_and?; auto.
   - by rewrite -(assoc _ r2)
       (comm _ rR) !assoc -(assoc _ _ rR).
   - apply IH; eauto using uPred_weaken.
@@ -172,9 +172,9 @@ Proof.
   destruct (Hgo (rR⋅rf) k Ef σ1) as [Hsafe Hstep];rewrite ?assoc;auto.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
-  exists (r2 ⋅ rR), r2'; split_ands; auto.
+  exists (r2 ⋅ rR), r2'; split_and?; auto.
   - by rewrite -(assoc _ r2) (comm _ rR) !assoc -(assoc _ _ rR).
-  - apply wp_frame_r; [auto|exists r2, rR; split_ands; auto].
+  - apply wp_frame_r; [auto|exists r2, rR; split_and?; auto].
     eapply uPred_weaken with n rR; eauto.
 Qed.
 Lemma wp_bind `{LanguageCtx Λ K} E e Φ :
@@ -190,7 +190,7 @@ Proof.
   intros e2 σ2 ef ?.
   destruct (fill_step_inv e σ1 e2 σ2 ef) as (e2'&->&?); auto.
   destruct (Hstep e2' σ2 ef) as (r2&r2'&?&?&?); auto.
-  exists r2, r2'; split_ands; try eapply IH; eauto.
+  exists r2, r2'; split_and?; try eapply IH; eauto.
 Qed.
 
 (** * Derived rules *)

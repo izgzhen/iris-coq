@@ -38,7 +38,7 @@ Proof.
     as (r'&(r1'&r2'&?&?&?)&?); auto; cofe_subst r'.
   { split. destruct k; try eapply Hstep; eauto. apply ownP_spec; auto. }
   { rewrite (comm _ r2) -assoc; eauto using wsat_le. }
-  by exists r1', r2'; split_ands; [| |by intros ? ->].
+  by exists r1', r2'; split_and?; [| |by intros ? ->].
 Qed.
 
 Lemma wp_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) Φ e1 :
@@ -51,7 +51,7 @@ Proof.
   intros rf k Ef σ1 ???; split; [done|]. destruct n as [|n]; first lia.
   intros e2 σ2 ef ?; destruct (Hstep σ1 e2 σ2 ef); auto; subst.
   destruct (Hwp e2 ef k r) as (r1&r2&Hr&?&?); auto.
-  exists r1,r2; split_ands; [rewrite -Hr| |by intros ? ->]; eauto using wsat_le.
+  exists r1,r2; split_and?; [rewrite -Hr| |by intros ? ->]; eauto using wsat_le.
 Qed.
 
 (** Derived lifting lemmas. *)

@@ -267,7 +267,7 @@ Section spec.
       (∀ l P Q, (P -★ Q) ⊑ (recv l P -★ recv l Q)).
   Proof.
     intros HN. exists (λ l, CofeMor (recv N heapN l)). exists (λ l, CofeMor (send N heapN l)).
-    split_ands; cbn.
+    split_and?; cbn.
     - intros. apply: always_intro. apply impl_intro_l. rewrite -newchan_spec.
       rewrite comm always_and_sep_r. apply sep_mono_r. apply forall_intro=>l.
       apply wand_intro_l. rewrite right_id -(exist_intro l) const_equiv // left_id.

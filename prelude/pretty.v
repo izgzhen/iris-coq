@@ -57,7 +57,7 @@ Proof.
   { intros -> Hlen; edestruct help; rewrite Hlen; simpl; lia. }
   { intros <- Hlen; edestruct help; rewrite <-Hlen; simpl; lia. }
   intros Hs Hlen; apply IH in Hs; destruct Hs;
-    simplify_eq/=; split_ands'; auto using N.div_lt_upper_bound with lia.
+    simplify_eq/=; split_and?; auto using N.div_lt_upper_bound with lia.
   rewrite (N.div_mod x 10), (N.div_mod y 10) by done.
   auto using N.mod_lt with f_equal.
 Qed.

@@ -44,7 +44,7 @@ Global Instance pvs_ne E1 E2 n : Proper (dist n ==> dist n) (@pvs Λ Σ E1 E2).
 Proof.
   intros P Q HPQ r1 n' ??; simpl; split; intros HP rf k Ef σ ???;
     destruct (HP rf k Ef σ) as (r2&?&?); auto;
-    exists r2; split_ands; auto; apply HPQ; eauto.
+    exists r2; split_and?; auto; apply HPQ; eauto.
 Qed.
 Global Instance pvs_proper E1 E2 : Proper ((≡) ==> (≡)) (@pvs Λ Σ E1 E2).
 Proof. apply ne_proper, _. Qed.
@@ -84,7 +84,7 @@ Proof.
   destruct (HP (r2 ⋅ rf) k Ef σ) as (r'&?&?); eauto.
   { by rewrite assoc -(dist_le _ _ _ _ Hr); last lia. }
   exists (r' ⋅ r2); split; last by rewrite -assoc.
-  exists r', r2; split_ands; auto; apply uPred_weaken with n r2; auto.
+  exists r', r2; split_and?; auto; apply uPred_weaken with n r2; auto.
 Qed.
 Lemma pvs_openI i P : ownI i P ⊑ (|={{[i]},∅}=> ▷ P).
 Proof.

@@ -54,11 +54,20 @@ Ltac done :=
 Tactic Notation "by" tactic(tac) :=
   tac; done.
 
-(** Whereas the [split] tactic splits any inductive with one constructor, the
-tactic [split_and] only splits a conjunction. *)
-Ltac split_and := match goal with |- _ ∧ _ => split end.
-Ltac split_ands := repeat split_and.
-Ltac split_ands' := repeat (hnf; split_and).
+(** Tactics for splitting conjunctions:
+
+- [split_and] : split the goal if is syntactically of the shape [_ ∧ _]
+- [split_ands?] : split the goal repeatedly (perhaps zero times) while it is
+  of the shape [_ ∧ _].
+- [split_ands!] : works similarly, but at least one split should succeed. In
+  order to do so, it will head normalize the goal first to possibly expose a
+  conjunction.
+
+Note that [split_and] differs from [split] by only splitting conjunctions. The
+[split] tactic splits any inductive with one constructor. *)
+Tactic Notation "split_and" := match goal with |- _ ∧ _ => split end.
+Tactic Notation "split_and" "?" := repeat split_and.
+Tactic Notation "split_and" "!" := hnf; split_and; split_and?.
 
 (** The tactic [case_match] destructs an arbitrary match in the conclusion or
 assumptions, and generates a corresponding equality. This tactic is best used

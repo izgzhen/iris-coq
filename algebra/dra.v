@@ -104,13 +104,13 @@ Definition validity_ra : RA (discreteC T).
 Proof.
   split.
   - intros ??? [? Heq]; split; simpl; [|by intros (?&?&?); rewrite Heq].
-    split; intros (?&?&?); split_ands';
+    split; intros (?&?&?); split_and!;
       first [rewrite ?Heq; tauto|rewrite -?Heq; tauto|tauto].
   - by intros ?? [? Heq]; split; [done|]; simpl; intros ?; rewrite Heq.
   - intros ?? [??]; naive_solver.
   - intros x1 x2 [? Hx] y1 y2 [? Hy];
       split; simpl; [|by intros (?&?&?); rewrite Hx // Hy].
-    split; intros (?&?&z&?&?); split_ands'; try tauto.
+    split; intros (?&?&z&?&?); split_and!; try tauto.
     + exists z. by rewrite -Hy // -Hx.
     + exists z. by rewrite Hx ?Hy; tauto.
   - intros [x px ?] [y py ?] [z pz ?]; split; simpl;
@@ -135,7 +135,7 @@ Lemma validity_update (x y : validityRA) :
   (∀ z, ✓ x → ✓ z → validity_car x ⊥ z → ✓ y ∧ validity_car y ⊥ z) → x ~~> y.
 Proof.
   intros Hxy. apply discrete_update.
-  intros z (?&?&?); split_ands'; try eapply Hxy; eauto.
+  intros z (?&?&?); split_and!; try eapply Hxy; eauto.
 Qed.
 
 Lemma to_validity_valid (x : A) :
