@@ -53,7 +53,7 @@ Proof.
     by rewrite -Permutation_middle /= big_op_app.
 Qed.
 Lemma ht_adequacy_steps P Φ k n e1 t2 σ1 σ2 r1 :
-  {{ P }} e1 @ ⊤ {{ Φ }} →
+  {{ P }} e1 {{ Φ }} →
   nsteps step k ([e1],σ1) (t2,σ2) →
   1 < n → wsat (k + n) ⊤ σ1 r1 →
   P (k + n) r1 →
@@ -66,8 +66,8 @@ Proof.
   eapply uPred.const_intro; eauto.
 Qed.
 Lemma ht_adequacy_own Φ e1 t2 σ1 m σ2 :
-  ✓m →
-  {{ ownP σ1 ★ ownG m }} e1 @ ⊤ {{ Φ }} →
+  ✓ m →
+  {{ ownP σ1 ★ ownG m }} e1 {{ Φ }} →
   rtc step ([e1],σ1) (t2,σ2) →
   ∃ rs2 Φs', wptp 2 t2 (Φ :: Φs') rs2 ∧ wsat 2 ⊤ σ2 (big_op rs2).
 Proof.
