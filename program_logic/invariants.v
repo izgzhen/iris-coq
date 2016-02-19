@@ -58,7 +58,7 @@ Lemma pvs_open_close E N P Q R :
   nclose N ⊆ E →
   R ⊑ inv N P →
   R ⊑ (▷ P -★ pvs (E ∖ nclose N) (E ∖ nclose N) (▷ P ★ Q)) →
-  R ⊑ pvs E E Q.
+  R ⊑ (|={E}=> Q).
 Proof. intros. by apply: (inv_fsa pvs_fsa). Qed.
 
 Lemma wp_open_close E e N P Φ R :

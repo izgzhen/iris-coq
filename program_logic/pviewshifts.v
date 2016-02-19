@@ -203,7 +203,7 @@ Notation FSA Λ Σ A := (coPset → (A → iProp Λ Σ) → iProp Λ Σ).
 Class FrameShiftAssertion {Λ Σ A} (fsaV : Prop) (fsa : FSA Λ Σ A) := {
   fsa_mask_frame_mono E1 E2 Φ Ψ :
     E1 ⊆ E2 → (∀ a, Φ a ⊑ Ψ a) → fsa E1 Φ ⊑ fsa E2 Ψ;
-  fsa_trans3 E Φ : pvs E E (fsa E (λ a, |={E}=> Φ a)) ⊑ fsa E Φ;
+  fsa_trans3 E Φ : (|={E}=> fsa E (λ a, |={E}=> Φ a)) ⊑ fsa E Φ;
   fsa_open_close E1 E2 Φ :
     fsaV → E2 ⊆ E1 → (|={E1,E2}=> fsa E2 (λ a, |={E2,E1}=> Φ a)) ⊑ fsa E1 Φ;
   fsa_frame_r E P Φ : (fsa E Φ ★ P) ⊑ fsa E (λ a, Φ a ★ P)

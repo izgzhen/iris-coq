@@ -91,7 +91,7 @@ Proof. by rewrite /AlwaysStable always_own_unit. Qed.
 (* TODO: This also holds if we just have ✓ a at the current step-idx, as Iris
    assertion. However, the map_updateP_alloc does not suffice to show this. *)
 Lemma own_alloc_strong a E (G : gset gname) :
-  ✓ a → True ⊑ pvs E E (∃ γ, ■(γ ∉ G) ∧ own γ a).
+  ✓ a → True ⊑ (|={E}=> ∃ γ, ■(γ ∉ G) ∧ own γ a).
 Proof.
   intros Ha.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ γ, γ ∉ G ∧ m = to_globalF γ a) ∧ ownG m)%I).
@@ -101,14 +101,14 @@ Proof.
   - apply exist_elim=>m; apply const_elim_l=>-[γ [Hfresh ->]].
     by rewrite -(exist_intro γ) const_equiv.
 Qed.
-Lemma own_alloc a E : ✓ a → True ⊑ pvs E E (∃ γ, own γ a).
+Lemma own_alloc a E : ✓ a → True ⊑ (|={E}=> ∃ γ, own γ a).
 Proof.
   intros Ha. rewrite (own_alloc_strong a E ∅) //; []. apply pvs_mono.
   apply exist_mono=>?. eauto with I.
 Qed.
 
 Lemma own_updateP P γ a E :
-  a ~~>: P → own γ a ⊑ pvs E E (∃ a', ■ P a' ∧ own γ a').
+  a ~~>: P → own γ a ⊑ (|={E}=> ∃ a', ■ P a' ∧ own γ a').
 Proof.
   intros Ha.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ a', m = to_globalF γ a' ∧ P a') ∧ ownG m)%I).
@@ -120,7 +120,7 @@ Proof.
 Qed.
 
 Lemma own_updateP_empty `{Empty A, !CMRAIdentity A} P γ E :
-  ∅ ~~>: P → True ⊑ pvs E E (∃ a, ■ P a ∧ own γ a).
+  ∅ ~~>: P → True ⊑ (|={E}=> ∃ a, ■ P a ∧ own γ a).
 Proof.
   intros Hemp.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ a', m = to_globalF γ a' ∧ P a') ∧ ownG m)%I).
@@ -131,14 +131,14 @@ Proof.
     rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
 Qed.
 
-Lemma own_update γ a a' E : a ~~> a' → own γ a ⊑ pvs E E (own γ a').
+Lemma own_update γ a a' E : a ~~> a' → own γ a ⊑ (|={E}=> own γ a').
 Proof.
   intros; rewrite (own_updateP (a' =)); last by apply cmra_update_updateP.
   by apply pvs_mono, exist_elim=> a''; apply const_elim_l=> ->.
 Qed.
 
 Lemma own_update_empty `{Empty A, !CMRAIdentity A} γ E :
-  True ⊑ pvs E E (own γ ∅).
+  True ⊑ (|={E}=> own γ ∅).
 Proof.
   rewrite (own_updateP_empty (∅ =)); last by apply cmra_updateP_id.
   apply pvs_mono, exist_elim=>a. by apply const_elim_l=>->.

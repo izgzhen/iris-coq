@@ -23,8 +23,8 @@ Lemma wp_lift_step E1 E2
   E1 ⊆ E2 → to_val e1 = None →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  pvs E2 E1 (ownP σ1 ★ ▷ ∀ e2 σ2 ef,
-    (■ φ e2 σ2 ef ∧ ownP σ2) -★ pvs E1 E2 (wp E2 e2 Φ ★ wp_fork ef))
+  (|={E2,E1}=> ownP σ1 ★ ▷ ∀ e2 σ2 ef,
+    (■ φ e2 σ2 ef ∧ ownP σ2) -★ |={E1,E2}=> wp E2 e2 Φ ★ wp_fork ef)
   ⊑ wp E2 e1 Φ.
 Proof.
   intros ? He Hsafe Hstep n r ? Hvs; constructor; auto.

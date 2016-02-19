@@ -55,12 +55,12 @@ Section sts.
      sts_frag_included. *)
   Lemma sts_ownS_weaken E γ S1 S2 T1 T2 :
     T1 ≡ T2 → S1 ⊆ S2 → sts.closed S2 T2 →
-    sts_ownS γ S1 T1 ⊑ pvs E E (sts_ownS γ S2 T2).
+    sts_ownS γ S1 T1 ⊑ (|={E}=> sts_ownS γ S2 T2).
   Proof. intros -> ? ?. by apply own_update, sts_update_frag. Qed.
 
   Lemma sts_own_weaken E γ s S T1 T2 :
     T1 ≡ T2 → s ∈ S → sts.closed S T2 →
-    sts_own γ s T1 ⊑ pvs E E (sts_ownS γ S T2).
+    sts_own γ s T1 ⊑ (|={E}=> sts_ownS γ S T2).
   Proof. intros -> ??. by apply own_update, sts_update_frag_up. Qed.
 
   Lemma sts_ownS_op γ S1 S2 T1 T2 :
@@ -70,7 +70,7 @@ Section sts.
 
   Lemma sts_alloc E N s :
     nclose N ⊆ E →
-    ▷ φ s ⊑ pvs E E (∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s)).
+    ▷ φ s ⊑ (|={E}=> ∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s)).
   Proof.
     intros HN. eapply sep_elim_True_r.
     { apply (own_alloc (sts_auth s (⊤ ∖ sts.tok s)) N).
@@ -88,7 +88,7 @@ Section sts.
 
   Lemma sts_opened E γ S T :
     (▷ sts_inv γ φ ★ sts_ownS γ S T)
-    ⊑ pvs E E (∃ s, ■ (s ∈ S) ★ ▷ φ s ★ own γ (sts_auth s T)).
+    ⊑ (|={E}=> ∃ s, ■ (s ∈ S) ★ ▷ φ s ★ own γ (sts_auth s T)).
   Proof.
     rewrite /sts_inv /sts_ownS later_exist sep_exist_r. apply exist_elim=>s.
     rewrite later_sep pvs_timeless !pvs_frame_r. apply pvs_mono.
@@ -104,13 +104,13 @@ Section sts.
 
   Lemma sts_closing E γ s T s' T' :
     sts.step (s, T) (s', T') →
-    (▷ φ s' ★ own γ (sts_auth s T)) ⊑ pvs E E (▷ sts_inv γ φ ★ sts_own γ s' T').
+    (▷ φ s' ★ own γ (sts_auth s T)) ⊑ (|={E}=> ▷ sts_inv γ φ ★ sts_own γ s' T').
   Proof.
     intros Hstep. rewrite /sts_inv /sts_own -(exist_intro s').
     rewrite later_sep [(_ ★ ▷φ _)%I]comm -assoc.
     rewrite -pvs_frame_l. apply sep_mono_r. rewrite -later_intro.
     rewrite own_valid_l discrete_validI. apply const_elim_sep_l=>Hval.
-    transitivity (pvs E E (own γ (sts_auth s' T'))).
+    transitivity (|={E}=> own γ (sts_auth s' T'))%I.
     { by apply own_update, sts_update_auth. }
     by rewrite -own_op sts_op_auth_frag_up; last by inversion_clear Hstep.
   Qed.

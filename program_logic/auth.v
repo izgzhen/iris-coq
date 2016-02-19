@@ -43,7 +43,7 @@ Section auth.
 
   Lemma auth_alloc E N a :
     ✓ a → nclose N ⊆ E →
-    ▷ φ a ⊑ pvs E E (∃ γ, auth_ctx γ N φ ∧ auth_own γ a).
+    ▷ φ a ⊑ (|={E}=> ∃ γ, auth_ctx γ N φ ∧ auth_own γ a).
   Proof.
     intros Ha HN. eapply sep_elim_True_r.
     { by eapply (own_alloc (Auth (Excl a) a) N). }
@@ -58,12 +58,12 @@ Section auth.
     by rewrite always_and_sep_l.
   Qed.
 
-  Lemma auth_empty γ E : True ⊑ pvs E E (auth_own γ ∅).
+  Lemma auth_empty γ E : True ⊑ (|={E}=> auth_own γ ∅).
   Proof. by rewrite /auth_own -own_update_empty. Qed.
 
   Lemma auth_opened E γ a :
     (▷ auth_inv γ φ ★ auth_own γ a)
-    ⊑ pvs E E (∃ a', ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') ★ own γ (● (a ⋅ a') ⋅ ◯ a)).
+    ⊑ (|={E}=> ∃ a', ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') ★ own γ (● (a ⋅ a') ⋅ ◯ a)).
   Proof.
     rewrite /auth_inv. rewrite later_exist sep_exist_r. apply exist_elim=>b.
     rewrite later_sep [(▷(_ ∧ _))%I]pvs_timeless !pvs_frame_r. apply pvs_mono.
@@ -83,7 +83,7 @@ Section auth.
   Lemma auth_closing `{!LocalUpdate Lv L} E γ a a' :
     Lv a → ✓ (L a ⋅ a') →
     (▷ φ (L a ⋅ a') ★ own γ (● (a ⋅ a') ⋅ ◯ a))
-    ⊑ pvs E E (▷ auth_inv γ φ ★ auth_own γ (L a)).
+    ⊑ (|={E}=> ▷ auth_inv γ φ ★ auth_own γ (L a)).
   Proof.
     intros HL Hv. rewrite /auth_inv /auth_own -(exist_intro (L a ⋅ a')).
     rewrite later_sep [(_ ★ ▷φ _)%I]comm -assoc.

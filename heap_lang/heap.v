@@ -65,7 +65,7 @@ Section heap.
   (** Allocation *)
   Lemma heap_alloc E N σ :
     authG heap_lang Σ heapRA → nclose N ⊆ E →
-    ownP σ ⊑ pvs E E (∃ (_ : heapG Σ), heap_ctx N ∧ Π★{map σ} heap_mapsto).
+    ownP σ ⊑ (|={E}=> ∃ (_ : heapG Σ), heap_ctx N ∧ Π★{map σ} heap_mapsto).
   Proof.
     intros. rewrite -{1}(from_to_heap σ). etransitivity.
     { rewrite [ownP _]later_intro.
@@ -103,7 +103,7 @@ Section heap.
     P ⊑ wp E (Alloc e) Φ.
   Proof.
     rewrite /heap_ctx /heap_inv /heap_mapsto=> ?? Hctx HP.
-    transitivity (pvs E E (auth_own heap_name ∅ ★ P))%I.
+    transitivity (|={E}=> auth_own heap_name ∅ ★ P)%I.
     { by rewrite -pvs_frame_r -(auth_empty _ E) left_id. }
     apply wp_strip_pvs, (auth_fsa heap_inv (wp_fsa (Alloc e)))
       with N heap_name ∅; simpl; eauto with I.
