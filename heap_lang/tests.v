@@ -35,7 +35,7 @@ Section LiftingTests.
     rewrite /heap_e=>HN. rewrite -(wp_mask_weaken N E) //.
     wp eapply wp_alloc; eauto. apply forall_intro=>l; apply wand_intro_l.
     wp_rec. wp eapply wp_load; eauto with I. apply sep_mono_r, wand_intro_l.
-    wp_bin_op. wp eapply wp_store; eauto with I. apply sep_mono_r, wand_intro_l.
+    wp_op. wp eapply wp_store; eauto with I. apply sep_mono_r, wand_intro_l.
     wp_rec. wp eapply wp_load; eauto with I. apply sep_mono_r, wand_intro_l.
       by apply const_intro.
   Qed.
@@ -57,7 +57,7 @@ Section LiftingTests.
     wp_rec>.
     (* FIXME: ssr rewrite fails with "Error: _pattern_value_ is used in conclusion." *)
     rewrite ->(later_intro (Φ _)); rewrite -!later_and; apply later_mono.
-    wp_rec. wp_bin_op. wp_rec. wp_bin_op=> ?; wp_if.
+    wp_rec. wp_op. wp_rec. wp_op=> ?; wp_if.
     - rewrite (forall_elim (n1 + 1)) const_equiv; last omega.
       by rewrite left_id impl_elim_l.
     - wp_value. assert (n1 = n2 - 1) as -> by omega; auto with I.
@@ -65,11 +65,11 @@ Section LiftingTests.
 
   Lemma Pred_spec n E Φ : ▷ Φ (LitV (n - 1)) ⊑ || Pred 'n @ E {{ Φ }}.
   Proof.
-    wp_rec>; apply later_mono; wp_bin_op=> ?; wp_if.
-    - wp_un_op. wp_bin_op.
+    wp_rec>; apply later_mono; wp_op=> ?; wp_if.
+    - wp_op. wp_op.
       ewp apply FindPred_spec.
       apply and_intro; first auto with I omega.
-      wp_un_op. by replace (n - 1) with (- (-n + 2 - 1)) by omega.
+      wp_op. by replace (n - 1) with (- (-n + 2 - 1)) by omega.
     - ewp apply FindPred_spec. auto with I omega.
   Qed.
 

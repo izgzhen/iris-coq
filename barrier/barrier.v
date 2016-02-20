@@ -149,7 +149,7 @@ Section proof.
     ⊑ || newchan '() {{ Φ }}.
   Proof.
     rewrite /newchan. wp_rec. (* TODO: wp_seq. *)
-    rewrite -wp_pvs. wp> eapply wp_alloc; eauto with I ndisj.
+    rewrite -wp_pvs. wp eapply wp_alloc; eauto with I ndisj.
     apply forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
     rewrite !assoc. apply pvs_wand_r.
     (* The core of this proof: Allocating the STS and the saved prop. *)
@@ -266,7 +266,7 @@ Section proof.
       rewrite const_equiv /=; last by apply rtc_refl.
       rewrite left_id -[(▷ barrier_inv _ _ _)%I]later_intro {3}/barrier_inv.
       rewrite -!assoc. apply sep_mono_r, sep_mono_r, wand_intro_l.
-      wp_bin_op; first done. intros _. wp_if. rewrite !assoc.
+      wp_op; first done. intros _. wp_if. rewrite !assoc.
       eapply wand_apply_r'; first done.
       rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro Q) -(exist_intro i).
       rewrite !assoc. do 3 (rewrite -pvs_frame_r; apply sep_mono_l).
@@ -293,7 +293,7 @@ Section proof.
     apply wand_intro_l. rewrite [(heap_ctx _ ★ _)%I]sep_elim_r.
     rewrite [(sts_own _ _ _ ★ _)%I]sep_elim_r [(sts_ctx _ _ _ ★ _)%I]sep_elim_r.
     rewrite !assoc [(_ ★ saved_prop_own i Q)%I]comm !assoc saved_prop_agree.
-    wp_bin_op>; last done. intros _.
+    wp_op>; last done. intros _.
     etransitivity; last eapply later_mono.
     { (* Is this really the best way to strip the later? *)
       erewrite later_sep. apply sep_mono; last apply later_intro.
