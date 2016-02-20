@@ -237,15 +237,17 @@ Section proof.
     heapN ⊥ N → (recv l P ★ (P -★ Φ '())) ⊑ || wait (LocV l) {{ Φ }}.
   Proof.
     rename P into R.
-    intros Hdisj. rewrite /wait. rewrite [(_ ★ _)%I](pvs_intro ⊤).
-    apply löb_strong_sep. rewrite pvs_frame_r. apply wp_strip_pvs.
+    intros Hdisj.
+    (* TODO we probably want a tactic or lemma that does the next 2 lines for us.
+       It should be general enough to also cover FindPred_spec. Probably this
+       should be the default behavior of wp_rec - since this is what we need every time
+       we prove a recursive function correct. *)
+    rewrite /wait. rewrite [(_ ★ _)%I](pvs_intro ⊤).
+    apply löb_strong_sep. rewrite pvs_frame_r. apply wp_strip_pvs. wp_rec.
     rewrite {1}/recv /barrier_ctx. rewrite !sep_exist_r.
     apply exist_elim=>γ. rewrite !sep_exist_r. apply exist_elim=>P.
     rewrite !sep_exist_r. apply exist_elim=>Q. rewrite !sep_exist_r.
-    apply exist_elim=>i. wp_rec.
-    (* TODO use automatic binding *)
-    rewrite -(wp_bindi (IfCtx _ _)) /=.
-    rewrite -(wp_bindi (BinOpLCtx _ _)) /=.
+    apply exist_elim=>i. wp_focus (! _)%L.
     (* I think some evars here are better than repeating *everything* *)
     eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
       eauto with I ndisj.
