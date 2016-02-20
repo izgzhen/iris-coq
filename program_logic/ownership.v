@@ -71,7 +71,7 @@ Global Instance ownG_unit_always_stable m : AlwaysStable (ownG (unit m)).
 Proof. by rewrite /AlwaysStable always_ownG_unit. Qed.
 
 (* inversion lemmas *)
-Lemma ownI_spec r n i P :
+Lemma ownI_spec n r i P :
   ✓{n} r →
   (ownI i P) n r ↔ wld r !! i ≡{n}≡ Some (to_agree (Next (iProp_unfold P))).
 Proof.
@@ -81,12 +81,12 @@ Proof.
       (cmra_included_includedN _ P'),HP; apply map_lookup_validN with (wld r) i.
   - intros ?; split_and?; try apply cmra_empty_leastN; eauto.
 Qed.
-Lemma ownP_spec r n σ : ✓{n} r → (ownP σ) n r ↔ pst r ≡{n}≡ Excl σ.
+Lemma ownP_spec n r σ : ✓{n} r → (ownP σ) n r ↔ pst r ≡ Excl σ.
 Proof.
   intros (?&?&?); rewrite /uPred_holds /= res_includedN /= Excl_includedN //.
-  naive_solver (apply cmra_empty_leastN).
+  rewrite (timeless_iff n). naive_solver (apply cmra_empty_leastN).
 Qed.
-Lemma ownG_spec r n m : (ownG m) n r ↔ Some m ≼{n} gst r.
+Lemma ownG_spec n r m : (ownG m) n r ↔ Some m ≼{n} gst r.
 Proof.
   rewrite /uPred_holds /= res_includedN; naive_solver (apply cmra_empty_leastN).
 Qed.

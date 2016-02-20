@@ -23,7 +23,7 @@ Lemma wp_lift_step E1 E2
   E1 ⊆ E2 → to_val e1 = None →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  (|={E2,E1}=> ownP σ1 ★ ▷ ∀ e2 σ2 ef,
+  (|={E2,E1}=> ▷ ownP σ1 ★ ▷ ∀ e2 σ2 ef,
     (■ φ e2 σ2 ef ∧ ownP σ2) -★ |={E1,E2}=> || e2 @ E2 {{ Φ }} ★ wp_fork ef)
   ⊑ || e1 @ E2 {{ Φ }}.
 Proof.
@@ -31,7 +31,7 @@ Proof.
   intros rf k Ef σ1' ???; destruct (Hvs rf (S k) Ef σ1')
     as (r'&(r1&r2&?&?&Hwp)&Hws); auto; clear Hvs; cofe_subst r'.
   destruct (wsat_update_pst k (E1 ∪ Ef) σ1 σ1' r1 (r2 ⋅ rf)) as [-> Hws'].
-  { by apply ownP_spec; auto. }
+  { apply equiv_dist. rewrite -(ownP_spec k); auto. }
   { by rewrite assoc. }
   constructor; [done|intros e2 σ2 ef ?; specialize (Hws' σ2)].
   destruct (λ H1 H2 H3, Hwp e2 σ2 ef k (update_pst σ2 r1) H1 H2 H3 rf k Ef σ2)
@@ -64,7 +64,7 @@ Lemma wp_lift_atomic_step {E Φ} e1
   reducible e1 σ1 →
   (∀ e2 σ2 ef,
     prim_step e1 σ1 e2 σ2 ef → ∃ v2, to_val e2 = Some v2 ∧ φ v2 σ2 ef) →
-  (ownP σ1 ★ ▷ ∀ v2 σ2 ef, ■ φ v2 σ2 ef ∧ ownP σ2 -★ Φ v2 ★ wp_fork ef)
+  (▷ ownP σ1 ★ ▷ ∀ v2 σ2 ef, ■ φ v2 σ2 ef ∧ ownP σ2 -★ Φ v2 ★ wp_fork ef)
   ⊑ || e1 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_step E E (λ e2 σ2 ef, ∃ v2,
@@ -84,7 +84,7 @@ Lemma wp_lift_atomic_det_step {E Φ e1} σ1 v2 σ2 ef :
   reducible e1 σ1 →
   (∀ e2' σ2' ef', prim_step e1 σ1 e2' σ2' ef' →
     σ2 = σ2' ∧ to_val e2' = Some v2 ∧ ef = ef') →
-  (ownP σ1 ★ ▷ (ownP σ2 -★ Φ v2 ★ wp_fork ef)) ⊑ || e1 @ E {{ Φ }}.
+  (▷ ownP σ1 ★ ▷ (ownP σ2 -★ Φ v2 ★ wp_fork ef)) ⊑ || e1 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_step _ (λ v2' σ2' ef',
     σ2 = σ2' ∧ v2 = v2' ∧ ef = ef') σ1) //; last naive_solver.

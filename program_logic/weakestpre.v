@@ -247,6 +247,7 @@ Proof. auto using wp_mask_frame_mono. Qed.
 
 (** * Weakest-pre is a FSA. *)
 Definition wp_fsa (e : expr Λ) : FSA Λ Σ (val Λ) := λ E, wp E e.
+Global Arguments wp_fsa _ _ / _.
 Global Instance wp_fsa_prf : FrameShiftAssertion (atomic e) (wp_fsa e).
 Proof.
   rewrite /wp_fsa; split; auto using wp_mask_frame_mono, wp_atomic, wp_frame_r.

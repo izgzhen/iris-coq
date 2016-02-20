@@ -22,7 +22,7 @@ Lemma ht_lift_step E1 E2
   E1 ⊆ E2 → to_val e1 = None →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  ((P ={E2,E1}=> ownP σ1 ★ ▷ P') ∧ ∀ e2 σ2 ef,
+  ((P ={E2,E1}=> ▷ ownP σ1 ★ ▷ P') ∧ ∀ e2 σ2 ef,
     (■ φ e2 σ2 ef ★ ownP σ2 ★ P' ={E1,E2}=> Φ1 e2 σ2 ef ★ Φ2 e2 σ2 ef) ∧
     {{ Φ1 e2 σ2 ef }} e2 @ E2 {{ Ψ }} ∧
     {{ Φ2 e2 σ2 ef }} ef ?@ ⊤ {{ λ _, True }})
@@ -54,7 +54,7 @@ Lemma ht_lift_atomic_step
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
   (∀ e2 σ2 ef, {{ ■ φ e2 σ2 ef ★ P }} ef ?@ ⊤ {{ λ _, True }}) ⊑
-  {{ ownP σ1 ★ ▷ P }} e1 @ E {{ λ v, ∃ σ2 ef, ownP σ2 ★ ■ φ (of_val v) σ2 ef }}.
+  {{ ▷ ownP σ1 ★ ▷ P }} e1 @ E {{ λ v, ∃ σ2 ef, ownP σ2 ★ ■ φ (of_val v) σ2 ef }}.
 Proof.
   intros ? Hsafe Hstep; set (φ' e σ ef := is_Some (to_val e) ∧ φ e σ ef).
   rewrite -(ht_lift_step E E φ'  _ P

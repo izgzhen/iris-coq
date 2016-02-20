@@ -22,7 +22,7 @@ Proof. apply weakestpre.wp_bind. Qed.
 (** Base axioms for core primitives of the language: Stateful reductions. *)
 Lemma wp_alloc_pst E σ e v Φ :
   to_val e = Some v →
-  (ownP σ ★ ▷ (∀ l, σ !! l = None ∧ ownP (<[l:=v]>σ) -★ Φ (LocV l)))
+  (▷ ownP σ ★ ▷ (∀ l, σ !! l = None ∧ ownP (<[l:=v]>σ) -★ Φ (LocV l)))
   ⊑ || Alloc e @ E {{ Φ }}.
 Proof.
   (* TODO RJ: This works around ssreflect bug #22. *)
@@ -40,7 +40,7 @@ Qed.
 
 Lemma wp_load_pst E σ l v Φ :
   σ !! l = Some v →
-  (ownP σ ★ ▷ (ownP σ -★ Φ v)) ⊑ || Load (Loc l) @ E {{ Φ }}.
+  (▷ ownP σ ★ ▷ (ownP σ -★ Φ v)) ⊑ || Load (Loc l) @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_step σ v σ None) ?right_id //;
     last by intros; inv_step; eauto using to_of_val.
@@ -48,7 +48,7 @@ Qed.
 
 Lemma wp_store_pst E σ l e v v' Φ :
   to_val e = Some v → σ !! l = Some v' →
-  (ownP σ ★ ▷ (ownP (<[l:=v]>σ) -★ Φ (LitV LitUnit)))
+  (▷ ownP σ ★ ▷ (ownP (<[l:=v]>σ) -★ Φ (LitV LitUnit)))
   ⊑ || Store (Loc l) e @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_step σ (LitV LitUnit) (<[l:=v]>σ) None)
@@ -57,7 +57,7 @@ Qed.
 
 Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v' → v' ≠ v1 →
-  (ownP σ ★ ▷ (ownP σ -★ Φ (LitV $ LitBool false)))
+  (▷ ownP σ ★ ▷ (ownP σ -★ Φ (LitV $ LitBool false)))
   ⊑ || Cas (Loc l) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_step σ (LitV $ LitBool false) σ None)
@@ -66,7 +66,7 @@ Qed.
 
 Lemma wp_cas_suc_pst E σ l e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v1 →
-  (ownP σ ★ ▷ (ownP (<[l:=v2]>σ) -★ Φ (LitV $ LitBool true)))
+  (▷ ownP σ ★ ▷ (ownP (<[l:=v2]>σ) -★ Φ (LitV $ LitBool true)))
   ⊑ || Cas (Loc l) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_step σ (LitV $ LitBool true)
