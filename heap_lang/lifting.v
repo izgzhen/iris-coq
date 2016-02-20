@@ -19,6 +19,11 @@ Lemma wp_bind {E e} K Φ :
   || e @ E {{ λ v, || fill K (of_val v) @ E {{ Φ }}}} ⊑ || fill K e @ E {{ Φ }}.
 Proof. apply weakestpre.wp_bind. Qed.
 
+Lemma wp_bindi {E e} Ki Φ :
+  || e @ E {{ λ v, || fill_item Ki (of_val v) @ E {{ Φ }}}}
+     ⊑ || fill_item Ki e @ E {{ Φ }}.
+Proof. apply weakestpre.wp_bind. Qed.
+
 (** Base axioms for core primitives of the language: Stateful reductions. *)
 Lemma wp_alloc_pst E σ e v Φ :
   to_val e = Some v →

@@ -166,23 +166,28 @@ Section proof.
       + rewrite -later_intro. apply wand_intro_l. rewrite right_id.
         by rewrite big_sepS_singleton.
       + by rewrite big_sepS_singleton.
-    - rewrite (sts_alloc (barrier_inv l P) ⊤ N); last by eauto. rewrite !pvs_frame_r !pvs_frame_l. 
-      rewrite pvs_trans'. apply pvs_strip_pvs. rewrite sep_exist_r sep_exist_l. apply exist_elim=>γ.
+    - rewrite (sts_alloc (barrier_inv l P) ⊤ N); last by eauto.
+      rewrite !pvs_frame_r !pvs_frame_l. 
+      rewrite pvs_trans'. apply pvs_strip_pvs. rewrite sep_exist_r sep_exist_l.
+      apply exist_elim=>γ.
       (* TODO: The record notation is rather annoying here *)
       rewrite /recv /send. rewrite -(exist_intro γ) -(exist_intro P).
       rewrite -(exist_intro P) -(exist_intro i) -(exist_intro γ).
       (* This is even more annoying than usually, since rewrite sometimes unfolds stuff... *)
-      rewrite [barrier_ctx _ _ _]lock !assoc [(_ ★ locked _)%I]comm !assoc -lock.
+      rewrite [barrier_ctx _ _ _]lock !assoc [(_ ★locked _)%I]comm !assoc -lock.
       rewrite -always_sep_dup.
       rewrite [barrier_ctx _ _ _]lock always_and_sep_l -!assoc assoc -lock.
       rewrite -pvs_frame_l. apply sep_mono_r.
-      rewrite [(saved_prop_own _ _ ★ _)%I]comm !assoc. rewrite -pvs_frame_r. apply sep_mono_l.
+      rewrite [(saved_prop_own _ _ ★ _)%I]comm !assoc. rewrite -pvs_frame_r.
+      apply sep_mono_l.
       rewrite -assoc [(▷ _ ★ _)%I]comm assoc -pvs_frame_r.
       eapply sep_elim_True_r; last eapply sep_mono_l.
       { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
-      rewrite (sts_own_weaken ⊤ _ _ (i_states i ∩ low_states) _ ({[ Change i ]} ∪ {[ Send ]})).
+      rewrite (sts_own_weaken ⊤ _ _ (i_states i ∩ low_states) _ 
+                              ({[ Change i ]} ∪ {[ Send ]})).
       + apply pvs_mono. rewrite sts_ownS_op; eauto; []. set_solver.
-      + rewrite /= /tok /=. apply elem_of_equiv=>t. rewrite elem_of_difference elem_of_union.
+      + rewrite /= /tok /=. apply elem_of_equiv=>t.
+        rewrite elem_of_difference elem_of_union.
         rewrite !mkSet_elem_of /change_tokens.
         (* TODO: destruct t; set_solver does not work. What is the best way to do on? *)
         destruct t as [i'|]; last by naive_solver. split.
@@ -191,7 +196,8 @@ Section proof.
         * move=>[[EQ]|?]; last discriminate. set_solver. 
       + apply elem_of_intersection. rewrite !mkSet_elem_of /=. set_solver.
       + apply sts.closed_op; eauto; first set_solver; [].
-        apply (non_empty_inhabited (State Low {[ i ]})). apply elem_of_intersection.
+        apply (non_empty_inhabited (State Low {[ i ]})).
+        apply elem_of_intersection.
         rewrite !mkSet_elem_of /=. set_solver.
   Qed.
 
@@ -228,9 +234,29 @@ Section proof.
   Lemma wait_spec l P (Φ : val → iProp) :
     heapN ⊥ N → (recv l P ★ (P -★ Φ '())) ⊑ || wait (LocV l) {{ Φ }}.
   Proof.
+    rename P into R.
+    intros Hdisj. rewrite /wait. apply löb_strong_sep.
+    rewrite {1}/recv /barrier_ctx. rewrite !sep_exist_r.
+    apply exist_elim=>γ. rewrite !sep_exist_r. apply exist_elim=>P.
+    rewrite !sep_exist_r. apply exist_elim=>Q. rewrite !sep_exist_r.
+    apply exist_elim=>i. wp_rec.
+    (* TODO use automatic binding *)
+    apply (wp_bindi (IfCtx _ _)).
+    (* I think some evars here are better than repeating *everything* *)
+    eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
+      eauto with I ndisj.
+    rewrite [(_ ★ sts_ownS _ _ _)%I]comm -!assoc /wp_fsa. apply sep_mono_r.
+    apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
+    apply const_elim_sep_l=>Hs. destruct p; last done.
+    rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
+    eapply wp_store; eauto with I ndisj.
+    rewrite -!assoc. apply sep_mono_r. etransitivity; last eapply later_mono.
+    { (* Is this really the best way to strip the later? *)
+      erewrite later_sep. apply sep_mono_r. apply later_intro. }
+    apply wand_intro_l. rewrite -(exist_intro (State High I)).
   Abort.
 
-  Lemma split_spec l P1 P2 Φ :
+  Lemma recv_split l P1 P2 Φ :
     (recv l (P1 ★ P2) ★ (recv l P1 ★ recv l P2 -★ Φ '())) ⊑ || Skip {{ Φ }}.
   Proof.
   Abort.
