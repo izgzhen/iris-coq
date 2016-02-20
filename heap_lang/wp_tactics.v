@@ -56,7 +56,8 @@ Ltac uLöb tac :=
                let H := fresh in intro H; go; revert H
       | |- ▷ ?R ⊑ (?L -★ locked _) => apply wand_intro_l;
                (* TODO: Do sth. more robust than rewriting. *)
-               trans (▷ (L ★ R))%I; first (rewrite later_sep -(later_intro L); reflexivity );
+               trans (▷ L ★ ▷ R)%I; first (apply sep_mono_l, later_intro; reflexivity);
+               trans (▷ (L ★ R))%I; first (apply equiv_spec, later_sep; reflexivity );
                unlock; tac
       end
   in go.
