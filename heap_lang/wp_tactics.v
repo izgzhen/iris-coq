@@ -48,12 +48,10 @@ Ltac u_strip_later :=
                          etrans; last eapply later_mono; first solve [ strip ]).
 
 (* ssreflect-locks the part after the ⊑ *)
-(* FIXME: I tried doing a lazymatch to only apply the tactic if the goal has shape ⊑,
-   bit the match is executed *before* doing the recursion... WTF? *)
 Ltac u_lock_goal := revert_intros ltac:(apply uPred_lock_conclusion).
 
 (** Transforms a goal of the form ∀ ..., ?0... → ?1 ⊑ ?2
-    into True ⊑ ∀..., ■?0... → ?1 → ?2, applies tac, and
+    into True ⊑ ∀..., ■?0... → ?1 -★ ?2, applies tac, and
     the moves all the assumptions back. *)
 Ltac u_revert_all :=
   lazymatch goal with
@@ -71,10 +69,8 @@ Ltac u_revert_all :=
 (** This starts on a goal of the form ∀ ..., ?0... → ?1 ⊑ ?2.
    It applies löb where all the Coq assumptions have been turned into logical
    assumptions, then moves all the Coq assumptions back out to the context,
-   applies [tac ()] on the goal (now of the form _ ⊑ _), and then reverts the
-   Coq assumption so that we end up with the same shape as where we started.
-   [tac] is a thunk because I found no other way to prevent Coq from expandig
-   matches too early.*)
+   applies [tac] on the goal (now of the form _ ⊑ _), and then reverts the
+   Coq assumption so that we end up with the same shape as where we started. *)
 Ltac u_löb tac :=
   u_lock_goal; u_revert_all;
   (* We now have a goal for the form True ⊑ P, with the "original" conclusion
@@ -89,8 +85,9 @@ Ltac u_löb tac :=
                let H := fresh in intro H; go; revert H
       | |- _ ⊑ (■ _ → _) => apply impl_intro_l, const_elim_l;
                let H := fresh in intro H; go; revert H
-      | |- ▷ ?R ⊑ (?L -★ locked _) => apply wand_intro_l;
-               unlock; tac ()
+      (* This is the "bottom" of the goal, where we see the wand introduced
+         by u_revert_all and the lock, as well as the ▷ from löb_strong. *)
+      | |- ▷ _ ⊑ (_ -★ locked _) => apply wand_intro_l; unlock; tac
       end
   in go.
 
@@ -124,7 +121,8 @@ Ltac wp_finish :=
   end in simpl; revert_intros go.
 
 Tactic Notation "wp_rec" ">" :=
-  u_löb ltac:(fun _ => (* Find the redex and apply wp_rec *)
+  u_löb ltac:((* Find the redex and apply wp_rec *)
+              idtac; (* FIXME WTF without this, it matches the goal before executing u_löb ?!? *)
                lazymatch goal with
                | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
                         match eval cbv in e' with
