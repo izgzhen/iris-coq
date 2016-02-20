@@ -119,12 +119,13 @@ Ltac wp_finish :=
 
 Tactic Notation "wp_rec" ">" :=
   u_löb ltac:((* Find the redex and apply wp_rec *)
-              idtac; (* FIXME WTF without this, it matches the goal before executing u_löb ?!? *)
+              idtac; (* <https://coq.inria.fr/bugs/show_bug.cgi?id=4584> *)
                lazymatch goal with
                | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
                         match eval cbv in e' with
                         | App (Rec _ _ _) _ =>
-                          wp_bind K; etrans; [|eapply wp_rec; reflexivity]; wp_finish
+                          wp_bind K; etrans; [|eapply wp_rec; reflexivity];
+                          wp_finish
                         end)
                end).
 Tactic Notation "wp_rec" := wp_rec>; wp_strip_later.
