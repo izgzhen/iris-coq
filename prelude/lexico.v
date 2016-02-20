@@ -52,7 +52,7 @@ Proof.
   - intros [x y]. apply prod_lexico_irreflexive.
     by apply (irreflexivity lexico y).
   - intros [??] [??] [??] ??.
-    eapply prod_lexico_transitive; eauto. apply trans.
+    eapply prod_lexico_transitive; eauto. apply transitivity.
 Qed.
 Instance prod_lexico_trichotomyT `{Lexico A, tA : !TrichotomyT (@lexico A _)}
   `{Lexico B, tB : !TrichotomyT (@lexico B _)}: TrichotomyT (@lexico (A * B) _).

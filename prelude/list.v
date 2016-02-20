@@ -2493,7 +2493,7 @@ Section Forall2_order.
   Global Instance: Symmetric R → Symmetric (Forall2 R).
   Proof. intros. induction 1; constructor; auto. Qed.
   Global Instance: Transitive R → Transitive (Forall2 R).
-  Proof. intros ????. apply Forall2_transitive. by apply @trans. Qed.
+  Proof. intros ????. apply Forall2_transitive. by apply @transitivity. Qed.
   Global Instance: Equivalence R → Equivalence (Forall2 R).
   Proof. split; apply _. Qed.
   Global Instance: PreOrder R → PreOrder (Forall2 R).
