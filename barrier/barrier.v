@@ -148,7 +148,7 @@ Section proof.
     (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ (LocV l))
     ⊑ || newchan '() {{ Φ }}.
   Proof.
-    rewrite /newchan. wp_rec. (* TODO: wp_seq. *)
+    rewrite /newchan. wp_seq.
     rewrite -wp_pvs. wp eapply wp_alloc; eauto with I ndisj.
     apply forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
     rewrite !assoc. apply pvs_wand_r.
@@ -206,7 +206,7 @@ Section proof.
     heapN ⊥ N → (send l P ★ P ★ Φ '()) ⊑ || signal (LocV l) {{ Φ }}.
   Proof.
     intros Hdisj. rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
-    apply exist_elim=>γ. wp_rec. (* FIXME wp_let *)
+    apply exist_elim=>γ. wp_let.
     (* I think some evars here are better than repeating *everything* *)
     eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
       eauto with I ndisj.

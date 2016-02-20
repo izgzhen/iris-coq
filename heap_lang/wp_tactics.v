@@ -47,6 +47,21 @@ Tactic Notation "wp_rec" ">" :=
   end.
 Tactic Notation "wp_rec" := wp_rec>; wp_strip_later.
 
+Tactic Notation "wp_lam" ">" :=
+  match goal with
+  | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
+    match eval cbv in e' with
+    | App (Rec "" _ _) _ =>
+       wp_bind K; etransitivity; [|eapply wp_lam; reflexivity]; wp_finish
+    end)
+  end.
+Tactic Notation "wp_lam" := wp_lam>; wp_strip_later.
+
+Tactic Notation "wp_let" ">" := wp_lam>.
+Tactic Notation "wp_let" := wp_lam.
+Tactic Notation "wp_seq" ">" := wp_let>.
+Tactic Notation "wp_seq" := wp_let.
+
 Tactic Notation "wp_op" ">" :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>

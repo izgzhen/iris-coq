@@ -26,15 +26,13 @@ Lemma wp_let' E x e1 e2 v Φ :
   ▷ || subst e2 x v @ E {{ Φ }} ⊑ || Let x e1 e2 @ E {{ Φ }}.
 Proof. apply wp_lam'. Qed.
 
-Lemma wp_seq E e1 e2 Φ :
-  || e1 @ E {{ λ _, ▷ || e2 @ E {{ Φ }} }} ⊑ || Seq e1 e2 @ E {{ Φ }}.
-Proof.
-  rewrite -(wp_bind [LetCtx "" e2]). apply wp_mono=>v.
-  by rewrite -wp_let' //= ?to_of_val ?subst_empty.
-Qed.
+Lemma wp_seq E e1 e2 v Φ :
+  to_val e1 = Some v →
+  ▷ || e2 @ E {{ Φ }} ⊑ || Seq e1 e2 @ E {{ Φ }}.
+Proof. intros ?. rewrite -wp_let' // subst_empty //. Qed.
 
 Lemma wp_skip E Φ : ▷ Φ (LitV LitUnit) ⊑ || Skip @ E {{ Φ }}.
-Proof. rewrite -wp_seq -wp_value // -wp_value //. Qed.
+Proof. rewrite -wp_seq // -wp_value //. Qed.
 
 Lemma wp_le E (n1 n2 : Z) P Φ :
   (n1 ≤ n2 → P ⊑ ▷ Φ (LitV (LitBool true))) →
