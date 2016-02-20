@@ -84,14 +84,14 @@ Lemma res_included (r1 r2 : res Λ Σ A) :
   r1 ≼ r2 ↔ wld r1 ≼ wld r2 ∧ pst r1 ≼ pst r2 ∧ gst r1 ≼ gst r2.
 Proof.
   split; [|by intros ([w ?]&[σ ?]&[m ?]); exists (Res w σ m)].
-  intros [r Hr]; split_ands;
+  intros [r Hr]; split_and?;
     [exists (wld r)|exists (pst r)|exists (gst r)]; apply Hr.
 Qed.
 Lemma res_includedN (r1 r2 : res Λ Σ A) n :
   r1 ≼{n} r2 ↔ wld r1 ≼{n} wld r2 ∧ pst r1 ≼{n} pst r2 ∧ gst r1 ≼{n} gst r2.
 Proof.
   split; [|by intros ([w ?]&[σ ?]&[m ?]); exists (Res w σ m)].
-  intros [r Hr]; split_ands;
+  intros [r Hr]; split_and?;
     [exists (wld r)|exists (pst r)|exists (gst r)]; apply Hr.
 Qed.
 Definition res_cmra_mixin : CMRAMixin (res Λ Σ A).
@@ -99,18 +99,18 @@ Proof.
   split.
   - by intros n x [???] ? [???]; constructor; simpl in *; cofe_subst.
   - by intros n [???] ? [???]; constructor; simpl in *; cofe_subst.
-  - by intros n [???] ? [???] (?&?&?); split_ands'; simpl in *; cofe_subst.
+  - by intros n [???] ? [???] (?&?&?); split_and!; simpl in *; cofe_subst.
   - by intros n [???] ? [???] [???] ? [???];
       constructor; simpl in *; cofe_subst.
-  - by intros n ? (?&?&?); split_ands'; apply cmra_validN_S.
+  - by intros n ? (?&?&?); split_and!; apply cmra_validN_S.
   - by intros ???; constructor; rewrite /= assoc.
   - by intros ??; constructor; rewrite /= comm.
   - by intros ?; constructor; rewrite /= cmra_unit_l.
   - by intros ?; constructor; rewrite /= cmra_unit_idemp.
   - intros n r1 r2; rewrite !res_includedN.
-    by intros (?&?&?); split_ands'; apply cmra_unit_preservingN.
+    by intros (?&?&?); split_and!; apply cmra_unit_preservingN.
   - intros n r1 r2 (?&?&?);
-      split_ands'; simpl in *; eapply cmra_validN_op_l; eauto.
+      split_and!; simpl in *; eapply cmra_validN_op_l; eauto.
   - intros n r1 r2; rewrite res_includedN; intros (?&?&?).
     by constructor; apply cmra_op_minus.
 Qed.
@@ -127,7 +127,7 @@ Canonical Structure resRA : cmraT :=
 Global Instance res_cmra_identity : CMRAIdentity resRA.
 Proof.
   split.
-  - intros n; split_ands'; apply cmra_empty_valid.
+  - intros n; split_and!; apply cmra_empty_valid.
   - by split; rewrite /= left_id.
   - apply _.
 Qed.
@@ -205,8 +205,8 @@ Instance res_map_cmra_monotone {Λ Σ} {A B : cofeT} (f : A -n> B) :
 Proof.
   split.
   - by intros n r1 r2; rewrite !res_includedN;
-      intros (?&?&?); split_ands'; simpl; try apply includedN_preserving.
-  - by intros n r (?&?&?); split_ands'; simpl; try apply validN_preserving.
+      intros (?&?&?); split_and!; simpl; try apply includedN_preserving.
+  - by intros n r (?&?&?); split_and!; simpl; try apply validN_preserving.
 Qed.
 Definition resC_map {Λ Σ A B} (f : A -n> B) : resC Λ Σ A -n> resC Λ Σ B :=
   CofeMor (res_map f : resRA Λ Σ A → resRA Λ Σ B).

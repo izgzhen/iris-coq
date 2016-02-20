@@ -21,7 +21,7 @@ Infix "⩪" := minus (at level 40) : C_scope.
 Class ValidN (A : Type) := validN : nat → A → Prop.
 Instance: Params (@validN) 3.
 Notation "✓{ n } x" := (validN n x)
-  (at level 20, n at level 1, format "✓{ n }  x").
+  (at level 20, n at next level, format "✓{ n }  x").
 
 Class Valid (A : Type) := valid : A → Prop.
 Instance: Params (@valid) 2.
@@ -30,7 +30,7 @@ Instance validN_valid `{ValidN A} : Valid A := λ x, ∀ n, ✓{n} x.
 
 Definition includedN `{Dist A, Op A} (n : nat) (x y : A) := ∃ z, y ≡{n}≡ x ⋅ z.
 Notation "x ≼{ n } y" := (includedN n x y)
-  (at level 70, format "x  ≼{ n }  y") : C_scope.
+  (at level 70, n at next level, format "x  ≼{ n }  y") : C_scope.
 Instance: Params (@includedN) 4.
 Hint Extern 0 (_ ≼{_} _) => reflexivity.
 
@@ -476,7 +476,7 @@ Section discrete.
   Qed.
   Definition discrete_extend_mixin : CMRAExtendMixin A.
   Proof.
-    intros n x y1 y2 ??; exists (y1,y2); split_ands; auto.
+    intros n x y1 y2 ??; exists (y1,y2); split_and?; auto.
     apply (timeless _), dist_le with n; auto with lia.
   Qed.
   Definition discreteRA : cmraT :=

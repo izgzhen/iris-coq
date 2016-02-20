@@ -64,7 +64,7 @@ Proof.
   - intros ? [o t t']; unfold map_to_list; simpl.
     assert (NoDup ((prod_map Z.pos id <$> map_to_list t) ++
       prod_map Z.neg id <$> map_to_list t')).
-    { apply NoDup_app; split_ands.
+    { apply NoDup_app; split_and?.
       - apply (NoDup_fmap_2 _), NoDup_map_to_list.
       - intro. rewrite !elem_of_list_fmap. naive_solver.
       - apply (NoDup_fmap_2 _), NoDup_map_to_list. }

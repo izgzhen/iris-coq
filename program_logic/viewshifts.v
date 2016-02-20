@@ -3,26 +3,26 @@ From program_logic Require Export pviewshifts invariants ghost_ownership.
 Import uPred.
 
 Definition vs {Λ Σ} (E1 E2 : coPset) (P Q : iProp Λ Σ) : iProp Λ Σ :=
-  (□ (P → pvs E1 E2 Q))%I.
+  (□ (P → |={E1,E2}=> Q))%I.
 Arguments vs {_ _} _ _ _%I _%I.
 Instance: Params (@vs) 4.
 Notation "P ={ E1 , E2 }=> Q" := (vs E1 E2 P%I Q%I)
-  (at level 199, E1 at level 1, E2 at level 1,
+  (at level 199, E1,E2 at level 50,
    format "P  ={ E1 , E2 }=>  Q") : uPred_scope.
 Notation "P ={ E1 , E2 }=> Q" := (True ⊑ vs E1 E2 P%I Q%I)
-  (at level 199, E1 at level 1, E2 at level 1,
+  (at level 199, E1, E2 at level 50,
    format "P  ={ E1 , E2 }=>  Q") : C_scope.
 Notation "P ={ E }=> Q" := (vs E E P%I Q%I)
-  (at level 199, E at level 1, format "P  ={ E }=>  Q") : uPred_scope.
+  (at level 199, E at level 50, format "P  ={ E }=>  Q") : uPred_scope.
 Notation "P ={ E }=> Q" := (True ⊑ vs E E P%I Q%I)
-  (at level 199, E at level 1, format "P  ={ E }=>  Q") : C_scope.
+  (at level 199, E at level 50, format "P  ={ E }=>  Q") : C_scope.
 
 Section vs.
 Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q R : iProp Λ Σ.
 Implicit Types N : namespace.
 
-Lemma vs_alt E1 E2 P Q : (P ⊑ pvs E1 E2 Q) → P ={E1,E2}=> Q.
+Lemma vs_alt E1 E2 P Q : P ⊑ (|={E1,E2}=> Q) → P ={E1,E2}=> Q.
 Proof.
   intros; rewrite -{1}always_const. apply: always_intro. apply impl_intro_l.
   by rewrite always_const right_id.

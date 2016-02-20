@@ -1,7 +1,12 @@
 From heap_lang Require Export derived.
 
-(* What about Arguments for hoare triples?. *)
 Arguments wp {_ _} _ _%L _.
+Notation "|| e @ E {{ Φ } }" := (wp E e%L Φ)
+  (at level 20, e, Φ at level 200,
+   format "||  e  @  E  {{  Φ  } }") : uPred_scope.
+Notation "|| e {{ Φ } }" := (wp ⊤ e%L Φ)
+  (at level 20, e, Φ at level 200,
+   format "||  e   {{  Φ  } }") : uPred_scope.
 
 Coercion LitInt : Z >-> base_lit.
 Coercion LitBool : bool >-> base_lit.

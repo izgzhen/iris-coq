@@ -1,13 +1,22 @@
 From program_logic Require Export weakestpre viewshifts.
 
 Definition ht {Λ Σ} (E : coPset) (P : iProp Λ Σ)
-    (e : expr Λ) (Φ : val Λ → iProp Λ Σ) : iProp Λ Σ := (□ (P → wp E e Φ))%I.
+    (e : expr Λ) (Φ : val Λ → iProp Λ Σ) : iProp Λ Σ :=
+  (□ (P → || e @ E {{ Φ }}))%I.
 Instance: Params (@ht) 3.
 
 Notation "{{ P } } e @ E {{ Φ } }" := (ht E P e Φ)
-  (at level 74, format "{{  P  } }  e  @  E  {{  Φ  } }") : uPred_scope.
+  (at level 20, P, e, Φ at level 200,
+   format "{{  P  } }  e  @  E  {{  Φ  } }") : uPred_scope.
+Notation "{{ P } } e {{ Φ } }" := (ht ⊤ P e Φ)
+  (at level 20, P, e, Φ at level 200,
+   format "{{  P  } }  e  {{  Φ  } }") : uPred_scope.
 Notation "{{ P } } e @ E {{ Φ } }" := (True ⊑ ht E P e Φ)
-  (at level 74, format "{{  P  } }  e  @  E  {{  Φ  } }") : C_scope.
+  (at level 20, P, e, Φ at level 200,
+   format "{{  P  } }  e  @  E  {{  Φ  } }") : C_scope.
+Notation "{{ P } } e {{ Φ } }" := (True ⊑ ht ⊤ P e Φ)
+  (at level 20, P, e, Φ at level 200,
+   format "{{  P  } }  e  {{  Φ  } }") : C_scope.
 
 Section hoare.
 Context {Λ : language} {Σ : iFunctor}.
@@ -29,7 +38,7 @@ Global Instance ht_mono' E :
   Proper (flip (⊑) ==> eq ==> pointwise_relation _ (⊑) ==> (⊑)) (@ht Λ Σ E).
 Proof. by intros P P' HP e ? <- Φ Φ' HΦ; apply ht_mono. Qed.
 
-Lemma ht_alt E P Φ e : (P ⊑ wp E e Φ) → {{ P }} e @ E {{ Φ }}.
+Lemma ht_alt E P Φ e : (P ⊑ || e @ E {{ Φ }}) → {{ P }} e @ E {{ Φ }}.
 Proof.
   intros; rewrite -{1}always_const. apply: always_intro. apply impl_intro_l.
   by rewrite always_const right_id.

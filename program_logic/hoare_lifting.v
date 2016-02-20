@@ -4,10 +4,12 @@ Import uPred.
 
 Local Notation "{{ P } } ef ?@ E {{ Φ } }" :=
   (default True%I ef (λ e, ht E P e Φ))
-  (at level 74, format "{{  P  } }  ef  ?@  E  {{  Φ  } }") : uPred_scope.
+  (at level 20, P, ef, Φ at level 200,
+   format "{{  P  } }  ef  ?@  E  {{  Φ  } }") : uPred_scope.
 Local Notation "{{ P } } ef ?@ E {{ Φ } }" :=
   (True ⊑ default True ef (λ e, ht E P e Φ))
-  (at level 74, format "{{  P  } }  ef  ?@  E  {{  Φ  } }") : C_scope.
+  (at level 20, P, ef, Φ at level 200,
+   format "{{  P  } }  ef  ?@  E  {{  Φ  } }") : C_scope.
 
 Section lifting.
 Context {Λ : language} {Σ : iFunctor}.

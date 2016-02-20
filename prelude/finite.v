@@ -220,7 +220,7 @@ Proof. done. Qed.
 Program Instance sum_finite `{Finite A, Finite B} : Finite (A + B)%type :=
   {| enum := (inl <$> enum A) ++ (inr <$> enum B) |}.
 Next Obligation.
-  intros. apply NoDup_app; split_ands.
+  intros. apply NoDup_app; split_and?.
   - apply (NoDup_fmap_2 _). by apply NoDup_enum.
   - intro. rewrite !elem_of_list_fmap. intros (?&?&?) (?&?&?); congruence.
   - apply (NoDup_fmap_2 _). by apply NoDup_enum.
@@ -237,7 +237,7 @@ Program Instance prod_finite `{Finite A, Finite B} : Finite (A * B)%type :=
 Next Obligation.
   intros ??????. induction (NoDup_enum A) as [|x xs Hx Hxs IH]; simpl.
   { constructor. }
-  apply NoDup_app; split_ands.
+  apply NoDup_app; split_and?.
   - by apply (NoDup_fmap_2 _), NoDup_enum.
   - intros [? y]. rewrite elem_of_list_fmap. intros (?&?&?); simplify_eq.
     clear IH. induction Hxs as [|x' xs ?? IH]; simpl.
@@ -271,7 +271,7 @@ Next Obligation.
   intros ????. induction n as [|n IH]; simpl; [apply NoDup_singleton |].
   revert IH. generalize (list_enum (enum A) n). intros l Hl.
   induction (NoDup_enum A) as [|x xs Hx Hxs IH]; simpl; auto; [constructor |].
-  apply NoDup_app; split_ands.
+  apply NoDup_app; split_and?.
   - by apply (NoDup_fmap_2 _).
   - intros [k1 Hk1]. clear Hxs IH. rewrite elem_of_list_fmap.
     intros ([k2 Hk2]&?&?) Hxk2; simplify_eq/=. destruct Hx. revert Hxk2.

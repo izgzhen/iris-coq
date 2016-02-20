@@ -39,7 +39,7 @@ Section ndisjoint.
   Lemma ndot_preserve_disjoint_l N1 N2 x : N1 ⊥ N2 → ndot N1 x ⊥ N2.
   Proof.
     intros (N1' & N2' & Hpr1 & Hpr2 & Hl & Hne). exists N1', N2'.
-    split_ands; try done; []. by apply suffix_of_cons_r.
+    split_and?; try done; []. by apply suffix_of_cons_r.
   Qed.
 
   Lemma ndot_preserve_disjoint_r N1 N2 x : N1 ⊥ N2 → N1 ⊥ ndot N2 x .

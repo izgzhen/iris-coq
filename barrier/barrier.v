@@ -146,7 +146,7 @@ Section proof.
 
   Lemma newchan_spec (P : iProp) (Φ : val → iProp) :
     (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ (LocV l))
-    ⊑ wp ⊤ (newchan '()) Φ.
+    ⊑ || newchan '() {{ Φ }}.
   Proof.
     rewrite /newchan. wp_rec. (* TODO: wp_seq. *)
     rewrite -wp_pvs. wp> eapply wp_alloc; eauto with I ndisj.
@@ -196,7 +196,7 @@ Section proof.
   Qed.
 
   Lemma signal_spec l P (Φ : val → iProp) :
-    heapN ⊥ N → (send l P ★ P ★ Φ '()) ⊑ wp ⊤ (signal (LocV l)) Φ.
+    heapN ⊥ N → (send l P ★ P ★ Φ '()) ⊑ || signal (LocV l) {{ Φ }}.
   Proof.
     intros Hdisj. rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
     apply exist_elim=>γ. wp_rec. (* FIXME wp_let *)
@@ -226,12 +226,12 @@ Section proof.
   Qed.
 
   Lemma wait_spec l P (Φ : val → iProp) :
-    heapN ⊥ N → (recv l P ★ (P -★ Φ '())) ⊑ wp ⊤ (wait (LocV l)) Φ.
+    heapN ⊥ N → (recv l P ★ (P -★ Φ '())) ⊑ || wait (LocV l) {{ Φ }}.
   Proof.
   Abort.
 
   Lemma split_spec l P1 P2 Φ :
-    (recv l (P1 ★ P2) ★ (recv l P1 ★ recv l P2 -★ Φ '())) ⊑ wp ⊤ Skip Φ.
+    (recv l (P1 ★ P2) ★ (recv l P1 ★ recv l P2 -★ Φ '())) ⊑ || Skip {{ Φ }}.
   Proof.
   Abort.
 
@@ -260,14 +260,14 @@ Section spec.
   Lemma barrier_spec (heapN N : namespace) :
     heapN ⊥ N →
     ∃ (recv send : loc -> iProp -n> iProp),
-      (∀ P, heap_ctx heapN ⊑ ({{ True }} newchan '() @ ⊤ {{ λ v, ∃ l, v = LocV l ★ recv l P ★ send l P }})) ∧
-      (∀ l P, {{ send l P ★ P }} signal (LocV l) @ ⊤ {{ λ _, True }}) ∧
-      (∀ l P, {{ recv l P }} wait (LocV l) @ ⊤ {{ λ _, P }}) ∧
-      (∀ l P Q, {{ recv l (P ★ Q) }} Skip @ ⊤ {{ λ _, recv l P ★ recv l Q }}) ∧
+      (∀ P, heap_ctx heapN ⊑ ({{ True }} newchan '() {{ λ v, ∃ l, v = LocV l ★ recv l P ★ send l P }})) ∧
+      (∀ l P, {{ send l P ★ P }} signal (LocV l) {{ λ _, True }}) ∧
+      (∀ l P, {{ recv l P }} wait (LocV l) {{ λ _, P }}) ∧
+      (∀ l P Q, {{ recv l (P ★ Q) }} Skip {{ λ _, recv l P ★ recv l Q }}) ∧
       (∀ l P Q, (P -★ Q) ⊑ (recv l P -★ recv l Q)).
   Proof.
     intros HN. exists (λ l, CofeMor (recv N heapN l)). exists (λ l, CofeMor (send N heapN l)).
-    split_ands; cbn.
+    split_and?; cbn.
     - intros. apply: always_intro. apply impl_intro_l. rewrite -newchan_spec.
       rewrite comm always_and_sep_r. apply sep_mono_r. apply forall_intro=>l.
       apply wand_intro_l. rewrite right_id -(exist_intro l) const_equiv // left_id.

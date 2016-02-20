@@ -79,7 +79,7 @@ Proof.
   - intros [(P'&Hi&HP) _]; rewrite Hi.
     by apply Some_dist, symmetry, agree_valid_includedN,
       (cmra_included_includedN _ P'),HP; apply map_lookup_validN with (wld r) i.
-  - intros ?; split_ands; try apply cmra_empty_leastN; eauto.
+  - intros ?; split_and?; try apply cmra_empty_leastN; eauto.
 Qed.
 Lemma ownP_spec r n σ : ✓{n} r → (ownP σ) n r ↔ pst r ≡{n}≡ Excl σ.
 Proof.

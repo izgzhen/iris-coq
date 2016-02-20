@@ -29,7 +29,8 @@ Section LiftingTests.
 
   Definition heap_e  : expr :=
     let: "x" := ref '1 in "x" <- !"x" + '1;; !"x".
-  Lemma heap_e_spec E N : nclose N ⊆ E → heap_ctx N ⊑ wp E heap_e (λ v, v = '2).
+  Lemma heap_e_spec E N :
+     nclose N ⊆ E → heap_ctx N ⊑ || heap_e @ E {{ λ v, v = '2 }}.
   Proof.
     rewrite /heap_e=>HN. rewrite -(wp_mask_weaken N E) //.
     wp> eapply wp_alloc; eauto. apply forall_intro=>l; apply wand_intro_l.
@@ -48,7 +49,7 @@ Section LiftingTests.
       if: "x" ≤ '0 then -FindPred (-"x" + '2) '0 else FindPred "x" '0.
 
   Lemma FindPred_spec n1 n2 E Φ :
-    (■ (n1 < n2) ∧ Φ '(n2 - 1)) ⊑ wp E (FindPred 'n2 'n1) Φ.
+    (■ (n1 < n2) ∧ Φ '(n2 - 1)) ⊑ || FindPred 'n2 'n1 @ E {{ Φ }}.
   Proof.
     revert n1; apply löb_all_1=>n1.
     rewrite (comm uPred_and (■ _)%I) assoc; apply const_elim_r=>?.
@@ -62,7 +63,7 @@ Section LiftingTests.
     - wp_value. assert (n1 = n2 - 1) as -> by omega; auto with I.
   Qed.
 
-  Lemma Pred_spec n E Φ : ▷ Φ (LitV (n - 1)) ⊑ wp E (Pred 'n)%L Φ.
+  Lemma Pred_spec n E Φ : ▷ Φ (LitV (n - 1)) ⊑ || Pred 'n @ E {{ Φ }}.
   Proof.
     wp_rec>; apply later_mono; wp_bin_op=> ?; wp_if.
     - wp_un_op. wp_bin_op.
@@ -73,7 +74,7 @@ Section LiftingTests.
   Qed.
 
   Lemma Pred_user E :
-    True ⊑ wp (Σ:=globalF Σ) E (let: "x" := Pred '42 in Pred "x") (λ v, v = '40).
+    (True : iProp) ⊑ || let: "x" := Pred '42 in Pred "x" @ E {{ λ v, v = '40 }}.
   Proof.
     intros. ewp> apply Pred_spec. wp_rec. ewp> apply Pred_spec. auto with I.
   Qed.
@@ -86,7 +87,7 @@ Section ClosedProofs.
   Instance: authG heap_lang Σ heapRA.
   Proof. split; try apply _. by exists 1%nat. Qed.
 
-  Lemma heap_e_hoare σ : {{ ownP σ : iProp }} heap_e @ ⊤ {{ λ v, v = '2 }}.
+  Lemma heap_e_hoare σ : {{ ownP σ : iProp }} heap_e {{ λ v, v = '2 }}.
   Proof.
     apply ht_alt. rewrite (heap_alloc ⊤ nroot); last by rewrite nclose_nroot.
     apply wp_strip_pvs, exist_elim=> ?. rewrite and_elim_l.
