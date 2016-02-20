@@ -33,10 +33,10 @@ Section LiftingTests.
      nclose N ⊆ E → heap_ctx N ⊑ || heap_e @ E {{ λ v, v = '2 }}.
   Proof.
     rewrite /heap_e=>HN. rewrite -(wp_mask_weaken N E) //.
-    wp> eapply wp_alloc; eauto. apply forall_intro=>l; apply wand_intro_l.
-    wp_rec. wp> eapply wp_load; eauto with I. apply sep_mono_r, wand_intro_l.
-    wp_bin_op. wp> eapply wp_store; eauto with I. apply sep_mono_r, wand_intro_l.
-    wp_rec. wp> eapply wp_load; eauto with I. apply sep_mono_r, wand_intro_l.
+    wp eapply wp_alloc; eauto. apply forall_intro=>l; apply wand_intro_l.
+    wp_rec. wp eapply wp_load; eauto with I. apply sep_mono_r, wand_intro_l.
+    wp_bin_op. wp eapply wp_store; eauto with I. apply sep_mono_r, wand_intro_l.
+    wp_rec. wp eapply wp_load; eauto with I. apply sep_mono_r, wand_intro_l.
       by apply const_intro.
   Qed.
 
@@ -76,7 +76,7 @@ Section LiftingTests.
   Lemma Pred_user E :
     (True : iProp) ⊑ || let: "x" := Pred '42 in Pred "x" @ E {{ λ v, v = '40 }}.
   Proof.
-    intros. ewp> apply Pred_spec. wp_rec. ewp> apply Pred_spec. auto with I.
+    intros. ewp apply Pred_spec. wp_rec. ewp apply Pred_spec. auto with I.
   Qed.
 End LiftingTests.
 
