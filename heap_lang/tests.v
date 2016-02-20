@@ -63,10 +63,10 @@ Section LiftingTests.
   Proof.
     wp_lam>; apply later_mono; wp_op=> ?; wp_if.
     - wp_op. wp_op.
-      ewp apply FindPred_spec.
-      apply and_intro; first auto with I omega.
+      (* TODO: Can we use the wp tactic again here? *)
+      wp_focus (FindPred _ _). rewrite -FindPred_spec; last by omega.
       wp_op. by replace (n - 1) with (- (-n + 2 - 1)) by omega.
-    - ewp apply FindPred_spec. auto with I omega.
+    - rewrite -FindPred_spec; eauto with omega.
   Qed.
 
   Lemma Pred_user E :
