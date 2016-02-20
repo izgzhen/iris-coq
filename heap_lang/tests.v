@@ -54,13 +54,13 @@ Section LiftingTests.
     revert n1; apply löb_all_1=>n1.
     rewrite (comm uPred_and (■ _)%I) assoc; apply const_elim_r=>?.
     (* first need to do the rec to get a later *)
-    wp_rec>.
+    wp_rec>. 
     (* FIXME: ssr rewrite fails with "Error: _pattern_value_ is used in conclusion." *)
     rewrite ->(later_intro (Φ _)); rewrite -!later_and; apply later_mono.
     wp_let. wp_op. wp_let. wp_op=> ?; wp_if.
     - rewrite (forall_elim (n1 + 1)) const_equiv; last omega.
       by rewrite left_id impl_elim_l.
-    - wp_value. assert (n1 = n2 - 1) as -> by omega; auto with I.
+    - assert (n1 = n2 - 1) as -> by omega; auto with I.
   Qed.
 
   Lemma Pred_spec n E Φ : ▷ Φ (LitV (n - 1)) ⊑ || Pred 'n @ E {{ Φ }}.

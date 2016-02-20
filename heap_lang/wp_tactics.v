@@ -25,17 +25,13 @@ Ltac wp_finish :=
   match goal with
   | |- _ ⊑ ▷ _ => etransitivity; [|apply later_mono; go; reflexivity]
   | |- _ ⊑ wp _ _ _ =>
-     etransitivity; [|eapply wp_value; reflexivity];
+     etransitivity; [|eapply wp_value_pvs; reflexivity];
      (* sometimes, we will have to do a final view shift, so only apply
      wp_value if we obtain a consecutive wp *)
-     match goal with |- _ ⊑ wp _ _ _ => simpl | _ => fail end
+     try (eapply pvs_intro;
+          match goal with |- _ ⊑ wp _ _ _ => simpl | _ => fail end)
   | _ => idtac
   end in simpl; revert_intros go.
-
-Tactic Notation "wp_value" :=
-  match goal with
-  | |- _ ⊑ wp ?E ?e ?Q => etransitivity; [|eapply wp_value; reflexivity]; simpl
-  end.
 
 Tactic Notation "wp_rec" ">" :=
   match goal with

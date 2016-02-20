@@ -298,7 +298,7 @@ Section proof.
     { (* Is this really the best way to strip the later? *)
       erewrite later_sep. apply sep_mono; last apply later_intro.
       rewrite ->later_sep. apply sep_mono_l. rewrite ->later_sep. done. }
-    wp_if. wp_value.
+    wp_if. 
     eapply wand_apply_r; [done..|]. eapply wand_apply_r; [done..|].
     apply: (eq_rewrite Q' Q (λ x, x)%I); last by eauto with I.
     rewrite eq_sym. eauto with I.
