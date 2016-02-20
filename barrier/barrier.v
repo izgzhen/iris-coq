@@ -214,10 +214,8 @@ Section proof.
     apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
     apply const_elim_sep_l=>Hs. destruct p; last done.
     rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
-    eapply wp_store; eauto with I ndisj.
-    rewrite -!assoc. apply sep_mono_r. etrans; last eapply later_mono.
-    { (* Is this really the best way to strip the later? *)
-      erewrite later_sep. apply sep_mono_r. apply later_intro. }
+    eapply wp_store; eauto with I ndisj. 
+    rewrite -!assoc. apply sep_mono_r. u_strip_later.
     apply wand_intro_l. rewrite -(exist_intro (State High I)).
     rewrite -(exist_intro ∅). rewrite const_equiv /=; last first.
     { apply rtc_once. constructor; first constructor;
@@ -249,9 +247,7 @@ Section proof.
     apply const_elim_sep_l=>Hs.
     rewrite {1}/barrier_inv =>/=. rewrite later_sep.
     eapply wp_load; eauto with I ndisj.
-    rewrite -!assoc. apply sep_mono_r. etrans; last eapply later_mono.
-    { (* Is this really the best way to strip the later? *)
-      erewrite later_sep. apply sep_mono_r, later_intro. }
+    rewrite -!assoc. apply sep_mono_r. u_strip_later.
     apply wand_intro_l. destruct p.
     { (* a Low state. The comparison fails, and we recurse. *)
       rewrite -(exist_intro (State Low I)) -(exist_intro {[ Change i ]}).
@@ -261,7 +257,8 @@ Section proof.
       wp_op; first done. intros _. wp_if. rewrite !assoc.
       rewrite -{2}pvs_wp. apply pvs_wand_r.
       rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro Q) -(exist_intro i).
-      rewrite !assoc. do 3 (rewrite -pvs_frame_r; apply sep_mono_l).
+      rewrite !assoc.
+      do 3 (rewrite -pvs_frame_r; apply sep_mono; last (try apply later_intro; reflexivity)).
       rewrite [(_ ★ heap_ctx _)%I]comm -!assoc -pvs_frame_l. apply sep_mono_r.
       rewrite comm -pvs_frame_l. apply sep_mono_r.
       apply sts_ownS_weaken; eauto using sts.up_subseteq. }
@@ -285,11 +282,7 @@ Section proof.
     apply wand_intro_l. rewrite [(heap_ctx _ ★ _)%I]sep_elim_r.
     rewrite [(sts_own _ _ _ ★ _)%I]sep_elim_r [(sts_ctx _ _ _ ★ _)%I]sep_elim_r.
     rewrite !assoc [(_ ★ saved_prop_own i Q)%I]comm !assoc saved_prop_agree.
-    wp_op>; last done. intros _.
-    etrans; last eapply later_mono.
-    { (* Is this really the best way to strip the later? *)
-      erewrite later_sep. apply sep_mono; last apply later_intro.
-      rewrite ->later_sep. apply sep_mono_l. rewrite ->later_sep. done. }
+    wp_op>; last done. intros _. u_strip_later.
     wp_if. 
     eapply wand_apply_r; [done..|]. eapply wand_apply_r; [done..|].
     apply: (eq_rewrite Q' Q (λ x, x)%I); last by eauto with I.

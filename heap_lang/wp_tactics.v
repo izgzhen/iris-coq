@@ -1,6 +1,8 @@
 From heap_lang Require Export tactics substitution.
 Import uPred.
 
+(* TODO: The next 6 tactics are not wp-specific at all. They should move elsewhere. *)
+
 Ltac revert_intros tac :=
   lazymatch goal with
   | |- ∀ _, _ => let H := fresh in intro H; revert_intros tac; revert H
@@ -15,17 +17,36 @@ Ltac wp_strip_later :=
     end
   in revert_intros ltac:(etrans; [|go]).
 
+(** Assumes a goal of the shape P ⊑ ▷ Q.
+    Will get rid of ▷ in P below ★, ∧ and ∨. *)
+Ltac u_strip_later :=
+  let rec strip :=
+      match goal with
+      | |- (_ ★ _) ⊑ ▷ _  =>
+        etrans; last (eapply equiv_spec, later_sep);
+        apply sep_mono; strip
+      | |- (_ ∧ _) ⊑ ▷ _  =>
+        etrans; last (eapply equiv_spec, later_and);
+        apply sep_mono; strip
+      | |- (_ ∨ _) ⊑ ▷ _  =>
+        etrans; last (eapply equiv_spec, later_or);
+        apply sep_mono; strip
+      | |- ▷ _ ⊑ ▷ _ => apply later_mono; reflexivity
+      | |- _ ⊑ ▷ _ => apply later_intro; reflexivity
+      end
+  in etrans; last eapply later_mono; first solve [ strip ].
+
 (* ssreflect-locks the part after the ⊑ *)
 (* FIXME: I tried doing a lazymatch to only apply the tactic if the goal has shape ⊑,
    bit the match is executed *before* doing the recursion... WTF? *)
-Ltac uLock_goal := revert_intros ltac:(apply uPred_lock_conclusion).
+Ltac u_lock_goal := revert_intros ltac:(apply uPred_lock_conclusion).
 
 (** Transforms a goal of the form ∀ ..., ?0... → ?1 ⊑ ?2
     into True ⊑ ∀..., ■?0... → ?1 → ?2, applies tac, and
     the moves all the assumptions back. *)
-Ltac uRevert_all :=
+Ltac u_revert_all :=
   lazymatch goal with
-  | |- ∀ _, _ => let H := fresh in intro H; uRevert_all;
+  | |- ∀ _, _ => let H := fresh in intro H; u_revert_all;
                  (* TODO: Really, we should distinguish based on whether this is a
                     dependent function type or not. Right now, we distinguish based
                     on the sort of the argument, which is suboptimal. *)
@@ -41,8 +62,8 @@ Ltac uRevert_all :=
    assumptions, then moves all the Coq assumptions back out to the context,
    applies [tac] on the goal (now of the form _ ⊑ _), and then reverts the Coq
    assumption so that we end up with the same shape as where we started. *)
-Ltac uLöb tac :=
-  uLock_goal; uRevert_all;
+Ltac u_löb tac :=
+  u_lock_goal; u_revert_all;
   (* We now have a goal for the form True ⊑ P, with the "original" conclusion
      being locked. *)
   apply löb_strong; etransitivity;
@@ -81,7 +102,7 @@ Ltac wp_finish :=
   end in simpl; revert_intros go.
 
 Tactic Notation "wp_rec" :=
-  uLöb ltac:((* Find the redex and apply wp_rec *)
+  u_löb ltac:((* Find the redex and apply wp_rec *)
                match goal with
                | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
                         match eval cbv in e' with
