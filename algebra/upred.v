@@ -984,8 +984,6 @@ Lemma always_always P `{!AlwaysStable P} : (□ P)%I ≡ P.
 Proof. apply (anti_symm (⊑)); auto using always_elim. Qed.
 Lemma always_intro P Q `{!AlwaysStable P} : P ⊑ Q → P ⊑ □ Q.
 Proof. rewrite -(always_always P); apply always_intro'. Qed.
-Lemma always_entails P Q `{!AlwaysStable P} : P ⊑ □ Q → P ⊑ Q.
-Proof. rewrite -(always_always P). move=>->. by rewrite always_elim. Qed.
 Lemma always_and_sep_l P Q `{!AlwaysStable P} : (P ∧ Q)%I ≡ (P ★ Q)%I.
 Proof. by rewrite -(always_always P) always_and_sep_l'. Qed.
 Lemma always_and_sep_r P Q `{!AlwaysStable Q} : (P ∧ Q)%I ≡ (P ★ Q)%I.
@@ -1001,7 +999,7 @@ Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
 Lemma löb_strong_sep P Q : (P ★ ▷(P -★ Q)) ⊑ Q → P ⊑ Q.
 Proof.
   move/wand_intro_l=>Hlöb. rewrite -[P](left_id True (∧))%I.
-  apply impl_elim_l'. apply: always_entails. apply löb_strong.
+  apply impl_elim_l'. rewrite -[(_ → _)%I]always_elim. apply löb_strong.
   rewrite left_id -always_wand_impl -always_later Hlöb. done.
 Qed.
 
