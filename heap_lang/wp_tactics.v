@@ -141,7 +141,7 @@ Tactic Notation "wp" ">" tactic(tac) :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' => wp_bind K; tac)
   end.
-Tactic Notation "wp" tactic(tac) := (wp> tac); wp_strip_later.
+Tactic Notation "wp" tactic(tac) := (wp> tac); [wp_strip_later|..].
 
 (* In case the precondition does not match *)
 Tactic Notation "ewp" tactic(tac) := wp (etrans; [|tac]).
