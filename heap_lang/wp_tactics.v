@@ -1,27 +1,20 @@
 From heap_lang Require Export tactics substitution.
 Import uPred.
 
-(* TODO: The next 6 tactics are not wp-specific at all. They should move elsewhere. *)
+(* TODO: The next 5 tactics are not wp-specific at all. They should move elsewhere. *)
 
 Ltac revert_intros tac :=
   lazymatch goal with
   | |- ∀ _, _ => let H := fresh in intro H; revert_intros tac; revert H
   | |- _ => tac
   end.
-Ltac wp_strip_later :=
-  let rec go :=
-    lazymatch goal with
-    | |- _ ⊑ (_ ★ _) => apply sep_mono; go
-    | |- _ ⊑ ▷ _ => apply later_intro
-    | |- _ ⊑ _ => reflexivity
-    end
-  in revert_intros ltac:(etrans; [|go]).
 
-(** Assumes a goal of the shape P ⊑ ▷ Q.
-    Will get rid of ▷ in P below ★, ∧ and ∨. *)
+(** Assumes a goal of the shape P ⊑ ▷ Q. Alterantively, if Q
+    is built of ★, ∧, ∨ with ▷ in all branches; that will work, too.
+    Will turn this goal into P ⊑ Q and strip ▷ in P below ★, ∧, ∨. *)
 Ltac u_strip_later :=
   let rec strip :=
-      match goal with
+      lazymatch goal with
       | |- (_ ★ _) ⊑ ▷ _  =>
         etrans; last (eapply equiv_spec, later_sep);
         apply sep_mono; strip
@@ -34,7 +27,25 @@ Ltac u_strip_later :=
       | |- ▷ _ ⊑ ▷ _ => apply later_mono; reflexivity
       | |- _ ⊑ ▷ _ => apply later_intro; reflexivity
       end
-  in etrans; last eapply later_mono; first solve [ strip ].
+  in let rec shape_Q :=
+    lazymatch goal with
+    | |- _ ⊑ (_ ★ _) =>
+      (* Force the later on the LHS to be top-level, matching laters
+         below ★ on the RHS *)
+      etrans; first (apply equiv_spec; symmetry; apply later_sep; reflexivity);
+      (* Match the arm recursively *)
+      apply sep_mono; shape_Q
+    | |- _ ⊑ (_ ∧ _) =>
+      etrans; first (apply equiv_spec; symmetry; apply later_and; reflexivity);
+      apply sep_mono; shape_Q
+    | |- _ ⊑ (_ ∨ _) =>
+      etrans; first (apply equiv_spec; symmetry; apply later_or; reflexivity);
+      apply sep_mono; shape_Q
+    | |- _ ⊑ ▷ _ => apply later_mono; reflexivity
+    (* We fail if we don't find laters in all branches. *)
+    end
+  in revert_intros ltac:(etrans; [|shape_Q];
+                         etrans; last eapply later_mono; first solve [ strip ]).
 
 (* ssreflect-locks the part after the ⊑ *)
 (* FIXME: I tried doing a lazymatch to only apply the tactic if the goal has shape ⊑,
@@ -47,28 +58,31 @@ Ltac u_lock_goal := revert_intros ltac:(apply uPred_lock_conclusion).
 Ltac u_revert_all :=
   lazymatch goal with
   | |- ∀ _, _ => let H := fresh in intro H; u_revert_all;
-                 (* TODO: Really, we should distinguish based on whether this is a
-                    dependent function type or not. Right now, we distinguish based
-                    on the sort of the argument, which is suboptimal. *)
-                 first [ apply (const_intro_impl _ _ _ H); clear H
-                       | revert H; apply forall_elim']
+             (* TODO: Really, we should distinguish based on whether this is a
+                dependent function type or not. Right now, we distinguish based
+                on the sort of the argument, which is suboptimal. *)
+             first [ apply (const_intro_impl _ _ _ H); clear H
+                   | revert H; apply forall_elim']
   | |- ?C ⊑ _ => trans (True ★ C)%I;
-                 first (rewrite [(True ★ C)%I]left_id; reflexivity);
-                 apply wand_elim_l'
+             first (rewrite [(True ★ C)%I]left_id; reflexivity);
+             apply wand_elim_l'
   end.
 
 (** This starts on a goal of the form ∀ ..., ?0... → ?1 ⊑ ?2.
    It applies löb where all the Coq assumptions have been turned into logical
    assumptions, then moves all the Coq assumptions back out to the context,
-   applies [tac] on the goal (now of the form _ ⊑ _), and then reverts the Coq
-   assumption so that we end up with the same shape as where we started. *)
+   applies [tac ()] on the goal (now of the form _ ⊑ _), and then reverts the
+   Coq assumption so that we end up with the same shape as where we started.
+   [tac] is a thunk because I found no other way to prevent Coq from expandig
+   matches too early.*)
 Ltac u_löb tac :=
   u_lock_goal; u_revert_all;
   (* We now have a goal for the form True ⊑ P, with the "original" conclusion
      being locked. *)
   apply löb_strong; etransitivity;
     first (apply equiv_spec; symmetry; apply (left_id _ _ _); reflexivity);
-  (* Now introduce again all the things that we reverted, and at the bottom, do the work *)
+  (* Now introduce again all the things that we reverted, and at the bottom,
+     do the work *)
   let rec go :=
       lazymatch goal with
       | |- _ ⊑ (∀ _, _) => apply forall_intro;
@@ -76,13 +90,21 @@ Ltac u_löb tac :=
       | |- _ ⊑ (■ _ → _) => apply impl_intro_l, const_elim_l;
                let H := fresh in intro H; go; revert H
       | |- ▷ ?R ⊑ (?L -★ locked _) => apply wand_intro_l;
-               (* TODO: Do sth. more robust than rewriting. *)
-               trans (▷ L ★ ▷ R)%I; first (apply sep_mono_l, later_intro; reflexivity);
-               trans (▷ (L ★ R))%I; first (apply equiv_spec, later_sep; reflexivity );
-               unlock; tac
+               unlock; tac ()
       end
   in go.
 
+(** wp-specific helper tactics *)
+(* First try to productively strip off laters; if that fails, at least
+   cosmetically get rid of laters in the conclusion. *)
+Ltac wp_strip_later :=
+  let rec go :=
+    lazymatch goal with
+    | |- _ ⊑ (_ ★ _) => apply sep_mono; go
+    | |- _ ⊑ ▷ _ => apply later_intro
+    | |- _ ⊑ _ => reflexivity
+    end
+  in revert_intros ltac:(first [ u_strip_later | etrans; [|go] ] ).
 Ltac wp_bind K :=
   lazymatch eval hnf in K with
   | [] => idtac
@@ -101,16 +123,16 @@ Ltac wp_finish :=
   | _ => idtac
   end in simpl; revert_intros go.
 
-Tactic Notation "wp_rec" :=
-  u_löb ltac:((* Find the redex and apply wp_rec *)
-               match goal with
+Tactic Notation "wp_rec" ">" :=
+  u_löb ltac:(fun _ => (* Find the redex and apply wp_rec *)
+               lazymatch goal with
                | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
                         match eval cbv in e' with
                         | App (Rec _ _ _) _ =>
                           wp_bind K; etrans; [|eapply wp_rec; reflexivity]; wp_finish
                         end)
-               end;
-               apply later_mono).
+               end).
+Tactic Notation "wp_rec" := wp_rec>; wp_strip_later.
 
 Tactic Notation "wp_lam" ">" :=
   match goal with

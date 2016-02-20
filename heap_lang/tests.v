@@ -61,7 +61,7 @@ Section LiftingTests.
 
   Lemma Pred_spec n E Φ : ▷ Φ (LitV (n - 1)) ⊑ || Pred 'n @ E {{ Φ }}.
   Proof.
-    wp_lam>; apply later_mono; wp_op=> ?; wp_if.
+    wp_lam. wp_op=> ?; wp_if.
     - wp_op. wp_op.
       (* TODO: Can we use the wp tactic again here? It seems that the tactic fails if there
          are goals being generated. That should not be the case. *)
