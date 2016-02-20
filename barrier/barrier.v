@@ -186,6 +186,7 @@ Section proof.
       rewrite (sts_own_weaken ⊤ _ _ (i_states i ∩ low_states) _ 
                               ({[ Change i ]} ∪ {[ Send ]})).
       + apply pvs_mono. rewrite sts_ownS_op; eauto; []. set_solver.
+      (* TODO the rest of this proof is rather annoying. *)
       + rewrite /= /tok /=. apply elem_of_equiv=>t.
         rewrite elem_of_difference elem_of_union.
         rewrite !mkSet_elem_of /change_tokens.
@@ -219,7 +220,8 @@ Section proof.
       erewrite later_sep. apply sep_mono_r. apply later_intro. }
     apply wand_intro_l. rewrite -(exist_intro (State High I)).
     rewrite -(exist_intro ∅). rewrite const_equiv /=; last first.
-    { constructor; first constructor; rewrite /= /tok /=; set_solver. }
+    { apply rtc_once. constructor; first constructor;
+                        rewrite /= /tok /=; set_solver. }
     rewrite left_id -later_intro {2}/barrier_inv -!assoc. apply sep_mono_r.
     rewrite !assoc [(_ ★ P)%I]comm !assoc -2!assoc.
     apply sep_mono; last first.
@@ -235,26 +237,70 @@ Section proof.
     heapN ⊥ N → (recv l P ★ (P -★ Φ '())) ⊑ || wait (LocV l) {{ Φ }}.
   Proof.
     rename P into R.
-    intros Hdisj. rewrite /wait. apply löb_strong_sep.
+    intros Hdisj. rewrite /wait. rewrite [(_ ★ _)%I](pvs_intro ⊤).
+    apply löb_strong_sep. rewrite pvs_frame_r. apply wp_strip_pvs.
     rewrite {1}/recv /barrier_ctx. rewrite !sep_exist_r.
     apply exist_elim=>γ. rewrite !sep_exist_r. apply exist_elim=>P.
     rewrite !sep_exist_r. apply exist_elim=>Q. rewrite !sep_exist_r.
     apply exist_elim=>i. wp_rec.
     (* TODO use automatic binding *)
-    apply (wp_bindi (IfCtx _ _)).
+    rewrite -(wp_bindi (IfCtx _ _)) /=.
+    rewrite -(wp_bindi (BinOpLCtx _ _)) /=.
     (* I think some evars here are better than repeating *everything* *)
     eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
       eauto with I ndisj.
-    rewrite [(_ ★ sts_ownS _ _ _)%I]comm -!assoc /wp_fsa. apply sep_mono_r.
+    rewrite !assoc [(_ ★ sts_ownS _ _ _)%I]comm -!assoc /wp_fsa. apply sep_mono_r.
     apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
-    apply const_elim_sep_l=>Hs. destruct p; last done.
-    rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
-    eapply wp_store; eauto with I ndisj.
+    apply const_elim_sep_l=>Hs.
+    rewrite {1}/barrier_inv =>/=. rewrite later_sep.
+    eapply wp_load; eauto with I ndisj.
     rewrite -!assoc. apply sep_mono_r. etransitivity; last eapply later_mono.
     { (* Is this really the best way to strip the later? *)
-      erewrite later_sep. apply sep_mono_r. apply later_intro. }
-    apply wand_intro_l. rewrite -(exist_intro (State High I)).
-  Abort.
+      erewrite later_sep. apply sep_mono_r. rewrite !assoc. erewrite later_sep.
+      apply sep_mono_l, later_intro. }
+    apply wand_intro_l. destruct p.
+    { (* a Low state. The comparison fails, and we recurse. *)
+      rewrite -(exist_intro (State Low I)) -(exist_intro {[ Change i ]}).
+      rewrite const_equiv /=; last by apply rtc_refl.
+      rewrite left_id -[(▷ barrier_inv _ _ _)%I]later_intro {3}/barrier_inv.
+      rewrite -!assoc. apply sep_mono_r, sep_mono_r, wand_intro_l.
+      wp_bin_op; first done. intros _. wp_if. rewrite !assoc.
+      eapply wand_apply_r'; first done.
+      rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro Q) -(exist_intro i).
+      rewrite !assoc. do 3 (rewrite -pvs_frame_r; apply sep_mono_l).
+      rewrite [(_ ★ heap_ctx _)%I]comm -!assoc -pvs_frame_l. apply sep_mono_r.
+      rewrite comm -pvs_frame_l. apply sep_mono_r.
+      apply sts_ownS_weaken; eauto using sts.up_subseteq. }
+    (* a High state: the comparison succeeds, and we perform a transition and
+       return to the client *)
+    rewrite [(_ ★ (_ -★ _ ))%I]sep_elim_l.
+    rewrite -(exist_intro (State High (I ∖ {[ i ]}))) -(exist_intro ∅).
+    change (i ∈ I) in Hs.
+    rewrite const_equiv /=; last first.
+    { apply rtc_once. constructor; first constructor; rewrite /= /tok /=; [set_solver..|].
+      (* TODO this proof is rather annoying. *)
+      apply elem_of_equiv=>t. rewrite !elem_of_union.
+      rewrite !mkSet_elem_of /change_tokens /=.
+      destruct t as [j|]; last naive_solver.
+      rewrite elem_of_difference elem_of_singleton.
+      destruct (decide (i = j)); naive_solver. }
+    rewrite left_id -[(▷ barrier_inv _ _ _)%I]later_intro {2}/barrier_inv.
+    rewrite -!assoc. apply sep_mono_r. rewrite /ress.
+    rewrite (big_sepS_delete _ I i) // [(_ ★ Π★{set _} _)%I]comm -!assoc.
+    apply sep_mono_r. rewrite !sep_exist_r. apply exist_elim=>Q'.
+    apply wand_intro_l. rewrite [(heap_ctx _ ★ _)%I]sep_elim_r.
+    rewrite [(sts_own _ _ _ ★ _)%I]sep_elim_r [(sts_ctx _ _ _ ★ _)%I]sep_elim_r.
+    rewrite !assoc [(_ ★ saved_prop_own i Q)%I]comm !assoc saved_prop_agree.
+    wp_bin_op>; last done. intros _.
+    etransitivity; last eapply later_mono.
+    { (* Is this really the best way to strip the later? *)
+      erewrite later_sep. apply sep_mono; last apply later_intro.
+      rewrite ->later_sep. apply sep_mono_l. rewrite ->later_sep. done. }
+    wp_if. wp_value.
+    eapply wand_apply_r; [done..|]. eapply wand_apply_r; [done..|].
+    apply: (eq_rewrite Q' Q (λ x, x)%I); last by eauto with I.
+    rewrite eq_sym. eauto with I.
+  Qed.
 
   Lemma recv_split l P1 P2 Φ :
     (recv l (P1 ★ P2) ★ (recv l P1 ★ recv l P2 -★ Φ '())) ⊑ || Skip {{ Φ }}.
@@ -298,8 +344,10 @@ Section spec.
       rewrite comm always_and_sep_r. apply sep_mono_r. apply forall_intro=>l.
       apply wand_intro_l. rewrite right_id -(exist_intro l) const_equiv // left_id.
       done.
-    - intros. apply ht_alt. rewrite -signal_spec; first by rewrite right_id. done.
-    - admit.
+    - intros. apply ht_alt. rewrite -signal_spec; last done.
+        by rewrite right_id.
+    - intros. apply ht_alt. rewrite -wait_spec; last done.
+      apply sep_intro_True_r; first done. apply wand_intro_l. eauto with I.
     - admit.
     - intros. apply recv_strengthen.
   Abort.

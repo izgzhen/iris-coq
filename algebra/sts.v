@@ -151,6 +151,12 @@ Proof.
   unfold up_set; rewrite elem_of_bind; intros (s'&Hstep&?).
   induction Hstep; eauto using closed_step.
 Qed.
+Lemma up_subseteq s T S :
+  closed S T → s ∈ S → sts.up s T ⊆ S.
+Proof. move=>? ? s' ?. eapply closed_steps; done. Qed.
+Lemma up_set_subseteq S1 T S2 :
+  closed S2 T → S1 ⊆ S2 → sts.up_set S1 T ⊆ S2.
+Proof. move=>? ? s [s' [? ?]]. eapply closed_steps; by eauto. Qed.
 End sts. End sts.
 
 Notation stsT := sts.stsT.
