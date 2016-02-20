@@ -715,13 +715,24 @@ Lemma later_wand P Q : ▷ (P -★ Q) ⊑ (▷ P -★ ▷ Q).
 Proof. apply wand_intro_r;rewrite -later_sep; apply later_mono,wand_elim_l. Qed.
 Lemma later_iff P Q : (▷ (P ↔ Q)) ⊑ (▷P ↔ ▷Q).
 Proof. by rewrite /uPred_iff later_and !later_impl. Qed.
+Lemma löb_strong P Q : (P ∧ ▷Q) ⊑ Q → P ⊑ Q.
+Proof.
+  intros Hlöb. apply impl_entails.
+  etransitivity; last by eapply löb.
+  apply impl_intro_l, impl_intro_l. rewrite right_id -{2}Hlöb.
+  apply and_intro; first by eauto.
+  by rewrite {1}(later_intro P) later_impl impl_elim_r.
+Qed.       
 Lemma löb_all_1 {A} (Φ Ψ : A → uPred M) :
   (∀ a, (▷ (∀ b, Φ b → Ψ b) ∧ Φ a) ⊑ Ψ a) → ∀ a, Φ a ⊑ Ψ a.
 Proof.
-  intros Hlöb a. apply impl_entails. transitivity (∀ a, Φ a → Ψ a)%I; last first.
-  { by rewrite (forall_elim a). } clear a.
-  etransitivity; last by eapply löb.
-  apply impl_intro_l, forall_intro=>a. rewrite right_id. by apply impl_intro_r.
+  intros Hlöb a.
+  (* Part I: Revert all the bits we need for the induction into the conclusion. *)
+  apply impl_entails.
+  rewrite -[(Φ a → Ψ a)%I](forall_elim (Ψ := λ a, Φ a → Ψ a)%I a). clear a.
+  (* Part II: Perform induction. *)
+  apply löb_strong, forall_intro=>a. apply impl_intro_r.
+  by rewrite left_id Hlöb.
 Qed.
 
 (* Always *)
@@ -957,6 +968,8 @@ Lemma always_always P `{!AlwaysStable P} : (□ P)%I ≡ P.
 Proof. apply (anti_symm (⊑)); auto using always_elim. Qed.
 Lemma always_intro P Q `{!AlwaysStable P} : P ⊑ Q → P ⊑ □ Q.
 Proof. rewrite -(always_always P); apply always_intro'. Qed.
+Lemma always_entails P Q `{!AlwaysStable P} : P ⊑ □ Q → P ⊑ Q.
+Proof. rewrite -(always_always P). move=>->. by rewrite always_elim. Qed.
 Lemma always_and_sep_l P Q `{!AlwaysStable P} : (P ∧ Q)%I ≡ (P ★ Q)%I.
 Proof. by rewrite -(always_always P) always_and_sep_l'. Qed.
 Lemma always_and_sep_r P Q `{!AlwaysStable Q} : (P ∧ Q)%I ≡ (P ★ Q)%I.
@@ -967,6 +980,14 @@ Lemma always_entails_l P Q `{!AlwaysStable Q} : (P ⊑ Q) → P ⊑ (Q ★ P).
 Proof. by rewrite -(always_always Q); apply always_entails_l'. Qed.
 Lemma always_entails_r P Q `{!AlwaysStable Q} : (P ⊑ Q) → P ⊑ (P ★ Q).
 Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
+
+(* Derived lemmas that need a combination of the above *)
+Lemma löb_strong_sep P Q : (▷(P -★ Q) ★ P) ⊑ Q → P ⊑ Q.
+Proof.
+  move/wand_intro_r=>Hlöb. rewrite -[P](left_id True (∧))%I.
+  apply impl_elim_l'. apply: always_entails. apply löb_strong.
+  rewrite left_id -always_wand_impl -always_later Hlöb. done.
+Qed.
 
 End uPred_logic.
 
