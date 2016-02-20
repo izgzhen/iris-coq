@@ -42,7 +42,7 @@ Proof.
   split.
   - now cofix; intros [??]; constructor.
   - now cofix; intros ?? [??]; constructor.
-  - cofix; intros ??? [??] [??]; constructor; etransitivity; eauto.
+  - cofix; intros ??? [??] [??]; constructor; etrans; eauto.
 Qed.
 Global Instance scons_proper x : Proper ((≡) ==> (≡)) (scons x).
 Proof. by constructor. Qed.

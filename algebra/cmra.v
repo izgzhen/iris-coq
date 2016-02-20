@@ -250,7 +250,7 @@ Qed.
 Global Instance cmra_included_preorder: PreOrder (@included A _ _).
 Proof.
   split; red; intros until 0; rewrite !cmra_included_includedN; first done.
-  intros; etransitivity; eauto.
+  intros; etrans; eauto.
 Qed.
 Lemma cmra_validN_includedN n x y : ✓{n} y → x ≼{n} y → ✓{n} x.
 Proof. intros Hyv [z ?]; cofe_subst y; eauto using cmra_validN_op_l. Qed.
@@ -391,7 +391,7 @@ Section identity_updates.
   Lemma cmra_update_empty x : x ~~> ∅.
   Proof. intros n z; rewrite left_id; apply cmra_validN_op_r. Qed.
   Lemma cmra_update_empty_alt y : ∅ ~~> y ↔ ∀ x, x ~~> y.
-  Proof. split; [intros; transitivity ∅|]; auto using cmra_update_empty. Qed.
+  Proof. split; [intros; trans ∅|]; auto using cmra_update_empty. Qed.
 End identity_updates.
 End cmra.
 

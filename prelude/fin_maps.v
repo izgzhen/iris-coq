@@ -123,7 +123,7 @@ Section setoid.
     split.
     - by intros m i.
     - by intros m1 m2 ? i.
-    - by intros m1 m2 m3 ?? i; transitivity (m2 !! i).
+    - by intros m1 m2 m3 ?? i; trans (m2 !! i).
   Qed.
   Global Instance lookup_proper (i : K) :
     Proper ((≡) ==> (≡)) (lookup (M:=M A) i).
@@ -199,7 +199,7 @@ Proof.
   split; [intros m i; by destruct (m !! i); simpl|].
   intros m1 m2 m3 Hm12 Hm23 i; specialize (Hm12 i); specialize (Hm23 i).
   destruct (m1 !! i), (m2 !! i), (m3 !! i); simplify_eq/=;
-    done || etransitivity; eauto.
+    done || etrans; eauto.
 Qed.
 Global Instance: PartialOrder ((⊆) : relation (M A)).
 Proof.
@@ -1182,10 +1182,10 @@ Proof.
   intros. rewrite map_union_comm by done. by apply map_union_subseteq_l.
 Qed.
 Lemma map_union_subseteq_l_alt {A} (m1 m2 m3 : M A) : m1 ⊆ m2 → m1 ⊆ m2 ∪ m3.
-Proof. intros. transitivity m2; auto using map_union_subseteq_l. Qed.
+Proof. intros. trans m2; auto using map_union_subseteq_l. Qed.
 Lemma map_union_subseteq_r_alt {A} (m1 m2 m3 : M A) :
   m2 ⊥ₘ m3 → m1 ⊆ m3 → m1 ⊆ m2 ∪ m3.
-Proof. intros. transitivity m3; auto using map_union_subseteq_r. Qed.
+Proof. intros. trans m3; auto using map_union_subseteq_r. Qed.
 Lemma map_union_preserving_l {A} (m1 m2 m3 : M A) : m1 ⊆ m2 → m3 ∪ m1 ⊆ m3 ∪ m2.
 Proof.
   rewrite !map_subseteq_spec. intros ???.

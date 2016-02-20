@@ -29,13 +29,13 @@ Section orders.
   Proof. by intros [??] <-. Qed.
   Lemma strict_transitive_l `{!Transitive R} X Y Z : X ⊂ Y → Y ⊆ Z → X ⊂ Z.
   Proof.
-    intros [? HXY] ?. split; [by transitivity Y|].
-    contradict HXY. by transitivity Z.
+    intros [? HXY] ?. split; [by trans Y|].
+    contradict HXY. by trans Z.
   Qed.
   Lemma strict_transitive_r `{!Transitive R} X Y Z : X ⊆ Y → Y ⊂ Z → X ⊂ Z.
   Proof.
-    intros ? [? HYZ]. split; [by transitivity Y|].
-    contradict HYZ. by transitivity X.
+    intros ? [? HYZ]. split; [by trans Y|].
+    contradict HYZ. by trans X.
   Qed.
   Global Instance: Irreflexive (strict R).
   Proof. firstorder. Qed.
@@ -79,7 +79,7 @@ Section strict_orders.
   Proof. intros ->. apply (irreflexivity R). Qed.
   Lemma strict_anti_symm `{!StrictOrder R} X Y :
     X ⊂ Y → Y ⊂ X → False.
-  Proof. intros. apply (irreflexivity R X). by transitivity Y. Qed.
+  Proof. intros. apply (irreflexivity R X). by trans Y. Qed.
   Global Instance trichotomyT_dec `{!TrichotomyT R, !StrictOrder R} X Y :
       Decision (X ⊂ Y) :=
     match trichotomyT R X Y with
@@ -101,7 +101,7 @@ Ltac simplify_order := repeat
       assert (x = y) by (by apply (anti_symm R)); clear H1 H2
     | H2 : R y ?z |- _ =>
       unless (R x z) by done;
-      assert (R x z) by (by transitivity y)
+      assert (R x z) by (by trans y)
     end
   end.
 
@@ -319,13 +319,13 @@ Section preorder.
     split.
     - done.
     - by intros ?? [??].
-    - by intros X Y Z [??] [??]; split; transitivity Y.
+    - by intros X Y Z [??] [??]; split; trans Y.
   Qed.
   Global Instance: Proper ((≡) ==> (≡) ==> iff) ((⊆) : relation A).
   Proof.
     unfold equiv, preorder_equiv. intros X1 Y1 ? X2 Y2 ?. split; intro.
-    - transitivity X1. tauto. transitivity X2; tauto.
-    - transitivity Y1. tauto. transitivity Y2; tauto.
+    - trans X1. tauto. trans X2; tauto.
+    - trans Y1. tauto. trans Y2; tauto.
   Qed.
   Lemma subset_spec (X Y : A) : X ⊂ Y ↔ X ⊆ Y ∧ X ≢ Y.
   Proof.
@@ -376,9 +376,9 @@ Section join_semi_lattice.
 
   Hint Resolve subseteq_empty union_subseteq_l union_subseteq_r union_least.
   Lemma union_subseteq_l_transitive X1 X2 Y : X1 ⊆ X2 → X1 ⊆ X2 ∪ Y.
-  Proof. intros. transitivity X2; auto. Qed.
+  Proof. intros. trans X2; auto. Qed.
   Lemma union_subseteq_r_transitive X1 X2 Y : X1 ⊆ X2 → X1 ⊆ Y ∪ X2.
-  Proof. intros. transitivity X2; auto. Qed.
+  Proof. intros. trans X2; auto. Qed.
   Hint Resolve union_subseteq_l_transitive union_subseteq_r_transitive.
   Lemma union_preserving_l X Y1 Y2 : Y1 ⊆ Y2 → X ∪ Y1 ⊆ X ∪ Y2.
   Proof. auto. Qed.
@@ -436,7 +436,7 @@ Section join_semi_lattice.
   Proof.
     split.
     - intros HXY. split; apply equiv_empty;
-        by transitivity (X ∪ Y); [auto | rewrite HXY].
+        by trans (X ∪ Y); [auto | rewrite HXY].
     - intros [HX HY]. by rewrite HX, HY, (left_id _ _).
   Qed.
   Lemma empty_union_list Xs : ⋃ Xs ≡ ∅ ↔ Forall (≡ ∅) Xs.
@@ -502,9 +502,9 @@ Section meet_semi_lattice.
   Hint Resolve intersection_subseteq_l intersection_subseteq_r
     intersection_greatest.
   Lemma intersection_subseteq_l_transitive X1 X2 Y : X1 ⊆ X2 → X1 ∩ Y ⊆ X2.
-  Proof. intros. transitivity X1; auto. Qed.
+  Proof. intros. trans X1; auto. Qed.
   Lemma intersection_subseteq_r_transitive X1 X2 Y : X1 ⊆ X2 → Y ∩ X1 ⊆ X2.
-  Proof. intros. transitivity X1; auto. Qed.
+  Proof. intros. trans X1; auto. Qed.
   Hint Resolve intersection_subseteq_l_transitive
     intersection_subseteq_r_transitive.
   Lemma intersection_preserving_l X Y1 Y2 : Y1 ⊆ Y2 → X ∩ Y1 ⊆ X ∩ Y2.

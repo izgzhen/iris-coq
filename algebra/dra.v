@@ -60,7 +60,7 @@ Proof.
   - by intros [x px ?]; simpl.
   - intros [x px ?] [y py ?]; naive_solver.
   - intros [x px ?] [y py ?] [z pz ?] [? Hxy] [? Hyz]; simpl in *.
-    split; [|intros; transitivity y]; tauto.
+    split; [|intros; trans y]; tauto.
 Qed.
 Instance dra_valid_proper' : Proper ((≡) ==> iff) (valid : A → Prop).
 Proof. by split; apply dra_valid_proper. Qed.

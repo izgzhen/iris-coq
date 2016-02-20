@@ -99,13 +99,13 @@ Section cofe.
     split.
     - by intros x; rewrite equiv_dist.
     - by intros x y; rewrite !equiv_dist.
-    - by intros x y z; rewrite !equiv_dist; intros; transitivity y.
+    - by intros x y z; rewrite !equiv_dist; intros; trans y.
   Qed.
   Global Instance dist_ne n : Proper (dist n ==> dist n ==> iff) (@dist A _ n).
   Proof.
     intros x1 x2 ? y1 y2 ?; split; intros.
-    - by transitivity x1; [|transitivity y1].
-    - by transitivity x2; [|transitivity y2].
+    - by trans x1; [|trans y1].
+    - by trans x2; [|trans y2].
   Qed.
   Global Instance dist_proper n : Proper ((≡) ==> (≡) ==> iff) (@dist A _ n).
   Proof.
@@ -217,7 +217,7 @@ Section cofe_mor.
     - intros n; split.
       + by intros f x.
       + by intros f g ? x.
-      + by intros f g h ?? x; transitivity (g x).
+      + by intros f g h ?? x; trans (g x).
     - by intros n f g ? x; apply dist_S.
     - intros n c x; simpl.
       by rewrite (conv_compl n (fun_chain c x)) /=.
@@ -352,7 +352,7 @@ Section later.
     - intros [|n]; [by split|split]; unfold dist, later_dist.
       + by intros [x].
       + by intros [x] [y].
-      + by intros [x] [y] [z] ??; transitivity y.
+      + by intros [x] [y] [z] ??; trans y.
     - intros [|n] [x] [y] ?; [done|]; unfold dist, later_dist; by apply dist_S.
     - intros [|n] c; [done|by apply (conv_compl n (later_chain c))].
   Qed.

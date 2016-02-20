@@ -44,7 +44,7 @@ Proof.
   - intros n; split.
     + by intros ?; split.
     + by intros ?? [??]; split; symmetry.
-    + intros ??? [??] [??]; split; etransitivity; eauto.
+    + intros ??? [??] [??]; split; etrans; eauto.
   - by intros ? [??] [??] [??]; split; apply dist_S.
   - intros n c; split. apply (conv_compl n (chain_map authoritative c)).
     apply (conv_compl n (chain_map own c)).

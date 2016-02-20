@@ -224,7 +224,7 @@ Proof.
   split.
   - by intros []; constructor.
   - by destruct 1; constructor.
-  - destruct 1; inversion_clear 1; constructor; etransitivity; eauto.
+  - destruct 1; inversion_clear 1; constructor; etrans; eauto.
 Qed.
 Global Instance sts_dra : DRA (car sts).
 Proof.
@@ -366,7 +366,7 @@ Lemma sts_op_frag S1 S2 T1 T2 :
 Proof.
   intros HT HS1 HS2. rewrite /sts_frag.
   (* FIXME why does rewrite not work?? *)
-  etransitivity; last eapply to_validity_op; try done; [].
+  etrans; last eapply to_validity_op; try done; [].
   intros Hval. constructor; last set_solver. eapply closed_ne, Hval.
 Qed.
 

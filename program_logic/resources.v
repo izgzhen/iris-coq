@@ -59,7 +59,7 @@ Proof.
   - intros n; split.
     + done.
     + by destruct 1; constructor.
-    + do 2 destruct 1; constructor; etransitivity; eauto.
+    + do 2 destruct 1; constructor; etrans; eauto.
   - by destruct 1; constructor; apply dist_S.
   - intros n c; constructor.
     + apply (conv_compl n (chain_map wld c)).

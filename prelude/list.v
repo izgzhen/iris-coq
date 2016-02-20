@@ -371,7 +371,7 @@ Section setoid.
     - intros l; induction l; constructor; auto.
     - induction 1; constructor; auto.
     - intros l1 l2 l3 Hl; revert l3.
-      induction Hl; inversion_clear 1; constructor; try etransitivity; eauto.
+      induction Hl; inversion_clear 1; constructor; try etrans; eauto.
   Qed.
   Global Instance cons_proper : Proper ((≡) ==> (≡) ==> (≡)) (@cons A).
   Proof. by constructor. Qed.
@@ -1719,7 +1719,7 @@ Proof. revert i. by induction l; intros [|?]; simpl; constructor. Qed.
 Lemma sublist_foldr_delete l is : foldr delete l is `sublist` l.
 Proof.
   induction is as [|i is IH]; simpl; [done |].
-  transitivity (foldr delete l is); auto using sublist_delete.
+  trans (foldr delete l is); auto using sublist_delete.
 Qed.
 Lemma sublist_alt l1 l2 : l1 `sublist` l2 ↔ ∃ is, l1 = foldr delete l2 is.
 Proof.
@@ -1749,7 +1749,7 @@ Proof.
     + by rewrite !Permutation_middle, Permutation_swap.
   - intros l3 ?. destruct (IH2 l3) as (l3'&?&?); trivial.
     destruct (IH1 l3') as (l3'' &?&?); trivial. exists l3''.
-    split. done. etransitivity; eauto.
+    split. done. etrans; eauto.
 Qed.
 Lemma sublist_Permutation l1 l2 l3 :
   l1 `sublist` l2 → l2 ≡ₚ l3 → ∃ l4, l1 ≡ₚ l4 ∧ l4 `sublist` l3.
@@ -1770,7 +1770,7 @@ Proof.
     + exists (x :: y :: l1''). by repeat constructor.
   - intros l1 ?. destruct (IH1 l1) as (l3'&?&?); trivial.
     destruct (IH2 l3') as (l3'' &?&?); trivial. exists l3''.
-    split; [|done]. etransitivity; eauto.
+    split; [|done]. etrans; eauto.
 Qed.
 
 (** Properties of the [contains] predicate *)
@@ -1816,10 +1816,10 @@ Proof. intro. apply contains_Permutation_length_le. lia. Qed.
 Global Instance: Proper ((≡ₚ) ==> (≡ₚ) ==> iff) (@contains A).
 Proof.
   intros l1 l2 ? k1 k2 ?. split; intros.
-  - transitivity l1. by apply Permutation_contains.
-    transitivity k1. done. by apply Permutation_contains.
-  - transitivity l2. by apply Permutation_contains.
-    transitivity k2. done. by apply Permutation_contains.
+  - trans l1. by apply Permutation_contains.
+    trans k1. done. by apply Permutation_contains.
+  - trans l2. by apply Permutation_contains.
+    trans k2. done. by apply Permutation_contains.
 Qed.
 Global Instance: AntiSymm (≡ₚ) (@contains A).
 Proof. red. auto using contains_Permutation_length_le, contains_length. Qed.
@@ -1842,9 +1842,9 @@ Proof.
     - intros x l1 l3 ? (l2&?&?). exists (x :: l2). by repeat constructor.
     - intros l1 l3 l5 ? (l2&?&?) ? (l4&?&?).
       destruct (Permutation_sublist l2 l3 l4) as (l3'&?&?); trivial.
-      exists l3'. split; etransitivity; eauto. }
+      exists l3'. split; etrans; eauto. }
   intros (l2&?&?).
-  transitivity l2; auto using sublist_contains, Permutation_contains.
+  trans l2; auto using sublist_contains, Permutation_contains.
 Qed.
 Lemma contains_sublist_r l1 l3 :
   l1 `contains` l3 ↔ ∃ l2, l1 ≡ₚ l2 ∧ l2 `sublist` l3.
@@ -1863,7 +1863,7 @@ Proof. rewrite !(comm (++) _ k). apply contains_skips_l. Qed.
 Lemma contains_app l1 l2 k1 k2 :
   l1 `contains` l2 → k1 `contains` k2 → l1 ++ k1 `contains` l2 ++ k2.
 Proof.
-  transitivity (l1 ++ k2); auto using contains_skips_l, contains_skips_r.
+  trans (l1 ++ k2); auto using contains_skips_l, contains_skips_r.
 Qed.
 Lemma contains_cons_r x l k :
   l `contains` x :: k ↔ l `contains` k ∨ ∃ l', l ≡ₚ x :: l' ∧ l' `contains` k.
@@ -1975,7 +1975,7 @@ Section contains_dec.
     - simplify_option_eq; eauto using Permutation_swap.
     - destruct (IH1 k1) as (k2&?&?); trivial.
       destruct (IH2 k2) as (k3&?&?); trivial.
-      exists k3. split; eauto. by transitivity k2.
+      exists k3. split; eauto. by trans k2.
   Qed.
   Lemma list_remove_Some l k x : list_remove x l = Some k → l ≡ₚ x :: k.
   Proof.
@@ -2493,7 +2493,7 @@ Section Forall2_order.
   Global Instance: Symmetric R → Symmetric (Forall2 R).
   Proof. intros. induction 1; constructor; auto. Qed.
   Global Instance: Transitive R → Transitive (Forall2 R).
-  Proof. intros ????. apply Forall2_transitive. by apply @transitivity. Qed.
+  Proof. intros ????. apply Forall2_transitive. by apply @trans. Qed.
   Global Instance: Equivalence R → Equivalence (Forall2 R).
   Proof. split; apply _. Qed.
   Global Instance: PreOrder R → PreOrder (Forall2 R).
@@ -2768,14 +2768,14 @@ Section bind.
     - by apply contains_app.
     - by rewrite !(assoc_L (++)), (comm (++) (f _)).
     - by apply contains_inserts_l.
-    - etransitivity; eauto.
+    - etrans; eauto.
   Qed.
   Global Instance bind_Permutation: Proper ((≡ₚ) ==> (≡ₚ)) (mbind f).
   Proof.
     induction 1; csimpl; auto.
     - by f_equiv.
     - by rewrite !(assoc_L (++)), (comm (++) (f _)).
-    - etransitivity; eauto.
+    - etrans; eauto.
   Qed.
   Lemma bind_cons x l : (x :: l) ≫= f = f x ++ l ≫= f.
   Proof. done. Qed.
@@ -2998,7 +2998,7 @@ Lemma foldr_permutation {A B} (R : relation B) `{!Equivalence R}
     (f : A → B → B) (b : B) `{!Proper ((=) ==> R ==> R) f}
     (Hf : ∀ a1 a2 b, R (f a1 (f a2 b)) (f a2 (f a1 b))) :
   Proper ((≡ₚ) ==> R) (foldr f b).
-Proof. induction 1; simpl; [done|by f_equiv|apply Hf|etransitivity; eauto]. Qed.
+Proof. induction 1; simpl; [done|by f_equiv|apply Hf|etrans; eauto]. Qed.
 
 (** ** Properties of the [zip_with] and [zip] functions *)
 Section zip_with.

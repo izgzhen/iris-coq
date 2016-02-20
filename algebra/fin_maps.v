@@ -22,7 +22,7 @@ Proof.
   - intros n; split.
     + by intros m k.
     + by intros m1 m2 ? k.
-    + by intros m1 m2 m3 ?? k; transitivity (m2 !! k).
+    + by intros m1 m2 m3 ?? k; trans (m2 !! k).
   - by intros n m1 m2 ? k; apply dist_S.
   - intros n c k; rewrite /compl /map_compl lookup_imap.
     feed inversion (λ H, chain_cauchy c 0 (S n) H k); simpl; auto with lia.

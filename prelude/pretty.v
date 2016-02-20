@@ -49,7 +49,7 @@ Proof.
     intros x; induction (N.lt_wf_0 x) as [x _ IH]; intros s.
     assert (x = 0 ∨ 0 < x)%N as [->|?] by lia; [by rewrite pretty_N_go_0|].
     rewrite pretty_N_go_step by done.
-    etransitivity; [|by eapply IH, N.div_lt]; simpl; lia. }
+    etrans; [|by eapply IH, N.div_lt]; simpl; lia. }
   intros x; induction (N.lt_wf_0 x) as [x _ IH]; intros y s s'.
   assert ((x = 0 ∨ 0 < x) ∧ (y = 0 ∨ 0 < y))%N as [[->|?] [->|?]] by lia;
     rewrite ?pretty_N_go_0, ?pretty_N_go_step, ?(pretty_N_go_step y) by done.

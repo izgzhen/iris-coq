@@ -71,7 +71,7 @@ Proof.
   - intros k; split.
     + by intros X n.
     + by intros X Y ? n.
-    + by intros X Y Z ?? n; transitivity (Y n).
+    + by intros X Y Z ?? n; trans (Y n).
   - intros k X Y HXY n; apply dist_S.
     by rewrite -(g_tower X) (HXY (S n)) g_tower.
   - intros n c k; rewrite /= (conv_compl n (tower_chain c k)).
@@ -209,7 +209,7 @@ Proof.
   - move=> X /=.
     rewrite equiv_dist; intros n k; unfold unfold, fold; simpl.
     rewrite -g_tower -(gg_tower _ n); apply (_ : Proper (_ ==> _) (g _)).
-    transitivity (map (ff n, gg n) (X (S (n + k)))).
+    trans (map (ff n, gg n) (X (S (n + k)))).
     { rewrite /unfold (conv_compl n (unfold_chain X)).
       rewrite -(chain_cauchy (unfold_chain X) n (S (n + k))) /=; last lia.
       rewrite -(dist_le _ _ _ _ (f_tower (n + k) _)); last lia.
@@ -234,6 +234,6 @@ Proof.
     apply (contractive_ne map); split => Y /=.
     + apply dist_le with n; last omega.
       rewrite f_tower. apply dist_S. by rewrite embed_tower.
-    + etransitivity; [apply embed_ne, equiv_dist, g_tower|apply embed_tower].
+    + etrans; [apply embed_ne, equiv_dist, g_tower|apply embed_tower].
 Qed.
 End solver. End solver.

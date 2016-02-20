@@ -78,7 +78,7 @@ Section sts.
     rewrite pvs_frame_l. rewrite -(pvs_mask_weaken N E) //.
     apply pvs_strip_pvs.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
-    transitivity (▷ sts_inv γ φ ★ sts_own γ s (⊤ ∖ sts.tok s))%I.
+    trans (▷ sts_inv γ φ ★ sts_own γ s (⊤ ∖ sts.tok s))%I.
     { rewrite /sts_inv -(exist_intro s) later_sep.
       rewrite [(_ ★ ▷ φ _)%I]comm -assoc. apply sep_mono_r.
       by rewrite -later_intro -own_op sts_op_auth_frag_up; last set_solver. }
@@ -110,7 +110,7 @@ Section sts.
     rewrite later_sep [(_ ★ ▷φ _)%I]comm -assoc.
     rewrite -pvs_frame_l. apply sep_mono_r. rewrite -later_intro.
     rewrite own_valid_l discrete_validI. apply const_elim_sep_l=>Hval.
-    transitivity (|={E}=> own γ (sts_auth s' T'))%I.
+    trans (|={E}=> own γ (sts_auth s' T'))%I.
     { by apply own_update, sts_update_auth. }
     by rewrite -own_op sts_op_auth_frag_up.
   Qed.

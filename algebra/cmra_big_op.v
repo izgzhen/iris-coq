@@ -23,7 +23,7 @@ Proof.
   induction 1 as [|x xs1 xs2 ? IH|x y xs|xs1 xs2 xs3]; simpl; auto.
   - by rewrite IH.
   - by rewrite !assoc (comm _ x).
-  - by transitivity (big_op xs2).
+  - by trans (big_op xs2).
 Qed.
 Global Instance big_op_proper : Proper ((≡) ==> (≡)) big_op.
 Proof. by induction 1; simpl; repeat apply (_ : Proper (_ ==> _ ==> _) op). Qed.

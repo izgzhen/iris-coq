@@ -1,6 +1,6 @@
 From algebra Require Export cmra.
-Local Hint Extern 1 (_ ≼ _) => etransitivity; [eassumption|].
-Local Hint Extern 1 (_ ≼ _) => etransitivity; [|eassumption].
+Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
+Local Hint Extern 1 (_ ≼ _) => etrans; [|eassumption].
 Local Hint Extern 10 (_ ≤ _) => omega.
 
 Record uPred (M : cmraT) : Type := IProp {
@@ -40,7 +40,7 @@ Section cofe.
     - intros n; split.
       + by intros P x i.
       + by intros P Q HPQ x i ??; symmetry; apply HPQ.
-      + by intros P Q Q' HP HQ i x ??; transitivity (Q i x);[apply HP|apply HQ].
+      + by intros P Q Q' HP HQ i x ??; trans (Q i x);[apply HP|apply HQ].
     - intros n P Q HPQ i x ??; apply HPQ; auto.
     - intros n c i x ??; symmetry; apply (chain_cauchy c i (S n)); auto.
   Qed.
@@ -243,8 +243,8 @@ Global Instance entails_proper :
   Proper ((≡) ==> (≡) ==> iff) ((⊑) : relation (uPred M)).
 Proof.
   move => P1 P2 /equiv_spec [HP1 HP2] Q1 Q2 /equiv_spec [HQ1 HQ2]; split; intros.
-  - by transitivity P1; [|transitivity Q1].
-  - by transitivity P2; [|transitivity Q2].
+  - by trans P1; [|trans Q1].
+  - by trans P2; [|trans Q2].
 Qed.
 
 (** Non-expansiveness and setoid morphisms *)
@@ -734,7 +734,7 @@ Proof. by rewrite /uPred_iff later_and !later_impl. Qed.
 Lemma löb_strong P Q : (P ∧ ▷Q) ⊑ Q → P ⊑ Q.
 Proof.
   intros Hlöb. apply impl_entails.
-  etransitivity; last by eapply löb.
+  etrans; last by eapply löb.
   apply impl_intro_l, impl_intro_l. rewrite right_id -{2}Hlöb.
   apply and_intro; first by eauto.
   by rewrite {1}(later_intro P) later_impl impl_elim_r.

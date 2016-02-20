@@ -35,7 +35,7 @@ Section iprod_cofe.
     - intros n; split.
       + by intros f x.
       + by intros f g ? x.
-      + by intros f g h ?? x; transitivity (g x).
+      + by intros f g h ?? x; trans (g x).
     - intros n f g Hfg x; apply dist_S, Hfg.
     - intros n c x.
       rewrite /compl /iprod_compl (conv_compl n (iprod_chain c x)).

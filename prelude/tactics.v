@@ -54,6 +54,10 @@ Ltac done :=
 Tactic Notation "by" tactic(tac) :=
   tac; done.
 
+(** Aliases for trans and etrans that are easier to type *)
+Tactic Notation "trans" constr(A) := transitivity A.
+Tactic Notation "etrans" := etransitivity.
+
 (** Tactics for splitting conjunctions:
 
 - [split_and] : split the goal if is syntactically of the shape [_ ∧ _]

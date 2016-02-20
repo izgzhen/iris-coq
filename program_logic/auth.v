@@ -49,7 +49,7 @@ Section auth.
     { by eapply (own_alloc (Auth (Excl a) a) N). }
     rewrite pvs_frame_l. rewrite -(pvs_mask_weaken N E) //. apply pvs_strip_pvs.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
-    transitivity (▷ auth_inv γ φ ★ auth_own γ a)%I.
+    trans (▷ auth_inv γ φ ★ auth_own γ a)%I.
     { rewrite /auth_inv -(exist_intro a) later_sep.
       rewrite const_equiv // left_id.
       rewrite [(_ ★ ▷ φ _)%I]comm -assoc. apply sep_mono; first done.

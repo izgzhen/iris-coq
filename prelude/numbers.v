@@ -243,7 +243,7 @@ Proof.
   intros [??] ?.
   destruct (decide (y = 1)); subst; [rewrite Z.quot_1_r; auto |].
   destruct (decide (x = 0)); subst; [rewrite Z.quot_0_l; auto with lia |].
-  split. apply Z.quot_pos; lia. transitivity x; auto. apply Z.quot_lt; lia.
+  split. apply Z.quot_pos; lia. trans x; auto. apply Z.quot_lt; lia.
 Qed.
 
 (* Note that we cannot disable simpl for [Z.of_nat] as that would break
@@ -396,7 +396,7 @@ Lemma Qcplus_pos_pos (x y : Qc) : 0 < x → 0 < y → 0 < x + y.
 Proof. auto using Qcplus_pos_nonneg, Qclt_le_weak. Qed.
 Lemma Qcplus_nonneg_nonneg (x y : Qc) : 0 ≤ x → 0 ≤ y → 0 ≤ x + y.
 Proof.
-  intros. transitivity (x + 0); [by rewrite Qcplus_0_r|].
+  intros. trans (x + 0); [by rewrite Qcplus_0_r|].
   by apply Qcplus_le_mono_l.
 Qed.
 Lemma Qcplus_neg_nonpos (x y : Qc) : x < 0 → y ≤ 0 → x + y < 0.
@@ -410,7 +410,7 @@ Lemma Qcplus_neg_neg (x y : Qc) : x < 0 → y < 0 → x + y < 0.
 Proof. auto using Qcplus_nonpos_neg, Qclt_le_weak. Qed.
 Lemma Qcplus_nonpos_nonpos (x y : Qc) : x ≤ 0 → y ≤ 0 → x + y ≤ 0.
 Proof.
-  intros. transitivity (x + 0); [|by rewrite Qcplus_0_r].
+  intros. trans (x + 0); [|by rewrite Qcplus_0_r].
   by apply Qcplus_le_mono_l.
 Qed.
 Lemma Qcmult_le_mono_nonneg_l x y z : 0 ≤ z → x ≤ y → z * x ≤ z * y.
@@ -436,7 +436,7 @@ Proof.
 Qed.
 Lemma Qcmult_nonneg_nonneg x y : 0 ≤ x → 0 ≤ y → 0 ≤ x * y.
 Proof.
-  intros. transitivity (0 * y); [by rewrite Qcmult_0_l|].
+  intros. trans (0 * y); [by rewrite Qcmult_0_l|].
   by apply Qcmult_le_mono_nonneg_r.
 Qed.
 

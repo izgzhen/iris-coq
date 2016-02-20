@@ -40,8 +40,8 @@ Proof.
     + by split.
     + by intros x y Hxy; split; intros; symmetry; apply Hxy; auto; apply Hxy.
     + intros x y z Hxy Hyz; split; intros n'; intros.
-      * transitivity (agree_is_valid y n'). by apply Hxy. by apply Hyz.
-      * transitivity (y n'). by apply Hxy. by apply Hyz, Hxy.
+      * trans (agree_is_valid y n'). by apply Hxy. by apply Hyz.
+      * trans (y n'). by apply Hxy. by apply Hyz, Hxy.
   - intros n x y Hxy; split; intros; apply Hxy; auto.
   - intros n c; apply and_wlog_r; intros;
       symmetry; apply (chain_cauchy c); naive_solver.
@@ -74,8 +74,8 @@ Proof.
   intros n x y1 y2 [Hy' Hy]; split; [|done].
   split; intros (?&?&Hxy); repeat (intro || split);
     try apply Hy'; eauto using agree_valid_le.
-  - etransitivity; [apply Hxy|apply Hy]; eauto using agree_valid_le.
-  - etransitivity; [apply Hxy|symmetry; apply Hy, Hy'];
+  - etrans; [apply Hxy|apply Hy]; eauto using agree_valid_le.
+  - etrans; [apply Hxy|symmetry; apply Hy, Hy'];
       eauto using agree_valid_le.
 Qed.
 Instance: Proper (dist n ==> dist n ==> dist n) (@op (agree A) _).

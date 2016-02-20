@@ -42,7 +42,7 @@ Lemma prod_lexico_transitive `{Lexico A, Lexico B, !Transitive (@lexico A _)}
 Proof.
   intros Hx12 Hx23 ?; revert Hx12 Hx23. unfold lexico, prod_lexico.
   intros [|[??]] [?|[??]]; simplify_eq/=; auto.
-  by left; transitivity x2.
+  by left; trans x2.
 Qed.
 
 Instance prod_lexico_po `{Lexico A, Lexico B, !StrictOrder (@lexico A _)}
@@ -52,7 +52,7 @@ Proof.
   - intros [x y]. apply prod_lexico_irreflexive.
     by apply (irreflexivity lexico y).
   - intros [??] [??] [??] ??.
-    eapply prod_lexico_transitive; eauto. apply transitivity.
+    eapply prod_lexico_transitive; eauto. apply trans.
 Qed.
 Instance prod_lexico_trichotomyT `{Lexico A, tA : !TrichotomyT (@lexico A _)}
   `{Lexico B, tB : !TrichotomyT (@lexico B _)}: TrichotomyT (@lexico (A * B) _).
@@ -143,7 +143,7 @@ Instance sig_lexico_po `{Lexico A, !StrictOrder (@lexico A _)}
 Proof.
   unfold lexico, sig_lexico. split.
   - intros [x ?] ?. by apply (irreflexivity lexico x). 
-  - intros [x1 ?] [x2 ?] [x3 ?] ??. by transitivity x2.
+  - intros [x1 ?] [x2 ?] [x3 ?] ??. by trans x2.
 Qed.
 Instance sig_lexico_trichotomy `{Lexico A, tA : !TrichotomyT (@lexico A _)}
   (P : A → Prop) `{∀ x, ProofIrrel (P x)} : TrichotomyT (@lexico (sig P) _).

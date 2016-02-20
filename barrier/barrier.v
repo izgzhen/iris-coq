@@ -157,7 +157,7 @@ Section proof.
     { by eapply (saved_prop_alloc _ P). }
     rewrite pvs_frame_l. apply pvs_strip_pvs. rewrite sep_exist_l.
     apply exist_elim=>i.
-    transitivity (pvs ⊤ ⊤ (heap_ctx heapN ★ ▷ (barrier_inv l P (State Low {[ i ]}))  ★ saved_prop_own i P)).
+    trans (pvs ⊤ ⊤ (heap_ctx heapN ★ ▷ (barrier_inv l P (State Low {[ i ]}))  ★ saved_prop_own i P)).
     - rewrite -pvs_intro. rewrite [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
       rewrite {1}[saved_prop_own _ _]always_sep_dup !assoc. apply sep_mono_l.
       rewrite /barrier_inv /waiting -later_intro. apply sep_mono_r.
@@ -215,7 +215,7 @@ Section proof.
     apply const_elim_sep_l=>Hs. destruct p; last done.
     rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
     eapply wp_store; eauto with I ndisj.
-    rewrite -!assoc. apply sep_mono_r. etransitivity; last eapply later_mono.
+    rewrite -!assoc. apply sep_mono_r. etrans; last eapply later_mono.
     { (* Is this really the best way to strip the later? *)
       erewrite later_sep. apply sep_mono_r. apply later_intro. }
     apply wand_intro_l. rewrite -(exist_intro (State High I)).
@@ -256,7 +256,7 @@ Section proof.
     apply const_elim_sep_l=>Hs.
     rewrite {1}/barrier_inv =>/=. rewrite later_sep.
     eapply wp_load; eauto with I ndisj.
-    rewrite -!assoc. apply sep_mono_r. etransitivity; last eapply later_mono.
+    rewrite -!assoc. apply sep_mono_r. etrans; last eapply later_mono.
     { (* Is this really the best way to strip the later? *)
       erewrite later_sep. apply sep_mono_r. rewrite !assoc. erewrite later_sep.
       apply sep_mono_l, later_intro. }
@@ -294,7 +294,7 @@ Section proof.
     rewrite [(sts_own _ _ _ ★ _)%I]sep_elim_r [(sts_ctx _ _ _ ★ _)%I]sep_elim_r.
     rewrite !assoc [(_ ★ saved_prop_own i Q)%I]comm !assoc saved_prop_agree.
     wp_op>; last done. intros _.
-    etransitivity; last eapply later_mono.
+    etrans; last eapply later_mono.
     { (* Is this really the best way to strip the later? *)
       erewrite later_sep. apply sep_mono; last apply later_intro.
       rewrite ->later_sep. apply sep_mono_l. rewrite ->later_sep. done. }

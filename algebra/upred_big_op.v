@@ -61,14 +61,14 @@ Proof.
   induction 1 as [|P Ps Qs ? IH|P Q Ps|]; simpl; auto.
   - by rewrite IH.
   - by rewrite !assoc (comm _ P).
-  - etransitivity; eauto.
+  - etrans; eauto.
 Qed.
 Global Instance big_sep_perm : Proper ((≡ₚ) ==> (≡)) (@uPred_big_sep M).
 Proof.
   induction 1 as [|P Ps Qs ? IH|P Q Ps|]; simpl; auto.
   - by rewrite IH.
   - by rewrite !assoc (comm _ P).
-  - etransitivity; eauto.
+  - etrans; eauto.
 Qed.
 
 Lemma big_and_app Ps Qs : (Π∧ (Ps ++ Qs))%I ≡ (Π∧ Ps ∧ Π∧ Qs)%I.
@@ -103,7 +103,7 @@ Section gmap.
     m2 ⊆ m1 → (∀ x k, m2 !! k = Some x → Φ k x ⊑ Ψ k x) →
     (Π★{map m1} Φ) ⊑ (Π★{map m2} Ψ).
   Proof.
-    intros HX HΦ. transitivity (Π★{map m2} Φ)%I.
+    intros HX HΦ. trans (Π★{map m2} Φ)%I.
     - by apply big_sep_contains, fmap_contains, map_to_list_contains.
     - apply big_sep_mono', Forall2_fmap, Forall2_Forall.
       apply Forall_forall=> -[i x] ? /=. by apply HΦ, elem_of_map_to_list.
@@ -163,7 +163,7 @@ Section gset.
   Lemma big_sepS_mono Φ Ψ X Y :
     Y ⊆ X → (∀ x, x ∈ Y → Φ x ⊑ Ψ x) → (Π★{set X} Φ) ⊑ (Π★{set Y} Ψ).
   Proof.
-    intros HX HΦ. transitivity (Π★{set Y} Φ)%I.
+    intros HX HΦ. trans (Π★{set Y} Φ)%I.
     - by apply big_sep_contains, fmap_contains, elements_contains.
     - apply big_sep_mono', Forall2_fmap, Forall2_Forall.
       apply Forall_forall=> x ? /=. by apply HΦ, elem_of_elements.

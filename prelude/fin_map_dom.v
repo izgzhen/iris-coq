@@ -60,7 +60,7 @@ Lemma dom_insert_subseteq {A} (m : M A) i x : dom D m ⊆ dom D (<[i:=x]>m).
 Proof. rewrite (dom_insert _). set_solver. Qed.
 Lemma dom_insert_subseteq_compat_l {A} (m : M A) i x X :
   X ⊆ dom D m → X ⊆ dom D (<[i:=x]>m).
-Proof. intros. transitivity (dom D m); eauto using dom_insert_subseteq. Qed.
+Proof. intros. trans (dom D m); eauto using dom_insert_subseteq. Qed.
 Lemma dom_singleton {A} (i : K) (x : A) : dom D {[i := x]} ≡ {[ i ]}.
 Proof. rewrite <-insert_empty, dom_insert, dom_empty; set_solver. Qed.
 Lemma dom_delete {A} (m : M A) i : dom D (delete i m) ≡ dom D m ∖ {[ i ]}.

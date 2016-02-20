@@ -70,7 +70,7 @@ Section rtc.
   Lemma rtc_once x y : R x y → rtc R x y.
   Proof. eauto. Qed.
   Lemma rtc_r x y z : rtc R x y → R y z → rtc R x z.
-  Proof. intros. etransitivity; eauto. Qed.
+  Proof. intros. etrans; eauto. Qed.
   Lemma rtc_inv x z : rtc R x z → x = z ∨ ∃ y, R x y ∧ rtc R y z.
   Proof. inversion_clear 1; eauto. Qed.
   Lemma rtc_ind_l (P : A → Prop) (z : A)
@@ -152,7 +152,7 @@ Section rtc.
   Global Instance: Transitive (tc R).
   Proof. exact tc_transitive. Qed.
   Lemma tc_r x y z : tc R x y → R y z → tc R x z.
-  Proof. intros. etransitivity; eauto. Qed.
+  Proof. intros. etrans; eauto. Qed.
   Lemma tc_rtc_l x y z : rtc R x y → tc R y z → tc R x z.
   Proof. induction 1; eauto. Qed.
   Lemma tc_rtc_r x y z : tc R x y → rtc R y z → tc R x z.

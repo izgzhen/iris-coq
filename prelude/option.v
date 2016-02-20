@@ -96,7 +96,7 @@ Section setoids.
     split.
     - by intros []; constructor.
     - by destruct 1; constructor.
-    - destruct 1; inversion 1; constructor; etransitivity; eauto.
+    - destruct 1; inversion 1; constructor; etrans; eauto.
   Qed.
   Global Instance Some_proper : Proper ((≡) ==> (≡)) (@Some A).
   Proof. by constructor. Qed.
