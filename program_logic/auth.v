@@ -116,9 +116,9 @@ Section auth.
     rewrite (auth_opened (E ∖ N)) !pvs_frame_r !sep_exist_r.
     apply (fsa_strip_pvs fsa). apply exist_elim=>a'.
     rewrite (forall_elim a'). rewrite [(▷_ ★ _)%I]comm.
-    (* Getting this wand eliminated is really annoying. *)
-    rewrite [(■_ ★ _)%I]comm -!assoc [(▷φ _ ★ _ ★ _)%I]assoc [(▷φ _ ★ _)%I]comm.
-    rewrite wand_elim_r fsa_frame_l.
+    eapply wand_apply_r; first (by eapply (wand_frame_l (own γ _))); last first.
+    { rewrite assoc [(_ ★ own _ _)%I]comm -assoc. done. }
+    rewrite fsa_frame_l.
     apply (fsa_mono_pvs fsa)=> x.
     rewrite sep_exist_l; apply exist_elim=> L.
     rewrite sep_exist_l; apply exist_elim=> Lv.

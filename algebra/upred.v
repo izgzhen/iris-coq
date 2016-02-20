@@ -623,6 +623,21 @@ Lemma wand_elim_l' P Q R : P ⊑ (Q -★ R) → (P ★ Q) ⊑ R.
 Proof. intros ->; apply wand_elim_l. Qed.
 Lemma wand_elim_r' P Q R : Q ⊑ (P -★ R) → (P ★ Q) ⊑ R.
 Proof. intros ->; apply wand_elim_r. Qed.
+Lemma wand_apply_l P Q Q' R R' : P ⊑ (Q' -★ R') → R' ⊑ R → Q ⊑ Q' → (P ★ Q) ⊑ R.
+Proof. intros -> -> <-; apply wand_elim_l. Qed.
+Lemma wand_apply_r P Q Q' R R' : P ⊑ (Q' -★ R') → R' ⊑ R → Q ⊑ Q' → (Q ★ P) ⊑ R.
+Proof. intros -> -> <-; apply wand_elim_r. Qed.
+Lemma wand_apply_l' P Q Q' R : P ⊑ (Q' -★ R) → Q ⊑ Q' → (P ★ Q) ⊑ R.
+Proof. intros -> <-; apply wand_elim_l. Qed.
+Lemma wand_apply_r' P Q Q' R : P ⊑ (Q' -★ R) → Q ⊑ Q' → (Q ★ P) ⊑ R.
+Proof. intros -> <-; apply wand_elim_r. Qed.
+Lemma wand_frame_l P Q R : (Q -★ R) ⊑ (P ★ Q -★ P ★ R).
+Proof. apply wand_intro_l. rewrite -assoc. apply sep_mono_r, wand_elim_r. Qed.
+Lemma wand_frame_r P Q R : (Q -★ R) ⊑ (Q ★ P -★ R ★ P).
+Proof.
+  apply wand_intro_l. rewrite ![(_ ★ P)%I]comm -assoc.
+  apply sep_mono_r, wand_elim_r.
+Qed.
 Lemma sep_and P Q : (P ★ Q) ⊑ (P ∧ Q).
 Proof. auto. Qed.
 Lemma impl_wand P Q : (P → Q) ⊑ (P -★ Q).
