@@ -103,7 +103,7 @@ Section sts.
   Qed.
 
   Lemma sts_closing E γ s T s' T' :
-    sts.step (s, T) (s', T') →
+    sts.steps (s, T) (s', T') →
     (▷ φ s' ★ own γ (sts_auth s T)) ⊑ (|={E}=> ▷ sts_inv γ φ ★ sts_own γ s' T').
   Proof.
     intros Hstep. rewrite /sts_inv /sts_own -(exist_intro s').
@@ -112,7 +112,7 @@ Section sts.
     rewrite own_valid_l discrete_validI. apply const_elim_sep_l=>Hval.
     transitivity (|={E}=> own γ (sts_auth s' T'))%I.
     { by apply own_update, sts_update_auth. }
-    by rewrite -own_op sts_op_auth_frag_up; last by inversion_clear Hstep.
+    by rewrite -own_op sts_op_auth_frag_up.
   Qed.
 
   Context {V} (fsa : FSA Λ (globalF Σ) V) `{!FrameShiftAssertion fsaV fsa}.
@@ -123,7 +123,7 @@ Section sts.
     P ⊑ (sts_ownS γ S T ★ ∀ s,
           ■ (s ∈ S) ★ ▷ φ s -★
           fsa (E ∖ nclose N) (λ x, ∃ s' T',
-            ■ sts.step (s, T) (s', T') ★ ▷ φ s' ★
+            ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ★
             (sts_own γ s' T' -★ Ψ x))) →
     P ⊑ fsa E Ψ.
   Proof.
@@ -152,7 +152,7 @@ Section sts.
     P ⊑ (sts_own γ s0 T ★ ∀ s,
           ■ (s ∈ sts.up s0 T) ★ ▷ φ s -★
           fsa (E ∖ nclose N) (λ x, ∃ s' T',
-            ■ (sts.step (s, T) (s', T')) ★ ▷ φ s' ★
+            ■ (sts.steps (s, T) (s', T')) ★ ▷ φ s' ★
             (sts_own γ s' T' -★ Ψ x))) →
     P ⊑ fsa E Ψ.
   Proof. apply sts_fsaS. Qed.

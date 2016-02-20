@@ -983,9 +983,9 @@ Lemma always_entails_r P Q `{!AlwaysStable Q} : (P ⊑ Q) → P ⊑ (P ★ Q).
 Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
 
 (* Derived lemmas that need a combination of the above *)
-Lemma löb_strong_sep P Q : (▷(P -★ Q) ★ P) ⊑ Q → P ⊑ Q.
+Lemma löb_strong_sep P Q : (P ★ ▷(P -★ Q)) ⊑ Q → P ⊑ Q.
 Proof.
-  move/wand_intro_r=>Hlöb. rewrite -[P](left_id True (∧))%I.
+  move/wand_intro_l=>Hlöb. rewrite -[P](left_id True (∧))%I.
   apply impl_elim_l'. apply: always_entails. apply löb_strong.
   rewrite left_id -always_wand_impl -always_later Hlöb. done.
 Qed.

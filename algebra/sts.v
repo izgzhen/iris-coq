@@ -29,6 +29,7 @@ Inductive step : relation (state sts * tokens sts) :=
      (* TODO: This asks for ⊥ on sets: T1 ⊥ T2 := T1 ∩ T2 ⊆ ∅. *)
      prim_step s1 s2 → tok s1 ∩ T1 ≡ ∅ → tok s2 ∩ T2 ≡ ∅ →
      tok s1 ∪ T1 ≡ tok s2 ∪ T2 → step (s1,T1) (s2,T2).
+Definition steps := rtc step.
 Inductive frame_step (T : tokens sts) (s1 s2 : state sts) : Prop :=
   | Frame_step T1 T2 :
      T1 ∩ (tok s1 ∪ T) ≡ ∅ → step (s1,T1) (s2,T2) → frame_step T s1 s2.
@@ -104,6 +105,16 @@ Proof.
   inversion_clear 1 as [???? HR Hs1 Hs2]; intros [?? Hstep]??; split_and?; auto.
   - eapply Hstep with s1, Frame_step with T1 T2; auto with sts.
   - set_solver -Hstep Hs1 Hs2.
+Qed.
+Lemma steps_closed s1 s2 T1 T2 S Tf :
+  steps (s1,T1) (s2,T2) → closed S Tf → s1 ∈ S → T1 ∩ Tf ≡ ∅ →
+  tok s1 ∩ T1 ≡ ∅ → s2 ∈ S ∧ T2 ∩ Tf ≡ ∅ ∧ tok s2 ∩ T2 ≡ ∅.
+Proof.
+  remember (s1,T1) as sT1. remember (s2,T2) as sT2. intros Hsteps.
+  revert s1 T1 HeqsT1 s2 T2 HeqsT2.
+  induction Hsteps as [?|? [s' T'] ? Hstep Hsteps IH]; intros; subst.
+  - case: HeqsT2=>? ?. subst. done.
+  - eapply step_closed in Hstep; [|done..]. destruct_conjs. eauto.
 Qed.
 
 (** ** Properties of the closure operators *)
@@ -326,11 +337,22 @@ Lemma sts_op_auth_frag s S T :
 Proof.
   intros; split; [split|constructor; set_solver]; simpl.
   - intros (?&?&?); by apply closed_disjoint' with S.
-  - intros; split_and?. set_solver+. done. constructor; set_solver.
+  - intros; split_and?.
+    + set_solver+.
+    + done.
+    + constructor; set_solver.
 Qed.
 Lemma sts_op_auth_frag_up s T :
-  tok s ∩ T ≡ ∅ → sts_auth s ∅ ⋅ sts_frag_up s T ≡ sts_auth s T.
-Proof. intros; apply sts_op_auth_frag; auto using elem_of_up, closed_up. Qed.
+  sts_auth s ∅ ⋅ sts_frag_up s T ≡ sts_auth s T.
+Proof.
+  intros; split; [split|constructor; set_solver]; simpl.
+  - intros (?&?&?). apply closed_disjoint' with (up s T); first done.
+    apply elem_of_up.
+  - intros; split_and?.
+    + set_solver+.
+    + by apply closed_up.
+    + constructor; last set_solver. apply elem_of_up.
+Qed.
 
 Lemma sts_op_frag S1 S2 T1 T2 :
   T1 ∩ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
@@ -344,10 +366,10 @@ Qed.
 
 (** Frame preserving updates *)
 Lemma sts_update_auth s1 s2 T1 T2 :
-  step (s1,T1) (s2,T2) → sts_auth s1 T1 ~~> sts_auth s2 T2.
+  steps (s1,T1) (s2,T2) → sts_auth s1 T1 ~~> sts_auth s2 T2.
 Proof.
   intros ?; apply validity_update; inversion 3 as [|? S ? Tf|]; subst.
-  destruct (step_closed s1 s2 T1 T2 S Tf) as (?&?&?); auto.
+  destruct (steps_closed s1 s2 T1 T2 S Tf) as (?&?&?); auto; [].
   repeat (done || constructor).
 Qed.
 
