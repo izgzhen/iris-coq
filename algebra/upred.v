@@ -750,17 +750,6 @@ Proof.
   apply and_intro; first by eauto.
   by rewrite {1}(later_intro P) later_impl impl_elim_r.
 Qed.       
-Lemma löb_all_1 {A} (Φ Ψ : A → uPred M) :
-  (∀ a, (▷ (∀ b, Φ b → Ψ b) ∧ Φ a) ⊑ Ψ a) → ∀ a, Φ a ⊑ Ψ a.
-Proof.
-  intros Hlöb a.
-  (* Part I: Revert all the bits we need for the induction into the conclusion. *)
-  apply impl_entails.
-  rewrite -[(Φ a → Ψ a)%I](forall_elim (Ψ := λ a, Φ a → Ψ a)%I a). clear a.
-  (* Part II: Perform induction. *)
-  apply löb_strong, forall_intro=>a. apply impl_intro_r.
-  by rewrite left_id Hlöb.
-Qed.
 
 (* Always *)
 Lemma always_const φ : (□ ■ φ : uPred M)%I ≡ (■ φ)%I.
