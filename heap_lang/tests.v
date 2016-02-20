@@ -49,17 +49,13 @@ Section LiftingTests.
       if: "x" ≤ '0 then -FindPred (-"x" + '2) '0 else FindPred "x" '0.
 
   Lemma FindPred_spec n1 n2 E Φ :
-    (■ (n1 < n2) ∧ Φ '(n2 - 1)) ⊑ || FindPred 'n2 'n1 @ E {{ Φ }}.
+    n1 < n2 → 
+    Φ '(n2 - 1) ⊑ || FindPred 'n2 'n1 @ E {{ Φ }}.
   Proof.
-    revert n1; apply löb_all_1=>n1.
-    rewrite (comm uPred_and (■ _)%I) assoc; apply const_elim_r=>?.
-    (* first need to do the rec to get a later *)
-    wp_rec>. 
-    (* FIXME: ssr rewrite fails with "Error: _pattern_value_ is used in conclusion." *)
-    rewrite ->(later_intro (Φ _)); rewrite -!later_and; apply later_mono.
+    revert n1. wp_rec=>n1 Hn.
     wp_let. wp_op. wp_let. wp_op=> ?; wp_if.
     - rewrite (forall_elim (n1 + 1)) const_equiv; last omega.
-      by rewrite left_id impl_elim_l.
+      by rewrite left_id wand_elim_r.
     - assert (n1 = n2 - 1) as -> by omega; auto with I.
   Qed.
 

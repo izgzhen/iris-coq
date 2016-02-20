@@ -236,14 +236,7 @@ Section proof.
   Lemma wait_spec l P (Φ : val → iProp) :
     heapN ⊥ N → (recv l P ★ (P -★ Φ '())) ⊑ || wait (LocV l) {{ Φ }}.
   Proof.
-    rename P into R.
-    intros Hdisj.
-    (* TODO we probably want a tactic or lemma that does the next 2 lines for us.
-       It should be general enough to also cover FindPred_spec. Probably this
-       should be the default behavior of wp_rec - since this is what we need every time
-       we prove a recursive function correct. *)
-    rewrite /wait. rewrite [(_ ★ _)%I](pvs_intro ⊤).
-    apply löb_strong_sep. rewrite pvs_frame_r. apply wp_strip_pvs. wp_rec.
+    rename P into R. intros Hdisj. wp_rec.
     rewrite {1}/recv /barrier_ctx. rewrite !sep_exist_r.
     apply exist_elim=>γ. rewrite !sep_exist_r. apply exist_elim=>P.
     rewrite !sep_exist_r. apply exist_elim=>Q. rewrite !sep_exist_r.
@@ -258,8 +251,7 @@ Section proof.
     eapply wp_load; eauto with I ndisj.
     rewrite -!assoc. apply sep_mono_r. etrans; last eapply later_mono.
     { (* Is this really the best way to strip the later? *)
-      erewrite later_sep. apply sep_mono_r. rewrite !assoc. erewrite later_sep.
-      apply sep_mono_l, later_intro. }
+      erewrite later_sep. apply sep_mono_r, later_intro. }
     apply wand_intro_l. destruct p.
     { (* a Low state. The comparison fails, and we recurse. *)
       rewrite -(exist_intro (State Low I)) -(exist_intro {[ Change i ]}).
@@ -267,7 +259,7 @@ Section proof.
       rewrite left_id -[(▷ barrier_inv _ _ _)%I]later_intro {3}/barrier_inv.
       rewrite -!assoc. apply sep_mono_r, sep_mono_r, wand_intro_l.
       wp_op; first done. intros _. wp_if. rewrite !assoc.
-      eapply wand_apply_r'; first done.
+      rewrite -{2}pvs_wp. apply pvs_wand_r.
       rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro Q) -(exist_intro i).
       rewrite !assoc. do 3 (rewrite -pvs_frame_r; apply sep_mono_l).
       rewrite [(_ ★ heap_ctx _)%I]comm -!assoc -pvs_frame_l. apply sep_mono_r.

@@ -15,6 +15,27 @@ Ltac wp_strip_later :=
     end
   in revert_intros ltac:(etrans; [|go]).
 
+(* ssreflect-locks the part after the ⊑ *)
+(* FIXME: I tried doing a lazymatch to only apply the tactic if the goal has shape ⊑,
+   bit the match is executed *before* doing the recursion... WTF? *)
+Ltac uLock_goal := revert_intros ltac:(apply uPred_lock_conclusion).
+
+(** Transforms a goal of the form ∀ ..., ?0... → ?1 ⊑ ?2
+    into True ⊑ ∀..., ■?0... → ?1 → ?2, applies tac, and
+    the moves all the assumptions back. *)
+Ltac uRevert_all :=
+  lazymatch goal with
+  | |- ∀ _, _ => let H := fresh in intro H; uRevert_all;
+                 (* TODO: Really, we should distinguish based on whether this is a
+                    dependent function type or not. Right now, we distinguish based
+                    on the sort of the argument, which is suboptimal. *)
+                 first [ apply (const_intro_impl _ _ _ H); clear H
+                       | revert H; apply forall_elim']
+  | |- ?C ⊑ _ => trans (True ★ C)%I;
+                 first (rewrite [(True ★ C)%I]left_id; reflexivity);
+                 apply wand_elim_l'
+  end.
+
 Ltac wp_bind K :=
   lazymatch eval hnf in K with
   | [] => idtac
@@ -33,15 +54,34 @@ Ltac wp_finish :=
   | _ => idtac
   end in simpl; revert_intros go.
 
-Tactic Notation "wp_rec" ">" :=
-  match goal with
-  | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval cbv in e' with
-    | App (Rec _ _ _) _ =>
-       wp_bind K; etrans; [|eapply wp_rec; reflexivity]; wp_finish
-    end)
-  end.
-Tactic Notation "wp_rec" := wp_rec>; wp_strip_later.
+Tactic Notation "wp_rec" :=
+  uLock_goal; uRevert_all;
+  (* We now have a goal for the form True ⊑ P, with the "original" conclusion
+     being locked. *)
+  apply löb_strong; etransitivity;
+    first (apply equiv_spec; symmetry; apply (left_id _ _ _)); [];
+  (* Now introduce again all the things that we reverted, and at the bottom, do the work *)
+  let rec go :=
+      lazymatch goal with
+      | |- _ ⊑ (∀ _, _) => apply forall_intro;
+               let H := fresh in intro H; go; revert H
+      | |- _ ⊑ (■ _ → _) => apply impl_intro_l, const_elim_l;
+               let H := fresh in intro H; go; revert H
+      | |- ▷ ?R ⊑ (?L -★ locked _) => apply wand_intro_l;
+               (* TODO: Do sth. more robust than rewriting. *)
+               trans (▷ (L ★ R))%I; first (rewrite later_sep -(later_intro L); reflexivity );
+               unlock;
+               (* Find the redex and apply wp_rec *)
+               match goal with
+               | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
+                        match eval cbv in e' with
+                        | App (Rec _ _ _) _ =>
+                          wp_bind K; etrans; [|eapply wp_rec; reflexivity]; wp_finish
+                        end)
+               end;
+               apply later_mono
+      end
+  in go.
 
 Tactic Notation "wp_lam" ">" :=
   match goal with
