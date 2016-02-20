@@ -217,10 +217,6 @@ Notation "✓ x" := (uPred_valid x) (at level 20) : uPred_scope.
 Definition uPred_iff {M} (P Q : uPred M) : uPred M := ((P → Q) ∧ (Q → P))%I.
 Infix "↔" := uPred_iff : uPred_scope.
 
-Lemma uPred_lock_conclusion {M} (P Q : uPred M) :
-  P ⊑ locked Q → P ⊑ Q.
-Proof. by rewrite -lock. Qed.
-
 Class TimelessP {M} (P : uPred M) := timelessP : ▷ P ⊑ (P ∨ ▷ False).
 Arguments timelessP {_} _ {_} _ _ _ _.
 Class AlwaysStable {M} (P : uPred M) := always_stable : P ⊑ □ P.

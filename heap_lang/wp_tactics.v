@@ -1,7 +1,7 @@
 From heap_lang Require Export tactics substitution.
 Import uPred.
 
-(* TODO: The next 5 tactics are not wp-specific at all. They should move elsewhere. *)
+(* TODO: The next few tactics are not wp-specific at all. They should move elsewhere. *)
 
 Ltac revert_intros tac :=
   lazymatch goal with
@@ -47,9 +47,6 @@ Ltac u_strip_later :=
   in revert_intros ltac:(etrans; [|shape_Q];
                          etrans; last eapply later_mono; first solve [ strip ]).
 
-(* ssreflect-locks the part after the ⊑ *)
-Ltac u_lock_goal := revert_intros ltac:(apply uPred_lock_conclusion).
-
 (** Transforms a goal of the form ∀ ..., ?0... → ?1 ⊑ ?2
     into True ⊑ ∀..., ■?0... → ?1 -★ ?2, applies tac, and
     the moves all the assumptions back. *)
@@ -72,7 +69,7 @@ Ltac u_revert_all :=
    applies [tac] on the goal (now of the form _ ⊑ _), and then reverts the
    Coq assumption so that we end up with the same shape as where we started. *)
 Ltac u_löb tac :=
-  u_lock_goal; u_revert_all;
+  u_revert_all;
   (* We now have a goal for the form True ⊑ P, with the "original" conclusion
      being locked. *)
   apply löb_strong; etransitivity;
@@ -86,8 +83,8 @@ Ltac u_löb tac :=
       | |- _ ⊑ (■ _ → _) => apply impl_intro_l, const_elim_l;
                let H := fresh in intro H; go; revert H
       (* This is the "bottom" of the goal, where we see the wand introduced
-         by u_revert_all and the lock, as well as the ▷ from löb_strong. *)
-      | |- ▷ _ ⊑ (_ -★ locked _) => apply wand_intro_l; unlock; tac
+         by u_revert_all as well as the ▷ from löb_strong. *)
+      | |- ▷ _ ⊑ (_ -★ _) => apply wand_intro_l; tac
       end
   in go.
 
