@@ -255,6 +255,7 @@ Section proof.
       rewrite left_id -[(▷ barrier_inv _ _ _)%I]later_intro {3}/barrier_inv.
       rewrite -!assoc. apply sep_mono_r, sep_mono_r, wand_intro_l.
       wp_op; first done. intros _. wp_if. rewrite !assoc.
+      rewrite -always_wand_impl always_elim.
       rewrite -{2}pvs_wp. apply pvs_wand_r.
       rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro Q) -(exist_intro i).
       rewrite !assoc.
@@ -264,7 +265,7 @@ Section proof.
       apply sts_ownS_weaken; eauto using sts.up_subseteq. }
     (* a High state: the comparison succeeds, and we perform a transition and
        return to the client *)
-    rewrite [(_ ★ (_ -★ _ ))%I]sep_elim_l.
+    rewrite [(_ ★ □ (_ → _ ))%I]sep_elim_l.
     rewrite -(exist_intro (State High (I ∖ {[ i ]}))) -(exist_intro ∅).
     change (i ∈ I) in Hs.
     rewrite const_equiv /=; last first.

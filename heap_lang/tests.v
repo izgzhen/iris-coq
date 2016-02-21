@@ -55,7 +55,7 @@ Section LiftingTests.
     revert n1. wp_rec=>n1 Hn.
     wp_let. wp_op. wp_let. wp_op=> ?; wp_if.
     - rewrite (forall_elim (n1 + 1)) const_equiv; last omega.
-      by rewrite left_id wand_elim_r.
+      by rewrite left_id -always_wand_impl always_elim wand_elim_r.
     - assert (n1 = n2 - 1) as -> by omega; auto with I.
   Qed.
 

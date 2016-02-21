@@ -239,6 +239,10 @@ Proof.
   split; [|by intros [??]; apply (anti_symm (⊑))].
   intros HPQ; split; intros x i; apply HPQ.
 Qed.
+Lemma equiv_entails P Q : P ≡ Q → P ⊑ Q.
+Proof. apply equiv_spec. Qed.
+Lemma equiv_entails_sym P Q : Q ≡ P → P ⊑ Q.
+Proof. apply equiv_spec. Qed.
 Global Instance entails_proper :
   Proper ((≡) ==> (≡) ==> iff) ((⊑) : relation (uPred M)).
 Proof.

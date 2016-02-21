@@ -16,13 +16,13 @@ Ltac u_strip_later :=
   let rec strip :=
       lazymatch goal with
       | |- (_ ★ _) ⊑ ▷ _  =>
-        etrans; last (eapply equiv_spec, later_sep);
+        etrans; last (eapply equiv_entails_sym, later_sep);
         apply sep_mono; strip
       | |- (_ ∧ _) ⊑ ▷ _  =>
-        etrans; last (eapply equiv_spec, later_and);
+        etrans; last (eapply equiv_entails_sym, later_and);
         apply sep_mono; strip
       | |- (_ ∨ _) ⊑ ▷ _  =>
-        etrans; last (eapply equiv_spec, later_or);
+        etrans; last (eapply equiv_entails_sym, later_or);
         apply sep_mono; strip
       | |- ▷ _ ⊑ ▷ _ => apply later_mono; reflexivity
       | |- _ ⊑ ▷ _ => apply later_intro; reflexivity
@@ -32,14 +32,14 @@ Ltac u_strip_later :=
     | |- _ ⊑ (_ ★ _) =>
       (* Force the later on the LHS to be top-level, matching laters
          below ★ on the RHS *)
-      etrans; first (apply equiv_spec; symmetry; apply later_sep; reflexivity);
+      etrans; first (apply equiv_entails, later_sep; reflexivity);
       (* Match the arm recursively *)
       apply sep_mono; shape_Q
     | |- _ ⊑ (_ ∧ _) =>
-      etrans; first (apply equiv_spec; symmetry; apply later_and; reflexivity);
+      etrans; first (apply equiv_entails, later_and; reflexivity);
       apply sep_mono; shape_Q
     | |- _ ⊑ (_ ∨ _) =>
-      etrans; first (apply equiv_spec; symmetry; apply later_or; reflexivity);
+      etrans; first (apply equiv_entails, later_or; reflexivity);
       apply sep_mono; shape_Q
     | |- _ ⊑ ▷ _ => apply later_mono; reflexivity
     (* We fail if we don't find laters in all branches. *)
@@ -48,32 +48,36 @@ Ltac u_strip_later :=
                          etrans; last eapply later_mono; first solve [ strip ]).
 
 (** Transforms a goal of the form ∀ ..., ?0... → ?1 ⊑ ?2
-    into True ⊑ ∀..., ■?0... → ?1 -★ ?2, applies tac, and
+    into True ⊑ ∀..., ■?0... → ?1 → ?2, applies tac, and
     the moves all the assumptions back. *)
 Ltac u_revert_all :=
   lazymatch goal with
   | |- ∀ _, _ => let H := fresh in intro H; u_revert_all;
-             (* TODO: Really, we should distinguish based on whether this is a
-                dependent function type or not. Right now, we distinguish based
-                on the sort of the argument, which is suboptimal. *)
-             first [ apply (const_intro_impl _ _ _ H); clear H
-                   | revert H; apply forall_elim']
-  | |- ?C ⊑ _ => trans (True ★ C)%I;
-             first (rewrite [(True ★ C)%I]left_id; reflexivity);
-             apply wand_elim_l'
+           (* TODO: Really, we should distinguish based on whether this is a
+              dependent function type or not. Right now, we distinguish based
+              on the sort of the argument, which is suboptimal. *)
+           first [ apply (const_intro_impl _ _ _ H); clear H
+                 | revert H; apply forall_elim']
+  | |- ?C ⊑ _ => trans (True ∧ C)%I;
+           first (apply equiv_entails_sym, left_id, _; reflexivity);
+           apply impl_elim_l'
   end.
 
 (** This starts on a goal of the form ∀ ..., ?0... → ?1 ⊑ ?2.
    It applies löb where all the Coq assumptions have been turned into logical
    assumptions, then moves all the Coq assumptions back out to the context,
    applies [tac] on the goal (now of the form _ ⊑ _), and then reverts the
-   Coq assumption so that we end up with the same shape as where we started. *)
+   Coq assumption so that we end up with the same shape as where we started,
+   but with an additional assumption ★-ed to the context *)
 Ltac u_löb tac :=
   u_revert_all;
+  (* Add a box *)
+  etrans; last (eapply always_elim; reflexivity);
   (* We now have a goal for the form True ⊑ P, with the "original" conclusion
      being locked. *)
   apply löb_strong; etransitivity;
-    first (apply equiv_spec; symmetry; apply (left_id _ _ _); reflexivity);
+    first (apply equiv_entails, left_id, _; reflexivity);
+  apply: always_intro;
   (* Now introduce again all the things that we reverted, and at the bottom,
      do the work *)
   let rec go :=
@@ -82,9 +86,12 @@ Ltac u_löb tac :=
                let H := fresh in intro H; go; revert H
       | |- _ ⊑ (■ _ → _) => apply impl_intro_l, const_elim_l;
                let H := fresh in intro H; go; revert H
-      (* This is the "bottom" of the goal, where we see the wand introduced
-         by u_revert_all as well as the ▷ from löb_strong. *)
-      | |- ▷ _ ⊑ (_ -★ _) => apply wand_intro_l; tac
+      (* This is the "bottom" of the goal, where we see the impl introduced
+         by u_revert_all as well as the ▷ from löb_strong and the □ we added. *)
+      | |- ▷ □ ?R ⊑ (?L → _) => apply impl_intro_l;
+               trans (L ★ ▷ □ R)%I;
+                 first (eapply equiv_entails, always_and_sep_r, _; reflexivity);
+               tac
       end
   in go.
 
