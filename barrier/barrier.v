@@ -293,6 +293,34 @@ Section proof.
   Lemma recv_split l P1 P2 Φ :
     (recv l (P1 ★ P2) ★ (recv l P1 ★ recv l P2 -★ Φ '())) ⊑ || Skip {{ Φ }}.
   Proof.
+    rename P1 into R1. rename P2 into R2.
+    rewrite {1}/recv /barrier_ctx. rewrite sep_exist_r.
+    apply exist_elim=>γ. rewrite sep_exist_r.  apply exist_elim=>P. 
+    rewrite sep_exist_r.  apply exist_elim=>Q. rewrite sep_exist_r.
+    apply exist_elim=>i.
+    (* I think some evars here are better than repeating *everything* *)
+    eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
+      eauto with I ndisj.
+    rewrite [(_ ★ sts_ownS _ _ _)%I]comm -!assoc. apply sep_mono_r.
+    apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
+    apply const_elim_sep_l=>Hs. destruct p; last done.
+    rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
+    eapply wp_store; eauto with I ndisj. 
+    rewrite -!assoc. apply sep_mono_r. u_strip_later.
+    apply wand_intro_l. rewrite -(exist_intro (State High I)).
+    rewrite -(exist_intro ∅). rewrite const_equiv /=; last first.
+    { apply rtc_once. constructor; first constructor;
+                        rewrite /= /tok /=; set_solver. }
+    rewrite left_id -later_intro {2}/barrier_inv -!assoc. apply sep_mono_r.
+    rewrite !assoc [(_ ★ P)%I]comm !assoc -2!assoc.
+    apply sep_mono; last first.
+    { apply wand_intro_l. eauto with I. }
+    (* Now we come to the core of the proof: Updating from waiting to ress. *)
+    rewrite /waiting /ress sep_exist_l. apply exist_elim=>{Φ} Φ.
+    rewrite later_wand {1}(later_intro P) !assoc wand_elim_r.
+    rewrite big_sepS_later -big_sepS_sepS. apply big_sepS_mono'=>i.
+    rewrite -(exist_intro (Φ i)) comm. done.
+
   Abort.
 
   Lemma recv_strengthen l P1 P2 :

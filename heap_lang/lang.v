@@ -226,6 +226,8 @@ Definition atomic (e: expr) : Prop :=
   | Load e => is_Some (to_val e)
   | Store e1 e2 => is_Some (to_val e1) ∧ is_Some (to_val e2)
   | Cas e0 e1 e2 => is_Some (to_val e0) ∧ is_Some (to_val e1) ∧ is_Some (to_val e2)
+  (* Make "skip" atomic *)
+  | App (Rec _ _ (Lit _)) (Lit _) => True
   | _ => False
   end.
 
@@ -280,12 +282,24 @@ Proof. destruct e; naive_solver. Qed.
 Lemma atomic_fill K e : atomic (fill K e) → to_val e = None → K = [].
 Proof.
   rewrite eq_None_not_Some.
-  destruct K as [|[]]; naive_solver eauto using fill_val.
+  destruct K as [|[] K]; try (naive_solver eauto using fill_val); [|].
+  (* Oh wow, this si getting annoying... *)
+  - simpl; destruct K as [|[] K]; try contradiction; [].
+    simpl. destruct e; simpl; try contradiction. naive_solver.
+  - simpl. destruct (of_val v1) eqn:EQ; try contradiction; [].
+    destruct e0; try contradiction; [].
+    destruct K as [|[] K]; try contradiction; [].
+    simpl. destruct e; simpl; try contradiction. naive_solver.
 Qed.
 
 Lemma atomic_head_step e1 σ1 e2 σ2 ef :
   atomic e1 → head_step e1 σ1 e2 σ2 ef → is_Some (to_val e2).
-Proof. destruct 2; simpl; rewrite ?to_of_val; naive_solver. Qed.
+Proof.
+  intros Hatomic Hstep.
+  destruct Hstep; simpl; rewrite ?to_of_val; try naive_solver; [].
+  simpl in Hatomic. destruct e1; try contradiction; [].
+  destruct e2; try contradiction; []. naive_solver.
+Qed.
 
 Lemma atomic_step e1 σ1 e2 σ2 ef :
   atomic e1 → prim_step e1 σ1 e2 σ2 ef → is_Some (to_val e2).
