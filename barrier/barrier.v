@@ -85,6 +85,47 @@ Module barrier_proto.
       rewrite /= /tok /=. intros. set_solver +Hdisj Htok.
   Qed.
 
+  (* Proof that we can take the steps we need. *)
+  Lemma signal_step I:
+    sts.steps (State Low I, {[Send]}) (State High I, ∅).
+  Proof.
+    apply rtc_once. constructor; first constructor;
+                        rewrite /= /tok /=; set_solver.
+  Qed.
+
+  Lemma wait_step i I :
+    i ∈ I → sts.steps (State High I, {[ Change i ]}) (State High (I ∖ {[ i ]}), ∅).
+  Proof.
+    intros. apply rtc_once.
+    constructor; first constructor; rewrite /= /tok /=; [set_solver..|].
+    (* TODO this proof is rather annoying. *)
+    apply elem_of_equiv=>t. rewrite !elem_of_union.
+    rewrite !mkSet_elem_of /change_tokens /=.
+    destruct t as [j|]; last naive_solver.
+    rewrite elem_of_difference elem_of_singleton.
+    destruct (decide (i = j)); naive_solver.
+  Qed.
+    
+  Lemma split_step p i i1 i2 I :
+    i ∈ I → i1 ∉ I → i2 ∉ I → i1 ≠ i2 →
+    sts.steps (State p I, {[ Change i ]})
+        (State p ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))), {[ Change i1; Change i2 ]}).
+  Proof.
+    intros. apply rtc_once.
+    constructor; first constructor; rewrite /= /tok /=; first (destruct p; set_solver).
+    (* This gets annoying... and I think I can see a pattern with all these proofs. Automatable? *)
+    - apply elem_of_equiv=>t. destruct t; last set_solver.
+      rewrite !mkSet_elem_of /change_tokens /=.
+      rewrite !elem_of_union !elem_of_difference !elem_of_singleton.
+      destruct p; naive_solver.
+    - apply elem_of_equiv=>t. destruct t as [j|]; last set_solver.
+      rewrite !mkSet_elem_of /change_tokens /=.
+      rewrite !elem_of_union !elem_of_difference !elem_of_singleton.
+      destruct (decide (i1 = j)); first naive_solver. 
+      destruct (decide (i2 = j)); first naive_solver.
+      destruct (decide (i = j)); naive_solver.
+  Qed.
+
 End barrier_proto.
 (* I am too lazy to type the full module name all the time. But then
    why did we even put this into a module? Because some of the names 
@@ -100,7 +141,13 @@ Section proof.
   Context `{stsG heap_lang Σ sts}.
   Context `{savedPropG heap_lang Σ}.
 
-  Local Hint Immediate i_states_closed low_states_closed.
+  Local Hint Immediate i_states_closed low_states_closed : sts.
+  Local Hint Resolve signal_step wait_step split_step : sts.
+  Local Hint Resolve sts.closed_op : sts.
+
+  Hint Extern 50 (_ ∈ _) => set_solver : sts.
+  Hint Extern 50 (_ ⊆ _) => set_solver : sts.
+  Hint Extern 50 (_ ≡ _) => set_solver : sts.
 
   Local Notation iProp := (iPropG heap_lang Σ).
 
@@ -156,28 +203,25 @@ Section proof.
     rewrite [(Π★{set _} (λ _, saved_prop_own _ _))%I](big_sepS_delete _ I i) //.
     rewrite !assoc [(_ ★ (_ -★ _))%I]comm !assoc [(_ ★ ▷ _)%I]comm.
     rewrite !assoc [(_ ★ _ i _)%I]comm !assoc [(_ ★ _ i _)%I]comm -!assoc.
+    do 4 (rewrite big_sepS_insert; last set_solver).
+    rewrite !fn_lookup_insert fn_lookup_insert_ne // !fn_lookup_insert.
     rewrite 3!assoc. apply sep_mono.
     - rewrite saved_prop_agree. u_strip_later.
       apply wand_intro_l. rewrite [(_ ★ (_ -★ Π★{set _} _))%I]comm !assoc wand_elim_r.
       rewrite (big_sepS_delete _ I i) //.
-      rewrite big_sepS_insert; last set_solver.
-      rewrite big_sepS_insert; last set_solver.
-      rewrite [(_ ★ Π★{set _} _)%I]comm !assoc [(_ ★ Π★{set _} _)%I]comm -!assoc.
+      rewrite [(_ ★ Π★{set _} _)%I]comm [(_ ★ Π★{set _} _)%I]comm -!assoc.
       apply sep_mono.
       + apply big_sepS_mono; first done. intros j.
         rewrite elem_of_difference not_elem_of_singleton. intros.
         rewrite fn_lookup_insert_ne; last naive_solver.
         rewrite fn_lookup_insert_ne; last naive_solver.
         done.
-      + rewrite !fn_lookup_insert fn_lookup_insert_ne // !fn_lookup_insert !assoc.
+      + rewrite !assoc.
         eapply wand_apply_r'; first done.
         apply: (eq_rewrite (Ψ i) Q (λ x, x)%I); last by eauto with I.
         rewrite eq_sym. eauto with I.
-    - rewrite big_sepS_insert; last set_solver.
-      rewrite big_sepS_insert; last set_solver.
-      rewrite !assoc. apply sep_mono.
-      + rewrite !fn_lookup_insert fn_lookup_insert_ne // !fn_lookup_insert comm.
-        done.
+    - rewrite !assoc. apply sep_mono.
+      + by rewrite comm.
       + apply big_sepS_mono; first done. intros j.
         rewrite elem_of_difference not_elem_of_singleton. intros.
         rewrite fn_lookup_insert_ne; last naive_solver.
@@ -248,7 +292,7 @@ Section proof.
       { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
       rewrite (sts_own_weaken ⊤ _ _ (i_states i ∩ low_states) _ 
                               ({[ Change i ]} ∪ {[ Send ]})).
-      + apply pvs_mono. rewrite sts_ownS_op; eauto; []. set_solver.
+      + apply pvs_mono. rewrite sts_ownS_op; eauto with sts.
       (* TODO the rest of this proof is rather annoying. *)
       + rewrite /= /tok /=. apply elem_of_equiv=>t.
         rewrite elem_of_difference elem_of_union.
@@ -259,7 +303,7 @@ Section proof.
           exfalso. apply Hn. left. set_solver.
         * move=>[[EQ]|?]; last discriminate. set_solver. 
       + apply elem_of_intersection. rewrite !mkSet_elem_of /=. set_solver.
-      + apply sts.closed_op; eauto; first set_solver; [].
+      + apply sts.closed_op; eauto with sts; [].
         apply (non_empty_inhabited (State Low {[ i ]})).
         apply elem_of_intersection.
         rewrite !mkSet_elem_of /=. set_solver.
@@ -280,9 +324,7 @@ Section proof.
     eapply wp_store; eauto with I ndisj. 
     rewrite -!assoc. apply sep_mono_r. u_strip_later.
     apply wand_intro_l. rewrite -(exist_intro (State High I)).
-    rewrite -(exist_intro ∅). rewrite const_equiv /=; last first.
-    { apply rtc_once. constructor; first constructor;
-                        rewrite /= /tok /=; set_solver. }
+    rewrite -(exist_intro ∅). rewrite const_equiv /=; last by eauto with sts.
     rewrite left_id -later_intro {2}/barrier_inv -!assoc. apply sep_mono_r.
     rewrite !assoc [(_ ★ P)%I]comm !assoc -2!assoc.
     apply sep_mono; last first.
@@ -325,20 +367,13 @@ Section proof.
       do 3 (rewrite -pvs_frame_r; apply sep_mono; last (try apply later_intro; reflexivity)).
       rewrite [(_ ★ heap_ctx _)%I]comm -!assoc -pvs_frame_l. apply sep_mono_r.
       rewrite comm -pvs_frame_l. apply sep_mono_r.
-      apply sts_ownS_weaken; eauto using sts.up_subseteq. }
+      apply sts_ownS_weaken; eauto using sts.up_subseteq with sts. }
     (* a High state: the comparison succeeds, and we perform a transition and
        return to the client *)
     rewrite [(_ ★ □ (_ → _ ))%I]sep_elim_l.
     rewrite -(exist_intro (State High (I ∖ {[ i ]}))) -(exist_intro ∅).
     change (i ∈ I) in Hs.
-    rewrite const_equiv /=; last first.
-    { apply rtc_once. constructor; first constructor; rewrite /= /tok /=; [set_solver..|].
-      (* TODO this proof is rather annoying. *)
-      apply elem_of_equiv=>t. rewrite !elem_of_union.
-      rewrite !mkSet_elem_of /change_tokens /=.
-      destruct t as [j|]; last naive_solver.
-      rewrite elem_of_difference elem_of_singleton.
-      destruct (decide (i = j)); naive_solver. }
+    rewrite const_equiv /=; last by eauto with sts.
     rewrite left_id -[(▷ barrier_inv _ _ _)%I]later_intro {2}/barrier_inv.
     rewrite -!assoc. apply sep_mono_r. rewrite /ress.
     rewrite (big_sepS_delete _ I i) // [(_ ★ Π★{set _} _)%I]comm -!assoc.
@@ -381,19 +416,7 @@ Section proof.
     (* Case I: Low state. *)
     - rewrite -(exist_intro (State Low ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
       rewrite -(exist_intro ({[Change i1 ]} ∪ {[ Change i2 ]})).
-      rewrite const_equiv; last first.
-      { apply rtc_once. constructor; first constructor; rewrite /= /tok /=; first set_solver.
-      (* This gets annoying... and I think I can see a pattern with all these proofs. Automatable? *)
-        - apply elem_of_equiv=>t. destruct t; last set_solver.
-          rewrite !mkSet_elem_of /change_tokens /=.
-          rewrite !elem_of_union !elem_of_difference !elem_of_singleton.
-          naive_solver.
-        - apply elem_of_equiv=>t. destruct t as [j|]; last set_solver.
-          rewrite !mkSet_elem_of /change_tokens /=.
-          rewrite !elem_of_union !elem_of_difference !elem_of_singleton.
-          destruct (decide (i1 = j)); first naive_solver. 
-          destruct (decide (i2 = j)); first naive_solver.
-          destruct (decide (i = j)); naive_solver. }
+      rewrite const_equiv; last by eauto with sts.
       rewrite left_id -later_intro {1 3}/barrier_inv.
       (* FIXME ssreflect rewrite fails if there are evars around. Also, this is very slow because we don't have a proof mode. *)
       rewrite -(waiting_split _ _ _ Q R1 R2); [|done..].
@@ -418,10 +441,10 @@ Section proof.
         do 2 rewrite !(assoc (★)%I) [(_ ★ sts_ownS _ _ _)%I]comm.
         rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
         apply sep_mono.
-        * rewrite -sts_ownS_op; [|set_solver|by eauto..].
+        * rewrite -sts_ownS_op; [|by eauto with sts..].
           apply sts_own_weaken; first done.
           { rewrite !mkSet_elem_of /=. set_solver+. }
-          apply sts.closed_op; [by eauto..|set_solver|].
+          apply sts.closed_op; [by eauto with sts..|].
           apply (non_empty_inhabited (State Low ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
           rewrite !mkSet_elem_of /=. set_solver+.
         * rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
@@ -433,28 +456,12 @@ Section proof.
           apply sep_intro_True_r; first done.
           { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
 (* Case II: High state. TODO: Lots of this script is just copy-n-paste of the previous one.
-   Some of that ist because stuff should be more trivial than it is (like sts_ownS_op
-   having a too strong precondition, see the TODO over there); some of that
-   is because the goals a fairly simioar in structure, and the proof scripts
-   are mostlx concerned with manually managaing the structure (assoc, comm, dup) of
+   Most of that is because the goals are fairly similar in structure, and the proof scripts
+   are mostly concerned with manually managaing the structure (assoc, comm, dup) of
    the context. *)
     - rewrite -(exist_intro (State High ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
       rewrite -(exist_intro ({[Change i1 ]} ∪ {[ Change i2 ]})).
-      rewrite const_equiv; last first.
-      (* This is exactly the same proof as above. Really, this should all be automated to be simple...
-         but if we can't get that, at least factor it out as a lemma? *)
-      { apply rtc_once. constructor; first constructor; rewrite /= /tok /=; first set_solver.
-      (* This gets annoying... and I think I can see a pattern with all these proofs. Automatable? *)
-        - apply elem_of_equiv=>t. destruct t; last set_solver.
-          rewrite !mkSet_elem_of /change_tokens /=.
-          rewrite !elem_of_union !elem_of_difference !elem_of_singleton.
-          naive_solver.
-        - apply elem_of_equiv=>t. destruct t as [j|]; last set_solver.
-          rewrite !mkSet_elem_of /change_tokens /=.
-          rewrite !elem_of_union !elem_of_difference !elem_of_singleton.
-          destruct (decide (i1 = j)); first naive_solver. 
-          destruct (decide (i2 = j)); first naive_solver.
-          destruct (decide (i = j)); naive_solver. }
+      rewrite const_equiv; last by eauto with sts.
       rewrite left_id -later_intro {1 3}/barrier_inv.
       rewrite -(ress_split _ _ _ Q R1 R2); [|done..].
       match goal with | |- _ ⊑ ?G => rewrite [G]lock end.
@@ -478,10 +485,10 @@ Section proof.
         do 2 rewrite !(assoc (★)%I) [(_ ★ sts_ownS _ _ _)%I]comm.
         rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
         apply sep_mono.
-        * rewrite -sts_ownS_op; [|set_solver|by eauto..].
+        * rewrite -sts_ownS_op; [|by eauto with sts..].
           apply sts_own_weaken; first done.
           { rewrite !mkSet_elem_of /=. set_solver+. }
-          apply sts.closed_op; [by eauto..|set_solver|].
+          apply sts.closed_op; [by eauto with sts..|].
           apply (non_empty_inhabited (State High ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
           rewrite !mkSet_elem_of /=. set_solver+.
         * rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.

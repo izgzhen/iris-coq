@@ -3,7 +3,7 @@
 (** Finite maps associate data to keys. This file defines an interface for
 finite maps and collects some theory on it. Most importantly, it proves useful
 induction principles for finite maps and implements the tactic
-[simplify_map_equality] to simplify goals involving finite maps. *)
+[simplify_map_eq] to simplify goals involving finite maps. *)
 From Coq Require Import Permutation.
 From prelude Require Export relations vector orders.
 
