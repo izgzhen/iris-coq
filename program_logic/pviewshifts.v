@@ -159,6 +159,9 @@ Proof. intros ->. rewrite pvs_frame_l. apply pvs_mono, wand_elim_l. Qed.
 Lemma pvs_wand_r E1 E2 P Q R :
   P ⊑ (|={E1,E2}=> Q) → (P ★ (Q -★ R)) ⊑ (|={E1,E2}=> R).
 Proof. rewrite comm. apply pvs_wand_l. Qed.
+Lemma pvs_sep E P Q:
+  ((|={E}=> P) ★ (|={E}=> Q)) ⊑ (|={E}=> P ★ Q).
+Proof. rewrite pvs_frame_r pvs_frame_l pvs_trans //. set_solver. Qed.
 
 Lemma pvs_mask_frame' E1 E1' E2 E2' P :
   E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' →
