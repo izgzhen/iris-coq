@@ -189,12 +189,12 @@ Implicit Types T : tokens sts.
 Inductive sts_equiv : Equiv (car sts) :=
   | auth_equiv s T1 T2 : T1 ≡ T2 → auth s T1 ≡ auth s T2
   | frag_equiv S1 S2 T1 T2 : T1 ≡ T2 → S1 ≡ S2 → frag S1 T1 ≡ frag S2 T2.
-Existing Instance sts_equiv.
-Instance sts_valid : Valid (car sts) := λ x,
+Global Existing Instance sts_equiv.
+Global Instance sts_valid : Valid (car sts) := λ x,
   match x with
   | auth s T => tok s ∩ T ≡ ∅
   | frag S' T => closed S' T ∧ S' ≢ ∅ end.
-Instance sts_unit : Unit (car sts) := λ x,
+Global Instance sts_unit : Unit (car sts) := λ x,
   match x with
   | frag S' _ => frag (up_set S' ∅ ) ∅
   | auth s _  => frag (up s ∅) ∅
@@ -206,15 +206,15 @@ Inductive sts_disjoint : Disjoint (car sts) :=
      s ∈ S → T1 ∩ T2 ≡ ∅ → auth s T1 ⊥ frag S T2
   | frag_auth_disjoint s S T1 T2 :
      s ∈ S → T1 ∩ T2 ≡ ∅ → frag S T1 ⊥ auth s T2.
-Existing Instance sts_disjoint.
-Instance sts_op : Op (car sts) := λ x1 x2,
+Global Existing Instance sts_disjoint.
+Global Instance sts_op : Op (car sts) := λ x1 x2,
   match x1, x2 with
   | frag S1 T1, frag S2 T2 => frag (S1 ∩ S2) (T1 ∪ T2)
   | auth s T1, frag _ T2 => auth s (T1 ∪ T2)
   | frag _ T1, auth s T2 => auth s (T1 ∪ T2)
   | auth s T1, auth _ T2 => auth s (T1 ∪ T2)(* never happens *)
   end.
-Instance sts_minus : Minus (car sts) := λ x1 x2,
+Global Instance sts_minus : Minus (car sts) := λ x1 x2,
   match x1, x2 with
   | frag S1 T1, frag S2 T2 => frag (up_set S1 (T1 ∖ T2)) (T1 ∖ T2)
   | auth s T1, frag _ T2 => auth s (T1 ∖ T2)
@@ -226,7 +226,7 @@ Hint Extern 10 (equiv (A:=set _) _ _) => set_solver : sts.
 Hint Extern 10 (¬equiv (A:=set _) _ _) => set_solver : sts.
 Hint Extern 10 (_ ∈ _) => set_solver : sts.
 Hint Extern 10 (_ ⊆ _) => set_solver : sts.
-Instance sts_equivalence: Equivalence ((≡) : relation (car sts)).
+Global Instance sts_equivalence: Equivalence ((≡) : relation (car sts)).
 Proof.
   split.
   - by intros []; constructor.
@@ -414,47 +414,56 @@ Proof.
   rewrite <-HT. eapply up_subseteq; done.
 Qed.
 
+Lemma up_set_intersection S1 Sf Tf :
+  closed Sf Tf → 
+  S1 ∩ Sf ≡ S1 ∩ up_set (S1 ∩ Sf) Tf.
+Proof.
+  intros Hclf. apply (anti_symm (⊆)).
+  + move=>s [HS1 HSf]. split; first by apply HS1.
+    by apply subseteq_up_set.
+  + move=>s [HS1 Hscl]. split; first done.
+    destruct Hscl as [s' [Hsup Hs']].
+    eapply closed_steps; last (hnf in Hsup; eexact Hsup); first done.
+    set_solver +Hs'.
+Qed.
+
 (** Inclusion *)
-(*
+(* This is surprisingly different from to_validity_included. I am not sure
+   whether this is because to_validity_included is non-canonical, or this
+   one here is non-canonical - but I suspect both. *)
 Lemma sts_frag_included S1 S2 T1 T2 :
-  closed S2 T2 → S2 ≢ ∅
-  sts_frag S1 T1 ≼ sts_frag S2 T2 ↔
-  (closed S1 T1 ∧ ∃ Tf, T2 ≡ T1 ∪ Tf ∧ T1 ∩ Tf ≡ ∅ ∧ S2 ≡ S1 ∩ up_set S2 Tf).
-Proof. (* This should use some general properties of DRAs. To be improved
-when we have RAs back *)
-  move=>Hcl2. split.
-  - intros [[[Sf Tf|Sf Tf] vf Hvf] EQ].
-    { exfalso. inversion_clear EQ as [Hv EQ']. apply EQ' in Hcl2. simpl in Hcl2.
-      inversion Hcl2. }
-    inversion_clear EQ as [Hv EQ'].
-    move:(EQ' Hcl2)=>{EQ'} EQ. inversion_clear EQ as [|? ? ? ? HT HS].
-    destruct Hv as [Hv _]. move:(Hv Hcl2)=>{Hv} [/= Hcl1  [Hclf Hdisj]].
-    apply Hvf in Hclf. simpl in Hclf. clear Hvf.
-    inversion_clear Hdisj. split; last (exists Tf; split_and?); [done..|].
-    apply (anti_symm (⊆)).
-    + move=>s HS2. apply elem_of_intersection. split; first by apply HS.
-      by apply subseteq_up_set.
-    + move=>s /elem_of_intersection [HS1 Hscl]. apply HS. split; first done.
-      destruct Hscl as [s' [Hsup Hs']].
-      eapply closed_steps; last (hnf in Hsup; eexact Hsup); first done.
-      set_solver +HS Hs'.
-  - intros (Hcl1 & Tf & Htk & Hf & Hs).
-    exists (sts_frag (up_set S2 Tf) Tf).
-    split; first split; simpl;[|done|].
-    + intros _. split_and?; first done.
-      * apply closed_up_set; last by eapply closed_ne.
-        move=>s Hs2. move:(closed_disjoint _ _ Hcl2 _ Hs2).
-        set_solver +Htk.
-      * constructor; last done. rewrite -Hs. by eapply closed_ne.
-    + intros _. constructor; [ set_solver +Htk | done].
+  closed S2 T2 → S2 ≢ ∅ →
+  (sts_frag S1 T1 ≼ sts_frag S2 T2) ↔
+  (closed S1 T1 ∧ S1 ≢ ∅ ∧ ∃ Tf, T2 ≡ T1 ∪ Tf ∧ T1 ∩ Tf ≡ ∅ ∧
+                                 S2 ≡ S1 ∩ up_set S2 Tf).
+Proof.
+  destruct (to_validity_included (sts_dra.car sts) (sts_dra.frag S1 T1) (sts_dra.frag S2 T2)) as [Hfincl Htoincl].
+  intros Hcl2 HS2ne. split.
+  - intros Hincl. destruct Hfincl as ((Hcl1 & ?) & (z & EQ & Hval & Hdisj)).
+    { split; last done. split; done. }
+    clear Htoincl. split_and!; try done; [].
+    destruct z as [sf Tf|Sf Tf].
+    { exfalso. inversion_clear EQ. }
+    exists Tf. inversion_clear EQ as [|? ? ? ? HT2 HS2].
+    inversion_clear Hdisj as [? ? ? ? _ HTdisj | |]. split_and!; [done..|].
+    rewrite HS2. apply up_set_intersection. apply Hval.
+  - intros (Hcl & Hne & (Tf & HT & HTdisj & HS)). destruct Htoincl as ((Hcl' & ?) & (z & EQ)); last first.
+    { exists z. exact EQ. } clear Hfincl.
+    split; first (split; done). exists (sts_dra.frag (up_set S2 Tf) Tf). split_and!.
+    + constructor; done.
+    + simpl. split.
+      * apply closed_up_set. move=>s Hs2. move:(closed_disjoint _ _ Hcl2 _ Hs2).
+        set_solver +HT.
+      * by apply up_set_nonempty.
+    + constructor; last done. by rewrite -HS.
 Qed.
 
 Lemma sts_frag_included' S1 S2 T :
-  closed S2 T → closed S1 T → S2 ≡ S1 ∩ up_set S2 ∅ →
+  closed S2 T → closed S1 T → S2 ≢ ∅ → S1 ≢ ∅ → S2 ≡ S1 ∩ up_set S2 ∅ →
   sts_frag S1 T ≼ sts_frag S2 T.
 Proof.
   intros. apply sts_frag_included; split_and?; auto.
   exists ∅; split_and?; done || set_solver+.
 Qed.
-*)
+
 End stsRA.

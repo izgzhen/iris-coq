@@ -141,6 +141,7 @@ Qed.
 Lemma to_validity_valid (x : A) :
   ✓ to_validity x → ✓ x.
 Proof. intros. done. Qed.
+
 Lemma to_validity_op (x y : A) :
   (✓ (x ⋅ y) → ✓ x ∧ ✓ y ∧ x ⊥ y) →
   to_validity (x ⋅ y) ≡ to_validity x ⋅ to_validity y.
@@ -149,6 +150,24 @@ Proof.
   - simpl. auto.
   - clear Hvd. simpl. intros (? & ? & ?).
     auto using dra_op_valid, to_validity_valid.
+Qed.
+
+Lemma to_validity_included x y:
+  (✓ y ∧ to_validity x ≼ to_validity y)%C ↔ (✓ x ∧ x ≼ y).
+Proof.
+  split.
+  - move=>[Hvl [z [Hvxz EQ]]]. move:(Hvl)=>Hvl'. apply Hvxz in Hvl'.
+    destruct Hvl' as [? [? ?]].
+    split; first by apply to_validity_valid.
+    exists (validity_car z). split_and!; last done.
+    + apply EQ. assumption.
+    + by apply validity_valid_car_valid.
+  - intros (Hvl & z & EQ & ? & ?).
+    assert (✓ y) by (rewrite EQ; apply dra_op_valid; done).
+    split; first done. exists (to_validity z). split; first split.
+    + intros _. simpl. split_and!; done.
+    + intros _. setoid_subst. by apply dra_op_valid. 
+    + intros _. rewrite /= EQ //.
 Qed.
 
 End dra.
