@@ -36,8 +36,7 @@ Inductive frame_step (T : tokens sts) (s1 s2 : state sts) : Prop :=
 
 (** ** Closure under frame steps *)
 Record closed (S : states sts) (T : tokens sts) : Prop := Closed {
-  closed_ne : S ≢ ∅;
-  closed_disjoint s : s ∈ S → tok s ∩ T ⊆ ∅;
+  closed_disjoint s : s ∈ S → tok s ∩ T ≡ ∅;
   closed_step s1 s2 : s1 ∈ S → frame_step T s1 s2 → s2 ∈ S
 }.
 Definition up (s : state sts) (T : tokens sts) : states sts :=
@@ -47,10 +46,10 @@ Definition up_set (S : states sts) (T : tokens sts) : states sts :=
 
 (** Tactic setup *)
 Hint Resolve Step.
-Hint Extern 10 (equiv (A:=set _) _ _) => set_solver : sts.
-Hint Extern 10 (¬equiv (A:=set _) _ _) => set_solver : sts.
-Hint Extern 10 (_ ∈ _) => set_solver : sts.
-Hint Extern 10 (_ ⊆ _) => set_solver : sts.
+Hint Extern 50 (equiv (A:=set _) _ _) => set_solver : sts.
+Hint Extern 50 (¬equiv (A:=set _) _ _) => set_solver : sts.
+Hint Extern 50 (_ ∈ _) => set_solver : sts.
+Hint Extern 50 (_ ⊆ _) => set_solver : sts.
 
 (** ** Setoids *)
 Instance framestep_mono : Proper (flip (⊆) ==> (=) ==> (=) ==> impl) frame_step.
@@ -84,16 +83,13 @@ Global Instance up_set_proper : Proper ((≡) ==> (≡) ==> (≡)) up_set.
 Proof. by intros S1 S2 [??] T1 T2 [??]; split; apply up_set_preserving. Qed.
 
 (** ** Properties of closure under frame steps *)
-Lemma closed_disjoint' S T s : closed S T → s ∈ S → tok s ∩ T ≡ ∅.
-Proof. intros [_ ? _]; set_solver. Qed.
 Lemma closed_steps S T s1 s2 :
   closed S T → s1 ∈ S → rtc (frame_step T) s1 s2 → s2 ∈ S.
 Proof. induction 3; eauto using closed_step. Qed.
 Lemma closed_op T1 T2 S1 S2 :
-  closed S1 T1 → closed S2 T2 →
-  T1 ∩ T2 ≡ ∅ → S1 ∩ S2 ≢ ∅ → closed (S1 ∩ S2) (T1 ∪ T2).
+  closed S1 T1 → closed S2 T2 → closed (S1 ∩ S2) (T1 ∪ T2).
 Proof.
-  intros [_ ? Hstep1] [_ ? Hstep2] ?; split; [done|set_solver|].
+  intros [? Hstep1] [? Hstep2]; split; [set_solver|].
   intros s3 s4; rewrite !elem_of_intersection; intros [??] [T3 T4 ?]; split.
   - apply Hstep1 with s3, Frame_step with T3 T4; auto with sts.
   - apply Hstep2 with s3, Frame_step with T3 T4; auto with sts.
@@ -102,7 +98,7 @@ Lemma step_closed s1 s2 T1 T2 S Tf :
   step (s1,T1) (s2,T2) → closed S Tf → s1 ∈ S → T1 ∩ Tf ≡ ∅ →
   s2 ∈ S ∧ T2 ∩ Tf ≡ ∅ ∧ tok s2 ∩ T2 ≡ ∅.
 Proof.
-  inversion_clear 1 as [???? HR Hs1 Hs2]; intros [?? Hstep]??; split_and?; auto.
+  inversion_clear 1 as [???? HR Hs1 Hs2]; intros [? Hstep]??; split_and?; auto.
   - eapply Hstep with s1, Frame_step with T1 T2; auto with sts.
   - set_solver -Hstep Hs1 Hs2.
 Qed.
@@ -125,26 +121,35 @@ Proof. intros s ?; apply elem_of_bind; eauto using elem_of_up. Qed.
 Lemma up_up_set s T : up s T ≡ up_set {[ s ]} T.
 Proof. by rewrite /up_set collection_bind_singleton. Qed.
 Lemma closed_up_set S T :
-  (∀ s, s ∈ S → tok s ∩ T ⊆ ∅) → S ≢ ∅ → closed (up_set S T) T.
+  (∀ s, s ∈ S → tok s ∩ T ≡ ∅) → closed (up_set S T) T.
 Proof.
-  intros HS Hne; unfold up_set; split.
-  - assert (∀ s, s ∈ up s T) by eauto using elem_of_up. set_solver.
+  intros HS; unfold up_set; split.
   - intros s; rewrite !elem_of_bind; intros (s'&Hstep&Hs').
-    specialize (HS s' Hs'); clear Hs' Hne S.
+    specialize (HS s' Hs'); clear Hs' S.
     induction Hstep as [s|s1 s2 s3 [T1 T2 ? Hstep] ? IH]; first done.
     inversion_clear Hstep; apply IH; clear IH; auto with sts.
   - intros s1 s2; rewrite !elem_of_bind; intros (s&?&?) ?; exists s.
     split; [eapply rtc_r|]; eauto.
 Qed.
-Lemma closed_up_set_empty S : S ≢ ∅ → closed (up_set S ∅) ∅.
-Proof. eauto using closed_up_set with sts. Qed.
 Lemma closed_up s T : tok s ∩ T ≡ ∅ → closed (up s T) T.
 Proof.
   intros; rewrite -(collection_bind_singleton (λ s, up s T) s).
   apply closed_up_set; set_solver.
 Qed.
+Lemma closed_up_set_empty S : closed (up_set S ∅) ∅.
+Proof. eauto using closed_up_set with sts. Qed.
 Lemma closed_up_empty s : closed (up s ∅) ∅.
 Proof. eauto using closed_up with sts. Qed.
+Lemma up_set_empty S T : up_set S T ≡ ∅ → S ≡ ∅.
+Proof.
+  move:(subseteq_up_set S T). set_solver.
+Qed.
+Lemma up_set_nonempty S T : S ≢ ∅ → up_set S T ≢ ∅.
+Proof. by move=>? /up_set_empty. Qed.
+Lemma up_nonempty s T : up s T ≢ ∅.
+Proof.
+  move:(elem_of_up s T). set_solver.
+Qed.
 Lemma up_closed S T : closed S T → up_set S T ≡ S.
 Proof.
   intros; split; auto using subseteq_up_set; intros s.
@@ -186,7 +191,9 @@ Inductive sts_equiv : Equiv (car sts) :=
   | frag_equiv S1 S2 T1 T2 : T1 ≡ T2 → S1 ≡ S2 → frag S1 T1 ≡ frag S2 T2.
 Existing Instance sts_equiv.
 Instance sts_valid : Valid (car sts) := λ x,
-  match x with auth s T => tok s ∩ T ≡ ∅ | frag S' T => closed S' T end.
+  match x with
+  | auth s T => tok s ∩ T ≡ ∅
+  | frag S' T => closed S' T ∧ S' ≢ ∅ end.
 Instance sts_unit : Unit (car sts) := λ x,
   match x with
   | frag S' _ => frag (up_set S' ∅ ) ∅
@@ -238,29 +245,36 @@ Proof.
   - assert (∀ T T' S s,
       closed S T → s ∈ S → tok s ∩ T' ≡ ∅ → tok s ∩ (T ∪ T') ≡ ∅).
     { intros S T T' s [??]; set_solver. }
-    destruct 3; simpl in *; auto using closed_op with sts.
-  - intros []; simpl; eauto using closed_up, closed_up_set, closed_ne with sts.
-  - intros ???? (z&Hy&?&Hxz); destruct Hxz; inversion Hy;clear Hy; setoid_subst;
-      rewrite ?disjoint_union_difference; auto using closed_up with sts.
-    eapply closed_up_set; eauto 2 using closed_disjoint with sts.
+    destruct 3; simpl in *; destruct_conjs; auto using closed_op with sts.
+  - intros []; simpl; intros; destruct_conjs; split;
+      eauto using closed_up, up_nonempty, closed_up_set, up_set_empty with sts.
+  - intros ???? (z&Hy&?&Hxz); destruct Hxz; inversion Hy; clear Hy;
+      setoid_subst; destruct_conjs; split_and?;
+      (* TODO improve this. *)
+      eauto using up_set_nonempty, up_nonempty;
+      assert ((T1 ∪ T2) ∖ T1 ≡ T2) as -> by set_solver;
+      eauto using closed_up, closed_disjoint; [].
+    eapply closed_up_set. intros.
+    eapply closed_disjoint; first done. set_solver.
   - intros [] [] []; constructor; rewrite ?assoc; auto with sts.
   - destruct 4; inversion_clear 1; constructor; auto with sts.
   - destruct 4; inversion_clear 1; constructor; auto with sts.
   - destruct 1; constructor; auto with sts.
   - destruct 3; constructor; auto with sts.
   - intros [|S T]; constructor; auto using elem_of_up with sts.
-    assert (S ⊆ up_set S ∅ ∧ S ≢ ∅) by eauto using subseteq_up_set, closed_ne.
+    simpl in *. assert (S ⊆ up_set S ∅) by eauto using subseteq_up_set.
     set_solver.
   - intros [|S T]; constructor; auto with sts.
     assert (S ⊆ up_set S ∅); auto using subseteq_up_set with sts.
   - intros [s T|S T]; constructor; auto with sts.
     + rewrite (up_closed (up _ _)); auto using closed_up with sts.
     + rewrite (up_closed (up_set _ _));
-        eauto using closed_up_set, closed_ne with sts.
+        eauto using closed_up_set with sts.
   - intros x y ?? (z&Hy&?&Hxz); exists (unit (x ⋅ y)); split_and?.
     + destruct Hxz;inversion_clear Hy;constructor;unfold up_set; set_solver.
-    + destruct Hxz; inversion_clear Hy; simpl;
-        auto using closed_up_set_empty, closed_up_empty with sts.
+    + destruct Hxz; inversion_clear Hy; simpl; split_and?;
+        auto using closed_up_set_empty, closed_up_empty, up_nonempty; [].
+      eapply up_set_nonempty. set_solver.
     + destruct Hxz; inversion_clear Hy; constructor;
         repeat match goal with
         | |- context [ up_set ?S ?T ] =>
@@ -280,7 +294,7 @@ Proof.
       rewrite ?disjoint_union_difference; auto.
     split; [|apply intersection_greatest; auto using subseteq_up_set with sts].
     apply intersection_greatest; [auto with sts|].
-    intros s2; rewrite elem_of_intersection.
+    intros s2; rewrite elem_of_intersection. destruct_conjs.
     unfold up_set; rewrite elem_of_bind; intros (?&s1&?&?&?).
     apply closed_steps with T2 s1; auto with sts.
 Qed.
@@ -328,10 +342,10 @@ Proof. intros T1 T2 HT. by rewrite /sts_frag_up HT. Qed.
 (** Validity *)
 Lemma sts_auth_valid s T : ✓ sts_auth s T ↔ tok s ∩ T ≡ ∅.
 Proof. split. by move=> /(_ 0). by intros ??. Qed.
-Lemma sts_frag_valid S T : ✓ sts_frag S T ↔ closed S T.
+Lemma sts_frag_valid S T : ✓ sts_frag S T ↔ closed S T ∧ S ≢ ∅.
 Proof. split. by move=> /(_ 0). by intros ??. Qed.
 Lemma sts_frag_up_valid s T : tok s ∩ T ≡ ∅ → ✓ sts_frag_up s T.
-Proof. intros; by apply sts_frag_valid, closed_up. Qed.
+Proof. intros. by apply sts_frag_valid; auto using closed_up, up_nonempty. Qed.
 
 Lemma sts_auth_frag_valid_inv s S T1 T2 :
   ✓ (sts_auth s T1 ⋅ sts_frag S T2) → s ∈ S.
@@ -342,32 +356,36 @@ Lemma sts_op_auth_frag s S T :
   s ∈ S → closed S T → sts_auth s ∅ ⋅ sts_frag S T ≡ sts_auth s T.
 Proof.
   intros; split; [split|constructor; set_solver]; simpl.
-  - intros (?&?&?); by apply closed_disjoint' with S.
+  - intros (?&?&?); by apply closed_disjoint with S.
   - intros; split_and?.
     + set_solver+.
     + done.
+    + set_solver.
     + constructor; set_solver.
 Qed.
 Lemma sts_op_auth_frag_up s T :
   sts_auth s ∅ ⋅ sts_frag_up s T ≡ sts_auth s T.
 Proof.
   intros; split; [split|constructor; set_solver]; simpl.
-  - intros (?&?&?). apply closed_disjoint' with (up s T); first done.
+  - intros (?&?&?). destruct_conjs.
+    apply closed_disjoint with (up s T); first done.
     apply elem_of_up.
   - intros; split_and?.
     + set_solver+.
     + by apply closed_up.
+    + apply up_nonempty.
     + constructor; last set_solver. apply elem_of_up.
 Qed.
 
 Lemma sts_op_frag S1 S2 T1 T2 :
-  T1 ∩ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
+  T1 ∩ T2 ≡ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
   sts_frag (S1 ∩ S2) (T1 ∪ T2) ≡ sts_frag S1 T1 ⋅ sts_frag S2 T2.
 Proof.
   intros HT HS1 HS2. rewrite /sts_frag.
   (* FIXME why does rewrite not work?? *)
-  etrans; last eapply to_validity_op; try done; [].
-  intros Hval. constructor; last set_solver. eapply closed_ne, Hval.
+  etrans; last eapply to_validity_op; first done; [].
+  move=>/=[??]. split_and!; [auto; set_solver..|].
+  constructor; done.
 Qed.
 
 (** Frame preserving updates *)
@@ -375,28 +393,31 @@ Lemma sts_update_auth s1 s2 T1 T2 :
   steps (s1,T1) (s2,T2) → sts_auth s1 T1 ~~> sts_auth s2 T2.
 Proof.
   intros ?; apply validity_update; inversion 3 as [|? S ? Tf|]; subst.
+  simpl in *. destruct_conjs.
   destruct (steps_closed s1 s2 T1 T2 S Tf) as (?&?&?); auto; [].
   repeat (done || constructor).
 Qed.
 
-Lemma sts_update_frag S1 S2 T :
-  closed S2 T → S1 ⊆ S2 → sts_frag S1 T ~~> sts_frag S2 T.
+Lemma sts_update_frag S1 S2 T1 T2 :
+  closed S2 T2 → S1 ⊆ S2 → T2 ⊆ T1 → sts_frag S1 T1 ~~> sts_frag S2 T2.
 Proof.
-  rewrite /sts_frag=> HS Hcl. apply validity_update.
+  rewrite /sts_frag=> ? HS HT. apply validity_update.
   inversion 3 as [|? S ? Tf|]; simplify_eq/=.
-  - split; first done. constructor; [set_solver|done].
-  - split; first done. constructor; set_solver.
+  - split_and!; first done; first set_solver. constructor; set_solver.
+  - split_and!; first done; first set_solver. constructor; set_solver.
 Qed.
 
-Lemma sts_update_frag_up s1 S2 T :
-  closed S2 T → s1 ∈ S2 → sts_frag_up s1 T ~~> sts_frag S2 T.
+Lemma sts_update_frag_up s1 S2 T1 T2 :
+  closed S2 T2 → s1 ∈ S2 → T2 ⊆ T1 → sts_frag_up s1 T1 ~~> sts_frag S2 T2.
 Proof.
-  intros; by apply sts_update_frag; [|intros ?; eauto using closed_steps].
+  intros ? ? HT; apply sts_update_frag; [intros; eauto using closed_steps..].
+  rewrite <-HT. eapply up_subseteq; done.
 Qed.
 
 (** Inclusion *)
+(*
 Lemma sts_frag_included S1 S2 T1 T2 :
-  closed S2 T2 →
+  closed S2 T2 → S2 ≢ ∅
   sts_frag S1 T1 ≼ sts_frag S2 T2 ↔
   (closed S1 T1 ∧ ∃ Tf, T2 ≡ T1 ∪ Tf ∧ T1 ∩ Tf ≡ ∅ ∧ S2 ≡ S1 ∩ up_set S2 Tf).
 Proof. (* This should use some general properties of DRAs. To be improved
@@ -435,4 +456,5 @@ Proof.
   intros. apply sts_frag_included; split_and?; auto.
   exists ∅; split_and?; done || set_solver+.
 Qed.
+*)
 End stsRA.

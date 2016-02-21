@@ -53,23 +53,15 @@ Section sts.
 
   (* The same rule as implication does *not* hold, as could be shown using
      sts_frag_included. *)
-  (* TODO: sts.closed forces the user to prove that S2 is inhabited. This is
-     silly, we know that S1 is inhabited since we own it, and hence S2 is
-     inhabited, too. Probably, sts.closed should really just be about closedness.
-     I think keeping disjointnes of the token stuff in there is fine, since it
-     does not incur any unnecessary side-conditions.
-     Then we additionally demand for validity that S is nonempty, rather than
-     making that part of "closed".
-   *)
   Lemma sts_ownS_weaken E γ S1 S2 T1 T2 :
-    T1 ≡ T2 → S1 ⊆ S2 → sts.closed S2 T2 →
+    T2 ⊆ T1 → S1 ⊆ S2 → sts.closed S2 T2 →
     sts_ownS γ S1 T1 ⊑ (|={E}=> sts_ownS γ S2 T2).
-  Proof. intros -> ? ?. by apply own_update, sts_update_frag. Qed.
+  Proof. intros ? ? ?. by apply own_update, sts_update_frag. Qed.
 
   Lemma sts_own_weaken E γ s S T1 T2 :
-    T1 ≡ T2 → s ∈ S → sts.closed S T2 →
+    T2 ⊆ T1 → s ∈ S → sts.closed S T2 →
     sts_own γ s T1 ⊑ (|={E}=> sts_ownS γ S T2).
-  Proof. intros -> ??. by apply own_update, sts_update_frag_up. Qed.
+  Proof. intros ???. by apply own_update, sts_update_frag_up. Qed.
 
   Lemma sts_ownS_op γ S1 S2 T1 T2 :
     T1 ∩ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
@@ -106,8 +98,9 @@ Section sts.
     rewrite -!assoc. apply const_elim_sep_l=> Hvalid.
     assert (s ∈ S) by (by eapply sts_auth_frag_valid_inv, discrete_valid).
     rewrite const_equiv // left_id comm sts_op_auth_frag //.
-    (* this is horrible, but will be fixed whenever we have RAs back *)
-    by rewrite -sts_frag_valid; eapply cmra_valid_op_r, discrete_valid.
+    assert (✓ sts_frag S T) as Hv by
+          by eapply cmra_valid_op_r, discrete_valid.
+    apply (Hv 0).
   Qed.
 
   Lemma sts_closing E γ s T s' T' :

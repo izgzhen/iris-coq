@@ -41,22 +41,18 @@ Module barrier_proto.
     sts.closed (i_states i) {[ Change i ]}.
   Proof.
     split.
-    - apply (non_empty_inhabited(State Low {[ i ]})). rewrite !mkSet_elem_of /=.
-      apply lookup_singleton.
     - move=>[p I]. rewrite /= /tok !mkSet_elem_of /= =>HI.
-      move=>s' /elem_of_intersection. rewrite !mkSet_elem_of /=.
-      move=>[[Htok|Htok] ? ]; subst s'; first done.
-      destruct p; done.
+      destruct p; set_solver.
     - (* If we do the destruct of the states early, and then inversion
          on the proof of a transition, it doesn't work - we do not obtain
          the equalities we need. So we destruct the states late, because this
          means we can use "destruct" instead of "inversion". *)
       move=>s1 s2. rewrite !mkSet_elem_of /==> Hs1 Hstep.
-      (* We probably want some helper lemmas for this... *)
       inversion_clear Hstep as [T1 T2 Hdisj Hstep'].
       inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
       destruct Htrans; last done; move:Hs1 Hdisj Htok.
-      rewrite /= /tok /=.
+      rewrite /= /tok /=. 
+      (* TODO: Can this be done better? *)
       intros. apply dec_stable. 
       assert (Change i ∉ change_tokens I1) as HI1
         by (rewrite mkSet_not_elem_of; set_solver +Hs1).
@@ -74,9 +70,8 @@ Module barrier_proto.
   Lemma low_states_closed : sts.closed low_states {[ Send ]}.
   Proof.
     split.
-    - apply (non_empty_inhabited(State Low ∅)). by rewrite !mkSet_elem_of /=.
     - move=>[p I]. rewrite /= /tok !mkSet_elem_of /= =>HI.
-      destruct p; last done. set_solver.
+      destruct p; set_solver.
     - move=>s1 s2. rewrite !mkSet_elem_of /==> Hs1 Hstep.
       inversion_clear Hstep as [T1 T2 Hdisj Hstep'].
       inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
@@ -101,9 +96,9 @@ Module barrier_proto.
     (* TODO this proof is rather annoying. *)
     apply elem_of_equiv=>t. rewrite !elem_of_union.
     rewrite !mkSet_elem_of /change_tokens /=.
-    destruct t as [j|]; last naive_solver.
+    destruct t as [j|]; last set_solver.
     rewrite elem_of_difference elem_of_singleton.
-    destruct (decide (i = j)); naive_solver.
+    destruct (decide (i = j)); set_solver.
   Qed.
     
   Lemma split_step p i i1 i2 I :
@@ -115,15 +110,12 @@ Module barrier_proto.
     constructor; first constructor; rewrite /= /tok /=; first (destruct p; set_solver).
     (* This gets annoying... and I think I can see a pattern with all these proofs. Automatable? *)
     - apply elem_of_equiv=>t. destruct t; last set_solver.
-      rewrite !mkSet_elem_of /change_tokens /=.
-      rewrite !elem_of_union !elem_of_difference !elem_of_singleton.
-      destruct p; naive_solver.
+      rewrite !mkSet_elem_of. destruct p; set_solver.
     - apply elem_of_equiv=>t. destruct t as [j|]; last set_solver.
-      rewrite !mkSet_elem_of /change_tokens /=.
-      rewrite !elem_of_union !elem_of_difference !elem_of_singleton.
-      destruct (decide (i1 = j)); first naive_solver. 
-      destruct (decide (i2 = j)); first naive_solver.
-      destruct (decide (i = j)); naive_solver.
+      rewrite !mkSet_elem_of.
+      destruct (decide (i1 = j)); first set_solver. 
+      destruct (decide (i2 = j)); first set_solver.
+      destruct (decide (i = j)); set_solver.
   Qed.
 
 End barrier_proto.
@@ -145,9 +137,9 @@ Section proof.
   Local Hint Resolve signal_step wait_step split_step : sts.
   Local Hint Resolve sts.closed_op : sts.
 
-  Hint Extern 50 (_ ∈ _) => set_solver : sts.
-  Hint Extern 50 (_ ⊆ _) => set_solver : sts.
-  Hint Extern 50 (_ ≡ _) => set_solver : sts.
+  Hint Extern 50 (_ ∈ _) => try rewrite !mkSet_elem_of; set_solver : sts.
+  Hint Extern 50 (_ ⊆ _) => try rewrite !mkSet_elem_of; set_solver : sts.
+  Hint Extern 50 (_ ≡ _) => try rewrite !mkSet_elem_of; set_solver : sts.
 
   Local Notation iProp := (iPropG heap_lang Σ).
 
@@ -293,20 +285,10 @@ Section proof.
       rewrite (sts_own_weaken ⊤ _ _ (i_states i ∩ low_states) _ 
                               ({[ Change i ]} ∪ {[ Send ]})).
       + apply pvs_mono. rewrite sts_ownS_op; eauto with sts.
-      (* TODO the rest of this proof is rather annoying. *)
-      + rewrite /= /tok /=. apply elem_of_equiv=>t.
-        rewrite elem_of_difference elem_of_union.
-        rewrite !mkSet_elem_of /change_tokens.
-        (* TODO: destruct t; set_solver does not work. What is the best way to do on? *)
-        destruct t as [i'|]; last by naive_solver. split.
-        * move=>[_ Hn]. left. destruct (decide (i = i')); first by subst i.
-          exfalso. apply Hn. left. set_solver.
-        * move=>[[EQ]|?]; last discriminate. set_solver. 
-      + apply elem_of_intersection. rewrite !mkSet_elem_of /=. set_solver.
-      + apply sts.closed_op; eauto with sts; [].
-        apply (non_empty_inhabited (State Low {[ i ]})).
-        apply elem_of_intersection.
-        rewrite !mkSet_elem_of /=. set_solver.
+      + rewrite /= /tok /=  =>t. rewrite !mkSet_elem_of.
+        move=>[[?]|?]; set_solver. 
+      + eauto with sts.
+      + eauto with sts.
   Qed.
 
   Lemma signal_spec l P (Φ : val → iProp) :
@@ -441,12 +423,7 @@ Section proof.
         do 2 rewrite !(assoc (★)%I) [(_ ★ sts_ownS _ _ _)%I]comm.
         rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
         apply sep_mono.
-        * rewrite -sts_ownS_op; [|by eauto with sts..].
-          apply sts_own_weaken; first done.
-          { rewrite !mkSet_elem_of /=. set_solver+. }
-          apply sts.closed_op; [by eauto with sts..|].
-          apply (non_empty_inhabited (State Low ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
-          rewrite !mkSet_elem_of /=. set_solver+.
+        * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
         * rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
           rewrite !assoc ![(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
           rewrite {1}[sts_ctx _ _ _]always_sep_dup !assoc [(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
@@ -485,12 +462,7 @@ Section proof.
         do 2 rewrite !(assoc (★)%I) [(_ ★ sts_ownS _ _ _)%I]comm.
         rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
         apply sep_mono.
-        * rewrite -sts_ownS_op; [|by eauto with sts..].
-          apply sts_own_weaken; first done.
-          { rewrite !mkSet_elem_of /=. set_solver+. }
-          apply sts.closed_op; [by eauto with sts..|].
-          apply (non_empty_inhabited (State High ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
-          rewrite !mkSet_elem_of /=. set_solver+.
+        * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
         * rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
           rewrite !assoc ![(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
           rewrite {1}[sts_ctx _ _ _]always_sep_dup !assoc [(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.

@@ -142,12 +142,12 @@ Lemma to_validity_valid (x : A) :
   ✓ to_validity x → ✓ x.
 Proof. intros. done. Qed.
 Lemma to_validity_op (x y : A) :
-  ✓ x → ✓ y → (✓ (x ⋅ y) → x ⊥ y) →
+  (✓ (x ⋅ y) → ✓ x ∧ ✓ y ∧ x ⊥ y) →
   to_validity (x ⋅ y) ≡ to_validity x ⋅ to_validity y.
 Proof.
-  intros Hvalx Hvaly Hdisj. split; [split | done].
+  intros Hvd. split; [split | done].
   - simpl. auto.
-  - simpl. intros (_ & _ & ?).
+  - clear Hvd. simpl. intros (? & ? & ?).
     auto using dra_op_valid, to_validity_valid.
 Qed.
 
