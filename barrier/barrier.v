@@ -1,3 +1,4 @@
+From prelude Require Export functions.
 From algebra Require Export upred_big_op.
 From program_logic Require Export sts saved_prop.
 From program_logic Require Import hoare.
@@ -143,6 +144,46 @@ Section proof.
   Proof.
     move=>? ? EQ. rewrite /send. do 4 apply exist_ne=>?. by rewrite EQ.
   Qed.
+
+  Lemma waiting_split i i1 i2 Q R1 R2 P I :
+    i ∈ I → i1 ∉ I → i2 ∉ I → i1 ≠ i2 →
+    (saved_prop_own i2 R2 ★ saved_prop_own i1 R1 ★ saved_prop_own i Q ★
+     (Q -★ R1 ★ R2) ★ waiting P I)
+    ⊑ waiting P ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))).
+  Proof.
+    intros. rewrite /waiting !sep_exist_l. apply exist_elim=>Ψ.
+    rewrite -(exist_intro (<[i1:=R1]> (<[i2:=R2]> Ψ))).
+    rewrite [(Π★{set _} (λ _, saved_prop_own _ _))%I](big_sepS_delete _ I i) //.
+    rewrite !assoc [(_ ★ (_ -★ _))%I]comm !assoc [(_ ★ ▷ _)%I]comm.
+    rewrite !assoc [(_ ★ saved_prop_own i _)%I]comm !assoc [(_ ★ saved_prop_own i _)%I]comm -!assoc.
+    rewrite 3!assoc. apply sep_mono.
+    - rewrite saved_prop_agree. u_strip_later.
+      apply wand_intro_l. rewrite [(_ ★ (_ -★ Π★{set _} _))%I]comm !assoc wand_elim_r.
+      rewrite (big_sepS_delete _ I i) //.
+      rewrite big_sepS_insert; last set_solver.
+      rewrite big_sepS_insert; last set_solver.
+      rewrite [(_ ★ Π★{set _} _)%I]comm !assoc [(_ ★ Π★{set _} _)%I]comm -!assoc.
+      apply sep_mono.
+      + apply big_sepS_mono; first done. intros j.
+        rewrite elem_of_difference not_elem_of_singleton. intros.
+        rewrite fn_lookup_insert_ne; last naive_solver.
+        rewrite fn_lookup_insert_ne; last naive_solver.
+        done.
+      + rewrite !fn_lookup_insert fn_lookup_insert_ne // !fn_lookup_insert !assoc.
+        eapply wand_apply_r'; first done.
+        apply: (eq_rewrite (Ψ i) Q (λ x, x)%I); last by eauto with I.
+        rewrite eq_sym. eauto with I.
+    - rewrite big_sepS_insert; last set_solver.
+      rewrite big_sepS_insert; last set_solver.
+      rewrite !assoc. apply sep_mono.
+      + rewrite !fn_lookup_insert fn_lookup_insert_ne // !fn_lookup_insert comm.
+        done.
+      + apply big_sepS_mono; first done. intros j.
+        rewrite elem_of_difference not_elem_of_singleton. intros.
+        rewrite fn_lookup_insert_ne; last naive_solver.
+        rewrite fn_lookup_insert_ne; last naive_solver.
+        done.
+  Qed.  
 
   Lemma newchan_spec (P : iProp) (Φ : val → iProp) :
     (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ (LocV l))
@@ -297,30 +338,80 @@ Section proof.
     rewrite {1}/recv /barrier_ctx. rewrite sep_exist_r.
     apply exist_elim=>γ. rewrite sep_exist_r.  apply exist_elim=>P. 
     rewrite sep_exist_r.  apply exist_elim=>Q. rewrite sep_exist_r.
-    apply exist_elim=>i.
+    apply exist_elim=>i. rewrite -wp_pvs.
     (* I think some evars here are better than repeating *everything* *)
     eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
       eauto with I ndisj.
-    rewrite [(_ ★ sts_ownS _ _ _)%I]comm -!assoc. apply sep_mono_r.
+    rewrite !assoc [(_ ★ sts_ownS _ _ _)%I]comm -!assoc. apply sep_mono_r.
     apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
-    apply const_elim_sep_l=>Hs. destruct p; last done.
-    rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
-    eapply wp_store; eauto with I ndisj. 
-    rewrite -!assoc. apply sep_mono_r. u_strip_later.
-    apply wand_intro_l. rewrite -(exist_intro (State High I)).
-    rewrite -(exist_intro ∅). rewrite const_equiv /=; last first.
-    { apply rtc_once. constructor; first constructor;
-                        rewrite /= /tok /=; set_solver. }
-    rewrite left_id -later_intro {2}/barrier_inv -!assoc. apply sep_mono_r.
-    rewrite !assoc [(_ ★ P)%I]comm !assoc -2!assoc.
-    apply sep_mono; last first.
-    { apply wand_intro_l. eauto with I. }
-    (* Now we come to the core of the proof: Updating from waiting to ress. *)
-    rewrite /waiting /ress sep_exist_l. apply exist_elim=>{Φ} Φ.
-    rewrite later_wand {1}(later_intro P) !assoc wand_elim_r.
-    rewrite big_sepS_later -big_sepS_sepS. apply big_sepS_mono'=>i.
-    rewrite -(exist_intro (Φ i)) comm. done.
-
+    apply const_elim_sep_l=>Hs. rewrite -wp_pvs. wp_seq.
+    eapply sep_elim_True_l.
+    { eapply saved_prop_alloc_strong with (P0 := R1) (G := I). }
+    rewrite pvs_frame_r. apply pvs_strip_pvs. rewrite sep_exist_r.
+    apply exist_elim=>i1. rewrite always_and_sep_l. rewrite -assoc.
+    apply const_elim_sep_l=>Hi1. eapply sep_elim_True_l.
+    { eapply saved_prop_alloc_strong with (P0 := R2) (G := I ∪ {[ i1 ]}). }
+    rewrite pvs_frame_r. apply pvs_mono. rewrite sep_exist_r.
+    apply exist_elim=>i2. rewrite always_and_sep_l. rewrite -assoc.
+    apply const_elim_sep_l=>Hi2.
+    rewrite ->not_elem_of_union, elem_of_singleton in Hi2.
+    destruct Hi2 as [Hi2 Hi12]. change (i ∈ I) in Hs. destruct p.
+    (* Case I: Low state. *)
+    - rewrite -(exist_intro (State Low ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
+      rewrite -(exist_intro ({[Change i1 ]} ∪ {[ Change i2 ]})).
+      rewrite const_equiv; last first.
+      { apply rtc_once. constructor; first constructor; rewrite /= /tok /=; first set_solver.
+      (* This gets annoying... and I think I can see a pattern with all these proofs. Automatable? *)
+        - apply elem_of_equiv=>t. destruct t; last set_solver.
+          rewrite !mkSet_elem_of /change_tokens /=.
+          rewrite !elem_of_union !elem_of_difference !elem_of_singleton.
+          naive_solver.
+        - apply elem_of_equiv=>t. destruct t as [j|]; last set_solver.
+          rewrite !mkSet_elem_of /change_tokens /=.
+          rewrite !elem_of_union !elem_of_difference !elem_of_singleton.
+          destruct (decide (i1 = j)); first naive_solver. 
+          destruct (decide (i2 = j)); first naive_solver.
+          destruct (decide (i = j)); naive_solver. }
+      rewrite left_id -later_intro {1 3}/barrier_inv.
+      (* FIXME ssreflect rewrite fails if there are evars around. Also, this is very slow because we don't have a proof mode. *)
+      rewrite -(waiting_split _ _ _ Q R1 R2); [|done..].
+      match goal with | |- _ ⊑ ?G => rewrite [G]lock end.
+      rewrite {1}[saved_prop_own i1 _]always_sep_dup.
+      rewrite {1}[saved_prop_own i2 _]always_sep_dup.
+      rewrite !assoc [(_ ★ saved_prop_own i1 _)%I]comm.
+      rewrite !assoc [(_ ★ saved_prop_own i _)%I]comm.
+      rewrite !assoc [(_ ★ (l ↦ _))%I]comm.
+      rewrite !assoc [(_ ★ (waiting _ _))%I]comm.
+      rewrite !assoc [(_ ★ (Q -★ _))%I]comm -!assoc 5!assoc.
+      unlock. apply sep_mono.
+      + (* This should really all be handled automatically. *)
+        rewrite !assoc [(_ ★ (l ↦ _))%I]comm -!assoc. apply sep_mono_r.
+        rewrite !assoc [(_ ★ saved_prop_own i2 _)%I]comm -!assoc. apply sep_mono_r.
+        rewrite !assoc [(_ ★ saved_prop_own i1 _)%I]comm -!assoc. apply sep_mono_r.
+        rewrite !assoc [(_ ★ saved_prop_own i _)%I]comm -!assoc. apply sep_mono_r.
+        done.
+      + apply wand_intro_l. rewrite !assoc. eapply pvs_wand_r. rewrite /recv.
+        rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R1) -(exist_intro i1).
+        rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R2) -(exist_intro i2).
+        do 2 rewrite !(assoc (★)%I) [(_ ★ sts_ownS _ _ _)%I]comm.
+        rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
+        apply sep_mono.
+        * rewrite -sts_ownS_op; [|set_solver|by eauto..].
+          apply sts_own_weaken; first done.
+          { rewrite !mkSet_elem_of /=. set_solver+. }
+          apply sts.closed_op; [by eauto..|set_solver|].
+          apply (non_empty_inhabited (State Low ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
+          rewrite !mkSet_elem_of /=. set_solver+.
+        * rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
+          rewrite !assoc ![(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
+          rewrite {1}[sts_ctx _ _ _]always_sep_dup !assoc [(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
+          rewrite !assoc ![(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
+          rewrite comm. apply sep_mono_r. apply sep_intro_True_l.
+          { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
+          apply sep_intro_True_r; first done.
+          { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
+(* Case II: High state *)
+    - 
   Abort.
 
   Lemma recv_strengthen l P1 P2 :

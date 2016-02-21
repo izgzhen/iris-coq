@@ -53,6 +53,14 @@ Section sts.
 
   (* The same rule as implication does *not* hold, as could be shown using
      sts_frag_included. *)
+  (* TODO: sts.closed forces the user to prove that S2 is inhabited. This is
+     silly, we know that S1 is inhabited since we own it, and hence S2 is
+     inhabited, too. Probably, sts.closed should really just be about closedness.
+     I think keeping disjointnes of the token stuff in there is fine, since it
+     does not incur any unnecessary side-conditions.
+     Then we additionally demand for validity that S is nonempty, rather than
+     making that part of "closed".
+   *)
   Lemma sts_ownS_weaken E γ S1 S2 T1 T2 :
     T1 ≡ T2 → S1 ⊆ S2 → sts.closed S2 T2 →
     sts_ownS γ S1 T1 ⊑ (|={E}=> sts_ownS γ S2 T2).
