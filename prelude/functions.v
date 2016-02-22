@@ -31,23 +31,19 @@ Section functions.
 End functions.
 
 (** "Cons-ing" of functions from nat to T *)
-Section fcons.
-  Context {T : Type}.
+Polymorphic Definition fn_cons {T : Type} (t : T) (f: nat → T) : nat → T :=
+  λ n, match n with
+       | O => t
+       | S n => f n
+       end.
 
-  Definition fn_cons (t : T) (f: nat → T) : nat → T :=
-    λ n, match n with
-         | O => t
-         | S n => f n
-         end.
-
-  Definition fn_mcons (ts : list T) (f : nat → T) : nat → T :=
+Polymorphic Definition fn_mcons {T : Type} (ts : list T) (f : nat → T) : nat → T :=
     fold_right fn_cons f ts.
-End fcons.
 
 Infix ".::" := fn_cons (at level 60, right associativity) : C_scope.
 Infix ".++" := fn_mcons (at level 60, right associativity) : C_scope.
 
-Lemma fn_mcons_app {T : Type} (ts1 ts2 : list T) f :
+Polymorphic Lemma fn_mcons_app {T : Type} (ts1 ts2 : list T) f :
   (ts1 ++ ts2) .++ f = ts1 .++ (ts2 .++ f).
 Proof.
   unfold fn_mcons. rewrite fold_right_app. done.
