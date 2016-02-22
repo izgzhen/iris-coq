@@ -4,4 +4,4 @@ buildjob:
   tags:
   - coq
   script:
-  - make
+  - make -j9
