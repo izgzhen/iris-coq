@@ -6,13 +6,17 @@ Import uPred.
 
 (** Index of a CMRA in the product of global CMRAs. *)
 Definition gid := nat.
+
 (** Name of one instance of a particular CMRA in the ghost state. *)
 Definition gname := positive.
+
 (** The global CMRA: Indexed product over a gid i to (gname --fin--> Σ i) *)
 Definition globalF (Σ : gid → iFunctor) : iFunctor :=
   iprodF (λ i, mapF gname (Σ i)).
+Notation iFunctorG := (gid → iFunctor).
+Notation iPropG Λ Σ := (iProp Λ (globalF Σ)).
 
-Class inG (Λ : language) (Σ : gid → iFunctor) (A : cmraT) := InG {
+Class inG (Λ : language) (Σ : iFunctorG) (A : cmraT) := InG {
   inG_id : gid;
   inG_prf : A = Σ inG_id (laterC (iPreProp Λ (globalF Σ)))
 }.
@@ -24,32 +28,6 @@ Definition own `{inG Λ Σ A} (γ : gname) (a : A) : iProp Λ (globalF Σ) :=
 Instance: Params (@to_globalF) 5.
 Instance: Params (@own) 5.
 Typeclasses Opaque to_globalF own.
-
-Notation iPropG Λ Σ := (iProp Λ (globalF Σ)).
-Notation iFunctorG := (gid → iFunctor).
-
-(** We need another typeclass to identify the *functor* in the Σ. Basing inG on
-   the functor breaks badly because Coq is unable to infer the correct
-   typeclasses, it does not unfold the functor. *)
-Class inGF (Λ : language) (Σ : gid → iFunctor) (F : iFunctor) := InGF {
-  inGF_id : gid;
-  inGF_prf : F = Σ inGF_id;
-}.
-(* Avoid eager type class search: this line ensures that type class search
-is only triggered if the first two arguments of inGF do not contain evars. Since
-instance search for [inGF] is restrained, instances should always have [inGF] as
-their first argument to avoid loops. For example, the instances [authGF_inGF]
-and [auth_identity] otherwise create a cycle that pops up arbitrarily. *)
-Hint Mode inGF + + - : typeclass_instances.
-
-Lemma inGF_inG `{inGF Λ Σ F} : inG Λ Σ (F (laterC (iPreProp Λ (globalF Σ)))).
-Proof. exists inGF_id. by rewrite -inGF_prf. Qed.
-Instance inGF_here {Λ Σ} (F: iFunctor) : inGF Λ (F .:: Σ) F.
-Proof. by exists 0. Qed.
-Instance inGF_further {Λ Σ} (F F': iFunctor) : inGF Λ Σ F → inGF Λ (F' .:: Σ) F.
-Proof. intros [i ?]. by exists (S i). Qed.
-
-Definition endGF : iFunctorG := const (constF unitRA).
 
 (** Properties about ghost ownership *)
 Section global.

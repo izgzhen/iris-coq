@@ -27,45 +27,4 @@ Section functions.
   Lemma fn_lookup_alter_ne (g : T → T) (f : A → T) a b :
     a ≠ b → alter g a f b = f b.
   Proof. unfold alter, fn_alter. by destruct (decide (a = b)). Qed.
-
 End functions.
-
-(** "Cons-ing" of functions from nat to T *)
-(* Coq's standard lists are not universe polymorphic. Hence we have to re-define them. Ouch.
-   TODO: If we decide to end up going with this, we should move this elsewhere. *)
-Polymorphic Inductive plist {A : Type} : Type :=
-| pnil : plist
-| pcons: A → plist → plist.
-Arguments plist : clear implicits.
-
-Polymorphic Fixpoint papp {A : Type} (l1 l2 : plist A) : plist A :=
-  match l1 with
-  | pnil => l2
-  | pcons a l => pcons a (papp l l2)
-  end.
-
-(* TODO: Notation is totally up for debate. *)
-Infix "`::`" := pcons (at level 60, right associativity) : C_scope.
-Infix "`++`" := papp (at level 60, right associativity) : C_scope.
-
-Polymorphic Definition fn_cons {T : Type} (t : T) (f: nat → T) : nat → T :=
-  λ n, match n with
-       | O => t
-       | S n => f n
-       end.
-
-Polymorphic Fixpoint fn_mcons {T : Type} (ts : plist T) (f : nat → T) : nat → T :=
-  match ts with
-  | pnil => f
-  | pcons t ts => fn_cons t (fn_mcons ts f)
-  end.
-
-(* TODO: Notation is totally up for debate. *)
-Infix ".::" := fn_cons (at level 60, right associativity) : C_scope.
-Infix ".++" := fn_mcons (at level 60, right associativity) : C_scope.
-
-Polymorphic Lemma fn_mcons_app {T : Type} (ts1 ts2 : plist T) f :
-  (ts1 `++` ts2) .++ f = ts1 .++ (ts2 .++ f).
-Proof.
-  induction ts1; simpl; eauto. congruence.
-Qed.

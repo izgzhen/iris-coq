@@ -1,5 +1,5 @@
 From algebra Require Export auth.
-From program_logic Require Export invariants ghost_ownership.
+From program_logic Require Export invariants global_functor.
 Import uPred.
 
 Class authG Λ Σ (A : cmraT) `{Empty A} := AuthG {

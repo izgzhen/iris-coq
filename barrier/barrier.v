@@ -125,7 +125,7 @@ End barrier_proto.
 Import barrier_proto.
 
 (* The functors we need. *)
-Definition barrierGFs := stsGF sts `::` agreeF `::` pnil.
+Definition barrierGFs : iFunctors := [stsGF sts; agreeF].
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.

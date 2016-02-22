@@ -1,5 +1,5 @@
 From algebra Require Export agree.
-From program_logic Require Export ghost_ownership.
+From program_logic Require Export global_functor.
 Import uPred.
 
 Notation savedPropG Λ Σ :=

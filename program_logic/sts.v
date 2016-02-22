@@ -1,5 +1,5 @@
 From algebra Require Export sts.
-From program_logic Require Export invariants ghost_ownership.
+From program_logic Require Export invariants global_functor.
 Import uPred.
 
 Class stsG Λ Σ (sts : stsT) := StsG {
