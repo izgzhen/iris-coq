@@ -42,7 +42,7 @@ Module barrier_proto.
   Proof.
     split.
     - move=>[p I]. rewrite /= /tok !mkSet_elem_of /= =>HI.
-      destruct p; set_solver.
+      destruct p; set_solver eauto.
     - (* If we do the destruct of the states early, and then inversion
          on the proof of a transition, it doesn't work - we do not obtain
          the equalities we need. So we destruct the states late, because this
@@ -57,9 +57,7 @@ Module barrier_proto.
       assert (Change i ∉ change_tokens I1) as HI1
         by (rewrite mkSet_not_elem_of; set_solver +Hs1).
       assert (Change i ∉ change_tokens I2) as HI2.
-      { destruct p.
-        - set_solver +Htok Hdisj HI1.
-        - set_solver +Htok Hdisj HI1 / discriminate. }
+      { destruct p; set_solver +Htok Hdisj HI1. }
       done.
   Qed.
 
@@ -92,7 +90,7 @@ Module barrier_proto.
     i ∈ I → sts.steps (State High I, {[ Change i ]}) (State High (I ∖ {[ i ]}), ∅).
   Proof.
     intros. apply rtc_once.
-    constructor; first constructor; rewrite /= /tok /=; [set_solver..|].
+    constructor; first constructor; rewrite /= /tok /=; [set_solver eauto..|].
     (* TODO this proof is rather annoying. *)
     apply elem_of_equiv=>t. rewrite !elem_of_union.
     rewrite !mkSet_elem_of /change_tokens /=.
@@ -100,7 +98,7 @@ Module barrier_proto.
     rewrite elem_of_difference elem_of_singleton.
     destruct (decide (i = j)); set_solver.
   Qed.
-    
+
   Lemma split_step p i i1 i2 I :
     i ∈ I → i1 ∉ I → i2 ∉ I → i1 ≠ i2 →
     sts.steps (State p I, {[ Change i ]})

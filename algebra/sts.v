@@ -290,7 +290,7 @@ Proof.
     intros s2; rewrite elem_of_intersection. destruct_conjs.
     unfold up_set; rewrite elem_of_bind; intros (?&s1&?&?&?).
     apply closed_steps with T2 s1; auto with sts.
-Admitted.
+Qed.
 Canonical Structure RA : cmraT := validityRA (car sts).
 End sts_dra. End sts_dra.
 
