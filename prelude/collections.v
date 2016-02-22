@@ -262,7 +262,7 @@ Tactic Notation "set_solver" "-" hyp_list(Hs) "/" tactic3(tac) :=
   clear Hs; set_solver tac.
 Tactic Notation "set_solver" "+" hyp_list(Hs) "/" tactic3(tac) :=
   revert Hs; clear; set_solver tac.
-Tactic Notation "set_solver" := set_solver eauto.
+Tactic Notation "set_solver" := set_solver idtac.
 Tactic Notation "set_solver" "-" hyp_list(Hs) := clear Hs; set_solver.
 Tactic Notation "set_solver" "+" hyp_list(Hs) :=
   revert Hs; clear; set_solver.
@@ -537,10 +537,10 @@ Section collection_monad.
 
   Global Instance collection_fmap_mono {A B} :
     Proper (pointwise_relation _ (=) ==> (⊆) ==> (⊆)) (@fmap M _ A B).
-  Proof. intros f g ? X Y ?; set_solver. Qed.
+  Proof. intros f g ? X Y ?; set_solver eauto. Qed.
   Global Instance collection_fmap_proper {A B} :
     Proper (pointwise_relation _ (=) ==> (≡) ==> (≡)) (@fmap M _ A B).
-  Proof. intros f g ? X Y [??]; split; set_solver. Qed.
+  Proof. intros f g ? X Y [??]; split; set_solver eauto. Qed.
   Global Instance collection_bind_mono {A B} :
     Proper (((=) ==> (⊆)) ==> (⊆) ==> (⊆)) (@mbind M _ A B).
   Proof. unfold respectful; intros f g Hfg X Y ?; set_solver. Qed.
@@ -575,12 +575,12 @@ Section collection_monad.
     l ∈ mapM f k ↔ Forall2 (λ x y, x ∈ f y) l k.
   Proof.
     split.
-    - revert l. induction k; set_solver.
+    - revert l. induction k; set_solver eauto.
     - induction 1; set_solver.
   Qed.
   Lemma collection_mapM_length {A B} (f : A → M B) l k :
     l ∈ mapM f k → length l = length k.
-  Proof. revert l; induction k; set_solver. Qed.
+  Proof. revert l; induction k; set_solver eauto. Qed.
   Lemma elem_of_mapM_fmap {A B} (f : A → B) (g : B → M A) l k :
     Forall (λ x, ∀ y, y ∈ g x → f y = x) l → k ∈ mapM g l → fmap f k = l.
   Proof.
