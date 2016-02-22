@@ -162,18 +162,18 @@ Next Obligation.
     eauto using cmra_validN_included, cmra_preserving_r.
 Qed.
 
-Program Definition uPred_later {M} (P : uPred M) : uPred M :=
-  {| uPred_holds n x := match n return _ with 0 => True | S n' => P n' x end |}.
-Next Obligation. intros M P [|n] ??; eauto using uPred_ne,(dist_le (A:=M)). Qed.
-Next Obligation.
-  intros M P [|n1] [|n2] x1 x2; eauto using uPred_weaken,cmra_validN_S; try lia.
-Qed.
 Program Definition uPred_always {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n (unit x) |}.
 Next Obligation. by intros M P x1 x2 n ? Hx; rewrite /= -Hx. Qed.
 Next Obligation.
   intros M P n1 n2 x1 x2 ????; eapply uPred_weaken with n1 (unit x1);
     eauto using cmra_unit_preserving, cmra_unit_validN.
+Qed.
+Program Definition uPred_later {M} (P : uPred M) : uPred M :=
+  {| uPred_holds n x := match n return _ with 0 => True | S n' => P n' x end |}.
+Next Obligation. intros M P [|n] ??; eauto using uPred_ne,(dist_le (A:=M)). Qed.
+Next Obligation.
+  intros M P [|n1] [|n2] x1 x2; eauto using uPred_weaken,cmra_validN_S; try lia.
 Qed.
 
 Program Definition uPred_ownM {M : cmraT} (a : M) : uPred M :=
@@ -207,9 +207,9 @@ Notation "∀ x .. y , P" :=
   (uPred_forall (λ x, .. (uPred_forall (λ y, P)) ..)%I) : uPred_scope.
 Notation "∃ x .. y , P" :=
   (uPred_exist (λ x, .. (uPred_exist (λ y, P)) ..)%I) : uPred_scope.
-Notation "▷ P" := (uPred_later P)
-  (at level 20, right associativity) : uPred_scope.
 Notation "□ P" := (uPred_always P)
+  (at level 20, right associativity) : uPred_scope.
+Notation "▷ P" := (uPred_later P)
   (at level 20, right associativity) : uPred_scope.
 Infix "≡" := uPred_eq : uPred_scope.
 Notation "✓ x" := (uPred_valid x) (at level 20) : uPred_scope.
@@ -690,67 +690,6 @@ Proof. by apply forall_intro=> a; rewrite forall_elim. Qed.
 Lemma sep_forall_r {A} (Φ : A → uPred M) Q : ((∀ a, Φ a) ★ Q) ⊑ (∀ a, Φ a ★ Q).
 Proof. by apply forall_intro=> a; rewrite forall_elim. Qed.
 
-(* Later *)
-Lemma later_mono P Q : P ⊑ Q → ▷ P ⊑ ▷ Q.
-Proof. intros HP [|n] x ??; [done|apply HP; eauto using cmra_validN_S]. Qed.
-Lemma later_intro P : P ⊑ ▷ P.
-Proof.
-  intros [|n] x ??; simpl in *; [done|].
-  apply uPred_weaken with (S n) x; eauto using cmra_validN_S.
-Qed.
-Lemma löb P : (▷ P → P) ⊑ P.
-Proof.
-  intros n x ? HP; induction n as [|n IH]; [by apply HP|].
-  apply HP, IH, uPred_weaken with (S n) x; eauto using cmra_validN_S.
-Qed.
-Lemma later_True' : True ⊑ (▷ True : uPred M).
-Proof. by intros [|n] x. Qed.
-Lemma later_and P Q : (▷ (P ∧ Q))%I ≡ (▷ P ∧ ▷ Q)%I.
-Proof. by intros [|n] x; split. Qed.
-Lemma later_or P Q : (▷ (P ∨ Q))%I ≡ (▷ P ∨ ▷ Q)%I.
-Proof. intros [|n] x; simpl; tauto. Qed.
-Lemma later_forall {A} (Φ : A → uPred M) : (▷ ∀ a, Φ a)%I ≡ (∀ a, ▷ Φ a)%I.
-Proof. by intros [|n] x. Qed.
-Lemma later_exist_1 {A} (Φ : A → uPred M) : (∃ a, ▷ Φ a) ⊑ (▷ ∃ a, Φ a).
-Proof. by intros [|[|n]] x. Qed.
-Lemma later_exist `{Inhabited A} (Φ : A → uPred M) :
-  (▷ ∃ a, Φ a)%I ≡ (∃ a, ▷ Φ a)%I.
-Proof. intros [|[|n]] x; split; done || by exists inhabitant; simpl. Qed.
-Lemma later_sep P Q : (▷ (P ★ Q))%I ≡ (▷ P ★ ▷ Q)%I.
-Proof.
-  intros n x ?; split.
-  - destruct n as [|n]; simpl.
-    { by exists x, (unit x); rewrite cmra_unit_r. } 
-    intros (x1&x2&Hx&?&?); destruct (cmra_extend_op n x x1 x2)
-      as ([y1 y2]&Hx'&Hy1&Hy2); eauto using cmra_validN_S; simpl in *.
-    exists y1, y2; split; [by rewrite Hx'|by rewrite Hy1 Hy2].
-  - destruct n as [|n]; simpl; [done|intros (x1&x2&Hx&?&?)].
-    exists x1, x2; eauto using dist_S.
-Qed.
-
-(* Later derived *)
-Global Instance later_mono' : Proper ((⊑) ==> (⊑)) (@uPred_later M).
-Proof. intros P Q; apply later_mono. Qed.
-Lemma later_True : (▷ True : uPred M)%I ≡ True%I.
-Proof. apply (anti_symm (⊑)); auto using later_True'. Qed.
-Lemma later_impl P Q : ▷ (P → Q) ⊑ (▷ P → ▷ Q).
-Proof.
-  apply impl_intro_l; rewrite -later_and.
-  apply later_mono, impl_elim with P; auto.
-Qed.
-Lemma later_wand P Q : ▷ (P -★ Q) ⊑ (▷ P -★ ▷ Q).
-Proof. apply wand_intro_r;rewrite -later_sep; apply later_mono,wand_elim_l. Qed.
-Lemma later_iff P Q : (▷ (P ↔ Q)) ⊑ (▷P ↔ ▷Q).
-Proof. by rewrite /uPred_iff later_and !later_impl. Qed.
-Lemma löb_strong P Q : (P ∧ ▷Q) ⊑ Q → P ⊑ Q.
-Proof.
-  intros Hlöb. apply impl_entails.
-  etrans; last by eapply löb.
-  apply impl_intro_l, impl_intro_l. rewrite right_id -{2}Hlöb.
-  apply and_intro; first by eauto.
-  by rewrite {1}(later_intro P) later_impl impl_elim_r.
-Qed.       
-
 (* Always *)
 Lemma always_const φ : (□ ■ φ : uPred M)%I ≡ (■ φ)%I.
 Proof. done. Qed.
@@ -821,6 +760,72 @@ Lemma always_entails_l' P Q : (P ⊑ □ Q) → P ⊑ (□ Q ★ P).
 Proof. intros; rewrite -always_and_sep_l'; auto. Qed.
 Lemma always_entails_r' P Q : (P ⊑ □ Q) → P ⊑ (P ★ □ Q).
 Proof. intros; rewrite -always_and_sep_r'; auto. Qed.
+
+(* Later *)
+Lemma later_mono P Q : P ⊑ Q → ▷ P ⊑ ▷ Q.
+Proof. intros HP [|n] x ??; [done|apply HP; eauto using cmra_validN_S]. Qed.
+Lemma later_intro P : P ⊑ ▷ P.
+Proof.
+  intros [|n] x ??; simpl in *; [done|].
+  apply uPred_weaken with (S n) x; eauto using cmra_validN_S.
+Qed.
+Lemma löb P : (▷ P → P) ⊑ P.
+Proof.
+  intros n x ? HP; induction n as [|n IH]; [by apply HP|].
+  apply HP, IH, uPred_weaken with (S n) x; eauto using cmra_validN_S.
+Qed.
+Lemma later_True' : True ⊑ (▷ True : uPred M).
+Proof. by intros [|n] x. Qed.
+Lemma later_and P Q : (▷ (P ∧ Q))%I ≡ (▷ P ∧ ▷ Q)%I.
+Proof. by intros [|n] x; split. Qed.
+Lemma later_or P Q : (▷ (P ∨ Q))%I ≡ (▷ P ∨ ▷ Q)%I.
+Proof. intros [|n] x; simpl; tauto. Qed.
+Lemma later_forall {A} (Φ : A → uPred M) : (▷ ∀ a, Φ a)%I ≡ (∀ a, ▷ Φ a)%I.
+Proof. by intros [|n] x. Qed.
+Lemma later_exist_1 {A} (Φ : A → uPred M) : (∃ a, ▷ Φ a) ⊑ (▷ ∃ a, Φ a).
+Proof. by intros [|[|n]] x. Qed.
+Lemma later_exist `{Inhabited A} (Φ : A → uPred M) :
+  (▷ ∃ a, Φ a)%I ≡ (∃ a, ▷ Φ a)%I.
+Proof. intros [|[|n]] x; split; done || by exists inhabitant; simpl. Qed.
+Lemma later_sep P Q : (▷ (P ★ Q))%I ≡ (▷ P ★ ▷ Q)%I.
+Proof.
+  intros n x ?; split.
+  - destruct n as [|n]; simpl.
+    { by exists x, (unit x); rewrite cmra_unit_r. }
+    intros (x1&x2&Hx&?&?); destruct (cmra_extend_op n x x1 x2)
+      as ([y1 y2]&Hx'&Hy1&Hy2); eauto using cmra_validN_S; simpl in *.
+    exists y1, y2; split; [by rewrite Hx'|by rewrite Hy1 Hy2].
+  - destruct n as [|n]; simpl; [done|intros (x1&x2&Hx&?&?)].
+    exists x1, x2; eauto using dist_S.
+Qed.
+
+(* Later derived *)
+Global Instance later_mono' : Proper ((⊑) ==> (⊑)) (@uPred_later M).
+Proof. intros P Q; apply later_mono. Qed.
+Lemma later_True : (▷ True : uPred M)%I ≡ True%I.
+Proof. apply (anti_symm (⊑)); auto using later_True'. Qed.
+Lemma later_impl P Q : ▷ (P → Q) ⊑ (▷ P → ▷ Q).
+Proof.
+  apply impl_intro_l; rewrite -later_and.
+  apply later_mono, impl_elim with P; auto.
+Qed.
+Lemma later_wand P Q : ▷ (P -★ Q) ⊑ (▷ P -★ ▷ Q).
+Proof. apply wand_intro_r;rewrite -later_sep; apply later_mono,wand_elim_l. Qed.
+Lemma later_iff P Q : (▷ (P ↔ Q)) ⊑ (▷ P ↔ ▷ Q).
+Proof. by rewrite /uPred_iff later_and !later_impl. Qed.
+Lemma löb_strong P Q : (P ∧ ▷ Q) ⊑ Q → P ⊑ Q.
+Proof.
+  intros Hlöb. apply impl_entails. rewrite -(löb (P → Q)).
+  apply entails_impl, impl_intro_l. rewrite -{2}Hlöb.
+  apply and_intro; first by eauto.
+  by rewrite {1}(later_intro P) later_impl impl_elim_r.
+Qed.
+Lemma löb_strong_sep P Q : (P ★ ▷ (P -★ Q)) ⊑ Q → P ⊑ Q.
+Proof.
+  move/wand_intro_l=>Hlöb. apply impl_entails.
+  rewrite -[(_ → _)%I]always_elim. apply löb_strong.
+  by rewrite left_id -always_wand_impl -always_later Hlöb.
+Qed.
 
 (* Own *)
 Lemma ownM_op (a1 a2 : M) :
@@ -994,15 +999,6 @@ Lemma always_entails_l P Q `{!AlwaysStable Q} : (P ⊑ Q) → P ⊑ (Q ★ P).
 Proof. by rewrite -(always_always Q); apply always_entails_l'. Qed.
 Lemma always_entails_r P Q `{!AlwaysStable Q} : (P ⊑ Q) → P ⊑ (P ★ Q).
 Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
-
-(* Derived lemmas that need a combination of the above *)
-Lemma löb_strong_sep P Q : (P ★ ▷(P -★ Q)) ⊑ Q → P ⊑ Q.
-Proof.
-  move/wand_intro_l=>Hlöb. rewrite -[P](left_id True (∧))%I.
-  apply impl_elim_l'. rewrite -[(_ → _)%I]always_elim. apply löb_strong.
-  rewrite left_id -always_wand_impl -always_later Hlöb. done.
-Qed.
-
 End uPred_logic.
 
 (* Hint DB for the logic *)
