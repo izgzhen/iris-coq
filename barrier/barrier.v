@@ -126,6 +126,9 @@ End barrier_proto.
    the module into our namespaces. But Coq doesn't seem to support that...?? *)
 Import barrier_proto.
 
+(* The functors we need. *)
+Definition barrierFs := stsF sts `::` agreeF `::` pnil.
+
 (** Now we come to the Iris part of the proof. *)
 Section proof.
   Context {Σ : iFunctorG} (N : namespace).

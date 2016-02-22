@@ -28,8 +28,7 @@ Section client.
 End client.
 
 Section ClosedProofs.
-  Definition Σ : iFunctorG := agreeF .:: constF (stsRA barrier_proto.sts) .:: heapF
-                                     .:: (λ _, constF unitRA) : iFunctorG.
+  Definition Σ : iFunctorG := heapF .:: barrierFs .++ endF.
   Notation iProp := (iPropG heap_lang Σ).
 
   Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ λ v, True }}.
