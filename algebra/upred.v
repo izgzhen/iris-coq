@@ -398,7 +398,7 @@ Proof. intros ->; apply or_intro_r. Qed.
 Lemma exist_intro' {A} P (Ψ : A → uPred M) a : P ⊑ Ψ a → P ⊑ (∃ a, Ψ a).
 Proof. intros ->; apply exist_intro. Qed.
 Lemma forall_elim' {A} P (Ψ : A → uPred M) : P ⊑ (∀ a, Ψ a) → (∀ a, P ⊑ Ψ a).
-Proof. move=>EQ ?. rewrite EQ. by apply forall_elim. Qed.
+Proof. move=> HP a. by rewrite HP forall_elim. Qed.
 
 Hint Resolve or_elim or_intro_l' or_intro_r'.
 Hint Resolve and_intro and_elim_l' and_elim_r'.
@@ -532,14 +532,12 @@ Proof.
   rewrite -(comm _ P) and_exist_l. apply exist_proper=>a. by rewrite comm.
 Qed.
 
-Lemma const_intro_l φ Q R : φ → (■φ ∧ Q) ⊑ R → Q ⊑ R.
+Lemma const_intro_l φ Q R : φ → (■ φ ∧ Q) ⊑ R → Q ⊑ R.
 Proof. intros ? <-; auto using const_intro. Qed.
-Lemma const_intro_r φ Q R : φ → (Q ∧ ■φ) ⊑ R → Q ⊑ R.
+Lemma const_intro_r φ Q R : φ → (Q ∧ ■ φ) ⊑ R → Q ⊑ R.
 Proof. intros ? <-; auto using const_intro. Qed.
 Lemma const_intro_impl φ Q R : φ → Q ⊑ (■ φ → R) → Q ⊑ R.
-Proof.
-  intros ? ->; apply (const_intro_l φ); first done. by rewrite impl_elim_r.
-Qed.
+Proof. intros ? ->. eauto using const_intro_l, impl_elim_r. Qed.
 Lemma const_elim_l φ Q R : (φ → Q ⊑ R) → (■ φ ∧ Q) ⊑ R.
 Proof. intros; apply const_elim with φ; eauto. Qed.
 Lemma const_elim_r φ Q R : (φ → Q ⊑ R) → (Q ∧ ■ φ) ⊑ R.
@@ -549,11 +547,7 @@ Proof. intros; apply (anti_symm _); auto using const_intro. Qed.
 Lemma equiv_eq {A : cofeT} P (a b : A) : a ≡ b → P ⊑ (a ≡ b).
 Proof. intros ->; apply eq_refl. Qed.
 Lemma eq_sym {A : cofeT} (a b : A) : (a ≡ b) ⊑ (b ≡ a).
-Proof.
-  apply (eq_rewrite a b (λ b, b ≡ a)%I); auto using eq_refl.
-  intros n; solve_proper.
-Qed.
-
+Proof. apply (eq_rewrite a b (λ b, b ≡ a)%I); auto using eq_refl. solve_ne. Qed.
 
 (* BI connectives *)
 Lemma sep_mono P P' Q Q' : P ⊑ Q → P' ⊑ Q' → (P ★ P') ⊑ (Q ★ Q').
