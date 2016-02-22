@@ -33,13 +33,13 @@ Section ClosedProofs.
 
   Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ λ v, True }}.
   Proof.
-    apply ht_alt. rewrite (heap_alloc ⊤ (ndot nroot "Barrier")); last first.
+    apply ht_alt. rewrite (heap_alloc ⊤ (nroot .: "Barrier")); last first.
     { (* FIXME Really?? set_solver takes forever on "⊆ ⊤"?!? *)
-      move=>? _. exact I. }
+      by move=>? _. }
     apply wp_strip_pvs, exist_elim=> ?. rewrite and_elim_l.
     rewrite -(client_safe (nroot .: "Heap" ) (nroot .: "Barrier" )) //.
     (* This, too, should be automated. *)
-    apply ndot_ne_disjoint. discriminate.
+    by apply ndot_ne_disjoint.
   Qed.
 
   Print Assumptions client_safe_closed.

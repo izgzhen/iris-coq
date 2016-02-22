@@ -8,7 +8,7 @@ Definition ndot `{Countable A} (N : namespace) (x : A) : namespace :=
 Coercion nclose (N : namespace) : coPset := coPset_suffixes (encode N).
 
 Infix ".:" := ndot (at level 19, left associativity) : C_scope.
-Notation "(.:)" := ndot : C_scope.
+Notation "(.:)" := ndot (only parsing) : C_scope.
 
 Instance ndot_inj `{Countable A} : Inj2 (=) (=) (=) (@ndot A _ _).
 Proof. by intros N1 x1 N2 x2 ?; simplify_eq. Qed.
