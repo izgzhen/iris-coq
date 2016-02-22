@@ -65,9 +65,9 @@ Section LiftingTests.
     - wp_op. wp_op.
       (* TODO: Can we use the wp tactic again here? It seems that the tactic fails if there
          are goals being generated. That should not be the case. *)
-      wp_focus (FindPred _ _). rewrite -FindPred_spec; last by omega.
+      ewp apply FindPred_spec; last omega.
       wp_op. by replace (n - 1) with (- (-n + 2 - 1)) by omega.
-    - rewrite -FindPred_spec; eauto with omega.
+    - by ewp apply FindPred_spec; eauto with omega.
   Qed.
 
   Lemma Pred_user E :
