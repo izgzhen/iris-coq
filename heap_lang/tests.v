@@ -82,12 +82,12 @@ Section ClosedProofs.
   Instance: authG heap_lang Σ heapRA.
   Proof. split; try apply _. by exists 1%nat. Qed.
 
-  Lemma heap_e_hoare σ : {{ ownP σ : iProp }} heap_e {{ λ v, v = '2 }}.
+  Lemma heap_e_closed σ : {{ ownP σ : iProp }} heap_e {{ λ v, v = '2 }}.
   Proof.
     apply ht_alt. rewrite (heap_alloc ⊤ nroot); last by rewrite nclose_nroot.
     apply wp_strip_pvs, exist_elim=> ?. rewrite and_elim_l.
     rewrite -heap_e_spec; first by eauto with I. by rewrite nclose_nroot.
   Qed.
 
-  Print Assumptions heap_e_hoare.
+  Print Assumptions heap_e_closed.
 End ClosedProofs.
