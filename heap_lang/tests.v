@@ -76,11 +76,8 @@ Section LiftingTests.
 End LiftingTests.
 
 Section ClosedProofs.
-  Definition Σ : iFunctorG := λ _, authF (constF heapRA).
+  Definition Σ : iFunctorG := heapF .:: endF.
   Notation iProp := (iPropG heap_lang Σ).
-
-  Instance: authG heap_lang Σ heapRA.
-  Proof. split; try apply _. by exists 1%nat. Qed.
 
   Lemma heap_e_closed σ : {{ ownP σ : iProp }} heap_e {{ λ v, v = '2 }}.
   Proof.

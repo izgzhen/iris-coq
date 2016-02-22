@@ -8,6 +8,12 @@ Class stsG Λ Σ (sts : stsT) := StsG {
 }.
 Coercion sts_inG : stsG >-> inG.
 
+Definition stsF (sts : stsT) := constF (stsRA sts).
+
+Instance stsG_inGF sts `{Inhabited (sts.state sts)}
+         `{inGF Λ Σ (stsF sts)} : stsG Λ Σ sts.
+Proof. split; try apply _. move:(@inGF_inG Λ Σ (stsF sts)). auto. Qed.
+
 Section definitions.
   Context `{i : stsG Λ Σ sts} (γ : gname).
   Import sts.

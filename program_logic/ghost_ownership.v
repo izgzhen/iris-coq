@@ -145,3 +145,22 @@ Proof.
   apply pvs_mono, exist_elim=>a. by apply const_elim_l=>->.
 Qed.
 End global.
+
+(** We need another typeclass to identify the *functor* in the Σ. Basing inG on
+   the functor breaks badly because Coq is unable to infer the correct
+   typeclasses, it does not unfold the functor. *)
+Class inGF (Λ : language) (Σ : gid → iFunctor) (F : iFunctor) := InGF {
+  inGF_id : gid;
+  inGF_prf : F = Σ inGF_id;
+}.
+
+Instance inGF_inG `{inGF Λ Σ F} : inG Λ Σ (F (laterC (iPreProp Λ (globalF Σ)))).
+Proof. exists inGF_id. f_equal. apply inGF_prf. Qed.
+
+Instance inGF_nil {Λ Σ} (F: iFunctor) : inGF Λ (F .:: Σ) F.
+Proof. exists 0. done. Qed.
+
+Instance inGF_cons `{inGF Λ Σ F} (F': iFunctor) : inGF Λ (F' .:: Σ) F.
+Proof. exists (S inGF_id). apply inGF_prf. Qed.
+
+Definition endF : gid → iFunctor := const (constF unitRA).

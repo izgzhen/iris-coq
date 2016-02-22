@@ -28,18 +28,9 @@ Section client.
 End client.
 
 Section ClosedProofs.
-  Definition Σ : iFunctorG := agreeF .:: constF (stsRA barrier_proto.sts) .:: authF (constF heapRA)
+  Definition Σ : iFunctorG := agreeF .:: constF (stsRA barrier_proto.sts) .:: heapF
                                      .:: (λ _, constF unitRA) : iFunctorG.
   Notation iProp := (iPropG heap_lang Σ).
-
-  Instance: authG heap_lang Σ heapRA.
-  Proof. split; try apply _. by exists 2%nat. Qed.
-
-  Instance: stsG heap_lang Σ barrier_proto.sts.
-  Proof. split; try apply _. by exists 1%nat. Qed.
-
-  Instance: savedPropG heap_lang Σ.
-  Proof. by exists 0%nat. Qed.
 
   Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ λ v, True }}.
   Proof.
