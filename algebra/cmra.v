@@ -464,6 +464,7 @@ Class RA A `{Equiv A, Unit A, Op A, Valid A, Minus A} := {
   ra_op_minus x y : x ≼ y → x ⋅ y ⩪ x ≡ y
 }.
 
+(*
 Section discrete.
   Context {A : cofeT} `{∀ x : A, Timeless x}.
   Context {v : Valid A} `{Unit A, Op A, Minus A} (ra : RA A).
@@ -480,7 +481,7 @@ Section discrete.
     apply (timeless _), dist_le with n; auto with lia.
   Qed.
   Definition discreteRA : cmraT :=
-    CMRAT (cofe_mixin A) discrete_cmra_mixin discrete_extend_mixin.
+    CMRAT (let 'CofeT _ _ _ _ m := A in m) discrete_cmra_mixin discrete_extend_mixin.
   Lemma discrete_updateP (x : discreteRA) (P : A → Prop) :
     (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → x ~~>: P.
   Proof. intros Hvalid n z; apply Hvalid. Qed.
@@ -505,6 +506,7 @@ Section unit.
   Global Instance unit_cmra_identity : CMRAIdentity unitRA.
   Proof. by split; intros []. Qed.
 End unit.
+*)
 
 (** ** Product *)
 Section prod.

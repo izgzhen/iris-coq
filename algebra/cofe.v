@@ -62,32 +62,33 @@ Class Contractive `{Dist A, Dist B} (f : A -> B) :=
 (** Bundeled version *)
 Structure cofeT := CofeT {
   cofe_car :> Type;
-  cofe_equiv : Equiv cofe_car;
-  cofe_dist : Dist cofe_car;
-  cofe_compl : Compl cofe_car;
-  cofe_mixin : CofeMixin cofe_car
+  _ : Equiv cofe_car;
+  _ : Dist cofe_car;
+  _ : Compl cofe_car;
+  _ : CofeMixin cofe_car
 }.
 Arguments CofeT {_ _ _ _} _.
 Add Printing Constructor cofeT.
-Existing Instances cofe_equiv cofe_dist cofe_compl.
+Instance cofe_equiv (A : cofeT) : Equiv A := let 'CofeT _ e _ _ _ := A in e.
+Instance cofe_dist (A : cofeT) : Dist A := let 'CofeT _ _ d _ _ := A in d.
+Instance cofe_compl (A : cofeT) : Compl A := let 'CofeT _ _ _ c _ := A in c.
 Arguments cofe_car : simpl never.
 Arguments cofe_equiv : simpl never.
 Arguments cofe_dist : simpl never.
 Arguments cofe_compl : simpl never.
-Arguments cofe_mixin : simpl never.
 
 (** Lifting properties from the mixin *)
 Section cofe_mixin.
   Context {A : cofeT}.
   Implicit Types x y : A.
   Lemma equiv_dist x y : x ≡ y ↔ ∀ n, x ≡{n}≡ y.
-  Proof. apply (mixin_equiv_dist _ (cofe_mixin A)). Qed.
+  Proof. by destruct A as [???? []]. Qed.
   Global Instance dist_equivalence n : Equivalence (@dist A _ n).
-  Proof. apply (mixin_dist_equivalence _ (cofe_mixin A)). Qed.
+  Proof. by destruct A as [???? []]. Qed.
   Lemma dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y.
-  Proof. apply (mixin_dist_S _ (cofe_mixin A)). Qed.
+  Proof. destruct A as [???? []]; auto. Qed.
   Lemma conv_compl n (c : chain A) : compl c ≡{n}≡ c (S n).
-  Proof. apply (mixin_conv_compl _ (cofe_mixin A)). Qed.
+  Proof. destruct A as [???? []]; auto. Qed.
 End cofe_mixin.
 
 (** General properties *)

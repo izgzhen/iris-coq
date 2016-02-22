@@ -876,12 +876,14 @@ Lemma later_equivI {A : cofeT} (x y : later A) :
   (x ≡ y)%I ≡ (▷ (later_car x ≡ later_car y) : uPred M)%I.
 Proof. done. Qed.
 
+(*
 (* Discrete *)
 (* For equality, there already is timeless_eq *)
 Lemma discrete_validI {A : cofeT} `{∀ x : A, Timeless x}
   `{Op A, Valid A, Unit A, Minus A} (ra : RA A) (x : discreteRA ra) :
   (✓ x)%I ≡ (■ ✓ x : uPred M)%I.
 Proof. done. Qed.
+*)
 
 (* Timeless *)
 Lemma timelessP_spec P : TimelessP P ↔ ∀ n x, ✓{n} x → P 0 x → P n x.

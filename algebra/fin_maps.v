@@ -18,7 +18,49 @@ Proof.
   split.
   - intros m1 m2; split.
     + by intros Hm n k; apply equiv_dist.
-    + intros Hm k; apply equiv_dist; intros n; apply Hm.
+    + intros Hm k.
+
+(**
+Goal is
+
+  @equiv (option (cofe_car A)) (@option_equiv (cofe_car A) (cofe_equiv A))
+    (@lookup K (cofe_car A) (@gmap K H H0 (cofe_car A)) (@gmap_lookup K H H0 (cofe_car A)) k m1)
+    (@lookup K (cofe_car A) (@gmap K H H0 (cofe_car A)) (@gmap_lookup K H H0 (cofe_car A)) k m2)
+*)
+
+(** LHS of equiv_dist is:
+
+  @equiv (cofe_car B) (cofe_equiv B) x y
+
+for some [B : cofeT].
+*)
+
+Fail apply equiv_dist.
+
+(* Works: apply @equiv_dist.  *)
+
+
+(* Note that equiv_dist is an iff, so [apply:] needs some help. But it works.
+
+apply: (fun {A} x y => proj2 (@equiv_dist A x y)).
+*)
+
+(* I do not think it is just about the type of the projection of the [equiv]
+operational typeclass being in the way. The following also fails. *)
+
+change (option (cofe_car A)) with (cofe_car (optionC A)).
+
+Fail apply equiv_dist.
+
+change (@option_equiv (cofe_car A) (cofe_equiv A)) with
+  (@cofe_equiv (optionC A)).
+
+(* Only now it works *)
+apply equiv_dist.
+
+
+
+intros n; apply Hm.
   - intros n; split.
     + by intros m k.
     + by intros m1 m2 ? k.
