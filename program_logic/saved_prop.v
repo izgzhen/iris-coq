@@ -6,7 +6,7 @@ Notation savedPropG Λ Σ :=
   (inG Λ Σ (agreeRA (laterC (iPreProp Λ (globalF Σ))))).
 
 Instance savedPropG_inGF `{inGF Λ Σ agreeF} : savedPropG Λ Σ.
-Proof. move:(@inGF_inG Λ Σ agreeF). auto. Qed.
+Proof. apply: inGF_inG. Qed.
 
 Definition saved_prop_own `{savedPropG Λ Σ}
     (γ : gname) (P : iPropG Λ Σ) : iPropG Λ Σ :=
@@ -18,11 +18,9 @@ Section saved_prop.
   Implicit Types P Q : iPropG Λ Σ.
   Implicit Types γ : gname.
 
-  Global Instance : ∀ P, AlwaysStable (saved_prop_own γ P).
-  Proof.
-    intros. rewrite /AlwaysStable /saved_prop_own.
-    rewrite always_own; done.
-  Qed.
+  Global Instance saved_prop_always_stable γ P :
+    AlwaysStable (saved_prop_own γ P).
+  Proof. by rewrite /AlwaysStable /saved_prop_own always_own. Qed.
 
   Lemma saved_prop_alloc_strong N P (G : gset gname) :
     True ⊑ pvs N N (∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ P).

@@ -9,12 +9,10 @@ Class authG Λ Σ (A : cmraT) `{Empty A} := AuthG {
   auth_timeless (a : A) :> Timeless a;
 }.
 
-(* TODO: This shadows algebra.auth.authF. *)
-Definition authF (A : cmraT) := constF (authRA A).
-
-Instance authG_inGF (A : cmraT) `{CMRAIdentity A} `{∀ a : A, Timeless a}
-         `{inGF Λ Σ (authF A)} : authG Λ Σ A.
-Proof. split; try apply _. move:(@inGF_inG Λ Σ (authF A)). auto. Qed.
+Definition authGF (A : cmraT) : iFunctor := constF (authRA A).
+Instance authGF_inGF (A : cmraT) `{inGF Λ Σ (authGF A)}
+  `{CMRAIdentity A, ∀ a : A, Timeless a} : authG Λ Σ A.
+Proof. split; try apply _. apply: inGF_inG. Qed.
 
 Section definitions.
   Context `{authG Λ Σ A} (γ : gname).
