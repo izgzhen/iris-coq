@@ -320,6 +320,12 @@ Lemma forall_and_distr (A : Type) (P Q : A → Prop) :
   (∀ x, P x ∧ Q x) ↔ (∀ x, P x) ∧ (∀ x, Q x).
 Proof. firstorder. Qed.
 
+(** The tactic [no_new_unsolved_evars tac] executes [tac] and fails if it
+creates any new evars. This trick is by Jonathan Leivent, see:
+https://coq.inria.fr/bugs/show_bug.cgi?id=3872 *)
+
+Ltac no_new_unsolved_evars tac := exact ltac:(tac).
+
 Tactic Notation "naive_solver" tactic(tac) :=
   unfold iff, not in *;
   repeat match goal with
@@ -353,23 +359,20 @@ Tactic Notation "naive_solver" tactic(tac) :=
   (**i use recursion to enable backtracking on the following clauses. *)
   match goal with
   (**i instantiation of the conclusion *)
-  | |- ∃ x, _ => eexists; go n
+  | |- ∃ x, _ => no_new_unsolved_evars ltac:(eexists; go n)
   | |- _ ∨ _ => first [left; go n | right; go n]
   | _ =>
     (**i instantiations of assumptions. *)
     lazymatch n with
     | S ?n' =>
       (**i we give priority to assumptions that fit on the conclusion. *)
-      match goal with 
+      match goal with
       | H : _ → _ |- _ =>
         is_non_dependent H;
-        eapply H; clear H; go n'
-      | H : _ → _ |- _ =>
-        is_non_dependent H;
-        try (eapply H; fail 2);
-        efeed pose proof H; clear H; go n'
+        no_new_unsolved_evars
+          ltac:(first [eapply H | efeed pose proof H]; clear H; go n')
       end
     end
   end
-  in iter (fun n' => go n') (eval compute in (seq 0 6)).
+  in iter (fun n' => go n') (eval compute in (seq 1 6)).
 Tactic Notation "naive_solver" := naive_solver eauto.
