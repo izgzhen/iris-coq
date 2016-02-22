@@ -1,7 +1,5 @@
 From barrier Require Import barrier.
 From program_logic Require Import auth sts saved_prop hoare ownership.
-(* FIXME This needs to be imported even though barrier exports it *)
-From heap_lang Require Import notation.
 Import uPred.
 
 Definition client := (let: "b" := newchan '() in wait "b")%L.
