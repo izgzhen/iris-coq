@@ -38,7 +38,7 @@ Section ClosedProofs.
     { (* FIXME Really?? set_solver takes forever on "⊆ ⊤"?!? *)
       move=>? _. exact I. }
     apply wp_strip_pvs, exist_elim=> ?. rewrite and_elim_l.
-    rewrite -(client_safe (ndot nroot "Heap" ) (ndot nroot "Barrier" )) //.
+    rewrite -(client_safe (nroot .: "Heap" ) (nroot .: "Barrier" )) //.
     (* This, too, should be automated. *)
     apply ndot_ne_disjoint. discriminate.
   Qed.
