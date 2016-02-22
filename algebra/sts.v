@@ -240,26 +240,15 @@ Proof.
   - by destruct 1; simpl; intros ?; setoid_subst.
   - by intros ? [|]; destruct 1; inversion_clear 1; constructor; setoid_subst.
   - by do 2 destruct 1; constructor; setoid_subst.
-  - (* (* assert (∀ T T' S s,
-      closed S T → s ∈ S → tok s ∩ T' ≡ ∅ → tok s ∩ (T ∪ T') ≡ ∅).
-    { intros S T T' s [??]. set_solver. } *)
-
-
-    destruct 3; simpl in *; destruct_conjs;
-      repeat match goal with H : closed _ _ |- _ => destruct H end; eauto using closed_op with sts.
-split. auto with sts. 
-
- destruct_conjs. eauto using closed_op with sts.
-admit.
-eapply H. eauto. eauto. *) admit.
+  - destruct 3; simpl in *; destruct_conjs; eauto using closed_op;
+      match goal with H : closed _ _ |- _ => destruct H end; set_solver.
   - intros []; simpl; intros; destruct_conjs; split;
       eauto using closed_up, up_non_empty, closed_up_set, up_set_empty with sts.
   - intros ???? (z&Hy&?&Hxz); destruct Hxz; inversion Hy; clear Hy;
       setoid_subst; destruct_conjs; split_and?;
       rewrite disjoint_union_difference //;
       eauto using up_set_non_empty, up_non_empty, closed_up, closed_disjoint; [].
-    eapply closed_up_set. intros.
-    eapply closed_disjoint; eauto with sts.
+    eapply closed_up_set=> s ?; eapply closed_disjoint; eauto with sts.
   - intros [] [] []; constructor; rewrite ?assoc; auto with sts.
   - destruct 4; inversion_clear 1; constructor; auto with sts.
   - destruct 4; inversion_clear 1; constructor; auto with sts.
@@ -396,8 +385,8 @@ Qed.
 Lemma sts_update_auth s1 s2 T1 T2 :
   steps (s1,T1) (s2,T2) → sts_auth s1 T1 ~~> sts_auth s2 T2.
 Proof.
-  intros ?; apply validity_update; inversion 3 as [|? S ? Tf|]; subst.
-  simpl in *. destruct_conjs.
+  intros ?; apply validity_update.
+  inversion 3 as [|? S ? Tf|]; simplify_eq/=; destruct_conjs.
   destruct (steps_closed s1 s2 T1 T2 S Tf) as (?&?&?); auto; [].
   repeat (done || constructor).
 Qed.

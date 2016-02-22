@@ -102,7 +102,7 @@ Proof.
   { by rewrite (comm _ rP) -assoc big_opM_insert. }
   exists (<[i:=rP]>rs); constructor; rewrite ?Hr; auto.
   - intros j; rewrite Hr lookup_insert_is_Some=>-[?|[??]]; subst.
-    + rewrite !lookup_op HiP !op_is_Some; set_solver +.
+    + split. set_solver. rewrite !lookup_op HiP !op_is_Some; eauto.
     + destruct (HE j) as [Hj Hj']; auto; set_solver +Hj Hj'.
   - intros j P'; rewrite Hr elem_of_union elem_of_singleton=>-[?|?]; subst.
     + rewrite !lookup_wld_op_l ?HiP; auto=> HP.
@@ -162,7 +162,8 @@ Proof.
     + by rewrite lookup_op lookup_singleton_ne // left_id.
   - by rewrite -assoc Hr /= left_id.
   - intros j; rewrite -assoc Hr; destruct (decide (j = i)) as [->|].
-    + rewrite /= !lookup_op lookup_singleton !op_is_Some; set_solver +Hi.
+    + intros _; split; first set_solver +Hi.
+      rewrite /= !lookup_op lookup_singleton !op_is_Some; eauto.
     + rewrite lookup_insert_ne //.
       rewrite lookup_op lookup_singleton_ne // left_id; eauto.
   - intros j P'; rewrite -assoc Hr; destruct (decide (j=i)) as [->|].
