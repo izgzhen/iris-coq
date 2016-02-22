@@ -1,4 +1,5 @@
 From barrier Require Import barrier.
+From program_logic Require Import auth sts saved_prop hoare ownership.
 (* FIXME This needs to be imported even though barrier exports it *)
 From heap_lang Require Import notation.
 Import uPred.
@@ -17,9 +18,7 @@ Section client.
     heapN ⊥ N → heap_ctx heapN ⊑ || client {{ λ _, True }}.
   Proof.
     intros ?. rewrite /client.
-    (* FIXME: wp (eapply newchan_spec with (P:=True%I)). *)
-    wp_focus (newchan _).
-    rewrite -(newchan_spec N heapN True%I) //.
+    ewp eapply (newchan_spec N heapN True%I); last done.
     apply sep_intro_True_r; first done.
     apply forall_intro=>l. apply wand_intro_l. rewrite right_id.
     wp_let. etrans; last eapply wait_spec.
@@ -27,3 +26,21 @@ Section client.
   Qed.
 
 End client.
+
+Section ClosedProofs.
+  Definition Σ : iFunctorG := heapF .:: barrierFs .++ endF.
+  Notation iProp := (iPropG heap_lang Σ).
+
+  Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ λ v, True }}.
+  Proof.
+    apply ht_alt. rewrite (heap_alloc ⊤ (ndot nroot "Barrier")); last first.
+    { (* FIXME Really?? set_solver takes forever on "⊆ ⊤"?!? *)
+      move=>? _. exact I. }
+    apply wp_strip_pvs, exist_elim=> ?. rewrite and_elim_l.
+    rewrite -(client_safe (nroot .: "Heap" ) (nroot .: "Barrier" )) //.
+    (* This, too, should be automated. *)
+    apply ndot_ne_disjoint. discriminate.
+  Qed.
+
+  Print Assumptions client_safe_closed.
+End ClosedProofs.

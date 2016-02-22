@@ -8,6 +8,7 @@ Import uPred.
    predicates over finmaps instead of just ownP. *)
 
 Definition heapRA := mapRA loc (exclRA (leibnizC val)).
+Definition heapF := authF heapRA.
 
 Class heapG Σ := HeapG {
   heap_inG : inG heap_lang Σ (authRA heapRA);
@@ -20,7 +21,7 @@ Definition to_heap : state → heapRA := fmap Excl.
 Definition of_heap : heapRA → state := omap (maybe Excl).
 
 Definition heap_mapsto `{heapG Σ} (l : loc) (v: val) : iPropG heap_lang Σ :=
-  auth_own heap_name {[ l := Excl v ]}.
+  auth_own heap_name ({[ l := Excl v ]} : heapRA).
 Definition heap_inv `{i : heapG Σ} (h : heapRA) : iPropG heap_lang Σ :=
   ownP (of_heap h).
 Definition heap_ctx `{i : heapG Σ} (N : namespace) : iPropG heap_lang Σ :=
@@ -103,7 +104,7 @@ Section heap.
     P ⊑ || Alloc e @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv /heap_mapsto=> ?? Hctx HP.
-    trans (|={E}=> auth_own heap_name ∅ ★ P)%I.
+    trans (|={E}=> auth_own heap_name (∅ : heapRA) ★ P)%I.
     { by rewrite -pvs_frame_r -(auth_empty _ E) left_id. }
     apply wp_strip_pvs, (auth_fsa heap_inv (wp_fsa (Alloc e)))
       with N heap_name ∅; simpl; eauto with I.

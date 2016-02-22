@@ -63,8 +63,6 @@ Section LiftingTests.
   Proof.
     wp_lam. wp_op=> ?; wp_if.
     - wp_op. wp_op.
-      (* TODO: Can we use the wp tactic again here? It seems that the tactic fails if there
-         are goals being generated. That should not be the case. *)
       ewp apply FindPred_spec; last omega.
       wp_op. by replace (n - 1) with (- (-n + 2 - 1)) by omega.
     - by ewp apply FindPred_spec; eauto with omega.
@@ -78,18 +76,15 @@ Section LiftingTests.
 End LiftingTests.
 
 Section ClosedProofs.
-  Definition Σ : iFunctorG := λ _, authF (constF heapRA).
+  Definition Σ : iFunctorG := heapF .:: endF.
   Notation iProp := (iPropG heap_lang Σ).
 
-  Instance: authG heap_lang Σ heapRA.
-  Proof. split; try apply _. by exists 1%nat. Qed.
-
-  Lemma heap_e_hoare σ : {{ ownP σ : iProp }} heap_e {{ λ v, v = '2 }}.
+  Lemma heap_e_closed σ : {{ ownP σ : iProp }} heap_e {{ λ v, v = '2 }}.
   Proof.
     apply ht_alt. rewrite (heap_alloc ⊤ nroot); last by rewrite nclose_nroot.
     apply wp_strip_pvs, exist_elim=> ?. rewrite and_elim_l.
     rewrite -heap_e_spec; first by eauto with I. by rewrite nclose_nroot.
   Qed.
 
-  Print Assumptions heap_e_hoare.
+  Print Assumptions heap_e_closed.
 End ClosedProofs.

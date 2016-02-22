@@ -1,0 +1,7 @@
+image: coq:8.5
+
+buildjob:
+  tags:
+  - coq
+  script:
+  - make -j9

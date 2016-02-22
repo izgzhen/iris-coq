@@ -190,6 +190,7 @@ Tactic Notation "wp" ">" tactic(tac) :=
   end.
 Tactic Notation "wp" tactic(tac) := (wp> tac); [wp_strip_later|..].
 
-(* In case the precondition does not match *)
+(* In case the precondition does not match.
+   TODO: Have one tactic unifying wp and ewp. *)
 Tactic Notation "ewp" tactic(tac) := wp (etrans; [|tac]).
 Tactic Notation "ewp" ">" tactic(tac) := wp> (etrans; [|tac]).
