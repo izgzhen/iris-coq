@@ -158,11 +158,12 @@ Section proof.
     )%I.
 
   Definition barrier_ctx (γ : gname) (l : loc) (P : iProp) : iProp :=
-    (heap_ctx heapN ★ sts_ctx γ N (barrier_inv l P))%I.
+    (■ (heapN ⊥ N) ★ heap_ctx heapN ★ sts_ctx γ N (barrier_inv l P))%I.
 
   Global Instance barrier_ctx_ne n γ l : Proper (dist n ==> dist n) (barrier_ctx γ l).
   Proof.
-    move=>? ? EQ. rewrite /barrier_ctx. apply sep_ne; first done. apply sts_ctx_ne.
+    move=>? ? EQ. rewrite /barrier_ctx. apply sep_ne; first done.
+    apply sep_ne; first done. apply sts_ctx_ne.
     move=>[p I]. rewrite /barrier_inv. destruct p; last done.
     rewrite /waiting. by setoid_rewrite EQ.
   Qed.
@@ -244,10 +245,11 @@ Section proof.
   Qed.
 
   Lemma newchan_spec (P : iProp) (Φ : val → iProp) :
+    heapN ⊥ N →
     (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ (LocV l))
     ⊑ || newchan '() {{ Φ }}.
   Proof.
-    rewrite /newchan. wp_seq.
+    intros HN. rewrite /newchan. wp_seq.
     rewrite -wp_pvs. wp eapply wp_alloc; eauto with I ndisj.
     apply forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
     rewrite !assoc. apply pvs_wand_r.
@@ -276,7 +278,7 @@ Section proof.
       rewrite [barrier_ctx _ _ _]lock !assoc [(_ ★locked _)%I]comm !assoc -lock.
       rewrite -always_sep_dup.
       rewrite [barrier_ctx _ _ _]lock always_and_sep_l -!assoc assoc -lock.
-      rewrite -pvs_frame_l. apply sep_mono_r.
+      rewrite -pvs_frame_l. rewrite /barrier_ctx const_equiv // left_id. apply sep_mono_r.
       rewrite [(saved_prop_own _ _ ★ _)%I]comm !assoc. rewrite -pvs_frame_r.
       apply sep_mono_l.
       rewrite -assoc [(▷ _ ★ _)%I]comm assoc -pvs_frame_r.
@@ -292,14 +294,14 @@ Section proof.
   Qed.
 
   Lemma signal_spec l P (Φ : val → iProp) :
-    heapN ⊥ N → (send l P ★ P ★ Φ '()) ⊑ || signal (LocV l) {{ Φ }}.
+    (send l P ★ P ★ Φ '()) ⊑ || signal (LocV l) {{ Φ }}.
   Proof.
-    intros Hdisj. rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
-    apply exist_elim=>γ. wp_let.
+    rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
+    apply exist_elim=>γ. rewrite -!assoc. apply const_elim_sep_l=>?. wp_let.
     (* I think some evars here are better than repeating *everything* *)
     eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
       eauto with I ndisj.
-    rewrite [(_ ★ sts_ownS _ _ _)%I]comm -!assoc. apply sep_mono_r.
+    rewrite !assoc [(_ ★ sts_ownS _ _ _)%I]comm -!assoc. apply sep_mono_r.
     apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
     apply const_elim_sep_l=>Hs. destruct p; last done.
     rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
@@ -319,13 +321,14 @@ Section proof.
   Qed.
 
   Lemma wait_spec l P (Φ : val → iProp) :
-    heapN ⊥ N → (recv l P ★ (P -★ Φ '())) ⊑ || wait (LocV l) {{ Φ }}.
+    (recv l P ★ (P -★ Φ '())) ⊑ || wait (LocV l) {{ Φ }}.
   Proof.
-    rename P into R. intros Hdisj. wp_rec.
+    rename P into R. wp_rec.
     rewrite {1}/recv /barrier_ctx. rewrite !sep_exist_r.
     apply exist_elim=>γ. rewrite !sep_exist_r. apply exist_elim=>P.
     rewrite !sep_exist_r. apply exist_elim=>Q. rewrite !sep_exist_r.
-    apply exist_elim=>i. wp_focus (! _)%L.
+    apply exist_elim=>i. rewrite -!assoc. apply const_elim_sep_l=>?.
+    wp_focus (! _)%L.
     (* I think some evars here are better than repeating *everything* *)
     eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
       eauto with I ndisj.
@@ -338,7 +341,7 @@ Section proof.
     apply wand_intro_l. destruct p.
     { (* a Low state. The comparison fails, and we recurse. *)
       rewrite -(exist_intro (State Low I)) -(exist_intro {[ Change i ]}).
-      rewrite const_equiv /=; last by apply rtc_refl.
+      rewrite [(■ sts.steps _ _ )%I]const_equiv /=; last by apply rtc_refl.
       rewrite left_id -[(▷ barrier_inv _ _ _)%I]later_intro {3}/barrier_inv.
       rewrite -!assoc. apply sep_mono_r, sep_mono_r, wand_intro_l.
       wp_op; first done. intros _. wp_if. rewrite !assoc.
@@ -347,7 +350,8 @@ Section proof.
       rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro Q) -(exist_intro i).
       rewrite !assoc.
       do 3 (rewrite -pvs_frame_r; apply sep_mono; last (try apply later_intro; reflexivity)).
-      rewrite [(_ ★ heap_ctx _)%I]comm -!assoc -pvs_frame_l. apply sep_mono_r.
+      rewrite [(_ ★ heap_ctx _)%I]comm -!assoc.
+      rewrite const_equiv // left_id -pvs_frame_l. apply sep_mono_r.
       rewrite comm -pvs_frame_l. apply sep_mono_r.
       apply sts_ownS_weaken; eauto using sts.up_subseteq with sts. }
     (* a High state: the comparison succeeds, and we perform a transition and
@@ -377,7 +381,7 @@ Section proof.
     rewrite {1}/recv /barrier_ctx. rewrite sep_exist_r.
     apply exist_elim=>γ. rewrite sep_exist_r.  apply exist_elim=>P. 
     rewrite sep_exist_r.  apply exist_elim=>Q. rewrite sep_exist_r.
-    apply exist_elim=>i. rewrite -wp_pvs.
+    apply exist_elim=>i. rewrite -!assoc. apply const_elim_sep_l=>?. rewrite -wp_pvs.
     (* I think some evars here are better than repeating *everything* *)
     eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
       eauto with I ndisj.
@@ -398,7 +402,7 @@ Section proof.
     (* Case I: Low state. *)
     - rewrite -(exist_intro (State Low ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
       rewrite -(exist_intro ({[Change i1 ]} ∪ {[ Change i2 ]})).
-      rewrite const_equiv; last by eauto with sts.
+      rewrite [(■ sts.steps _ _)%I]const_equiv; last by eauto with sts.
       rewrite left_id -later_intro {1 3}/barrier_inv.
       (* FIXME ssreflect rewrite fails if there are evars around. Also, this is very slow because we don't have a proof mode. *)
       rewrite -(waiting_split _ _ _ Q R1 R2); [|done..].
@@ -424,7 +428,8 @@ Section proof.
         rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
         apply sep_mono.
         * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
-        * rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
+        * rewrite const_equiv // !left_id.
+          rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
           rewrite !assoc ![(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
           rewrite {1}[sts_ctx _ _ _]always_sep_dup !assoc [(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
           rewrite !assoc ![(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
@@ -463,7 +468,8 @@ Section proof.
         rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
         apply sep_mono.
         * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
-        * rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
+        * rewrite const_equiv // !left_id.
+          rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
           rewrite !assoc ![(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
           rewrite {1}[sts_ctx _ _ _]always_sep_dup !assoc [(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
           rewrite !assoc ![(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
@@ -479,7 +485,7 @@ Section proof.
     apply wand_intro_l. rewrite /recv. rewrite sep_exist_r. apply exist_mono=>γ.
     rewrite sep_exist_r. apply exist_mono=>P. rewrite sep_exist_r.
     apply exist_mono=>Q. rewrite sep_exist_r. apply exist_mono=>i.
-    rewrite -!assoc. apply sep_mono_r, sep_mono_r, sep_mono_r, sep_mono_r.
+    rewrite -!assoc. apply sep_mono_r, sep_mono_r, sep_mono_r, sep_mono_r, sep_mono_r.
     rewrite (later_intro (P1 -★ _)%I) -later_sep. apply later_mono.
     apply wand_intro_l. rewrite !assoc wand_elim_r wand_elim_r. done.
   Qed.
@@ -506,13 +512,12 @@ Section spec.
   Proof.
     intros HN. exists (λ l, CofeMor (recv N heapN l)). exists (λ l, CofeMor (send N heapN l)).
     split_and?; cbn.
-    - intros. apply: always_intro. apply impl_intro_l. rewrite -newchan_spec.
+    - intros. apply: always_intro. apply impl_intro_l. rewrite -newchan_spec //.
       rewrite comm always_and_sep_r. apply sep_mono_r. apply forall_intro=>l.
-      apply wand_intro_l. rewrite right_id -(exist_intro l) const_equiv // left_id.
+      apply wand_intro_l. rewrite right_id -(exist_intro l) const_equiv // left_id;
       done.
-    - intros. apply ht_alt. rewrite -signal_spec; last done.
-        by rewrite right_id.
-    - intros. apply ht_alt. rewrite -wait_spec; last done.
+    - intros. apply ht_alt. rewrite -signal_spec. by rewrite right_id.
+    - intros. apply ht_alt. rewrite -wait_spec.
       apply sep_intro_True_r; first done. apply wand_intro_l. eauto with I.
     - intros. apply ht_alt. rewrite -recv_split.
       apply sep_intro_True_r; first done. apply wand_intro_l. eauto with I.
