@@ -63,8 +63,6 @@ Section LiftingTests.
   Proof.
     wp_lam. wp_op=> ?; wp_if.
     - wp_op. wp_op.
-      (* TODO: Can we use the wp tactic again here? It seems that the tactic fails if there
-         are goals being generated. That should not be the case. *)
       ewp apply FindPred_spec; last omega.
       wp_op. by replace (n - 1) with (- (-n + 2 - 1)) by omega.
     - by ewp apply FindPred_spec; eauto with omega.
