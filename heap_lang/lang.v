@@ -279,26 +279,23 @@ Proof. intros [??? -> -> ?]; eauto using fill_not_val, values_head_stuck. Qed.
 Lemma atomic_not_val e : atomic e → to_val e = None.
 Proof. destruct e; naive_solver. Qed.
 
+Lemma atomic_fill_item Ki e : atomic (fill_item Ki e) → is_Some (to_val e).
+Proof.
+  intros. destruct Ki; simplify_eq/=; destruct_conjs;
+    repeat (case_match || contradiction); eauto.
+Qed.
+
 Lemma atomic_fill K e : atomic (fill K e) → to_val e = None → K = [].
 Proof.
-  rewrite eq_None_not_Some.
-  destruct K as [|[] K]; try (naive_solver eauto using fill_val); [|].
-  (* Oh wow, this si getting annoying... *)
-  - simpl; destruct K as [|[] K]; try contradiction; [].
-    simpl. destruct e; simpl; try contradiction. naive_solver.
-  - simpl. destruct (of_val v1) eqn:EQ; try contradiction; [].
-    destruct e0; try contradiction; [].
-    destruct K as [|[] K]; try contradiction; [].
-    simpl. destruct e; simpl; try contradiction. naive_solver.
+  destruct K as [|Ki K]; [done|].
+  rewrite eq_None_not_Some=> /= ? []; eauto using atomic_fill_item, fill_val.
 Qed.
 
 Lemma atomic_head_step e1 σ1 e2 σ2 ef :
   atomic e1 → head_step e1 σ1 e2 σ2 ef → is_Some (to_val e2).
 Proof.
-  intros Hatomic Hstep.
-  destruct Hstep; simpl; rewrite ?to_of_val; try naive_solver; [].
-  simpl in Hatomic. destruct e1; try contradiction; [].
-  destruct e2; try contradiction; []. naive_solver.
+  destruct 2; simpl; rewrite ?to_of_val; try by eauto.
+  repeat (case_match || contradiction || simplify_eq/=); eauto.
 Qed.
 
 Lemma atomic_step e1 σ1 e2 σ2 ef :
