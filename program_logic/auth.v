@@ -56,8 +56,8 @@ Section auth.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     trans (▷ auth_inv γ φ ★ auth_own γ a)%I.
     { rewrite /auth_inv -(exist_intro a) later_sep.
-      rewrite const_equiv // left_id. cancel (▷ φ a)%I.
-      rewrite -later_intro /auth_own -own_op auth_both_op. done. }
+      rewrite const_equiv // left_id. cancel [▷ φ a]%I.
+      by rewrite -later_intro /auth_own -own_op auth_both_op. }
     rewrite (inv_alloc N) /auth_ctx pvs_frame_r. apply pvs_mono.
     by rewrite always_and_sep_l.
   Qed.

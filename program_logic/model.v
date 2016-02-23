@@ -31,11 +31,11 @@ End iProp.
 
 (* Solution *)
 Definition iPreProp (Λ : language) (Σ : iFunctor) : cofeT := iProp.result Λ Σ.
-Notation iRes Λ Σ := (res Λ Σ (laterC (iPreProp Λ Σ))).
-Notation iResRA Λ Σ := (resRA Λ Σ (laterC (iPreProp Λ Σ))).
-Notation iWld Λ Σ := (mapRA positive (agreeRA (laterC (iPreProp Λ Σ)))).
-Notation iPst Λ := (exclRA (istateC Λ)).
-Notation iGst Λ Σ := (ifunctor_car Σ (laterC (iPreProp Λ Σ))).
+Definition iRes Λ Σ := res Λ Σ (laterC (iPreProp Λ Σ)).
+Definition iResRA Λ Σ := resRA Λ Σ (laterC (iPreProp Λ Σ)).
+Definition iWld Λ Σ := mapRA positive (agreeRA (laterC (iPreProp Λ Σ))).
+Definition iPst Λ := exclRA (istateC Λ).
+Definition iGst Λ Σ := ifunctor_car Σ (laterC (iPreProp Λ Σ)).
 Definition iProp (Λ : language) (Σ : iFunctor) : cofeT := uPredC (iResRA Λ Σ).
 Definition iProp_unfold {Λ Σ} : iProp Λ Σ -n> iPreProp Λ Σ := solution_fold _.
 Definition iProp_fold {Λ Σ} : iPreProp Λ Σ -n> iProp Λ Σ := solution_unfold _.
