@@ -47,3 +47,5 @@ Proof.
 Qed.
 
 Canonical Structure dec_agreeRA : cmraT := discreteRA dec_agree_ra.
+
+End dec_agree.

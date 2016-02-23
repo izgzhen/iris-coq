@@ -61,7 +61,7 @@ Instance agree_unit : Unit (agree A) := id.
 Instance agree_minus : Minus (agree A) := λ x y, x.
 Instance: Comm (≡) (@op (agree A) _).
 Proof. intros x y; split; [naive_solver|by intros n (?&?&Hxy); apply Hxy]. Qed.
-Definition agree_idemp (x : agree A) : x ⋅ x ≡ x.
+Lemma agree_idemp (x : agree A) : x ⋅ x ≡ x.
 Proof. split; naive_solver. Qed.
 Instance: ∀ n : nat, Proper (dist n ==> impl) (@validN (agree A) _ n).
 Proof.
