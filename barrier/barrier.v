@@ -268,9 +268,9 @@ Section proof.
     rewrite pvs_frame_l. apply pvs_strip_pvs. rewrite sep_exist_l.
     apply exist_elim=>i.
     trans (pvs ⊤ ⊤ (heap_ctx heapN ★ ▷ (barrier_inv l P (State Low {[ i ]}))  ★ saved_prop_own i P)).
-    - rewrite -pvs_intro. cancel (heap_ctx heapN).
-      rewrite {1}[saved_prop_own _ _]always_sep_dup. cancel (saved_prop_own i P).
-      rewrite /barrier_inv /waiting -later_intro. cancel (l ↦ '0)%I.
+    - rewrite -pvs_intro. cancel [heap_ctx heapN].
+      rewrite {1}[saved_prop_own _ _]always_sep_dup. cancel [saved_prop_own i P].
+      rewrite /barrier_inv /waiting -later_intro. cancel [l ↦ '0]%I.
       rewrite -(exist_intro (const P)) /=. rewrite -[saved_prop_own _ _](left_id True%I (★)%I).
       apply sep_mono.
       + rewrite -later_intro. apply wand_intro_l. rewrite right_id.
@@ -316,7 +316,7 @@ Section proof.
     apply const_elim_sep_l=>Hs. destruct p; last done.
     rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
     eapply wp_store with (v' := '0); eauto with I ndisj. 
-    u_strip_later. cancel (l ↦ '0)%I.
+    u_strip_later. cancel [l ↦ '0]%I.
     apply wand_intro_l. rewrite -(exist_intro (State High I)).
     rewrite -(exist_intro ∅). rewrite const_equiv /=; last by eauto with sts.
     rewrite left_id -later_intro {2}/barrier_inv -!assoc. apply sep_mono_r.
@@ -418,12 +418,8 @@ Section proof.
       rewrite -(waiting_split _ _ _ Q R1 R2); [|done..].
       rewrite {1}[saved_prop_own i1 _]always_sep_dup.
       rewrite {1}[saved_prop_own i2 _]always_sep_dup.
-      cancel (saved_prop_own i1 R1).
-      cancel (saved_prop_own i2 R2).
-      cancel (l ↦ '0)%I.
-      cancel (waiting P I).
-      cancel (Q -★ R1 ★ R2)%I.
-      cancel (saved_prop_own i Q).
+      cancel [saved_prop_own i1 R1; saved_prop_own i2 R2; l ↦ '0;
+              waiting P I; Q -★ R1 ★ R2; saved_prop_own i Q]%I.
       apply wand_intro_l. rewrite !assoc. eapply pvs_wand_r. rewrite /recv.
       rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R1) -(exist_intro i1).
       rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R2) -(exist_intro i2).
@@ -433,8 +429,9 @@ Section proof.
       * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
       * rewrite const_equiv // !left_id.
         rewrite {1}[heap_ctx _]always_sep_dup {1}[sts_ctx _ _ _]always_sep_dup.
-        do 2 cancel (heap_ctx heapN). do 2 cancel (sts_ctx γ N (barrier_inv l P)).
-        cancel (saved_prop_own i1 R1). cancel (saved_prop_own i2 R2).
+        cancel [heap_ctx heapN; heap_ctx heapN;
+                sts_ctx γ N (barrier_inv l P); sts_ctx γ N (barrier_inv l P);
+                saved_prop_own i1 R1; saved_prop_own i2 R2].
         apply sep_intro_True_l.
         { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
         rewrite -later_intro. apply wand_intro_l. by rewrite right_id.
@@ -449,12 +446,8 @@ Section proof.
       rewrite -(ress_split _ _ _ Q R1 R2); [|done..].
       rewrite {1}[saved_prop_own i1 _]always_sep_dup.
       rewrite {1}[saved_prop_own i2 _]always_sep_dup.
-      cancel (saved_prop_own i1 R1).
-      cancel (saved_prop_own i2 R2).
-      cancel (l ↦ '1)%I.
-      cancel (Q -★ R1 ★ R2)%I.
-      cancel (saved_prop_own i Q).
-      cancel (ress I).
+      cancel [saved_prop_own i1 R1; saved_prop_own i2 R2; l ↦ '1;
+              Q -★ R1 ★ R2; saved_prop_own i Q; ress I]%I.
       apply wand_intro_l. rewrite !assoc. eapply pvs_wand_r. rewrite /recv.
       rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R1) -(exist_intro i1).
       rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R2) -(exist_intro i2).
@@ -464,8 +457,9 @@ Section proof.
       * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
       * rewrite const_equiv // !left_id.
         rewrite {1}[heap_ctx _]always_sep_dup {1}[sts_ctx _ _ _]always_sep_dup.
-        do 2 cancel (heap_ctx heapN). do 2 cancel (sts_ctx γ N (barrier_inv l P)).
-        cancel (saved_prop_own i1 R1). cancel (saved_prop_own i2 R2).
+        cancel [heap_ctx heapN; heap_ctx heapN;
+                sts_ctx γ N (barrier_inv l P); sts_ctx γ N (barrier_inv l P);
+                saved_prop_own i1 R1; saved_prop_own i2 R2]%I.
         apply sep_intro_True_l.
         { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
         rewrite -later_intro. apply wand_intro_l. by rewrite right_id.
@@ -493,7 +487,7 @@ Section spec.
   Lemma barrier_spec (heapN N : namespace) :
     heapN ⊥ N →
     ∃ (recv send : loc -> iProp -n> iProp),
-      (∀ P, heap_ctx heapN ⊑ ({{ True }} newchan '() {{ λ v, ∃ l, v = LocV l ★ recv l P ★ send l P }})) ∧
+      (∀ P, heap_ctx heapN ⊑ {{ True }} newchan '() {{ λ v, ∃ l, v = LocV l ★ recv l P ★ send l P }}) ∧
       (∀ l P, {{ send l P ★ P }} signal (LocV l) {{ λ _, True }}) ∧
       (∀ l P, {{ recv l P }} wait (LocV l) {{ λ _, P }}) ∧
       (∀ l P Q, {{ recv l (P ★ Q) }} Skip {{ λ _, recv l P ★ recv l Q }}) ∧

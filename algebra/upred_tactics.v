@@ -66,28 +66,30 @@ Module upred_reflection. Section upred_reflection.
        | None => ESep e1 <$> cancel_go n e2
        end
     end.
-  Definition cancel (n: nat) (e: expr) : option expr := prune <$> cancel_go n e.
+  Definition cancel (ns : list nat) (e: expr) : option expr :=
+    prune <$> fold_right (mbind ∘ cancel_go) (Some e) ns.
   Lemma flatten_cancel_go e e' n :
     cancel_go n e = Some e' → flatten e ≡ₚ n :: flatten e'.
   Proof.
     revert e'; induction e as [| |e1 IH1 e2 IH2]; intros;
       repeat (simplify_option_eq || case_match); auto.
-    * by rewrite IH1 //.
-    * by rewrite IH2 // Permutation_middle.
+    - by rewrite IH1 //.
+    - by rewrite IH2 // Permutation_middle.
   Qed.
-  Lemma flatten_cancel e e' n :
-    cancel n e = Some e' → flatten e ≡ₚ n :: flatten e'.
+  Lemma flatten_cancel e e' ns :
+    cancel ns e = Some e' → flatten e ≡ₚ ns ++ flatten e'.
   Proof.
-    rewrite /cancel fmap_Some=> -[e'' [? ->]].
-    by rewrite flatten_prune -flatten_cancel_go.
+    rewrite /cancel fmap_Some=> -[{e'}e' [He ->]]; rewrite flatten_prune.
+    revert e' He; induction ns as [|n ns IH]=> e' He; simplify_option_eq; auto.
+    rewrite Permutation_middle -flatten_cancel_go //; eauto.
   Qed.
-  Lemma cancel_entails Σ e1 e2 e1' e2' n :
-    cancel n e1 = Some e1' → cancel n e2 = Some e2' →
+  Lemma cancel_entails Σ e1 e2 e1' e2' ns :
+    cancel ns e1 = Some e1' → cancel ns e2 = Some e2' →
     eval Σ e1' ⊑ eval Σ e2' → eval Σ e1 ⊑ eval Σ e2.
   Proof.
     intros ??. rewrite !eval_flatten.
-    rewrite (flatten_cancel e1 e1' n) // (flatten_cancel e2 e2' n) //; csimpl.
-    apply uPred.sep_mono_r.
+    rewrite (flatten_cancel e1 e1' ns) // (flatten_cancel e2 e2' ns) //; csimpl.
+    rewrite !fmap_app !big_sep_app. apply uPred.sep_mono_r.
   Qed.
 
   Class Quote (Σ1 Σ2 : list (uPred M)) (P : uPred M) (e : expr) := {}.
@@ -96,6 +98,13 @@ Module upred_reflection. Section upred_reflection.
     rlist.QuoteLookup Σ1 Σ2 P i → Quote Σ1 Σ2 P (EVar i) | 1000.
   Global Instance quote_sep Σ1 Σ2 Σ3 P1 P2 e1 e2 :
     Quote Σ1 Σ2 P1 e1 → Quote Σ2 Σ3 P2 e2 → Quote Σ1 Σ3 (P1 ★ P2) (ESep e1 e2).
+
+  Class QuoteArgs (Σ: list (uPred M)) (Ps: list (uPred M)) (ns: list nat) := {}.
+  Global Instance quote_args_nil Σ : QuoteArgs Σ nil nil.
+  Global Instance quote_args_cons Σ Ps P ns n :
+    rlist.QuoteLookup Σ Σ P n →
+    QuoteArgs Σ Ps ns → QuoteArgs Σ (P :: Ps) (n :: ns).
+
   End upred_reflection.
 
   Ltac quote :=
@@ -108,16 +117,13 @@ Module upred_reflection. Section upred_reflection.
     end.
 End upred_reflection.
 
-Tactic Notation "cancel" constr(P) :=
-  let rec lookup Σ n :=
-    match Σ with
-    | P :: _ => n
-    | _ :: ?Σ => lookup Σ (S n)
-    end in
+Tactic Notation "cancel" constr(Ps) :=
   upred_reflection.quote;
   match goal with
   | |- upred_reflection.eval ?Σ _ ⊑ upred_reflection.eval _ _ =>
-    let n' := lookup Σ 0%nat in
-    eapply upred_reflection.cancel_entails with (n:=n');
-      [cbv; reflexivity|cbv; reflexivity|simpl]
+     lazymatch type of (_ : upred_reflection.QuoteArgs Σ Ps _) with
+       upred_reflection.QuoteArgs _ _ ?ns' =>
+       eapply upred_reflection.cancel_entails with (ns:=ns');
+        [cbv; reflexivity|cbv; reflexivity|simpl]
+     end
   end.

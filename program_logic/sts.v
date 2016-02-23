@@ -85,7 +85,7 @@ Section sts.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     trans (▷ sts_inv γ φ ★ sts_own γ s (⊤ ∖ sts.tok s))%I.
     { rewrite /sts_inv -(exist_intro s) later_sep.
-      cancel (▷ φ s)%I.
+      cancel [▷ φ s]%I.
       by rewrite -later_intro -own_op sts_op_auth_frag_up; last set_solver. }
     rewrite (inv_alloc N) /sts_ctx pvs_frame_r.
     by rewrite always_and_sep_l.
