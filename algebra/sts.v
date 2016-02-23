@@ -7,7 +7,7 @@ Local Arguments unit _ _ !_ /.
 
 (** * Definition of STSs *)
 Module sts.
-Record stsT := STS {
+Structure stsT := STS {
   state : Type;
   token : Type;
   prim_step : relation state;
