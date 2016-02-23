@@ -124,15 +124,23 @@ End barrier_proto.
    the module into our namespaces. But Coq doesn't seem to support that...?? *)
 Import barrier_proto.
 
-(* The functors we need. *)
+(** The monoids we need. *)
+(* Not bundling heapG, as it may be shared with other users. *)
+Class barrierG Σ `{heapG Σ} := BarrierG {
+  barrier_stsG :> stsG heap_lang Σ sts;
+  barrier_savedPropG :> savedPropG heap_lang Σ;
+}.
+
 Definition barrierGF : iFunctors := [stsGF sts; agreeF].
+
+Instance inGF_barrierG `{heapG Σ} `{inGF heap_lang Σ (stsGF sts)}
+         `{inGF heap_lang Σ agreeF} : barrierG Σ.
+Proof. split; apply _. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.
-  Context {Σ : iFunctorG} (N : namespace).
-  Context `{heapG Σ} (heapN : namespace).
-  (* These are exactly the elements of barrierGF *)
-  Context `{inGF heap_lang Σ (stsGF sts)} `{inGF heap_lang Σ agreeF}.
+  Context {Σ : iFunctorG} `{barrierG Σ}.
+  Context (N : namespace) (heapN : namespace).
 
   Local Hint Immediate i_states_closed low_states_closed : sts.
   Local Hint Resolve signal_step wait_step split_step : sts.
@@ -477,9 +485,7 @@ Section proof.
 End proof.
 
 Section spec.
-  Context {Σ : iFunctorG}.
-  Context `{heapG Σ}.
-  Context `{inGF heap_lang Σ (stsGF sts)} `{inGF heap_lang Σ agreeF}.
+  Context {Σ : iFunctorG} `{!heapG Σ} `{!barrierG Σ}. 
 
   Local Notation iProp := (iPropG heap_lang Σ).
 
