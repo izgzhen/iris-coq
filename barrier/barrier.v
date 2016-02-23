@@ -260,9 +260,9 @@ Section proof.
     rewrite pvs_frame_l. apply pvs_strip_pvs. rewrite sep_exist_l.
     apply exist_elim=>i.
     trans (pvs ⊤ ⊤ (heap_ctx heapN ★ ▷ (barrier_inv l P (State Low {[ i ]}))  ★ saved_prop_own i P)).
-    - rewrite -pvs_intro. rewrite [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
-      rewrite {1}[saved_prop_own _ _]always_sep_dup !assoc. apply sep_mono_l.
-      rewrite /barrier_inv /waiting -later_intro. apply sep_mono_r.
+    - rewrite -pvs_intro. cancel (heap_ctx heapN).
+      rewrite {1}[saved_prop_own _ _]always_sep_dup. cancel (saved_prop_own i P).
+      rewrite /barrier_inv /waiting -later_intro. cancel (l ↦ '0)%I.
       rewrite -(exist_intro (const P)) /=. rewrite -[saved_prop_own _ _](left_id True%I (★)%I).
       apply sep_mono.
       + rewrite -later_intro. apply wand_intro_l. rewrite right_id.
@@ -278,6 +278,7 @@ Section proof.
       (* This is even more annoying than usually, since rewrite sometimes unfolds stuff... *)
       rewrite [barrier_ctx _ _ _]lock !assoc [(_ ★locked _)%I]comm !assoc -lock.
       rewrite -always_sep_dup.
+      (* TODO: This is cancelling below a pvs. *)
       rewrite [barrier_ctx _ _ _]lock always_and_sep_l -!assoc assoc -lock.
       rewrite -pvs_frame_l. rewrite /barrier_ctx const_equiv // left_id. apply sep_mono_r.
       rewrite [(saved_prop_own _ _ ★ _)%I]comm !assoc. rewrite -pvs_frame_r.
@@ -306,8 +307,8 @@ Section proof.
     apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
     apply const_elim_sep_l=>Hs. destruct p; last done.
     rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
-    eapply wp_store; eauto with I ndisj. 
-    rewrite -!assoc. apply sep_mono_r. u_strip_later.
+    eapply wp_store with (v' := '0); eauto with I ndisj. 
+    u_strip_later. cancel (l ↦ '0)%I.
     apply wand_intro_l. rewrite -(exist_intro (State High I)).
     rewrite -(exist_intro ∅). rewrite const_equiv /=; last by eauto with sts.
     rewrite left_id -later_intro {2}/barrier_inv -!assoc. apply sep_mono_r.
@@ -423,14 +424,12 @@ Section proof.
       apply sep_mono.
       * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
       * rewrite const_equiv // !left_id.
-        rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
-        rewrite !assoc ![(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
-        rewrite {1}[sts_ctx _ _ _]always_sep_dup !assoc [(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
-        rewrite !assoc ![(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
-        rewrite comm. apply sep_mono_r. apply sep_intro_True_l.
+        rewrite {1}[heap_ctx _]always_sep_dup {1}[sts_ctx _ _ _]always_sep_dup.
+        do 2 cancel (heap_ctx heapN). do 2 cancel (sts_ctx γ N (barrier_inv l P)).
+        cancel (saved_prop_own i1 R1). cancel (saved_prop_own i2 R2).
+        apply sep_intro_True_l.
         { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
-        apply sep_intro_True_r; first done.
-        { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
+        rewrite -later_intro. apply wand_intro_l. by rewrite right_id.
 (* Case II: High state. TODO: Lots of this script is just copy-n-paste of the previous one.
    Most of that is because the goals are fairly similar in structure, and the proof scripts
    are mostly concerned with manually managaing the structure (assoc, comm, dup) of
@@ -456,14 +455,12 @@ Section proof.
       apply sep_mono.
       * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
       * rewrite const_equiv // !left_id.
-        rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
-        rewrite !assoc ![(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
-        rewrite {1}[sts_ctx _ _ _]always_sep_dup !assoc [(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
-        rewrite !assoc ![(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
-        rewrite comm. apply sep_mono_r. apply sep_intro_True_l.
+        rewrite {1}[heap_ctx _]always_sep_dup {1}[sts_ctx _ _ _]always_sep_dup.
+        do 2 cancel (heap_ctx heapN). do 2 cancel (sts_ctx γ N (barrier_inv l P)).
+        cancel (saved_prop_own i1 R1). cancel (saved_prop_own i2 R2).
+        apply sep_intro_True_l.
         { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
-        apply sep_intro_True_r; first done.
-        { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
+        rewrite -later_intro. apply wand_intro_l. by rewrite right_id.
   Qed.
 
   Lemma recv_strengthen l P1 P2 :
