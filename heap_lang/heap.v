@@ -116,8 +116,9 @@ Section heap.
     rewrite always_and_sep_l -assoc; apply const_elim_sep_l=> ?.
     rewrite -(exist_intro (op {[ l := Excl v ]})).
     repeat erewrite <-exist_intro by apply _; simpl.
-    rewrite -of_heap_insert left_id right_id !assoc.
-    apply sep_mono_l.
+    rewrite -of_heap_insert left_id right_id.
+    (* FIXME: cancel (auth_own heap_name {[l := Excl v]} -★ Φ (LocV l))%I. *)
+    rewrite !assoc. apply sep_mono_l.
     rewrite -(map_insert_singleton_op h); last by apply of_heap_None.
     rewrite const_equiv ?left_id; last by apply (map_insert_valid h).
     apply later_intro.
