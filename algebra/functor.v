@@ -2,7 +2,7 @@ From algebra Require Export cmra.
 
 (** * Functors from COFE to CMRA *)
 (* TODO RJ: Maybe find a better name for this? It is not PL-specific any more. *)
-Structure iFunctor := IFunctor {
+Record iFunctor := IFunctor {
   ifunctor_car :> cofeT → cmraT;
   ifunctor_map {A B} (f : A -n> B) : ifunctor_car A -n> ifunctor_car B;
   ifunctor_map_ne {A B} n : Proper (dist n ==> dist n) (@ifunctor_map A B);
