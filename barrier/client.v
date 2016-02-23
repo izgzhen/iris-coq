@@ -7,8 +7,7 @@ Definition client := (let: "b" := newchan '() in wait "b")%L.
 Section client.
   Context {Σ : iFunctorG} (N : namespace).
   Context `{heapG Σ} (heapN : namespace).
-  Context `{stsG heap_lang Σ barrier_proto.sts}.
-  Context `{savedPropG heap_lang Σ}.
+  Context `{inGF heap_lang Σ (stsGF sts)} `{inGF heap_lang Σ agreeF}.
 
   Local Notation iProp := (iPropG heap_lang Σ).
 
