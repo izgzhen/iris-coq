@@ -482,8 +482,7 @@ End proof.
 Section spec.
   Context {Σ : iFunctorG}.
   Context `{heapG Σ}.
-  Context `{stsG heap_lang Σ barrier_proto.sts}.
-  Context `{savedPropG heap_lang Σ}.
+  Context `{inGF heap_lang Σ (stsGF sts)} `{inGF heap_lang Σ agreeF}.
 
   Local Notation iProp := (iPropG heap_lang Σ).
 
