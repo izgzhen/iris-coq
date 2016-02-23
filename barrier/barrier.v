@@ -1,5 +1,5 @@
 From prelude Require Export functions.
-From algebra Require Export upred_big_op.
+From algebra Require Export upred_big_op upred_tactics.
 From program_logic Require Export sts saved_prop.
 From program_logic Require Import hoare.
 From heap_lang Require Export derived heap wp_tactics notation.
@@ -407,37 +407,30 @@ Section proof.
       rewrite left_id -later_intro {1 3}/barrier_inv.
       (* FIXME ssreflect rewrite fails if there are evars around. Also, this is very slow because we don't have a proof mode. *)
       rewrite -(waiting_split _ _ _ Q R1 R2); [|done..].
-      match goal with | |- _ ⊑ ?G => rewrite [G]lock end.
       rewrite {1}[saved_prop_own i1 _]always_sep_dup.
       rewrite {1}[saved_prop_own i2 _]always_sep_dup.
-      rewrite !assoc [(_ ★ _ i1 _)%I]comm.
-      rewrite !assoc [(_ ★ _ i _)%I]comm.
-      rewrite !assoc [(_ ★ (l ↦ _))%I]comm.
-      rewrite !assoc [(_ ★ (waiting _ _))%I]comm.
-      rewrite !assoc [(_ ★ (Q -★ _))%I]comm -!assoc 5!assoc.
-      unlock. apply sep_mono.
-      + (* This should really all be handled automatically. *)
-        rewrite !assoc [(_ ★ (l ↦ _))%I]comm -!assoc. apply sep_mono_r.
-        rewrite !assoc [(_ ★ _ i2 _)%I]comm -!assoc. apply sep_mono_r.
-        rewrite !assoc [(_ ★ _ i1 _)%I]comm -!assoc. apply sep_mono_r.
-        rewrite !assoc [(_ ★ _ i _)%I]comm -!assoc. apply sep_mono_r.
-        done.
-      + apply wand_intro_l. rewrite !assoc. eapply pvs_wand_r. rewrite /recv.
-        rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R1) -(exist_intro i1).
-        rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R2) -(exist_intro i2).
-        do 2 rewrite !(assoc (★)%I) [(_ ★ sts_ownS _ _ _)%I]comm.
-        rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
-        apply sep_mono.
-        * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
-        * rewrite const_equiv // !left_id.
-          rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
-          rewrite !assoc ![(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
-          rewrite {1}[sts_ctx _ _ _]always_sep_dup !assoc [(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
-          rewrite !assoc ![(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
-          rewrite comm. apply sep_mono_r. apply sep_intro_True_l.
-          { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
-          apply sep_intro_True_r; first done.
-          { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
+      cancel (saved_prop_own i1 R1).
+      cancel (saved_prop_own i2 R2).
+      cancel (l ↦ '0)%I.
+      cancel (waiting P I).
+      cancel (Q -★ R1 ★ R2)%I.
+      cancel (saved_prop_own i Q).
+      apply wand_intro_l. rewrite !assoc. eapply pvs_wand_r. rewrite /recv.
+      rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R1) -(exist_intro i1).
+      rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R2) -(exist_intro i2).
+      do 2 rewrite !(assoc (★)%I) [(_ ★ sts_ownS _ _ _)%I]comm.
+      rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
+      apply sep_mono.
+      * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
+      * rewrite const_equiv // !left_id.
+        rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
+        rewrite !assoc ![(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
+        rewrite {1}[sts_ctx _ _ _]always_sep_dup !assoc [(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
+        rewrite !assoc ![(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
+        rewrite comm. apply sep_mono_r. apply sep_intro_True_l.
+        { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
+        apply sep_intro_True_r; first done.
+        { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
 (* Case II: High state. TODO: Lots of this script is just copy-n-paste of the previous one.
    Most of that is because the goals are fairly similar in structure, and the proof scripts
    are mostly concerned with manually managaing the structure (assoc, comm, dup) of
@@ -447,37 +440,30 @@ Section proof.
       rewrite const_equiv; last by eauto with sts.
       rewrite left_id -later_intro {1 3}/barrier_inv.
       rewrite -(ress_split _ _ _ Q R1 R2); [|done..].
-      match goal with | |- _ ⊑ ?G => rewrite [G]lock end.
       rewrite {1}[saved_prop_own i1 _]always_sep_dup.
       rewrite {1}[saved_prop_own i2 _]always_sep_dup.
-      rewrite !assoc [(_ ★ _ i1 _)%I]comm.
-      rewrite !assoc [(_ ★ _ i _)%I]comm.
-      rewrite !assoc [(_ ★ (l ↦ _))%I]comm.
-      rewrite !assoc [(_ ★ (ress _))%I]comm.
-      rewrite !assoc [(_ ★ (Q -★ _))%I]comm -!assoc 5!assoc.
-      unlock. apply sep_mono.
-      + (* This should really all be handled automatically. *)
-        rewrite !assoc [(_ ★ (l ↦ _))%I]comm -!assoc. apply sep_mono_r.
-        rewrite !assoc [(_ ★ _ i2 _)%I]comm -!assoc. apply sep_mono_r.
-        rewrite !assoc [(_ ★ _ i1 _)%I]comm -!assoc. apply sep_mono_r.
-        rewrite !assoc [(_ ★ _ i _)%I]comm -!assoc. apply sep_mono_r.
-        done.
-      + apply wand_intro_l. rewrite !assoc. eapply pvs_wand_r. rewrite /recv.
-        rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R1) -(exist_intro i1).
-        rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R2) -(exist_intro i2).
-        do 2 rewrite !(assoc (★)%I) [(_ ★ sts_ownS _ _ _)%I]comm.
-        rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
-        apply sep_mono.
-        * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
-        * rewrite const_equiv // !left_id.
-          rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
-          rewrite !assoc ![(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
-          rewrite {1}[sts_ctx _ _ _]always_sep_dup !assoc [(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
-          rewrite !assoc ![(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
-          rewrite comm. apply sep_mono_r. apply sep_intro_True_l.
-          { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
-          apply sep_intro_True_r; first done.
-          { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
+      cancel (saved_prop_own i1 R1).
+      cancel (saved_prop_own i2 R2).
+      cancel (l ↦ '1)%I.
+      cancel (Q -★ R1 ★ R2)%I.
+      cancel (saved_prop_own i Q).
+      cancel (ress I).
+      apply wand_intro_l. rewrite !assoc. eapply pvs_wand_r. rewrite /recv.
+      rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R1) -(exist_intro i1).
+      rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R2) -(exist_intro i2).
+      do 2 rewrite !(assoc (★)%I) [(_ ★ sts_ownS _ _ _)%I]comm.
+      rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
+      apply sep_mono.
+      * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
+      * rewrite const_equiv // !left_id.
+        rewrite {1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
+        rewrite !assoc ![(_ ★ heap_ctx _)%I]comm -!assoc. apply sep_mono_r.
+        rewrite {1}[sts_ctx _ _ _]always_sep_dup !assoc [(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
+        rewrite !assoc ![(_ ★ sts_ctx _ _ _)%I]comm -!assoc. apply sep_mono_r.
+        rewrite comm. apply sep_mono_r. apply sep_intro_True_l.
+        { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
+        apply sep_intro_True_r; first done.
+        { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
   Qed.
 
   Lemma recv_strengthen l P1 P2 :

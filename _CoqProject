@@ -51,6 +51,7 @@ algebra/excl.v
 algebra/iprod.v
 algebra/functor.v
 algebra/upred.v
+algebra/upred_tactics.v
 algebra/upred_big_op.v
 program_logic/model.v
 program_logic/adequacy.v
