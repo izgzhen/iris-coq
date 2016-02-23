@@ -9,7 +9,7 @@ Class stsG Λ Σ (sts : stsT) := StsG {
 Coercion sts_inG : stsG >-> inG.
 
 Definition stsGF (sts : stsT) : iFunctor := constF (stsRA sts).
-Instance stsGF_inGF sts `{inGF Λ Σ (stsGF sts)}
+Instance inGF_stsG sts `{inGF Λ Σ (stsGF sts)}
   `{Inhabited (sts.state sts)} : stsG Λ Σ sts.
 Proof. split; try apply _. apply: inGF_inG. Qed.
 

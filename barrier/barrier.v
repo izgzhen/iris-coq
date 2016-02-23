@@ -125,14 +125,14 @@ End barrier_proto.
 Import barrier_proto.
 
 (* The functors we need. *)
-Definition barrierGFs : iFunctors := [stsGF sts; agreeF].
+Definition barrierGF : iFunctors := [stsGF sts; agreeF].
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.
   Context {Σ : iFunctorG} (N : namespace).
   Context `{heapG Σ} (heapN : namespace).
-  Context `{stsG heap_lang Σ sts}.
-  Context `{savedPropG heap_lang Σ}.
+  (* These are exactly the elements of barrierGF *)
+  Context `{inGF heap_lang Σ (stsGF sts)} `{inGF heap_lang Σ agreeF}.
 
   Local Hint Immediate i_states_closed low_states_closed : sts.
   Local Hint Resolve signal_step wait_step split_step : sts.

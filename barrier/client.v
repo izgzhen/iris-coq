@@ -26,7 +26,7 @@ Section client.
 End client.
 
 Section ClosedProofs.
-  Definition Σ : iFunctorG := #[ heapGF ; barrierGFs ].
+  Definition Σ : iFunctorG := #[ heapGF ; barrierGF ].
   Notation iProp := (iPropG heap_lang Σ).
 
   Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ λ v, True }}.
