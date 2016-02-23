@@ -20,8 +20,20 @@ Instance heap_authG `{i : heapG Σ} : authG heap_lang Σ heapRA :=
 Definition to_heap : state → heapRA := fmap Excl.
 Definition of_heap : heapRA → state := omap (maybe Excl).
 
-Definition heap_mapsto `{heapG Σ} (l : loc) (v: val) : iPropG heap_lang Σ :=
+(* heap_mapsto is defined strongly opaquely, to prevent unification from
+matching it against other forms of ownership. *)
+Definition heap_mapsto_def `{heapG Σ} (l : loc) (v: val) : iPropG heap_lang Σ :=
   auth_own heap_name {[ l := Excl v ]}.
+(* Perform sealing *)
+Module Type HeapMapstoSig.
+  Parameter heap_mapsto : ∀ `{heapG Σ} (l : loc) (v: val), iPropG heap_lang Σ.
+  Axiom heap_mapsto_def : @heap_mapsto = @heap_mapsto_def.
+End HeapMapstoSig.
+Module Export HeapMapsto : HeapMapstoSig.
+  Definition heap_mapsto := @heap_mapsto_def.
+  Definition heap_mapsto_def := Logic.eq_refl (@heap_mapsto).
+End HeapMapsto. 
+
 Definition heap_inv `{i : heapG Σ} (h : heapRA) : iPropG heap_lang Σ :=
   ownP (of_heap h).
 Definition heap_ctx `{i : heapG Σ} (N : namespace) : iPropG heap_lang Σ :=
@@ -68,6 +80,7 @@ Section heap.
     authG heap_lang Σ heapRA → nclose N ⊆ E →
     ownP σ ⊑ (|={E}=> ∃ _ : heapG Σ, heap_ctx N ∧ Π★{map σ} heap_mapsto).
   Proof.
+    rewrite heap_mapsto_def.
     intros. rewrite -{1}(from_to_heap σ). etrans.
     { rewrite [ownP _]later_intro.
       apply (auth_alloc (ownP ∘ of_heap) E N (to_heap σ)); last done.
@@ -91,7 +104,8 @@ Section heap.
   (** General properties of mapsto *)
   Lemma heap_mapsto_disjoint l v1 v2 : (l ↦ v1 ★ l ↦ v2)%I ⊑ False.
   Proof.
-    rewrite /heap_mapsto -auto_own_op auto_own_valid map_op_singleton.
+    rewrite heap_mapsto_def.
+    rewrite -auto_own_op auto_own_valid map_op_singleton.
     rewrite map_validI (forall_elim l) lookup_singleton.
     by rewrite option_validI excl_validI.
   Qed.
@@ -103,7 +117,7 @@ Section heap.
     P ⊑ (▷ ∀ l, l ↦ v -★ Φ (LocV l)) →
     P ⊑ || Alloc e @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv /heap_mapsto=> ?? Hctx HP.
+    rewrite /heap_ctx /heap_inv heap_mapsto_def=> ?? Hctx HP.
     trans (|={E}=> auth_own heap_name ∅ ★ P)%I.
     { by rewrite -pvs_frame_r -(auth_empty _ E) left_id. }
     apply wp_strip_pvs, (auth_fsa heap_inv (wp_fsa (Alloc e)))
@@ -129,7 +143,7 @@ Section heap.
     P ⊑ (▷ l ↦ v ★ ▷ (l ↦ v -★ Φ v)) →
     P ⊑ || Load (Loc l) @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv /heap_mapsto=>HN ? HPΦ.
+    rewrite /heap_ctx /heap_inv heap_mapsto_def=>HN ? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
       with N heap_name {[ l := Excl v ]}; simpl; eauto with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
@@ -147,7 +161,7 @@ Section heap.
     P ⊑ (▷ l ↦ v' ★ ▷ (l ↦ v -★ Φ (LitV LitUnit))) →
     P ⊑ || Store (Loc l) e @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv /heap_mapsto=>? HN ? HPΦ.
+    rewrite /heap_ctx /heap_inv heap_mapsto_def=>? HN ? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Excl v) l))
       with N heap_name {[ l := Excl v' ]}; simpl; eauto with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
@@ -167,7 +181,7 @@ Section heap.
     P ⊑ (▷ l ↦ v' ★ ▷ (l ↦ v' -★ Φ (LitV (LitBool false)))) →
     P ⊑ || Cas (Loc l) e1 e2 @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv /heap_mapsto=>??? HN ? HPΦ.
+    rewrite /heap_ctx /heap_inv heap_mapsto_def=>??? HN ? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
       with N heap_name {[ l := Excl v' ]}; simpl; eauto 10 with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
@@ -186,7 +200,7 @@ Section heap.
     P ⊑ (▷ l ↦ v1 ★ ▷ (l ↦ v2 -★ Φ (LitV (LitBool true)))) →
     P ⊑ || Cas (Loc l) e1 e2 @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv /heap_mapsto=> ?? HN ? HPΦ.
+    rewrite /heap_ctx /heap_inv heap_mapsto_def=> ?? HN ? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Excl v2) l))
       with N heap_name {[ l := Excl v1 ]}; simpl; eauto 10 with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
