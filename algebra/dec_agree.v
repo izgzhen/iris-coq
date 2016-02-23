@@ -48,4 +48,20 @@ Qed.
 
 Canonical Structure dec_agreeRA : cmraT := discreteRA dec_agree_ra.
 
+(* Some properties of this CMRA *)
+Lemma dec_agree_idemp (x : dec_agree A) : x ⋅ x ≡ x.
+Proof.
+  destruct x as [x|]; simpl; repeat (case_match; simpl); try subst; congruence.
+Qed.
+
+Lemma dec_agree_op_inv (x1 x2 : dec_agree A) : ✓ (x1 ⋅ x2) → x1 ≡ x2.
+Proof.
+  destruct x1 as [x1|], x2 as [x2|]; simpl;repeat (case_match; simpl); by subst.
+Qed.
+
+Lemma dec_agree_equivI {M} a b : (DecAgree a ≡ DecAgree b)%I ≡ (a = b : uPred M)%I.
+Proof. split. by case. by destruct 1. Qed.
+Lemma dec_agree_validI {M} (x y : dec_agreeRA) : ✓ (x ⋅ y) ⊑ (x = y : uPred M).
+Proof. intros r n _ ?. by apply: dec_agree_op_inv. Qed.
+
 End dec_agree.
