@@ -127,3 +127,16 @@ Tactic Notation "cancel" constr(Ps) :=
         [cbv; reflexivity|cbv; reflexivity|simpl]
      end
   end.
+
+Tactic Notation "ecancel" open_constr(Ps) :=
+  let rec close Ps Qs tac :=
+    lazymatch Ps with
+    | [] => tac Qs
+    | ?P :: ?Ps =>
+      find_pat P ltac:(fun Q => close Ps (Q :: Qs) tac)
+    end
+  in
+    lazymatch goal with
+    | |- @uPred_entails ?M _ _ =>
+       close Ps (@nil (uPred M)) ltac:(fun Qs => cancel Qs)
+    end. 

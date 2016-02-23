@@ -131,7 +131,7 @@ Section heap.
     rewrite -(exist_intro (op {[ l := Excl v ]})).
     repeat erewrite <-exist_intro by apply _; simpl.
     rewrite -of_heap_insert left_id right_id.
-    cancel [auth_own heap_name {[l := Excl v]} -★ Φ (LocV l)]%I.
+    ecancel [_ -★ Φ _]%I.
     rewrite -(map_insert_singleton_op h); last by apply of_heap_None.
     rewrite const_equiv ?left_id; last by apply (map_insert_valid h).
     apply later_intro.

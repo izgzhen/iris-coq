@@ -85,7 +85,7 @@ Section sts.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     trans (▷ sts_inv γ φ ★ sts_own γ s (⊤ ∖ sts.tok s))%I.
     { rewrite /sts_inv -(exist_intro s) later_sep.
-      cancel [▷ φ s]%I.
+      ecancel [▷ φ _]%I.
       by rewrite -later_intro -own_op sts_op_auth_frag_up; last set_solver. }
     rewrite (inv_alloc N) /sts_ctx pvs_frame_r.
     by rewrite always_and_sep_l.
@@ -114,7 +114,7 @@ Section sts.
   Proof.
     intros Hstep. rewrite /sts_inv /sts_own -(exist_intro s') later_sep.
     (* TODO it would be really nice to use cancel here *)
-    rewrite [(_ ★ ▷φ _)%I]comm -assoc.
+    rewrite [(_ ★ ▷ φ _)%I]comm -assoc.
     rewrite -pvs_frame_l. apply sep_mono_r. rewrite -later_intro.
     rewrite own_valid_l discrete_validI. apply const_elim_sep_l=>Hval.
     trans (|={E}=> own γ (sts_auth s' T'))%I.
