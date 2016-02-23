@@ -50,6 +50,17 @@ Inductive val :=
   | InjRV (v : val)
   | LocV (l : loc).
 
+Global Instance base_lit_dec_eq (l1 l2 : base_lit) : Decision (l1 = l2).
+Proof.  rewrite /Decision. decide equality; apply decide, _. Qed.
+Global Instance un_op_dec_eq (op1 op2 : un_op) : Decision (op1 = op2).
+Proof.  rewrite /Decision. decide equality; apply decide, _. Qed.
+Global Instance bin_op_dec_eq (op1 op2 : bin_op) : Decision (op1 = op2).
+Proof.  rewrite /Decision. decide equality; apply decide, _. Qed.
+Global Instance expr_dec_eq (e1 e2 : expr) : Decision (e1 = e2).
+Proof.  rewrite /Decision. decide equality; apply decide, _. Qed.
+Global Instance val_dec_eq (v1 v2 : val) : Decision (v1 = v2).
+Proof.  rewrite /Decision. decide equality; apply decide, _. Qed.
+
 Delimit Scope lang_scope with L.
 Bind Scope lang_scope with expr val.
 
