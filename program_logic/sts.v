@@ -1,4 +1,4 @@
-From algebra Require Export sts.
+From algebra Require Export sts upred_tactics.
 From program_logic Require Export invariants global_functor.
 Import uPred.
 
@@ -85,7 +85,7 @@ Section sts.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     trans (▷ sts_inv γ φ ★ sts_own γ s (⊤ ∖ sts.tok s))%I.
     { rewrite /sts_inv -(exist_intro s) later_sep.
-      rewrite [(_ ★ ▷ φ _)%I]comm -assoc. apply sep_mono_r.
+      cancel (▷ φ s)%I.
       by rewrite -later_intro -own_op sts_op_auth_frag_up; last set_solver. }
     rewrite (inv_alloc N) /sts_ctx pvs_frame_r.
     by rewrite always_and_sep_l.
@@ -112,8 +112,9 @@ Section sts.
     sts.steps (s, T) (s', T') →
     (▷ φ s' ★ own γ (sts_auth s T)) ⊑ (|={E}=> ▷ sts_inv γ φ ★ sts_own γ s' T').
   Proof.
-    intros Hstep. rewrite /sts_inv /sts_own -(exist_intro s').
-    rewrite later_sep [(_ ★ ▷φ _)%I]comm -assoc.
+    intros Hstep. rewrite /sts_inv /sts_own -(exist_intro s') later_sep.
+    (* TODO it would be really nice to use cancel here *)
+    rewrite [(_ ★ ▷φ _)%I]comm -assoc.
     rewrite -pvs_frame_l. apply sep_mono_r. rewrite -later_intro.
     rewrite own_valid_l discrete_validI. apply const_elim_sep_l=>Hval.
     trans (|={E}=> own γ (sts_auth s' T'))%I.

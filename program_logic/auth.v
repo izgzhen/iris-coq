@@ -1,4 +1,4 @@
-From algebra Require Export auth.
+From algebra Require Export auth upred_tactics.
 From program_logic Require Export invariants global_functor.
 Import uPred.
 
@@ -56,8 +56,7 @@ Section auth.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     trans (▷ auth_inv γ φ ★ auth_own γ a)%I.
     { rewrite /auth_inv -(exist_intro a) later_sep.
-      rewrite const_equiv // left_id.
-      rewrite [(_ ★ ▷ φ _)%I]comm -assoc. apply sep_mono; first done.
+      rewrite const_equiv // left_id. cancel (▷ φ a)%I.
       rewrite -later_intro /auth_own -own_op auth_both_op. done. }
     rewrite (inv_alloc N) /auth_ctx pvs_frame_r. apply pvs_mono.
     by rewrite always_and_sep_l.
@@ -81,8 +80,7 @@ Section auth.
     { by move=>n ? ? /timeless_iff ->. }
     { by eauto with I. }
     rewrite const_equiv // left_id comm.
-    apply sep_mono; first done.
-    by rewrite sep_elim_l.
+    apply sep_mono_r. by rewrite sep_elim_l.
   Qed.
 
   Lemma auth_closing `{!LocalUpdate Lv L} E γ a a' :
@@ -91,6 +89,7 @@ Section auth.
     ⊑ (|={E}=> ▷ auth_inv γ φ ★ auth_own γ (L a)).
   Proof.
     intros HL Hv. rewrite /auth_inv /auth_own -(exist_intro (L a ⋅ a')).
+    (* TODO it would be really nice to use cancel here *)
     rewrite later_sep [(_ ★ ▷φ _)%I]comm -assoc.
     rewrite -pvs_frame_l. apply sep_mono; first done.
     rewrite const_equiv // left_id -later_intro -own_op.
@@ -146,7 +145,7 @@ Section auth.
     P ⊑ fsa E Ψ.
   Proof.
     intros ??? HP. eapply auth_fsa with N γ a; eauto.
-    rewrite HP; apply sep_mono; first done; apply forall_mono=> a'.
+    rewrite HP; apply sep_mono_r, forall_mono=> a'.
     apply wand_mono; first done. apply (fsa_mono fsa)=> b.
     rewrite -(exist_intro L). by repeat erewrite <-exist_intro by apply _.
   Qed.
