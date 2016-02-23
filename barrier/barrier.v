@@ -284,7 +284,8 @@ Section proof.
       rewrite /recv /send. rewrite -(exist_intro γ) -(exist_intro P).
       rewrite -(exist_intro P) -(exist_intro i) -(exist_intro γ).
       (* This is even more annoying than usually, since rewrite sometimes unfolds stuff... *)
-      rewrite [barrier_ctx _ _ _]lock !assoc [(_ ★locked _)%I]comm !assoc -lock.
+      rewrite [barrier_ctx _ _ _]lock !assoc
+              [(_ ★ locked (barrier_ctx _ _ _))%I]comm !assoc -lock.
       rewrite -always_sep_dup.
       (* TODO: This is cancelling below a pvs. *)
       rewrite [barrier_ctx _ _ _]lock always_and_sep_l -!assoc assoc -lock.
@@ -418,8 +419,8 @@ Section proof.
       rewrite -(waiting_split _ _ _ Q R1 R2); [|done..].
       rewrite {1}[saved_prop_own i1 _]always_sep_dup.
       rewrite {1}[saved_prop_own i2 _]always_sep_dup.
-      cancel [saved_prop_own i1 R1; saved_prop_own i2 R2; l ↦ '0;
-              waiting P I; Q -★ R1 ★ R2; saved_prop_own i Q]%I.
+      ecancel [l ↦ _; saved_prop_own i1 _; saved_prop_own i2 _; waiting _ _;
+               _ -★ _; saved_prop_own i _]%I. 
       apply wand_intro_l. rewrite !assoc. eapply pvs_wand_r. rewrite /recv.
       rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R1) -(exist_intro i1).
       rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R2) -(exist_intro i2).
@@ -446,8 +447,8 @@ Section proof.
       rewrite -(ress_split _ _ _ Q R1 R2); [|done..].
       rewrite {1}[saved_prop_own i1 _]always_sep_dup.
       rewrite {1}[saved_prop_own i2 _]always_sep_dup.
-      cancel [saved_prop_own i1 R1; saved_prop_own i2 R2; l ↦ '1;
-              Q -★ R1 ★ R2; saved_prop_own i Q; ress I]%I.
+      ecancel [l ↦ _; saved_prop_own i1 _; saved_prop_own i2 _; ress _;
+               _ -★ _; saved_prop_own i _]%I. 
       apply wand_intro_l. rewrite !assoc. eapply pvs_wand_r. rewrite /recv.
       rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R1) -(exist_intro i1).
       rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R2) -(exist_intro i2).
