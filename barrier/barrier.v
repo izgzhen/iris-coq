@@ -126,20 +126,20 @@ Import barrier_proto.
 
 (** The monoids we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
-Class barrierG Σ `{heapG Σ} := BarrierG {
+Class barrierG Σ := BarrierG {
   barrier_stsG :> stsG heap_lang Σ sts;
   barrier_savedPropG :> savedPropG heap_lang Σ;
 }.
 
 Definition barrierGF : iFunctors := [stsGF sts; agreeF].
 
-Instance inGF_barrierG `{heapG Σ} `{inGF heap_lang Σ (stsGF sts)}
+Instance inGF_barrierG `{inGF heap_lang Σ (stsGF sts)}
          `{inGF heap_lang Σ agreeF} : barrierG Σ.
 Proof. split; apply _. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.
-  Context {Σ : iFunctorG} `{barrierG Σ}.
+  Context {Σ : iFunctorG} `{!heapG Σ} `{!barrierG Σ}.
   Context (N : namespace) (heapN : namespace).
 
   Local Hint Immediate i_states_closed low_states_closed : sts.
