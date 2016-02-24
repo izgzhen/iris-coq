@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, pprint
+import argparse, pprint, subprocess, sys
 import requests
 
 def first(it):
@@ -9,27 +9,45 @@ def first(it):
 
 def req(path):
     url = '%s/api/v3/%s' % (args.server, path)
-    return requests.get(url, headers={'PRIVATE-TOKEN': args.private_token}).json()
+    return requests.get(url, headers={'PRIVATE-TOKEN': args.private_token})
 
 # read command-line arguments
 parser = argparse.ArgumentParser(description='Update and build a bunch of stuff')
 parser.add_argument("-t", "--private-token",
                     dest="private_token", required=True,
-                    help="The private token used to authenticate access")
+                    help="The private token used to authenticate access.")
 parser.add_argument("-s", "--server",
                     dest="server", default="https://gitlab.mpi-sws.org/",
-                    help="The GitLab server to contact")
+                    help="The GitLab server to contact.")
 parser.add_argument("-p", "--project",
                     dest="project", default="FP / iris-coq",
-                    help="The name of the project on GitLab")
+                    help="The name of the project on GitLab.")
+parser.add_argument("-f", "--file",
+                    dest="file", required=True,
+                    help="Filename to store the load in.")
+parser.add_argument("-c", "--commits",
+                    dest="commits",
+                    help="The commits to fetch. Default is everything since the most recent entry in the log file.")
 args = parser.parse_args()
 pp = pprint.PrettyPrinter(indent=4)
+log_file = sys.stdout if args.file == "-" else open(args.file, "a")
 
 projects = req("projects")
-project = first(filter(lambda p: p['name_with_namespace'] == args.project, projects))
+project = first(filter(lambda p: p['name_with_namespace'] == args.project, projects.json()))
 
-commit = "7e49776c0b3565364823665ab11ee91ed95ade63"
-
-build = first(sorted(req("/projects/{}/repository/commits/{}/builds".format(project['id'], commit)), key = lambda b: -int(b['id'])))
-print("The build ID is {}".format(build['id']))
-print(requests.get("{}/{}/builds/{}/artifacts/file/build-time.txt".format(args.server, args.project.replace(' ', ''), build['id'])).text)
+commits = subprocess.check_output(["git", "rev-list", args.commits]).decode("utf-8")
+for commit in reversed(commits.strip().split('\n')):
+    builds = req("/projects/{}/repository/commits/{}/builds".format(project['id'], commit))
+    if builds.status_code != 200:
+        continue
+    try:
+        build = first(sorted(builds.json(), key = lambda b: -int(b['id'])))
+    except Exception:
+        # no build
+        continue
+    build_times = requests.get("{}/{}/builds/{}/artifacts/file/build-time.txt".format(args.server, args.project.replace(' ', ''), build['id']))
+    if build_times.status_code != 200:
+        continue
+    # Output in the log file format
+    log_file.write("# {}\n".format(commit))
+    log_file.write(build_times.text)
