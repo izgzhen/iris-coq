@@ -58,7 +58,7 @@ Proof.
   - intros s1 s2 Hs1 [T1 T2 Hdisj Hstep'].
     inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
     destruct Htrans; simpl in *; first by destruct p.
-    exfalso; set_solver.
+    exfalso; apply dec_stable; set_solver.
 Qed.
 
 (* Proof that we can take the steps we need. *)

@@ -28,6 +28,7 @@ Proof. apply nclose_subseteq with x, encode_nclose. Qed.
 Instance ndisjoint : Disjoint namespace := λ N1 N2,
   ∃ N1' N2', N1' `suffix_of` N1 ∧ N2' `suffix_of` N2 ∧
              length N1' = length N2' ∧ N1' ≠ N2'.
+Typeclasses Opaque ndisjoint.
 
 Section ndisjoint.
   Context `{Countable A}.

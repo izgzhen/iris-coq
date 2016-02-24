@@ -117,6 +117,8 @@ Proof.
 Qed.
 End hashset.
 
+Typeclasses Opaque hashset_elem_of.
+
 (** These instances are declared using [Hint Extern] to avoid too
 eager type class search. *)
 Hint Extern 1 (ElemOf _ (hashset _)) =>

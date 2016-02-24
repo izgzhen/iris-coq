@@ -4,10 +4,10 @@
 importantly, it implements some tactics to automatically solve goals involving
 collections. *)
 From prelude Require Export base tactics orders.
-From prelude Require Import sets.
 
 Instance collection_subseteq `{ElemOf A C} : SubsetEq C := λ X Y,
   ∀ x, x ∈ X → x ∈ Y.
+Typeclasses Opaque collection_subseteq.
 
 (** * Basic theorems *)
 Section simple_collection.
@@ -99,18 +99,195 @@ Section simple_collection.
   End dec.
 End simple_collection.
 
-Definition of_option `{Singleton A C, Empty C} (x : option A) : C :=
-  match x with None => ∅ | Some a => {[ a ]} end.
+(** * Tactics *)
+(** The tactic [set_unfold] transforms all occurrences of [(∪)], [(∩)], [(∖)],
+[(<$>)], [∅], [{[_]}], [(≡)], and [(⊆)] into logically equivalent propositions
+involving just [∈]. For example, [A → x ∈ X ∪ ∅] becomes [A → x ∈ X ∨ False].
+
+This transformation is implemented using type classes instead of [rewrite]ing
+to ensure that we traverse each term at most once. *)
+Class SetUnfold (P Q : Prop) := { set_unfold : P ↔ Q }.
+Arguments set_unfold _ _ {_}.
+Hint Mode SetUnfold + - : typeclass_instances.
+
+Class SetUnfoldSimpl (P Q : Prop) := { set_unfold_simpl : SetUnfold P Q }.
+Hint Extern 0 (SetUnfoldSimpl _ _) => csimpl; constructor : typeclass_instances.
+
+Instance set_unfold_fallthrough P : SetUnfold P P | 1000. done. Qed.
+Definition set_unfold_1 `{SetUnfold P Q} : P → Q := proj1 (set_unfold P Q).
+Definition set_unfold_2 `{SetUnfold P Q} : Q → P := proj2 (set_unfold P Q).
+
+Lemma set_unfold_impl P Q P' Q' :
+  SetUnfold P P' → SetUnfold Q Q' → SetUnfold (P → Q) (P' → Q').
+Proof. constructor. by rewrite (set_unfold P P'), (set_unfold Q Q'). Qed.
+Lemma set_unfold_and P Q P' Q' :
+  SetUnfold P P' → SetUnfold Q Q' → SetUnfold (P ∧ Q) (P' ∧ Q').
+Proof. constructor. by rewrite (set_unfold P P'), (set_unfold Q Q'). Qed.
+Lemma set_unfold_or P Q P' Q' :
+  SetUnfold P P' → SetUnfold Q Q' → SetUnfold (P ∨ Q) (P' ∨ Q').
+Proof. constructor. by rewrite (set_unfold P P'), (set_unfold Q Q'). Qed.
+Lemma set_unfold_iff P Q P' Q' :
+  SetUnfold P P' → SetUnfold Q Q' → SetUnfold (P ↔ Q) (P' ↔ Q').
+Proof. constructor. by rewrite (set_unfold P P'), (set_unfold Q Q'). Qed.
+Lemma set_unfold_not P P' : SetUnfold P P' → SetUnfold (¬P) (¬P').
+Proof. constructor. by rewrite (set_unfold P P'). Qed.
+Lemma set_unfold_forall {A} (P P' : A → Prop) :
+  (∀ x, SetUnfold (P x) (P' x)) → SetUnfold (∀ x, P x) (∀ x, P' x).
+Proof. constructor. naive_solver. Qed.
+Lemma set_unfold_exist {A} (P P' : A → Prop) :
+  (∀ x, SetUnfold (P x) (P' x)) → SetUnfold (∃ x, P x) (∃ x, P' x).
+Proof. constructor. naive_solver. Qed.
+
+(* Avoid too eager application of the above instances (and thus too eager
+unfolding of type class transparent definitions). *)
+Hint Extern 0 (SetUnfold (_ → _) _) =>
+  class_apply set_unfold_impl : typeclass_instances.
+Hint Extern 0 (SetUnfold (_ ∧ _) _) =>
+  class_apply set_unfold_and : typeclass_instances.
+Hint Extern 0 (SetUnfold (_ ∨ _) _) =>
+  class_apply set_unfold_or : typeclass_instances.
+Hint Extern 0 (SetUnfold (_ ↔ _) _) =>
+  class_apply set_unfold_iff : typeclass_instances.
+Hint Extern 0 (SetUnfold (¬ _) _) =>
+  class_apply set_unfold_not : typeclass_instances.
+Hint Extern 1 (SetUnfold (∀ _, _) _) =>
+  class_apply set_unfold_forall : typeclass_instances.
+Hint Extern 0 (SetUnfold (∃ _, _) _) =>
+  class_apply set_unfold_exist : typeclass_instances.
+
+Section set_unfold_simple.
+  Context `{SimpleCollection A C}.
+  Implicit Types x y : A.
+  Implicit Types X Y : C.
+
+  Global Instance set_unfold_empty x : SetUnfold (x ∈ ∅) False.
+  Proof. constructor; apply elem_of_empty. Qed.
+  Global Instance set_unfold_singleton x y : SetUnfold (x ∈ {[ y ]}) (x = y).
+  Proof. constructor; apply elem_of_singleton. Qed.
+  Global Instance set_unfold_union x X Y P Q :
+    SetUnfold (x ∈ X) P → SetUnfold (x ∈ Y) Q → SetUnfold (x ∈ X ∪ Y) (P ∨ Q).
+  Proof.
+    intros ??; constructor.
+    by rewrite elem_of_union, (set_unfold (x ∈ X) P), (set_unfold (x ∈ Y) Q).
+  Qed.
+  Global Instance set_unfold_equiv_same X : SetUnfold (X ≡ X) True | 1.
+  Proof. done. Qed.
+  Global Instance set_unfold_equiv_empty_l X (P : A → Prop) :
+    (∀ x, SetUnfold (x ∈ X) (P x)) → SetUnfold (∅ ≡ X) (∀ x, ¬P x) | 5.
+  Proof.
+    intros ?; constructor.
+    rewrite (symmetry_iff equiv), elem_of_equiv_empty; naive_solver.
+  Qed.
+  Global Instance set_unfold_equiv_empty_r (P : A → Prop) :
+    (∀ x, SetUnfold (x ∈ X) (P x)) → SetUnfold (X ≡ ∅) (∀ x, ¬P x) | 5.
+  Proof. constructor. rewrite elem_of_equiv_empty; naive_solver. Qed.
+  Global Instance set_unfold_equiv (P Q : A → Prop) :
+    (∀ x, SetUnfold (x ∈ X) (P x)) → (∀ x, SetUnfold (x ∈ Y) (Q x)) →
+    SetUnfold (X ≡ Y) (∀ x, P x ↔ Q x) | 10.
+  Proof. constructor. rewrite elem_of_equiv; naive_solver. Qed.
+  Global Instance set_unfold_subseteq (P Q : A → Prop) :
+    (∀ x, SetUnfold (x ∈ X) (P x)) → (∀ x, SetUnfold (x ∈ Y) (Q x)) →
+    SetUnfold (X ⊆ Y) (∀ x, P x → Q x).
+  Proof. constructor. rewrite elem_of_subseteq; naive_solver. Qed.
+  Global Instance set_unfold_subset (P Q : A → Prop) :
+    (∀ x, SetUnfold (x ∈ X) (P x)) → (∀ x, SetUnfold (x ∈ Y) (Q x)) →
+    SetUnfold (X ⊂ Y) ((∀ x, P x → Q x) ∧ ¬∀ x, P x ↔ Q x).
+  Proof.
+    constructor. rewrite subset_spec, elem_of_subseteq, elem_of_equiv.
+    repeat f_equiv; naive_solver.
+  Qed.
+
+  Context `{!LeibnizEquiv C}.
+  Global Instance set_unfold_equiv_same_L X : SetUnfold (X = X) True | 1.
+  Proof. done. Qed.
+  Global Instance set_unfold_equiv_empty_l_L X (P : A → Prop) :
+    (∀ x, SetUnfold (x ∈ X) (P x)) → SetUnfold (∅ = X) (∀ x, ¬P x) | 5.
+  Proof.
+    constructor. rewrite (symmetry_iff eq), elem_of_equiv_empty_L; naive_solver.
+  Qed.
+  Global Instance set_unfold_equiv_empty_r_L (P : A → Prop) :
+    (∀ x, SetUnfold (x ∈ X) (P x)) → SetUnfold (X = ∅) (∀ x, ¬P x) | 5.
+  Proof. constructor. rewrite elem_of_equiv_empty_L; naive_solver. Qed.
+  Global Instance set_unfold_equiv_L (P Q : A → Prop) :
+    (∀ x, SetUnfold (x ∈ X) (P x)) → (∀ x, SetUnfold (x ∈ Y) (Q x)) →
+    SetUnfold (X = Y) (∀ x, P x ↔ Q x) | 10.
+  Proof. constructor. rewrite elem_of_equiv_L; naive_solver. Qed.
+End set_unfold_simple.
+
+Section set_unfold.
+  Context `{Collection A C}.
+  Implicit Types x y : A.
+  Implicit Types X Y : C.
+
+  Global Instance set_unfold_intersection x X Y P Q :
+    SetUnfold (x ∈ X) P → SetUnfold (x ∈ Y) Q → SetUnfold (x ∈ X ∩ Y) (P ∧ Q).
+  Proof.
+    intros ??; constructor. by rewrite elem_of_intersection,
+      (set_unfold (x ∈ X) P), (set_unfold (x ∈ Y) Q).
+  Qed.
+  Global Instance set_unfold_difference x X Y P Q :
+    SetUnfold (x ∈ X) P → SetUnfold (x ∈ Y) Q → SetUnfold (x ∈ X ∖ Y) (P ∧ ¬Q).
+  Proof.
+    intros ??; constructor. by rewrite elem_of_difference,
+      (set_unfold (x ∈ X) P), (set_unfold (x ∈ Y) Q).
+  Qed.
+End set_unfold.
+
+Section set_unfold_monad.
+  Context `{CollectionMonad M} {A : Type}.
+  Implicit Types x y : A.
+
+  Global Instance set_unfold_ret x y : SetUnfold (x ∈ mret y) (x = y).
+  Proof. constructor; apply elem_of_ret. Qed.
+  Global Instance set_unfold_bind {B} (f : A → M B) X (P Q : A → Prop) :
+    (∀ y, SetUnfold (y ∈ X) (P y)) → (∀ y, SetUnfold (x ∈ f y) (Q y)) →
+    SetUnfold (x ∈ X ≫= f) (∃ y, Q y ∧ P y).
+  Proof. constructor. rewrite elem_of_bind; naive_solver. Qed.
+  Global Instance set_unfold_fmap {B} (f : A → B) X (P : A → Prop) :
+    (∀ y, SetUnfold (y ∈ X) (P y)) →
+    SetUnfold (x ∈ f <$> X) (∃ y, x = f y ∧ P y).
+  Proof. constructor. rewrite elem_of_fmap; naive_solver. Qed.
+  Global Instance set_unfold_join (X : M (M A)) (P : M A → Prop) :
+    (∀ Y, SetUnfold (Y ∈ X) (P Y)) → SetUnfold (x ∈ mjoin X) (∃ Y, x ∈ Y ∧ P Y).
+  Proof. constructor. rewrite elem_of_join; naive_solver. Qed.
+End set_unfold_monad.
+
+Ltac set_unfold :=
+  let rec unfold_hyps :=
+    try match goal with
+    | H : _ |- _ =>
+       apply set_unfold_1 in H; revert H;
+       first [unfold_hyps; intros H | intros H; fail 1]
+    end in
+  apply set_unfold_2; unfold_hyps; csimpl in *.
+
+(** Since [firstorder] fails or loops on very small goals generated by
+[set_solver] already. We use the [naive_solver] tactic as a substitute.
+This tactic either fails or proves the goal. *)
+Tactic Notation "set_solver" "by" tactic3(tac) :=
+  intros; setoid_subst;
+  set_unfold;
+  intros; setoid_subst;
+  try match goal with |- _ ∈ _ => apply dec_stable end;
+  naive_solver tac.
+Tactic Notation "set_solver" "-" hyp_list(Hs) "by" tactic3(tac) :=
+  clear Hs; set_solver by tac.
+Tactic Notation "set_solver" "+" hyp_list(Hs) "by" tactic3(tac) :=
+  clear -Hs; set_solver by tac.
+Tactic Notation "set_solver" := set_solver by idtac.
+Tactic Notation "set_solver" "-" hyp_list(Hs) := clear Hs; set_solver.
+Tactic Notation "set_solver" "+" hyp_list(Hs) := clear -Hs; set_solver.
+
+(** * Conversion of option and list *)
+Definition of_option `{Singleton A C, Empty C} (mx : option A) : C :=
+  match mx with None => ∅ | Some x => {[ x ]} end.
 Fixpoint of_list `{Singleton A C, Empty C, Union C} (l : list A) : C :=
   match l with [] => ∅ | x :: l => {[ x ]} ∪ of_list l end.
 
 Section of_option_list.
   Context `{SimpleCollection A C}.
-  Lemma elem_of_of_option (x : A) o : x ∈ of_option o ↔ o = Some x.
-  Proof.
-    destruct o; simpl;
-      rewrite ?elem_of_empty, ?elem_of_singleton; naive_solver.
-  Qed.
+  Lemma elem_of_of_option (x : A) mx: x ∈ of_option mx ↔ mx = Some x.
+  Proof. destruct mx; set_solver. Qed.
   Lemma elem_of_of_list (x : A) l : x ∈ of_list l ↔ x ∈ l.
   Proof.
     split.
@@ -118,8 +295,15 @@ Section of_option_list.
       rewrite elem_of_union,elem_of_singleton; intros [->|?]; constructor; auto.
     - induction 1; simpl; rewrite elem_of_union, elem_of_singleton; auto.
   Qed.
+  Global Instance set_unfold_of_option (mx : option A) x :
+    SetUnfold (x ∈ of_option mx) (mx = Some x).
+  Proof. constructor; apply elem_of_of_option. Qed.
+  Global Instance set_unfold_of_list (l : list A) x :
+    SetUnfold (x ∈ of_list l) (x ∈ l).
+  Proof. constructor; apply elem_of_of_list. Qed.
 End of_option_list.
 
+(** * Guard *)
 Global Instance collection_guard `{CollectionMonad M} : MGuard M :=
   λ P dec A x, match dec with left H => x H | _ => ∅ end.
 
@@ -139,140 +323,13 @@ Section collection_monad_base.
     rewrite !elem_of_equiv_empty; setoid_rewrite elem_of_guard.
     destruct (decide P); naive_solver.
   Qed.
+  Global Instance set_unfold_guard `{Decision P} {A} (x : A) X Q :
+    SetUnfold (x ∈ X) Q → SetUnfold (x ∈ guard P; X) (P ∧ Q).
+  Proof. constructor. by rewrite elem_of_guard, (set_unfold (x ∈ X) Q). Qed.
   Lemma bind_empty {A B} (f : A → M B) X :
     X ≫= f ≡ ∅ ↔ X ≡ ∅ ∨ ∀ x, x ∈ X → f x ≡ ∅.
-  Proof.
-    setoid_rewrite elem_of_equiv_empty; setoid_rewrite elem_of_bind.
-    naive_solver.
-  Qed.
+  Proof. set_solver. Qed.
 End collection_monad_base.
-
-(** * Tactics *)
-(** Given a hypothesis [H : _ ∈ _], the tactic [destruct_elem_of H] will
-recursively split [H] for [(∪)], [(∩)], [(∖)], [map], [∅], [{[_]}]. *)
-Tactic Notation "decompose_elem_of" hyp(H) :=
-  let rec go H :=
-  lazymatch type of H with
-  | _ ∈ ∅ => apply elem_of_empty in H; destruct H
-  | _ ∈ ⊤ => clear H
-  | _ ∈ {[ _ | _ ]} => rewrite elem_of_mkSet in H
-  | ¬_ ∈ {[ _ | _ ]} => rewrite not_elem_of_mkSet in H
-  | ?x ∈ {[ ?y ]} =>
-    apply elem_of_singleton in H; try first [subst y | subst x]
-  | ?x ∉ {[ ?y ]} =>
-    apply not_elem_of_singleton in H
-  | _ ∈ _ ∪ _ =>
-    apply elem_of_union in H; destruct H as [H|H]; [go H|go H]
-  | _ ∉ _ ∪ _ =>
-    let H1 := fresh H in let H2 := fresh H in apply not_elem_of_union in H;
-    destruct H as [H1 H2]; go H1; go H2
-  | _ ∈ _ ∩ _ =>
-    let H1 := fresh H in let H2 := fresh H in apply elem_of_intersection in H;
-    destruct H as [H1 H2]; go H1; go H2
-  | _ ∈ _ ∖ _ =>
-    let H1 := fresh H in let H2 := fresh H in apply elem_of_difference in H;
-    destruct H as [H1 H2]; go H1; go H2
-  | ?x ∈ _ <$> _ =>
-    apply elem_of_fmap in H; destruct H as [? [? H]]; try (subst x); go H
-  | _ ∈ _ ≫= _ =>
-    let H1 := fresh H in let H2 := fresh H in apply elem_of_bind in H;
-    destruct H as [? [H1 H2]]; go H1; go H2
-  | ?x ∈ mret ?y =>
-    apply elem_of_ret in H; try first [subst y | subst x]
-  | _ ∈ mjoin _ ≫= _ =>
-    let H1 := fresh H in let H2 := fresh H in apply elem_of_join in H;
-    destruct H as [? [H1 H2]]; go H1; go H2
-  | _ ∈ guard _; _ =>
-    let H1 := fresh H in let H2 := fresh H in apply elem_of_guard in H;
-    destruct H as [H1 H2]; go H2
-  | _ ∈ of_option _ => apply elem_of_of_option in H
-  | _ ∈ of_list _ => apply elem_of_of_list in H
-  | _ => idtac
-  end in go H.
-Tactic Notation "decompose_elem_of" :=
-  repeat_on_hyps (fun H => decompose_elem_of H).
-
-Ltac decompose_empty := repeat
-  match goal with
-  | H : ∅ ≡ ∅ |- _ => clear H
-  | H : ∅ = ∅ |- _ => clear H
-  | H : ∅ ≡ _ |- _ => symmetry in H
-  | H : ∅ = _ |- _ => symmetry in H
-  | H : _ ∪ _ ≡ ∅ |- _ => apply empty_union in H; destruct H
-  | H : _ ∪ _ ≢ ∅ |- _ => apply non_empty_union in H; destruct H
-  | H : {[ _ ]} ≡ ∅ |- _ => destruct (non_empty_singleton _ H)
-  | H : _ ∪ _ = ∅ |- _ => apply empty_union_L in H; destruct H
-  | H : _ ∪ _ ≠ ∅ |- _ => apply non_empty_union_L in H; destruct H
-  | H : {[ _ ]} = ∅ |- _ => destruct (non_empty_singleton_L _ H)
-  | H : guard _ ; _ ≡ ∅ |- _ => apply guard_empty in H; destruct H
-  end.
-
-(** The first pass of our collection tactic consists of eliminating all
-occurrences of [(∪)], [(∩)], [(∖)], [(<$>)], [∅], [{[_]}], [(≡)], and [(⊆)],
-by rewriting these into logically equivalent propositions. For example we
-rewrite [A → x ∈ X ∪ ∅] into [A → x ∈ X ∨ False]. *)
-Ltac set_unfold :=
-  repeat_on_hyps (fun H =>
-    repeat match type of H with
-    | context [ _ ⊆ _ ] => setoid_rewrite elem_of_subseteq in H
-    | context [ _ ⊂ _ ] => setoid_rewrite subset_spec in H
-    | context [ _ ≡ ∅ ] => setoid_rewrite elem_of_equiv_empty in H
-    | context [ _ ≡ _ ] => setoid_rewrite elem_of_equiv_alt in H
-    | context [ _ = ∅ ] => setoid_rewrite elem_of_equiv_empty_L in H
-    | context [ _ = _ ] => setoid_rewrite elem_of_equiv_alt_L in H
-    | context [ _ ∈ ∅ ] => setoid_rewrite elem_of_empty in H
-    | context [ _ ∈ ⊤ ] => setoid_rewrite elem_of_all in H
-    | context [ _ ∈ {[ _ ]} ] => setoid_rewrite elem_of_singleton in H
-    | context [ _ ∈ {[_| _ ]} ] => setoid_rewrite elem_of_mkSet in H; simpl in H
-    | context [ _ ∈ _ ∪ _ ] => setoid_rewrite elem_of_union in H
-    | context [ _ ∈ _ ∩ _ ] => setoid_rewrite elem_of_intersection in H
-    | context [ _ ∈ _ ∖ _ ] => setoid_rewrite elem_of_difference in H
-    | context [ _ ∈ _ <$> _ ] => setoid_rewrite elem_of_fmap in H
-    | context [ _ ∈ mret _ ] => setoid_rewrite elem_of_ret in H
-    | context [ _ ∈ _ ≫= _ ] => setoid_rewrite elem_of_bind in H
-    | context [ _ ∈ mjoin _ ] => setoid_rewrite elem_of_join in H
-    | context [ _ ∈ guard _; _ ] => setoid_rewrite elem_of_guard in H
-    | context [ _ ∈ of_option _ ] => setoid_rewrite elem_of_of_option in H
-    | context [ _ ∈ of_list _ ] => setoid_rewrite elem_of_of_list in H
-    end);
-  repeat match goal with
-  | |- context [ _ ⊆ _ ] => setoid_rewrite elem_of_subseteq
-  | |- context [ _ ⊂ _ ] => setoid_rewrite subset_spec
-  | |- context [ _ ≡ ∅ ] => setoid_rewrite elem_of_equiv_empty
-  | |- context [ _ ≡ _ ] => setoid_rewrite elem_of_equiv_alt
-  | |- context [ _ = ∅ ] => setoid_rewrite elem_of_equiv_empty_L
-  | |- context [ _ = _ ] => setoid_rewrite elem_of_equiv_alt_L
-  | |- context [ _ ∈ ∅ ] => setoid_rewrite elem_of_empty
-  | |- context [ _ ∈ ⊤ ] => setoid_rewrite elem_of_all
-  | |- context [ _ ∈ {[ _ ]} ] => setoid_rewrite elem_of_singleton
-  | |- context [ _ ∈ {[ _ | _ ]} ] => setoid_rewrite elem_of_mkSet; simpl
-  | |- context [ _ ∈ _ ∪ _ ] => setoid_rewrite elem_of_union
-  | |- context [ _ ∈ _ ∩ _ ] => setoid_rewrite elem_of_intersection
-  | |- context [ _ ∈ _ ∖ _ ] => setoid_rewrite elem_of_difference
-  | |- context [ _ ∈ _ <$> _ ] => setoid_rewrite elem_of_fmap
-  | |- context [ _ ∈ mret _ ] => setoid_rewrite elem_of_ret
-  | |- context [ _ ∈ _ ≫= _ ] => setoid_rewrite elem_of_bind
-  | |- context [ _ ∈ mjoin _ ] => setoid_rewrite elem_of_join
-  | |- context [ _ ∈ guard _; _ ] => setoid_rewrite elem_of_guard
-  | |- context [ _ ∈ of_option _ ] => setoid_rewrite elem_of_of_option
-  | |- context [ _ ∈ of_list _ ] => setoid_rewrite elem_of_of_list
-  end.
-
-(** Since [firstorder] fails or loops on very small goals generated by
-[set_solver] already. We use the [naive_solver] tactic as a substitute.
-This tactic either fails or proves the goal. *)
-Tactic Notation "set_solver" "by" tactic3(tac) :=
-  setoid_subst;
-  decompose_empty;
-  set_unfold;
-  naive_solver tac.
-Tactic Notation "set_solver" "-" hyp_list(Hs) "by" tactic3(tac) :=
-  clear Hs; set_solver by tac.
-Tactic Notation "set_solver" "+" hyp_list(Hs) "by" tactic3(tac) :=
-  clear -Hs; set_solver by tac.
-Tactic Notation "set_solver" := set_solver by idtac.
-Tactic Notation "set_solver" "-" hyp_list(Hs) := clear Hs; set_solver.
-Tactic Notation "set_solver" "+" hyp_list(Hs) := clear -Hs; set_solver.
 
 (** * More theorems *)
 Section collection.
@@ -339,12 +396,9 @@ Section collection.
       destruct (decide (x ∈ X)); intuition.
     Qed.
     Lemma non_empty_difference X Y : X ⊂ Y → Y ∖ X ≢ ∅.
-    Proof.
-      intros [HXY1 HXY2] Hdiff. destruct HXY2. intros x.
-      destruct (decide (x ∈ X)); set_solver.
-    Qed.
+    Proof. intros [HXY1 HXY2] Hdiff. destruct HXY2. set_solver. Qed.
     Lemma empty_difference_subseteq X Y : X ∖ Y ≡ ∅ → X ⊆ Y.
-    Proof. intros ? x ?; apply dec_stable; set_solver. Qed.
+    Proof. set_solver. Qed.
     Context `{!LeibnizEquiv C}.
     Lemma union_difference_L X Y : X ⊆ Y → Y = X ∪ Y ∖ X.
     Proof. unfold_leibniz. apply union_difference. Qed.
@@ -590,10 +644,7 @@ Section collection_monad.
   Proof. revert l; induction k; set_solver by eauto. Qed.
   Lemma elem_of_mapM_fmap {A B} (f : A → B) (g : B → M A) l k :
     Forall (λ x, ∀ y, y ∈ g x → f y = x) l → k ∈ mapM g l → fmap f k = l.
-  Proof.
-    intros Hl. revert k. induction Hl; simpl; intros;
-      decompose_elem_of; f_equal/=; auto.
-  Qed.
+  Proof. intros Hl. revert k. induction Hl; set_solver. Qed.
   Lemma elem_of_mapM_Forall {A B} (f : A → M B) (P : B → Prop) l k :
     l ∈ mapM f k → Forall (λ x, ∀ y, y ∈ f x → P y) k → Forall P l.
   Proof. rewrite elem_of_mapM. apply Forall2_Forall_l. Qed.

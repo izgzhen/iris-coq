@@ -1,7 +1,7 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
 (** This file implements sets as functions into Prop. *)
-From prelude Require Export tactics.
+From prelude Require Export collections.
 
 Record set (A : Type) : Type := mkSet { set_car : A → Prop }.
 Add Printing Constructor set.
@@ -40,4 +40,12 @@ Instance set_join : MJoin set := λ A (XX : set (set A)),
 Instance set_collection_monad : CollectionMonad set.
 Proof. by split; try apply _. Qed.
 
-Global Opaque set_elem_of set_union set_intersection set_difference.
+Instance set_unfold_set_all {A} (x : A) : SetUnfold (x ∈ (⊤ : set A)) True.
+Proof. by constructor. Qed.
+Instance set_unfold_mkSet {A} (P : A → Prop) x Q :
+  SetUnfoldSimpl (P x) Q → SetUnfold (x ∈ mkSet P) Q.
+Proof. intros HPQ. constructor. apply HPQ. Qed.
+
+Global Opaque set_elem_of set_all set_empty set_singleton.
+Global Opaque set_union set_intersection set_difference.
+Global Opaque set_ret set_bind set_fmap set_join.
