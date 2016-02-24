@@ -163,8 +163,8 @@ Proof.
     + apply pvs_mono.
       rewrite -sts_ownS_op; eauto using i_states_closed, low_states_closed.
       set_solver.
-    + move=> /= t. rewrite !mkSet_elem_of; intros [<-|<-]; set_solver.
-    + rewrite !mkSet_elem_of; set_solver.
+    + move=> /= t. rewrite !elem_of_mkSet; intros [<-|<-]; set_solver.
+    + rewrite !elem_of_mkSet; set_solver.
     + auto using sts.closed_op, i_states_closed, low_states_closed.
 Qed.
 
@@ -293,7 +293,7 @@ Proof.
     apply sep_mono.
     * rewrite -sts_ownS_op; eauto using i_states_closed.
       + apply sts_own_weaken; eauto using sts.closed_op, i_states_closed.
-        rewrite !mkSet_elem_of; set_solver.
+        rewrite !elem_of_mkSet; set_solver.
       + set_solver.
     * rewrite const_equiv // !left_id.
       rewrite {1}[heap_ctx _]always_sep_dup {1}[sts_ctx _ _ _]always_sep_dup.
@@ -319,7 +319,7 @@ Proof.
     apply sep_mono.
     * rewrite -sts_ownS_op; eauto using i_states_closed.
       + apply sts_own_weaken; eauto using sts.closed_op, i_states_closed.
-        rewrite !mkSet_elem_of; set_solver.
+        rewrite !elem_of_mkSet; set_solver.
       + set_solver.
     * rewrite const_equiv // !left_id.
       rewrite {1}[heap_ctx _]always_sep_dup {1}[sts_ctx _ _ _]always_sep_dup.

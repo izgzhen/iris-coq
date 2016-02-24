@@ -18,7 +18,7 @@ Inductive prim_step : relation state :=
   | ChangePhase I : prim_step (State Low I) (State High I).
 
 Definition change_tok (I : gset gname) : set token :=
-  mkSet (λ t, match t with Change i => i ∉ I | Send => False end).
+  {[ t | match t with Change i => i ∉ I | Send => False end ]}.
 Definition send_tok (p : phase) : set token :=
   match p with Low => ∅ | High => {[ Send ]} end.
 Definition tok (s : state) : set token :=
@@ -28,29 +28,27 @@ Global Arguments tok !_ /.
 Canonical Structure sts := sts.STS prim_step tok.
 
 (* The set of states containing some particular i *)
-Definition i_states (i : gname) : set state :=
-  mkSet (λ s, i ∈ state_I s).
+Definition i_states (i : gname) : set state := {[ s | i ∈ state_I s ]}.
 
 (* The set of low states *)
-Definition low_states : set state :=
-  mkSet (λ s, if state_phase s is Low then True else False).
+Definition low_states : set state := {[ s | state_phase s = Low ]}.
 
 Lemma i_states_closed i : sts.closed (i_states i) {[ Change i ]}.
 Proof.
   split.
-  - move=>[p I]. rewrite /= !mkSet_elem_of /= =>HI.
+  - move=>[p I]. rewrite /= !elem_of_mkSet /= =>HI.
     destruct p; set_solver by eauto.
   - (* If we do the destruct of the states early, and then inversion
        on the proof of a transition, it doesn't work - we do not obtain
        the equalities we need. So we destruct the states late, because this
        means we can use "destruct" instead of "inversion". *)
-    move=>s1 s2. rewrite !mkSet_elem_of.
+    move=>s1 s2. rewrite !elem_of_mkSet.
     intros Hs1 [T1 T2 Hdisj Hstep'].
     inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
     destruct Htrans; simpl in *; last done.
     move: Hs1 Hdisj Htok. rewrite elem_of_equiv_empty elem_of_equiv.
     move=> ? /(_ (Change i)) Hdisj /(_ (Change i)); move: Hdisj.
-    rewrite elem_of_intersection elem_of_union !mkSet_elem_of.
+    rewrite elem_of_intersection elem_of_union !elem_of_mkSet.
     intros; apply dec_stable.
     destruct p; set_solver.
 Qed.
@@ -58,13 +56,13 @@ Qed.
 Lemma low_states_closed : sts.closed low_states {[ Send ]}.
 Proof.
   split.
-  - move=>[p I]. rewrite /= /tok !mkSet_elem_of /= =>HI.
+  - move=>[p I]. rewrite /= /tok !elem_of_mkSet /= =>HI.
     destruct p; set_solver.
-  - move=>s1 s2. rewrite !mkSet_elem_of.
+  - move=>s1 s2. rewrite !elem_of_mkSet.
     intros Hs1 [T1 T2 Hdisj Hstep'].
     inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
     destruct Htrans; simpl in *; first by destruct p.
-    set_solver.
+    exfalso; set_solver.
 Qed.
 
 (* Proof that we can take the steps we need. *)
@@ -79,7 +77,7 @@ Proof.
   constructor; first constructor; simpl; [set_solver by eauto..|].
   (* TODO this proof is rather annoying. *)
   apply elem_of_equiv=>t. rewrite !elem_of_union.
-  rewrite !mkSet_elem_of /change_tok /=.
+  rewrite !elem_of_mkSet /change_tok /=.
   destruct t as [j|]; last set_solver.
   rewrite elem_of_difference elem_of_singleton.
   destruct (decide (i = j)); set_solver.
@@ -96,11 +94,11 @@ Proof.
   - destruct p; set_solver.
   (* This gets annoying... and I think I can see a pattern with all these proofs. Automatable? *)
   - apply elem_of_equiv=>t. destruct t; last set_solver.
-    rewrite !mkSet_elem_of !not_elem_of_union !not_elem_of_singleton
+    rewrite !elem_of_mkSet !not_elem_of_union !not_elem_of_singleton
       not_elem_of_difference elem_of_singleton !(inj_iff Change).
     destruct p; naive_solver.
   - apply elem_of_equiv=>t. destruct t as [j|]; last set_solver.
-    rewrite !mkSet_elem_of !not_elem_of_union !not_elem_of_singleton
+    rewrite !elem_of_mkSet !not_elem_of_union !not_elem_of_singleton
       not_elem_of_difference elem_of_singleton !(inj_iff Change).
     destruct (decide (i1 = j)) as [->|]; first tauto.
     destruct (decide (i2 = j)) as [->|]; intuition.
