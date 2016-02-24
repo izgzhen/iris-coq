@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, sys, pprint
+import argparse, sys, pprint, itertools
 import matplotlib.pyplot as plt
 import parse_log
 
@@ -10,17 +10,19 @@ parser.add_argument("-f", "--file",
                     help="Filename to get the data from.")
 parser.add_argument("-t", "--timings", nargs='+',
                     dest="timings",
-                    help="The names of the Coq files (without the extension) whose timings should be extracted")
+                    help="The names of the Coq files (with or without the extension) whose timings should be extracted")
 args = parser.parse_args()
 pp = pprint.PrettyPrinter()
 log_file = sys.stdin if args.file == "-" else open(args.file, "r")
 
-results = list(parse_log.parse(log_file, args.timings))
+timings = list(map(lambda t: t[:-2] if t.endswith(".v") else t, args.timings))
+results = list(parse_log.parse(log_file, timings))
 
-for timing in args.timings:
-    plt.plot(list(map(lambda r: r.times[timing], results)))
+markers = itertools.cycle([(3, 0), (3, 0, 180), (4, 0), (4, 0, 45), (8, 0)])
+for timing in timings:
+    plt.plot(list(map(lambda r: r.times.get(timing), results)), marker=next(markers), markersize=8)
 
-plt.legend(args.timings)
+plt.legend(timings)
 plt.xticks(range(len(results)), list(map(lambda r: r.commit[:7], results)), rotation=70)
 plt.subplots_adjust(bottom=0.2) # more space for the commit labels
 
