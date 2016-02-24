@@ -180,7 +180,9 @@ Section proof.
     (∃ γ, barrier_ctx γ l P ★ sts_ownS γ low_states {[ Send ]})%I.
 
   Global Instance send_ne n l : Proper (dist n ==> dist n) (send l).
-  Proof. intros P1 P2 HP. rewrite /send. by setoid_rewrite HP. Qed.
+  Proof. (* TODO: This really ought to be doable by just calling a tactic.
+            It is just application of already registered congruence lemmas. *)
+    intros P1 P2 HP. rewrite /send. by setoid_rewrite HP. Qed.
  
   Definition recv (l : loc) (R : iProp) : iProp :=
     (∃ γ P Q i, barrier_ctx γ l P ★ sts_ownS γ (i_states i) {[ Change i ]} ★
