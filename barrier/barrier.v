@@ -15,20 +15,24 @@ Definition wait := (rec: "wait" "x" :=if: !"x" = '1 then '() else "wait" "x")%L.
 Module barrier_proto.
   Inductive phase := Low | High.
   Record state := State { state_phase : phase; state_I : gset gname }.
+  Add Printing Constructor state.
   Inductive token := Change (i : gname) | Send.
 
   Global Instance stateT_inhabited: Inhabited state := populate (State Low ∅).
-
-  Definition change_tokens (I : gset gname) : set token :=
-    mkSet (λ t, match t with Change i => i ∉ I | Send => False end).
+  Global Instance Change_inj : Inj (=) (=) Change.
+  Proof. by injection 1. Qed.
 
   Inductive prim_step : relation state :=
     | ChangeI p I2 I1 : prim_step (State p I1) (State p I2)
     | ChangePhase I : prim_step (State Low I) (State High I).
 
+  Definition change_tok (I : gset gname) : set token :=
+    mkSet (λ t, match t with Change i => i ∉ I | Send => False end).
+  Definition send_tok (p : phase) : set token :=
+    match p with Low => ∅ | High => {[ Send ]} end.
   Definition tok (s : state) : set token :=
-      change_tokens (state_I s)
-    ∪ match state_phase s with Low => ∅ | High => {[ Send ]} end.
+    change_tok (state_I s) ∪ send_tok (state_phase s).
+  Global Arguments tok !_ /.
 
   Canonical Structure sts := sts.STS prim_step tok.
 
@@ -36,63 +40,55 @@ Module barrier_proto.
   Definition i_states (i : gname) : set state :=
     mkSet (λ s, i ∈ state_I s).
 
-  Lemma i_states_closed i :
-    sts.closed (i_states i) {[ Change i ]}.
+  (* The set of low states *)
+  Definition low_states : set state :=
+    mkSet (λ s, if state_phase s is Low then True else False).
+
+  Lemma i_states_closed i : sts.closed (i_states i) {[ Change i ]}.
   Proof.
     split.
-    - move=>[p I]. rewrite /= /tok !mkSet_elem_of /= =>HI.
+    - move=>[p I]. rewrite /= !mkSet_elem_of /= =>HI.
       destruct p; set_solver by eauto.
     - (* If we do the destruct of the states early, and then inversion
          on the proof of a transition, it doesn't work - we do not obtain
          the equalities we need. So we destruct the states late, because this
          means we can use "destruct" instead of "inversion". *)
-      move=>s1 s2. rewrite !mkSet_elem_of /==> Hs1 Hstep.
-      inversion_clear Hstep as [T1 T2 Hdisj Hstep'].
+      move=>s1 s2. rewrite !mkSet_elem_of.
+      intros Hs1 [T1 T2 Hdisj Hstep'].
       inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
-      destruct Htrans; last done; move:Hs1 Hdisj Htok.
-      rewrite /= /tok /=. 
-      (* TODO: Can this be done better? *)
-      intros. apply dec_stable. 
-      assert (Change i ∉ change_tokens I1) as HI1
-        by (rewrite mkSet_not_elem_of; set_solver +Hs1).
-      assert (Change i ∉ change_tokens I2) as HI2.
-      { destruct p; set_solver +Htok Hdisj HI1. }
-      done.
+      destruct Htrans; simpl in *; last done.
+      move: Hs1 Hdisj Htok. rewrite elem_of_equiv_empty elem_of_equiv.
+      move=> ? /(_ (Change i)) Hdisj /(_ (Change i)); move: Hdisj.
+      rewrite elem_of_intersection elem_of_union !mkSet_elem_of.
+      intros; apply dec_stable.
+      destruct p; set_solver.
   Qed.
-
-  (* The set of low states *)
-  Definition low_states : set state :=
-    mkSet (λ s, if state_phase s is Low then True else False).
 
   Lemma low_states_closed : sts.closed low_states {[ Send ]}.
   Proof.
     split.
     - move=>[p I]. rewrite /= /tok !mkSet_elem_of /= =>HI.
       destruct p; set_solver.
-    - move=>s1 s2. rewrite !mkSet_elem_of /==> Hs1 Hstep.
-      inversion_clear Hstep as [T1 T2 Hdisj Hstep'].
+    - move=>s1 s2. rewrite !mkSet_elem_of.
+      intros Hs1 [T1 T2 Hdisj Hstep'].
       inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
-      destruct Htrans; move:Hs1 Hdisj Htok =>/=;
-                                first by destruct p.
-      rewrite /= /tok /=. intros. set_solver +Hdisj Htok.
+      destruct Htrans; simpl in *; first by destruct p.
+      set_solver.
   Qed.
 
   (* Proof that we can take the steps we need. *)
-  Lemma signal_step I:
-    sts.steps (State Low I, {[Send]}) (State High I, ∅).
-  Proof.
-    apply rtc_once. constructor; first constructor;
-                        rewrite /= /tok /=; set_solver.
-  Qed.
+  Lemma signal_step I : sts.steps (State Low I, {[Send]}) (State High I, ∅).
+  Proof. apply rtc_once. constructor; first constructor; set_solver. Qed.
 
   Lemma wait_step i I :
-    i ∈ I → sts.steps (State High I, {[ Change i ]}) (State High (I ∖ {[ i ]}), ∅).
+    i ∈ I →
+    sts.steps (State High I, {[ Change i ]}) (State High (I ∖ {[ i ]}), ∅).
   Proof.
     intros. apply rtc_once.
-    constructor; first constructor; rewrite /= /tok /=; [set_solver by eauto..|].
+    constructor; first constructor; simpl; [set_solver by eauto..|].
     (* TODO this proof is rather annoying. *)
     apply elem_of_equiv=>t. rewrite !elem_of_union.
-    rewrite !mkSet_elem_of /change_tokens /=.
+    rewrite !mkSet_elem_of /change_tok /=.
     destruct t as [j|]; last set_solver.
     rewrite elem_of_difference elem_of_singleton.
     destruct (decide (i = j)); set_solver.
@@ -100,19 +96,23 @@ Module barrier_proto.
 
   Lemma split_step p i i1 i2 I :
     i ∈ I → i1 ∉ I → i2 ∉ I → i1 ≠ i2 →
-    sts.steps (State p I, {[ Change i ]})
-        (State p ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))), {[ Change i1; Change i2 ]}).
+    sts.steps
+      (State p I, {[ Change i ]})
+      (State p ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))), {[ Change i1; Change i2 ]}).
   Proof.
     intros. apply rtc_once.
-    constructor; first constructor; rewrite /= /tok /=; first (destruct p; set_solver).
+    constructor; first constructor; simpl.
+    - destruct p; set_solver.
     (* This gets annoying... and I think I can see a pattern with all these proofs. Automatable? *)
     - apply elem_of_equiv=>t. destruct t; last set_solver.
-      rewrite !mkSet_elem_of. destruct p; set_solver.
+      rewrite !mkSet_elem_of !not_elem_of_union !not_elem_of_singleton
+        not_elem_of_difference elem_of_singleton !(inj_iff Change).
+      destruct p; naive_solver.
     - apply elem_of_equiv=>t. destruct t as [j|]; last set_solver.
-      rewrite !mkSet_elem_of.
-      destruct (decide (i1 = j)); first set_solver. 
-      destruct (decide (i2 = j)); first set_solver.
-      destruct (decide (i = j)); set_solver.
+      rewrite !mkSet_elem_of !not_elem_of_union !not_elem_of_singleton
+        not_elem_of_difference elem_of_singleton !(inj_iff Change).
+      destruct (decide (i1 = j)) as [->|]; first tauto.
+      destruct (decide (i2 = j)) as [->|]; intuition.
   Qed.
 
 End barrier_proto.
@@ -132,63 +132,63 @@ Class barrierG Σ := BarrierG {
 
 Definition barrierGF : iFunctors := [stsGF sts; agreeF].
 
-Instance inGF_barrierG `{inGF heap_lang Σ (stsGF sts)}
-         `{inGF heap_lang Σ agreeF} : barrierG Σ.
+Instance inGF_barrierG
+  `{inGF heap_lang Σ (stsGF sts), inGF heap_lang Σ agreeF} : barrierG Σ.
 Proof. split; apply _. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.
-  Context {Σ : iFunctorG} `{!heapG Σ} `{!barrierG Σ}.
-  Context (N : namespace) (heapN : namespace).
-
-  Local Hint Immediate i_states_closed low_states_closed : sts.
-  Local Hint Resolve signal_step wait_step split_step : sts.
-  Local Hint Resolve sts.closed_op : sts.
-
-  Hint Extern 50 (_ ∈ _) => try rewrite !mkSet_elem_of; set_solver : sts.
-  Hint Extern 50 (_ ⊆ _) => try rewrite !mkSet_elem_of; set_solver : sts.
-  Hint Extern 50 (_ ≡ _) => try rewrite !mkSet_elem_of; set_solver : sts.
-
+  Context {Σ : iFunctorG} `{!heapG Σ, !barrierG Σ}.
+  Context (heapN N : namespace).
   Local Notation iProp := (iPropG heap_lang Σ).
 
   Definition waiting (P : iProp) (I : gset gname) : iProp :=
-    (∃ Ψ : gname → iProp, ▷(P -★ Π★{set I} (λ i, Ψ i)) ★
-                             Π★{set I} (λ i, saved_prop_own i (Ψ i)))%I.
+    (∃ Ψ : gname → iProp,
+      ▷ (P -★ Π★{set I} Ψ) ★ Π★{set I} (λ i, saved_prop_own i (Ψ i)))%I.
 
   Definition ress (I : gset gname) : iProp :=
-    (Π★{set I} (λ i, ∃ R, saved_prop_own i R ★ ▷R))%I.
+    (Π★{set I} (λ i, ∃ R, saved_prop_own i R ★ ▷ R))%I.
 
-  Local Notation state_to_val s :=
-    (match s with State Low _ => 0 | State High _ => 1 end).
+  Coercion state_to_val (s : state) : val :=
+    match s with State Low _ => '0 | State High _ => '1 end.
+  Arguments state_to_val !_ /.
+
   Definition barrier_inv (l : loc) (P : iProp) (s : state) : iProp :=
-    (l ↦ '(state_to_val s) ★
+    (l ↦ s ★
      match s with State Low I' => waiting P I' | State High I' => ress I' end
     )%I.
 
   Definition barrier_ctx (γ : gname) (l : loc) (P : iProp) : iProp :=
     (■ (heapN ⊥ N) ★ heap_ctx heapN ★ sts_ctx γ N (barrier_inv l P))%I.
 
-  Global Instance barrier_ctx_ne n γ l : Proper (dist n ==> dist n) (barrier_ctx γ l).
-  Proof.
-    move=>? ? EQ. rewrite /barrier_ctx. apply sep_ne; first done.
-    apply sep_ne; first done. apply sts_ctx_ne.
-    move=>[p I]. rewrite /barrier_inv. destruct p; last done.
-    rewrite /waiting. by setoid_rewrite EQ.
-  Qed.
-
   Definition send (l : loc) (P : iProp) : iProp :=
     (∃ γ, barrier_ctx γ l P ★ sts_ownS γ low_states {[ Send ]})%I.
 
+  Definition recv (l : loc) (R : iProp) : iProp :=
+    (∃ γ P Q i,
+      barrier_ctx γ l P ★ sts_ownS γ (i_states i) {[ Change i ]} ★
+      saved_prop_own i Q ★ ▷ (Q -★ R))%I.
+
+  (** Setoids *)
+  Global Instance waiting_ne n : Proper (dist n ==> (=) ==> dist n) waiting.
+  Proof. intros P1 P2 HP I1 I2 ->. rewrite /waiting. by setoid_rewrite HP. Qed.
+
+  Global Instance barrier_inv_ne n l :
+    Proper (dist n ==> pointwise_relation _ (dist n)) (barrier_inv l).
+  Proof.
+    intros P1 P2 HP [[] ]; rewrite /barrier_inv //=. by setoid_rewrite HP.
+  Qed.
+
+  Global Instance barrier_ctx_ne n γ l : Proper (dist n ==> dist n) (barrier_ctx γ l).
+  Proof. intros P1 P2 HP. rewrite /barrier_ctx. by setoid_rewrite HP. Qed.
+
   Global Instance send_ne n l : Proper (dist n ==> dist n) (send l).
   Proof. intros P1 P2 HP. rewrite /send. by setoid_rewrite HP. Qed.
- 
-  Definition recv (l : loc) (R : iProp) : iProp :=
-    (∃ γ P Q i, barrier_ctx γ l P ★ sts_ownS γ (i_states i) {[ Change i ]} ★
-        saved_prop_own i Q ★ ▷(Q -★ R))%I.
 
   Global Instance recv_ne n l : Proper (dist n ==> dist n) (recv l).
   Proof. intros R1 R2 HR. rewrite /recv. by setoid_rewrite HR. Qed.
 
+  (** Helper lemmas *)
   Lemma waiting_split i i1 i2 Q R1 R2 P I :
     i ∈ I → i1 ∉ I → i2 ∉ I → i1 ≠ i2 →
     (saved_prop_own i2 R2 ★ saved_prop_own i1 R1 ★ saved_prop_own i Q ★
@@ -208,22 +208,17 @@ Section proof.
       rewrite (big_sepS_delete _ I i) //.
       rewrite [(_ ★ Π★{set _} _)%I]comm [(_ ★ Π★{set _} _)%I]comm -!assoc.
       apply sep_mono.
-      + apply big_sepS_mono; first done. intros j.
-        rewrite elem_of_difference not_elem_of_singleton. intros.
-        rewrite fn_lookup_insert_ne; last naive_solver.
-        rewrite fn_lookup_insert_ne; last naive_solver.
-        done.
+      + apply big_sepS_mono; [done|] => j.
+        rewrite elem_of_difference not_elem_of_singleton=> -[??].
+        by do 2 (rewrite fn_lookup_insert_ne; last naive_solver).
       + rewrite !assoc.
         eapply wand_apply_r'; first done.
         apply: (eq_rewrite (Ψ i) Q (λ x, x)%I); last by eauto with I.
         rewrite eq_sym. eauto with I.
-    - rewrite !assoc. apply sep_mono.
-      + by rewrite comm.
-      + apply big_sepS_mono; first done. intros j.
-        rewrite elem_of_difference not_elem_of_singleton. intros.
-        rewrite fn_lookup_insert_ne; last naive_solver.
-        rewrite fn_lookup_insert_ne; last naive_solver.
-        done.
+    - rewrite !assoc [(saved_prop_own i2 _ ★ _)%I]comm; apply sep_mono_r.
+      apply big_sepS_mono; [done|]=> j.
+      rewrite elem_of_difference not_elem_of_singleton=> -[??].
+      by do 2 (rewrite fn_lookup_insert_ne; last naive_solver).
   Qed. 
 
   Lemma ress_split i i1 i2 Q R1 R2 I :
@@ -235,19 +230,19 @@ Section proof.
     intros. rewrite /ress.
     rewrite [(Π★{set _} _)%I](big_sepS_delete _ I i) // !assoc !sep_exist_l !sep_exist_r.
     apply exist_elim=>R.
-    rewrite big_sepS_insert; last set_solver.
-    rewrite big_sepS_insert; last set_solver.
+    do 2 (rewrite big_sepS_insert; last set_solver).
     rewrite -(exist_intro R1) -(exist_intro R2) [(_ i2 _ ★ _)%I]comm -!assoc.
     apply sep_mono_r. rewrite !assoc. apply sep_mono_l.
     rewrite [(▷ _ ★ _ i2 _)%I]comm -!assoc. apply sep_mono_r.
     rewrite !assoc [(_ ★ _ i R)%I]comm !assoc saved_prop_agree.
     rewrite [(▷ _ ★ _)%I]comm -!assoc. eapply wand_apply_l.
-    { rewrite <-later_wand, <-later_intro. done. }
+    { by rewrite <-later_wand, <-later_intro. }
     { by rewrite later_sep. }
     u_strip_later.
     apply: (eq_rewrite R Q (λ x, x)%I); eauto with I.
   Qed.
 
+  (** Actual proofs *)
   Lemma newchan_spec (P : iProp) (Φ : val → iProp) :
     heapN ⊥ N →
     (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ (LocV l))
@@ -258,24 +253,19 @@ Section proof.
     apply forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
     rewrite !assoc. apply pvs_wand_r.
     (* The core of this proof: Allocating the STS and the saved prop. *)
-    eapply sep_elim_True_r.
-    { by eapply (saved_prop_alloc _ P). }
+    eapply sep_elim_True_r; first by eapply (saved_prop_alloc _ P).
     rewrite pvs_frame_l. apply pvs_strip_pvs. rewrite sep_exist_l.
     apply exist_elim=>i.
-    trans (pvs ⊤ ⊤ (heap_ctx heapN ★ ▷ (barrier_inv l P (State Low {[ i ]}))  ★ saved_prop_own i P)).
+    trans (pvs ⊤ ⊤ (heap_ctx heapN ★ ▷ (barrier_inv l P (State Low {[ i ]})) ★ saved_prop_own i P)).
     - rewrite -pvs_intro. cancel [heap_ctx heapN].
       rewrite {1}[saved_prop_own _ _]always_sep_dup. cancel [saved_prop_own i P].
       rewrite /barrier_inv /waiting -later_intro. cancel [l ↦ '0]%I.
       rewrite -(exist_intro (const P)) /=. rewrite -[saved_prop_own _ _](left_id True%I (★)%I).
-      apply sep_mono.
-      + rewrite -later_intro. apply wand_intro_l. rewrite right_id.
-        by rewrite big_sepS_singleton.
-      + by rewrite big_sepS_singleton.
+      by rewrite !big_sepS_singleton /= wand_diag -later_intro.
     - rewrite (sts_alloc (barrier_inv l P) ⊤ N); last by eauto.
       rewrite !pvs_frame_r !pvs_frame_l. 
       rewrite pvs_trans'. apply pvs_strip_pvs. rewrite sep_exist_r sep_exist_l.
       apply exist_elim=>γ.
-      (* TODO: The record notation is rather annoying here *)
       rewrite /recv /send. rewrite -(exist_intro γ) -(exist_intro P).
       rewrite -(exist_intro P) -(exist_intro i) -(exist_intro γ).
       (* This is even more annoying than usually, since rewrite sometimes unfolds stuff... *)
@@ -292,11 +282,12 @@ Section proof.
       { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
       rewrite (sts_own_weaken ⊤ _ _ (i_states i ∩ low_states) _ 
                               ({[ Change i ]} ∪ {[ Send ]})).
-      + apply pvs_mono. rewrite sts_ownS_op; eauto with sts.
-      + rewrite /= /tok /=  =>t. rewrite !mkSet_elem_of.
-        move=>[[?]|?]; set_solver. 
-      + eauto with sts.
-      + eauto with sts.
+      + apply pvs_mono.
+        rewrite -sts_ownS_op; eauto using i_states_closed, low_states_closed.
+        set_solver.
+      + move=> /= t. rewrite !mkSet_elem_of; intros [<-|<-]; set_solver.
+      + rewrite !mkSet_elem_of; set_solver.
+      + auto using sts.closed_op, i_states_closed, low_states_closed.
   Qed.
 
   Lemma signal_spec l P (Φ : val → iProp) :
@@ -314,7 +305,7 @@ Section proof.
     eapply wp_store with (v' := '0); eauto with I ndisj. 
     u_strip_later. cancel [l ↦ '0]%I.
     apply wand_intro_l. rewrite -(exist_intro (State High I)).
-    rewrite -(exist_intro ∅). rewrite const_equiv /=; last by eauto with sts.
+    rewrite -(exist_intro ∅). rewrite const_equiv /=; last by eauto using signal_step.
     rewrite left_id -later_intro {2}/barrier_inv -!assoc. apply sep_mono_r.
     rewrite !assoc [(_ ★ P)%I]comm !assoc -2!assoc.
     apply sep_mono; last first.
@@ -323,7 +314,7 @@ Section proof.
     rewrite /waiting /ress sep_exist_l. apply exist_elim=>{Φ} Φ.
     rewrite later_wand {1}(later_intro P) !assoc wand_elim_r.
     rewrite big_sepS_later -big_sepS_sepS. apply big_sepS_mono'=>i.
-    rewrite -(exist_intro (Φ i)) comm. done.
+    by rewrite -(exist_intro (Φ i)) comm.
   Qed.
 
   Lemma wait_spec l P (Φ : val → iProp) :
@@ -359,13 +350,13 @@ Section proof.
       rewrite [(_ ★ heap_ctx _)%I]comm -!assoc.
       rewrite const_equiv // left_id -pvs_frame_l. apply sep_mono_r.
       rewrite comm -pvs_frame_l. apply sep_mono_r.
-      apply sts_own_weaken; eauto using sts.up_subseteq with sts. }
+      apply sts_own_weaken; eauto using i_states_closed. }
     (* a High state: the comparison succeeds, and we perform a transition and
        return to the client *)
     rewrite [(_ ★ □ (_ → _ ))%I]sep_elim_l.
     rewrite -(exist_intro (State High (I ∖ {[ i ]}))) -(exist_intro ∅).
     change (i ∈ I) in Hs.
-    rewrite const_equiv /=; last by eauto with sts.
+    rewrite const_equiv /=; last by eauto using wait_step.
     rewrite left_id -[(▷ barrier_inv _ _ _)%I]later_intro {2}/barrier_inv.
     rewrite -!assoc. apply sep_mono_r. rewrite /ress.
     rewrite (big_sepS_delete _ I i) // [(_ ★ Π★{set _} _)%I]comm -!assoc.
@@ -408,7 +399,7 @@ Section proof.
     (* Case I: Low state. *)
     - rewrite -(exist_intro (State Low ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
       rewrite -(exist_intro ({[Change i1 ]} ∪ {[ Change i2 ]})).
-      rewrite [(■ sts.steps _ _)%I]const_equiv; last by eauto with sts.
+      rewrite [(■ sts.steps _ _)%I]const_equiv; last by eauto using split_step.
       rewrite left_id -later_intro {1 3}/barrier_inv.
       (* FIXME ssreflect rewrite fails if there are evars around. Also, this is very slow because we don't have a proof mode. *)
       rewrite -(waiting_split _ _ _ Q R1 R2); [|done..].
@@ -422,22 +413,20 @@ Section proof.
       do 2 rewrite !(assoc (★)%I) [(_ ★ sts_ownS _ _ _)%I]comm.
       rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
       apply sep_mono.
-      * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
+      * rewrite -sts_ownS_op; eauto using i_states_closed.
+        + apply sts_own_weaken; eauto using sts.closed_op, i_states_closed.
+          rewrite !mkSet_elem_of; set_solver.
+        + set_solver.
       * rewrite const_equiv // !left_id.
         rewrite {1}[heap_ctx _]always_sep_dup {1}[sts_ctx _ _ _]always_sep_dup.
-        cancel [heap_ctx heapN; heap_ctx heapN;
-                sts_ctx γ N (barrier_inv l P); sts_ctx γ N (barrier_inv l P);
-                saved_prop_own i1 R1; saved_prop_own i2 R2].
-        apply sep_intro_True_l.
-        { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
-        rewrite -later_intro. apply wand_intro_l. by rewrite right_id.
+        rewrite !wand_diag -!later_intro. solve_sep_entails.
 (* Case II: High state. TODO: Lots of this script is just copy-n-paste of the previous one.
    Most of that is because the goals are fairly similar in structure, and the proof scripts
    are mostly concerned with manually managaing the structure (assoc, comm, dup) of
    the context. *)
     - rewrite -(exist_intro (State High ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
       rewrite -(exist_intro ({[Change i1 ]} ∪ {[ Change i2 ]})).
-      rewrite const_equiv; last by eauto with sts.
+      rewrite const_equiv; last by eauto using split_step.
       rewrite left_id -later_intro {1 3}/barrier_inv.
       rewrite -(ress_split _ _ _ Q R1 R2); [|done..].
       rewrite {1}[saved_prop_own i1 _]always_sep_dup.
@@ -450,15 +439,13 @@ Section proof.
       do 2 rewrite !(assoc (★)%I) [(_ ★ sts_ownS _ _ _)%I]comm.
       rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
       apply sep_mono.
-      * rewrite -sts_ownS_op; by eauto using sts_own_weaken with sts.
+      * rewrite -sts_ownS_op; eauto using i_states_closed.
+        + apply sts_own_weaken; eauto using sts.closed_op, i_states_closed.
+          rewrite !mkSet_elem_of; set_solver.
+        + set_solver.
       * rewrite const_equiv // !left_id.
         rewrite {1}[heap_ctx _]always_sep_dup {1}[sts_ctx _ _ _]always_sep_dup.
-        cancel [heap_ctx heapN; heap_ctx heapN;
-                sts_ctx γ N (barrier_inv l P); sts_ctx γ N (barrier_inv l P);
-                saved_prop_own i1 R1; saved_prop_own i2 R2]%I.
-        apply sep_intro_True_l.
-        { rewrite -later_intro. apply wand_intro_l. by rewrite right_id. }
-        rewrite -later_intro. apply wand_intro_l. by rewrite right_id.
+        rewrite !wand_diag -!later_intro. solve_sep_entails.
   Qed.
 
   Lemma recv_strengthen l P1 P2 :
@@ -469,9 +456,8 @@ Section proof.
     apply exist_mono=>Q. rewrite sep_exist_r. apply exist_mono=>i.
     rewrite -!assoc. apply sep_mono_r, sep_mono_r, sep_mono_r, sep_mono_r, sep_mono_r.
     rewrite (later_intro (P1 -★ _)%I) -later_sep. apply later_mono.
-    apply wand_intro_l. rewrite !assoc wand_elim_r wand_elim_r. done.
+    apply wand_intro_l. by rewrite !assoc wand_elim_r wand_elim_r.
   Qed.
-
 End proof.
 
 Section spec.
@@ -482,25 +468,25 @@ Section spec.
   (* TODO: Maybe notation for LocV (and Loc)? *)
   Lemma barrier_spec (heapN N : namespace) :
     heapN ⊥ N →
-    ∃ (recv send : loc -> iProp -n> iProp),
+    ∃ recv send : loc -> iProp -n> iProp,
       (∀ P, heap_ctx heapN ⊑ {{ True }} newchan '() {{ λ v, ∃ l, v = LocV l ★ recv l P ★ send l P }}) ∧
       (∀ l P, {{ send l P ★ P }} signal (LocV l) {{ λ _, True }}) ∧
       (∀ l P, {{ recv l P }} wait (LocV l) {{ λ _, P }}) ∧
       (∀ l P Q, {{ recv l (P ★ Q) }} Skip {{ λ _, recv l P ★ recv l Q }}) ∧
       (∀ l P Q, (P -★ Q) ⊑ (recv l P -★ recv l Q)).
   Proof.
-    intros HN. exists (λ l, CofeMor (recv N heapN l)). exists (λ l, CofeMor (send N heapN l)).
-    split_and?; cbn.
-    - intros. apply: always_intro. apply impl_intro_l. rewrite -newchan_spec //.
-      rewrite comm always_and_sep_r. apply sep_mono_r. apply forall_intro=>l.
-      apply wand_intro_l. rewrite right_id -(exist_intro l) const_equiv // left_id;
-      done.
-    - intros. apply ht_alt. rewrite -signal_spec. by rewrite right_id.
-    - intros. apply ht_alt. rewrite -wait_spec.
+    intros HN.
+    exists (λ l, CofeMor (recv heapN N l)), (λ l, CofeMor (send heapN N l)).
+    split_and?; simpl.
+    - intros P. apply: always_intro. apply impl_intro_r.
+      rewrite -(newchan_spec heapN N P) // always_and_sep_r.
+      apply sep_mono_r, forall_intro=>l; apply wand_intro_l.
+      by rewrite right_id -(exist_intro l) const_equiv // left_id.
+    - intros l P. apply ht_alt. by rewrite -signal_spec right_id.
+    - intros l P. apply ht_alt.
+      by rewrite -(wait_spec heapN N l P) wand_diag right_id.
+    - intros l P Q. apply ht_alt. rewrite -(recv_split heapN N l P Q).
       apply sep_intro_True_r; first done. apply wand_intro_l. eauto with I.
-    - intros. apply ht_alt. rewrite -recv_split.
-      apply sep_intro_True_r; first done. apply wand_intro_l. eauto with I.
-    - intros. apply recv_strengthen.
+    - intros l P Q. apply recv_strengthen.
   Qed.
-
 End spec.
