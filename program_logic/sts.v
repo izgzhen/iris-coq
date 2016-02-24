@@ -125,11 +125,9 @@ Section sts.
     rewrite [(_ ★ ▷φ _)%I]comm -!assoc -own_op -[(▷φ _ ★ _)%I]comm.
     rewrite own_valid_l discrete_validI.
     rewrite -!assoc. apply const_elim_sep_l=> Hvalid.
-    assert (s ∈ S) by (by eapply sts_auth_frag_valid_inv, discrete_valid).
+    assert (s ∈ S) by eauto using sts_auth_frag_valid_inv.
     rewrite const_equiv // left_id comm sts_op_auth_frag //.
-    assert (✓ sts_frag S T) as Hv by
-          by eapply cmra_valid_op_r, discrete_valid.
-    apply (Hv 0).
+    by assert (✓ sts_frag S T) as [??] by eauto using cmra_valid_op_r.
   Qed.
 
   Lemma sts_closing E γ s T s' T' :
@@ -187,7 +185,7 @@ Section sts.
             (sts_own γ s' T' -★ Ψ x))) →
     P ⊑ fsa E Ψ.
   Proof.
-    rewrite sts_own_eq. intros. eapply sts_fsaS; try done; [].
+    rewrite sts_own_eq. intros. eapply sts_fsaS; try done; []. (* FIXME: slow *)
     by rewrite sts_ownS_eq sts_own_eq. 
   Qed.
 End sts.

@@ -96,6 +96,7 @@ Implicit Types m : gmap K A.
 
 Instance map_op : Op (gmap K A) := merge op.
 Instance map_unit : Unit (gmap K A) := fmap unit.
+Instance map_valid : Valid (gmap K A) := λ m, ∀ i, ✓ (m !! i).
 Instance map_validN : ValidN (gmap K A) := λ n m, ∀ i, ✓{n} (m !! i).
 Instance map_minus : Minus (gmap K A) := merge minus.
 
@@ -106,8 +107,6 @@ Proof. by apply lookup_merge. Qed.
 Lemma lookup_unit m i : unit m !! i = unit (m !! i).
 Proof. by apply lookup_fmap. Qed.
 
-Lemma map_valid_spec m : ✓ m ↔ ∀ i, ✓ (m !! i).
-Proof. split; intros Hm ??; apply Hm. Qed.
 Lemma map_included_spec (m1 m2 : gmap K A) : m1 ≼ m2 ↔ ∀ i, m1 !! i ≼ m2 !! i.
 Proof.
   split.
@@ -131,6 +130,9 @@ Proof.
   - by intros n m1 m2 Hm i; rewrite !lookup_unit (Hm i).
   - by intros n m1 m2 Hm ? i; rewrite -(Hm i).
   - by intros n m1 m1' Hm1 m2 m2' Hm2 i; rewrite !lookup_minus (Hm1 i) (Hm2 i).
+  - intros m; split.
+    + by intros ? n i; apply cmra_valid_validN.
+    + intros Hm i; apply cmra_valid_validN=> n; apply Hm.
   - intros n m Hm i; apply cmra_validN_S, Hm.
   - by intros m1 m2 m3 i; rewrite !lookup_op assoc.
   - by intros m1 m2 i; rewrite !lookup_op comm.
@@ -162,7 +164,7 @@ Canonical Structure mapRA : cmraT := CMRAT map_cofe_mixin map_cmra_mixin.
 Global Instance map_cmra_identity : CMRAIdentity mapRA.
 Proof.
   split.
-  - by intros ? n; rewrite lookup_empty.
+  - by intros i; rewrite lookup_empty.
   - by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
   - apply map_empty_timeless.
 Qed.
@@ -187,18 +189,18 @@ Implicit Types a : A.
 Lemma map_lookup_validN n m i x : ✓{n} m → m !! i ≡{n}≡ Some x → ✓{n} x.
 Proof. by move=> /(_ i) Hm Hi; move:Hm; rewrite Hi. Qed.
 Lemma map_lookup_valid m i x : ✓ m → m !! i ≡ Some x → ✓ x.
-Proof. move=>Hm Hi n. move:(Hm n i). by rewrite Hi. Qed.
+Proof. move=> Hm Hi. move:(Hm i). by rewrite Hi. Qed.
 Lemma map_insert_validN n m i x : ✓{n} x → ✓{n} m → ✓{n} <[i:=x]>m.
 Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_eq. Qed.
 Lemma map_insert_valid m i x : ✓ x → ✓ m → ✓ <[i:=x]>m.
-Proof. intros ?? n j; apply map_insert_validN; auto. Qed.
+Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_eq. Qed.
 Lemma map_singleton_validN n i x : ✓{n} ({[ i := x ]} : gmap K A) ↔ ✓{n} x.
 Proof.
-  split; [|by intros; apply map_insert_validN, cmra_empty_valid].
+  split; [|by intros; apply map_insert_validN, cmra_empty_validN].
   by move=>/(_ i); simplify_map_eq.
 Qed.
 Lemma map_singleton_valid i x : ✓ ({[ i := x ]} : gmap K A) ↔ ✓ x.
-Proof. split; intros ? n; eapply map_singleton_validN; eauto. Qed.
+Proof. rewrite !cmra_valid_validN. by setoid_rewrite map_singleton_validN. Qed.
 
 Lemma map_insert_singleton_opN n m i x :
   m !! i = None ∨ m !! i ≡{n}≡ Some (unit x) → <[i:=x]> m ≡{n}≡ {[ i := x ]} ⋅ m.
@@ -275,7 +277,7 @@ Proof.
   intros Hx HQ n gf Hg.
   destruct (Hx n (from_option ∅ (gf !! i))) as (y&?&Hy).
   { move:(Hg i). rewrite !left_id.
-    case _: (gf !! i); simpl; auto using cmra_empty_valid. }
+    case _: (gf !! i); simpl; auto using cmra_empty_validN. }
   exists {[ i := y ]}; split; first by auto.
   intros i'; destruct (decide (i' = i)) as [->|].
   - rewrite lookup_op lookup_singleton.

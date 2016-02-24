@@ -83,6 +83,8 @@ Global Instance excl_leibniz : LeibnizEquiv A → LeibnizEquiv (excl A).
 Proof. by destruct 2; f_equal; apply leibniz_equiv. Qed.
 
 (* CMRA *)
+Instance excl_valid : Valid (excl A) := λ x,
+  match x with Excl _ | ExclUnit => True | ExclBot => False end.
 Instance excl_validN : ValidN (excl A) := λ n x,
   match x with Excl _ | ExclUnit => True | ExclBot => False end.
 Global Instance excl_empty : Empty (excl A) := ExclUnit.
@@ -106,6 +108,7 @@ Proof.
   - constructor.
   - by destruct 1; intros ?.
   - by destruct 1; inversion_clear 1; constructor.
+  - intros x; split. done. by move=> /(_ 0).
   - intros n [?| |]; simpl; auto with lia.
   - by intros [?| |] [?| |] [?| |]; constructor.
   - by intros [?| |] [?| |]; constructor.

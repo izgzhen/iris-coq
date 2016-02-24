@@ -76,10 +76,12 @@ Instance res_op : Op (res Λ Σ A) := λ r1 r2,
 Global Instance res_empty : Empty (res Λ Σ A) := Res ∅ ∅ ∅.
 Instance res_unit : Unit (res Λ Σ A) := λ r,
   Res (unit (wld r)) (unit (pst r)) (unit (gst r)).
+Instance res_valid : Valid (res Λ Σ A) := λ r, ✓ wld r ∧ ✓ pst r ∧ ✓ gst r.
 Instance res_validN : ValidN (res Λ Σ A) := λ n r,
   ✓{n} wld r ∧ ✓{n} pst r ∧ ✓{n} gst r.
 Instance res_minus : Minus (res Λ Σ A) := λ r1 r2,
   Res (wld r1 ⩪ wld r2) (pst r1 ⩪ pst r2) (gst r1 ⩪ gst r2).
+
 Lemma res_included (r1 r2 : res Λ Σ A) :
   r1 ≼ r2 ↔ wld r1 ≼ wld r2 ∧ pst r1 ≼ pst r2 ∧ gst r1 ≼ gst r2.
 Proof.
@@ -97,11 +99,13 @@ Qed.
 Definition res_cmra_mixin : CMRAMixin (res Λ Σ A).
 Proof.
   split.
-  - by intros n x [???] ? [???]; constructor; simpl in *; cofe_subst.
-  - by intros n [???] ? [???]; constructor; simpl in *; cofe_subst.
-  - by intros n [???] ? [???] (?&?&?); split_and!; simpl in *; cofe_subst.
-  - by intros n [???] ? [???] [???] ? [???];
-      constructor; simpl in *; cofe_subst.
+  - by intros n x [???] ? [???]; constructor; cofe_subst.
+  - by intros n [???] ? [???]; constructor; cofe_subst.
+  - by intros n [???] ? [???] (?&?&?); split_and!; cofe_subst.
+  - by intros n [???] ? [???] [???] ? [???]; constructor; cofe_subst.
+  - intros r; split.
+    + intros (?&?&?) n; split_and!; by apply cmra_valid_validN.
+    + intros Hr; split_and!; apply cmra_valid_validN=> n; apply Hr.
   - by intros n ? (?&?&?); split_and!; apply cmra_validN_S.
   - by intros ???; constructor; rewrite /= assoc.
   - by intros ??; constructor; rewrite /= comm.
@@ -123,7 +127,7 @@ Canonical Structure resRA : cmraT := CMRAT res_cofe_mixin res_cmra_mixin.
 Global Instance res_cmra_identity : CMRAIdentity resRA.
 Proof.
   split.
-  - intros n; split_and!; apply cmra_empty_valid.
+  - split_and!; apply cmra_empty_valid.
   - by split; rewrite /= left_id.
   - apply _.
 Qed.
