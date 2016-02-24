@@ -4,7 +4,7 @@ buildjob:
   tags:
   - coq
   script:
-  - 'make -j8 TIMED=y | tee /dev/stdout | egrep "[a-zA-Z0-9-_/]+ \(user: [0-9]" > build-time.txt'
+  - 'make -j8 TIMED=y | tee /dev/stdout | egrep "[a-zA-Z0-9_/-]+ \(user: [0-9]" > build-time.txt'
   artifacts:
     paths:
     - build-time.txt
