@@ -69,6 +69,10 @@ Proof.
        constructor; destruct (c 1); simplify_eq/=.
 Qed.
 Canonical Structure exclC : cofeT := CofeT excl_cofe_mixin.
+Global Instance excl_discrete : Discrete A → Discrete exclC.
+Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
+Global Instance excl_leibniz : LeibnizEquiv A → LeibnizEquiv (excl A).
+Proof. by destruct 2; f_equal; apply leibniz_equiv. Qed.
 
 Global Instance Excl_timeless (x : A) : Timeless x → Timeless (Excl x).
 Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
@@ -76,11 +80,6 @@ Global Instance ExclUnit_timeless : Timeless (@ExclUnit A).
 Proof. by inversion_clear 1; constructor. Qed.
 Global Instance ExclBot_timeless : Timeless (@ExclBot A).
 Proof. by inversion_clear 1; constructor. Qed.
-Global Instance excl_timeless :
-  (∀ x : A, Timeless x) → ∀ x : excl A, Timeless x.
-Proof. intros ? []; apply _. Qed.
-Global Instance excl_leibniz : LeibnizEquiv A → LeibnizEquiv (excl A).
-Proof. by destruct 2; f_equal; apply leibniz_equiv. Qed.
 
 (* CMRA *)
 Instance excl_valid : Valid (excl A) := λ x,
@@ -127,6 +126,9 @@ Qed.
 Canonical Structure exclRA : cmraT := CMRAT excl_cofe_mixin excl_cmra_mixin.
 Global Instance excl_cmra_identity : CMRAIdentity exclRA.
 Proof. split. done. by intros []. apply _. Qed.
+Global Instance excl_cmra_discrete : Discrete A → CMRADiscrete exclRA.
+Proof. split. apply _. by intros []. Qed.
+
 Lemma excl_validN_inv_l n x y : ✓{n} (Excl x ⋅ y) → y = ∅.
 Proof. by destruct y. Qed.
 Lemma excl_validN_inv_r n x y : ✓{n} (x ⋅ Excl y) → x = ∅.

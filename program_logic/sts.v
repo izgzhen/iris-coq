@@ -121,7 +121,7 @@ Section sts.
     rewrite later_sep pvs_timeless !pvs_frame_r. apply pvs_mono.
     rewrite -(exist_intro s).
     rewrite [(_ ★ ▷φ _)%I]comm -!assoc -own_op -[(▷φ _ ★ _)%I]comm.
-    rewrite own_valid_l discrete_validI.
+    rewrite own_valid_l discrete_valid.
     rewrite -!assoc. apply const_elim_sep_l=> Hvalid.
     assert (s ∈ S) by eauto using sts_auth_frag_valid_inv.
     rewrite const_equiv // left_id comm sts_op_auth_frag //.
@@ -136,7 +136,7 @@ Section sts.
     (* TODO it would be really nice to use cancel here *)
     rewrite [(_ ★ ▷ φ _)%I]comm -assoc.
     rewrite -pvs_frame_l. apply sep_mono_r. rewrite -later_intro.
-    rewrite own_valid_l discrete_validI. apply const_elim_sep_l=>Hval.
+    rewrite own_valid_l discrete_valid. apply const_elim_sep_l=>Hval.
     trans (|={E}=> own γ (sts_auth s' T'))%I.
     { by apply own_update, sts_update_auth. }
     by rewrite -own_op sts_op_auth_frag_up.

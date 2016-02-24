@@ -29,7 +29,8 @@ Proof.
     by rewrite conv_compl /=; apply reflexive_eq.
 Qed.
 Canonical Structure mapC : cofeT := CofeT map_cofe_mixin.
-
+Global Instance map_discrete : Discrete A → Discrete mapC.
+Proof. intros ? m m' ? i. by apply (timeless _). Qed.
 (* why doesn't this go automatic? *)
 Global Instance mapC_leibniz: LeibnizEquiv A → LeibnizEquiv mapC.
 Proof. intros; change (LeibnizEquiv (gmap K A)); apply _. Qed.
@@ -60,9 +61,6 @@ Proof.
   intros m m' ? j; destruct (decide (i = j)); simplify_map_eq;
     [by constructor|by apply lookup_ne].
 Qed.
-
-Global Instance map_timeless `{∀ a : A, Timeless a} m : Timeless m.
-Proof. by intros m' ? i; apply: timeless. Qed.
 
 Instance map_empty_timeless : Timeless (∅ : gmap K A).
 Proof.
@@ -168,8 +166,8 @@ Proof.
   - by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
   - apply map_empty_timeless.
 Qed.
-Global Instance mapRA_leibniz : LeibnizEquiv A → LeibnizEquiv mapRA.
-Proof. intros; change (LeibnizEquiv (gmap K A)); apply _. Qed.
+Global Instance map_cmra_discrete : CMRADiscrete A → CMRADiscrete mapRA.
+Proof. split; [apply _|]. intros m ? i. by apply: cmra_discrete_valid. Qed.
 
 (** Internalized properties *)
 Lemma map_equivI {M} m1 m2 : (m1 ≡ m2)%I ≡ (∀ i, m1 !! i ≡ m2 !! i : uPred M)%I.

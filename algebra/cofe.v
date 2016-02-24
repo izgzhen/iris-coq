@@ -90,6 +90,11 @@ Section cofe_mixin.
   Proof. apply (mixin_conv_compl _ (cofe_mixin A)). Qed.
 End cofe_mixin.
 
+(** Discrete COFEs and Timeless elements *)
+Class Timeless {A : cofeT} (x : A) := timeless y : x ≡{0}≡ y → x ≡ y.
+Arguments timeless {_} _ {_} _ _.
+Class Discrete (A : cofeT) := discrete_timeless (x : A) :> Timeless x.
+
 (** General properties *)
 Section cofe.
   Context {A : cofeT}.
@@ -136,6 +141,12 @@ Section cofe.
   Proof. by intros x y ?; apply dist_S, contractive_S. Qed.
   Global Instance contractive_proper {B : cofeT} (f : A → B) `{!Contractive f} :
     Proper ((≡) ==> (≡)) f | 100 := _.
+
+  Lemma timeless_iff n (x : A) `{!Timeless x} y : x ≡ y ↔ x ≡{n}≡ y.
+  Proof.
+    split; intros; [by apply equiv_dist|].
+    apply (timeless _), dist_le with n; auto with lia.
+  Qed.
 End cofe.
 
 (** Mapping a chain *)
@@ -143,15 +154,6 @@ Program Definition chain_map `{Dist A, Dist B} (f : A → B)
     `{!∀ n, Proper (dist n ==> dist n) f} (c : chain A) : chain B :=
   {| chain_car n := f (c n) |}.
 Next Obligation. by intros ? A ? B f Hf c n i ?; apply Hf, chain_cauchy. Qed.
-
-(** Timeless elements *)
-Class Timeless {A : cofeT} (x : A) := timeless y : x ≡{0}≡ y → x ≡ y.
-Arguments timeless {_} _ {_} _ _.
-Lemma timeless_iff {A : cofeT} n (x : A) `{!Timeless x} y : x ≡ y ↔ x ≡{n}≡ y.
-Proof.
-  split; intros; [by apply equiv_dist|].
-  apply (timeless _), dist_le with n; auto with lia.
-Qed.
 
 (** Fixpoint *)
 Program Definition fixpoint_chain {A : cofeT} `{Inhabited A} (f : A → A)
@@ -256,7 +258,7 @@ Section unit.
   Definition unit_cofe_mixin : CofeMixin unit.
   Proof. by repeat split; try exists 0. Qed.
   Canonical Structure unitC : cofeT := CofeT unit_cofe_mixin.
-  Global Instance unit_timeless (x : ()) : Timeless x.
+  Global Instance unit_discrete_cofe : Discrete unitC.
   Proof. done. Qed.
 End unit.
 
@@ -285,6 +287,8 @@ Section product.
   Global Instance pair_timeless (x : A) (y : B) :
     Timeless x → Timeless y → Timeless (x,y).
   Proof. by intros ?? [x' y'] [??]; split; apply (timeless _). Qed.
+  Global Instance prod_discrete_cofe : Discrete A → Discrete B → Discrete prodC.
+  Proof. intros ?? [??]; apply _. Qed.
 End product.
 
 Arguments prodC : clear implicits.
@@ -315,8 +319,8 @@ Section discrete_cofe.
       symmetry; apply (chain_cauchy c 0 (S n)); omega.
   Qed.
   Definition discreteC : cofeT := CofeT discrete_cofe_mixin.
-  Global Instance discrete_timeless (x : A) : Timeless (x : discreteC).
-  Proof. by intros y. Qed.
+  Global Instance discrete_discrete_cofe : Discrete discreteC.
+  Proof. by intros x y. Qed.
 End discrete_cofe.
 Arguments discreteC _ {_ _}.
 

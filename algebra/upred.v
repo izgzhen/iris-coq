@@ -896,7 +896,7 @@ Proof. split=> n x _; apply cmra_validN_op_l. Qed.
 Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_ownM a ⊑ False.
 Proof. by intros; rewrite ownM_valid valid_elim. Qed.
 Global Instance ownM_mono : Proper (flip (≼) ==> (⊑)) (@uPred_ownM M).
-Proof. intros x y [z ->]. rewrite ownM_op. eauto. Qed.
+Proof. intros a b [b' ->]. rewrite ownM_op. eauto. Qed.
 
 (* Products *)
 Lemma prod_equivI {A B : cofeT} (x y : A * B) :
@@ -912,11 +912,16 @@ Lemma later_equivI {A : cofeT} (x y : later A) :
 Proof. done. Qed.
 
 (* Discrete *)
-(* For equality, there already is timeless_eq *)
-Lemma discrete_validI {A : cofeT} `{∀ x : A, Timeless x}
-  `{Op A, Valid A, Unit A, Minus A} (ra : RA A) (x : discreteRA ra) :
-  (✓ x)%I ≡ (■ ✓ x : uPred M)%I.
-Proof. done. Qed.
+Lemma discrete_valid {A : cmraT} `{!CMRADiscrete A} (a : A) :
+  (✓ a)%I ≡ (■ ✓ a : uPred M)%I.
+Proof. split=> n x _. by rewrite /= -cmra_discrete_valid_iff. Qed.
+Lemma timeless_eq {A : cofeT} (a b : A) :
+  Timeless a → (a ≡ b)%I ≡ (■ (a ≡ b) : uPred M)%I.
+Proof.
+  intros ?. apply (anti_symm (⊑)).
+  - split=> n x ? ? /=. by apply (timeless_iff n a).
+  - eapply const_elim; first done. move=>->. apply eq_refl.
+Qed.
 
 (* Timeless *)
 Lemma timelessP_spec P : TimelessP P ↔ ∀ n x, ✓{n} x → P 0 x → P n x.
@@ -927,13 +932,17 @@ Proof.
   - move=> HP; split=> -[|n] x /=; auto; left.
     apply HP, uPred_weaken with n x; eauto using cmra_validN_le.
 Qed.
+
 Global Instance const_timeless φ : TimelessP (■ φ : uPred M)%I.
 Proof. by apply timelessP_spec=> -[|n] x. Qed.
+Global Instance valid_timeless {A : cmraT} `{CMRADiscrete A} (a : A) :
+   TimelessP (✓ a : uPred M)%I.
+Proof. apply timelessP_spec=> n x /=. by rewrite -!cmra_discrete_valid_iff. Qed.
 Global Instance and_timeless P Q: TimelessP P → TimelessP Q → TimelessP (P ∧ Q).
 Proof. by intros ??; rewrite /TimelessP later_and or_and_r; apply and_mono. Qed.
 Global Instance or_timeless P Q : TimelessP P → TimelessP Q → TimelessP (P ∨ Q).
 Proof.
-  intros; rewrite /TimelessP later_or (timelessP P) (timelessP Q); eauto 10.
+  intros; rewrite /TimelessP later_or (timelessP _) (timelessP Q); eauto 10.
 Qed.
 Global Instance impl_timeless P Q : TimelessP Q → TimelessP (P → Q).
 Proof.
@@ -974,13 +983,6 @@ Global Instance ownM_timeless (a : M) : Timeless a → TimelessP (uPred_ownM a).
 Proof.
   intros ?; apply timelessP_spec=> n x ??; apply cmra_included_includedN,
     cmra_timeless_included_l; eauto using cmra_validN_le.
-Qed.
-Lemma timeless_eq {A : cofeT} (a b : A) :
-  Timeless a → (a ≡ b)%I ≡ (■(a ≡ b) : uPred M)%I.
-Proof.
-  intros ?. apply (anti_symm (⊑)).
-  - split=> n x ? ? /=. by apply (timeless_iff n a).
-  - eapply const_elim; first done. move=>->. apply eq_refl.
 Qed.
 
 (* Always stable *)

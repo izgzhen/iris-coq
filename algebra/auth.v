@@ -14,7 +14,8 @@ Notation "● a" := (Auth (Excl a) ∅) (at level 20).
 (* COFE *)
 Section cofe.
 Context {A : cofeT}.
-Implicit Types a b : A.
+Implicit Types a : excl A.
+Implicit Types b : A.
 Implicit Types x y : auth A.
 
 Instance auth_equiv : Equiv (auth A) := λ x y,
@@ -51,9 +52,12 @@ Proof.
     apply (conv_compl n (chain_map own c)).
 Qed.
 Canonical Structure authC := CofeT auth_cofe_mixin.
-Global Instance auth_timeless (x : auth A) :
-  Timeless (authoritative x) → Timeless (own x) → Timeless x.
-Proof. by intros ?? [??] [??]; split; simpl in *; apply (timeless _). Qed.
+
+Global Instance Auth_timeless a b :
+  Timeless a → Timeless b → Timeless (Auth a b).
+Proof. by intros ?? [??] [??]; split; apply: timeless. Qed.
+Global Instance auth_discrete : Discrete A → Discrete authC.
+Proof. intros ? [??]; apply _. Qed.
 Global Instance auth_leibniz : LeibnizEquiv A → LeibnizEquiv (auth A).
 Proof. by intros ? [??] [??] [??]; f_equal/=; apply leibniz_equiv. Qed.
 End cofe.
@@ -87,6 +91,7 @@ Instance auth_op : Op (auth A) := λ x y,
   Auth (authoritative x ⋅ authoritative y) (own x ⋅ own y).
 Instance auth_minus : Minus (auth A) := λ x y,
   Auth (authoritative x ⩪ authoritative y) (own x ⩪ own y).
+
 Lemma auth_included (x y : auth A) :
   x ≼ y ↔ authoritative x ≼ authoritative y ∧ own x ≼ own y.
 Proof.
@@ -136,6 +141,12 @@ Proof.
     by exists (Auth (ea.1) (b.1), Auth (ea.2) (b.2)).
 Qed.
 Canonical Structure authRA : cmraT := CMRAT auth_cofe_mixin auth_cmra_mixin.
+Global Instance auth_cmra_discrete : CMRADiscrete A → CMRADiscrete authRA.
+Proof.
+  split; first apply _.
+  intros [[] ?]; by rewrite /= /cmra_valid /cmra_validN /=
+    -?cmra_discrete_included_iff -?cmra_discrete_valid_iff.
+Qed.
 
 (** Internalized properties *)
 Lemma auth_equivI {M} (x y : auth A) :

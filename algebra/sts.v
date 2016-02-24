@@ -318,6 +318,9 @@ Implicit Types s : state sts.
 Implicit Types S : states sts.
 Implicit Types T : tokens sts.
 
+Global Instance sts_cmra_discrete : CMRADiscrete (stsRA sts).
+Proof. apply validity_cmra_discrete. Qed.
+
 (** Setoids *)
 Global Instance sts_auth_proper s : Proper ((≡) ==> (≡)) (sts_auth s).
 Proof. (* this proof is horrible *)
