@@ -24,7 +24,7 @@ Arguments auth_own {_ _ _ _ _} _ _.
 
 Definition auth_inv `{authG Λ Σ A}
     (γ : gname) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
-  (∃ a, (✓ a ∧ own γ (● a)) ★ φ a)%I.
+  (∃ a, own γ (● a) ★ φ a)%I.
 Definition auth_ctx`{authG Λ Σ A}
     (γ : gname) (N : namespace) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
   inv N (auth_inv γ φ).
@@ -64,7 +64,7 @@ Section auth.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     trans (▷ auth_inv γ φ ★ auth_own γ a)%I.
     { rewrite /auth_inv -(exist_intro a) later_sep.
-      rewrite -valid_intro // left_id. ecancel [▷ φ _]%I.
+      ecancel [▷ φ _]%I.
       by rewrite -later_intro auth_own_eq -own_op auth_both_op. }
     rewrite (inv_alloc N) /auth_ctx pvs_frame_r. apply pvs_mono.
     by rewrite always_and_sep_l.
@@ -78,8 +78,8 @@ Section auth.
     ⊑ (|={E}=> ∃ a', ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') ★ own γ (● (a ⋅ a') ⋅ ◯ a)).
   Proof.
     rewrite /auth_inv. rewrite later_exist sep_exist_r. apply exist_elim=>b.
-    rewrite later_sep [(▷(_ ∧ _))%I]pvs_timeless !pvs_frame_r. apply pvs_mono.
-    rewrite always_and_sep_l -!assoc discrete_valid. apply const_elim_sep_l=>Hv.
+    rewrite later_sep [(▷ own _ _)%I]pvs_timeless !pvs_frame_r. apply pvs_mono.
+    rewrite own_valid_l discrete_valid -!assoc. apply const_elim_sep_l=>Hv.
     rewrite auth_own_eq [(▷φ _ ★ _)%I]comm assoc -own_op.
     rewrite own_valid_r auth_validI /= and_elim_l sep_exist_l sep_exist_r /=.
     apply exist_elim=>a'.
@@ -87,7 +87,8 @@ Section auth.
     apply (eq_rewrite b (a ⋅ a') (λ x, ✓ x ★ ▷ φ x ★ own γ (● x ⋅ ◯ a))%I).
     { by move=>n x y /timeless_iff ->. }
     { by eauto with I. }
-    rewrite -valid_intro // left_id comm. auto with I.
+    rewrite -valid_intro; last by apply Hv.
+    rewrite left_id comm. auto with I.
   Qed.
 
   Lemma auth_closing `{!LocalUpdate Lv L} E γ a a' :
@@ -99,7 +100,7 @@ Section auth.
     (* TODO it would be really nice to use cancel here *)
     rewrite later_sep [(_ ★ ▷φ _)%I]comm -assoc.
     rewrite -pvs_frame_l. apply sep_mono_r.
-    rewrite -valid_intro // left_id -later_intro -own_op.
+    rewrite -later_intro -own_op.
     by apply own_update, (auth_local_update_l L).
   Qed.
 
