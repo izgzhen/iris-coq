@@ -109,12 +109,12 @@ Section heap.
 
   (** Weakest precondition *)
   Lemma wp_alloc N E e v P Φ :
-    to_val e = Some v → nclose N ⊆ E →
-    P ⊑ heap_ctx N →
+    to_val e = Some v →
+    P ⊑ heap_ctx N → nclose N ⊆ E →
     P ⊑ (▷ ∀ l, l ↦ v -★ Φ (LocV l)) →
     P ⊑ || Alloc e @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv heap_mapsto_eq=> ?? Hctx HP.
+    rewrite /heap_ctx /heap_inv heap_mapsto_eq=> ??? HP.
     trans (|={E}=> auth_own heap_name ∅ ★ P)%I.
     { by rewrite -pvs_frame_r -(auth_empty _ E) left_id. }
     apply wp_strip_pvs, (auth_fsa heap_inv (wp_fsa (Alloc e)))
@@ -135,12 +135,11 @@ Section heap.
   Qed.
 
   Lemma wp_load N E l v P Φ :
-    nclose N ⊆ E →
-    P ⊑ heap_ctx N →
+    P ⊑ heap_ctx N → nclose N ⊆ E →
     P ⊑ (▷ l ↦ v ★ ▷ (l ↦ v -★ Φ v)) →
     P ⊑ || Load (Loc l) @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv heap_mapsto_eq=>HN ? HPΦ.
+    rewrite /heap_ctx /heap_inv heap_mapsto_eq=> ?? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
       with N heap_name {[ l := Excl v ]}; simpl; eauto with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
@@ -153,12 +152,12 @@ Section heap.
   Qed.
 
   Lemma wp_store N E l v' e v P Φ :
-    to_val e = Some v → nclose N ⊆ E → 
-    P ⊑ heap_ctx N →
+    to_val e = Some v →
+    P ⊑ heap_ctx N → nclose N ⊆ E →
     P ⊑ (▷ l ↦ v' ★ ▷ (l ↦ v -★ Φ (LitV LitUnit))) →
     P ⊑ || Store (Loc l) e @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv heap_mapsto_eq=>? HN ? HPΦ.
+    rewrite /heap_ctx /heap_inv heap_mapsto_eq=> ??? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Excl v) l))
       with N heap_name {[ l := Excl v' ]}; simpl; eauto with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
@@ -173,12 +172,11 @@ Section heap.
 
   Lemma wp_cas_fail N E l v' e1 v1 e2 v2 P Φ :
     to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 →
-    nclose N ⊆ E →
-    P ⊑ heap_ctx N →
+    P ⊑ heap_ctx N → nclose N ⊆ E →
     P ⊑ (▷ l ↦ v' ★ ▷ (l ↦ v' -★ Φ (LitV (LitBool false)))) →
     P ⊑ || Cas (Loc l) e1 e2 @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv heap_mapsto_eq=>??? HN ? HPΦ.
+    rewrite /heap_ctx /heap_inv heap_mapsto_eq=>????? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
       with N heap_name {[ l := Excl v' ]}; simpl; eauto 10 with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
@@ -192,12 +190,11 @@ Section heap.
 
   Lemma wp_cas_suc N E l e1 v1 e2 v2 P Φ :
     to_val e1 = Some v1 → to_val e2 = Some v2 →
-    nclose N ⊆ E →
-    P ⊑ heap_ctx N →
+    P ⊑ heap_ctx N → nclose N ⊆ E →
     P ⊑ (▷ l ↦ v1 ★ ▷ (l ↦ v2 -★ Φ (LitV (LitBool true)))) →
     P ⊑ || Cas (Loc l) e1 e2 @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv heap_mapsto_eq=> ?? HN ? HPΦ.
+    rewrite /heap_ctx /heap_inv heap_mapsto_eq=> ???? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Excl v2) l))
       with N heap_name {[ l := Excl v1 ]}; simpl; eauto 10 with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
