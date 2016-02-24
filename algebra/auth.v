@@ -118,18 +118,14 @@ Proof.
      naive_solver eauto using cmra_validN_op_l, cmra_validN_includedN.
   - by intros n ??; rewrite auth_includedN;
       intros [??]; split; simpl; apply cmra_op_minus.
+  - intros n x y1 y2 ? [??]; simpl in *.
+    destruct (cmra_extend n (authoritative x) (authoritative y1)
+      (authoritative y2)) as (ea&?&?&?); auto using authoritative_validN.
+    destruct (cmra_extend n (own x) (own y1) (own y2))
+      as (b&?&?&?); auto using own_validN.
+    by exists (Auth (ea.1) (b.1), Auth (ea.2) (b.2)).
 Qed.
-Definition auth_cmra_extend_mixin : CMRAExtendMixin (auth A).
-Proof.
-  intros n x y1 y2 ? [??]; simpl in *.
-  destruct (cmra_extend_op n (authoritative x) (authoritative y1)
-    (authoritative y2)) as (ea&?&?&?); auto using authoritative_validN.
-  destruct (cmra_extend_op n (own x) (own y1) (own y2))
-    as (b&?&?&?); auto using own_validN.
-  by exists (Auth (ea.1) (b.1), Auth (ea.2) (b.2)).
-Qed.
-Canonical Structure authRA : cmraT :=
-  CMRAT auth_cofe_mixin auth_cmra_mixin auth_cmra_extend_mixin.
+Canonical Structure authRA : cmraT := CMRAT auth_cofe_mixin auth_cmra_mixin.
 
 (** Internalized properties *)
 Lemma auth_equivI {M} (x y : auth A) :

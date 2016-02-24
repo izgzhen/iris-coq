@@ -150,16 +150,12 @@ Section iprod_cmra.
     - intros n f1 f2 Hf x; apply cmra_validN_op_l with (f2 x), Hf.
     - intros n f1 f2; rewrite iprod_includedN_spec=> Hf x.
       by rewrite iprod_lookup_op iprod_lookup_minus cmra_op_minus; try apply Hf.
+    - intros n f f1 f2 Hf Hf12.
+      set (g x := cmra_extend n (f x) (f1 x) (f2 x) (Hf x) (Hf12 x)).
+      exists ((λ x, (proj1_sig (g x)).1), (λ x, (proj1_sig (g x)).2)).
+      split_and?; intros x; apply (proj2_sig (g x)).
   Qed.
-  Definition iprod_cmra_extend_mixin : CMRAExtendMixin (iprod B).
-  Proof.
-    intros n f f1 f2 Hf Hf12.
-    set (g x := cmra_extend_op n (f x) (f1 x) (f2 x) (Hf x) (Hf12 x)).
-    exists ((λ x, (proj1_sig (g x)).1), (λ x, (proj1_sig (g x)).2)).
-    split_and?; intros x; apply (proj2_sig (g x)).
-  Qed.
-  Canonical Structure iprodRA : cmraT :=
-    CMRAT iprod_cofe_mixin iprod_cmra_mixin iprod_cmra_extend_mixin.
+  Canonical Structure iprodRA : cmraT := CMRAT iprod_cofe_mixin iprod_cmra_mixin.
   Global Instance iprod_cmra_identity `{∀ x, Empty (B x)} :
     (∀ x, CMRAIdentity (B x)) → CMRAIdentity iprodRA.
   Proof.

@@ -114,18 +114,14 @@ Proof.
   - by intros n [?| |] [?| |]; exists ∅.
   - by intros n [?| |] [?| |].
   - by intros n [?| |] [?| |] [[?| |] Hz]; inversion_clear Hz; constructor.
+  - intros n x y1 y2 ? Hx.
+    by exists match y1, y2 with
+      | Excl a1, Excl a2 => (Excl a1, Excl a2)
+      | ExclBot, _ => (ExclBot, y2) | _, ExclBot => (y1, ExclBot)
+      | ExclUnit, _ => (ExclUnit, x) | _, ExclUnit => (x, ExclUnit)
+      end; destruct y1, y2; inversion_clear Hx; repeat constructor.
 Qed.
-Definition excl_cmra_extend_mixin : CMRAExtendMixin (excl A).
-Proof.
-  intros n x y1 y2 ? Hx.
-  by exists match y1, y2 with
-    | Excl a1, Excl a2 => (Excl a1, Excl a2)
-    | ExclBot, _ => (ExclBot, y2) | _, ExclBot => (y1, ExclBot)
-    | ExclUnit, _ => (ExclUnit, x) | _, ExclUnit => (x, ExclUnit)
-    end; destruct y1, y2; inversion_clear Hx; repeat constructor.
-Qed.
-Canonical Structure exclRA : cmraT :=
-  CMRAT excl_cofe_mixin excl_cmra_mixin excl_cmra_extend_mixin.
+Canonical Structure exclRA : cmraT := CMRAT excl_cofe_mixin excl_cmra_mixin.
 Global Instance excl_cmra_identity : CMRAIdentity exclRA.
 Proof. split. done. by intros []. apply _. Qed.
 Lemma excl_validN_inv_l n x y : ✓{n} (Excl x ⋅ y) → y = ∅.

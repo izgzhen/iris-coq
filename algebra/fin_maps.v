@@ -142,27 +142,23 @@ Proof.
     by rewrite -lookup_op.
   - intros n x y; rewrite map_includedN_spec=> ? i.
     by rewrite lookup_op lookup_minus cmra_op_minus.
+  - intros n m m1 m2 Hm Hm12.
+    assert (∀ i, m !! i ≡{n}≡ m1 !! i ⋅ m2 !! i) as Hm12'
+      by (by intros i; rewrite -lookup_op).
+    set (f i := cmra_extend n (m !! i) (m1 !! i) (m2 !! i) (Hm i) (Hm12' i)).
+    set (f_proj i := proj1_sig (f i)).
+    exists (map_imap (λ i _, (f_proj i).1) m, map_imap (λ i _, (f_proj i).2) m);
+      repeat split; intros i; rewrite /= ?lookup_op !lookup_imap.
+    + destruct (m !! i) as [x|] eqn:Hx; rewrite !Hx /=; [|constructor].
+      rewrite -Hx; apply (proj2_sig (f i)).
+    + destruct (m !! i) as [x|] eqn:Hx; rewrite /=; [apply (proj2_sig (f i))|].
+      pose proof (Hm12' i) as Hm12''; rewrite Hx in Hm12''.
+      by symmetry; apply option_op_positive_dist_l with (m2 !! i).
+    + destruct (m !! i) as [x|] eqn:Hx; simpl; [apply (proj2_sig (f i))|].
+      pose proof (Hm12' i) as Hm12''; rewrite Hx in Hm12''.
+      by symmetry; apply option_op_positive_dist_r with (m1 !! i).
 Qed.
-Definition map_cmra_extend_mixin : CMRAExtendMixin (gmap K A).
-Proof.
-  intros n m m1 m2 Hm Hm12.
-  assert (∀ i, m !! i ≡{n}≡ m1 !! i ⋅ m2 !! i) as Hm12'
-    by (by intros i; rewrite -lookup_op).
-  set (f i := cmra_extend_op n (m !! i) (m1 !! i) (m2 !! i) (Hm i) (Hm12' i)).
-  set (f_proj i := proj1_sig (f i)).
-  exists (map_imap (λ i _, (f_proj i).1) m, map_imap (λ i _, (f_proj i).2) m);
-    repeat split; intros i; rewrite /= ?lookup_op !lookup_imap.
-  - destruct (m !! i) as [x|] eqn:Hx; rewrite !Hx /=; [|constructor].
-    rewrite -Hx; apply (proj2_sig (f i)).
-  - destruct (m !! i) as [x|] eqn:Hx; rewrite /=; [apply (proj2_sig (f i))|].
-    pose proof (Hm12' i) as Hm12''; rewrite Hx in Hm12''.
-    by symmetry; apply option_op_positive_dist_l with (m2 !! i).
-  - destruct (m !! i) as [x|] eqn:Hx; simpl; [apply (proj2_sig (f i))|].
-    pose proof (Hm12' i) as Hm12''; rewrite Hx in Hm12''.
-    by symmetry; apply option_op_positive_dist_r with (m1 !! i).
-Qed.
-Canonical Structure mapRA : cmraT :=
-  CMRAT map_cofe_mixin map_cmra_mixin map_cmra_extend_mixin.
+Canonical Structure mapRA : cmraT := CMRAT map_cofe_mixin map_cmra_mixin.
 Global Instance map_cmra_identity : CMRAIdentity mapRA.
 Proof.
   split.
