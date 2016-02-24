@@ -84,4 +84,7 @@ heap_lang/notation.v
 heap_lang/tests.v
 heap_lang/substitution.v
 barrier/barrier.v
+barrier/specification.v
+barrier/protocol.v
+barrier/proof.v
 barrier/client.v

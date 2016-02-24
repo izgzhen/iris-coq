@@ -1,4 +1,4 @@
-From barrier Require Import barrier.
+From barrier Require Import proof.
 From program_logic Require Import auth sts saved_prop hoare ownership.
 Import uPred.
 
