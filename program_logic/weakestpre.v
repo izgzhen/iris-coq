@@ -71,7 +71,7 @@ Global Instance wp_ne E e n :
 Proof.
   cut (∀ Φ Ψ, (∀ v, Φ v ≡{n}≡ Ψ v) →
     ∀ n' r, n' ≤ n → ✓{n'} r → wp E e Φ n' r → wp E e Ψ n' r).
-  { by intros help Φ Ψ HΦΨ; split; apply help. }
+  { intros help Φ Ψ HΦΨ. by do 2 split; apply help. }
   intros Φ Ψ HΦΨ n' r; revert e r.
   induction n' as [n' IH] using lt_wf_ind=> e r.
   destruct 3 as [n' r v HpvsQ|n' r e1 ? Hgo].
@@ -90,7 +90,8 @@ Qed.
 Lemma wp_mask_frame_mono E1 E2 e Φ Ψ :
   E1 ⊆ E2 → (∀ v, Φ v ⊑ Ψ v) → || e @ E1 {{ Φ }} ⊑ || e @ E2 {{ Ψ }}.
 Proof.
-  intros HE HΦ n r; revert e r; induction n as [n IH] using lt_wf_ind=> e r.
+  intros HE HΦ; split=> n r.
+  revert e r; induction n as [n IH] using lt_wf_ind=> e r.
   destruct 2 as [n' r v HpvsQ|n' r e1 ? Hgo].
   { constructor; eapply pvs_mask_frame_mono, HpvsQ; eauto. }
   constructor; [done|]=> rf k Ef σ1 ???.
@@ -114,20 +115,20 @@ Lemma wp_step_inv E Ef Φ e k n σ r rf :
 Proof. intros He; destruct 3; [by rewrite ?to_of_val in He|eauto]. Qed.
 
 Lemma wp_value' E Φ v : Φ v ⊑ || of_val v @ E {{ Φ }}.
-Proof. by constructor; apply pvs_intro. Qed.
+Proof. split=> n r; constructor; by apply pvs_intro. Qed.
 Lemma pvs_wp E e Φ : (|={E}=> || e @ E {{ Φ }}) ⊑ || e @ E {{ Φ }}.
 Proof.
-  intros n r ? Hvs.
+  split=> n r ? Hvs.
   destruct (to_val e) as [v|] eqn:He; [apply of_to_val in He; subst|].
   { constructor; eapply pvs_trans', pvs_mono, Hvs; eauto.
-    intros ???; apply wp_value_inv. }
+    split=> ???; apply wp_value_inv. }
   constructor; [done|]=> rf k Ef σ1 ???.
   destruct (Hvs rf (S k) Ef σ1) as (r'&Hwp&?); auto.
   eapply wp_step_inv with (S k) r'; eauto.
 Qed.
 Lemma wp_pvs E e Φ : || e @  E {{ λ v, |={E}=> Φ v }} ⊑ || e @ E {{ Φ }}.
 Proof.
-  intros n r; revert e r; induction n as [n IH] using lt_wf_ind=> e r Hr HΦ.
+  split=> n r; revert e r; induction n as [n IH] using lt_wf_ind=> e r Hr HΦ.
   destruct (to_val e) as [v|] eqn:He; [apply of_to_val in He; subst|].
   { constructor; apply pvs_trans', (wp_value_inv _ (pvs E E ∘ Φ)); auto. }
   constructor; [done|]=> rf k Ef σ1 ???.
@@ -140,7 +141,7 @@ Lemma wp_atomic E1 E2 e Φ :
   E2 ⊆ E1 → atomic e →
   (|={E1,E2}=> || e @ E2 {{ λ v, |={E2,E1}=> Φ v }}) ⊑ || e @ E1 {{ Φ }}.
 Proof.
-  intros ? He n r ? Hvs; constructor; eauto using atomic_not_val.
+  intros ? He; split=> n r ? Hvs; constructor; eauto using atomic_not_val.
   intros rf k Ef σ1 ???.
   destruct (Hvs rf (S k) Ef σ1) as (r'&Hwp&?); auto.
   destruct (wp_step_inv E2 Ef (pvs E2 E1 ∘ Φ) e k (S k) σ1 r' rf)
@@ -157,7 +158,7 @@ Proof.
 Qed.
 Lemma wp_frame_r E e Φ R : (|| e @ E {{ Φ }} ★ R) ⊑ || e @ E {{ λ v, Φ v ★ R }}.
 Proof.
-  intros n r' Hvalid (r&rR&Hr&Hwp&?); revert Hvalid.
+  split; intros n r' Hvalid (r&rR&Hr&Hwp&?); revert Hvalid.
   rewrite Hr; clear Hr; revert e r Hwp.
   induction n as [n IH] using lt_wf_ind; intros e r1.
   destruct 1 as [|n r e ? Hgo]=>?.
@@ -175,7 +176,8 @@ Qed.
 Lemma wp_frame_later_r E e Φ R :
   to_val e = None → (|| e @ E {{ Φ }} ★ ▷ R) ⊑ || e @ E {{ λ v, Φ v ★ R }}.
 Proof.
-  intros He n r' Hvalid (r&rR&Hr&Hwp&?); revert Hvalid; rewrite Hr; clear Hr.
+  intros He; split; intros n r' Hvalid (r&rR&Hr&Hwp&?).
+  revert Hvalid; rewrite Hr; clear Hr.
   destruct Hwp as [|n r e ? Hgo]; [by rewrite to_of_val in He|].
   constructor; [done|]=>rf k Ef σ1 ???; destruct n as [|n]; first omega.
   destruct (Hgo (rR⋅rf) k Ef σ1) as [Hsafe Hstep];rewrite ?assoc;auto.
@@ -189,7 +191,7 @@ Qed.
 Lemma wp_bind `{LanguageCtx Λ K} E e Φ :
   || e @ E {{ λ v, || K (of_val v) @ E {{ Φ }} }} ⊑ || K e @ E {{ Φ }}.
 Proof.
-  intros n r; revert e r; induction n as [n IH] using lt_wf_ind=> e r ?.
+  split=> n r; revert e r; induction n as [n IH] using lt_wf_ind=> e r ?.
   destruct 1 as [|n r e ? Hgo]; [by apply pvs_wp|].
   constructor; auto using fill_not_val=> rf k Ef σ1 ???.
   destruct (Hgo rf k Ef σ1) as [Hsafe Hstep]; auto.

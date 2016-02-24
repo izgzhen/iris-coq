@@ -27,7 +27,7 @@ Lemma wp_lift_step E1 E2
     (■ φ e2 σ2 ef ∧ ownP σ2) -★ |={E1,E2}=> || e2 @ E2 {{ Φ }} ★ wp_fork ef)
   ⊑ || e1 @ E2 {{ Φ }}.
 Proof.
-  intros ? He Hsafe Hstep n r ? Hvs; constructor; auto.
+  intros ? He Hsafe Hstep; split=> n r ? Hvs; constructor; auto.
   intros rf k Ef σ1' ???; destruct (Hvs rf (S k) Ef σ1')
     as (r'&(r1&r2&?&?&Hwp)&Hws); auto; clear Hvs; cofe_subst r'.
   destruct (wsat_update_pst k (E1 ∪ Ef) σ1 σ1' r1 (r2 ⋅ rf)) as [-> Hws'].
@@ -36,7 +36,7 @@ Proof.
   constructor; [done|intros e2 σ2 ef ?; specialize (Hws' σ2)].
   destruct (λ H1 H2 H3, Hwp e2 σ2 ef k (update_pst σ2 r1) H1 H2 H3 rf k Ef σ2)
     as (r'&(r1'&r2'&?&?&?)&?); auto; cofe_subst r'.
-  { split. destruct k; try eapply Hstep; eauto. apply ownP_spec; auto. }
+  { split. by eapply Hstep. apply ownP_spec; auto. }
   { rewrite (comm _ r2) -assoc; eauto using wsat_le. }
   by exists r1', r2'; split_and?; [| |by intros ? ->].
 Qed.
@@ -47,7 +47,7 @@ Lemma wp_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) Φ e1 :
   (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →
   (▷ ∀ e2 ef, ■ φ e2 ef → || e2 @ E {{ Φ }} ★ wp_fork ef) ⊑ || e1 @ E {{ Φ }}.
 Proof.
-  intros He Hsafe Hstep n r ? Hwp; constructor; auto.
+  intros He Hsafe Hstep; split=> n r ? Hwp; constructor; auto.
   intros rf k Ef σ1 ???; split; [done|]. destruct n as [|n]; first lia.
   intros e2 σ2 ef ?; destruct (Hstep σ1 e2 σ2 ef); auto; subst.
   destruct (Hwp e2 ef k r) as (r1&r2&Hr&?&?); auto.

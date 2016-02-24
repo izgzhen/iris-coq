@@ -42,7 +42,7 @@ Transparent uPred_holds.
 
 Global Instance pvs_ne E1 E2 n : Proper (dist n ==> dist n) (@pvs Λ Σ E1 E2).
 Proof.
-  intros P Q HPQ r1 n' ??; simpl; split; intros HP rf k Ef σ ???;
+  intros P Q HPQ; split=> n' r1 ??; simpl; split; intros HP rf k Ef σ ???;
     destruct (HP rf k Ef σ) as (r2&?&?); auto;
     exists r2; split_and?; auto; apply HPQ; eauto.
 Qed.
@@ -51,36 +51,38 @@ Proof. apply ne_proper, _. Qed.
 
 Lemma pvs_intro E P : P ⊑ |={E}=> P.
 Proof.
-  intros n r ? HP rf k Ef σ ???; exists r; split; last done.
+  split=> n r ? HP rf k Ef σ ???; exists r; split; last done.
   apply uPred_weaken with n r; eauto.
 Qed.
 Lemma pvs_mono E1 E2 P Q : P ⊑ Q → (|={E1,E2}=> P) ⊑ (|={E1,E2}=> Q).
 Proof.
-  intros HPQ n r ? HP rf k Ef σ ???.
-  destruct (HP rf k Ef σ) as (r2&?&?); eauto; exists r2; eauto.
+  intros HPQ; split=> n r ? HP rf k Ef σ ???.
+  destruct (HP rf k Ef σ) as (r2&?&?); eauto.
+  exists r2; eauto using uPred_in_entails.
 Qed.
 Lemma pvs_timeless E P : TimelessP P → (▷ P) ⊑ (|={E}=> P).
 Proof.
-  rewrite uPred.timelessP_spec=> HP [|n] r ? HP' rf k Ef σ ???; first lia.
+  rewrite uPred.timelessP_spec=> HP.
+  split=>-[|n] r ? HP' rf k Ef σ ???; first lia.
   exists r; split; last done.
   apply HP, uPred_weaken with n r; eauto using cmra_validN_le.
 Qed.
 Lemma pvs_trans E1 E2 E3 P :
   E2 ⊆ E1 ∪ E3 → (|={E1,E2}=> |={E2,E3}=> P) ⊑ (|={E1,E3}=> P).
 Proof.
-  intros ? n r1 ? HP1 rf k Ef σ ???.
+  intros ?; split=> n r1 ? HP1 rf k Ef σ ???.
   destruct (HP1 rf k Ef σ) as (r2&HP2&?); auto.
 Qed.
 Lemma pvs_mask_frame E1 E2 Ef P :
   Ef ∩ (E1 ∪ E2) = ∅ → (|={E1,E2}=> P) ⊑ (|={E1 ∪ Ef,E2 ∪ Ef}=> P).
 Proof.
-  intros ? n r ? HP rf k Ef' σ ???.
+  intros ?; split=> n r ? HP rf k Ef' σ ???.
   destruct (HP rf k (Ef∪Ef') σ) as (r'&?&?); rewrite ?(assoc_L _); eauto.
   by exists r'; rewrite -(assoc_L _).
 Qed.
 Lemma pvs_frame_r E1 E2 P Q : ((|={E1,E2}=> P) ★ Q) ⊑ (|={E1,E2}=> P ★ Q).
 Proof.
-  intros n r ? (r1&r2&Hr&HP&?) rf k Ef σ ???.
+  split; intros n r ? (r1&r2&Hr&HP&?) rf k Ef σ ???.
   destruct (HP (r2 ⋅ rf) k Ef σ) as (r'&?&?); eauto.
   { by rewrite assoc -(dist_le _ _ _ _ Hr); last lia. }
   exists (r' ⋅ r2); split; last by rewrite -assoc.
@@ -88,7 +90,7 @@ Proof.
 Qed.
 Lemma pvs_openI i P : ownI i P ⊑ (|={{[i]},∅}=> ▷ P).
 Proof.
-  intros [|n] r ? Hinv rf [|k] Ef σ ???; try lia.
+  split=> -[|n] r ? Hinv rf [|k] Ef σ ???; try lia.
   apply ownI_spec in Hinv; last auto.
   destruct (wsat_open k Ef σ (r ⋅ rf) i P) as (rP&?&?); auto.
   { rewrite lookup_wld_op_l ?Hinv; eauto; apply dist_le with (S n); eauto. }
@@ -97,7 +99,8 @@ Proof.
 Qed.
 Lemma pvs_closeI i P : (ownI i P ∧ ▷ P) ⊑ (|={∅,{[i]}}=> True).
 Proof.
-  intros [|n] r ? [? HP] rf [|k] Ef σ ? HE ?; try lia; exists ∅; split; [done|].
+  split=> -[|n] r ? [? HP] rf [|k] Ef σ ? HE ?; try lia.
+  exists ∅; split; [done|].
   rewrite left_id; apply wsat_close with P r.
   - apply ownI_spec, uPred_weaken with (S n) r; auto.
   - set_solver +HE.
@@ -107,7 +110,8 @@ Qed.
 Lemma pvs_ownG_updateP E m (P : iGst Λ Σ → Prop) :
   m ~~>: P → ownG m ⊑ (|={E}=> ∃ m', ■ P m' ∧ ownG m').
 Proof.
-  intros Hup%option_updateP' [|n] r ? Hinv%ownG_spec rf [|k] Ef σ ???; try lia.
+  intros Hup%option_updateP'.
+  split=> -[|n] r ? /ownG_spec Hinv rf [|k] Ef σ ???; try lia.
   destruct (wsat_update_gst k (E ∪ Ef) σ r rf (Some m) P) as (m'&?&?); eauto.
   { apply cmra_includedN_le with (S n); auto. }
   by exists (update_gst m' r); split; [exists m'; split; [|apply ownG_spec]|].
@@ -116,7 +120,7 @@ Lemma pvs_ownG_updateP_empty `{Empty (iGst Λ Σ), !CMRAIdentity (iGst Λ Σ)}
     E (P : iGst Λ Σ → Prop) :
   ∅ ~~>: P → True ⊑ (|={E}=> ∃ m', ■ P m' ∧ ownG m').
 Proof.
-  intros Hup [|n] r ? _ rf [|k] Ef σ ???; try lia.
+  intros Hup; split=> -[|n] r ? _ rf [|k] Ef σ ???; try lia.
   destruct (wsat_update_gst k (E ∪ Ef) σ r rf ∅ P) as (m'&?&?); eauto.
   { apply cmra_empty_leastN. }
   { apply cmra_updateP_compose_l with (Some ∅), option_updateP with P;
@@ -125,7 +129,7 @@ Proof.
 Qed.
 Lemma pvs_allocI E P : ¬set_finite E → ▷ P ⊑ (|={E}=> ∃ i, ■ (i ∈ E) ∧ ownI i P).
 Proof.
-  intros ? [|n] r ? HP rf [|k] Ef σ ???; try lia.
+  intros ?; split=> -[|n] r ? HP rf [|k] Ef σ ???; try lia.
   destruct (wsat_alloc k E Ef σ rf P r) as (i&?&?&?); auto.
   { apply uPred_weaken with n r; eauto. }
   exists (Res {[ i := to_agree (Next (iProp_unfold P)) ]} ∅ ∅).
@@ -136,6 +140,9 @@ Qed.
 Opaque uPred_holds.
 Import uPred.
 Global Instance pvs_mono' E1 E2 : Proper ((⊑) ==> (⊑)) (@pvs Λ Σ E1 E2).
+Proof. intros P Q; apply pvs_mono. Qed.
+Global Instance pvs_flip_mono' E1 E2 :
+  Proper (flip (⊑) ==> flip (⊑)) (@pvs Λ Σ E1 E2).
 Proof. intros P Q; apply pvs_mono. Qed.
 Lemma pvs_trans' E P : (|={E}=> |={E}=> P) ⊑ (|={E}=> P).
 Proof. apply pvs_trans; set_solver. Qed.
@@ -194,7 +201,6 @@ Proof.
   intros; rewrite (pvs_ownG_updateP E _ (m' =)); last by apply cmra_update_updateP.
   by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.const_elim_l=> ->.
 Qed.
-
 End pvs.
 
 (** * Frame Shift Assertions. *)

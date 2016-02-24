@@ -138,7 +138,7 @@ Lemma option_equivI {M} (x y : option A) :
   (x ≡ y)%I ≡ (match x, y with
                | Some a, Some b => a ≡ b | None, None => True | _, _ => False
                end : uPred M)%I.
-Proof. split. by destruct 1. by destruct x, y; try constructor. Qed.
+Proof. do 2 split. by destruct 1. by destruct x, y; try constructor. Qed.
 Lemma option_validI {M} (x : option A) :
   (✓ x)%I ≡ (match x with Some a => ✓ a | None => True end : uPred M)%I.
 Proof. by destruct x. Qed.

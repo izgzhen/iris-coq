@@ -24,8 +24,9 @@ Proof.
     rewrite -uPred_map_compose. apply uPred_map_ext=>{P} r /=.
     rewrite -res_map_compose. apply res_map_ext=>{r} r /=.
     by rewrite -later_map_compose.
-  - intros A1 A2 B1 B2 n f f' Hf P n' [???].
-    apply upredC_map_ne, resC_map_ne, laterC_map_contractive=>i. by apply Hf.
+  - intros A1 A2 B1 B2 n f f' Hf P; split=> n' -[???].
+    apply upredC_map_ne, resC_map_ne, laterC_map_contractive.
+    by intros i ?; apply Hf.
 Qed.
 End iProp.
 

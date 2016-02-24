@@ -60,8 +60,8 @@ Proof.
 Qed.
 
 Lemma dec_agree_equivI {M} a b : (DecAgree a ≡ DecAgree b)%I ≡ (a = b : uPred M)%I.
-Proof. split. by case. by destruct 1. Qed.
+Proof. do 2 split. by case. by destruct 1. Qed.
 Lemma dec_agree_validI {M} (x y : dec_agreeRA) : ✓ (x ⋅ y) ⊑ (x = y : uPred M).
-Proof. intros r n _ ?. by apply: dec_agree_op_inv. Qed.
+Proof. split=> r n _ ?. by apply: dec_agree_op_inv. Qed.
 
 End dec_agree.

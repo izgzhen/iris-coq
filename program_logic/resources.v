@@ -162,7 +162,7 @@ Proof. by intros ? ? [???]; constructor; apply: timeless. Qed.
 (** Internalized properties *)
 Lemma res_equivI {M} r1 r2 :
   (r1 ≡ r2)%I ≡ (wld r1 ≡ wld r2 ∧ pst r1 ≡ pst r2 ∧ gst r1 ≡ gst r2: uPred M)%I.
-Proof. split. by destruct 1. by intros (?&?&?); constructor. Qed.
+Proof. do 2 split. by destruct 1. by intros (?&?&?); constructor. Qed.
 Lemma res_validI {M} r : (✓ r)%I ≡ (✓ wld r ∧ ✓ pst r ∧ ✓ gst r : uPred M)%I.
 Proof. done. Qed.
 End res.

@@ -132,9 +132,9 @@ Proof. intros [??]; split; naive_solver eauto using agree_valid_le. Qed.
 
 (** Internalized properties *)
 Lemma agree_equivI {M} a b : (to_agree a ≡ to_agree b)%I ≡ (a ≡ b : uPred M)%I.
-Proof. split. by intros [? Hv]; apply (Hv n). apply: to_agree_ne. Qed.
+Proof. do 2 split. by intros [? Hv]; apply (Hv n). apply: to_agree_ne. Qed.
 Lemma agree_validI {M} x y : ✓ (x ⋅ y) ⊑ (x ≡ y : uPred M).
-Proof. by intros r n _ ?; apply: agree_op_inv. Qed.
+Proof. split=> r n _ ?; by apply: agree_op_inv. Qed.
 End agree.
 
 Arguments agreeC : clear implicits.
