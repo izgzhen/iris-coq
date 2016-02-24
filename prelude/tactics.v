@@ -303,7 +303,8 @@ Tactic Notation "feed" "destruct" constr(H) "as" simple_intropattern(IP) :=
 It will search for the first subterm of the goal matching [pat], and then call [tac]
 with that subterm. *)
 Ltac find_pat pat tac :=
-  match goal with |- context [?x] => unify pat x; tac x || fail 2
+  match goal with |- context [?x] =>
+                  unify pat x; tryif tac x then idtac else fail 2
 end.
 
 (** Coq's [firstorder] tactic fails or loops on rather small goals already. In 
