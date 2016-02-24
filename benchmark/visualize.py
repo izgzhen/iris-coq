@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse, sys, pprint
+import matplotlib.pyplot as plt
 import parse_log
 
 # read command-line arguments
@@ -14,7 +15,17 @@ args = parser.parse_args()
 pp = pprint.PrettyPrinter()
 log_file = sys.stdin if args.file == "-" else open(args.file, "r")
 
-for result in parse_log.parse(log_file, args.timings):
-    pp.pprint(result.commit)
-    pp.pprint(result.times)
-    print()
+results = list(parse_log.parse(log_file, args.timings))
+
+for timing in args.timings:
+    plt.plot(list(map(lambda r: r.times[timing], results)))
+
+plt.legend(args.timings)
+plt.xticks(range(len(results)), list(map(lambda r: r.commit[:7], results)), rotation=70)
+plt.subplots_adjust(bottom=0.2) # more space for the commit labels
+
+plt.xlabel('Commit')
+plt.ylabel('Time (s)')
+plt.title('Time to compile files')
+plt.grid(True)
+plt.show()
