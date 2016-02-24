@@ -20,7 +20,7 @@ parser.add_argument("-s", "--server",
                     dest="server", default="https://gitlab.mpi-sws.org/",
                     help="The GitLab server to contact.")
 parser.add_argument("-p", "--project",
-                    dest="project", default="FP / iris-coq",
+                    dest="project", default="FP/iris-coq",
                     help="The name of the project on GitLab.")
 parser.add_argument("-f", "--file",
                     dest="file", required=True,
@@ -29,14 +29,19 @@ parser.add_argument("-c", "--commits",
                     dest="commits",
                     help="The commits to fetch. Default is everything since the most recent entry in the log file.")
 args = parser.parse_args()
-pp = pprint.PrettyPrinter(indent=4)
 log_file = sys.stdout if args.file == "-" else open(args.file, "a")
 
 projects = req("projects")
-project = first(filter(lambda p: p['name_with_namespace'] == args.project, projects.json()))
+project = first(filter(lambda p: p['path_with_namespace'] == args.project, projects.json()))
 
-commits = subprocess.check_output(["git", "rev-list", args.commits]).decode("utf-8")
+if args.commits.find('..') >= 0:
+    # a range of commits
+    commits = subprocess.check_output(["git", "rev-list", args.commits]).decode("utf-8")
+else:
+    # a single commit
+    commits = subprocess.check_output(["git", "rev-parse", args.commits]).decode("utf-8")
 for commit in reversed(commits.strip().split('\n')):
+    print("Fetching {}...".format(commit))
     builds = req("/projects/{}/repository/commits/{}/builds".format(project['id'], commit))
     if builds.status_code != 200:
         continue
@@ -45,7 +50,7 @@ for commit in reversed(commits.strip().split('\n')):
     except Exception:
         # no build
         continue
-    build_times = requests.get("{}/{}/builds/{}/artifacts/file/build-time.txt".format(args.server, args.project.replace(' ', ''), build['id']))
+    build_times = requests.get("{}/builds/{}/artifacts/file/build-time.txt".format(project['web_url'], build['id']))
     if build_times.status_code != 200:
         continue
     # Output in the log file format
