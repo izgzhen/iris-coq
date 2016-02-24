@@ -41,6 +41,9 @@ Proof.
     constructor.
 Qed.
 Canonical Structure optionC := CofeT option_cofe_mixin.
+Global Instance option_discrete : Discrete A → Discrete optionC.
+Proof. inversion_clear 2; constructor; by apply (timeless _). Qed.
+
 Global Instance Some_ne : Proper (dist n ==> dist n) (@Some A).
 Proof. by constructor. Qed.
 Global Instance is_Some_ne n : Proper (dist n ==> iff) (@is_Some A).
@@ -51,8 +54,6 @@ Global Instance None_timeless : Timeless (@None A).
 Proof. inversion_clear 1; constructor. Qed.
 Global Instance Some_timeless x : Timeless x → Timeless (Some x).
 Proof. by intros ?; inversion_clear 1; constructor; apply timeless. Qed.
-Global Instance option_timeless `{!∀ a : A, Timeless a} (mx : option A) : Timeless mx.
-Proof. destruct mx; auto with typeclass_instances. Qed.
 End cofe.
 
 Arguments optionC : clear implicits.
@@ -121,6 +122,8 @@ Qed.
 Canonical Structure optionRA := CMRAT option_cofe_mixin option_cmra_mixin.
 Global Instance option_cmra_identity : CMRAIdentity optionRA.
 Proof. split. done. by intros []. by inversion_clear 1. Qed.
+Global Instance option_cmra_discrete : CMRADiscrete A → CMRADiscrete optionRA.
+Proof. split; [apply _|]. by intros [x|]; [apply (cmra_discrete_valid x)|]. Qed.
 
 (** Misc *)
 Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my.

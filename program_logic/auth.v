@@ -5,13 +5,12 @@ Import uPred.
 Class authG Λ Σ (A : cmraT) `{Empty A} := AuthG {
   auth_inG :> inG Λ Σ (authRA A);
   auth_identity :> CMRAIdentity A;
-  (* TODO: Once we switched to RAs, this can be removed. *)
-  auth_timeless (a : A) :> Timeless a;
+  auth_timeless :> CMRADiscrete A;
 }.
 
 Definition authGF (A : cmraT) : iFunctor := constF (authRA A).
 Instance authGF_inGF (A : cmraT) `{inGF Λ Σ (authGF A)}
-  `{CMRAIdentity A, ∀ a : A, Timeless a} : authG Λ Σ A.
+  `{CMRAIdentity A, CMRADiscrete A} : authG Λ Σ A.
 Proof. split; try apply _. apply: inGF_inG. Qed.
 
 Definition auth_own_def `{authG Λ Σ A} (γ : gname) (a : A) : iPropG Λ Σ :=
@@ -26,11 +25,11 @@ Module Export AuthOwn : AuthOwnSig.
   Definition auth_own_eq := Logic.eq_refl (@auth_own).
 End AuthOwn. 
 
-(* TODO: Once we switched to RAs, it is no longer necessary to remember that a
-     is constantly valid. *)
-Definition auth_inv`{authG Λ Σ A} (γ : gname) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
-  (∃ a, (■ ✓ a ∧ own γ (● a)) ★ φ a)%I.
-Definition auth_ctx`{authG Λ Σ A} (γ : gname) (N : namespace) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
+Definition auth_inv `{authG Λ Σ A}
+    (γ : gname) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
+  (∃ a, (✓ a ∧ own γ (● a)) ★ φ a)%I.
+Definition auth_ctx`{authG Λ Σ A}
+    (γ : gname) (N : namespace) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
   inv N (auth_inv γ φ).
 
 Instance: Params (@auth_inv) 6.
@@ -68,7 +67,7 @@ Section auth.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     trans (▷ auth_inv γ φ ★ auth_own γ a)%I.
     { rewrite /auth_inv -(exist_intro a) later_sep.
-      rewrite const_equiv // left_id. ecancel [▷ φ _]%I.
+      rewrite -valid_intro // left_id. ecancel [▷ φ _]%I.
       by rewrite -later_intro auth_own_eq -own_op auth_both_op. }
     rewrite (inv_alloc N) /auth_ctx pvs_frame_r. apply pvs_mono.
     by rewrite always_and_sep_l.
@@ -79,20 +78,19 @@ Section auth.
 
   Lemma auth_opened E γ a :
     (▷ auth_inv γ φ ★ auth_own γ a)
-    ⊑ (|={E}=> ∃ a', ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') ★ own γ (● (a ⋅ a') ⋅ ◯ a)).
+    ⊑ (|={E}=> ∃ a', ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') ★ own γ (● (a ⋅ a') ⋅ ◯ a)).
   Proof.
     rewrite /auth_inv. rewrite later_exist sep_exist_r. apply exist_elim=>b.
     rewrite later_sep [(▷(_ ∧ _))%I]pvs_timeless !pvs_frame_r. apply pvs_mono.
-    rewrite always_and_sep_l -!assoc. apply const_elim_sep_l=>Hv.
+    rewrite always_and_sep_l -!assoc discrete_valid. apply const_elim_sep_l=>Hv.
     rewrite auth_own_eq [(▷φ _ ★ _)%I]comm assoc -own_op.
     rewrite own_valid_r auth_validI /= and_elim_l sep_exist_l sep_exist_r /=.
     apply exist_elim=>a'.
     rewrite left_id -(exist_intro a').
-    apply (eq_rewrite b (a ⋅ a') (λ x, ■ ✓ x ★ ▷ φ x ★ own γ (● x ⋅ ◯ a))%I).
-    { by move=>n ? ? /timeless_iff ->. }
+    apply (eq_rewrite b (a ⋅ a') (λ x, ✓ x ★ ▷ φ x ★ own γ (● x ⋅ ◯ a))%I).
+    { by move=>n x y /timeless_iff ->. }
     { by eauto with I. }
-    rewrite const_equiv // left_id comm.
-    apply sep_mono_r. by rewrite sep_elim_l.
+    rewrite -valid_intro // left_id comm. auto with I.
   Qed.
 
   Lemma auth_closing `{!LocalUpdate Lv L} E γ a a' :
@@ -103,8 +101,8 @@ Section auth.
     intros HL Hv. rewrite /auth_inv auth_own_eq -(exist_intro (L a ⋅ a')).
     (* TODO it would be really nice to use cancel here *)
     rewrite later_sep [(_ ★ ▷φ _)%I]comm -assoc.
-    rewrite -pvs_frame_l. apply sep_mono; first done.
-    rewrite const_equiv // left_id -later_intro -own_op.
+    rewrite -pvs_frame_l. apply sep_mono_r.
+    rewrite -valid_intro // left_id -later_intro -own_op.
     by apply own_update, (auth_local_update_l L).
   Qed.
 
@@ -118,7 +116,7 @@ Section auth.
     nclose N ⊆ E →
     P ⊑ auth_ctx γ N φ →
     P ⊑ (▷ auth_own γ a ★ ∀ a',
-          ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
+          ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
           fsa (E ∖ nclose N) (λ x, ∃ L Lv (Hup : LocalUpdate Lv L),
             ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
             (auth_own γ (L a) -★ Ψ x))) →
@@ -150,7 +148,7 @@ Section auth.
     nclose N ⊆ E →
     P ⊑ auth_ctx γ N φ →
     P ⊑ (▷ auth_own γ a ★ (∀ a',
-          ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
+          ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
           fsa (E ∖ nclose N) (λ x,
             ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
             (auth_own γ (L a) -★ Ψ x)))) →

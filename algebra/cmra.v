@@ -134,6 +134,12 @@ Class CMRAIdentity (A : cmraT) `{Empty A} : Prop := {
 }.
 Instance cmra_identity_inhabited `{CMRAIdentity A} : Inhabited A := populate ∅.
 
+(** * Discrete CMRAs *)
+Class CMRADiscrete (A : cmraT) : Prop := {
+  cmra_discrete :> Discrete A;
+  cmra_discrete_valid (x : A) : ✓{0} x → ✓ x
+}.
+
 (** * Morphisms *)
 Class CMRAMonotone {A B : cmraT} (f : A → B) := {
   includedN_preserving n x y : x ≼{n} y → f x ≼{n} f y;
@@ -319,6 +325,24 @@ Proof.
   by rewrite Hz' (timeless x1 y1) // (timeless x2 y2).
 Qed.
 
+(** ** Discrete *)
+Lemma cmra_discrete_valid_iff `{CMRADiscrete A} n x : ✓ x ↔ ✓{n} x.
+Proof.
+  split; first by rewrite cmra_valid_validN.
+  eauto using cmra_discrete_valid, cmra_validN_le with lia.
+Qed.
+Lemma cmra_discrete_included_iff `{Discrete A} n x y : x ≼ y ↔ x ≼{n} y.
+Proof.
+  split; first by rewrite cmra_included_includedN.
+  intros [z ->%(timeless_iff _ _)]; eauto using cmra_included_l.
+Qed.
+Lemma cmra_discrete_updateP `{CMRADiscrete A} (x : A) (P : A → Prop) :
+  (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → x ~~>: P.
+Proof. intros ? n. by setoid_rewrite <-cmra_discrete_valid_iff. Qed.
+Lemma cmra_discrete_update `{CMRADiscrete A} (x y : A) :
+  (∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z)) → x ~~> y.
+Proof. intros ? n. by setoid_rewrite <-cmra_discrete_valid_iff. Qed.
+
 (** ** RAs with an empty element *)
 Section identity.
   Context `{Empty A, !CMRAIdentity A}.
@@ -473,7 +497,7 @@ Class RA A `{Equiv A, Unit A, Op A, Valid A, Minus A} := {
 }.
 
 Section discrete.
-  Context {A : cofeT} `{∀ x : A, Timeless x}.
+  Context {A : cofeT} `{Discrete A}.
   Context `{Unit A, Op A, Valid A, Minus A} (ra : RA A).
 
   Instance discrete_validN : ValidN A := λ n x, ✓ x.
@@ -486,12 +510,8 @@ Section discrete.
       apply (timeless _), dist_le with n; auto with lia.
   Qed.
   Definition discreteRA : cmraT := CMRAT (cofe_mixin A) discrete_cmra_mixin.
-  Lemma discrete_updateP (x : discreteRA) (P : A → Prop) :
-    (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → x ~~>: P.
-  Proof. intros Hvalid n z; apply Hvalid. Qed.
-  Lemma discrete_update (x y : discreteRA) :
-    (∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z)) → x ~~> y.
-  Proof. intros Hvalid n z; apply Hvalid. Qed.
+  Instance discrete_cmra_discrete : CMRADiscrete discreteRA.
+  Proof. split. change (Discrete A); apply _. by intros x ?. Qed.
 End discrete.
 
 (** ** CMRA for the unit type *)
@@ -506,7 +526,8 @@ Section unit.
   Canonical Structure unitRA : cmraT :=
     Eval cbv [unitC discreteRA cofe_car] in discreteRA unit_ra.
   Global Instance unit_cmra_identity : CMRAIdentity unitRA.
-  Proof. by split. Qed.
+  Global Instance unit_cmra_discrete : CMRADiscrete unitRA.
+  Proof. by apply discrete_cmra_discrete. Qed.
 End unit.
 
 (** ** Product *)
@@ -563,6 +584,10 @@ Section prod.
     - by split; rewrite /=left_id.
     - by intros ? [??]; split; apply (timeless _).
   Qed.
+  Global Instance prod_cmra_discrete :
+    CMRADiscrete A → CMRADiscrete B → CMRADiscrete prodRA.
+  Proof. split. apply _. by intros ? []; split; apply cmra_discrete_valid. Qed.
+
   Lemma prod_update x y : x.1 ~~> y.1 → x.2 ~~> y.2 → x ~~> y.
   Proof. intros ?? n z [??]; split; simpl in *; auto. Qed.
   Lemma prod_updateP P1 P2 (Q : A * B → Prop)  x :

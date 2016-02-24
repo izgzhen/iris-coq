@@ -123,7 +123,7 @@ Section heap.
     apply wp_strip_pvs, (auth_fsa heap_inv (wp_fsa (Alloc e)))
       with N heap_name ∅; simpl; eauto with I.
     rewrite -later_intro. apply sep_mono_r,forall_intro=> h; apply wand_intro_l.
-    rewrite -assoc left_id; apply const_elim_sep_l=> ?.
+    rewrite -assoc left_id discrete_valid; apply const_elim_sep_l=> ?.
     rewrite -(wp_alloc_pst _ (of_heap h)) //.
     apply sep_mono_r; rewrite HP; apply later_mono.
     apply forall_mono=> l; apply wand_intro_l.
@@ -147,7 +147,7 @@ Section heap.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
       with N heap_name {[ l := Excl v ]}; simpl; eauto with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
-    rewrite -assoc; apply const_elim_sep_l=> ?.
+    rewrite -assoc discrete_valid; apply const_elim_sep_l=> ?.
     rewrite -(wp_load_pst _ (<[l:=v]>(of_heap h))) ?lookup_insert //.
     rewrite const_equiv // left_id.
     rewrite -(map_insert_singleton_op h); last by eapply heap_singleton_inv_l.
@@ -165,7 +165,7 @@ Section heap.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Excl v) l))
       with N heap_name {[ l := Excl v' ]}; simpl; eauto with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
-    rewrite -assoc; apply const_elim_sep_l=> ?.
+    rewrite -assoc discrete_valid; apply const_elim_sep_l=> ?.
     rewrite -(wp_store_pst _ (<[l:=v']>(of_heap h))) ?lookup_insert //.
     rewrite /heap_inv alter_singleton insert_insert.
     rewrite -!(map_insert_singleton_op h); try by eapply heap_singleton_inv_l.
@@ -185,7 +185,7 @@ Section heap.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
       with N heap_name {[ l := Excl v' ]}; simpl; eauto 10 with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
-    rewrite -assoc; apply const_elim_sep_l=> ?.
+    rewrite -assoc discrete_valid; apply const_elim_sep_l=> ?.
     rewrite -(wp_cas_fail_pst _ (<[l:=v']>(of_heap h))) ?lookup_insert //.
     rewrite const_equiv // left_id.
     rewrite -(map_insert_singleton_op h); last by eapply heap_singleton_inv_l.
@@ -204,7 +204,7 @@ Section heap.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Excl v2) l))
       with N heap_name {[ l := Excl v1 ]}; simpl; eauto 10 with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
-    rewrite -assoc; apply const_elim_sep_l=> ?.
+    rewrite -assoc discrete_valid; apply const_elim_sep_l=> ?.
     rewrite -(wp_cas_suc_pst _ (<[l:=v1]>(of_heap h))) ?lookup_insert //.
     rewrite /heap_inv alter_singleton insert_insert.
     rewrite -!(map_insert_singleton_op h); try by eapply heap_singleton_inv_l.

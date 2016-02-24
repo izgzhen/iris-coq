@@ -131,26 +131,20 @@ Proof.
       intuition eauto 10 using dra_disjoint_minus, dra_op_minus.
 Qed.
 Definition validityRA : cmraT := discreteRA validity_ra.
+Instance validity_cmra_discrete :
+  CMRADiscrete validityRA := discrete_cmra_discrete _.
+
 Lemma validity_update (x y : validityRA) :
   (∀ z, ✓ x → ✓ z → validity_car x ⊥ z → ✓ y ∧ validity_car y ⊥ z) → x ~~> y.
 Proof.
-  intros Hxy. apply discrete_update.
-  intros z (?&?&?); split_and!; try eapply Hxy; eauto.
+  intros Hxy; apply cmra_discrete_update=> z [?[??]].
+  split_and!; try eapply Hxy; eauto.
 Qed.
-
-Lemma to_validity_valid (x : A) :
-  ✓ to_validity x → ✓ x.
-Proof. intros. done. Qed.
 
 Lemma to_validity_op (x y : A) :
   (✓ (x ⋅ y) → ✓ x ∧ ✓ y ∧ x ⊥ y) →
   to_validity (x ⋅ y) ≡ to_validity x ⋅ to_validity y.
-Proof.
-  intros Hvd. split; [split | done].
-  - simpl. auto.
-  - clear Hvd. simpl. intros (? & ? & ?).
-    auto using dra_op_valid, to_validity_valid.
-Qed.
+Proof. split; naive_solver auto using dra_op_valid. Qed.
 
 Lemma to_validity_included x y:
   (✓ y ∧ to_validity x ≼ to_validity y)%C ↔ (✓ x ∧ x ≼ y).
@@ -158,7 +152,7 @@ Proof.
   split.
   - move=>[Hvl [z [Hvxz EQ]]]. move:(Hvl)=>Hvl'. apply Hvxz in Hvl'.
     destruct Hvl' as [? [? ?]].
-    split; first by apply to_validity_valid.
+    split; first done.
     exists (validity_car z). split_and!; last done.
     + apply EQ. assumption.
     + by apply validity_valid_car_valid.
@@ -169,5 +163,4 @@ Proof.
     + intros _. setoid_subst. by apply dra_op_valid. 
     + intros _. rewrite /= EQ //.
 Qed.
-
 End dra.
