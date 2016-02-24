@@ -13,18 +13,35 @@ Instance inGF_stsG sts `{inGF Λ Σ (stsGF sts)}
   `{Inhabited (sts.state sts)} : stsG Λ Σ sts.
 Proof. split; try apply _. apply: inGF_inG. Qed.
 
-Section definitions.
-  Context `{i : stsG Λ Σ sts} (γ : gname).
-  Import sts.
-  Definition sts_inv (φ : state sts → iPropG Λ Σ) : iPropG Λ Σ :=
-    (∃ s, own γ (sts_auth s ∅) ★ φ s)%I.
-  Definition sts_ownS (S : states sts) (T : tokens sts) : iPropG Λ Σ:=
-    own γ (sts_frag S T).
-  Definition sts_own (s : state sts) (T : tokens sts) : iPropG Λ Σ :=
-    own γ (sts_frag_up s T).
-  Definition sts_ctx (N : namespace) (φ: state sts → iPropG Λ Σ) : iPropG Λ Σ :=
-    inv N (sts_inv φ).
-End definitions.
+Definition sts_ownS_def `{i : stsG Λ Σ sts} (γ : gname)
+           (S : sts.states sts) (T : sts.tokens sts) : iPropG Λ Σ:=
+  own γ (sts_frag S T).
+Definition sts_own_def `{i : stsG Λ Σ sts} (γ : gname)
+           (s : sts.state sts) (T : sts.tokens sts) : iPropG Λ Σ :=
+  own γ (sts_frag_up s T).
+(* Perform sealing. *)
+Module Type StsOwnSig.
+  Parameter sts_ownS : ∀ `{i : stsG Λ Σ sts} (γ : gname)
+           (S : sts.states sts) (T : sts.tokens sts), iPropG Λ Σ.
+  Parameter sts_own : ∀ `{i : stsG Λ Σ sts} (γ : gname)
+           (s : sts.state sts) (T : sts.tokens sts), iPropG Λ Σ.
+  Axiom sts_ownS_def : @sts_ownS = @sts_ownS_def.
+  Axiom sts_own_def : @sts_own = @sts_own_def.
+End StsOwnSig.
+Module Export StsOwn : StsOwnSig.
+  Definition sts_ownS := @sts_ownS_def.
+  Definition sts_own := @sts_own_def.
+  Definition sts_ownS_def := Logic.eq_refl (@sts_ownS_def).
+  Definition sts_own_def := Logic.eq_refl (@sts_own_def).
+End StsOwn. 
+
+Definition sts_inv `{i : stsG Λ Σ sts} (γ : gname)
+           (φ : sts.state sts → iPropG Λ Σ) : iPropG Λ Σ :=
+  (∃ s, own γ (sts_auth s ∅) ★ φ s)%I.
+Definition sts_ctx `{i : stsG Λ Σ sts} (γ : gname)
+           (N : namespace) (φ: sts.state sts → iPropG Λ Σ) : iPropG Λ Σ :=
+  inv N (sts_inv γ φ).
+
 Instance: Params (@sts_inv) 5.
 Instance: Params (@sts_ownS) 5.
 Instance: Params (@sts_own) 6.
@@ -46,9 +63,11 @@ Section sts.
     Proper (pointwise_relation _ (≡) ==> (≡)) (sts_inv γ).
   Proof. by intros φ1 φ2 Hφ; rewrite /sts_inv; setoid_rewrite Hφ. Qed.
   Global Instance sts_ownS_proper γ : Proper ((≡) ==> (≡) ==> (≡)) (sts_ownS γ).
-  Proof. intros S1 S2 HS T1 T2 HT. by rewrite /sts_ownS HS HT. Qed.
+  Proof.
+    intros S1 S2 HS T1 T2 HT. by rewrite !sts_ownS_def /Top.sts_ownS_def HS HT.
+  Qed.
   Global Instance sts_own_proper γ s : Proper ((≡) ==> (≡)) (sts_own γ s).
-  Proof. intros T1 T2 HT. by rewrite /sts_own HT. Qed.
+  Proof. intros T1 T2 HT. by rewrite !sts_own_def /Top.sts_own_def HT. Qed.
   Global Instance sts_ctx_ne n γ N :
     Proper (pointwise_relation _ (dist n) ==> dist n) (sts_ctx γ N).
   Proof. by intros φ1 φ2 Hφ; rewrite /sts_ctx Hφ. Qed.
@@ -61,17 +80,24 @@ Section sts.
   Lemma sts_ownS_weaken E γ S1 S2 T1 T2 :
     T2 ⊆ T1 → S1 ⊆ S2 → sts.closed S2 T2 →
     sts_ownS γ S1 T1 ⊑ (|={E}=> sts_ownS γ S2 T2).
-  Proof. intros ? ? ?. by apply own_update, sts_update_frag. Qed.
+  Proof.
+    intros ? ? ?. rewrite sts_ownS_def. by apply own_update, sts_update_frag.
+  Qed.
 
   Lemma sts_own_weaken E γ s S T1 T2 :
     T2 ⊆ T1 → s ∈ S → sts.closed S T2 →
     sts_own γ s T1 ⊑ (|={E}=> sts_ownS γ S T2).
-  Proof. intros ???. by apply own_update, sts_update_frag_up. Qed.
+  Proof.
+    intros ???. rewrite sts_ownS_def sts_own_def.
+    by apply own_update, sts_update_frag_up.
+  Qed.
 
   Lemma sts_ownS_op γ S1 S2 T1 T2 :
     T1 ∩ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
     sts_ownS γ (S1 ∩ S2) (T1 ∪ T2) ≡ (sts_ownS γ S1 T1 ★ sts_ownS γ S2 T2)%I.
-  Proof. intros. by rewrite /sts_ownS -own_op sts_op_frag. Qed.
+  Proof.
+    intros. by rewrite sts_ownS_def /Top.sts_ownS_def -own_op sts_op_frag.
+  Qed.
 
   Lemma sts_alloc E N s :
     nclose N ⊆ E →
@@ -85,7 +111,7 @@ Section sts.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     trans (▷ sts_inv γ φ ★ sts_own γ s (⊤ ∖ sts.tok s))%I.
     { rewrite /sts_inv -(exist_intro s) later_sep.
-      ecancel [▷ φ _]%I.
+      ecancel [▷ φ _]%I. rewrite sts_own_def.
       by rewrite -later_intro -own_op sts_op_auth_frag_up; last set_solver. }
     rewrite (inv_alloc N) /sts_ctx pvs_frame_r.
     by rewrite always_and_sep_l.
@@ -95,7 +121,7 @@ Section sts.
     (▷ sts_inv γ φ ★ sts_ownS γ S T)
     ⊑ (|={E}=> ∃ s, ■ (s ∈ S) ★ ▷ φ s ★ own γ (sts_auth s T)).
   Proof.
-    rewrite /sts_inv /sts_ownS later_exist sep_exist_r. apply exist_elim=>s.
+    rewrite /sts_inv sts_ownS_def later_exist sep_exist_r. apply exist_elim=>s.
     rewrite later_sep pvs_timeless !pvs_frame_r. apply pvs_mono.
     rewrite -(exist_intro s).
     rewrite [(_ ★ ▷φ _)%I]comm -!assoc -own_op -[(▷φ _ ★ _)%I]comm.
@@ -112,7 +138,7 @@ Section sts.
     sts.steps (s, T) (s', T') →
     (▷ φ s' ★ own γ (sts_auth s T)) ⊑ (|={E}=> ▷ sts_inv γ φ ★ sts_own γ s' T').
   Proof.
-    intros Hstep. rewrite /sts_inv /sts_own -(exist_intro s') later_sep.
+    intros Hstep. rewrite /sts_inv sts_own_def -(exist_intro s') later_sep.
     (* TODO it would be really nice to use cancel here *)
     rewrite [(_ ★ ▷ φ _)%I]comm -assoc.
     rewrite -pvs_frame_l. apply sep_mono_r. rewrite -later_intro.
@@ -162,5 +188,8 @@ Section sts.
             ■ (sts.steps (s, T) (s', T')) ★ ▷ φ s' ★
             (sts_own γ s' T' -★ Ψ x))) →
     P ⊑ fsa E Ψ.
-  Proof. apply sts_fsaS. Qed.
+  Proof.
+    rewrite sts_own_def. intros. eapply sts_fsaS; try done; [].
+    by rewrite sts_ownS_def sts_own_def. 
+  Qed.
 End sts.
