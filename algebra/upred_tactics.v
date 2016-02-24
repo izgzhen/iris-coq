@@ -117,6 +117,10 @@ Module upred_reflection. Section upred_reflection.
     end.
 End upred_reflection.
 
+Tactic Notation "solve_sep_entails" :=
+  upred_reflection.quote; apply upred_reflection.flatten_entails;
+  apply (bool_decide_unpack _); vm_compute; exact Logic.I.
+
 Tactic Notation "cancel" constr(Ps) :=
   upred_reflection.quote;
   match goal with
