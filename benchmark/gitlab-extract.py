@@ -3,6 +3,12 @@ import argparse, pprint, subprocess, sys
 import requests
 import parse_log
 
+def last(it):
+    r = first(it) # errors out if it is empty
+    for i in it:
+        r = i
+    return r
+
 def first(it):
     for i in it:
         return i
@@ -31,6 +37,13 @@ parser.add_argument("-c", "--commits",
                     help="The commits to fetch. Default is everything since the most recent entry in the log file.")
 args = parser.parse_args()
 log_file = sys.stdout if args.file == "-" else open(args.file, "a")
+
+# determine commit, if missing
+if args.commits is None:
+    if args.file == "-":
+        raise Exception("If you do not give explicit commits, you have to give a logfile so that we can determine the missing commits.")
+    last_result = last(parse_log.parse(open(args.file, "r"), []))
+    args.commits = "{}..origin/master".format(last_result.commit)
 
 projects = req("projects")
 project = first(filter(lambda p: p['path_with_namespace'] == args.project, projects.json()))
