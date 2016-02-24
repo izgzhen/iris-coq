@@ -42,7 +42,7 @@ Module barrier_proto.
   Proof.
     split.
     - move=>[p I]. rewrite /= /tok !mkSet_elem_of /= =>HI.
-      destruct p; set_solver eauto.
+      destruct p; set_solver by eauto.
     - (* If we do the destruct of the states early, and then inversion
          on the proof of a transition, it doesn't work - we do not obtain
          the equalities we need. So we destruct the states late, because this
@@ -90,7 +90,7 @@ Module barrier_proto.
     i ∈ I → sts.steps (State High I, {[ Change i ]}) (State High (I ∖ {[ i ]}), ∅).
   Proof.
     intros. apply rtc_once.
-    constructor; first constructor; rewrite /= /tok /=; [set_solver eauto..|].
+    constructor; first constructor; rewrite /= /tok /=; [set_solver by eauto..|].
     (* TODO this proof is rather annoying. *)
     apply elem_of_equiv=>t. rewrite !elem_of_union.
     rewrite !mkSet_elem_of /change_tokens /=.
