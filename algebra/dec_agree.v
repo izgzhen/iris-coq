@@ -1,11 +1,10 @@
 From algebra Require Export cmra.
-From algebra Require Import functor upred.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 Local Arguments op _ _ _ !_ /.
 Local Arguments unit _ _ !_ /.
 
-(* This is isomorphic to optiob, but has a very different RA structure. *)
+(* This is isomorphic to option, but has a very different RA structure. *)
 Inductive dec_agree (A : Type) : Type := 
   | DecAgree : A → dec_agree A
   | DecAgreeBot : dec_agree A.
@@ -35,33 +34,23 @@ Proof.
   - apply _.
   - apply _.
   - apply _.
-  - intros [?|] [?|] [?|]; simpl; repeat (case_match; simpl); subst; congruence.
-  - intros [?|] [?|]; simpl; repeat (case_match; simpl); try subst; congruence.
-  - intros [?|]; simpl; repeat (case_match; simpl); try subst; congruence.
-  - intros [?|]; simpl; repeat (case_match; simpl); try subst; congruence.
-  - intros [?|] [?|] ?; simpl; done.
-  - intros [?|] [?|] ?; simpl; done.
-  - intros [?|] [?|] [[?|]]; simpl; repeat (case_match; simpl); subst;
-      try congruence; [].
-    case=>EQ. destruct EQ. done.
+  - intros [?|] [?|] [?|]; by repeat (simplify_eq/= || case_match).
+  - intros [?|] [?|]; by repeat (simplify_eq/= || case_match).
+  - intros [?|]; by repeat (simplify_eq/= || case_match).
+  - intros [?|]; by repeat (simplify_eq/= || case_match).
+  - by intros [?|] [?|] ?.
+  - by intros [?|] [?|] ?.
+  - intros [?|] [?|] [[?|]]; fold_leibniz;
+      intros; by repeat (simplify_eq/= || case_match).
 Qed.
 
 Canonical Structure dec_agreeRA : cmraT := discreteRA dec_agree_ra.
 
 (* Some properties of this CMRA *)
 Lemma dec_agree_idemp (x : dec_agree A) : x ⋅ x ≡ x.
-Proof.
-  destruct x as [x|]; simpl; repeat (case_match; simpl); try subst; congruence.
-Qed.
+Proof. destruct x; by repeat (simplify_eq/= || case_match). Qed.
 
 Lemma dec_agree_op_inv (x1 x2 : dec_agree A) : ✓ (x1 ⋅ x2) → x1 ≡ x2.
-Proof.
-  destruct x1 as [x1|], x2 as [x2|]; simpl;repeat (case_match; simpl); by subst.
-Qed.
-
-Lemma dec_agree_equivI {M} a b : (DecAgree a ≡ DecAgree b)%I ≡ (a = b : uPred M)%I.
-Proof. do 2 split. by case. by destruct 1. Qed.
-Lemma dec_agree_validI {M} (x y : dec_agreeRA) : ✓ (x ⋅ y) ⊑ (x = y : uPred M).
-Proof. split=> r n _ ?. by apply: dec_agree_op_inv. Qed.
+Proof. destruct x1, x2; by repeat (simplify_eq/= || case_match). Qed.
 
 End dec_agree.
