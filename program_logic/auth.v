@@ -40,10 +40,10 @@ Section auth.
   Proof. by rewrite /auth_own=> a b ->. Qed.
   Global Instance auth_own_proper γ : Proper ((≡) ==> (≡)) (auth_own γ).
   Proof. by rewrite /auth_own=> a b ->. Qed.
-  Lemma auto_own_op γ a b :
+  Lemma auth_own_op γ a b :
     auth_own γ (a ⋅ b) ≡ (auth_own γ a ★ auth_own γ b)%I.
   Proof. by rewrite /auth_own -own_op auth_frag_op. Qed.
-  Lemma auto_own_valid γ a : auth_own γ a ⊑ ✓ a.
+  Lemma auth_own_valid γ a : auth_own γ a ⊑ ✓ a.
   Proof. by rewrite /auth_own own_valid auth_validI. Qed.
 
   Lemma auth_alloc E N a :

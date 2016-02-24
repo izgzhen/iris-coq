@@ -91,7 +91,7 @@ Section heap.
     rewrite to_heap_insert big_sepM_insert //.
     rewrite (map_insert_singleton_op (to_heap σ));
       last rewrite lookup_fmap Hl; auto.
-    by rewrite auto_own_op IH.
+    by rewrite auth_own_op IH.
   Qed.
 
   Context `{heapG Σ}.
@@ -103,7 +103,7 @@ Section heap.
   (** General properties of mapsto *)
   Lemma heap_mapsto_disjoint l v1 v2 : (l ↦ v1 ★ l ↦ v2)%I ⊑ False.
   Proof.
-    rewrite heap_mapsto_eq -auto_own_op auto_own_valid map_op_singleton.
+    rewrite heap_mapsto_eq -auth_own_op auth_own_valid map_op_singleton.
     rewrite map_validI (forall_elim l) lookup_singleton.
     by rewrite option_validI excl_validI.
   Qed.
