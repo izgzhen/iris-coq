@@ -113,17 +113,13 @@ Proof.
       split_and!; simpl in *; eapply cmra_validN_op_l; eauto.
   - intros n r1 r2; rewrite res_includedN; intros (?&?&?).
     by constructor; apply cmra_op_minus.
+  - intros n r r1 r2 (?&?&?) [???]; simpl in *.
+    destruct (cmra_extend n (wld r) (wld r1) (wld r2)) as ([w w']&?&?&?),
+      (cmra_extend n (pst r) (pst r1) (pst r2)) as ([σ σ']&?&?&?),
+      (cmra_extend n (gst r) (gst r1) (gst r2)) as ([m m']&?&?&?); auto.
+    by exists (Res w σ m, Res w' σ' m').
 Qed.
-Definition res_cmra_extend_mixin : CMRAExtendMixin (res Λ Σ A).
-Proof.
-  intros n r r1 r2 (?&?&?) [???]; simpl in *.
-  destruct (cmra_extend_op n (wld r) (wld r1) (wld r2)) as ([w w']&?&?&?),
-    (cmra_extend_op n (pst r) (pst r1) (pst r2)) as ([σ σ']&?&?&?),
-    (cmra_extend_op n (gst r) (gst r1) (gst r2)) as ([m m']&?&?&?); auto.
-  by exists (Res w σ m, Res w' σ' m').
-Qed.
-Canonical Structure resRA : cmraT :=
-  CMRAT res_cofe_mixin res_cmra_mixin res_cmra_extend_mixin.
+Canonical Structure resRA : cmraT := CMRAT res_cofe_mixin res_cmra_mixin.
 Global Instance res_cmra_identity : CMRAIdentity resRA.
 Proof.
   split.

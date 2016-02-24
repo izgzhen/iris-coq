@@ -49,11 +49,11 @@ Record CMRAMixin A `{Dist A, Equiv A, Unit A, Op A, ValidN A, Minus A} := {
   mixin_cmra_unit_idemp x : unit (unit x) ≡ unit x;
   mixin_cmra_unit_preservingN n x y : x ≼{n} y → unit x ≼{n} unit y;
   mixin_cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
-  mixin_cmra_op_minus n x y : x ≼{n} y → x ⋅ y ⩪ x ≡{n}≡ y
+  mixin_cmra_op_minus n x y : x ≼{n} y → x ⋅ y ⩪ x ≡{n}≡ y;
+  mixin_cmra_extend n x y1 y2 :
+    ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
+    { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ≡{n}≡ y1 ∧ z.2 ≡{n}≡ y2 }
 }.
-Definition CMRAExtendMixin A `{Equiv A, Dist A, Op A, ValidN A} := ∀ n x y1 y2,
-  ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
-  { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ≡{n}≡ y1 ∧ z.2 ≡{n}≡ y2 }.
 
 (** Bundeled version *)
 Structure cmraT := CMRAT {
@@ -66,10 +66,9 @@ Structure cmraT := CMRAT {
   cmra_validN : ValidN cmra_car;
   cmra_minus : Minus cmra_car;
   cmra_cofe_mixin : CofeMixin cmra_car;
-  cmra_mixin : CMRAMixin cmra_car;
-  cmra_extend_mixin : CMRAExtendMixin cmra_car
+  cmra_mixin : CMRAMixin cmra_car
 }.
-Arguments CMRAT {_ _ _ _ _ _ _ _} _ _ _.
+Arguments CMRAT {_ _ _ _ _ _ _ _} _ _.
 Arguments cmra_car : simpl never.
 Arguments cmra_equiv : simpl never.
 Arguments cmra_dist : simpl never.
@@ -80,7 +79,6 @@ Arguments cmra_validN : simpl never.
 Arguments cmra_minus : simpl never.
 Arguments cmra_cofe_mixin : simpl never.
 Arguments cmra_mixin : simpl never.
-Arguments cmra_extend_mixin : simpl never.
 Add Printing Constructor cmraT.
 Existing Instances cmra_unit cmra_op cmra_validN cmra_minus.
 Coercion cmra_cofeC (A : cmraT) : cofeT := CofeT (cmra_cofe_mixin A).
@@ -115,10 +113,10 @@ Section cmra_mixin.
   Proof. apply (mixin_cmra_validN_op_l _ (cmra_mixin A)). Qed.
   Lemma cmra_op_minus n x y : x ≼{n} y → x ⋅ y ⩪ x ≡{n}≡ y.
   Proof. apply (mixin_cmra_op_minus _ (cmra_mixin A)). Qed.
-  Lemma cmra_extend_op n x y1 y2 :
+  Lemma cmra_extend n x y1 y2 :
     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
     { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ≡{n}≡ y1 ∧ z.2 ≡{n}≡ y2 }.
-  Proof. apply (cmra_extend_mixin A). Qed.
+  Proof. apply (mixin_cmra_extend _ (cmra_mixin A)). Qed.
 End cmra_mixin.
 
 (** * CMRAs with a global identity element *)
@@ -301,7 +299,7 @@ Qed.
 Lemma cmra_timeless_included_l x y : Timeless x → ✓{0} y → x ≼{0} y → x ≼ y.
 Proof.
   intros ?? [x' ?].
-  destruct (cmra_extend_op 0 y x x') as ([z z']&Hy&Hz&Hz'); auto; simpl in *.
+  destruct (cmra_extend 0 y x x') as ([z z']&Hy&Hz&Hz'); auto; simpl in *.
   by exists z'; rewrite Hy (timeless x z).
 Qed.
 Lemma cmra_timeless_included_r n x y : Timeless y → x ≼{0} y → x ≼{n} y.
@@ -310,7 +308,7 @@ Lemma cmra_op_timeless x1 x2 :
   ✓ (x1 ⋅ x2) → Timeless x1 → Timeless x2 → Timeless (x1 ⋅ x2).
 Proof.
   intros ??? z Hz.
-  destruct (cmra_extend_op 0 z x1 x2) as ([y1 y2]&Hz'&?&?); auto; simpl in *.
+  destruct (cmra_extend 0 z x1 x2) as ([y1 y2]&Hz'&?&?); auto; simpl in *.
   { by rewrite -?Hz. }
   by rewrite Hz' (timeless x1 y1) // (timeless x2 y2).
 Qed.
@@ -471,16 +469,12 @@ Section discrete.
   Instance discrete_validN : ValidN A := λ n x, ✓ x.
   Definition discrete_cmra_mixin : CMRAMixin A.
   Proof.
-    by destruct ra; split; unfold Proper, respectful, includedN;
-      try setoid_rewrite <-(timeless_iff _ _).
-  Qed.
-  Definition discrete_extend_mixin : CMRAExtendMixin A.
-  Proof.
+    destruct ra; split; unfold Proper, respectful, includedN;
+      try setoid_rewrite <-(timeless_iff _ _); try done.
     intros n x y1 y2 ??; exists (y1,y2); split_and?; auto.
     apply (timeless _), dist_le with n; auto with lia.
   Qed.
-  Definition discreteRA : cmraT :=
-    CMRAT (cofe_mixin A) discrete_cmra_mixin discrete_extend_mixin.
+  Definition discreteRA : cmraT := CMRAT (cofe_mixin A) discrete_cmra_mixin.
   Lemma discrete_updateP (x : discreteRA) (P : A → Prop) :
     (∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z)) → x ~~>: P.
   Proof. intros Hvalid n z; apply Hvalid. Qed.
@@ -542,16 +536,12 @@ Section prod.
     - intros n x y [??]; split; simpl in *; eauto using cmra_validN_op_l.
     - intros n x y; rewrite prod_includedN; intros [??].
       by split; apply cmra_op_minus.
+    - intros n x y1 y2 [??] [??]; simpl in *.
+      destruct (cmra_extend n (x.1) (y1.1) (y2.1)) as (z1&?&?&?); auto.
+      destruct (cmra_extend n (x.2) (y1.2) (y2.2)) as (z2&?&?&?); auto.
+      by exists ((z1.1,z2.1),(z1.2,z2.2)).
   Qed.
-  Definition prod_cmra_extend_mixin : CMRAExtendMixin (A * B).
-  Proof.
-    intros n x y1 y2 [??] [??]; simpl in *.
-    destruct (cmra_extend_op n (x.1) (y1.1) (y2.1)) as (z1&?&?&?); auto.
-    destruct (cmra_extend_op n (x.2) (y1.2) (y2.2)) as (z2&?&?&?); auto.
-    by exists ((z1.1,z2.1),(z1.2,z2.2)).
-  Qed.
-  Canonical Structure prodRA : cmraT :=
-    CMRAT prod_cofe_mixin prod_cmra_mixin prod_cmra_extend_mixin.
+  Canonical Structure prodRA : cmraT := CMRAT prod_cofe_mixin prod_cmra_mixin.
   Global Instance prod_cmra_identity `{Empty A, Empty B} :
     CMRAIdentity A → CMRAIdentity B → CMRAIdentity prodRA.
   Proof.

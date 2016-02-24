@@ -818,7 +818,7 @@ Proof.
   split=> n x ?; split.
   - destruct n as [|n]; simpl.
     { by exists x, (unit x); rewrite cmra_unit_r. }
-    intros (x1&x2&Hx&?&?); destruct (cmra_extend_op n x x1 x2)
+    intros (x1&x2&Hx&?&?); destruct (cmra_extend n x x1 x2)
       as ([y1 y2]&Hx'&Hy1&Hy2); eauto using cmra_validN_S; simpl in *.
     exists y1, y2; split; [by rewrite Hx'|by rewrite Hy1 Hy2].
   - destruct n as [|n]; simpl; [done|intros (x1&x2&Hx&?&?)].

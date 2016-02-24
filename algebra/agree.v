@@ -59,6 +59,7 @@ Program Instance agree_op : Op (agree A) := λ x y,
 Next Obligation. naive_solver eauto using agree_valid_S, dist_S. Qed.
 Instance agree_unit : Unit (agree A) := id.
 Instance agree_minus : Minus (agree A) := λ x y, x.
+
 Instance: Comm (≡) (@op (agree A) _).
 Proof. intros x y; split; [naive_solver|by intros n (?&?&Hxy); apply Hxy]. Qed.
 Lemma agree_idemp (x : agree A) : x ⋅ x ≡ x.
@@ -87,11 +88,20 @@ Proof.
     repeat match goal with H : agree_is_valid _ _ |- _ => clear H end;
     by cofe_subst; rewrite !agree_idemp.
 Qed.
+
 Lemma agree_includedN n (x y : agree A) : x ≼{n} y ↔ y ≡{n}≡ x ⋅ y.
 Proof.
   split; [|by intros ?; exists y].
   by intros [z Hz]; rewrite Hz assoc agree_idemp.
 Qed.
+Lemma agree_op_inv n (x1 x2 : agree A) : ✓{n} (x1 ⋅ x2) → x1 ≡{n}≡ x2.
+Proof. intros Hxy; apply Hxy. Qed.
+Lemma agree_valid_includedN n (x y : agree A) : ✓{n} y → x ≼{n} y → x ≡{n}≡ y.
+Proof.
+  move=> Hval [z Hy]; move: Hval; rewrite Hy.
+  by move=> /agree_op_inv->; rewrite agree_idemp.
+Qed.
+
 Definition agree_cmra_mixin : CMRAMixin (agree A).
 Proof.
   split; try (apply _ || done).
@@ -102,22 +112,11 @@ Proof.
   - intros x; apply agree_idemp.
   - by intros n x y [(?&?&?) ?].
   - by intros n x y; rewrite agree_includedN.
+  - intros n x y1 y2 Hval Hx; exists (x,x); simpl; split.
+    + by rewrite agree_idemp.
+    + by move: Hval; rewrite Hx; move=> /agree_op_inv->; rewrite agree_idemp.
 Qed.
-Lemma agree_op_inv n (x1 x2 : agree A) : ✓{n} (x1 ⋅ x2) → x1 ≡{n}≡ x2.
-Proof. intros Hxy; apply Hxy. Qed.
-Lemma agree_valid_includedN n (x y : agree A) : ✓{n} y → x ≼{n} y → x ≡{n}≡ y.
-Proof.
-  move=> Hval [z Hy]; move: Hval; rewrite Hy.
-  by move=> /agree_op_inv->; rewrite agree_idemp.
-Qed.
-Definition agree_cmra_extend_mixin : CMRAExtendMixin (agree A).
-Proof.
-  intros n x y1 y2 Hval Hx; exists (x,x); simpl; split.
-  - by rewrite agree_idemp.
-  - by move: Hval; rewrite Hx; move=> /agree_op_inv->; rewrite agree_idemp.
-Qed.
-Canonical Structure agreeRA : cmraT :=
-  CMRAT agree_cofe_mixin agree_cmra_mixin agree_cmra_extend_mixin.
+Canonical Structure agreeRA : cmraT := CMRAT agree_cofe_mixin agree_cmra_mixin.
 
 Program Definition to_agree (x : A) : agree A :=
   {| agree_car n := x; agree_is_valid n := True |}.

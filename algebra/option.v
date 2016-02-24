@@ -105,21 +105,17 @@ Proof.
   - intros n mx my; rewrite option_includedN.
     intros [->|(x&y&->&->&?)]; [by destruct my|].
     by constructor; apply cmra_op_minus.
+  - intros n mx my1 my2.
+    destruct mx as [x|], my1 as [y1|], my2 as [y2|]; intros Hx Hx';
+      try (by exfalso; inversion Hx'; auto).
+    + destruct (cmra_extend n x y1 y2) as ([z1 z2]&?&?&?); auto.
+      { by inversion_clear Hx'. }
+      by exists (Some z1, Some z2); repeat constructor.
+    + by exists (Some x,None); inversion Hx'; repeat constructor.
+    + by exists (None,Some x); inversion Hx'; repeat constructor.
+    + exists (None,None); repeat constructor.
 Qed.
-Definition option_cmra_extend_mixin : CMRAExtendMixin (option A).
-Proof.
-  intros n mx my1 my2.
-  destruct mx as [x|], my1 as [y1|], my2 as [y2|]; intros Hx Hx';
-    try (by exfalso; inversion Hx'; auto).
-  - destruct (cmra_extend_op n x y1 y2) as ([z1 z2]&?&?&?); auto.
-    { by inversion_clear Hx'. }
-    by exists (Some z1, Some z2); repeat constructor.
-  - by exists (Some x,None); inversion Hx'; repeat constructor.
-  - by exists (None,Some x); inversion Hx'; repeat constructor.
-  - exists (None,None); repeat constructor.
-Qed.
-Canonical Structure optionRA :=
-  CMRAT option_cofe_mixin option_cmra_mixin option_cmra_extend_mixin.
+Canonical Structure optionRA := CMRAT option_cofe_mixin option_cmra_mixin.
 Global Instance option_cmra_identity : CMRAIdentity optionRA.
 Proof. split. done. by intros []. by inversion_clear 1. Qed.
 
