@@ -40,7 +40,7 @@ Record closed (S : states sts) (T : tokens sts) : Prop := Closed {
   closed_step s1 s2 : s1 ∈ S → frame_step T s1 s2 → s2 ∈ S
 }.
 Definition up (s : state sts) (T : tokens sts) : states sts :=
-  mkSet (rtc (frame_step T) s).
+  {[ s' | rtc (frame_step T) s s' ]}.
 Definition up_set (S : states sts) (T : tokens sts) : states sts :=
   S ≫= λ s, up s T.
 
@@ -70,7 +70,7 @@ Global Instance up_preserving : Proper ((=) ==> flip (⊆) ==> (⊆)) up.
 Proof.
   intros s ? <- T T' HT ; apply elem_of_subseteq.
   induction 1 as [|s1 s2 s3 [T1 T2]]; [constructor|].
-  eapply rtc_l; [eapply Frame_step with T1 T2|]; eauto with sts.
+  eapply elem_of_mkSet, rtc_l; [eapply Frame_step with T1 T2|]; eauto with sts.
 Qed.
 Global Instance up_proper : Proper ((=) ==> (≡) ==> (≡)) up.
 Proof. by intros ??? ?? [??]; split; apply up_preserving. Qed.
@@ -128,7 +128,7 @@ Proof.
     specialize (HS s' Hs'); clear Hs' S.
     induction Hstep as [s|s1 s2 s3 [T1 T2 ? Hstep] ? IH]; first done.
     inversion_clear Hstep; apply IH; clear IH; auto with sts.
-  - intros s1 s2; rewrite !elem_of_bind; intros (s&?&?) ?; exists s.
+  - intros s1 s2; rewrite /up; set_unfold; intros (s&?&?) ?; exists s.
     split; [eapply rtc_r|]; eauto.
 Qed.
 Lemma closed_up s T : tok s ∩ T ≡ ∅ → closed (up s T) T.
@@ -359,9 +359,7 @@ Lemma sts_op_auth_frag_up s T :
   sts_auth s ∅ ⋅ sts_frag_up s T ≡ sts_auth s T.
 Proof.
   intros; split; [split|constructor; set_solver]; simpl.
-  - intros (?&?&?). destruct_conjs.
-    apply closed_disjoint with (up s T); first done.
-    apply elem_of_up.
+  - intros (?&[??]&?). by apply closed_disjoint with (up s T), elem_of_up.
   - intros; split_and?.
     + set_solver+.
     + by apply closed_up.
@@ -411,12 +409,9 @@ Lemma up_set_intersection S1 Sf Tf :
   S1 ∩ Sf ≡ S1 ∩ up_set (S1 ∩ Sf) Tf.
 Proof.
   intros Hclf. apply (anti_symm (⊆)).
-  + move=>s [HS1 HSf]. split; first by apply HS1.
-    by apply subseteq_up_set.
-  + move=>s [HS1 Hscl]. split; first done.
-    destruct Hscl as [s' [Hsup Hs']].
-    eapply closed_steps; last (hnf in Hsup; eexact Hsup); first done.
-    set_solver +Hs'.
+  + move=>s [HS1 HSf]. split. by apply HS1. by apply subseteq_up_set.
+  + move=>s [HS1 [s' [/elem_of_mkSet Hsup Hs']]]. split; first done.
+    eapply closed_steps, Hsup; first done. set_solver +Hs'.
 Qed.
 
 (** Inclusion *)

@@ -23,9 +23,11 @@ Instance set_difference {A} : Difference (set A) := λ X1 X2,
 Instance set_collection : Collection A (set A).
 Proof. split; [split | |]; by repeat intro. Qed.
 
-Lemma elem_of_mkSet {A} (P : A → Prop) x : (x ∈ {[ x | P x ]}) = P x.
+Lemma elem_of_all {A} (x : A) : x ∈ ⊤ ↔ True.
 Proof. done. Qed.
-Lemma not_elem_of_mkSet {A} (P : A → Prop) x : (x ∉ {[ x | P x ]}) = (¬P x).
+Lemma elem_of_mkSet {A} (P : A → Prop) x : x ∈ {[ x | P x ]} ↔ P x.
+Proof. done. Qed.
+Lemma not_elem_of_mkSet {A} (P : A → Prop) x : x ∉ {[ x | P x ]} ↔ ¬P x.
 Proof. done. Qed.
 
 Instance set_ret : MRet set := λ A (x : A), {[ x ]}.
@@ -38,4 +40,4 @@ Instance set_join : MJoin set := λ A (XX : set (set A)),
 Instance set_collection_monad : CollectionMonad set.
 Proof. by split; try apply _. Qed.
 
-Global Opaque set_union set_intersection set_difference.
+Global Opaque set_elem_of set_union set_intersection set_difference.

@@ -36,14 +36,12 @@ Definition low_states : set state := {[ s | state_phase s = Low ]}.
 Lemma i_states_closed i : sts.closed (i_states i) {[ Change i ]}.
 Proof.
   split.
-  - move=>[p I]. rewrite /= !elem_of_mkSet /= =>HI.
-    destruct p; set_solver by eauto.
+  - intros [p I]. rewrite /= /i_states /change_tok. destruct p; set_solver.
   - (* If we do the destruct of the states early, and then inversion
        on the proof of a transition, it doesn't work - we do not obtain
        the equalities we need. So we destruct the states late, because this
        means we can use "destruct" instead of "inversion". *)
-    move=>s1 s2. rewrite !elem_of_mkSet.
-    intros Hs1 [T1 T2 Hdisj Hstep'].
+    intros s1 s2 Hs1 [T1 T2 Hdisj Hstep'].
     inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
     destruct Htrans; simpl in *; last done.
     move: Hs1 Hdisj Htok. rewrite elem_of_equiv_empty elem_of_equiv.
@@ -56,10 +54,8 @@ Qed.
 Lemma low_states_closed : sts.closed low_states {[ Send ]}.
 Proof.
   split.
-  - move=>[p I]. rewrite /= /tok !elem_of_mkSet /= =>HI.
-    destruct p; set_solver.
-  - move=>s1 s2. rewrite !elem_of_mkSet.
-    intros Hs1 [T1 T2 Hdisj Hstep'].
+  - intros [p I]. rewrite /low_states. set_solver.
+  - intros s1 s2 Hs1 [T1 T2 Hdisj Hstep'].
     inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
     destruct Htrans; simpl in *; first by destruct p.
     exfalso; set_solver.
@@ -74,7 +70,7 @@ Lemma wait_step i I :
   sts.steps (State High I, {[ Change i ]}) (State High (I ∖ {[ i ]}), ∅).
 Proof.
   intros. apply rtc_once.
-  constructor; first constructor; simpl; [set_solver by eauto..|].
+  constructor; first constructor; rewrite /= /change_tok; [set_solver by eauto..|].
   (* TODO this proof is rather annoying. *)
   apply elem_of_equiv=>t. rewrite !elem_of_union.
   rewrite !elem_of_mkSet /change_tok /=.

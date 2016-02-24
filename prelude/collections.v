@@ -4,6 +4,7 @@
 importantly, it implements some tactics to automatically solve goals involving
 collections. *)
 From prelude Require Export base tactics orders.
+From prelude Require Import sets.
 
 Instance collection_subseteq `{ElemOf A C} : SubsetEq C := λ X Y,
   ∀ x, x ∈ X → x ∈ Y.
@@ -153,6 +154,9 @@ Tactic Notation "decompose_elem_of" hyp(H) :=
   let rec go H :=
   lazymatch type of H with
   | _ ∈ ∅ => apply elem_of_empty in H; destruct H
+  | _ ∈ ⊤ => clear H
+  | _ ∈ {[ _ | _ ]} => rewrite elem_of_mkSet in H
+  | ¬_ ∈ {[ _ | _ ]} => rewrite not_elem_of_mkSet in H
   | ?x ∈ {[ ?y ]} =>
     apply elem_of_singleton in H; try first [subst y | subst x]
   | ?x ∉ {[ ?y ]} =>
@@ -217,7 +221,9 @@ Ltac set_unfold :=
     | context [ _ = ∅ ] => setoid_rewrite elem_of_equiv_empty_L in H
     | context [ _ = _ ] => setoid_rewrite elem_of_equiv_alt_L in H
     | context [ _ ∈ ∅ ] => setoid_rewrite elem_of_empty in H
+    | context [ _ ∈ ⊤ ] => setoid_rewrite elem_of_all in H
     | context [ _ ∈ {[ _ ]} ] => setoid_rewrite elem_of_singleton in H
+    | context [ _ ∈ {[_| _ ]} ] => setoid_rewrite elem_of_mkSet in H; simpl in H
     | context [ _ ∈ _ ∪ _ ] => setoid_rewrite elem_of_union in H
     | context [ _ ∈ _ ∩ _ ] => setoid_rewrite elem_of_intersection in H
     | context [ _ ∈ _ ∖ _ ] => setoid_rewrite elem_of_difference in H
@@ -237,7 +243,9 @@ Ltac set_unfold :=
   | |- context [ _ = ∅ ] => setoid_rewrite elem_of_equiv_empty_L
   | |- context [ _ = _ ] => setoid_rewrite elem_of_equiv_alt_L
   | |- context [ _ ∈ ∅ ] => setoid_rewrite elem_of_empty
+  | |- context [ _ ∈ ⊤ ] => setoid_rewrite elem_of_all
   | |- context [ _ ∈ {[ _ ]} ] => setoid_rewrite elem_of_singleton
+  | |- context [ _ ∈ {[ _ | _ ]} ] => setoid_rewrite elem_of_mkSet; simpl
   | |- context [ _ ∈ _ ∪ _ ] => setoid_rewrite elem_of_union
   | |- context [ _ ∈ _ ∩ _ ] => setoid_rewrite elem_of_intersection
   | |- context [ _ ∈ _ ∖ _ ] => setoid_rewrite elem_of_difference
