@@ -364,7 +364,7 @@ Section proof.
       rewrite [(_ ★ heap_ctx _)%I]comm -!assoc.
       rewrite const_equiv // left_id -pvs_frame_l. apply sep_mono_r.
       rewrite comm -pvs_frame_l. apply sep_mono_r.
-      apply sts_ownS_weaken; eauto using sts.up_subseteq with sts. }
+      apply sts_own_weaken; eauto using sts.up_subseteq with sts. }
     (* a High state: the comparison succeeds, and we perform a transition and
        return to the client *)
     rewrite [(_ ★ □ (_ → _ ))%I]sep_elim_l.
