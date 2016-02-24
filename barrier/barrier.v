@@ -14,27 +14,26 @@ Definition wait := (rec: "wait" "x" :=if: !"x" = '1 then '() else "wait" "x")%L.
     with saved propositions. *)
 Module barrier_proto.
   Inductive phase := Low | High.
-  Record stateT := State { state_phase : phase; state_I : gset gname }.
+  Record state := State { state_phase : phase; state_I : gset gname }.
   Inductive token := Change (i : gname) | Send.
 
-  Global Instance stateT_inhabited: Inhabited stateT.
-  Proof. split. exact (State Low ∅). Qed.
+  Global Instance stateT_inhabited: Inhabited state := populate (State Low ∅).
 
   Definition change_tokens (I : gset gname) : set token :=
     mkSet (λ t, match t with Change i => i ∉ I | Send => False end).
 
-  Inductive trans : relation stateT :=
-  | ChangeI p I2 I1 : trans (State p I1) (State p I2)
-  | ChangePhase I : trans (State Low I) (State High I).
+  Inductive prim_step : relation state :=
+    | ChangeI p I2 I1 : prim_step (State p I1) (State p I2)
+    | ChangePhase I : prim_step (State Low I) (State High I).
 
-  Definition tok (s : stateT) : set token :=
+  Definition tok (s : state) : set token :=
       change_tokens (state_I s)
     ∪ match state_phase s with Low => ∅ | High => {[ Send ]} end.
 
-  Canonical Structure sts := sts.STS trans tok.
+  Canonical Structure sts := sts.STS prim_step tok.
 
   (* The set of states containing some particular i *)
-  Definition i_states (i : gname) : set stateT :=
+  Definition i_states (i : gname) : set state :=
     mkSet (λ s, i ∈ state_I s).
 
   Lemma i_states_closed i :
@@ -62,7 +61,7 @@ Module barrier_proto.
   Qed.
 
   (* The set of low states *)
-  Definition low_states : set stateT :=
+  Definition low_states : set state :=
     mkSet (λ s, if state_phase s is Low then True else False).
 
   Lemma low_states_closed : sts.closed low_states {[ Send ]}.
@@ -161,7 +160,7 @@ Section proof.
 
   Local Notation state_to_val s :=
     (match s with State Low _ => 0 | State High _ => 1 end).
-  Definition barrier_inv (l : loc) (P : iProp) (s : stateT) : iProp :=
+  Definition barrier_inv (l : loc) (P : iProp) (s : state) : iProp :=
     (l ↦ '(state_to_val s) ★
      match s with State Low I' => waiting P I' | State High I' => ress I' end
     )%I.
@@ -181,18 +180,14 @@ Section proof.
     (∃ γ, barrier_ctx γ l P ★ sts_ownS γ low_states {[ Send ]})%I.
 
   Global Instance send_ne n l : Proper (dist n ==> dist n) (send l).
-  Proof. (* TODO: This really ought to be doable by an automatic tactic. it is just application of already regostered congruence lemmas. *)
-    move=>? ? EQ. rewrite /send. apply exist_ne=>γ. by rewrite EQ.
-  Qed.
-
+  Proof. intros P1 P2 HP. rewrite /send. by setoid_rewrite HP. Qed.
+ 
   Definition recv (l : loc) (R : iProp) : iProp :=
     (∃ γ P Q i, barrier_ctx γ l P ★ sts_ownS γ (i_states i) {[ Change i ]} ★
         saved_prop_own i Q ★ ▷(Q -★ R))%I.
 
   Global Instance recv_ne n l : Proper (dist n ==> dist n) (recv l).
-  Proof.
-    move=>? ? EQ. rewrite /send. do 4 apply exist_ne=>?. by rewrite EQ.
-  Qed.
+  Proof. intros R1 R2 HR. rewrite /recv. by setoid_rewrite HR. Qed.
 
   Lemma waiting_split i i1 i2 Q R1 R2 P I :
     i ∈ I → i1 ∉ I → i2 ∉ I → i1 ≠ i2 →
