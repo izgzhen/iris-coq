@@ -670,6 +670,8 @@ Proof.
   apply wand_intro_l. rewrite ![(_ ★ P)%I]comm -assoc.
   apply sep_mono_r, wand_elim_r.
 Qed.
+Lemma wand_diag P : (P -★ P)%I ≡ True%I.
+Proof. apply (anti_symm _); auto. apply wand_intro_l; by rewrite right_id. Qed.
 Lemma sep_and P Q : (P ★ Q) ⊑ (P ∧ Q).
 Proof. auto. Qed.
 Lemma impl_wand P Q : (P → Q) ⊑ (P -★ Q).
