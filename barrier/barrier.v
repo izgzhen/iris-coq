@@ -170,21 +170,19 @@ Section proof.
       saved_prop_own i Q ★ ▷ (Q -★ R))%I.
 
   (** Setoids *)
+  (* These lemmas really ought to be doable by just calling a tactic.
+     It is just application of already registered congruence lemmas. *)
   Global Instance waiting_ne n : Proper (dist n ==> (=) ==> dist n) waiting.
   Proof. intros P1 P2 HP I1 I2 ->. rewrite /waiting. by setoid_rewrite HP. Qed.
-
   Global Instance barrier_inv_ne n l :
     Proper (dist n ==> pointwise_relation _ (dist n)) (barrier_inv l).
   Proof.
     intros P1 P2 HP [[] ]; rewrite /barrier_inv //=. by setoid_rewrite HP.
   Qed.
-
   Global Instance barrier_ctx_ne n γ l : Proper (dist n ==> dist n) (barrier_ctx γ l).
   Proof. intros P1 P2 HP. rewrite /barrier_ctx. by setoid_rewrite HP. Qed.
-
   Global Instance send_ne n l : Proper (dist n ==> dist n) (send l).
   Proof. intros P1 P2 HP. rewrite /send. by setoid_rewrite HP. Qed.
-
   Global Instance recv_ne n l : Proper (dist n ==> dist n) (recv l).
   Proof. intros R1 R2 HR. rewrite /recv. by setoid_rewrite HR. Qed.
 
