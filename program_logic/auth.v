@@ -14,16 +14,25 @@ Instance authGF_inGF (A : cmraT) `{inGF Λ Σ (authGF A)}
   `{CMRAIdentity A, ∀ a : A, Timeless a} : authG Λ Σ A.
 Proof. split; try apply _. apply: inGF_inG. Qed.
 
-Section definitions.
-  Context `{authG Λ Σ A} (γ : gname).
-  (* TODO: Once we switched to RAs, it is no longer necessary to remember that a
+Definition auth_own_def `{authG Λ Σ A} (γ : gname) (a : A) : iPropG Λ Σ :=
+  own γ (◯ a).
+(* Perform sealing *)
+Module Type AuthOwnSig.
+  Parameter auth_own : ∀ `{authG Λ Σ A} (γ : gname) (a : A), iPropG Λ Σ.
+  Axiom auth_own_eq : @auth_own = @auth_own_def.
+End AuthOwnSig.
+Module Export AuthOwn : AuthOwnSig.
+  Definition auth_own := @auth_own_def.
+  Definition auth_own_eq := Logic.eq_refl (@auth_own).
+End AuthOwn. 
+
+(* TODO: Once we switched to RAs, it is no longer necessary to remember that a
      is constantly valid. *)
-  Definition auth_inv (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
-    (∃ a, (■ ✓ a ∧ own γ (● a)) ★ φ a)%I.
-  Definition auth_own (a : A) : iPropG Λ Σ := own γ (◯ a).
-  Definition auth_ctx (N : namespace) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
-    inv N (auth_inv φ).
-End definitions.
+Definition auth_inv`{authG Λ Σ A} (γ : gname) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
+  (∃ a, (■ ✓ a ∧ own γ (● a)) ★ φ a)%I.
+Definition auth_ctx`{authG Λ Σ A} (γ : gname) (N : namespace) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
+  inv N (auth_inv γ φ).
+
 Instance: Params (@auth_inv) 6.
 Instance: Params (@auth_own) 6.
 Instance: Params (@auth_ctx) 7.
@@ -37,14 +46,17 @@ Section auth.
   Implicit Types γ : gname.
 
   Global Instance auth_own_ne n γ : Proper (dist n ==> dist n) (auth_own γ).
-  Proof. by rewrite /auth_own=> a b ->. Qed.
+  Proof. by rewrite auth_own_eq /auth_own_def=> a b ->. Qed.
   Global Instance auth_own_proper γ : Proper ((≡) ==> (≡)) (auth_own γ).
-  Proof. by rewrite /auth_own=> a b ->. Qed.
+  Proof. by rewrite auth_own_eq /auth_own_def=> a b ->. Qed.
+  Global Instance auth_own_timeless γ a : TimelessP (auth_own γ a).
+  Proof. rewrite auth_own_eq. apply _. Qed.
+
   Lemma auth_own_op γ a b :
     auth_own γ (a ⋅ b) ≡ (auth_own γ a ★ auth_own γ b)%I.
-  Proof. by rewrite /auth_own -own_op auth_frag_op. Qed.
+  Proof. by rewrite auth_own_eq /auth_own_def -own_op auth_frag_op. Qed.
   Lemma auth_own_valid γ a : auth_own γ a ⊑ ✓ a.
-  Proof. by rewrite /auth_own own_valid auth_validI. Qed.
+  Proof. by rewrite auth_own_eq /auth_own_def own_valid auth_validI. Qed.
 
   Lemma auth_alloc E N a :
     ✓ a → nclose N ⊆ E →
@@ -57,13 +69,13 @@ Section auth.
     trans (▷ auth_inv γ φ ★ auth_own γ a)%I.
     { rewrite /auth_inv -(exist_intro a) later_sep.
       rewrite const_equiv // left_id. ecancel [▷ φ _]%I.
-      by rewrite -later_intro /auth_own -own_op auth_both_op. }
+      by rewrite -later_intro auth_own_eq -own_op auth_both_op. }
     rewrite (inv_alloc N) /auth_ctx pvs_frame_r. apply pvs_mono.
     by rewrite always_and_sep_l.
   Qed.
 
   Lemma auth_empty γ E : True ⊑ (|={E}=> auth_own γ ∅).
-  Proof. by rewrite /auth_own -own_update_empty. Qed.
+  Proof. by rewrite auth_own_eq -own_update_empty. Qed.
 
   Lemma auth_opened E γ a :
     (▷ auth_inv γ φ ★ auth_own γ a)
@@ -72,7 +84,7 @@ Section auth.
     rewrite /auth_inv. rewrite later_exist sep_exist_r. apply exist_elim=>b.
     rewrite later_sep [(▷(_ ∧ _))%I]pvs_timeless !pvs_frame_r. apply pvs_mono.
     rewrite always_and_sep_l -!assoc. apply const_elim_sep_l=>Hv.
-    rewrite /auth_own [(▷φ _ ★ _)%I]comm assoc -own_op.
+    rewrite auth_own_eq [(▷φ _ ★ _)%I]comm assoc -own_op.
     rewrite own_valid_r auth_validI /= and_elim_l sep_exist_l sep_exist_r /=.
     apply exist_elim=>a'.
     rewrite left_id -(exist_intro a').
@@ -88,7 +100,7 @@ Section auth.
     (▷ φ (L a ⋅ a') ★ own γ (● (a ⋅ a') ⋅ ◯ a))
     ⊑ (|={E}=> ▷ auth_inv γ φ ★ auth_own γ (L a)).
   Proof.
-    intros HL Hv. rewrite /auth_inv /auth_own -(exist_intro (L a ⋅ a')).
+    intros HL Hv. rewrite /auth_inv auth_own_eq -(exist_intro (L a ⋅ a')).
     (* TODO it would be really nice to use cancel here *)
     rewrite later_sep [(_ ★ ▷φ _)%I]comm -assoc.
     rewrite -pvs_frame_l. apply sep_mono; first done.
