@@ -86,12 +86,14 @@ Section heap.
       apply to_heap_valid. }
     apply pvs_mono, exist_elim=> γ.
     rewrite -(exist_intro (HeapG _ _ γ)); apply and_mono_r.
+    rewrite /heap_mapsto_def /heap_name.
     induction σ as [|l v σ Hl IH] using map_ind.
     { rewrite big_sepM_empty; apply True_intro. }
     rewrite to_heap_insert big_sepM_insert //.
     rewrite (map_insert_singleton_op (to_heap σ));
       last rewrite lookup_fmap Hl; auto.
-    by rewrite auth_own_op IH.
+    (* FIXME: investigate why we have to unfold auth_own here. *)
+    by rewrite auth_own_op IH auth_own_eq. 
   Qed.
 
   Context `{heapG Σ}.
