@@ -61,6 +61,8 @@ Arguments optionC : clear implicits.
 Section cmra.
 Context {A : cmraT}.
 
+Instance option_valid : Valid (option A) := λ mx,
+  match mx with Some x => ✓ x | None => True end.
 Instance option_validN : ValidN (option A) := λ n mx,
   match mx with Some x => ✓{n} x | None => True end.
 Global Instance option_empty : Empty (option A) := None.
@@ -93,6 +95,7 @@ Proof.
   - by destruct 1; constructor; cofe_subst.
   - by destruct 1; rewrite /validN /option_validN //=; cofe_subst.
   - by destruct 1; inversion_clear 1; constructor; cofe_subst.
+  - intros [x|]; [apply cmra_valid_validN|done].
   - intros n [x|]; unfold validN, option_validN; eauto using cmra_validN_S.
   - intros [x|] [y|] [z|]; constructor; rewrite ?assoc; auto.
   - intros [x|] [y|]; constructor; rewrite 1?comm; auto.
@@ -158,7 +161,7 @@ Qed.
 Lemma option_update_None `{Empty A, !CMRAIdentity A} : ∅ ~~> Some ∅.
 Proof.
   intros n [x|] ?; rewrite /op /cmra_op /validN /cmra_validN /= ?left_id;
-    auto using cmra_empty_valid.
+    auto using cmra_empty_validN.
 Qed.
 End cmra.
 Arguments optionRA : clear implicits.

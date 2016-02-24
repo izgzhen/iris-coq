@@ -1,5 +1,6 @@
 From algebra Require Export excl.
 From algebra Require Import functor upred.
+Local Arguments valid _ _ !_ /.
 Local Arguments validN _ _ _ !_ /.
 
 Record auth (A : Type) : Type := Auth { authoritative : excl A ; own : A }.
@@ -66,6 +67,13 @@ Implicit Types a b : A.
 Implicit Types x y : auth A.
 
 Global Instance auth_empty `{Empty A} : Empty (auth A) := Auth ∅ ∅.
+Instance auth_valid : Valid (auth A) := λ x,
+  match authoritative x with
+  | Excl a => own x ≼ a ∧ ✓ a
+  | ExclUnit => ✓ own x
+  | ExclBot => False
+  end.
+Global Arguments auth_valid !_ /.
 Instance auth_validN : ValidN (auth A) := λ n x,
   match authoritative x with
   | Excl a => own x ≼{n} a ∧ ✓{n} a
@@ -105,6 +113,8 @@ Proof.
       destruct Hx; intros ?; cofe_subst; auto.
   - by intros n x1 x2 [Hx Hx'] y1 y2 [Hy Hy'];
       split; simpl; rewrite ?Hy ?Hy' ?Hx ?Hx'.
+  - intros [[] ?]; rewrite /= ?cmra_included_includedN ?cmra_valid_validN;
+      naive_solver eauto using O.
   - intros n [[] ?] ?; naive_solver eauto using cmra_includedN_S, cmra_validN_S.
   - by split; simpl; rewrite assoc.
   - by split; simpl; rewrite comm.
@@ -169,7 +179,7 @@ Lemma auth_local_update L `{!LocalUpdate Lv L} a a' :
   Lv a → ✓ L a' →
   ● a' ⋅ ◯ a ~~> ● L a' ⋅ ◯ L a.
 Proof.
-  intros. apply auth_update=>n af ? EQ; split; last done.
+  intros. apply auth_update=>n af ? EQ; split; last by apply cmra_valid_validN.
   by rewrite EQ (local_updateN L) // -EQ.
 Qed.
 
@@ -188,7 +198,7 @@ Lemma auth_local_update_l L `{!LocalUpdate Lv L} a a' :
   Lv a → ✓ (L a ⋅ a') →
   ● (a ⋅ a') ⋅ ◯ a ~~> ● (L a ⋅ a') ⋅ ◯ L a.
 Proof.
-  intros. apply auth_update=>n af ? EQ; split; last done.
+  intros. apply auth_update=>n af ? EQ; split; last by apply cmra_valid_validN.
   by rewrite -(local_updateN L) // EQ -(local_updateN L) // -EQ.
 Qed.
 

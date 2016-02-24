@@ -334,15 +334,15 @@ Proof. intros T1 T2 HT. by rewrite /sts_frag_up HT. Qed.
 
 (** Validity *)
 Lemma sts_auth_valid s T : ✓ sts_auth s T ↔ tok s ∩ T ≡ ∅.
-Proof. split. by move=> /(_ 0). by intros ??. Qed.
+Proof. done. Qed.
 Lemma sts_frag_valid S T : ✓ sts_frag S T ↔ closed S T ∧ S ≢ ∅.
-Proof. split. by move=> /(_ 0). by intros ??. Qed.
+Proof. done. Qed.
 Lemma sts_frag_up_valid s T : tok s ∩ T ≡ ∅ → ✓ sts_frag_up s T.
 Proof. intros. by apply sts_frag_valid; auto using closed_up, up_non_empty. Qed.
 
 Lemma sts_auth_frag_valid_inv s S T1 T2 :
   ✓ (sts_auth s T1 ⋅ sts_frag S T2) → s ∈ S.
-Proof. by move=> /(_ 0) [? [? Hdisj]]; inversion Hdisj. Qed.
+Proof. by intros (?&?&Hdisj); inversion Hdisj. Qed.
 
 (** Op *)
 Lemma sts_op_auth_frag s S T :
@@ -350,11 +350,7 @@ Lemma sts_op_auth_frag s S T :
 Proof.
   intros; split; [split|constructor; set_solver]; simpl.
   - intros (?&?&?); by apply closed_disjoint with S.
-  - intros; split_and?.
-    + set_solver+.
-    + done.
-    + set_solver.
-    + constructor; set_solver.
+  - intros; split_and?; last constructor; set_solver.
 Qed.
 Lemma sts_op_auth_frag_up s T :
   sts_auth s ∅ ⋅ sts_frag_up s T ≡ sts_auth s T.

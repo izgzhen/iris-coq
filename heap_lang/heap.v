@@ -57,7 +57,7 @@ Section heap.
     apply map_eq=>l. rewrite lookup_omap lookup_fmap. by case (σ !! l).
   Qed.
   Lemma to_heap_valid σ : ✓ to_heap σ.
-  Proof. intros n l. rewrite lookup_fmap. by case (σ !! l). Qed.
+  Proof. intros l. rewrite lookup_fmap. by case (σ !! l). Qed.
   Lemma of_heap_insert l v h : of_heap (<[l:=Excl v]> h) = <[l:=v]> (of_heap h).
   Proof. by rewrite /of_heap -(omap_insert _ _ _ (Excl v)). Qed.
   Lemma to_heap_insert l v σ : to_heap (<[l:=v]> σ) = <[l:=Excl v]> (to_heap σ).
@@ -65,13 +65,13 @@ Section heap.
   Lemma of_heap_None h l :
     ✓ h → of_heap h !! l = None → h !! l = None ∨ h !! l ≡ Some ExclUnit.
   Proof.
-    move=> /(_ O l). rewrite /of_heap lookup_omap.
+    move=> /(_ l). rewrite /of_heap lookup_omap.
     by case: (h !! l)=> [[]|]; auto.
   Qed.
   Lemma heap_singleton_inv_l h l v :
     ✓ ({[l := Excl v]} ⋅ h) → h !! l = None ∨ h !! l ≡ Some ExclUnit.
   Proof.
-    move=> /(_ O l). rewrite lookup_op lookup_singleton.
+    move=> /(_ l). rewrite lookup_op lookup_singleton.
     by case: (h !! l)=> [[]|]; auto.
   Qed.
 

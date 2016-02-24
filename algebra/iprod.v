@@ -118,6 +118,7 @@ Section iprod_cmra.
 
   Instance iprod_op : Op (iprod B) := λ f g x, f x ⋅ g x.
   Instance iprod_unit : Unit (iprod B) := λ f x, unit (f x).
+  Instance iprod_valid : Valid (iprod B) := λ f, ∀ x, ✓ f x.
   Instance iprod_validN : ValidN (iprod B) := λ n f, ∀ x, ✓{n} f x.
   Instance iprod_minus : Minus (iprod B) := λ f g x, f x ⩪ g x.
 
@@ -140,6 +141,9 @@ Section iprod_cmra.
     - by intros n f1 f2 Hf x; rewrite iprod_lookup_unit (Hf x).
     - by intros n f1 f2 Hf ? x; rewrite -(Hf x).
     - by intros n f f' Hf g g' Hg i; rewrite iprod_lookup_minus (Hf i) (Hg i).
+    - intros g; split.
+      + intros Hg n i; apply cmra_valid_validN, Hg.
+      + intros Hg i; apply cmra_valid_validN=> n; apply Hg.
     - intros n f Hf x; apply cmra_validN_S, Hf.
     - by intros f1 f2 f3 x; rewrite iprod_lookup_op assoc.
     - by intros f1 f2 x; rewrite iprod_lookup_op comm.
@@ -160,7 +164,7 @@ Section iprod_cmra.
     (∀ x, CMRAIdentity (B x)) → CMRAIdentity iprodRA.
   Proof.
     intros ?; split.
-    - intros n x; apply cmra_empty_valid.
+    - intros x; apply cmra_empty_valid.
     - by intros f x; rewrite iprod_lookup_op left_id.
     - by apply _.
   Qed.
@@ -204,7 +208,7 @@ Section iprod_cmra.
     split; [by move=>/(_ x); rewrite iprod_lookup_singleton|].
     move=>Hx x'; destruct (decide (x = x')) as [->|];
       rewrite ?iprod_lookup_singleton ?iprod_lookup_singleton_ne //.
-    by apply cmra_empty_valid.
+    by apply cmra_empty_validN.
   Qed.
 
   Lemma iprod_unit_singleton x (y : B x) :
