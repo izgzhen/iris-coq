@@ -16,14 +16,11 @@ Proof. split; try apply _. apply: inGF_inG. Qed.
 Definition auth_own_def `{authG Λ Σ A} (γ : gname) (a : A) : iPropG Λ Σ :=
   own γ (◯ a).
 (* Perform sealing *)
-Module Type AuthOwnSig.
-  Parameter auth_own : ∀ `{authG Λ Σ A} (γ : gname) (a : A), iPropG Λ Σ.
-  Axiom auth_own_eq : @auth_own = @auth_own_def.
-End AuthOwnSig.
-Module Export AuthOwn : AuthOwnSig.
-  Definition auth_own := @auth_own_def.
-  Definition auth_own_eq := Logic.eq_refl (@auth_own).
-End AuthOwn. 
+Definition auth_own_aux : { x : _ & x = @auth_own_def }.
+  exact (existT _ Logic.eq_refl). Qed.
+Definition auth_own := projT1 auth_own_aux.
+Definition auth_own_eq : @auth_own = @auth_own_def := projT2 auth_own_aux.
+Arguments auth_own {_ _ _ _ _} _ _.
 
 Definition auth_inv `{authG Λ Σ A}
     (γ : gname) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
