@@ -14,30 +14,26 @@ Instance inGF_stsG sts `{inGF Λ Σ (stsGF sts)}
 Proof. split; try apply _. apply: inGF_inG. Qed.
 
 Definition sts_ownS_def `{i : stsG Λ Σ sts} (γ : gname)
-           (S : sts.states sts) (T : sts.tokens sts) : iPropG Λ Σ:=
+    (S : sts.states sts) (T : sts.tokens sts) : iPropG Λ Σ:=
   own γ (sts_frag S T).
 (* Perform sealing. *)
-Definition sts_ownS_aux : { x : _ & x = @sts_ownS_def }.
-  exact (existT _ Logic.eq_refl). Qed.
-Definition sts_ownS := projT1 sts_ownS_aux.
-Definition sts_ownS_eq : @sts_ownS = @sts_ownS_def := projT2 sts_ownS_aux.
-Arguments sts_ownS {_ _ _ _} _ _ _.
+Definition sts_ownS_aux : { x | x = @sts_ownS_def }. by eexists. Qed.
+Definition sts_ownS {Λ Σ sts i} := proj1_sig sts_ownS_aux Λ Σ sts i.
+Definition sts_ownS_eq : @sts_ownS = @sts_ownS_def := proj2_sig sts_ownS_aux.
 
 Definition sts_own_def `{i : stsG Λ Σ sts} (γ : gname)
-           (s : sts.state sts) (T : sts.tokens sts) : iPropG Λ Σ :=
+    (s : sts.state sts) (T : sts.tokens sts) : iPropG Λ Σ :=
   own γ (sts_frag_up s T).
 (* Perform sealing. *)
-Definition sts_own_aux : { x : _ & x = @sts_own_def }.
-  exact (existT _ Logic.eq_refl). Qed.
-Definition sts_own := projT1 sts_own_aux.
-Definition sts_own_eq : @sts_own = @sts_own_def := projT2 sts_own_aux.
-Arguments sts_own {_ _ _ _} _ _ _.
+Definition sts_own_aux : { x | x = @sts_own_def }. by eexists. Qed.
+Definition sts_own {Λ Σ sts i} := proj1_sig sts_own_aux Λ Σ sts i.
+Definition sts_own_eq : @sts_own = @sts_own_def := proj2_sig sts_own_aux.
 
 Definition sts_inv `{i : stsG Λ Σ sts} (γ : gname)
-           (φ : sts.state sts → iPropG Λ Σ) : iPropG Λ Σ :=
+    (φ : sts.state sts → iPropG Λ Σ) : iPropG Λ Σ :=
   (∃ s, own γ (sts_auth s ∅) ★ φ s)%I.
 Definition sts_ctx `{i : stsG Λ Σ sts} (γ : gname)
-           (N : namespace) (φ: sts.state sts → iPropG Λ Σ) : iPropG Λ Σ :=
+    (N : namespace) (φ: sts.state sts → iPropG Λ Σ) : iPropG Λ Σ :=
   inv N (sts_inv γ φ).
 
 Instance: Params (@sts_inv) 5.

@@ -16,11 +16,9 @@ Proof. split; try apply _. apply: inGF_inG. Qed.
 Definition auth_own_def `{authG Λ Σ A} (γ : gname) (a : A) : iPropG Λ Σ :=
   own γ (◯ a).
 (* Perform sealing *)
-Definition auth_own_aux : { x : _ & x = @auth_own_def }.
-  exact (existT _ Logic.eq_refl). Qed.
-Definition auth_own := projT1 auth_own_aux.
-Definition auth_own_eq : @auth_own = @auth_own_def := projT2 auth_own_aux.
-Arguments auth_own {_ _ _ _ _} _ _.
+Definition auth_own_aux : { x | x = @auth_own_def }. by eexists. Qed.
+Definition auth_own {Λ Σ A Ae a} := proj1_sig auth_own_aux Λ Σ A Ae a.
+Definition auth_own_eq : @auth_own = @auth_own_def := proj2_sig auth_own_aux.
 
 Definition auth_inv `{authG Λ Σ A}
     (γ : gname) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=

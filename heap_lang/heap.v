@@ -25,11 +25,10 @@ matching it against other forms of ownership. *)
 Definition heap_mapsto_def `{heapG Σ} (l : loc) (v: val) : iPropG heap_lang Σ :=
   auth_own heap_name {[ l := Excl v ]}.
 (* Perform sealing *)
-Definition heap_mapsto_aux : { x : _ & x = @heap_mapsto_def }.
-  exact (existT _ Logic.eq_refl). Qed.
-Definition heap_mapsto := projT1 heap_mapsto_aux.
-Definition heap_mapsto_eq : @heap_mapsto = @heap_mapsto_def := projT2 heap_mapsto_aux.
-Arguments heap_mapsto {_ _} _ _.
+Definition heap_mapsto_aux : { x | x = @heap_mapsto_def }. by eexists. Qed.
+Definition heap_mapsto {Σ h} := proj1_sig heap_mapsto_aux Σ h.
+Definition heap_mapsto_eq :
+  @heap_mapsto = @heap_mapsto_def := proj2_sig heap_mapsto_aux.
 
 Definition heap_inv `{i : heapG Σ} (h : heapRA) : iPropG heap_lang Σ :=
   ownP (of_heap h).
