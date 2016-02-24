@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse, pprint, subprocess, sys
 import requests
+import parse_log
 
 def first(it):
     for i in it:
@@ -12,7 +13,7 @@ def req(path):
     return requests.get(url, headers={'PRIVATE-TOKEN': args.private_token})
 
 # read command-line arguments
-parser = argparse.ArgumentParser(description='Update and build a bunch of stuff')
+parser = argparse.ArgumentParser(description='Extract iris-coq build logs from GitLab')
 parser.add_argument("-t", "--private-token",
                     dest="private_token", required=True,
                     help="The private token used to authenticate access.")
