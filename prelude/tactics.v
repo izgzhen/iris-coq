@@ -228,6 +228,73 @@ Ltac setoid_subst :=
   | H : @equiv ?A ?e _ ?x |- _ => symmetry in H; setoid_subst_aux (@equiv A e) x
   end.
 
+(** f_equiv solves goals of the form "f _ = f _", for any relation and any
+    number of arguments, by looking for appropriate "Proper" instances.
+    If it cannot solve an equality, it will leave that to the user. *)
+Ltac f_equiv :=
+  (* Deal with "pointwise_relation" *)
+  try lazymatch goal with
+    | |- pointwise_relation _ _ _ _ => intros ?
+    end;
+  (* repeatedly apply congruence lemmas and use the equalities in the hypotheses. *)
+  first [ reflexivity | assumption | symmetry; assumption |
+          match goal with
+          (* We support matches on both sides, *if* they concern the same
+             or provably equal variables.
+             TODO: We should support different variables, provided that we can
+             derive contradictions for the off-diagonal cases. *)
+          | |- ?R (match ?x with _ => _ end) (match ?x with _ => _ end) =>
+            destruct x; f_equiv
+          | |- ?R (match ?x with _ => _ end) (match ?y with _ => _ end) =>
+            subst y; f_equiv
+          (* First assume that the arguments need the same relation as the result *)
+          | |- ?R (?f ?x) (?f _) =>
+            let H := fresh "Proper" in
+            assert (Proper (R ==> R) f) as H by (eapply _);
+            apply H; clear H; f_equiv
+          | |- ?R (?f ?x ?y) (?f _ _) =>
+            let H := fresh "Proper" in
+            assert (Proper (R ==> R ==> R) f) as H by (eapply _);
+            apply H; clear H; f_equiv
+          (* Next, try to infer the relation *)
+          (* TODO: If some of the arguments are the same, we could also
+             query for "pointwise_relation"'s. But that leads to a combinatorial
+             explosion about which arguments are and which are not the same. *)
+          | |- ?R (?f ?x) (?f _) =>
+            let R1 := fresh "R" in let H := fresh "Proper" in
+            let T := type of x in evar (R1: relation T);
+            assert (Proper (R1 ==> R) f) as H by (subst R1; eapply _);
+            subst R1; apply H; clear H; f_equiv
+          | |- ?R (?f ?x ?y) (?f _ _) =>
+            let R1 := fresh "R" in let R2 := fresh "R" in
+            let H := fresh "Proper" in
+            let T1 := type of x in evar (R1: relation T1);
+            let T2 := type of y in evar (R2: relation T2);
+            assert (Proper (R1 ==> R2 ==> R) f) as H by (subst R1 R2; eapply _);
+            subst R1 R2; apply H; clear H; f_equiv
+         end | idtac (* Let the user solve this goal *)
+        ].
+
+(** solve_proper solves goals of the form "Proper (R1 ==> R2)", for any
+    number of relations. All the actual work is done by f_equiv;
+    solve_proper just introduces the assumptions and unfolds the first
+    head symbol. *)
+Ltac solve_proper :=
+  (* Introduce everything *)
+  intros;
+  repeat lazymatch goal with
+         | |- Proper _ _ => intros ???
+         | |- (_ ==> _)%signature _ _ => intros ???
+         end;
+  (* Unfold the head symbol, which is the one we are proving a new property about *)
+  lazymatch goal with
+  | |- ?R (?f _ _ _ _) (?f _ _ _ _) => unfold f
+  | |- ?R (?f _ _ _) (?f _ _ _) => unfold f
+  | |- ?R (?f _ _) (?f _ _) => unfold f
+  | |- ?R (?f _) (?f _) => unfold f
+  end;
+  solve [ f_equiv ].
+
 (** The tactic [intros_revert tac] introduces all foralls/arrows, performs tac,
 and then reverts them. *)
 Ltac intros_revert tac :=

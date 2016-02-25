@@ -648,7 +648,7 @@ Proof. intros; apply (anti_symm _); auto using const_intro. Qed.
 Lemma equiv_eq {A : cofeT} P (a b : A) : a ≡ b → P ⊑ (a ≡ b).
 Proof. intros ->; apply eq_refl. Qed.
 Lemma eq_sym {A : cofeT} (a b : A) : (a ≡ b) ⊑ (b ≡ a).
-Proof. apply (eq_rewrite a b (λ b, b ≡ a)%I); auto using eq_refl. solve_ne. Qed.
+Proof. apply (eq_rewrite a b (λ b, b ≡ a)%I); auto using eq_refl. solve_proper. Qed.
 
 (* BI connectives *)
 Lemma sep_mono P P' Q Q' : P ⊑ Q → P' ⊑ Q' → (P ★ P') ⊑ (Q ★ Q').
