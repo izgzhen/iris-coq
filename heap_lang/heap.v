@@ -194,11 +194,13 @@ Section heap.
       with N heap_name {[ l := Excl v1 ]}; simpl; eauto 10 with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
     rewrite -assoc discrete_valid; apply const_elim_sep_l=> ?.
-    rewrite -(wp_cas_suc_pst _ (<[l:=v1]>(of_heap h))) ?lookup_insert //.
+    rewrite -(wp_cas_suc_pst _ (<[l:=v1]>(of_heap h))) //;
+      last by rewrite lookup_insert.
     rewrite /heap_inv alter_singleton insert_insert.
     rewrite -!(map_insert_singleton_op h); try by eapply heap_singleton_inv_l.
-    rewrite -!of_heap_insert const_equiv;
-      last (split; [naive_solver|by eapply map_insert_valid, cmra_valid_op_r]).
+    rewrite -!of_heap_insert const_equiv; last first.
+    { split; last by eapply map_insert_valid, cmra_valid_op_r.
+      eexists; rewrite lookup_insert; naive_solver. }
     apply sep_mono_r, later_mono, wand_intro_l. by rewrite left_id -later_intro.
   Qed.
 End heap.
