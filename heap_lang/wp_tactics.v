@@ -3,8 +3,6 @@ From heap_lang Require Export tactics substitution.
 Import uPred.
 
 (** wp-specific helper tactics *)
-(* First try to productively strip off laters; if that fails, at least
-   cosmetically get rid of laters in the conclusion. *)
 Ltac wp_bind K :=
   lazymatch eval hnf in K with
   | [] => idtac
