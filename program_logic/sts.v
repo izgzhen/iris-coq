@@ -16,18 +16,17 @@ Proof. split; try apply _. apply: inGF_inG. Qed.
 Definition sts_ownS_def `{i : stsG Λ Σ sts} (γ : gname)
     (S : sts.states sts) (T : sts.tokens sts) : iPropG Λ Σ:=
   own γ (sts_frag S T).
-(* Perform sealing. *)
-Definition sts_ownS_aux : { x | x = @sts_ownS_def }. by eexists. Qed.
-Definition sts_ownS {Λ Σ sts i} := proj1_sig sts_ownS_aux Λ Σ sts i.
-Definition sts_ownS_eq : @sts_ownS = @sts_ownS_def := proj2_sig sts_ownS_aux.
+Definition sts_ownS_aux : seal (@sts_ownS_def). by eexists. Qed.
+Definition sts_ownS {Λ Σ sts i} := unseal sts_ownS_aux Λ Σ sts i.
+Definition sts_ownS_eq : @sts_ownS = @sts_ownS_def := seal_eq sts_ownS_aux.
 
 Definition sts_own_def `{i : stsG Λ Σ sts} (γ : gname)
     (s : sts.state sts) (T : sts.tokens sts) : iPropG Λ Σ :=
   own γ (sts_frag_up s T).
 (* Perform sealing. *)
-Definition sts_own_aux : { x | x = @sts_own_def }. by eexists. Qed.
-Definition sts_own {Λ Σ sts i} := proj1_sig sts_own_aux Λ Σ sts i.
-Definition sts_own_eq : @sts_own = @sts_own_def := proj2_sig sts_own_aux.
+Definition sts_own_aux : seal (@sts_own_def). by eexists. Qed.
+Definition sts_own {Λ Σ sts i} := unseal sts_own_aux Λ Σ sts i.
+Definition sts_own_eq : @sts_own = @sts_own_def := seal_eq sts_own_aux.
 
 Definition sts_inv `{i : stsG Λ Σ sts} (γ : gname)
     (φ : sts.state sts → iPropG Λ Σ) : iPropG Λ Σ :=

@@ -4,11 +4,11 @@ Import uPred.
 
 (** * Big ops over lists *)
 (* These are the basic building blocks for other big ops *)
-Fixpoint uPred_big_and {M} (Ps : list (uPred M)) : uPred M:=
+Fixpoint uPred_big_and {M} (Ps : list (uPred M)) {struct Ps} : uPred M:=
   match Ps with [] => True | P :: Ps => P ∧ uPred_big_and Ps end%I.
 Instance: Params (@uPred_big_and) 1.
 Notation "'Π∧' Ps" := (uPred_big_and Ps) (at level 20) : uPred_scope.
-Fixpoint uPred_big_sep {M} (Ps : list (uPred M)) : uPred M :=
+Fixpoint uPred_big_sep {M} (Ps : list (uPred M)) {struct Ps} : uPred M :=
   match Ps with [] => True | P :: Ps => P ★ uPred_big_sep Ps end%I.
 Instance: Params (@uPred_big_sep) 1.
 Notation "'Π★' Ps" := (uPred_big_sep Ps) (at level 20) : uPred_scope.

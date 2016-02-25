@@ -109,26 +109,26 @@ Instance uPred_entails_rewrite_relation M : RewriteRelation (@uPred_entails M).
 Program Definition uPred_const_def {M} (φ : Prop) : uPred M :=
   {| uPred_holds n x := φ |}.
 Solve Obligations with done.
-Definition uPred_const_aux : { x | x = @uPred_const_def }. by eexists. Qed.
-Definition uPred_const {M} := proj1_sig uPred_const_aux M.
+Definition uPred_const_aux : seal (@uPred_const_def). by eexists. Qed.
+Definition uPred_const {M} := unseal uPred_const_aux M.
 Definition uPred_const_eq :
-  @uPred_const = @uPred_const_def := proj2_sig uPred_const_aux.
+  @uPred_const = @uPred_const_def := seal_eq uPred_const_aux.
 
 Instance uPred_inhabited M : Inhabited (uPred M) := populate (uPred_const True).
 
 Program Definition uPred_and_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := P n x ∧ Q n x |}.
 Solve Obligations with naive_solver eauto 2 using uPred_ne, uPred_weaken.
-Definition uPred_and_aux : { x | x = @uPred_and_def }. by eexists. Qed.
-Definition uPred_and {M} := proj1_sig uPred_and_aux M.
-Definition uPred_and_eq: @uPred_and = @uPred_and_def := proj2_sig uPred_and_aux.
+Definition uPred_and_aux : seal (@uPred_and_def). by eexists. Qed.
+Definition uPred_and {M} := unseal uPred_and_aux M.
+Definition uPred_and_eq: @uPred_and = @uPred_and_def := seal_eq uPred_and_aux.
 
 Program Definition uPred_or_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := P n x ∨ Q n x |}.
 Solve Obligations with naive_solver eauto 2 using uPred_ne, uPred_weaken.
-Definition uPred_or_aux : { x | x = @uPred_or_def }. by eexists. Qed.
-Definition uPred_or {M} := proj1_sig uPred_or_aux M.
-Definition uPred_or_eq: @uPred_or = @uPred_or_def := proj2_sig uPred_or_aux.
+Definition uPred_or_aux : seal (@uPred_or_def). by eexists. Qed.
+Definition uPred_or {M} := unseal uPred_or_aux M.
+Definition uPred_or_eq: @uPred_or = @uPred_or_def := seal_eq uPred_or_aux.
 
 Program Definition uPred_impl_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ n' x',
@@ -141,32 +141,32 @@ Next Obligation.
   eauto using uPred_weaken, uPred_ne.
 Qed.
 Next Obligation. intros M P Q [|n] x1 x2; auto with lia. Qed.
-Definition uPred_impl_aux : { x | x = @uPred_impl_def }. by eexists. Qed.
-Definition uPred_impl {M} := proj1_sig uPred_impl_aux M.
+Definition uPred_impl_aux : seal (@uPred_impl_def). by eexists. Qed.
+Definition uPred_impl {M} := unseal uPred_impl_aux M.
 Definition uPred_impl_eq :
-  @uPred_impl = @uPred_impl_def := proj2_sig uPred_impl_aux.
+  @uPred_impl = @uPred_impl_def := seal_eq uPred_impl_aux.
 
 Program Definition uPred_forall_def {M A} (Ψ : A → uPred M) : uPred M :=
   {| uPred_holds n x := ∀ a, Ψ a n x |}.
 Solve Obligations with naive_solver eauto 2 using uPred_ne, uPred_weaken.
-Definition uPred_forall_aux : { x | x = @uPred_forall_def }. by eexists. Qed.
-Definition uPred_forall {M A} := proj1_sig uPred_forall_aux M A.
+Definition uPred_forall_aux : seal (@uPred_forall_def). by eexists. Qed.
+Definition uPred_forall {M A} := unseal uPred_forall_aux M A.
 Definition uPred_forall_eq :
-  @uPred_forall = @uPred_forall_def := proj2_sig uPred_forall_aux.
+  @uPred_forall = @uPred_forall_def := seal_eq uPred_forall_aux.
 
 Program Definition uPred_exist_def {M A} (Ψ : A → uPred M) : uPred M :=
   {| uPred_holds n x := ∃ a, Ψ a n x |}.
 Solve Obligations with naive_solver eauto 2 using uPred_ne, uPred_weaken.
-Definition uPred_exist_aux : { x | x = @uPred_exist_def }. by eexists. Qed.
-Definition uPred_exist {M A} := proj1_sig uPred_exist_aux M A.
-Definition uPred_exist_eq: @uPred_exist = @uPred_exist_def := proj2_sig uPred_exist_aux.
+Definition uPred_exist_aux : seal (@uPred_exist_def). by eexists. Qed.
+Definition uPred_exist {M A} := unseal uPred_exist_aux M A.
+Definition uPred_exist_eq: @uPred_exist = @uPred_exist_def := seal_eq uPred_exist_aux.
 
 Program Definition uPred_eq_def {M} {A : cofeT} (a1 a2 : A) : uPred M :=
   {| uPred_holds n x := a1 ≡{n}≡ a2 |}.
 Solve Obligations with naive_solver eauto 2 using (dist_le (A:=A)).
-Definition uPred_eq_aux : { x | x = @uPred_eq_def }. by eexists. Qed.
-Definition uPred_eq {M A} := proj1_sig uPred_eq_aux M A.
-Definition uPred_eq_eq: @uPred_eq = @uPred_eq_def := proj2_sig uPred_eq_aux.
+Definition uPred_eq_aux : seal (@uPred_eq_def). by eexists. Qed.
+Definition uPred_eq {M A} := unseal uPred_eq_aux M A.
+Definition uPred_eq_eq: @uPred_eq = @uPred_eq_def := seal_eq uPred_eq_aux.
 
 Program Definition uPred_sep_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∃ x1 x2, x ≡{n}≡ x1 ⋅ x2 ∧ P n x1 ∧ Q n x2 |}.
@@ -182,9 +182,9 @@ Next Obligation.
   - apply uPred_weaken with n1 x1; eauto using cmra_validN_op_l.
   - apply uPred_weaken with n1 x2; eauto using cmra_validN_op_r.
 Qed.
-Definition uPred_sep_aux : { x | x = @uPred_sep_def }. by eexists. Qed.
-Definition uPred_sep {M} := proj1_sig uPred_sep_aux M.
-Definition uPred_sep_eq: @uPred_sep = @uPred_sep_def := proj2_sig uPred_sep_aux.
+Definition uPred_sep_aux : seal (@uPred_sep_def). by eexists. Qed.
+Definition uPred_sep {M} := unseal uPred_sep_aux M.
+Definition uPred_sep_eq: @uPred_sep = @uPred_sep_def := seal_eq uPred_sep_aux.
 
 Program Definition uPred_wand_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ n' x',
@@ -199,10 +199,10 @@ Next Obligation.
   apply uPred_weaken with n3 (x1 ⋅ x3);
     eauto using cmra_validN_included, cmra_preserving_r.
 Qed.
-Definition uPred_wand_aux : { x | x = @uPred_wand_def }. by eexists. Qed.
-Definition uPred_wand {M} := proj1_sig uPred_wand_aux M.
+Definition uPred_wand_aux : seal (@uPred_wand_def). by eexists. Qed.
+Definition uPred_wand {M} := unseal uPred_wand_aux M.
 Definition uPred_wand_eq :
-  @uPred_wand = @uPred_wand_def := proj2_sig uPred_wand_aux.
+  @uPred_wand = @uPred_wand_def := seal_eq uPred_wand_aux.
 
 Program Definition uPred_always_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n (unit x) |}.
@@ -211,10 +211,10 @@ Next Obligation.
   intros M P n1 n2 x1 x2 ????; eapply uPred_weaken with n1 (unit x1);
     eauto using cmra_unit_preserving, cmra_unit_validN.
 Qed.
-Definition uPred_always_aux : { x | x = @uPred_always_def }. by eexists. Qed.
-Definition uPred_always {M} := proj1_sig uPred_always_aux M.
+Definition uPred_always_aux : seal (@uPred_always_def). by eexists. Qed.
+Definition uPred_always {M} := unseal uPred_always_aux M.
 Definition uPred_always_eq :
-  @uPred_always = @uPred_always_def := proj2_sig uPred_always_aux.
+  @uPred_always = @uPred_always_def := seal_eq uPred_always_aux.
 
 Program Definition uPred_later_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := match n return _ with 0 => True | S n' => P n' x end |}.
@@ -222,10 +222,10 @@ Next Obligation. intros M P [|n] ??; eauto using uPred_ne,(dist_le (A:=M)). Qed.
 Next Obligation.
   intros M P [|n1] [|n2] x1 x2; eauto using uPred_weaken,cmra_validN_S; try lia.
 Qed.
-Definition uPred_later_aux : { x | x = @uPred_later_def }. by eexists. Qed.
-Definition uPred_later {M} := proj1_sig uPred_later_aux M.
+Definition uPred_later_aux : seal (@uPred_later_def). by eexists. Qed.
+Definition uPred_later {M} := unseal uPred_later_aux M.
 Definition uPred_later_eq :
-  @uPred_later = @uPred_later_def := proj2_sig uPred_later_aux.
+  @uPred_later = @uPred_later_def := seal_eq uPred_later_aux.
 
 Program Definition uPred_ownM_def {M : cmraT} (a : M) : uPred M :=
   {| uPred_holds n x := a ≼{n} x |}.
@@ -234,18 +234,18 @@ Next Obligation.
   intros M a n1 n2 x1 x [a' Hx1] [x2 Hx] ??.
   exists (a' ⋅ x2). by rewrite (assoc op) -(dist_le _ _ _ _ Hx1) // Hx.
 Qed.
-Definition uPred_ownM_aux : { x | x = @uPred_ownM_def }. by eexists. Qed.
-Definition uPred_ownM {M} := proj1_sig uPred_ownM_aux M.
+Definition uPred_ownM_aux : seal (@uPred_ownM_def). by eexists. Qed.
+Definition uPred_ownM {M} := unseal uPred_ownM_aux M.
 Definition uPred_ownM_eq :
-  @uPred_ownM = @uPred_ownM_def := proj2_sig uPred_ownM_aux.
+  @uPred_ownM = @uPred_ownM_def := seal_eq uPred_ownM_aux.
 
 Program Definition uPred_valid_def {M A : cmraT} (a : A) : uPred M :=
   {| uPred_holds n x := ✓{n} a |}.
 Solve Obligations with naive_solver eauto 2 using cmra_validN_le.
-Definition uPred_valid_aux : { x | x = @uPred_valid_def }. by eexists. Qed.
-Definition uPred_valid {M A} := proj1_sig uPred_valid_aux M A.
+Definition uPred_valid_aux : seal (@uPred_valid_def). by eexists. Qed.
+Definition uPred_valid {M A} := unseal uPred_valid_aux M A.
 Definition uPred_valid_eq :
-  @uPred_valid = @uPred_valid_def := proj2_sig uPred_valid_aux.
+  @uPred_valid = @uPred_valid_def := seal_eq uPred_valid_aux.
 
 Notation "P ⊑ Q" := (uPred_entails P%I Q%I) (at level 70) : C_scope.
 Notation "(⊑)" := uPred_entails (only parsing) : C_scope.
@@ -283,11 +283,11 @@ Class AlwaysStable {M} (P : uPred M) := always_stable : P ⊑ □ P.
 Arguments always_stable {_} _ {_}.
 
 Module uPred.
-Definition unseal :=
+Definition unseal_eqs :=
   (uPred_const_eq, uPred_and_eq, uPred_or_eq, uPred_impl_eq, uPred_forall_eq,
   uPred_exist_eq, uPred_eq_eq, uPred_sep_eq, uPred_wand_eq, uPred_always_eq,
   uPred_later_eq, uPred_ownM_eq, uPred_valid_eq).
-Ltac unseal := rewrite !unseal.
+Ltac unseal := rewrite !unseal_eqs.
 
 Section uPred_logic.
 Context {M : cmraT}.

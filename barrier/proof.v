@@ -163,7 +163,7 @@ Proof.
     + apply pvs_mono.
       rewrite -sts_ownS_op; eauto using i_states_closed, low_states_closed.
       set_solver.
-    + intros []; set_solver.
+    + set_solver.
     + set_solver.
     + auto using sts.closed_op, i_states_closed, low_states_closed.
 Qed.
@@ -280,7 +280,7 @@ Proof.
     rewrite [(■ sts.steps _ _)%I]const_equiv; last by eauto using split_step.
     rewrite left_id -later_intro {1 3}/barrier_inv.
     (* FIXME ssreflect rewrite fails if there are evars around. Also, this is very slow because we don't have a proof mode. *)
-    rewrite -(waiting_split _ _ _ Q R1 R2); [|done..].
+    rewrite -(waiting_split _ _ _ Q R1 R2) //.
     rewrite {1}[saved_prop_own i1 _]always_sep_dup.
     rewrite {1}[saved_prop_own i2 _]always_sep_dup.
     ecancel [l ↦ _; saved_prop_own i1 _; saved_prop_own i2 _; waiting _ _;

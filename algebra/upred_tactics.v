@@ -9,7 +9,7 @@ Module upred_reflection. Section upred_reflection.
     | ETrue : expr
     | EVar : nat → expr
     | ESep : expr → expr → expr.
-  Fixpoint eval (Σ : list (uPred M)) (e : expr) : uPred M :=
+  Fixpoint eval (Σ : list (uPred M)) (e : expr) {struct e} : uPred M :=
     match e with
     | ETrue => True
     | EVar n => from_option True%I (Σ !! n)
@@ -27,7 +27,7 @@ Module upred_reflection. Section upred_reflection.
   Lemma eval_flatten Σ e : eval Σ e ≡ eval_list Σ (flatten e).
   Proof.
     induction e as [| |e1 IH1 e2 IH2];
-      rewrite /= ?right_id ?fmap_app ?big_sep_app ?IH1 ?IH2 //. 
+      rewrite /= ?right_id ?fmap_app ?big_sep_app ?IH1 ?IH2 //.
   Qed.
   Lemma flatten_entails Σ e1 e2 :
     flatten e2 `contains` flatten e1 → eval Σ e1 ⊑ eval Σ e2.

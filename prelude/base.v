@@ -10,6 +10,13 @@ Global Set Asymmetric Patterns.
 From Coq Require Export Morphisms RelationClasses List Bool Utf8 Program Setoid.
 Obligation Tactic := idtac.
 
+(** Sealing off definitions *)
+Set Primitive Projections.
+Inductive seal {A} (f : A) := { unseal : A; seal_eq : unseal = f }.
+Arguments unseal {_ _} _.
+Arguments seal_eq {_ _} _.
+Unset Primitive Projections.
+
 (** * General *)
 (** Zipping lists. *)
 Definition zip_with {A B C} (f : A → B → C) : list A → list B → list C :=

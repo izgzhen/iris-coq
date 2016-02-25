@@ -24,11 +24,10 @@ Definition of_heap : heapRA → state := omap (maybe Excl).
 matching it against other forms of ownership. *)
 Definition heap_mapsto_def `{heapG Σ} (l : loc) (v: val) : iPropG heap_lang Σ :=
   auth_own heap_name {[ l := Excl v ]}.
-(* Perform sealing *)
-Definition heap_mapsto_aux : { x | x = @heap_mapsto_def }. by eexists. Qed.
-Definition heap_mapsto {Σ h} := proj1_sig heap_mapsto_aux Σ h.
+Definition heap_mapsto_aux : seal (@heap_mapsto_def). by eexists. Qed.
+Definition heap_mapsto {Σ h} := unseal heap_mapsto_aux Σ h.
 Definition heap_mapsto_eq :
-  @heap_mapsto = @heap_mapsto_def := proj2_sig heap_mapsto_aux.
+  @heap_mapsto = @heap_mapsto_def := seal_eq heap_mapsto_aux.
 
 Definition heap_inv `{i : heapG Σ} (h : heapRA) : iPropG heap_lang Σ :=
   ownP (of_heap h).

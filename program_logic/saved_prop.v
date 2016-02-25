@@ -12,10 +12,10 @@ Definition saved_prop_own_def `{savedPropG Λ Σ}
     (γ : gname) (P : iPropG Λ Σ) : iPropG Λ Σ :=
   own γ (to_agree (Next (iProp_unfold P))).
 (* Perform sealing *)
-Definition saved_prop_own_aux : { x | x = @saved_prop_own_def }. by eexists. Qed.
-Definition saved_prop_own {Λ Σ s} := proj1_sig saved_prop_own_aux Λ Σ s.
+Definition saved_prop_own_aux : seal (@saved_prop_own_def). by eexists. Qed.
+Definition saved_prop_own {Λ Σ s} := unseal saved_prop_own_aux Λ Σ s.
 Definition saved_prop_own_eq :
-  @saved_prop_own = @saved_prop_own_def := proj2_sig saved_prop_own_aux.
+  @saved_prop_own = @saved_prop_own_def := seal_eq saved_prop_own_aux.
 
 Instance: Params (@saved_prop_own) 4.
 
