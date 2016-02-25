@@ -46,7 +46,7 @@ Proof. rewrite /ownP; apply _. Qed.
 
 (* ghost state *)
 Global Instance ownG_ne n : Proper (dist n ==> dist n) (@ownG Λ Σ).
-Proof. by intros m m' Hm; unfold ownG; rewrite Hm. Qed.
+Proof. solve_proper. Qed.
 Global Instance ownG_proper : Proper ((≡) ==> (≡)) (@ownG Λ Σ) := ne_proper _.
 Lemma ownG_op m1 m2 : ownG (m1 ⋅ m2) ≡ (ownG m1 ★ ownG m2)%I.
 Proof. by rewrite /ownG -uPred.ownM_op Res_op !left_id. Qed.

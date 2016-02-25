@@ -64,7 +64,7 @@ Qed.
 
 (** * Properties of own *)
 Global Instance own_ne γ n : Proper (dist n ==> dist n) (own γ).
-Proof. by intros m m' Hm; rewrite /own Hm. Qed.
+Proof. solve_proper. Qed.
 Global Instance own_proper γ : Proper ((≡) ==> (≡)) (own γ) := ne_proper _.
 
 Lemma own_op γ a1 a2 : own γ (a1 ⋅ a2) ≡ (own γ a1 ★ own γ a2)%I.

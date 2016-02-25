@@ -41,7 +41,7 @@ Proof. by intros HP HQ; rewrite /vs -HP HQ. Qed.
 
 Global Instance vs_mono' E1 E2 :
   Proper (flip (⊑) ==> (⊑) ==> (⊑)) (@vs Λ Σ E1 E2).
-Proof. by intros until 2; apply vs_mono. Qed.
+Proof. solve_proper. Qed.
 
 Lemma vs_false_elim E1 E2 P : False ={E1,E2}=> P.
 Proof. apply vs_alt, False_elim. Qed.

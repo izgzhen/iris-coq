@@ -30,13 +30,13 @@ Global Instance ht_ne E n :
 Proof. solve_proper. Qed.
 Global Instance ht_proper E :
   Proper ((≡) ==> eq ==> pointwise_relation _ (≡) ==> (≡)) (@ht Λ Σ E).
-Proof. by intros P P' HP e ? <- Φ Φ' HΦ; rewrite /ht HP; setoid_rewrite HΦ. Qed.
+Proof. solve_proper. Qed.
 Lemma ht_mono E P P' Φ Φ' e :
   P ⊑ P' → (∀ v, Φ' v ⊑ Φ v) → {{ P' }} e @ E {{ Φ' }} ⊑ {{ P }} e @ E {{ Φ }}.
 Proof. by intros; apply always_mono, impl_mono, wp_mono. Qed.
 Global Instance ht_mono' E :
   Proper (flip (⊑) ==> eq ==> pointwise_relation _ (⊑) ==> (⊑)) (@ht Λ Σ E).
-Proof. by intros P P' HP e ? <- Φ Φ' HΦ; apply ht_mono. Qed.
+Proof. solve_proper. Qed.
 
 Lemma ht_alt E P Φ e : (P ⊑ || e @ E {{ Φ }}) → {{ P }} e @ E {{ Φ }}.
 Proof.
