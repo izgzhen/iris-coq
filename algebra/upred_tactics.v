@@ -146,19 +146,10 @@ Tactic Notation "ecancel" open_constr(Ps) :=
        close Ps (@nil (uPred M)) ltac:(fun Qs => cancel Qs)
     end. 
 
-(* Some more generic uPred tactics.
-   TODO: Naming. *)
-
-Ltac revert_intros tac :=
-  lazymatch goal with
-  | |- ∀ _, _ => let H := fresh in intro H; revert_intros tac; revert H
-  | |- _ => tac
-  end.
-
 (** Assumes a goal of the shape P ⊑ ▷ Q. Alterantively, if Q
     is built of ★, ∧, ∨ with ▷ in all branches; that will work, too.
     Will turn this goal into P ⊑ Q and strip ▷ in P below ★, ∧, ∨. *)
-Ltac u_strip_later :=
+Ltac strip_later :=
   let rec strip :=
       lazymatch goal with
       | |- (_ ★ _) ⊑ ▷ _  =>
@@ -190,23 +181,22 @@ Ltac u_strip_later :=
     | |- _ ⊑ ▷ _ => apply later_mono; reflexivity
     (* We fail if we don't find laters in all branches. *)
     end
-  in revert_intros ltac:(etrans; [|shape_Q];
+  in intros_revert ltac:(etrans; [|shape_Q];
                          etrans; last eapply later_mono; first solve [ strip ]).
 
 (** Transforms a goal of the form ∀ ..., ?0... → ?1 ⊑ ?2
     into True ⊑ ∀..., ■?0... → ?1 → ?2, applies tac, and
     the moves all the assumptions back. *)
-Ltac u_revert_all :=
+(* TODO: this name may be a big too general *)
+Ltac revert_all :=
   lazymatch goal with
-  | |- ∀ _, _ => let H := fresh in intro H; u_revert_all;
+  | |- ∀ _, _ => let H := fresh in intro H; revert_all;
            (* TODO: Really, we should distinguish based on whether this is a
               dependent function type or not. Right now, we distinguish based
               on the sort of the argument, which is suboptimal. *)
            first [ apply (const_intro_impl _ _ _ H); clear H
                  | revert H; apply forall_elim']
-  | |- ?C ⊑ _ => trans (True ∧ C)%I;
-           first (apply equiv_entails_sym, left_id, _; reflexivity);
-           apply impl_elim_l'
+  | |- ?C ⊑ _ => apply impl_entails
   end.
 
 (** This starts on a goal of the form ∀ ..., ?0... → ?1 ⊑ ?2.
@@ -215,8 +205,8 @@ Ltac u_revert_all :=
    applies [tac] on the goal (now of the form _ ⊑ _), and then reverts the
    Coq assumption so that we end up with the same shape as where we started,
    but with an additional assumption ★-ed to the context *)
-Ltac u_löb tac :=
-  u_revert_all;
+Ltac löb tac :=
+  revert_all;
   (* Add a box *)
   etrans; last (eapply always_elim; reflexivity);
   (* We now have a goal for the form True ⊑ P, with the "original" conclusion
@@ -233,7 +223,7 @@ Ltac u_löb tac :=
       | |- _ ⊑ (■ _ → _) => apply impl_intro_l, const_elim_l;
                let H := fresh in intro H; go; revert H
       (* This is the "bottom" of the goal, where we see the impl introduced
-         by u_revert_all as well as the ▷ from löb_strong and the □ we added. *)
+         by uPred_revert_all as well as the ▷ from löb_strong and the □ we added. *)
       | |- ▷ □ ?R ⊑ (?L → _) => apply impl_intro_l;
                trans (L ★ ▷ □ R)%I;
                  first (eapply equiv_entails, always_and_sep_r, _; reflexivity);
