@@ -22,13 +22,9 @@ Definition of_heap : heapRA → state := omap (maybe Excl).
 
 (* heap_mapsto is defined strongly opaquely, to prevent unification from
 matching it against other forms of ownership. *)
-Definition heap_mapsto_def `{heapG Σ} (l : loc) (v: val) : iPropG heap_lang Σ :=
+Definition heap_mapsto `{heapG Σ} (l : loc) (v: val) : iPropG heap_lang Σ :=
   auth_own heap_name {[ l := Excl v ]}.
-(* Perform sealing *)
-Definition heap_mapsto_aux : { x | x = @heap_mapsto_def }. by eexists. Qed.
-Definition heap_mapsto {Σ h} := proj1_sig heap_mapsto_aux Σ h.
-Definition heap_mapsto_eq :
-  @heap_mapsto = @heap_mapsto_def := proj2_sig heap_mapsto_aux.
+Typeclasses Opaque heap_mapsto.
 
 Definition heap_inv `{i : heapG Σ} (h : heapRA) : iPropG heap_lang Σ :=
   ownP (of_heap h).
@@ -76,20 +72,20 @@ Section heap.
     authG heap_lang Σ heapRA → nclose N ⊆ E →
     ownP σ ⊑ (|={E}=> ∃ _ : heapG Σ, heap_ctx N ∧ Π★{map σ} heap_mapsto).
   Proof.
-    intros. rewrite heap_mapsto_eq -{1}(from_to_heap σ). etrans.
+    intros. rewrite -{1}(from_to_heap σ). etrans.
     { rewrite [ownP _]later_intro.
       apply (auth_alloc (ownP ∘ of_heap) E N (to_heap σ)); last done.
       apply to_heap_valid. }
     apply pvs_mono, exist_elim=> γ.
     rewrite -(exist_intro (HeapG _ _ γ)); apply and_mono_r.
-    rewrite /heap_mapsto_def /heap_name.
+    rewrite /heap_mapsto /heap_name.
     induction σ as [|l v σ Hl IH] using map_ind.
     { rewrite big_sepM_empty; apply True_intro. }
     rewrite to_heap_insert big_sepM_insert //.
     rewrite (map_insert_singleton_op (to_heap σ));
       last rewrite lookup_fmap Hl; auto.
     (* FIXME: investigate why we have to unfold auth_own here. *)
-    by rewrite auth_own_op IH auth_own_eq. 
+    by rewrite auth_own_op IH. 
   Qed.
 
   Context `{heapG Σ}.
@@ -101,7 +97,7 @@ Section heap.
   (** General properties of mapsto *)
   Lemma heap_mapsto_disjoint l v1 v2 : (l ↦ v1 ★ l ↦ v2)%I ⊑ False.
   Proof.
-    rewrite heap_mapsto_eq -auth_own_op auth_own_valid map_op_singleton.
+    rewrite -auth_own_op auth_own_valid map_op_singleton.
     rewrite map_validI (forall_elim l) lookup_singleton.
     by rewrite option_validI excl_validI.
   Qed.
@@ -113,7 +109,7 @@ Section heap.
     P ⊑ (▷ ∀ l, l ↦ v -★ Φ (LocV l)) →
     P ⊑ || Alloc e @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv heap_mapsto_eq=> ??? HP.
+    rewrite /heap_ctx /heap_inv=> ??? HP.
     trans (|={E}=> auth_own heap_name ∅ ★ P)%I.
     { by rewrite -pvs_frame_r -(auth_empty _ E) left_id. }
     apply wp_strip_pvs, (auth_fsa heap_inv (wp_fsa (Alloc e)))
@@ -127,7 +123,7 @@ Section heap.
     rewrite -(exist_intro (op {[ l := Excl v ]})).
     repeat erewrite <-exist_intro by apply _; simpl.
     rewrite -of_heap_insert left_id right_id.
-    ecancel [_ -★ Φ _]%I.
+    rewrite /heap_mapsto. ecancel [_ -★ Φ _]%I.
     rewrite -(map_insert_singleton_op h); last by apply of_heap_None.
     rewrite const_equiv ?left_id; last by apply (map_insert_valid h).
     apply later_intro.
@@ -138,7 +134,7 @@ Section heap.
     P ⊑ (▷ l ↦ v ★ ▷ (l ↦ v -★ Φ v)) →
     P ⊑ || Load (Loc l) @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv heap_mapsto_eq=> ?? HPΦ.
+    rewrite /heap_ctx /heap_inv=> ?? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
       with N heap_name {[ l := Excl v ]}; simpl; eauto with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
@@ -156,7 +152,7 @@ Section heap.
     P ⊑ (▷ l ↦ v' ★ ▷ (l ↦ v -★ Φ (LitV LitUnit))) →
     P ⊑ || Store (Loc l) e @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv heap_mapsto_eq=> ??? HPΦ.
+    rewrite /heap_ctx /heap_inv=> ??? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Excl v) l))
       with N heap_name {[ l := Excl v' ]}; simpl; eauto with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
@@ -175,7 +171,7 @@ Section heap.
     P ⊑ (▷ l ↦ v' ★ ▷ (l ↦ v' -★ Φ (LitV (LitBool false)))) →
     P ⊑ || Cas (Loc l) e1 e2 @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv heap_mapsto_eq=>????? HPΦ.
+    rewrite /heap_ctx /heap_inv=>????? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
       with N heap_name {[ l := Excl v' ]}; simpl; eauto 10 with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
@@ -193,7 +189,7 @@ Section heap.
     P ⊑ (▷ l ↦ v1 ★ ▷ (l ↦ v2 -★ Φ (LitV (LitBool true)))) →
     P ⊑ || Cas (Loc l) e1 e2 @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv heap_mapsto_eq=> ???? HPΦ.
+    rewrite /heap_ctx /heap_inv=> ???? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Excl v2) l))
       with N heap_name {[ l := Excl v1 ]}; simpl; eauto 10 with I.
     rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
