@@ -188,6 +188,7 @@ Tactic Notation "simplify_eq" := repeat
   | H : ?x = _ |- _ => subst x
   | H : _ = ?x |- _ => subst x
   | H : _ = _ |- _ => discriminate H
+  | H : _ ≡ _ |- _ => apply leibniz_equiv in H
   | H : ?f _ = ?f _ |- _ => apply (inj f) in H
   | H : ?f _ _ = ?f _ _ |- _ => apply (inj2 f) in H; destruct H
     (* before [injection] to circumvent bug #2939 in some situations *)
@@ -237,7 +238,7 @@ Ltac f_equiv :=
   | |- pointwise_relation _ _ _ _ => intros ?
   end;
   (* Normalize away equalities. *)
-  subst;
+  simplify_eq;
   (* repeatedly apply congruence lemmas and use the equalities in the hypotheses. *)
   try match goal with
   | _ => first [ reflexivity | assumption | symmetry; assumption]
