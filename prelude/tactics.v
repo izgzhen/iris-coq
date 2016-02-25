@@ -234,40 +234,39 @@ Ltac setoid_subst :=
 Ltac f_equiv :=
   (* Deal with "pointwise_relation" *)
   repeat lazymatch goal with
-    | |- pointwise_relation _ _ _ _ => intros ?
-    end;
+  | |- pointwise_relation _ _ _ _ => intros ?
+  end;
   (* Normalize away equalities. *)
   subst;
   (* repeatedly apply congruence lemmas and use the equalities in the hypotheses. *)
-  first [ reflexivity | assumption | symmetry; assumption |
-          match goal with
-          (* We support matches on both sides, *if* they concern the same
-             variable.
-             TODO: We should support different variables, provided that we can
-             derive contradictions for the off-diagonal cases. *)
-          | |- ?R (match ?x with _ => _ end) (match ?x with _ => _ end) =>
-            destruct x; f_equiv
-          (* First assume that the arguments need the same relation as the result *)
-          | |- ?R (?f ?x) (?f _) =>
-            apply (_ : Proper (R ==> R) f); f_equiv
-          | |- ?R (?f ?x ?y) (?f _ _) =>
-            apply (_ : Proper (R ==> R ==> R) f); f_equiv
-          (* Next, try to infer the relation. Unfortunately, there is an instance
-             of Proper for (eq ==> _), which will always be matched. *)
-          (* TODO: Can we exclude that instance? *)
-          (* TODO: If some of the arguments are the same, we could also
-             query for "pointwise_relation"'s. But that leads to a combinatorial
-             explosion about which arguments are and which are not the same. *)
-          | |- ?R (?f ?x) (?f _) =>
-            apply (_ : Proper (_ ==> R) f); f_equiv
-          | |- ?R (?f ?x ?y) (?f _ _) =>
-            apply (_ : Proper (_ ==> _ ==> R) f); f_equiv
-           (* In case the function symbol differs, but the arguments are the same,
-              maybe we have a pointwise_relation in our context. *)
-           | H : pointwise_relation _ ?R ?f ?g |- ?R (?f ?x) (?g ?x) =>
-             apply H; f_equiv
-         end | idtac (* Let the user solve this goal *)
-        ].
+  try match goal with
+  | _ => first [ reflexivity | assumption | symmetry; assumption]
+  (* We support matches on both sides, *if* they concern the same
+     variable.
+     TODO: We should support different variables, provided that we can
+     derive contradictions for the off-diagonal cases. *)
+  | |- ?R (match ?x with _ => _ end) (match ?x with _ => _ end) =>
+    destruct x; f_equiv
+  (* First assume that the arguments need the same relation as the result *)
+  | |- ?R (?f ?x) (?f _) =>
+    apply (_ : Proper (R ==> R) f); f_equiv
+  | |- ?R (?f ?x ?y) (?f _ _) =>
+    apply (_ : Proper (R ==> R ==> R) f); f_equiv
+  (* Next, try to infer the relation. Unfortunately, there is an instance
+     of Proper for (eq ==> _), which will always be matched. *)
+  (* TODO: Can we exclude that instance? *)
+  (* TODO: If some of the arguments are the same, we could also
+     query for "pointwise_relation"'s. But that leads to a combinatorial
+     explosion about which arguments are and which are not the same. *)
+  | |- ?R (?f ?x) (?f _) =>
+    apply (_ : Proper (_ ==> R) f); f_equiv
+  | |- ?R (?f ?x ?y) (?f _ _) =>
+    apply (_ : Proper (_ ==> _ ==> R) f); f_equiv
+   (* In case the function symbol differs, but the arguments are the same,
+      maybe we have a pointwise_relation in our context. *)
+  | H : pointwise_relation _ ?R ?f ?g |- ?R (?f ?x) (?g ?x) =>
+     apply H; f_equiv
+  end.
 
 (** solve_proper solves goals of the form "Proper (R1 ==> R2)", for any
     number of relations. All the actual work is done by f_equiv;
@@ -277,9 +276,9 @@ Ltac solve_proper :=
   (* Introduce everything *)
   intros;
   repeat lazymatch goal with
-         | |- Proper _ _ => intros ???
-         | |- (_ ==> _)%signature _ _ => intros ???
-         end;
+  | |- Proper _ _ => intros ???
+  | |- (_ ==> _)%signature _ _ => intros ???
+  end;
   (* Unfold the head symbol, which is the one we are proving a new property about *)
   lazymatch goal with
   | |- ?R (?f _ _ _ _ _ _ _ _) (?f _ _ _ _ _ _ _ _) => unfold f
