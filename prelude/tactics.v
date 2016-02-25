@@ -389,7 +389,8 @@ It will search for the first subterm of the goal matching [pat], and then call [
 with that subterm. *)
 Ltac find_pat pat tac :=
   match goal with |- context [?x] =>
-                  unify pat x; tryif tac x then idtac else fail 2
+                  unify pat x with typeclass_instances;
+                  tryif tac x then idtac else fail 2
 end.
 
 (** Coq's [firstorder] tactic fails or loops on rather small goals already. In 
