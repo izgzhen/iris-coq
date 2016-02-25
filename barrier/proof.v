@@ -52,19 +52,17 @@ Definition recv (l : loc) (R : iProp) : iProp :=
     saved_prop_own i Q ★ ▷ (Q -★ R))%I.
 
 (** Setoids *)
-(* TODO: These lemmas really ought to be doable by just calling a tactic.
-   It is just application of already registered congruence lemmas. *)
 Global Instance waiting_ne n : Proper (dist n ==> (=) ==> dist n) waiting.
-Proof. intros P P' HP I ? <-. rewrite /waiting. by setoid_rewrite HP. Qed.
+Proof. solve_proper. Qed.
 Global Instance barrier_inv_ne n l :
-  Proper (dist n ==> pointwise_relation _ (dist n)) (barrier_inv l).
-Proof. intros P P' HP [[]]; rewrite /barrier_inv //=. by setoid_rewrite HP. Qed.
+  Proper (dist n ==> eq ==> dist n) (barrier_inv l).
+Proof. solve_proper. Qed.
 Global Instance barrier_ctx_ne n γ l : Proper (dist n ==> dist n) (barrier_ctx γ l).
-Proof. intros P P' HP. rewrite /barrier_ctx. by setoid_rewrite HP. Qed.
+Proof. solve_proper. Qed.
 Global Instance send_ne n l : Proper (dist n ==> dist n) (send l).
-Proof. intros P P' HP. rewrite /send. by setoid_rewrite HP. Qed.
+Proof. solve_proper. Qed.
 Global Instance recv_ne n l : Proper (dist n ==> dist n) (recv l).
-Proof. intros R R' HR. rewrite /recv. by setoid_rewrite HR. Qed.
+Proof. solve_proper. Qed.
 
 (** Helper lemmas *)
 Lemma waiting_split i i1 i2 Q R1 R2 P I :

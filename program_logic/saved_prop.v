@@ -43,6 +43,6 @@ Section saved_prop.
     rewrite agree_equivI later_equivI /=; apply later_mono.
     rewrite -{2}(iProp_fold_unfold P) -{2}(iProp_fold_unfold Q).
     apply (eq_rewrite (iProp_unfold P) (iProp_unfold Q) (λ Q' : iPreProp Λ _,
-      iProp_fold (iProp_unfold P) ≡ iProp_fold Q')%I); solve_ne || auto with I.
+      iProp_fold (iProp_unfold P) ≡ iProp_fold Q')%I); solve_proper || auto with I.
   Qed.
 End saved_prop.
