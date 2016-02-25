@@ -17,12 +17,9 @@ Inductive prim_step : relation state :=
   | ChangeI p I2 I1 : prim_step (State p I1) (State p I2)
   | ChangePhase I : prim_step (State Low I) (State High I).
 
-Definition change_tok (I : gset gname) : set token :=
-  {[ t | match t with Change i => i ∉ I | Send => False end ]}.
-Definition send_tok (p : phase) : set token :=
-  match p with Low => ∅ | High => {[ Send ]} end.
 Definition tok (s : state) : set token :=
-  change_tok (state_I s) ∪ send_tok (state_phase s).
+  {[ t | ∃ i, t = Change i ∧ i ∉ state_I s ]} ∪
+  (if state_phase s is High then {[ Send ]} else ∅).
 Global Arguments tok !_ /.
 
 Canonical Structure sts := sts.STS prim_step tok.
@@ -35,30 +32,22 @@ Definition low_states : set state := {[ s | state_phase s = Low ]}.
 
 Lemma i_states_closed i : sts.closed (i_states i) {[ Change i ]}.
 Proof.
-  split.
-  - intros [p I]. rewrite /= /i_states /change_tok. destruct p; set_solver.
-  - (* If we do the destruct of the states early, and then inversion
-       on the proof of a transition, it doesn't work - we do not obtain
-       the equalities we need. So we destruct the states late, because this
-       means we can use "destruct" instead of "inversion". *)
-    intros s1 s2 Hs1 [T1 T2 Hdisj Hstep'].
-    inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
-    destruct Htrans; simpl in *; last done.
-    move: Hs1 Hdisj Htok. rewrite elem_of_equiv_empty elem_of_equiv.
-    move=> ? /(_ (Change i)) Hdisj /(_ (Change i)); move: Hdisj.
-    rewrite elem_of_intersection elem_of_union !elem_of_mkSet.
-    intros; apply dec_stable.
-    destruct p; set_solver.
+  split; first (intros [[] I]; set_solver).
+  (* If we do the destruct of the states early, and then inversion
+     on the proof of a transition, it doesn't work - we do not obtain
+     the equalities we need. So we destruct the states late, because this
+     means we can use "destruct" instead of "inversion". *)
+  intros s1 s2 Hs1 [T1 T2 Hdisj Hstep'].
+  inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
+  destruct Htrans as [[] ??|]; done || set_solver.
 Qed.
 
 Lemma low_states_closed : sts.closed low_states {[ Send ]}.
 Proof.
-  split.
-  - intros [p I]. rewrite /low_states. set_solver.
-  - intros s1 s2 Hs1 [T1 T2 Hdisj Hstep'].
-    inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
-    destruct Htrans; simpl in *; first by destruct p.
-    exfalso; apply dec_stable; set_solver.
+  split; first (intros [??]; set_solver).
+  intros s1 s2 Hs1 [T1 T2 Hdisj Hstep'].
+  inversion_clear Hstep' as [? ? ? ? Htrans _ _ Htok].
+  destruct Htrans as [[] ??|]; done || set_solver.
 Qed.
 
 (* Proof that we can take the steps we need. *)
@@ -70,12 +59,8 @@ Lemma wait_step i I :
   sts.steps (State High I, {[ Change i ]}) (State High (I ∖ {[ i ]}), ∅).
 Proof.
   intros. apply rtc_once.
-  constructor; first constructor; rewrite /= /change_tok; [set_solver by eauto..|].
-  (* TODO this proof is rather annoying. *)
-  apply elem_of_equiv=>t. rewrite !elem_of_union.
-  rewrite !elem_of_mkSet /change_tok /=.
-  destruct t as [j|]; last set_solver.
-  rewrite elem_of_difference elem_of_singleton.
+  constructor; first constructor; [set_solver..|].
+  apply elem_of_equiv=>-[j|]; last set_solver.
   destruct (decide (i = j)); set_solver.
 Qed.
 
@@ -85,17 +70,14 @@ Lemma split_step p i i1 i2 I :
     (State p I, {[ Change i ]})
     (State p ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))), {[ Change i1; Change i2 ]}).
 Proof.
-  intros. apply rtc_once.
-  constructor; first constructor; simpl.
+  intros. apply rtc_once. constructor; first constructor.
   - destruct p; set_solver.
-  (* This gets annoying... and I think I can see a pattern with all these proofs. Automatable? *)
-  - apply elem_of_equiv=>t. destruct t; last set_solver.
-    rewrite !elem_of_mkSet !not_elem_of_union !not_elem_of_singleton
-      not_elem_of_difference elem_of_singleton !(inj_iff Change).
-    destruct p; naive_solver.
-  - apply elem_of_equiv=>t. destruct t as [j|]; last set_solver.
-    rewrite !elem_of_mkSet !not_elem_of_union !not_elem_of_singleton
-      not_elem_of_difference elem_of_singleton !(inj_iff Change).
-    destruct (decide (i1 = j)) as [->|]; first tauto.
-    destruct (decide (i2 = j)) as [->|]; intuition.
+  - destruct p; set_solver.
+  - apply elem_of_equiv=> /= -[j|]; last set_solver.
+    set_unfold; rewrite !(inj_iff Change).
+    assert (Change j ∈ match p with Low => ∅ | High => {[Send]} end ↔ False)
+      as -> by (destruct p; set_solver).
+    destruct (decide (i1 = j)) as [->|]; first naive_solver.
+    destruct (decide (i2 = j)) as [->|]; first naive_solver.
+    destruct (decide (i = j)) as [->|]; naive_solver.
 Qed.
