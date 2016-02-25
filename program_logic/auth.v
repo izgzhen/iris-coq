@@ -40,7 +40,7 @@ Section auth.
   Implicit Types γ : gname.
 
   Global Instance auth_own_ne n γ : Proper (dist n ==> dist n) (auth_own γ).
-  Proof. by rewrite auth_own_eq /auth_own_def=> a b ->. Qed.
+  Proof. rewrite auth_own_eq; solve_proper. Qed.
   Global Instance auth_own_proper γ : Proper ((≡) ==> (≡)) (auth_own γ).
   Proof. by rewrite auth_own_eq /auth_own_def=> a b ->. Qed.
   Global Instance auth_own_timeless γ a : TimelessP (auth_own γ a).

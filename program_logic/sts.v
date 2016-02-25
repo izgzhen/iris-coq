@@ -52,22 +52,20 @@ Section sts.
   (** Setoids *)
   Global Instance sts_inv_ne n γ :
     Proper (pointwise_relation _ (dist n) ==> dist n) (sts_inv γ).
-  Proof. by intros φ1 φ2 Hφ; rewrite /sts_inv; setoid_rewrite Hφ. Qed.
+  Proof. solve_proper. Qed.
   Global Instance sts_inv_proper γ :
     Proper (pointwise_relation _ (≡) ==> (≡)) (sts_inv γ).
-  Proof. by intros φ1 φ2 Hφ; rewrite /sts_inv; setoid_rewrite Hφ. Qed.
+  Proof. solve_proper. Qed.
   Global Instance sts_ownS_proper γ : Proper ((≡) ==> (≡) ==> (≡)) (sts_ownS γ).
-  Proof.
-    intros S1 S2 HS T1 T2 HT. by rewrite !sts_ownS_eq /sts_ownS_def HS HT.
-  Qed.
+  Proof. rewrite sts_ownS_eq. solve_proper. Qed.
   Global Instance sts_own_proper γ s : Proper ((≡) ==> (≡)) (sts_own γ s).
-  Proof. intros T1 T2 HT. by rewrite !sts_own_eq /sts_own_def HT. Qed.
+  Proof. rewrite sts_own_eq. solve_proper. Qed.
   Global Instance sts_ctx_ne n γ N :
     Proper (pointwise_relation _ (dist n) ==> dist n) (sts_ctx γ N).
-  Proof. by intros φ1 φ2 Hφ; rewrite /sts_ctx Hφ. Qed.
+  Proof. solve_proper. Qed.
   Global Instance sts_ctx_proper γ N :
     Proper (pointwise_relation _ (≡) ==> (≡)) (sts_ctx γ N).
-  Proof. by intros φ1 φ2 Hφ; rewrite /sts_ctx Hφ. Qed.
+  Proof. solve_proper. Qed.
 
   (* The same rule as implication does *not* hold, as could be shown using
      sts_frag_included. *)

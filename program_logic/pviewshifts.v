@@ -9,6 +9,7 @@ Local Hint Extern 10 (✓{_} _) =>
   | H : wsat _ _ _ _ |- _ => apply wsat_valid in H; last omega
   end; solve_validN.
 
+(* TODO: Consider sealing this, like all the definitions in upred.v. *)
 Program Definition pvs {Λ Σ} (E1 E2 : coPset) (P : iProp Λ Σ) : iProp Λ Σ :=
   {| uPred_holds n r1 := ∀ rf k Ef σ,
        0 < k ≤ n → (E1 ∪ E2) ∩ Ef = ∅ →

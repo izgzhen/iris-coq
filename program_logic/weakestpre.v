@@ -30,6 +30,7 @@ CoInductive wp_pre {Λ Σ} (E : coPset)
        wp_go (E ∪ Ef) (wp_pre E Φ)
                       (wp_pre ⊤ (λ _, True%I)) k rf e1 σ1) →
      wp_pre E Φ e1 n r1.
+(* TODO: Consider sealing this, like all the definitions in upred.v. *)
 Program Definition wp {Λ Σ} (E : coPset) (e : expr Λ)
   (Φ : val Λ → iProp Λ Σ) : iProp Λ Σ := {| uPred_holds := wp_pre E Φ e |}.
 Next Obligation.
