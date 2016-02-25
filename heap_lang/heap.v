@@ -47,7 +47,7 @@ Section heap.
 
   (** Conversion to heaps and back *)
   Global Instance of_heap_proper : Proper ((≡) ==> (=)) of_heap.
-  Proof. by intros ??; fold_leibniz=>->. Qed.
+  Proof. solve_proper. Qed.
   Lemma from_to_heap σ : of_heap (to_heap σ) = σ.
   Proof.
     apply map_eq=>l. rewrite lookup_omap lookup_fmap. by case (σ !! l).
@@ -96,7 +96,7 @@ Section heap.
 
   (** Propers *)
   Global Instance heap_inv_proper : Proper ((≡) ==> (≡)) heap_inv.
-  Proof. intros h1 h2. by fold_leibniz=> ->. Qed.
+  Proof. solve_proper. Qed.
 
   (** General properties of mapsto *)
   Lemma heap_mapsto_disjoint l v1 v2 : (l ↦ v1 ★ l ↦ v2)%I ⊑ False.
