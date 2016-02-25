@@ -12,7 +12,7 @@ Ltac wp_strip_later :=
     | |- _ ⊑ ▷ _ => apply later_intro
     | |- _ ⊑ _ => reflexivity
     end
-  in revert_intros ltac:(first [ u_strip_later | etrans; [|go] ] ).
+  in intros_revert ltac:(first [ strip_later | etrans; [|go] ] ).
 Ltac wp_bind K :=
   lazymatch eval hnf in K with
   | [] => idtac
@@ -29,10 +29,10 @@ Ltac wp_finish :=
      try (eapply pvs_intro;
           match goal with |- _ ⊑ wp _ _ _ => simpl | _ => fail end)
   | _ => idtac
-  end in simpl; revert_intros go.
+  end in simpl; intros_revert go.
 
 Tactic Notation "wp_rec" ">" :=
-  u_löb ltac:((* Find the redex and apply wp_rec *)
+  löb ltac:((* Find the redex and apply wp_rec *)
               idtac; (* <https://coq.inria.fr/bugs/show_bug.cgi?id=4584> *)
                lazymatch goal with
                | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>

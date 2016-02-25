@@ -81,7 +81,7 @@ Proof.
   do 4 (rewrite big_sepS_insert; last set_solver).
   rewrite !fn_lookup_insert fn_lookup_insert_ne // !fn_lookup_insert.
   rewrite 3!assoc. apply sep_mono.
-  - rewrite saved_prop_agree. u_strip_later.
+  - rewrite saved_prop_agree. strip_later.
     apply wand_intro_l. rewrite [(_ ★ (_ -★ Π★{set _} _))%I]comm !assoc wand_elim_r.
     rewrite (big_sepS_delete _ I i) //.
     rewrite [(_ ★ Π★{set _} _)%I]comm [(_ ★ Π★{set _} _)%I]comm -!assoc.
@@ -116,8 +116,7 @@ Proof.
   rewrite [(▷ _ ★ _)%I]comm -!assoc. eapply wand_apply_l.
   { by rewrite <-later_wand, <-later_intro. }
   { by rewrite later_sep. }
-  u_strip_later.
-  apply: (eq_rewrite R Q (λ x, x)%I); eauto with I.
+  strip_later. apply: (eq_rewrite R Q (λ x, x)%I); eauto with I.
 Qed.
 
 (** Actual proofs *)
@@ -181,7 +180,7 @@ Proof.
   apply const_elim_sep_l=>Hs. destruct p; last done.
   rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
   eapply wp_store with (v' := '0); eauto with I ndisj. 
-  u_strip_later. cancel [l ↦ '0]%I.
+  strip_later. cancel [l ↦ '0]%I.
   apply wand_intro_l. rewrite -(exist_intro (State High I)).
   rewrite -(exist_intro ∅). rewrite const_equiv /=; last by eauto using signal_step.
   rewrite left_id -later_intro {2}/barrier_inv -!assoc. apply sep_mono_r.
@@ -212,7 +211,7 @@ Proof.
   apply const_elim_sep_l=>Hs.
   rewrite {1}/barrier_inv =>/=. rewrite later_sep.
   eapply wp_load; eauto with I ndisj.
-  rewrite -!assoc. apply sep_mono_r. u_strip_later.
+  rewrite -!assoc. apply sep_mono_r. strip_later.
   apply wand_intro_l. destruct p.
   { (* a Low state. The comparison fails, and we recurse. *)
     rewrite -(exist_intro (State Low I)) -(exist_intro {[ Change i ]}).
@@ -242,8 +241,7 @@ Proof.
   apply wand_intro_l. rewrite [(heap_ctx _ ★ _)%I]sep_elim_r.
   rewrite [(sts_own _ _ _ ★ _)%I]sep_elim_r [(sts_ctx _ _ _ ★ _)%I]sep_elim_r.
   rewrite !assoc [(_ ★ saved_prop_own i Q)%I]comm !assoc saved_prop_agree.
-  wp_op>; last done. intros _. u_strip_later.
-  wp_if. 
+  wp_op; [|done]=> _. wp_if.
   eapply wand_apply_r; [done..|]. eapply wand_apply_r; [done..|].
   apply: (eq_rewrite Q' Q (λ x, x)%I); last by eauto with I.
   rewrite eq_sym. eauto with I.
