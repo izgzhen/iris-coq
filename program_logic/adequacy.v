@@ -14,7 +14,6 @@ Implicit Types P Q : iProp Λ Σ.
 Implicit Types Φ : val Λ → iProp Λ Σ.
 Implicit Types Φs : list (val Λ → iProp Λ Σ).
 Implicit Types m : iGst Λ Σ.
-Transparent uPred_holds.
 
 Notation wptp n := (Forall3 (λ e Φ r, uPred_holds (wp ⊤ e Φ) n r)).
 Lemma wptp_le Φs es rs n n' :
@@ -32,6 +31,7 @@ Proof.
   { by intros; exists rs, []; rewrite right_id_L. }
   intros (Φs1&?&rs1&?&->&->&?&
     (Φ&Φs2&r&rs2&->&->&Hwp&?)%Forall3_cons_inv_l)%Forall3_app_inv_l ?.
+  rewrite wp_eq in Hwp.
   destruct (wp_step_inv ⊤ ∅ Φ e1 (k + n) (S (k + n)) σ1 r
     (big_op (rs1 ++ rs2))) as [_ Hwpstep]; eauto using values_stuck.
   { by rewrite right_id_L -big_op_cons Permutation_middle. }
@@ -41,7 +41,8 @@ Proof.
   - destruct (IH (Φs1 ++ Φ :: Φs2 ++ [λ _, True%I])
       (rs1 ++ r2 :: rs2 ++ [r2'])) as (rs'&Φs'&?&?).
     { apply Forall3_app, Forall3_cons,
-        Forall3_app, Forall3_cons, Forall3_nil; eauto using wptp_le. }
+        Forall3_app, Forall3_cons, Forall3_nil; eauto using wptp_le; [|];
+      rewrite wp_eq; eauto. }
     { by rewrite -Permutation_middle /= (assoc (++))
         (comm (++)) /= assoc big_op_app. }
     exists rs', ([λ _, True%I] ++ Φs'); split; auto.
@@ -49,6 +50,7 @@ Proof.
   - apply (IH (Φs1 ++ Φ :: Φs2) (rs1 ++ r2 ⋅ r2' :: rs2)).
     { rewrite /option_list right_id_L.
       apply Forall3_app, Forall3_cons; eauto using wptp_le.
+      rewrite wp_eq.
       apply uPred_weaken with (k + n) r2; eauto using cmra_included_l. }
     by rewrite -Permutation_middle /= big_op_app.
 Qed.
@@ -90,7 +92,8 @@ Proof.
              as (rs2&Qs&Hwptp&?); auto.
   { by rewrite -(ht_mask_weaken E ⊤). }
   inversion Hwptp as [|?? r ?? rs Hwp _]; clear Hwptp; subst.
-  move: Hwp. uPred.unseal=> /wp_value_inv Hwp.
+  move: Hwp. rewrite wp_eq. uPred.unseal=> /wp_value_inv Hwp.
+  rewrite pvs_eq in Hwp.
   destruct (Hwp (big_op rs) 2 ∅ σ2) as [r' []]; rewrite ?right_id_L; auto.
 Qed.
 Lemma ht_adequacy_reducible E Φ e1 e2 t2 σ1 m σ2 :
@@ -106,6 +109,7 @@ Proof.
     (Φ :: Φs) rs2 i e2) as (Φ'&r2&?&?&Hwp); auto.
   destruct (wp_step_inv ⊤ ∅ Φ' e2 1 2 σ2 r2 (big_op (delete i rs2)));
     rewrite ?right_id_L ?big_op_delete; auto.
+  by rewrite -wp_eq.
 Qed.
 Theorem ht_adequacy_safe E Φ e1 t2 σ1 m σ2 :
   ✓ m →
