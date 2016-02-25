@@ -102,7 +102,7 @@ Proof.
       first (eapply map_updateP_alloc_strong', cmra_transport_valid, Ha);
       naive_solver.
   - apply exist_elim=>m; apply const_elim_l=>-[γ [Hfresh ->]].
-    by rewrite -(exist_intro γ) const_equiv.
+    by rewrite -(exist_intro γ) const_equiv // left_id.
 Qed.
 Lemma own_alloc a E : ✓ a → True ⊑ (|={E}=> ∃ γ, own γ a).
 Proof.

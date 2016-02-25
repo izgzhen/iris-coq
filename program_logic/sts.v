@@ -179,7 +179,7 @@ Section sts.
             (sts_own γ s' T' -★ Ψ x))) →
     P ⊑ fsa E Ψ.
   Proof.
-    rewrite sts_own_eq. intros. eapply sts_fsaS; try done; []. (* FIXME: slow *)
+    rewrite sts_own_eq. intros. eapply sts_fsaS; try done; [].
     by rewrite sts_ownS_eq sts_own_eq. 
   Qed.
 End sts.

@@ -146,10 +146,12 @@ Lemma excl_equivI {M} (x y : excl A) :
                | ExclUnit, ExclUnit | ExclBot, ExclBot => True
                | _, _ => False
                end : uPred M)%I.
-Proof. do 2 split. by destruct 1. by destruct x, y; try constructor. Qed.
+Proof.
+  uPred.unseal. do 2 split. by destruct 1. by destruct x, y; try constructor.
+Qed.
 Lemma excl_validI {M} (x : excl A) :
   (✓ x)%I ≡ (if x is ExclBot then False else True : uPred M)%I.
-Proof. by destruct x. Qed.
+Proof. uPred.unseal. by destruct x. Qed.
 
 (** ** Local updates *)
 Global Instance excl_local_update b :

@@ -151,14 +151,14 @@ Qed.
 (** Internalized properties *)
 Lemma auth_equivI {M} (x y : auth A) :
   (x ≡ y)%I ≡ (authoritative x ≡ authoritative y ∧ own x ≡ own y : uPred M)%I.
-Proof. done. Qed.
+Proof. by uPred.unseal. Qed.
 Lemma auth_validI {M} (x : auth A) :
   (✓ x)%I ≡ (match authoritative x with
              | Excl a => (∃ b, a ≡ own x ⋅ b) ∧ ✓ a
              | ExclUnit => ✓ own x
              | ExclBot => False
              end : uPred M)%I.
-Proof. by destruct x as [[]]. Qed.
+Proof. uPred.unseal. by destruct x as [[]]. Qed.
 
 (** The notations ◯ and ● only work for CMRAs with an empty element. So, in
 what follows, we assume we have an empty element. *)

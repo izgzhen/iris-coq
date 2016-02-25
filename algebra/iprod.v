@@ -171,9 +171,9 @@ Section iprod_cmra.
 
   (** Internalized properties *)
   Lemma iprod_equivI {M} g1 g2 : (g1 ≡ g2)%I ≡ (∀ i, g1 i ≡ g2 i : uPred M)%I.
-  Proof. done. Qed.
+  Proof. by uPred.unseal. Qed.
   Lemma iprod_validI {M} g : (✓ g)%I ≡ (∀ i, ✓ g i : uPred M)%I.
-  Proof. done. Qed.
+  Proof. by uPred.unseal. Qed.
 
   (** Properties of iprod_insert. *)
   Context `{∀ x x' : A, Decision (x = x')}.

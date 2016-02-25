@@ -75,7 +75,8 @@ Lemma ownI_spec n r i P :
   ✓{n} r →
   (ownI i P) n r ↔ wld r !! i ≡{n}≡ Some (to_agree (Next (iProp_unfold P))).
 Proof.
-  intros [??]; rewrite /uPred_holds/=res_includedN/=singleton_includedN; split.
+  intros (?&?&?). rewrite /ownI; uPred.unseal.
+  rewrite /uPred_holds/=res_includedN/=singleton_includedN; split.
   - intros [(P'&Hi&HP) _]; rewrite Hi.
     by apply Some_dist, symmetry, agree_valid_includedN,
       (cmra_included_includedN _ P'),HP; apply map_lookup_validN with (wld r) i.
@@ -83,11 +84,13 @@ Proof.
 Qed.
 Lemma ownP_spec n r σ : ✓{n} r → (ownP σ) n r ↔ pst r ≡ Excl σ.
 Proof.
-  intros (?&?&?); rewrite /uPred_holds /= res_includedN /= Excl_includedN //.
+  intros (?&?&?). rewrite /ownP; uPred.unseal.
+  rewrite /uPred_holds /= res_includedN /= Excl_includedN //.
   rewrite (timeless_iff n). naive_solver (apply cmra_empty_leastN).
 Qed.
 Lemma ownG_spec n r m : (ownG m) n r ↔ Some m ≼{n} gst r.
 Proof.
+  rewrite /ownG; uPred.unseal.
   rewrite /uPred_holds /= res_includedN; naive_solver (apply cmra_empty_leastN).
 Qed.
 End ownership.

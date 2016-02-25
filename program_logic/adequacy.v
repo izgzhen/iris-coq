@@ -62,8 +62,8 @@ Proof.
   intros Hht ????; apply (nsteps_wptp [Φ] k n ([e1],σ1) (t2,σ2) [r1]);
     rewrite /big_op ?right_id; auto.
   constructor; last constructor.
-  apply Hht with (k + n) r1; eauto using cmra_included_unit.
-  eapply uPred.const_intro; eauto.
+  move: Hht; rewrite /ht; uPred.unseal=> Hht.
+  apply Hht with (k + n) r1; by eauto using cmra_included_unit.
 Qed.
 Lemma ht_adequacy_own Φ e1 t2 σ1 m σ2 :
   ✓ m →
@@ -74,9 +74,9 @@ Proof.
   intros Hv ? [k ?]%rtc_nsteps.
   eapply ht_adequacy_steps with (r1 := (Res ∅ (Excl σ1) (Some m))); eauto; [|].
   { by rewrite Nat.add_comm; apply wsat_init, cmra_valid_validN. }
-  exists (Res ∅ (Excl σ1) ∅), (Res ∅ ∅ (Some m)); split_and?.
+  uPred.unseal; exists (Res ∅ (Excl σ1) ∅), (Res ∅ ∅ (Some m)); split_and?.
   - by rewrite Res_op ?left_id ?right_id.
-  - by rewrite /uPred_holds /=.
+  - rewrite /ownP; uPred.unseal; rewrite /uPred_holds //=.
   - by apply ownG_spec.
 Qed.
 Theorem ht_adequacy_result E φ e v t2 σ1 m σ2 :
@@ -90,8 +90,8 @@ Proof.
              as (rs2&Qs&Hwptp&?); auto.
   { by rewrite -(ht_mask_weaken E ⊤). }
   inversion Hwptp as [|?? r ?? rs Hwp _]; clear Hwptp; subst.
-  apply wp_value_inv in Hwp; destruct (Hwp (big_op rs) 2 ∅ σ2) as [r' []]; auto.
-  by rewrite right_id_L.
+  move: Hwp. uPred.unseal=> /wp_value_inv Hwp.
+  destruct (Hwp (big_op rs) 2 ∅ σ2) as [r' []]; rewrite ?right_id_L; auto.
 Qed.
 Lemma ht_adequacy_reducible E Φ e1 e2 t2 σ1 m σ2 :
   ✓ m →

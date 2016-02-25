@@ -158,11 +158,12 @@ Proof.
 Qed.
 Lemma wp_frame_r E e Φ R : (|| e @ E {{ Φ }} ★ R) ⊑ || e @ E {{ λ v, Φ v ★ R }}.
 Proof.
-  split; intros n r' Hvalid (r&rR&Hr&Hwp&?); revert Hvalid.
+  uPred.unseal; split; intros n r' Hvalid (r&rR&Hr&Hwp&?); revert Hvalid.
   rewrite Hr; clear Hr; revert e r Hwp.
   induction n as [n IH] using lt_wf_ind; intros e r1.
   destruct 1 as [|n r e ? Hgo]=>?.
-  { constructor; apply pvs_frame_r; auto. exists r, rR; eauto. }
+  { constructor. rewrite -uPred_sep_eq; apply pvs_frame_r; auto.
+    uPred.unseal; exists r, rR; eauto. }
   constructor; [done|]=> rf k Ef σ1 ???.
   destruct (Hgo (rR⋅rf) k Ef σ1) as [Hsafe Hstep]; auto.
   { by rewrite assoc. }
@@ -176,7 +177,7 @@ Qed.
 Lemma wp_frame_later_r E e Φ R :
   to_val e = None → (|| e @ E {{ Φ }} ★ ▷ R) ⊑ || e @ E {{ λ v, Φ v ★ R }}.
 Proof.
-  intros He; split; intros n r' Hvalid (r&rR&Hr&Hwp&?).
+  intros He; uPred.unseal; split; intros n r' Hvalid (r&rR&Hr&Hwp&?).
   revert Hvalid; rewrite Hr; clear Hr.
   destruct Hwp as [|n r e ? Hgo]; [by rewrite to_of_val in He|].
   constructor; [done|]=>rf k Ef σ1 ???; destruct n as [|n]; first omega.
@@ -185,7 +186,8 @@ Proof.
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
   exists (r2 ⋅ rR), r2'; split_and?; auto.
   - by rewrite -(assoc _ r2) (comm _ rR) !assoc -(assoc _ _ rR).
-  - apply wp_frame_r; [auto|exists r2, rR; split_and?; auto].
+  - rewrite -uPred_sep_eq.
+    apply wp_frame_r; [auto|uPred.unseal; exists r2, rR; split_and?; auto].
     eapply uPred_weaken with n rR; eauto.
 Qed.
 Lemma wp_bind `{LanguageCtx Λ K} E e Φ :

@@ -171,9 +171,9 @@ Proof. split; [apply _|]. intros m ? i. by apply: cmra_discrete_valid. Qed.
 
 (** Internalized properties *)
 Lemma map_equivI {M} m1 m2 : (m1 ≡ m2)%I ≡ (∀ i, m1 !! i ≡ m2 !! i : uPred M)%I.
-Proof. done. Qed.
+Proof. by uPred.unseal. Qed.
 Lemma map_validI {M} m : (✓ m)%I ≡ (∀ i, ✓ (m !! i) : uPred M)%I.
-Proof. done. Qed.
+Proof. by uPred.unseal. Qed.
 End cmra.
 
 Arguments mapRA _ {_ _} _.

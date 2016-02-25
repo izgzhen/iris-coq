@@ -140,10 +140,12 @@ Lemma option_equivI {M} (x y : option A) :
   (x ≡ y)%I ≡ (match x, y with
                | Some a, Some b => a ≡ b | None, None => True | _, _ => False
                end : uPred M)%I.
-Proof. do 2 split. by destruct 1. by destruct x, y; try constructor. Qed.
+Proof.
+  uPred.unseal. do 2 split. by destruct 1. by destruct x, y; try constructor.
+Qed.
 Lemma option_validI {M} (x : option A) :
   (✓ x)%I ≡ (match x with Some a => ✓ a | None => True end : uPred M)%I.
-Proof. by destruct x. Qed.
+Proof. uPred.unseal. by destruct x. Qed.
 
 (** Updates *)
 Lemma option_updateP (P : A → Prop) (Q : option A → Prop) x :
