@@ -229,30 +229,23 @@ Ltac setoid_subst :=
   | H : @equiv ?A ?e _ ?x |- _ => symmetry in H; setoid_subst_aux (@equiv A e) x
   end.
 
-(** f_equiv solves goals of the form "f _ = f _", for any relation and any
-    number of arguments, by looking for appropriate "Proper" instances.
-    If it cannot solve an equality, it will leave that to the user. *)
+(** f_equiv works on goals of the form "f _ = f _", for any relation and any
+    number of arguments. It looks for an appropriate "Proper" instance, and
+    applies it. *)
 Ltac f_equiv :=
-  (* Deal with "pointwise_relation" *)
-  repeat lazymatch goal with
-  | |- pointwise_relation _ _ _ _ => intros ?
-  end;
-  (* Normalize away equalities. *)
-  simplify_eq;
-  (* repeatedly apply congruence lemmas and use the equalities in the hypotheses. *)
-  try match goal with
-  | _ => first [ reflexivity | assumption | symmetry; assumption]
+  match goal with
+  | _ => reflexivity
   (* We support matches on both sides, *if* they concern the same
      variable.
      TODO: We should support different variables, provided that we can
      derive contradictions for the off-diagonal cases. *)
   | |- ?R (match ?x with _ => _ end) (match ?x with _ => _ end) =>
-    destruct x; f_equiv
+    destruct x
   (* First assume that the arguments need the same relation as the result *)
   | |- ?R (?f ?x) (?f _) =>
-    apply (_ : Proper (R ==> R) f); f_equiv
+    apply (_ : Proper (R ==> R) f)
   | |- ?R (?f ?x ?y) (?f _ _) =>
-    apply (_ : Proper (R ==> R ==> R) f); f_equiv
+    apply (_ : Proper (R ==> R ==> R) f)
   (* Next, try to infer the relation. Unfortunately, there is an instance
      of Proper for (eq ==> _), which will always be matched. *)
   (* TODO: Can we exclude that instance? *)
@@ -260,14 +253,27 @@ Ltac f_equiv :=
      query for "pointwise_relation"'s. But that leads to a combinatorial
      explosion about which arguments are and which are not the same. *)
   | |- ?R (?f ?x) (?f _) =>
-    apply (_ : Proper (_ ==> R) f); f_equiv
+    apply (_ : Proper (_ ==> R) f)
   | |- ?R (?f ?x ?y) (?f _ _) =>
-    apply (_ : Proper (_ ==> _ ==> R) f); f_equiv
+    apply (_ : Proper (_ ==> _ ==> R) f)
    (* In case the function symbol differs, but the arguments are the same,
       maybe we have a pointwise_relation in our context. *)
   | H : pointwise_relation _ ?R ?f ?g |- ?R (?f ?x) (?g ?x) =>
-     apply H; f_equiv
+     apply H
   end.
+
+(** auto_proper solves goals of the form "f _ = f _", for any relation and any
+    number of arguments, by repeatedly apply f_equiv and handling trivial cases.
+    If it cannot solve an equality, it will leave that to the user. *)
+Ltac auto_proper :=
+  (* Deal with "pointwise_relation" *)
+  repeat lazymatch goal with
+  | |- pointwise_relation _ _ _ _ => intros ?
+  end;
+  (* Normalize away equalities. *)
+  simplify_eq;
+  (* repeatedly apply congruence lemmas and use the equalities in the hypotheses. *)
+  try (f_equiv; assumption || (symmetry; assumption) || auto_proper).
 
 (** solve_proper solves goals of the form "Proper (R1 ==> R2)", for any
     number of relations. All the actual work is done by f_equiv;
@@ -291,7 +297,7 @@ Ltac solve_proper :=
   | |- ?R (?f _ _) (?f _ _) => unfold f
   | |- ?R (?f _) (?f _) => unfold f
   end;
-  solve [ f_equiv ].
+  solve [ auto_proper ].
 
 (** The tactic [intros_revert tac] introduces all foralls/arrows, performs tac,
 and then reverts them. *)
