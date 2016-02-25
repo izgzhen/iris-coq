@@ -15,25 +15,25 @@ Ltac wp_finish :=
   match goal with
   | |- _ ⊑ ▷ _ => etrans; [|apply later_mono; go; reflexivity]
   | |- _ ⊑ wp _ _ _ =>
-     etrans; [|eapply wp_value_pvs; reflexivity];
-     (* sometimes, we will have to do a final view shift, so only apply
-     pvs_intro if we obtain a consecutive wp *)
-     try (eapply pvs_intro;
-          match goal with |- _ ⊑ wp _ _ _ => simpl | _ => fail end)
+    etrans; [|eapply wp_value_pvs; reflexivity];
+    (* sometimes, we will have to do a final view shift, so only apply
+    pvs_intro if we obtain a consecutive wp *)
+    try (eapply pvs_intro;
+         match goal with |- _ ⊑ wp _ _ _ => simpl | _ => fail end)
   | _ => idtac
   end in simpl; intros_revert go.
 
 Tactic Notation "wp_rec" ">" :=
-  löb ltac:((* Find the redex and apply wp_rec *)
-              idtac; (* <https://coq.inria.fr/bugs/show_bug.cgi?id=4584> *)
-               lazymatch goal with
-               | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-                        match eval cbv in e' with
-                        | App (Rec _ _ _) _ =>
-                          wp_bind K; etrans; [|eapply wp_rec; reflexivity];
-                          wp_finish
-                        end)
-               end).
+  löb ltac:(
+    (* Find the redex and apply wp_rec *)
+    idtac; (* <https://coq.inria.fr/bugs/show_bug.cgi?id=4584> *)
+    lazymatch goal with
+    | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
+      match eval cbv in e' with
+      | App (Rec _ _ _) _ =>
+         wp_bind K; etrans; [|eapply wp_rec; reflexivity]; wp_finish
+      end)
+     end).
 Tactic Notation "wp_rec" := wp_rec>; try strip_later.
 
 Tactic Notation "wp_lam" ">" :=
