@@ -52,7 +52,7 @@ Definition recv (l : loc) (R : iProp) : iProp :=
     saved_prop_own i Q ★ ▷ (Q -★ R))%I.
 
 (** Setoids *)
-(* These lemmas really ought to be doable by just calling a tactic.
+(* TODO: These lemmas really ought to be doable by just calling a tactic.
    It is just application of already registered congruence lemmas. *)
 Global Instance waiting_ne n : Proper (dist n ==> (=) ==> dist n) waiting.
 Proof. intros P P' HP I ? <-. rewrite /waiting. by setoid_rewrite HP. Qed.
