@@ -70,7 +70,6 @@ Implicit Types P : iProp Λ Σ.
 Implicit Types Φ : val Λ → iProp Λ Σ.
 Implicit Types v : val Λ.
 Implicit Types e : expr Λ.
-Transparent uPred_holds.
 
 Global Instance wp_ne E e n :
   Proper (pointwise_relation _ (dist n) ==> dist n) (@wp Λ Σ E e).
@@ -218,7 +217,6 @@ Proof.
 Qed.
 
 (** * Derived rules *)
-Opaque uPred_holds.
 Import uPred.
 Lemma wp_mono E e Φ Ψ : (∀ v, Φ v ⊑ Ψ v) → || e @ E {{ Φ }} ⊑ || e @ E {{ Ψ }}.
 Proof. by apply wp_mask_frame_mono. Qed.

@@ -14,7 +14,6 @@ Implicit Types e : expr Λ.
 Implicit Types σ : state Λ.
 Implicit Types P Q : iProp Λ Σ.
 Implicit Types Φ : val Λ → iProp Λ Σ.
-Transparent uPred_holds.
 
 Notation wp_fork ef := (default True ef (flip (wp ⊤) (λ _, ■ True)))%I.
 
@@ -59,7 +58,6 @@ Proof.
 Qed.
 
 (** Derived lifting lemmas. *)
-Opaque uPred_holds.
 Import uPred.
 
 Lemma wp_lift_atomic_step {E Φ} e1

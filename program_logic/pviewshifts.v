@@ -43,7 +43,6 @@ Section pvs.
 Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q : iProp Λ Σ.
 Implicit Types m : iGst Λ Σ.
-Transparent uPred_holds.
 
 Global Instance pvs_ne E1 E2 n : Proper (dist n ==> dist n) (@pvs Λ Σ E1 E2).
 Proof.
@@ -144,7 +143,6 @@ Proof.
 Qed.
 
 (** * Derived rules *)
-Opaque uPred_holds.
 Import uPred.
 Global Instance pvs_mono' E1 E2 : Proper ((⊑) ==> (⊑)) (@pvs Λ Σ E1 E2).
 Proof. intros P Q; apply pvs_mono. Qed.
