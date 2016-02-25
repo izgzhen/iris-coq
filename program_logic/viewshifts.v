@@ -30,7 +30,7 @@ Qed.
 
 Global Instance vs_ne E1 E2 n :
   Proper (dist n ==> dist n ==> dist n) (@vs Λ Σ E1 E2).
-Proof. by intros P P' HP Q Q' HQ; rewrite /vs HP HQ. Qed.
+Proof. solve_proper. Qed.
 
 Global Instance vs_proper E1 E2 : Proper ((≡) ==> (≡) ==> (≡)) (@vs Λ Σ E1 E2).
 Proof. apply ne_proper_2, _. Qed.

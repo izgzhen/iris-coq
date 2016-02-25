@@ -236,17 +236,17 @@ Ltac f_equiv :=
   try lazymatch goal with
     | |- pointwise_relation _ _ _ _ => intros ?
     end;
+  (* Normalize away equalities. *)
+  subst;
   (* repeatedly apply congruence lemmas and use the equalities in the hypotheses. *)
   first [ reflexivity | assumption | symmetry; assumption |
           match goal with
           (* We support matches on both sides, *if* they concern the same
-             or provably equal variables.
+             variable.
              TODO: We should support different variables, provided that we can
              derive contradictions for the off-diagonal cases. *)
           | |- ?R (match ?x with _ => _ end) (match ?x with _ => _ end) =>
             destruct x; f_equiv
-          | |- ?R (match ?x with _ => _ end) (match ?y with _ => _ end) =>
-            subst y; f_equiv
           (* First assume that the arguments need the same relation as the result *)
           | |- ?R (?f ?x) (?f _) =>
             let H := fresh "Proper" in
