@@ -22,7 +22,7 @@ markers = itertools.cycle([(3, 0), (3, 0, 180), (4, 0), (4, 0, 45), (8, 0)])
 for timing in timings:
     plt.plot(list(map(lambda r: r.times.get(timing), results)), marker=next(markers), markersize=8)
 
-plt.legend(timings)
+plt.legend(timings, loc='lower left')
 plt.xticks(range(len(results)), list(map(lambda r: r.commit[:7], results)), rotation=70)
 plt.subplots_adjust(bottom=0.2) # more space for the commit labels
 
