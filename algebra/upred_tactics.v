@@ -151,19 +151,19 @@ Tactic Notation "ecancel" open_constr(Ps) :=
     Will turn this goal into P ⊑ Q and strip ▷ in P below ★, ∧, ∨. *)
 Ltac strip_later :=
   let rec strip :=
-      lazymatch goal with
-      | |- (_ ★ _) ⊑ ▷ _  =>
-        etrans; last (eapply equiv_entails_sym, later_sep);
-        apply sep_mono; strip
-      | |- (_ ∧ _) ⊑ ▷ _  =>
-        etrans; last (eapply equiv_entails_sym, later_and);
-        apply sep_mono; strip
-      | |- (_ ∨ _) ⊑ ▷ _  =>
-        etrans; last (eapply equiv_entails_sym, later_or);
-        apply sep_mono; strip
-      | |- ▷ _ ⊑ ▷ _ => apply later_mono; reflexivity
-      | |- _ ⊑ ▷ _ => apply later_intro; reflexivity
-      end
+    lazymatch goal with
+    | |- (_ ★ _) ⊑ ▷ _  =>
+      etrans; last (eapply equiv_entails_sym, later_sep);
+      apply sep_mono; strip
+    | |- (_ ∧ _) ⊑ ▷ _  =>
+      etrans; last (eapply equiv_entails_sym, later_and);
+      apply sep_mono; strip
+    | |- (_ ∨ _) ⊑ ▷ _  =>
+      etrans; last (eapply equiv_entails_sym, later_or);
+      apply sep_mono; strip
+    | |- ▷ _ ⊑ ▷ _ => apply later_mono; reflexivity
+    | |- _ ⊑ ▷ _ => apply later_intro; reflexivity
+    end
   in let rec shape_Q :=
     lazymatch goal with
     | |- _ ⊑ (_ ★ _) =>
@@ -190,13 +190,14 @@ Ltac strip_later :=
 (* TODO: this name may be a big too general *)
 Ltac revert_all :=
   lazymatch goal with
-  | |- ∀ _, _ => let H := fresh in intro H; revert_all;
-           (* TODO: Really, we should distinguish based on whether this is a
-              dependent function type or not. Right now, we distinguish based
-              on the sort of the argument, which is suboptimal. *)
-           first [ apply (const_intro_impl _ _ _ H); clear H
-                 | revert H; apply forall_elim']
-  | |- ?C ⊑ _ => apply impl_entails
+  | |- ∀ _, _ =>
+    let H := fresh in intro H; revert_all;
+    (* TODO: Really, we should distinguish based on whether this is a
+    dependent function type or not. Right now, we distinguish based
+    on the sort of the argument, which is suboptimal. *)
+    first [ apply (const_intro_impl _ _ _ H); clear H
+          | revert H; apply forall_elim']
+  | |- _ ⊑ _ => apply impl_entails
   end.
 
 (** This starts on a goal of the form ∀ ..., ?0... → ?1 ⊑ ?2.
@@ -217,16 +218,15 @@ Ltac löb tac :=
   (* Now introduce again all the things that we reverted, and at the bottom,
      do the work *)
   let rec go :=
-      lazymatch goal with
-      | |- _ ⊑ (∀ _, _) => apply forall_intro;
-               let H := fresh in intro H; go; revert H
-      | |- _ ⊑ (■ _ → _) => apply impl_intro_l, const_elim_l;
-               let H := fresh in intro H; go; revert H
-      (* This is the "bottom" of the goal, where we see the impl introduced
-         by uPred_revert_all as well as the ▷ from löb_strong and the □ we added. *)
-      | |- ▷ □ ?R ⊑ (?L → _) => apply impl_intro_l;
-               trans (L ★ ▷ □ R)%I;
-                 first (eapply equiv_entails, always_and_sep_r, _; reflexivity);
-               tac
-      end
+    lazymatch goal with
+    | |- _ ⊑ (∀ _, _) =>
+      apply forall_intro; let H := fresh in intro H; go; revert H
+    | |- _ ⊑ (■ _ → _) =>
+      apply impl_intro_l, const_elim_l; let H := fresh in intro H; go; revert H
+    (* This is the "bottom" of the goal, where we see the impl introduced
+       by uPred_revert_all as well as the ▷ from löb_strong and the □ we added. *)
+    | |- ▷ □ ?R ⊑ (?L → _) => apply impl_intro_l;
+      trans (L ★ ▷ □ R)%I;
+        [eapply equiv_entails, always_and_sep_r, _; reflexivity | tac]
+    end
   in go.
