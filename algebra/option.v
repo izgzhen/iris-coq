@@ -179,7 +179,7 @@ Instance option_fmap_cmra_monotone {A B : cmraT} (f: A → B) `{!CMRAMonotone f}
   CMRAMonotone (fmap f : option A → option B).
 Proof.
   split; first apply _.
-  - intros n [x|] ?; rewrite /cmra_validN /=; by repeat apply validN_preserving.
+  - intros n [x|] ?; rewrite /cmra_validN //=. by apply (validN_preserving f).
   - intros mx my; rewrite !option_included.
     intros [->|(x&y&->&->&?)]; simpl; eauto 10 using @included_preserving.
 Qed.

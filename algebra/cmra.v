@@ -127,7 +127,7 @@ End cmra_mixin.
 (** * CMRAs with a global identity element *)
 (** We use the notation ∅ because for most instances (maps, sets, etc) the
 `empty' element is the global identity. *)
-Class CMRAIdentity (A : cmraT) `{Empty A} : Prop := {
+Class CMRAIdentity (A : cmraT) `{Empty A} := {
   cmra_empty_valid : ✓ ∅;
   cmra_empty_left_id :> LeftId (≡) ∅ (⋅);
   cmra_empty_timeless :> Timeless ∅
@@ -135,7 +135,7 @@ Class CMRAIdentity (A : cmraT) `{Empty A} : Prop := {
 Instance cmra_identity_inhabited `{CMRAIdentity A} : Inhabited A := populate ∅.
 
 (** * Discrete CMRAs *)
-Class CMRADiscrete (A : cmraT) : Prop := {
+Class CMRADiscrete (A : cmraT) := {
   cmra_discrete :> Discrete A;
   cmra_discrete_valid (x : A) : ✓{0} x → ✓ x
 }.
@@ -146,6 +146,8 @@ Class CMRAMonotone {A B : cmraT} (f : A → B) := {
   validN_preserving n x : ✓{n} x → ✓{n} f x;
   included_preserving x y : x ≼ y → f x ≼ f y
 }.
+Arguments validN_preserving {_ _} _ {_} _ _ _.
+Arguments included_preserving {_ _} _ {_} _ _ _.
 
 (** * Local updates *)
 (** The idea is that lemams taking this class will usually have L explicit,
@@ -447,7 +449,7 @@ Section cmra_monotone.
   Lemma includedN_preserving n x y : x ≼{n} y → f x ≼{n} f y.
   Proof.
     intros [z ->].
-    apply cmra_included_includedN, included_preserving, cmra_included_l.
+    apply cmra_included_includedN, (included_preserving f), cmra_included_l.
   Qed.
   Lemma valid_preserving x : ✓ x → ✓ f x.
   Proof. rewrite !cmra_valid_validN; eauto using validN_preserving. Qed.

@@ -277,9 +277,9 @@ Instance iprod_map_cmra_monotone {A} {B1 B2: A → cmraT} (f : ∀ x, B1 x → B
   (∀ x, CMRAMonotone (f x)) → CMRAMonotone (iprod_map f).
 Proof.
   split; first apply _.
-  - intros n g Hg x; rewrite /iprod_map; apply validN_preserving, Hg.
+  - intros n g Hg x; rewrite /iprod_map; apply (validN_preserving (f _)), Hg.
   - intros g1 g2; rewrite !iprod_included_spec=> Hf x.
-    rewrite /iprod_map; apply included_preserving, Hf.
+    rewrite /iprod_map; apply (included_preserving _), Hf.
 Qed.
 
 Definition iprodC_map {A} {B1 B2 : A → cofeT} (f : iprod (λ x, B1 x -n> B2 x)) :

@@ -206,9 +206,9 @@ Instance res_map_cmra_monotone {Λ Σ} {A B : cofeT} (f : A -n> B) :
   CMRAMonotone (@res_map Λ Σ _ _ f).
 Proof.
   split; first apply _.
-  - by intros n r (?&?&?); split_and!; simpl; try apply validN_preserving.
+  - by intros n r (?&?&?); split_and!; simpl; try apply: validN_preserving.
   - by intros r1 r2; rewrite !res_included;
-      intros (?&?&?); split_and!; simpl; try apply included_preserving.
+      intros (?&?&?); split_and!; simpl; try apply: included_preserving.
 Qed.
 Definition resC_map {Λ Σ A B} (f : A -n> B) : resC Λ Σ A -n> resC Λ Σ B :=
   CofeMor (res_map f : resRA Λ Σ A → resRA Λ Σ B).

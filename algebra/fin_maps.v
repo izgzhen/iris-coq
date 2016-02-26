@@ -339,7 +339,7 @@ Instance map_fmap_cmra_monotone `{Countable K} {A B : cmraT} (f : A → B)
   `{!CMRAMonotone f} : CMRAMonotone (fmap f : gmap K A → gmap K B).
 Proof.
   split; try apply _.
-  - by intros n m ? i; rewrite lookup_fmap; apply validN_preserving.
+  - by intros n m ? i; rewrite lookup_fmap; apply (validN_preserving _).
   - intros m1 m2; rewrite !map_included_spec=> Hm i.
     by rewrite !lookup_fmap; apply: included_preserving.
 Qed.
