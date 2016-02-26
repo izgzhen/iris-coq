@@ -22,7 +22,7 @@ Inductive excl_equiv : Equiv (excl A) :=
   | ExclUnit_equiv : ExclUnit ≡ ExclUnit
   | ExclBot_equiv : ExclBot ≡ ExclBot.
 Existing Instance excl_equiv.
-Inductive excl_dist `{Dist A} : Dist (excl A) :=
+Inductive excl_dist : Dist (excl A) :=
   | Excl_dist (x y : A) n : x ≡{n}≡ y → Excl x ≡{n}≡ Excl y
   | ExclUnit_dist n : ExclUnit ≡{n}≡ ExclUnit
   | ExclBot_dist n : ExclBot ≡{n}≡ ExclBot.
