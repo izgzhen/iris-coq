@@ -10,6 +10,8 @@ Inductive dec_agree (A : Type) : Type :=
   | DecAgreeBot : dec_agree A.
 Arguments DecAgree {_} _.
 Arguments DecAgreeBot {_}.
+Instance maybe_DecAgree {A} : Maybe (@DecAgree A) := λ x,
+  match x with DecAgree a => Some a | _ => None end.
 
 Section dec_agree.
 Context {A : Type} `{∀ x y : A, Decision (x = y)}.
