@@ -27,6 +27,7 @@ Inductive excl_dist : Dist (excl A) :=
   | ExclUnit_dist n : ExclUnit ≡{n}≡ ExclUnit
   | ExclBot_dist n : ExclBot ≡{n}≡ ExclBot.
 Existing Instance excl_dist.
+
 Global Instance Excl_ne n : Proper (dist n ==> dist n) (@Excl A).
 Proof. by constructor. Qed.
 Global Instance Excl_proper : Proper ((≡) ==> (≡)) (@Excl A).
@@ -35,6 +36,7 @@ Global Instance Excl_inj : Inj (≡) (≡) (@Excl A).
 Proof. by inversion_clear 1. Qed.
 Global Instance Excl_dist_inj n : Inj (dist n) (dist n) (@Excl A).
 Proof. by inversion_clear 1. Qed.
+
 Program Definition excl_chain
     (c : chain (excl A)) (x : A) (H : maybe Excl (c 1) = Some x) : chain A :=
   {| chain_car n := match c n return _ with Excl y => y | _ => x end |}.
@@ -191,10 +193,10 @@ Proof. by intros f f' Hf; destruct 1; constructor; apply Hf. Qed.
 Instance excl_map_cmra_monotone {A B : cofeT} (f : A → B) :
   (∀ n, Proper (dist n ==> dist n) f) → CMRAMonotone (excl_map f).
 Proof.
-  split.
-  - intros n x y [z Hy]; exists (excl_map f z); rewrite Hy.
-    by destruct x, z; constructor.
+  split; try apply _.
   - by intros n [a| |].
+  - intros x y [z Hy]; exists (excl_map f z); apply equiv_dist=> n.
+    move: Hy=> /equiv_dist /(_ n) ->; by destruct x, z.
 Qed.
 Definition exclC_map {A B} (f : A -n> B) : exclC A -n> exclC B :=
   CofeMor (excl_map f).

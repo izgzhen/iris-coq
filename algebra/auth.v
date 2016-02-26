@@ -98,12 +98,6 @@ Proof.
   split; [intros [[z1 z2] Hz]; split; [exists z1|exists z2]; apply Hz|].
   intros [[z1 Hz1] [z2 Hz2]]; exists (Auth z1 z2); split; auto.
 Qed.
-Lemma auth_includedN n (x y : auth A) :
-  x ≼{n} y ↔ authoritative x ≼{n} authoritative y ∧ own x ≼{n} own y.
-Proof.
-  split; [intros [[z1 z2] Hz]; split; [exists z1|exists z2]; apply Hz|].
-  intros [[z1 Hz1] [z2 Hz2]]; exists (Auth z1 z2); split; auto.
-Qed.
 Lemma authoritative_validN n (x : auth A) : ✓{n} x → ✓{n} authoritative x.
 Proof. by destruct x as [[]]. Qed.
 Lemma own_validN n (x : auth A) : ✓{n} x → ✓{n} own x.
@@ -212,7 +206,6 @@ Proof.
   intros. apply auth_update=>n af ? EQ; split; last by apply cmra_valid_validN.
   by rewrite -(local_updateN L) // EQ -(local_updateN L) // -EQ.
 Qed.
-
 End cmra.
 
 Arguments authRA : clear implicits.
@@ -234,14 +227,13 @@ Proof.
   intros f g Hf [??] [??] [??]; split; [by apply excl_map_cmra_ne|by apply Hf].
 Qed.
 Instance auth_map_cmra_monotone {A B : cmraT} (f : A → B) :
-  (∀ n, Proper (dist n ==> dist n) f) →
   CMRAMonotone f → CMRAMonotone (auth_map f).
 Proof.
-  split.
-  - by intros n [x a] [y b]; rewrite !auth_includedN /=;
-      intros [??]; split; simpl; apply: includedN_preserving.
-  - intros n [[a| |] b]; rewrite /= /cmra_validN;
-      naive_solver eauto using @includedN_preserving, @validN_preserving.
+  split; try apply _.
+  - intros n [[a| |] b]; rewrite /= /cmra_validN /=; try
+      naive_solver eauto using includedN_preserving, validN_preserving.
+  - by intros [x a] [y b]; rewrite !auth_included /=;
+      intros [??]; split; simpl; apply: included_preserving.
 Qed.
 Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=
   CofeMor (auth_map f).

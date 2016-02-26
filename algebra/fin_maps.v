@@ -231,8 +231,8 @@ Proof.
       [exists (x ⋅ y)|exists x]; eauto using cmra_included_l.
   - intros (y&Hi&?); rewrite map_includedN_spec=>j.
     destruct (decide (i = j)); simplify_map_eq.
-    + by rewrite Hi; apply Some_Some_includedN, cmra_included_includedN.
-    + apply None_includedN.
+    + rewrite Hi. by apply (includedN_preserving _), cmra_included_includedN.
+    + apply: cmra_empty_leastN.
 Qed.
 Lemma map_dom_op m1 m2 : dom (gset K) (m1 ⋅ m2) ≡ dom _ m1 ∪ dom _ m2.
 Proof.
@@ -338,10 +338,10 @@ Proof. by intros ? m m' Hm k; rewrite !lookup_fmap; apply option_fmap_ne. Qed.
 Instance map_fmap_cmra_monotone `{Countable K} {A B : cmraT} (f : A → B)
   `{!CMRAMonotone f} : CMRAMonotone (fmap f : gmap K A → gmap K B).
 Proof.
-  split.
-  - intros m1 m2 n; rewrite !map_includedN_spec; intros Hm i.
-    by rewrite !lookup_fmap; apply: includedN_preserving.
+  split; try apply _.
   - by intros n m ? i; rewrite lookup_fmap; apply validN_preserving.
+  - intros m1 m2; rewrite !map_included_spec=> Hm i.
+    by rewrite !lookup_fmap; apply: included_preserving.
 Qed.
 Definition mapC_map `{Countable K} {A B} (f: A -n> B) : mapC K A -n> mapC K B :=
   CofeMor (fmap f : mapC K A → mapC K B).

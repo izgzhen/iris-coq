@@ -142,8 +142,9 @@ Class CMRADiscrete (A : cmraT) : Prop := {
 
 (** * Morphisms *)
 Class CMRAMonotone {A B : cmraT} (f : A → B) := {
-  includedN_preserving n x y : x ≼{n} y → f x ≼{n} f y;
-  validN_preserving n x : ✓{n} x → ✓{n} f x
+  cmra_monotone_ne n :> Proper (dist n ==> dist n) f;
+  validN_preserving n x : ✓{n} x → ✓{n} f x;
+  included_preserving x y : x ≼ y → f x ≼ f y
 }.
 
 (** * Local updates *)
@@ -430,25 +431,27 @@ End cmra.
 
 (** * Properties about monotone functions *)
 Instance cmra_monotone_id {A : cmraT} : CMRAMonotone (@id A).
-Proof. by split. Qed.
+Proof. repeat split; by try apply _. Qed.
 Instance cmra_monotone_compose {A B C : cmraT} (f : A → B) (g : B → C) :
   CMRAMonotone f → CMRAMonotone g → CMRAMonotone (g ∘ f).
 Proof.
   split.
-  - move=> n x y Hxy /=. by apply includedN_preserving, includedN_preserving.
+  - apply _. 
   - move=> n x Hx /=. by apply validN_preserving, validN_preserving.
+  - move=> x y Hxy /=. by apply included_preserving, included_preserving.
 Qed.
 
 Section cmra_monotone.
   Context {A B : cmraT} (f : A → B) `{!CMRAMonotone f}.
-  Lemma included_preserving x y : x ≼ y → f x ≼ f y.
+  Global Instance cmra_monotone_proper : Proper ((≡) ==> (≡)) f := ne_proper _.
+  Lemma includedN_preserving n x y : x ≼{n} y → f x ≼{n} f y.
   Proof.
-    rewrite !cmra_included_includedN; eauto using includedN_preserving.
+    intros [z ->].
+    apply cmra_included_includedN, included_preserving, cmra_included_l.
   Qed.
   Lemma valid_preserving x : ✓ x → ✓ f x.
   Proof. rewrite !cmra_valid_validN; eauto using validN_preserving. Qed.
 End cmra_monotone.
-
 
 (** * Transporting a CMRA equality *)
 Definition cmra_transport {A B : cmraT} (H : A = B) (x : A) : B :=
@@ -607,8 +610,8 @@ Arguments prodRA : clear implicits.
 Instance prod_map_cmra_monotone {A A' B B' : cmraT} (f : A → A') (g : B → B') :
   CMRAMonotone f → CMRAMonotone g → CMRAMonotone (prod_map f g).
 Proof.
-  split.
-  - intros n x y; rewrite !prod_includedN; intros [??]; simpl.
-    by split; apply includedN_preserving.
+  split; first apply _.
   - by intros n x [??]; split; simpl; apply validN_preserving.
+  - intros x y; rewrite !prod_included=> -[??] /=.
+    by split; apply included_preserving.
 Qed.

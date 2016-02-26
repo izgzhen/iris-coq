@@ -133,13 +133,6 @@ Section iprod_cmra.
     - intros Hh; exists (g ⩪ f)=> x; specialize (Hh x).
       by rewrite /op /iprod_op /minus /iprod_minus cmra_op_minus.
   Qed.
-  Lemma iprod_includedN_spec n (f g : iprod B) : f ≼{n} g ↔ ∀ x, f x ≼{n} g x.
-  Proof.
-    split.
-    - by intros [h Hh] x; exists (h x); rewrite /op /iprod_op (Hh x).
-    - intros Hh; exists (g ⩪ f)=> x; specialize (Hh x).
-      by rewrite /op /iprod_op /minus /iprod_minus cmra_op_minus'.
-  Qed.
 
   Definition iprod_cmra_mixin : CMRAMixin (iprod B).
   Proof.
@@ -283,10 +276,10 @@ Proof. by intros ? y1 y2 Hy x; rewrite /iprod_map (Hy x). Qed.
 Instance iprod_map_cmra_monotone {A} {B1 B2: A → cmraT} (f : ∀ x, B1 x → B2 x) :
   (∀ x, CMRAMonotone (f x)) → CMRAMonotone (iprod_map f).
 Proof.
-  split.
-  - intros n g1 g2; rewrite !iprod_includedN_spec=> Hf x.
-    rewrite /iprod_map; apply includedN_preserving, Hf.
+  split; first apply _.
   - intros n g Hg x; rewrite /iprod_map; apply validN_preserving, Hg.
+  - intros g1 g2; rewrite !iprod_included_spec=> Hf x.
+    rewrite /iprod_map; apply included_preserving, Hf.
 Qed.
 
 Definition iprodC_map {A} {B1 B2 : A → cofeT} (f : iprod (λ x, B1 x -n> B2 x)) :

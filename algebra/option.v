@@ -72,6 +72,8 @@ Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
 Instance option_minus : Minus (option A) :=
   difference_with (λ x y, Some (x ⩪ y)).
 
+Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl.
+
 Lemma option_included (mx my : option A) :
   mx ≼ my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ x ≼ y.
 Proof.
@@ -84,24 +86,6 @@ Proof.
   - intros [->|(x&y&->&->&z&Hz)]; try (by exists my; destruct my; constructor).
     by exists (Some z); constructor.
 Qed.
-Lemma option_includedN n (mx my : option A) :
-  mx ≼{n} my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ x ≼{n} y.
-Proof.
-  split.
-  - intros [mz Hmz].
-    destruct mx as [x|]; [right|by left].
-    destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
-    destruct mz as [z|]; inversion_clear Hmz; split_and?; auto;
-      cofe_subst; eauto using cmra_includedN_l.
-  - intros [->|(x&y&->&->&z&Hz)]; try (by exists my; destruct my; constructor).
-    by exists (Some z); constructor.
-Qed.
-
-Lemma None_includedN n (mx : option A) : None ≼{n} mx.
-Proof. rewrite option_includedN; auto. Qed.
-Lemma Some_Some_includedN n (x y : A) : x ≼{n} y → Some x ≼{n} Some y.
-Proof. rewrite option_includedN; eauto 10. Qed.
-Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl.
 
 Definition option_cmra_mixin  : CMRAMixin (option A).
 Proof.
@@ -140,6 +124,8 @@ Global Instance option_cmra_discrete : CMRADiscrete A → CMRADiscrete optionRA.
 Proof. split; [apply _|]. by intros [x|]; [apply (cmra_discrete_valid x)|]. Qed.
 
 (** Misc *)
+Global Instance Some_cmra_monotone : CMRAMonotone Some.
+Proof. split; [apply _|done|intros x y [z ->]; by exists (Some z)]. Qed.
 Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my.
 Proof.
   destruct mx, my; rewrite /op /option_op /= -!not_eq_None_Some; naive_solver.
@@ -192,10 +178,10 @@ Proof. by intros Hf; destruct 1; constructor; apply Hf. Qed.
 Instance option_fmap_cmra_monotone {A B : cmraT} (f: A → B) `{!CMRAMonotone f} :
   CMRAMonotone (fmap f : option A → option B).
 Proof.
-  split.
-  - intros n mx my; rewrite !option_includedN.
-    intros [->|(x&y&->&->&?)]; simpl; eauto 10 using @includedN_preserving.
-  - by intros n [x|] ?; rewrite /cmra_validN /=; try apply validN_preserving.
+  split; first apply _.
+  - intros n [x|] ?; rewrite /cmra_validN /=; by repeat apply validN_preserving.
+  - intros mx my; rewrite !option_included.
+    intros [->|(x&y&->&->&?)]; simpl; eauto 10 using @included_preserving.
 Qed.
 Definition optionC_map {A B} (f : A -n> B) : optionC A -n> optionC B :=
   CofeMor (fmap f : optionC A → optionC B).

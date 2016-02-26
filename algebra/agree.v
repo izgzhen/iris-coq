@@ -97,11 +97,6 @@ Proof.
   split; [|by intros ?; exists y].
   by intros [z Hz]; rewrite Hz assoc agree_idemp.
 Qed.
-Lemma agree_includedN n (x y : agree A) : x ≼{n} y ↔ y ≡{n}≡ x ⋅ y.
-Proof.
-  split; [|by intros ?; exists y].
-  by intros [z Hz]; rewrite Hz assoc agree_idemp.
-Qed.
 Lemma agree_op_inv n (x1 x2 : agree A) : ✓{n} (x1 ⋅ x2) → x1 ≡{n}≡ x2.
 Proof. intros Hxy; apply Hxy. Qed.
 Lemma agree_valid_includedN n (x y : agree A) : ✓{n} y → x ≼{n} y → x ≡{n}≡ y.
@@ -160,20 +155,20 @@ Proof. done. Qed.
 
 Section agree_map.
   Context {A B : cofeT} (f : A → B) `{Hf: ∀ n, Proper (dist n ==> dist n) f}.
-  Global Instance agree_map_ne n : Proper (dist n ==> dist n) (agree_map f).
+  Instance agree_map_ne n : Proper (dist n ==> dist n) (agree_map f).
   Proof. by intros x1 x2 Hx; split; simpl; intros; [apply Hx|apply Hf, Hx]. Qed.
-  Global Instance agree_map_proper :
-    Proper ((≡) ==> (≡)) (agree_map f) := ne_proper _.
+  Instance agree_map_proper : Proper ((≡) ==> (≡)) (agree_map f) := ne_proper _.
   Lemma agree_map_ext (g : A → B) x :
     (∀ x, f x ≡ g x) → agree_map f x ≡ agree_map g x.
   Proof. by intros Hfg; split; simpl; intros; rewrite ?Hfg. Qed.
   Global Instance agree_map_monotone : CMRAMonotone (agree_map f).
   Proof.
-    split; [|by intros n x [? Hx]; split; simpl; [|by intros n' ?; rewrite Hx]].
-    intros n x y; rewrite !agree_includedN; intros Hy; rewrite Hy.
-    split; last done; split; simpl; last tauto.
-    by intros (?&?&Hxy); repeat split; intros;
-       try apply Hxy; try apply Hf; eauto using @agree_valid_le.
+    split; first apply _.
+    - by intros n x [? Hx]; split; simpl; [|by intros n' ?; rewrite Hx].
+    - intros x y; rewrite !agree_included=> ->.
+      split; last done; split; simpl; last tauto.
+      by intros (?&?&Hxy); repeat split; intros;
+        try apply Hxy; try apply Hf; eauto using @agree_valid_le.
   Qed.
 End agree_map.
 
