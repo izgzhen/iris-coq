@@ -9,6 +9,8 @@ From prelude Require Export base decidable option.
 Open Scope nat_scope.
 
 Coercion Z.of_nat : nat >-> Z.
+Instance comparison_eq_dec (c1 c2 : comparison) : Decision (c1 = c2).
+Proof. solve_decision. Defined.
 
 (** * Notations and properties of [nat] *)
 Arguments minus !_ !_ /.
@@ -104,7 +106,9 @@ Notation "(<)" := Pos.lt (only parsing) : positive_scope.
 Notation "(~0)" := xO (only parsing) : positive_scope.
 Notation "(~1)" := xI (only parsing) : positive_scope.
 
-Arguments Pos.of_nat _ : simpl never.
+Arguments Pos.of_nat : simpl never.
+Arguments Pmult : simpl never.
+
 Instance positive_eq_dec: ∀ x y : positive, Decision (x = y) := Pos.eq_dec.
 Instance positive_inhabited: Inhabited positive := populate 1.
 
@@ -353,6 +357,8 @@ Lemma Qcmult_0_l x : 0 * x = 0.
 Proof. ring. Qed.
 Lemma Qcmult_0_r x : x * 0 = 0.
 Proof. ring. Qed.
+Lemma Qcplus_diag x : (x + x)%Qc = (2 * x)%Qc.
+Proof. ring. Qed.
 Lemma Qcle_ngt (x y : Qc) : x ≤ y ↔ ¬y < x.
 Proof. split; auto using Qcle_not_lt, Qcnot_lt_le. Qed.
 Lemma Qclt_nge (x y : Qc) : x < y ↔ ¬y ≤ x.
@@ -445,6 +451,10 @@ Proof. apply Qred_identity; auto using Z.gcd_1_r. Qed.
 Coercion Qc_of_Z (n : Z) : Qc := Qcmake _ (inject_Z_Qred n).
 Lemma Z2Qc_inj_0 : Qc_of_Z 0 = 0.
 Proof. by apply Qc_is_canon. Qed.
+Lemma Z2Qc_inj_1 : Qc_of_Z 1 = 1.
+Proof. by apply Qc_is_canon. Qed.
+Lemma Z2Qc_inj_2 : Qc_of_Z 2 = 2.
+Proof. by apply Qc_is_canon. Qed.
 Lemma Z2Qc_inj n m : Qc_of_Z n = Qc_of_Z m → n = m.
 Proof. by injection 1. Qed.
 Lemma Z2Qc_inj_iff n m : Qc_of_Z n = Qc_of_Z m ↔ n = m.
@@ -465,3 +475,66 @@ Proof.
   by rewrite !Qred_correct, <-inject_Z_opp, <-inject_Z_plus.
 Qed.
 Close Scope Qc_scope.
+
+(** * Positive rationals *)
+(** The theory of positive rationals is very incomplete. We merely provide
+some operations and theorems that are relevant for fractional permissions. *)
+Record Qp := mk_Qp { Qp_car :> Qc ; Qp_prf : (0 < Qp_car)%Qc }.
+Hint Resolve Qp_prf.
+Delimit Scope Qp_scope with Qp.
+Bind Scope Qp_scope with Qp.
+Arguments Qp_car _%Qp.
+
+Definition Qp_one : Qp := mk_Qp 1 eq_refl.
+Program Definition Qp_plus (x y : Qp) : Qp := mk_Qp (x + y) _.
+Next Obligation. by intros x y; apply Qcplus_pos_pos. Qed.
+Definition Qp_minus (x y : Qp) : option Qp :=
+  let z := (x - y)%Qc in
+  match decide (0 < z)%Qc with left Hz => Some (mk_Qp z Hz) | _ => None end.
+Program Definition Qp_div (x : Qp) (y : positive) : Qp := mk_Qp (x / ('y)%Z) _.  
+Next Obligation.
+  intros x y. assert (0 < ('y)%Z)%Qc.
+  { apply (Z2Qc_inj_lt 0%Z (' y)), Pos2Z.is_pos. }
+  by rewrite (Qcmult_lt_mono_pos_r _ _ ('y)%Z), Qcmult_0_l,
+    <-Qcmult_assoc, Qcmult_inv_l, Qcmult_1_r.
+Qed.
+
+Notation "1" := Qp_one : Qp_scope.
+Infix "+" := Qp_plus : Qp_scope.
+Infix "-" := Qp_minus : Qp_scope.
+Infix "/" := Qp_div : Qp_scope.
+
+Lemma Qp_eq x y : x = y ↔ Qp_car x = Qp_car y.
+Proof.
+  split; [by intros ->|].
+  destruct x, y; intros; simplify_eq/=; f_equal; apply (proof_irrel _).
+Qed.
+Instance Qp_plus_assoc : Assoc (=) Qp_plus.
+Proof. intros x y z; apply Qp_eq, Qcplus_assoc. Qed.
+Instance Qp_plus_comm : Comm (=) Qp_plus.
+Proof. intros x y; apply Qp_eq, Qcplus_comm. Qed.
+
+Lemma Qp_minus_diag x : (x - x)%Qp = None.
+Proof. unfold Qp_minus. by rewrite Qcplus_opp_r. Qed.
+Lemma Qp_op_minus x y : ((x + y) - x)%Qp = Some y.
+Proof.
+  unfold Qp_minus; simpl.
+  rewrite (Qcplus_comm x), <- Qcplus_assoc, Qcplus_opp_r, Qcplus_0_r.
+  destruct (decide _) as [|[]]; auto. by f_equal; apply Qp_eq.
+Qed.
+
+Lemma Qp_div_1 x : (x / 1 = x)%Qp.
+Proof.
+  apply Qp_eq; simpl.
+  rewrite <-(Qcmult_div_r x 1) at 2 by done. by rewrite Qcmult_1_l.
+Qed.
+Lemma Qp_div_S x y : (x / (2 * y) + x / (2 * y) = x / y)%Qp.
+Proof.
+  apply Qp_eq; simpl.
+  rewrite <-Qcmult_plus_distr_l, Pos2Z.inj_mul, Z2Qc_inj_mul, Z2Qc_inj_2.
+  rewrite Qcplus_diag. by field_simplify.
+Qed.
+Lemma Qp_div_2 x : (x / 2 + x / 2 = x)%Qp.
+Proof.
+  change 2%positive with (2 * 1)%positive. by rewrite Qp_div_S, Qp_div_1.
+Qed.
