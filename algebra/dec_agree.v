@@ -52,5 +52,6 @@ Proof. destruct x; by repeat (simplify_eq/= || case_match). Qed.
 
 Lemma dec_agree_op_inv (x1 x2 : dec_agree A) : ✓ (x1 ⋅ x2) → x1 ≡ x2.
 Proof. destruct x1, x2; by repeat (simplify_eq/= || case_match). Qed.
-
 End dec_agree.
+
+Arguments dec_agreeRA _ {_}.
