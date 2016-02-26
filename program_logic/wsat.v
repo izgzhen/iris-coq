@@ -117,7 +117,7 @@ Lemma wsat_update_pst n E σ1 σ1' r rf :
 Proof.
   intros Hpst_r [rs [(?&?&?) Hpst HE Hwld]]; simpl in *.
   assert (pst rf ⋅ pst (big_opM rs) = ∅) as Hpst'.
-  { by apply: (excl_validN_inv_l (S n) σ1); rewrite -Hpst_r assoc. }
+  { by apply: (excl_validN_inv_l (S n) _ σ1); rewrite -Hpst_r assoc. }
   assert (σ1' = σ1) as ->.
   { apply leibniz_equiv, (timeless _), dist_le with (S n); auto.
     apply (inj Excl).
