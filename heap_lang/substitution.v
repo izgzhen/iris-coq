@@ -1,152 +1,156 @@
-From heap_lang Require Export derived.
+From heap_lang Require Export lang.
+From prelude Require Import stringmap.
+Import heap_lang.
 
-(** We define an alternative notion of substitution [gsubst e x ev] that
-preserves the expression [e] syntactically in case the variable [x] does not
-occur freely in [e]. By syntactically, we mean that [e] is preserved without
-unfolding any Coq definitions. For example:
+(** The tactic [simpl_subst] performs substitutions in the goal. Its behavior
+can be tuned using instances of the type class [Closed e], which can be used
+to mark that expressions are closed, and should thus not be substituted into. *)
 
-<<
-  Definition id : val := λ: "x", "x".
-  Eval simpl in subst (id "y") "y" '10.   (* (Lam "x" "x") '10 *)
-  Eval simpl in gsubst (id "y") "y" '10.  (* id '10 *)
->>
+Class Closed (e : expr) := closed : ∀ x v, subst e x v = e.
+Class Subst (e : expr) (x : string) (v : val) (er : expr) :=
+  do_subst : subst e x v = er.
+Hint Mode Subst + + + - : typeclass_instances.
 
-For [gsubst e x ev] to work, [e] should not contain any opaque parts.
-Fundamentally, the way this works is that [gsubst] tests whether a subterm
-needs substitution, before it traverses into the term. This way, unaffected
-sub-terms are returned directly, rather than their tree structure being
-deconstructed and composed again.
+Ltac simpl_subst :=
+  repeat match goal with
+  | |- context [subst ?e ?x ?v] => rewrite (@do_subst e x v)
+  | |- _ => progress csimpl
+  end; fold of_val.
 
-The function [gsubst e x ev] differs in yet another way from [subst e x v].
-The function [gsubst] substitutes an expression [ev] whereas [subst]
-substitutes a value [v]. This way we avoid unnecessary conversion back and
-forth between values and expressions, which could also cause Coq definitions
-to be unfolded. For example, consider the rule [wp_rec'] from below:
-
-<<
-  Definition foo : val := rec: "f" "x" := ... .
-
-  Lemma wp_rec E e1 f x erec e2 v Φ :
-    e1 = Rec f x erec →
-    to_val e2 = Some v →
-    ▷ || gsubst (gsubst erec f e1) x e2 @ E {{ Φ }} ⊑ || App e1 e2 @ E {{ Φ }}.
->>
-
-We ensure that [e1] is substituted instead of [RecV f x erec]. So, for example
-when taking [e1 := foo] we ensure that [foo] is substituted without being
-unfolded. *)
-
-(** * Implementation *)
-(** The core of [gsubst e x ev] is the partial function [gsubst_go e x ev] that
-returns [None] in case [x] does not occur freely in [e] and [Some e'] in case
-[x] occurs in [e]. The function [gsubst e x ev] is then simply defined as
-[from_option e (gsubst_go e x ev)]. *)
-Definition gsubst_lift {A B C} (f : A → B → C)
-    (x : A) (y : B) (mx : option A) (my : option B) : option C :=
-  match mx, my with
-  | Some x, Some y => Some (f x y)
-  | Some x, None => Some (f x y)
-  | None, Some y => Some (f x y)
-  | None, None => None
-  end.
-Fixpoint gsubst_go (e : expr) (x : string) (ev : expr) : option expr :=
-  match e with
-  | Var y => if decide (x = y ∧ x ≠ "") then Some ev else None
-  | Rec f y e =>
-     if decide (x ≠ f ∧ x ≠ y) then Rec f y <$> gsubst_go e x ev else None
-  | App e1 e2 => gsubst_lift App e1 e2 (gsubst_go e1 x ev) (gsubst_go e2 x ev)
-  | Lit l => None
-  | UnOp op e => UnOp op <$> gsubst_go e x ev
-  | BinOp op e1 e2 =>
-     gsubst_lift (BinOp op) e1 e2 (gsubst_go e1 x ev) (gsubst_go e2 x ev)
-  | If e0 e1 e2 =>
-     gsubst_lift id (If e0 e1) e2
-       (gsubst_lift If e0 e1 (gsubst_go e0 x ev) (gsubst_go e1 x ev))
-       (gsubst_go e2 x ev)
-  | Pair e1 e2 => gsubst_lift Pair e1 e2 (gsubst_go e1 x ev) (gsubst_go e2 x ev)
-  | Fst e => Fst <$> gsubst_go e x ev
-  | Snd e => Snd <$> gsubst_go e x ev
-  | InjL e => InjL <$> gsubst_go e x ev
-  | InjR e => InjR <$> gsubst_go e x ev
-  | Case e0 x1 e1 x2 e2 =>
-     gsubst_lift id (Case e0 x1 e1 x2) e2
-       (gsubst_lift (λ e0' e1', Case e0' x1 e1' x2) e0 e1
-         (gsubst_go e0 x ev)
-         (if decide (x ≠ x1) then gsubst_go e1 x ev else None))
-       (if decide (x ≠ x2) then gsubst_go e2 x ev else None)
-  | Fork e => Fork <$> gsubst_go e x ev
-  | Loc l => None
-  | Alloc e => Alloc <$> gsubst_go e x ev
-  | Load e => Load <$> gsubst_go e x ev
-  | Store e1 e2 => gsubst_lift Store e1 e2 (gsubst_go e1 x ev) (gsubst_go e2 x ev)
-  | Cas e0 e1 e2 =>
-     gsubst_lift id (Cas e0 e1) e2
-       (gsubst_lift Cas e0 e1 (gsubst_go e0 x ev) (gsubst_go e1 x ev))
-       (gsubst_go e2 x ev)
-  end.
-Definition gsubst (e : expr) (x : string) (ev : expr) : expr :=
-  from_option e (gsubst_go e x ev).
-
-(** * Simpl  *)
-(** Ensure that [simpl] unfolds [gsubst e x ev] when applied to a concrete term
-[e] and use [simpl nomatch] to ensure that it does not reduce in case [e]
-contains any opaque parts that block reduction. *)
-Arguments gsubst !_ _ _/ : simpl nomatch.
-
-(** We define heap_lang functions as values (see [id] above). In order to
-ensure too eager conversion to expressions, we block [simpl]. *)
 Arguments of_val : simpl never.
+Hint Extern 10 (Subst (of_val _) _ _ _) =>
+  unfold of_val; fold of_val : typeclass_instances.
+Hint Extern 10 (Closed (of_val _)) =>
+  unfold of_val; fold of_val : typeclass_instances.
 
-(** * Correctness *)
-(** We prove that [gsubst] behaves like [subst] when substituting values. *)
-Lemma gsubst_None e x v : gsubst_go e x (of_val v) = None → e = subst e x v.
+Class SubstIf (P : Prop) (e : expr) (x : string) (v : val) (er : expr) := {
+  subst_if_true : P → subst e x v = er;
+  subst_if_false : ¬P → e = er
+}.
+Hint Mode SubstIf + + + + - : typeclass_instances.
+Definition subst_if_mk_true (P : Prop) x v e er :
+  Subst e x v er → P → SubstIf P e x v er.
+Proof. by split. Qed.
+Definition subst_if_mk_false (P : Prop) x v e : ¬P → SubstIf P e x v e.
+Proof. by split. Qed.
+
+Ltac bool_decide_no_check := apply (bool_decide_unpack _); vm_cast_no_check I.
+
+Hint Extern 0 (SubstIf ?P ?e ?x ?v _) =>
+  match eval vm_compute in (bool_decide P) with
+  | true => apply subst_if_mk_true; [|bool_decide_no_check]
+  | false => apply subst_if_mk_false; bool_decide_no_check
+  end : typeclass_instances.
+
+Instance subst_closed e x v : Closed e → Subst e x v e | 0.
+Proof. intros He; apply He. Qed.
+
+Instance lit_closed l : Closed (Lit l).
+Proof. done. Qed.
+Instance loc_closed l : Closed (Loc l).
+Proof. done. Qed.
+
+Definition subst_var_eq y x v : (x = y ∧ x ≠ "") → Subst (Var y) x v (of_val v).
+Proof. intros. by red; rewrite /= decide_True. Defined.
+Definition subst_var_ne y x v : ¬(x = y ∧ x ≠ "") → Subst (Var y) x v (Var y).
+Proof. intros. by red; rewrite /= decide_False. Defined.
+
+Hint Extern 0 (Subst (Var ?y) ?x ?v _) =>
+  match eval vm_compute in (bool_decide (x = y ∧ x ≠ "")) with
+  | true => apply subst_var_eq; bool_decide_no_check
+  | false => apply subst_var_ne; bool_decide_no_check
+  end : typeclass_instances.
+
+Instance subst_rec f y e x v er :
+  SubstIf (x ≠ f ∧ x ≠ y) e x v er → Subst (Rec f y e) x v (Rec f y er).
+Proof. intros [??]; red; f_equal/=; case_decide; auto. Qed.
+Instance subst_case e0 x1 e1 x2 e2 x v e0r e1r e2r :
+  Subst e0 x v e0r → SubstIf (x ≠ x1) e1 x v e1r → SubstIf (x ≠ x2) e2 x v e2r →
+  Subst (Case e0 x1 e1 x2 e2) x v (Case e0r x1 e1r x2 e2r).
+Proof. intros ? [??] [??]; red; f_equal/=; repeat case_decide; auto. Qed.
+
+Instance subst_app e1 e2 x v e1r e2r :
+  Subst e1 x v e1r → Subst e2 x v e2r → Subst (App e1 e2) x v (App e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+Instance subst_unop op e x v er :
+  Subst e x v er → Subst (UnOp op e) x v (UnOp op er).
+Proof. by intros; red; f_equal/=. Qed.
+Instance subst_binop op e1 e2 x v e1r e2r :
+  Subst e1 x v e1r → Subst e2 x v e2r →
+  Subst (BinOp op e1 e2) x v (BinOp op e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+Instance subst_if e0 e1 e2 x v e0r e1r e2r :
+  Subst e0 x v e0r → Subst e1 x v e1r → Subst e2 x v e2r →
+  Subst (If e0 e1 e2) x v (If e0r e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+Instance subst_pair e1 e2 x v e1r e2r :
+  Subst e1 x v e1r → Subst e2 x v e2r → Subst (Pair e1 e2) x v (Pair e1r e2r).
+Proof. by intros ??; red; f_equal/=. Qed.
+Instance subst_fst e x v er : Subst e x v er → Subst (Fst e) x v (Fst er).
+Proof. by intros; red; f_equal/=. Qed.
+Instance subst_snd e x v er : Subst e x v er → Subst (Snd e) x v (Snd er).
+Proof. by intros; red; f_equal/=. Qed.
+Instance subst_injL e x v er : Subst e x v er → Subst (InjL e) x v (InjL er).
+Proof. by intros; red; f_equal/=. Qed.
+Instance subst_injR e x v er : Subst e x v er → Subst (InjR e) x v (InjR er).
+Proof. by intros; red; f_equal/=. Qed.
+Instance subst_fork e x v er : Subst e x v er → Subst (Fork e) x v (Fork er).
+Proof. by intros; red; f_equal/=. Qed.
+Instance subst_alloc e x v er : Subst e x v er → Subst (Alloc e) x v (Alloc er).
+Proof. by intros; red; f_equal/=. Qed.
+Instance subst_load e x v er : Subst e x v er → Subst (Load e) x v (Load er).
+Proof. by intros; red; f_equal/=. Qed.
+Instance subst_store e1 e2 x v e1r e2r :
+  Subst e1 x v e1r → Subst e2 x v e2r → Subst (Store e1 e2) x v (Store e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+Instance subst_cas e0 e1 e2 x v e0r e1r e2r :
+  Subst e0 x v e0r → Subst e1 x v e1r → Subst e2 x v e2r →
+  Subst (Cas e0 e1 e2) x v (Cas e0r e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+
+(** * Solver for [Closed] *)
+Fixpoint is_closed (X : stringset) (e : expr) : bool :=
+  match e with
+  | Var x => bool_decide (x ∈ X)
+  | Rec f y e => is_closed ({[ f ; y ]} ∪ X) e
+  | App e1 e2 => is_closed X e1 && is_closed X e2
+  | Lit l => true
+  | UnOp _ e => is_closed X e
+  | BinOp _ e1 e2 => is_closed X e1 && is_closed X e2
+  | If e0 e1 e2 => is_closed X e0 && is_closed X e1 && is_closed X e2
+  | Pair e1 e2 => is_closed X e1 && is_closed X e2
+  | Fst e => is_closed X e
+  | Snd e => is_closed X e
+  | InjL e => is_closed X e
+  | InjR e => is_closed X e
+  | Case e0 x1 e1 x2 e2 =>
+     is_closed X e0 && is_closed ({[x1]} ∪ X) e1 && is_closed ({[x2]} ∪ X) e2
+  | Fork e => is_closed X e
+  | Loc l => true
+  | Alloc e => is_closed X e
+  | Load e => is_closed X e
+  | Store e1 e2 => is_closed X e1 && is_closed X e2
+  | Cas e0 e1 e2 => is_closed X e0 && is_closed X e1 && is_closed X e2
+  end.
+Lemma is_closed_sound e : is_closed ∅ e → Closed e.
 Proof.
-  induction e; simpl; unfold gsubst_lift; intros;
-    repeat (simplify_option_eq || case_match); f_equal; auto.
+  cut (∀ x v X, is_closed X e → x ∉ X → subst e x v = e).
+  { intros help ? x v. by apply (help x v ∅). }
+  intros x v; induction e; simpl; intros;
+    repeat match goal with
+    | _ => progress subst
+    | _ => contradiction
+    | H : Is_true (bool_decide _) |- _ => apply (bool_decide_unpack _) in H
+    | H : Is_true (_ && _) |- _ => apply andb_True in H
+    | H : _ ∧ _ |- _ => destruct H
+    | _ => case_decide
+    | _ => f_equal
+    end; eauto;
+    match goal with
+    | H : ∀ _, _ → _ ∉ _ → subst _ _ _ = _ |- _ =>
+       eapply H; first done; rewrite !elem_of_union !elem_of_singleton; tauto
+    end.
 Qed.
-Lemma gsubst_correct e x v : gsubst e x (of_val v) = subst e x v.
-Proof.
-  unfold gsubst; destruct (gsubst_go e x (of_val v)) as [e'|] eqn:He; simpl;
-    last by apply gsubst_None.
-  revert e' He; induction e; simpl; unfold gsubst_lift; intros;
-    repeat (simplify_option_eq || case_match);
-    f_equal; auto using gsubst_None.
-Qed.
+Ltac solve_closed := apply is_closed_sound; vm_compute; exact I.
 
-(** * Weakest precondition rules *)
-Section wp.
-Context {Σ : iFunctor}.
-Implicit Types P Q : iProp heap_lang Σ.
-Implicit Types Φ : val → iProp heap_lang Σ.
-Hint Resolve to_of_val.
-
-Lemma wp_rec E e1 f x erec e2 v Φ :
-  e1 = Rec f x erec →
-  to_val e2 = Some v →
-  ▷ || gsubst (gsubst erec f e1) x e2 @ E {{ Φ }} ⊑ || App e1 e2 @ E {{ Φ }}.
-Proof.
-  intros -> <-%of_to_val.
-  rewrite (gsubst_correct _ _ (RecV _ _ _)) gsubst_correct.
-  by apply wp_rec'.
-Qed.
-
-Lemma wp_lam E x ef e v Φ :
-  to_val e = Some v →
-  ▷ || gsubst ef x e @ E {{ Φ }} ⊑ || App (Lam x ef) e @ E {{ Φ }}.
-Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_lam'. Qed.
-
-Lemma wp_let E x e1 e2 v Φ :
-  to_val e1 = Some v →
-  ▷ || gsubst e2 x e1 @ E {{ Φ }} ⊑ || Let x e1 e2 @ E {{ Φ }}.
-Proof. apply wp_lam. Qed.
-
-Lemma wp_case_inl E e0 v0 x1 e1 x2 e2 Φ :
-  to_val e0 = Some v0 →
-  ▷ || gsubst e1 x1 e0 @ E {{ Φ }} ⊑ || Case (InjL e0) x1 e1 x2 e2 @ E {{ Φ }}.
-Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_case_inl'. Qed.
-
-Lemma wp_case_inr E e0 v0 x1 e1 x2 e2 Φ :
-  to_val e0 = Some v0 →
-  ▷ || gsubst e2 x2 e0 @ E {{ Φ }} ⊑ || Case (InjR e0) x1 e1 x2 e2 @ E {{ Φ }}.
-Proof. intros <-%of_to_val; rewrite gsubst_correct. by apply wp_case_inr'. Qed.
-End wp.
+Global Opaque subst.

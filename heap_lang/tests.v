@@ -48,6 +48,11 @@ Section LiftingTests.
     λ: "x",
       if: "x" ≤ '0 then -FindPred (-"x" + '2) '0 else FindPred "x" '0.
 
+  Instance FindPred_closed : Closed FindPred | 0.
+  Proof. solve_closed. Qed.
+  Instance Pred_closed : Closed Pred | 0.
+  Proof. solve_closed. Qed.
+
   Lemma FindPred_spec n1 n2 E Φ :
     n1 < n2 → 
     Φ '(n2 - 1) ⊑ || FindPred 'n2 'n1 @ E {{ Φ }}.

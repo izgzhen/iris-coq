@@ -1,5 +1,5 @@
 From algebra Require Export upred_tactics.
-From heap_lang Require Export tactics substitution.
+From heap_lang Require Export tactics derived substitution.
 Import uPred.
 
 (** wp-specific helper tactics *)
@@ -30,8 +30,9 @@ Tactic Notation "wp_rec" ">" :=
       match eval cbv in e' with
       | App (Rec _ _ _) _ =>
          wp_bind K; etrans;
-           [|eapply wp_rec; repeat (reflexivity || rewrite /= to_of_val)];
-           wp_finish
+           [|first [eapply wp_rec' | eapply wp_rec];
+               repeat (reflexivity || rewrite /= to_of_val)];
+           simpl_subst; wp_finish
       end)
      end).
 Tactic Notation "wp_rec" := wp_rec>; try strip_later.
@@ -43,7 +44,7 @@ Tactic Notation "wp_lam" ">" :=
     | App (Rec "" _ _) _ =>
        wp_bind K; etrans;
          [|eapply wp_lam; repeat (reflexivity || rewrite /= to_of_val)];
-         wp_finish
+         simpl_subst; wp_finish
     end)
   end.
 Tactic Notation "wp_lam" := wp_lam>; try strip_later.
