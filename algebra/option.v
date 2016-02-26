@@ -72,6 +72,7 @@ Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
 Instance option_minus : Minus (option A) :=
   difference_with (λ x y, Some (x ⩪ y)).
 
+Definition Some_valid a : ✓ Some a ↔ ✓ a := reflexivity _.
 Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl.
 
 Lemma option_included (mx my : option A) :
