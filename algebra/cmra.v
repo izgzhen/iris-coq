@@ -516,7 +516,7 @@ Section discrete.
       apply (timeless _), dist_le with n; auto with lia.
   Qed.
   Definition discreteRA : cmraT := CMRAT (cofe_mixin A) discrete_cmra_mixin.
-  Instance discrete_cmra_discrete : CMRADiscrete discreteRA.
+  Global Instance discrete_cmra_discrete : CMRADiscrete discreteRA.
   Proof. split. change (Discrete A); apply _. by intros x ?. Qed.
 End discrete.
 
