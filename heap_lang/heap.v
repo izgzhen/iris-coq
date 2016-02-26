@@ -1,5 +1,5 @@
 From heap_lang Require Export lifting.
-From algebra Require Import upred_big_op.
+From algebra Require Import upred_big_op frac.
 From program_logic Require Export invariants ghost_ownership.
 From program_logic Require Import ownership auth.
 Import uPred.
