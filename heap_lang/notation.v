@@ -62,9 +62,9 @@ Notation "'let:' x := e1 'in' e2" := (Lam x e2%L e1%L)
 Notation "'let:' x := e1 'in' e2" := (LamV x e2%L e1%L)
   (at level 102, x at level 1, e1, e2 at level 200) : lang_scope.
 Notation "e1 ;; e2" := (Lam "" e2%L e1%L)
-  (at level 100, e2 at level 200) : lang_scope.
+  (at level 100, e2 at level 200, format "e1  ;;  e2") : lang_scope.
 Notation "e1 ;; e2" := (LamV "" e2%L e1%L)
-  (at level 100, e2 at level 200) : lang_scope.
+  (at level 100, e2 at level 200, format "e1  ;;  e2") : lang_scope.
 
 Notation "'rec:' f x y := e" := (Rec f x (Lam y e%L))
   (at level 102, f, x, y at level 1, e at level 200) : lang_scope.
