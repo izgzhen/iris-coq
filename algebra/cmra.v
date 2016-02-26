@@ -48,9 +48,9 @@ Record CMRAMixin A
   mixin_cmra_comm : Comm (≡) (⋅);
   mixin_cmra_unit_l x : unit x ⋅ x ≡ x;
   mixin_cmra_unit_idemp x : unit (unit x) ≡ unit x;
-  mixin_cmra_unit_preservingN n x y : x ≼{n} y → unit x ≼{n} unit y;
+  mixin_cmra_unit_preserving x y : x ≼ y → unit x ≼ unit y;
   mixin_cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
-  mixin_cmra_op_minus n x y : x ≼{n} y → x ⋅ y ⩪ x ≡{n}≡ y;
+  mixin_cmra_op_minus x y : x ≼ y → x ⋅ y ⩪ x ≡ y;
   mixin_cmra_extend n x y1 y2 :
     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
     { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ≡{n}≡ y1 ∧ z.2 ≡{n}≡ y2 }
@@ -112,11 +112,11 @@ Section cmra_mixin.
   Proof. apply (mixin_cmra_unit_l _ (cmra_mixin A)). Qed.
   Lemma cmra_unit_idemp x : unit (unit x) ≡ unit x.
   Proof. apply (mixin_cmra_unit_idemp _ (cmra_mixin A)). Qed.
-  Lemma cmra_unit_preservingN n x y : x ≼{n} y → unit x ≼{n} unit y.
-  Proof. apply (mixin_cmra_unit_preservingN _ (cmra_mixin A)). Qed.
+  Lemma cmra_unit_preserving x y : x ≼ y → unit x ≼ unit y.
+  Proof. apply (mixin_cmra_unit_preserving _ (cmra_mixin A)). Qed.
   Lemma cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x.
   Proof. apply (mixin_cmra_validN_op_l _ (cmra_mixin A)). Qed.
-  Lemma cmra_op_minus n x y : x ≼{n} y → x ⋅ y ⩪ x ≡{n}≡ y.
+  Lemma cmra_op_minus x y : x ≼ y → x ⋅ y ⩪ x ≡ y.
   Proof. apply (mixin_cmra_op_minus _ (cmra_mixin A)). Qed.
   Lemma cmra_extend n x y1 y2 :
     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
@@ -243,12 +243,16 @@ Proof. rewrite -{1}(cmra_unit_l x); apply cmra_validN_op_l. Qed.
 Lemma cmra_unit_valid x : ✓ x → ✓ unit x.
 Proof. rewrite -{1}(cmra_unit_l x); apply cmra_valid_op_l. Qed.
 
+(** ** Minus *)
+Lemma cmra_op_minus' n x y : x ≼{n} y → x ⋅ y ⩪ x ≡{n}≡ y.
+Proof. intros [z ->]. by rewrite cmra_op_minus; last exists z. Qed.
+
 (** ** Order *)
 Lemma cmra_included_includedN x y : x ≼ y ↔ ∀ n, x ≼{n} y.
 Proof.
   split; [by intros [z Hz] n; exists z; rewrite Hz|].
   intros Hxy; exists (y ⩪ x); apply equiv_dist=> n.
-  symmetry; apply cmra_op_minus, Hxy.
+  by rewrite cmra_op_minus'.
 Qed.
 Global Instance cmra_includedN_preorder n : PreOrder (@includedN A _ _ n).
 Proof.
@@ -281,8 +285,11 @@ Proof. rewrite (comm op); apply cmra_includedN_l. Qed.
 Lemma cmra_included_r x y : y ≼ x ⋅ y.
 Proof. rewrite (comm op); apply cmra_included_l. Qed.
 
-Lemma cmra_unit_preserving x y : x ≼ y → unit x ≼ unit y.
-Proof. rewrite !cmra_included_includedN; eauto using cmra_unit_preservingN. Qed.
+Lemma cmra_unit_preservingN n x y : x ≼{n} y → unit x ≼{n} unit y.
+Proof.
+  intros [z ->].
+  apply cmra_included_includedN, cmra_unit_preserving, cmra_included_l.
+Qed.
 Lemma cmra_included_unit x : unit x ≼ x.
 Proof. by exists x; rewrite cmra_unit_l. Qed.
 Lemma cmra_preservingN_l n x y z : x ≼{n} y → z ⋅ x ≼{n} z ⋅ y.
@@ -299,12 +306,6 @@ Lemma cmra_included_dist_l n x1 x2 x1' :
 Proof.
   intros [z Hx2] Hx1; exists (x1' ⋅ z); split; auto using cmra_included_l.
   by rewrite Hx1 Hx2.
-Qed.
-
-(** ** Minus *)
-Lemma cmra_op_minus' x y : x ≼ y → x ⋅ y ⩪ x ≡ y.
-Proof.
-  rewrite cmra_included_includedN equiv_dist; eauto using cmra_op_minus.
 Qed.
 
 (** ** Timeless *)
@@ -565,10 +566,10 @@ Section prod.
     - by split; rewrite /= comm.
     - by split; rewrite /= cmra_unit_l.
     - by split; rewrite /= cmra_unit_idemp.
-    - intros n x y; rewrite !prod_includedN.
-      by intros [??]; split; apply cmra_unit_preservingN.
+    - intros x y; rewrite !prod_included.
+      by intros [??]; split; apply cmra_unit_preserving.
     - intros n x y [??]; split; simpl in *; eauto using cmra_validN_op_l.
-    - intros n x y; rewrite prod_includedN; intros [??].
+    - intros x y; rewrite prod_included; intros [??].
       by split; apply cmra_op_minus.
     - intros n x y1 y2 [??] [??]; simpl in *.
       destruct (cmra_extend n (x.1) (y1.1) (y2.1)) as (z1&?&?&?); auto.

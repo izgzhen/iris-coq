@@ -111,11 +111,11 @@ Proof.
   - by intros ??; constructor; rewrite /= comm.
   - by intros ?; constructor; rewrite /= cmra_unit_l.
   - by intros ?; constructor; rewrite /= cmra_unit_idemp.
-  - intros n r1 r2; rewrite !res_includedN.
-    by intros (?&?&?); split_and!; apply cmra_unit_preservingN.
+  - intros r1 r2; rewrite !res_included.
+    by intros (?&?&?); split_and!; apply cmra_unit_preserving.
   - intros n r1 r2 (?&?&?);
       split_and!; simpl in *; eapply cmra_validN_op_l; eauto.
-  - intros n r1 r2; rewrite res_includedN; intros (?&?&?).
+  - intros r1 r2; rewrite res_included; intros (?&?&?).
     by constructor; apply cmra_op_minus.
   - intros n r r1 r2 (?&?&?) [???]; simpl in *.
     destruct (cmra_extend n (wld r) (wld r1) (wld r2)) as ([w w']&?&?&?),

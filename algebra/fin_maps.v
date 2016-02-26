@@ -110,7 +110,7 @@ Proof.
   split.
   - by intros [m Hm]; intros i; exists (m !! i); rewrite -lookup_op Hm.
   - intros Hm; exists (m2 ⩪ m1); intros i.
-    by rewrite lookup_op lookup_minus cmra_op_minus'.
+    by rewrite lookup_op lookup_minus cmra_op_minus.
 Qed.
 Lemma map_includedN_spec (m1 m2 : gmap K A) n :
   m1 ≼{n} m2 ↔ ∀ i, m1 !! i ≼{n} m2 !! i.
@@ -118,7 +118,7 @@ Proof.
   split.
   - by intros [m Hm]; intros i; exists (m !! i); rewrite -lookup_op Hm.
   - intros Hm; exists (m2 ⩪ m1); intros i.
-    by rewrite lookup_op lookup_minus cmra_op_minus.
+    by rewrite lookup_op lookup_minus cmra_op_minus'.
 Qed.
 
 Definition map_cmra_mixin : CMRAMixin (gmap K A).
@@ -136,11 +136,11 @@ Proof.
   - by intros m1 m2 i; rewrite !lookup_op comm.
   - by intros m i; rewrite lookup_op !lookup_unit cmra_unit_l.
   - by intros m i; rewrite !lookup_unit cmra_unit_idemp.
-  - intros n x y; rewrite !map_includedN_spec; intros Hm i.
-    by rewrite !lookup_unit; apply cmra_unit_preservingN.
+  - intros x y; rewrite !map_included_spec; intros Hm i.
+    by rewrite !lookup_unit; apply cmra_unit_preserving.
   - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
-  - intros n x y; rewrite map_includedN_spec=> ? i.
+  - intros x y; rewrite map_included_spec=> ? i.
     by rewrite lookup_op lookup_minus cmra_op_minus.
   - intros n m m1 m2 Hm Hm12.
     assert (∀ i, m !! i ≡{n}≡ m1 !! i ⋅ m2 !! i) as Hm12'

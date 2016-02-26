@@ -71,6 +71,19 @@ Instance option_unit : Unit (option A) := fmap unit.
 Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
 Instance option_minus : Minus (option A) :=
   difference_with (λ x y, Some (x ⩪ y)).
+
+Lemma option_included (mx my : option A) :
+  mx ≼ my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ x ≼ y.
+Proof.
+  split.
+  - intros [mz Hmz].
+    destruct mx as [x|]; [right|by left].
+    destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
+    destruct mz as [z|]; inversion_clear Hmz; split_and?; auto;
+      setoid_subst; eauto using cmra_included_l.
+  - intros [->|(x&y&->&->&z&Hz)]; try (by exists my; destruct my; constructor).
+    by exists (Some z); constructor.
+Qed.
 Lemma option_includedN n (mx my : option A) :
   mx ≼{n} my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ x ≼{n} y.
 Proof.
@@ -83,6 +96,7 @@ Proof.
   - intros [->|(x&y&->&->&z&Hz)]; try (by exists my; destruct my; constructor).
     by exists (Some z); constructor.
 Qed.
+
 Lemma None_includedN n (mx : option A) : None ≼{n} mx.
 Proof. rewrite option_includedN; auto. Qed.
 Lemma Some_Some_includedN n (x y : A) : x ≼{n} y → Some x ≼{n} Some y.
@@ -102,11 +116,11 @@ Proof.
   - intros [x|] [y|]; constructor; rewrite 1?comm; auto.
   - by intros [x|]; constructor; rewrite cmra_unit_l.
   - by intros [x|]; constructor; rewrite cmra_unit_idemp.
-  - intros n mx my; rewrite !option_includedN;intros [->|(x&y&->&->&?)]; auto.
-    right; exists (unit x), (unit y); eauto using cmra_unit_preservingN.
+  - intros mx my; rewrite !option_included ;intros [->|(x&y&->&->&?)]; auto.
+    right; exists (unit x), (unit y); eauto using cmra_unit_preserving.
   - intros n [x|] [y|]; rewrite /validN /option_validN /=;
       eauto using cmra_validN_op_l.
-  - intros n mx my; rewrite option_includedN.
+  - intros mx my; rewrite option_included.
     intros [->|(x&y&->&->&?)]; [by destruct my|].
     by constructor; apply cmra_op_minus.
   - intros n mx my1 my2.

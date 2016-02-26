@@ -126,12 +126,19 @@ Section iprod_cmra.
   Definition iprod_lookup_unit f x : (unit f) x = unit (f x) := eq_refl.
   Definition iprod_lookup_minus f g x : (f ⩪ g) x = f x ⩪ g x := eq_refl.
 
-  Lemma iprod_includedN_spec (f g : iprod B) n : f ≼{n} g ↔ ∀ x, f x ≼{n} g x.
+  Lemma iprod_included_spec (f g : iprod B) : f ≼ g ↔ ∀ x, f x ≼ g x.
   Proof.
     split.
     - by intros [h Hh] x; exists (h x); rewrite /op /iprod_op (Hh x).
     - intros Hh; exists (g ⩪ f)=> x; specialize (Hh x).
       by rewrite /op /iprod_op /minus /iprod_minus cmra_op_minus.
+  Qed.
+  Lemma iprod_includedN_spec n (f g : iprod B) : f ≼{n} g ↔ ∀ x, f x ≼{n} g x.
+  Proof.
+    split.
+    - by intros [h Hh] x; exists (h x); rewrite /op /iprod_op (Hh x).
+    - intros Hh; exists (g ⩪ f)=> x; specialize (Hh x).
+      by rewrite /op /iprod_op /minus /iprod_minus cmra_op_minus'.
   Qed.
 
   Definition iprod_cmra_mixin : CMRAMixin (iprod B).
@@ -149,10 +156,10 @@ Section iprod_cmra.
     - by intros f1 f2 x; rewrite iprod_lookup_op comm.
     - by intros f x; rewrite iprod_lookup_op iprod_lookup_unit cmra_unit_l.
     - by intros f x; rewrite iprod_lookup_unit cmra_unit_idemp.
-    - intros n f1 f2; rewrite !iprod_includedN_spec=> Hf x.
-      by rewrite iprod_lookup_unit; apply cmra_unit_preservingN, Hf.
+    - intros f1 f2; rewrite !iprod_included_spec=> Hf x.
+      by rewrite iprod_lookup_unit; apply cmra_unit_preserving, Hf.
     - intros n f1 f2 Hf x; apply cmra_validN_op_l with (f2 x), Hf.
-    - intros n f1 f2; rewrite iprod_includedN_spec=> Hf x.
+    - intros f1 f2; rewrite iprod_included_spec=> Hf x.
       by rewrite iprod_lookup_op iprod_lookup_minus cmra_op_minus; try apply Hf.
     - intros n f f1 f2 Hf Hf12.
       set (g x := cmra_extend n (f x) (f1 x) (f2 x) (Hf x) (Hf12 x)).

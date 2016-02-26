@@ -92,6 +92,11 @@ Proof.
     by cofe_subst; rewrite !agree_idemp.
 Qed.
 
+Lemma agree_included (x y : agree A) : x ≼ y ↔ y ≡ x ⋅ y.
+Proof.
+  split; [|by intros ?; exists y].
+  by intros [z Hz]; rewrite Hz assoc agree_idemp.
+Qed.
 Lemma agree_includedN n (x y : agree A) : x ≼{n} y ↔ y ≡{n}≡ x ⋅ y.
 Proof.
   split; [|by intros ?; exists y].
@@ -114,7 +119,7 @@ Proof.
     symmetry; apply dist_le with n; try apply Hx; auto.
   - intros x; apply agree_idemp.
   - by intros n x y [(?&?&?) ?].
-  - by intros n x y; rewrite agree_includedN.
+  - by intros x y; rewrite agree_included.
   - intros n x y1 y2 Hval Hx; exists (x,x); simpl; split.
     + by rewrite agree_idemp.
     + by move: Hval; rewrite Hx; move=> /agree_op_inv->; rewrite agree_idemp.

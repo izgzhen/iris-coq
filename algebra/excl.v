@@ -113,9 +113,9 @@ Proof.
   - by intros [?| |] [?| |]; constructor.
   - by intros [?| |]; constructor.
   - constructor.
-  - by intros n [?| |] [?| |]; exists ∅.
+  - by intros [?| |] [?| |]; exists ∅.
   - by intros n [?| |] [?| |].
-  - by intros n [?| |] [?| |] [[?| |] Hz]; inversion_clear Hz; constructor.
+  - by intros [?| |] [?| |] [[?| |] Hz]; inversion_clear Hz; constructor.
   - intros n x y1 y2 ? Hx.
     by exists match y1, y2 with
       | Excl a1, Excl a2 => (Excl a1, Excl a2)

@@ -125,13 +125,13 @@ Proof.
   - by split; simpl; rewrite comm.
   - by split; simpl; rewrite ?cmra_unit_l.
   - by split; simpl; rewrite ?cmra_unit_idemp.
-  - intros n ??; rewrite! auth_includedN; intros [??].
-    by split; simpl; apply cmra_unit_preservingN.
+  - intros ??; rewrite! auth_included; intros [??].
+    by split; simpl; apply cmra_unit_preserving.
   - assert (∀ n (a b1 b2 : A), b1 ⋅ b2 ≼{n} a → b1 ≼{n} a).
     { intros n a b1 b2 <-; apply cmra_includedN_l. }
    intros n [[a1| |] b1] [[a2| |] b2];
      naive_solver eauto using cmra_validN_op_l, cmra_validN_includedN.
-  - by intros n ??; rewrite auth_includedN;
+  - by intros ??; rewrite auth_included;
       intros [??]; split; simpl; apply cmra_op_minus.
   - intros n x y1 y2 ? [??]; simpl in *.
     destruct (cmra_extend n (authoritative x) (authoritative y1)
