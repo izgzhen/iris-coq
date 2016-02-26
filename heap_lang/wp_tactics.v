@@ -29,7 +29,9 @@ Tactic Notation "wp_rec" ">" :=
     | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
       match eval cbv in e' with
       | App (Rec _ _ _) _ =>
-         wp_bind K; etrans; [|eapply wp_rec; reflexivity]; wp_finish
+         wp_bind K; etrans;
+           [|eapply wp_rec; repeat (reflexivity || rewrite /= to_of_val)];
+           wp_finish
       end)
      end).
 Tactic Notation "wp_rec" := wp_rec>; try strip_later.
@@ -39,7 +41,9 @@ Tactic Notation "wp_lam" ">" :=
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval cbv in e' with
     | App (Rec "" _ _) _ =>
-       wp_bind K; etrans; [|eapply wp_lam; reflexivity]; wp_finish
+       wp_bind K; etrans;
+         [|eapply wp_lam; repeat (reflexivity || rewrite /= to_of_val)];
+         wp_finish
     end)
   end.
 Tactic Notation "wp_lam" := wp_lam>; try strip_later.
