@@ -25,7 +25,7 @@ Coercion of_val : val >-> expr.
    pretty printing. *)
 Notation "( e1 , e2 , .. , en )" := (Pair .. (Pair e1 e2) .. en) : lang_scope.
 Notation "' l" := (Lit l%Z) (at level 8, format "' l").
-Notation "'match:' e0 'with' 'injL' x1 => e1 | 'injR' x2 => e2 'end'" :=
+Notation "'match:' e0 'with' 'InjL' x1 => e1 | 'InjR' x2 => e2 'end'" :=
   (Case e0 x1 e1 x2 e2)
   (e0, x1, e1, x2, e2 at level 200) : lang_scope.
 Notation "' l" := (LitV l%Z) (at level 8, format "' l").
