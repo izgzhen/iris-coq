@@ -101,15 +101,12 @@ Section auth.
 
   Context {V} (fsa : FSA Λ (globalF Σ) V) `{!FrameShiftAssertion fsaV fsa}.
 
-  (* Notice how the user has to prove that `b⋅a'` is valid at all
-     step-indices. However, since A is timeless, that should not be
-     a restriction. *)
   Lemma auth_fsa E N P (Ψ : V → iPropG Λ Σ) γ a :
     fsaV →
     nclose N ⊆ E →
     P ⊑ auth_ctx γ N φ →
     P ⊑ (▷ auth_own γ a ★ ∀ a',
-          ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
+          ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
           fsa (E ∖ nclose N) (λ x, ∃ L Lv (Hup : LocalUpdate Lv L),
             ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
             (auth_own γ (L a) -★ Ψ x))) →
@@ -124,7 +121,7 @@ Section auth.
     apply (fsa_strip_pvs fsa). apply exist_elim=>a'.
     rewrite (forall_elim a'). rewrite [(▷_ ★ _)%I]comm.
     eapply wand_apply_r; first (by eapply (wand_frame_l (own γ _))); last first.
-    { rewrite assoc [(_ ★ own _ _)%I]comm -assoc. done. }
+    { rewrite assoc [(_ ★ own _ _)%I]comm -assoc discrete_valid.  done. }
     rewrite fsa_frame_l.
     apply (fsa_mono_pvs fsa)=> x.
     rewrite sep_exist_l; apply exist_elim=> L.
@@ -141,7 +138,7 @@ Section auth.
     nclose N ⊆ E →
     P ⊑ auth_ctx γ N φ →
     P ⊑ (▷ auth_own γ a ★ (∀ a',
-          ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
+          ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
           fsa (E ∖ nclose N) (λ x,
             ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
             (auth_own γ (L a) -★ Ψ x)))) →

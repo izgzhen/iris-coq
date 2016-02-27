@@ -1,4 +1,4 @@
-From Coq Require Import Qcanon.
+From Coq.QArith Require Import Qcanon.
 From algebra Require Export cmra.
 From algebra Require Import functor upred.
 Local Arguments validN _ _ _ !_ /.
