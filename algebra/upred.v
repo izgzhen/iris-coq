@@ -85,7 +85,7 @@ Lemma uPred_map_compose {M1 M2 M3 : cmraT} (f : M1 -n> M2) (g : M2 -n> M3)
 Proof. by split=> n x Hx. Qed.
 Lemma uPred_map_ext {M1 M2 : cmraT} (f g : M1 -n> M2)
       `{!CMRAMonotone f} `{!CMRAMonotone g}:
-  (∀ x, f x ≡ g x) -> ∀ x, uPred_map f x ≡ uPred_map g x.
+  (∀ x, f x ≡ g x) → ∀ x, uPred_map f x ≡ uPred_map g x.
 Proof. intros Hf P; split=> n x Hx /=; by rewrite /uPred_holds /= Hf. Qed.
 Definition uPredC_map {M1 M2 : cmraT} (f : M2 -n> M1) `{!CMRAMonotone f} :
   uPredC M1 -n> uPredC M2 := CofeMor (uPred_map f : uPredC M1 → uPredC M2).

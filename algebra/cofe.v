@@ -54,7 +54,7 @@ Record CofeMixin A `{Equiv A, Compl A} := {
   mixin_dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y;
   mixin_conv_compl n c : compl c ≡{n}≡ c (S n)
 }.
-Class Contractive `{Dist A, Dist B} (f : A -> B) :=
+Class Contractive `{Dist A, Dist B} (f : A → B) :=
   contractive n x y : (∀ i, i < n → x ≡{i}≡ y) → f x ≡{n}≡ f y.
 
 (** Bundeled version *)

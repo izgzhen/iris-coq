@@ -11,7 +11,7 @@ Local Notation iProp := (iPropG heap_lang Σ).
 (* TODO: Maybe notation for LocV (and Loc)? *)
 Lemma barrier_spec (heapN N : namespace) :
   heapN ⊥ N →
-  ∃ recv send : loc -> iProp -n> iProp,
+  ∃ recv send : loc → iProp -n> iProp,
     (∀ P, heap_ctx heapN ⊑ {{ True }} newchan '() {{ λ v, ∃ l, v = LocV l ★ recv l P ★ send l P }}) ∧
     (∀ l P, {{ send l P ★ P }} signal (LocV l) {{ λ _, True }}) ∧
     (∀ l P, {{ recv l P }} wait (LocV l) {{ λ _, P }}) ∧

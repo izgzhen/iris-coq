@@ -183,7 +183,7 @@ Definition bin_op_eval (op : bin_op) (l1 l2 : base_lit) : option base_lit :=
   | _, _, _ => None
   end.
 
-Inductive head_step : expr -> state -> expr -> state -> option expr -> Prop :=
+Inductive head_step : expr → state → expr → state → option expr → Prop :=
   | BetaS f x e1 e2 v2 σ :
      to_val e2 = Some v2 →
      head_step (App (Rec f x e1) e2) σ
