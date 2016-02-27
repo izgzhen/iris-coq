@@ -13,15 +13,16 @@ Hint Mode Subst + + + - : typeclass_instances.
 
 Ltac simpl_subst :=
   repeat match goal with
-  | |- context [subst ?e ?x ?v] => rewrite (@do_subst e x v)
+  | |- context [subst ?e ?x ?v] => progress rewrite (@do_subst e x v)
   | |- _ => progress csimpl
   end; fold of_val.
 
 Arguments of_val : simpl never.
-Hint Extern 10 (Subst (of_val _) _ _ _) =>
-  unfold of_val; fold of_val : typeclass_instances.
-Hint Extern 10 (Closed (of_val _)) =>
-  unfold of_val; fold of_val : typeclass_instances.
+Hint Extern 10 (Subst (of_val _) _ _ _) => unfold of_val : typeclass_instances.
+Hint Extern 10 (Closed (of_val _)) => unfold of_val : typeclass_instances.
+
+Instance subst_fallthrough e x v : Subst e x v (subst e x v) | 1000.
+Proof. done. Qed.
 
 Class SubstIf (P : Prop) (e : expr) (x : string) (v : val) (er : expr) := {
   subst_if_true : P → subst e x v = er;
