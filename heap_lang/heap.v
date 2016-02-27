@@ -132,6 +132,10 @@ Section heap.
     rewrite option_validI frac_validI discrete_valid. by apply const_elim_r.
   Qed.
 
+  Lemma heap_mapsto_op_split l q v :
+    (l ↦{q} v)%I ≡ (l ↦{q/2} v ★ l ↦{q/2} v)%I.
+  Proof. by rewrite heap_mapsto_op_eq Qp_div_2. Qed.
+
   (** Weakest precondition *)
   Lemma wp_alloc N E e v P Φ :
     to_val e = Some v →
