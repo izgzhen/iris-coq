@@ -179,6 +179,9 @@ Proof.
   apply (sig_eq_pi _), coPset_eq; try apply proj2_sig.
   intros p; apply eq_bool_prop_intro, (HXY p).
 Qed.
+Lemma coPset_top_subseteq (X : coPset) : X ⊆ ⊤.
+Proof. done. Qed.
+Hint Resolve coPset_top_subseteq.
 
 (** * Finite sets *)
 Fixpoint coPset_finite (t : coPset_raw) : bool :=
