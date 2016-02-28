@@ -2,7 +2,7 @@ From barrier Require Import proof.
 From program_logic Require Import auth sts saved_prop hoare ownership.
 Import uPred.
 
-Definition client := (let: "b" := newchan '() in wait "b")%L.
+Definition client := (let: "b" := newbarrier '() in wait "b")%L.
 
 Section client.
   Context {Σ : iFunctorG} `{!heapG Σ, !barrierG Σ} (heapN N : namespace).
@@ -12,7 +12,7 @@ Section client.
     heapN ⊥ N → heap_ctx heapN ⊑ || client {{ λ _, True }}.
   Proof.
     intros ?. rewrite /client.
-    ewp eapply (newchan_spec heapN N True%I); last done.
+    ewp eapply (newbarrier_spec heapN N True%I); last done.
     apply sep_intro_True_r; first done.
     apply forall_intro=>l. apply wand_intro_l. rewrite right_id.
     wp_let. etrans; last eapply wait_spec.

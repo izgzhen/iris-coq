@@ -118,12 +118,12 @@ Proof.
 Qed.
 
 (** Actual proofs *)
-Lemma newchan_spec (P : iProp) (Φ : val → iProp) :
+Lemma newbarrier_spec (P : iProp) (Φ : val → iProp) :
   heapN ⊥ N →
   (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ (LocV l))
-  ⊑ || newchan '() {{ Φ }}.
+  ⊑ || newbarrier '() {{ Φ }}.
 Proof.
-  intros HN. rewrite /newchan. wp_seq.
+  intros HN. rewrite /newbarrier. wp_seq.
   rewrite -wp_pvs. wp eapply wp_alloc; eauto with I ndisj.
   apply forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
   rewrite !assoc. apply pvs_wand_r.
