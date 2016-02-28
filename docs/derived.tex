@@ -5,7 +5,7 @@ In this section we describe some constructions that we will use throughout the r
 \subsection{Global monoid}
 
 Hereinafter we assume the global monoid (served up as a parameter to Iris) is obtained from a family of monoids $(M_i)_{i \in I}$ by first applying the construction for finite partial functions to each~(\Sref{sec:fpfunm}), and then applying the product construction~(\Sref{sec:prodm}):
-\[ M \eqdef \prod_{i \in I} \fpfunm{\textdom{GhName}}{M_i} \]
+\[ M \eqdef \prod_{i \in I} \textdom{GhName} \fpfn M_i \]
 We don't care so much about what concretely $\textdom{GhName}$ is, as long as it is countable and infinite.
 We write $\ownGhost{\gname}{\melt : M_i}$ (or just $\ownGhost{\gname}{\melt}$ if $M_i$ is clear from the context) for $\ownGGhost{[i \mapsto [\gname \mapsto \melt]]}$ when $\melt \in \mcarp {M_i}$, and for $\FALSE$ when $\melt = \mzero_{M_i}$.
 In other words, $\ownGhost{\gname}{\melt : M_i}$ asserts that in the current state of monoid $M_i$, the name $\gname$ is allocated and has at least value $\melt$.

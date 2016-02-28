@@ -189,7 +189,8 @@ The first is trivial, the second follows from cancellativitiy of $M$.
 \label{sec:fpfunm}
 
 Given a countable set $X$ and a monoid $M$, we construct a monoid representing finite partial functions from $X$ to (non-unit, non-zero elements of) $M$.
-Let $\fpfunm{X}{M}$ be the product monoid $\prod_{x \in X} M$, as defined in \secref{sec:prodm} but restricting the carrier to functions $f$ where the set $\dom(f) \eqdef \{ x \mid f(x) \neq \munit_M \}$ is finite.
+\ralf{all outdated}
+Let ${X} \fpfn {M}$ be the product monoid $\prod_{x \in X} M$, as defined in \secref{sec:prodm} but restricting the carrier to functions $f$ where the set $\dom(f) \eqdef \{ x \mid f(x) \neq \munit_M \}$ is finite.
 This is well-defined as the set of these $f$ contains the unit and is closed under multiplication.
 (We identify finite partial functions from $X$ to $\mcarp{M}\setminus\{\munit_M\}$ and total functions from $X$ to $\mcarp{M}$ with finite $\munit_M$-support.)
 
@@ -303,7 +304,7 @@ Frame-preserving updates are also possible if we assume $M$ cancellative:
 By combining the fractional, finite partial function, and authoritative monoids, we construct two flavors of heaps with fractional permissions and mention their important frame-preserving updates.
 Hereinafter, we assume the set $\textdom{Val}$ of values is countable.
 
-Given a set $Y$, define $\FHeap(Y) \eqdef \fpfunm{\textdom{Val}}{\fracm{Y}}$ representing a fractional heap with codomain $Y$.
+Given a set $Y$, define $\FHeap(Y) \eqdef \textdom{Val} \fpfn \fracm(Y)$ representing a fractional heap with codomain $Y$.
 From \S\S\ref{sec:fracm} and~\ref{sec:fpfunm} we obtain the following frame-preserving updates as well as the fact that $\FHeap(Y)$ is cancellative.
 \begin{mathpar}
 	\axiomH{FHeapUpd}{h[x \mapsto (1, y)] \mupd h[x \mapsto (1, y')]} \and
