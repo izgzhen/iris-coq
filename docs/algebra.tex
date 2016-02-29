@@ -2,13 +2,17 @@
 
 \subsection{COFE}
 
+\begin{defn}[Chain]
+  Given some set $T$ and an indexed family $({\nequiv{n}} \subseteq T \times T)_{n \in \mathbb{N}}$ of equivalence relations, a \emph{chain} is a function $c : \mathbb{N} \to T$ such that $\All n, m. n < m \Ra c (m) \nequiv{n} c (n+1)$.
+\end{defn}
+
 \begin{defn}
-  A COFE is a tuple $(T, (\nequiv{n})_{n \in \mathbb{N}}, c : (\mathbb{N} \to T) \to T)$ satisfying
+  A \emph{complete ordered family of equivalences} (COFE) is a tuple $(T, ({\nequiv{n}} \subseteq T \times T)_{n \in \mathbb{N}}, \lim : \chain(T) \to T)$ satisfying
   \begin{align*}
     \All n. (\nequiv{n}) ~& \text{is an equivalence relation} \tagH{cofe-equiv} \\
     \All n, m.& n \geq m \Ra (\nequiv{n}) \subseteq (\nequiv{m}) \tagH{cofe-mono} \\
     \All x, y.& x = y \Lra (\All n. x \nequiv{n} y) \tagH{cofe-limit} \\
-    \All n, X.& c(X) \nequiv{n} X(n+1) \tagH{cofe-compl}
+    \All n, c.& \lim(c) \nequiv{n} c(n+1) \tagH{cofe-compl}
   \end{align*}
 \end{defn}
 
@@ -17,7 +21,7 @@
 \subsection{CMRA}
 
 \begin{defn}
-  A CMRA is a tuple $(\monoid, (\mval_n \subseteq \monoid)_{n \in \mathbb{N}}, \munit: \monoid \to \monoid, (\mtimes) : \monoid \times \monoid \to \monoid, (\mdiv) : \monoid \times \monoid \to \monoid)$ satisfying
+  A \emph{CMRA} is a tuple $(\monoid, (\mval_n \subseteq \monoid)_{n \in \mathbb{N}}, \munit: \monoid \to \monoid, (\mtimes) : \monoid \times \monoid \to \monoid, (\mdiv) : \monoid \times \monoid \to \monoid)$ satisfying
   \begin{align*}
     \All n, m.& n \geq m \Ra V_n \subseteq V_m \tagH{cmra-valid-mono} \\
     \All \melt, \meltB, \meltC.& (\melt \mtimes \meltB) \mtimes \meltC = \melt \mtimes (\meltB \mtimes \meltC) \tagH{cmra-assoc} \\
