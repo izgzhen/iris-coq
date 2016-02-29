@@ -40,16 +40,16 @@ Global Instance Excl_dist_inj n : Inj (dist n) (dist n) (@Excl A).
 Proof. by inversion_clear 1. Qed.
 
 Program Definition excl_chain
-    (c : chain (excl A)) (a : A) (H : maybe Excl (c 1) = Some a) : chain A :=
+    (c : chain (excl A)) (a : A) (H : maybe Excl (c 0) = Some a) : chain A :=
   {| chain_car n := match c n return _ with Excl y => y | _ => a end |}.
 Next Obligation.
-  intros c a ? n [|i] ?; [omega|]; simpl.
-  destruct (c 1) eqn:?; simplify_eq/=.
-  by feed inversion (chain_cauchy c n (S i)).
+  intros c a ? n i ?; simpl.
+  destruct (c 0) eqn:?; simplify_eq/=.
+  by feed inversion (chain_cauchy c n i).
 Qed.
 Instance excl_compl : Compl (excl A) := λ c,
-  match Some_dec (maybe Excl (c 1)) with
-  | inleft (exist a H) => Excl (compl (excl_chain c a H)) | inright _ => c 1
+  match Some_dec (maybe Excl (c 0)) with
+  | inleft (exist a H) => Excl (compl (excl_chain c a H)) | inright _ => c 0
   end.
 Definition excl_cofe_mixin : CofeMixin (excl A).
 Proof.
@@ -63,14 +63,14 @@ Proof.
     + destruct 1; inversion_clear 1; constructor; etrans; eauto.
   - by inversion_clear 1; constructor; apply dist_S.
   - intros n c; unfold compl, excl_compl.
-    destruct (Some_dec (maybe Excl (c 1))) as [[a Ha]|].
-    { assert (c 1 = Excl a) by (by destruct (c 1); simplify_eq/=).
-      assert (∃ b, c (S n) = Excl b) as [b Hb].
-      { feed inversion (chain_cauchy c 0 (S n)); eauto with lia congruence. }
+    destruct (Some_dec (maybe Excl (c 0))) as [[a Ha]|].
+    { assert (c 0 = Excl a) by (by destruct (c 0); simplify_eq/=).
+      assert (∃ b, c n = Excl b) as [b Hb].
+      { feed inversion (chain_cauchy c 0 n); eauto with lia congruence. }
       rewrite Hb; constructor.
       by rewrite (conv_compl n (excl_chain c a Ha)) /= Hb. }
-    feed inversion (chain_cauchy c 0 (S n)); first lia;
-       constructor; destruct (c 1); simplify_eq/=.
+    feed inversion (chain_cauchy c 0 n); first lia;
+       constructor; destruct (c 0); simplify_eq/=.
 Qed.
 Canonical Structure exclC : cofeT := CofeT excl_cofe_mixin.
 Global Instance excl_discrete : Discrete A → Discrete exclC.

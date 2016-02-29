@@ -42,7 +42,7 @@ Tactic Notation "cofe_subst" :=
 
 Record chain (A : Type) `{Dist A} := {
   chain_car :> nat → A;
-  chain_cauchy n i : n < i → chain_car i ≡{n}≡ chain_car (S n)
+  chain_cauchy n i : n ≤ i → chain_car i ≡{n}≡ chain_car n
 }.
 Arguments chain_car {_ _} _ _.
 Arguments chain_cauchy {_ _} _ _ _ _.
@@ -52,7 +52,7 @@ Record CofeMixin A `{Equiv A, Compl A} := {
   mixin_equiv_dist x y : x ≡ y ↔ ∀ n, x ≡{n}≡ y;
   mixin_dist_equivalence n : Equivalence (dist n);
   mixin_dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y;
-  mixin_conv_compl n c : compl c ≡{n}≡ c (S n)
+  mixin_conv_compl n c : compl c ≡{n}≡ c n
 }.
 Class Contractive `{Dist A, Dist B} (f : A → B) :=
   contractive n x y : (∀ i, i < n → x ≡{i}≡ y) → f x ≡{n}≡ f y.
@@ -84,7 +84,7 @@ Section cofe_mixin.
   Proof. apply (mixin_dist_equivalence _ (cofe_mixin A)). Qed.
   Lemma dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y.
   Proof. apply (mixin_dist_S _ (cofe_mixin A)). Qed.
-  Lemma conv_compl n (c : chain A) : compl c ≡{n}≡ c (S n).
+  Lemma conv_compl n (c : chain A) : compl c ≡{n}≡ c n.
   Proof. apply (mixin_conv_compl _ (cofe_mixin A)). Qed.
 End cofe_mixin.
 
@@ -118,6 +118,8 @@ Section cofe.
   Proof. by apply dist_proper. Qed.
   Lemma dist_le n n' x y : x ≡{n}≡ y → n' ≤ n → x ≡{n'}≡ y.
   Proof. induction 2; eauto using dist_S. Qed.
+  Lemma dist_le' n n' x y : n' ≤ n → x ≡{n}≡ y → x ≡{n'}≡ y.
+  Proof. intros; eauto using dist_le. Qed.
   Instance ne_proper {B : cofeT} (f : A → B)
     `{!∀ n, Proper (dist n ==> dist n) f} : Proper ((≡) ==> (≡)) f | 100.
   Proof. by intros x1 x2; rewrite !equiv_dist; intros Hx n; rewrite (Hx n). Qed.
@@ -140,6 +142,11 @@ Section cofe.
   Global Instance contractive_proper {B : cofeT} (f : A → B) `{!Contractive f} :
     Proper ((≡) ==> (≡)) f | 100 := _.
 
+  Lemma conv_compl' n (c : chain A) : compl c ≡{n}≡ c (S n).
+  Proof.
+    transitivity (c n); first by apply conv_compl. symmetry.
+    apply chain_cauchy. omega.
+  Qed.
   Lemma timeless_iff n (x : A) `{!Timeless x} y : x ≡ y ↔ x ≡{n}≡ y.
   Proof.
     split; intros; [by apply equiv_dist|].
@@ -157,7 +164,8 @@ Next Obligation. by intros ? A ? B f Hf c n i ?; apply Hf, chain_cauchy. Qed.
 Program Definition fixpoint_chain {A : cofeT} `{Inhabited A} (f : A → A)
   `{!Contractive f} : chain A := {| chain_car i := Nat.iter (S i) f inhabitant |}.
 Next Obligation.
-  intros A ? f ? n. induction n as [|n IH]; intros [|i] ?; simpl; try omega.
+  intros A ? f ? n. induction n as [|n IH]; intros [|i] ?; simpl;
+                      try reflexivity || omega; [|].
   - apply (contractive_0 f).
   - apply (contractive_S f), IH; auto with omega.
 Qed.
@@ -306,15 +314,15 @@ Proof. intros f f' Hf g g' Hg [??]; split; [apply Hf|apply Hg]. Qed.
 Section discrete_cofe.
   Context `{Equiv A, @Equivalence A (≡)}.
   Instance discrete_dist : Dist A := λ n x y, x ≡ y.
-  Instance discrete_compl : Compl A := λ c, c 1.
+  Instance discrete_compl : Compl A := λ c, c 0.
   Definition discrete_cofe_mixin : CofeMixin A.
   Proof.
     split.
     - intros x y; split; [done|intros Hn; apply (Hn 0)].
     - done.
     - done.
-    - intros n c. rewrite /compl /discrete_compl /=.
-      symmetry; apply (chain_cauchy c 0 (S n)); omega.
+    - intros n c. rewrite /compl /discrete_compl /=;
+      symmetry; apply (chain_cauchy c 0 n). omega.
   Qed.
   Definition discreteC : cofeT := CofeT discrete_cofe_mixin.
   Global Instance discrete_discrete_cofe : Discrete discreteC.

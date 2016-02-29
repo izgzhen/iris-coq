@@ -27,11 +27,11 @@ Section cofe.
     { uPred_in_dist : ∀ n' x, n' ≤ n → ✓{n'} x → P n' x ↔ Q n' x }.
   Instance uPred_dist : Dist (uPred M) := uPred_dist'.
   Program Instance uPred_compl : Compl (uPred M) := λ c,
-    {| uPred_holds n x := c (S n) n x |}.
+    {| uPred_holds n x := c n n x |}.
   Next Obligation. by intros c n x y ??; simpl in *; apply uPred_ne with x. Qed.
   Next Obligation.
     intros c n1 n2 x1 x2 ????; simpl in *.
-    apply (chain_cauchy c n2 (S n1)); eauto using uPred_weaken.
+    apply (chain_cauchy c n2 n1); eauto using uPred_weaken.
   Qed.
   Definition uPred_cofe_mixin : CofeMixin (uPred M).
   Proof.
@@ -45,7 +45,7 @@ Section cofe.
       + intros P Q Q' HP HQ; split=> i x ??.
         by trans (Q i x);[apply HP|apply HQ].
     - intros n P Q HPQ; split=> i x ??; apply HPQ; auto.
-    - intros n c; split=>i x ??; symmetry; apply (chain_cauchy c i (S n)); auto.
+    - intros n c; split=>i x ??; symmetry; apply (chain_cauchy c i n); auto.
   Qed.
   Canonical Structure uPredC : cofeT := CofeT uPred_cofe_mixin.
 End cofe.

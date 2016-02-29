@@ -12,7 +12,7 @@ Program Definition map_chain (c : chain (gmap K A))
   (k : K) : chain (option A) := {| chain_car n := c n !! k |}.
 Next Obligation. by intros c k n i ?; apply (chain_cauchy c). Qed.
 Instance map_compl : Compl (gmap K A) := λ c,
-  map_imap (λ i _, compl (map_chain c i)) (c 1).
+  map_imap (λ i _, compl (map_chain c i)) (c 0).
 Definition map_cofe_mixin : CofeMixin (gmap K A).
 Proof.
   split.
@@ -25,7 +25,7 @@ Proof.
     + by intros m1 m2 m3 ?? k; trans (m2 !! k).
   - by intros n m1 m2 ? k; apply dist_S.
   - intros n c k; rewrite /compl /map_compl lookup_imap.
-    feed inversion (λ H, chain_cauchy c 0 (S n) H k); simpl; auto with lia.
+    feed inversion (λ H, chain_cauchy c 0 n H k); simpl; auto with lia.
     by rewrite conv_compl /=; apply reflexive_eq.
 Qed.
 Canonical Structure mapC : cofeT := CofeT map_cofe_mixin.

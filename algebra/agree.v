@@ -15,7 +15,7 @@ Section agree.
 Context {A : cofeT}.
 
 Instance agree_validN : ValidN (agree A) := λ n x,
-  agree_is_valid x n ∧ ∀ n', n' ≤ n → x n' ≡{n'}≡ x n.
+  agree_is_valid x n ∧ ∀ n', n' ≤ n → x n ≡{n'}≡ x n'.
 Instance agree_valid : Valid (agree A) := λ x, ∀ n, ✓{n} x.
 
 Lemma agree_valid_le n n' (x : agree A) :
@@ -29,9 +29,9 @@ Instance agree_dist : Dist (agree A) := λ n x y,
   (∀ n', n' ≤ n → agree_is_valid x n' ↔ agree_is_valid y n') ∧
   (∀ n', n' ≤ n → agree_is_valid x n' → x n' ≡{n'}≡ y n').
 Program Instance agree_compl : Compl (agree A) := λ c,
-  {| agree_car n := c (S n) n; agree_is_valid n := agree_is_valid (c (S n)) n |}.
+  {| agree_car n := c n n; agree_is_valid n := agree_is_valid (c n) n |}.
 Next Obligation.
-  intros c n ?. apply (chain_cauchy c n (S (S n))), agree_valid_S; auto.
+  intros c n ?. apply (chain_cauchy c n (S n)), agree_valid_S; auto.
 Qed.
 Definition agree_cofe_mixin : CofeMixin (agree A).
 Proof.
@@ -53,7 +53,7 @@ Canonical Structure agreeC := CofeT agree_cofe_mixin.
 
 Lemma agree_car_ne n (x y : agree A) : ✓{n} x → x ≡{n}≡ y → x n ≡{n}≡ y n.
 Proof. by intros [??] Hxy; apply Hxy. Qed.
-Lemma agree_cauchy n (x : agree A) i : ✓{n} x → i ≤ n → x i ≡{i}≡ x n.
+Lemma agree_cauchy n (x : agree A) i : ✓{n} x → i ≤ n → x n ≡{i}≡ x i.
 Proof. by intros [? Hx]; apply Hx. Qed.
 
 Program Instance agree_op : Op (agree A) := λ x y,
@@ -70,8 +70,8 @@ Proof. split; naive_solver. Qed.
 Instance: ∀ n : nat, Proper (dist n ==> impl) (@validN (agree A) _ n).
 Proof.
   intros n x y Hxy [? Hx]; split; [by apply Hxy|intros n' ?].
-  rewrite -(proj2 Hxy n') 1?(Hx n'); eauto using agree_valid_le.
-  by apply dist_le with n; try apply Hxy.
+  rewrite -(proj2 Hxy n') -1?(Hx n'); eauto using agree_valid_le.
+  symmetry. by apply dist_le with n; try apply Hxy.
 Qed.
 Instance: ∀ x : agree A, Proper (dist n ==> dist n) (op x).
 Proof.
@@ -110,7 +110,7 @@ Proof.
   split; try (apply _ || done).
   - by intros n x1 x2 Hx y1 y2 Hy.
   - intros n x [? Hx]; split; [by apply agree_valid_S|intros n' ?].
-    rewrite (Hx n'); last auto.
+    rewrite -(Hx n'); last auto.
     symmetry; apply dist_le with n; try apply Hx; auto.
   - intros x; apply agree_idemp.
   - by intros n x y [(?&?&?) ?].

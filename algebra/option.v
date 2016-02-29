@@ -9,15 +9,15 @@ Inductive option_dist : Dist (option A) :=
   | None_dist n : None ≡{n}≡ None.
 Existing Instance option_dist.
 Program Definition option_chain
-    (c : chain (option A)) (x : A) (H : c 1 = Some x) : chain A :=
+    (c : chain (option A)) (x : A) (H : c 0 = Some x) : chain A :=
   {| chain_car n := from_option x (c n) |}.
 Next Obligation.
-  intros c x ? n [|i] ?; [omega|]; simpl.
-  destruct (c 1) eqn:?; simplify_eq/=.
-  by feed inversion (chain_cauchy c n (S i)).
+  intros c x ? n i ?; simpl.
+  destruct (c 0) eqn:?; simplify_eq/=.
+  by feed inversion (chain_cauchy c n i).
 Qed.
 Instance option_compl : Compl (option A) := λ c,
-  match Some_dec (c 1) with
+  match Some_dec (c 0) with
   | inleft (exist x H) => Some (compl (option_chain c x H)) | inright _ => None
   end.
 Definition option_cofe_mixin : CofeMixin (option A).
@@ -32,12 +32,12 @@ Proof.
     + destruct 1; inversion_clear 1; constructor; etrans; eauto.
   - by inversion_clear 1; constructor; apply dist_S.
   - intros n c; unfold compl, option_compl.
-    destruct (Some_dec (c 1)) as [[x Hx]|].
-    { assert (is_Some (c (S n))) as [y Hy].
-      { feed inversion (chain_cauchy c 0 (S n)); eauto with lia congruence. }
+    destruct (Some_dec (c 0)) as [[x Hx]|].
+    { assert (is_Some (c n)) as [y Hy].
+      { feed inversion (chain_cauchy c 0 n); eauto with lia congruence. }
       rewrite Hy; constructor.
       by rewrite (conv_compl n (option_chain c x Hx)) /= Hy. }
-    feed inversion (chain_cauchy c 0 (S n)); eauto with lia congruence.
+    feed inversion (chain_cauchy c 0 n); eauto with lia congruence.
     constructor.
 Qed.
 Canonical Structure optionC := CofeT option_cofe_mixin.

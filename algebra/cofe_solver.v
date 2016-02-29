@@ -61,7 +61,7 @@ Program Instance tower_compl : Compl tower := λ c,
 Next Obligation.
   intros c k; apply equiv_dist=> n.
   by rewrite (conv_compl n (tower_chain c k))
-    (conv_compl n (tower_chain c (S k))) /= (g_tower (c (S n)) k).
+    (conv_compl n (tower_chain c (S k))) /= (g_tower (c _) k).
 Qed.
 Definition tower_cofe_mixin : CofeMixin tower.
 Proof.
@@ -179,9 +179,7 @@ Program Definition unfold_chain (X : T) : chain (F T T) :=
 Next Obligation.
   intros X n i Hi.
   assert (∃ k, i = k + n) as [k ?] by (exists (i - n); lia); subst; clear Hi.
-  induction k as [|k IH]; simpl.
-  { rewrite -f_tower f_S -map_comp.
-    by apply (contractive_ne map); split=> Y /=; rewrite ?g_tower ?embed_f. }
+  induction k as [|k IH]; simpl; first done.
   rewrite -IH -(dist_le _ _ _ _ (f_tower (k + n) _)); last lia.
   rewrite f_S -map_comp.
   by apply (contractive_ne map); split=> Y /=; rewrite ?g_tower ?embed_f.
@@ -190,7 +188,7 @@ Definition unfold (X : T) : F T T := compl (unfold_chain X).
 Instance unfold_ne : Proper (dist n ==> dist n) unfold.
 Proof.
   intros n X Y HXY. by rewrite /unfold (conv_compl n (unfold_chain X))
-    (conv_compl n (unfold_chain Y)) /= (HXY (S (S n))).
+    (conv_compl n (unfold_chain Y)) /= (HXY (S n)).
 Qed.
 
 Program Definition fold (X : F T T) : T :=
@@ -229,11 +227,10 @@ Proof.
     rewrite (map_ff_gg _ _ _ H).
     apply (_ : Proper (_ ==> _) (gg _)); by destruct H.
   - intros X; rewrite equiv_dist=> n /=.
-    rewrite /unfold /= (conv_compl n (unfold_chain (fold X))) /=.
+    rewrite /unfold /= (conv_compl' n (unfold_chain (fold X))) /=.
     rewrite g_S -!map_comp -{2}(map_id _ _ X).
     apply (contractive_ne map); split => Y /=.
-    + apply dist_le with n; last omega.
-      rewrite f_tower. apply dist_S. by rewrite embed_tower.
+    + rewrite f_tower. apply dist_S. by rewrite embed_tower.
     + etrans; [apply embed_ne, equiv_dist, g_tower|apply embed_tower].
 Qed.
 End solver. End solver.

@@ -39,17 +39,17 @@ Global Instance Frac_dist_inj n : Inj2 (=) (dist n) (dist n) (@Frac A).
 Proof. by inversion_clear 1. Qed.
 
 Program Definition frac_chain (c : chain (frac A)) (q : Qp) (a : A)
-    (H : maybe2 Frac (c 1) = Some (q,a)) : chain A :=
+    (H : maybe2 Frac (c 0) = Some (q,a)) : chain A :=
   {| chain_car n := match c n return _ with Frac _ b => b | _ => a end |}.
 Next Obligation.
-  intros c q a ? n [|i] ?; [omega|]; simpl.
-  destruct (c 1) eqn:?; simplify_eq/=.
-  by feed inversion (chain_cauchy c n (S i)).
+  intros c q a ? n i ?; simpl.
+  destruct (c 0) eqn:?; simplify_eq/=.
+  by feed inversion (chain_cauchy c n i).
 Qed.
 Instance frac_compl : Compl (frac A) := λ c,
-  match Some_dec (maybe2 Frac (c 1)) with
+  match Some_dec (maybe2 Frac (c 0)) with
   | inleft (exist (q,a) H) => Frac q (compl (frac_chain c q a H))
-  | inright _ => c 1
+  | inright _ => c 0
   end.
 Definition frac_cofe_mixin : CofeMixin (frac A).
 Proof.
@@ -64,15 +64,15 @@ Proof.
     + destruct 1; inversion_clear 1; constructor; etrans; eauto.
   - by inversion_clear 1; constructor; done || apply dist_S.
   - intros n c; unfold compl, frac_compl.
-    destruct (Some_dec (maybe2 Frac (c 1))) as [[[q a] Hx]|].
-    { assert (c 1 = Frac q a) by (by destruct (c 1); simplify_eq/=).
-      assert (∃ b, c (S n) = Frac q b) as [y Hy].
-      { feed inversion (chain_cauchy c 0 (S n));
+    destruct (Some_dec (maybe2 Frac (c 0))) as [[[q a] Hx]|].
+    { assert (c 0 = Frac q a) by (by destruct (c 0); simplify_eq/=).
+      assert (∃ b, c n = Frac q b) as [y Hy].
+      { feed inversion (chain_cauchy c 0 n);
           eauto with lia congruence f_equal. }
       rewrite Hy; constructor; auto.
       by rewrite (conv_compl n (frac_chain c q a Hx)) /= Hy. }
-    feed inversion (chain_cauchy c 0 (S n)); first lia;
-       constructor; destruct (c 1); simplify_eq/=.
+    feed inversion (chain_cauchy c 0 n); first lia;
+       constructor; destruct (c 0); simplify_eq/=.
 Qed.
 Canonical Structure fracC : cofeT := CofeT frac_cofe_mixin.
 Global Instance frac_discrete : Discrete A → Discrete fracC.
