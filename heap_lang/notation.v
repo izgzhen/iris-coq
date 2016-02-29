@@ -78,3 +78,11 @@ Notation "'rec:' f x y z := e" := (Rec f x (Lam y (Lam z e%L)))
   (at level 102, f, x, y, z at level 1, e at level 200) : lang_scope.
 Notation "'rec:' f x y z := e" := (RecV f x (Lam y (Lam z e%L)))
   (at level 102, f, x, y, z at level 1, e at level 200) : lang_scope.
+Notation "λ: x y , e" := (Lam x (Lam y e%L))
+  (at level 102, x, y at level 1, e at level 200) : lang_scope.
+Notation "λ: x y , e" := (LamV x (Lam y e%L))
+  (at level 102, x, y at level 1, e at level 200) : lang_scope.
+Notation "λ: x y z , e" := (Lam x (LamV y (LamV z e%L)))
+  (at level 102, x, y, z at level 1, e at level 200) : lang_scope.
+Notation "λ: x y z , e" := (LamV x (LamV y (LamV z e%L)))
+  (at level 102, x, y, z at level 1, e at level 200) : lang_scope.

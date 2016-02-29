@@ -332,4 +332,11 @@ Proof.
   rewrite (later_intro (P1 -★ _)%I) -later_sep. apply later_mono.
   apply wand_intro_l. by rewrite !assoc wand_elim_r wand_elim_r.
 Qed.
+
+Lemma recv_mono l P1 P2 :
+  P1 ⊑ P2 → recv l P1 ⊑ recv l P2.
+Proof.
+  intros HP%entails_wand. apply wand_entails. rewrite HP. apply recv_strengthen.
+Qed.
+
 End proof.

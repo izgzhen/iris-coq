@@ -747,6 +747,13 @@ Proof.
 Qed.
 Lemma wand_diag P : (P -★ P)%I ≡ True%I.
 Proof. apply (anti_symm _); auto. apply wand_intro_l; by rewrite right_id. Qed.
+Lemma wand_entails P Q : True ⊑ (P -★ Q) → P ⊑ Q.
+Proof.
+  intros HPQ. eapply sep_elim_True_r; first exact: HPQ. by rewrite wand_elim_r.
+Qed.
+Lemma entails_wand P Q : (P ⊑ Q) → True ⊑ (P -★ Q).
+Proof. auto using wand_intro_l. Qed.
+
 Lemma sep_and P Q : (P ★ Q) ⊑ (P ∧ Q).
 Proof. auto. Qed.
 Lemma impl_wand P Q : (P → Q) ⊑ (P -★ Q).
