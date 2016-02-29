@@ -21,17 +21,12 @@
 
 %FIXME any better way to do this?
 \author{%
- Ralf Jung \\ MPI-SWS \& Saarland University \\ jung@mpi-sws.org \and
- David Swasey \\ MPI-SWS \\ swasey@mpi-sws.org \andcr
- Filip Sieczkowski \\ Aarhus University \\ filips@cs.au.dk \and
- Kasper Svendsen \\ Aarhus University \\ ksvendsen@cs.au.dk \and
- Aaron Turon \\ Mozilla Research \\ aturon@mozilla.com \andcr
+ Ralf Jung \\ MPI-SWS \\ jung@mpi-sws.org \and
+ Robbert Krebbers \\ Aarhus University \\ robbert@cs.au.dk \and
  Lars Birkedal \\ Aarhus University \\ birkedal@cs.au.dk \and
  Derek Dreyer \\ MPI-SWS \\ dreyer@mpi-sws.org}
 
-\def\andcr{\end{tabular}\\\begin{tabular}[t]{c}}% see \@maketitle in article.cls and \and in latex.ltx
 \maketitle
-\let\andcr\relax%
 
 \thispagestyle{empty}
 
@@ -41,14 +36,15 @@
 \clearpage\begingroup
 \input{algebra}
 \endgroup\clearpage\begingroup
-\input{constructions}
-\endgroup\clearpage\begingroup
-\input{logic}
-\endgroup\clearpage\begingroup
-\input{model}
-\endgroup\clearpage\begingroup
-\input{derived}
-\endgroup\clearpage\begingroup
+% temporarily disabled, to generate the Iris 2.0 appendix
+%\input{constructions}
+%\endgroup\clearpage\begingroup
+%\input{logic}
+%\endgroup\clearpage\begingroup
+%\input{model}
+%\endgroup\clearpage\begingroup
+%\input{derived}
+%\endgroup\clearpage\begingroup
 \printbibliography
 
 \end{document}

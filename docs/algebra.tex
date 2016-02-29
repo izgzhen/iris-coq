@@ -1,5 +1,85 @@
 \section{Algebraic Structures}
 
+\subsection{COFE}
+
+\begin{defn}
+  A COFE is a tuple $(T, (\nequiv{n})_{n \in \mathbb{N}}, c : (\mathbb{N} \to T) \to T)$ satisfying
+  \begin{align*}
+    \All n. (\nequiv{n}) ~& \text{is an equivalence relation} \tagH{cofe-equiv} \\
+    \All n, m.& n \geq m \Ra (\nequiv{n}) \subseteq (\nequiv{m}) \tagH{cofe-mono} \\
+    \All x, y.& x = y \Lra (\All n. x \nequiv{n} y) \tagH{cofe-limit} \\
+    \All n, X.& c(X) \nequiv{n} X(n+1) \tagH{cofe-compl}
+  \end{align*}
+\end{defn}
+
+\ralf{Copy the explanation from the paper, when that one is more polished.}
+
+\subsection{CMRA}
+
+\begin{defn}
+  A CMRA is a tuple $(\monoid, (\mval_n \subseteq \monoid)_{n \in \mathbb{N}}, \munit: \monoid \to \monoid, (\mtimes) : \monoid \times \monoid \to \monoid, (\mdiv) : \monoid \times \monoid \to \monoid)$ satisfying
+  \begin{align*}
+    \All n, m.& n \geq m \Ra V_n \subseteq V_m \tagH{cmra-valid-mono} \\
+    \All \melt, \meltB, \meltC.& (\melt \mtimes \meltB) \mtimes \meltC = \melt \mtimes (\meltB \mtimes \meltC) \tagH{cmra-assoc} \\
+    \All \melt, \meltB.& \melt \mtimes \meltB = \meltB \mtimes \melt \tagH{cmra-comm} \\
+    \All \melt.& \munit(\melt) \mtimes \melt = \melt \tagH{cmra-unit-id} \\
+    \All \melt.& \munit(\munit(\melt)) = \munit(\melt) \tagH{cmra-unit-idem} \\
+    \All \melt, \meltB.& \melt \leq \meltB \Ra \munit(\melt) \leq \munit(\meltB) \tagH{cmra-unit-mono} \\
+    \All n, \melt, \meltB.& (\melt \mtimes \meltB) \in \mval_n \Ra \melt \in \mval_n \tagH{cmra-unit-op} \\
+    \All \melt, \meltB.& \melt \leq \meltB \Ra \melt \mtimes (\meltB \mdiv \melt) = \meltB \tagH{cmra-div-op} \\
+    \All n, \melt, \meltB_1, \meltB_2.& \omit\rlap{$\melt \in \mval_n \land \melt \nequiv{n} \meltB_1 \mtimes \meltB_2 \Ra {}$} \\
+    &\Exists \meltC_1, \meltC_2. \melt = \meltC_1 \mtimes \meltC_2 \land \meltC_1 \nequiv{n} \meltB_1 \land \meltC_2 \nequiv{n} \meltB_2 \tagH{cmra-extend} \\
+    \text{where}\qquad\qquad\\
+    \melt \leq \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{cmra-incl}
+  \end{align*}
+\end{defn}
+
+\ralf{Copy the rest of the explanation from the paper, when that one is more polished.}
+
+\paragraph{The division operation $\mdiv$.}
+One way to describe $\mdiv$ is to say that it extracts the witness from the extension order: If $\melt \leq \meltB$, then $\melt \mdiv \meltB$ computes the difference between the two elements (\ruleref{cmra-div-op}).
+Otherwise, $\mdiv$ can have arbitrary behavior.
+This means that, in classical logic, the division operator can be defined for any PCM using the axiom of choice, and it will trivially satisfy \ruleref{cmra-div-op}.
+However, notice that the division operator also has to be \emph{non-expansive} --- so if the carrier $\monoid$ is equipped with a non-trivial $\nequiv{n}$, there is an additional proof obligation here.
+This is crucial, for the following reason:
+Considering that the extension order is defined using \emph{equality}, there is a natural notion of a \emph{step-indexed extension} order using the step-indexed equivalence of the underlying COFE:
+\[ \melt \mincl{n} \meltB \eqdef \Exists \meltC. \meltB \nequiv{n} \melt \mtimes \meltC \tagH{cmra-inclM} \]
+One of the properties we would expect to hold is the usual correspondence between a step-indexed predicate and its non-step-indexed counterpart:
+\[ \All \melt, \meltB. \melt \leq \meltB \Lra (\All n. \melt \mincl{n} \meltB) \tagH{cmra-incl-limit} \]
+The right-to-left direction here is trick.
+For every $n$, we obtain a proof that $\melt \mincl{n} \meltB$.
+From this, we could extract a sequence of witnesses $(\meltC_m)_{m}$, and we need to arrive at a single witness $\meltC$ showing that $\melt \leq \meltB$.
+Without the division operator, there is no reason to believe that such a witness exists.
+However, since we can use the division operator, and since we know that this operator is \emph{non-expansive}, we can pick $\meltC \eqdef \meltB \mdiv \melt$, and then we can prove that this is indeed the desired witness.
+\ralf{Do we actually need this property anywhere?}
+
+\paragraph{The extension axiom (\ruleref{cmra-extend}).}
+Notice that the existential quantification in this axiom is \emph{constructive}, \ie it is a sigma type in Coq.
+The purpose of this axiom is to compute $\melt_1$, $\melt_2$ completing the following square:
+
+\ralf{Needs some magic to fix the baseline of the $\nequiv{n}$, or so}
+\begin{center}
+\begin{tikzpicture}[every edge/.style={draw=none}]
+  \node (a) at (0, 0) {$\melt$};
+  \node (b) at (1.7, 0) {$\meltB$};
+  \node (b12) at (1.7, -1) {$\meltB_1 \mtimes \meltB_2$};
+  \node (a12) at (0, -1) {$\melt_1 \mtimes \melt_2$};
+
+  \path (a) edge node {$\nequiv{n}$} (b);
+  \path (a12) edge node {$\nequiv{n}$} (b12);
+  \path (a) edge node [rotate=90] {$=$} (a12);
+  \path (b) edge node [rotate=90] {$=$} (b12);
+\end{tikzpicture}\end{center}
+where the $n$-equivalence at the bottom is meant to apply to the pairs of elements, \ie we demand $\melt_1 \nequiv{n} \meltB_1$ and $\melt_2 \nequiv{n} \meltB_2$.
+In other words, extension carries the decomposition of $\meltB$ into $\meltB_1$ and $\meltB_2$ over the $n$-equivalence of $\melt$ and $\meltB$, and yields a corresponding decomposition of $\melt$ into $\melt_1$ and $\melt_2$.
+This operation is needed to prove that $\later$ commutes with existential quantification and separating conjunction:
+\begin{mathpar}
+  \axiom{\later(\Exists\var:\sort. \prop) \Lra \Exists\var:\sort. \later\prop}
+  \and\axiom{\later (\prop * \propB) \Lra \later\prop * \later\propB}
+\end{mathpar}
+(This assumes that the sort $\sort$ is non-empty.)
+
+
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "iris"
