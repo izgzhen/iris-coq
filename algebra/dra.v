@@ -18,18 +18,18 @@ Definition dra_included `{Equiv A, Valid A, Disjoint A, Op A} := λ x y,
 Instance: Params (@dra_included) 4.
 Local Infix "≼" := dra_included.
 
-Class DRA A `{Equiv A, Valid A, Unit A, Disjoint A, Op A, Minus A} := {
+Class DRA A `{Equiv A, Valid A, Unit A, Disjoint A, Op A, Div A} := {
   (* setoids *)
   dra_equivalence :> Equivalence ((≡) : relation A);
   dra_op_proper :> Proper ((≡) ==> (≡) ==> (≡)) (⋅);
   dra_unit_proper :> Proper ((≡) ==> (≡)) unit;
   dra_valid_proper :> Proper ((≡) ==> impl) valid;
   dra_disjoint_proper :> ∀ x, Proper ((≡) ==> impl) (disjoint x);
-  dra_minus_proper :> Proper ((≡) ==> (≡) ==> (≡)) minus;
+  dra_div_proper :> Proper ((≡) ==> (≡) ==> (≡)) div;
   (* validity *)
   dra_op_valid x y : ✓ x → ✓ y → x ⊥ y → ✓ (x ⋅ y);
   dra_unit_valid x : ✓ x → ✓ unit x;
-  dra_minus_valid x y : ✓ x → ✓ y → x ≼ y → ✓ (y ⩪ x);
+  dra_div_valid x y : ✓ x → ✓ y → x ≼ y → ✓ (y ÷ x);
   (* monoid *)
   dra_assoc :> Assoc (≡) (⋅);
   dra_disjoint_ll x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ z;
@@ -40,8 +40,8 @@ Class DRA A `{Equiv A, Valid A, Unit A, Disjoint A, Op A, Minus A} := {
   dra_unit_l x : ✓ x → unit x ⋅ x ≡ x;
   dra_unit_idemp x : ✓ x → unit (unit x) ≡ unit x;
   dra_unit_preserving x y : ✓ x → ✓ y → x ≼ y → unit x ≼ unit y;
-  dra_disjoint_minus x y : ✓ x → ✓ y → x ≼ y → x ⊥ y ⩪ x;
-  dra_op_minus x y : ✓ x → ✓ y → x ≼ y → x ⋅ y ⩪ x ≡ y
+  dra_disjoint_div x y : ✓ x → ✓ y → x ≼ y → x ⊥ y ÷ x;
+  dra_op_div x y : ✓ x → ✓ y → x ≼ y → x ⋅ y ÷ x ≡ y
 }.
 
 Section dra.
@@ -95,10 +95,10 @@ Program Instance validity_op : Op T := λ x y,
   Validity (validity_car x ⋅ validity_car y)
            (✓ x ∧ ✓ y ∧ validity_car x ⊥ validity_car y) _.
 Solve Obligations with naive_solver auto using dra_op_valid.
-Program Instance validity_minus : Minus T := λ x y,
-  Validity (validity_car x ⩪ validity_car y)
+Program Instance validity_div : Div T := λ x y,
+  Validity (validity_car x ÷ validity_car y)
            (✓ x ∧ ✓ y ∧ validity_car y ≼ validity_car x) _.
-Solve Obligations with naive_solver auto using dra_minus_valid.
+Solve Obligations with naive_solver auto using dra_div_valid.
 
 Definition validity_ra : RA (discreteC T).
 Proof.
@@ -120,15 +120,15 @@ Proof.
   - intros [x px ?]; split;
       naive_solver eauto using dra_unit_l, dra_unit_disjoint_l.
   - intros [x px ?]; split; naive_solver eauto using dra_unit_idemp.
-  - intros x y Hxy; exists (unit y ⩪ unit x).
+  - intros x y Hxy; exists (unit y ÷ unit x).
     destruct x as [x px ?], y as [y py ?], Hxy as [[z pz ?] [??]]; simpl in *.
     assert (py → unit x ≼ unit y)
       by intuition eauto 10 using dra_unit_preserving.
     constructor; [|symmetry]; simpl in *;
-      intuition eauto using dra_op_minus, dra_disjoint_minus, dra_unit_valid.
+      intuition eauto using dra_op_div, dra_disjoint_div, dra_unit_valid.
   - by intros [x px ?] [y py ?] (?&?&?).
   - intros [x px ?] [y py ?] [[z pz ?] [??]]; split; simpl in *;
-      intuition eauto 10 using dra_disjoint_minus, dra_op_minus.
+      intuition eauto 10 using dra_disjoint_div, dra_op_div.
 Qed.
 Definition validityRA : cmraT := discreteRA validity_ra.
 Instance validity_cmra_discrete :

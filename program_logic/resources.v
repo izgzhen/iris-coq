@@ -79,8 +79,8 @@ Instance res_unit : Unit (res Λ Σ A) := λ r,
 Instance res_valid : Valid (res Λ Σ A) := λ r, ✓ wld r ∧ ✓ pst r ∧ ✓ gst r.
 Instance res_validN : ValidN (res Λ Σ A) := λ n r,
   ✓{n} wld r ∧ ✓{n} pst r ∧ ✓{n} gst r.
-Instance res_minus : Minus (res Λ Σ A) := λ r1 r2,
-  Res (wld r1 ⩪ wld r2) (pst r1 ⩪ pst r2) (gst r1 ⩪ gst r2).
+Instance res_minus : Div (res Λ Σ A) := λ r1 r2,
+  Res (wld r1 ÷ wld r2) (pst r1 ÷ pst r2) (gst r1 ÷ gst r2).
 
 Lemma res_included (r1 r2 : res Λ Σ A) :
   r1 ≼ r2 ↔ wld r1 ≼ wld r2 ∧ pst r1 ≼ pst r2 ∧ gst r1 ≼ gst r2.
@@ -116,7 +116,7 @@ Proof.
   - intros n r1 r2 (?&?&?);
       split_and!; simpl in *; eapply cmra_validN_op_l; eauto.
   - intros r1 r2; rewrite res_included; intros (?&?&?).
-    by constructor; apply cmra_op_minus.
+    by constructor; apply cmra_op_div.
   - intros n r r1 r2 (?&?&?) [???]; simpl in *.
     destruct (cmra_extend n (wld r) (wld r1) (wld r2)) as ([w w']&?&?&?),
       (cmra_extend n (pst r) (pst r1) (pst r2)) as ([σ σ']&?&?&?),

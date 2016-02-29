@@ -96,11 +96,11 @@ Instance map_op : Op (gmap K A) := merge op.
 Instance map_unit : Unit (gmap K A) := fmap unit.
 Instance map_valid : Valid (gmap K A) := λ m, ∀ i, ✓ (m !! i).
 Instance map_validN : ValidN (gmap K A) := λ n m, ∀ i, ✓{n} (m !! i).
-Instance map_minus : Minus (gmap K A) := merge minus.
+Instance map_div : Div (gmap K A) := merge div.
 
 Lemma lookup_op m1 m2 i : (m1 ⋅ m2) !! i = m1 !! i ⋅ m2 !! i.
 Proof. by apply lookup_merge. Qed.
-Lemma lookup_minus m1 m2 i : (m1 ⩪ m2) !! i = m1 !! i ⩪ m2 !! i.
+Lemma lookup_div m1 m2 i : (m1 ÷ m2) !! i = m1 !! i ÷ m2 !! i.
 Proof. by apply lookup_merge. Qed.
 Lemma lookup_unit m i : unit m !! i = unit (m !! i).
 Proof. by apply lookup_fmap. Qed.
@@ -109,16 +109,16 @@ Lemma map_included_spec (m1 m2 : gmap K A) : m1 ≼ m2 ↔ ∀ i, m1 !! i ≼ m2
 Proof.
   split.
   - by intros [m Hm]; intros i; exists (m !! i); rewrite -lookup_op Hm.
-  - intros Hm; exists (m2 ⩪ m1); intros i.
-    by rewrite lookup_op lookup_minus cmra_op_minus.
+  - intros Hm; exists (m2 ÷ m1); intros i.
+    by rewrite lookup_op lookup_div cmra_op_div.
 Qed.
 Lemma map_includedN_spec (m1 m2 : gmap K A) n :
   m1 ≼{n} m2 ↔ ∀ i, m1 !! i ≼{n} m2 !! i.
 Proof.
   split.
   - by intros [m Hm]; intros i; exists (m !! i); rewrite -lookup_op Hm.
-  - intros Hm; exists (m2 ⩪ m1); intros i.
-    by rewrite lookup_op lookup_minus cmra_op_minus'.
+  - intros Hm; exists (m2 ÷ m1); intros i.
+    by rewrite lookup_op lookup_div cmra_op_div'.
 Qed.
 
 Definition map_cmra_mixin : CMRAMixin (gmap K A).
@@ -127,7 +127,7 @@ Proof.
   - by intros n m1 m2 m3 Hm i; rewrite !lookup_op (Hm i).
   - by intros n m1 m2 Hm i; rewrite !lookup_unit (Hm i).
   - by intros n m1 m2 Hm ? i; rewrite -(Hm i).
-  - by intros n m1 m1' Hm1 m2 m2' Hm2 i; rewrite !lookup_minus (Hm1 i) (Hm2 i).
+  - by intros n m1 m1' Hm1 m2 m2' Hm2 i; rewrite !lookup_div (Hm1 i) (Hm2 i).
   - intros m; split.
     + by intros ? n i; apply cmra_valid_validN.
     + intros Hm i; apply cmra_valid_validN=> n; apply Hm.
@@ -141,7 +141,7 @@ Proof.
   - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
   - intros x y; rewrite map_included_spec=> ? i.
-    by rewrite lookup_op lookup_minus cmra_op_minus.
+    by rewrite lookup_op lookup_div cmra_op_div.
   - intros n m m1 m2 Hm Hm12.
     assert (∀ i, m !! i ≡{n}≡ m1 !! i ⋅ m2 !! i) as Hm12'
       by (by intros i; rewrite -lookup_op).

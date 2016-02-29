@@ -3,7 +3,7 @@ From algebra Require Export cmra.
 From algebra Require Import functor upred.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
-Local Arguments minus _ _ !_ !_ /.
+Local Arguments div _ _ !_ !_ /.
 
 Inductive frac (A : Type) :=
   | Frac : Qp → A → frac A
@@ -129,11 +129,11 @@ Instance frac_op : Op (frac A) := λ x y,
   | Frac q a, FracUnit | FracUnit, Frac q a => Frac q a
   | FracUnit, FracUnit => FracUnit
   end.
-Instance frac_minus : Minus (frac A) := λ x y,
+Instance frac_div : Div (frac A) := λ x y,
   match x, y with
   | _, FracUnit => x
   | Frac q1 a, Frac q2 b =>
-     match q1 - q2 with Some q => Frac q (a ⩪ b) | None => FracUnit end%Qp
+     match q1 - q2 with Some q => Frac q (a ÷ b) | None => FracUnit end%Qp
   | FracUnit, _ => FracUnit
   end.
 
@@ -159,7 +159,7 @@ Proof.
     rewrite -{1}(Qcplus_0_r q1) -Qcplus_le_mono_l; auto using Qclt_le_weak.
   - intros [q1 a1|] [q2 a2|] [[q3 a3|] Hx];
       inversion_clear Hx; simplify_eq/=; auto.
-    + rewrite Qp_op_minus. by constructor; [|apply cmra_op_minus; exists a3].
+    + rewrite Qp_op_minus. by constructor; [|apply cmra_op_div; exists a3].
     + rewrite Qp_minus_diag. by constructor.
   - intros n [q a|] y1 y2 Hx Hx'; last first.
     { by exists (∅, ∅); destruct y1, y2; inversion_clear Hx'. }

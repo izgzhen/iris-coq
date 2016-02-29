@@ -212,7 +212,7 @@ Global Instance sts_op : Op (car sts) := λ x1 x2,
   | frag _ T1, auth s T2 => auth s (T1 ∪ T2)
   | auth s T1, auth _ T2 => auth s (T1 ∪ T2)(* never happens *)
   end.
-Global Instance sts_minus : Minus (car sts) := λ x1 x2,
+Global Instance sts_div : Div (car sts) := λ x1 x2,
   match x1, x2 with
   | frag S1 T1, frag S2 T2 => frag (up_set S1 (T1 ∖ T2)) (T1 ∖ T2)
   | auth s T1, frag _ T2 => auth s (T1 ∖ T2)

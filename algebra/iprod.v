@@ -120,18 +120,18 @@ Section iprod_cmra.
   Instance iprod_unit : Unit (iprod B) := λ f x, unit (f x).
   Instance iprod_valid : Valid (iprod B) := λ f, ∀ x, ✓ f x.
   Instance iprod_validN : ValidN (iprod B) := λ n f, ∀ x, ✓{n} f x.
-  Instance iprod_minus : Minus (iprod B) := λ f g x, f x ⩪ g x.
+  Instance iprod_div : Div (iprod B) := λ f g x, f x ÷ g x.
 
   Definition iprod_lookup_op f g x : (f ⋅ g) x = f x ⋅ g x := eq_refl.
   Definition iprod_lookup_unit f x : (unit f) x = unit (f x) := eq_refl.
-  Definition iprod_lookup_minus f g x : (f ⩪ g) x = f x ⩪ g x := eq_refl.
+  Definition iprod_lookup_div f g x : (f ÷ g) x = f x ÷ g x := eq_refl.
 
   Lemma iprod_included_spec (f g : iprod B) : f ≼ g ↔ ∀ x, f x ≼ g x.
   Proof.
     split.
     - by intros [h Hh] x; exists (h x); rewrite /op /iprod_op (Hh x).
-    - intros Hh; exists (g ⩪ f)=> x; specialize (Hh x).
-      by rewrite /op /iprod_op /minus /iprod_minus cmra_op_minus.
+    - intros Hh; exists (g ÷ f)=> x; specialize (Hh x).
+      by rewrite /op /iprod_op /div /iprod_div cmra_op_div.
   Qed.
 
   Definition iprod_cmra_mixin : CMRAMixin (iprod B).
@@ -140,7 +140,7 @@ Section iprod_cmra.
     - by intros n f1 f2 f3 Hf x; rewrite iprod_lookup_op (Hf x).
     - by intros n f1 f2 Hf x; rewrite iprod_lookup_unit (Hf x).
     - by intros n f1 f2 Hf ? x; rewrite -(Hf x).
-    - by intros n f f' Hf g g' Hg i; rewrite iprod_lookup_minus (Hf i) (Hg i).
+    - by intros n f f' Hf g g' Hg i; rewrite iprod_lookup_div (Hf i) (Hg i).
     - intros g; split.
       + intros Hg n i; apply cmra_valid_validN, Hg.
       + intros Hg i; apply cmra_valid_validN=> n; apply Hg.
@@ -153,7 +153,7 @@ Section iprod_cmra.
       by rewrite iprod_lookup_unit; apply cmra_unit_preserving, Hf.
     - intros n f1 f2 Hf x; apply cmra_validN_op_l with (f2 x), Hf.
     - intros f1 f2; rewrite iprod_included_spec=> Hf x.
-      by rewrite iprod_lookup_op iprod_lookup_minus cmra_op_minus; try apply Hf.
+      by rewrite iprod_lookup_op iprod_lookup_div cmra_op_div; try apply Hf.
     - intros n f f1 f2 Hf Hf12.
       set (g x := cmra_extend n (f x) (f1 x) (f2 x) (Hf x) (Hf12 x)).
       exists ((λ x, (proj1_sig (g x)).1), (λ x, (proj1_sig (g x)).2)).

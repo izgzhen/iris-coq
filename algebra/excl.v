@@ -98,7 +98,7 @@ Instance excl_op : Op (excl A) := λ x y,
   | ExclUnit, ExclUnit => ExclUnit
   | _, _=> ExclBot
   end.
-Instance excl_minus : Minus (excl A) := λ x y,
+Instance excl_div : Div (excl A) := λ x y,
   match x, y with
   | _, ExclUnit => x
   | Excl _, Excl _ => ExclUnit

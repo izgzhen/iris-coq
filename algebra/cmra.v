@@ -14,9 +14,9 @@ Notation "(≼)" := included (only parsing) : C_scope.
 Hint Extern 0 (_ ≼ _) => reflexivity.
 Instance: Params (@included) 3.
 
-Class Minus (A : Type) := minus : A → A → A.
-Instance: Params (@minus) 2.
-Infix "⩪" := minus (at level 40) : C_scope.
+Class Div (A : Type) := div : A → A → A.
+Instance: Params (@div) 2.
+Infix "÷" := div : C_scope.
 
 Class ValidN (A : Type) := validN : nat → A → Prop.
 Instance: Params (@validN) 3.
@@ -34,12 +34,12 @@ Instance: Params (@includedN) 4.
 Hint Extern 0 (_ ≼{_} _) => reflexivity.
 
 Record CMRAMixin A
-    `{Dist A, Equiv A, Unit A, Op A, Valid A, ValidN A, Minus A} := {
+    `{Dist A, Equiv A, Unit A, Op A, Valid A, ValidN A, Div A} := {
   (* setoids *)
   mixin_cmra_op_ne n (x : A) : Proper (dist n ==> dist n) (op x);
   mixin_cmra_unit_ne n : Proper (dist n ==> dist n) unit;
   mixin_cmra_validN_ne n : Proper (dist n ==> impl) (validN n);
-  mixin_cmra_minus_ne n : Proper (dist n ==> dist n ==> dist n) minus;
+  mixin_cmra_div_ne n : Proper (dist n ==> dist n ==> dist n) div;
   (* valid *)
   mixin_cmra_valid_validN x : ✓ x ↔ ∀ n, ✓{n} x;
   mixin_cmra_validN_S n x : ✓{S n} x → ✓{n} x;
@@ -50,7 +50,7 @@ Record CMRAMixin A
   mixin_cmra_unit_idemp x : unit (unit x) ≡ unit x;
   mixin_cmra_unit_preserving x y : x ≼ y → unit x ≼ unit y;
   mixin_cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
-  mixin_cmra_op_minus x y : x ≼ y → x ⋅ y ⩪ x ≡ y;
+  mixin_cmra_op_div x y : x ≼ y → x ⋅ y ÷ x ≡ y;
   mixin_cmra_extend n x y1 y2 :
     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
     { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ≡{n}≡ y1 ∧ z.2 ≡{n}≡ y2 }
@@ -66,7 +66,7 @@ Structure cmraT := CMRAT {
   cmra_op : Op cmra_car;
   cmra_valid : Valid cmra_car;
   cmra_validN : ValidN cmra_car;
-  cmra_minus : Minus cmra_car;
+  cmra_div : Div cmra_car;
   cmra_cofe_mixin : CofeMixin cmra_car;
   cmra_mixin : CMRAMixin cmra_car
 }.
@@ -79,11 +79,11 @@ Arguments cmra_unit : simpl never.
 Arguments cmra_op : simpl never.
 Arguments cmra_valid : simpl never.
 Arguments cmra_validN : simpl never.
-Arguments cmra_minus : simpl never.
+Arguments cmra_div : simpl never.
 Arguments cmra_cofe_mixin : simpl never.
 Arguments cmra_mixin : simpl never.
 Add Printing Constructor cmraT.
-Existing Instances cmra_unit cmra_op cmra_valid cmra_validN cmra_minus.
+Existing Instances cmra_unit cmra_op cmra_valid cmra_validN cmra_div.
 Coercion cmra_cofeC (A : cmraT) : cofeT := CofeT (cmra_cofe_mixin A).
 Canonical Structure cmra_cofeC.
 
@@ -97,9 +97,9 @@ Section cmra_mixin.
   Proof. apply (mixin_cmra_unit_ne _ (cmra_mixin A)). Qed.
   Global Instance cmra_validN_ne n : Proper (dist n ==> impl) (@validN A _ n).
   Proof. apply (mixin_cmra_validN_ne _ (cmra_mixin A)). Qed.
-  Global Instance cmra_minus_ne n :
-    Proper (dist n ==> dist n ==> dist n) (@minus A _).
-  Proof. apply (mixin_cmra_minus_ne _ (cmra_mixin A)). Qed.
+  Global Instance cmra_div_ne n :
+    Proper (dist n ==> dist n ==> dist n) (@div A _).
+  Proof. apply (mixin_cmra_div_ne _ (cmra_mixin A)). Qed.
   Lemma cmra_valid_validN x : ✓ x ↔ ∀ n, ✓{n} x.
   Proof. apply (mixin_cmra_valid_validN _ (cmra_mixin A)). Qed.
   Lemma cmra_validN_S n x : ✓{S n} x → ✓{n} x.
@@ -116,8 +116,8 @@ Section cmra_mixin.
   Proof. apply (mixin_cmra_unit_preserving _ (cmra_mixin A)). Qed.
   Lemma cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x.
   Proof. apply (mixin_cmra_validN_op_l _ (cmra_mixin A)). Qed.
-  Lemma cmra_op_minus x y : x ≼ y → x ⋅ y ⩪ x ≡ y.
-  Proof. apply (mixin_cmra_op_minus _ (cmra_mixin A)). Qed.
+  Lemma cmra_op_div x y : x ≼ y → x ⋅ y ÷ x ≡ y.
+  Proof. apply (mixin_cmra_op_div _ (cmra_mixin A)). Qed.
   Lemma cmra_extend n x y1 y2 :
     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
     { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ≡{n}≡ y1 ∧ z.2 ≡{n}≡ y2 }.
@@ -188,7 +188,7 @@ Global Instance cmra_validN_ne' : Proper (dist n ==> iff) (@validN A _ n) | 1.
 Proof. by split; apply cmra_validN_ne. Qed.
 Global Instance cmra_validN_proper : Proper ((≡) ==> iff) (@validN A _ n) | 1.
 Proof. by intros n x1 x2 Hx; apply cmra_validN_ne', equiv_dist. Qed.
-Global Instance cmra_minus_proper : Proper ((≡) ==> (≡) ==> (≡)) (@minus A _).
+Global Instance cmra_div_proper : Proper ((≡) ==> (≡) ==> (≡)) (@div A _).
 Proof. apply (ne_proper_2 _). Qed.
 
 Global Instance cmra_valid_proper : Proper ((≡) ==> iff) (@valid A _).
@@ -246,16 +246,16 @@ Proof. rewrite -{1}(cmra_unit_l x); apply cmra_validN_op_l. Qed.
 Lemma cmra_unit_valid x : ✓ x → ✓ unit x.
 Proof. rewrite -{1}(cmra_unit_l x); apply cmra_valid_op_l. Qed.
 
-(** ** Minus *)
-Lemma cmra_op_minus' n x y : x ≼{n} y → x ⋅ y ⩪ x ≡{n}≡ y.
-Proof. intros [z ->]. by rewrite cmra_op_minus; last exists z. Qed.
+(** ** Div *)
+Lemma cmra_op_div' n x y : x ≼{n} y → x ⋅ y ÷ x ≡{n}≡ y.
+Proof. intros [z ->]. by rewrite cmra_op_div; last exists z. Qed.
 
 (** ** Order *)
 Lemma cmra_included_includedN x y : x ≼ y ↔ ∀ n, x ≼{n} y.
 Proof.
   split; [by intros [z Hz] n; exists z; rewrite Hz|].
-  intros Hxy; exists (y ⩪ x); apply equiv_dist=> n.
-  by rewrite cmra_op_minus'.
+  intros Hxy; exists (y ÷ x); apply equiv_dist=> n.
+  by rewrite cmra_op_div'.
 Qed.
 Global Instance cmra_includedN_preorder n : PreOrder (@includedN A _ _ n).
 Proof.
@@ -486,12 +486,12 @@ End cmra_transport.
 
 (** * Instances *)
 (** ** Discrete CMRA *)
-Class RA A `{Equiv A, Unit A, Op A, Valid A, Minus A} := {
+Class RA A `{Equiv A, Unit A, Op A, Valid A, Div A} := {
   (* setoids *)
   ra_op_ne (x : A) : Proper ((≡) ==> (≡)) (op x);
   ra_unit_ne :> Proper ((≡) ==> (≡)) unit;
   ra_validN_ne :> Proper ((≡) ==> impl) valid;
-  ra_minus_ne :> Proper ((≡) ==> (≡) ==> (≡)) minus;
+  ra_div_ne :> Proper ((≡) ==> (≡) ==> (≡)) div;
   (* monoid *)
   ra_assoc :> Assoc (≡) (⋅);
   ra_comm :> Comm (≡) (⋅);
@@ -499,12 +499,12 @@ Class RA A `{Equiv A, Unit A, Op A, Valid A, Minus A} := {
   ra_unit_idemp x : unit (unit x) ≡ unit x;
   ra_unit_preserving x y : x ≼ y → unit x ≼ unit y;
   ra_valid_op_l x y : ✓ (x ⋅ y) → ✓ x;
-  ra_op_minus x y : x ≼ y → x ⋅ y ⩪ x ≡ y
+  ra_op_div x y : x ≼ y → x ⋅ y ÷ x ≡ y
 }.
 
 Section discrete.
   Context {A : cofeT} `{Discrete A}.
-  Context `{Unit A, Op A, Valid A, Minus A} (ra : RA A).
+  Context `{Unit A, Op A, Valid A, Div A} (ra : RA A).
 
   Instance discrete_validN : ValidN A := λ n x, ✓ x.
   Definition discrete_cmra_mixin : CMRAMixin A.
@@ -525,7 +525,7 @@ Section unit.
   Instance unit_valid : Valid () := λ x, True.
   Instance unit_unit : Unit () := λ x, x.
   Instance unit_op : Op () := λ x y, ().
-  Instance unit_minus : Minus () := λ x y, ().
+  Instance unit_div : Div () := λ x y, ().
   Global Instance unit_empty : Empty () := ().
   Definition unit_ra : RA ().
   Proof. by split. Qed.
@@ -544,7 +544,7 @@ Section prod.
   Instance prod_unit : Unit (A * B) := λ x, (unit (x.1), unit (x.2)).
   Instance prod_valid : Valid (A * B) := λ x, ✓ x.1 ∧ ✓ x.2.
   Instance prod_validN : ValidN (A * B) := λ n x, ✓{n} x.1 ∧ ✓{n} x.2.
-  Instance prod_minus : Minus (A * B) := λ x y, (x.1 ⩪ y.1, x.2 ⩪ y.2).
+  Instance prod_div : Div (A * B) := λ x y, (x.1 ÷ y.1, x.2 ÷ y.2).
   Lemma prod_included (x y : A * B) : x ≼ y ↔ x.1 ≼ y.1 ∧ x.2 ≼ y.2.
   Proof.
     split; [intros [z Hz]; split; [exists (z.1)|exists (z.2)]; apply Hz|].
@@ -575,7 +575,7 @@ Section prod.
       by intros [??]; split; apply cmra_unit_preserving.
     - intros n x y [??]; split; simpl in *; eauto using cmra_validN_op_l.
     - intros x y; rewrite prod_included; intros [??].
-      by split; apply cmra_op_minus.
+      by split; apply cmra_op_div.
     - intros n x y1 y2 [??] [??]; simpl in *.
       destruct (cmra_extend n (x.1) (y1.1) (y2.1)) as (z1&?&?&?); auto.
       destruct (cmra_extend n (x.2) (y1.2) (y2.2)) as (z2&?&?&?); auto.

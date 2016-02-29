@@ -89,8 +89,8 @@ Instance auth_unit : Unit (auth A) := λ x,
   Auth (unit (authoritative x)) (unit (own x)).
 Instance auth_op : Op (auth A) := λ x y,
   Auth (authoritative x ⋅ authoritative y) (own x ⋅ own y).
-Instance auth_minus : Minus (auth A) := λ x y,
-  Auth (authoritative x ⩪ authoritative y) (own x ⩪ own y).
+Instance auth_div : Div (auth A) := λ x y,
+  Auth (authoritative x ÷ authoritative y) (own x ÷ own y).
 
 Lemma auth_included (x y : auth A) :
   x ≼ y ↔ authoritative x ≼ authoritative y ∧ own x ≼ own y.
@@ -126,7 +126,7 @@ Proof.
    intros n [[a1| |] b1] [[a2| |] b2];
      naive_solver eauto using cmra_validN_op_l, cmra_validN_includedN.
   - by intros ??; rewrite auth_included;
-      intros [??]; split; simpl; apply cmra_op_minus.
+      intros [??]; split; simpl; apply cmra_op_div.
   - intros n x y1 y2 ? [??]; simpl in *.
     destruct (cmra_extend n (authoritative x) (authoritative y1)
       (authoritative y2)) as (ea&?&?&?); auto using authoritative_validN.

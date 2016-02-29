@@ -69,8 +69,8 @@ Instance option_validN : ValidN (option A) := λ n mx,
 Global Instance option_empty : Empty (option A) := None.
 Instance option_unit : Unit (option A) := fmap unit.
 Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
-Instance option_minus : Minus (option A) :=
-  difference_with (λ x y, Some (x ⩪ y)).
+Instance option_div : Div (option A) :=
+  difference_with (λ x y, Some (x ÷ y)).
 
 Definition Some_valid a : ✓ Some a ↔ ✓ a := reflexivity _.
 Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl.
@@ -107,7 +107,7 @@ Proof.
       eauto using cmra_validN_op_l.
   - intros mx my; rewrite option_included.
     intros [->|(x&y&->&->&?)]; [by destruct my|].
-    by constructor; apply cmra_op_minus.
+    by constructor; apply cmra_op_div.
   - intros n mx my1 my2.
     destruct mx as [x|], my1 as [y1|], my2 as [y2|]; intros Hx Hx';
       try (by exfalso; inversion Hx'; auto).
