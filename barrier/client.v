@@ -4,7 +4,7 @@ Import uPred.
 
 Definition worker (n : Z) := (λ: "b" "y", wait "b" ;; (!"y") 'n)%L.
 Definition client := (let: "y" := ref '0 in let: "b" := newbarrier '() in
-                      Fork (Skip ;; Fork (worker 12 "b" "y") ;; worker 17 "b" "y") ;;
+                      Fork (Fork (worker 12 "b" "y") ;; worker 17 "b" "y") ;;
                       "y" <- (λ: "z", "z" + '42) ;; signal "b")%L.
 
 Section client.
@@ -58,9 +58,9 @@ Section client.
       apply sep_intro_True_r; first done. apply: always_intro.
       apply forall_intro=>n. wp_let. wp_op. by apply const_intro. }
     (* The two spawned threads, the waiters. *)
-    ewp eapply recv_split. rewrite comm. apply sep_mono.
-    { apply recv_mono. rewrite y_inv_split. done. }
-    apply wand_intro_r. wp_seq. ewp eapply wp_fork.
+    rewrite recv_mono; last exact: y_inv_split.
+    rewrite (recv_split _ _ ⊤) // pvs_frame_l. apply wp_strip_pvs.
+    ewp eapply wp_fork.
     rewrite [heap_ctx _]always_sep_dup !assoc [(_ ★ recv _ _ _ _)%I]comm.
     rewrite -!assoc assoc. apply sep_mono.
     - wp_seq. by rewrite -worker_safe comm.

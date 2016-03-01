@@ -15,7 +15,7 @@ Lemma barrier_spec (heapN N : namespace) :
     (∀ P, heap_ctx heapN ⊑ {{ True }} newbarrier '() {{ λ v, ∃ l, v = LocV l ★ recv l P ★ send l P }}) ∧
     (∀ l P, {{ send l P ★ P }} signal (LocV l) {{ λ _, True }}) ∧
     (∀ l P, {{ recv l P }} wait (LocV l) {{ λ _, P }}) ∧
-    (∀ l P Q, {{ recv l (P ★ Q) }} Skip {{ λ _, recv l P ★ recv l Q }}) ∧
+    (∀ l P Q, recv l (P ★ Q) ={N}=> recv l P ★ recv l Q) ∧
     (∀ l P Q, (P -★ Q) ⊑ (recv l P -★ recv l Q)).
 Proof.
   intros HN.
@@ -28,8 +28,7 @@ Proof.
   - intros l P. apply ht_alt. by rewrite -signal_spec right_id.
   - intros l P. apply ht_alt.
     by rewrite -(wait_spec heapN N l P) wand_diag right_id.
-  - intros l P Q. apply ht_alt. rewrite -(recv_split heapN N l P Q).
-    apply sep_intro_True_r; first done. apply wand_intro_l. eauto with I.
+  - intros l P Q. apply vs_alt. rewrite -(recv_split heapN N N l P Q) //.
   - intros l P Q. apply recv_strengthen.
 Qed.
 End spec.

@@ -248,3 +248,8 @@ Proof.
   rewrite /pvs_fsa.
   split; auto using pvs_mask_frame_mono, pvs_trans3, pvs_frame_r.
 Qed.
+
+Lemma pvs_mk_fsa {Λ Σ} E (P Q : iProp Λ Σ) :
+  P ⊑ pvs_fsa E (λ _, Q) →
+  P ⊑ |={E}=> Q.
+Proof. by intros ?. Qed.

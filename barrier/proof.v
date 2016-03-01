@@ -245,20 +245,21 @@ Proof.
   rewrite eq_sym. eauto with I.
 Qed.
 
-Lemma recv_split l P1 P2 Φ :
-  (recv l (P1 ★ P2) ★ (recv l P1 ★ recv l P2 -★ Φ '())) ⊑ || Skip {{ Φ }}.
+Lemma recv_split E l P1 P2 :
+  nclose N ⊆ E → 
+  recv l (P1 ★ P2) ⊑ |={E}=> recv l P1 ★ recv l P2.
 Proof.
-  rename P1 into R1. rename P2 into R2.
-  rewrite {1}/recv /barrier_ctx. rewrite sep_exist_r.
+  rename P1 into R1. rename P2 into R2. intros HN.
+  rewrite {1}/recv /barrier_ctx. 
   apply exist_elim=>γ. rewrite sep_exist_r.  apply exist_elim=>P. 
-  rewrite sep_exist_r.  apply exist_elim=>Q. rewrite sep_exist_r.
-  apply exist_elim=>i. rewrite -!assoc. apply const_elim_sep_l=>?. rewrite -wp_pvs.
+  apply exist_elim=>Q. apply exist_elim=>i. rewrite -!assoc.
+  apply const_elim_sep_l=>?. rewrite -pvs_trans'.
   (* I think some evars here are better than repeating *everything* *)
-  eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
+  eapply pvs_mk_fsa, (sts_fsaS _ pvs_fsa) with (N0:=N) (γ0:=γ); simpl;
     eauto with I ndisj.
   rewrite !assoc [(_ ★ sts_ownS _ _ _)%I]comm -!assoc. apply sep_mono_r.
   apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
-  apply const_elim_sep_l=>Hs. rewrite -wp_pvs. wp_seq.
+  apply const_elim_sep_l=>Hs. rewrite /pvs_fsa.
   eapply sep_elim_True_l.
   { eapply saved_prop_alloc_strong with (P0 := R1) (G := I). }
   rewrite pvs_frame_r. apply pvs_strip_pvs. rewrite sep_exist_r.
@@ -274,22 +275,23 @@ Proof.
   - rewrite -(exist_intro (State Low ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
     rewrite -(exist_intro ({[Change i1 ]} ∪ {[ Change i2 ]})).
     rewrite [(■ sts.steps _ _)%I]const_equiv; last by eauto using split_step.
-    rewrite left_id -later_intro {1 3}/barrier_inv.
+    rewrite left_id {1 3}/barrier_inv.
     (* FIXME ssreflect rewrite fails if there are evars around. Also, this is very slow because we don't have a proof mode. *)
     rewrite -(waiting_split _ _ _ Q R1 R2); [|done..].
     rewrite {1}[saved_prop_own i1 _]always_sep_dup.
-    rewrite {1}[saved_prop_own i2 _]always_sep_dup.
-    ecancel [l ↦ _; saved_prop_own i1 _; saved_prop_own i2 _; waiting _ _;
-             _ -★ _; saved_prop_own i _]%I. 
-    apply wand_intro_l. rewrite !assoc. eapply pvs_wand_r. rewrite /recv.
+    rewrite {1}[saved_prop_own i2 _]always_sep_dup !later_sep.
+    rewrite -![(▷ saved_prop_own _ _)%I]later_intro.
+    ecancel [▷ l ↦ _; saved_prop_own i1 _; saved_prop_own i2 _ ;
+             ▷ waiting _ _ ; ▷ (Q -★ _) ; saved_prop_own i _]%I. 
+    apply wand_intro_l. rewrite !assoc. rewrite /recv.
     rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R1) -(exist_intro i1).
     rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R2) -(exist_intro i2).
     do 2 rewrite !(assoc (★)%I) [(_ ★ sts_ownS _ _ _)%I]comm.
-    rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc -pvs_frame_r.
-    apply sep_mono.
+    rewrite -!assoc. rewrite [(sts_ownS _ _ _ ★ _ ★ _)%I]assoc.
+    rewrite -pvs_frame_r. apply sep_mono.
     * rewrite -sts_ownS_op; eauto using i_states_closed.
-      + apply sts_own_weaken; eauto using sts.closed_op, i_states_closed.
-        set_solver.
+      + apply sts_own_weaken;
+          eauto using sts.closed_op, i_states_closed. set_solver.
       + set_solver.
     * rewrite const_equiv // !left_id.
       rewrite {1}[heap_ctx _]always_sep_dup {1}[sts_ctx _ _ _]always_sep_dup.
@@ -301,13 +303,14 @@ Proof.
   - rewrite -(exist_intro (State High ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
     rewrite -(exist_intro ({[Change i1 ]} ∪ {[ Change i2 ]})).
     rewrite const_equiv; last by eauto using split_step.
-    rewrite left_id -later_intro {1 3}/barrier_inv.
+    rewrite left_id {1 3}/barrier_inv.
     rewrite -(ress_split _ _ _ Q R1 R2); [|done..].
     rewrite {1}[saved_prop_own i1 _]always_sep_dup.
-    rewrite {1}[saved_prop_own i2 _]always_sep_dup.
-    ecancel [l ↦ _; saved_prop_own i1 _; saved_prop_own i2 _; ress _;
-             _ -★ _; saved_prop_own i _]%I. 
-    apply wand_intro_l. rewrite !assoc. eapply pvs_wand_r. rewrite /recv.
+    rewrite {1}[saved_prop_own i2 _]always_sep_dup !later_sep.
+    rewrite -![(▷ saved_prop_own _ _)%I]later_intro.
+    ecancel [▷ l ↦ _; saved_prop_own i1 _; saved_prop_own i2 _ ;
+             ▷ ress _ ; ▷ (Q -★ _) ; saved_prop_own i _]%I. 
+    apply wand_intro_l. rewrite !assoc. rewrite /recv.
     rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R1) -(exist_intro i1).
     rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R2) -(exist_intro i2).
     do 2 rewrite !(assoc (★)%I) [(_ ★ sts_ownS _ _ _)%I]comm.
