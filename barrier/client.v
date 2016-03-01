@@ -2,10 +2,13 @@ From barrier Require Import proof.
 From program_logic Require Import auth sts saved_prop hoare ownership.
 Import uPred.
 
-Definition worker (n : Z) := (λ: "b" "y", wait "b" ;; (!"y") 'n)%L.
-Definition client := (let: "y" := ref '0 in let: "b" := newbarrier '() in
-                      Fork (Fork (worker 12 "b" "y") ;; worker 17 "b" "y") ;;
-                      "y" <- (λ: "z", "z" + '42) ;; signal "b")%L.
+Definition worker (n : Z) : val :=
+  λ: "b" "y", wait "b" ;; !"y" 'n.
+Definition client : expr :=
+  let: "y" := ref '0 in
+  let: "b" := newbarrier '() in
+  Fork (Fork (worker 12 "b" "y") ;; worker 17 "b" "y") ;;
+  "y" <- (λ: "z", "z" + '42) ;; signal "b".
 
 Section client.
   Context {Σ : iFunctorG} `{!heapG Σ, !barrierG Σ} (heapN N : namespace).
