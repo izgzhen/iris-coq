@@ -159,9 +159,9 @@ Section iprod_cmra.
       exists ((λ x, (proj1_sig (g x)).1), (λ x, (proj1_sig (g x)).2)).
       split_and?; intros x; apply (proj2_sig (g x)).
   Qed.
-  Canonical Structure iprodRA : cmraT := CMRAT iprod_cofe_mixin iprod_cmra_mixin.
+  Canonical Structure iprodR : cmraT := CMRAT iprod_cofe_mixin iprod_cmra_mixin.
   Global Instance iprod_cmra_identity `{∀ x, Empty (B x)} :
-    (∀ x, CMRAIdentity (B x)) → CMRAIdentity iprodRA.
+    (∀ x, CMRAIdentity (B x)) → CMRAIdentity iprodR.
   Proof.
     intros ?; split.
     - intros x; apply cmra_empty_valid.
@@ -253,7 +253,7 @@ Section iprod_cmra.
   Proof. eauto using iprod_singleton_updateP_empty. Qed.
 End iprod_cmra.
 
-Arguments iprodRA {_} _.
+Arguments iprodR {_} _.
 
 (** * Functor *)
 Definition iprod_map {A} {B1 B2 : A → cofeT} (f : ∀ x, B1 x → B2 x)
@@ -289,7 +289,7 @@ Instance iprodC_map_ne {A} {B1 B2 : A → cofeT} n :
 Proof. intros f1 f2 Hf g x; apply Hf. Qed.
 
 Program Definition iprodF {A} (Σ : A → iFunctor) : iFunctor := {|
-  ifunctor_car B := iprodRA (λ x, Σ x B);
+  ifunctor_car B := iprodR (λ x, Σ x B);
   ifunctor_map B1 B2 f := iprodC_map (λ x, ifunctor_map (Σ x) f);
 |}.
 Next Obligation.

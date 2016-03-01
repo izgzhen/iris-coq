@@ -3,12 +3,12 @@ From program_logic Require Export invariants global_functor.
 Import uPred.
 
 Class authG Λ Σ (A : cmraT) `{Empty A} := AuthG {
-  auth_inG :> inG Λ Σ (authRA A);
+  auth_inG :> inG Λ Σ (authR A);
   auth_identity :> CMRAIdentity A;
   auth_timeless :> CMRADiscrete A;
 }.
 
-Definition authGF (A : cmraT) : iFunctor := constF (authRA A).
+Definition authGF (A : cmraT) : iFunctor := constF (authR A).
 Instance authGF_inGF (A : cmraT) `{inGF Λ Σ (authGF A)}
   `{CMRAIdentity A, CMRADiscrete A} : authG Λ Σ A.
 Proof. split; try apply _. apply: inGF_inG. Qed.

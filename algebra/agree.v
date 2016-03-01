@@ -119,7 +119,7 @@ Proof.
     + by rewrite agree_idemp.
     + by move: Hval; rewrite Hx; move=> /agree_op_inv->; rewrite agree_idemp.
 Qed.
-Canonical Structure agreeRA : cmraT := CMRAT agree_cofe_mixin agree_cmra_mixin.
+Canonical Structure agreeR : cmraT := CMRAT agree_cofe_mixin agree_cmra_mixin.
 
 Program Definition to_agree (x : A) : agree A :=
   {| agree_car n := x; agree_is_valid n := True |}.
@@ -142,7 +142,7 @@ Proof. uPred.unseal; split=> r n _ ?; by apply: agree_op_inv. Qed.
 End agree.
 
 Arguments agreeC : clear implicits.
-Arguments agreeRA : clear implicits.
+Arguments agreeR : clear implicits.
 
 Program Definition agree_map {A B} (f : A → B) (x : agree A) : agree B :=
   {| agree_car n := f (x n); agree_is_valid := agree_is_valid x |}.
@@ -181,5 +181,5 @@ Proof.
 Qed.
 
 Program Definition agreeF : iFunctor :=
-  {| ifunctor_car := agreeRA; ifunctor_map := @agreeC_map |}.
+  {| ifunctor_car := agreeR; ifunctor_map := @agreeC_map |}.
 Solve Obligations with done.

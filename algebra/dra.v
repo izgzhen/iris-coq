@@ -130,11 +130,11 @@ Proof.
   - intros [x px ?] [y py ?] [[z pz ?] [??]]; split; simpl in *;
       intuition eauto 10 using dra_disjoint_div, dra_op_div.
 Qed.
-Definition validityRA : cmraT := discreteRA validity_ra.
+Definition validityR : cmraT := discreteR validity_ra.
 Instance validity_cmra_discrete :
-  CMRADiscrete validityRA := discrete_cmra_discrete _.
+  CMRADiscrete validityR := discrete_cmra_discrete _.
 
-Lemma validity_update (x y : validityRA) :
+Lemma validity_update (x y : validityR) :
   (∀ z, ✓ x → ✓ z → validity_car x ⊥ z → ✓ y ∧ validity_car y ⊥ z) → x ~~> y.
 Proof.
   intros Hxy; apply cmra_discrete_update=> z [?[??]].

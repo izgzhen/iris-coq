@@ -118,10 +118,10 @@ Proof.
     + by exists (None,Some x); inversion Hx'; repeat constructor.
     + exists (None,None); repeat constructor.
 Qed.
-Canonical Structure optionRA := CMRAT option_cofe_mixin option_cmra_mixin.
-Global Instance option_cmra_identity : CMRAIdentity optionRA.
+Canonical Structure optionR := CMRAT option_cofe_mixin option_cmra_mixin.
+Global Instance option_cmra_identity : CMRAIdentity optionR.
 Proof. split. done. by intros []. by inversion_clear 1. Qed.
-Global Instance option_cmra_discrete : CMRADiscrete A → CMRADiscrete optionRA.
+Global Instance option_cmra_discrete : CMRADiscrete A → CMRADiscrete optionR.
 Proof. split; [apply _|]. by intros [x|]; [apply (cmra_discrete_valid x)|]. Qed.
 
 (** Misc *)
@@ -170,7 +170,7 @@ Proof.
     auto using cmra_empty_validN.
 Qed.
 End cmra.
-Arguments optionRA : clear implicits.
+Arguments optionR : clear implicits.
 
 (** Functor *)
 Instance option_fmap_ne {A B : cofeT} (f : A → B) n:
@@ -190,7 +190,7 @@ Instance optionC_map_ne A B n : Proper (dist n ==> dist n) (@optionC_map A B).
 Proof. by intros f f' Hf []; constructor; apply Hf. Qed.
 
 Program Definition optionF (Σ : iFunctor) : iFunctor := {|
-  ifunctor_car := optionRA ∘ Σ; ifunctor_map A B := optionC_map ∘ ifunctor_map Σ
+  ifunctor_car := optionR ∘ Σ; ifunctor_map A B := optionC_map ∘ ifunctor_map Σ
 |}.
 Next Obligation.
   by intros Σ A B n f g Hfg; apply optionC_map_ne, ifunctor_map_ne.

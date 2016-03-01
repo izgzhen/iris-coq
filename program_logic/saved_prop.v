@@ -3,7 +3,7 @@ From program_logic Require Export global_functor.
 Import uPred.
 
 Notation savedPropG Λ Σ :=
-  (inG Λ Σ (agreeRA (laterC (iPreProp Λ (globalF Σ))))).
+  (inG Λ Σ (agreeR (laterC (iPreProp Λ (globalF Σ))))).
 
 Instance inGF_savedPropG `{inGF Λ Σ agreeF} : savedPropG Λ Σ.
 Proof. apply: inGF_inG. Qed.

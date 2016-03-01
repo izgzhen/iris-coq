@@ -7,18 +7,18 @@ Import uPred.
    a finmap as their state. Or maybe even beyond "as their state", i.e. arbitrary
    predicates over finmaps instead of just ownP. *)
 
-Definition heapRA : cmraT := mapRA loc (fracRA (dec_agreeRA val)).
-Definition heapGF : iFunctor := authGF heapRA.
+Definition heapR : cmraT := mapR loc (fracR (dec_agreeR val)).
+Definition heapGF : iFunctor := authGF heapR.
 
 Class heapG Σ := HeapG {
-  heap_inG : inG heap_lang Σ (authRA heapRA);
+  heap_inG : inG heap_lang Σ (authR heapR);
   heap_name : gname
 }.
-Instance heap_authG `{i : heapG Σ} : authG heap_lang Σ heapRA :=
+Instance heap_authG `{i : heapG Σ} : authG heap_lang Σ heapR :=
   {| auth_inG := heap_inG |}.
 
-Definition to_heap : state → heapRA := fmap (λ v, Frac 1 (DecAgree v)).
-Definition of_heap : heapRA → state :=
+Definition to_heap : state → heapR := fmap (λ v, Frac 1 (DecAgree v)).
+Definition of_heap : heapR → state :=
   omap (mbind (maybe DecAgree ∘ snd) ∘ maybe2 Frac).
 
 (* heap_mapsto is defined strongly opaquely, to prevent unification from
@@ -28,7 +28,7 @@ Definition heap_mapsto `{heapG Σ}
   auth_own heap_name {[ l := Frac q (DecAgree v) ]}.
 Typeclasses Opaque heap_mapsto.
 
-Definition heap_inv `{i : heapG Σ} (h : heapRA) : iPropG heap_lang Σ :=
+Definition heap_inv `{i : heapG Σ} (h : heapR) : iPropG heap_lang Σ :=
   ownP (of_heap h).
 Definition heap_ctx `{i : heapG Σ} (N : namespace) : iPropG heap_lang Σ :=
   auth_ctx heap_name N heap_inv.
@@ -43,7 +43,7 @@ Section heap.
   Implicit Types P Q : iPropG heap_lang Σ.
   Implicit Types Φ : val → iPropG heap_lang Σ.
   Implicit Types σ : state.
-  Implicit Types h g : heapRA.
+  Implicit Types h g : heapR.
 
   (** Conversion to heaps and back *)
   Global Instance of_heap_proper : Proper ((≡) ==> (=)) of_heap.
@@ -91,7 +91,7 @@ Section heap.
 
   (** Allocation *)
   Lemma heap_alloc E N σ :
-    authG heap_lang Σ heapRA → nclose N ⊆ E →
+    authG heap_lang Σ heapR → nclose N ⊆ E →
     ownP σ ⊑ (|={E}=> ∃ _ : heapG Σ, heap_ctx N ∧ Π★{map σ} (λ l v, l ↦ v)).
   Proof.
     intros. rewrite -{1}(from_to_heap σ). etrans.

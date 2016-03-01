@@ -18,7 +18,7 @@ Notation "[ F ; .. ; F' ]" :=
   (iFunctors.cons F .. (iFunctors.cons F' iFunctors.nil) ..) : iFunctors_scope.
 
 Module iFunctorG.
-  Definition nil : iFunctorG := const (constF unitRA).
+  Definition nil : iFunctorG := const (constF unitR).
 
   Definition cons (F : iFunctor) (Σ : iFunctorG) : iFunctorG :=
     λ n, match n with O => F | S n => Σ n end.

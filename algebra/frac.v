@@ -171,10 +171,10 @@ Proof.
     + exists (∅, Frac q a); inversion_clear Hx'; by repeat constructor.
     + exfalso; inversion_clear Hx'.
 Qed.
-Canonical Structure fracRA : cmraT := CMRAT frac_cofe_mixin frac_cmra_mixin.
-Global Instance frac_cmra_identity : CMRAIdentity fracRA.
+Canonical Structure fracR : cmraT := CMRAT frac_cofe_mixin frac_cmra_mixin.
+Global Instance frac_cmra_identity : CMRAIdentity fracR.
 Proof. split. done. by intros []. apply _. Qed.
-Global Instance frac_cmra_discrete : CMRADiscrete A → CMRADiscrete fracRA.
+Global Instance frac_cmra_discrete : CMRADiscrete A → CMRADiscrete fracR.
 Proof.
   split; first apply _.
   intros [q a|]; destruct 1; split; auto using cmra_discrete_valid.
@@ -229,7 +229,7 @@ Proof.
 Qed.
 End cmra.
 
-Arguments fracRA : clear implicits.
+Arguments fracR : clear implicits.
 
 (* Functor *)
 Instance frac_map_cmra_monotone {A B : cmraT} (f : A → B) :
@@ -245,7 +245,7 @@ Proof.
 Qed.
 
 Program Definition fracF (Σ : iFunctor) : iFunctor := {|
-  ifunctor_car := fracRA ∘ Σ; ifunctor_map A B := fracC_map ∘ ifunctor_map Σ
+  ifunctor_car := fracR ∘ Σ; ifunctor_map A B := fracC_map ∘ ifunctor_map Σ
 |}.
 Next Obligation.
   by intros Σ A B n f g Hfg; apply fracC_map_ne, ifunctor_map_ne.

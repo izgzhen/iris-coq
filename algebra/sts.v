@@ -287,20 +287,20 @@ Proof.
     unfold up_set; rewrite elem_of_bind; intros (?&s1&?&?&?).
     apply closed_steps with T2 s1; auto with sts.
 Qed.
-Canonical Structure RA : cmraT := validityRA (car sts).
+Canonical Structure R : cmraT := validityR (car sts).
 End sts_dra. End sts_dra.
 
 (** * The STS Resource Algebra *)
 (** Finally, the general theory of STS that should be used by users *)
-Notation stsRA := (@sts_dra.RA).
+Notation stsR := (@sts_dra.R).
 
 Section sts_definitions.
   Context {sts : stsT}.
-  Definition sts_auth (s : sts.state sts) (T : sts.tokens sts) : stsRA sts :=
+  Definition sts_auth (s : sts.state sts) (T : sts.tokens sts) : stsR sts :=
     to_validity (sts_dra.auth s T).
-  Definition sts_frag (S : sts.states sts) (T : sts.tokens sts) : stsRA sts :=
+  Definition sts_frag (S : sts.states sts) (T : sts.tokens sts) : stsR sts :=
     to_validity (sts_dra.frag S T).
-  Definition sts_frag_up (s : sts.state sts) (T : sts.tokens sts) : stsRA sts :=
+  Definition sts_frag_up (s : sts.state sts) (T : sts.tokens sts) : stsR sts :=
     sts_frag (sts.up s T) T.
 End sts_definitions.
 Instance: Params (@sts_auth) 2.
@@ -314,7 +314,7 @@ Implicit Types s : state sts.
 Implicit Types S : states sts.
 Implicit Types T : tokens sts.
 
-Global Instance sts_cmra_discrete : CMRADiscrete (stsRA sts).
+Global Instance sts_cmra_discrete : CMRADiscrete (stsR sts).
 Proof. apply validity_cmra_discrete. Qed.
 
 (** Setoids *)

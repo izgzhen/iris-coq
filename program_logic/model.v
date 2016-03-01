@@ -10,7 +10,7 @@ propositions using the agreement CMRA. *)
 (* TODO RJ: Can we make use of resF, the resource functor? *)
 Module iProp.
 Definition F (Λ : language) (Σ : iFunctor) (A B : cofeT) : cofeT :=
-  uPredC (resRA Λ Σ (laterC A)).
+  uPredC (resR Λ Σ (laterC A)).
 Definition map {Λ : language} {Σ : iFunctor} {A1 A2 B1 B2 : cofeT}
     (f : (A2 -n> A1) * (B1 -n> B2)) : F Λ Σ A1 B1 -n> F Λ Σ A2 B2 :=
   uPredC_map (resC_map (laterC_map (f.1))).
@@ -33,11 +33,11 @@ End iProp.
 (* Solution *)
 Definition iPreProp (Λ : language) (Σ : iFunctor) : cofeT := iProp.result Λ Σ.
 Definition iRes Λ Σ := res Λ Σ (laterC (iPreProp Λ Σ)).
-Definition iResRA Λ Σ := resRA Λ Σ (laterC (iPreProp Λ Σ)).
-Definition iWld Λ Σ := mapRA positive (agreeRA (laterC (iPreProp Λ Σ))).
-Definition iPst Λ := exclRA (istateC Λ).
+Definition iResR Λ Σ := resR Λ Σ (laterC (iPreProp Λ Σ)).
+Definition iWld Λ Σ := mapR positive (agreeR (laterC (iPreProp Λ Σ))).
+Definition iPst Λ := exclR (istateC Λ).
 Definition iGst Λ Σ := ifunctor_car Σ (laterC (iPreProp Λ Σ)).
-Definition iProp (Λ : language) (Σ : iFunctor) : cofeT := uPredC (iResRA Λ Σ).
+Definition iProp (Λ : language) (Σ : iFunctor) : cofeT := uPredC (iResR Λ Σ).
 Definition iProp_unfold {Λ Σ} : iProp Λ Σ -n> iPreProp Λ Σ := solution_fold _.
 Definition iProp_fold {Λ Σ} : iPreProp Λ Σ -n> iProp Λ Σ := solution_unfold _.
 Lemma iProp_fold_unfold {Λ Σ} (P : iProp Λ Σ) : iProp_fold (iProp_unfold P) ≡ P.

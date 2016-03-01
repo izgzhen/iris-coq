@@ -134,8 +134,8 @@ Proof.
       as (b&?&?&?); auto using own_validN.
     by exists (Auth (ea.1) (b.1), Auth (ea.2) (b.2)).
 Qed.
-Canonical Structure authRA : cmraT := CMRAT auth_cofe_mixin auth_cmra_mixin.
-Global Instance auth_cmra_discrete : CMRADiscrete A → CMRADiscrete authRA.
+Canonical Structure authR : cmraT := CMRAT auth_cofe_mixin auth_cmra_mixin.
+Global Instance auth_cmra_discrete : CMRADiscrete A → CMRADiscrete authR.
 Proof.
   split; first apply _.
   intros [[] ?]; by rewrite /= /cmra_valid /cmra_validN /=
@@ -158,7 +158,7 @@ Proof. uPred.unseal. by destruct x as [[]]. Qed.
 what follows, we assume we have an empty element. *)
 Context `{Empty A, !CMRAIdentity A}.
 
-Global Instance auth_cmra_identity : CMRAIdentity authRA.
+Global Instance auth_cmra_identity : CMRAIdentity authR.
 Proof.
   split; simpl.
   - by apply (@cmra_empty_valid A _).
@@ -208,7 +208,7 @@ Proof.
 Qed.
 End cmra.
 
-Arguments authRA : clear implicits.
+Arguments authR : clear implicits.
 
 (* Functor *)
 Definition auth_map {A B} (f : A → B) (x : auth A) : auth B :=
@@ -241,7 +241,7 @@ Lemma authC_map_ne A B n : Proper (dist n ==> dist n) (@authC_map A B).
 Proof. intros f f' Hf [[a| |] b]; repeat constructor; apply Hf. Qed.
 
 Program Definition authF (Σ : iFunctor) : iFunctor := {|
-  ifunctor_car := authRA ∘ Σ; ifunctor_map A B := authC_map ∘ ifunctor_map Σ
+  ifunctor_car := authR ∘ Σ; ifunctor_map A B := authC_map ∘ ifunctor_map Σ
 |}.
 Next Obligation.
   by intros Σ A B n f g Hfg; apply authC_map_ne, ifunctor_map_ne.

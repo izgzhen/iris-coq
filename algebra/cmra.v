@@ -515,8 +515,8 @@ Section discrete.
     - intros n x y1 y2 ??; exists (y1,y2); split_and?; auto.
       apply (timeless _), dist_le with n; auto with lia.
   Qed.
-  Definition discreteRA : cmraT := CMRAT (cofe_mixin A) discrete_cmra_mixin.
-  Global Instance discrete_cmra_discrete : CMRADiscrete discreteRA.
+  Definition discreteR : cmraT := CMRAT (cofe_mixin A) discrete_cmra_mixin.
+  Global Instance discrete_cmra_discrete : CMRADiscrete discreteR.
   Proof. split. change (Discrete A); apply _. by intros x ?. Qed.
 End discrete.
 
@@ -529,10 +529,10 @@ Section unit.
   Global Instance unit_empty : Empty () := ().
   Definition unit_ra : RA ().
   Proof. by split. Qed.
-  Canonical Structure unitRA : cmraT :=
-    Eval cbv [unitC discreteRA cofe_car] in discreteRA unit_ra.
-  Global Instance unit_cmra_identity : CMRAIdentity unitRA.
-  Global Instance unit_cmra_discrete : CMRADiscrete unitRA.
+  Canonical Structure unitR : cmraT :=
+    Eval cbv [unitC discreteR cofe_car] in discreteR unit_ra.
+  Global Instance unit_cmra_identity : CMRAIdentity unitR.
+  Global Instance unit_cmra_discrete : CMRADiscrete unitR.
   Proof. by apply discrete_cmra_discrete. Qed.
 End unit.
 
@@ -581,9 +581,9 @@ Section prod.
       destruct (cmra_extend n (x.2) (y1.2) (y2.2)) as (z2&?&?&?); auto.
       by exists ((z1.1,z2.1),(z1.2,z2.2)).
   Qed.
-  Canonical Structure prodRA : cmraT := CMRAT prod_cofe_mixin prod_cmra_mixin.
+  Canonical Structure prodR : cmraT := CMRAT prod_cofe_mixin prod_cmra_mixin.
   Global Instance prod_cmra_identity `{Empty A, Empty B} :
-    CMRAIdentity A → CMRAIdentity B → CMRAIdentity prodRA.
+    CMRAIdentity A → CMRAIdentity B → CMRAIdentity prodR.
   Proof.
     split.
     - split; apply cmra_empty_valid.
@@ -591,7 +591,7 @@ Section prod.
     - by intros ? [??]; split; apply (timeless _).
   Qed.
   Global Instance prod_cmra_discrete :
-    CMRADiscrete A → CMRADiscrete B → CMRADiscrete prodRA.
+    CMRADiscrete A → CMRADiscrete B → CMRADiscrete prodR.
   Proof. split. apply _. by intros ? []; split; apply cmra_discrete_valid. Qed.
 
   Lemma prod_update x y : x.1 ~~> y.1 → x.2 ~~> y.2 → x ~~> y.
@@ -607,7 +607,7 @@ Section prod.
     x.1 ~~>: P1 → x.2 ~~>: P2 → x ~~>: λ y, P1 (y.1) ∧ P2 (y.2).
   Proof. eauto using prod_updateP. Qed.
 End prod.
-Arguments prodRA : clear implicits.
+Arguments prodR : clear implicits.
 
 Instance prod_map_cmra_monotone {A A' B B' : cmraT} (f : A → A') (g : B → B') :
   CMRAMonotone f → CMRAMonotone g → CMRAMonotone (prod_map f g).

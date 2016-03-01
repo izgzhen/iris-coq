@@ -127,10 +127,10 @@ Proof.
       | ExclUnit, _ => (ExclUnit, x) | _, ExclUnit => (x, ExclUnit)
       end; destruct y1, y2; inversion_clear Hx; repeat constructor.
 Qed.
-Canonical Structure exclRA : cmraT := CMRAT excl_cofe_mixin excl_cmra_mixin.
-Global Instance excl_cmra_identity : CMRAIdentity exclRA.
+Canonical Structure exclR : cmraT := CMRAT excl_cofe_mixin excl_cmra_mixin.
+Global Instance excl_cmra_identity : CMRAIdentity exclR.
 Proof. split. done. by intros []. apply _. Qed.
-Global Instance excl_cmra_discrete : Discrete A → CMRADiscrete exclRA.
+Global Instance excl_cmra_discrete : Discrete A → CMRADiscrete exclR.
 Proof. split. apply _. by intros []. Qed.
 
 Lemma excl_validN_inv_l n x a : ✓{n} (Excl a ⋅ x) → x = ∅.
@@ -170,7 +170,7 @@ Proof. intros ?? n z ?; exists y. by destruct y, z as [?| |]. Qed.
 End excl.
 
 Arguments exclC : clear implicits.
-Arguments exclRA : clear implicits.
+Arguments exclR : clear implicits.
 
 (* Functor *)
 Definition excl_map {A B} (f : A → B) (x : excl A) : excl B :=
@@ -202,6 +202,6 @@ Instance exclC_map_ne A B n : Proper (dist n ==> dist n) (@exclC_map A B).
 Proof. by intros f f' Hf []; constructor; apply Hf. Qed.
 
 Program Definition exclF : iFunctor :=
-  {| ifunctor_car := exclRA; ifunctor_map := @exclC_map |}.
+  {| ifunctor_car := exclR; ifunctor_map := @exclC_map |}.
 Next Obligation. by intros A x; rewrite /= excl_map_id. Qed.
 Next Obligation. by intros A B C f g x; rewrite /= excl_map_compose. Qed.

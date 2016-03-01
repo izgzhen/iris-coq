@@ -46,7 +46,7 @@ Proof.
       intros; by repeat (simplify_eq/= || case_match).
 Qed.
 
-Canonical Structure dec_agreeRA : cmraT := discreteRA dec_agree_ra.
+Canonical Structure dec_agreeR : cmraT := discreteR dec_agree_ra.
 
 (* Some properties of this CMRA *)
 Lemma dec_agree_ne a b : a ≠ b → DecAgree a ⋅ DecAgree b = DecAgreeBot.
@@ -59,4 +59,4 @@ Lemma dec_agree_op_inv (x1 x2 : dec_agree A) : ✓ (x1 ⋅ x2) → x1 = x2.
 Proof. destruct x1, x2; by repeat (simplify_eq/= || case_match). Qed.
 End dec_agree.
 
-Arguments dec_agreeRA _ {_}.
+Arguments dec_agreeR _ {_}.

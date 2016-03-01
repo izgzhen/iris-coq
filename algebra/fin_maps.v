@@ -158,15 +158,15 @@ Proof.
       pose proof (Hm12' i) as Hm12''; rewrite Hx in Hm12''.
       by symmetry; apply option_op_positive_dist_r with (m1 !! i).
 Qed.
-Canonical Structure mapRA : cmraT := CMRAT map_cofe_mixin map_cmra_mixin.
-Global Instance map_cmra_identity : CMRAIdentity mapRA.
+Canonical Structure mapR : cmraT := CMRAT map_cofe_mixin map_cmra_mixin.
+Global Instance map_cmra_identity : CMRAIdentity mapR.
 Proof.
   split.
   - by intros i; rewrite lookup_empty.
   - by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
   - apply map_empty_timeless.
 Qed.
-Global Instance map_cmra_discrete : CMRADiscrete A → CMRADiscrete mapRA.
+Global Instance map_cmra_discrete : CMRADiscrete A → CMRADiscrete mapR.
 Proof. split; [apply _|]. intros m ? i. by apply: cmra_discrete_valid. Qed.
 
 (** Internalized properties *)
@@ -176,7 +176,7 @@ Lemma map_validI {M} m : (✓ m)%I ≡ (∀ i, ✓ (m !! i) : uPred M)%I.
 Proof. by uPred.unseal. Qed.
 End cmra.
 
-Arguments mapRA _ {_ _} _.
+Arguments mapR _ {_ _} _.
 
 Section properties.
 Context `{Countable K} {A : cmraT}.
@@ -353,7 +353,7 @@ Proof.
 Qed.
 
 Program Definition mapF K `{Countable K} (Σ : iFunctor) : iFunctor := {|
-  ifunctor_car := mapRA K ∘ Σ; ifunctor_map A B := mapC_map ∘ ifunctor_map Σ
+  ifunctor_car := mapR K ∘ Σ; ifunctor_map A B := mapC_map ∘ ifunctor_map Σ
 |}.
 Next Obligation.
   by intros K ?? Σ A B n f g Hfg; apply mapC_map_ne, ifunctor_map_ne.

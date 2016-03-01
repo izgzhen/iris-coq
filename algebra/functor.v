@@ -29,7 +29,7 @@ Program Definition constF (B : cmraT) : iFunctor :=
 Solve Obligations with done.
 
 Program Definition prodF (Σ1 Σ2 : iFunctor) : iFunctor := {|
-  ifunctor_car A := prodRA (Σ1 A) (Σ2 A);
+  ifunctor_car A := prodR (Σ1 A) (Σ2 A);
   ifunctor_map A B f := prodC_map (ifunctor_map Σ1 f) (ifunctor_map Σ2 f)
 |}.
 Next Obligation.

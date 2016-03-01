@@ -3,9 +3,9 @@ From algebra Require Import upred.
 From program_logic Require Export language.
 
 Record res (Λ : language) (Σ : iFunctor) (A : cofeT) := Res {
-  wld : mapRA positive (agreeRA A);
-  pst : exclRA (istateC Λ);
-  gst : optionRA (Σ A);
+  wld : mapR positive (agreeR A);
+  pst : exclR (istateC Λ);
+  gst : optionR (Σ A);
 }.
 Add Printing Constructor res.
 Arguments Res {_ _ _} _ _ _.
@@ -123,8 +123,8 @@ Proof.
       (cmra_extend n (gst r) (gst r1) (gst r2)) as ([m m']&?&?&?); auto.
     by exists (Res w σ m, Res w' σ' m').
 Qed.
-Canonical Structure resRA : cmraT := CMRAT res_cofe_mixin res_cmra_mixin.
-Global Instance res_cmra_identity : CMRAIdentity resRA.
+Canonical Structure resR : cmraT := CMRAT res_cofe_mixin res_cmra_mixin.
+Global Instance res_cmra_identity : CMRAIdentity resR.
 Proof.
   split.
   - split_and!; apply cmra_empty_valid.
@@ -170,7 +170,7 @@ Proof. by uPred.unseal. Qed.
 End res.
 
 Arguments resC : clear implicits.
-Arguments resRA : clear implicits.
+Arguments resR : clear implicits.
 
 Definition res_map {Λ Σ A B} (f : A -n> B) (r : res Λ Σ A) : res Λ Σ B :=
   Res (agree_map f <$> wld r) (pst r) (ifunctor_map Σ f <$> gst r).
@@ -211,7 +211,7 @@ Proof.
       intros (?&?&?); split_and!; simpl; try apply: included_preserving.
 Qed.
 Definition resC_map {Λ Σ A B} (f : A -n> B) : resC Λ Σ A -n> resC Λ Σ B :=
-  CofeMor (res_map f : resRA Λ Σ A → resRA Λ Σ B).
+  CofeMor (res_map f : resC Λ Σ A → resC Λ Σ B).
 Instance resC_map_ne {Λ Σ A B} n :
   Proper (dist n ==> dist n) (@resC_map Λ Σ A B).
 Proof.
@@ -221,7 +221,7 @@ Proof.
 Qed.
 
 Program Definition resF {Λ Σ} : iFunctor := {|
-  ifunctor_car := resRA Λ Σ;
+  ifunctor_car := resR Λ Σ;
   ifunctor_map A B := resC_map
 |}.
 Next Obligation. intros Λ Σ A x. by rewrite /= res_map_id. Qed.
