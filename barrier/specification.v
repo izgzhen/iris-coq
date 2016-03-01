@@ -29,6 +29,6 @@ Proof.
   - intros l P. apply ht_alt.
     by rewrite -(wait_spec heapN N l P) wand_diag right_id.
   - intros l P Q. apply vs_alt. rewrite -(recv_split heapN N N l P Q) //.
-  - intros l P Q. apply recv_strengthen.
+  - intros l P Q. apply recv_weaken.
 Qed.
 End spec.
