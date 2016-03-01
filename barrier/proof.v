@@ -325,7 +325,7 @@ Proof.
       rewrite !wand_diag -!later_intro. solve_sep_entails.
 Qed.
 
-Lemma recv_strengthen l P1 P2 :
+Lemma recv_weaken l P1 P2 :
   (P1 -★ P2) ⊑ (recv l P1 -★ recv l P2).
 Proof.
   apply wand_intro_l. rewrite /recv. rewrite sep_exist_r. apply exist_mono=>γ.
@@ -339,7 +339,7 @@ Qed.
 Lemma recv_mono l P1 P2 :
   P1 ⊑ P2 → recv l P1 ⊑ recv l P2.
 Proof.
-  intros HP%entails_wand. apply wand_entails. rewrite HP. apply recv_strengthen.
+  intros HP%entails_wand. apply wand_entails. rewrite HP. apply recv_weaken.
 Qed.
 
 End proof.
