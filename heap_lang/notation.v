@@ -16,6 +16,9 @@ Coercion Var : string >-> expr.
 Coercion App : expr >-> Funclass.
 Coercion of_val : val >-> expr.
 
+Coercion BNamed : string >-> binder.
+Notation "<>" := BAnom : binder_scope.
+
 (** Syntax inspired by Coq/Ocaml. Constructions with higher precedence come
     first. *)
 (* We have overlapping notation for values and expressions, with the expressions
@@ -64,9 +67,9 @@ Notation "'let:' x := e1 'in' e2" := (Lam x e2%L e1%L)
   (at level 102, x at level 1, e1, e2 at level 200) : lang_scope.
 Notation "'let:' x := e1 'in' e2" := (LamV x e2%L e1%L)
   (at level 102, x at level 1, e1, e2 at level 200) : lang_scope.
-Notation "e1 ;; e2" := (Lam "" e2%L e1%L)
+Notation "e1 ;; e2" := (Lam BAnom e2%L e1%L)
   (at level 100, e2 at level 200, format "e1  ;;  e2") : lang_scope.
-Notation "e1 ;; e2" := (LamV "" e2%L e1%L)
+Notation "e1 ;; e2" := (LamV BAnom e2%L e1%L)
   (at level 100, e2 at level 200, format "e1  ;;  e2") : lang_scope.
 
 Notation "'rec:' f x y := e" := (Rec f x (Lam y e%L))

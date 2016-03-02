@@ -17,7 +17,7 @@ Section LangTests.
   Goal ∀ σ, prim_step (lam #21)%L σ add σ None.
   Proof.
     intros. rewrite /lam. (* FIXME: do_step does not work here *)
-    by eapply (Ectx_step  _ _ _ _ _ []), (BetaS "" "x" ("x" + #21) _ #21).
+    by eapply (Ectx_step  _ _ _ _ _ []), (BetaS <> "x" ("x" + #21) _ #21).
   Qed.
 End LangTests.
 

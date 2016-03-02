@@ -86,18 +86,18 @@ Qed.
    The final version is defined in substitution.v. *)
 Lemma wp_rec E f x e1 e2 v Φ :
   to_val e2 = Some v →
-  ▷ || subst (subst e1 f (RecV f x e1)) x v @ E {{ Φ }}
+  ▷ || subst' (subst' e1 f (RecV f x e1)) x v @ E {{ Φ }}
   ⊑ || App (Rec f x e1) e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_step (App _ _)
-    (subst (subst e1 f (RecV f x e1)) x v) None) ?right_id //=;
+    (subst' (subst' e1 f (RecV f x e1)) x v) None) ?right_id //=;
     intros; inv_step; eauto.
 Qed.
 
 Lemma wp_rec' E f x erec v1 e2 v2 Φ :
   v1 = RecV f x erec →
   to_val e2 = Some v2 →
-  ▷ || subst (subst erec f v1) x v2 @ E {{ Φ }}
+  ▷ || subst' (subst' erec f v1) x v2 @ E {{ Φ }}
   ⊑ || App (of_val v1) e2 @ E {{ Φ }}.
 Proof. intros ->. apply wp_rec. Qed.
 
@@ -149,18 +149,18 @@ Qed.
 
 Lemma wp_case_inl E e0 v0 x1 e1 x2 e2 Φ :
   to_val e0 = Some v0 →
-  ▷ || subst e1 x1 v0 @ E {{ Φ }} ⊑ || Case (InjL e0) x1 e1 x2 e2 @ E {{ Φ }}.
+  ▷ || subst' e1 x1 v0 @ E {{ Φ }} ⊑ || Case (InjL e0) x1 e1 x2 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_step (Case _ _ _ _ _)
-    (subst e1 x1 v0) None) ?right_id //; intros; inv_step; eauto.
+    (subst' e1 x1 v0) None) ?right_id //; intros; inv_step; eauto.
 Qed.
 
 Lemma wp_case_inr E e0 v0 x1 e1 x2 e2 Φ :
   to_val e0 = Some v0 →
-  ▷ || subst e2 x2 v0 @ E {{ Φ }} ⊑ || Case (InjR e0) x1 e1 x2 e2 @ E {{ Φ }}.
+  ▷ || subst' e2 x2 v0 @ E {{ Φ }} ⊑ || Case (InjR e0) x1 e1 x2 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_step (Case _ _ _ _ _)
-    (subst e2 x2 v0) None) ?right_id //; intros; inv_step; eauto.
+    (subst' e2 x2 v0) None) ?right_id //; intros; inv_step; eauto.
 Qed.
 
 End lifting.

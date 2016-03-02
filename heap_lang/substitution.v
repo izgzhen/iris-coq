@@ -51,22 +51,24 @@ Proof. done. Qed.
 Instance loc_closed l : Closed (Loc l).
 Proof. done. Qed.
 
-Definition subst_var_eq y x v : (x = y ∧ x ≠ "") → Subst (Var y) x v (of_val v).
+Definition subst_var_eq y x v : x = y → Subst (Var y) x v (of_val v).
 Proof. intros. by red; rewrite /= decide_True. Defined.
-Definition subst_var_ne y x v : ¬(x = y ∧ x ≠ "") → Subst (Var y) x v (Var y).
+Definition subst_var_ne y x v : x ≠ y → Subst (Var y) x v (Var y).
 Proof. intros. by red; rewrite /= decide_False. Defined.
 
 Hint Extern 0 (Subst (Var ?y) ?x ?v _) =>
-  match eval vm_compute in (bool_decide (x = y ∧ x ≠ "")) with
+  match eval vm_compute in (bool_decide (x = y)) with
   | true => apply subst_var_eq; bool_decide_no_check
   | false => apply subst_var_ne; bool_decide_no_check
   end : typeclass_instances.
 
 Instance subst_rec f y e x v er :
-  SubstIf (x ≠ f ∧ x ≠ y) e x v er → Subst (Rec f y e) x v (Rec f y er).
+  SubstIf (BNamed x ≠ f ∧ BNamed x ≠ y) e x v er →
+  Subst (Rec f y e) x v (Rec f y er).
 Proof. intros [??]; red; f_equal/=; case_decide; auto. Qed.
 Instance subst_case e0 x1 e1 x2 e2 x v e0r e1r e2r :
-  Subst e0 x v e0r → SubstIf (x ≠ x1) e1 x v e1r → SubstIf (x ≠ x2) e2 x v e2r →
+  Subst e0 x v e0r →
+  SubstIf (BNamed x ≠ x1) e1 x v e1r → SubstIf (BNamed x ≠ x2) e2 x v e2r →
   Subst (Case e0 x1 e1 x2 e2) x v (Case e0r x1 e1r x2 e2r).
 Proof. intros ? [??] [??]; red; f_equal/=; repeat case_decide; auto. Qed.
 
@@ -109,11 +111,19 @@ Instance subst_cas e0 e1 e2 x v e0r e1r e2r :
   Subst (Cas e0 e1 e2) x v (Cas e0r e1r e2r).
 Proof. by intros; red; f_equal/=. Qed.
 
+Definition of_binder (mx : binder) : stringset :=
+  match mx with BAnom => ∅ | BNamed x => {[ x ]} end.
+Lemma elem_of_of_binder x mx: x ∈ of_binder mx ↔ mx = BNamed x.
+Proof. destruct mx; set_solver. Qed.
+Global Instance set_unfold_of_binder (mx : binder) x :
+  SetUnfold (x ∈ of_binder mx) (mx = BNamed x).
+Proof. constructor; destruct mx; set_solver. Qed.
+
 (** * Solver for [Closed] *)
 Fixpoint is_closed (X : stringset) (e : expr) : bool :=
   match e with
   | Var x => bool_decide (x ∈ X)
-  | Rec f y e => is_closed ({[ f ; y ]} ∪ X) e
+  | Rec f y e => is_closed (of_binder f ∪ of_binder y ∪ X) e
   | App e1 e2 => is_closed X e1 && is_closed X e2
   | Lit l => true
   | UnOp _ e => is_closed X e
@@ -125,7 +135,8 @@ Fixpoint is_closed (X : stringset) (e : expr) : bool :=
   | InjL e => is_closed X e
   | InjR e => is_closed X e
   | Case e0 x1 e1 x2 e2 =>
-     is_closed X e0 && is_closed ({[x1]} ∪ X) e1 && is_closed ({[x2]} ∪ X) e2
+     is_closed X e0 &&
+     is_closed (of_binder x1 ∪ X) e1 && is_closed (of_binder x2 ∪ X) e2
   | Fork e => is_closed X e
   | Loc l => true
   | Alloc e => is_closed X e
@@ -147,9 +158,10 @@ Proof.
     | _ => case_decide
     | _ => f_equal
     end; eauto;
-    match goal with
+    try match goal with
     | H : ∀ _, _ → _ ∉ _ → subst _ _ _ = _ |- _ =>
-       eapply H; first done; rewrite !elem_of_union !elem_of_singleton; tauto
+       eapply H; first done;
+       rewrite !elem_of_union !elem_of_of_binder; intuition congruence
     end.
 Qed.
 Ltac solve_closed := apply is_closed_sound; vm_compute; exact I.
