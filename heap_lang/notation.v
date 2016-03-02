@@ -27,10 +27,9 @@ Notation "( e1 , e2 , .. , en )" := (Pair .. (Pair e1 e2) .. en) : lang_scope.
 Notation "'match:' e0 'with' 'InjL' x1 => e1 | 'InjR' x2 => e2 'end'" :=
   (Case e0 x1 e1 x2 e2)
   (e0, x1, e1, x2, e2 at level 200) : lang_scope.
-Notation "' l" := (Lit l%Z) (at level 8, format "' l").
-Notation "' l" := (LitV l%Z) (at level 8, format "' l").
-Notation "'()"  := (Lit LitUnit) (at level 0).
-Notation "'()"  := (LitV LitUnit) (at level 0).
+Notation "()" := LitUnit : lang_scope.
+Notation "# l" := (Lit l%Z%L) (at level 8, format "# l").
+Notation "# l" := (LitV l%Z%L) (at level 8, format "# l").
 Notation "! e" := (Load e%L) (at level 9, right associativity) : lang_scope.
 Notation "'ref' e" := (Alloc e%L)
   (at level 30, right associativity) : lang_scope.

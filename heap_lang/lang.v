@@ -62,7 +62,7 @@ Global Instance val_dec_eq (v1 v2 : val) : Decision (v1 = v2).
 Proof. solve_decision. Defined.
 
 Delimit Scope lang_scope with L.
-Bind Scope lang_scope with expr val.
+Bind Scope lang_scope with expr val base_lit.
 
 Fixpoint of_val (v : val) : expr :=
   match v with
