@@ -2,12 +2,12 @@ From heap_lang Require Export lifting.
 Import uPred.
 
 (** Define some derived forms, and derived lemmas about them. *)
-Notation Lam x e := (Rec BAnom x e).
+Notation Lam x e := (Rec BAnon x e).
 Notation Let x e1 e2 := (App (Lam x e2) e1).
-Notation Seq e1 e2 := (Let BAnom e1 e2).
-Notation LamV x e := (RecV BAnom x e).
+Notation Seq e1 e2 := (Let BAnon e1 e2).
+Notation LamV x e := (RecV BAnon x e).
 Notation LetCtx x e2 := (AppRCtx (LamV x e2)).
-Notation SeqCtx e2 := (LetCtx BAnom e2).
+Notation SeqCtx e2 := (LetCtx BAnon e2).
 Notation Skip := (Seq (Lit LitUnit) (Lit LitUnit)).
 Notation Match e0 x1 e1 x2 e2 := (Case e0 (Lam x1 e1) (Lam x2 e2)).
 

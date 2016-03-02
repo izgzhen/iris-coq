@@ -41,7 +41,7 @@ Tactic Notation "wp_lam" ">" :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval cbv in e' with
-    | App (Rec BAnom _ _) _ =>
+    | App (Rec BAnon _ _) _ =>
        wp_bind K; etrans;
          [|eapply wp_lam; repeat (reflexivity || rewrite /= to_of_val)];
          simpl_subst; wp_finish

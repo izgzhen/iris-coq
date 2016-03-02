@@ -82,8 +82,6 @@ Proof.
   rewrite later_sep -(wp_value _ _ (Lit _)) //.
 Qed.
 
-(* For the lemmas involving substitution, we only derive a preliminary version.
-   The final version is defined in substitution.v. *)
 Lemma wp_rec E f x e1 e2 v Φ :
   to_val e2 = Some v →
   ▷ || subst' (subst' e1 f (RecV f x e1)) x v @ E {{ Φ }}

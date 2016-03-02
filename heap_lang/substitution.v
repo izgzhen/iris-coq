@@ -111,7 +111,7 @@ Instance subst_cas e0 e1 e2 x v e0r e1r e2r :
 Proof. by intros; red; f_equal/=. Qed.
 
 Definition of_binder (mx : binder) : stringset :=
-  match mx with BAnom => ∅ | BNamed x => {[ x ]} end.
+  match mx with BAnon => ∅ | BNamed x => {[ x ]} end.
 Lemma elem_of_of_binder x mx: x ∈ of_binder mx ↔ mx = BNamed x.
 Proof. destruct mx; set_solver. Qed.
 Global Instance set_unfold_of_binder (mx : binder) x :

@@ -56,7 +56,7 @@ Section client.
       wp_seq. (ewp eapply wp_store); eauto with I. strip_later.
       rewrite assoc [(_ ★ y ↦ _)%I]comm. apply sep_mono_r, wand_intro_l.
       wp_seq. rewrite -signal_spec right_id assoc sep_elim_l comm.
-      apply sep_mono_r. rewrite /y_inv -(exist_intro (λ: "z", "z" + #42)%L).
+      apply sep_mono_r. rewrite /y_inv -(exist_intro (λ: "z", "z" + #42)%V).
       apply sep_intro_True_r; first done. apply: always_intro.
       apply forall_intro=>n. wp_let. wp_op. by apply const_intro. }
     (* The two spawned threads, the waiters. *)

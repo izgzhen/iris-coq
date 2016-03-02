@@ -90,6 +90,4 @@ Section ClosedProofs.
     apply wp_strip_pvs, exist_elim=> ?. rewrite and_elim_l.
     rewrite -heap_e_spec; first by eauto with I. by rewrite nclose_nroot.
   Qed.
-
-  Print Assumptions heap_e_closed.
 End ClosedProofs.

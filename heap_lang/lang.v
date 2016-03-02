@@ -15,9 +15,14 @@ Inductive un_op : Set :=
 Inductive bin_op : Set :=
   | PlusOp | MinusOp | LeOp | LtOp | EqOp.
 
-Inductive binder := BAnom | BNamed : string → binder.
+Inductive binder := BAnon | BNamed : string → binder.
+
 Delimit Scope binder_scope with binder.
-Bind Scope binder_scope with expr binder.
+Bind Scope binder_scope with binder.
+Delimit Scope lang_scope with L.
+Bind Scope lang_scope with base_lit.
+Delimit Scope val_scope with V.
+Bind Scope val_scope with base_lit.
 
 Inductive expr :=
   (* Base lambda calculus *)
@@ -54,6 +59,10 @@ Inductive val :=
   | InjRV (v : val)
   | LocV (l : loc).
 
+Bind Scope binder_scope with expr.
+Bind Scope lang_scope with expr base_lit.
+Bind Scope val_scope with val base_lit.
+
 Global Instance base_lit_dec_eq (l1 l2 : base_lit) : Decision (l1 = l2).
 Proof. solve_decision. Defined.
 Global Instance un_op_dec_eq (op1 op2 : un_op) : Decision (op1 = op2).
@@ -66,9 +75,6 @@ Global Instance expr_dec_eq (e1 e2 : expr) : Decision (e1 = e2).
 Proof. solve_decision. Defined.
 Global Instance val_dec_eq (v1 v2 : val) : Decision (v1 = v2).
 Proof. solve_decision. Defined.
-
-Delimit Scope lang_scope with L.
-Bind Scope lang_scope with expr val base_lit.
 
 Fixpoint of_val (v : val) : expr :=
   match v with
@@ -144,7 +150,7 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
 Definition fill (K : ectx) (e : expr) : expr := fold_right fill_item e K.
 
 (** Substitution *)
-(** We have [subst e None v = e] to deal with anonymous binders *)
+(** We have [subst' e BAnon v = e] to deal with anonymous binders *)
 Fixpoint subst (e : expr) (x : string) (v : val) : expr :=
   match e with
   | Var y => if decide (x = y) then of_val v else Var y
@@ -170,7 +176,7 @@ Fixpoint subst (e : expr) (x : string) (v : val) : expr :=
   | Cas e0 e1 e2 => Cas (subst e0 x v) (subst e1 x v) (subst e2 x v)
   end.
 Definition subst' (e : expr) (mx : binder) (v : val) : expr :=
-  match mx with BNamed x => subst e x v | BAnom => e end.
+  match mx with BNamed x => subst e x v | BAnon => e end.
 
 (** The stepping relation *)
 Definition un_op_eval (op : un_op) (l : base_lit) : option base_lit :=
