@@ -293,12 +293,12 @@ Qed.
 Lemma fill_not_val K e : to_val e = None → to_val (fill K e) = None.
 Proof. rewrite !eq_None_not_Some; eauto using fill_val. Qed.
 
-Lemma values_head_stuck e1 σ1 e2 σ2 ef :
+Lemma val_head_stuck e1 σ1 e2 σ2 ef :
   head_step e1 σ1 e2 σ2 ef → to_val e1 = None.
 Proof. destruct 1; naive_solver. Qed.
 
-Lemma values_stuck e1 σ1 e2 σ2 ef : prim_step e1 σ1 e2 σ2 ef → to_val e1 = None.
-Proof. intros [??? -> -> ?]; eauto using fill_not_val, values_head_stuck. Qed.
+Lemma val_stuck e1 σ1 e2 σ2 ef : prim_step e1 σ1 e2 σ2 ef → to_val e1 = None.
+Proof. intros [??? -> -> ?]; eauto using fill_not_val, val_head_stuck. Qed.
 
 Lemma atomic_not_val e : atomic e → to_val e = None.
 Proof. destruct e; naive_solver. Qed.
@@ -326,7 +326,7 @@ Lemma atomic_step e1 σ1 e2 σ2 ef :
   atomic e1 → prim_step e1 σ1 e2 σ2 ef → is_Some (to_val e2).
 Proof.
   intros Hatomic [K e1' e2' -> -> Hstep].
-  assert (K = []) as -> by eauto 10 using atomic_fill, values_head_stuck.
+  assert (K = []) as -> by eauto 10 using atomic_fill, val_head_stuck.
   naive_solver eauto using atomic_head_step.
 Qed.
 
@@ -357,7 +357,7 @@ Proof.
   { exfalso; apply (eq_None_not_Some (to_val (fill K e1)));
       eauto using fill_not_val, head_ctx_step_val. }
   cut (Ki = Ki'); [naive_solver eauto using prefix_of_cons|].
-  eauto using fill_item_no_val_inj, values_head_stuck, fill_not_val.
+  eauto using fill_item_no_val_inj, val_head_stuck, fill_not_val.
 Qed.
 
 Lemma alloc_fresh e v σ :
@@ -373,7 +373,7 @@ Program Canonical Structure heap_lang : language := {|
   atomic := heap_lang.atomic; prim_step := heap_lang.prim_step;
 |}.
 Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,
-  heap_lang.values_stuck, heap_lang.atomic_not_val, heap_lang.atomic_step.
+  heap_lang.val_stuck, heap_lang.atomic_not_val, heap_lang.atomic_step.
 
 Global Instance heap_lang_ctx K : LanguageCtx heap_lang (heap_lang.fill K).
 Proof.

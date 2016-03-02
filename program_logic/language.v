@@ -10,7 +10,7 @@ Structure language := Language {
   prim_step : expr → state → expr → state → option expr → Prop;
   to_of_val v : to_val (of_val v) = Some v;
   of_to_val e v : to_val e = Some v → of_val v = e;
-  values_stuck e σ e' σ' ef : prim_step e σ e' σ' ef → to_val e = None;
+  val_stuck e σ e' σ' ef : prim_step e σ e' σ' ef → to_val e = None;
   atomic_not_val e : atomic e → to_val e = None;
   atomic_step e1 σ1 e2 σ2 ef :
     atomic e1 →
@@ -23,7 +23,7 @@ Arguments atomic {_} _.
 Arguments prim_step {_} _ _ _ _ _.
 Arguments to_of_val {_} _.
 Arguments of_to_val {_} _ _ _.
-Arguments values_stuck {_} _ _ _ _ _ _.
+Arguments val_stuck {_} _ _ _ _ _ _.
 Arguments atomic_not_val {_} _ _.
 Arguments atomic_step {_} _ _ _ _ _ _ _.
 
@@ -45,7 +45,7 @@ Section language.
        step ρ1 ρ2.
 
   Lemma reducible_not_val e σ : reducible e σ → to_val e = None.
-  Proof. intros (?&?&?&?); eauto using values_stuck. Qed.
+  Proof. intros (?&?&?&?); eauto using val_stuck. Qed.
   Lemma atomic_of_val v : ¬atomic (of_val v).
   Proof. by intros Hat%atomic_not_val; rewrite to_of_val in Hat. Qed.
   Global Instance: Inj (=) (=) (@of_val Λ).

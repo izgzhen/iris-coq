@@ -19,7 +19,7 @@ Ltac inv_step :=
      simpl in H; first [subst e|discriminate H|injection H as H]
      (* ensure that we make progress for each subgoal *)
   | H : head_step ?e _ _ _ _, Hv : of_val ?v = fill ?K ?e |- _ =>
-    apply values_head_stuck, (fill_not_val K) in H;
+    apply val_head_stuck, (fill_not_val K) in H;
     by rewrite -Hv to_of_val in H (* maybe use a helper lemma here? *)
   | H : head_step ?e _ _ _ _ |- _ =>
      try (is_var e; fail 1); (* inversion yields many goals if e is a variable
