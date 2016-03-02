@@ -239,6 +239,7 @@ Section cofe_mor.
     Proper ((≡) ==> (≡) ==> (≡)) (@cofe_mor_car A B) := ne_proper_2 _.
   Lemma cofe_mor_ext (f g : cofeMor A B) : f ≡ g ↔ ∀ x, f x ≡ g x.
   Proof. done. Qed.
+
 End cofe_mor.
 
 Arguments cofe_mor : clear implicits.
@@ -256,6 +257,22 @@ Infix "◎" := ccompose (at level 40, left associativity).
 Lemma ccompose_ne {A B C} (f1 f2 : B -n> C) (g1 g2 : A -n> B) n :
   f1 ≡{n}≡ f2 → g1 ≡{n}≡ g2 → f1 ◎ g1 ≡{n}≡ f2 ◎ g2.
 Proof. by intros Hf Hg x; rewrite /= (Hg x) (Hf (g2 x)). Qed.
+
+(* Function space maps *)
+Definition cofe_mor_map {A A' B B' : cofeT} (f : A' -n> A) (g : B -n> B')
+  (h : A -n> B) : A' -n> B' := g ◎ h ◎ f.
+Instance cofe_mor_map_ne {A A' B B' : cofeT} n :
+  Proper (dist n ==> dist n ==> dist n ==> dist n) (@cofe_mor_map A A' B B').
+Proof. intros ??? ??? ???. apply ccompose_ne; first apply ccompose_ne;done. Qed.
+
+Definition cofe_morC_map {A A' B B' : cofeT} (f : A' -n> A) (g : B -n> B') :
+  (A -n> B) -n> (A' -n>  B') := CofeMor (cofe_mor_map f g).
+Instance cofe_morC_map_ne {A A' B B' : cofeT} n :
+  Proper (dist n ==> dist n ==> dist n) (@cofe_morC_map A A' B B').
+Proof.
+  intros f f' Hf g g' Hg ?. rewrite /= /cofe_mor_map.
+  apply ccompose_ne; first apply ccompose_ne; done.
+Qed.
 
 (** unit *)
 Section unit.
@@ -349,6 +366,26 @@ Next Obligation. by intros F1 F2 A B [??]; rewrite /= !cFunctor_id. Qed.
 Next Obligation.
   intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??]; simpl.
   by rewrite !cFunctor_compose.
+Qed.
+
+Program Definition cofe_morCF (F1 F2 : cFunctor) : cFunctor := {|
+  cFunctor_car A B := cofe_mor (cFunctor_car F1 B A) (cFunctor_car F2 A B);
+  cFunctor_map A1 A2 B1 B2 fg :=
+    cofe_morC_map (cFunctor_map F1 (fg.2, fg.1)) (cFunctor_map F2 fg)
+|}.
+Next Obligation.
+  by intros F1 F2 A1 A2 B1 B2 n [??] [??] [??]; apply cofe_morC_map_ne;
+    apply cFunctor_ne; apply pair_ne.
+Qed.
+Next Obligation.
+  intros F1 F2 A B [??] ?; rewrite /= !cFunctor_id. apply ne_proper; first done.
+  apply cFunctor_id.
+Qed.
+Next Obligation.
+  intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??] ?; simpl.
+  rewrite !cFunctor_compose. apply ne_proper; first by solve_proper.
+  apply ne_proper; first by solve_proper. apply ne_proper; first done.
+  apply cFunctor_compose.
 Qed.
 
 (** Discrete cofe *)
