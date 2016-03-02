@@ -237,12 +237,16 @@ Definition bin_op_eval (op : bin_op) (l1 l2 : base_lit) : option base_lit :=
   end.
 
 Inductive head_step : expr ∅ → state → expr ∅ → state → option (expr ∅) → Prop :=
-  | BetaS (f x : string) (e1 : expr ((∅ ∪ {[ x ]}) ∪ {[ f ]})) (e2 : expr ∅) v2 (σ : state) :
-      (* FIXME WTF this keeps working if I swap the "x" and "f" in the type of e1; but
-         thesr two terms are NOT convertible. ?!?? *)
+  (* The second "x" in the type of [e1] should be an "f". *)
+  | BetaS (f x : string) (e1 : expr ((∅ ∪ {[ x ]}) ∪ {[ x ]})) (e2 : expr ∅) v2 (σ : state) :
      to_val e2 = Some v2 →
      head_step (App (Rec ∅ f x e1) e2) σ
-       (subst ∅ x v2 (subst (∅ ∪ {[ x ]}) f (RecV f x e1) e1)) σ None
+       (subst ∅ x v2 (subst (∅ ∪ {[ x ]}) f (RecV f x e1) e1)) σ None.
+
+Set Printing All.
+Print head_step.
+
+
   | UnOpS op l l' σ :
      un_op_eval op l = Some l' → 
      head_step (UnOp op (Lit ∅ l)) σ (Lit ∅ l') σ None
