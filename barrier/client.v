@@ -27,7 +27,7 @@ Section client.
 
   Lemma worker_safe q (n : Z) (b y : loc) :
     (heap_ctx heapN ★ recv heapN N b (y_inv q y))
-      ⊑ || worker n (Loc b) (Loc y) {{ λ _, True }}.
+      ⊑ || worker n (%b) (%y) {{ λ _, True }}.
   Proof.
     rewrite /worker. wp_lam. wp_let. ewp apply wait_spec.
     rewrite comm. apply sep_mono_r. apply wand_intro_l.

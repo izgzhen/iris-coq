@@ -21,18 +21,16 @@ Notation "<>" := BAnon : binder_scope.
 
 (** Syntax inspired by Coq/Ocaml. Constructions with higher precedence come
     first. *)
-(* We have overlapping notation for values and expressions, with the expressions
-   coming first. This way, parsing as a value will be preferred. If an expression
-   was needed, the coercion of_val will be called. The notations for literals
-   are not put in any scope so as to avoid lots of annoying %L scopes while
-   pretty printing. *)
+
+(* No scope, does not conflict and scope is often not inferred properly. *)
+Notation "# l" := (LitV l%Z%V) (at level 8, format "# l").
+Notation "% l" := (LocV l) (at level 8, format "% l").
+
 Notation "( e1 , e2 , .. , en )" := (Pair .. (Pair e1 e2) .. en) : lang_scope.
 Notation "'match:' e0 'with' 'InjL' x1 => e1 | 'InjR' x2 => e2 'end'" :=
   (Match e0 x1 e1 x2 e2)
   (e0, x1, e1, x2, e2 at level 200) : lang_scope.
 Notation "()" := LitUnit : val_scope.
-(* No scope, does not conflict and scope is often not inferred properly. *)
-Notation "# l" := (LitV l%Z%V) (at level 8, format "# l").
 Notation "! e" := (Load e%L) (at level 9, right associativity) : lang_scope.
 Notation "'ref' e" := (Alloc e%L)
   (at level 30, right associativity) : lang_scope.
