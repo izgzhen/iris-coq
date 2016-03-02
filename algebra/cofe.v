@@ -250,6 +250,7 @@ Instance cofe_more_inhabited {A B : cofeT} `{Inhabited B} :
 (** Identity and composition *)
 Definition cid {A} : A -n> A := CofeMor id.
 Instance: Params (@cid) 1.
+
 Definition ccompose {A B C}
   (f : B -n> C) (g : A -n> B) : A -n> C := CofeMor (f ∘ g).
 Instance: Params (@ccompose) 3.
@@ -259,19 +260,19 @@ Lemma ccompose_ne {A B C} (f1 f2 : B -n> C) (g1 g2 : A -n> B) n :
 Proof. by intros Hf Hg x; rewrite /= (Hg x) (Hf (g2 x)). Qed.
 
 (* Function space maps *)
-Definition cofe_mor_map {A A' B B' : cofeT} (f : A' -n> A) (g : B -n> B')
+Definition cofe_mor_map {A A' B B'} (f : A' -n> A) (g : B -n> B')
   (h : A -n> B) : A' -n> B' := g ◎ h ◎ f.
-Instance cofe_mor_map_ne {A A' B B' : cofeT} n :
+Instance cofe_mor_map_ne {A A' B B'} n :
   Proper (dist n ==> dist n ==> dist n ==> dist n) (@cofe_mor_map A A' B B').
-Proof. intros ??? ??? ???. apply ccompose_ne; first apply ccompose_ne;done. Qed.
+Proof. intros ??? ??? ???. by repeat apply ccompose_ne. Qed.
 
-Definition cofe_morC_map {A A' B B' : cofeT} (f : A' -n> A) (g : B -n> B') :
+Definition cofe_morC_map {A A' B B'} (f : A' -n> A) (g : B -n> B') :
   (A -n> B) -n> (A' -n>  B') := CofeMor (cofe_mor_map f g).
-Instance cofe_morC_map_ne {A A' B B' : cofeT} n :
+Instance cofe_morC_map_ne {A A' B B'} n :
   Proper (dist n ==> dist n ==> dist n) (@cofe_morC_map A A' B B').
 Proof.
   intros f f' Hf g g' Hg ?. rewrite /= /cofe_mor_map.
-  apply ccompose_ne; first apply ccompose_ne; done.
+  by repeat apply ccompose_ne.
 Qed.
 
 (** unit *)
@@ -374,18 +375,16 @@ Program Definition cofe_morCF (F1 F2 : cFunctor) : cFunctor := {|
     cofe_morC_map (cFunctor_map F1 (fg.2, fg.1)) (cFunctor_map F2 fg)
 |}.
 Next Obligation.
-  by intros F1 F2 A1 A2 B1 B2 n [??] [??] [??]; apply cofe_morC_map_ne;
-    apply cFunctor_ne; apply pair_ne.
+  intros F1 F2 A1 A2 B1 B2 n [f g] [f' g'] [??]; simpl in *.
+  apply cofe_morC_map_ne; apply cFunctor_ne; by apply pair_ne.
 Qed.
 Next Obligation.
-  intros F1 F2 A B [??] ?; rewrite /= !cFunctor_id. apply ne_proper; first done.
-  apply cFunctor_id.
+  intros F1 F2 A B [f ?] ?; simpl. rewrite /= !cFunctor_id.
+  apply (ne_proper f). apply cFunctor_id.
 Qed.
 Next Obligation.
-  intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??] ?; simpl.
-  rewrite !cFunctor_compose. apply ne_proper; first by solve_proper.
-  apply ne_proper; first by solve_proper. apply ne_proper; first done.
-  apply cFunctor_compose.
+  intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [h ?] ?; simpl in *.
+  rewrite -!cFunctor_compose. do 2 apply (ne_proper _). apply cFunctor_compose.
 Qed.
 
 (** Discrete cofe *)
