@@ -50,7 +50,6 @@ algebra/agree.v
 algebra/dec_agree.v
 algebra/excl.v
 algebra/iprod.v
-algebra/functor.v
 algebra/upred.v
 algebra/upred_tactics.v
 algebra/upred_big_op.v

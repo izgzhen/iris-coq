@@ -1,46 +1,46 @@
 From program_logic Require Export ghost_ownership.
 
-Module iFunctors.
-  Inductive iFunctors :=
-    | nil  : iFunctors
-    | cons : iFunctor → iFunctors → iFunctors.
-  Coercion singleton (F : iFunctor) : iFunctors := cons F nil.
-End iFunctors.
-Notation iFunctors := iFunctors.iFunctors.
+Module rFunctors.
+  Inductive rFunctors :=
+    | nil  : rFunctors
+    | cons : rFunctor → rFunctors → rFunctors.
+  Coercion singleton (F : rFunctor) : rFunctors := cons F nil.
+End rFunctors.
+Notation rFunctors := rFunctors.rFunctors.
 
-Delimit Scope iFunctors_scope with iFunctors.
-Bind Scope iFunctors_scope with iFunctors.
-Arguments iFunctors.cons _ _%iFunctors.
+Delimit Scope rFunctors_scope with rFunctors.
+Bind Scope rFunctors_scope with rFunctors.
+Arguments rFunctors.cons _ _%rFunctors.
 
-Notation "[ ]" := iFunctors.nil (format "[ ]") : iFunctors_scope.
-Notation "[ F ]" := (iFunctors.cons F iFunctors.nil) : iFunctors_scope.
+Notation "[ ]" := rFunctors.nil (format "[ ]") : rFunctors_scope.
+Notation "[ F ]" := (rFunctors.cons F rFunctors.nil) : rFunctors_scope.
 Notation "[ F ; .. ; F' ]" :=
-  (iFunctors.cons F .. (iFunctors.cons F' iFunctors.nil) ..) : iFunctors_scope.
+  (rFunctors.cons F .. (rFunctors.cons F' rFunctors.nil) ..) : rFunctors_scope.
 
-Module iFunctorG.
-  Definition nil : iFunctorG := const (constF unitR).
+Module rFunctorG.
+  Definition nil : rFunctorG := const (constRF unitR).
 
-  Definition cons (F : iFunctor) (Σ : iFunctorG) : iFunctorG :=
+  Definition cons (F : rFunctor) (Σ : rFunctorG) : rFunctorG :=
     λ n, match n with O => F | S n => Σ n end.
 
-  Fixpoint app (Fs : iFunctors) (Σ : iFunctorG) : iFunctorG :=
+  Fixpoint app (Fs : rFunctors) (Σ : rFunctorG) : rFunctorG :=
     match Fs with
-    | iFunctors.nil => Σ
-    | iFunctors.cons F Fs => cons F (app Fs Σ)
+    | rFunctors.nil => Σ
+    | rFunctors.cons F Fs => cons F (app Fs Σ)
     end.
-End iFunctorG.
+End rFunctorG.
 
-(** Cannot bind this scope with the [iFunctorG] since [iFunctorG] is a
+(** Cannot bind this scope with the [rFunctorG] since [rFunctorG] is a
 notation hiding a more complex type. *)
-Notation "#[ ]" := iFunctorG.nil (format "#[ ]").
-Notation "#[ Fs ]" := (iFunctorG.app Fs iFunctorG.nil).
+Notation "#[ ]" := rFunctorG.nil (format "#[ ]").
+Notation "#[ Fs ]" := (rFunctorG.app Fs rFunctorG.nil).
 Notation "#[ Fs ; .. ; Fs' ]" :=
-  (iFunctorG.app Fs .. (iFunctorG.app Fs' iFunctorG.nil) ..).
+  (rFunctorG.app Fs .. (rFunctorG.app Fs' rFunctorG.nil) ..).
 
 (** We need another typeclass to identify the *functor* in the Σ. Basing inG on
    the functor breaks badly because Coq is unable to infer the correct
    typeclasses, it does not unfold the functor. *)
-Class inGF (Λ : language) (Σ : iFunctorG) (F : iFunctor) := InGF {
+Class inGF (Λ : language) (Σ : rFunctorG) (F : rFunctor) := InGF {
   inGF_id : gid;
   inGF_prf : F = Σ inGF_id;
 }.
@@ -53,8 +53,8 @@ Hint Mode inGF + + - : typeclass_instances.
 
 Lemma inGF_inG `{inGF Λ Σ F} : inG Λ Σ (F (laterC (iPreProp Λ (globalF Σ)))).
 Proof. exists inGF_id. by rewrite -inGF_prf. Qed.
-Instance inGF_here {Λ Σ} (F: iFunctor) : inGF Λ (iFunctorG.cons F Σ) F.
+Instance inGF_here {Λ Σ} (F: rFunctor) : inGF Λ (rFunctorG.cons F Σ) F.
 Proof. by exists 0. Qed.
-Instance inGF_further {Λ Σ} (F F': iFunctor) :
-  inGF Λ Σ F → inGF Λ (iFunctorG.cons F' Σ) F.
+Instance inGF_further {Λ Σ} (F F': rFunctor) :
+  inGF Λ Σ F → inGF Λ (rFunctorG.cons F' Σ) F.
 Proof. intros [i ?]. by exists (S i). Qed.

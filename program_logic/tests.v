@@ -2,6 +2,6 @@
 From program_logic Require Import model.
 
 Module ModelTest. (* Make sure we got the notations right. *)
-  Definition iResTest {Λ : language} {Σ : iFunctor}
+  Definition iResTest {Λ : language} {Σ : rFunctor}
     (w : iWld Λ Σ) (p : iPst Λ) (g : iGst Λ Σ) : iRes Λ Σ := Res w p (Some g).
 End ModelTest.

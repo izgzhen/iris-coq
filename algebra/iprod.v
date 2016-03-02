@@ -1,5 +1,5 @@
 From algebra Require Export cmra.
-From algebra Require Import functor upred.
+From algebra Require Import upred.
 
 (** * Indexed product *)
 (** Need to put this in a definition to make canonical structures to work. *)
@@ -288,18 +288,34 @@ Instance iprodC_map_ne {A} {B1 B2 : A → cofeT} n :
   Proper (dist n ==> dist n) (@iprodC_map A B1 B2).
 Proof. intros f1 f2 Hf g x; apply Hf. Qed.
 
-Program Definition iprodF {A} (Σ : A → iFunctor) : iFunctor := {|
-  ifunctor_car B := iprodR (λ x, Σ x B);
-  ifunctor_map B1 B2 f := iprodC_map (λ x, ifunctor_map (Σ x) f);
+Program Definition iprodCF {C} (F : C → cFunctor) : cFunctor := {|
+  cFunctor_car A B := iprodC (λ c, cFunctor_car (F c) A B);
+  cFunctor_map A1 A2 B1 B2 fg := iprodC_map (λ c, cFunctor_map (F c) fg)
 |}.
 Next Obligation.
-  by intros A Σ B1 B2 n f f' ? g; apply iprodC_map_ne=>x; apply ifunctor_map_ne.
+  by intros C F A1 A2 B1 B2 n ?? g; apply iprodC_map_ne=>c; apply cFunctor_ne.
 Qed.
 Next Obligation.
-  intros A Σ B g. rewrite /= -{2}(iprod_map_id g).
-  apply iprod_map_ext=> x; apply ifunctor_map_id.
+  intros C F A B g; simpl. rewrite -{2}(iprod_map_id g).
+  apply iprod_map_ext=> y; apply cFunctor_id.
 Qed.
 Next Obligation.
-  intros A Σ B1 B2 B3 f1 f2 g. rewrite /= -iprod_map_compose.
-  apply iprod_map_ext=> y; apply ifunctor_map_compose.
+  intros C F A1 A2 A3 B1 B2 B3 f1 f2 f1' f2' g. rewrite /= -iprod_map_compose.
+  apply iprod_map_ext=>y; apply cFunctor_compose.
+Qed.
+
+Program Definition iprodRF {C} (F : C → rFunctor) : rFunctor := {|
+  rFunctor_car A B := iprodR (λ c, rFunctor_car (F c) A B);
+  rFunctor_map A1 A2 B1 B2 fg := iprodC_map (λ c, rFunctor_map (F c) fg)
+|}.
+Next Obligation.
+  by intros C F A1 A2 B1 B2 n ?? g; apply iprodC_map_ne=>c; apply rFunctor_ne.
+Qed.
+Next Obligation.
+  intros C F A B g; simpl. rewrite -{2}(iprod_map_id g).
+  apply iprod_map_ext=> y; apply rFunctor_id.
+Qed.
+Next Obligation.
+  intros C F A1 A2 A3 B1 B2 B3 f1 f2 f1' f2' g. rewrite /= -iprod_map_compose.
+  apply iprod_map_ext=>y; apply rFunctor_compose.
 Qed.

@@ -1,5 +1,5 @@
 From algebra Require Export cmra.
-From algebra Require Import functor upred.
+From algebra Require Import upred.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 
@@ -201,7 +201,9 @@ Definition exclC_map {A B} (f : A -n> B) : exclC A -n> exclC B :=
 Instance exclC_map_ne A B n : Proper (dist n ==> dist n) (@exclC_map A B).
 Proof. by intros f f' Hf []; constructor; apply Hf. Qed.
 
-Program Definition exclF : iFunctor :=
-  {| ifunctor_car := exclR; ifunctor_map := @exclC_map |}.
-Next Obligation. by intros A x; rewrite /= excl_map_id. Qed.
-Next Obligation. by intros A B C f g x; rewrite /= excl_map_compose. Qed.
+Program Definition exclF : rFunctor := {|
+  rFunctor_car A B := exclR B; rFunctor_map A1 A2 B1 B2 fg := exclC_map (fg.2)
+|}.
+Next Obligation. intros A1 A2 B1 B2 n x1 x2 [??]. by apply exclC_map_ne. Qed.
+Next Obligation. by intros A B x; rewrite /= excl_map_id. Qed.
+Next Obligation. by intros A1 A2 A3 B1 B2 B3 *;rewrite /= excl_map_compose. Qed.

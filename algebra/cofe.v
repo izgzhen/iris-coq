@@ -310,6 +310,47 @@ Instance prodC_map_ne {A A' B B'} n :
   Proper (dist n ==> dist n ==> dist n) (@prodC_map A A' B B').
 Proof. intros f f' Hf g g' Hg [??]; split; [apply Hf|apply Hg]. Qed.
 
+(** Functors *)
+Structure cFunctor := CFunctor {
+  cFunctor_car : cofeT → cofeT -> cofeT;
+  cFunctor_map {A1 A2 B1 B2} :
+    ((A2 -n> A1) * (B1 -n> B2)) → cFunctor_car A1 B1 -n> cFunctor_car A2 B2;
+  cFunctor_ne {A1 A2 B1 B2} n :
+    Proper (dist n ==> dist n) (@cFunctor_map A1 A2 B1 B2);
+  cFunctor_id {A B : cofeT} (x : cFunctor_car A B) :
+    cFunctor_map (cid,cid) x ≡ x;
+  cFunctor_compose {A1 A2 A3 B1 B2 B3}
+      (f : A2 -n> A1) (g : A3 -n> A2) (f' : B1 -n> B2) (g' : B2 -n> B3) x :
+    cFunctor_map (f◎g, g'◎f') x ≡ cFunctor_map (g,g') (cFunctor_map (f,f') x)
+}.
+Existing Instances cFunctor_ne.
+Instance: Params (@cFunctor_map) 5.
+
+Definition cFunctor_diag (F: cFunctor) (A: cofeT) : cofeT := cFunctor_car F A A.
+Coercion cFunctor_diag : cFunctor >-> Funclass.
+
+Program Definition idCF : cFunctor :=
+  {| cFunctor_car A1 A2 := A2; cFunctor_map A1 A2 B1 B2 f := f.2 |}.
+Solve Obligations with done.
+
+Program Definition constCF (B : cofeT) : cFunctor :=
+  {| cFunctor_car A1 A2 := B; cFunctor_map A1 A2 B1 B2 f := cid |}.
+Solve Obligations with done.
+
+Program Definition prodCF (F1 F2 : cFunctor) : cFunctor := {|
+  cFunctor_car A B := prodC (cFunctor_car F1 A B) (cFunctor_car F2 A B);
+  cFunctor_map A1 A2 B1 B2 fg :=
+    prodC_map (cFunctor_map F1 fg) (cFunctor_map F2 fg)
+|}.
+Next Obligation.
+  by intros F1 F2 A1 A2 B1 B2 n ???; apply prodC_map_ne; apply cFunctor_ne.
+Qed.
+Next Obligation. by intros F1 F2 A B [??]; rewrite /= !cFunctor_id. Qed.
+Next Obligation.
+  intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??]; simpl.
+  by rewrite !cFunctor_compose.
+Qed.
+
 (** Discrete cofe *)
 Section discrete_cofe.
   Context `{Equiv A, @Equivalence A (≡)}.
@@ -390,3 +431,13 @@ Definition laterC_map {A B} (f : A -n> B) : laterC A -n> laterC B :=
   CofeMor (later_map f).
 Instance laterC_map_contractive (A B : cofeT) : Contractive (@laterC_map A B).
 Proof. intros [|n] f g Hf n'; [done|]; apply Hf; lia. Qed.
+
+Program Definition laterCF : cFunctor := {|
+  cFunctor_car A B := laterC B;
+  cFunctor_map A1 A2 B1 B2 fg := laterC_map (fg.2)
+|}.
+Next Obligation.
+  intros F A1 A2 B1 B2 n ? [??]; simpl. by apply (contractive_ne laterC_map).
+Qed.
+Next Obligation. by intros A B []. Qed.
+Next Obligation. by intros A1 A2 A3 B1 B2 B3 f g f' g' []. Qed.

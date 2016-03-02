@@ -11,12 +11,12 @@ Definition gid := nat.
 Definition gname := positive.
 
 (** The global CMRA: Indexed product over a gid i to (gname --fin--> Σ i) *)
-Definition globalF (Σ : gid → iFunctor) : iFunctor :=
-  iprodF (λ i, mapF gname (Σ i)).
-Notation iFunctorG := (gid → iFunctor).
+Definition globalF (Σ : gid → rFunctor) : rFunctor :=
+  iprodRF (λ i, mapRF gname (Σ i)).
+Notation rFunctorG := (gid → rFunctor).
 Notation iPropG Λ Σ := (iProp Λ (globalF Σ)).
 
-Class inG (Λ : language) (Σ : iFunctorG) (A : cmraT) := InG {
+Class inG (Λ : language) (Σ : rFunctorG) (A : cmraT) := InG {
   inG_id : gid;
   inG_prf : A = Σ inG_id (laterC (iPreProp Λ (globalF Σ)))
 }.
@@ -80,7 +80,8 @@ Proof.
   rewrite /own ownG_valid /to_globalF.
   rewrite iprod_validI (forall_elim inG_id) iprod_lookup_singleton.
   rewrite map_validI (forall_elim γ) lookup_singleton option_validI.
-  by destruct inG_prf.
+  (* implicit arguments differ a bit *)
+  by trans (✓ cmra_transport inG_prf a : iPropG Λ Σ)%I; last destruct inG_prf.
 Qed.
 Lemma own_valid_r γ a : own γ a ⊑ (own γ a ★ ✓ a).
 Proof. apply: uPred.always_entails_r. apply own_valid. Qed.

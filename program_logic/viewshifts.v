@@ -18,7 +18,7 @@ Notation "P ={ E }=> Q" := (True ⊑ vs E E P%I Q%I)
   (at level 199, E at level 50, format "P  ={ E }=>  Q") : C_scope.
 
 Section vs.
-Context {Λ : language} {Σ : iFunctor}.
+Context {Λ : language} {Σ : rFunctor}.
 Implicit Types P Q R : iProp Λ Σ.
 Implicit Types N : namespace.
 

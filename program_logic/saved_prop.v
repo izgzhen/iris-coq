@@ -5,7 +5,7 @@ Import uPred.
 Notation savedPropG Λ Σ :=
   (inG Λ Σ (agreeR (laterC (iPreProp Λ (globalF Σ))))).
 
-Instance inGF_savedPropG `{inGF Λ Σ agreeF} : savedPropG Λ Σ.
+Instance inGF_savedPropG `{inGF Λ Σ (agreeRF idCF)} : savedPropG Λ Σ.
 Proof. apply: inGF_inG. Qed.
 
 Definition saved_prop_own `{savedPropG Λ Σ}

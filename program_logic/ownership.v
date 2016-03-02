@@ -12,7 +12,7 @@ Instance: Params (@ownG) 2.
 Typeclasses Opaque ownI ownG ownP.
 
 Section ownership.
-Context {Λ : language} {Σ : iFunctor}.
+Context {Λ : language} {Σ : rFunctor}.
 Implicit Types r : iRes Λ Σ.
 Implicit Types σ : state Λ.
 Implicit Types P : iProp Λ Σ.

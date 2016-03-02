@@ -12,15 +12,15 @@ Class barrierG Σ := BarrierG {
   barrier_stsG :> stsG heap_lang Σ sts;
   barrier_savedPropG :> savedPropG heap_lang Σ;
 }.
-Definition barrierGF : iFunctors := [stsGF sts; agreeF].
+Definition barrierGF : rFunctors := [stsGF sts; agreeRF idCF].
 
 Instance inGF_barrierG
-  `{inGF heap_lang Σ (stsGF sts), inGF heap_lang Σ agreeF} : barrierG Σ.
+  `{inGF heap_lang Σ (stsGF sts), inGF heap_lang Σ (agreeRF idCF)} : barrierG Σ.
 Proof. split; apply _. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.
-Context {Σ : iFunctorG} `{!heapG Σ, !barrierG Σ}.
+Context {Σ : rFunctorG} `{!heapG Σ, !barrierG Σ}.
 Context (heapN N : namespace).
 Local Notation iProp := (iPropG heap_lang Σ).
 

@@ -19,7 +19,7 @@ Notation "{{ P } } e {{ Φ } }" := (True ⊑ ht ⊤ P e Φ)
    format "{{  P  } }  e  {{  Φ  } }") : C_scope.
 
 Section hoare.
-Context {Λ : language} {Σ : iFunctor}.
+Context {Λ : language} {Σ : rFunctor}.
 Implicit Types P Q : iProp Λ Σ.
 Implicit Types Φ Ψ : val Λ → iProp Λ Σ.
 Implicit Types v : val Λ.

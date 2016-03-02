@@ -8,7 +8,7 @@ Local Hint Extern 10 (✓{_} _) =>
   end; solve_validN.
 
 Section adequacy.
-Context {Λ : language} {Σ : iFunctor}.
+Context {Λ : language} {Σ : rFunctor}.
 Implicit Types e : expr Λ.
 Implicit Types P Q : iProp Λ Σ.
 Implicit Types Φ : val Λ → iProp Λ Σ.

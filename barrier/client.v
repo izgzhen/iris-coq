@@ -11,7 +11,7 @@ Definition client : expr :=
   "y" <- (λ: "z", "z" + '42) ;; signal "b".
 
 Section client.
-  Context {Σ : iFunctorG} `{!heapG Σ, !barrierG Σ} (heapN N : namespace).
+  Context {Σ : rFunctorG} `{!heapG Σ, !barrierG Σ} (heapN N : namespace).
   Local Notation iProp := (iPropG heap_lang Σ).
 
   Definition y_inv q y : iProp := (∃ f : val, y ↦{q} f ★ □ ∀ n : Z,
@@ -72,7 +72,7 @@ Section client.
 End client.
 
 Section ClosedProofs.
-  Definition Σ : iFunctorG := #[ heapGF ; barrierGF ].
+  Definition Σ : rFunctorG := #[ heapGF ; barrierGF ].
   Notation iProp := (iPropG heap_lang Σ).
 
   Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ λ v, True }}.

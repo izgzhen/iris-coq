@@ -8,7 +8,7 @@ Import uPred.
    predicates over finmaps instead of just ownP. *)
 
 Definition heapR : cmraT := mapR loc (fracR (dec_agreeR val)).
-Definition heapGF : iFunctor := authGF heapR.
+Definition heapGF : rFunctor := authGF heapR.
 
 Class heapG Σ := HeapG {
   heap_inG : inG heap_lang Σ (authR heapR);
@@ -38,7 +38,7 @@ Notation "l ↦{ q } v" := (heap_mapsto l q v)
 Notation "l ↦ v" := (heap_mapsto l 1 v) (at level 20) : uPred_scope.
 
 Section heap.
-  Context {Σ : iFunctorG}.
+  Context {Σ : rFunctorG}.
   Implicit Types N : namespace.
   Implicit Types P Q : iPropG heap_lang Σ.
   Implicit Types Φ : val → iPropG heap_lang Σ.

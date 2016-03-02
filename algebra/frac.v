@@ -1,6 +1,6 @@
 From Coq.QArith Require Import Qcanon.
 From algebra Require Export cmra.
-From algebra Require Import functor upred.
+From algebra Require Import upred.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 Local Arguments div _ _ !_ !_ /.
@@ -244,17 +244,18 @@ Proof.
     by exists (Frac q3 b); constructor.
 Qed.
 
-Program Definition fracF (Σ : iFunctor) : iFunctor := {|
-  ifunctor_car := fracR ∘ Σ; ifunctor_map A B := fracC_map ∘ ifunctor_map Σ
+Program Definition fracRF (F : rFunctor) : rFunctor := {|
+  rFunctor_car A B := fracR (rFunctor_car F A B);
+  rFunctor_map A1 A2 B1 B2 fg := fracC_map (rFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros Σ A B n f g Hfg; apply fracC_map_ne, ifunctor_map_ne.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply fracC_map_ne, rFunctor_ne.
 Qed.
 Next Obligation.
-  intros Σ A x. rewrite /= -{2}(frac_map_id x).
-  apply frac_map_ext=>y; apply ifunctor_map_id.
+  intros F A B x. rewrite /= -{2}(frac_map_id x).
+  apply frac_map_ext=>y; apply rFunctor_id.
 Qed.
 Next Obligation.
-  intros Σ A B C f g x. rewrite /= -frac_map_compose.
-  apply frac_map_ext=>y; apply ifunctor_map_compose.
+  intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -frac_map_compose.
+  apply frac_map_ext=>y; apply rFunctor_compose.
 Qed.

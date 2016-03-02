@@ -617,3 +617,59 @@ Proof.
   - intros x y; rewrite !prod_included=> -[??] /=.
     by split; apply included_preserving.
 Qed.
+
+(** Functors *)
+Structure rFunctor := RFunctor {
+  rFunctor_car : cofeT → cofeT -> cmraT;
+  rFunctor_map {A1 A2 B1 B2} :
+    ((A2 -n> A1) * (B1 -n> B2)) → rFunctor_car A1 B1 -n> rFunctor_car A2 B2;
+  rFunctor_ne {A1 A2 B1 B2} n :
+    Proper (dist n ==> dist n) (@rFunctor_map A1 A2 B1 B2);
+  rFunctor_id {A B} (x : rFunctor_car A B) : rFunctor_map (cid,cid) x ≡ x;
+  rFunctor_compose {A1 A2 A3 B1 B2 B3}
+      (f : A2 -n> A1) (g : A3 -n> A2) (f' : B1 -n> B2) (g' : B2 -n> B3) x :
+    rFunctor_map (f◎g, g'◎f') x ≡ rFunctor_map (g,g') (rFunctor_map (f,f') x);
+  rFunctor_mono {A1 A2 B1 B2} (fg : (A2 -n> A1) * (B1 -n> B2)) :
+    CMRAMonotone (rFunctor_map fg) 
+}.
+Existing Instances rFunctor_ne rFunctor_mono.
+Instance: Params (@rFunctor_map) 5.
+
+Definition rFunctor_diag (F: rFunctor) (A: cofeT) : cmraT := rFunctor_car F A A.
+Coercion rFunctor_diag : rFunctor >-> Funclass.
+
+Program Definition constRF (B : cmraT) : rFunctor :=
+  {| rFunctor_car A1 A2 := B; rFunctor_map A1 A2 B1 B2 f := cid |}.
+Solve Obligations with done.
+
+Program Definition prodRF (F1 F2 : rFunctor) : rFunctor := {|
+  rFunctor_car A B := prodR (rFunctor_car F1 A B) (rFunctor_car F2 A B);
+  rFunctor_map A1 A2 B1 B2 fg :=
+    prodC_map (rFunctor_map F1 fg) (rFunctor_map F2 fg)
+|}.
+Next Obligation.
+  by intros F1 F2 A1 A2 B1 B2 n ???; apply prodC_map_ne; apply rFunctor_ne.
+Qed.
+Next Obligation. by intros F1 F2 A B [??]; rewrite /= !rFunctor_id. Qed.
+Next Obligation.
+  intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??]; simpl.
+  by rewrite !rFunctor_compose.
+Qed.
+
+Program Definition laterRF (F : rFunctor) : rFunctor := {|
+  rFunctor_car A B := rFunctor_car F (laterC A) (laterC B);
+  rFunctor_map A1 A2 B1 B2 fg :=
+    rFunctor_map F (prod_map laterC_map laterC_map fg)
+|}.
+Next Obligation.
+  intros F A1 A2 B1 B2 n x y [??].
+  by apply rFunctor_ne; split; apply (contractive_ne laterC_map).
+Qed.
+Next Obligation.
+  intros F A B x; simpl. rewrite -{2}[x]rFunctor_id.
+  apply (ne_proper (rFunctor_map F)); split; by intros [].
+Qed.
+Next Obligation.
+  intros F A1 A2 A3 B1 B2 B3 f g f' g' x; simpl in *. rewrite -rFunctor_compose.
+  apply (ne_proper (rFunctor_map F)); split; by intros [].
+Qed.

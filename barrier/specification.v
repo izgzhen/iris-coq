@@ -4,7 +4,7 @@ From barrier Require Import proof.
 Import uPred.
 
 Section spec.
-Context {Σ : iFunctorG} `{!heapG Σ} `{!barrierG Σ}. 
+Context {Σ : rFunctorG} `{!heapG Σ} `{!barrierG Σ}. 
 
 Local Notation iProp := (iPropG heap_lang Σ).
 

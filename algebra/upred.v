@@ -89,12 +89,28 @@ Lemma uPred_map_ext {M1 M2 : cmraT} (f g : M1 -n> M2)
 Proof. intros Hf P; split=> n x Hx /=; by rewrite /uPred_holds /= Hf. Qed.
 Definition uPredC_map {M1 M2 : cmraT} (f : M2 -n> M1) `{!CMRAMonotone f} :
   uPredC M1 -n> uPredC M2 := CofeMor (uPred_map f : uPredC M1 → uPredC M2).
-Lemma upredC_map_ne {M1 M2 : cmraT} (f g : M2 -n> M1)
+Lemma uPredC_map_ne {M1 M2 : cmraT} (f g : M2 -n> M1)
     `{!CMRAMonotone f, !CMRAMonotone g} n :
   f ≡{n}≡ g → uPredC_map f ≡{n}≡ uPredC_map g.
 Proof.
   by intros Hfg P; split=> n' y ??;
     rewrite /uPred_holds /= (dist_le _ _ _ _(Hfg y)); last lia.
+Qed.
+
+Program Definition uPredCF (F : rFunctor) : cFunctor := {|
+  cFunctor_car A B := uPredC (rFunctor_car F B A);
+  cFunctor_map A1 A2 B1 B2 fg := uPredC_map (rFunctor_map F (fg.2, fg.1))
+|}.
+Next Obligation.
+  intros F A1 A2 B1 B2 n P Q [??]. by apply uPredC_map_ne, rFunctor_ne.
+Qed.
+Next Obligation.
+  intros F A B P; simpl. rewrite -{2}(uPred_map_id P).
+  apply uPred_map_ext=>y. by rewrite rFunctor_id.
+Qed.
+Next Obligation.
+  intros F A1 A2 A3 B1 B2 B3 f g f' g' P; simpl. rewrite -uPred_map_compose.
+  apply uPred_map_ext=>y; apply rFunctor_compose.
 Qed.
 
 (** logical entailement *)

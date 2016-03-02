@@ -6,39 +6,29 @@ From algebra Require Import cofe_solver.
 COFEs to the category of CMRAs, which is instantiated with [laterC iProp]. The
 [laterC iProp] can be used to construct impredicate CMRAs, such as the stored
 propositions using the agreement CMRA. *)
-
-(* TODO RJ: Can we make use of resF, the resource functor? *)
-Module iProp.
-Definition F (Λ : language) (Σ : iFunctor) (A B : cofeT) : cofeT :=
-  uPredC (resR Λ Σ (laterC A)).
-Definition map {Λ : language} {Σ : iFunctor} {A1 A2 B1 B2 : cofeT}
-    (f : (A2 -n> A1) * (B1 -n> B2)) : F Λ Σ A1 B1 -n> F Λ Σ A2 B2 :=
-  uPredC_map (resC_map (laterC_map (f.1))).
-Definition result Λ Σ : solution (F Λ Σ).
+Definition iProp_result (Λ : language) (Σ : rFunctor) :
+  solution (uPredCF (resRF Λ laterCF (laterRF Σ))).
 Proof.
-  apply (solver.result _ (@map Λ Σ)).
-  - intros A B P. rewrite /map /= -{2}(uPred_map_id P). apply uPred_map_ext=> r.
-    rewrite /= -{2}(res_map_id r); apply res_map_ext=>{r} r /=.
-    by rewrite later_map_id.
-  - intros A1 A2 A3 B1 B2 B3 f g f' g' P. rewrite /map /=.
-    rewrite -uPred_map_compose. apply uPred_map_ext=>{P} r /=.
-    rewrite -res_map_compose. apply res_map_ext=>{r} r /=.
-    by rewrite -later_map_compose.
-  - intros A1 A2 B1 B2 n f f' Hf P; split=> n' -[???].
-    apply upredC_map_ne, resC_map_ne, laterC_map_contractive.
-    by intros i ?; apply Hf.
+  (* Contractiveness should be derived from general properties about functors *)
+  apply (solver.result _)=> A1 A2 B1 B2.
+  intros n fg fg' Hf P; split=> n' -[???].
+  apply uPredC_map_ne, resC_map_ne; simpl.
+  - apply laterC_map_contractive=> i ?. by apply Hf.
+  - apply rFunctor_ne; split; apply laterC_map_contractive=> i ?; by apply Hf.
 Qed.
-End iProp.
 
 (* Solution *)
-Definition iPreProp (Λ : language) (Σ : iFunctor) : cofeT := iProp.result Λ Σ.
-Definition iRes Λ Σ := res Λ Σ (laterC (iPreProp Λ Σ)).
-Definition iResR Λ Σ := resR Λ Σ (laterC (iPreProp Λ Σ)).
-Definition iWld Λ Σ := mapR positive (agreeR (laterC (iPreProp Λ Σ))).
-Definition iPst Λ := exclR (istateC Λ).
-Definition iGst Λ Σ := ifunctor_car Σ (laterC (iPreProp Λ Σ)).
-Definition iProp (Λ : language) (Σ : iFunctor) : cofeT := uPredC (iResR Λ Σ).
-Definition iProp_unfold {Λ Σ} : iProp Λ Σ -n> iPreProp Λ Σ := solution_fold _.
+Definition iPreProp (Λ : language) (Σ : rFunctor) : cofeT := iProp_result Λ Σ.
+Definition iGst (Λ : language) (Σ : rFunctor) : cmraT :=
+  Σ (laterC (iPreProp Λ Σ)).
+Definition iRes Λ Σ := res Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
+Definition iResR Λ Σ := resR Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
+Definition iWld Λ Σ := gmap positive (agree (laterC (iPreProp Λ Σ))).
+Definition iPst Λ := excl (state Λ).
+
+Definition iProp (Λ : language) (Σ : rFunctor) : cofeT := uPredC (iResR Λ Σ).
+Definition iProp_unfold {Λ Σ} : iProp Λ Σ -n> iPreProp Λ Σ :=
+  solution_fold (iProp_result Λ Σ).
 Definition iProp_fold {Λ Σ} : iPreProp Λ Σ -n> iProp Λ Σ := solution_unfold _.
 Lemma iProp_fold_unfold {Λ Σ} (P : iProp Λ Σ) : iProp_fold (iProp_unfold P) ≡ P.
 Proof. apply solution_unfold_fold. Qed.

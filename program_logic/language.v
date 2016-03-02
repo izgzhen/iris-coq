@@ -27,7 +27,7 @@ Arguments values_stuck {_} _ _ _ _ _ _.
 Arguments atomic_not_val {_} _ _.
 Arguments atomic_step {_} _ _ _ _ _ _ _.
 
-Canonical Structure istateC Σ := leibnizC (state Σ).
+Canonical Structure stateC Σ := leibnizC (state Σ).
 
 Definition cfg (Λ : language) := (list (expr Λ) * state Λ)%type.
 

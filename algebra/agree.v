@@ -1,5 +1,5 @@
 From algebra Require Export cmra.
-From algebra Require Import functor upred.
+From algebra Require Import upred.
 Local Hint Extern 10 (_ ≤ _) => omega.
 
 Record agree (A : Type) : Type := Agree {
@@ -180,6 +180,18 @@ Proof.
   by apply dist_le with n; try apply Hfg.
 Qed.
 
-Program Definition agreeF : iFunctor :=
-  {| ifunctor_car := agreeR; ifunctor_map := @agreeC_map |}.
-Solve Obligations with done.
+Program Definition agreeRF (F : cFunctor) : rFunctor := {|
+  rFunctor_car A B := agreeR (cFunctor_car F A B);
+  rFunctor_map A1 A2 B1 B2 fg := agreeC_map (cFunctor_map F fg)
+|}.
+Next Obligation.
+  intros F A1 A2 B1 B2 n ???; simpl. by apply agreeC_map_ne, cFunctor_ne.
+Qed.
+Next Obligation.
+  intros F A B x; simpl. rewrite -{2}(agree_map_id x).
+  apply agree_map_ext=>y. by rewrite cFunctor_id.
+Qed.
+Next Obligation.
+  intros F A1 A2 A3 B1 B2 B3 f g f' g' x; simpl. rewrite -agree_map_compose.
+  apply agree_map_ext=>y; apply cFunctor_compose.
+Qed.

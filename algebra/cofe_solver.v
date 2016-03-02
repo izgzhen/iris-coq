@@ -1,9 +1,9 @@
 From algebra Require Export cofe.
 
-Record solution (F : cofeT → cofeT → cofeT) := Solution {
+Record solution (F : cFunctor) := Solution {
   solution_car :> cofeT;
-  solution_unfold : solution_car -n> F solution_car solution_car;
-  solution_fold : F solution_car solution_car -n> solution_car;
+  solution_unfold : solution_car -n> F solution_car;
+  solution_fold : F solution_car -n> solution_car;
   solution_fold_unfold X : solution_fold (solution_unfold X) ≡ X;
   solution_unfold_fold X : solution_unfold (solution_fold X) ≡ X
 }.
@@ -11,20 +11,13 @@ Arguments solution_unfold {_} _.
 Arguments solution_fold {_} _.
 
 Module solver. Section solver.
-Context (F : cofeT → cofeT → cofeT).
-Context `{Finhab : Inhabited (F unitC unitC)}.
-Context (map : ∀ {A1 A2 B1 B2 : cofeT},
-  ((A2 -n> A1) * (B1 -n> B2)) → (F A1 B1 -n> F A2 B2)).
-Arguments map {_ _ _ _} _.
-Instance: Params (@map) 4.
-Context (map_id : ∀ {A B : cofeT} (x : F A B), map (cid, cid) x ≡ x).
-Context (map_comp : ∀ {A1 A2 A3 B1 B2 B3 : cofeT}
-    (f : A2 -n> A1) (g : A3 -n> A2) (f' : B1 -n> B2) (g' : B2 -n> B3) x,
-  map (f ◎ g, g' ◎ f') x ≡ map (g,g') (map (f,f') x)).
-Context (map_contractive : ∀ {A1 A2 B1 B2}, Contractive (@map A1 A2 B1 B2)).
+Context (F : cFunctor) `{Finhab : Inhabited (F unitC)}.
+Context (map_contractive : ∀ {A1 A2 B1 B2},
+  Contractive (@cFunctor_map F A1 A2 B1 B2)).
+Notation map := (cFunctor_map F).
 
 Fixpoint A (k : nat) : cofeT :=
-  match k with 0 => unitC | S k => F (A k) (A k) end.
+  match k with 0 => unitC | S k => F (A k) end.
 Fixpoint f (k : nat) : A k -n> A (S k) :=
   match k with 0 => CofeMor (λ _, inhabitant) | S k => map (g k,f k) end
 with g (k : nat) : A (S k) -n> A k :=
@@ -38,13 +31,15 @@ Arguments g : simpl never.
 Lemma gf {k} (x : A k) : g k (f k x) ≡ x.
 Proof.
   induction k as [|k IH]; simpl in *; [by destruct x|].
-  rewrite -map_comp -{2}(map_id _ _ x). by apply (contractive_proper map).
+  rewrite -cFunctor_compose -{2}[x]cFunctor_id. by apply (contractive_proper map).
 Qed.
 Lemma fg {k} (x : A (S (S k))) : f (S k) (g (S k) x) ≡{k}≡ x.
 Proof.
   induction k as [|k IH]; simpl.
-  - rewrite f_S g_S -{2}(map_id _ _ x) -map_comp. apply (contractive_0 map).
-  - rewrite f_S g_S -{2}(map_id _ _ x) -map_comp. by apply (contractive_S map).
+  - rewrite f_S g_S -{2}[x]cFunctor_id -cFunctor_compose.
+    apply (contractive_0 map).
+  - rewrite f_S g_S -{2}[x]cFunctor_id -cFunctor_compose.
+    by apply (contractive_S map).
 Qed.
 
 Record tower := {
@@ -174,28 +169,28 @@ Proof.
   - rewrite (ff_tower k (i - S k) X). by destruct (Nat.sub_add _ _ _).
 Qed.
 
-Program Definition unfold_chain (X : T) : chain (F T T) :=
+Program Definition unfold_chain (X : T) : chain (F T) :=
   {| chain_car n := map (project n,embed' n) (X (S n)) |}.
 Next Obligation.
   intros X n i Hi.
   assert (∃ k, i = k + n) as [k ?] by (exists (i - n); lia); subst; clear Hi.
   induction k as [|k IH]; simpl; first done.
   rewrite -IH -(dist_le _ _ _ _ (f_tower (k + n) _)); last lia.
-  rewrite f_S -map_comp.
+  rewrite f_S -cFunctor_compose.
   by apply (contractive_ne map); split=> Y /=; rewrite ?g_tower ?embed_f.
 Qed.
-Definition unfold (X : T) : F T T := compl (unfold_chain X).
+Definition unfold (X : T) : F T := compl (unfold_chain X).
 Instance unfold_ne : Proper (dist n ==> dist n) unfold.
 Proof.
   intros n X Y HXY. by rewrite /unfold (conv_compl n (unfold_chain X))
     (conv_compl n (unfold_chain Y)) /= (HXY (S n)).
 Qed.
 
-Program Definition fold (X : F T T) : T :=
+Program Definition fold (X : F T) : T :=
   {| tower_car n := g n (map (embed' n,project n) X) |}.
 Next Obligation.
   intros X k. apply (_ : Proper ((≡) ==> (≡)) (g k)).
-  rewrite g_S -map_comp.
+  rewrite g_S -cFunctor_compose.
   apply (contractive_proper map); split=> Y; [apply embed_f|apply g_tower].
 Qed.
 Instance fold_ne : Proper (dist n ==> dist n) fold.
@@ -204,14 +199,13 @@ Proof. by intros n X Y HXY k; rewrite /fold /= HXY. Qed.
 Theorem result : solution F.
 Proof.
   apply (Solution F T (CofeMor unfold) (CofeMor fold)).
-  - move=> X /=.
-    rewrite equiv_dist; intros n k; unfold unfold, fold; simpl.
+  - move=> X /=. rewrite equiv_dist=> n k; rewrite /unfold /fold /=.
     rewrite -g_tower -(gg_tower _ n); apply (_ : Proper (_ ==> _) (g _)).
     trans (map (ff n, gg n) (X (S (n + k)))).
     { rewrite /unfold (conv_compl n (unfold_chain X)).
       rewrite -(chain_cauchy (unfold_chain X) n (S (n + k))) /=; last lia.
       rewrite -(dist_le _ _ _ _ (f_tower (n + k) _)); last lia.
-      rewrite f_S -!map_comp; apply (contractive_ne map); split=> Y.
+      rewrite f_S -!cFunctor_compose; apply (contractive_ne map); split=> Y.
       + rewrite /embed' /= /embed_coerce.
         destruct (le_lt_dec _ _); simpl; [exfalso; lia|].
         by rewrite (ff_ff _ (eq_refl (S n + (0 + k)))) /= gf.
@@ -221,14 +215,14 @@ Proof.
     assert (∀ i k (x : A (S i + k)) (H : S i + k = i + S k),
       map (ff i, gg i) x ≡ gg i (coerce H x)) as map_ff_gg.
     { intros i; induction i as [|i IH]; intros k' x H; simpl.
-      { by rewrite coerce_id map_id. }
-      rewrite map_comp g_coerce; apply IH. }
+      { by rewrite coerce_id cFunctor_id. }
+      rewrite cFunctor_compose g_coerce; apply IH. }
     assert (H: S n + k = n + S k) by lia.
     rewrite (map_ff_gg _ _ _ H).
     apply (_ : Proper (_ ==> _) (gg _)); by destruct H.
   - intros X; rewrite equiv_dist=> n /=.
     rewrite /unfold /= (conv_compl' n (unfold_chain (fold X))) /=.
-    rewrite g_S -!map_comp -{2}(map_id _ _ X).
+    rewrite g_S -!cFunctor_compose -{2}[X]cFunctor_id.
     apply (contractive_ne map); split => Y /=.
     + rewrite f_tower. apply dist_S. by rewrite embed_tower.
     + etrans; [apply embed_ne, equiv_dist, g_tower|apply embed_tower].

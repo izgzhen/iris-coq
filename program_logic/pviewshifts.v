@@ -40,7 +40,7 @@ Notation "|={ E }=> Q" := (pvs E E Q%I)
    format "|={ E }=>  Q") : uPred_scope.
 
 Section pvs.
-Context {Λ : language} {Σ : iFunctor}.
+Context {Λ : language} {Σ : rFunctor}.
 Implicit Types P Q : iProp Λ Σ.
 Implicit Types m : iGst Λ Σ.
 

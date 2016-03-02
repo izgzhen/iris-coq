@@ -28,7 +28,7 @@ Instance: Params (@wsat) 5.
 Arguments wsat : simpl never.
 
 Section wsat.
-Context {Λ : language} {Σ : iFunctor}.
+Context {Λ : language} {Σ : rFunctor}.
 Implicit Types σ : state Λ.
 Implicit Types r : iRes Λ Σ.
 Implicit Types rs : gmap positive (iRes Λ Σ).

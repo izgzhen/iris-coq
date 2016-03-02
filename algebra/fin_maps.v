@@ -1,6 +1,6 @@
 From algebra Require Export cmra option.
 From prelude Require Export gmap.
-From algebra Require Import functor upred.
+From algebra Require Import upred.
 
 Section cofe.
 Context `{Countable K} {A : cofeT}.
@@ -352,17 +352,34 @@ Proof.
   destruct (_ !! k) eqn:?; simpl; constructor; apply Hf.
 Qed.
 
-Program Definition mapF K `{Countable K} (Σ : iFunctor) : iFunctor := {|
-  ifunctor_car := mapR K ∘ Σ; ifunctor_map A B := mapC_map ∘ ifunctor_map Σ
+Program Definition mapCF K `{Countable K} (F : cFunctor) : cFunctor := {|
+  cFunctor_car A B := mapC K (cFunctor_car F A B);
+  cFunctor_map A1 A2 B1 B2 fg := mapC_map (cFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros K ?? Σ A B n f g Hfg; apply mapC_map_ne, ifunctor_map_ne.
+  by intros K ?? F A1 A2 B1 B2 n f g Hfg; apply mapC_map_ne, cFunctor_ne.
 Qed.
 Next Obligation.
-  intros K ?? Σ A x. rewrite /= -{2}(map_fmap_id x).
-  apply map_fmap_setoid_ext=> ? y _; apply ifunctor_map_id.
+  intros K ?? F A B x. rewrite /= -{2}(map_fmap_id x).
+  apply map_fmap_setoid_ext=>y ??; apply cFunctor_id.
 Qed.
 Next Obligation.
-  intros K ?? Σ A B C f g x. rewrite /= -map_fmap_compose.
-  apply map_fmap_setoid_ext=> ? y _; apply ifunctor_map_compose.
+  intros K ?? F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -map_fmap_compose.
+  apply map_fmap_setoid_ext=>y ??; apply cFunctor_compose.
+Qed.
+
+Program Definition mapRF K `{Countable K} (F : rFunctor) : rFunctor := {|
+  rFunctor_car A B := mapR K (rFunctor_car F A B);
+  rFunctor_map A1 A2 B1 B2 fg := mapC_map (rFunctor_map F fg)
+|}.
+Next Obligation.
+  by intros K ?? F A1 A2 B1 B2 n f g Hfg; apply mapC_map_ne, rFunctor_ne.
+Qed.
+Next Obligation.
+  intros K ?? F A B x. rewrite /= -{2}(map_fmap_id x).
+  apply map_fmap_setoid_ext=>y ??; apply rFunctor_id.
+Qed.
+Next Obligation.
+  intros K ?? F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -map_fmap_compose.
+  apply map_fmap_setoid_ext=>y ??; apply rFunctor_compose.
 Qed.

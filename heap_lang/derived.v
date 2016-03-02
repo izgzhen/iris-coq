@@ -11,7 +11,7 @@ Notation SeqCtx e2 := (LetCtx "" e2).
 Notation Skip := (Seq (Lit LitUnit) (Lit LitUnit)).
 
 Section derived.
-Context {Σ : iFunctor}.
+Context {Σ : rFunctor}.
 Implicit Types P Q : iProp heap_lang Σ.
 Implicit Types Φ : val → iProp heap_lang Σ.
 

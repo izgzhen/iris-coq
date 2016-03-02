@@ -1,5 +1,5 @@
 From algebra Require Export excl.
-From algebra Require Import functor upred.
+From algebra Require Import upred.
 Local Arguments valid _ _ !_ /.
 Local Arguments validN _ _ _ !_ /.
 
@@ -240,17 +240,18 @@ Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=
 Lemma authC_map_ne A B n : Proper (dist n ==> dist n) (@authC_map A B).
 Proof. intros f f' Hf [[a| |] b]; repeat constructor; apply Hf. Qed.
 
-Program Definition authF (Σ : iFunctor) : iFunctor := {|
-  ifunctor_car := authR ∘ Σ; ifunctor_map A B := authC_map ∘ ifunctor_map Σ
+Program Definition authRF (F : rFunctor) : rFunctor := {|
+  rFunctor_car A B := authR (rFunctor_car F A B);
+  rFunctor_map A1 A2 B1 B2 fg := authC_map (rFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros Σ A B n f g Hfg; apply authC_map_ne, ifunctor_map_ne.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply authC_map_ne, rFunctor_ne.
 Qed.
 Next Obligation.
-  intros Σ A x. rewrite /= -{2}(auth_map_id x).
-  apply auth_map_ext=>y; apply ifunctor_map_id.
+  intros F A B x. rewrite /= -{2}(auth_map_id x).
+  apply auth_map_ext=>y; apply rFunctor_id.
 Qed.
 Next Obligation.
-  intros Σ A B C f g x. rewrite /= -auth_map_compose.
-  apply auth_map_ext=>y; apply ifunctor_map_compose.
+  intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -auth_map_compose.
+  apply auth_map_ext=>y; apply rFunctor_compose.
 Qed.

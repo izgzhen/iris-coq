@@ -65,7 +65,7 @@ Notation "|| e {{ Φ } }" := (wp ⊤ e Φ)
    format "||  e   {{  Φ  } }") : uPred_scope.
 
 Section wp.
-Context {Λ : language} {Σ : iFunctor}.
+Context {Λ : language} {Σ : rFunctor}.
 Implicit Types P : iProp Λ Σ.
 Implicit Types Φ : val Λ → iProp Λ Σ.
 Implicit Types v : val Λ.

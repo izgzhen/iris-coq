@@ -8,7 +8,7 @@ Class authG Λ Σ (A : cmraT) `{Empty A} := AuthG {
   auth_timeless :> CMRADiscrete A;
 }.
 
-Definition authGF (A : cmraT) : iFunctor := constF (authR A).
+Definition authGF (A : cmraT) : rFunctor := constRF (authR A).
 Instance authGF_inGF (A : cmraT) `{inGF Λ Σ (authGF A)}
   `{CMRAIdentity A, CMRADiscrete A} : authG Λ Σ A.
 Proof. split; try apply _. apply: inGF_inG. Qed.
