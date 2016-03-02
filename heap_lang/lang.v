@@ -19,35 +19,41 @@ Inductive bin_op : Set :=
    I removed the "empty binder" hack since it does not go well with
    proof irrelevance of the proof required for [Var]. If we really want
    that back, we should change the binders in [Rec] to "option string". *)
-Inductive expr (X : stringset) : Type :=
+Inductive expr {X : stringset} : Type :=
   (* Base lambda calculus *)
-  | Var (x : string) {H : x ∈ X} : expr X
-  | Rec (f x : string) (e : expr (X ∪ {[ f ; x ]})) : expr X
-  | App (e1 e2 : expr X) : expr X
+  | Var (x : string) {H : x ∈ X} : @expr X
+  | Rec (f x : string) (e : @expr ((X ∪ {[ x ]}) ∪ {[ f ]})) : @expr X
+  | App (e1 e2 : @expr X) : @expr X
   (* Base types and their operations *)
-  | Lit (l : base_lit) : expr X
-  | UnOp (op : un_op) (e : expr X) : expr X
-  | BinOp (op : bin_op) (e1 e2 : expr X) : expr X
-  | If (e0 e1 e2 : expr X) : expr X
+  | Lit (l : base_lit) : @expr X
+  | UnOp (op : un_op) (e : @expr X) : @expr X
+  | BinOp (op : bin_op) (e1 e2 : @expr X) : @expr X
+  | If (e0 e1 e2 : @expr X) : @expr X
   (* Products *)
-  | Pair (e1 e2 : expr X) : expr X
-  | Fst (e : expr X) : expr X
-  | Snd (e : expr X) : expr X
+  | Pair (e1 e2 : @expr X) : @expr X
+  | Fst (e : @expr X) : @expr X
+  | Snd (e : @expr X) : @expr X
   (* Sums *)
-  | InjL (e : expr X) : expr X
-  | InjR (e : expr X) : expr X
-  | Case (e0 e1 e2 : expr X) : expr X
+  | InjL (e : @expr X) : @expr X
+  | InjR (e : @expr X) : @expr X
+  | Case (e0 e1 e2 : @expr X) : @expr X
   (* Concurrency *)
-  | Fork (e : expr X) : expr X
+  | Fork (e : @expr X) : @expr X
   (* Heap *)
-  | Loc (l : loc) : expr X
-  | Alloc (e : expr X) : expr X
-  | Load (e : expr X) : expr X
-  | Store (e1 e2 : expr X) : expr X
-  | Cas (e0 e1 e2 : expr X) : expr X.
+  | Loc (l : loc) : @expr X
+  | Alloc (e : @expr X) : @expr X
+  | Load (e : @expr X) : @expr X
+  | Store (e1 e2 : @expr X) : @expr X
+  | Cas (e0 e1 e2 : @expr X) : @expr X.
+(* X should be explicit for a few of them: Those that do not take an expr of the same X *)
+Arguments expr _ : clear implicits.
+Arguments Var _ _ {_} : clear implicits.
+Arguments Rec _ _ _ _ : clear implicits.
+Arguments Lit _ _ : clear implicits.
+Arguments Loc _ _ : clear implicits.
 
 Inductive val :=
-  | RecV (f x : string) (e : expr {[ f ; x ]})
+  | RecV (f x : string) (e : expr ((∅ ∪ {[ x ]}) ∪ {[ f ]}))
   | LitV (l : base_lit)
   | PairV (v1 v2 : val)
   | InjLV (v : val)
@@ -71,51 +77,46 @@ Bind Scope lang_scope with expr val.
 Definition expr_cast {X1 X2} {H : X1 = X2} (e : expr X1) : expr X2 :=
   eq_rect _ (λ X, expr X) e _ H.
 
-Program Fixpoint expr_weaken_def {X1 X2 : stringset} (e : expr X1) :
-  X1 ⊆ X2 → expr X2 :=
-  match e in expr _ return X1 ⊆ X2 → expr X2 with
-  | Var x Hx => λ H, Var X2 x
-  | Rec f x e => λ H, Rec X2 f x (expr_weaken_def e _)
-  | App e1 e2 => λ H, App X2 (expr_weaken_def e1 H) (expr_weaken_def e2 H)
-  | Lit l => λ H, Lit X2 l
-  | UnOp op e => λ H, UnOp X2 op (expr_weaken_def e H)
-  | BinOp op e1 e2 => λ H, BinOp X2 op (expr_weaken_def e1 H) (expr_weaken_def e2 H)
-  | If e0 e1 e2 => λ H, If X2 (expr_weaken_def e0 H) (expr_weaken_def e1 H) (expr_weaken_def e2 H)
-  | Pair e1 e2 => λ H, Pair X2 (expr_weaken_def e1 H) (expr_weaken_def e2 H)
-  | Fst e => λ H, Fst X2 (expr_weaken_def e H)
-  | Snd e => λ H, Snd X2 (expr_weaken_def e H)
-  | InjL e => λ H, InjL X2 (expr_weaken_def e H)
-  | InjR e => λ H, InjR X2 (expr_weaken_def e H)
-  | Case e0 e1 e2 => λ H, Case X2 (expr_weaken_def e0 H) (expr_weaken_def e1 H) (expr_weaken_def e2 H)
-  | Fork e => λ H, Fork X2 (expr_weaken_def e H)
-  | Loc l => λ H, Loc X2 l
-  | Alloc e => λ H, Alloc X2 (expr_weaken_def e H)
-  | Load  e => λ H, Load X2 (expr_weaken_def e H)
-  | Store e1 e2 => λ H, Store X2 (expr_weaken_def e1 H) (expr_weaken_def e2 H)
-  | Cas e0 e1 e2 => λ H, Cas X2 (expr_weaken_def e0 H) (expr_weaken_def e1 H) (expr_weaken_def e2 H)
+Program Fixpoint expr_weaken {X1 X2 : stringset} {H : X1 ⊆ X2} (e : expr X1) : expr X2 :=
+  match e return _ with
+  | Var x Hx => Var X2 x
+  | Rec f x e => Rec X2 f x (expr_weaken e)
+  | App e1 e2 => App (expr_weaken (H:=H) e1) (expr_weaken (H:=H) e2)
+  | Lit l => Lit X2 l
+  | UnOp op e => UnOp op (expr_weaken (H:=H) e)
+  | BinOp op e1 e2 => BinOp op (expr_weaken (H:=H) e1) (expr_weaken (H:=H) e2)
+  | If e0 e1 e2 => If (expr_weaken (H:=H) e0) (expr_weaken (H:=H) e1) (expr_weaken (H:=H) e2)
+  | Pair e1 e2 => Pair (expr_weaken (H:=H) e1) (expr_weaken (H:=H) e2)
+  | Fst e => Fst (expr_weaken (H:=H) e)
+  | Snd e => Snd (expr_weaken (H:=H) e)
+  | InjL e => InjL (expr_weaken (H:=H) e)
+  | InjR e => InjR (expr_weaken (H:=H) e)
+  | Case e0 e1 e2 => Case (expr_weaken (H:=H) e0) (expr_weaken (H:=H) e1) (expr_weaken (H:=H) e2)
+  | Fork e => Fork (expr_weaken (H:=H) e)
+  | Loc l => Loc X2 l
+  | Alloc e => Alloc (expr_weaken (H:=H) e)
+  | Load  e => Load (expr_weaken (H:=H) e)
+  | Store e1 e2 => Store (expr_weaken (H:=H) e1) (expr_weaken (H:=H) e2)
+  | Cas e0 e1 e2 => Cas (expr_weaken (H:=H) e0) (expr_weaken (H:=H) e1) (expr_weaken (H:=H) e2)
   end.
 Solve Obligations with set_solver.
 
-Definition expr_weaken {X1 X2 : stringset} {H : X1 ⊆ X2} (e : expr X1) :=
-  expr_weaken_def e H.
-
-Program Fixpoint of_val (v : val) : expr ∅ :=
-  match v return expr ∅ with
-  | RecV f x e => Rec ∅ f x (expr_cast e)
-  | LitV l => Lit ∅ l
-  | PairV v1 v2 => Pair ∅ (of_val v1) (of_val v2)
-  | InjLV v => InjL ∅ (of_val v)
-  | InjRV v => InjR ∅ (of_val v)
-  | LocV l => Loc ∅ l
+Program Fixpoint of_val X (v : val) : expr X :=
+  match v return expr X with
+  | RecV f x e => Rec X f x (expr_weaken e)
+  | LitV l => Lit X l
+  | PairV v1 v2 => Pair (of_val X v1) (of_val X v2)
+  | InjLV v => InjL (of_val X v)
+  | InjRV v => InjR (of_val X v)
+  | LocV l => Loc X l
   end.
 Solve Obligations with set_solver.
 
-Fixpoint to_val {X} (e : expr X) : option val :=
+Fixpoint to_val (e : expr ∅) : option val :=
   match e return option val with
-  | Rec f x e => match decide (X ∪ {[ f ; x ]} ⊆ {[ f ; x ]}) return _ with
-                 | left H => Some (RecV f x (expr_weaken e (H:=H)))
-                 | right _ => None
-                 end
+    (* The LHS of thus ⊆ must be like the argument of Rec, the RHS
+       must be like the argument of RecV. *)
+  | Rec f x e => Some (RecV f x e)
   | Lit l => Some (LitV l)
   | Pair e1 e2 => v1 ← to_val e1; v2 ← to_val e2; Some (PairV v1 v2)
   | InjL e => InjLV <$> to_val e
@@ -154,67 +155,66 @@ Notation ectx := (list ectx_item).
 
 Definition fill_item (Ki : ectx_item) (e : expr ∅) : expr ∅ :=
   match Ki return expr ∅ with
-  | AppLCtx e2 => App ∅ e e2
-  | AppRCtx v1 => App ∅ (of_val v1) e
-  | UnOpCtx op => UnOp ∅ op e
-  | BinOpLCtx op e2 => BinOp ∅ op e e2
-  | BinOpRCtx op v1 => BinOp ∅ op (of_val v1) e
-  | IfCtx e1 e2 => If ∅ e e1 e2
-  | PairLCtx e2 => Pair ∅ e e2
-  | PairRCtx v1 => Pair ∅ (of_val v1) e
-  | FstCtx => Fst ∅ e
-  | SndCtx => Snd ∅ e
-  | InjLCtx => InjL ∅ e
-  | InjRCtx => InjR ∅ e
-  | CaseCtx e1 e2 => Case ∅ e e1 e2
-  | AllocCtx => Alloc ∅ e
-  | LoadCtx => Load ∅ e
-  | StoreLCtx e2 => Store ∅ e e2
-  | StoreRCtx v1 => Store ∅ (of_val v1) e
-  | CasLCtx e1 e2 => Cas ∅ e e1 e2
-  | CasMCtx v0 e2 => Cas ∅ (of_val v0) e e2
-  | CasRCtx v0 v1 => Cas ∅ (of_val v0) (of_val v1) e
+  | AppLCtx e2 => App e e2
+  | AppRCtx v1 => App (of_val ∅ v1) e
+  | UnOpCtx op => UnOp op e
+  | BinOpLCtx op e2 => BinOp op e e2
+  | BinOpRCtx op v1 => BinOp op (of_val ∅ v1) e
+  | IfCtx e1 e2 => If e e1 e2
+  | PairLCtx e2 => Pair e e2
+  | PairRCtx v1 => Pair (of_val ∅ v1) e
+  | FstCtx => Fst e
+  | SndCtx => Snd e
+  | InjLCtx => InjL e
+  | InjRCtx => InjR e
+  | CaseCtx e1 e2 => Case e e1 e2
+  | AllocCtx => Alloc e
+  | LoadCtx => Load e
+  | StoreLCtx e2 => Store e e2
+  | StoreRCtx v1 => Store (of_val ∅ v1) e
+  | CasLCtx e1 e2 => Cas e e1 e2
+  | CasMCtx v0 e2 => Cas (of_val ∅ v0) e e2
+  | CasRCtx v0 v1 => Cas (of_val ∅ v0) (of_val ∅ v1) e
   end.
 
 Definition fill (K : ectx) (e : expr ∅) : expr ∅ := fold_right fill_item e K.
 
 (** Substitution *)
-Program Fixpoint subst {X} (x : string) (v : val) (e : expr X) :
-    expr (X ∖ {[ x ]}) :=
-  match e return _ with
-  | Var y Hx => if decide (x = y) then expr_weaken $ of_val v
-                                   else Var _ y
-  | Rec f y e => Rec _ f y (if decide (x ≠ f ∧ x ≠ y)
-                            then expr_cast (subst x v e)
+Program Fixpoint subst X (x : string) (v : val) (e : expr (X ∪ {[ x ]})) :
+    expr X :=
+  match e return expr X with
+  | Var y Hx => if decide (x = y) then of_val X v
+                                   else Var X y
+  | Rec f y e => Rec X f y (if decide (x ≠ f ∧ x ≠ y)
+                            then subst ((X ∪ {[ y ]}) ∪ {[ f ]}) x v (expr_cast e)
                             else expr_cast e)
-  | App e1 e2 => App _ (subst x v e1) (subst x v e2)
-  | Lit l => Lit _ l
-  | UnOp op e => UnOp _ op (subst x v e)
-  | BinOp op e1 e2 => BinOp _ op (subst x v e1) (subst x v e2)
-  | If e0 e1 e2 => If _ (subst x v e0) (subst x v e1) (subst x v e2)
-  | Pair e1 e2 => Pair _ (subst x v e1) (subst x v e2)
-  | Fst e => Fst _ (subst x v e)
-  | Snd e => Snd _ (subst x v e)
-  | InjL e => InjL _ (subst x v e)
-  | InjR e => InjR _ (subst x v e)
+  | App e1 e2 => App (subst X x v e1) (subst X x v e2)
+  | Lit l => Lit X l
+  | UnOp op e => UnOp op (subst X x v e)
+  | BinOp op e1 e2 => BinOp op (subst X x v e1) (subst X x v e2)
+  | If e0 e1 e2 => If (subst X x v e0) (subst X x v e1) (subst X x v e2)
+  | Pair e1 e2 => Pair (subst X x v e1) (subst X x v e2)
+  | Fst e => Fst (subst X x v e)
+  | Snd e => Snd (subst X x v e)
+  | InjL e => InjL (subst X x v e)
+  | InjR e => InjR (subst X x v e)
   | Case e0 e1 e2 =>
-     Case _ (subst x v e0) (subst x v e1) (subst x v e2)
-  | Fork e => Fork _ (subst x v e)
-  | Loc l => Loc _ l
-  | Alloc e => Alloc _ (subst x v e)
-  | Load e => Load _ (subst x v e)
-  | Store e1 e2 => Store _ (subst x v e1) (subst x v e2)
-  | Cas e0 e1 e2 => Cas _ (subst x v e0) (subst x v e1) (subst x v e2)
+     Case (subst X x v e0) (subst X x v e1) (subst X x v e2)
+  | Fork e => Fork (subst X x v e)
+  | Loc l => Loc X l
+  | Alloc e => Alloc (subst X x v e)
+  | Load e => Load (subst X x v e)
+  | Store e1 e2 => Store (subst X x v e1) (subst X x v e2)
+  | Cas e0 e1 e2 => Cas (subst X x v e0) (subst X x v e1) (subst X x v e2)
   end.
-Next Obligation. set_solver. Qed.
 Next Obligation. set_solver. Qed.
 Next Obligation. set_solver. Qed.
 (* FIXME fix this *)
 Next Obligation.
   intros ??????? [H%dec_stable|H%dec_stable]%not_and_l; subst.
-  - apply elem_of_equiv_L=>x. split; intro; last set_solver.
+  - apply elem_of_equiv_L=>x.
     destruct (decide (x = f)); set_solver.
-  - apply elem_of_equiv_L=>x. split; intro; last set_solver.
+  - apply elem_of_equiv_L=>x.
     destruct (decide (x = y)); set_solver.
 Qed.
                  
@@ -236,63 +236,54 @@ Definition bin_op_eval (op : bin_op) (l1 l2 : base_lit) : option base_lit :=
   | _, _, _ => None
   end.
 
-(* The equalities we need for substitution and some other lemmas. *)
-Lemma stringset_eq_1 {X : stringset} :
-  X = ∅ ∪ X.
-Proof. set_solver. Qed.
-Lemma stringset_eq_2 {f x : string} :
-  (({[f; x]} ∖ {[f]}) ∖ {[x]}) = (∅ : stringset).
-Proof. set_solver. Qed.
-Lemma stringset_subseteq_1 {X : stringset} :
-  ∅ ⊆ X.
-Proof. set_solver. Qed.
-
 Inductive head_step : expr ∅ → state → expr ∅ → state → option (expr ∅) → Prop :=
-  | BetaS (f x : string) (e1 : expr {[ f ; x ]}) (e2 : expr ∅) v2 (σ : state) :
+  | BetaS (f x : string) (e1 : expr ((∅ ∪ {[ x ]}) ∪ {[ f ]})) (e2 : expr ∅) v2 (σ : state) :
+      (* FIXME WTF this keeps working if I swap the "x" and "f" in the type of e1; but
+         thesr two terms are NOT convertible. ?!?? *)
      to_val e2 = Some v2 →
-     head_step (App ∅ (Rec _ f x (expr_cast (H:=stringset_eq_1) e1)) e2) σ
-       (expr_cast (H:=stringset_eq_2) $ subst x v2 (subst f (RecV f x e1) e1)) σ None
+     head_step (App (Rec ∅ f x e1) e2) σ
+       (subst ∅ x v2 (subst (∅ ∪ {[ x ]}) f (RecV f x e1) e1)) σ None
   | UnOpS op l l' σ :
      un_op_eval op l = Some l' → 
-     head_step (UnOp ∅ op (Lit ∅ l)) σ (Lit ∅ l') σ None
+     head_step (UnOp op (Lit ∅ l)) σ (Lit ∅ l') σ None
   | BinOpS op l1 l2 l' σ :
      bin_op_eval op l1 l2 = Some l' → 
-     head_step (BinOp ∅ op (Lit ∅ l1) (Lit ∅ l2)) σ (Lit ∅ l') σ None
+     head_step (BinOp op (Lit ∅ l1) (Lit ∅ l2)) σ (Lit ∅ l') σ None
   | IfTrueS e1 e2 σ :
-     head_step (If ∅ (Lit ∅ $ LitBool true) e1 e2) σ e1 σ None
+     head_step (If (Lit ∅ $ LitBool true) e1 e2) σ e1 σ None
   | IfFalseS e1 e2 σ :
-     head_step (If ∅ (Lit ∅ $ LitBool false) e1 e2) σ e2 σ None
+     head_step (If (Lit ∅ $ LitBool false) e1 e2) σ e2 σ None
   | FstS e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     head_step (Fst ∅ (Pair ∅ e1 e2)) σ e1 σ None
+     head_step (Fst (Pair e1 e2)) σ e1 σ None
   | SndS e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     head_step (Snd ∅ (Pair ∅ e1 e2)) σ e2 σ None
+     head_step (Snd (Pair e1 e2)) σ e2 σ None
   | CaseLS e0 v0 e1 e2 σ :
      to_val e0 = Some v0 →
-     head_step (Case ∅ (InjL ∅ e0) e1 e2) σ (App ∅ e1 (of_val v0)) σ None
+     head_step (Case (InjL e0) e1 e2) σ (App e1 (of_val ∅ v0)) σ None
   | CaseRS e0 v0 e1 e2 σ :
      to_val e0 = Some v0 →
-     head_step (Case ∅ (InjR ∅ e0) e1 e2) σ (App ∅ e2 (of_val v0)) σ None
+     head_step (Case (InjR e0) e1 e2) σ (App e2 (of_val ∅ v0)) σ None
   | ForkS e σ:
-     head_step (Fork ∅ e) σ (Lit ∅ LitUnit) σ (Some e)
+     head_step (Fork e) σ (Lit ∅ LitUnit) σ (Some e)
   | AllocS e v σ l :
      to_val e = Some v → σ !! l = None →
-     head_step (Alloc ∅ e) σ (Loc ∅ l) (<[l:=v]>σ) None
+     head_step (Alloc e) σ (Loc ∅ l) (<[l:=v]>σ) None
   | LoadS l v σ :
      σ !! l = Some v →
-     head_step (Load ∅ (Loc ∅ l)) σ (of_val v) σ None
+     head_step (Load (Loc ∅ l)) σ (of_val ∅ v) σ None
   | StoreS l e v σ :
      to_val e = Some v → is_Some (σ !! l) →
-     head_step (Store ∅ (Loc ∅ l) e) σ (Lit ∅ LitUnit) (<[l:=v]>σ) None
+     head_step (Store (Loc ∅ l) e) σ (Lit ∅ LitUnit) (<[l:=v]>σ) None
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some vl → vl ≠ v1 →
-     head_step (Cas ∅ (Loc ∅ l) e1 e2) σ (Lit ∅ $ LitBool false) σ None
+     head_step (Cas (Loc ∅ l) e1 e2) σ (Lit ∅ $ LitBool false) σ None
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some v1 →
-     head_step (Cas ∅ (Loc ∅ l) e1 e2) σ (Lit ∅ $ LitBool true) (<[l:=v2]>σ) None.
+     head_step (Cas (Loc ∅ l) e1 e2) σ (Lit ∅ $ LitBool true) (<[l:=v2]>σ) None.
 
 (** Atomic expressions *)
 Definition atomic (e: expr ∅) : Prop :=
@@ -313,6 +304,19 @@ Inductive prim_step
   Ectx_step K e1' e2' :
     e1 = fill K e1' → e2 = fill K e2' →
     head_step e1' σ1 e2' σ2 ef → prim_step e1 σ1 e2 σ2 ef.
+
+(** The equalities we need for some lemmas. *)
+Lemma stringset_eq_1 {X : stringset} :
+  X = ∅ ∪ X.
+Proof. set_solver. Qed.
+Lemma stringset_eq_2 {f x : string} :
+  (({[f; x]} ∖ {[f]}) ∖ {[x]}) = (∅ : stringset).
+Proof. set_solver. Qed.
+Lemma stringset_subseteq_1 {X : stringset} :
+  ∅ ⊆ X.
+Proof. set_solver. Qed.
+
+
 
 (** Properties of the cast operators *)
 Lemma not_or_l {P Q : Prop} `{Decision P} : ¬(P ∨ Q) ↔ ¬P ∧ ¬Q.
