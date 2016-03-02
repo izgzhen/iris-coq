@@ -2,42 +2,49 @@ From algebra Require Export agree.
 From program_logic Require Export global_functor.
 Import uPred.
 
-Notation savedPropG Λ Σ :=
-  (inG Λ Σ (agreeR (laterC (iPreProp Λ (globalF Σ))))).
+Class savedPropG (Λ : language) (Σ : rFunctorG) (F : cFunctor) :=
+  saved_prop_inG :> inG Λ Σ (agreeR (F (laterC (iPreProp Λ (globalF Σ))))).
 
-Instance inGF_savedPropG `{inGF Λ Σ (agreeRF idCF)} : savedPropG Λ Σ.
+Instance inGF_savedPropG `{inGF Λ Σ (agreeRF F)} : savedPropG Λ Σ F.
 Proof. apply: inGF_inG. Qed.
 
-Definition saved_prop_own `{savedPropG Λ Σ}
-    (γ : gname) (P : iPropG Λ Σ) : iPropG Λ Σ :=
-  own γ (to_agree (Next (iProp_unfold P))).
+Definition saved_prop_own `{savedPropG Λ Σ F}
+    (γ : gname) (x : F (laterC (iPropG Λ Σ))) : iPropG Λ Σ :=
+  own γ (to_agree
+    (cFunctor_map F (laterC_map iProp_fold, laterC_map iProp_unfold) x)).
 Typeclasses Opaque saved_prop_own.
 Instance: Params (@saved_prop_own) 4.
 
 Section saved_prop.
-  Context `{savedPropG Λ Σ}.
-  Implicit Types P Q : iPropG Λ Σ.
+  Context `{savedPropG Λ Σ F}.
+  Implicit Types x y : F (laterC (iPropG Λ Σ)).
   Implicit Types γ : gname.
 
-  Global Instance saved_prop_always_stable γ P :
-    AlwaysStable (saved_prop_own γ P).
+  Global Instance saved_prop_always_stable γ x :
+    AlwaysStable (saved_prop_own γ x).
   Proof. by rewrite /AlwaysStable always_own. Qed.
 
-  Lemma saved_prop_alloc_strong N P (G : gset gname) :
-    True ⊑ pvs N N (∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ P).
+  Lemma saved_prop_alloc_strong N x (G : gset gname) :
+    True ⊑ pvs N N (∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ x).
   Proof. by apply own_alloc_strong. Qed.
 
-  Lemma saved_prop_alloc N P :
-    True ⊑ pvs N N (∃ γ, saved_prop_own γ P).
+  Lemma saved_prop_alloc N x : True ⊑ pvs N N (∃ γ, saved_prop_own γ x).
   Proof. by apply own_alloc. Qed.
 
-  Lemma saved_prop_agree γ P Q :
-    (saved_prop_own γ P ★ saved_prop_own γ Q) ⊑ ▷ (P ≡ Q).
+  Lemma saved_prop_agree γ x y :
+    (saved_prop_own γ x ★ saved_prop_own γ y) ⊑ (x ≡ y).
   Proof.
-    rewrite -own_op own_valid agree_validI.
-    rewrite agree_equivI later_equivI /=; apply later_mono.
-    rewrite -{2}(iProp_fold_unfold P) -{2}(iProp_fold_unfold Q).
-    apply (eq_rewrite (iProp_unfold P) (iProp_unfold Q) (λ Q' : iPreProp Λ _,
-      iProp_fold (iProp_unfold P) ≡ iProp_fold Q')%I); solve_proper || auto with I.
+    rewrite -own_op own_valid agree_validI agree_equivI.
+    set (G1 := cFunctor_map F (laterC_map iProp_fold, laterC_map iProp_unfold)).
+    set (G2 := cFunctor_map F (laterC_map (@iProp_unfold Λ (globalF Σ)),
+                               laterC_map (@iProp_fold Λ (globalF Σ)))).
+    assert (∀ z, G2 (G1 z) ≡ z) as help.
+    { intros z. rewrite /G1 /G2 -cFunctor_compose -{2}[z]cFunctor_id.
+      apply (ne_proper (cFunctor_map F)); split=> P /=;
+        rewrite -later_map_compose -{2}[P]later_map_id;
+        apply later_map_ext=>?; apply iProp_fold_unfold. }
+    rewrite -{2}[x]help -{2}[y]help.
+    apply (eq_rewrite (G1 x) (G1 y) (λ z, G2 (G1 x) ≡ G2 z))%I;
+      first solve_proper; auto with I.
   Qed.
 End saved_prop.

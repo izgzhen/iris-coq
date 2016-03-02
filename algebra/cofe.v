@@ -427,6 +427,9 @@ Proof. by destruct x. Qed.
 Lemma later_map_compose {A B C} (f : A → B) (g : B → C) (x : later A) :
   later_map (g ∘ f) x = later_map g (later_map f x).
 Proof. by destruct x. Qed.
+Lemma later_map_ext {A B : cofeT} (f g : A → B) x :
+  (∀ x, f x ≡ g x) → later_map f x ≡ later_map g x.
+Proof. destruct x; intros Hf; apply Hf. Qed.
 Definition laterC_map {A B} (f : A -n> B) : laterC A -n> laterC B :=
   CofeMor (later_map f).
 Instance laterC_map_contractive (A B : cofeT) : Contractive (@laterC_map A B).
