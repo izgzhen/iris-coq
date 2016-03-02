@@ -36,7 +36,7 @@ Inductive expr :=
   (* Sums *)
   | InjL (e : expr)
   | InjR (e : expr)
-  | Case (e0 : expr) (x1 : binder) (e1 : expr) (x2 : binder) (e2 : expr)
+  | Case (e0 : expr) (e1 : expr) (e2 : expr)
   (* Concurrency *)
   | Fork (e : expr)
   (* Heap *)
@@ -107,7 +107,7 @@ Inductive ectx_item :=
   | SndCtx
   | InjLCtx
   | InjRCtx
-  | CaseCtx (x1 : binder) (e1 : expr) (x2 : binder) (e2 : expr)
+  | CaseCtx (e1 : expr) (e2 : expr)
   | AllocCtx
   | LoadCtx
   | StoreLCtx (e2 : expr)
@@ -132,7 +132,7 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   | SndCtx => Snd e
   | InjLCtx => InjL e
   | InjRCtx => InjR e
-  | CaseCtx x1 e1 x2 e2 => Case e x1 e1 x2 e2
+  | CaseCtx e1 e2 => Case e e1 e2
   | AllocCtx => Alloc e
   | LoadCtx => Load e
   | StoreLCtx e2 => Store e e2
@@ -160,10 +160,8 @@ Fixpoint subst (e : expr) (x : string) (v : val) : expr :=
   | Snd e => Snd (subst e x v)
   | InjL e => InjL (subst e x v)
   | InjR e => InjR (subst e x v)
-  | Case e0 x1 e1 x2 e2 =>
-     Case (subst e0 x v)
-       x1 (if decide (BNamed x ≠ x1) then subst e1 x v else e1)
-       x2 (if decide (BNamed x ≠ x2) then subst e2 x v else e2)
+  | Case e0 e1 e2 =>
+     Case (subst e0 x v) (subst e1 x v) (subst e2 x v)
   | Fork e => Fork (subst e x v)
   | Loc l => Loc l
   | Alloc e => Alloc (subst e x v)
@@ -213,12 +211,12 @@ Inductive head_step : expr → state → expr → state → option expr → Prop
   | SndS e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      head_step (Snd (Pair e1 e2)) σ e2 σ None
-  | CaseLS e0 v0 x1 e1 x2 e2 σ :
+  | CaseLS e0 v0 e1 e2 σ :
      to_val e0 = Some v0 →
-     head_step (Case (InjL e0) x1 e1 x2 e2) σ (subst' e1 x1 v0) σ None
-  | CaseRS e0 v0 x1 e1 x2 e2 σ :
+     head_step (Case (InjL e0) e1 e2) σ (App e1 e0) σ None
+  | CaseRS e0 v0 e1 e2 σ :
      to_val e0 = Some v0 →
-     head_step (Case (InjR e0) x1 e1 x2 e2) σ (subst' e2 x2 v0) σ None
+     head_step (Case (InjR e0) e1 e2) σ (App e2 e0) σ None
   | ForkS e σ:
      head_step (Fork e) σ (Lit LitUnit) σ (Some e)
   | AllocS e v σ l :

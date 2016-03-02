@@ -9,6 +9,7 @@ Notation LamV x e := (RecV BAnom x e).
 Notation LetCtx x e2 := (AppRCtx (LamV x e2)).
 Notation SeqCtx e2 := (LetCtx BAnom e2).
 Notation Skip := (Seq (Lit LitUnit) (Lit LitUnit)).
+Notation Match e0 x1 e1 x2 e2 := (Case e0 (Lam x1 e1) (Lam x2 e2)).
 
 Section derived.
 Context {Σ : rFunctor}.
@@ -33,6 +34,20 @@ Proof. intros ?. by rewrite -wp_let. Qed.
 
 Lemma wp_skip E Φ : ▷ Φ (LitV LitUnit) ⊑ || Skip @ E {{ Φ }}.
 Proof. rewrite -wp_seq // -wp_value //. Qed.
+
+Lemma wp_match_inl E e0 v0 x1 e1 x2 e2 Φ :
+  to_val e0 = Some v0 →
+  ▷ || subst' e1 x1 v0 @ E {{ Φ }} ⊑ || Match (InjL e0) x1 e1 x2 e2 @ E {{ Φ }}.
+Proof.
+  intros. rewrite -wp_case_inl // -[X in _ ⊑ X]later_intro. by apply wp_let.
+Qed.
+
+Lemma wp_match_inr E e0 v0 x1 e1 x2 e2 Φ :
+  to_val e0 = Some v0 →
+  ▷ || subst' e2 x2 v0 @ E {{ Φ }} ⊑ || Match (InjR e0) x1 e1 x2 e2 @ E {{ Φ }}.
+Proof.
+  intros. rewrite -wp_case_inr // -[X in _ ⊑ X]later_intro. by apply wp_let.
+Qed.
 
 Lemma wp_le E (n1 n2 : Z) P Φ :
   (n1 ≤ n2 → P ⊑ ▷ Φ (LitV (LitBool true))) →

@@ -66,11 +66,6 @@ Instance subst_rec f y e x v er :
   SubstIf (BNamed x ≠ f ∧ BNamed x ≠ y) e x v er →
   Subst (Rec f y e) x v (Rec f y er).
 Proof. intros [??]; red; f_equal/=; case_decide; auto. Qed.
-Instance subst_case e0 x1 e1 x2 e2 x v e0r e1r e2r :
-  Subst e0 x v e0r →
-  SubstIf (BNamed x ≠ x1) e1 x v e1r → SubstIf (BNamed x ≠ x2) e2 x v e2r →
-  Subst (Case e0 x1 e1 x2 e2) x v (Case e0r x1 e1r x2 e2r).
-Proof. intros ? [??] [??]; red; f_equal/=; repeat case_decide; auto. Qed.
 
 Instance subst_app e1 e2 x v e1r e2r :
   Subst e1 x v e1r → Subst e2 x v e2r → Subst (App e1 e2) x v (App e1r e2r).
@@ -96,6 +91,10 @@ Proof. by intros; red; f_equal/=. Qed.
 Instance subst_injL e x v er : Subst e x v er → Subst (InjL e) x v (InjL er).
 Proof. by intros; red; f_equal/=. Qed.
 Instance subst_injR e x v er : Subst e x v er → Subst (InjR e) x v (InjR er).
+Proof. by intros; red; f_equal/=. Qed.
+Instance subst_case e0 e1 e2 x v e0r e1r e2r :
+  Subst e0 x v e0r → Subst e1 x v e1r → Subst e2 x v e2r →
+  Subst (Case e0 e1 e2) x v (Case e0r e1r e2r).
 Proof. by intros; red; f_equal/=. Qed.
 Instance subst_fork e x v er : Subst e x v er → Subst (Fork e) x v (Fork er).
 Proof. by intros; red; f_equal/=. Qed.
@@ -134,9 +133,7 @@ Fixpoint is_closed (X : stringset) (e : expr) : bool :=
   | Snd e => is_closed X e
   | InjL e => is_closed X e
   | InjR e => is_closed X e
-  | Case e0 x1 e1 x2 e2 =>
-     is_closed X e0 &&
-     is_closed (of_binder x1 ∪ X) e1 && is_closed (of_binder x2 ∪ X) e2
+  | Case e0 e1 e2 => is_closed X e0 && is_closed X e1 && is_closed X e2
   | Fork e => is_closed X e
   | Loc l => true
   | Alloc e => is_closed X e

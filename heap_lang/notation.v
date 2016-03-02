@@ -28,7 +28,7 @@ Notation "<>" := BAnom : binder_scope.
    pretty printing. *)
 Notation "( e1 , e2 , .. , en )" := (Pair .. (Pair e1 e2) .. en) : lang_scope.
 Notation "'match:' e0 'with' 'InjL' x1 => e1 | 'InjR' x2 => e2 'end'" :=
-  (Case e0 x1 e1 x2 e2)
+  (Match e0 x1 e1 x2 e2)
   (e0, x1, e1, x2, e2 at level 200) : lang_scope.
 Notation "()" := LitUnit : lang_scope.
 Notation "# l" := (Lit l%Z%L) (at level 8, format "# l").

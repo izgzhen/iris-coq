@@ -147,20 +147,20 @@ Proof.
     ?right_id -?wp_value //; intros; inv_step; eauto.
 Qed.
 
-Lemma wp_case_inl E e0 v0 x1 e1 x2 e2 Φ :
+Lemma wp_case_inl E e0 v0 e1 e2 Φ :
   to_val e0 = Some v0 →
-  ▷ || subst' e1 x1 v0 @ E {{ Φ }} ⊑ || Case (InjL e0) x1 e1 x2 e2 @ E {{ Φ }}.
+  ▷ || App e1 e0 @ E {{ Φ }} ⊑ || Case (InjL e0) e1 e2 @ E {{ Φ }}.
 Proof.
-  intros. rewrite -(wp_lift_pure_det_step (Case _ _ _ _ _)
-    (subst' e1 x1 v0) None) ?right_id //; intros; inv_step; eauto.
+  intros. rewrite -(wp_lift_pure_det_step (Case _ _ _)
+    (App e1 e0) None) ?right_id //; intros; inv_step; eauto.
 Qed.
 
-Lemma wp_case_inr E e0 v0 x1 e1 x2 e2 Φ :
+Lemma wp_case_inr E e0 v0 e1 e2 Φ :
   to_val e0 = Some v0 →
-  ▷ || subst' e2 x2 v0 @ E {{ Φ }} ⊑ || Case (InjR e0) x1 e1 x2 e2 @ E {{ Φ }}.
+  ▷ || App e2 e0 @ E {{ Φ }} ⊑ || Case (InjR e0) e1 e2 @ E {{ Φ }}.
 Proof.
-  intros. rewrite -(wp_lift_pure_det_step (Case _ _ _ _ _)
-    (subst' e2 x2 v0) None) ?right_id //; intros; inv_step; eauto.
+  intros. rewrite -(wp_lift_pure_det_step (Case _ _ _)
+    (App e2 e0) None) ?right_id //; intros; inv_step; eauto.
 Qed.
 
 End lifting.
