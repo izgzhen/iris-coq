@@ -35,7 +35,7 @@ def parse(file, parse_times = True):
         # nothing else we know about
         raise Exception("Unexpected line: {}".format(line))
     # end of file. previous commit, if any, is done now.
-    if times is not None:
+    if commit is not None:
         yield Result(commit, times)
 
 def parse_git_commits(commits):

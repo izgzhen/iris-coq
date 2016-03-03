@@ -4,7 +4,7 @@ import requests
 import parse_log
 
 def last(it):
-    r = first(it) # errors out if it is empty
+    r = None
     for i in it:
         r = i
     return r
@@ -12,7 +12,7 @@ def last(it):
 def first(it):
     for i in it:
         return i
-    raise Exception("The iterator is empty")
+    return None
 
 def req(path):
     url = '%s/api/v3/%s' % (args.server, path)
@@ -47,20 +47,29 @@ if args.commits is None:
 
 projects = req("projects")
 project = first(filter(lambda p: p['path_with_namespace'] == args.project, projects.json()))
+if project is None:
+    sys.stderr.write("Project not found.\n")
+    sys.exit(1)
 
 for commit in parse_log.parse_git_commits(args.commits):
     print("Fetching {}...".format(commit))
+    commit_data = req("/projects/{}/repository/commits/{}".format(project['id'], commit))
+    if commit_data.status_code != 200:
+        raise Exception("Commit not found?")
     builds = req("/projects/{}/repository/commits/{}/builds".format(project['id'], commit))
     if builds.status_code != 200:
-        continue
-    try:
-        build = first(sorted(builds.json(), key = lambda b: -int(b['id'])))
-    except Exception:
         # no build
         continue
+    build = first(sorted(builds.json(), key = lambda b: -int(b['id'])))
+    assert build is not None
+    if build['status'] == 'failed':
+        # build failed
+        continue
+    # now fetch the build times
     build_times = requests.get("{}/builds/{}/artifacts/file/build-time.txt".format(project['web_url'], build['id']))
     if build_times.status_code != 200:
-        continue
+        raise Exception("No artifact at build?")
     # Output in the log file format
     log_file.write("# {}\n".format(commit))
     log_file.write(build_times.text)
+    log_file.flush()
