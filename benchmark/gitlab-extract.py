@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, pprint, subprocess, sys
+import argparse, pprint, sys
 import requests
 import parse_log
 
@@ -42,19 +42,13 @@ log_file = sys.stdout if args.file == "-" else open(args.file, "a")
 if args.commits is None:
     if args.file == "-":
         raise Exception("If you do not give explicit commits, you have to give a logfile so that we can determine the missing commits.")
-    last_result = last(parse_log.parse(open(args.file, "r"), []))
+    last_result = last(parse_log.parse(open(args.file, "r"), parse_times = False))
     args.commits = "{}..origin/master".format(last_result.commit)
 
 projects = req("projects")
 project = first(filter(lambda p: p['path_with_namespace'] == args.project, projects.json()))
 
-if args.commits.find('..') >= 0:
-    # a range of commits
-    commits = subprocess.check_output(["git", "rev-list", args.commits]).decode("utf-8")
-else:
-    # a single commit
-    commits = subprocess.check_output(["git", "rev-parse", args.commits]).decode("utf-8")
-for commit in reversed(commits.strip().split('\n')):
+for commit in parse_log.parse_git_commits(args.commits):
     print("Fetching {}...".format(commit))
     builds = req("/projects/{}/repository/commits/{}/builds".format(project['id'], commit))
     if builds.status_code != 200:
