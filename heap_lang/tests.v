@@ -4,7 +4,7 @@ From heap_lang Require Import wp_tactics heap notation.
 Import uPred.
 
 Section LangTests.
-  Definition add := (#21 + #21)%L.
+  Definition add := (#21 + #21)%E.
   Goal ∀ σ, prim_step add σ (#42) σ None.
   Proof. intros; do_step done. Qed.
   Definition rec_app : expr := ((rec: "f" "x" := "f" "x") #0).
@@ -14,7 +14,7 @@ Section LangTests.
     by eapply (Ectx_step  _ _ _ _ _ []), (BetaS _ _ _ _ #0).
   Qed.
   Definition lam : expr := λ: "x", "x" + #21.
-  Goal ∀ σ, prim_step (lam #21)%L σ add σ None.
+  Goal ∀ σ, prim_step (lam #21)%E σ add σ None.
   Proof.
     intros. rewrite /lam. (* FIXME: do_step does not work here *)
     by eapply (Ectx_step  _ _ _ _ _ []), (BetaS <> "x" ("x" + #21) _ #21).

@@ -33,7 +33,7 @@ Proof.
     (Φ&Φs2&r&rs2&->&->&Hwp&?)%Forall3_cons_inv_l)%Forall3_app_inv_l ?.
   rewrite wp_eq in Hwp.
   destruct (wp_step_inv ⊤ ∅ Φ e1 (k + n) (S (k + n)) σ1 r
-    (big_op (rs1 ++ rs2))) as [_ Hwpstep]; eauto using values_stuck.
+    (big_op (rs1 ++ rs2))) as [_ Hwpstep]; eauto using val_stuck.
   { by rewrite right_id_L -big_op_cons Permutation_middle. }
   destruct (Hwpstep e2 σ2 ef) as (r2&r2'&Hwsat&?&?); auto; clear Hwpstep.
   revert Hwsat; rewrite big_op_app right_id_L=>Hwsat.
