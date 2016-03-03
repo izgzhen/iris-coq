@@ -4,7 +4,7 @@
 the development. *)
 From Coq Require Import Omega.
 From Coq Require Export Psatz.
-From prelude Require Export base.
+From prelude Require Export decidable.
 
 Lemma f_equal_dep {A B} (f g : ∀ x : A, B x) x : f = g → f x = g x.
 Proof. intros ->; reflexivity. Qed.
@@ -430,6 +430,8 @@ Tactic Notation "naive_solver" tactic(tac) :=
   | H : _ ∧ _ |- _ => destruct H
   | H : ∃ _, _  |- _ => destruct H
   | H : ?P → ?Q, H2 : ?P |- _ => specialize (H H2)
+  | H : Is_true (bool_decide _) |- _ => apply (bool_decide_unpack _) in H
+  | H : Is_true (_ && _) |- _ => apply andb_True in H; destruct H
   (**i simplify and solve equalities *)
   | |- _ => progress simplify_eq/=
   (**i solve the goal *)
@@ -441,6 +443,8 @@ Tactic Notation "naive_solver" tactic(tac) :=
     | reflexivity ]
   (**i operations that generate more subgoals *)
   | |- _ ∧ _ => split
+  | |- Is_true (bool_decide _) => apply (bool_decide_pack _)
+  | |- Is_true (_ && _) => apply andb_True; split
   | H : _ ∨ _ |- _ => destruct H
   (**i solve the goal using the user supplied tactic *)
   | |- _ => solve [tac]

@@ -11,7 +11,7 @@ Lemma dec_stable `{Decision P} : ¬¬P → P.
 Proof. firstorder. Qed.
 
 Lemma Is_true_reflect (b : bool) : reflect b b.
-Proof. destruct b. by left. right. intros []. Qed.
+Proof. destruct b. left; constructor. right. intros []. Qed.
 Instance: Inj (=) (↔) Is_true.
 Proof. intros [] []; simpl; intuition. Qed.
 
@@ -24,17 +24,17 @@ Definition decide_rel {A B} (R : A → B → Prop) {dec : ∀ x y, Decision (R x
   (x : A) (y : B) : Decision (R x y) := dec x y.
 Lemma decide_rel_correct {A B} (R : A → B → Prop) `{∀ x y, Decision (R x y)}
   (x : A) (y : B) : decide_rel R x y = decide (R x y).
-Proof. done. Qed.
+Proof. reflexivity. Qed.
 
 Lemma decide_True {A} `{Decision P} (x y : A) :
   P → (if decide P then x else y) = x.
-Proof. by destruct (decide P). Qed.
+Proof. destruct (decide P); tauto. Qed.
 Lemma decide_False {A} `{Decision P} (x y : A) :
   ¬P → (if decide P then x else y) = y.
-Proof. by destruct (decide P). Qed.
+Proof. destruct (decide P); tauto. Qed.
 Lemma decide_iff {A} P Q `{Decision P, Decision Q} (x y : A) :
   (P ↔ Q) → (if decide P then x else y) = (if decide Q then x else y).
-Proof. intros [??]. destruct (decide P), (decide Q); intuition. Qed.
+Proof. intros [??]. destruct (decide P), (decide Q); tauto. Qed.
 
 (** The tactic [destruct_decide] destructs a sumbool [dec]. If one of the
 components is double negated, it will try to remove the double negation. *)
@@ -95,7 +95,7 @@ Definition bool_decide (P : Prop) {dec : Decision P} : bool :=
   if dec then true else false.
 
 Lemma bool_decide_reflect P `{dec : Decision P} : reflect P (bool_decide P).
-Proof. unfold bool_decide. destruct dec. by left. by right. Qed.
+Proof. unfold bool_decide. destruct dec; [left|right]; assumption. Qed.
 
 Tactic Notation "case_bool_decide" "as" ident (Hd) :=
   match goal with
@@ -108,15 +108,15 @@ Tactic Notation "case_bool_decide" :=
   let H := fresh in case_bool_decide as H.
 
 Lemma bool_decide_spec (P : Prop) {dec : Decision P} : bool_decide P ↔ P.
-Proof. unfold bool_decide. by destruct dec. Qed.
+Proof. unfold bool_decide. destruct dec; simpl; tauto. Qed.
 Lemma bool_decide_unpack (P : Prop) {dec : Decision P} : bool_decide P → P.
-Proof. by rewrite bool_decide_spec. Qed.
+Proof. rewrite bool_decide_spec; trivial. Qed.
 Lemma bool_decide_pack (P : Prop) {dec : Decision P} : P → bool_decide P.
-Proof. by rewrite bool_decide_spec. Qed.
+Proof. rewrite bool_decide_spec; trivial. Qed.
 Lemma bool_decide_true (P : Prop) `{Decision P} : P → bool_decide P = true.
-Proof. by case_bool_decide. Qed.
+Proof. case_bool_decide; tauto. Qed.
 Lemma bool_decide_false (P : Prop) `{Decision P} : ¬P → bool_decide P = false.
-Proof. by case_bool_decide. Qed.
+Proof. case_bool_decide; tauto. Qed.
 Lemma bool_decide_iff (P Q : Prop) `{Decision P, Decision Q} :
   (P ↔ Q) → bool_decide P = bool_decide Q.
 Proof. repeat case_bool_decide; tauto. Qed.
@@ -138,7 +138,7 @@ Lemma dsig_eq `(P : A → Prop) `{∀ x, Decision (P x)}
 Proof. apply (sig_eq_pi _). Qed.
 Lemma dexists_proj1 `(P : A → Prop) `{∀ x, Decision (P x)} (x : dsig P) p :
   dexist (`x) p = x.
-Proof. by apply dsig_eq. Qed.
+Proof. apply dsig_eq; reflexivity. Qed.
 
 (** * Instances of Decision *)
 (** Instances of [Decision] for operators of propositional logic. *)
@@ -184,7 +184,7 @@ Instance uncurry_dec `(P_dec : ∀ (p : A * B), Decision (P p)) x y :
 
 Instance sig_eq_dec `(P : A → Prop) `{∀ x, ProofIrrel (P x)}
   `{∀ x y : A, Decision (x = y)} (x y : sig P) : Decision (x = y).
-Proof. refine (cast_if (decide (`x = `y))); by rewrite sig_eq_pi. Defined.
+Proof. refine (cast_if (decide (`x = `y))); rewrite sig_eq_pi; trivial. Defined.
 
 (** Some laws for decidable propositions *)
 Lemma not_and_l {P Q : Prop} `{Decision P} : ¬(P ∧ Q) ↔ ¬P ∨ ¬Q.

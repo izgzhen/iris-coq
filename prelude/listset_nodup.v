@@ -3,7 +3,7 @@
 (** This file implements finite as unordered lists without duplicates.
 Although this implementation is slow, it is very useful as decidable equality
 is the only constraint on the carrier set. *)
-From prelude Require Export base decidable collections list.
+From prelude Require Export collections list.
 
 Record listset_nodup A := ListsetNoDup {
   listset_nodup_car : list A; listset_nodup_prf : NoDup listset_nodup_car
