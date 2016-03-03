@@ -265,6 +265,7 @@ Ltac set_unfold :=
 [set_solver] already. We use the [naive_solver] tactic as a substitute.
 This tactic either fails or proves the goal. *)
 Tactic Notation "set_solver" "by" tactic3(tac) :=
+  try done;
   intros; setoid_subst;
   set_unfold;
   intros; setoid_subst;
@@ -277,6 +278,10 @@ Tactic Notation "set_solver" "+" hyp_list(Hs) "by" tactic3(tac) :=
 Tactic Notation "set_solver" := set_solver by idtac.
 Tactic Notation "set_solver" "-" hyp_list(Hs) := clear Hs; set_solver.
 Tactic Notation "set_solver" "+" hyp_list(Hs) := clear -Hs; set_solver.
+
+Hint Extern 1000 (_ ∉ _) => set_solver : set_solver.
+Hint Extern 1000 (_ ∈ _) => set_solver : set_solver.
+Hint Extern 1000 (_ ⊆ _) => set_solver : set_solver.
 
 (** * Conversion of option and list *)
 Definition of_option `{Singleton A C, Empty C} (mx : option A) : C :=
