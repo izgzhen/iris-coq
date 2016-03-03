@@ -206,7 +206,7 @@ Proof.
   apply exist_elim=>γ. rewrite !sep_exist_r. apply exist_elim=>P.
   rewrite !sep_exist_r. apply exist_elim=>Q. rewrite !sep_exist_r.
   apply exist_elim=>i. rewrite -!assoc. apply const_elim_sep_l=>?.
-  wp_focus (! _)%L.
+  wp_focus (! _)%E.
   (* I think some evars here are better than repeating *everything* *)
   eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
     eauto with I ndisj.

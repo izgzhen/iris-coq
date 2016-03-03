@@ -19,10 +19,6 @@ Inductive binder := BAnon | BNamed : string → binder.
 
 Delimit Scope binder_scope with binder.
 Bind Scope binder_scope with binder.
-Delimit Scope lang_scope with L.
-Bind Scope lang_scope with base_lit.
-Delimit Scope val_scope with V.
-Bind Scope val_scope with base_lit.
 
 Inductive expr :=
   (* Base lambda calculus *)
@@ -51,6 +47,9 @@ Inductive expr :=
   | Store (e1 : expr) (e2 : expr)
   | Cas (e0 : expr) (e1 : expr) (e2 : expr).
 
+Bind Scope expr_scope with expr.
+Delimit Scope expr_scope with E.
+
 Inductive val :=
   | RecV (f x : binder) (e : expr) (* e should be closed *)
   | LitV (l : base_lit)
@@ -59,9 +58,8 @@ Inductive val :=
   | InjRV (v : val)
   | LocV (l : loc).
 
-Bind Scope binder_scope with expr.
-Bind Scope lang_scope with expr base_lit.
-Bind Scope val_scope with val base_lit.
+Bind Scope val_scope with val.
+Delimit Scope val_scope with V.
 
 Global Instance base_lit_dec_eq (l1 l2 : base_lit) : Decision (l1 = l2).
 Proof. solve_decision. Defined.
