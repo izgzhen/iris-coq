@@ -240,12 +240,12 @@ Proof.
   - by destruct 1; simpl; intros ?; setoid_subst.
   - by intros ? [|]; destruct 1; inversion_clear 1; constructor; setoid_subst.
   - by do 2 destruct 1; constructor; setoid_subst.
-  - destruct 3; simpl in *; destruct_conjs; eauto using closed_op;
+  - destruct 3; simpl in *; destruct_and?; eauto using closed_op;
       match goal with H : closed _ _ |- _ => destruct H end; set_solver.
-  - intros []; simpl; intros; destruct_conjs; split;
+  - intros []; simpl; intros; destruct_and?; split;
       eauto using closed_up, up_non_empty, closed_up_set, up_set_empty with sts.
   - intros ???? (z&Hy&?&Hxz); destruct Hxz; inversion Hy; clear Hy;
-      setoid_subst; destruct_conjs; split_and?;
+      setoid_subst; destruct_and?; split_and?;
       rewrite disjoint_union_difference //;
       eauto using up_set_non_empty, up_non_empty, closed_up, closed_disjoint; [].
     eapply closed_up_set=> s ?; eapply closed_disjoint; eauto with sts.
@@ -283,7 +283,7 @@ Proof.
       rewrite ?disjoint_union_difference; auto.
     split; [|apply intersection_greatest; auto using subseteq_up_set with sts].
     apply intersection_greatest; [auto with sts|].
-    intros s2; rewrite elem_of_intersection. destruct_conjs.
+    intros s2; rewrite elem_of_intersection. destruct_and?.
     unfold up_set; rewrite elem_of_bind; intros (?&s1&?&?&?).
     apply closed_steps with T2 s1; auto with sts.
 Qed.
@@ -379,7 +379,7 @@ Lemma sts_update_auth s1 s2 T1 T2 :
   steps (s1,T1) (s2,T2) → sts_auth s1 T1 ~~> sts_auth s2 T2.
 Proof.
   intros ?; apply validity_update.
-  inversion 3 as [|? S ? Tf|]; simplify_eq/=; destruct_conjs.
+  inversion 3 as [|? S ? Tf|]; simplify_eq/=; destruct_and?.
   destruct (steps_closed s1 s2 T1 T2 S Tf) as (?&?&?); auto; [].
   repeat (done || constructor).
 Qed.

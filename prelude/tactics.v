@@ -69,9 +69,22 @@ Tactic Notation "etrans" := etransitivity.
 
 Note that [split_and] differs from [split] by only splitting conjunctions. The
 [split] tactic splits any inductive with one constructor. *)
-Tactic Notation "split_and" := match goal with |- _ ∧ _ => split end.
+Tactic Notation "split_and" :=
+  match goal with
+  | |- _ ∧ _ => split
+  | |- Is_true (_ && _) => apply andb_True; split
+  end.
 Tactic Notation "split_and" "?" := repeat split_and.
 Tactic Notation "split_and" "!" := hnf; split_and; split_and?.
+
+Tactic Notation "destruct_and" "?" :=
+  repeat match goal with
+  | H : False |- _ => destruct H
+  | H : _ ∧ _ |- _ => destruct H
+  | H : Is_true (bool_decide _) |- _ => apply (bool_decide_unpack _) in H
+  | H : Is_true (_ && _) |- _ => apply andb_True in H; destruct H
+  end.
+Tactic Notation "destruct_and" "!" := progress (destruct_and?).
 
 (** The tactic [case_match] destructs an arbitrary match in the conclusion or
 assumptions, and generates a corresponding equality. This tactic is best used
