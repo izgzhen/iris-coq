@@ -6,7 +6,6 @@ Import heap_lang.
 can be tuned using instances of the type class [Closed e], which can be used
 to mark that expressions are closed, and should thus not be substituted into. *)
 
-Class Closed (e : expr) := closed : ∀ x v, subst e x v = e.
 Class Subst (e : expr) (x : string) (v : val) (er : expr) :=
   do_subst : subst e x v = er.
 Hint Mode Subst + + + - : typeclass_instances.
@@ -109,58 +108,5 @@ Instance subst_cas e0 e1 e2 x v e0r e1r e2r :
   Subst e0 x v e0r → Subst e1 x v e1r → Subst e2 x v e2r →
   Subst (Cas e0 e1 e2) x v (Cas e0r e1r e2r).
 Proof. by intros; red; f_equal/=. Qed.
-
-Definition of_binder (mx : binder) : stringset :=
-  match mx with BAnon => ∅ | BNamed x => {[ x ]} end.
-Lemma elem_of_of_binder x mx: x ∈ of_binder mx ↔ mx = BNamed x.
-Proof. destruct mx; set_solver. Qed.
-Global Instance set_unfold_of_binder (mx : binder) x :
-  SetUnfold (x ∈ of_binder mx) (mx = BNamed x).
-Proof. constructor; destruct mx; set_solver. Qed.
-
-(** * Solver for [Closed] *)
-Fixpoint is_closed (X : stringset) (e : expr) : bool :=
-  match e with
-  | Var x => bool_decide (x ∈ X)
-  | Rec f y e => is_closed (of_binder f ∪ of_binder y ∪ X) e
-  | App e1 e2 => is_closed X e1 && is_closed X e2
-  | Lit l => true
-  | UnOp _ e => is_closed X e
-  | BinOp _ e1 e2 => is_closed X e1 && is_closed X e2
-  | If e0 e1 e2 => is_closed X e0 && is_closed X e1 && is_closed X e2
-  | Pair e1 e2 => is_closed X e1 && is_closed X e2
-  | Fst e => is_closed X e
-  | Snd e => is_closed X e
-  | InjL e => is_closed X e
-  | InjR e => is_closed X e
-  | Case e0 e1 e2 => is_closed X e0 && is_closed X e1 && is_closed X e2
-  | Fork e => is_closed X e
-  | Loc l => true
-  | Alloc e => is_closed X e
-  | Load e => is_closed X e
-  | Store e1 e2 => is_closed X e1 && is_closed X e2
-  | Cas e0 e1 e2 => is_closed X e0 && is_closed X e1 && is_closed X e2
-  end.
-Lemma is_closed_sound e : is_closed ∅ e → Closed e.
-Proof.
-  cut (∀ x v X, is_closed X e → x ∉ X → subst e x v = e).
-  { intros help ? x v. by apply (help x v ∅). }
-  intros x v; induction e; simpl; intros;
-    repeat match goal with
-    | _ => progress subst
-    | _ => contradiction
-    | H : Is_true (bool_decide _) |- _ => apply (bool_decide_unpack _) in H
-    | H : Is_true (_ && _) |- _ => apply andb_True in H
-    | H : _ ∧ _ |- _ => destruct H
-    | _ => case_decide
-    | _ => f_equal
-    end; eauto;
-    try match goal with
-    | H : ∀ _, _ → _ ∉ _ → subst _ _ _ = _ |- _ =>
-       eapply H; first done;
-       rewrite !elem_of_union !elem_of_of_binder; intuition congruence
-    end.
-Qed.
-Ltac solve_closed := apply is_closed_sound; vm_compute; exact I.
 
 Global Opaque subst.

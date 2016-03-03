@@ -1,5 +1,5 @@
 From program_logic Require Export language.
-From prelude Require Export strings.
+From prelude Require Export stringmap.
 From prelude Require Import gmap.
 
 Module heap_lang.
@@ -303,7 +303,7 @@ Proof. destruct e; naive_solver. Qed.
 
 Lemma atomic_fill_item Ki e : atomic (fill_item Ki e) → is_Some (to_val e).
 Proof.
-  intros. destruct Ki; simplify_eq/=; destruct_conjs;
+  intros. destruct Ki; simplify_eq/=; destruct_and?;
     repeat (case_match || contradiction); eauto.
 Qed.
 
@@ -362,6 +362,88 @@ Lemma alloc_fresh e v σ :
   let l := fresh (dom _ σ) in
   to_val e = Some v → head_step (Alloc e) σ (Loc l) (<[l:=v]>σ) None.
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset _)), is_fresh. Qed.
+
+(** Closed expressions *)
+Definition of_binder (mx : binder) : stringset :=
+  match mx with BAnon => ∅ | BNamed x => {[ x ]} end.
+Lemma elem_of_of_binder x mx: x ∈ of_binder mx ↔ mx = BNamed x.
+Proof. destruct mx; set_solver. Qed.
+Global Instance set_unfold_of_binder (mx : binder) x :
+  SetUnfold (x ∈ of_binder mx) (mx = BNamed x).
+Proof. constructor; destruct mx; set_solver. Qed.
+
+Fixpoint is_closed (X : stringset) (e : expr) : bool :=
+  match e with
+  | Var x => bool_decide (x ∈ X)
+  | Rec f y e => is_closed (of_binder f ∪ of_binder y ∪ X) e
+  | App e1 e2 => is_closed X e1 && is_closed X e2
+  | Lit l => true
+  | UnOp _ e => is_closed X e
+  | BinOp _ e1 e2 => is_closed X e1 && is_closed X e2
+  | If e0 e1 e2 => is_closed X e0 && is_closed X e1 && is_closed X e2
+  | Pair e1 e2 => is_closed X e1 && is_closed X e2
+  | Fst e => is_closed X e
+  | Snd e => is_closed X e
+  | InjL e => is_closed X e
+  | InjR e => is_closed X e
+  | Case e0 e1 e2 => is_closed X e0 && is_closed X e1 && is_closed X e2
+  | Fork e => is_closed X e
+  | Loc l => true
+  | Alloc e => is_closed X e
+  | Load e => is_closed X e
+  | Store e1 e2 => is_closed X e1 && is_closed X e2
+  | Cas e0 e1 e2 => is_closed X e0 && is_closed X e1 && is_closed X e2
+  end.
+Class Closed (e : expr) := closed : ∀ x v, subst e x v = e.
+
+Lemma is_closed_subst_same X e x v : is_closed X e → x ∉ X → subst e x v = e.
+Proof.
+  revert X. induction e; simpl;
+    repeat case_decide; naive_solver eauto with f_equal set_solver.
+Qed.
+Lemma is_closed_Closed e : is_closed ∅ e → Closed e.
+Proof. intros ? x v. by eapply is_closed_subst_same, not_elem_of_empty. Qed.
+
+Ltac solve_closed := apply is_closed_Closed; vm_compute; exact I.
+
+Lemma is_closed_weaken X Y e : is_closed X e → X ⊆ Y → is_closed Y e.
+Proof.
+  revert X Y.
+  induction e; simpl; intros; naive_solver eauto with f_equal set_solver.
+Qed.
+
+Lemma is_closed_fill_item X Ki e : is_closed X (fill_item Ki e) → is_closed X e.
+Proof. destruct Ki; rewrite /= ?andb_True; tauto. Qed.
+Lemma is_closed_fill X K e : is_closed X (fill K e) → is_closed X e.
+Proof. induction K; simpl; eauto using is_closed_fill_item. Qed.
+
+Lemma is_closed_subst X e x v :
+  is_closed ({[x]} ∪ X) e → is_closed ∅ (of_val v) → is_closed X (subst e x v).
+Proof.
+  revert X. elim: e; simpl; try by intros; destruct_and?; split_and?; auto.
+  - intros y X; rewrite bool_decide_spec=>??.
+    case_decide; subst; last set_solver.
+    eauto using is_closed_weaken with set_solver.
+  - intros f y e IH X ??. case_decide as Hx.
+    + apply IH; clear IH; eauto using is_closed_weaken with set_solver.
+    + clear IH; apply not_and_l in Hx;
+        destruct Hx as [Hx|Hx]; apply dec_stable in Hx; subst;
+        eauto using is_closed_weaken with set_solver.
+Qed.
+Lemma is_closed_subst' X e x v :
+  is_closed (of_binder x ∪ X) e → is_closed ∅ (of_val v) →
+  is_closed X (subst' e x v).
+Proof. destruct x; rewrite /= ?left_id_L; auto using is_closed_subst. Qed.
+Lemma is_closed_head_step e1 σ1 e2 σ2 ef :
+  (* for load, the state should be closed *)
+  match e1 with Load _ => False | _ => True end →
+  head_step e1 σ1 e2 σ2 ef → is_closed ∅ e1 → is_closed ∅ e2.
+Proof.
+  destruct 2; rewrite /= ?andb_True; try
+    match goal with H : to_val _ = _ |- _ => apply of_to_val in H; subst end;
+    try tauto.
+  intros [??]. repeat apply is_closed_subst'; rewrite /= ?assoc_L; auto.
+Qed.
 End heap_lang.
 
 (** Language *)
@@ -389,7 +471,4 @@ Qed.
 
 Global Instance heap_lang_ctx_item Ki :
   LanguageCtx heap_lang (heap_lang.fill_item Ki).
-Proof.
-  change (LanguageCtx heap_lang (heap_lang.fill [Ki])).
-  by apply _.
-Qed.
+Proof. change (LanguageCtx heap_lang (heap_lang.fill [Ki])). apply _. Qed.
