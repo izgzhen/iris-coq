@@ -6,6 +6,8 @@ buildjob:
   script:
   - 'make -j8 TIMED=y 2>&1 | tee build-log.txt'
   - 'cat build-log.txt  | egrep "[a-zA-Z0-9_/-]+ \(user: [0-9]" > build-time.txt'
+  only:
+  - master
   artifacts:
     paths:
     - build-time.txt
