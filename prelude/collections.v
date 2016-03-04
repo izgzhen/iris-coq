@@ -303,10 +303,28 @@ Section of_option_list.
   Global Instance set_unfold_of_option (mx : option A) x :
     SetUnfold (x ∈ of_option mx) (mx = Some x).
   Proof. constructor; apply elem_of_of_option. Qed.
-  Global Instance set_unfold_of_list (l : list A) x :
-    SetUnfold (x ∈ of_list l) (x ∈ l).
-  Proof. constructor; apply elem_of_of_list. Qed.
+  Global Instance set_unfold_of_list (l : list A) x P :
+    SetUnfold (x ∈ l) P → SetUnfold (x ∈ of_list l) P.
+  Proof. constructor. by rewrite elem_of_of_list, (set_unfold (x ∈ l) P). Qed.
 End of_option_list.
+
+Section list_unfold.
+  Context {A : Type}.
+  Implicit Types x : A.
+  Implicit Types l : list A.
+
+  Global Instance set_unfold_nil x : SetUnfold (x ∈ []) False.
+  Proof. constructor; apply elem_of_nil. Qed.
+  Global Instance set_unfold_cons x y l P :
+    SetUnfold (x ∈ l) P → SetUnfold (x ∈ y :: l) (x = y ∨ P).
+  Proof. constructor. by rewrite elem_of_cons, (set_unfold (x ∈ l) P). Qed.
+  Global Instance set_unfold_app x l k P Q :
+    SetUnfold (x ∈ l) P → SetUnfold (x ∈ k) Q → SetUnfold (x ∈ l ++ k) (P ∨ Q).
+  Proof.
+    intros ??; constructor.
+    by rewrite elem_of_app, (set_unfold (x ∈ l) P), (set_unfold (x ∈ k) Q).
+  Qed.
+End list_unfold.
 
 (** * Guard *)
 Global Instance collection_guard `{CollectionMonad M} : MGuard M :=
