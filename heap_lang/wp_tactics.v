@@ -27,25 +27,25 @@ Tactic Notation "wp_rec" ">" :=
     idtac; (* <https://coq.inria.fr/bugs/show_bug.cgi?id=4584> *)
     lazymatch goal with
     | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-      match eval cbv in e' with
-      | App (Rec _ _ _) _ =>
-         wp_bind K; etrans;
-           [|first [eapply wp_rec' | eapply wp_rec];
-               repeat (reflexivity || rewrite /= to_of_val)];
-           simpl_subst; wp_finish
-      end)
+      match eval hnf in e' with App ?e1 _ =>
+(* hnf does not reduce through an of_val *)
+(*      match eval hnf in e1 with Rec _ _ _ => *)
+      wp_bind K; etrans;
+         [|eapply wp_rec'; repeat rewrite /= to_of_val; reflexivity];
+         simpl_subst; wp_finish
+(*      end *) end)
      end).
 Tactic Notation "wp_rec" := wp_rec>; try strip_later.
 
 Tactic Notation "wp_lam" ">" :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval cbv in e' with
-    | App (Rec BAnon _ _) _ =>
-       wp_bind K; etrans;
-         [|eapply wp_lam; repeat (reflexivity || rewrite /= to_of_val)];
-         simpl_subst; wp_finish
-    end)
+    match eval hnf in e' with App ?e1 _ =>
+(*    match eval hnf in e1 with Rec BAnon _ _ => *)
+    wp_bind K; etrans;
+       [|eapply wp_lam; repeat (reflexivity || rewrite /= to_of_val)];
+       simpl_subst; wp_finish
+(*    end *) end)
   end.
 Tactic Notation "wp_lam" := wp_lam>; try strip_later.
 
@@ -57,7 +57,7 @@ Tactic Notation "wp_seq" := wp_let.
 Tactic Notation "wp_op" ">" :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval cbv in e' with
+    match eval hnf in e' with
     | BinOp LtOp _ _ => wp_bind K; apply wp_lt; wp_finish
     | BinOp LeOp _ _ => wp_bind K; apply wp_le; wp_finish
     | BinOp EqOp _ _ => wp_bind K; apply wp_eq; wp_finish
@@ -72,10 +72,9 @@ Tactic Notation "wp_op" := wp_op>; try strip_later.
 Tactic Notation "wp_if" ">" :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval cbv in e' with
-    | If _ _ _ =>
-       wp_bind K;
-       etrans; [|apply wp_if_true || apply wp_if_false]; wp_finish
+    match eval hnf in e' with If _ _ _ =>
+    wp_bind K;
+    etrans; [|apply wp_if_true || apply wp_if_false]; wp_finish
     end)
   end.
 Tactic Notation "wp_if" := wp_if>; try strip_later.

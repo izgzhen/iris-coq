@@ -1,112 +1,206 @@
 From heap_lang Require Export lang.
-From prelude Require Import stringmap.
 Import heap_lang.
 
 (** The tactic [simpl_subst] performs substitutions in the goal. Its behavior
 can be tuned using instances of the type class [Closed e], which can be used
 to mark that expressions are closed, and should thus not be substituted into. *)
 
-Class Subst (e : expr) (x : string) (v : val) (er : expr) :=
-  do_subst : subst e x v = er.
-Hint Mode Subst + + + - : typeclass_instances.
+(** * Weakening *)
+Class WExpr {X Y} (H : X `included` Y) (e : expr X) (er : expr Y) :=
+  do_wexpr : wexpr H e = er.
+Hint Mode WExpr + + + + - : typeclass_instances.
+
+(* Variables *)
+Hint Extern 0 (WExpr _ (Var ?y) _) =>
+  apply var_proof_irrel : typeclass_instances.
+
+(* Rec *)
+Instance do_wexpr_rec_true {X Y f y e} {H : X `included` Y} er :
+  WExpr (wexpr_rec_prf H) e er → WExpr H (Rec f y e) (Rec f y er).
+Proof. intros; red; f_equal/=. by etrans; [apply wexpr_proof_irrel|]. Qed.
+
+(* Values *)
+Instance do_wexpr_of_val_nil (H : [] `included` []) v :
+  WExpr H (of_val v) (of_val v) | 0.
+Proof. apply wexpr_id. Qed.
+Instance do_wexpr_of_val_nil' X (H : X `included` []) v :
+  WExpr H (of_val' v) (of_val v) | 0.
+Proof. by rewrite /WExpr /of_val' wexpr_wexpr' wexpr_id. Qed.
+Instance do_wexpr_of_val Y (H : [] `included` Y) v :
+  WExpr H (of_val v) (of_val' v) | 1.
+Proof. apply wexpr_proof_irrel. Qed.
+Instance do_wexpr_of_val' X Y (H : X `included` Y) v :
+  WExpr H (of_val' v) (of_val' v) | 1.
+Proof. apply wexpr_wexpr. Qed.
+
+(* Boring connectives *)
+Section do_wexpr.
+Context {X Y : list string} (H : X `included` Y).
+Notation W := (WExpr H).
+
+(* Ground terms *)
+Global Instance do_wexpr_lit l : W (Lit l) (Lit l).
+Proof. done. Qed.
+Global Instance do_wexpr_loc l : W (Loc l) (Loc l).
+Proof. done. Qed.
+Global Instance do_wexpr_app e1 e2 e1r e2r :
+  W e1 e1r → W e2 e2r → W (App e1 e2) (App e1r e2r).
+Proof. intros; red; f_equal/=; apply: do_wexpr. Qed.
+Global Instance do_wexpr_unop op e er : W e er → W (UnOp op e) (UnOp op er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wexpr_binop op e1 e2 e1r e2r :
+  W e1 e1r → W e2 e2r → W (BinOp op e1 e2) (BinOp op e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wexpr_if e0 e1 e2 e0r e1r e2r :
+  W e0 e0r → W e1 e1r → W e2 e2r → W (If e0 e1 e2) (If e0r e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wexpr_pair e1 e2 e1r e2r :
+  W e1 e1r → W e2 e2r → W (Pair e1 e2) (Pair e1r e2r).
+Proof. by intros ??; red; f_equal/=. Qed.
+Global Instance do_wexpr_fst e er : W e er → W (Fst e) (Fst er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wexpr_snd e er : W e er → W (Snd e) (Snd er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wexpr_injL e er : W e er → W (InjL e) (InjL er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wexpr_injR e er : W e er → W (InjR e) (InjR er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wexpr_case e0 e1 e2 e0r e1r e2r :
+  W e0 e0r → W e1 e1r → W e2 e2r → W (Case e0 e1 e2) (Case e0r e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wexpr_fork e er : W e er → W (Fork e) (Fork er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wexpr_alloc e er : W e er → W (Alloc e) (Alloc er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wexpr_load e er : W e er → W (Load e) (Load er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wexpr_store e1 e2 e1r e2r :
+  W e1 e1r → W e2 e2r → W (Store e1 e2) (Store e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wexpr_cas e0 e1 e2 e0r e1r e2r :
+  W e0 e0r → W e1 e1r → W e2 e2r → W (Cas e0 e1 e2) (Cas e0r e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+End do_wexpr.
+
+(** * WSubstitution *)
+Class WSubst {X Y} (x : string) (es : expr []) H (e : expr X) (er : expr Y) :=
+  do_wsubst : wsubst x es H e = er.
+Hint Mode WSubst + + + + + + - : typeclass_instances.
+
+(* Variables *)
+Lemma do_wsubst_var_eq {X Y x es} {H : X `included` x :: Y} `{VarBound x X} er :
+  WExpr (included_nil _) es er → WSubst x es H (Var x) er.
+Proof.
+  intros; red; simpl. case_decide; last done.
+  by etrans; [apply wexpr_proof_irrel|].
+Qed.
+Hint Extern 0 (WSubst ?x ?v _ (Var ?y) _) => first
+  [ apply var_proof_irrel
+  | apply do_wsubst_var_eq ] : typeclass_instances.
+
+(** Rec *)
+Lemma do_wsubst_rec_true {X Y x es f y e} {H : X `included` x :: Y}
+    (Hfy : BNamed x ≠ f ∧ BNamed x ≠ y) er :
+  WSubst x es (wsubst_rec_true_prf H Hfy) e er →
+  WSubst x es H (Rec f y e) (Rec f y er).
+Proof.
+  intros ?; red; f_equal/=; case_decide; last done.
+  by etrans; [apply wsubst_proof_irrel|].
+Qed.
+Lemma do_wsubst_rec_false {X Y x es f y e} {H : X `included` x :: Y}
+    (Hfy : ¬(BNamed x ≠ f ∧ BNamed x ≠ y)) er :
+  WExpr (wsubst_rec_false_prf H Hfy) e er →
+  WSubst x es H (Rec f y e) (Rec f y er).
+Proof.
+  intros; red; f_equal/=; case_decide; first done.
+  by etrans; [apply wexpr_proof_irrel|].
+Qed.
+
+Ltac bool_decide_no_check := apply (bool_decide_unpack _); vm_cast_no_check I.
+Hint Extern 0 (WSubst ?x ?v _ (Rec ?f ?y ?e) _) =>
+  match eval vm_compute in (bool_decide (BNamed x ≠ f ∧ BNamed x ≠ y)) with
+  | true => eapply (do_wsubst_rec_true ltac:(bool_decide_no_check))
+  | false => eapply (do_wsubst_rec_false ltac:(bool_decide_no_check))
+  end : typeclass_instances.
+
+(* Values *)
+Instance do_wsubst_of_val_nil x es (H : [] `included` [x]) w :
+  WSubst x es H (of_val w) (of_val w) | 0.
+Proof. apply wsubst_closed_nil. Qed.
+Instance do_wsubst_of_val_nil' {X} x es (H : X `included` [x]) w :
+  WSubst x es H (of_val' w) (of_val w) | 0.
+Proof. by rewrite /WSubst /of_val' wsubst_wexpr' wsubst_closed_nil. Qed.
+Instance do_wsubst_of_val Y x es (H : [] `included` x :: Y) w :
+  WSubst x es H (of_val w) (of_val' w) | 1.
+Proof. apply wsubst_closed, not_elem_of_nil. Qed.
+Instance do_wsubst_of_val' X Y x es (H : X `included` x :: Y) w :
+  WSubst x es H (of_val' w) (of_val' w) | 1.
+Proof.
+  rewrite /WSubst /of_val' wsubst_wexpr'.
+  apply wsubst_closed, not_elem_of_nil.
+Qed.
+
+(* Boring connectives *)
+Section wsubst.
+Context {X Y} (x : string) (es : expr []) (H : X `included` x :: Y).
+Notation Sub := (WSubst x es H).
+
+(* Ground terms *)
+Global Instance do_wsubst_lit l : Sub (Lit l) (Lit l).
+Proof. done. Qed.
+Global Instance do_wsubst_loc l : Sub (Loc l) (Loc l).
+Proof. done. Qed.
+Global Instance do_wsubst_app e1 e2 e1r e2r :
+  Sub e1 e1r → Sub e2 e2r → Sub (App e1 e2) (App e1r e2r).
+Proof. intros; red; f_equal/=; apply: do_wsubst. Qed.
+Global Instance do_wsubst_unop op e er : Sub e er → Sub (UnOp op e) (UnOp op er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wsubst_binop op e1 e2 e1r e2r :
+  Sub e1 e1r → Sub e2 e2r → Sub (BinOp op e1 e2) (BinOp op e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wsubst_if e0 e1 e2 e0r e1r e2r :
+  Sub e0 e0r → Sub e1 e1r → Sub e2 e2r → Sub (If e0 e1 e2) (If e0r e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wsubst_pair e1 e2 e1r e2r :
+  Sub e1 e1r → Sub e2 e2r → Sub (Pair e1 e2) (Pair e1r e2r).
+Proof. by intros ??; red; f_equal/=. Qed.
+Global Instance do_wsubst_fst e er : Sub e er → Sub (Fst e) (Fst er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wsubst_snd e er : Sub e er → Sub (Snd e) (Snd er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wsubst_injL e er : Sub e er → Sub (InjL e) (InjL er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wsubst_injR e er : Sub e er → Sub (InjR e) (InjR er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wsubst_case e0 e1 e2 e0r e1r e2r :
+  Sub e0 e0r → Sub e1 e1r → Sub e2 e2r → Sub (Case e0 e1 e2) (Case e0r e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wsubst_fork e er : Sub e er → Sub (Fork e) (Fork er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wsubst_alloc e er : Sub e er → Sub (Alloc e) (Alloc er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wsubst_load e er : Sub e er → Sub (Load e) (Load er).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wsubst_store e1 e2 e1r e2r :
+  Sub e1 e1r → Sub e2 e2r → Sub (Store e1 e2) (Store e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+Global Instance do_wsubst_cas e0 e1 e2 e0r e1r e2r :
+  Sub e0 e0r → Sub e1 e1r → Sub e2 e2r → Sub (Cas e0 e1 e2) (Cas e0r e1r e2r).
+Proof. by intros; red; f_equal/=. Qed.
+End wsubst.
+
+(** * The tactic *)
+Lemma do_subst {X} (x: string) (es: expr []) (e: expr (x :: X)) (er: expr X) :
+  WSubst x es (λ _, id) e er → subst x es e = er.
+Proof. done. Qed.
 
 Ltac simpl_subst :=
   repeat match goal with
-  | |- context [subst ?e ?x ?v] => progress rewrite (@do_subst e x v)
+  | |- context [subst ?x ?es ?e] => progress rewrite (@do_subst _ x es e)
   | |- _ => progress csimpl
-  end; fold of_val.
-
+  end.
+Arguments wexpr : simpl never.
+Arguments subst : simpl never.
+Arguments wsubst : simpl never.
 Arguments of_val : simpl never.
-Hint Extern 10 (Subst (of_val _) _ _ _) => unfold of_val : typeclass_instances.
-Hint Extern 10 (Closed (of_val _)) => unfold of_val : typeclass_instances.
-
-Instance subst_fallthrough e x v : Subst e x v (subst e x v) | 1000.
-Proof. done. Qed.
-
-Class SubstIf (P : Prop) (e : expr) (x : string) (v : val) (er : expr) := {
-  subst_if_true : P → subst e x v = er;
-  subst_if_false : ¬P → e = er
-}.
-Hint Mode SubstIf + + + + - : typeclass_instances.
-Definition subst_if_mk_true (P : Prop) x v e er :
-  Subst e x v er → P → SubstIf P e x v er.
-Proof. by split. Qed.
-Definition subst_if_mk_false (P : Prop) x v e : ¬P → SubstIf P e x v e.
-Proof. by split. Qed.
-
-Ltac bool_decide_no_check := apply (bool_decide_unpack _); vm_cast_no_check I.
-
-Hint Extern 0 (SubstIf ?P ?e ?x ?v _) =>
-  match eval vm_compute in (bool_decide P) with
-  | true => apply subst_if_mk_true; [|bool_decide_no_check]
-  | false => apply subst_if_mk_false; bool_decide_no_check
-  end : typeclass_instances.
-
-Instance subst_closed e x v : Closed e → Subst e x v e | 0.
-Proof. intros He; apply He. Qed.
-
-Instance lit_closed l : Closed (Lit l).
-Proof. done. Qed.
-Instance loc_closed l : Closed (Loc l).
-Proof. done. Qed.
-
-Definition subst_var_eq y x v : x = y → Subst (Var y) x v (of_val v).
-Proof. intros. by red; rewrite /= decide_True. Defined.
-Definition subst_var_ne y x v : x ≠ y → Subst (Var y) x v (Var y).
-Proof. intros. by red; rewrite /= decide_False. Defined.
-
-Hint Extern 0 (Subst (Var ?y) ?x ?v _) =>
-  match eval vm_compute in (bool_decide (x = y)) with
-  | true => apply subst_var_eq; bool_decide_no_check
-  | false => apply subst_var_ne; bool_decide_no_check
-  end : typeclass_instances.
-
-Instance subst_rec f y e x v er :
-  SubstIf (BNamed x ≠ f ∧ BNamed x ≠ y) e x v er →
-  Subst (Rec f y e) x v (Rec f y er).
-Proof. intros [??]; red; f_equal/=; case_decide; auto. Qed.
-
-Instance subst_app e1 e2 x v e1r e2r :
-  Subst e1 x v e1r → Subst e2 x v e2r → Subst (App e1 e2) x v (App e1r e2r).
-Proof. by intros; red; f_equal/=. Qed.
-Instance subst_unop op e x v er :
-  Subst e x v er → Subst (UnOp op e) x v (UnOp op er).
-Proof. by intros; red; f_equal/=. Qed.
-Instance subst_binop op e1 e2 x v e1r e2r :
-  Subst e1 x v e1r → Subst e2 x v e2r →
-  Subst (BinOp op e1 e2) x v (BinOp op e1r e2r).
-Proof. by intros; red; f_equal/=. Qed.
-Instance subst_if e0 e1 e2 x v e0r e1r e2r :
-  Subst e0 x v e0r → Subst e1 x v e1r → Subst e2 x v e2r →
-  Subst (If e0 e1 e2) x v (If e0r e1r e2r).
-Proof. by intros; red; f_equal/=. Qed.
-Instance subst_pair e1 e2 x v e1r e2r :
-  Subst e1 x v e1r → Subst e2 x v e2r → Subst (Pair e1 e2) x v (Pair e1r e2r).
-Proof. by intros ??; red; f_equal/=. Qed.
-Instance subst_fst e x v er : Subst e x v er → Subst (Fst e) x v (Fst er).
-Proof. by intros; red; f_equal/=. Qed.
-Instance subst_snd e x v er : Subst e x v er → Subst (Snd e) x v (Snd er).
-Proof. by intros; red; f_equal/=. Qed.
-Instance subst_injL e x v er : Subst e x v er → Subst (InjL e) x v (InjL er).
-Proof. by intros; red; f_equal/=. Qed.
-Instance subst_injR e x v er : Subst e x v er → Subst (InjR e) x v (InjR er).
-Proof. by intros; red; f_equal/=. Qed.
-Instance subst_case e0 e1 e2 x v e0r e1r e2r :
-  Subst e0 x v e0r → Subst e1 x v e1r → Subst e2 x v e2r →
-  Subst (Case e0 e1 e2) x v (Case e0r e1r e2r).
-Proof. by intros; red; f_equal/=. Qed.
-Instance subst_fork e x v er : Subst e x v er → Subst (Fork e) x v (Fork er).
-Proof. by intros; red; f_equal/=. Qed.
-Instance subst_alloc e x v er : Subst e x v er → Subst (Alloc e) x v (Alloc er).
-Proof. by intros; red; f_equal/=. Qed.
-Instance subst_load e x v er : Subst e x v er → Subst (Load e) x v (Load er).
-Proof. by intros; red; f_equal/=. Qed.
-Instance subst_store e1 e2 x v e1r e2r :
-  Subst e1 x v e1r → Subst e2 x v e2r → Subst (Store e1 e2) x v (Store e1r e2r).
-Proof. by intros; red; f_equal/=. Qed.
-Instance subst_cas e0 e1 e2 x v e0r e1r e2r :
-  Subst e0 x v e0r → Subst e1 x v e1r → Subst e2 x v e2r →
-  Subst (Cas e0 e1 e2) x v (Cas e0r e1r e2r).
-Proof. by intros; red; f_equal/=. Qed.
-
-Global Opaque subst.
+Arguments of_val' : simpl never.

@@ -1,4 +1,4 @@
-From heap_lang Require Export lang.
+From heap_lang Require Export substitution.
 From prelude Require Import fin_maps.
 Import heap_lang.
 
@@ -34,6 +34,7 @@ Ltac reshape_val e tac :=
   let rec go e :=
   match e with
   | of_val ?v => v
+  | of_val' ?v => v
   | Rec ?f ?x ?e => constr:(RecV f x e)
   | Lit ?l => constr:(LitV l)
   | Pair ?e1 ?e2 =>
@@ -83,7 +84,7 @@ Ltac do_step tac :=
   | |- prim_step ?e1 ?σ1 ?e2 ?σ2 ?ef =>
      reshape_expr e1 ltac:(fun K e1' =>
        eapply Ectx_step with K e1' _; [reflexivity|reflexivity|];
-       first [apply alloc_fresh|econstructor];
+       first [apply alloc_fresh|econstructor; try reflexivity; simpl_subst];
        rewrite ?to_of_val; tac; fail)
   | |- head_step ?e1 ?σ1 ?e2 ?σ2 ?ef =>
      first [apply alloc_fresh|econstructor];

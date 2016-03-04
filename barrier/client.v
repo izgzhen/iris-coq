@@ -3,12 +3,12 @@ From program_logic Require Import auth sts saved_prop hoare ownership.
 Import uPred.
 
 Definition worker (n : Z) : val :=
-  λ: "b" "y", wait "b" ;; !"y" #n.
-Definition client : expr :=
+  λ: "b" "y", ^wait '"b" ;; !'"y" #n.
+Definition client : expr [] :=
   let: "y" := ref #0 in
-  let: "b" := newbarrier #() in
-  Fork (Fork (worker 12 "b" "y") ;; worker 17 "b" "y") ;;
-  "y" <- (λ: "z", "z" + #42) ;; signal "b".
+  let: "b" := ^newbarrier #() in
+  Fork (Fork (^(worker 12) '"b" '"y") ;; ^(worker 17) '"b" '"y") ;;
+  '"y" <- (λ: "z", '"z" + #42) ;; ^signal '"b".
 
 Section client.
   Context {Σ : rFunctorG} `{!heapG Σ, !barrierG Σ} (heapN N : namespace).
@@ -16,7 +16,7 @@ Section client.
 
   Definition y_inv q y : iProp :=
     (∃ f : val, y ↦{q} f ★ □ ∀ n : Z, || f #n {{ λ v, v = #(n + 42) }})%I.
-  
+
   Lemma y_inv_split q y :
     y_inv q y ⊑ (y_inv (q/2) y ★ y_inv (q/2) y).
   Proof.
@@ -56,7 +56,7 @@ Section client.
       wp_seq. (ewp eapply wp_store); eauto with I. strip_later.
       rewrite assoc [(_ ★ y ↦ _)%I]comm. apply sep_mono_r, wand_intro_l.
       wp_seq. rewrite -signal_spec right_id assoc sep_elim_l comm.
-      apply sep_mono_r. rewrite /y_inv -(exist_intro (λ: "z", "z" + #42)%V).
+      apply sep_mono_r. rewrite /y_inv -(exist_intro (λ: "z", '"z" + #42)%V).
       apply sep_intro_True_r; first done. apply: always_intro.
       apply forall_intro=>n. wp_let. wp_op. by apply const_intro. }
     (* The two spawned threads, the waiters. *)

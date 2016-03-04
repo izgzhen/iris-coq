@@ -10,18 +10,22 @@ Notation "|| e {{ Φ } }" := (wp ⊤ e%E Φ)
 
 Coercion LitInt : Z >-> base_lit.
 Coercion LitBool : bool >-> base_lit.
-(** No coercion from base_lit to expr. This makes is slightly easier to tell
-   apart language and Coq expressions. *)
-Coercion Var : string >-> expr.
 Coercion App : expr >-> Funclass.
 Coercion of_val : val >-> expr.
 
 Coercion BNamed : string >-> binder.
 Notation "<>" := BAnon : binder_scope.
 
-(* No scope, does not conflict and scope is often not inferred properly. *)
+(* No scope for the values, does not conflict and scope is often not inferred properly. *)
 Notation "# l" := (LitV l%Z%V) (at level 8, format "# l").
 Notation "% l" := (LocV l) (at level 8, format "% l").
+Notation "# l" := (LitV l%Z%V) (at level 8, format "# l") : val_scope.
+Notation "% l" := (LocV l) (at level 8, format "% l") : val_scope.
+Notation "# l" := (Lit l%Z%V) (at level 8, format "# l") : expr_scope.
+Notation "% l" := (Loc l) (at level 8, format "% l") : expr_scope.
+
+Notation "' x" := (Var x) (at level 8, format "' x") : expr_scope.
+Notation "^ v" := (of_val' v%V) (at level 8, format "^ v") : expr_scope.
 
 (** Syntax inspired by Coq/Ocaml. Constructions with higher precedence come
     first. *)
@@ -56,10 +60,23 @@ Notation "'if:' e1 'then' e2 'else' e3" := (If e1%E e2%E e3%E)
 are stated explicitly instead of relying on the Notations Let and Seq as
 defined above. This is needed because App is now a coercion, and these
 notations are otherwise not pretty printed back accordingly. *)
-Notation "λ: x , e" := (Lam x e%E)
+Notation "'rec:' f x y := e" := (Rec f x (Lam y e%E))
+  (at level 102, f, x, y at level 1, e at level 200) : expr_scope.
+Notation "'rec:' f x y := e" := (RecV f x (Lam y e%E))
+  (at level 102, f, x, y at level 1, e at level 200) : val_scope.
+Notation "'rec:' f x y .. z := e" := (Rec f x (Lam y .. (Lam z e%E) ..))
+  (at level 102, f, x, y, z at level 1, e at level 200) : expr_scope.
+Notation "'rec:' f x y .. z := e" := (RecV f x (Lam y .. (Lam z e%E) ..))
+  (at level 102, f, x, y, z at level 1, e at level 200) : val_scope.
+
+Notation "λ: x , e" := (Lam x  e%E)
   (at level 102, x at level 1, e at level 200) : expr_scope.
+Notation "λ: x y .. z , e" := (Lam x (Lam y .. (Lam z e%E) ..))
+  (at level 102, x, y, z at level 1, e at level 200) : expr_scope.
 Notation "λ: x , e" := (LamV x e%E)
   (at level 102, x at level 1, e at level 200) : val_scope.
+Notation "λ: x y .. z , e" := (LamV x (Lam y .. (Lam z e%E) .. ))
+  (at level 102, x, y, z at level 1, e at level 200) : val_scope.
 
 Notation "'let:' x := e1 'in' e2" := (Lam x e2%E e1%E)
   (at level 102, x at level 1, e1, e2 at level 200) : expr_scope.
@@ -70,20 +87,3 @@ Notation "'let:' x := e1 'in' e2" := (LamV x e2%E e1%E)
   (at level 102, x at level 1, e1, e2 at level 200) : val_scope.
 Notation "e1 ;; e2" := (LamV BAnon e2%E e1%E)
   (at level 100, e2 at level 200, format "e1  ;;  e2") : val_scope.
-
-Notation "'rec:' f x y := e" := (Rec f x (Lam y e%E))
-  (at level 102, f, x, y at level 1, e at level 200) : expr_scope.
-Notation "'rec:' f x y := e" := (RecV f x (Lam y e%E))
-  (at level 102, f, x, y at level 1, e at level 200) : val_scope.
-Notation "'rec:' f x y z := e" := (Rec f x (Lam y (Lam z e%E)))
-  (at level 102, f, x, y, z at level 1, e at level 200) : expr_scope.
-Notation "'rec:' f x y z := e" := (RecV f x (Lam y (Lam z e%E)))
-  (at level 102, f, x, y, z at level 1, e at level 200) : val_scope.
-Notation "λ: x y , e" := (Lam x (Lam y e%E))
-  (at level 102, x, y at level 1, e at level 200) : expr_scope.
-Notation "λ: x y , e" := (LamV x (Lam y e%E))
-  (at level 102, x, y at level 1, e at level 200) : val_scope.
-Notation "λ: x y z , e" := (Lam x (Lam y (Lam z e%E)))
-  (at level 102, x, y, z at level 1, e at level 200) : expr_scope.
-Notation "λ: x y z , e" := (LamV x (Lam y (Lam z e%E)))
-  (at level 102, x, y, z at level 1, e at level 200) : val_scope.

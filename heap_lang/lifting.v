@@ -12,7 +12,7 @@ Context {Σ : rFunctor}.
 Implicit Types P Q : iProp heap_lang Σ.
 Implicit Types Φ : val → iProp heap_lang Σ.
 Implicit Types K : ectx.
-Implicit Types ef : option expr.
+Implicit Types ef : option (expr []).
 
 (** Bind. *)
 Lemma wp_bind {E e} K Φ :
@@ -84,19 +84,19 @@ Qed.
 
 Lemma wp_rec E f x e1 e2 v Φ :
   to_val e2 = Some v →
-  ▷ || subst' (subst' e1 f (RecV f x e1)) x v @ E {{ Φ }}
+  ▷ || subst' x e2 (subst' f (Rec f x e1) e1) @ E {{ Φ }}
   ⊑ || App (Rec f x e1) e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_step (App _ _)
-    (subst' (subst' e1 f (RecV f x e1)) x v) None) ?right_id //=;
+    (subst' x e2 (subst' f (Rec f x e1) e1)) None) //= ?right_id;
     intros; inv_step; eauto.
 Qed.
 
-Lemma wp_rec' E f x erec v1 e2 v2 Φ :
-  v1 = RecV f x erec →
+Lemma wp_rec' E f x erec e1 e2 v2 Φ :
+  e1 = Rec f x erec →
   to_val e2 = Some v2 →
-  ▷ || subst' (subst' erec f v1) x v2 @ E {{ Φ }}
-  ⊑ || App (of_val v1) e2 @ E {{ Φ }}.
+  ▷ || subst' x e2 (subst' f e1 erec) @ E {{ Φ }}
+  ⊑ || App e1 e2 @ E {{ Φ }}.
 Proof. intros ->. apply wp_rec. Qed.
 
 Lemma wp_un_op E op l l' Φ :
