@@ -32,8 +32,16 @@ Proof.
   destruct mx; rewrite /= ?elem_of_cons; naive_solver.
 Qed.
 
+(** A typeclass for whether a variable is bound in a given
+   context. Making this a typeclass means we can use tpeclass search
+   to program solving these constraints, so this becomes extensible.
+   Also, since typeclass search runs *after* unification, Coq has already
+   inferred the X for us; if we were to go for embedded proof terms ot
+   tactics, Coq would do things in the wrong order. *)
 Class VarBound (x : string) (X : list string) :=
   var_bound : bool_decide (x ∈ X).
+(* FIXME shouldn't this have this Hint to only perfom search of x and X
+   are not evars? *)
 Hint Extern 0 (VarBound _ _) => vm_compute; exact I : typeclass_instances. 
 
 Instance var_bound_proof_irrel x X : ProofIrrel (VarBound x X).
@@ -46,6 +54,13 @@ Qed.
 
 Inductive expr (X : list string) :=
   (* Base lambda calculus *)
+      (* Var is the only place where the terms contain a proof. The fact that they
+       contain a proof at all is suboptimal, since this means two seeminlgy
+       convertible terms could differ in their proofs. However, this also has
+       some advantages:
+       * We can make the [X] an index, so we can do non-dependent match.
+       * In expr_weaken, we can push the proof all the way into Var, making
+         sure that proofs never block computation. *)
   | Var (x : string) `{VarBound x X}
   | Rec (f x : binder) (e : expr (f :b: x :b: X))
   | App (e1 e2 : expr X)
