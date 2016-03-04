@@ -126,7 +126,7 @@ Qed.
 Lemma newbarrier_spec (P : iProp) (Φ : val → iProp) :
   heapN ⊥ N →
   (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ (%l))
-  ⊑ || newbarrier #() {{ Φ }}.
+  ⊑ #> newbarrier #() {{ Φ }}.
 Proof.
   intros HN. rewrite /newbarrier. wp_seq.
   rewrite -wp_pvs. wp eapply wp_alloc; eauto with I ndisj.
@@ -172,7 +172,7 @@ Proof.
 Qed.
 
 Lemma signal_spec l P (Φ : val → iProp) :
-  (send l P ★ P ★ Φ #()) ⊑ || signal (%l) {{ Φ }}.
+  (send l P ★ P ★ Φ #()) ⊑ #> signal (%l) {{ Φ }}.
 Proof.
   rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
   apply exist_elim=>γ. rewrite -!assoc. apply const_elim_sep_l=>?. wp_let.
@@ -199,7 +199,7 @@ Proof.
 Qed.
 
 Lemma wait_spec l P (Φ : val → iProp) :
-  (recv l P ★ (P -★ Φ #())) ⊑ || wait (%l) {{ Φ }}.
+  (recv l P ★ (P -★ Φ #())) ⊑ #> wait (%l) {{ Φ }}.
 Proof.
   rename P into R. wp_rec.
   rewrite {1}/recv /barrier_ctx. rewrite !sep_exist_r.

@@ -23,8 +23,8 @@ Lemma wp_lift_step E1 E2
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
   (|={E2,E1}=> ▷ ownP σ1 ★ ▷ ∀ e2 σ2 ef,
-    (■ φ e2 σ2 ef ∧ ownP σ2) -★ |={E1,E2}=> || e2 @ E2 {{ Φ }} ★ wp_fork ef)
-  ⊑ || e1 @ E2 {{ Φ }}.
+    (■ φ e2 σ2 ef ∧ ownP σ2) -★ |={E1,E2}=> #> e2 @ E2 {{ Φ }} ★ wp_fork ef)
+  ⊑ #> e1 @ E2 {{ Φ }}.
 Proof.
   intros ? He Hsafe Hstep. rewrite pvs_eq wp_eq.
   uPred.unseal; split=> n r ? Hvs; constructor; auto.
@@ -45,7 +45,7 @@ Lemma wp_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) Φ e1 :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →
-  (▷ ∀ e2 ef, ■ φ e2 ef → || e2 @ E {{ Φ }} ★ wp_fork ef) ⊑ || e1 @ E {{ Φ }}.
+  (▷ ∀ e2 ef, ■ φ e2 ef → #> e2 @ E {{ Φ }} ★ wp_fork ef) ⊑ #> e1 @ E {{ Φ }}.
 Proof.
   intros He Hsafe Hstep; rewrite wp_eq; uPred.unseal.
   split=> n r ? Hwp; constructor; auto.
@@ -67,7 +67,7 @@ Lemma wp_lift_atomic_step {E Φ} e1
   (∀ e2 σ2 ef,
     prim_step e1 σ1 e2 σ2 ef → ∃ v2, to_val e2 = Some v2 ∧ φ v2 σ2 ef) →
   (▷ ownP σ1 ★ ▷ ∀ v2 σ2 ef, ■ φ v2 σ2 ef ∧ ownP σ2 -★ Φ v2 ★ wp_fork ef)
-  ⊑ || e1 @ E {{ Φ }}.
+  ⊑ #> e1 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_step E E (λ e2 σ2 ef, ∃ v2,
     to_val e2 = Some v2 ∧ φ v2 σ2 ef) _ e1 σ1) //; [].
@@ -86,7 +86,7 @@ Lemma wp_lift_atomic_det_step {E Φ e1} σ1 v2 σ2 ef :
   reducible e1 σ1 →
   (∀ e2' σ2' ef', prim_step e1 σ1 e2' σ2' ef' →
     σ2 = σ2' ∧ to_val e2' = Some v2 ∧ ef = ef') →
-  (▷ ownP σ1 ★ ▷ (ownP σ2 -★ Φ v2 ★ wp_fork ef)) ⊑ || e1 @ E {{ Φ }}.
+  (▷ ownP σ1 ★ ▷ (ownP σ2 -★ Φ v2 ★ wp_fork ef)) ⊑ #> e1 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_step _ (λ v2' σ2' ef',
     σ2 = σ2' ∧ v2 = v2' ∧ ef = ef') σ1) //; last naive_solver.
@@ -101,7 +101,7 @@ Lemma wp_lift_pure_det_step {E Φ} e1 e2 ef :
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2' σ2 ef', prim_step e1 σ1 e2' σ2 ef' → σ1 = σ2 ∧ e2 = e2' ∧ ef = ef')→
-  ▷ (|| e2 @ E {{ Φ }} ★ wp_fork ef) ⊑ || e1 @ E {{ Φ }}.
+  ▷ (#> e2 @ E {{ Φ }} ★ wp_fork ef) ⊑ #> e1 @ E {{ Φ }}.
 Proof.
   intros.
   rewrite -(wp_lift_pure_step E (λ e2' ef', e2 = e2' ∧ ef = ef') _ e1) //=.
