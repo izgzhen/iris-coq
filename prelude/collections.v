@@ -324,6 +324,10 @@ Section list_unfold.
     intros ??; constructor.
     by rewrite elem_of_app, (set_unfold (x ∈ l) P), (set_unfold (x ∈ k) Q).
   Qed.
+  Global Instance set_unfold_included l k (P Q : A → Prop) :
+    (∀ x, SetUnfold (x ∈ l) (P x)) → (∀ x, SetUnfold (x ∈ k) (Q x)) →
+    SetUnfold (l `included` k) (∀ x, P x → Q x).
+  Proof. by constructor; unfold included; set_unfold. Qed.
 End list_unfold.
 
 (** * Guard *)

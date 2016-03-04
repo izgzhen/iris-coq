@@ -282,6 +282,9 @@ Inductive Forall3 {A B C} (P : A → B → C → Prop) :
      P x y z → Forall3 P l k k' → Forall3 P (x :: l) (y :: k) (z :: k').
 
 (** Set operations on lists *)
+Definition included {A} (l1 l2 : list A) := ∀ x, x ∈ l1 → x ∈ l2.
+Infix "`included`" := included (at level 70) : C_scope.
+
 Section list_set.
   Context {A} {dec : ∀ x y : A, Decision (x = y)}.
   Global Instance elem_of_list_dec {dec : ∀ x y : A, Decision (x = y)}
@@ -2017,6 +2020,12 @@ Section contains_dec.
     abstract (rewrite Permutation_alt; tauto).
   Defined.
 End contains_dec.
+
+(** ** Properties of [included] *)
+Global Instance included_preorder : PreOrder (@included A).
+Proof. split; firstorder. Qed.
+Lemma included_nil l : [] `included` l.
+Proof. intros x. by rewrite elem_of_nil. Qed.
 End more_general_properties.
 
 (** ** Properties of the [Forall] and [Exists] predicate *)
