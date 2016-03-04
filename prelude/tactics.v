@@ -205,18 +205,20 @@ Tactic Notation "simplify_eq" := repeat
   | H : ?f _ = ?f _ |- _ => apply (inj f) in H
   | H : ?f _ _ = ?f _ _ |- _ => apply (inj2 f) in H; destruct H
     (* before [injection] to circumvent bug #2939 in some situations *)
-  | H : ?f _ = ?f _ |- _ => injection H as H
+  | H : ?f _ = ?f _ |- _ => progress injection H as H
     (* first hyp will be named [H], subsequent hyps will be given fresh names *)
-  | H : ?f _ _ = ?f _ _ |- _ => injection H as H
-  | H : ?f _ _ _ = ?f _ _ _ |- _ => injection H as H
-  | H : ?f _ _ _ _ = ?f _ _ _ _ |- _ => injection H as H
-  | H : ?f _ _ _ _ _ = ?f _ _ _ _ _ |- _ => injection H as H
-  | H : ?f _ _ _ _ _ _ = ?f _ _ _ _ _ _ |- _ => injection H as H
+  | H : ?f _ _ = ?f _ _ |- _ => progress injection H as H
+  | H : ?f _ _ _ = ?f _ _ _ |- _ => progress injection H as H
+  | H : ?f _ _ _ _ = ?f _ _ _ _ |- _ => progress injection H as H
+  | H : ?f _ _ _ _ _ = ?f _ _ _ _ _ |- _ => progress injection H as H
+  | H : ?f _ _ _ _ _ _ = ?f _ _ _ _ _ _ |- _ => progress injection H as H
   | H : ?x = ?x |- _ => clear H
     (* unclear how to generalize the below *)
   | H1 : ?o = Some ?x, H2 : ?o = Some ?y |- _ =>
     assert (y = x) by congruence; clear H2
   | H1 : ?o = Some ?x, H2 : ?o = None |- _ => congruence
+  | H : @existT ?A _ _ _ = existT _ _ |- _ =>
+     apply (Eqdep_dec.inj_pair2_eq_dec _ (decide_rel (@eq A))) in H
   end.
 Tactic Notation "simplify_eq" "/=" :=
   repeat (progress csimpl in * || simplify_eq).
