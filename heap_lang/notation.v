@@ -37,7 +37,7 @@ Notation "'match:' e0 'with' 'InjL' x1 => e1 | 'InjR' x2 => e2 'end'" :=
   (e0, x1, e1, x2, e2 at level 200) : expr_scope.
 Notation "'match:' e0 'with' 'InjR' x1 => e1 | 'InjL' x2 => e2 'end'" :=
   (Match e0 x2 e2 x1 e1)
-  (e0, x1, e1, x2, e2 at level 200) : expr_scope.
+  (e0, x1, e1, x2, e2 at level 200, only parsing) : expr_scope.
 Notation "()" := LitUnit : val_scope.
 Notation "! e" := (Load e%E) (at level 9, right associativity) : expr_scope.
 Notation "'ref' e" := (Alloc e%E)
