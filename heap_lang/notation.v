@@ -32,6 +32,7 @@ Notation "^ v" := (of_val' v%V) (at level 8, format "^ v") : expr_scope.
 (** Syntax inspired by Coq/Ocaml. Constructions with higher precedence come
     first. *)
 Notation "( e1 , e2 , .. , en )" := (Pair .. (Pair e1 e2) .. en) : expr_scope.
+Notation "( e1 , e2 , .. , en )" := (PairV .. (PairV e1 e2) .. en) : val_scope.
 Notation "'match:' e0 'with' 'InjL' x1 => e1 | 'InjR' x2 => e2 'end'" :=
   (Match e0 x1 e1 x2 e2)
   (e0, x1, e1, x2, e2 at level 200) : expr_scope.

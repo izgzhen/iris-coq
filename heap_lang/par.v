@@ -20,21 +20,21 @@ Context (heapN N : namespace).
 Local Notation iProp := (iPropG heap_lang Σ).
 
 Lemma par_spec (Ψ1 Ψ2 : val → iProp) e (f1 f2 : val) (Φ : val → iProp) :
-  heapN ⊥ N → to_val e = Some (PairV f1 f2) →
+  heapN ⊥ N → to_val e = Some (f1,f2)%V →
   (heap_ctx heapN ★ #> f1 #() {{ Ψ1 }} ★ #> f2 #() {{ Ψ2 }} ★
-   ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ Φ (PairV v1 v2))
+   ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ Φ (v1,v2)%V)
   ⊑ #> par e {{ Φ }}.
 Proof.
   intros. rewrite /par.
   wp_focus e. etransitivity; last by eapply wp_value. wp_let.
   (* FIXME: wp_proj should not spawn these goals. *)
   wp_proj; eauto using to_of_val.
-  (ewp eapply spawn_spec); eauto using to_of_val.
+  ewp eapply spawn_spec; eauto using to_of_val.
   apply sep_mono_r. apply sep_mono_r.
   apply forall_intro=>h. apply wand_intro_l. wp_let.
   wp_proj; eauto using to_of_val.
   wp_focus (f2 _). rewrite wp_frame_r wp_frame_l. apply wp_mono=>v2. wp_let.
-  (ewp eapply join_spec); eauto using to_of_val. apply sep_mono_r.
+  ewp eapply join_spec; eauto using to_of_val. apply sep_mono_r.
   apply forall_intro=>v1. apply wand_intro_l. wp_let.
   etransitivity; last by (eapply wp_value, to_val_Pair; eapply to_of_val).
   rewrite (forall_elim v1) (forall_elim v2). rewrite assoc.
@@ -44,7 +44,7 @@ Qed.
 Lemma wp_par (Ψ1 Ψ2 : val → iProp) (e1 e2 : expr []) (Φ : val → iProp) :
   heapN ⊥ N →
   (heap_ctx heapN ★ #> e1 {{ Ψ1 }} ★ #> e2 {{ Ψ2 }} ★
-   ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ Φ (PairV v1 v2))
+   ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ Φ (v1,v2)%V)
   ⊑ #> ParV e1 e2 {{ Φ }}.
 Proof.
   intros. rewrite -par_spec //. apply sep_mono_r.
