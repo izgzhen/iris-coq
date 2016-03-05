@@ -84,7 +84,7 @@ Inductive expr (X : list string) :=
   | Alloc (e : expr X)
   | Load (e : expr X)
   | Store (e1 : expr X) (e2 : expr X)
-  | Cas (e0 : expr X) (e1 : expr X) (e2 : expr X).
+  | CAS (e0 : expr X) (e1 : expr X) (e2 : expr X).
 
 Bind Scope expr_scope with expr.
 Delimit Scope expr_scope with E.
@@ -106,7 +106,7 @@ Arguments Loc {_} _.
 Arguments Alloc {_} _%E.
 Arguments Load {_} _%E.
 Arguments Store {_} _%E _%E.
-Arguments Cas {_} _%E _%E _%E.
+Arguments CAS {_} _%E _%E _%E.
 
 Inductive val :=
   | RecV (f x : binder) (e : expr (f :b: x :b: []))
@@ -192,9 +192,9 @@ Definition fill_item (Ki : ectx_item) (e : expr []) : expr [] :=
   | LoadCtx => Load e
   | StoreLCtx e2 => Store e e2
   | StoreRCtx v1 => Store (of_val v1) e
-  | CasLCtx e1 e2 => Cas e e1 e2
-  | CasMCtx v0 e2 => Cas (of_val v0) e e2
-  | CasRCtx v0 v1 => Cas (of_val v0) (of_val v1) e
+  | CasLCtx e1 e2 => CAS e e1 e2
+  | CasMCtx v0 e2 => CAS (of_val v0) e e2
+  | CasRCtx v0 v1 => CAS (of_val v0) (of_val v1) e
   end.
 Definition fill (K : ectx) (e : expr []) : expr [] := fold_right fill_item e K.
 
@@ -224,7 +224,7 @@ Program Fixpoint wexpr {X Y} (H : X `included` Y) (e : expr X) : expr Y :=
   | Alloc e => Alloc (wexpr H e)
   | Load  e => Load (wexpr H e)
   | Store e1 e2 => Store (wexpr H e1) (wexpr H e2)
-  | Cas e0 e1 e2 => Cas (wexpr H e0) (wexpr H e1) (wexpr H e2)
+  | CAS e0 e1 e2 => CAS (wexpr H e0) (wexpr H e1) (wexpr H e2)
   end.
 Solve Obligations with set_solver.
 
@@ -265,7 +265,7 @@ Program Fixpoint wsubst {X Y} (x : string) (es : expr [])
   | Alloc e => Alloc (wsubst x es H e)
   | Load e => Load (wsubst x es H e)
   | Store e1 e2 => Store (wsubst x es H e1) (wsubst x es H e2)
-  | Cas e0 e1 e2 => Cas (wsubst x es H e0) (wsubst x es H e1) (wsubst x es H e2)
+  | CAS e0 e1 e2 => CAS (wsubst x es H e0) (wsubst x es H e1) (wsubst x es H e2)
   end.
 Solve Obligations with set_solver.
 
@@ -333,11 +333,11 @@ Inductive head_step : expr [] → state → expr [] → state → option (expr [
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some vl → vl ≠ v1 →
-     head_step (Cas (Loc l) e1 e2) σ (Lit $ LitBool false) σ None
+     head_step (CAS (Loc l) e1 e2) σ (Lit $ LitBool false) σ None
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some v1 →
-     head_step (Cas (Loc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) None.
+     head_step (CAS (Loc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) None.
 
 (** Atomic expressions *)
 Definition atomic (e: expr []) : Prop :=
@@ -345,7 +345,7 @@ Definition atomic (e: expr []) : Prop :=
   | Alloc e => is_Some (to_val e)
   | Load e => is_Some (to_val e)
   | Store e1 e2 => is_Some (to_val e1) ∧ is_Some (to_val e2)
-  | Cas e0 e1 e2 => is_Some (to_val e0) ∧ is_Some (to_val e1) ∧ is_Some (to_val e2)
+  | CAS e0 e1 e2 => is_Some (to_val e0) ∧ is_Some (to_val e1) ∧ is_Some (to_val e2)
   (* Make "skip" atomic *)
   | App (Rec _ _ (Lit _)) (Lit _) => True
   | _ => False
@@ -545,7 +545,7 @@ Fixpoint expr_beq {X Y} (e : expr X) (e' : expr Y) : bool :=
   | BinOp op e1 e2, BinOp op' e1' e2' =>
      bool_decide (op = op') && expr_beq e1 e1' && expr_beq e2 e2'
   | If e0 e1 e2, If e0' e1' e2' | Case e0 e1 e2, Case e0' e1' e2' |
-    Cas e0 e1 e2, Cas e0' e1' e2' =>
+    CAS e0 e1 e2, CAS e0' e1' e2' =>
      expr_beq e0 e0' && expr_beq e1 e1' && expr_beq e2 e2'
   | Fst e, Fst e' | Snd e, Snd e' | InjL e, InjL e' | InjR e, InjR e' |
     Fork e, Fork e' | Alloc e, Alloc e' | Load e, Load e' => expr_beq e e'
@@ -595,3 +595,6 @@ Qed.
 Global Instance heap_lang_ctx_item Ki :
   LanguageCtx heap_lang (heap_lang.fill_item Ki).
 Proof. change (LanguageCtx heap_lang (heap_lang.fill [Ki])). apply _. Qed.
+
+(* Prefer heap_lang names over language names. *)
+Export heap_lang.

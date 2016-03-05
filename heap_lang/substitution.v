@@ -78,7 +78,7 @@ Global Instance do_wexpr_store e1 e2 e1r e2r :
   W e1 e1r → W e2 e2r → W (Store e1 e2) (Store e1r e2r).
 Proof. by intros; red; f_equal/=. Qed.
 Global Instance do_wexpr_cas e0 e1 e2 e0r e1r e2r :
-  W e0 e0r → W e1 e1r → W e2 e2r → W (Cas e0 e1 e2) (Cas e0r e1r e2r).
+  W e0 e0r → W e1 e1r → W e2 e2r → W (CAS e0 e1 e2) (CAS e0r e1r e2r).
 Proof. by intros; red; f_equal/=. Qed.
 End do_wexpr.
 
@@ -185,7 +185,7 @@ Global Instance do_wsubst_store e1 e2 e1r e2r :
   Sub e1 e1r → Sub e2 e2r → Sub (Store e1 e2) (Store e1r e2r).
 Proof. by intros; red; f_equal/=. Qed.
 Global Instance do_wsubst_cas e0 e1 e2 e0r e1r e2r :
-  Sub e0 e0r → Sub e1 e1r → Sub e2 e2r → Sub (Cas e0 e1 e2) (Cas e0r e1r e2r).
+  Sub e0 e0r → Sub e1 e1r → Sub e2 e2r → Sub (CAS e0 e1 e2) (CAS e0r e1r e2r).
 Proof. by intros; red; f_equal/=. Qed.
 End wsubst.
 

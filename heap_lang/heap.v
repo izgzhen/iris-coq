@@ -200,7 +200,7 @@ Section heap.
     to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 →
     P ⊑ heap_ctx N → nclose N ⊆ E →
     P ⊑ (▷ l ↦{q} v' ★ ▷ (l ↦{q} v' -★ Φ (LitV (LitBool false)))) →
-    P ⊑ #> Cas (Loc l) e1 e2 @ E {{ Φ }}.
+    P ⊑ #> CAS (Loc l) e1 e2 @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv=>????? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
@@ -217,7 +217,7 @@ Section heap.
     to_val e1 = Some v1 → to_val e2 = Some v2 →
     P ⊑ heap_ctx N → nclose N ⊆ E →
     P ⊑ (▷ l ↦ v1 ★ ▷ (l ↦ v2 -★ Φ (LitV (LitBool true)))) →
-    P ⊑ #> Cas (Loc l) e1 e2 @ E {{ Φ }}.
+    P ⊑ #> CAS (Loc l) e1 e2 @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv=> ???? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Frac 1 (DecAgree v2)) l))

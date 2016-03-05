@@ -1,12 +1,13 @@
 From heap_lang Require Export derived.
+Export heap_lang.
 
 Arguments wp {_ _} _ _%E _.
-Notation "|| e @ E {{ Φ } }" := (wp E e%E Φ)
+Notation "#> e @ E {{ Φ } }" := (wp E e%E Φ)
   (at level 20, e, Φ at level 200,
-   format "||  e  @  E  {{  Φ  } }") : uPred_scope.
-Notation "|| e {{ Φ } }" := (wp ⊤ e%E Φ)
+   format "#>  e  @  E  {{  Φ  } }") : uPred_scope.
+Notation "#> e {{ Φ } }" := (wp ⊤ e%E Φ)
   (at level 20, e, Φ at level 200,
-   format "||  e   {{  Φ  } }") : uPred_scope.
+   format "#>  e   {{  Φ  } }") : uPred_scope.
 
 Coercion LitInt : Z >-> base_lit.
 Coercion LitBool : bool >-> base_lit.
@@ -15,6 +16,7 @@ Coercion of_val : val >-> expr.
 
 Coercion BNamed : string >-> binder.
 Notation "<>" := BAnon : binder_scope.
+Notation "<>" := BAnon : expr_scope.
 
 (* No scope for the values, does not conflict and scope is often not inferred properly. *)
 Notation "# l" := (LitV l%Z%V) (at level 8, format "# l").
@@ -32,6 +34,9 @@ Notation "^ v" := (of_val' v%V) (at level 8, format "^ v") : expr_scope.
 Notation "( e1 , e2 , .. , en )" := (Pair .. (Pair e1 e2) .. en) : expr_scope.
 Notation "'match:' e0 'with' 'InjL' x1 => e1 | 'InjR' x2 => e2 'end'" :=
   (Match e0 x1 e1 x2 e2)
+  (e0, x1, e1, x2, e2 at level 200) : expr_scope.
+Notation "'match:' e0 'with' 'InjR' x1 => e1 | 'InjL' x2 => e2 'end'" :=
+  (Match e0 x2 e2 x1 e1)
   (e0, x1, e1, x2, e2 at level 200) : expr_scope.
 Notation "()" := LitUnit : val_scope.
 Notation "! e" := (Load e%E) (at level 9, right associativity) : expr_scope.

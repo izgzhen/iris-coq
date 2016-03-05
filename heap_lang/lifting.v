@@ -3,7 +3,6 @@ From heap_lang Require Export lang.
 From program_logic Require Import lifting.
 From program_logic Require Import ownership. (* for ownP *)
 From heap_lang Require Import tactics.
-Export heap_lang. (* Prefer heap_lang names over language names. *)
 Import uPred.
 Local Hint Extern 0 (language.reducible _ _) => do_step ltac:(eauto 2).
 
@@ -58,7 +57,7 @@ Qed.
 Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v' → v' ≠ v1 →
   (▷ ownP σ ★ ▷ (ownP σ -★ Φ (LitV $ LitBool false)))
-  ⊑ #> Cas (Loc l) e1 e2 @ E {{ Φ }}.
+  ⊑ #> CAS (Loc l) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_step σ (LitV $ LitBool false) σ None)
     ?right_id //; last by intros; inv_step; eauto.
@@ -67,7 +66,7 @@ Qed.
 Lemma wp_cas_suc_pst E σ l e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v1 →
   (▷ ownP σ ★ ▷ (ownP (<[l:=v2]>σ) -★ Φ (LitV $ LitBool true)))
-  ⊑ #> Cas (Loc l) e1 e2 @ E {{ Φ }}.
+  ⊑ #> CAS (Loc l) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_step σ (LitV $ LitBool true)
     (<[l:=v2]>σ) None) ?right_id //; last by intros; inv_step; eauto.

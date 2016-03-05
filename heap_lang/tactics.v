@@ -66,10 +66,10 @@ Ltac reshape_expr e tac :=
   | Load ?e => go (LoadCtx :: K) e
   | Store ?e1 ?e2 => reshape_val e1 ltac:(fun v1 => go (StoreRCtx v1 :: K) e2)
   | Store ?e1 ?e2 => go (StoreLCtx e2 :: K) e1
-  | Cas ?e0 ?e1 ?e2 => reshape_val e0 ltac:(fun v0 => first
+  | CAS ?e0 ?e1 ?e2 => reshape_val e0 ltac:(fun v0 => first
      [ reshape_val e1 ltac:(fun v1 => go (CasRCtx v0 v1 :: K) e2)
      | go (CasMCtx v0 e2 :: K) e1 ])
-  | Cas ?e0 ?e1 ?e2 => go (CasLCtx e1 e2 :: K) e0
+  | CAS ?e0 ?e1 ?e2 => go (CasLCtx e1 e2 :: K) e0
   end in go (@nil ectx_item) e.
 
 (** The tactic [do_step tac] solves goals of the shape [reducible], [prim_step]
