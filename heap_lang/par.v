@@ -3,10 +3,11 @@ From heap_lang Require Import wp_tactics notation.
 Import uPred.
 
 Definition par : val :=
-  λ: "fs", let: "handle" := ^spawn (Fst '"fs") in
-           let: "v2" := Snd '"fs" #() in
-           let: "v1" := ^join '"handle" in
-           Pair '"v1" '"v2".
+  λ: "fs",
+    let: "handle" := ^spawn (Fst '"fs") in
+    let: "v2" := Snd '"fs" #() in
+    let: "v1" := ^join '"handle" in
+    Pair '"v1" '"v2".
 Notation Par e1 e2 := (^par (Pair (λ: <>, e1) (λ: <>, e2)))%E.
 Notation ParV e1 e2 := (par (Pair (λ: <>, e1) (λ: <>, e2)))%E.
 (* We want both par and par^ to print like this. *)

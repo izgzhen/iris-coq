@@ -4,11 +4,15 @@ From heap_lang Require Import wp_tactics notation.
 Import uPred.
 
 Definition spawn : val :=
-  λ: "f", let: "c" := ref (InjL #0) in
-          Fork ('"c" <- InjR ('"f" #())) ;; '"c".
+  λ: "f",
+    let: "c" := ref (InjL #0) in
+    Fork ('"c" <- InjR ('"f" #())) ;; '"c".
 Definition join : val :=
-  rec: "join" "c" := match: !'"c" with InjR "x" => '"x"
-                                     | InjL <>  => '"join" '"c" end.
+  rec: "join" "c" :=
+    match: !'"c" with
+      InjR "x" => '"x"
+    | InjL <>  => '"join" '"c"
+    end.
 
 (** The monoids we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
