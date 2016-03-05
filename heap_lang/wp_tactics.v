@@ -6,14 +6,14 @@ Import uPred.
 Ltac wp_bind K :=
   lazymatch eval hnf in K with
   | [] => idtac
-  | _ => etrans; [|solve [ apply (wp_bind K) ]]; simpl
+  | _ => etrans; [|fast_by apply (wp_bind K)]; simpl
   end.
 Ltac wp_finish :=
   let rec go :=
   match goal with
-  | |- _ ⊑ ▷ _ => etrans; [|apply later_mono; go; reflexivity]
+  | |- _ ⊑ ▷ _ => etrans; [|fast_by apply later_mono; go]
   | |- _ ⊑ wp _ _ _ =>
-    etrans; [|eapply wp_value_pvs; reflexivity];
+    etrans; [|eapply wp_value_pvs; fast_done];
     (* sometimes, we will have to do a final view shift, so only apply
     pvs_intro if we obtain a consecutive wp *)
     try (eapply pvs_intro;
@@ -31,7 +31,7 @@ Tactic Notation "wp_rec" ">" :=
 (* hnf does not reduce through an of_val *)
 (*      match eval hnf in e1 with Rec _ _ _ => *)
       wp_bind K; etrans;
-         [|eapply wp_rec'; repeat rewrite /= to_of_val; reflexivity];
+         [|eapply wp_rec'; repeat rewrite /= to_of_val; fast_done];
          simpl_subst; wp_finish
 (*      end *) end)
      end).
@@ -43,7 +43,7 @@ Tactic Notation "wp_lam" ">" :=
     match eval hnf in e' with App ?e1 _ =>
 (*    match eval hnf in e1 with Rec BAnon _ _ => *)
     wp_bind K; etrans;
-       [|eapply wp_lam; repeat (reflexivity || rewrite /= to_of_val)];
+       [|eapply wp_lam; repeat (fast_done || rewrite /= to_of_val)];
        simpl_subst; wp_finish
 (*    end *) end)
   end.
@@ -62,9 +62,9 @@ Tactic Notation "wp_op" ">" :=
     | BinOp LeOp _ _ => wp_bind K; apply wp_le; wp_finish
     | BinOp EqOp _ _ => wp_bind K; apply wp_eq; wp_finish
     | BinOp _ _ _ =>
-       wp_bind K; etrans; [|eapply wp_bin_op; reflexivity]; wp_finish
+       wp_bind K; etrans; [|fast_by eapply wp_bin_op]; wp_finish
     | UnOp _ _ =>
-       wp_bind K; etrans; [|eapply wp_un_op; reflexivity]; wp_finish
+       wp_bind K; etrans; [|fast_by eapply wp_un_op]; wp_finish
     end)
   end.
 Tactic Notation "wp_op" := wp_op>; try strip_later.

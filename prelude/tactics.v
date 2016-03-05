@@ -34,6 +34,13 @@ is rather efficient when having big hint databases, or expensive [Hint Extern]
 declarations as the ones above. *)
 Tactic Notation "intuition" := intuition auto.
 
+(* [done] can get slow as it calls "trivial". [fast_done] can solve way less
+   goals, but it will also always finish quickly. *)
+Ltac fast_done :=
+  solve [ reflexivity | eassumption | symmetry; eassumption ].
+Tactic Notation "fast_by" tactic(tac) :=
+  tac; fast_done.
+
 (** A slightly modified version of Ssreflect's finishing tactic [done]. It
 also performs [reflexivity] and uses symmetry of negated equalities. Compared
 to Ssreflect's [done], it does not compute the goal's [hnf] so as to avoid
@@ -42,10 +49,9 @@ Coq's [easy] tactic as it does not perform [inversion]. *)
 Ltac done :=
   trivial; intros; solve
   [ repeat first
-    [ solve [trivial]
+    [ fast_done
+    | solve [trivial]
     | solve [symmetry; trivial]
-    | eassumption
-    | reflexivity
     | discriminate
     | contradiction
     | solve [apply not_symmetry; trivial]
@@ -288,7 +294,7 @@ Ltac auto_proper :=
   (* Normalize away equalities. *)
   simplify_eq;
   (* repeatedly apply congruence lemmas and use the equalities in the hypotheses. *)
-  try (f_equiv; assumption || (symmetry; assumption) || auto_proper).
+  try (f_equiv; fast_done || auto_proper).
 
 (** solve_proper solves goals of the form "Proper (R1 ==> R2)", for any
     number of relations. All the actual work is done by f_equiv;
