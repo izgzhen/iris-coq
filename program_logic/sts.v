@@ -99,12 +99,12 @@ Section sts.
   Proof.
     rewrite /sts_inv later_exist sep_exist_r. apply exist_elim=>s.
     rewrite later_sep pvs_timeless !pvs_frame_r. apply pvs_mono.
-    rewrite -(exist_intro s).
-    rewrite [(_ ★ ▷φ _)%I]comm -!assoc -own_op -[(▷φ _ ★ _)%I]comm.
-    rewrite own_valid_l discrete_valid.
-    rewrite -!assoc. apply const_elim_sep_l=> Hvalid.
+    rewrite -(exist_intro s). ecancel [▷ φ _]%I.
+    to_front [own _ _; sts_ownS _ _ _].
+    rewrite -own_op own_valid_l discrete_valid.
+    apply const_elim_sep_l=> Hvalid.
     assert (s ∈ S) by eauto using sts_auth_frag_valid_inv.
-    rewrite const_equiv // left_id comm sts_op_auth_frag //.
+    rewrite const_equiv // left_id sts_op_auth_frag //.
     by assert (✓ sts_frag S T) as [??] by eauto using cmra_valid_op_r.
   Qed.
 

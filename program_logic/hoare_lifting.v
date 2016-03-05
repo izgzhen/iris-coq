@@ -1,3 +1,4 @@
+From algebra Require Import upred_tactics.
 From program_logic Require Export hoare lifting.
 From program_logic Require Import ownership.
 Import uPred.
@@ -31,21 +32,20 @@ Proof.
   intros ?? Hsafe Hstep; apply: always_intro. apply impl_intro_l.
   rewrite (assoc _ P) {1}/vs always_elim impl_elim_r pvs_always_r.
   rewrite -(wp_lift_step E1 E2 φ _ e1 σ1) //; apply pvs_mono.
-  rewrite always_and_sep_r -assoc; apply sep_mono; first done.
+  rewrite always_and_sep_r -assoc; apply sep_mono_r.
   rewrite (later_intro (∀ _, _)) -later_sep; apply later_mono.
   apply forall_intro=>e2; apply forall_intro=>σ2; apply forall_intro=>ef.
   rewrite (forall_elim e2) (forall_elim σ2) (forall_elim ef).
   apply wand_intro_l; rewrite !always_and_sep_l.
+  (* Apply the view shift. *)
   rewrite (assoc _ _ P') -(assoc _ _ _ P') assoc.
   rewrite {1}/vs -always_wand_impl always_elim wand_elim_r.
   rewrite pvs_frame_r; apply pvs_mono.
-  rewrite (comm _ (Φ1 _ _ _)) -assoc (assoc _ (Φ1 _ _ _)).
-  rewrite {1}/ht -always_wand_impl always_elim wand_elim_r.
-  rewrite assoc (comm _ _ (wp _ _ _)) -assoc.
-  apply sep_mono; first done.
-  destruct ef as [e'|]; simpl; [|by apply const_intro].
-  rewrite {1}/ht -always_wand_impl always_elim wand_elim_r; apply wp_mono=>v.
-  by apply const_intro.
+  (* Now we're almost done. *)
+  sep_split left: [Φ1 _ _ _; {{ Φ1 _ _ _ }} e2 @ E2 {{ Ψ }}]%I.
+  - rewrite {1}/ht -always_wand_impl always_elim wand_elim_r //.
+  - destruct ef as [e'|]; simpl; [|by apply const_intro].
+    rewrite {1}/ht -always_wand_impl always_elim wand_elim_r //.
 Qed.
 
 Lemma ht_lift_atomic_step
@@ -90,15 +90,10 @@ Proof.
   apply forall_intro=>e2; apply forall_intro=>ef; apply impl_intro_l.
   rewrite (forall_elim e2) (forall_elim ef).
   rewrite always_and_sep_l !always_and_sep_r {1}(always_sep_dup (■ _)).
-  rewrite {1}(assoc _ (_ ★ _)%I) -(assoc _ (■ _)%I).
-  rewrite (assoc _ (■ _)%I P) -{1}(comm _ P) -(assoc _ P).
-  rewrite (assoc _ (■ _)%I) assoc -(assoc _ (■ _ ★ P))%I.
-  rewrite (comm _ (■ _ ★ P'))%I assoc.
-  rewrite {1}/ht -always_wand_impl always_elim wand_elim_r.
-  rewrite -assoc; apply sep_mono; first done.
-  destruct ef as [e'|]; simpl; [|by apply const_intro].
-  rewrite {1}/ht -always_wand_impl always_elim wand_elim_r; apply wp_mono=>v.
-  by apply const_intro.
+  sep_split left: [■ φ _ _; P; {{ ■ φ _ _ ★ P }} e2 @ E {{ Ψ }}]%I.
+  - rewrite {1}/ht -always_wand_impl always_elim wand_elim_r //.
+  - destruct ef as [e'|]; simpl; [|by apply const_intro].
+    rewrite assoc {1}/ht -always_wand_impl always_elim wand_elim_r //.
 Qed.
 
 Lemma ht_lift_pure_det_step

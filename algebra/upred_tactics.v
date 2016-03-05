@@ -146,6 +146,74 @@ Tactic Notation "ecancel" open_constr(Ps) :=
        close Ps (@nil (uPred M)) ltac:(fun Qs => cancel Qs)
     end. 
 
+(** [to_front [P1, P2, ..]] rewrites in the premise of ⊑ such that
+    the assumptions P1, P2, ... appear at the front, in that order. *)
+Tactic Notation "to_front" open_constr(Ps) :=
+  let rec tofront Ps :=
+    lazymatch eval hnf in Ps with
+    | [] => idtac
+    | ?P :: ?Ps =>
+      rewrite ?(assoc (★)%I);
+      match goal with
+      | |- (?Q ★ _)%I ⊑ _ => (* test if it is already at front. *)
+        unify P Q with typeclass_instances
+      | |- _ => find_pat P ltac:(fun P => rewrite {1}[(_ ★ P)%I]comm)
+      end;
+      tofront Ps
+    end
+  in
+  rewrite [X in _ ⊑ X]lock;
+  tofront (rev Ps);
+  rewrite -[X in _ ⊑ X]lock.
+
+(** [sep_split] is used to introduce a (★).
+    Use [sep_split left: [P1, P2, ...]] to define which assertions will be
+    taken to the left; the rest will be available on the right.
+    [sep_split right: [P1, P2, ...]] works the other way around. *)
+(* TODO: These tactics fail if the list contains *all* assumptions.
+   However, in these cases using the "other" variant with the emtpy list
+   is much more convenient anyway. *)
+(* TODO: These tactics are pretty slow, can we use the reflection stuff
+   above to speed them up? *)
+Tactic Notation "sep_split" "right:" open_constr(Ps) :=
+  match goal with
+  | |- ?P ⊑ _ =>
+    let iProp := type of P in (* ascribe a type to the list, to prevent evars from appearing *)
+    lazymatch eval hnf in (Ps : list iProp) with
+    | [] => apply sep_intro_True_r
+    | ?P :: ?Ps =>
+      to_front (P::Ps);
+      (* Run assoc length (ps) times *)
+      let rec nassoc Ps :=
+          lazymatch eval hnf in Ps with
+          | [] => idtac
+          | _ :: ?Ps => rewrite assoc; nassoc Ps
+          end in
+      rewrite [X in _ ⊑ X]lock -?(assoc (★)%I);
+      nassoc Ps; rewrite [X in X ⊑ _]comm -[X in _ ⊑ X]lock;
+      apply sep_mono
+   end
+  end.
+Tactic Notation "sep_split" "left:" open_constr(Ps) :=
+  match goal with
+  | |- ?P ⊑ _ =>
+    let iProp := type of P in (* ascribe a type to the list, to prevent evars from appearing *)
+    lazymatch eval hnf in (Ps : list iProp) with
+    | [] => apply sep_intro_True_l
+    | ?P :: ?Ps =>
+      to_front (P::Ps);
+      (* Run assoc length (ps) times *)
+      let rec nassoc Ps :=
+          lazymatch eval hnf in Ps with
+          | [] => idtac
+          | _ :: ?Ps => rewrite assoc; nassoc Ps
+          end in
+      rewrite [X in _ ⊑ X]lock -?(assoc (★)%I);
+      nassoc Ps; rewrite -[X in _ ⊑ X]lock;
+      apply sep_mono
+   end
+  end.
+
 (** Assumes a goal of the shape P ⊑ ▷ Q. Alterantively, if Q
     is built of ★, ∧, ∨ with ▷ in all branches; that will work, too.
     Will turn this goal into P ⊑ Q and strip ▷ in P below ★, ∧, ∨. *)
