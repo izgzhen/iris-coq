@@ -417,6 +417,10 @@ Proof.
   apply wsubst_closed, not_elem_of_nil.
 Qed.
 
+Lemma of_val'_closed (v : val) :
+  of_val' v = of_val v.
+Proof. by rewrite /of_val' wexpr_id. Qed.
+
 (** to_val propagation.
     TODO: automatically appliy in wp_tactics? *)
 Lemma to_val_InjL e v : to_val e = Some v → to_val (InjL e) = Some (InjLV v).
