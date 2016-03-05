@@ -45,8 +45,7 @@ Proof. solve_proper. Qed.
 Lemma spawn_spec (Ψ : val → iProp) e (f : val) (Φ : val → iProp) :
   to_val e = Some f →
   heapN ⊥ N →
-  (* TODO: Not sure whether the wp should be about [e] or [f]. Both work. *)
-  (heap_ctx heapN ★ #> e #() {{ Ψ }} ★ ∀ l, join_handle l Ψ -★ Φ (%l))
+  (heap_ctx heapN ★ #> f #() {{ Ψ }} ★ ∀ l, join_handle l Ψ -★ Φ (%l))
   ⊑ #> spawn e {{ Φ }}.
 Proof.
   intros Hval Hdisj. rewrite /spawn.
@@ -60,7 +59,7 @@ Proof.
   rewrite !pvs_frame_r. eapply wp_strip_pvs. rewrite !sep_exist_r.
   apply exist_elim=>γ.
   (* TODO: Figure out a better way to say "I want to establish ▷ spawn_inv". *)
-  trans (heap_ctx heapN ★ #> e #() {{ Ψ }} ★ (join_handle l Ψ -★ Φ (%l)%V) ★
+  trans (heap_ctx heapN ★ #> f #() {{ Ψ }} ★ (join_handle l Ψ -★ Φ (%l)%V) ★
          own γ (Excl ()) ★ ▷ (spawn_inv γ l Ψ))%I.
   { ecancel [ #> _ {{ _ }}; _ -★ _; heap_ctx _; own _ _]%I.
     rewrite -later_intro /spawn_inv -(exist_intro (InjLV #0)).
@@ -101,7 +100,7 @@ Proof.
   cancel [l ↦ lv]%I. rewrite sep_or_r. apply or_elim.
   - (* Case 1 : nothing sent yet, we wait. *)
     rewrite -or_intro_l. apply const_elim_sep_l=>-> {lv}.
-    do 2 rewrite const_equiv // left_id. (ewp eapply wp_case_inl); eauto.
+    do 2 rewrite const_equiv // left_id. wp_case; eauto.
     wp_seq. rewrite -always_wand_impl always_elim.
     rewrite !assoc. eapply wand_apply_r'; first done.
     rewrite -(exist_intro γ). solve_sep_entails.
@@ -112,7 +111,7 @@ Proof.
       rewrite [(heap_ctx _ ★ _)%I]sep_elim_r !assoc. rewrite -own_op own_valid_l.
       rewrite -!assoc discrete_valid. apply const_elim_sep_l=>-[]. }
     rewrite -or_intro_r. ecancel [own _ _].
-    (ewp apply: wp_case_inr); eauto using to_of_val.
+    wp_case; eauto using to_of_val.
     wp_let. etransitivity; last by eapply wp_value, to_of_val.
     rewrite (forall_elim v). rewrite !assoc. eapply wand_apply_r'; eauto with I.
 Qed.

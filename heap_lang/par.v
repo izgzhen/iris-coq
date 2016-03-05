@@ -3,12 +3,12 @@ From heap_lang Require Import wp_tactics notation.
 Import uPred.
 
 Definition par : val :=
-  λ: "f1" "f2", let: "handle" := ^spawn '"f1" in
-                let: "v2" := '"f2" #() in
-                let: "v1" := ^join '"handle" in
-                Pair '"v1" '"v2".
-Notation Par e1 e2 := (^par (λ: <>, e1) (λ: <>, e2))%E.
-Notation ParV e1 e2 := (par (λ: <>, e1) (λ: <>, e2))%E.
+  λ: "fs", let: "handle" := ^spawn (Fst '"fs") in
+           let: "v2" := Snd '"fs" #() in
+           let: "v1" := ^join '"handle" in
+           Pair '"v1" '"v2".
+Notation Par e1 e2 := (^par (Pair (λ: <>, e1) (λ: <>, e2)))%E.
+Notation ParV e1 e2 := (par (Pair (λ: <>, e1) (λ: <>, e2)))%E.
 (* We want both par and par^ to print like this. *)
 Infix "||" := ParV : expr_scope.
 Infix "||" := Par : expr_scope.
@@ -18,21 +18,21 @@ Context {Σ : rFunctorG} `{!heapG Σ, !spawnG Σ}.
 Context (heapN N : namespace).
 Local Notation iProp := (iPropG heap_lang Σ).
 
-Lemma par_spec (Ψ1 Ψ2 : val → iProp) e1 e2 (f1 f2 : val) (Φ : val → iProp) :
-  heapN ⊥ N → to_val e1 = Some f1 → to_val e2 = Some f2 →
-  (* TODO like in spawn.v -- wp about e or f? *)
-  (heap_ctx heapN ★ #> e1 #() {{ Ψ1 }} ★ #> e2 #() {{ Ψ2 }} ★
+Lemma par_spec (Ψ1 Ψ2 : val → iProp) e (f1 f2 : val) (Φ : val → iProp) :
+  heapN ⊥ N → to_val e = Some (PairV f1 f2) →
+  (heap_ctx heapN ★ #> f1 #() {{ Ψ1 }} ★ #> f2 #() {{ Ψ2 }} ★
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ Φ (PairV v1 v2))
-  ⊑ #> par e1 e2 {{ Φ }}.
+  ⊑ #> par e {{ Φ }}.
 Proof.
   intros. rewrite /par.
-  wp_focus e1. etransitivity; last by eapply wp_value. wp_let.
-  wp_focus e2. etransitivity; last by eapply wp_value. wp_let.
+  wp_focus e. etransitivity; last by eapply wp_value. wp_let.
+  (* FIXME: wp_proj should not spawn these goals. *)
+  wp_proj; eauto using to_of_val.
   (ewp eapply spawn_spec); eauto using to_of_val.
-  apply sep_mono_r. rewrite (of_to_val e1) //. apply sep_mono_r.
+  apply sep_mono_r. apply sep_mono_r.
   apply forall_intro=>h. apply wand_intro_l. wp_let.
-  wp_focus (f2 _). rewrite wp_frame_r wp_frame_l. rewrite (of_to_val e2) //.
-  apply wp_mono=>v2. wp_let.
+  wp_proj; eauto using to_of_val.
+  wp_focus (f2 _). rewrite wp_frame_r wp_frame_l. apply wp_mono=>v2. wp_let.
   (ewp eapply join_spec); eauto using to_of_val. apply sep_mono_r.
   apply forall_intro=>v1. apply wand_intro_l. wp_let.
   etransitivity; last by (eapply wp_value, to_val_Pair; eapply to_of_val).

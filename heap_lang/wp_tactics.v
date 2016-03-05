@@ -62,22 +62,44 @@ Tactic Notation "wp_op" ">" :=
     | BinOp LeOp _ _ => wp_bind K; apply wp_le; wp_finish
     | BinOp EqOp _ _ => wp_bind K; apply wp_eq; wp_finish
     | BinOp _ _ _ =>
-       wp_bind K; etrans; [|fast_by eapply wp_bin_op]; wp_finish
+       wp_bind K; etrans; [|eapply wp_bin_op; try fast_done]; wp_finish
     | UnOp _ _ =>
-       wp_bind K; etrans; [|fast_by eapply wp_un_op]; wp_finish
+       wp_bind K; etrans; [|eapply wp_un_op; try fast_done]; wp_finish
     end)
   end.
 Tactic Notation "wp_op" := wp_op>; try strip_later.
+
+Tactic Notation "wp_proj" ">" :=
+  match goal with
+  | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
+    match eval hnf in e' with
+    | Fst _ =>
+       wp_bind K; etrans; [|eapply wp_fst; try fast_done]; wp_finish
+    | Snd _ =>
+       wp_bind K; etrans; [|eapply wp_snd; try fast_done]; wp_finish
+    end)
+  end.
+Tactic Notation "wp_proj" := wp_proj>; try strip_later.
 
 Tactic Notation "wp_if" ">" :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with If _ _ _ =>
     wp_bind K;
-    etrans; [|apply wp_if_true || apply wp_if_false]; wp_finish
+    etrans; [|eapply wp_if_true || eapply wp_if_false]; wp_finish
     end)
   end.
 Tactic Notation "wp_if" := wp_if>; try strip_later.
+
+Tactic Notation "wp_case" ">" :=
+  match goal with
+  | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
+    match eval hnf in e' with Case _ _ _ =>
+    wp_bind K;
+    etrans; [|eapply wp_case_inl || eapply wp_case_inr]; wp_finish
+    end)
+  end.
+Tactic Notation "wp_case" := wp_case>; try strip_later.
 
 Tactic Notation "wp_focus" open_constr(efoc) :=
   match goal with
