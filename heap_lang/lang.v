@@ -40,8 +40,8 @@ Qed.
    tactics, Coq would do things in the wrong order. *)
 Class VarBound (x : string) (X : list string) :=
   var_bound : bool_decide (x ∈ X).
-(* FIXME shouldn't this have this Hint to only perfom search of x and X
-   are not evars? *)
+(* There is no need to restrict this hint to terms without evars, [vm_compute]
+will fail in case evars are arround. *)
 Hint Extern 0 (VarBound _ _) => vm_compute; exact I : typeclass_instances. 
 
 Instance var_bound_proof_irrel x X : ProofIrrel (VarBound x X).
