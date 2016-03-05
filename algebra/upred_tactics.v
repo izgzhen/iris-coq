@@ -155,7 +155,7 @@ Tactic Notation "to_front" open_constr(Ps) :=
     | ?P :: ?Ps =>
       rewrite ?(assoc (★)%I);
       match goal with
-      | |- (?Q ★ _)%I ⊑ _ => (* test if it is already at front. *)
+      | |- (?Q ★ _)%I ⊑ _ => (* check if it is already at front. *)
         unify P Q with typeclass_instances
       | |- _ => find_pat P ltac:(fun P => rewrite {1}[(_ ★ P)%I]comm)
       end;
@@ -183,11 +183,12 @@ Tactic Notation "sep_split" "right:" open_constr(Ps) :=
     | [] => apply sep_intro_True_r
     | ?P :: ?Ps =>
       to_front (P::Ps);
-      (* Run assoc length (ps) times *)
+      (* Run assoc length (Ps) times -- that is 1 - length(original Ps),
+         and it will turn the goal in just the right shape for sep_mono. *)
       let rec nassoc Ps :=
           lazymatch eval hnf in Ps with
           | [] => idtac
-          | _ :: ?Ps => rewrite assoc; nassoc Ps
+          | _ :: ?Ps => rewrite (assoc (★)%I); nassoc Ps
           end in
       rewrite [X in _ ⊑ X]lock -?(assoc (★)%I);
       nassoc Ps; rewrite [X in X ⊑ _]comm -[X in _ ⊑ X]lock;
@@ -202,11 +203,12 @@ Tactic Notation "sep_split" "left:" open_constr(Ps) :=
     | [] => apply sep_intro_True_l
     | ?P :: ?Ps =>
       to_front (P::Ps);
-      (* Run assoc length (ps) times *)
+      (* Run assoc length (Ps) times -- that is 1 - length(original Ps),
+         and it will turn the goal in just the right shape for sep_mono. *)
       let rec nassoc Ps :=
           lazymatch eval hnf in Ps with
           | [] => idtac
-          | _ :: ?Ps => rewrite assoc; nassoc Ps
+          | _ :: ?Ps => rewrite (assoc (★)%I); nassoc Ps
           end in
       rewrite [X in _ ⊑ X]lock -?(assoc (★)%I);
       nassoc Ps; rewrite -[X in _ ⊑ X]lock;

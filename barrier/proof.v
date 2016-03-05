@@ -79,23 +79,21 @@ Proof.
   intros. rewrite /ress !sep_exist_l. apply exist_elim=>Ψ.
   rewrite -(exist_intro (<[i1:=R1]> (<[i2:=R2]> Ψ))).
   rewrite [(Π★{set _} (λ _, saved_prop_own _ _))%I](big_sepS_delete _ I i) //.
-  rewrite !assoc [(_ ★ (_ -★ _))%I]comm !assoc [(_ ★ ▷ _)%I]comm.
-  rewrite !assoc [(_ ★ _ i _)%I]comm !assoc [(_ ★ _ i _)%I]comm -!assoc.
   do 4 (rewrite big_sepS_insert; last set_solver).
   rewrite !fn_lookup_insert fn_lookup_insert_ne // !fn_lookup_insert.
-  rewrite 3!assoc. apply sep_mono.
-  - rewrite saved_prop_agree later_equivI /=. strip_later.
-    apply wand_intro_l. rewrite [(_ ★ (_ -★ Π★{set _} _))%I]comm !assoc wand_elim_r.
+  set savedQ := _ i _. set savedΨ := _ i _.
+  sep_split left: [savedQ; savedΨ; Q -★ _; ▷ (_ -★ Π★{set I} _)]%I.
+  - rewrite !assoc saved_prop_agree later_equivI /=. strip_later.
+    apply wand_intro_l. to_front [P; P -★ _]%I. rewrite wand_elim_r.
     rewrite (big_sepS_delete _ I i) //.
-    rewrite [(_ ★ Π★{set _} _)%I]comm [(_ ★ Π★{set _} _)%I]comm -!assoc.
-    apply sep_mono.
-    + apply big_sepS_mono; [done|] => j.
-      rewrite elem_of_difference not_elem_of_singleton=> -[??].
-      by do 2 (rewrite fn_lookup_insert_ne; last naive_solver).
+    sep_split right: [Π★{set _} _]%I.
     + rewrite !assoc.
       eapply wand_apply_r'; first done.
       apply: (eq_rewrite (Ψ i) Q (λ x, x)%I); last by eauto with I.
       rewrite eq_sym. eauto with I.
+    + apply big_sepS_mono; [done|] => j.
+      rewrite elem_of_difference not_elem_of_singleton=> -[??].
+      by do 2 (rewrite fn_lookup_insert_ne; last naive_solver).
   - rewrite !assoc [(saved_prop_own i2 _ ★ _)%I]comm; apply sep_mono_r.
     apply big_sepS_mono; [done|]=> j.
     rewrite elem_of_difference not_elem_of_singleton=> -[??].
