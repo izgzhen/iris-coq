@@ -1,4 +1,5 @@
 From barrier Require Import proof.
+From heap_lang Require Import par.
 From program_logic Require Import auth sts saved_prop hoare ownership.
 Import uPred.
 
@@ -7,11 +8,11 @@ Definition worker (n : Z) : val :=
 Definition client : expr [] :=
   let: "y" := ref #0 in
   let: "b" := ^newbarrier #() in
-  Fork (Fork (^(worker 12) '"b" '"y") ;; ^(worker 17) '"b" '"y") ;;
-  '"y" <- (λ: "z", '"z" + #42) ;; ^signal '"b".
+  ('"y" <- (λ: "z", '"z" + #42) ;; ^signal '"b") ||
+    (^(worker 12) '"b" '"y" || ^(worker 17) '"b" '"y").
 
 Section client.
-  Context {Σ : rFunctorG} `{!heapG Σ, !barrierG Σ} (heapN N : namespace).
+  Context {Σ : rFunctorG} `{!heapG Σ, !barrierG Σ, !spawnG Σ} (heapN N : namespace).
   Local Notation iProp := (iPropG heap_lang Σ).
 
   Definition y_inv q y : iProp :=
@@ -49,29 +50,31 @@ Section client.
     ewp eapply (newbarrier_spec heapN N (y_inv 1 y)); last done.
     rewrite comm. rewrite {1}[heap_ctx _]always_sep_dup -!assoc.
     apply sep_mono_r. apply forall_intro=>b. apply wand_intro_l. 
-    wp_let. ewp eapply wp_fork.
-    rewrite [heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm.
-    rewrite [(#> _ {{ _ }} ★ _)%I]comm -!assoc assoc. apply sep_mono;last first.
-    { (* The original thread, the sender. *)
-      wp_seq. (ewp eapply wp_store); eauto with I. strip_later.
-      rewrite assoc [(_ ★ y ↦ _)%I]comm. apply sep_mono_r, wand_intro_l.
+    wp_let. (ewp eapply (wp_par heapN N (λ _, True%I) (λ _, True%I))); eauto.
+    rewrite 2!{1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm.
+    ecancel [heap_ctx _]. sep_split right: []; last first.
+    { do 2 apply forall_intro=>_. apply wand_intro_l. eauto with I. }
+    sep_split left: [send heapN _ _ _; heap_ctx _; y ↦ _]%I.
+    - (* The original thread, the sender. *)
+      (ewp eapply wp_store); eauto with I. strip_later.
+      ecancel [y ↦ _]%I. apply wand_intro_l.
       wp_seq. rewrite -signal_spec right_id assoc sep_elim_l comm.
       apply sep_mono_r. rewrite /y_inv -(exist_intro (λ: "z", '"z" + #42)%V).
       apply sep_intro_True_r; first done. apply: always_intro.
-      apply forall_intro=>n. wp_let. wp_op. by apply const_intro. }
-    (* The two spawned threads, the waiters. *)
-    rewrite recv_mono; last exact: y_inv_split.
-    rewrite (recv_split _ _ ⊤) // pvs_frame_l. apply wp_strip_pvs.
-    ewp eapply wp_fork.
-    rewrite [heap_ctx _]always_sep_dup !assoc [(_ ★ recv _ _ _ _)%I]comm.
-    rewrite -!assoc assoc. apply sep_mono.
-    - wp_seq. by rewrite -worker_safe comm.
-    - by rewrite -worker_safe.
-  Qed.
+      apply forall_intro=>n. wp_let. wp_op. by apply const_intro.
+    - (* The two spawned threads, the waiters. *)
+      rewrite recv_mono; last exact: y_inv_split.
+      rewrite (recv_split _ _ ⊤) // pvs_frame_r. apply wp_strip_pvs.
+      (ewp eapply (wp_par heapN N (λ _, True%I) (λ _, True%I))); eauto.
+      do 2 rewrite {1}[heap_ctx _]always_sep_dup.
+      ecancel [heap_ctx _]. rewrite !assoc. sep_split right: []; last first.
+      { do 2 apply forall_intro=>_. apply wand_intro_l. eauto with I. }
+      sep_split left: [recv heapN _ _ _; heap_ctx _]%I; by rewrite -worker_safe comm.
+Qed.
 End client.
 
 Section ClosedProofs.
-  Definition Σ : rFunctorG := #[ heapGF ; barrierGF ].
+  Definition Σ : rFunctorG := #[ heapGF ; barrierGF ; spawnGF ].
   Notation iProp := (iPropG heap_lang Σ).
 
   Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ λ v, True }}.

@@ -1,5 +1,5 @@
-From heap_lang Require Export heap.
-From heap_lang Require Import spawn wp_tactics notation.
+From heap_lang Require Export heap spawn.
+From heap_lang Require Import wp_tactics notation.
 Import uPred.
 
 Definition par : val :=
@@ -8,6 +8,9 @@ Definition par : val :=
                 let: "v1" := ^join '"handle" in
                 Pair '"v1" '"v2".
 Notation Par e1 e2 := (^par (λ: <>, e1) (λ: <>, e2))%E.
+Notation ParV e1 e2 := (par (λ: <>, e1) (λ: <>, e2))%E.
+(* We want both par and par^ to print like this. *)
+Infix "||" := ParV : expr_scope.
 Infix "||" := Par : expr_scope.
 
 Section proof.
@@ -41,9 +44,9 @@ Lemma wp_par (Ψ1 Ψ2 : val → iProp) (e1 e2 : expr []) (Φ : val → iProp) :
   heapN ⊥ N →
   (heap_ctx heapN ★ #> e1 {{ Ψ1 }} ★ #> e2 {{ Ψ2 }} ★
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ Φ (PairV v1 v2))
-  ⊑ #> e1 || e2 {{ Φ }}.
+  ⊑ #> ParV e1 e2 {{ Φ }}.
 Proof.
-  intros. rewrite of_val'_closed -par_spec //. apply sep_mono_r.
+  intros. rewrite -par_spec //. apply sep_mono_r.
   apply sep_mono; last apply sep_mono_l; by wp_seq.
 Qed.
 
