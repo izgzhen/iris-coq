@@ -265,7 +265,7 @@ Ltac set_unfold :=
 [set_solver] already. We use the [naive_solver] tactic as a substitute.
 This tactic either fails or proves the goal. *)
 Tactic Notation "set_solver" "by" tactic3(tac) :=
-  try done;
+  try (reflexivity || eassumption);
   intros; setoid_subst;
   set_unfold;
   intros; setoid_subst;
