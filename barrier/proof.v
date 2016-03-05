@@ -2,8 +2,8 @@ From prelude Require Import functions.
 From algebra Require Import upred_big_op upred_tactics.
 From program_logic Require Import sts saved_prop.
 From heap_lang Require Export heap wp_tactics.
-From barrier Require Import protocol.
 From barrier Require Export barrier.
+From barrier Require Import protocol.
 Import uPred.
 
 (** The monoids we need. *)

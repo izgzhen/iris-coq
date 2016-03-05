@@ -49,19 +49,19 @@ Section auth.
   Lemma auth_own_valid γ a : auth_own γ a ⊑ ✓ a.
   Proof. by rewrite /auth_own own_valid auth_validI. Qed.
 
-  Lemma auth_alloc E N a :
+  Lemma auth_alloc N E a :
     ✓ a → nclose N ⊆ E →
     ▷ φ a ⊑ (|={E}=> ∃ γ, auth_ctx γ N φ ∧ auth_own γ a).
   Proof.
     intros Ha HN. eapply sep_elim_True_r.
-    { by eapply (own_alloc (Auth (Excl a) a) N). }
-    rewrite pvs_frame_l. rewrite -(pvs_mask_weaken N E) //. apply pvs_strip_pvs.
+    { by eapply (own_alloc (Auth (Excl a) a) E). }
+    rewrite pvs_frame_l. apply pvs_strip_pvs.
     rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
     trans (▷ auth_inv γ φ ★ auth_own γ a)%I.
     { rewrite /auth_inv -(exist_intro a) later_sep.
       ecancel [▷ φ _]%I.
       by rewrite -later_intro -own_op auth_both_op. }
-    rewrite (inv_alloc N) /auth_ctx pvs_frame_r. apply pvs_mono.
+    rewrite (inv_alloc N E) // /auth_ctx pvs_frame_r. apply pvs_mono.
     by rewrite always_and_sep_l.
   Qed.
 

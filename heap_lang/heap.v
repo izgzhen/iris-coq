@@ -90,13 +90,13 @@ Section heap.
   Hint Resolve heap_store_valid.
 
   (** Allocation *)
-  Lemma heap_alloc E N σ :
+  Lemma heap_alloc N E σ :
     authG heap_lang Σ heapR → nclose N ⊆ E →
     ownP σ ⊑ (|={E}=> ∃ _ : heapG Σ, heap_ctx N ∧ Π★{map σ} (λ l v, l ↦ v)).
   Proof.
     intros. rewrite -{1}(from_to_heap σ). etrans.
     { rewrite [ownP _]later_intro.
-      apply (auth_alloc (ownP ∘ of_heap) E N (to_heap σ)); last done.
+      apply (auth_alloc (ownP ∘ of_heap) N E (to_heap σ)); last done.
       apply to_heap_valid. }
     apply pvs_mono, exist_elim=> γ.
     rewrite -(exist_intro (HeapG _ _ γ)); apply and_mono_r.
