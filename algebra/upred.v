@@ -336,6 +336,10 @@ Proof.
   - by trans P1; [|trans Q1].
   - by trans P2; [|trans Q2].
 Qed.
+Lemma entails_equiv_l (P Q R : uPred M) : P ≡ Q → Q ⊑ R → P ⊑ R.
+Proof. by intros ->. Qed.
+Lemma entails_equiv_r (P Q R : uPred M) : P ⊑ Q → Q ≡ R → P ⊑ R.
+Proof. by intros ? <-. Qed.
 
 (** Non-expansiveness and setoid morphisms *)
 Global Instance const_proper : Proper (iff ==> (≡)) (@uPred_const M).

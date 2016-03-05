@@ -91,7 +91,7 @@ Proof.
   rewrite (forall_elim e2) (forall_elim ef).
   rewrite always_and_sep_l !always_and_sep_r {1}(always_sep_dup (■ _)).
   sep_split left: [■ φ _ _; P; {{ ■ φ _ _ ★ P }} e2 @ E {{ Ψ }}]%I.
-  - rewrite {1}/ht -always_wand_impl always_elim wand_elim_r //.
+  - rewrite assoc {1}/ht -always_wand_impl always_elim wand_elim_r //.
   - destruct ef as [e'|]; simpl; [|by apply const_intro].
     rewrite assoc {1}/ht -always_wand_impl always_elim wand_elim_r //.
 Qed.

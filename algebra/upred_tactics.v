@@ -2,7 +2,7 @@ From algebra Require Export upred.
 From algebra Require Export upred_big_op.
 Import uPred.
 
-Module upred_reflection. Section upred_reflection.
+Module uPred_reflection. Section uPred_reflection.
   Context {M : cmraT}.
 
   Inductive expr :=
@@ -93,6 +93,45 @@ Module upred_reflection. Section upred_reflection.
     rewrite !fmap_app !big_sep_app. apply sep_mono_r.
   Qed.
 
+  Fixpoint to_expr (l : list nat) : expr :=
+    match l with
+    | [] => ETrue
+    | [n] => EVar n
+    | n :: l => ESep (EVar n) (to_expr l)
+    end.
+  Arguments to_expr !_ / : simpl nomatch.
+  Lemma eval_to_expr Σ l : eval Σ (to_expr l) ≡ eval_list Σ l.
+  Proof.
+    induction l as [|n1 [|n2 l] IH]; csimpl; rewrite ?right_id //.
+    by rewrite IH.
+  Qed.
+
+  Fixpoint remove_all (l k : list nat) : option (list nat) :=
+    match l with
+    | [] => Some k
+    | n :: l => '(i,_) ← list_find (n =) k; remove_all l (delete i k)
+    end.
+
+  Lemma remove_all_permutation l k k' : remove_all l k = Some k' → k ≡ₚ l ++ k'.
+  Proof.
+    revert k k'; induction l as [|n l IH]; simpl; intros k k' Hk.
+    { by simplify_eq. }
+    destruct (list_find _ _) as [[i ?]|] eqn:?Hk'; simplify_eq/=.
+    move: Hk'; intros [? <-]%list_find_Some.
+    rewrite -(IH (delete i k) k') // -delete_Permutation //.
+  Qed.
+  Lemma split_l Σ e l k :
+    remove_all l (flatten e) = Some k →
+    eval Σ e ≡ eval Σ (ESep (to_expr l) (to_expr k)).
+  Proof.
+    intros He%remove_all_permutation.
+    by rewrite eval_flatten He fmap_app big_sep_app /= !eval_to_expr.
+  Qed.
+  Lemma split_r Σ e l k :
+    remove_all l (flatten e) = Some k →
+    eval Σ e ≡ eval Σ (ESep (to_expr k) (to_expr l)).
+  Proof. intros. rewrite /= comm. by apply split_l. Qed.
+
   Class Quote (Σ1 Σ2 : list (uPred M)) (P : uPred M) (e : expr) := {}.
   Global Instance quote_True Σ : Quote Σ Σ True ETrue.
   Global Instance quote_var Σ1 Σ2 P i:
@@ -105,116 +144,82 @@ Module upred_reflection. Section upred_reflection.
   Global Instance quote_args_cons Σ Ps P ns n :
     rlist.QuoteLookup Σ Σ P n →
     QuoteArgs Σ Ps ns → QuoteArgs Σ (P :: Ps) (n :: ns).
-
-  End upred_reflection.
+  End uPred_reflection.
 
   Ltac quote :=
     match goal with
     | |- ?P1 ⊑ ?P2 =>
       lazymatch type of (_ : Quote [] _ P1 _) with Quote _ ?Σ2 _ ?e1 =>
       lazymatch type of (_ : Quote Σ2 _ P2 _) with Quote _ ?Σ3 _ ?e2 =>
-        change (eval Σ3 e1 ⊑ eval Σ3 e2)
-      end end
+        change (eval Σ3 e1 ⊑ eval Σ3 e2) end end
     end.
-End upred_reflection.
+  Ltac quote_l :=
+    match goal with
+    | |- ?P1 ⊑ ?P2 =>
+      lazymatch type of (_ : Quote [] _ P1 _) with Quote _ ?Σ2 _ ?e1 =>
+        change (eval Σ2 e1 ⊑ P2) end
+    end.
+End uPred_reflection.
 
 Tactic Notation "solve_sep_entails" :=
-  upred_reflection.quote; apply upred_reflection.flatten_entails;
+  uPred_reflection.quote; apply uPred_reflection.flatten_entails;
   apply (bool_decide_unpack _); vm_compute; exact Logic.I.
 
+Ltac close_uPreds Ps tac :=
+  let M := match goal with |- @uPred_entails ?M _ _ => M end in
+  let rec go Ps Qs :=
+    lazymatch Ps with
+    | [] => let Qs' := eval cbv [reverse rev_append] in (reverse Qs) in tac Qs'
+    | ?P :: ?Ps => find_pat P ltac:(fun Q => go Ps (Q :: Qs))
+    end in
+  (* avoid evars in case Ps = @nil ?A *)
+  try match Ps with [] => unify Ps (@nil (uPred M)) end;
+  go Ps (@nil (uPred M)).
+
 Tactic Notation "cancel" constr(Ps) :=
-  upred_reflection.quote;
-  match goal with
-  | |- upred_reflection.eval ?Σ _ ⊑ upred_reflection.eval _ _ =>
-     lazymatch type of (_ : upred_reflection.QuoteArgs Σ Ps _) with
-       upred_reflection.QuoteArgs _ _ ?ns' =>
-       eapply upred_reflection.cancel_entails with (ns:=ns');
-        [cbv; reflexivity|cbv; reflexivity|simpl]
-     end
-  end.
+  uPred_reflection.quote;
+  let Σ := match goal with |- uPred_reflection.eval ?Σ _ ⊑ _ => Σ end in
+  let ns' := lazymatch type of (_ : uPred_reflection.QuoteArgs Σ Ps _) with
+             | uPred_reflection.QuoteArgs _ _ ?ns' => ns'
+             end in
+  eapply uPred_reflection.cancel_entails with (ns:=ns');
+    [cbv; reflexivity|cbv; reflexivity|simpl].
 
 Tactic Notation "ecancel" open_constr(Ps) :=
-  let rec close Ps Qs tac :=
-    lazymatch Ps with
-    | [] => tac Qs
-    | ?P :: ?Ps =>
-      find_pat P ltac:(fun Q => close Ps (Q :: Qs) tac)
-    end
-  in
-    lazymatch goal with
-    | |- @uPred_entails ?M _ _ =>
-       close Ps (@nil (uPred M)) ltac:(fun Qs => cancel Qs)
-    end. 
+  close_uPreds Ps ltac:(fun Qs => cancel Qs).
 
 (** [to_front [P1, P2, ..]] rewrites in the premise of ⊑ such that
     the assumptions P1, P2, ... appear at the front, in that order. *)
 Tactic Notation "to_front" open_constr(Ps) :=
-  let rec tofront Ps :=
-    lazymatch eval hnf in Ps with
-    | [] => idtac
-    | ?P :: ?Ps =>
-      rewrite ?(assoc (★)%I);
-      match goal with
-      | |- (?Q ★ _)%I ⊑ _ => (* check if it is already at front. *)
-        unify P Q with typeclass_instances
-      | |- _ => find_pat P ltac:(fun P => rewrite {1}[(_ ★ P)%I]comm)
-      end;
-      tofront Ps
-    end
-  in
-  rewrite [X in _ ⊑ X]lock;
-  tofront (rev Ps);
-  rewrite -[X in _ ⊑ X]lock.
+  close_uPreds Ps ltac:(fun Ps =>
+    uPred_reflection.quote_l;
+    let Σ := match goal with |- uPred_reflection.eval ?Σ _ ⊑ _ => Σ end in
+    let ns' := lazymatch type of (_ : uPred_reflection.QuoteArgs Σ Ps _) with
+               | uPred_reflection.QuoteArgs _ _ ?ns' => ns'
+               end in
+    eapply entails_equiv_l;
+      first (apply uPred_reflection.split_l with (l:=ns'); cbv; reflexivity);
+      simpl).
+
+Tactic Notation "to_back" open_constr(Ps) :=
+  close_uPreds Ps ltac:(fun Ps =>
+    uPred_reflection.quote_l;
+    let Σ := match goal with |- uPred_reflection.eval ?Σ _ ⊑ _ => Σ end in
+    let ns' := lazymatch type of (_ : uPred_reflection.QuoteArgs Σ Ps _) with
+               | uPred_reflection.QuoteArgs _ _ ?ns' => ns'
+               end in
+    eapply entails_equiv_l;
+      first (apply uPred_reflection.split_r with (l:=ns'); cbv; reflexivity);
+      simpl).
 
 (** [sep_split] is used to introduce a (★).
     Use [sep_split left: [P1, P2, ...]] to define which assertions will be
     taken to the left; the rest will be available on the right.
     [sep_split right: [P1, P2, ...]] works the other way around. *)
-(* TODO: These tactics fail if the list contains *all* assumptions.
-   However, in these cases using the "other" variant with the emtpy list
-   is much more convenient anyway. *)
-(* TODO: These tactics are pretty slow, can we use the reflection stuff
-   above to speed them up? *)
 Tactic Notation "sep_split" "right:" open_constr(Ps) :=
-  match goal with
-  | |- ?P ⊑ _ =>
-    let iProp := type of P in (* ascribe a type to the list, to prevent evars from appearing *)
-    lazymatch eval hnf in (Ps : list iProp) with
-    | [] => apply sep_intro_True_r
-    | ?P :: ?Ps =>
-      to_front (P::Ps);
-      (* Run assoc length (Ps) times -- that is 1 - length(original Ps),
-         and it will turn the goal in just the right shape for sep_mono. *)
-      let rec nassoc Ps :=
-          lazymatch eval hnf in Ps with
-          | [] => idtac
-          | _ :: ?Ps => rewrite (assoc (★)%I); nassoc Ps
-          end in
-      rewrite [X in _ ⊑ X]lock -?(assoc (★)%I);
-      nassoc Ps; rewrite [X in X ⊑ _]comm -[X in _ ⊑ X]lock;
-      apply sep_mono
-   end
-  end.
+  to_back Ps; apply sep_mono.
 Tactic Notation "sep_split" "left:" open_constr(Ps) :=
-  match goal with
-  | |- ?P ⊑ _ =>
-    let iProp := type of P in (* ascribe a type to the list, to prevent evars from appearing *)
-    lazymatch eval hnf in (Ps : list iProp) with
-    | [] => apply sep_intro_True_l
-    | ?P :: ?Ps =>
-      to_front (P::Ps);
-      (* Run assoc length (Ps) times -- that is 1 - length(original Ps),
-         and it will turn the goal in just the right shape for sep_mono. *)
-      let rec nassoc Ps :=
-          lazymatch eval hnf in Ps with
-          | [] => idtac
-          | _ :: ?Ps => rewrite (assoc (★)%I); nassoc Ps
-          end in
-      rewrite [X in _ ⊑ X]lock -?(assoc (★)%I);
-      nassoc Ps; rewrite -[X in _ ⊑ X]lock;
-      apply sep_mono
-   end
-  end.
+  to_front Ps; apply sep_mono.
 
 (** Assumes a goal of the shape P ⊑ ▷ Q. Alterantively, if Q
     is built of ★, ∧, ∨ with ▷ in all branches; that will work, too.
