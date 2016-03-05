@@ -417,6 +417,17 @@ Proof.
   apply wsubst_closed, not_elem_of_nil.
 Qed.
 
+(** to_val propagation.
+    TODO: automatically appliy in wp_tactics? *)
+Lemma to_val_InjL e v : to_val e = Some v → to_val (InjL e) = Some (InjLV v).
+Proof. move=>H. simpl. by rewrite H. Qed.
+Lemma to_val_InjR e v : to_val e = Some v → to_val (InjR e) = Some (InjRV v).
+Proof. move=>H. simpl. by rewrite H. Qed.
+Lemma to_val_Pair e1 e2 v1 v2 :
+  to_val e1 = Some v1 → to_val e2 = Some v2 →
+  to_val (Pair e1 e2) = Some (PairV v1 v2).
+Proof. move=>H1 H2. simpl. by rewrite H1 H2. Qed.
+
 (** Basic properties about the language *)
 Lemma to_of_val v : to_val (of_val v) = Some v.
 Proof. by induction v; simplify_option_eq. Qed.
@@ -525,7 +536,7 @@ Lemma alloc_fresh e v σ :
   to_val e = Some v → head_step (Alloc e) σ (Loc l) (<[l:=v]>σ) None.
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset _)), is_fresh. Qed.
 
-(** Equality stuff *)
+(** Equality and other typeclass stuff *)
 Instance base_lit_dec_eq (l1 l2 : base_lit) : Decision (l1 = l2).
 Proof. solve_decision. Defined.
 Instance un_op_dec_eq (op1 op2 : un_op) : Decision (op1 = op2).
@@ -567,6 +578,9 @@ Instance val_dec_eq (v1 v2 : val) : Decision (v1 = v2).
 Proof.
  refine (cast_if (decide (of_val v1 = of_val v2))); abstract naive_solver.
 Defined.
+
+Instance expr_inhabited X : Inhabited (expr X) := populate (Lit LitUnit).
+Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
 End heap_lang.
 
 (** Language *)

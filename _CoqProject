@@ -81,6 +81,7 @@ heap_lang/lifting.v
 heap_lang/derived.v
 heap_lang/heap.v
 heap_lang/notation.v
+heap_lang/spawn.v
 heap_lang/tests.v
 heap_lang/substitution.v
 barrier/barrier.v
