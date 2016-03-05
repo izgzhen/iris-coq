@@ -122,14 +122,14 @@ Module uPred_reflection. Section uPred_reflection.
   Qed.
   Lemma split_l Σ e l k :
     remove_all l (flatten e) = Some k →
-    eval Σ e ≡ eval Σ (ESep (to_expr l) (to_expr k)).
+    eval Σ e ≡ (eval Σ (to_expr l) ★ eval Σ (to_expr k))%I.
   Proof.
     intros He%remove_all_permutation.
-    by rewrite eval_flatten He fmap_app big_sep_app /= !eval_to_expr.
+    by rewrite eval_flatten He fmap_app big_sep_app !eval_to_expr.
   Qed.
   Lemma split_r Σ e l k :
     remove_all l (flatten e) = Some k →
-    eval Σ e ≡ eval Σ (ESep (to_expr k) (to_expr l)).
+    eval Σ e ≡ (eval Σ (to_expr k) ★ eval Σ (to_expr l))%I.
   Proof. intros. rewrite /= comm. by apply split_l. Qed.
 
   Class Quote (Σ1 Σ2 : list (uPred M)) (P : uPred M) (e : expr) := {}.
