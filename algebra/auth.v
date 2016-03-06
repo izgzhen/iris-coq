@@ -245,7 +245,7 @@ Program Definition authRF (F : rFunctor) : rFunctor := {|
   rFunctor_map A1 A2 B1 B2 fg := authC_map (rFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros F A1 A2 B1 B2 n f g Hfg; apply authC_map_ne, rFunctor_ne.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply authC_map_ne, rFunctor_contractive.
 Qed.
 Next Obligation.
   intros F A B x. rewrite /= -{2}(auth_map_id x).

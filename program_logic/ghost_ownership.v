@@ -18,7 +18,7 @@ Notation iPropG Λ Σ := (iProp Λ (globalF Σ)).
 
 Class inG (Λ : language) (Σ : rFunctorG) (A : cmraT) := InG {
   inG_id : gid;
-  inG_prf : A = Σ inG_id (laterC (iPreProp Λ (globalF Σ)))
+  inG_prf : A = Σ inG_id (iPreProp Λ (globalF Σ))
 }.
 
 Definition to_globalF `{inG Λ Σ A} (γ : gname) (a : A) : iGst Λ (globalF Σ) :=
@@ -52,9 +52,9 @@ Proof. rewrite /to_globalF; apply _. Qed.
 
 (** * Transport empty *)
 Instance inG_empty `{Empty A} :
-  Empty (Σ inG_id (laterC (iPreProp Λ (globalF Σ)))) := cmra_transport inG_prf ∅.
+  Empty (Σ inG_id (iPreProp Λ (globalF Σ))) := cmra_transport inG_prf ∅.
 Instance inG_empty_spec `{Empty A} :
-  CMRAIdentity A → CMRAIdentity (Σ inG_id (laterC (iPreProp Λ (globalF Σ)))).
+  CMRAIdentity A → CMRAIdentity (Σ inG_id (iPreProp Λ (globalF Σ))).
 Proof.
   split.
   - apply cmra_transport_valid, cmra_empty_valid.

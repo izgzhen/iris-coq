@@ -185,7 +185,8 @@ Program Definition agreeRF (F : cFunctor) : rFunctor := {|
   rFunctor_map A1 A2 B1 B2 fg := agreeC_map (cFunctor_map F fg)
 |}.
 Next Obligation.
-  intros F A1 A2 B1 B2 n ???; simpl. by apply agreeC_map_ne, cFunctor_ne.
+  intros F A1 A2 B1 B2 n ???; simpl.
+  by apply agreeC_map_ne, cFunctor_contractive.
 Qed.
 Next Obligation.
   intros F A B x; simpl. rewrite -{2}(agree_map_id x).

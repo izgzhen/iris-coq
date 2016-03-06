@@ -57,7 +57,7 @@ their first argument to avoid loops. For example, the instances [authGF_inGF]
 and [auth_identity] otherwise create a cycle that pops up arbitrarily. *)
 Hint Mode inGF + + - : typeclass_instances.
 
-Lemma inGF_inG `{inGF Λ Σ F} : inG Λ Σ (F (laterC (iPreProp Λ (globalF Σ)))).
+Lemma inGF_inG `{inGF Λ Σ F} : inG Λ Σ (F (iPreProp Λ (globalF Σ))).
 Proof. exists inGF_id. by rewrite -inGF_prf. Qed.
 Instance inGF_here {Λ Σ} (F: rFunctor) : inGF Λ (rFunctorG.cons F Σ) F.
 Proof. by exists 0. Qed.
@@ -76,4 +76,4 @@ Instance inGFs_nil {Λ Σ} : inGFs Λ Σ [].
 Proof. exact tt. Qed.
 Instance inGFs_cons {Λ Σ} F Fs :
   inGF Λ Σ F → inGFs Λ Σ Fs → inGFs Λ Σ (rFunctors.cons F Fs).
-Proof. split; done. Qed.
+Proof. by split. Qed.

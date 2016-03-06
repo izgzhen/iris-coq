@@ -10,10 +10,10 @@ Import uPred.
 (* Not bundling heapG, as it may be shared with other users. *)
 Class barrierG Σ := BarrierG {
   barrier_stsG :> stsG heap_lang Σ sts;
-  barrier_savedPropG :> savedPropG heap_lang Σ idCF;
+  barrier_savedPropG :> savedPropG heap_lang Σ laterCF;
 }.
 (** The Functors we need. *)
-Definition barrierGF : rFunctors := [stsGF sts; agreeRF idCF].
+Definition barrierGF : rFunctors := [stsGF sts; agreeRF laterCF].
 (* Show and register that they match. *)
 Instance inGF_barrierG `{H : inGFs heap_lang Σ barrierGF} : barrierG Σ.
 Proof. destruct H as (?&?&?). split; apply _. Qed.
@@ -119,7 +119,7 @@ Proof.
   apply forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
   rewrite !assoc. apply pvs_wand_r.
   (* The core of this proof: Allocating the STS and the saved prop. *)
-  eapply sep_elim_True_r; first by eapply (saved_prop_alloc (F:=idCF) _ (Next P)).
+  eapply sep_elim_True_r; first by eapply (saved_prop_alloc (F:=laterCF) _ (Next P)).
   rewrite pvs_frame_l. apply pvs_strip_pvs. rewrite sep_exist_l.
   apply exist_elim=>i.
   trans (pvs ⊤ ⊤ (heap_ctx heapN ★

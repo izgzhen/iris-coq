@@ -194,7 +194,7 @@ Program Definition optionCF (F : cFunctor) : cFunctor := {|
   cFunctor_map A1 A2 B1 B2 fg := optionC_map (cFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, cFunctor_ne.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, cFunctor_contractive.
 Qed.
 Next Obligation.
   intros F A B x. rewrite /= -{2}(option_fmap_id x).
@@ -210,7 +210,7 @@ Program Definition optionRF (F : rFunctor) : rFunctor := {|
   rFunctor_map A1 A2 B1 B2 fg := optionC_map (rFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_ne.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_contractive.
 Qed.
 Next Obligation.
   intros F A B x. rewrite /= -{2}(option_fmap_id x).

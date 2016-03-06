@@ -232,8 +232,9 @@ Program Definition resRF (Λ : language)
   rFunctor_map A1 A2 B1 B2 fg :=resC_map (cFunctor_map F fg) (rFunctor_map Σ fg)
 |}.
 Next Obligation.
-  intros Λ F Σ A1 A2 B1 B2 n f g Hfg.
-  apply resC_map_ne. by apply cFunctor_ne. by apply rFunctor_ne.
+  intros Λ F Σ A1 A2 B1 B2 n f g Hfg; apply resC_map_ne.
+  - by apply cFunctor_contractive.
+  - by apply rFunctor_contractive.
 Qed.
 Next Obligation.
   intros Λ F Σ A B x. rewrite /= -{2}(res_map_id x).

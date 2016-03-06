@@ -9,8 +9,7 @@ propositions using the agreement CMRA. *)
 
 Module Type iProp_solution_sig.
 Parameter iPreProp : language → rFunctor → cofeT.
-Definition iGst (Λ : language) (Σ : rFunctor) : cmraT :=
-  Σ (laterC (iPreProp Λ Σ)).
+Definition iGst (Λ : language) (Σ : rFunctor) : cmraT := Σ (iPreProp Λ Σ).
 Definition iRes Λ Σ := res Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
 Definition iResR Λ Σ := resR Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
 Definition iWld Λ Σ := gmap positive (agree (laterC (iPreProp Λ Σ))).
@@ -27,19 +26,10 @@ End iProp_solution_sig.
 
 Module Export iProp_solution : iProp_solution_sig.
 Definition iProp_result (Λ : language) (Σ : rFunctor) :
-  solution (uPredCF (resRF Λ laterCF (laterRF Σ))).
-Proof.
-  (* Contractiveness should be derived from general properties about functors *)
-  apply (solver.result _)=> A1 A2 B1 B2.
-  intros n fg fg' Hf P; split=> n' -[???].
-  apply uPredC_map_ne, resC_map_ne; simpl.
-  - apply laterC_map_contractive=> i ?. by apply Hf.
-  - apply rFunctor_ne; split; apply laterC_map_contractive=> i ?; by apply Hf.
-Qed.
+  solution (uPredCF (resRF Λ laterCF Σ)) := solver.result _.
 
 Definition iPreProp (Λ : language) (Σ : rFunctor) : cofeT := iProp_result Λ Σ.
-Definition iGst (Λ : language) (Σ : rFunctor) : cmraT :=
-  Σ (laterC (iPreProp Λ Σ)).
+Definition iGst (Λ : language) (Σ : rFunctor) : cmraT := Σ (iPreProp Λ Σ).
 Definition iRes Λ Σ := res Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
 Definition iResR Λ Σ := resR Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
 Definition iWld Λ Σ := gmap positive (agree (laterC (iPreProp Λ Σ))).

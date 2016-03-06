@@ -357,7 +357,7 @@ Program Definition mapCF K `{Countable K} (F : cFunctor) : cFunctor := {|
   cFunctor_map A1 A2 B1 B2 fg := mapC_map (cFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros K ?? F A1 A2 B1 B2 n f g Hfg; apply mapC_map_ne, cFunctor_ne.
+  by intros K ?? F A1 A2 B1 B2 n f g ?; apply mapC_map_ne, cFunctor_contractive.
 Qed.
 Next Obligation.
   intros K ?? F A B x. rewrite /= -{2}(map_fmap_id x).
@@ -373,7 +373,7 @@ Program Definition mapRF K `{Countable K} (F : rFunctor) : rFunctor := {|
   rFunctor_map A1 A2 B1 B2 fg := mapC_map (rFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros K ?? F A1 A2 B1 B2 n f g Hfg; apply mapC_map_ne, rFunctor_ne.
+  by intros K ?? F A1 A2 B1 B2 n f g ?; apply mapC_map_ne, rFunctor_contractive.
 Qed.
 Next Obligation.
   intros K ?? F A B x. rewrite /= -{2}(map_fmap_id x).

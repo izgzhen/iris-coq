@@ -9,11 +9,11 @@ End ModelTest.
 Module SavedPropTest.
   (* Test if we can really go "crazy higher order" *)
   Section sec.
-    Definition Σ : rFunctorG := #[ agreeRF (cofe_morCF idCF idCF) ].
+    Definition Σ : rFunctorG := #[ agreeRF (cofe_morCF laterCF laterCF) ].
     Context {Λ : language}.
     Notation iProp := (iPropG Λ Σ).
 
-    Local Instance : savedPropG Λ Σ (cofe_morCF idCF idCF) := _.
+    Local Instance : savedPropG Λ Σ (cofe_morCF laterCF laterCF) := _.
 
     Definition own_pred γ (φ : laterC iProp -n> laterC iProp) : iProp :=
       saved_prop_own γ φ.
