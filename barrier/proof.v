@@ -6,17 +6,17 @@ From barrier Require Export barrier.
 From barrier Require Import protocol.
 Import uPred.
 
-(** The monoids we need. *)
+(** The CMRAs we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
 Class barrierG Σ := BarrierG {
   barrier_stsG :> stsG heap_lang Σ sts;
   barrier_savedPropG :> savedPropG heap_lang Σ idCF;
 }.
+(** The Functors we need. *)
 Definition barrierGF : rFunctors := [stsGF sts; agreeRF idCF].
-
-Instance inGF_barrierG
-  `{inGF heap_lang Σ (stsGF sts), inGF heap_lang Σ (agreeRF idCF)} : barrierG Σ.
-Proof. split; apply _. Qed.
+(* Show and register that they match. *)
+Instance inGF_barrierG `{H : inGFs heap_lang Σ barrierGF} : barrierG Σ.
+Proof. destruct H as (?&?&?). split; apply _. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.

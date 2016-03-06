@@ -14,13 +14,14 @@ Definition join : val :=
     | InjL <>  => '"join" '"c"
     end.
 
-(** The monoids we need. *)
+(** The CMRA we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
 Class spawnG Σ := SpawnG {
   spawn_tokG :> inG heap_lang Σ (exclR unitC);
 }.
+(** The functor we need. *)
 Definition spawnGF : rFunctors := [constRF (exclR unitC)].
-
+(* Show and register that they match. *)
 Instance inGF_spawnG
   `{inGF heap_lang Σ (constRF (exclR unitC))} : spawnG Σ.
 Proof. split. apply: inGF_inG. Qed.

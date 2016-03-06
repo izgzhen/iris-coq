@@ -8,14 +8,14 @@ Import uPred.
    predicates over finmaps instead of just ownP. *)
 
 Definition heapR : cmraT := mapR loc (fracR (dec_agreeR val)).
-Definition heapGF : rFunctor := authGF heapR.
 
+(** The CMRA we need. *)
 Class heapG Σ := HeapG {
-  heap_inG : inG heap_lang Σ (authR heapR);
+  heap_inG :> authG heap_lang Σ heapR;
   heap_name : gname
 }.
-Instance heap_authG `{i : heapG Σ} : authG heap_lang Σ heapR :=
-  {| auth_inG := heap_inG |}.
+(** The Functor we need. *)
+Definition heapGF : rFunctor := authGF heapR.
 
 Definition to_heap : state → heapR := fmap (λ v, Frac 1 (DecAgree v)).
 Definition of_heap : heapR → state :=

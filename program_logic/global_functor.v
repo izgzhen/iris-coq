@@ -5,6 +5,12 @@ Module rFunctors.
     | nil  : rFunctors
     | cons : rFunctor → rFunctors → rFunctors.
   Coercion singleton (F : rFunctor) : rFunctors := cons F nil.
+
+  Fixpoint fold_right {A} (f : rFunctor → A → A) (a : A) (Fs : rFunctors) : A :=
+    match Fs with
+    | nil => a
+    | cons F Fs => f F (fold_right f a Fs)
+    end.
 End rFunctors.
 Notation rFunctors := rFunctors.rFunctors.
 
@@ -58,3 +64,16 @@ Proof. by exists 0. Qed.
 Instance inGF_further {Λ Σ} (F F': rFunctor) :
   inGF Λ Σ F → inGF Λ (rFunctorG.cons F' Σ) F.
 Proof. intros [i ?]. by exists (S i). Qed.
+
+(** For modules that need more than one functor, we offer a typeclass
+    [inGFs] to demand a list of rFunctor to be available. We do
+    *not* register any instances that go from there to [inGF], to
+    avoid cycles. *)
+Class inGFs (Λ : language) (Σ : rFunctorG) (Fs : rFunctors) :=
+  InGFs : (rFunctors.fold_right (λ F T, inGF Λ Σ F * T) () Fs)%type.
+
+Instance inGFs_nil {Λ Σ} : inGFs Λ Σ [].
+Proof. exact tt. Qed.
+Instance inGFs_cons {Λ Σ} F Fs :
+  inGF Λ Σ F → inGFs Λ Σ Fs → inGFs Λ Σ (rFunctors.cons F Fs).
+Proof. split; done. Qed.

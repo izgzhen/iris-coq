@@ -2,13 +2,15 @@ From algebra Require Export sts upred_tactics.
 From program_logic Require Export invariants global_functor.
 Import uPred.
 
+(** The CMRA we need. *)
 Class stsG Λ Σ (sts : stsT) := StsG {
   sts_inG :> inG Λ Σ (stsR sts);
   sts_inhabited :> Inhabited (sts.state sts);
 }.
 Coercion sts_inG : stsG >-> inG.
-
+(** The Functor we need. *)
 Definition stsGF (sts : stsT) : rFunctor := constRF (stsR sts).
+(* Show and register that they match. *)
 Instance inGF_stsG sts `{inGF Λ Σ (stsGF sts)}
   `{Inhabited (sts.state sts)} : stsG Λ Σ sts.
 Proof. split; try apply _. apply: inGF_inG. Qed.

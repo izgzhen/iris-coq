@@ -2,13 +2,15 @@ From algebra Require Export auth upred_tactics.
 From program_logic Require Export invariants global_functor.
 Import uPred.
 
+(* The CMRA we need. *)
 Class authG Λ Σ (A : cmraT) `{Empty A} := AuthG {
   auth_inG :> inG Λ Σ (authR A);
   auth_identity :> CMRAIdentity A;
   auth_timeless :> CMRADiscrete A;
 }.
-
+(* The Functor we need. *)
 Definition authGF (A : cmraT) : rFunctor := constRF (authR A).
+(* Show and register that they match. *)
 Instance authGF_inGF (A : cmraT) `{inGF Λ Σ (authGF A)}
   `{CMRAIdentity A, CMRADiscrete A} : authG Λ Σ A.
 Proof. split; try apply _. apply: inGF_inG. Qed.
