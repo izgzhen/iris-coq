@@ -53,7 +53,8 @@ Section client.
     wp_let. (ewp eapply (wp_par heapN N (λ _, True%I) (λ _, True%I))); eauto.
     rewrite 2!{1}[heap_ctx _]always_sep_dup !assoc [(_ ★ heap_ctx _)%I]comm.
     ecancel [heap_ctx _]. sep_split right: []; last first.
-    { do 2 apply forall_intro=>_. apply wand_intro_l. eauto with I. }
+    { do 2 apply forall_intro=>_. apply wand_intro_l.
+      eauto using later_intro with I. }
     sep_split left: [send heapN _ _ _; heap_ctx _; y ↦ _]%I.
     - (* The original thread, the sender. *)
       (ewp eapply wp_store); eauto with I. strip_later.
@@ -68,7 +69,8 @@ Section client.
       (ewp eapply (wp_par heapN N (λ _, True%I) (λ _, True%I))); eauto.
       do 2 rewrite {1}[heap_ctx _]always_sep_dup.
       ecancel [heap_ctx _]. rewrite !assoc. sep_split right: []; last first.
-      { do 2 apply forall_intro=>_. apply wand_intro_l. eauto with I. }
+      { do 2 apply forall_intro=>_. apply wand_intro_l.
+        eauto using later_intro with I. }
       sep_split left: [recv heapN _ _ _; heap_ctx _]%I; by rewrite -worker_safe comm.
 Qed.
 End client.
