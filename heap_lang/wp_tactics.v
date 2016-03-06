@@ -21,6 +21,8 @@ Ltac wp_finish :=
   | _ => idtac
   end in simpl; intros_revert go.
 
+Ltac wp_done := rewrite -/of_val /= ?to_of_val; fast_done.
+
 Tactic Notation "wp_rec" ">" :=
   löb ltac:(
     (* Find the redex and apply wp_rec *)
@@ -30,9 +32,7 @@ Tactic Notation "wp_rec" ">" :=
       match eval hnf in e' with App ?e1 _ =>
 (* hnf does not reduce through an of_val *)
 (*      match eval hnf in e1 with Rec _ _ _ => *)
-      wp_bind K; etrans;
-         [|eapply wp_rec'; repeat rewrite /= to_of_val; fast_done];
-         simpl_subst; wp_finish
+      wp_bind K; etrans; [|eapply wp_rec'; wp_done]; simpl_subst; wp_finish
 (*      end *) end)
      end).
 Tactic Notation "wp_rec" := wp_rec>; try strip_later.
@@ -42,9 +42,7 @@ Tactic Notation "wp_lam" ">" :=
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with App ?e1 _ =>
 (*    match eval hnf in e1 with Rec BAnon _ _ => *)
-    wp_bind K; etrans;
-       [|eapply wp_lam; repeat (fast_done || rewrite /= to_of_val)];
-       simpl_subst; wp_finish
+    wp_bind K; etrans; [|eapply wp_lam; wp_done]; simpl_subst; wp_finish
 (*    end *) end)
   end.
 Tactic Notation "wp_lam" := wp_lam>; try strip_later.
@@ -73,10 +71,8 @@ Tactic Notation "wp_proj" ">" :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
-    | Fst _ =>
-       wp_bind K; etrans; [|eapply wp_fst; try fast_done]; wp_finish
-    | Snd _ =>
-       wp_bind K; etrans; [|eapply wp_snd; try fast_done]; wp_finish
+    | Fst _ => wp_bind K; etrans; [|eapply wp_fst; wp_done]; wp_finish
+    | Snd _ => wp_bind K; etrans; [|eapply wp_snd; wp_done]; wp_finish
     end)
   end.
 Tactic Notation "wp_proj" := wp_proj>; try strip_later.
@@ -95,8 +91,9 @@ Tactic Notation "wp_case" ">" :=
   match goal with
   | |- _ ⊑ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with Case _ _ _ =>
-    wp_bind K;
-    etrans; [|eapply wp_case_inl || eapply wp_case_inr]; wp_finish
+      wp_bind K;
+      etrans; [|first[eapply wp_case_inl; wp_done|eapply wp_case_inr; wp_done]];
+      wp_finish
     end)
   end.
 Tactic Notation "wp_case" := wp_case>; try strip_later.
