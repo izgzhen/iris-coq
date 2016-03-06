@@ -21,17 +21,22 @@ Definition to_heap : state → heapR := fmap (λ v, Frac 1 (DecAgree v)).
 Definition of_heap : heapR → state :=
   omap (mbind (maybe DecAgree ∘ snd) ∘ maybe2 Frac).
 
-(* heap_mapsto is defined strongly opaquely, to prevent unification from
-matching it against other forms of ownership. *)
-Definition heap_mapsto `{heapG Σ}
-    (l : loc)(q : Qp) (v: val) : iPropG heap_lang Σ :=
-  auth_own heap_name {[ l := Frac q (DecAgree v) ]}.
-Typeclasses Opaque heap_mapsto.
+Section definitions.
+  Context `{i : heapG Σ}.
 
-Definition heap_inv `{i : heapG Σ} (h : heapR) : iPropG heap_lang Σ :=
-  ownP (of_heap h).
-Definition heap_ctx `{i : heapG Σ} (N : namespace) : iPropG heap_lang Σ :=
-  auth_ctx heap_name N heap_inv.
+  Definition heap_mapsto (l : loc) (q : Qp) (v: val) : iPropG heap_lang Σ :=
+    auth_own heap_name {[ l := Frac q (DecAgree v) ]}.
+  Definition heap_inv (h : heapR) : iPropG heap_lang Σ :=
+    ownP (of_heap h).
+  Definition heap_ctx (N : namespace) : iPropG heap_lang Σ :=
+    auth_ctx heap_name N heap_inv.
+
+  Global Instance heap_inv_proper : Proper ((≡) ==> (≡)) heap_inv.
+  Proof. solve_proper. Qed.
+  Global Instance heap_ctx_always_stable N : AlwaysStable (heap_ctx N).
+  Proof. apply _. Qed.
+End definitions.
+Typeclasses Opaque heap_ctx heap_mapsto.
 
 Notation "l ↦{ q } v" := (heap_mapsto l q v)
   (at level 20, q at level 50, format "l  ↦{ q }  v") : uPred_scope.
@@ -99,7 +104,7 @@ Section heap.
       apply (auth_alloc (ownP ∘ of_heap) N E (to_heap σ)); last done.
       apply to_heap_valid. }
     apply pvs_mono, exist_elim=> γ.
-    rewrite -(exist_intro (HeapG _ _ γ)); apply and_mono_r.
+    rewrite -(exist_intro (HeapG _ _ γ)) /heap_ctx; apply and_mono_r.
     rewrite /heap_mapsto /heap_name.
     induction σ as [|l v σ Hl IH] using map_ind.
     { rewrite big_sepM_empty; apply True_intro. }
@@ -111,10 +116,6 @@ Section heap.
   Qed.
 
   Context `{heapG Σ}.
-
-  (** Propers *)
-  Global Instance heap_inv_proper : Proper ((≡) ==> (≡)) heap_inv.
-  Proof. solve_proper. Qed.
 
   (** General properties of mapsto *)
   Lemma heap_mapsto_op_eq l q1 q2 v :

@@ -70,9 +70,8 @@ Proof.
     cancel [l ↦ InjLV #0]%I. apply or_intro_l'. by rewrite const_equiv. }
   rewrite (inv_alloc N) // !pvs_frame_l. eapply wp_strip_pvs.
   ewp eapply wp_fork. rewrite [heap_ctx _]always_sep_dup [inv _ _]always_sep_dup.
-  rewrite !assoc [(_ ★ (own _ _))%I]comm !assoc [(_ ★ (inv _ _))%I]comm.
-  rewrite !assoc [(_ ★ (_ -★ _))%I]comm. rewrite -!assoc 3!assoc. apply sep_mono.
-  - wp_seq. rewrite -!assoc. eapply wand_apply_l; [done..|].
+  sep_split left: [_ -★ _; inv _ _; own _ _; heap_ctx _]%I.
+  - wp_seq. eapply wand_apply_l; [done..|].
     rewrite /join_handle. rewrite const_equiv // left_id -(exist_intro γ).
     solve_sep_entails.
   - wp_focus (f _). rewrite wp_frame_r wp_frame_l.

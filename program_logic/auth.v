@@ -13,17 +13,26 @@ Instance authGF_inGF (A : cmraT) `{inGF Λ Σ (authGF A)}
   `{CMRAIdentity A, CMRADiscrete A} : authG Λ Σ A.
 Proof. split; try apply _. apply: inGF_inG. Qed.
 
-Definition auth_own `{authG Λ Σ A} (γ : gname) (a : A) : iPropG Λ Σ :=
-  own γ (◯ a).
-Typeclasses Opaque auth_own.
+Section definitions.
+  Context `{authG Λ Σ A} (γ : gname).
+  Definition auth_own  (a : A) : iPropG Λ Σ :=
+    own γ (◯ a).
+  Definition auth_inv (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
+    (∃ a, own γ (● a) ★ φ a)%I.
+  Definition auth_ctx (N : namespace) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
+    inv N (auth_inv φ).
 
-Definition auth_inv `{authG Λ Σ A}
-    (γ : gname) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
-  (∃ a, own γ (● a) ★ φ a)%I.
-Definition auth_ctx`{authG Λ Σ A}
-    (γ : gname) (N : namespace) (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
-  inv N (auth_inv γ φ).
+  Global Instance auth_own_ne n : Proper (dist n ==> dist n) auth_own.
+  Proof. solve_proper. Qed.
+  Global Instance auth_own_proper : Proper ((≡) ==> (≡)) auth_own.
+  Proof. solve_proper. Qed.
+  Global Instance auth_own_timeless a : TimelessP (auth_own a).
+  Proof. apply _. Qed.
+  Global Instance auth_ctx_always_stable N φ : AlwaysStable (auth_ctx N φ).
+  Proof. apply _. Qed.
+End definitions.
 
+Typeclasses Opaque auth_own auth_ctx.
 Instance: Params (@auth_inv) 6.
 Instance: Params (@auth_own) 6.
 Instance: Params (@auth_ctx) 7.
@@ -35,13 +44,6 @@ Section auth.
   Implicit Types P Q R : iPropG Λ Σ.
   Implicit Types a b : A.
   Implicit Types γ : gname.
-
-  Global Instance auth_own_ne n γ : Proper (dist n ==> dist n) (auth_own γ).
-  Proof. solve_proper. Qed.
-  Global Instance auth_own_proper γ : Proper ((≡) ==> (≡)) (auth_own γ).
-  Proof. solve_proper. Qed.
-  Global Instance auth_own_timeless γ a : TimelessP (auth_own γ a).
-  Proof. rewrite /auth_own. apply _. Qed.
 
   Lemma auth_own_op γ a b :
     auth_own γ (a ⋅ b) ≡ (auth_own γ a ★ auth_own γ b)%I.

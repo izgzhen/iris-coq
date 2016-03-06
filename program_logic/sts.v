@@ -13,21 +13,37 @@ Instance inGF_stsG sts `{inGF Λ Σ (stsGF sts)}
   `{Inhabited (sts.state sts)} : stsG Λ Σ sts.
 Proof. split; try apply _. apply: inGF_inG. Qed.
 
-Definition sts_ownS `{i : stsG Λ Σ sts} (γ : gname)
-    (S : sts.states sts) (T : sts.tokens sts) : iPropG Λ Σ:=
-  own γ (sts_frag S T).
-Definition sts_own `{i : stsG Λ Σ sts} (γ : gname)
-    (s : sts.state sts) (T : sts.tokens sts) : iPropG Λ Σ :=
-  own γ (sts_frag_up s T).
-Typeclasses Opaque sts_own sts_ownS.
+Section definitions.
+  Context `{i : stsG Λ Σ sts} (γ : gname).
+  Definition sts_ownS (S : sts.states sts) (T : sts.tokens sts) : iPropG Λ Σ:=
+    own γ (sts_frag S T).
+  Definition sts_own (s : sts.state sts) (T : sts.tokens sts) : iPropG Λ Σ :=
+    own γ (sts_frag_up s T).
+  Definition sts_inv (φ : sts.state sts → iPropG Λ Σ) : iPropG Λ Σ :=
+    (∃ s, own γ (sts_auth s ∅) ★ φ s)%I.
+  Definition sts_ctx (N : namespace) (φ: sts.state sts → iPropG Λ Σ) : iPropG Λ Σ :=
+    inv N (sts_inv φ).
 
-Definition sts_inv `{i : stsG Λ Σ sts} (γ : gname)
-    (φ : sts.state sts → iPropG Λ Σ) : iPropG Λ Σ :=
-  (∃ s, own γ (sts_auth s ∅) ★ φ s)%I.
-Definition sts_ctx `{i : stsG Λ Σ sts} (γ : gname)
-    (N : namespace) (φ: sts.state sts → iPropG Λ Σ) : iPropG Λ Σ :=
-  inv N (sts_inv γ φ).
-
+  Global Instance sts_inv_ne n :
+    Proper (pointwise_relation _ (dist n) ==> dist n) sts_inv.
+  Proof. solve_proper. Qed.
+  Global Instance sts_inv_proper :
+    Proper (pointwise_relation _ (≡) ==> (≡)) sts_inv.
+  Proof. solve_proper. Qed.
+  Global Instance sts_ownS_proper : Proper ((≡) ==> (≡) ==> (≡)) sts_ownS.
+  Proof. solve_proper. Qed.
+  Global Instance sts_own_proper s : Proper ((≡) ==> (≡)) (sts_own s).
+  Proof. solve_proper. Qed.
+  Global Instance sts_ctx_ne n N :
+    Proper (pointwise_relation _ (dist n) ==> dist n) (sts_ctx N).
+  Proof. solve_proper. Qed.
+  Global Instance sts_ctx_proper N :
+    Proper (pointwise_relation _ (≡) ==> (≡)) (sts_ctx N).
+  Proof. solve_proper. Qed.
+  Global Instance sts_ctx_always_stable N φ : AlwaysStable (sts_ctx N φ).
+  Proof. apply _. Qed.
+End definitions.
+Typeclasses Opaque sts_own sts_ownS sts_ctx.
 Instance: Params (@sts_inv) 5.
 Instance: Params (@sts_ownS) 5.
 Instance: Params (@sts_own) 6.
@@ -42,22 +58,6 @@ Section sts.
   Implicit Types T : sts.tokens sts.
 
   (** Setoids *)
-  Global Instance sts_inv_ne n γ :
-    Proper (pointwise_relation _ (dist n) ==> dist n) (sts_inv γ).
-  Proof. solve_proper. Qed.
-  Global Instance sts_inv_proper γ :
-    Proper (pointwise_relation _ (≡) ==> (≡)) (sts_inv γ).
-  Proof. solve_proper. Qed.
-  Global Instance sts_ownS_proper γ : Proper ((≡) ==> (≡) ==> (≡)) (sts_ownS γ).
-  Proof. solve_proper. Qed.
-  Global Instance sts_own_proper γ s : Proper ((≡) ==> (≡)) (sts_own γ s).
-  Proof. solve_proper. Qed.
-  Global Instance sts_ctx_ne n γ N :
-    Proper (pointwise_relation _ (dist n) ==> dist n) (sts_ctx γ N).
-  Proof. solve_proper. Qed.
-  Global Instance sts_ctx_proper γ N :
-    Proper (pointwise_relation _ (≡) ==> (≡)) (sts_ctx γ N).
-  Proof. solve_proper. Qed.
 
   (* The same rule as implication does *not* hold, as could be shown using
      sts_frag_included. *)
