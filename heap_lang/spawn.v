@@ -53,14 +53,11 @@ Lemma spawn_spec (Ψ : val → iProp) e (f : val) (Φ : val → iProp) :
   (heap_ctx heapN ★ #> f #() {{ Ψ }} ★ ∀ l, join_handle l Ψ -★ Φ (%l))
   ⊑ #> spawn e {{ Φ }}.
 Proof.
-  intros Hval Hdisj. rewrite /spawn.
-  (* TODO: Make this more convenient. *)
-  wp_focus e. etransitivity; last by eapply wp_value. wp_let.
-  (* FIXME: can we change the ewp notation so that the parentheses become unnecessary? *)
-  (ewp eapply wp_alloc); eauto with I. strip_later.
+  intros Hval Hdisj. rewrite /spawn. ewp (by eapply wp_value). wp_let.
+  wp eapply wp_alloc; eauto with I.
   apply forall_intro=>l. apply wand_intro_l. wp_let.
   rewrite (forall_elim l). eapply sep_elim_True_l.
-  { eapply (own_alloc (Excl ())). done. }
+  { by eapply (own_alloc (Excl ())). }
   rewrite !pvs_frame_r. eapply wp_strip_pvs. rewrite !sep_exist_r.
   apply exist_elim=>γ.
   (* TODO: Figure out a better way to say "I want to establish ▷ spawn_inv". *)
@@ -68,7 +65,7 @@ Proof.
          own γ (Excl ()) ★ ▷ (spawn_inv γ l Ψ))%I.
   { ecancel [ #> _ {{ _ }}; _ -★ _; heap_ctx _; own _ _]%I.
     rewrite -later_intro /spawn_inv -(exist_intro (InjLV #0)).
-    cancel [l ↦ InjLV #0]%I. apply or_intro_l'. by rewrite const_equiv. }
+    cancel [l ↦ InjLV #0]%I. by apply or_intro_l', const_intro. }
   rewrite (inv_alloc N) // !pvs_frame_l. eapply wp_strip_pvs.
   ewp eapply wp_fork. rewrite [heap_ctx _]always_sep_dup [inv _ _]always_sep_dup.
   sep_split left: [_ -★ _; inv _ _; own _ _; heap_ctx _]%I.
@@ -104,7 +101,7 @@ Proof.
   cancel [l ↦ lv]%I. rewrite sep_or_r. apply or_elim.
   - (* Case 1 : nothing sent yet, we wait. *)
     rewrite -or_intro_l. apply const_elim_sep_l=>-> {lv}.
-    do 2 rewrite const_equiv // left_id. wp_case; eauto.
+    do 2 rewrite const_equiv // left_id. wp_case.
     wp_seq. rewrite -always_wand_impl always_elim.
     rewrite !assoc. eapply wand_apply_r'; first done.
     rewrite -(exist_intro γ). solve_sep_entails.
@@ -115,8 +112,7 @@ Proof.
       rewrite [(heap_ctx _ ★ _)%I]sep_elim_r !assoc. rewrite -own_op own_valid_l.
       rewrite -!assoc discrete_valid. apply const_elim_sep_l=>-[]. }
     rewrite -or_intro_r. ecancel [own _ _].
-    wp_case; eauto using to_of_val.
-    wp_let. etransitivity; last by eapply wp_value, to_of_val.
+    wp_case. wp_let. ewp (eapply wp_value; wp_done).
     rewrite (forall_elim v). rewrite !assoc. eapply wand_apply_r'; eauto with I.
 Qed.
 
