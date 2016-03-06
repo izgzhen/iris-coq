@@ -703,9 +703,10 @@ Proof.
   exists x, x'; split_and?; auto.
   eapply uPred_weaken with n x; eauto using cmra_validN_op_l.
 Qed.
-Lemma wand_elim_l P Q : ((P -★ Q) ★ P) ⊑ Q.
+Lemma wand_elim_l' P Q R : P ⊑ (Q -★ R) → (P ★ Q) ⊑ R.
 Proof.
-  unseal; split; intros n x ? (x1&x2&Hx&HPQ&?); cofe_subst; by apply HPQ.
+  unseal =>HPQR. split; intros n x ? (?&?&?&?&?). cofe_subst.
+  eapply HPQR; eauto using cmra_validN_op_l.
 Qed.
 
 (* Derived BI Stuff *)
@@ -720,7 +721,9 @@ Global Instance sep_flip_mono' :
   Proper (flip (⊑) ==> flip (⊑) ==> flip (⊑)) (@uPred_sep M).
 Proof. by intros P P' HP Q Q' HQ; apply sep_mono. Qed.
 Lemma wand_mono P P' Q Q' : Q ⊑ P → P' ⊑ Q' → (P -★ P') ⊑ (Q -★ Q').
-Proof. intros HP HQ; apply wand_intro_r; rewrite HP -HQ; apply wand_elim_l. Qed.
+Proof.
+  intros HP HQ; apply wand_intro_r. rewrite HP -HQ. by apply wand_elim_l'.
+Qed.
 Global Instance wand_mono' : Proper (flip (⊑) ==> (⊑) ==> (⊑)) (@uPred_wand M).
 Proof. by intros P P' HP Q Q' HQ; apply wand_mono. Qed.
 
@@ -745,10 +748,10 @@ Lemma sep_elim_True_r P Q R : True ⊑ P → (R ★ P) ⊑ Q → R ⊑ Q.
 Proof. by intros HP; rewrite -HP right_id. Qed.
 Lemma wand_intro_l P Q R : (Q ★ P) ⊑ R → P ⊑ (Q -★ R).
 Proof. rewrite comm; apply wand_intro_r. Qed.
+Lemma wand_elim_l P Q : ((P -★ Q) ★ P) ⊑ Q.
+Proof. by apply wand_elim_l'. Qed.
 Lemma wand_elim_r P Q : (P ★ (P -★ Q)) ⊑ Q.
 Proof. rewrite (comm _ P); apply wand_elim_l. Qed.
-Lemma wand_elim_l' P Q R : P ⊑ (Q -★ R) → (P ★ Q) ⊑ R.
-Proof. intros ->; apply wand_elim_l. Qed.
 Lemma wand_elim_r' P Q R : Q ⊑ (P -★ R) → (P ★ Q) ⊑ R.
 Proof. intros ->; apply wand_elim_r. Qed.
 Lemma wand_apply_l P Q Q' R R' : P ⊑ (Q' -★ R') → R' ⊑ R → Q ⊑ Q' → (P ★ Q) ⊑ R.

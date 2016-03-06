@@ -87,14 +87,13 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
       \type \to \type
 \\[0.4em]
   \term, \prop, \pred ::={}&
-      x \mid
+      \var \mid
       \sigfn(\term_1, \dots, \term_n) \mid
       \unitval \mid
       (\term, \term) \mid
       \pi_i\; \term \mid
-      \Lam x.\term \mid
+      \Lam \var:\type.\term \mid
       \term(\term)  \mid
-      \mzero \mid
       \munit \mid
       \term \mtimes \term \mid
 \\&
@@ -107,7 +106,7 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
     \prop * \prop \mid
     \prop \wand \prop \mid
 \\&
-    \MU \var. \pred  \mid
+    \MU \var:\type. \pred  \mid
     \Exists \var:\type. \prop \mid
     \All \var:\type. \prop \mid
 \\&
@@ -226,10 +225,10 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 		{\vctx \proves \wtt{\prop \wand \propB}{\Prop}}
 \and
 	\infer{
-		\vctx, \var:\type\to\Prop \proves \wtt{\pred}{\type\to\Prop} \and
-		\text{$\var$ is guarded in $\pred$}
+		\vctx, \var:\type \proves \wtt{\term}{\type} \and
+		\text{$\var$ is guarded in $\term$}
 	}{
-		\vctx \proves \wtt{\MU \var. \pred}{\type\to\Prop}
+		\vctx \proves \wtt{\MU \var:\type. \term}{\type}
 	}
 \and
 	\infer{\vctx, x:\type \proves \wtt{\prop}{\Prop}}
@@ -285,23 +284,35 @@ This is a \emph{meta-level} assertions about propositions, defined by the follow
 
 \subsection{Proof rules}
 
-\ralf{Go on checking below.}
 The judgment $\vctx \mid \pfctx \proves \prop$ says that with free variables $\vctx$, proposition $\prop$ holds whenever all assumptions $\pfctx$ hold.
 We implicitly assume that an arbitrary variable context, $\vctx$, is added to every constituent of the rules.
 Axioms $\prop \Ra \propB$ stand for judgments $\vctx \mid \cdot \proves \prop \Ra \propB$ with no assumptions.
 (Bi-implications are analogous.)
 
+\judgment{}{\vctx \mid \pfctx \proves \prop}
 \paragraph{Laws of intuitionistic higher-order logic.}
 This is entirely standard.
 
-\begin{mathpar}
-\inferH{Asm}
+\begin{mathparpagebreakable}
+\infer[Asm]
   {\prop \in \pfctx}
   {\pfctx \proves \prop}
 \and
-\inferH{Eq}
-  {\pfctx \proves \prop(\term) \\ \pfctx \proves \term = \term'}
+\infer[Eq]
+  {\pfctx \proves \prop(\term) \\ \pfctx \proves \term =_\type \term'}
   {\pfctx \proves \prop(\term')}
+\and
+\infer[Refl]
+  {}
+  {\pfctx \proves \term =_\type \term}
+\and
+\infer[$\bot$E]
+  {\pfctx \proves \FALSE}
+  {\pfctx \proves \prop}
+\and
+\infer[$\top$I]
+  {}
+  {\pfctx \proves \TRUE}
 \and
 \infer[$\wedge$I]
   {\pfctx \proves \prop \\ \pfctx \proves \propB}
@@ -315,12 +326,6 @@ This is entirely standard.
   {\pfctx \proves \prop \wedge \propB}
   {\pfctx \proves \propB}
 \and
-\infer[$\vee$E]
-  {\pfctx \proves \prop \vee \propB \\
-   \pfctx, \prop \proves \propC \\
-   \pfctx, \propB \proves \propC}
-  {\pfctx \proves \propC}
-\and
 \infer[$\vee$IL]
   {\pfctx \proves \prop }
   {\pfctx \proves \prop \vee \propB}
@@ -328,6 +333,12 @@ This is entirely standard.
 \infer[$\vee$IR]
   {\pfctx \proves \propB}
   {\pfctx \proves \prop \vee \propB}
+\and
+\infer[$\vee$E]
+  {\pfctx \proves \prop \vee \propB \\
+   \pfctx, \prop \proves \propC \\
+   \pfctx, \propB \proves \propC}
+  {\pfctx \proves \propC}
 \and
 \infer[$\Ra$I]
   {\pfctx, \prop \proves \propB}
@@ -337,82 +348,50 @@ This is entirely standard.
   {\pfctx \proves \prop \Ra \propB \\ \pfctx \proves \prop}
   {\pfctx \proves \propB}
 \and
-\infer[$\forall_1$I]
-  {\pfctx, x : \sort \proves \prop}
-  {\pfctx \proves \forall x: \sort.\; \prop}
+\infer[$\forall$I]
+  { \vctx,\var : \type\mid\pfctx \proves \prop}
+  {\vctx\mid\pfctx \proves \forall \var: \type.\; \prop}
 \and
-\infer[$\forall_1$E]
-  {\pfctx \proves \forall X \in \sort.\; \prop \\
-   \pfctx \proves \term: \sort}
-  {\pfctx \proves \prop[\term/X]}
+\infer[$\forall$E]
+  {\vctx\mid\pfctx \proves \forall \var :\type.\; \prop \\
+   \vctx \proves \wtt\term\type}
+  {\vctx\mid\pfctx \proves \prop[\term/\var]}
 \and
-\infer[$\exists_1$E]
-  {\pfctx \proves \exists X\in \sort.\; \prop \\
-   \pfctx, X : \sort, \prop \proves \propB}
-  {\pfctx \proves \propB}
+\infer[$\exists$I]
+  {\vctx\mid\pfctx \proves \prop[\term/\var] \\
+   \vctx \proves \wtt\term\type}
+  {\vctx\mid\pfctx \proves \exists \var: \type. \prop}
 \and
-\infer[$\exists_1$I]
-  {\pfctx \proves \prop[\term/X] \\
-   \pfctx \proves \term: \sort}
-  {\pfctx \proves \exists X: \sort. \prop}
+\infer[$\exists$E]
+  {\vctx\mid\pfctx \proves \exists \var: \type.\; \prop \\
+   \vctx,\var : \type\mid\pfctx , \prop \proves \propB}
+  {\vctx\mid\pfctx \proves \propB}
 \and
-\infer[$\forall_2$I]
-  {\pfctx, \var: \Pred(\sort) \proves \prop}
-  {\pfctx \proves \forall \var\in \Pred(\sort).\; \prop}
+\infer[$\lambda$]
+  {}
+  {\pfctx \proves (\Lam\var: \type. \prop)(\term) =_{\type\to\type'} \prop[\term/\var]}
 \and
-\infer[$\forall_2$E]
-  {\pfctx \proves \forall \var. \prop \\
-   \pfctx \proves \propB: \Prop}
-  {\pfctx \proves \prop[\propB/\var]}
-\and
-\infer[$\exists_2$E]
-  {\pfctx \proves \exists \var \in \Pred(\sort).\prop \\
-   \pfctx, \var : \Pred(\sort), \prop \proves \propB}
-  {\pfctx \proves \propB}
-\and
-\infer[$\exists_2$I]
-  {\pfctx \proves \prop[\propB/\var] \\
-   \pfctx \proves \propB: \Prop}
-  {\pfctx \proves \exists \var. \prop}
-\and
-\inferB[Elem]
-  {\pfctx \proves \term \in (X \in \sort). \prop}
-  {\pfctx \proves \prop[\term/X]}
-\and
-\inferB[Elem-$\mu$]
-  {\pfctx \proves \term \in (\mu\var \in \Pred(\sort). \pred)}
-  {\pfctx \proves \term \in \pred[\mu\var \in \Pred(\sort). \pred/\var]}
-\end{mathpar}
+\infer[$\mu$]
+  {}
+  {\pfctx \proves \mu\var: \type. \prop =_{\type} \prop[\mu\var: \type. \prop/\var]}
+\end{mathparpagebreakable}
 
 \paragraph{Laws of (affine) bunched implications.}
 \begin{mathpar}
 \begin{array}{rMcMl}
+  \TRUE * \prop &\Lra& \prop \\
   \prop * \propB &\Lra& \propB * \prop \\
-  (\prop * \propB) * \propC &\Lra& \prop * (\propB * \propC) \\
-  \prop * \propB &\Ra& \prop
-\end{array}
-\and
-\begin{array}{rMcMl}
-  (\prop \vee \propB) * \propC &\Lra& 
-    (\prop * \propC) \vee (\propB * \propC)  \\
-  (\prop \wedge \propB) * \propC &\Ra& 
-    (\prop * \propC) \wedge (\propB * \propC)  \\
-  (\Exists x. \prop) * \propB &\Lra& \Exists x. (\prop * \propB) \\
-  (\All x. \prop) * \propB &\Ra& \All x. (\prop * \propB) 
+  (\prop * \propB) * \propC &\Lra& \prop * (\propB * \propC)
 \end{array}
 \and
 \infer
-  {\pfctx, \prop_1 \proves \propB_1 \and
-   \pfctx, \prop_2 \proves \propB_2}
-  {\pfctx, \prop_1 * \prop_2 \proves \propB_1 * \propB_2}
+  {\prop_1 \proves \propB_1 \and
+   \prop_2 \proves \propB_2}
+  {\prop_1 * \prop_2 \proves \propB_1 * \propB_2}
 \and
-\infer
-  {\pfctx, \prop * \propB \proves \propC}
-  {\pfctx, \prop \proves \propB \wand \propC}
-\and
-\infer
-  {\pfctx, \prop \proves \propB \wand \propC}
-  {\pfctx, \prop * \propB \proves \propC}
+\inferB
+  {\prop * \propB \proves \propC}
+  {\prop \proves \propB \wand \propC}
 \end{mathpar}
 
 \paragraph{Laws for ghosts and physical resources.}
@@ -420,18 +399,18 @@ This is entirely standard.
 \begin{mathpar}
 \begin{array}{rMcMl}
 \ownGGhost{\melt} * \ownGGhost{\meltB} &\Lra&  \ownGGhost{\melt \mtimes \meltB} \\
-\TRUE &\Ra&  \ownGGhost{\munit}\\
-\ownGGhost{\mzero} &\Ra& \FALSE\\
-\multicolumn{3}{c}{\timeless{\ownGGhost{\melt}}}
+%\TRUE &\Ra&  \ownGGhost{\munit}\\
+\ownGGhost{\melt} &\Ra& \melt \in \mval % * \ownGGhost{\melt}
 \end{array}
 \and
 \begin{array}{c}
-\ownPhys{\state} * \ownPhys{\state'} \Ra \FALSE \\
-\timeless{\ownPhys{\state}}
+\ownPhys{\state} * \ownPhys{\state'} \Ra \FALSE
 \end{array}
 \end{mathpar}
 
 \paragraph{Laws for the later modality.}
+~\\\ralf{Go on checking below.}
+
 
 \begin{mathpar}
 \inferH{Mono}
@@ -466,7 +445,7 @@ This is entirely standard.
   {\always{\pfctx} \proves \always{\prop}}
 \and
 \begin{array}[b]{rMcMl}
-  \always(\term =_\sort \termB) &\Lra& \term=_\sort \termB \\
+  \always(\term =_\type \termB) &\Lra& \term=_\type \termB \\
   \always{\prop} * \propB &\Lra& \always{\prop} \land \propB \\
   \always{(\prop \Ra \propB)} &\Ra& \always{\prop} \Ra \always{\propB} \\
 \end{array}
