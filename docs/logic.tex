@@ -120,6 +120,8 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
 \end{align*}
 Recursive predicates must be \emph{guarded}: in $\MU \var. \pred$, the variable $\var$ can only appear under the later $\later$ modality.
 
+Note that $\always$ and $\later$ bind more tightly than $*$, $\wand$, $\land$, $\lor$, and $\Ra$.
+
 \paragraph{Metavariable conventions.}
 We introduce additional metavariables ranging over terms and generally let the choice of metavariable indicate the term's type:
 \[
@@ -292,7 +294,6 @@ Axioms $\prop \Ra \propB$ stand for judgments $\vctx \mid \cdot \proves \prop \R
 \judgment{}{\vctx \mid \pfctx \proves \prop}
 \paragraph{Laws of intuitionistic higher-order logic.}
 This is entirely standard.
-
 \begin{mathparpagebreakable}
 \infer[Asm]
   {\prop \in \pfctx}
@@ -384,18 +385,17 @@ This is entirely standard.
   (\prop * \propB) * \propC &\Lra& \prop * (\propB * \propC)
 \end{array}
 \and
-\infer
+\infer[$*$-mono]
   {\prop_1 \proves \propB_1 \and
    \prop_2 \proves \propB_2}
   {\prop_1 * \prop_2 \proves \propB_1 * \propB_2}
 \and
-\inferB
+\inferB[$\wand$I-E]
   {\prop * \propB \proves \propC}
   {\prop \proves \propB \wand \propC}
 \end{mathpar}
 
 \paragraph{Laws for ghosts and physical resources.}
-
 \begin{mathpar}
 \begin{array}{rMcMl}
 \ownGGhost{\melt} * \ownGGhost{\meltB} &\Lra&  \ownGGhost{\melt \mtimes \meltB} \\
@@ -409,60 +409,59 @@ This is entirely standard.
 \end{mathpar}
 
 \paragraph{Laws for the later modality.}
-~\\\ralf{Go on checking below.}
-
-
 \begin{mathpar}
-\inferH{Mono}
+\infer[$\later$-mono]
   {\pfctx \proves \prop}
   {\pfctx \proves \later{\prop}}
 \and
-\inferhref{L{\"o}b}{Loeb}
-  {\pfctx, \later{\prop} \proves \prop}
-  {\pfctx \proves \prop}
+\infer[L{\"o}b]
+  {}
+  {(\later\prop\Ra\prop) \proves \prop}
 \and
-\begin{array}[b]{rMcMl}
-  \later{\always{\prop}} &\Lra& \always{\later{\prop}} \\
+\infer[$\later$-$\exists$]
+  {\text{$\type$ is inhabited}}
+  {\later{\Exists x:\type.\prop} \proves \Exists x:\type. \later\prop}
+\\\\
+\begin{array}[c]{rMcMl}
   \later{(\prop \wedge \propB)} &\Lra& \later{\prop} \wedge \later{\propB}  \\
   \later{(\prop \vee \propB)} &\Lra& \later{\prop} \vee \later{\propB} \\
 \end{array}
 \and
-\begin{array}[b]{rMcMl}
+\begin{array}[c]{rMcMl}
   \later{\All x.\prop} &\Lra& \All x. \later\prop \\
-  \later{\Exists x.\prop} &\Lra& \Exists x. \later\prop \\
+  \Exists x. \later\prop &\Ra& \later{\Exists x.\prop}  \\
   \later{(\prop * \propB)} &\Lra& \later\prop * \later\propB
 \end{array}
 \end{mathpar}
 
 \paragraph{Laws for the always modality.}
-
 \begin{mathpar}
-\axiomH{Necessity}
-  {\always{\prop} \Ra \prop}
-\and
-\inferhref{$\always$I}{AlwaysIntro}
+\infer[$\always$I]
   {\always{\pfctx} \proves \prop}
   {\always{\pfctx} \proves \always{\prop}}
 \and
-\begin{array}[b]{rMcMl}
-  \always(\term =_\type \termB) &\Lra& \term=_\type \termB \\
-  \always{\prop} * \propB &\Lra& \always{\prop} \land \propB \\
-  \always{(\prop \Ra \propB)} &\Ra& \always{\prop} \Ra \always{\propB} \\
+\infer[$\always$E]{}
+  {\always{\prop} \Ra \prop}
+\and
+\begin{array}[c]{rMcMl}
+  \always{(\prop * \propB)} &\Ra& \always{(\prop \land \propB)} \\
+  \always{\prop} * \propB &\Ra& \always{\prop} \land \propB \\
+  \always{\later\prop} &\Lra& \later\always{\prop} \\
 \end{array}
 \and
-\begin{array}[b]{rMcMl}
+\begin{array}[c]{rMcMl}
   \always{(\prop \land \propB)} &\Lra& \always{\prop} \land \always{\propB} \\
   \always{(\prop \lor \propB)} &\Lra& \always{\prop} \lor \always{\propB} \\
   \always{\All x. \prop} &\Lra& \All x. \always{\prop} \\
   \always{\Exists x. \prop} &\Lra& \Exists x. \always{\prop} \\
 \end{array}
 \end{mathpar}
-Note that $\always$ binds more tightly than $*$, $\land$, $\lor$, and $\Ra$.
 
 \paragraph{Laws of primitive view shifts.}
+~\\\ralf{Add these.}
 
 \paragraph{Laws of weakest preconditions.}
-
+~\\\ralf{Add these.}
 
 %%% Local Variables:
 %%% mode: latex

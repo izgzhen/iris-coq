@@ -917,8 +917,6 @@ Proof.
   unseal; split=> n x ? HP; induction n as [|n IH]; [by apply HP|].
   apply HP, IH, uPred_weaken with (S n) x; eauto using cmra_validN_S.
 Qed.
-Lemma later_True' : True ⊑ (▷ True : uPred M).
-Proof. unseal; by split=> -[|n] x. Qed.
 Lemma later_and P Q : (▷ (P ∧ Q))%I ≡ (▷ P ∧ ▷ Q)%I.
 Proof. unseal; split=> -[|n] x; by split. Qed.
 Lemma later_or P Q : (▷ (P ∨ Q))%I ≡ (▷ P ∨ ▷ Q)%I.
@@ -927,9 +925,9 @@ Lemma later_forall {A} (Φ : A → uPred M) : (▷ ∀ a, Φ a)%I ≡ (∀ a, �
 Proof. unseal; by split=> -[|n] x. Qed.
 Lemma later_exist_1 {A} (Φ : A → uPred M) : (∃ a, ▷ Φ a) ⊑ (▷ ∃ a, Φ a).
 Proof. unseal; by split=> -[|[|n]] x. Qed.
-Lemma later_exist `{Inhabited A} (Φ : A → uPred M) :
-  (▷ ∃ a, Φ a)%I ≡ (∃ a, ▷ Φ a)%I.
-Proof. unseal; split=> -[|[|n]] x; split; done || by exists inhabitant. Qed.
+Lemma later_exist' `{Inhabited A} (Φ : A → uPred M) :
+  (▷ ∃ a, Φ a)%I ⊑ (∃ a, ▷ Φ a)%I.
+Proof. unseal; split=> -[|[|n]] x; done || by exists inhabitant. Qed.
 Lemma later_sep P Q : (▷ (P ★ Q))%I ≡ (▷ P ★ ▷ Q)%I.
 Proof.
   unseal; split=> n x ?; split.
@@ -949,12 +947,15 @@ Global Instance later_flip_mono' :
   Proper (flip (⊑) ==> flip (⊑)) (@uPred_later M).
 Proof. intros P Q; apply later_mono. Qed.
 Lemma later_True : (▷ True : uPred M)%I ≡ True%I.
-Proof. apply (anti_symm (⊑)); auto using later_True'. Qed.
+Proof. apply (anti_symm (⊑)); auto using later_intro. Qed.
 Lemma later_impl P Q : ▷ (P → Q) ⊑ (▷ P → ▷ Q).
 Proof.
   apply impl_intro_l; rewrite -later_and.
   apply later_mono, impl_elim with P; auto.
 Qed.
+Lemma later_exist `{Inhabited A} (Φ : A → uPred M) :
+  (▷ ∃ a, Φ a)%I ≡ (∃ a, ▷ Φ a)%I.
+Proof. apply: anti_symm; eauto using later_exist', later_exist_1. Qed.
 Lemma later_wand P Q : ▷ (P -★ Q) ⊑ (▷ P -★ ▷ Q).
 Proof. apply wand_intro_r;rewrite -later_sep; apply later_mono,wand_elim_l. Qed.
 Lemma later_iff P Q : (▷ (P ↔ Q)) ⊑ (▷ P ↔ ▷ Q).
