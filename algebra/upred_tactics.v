@@ -106,30 +106,14 @@ Module uPred_reflection. Section uPred_reflection.
     by rewrite IH.
   Qed.
 
-  Fixpoint remove_all (l k : list nat) : option (list nat) :=
-    match l with
-    | [] => Some k
-    | n :: l => '(i,_) ← list_find (n =) k; remove_all l (delete i k)
-    end.
-
-  Lemma remove_all_permutation l k k' : remove_all l k = Some k' → k ≡ₚ l ++ k'.
+  Lemma split_l Σ e ns e' :
+    cancel ns e = Some e' → eval Σ e ≡ (eval Σ (to_expr ns) ★ eval Σ e')%I.
   Proof.
-    revert k k'; induction l as [|n l IH]; simpl; intros k k' Hk.
-    { by simplify_eq. }
-    destruct (list_find _ _) as [[i ?]|] eqn:?Hk'; simplify_eq/=.
-    move: Hk'; intros [? <-]%list_find_Some.
-    rewrite -(IH (delete i k) k') // -delete_Permutation //.
+    intros He%flatten_cancel.
+    by rewrite eval_flatten He fmap_app big_sep_app eval_to_expr eval_flatten.
   Qed.
-  Lemma split_l Σ e l k :
-    remove_all l (flatten e) = Some k →
-    eval Σ e ≡ (eval Σ (to_expr l) ★ eval Σ (to_expr k))%I.
-  Proof.
-    intros He%remove_all_permutation.
-    by rewrite eval_flatten He fmap_app big_sep_app !eval_to_expr.
-  Qed.
-  Lemma split_r Σ e l k :
-    remove_all l (flatten e) = Some k →
-    eval Σ e ≡ (eval Σ (to_expr k) ★ eval Σ (to_expr l))%I.
+  Lemma split_r Σ e ns e' :
+    cancel ns e = Some e' → eval Σ e ≡ (eval Σ e' ★ eval Σ (to_expr ns))%I.
   Proof. intros. rewrite /= comm. by apply split_l. Qed.
 
   Class Quote (Σ1 Σ2 : list (uPred M)) (P : uPred M) (e : expr) := {}.
@@ -198,7 +182,7 @@ Tactic Notation "to_front" open_constr(Ps) :=
                | uPred_reflection.QuoteArgs _ _ ?ns' => ns'
                end in
     eapply entails_equiv_l;
-      first (apply uPred_reflection.split_l with (l:=ns'); cbv; reflexivity);
+      first (apply uPred_reflection.split_l with (ns:=ns'); cbv; reflexivity);
       simpl).
 
 Tactic Notation "to_back" open_constr(Ps) :=
@@ -209,7 +193,7 @@ Tactic Notation "to_back" open_constr(Ps) :=
                | uPred_reflection.QuoteArgs _ _ ?ns' => ns'
                end in
     eapply entails_equiv_l;
-      first (apply uPred_reflection.split_r with (l:=ns'); cbv; reflexivity);
+      first (apply uPred_reflection.split_r with (ns:=ns'); cbv; reflexivity);
       simpl).
 
 (** [sep_split] is used to introduce a (★).
