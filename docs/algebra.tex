@@ -78,10 +78,10 @@ where the $n$-equivalence at the bottom is meant to apply to the pairs of elemen
 In other words, extension carries the decomposition of $\meltB$ into $\meltB_1$ and $\meltB_2$ over the $n$-equivalence of $\melt$ and $\meltB$, and yields a corresponding decomposition of $\melt$ into $\melt_1$ and $\melt_2$.
 This operation is needed to prove that $\later$ commutes with existential quantification and separating conjunction:
 \begin{mathpar}
-  \axiom{\later(\Exists\var:\sort. \prop) \Lra \Exists\var:\sort. \later\prop}
+  \axiom{\later(\Exists\var:\type. \prop) \Lra \Exists\var:\type. \later\prop}
   \and\axiom{\later (\prop * \propB) \Lra \later\prop * \later\propB}
 \end{mathpar}
-(This assumes that the sort $\sort$ is non-empty.)
+(This assumes that the type $\type$ is non-empty.)
 
 
 %%% Local Variables: 

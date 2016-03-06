@@ -149,6 +149,7 @@
 
 \newcommand{\ALT}{\ |\ }
 
+\newcommand\dplus{\mathbin{+\kern-1.0ex+}}
 
 \newcommand{\upclose}{\mathord{\uparrow}}
 
@@ -198,31 +199,7 @@
   \end{tabu}%
 }
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CMRA (RESOURCE ALGEBRA) SYMBOLS & NOTATION & IDENTIFIERS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newcommand{\textmon}[1]{\textsc{#1}}
-
-\newcommand{\monoid}{M}
-\newcommand{\mval}{V}
-
-\newcommand{\melt}{a}
-\newcommand{\meltB}{b}
-\newcommand{\meltC}{c}
-\newcommand{\melts}{A}
-\newcommand{\meltsB}{B}
-
-\newcommand{\mcar}[1]{|#1|}
-\newcommand{\mcarp}[1]{\mcar{#1}^{+}}
-\newcommand{\mzero}{\bot}
-\newcommand{\munit}{\mathord{\varepsilon}}
-\newcommand{\mtimes}{\mathbin{\cdot}}
-\newcommand{\mdiv}{\mathbin{\div}}
-
-\newcommand{\mupd}{\rightsquigarrow}
-\newcommand{\mincl}[1]{\ensuremath{\mathrel{\stackrel{#1}{\leq}}}}
-
+\newcommand{\Func}{F} % functor
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MODEL-SPECIFIC SYMBOLS & NOTATION & IDENTIFIERS
@@ -262,6 +239,36 @@
 \newcommand{\PropDom}{\textdom{Prop}}
 \newcommand{\PredDom}{\textdom{Pred}}
 
+\newcommand{\COFEs}{\mathcal{U}} % category of COFEs
+\newcommand{\iFunc}{\Sigma}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CMRA (RESOURCE ALGEBRA) SYMBOLS & NOTATION & IDENTIFIERS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\textmon}[1]{\textsc{#1}}
+
+\newcommand{\monoid}{M}
+\newcommand{\mval}{V}
+
+\newcommand{\melt}{a}
+\newcommand{\meltB}{b}
+\newcommand{\meltC}{c}
+\newcommand{\melts}{A}
+\newcommand{\meltsB}{B}
+
+\newcommand{\mcar}[1]{|#1|}
+\newcommand{\mcarp}[1]{\mcar{#1}^{+}}
+\newcommand{\mzero}{\bot}
+\newcommand{\munit}{\mathord{\varepsilon}}
+\newcommand{\mtimes}{\mathbin{\cdot}}
+\newcommand{\mdiv}{\mathbin{\div}}
+
+\newcommand{\mupd}{\rightsquigarrow}
+\newcommand{\mincl}[1]{\ensuremath{\mathrel{\stackrel{#1}{\leq}}}}
+
+\newcommand{\CMRAs}{\mathcal{R}} % category of CMRAs
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LOGIC SYMBOLS & NOTATION & IDENTIFIERS
@@ -272,7 +279,10 @@
 \newcommand{\Sig}{\mathcal{S}}
 \newcommand{\SigType}{\mathcal{T}}
 \newcommand{\SigFn}{\mathcal{F}}
+\newcommand{\SigAx}{\mathcal{A}}
+\newcommand{\sigtype}{T}
 \newcommand{\sigfn}{F}
+\newcommand{\sigax}{A}
 
 \newcommand{\type}{\tau}
 
@@ -283,8 +293,6 @@
 \newcommand{\term}{t}
 \newcommand{\termB}{u}
 \newcommand{\termVal}{V}
-
-\newcommand{\sort}{\Sigma}
 
 \newcommand{\vctx}{\Gamma}
 \newcommand{\pfctx}{\Theta}
@@ -425,7 +433,11 @@
 \newcommand{\state}{\sigma}
 \newcommand{\step}{\ra}
 
-\newcommand{\ectx}{K}
+\newcommand{\toval}{\mathit{val}}
+\newcommand{\ofval}{\mathit{expr}}
+\newcommand{\atomic}{\mathit{atomic}}
+\newcommand{\Lang}{\Lambda}
+
 \newcommand{\tpool}{T}
 
 \newcommand{\cfg}[2]{{#1};{#2}}

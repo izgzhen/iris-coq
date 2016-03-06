@@ -1,3 +1,277 @@
+\section{Derived Program logic}\label{sec:proglog}
+
+Hoare triples and view shifts are syntactic sugar for weakest (liberal) preconditions and primitive view shifts, respectively:
+\[
+\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \dynA{\expr}{\lambda\Ret\val.\propB}{\mask})}
+\qquad\qquad
+\begin{aligned}
+\prop \vs[\mask_1][\mask_2] \propB &\eqdef \always{(\prop \Ra \pvsA{\propB}{\mask_1}{\mask_2})} \\
+\prop \vsE[\mask_1][\mask_2] \propB &\eqdef \prop \vs[\mask_1][\mask_2] \propB \land \propB \vs[\mask2][\mask_1] \prop
+\end{aligned}
+\]
+We write just one mask for a view shift when $\mask_1 = \mask_2$.
+The convention for omitted masks is generous:
+An omitted $\mask$ is $\top$ for Hoare triples and $\emptyset$ for view shifts.
+
+% PDS: We're repeating ourselves. We gave Γ conventions and we're about to give Θ conventions. Also, the scope of "Below" is unclear.
+% Below, we implicitly assume the same context for all judgements which don't have an explicit context at \emph{all} pre-conditions \emph{and} the conclusion.
+
+Henceforward, we implicitly assume a proof context, $\pfctx$, is added to every constituent of the rules.
+Generally, this is an arbitrary proof context.
+We write $\provesalways$ to denote judgments that can only be extended with a boxed proof context.
+
+\ralf{Give the actual base rules from the Coq development instead}
+
+\subsection{Hoare triples}
+\begin{mathpar}
+\inferH{Ret}
+  {}
+  {\hoare{\TRUE}{\valB}{\Ret\val. \val = \valB}[\mask]}
+\and
+\inferH{Bind}
+  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask] \\
+   \All \val. \hoare{\propB}{K[\val]}{\Ret\valB.\propC}[\mask]}
+  {\hoare{\prop}{K[\expr]}{\Ret\valB.\propC}[\mask]}
+\and
+\inferH{Csq}
+  {\prop \vs \prop' \\
+    \hoare{\prop'}{\expr}{\Ret\val.\propB'}[\mask] \\   
+   \All \val. \propB' \vs \propB}
+  {\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask]}
+\and
+\inferH{Frame}
+  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask]}
+  {\hoare{\prop * \propC}{\expr}{\Ret\val. \propB * \propC}[\mask \uplus \mask']}
+\and
+\inferH{AFrame}
+  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask] \and \text{$\expr$ not a value}
+  }
+  {\hoare{\prop * \later\propC}{\expr}{\Ret\val. \propB * \propC}[\mask \uplus \mask']}
+% \and
+% \inferH{Fork}
+%   {\hoare{\prop}{\expr}{\Ret\any. \TRUE}[\top]}
+%   {\hoare{\later\prop * \later\propB}{\fork{\expr}}{\Ret\val. \val = \textsf{fRet} \land \propB}[\mask]}
+\and
+\inferH{ACsq}
+  {\prop \vs[\mask \uplus \mask'][\mask] \prop' \\
+    \hoare{\prop'}{\expr}{\Ret\val.\propB'}[\mask] \\   
+   \All\val. \propB' \vs[\mask][\mask \uplus \mask'] \propB \\
+   \physatomic{\expr}
+  }
+  {\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask \uplus \mask']}
+\end{mathpar}
+
+\subsection{View shifts}
+
+\begin{mathpar}
+\inferH{NewInv}
+  {\infinite(\mask)}
+  {\later{\prop} \vs[\mask] \exists \iname\in\mask.\; \knowInv{\iname}{\prop}}
+\and
+\inferH{FpUpd}
+  {\melt \mupd \meltsB}
+  {\ownGGhost{\melt} \vs \exists \meltB \in \meltsB.\; \ownGGhost{\meltB}}
+\and
+\inferH{VSTrans}
+  {\prop \vs[\mask_1][\mask_2] \propB \and \propB \vs[\mask_2][\mask_3] \propC \and \mask_2 \subseteq \mask_1 \cup \mask_3}
+  {\prop \vs[\mask_1][\mask_3] \propC}
+\and
+\inferH{VSImp}
+  {\always{(\prop \Ra \propB)}}
+  {\prop \vs[\emptyset] \propB}
+\and
+\inferH{VSFrame}
+  {\prop \vs[\mask_1][\mask_2] \propB}
+  {\prop * \propC \vs[\mask_1 \uplus \mask'][\mask_2 \uplus \mask'] \propB * \propC}
+\and
+\inferH{VSTimeless}
+  {\timeless{\prop}}
+  {\later \prop \vs \prop}
+\and
+\axiomH{InvOpen}
+  {\knowInv{\iname}{\prop} \proves \TRUE \vs[\{ \iname \} ][\emptyset] \later \prop}
+\and
+\axiomH{InvClose}
+  {\knowInv{\iname}{\prop} \proves \later \prop \vs[\emptyset][\{ \iname \} ] \TRUE }
+\end{mathpar}
+
+\vspace{5pt}
+Note that $\timeless{\prop}$ means that $\prop$ does not depend on the step index.
+Furthermore, $$\melt \mupd \meltsB \eqdef \always{\All \melt_f. \melt \sep \melt_f \Ra \Exists \meltB \in \meltsB. \meltB \sep \melt_f}$$
+
+\subsection{Derived rules}
+
+\paragraph{Derived structural rules.}
+The following are easily derived by unfolding the sugar for Hoare triples and view shifts.
+\begin{mathpar}
+\inferHB{Disj}
+  {\hoare{\prop}{\expr}{\Ret\val.\propC}[\mask] \and \hoare{\propB}{\expr}{\Ret\val.\propC}[\mask]}
+  {\hoare{\prop \lor \propB}{\expr}{\Ret\val.\propC}[\mask]}
+\and
+\inferHB{VSDisj}
+  {\prop \vs[\mask_1][\mask_2] \propC \and \propB \vs[\mask_1][\mask_2] \propC}
+  {\prop \lor \propB \vs[\mask_1][\mask_2] \propC}
+\and
+\inferHB{Exist}
+  {\All \var. \hoare{\prop}{\expr}{\Ret\val.\propB}[\mask]}
+  {\hoare{\Exists \var. \prop}{\expr}{\Ret\val.\propB}[\mask]}
+\and
+\inferHB{VSExist}
+  {\All \var. (\prop \vs[\mask_1][\mask_2] \propB)}
+  {(\Exists \var. \prop) \vs[\mask_1][\mask_2] \propB}
+\and
+\inferHB{BoxOut}
+  {\always\propB \provesalways \hoare{\prop}{\expr}{\Ret\val.\propC}[\mask]}
+  {\hoare{\prop \land \always{\propB}}{\expr}{\Ret\val.\propC}[\mask]}
+\and
+\inferHB{VSBoxOut}
+  {\always\propB \provesalways \prop \vs[\mask_1][\mask_2] \propC}
+  {\prop \land \always{\propB} \vs[\mask_1][\mask_2] \propC}
+ \and
+\inferH{False}
+  {}
+  {\hoare{\FALSE}{\expr}{\Ret \val. \prop}[\mask]}
+\and
+\inferH{VSFalse}
+  {}
+  {\FALSE \vs[\mask_1][\mask_2] \prop }
+\end{mathpar}
+The proofs all follow the same pattern, so we only show two of them in detail.
+\begin{proof}[Proof of \ruleref{Exist}]
+	After unfolding the syntactic sugar for Hoare triples and removing the boxes from premise and conclusion, our goal becomes
+	\[
+		(\Exists \var. \prop(\var)) \Ra \dynA{\expr}{\Lam\val. \propB}{\mask}
+	\]
+	(remember that $\var$ is free in $\prop$) and the premise reads
+	\[
+		\All \var. \prop(\var) \Ra \dynA{\expr}{\Lam\val. \propB}{\mask}.
+	\]
+	Let $\var$ be given and assume $\prop(\var)$.
+	To show $\dynA{\expr}{\Lam\val. \propB}{\mask}$, apply the premise to $\var$ and $\prop(\var)$.
+ 
+	For the other direction, assume
+	\[
+		\hoare{\Exists \var. \prop(\var)}{\expr}{\Ret\val. \propB}[\mask]
+	\]
+	and let $\var$ be given.
+	We have to show $\hoare{\prop(\var)}{\expr}{\Ret\val. \propB}[\mask]$.
+	This trivially follows from \ruleref{Csq} with $\prop(\var) \Ra \Exists \var. \prop(\var)$.
+\end{proof}
+
+\begin{proof}[Proof of \ruleref{BoxOut}]
+  After unfolding the syntactic sugar for Hoare triples, our goal becomes
+  \begin{equation}\label{eq:boxin:goal}
+    \always\pfctx \proves \always\bigl(\prop\land\always \propB \Ra \dynA{\expr}{\Lam\val. \propC}{\mask}\bigr)
+  \end{equation}
+  while our premise reads
+  \begin{equation}\label{eq:boxin:as}
+    \always\pfctx, \always\propB \proves \always(\prop \Ra \dynA{\expr}{\Lam\val. \propC}{\mask})
+  \end{equation}
+  By the introduction rules for $\always$ and implication, it suffices to show
+  \[  (\always\pfctx), \prop,\always \propB \proves \dynA{\expr}{\Lam\val. \propC}{\mask} \]
+  By modus ponens and \ruleref{Necessity}, it suffices to show~\eqref{eq:boxin:as}, which is exactly our assumption.
+  
+  For the other direction, assume~\eqref{eq:boxin:goal}. We have to show~\eqref{eq:boxin:as}. By \ruleref{AlwaysIntro} and implication introduction, it suffices to show
+  \[  (\always\pfctx), \prop,\always \propB \proves \dynA{\expr}{\Lam\val. \propC}{\mask} \]
+  which easily follows from~\eqref{eq:boxin:goal}.
+\end{proof}
+
+\paragraph{Derived rules for invariants.}
+Invariants can be opened around atomic expressions and view shifts.
+
+\begin{mathpar}
+\inferH{Inv}
+  {\hoare{\later{\propC} * \prop }
+          {\expr}
+          {\Ret\val. \later{\propC} * \propB }[\mask]
+          \and \physatomic{\expr}
+  }
+  {\knowInv{\iname}{\propC} \proves \hoare{\prop}
+          {\expr}
+          {\Ret\val. \propB}[\mask \uplus \{ \iname \}]
+  }
+\and
+\inferH{VSInv}
+  {\later{\prop} * \propB \vs[\mask_1][\mask_2] \later{\prop} * \propC}
+  {\knowInv{\iname}{\prop} \proves \propB \vs[\mask_1 \uplus \{ \iname \}][\mask_2 \uplus \{ \iname \}] \propC}
+\end{mathpar}
+
+\begin{proof}[Proof of \ruleref{Inv}]
+  Use \ruleref{ACsq} with $\mask_1 \eqdef \mask \cup \{\iname\}$, $\mask_2 \eqdef \mask$.
+  The view shifts are obtained by \ruleref{InvOpen} and \ruleref{InvClose} with framing of $\mask$ and $\prop$ or $\propB$, respectively.
+\end{proof}
+
+\begin{proof}[Proof of \ruleref{VSInv}]
+Analogous to the proof of \ruleref{Inv}, using \ruleref{VSTrans} instead of \ruleref{ACsq}.
+\end{proof}
+
+\subsubsection{Unsound rules}
+
+Some rule suggestions (or rather, wishes) keep coming up, which are unsound. We collect them here.
+\begin{mathpar}
+	\infer
+	{P \vs Q}
+	{\later P \vs \later Q}
+	\and
+	\infer
+	{\later(P \vs Q)}
+	{\later P \vs \later Q}
+\end{mathpar}
+
+Of course, the second rule implies the first, so let's focus on that.
+Since implications work under $\later$, from $\later P$ we can get $\later \pvs{Q}$.
+If we now try to prove $\pvs{\later Q}$, we will be unable to establish world satisfaction in the new world:
+We have no choice but to use $\later \pvs{Q}$ at one step index below what we are operating on (because we have it under a $\later$).
+We can easily get world satisfaction for that lower step-index (by downwards-closedness of step-indexed predicates).
+We can, however, not make much use of the world satisfaction that we get out, becaase it is one step-index too low.
+
+\subsection{Adequacy}
+
+The adequacy statement reads as follows:
+\begin{align*}
+ &\All \mask, \expr, \val, \pred, i, \state, \state', \tpool'.
+ \\&( \proves \hoare{\ownPhys\state}{\expr}{x.\; \pred(x)}[\mask]) \implies
+ \\&\cfg{\state}{[i \mapsto \expr]} \step^\ast
+     \cfg{\state'}{[i \mapsto \val] \uplus \tpool'} \implies
+     \\&\pred(\val)
+\end{align*}
+where $\pred$ can mention neither resources nor invariants.
+
+\subsection{Axiom lifting}\label{sec:lifting}
+
+The following lemmas help in proving axioms for a particular language.
+The first applies to expressions with side-effects, and the second to side-effect-free expressions.
+\dave{Update the others, and the example, wrt the new treatment of $\predB$.}
+\begin{align*}
+ &\All \expr, \state, \pred, \prop, \propB, \mask. \\
+ &\textlog{reducible}(e) \implies \\
+ &(\All \expr', \state'. \cfg{\state}{\expr} \step \cfg{\state'}{\expr'} \implies \pred(\expr', \state')) \implies \\
+ &{} \proves \bigl( (\All \expr', \state'. \pred (\expr', \state') \Ra \hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask]) \Ra \hoare{ \later \prop * \ownPhys{\state} }{\expr}{\Ret\val. \propB}[\mask] \bigr) \\
+ \quad\\
+ &\All \expr, \pred, \prop, \propB, \mask. \\
+ &\textlog{reducible}(e) \implies \\
+ &(\All \state, \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \state_2 = \state \land \pred(\expr_2)) \implies \\
+ &{} \proves \bigl( (\All \expr'. \pred(\expr') \Ra \hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask]) \Ra \hoare{\later\prop}{\expr}{\Ret\val. \propB}[\mask] \bigr)
+\end{align*}
+Note that $\pred$ is a meta-logic predicate---it does not depend on any world or resources being owned.
+
+The following specializations cover all cases of a heap-manipulating lambda calculus like $F_{\mu!}$.
+\begin{align*}
+ &\All \expr, \expr', \prop, \propB, \mask. \\
+ &\textlog{reducible}(e) \implies \\
+ &(\All \state, \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \state_2 = \state \land \expr_2 = \expr') \implies \\
+ &{} \proves (\hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask] \Ra \hoare{\later\prop}{\expr}{\Ret\val. \propB}[\mask] ) \\
+ \quad \\
+ &\All \expr, \state, \pred, \mask. \\
+ &\textlog{atomic}(e) \implies \\
+ &\bigl(\All \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \pred(\expr_2, \state_2)\bigr) \implies \\
+ &{} \proves (\hoare{ \ownPhys{\state} }{\expr}{\Ret\val. \Exists\state'. \ownPhys{\state'} \land \pred(\val, \state') }[\mask] )
+\end{align*}
+The first is restricted to deterministic pure reductions, like $\beta$-reduction.
+The second is suited to proving triples for (possibly non-deterministic) atomic expressions; for example, with $\expr \eqdef \;!\ell$ (dereferencing $\ell$) and $\state \eqdef h \mtimes \ell \mapsto \valB$ and $\pred(\val, \state') \eqdef \state' = (h \mtimes \ell \mapsto \valB) \land \val = \valB$, one obtains the axiom $\All h, \ell, \valB. \hoare{\ownPhys{h \mtimes \ell \mapsto \valB}}{!\ell}{\Ret\val. \val = \valB \land \ownPhys{h \mtimes \ell \mapsto \valB} }$.
+%Axioms for CAS-like operations can be obtained by first deriving rules for the two possible cases, and then using the disjunction rule.
+
+
 \section{Derived constructions}
 
 In this section we describe some constructions that we will use throughout the rest of the appendix.

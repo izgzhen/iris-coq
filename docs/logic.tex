@@ -1,113 +1,93 @@
+\section{Language}
 
-\section{Parameters to the logic}
-
+A \emph{language} $\Lang$ consists of a set \textdom{Exp} of \emph{expressions} (metavariable $\expr$), a set \textdom{Val} of \emph{values} (metavariable $\val$), and a set \textdom{State} of \emph{states} (metvariable $\state$) such that
 \begin{itemize}
-% \item A set \textdom{Exp} of \emph{expressions} (metavariable $\expr$) with a
-%   subset \textdom{Val} of values ($\val$).  We assume that if $\expr$ is an
-%   expression then so is $\fork{\expr}$.  We moreover assume a value
-%   \textsf{fRet} (giving the intended return value of a fork), and we assume that
-%   \begin{align*}
-%     \fork{\expr} &\notin \textdom{Val} \\
-%     \fork{\expr_1} = \fork{\expr_2} &\implies \expr_1 = \expr_2
-%   \end{align*}
-\item A set $\textdom{Ectx}$ of \emph{evaluation contexts} ($\ectx$) that includes the empty context $[\; ]$,
-  a plugging operation $\ectx[\expr]$ that produces an expression, and context composition $\circ$
-  satisfying the following axioms:
-  \begin{align*}
-    [\; ][ \expr ] &= \expr \\
-    \ectx_1[\ectx_2[\expr]] &= (\ectx_1 \circ \ectx_2) [\expr] \\
-    \ectx_1[\expr] = \ectx_2[\expr] &\implies \ectx_1 = \ectx_2 \\
-    \ectx[\expr_1] = \ectx[\expr_2] &\implies \expr_1 = \expr_2 \\
-    \ectx_1 \circ \ectx_2 = [\; ] &\implies \ectx_1 = \ectx_2 = [\; ] \\
-    \ectx[\expr] \in \textdom{Val} &\implies \ectx = [\;] \\
-%    \ectx[\expr] = \fork{\expr'} &\implies \ectx = [\;]
-  \end{align*}
-
-\item A set \textdom{State} of shared machine states (\eg heaps), metavariable $\state$.
-\item An \emph{atomic stepping relation} \[
-  (- \step -) \subseteq (\textdom{State} \times \textdom{Exp}) \times (\textdom{State} \times \textdom{Exp})
-\]
-and notions of an expression to be \emph{reducible} or \emph{stuck}, such that
-\begin{align*}
-  \textlog{reducible}(\expr) &\iff \Exists \state, \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \\
-%  \textlog{stuck}(\expr) &\iff \All \ectx, \expr'. \expr = \ectx[\expr'] \implies
-   \lnot \textlog{reducible}(\expr')
-\end{align*}
-and the following hold
-% \begin{align*}
-% &\textlog{stuck}(\fork{\expr})& \\
-%  &\textlog{stuck}(\val)&\\
-%  &\ectx[\expr] = \ectx'[\expr'] \implies \textlog{reducible}(\expr') \implies
-%   \expr \notin \textdom{Val} \implies \Exists \ectx''. \ectx' = \ectx \circ \ectx'' &\mbox{(step-by-value)} \\
-%  &\ectx[\expr] = \ectx'[\fork{\expr'}] \implies
-%   \expr \notin \textdom{Val} \implies \Exists \ectx''. \ectx' = \ectx \circ \ectx'' &\mbox{(fork-by-value)} \\
-% \end{align*}
-
-\item A predicate \textlog{atomic} on expressions satisfying
-  \begin{align*}
-   &\textlog{atomic}(\expr) \implies \textlog{reducible}(\expr) &\\
-   &\textlog{atomic}(\expr) \implies \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \expr_2 \in \textdom{Val} &\mbox{(atomic-step)}
-  \end{align*}
-
-
-\item A commutative monoid with zero, $M$.
-That is, a set $\mcar{M}$ with two distinguished elements $\mzero$ (zero, undefined) and $\munit$ (one, unit) and an operation $\mtimes$ (times, combine) such that
-\begin{align*}
- \melt \mtimes \meltB &= \meltB \mtimes \melt \\
- \munit \mtimes \melt &= \melt \\
- (\melt \mtimes \meltB) \mtimes \meltC &= \melt \mtimes (\meltB \mtimes \meltC) \\
- \mzero \mtimes \melt &= \mzero \\
- \mzero &\neq \munit
-\end{align*}
-Let $\mcarp{M} \eqdef |\monoid| \setminus \{\mzero\}$.
-
-\item Arbitrary additional types and terms.
+\item There exist functions $\ofval : \textdom{Val} \to \textdom{Expr}$ and $\toval : \textdom{Expr} \pfn \textdom{val}$ (notice the latter is partial), such that
+\begin{mathpar} {\All \expr, \val. \toval(\expr) = \val \Ra \ofval(\val) = \expr} \and {\All\val. \toval(\ofval(\val)) = \val} 
+\end{mathpar}
+\item There exists a \emph{primitive reduction relation} \[(-,- \step -,-,-) \subseteq \textdom{Expr} \times \textdom{State} \times \textdom{Expr} \times \textdom{State} \times (\textdom{Expr} \uplus \set{()})\]
+  We will write $\expr_1, \state_1 \step \expr_2, \state_2$ for $\expr_1, \state_1 \step \expr_2, \state_2, ()$. \\
+  A reduction $\expr_1, \state_1 \step \expr_2, \state_2, \expr'$ indicates that, when $\expr_1$ reduces to $\expr$, a \emph{new thread} $\expr'$ is forked off.
+\item All values are stuck:
+\[ \expr, \_ \step  \_, \_, \_ \Ra \toval(\expr) = \bot \]
+\item There is a predicate defining \emph{atomic} expressions satisfying
+\let\oldcr\cr
+\begin{mathpar}
+  {\All\expr. \atomic(\expr) \Ra \toval(\expr) = \bot} \and
+  {{
+    \begin{inbox}
+\All\expr_1, \state_1, \expr_2, \state_2, \expr'. \atomic(\expr_1) \land \expr_1, \state_1 \step \expr_2, \state_2, \expr' \Ra {}\\\qquad\qquad\qquad\quad~~ \Exists \val_2. \toval(\expr_2) = \val_2
+    \end{inbox}
+}}
+\end{mathpar}
+In other words, atomic expression \emph{reduce in one step to a value}.
+It does not matter whether they fork off an arbitrary expression.
 \end{itemize}
 
-\section{The concurrent language}
+\subsection{The concurrent language}
+
+For any language $\Lang$, we define the corresponding thread-pool semantics.
 
 \paragraph{Machine syntax}
 \[
-	\tpool \in \textdom{ThreadPool} \eqdef \mathbb{N} \fpfn \textdom{Exp}
+	\tpool \in \textdom{ThreadPool} \eqdef \bigcup_n \textdom{Exp}^n
 \]
 
-\judgment{Machine reduction} {\cfg{\state}{\tpool} \step
-  \cfg{\state'}{\tpool'}}
+\judgment{Machine reduction} {\cfg{\tpool}{\state} \step
+  \cfg{\tpool'}{\state'}}
 \begin{mathpar}
 \infer
-  {\cfg{\state}{\expr} \step \cfg{\state'}{\expr'}}
-  {\cfg{\state}{\tpool [i \mapsto \ectx[\expr]]} \step
-     \cfg{\state'}{\tpool [i \mapsto \ectx[\expr']]}}
-% \and
-% \infer
-%   {}
-%   {\cfg{\state}{\tpool [i \mapsto \ectx[\fork{\expr}]]} \step
-%     \cfg{\state}{\tpool [i \mapsto \ectx[\textsf{fRet}]] [j \mapsto \expr]}}
+  {\expr_1, \state_1 \step \expr_2, \state_2, \expr' \and \expr' \neq ()}
+  {\cfg{\tpool \dplus [\expr_1] \dplus \tpool'}{\state} \step
+     \cfg{\tpool \dplus [\expr_2] \dplus \tpool' \dplus [\expr']}{\state'}}
+\and\infer
+  {\expr_1, \state_1 \step \expr_2, \state_2}
+  {\cfg{\tpool \dplus [\expr_1] \dplus \tpool'}{\state} \step
+     \cfg{\tpool \dplus [\expr_2] \dplus \tpool'}{\state'}}
 \end{mathpar}
 
-\section{Syntax}
 
-\subsection{Grammar}\label{sec:grammar}
+\section{The logic}
 
-\paragraph{Signatures.}
-We use a signature to account syntactically for the logic's parameters.
-A \emph{signature} $\Sig = (\SigType, \SigFn)$ comprises a set
+To instantiate Iris, you need to define the following parameters:
+\begin{itemize}
+\item A language $\Lang$
+\item A locally contractive functor $\iFunc : \COFEs \to \CMRAs$ defining the ghost state
+\end{itemize}
+
+\noindent
+As usual for higher-order logics, you can furthermore pick a \emph{signature} $\Sig = (\SigType, \SigFn, \SigAx)$ to add more types, symbols and axioms to the language.
+You have to make sure that $\SigType$ includes the base types:
 \[
-	\SigType \supseteq \{ \textsort{Val}, \textsort{Exp}, \textsort{Ectx}, \textsort{State}, \textsort{Monoid}, \textsort{InvName}, \textsort{InvMask}, \Prop \}
+	\SigType \supseteq \{ \textsort{Val}, \textsort{Expr}, \textsort{State}, \textsort{M}, \textsort{InvName}, \textsort{InvMask}, \Prop \}
 \]
-of base types (or base \emph{sorts}) and a set $\SigFn$ of typed function symbols.
-This means that each function symbol has an associated \emph{arity} comprising a natural number $n$ and an ordered list of $n+1$ base types.
+Elements of $\SigType$ are ranged over by $\sigtype$.
+
+Each function symbol in $\SigFn$ has an associated \emph{arity} comprising a natural number $n$ and an ordered list of $n+1$ types $\type$ (the grammar of $\type$ is defined below, and depends only on $\SigType$).
 We write
 \[
 	\sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \SigFn
 \]
 to express that $\sigfn$ is a function symbol with the indicated arity.
-\dave{Say something not-too-shabby about adequacy: We don't spell out what it means.}
+
+Furthermore, $\SigAx$ is a set of \emph{axioms}, that is, terms $\term$ of type $\Prop$.
+Again, the grammar of terms and their typing rules are defined below, and depends only on $\SigType$ and $\SigFn$, not on $\SigAx$.
+Elements of $\SigAx$ are ranged over by $\sigax$.
+
+\section{Syntax}
+
+\subsection{Grammar}\label{sec:grammar}
 
 \paragraph{Syntax.}
 Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\textdom{Var}$ of variables (ranged over by metavariables $x$, $y$, $z$):
 
 \begin{align*}
+  \type ::={}&
+      \sigtype \mid
+      \unitsort \mid
+      \type \times \type \mid
+      \type \to \type
+\\[0.4em]
   \term, \prop, \pred ::={}&
       x \mid
       \sigfn(\term_1, \dots, \term_n) \mid
@@ -115,14 +95,14 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
       (\term, \term) \mid
       \pi_i\; \term \mid
       \Lam x.\term \mid
-      \term\;\term  \mid
+      \term(\term)  \mid
       \mzero \mid
       \munit \mid
       \term \mtimes \term \mid
 \\&
     \FALSE \mid
     \TRUE \mid
-    \term =_\sort \term \mid
+    \term =_\type \term \mid
     \prop \Ra \prop \mid
     \prop \land \prop \mid
     \prop \lor \prop \mid
@@ -130,8 +110,8 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
     \prop \wand \prop \mid
 \\&
     \MU \var. \pred  \mid
-    \Exists \var:\sort. \prop \mid
-    \All \var:\sort. \prop \mid
+    \Exists \var:\type. \prop \mid
+    \All \var:\type. \prop \mid
 \\&
     \knowInv{\term}{\prop} \mid
     \ownGGhost{\term} \mid
@@ -139,66 +119,58 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
     \always\prop \mid
     {\later\prop} \mid
     \pvsA{\prop}{\term}{\term} \mid
-    \dynA{\term}{\pred}{\term} \mid
-    \timeless{\prop}
-\\[0.4em]
-  \sort ::={}&
-      \type \mid
-      \unitsort \mid
-      \sort \times \sort \mid
-      \sort \to \sort
+    \dynA{\term}{\pred}{\term}
 \end{align*}
 Recursive predicates must be \emph{guarded}: in $\MU \var. \pred$, the variable $\var$ can only appear under the later $\later$ modality.
 
 \paragraph{Metavariable conventions.}
-We introduce additional metavariables ranging over terms and generally let the choice of metavariable indicate the term's sort:
+We introduce additional metavariables ranging over terms and generally let the choice of metavariable indicate the term's type:
 \[
 \begin{array}{r|l}
- \text{metavariable} & \text{sort} \\\hline
+ \text{metavariable} & \text{type} \\\hline
   \term, \termB & \text{arbitrary} \\
   \val, \valB & \textsort{Val} \\
   \expr & \textsort{Exp} \\
-  \ectx & \textsort{Ectx} \\
   \state & \textsort{State} \\
 \end{array}
 \qquad\qquad
 \begin{array}{r|l}
- \text{metavariable} & \text{sort} \\\hline
+ \text{metavariable} & \text{type} \\\hline
   \iname & \textsort{InvName} \\
   \mask & \textsort{InvMask} \\
-  \melt, \meltB & \textsort{Monoid} \\
+  \melt, \meltB & \textsort{M} \\
   \prop, \propB, \propC & \Prop \\
-  \pred, \predB, \predC & \sort\to\Prop \text{ (when $\sort$ is clear from context)} \\
+  \pred, \predB, \predC & \type\to\Prop \text{ (when $\type$ is clear from context)} \\
 \end{array}
 \]
 
 \paragraph{Variable conventions.}
 We often abuse notation, using the preceding \emph{term} meta-variables to range over (bound) \emph{variables}.
 We omit type annotations in binders, when the type is clear from context.
+We assume that, if a term occurs multiple times in a rule, its free variables are exactly those binders which are available at every occurrence.
 
 
 \subsection{Types}\label{sec:types}
 
 Iris terms are simply-typed.
-The judgment $\vctx \proves_\Sig \wtt{\term}{\sort}$ expresses that, in signature $\Sig$ and variable context $\vctx$, the term $\term$ has sort $\sort$.
-In giving the rules for this judgment, we omit the signature (which does not change).
+The judgment $\vctx \proves \wtt{\term}{\type}$ expresses that, in variable context $\vctx$, the term $\term$ has type $\type$.
 
-A variable context, $\vctx = x_1:\sort_1, \dots, x_n:\sort_n$, declares a list of variables and their sorts.
-In writing $\vctx, x:\sort$, we presuppose that $x$ is not already declared in $\vctx$.
+A variable context, $\vctx = x_1:\type_1, \dots, x_n:\type_n$, declares a list of variables and their types.
+In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $\vctx$.
 
-\judgment{Well-typed terms}{\vctx \proves_\Sig \wtt{\term}{\sort}}
+\judgment{Well-typed terms}{\vctx \proves_\Sig \wtt{\term}{\type}}
 \begin{mathparpagebreakable}
 %%% variables and function symbols
-	\axiom{x : \sort \proves \wtt{x}{\sort}}
+	\axiom{x : \type \proves \wtt{x}{\type}}
 \and
-	\infer{\vctx \proves \wtt{\term}{\sort}}
-		{\vctx, x:\sort' \proves \wtt{\term}{\sort}}
+	\infer{\vctx \proves \wtt{\term}{\type}}
+		{\vctx, x:\type' \proves \wtt{\term}{\type}}
 \and
-	\infer{\vctx, x:\sort', y:\sort' \proves \wtt{\term}{\sort}}
-		{\vctx, x:\sort' \proves \wtt{\term[x/y]}{\sort}}
+	\infer{\vctx, x:\type', y:\type' \proves \wtt{\term}{\type}}
+		{\vctx, x:\type' \proves \wtt{\term[x/y]}{\type}}
 \and
-	\infer{\vctx_1, x:\sort', y:\sort'', \vctx_2 \proves \wtt{\term}{\sort}}
-		{\vctx_1, x:\sort'', y:\sort', \vctx_2 \proves \wtt{\term[y/x,x/y]}{\sort}}
+	\infer{\vctx_1, x:\type', y:\type'', \vctx_2 \proves \wtt{\term}{\type}}
+		{\vctx_1, x:\type'', y:\type', \vctx_2 \proves \wtt{\term[y/x,x/y]}{\type}}
 \and
 	\infer{
 		\vctx \proves \wtt{\term_1}{\type_1} \and
@@ -212,35 +184,33 @@ In writing $\vctx, x:\sort$, we presuppose that $x$ is not already declared in $
 \and
 	\axiom{\vctx \proves \wtt{\unitval}{\unitsort}}
 \and
-	\infer{\vctx \proves \wtt{\term}{\sort_1} \and \vctx \proves \wtt{\termB}{\sort_2}}
-		{\vctx \proves \wtt{(\term,\termB)}{\sort_1 \times \sort_2}}
+	\infer{\vctx \proves \wtt{\term}{\type_1} \and \vctx \proves \wtt{\termB}{\type_2}}
+		{\vctx \proves \wtt{(\term,\termB)}{\type_1 \times \type_2}}
 \and
-	\infer{\vctx \proves \wtt{\term}{\sort_1 \times \sort_2} \and i \in \{1, 2\}}
-		{\vctx \proves \wtt{\pi_i\,\term}{\sort_i}}
+	\infer{\vctx \proves \wtt{\term}{\type_1 \times \type_2} \and i \in \{1, 2\}}
+		{\vctx \proves \wtt{\pi_i\,\term}{\type_i}}
 %%% functions
 \and
-	\infer{\vctx, x:\sort \proves \wtt{\term}{\sort'}}
-		{\vctx \proves \wtt{\Lam x. \term}{\sort \to \sort'}}
+	\infer{\vctx, x:\type \proves \wtt{\term}{\type'}}
+		{\vctx \proves \wtt{\Lam x. \term}{\type \to \type'}}
 \and
 	\infer
-	{\vctx \proves \wtt{\term}{\sort \to \sort'} \and \wtt{\termB}{\sort}}
-	{\vctx \proves \wtt{\term\;\termB}{\sort'}}
+	{\vctx \proves \wtt{\term}{\type \to \type'} \and \wtt{\termB}{\type}}
+	{\vctx \proves \wtt{\term(\termB)}{\type'}}
 %%% monoids
 \and
-	\axiom{\vctx \proves \wtt{\mzero}{\textsort{Monoid}}}
+	\infer{\vctx \proves \wtt{\term}{\textsort{M}}}{\vctx \proves \wtt{\munit(\term)}{\textsort{M}}}
 \and
-	\axiom{\vctx \proves \wtt{\munit}{\textsort{Monoid}}}
-\and
-	\infer{\vctx \proves \wtt{\melt}{\textsort{Monoid}} \and \vctx \proves \wtt{\meltB}{\textsort{Monoid}}}
-		{\vctx \proves \wtt{\melt \mtimes \meltB}{\textsort{Monoid}}}
+	\infer{\vctx \proves \wtt{\melt}{\textsort{M}} \and \vctx \proves \wtt{\meltB}{\textsort{M}}}
+		{\vctx \proves \wtt{\melt \mtimes \meltB}{\textsort{M}}}
 %%% props and predicates
 \\
 	\axiom{\vctx \proves \wtt{\FALSE}{\Prop}}
 \and
 	\axiom{\vctx \proves \wtt{\TRUE}{\Prop}}
 \and
-	\infer{\vctx \proves \wtt{\term}{\sort} \and \vctx \proves \wtt{\termB}{\sort}}
-		{\vctx \proves \wtt{\term =_\sort \termB}{\Prop}}
+	\infer{\vctx \proves \wtt{\term}{\type} \and \vctx \proves \wtt{\termB}{\type}}
+		{\vctx \proves \wtt{\term =_\type \termB}{\Prop}}
 \and
 	\infer{\vctx \proves \wtt{\prop}{\Prop} \and \vctx \proves \wtt{\propB}{\Prop}}
 		{\vctx \proves \wtt{\prop \Ra \propB}{\Prop}}
@@ -258,17 +228,17 @@ In writing $\vctx, x:\sort$, we presuppose that $x$ is not already declared in $
 		{\vctx \proves \wtt{\prop \wand \propB}{\Prop}}
 \and
 	\infer{
-		\vctx, \var:\sort\to\Prop \proves \wtt{\pred}{\sort\to\Prop} \and
+		\vctx, \var:\type\to\Prop \proves \wtt{\pred}{\type\to\Prop} \and
 		\text{$\var$ is guarded in $\pred$}
 	}{
-		\vctx \proves \wtt{\MU \var. \pred}{\sort\to\Prop}
+		\vctx \proves \wtt{\MU \var. \pred}{\type\to\Prop}
 	}
 \and
-	\infer{\vctx, x:\sort \proves \wtt{\prop}{\Prop}}
-		{\vctx \proves \wtt{\Exists x:\sort. \prop}{\Prop}}
+	\infer{\vctx, x:\type \proves \wtt{\prop}{\Prop}}
+		{\vctx \proves \wtt{\Exists x:\type. \prop}{\Prop}}
 \and
-	\infer{\vctx, x:\sort \proves \wtt{\prop}{\Prop}}
-		{\vctx \proves \wtt{\All x:\sort. \prop}{\Prop}}
+	\infer{\vctx, x:\type \proves \wtt{\prop}{\Prop}}
+		{\vctx \proves \wtt{\All x:\type. \prop}{\Prop}}
 \and
 	\infer{
 		\vctx \proves \wtt{\prop}{\Prop} \and
@@ -277,7 +247,7 @@ In writing $\vctx, x:\sort$, we presuppose that $x$ is not already declared in $
 		\vctx \proves \wtt{\knowInv{\iname}{\prop}}{\Prop}
 	}
 \and
-	\infer{\vctx \proves \wtt{\melt}{\textsort{Monoid}}}
+	\infer{\vctx \proves \wtt{\melt}{\textsort{M}}}
 		{\vctx \proves \wtt{\ownGGhost{\melt}}{\Prop}}
 \and
 	\infer{\vctx \proves \wtt{\state}{\textsort{State}}}
@@ -304,32 +274,27 @@ In writing $\vctx, x:\sort$, we presuppose that $x$ is not already declared in $
 	}{
 		\vctx \proves \wtt{\dynA{\expr}{\pred}{\mask}}{\Prop}
 	}
-\and
-	\infer{
-		\vctx \proves \wtt{\prop}{\Prop}
-	}{
-		\vctx \proves \wtt{\timeless{\prop}}{\Prop}
-	}
 \end{mathparpagebreakable}
 
+\subsection{Timeless Propositions}
 
-\section{Base logic}
+Some propositions are \emph{timeless}, which intuitively means that step-indexing does not affect them.
+This is a \emph{meta-level} assertions about propositions, defined by the following judgment.
 
+\judgment{Timeless Propositions}{\timeless{P}}
+
+\ralf{Define a judgment that defines them.}
+
+\subsection{Base logic}
+
+\ralf{Go on checking below.}
 The judgment $\vctx \mid \pfctx \proves \prop$ says that with free variables $\vctx$, proposition $\prop$ holds whenever all assumptions $\pfctx$ hold.
 We implicitly assume that an arbitrary variable context, $\vctx$, is added to every constituent of the rules.
 Axioms $\prop \Ra \propB$ stand for judgments $\vctx \mid \cdot \proves \prop \Ra \propB$ with no assumptions.
 (Bi-implications are analogous.)
 
-% \subsubsection{Judgments}
-% 
-% Proof rules implicitly assume well-sortedness.  
-
-% e\subsection{Laws of intuitionistic higher-order logic with guarded recursion over a simply-typed lambda calculus}\label{sec:HOL}
-
+\paragraph{Laws of intuitionistic higher-order logic.}
 This is entirely standard.
-
-Soundness follows from the theorem that ${\cal U}(\any, \textdom{Prop})
-: {\cal U}^{\textrm{op}} \to \textrm{Poset}$ is a hyperdoctrine. 
 
 \begin{mathpar}
 \inferH{Asm}
@@ -421,7 +386,7 @@ Soundness follows from the theorem that ${\cal U}(\any, \textdom{Prop})
   {\pfctx \proves \term \in \pred[\mu\var \in \Pred(\sort). \pred/\var]}
 \end{mathpar}
 
-\subsection{Axioms from the logic of (affine) bunched implications}
+\paragraph{Laws of (affine) bunched implications.}
 \begin{mathpar}
 \begin{array}{rMcMl}
   \prop * \propB &\Lra& \propB * \prop \\
@@ -452,7 +417,7 @@ Soundness follows from the theorem that ${\cal U}(\any, \textdom{Prop})
   {\pfctx, \prop * \propB \proves \propC}
 \end{mathpar}
 
-\subsection{Laws for ghosts and physical resources}
+\paragraph{Laws for ghosts and physical resources.}
 
 \begin{mathpar}
 \begin{array}{rMcMl}
@@ -468,7 +433,7 @@ Soundness follows from the theorem that ${\cal U}(\any, \textdom{Prop})
 \end{array}
 \end{mathpar}
 
-\subsection{Laws for the later modality}\label{sec:later}
+\paragraph{Laws for the later modality.}
 
 \begin{mathpar}
 \inferH{Mono}
@@ -492,7 +457,7 @@ Soundness follows from the theorem that ${\cal U}(\any, \textdom{Prop})
 \end{array}
 \end{mathpar}
 
-\subsection{Laws for the always modality}\label{sec:always}
+\paragraph{Laws for the always modality.}
 
 \begin{mathpar}
 \axiomH{Necessity}
@@ -517,278 +482,10 @@ Soundness follows from the theorem that ${\cal U}(\any, \textdom{Prop})
 \end{mathpar}
 Note that $\always$ binds more tightly than $*$, $\land$, $\lor$, and $\Ra$.
 
-\section{Program logic}\label{sec:proglog}
+\paragraph{Laws of primitive view shifts.}
 
-Hoare triples and view shifts are syntactic sugar for weakest (liberal) preconditions and primitive view shifts, respectively:
-\[
-\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \dynA{\expr}{\lambda\Ret\val.\propB}{\mask})}
-\qquad\qquad
-\begin{aligned}
-\prop \vs[\mask_1][\mask_2] \propB &\eqdef \always{(\prop \Ra \pvsA{\propB}{\mask_1}{\mask_2})} \\
-\prop \vsE[\mask_1][\mask_2] \propB &\eqdef \prop \vs[\mask_1][\mask_2] \propB \land \propB \vs[\mask2][\mask_1] \prop
-\end{aligned}
-\]
-We write just one mask for a view shift when $\mask_1 = \mask_2$.
-The convention for omitted masks is generous:
-An omitted $\mask$ is $\top$ for Hoare triples and $\emptyset$ for view shifts.
+\paragraph{Laws of weakest preconditions.}
 
-% PDS: We're repeating ourselves. We gave Γ conventions and we're about to give Θ conventions. Also, the scope of "Below" is unclear.
-% Below, we implicitly assume the same context for all judgements which don't have an explicit context at \emph{all} pre-conditions \emph{and} the conclusion.
-
-Henceforward, we implicitly assume a proof context, $\pfctx$, is added to every constituent of the rules.
-Generally, this is an arbitrary proof context.
-We write $\provesalways$ to denote judgments that can only be extended with a boxed proof context.
-
-\ralf{Give the actual base rules from the Coq development instead}
-
-\subsection{Hoare triples}
-\begin{mathpar}
-\inferH{Ret}
-  {}
-  {\hoare{\TRUE}{\valB}{\Ret\val. \val = \valB}[\mask]}
-\and
-\inferH{Bind}
-  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask] \\
-   \All \val. \hoare{\propB}{K[\val]}{\Ret\valB.\propC}[\mask]}
-  {\hoare{\prop}{K[\expr]}{\Ret\valB.\propC}[\mask]}
-\and
-\inferH{Csq}
-  {\prop \vs \prop' \\
-    \hoare{\prop'}{\expr}{\Ret\val.\propB'}[\mask] \\   
-   \All \val. \propB' \vs \propB}
-  {\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask]}
-\and
-\inferH{Frame}
-  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask]}
-  {\hoare{\prop * \propC}{\expr}{\Ret\val. \propB * \propC}[\mask \uplus \mask']}
-\and
-\inferH{AFrame}
-  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask] \and \text{$\expr$ not a value}
-  }
-  {\hoare{\prop * \later\propC}{\expr}{\Ret\val. \propB * \propC}[\mask \uplus \mask']}
-% \and
-% \inferH{Fork}
-%   {\hoare{\prop}{\expr}{\Ret\any. \TRUE}[\top]}
-%   {\hoare{\later\prop * \later\propB}{\fork{\expr}}{\Ret\val. \val = \textsf{fRet} \land \propB}[\mask]}
-\and
-\inferH{ACsq}
-  {\prop \vs[\mask \uplus \mask'][\mask] \prop' \\
-    \hoare{\prop'}{\expr}{\Ret\val.\propB'}[\mask] \\   
-   \All\val. \propB' \vs[\mask][\mask \uplus \mask'] \propB \\
-   \physatomic{\expr}
-  }
-  {\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask \uplus \mask']}
-\end{mathpar}
-
-\subsection{View shifts}
-
-\begin{mathpar}
-\inferH{NewInv}
-  {\infinite(\mask)}
-  {\later{\prop} \vs[\mask] \exists \iname\in\mask.\; \knowInv{\iname}{\prop}}
-\and
-\inferH{FpUpd}
-  {\melt \mupd \meltsB}
-  {\ownGGhost{\melt} \vs \exists \meltB \in \meltsB.\; \ownGGhost{\meltB}}
-\and
-\inferH{VSTrans}
-  {\prop \vs[\mask_1][\mask_2] \propB \and \propB \vs[\mask_2][\mask_3] \propC \and \mask_2 \subseteq \mask_1 \cup \mask_3}
-  {\prop \vs[\mask_1][\mask_3] \propC}
-\and
-\inferH{VSImp}
-  {\always{(\prop \Ra \propB)}}
-  {\prop \vs[\emptyset] \propB}
-\and
-\inferH{VSFrame}
-  {\prop \vs[\mask_1][\mask_2] \propB}
-  {\prop * \propC \vs[\mask_1 \uplus \mask'][\mask_2 \uplus \mask'] \propB * \propC}
-\and
-\inferH{VSTimeless}
-  {\timeless{\prop}}
-  {\later \prop \vs \prop}
-\and
-\axiomH{InvOpen}
-  {\knowInv{\iname}{\prop} \proves \TRUE \vs[\{ \iname \} ][\emptyset] \later \prop}
-\and
-\axiomH{InvClose}
-  {\knowInv{\iname}{\prop} \proves \later \prop \vs[\emptyset][\{ \iname \} ] \TRUE }
-\end{mathpar}
-
-\vspace{5pt}
-Note that $\timeless{\prop}$ means that $\prop$ does not depend on the step index.
-Furthermore, $$\melt \mupd \meltsB \eqdef \always{\All \melt_f. \melt \sep \melt_f \Ra \Exists \meltB \in \meltsB. \meltB \sep \melt_f}$$
-
-\subsection{Derived rules}
-
-\paragraph{Derived structural rules.}
-The following are easily derived by unfolding the sugar for Hoare triples and view shifts.
-\begin{mathpar}
-\inferHB{Disj}
-  {\hoare{\prop}{\expr}{\Ret\val.\propC}[\mask] \and \hoare{\propB}{\expr}{\Ret\val.\propC}[\mask]}
-  {\hoare{\prop \lor \propB}{\expr}{\Ret\val.\propC}[\mask]}
-\and
-\inferHB{VSDisj}
-  {\prop \vs[\mask_1][\mask_2] \propC \and \propB \vs[\mask_1][\mask_2] \propC}
-  {\prop \lor \propB \vs[\mask_1][\mask_2] \propC}
-\and
-\inferHB{Exist}
-  {\All \var. \hoare{\prop}{\expr}{\Ret\val.\propB}[\mask]}
-  {\hoare{\Exists \var. \prop}{\expr}{\Ret\val.\propB}[\mask]}
-\and
-\inferHB{VSExist}
-  {\All \var. (\prop \vs[\mask_1][\mask_2] \propB)}
-  {(\Exists \var. \prop) \vs[\mask_1][\mask_2] \propB}
-\and
-\inferHB{BoxOut}
-  {\always\propB \provesalways \hoare{\prop}{\expr}{\Ret\val.\propC}[\mask]}
-  {\hoare{\prop \land \always{\propB}}{\expr}{\Ret\val.\propC}[\mask]}
-\and
-\inferHB{VSBoxOut}
-  {\always\propB \provesalways \prop \vs[\mask_1][\mask_2] \propC}
-  {\prop \land \always{\propB} \vs[\mask_1][\mask_2] \propC}
- \and
-\inferH{False}
-  {}
-  {\hoare{\FALSE}{\expr}{\Ret \val. \prop}[\mask]}
-\and
-\inferH{VSFalse}
-  {}
-  {\FALSE \vs[\mask_1][\mask_2] \prop }
-\end{mathpar}
-The proofs all follow the same pattern, so we only show two of them in detail.
-\begin{proof}[Proof of \ruleref{Exist}]
-	After unfolding the syntactic sugar for Hoare triples and removing the boxes from premise and conclusion, our goal becomes
-	\[
-		(\Exists \var. \prop(\var)) \Ra \dynA{\expr}{\Lam\val. \propB}{\mask}
-	\]
-	(remember that $\var$ is free in $\prop$) and the premise reads
-	\[
-		\All \var. \prop(\var) \Ra \dynA{\expr}{\Lam\val. \propB}{\mask}.
-	\]
-	Let $\var$ be given and assume $\prop(\var)$.
-	To show $\dynA{\expr}{\Lam\val. \propB}{\mask}$, apply the premise to $\var$ and $\prop(\var)$.
- 
-	For the other direction, assume
-	\[
-		\hoare{\Exists \var. \prop(\var)}{\expr}{\Ret\val. \propB}[\mask]
-	\]
-	and let $\var$ be given.
-	We have to show $\hoare{\prop(\var)}{\expr}{\Ret\val. \propB}[\mask]$.
-	This trivially follows from \ruleref{Csq} with $\prop(\var) \Ra \Exists \var. \prop(\var)$.
-\end{proof}
-
-\begin{proof}[Proof of \ruleref{BoxOut}]
-  After unfolding the syntactic sugar for Hoare triples, our goal becomes
-  \begin{equation}\label{eq:boxin:goal}
-    \always\pfctx \proves \always\bigl(\prop\land\always \propB \Ra \dynA{\expr}{\Lam\val. \propC}{\mask}\bigr)
-  \end{equation}
-  while our premise reads
-  \begin{equation}\label{eq:boxin:as}
-    \always\pfctx, \always\propB \proves \always(\prop \Ra \dynA{\expr}{\Lam\val. \propC}{\mask})
-  \end{equation}
-  By the introduction rules for $\always$ and implication, it suffices to show
-  \[  (\always\pfctx), \prop,\always \propB \proves \dynA{\expr}{\Lam\val. \propC}{\mask} \]
-  By modus ponens and \ruleref{Necessity}, it suffices to show~\eqref{eq:boxin:as}, which is exactly our assumption.
-  
-  For the other direction, assume~\eqref{eq:boxin:goal}. We have to show~\eqref{eq:boxin:as}. By \ruleref{AlwaysIntro} and implication introduction, it suffices to show
-  \[  (\always\pfctx), \prop,\always \propB \proves \dynA{\expr}{\Lam\val. \propC}{\mask} \]
-  which easily follows from~\eqref{eq:boxin:goal}.
-\end{proof}
-
-\paragraph{Derived rules for invariants.}
-Invariants can be opened around atomic expressions and view shifts.
-
-\begin{mathpar}
-\inferH{Inv}
-  {\hoare{\later{\propC} * \prop }
-          {\expr}
-          {\Ret\val. \later{\propC} * \propB }[\mask]
-          \and \physatomic{\expr}
-  }
-  {\knowInv{\iname}{\propC} \proves \hoare{\prop}
-          {\expr}
-          {\Ret\val. \propB}[\mask \uplus \{ \iname \}]
-  }
-\and
-\inferH{VSInv}
-  {\later{\prop} * \propB \vs[\mask_1][\mask_2] \later{\prop} * \propC}
-  {\knowInv{\iname}{\prop} \proves \propB \vs[\mask_1 \uplus \{ \iname \}][\mask_2 \uplus \{ \iname \}] \propC}
-\end{mathpar}
-
-\begin{proof}[Proof of \ruleref{Inv}]
-  Use \ruleref{ACsq} with $\mask_1 \eqdef \mask \cup \{\iname\}$, $\mask_2 \eqdef \mask$.
-  The view shifts are obtained by \ruleref{InvOpen} and \ruleref{InvClose} with framing of $\mask$ and $\prop$ or $\propB$, respectively.
-\end{proof}
-
-\begin{proof}[Proof of \ruleref{VSInv}]
-Analogous to the proof of \ruleref{Inv}, using \ruleref{VSTrans} instead of \ruleref{ACsq}.
-\end{proof}
-
-\subsubsection{Unsound rules}
-
-Some rule suggestions (or rather, wishes) keep coming up, which are unsound. We collect them here.
-\begin{mathpar}
-	\infer
-	{P \vs Q}
-	{\later P \vs \later Q}
-	\and
-	\infer
-	{\later(P \vs Q)}
-	{\later P \vs \later Q}
-\end{mathpar}
-
-Of course, the second rule implies the first, so let's focus on that.
-Since implications work under $\later$, from $\later P$ we can get $\later \pvs{Q}$.
-If we now try to prove $\pvs{\later Q}$, we will be unable to establish world satisfaction in the new world:
-We have no choice but to use $\later \pvs{Q}$ at one step index below what we are operating on (because we have it under a $\later$).
-We can easily get world satisfaction for that lower step-index (by downwards-closedness of step-indexed predicates).
-We can, however, not make much use of the world satisfaction that we get out, becaase it is one step-index too low.
-
-\subsection{Adequacy}
-
-The adequacy statement reads as follows:
-\begin{align*}
- &\All \mask, \expr, \val, \pred, i, \state, \state', \tpool'.
- \\&( \proves \hoare{\ownPhys\state}{\expr}{x.\; \pred(x)}[\mask]) \implies
- \\&\cfg{\state}{[i \mapsto \expr]} \step^\ast
-     \cfg{\state'}{[i \mapsto \val] \uplus \tpool'} \implies
-     \\&\pred(\val)
-\end{align*}
-where $\pred$ can mention neither resources nor invariants.
-
-\subsection{Axiom lifting}\label{sec:lifting}
-
-The following lemmas help in proving axioms for a particular language.
-The first applies to expressions with side-effects, and the second to side-effect-free expressions.
-\dave{Update the others, and the example, wrt the new treatment of $\predB$.}
-\begin{align*}
- &\All \expr, \state, \pred, \prop, \propB, \mask. \\
- &\textlog{reducible}(e) \implies \\
- &(\All \expr', \state'. \cfg{\state}{\expr} \step \cfg{\state'}{\expr'} \implies \pred(\expr', \state')) \implies \\
- &{} \proves \bigl( (\All \expr', \state'. \pred (\expr', \state') \Ra \hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask]) \Ra \hoare{ \later \prop * \ownPhys{\state} }{\expr}{\Ret\val. \propB}[\mask] \bigr) \\
- \quad\\
- &\All \expr, \pred, \prop, \propB, \mask. \\
- &\textlog{reducible}(e) \implies \\
- &(\All \state, \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \state_2 = \state \land \pred(\expr_2)) \implies \\
- &{} \proves \bigl( (\All \expr'. \pred(\expr') \Ra \hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask]) \Ra \hoare{\later\prop}{\expr}{\Ret\val. \propB}[\mask] \bigr)
-\end{align*}
-Note that $\pred$ is a meta-logic predicate---it does not depend on any world or resources being owned.
-
-The following specializations cover all cases of a heap-manipulating lambda calculus like $F_{\mu!}$.
-\begin{align*}
- &\All \expr, \expr', \prop, \propB, \mask. \\
- &\textlog{reducible}(e) \implies \\
- &(\All \state, \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \state_2 = \state \land \expr_2 = \expr') \implies \\
- &{} \proves (\hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask] \Ra \hoare{\later\prop}{\expr}{\Ret\val. \propB}[\mask] ) \\
- \quad \\
- &\All \expr, \state, \pred, \mask. \\
- &\textlog{atomic}(e) \implies \\
- &\bigl(\All \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \pred(\expr_2, \state_2)\bigr) \implies \\
- &{} \proves (\hoare{ \ownPhys{\state} }{\expr}{\Ret\val. \Exists\state'. \ownPhys{\state'} \land \pred(\val, \state') }[\mask] )
-\end{align*}
-The first is restricted to deterministic pure reductions, like $\beta$-reduction.
-The second is suited to proving triples for (possibly non-deterministic) atomic expressions; for example, with $\expr \eqdef \;!\ell$ (dereferencing $\ell$) and $\state \eqdef h \mtimes \ell \mapsto \valB$ and $\pred(\val, \state') \eqdef \state' = (h \mtimes \ell \mapsto \valB) \land \val = \valB$, one obtains the axiom $\All h, \ell, \valB. \hoare{\ownPhys{h \mtimes \ell \mapsto \valB}}{!\ell}{\Ret\val. \val = \valB \land \ownPhys{h \mtimes \ell \mapsto \valB} }$.
-%Axioms for CAS-like operations can be obtained by first deriving rules for the two possible cases, and then using the disjunction rule.
 
 %%% Local Variables:
 %%% mode: latex
