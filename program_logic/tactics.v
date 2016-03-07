@@ -6,7 +6,7 @@ Module uPred_reflection_pvs.
   Import uPred_reflection.
   Section uPred_reflection_pvs.
   
-  Context {Λ : language} {Σ : rFunctor}.
+  Context {Λ : language} {Σ : iFunctor}.
   Local Notation iProp := (iProp Λ Σ).
 
   Lemma cancel_entails_pvs Σ' E1 E2 e1 e2 e1' e2' ns :

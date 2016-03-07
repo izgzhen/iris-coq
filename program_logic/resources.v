@@ -5,7 +5,7 @@ From program_logic Require Export language.
 Record res (Λ : language) (A : cofeT) (M : cmraT) := Res {
   wld : mapR positive (agreeR A);
   pst : exclR (stateC Λ);
-  gst : optionR M;
+  gst : M;
 }.
 Add Printing Constructor res.
 Arguments Res {_ _ _} _ _ _.
@@ -73,7 +73,7 @@ Proof. by destruct 3; constructor; try apply: timeless. Qed.
 
 Instance res_op : Op (res Λ A M) := λ r1 r2,
   Res (wld r1 ⋅ wld r2) (pst r1 ⋅ pst r2) (gst r1 ⋅ gst r2).
-Global Instance res_empty : Empty (res Λ A M) := Res ∅ ∅ ∅.
+Global Instance res_empty `{Empty M} : Empty (res Λ A M) := Res ∅ ∅ ∅.
 Instance res_unit : Unit (res Λ A M) := λ r,
   Res (unit (wld r)) (unit (pst r)) (unit (gst r)).
 Instance res_valid : Valid (res Λ A M) := λ r, ✓ wld r ∧ ✓ pst r ∧ ✓ gst r.
@@ -124,7 +124,7 @@ Proof.
     by exists (Res w σ m, Res w' σ' m').
 Qed.
 Canonical Structure resR : cmraT := CMRAT res_cofe_mixin res_cmra_mixin.
-Global Instance res_cmra_identity : CMRAIdentity resR.
+Global Instance res_cmra_identity `{CMRAIdentity M} : CMRAIdentity resR.
 Proof.
   split.
   - split_and!; apply cmra_empty_valid.
@@ -135,7 +135,7 @@ Qed.
 Definition update_pst (σ : state Λ) (r : res Λ A M) : res Λ A M :=
   Res (wld r) (Excl σ) (gst r).
 Definition update_gst (m : M) (r : res Λ A M) : res Λ A M :=
-  Res (wld r) (pst r) (Some m).
+  Res (wld r) (pst r) m.
 
 Lemma wld_validN n r : ✓{n} r → ✓{n} wld r.
 Proof. by intros (?&?&?). Qed.
@@ -176,7 +176,7 @@ Arguments resR : clear implicits.
 (* Functor *)
 Definition res_map {Λ} {A A' : cofeT} {M M' : cmraT}
     (f : A → A') (g : M → M') (r : res Λ A M) : res Λ A' M' :=
-  Res (agree_map f <$> wld r) (pst r) (g <$> gst r).
+  Res (agree_map f <$> wld r) (pst r) (g $ gst r).
 Instance res_map_ne {Λ} {A A': cofeT} {M M' : cmraT} (f : A → A') (g : M → M') :
   (∀ n, Proper (dist n ==> dist n) f) → (∀ n, Proper (dist n ==> dist n) g) →
   ∀ n, Proper (dist n ==> dist n) (@res_map Λ _ _ _ _ f g).
@@ -186,7 +186,6 @@ Proof.
   constructor; rewrite /res_map /=; f_equal.
   - rewrite -{2}(map_fmap_id (wld r)). apply map_fmap_setoid_ext=> i y ? /=.
     by rewrite -{2}(agree_map_id y).
-  - by rewrite option_fmap_id.
 Qed.
 Lemma res_map_compose {Λ} {A1 A2 A3 : cofeT} {M1 M2 M3 : cmraT}
    (f : A1 → A2) (f' : A2 → A3) (g : M1 → M2) (g' : M2 → M3) (r : res Λ A1 M1) :
@@ -195,7 +194,6 @@ Proof.
   constructor; rewrite /res_map /=; f_equal.
   - rewrite -map_fmap_compose; apply map_fmap_setoid_ext=> i y _ /=.
     by rewrite -agree_map_compose.
-  - by rewrite option_fmap_compose.
 Qed.
 Lemma res_map_ext {Λ} {A A' : cofeT} {M M' : cmraT}
     (f f' : A → A') (g g' : M → M') (r : res Λ A M) :
@@ -203,7 +201,6 @@ Lemma res_map_ext {Λ} {A A' : cofeT} {M M' : cmraT}
 Proof.
   intros Hf Hg; split; simpl; auto.
   - by apply map_fmap_setoid_ext=>i x ?; apply agree_map_ext.
-  - by apply option_fmap_setoid_ext.
 Qed.
 Instance res_map_cmra_monotone {Λ}
     {A A' : cofeT} {M M': cmraT} (f: A → A') (g: M → M') :
@@ -223,19 +220,13 @@ Instance resC_map_ne {Λ A A' M M'} n :
 Proof.
   intros f g Hfg r; split; simpl; auto.
   - by apply (mapC_map_ne _ (agreeC_map f) (agreeC_map g)), agreeC_map_ne.
-  - by apply optionC_map_ne.
 Qed.
 
 Program Definition resRF (Λ : language)
-    (F : cFunctor) (Σ : rFunctor) : rFunctor := {|
-  rFunctor_car A B := resR Λ (cFunctor_car F A B) (rFunctor_car Σ A B);
-  rFunctor_map A1 A2 B1 B2 fg :=resC_map (cFunctor_map F fg) (rFunctor_map Σ fg)
+    (F1 : cFunctor) (F2 : rFunctor) : rFunctor := {|
+  rFunctor_car A B := resR Λ (cFunctor_car F1 A B) (rFunctor_car F2 A B);
+  rFunctor_map A1 A2 B1 B2 fg :=resC_map (cFunctor_map F1 fg) (rFunctor_map F2 fg)
 |}.
-Next Obligation.
-  intros Λ F Σ A1 A2 B1 B2 n f g Hfg; apply resC_map_ne.
-  - by apply cFunctor_contractive.
-  - by apply rFunctor_contractive.
-Qed.
 Next Obligation.
   intros Λ F Σ A B x. rewrite /= -{2}(res_map_id x).
   apply res_map_ext=>y. apply cFunctor_id. apply rFunctor_id.
@@ -243,4 +234,13 @@ Qed.
 Next Obligation.
   intros Λ F Σ A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -res_map_compose.
   apply res_map_ext=>y. apply cFunctor_compose. apply rFunctor_compose.
+Qed.
+
+Instance resRF_contractive Λ F1 F2 :
+  cFunctorContractive F1 → rFunctorContractive F2 →
+  rFunctorContractive (resRF Λ F1 F2).
+Proof.
+  intros ?? A1 A2 B1 B2 n f g Hfg; apply resC_map_ne.
+  - by apply cFunctor_contractive.
+  - by apply rFunctor_contractive.
 Qed.

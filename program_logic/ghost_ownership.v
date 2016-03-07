@@ -1,28 +1,9 @@
 From prelude Require Export functions.
 From algebra Require Export iprod.
-From program_logic Require Export pviewshifts.
+From program_logic Require Export pviewshifts global_functor.
 From program_logic Require Import ownership.
 Import uPred.
 
-(** Index of a CMRA in the product of global CMRAs. *)
-Definition gid := nat.
-
-(** Name of one instance of a particular CMRA in the ghost state. *)
-Definition gname := positive.
-
-(** The global CMRA: Indexed product over a gid i to (gname --fin--> Σ i) *)
-Definition globalF (Σ : gid → rFunctor) : rFunctor :=
-  iprodRF (λ i, mapRF gname (Σ i)).
-Notation rFunctorG := (gid → rFunctor).
-Notation iPropG Λ Σ := (iProp Λ (globalF Σ)).
-
-Class inG (Λ : language) (Σ : rFunctorG) (A : cmraT) := InG {
-  inG_id : gid;
-  inG_prf : A = Σ inG_id (iPreProp Λ (globalF Σ))
-}.
-
-Definition to_globalF `{inG Λ Σ A} (γ : gname) (a : A) : iGst Λ (globalF Σ) :=
-  iprod_singleton inG_id {[ γ := cmra_transport inG_prf a ]}.
 Definition own `{inG Λ Σ A} (γ : gname) (a : A) : iPropG Λ Σ :=
   ownG (to_globalF γ a).
 Instance: Params (@to_globalF) 5.
@@ -33,22 +14,6 @@ Typeclasses Opaque to_globalF own.
 Section global.
 Context `{i : inG Λ Σ A}.
 Implicit Types a : A.
-
-(** * Properties of to_globalC *)
-Instance to_globalF_ne γ n : Proper (dist n ==> dist n) (to_globalF γ).
-Proof. by intros a a' Ha; apply iprod_singleton_ne; rewrite Ha. Qed.
-Lemma to_globalF_op γ a1 a2 :
-  to_globalF γ (a1 ⋅ a2) ≡ to_globalF γ a1 ⋅ to_globalF γ a2.
-Proof.
-  by rewrite /to_globalF iprod_op_singleton map_op_singleton cmra_transport_op.
-Qed.
-Lemma to_globalF_unit γ a : unit (to_globalF γ a) ≡ to_globalF γ (unit a).
-Proof.
-  by rewrite /to_globalF
-    iprod_unit_singleton map_unit_singleton cmra_transport_unit.
-Qed.
-Instance to_globalF_timeless γ m : Timeless m → Timeless (to_globalF γ m).
-Proof. rewrite /to_globalF; apply _. Qed.
 
 (** * Transport empty *)
 Instance inG_empty `{Empty A} :
@@ -87,6 +52,11 @@ Lemma own_valid_r γ a : own γ a ⊑ (own γ a ★ ✓ a).
 Proof. apply: uPred.always_entails_r. apply own_valid. Qed.
 Lemma own_valid_l γ a : own γ a ⊑ (✓ a ★ own γ a).
 Proof. by rewrite comm -own_valid_r. Qed.
+Lemma own_empty `{CMRAIdentity A} γ : True ⊑ own γ ∅.
+Proof.
+  rewrite ownG_empty /own. apply equiv_spec, ownG_proper.
+  (* FIXME: rewrite to_globalF_empty. *)
+Abort.
 Global Instance own_timeless γ a : Timeless a → TimelessP (own γ a).
 Proof. unfold own; apply _. Qed.
 Global Instance own_unit_always_stable γ a : AlwaysStable (own γ (unit a)).
@@ -99,7 +69,7 @@ Lemma own_alloc_strong a E (G : gset gname) :
 Proof.
   intros Ha.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ γ, γ ∉ G ∧ m = to_globalF γ a) ∧ ownG m)%I).
-  - eapply pvs_ownG_updateP_empty, (iprod_singleton_updateP_empty inG_id);
+  - rewrite ownG_empty. eapply pvs_ownG_updateP, (iprod_singleton_updateP_empty inG_id);
       first (eapply map_updateP_alloc_strong', cmra_transport_valid, Ha);
       naive_solver.
   - apply exist_elim=>m; apply const_elim_l=>-[γ [Hfresh ->]].
@@ -123,28 +93,19 @@ Proof.
     rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
 Qed.
 
-Lemma own_updateP_empty `{Empty A, !CMRAIdentity A} P γ E :
-  ∅ ~~>: P → True ⊑ (|={E}=> ∃ a, ■ P a ∧ own γ a).
-Proof.
-  intros Hemp.
-  rewrite -(pvs_mono _ _ (∃ m, ■ (∃ a', m = to_globalF γ a' ∧ P a') ∧ ownG m)%I).
-  - eapply pvs_ownG_updateP_empty, iprod_singleton_updateP_empty;
-      first eapply map_singleton_updateP_empty', cmra_transport_updateP', Hemp.
-    naive_solver.
-  - apply exist_elim=>m; apply const_elim_l=>-[a' [-> HP]].
-    rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
-Qed.
-
 Lemma own_update γ a a' E : a ~~> a' → own γ a ⊑ (|={E}=> own γ a').
 Proof.
   intros; rewrite (own_updateP (a' =)); last by apply cmra_update_updateP.
   by apply pvs_mono, exist_elim=> a''; apply const_elim_l=> ->.
 Qed.
 
-Lemma own_update_empty `{Empty A, !CMRAIdentity A} γ E :
+Lemma own_empty `{Empty A, !CMRAIdentity A} γ E :
   True ⊑ (|={E}=> own γ ∅).
 Proof.
-  rewrite (own_updateP_empty (∅ =)); last by apply cmra_updateP_id.
-  apply pvs_mono, exist_elim=>a. by apply const_elim_l=>->.
+  rewrite ownG_empty /own. apply pvs_ownG_update, cmra_update_updateP.
+  eapply iprod_singleton_updateP_empty;
+      first by eapply map_singleton_updateP_empty', cmra_transport_updateP',
+               cmra_update_updateP, cmra_update_empty.
+  naive_solver.
 Qed.
 End global.

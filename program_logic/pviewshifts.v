@@ -40,7 +40,7 @@ Notation "|={ E }=> Q" := (pvs E E Q%I)
    format "|={ E }=>  Q") : uPred_scope.
 
 Section pvs.
-Context {Λ : language} {Σ : rFunctor}.
+Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q : iProp Λ Σ.
 Implicit Types m : iGst Λ Σ.
 
@@ -115,22 +115,11 @@ Qed.
 Lemma pvs_ownG_updateP E m (P : iGst Λ Σ → Prop) :
   m ~~>: P → ownG m ⊑ (|={E}=> ∃ m', ■ P m' ∧ ownG m').
 Proof.
-  rewrite pvs_eq. intros Hup%option_updateP'.
+  rewrite pvs_eq. intros Hup.
   uPred.unseal; split=> -[|n] r ? /ownG_spec Hinv rf [|k] Ef σ ???; try lia.
-  destruct (wsat_update_gst k (E ∪ Ef) σ r rf (Some m) P) as (m'&?&?); eauto.
+  destruct (wsat_update_gst k (E ∪ Ef) σ r rf m P) as (m'&?&?); eauto.
   { apply cmra_includedN_le with (S n); auto. }
   by exists (update_gst m' r); split; [exists m'; split; [|apply ownG_spec]|].
-Qed.
-Lemma pvs_ownG_updateP_empty `{Empty (iGst Λ Σ), !CMRAIdentity (iGst Λ Σ)}
-    E (P : iGst Λ Σ → Prop) :
-  ∅ ~~>: P → True ⊑ (|={E}=> ∃ m', ■ P m' ∧ ownG m').
-Proof.
-  rewrite pvs_eq. intros Hup; uPred.unseal; split=> -[|n] r ? _ rf [|k] Ef σ ???; try lia.
-  destruct (wsat_update_gst k (E ∪ Ef) σ r rf ∅ P) as (m'&?&?); eauto.
-  { apply cmra_empty_leastN. }
-  { apply cmra_updateP_compose_l with (Some ∅), option_updateP with P;
-      auto using option_update_None. }
-  exists (update_gst m' r); by split; [exists m'; split; [|apply ownG_spec]|].
 Qed.
 Lemma pvs_allocI E P : ¬set_finite E → ▷ P ⊑ (|={E}=> ∃ i, ■ (i ∈ E) ∧ ownI i P).
 Proof.

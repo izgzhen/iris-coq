@@ -1,5 +1,5 @@
 From algebra Require Export auth upred_tactics.
-From program_logic Require Export invariants global_functor.
+From program_logic Require Export invariants ghost_ownership.
 Import uPred.
 
 (* The CMRA we need. *)
@@ -9,7 +9,7 @@ Class authG Λ Σ (A : cmraT) `{Empty A} := AuthG {
   auth_timeless :> CMRADiscrete A;
 }.
 (* The Functor we need. *)
-Definition authGF (A : cmraT) : rFunctor := constRF (authR A).
+Definition authGF (A : cmraT) : gFunctor := GFunctor (constRF (authR A)).
 (* Show and register that they match. *)
 Instance authGF_inGF (A : cmraT) `{inGF Λ Σ (authGF A)}
   `{CMRAIdentity A, CMRADiscrete A} : authG Λ Σ A.
@@ -69,8 +69,8 @@ Section auth.
     by rewrite always_and_sep_l.
   Qed.
 
-  Lemma auth_empty γ E : True ⊑ (|={E}=> auth_own γ ∅).
-  Proof. by rewrite -own_update_empty. Qed.
+  Lemma auth_empty γ E : True ⊑ |={E}=> auth_own γ ∅.
+  Proof. by rewrite -own_empty. Qed.
 
   Lemma auth_opened E γ a :
     (▷ auth_inv γ φ ★ auth_own γ a)

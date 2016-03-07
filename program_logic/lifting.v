@@ -8,7 +8,7 @@ Local Hint Extern 10 (✓{_} _) =>
   end; solve_validN.
 
 Section lifting.
-Context {Λ : language} {Σ : rFunctor}.
+Context {Λ : language} {Σ : iFunctor}.
 Implicit Types v : val Λ.
 Implicit Types e : expr Λ.
 Implicit Types σ : state Λ.

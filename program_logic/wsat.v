@@ -28,13 +28,12 @@ Instance: Params (@wsat) 5.
 Arguments wsat : simpl never.
 
 Section wsat.
-Context {Λ : language} {Σ : rFunctor}.
+Context {Λ : language} {Σ : iFunctor}.
 Implicit Types σ : state Λ.
 Implicit Types r : iRes Λ Σ.
 Implicit Types rs : gmap positive (iRes Λ Σ).
 Implicit Types P : iProp Λ Σ.
 Implicit Types m : iGst Λ Σ.
-Implicit Types mm : option (iGst Λ Σ).
 
 Instance wsat_ne' : Proper (dist n ==> impl) (@wsat Λ Σ n E σ).
 Proof.
@@ -68,7 +67,7 @@ Proof.
   destruct n; first done.
   intros _ [rs ?]; eapply cmra_validN_op_l, wsat_pre_valid; eauto.
 Qed.
-Lemma wsat_init k E σ mm : ✓{S k} mm → wsat (S k) E σ (Res ∅ (Excl σ) mm).
+Lemma wsat_init k E σ m : ✓{S k} m → wsat (S k) E σ (Res ∅ (Excl σ) m).
 Proof.
   intros Hv. exists ∅; constructor; auto.
   - rewrite big_opM_empty right_id.
@@ -125,13 +124,13 @@ Proof.
   split; [done|exists rs].
   by constructor; first split_and!; try rewrite /= -assoc Hpst'.
 Qed.
-Lemma wsat_update_gst n E σ r rf mm1 (P : iGst Λ Σ → Prop) :
-  mm1 ≼{S n} gst r → mm1 ~~>: (λ mm2, default False mm2 P) →
+Lemma wsat_update_gst n E σ r rf m1 (P : iGst Λ Σ → Prop) :
+  m1 ≼{S n} gst r → m1 ~~>: P →
   wsat (S n) E σ (r ⋅ rf) → ∃ m2, wsat (S n) E σ (update_gst m2 r ⋅ rf) ∧ P m2.
 Proof.
   intros [mf Hr] Hup [rs [(?&?&?) Hσ HE Hwld]].
-  destruct (Hup (S n) (mf ⋅ gst (rf ⋅ big_opM rs))) as ([m2|]&?&Hval'); try done.
-  { by rewrite /= (assoc _ mm1) -Hr assoc. }
+  destruct (Hup (S n) (mf ⋅ gst (rf ⋅ big_opM rs))) as (m2&?&Hval'); try done.
+  { by rewrite /= (assoc _ m1) -Hr assoc. }
   exists m2; split; [exists rs|done].
   by constructor; first split_and!; auto.
 Qed.

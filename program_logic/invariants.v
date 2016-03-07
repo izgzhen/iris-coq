@@ -14,7 +14,7 @@ Instance: Params (@inv) 3.
 Typeclasses Opaque inv.
 
 Section inv.
-Context {Λ : language} {Σ : rFunctor}.
+Context {Λ : language} {Σ : iFunctor}.
 Implicit Types i : positive.
 Implicit Types N : namespace.
 Implicit Types P Q R : iProp Λ Σ.

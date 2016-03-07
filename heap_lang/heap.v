@@ -15,7 +15,7 @@ Class heapG Σ := HeapG {
   heap_name : gname
 }.
 (** The Functor we need. *)
-Definition heapGF : rFunctor := authGF heapR.
+Definition heapGF : gFunctor := authGF heapR.
 
 Definition to_heap : state → heapR := fmap (λ v, Frac 1 (DecAgree v)).
 Definition of_heap : heapR → state :=
@@ -43,7 +43,7 @@ Notation "l ↦{ q } v" := (heap_mapsto l q v)
 Notation "l ↦ v" := (heap_mapsto l 1 v) (at level 20) : uPred_scope.
 
 Section heap.
-  Context {Σ : rFunctorG}.
+  Context {Σ : gFunctors}.
   Implicit Types N : namespace.
   Implicit Types P Q : iPropG heap_lang Σ.
   Implicit Types Φ : val → iPropG heap_lang Σ.

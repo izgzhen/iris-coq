@@ -7,7 +7,7 @@ Import uPred.
 Local Hint Extern 0 (language.reducible _ _) => do_step ltac:(eauto 2).
 
 Section lifting.
-Context {Σ : rFunctor}.
+Context {Σ : iFunctor}.
 Implicit Types P Q : iProp heap_lang Σ.
 Implicit Types Φ : val → iProp heap_lang Σ.
 Implicit Types K : ectx.

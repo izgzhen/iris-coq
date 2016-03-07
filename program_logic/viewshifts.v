@@ -18,7 +18,7 @@ Notation "P ={ E }=> Q" := (True ⊑ vs E E P%I Q%I)
   (at level 199, E at level 50, format "P  ={ E }=>  Q") : C_scope.
 
 Section vs.
-Context {Λ : language} {Σ : rFunctor}.
+Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q R : iProp Λ Σ.
 Implicit Types N : namespace.
 
@@ -114,10 +114,11 @@ Lemma vs_own_updateP E γ a φ :
   a ~~>: φ → own γ a ={E}=> ∃ a', ■ φ a' ∧ own γ a'.
 Proof. by intros; apply vs_alt, own_updateP. Qed.
 
-Lemma vs_own_updateP_empty `{Empty A, !CMRAIdentity A} E γ φ :
-  ∅ ~~>: φ → True ={E}=> ∃ a', ■ φ a' ∧ own γ a'.
-Proof. by intros; eapply vs_alt, own_updateP_empty. Qed.
-
 Lemma vs_update E γ a a' : a ~~> a' → own γ a ={E}=> own γ a'.
 Proof. by intros; apply vs_alt, own_update. Qed.
+
+Lemma vs_own_empty `{Empty A, !CMRAIdentity A} E γ :
+  True ={E}=> own γ ∅.
+Proof. by intros; eapply vs_alt, own_empty. Qed.
+
 End vs_ghost.

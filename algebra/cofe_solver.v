@@ -11,7 +11,8 @@ Arguments solution_unfold {_} _.
 Arguments solution_fold {_} _.
 
 Module solver. Section solver.
-Context (F : cFunctor) `{Finhab : Inhabited (F unitC)}.
+Context (F : cFunctor) `{Fcontr : cFunctorContractive F}
+        `{Finhab : Inhabited (F unitC)}.
 Notation map := (cFunctor_map F).
 
 Fixpoint A (k : nat) : cofeT :=

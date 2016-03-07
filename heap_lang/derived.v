@@ -12,7 +12,7 @@ Notation Skip := (Seq (Lit LitUnit) (Lit LitUnit)).
 Notation Match e0 x1 e1 x2 e2 := (Case e0 (Lam x1 e1) (Lam x2 e2)).
 
 Section derived.
-Context {Σ : rFunctor}.
+Context {Σ : iFunctor}.
 Implicit Types P Q : iProp heap_lang Σ.
 Implicit Types Φ : val → iProp heap_lang Σ.
 

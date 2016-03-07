@@ -15,7 +15,7 @@ Infix "||" := ParV : expr_scope.
 Infix "||" := Par : expr_scope.
 
 Section proof.
-Context {Σ : rFunctorG} `{!heapG Σ, !spawnG Σ}.
+Context {Σ : gFunctors} `{!heapG Σ, !spawnG Σ}.
 Context (heapN N : namespace).
 Local Notation iProp := (iPropG heap_lang Σ).
 

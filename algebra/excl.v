@@ -201,14 +201,10 @@ Definition exclC_map {A B} (f : A -n> B) : exclC A -n> exclC B :=
 Instance exclC_map_ne A B n : Proper (dist n ==> dist n) (@exclC_map A B).
 Proof. by intros f f' Hf []; constructor; apply Hf. Qed.
 
-Program Definition exclF (F : cFunctor) : rFunctor := {|
+Program Definition exclRF (F : cFunctor) : rFunctor := {|
   rFunctor_car A B := exclR (cFunctor_car F A B);
   rFunctor_map A1 A2 B1 B2 fg := exclC_map (cFunctor_map F fg)
 |}.
-Next Obligation.
-  intros A1 A2 B1 B2 n x1 x2 ??.
-  by apply exclC_map_ne, cFunctor_contractive.
-Qed.
 Next Obligation.
   intros F A B x; simpl. rewrite -{2}(excl_map_id x).
   apply excl_map_ext=>y. by rewrite cFunctor_id.
@@ -216,4 +212,15 @@ Qed.
 Next Obligation.
   intros F A1 A2 A3 B1 B2 B3 f g f' g' x; simpl. rewrite -excl_map_compose.
   apply excl_map_ext=>y; apply cFunctor_compose.
+Qed.
+
+Instance exclRF_ne F : cFunctorNe F → rFunctorNe (exclRF F).
+Proof.
+  intros A1 A2 B1 B2 n x1 x2 ??. by apply exclC_map_ne, cFunctor_ne.
+Qed.
+Instance exclRF_contractive F :
+  cFunctorContractive F → rFunctorContractive (exclRF F).
+Proof.
+  intros A1 A2 B1 B2 n x1 x2 ??.
+  by apply exclC_map_ne, cFunctor_contractive.
 Qed.

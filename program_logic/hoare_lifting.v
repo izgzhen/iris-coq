@@ -13,7 +13,7 @@ Local Notation "{{ P } } ef ?@ E {{ Φ } }" :=
    format "{{  P  } }  ef  ?@  E  {{  Φ  } }") : C_scope.
 
 Section lifting.
-Context {Λ : language} {Σ : rFunctor}.
+Context {Λ : language} {Σ : iFunctor}.
 Implicit Types e : expr Λ.
 Implicit Types P Q R : iProp Λ Σ.
 Implicit Types Ψ : val Λ → iProp Λ Σ.

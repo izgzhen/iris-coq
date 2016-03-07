@@ -194,9 +194,6 @@ Program Definition optionCF (F : cFunctor) : cFunctor := {|
   cFunctor_map A1 A2 B1 B2 fg := optionC_map (cFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, cFunctor_contractive.
-Qed.
-Next Obligation.
   intros F A B x. rewrite /= -{2}(option_fmap_id x).
   apply option_fmap_setoid_ext=>y; apply cFunctor_id.
 Qed.
@@ -205,13 +202,20 @@ Next Obligation.
   apply option_fmap_setoid_ext=>y; apply cFunctor_compose.
 Qed.
 
+Instance optionCF_ne F : cFunctorNe F → cFunctorNe (optionCF F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, cFunctor_ne.
+Qed.
+Instance optionCF_contractive F :
+  cFunctorContractive F → cFunctorContractive (optionCF F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, cFunctor_contractive.
+Qed.
+
 Program Definition optionRF (F : rFunctor) : rFunctor := {|
   rFunctor_car A B := optionR (rFunctor_car F A B);
   rFunctor_map A1 A2 B1 B2 fg := optionC_map (rFunctor_map F fg)
 |}.
-Next Obligation.
-  by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_contractive.
-Qed.
 Next Obligation.
   intros F A B x. rewrite /= -{2}(option_fmap_id x).
   apply option_fmap_setoid_ext=>y; apply rFunctor_id.
@@ -219,4 +223,14 @@ Qed.
 Next Obligation.
   intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -option_fmap_compose.
   apply option_fmap_setoid_ext=>y; apply rFunctor_compose.
+Qed.
+
+Instance optionRF_ne F : rFunctorNe F → rFunctorNe (optionRF F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_ne.
+Qed.
+Instance optionRF_contractive F :
+  rFunctorContractive F → rFunctorContractive (optionRF F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_contractive.
 Qed.

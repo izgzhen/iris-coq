@@ -10,17 +10,17 @@ Import uPred.
 (* Not bundling heapG, as it may be shared with other users. *)
 Class barrierG Σ := BarrierG {
   barrier_stsG :> stsG heap_lang Σ sts;
-  barrier_savedPropG :> savedPropG heap_lang Σ laterCF;
+  barrier_savedPropG :> savedPropG heap_lang Σ (laterCF idCF);
 }.
 (** The Functors we need. *)
-Definition barrierGF : rFunctors := [stsGF sts; agreeRF laterCF].
+Definition barrierGF : gFunctorList := [stsGF sts; savedPropGF (laterCF idCF)].
 (* Show and register that they match. *)
 Instance inGF_barrierG `{H : inGFs heap_lang Σ barrierGF} : barrierG Σ.
 Proof. destruct H as (?&?&?). split; apply _. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.
-Context {Σ : rFunctorG} `{!heapG Σ, !barrierG Σ}.
+Context {Σ : gFunctors} `{!heapG Σ, !barrierG Σ}.
 Context (heapN N : namespace).
 Local Notation iProp := (iPropG heap_lang Σ).
 
@@ -119,7 +119,7 @@ Proof.
   apply forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
   rewrite !assoc. apply pvs_wand_r.
   (* The core of this proof: Allocating the STS and the saved prop. *)
-  eapply sep_elim_True_r; first by eapply (saved_prop_alloc (F:=laterCF) _ (Next P)).
+  eapply sep_elim_True_r; first by eapply (saved_prop_alloc (F:=laterCF idCF) _ (Next P)).
   rewrite pvs_frame_l. apply pvs_strip_pvs. rewrite sep_exist_l.
   apply exist_elim=>i.
   trans (pvs ⊤ ⊤ (heap_ctx heapN ★
@@ -182,7 +182,7 @@ Proof.
   rewrite {1}/recv /barrier_ctx. rewrite !sep_exist_r.
   apply exist_elim=>γ. rewrite !sep_exist_r. apply exist_elim=>P.
   rewrite !sep_exist_r. apply exist_elim=>Q. rewrite !sep_exist_r.
-  apply exist_elim=>i. rewrite -!assoc. apply const_elim_sep_l=>?.
+  apply exist_elim=>i. rewrite -!(assoc (★)%I). apply const_elim_sep_l=>?.
   wp_focus (! _)%E.
   (* I think some evars here are better than repeating *everything* *)
   eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
@@ -231,7 +231,7 @@ Proof.
   rename P1 into R1. rename P2 into R2. intros HN.
   rewrite {1}/recv /barrier_ctx. 
   apply exist_elim=>γ. rewrite sep_exist_r.  apply exist_elim=>P. 
-  apply exist_elim=>Q. apply exist_elim=>i. rewrite -!assoc.
+  apply exist_elim=>Q. apply exist_elim=>i. rewrite -!(assoc (★)%I).
   apply const_elim_sep_l=>?. rewrite -pvs_trans'.
   (* I think some evars here are better than repeating *everything* *)
   eapply pvs_mk_fsa, (sts_fsaS _ pvs_fsa) with (N0:=N) (γ0:=γ); simpl;

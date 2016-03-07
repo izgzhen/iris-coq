@@ -357,9 +357,6 @@ Program Definition mapCF K `{Countable K} (F : cFunctor) : cFunctor := {|
   cFunctor_map A1 A2 B1 B2 fg := mapC_map (cFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros K ?? F A1 A2 B1 B2 n f g ?; apply mapC_map_ne, cFunctor_contractive.
-Qed.
-Next Obligation.
   intros K ?? F A B x. rewrite /= -{2}(map_fmap_id x).
   apply map_fmap_setoid_ext=>y ??; apply cFunctor_id.
 Qed.
@@ -368,13 +365,20 @@ Next Obligation.
   apply map_fmap_setoid_ext=>y ??; apply cFunctor_compose.
 Qed.
 
+Instance mapCF_ne K `{Countable K} F : cFunctorNe F → cFunctorNe (mapCF K F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply mapC_map_ne, cFunctor_ne.
+Qed.
+Instance mapCF_contractive K `{Countable K} F :
+  cFunctorContractive F → cFunctorContractive (mapCF K F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply mapC_map_ne, cFunctor_contractive.
+Qed.
+
 Program Definition mapRF K `{Countable K} (F : rFunctor) : rFunctor := {|
   rFunctor_car A B := mapR K (rFunctor_car F A B);
   rFunctor_map A1 A2 B1 B2 fg := mapC_map (rFunctor_map F fg)
 |}.
-Next Obligation.
-  by intros K ?? F A1 A2 B1 B2 n f g ?; apply mapC_map_ne, rFunctor_contractive.
-Qed.
 Next Obligation.
   intros K ?? F A B x. rewrite /= -{2}(map_fmap_id x).
   apply map_fmap_setoid_ext=>y ??; apply rFunctor_id.
@@ -382,4 +386,14 @@ Qed.
 Next Obligation.
   intros K ?? F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -map_fmap_compose.
   apply map_fmap_setoid_ext=>y ??; apply rFunctor_compose.
+Qed.
+
+Instance mapRF_ne K `{Countable K} F : rFunctorNe F → rFunctorNe (mapRF K F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply mapC_map_ne, rFunctor_ne.
+Qed.
+Instance mapRF_contractive K `{Countable K} F :
+  rFunctorContractive F → rFunctorContractive (mapRF K F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply mapC_map_ne, rFunctor_contractive.
 Qed.

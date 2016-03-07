@@ -102,16 +102,19 @@ Program Definition uPredCF (F : rFunctor) : cFunctor := {|
   cFunctor_map A1 A2 B1 B2 fg := uPredC_map (rFunctor_map F (fg.2, fg.1))
 |}.
 Next Obligation.
-  intros F A1 A2 B1 B2 n P Q HPQ.
-  apply uPredC_map_ne, rFunctor_contractive=> i ?; split; by apply HPQ.
-Qed.
-Next Obligation.
   intros F A B P; simpl. rewrite -{2}(uPred_map_id P).
   apply uPred_map_ext=>y. by rewrite rFunctor_id.
 Qed.
 Next Obligation.
   intros F A1 A2 A3 B1 B2 B3 f g f' g' P; simpl. rewrite -uPred_map_compose.
   apply uPred_map_ext=>y; apply rFunctor_compose.
+Qed.
+
+Instance uPredCF_contractive F :
+  rFunctorContractive F → cFunctorContractive (uPredCF F).
+Proof.
+  intros ? A1 A2 B1 B2 n P Q HPQ.
+  apply uPredC_map_ne, rFunctor_contractive=> i ?; split; by apply HPQ.
 Qed.
 
 (** logical entailement *)

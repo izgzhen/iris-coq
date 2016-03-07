@@ -4,7 +4,7 @@ Definition ownI {Λ Σ} (i : positive) (P : iProp Λ Σ) : iProp Λ Σ :=
   uPred_ownM (Res {[ i := to_agree (Next (iProp_unfold P)) ]} ∅ ∅).
 Arguments ownI {_ _} _ _%I.
 Definition ownP {Λ Σ} (σ: state Λ) : iProp Λ Σ := uPred_ownM (Res ∅ (Excl σ) ∅).
-Definition ownG {Λ Σ} (m: iGst Λ Σ) : iProp Λ Σ := uPred_ownM (Res ∅ ∅ (Some m)).
+Definition ownG {Λ Σ} (m: iGst Λ Σ) : iProp Λ Σ := uPred_ownM (Res ∅ ∅ m).
 Instance: Params (@ownI) 3.
 Instance: Params (@ownP) 2.
 Instance: Params (@ownG) 2.
@@ -12,7 +12,7 @@ Instance: Params (@ownG) 2.
 Typeclasses Opaque ownI ownG ownP.
 
 Section ownership.
-Context {Λ : language} {Σ : rFunctor}.
+Context {Λ : language} {Σ : iFunctor}.
 Implicit Types r : iRes Λ Σ.
 Implicit Types σ : state Λ.
 Implicit Types P : iProp Λ Σ.
@@ -61,10 +61,12 @@ Lemma always_ownG m : unit m ≡ m → (□ ownG m)%I ≡ ownG m.
 Proof. by intros <-; rewrite always_ownG_unit. Qed.
 Lemma ownG_valid m : ownG m ⊑ ✓ m.
 Proof.
-  rewrite /ownG uPred.ownM_valid res_validI /= option_validI; auto with I.
+  rewrite /ownG uPred.ownM_valid res_validI /=; auto with I.
 Qed.
 Lemma ownG_valid_r m : ownG m ⊑ (ownG m ★ ✓ m).
 Proof. apply (uPred.always_entails_r _ _), ownG_valid. Qed.
+Lemma ownG_empty : True ⊑ (ownG ∅ : iProp Λ Σ).
+Proof. apply uPred.ownM_empty. Qed.
 Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
 Proof. rewrite /ownG; apply _. Qed.
 Global Instance ownG_unit_always_stable m : AlwaysStable (ownG (unit m)).
@@ -88,7 +90,7 @@ Proof.
   rewrite /uPred_holds /= res_includedN /= Excl_includedN //.
   rewrite (timeless_iff n). naive_solver (apply cmra_empty_leastN).
 Qed.
-Lemma ownG_spec n r m : (ownG m) n r ↔ Some m ≼{n} gst r.
+Lemma ownG_spec n r m : (ownG m) n r ↔ m ≼{n} gst r.
 Proof.
   rewrite /ownG; uPred.unseal.
   rewrite /uPred_holds /= res_includedN; naive_solver (apply cmra_empty_leastN).

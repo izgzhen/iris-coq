@@ -1,12 +1,17 @@
 From algebra Require Export agree.
-From program_logic Require Export global_functor.
+From program_logic Require Export ghost_ownership.
 Import uPred.
 
-Class savedPropG (Λ : language) (Σ : rFunctorG) (F : cFunctor) :=
-  saved_prop_inG :> inG Λ Σ (agreeR (F (iPreProp Λ (globalF Σ)))).
-
-Instance inGF_savedPropG `{inGF Λ Σ (agreeRF F)} : savedPropG Λ Σ F.
-Proof. apply: inGF_inG. Qed.
+Class savedPropG (Λ : language) (Σ : gFunctors) (F : cFunctor) :=
+  SavedPropG {
+    saved_prop_F_contractive :> cFunctorContractive F;
+    saved_prop_inG :> inG Λ Σ (agreeR (F (iPreProp Λ (globalF Σ))));
+  }.
+Definition savedPropGF (F : cFunctor) `{cFunctorContractive F} :
+  gFunctor := GFunctor (agreeRF F).
+Instance inGF_savedPropG `{cFunctorContractive F}
+         `{inGF Λ Σ (savedPropGF F)} : savedPropG Λ Σ F.
+Proof. split; try apply _; apply: inGF_inG. Qed.
 
 Definition saved_prop_own `{savedPropG Λ Σ F}
     (γ : gname) (x : F (iPropG Λ Σ)) : iPropG Λ Σ :=

@@ -20,15 +20,15 @@ Class spawnG Σ := SpawnG {
   spawn_tokG :> inG heap_lang Σ (exclR unitC);
 }.
 (** The functor we need. *)
-Definition spawnGF : rFunctors := [constRF (exclR unitC)].
+Definition spawnGF : gFunctorList := [GFunctor (constRF (exclR unitC))].
 (* Show and register that they match. *)
 Instance inGF_spawnG
-  `{inGF heap_lang Σ (constRF (exclR unitC))} : spawnG Σ.
-Proof. split. apply: inGF_inG. Qed.
+  `{H : inGFs heap_lang Σ spawnGF} : spawnG Σ.
+Proof. destruct H as (?&?). split. apply: inGF_inG. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.
-Context {Σ : rFunctorG} `{!heapG Σ, !spawnG Σ}.
+Context {Σ : gFunctors} `{!heapG Σ, !spawnG Σ}.
 Context (heapN N : namespace).
 Local Notation iProp := (iPropG heap_lang Σ).
 

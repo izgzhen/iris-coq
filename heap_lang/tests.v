@@ -70,7 +70,7 @@ Section LiftingTests.
 End LiftingTests.
 
 Section ClosedProofs.
-  Definition Σ : rFunctorG := #[ heapGF ].
+  Definition Σ : gFunctors := #[ heapGF ].
   Notation iProp := (iPropG heap_lang Σ).
 
   Lemma heap_e_closed σ : {{ ownP σ : iProp }} heap_e {{ λ v, v = #2 }}.

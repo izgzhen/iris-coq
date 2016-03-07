@@ -1,5 +1,5 @@
 From algebra Require Export sts upred_tactics.
-From program_logic Require Export invariants global_functor.
+From program_logic Require Export invariants ghost_ownership.
 Import uPred.
 
 (** The CMRA we need. *)
@@ -9,7 +9,7 @@ Class stsG Λ Σ (sts : stsT) := StsG {
 }.
 Coercion sts_inG : stsG >-> inG.
 (** The Functor we need. *)
-Definition stsGF (sts : stsT) : rFunctor := constRF (stsR sts).
+Definition stsGF (sts : stsT) : gFunctor := GFunctor (constRF (stsR sts)).
 (* Show and register that they match. *)
 Instance inGF_stsG sts `{inGF Λ Σ (stsGF sts)}
   `{Inhabited (sts.state sts)} : stsG Λ Σ sts.
@@ -58,8 +58,6 @@ Section sts.
   Implicit Types γ : gname.
   Implicit Types S : sts.states sts.
   Implicit Types T : sts.tokens sts.
-
-  (** Setoids *)
 
   (* The same rule as implication does *not* hold, as could be shown using
      sts_frag_included. *)

@@ -12,7 +12,7 @@ Definition client : expr [] :=
     (^(worker 12) '"b" '"y" || ^(worker 17) '"b" '"y").
 
 Section client.
-  Context {Σ : rFunctorG} `{!heapG Σ, !barrierG Σ, !spawnG Σ} (heapN N : namespace).
+  Context {Σ : gFunctors} `{!heapG Σ, !barrierG Σ, !spawnG Σ} (heapN N : namespace).
   Local Notation iProp := (iPropG heap_lang Σ).
 
   Definition y_inv q y : iProp :=
@@ -33,7 +33,7 @@ Section client.
     rewrite /worker. wp_lam. wp_let. ewp apply wait_spec.
     rewrite comm. apply sep_mono_r. apply wand_intro_l.
     rewrite sep_exist_r. apply exist_elim=>f. wp_seq.
-    (* TODO these aprenthesis are rather surprising. *)
+    (* TODO these parenthesis are rather surprising. *)
     (ewp apply: (wp_load heapN _ _ q f)); eauto with I.
     strip_later. (* hu, shouldn't it do that? *)
     rewrite -assoc. apply sep_mono_r. apply wand_intro_l.
@@ -76,7 +76,7 @@ Qed.
 End client.
 
 Section ClosedProofs.
-  Definition Σ : rFunctorG := #[ heapGF ; barrierGF ; spawnGF ].
+  Definition Σ : gFunctors := #[ heapGF ; barrierGF ; spawnGF ].
   Notation iProp := (iPropG heap_lang Σ).
 
   Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ λ v, True }}.
