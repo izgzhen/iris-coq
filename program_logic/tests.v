@@ -9,7 +9,7 @@ End ModelTest.
 Module SavedPropTest.
   (* Test if we can really go "crazy higher order" *)
   Section sec.
-    Definition F := (cofe_morCF idCF idCF).
+    Definition F : cFunctor := ( ∙ -n> ∙ ).
     Definition Σ : gFunctors := #[ savedPropGF F ].
     Context {Λ : language}.
     Notation iProp := (iPropG Λ Σ).

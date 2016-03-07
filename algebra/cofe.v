@@ -347,6 +347,9 @@ Structure cFunctor := CFunctor {
 Existing Instance cFunctor_ne.
 Instance: Params (@cFunctor_map) 5.
 
+Delimit Scope cFunctor_scope with CF.
+Bind Scope cFunctor_scope with cFunctor.
+
 Class cFunctorContractive (F : cFunctor) :=
   cFunctor_contractive A1 A2 B1 B2 :> Contractive (@cFunctor_map F A1 A2 B1 B2).
 
@@ -411,6 +414,7 @@ Proof.
   intros ?? A1 A2 B1 B2 n [f g] [f' g'] Hfg; simpl in *.
   apply cofe_morC_map_ne; apply cFunctor_contractive=>i ?; split; by apply Hfg.
 Qed.
+
 
 (** Discrete cofe *)
 Section discrete_cofe.
@@ -518,3 +522,10 @@ Proof.
   intros A1 A2 B1 B2 n fg fg' Hfg.
   apply laterC_map_contractive => i ?. by apply cFunctor_ne, Hfg.
 Qed.
+
+(** Notation for writing functors *)
+Notation "∙" := idCF : cFunctor_scope.
+Notation "F1 -n> F2" := (cofe_morCF F1%CF F2%CF) : cFunctor_scope.
+Notation "( F1 , F2 , .. , Fn )" := (prodCF .. (prodCF F1%CF F2%CF) .. Fn%CF) : cFunctor_scope.
+Notation "▶ F"  := (laterCF F%CF) (at level 20, right associativity) : cFunctor_scope.
+Coercion constCF : cofeT >-> cFunctor.

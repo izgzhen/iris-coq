@@ -5,7 +5,7 @@ Import uPred.
 Class savedPropG (Λ : language) (Σ : gFunctors) (F : cFunctor) :=
   saved_prop_inG :> inG Λ Σ (agreeR (laterC (F (iPreProp Λ (globalF Σ))))).
 Definition savedPropGF (F : cFunctor) : gFunctor :=
-  GFunctor (agreeRF (laterCF F)).
+  GFunctor (agreeRF (▶ F)).
 Instance inGF_savedPropG  `{inGF Λ Σ (savedPropGF F)} : savedPropG Λ Σ F.
 Proof. apply: inGF_inG. Qed.
 

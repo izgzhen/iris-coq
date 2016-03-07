@@ -34,7 +34,7 @@ End iProp_solution_sig.
 
 Module Export iProp_solution : iProp_solution_sig.
 Definition iProp_result (Λ : language) (Σ : iFunctor) :
-  solution (uPredCF (resRF Λ (laterCF idCF) Σ)) := solver.result _.
+  solution (uPredCF (resRF Λ (▶ ∙) Σ)) := solver.result _.
 
 Definition iPreProp (Λ : language) (Σ : iFunctor) : cofeT := iProp_result Λ Σ.
 Definition iGst (Λ : language) (Σ : iFunctor) : cmraT := Σ (iPreProp Λ Σ).
