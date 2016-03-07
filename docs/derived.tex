@@ -1,4 +1,12 @@
-\section{Derived Program logic}\label{sec:proglog}
+\section{Derived proof rules}
+
+\subsection{Base logic}
+
+\ralf{Give the most important derived rules.}
+
+\subsection{Program logic}
+
+\ralf{Sync this with Coq.}
 
 Hoare triples and view shifts are syntactic sugar for weakest (liberal) preconditions and primitive view shifts, respectively:
 \[
@@ -13,16 +21,9 @@ We write just one mask for a view shift when $\mask_1 = \mask_2$.
 The convention for omitted masks is generous:
 An omitted $\mask$ is $\top$ for Hoare triples and $\emptyset$ for view shifts.
 
-% PDS: We're repeating ourselves. We gave Γ conventions and we're about to give Θ conventions. Also, the scope of "Below" is unclear.
-% Below, we implicitly assume the same context for all judgements which don't have an explicit context at \emph{all} pre-conditions \emph{and} the conclusion.
+We write $\provesalways$ to denote judgments that can only be extended with a boxed proof context, in contrast to our usual convention of allowing the context to be extended with any assertions.
 
-Henceforward, we implicitly assume a proof context, $\pfctx$, is added to every constituent of the rules.
-Generally, this is an arbitrary proof context.
-We write $\provesalways$ to denote judgments that can only be extended with a boxed proof context.
-
-\ralf{Give the actual base rules from the Coq development instead}
-
-\subsection{Hoare triples}
+\paragraph{Hoare triples.}
 \begin{mathpar}
 \inferH{Ret}
   {}
@@ -61,7 +62,7 @@ We write $\provesalways$ to denote judgments that can only be extended with a bo
   {\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask \uplus \mask']}
 \end{mathpar}
 
-\subsection{View shifts}
+\paragraph{View shifts.}
 
 \begin{mathpar}
 \inferH{NewInv}
@@ -96,10 +97,9 @@ We write $\provesalways$ to denote judgments that can only be extended with a bo
 \end{mathpar}
 
 \vspace{5pt}
-Note that $\timeless{\prop}$ means that $\prop$ does not depend on the step index.
-Furthermore, $$\melt \mupd \meltsB \eqdef \always{\All \melt_f. \melt \sep \melt_f \Ra \Exists \meltB \in \meltsB. \meltB \sep \melt_f}$$
 
 \subsection{Derived rules}
+\ralf{Move all these to the two paragraphs above.}
 
 \paragraph{Derived structural rules.}
 The following are easily derived by unfolding the sugar for Hoare triples and view shifts.
@@ -136,45 +136,6 @@ The following are easily derived by unfolding the sugar for Hoare triples and vi
   {}
   {\FALSE \vs[\mask_1][\mask_2] \prop }
 \end{mathpar}
-The proofs all follow the same pattern, so we only show two of them in detail.
-\begin{proof}[Proof of \ruleref{Exist}]
-	After unfolding the syntactic sugar for Hoare triples and removing the boxes from premise and conclusion, our goal becomes
-	\[
-		(\Exists \var. \prop(\var)) \Ra \dynA{\expr}{\Lam\val. \propB}{\mask}
-	\]
-	(remember that $\var$ is free in $\prop$) and the premise reads
-	\[
-		\All \var. \prop(\var) \Ra \dynA{\expr}{\Lam\val. \propB}{\mask}.
-	\]
-	Let $\var$ be given and assume $\prop(\var)$.
-	To show $\dynA{\expr}{\Lam\val. \propB}{\mask}$, apply the premise to $\var$ and $\prop(\var)$.
- 
-	For the other direction, assume
-	\[
-		\hoare{\Exists \var. \prop(\var)}{\expr}{\Ret\val. \propB}[\mask]
-	\]
-	and let $\var$ be given.
-	We have to show $\hoare{\prop(\var)}{\expr}{\Ret\val. \propB}[\mask]$.
-	This trivially follows from \ruleref{Csq} with $\prop(\var) \Ra \Exists \var. \prop(\var)$.
-\end{proof}
-
-\begin{proof}[Proof of \ruleref{BoxOut}]
-  After unfolding the syntactic sugar for Hoare triples, our goal becomes
-  \begin{equation}\label{eq:boxin:goal}
-    \always\pfctx \proves \always\bigl(\prop\land\always \propB \Ra \dynA{\expr}{\Lam\val. \propC}{\mask}\bigr)
-  \end{equation}
-  while our premise reads
-  \begin{equation}\label{eq:boxin:as}
-    \always\pfctx, \always\propB \proves \always(\prop \Ra \dynA{\expr}{\Lam\val. \propC}{\mask})
-  \end{equation}
-  By the introduction rules for $\always$ and implication, it suffices to show
-  \[  (\always\pfctx), \prop,\always \propB \proves \dynA{\expr}{\Lam\val. \propC}{\mask} \]
-  By modus ponens and \ruleref{Necessity}, it suffices to show~\eqref{eq:boxin:as}, which is exactly our assumption.
-  
-  For the other direction, assume~\eqref{eq:boxin:goal}. We have to show~\eqref{eq:boxin:as}. By \ruleref{AlwaysIntro} and implication introduction, it suffices to show
-  \[  (\always\pfctx), \prop,\always \propB \proves \dynA{\expr}{\Lam\val. \propC}{\mask} \]
-  which easily follows from~\eqref{eq:boxin:goal}.
-\end{proof}
 
 \paragraph{Derived rules for invariants.}
 Invariants can be opened around atomic expressions and view shifts.
@@ -196,268 +157,194 @@ Invariants can be opened around atomic expressions and view shifts.
   {\knowInv{\iname}{\prop} \proves \propB \vs[\mask_1 \uplus \{ \iname \}][\mask_2 \uplus \{ \iname \}] \propC}
 \end{mathpar}
 
-\begin{proof}[Proof of \ruleref{Inv}]
-  Use \ruleref{ACsq} with $\mask_1 \eqdef \mask \cup \{\iname\}$, $\mask_2 \eqdef \mask$.
-  The view shifts are obtained by \ruleref{InvOpen} and \ruleref{InvClose} with framing of $\mask$ and $\prop$ or $\propB$, respectively.
-\end{proof}
-
-\begin{proof}[Proof of \ruleref{VSInv}]
-Analogous to the proof of \ruleref{Inv}, using \ruleref{VSTrans} instead of \ruleref{ACsq}.
-\end{proof}
-
-\subsubsection{Unsound rules}
-
-Some rule suggestions (or rather, wishes) keep coming up, which are unsound. We collect them here.
-\begin{mathpar}
-	\infer
-	{P \vs Q}
-	{\later P \vs \later Q}
-	\and
-	\infer
-	{\later(P \vs Q)}
-	{\later P \vs \later Q}
-\end{mathpar}
-
-Of course, the second rule implies the first, so let's focus on that.
-Since implications work under $\later$, from $\later P$ we can get $\later \pvs{Q}$.
-If we now try to prove $\pvs{\later Q}$, we will be unable to establish world satisfaction in the new world:
-We have no choice but to use $\later \pvs{Q}$ at one step index below what we are operating on (because we have it under a $\later$).
-We can easily get world satisfaction for that lower step-index (by downwards-closedness of step-indexed predicates).
-We can, however, not make much use of the world satisfaction that we get out, becaase it is one step-index too low.
-
-\subsection{Adequacy}
-
-The adequacy statement reads as follows:
-\begin{align*}
- &\All \mask, \expr, \val, \pred, i, \state, \state', \tpool'.
- \\&( \proves \hoare{\ownPhys\state}{\expr}{x.\; \pred(x)}[\mask]) \implies
- \\&\cfg{\state}{[i \mapsto \expr]} \step^\ast
-     \cfg{\state'}{[i \mapsto \val] \uplus \tpool'} \implies
-     \\&\pred(\val)
-\end{align*}
-where $\pred$ can mention neither resources nor invariants.
-
-\subsection{Axiom lifting}\label{sec:lifting}
-
-The following lemmas help in proving axioms for a particular language.
-The first applies to expressions with side-effects, and the second to side-effect-free expressions.
-\dave{Update the others, and the example, wrt the new treatment of $\predB$.}
-\begin{align*}
- &\All \expr, \state, \pred, \prop, \propB, \mask. \\
- &\textlog{reducible}(e) \implies \\
- &(\All \expr', \state'. \cfg{\state}{\expr} \step \cfg{\state'}{\expr'} \implies \pred(\expr', \state')) \implies \\
- &{} \proves \bigl( (\All \expr', \state'. \pred (\expr', \state') \Ra \hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask]) \Ra \hoare{ \later \prop * \ownPhys{\state} }{\expr}{\Ret\val. \propB}[\mask] \bigr) \\
- \quad\\
- &\All \expr, \pred, \prop, \propB, \mask. \\
- &\textlog{reducible}(e) \implies \\
- &(\All \state, \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \state_2 = \state \land \pred(\expr_2)) \implies \\
- &{} \proves \bigl( (\All \expr'. \pred(\expr') \Ra \hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask]) \Ra \hoare{\later\prop}{\expr}{\Ret\val. \propB}[\mask] \bigr)
-\end{align*}
-Note that $\pred$ is a meta-logic predicate---it does not depend on any world or resources being owned.
-
-The following specializations cover all cases of a heap-manipulating lambda calculus like $F_{\mu!}$.
-\begin{align*}
- &\All \expr, \expr', \prop, \propB, \mask. \\
- &\textlog{reducible}(e) \implies \\
- &(\All \state, \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \state_2 = \state \land \expr_2 = \expr') \implies \\
- &{} \proves (\hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask] \Ra \hoare{\later\prop}{\expr}{\Ret\val. \propB}[\mask] ) \\
- \quad \\
- &\All \expr, \state, \pred, \mask. \\
- &\textlog{atomic}(e) \implies \\
- &\bigl(\All \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \pred(\expr_2, \state_2)\bigr) \implies \\
- &{} \proves (\hoare{ \ownPhys{\state} }{\expr}{\Ret\val. \Exists\state'. \ownPhys{\state'} \land \pred(\val, \state') }[\mask] )
-\end{align*}
-The first is restricted to deterministic pure reductions, like $\beta$-reduction.
-The second is suited to proving triples for (possibly non-deterministic) atomic expressions; for example, with $\expr \eqdef \;!\ell$ (dereferencing $\ell$) and $\state \eqdef h \mtimes \ell \mapsto \valB$ and $\pred(\val, \state') \eqdef \state' = (h \mtimes \ell \mapsto \valB) \land \val = \valB$, one obtains the axiom $\All h, \ell, \valB. \hoare{\ownPhys{h \mtimes \ell \mapsto \valB}}{!\ell}{\Ret\val. \val = \valB \land \ownPhys{h \mtimes \ell \mapsto \valB} }$.
-%Axioms for CAS-like operations can be obtained by first deriving rules for the two possible cases, and then using the disjunction rule.
-
-
+\clearpage
 \section{Derived constructions}
 
-In this section we describe some constructions that we will use throughout the rest of the appendix.
+In this section we describe some derived constructions that are generally useful and language-independent.
 
-\subsection{Global monoid}
+\ralf{Describe at least global monoid and invariant namespaces.}
+% \subsection{Global monoid}
 
-Hereinafter we assume the global monoid (served up as a parameter to Iris) is obtained from a family of monoids $(M_i)_{i \in I}$ by first applying the construction for finite partial functions to each~(\Sref{sec:fpfunm}), and then applying the product construction~(\Sref{sec:prodm}):
-\[ M \eqdef \prod_{i \in I} \textdom{GhName} \fpfn M_i \]
-We don't care so much about what concretely $\textdom{GhName}$ is, as long as it is countable and infinite.
-We write $\ownGhost{\gname}{\melt : M_i}$ (or just $\ownGhost{\gname}{\melt}$ if $M_i$ is clear from the context) for $\ownGGhost{[i \mapsto [\gname \mapsto \melt]]}$ when $\melt \in \mcarp {M_i}$, and for $\FALSE$ when $\melt = \mzero_{M_i}$.
-In other words, $\ownGhost{\gname}{\melt : M_i}$ asserts that in the current state of monoid $M_i$, the name $\gname$ is allocated and has at least value $\melt$.
+% Hereinafter we assume the global monoid (served up as a parameter to Iris) is obtained from a family of monoids $(M_i)_{i \in I}$ by first applying the construction for finite partial functions to each~(\Sref{sec:fpfunm}), and then applying the product construction~(\Sref{sec:prodm}):
+% \[ M \eqdef \prod_{i \in I} \textdom{GhName} \fpfn M_i \]
+% We don't care so much about what concretely $\textdom{GhName}$ is, as long as it is countable and infinite.
+% We write $\ownGhost{\gname}{\melt : M_i}$ (or just $\ownGhost{\gname}{\melt}$ if $M_i$ is clear from the context) for $\ownGGhost{[i \mapsto [\gname \mapsto \melt]]}$ when $\melt \in \mcarp {M_i}$, and for $\FALSE$ when $\melt = \mzero_{M_i}$.
+% In other words, $\ownGhost{\gname}{\melt : M_i}$ asserts that in the current state of monoid $M_i$, the name $\gname$ is allocated and has at least value $\melt$.
 
-From~\ruleref{FpUpd} and the multiplications and frame-preserving updates in~\Sref{sec:prodm} and~\Sref{sec:fpfunm}, we have the following derived rules.
-\begin{mathpar}
-	\axiomH{NewGhost}{
-		\TRUE \vs \Exists\gname. \ownGhost\gname{\melt : M_i}
-	}
-	\and
-	\inferH{GhostUpd}
-    {\melt \mupd_{M_i} B}
-    {\ownGhost\gname{\melt : M_i} \vs \Exists \meltB\in B. \ownGhost\gname{\meltB : M_i}}
-  \and
-  \axiomH{GhostEq}
-    {\ownGhost\gname{\melt : M_i} * \ownGhost\gname{\meltB : M_i} \Lra \ownGhost\gname{\melt\mtimes\meltB : M_i}}
+% From~\ruleref{FpUpd} and the multiplications and frame-preserving updates in~\Sref{sec:prodm} and~\Sref{sec:fpfunm}, we have the following derived rules.
+% \begin{mathpar}
+% 	\axiomH{NewGhost}{
+% 		\TRUE \vs \Exists\gname. \ownGhost\gname{\melt : M_i}
+% 	}
+% 	\and
+% 	\inferH{GhostUpd}
+%     {\melt \mupd_{M_i} B}
+%     {\ownGhost\gname{\melt : M_i} \vs \Exists \meltB\in B. \ownGhost\gname{\meltB : M_i}}
+%   \and
+%   \axiomH{GhostEq}
+%     {\ownGhost\gname{\melt : M_i} * \ownGhost\gname{\meltB : M_i} \Lra \ownGhost\gname{\melt\mtimes\meltB : M_i}}
 
-  \axiomH{GhostUnit}
-    {\TRUE \Ra \ownGhost{\gname}{\munit : M_i}}
+%   \axiomH{GhostUnit}
+%     {\TRUE \Ra \ownGhost{\gname}{\munit : M_i}}
 
-  \axiomH{GhostZero}
-    {\ownGhost\gname{\mzero : M_i} \Ra \FALSE}
+%   \axiomH{GhostZero}
+%     {\ownGhost\gname{\mzero : M_i} \Ra \FALSE}
 
-  \axiomH{GhostTimeless}
-    {\timeless{\ownGhost\gname{\melt : M_i}}}
-\end{mathpar}
+%   \axiomH{GhostTimeless}
+%     {\timeless{\ownGhost\gname{\melt : M_i}}}
+% \end{mathpar}
 
-\subsection{STSs with interpretation}\label{sec:stsinterp}
+% \subsection{STSs with interpretation}\label{sec:stsinterp}
 
-Building on \Sref{sec:stsmon}, after constructing the monoid $\STSMon{\STSS}$ for a particular STS, we can use an invariant to tie an interpretation, $\pred : \STSS \to \Prop$, to the STS's current state, recovering CaReSL-style reasoning~\cite{caresl}.
+% Building on \Sref{sec:stsmon}, after constructing the monoid $\STSMon{\STSS}$ for a particular STS, we can use an invariant to tie an interpretation, $\pred : \STSS \to \Prop$, to the STS's current state, recovering CaReSL-style reasoning~\cite{caresl}.
 
-An STS invariant asserts authoritative ownership of an STS's current state and that state's interpretation:
-\begin{align*}
-  \STSInv(\STSS, \pred, \gname) \eqdef{}& \Exists s \in \STSS. \ownGhost{\gname}{(s, \STSS, \emptyset):\STSMon{\STSS}} * \pred(s) \\
-  \STS(\STSS, \pred, \gname, \iname) \eqdef{}& \knowInv{\iname}{\STSInv(\STSS, \pred, \gname)}
-\end{align*}
+% An STS invariant asserts authoritative ownership of an STS's current state and that state's interpretation:
+% \begin{align*}
+%   \STSInv(\STSS, \pred, \gname) \eqdef{}& \Exists s \in \STSS. \ownGhost{\gname}{(s, \STSS, \emptyset):\STSMon{\STSS}} * \pred(s) \\
+%   \STS(\STSS, \pred, \gname, \iname) \eqdef{}& \knowInv{\iname}{\STSInv(\STSS, \pred, \gname)}
+% \end{align*}
 
-We can specialize \ruleref{NewInv}, \ruleref{InvOpen}, and \ruleref{InvClose} to STS invariants:
-\begin{mathpar}
- \inferH{NewSts}
-  {\infinite(\mask)}
-  {\later\pred(s) \vs[\mask] \Exists \iname \in \mask, \gname.   \STS(\STSS, \pred, \gname, \iname) * \ownGhost{\gname}{(s, \STST \setminus \STSL(s)) : \STSMon{\STSS}}}
- \and
- \axiomH{StsOpen}
-  {  \STS(\STSS, \pred, \gname, \iname) \vdash \ownGhost{\gname}{(s_0, T) : \STSMon{\STSS}} \vsE[\{\iname\}][\emptyset] \Exists s\in \upclose(\{s_0\}, T). \later\pred(s) * \ownGhost{\gname}{(s, \upclose(\{s_0\}, T), T):\STSMon{\STSS}}}
- \and
- \axiomH{StsClose}
-  {  \STS(\STSS, \pred, \gname, \iname), (s, T) \ststrans (s', T')  \proves \later\pred(s') * \ownGhost{\gname}{(s, S, T):\STSMon{\STSS}} \vs[\emptyset][\{\iname\}] \ownGhost{\gname}{(s', T') : \STSMon{\STSS}} }
-\end{mathpar}
-\begin{proof}
-\ruleref{NewSts} uses \ruleref{NewGhost} to allocate $\ownGhost{\gname}{(s, \upclose(s, T), T) : \STSMon{\STSS}}$ where $T \eqdef \STST \setminus \STSL(s)$, and \ruleref{NewInv}.
+% We can specialize \ruleref{NewInv}, \ruleref{InvOpen}, and \ruleref{InvClose} to STS invariants:
+% \begin{mathpar}
+%  \inferH{NewSts}
+%   {\infinite(\mask)}
+%   {\later\pred(s) \vs[\mask] \Exists \iname \in \mask, \gname.   \STS(\STSS, \pred, \gname, \iname) * \ownGhost{\gname}{(s, \STST \setminus \STSL(s)) : \STSMon{\STSS}}}
+%  \and
+%  \axiomH{StsOpen}
+%   {  \STS(\STSS, \pred, \gname, \iname) \vdash \ownGhost{\gname}{(s_0, T) : \STSMon{\STSS}} \vsE[\{\iname\}][\emptyset] \Exists s\in \upclose(\{s_0\}, T). \later\pred(s) * \ownGhost{\gname}{(s, \upclose(\{s_0\}, T), T):\STSMon{\STSS}}}
+%  \and
+%  \axiomH{StsClose}
+%   {  \STS(\STSS, \pred, \gname, \iname), (s, T) \ststrans (s', T')  \proves \later\pred(s') * \ownGhost{\gname}{(s, S, T):\STSMon{\STSS}} \vs[\emptyset][\{\iname\}] \ownGhost{\gname}{(s', T') : \STSMon{\STSS}} }
+% \end{mathpar}
+% \begin{proof}
+% \ruleref{NewSts} uses \ruleref{NewGhost} to allocate $\ownGhost{\gname}{(s, \upclose(s, T), T) : \STSMon{\STSS}}$ where $T \eqdef \STST \setminus \STSL(s)$, and \ruleref{NewInv}.
 
-\ruleref{StsOpen} just uses \ruleref{InvOpen} and \ruleref{InvClose} on $\iname$, and the monoid equality $(s, \upclose(\{s_0\}, T), T) = (s, \STSS, \emptyset) \mtimes (\munit, \upclose(\{s_0\}, T), T)$.
+% \ruleref{StsOpen} just uses \ruleref{InvOpen} and \ruleref{InvClose} on $\iname$, and the monoid equality $(s, \upclose(\{s_0\}, T), T) = (s, \STSS, \emptyset) \mtimes (\munit, \upclose(\{s_0\}, T), T)$.
 
-\ruleref{StsClose} applies \ruleref{StsStep} and \ruleref{InvClose}.
-\end{proof}
-
-Using these view shifts, we can prove STS variants of the invariant rules \ruleref{Inv} and \ruleref{VSInv}~(compare the former to CaReSL's island update rule~\cite{caresl}):
-\begin{mathpar}
- \inferH{Sts}
-  {\All s \in \upclose(\{s_0\}, T). \hoare{\later\pred(s) * P}{\expr}{\Ret \val. \Exists s', T'. (s, T) \ststrans (s', T') * \later\pred(s') * Q}[\mask]
-   \and \physatomic{\expr}}
-  {  \STS(\STSS, \pred, \gname, \iname) \vdash \hoare{\ownGhost{\gname}{(s_0, T):\STSMon{\STSS}} * P}{\expr}{\Ret \val. \Exists s', T'. \ownGhost{\gname}{(s', T'):\STSMon{\STSS}} * Q}[\mask \uplus \{\iname\}]}
- \and
- \inferH{VSSts}
-  {\forall s \in \upclose(\{s_0\}, T).\; \later\pred(s) * P \vs[\mask_1][\mask_2] \exists s', T'.\; (s, T) \ststrans (s', T') * \later\pred(s') * Q}
-  {  \STS(\STSS, \pred, \gname, \iname) \vdash \ownGhost{\gname}{(s_0, T):\STSMon{\STSS}} * P \vs[\mask_1 \uplus \{\iname\}][\mask_2 \uplus \{\iname\}] \Exists s', T'. \ownGhost{\gname}{(s', T'):\STSMon{\STSS}} * Q}
-\end{mathpar}
-
-\begin{proof}[Proof of \ruleref{Sts}]\label{pf:sts}
- We have to show
- \[\hoare{\ownGhost{\gname}{(s_0, T):\STSMon{\STSS}} * P}{\expr}{\Ret \val. \Exists s', T'. \ownGhost{\gname}{(s', T'):\STSMon{\STSS}} * Q}[\mask \uplus \{\iname\}]\]
- where $\val$, $s'$, $T'$ are free in $Q$.
- 
- First, by \ruleref{ACsq} with \ruleref{StsOpen} and \ruleref{StsClose} (after moving $(s, T) \ststrans (s', T')$ into the view shift using \ruleref{VSBoxOut}), it suffices to show
- \[\hoareV{\Exists s\in \upclose(\{s_0\}, T). \later\pred(s) * \ownGhost{\gname}{(s, \upclose(\{s_0\}, T), T)} * P}{\expr}{\Ret \val. \Exists s, T, S, s', T'. (s, T) \ststrans (s', T') * \later\pred(s') * \ownGhost{\gname}{(s, S, T):\STSMon{\STSS}} * Q(\val, s', T')}[\mask]\]
-
- Now, use \ruleref{Exist} to move the $s$ from the precondition into the context and use \ruleref{Csq} to (i)~fix the $s$ and $T$ in the postcondition to be the same as in the precondition, and (ii)~fix $S \eqdef \upclose(\{s_0\}, T)$.
- It remains to show:
- \[\hoareV{s\in \upclose(\{s_0\}, T) * \later\pred(s) * \ownGhost{\gname}{(s, \upclose(\{s_0\}, T), T)} * P}{\expr}{\Ret \val. \Exists s', T'. (s, T) \ststrans (s', T') * \later\pred(s') * \ownGhost{\gname}{(s, \upclose(\{s_0\}, T), T)} * Q(\val, s', T')}[\mask]\]
- 
- Finally, use \ruleref{BoxOut} to move $s\in \upclose(\{s_0\}, T)$ into the context, and \ruleref{Frame} on $\ownGhost{\gname}{(s, \upclose(\{s_0\}, T), T)}$:
- \[s\in \upclose(\{s_0\}, T) \vdash \hoare{\later\pred(s) * P}{\expr}{\Ret \val. \Exists s', T'. (s, T) \ststrans (s', T') * \later\pred(s') * Q(\val, s', T')}[\mask]\]
- 
- This holds by our premise.
-\end{proof}
-
-% \begin{proof}[Proof of \ruleref{VSSts}]
-% This is similar to above, so we only give the proof in short notation:
-
-% \hproof{%
-% 	Context: $\knowInv\iname{\STSInv(\STSS, \pred, \gname)}$ \\
-% 	\pline[\mask_1 \uplus \{\iname\}]{
-% 		\ownGhost\gname{(s_0, T)} * P
-% 	} \\
-% 	\pline[\mask_1]{%
-% 		\Exists s. \later\pred(s) * \ownGhost\gname{(s, S, T)} * P
-% 	} \qquad by \ruleref{StsOpen} \\
-% 	Context: $s \in S \eqdef \upclose(\{s_0\}, T)$ \\
-% 	\pline[\mask_2]{%
-% 		 \Exists s', T'. \later\pred(s') * Q(s', T') * \ownGhost\gname{(s, S, T)}
-% 	} \qquad by premiss \\
-% 	Context: $(s, T) \ststrans (s', T')$ \\
-% 	\pline[\mask_2 \uplus \{\iname\}]{
-% 		\ownGhost\gname{(s', T')} * Q(s', T')
-% 	} \qquad by \ruleref{StsClose}
-% }
+% \ruleref{StsClose} applies \ruleref{StsStep} and \ruleref{InvClose}.
 % \end{proof}
 
-\subsection{Authoritative monoids with interpretation}\label{sec:authinterp}
+% Using these view shifts, we can prove STS variants of the invariant rules \ruleref{Inv} and \ruleref{VSInv}~(compare the former to CaReSL's island update rule~\cite{caresl}):
+% \begin{mathpar}
+%  \inferH{Sts}
+%   {\All s \in \upclose(\{s_0\}, T). \hoare{\later\pred(s) * P}{\expr}{\Ret \val. \Exists s', T'. (s, T) \ststrans (s', T') * \later\pred(s') * Q}[\mask]
+%    \and \physatomic{\expr}}
+%   {  \STS(\STSS, \pred, \gname, \iname) \vdash \hoare{\ownGhost{\gname}{(s_0, T):\STSMon{\STSS}} * P}{\expr}{\Ret \val. \Exists s', T'. \ownGhost{\gname}{(s', T'):\STSMon{\STSS}} * Q}[\mask \uplus \{\iname\}]}
+%  \and
+%  \inferH{VSSts}
+%   {\forall s \in \upclose(\{s_0\}, T).\; \later\pred(s) * P \vs[\mask_1][\mask_2] \exists s', T'.\; (s, T) \ststrans (s', T') * \later\pred(s') * Q}
+%   {  \STS(\STSS, \pred, \gname, \iname) \vdash \ownGhost{\gname}{(s_0, T):\STSMon{\STSS}} * P \vs[\mask_1 \uplus \{\iname\}][\mask_2 \uplus \{\iname\}] \Exists s', T'. \ownGhost{\gname}{(s', T'):\STSMon{\STSS}} * Q}
+% \end{mathpar}
 
-Building on \Sref{sec:auth}, after constructing the monoid $\auth{M}$ for a cancellative monoid $M$, we can tie an interpretation, $\pred : \mcarp{M} \to \Prop$, to the authoritative element of $M$, recovering reasoning that is close to the sharing rule in~\cite{krishnaswami+:icfp12}.
+% \begin{proof}[Proof of \ruleref{Sts}]\label{pf:sts}
+%  We have to show
+%  \[\hoare{\ownGhost{\gname}{(s_0, T):\STSMon{\STSS}} * P}{\expr}{\Ret \val. \Exists s', T'. \ownGhost{\gname}{(s', T'):\STSMon{\STSS}} * Q}[\mask \uplus \{\iname\}]\]
+%  where $\val$, $s'$, $T'$ are free in $Q$.
+ 
+%  First, by \ruleref{ACsq} with \ruleref{StsOpen} and \ruleref{StsClose} (after moving $(s, T) \ststrans (s', T')$ into the view shift using \ruleref{VSBoxOut}), it suffices to show
+%  \[\hoareV{\Exists s\in \upclose(\{s_0\}, T). \later\pred(s) * \ownGhost{\gname}{(s, \upclose(\{s_0\}, T), T)} * P}{\expr}{\Ret \val. \Exists s, T, S, s', T'. (s, T) \ststrans (s', T') * \later\pred(s') * \ownGhost{\gname}{(s, S, T):\STSMon{\STSS}} * Q(\val, s', T')}[\mask]\]
 
-Let $\pred_\bot$ be the extension of $\pred$ to $\mcar{M}$ with $\pred_\bot(\mzero) = \FALSE$.
-Now define
-\begin{align*}
-  \AuthInv(M, \pred, \gname) \eqdef{}& \exists \melt \in \mcar{M}.\; \ownGhost{\gname}{\authfull \melt:\auth{M}} * \pred_\bot(\melt) \\
-  \Auth(M, \pred, \gname, \iname) \eqdef{}& M~\textlog{cancellative} \land \knowInv{\iname}{\AuthInv(M, \pred, \gname)}
-\end{align*}
+%  Now, use \ruleref{Exist} to move the $s$ from the precondition into the context and use \ruleref{Csq} to (i)~fix the $s$ and $T$ in the postcondition to be the same as in the precondition, and (ii)~fix $S \eqdef \upclose(\{s_0\}, T)$.
+%  It remains to show:
+%  \[\hoareV{s\in \upclose(\{s_0\}, T) * \later\pred(s) * \ownGhost{\gname}{(s, \upclose(\{s_0\}, T), T)} * P}{\expr}{\Ret \val. \Exists s', T'. (s, T) \ststrans (s', T') * \later\pred(s') * \ownGhost{\gname}{(s, \upclose(\{s_0\}, T), T)} * Q(\val, s', T')}[\mask]\]
+ 
+%  Finally, use \ruleref{BoxOut} to move $s\in \upclose(\{s_0\}, T)$ into the context, and \ruleref{Frame} on $\ownGhost{\gname}{(s, \upclose(\{s_0\}, T), T)}$:
+%  \[s\in \upclose(\{s_0\}, T) \vdash \hoare{\later\pred(s) * P}{\expr}{\Ret \val. \Exists s', T'. (s, T) \ststrans (s', T') * \later\pred(s') * Q(\val, s', T')}[\mask]\]
+ 
+%  This holds by our premise.
+% \end{proof}
 
-The frame-preserving updates for $\auth{M}$ gives rise to the following view shifts:
-\begin{mathpar}
- \inferH{NewAuth}
-  {\infinite(\mask) \and M~\textlog{cancellative}}
-  {\later\pred_\bot(a) \vs[\mask] \exists \iname \in \mask, \gname.\; \Auth(M, \pred, \gname, \iname) * \ownGhost{\gname}{\authfrag a : \auth{M}}}
- \and
- \axiomH{AuthOpen}
-  {\Auth(M, \pred, \gname, \iname) \vdash \ownGhost{\gname}{\authfrag \melt : \auth{M}} \vsE[\{\iname\}][\emptyset] \exists \melt_f.\; \later\pred_\bot(\melt \mtimes \melt_f) * \ownGhost{\gname}{\authfull \melt \mtimes \melt_f, \authfrag a:\auth{M}}}
- \and
- \axiomH{AuthClose}
-  {\Auth(M, \pred, \gname, \iname) \vdash \later\pred_\bot(\meltB \mtimes \melt_f) * \ownGhost{\gname}{\authfull a \mtimes \melt_f, \authfrag a:\auth{M}} \vs[\emptyset][\{\iname\}] \ownGhost{\gname}{\authfrag \meltB : \auth{M}} }
-\end{mathpar}
+% % \begin{proof}[Proof of \ruleref{VSSts}]
+% % This is similar to above, so we only give the proof in short notation:
 
-These view shifts in turn can be used to prove variants of the invariant rules:
-\begin{mathpar}
- \inferH{Auth}
-  {\forall \melt_f.\; \hoare{\later\pred_\bot(a \mtimes \melt_f) * P}{\expr}{\Ret\val. \exists \meltB.\; \later\pred_\bot(\meltB\mtimes \melt_f) * Q}[\mask]
-   \and \physatomic{\expr}}
-  {\Auth(M, \pred, \gname, \iname) \vdash \hoare{\ownGhost{\gname}{\authfrag a:\auth{M}} * P}{\expr}{\Ret\val. \exists \meltB.\; \ownGhost{\gname}{\authfrag \meltB:\auth{M}} * Q}[\mask \uplus \{\iname\}]}
- \and
- \inferH{VSAuth}
-  {\forall \melt_f.\; \later\pred_\bot(a \mtimes \melt_f) * P \vs[\mask_1][\mask_2] \exists \meltB.\; \later\pred_\bot(\meltB \mtimes \melt_f) * Q(\meltB)}
-  {\Auth(M, \pred, \gname, \iname) \vdash
-   \ownGhost{\gname}{\authfrag a:\auth{M}} * P \vs[\mask_1 \uplus \{\iname\}][\mask_2 \uplus \{\iname\}]
-   \exists \meltB.\; \ownGhost{\gname}{\authfrag \meltB:\auth{M}} * Q(\meltB)}
-\end{mathpar}
+% % \hproof{%
+% % 	Context: $\knowInv\iname{\STSInv(\STSS, \pred, \gname)}$ \\
+% % 	\pline[\mask_1 \uplus \{\iname\}]{
+% % 		\ownGhost\gname{(s_0, T)} * P
+% % 	} \\
+% % 	\pline[\mask_1]{%
+% % 		\Exists s. \later\pred(s) * \ownGhost\gname{(s, S, T)} * P
+% % 	} \qquad by \ruleref{StsOpen} \\
+% % 	Context: $s \in S \eqdef \upclose(\{s_0\}, T)$ \\
+% % 	\pline[\mask_2]{%
+% % 		 \Exists s', T'. \later\pred(s') * Q(s', T') * \ownGhost\gname{(s, S, T)}
+% % 	} \qquad by premiss \\
+% % 	Context: $(s, T) \ststrans (s', T')$ \\
+% % 	\pline[\mask_2 \uplus \{\iname\}]{
+% % 		\ownGhost\gname{(s', T')} * Q(s', T')
+% % 	} \qquad by \ruleref{StsClose}
+% % }
+% % \end{proof}
+
+% \subsection{Authoritative monoids with interpretation}\label{sec:authinterp}
+
+% Building on \Sref{sec:auth}, after constructing the monoid $\auth{M}$ for a cancellative monoid $M$, we can tie an interpretation, $\pred : \mcarp{M} \to \Prop$, to the authoritative element of $M$, recovering reasoning that is close to the sharing rule in~\cite{krishnaswami+:icfp12}.
+
+% Let $\pred_\bot$ be the extension of $\pred$ to $\mcar{M}$ with $\pred_\bot(\mzero) = \FALSE$.
+% Now define
+% \begin{align*}
+%   \AuthInv(M, \pred, \gname) \eqdef{}& \exists \melt \in \mcar{M}.\; \ownGhost{\gname}{\authfull \melt:\auth{M}} * \pred_\bot(\melt) \\
+%   \Auth(M, \pred, \gname, \iname) \eqdef{}& M~\textlog{cancellative} \land \knowInv{\iname}{\AuthInv(M, \pred, \gname)}
+% \end{align*}
+
+% The frame-preserving updates for $\auth{M}$ gives rise to the following view shifts:
+% \begin{mathpar}
+%  \inferH{NewAuth}
+%   {\infinite(\mask) \and M~\textlog{cancellative}}
+%   {\later\pred_\bot(a) \vs[\mask] \exists \iname \in \mask, \gname.\; \Auth(M, \pred, \gname, \iname) * \ownGhost{\gname}{\authfrag a : \auth{M}}}
+%  \and
+%  \axiomH{AuthOpen}
+%   {\Auth(M, \pred, \gname, \iname) \vdash \ownGhost{\gname}{\authfrag \melt : \auth{M}} \vsE[\{\iname\}][\emptyset] \exists \melt_f.\; \later\pred_\bot(\melt \mtimes \melt_f) * \ownGhost{\gname}{\authfull \melt \mtimes \melt_f, \authfrag a:\auth{M}}}
+%  \and
+%  \axiomH{AuthClose}
+%   {\Auth(M, \pred, \gname, \iname) \vdash \later\pred_\bot(\meltB \mtimes \melt_f) * \ownGhost{\gname}{\authfull a \mtimes \melt_f, \authfrag a:\auth{M}} \vs[\emptyset][\{\iname\}] \ownGhost{\gname}{\authfrag \meltB : \auth{M}} }
+% \end{mathpar}
+
+% These view shifts in turn can be used to prove variants of the invariant rules:
+% \begin{mathpar}
+%  \inferH{Auth}
+%   {\forall \melt_f.\; \hoare{\later\pred_\bot(a \mtimes \melt_f) * P}{\expr}{\Ret\val. \exists \meltB.\; \later\pred_\bot(\meltB\mtimes \melt_f) * Q}[\mask]
+%    \and \physatomic{\expr}}
+%   {\Auth(M, \pred, \gname, \iname) \vdash \hoare{\ownGhost{\gname}{\authfrag a:\auth{M}} * P}{\expr}{\Ret\val. \exists \meltB.\; \ownGhost{\gname}{\authfrag \meltB:\auth{M}} * Q}[\mask \uplus \{\iname\}]}
+%  \and
+%  \inferH{VSAuth}
+%   {\forall \melt_f.\; \later\pred_\bot(a \mtimes \melt_f) * P \vs[\mask_1][\mask_2] \exists \meltB.\; \later\pred_\bot(\meltB \mtimes \melt_f) * Q(\meltB)}
+%   {\Auth(M, \pred, \gname, \iname) \vdash
+%    \ownGhost{\gname}{\authfrag a:\auth{M}} * P \vs[\mask_1 \uplus \{\iname\}][\mask_2 \uplus \{\iname\}]
+%    \exists \meltB.\; \ownGhost{\gname}{\authfrag \meltB:\auth{M}} * Q(\meltB)}
+% \end{mathpar}
 
 
-\subsection{Ghost heap}
-\label{sec:ghostheap}%
+% \subsection{Ghost heap}
+% \label{sec:ghostheap}%
 
-We define a simple ghost heap with fractional permissions.
-Some modules require a few ghost names per module instance to properly manage ghost state, but would like to expose to clients a single logical name (avoiding clutter).
-In such cases we use these ghost heaps.
+% We define a simple ghost heap with fractional permissions.
+% Some modules require a few ghost names per module instance to properly manage ghost state, but would like to expose to clients a single logical name (avoiding clutter).
+% In such cases we use these ghost heaps.
 
-We seek to implement the following interface:
-\newcommand{\GRefspecmaps}{\textsf{GMapsTo}}%
-\begin{align*}
- \exists& {\fgmapsto[]} : \textsort{Val} \times \mathbb{Q}_{>} \times \textsort{Val} \ra \textsort{Prop}.\;\\
-  & \All x, q, v. x \fgmapsto[q] v \Ra x \fgmapsto[q] v \land q \in (0, 1] \\
-  &\forall x, q_1, q_2, v, w.\; x \fgmapsto[q_1] v * x \fgmapsto[q_2] w \Leftrightarrow x \fgmapsto[q_1 + q_2] v * v = w\\
-  & \forall v.\; \TRUE \vs[\emptyset] \exists x.\; x \fgmapsto[1] v \\
-  & \forall x, v, w.\; x \fgmapsto[1] v \vs[\emptyset] x \fgmapsto[1] w
-\end{align*}
-We write $x \fgmapsto v$ for $\exists q.\; x \fgmapsto[q] v$ and $x \gmapsto v$ for $x \fgmapsto[1] v$.
-Note that $x \fgmapsto v$ is duplicable but cannot be boxed (as it depends on resources); \ie we have $x \fgmapsto v \Lra x \fgmapsto v * x \fgmapsto v$ but not $x \fgmapsto v \Ra \always x \fgmapsto v$.
+% We seek to implement the following interface:
+% \newcommand{\GRefspecmaps}{\textsf{GMapsTo}}%
+% \begin{align*}
+%  \exists& {\fgmapsto[]} : \textsort{Val} \times \mathbb{Q}_{>} \times \textsort{Val} \ra \textsort{Prop}.\;\\
+%   & \All x, q, v. x \fgmapsto[q] v \Ra x \fgmapsto[q] v \land q \in (0, 1] \\
+%   &\forall x, q_1, q_2, v, w.\; x \fgmapsto[q_1] v * x \fgmapsto[q_2] w \Leftrightarrow x \fgmapsto[q_1 + q_2] v * v = w\\
+%   & \forall v.\; \TRUE \vs[\emptyset] \exists x.\; x \fgmapsto[1] v \\
+%   & \forall x, v, w.\; x \fgmapsto[1] v \vs[\emptyset] x \fgmapsto[1] w
+% \end{align*}
+% We write $x \fgmapsto v$ for $\exists q.\; x \fgmapsto[q] v$ and $x \gmapsto v$ for $x \fgmapsto[1] v$.
+% Note that $x \fgmapsto v$ is duplicable but cannot be boxed (as it depends on resources); \ie we have $x \fgmapsto v \Lra x \fgmapsto v * x \fgmapsto v$ but not $x \fgmapsto v \Ra \always x \fgmapsto v$.
 
-To implement this interface, allocate an instance $\gname_G$ of $\FHeap(\textdom{Val})$ and define
-\[
-	x \fgmapsto[q] v \eqdef
-	  \begin{cases}
-    	\ownGhost{\gname_G}{x \mapsto (q, v)} & \text{if $q \in (0, 1]$} \\
-    	\FALSE & \text{otherwise}
-    \end{cases}
-\]
-The view shifts in the specification follow immediately from \ruleref{GhostUpd} and the frame-preserving updates in~\Sref{sec:fheapm}.
-The first implication is immediate from the definition.
-The second implication follows by case distinction on $q_1 + q_2 \in (0, 1]$.
+% To implement this interface, allocate an instance $\gname_G$ of $\FHeap(\textdom{Val})$ and define
+% \[
+% 	x \fgmapsto[q] v \eqdef
+% 	  \begin{cases}
+%     	\ownGhost{\gname_G}{x \mapsto (q, v)} & \text{if $q \in (0, 1]$} \\
+%     	\FALSE & \text{otherwise}
+%     \end{cases}
+% \]
+% The view shifts in the specification follow immediately from \ruleref{GhostUpd} and the frame-preserving updates in~\Sref{sec:fheapm}.
+% The first implication is immediate from the definition.
+% The second implication follows by case distinction on $q_1 + q_2 \in (0, 1]$.
 
 
 %%% Local Variables:

@@ -18,7 +18,11 @@
 
 \ralf{Copy the explanation from the paper, when that one is more polished.}
 
-\ralf{Describe non-expansive, contractive, category $\COFEs$, later, locally non-expansive/contractive, black later.}
+\ralf{Describe non-expansive, contractive, category $\COFEs$, later, locally non-expansive/contractive, black later, discrete elements, discrete CMRAs.}
+
+\subsection{RA}
+
+\ralf{Define this, including frame-preserving updates.}
 
 \subsection{CMRA}
 
@@ -39,6 +43,8 @@
     \melt \leq \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{cmra-incl}
   \end{align*}
 \end{defn}
+
+Note that every RA is a CMRA, by picking the discrete COFE for the equivalence relation.
 
 \ralf{Copy the rest of the explanation from the paper, when that one is more polished.}
 
@@ -86,6 +92,15 @@ This operation is needed to prove that $\later$ commutes with existential quanti
 (This assumes that the type $\type$ is non-empty.)
 
 \ralf{Describe monotone, category $\CMRAs$.}
+
+\begin{defn}
+  It is possible to do a \emph{frame-preserving update} from $\melt \in \monoid$ to $\meltsB \subseteq \monoid$, written $\melt \mupd \meltsB$, if
+  \[ \All n, \melt_f. \melt \mtimes \melt_f \in \mval_n \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \melt_f \in \mval_n \]
+
+  We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
+\end{defn}
+
+Note that for RAs, this and the RA-based definition of a frame-preserving update coincide.
 
 
 %%% Local Variables: 

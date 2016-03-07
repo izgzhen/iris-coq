@@ -46,7 +46,7 @@ For any language $\Lang$, we define the corresponding thread-pool semantics.
      \cfg{\tpool \dplus [\expr_2] \dplus \tpool'}{\state'}}
 \end{mathpar}
 
-
+\clearpage
 \section{The logic}
 
 To instantiate Iris, you need to define the following parameters:
@@ -198,7 +198,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 	{\vctx \proves \wtt{\term(\termB)}{\type'}}
 %%% monoids
 \and
-	\infer{\vctx \proves \wtt{\term}{\textsort{M}}}{\vctx \proves \wtt{\munit(\term)}{\textsort{M}}}
+	\infer{}{\vctx \proves \wtt{\munit}{\textsort{M} \to \textsort{M}}}
 \and
 	\infer{\vctx \proves \wtt{\melt}{\textsort{M}} \and \vctx \proves \wtt{\meltB}{\textsort{M}}}
 		{\vctx \proves \wtt{\melt \mtimes \meltB}{\textsort{M}}}
@@ -300,8 +300,8 @@ This is entirely standard.
   {\pfctx \proves \prop}
 \and
 \infer[Eq]
-  {\pfctx \proves \prop(\term) \\ \pfctx \proves \term =_\type \term'}
-  {\pfctx \proves \prop(\term')}
+  {\pfctx \proves \prop \\ \pfctx \proves \term =_\type \term'}
+  {\pfctx \proves \prop[\term'/\term]}
 \and
 \infer[Refl]
   {}
@@ -462,6 +462,80 @@ This is entirely standard.
 
 \paragraph{Laws of weakest preconditions.}
 ~\\\ralf{Add these.}
+
+\subsection{Lifting of operational semantics}\label{sec:lifting}
+~\\\ralf{Add this.}
+
+% The following lemmas help in proving axioms for a particular language.
+% The first applies to expressions with side-effects, and the second to side-effect-free expressions.
+% \dave{Update the others, and the example, wrt the new treatment of $\predB$.}
+% \begin{align*}
+%  &\All \expr, \state, \pred, \prop, \propB, \mask. \\
+%  &\textlog{reducible}(e) \implies \\
+%  &(\All \expr', \state'. \cfg{\state}{\expr} \step \cfg{\state'}{\expr'} \implies \pred(\expr', \state')) \implies \\
+%  &{} \proves \bigl( (\All \expr', \state'. \pred (\expr', \state') \Ra \hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask]) \Ra \hoare{ \later \prop * \ownPhys{\state} }{\expr}{\Ret\val. \propB}[\mask] \bigr) \\
+%  \quad\\
+%  &\All \expr, \pred, \prop, \propB, \mask. \\
+%  &\textlog{reducible}(e) \implies \\
+%  &(\All \state, \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \state_2 = \state \land \pred(\expr_2)) \implies \\
+%  &{} \proves \bigl( (\All \expr'. \pred(\expr') \Ra \hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask]) \Ra \hoare{\later\prop}{\expr}{\Ret\val. \propB}[\mask] \bigr)
+% \end{align*}
+% Note that $\pred$ is a meta-logic predicate---it does not depend on any world or resources being owned.
+
+% The following specializations cover all cases of a heap-manipulating lambda calculus like $F_{\mu!}$.
+% \begin{align*}
+%  &\All \expr, \expr', \prop, \propB, \mask. \\
+%  &\textlog{reducible}(e) \implies \\
+%  &(\All \state, \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \state_2 = \state \land \expr_2 = \expr') \implies \\
+%  &{} \proves (\hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask] \Ra \hoare{\later\prop}{\expr}{\Ret\val. \propB}[\mask] ) \\
+%  \quad \\
+%  &\All \expr, \state, \pred, \mask. \\
+%  &\textlog{atomic}(e) \implies \\
+%  &\bigl(\All \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \pred(\expr_2, \state_2)\bigr) \implies \\
+%  &{} \proves (\hoare{ \ownPhys{\state} }{\expr}{\Ret\val. \Exists\state'. \ownPhys{\state'} \land \pred(\val, \state') }[\mask] )
+% \end{align*}
+% The first is restricted to deterministic pure reductions, like $\beta$-reduction.
+% The second is suited to proving triples for (possibly non-deterministic) atomic expressions; for example, with $\expr \eqdef \;!\ell$ (dereferencing $\ell$) and $\state \eqdef h \mtimes \ell \mapsto \valB$ and $\pred(\val, \state') \eqdef \state' = (h \mtimes \ell \mapsto \valB) \land \val = \valB$, one obtains the axiom $\All h, \ell, \valB. \hoare{\ownPhys{h \mtimes \ell \mapsto \valB}}{!\ell}{\Ret\val. \val = \valB \land \ownPhys{h \mtimes \ell \mapsto \valB} }$.
+% %Axioms for CAS-like operations can be obtained by first deriving rules for the two possible cases, and then using the disjunction rule.
+
+
+\subsection{Adequacy}
+~\\\ralf{Check if this is still accurate. Port to weakest-pre.}
+
+The adequacy statement reads as follows:
+\begin{align*}
+ &\All \mask, \expr, \val, \pred, i, \state, \state', \tpool'.
+ \\&( \proves \hoare{\ownPhys\state}{\expr}{x.\; \pred(x)}[\mask]) \implies
+ \\&\cfg{\state}{[i \mapsto \expr]} \step^\ast
+     \cfg{\state'}{[i \mapsto \val] \uplus \tpool'} \implies
+     \\&\pred(\val)
+\end{align*}
+where $\pred$ can mention neither resources nor invariants.
+
+
+% RJ: If we want this section back, we should port it to primitive view shifts and prove it in Coq.
+% \subsection{Unsound rules}
+
+% Some rule suggestions (or rather, wishes) keep coming up, which are unsound. We collect them here.
+% \begin{mathpar}
+% 	\infer
+% 	{P \vs Q}
+% 	{\later P \vs \later Q}
+% 	\and
+% 	\infer
+% 	{\later(P \vs Q)}
+% 	{\later P \vs \later Q}
+% \end{mathpar}
+
+% Of course, the second rule implies the first, so let's focus on that.
+% Since implications work under $\later$, from $\later P$ we can get $\later \pvs{Q}$.
+% If we now try to prove $\pvs{\later Q}$, we will be unable to establish world satisfaction in the new world:
+% We have no choice but to use $\later \pvs{Q}$ at one step index below what we are operating on (because we have it under a $\later$).
+% We can easily get world satisfaction for that lower step-index (by downwards-closedness of step-indexed predicates).
+% We can, however, not make much use of the world satisfaction that we get out, becaase it is one step-index too low.
+
+
+
 
 %%% Local Variables:
 %%% mode: latex
