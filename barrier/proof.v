@@ -10,10 +10,10 @@ Import uPred.
 (* Not bundling heapG, as it may be shared with other users. *)
 Class barrierG Σ := BarrierG {
   barrier_stsG :> stsG heap_lang Σ sts;
-  barrier_savedPropG :> savedPropG heap_lang Σ (laterCF idCF);
+  barrier_savedPropG :> savedPropG heap_lang Σ idCF;
 }.
 (** The Functors we need. *)
-Definition barrierGF : gFunctorList := [stsGF sts; savedPropGF (laterCF idCF)].
+Definition barrierGF : gFunctorList := [stsGF sts; savedPropGF idCF].
 (* Show and register that they match. *)
 Instance inGF_barrierG `{H : inGFs heap_lang Σ barrierGF} : barrierG Σ.
 Proof. destruct H as (?&?&?). split; apply _. Qed.
@@ -26,7 +26,7 @@ Local Notation iProp := (iPropG heap_lang Σ).
 
 Definition ress (P : iProp) (I : gset gname) : iProp :=
   (∃ Ψ : gname → iProp,
-    ▷ (P -★ Π★{set I} Ψ) ★ Π★{set I} (λ i, saved_prop_own i (Next (Ψ i))))%I.
+    ▷ (P -★ Π★{set I} Ψ) ★ Π★{set I} (λ i, saved_prop_own i (Ψ i)))%I.
 
 Coercion state_to_val (s : state) : val :=
   match s with State Low _ => #0 | State High _ => #1 end.
@@ -48,7 +48,7 @@ Definition send (l : loc) (P : iProp) : iProp :=
 Definition recv (l : loc) (R : iProp) : iProp :=
   (∃ γ P Q i,
     barrier_ctx γ l P ★ sts_ownS γ (i_states i) {[ Change i ]} ★
-    saved_prop_own i (Next Q) ★ ▷ (Q -★ R))%I.
+    saved_prop_own i Q ★ ▷ (Q -★ R))%I.
 
 Global Instance barrier_ctx_always_stable (γ : gname) (l : loc) (P : iProp) :
   AlwaysStable (barrier_ctx γ l P).
@@ -79,8 +79,8 @@ Proof. solve_proper. Qed.
 (** Helper lemmas *)
 Lemma ress_split i i1 i2 Q R1 R2 P I :
   i ∈ I → i1 ∉ I → i2 ∉ I → i1 ≠ i2 →
-  (saved_prop_own i2 (Next R2) ★
-    saved_prop_own i1 (Next R1) ★ saved_prop_own i (Next Q) ★
+  (saved_prop_own i2 R2 ★
+    saved_prop_own i1 R1 ★ saved_prop_own i Q ★
     (Q -★ R1 ★ R2) ★ ress P I)
   ⊑ ress P ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))).
 Proof.
@@ -89,9 +89,9 @@ Proof.
   rewrite [(Π★{set _} (λ _, saved_prop_own _ _))%I](big_sepS_delete _ I i) //.
   do 4 (rewrite big_sepS_insert; last set_solver).
   rewrite !fn_lookup_insert fn_lookup_insert_ne // !fn_lookup_insert.
-  set savedQ := _ i _. set savedΨ := _ i _.
+  set savedQ := _ i Q. set savedΨ := _ i (Ψ _).
   sep_split left: [savedQ; savedΨ; Q -★ _; ▷ (_ -★ Π★{set I} _)]%I.
-  - rewrite !assoc saved_prop_agree later_equivI /=. strip_later.
+  - rewrite !assoc saved_prop_agree /=. strip_later.
     apply wand_intro_l. to_front [P; P -★ _]%I. rewrite wand_elim_r.
     rewrite (big_sepS_delete _ I i) //.
     sep_split right: [Π★{set _} _]%I.
@@ -119,13 +119,13 @@ Proof.
   apply forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
   rewrite !assoc. apply pvs_wand_r.
   (* The core of this proof: Allocating the STS and the saved prop. *)
-  eapply sep_elim_True_r; first by eapply (saved_prop_alloc (F:=laterCF idCF) _ (Next P)).
+  eapply sep_elim_True_r; first by eapply (saved_prop_alloc (F:=idCF) _ P).
   rewrite pvs_frame_l. apply pvs_strip_pvs. rewrite sep_exist_l.
   apply exist_elim=>i.
   trans (pvs ⊤ ⊤ (heap_ctx heapN ★
-    ▷ (barrier_inv l P (State Low {[ i ]})) ★ saved_prop_own i (Next P))).
+    ▷ (barrier_inv l P (State Low {[ i ]})) ★ saved_prop_own i P)).
   - rewrite -pvs_intro. cancel [heap_ctx heapN].
-    rewrite {1}[saved_prop_own _ _]always_sep_dup. cancel [saved_prop_own i (Next P)].
+    rewrite {1}[saved_prop_own _ _]always_sep_dup. cancel [saved_prop_own i P].
     rewrite /barrier_inv /ress -later_intro. cancel [l ↦ #0]%I.
     rewrite -(exist_intro (const P)) /=. rewrite -[saved_prop_own _ _](left_id True%I (★)%I).
     by rewrite !big_sepS_singleton /= wand_diag -later_intro.
@@ -217,8 +217,8 @@ Proof.
   rewrite !sep_exist_r. apply exist_mono=>Ψ.
   rewrite !(big_sepS_delete _ I i) //= !wand_True later_sep.
   ecancel [▷ Π★{set _} Ψ; Π★{set _} (λ _, saved_prop_own _ _)]%I.
-  apply wand_intro_l.  set savedΨ := _ i _. set savedQ := _ i _.
-  to_front [savedΨ; savedQ]. rewrite saved_prop_agree later_equivI /=.
+  apply wand_intro_l.  set savedΨ := _ i (Ψ _). set savedQ := _ i Q.
+  to_front [savedΨ; savedQ]. rewrite saved_prop_agree /=.
   wp_op; [|done]=> _. wp_if. rewrite !assoc. eapply wand_apply_r'; first done.
   eapply wand_apply_r'; first done.
   apply: (eq_rewrite (Ψ i) Q (λ x, x)%I); by eauto with I.
@@ -240,11 +240,11 @@ Proof.
   apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
   apply const_elim_sep_l=>Hs. rewrite /pvs_fsa.
   eapply sep_elim_True_l.
-  { eapply saved_prop_alloc_strong with (x := Next R1) (G := I). }
+  { eapply saved_prop_alloc_strong with (x := R1) (G := I). }
   rewrite pvs_frame_r. apply pvs_strip_pvs. rewrite sep_exist_r.
   apply exist_elim=>i1. rewrite always_and_sep_l. rewrite -assoc.
   apply const_elim_sep_l=>Hi1. eapply sep_elim_True_l.
-  { eapply saved_prop_alloc_strong with (x := Next R2) (G := I ∪ {[ i1 ]}). }
+  { eapply saved_prop_alloc_strong with (x := R2) (G := I ∪ {[ i1 ]}). }
   rewrite pvs_frame_r. apply pvs_mono. rewrite sep_exist_r.
   apply exist_elim=>i2. rewrite always_and_sep_l. rewrite -assoc.
   apply const_elim_sep_l=>Hi2.
