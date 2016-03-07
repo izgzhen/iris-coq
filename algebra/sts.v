@@ -450,3 +450,78 @@ Proof.
 Qed.
 
 End stsRA.
+
+(** STSs without tokens: Some stuff is simpler *)
+Module sts_notok.
+Structure stsT := STS {
+  state : Type;
+  prim_step : relation state;
+}.
+Arguments STS {_} _.
+Arguments prim_step {_} _ _.
+Notation states sts := (set (state sts)).
+
+Canonical sts_notok (sts : stsT) : sts.stsT :=
+  sts.STS (token:=Empty_set) (@prim_step sts) (λ _, ∅).
+
+Section sts.
+Context {sts : stsT}.
+Implicit Types s : state sts.
+Implicit Types S : states sts.
+
+Notation prim_steps := (rtc prim_step).
+
+Lemma sts_step s1 s2 :
+  prim_step s1 s2 → sts.step (s1, ∅) (s2, ∅).
+Proof.
+  intros. split; set_solver.
+Qed.
+
+Lemma sts_steps s1 s2 :
+  prim_steps s1 s2 → sts.steps (s1, ∅) (s2, ∅).
+Proof.
+  induction 1; eauto using sts_step, rtc_refl, rtc_l.
+Qed.
+
+Lemma frame_prim_step T s1 s2 :
+  sts.frame_step T s1 s2 → prim_step s1 s2.
+Proof.
+  inversion 1 as [??? Hstep]. inversion_clear Hstep. done.
+Qed.
+
+Lemma prim_frame_step T s1 s2 :
+  prim_step s1 s2 → sts.frame_step T s1 s2.
+Proof.
+  intros Hstep. apply sts.Frame_step with ∅ ∅; first set_solver.
+  by apply sts_step.
+Qed.
+
+Lemma mk_closed S :
+  (∀ s1 s2, s1 ∈ S → prim_step s1 s2 → s2 ∈ S) → sts.closed S ∅.
+Proof.
+  intros ?. constructor; first by set_solver.
+  intros ????. eauto using frame_prim_step.
+Qed.
+
+End sts.
+Notation steps := (rtc prim_step).
+End sts_notok.
+
+Coercion sts_notok.sts_notok : sts_notok.stsT >-> sts.stsT.
+Notation sts_notokT := sts_notok.stsT.
+Notation STS_NoTok := sts_notok.STS.
+
+Section sts_notokRA.
+Import sts_notok.
+Context {sts : sts_notokT}.
+Implicit Types s : state sts.
+Implicit Types S : states sts.
+
+Lemma sts_notok_update_auth s1 s2 :
+  rtc prim_step s1 s2 → sts_auth s1 ∅ ~~> sts_auth s2 ∅.
+Proof.
+  intros. by apply sts_update_auth, sts_steps.
+Qed.
+
+End sts_notokRA.
+
