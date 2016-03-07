@@ -25,12 +25,15 @@ It does not matter whether they fork off an arbitrary expression.
 \end{itemize}
 
 \begin{defn}[Context]
-  A function $\lctx : \textdom{Expr} \to \textdom{Expr}$ is a \emph{context} if the following conditions are satisfied
-  \begin{align*}
-  \All\expr.& \toval(\expr) = \bot \Ra \toval(\lctx(\expr)) = \bot \tagH{lang-ctx-not-val}\\
-  \All \expr_1, \state_1, \expr_2, \state_2, \expr'.& \expr_1, \state_1 \step \expr_2,\state_2,\expr' \Ra \lctx(\expr_1), \state_1 \step \lctx(\expr_2),\state_2,\expr' \tagH{lang-ctx-step}\\
-  \All \expr_1', \state_1, \expr_2, \state_2, \expr'.& \toval(\expr_1') = \bot \land \lctx(\expr_1'), \state_1 \step \expr_2,\state_2,\expr' \Ra \Exists\expr_2'. \expr_2 = \lctx(\expr_2') \land \expr_1', \state_1 \step \expr_2',\state_2,\expr' \tagH{lang-ctx-step-inv}
-  \end{align*}
+  A function $\lctx : \textdom{Expr} \to \textdom{Expr}$ is a \emph{context} if the following conditions are satisfied:
+  \begin{enumerate}
+  \item $\lctx$ does not turn non-values into values:\\
+    $\All\expr. \toval(\expr) = \bot \Ra \toval(\lctx(\expr)) = \bot $
+  \item One can perform reductions below $\lctx$:\\
+    $\All \expr_1, \state_1, \expr_2, \state_2, \expr'. \expr_1, \state_1 \step \expr_2,\state_2,\expr' \Ra \lctx(\expr_1), \state_1 \step \lctx(\expr_2),\state_2,\expr' $
+  \item Reductions stay below $\lctx$ until there is a value in the hole:\\
+    $\All \expr_1', \state_1, \expr_2, \state_2, \expr'. \toval(\expr_1') = \bot \land \lctx(\expr_1'), \state_1 \step \expr_2,\state_2,\expr' \Ra \Exists\expr_2'. \expr_2 = \lctx(\expr_2') \land \expr_1', \state_1 \step \expr_2',\state_2,\expr' $
+  \end{enumerate}
 \end{defn}
 
 \subsection{The concurrent language}
@@ -62,6 +65,7 @@ To instantiate Iris, you need to define the following parameters:
 \begin{itemize}
 \item A language $\Lang$
 \item A locally contractive functor $\iFunc : \COFEs \to \CMRAs$ defining the ghost state
+  \ralf{$\iFunc$ also needs to have a single-unit.}
 \end{itemize}
 
 \noindent

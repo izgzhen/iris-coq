@@ -18,7 +18,28 @@
 
 \ralf{Copy the explanation from the paper, when that one is more polished.}
 
-\ralf{Describe non-expansive, contractive, category $\COFEs$, later, locally non-expansive/contractive, black later, discrete elements, discrete CMRAs.}
+\begin{defn}
+  An element $x \in A$ of a COFE is called \emph{discrete} if
+  \[ \All y \in A. x \nequiv{0} y \Ra x = y\]
+  A COFE $A$ is called \emph{discrete} if all its elements are discrete.
+\end{defn}
+
+\begin{defn}
+  A function $f : A \to B$ between two COFEs is \emph{non-expansive} if
+  \[\All n, x \in A, y \in A. x \nequiv{n} y \Ra f(x) \nequiv{n} f(y) \]
+  It is \emph{contractive} if
+  \[ \All n, x \in A, y \in A. (\All m < n. x \nequiv{m} y) \Ra f(x) \nequiv{n} f(x) \]
+\end{defn}
+
+\begin{defn}
+  The category $\COFEs$ consists of COFEs as objects, and non-expansive functions as arrows.
+\end{defn}
+Note that $\COFEs$ is cartesian closed.
+
+\begin{defn}
+  A functor $F : \COFEs \to COFEs$ is called \emph{locally non-expansive} if its actions $F_1$ on arrows is itself a non-expansive map.
+  Similarly, $F$ is called \emph{locally contractive} if $F_1$ is a contractive map.
+\end{defn}
 
 \subsection{RA}
 
@@ -91,16 +112,32 @@ This operation is needed to prove that $\later$ commutes with existential quanti
 \end{mathpar}
 (This assumes that the type $\type$ is non-empty.)
 
-\ralf{Describe monotone, category $\CMRAs$.}
-
 \begin{defn}
   It is possible to do a \emph{frame-preserving update} from $\melt \in \monoid$ to $\meltsB \subseteq \monoid$, written $\melt \mupd \meltsB$, if
   \[ \All n, \melt_f. \melt \mtimes \melt_f \in \mval_n \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \melt_f \in \mval_n \]
 
   We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
 \end{defn}
-
 Note that for RAs, this and the RA-based definition of a frame-preserving update coincide.
+
+\ralf{Describe discrete CMRAs, and how they correspond to RAs.}
+
+\begin{defn}
+  A function $f : M \to N$ between two CMRAs is \emph{monotone} if it satisfies the following conditions:
+  \begin{enumerate}
+  \item $f$ is non-expansive
+  \item $f$ preserves validity: \\
+    $\All n, x \in M. x \in \mval_n \Ra f(x) \in \mval_n$
+  \item $f$ preserves CMRA inclusion:\\
+    $\All x, y. x \mincl y \Ra f(x) \mincl f(y)$
+  \end{enumerate}
+\end{defn}
+
+\begin{defn}
+  The category $\CMRAs$ consists of CMRAs as objects, and monotone functions as arrows.
+\end{defn}
+Note that $\CMRAs$ is a subcategory of $\COFEs$.
+The notion of a locally non-expansive (or contractive) functor naturally generalizes to functors between these categories.
 
 
 %%% Local Variables: 
