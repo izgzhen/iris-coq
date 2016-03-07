@@ -3,15 +3,11 @@ From program_logic Require Export ghost_ownership.
 Import uPred.
 
 Class savedPropG (Λ : language) (Σ : gFunctors) (F : cFunctor) :=
-  SavedPropG {
-    saved_prop_F_contractive :> cFunctorNe F;
-    saved_prop_inG :> inG Λ Σ (agreeR $ laterC (F (iPreProp Λ (globalF Σ))));
-  }.
-Definition savedPropGF (F : cFunctor) `{cFunctorNe F} :
-  gFunctor := GFunctor (agreeRF $ laterCF F).
-Instance inGF_savedPropG `{cFunctorNe F}
-         `{inGF Λ Σ (savedPropGF F)} : savedPropG Λ Σ F.
-Proof. split; try apply _; apply: inGF_inG. Qed.
+  saved_prop_inG :> inG Λ Σ (agreeR (laterC (F (iPreProp Λ (globalF Σ))))).
+Definition savedPropGF (F : cFunctor) : gFunctor :=
+  GFunctor (agreeRF (laterCF F)).
+Instance inGF_savedPropG  `{inGF Λ Σ (savedPropGF F)} : savedPropG Λ Σ F.
+Proof. apply: inGF_inG. Qed.
 
 Definition saved_prop_own `{savedPropG Λ Σ F}
     (γ : gname) (x : F (iPropG Λ Σ)) : iPropG Λ Σ :=

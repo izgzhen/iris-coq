@@ -206,6 +206,9 @@ Program Definition exclRF (F : cFunctor) : rFunctor := {|
   rFunctor_map A1 A2 B1 B2 fg := exclC_map (cFunctor_map F fg)
 |}.
 Next Obligation.
+  intros F A1 A2 B1 B2 n x1 x2 ??. by apply exclC_map_ne, cFunctor_ne.
+Qed.
+Next Obligation.
   intros F A B x; simpl. rewrite -{2}(excl_map_id x).
   apply excl_map_ext=>y. by rewrite cFunctor_id.
 Qed.
@@ -214,13 +217,8 @@ Next Obligation.
   apply excl_map_ext=>y; apply cFunctor_compose.
 Qed.
 
-Instance exclRF_ne F : cFunctorNe F → rFunctorNe (exclRF F).
-Proof.
-  intros A1 A2 B1 B2 n x1 x2 ??. by apply exclC_map_ne, cFunctor_ne.
-Qed.
 Instance exclRF_contractive F :
   cFunctorContractive F → rFunctorContractive (exclRF F).
 Proof.
-  intros A1 A2 B1 B2 n x1 x2 ??.
-  by apply exclC_map_ne, cFunctor_contractive.
+  intros A1 A2 B1 B2 n x1 x2 ??. by apply exclC_map_ne, cFunctor_contractive.
 Qed.
