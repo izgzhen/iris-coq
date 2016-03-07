@@ -102,6 +102,10 @@ Program Definition uPredCF (F : rFunctor) : cFunctor := {|
   cFunctor_map A1 A2 B1 B2 fg := uPredC_map (rFunctor_map F (fg.2, fg.1))
 |}.
 Next Obligation.
+  intros F A1 A2 B1 B2 n P Q HPQ.
+  apply uPredC_map_ne, rFunctor_ne; split; by apply HPQ.
+Qed.
+Next Obligation.
   intros F A B P; simpl. rewrite -{2}(uPred_map_id P).
   apply uPred_map_ext=>y. by rewrite rFunctor_id.
 Qed.

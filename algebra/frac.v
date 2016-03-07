@@ -249,6 +249,9 @@ Program Definition fracRF (F : rFunctor) : rFunctor := {|
   rFunctor_map A1 A2 B1 B2 fg := fracC_map (rFunctor_map F fg)
 |}.
 Next Obligation.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply fracC_map_ne, rFunctor_ne.
+Qed.
+Next Obligation.
   intros F A B x. rewrite /= -{2}(frac_map_id x).
   apply frac_map_ext=>y; apply rFunctor_id.
 Qed.

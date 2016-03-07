@@ -623,6 +623,8 @@ Structure rFunctor := RFunctor {
   rFunctor_car : cofeT → cofeT -> cmraT;
   rFunctor_map {A1 A2 B1 B2} :
     ((A2 -n> A1) * (B1 -n> B2)) → rFunctor_car A1 B1 -n> rFunctor_car A2 B2;
+  rFunctor_ne A1 A2 B1 B2 n :
+    Proper (dist n ==> dist n) (@rFunctor_map A1 A2 B1 B2);
   rFunctor_id {A B} (x : rFunctor_car A B) : rFunctor_map (cid,cid) x ≡ x;
   rFunctor_compose {A1 A2 A3 B1 B2 B3}
       (f : A2 -n> A1) (g : A3 -n> A2) (f' : B1 -n> B2) (g' : B2 -n> B3) x :
@@ -630,20 +632,11 @@ Structure rFunctor := RFunctor {
   rFunctor_mono {A1 A2 B1 B2} (fg : (A2 -n> A1) * (B1 -n> B2)) :
     CMRAMonotone (rFunctor_map fg) 
 }.
-Existing Instances rFunctor_mono.
+Existing Instances rFunctor_ne rFunctor_mono.
 Instance: Params (@rFunctor_map) 5.
 
-Class rFunctorNe (F : rFunctor) :=
-  rFunctor_ne A1 A2 B1 B2 n :> Proper (dist n ==> dist n) (@rFunctor_map F A1 A2 B1 B2).
 Class rFunctorContractive (F : rFunctor) :=
   rFunctor_contractive A1 A2 B1 B2 :> Contractive (@rFunctor_map F A1 A2 B1 B2).
-
-(* TODO: Check if this instance hurts us. We don't have such a large search space
-   overall, and because of the priority constCF and laterCF should be the only
-   users of this. *)
-Instance rFunctorContractive_Ne F :
-  rFunctorContractive F → rFunctorNe F.
-Proof. intros ?????. apply contractive_ne, _. Qed.
 
 Definition rFunctor_diag (F: rFunctor) (A: cofeT) : cmraT := rFunctor_car F A A.
 Coercion rFunctor_diag : rFunctor >-> Funclass.
@@ -653,25 +646,22 @@ Program Definition constRF (B : cmraT) : rFunctor :=
 Solve Obligations with done.
 
 Instance constRF_contractive B : rFunctorContractive (constRF B).
-Proof. intros ????. apply _. Qed.
+Proof. rewrite /rFunctorContractive; apply _. Qed.
 
 Program Definition prodRF (F1 F2 : rFunctor) : rFunctor := {|
   rFunctor_car A B := prodR (rFunctor_car F1 A B) (rFunctor_car F2 A B);
   rFunctor_map A1 A2 B1 B2 fg :=
     prodC_map (rFunctor_map F1 fg) (rFunctor_map F2 fg)
 |}.
+Next Obligation.
+  intros F1 F2 A1 A2 B1 B2 n ???; by apply prodC_map_ne; apply rFunctor_ne.
+Qed.
 Next Obligation. by intros F1 F2 A B [??]; rewrite /= !rFunctor_id. Qed.
 Next Obligation.
   intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??]; simpl.
   by rewrite !rFunctor_compose.
 Qed.
 
-Instance prodRF_ne F1 F2 :
-  rFunctorNe F1 → rFunctorNe F2 → rFunctorNe (prodRF F1 F2).
-Proof.
-  intros ?? A1 A2 B1 B2 n ???;
-    by apply prodC_map_ne; apply rFunctor_ne.
-Qed.
 Instance prodRF_contractive F1 F2 :
   rFunctorContractive F1 → rFunctorContractive F2 →
   rFunctorContractive (prodRF F1 F2).

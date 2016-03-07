@@ -293,19 +293,15 @@ Program Definition iprodCF {C} (F : C → cFunctor) : cFunctor := {|
   cFunctor_map A1 A2 B1 B2 fg := iprodC_map (λ c, cFunctor_map (F c) fg)
 |}.
 Next Obligation.
+  intros C F A1 A2 B1 B2 n ?? g. by apply iprodC_map_ne=>?; apply cFunctor_ne.
+Qed.
+Next Obligation.
   intros C F A B g; simpl. rewrite -{2}(iprod_map_id g).
   apply iprod_map_ext=> y; apply cFunctor_id.
 Qed.
 Next Obligation.
   intros C F A1 A2 A3 B1 B2 B3 f1 f2 f1' f2' g. rewrite /= -iprod_map_compose.
   apply iprod_map_ext=>y; apply cFunctor_compose.
-Qed.
-
-Instance iprodCF_ne {C} (F : C → cFunctor) :
-  (∀ c, cFunctorNe (F c)) → cFunctorNe (iprodCF F).
-Proof.
-  intros ? A1 A2 B1 B2 n ?? g.
-  by apply iprodC_map_ne=>c; apply cFunctor_ne.
 Qed.
 Instance iprodCF_contractive {C} (F : C → cFunctor) :
   (∀ c, cFunctorContractive (F c)) → cFunctorContractive (iprodCF F).
@@ -319,19 +315,15 @@ Program Definition iprodRF {C} (F : C → rFunctor) : rFunctor := {|
   rFunctor_map A1 A2 B1 B2 fg := iprodC_map (λ c, rFunctor_map (F c) fg)
 |}.
 Next Obligation.
+  intros C F A1 A2 B1 B2 n ?? g. by apply iprodC_map_ne=>?; apply rFunctor_ne.
+Qed.
+Next Obligation.
   intros C F A B g; simpl. rewrite -{2}(iprod_map_id g).
   apply iprod_map_ext=> y; apply rFunctor_id.
 Qed.
 Next Obligation.
   intros C F A1 A2 A3 B1 B2 B3 f1 f2 f1' f2' g. rewrite /= -iprod_map_compose.
   apply iprod_map_ext=>y; apply rFunctor_compose.
-Qed.
-
-Instance iprodRF_ne {C} (F : C → rFunctor) :
-  (∀ c, rFunctorNe (F c)) → rFunctorNe (iprodRF F).
-Proof.
-  intros ? A1 A2 B1 B2 n ?? g.
-  by apply iprodC_map_ne=>c; apply rFunctor_ne.
 Qed.
 Instance iprodRF_contractive {C} (F : C → rFunctor) :
   (∀ c, rFunctorContractive (F c)) → rFunctorContractive (iprodRF F).
