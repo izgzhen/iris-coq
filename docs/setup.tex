@@ -21,6 +21,7 @@
 \usepackage{tabu}
 
 \usepackage{dashbox}
+\usepackage{tensor}
 
 \usepackage{\basedir pftools}
 
@@ -135,12 +136,6 @@
 %% MATH SYMBOLS & NOTATION & IDENTIFIERS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% superscript to the left
-\def\presuper#1#2%
-  {\mathop{}%
-   \mathopen{\vphantom{#2}}^{#1}%
-   \kern-\scriptspace%
-   #2}
 
 \DeclareMathOperator*{\Sep}{\scalerel*{\ast}{\sum}}
 \newcommand{\bigast}{\Sep}
@@ -326,8 +321,8 @@
 \newcommand{\gmapsto}{\hookrightarrow}%
 \newcommand{\fgmapsto}[1][\mathrm{-}]{\xhookrightarrow{#1}}%
 
-\NewDocumentCommand\wpre{m m o}%
-  {{#1} \spac \{#2\}_{#3}}
+\NewDocumentCommand\wpre{m m O{}}%
+  {{#1} \spac \prescript{}{#3}{\kern-0.2ex\{#2\}}}
 
 \newcommand{\later}{\mathord{\triangleright}}
 \newcommand{\always}{\Box{}}
@@ -347,7 +342,7 @@
 \newcommand*{\ownGhost}[2]{\boxedassert[densely dashed]{#2}[#1]}
 \newcommand*{\ownGGhost}[1]{\boxedassert[densely dashed]{#1}}
 
-\newcommand{\ownPhys}[1]{\lfloor#1\rfloor}
+\newcommand{\ownPhys}[1]{\textlog{Phy}(#1)}
 
 %% View Shifts
 \NewDocumentCommand \vsGen {O{} m O{}}%
@@ -357,14 +352,14 @@
       {#2}_{#1}%
     }{%
       % Two masks
-      \presuper{#1}{#2}^{#3}
+      \tensor*[^{#1}]{#2}{^{#3}}
     }%
   }}%
 \NewDocumentCommand \vs {O{} O{}} {\vsGen[#1]{\Rrightarrow}[#2]}
 \NewDocumentCommand \vsL {O{} O{}} {\vsGen[#1]{\Lleftarrow}[#2]}
 \NewDocumentCommand \vsE {O{} O{}} %
   {\vsGen[#1]{\Lleftarrow\!\!\!\Rrightarrow}[#2]}
-\NewDocumentCommand \pvs {O{} O{}} {\mathord{\vsGen[#1]{{\mid\kern-0.4ex\Rrightarrow}}[#2]}}
+\NewDocumentCommand \pvs {O{} O{}} {\mathord{\vsGen[#1]{{\mid\kern-0.4ex\Rrightarrow\kern-0.25ex}}[#2]\kern0.2ex}}
 
 
 %% Hoare Triples
@@ -428,6 +423,7 @@
 \newcommand{\valB}{w}
 \newcommand{\state}{\sigma}
 \newcommand{\step}{\ra}
+\newcommand{\lctx}{K}
 
 \newcommand{\toval}{\mathit{val}}
 \newcommand{\ofval}{\mathit{expr}}

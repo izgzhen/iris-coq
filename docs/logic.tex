@@ -1,6 +1,6 @@
 \section{Language}
 
-A \emph{language} $\Lang$ consists of a set \textdom{Exp} of \emph{expressions} (metavariable $\expr$), a set \textdom{Val} of \emph{values} (metavariable $\val$), and a set \textdom{State} of \emph{states} (metvariable $\state$) such that
+A \emph{language} $\Lang$ consists of a set \textdom{Expr} of \emph{expressions} (metavariable $\expr$), a set \textdom{Val} of \emph{values} (metavariable $\val$), and a set \textdom{State} of \emph{states} (metvariable $\state$) such that
 \begin{itemize}
 \item There exist functions $\ofval : \textdom{Val} \to \textdom{Expr}$ and $\toval : \textdom{Expr} \pfn \textdom{val}$ (notice the latter is partial), such that
 \begin{mathpar} {\All \expr, \val. \toval(\expr) = \val \Ra \ofval(\val) = \expr} \and {\All\val. \toval(\ofval(\val)) = \val} 
@@ -23,6 +23,15 @@ A \emph{language} $\Lang$ consists of a set \textdom{Exp} of \emph{expressions} 
 In other words, atomic expression \emph{reduce in one step to a value}.
 It does not matter whether they fork off an arbitrary expression.
 \end{itemize}
+
+\begin{defn}[Context]
+  A function $\lctx : \textdom{Expr} \to \textdom{Expr}$ is a \emph{context} if the following conditions are satisfied
+  \begin{align*}
+  \All\expr.& \toval(\expr) = \bot \Ra \toval(\lctx(\expr)) = \bot \tagH{lang-ctx-not-val}\\
+  \All \expr_1, \state_1, \expr_2, \state_2, \expr'.& \expr_1, \state_1 \step \expr_2,\state_2,\expr' \Ra \lctx(\expr_1), \state_1 \step \lctx(\expr_2),\state_2,\expr' \tagH{lang-ctx-step}\\
+  \All \expr_1', \state_1, \expr_2, \state_2, \expr'.& \toval(\expr_1') = \bot \land \lctx(\expr_1'), \state_1 \step \expr_2,\state_2,\expr' \Ra \Exists\expr_2'. \expr_2 = \lctx(\expr_2') \land \expr_1', \state_1 \step \expr_2',\state_2,\expr' \tagH{lang-ctx-step-inv}
+  \end{align*}
+\end{defn}
 
 \subsection{The concurrent language}
 
@@ -116,11 +125,12 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
     \always\prop \mid
     {\later\prop} \mid
     \pvs[\term][\term] \prop\mid
-    \wpre{\term}{\pred}[\term]
+    \wpre{\term}{\Ret\var.\term}[\term]
 \end{align*}
 Recursive predicates must be \emph{guarded}: in $\MU \var. \pred$, the variable $\var$ can only appear under the later $\later$ modality.
 
 Note that $\always$ and $\later$ bind more tightly than $*$, $\wand$, $\land$, $\lor$, and $\Ra$.
+We will write $\pvs[\term] \prop$ for $\pvs[\term][\term] \prop$.
 
 \paragraph{Metavariable conventions.}
 We introduce additional metavariables ranging over terms and generally let the choice of metavariable indicate the term's type:
@@ -129,7 +139,7 @@ We introduce additional metavariables ranging over terms and generally let the c
  \text{metavariable} & \text{type} \\\hline
   \term, \termB & \text{arbitrary} \\
   \val, \valB & \textsort{Val} \\
-  \expr & \textsort{Exp} \\
+  \expr & \textsort{Expr} \\
   \state & \textsort{State} \\
 \end{array}
 \qquad\qquad
@@ -267,11 +277,11 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 	}
 \and
 	\infer{
-		\vctx \proves \wtt{\expr}{\textsort{Exp}} \and
-		\vctx \proves \wtt{\pred}{\textsort{Val} \to \Prop} \and
+		\vctx \proves \wtt{\expr}{\textsort{Expr}} \and
+		\vctx,\var:\textsort{Val} \proves \wtt{\term}{\Prop} \and
 		\vctx \proves \wtt{\mask}{\textsort{InvMask}}
 	}{
-		\vctx \proves \wtt{\wpre{\expr}{\pred}[\mask]}{\Prop}
+		\vctx \proves \wtt{\wpre{\expr}{\Ret\var.\term}[\mask]}{\Prop}
 	}
 \end{mathparpagebreakable}
 
@@ -456,13 +466,83 @@ This is entirely standard.
   \always{\All x. \prop} &\Lra& \All x. \always{\prop} \\
   \always{\Exists x. \prop} &\Lra& \Exists x. \always{\prop} \\
 \end{array}
+\and
+{ \term =_\type \term' \Ra \always \term =_\type \term'}
+\and
+{ \knowInv\iname\prop \Ra \always \knowInv\iname\prop}
+\and
+{ \ownGGhost{\munit(\melt)} \Ra \always \ownGGhost{\munit(\melt)}}
 \end{mathpar}
 
 \paragraph{Laws of primitive view shifts.}
-~\\\ralf{Add these.}
+\begin{mathpar}
+\infer[pvs-intro]
+{}{\prop \proves \pvs[\mask] \prop}
+
+\infer[pvs-mono]
+{\prop \proves \propB}
+{\pvs[\mask_1][\mask_2] \prop \proves \pvs[\mask_1][\mask_2] \propB}
+
+\infer[pvs-timeless]
+{\timeless\prop}
+{\later\prop \proves \pvs[\mask] \prop}
+
+\infer[pvs-trans]
+{\mask_2 \subseteq \mask_1 \cup \mask_3}
+{\pvs[\mask_1][\mask_2] \pvs[\mask_2][\mask_3] \prop \proves \pvs[\mask_1][\mask_3] \prop}
+
+\infer[pvs-mask-frame]
+{}{\pvs[\mask_1][\mask_2] \prop \proves \pvs[\mask_1 \uplus \mask_f][\mask_2 \uplus \mask_f] \prop}
+
+\infer[pvs-frame]
+{}{\propB * \pvs[\mask_1][\mask_2]\prop \proves \pvs[\mask_1][\mask_2] \propB * \prop}
+
+\infer[pvs-allocI]
+{\text{$\mask$ is infinite}}
+{\later\prop \proves \pvs[\mask] \Exists \iname \in \mask. \knowInv\iname\prop}
+
+\infer[pvs-openI]
+{}{\knowInv\iname\prop \proves \pvs[\set\iname][\emptyset] \later\prop}
+
+\infer[pvs-closeI]
+{}{\knowInv\iname\prop \land \later\prop \proves \pvs[\emptyset][\set\iname] \TRUE}
+
+\infer[pvs-update]
+{\melt \mupd \meltsB}
+{\ownGGhost\melt \proves \pvs[\mask] \Exists\meltB\in\meltsB. \ownGGhost\meltB}
+\end{mathpar}
 
 \paragraph{Laws of weakest preconditions.}
-~\\\ralf{Add these.}
+\begin{mathpar}
+\infer[wp-value]
+{}{\prop[\val/\var] \proves \wpre{\val}{\Ret\var.\prop}[\mask]}
+
+\infer[wp-mono]
+{\mask_1 \subseteq \mask_2 \and \var:\textsort{val}\mid\prop \proves \propB}
+{\wpre\expr{\Ret\var.\prop}[\mask_1] \proves \wpre\expr{\Ret\var.\propB}[\mask_2]}
+
+\infer[pvs-wp]
+{}{\pvs[\mask] \wpre\expr{\Ret\var.\prop}[\mask] \proves \wpre\expr{\Ret\var.\prop}[\mask]}
+
+\infer[wp-pvs]
+{}{\wpre\expr{\Ret\var.\pvs[\mask] \prop}[\mask] \proves \wpre\expr{\Ret\var.\prop}[\mask]}
+
+\infer[wp-atomic]
+{\mask_2 \subseteq \mask_1 \and \physatomic{\expr}}
+{\pvs[\mask_1][\mask_2] \wpre\expr{\Ret\var. \pvs[\mask_2][\mask_1]\prop}[\mask_2]
+ \proves \wpre\expr{\Ret\var.\prop}[\mask_1]}
+
+\infer[wp-frame]
+{}{\propB * \wpre\expr{\Ret\var.\prop}[\mask] \proves \wpre\expr{\Ret\var.\propB*\prop}[\mask]}
+
+\infer[wp-frame-step]
+{\toval(\expr) = \bot}
+{\later\propB * \wpre\expr{\Ret\var.\prop}[\mask] \proves \wpre\expr{\Ret\var.\propB*\prop}[\mask]}
+
+\infer[wp-bind]
+{\text{$\lctx$ is a context}}
+{\wpre\expr{\Ret\var. \wpre{\lctx(\ofval(\var))}{\Ret\varB.\prop}[\mask]}[\mask] \proves \wpre{\lctx(\expr)}{\Ret\varB.\prop}[\mask]}
+\end{mathpar}
 
 \subsection{Lifting of operational semantics}\label{sec:lifting}
 ~\\\ralf{Add this.}
@@ -504,7 +584,7 @@ This is entirely standard.
 
 The adequacy statement reads as follows:
 \begin{align*}
- &\All \mask, \expr, \val, \pred, i, \state, \melt, \state', \tpool'.
+ &\All \mask, \expr, \val, \pred, \state, \melt, \state', \tpool'.
  \\&(\All n. \melt \in \mval_n) \Ra
  \\&( \ownPhys\state * \ownGGhost\melt \proves \wpre{\expr}{x.\; \pred(x)}[\mask]) \Ra
  \\&\cfg{\state}{[\expr]} \step^\ast

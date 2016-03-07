@@ -97,20 +97,20 @@ Lemma ht_frame_r E P Φ R e :
   {{ P }} e @ E {{ Φ }} ⊑ {{ P ★ R }} e @ E {{ λ v, Φ v ★ R }}.
 Proof. setoid_rewrite (comm _ _ R); apply ht_frame_l. Qed.
 
-Lemma ht_frame_later_l E P R e Φ :
+Lemma ht_frame_step_l E P R e Φ :
   to_val e = None →
   {{ P }} e @ E {{ Φ }} ⊑ {{ ▷ R ★ P }} e @ E {{ λ v, R ★ Φ v }}.
 Proof.
   intros; apply always_intro', impl_intro_l.
   rewrite always_and_sep_r -assoc (sep_and P) always_elim impl_elim_r.
-  by rewrite wp_frame_later_l //; apply wp_mono=>v; rewrite pvs_frame_l.
+  by rewrite wp_frame_step_l //; apply wp_mono=>v; rewrite pvs_frame_l.
 Qed.
 
-Lemma ht_frame_later_r E P Φ R e :
+Lemma ht_frame_step_r E P Φ R e :
   to_val e = None →
   {{ P }} e @ E {{ Φ }} ⊑ {{ P ★ ▷ R }} e @ E {{ λ v, Φ v ★ R }}.
 Proof.
   rewrite (comm _ _ (▷ R)%I); setoid_rewrite (comm _ _ R).
-  apply ht_frame_later_l.
+  apply ht_frame_step_l.
 Qed.
 End hoare.

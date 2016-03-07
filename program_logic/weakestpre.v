@@ -182,7 +182,7 @@ Proof.
       (comm _ rR) !assoc -(assoc _ _ rR).
   - apply IH; eauto using uPred_weaken.
 Qed.
-Lemma wp_frame_later_r E e Φ R :
+Lemma wp_frame_step_r E e Φ R :
   to_val e = None → (#> e @ E {{ Φ }} ★ ▷ R) ⊑ #> e @ E {{ λ v, Φ v ★ R }}.
 Proof.
   rewrite wp_eq. intros He; uPred.unseal; split; intros n r' Hvalid (r&rR&Hr&Hwp&?).
@@ -233,11 +233,11 @@ Lemma wp_value_pvs E Φ e v :
 Proof. intros. rewrite -wp_pvs. rewrite -wp_value //. Qed.
 Lemma wp_frame_l E e Φ R : (R ★ #> e @ E {{ Φ }}) ⊑ #> e @ E {{ λ v, R ★ Φ v }}.
 Proof. setoid_rewrite (comm _ R); apply wp_frame_r. Qed.
-Lemma wp_frame_later_l E e Φ R :
+Lemma wp_frame_step_l E e Φ R :
   to_val e = None → (▷ R ★ #> e @ E {{ Φ }}) ⊑ #> e @ E {{ λ v, R ★ Φ v }}.
 Proof.
   rewrite (comm _ (▷ R)%I); setoid_rewrite (comm _ R).
-  apply wp_frame_later_r.
+  apply wp_frame_step_r.
 Qed.
 Lemma wp_always_l E e Φ R `{!AlwaysStable R} :
   (R ∧ #> e @ E {{ Φ }}) ⊑ #> e @ E {{ λ v, R ∧ Φ v }}.
