@@ -4,157 +4,147 @@
 
 \ralf{Give the most important derived rules.}
 
+\paragraph{Persistent assertions.}
+\begin{defn}
+  An assertion $\prop$ is \emph{persistent} if $\prop \proves \always\prop$.
+\end{defn}
+
+Of course, $\always\prop$ is persistent for any $\prop$.
+Furthermore, by the proof rules given above, $t = t'$ as well as $\ownGGhost{\munit(\melt)}$ and $\knowInv\iname\prop$ are persistent.
+Persistence is preserved by conjunction, disjunction, separating conjunction as well as universal and existential quantification.
+
+In our proofs, we will implicitly add and remove $\always$ from persistent assertions as necessary, and generally treat them like normal, non-linear assumptions.
+
 \subsection{Program logic}
 
 \ralf{Sync this with Coq.}
 
 Hoare triples and view shifts are syntactic sugar for weakest (liberal) preconditions and primitive view shifts, respectively:
-% \[
-% \hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \dynA{\expr}{\lambda\Ret\val.\propB}{\mask})}
-% \qquad\qquad
-% \begin{aligned}
-% \prop \vs[\mask_1][\mask_2] \propB &\eqdef \always{(\prop \Ra \pvsA{\propB}{\mask_1}{\mask_2})} \\
-% \prop \vsE[\mask_1][\mask_2] \propB &\eqdef \prop \vs[\mask_1][\mask_2] \propB \land \propB \vs[\mask2][\mask_1] \prop
-% \end{aligned}
-% \]
+\[
+\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \wpre{\expr}{\lambda\Ret\val.\propB}[\mask])}
+\qquad\qquad
+\begin{aligned}
+\prop \vs[\mask_1][\mask_2] \propB &\eqdef \always{(\prop \Ra \pvs[\mask_1][\mask_2] {\propB})} \\
+\prop \vsE[\mask_1][\mask_2] \propB &\eqdef \prop \vs[\mask_1][\mask_2] \propB \land \propB \vs[\mask2][\mask_1] \prop
+\end{aligned}
+\]
 We write just one mask for a view shift when $\mask_1 = \mask_2$.
-The convention for omitted masks is generous:
+Clearly, all of these assertions are persistent.
+The convention for omitted masks is similar to the base logic:
 An omitted $\mask$ is $\top$ for Hoare triples and $\emptyset$ for view shifts.
 
 
+\paragraph{View shifts.}~
+The following rules can be derived for view shifts.
+
+\begin{mathparpagebreakable}
+\inferH{vs-update}
+  {\melt \mupd \meltsB}
+  {\ownGGhost{\melt} \vs \exists \meltB \in \meltsB.\; \ownGGhost{\meltB}}
+\and
+\inferH{vs-trans}
+  {\prop \vs[\mask_1][\mask_2] \propB \and \propB \vs[\mask_2][\mask_3] \propC \and \mask_2 \subseteq \mask_1 \cup \mask_3}
+  {\prop \vs[\mask_1][\mask_3] \propC}
+\and
+\inferH{vs-imp}
+  {\always{(\prop \Ra \propB)}}
+  {\prop \vs[\emptyset] \propB}
+\and
+\inferH{vs-mask-frame}
+  {\prop \vs[\mask_1][\mask_2] \propB}
+  {\prop \vs[\mask_1 \uplus \mask'][\mask_2 \uplus \mask'] \propB}
+\and
+\inferH{vs-frame}
+  {\prop \vs[\mask_1][\mask_2] \propB}
+  {\prop * \propC \vs[\mask_1][\mask_2] \propB * \propC}
+\and
+\inferH{vs-timeless}
+  {\timeless{\prop}}
+  {\later \prop \vs \prop}
+\and
+\inferH{vs-allocI}
+  {\infinite(\mask)}
+  {\later{\prop} \vs[\mask] \exists \iname\in\mask.\; \knowInv{\iname}{\prop}}
+\and
+\axiomH{vs-openI}
+  {\knowInv{\iname}{\prop} \proves \TRUE \vs[\{ \iname \} ][\emptyset] \later \prop}
+\and
+\axiomH{vs-closeI}
+  {\knowInv{\iname}{\prop} \proves \later \prop \vs[\emptyset][\{ \iname \} ] \TRUE }
+
+\inferHB{vs-disj}
+  {\prop \vs[\mask_1][\mask_2] \propC \and \propB \vs[\mask_1][\mask_2] \propC}
+  {\prop \lor \propB \vs[\mask_1][\mask_2] \propC}
+\and
+\inferHB{vs-exist}
+  {\All \var. (\prop \vs[\mask_1][\mask_2] \propB)}
+  {(\Exists \var. \prop) \vs[\mask_1][\mask_2] \propB}
+\and
+\inferHB{vs-box}
+  {\always\propB \proves \prop \vs[\mask_1][\mask_2] \propC}
+  {\prop \land \always{\propB} \vs[\mask_1][\mask_2] \propC}
+ \and
+\inferH{vs-false}
+  {}
+  {\FALSE \vs[\mask_1][\mask_2] \prop }
+\end{mathparpagebreakable}
+
+
 \paragraph{Hoare triples.}
-\begin{mathpar}
-\inferH{Ret}
+The following rules can be derived for Hoare triples.
+
+\begin{mathparpagebreakable}
+\inferH{Ht-ret}
   {}
   {\hoare{\TRUE}{\valB}{\Ret\val. \val = \valB}[\mask]}
 \and
-\inferH{Bind}
-  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask] \\
-   \All \val. \hoare{\propB}{K[\val]}{\Ret\valB.\propC}[\mask]}
-  {\hoare{\prop}{K[\expr]}{\Ret\valB.\propC}[\mask]}
+\inferH{Ht-bind}
+  {\text{$\lctx$ is a context} \and \hoare{\prop}{\expr}{\Ret\val. \propB}[\mask] \\
+   \All \val. \hoare{\propB}{\lctx(\val)}{\Ret\valB.\propC}[\mask]}
+  {\hoare{\prop}{\lctx(\expr)}{\Ret\valB.\propC}[\mask]}
 \and
-\inferH{Csq}
+\inferH{Ht-csq}
   {\prop \vs \prop' \\
     \hoare{\prop'}{\expr}{\Ret\val.\propB'}[\mask] \\   
    \All \val. \propB' \vs \propB}
   {\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask]}
 \and
-\inferH{Frame}
+\inferH{Ht-mask-weaken}
   {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask]}
-  {\hoare{\prop * \propC}{\expr}{\Ret\val. \propB * \propC}[\mask \uplus \mask']}
+  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask \uplus \mask']}
+\\\\
+\inferH{Ht-frame}
+  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask]}
+  {\hoare{\prop * \propC}{\expr}{\Ret\val. \propB * \propC}[\mask]}
 \and
-\inferH{AFrame}
-  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask] \and \text{$\expr$ not a value}
-  }
-  {\hoare{\prop * \later\propC}{\expr}{\Ret\val. \propB * \propC}[\mask \uplus \mask']}
-% \and
-% \inferH{Fork}
-%   {\hoare{\prop}{\expr}{\Ret\any. \TRUE}[\top]}
-%   {\hoare{\later\prop * \later\propB}{\fork{\expr}}{\Ret\val. \val = \textsf{fRet} \land \propB}[\mask]}
+\inferH{Ht-frame-step}
+  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask] \and \toval(\expr) = \bot}
+  {\hoare{\prop * \later\propC}{\expr}{\Ret\val. \propB * \propC}[\mask]}
 \and
-\inferH{ACsq}
+\inferH{Ht-atomic}
   {\prop \vs[\mask \uplus \mask'][\mask] \prop' \\
     \hoare{\prop'}{\expr}{\Ret\val.\propB'}[\mask] \\   
    \All\val. \propB' \vs[\mask][\mask \uplus \mask'] \propB \\
    \physatomic{\expr}
   }
   {\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask \uplus \mask']}
-\end{mathpar}
-
-\paragraph{View shifts.}
-
-\begin{mathpar}
-\inferH{NewInv}
-  {\infinite(\mask)}
-  {\later{\prop} \vs[\mask] \exists \iname\in\mask.\; \knowInv{\iname}{\prop}}
 \and
-\inferH{FpUpd}
-  {\melt \mupd \meltsB}
-  {\ownGGhost{\melt} \vs \exists \meltB \in \meltsB.\; \ownGGhost{\meltB}}
-\and
-\inferH{VSTrans}
-  {\prop \vs[\mask_1][\mask_2] \propB \and \propB \vs[\mask_2][\mask_3] \propC \and \mask_2 \subseteq \mask_1 \cup \mask_3}
-  {\prop \vs[\mask_1][\mask_3] \propC}
-\and
-\inferH{VSImp}
-  {\always{(\prop \Ra \propB)}}
-  {\prop \vs[\emptyset] \propB}
-\and
-\inferH{VSFrame}
-  {\prop \vs[\mask_1][\mask_2] \propB}
-  {\prop * \propC \vs[\mask_1 \uplus \mask'][\mask_2 \uplus \mask'] \propB * \propC}
-\and
-\inferH{VSTimeless}
-  {\timeless{\prop}}
-  {\later \prop \vs \prop}
-\and
-\axiomH{InvOpen}
-  {\knowInv{\iname}{\prop} \proves \TRUE \vs[\{ \iname \} ][\emptyset] \later \prop}
-\and
-\axiomH{InvClose}
-  {\knowInv{\iname}{\prop} \proves \later \prop \vs[\emptyset][\{ \iname \} ] \TRUE }
-\end{mathpar}
-
-\vspace{5pt}
-
-\subsection{Derived rules}
-\ralf{Move all these to the two paragraphs above.}
-
-\paragraph{Derived structural rules.}
-The following are easily derived by unfolding the sugar for Hoare triples and view shifts.
-\begin{mathpar}
-\inferHB{Disj}
+\inferHB{Ht-disj}
   {\hoare{\prop}{\expr}{\Ret\val.\propC}[\mask] \and \hoare{\propB}{\expr}{\Ret\val.\propC}[\mask]}
   {\hoare{\prop \lor \propB}{\expr}{\Ret\val.\propC}[\mask]}
 \and
-\inferHB{VSDisj}
-  {\prop \vs[\mask_1][\mask_2] \propC \and \propB \vs[\mask_1][\mask_2] \propC}
-  {\prop \lor \propB \vs[\mask_1][\mask_2] \propC}
-\and
-\inferHB{Exist}
+\inferHB{Ht-exist}
   {\All \var. \hoare{\prop}{\expr}{\Ret\val.\propB}[\mask]}
   {\hoare{\Exists \var. \prop}{\expr}{\Ret\val.\propB}[\mask]}
 \and
-\inferHB{VSExist}
-  {\All \var. (\prop \vs[\mask_1][\mask_2] \propB)}
-  {(\Exists \var. \prop) \vs[\mask_1][\mask_2] \propB}
-\and
-\inferHB{HtBox}
+\inferHB{Ht-box}
   {\always\propB \proves \hoare{\prop}{\expr}{\Ret\val.\propC}[\mask]}
   {\hoare{\prop \land \always{\propB}}{\expr}{\Ret\val.\propC}[\mask]}
 \and
-\inferHB{VsBox}
-  {\always\propB \proves \prop \vs[\mask_1][\mask_2] \propC}
-  {\prop \land \always{\propB} \vs[\mask_1][\mask_2] \propC}
- \and
-\inferH{False}
+\inferH{Ht-false}
   {}
   {\hoare{\FALSE}{\expr}{\Ret \val. \prop}[\mask]}
-\and
-\inferH{VSFalse}
-  {}
-  {\FALSE \vs[\mask_1][\mask_2] \prop }
-\end{mathpar}
-
-\paragraph{Derived rules for invariants.}
-Invariants can be opened around atomic expressions and view shifts.
-
-\begin{mathpar}
-\inferH{Inv}
-  {\hoare{\later{\propC} * \prop }
-          {\expr}
-          {\Ret\val. \later{\propC} * \propB }[\mask]
-          \and \physatomic{\expr}
-  }
-  {\knowInv{\iname}{\propC} \proves \hoare{\prop}
-          {\expr}
-          {\Ret\val. \propB}[\mask \uplus \{ \iname \}]
-  }
-\and
-\inferH{VSInv}
-  {\later{\prop} * \propB \vs[\mask_1][\mask_2] \later{\prop} * \propC}
-  {\knowInv{\iname}{\prop} \proves \propB \vs[\mask_1 \uplus \{ \iname \}][\mask_2 \uplus \{ \iname \}] \propC}
-\end{mathpar}
+\end{mathparpagebreakable}
 
 \clearpage
 \section{Derived constructions}
