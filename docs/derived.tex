@@ -9,19 +9,18 @@
 \ralf{Sync this with Coq.}
 
 Hoare triples and view shifts are syntactic sugar for weakest (liberal) preconditions and primitive view shifts, respectively:
-\[
-\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \dynA{\expr}{\lambda\Ret\val.\propB}{\mask})}
-\qquad\qquad
-\begin{aligned}
-\prop \vs[\mask_1][\mask_2] \propB &\eqdef \always{(\prop \Ra \pvsA{\propB}{\mask_1}{\mask_2})} \\
-\prop \vsE[\mask_1][\mask_2] \propB &\eqdef \prop \vs[\mask_1][\mask_2] \propB \land \propB \vs[\mask2][\mask_1] \prop
-\end{aligned}
-\]
+% \[
+% \hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \dynA{\expr}{\lambda\Ret\val.\propB}{\mask})}
+% \qquad\qquad
+% \begin{aligned}
+% \prop \vs[\mask_1][\mask_2] \propB &\eqdef \always{(\prop \Ra \pvsA{\propB}{\mask_1}{\mask_2})} \\
+% \prop \vsE[\mask_1][\mask_2] \propB &\eqdef \prop \vs[\mask_1][\mask_2] \propB \land \propB \vs[\mask2][\mask_1] \prop
+% \end{aligned}
+% \]
 We write just one mask for a view shift when $\mask_1 = \mask_2$.
 The convention for omitted masks is generous:
 An omitted $\mask$ is $\top$ for Hoare triples and $\emptyset$ for view shifts.
 
-We write $\provesalways$ to denote judgments that can only be extended with a boxed proof context, in contrast to our usual convention of allowing the context to be extended with any assertions.
 
 \paragraph{Hoare triples.}
 \begin{mathpar}
@@ -120,12 +119,12 @@ The following are easily derived by unfolding the sugar for Hoare triples and vi
   {\All \var. (\prop \vs[\mask_1][\mask_2] \propB)}
   {(\Exists \var. \prop) \vs[\mask_1][\mask_2] \propB}
 \and
-\inferHB{BoxOut}
-  {\always\propB \provesalways \hoare{\prop}{\expr}{\Ret\val.\propC}[\mask]}
+\inferHB{HtBox}
+  {\always\propB \proves \hoare{\prop}{\expr}{\Ret\val.\propC}[\mask]}
   {\hoare{\prop \land \always{\propB}}{\expr}{\Ret\val.\propC}[\mask]}
 \and
-\inferHB{VSBoxOut}
-  {\always\propB \provesalways \prop \vs[\mask_1][\mask_2] \propC}
+\inferHB{VsBox}
+  {\always\propB \proves \prop \vs[\mask_1][\mask_2] \propC}
   {\prop \land \always{\propB} \vs[\mask_1][\mask_2] \propC}
  \and
 \inferH{False}

@@ -54,8 +54,8 @@ Proof.
       apply uPred_weaken with (k + n) r2; eauto using cmra_included_l. }
     by rewrite -Permutation_middle /= big_op_app.
 Qed.
-Lemma ht_adequacy_steps P Φ k n e1 t2 σ1 σ2 r1 :
-  {{ P }} e1 {{ Φ }} →
+Lemma wp_adequacy_steps P Φ k n e1 t2 σ1 σ2 r1 :
+  P ⊑ #> e1 {{ Φ }} →
   nsteps step k ([e1],σ1) (t2,σ2) →
   1 < n → wsat (k + n) ⊤ σ1 r1 →
   P (k + n) r1 →
@@ -64,65 +64,89 @@ Proof.
   intros Hht ????; apply (nsteps_wptp [Φ] k n ([e1],σ1) (t2,σ2) [r1]);
     rewrite /big_op ?right_id; auto.
   constructor; last constructor.
-  move: Hht; rewrite /ht; uPred.unseal=> Hht.
-  apply Hht with (k + n) r1; by eauto using cmra_included_unit.
+  apply Hht; by eauto using cmra_included_unit.
 Qed.
-Lemma ht_adequacy_own Φ e1 t2 σ1 m σ2 :
+
+Lemma wp_adequacy_own Φ e1 t2 σ1 m σ2 :
   ✓ m →
-  {{ ownP σ1 ★ ownG m }} e1 {{ Φ }} →
+  (ownP σ1 ★ ownG m) ⊑ #> e1 {{ Φ }} →
   rtc step ([e1],σ1) (t2,σ2) →
   ∃ rs2 Φs', wptp 2 t2 (Φ :: Φs') rs2 ∧ wsat 2 ⊤ σ2 (big_op rs2).
 Proof.
   intros Hv ? [k ?]%rtc_nsteps.
-  eapply ht_adequacy_steps with (r1 := (Res ∅ (Excl σ1) (Some m))); eauto; [|].
+  eapply wp_adequacy_steps with (r1 := (Res ∅ (Excl σ1) (Some m))); eauto; [|].
   { by rewrite Nat.add_comm; apply wsat_init, cmra_valid_validN. }
   uPred.unseal; exists (Res ∅ (Excl σ1) ∅), (Res ∅ ∅ (Some m)); split_and?.
   - by rewrite Res_op ?left_id ?right_id.
   - rewrite /ownP; uPred.unseal; rewrite /uPred_holds //=.
   - by apply ownG_spec.
 Qed.
-Theorem ht_adequacy_result E φ e v t2 σ1 m σ2 :
+
+Theorem wp_adequacy_result E φ e v t2 σ1 m σ2 :
   ✓ m →
-  {{ ownP σ1 ★ ownG m }} e @ E {{ λ v', ■ φ v' }} →
+  (ownP σ1 ★ ownG m) ⊑ #> e @ E {{ λ v', ■ φ v' }} →
   rtc step ([e], σ1) (of_val v :: t2, σ2) →
   φ v.
 Proof.
   intros Hv ? Hs.
-  destruct (ht_adequacy_own (λ v', ■ φ v')%I e (of_val v :: t2) σ1 m σ2)
+  destruct (wp_adequacy_own (λ v', ■ φ v')%I e (of_val v :: t2) σ1 m σ2)
              as (rs2&Qs&Hwptp&?); auto.
-  { by rewrite -(ht_mask_weaken E ⊤). }
+  { by rewrite -(wp_mask_weaken E ⊤). }
   inversion Hwptp as [|?? r ?? rs Hwp _]; clear Hwptp; subst.
   move: Hwp. rewrite wp_eq. uPred.unseal=> /wp_value_inv Hwp.
   rewrite pvs_eq in Hwp.
   destruct (Hwp (big_op rs) 2 ∅ σ2) as [r' []]; rewrite ?right_id_L; auto.
 Qed.
-Lemma ht_adequacy_reducible E Φ e1 e2 t2 σ1 m σ2 :
+
+Lemma ht_adequacy_result E φ e v t2 σ1 m σ2 :
   ✓ m →
-  {{ ownP σ1 ★ ownG m }} e1 @ E {{ Φ }} →
+  {{ ownP σ1 ★ ownG m }} e @ E {{ λ v', ■ φ v' }} →
+  rtc step ([e], σ1) (of_val v :: t2, σ2) →
+  φ v.
+Proof.
+  intros ? Hht. eapply wp_adequacy_result with (E:=E); first done.
+  move:Hht. by rewrite /ht uPred.always_elim=>/uPred.impl_entails.
+Qed.
+
+Lemma wp_adequacy_reducible E Φ e1 e2 t2 σ1 m σ2 :
+  ✓ m →
+  (ownP σ1 ★ ownG m) ⊑ #> e1 @ E {{ Φ }} →
   rtc step ([e1], σ1) (t2, σ2) →
   e2 ∈ t2 → to_val e2 = None → reducible e2 σ2.
 Proof.
   intros Hv ? Hs [i ?]%elem_of_list_lookup He.
-  destruct (ht_adequacy_own Φ e1 t2 σ1 m σ2) as (rs2&Φs&?&?); auto.
-  { by rewrite -(ht_mask_weaken E ⊤). }
+  destruct (wp_adequacy_own Φ e1 t2 σ1 m σ2) as (rs2&Φs&?&?); auto.
+  { by rewrite -(wp_mask_weaken E ⊤). }
   destruct (Forall3_lookup_l (λ e Φ r, wp ⊤ e Φ 2 r) t2
     (Φ :: Φs) rs2 i e2) as (Φ'&r2&?&?&Hwp); auto.
   destruct (wp_step_inv ⊤ ∅ Φ' e2 1 2 σ2 r2 (big_op (delete i rs2)));
     rewrite ?right_id_L ?big_op_delete; auto.
   by rewrite -wp_eq.
 Qed.
-Theorem ht_adequacy_safe E Φ e1 t2 σ1 m σ2 :
+
+Theorem wp_adequacy_safe E Φ e1 t2 σ1 m σ2 :
   ✓ m →
-  {{ ownP σ1 ★ ownG m }} e1 @ E {{ Φ }} →
+  (ownP σ1 ★ ownG m) ⊑ #> e1 @ E {{ Φ }} →
   rtc step ([e1], σ1) (t2, σ2) →
   Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ t3 σ3, step (t2, σ2) (t3, σ3).
 Proof.
   intros.
   destruct (decide (Forall (λ e, is_Some (to_val e)) t2)) as [|Ht2]; [by left|].
   apply (not_Forall_Exists _), Exists_exists in Ht2; destruct Ht2 as (e2&?&He2).
-  destruct (ht_adequacy_reducible E Φ e1 e2 t2 σ1 m σ2) as (e3&σ3&ef&?);
+  destruct (wp_adequacy_reducible E Φ e1 e2 t2 σ1 m σ2) as (e3&σ3&ef&?);
     rewrite ?eq_None_not_Some; auto.
   destruct (elem_of_list_split t2 e2) as (t2'&t2''&->); auto.
   right; exists (t2' ++ e3 :: t2'' ++ option_list ef), σ3; econstructor; eauto.
 Qed.
+
+Lemma ht_adequacy_safe E Φ e1 t2 σ1 m σ2 :
+  ✓ m →
+  {{ ownP σ1 ★ ownG m }} e1 @ E {{ Φ }} →
+  rtc step ([e1], σ1) (t2, σ2) →
+  Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ t3 σ3, step (t2, σ2) (t3, σ3).
+Proof.
+  intros ? Hht. eapply wp_adequacy_safe with (E:=E) (Φ:=Φ); first done.
+  move:Hht. by rewrite /ht uPred.always_elim=>/uPred.impl_entails.
+Qed.
+
 End adequacy.

@@ -115,8 +115,8 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
     \ownPhys{\term} \mid
     \always\prop \mid
     {\later\prop} \mid
-    \pvsA{\prop}{\term}{\term} \mid
-    \dynA{\term}{\pred}{\term}
+    \pvs[\term][\term] \prop\mid
+    \wpre{\term}{\pred}[\term]
 \end{align*}
 Recursive predicates must be \emph{guarded}: in $\MU \var. \pred$, the variable $\var$ can only appear under the later $\later$ modality.
 
@@ -263,7 +263,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 		\vctx \proves \wtt{\mask}{\textsort{InvMask}} \and
 		\vctx \proves \wtt{\mask'}{\textsort{InvMask}}
 	}{
-		\vctx \proves \wtt{\pvsA{\prop}{\mask}{\mask'}}{\Prop}
+		\vctx \proves \wtt{\pvs[\mask][\mask'] \prop}{\Prop}
 	}
 \and
 	\infer{
@@ -271,7 +271,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 		\vctx \proves \wtt{\pred}{\textsort{Val} \to \Prop} \and
 		\vctx \proves \wtt{\mask}{\textsort{InvMask}}
 	}{
-		\vctx \proves \wtt{\dynA{\expr}{\pred}{\mask}}{\Prop}
+		\vctx \proves \wtt{\wpre{\expr}{\pred}[\mask]}{\Prop}
 	}
 \end{mathparpagebreakable}
 
@@ -288,6 +288,7 @@ This is a \emph{meta-level} assertions about propositions, defined by the follow
 
 The judgment $\vctx \mid \pfctx \proves \prop$ says that with free variables $\vctx$, proposition $\prop$ holds whenever all assumptions $\pfctx$ hold.
 We implicitly assume that an arbitrary variable context, $\vctx$, is added to every constituent of the rules.
+Furthermore, an arbitrary \emph{boxed} assertion context $\always\pfctx$ may be added to every constituent.
 Axioms $\prop \Ra \propB$ stand for judgments $\vctx \mid \cdot \proves \prop \Ra \propB$ with no assumptions.
 (Bi-implications are analogous.)
 
@@ -500,17 +501,17 @@ This is entirely standard.
 
 
 \subsection{Adequacy}
-~\\\ralf{Check if this is still accurate. Port to weakest-pre.}
 
 The adequacy statement reads as follows:
 \begin{align*}
- &\All \mask, \expr, \val, \pred, i, \state, \state', \tpool'.
- \\&( \proves \hoare{\ownPhys\state}{\expr}{x.\; \pred(x)}[\mask]) \implies
- \\&\cfg{\state}{[i \mapsto \expr]} \step^\ast
-     \cfg{\state'}{[i \mapsto \val] \uplus \tpool'} \implies
+ &\All \mask, \expr, \val, \pred, i, \state, \melt, \state', \tpool'.
+ \\&(\All n. \melt \in \mval_n) \Ra
+ \\&( \ownPhys\state * \ownGGhost\melt \proves \wpre{\expr}{x.\; \pred(x)}[\mask]) \Ra
+ \\&\cfg{\state}{[\expr]} \step^\ast
+     \cfg{\state'}{[\val] \dplus \tpool'} \Ra
      \\&\pred(\val)
 \end{align*}
-where $\pred$ can mention neither resources nor invariants.
+where $\pred$ is a \emph{meta-level} predicate over values, \ie it can mention neither resources nor invariants.
 
 
 % RJ: If we want this section back, we should port it to primitive view shifts and prove it in Coq.

@@ -318,7 +318,6 @@
 \def\Lam #1.{\lambda #1.\spac}%
 
 \newcommand{\proves}{\vdash}
-\newcommand{\provesalways}{\vdash_{\!\!\boxempty}}
 
 \newcommand{\wand}{\;{{\mbox{---}}\!\!{*}}\;}
 
@@ -327,12 +326,8 @@
 \newcommand{\gmapsto}{\hookrightarrow}%
 \newcommand{\fgmapsto}[1][\mathrm{-}]{\xhookrightarrow{#1}}%
 
-\newcommand{\dyn}[2]{\textlog{wp}({#1}, {#2})}
-\newcommand{\adyn}[2]{{#1}\;\llparenthesis{#2}\rrparenthesis}
-\newcommand{\dynpred}[2]{\textdom{wp}({#1}, {#2})}
-\newcommand{\dynA}[3]{\textlog{wp}_{#3}({#1}, {#2})}
-\newcommand{\pvs}[1]{\textlog{vs}({#1})}
-\newcommand{\pvsA}[3]{\textlog{vs}_{#2}^{#3}({#1})}
+\NewDocumentCommand\wpre{m m o}%
+  {{#1} \spac \{#2\}_{#3}}
 
 \newcommand{\later}{\mathord{\triangleright}}
 \newcommand{\always}{\Box{}}
@@ -369,6 +364,8 @@
 \NewDocumentCommand \vsL {O{} O{}} {\vsGen[#1]{\Lleftarrow}[#2]}
 \NewDocumentCommand \vsE {O{} O{}} %
   {\vsGen[#1]{\Lleftarrow\!\!\!\Rrightarrow}[#2]}
+\NewDocumentCommand \pvs {O{} O{}} {\mathord{\vsGen[#1]{{\mid\kern-0.4ex\Rrightarrow}}[#2]}}
+
 
 %% Hoare Triples
 \newcommand*{\hoaresizebox}[1]{%
