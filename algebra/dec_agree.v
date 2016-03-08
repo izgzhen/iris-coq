@@ -2,7 +2,7 @@ From algebra Require Export cmra.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 Local Arguments op _ _ _ !_ /.
-Local Arguments unit _ _ !_ /.
+Local Arguments core _ _ !_ /.
 
 (* This is isomorphic to option, but has a very different RA structure. *)
 Inductive dec_agree (A : Type) : Type := 
@@ -26,7 +26,7 @@ Instance dec_agree_op : Op (dec_agree A) := λ x y,
   | DecAgree a, DecAgree b => if decide (a = b) then DecAgree a else DecAgreeBot
   | _, _ => DecAgreeBot
   end.
-Instance dec_agree_unit : Unit (dec_agree A) := id.
+Instance dec_agree_core : Core (dec_agree A) := id.
 Instance dec_agree_div : Div (dec_agree A) := λ x y, x.
 
 Definition dec_agree_ra : RA (dec_agree A).

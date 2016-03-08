@@ -122,7 +122,7 @@ Instance frac_valid : Valid (frac A) := λ x,
 Instance frac_validN : ValidN (frac A) := λ n x,
   match x with Frac q a => (q ≤ 1)%Qc ∧ ✓{n} a | FracUnit => True end.
 Global Instance frac_empty : Empty (frac A) := FracUnit.
-Instance frac_unit : Unit (frac A) := λ _, ∅.
+Instance frac_core : Core (frac A) := λ _, ∅.
 Instance frac_op : Op (frac A) := λ x y,
   match x, y with
   | Frac q1 a, Frac q2 b => Frac (q1 + q2) (a ⋅ b)
@@ -225,7 +225,7 @@ Qed.
 Lemma frac_update (a1 a2 : A) p : a1 ~~> a2 → Frac p a1 ~~> Frac p a2.
 Proof.
   intros Ha n [q b|] [??]; split; auto.
-  apply cmra_validN_op_l with (unit a1), Ha. by rewrite cmra_unit_r.
+  apply cmra_validN_op_l with (core a1), Ha. by rewrite cmra_core_r.
 Qed.
 End cmra.
 

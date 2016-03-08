@@ -60,7 +60,7 @@ Program Instance agree_op : Op (agree A) := λ x y,
   {| agree_car := x;
      agree_is_valid n := agree_is_valid x n ∧ agree_is_valid y n ∧ x ≡{n}≡ y |}.
 Next Obligation. naive_solver eauto using agree_valid_S, dist_S. Qed.
-Instance agree_unit : Unit (agree A) := id.
+Instance agree_core : Core (agree A) := id.
 Instance agree_div : Div (agree A) := λ x y, x.
 
 Instance: Comm (≡) (@op (agree A) _).

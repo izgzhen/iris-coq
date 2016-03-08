@@ -74,8 +74,8 @@ Proof. by destruct 3; constructor; try apply: timeless. Qed.
 Instance res_op : Op (res Λ A M) := λ r1 r2,
   Res (wld r1 ⋅ wld r2) (pst r1 ⋅ pst r2) (gst r1 ⋅ gst r2).
 Global Instance res_empty `{Empty M} : Empty (res Λ A M) := Res ∅ ∅ ∅.
-Instance res_unit : Unit (res Λ A M) := λ r,
-  Res (unit (wld r)) (unit (pst r)) (unit (gst r)).
+Instance res_core : Core (res Λ A M) := λ r,
+  Res (core (wld r)) (core (pst r)) (core (gst r)).
 Instance res_valid : Valid (res Λ A M) := λ r, ✓ wld r ∧ ✓ pst r ∧ ✓ gst r.
 Instance res_validN : ValidN (res Λ A M) := λ n r,
   ✓{n} wld r ∧ ✓{n} pst r ∧ ✓{n} gst r.
@@ -109,10 +109,10 @@ Proof.
   - by intros n ? (?&?&?); split_and!; apply cmra_validN_S.
   - by intros ???; constructor; rewrite /= assoc.
   - by intros ??; constructor; rewrite /= comm.
-  - by intros ?; constructor; rewrite /= cmra_unit_l.
-  - by intros ?; constructor; rewrite /= cmra_unit_idemp.
+  - by intros ?; constructor; rewrite /= cmra_core_l.
+  - by intros ?; constructor; rewrite /= cmra_core_idemp.
   - intros r1 r2; rewrite !res_included.
-    by intros (?&?&?); split_and!; apply cmra_unit_preserving.
+    by intros (?&?&?); split_and!; apply cmra_core_preserving.
   - intros n r1 r2 (?&?&?);
       split_and!; simpl in *; eapply cmra_validN_op_l; eauto.
   - intros r1 r2; rewrite res_included; intros (?&?&?).
@@ -144,7 +144,7 @@ Proof. by intros (?&?&?). Qed.
 Lemma Res_op w1 w2 σ1 σ2 m1 m2 :
   Res w1 σ1 m1 ⋅ Res w2 σ2 m2 = Res (w1 ⋅ w2) (σ1 ⋅ σ2) (m1 ⋅ m2).
 Proof. done. Qed.
-Lemma Res_unit w σ m : unit (Res w σ m) = Res (unit w) (unit σ) (unit m).
+Lemma Res_core w σ m : core (Res w σ m) = Res (core w) (core σ) (core m).
 Proof. done. Qed.
 Lemma lookup_wld_op_l n r1 r2 i P :
   ✓{n} (r1⋅r2) → wld r1 !! i ≡{n}≡ Some P → (wld r1 ⋅ wld r2) !! i ≡{n}≡ Some P.

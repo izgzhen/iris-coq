@@ -85,8 +85,8 @@ Instance auth_validN : ValidN (auth A) := λ n x,
   | ExclBot => False
   end.
 Global Arguments auth_validN _ !_ /.
-Instance auth_unit : Unit (auth A) := λ x,
-  Auth (unit (authoritative x)) (unit (own x)).
+Instance auth_core : Core (auth A) := λ x,
+  Auth (core (authoritative x)) (core (own x)).
 Instance auth_op : Op (auth A) := λ x y,
   Auth (authoritative x ⋅ authoritative y) (own x ⋅ own y).
 Instance auth_div : Div (auth A) := λ x y,
@@ -117,10 +117,10 @@ Proof.
   - intros n [[] ?] ?; naive_solver eauto using cmra_includedN_S, cmra_validN_S.
   - by split; simpl; rewrite assoc.
   - by split; simpl; rewrite comm.
-  - by split; simpl; rewrite ?cmra_unit_l.
-  - by split; simpl; rewrite ?cmra_unit_idemp.
+  - by split; simpl; rewrite ?cmra_core_l.
+  - by split; simpl; rewrite ?cmra_core_idemp.
   - intros ??; rewrite! auth_included; intros [??].
-    by split; simpl; apply cmra_unit_preserving.
+    by split; simpl; apply cmra_core_preserving.
   - assert (∀ n (a b1 b2 : A), b1 ⋅ b2 ≼{n} a → b1 ≼{n} a).
     { intros n a b1 b2 <-; apply cmra_includedN_l. }
    intros n [[a1| |] b1] [[a2| |] b2];

@@ -91,7 +91,7 @@ Instance excl_valid : Valid (excl A) := λ x,
 Instance excl_validN : ValidN (excl A) := λ n x,
   match x with Excl _ | ExclUnit => True | ExclBot => False end.
 Global Instance excl_empty : Empty (excl A) := ExclUnit.
-Instance excl_unit : Unit (excl A) := λ _, ∅.
+Instance excl_core : Core (excl A) := λ _, ∅.
 Instance excl_op : Op (excl A) := λ x y,
   match x, y with
   | Excl a, ExclUnit | ExclUnit, Excl a => Excl a

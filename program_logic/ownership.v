@@ -28,7 +28,7 @@ Qed.
 Lemma always_ownI i P : (□ ownI i P)%I ≡ ownI i P.
 Proof.
   apply uPred.always_ownM.
-  by rewrite Res_unit !cmra_unit_empty map_unit_singleton.
+  by rewrite Res_core !cmra_core_empty map_core_singleton.
 Qed.
 Global Instance ownI_always_stable i P : AlwaysStable (ownI i P).
 Proof. by rewrite /AlwaysStable always_ownI. Qed.
@@ -52,13 +52,13 @@ Lemma ownG_op m1 m2 : ownG (m1 ⋅ m2) ≡ (ownG m1 ★ ownG m2)%I.
 Proof. by rewrite /ownG -uPred.ownM_op Res_op !left_id. Qed.
 Global Instance ownG_mono : Proper (flip (≼) ==> (⊑)) (@ownG Λ Σ).
 Proof. move=>a b [c H]. rewrite H ownG_op. eauto with I. Qed.
-Lemma always_ownG_unit m : (□ ownG (unit m))%I ≡ ownG (unit m).
+Lemma always_ownG_core m : (□ ownG (core m))%I ≡ ownG (core m).
 Proof.
   apply uPred.always_ownM.
-  by rewrite Res_unit !cmra_unit_empty -{2}(cmra_unit_idemp m).
+  by rewrite Res_core !cmra_core_empty -{2}(cmra_core_idemp m).
 Qed.
-Lemma always_ownG m : unit m ≡ m → (□ ownG m)%I ≡ ownG m.
-Proof. by intros <-; rewrite always_ownG_unit. Qed.
+Lemma always_ownG m : core m ≡ m → (□ ownG m)%I ≡ ownG m.
+Proof. by intros <-; rewrite always_ownG_core. Qed.
 Lemma ownG_valid m : ownG m ⊑ ✓ m.
 Proof.
   rewrite /ownG uPred.ownM_valid res_validI /=; auto with I.
@@ -69,8 +69,8 @@ Lemma ownG_empty : True ⊑ (ownG ∅ : iProp Λ Σ).
 Proof. apply uPred.ownM_empty. Qed.
 Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
 Proof. rewrite /ownG; apply _. Qed.
-Global Instance ownG_unit_always_stable m : AlwaysStable (ownG (unit m)).
-Proof. by rewrite /AlwaysStable always_ownG_unit. Qed.
+Global Instance ownG_core_always_stable m : AlwaysStable (ownG (core m)).
+Proof. by rewrite /AlwaysStable always_ownG_core. Qed.
 
 (* inversion lemmas *)
 Lemma ownI_spec n r i P :

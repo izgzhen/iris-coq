@@ -64,7 +64,7 @@ Proof.
   intros Hht ????; apply (nsteps_wptp [Φ] k n ([e1],σ1) (t2,σ2) [r1]);
     rewrite /big_op ?right_id; auto.
   constructor; last constructor.
-  apply Hht; by eauto using cmra_included_unit.
+  apply Hht; by eauto using cmra_included_core.
 Qed.
 
 Lemma wp_adequacy_own Φ e1 t2 σ1 m σ2 :

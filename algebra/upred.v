@@ -227,11 +227,11 @@ Definition uPred_wand_eq :
   @uPred_wand = @uPred_wand_def := proj2_sig uPred_wand_aux.
 
 Program Definition uPred_always_def {M} (P : uPred M) : uPred M :=
-  {| uPred_holds n x := P n (unit x) |}.
+  {| uPred_holds n x := P n (core x) |}.
 Next Obligation. by intros M P x1 x2 n ? Hx; rewrite /= -Hx. Qed.
 Next Obligation.
-  intros M P n1 n2 x1 x2 ????; eapply uPred_weaken with n1 (unit x1);
-    eauto using cmra_unit_preserving, cmra_unit_validN.
+  intros M P n1 n2 x1 x2 ????; eapply uPred_weaken with n1 (core x1);
+    eauto using cmra_core_preserving, cmra_core_validN.
 Qed.
 Definition uPred_always_aux : { x | x = @uPred_always_def }. by eexists. Qed.
 Definition uPred_always {M} := proj1_sig uPred_always_aux M.
@@ -432,7 +432,7 @@ Global Instance later_proper :
 Global Instance always_ne n : Proper (dist n ==> dist n) (@uPred_always M).
 Proof.
   intros P1 P2 HP.
-  unseal; split=> n' x; split; apply HP; eauto using cmra_unit_validN.
+  unseal; split=> n' x; split; apply HP; eauto using cmra_core_validN.
 Qed.
 Global Instance always_proper :
   Proper ((≡) ==> (≡)) (@uPred_always M) := ne_proper _.
@@ -687,7 +687,7 @@ Global Instance True_sep : LeftId (≡) True%I (@uPred_sep M).
 Proof.
   intros P; unseal; split=> n x Hvalid; split.
   - intros (x1&x2&?&_&?); cofe_subst; eauto using uPred_weaken, cmra_included_r.
-  - by intros ?; exists (unit x), x; rewrite cmra_unit_l.
+  - by intros ?; exists (core x), x; rewrite cmra_core_l.
 Qed. 
 Global Instance sep_comm : Comm (≡) (@uPred_sep M).
 Proof.
@@ -836,13 +836,13 @@ Lemma always_const φ : (□ ■ φ : uPred M)%I ≡ (■ φ)%I.
 Proof. by unseal. Qed.
 Lemma always_elim P : □ P ⊑ P.
 Proof.
-  unseal; split=> n x ? /=; eauto using uPred_weaken, cmra_included_unit.
+  unseal; split=> n x ? /=; eauto using uPred_weaken, cmra_included_core.
 Qed.
 Lemma always_intro' P Q : □ P ⊑ Q → □ P ⊑ □ Q.
 Proof.
   unseal=> HPQ.
-  split=> n x ??; apply HPQ; simpl; auto using cmra_unit_validN.
-  by rewrite cmra_unit_idemp.
+  split=> n x ??; apply HPQ; simpl; auto using cmra_core_validN.
+  by rewrite cmra_core_idemp.
 Qed.
 Lemma always_and P Q : (□ (P ∧ Q))%I ≡ (□ P ∧ □ Q)%I.
 Proof. by unseal. Qed.
@@ -855,12 +855,12 @@ Proof. by unseal. Qed.
 Lemma always_and_sep_1 P Q : □ (P ∧ Q) ⊑ □ (P ★ Q).
 Proof.
   unseal; split=> n x ? [??].
-  exists (unit x), (unit x); rewrite cmra_unit_unit; auto.
+  exists (core x), (core x); rewrite cmra_core_core; auto.
 Qed.
 Lemma always_and_sep_l_1 P Q : (□ P ∧ Q) ⊑ (□ P ★ Q).
 Proof.
-  unseal; split=> n x ? [??]; exists (unit x), x; simpl in *.
-  by rewrite cmra_unit_l cmra_unit_idemp.
+  unseal; split=> n x ? [??]; exists (core x), x; simpl in *.
+  by rewrite cmra_core_l cmra_core_idemp.
 Qed.
 Lemma always_later P : (□ ▷ P)%I ≡ (▷ □ P)%I.
 Proof. by unseal. Qed.
@@ -939,7 +939,7 @@ Lemma later_sep P Q : (▷ (P ★ Q))%I ≡ (▷ P ★ ▷ Q)%I.
 Proof.
   unseal; split=> n x ?; split.
   - destruct n as [|n]; simpl.
-    { by exists x, (unit x); rewrite cmra_unit_r. }
+    { by exists x, (core x); rewrite cmra_core_r. }
     intros (x1&x2&Hx&?&?); destruct (cmra_extend n x x1 x2)
       as ([y1 y2]&Hx'&Hy1&Hy2); eauto using cmra_validN_S; simpl in *.
     exists y1, y2; split; [by rewrite Hx'|by rewrite Hy1 Hy2].
@@ -987,19 +987,19 @@ Lemma ownM_op (a1 a2 : M) :
 Proof.
   unseal; split=> n x ?; split.
   - intros [z ?]; exists a1, (a2 ⋅ z); split; [by rewrite (assoc op)|].
-    split. by exists (unit a1); rewrite cmra_unit_r. by exists z.
+    split. by exists (core a1); rewrite cmra_core_r. by exists z.
   - intros (y1&y2&Hx&[z1 Hy1]&[z2 Hy2]); exists (z1 ⋅ z2).
     by rewrite (assoc op _ z1) -(comm op z1) (assoc op z1)
       -(assoc op _ a2) (comm op z1) -Hy1 -Hy2.
 Qed.
-Lemma always_ownM_unit (a : M) : (□ uPred_ownM (unit a))%I ≡ uPred_ownM (unit a).
+Lemma always_ownM_core (a : M) : (□ uPred_ownM (core a))%I ≡ uPred_ownM (core a).
 Proof.
   split=> n x; split; [by apply always_elim|unseal; intros [a' Hx]]; simpl.
-  rewrite -(cmra_unit_idemp a) Hx.
-  apply cmra_unit_preservingN, cmra_includedN_l.
+  rewrite -(cmra_core_idemp a) Hx.
+  apply cmra_core_preservingN, cmra_includedN_l.
 Qed.
-Lemma always_ownM (a : M) : unit a ≡ a → (□ uPred_ownM a)%I ≡ uPred_ownM a.
-Proof. by intros <-; rewrite always_ownM_unit. Qed.
+Lemma always_ownM (a : M) : core a ≡ a → (□ uPred_ownM a)%I ≡ uPred_ownM a.
+Proof. by intros <-; rewrite always_ownM_core. Qed.
 Lemma ownM_something : True ⊑ ∃ a, uPred_ownM a.
 Proof. unseal; split=> n x ??. by exists x; simpl. Qed.
 Lemma ownM_empty `{Empty M, !CMRAIdentity M} : True ⊑ uPred_ownM ∅.
@@ -1139,8 +1139,8 @@ Global Instance valid_always_stable {A : cmraT} (a : A) : AS (✓ a : uPred M)%I
 Proof. by intros; rewrite /AlwaysStable always_valid. Qed.
 Global Instance later_always_stable P : AS P → AS (▷ P).
 Proof. by intros; rewrite /AlwaysStable always_later; apply later_mono. Qed.
-Global Instance ownM_unit_always_stable (a : M) : AS (uPred_ownM (unit a)).
-Proof. by rewrite /AlwaysStable always_ownM_unit. Qed.
+Global Instance ownM_core_always_stable (a : M) : AS (uPred_ownM (core a)).
+Proof. by rewrite /AlwaysStable always_ownM_core. Qed.
 Global Instance default_always_stable {A} P (Ψ : A → uPred M) (mx : option A) :
   AS P → (∀ x, AS (Ψ x)) → AS (default P mx Ψ).
 Proof. destruct mx; apply _. Qed.

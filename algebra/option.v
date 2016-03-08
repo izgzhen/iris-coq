@@ -67,7 +67,7 @@ Instance option_valid : Valid (option A) := λ mx,
 Instance option_validN : ValidN (option A) := λ n mx,
   match mx with Some x => ✓{n} x | None => True end.
 Global Instance option_empty : Empty (option A) := None.
-Instance option_unit : Unit (option A) := fmap unit.
+Instance option_core : Core (option A) := fmap core.
 Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
 Instance option_div : Div (option A) :=
   difference_with (λ x y, Some (x ÷ y)).
@@ -99,10 +99,10 @@ Proof.
   - intros n [x|]; unfold validN, option_validN; eauto using cmra_validN_S.
   - intros [x|] [y|] [z|]; constructor; rewrite ?assoc; auto.
   - intros [x|] [y|]; constructor; rewrite 1?comm; auto.
-  - by intros [x|]; constructor; rewrite cmra_unit_l.
-  - by intros [x|]; constructor; rewrite cmra_unit_idemp.
+  - by intros [x|]; constructor; rewrite cmra_core_l.
+  - by intros [x|]; constructor; rewrite cmra_core_idemp.
   - intros mx my; rewrite !option_included ;intros [->|(x&y&->&->&?)]; auto.
-    right; exists (unit x), (unit y); eauto using cmra_unit_preserving.
+    right; exists (core x), (core y); eauto using cmra_core_preserving.
   - intros n [x|] [y|]; rewrite /validN /option_validN /=;
       eauto using cmra_validN_op_l.
   - intros mx my; rewrite option_included.
@@ -154,8 +154,8 @@ Lemma option_updateP (P : A → Prop) (Q : option A → Prop) x :
 Proof.
   intros Hx Hy n [y|] ?.
   { destruct (Hx n y) as (y'&?&?); auto. exists (Some y'); auto. }
-  destruct (Hx n (unit x)) as (y'&?&?); rewrite ?cmra_unit_r; auto.
-  by exists (Some y'); split; [auto|apply cmra_validN_op_l with (unit x)].
+  destruct (Hx n (core x)) as (y'&?&?); rewrite ?cmra_core_r; auto.
+  by exists (Some y'); split; [auto|apply cmra_validN_op_l with (core x)].
 Qed.
 Lemma option_updateP' (P : A → Prop) x :
   x ~~>: P → Some x ~~>: λ y, default False y P.

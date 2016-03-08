@@ -93,7 +93,7 @@ Context `{Countable K} {A : cmraT}.
 Implicit Types m : gmap K A.
 
 Instance map_op : Op (gmap K A) := merge op.
-Instance map_unit : Unit (gmap K A) := fmap unit.
+Instance map_core : Core (gmap K A) := fmap core.
 Instance map_valid : Valid (gmap K A) := λ m, ∀ i, ✓ (m !! i).
 Instance map_validN : ValidN (gmap K A) := λ n m, ∀ i, ✓{n} (m !! i).
 Instance map_div : Div (gmap K A) := merge div.
@@ -102,7 +102,7 @@ Lemma lookup_op m1 m2 i : (m1 ⋅ m2) !! i = m1 !! i ⋅ m2 !! i.
 Proof. by apply lookup_merge. Qed.
 Lemma lookup_div m1 m2 i : (m1 ÷ m2) !! i = m1 !! i ÷ m2 !! i.
 Proof. by apply lookup_merge. Qed.
-Lemma lookup_unit m i : unit m !! i = unit (m !! i).
+Lemma lookup_core m i : core m !! i = core (m !! i).
 Proof. by apply lookup_fmap. Qed.
 
 Lemma map_included_spec (m1 m2 : gmap K A) : m1 ≼ m2 ↔ ∀ i, m1 !! i ≼ m2 !! i.
@@ -125,7 +125,7 @@ Definition map_cmra_mixin : CMRAMixin (gmap K A).
 Proof.
   split.
   - by intros n m1 m2 m3 Hm i; rewrite !lookup_op (Hm i).
-  - by intros n m1 m2 Hm i; rewrite !lookup_unit (Hm i).
+  - by intros n m1 m2 Hm i; rewrite !lookup_core (Hm i).
   - by intros n m1 m2 Hm ? i; rewrite -(Hm i).
   - by intros n m1 m1' Hm1 m2 m2' Hm2 i; rewrite !lookup_div (Hm1 i) (Hm2 i).
   - intros m; split.
@@ -134,10 +134,10 @@ Proof.
   - intros n m Hm i; apply cmra_validN_S, Hm.
   - by intros m1 m2 m3 i; rewrite !lookup_op assoc.
   - by intros m1 m2 i; rewrite !lookup_op comm.
-  - by intros m i; rewrite lookup_op !lookup_unit cmra_unit_l.
-  - by intros m i; rewrite !lookup_unit cmra_unit_idemp.
+  - by intros m i; rewrite lookup_op !lookup_core cmra_core_l.
+  - by intros m i; rewrite !lookup_core cmra_core_idemp.
   - intros x y; rewrite !map_included_spec; intros Hm i.
-    by rewrite !lookup_unit; apply cmra_unit_preserving.
+    by rewrite !lookup_core; apply cmra_core_preserving.
   - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
   - intros x y; rewrite map_included_spec=> ? i.
@@ -201,21 +201,21 @@ Lemma map_singleton_valid i x : ✓ ({[ i := x ]} : gmap K A) ↔ ✓ x.
 Proof. rewrite !cmra_valid_validN. by setoid_rewrite map_singleton_validN. Qed.
 
 Lemma map_insert_singleton_opN n m i x :
-  m !! i = None ∨ m !! i ≡{n}≡ Some (unit x) → <[i:=x]> m ≡{n}≡ {[ i := x ]} ⋅ m.
+  m !! i = None ∨ m !! i ≡{n}≡ Some (core x) → <[i:=x]> m ≡{n}≡ {[ i := x ]} ⋅ m.
 Proof.
   intros Hi j; destruct (decide (i = j)) as [->|];
     [|by rewrite lookup_op lookup_insert_ne // lookup_singleton_ne // left_id].
   rewrite lookup_op lookup_insert lookup_singleton.
-  by destruct Hi as [->| ->]; constructor; rewrite ?cmra_unit_r.
+  by destruct Hi as [->| ->]; constructor; rewrite ?cmra_core_r.
 Qed.
 Lemma map_insert_singleton_op m i x :
-  m !! i = None ∨ m !! i ≡ Some (unit x) → <[i:=x]> m ≡ {[ i := x ]} ⋅ m.
+  m !! i = None ∨ m !! i ≡ Some (core x) → <[i:=x]> m ≡ {[ i := x ]} ⋅ m.
 Proof.
   rewrite !equiv_dist; naive_solver eauto using map_insert_singleton_opN.
 Qed.
 
-Lemma map_unit_singleton (i : K) (x : A) :
-  unit ({[ i := x ]} : gmap K A) = {[ i := unit x ]}.
+Lemma map_core_singleton (i : K) (x : A) :
+  core ({[ i := x ]} : gmap K A) = {[ i := core x ]}.
 Proof. apply map_fmap_singleton. Qed.
 Lemma map_op_singleton (i : K) (x y : A) :
   {[ i := x ]} ⋅ {[ i := y ]} = ({[ i := x ⋅ y ]} : gmap K A).
@@ -315,7 +315,7 @@ End freshness.
 
 (* Allocation is a local update: Just use composition with a singleton map. *)
 (* Deallocation is *not* a local update. The trouble is that if we
-   own {[ i ↦ x ]}, then the frame could always own "unit x", and prevent
+   own {[ i ↦ x ]}, then the frame could always own "core x", and prevent
    deallocation. *)
 
 (* Applying a local update at a position we own is a local update. *)

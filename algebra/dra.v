@@ -18,17 +18,17 @@ Definition dra_included `{Equiv A, Valid A, Disjoint A, Op A} := λ x y,
 Instance: Params (@dra_included) 4.
 Local Infix "≼" := dra_included.
 
-Class DRA A `{Equiv A, Valid A, Unit A, Disjoint A, Op A, Div A} := {
+Class DRA A `{Equiv A, Valid A, Core A, Disjoint A, Op A, Div A} := {
   (* setoids *)
   dra_equivalence :> Equivalence ((≡) : relation A);
   dra_op_proper :> Proper ((≡) ==> (≡) ==> (≡)) (⋅);
-  dra_unit_proper :> Proper ((≡) ==> (≡)) unit;
+  dra_core_proper :> Proper ((≡) ==> (≡)) core;
   dra_valid_proper :> Proper ((≡) ==> impl) valid;
   dra_disjoint_proper :> ∀ x, Proper ((≡) ==> impl) (disjoint x);
   dra_div_proper :> Proper ((≡) ==> (≡) ==> (≡)) div;
   (* validity *)
   dra_op_valid x y : ✓ x → ✓ y → x ⊥ y → ✓ (x ⋅ y);
-  dra_unit_valid x : ✓ x → ✓ unit x;
+  dra_core_valid x : ✓ x → ✓ core x;
   dra_div_valid x y : ✓ x → ✓ y → x ≼ y → ✓ (y ÷ x);
   (* monoid *)
   dra_assoc :> Assoc (≡) (⋅);
@@ -36,10 +36,10 @@ Class DRA A `{Equiv A, Valid A, Unit A, Disjoint A, Op A, Div A} := {
   dra_disjoint_move_l x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ y ⋅ z;
   dra_symmetric :> Symmetric (@disjoint A _);
   dra_comm x y : ✓ x → ✓ y → x ⊥ y → x ⋅ y ≡ y ⋅ x;
-  dra_unit_disjoint_l x : ✓ x → unit x ⊥ x;
-  dra_unit_l x : ✓ x → unit x ⋅ x ≡ x;
-  dra_unit_idemp x : ✓ x → unit (unit x) ≡ unit x;
-  dra_unit_preserving x y : ✓ x → ✓ y → x ≼ y → unit x ≼ unit y;
+  dra_core_disjoint_l x : ✓ x → core x ⊥ x;
+  dra_core_l x : ✓ x → core x ⋅ x ≡ x;
+  dra_core_idemp x : ✓ x → core (core x) ≡ core x;
+  dra_core_preserving x y : ✓ x → ✓ y → x ≼ y → core x ≼ core y;
   dra_disjoint_div x y : ✓ x → ✓ y → x ≼ y → x ⊥ y ÷ x;
   dra_op_div x y : ✓ x → ✓ y → x ≼ y → x ⋅ y ÷ x ≡ y
 }.
@@ -88,9 +88,9 @@ Hint Unfold dra_included.
 Lemma validity_valid_car_valid (z : T) : ✓ z → ✓ validity_car z.
 Proof. apply validity_prf. Qed.
 Hint Resolve validity_valid_car_valid.
-Program Instance validity_unit : Unit T := λ x,
-  Validity (unit (validity_car x)) (✓ x) _.
-Solve Obligations with naive_solver auto using dra_unit_valid.
+Program Instance validity_core : Core T := λ x,
+  Validity (core (validity_car x)) (✓ x) _.
+Solve Obligations with naive_solver auto using dra_core_valid.
 Program Instance validity_op : Op T := λ x y,
   Validity (validity_car x ⋅ validity_car y)
            (✓ x ∧ ✓ y ∧ validity_car x ⊥ validity_car y) _.
@@ -118,14 +118,14 @@ Proof.
       |by intros; rewrite assoc].
   - intros [x px ?] [y py ?]; split; naive_solver eauto using dra_comm.
   - intros [x px ?]; split;
-      naive_solver eauto using dra_unit_l, dra_unit_disjoint_l.
-  - intros [x px ?]; split; naive_solver eauto using dra_unit_idemp.
-  - intros x y Hxy; exists (unit y ÷ unit x).
+      naive_solver eauto using dra_core_l, dra_core_disjoint_l.
+  - intros [x px ?]; split; naive_solver eauto using dra_core_idemp.
+  - intros x y Hxy; exists (core y ÷ core x).
     destruct x as [x px ?], y as [y py ?], Hxy as [[z pz ?] [??]]; simpl in *.
-    assert (py → unit x ≼ unit y)
-      by intuition eauto 10 using dra_unit_preserving.
+    assert (py → core x ≼ core y)
+      by intuition eauto 10 using dra_core_preserving.
     constructor; [|symmetry]; simpl in *;
-      intuition eauto using dra_op_div, dra_disjoint_div, dra_unit_valid.
+      intuition eauto using dra_op_div, dra_disjoint_div, dra_core_valid.
   - by intros [x px ?] [y py ?] (?&?&?).
   - intros [x px ?] [y py ?] [[z pz ?] [??]]; split; simpl in *;
       intuition eauto 10 using dra_disjoint_div, dra_op_div.

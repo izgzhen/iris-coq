@@ -3,7 +3,7 @@ From algebra Require Export cmra.
 From algebra Require Import dra.
 Local Arguments valid _ _ !_ /.
 Local Arguments op _ _ !_ !_ /.
-Local Arguments unit _ _ !_ /.
+Local Arguments core _ _ !_ /.
 
 (** * Definition of STSs *)
 Module sts.
@@ -192,7 +192,7 @@ Global Instance sts_valid : Valid (car sts) := λ x,
   | auth s T => tok s ∩ T ≡ ∅
   | frag S' T => closed S' T ∧ S' ≢ ∅
   end.
-Global Instance sts_unit : Unit (car sts) := λ x,
+Global Instance sts_core : Core (car sts) := λ x,
   match x with
   | frag S' _ => frag (up_set S' ∅ ) ∅
   | auth s _  => frag (up s ∅) ∅
@@ -259,7 +259,7 @@ Proof.
   - intros [s T|S T]; constructor; auto with sts.
     + rewrite (up_closed (up _ _)); auto using closed_up with sts.
     + rewrite (up_closed (up_set _ _)); eauto using closed_up_set with sts.
-  - intros x y ?? (z&Hy&?&Hxz); exists (unit (x ⋅ y)); split_and?.
+  - intros x y ?? (z&Hy&?&Hxz); exists (core (x ⋅ y)); split_and?.
     + destruct Hxz; inversion_clear Hy; constructor; unfold up_set; set_solver.
     + destruct Hxz; inversion_clear Hy; simpl; split_and?;
         auto using closed_up_set_empty, closed_up_empty, up_non_empty; [].

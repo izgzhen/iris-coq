@@ -117,13 +117,13 @@ Section iprod_cmra.
   Implicit Types f g : iprod B.
 
   Instance iprod_op : Op (iprod B) := λ f g x, f x ⋅ g x.
-  Instance iprod_unit : Unit (iprod B) := λ f x, unit (f x).
+  Instance iprod_core : Core (iprod B) := λ f x, core (f x).
   Instance iprod_valid : Valid (iprod B) := λ f, ∀ x, ✓ f x.
   Instance iprod_validN : ValidN (iprod B) := λ n f, ∀ x, ✓{n} f x.
   Instance iprod_div : Div (iprod B) := λ f g x, f x ÷ g x.
 
   Definition iprod_lookup_op f g x : (f ⋅ g) x = f x ⋅ g x := eq_refl.
-  Definition iprod_lookup_unit f x : (unit f) x = unit (f x) := eq_refl.
+  Definition iprod_lookup_core f x : (core f) x = core (f x) := eq_refl.
   Definition iprod_lookup_div f g x : (f ÷ g) x = f x ÷ g x := eq_refl.
 
   Lemma iprod_included_spec (f g : iprod B) : f ≼ g ↔ ∀ x, f x ≼ g x.
@@ -138,7 +138,7 @@ Section iprod_cmra.
   Proof.
     split.
     - by intros n f1 f2 f3 Hf x; rewrite iprod_lookup_op (Hf x).
-    - by intros n f1 f2 Hf x; rewrite iprod_lookup_unit (Hf x).
+    - by intros n f1 f2 Hf x; rewrite iprod_lookup_core (Hf x).
     - by intros n f1 f2 Hf ? x; rewrite -(Hf x).
     - by intros n f f' Hf g g' Hg i; rewrite iprod_lookup_div (Hf i) (Hg i).
     - intros g; split.
@@ -147,10 +147,10 @@ Section iprod_cmra.
     - intros n f Hf x; apply cmra_validN_S, Hf.
     - by intros f1 f2 f3 x; rewrite iprod_lookup_op assoc.
     - by intros f1 f2 x; rewrite iprod_lookup_op comm.
-    - by intros f x; rewrite iprod_lookup_op iprod_lookup_unit cmra_unit_l.
-    - by intros f x; rewrite iprod_lookup_unit cmra_unit_idemp.
+    - by intros f x; rewrite iprod_lookup_op iprod_lookup_core cmra_core_l.
+    - by intros f x; rewrite iprod_lookup_core cmra_core_idemp.
     - intros f1 f2; rewrite !iprod_included_spec=> Hf x.
-      by rewrite iprod_lookup_unit; apply cmra_unit_preserving, Hf.
+      by rewrite iprod_lookup_core; apply cmra_core_preserving, Hf.
     - intros n f1 f2 Hf x; apply cmra_validN_op_l with (f2 x), Hf.
     - intros f1 f2; rewrite iprod_included_spec=> Hf x.
       by rewrite iprod_lookup_op iprod_lookup_div cmra_op_div; try apply Hf.
@@ -211,12 +211,12 @@ Section iprod_cmra.
     by apply cmra_empty_validN.
   Qed.
 
-  Lemma iprod_unit_singleton x (y : B x) :
-    unit (iprod_singleton x y) ≡ iprod_singleton x (unit y).
+  Lemma iprod_core_singleton x (y : B x) :
+    core (iprod_singleton x y) ≡ iprod_singleton x (core y).
   Proof.
     by move=>x'; destruct (decide (x = x')) as [->|];
-      rewrite iprod_lookup_unit ?iprod_lookup_singleton
-      ?iprod_lookup_singleton_ne // cmra_unit_empty.
+      rewrite iprod_lookup_core ?iprod_lookup_singleton
+      ?iprod_lookup_singleton_ne // cmra_core_empty.
   Qed.
 
   Lemma iprod_op_singleton (x : A) (y1 y2 : B x) :
