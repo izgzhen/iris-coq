@@ -57,6 +57,7 @@ Definition wp_eq : @wp = @wp_def := proj2_sig wp_aux.
 Arguments wp {_ _} _ _ _.
 Instance: Params (@wp) 4.
 
+(* TODO: On paper, 'wp' is turned into a keyword. *)
 Notation "#> e @ E {{ Φ } }" := (wp E e Φ)
   (at level 20, e, Φ at level 200,
    format "#>  e  @  E  {{  Φ  } }") : uPred_scope.
