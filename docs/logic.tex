@@ -72,7 +72,7 @@ To instantiate Iris, you need to define the following parameters:
 As usual for higher-order logics, you can furthermore pick a \emph{signature} $\Sig = (\SigType, \SigFn, \SigAx)$ to add more types, symbols and axioms to the language.
 You have to make sure that $\SigType$ includes the base types:
 \[
-	\SigType \supseteq \{ \textsort{Val}, \textsort{Expr}, \textsort{State}, \textsort{M}, \textsort{InvName}, \textsort{InvMask}, \Prop \}
+	\SigType \supseteq \{ \textlog{Val}, \textlog{Expr}, \textlog{State}, \textlog{M}, \textlog{InvName}, \textlog{InvMask}, \Prop \}
 \]
 Elements of $\SigType$ are ranged over by $\sigtype$.
 
@@ -95,14 +95,14 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
 \begin{align*}
   \type ::={}&
       \sigtype \mid
-      \unitsort \mid
+      1 \mid
       \type \times \type \mid
       \type \to \type
 \\[0.4em]
   \term, \prop, \pred ::={}&
       \var \mid
       \sigfn(\term_1, \dots, \term_n) \mid
-      \unitval \mid
+      () \mid
       (\term, \term) \mid
       \pi_i\; \term \mid
       \Lam \var:\type.\term \mid
@@ -144,16 +144,16 @@ We introduce additional metavariables ranging over terms and generally let the c
 \begin{array}{r|l}
  \text{metavariable} & \text{type} \\\hline
   \term, \termB & \text{arbitrary} \\
-  \val, \valB & \textsort{Val} \\
-  \expr & \textsort{Expr} \\
-  \state & \textsort{State} \\
+  \val, \valB & \textlog{Val} \\
+  \expr & \textlog{Expr} \\
+  \state & \textlog{State} \\
 \end{array}
 \qquad\qquad
 \begin{array}{r|l}
  \text{metavariable} & \text{type} \\\hline
-  \iname & \textsort{InvName} \\
-  \mask & \textsort{InvMask} \\
-  \melt, \meltB & \textsort{M} \\
+  \iname & \textlog{InvName} \\
+  \mask & \textlog{InvMask} \\
+  \melt, \meltB & \textlog{M} \\
   \prop, \propB, \propC & \Prop \\
   \pred, \predB, \predC & \type\to\Prop \text{ (when $\type$ is clear from context)} \\
 \end{array}
@@ -197,7 +197,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 	}
 %%% products
 \and
-	\axiom{\vctx \proves \wtt{\unitval}{\unitsort}}
+	\axiom{\vctx \proves \wtt{()}{1}}
 \and
 	\infer{\vctx \proves \wtt{\term}{\type_1} \and \vctx \proves \wtt{\termB}{\type_2}}
 		{\vctx \proves \wtt{(\term,\termB)}{\type_1 \times \type_2}}
@@ -214,10 +214,10 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 	{\vctx \proves \wtt{\term(\termB)}{\type'}}
 %%% monoids
 \and
-	\infer{}{\vctx \proves \wtt{\munit}{\textsort{M} \to \textsort{M}}}
+	\infer{}{\vctx \proves \wtt{\munit}{\textlog{M} \to \textlog{M}}}
 \and
-	\infer{\vctx \proves \wtt{\melt}{\textsort{M}} \and \vctx \proves \wtt{\meltB}{\textsort{M}}}
-		{\vctx \proves \wtt{\melt \mtimes \meltB}{\textsort{M}}}
+	\infer{\vctx \proves \wtt{\melt}{\textlog{M}} \and \vctx \proves \wtt{\meltB}{\textlog{M}}}
+		{\vctx \proves \wtt{\melt \mtimes \meltB}{\textlog{M}}}
 %%% props and predicates
 \\
 	\axiom{\vctx \proves \wtt{\FALSE}{\Prop}}
@@ -257,15 +257,15 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 \and
 	\infer{
 		\vctx \proves \wtt{\prop}{\Prop} \and
-		\vctx \proves \wtt{\iname}{\textsort{InvName}}
+		\vctx \proves \wtt{\iname}{\textlog{InvName}}
 	}{
 		\vctx \proves \wtt{\knowInv{\iname}{\prop}}{\Prop}
 	}
 \and
-	\infer{\vctx \proves \wtt{\melt}{\textsort{M}}}
+	\infer{\vctx \proves \wtt{\melt}{\textlog{M}}}
 		{\vctx \proves \wtt{\ownGGhost{\melt}}{\Prop}}
 \and
-	\infer{\vctx \proves \wtt{\state}{\textsort{State}}}
+	\infer{\vctx \proves \wtt{\state}{\textlog{State}}}
 		{\vctx \proves \wtt{\ownPhys{\state}}{\Prop}}
 \and
 	\infer{\vctx \proves \wtt{\prop}{\Prop}}
@@ -276,16 +276,16 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 \and
 	\infer{
 		\vctx \proves \wtt{\prop}{\Prop} \and
-		\vctx \proves \wtt{\mask}{\textsort{InvMask}} \and
-		\vctx \proves \wtt{\mask'}{\textsort{InvMask}}
+		\vctx \proves \wtt{\mask}{\textlog{InvMask}} \and
+		\vctx \proves \wtt{\mask'}{\textlog{InvMask}}
 	}{
 		\vctx \proves \wtt{\pvs[\mask][\mask'] \prop}{\Prop}
 	}
 \and
 	\infer{
-		\vctx \proves \wtt{\expr}{\textsort{Expr}} \and
-		\vctx,\var:\textsort{Val} \proves \wtt{\term}{\Prop} \and
-		\vctx \proves \wtt{\mask}{\textsort{InvMask}}
+		\vctx \proves \wtt{\expr}{\textlog{Expr}} \and
+		\vctx,\var:\textlog{Val} \proves \wtt{\term}{\Prop} \and
+		\vctx \proves \wtt{\mask}{\textlog{InvMask}}
 	}{
 		\vctx \proves \wtt{\wpre{\expr}{\Ret\var.\term}[\mask]}{\Prop}
 	}
@@ -524,7 +524,7 @@ This is entirely standard.
 {}{\prop[\val/\var] \proves \wpre{\val}{\Ret\var.\prop}[\mask]}
 
 \infer[wp-mono]
-{\mask_1 \subseteq \mask_2 \and \var:\textsort{val}\mid\prop \proves \propB}
+{\mask_1 \subseteq \mask_2 \and \var:\textlog{val}\mid\prop \proves \propB}
 {\wpre\expr{\Ret\var.\prop}[\mask_1] \proves \wpre\expr{\Ret\var.\propB}[\mask_2]}
 
 \infer[pvs-wp]

@@ -227,14 +227,14 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 	$\mathit{inv}$ is well-defined: $\mathit{inv}(\iota, p)$ is a valid proposition (this amounts to showing non-expansiveness), and $\mathit{inv}$ itself is a non-expansive map.
 \end{lem}
 
-\typedsection{World satisfaction}{\fullSat{-}{-}{-}{-} : 
+\typedsection{World satisfaction}{\wsat{-}{-}{-}{-} : 
 	\textdom{State} \times
 	\pset{\mathbb{N}} \times
 	\textdom{Res} \times
 	\textdom{World} \to \psetdown{\mathbb{N}} \in {\cal U}}
 \ralf{Make this Dave-compatible: Explicitly compose all the things in $s$}
 \begin{align*}
-	\fullSat{\state}{\mask}{\rs}{W} &=
+	\wsat{\state}{\mask}{\rs}{W} &=
 	\begin{aligned}[t]
 		\{\, n + 1 \in \mathbb{N} \mid &\Exists  \rsB:\mathbb{N} \fpfn \textdom{Res}. (\rs \rtimes \rsB).\pres = \state \land{}\\
 		&\quad \All \iota \in \dom(W). \iota \in \dom(W) \leftrightarrow \iota \in \dom(\rsB) \land {}\\
@@ -242,7 +242,7 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 	\end{aligned}
 \end{align*}
 \begin{lem}\label{lem:fullsat-nonexpansive}
-	$\fullSat{-}{-}{-}{-}$ is well-defined: It maps into $\psetdown{\mathbb{N}}$. (There is no need for it to be a non-expansive map, it doesn't itself live in $\cal U$.)
+	$\wsat{-}{-}{-}{-}$ is well-defined: It maps into $\psetdown{\mathbb{N}}$. (There is no need for it to be a non-expansive map, it doesn't itself live in $\cal U$.)
 \end{lem}
 
 \begin{lem}\label{lem:fullsat-weaken-mask}
@@ -252,7 +252,7 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 		\All \mask_1, \mask_2 \in \Delta(\pset{\mathbb{N}}).
 		\All \rs, \rsB \in \Delta(\textdom{Res}).
 		\All W \in \textdom{World}. \\&
-		\mask_1 \subseteq \mask_2 \implies (\fullSat{\state}{\mask_2}{\rs}{W}) \subseteq (\fullSat{\state}{\mask_1}{\rs}{W})
+		\mask_1 \subseteq \mask_2 \implies (\wsat{\state}{\mask_2}{\rs}{W}) \subseteq (\wsat{\state}{\mask_1}{\rs}{W})
 	\end{align*}
 \end{lem}
 
@@ -297,9 +297,9 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 	\begin{aligned}[t]
 		\{\, (n, \rs) &\mid \All W_F \geq W. \All \rs_F, \mask_F, \state. \All k \leq n.\\
 		&\qquad 
-		k \in (\fullSat{\state}{\mask_1 \cup \mask_F}{\rs \rtimes \rs_F}{W_F}) \land k > 0 \land \mask_F \sep (\mask_1 \cup \mask_2) \implies{} \\
+		k \in (\wsat{\state}{\mask_1 \cup \mask_F}{\rs \rtimes \rs_F}{W_F}) \land k > 0 \land \mask_F \sep (\mask_1 \cup \mask_2) \implies{} \\
 		&\qquad
-		\Exists W' \geq W_F. \Exists \rs'. k \in (\fullSat{\state}{\mask_2 \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k, \rs') \in q(W')
+		\Exists W' \geq W_F. \Exists \rs'. k \in (\wsat{\state}{\mask_2 \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k, \rs') \in q(W')
 		\,\}
 	\end{aligned}
 \end{align*}
@@ -394,19 +394,19 @@ $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
 % \begin{align*}
 % 	\mathit{wp}_\mask(\expr, q) &\eqdef \Lam W.
 % 	\begin{aligned}[t]
-% 		\{\, (n, \rs) &\mid \All W_F \geq W; k \leq n; \rs_F; \state; \mask_F \sep \mask. k > 0 \land k \in (\fullSat{\state}{\mask \cup \mask_F}{\rs \rtimes \rs_F}{W_F}) \implies{}\\
+% 		\{\, (n, \rs) &\mid \All W_F \geq W; k \leq n; \rs_F; \state; \mask_F \sep \mask. k > 0 \land k \in (\wsat{\state}{\mask \cup \mask_F}{\rs \rtimes \rs_F}{W_F}) \implies{}\\
 % 		&\qquad
 % 		(\expr \in \textdom{Val} \implies \Exists W' \geq W_F. \Exists \rs'. \\
 % 		&\qquad\qquad
-% 		k \in (\fullSat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k, \rs') \in q(\expr)(W'))~\land \\
+% 		k \in (\wsat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k, \rs') \in q(\expr)(W'))~\land \\
 % 		&\qquad
 % 		(\All\ectx,\expr_0,\expr'_0,\state'. \expr = \ectx[\expr_0] \land \cfg{\state}{\expr_0} \step \cfg{\state'}{\expr'_0} \implies \Exists W' \geq W_F. \Exists \rs'. \\
 % 		&\qquad\qquad
-% 		k - 1 \in (\fullSat{\state'}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k-1, \rs') \in wp_\mask(\ectx[\expr_0'], q)(W'))~\land \\
+% 		k - 1 \in (\wsat{\state'}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k-1, \rs') \in wp_\mask(\ectx[\expr_0'], q)(W'))~\land \\
 % 		&\qquad
 % 		(\All\ectx,\expr'. \expr = \ectx[\fork{\expr'}] \implies \Exists W' \geq W_F. \Exists \rs', \rs_1', \rs_2'. \\
 % 		&\qquad\qquad
-% 		k - 1 \in (\fullSat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land \rs' = \rs_1' \rtimes \rs_2'~\land \\
+% 		k - 1 \in (\wsat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land \rs' = \rs_1' \rtimes \rs_2'~\land \\
 % 		&\qquad\qquad
 % 		(k-1, \rs_1') \in \mathit{wp}_\mask(\ectx[\textsf{fRet}], q)(W') \land
 % 		(k-1, \rs_2') \in \mathit{wp}_\top(\expr', \Lam\any. \top)(W'))
