@@ -193,8 +193,8 @@
 \newcommand{\gmapsto}{\hookrightarrow}%
 \newcommand{\fgmapsto}[1][\mathrm{-}]{\xhookrightarrow{#1}}%
 
-\NewDocumentCommand\wpre{m m O{}}%
-  {{#1} \spac \prescript{}{#3}{\kern-0.2ex\{#2\}}}
+\NewDocumentCommand\wpre{m O{} m}%
+  {{#1} \spac \prescript{}{#2}{\kern-0.2ex\{#3\}}}
 
 \newcommand{\later}{\mathord{\triangleright}}
 \newcommand{\always}{\Box{}}
@@ -297,10 +297,10 @@
 \newcommand{\step}{\ra}
 \newcommand{\lctx}{K}
 
-\newcommand{\toval}{\mathit{val}}
-\newcommand{\ofval}{\mathit{expr}}
-\newcommand{\atomic}{\mathit{atomic}}
-\newcommand{\red}{\mathit{red}}
+\newcommand{\toval}{\mathrm{expr2val}}
+\newcommand{\ofval}{\mathrm{val2expr}}
+\newcommand{\atomic}{\mathrm{atomic}}
+\newcommand{\red}{\mathrm{red}}
 \newcommand{\Lang}{\Lambda}
 
 \newcommand{\tpool}{T}

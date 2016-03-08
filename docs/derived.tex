@@ -74,7 +74,7 @@ We can show that the following additional closure properties hold for timeless a
 
 Hoare triples and view shifts are syntactic sugar for weakest (liberal) preconditions and primitive view shifts, respectively:
 \[
-\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \wpre{\expr}{\lambda\Ret\val.\propB}[\mask])}
+\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \wpre{\expr}[\mask]{\lambda\Ret\val.\propB})}
 \qquad\qquad
 \begin{aligned}
 \prop \vs[\mask_1][\mask_2] \propB &\eqdef \always{(\prop \Ra \pvs[\mask_1][\mask_2] {\propB})} \\

@@ -134,7 +134,7 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
     \always\prop \mid
     {\later\prop} \mid
     \pvs[\term][\term] \prop\mid
-    \wpre{\term}{\Ret\var.\term}[\term]
+    \wpre{\term}[\term]{\Ret\var.\term}
 \end{align*}
 Recursive predicates must be \emph{guarded}: in $\MU \var. \pred$, the variable $\var$ can only appear under the later $\later$ modality.
 
@@ -299,7 +299,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 		\vctx,\var:\textlog{Val} \proves \wtt{\term}{\Prop} \and
 		\vctx \proves \wtt{\mask}{\textlog{InvMask}}
 	}{
-		\vctx \proves \wtt{\wpre{\expr}{\Ret\var.\term}[\mask]}{\Prop}
+		\vctx \proves \wtt{\wpre{\expr}[\mask]{\Ret\var.\term}}{\Prop}
 	}
 \end{mathparpagebreakable}
 
@@ -554,33 +554,33 @@ This is entirely standard.
 \paragraph{Laws of weakest preconditions.}
 \begin{mathpar}
 \infer[wp-value]
-{}{\prop[\val/\var] \proves \wpre{\val}{\Ret\var.\prop}[\mask]}
+{}{\prop[\val/\var] \proves \wpre{\val}[\mask]{\Ret\var.\prop}}
 
 \infer[wp-mono]
 {\mask_1 \subseteq \mask_2 \and \var:\textlog{val}\mid\prop \proves \propB}
-{\wpre\expr{\Ret\var.\prop}[\mask_1] \proves \wpre\expr{\Ret\var.\propB}[\mask_2]}
+{\wpre\expr[\mask_1]{\Ret\var.\prop} \proves \wpre\expr[\mask_2]{\Ret\var.\propB}}
 
 \infer[pvs-wp]
-{}{\pvs[\mask] \wpre\expr{\Ret\var.\prop}[\mask] \proves \wpre\expr{\Ret\var.\prop}[\mask]}
+{}{\pvs[\mask] \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
 
 \infer[wp-pvs]
-{}{\wpre\expr{\Ret\var.\pvs[\mask] \prop}[\mask] \proves \wpre\expr{\Ret\var.\prop}[\mask]}
+{}{\wpre\expr[\mask]{\Ret\var.\pvs[\mask] \prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
 
 \infer[wp-atomic]
 {\mask_2 \subseteq \mask_1 \and \physatomic{\expr}}
-{\pvs[\mask_1][\mask_2] \wpre\expr{\Ret\var. \pvs[\mask_2][\mask_1]\prop}[\mask_2]
- \proves \wpre\expr{\Ret\var.\prop}[\mask_1]}
+{\pvs[\mask_1][\mask_2] \wpre\expr[\mask_2]{\Ret\var. \pvs[\mask_2][\mask_1]\prop}
+ \proves \wpre\expr[\mask_1]{\Ret\var.\prop}}
 
 \infer[wp-frame]
-{}{\propB * \wpre\expr{\Ret\var.\prop}[\mask] \proves \wpre\expr{\Ret\var.\propB*\prop}[\mask]}
+{}{\propB * \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\propB*\prop}}
 
 \infer[wp-frame-step]
 {\toval(\expr) = \bot}
-{\later\propB * \wpre\expr{\Ret\var.\prop}[\mask] \proves \wpre\expr{\Ret\var.\propB*\prop}[\mask]}
+{\later\propB * \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\propB*\prop}}
 
 \infer[wp-bind]
 {\text{$\lctx$ is a context}}
-{\wpre\expr{\Ret\var. \wpre{\lctx(\ofval(\var))}{\Ret\varB.\prop}[\mask]}[\mask] \proves \wpre{\lctx(\expr)}{\Ret\varB.\prop}[\mask]}
+{\wpre\expr[\mask]{\Ret\var. \wpre{\lctx(\ofval(\var))}[\mask]{\Ret\varB.\prop}} \proves \wpre{\lctx(\expr)}[\mask]{\Ret\varB.\prop}}
 \end{mathpar}
 
 \subsection{Lifting of operational semantics}\label{sec:lifting}
@@ -591,49 +591,16 @@ This is entirely standard.
    \toval(\expr_1) = \bot \and
    \red(\expr_1, \state_1) \and
    \All \expr_2, \state_2, \expr'. \expr_1,\state_1 \step \expr_2,\state_2,\expr' \Ra \pred(\expr_2,\state_2,\expr')}
-  {\pvs[\mask_1][\mask_2] \later\ownPhys{\state_1} * \later\All \expr_2, \state_2, \expr'. \pred(\expr_2, \state_2, \expr') \land \ownPhys{\state_2} \wand \pvs[\mask_2][\mask_1] \wpre{\expr_2}{\Ret\var.\prop}[\mask_1] * \wpre{\expr'}{\Ret\var.\TRUE}[\top] {}\\\proves \wpre{\expr_1}{\Ret\var.\prop}[\mask_1]}
+  {\pvs[\mask_1][\mask_2] \later\ownPhys{\state_1} * \later\All \expr_2, \state_2, \expr'. \pred(\expr_2, \state_2, \expr') \land \ownPhys{\state_2} \wand \pvs[\mask_2][\mask_1] \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \wpre{\expr'}[\top]{\Ret\var.\TRUE} {}\\\proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
 
   \infer[wp-lift-pure-step]
   {\toval(\expr_1) = \bot \and
    \All \state_1. \red(\expr_1, \state_1) \and
    \All \state_1, \expr_2, \state_2, \expr'. \expr_1,\state_1 \step \expr_2,\state_2,\expr' \Ra \state_1 = \state_2 \land \pred(\expr_2,\expr')}
-  {\later\All \expr_2, \expr'. \pred(\expr_2, \expr')  \wand \wpre{\expr_2}{\Ret\var.\prop}[\mask_1] * \wpre{\expr'}{\Ret\var.\TRUE}[\top] \proves \wpre{\expr_1}{\Ret\var.\prop}[\mask_1]}
+  {\later\All \expr_2, \expr'. \pred(\expr_2, \expr')  \wand \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \wpre{\expr'}[\top]{\Ret\var.\TRUE} \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
 \end{mathparpagebreakable}
 
-Here we define $\wpre{\expr'}{\Ret\var.\prop}[\mask] \eqdef \TRUE$ if $\expr' = \bot$ (remember that our stepping relation can, but does not have to, define a forked-off expression).
-
-% The following lemmas help in proving axioms for a particular language.
-% The first applies to expressions with side-effects, and the second to side-effect-free expressions.
-% \dave{Update the others, and the example, wrt the new treatment of $\predB$.}
-% \begin{align*}
-%  &\All \expr, \state, \pred, \prop, \propB, \mask. \\
-%  &\textlog{reducible}(e) \implies \\
-%  &(\All \expr', \state'. \cfg{\state}{\expr} \step \cfg{\state'}{\expr'} \implies \pred(\expr', \state')) \implies \\
-%  &{} \proves \bigl( (\All \expr', \state'. \pred (\expr', \state') \Ra \hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask]) \Ra \hoare{ \later \prop * \ownPhys{\state} }{\expr}{\Ret\val. \propB}[\mask] \bigr) \\
-%  \quad\\
-%  &\All \expr, \pred, \prop, \propB, \mask. \\
-%  &\textlog{reducible}(e) \implies \\
-%  &(\All \state, \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \state_2 = \state \land \pred(\expr_2)) \implies \\
-%  &{} \proves \bigl( (\All \expr'. \pred(\expr') \Ra \hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask]) \Ra \hoare{\later\prop}{\expr}{\Ret\val. \propB}[\mask] \bigr)
-% \end{align*}
-% Note that $\pred$ is a meta-logic predicate---it does not depend on any world or resources being owned.
-
-% The following specializations cover all cases of a heap-manipulating lambda calculus like $F_{\mu!}$.
-% \begin{align*}
-%  &\All \expr, \expr', \prop, \propB, \mask. \\
-%  &\textlog{reducible}(e) \implies \\
-%  &(\All \state, \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \state_2 = \state \land \expr_2 = \expr') \implies \\
-%  &{} \proves (\hoare{\prop}{\expr'}{\Ret\val. \propB}[\mask] \Ra \hoare{\later\prop}{\expr}{\Ret\val. \propB}[\mask] ) \\
-%  \quad \\
-%  &\All \expr, \state, \pred, \mask. \\
-%  &\textlog{atomic}(e) \implies \\
-%  &\bigl(\All \expr_2, \state_2. \cfg{\state}{\expr} \step \cfg{\state_2}{\expr_2} \implies \pred(\expr_2, \state_2)\bigr) \implies \\
-%  &{} \proves (\hoare{ \ownPhys{\state} }{\expr}{\Ret\val. \Exists\state'. \ownPhys{\state'} \land \pred(\val, \state') }[\mask] )
-% \end{align*}
-% The first is restricted to deterministic pure reductions, like $\beta$-reduction.
-% The second is suited to proving triples for (possibly non-deterministic) atomic expressions; for example, with $\expr \eqdef \;!\ell$ (dereferencing $\ell$) and $\state \eqdef h \mtimes \ell \mapsto \valB$ and $\pred(\val, \state') \eqdef \state' = (h \mtimes \ell \mapsto \valB) \land \val = \valB$, one obtains the axiom $\All h, \ell, \valB. \hoare{\ownPhys{h \mtimes \ell \mapsto \valB}}{!\ell}{\Ret\val. \val = \valB \land \ownPhys{h \mtimes \ell \mapsto \valB} }$.
-% %Axioms for CAS-like operations can be obtained by first deriving rules for the two possible cases, and then using the disjunction rule.
-
+Here we define $\wpre{\expr'}[\mask]{\Ret\var.\prop} \eqdef \TRUE$ if $\expr' = \bot$ (remember that our stepping relation can, but does not have to, define a forked-off expression).
 
 \subsection{Adequacy}
 
@@ -641,7 +608,7 @@ The adequacy statement reads as follows:
 \begin{align*}
  &\All \mask, \expr, \val, \pred, \state, \melt, \state', \tpool'.
  \\&(\All n. \melt \in \mval_n) \Ra
- \\&( \ownPhys\state * \ownGGhost\melt \proves \wpre{\expr}{x.\; \pred(x)}[\mask]) \Ra
+ \\&( \ownPhys\state * \ownGGhost\melt \proves \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
  \\&\cfg{\state}{[\expr]} \step^\ast
      \cfg{\state'}{[\val] \dplus \tpool'} \Ra
      \\&\pred(\val)
