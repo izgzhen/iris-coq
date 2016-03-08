@@ -26,7 +26,7 @@ It does not matter whether they fork off an arbitrary expression.
 
 \begin{defn}[Context]
   A function $\lctx : \textdom{Expr} \to \textdom{Expr}$ is a \emph{context} if the following conditions are satisfied:
-  \begin{enumerate}
+  \begin{enumerate}[itemsep=0pt]
   \item $\lctx$ does not turn non-values into values:\\
     $\All\expr. \toval(\expr) = \bot \Ra \toval(\lctx(\expr)) = \bot $
   \item One can perform reductions below $\lctx$:\\
@@ -64,8 +64,7 @@ For any language $\Lang$, we define the corresponding thread-pool semantics.
 To instantiate Iris, you need to define the following parameters:
 \begin{itemize}
 \item A language $\Lang$
-\item A locally contractive functor $\iFunc : \COFEs \to \CMRAs$ defining the ghost state
-  \ralf{$\iFunc$ also needs to have a single-unit.}
+\item A locally contractive functor $\iFunc : \COFEs \to \CMRAs$ defining the ghost state, such that for all COFEs $A$, the CMRA $\iFunc(A)$ has a unit
 \end{itemize}
 
 \noindent
@@ -107,6 +106,7 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
       \pi_i\; \term \mid
       \Lam \var:\type.\term \mid
       \term(\term)  \mid
+      \munit \mid
       \mcore\term \mid
       \term \mtimes \term \mid
 \\&
@@ -213,6 +213,8 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 	{\vctx \proves \wtt{\term}{\type \to \type'} \and \wtt{\termB}{\type}}
 	{\vctx \proves \wtt{\term(\termB)}{\type'}}
 %%% monoids
+\and
+        \infer{}{\vctx \proves \wtt\munit{\textlog{M}}}
 \and
 	\infer{\vctx \proves \wtt\melt{\textlog{M}}}{\vctx \proves \wtt{\mcore\melt}{\textlog{M}}}
 \and
@@ -416,7 +418,7 @@ This is entirely standard.
 \begin{mathpar}
 \begin{array}{rMcMl}
 \ownGGhost{\melt} * \ownGGhost{\meltB} &\Lra&  \ownGGhost{\melt \mtimes \meltB} \\
-%\TRUE &\Ra&  \ownGGhost{\munit}\\
+\TRUE &\Ra&  \ownGGhost{\munit}\\
 \ownGGhost{\melt} &\Ra& \melt \in \mval % * \ownGGhost{\melt}
 \end{array}
 \and

@@ -113,6 +113,16 @@ This operation is needed to prove that $\later$ commutes with existential quanti
 (This assumes that the type $\type$ is non-empty.)
 
 \begin{defn}
+  An element $\munit$ of a CMRA $\monoid$ is called the \emph{unit} of $\monoid$ if it satisfies the following conditions:
+  \begin{enumerate}[itemsep=0pt]
+  \item $\munit$ is valid: \\ $\All n, \munit \in \mval_n$
+  \item $\munit$ is left-identity of the operation: \\
+    $\All \melt \in M. \munit \mtimes \melt = \melt$
+  \item $\munit$ is discrete
+  \end{enumerate}
+\end{defn}
+
+\begin{defn}
   It is possible to do a \emph{frame-preserving update} from $\melt \in \monoid$ to $\meltsB \subseteq \monoid$, written $\melt \mupd \meltsB$, if
   \[ \All n, \melt_f. \melt \mtimes \melt_f \in \mval_n \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \melt_f \in \mval_n \]
 
@@ -124,7 +134,7 @@ Note that for RAs, this and the RA-based definition of a frame-preserving update
 
 \begin{defn}
   A function $f : M \to N$ between two CMRAs is \emph{monotone} if it satisfies the following conditions:
-  \begin{enumerate}
+  \begin{enumerate}[itemsep=0pt]
   \item $f$ is non-expansive
   \item $f$ preserves validity: \\
     $\All n, x \in M. x \in \mval_n \Ra f(x) \in \mval_n$
