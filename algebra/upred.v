@@ -301,6 +301,8 @@ Infix "↔" := uPred_iff : uPred_scope.
 
 Class TimelessP {M} (P : uPred M) := timelessP : ▷ P ⊑ (P ∨ ▷ False).
 Arguments timelessP {_} _ {_}.
+(* TODO: Derek suggested to call such assertions "persistent", which we now
+   do in the paper. *)
 Class AlwaysStable {M} (P : uPred M) := always_stable : P ⊑ □ P.
 Arguments always_stable {_} _ {_}.
 
