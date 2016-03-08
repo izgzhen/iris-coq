@@ -303,8 +303,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 The judgment $\vctx \mid \pfctx \proves \prop$ says that with free variables $\vctx$, proposition $\prop$ holds whenever all assumptions $\pfctx$ hold.
 We implicitly assume that an arbitrary variable context, $\vctx$, is added to every constituent of the rules.
 Furthermore, an arbitrary \emph{boxed} assertion context $\always\pfctx$ may be added to every constituent.
-Axioms $\prop \Ra \propB$ stand for judgments $\vctx \mid \cdot \proves \prop \Ra \propB$ with no assumptions.
-(Bi-implications are analogous.)
+Axioms $\vctx \mid \prop \provesIff \propB$ indicate that both $\vctx \mid \prop \proves \propB$ and $\vctx \mid \propB \proves \prop$ can be derived.
 
 \judgment{}{\vctx \mid \pfctx \proves \prop}
 \paragraph{Laws of intuitionistic higher-order logic with equality.}
@@ -395,9 +394,9 @@ This is entirely standard.
 \paragraph{Laws of (affine) bunched implications.}
 \begin{mathpar}
 \begin{array}{rMcMl}
-  \TRUE * \prop &\Lra& \prop \\
-  \prop * \propB &\Lra& \propB * \prop \\
-  (\prop * \propB) * \propC &\Lra& \prop * (\propB * \propC)
+  \TRUE * \prop &\provesIff& \prop \\
+  \prop * \propB &\provesIff& \propB * \prop \\
+  (\prop * \propB) * \propC &\provesIff& \prop * (\propB * \propC)
 \end{array}
 \and
 \infer[$*$-mono]
@@ -413,14 +412,14 @@ This is entirely standard.
 \paragraph{Laws for ghosts and physical resources.}
 \begin{mathpar}
 \begin{array}{rMcMl}
-\ownGGhost{\melt} * \ownGGhost{\meltB} &\Lra&  \ownGGhost{\melt \mtimes \meltB} \\
-\ownGGhost{\melt} &\Ra& \melt \in \mval \\
-\TRUE &\Ra&  \ownGGhost{\munit}
+\ownGGhost{\melt} * \ownGGhost{\meltB} &\provesIff&  \ownGGhost{\melt \mtimes \meltB} \\
+\ownGGhost{\melt} &\provesIff& \melt \in \mval \\
+\TRUE &\proves&  \ownGGhost{\munit}
 \end{array}
 \and
 \and
 \begin{array}{c}
-\ownPhys{\state} * \ownPhys{\state'} \Ra \FALSE
+\ownPhys{\state} * \ownPhys{\state'} \proves \FALSE
 \end{array}
 \end{mathpar}
 
@@ -439,14 +438,14 @@ This is entirely standard.
   {\later{\Exists x:\type.\prop} \proves \Exists x:\type. \later\prop}
 \\\\
 \begin{array}[c]{rMcMl}
-  \later{(\prop \wedge \propB)} &\Lra& \later{\prop} \wedge \later{\propB}  \\
-  \later{(\prop \vee \propB)} &\Lra& \later{\prop} \vee \later{\propB} \\
+  \later{(\prop \wedge \propB)} &\provesIff& \later{\prop} \wedge \later{\propB}  \\
+  \later{(\prop \vee \propB)} &\provesIff& \later{\prop} \vee \later{\propB} \\
 \end{array}
 \and
 \begin{array}[c]{rMcMl}
-  \later{\All x.\prop} &\Lra& \All x. \later\prop \\
-  \Exists x. \later\prop &\Ra& \later{\Exists x.\prop}  \\
-  \later{(\prop * \propB)} &\Lra& \later\prop * \later\propB
+  \later{\All x.\prop} &\provesIff& \All x. \later\prop \\
+  \Exists x. \later\prop &\proves& \later{\Exists x.\prop}  \\
+  \later{(\prop * \propB)} &\provesIff& \later\prop * \later\propB
 \end{array}
 \end{mathpar}
 
@@ -487,26 +486,26 @@ This is entirely standard.
   {\always{\pfctx} \proves \always{\prop}}
 \and
 \infer[$\always$E]{}
-  {\always{\prop} \Ra \prop}
+  {\always{\prop} \proves \prop}
 \and
 \begin{array}[c]{rMcMl}
-  \always{(\prop * \propB)} &\Ra& \always{(\prop \land \propB)} \\
-  \always{\prop} * \propB &\Ra& \always{\prop} \land \propB \\
-  \always{\later\prop} &\Lra& \later\always{\prop} \\
+  \always{(\prop * \propB)} &\proves& \always{(\prop \land \propB)} \\
+  \always{\prop} * \propB &\proves& \always{\prop} \land \propB \\
+  \always{\later\prop} &\provesIff& \later\always{\prop} \\
 \end{array}
 \and
 \begin{array}[c]{rMcMl}
-  \always{(\prop \land \propB)} &\Lra& \always{\prop} \land \always{\propB} \\
-  \always{(\prop \lor \propB)} &\Lra& \always{\prop} \lor \always{\propB} \\
-  \always{\All x. \prop} &\Lra& \All x. \always{\prop} \\
-  \always{\Exists x. \prop} &\Lra& \Exists x. \always{\prop} \\
+  \always{(\prop \land \propB)} &\provesIff& \always{\prop} \land \always{\propB} \\
+  \always{(\prop \lor \propB)} &\provesIff& \always{\prop} \lor \always{\propB} \\
+  \always{\All x. \prop} &\provesIff& \All x. \always{\prop} \\
+  \always{\Exists x. \prop} &\provesIff& \Exists x. \always{\prop} \\
 \end{array}
 \and
-{ \term =_\type \term' \Ra \always \term =_\type \term'}
+{ \term =_\type \term' \proves \always \term =_\type \term'}
 \and
-{ \knowInv\iname\prop \Ra \always \knowInv\iname\prop}
+{ \knowInv\iname\prop \proves \always \knowInv\iname\prop}
 \and
-{ \ownGGhost{\mcore\melt} \Ra \always \ownGGhost{\mcore\melt}}
+{ \ownGGhost{\mcore\melt} \proves \always \ownGGhost{\mcore\melt}}
 \end{mathpar}
 
 \paragraph{Laws of primitive view shifts.}

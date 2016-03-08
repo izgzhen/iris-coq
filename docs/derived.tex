@@ -8,13 +8,13 @@ We collect here some important and frequently used derived proof rules.
   {\prop \Ra \propB \proves \prop \wand \propB}
 
   \infer{}
-  {\prop * \Exists\var.\propB \Lra \Exists\var. \prop * \propB}
+  {\prop * \Exists\var.\propB \provesIff \Exists\var. \prop * \propB}
 
   \infer{}
   {\prop * \Exists\var.\propB \proves \Exists\var. \prop * \propB}
 
   \infer{}
-  {\always(\prop*\propB) \Lra \always\prop * \always\propB}
+  {\always(\prop*\propB) \provesIff \always\prop * \always\propB}
 
   \infer{}
   {\always(\prop \Ra \propB) \proves \always\prop \Ra \always\propB}
@@ -23,7 +23,7 @@ We collect here some important and frequently used derived proof rules.
   {\always(\prop \wand \propB) \proves \always\prop \wand \always\propB}
 
   \infer{}
-  {\always(\prop \wand \propB) \Lra \always(\prop \Ra \propB)}
+  {\always(\prop \wand \propB) \provesIff \always(\prop \Ra \propB)}
 
   \infer{}
   {\later(\prop \Ra \propB) \proves \later\prop \Ra \later\propB}
