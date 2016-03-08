@@ -87,7 +87,7 @@ The convention for omitted masks is similar to the base logic:
 An omitted $\mask$ is $\top$ for Hoare triples and $\emptyset$ for view shifts.
 
 
-\paragraph{View shifts.}~
+\paragraph{View shifts.}
 The following rules can be derived for view shifts.
 
 \begin{mathparpagebreakable}
@@ -198,6 +198,11 @@ The following rules can be derived for Hoare triples.
   {}
   {\hoare{\FALSE}{\expr}{\Ret \val. \prop}[\mask]}
 \end{mathparpagebreakable}
+
+\paragraph{Lifting of operational semantics.}
+We can derive some specialized forms of the lifting axioms for the operational semantics, as well as some forms that involve view shifts and Hoare triples.
+
+\ralf{Add these.}
 
 \subsection{Global Functor and ghost ownership}
 \ralf{Describe this.}

@@ -20,14 +20,14 @@ Implicit Types Ψ : val Λ → iProp Λ Σ.
 
 Lemma ht_lift_step E1 E2
     (φ : expr Λ → state Λ → option (expr Λ) → Prop) P P' Φ1 Φ2 Ψ e1 σ1 :
-  E1 ⊆ E2 → to_val e1 = None →
+  E2 ⊆ E1 → to_val e1 = None →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  ((P ={E2,E1}=> ▷ ownP σ1 ★ ▷ P') ∧ ∀ e2 σ2 ef,
-    (■ φ e2 σ2 ef ★ ownP σ2 ★ P' ={E1,E2}=> Φ1 e2 σ2 ef ★ Φ2 e2 σ2 ef) ∧
-    {{ Φ1 e2 σ2 ef }} e2 @ E2 {{ Ψ }} ∧
+  ((P ={E1,E2}=> ▷ ownP σ1 ★ ▷ P') ∧ ∀ e2 σ2 ef,
+    (■ φ e2 σ2 ef ★ ownP σ2 ★ P' ={E2,E1}=> Φ1 e2 σ2 ef ★ Φ2 e2 σ2 ef) ∧
+    {{ Φ1 e2 σ2 ef }} e2 @ E1 {{ Ψ }} ∧
     {{ Φ2 e2 σ2 ef }} ef ?@ ⊤ {{ λ _, True }})
-  ⊑ {{ P }} e1 @ E2 {{ Ψ }}.
+  ⊑ {{ P }} e1 @ E1 {{ Ψ }}.
 Proof.
   intros ?? Hsafe Hstep; apply: always_intro. apply impl_intro_l.
   rewrite (assoc _ P) {1}/vs always_elim impl_elim_r pvs_always_r.
@@ -42,7 +42,7 @@ Proof.
   rewrite {1}/vs -always_wand_impl always_elim wand_elim_r.
   rewrite pvs_frame_r; apply pvs_mono.
   (* Now we're almost done. *)
-  sep_split left: [Φ1 _ _ _; {{ Φ1 _ _ _ }} e2 @ E2 {{ Ψ }}]%I.
+  sep_split left: [Φ1 _ _ _; {{ Φ1 _ _ _ }} e2 @ E1 {{ Ψ }}]%I.
   - rewrite {1}/ht -always_wand_impl always_elim wand_elim_r //.
   - destruct ef as [e'|]; simpl; [|by apply const_intro].
     rewrite {1}/ht -always_wand_impl always_elim wand_elim_r //.
