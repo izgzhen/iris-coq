@@ -1,8 +1,40 @@
-\section{Derived proof rules}
+\section{Derived proof rules and other constructions}
 
 \subsection{Base logic}
 
-\ralf{Give the most important derived rules.}
+We collect here some important and frequently used derived proof rules.
+\begin{mathparpagebreakable}
+  \infer{}
+  {\prop \Ra \propB \proves \prop \wand \propB}
+
+  \infer{}
+  {\prop * \Exists\var.\propB \Lra \Exists\var. \prop * \propB}
+
+  \infer{}
+  {\prop * \Exists\var.\propB \proves \Exists\var. \prop * \propB}
+
+  \infer{}
+  {\always(\prop*\propB) \Lra \always\prop * \always\propB}
+
+  \infer{}
+  {\always(\prop \Ra \propB) \proves \always\prop \Ra \always\propB}
+
+  \infer{}
+  {\always(\prop \wand \propB) \proves \always\prop \wand \always\propB}
+
+  \infer{}
+  {\always(\prop \wand \propB) \Lra \always(\prop \Ra \propB)}
+
+  \infer{}
+  {\later(\prop \Ra \propB) \proves \later\prop \Ra \later\propB}
+
+  \infer{}
+  {\later(\prop \wand \propB) \proves \later\prop \wand \later\propB}
+
+  \infer
+  {\pfctx, \later\prop \proves \prop}
+  {\pfctx \proves \prop}
+\end{mathparpagebreakable}
 
 \paragraph{Persistent assertions.}
 \begin{defn}
@@ -39,8 +71,6 @@ We can show that the following additional closure properties hold for timeless a
 
 
 \subsection{Program logic}
-
-\ralf{Sync this with Coq.}
 
 Hoare triples and view shifts are syntactic sugar for weakest (liberal) preconditions and primitive view shifts, respectively:
 \[
@@ -169,12 +199,9 @@ The following rules can be derived for Hoare triples.
   {\hoare{\FALSE}{\expr}{\Ret \val. \prop}[\mask]}
 \end{mathparpagebreakable}
 
-\clearpage
-\section{Derived constructions}
+\subsection{Global Functor and ghost ownership}
+\ralf{Describe this.}
 
-In this section we describe some derived constructions that are generally useful and language-independent.
-
-\ralf{Describe at least global monoid and invariant namespaces.}
 % \subsection{Global monoid}
 
 % Hereinafter we assume the global monoid (served up as a parameter to Iris) is obtained from a family of monoids $(M_i)_{i \in I}$ by first applying the construction for finite partial functions to each~(\Sref{sec:fpfunm}), and then applying the product construction~(\Sref{sec:prodm}):
@@ -205,6 +232,9 @@ In this section we describe some derived constructions that are generally useful
 %   \axiomH{GhostTimeless}
 %     {\timeless{\ownGhost\gname{\melt : M_i}}}
 % \end{mathpar}
+
+\subsection{Invariant identifier namespaces}
+\ralf{Describe this.}
 
 % \subsection{STSs with interpretation}\label{sec:stsinterp}
 
