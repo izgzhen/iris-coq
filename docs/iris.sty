@@ -52,8 +52,9 @@
 \newcommand{\Ra}{\Rightarrow}
 \newcommand{\Lra}{\Leftrightarrow}
 \newcommand\monra{\xrightarrow{\kern-0.25ex\textrm{mon}\kern-0.25ex}}
-
 \newcommand{\eqdef}{\triangleq}
+\newcommand{\bnfdef}{\vcentcolon\vcentcolon=}
+
 \newcommand*\setComp[2]{\left\{#1\spac\middle|\spac#2\right\}}
 \newcommand*\set[1]{\left\{#1\right\}}
 
@@ -105,9 +106,9 @@
 
 %% Some commonly used identifiers
 \newcommand{\UPred}{\textdom{UPred}}
-
-\newcommand{\PropDom}{\textdom{Prop}}
-\newcommand{\PredDom}{\textdom{Pred}}
+\newcommand{\mProp}{\textdom{Prop}} % meta-level prop
+\newcommand{\iProp}{\textdom{iProp}}
+\newcommand{\Wld}{\textdom{Wld}}
 
 \newcommand{\COFEs}{\mathcal{U}} % category of COFEs
 \newcommand{\iFunc}{\Sigma}
@@ -284,7 +285,7 @@
 \newcommand{\FALSE}{\textlog{False}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% LANGUAGE SYNTAX AND SEMANTICS
+% GENERIC LANGUAGE SYNTAX AND SEMANTICS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand{\expr}{e}
 \newcommand{\val}{v}
