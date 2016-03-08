@@ -604,7 +604,7 @@ Here we define $\wpre{\expr'}[\mask]{\Ret\var.\prop} \eqdef \TRUE$ if $\expr' = 
 
 \subsection{Adequacy}
 
-The adequacy statement reads as follows:
+The adequacy statement concerning functional correctness reads as follows:
 \begin{align*}
  &\All \mask, \expr, \val, \pred, \state, \melt, \state', \tpool'.
  \\&(\All n. \melt \in \mval_n) \Ra
@@ -614,6 +614,17 @@ The adequacy statement reads as follows:
      \\&\pred(\val)
 \end{align*}
 where $\pred$ is a \emph{meta-level} predicate over values, \ie it can mention neither resources nor invariants.
+
+Furthermore, the following adequacy statement shows that our weakest preconditions imply that the execution never gets \emph{stuck}: Every expression in the thread pool either is a value, or can reduce further.
+\begin{align*}
+ &\All \mask, \expr, \state, \melt, \state', \tpool'.
+ \\&(\All n. \melt \in \mval_n) \Ra
+ \\&( \ownPhys\state * \ownGGhost\melt \proves \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
+ \\&\cfg{\state}{[\expr]} \step^\ast
+     \cfg{\state'}{\tpool'} \Ra
+     \\&\All\expr'\in\tpool'. \toval(\expr) \neq \bot \lor \red(\expr, \state')
+\end{align*}
+Notice that this is stronger than saying that the thread pool can reduce; we actually assert that \emph{every} non-finished thread can take a step.
 
 
 % RJ: If we want this section back, we should port it to primitive view shifts and prove it in Coq.

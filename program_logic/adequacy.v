@@ -112,18 +112,20 @@ Lemma wp_adequacy_reducible E Φ e1 e2 t2 σ1 m σ2 :
   ✓ m →
   (ownP σ1 ★ ownG m) ⊑ #> e1 @ E {{ Φ }} →
   rtc step ([e1], σ1) (t2, σ2) →
-  e2 ∈ t2 → to_val e2 = None → reducible e2 σ2.
+  e2 ∈ t2 → (is_Some (to_val e2) ∨ reducible e2 σ2).
 Proof.
-  intros Hv ? Hs [i ?]%elem_of_list_lookup He.
+  intros Hv ? Hs [i ?]%elem_of_list_lookup.
   destruct (wp_adequacy_own Φ e1 t2 σ1 m σ2) as (rs2&Φs&?&?); auto.
   { by rewrite -(wp_mask_weaken E ⊤). }
   destruct (Forall3_lookup_l (λ e Φ r, wp ⊤ e Φ 2 r) t2
     (Φ :: Φs) rs2 i e2) as (Φ'&r2&?&?&Hwp); auto.
+  case He:(to_val e2)=>[v2|]; first by eauto. right.
   destruct (wp_step_inv ⊤ ∅ Φ' e2 1 2 σ2 r2 (big_op (delete i rs2)));
     rewrite ?right_id_L ?big_op_delete; auto.
   by rewrite -wp_eq.
 Qed.
 
+(* Connect this up to the threadpool-semantics. *)
 Theorem wp_adequacy_safe E Φ e1 t2 σ1 m σ2 :
   ✓ m →
   (ownP σ1 ★ ownG m) ⊑ #> e1 @ E {{ Φ }} →
@@ -133,8 +135,9 @@ Proof.
   intros.
   destruct (decide (Forall (λ e, is_Some (to_val e)) t2)) as [|Ht2]; [by left|].
   apply (not_Forall_Exists _), Exists_exists in Ht2; destruct Ht2 as (e2&?&He2).
-  destruct (wp_adequacy_reducible E Φ e1 e2 t2 σ1 m σ2) as (e3&σ3&ef&?);
+  destruct (wp_adequacy_reducible E Φ e1 e2 t2 σ1 m σ2) as [?|(e3&σ3&ef&?)];
     rewrite ?eq_None_not_Some; auto.
+  { exfalso. eauto. }
   destruct (elem_of_list_split t2 e2) as (t2'&t2''&->); auto.
   right; exists (t2' ++ e3 :: t2'' ++ option_list ef), σ3; econstructor; eauto.
 Qed.
