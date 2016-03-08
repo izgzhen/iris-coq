@@ -194,7 +194,7 @@
 \newcommand{\fgmapsto}[1][\mathrm{-}]{\xhookrightarrow{#1}}%
 
 \NewDocumentCommand\wpre{m O{} m}%
-  {{#1} \spac \prescript{}{#2}{\kern-0.2ex\{#3\}}}
+  {\textlog{wp}_{#2}\spac#1\spac{\{#3\}}}
 
 \newcommand{\later}{\mathord{\triangleright}}
 \newcommand{\always}{\Box{}}
