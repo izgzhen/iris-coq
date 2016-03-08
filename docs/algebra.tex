@@ -48,15 +48,15 @@ Note that $\COFEs$ is cartesian closed.
 \subsection{CMRA}
 
 \begin{defn}
-  A \emph{CMRA} is a tuple $(\monoid, (\mval_n \subseteq \monoid)_{n \in \mathbb{N}}, \munit: \monoid \to \monoid, (\mtimes) : \monoid \times \monoid \to \monoid, (\mdiv) : \monoid \times \monoid \to \monoid)$ satisfying
+  A \emph{CMRA} is a tuple $(\monoid, (\mval_n \subseteq \monoid)_{n \in \mathbb{N}}, \mcore{-}: \monoid \to \monoid, (\mtimes) : \monoid \times \monoid \to \monoid, (\mdiv) : \monoid \times \monoid \to \monoid)$ satisfying
   \begin{align*}
     \All n, m.& n \geq m \Ra V_n \subseteq V_m \tagH{cmra-valid-mono} \\
     \All \melt, \meltB, \meltC.& (\melt \mtimes \meltB) \mtimes \meltC = \melt \mtimes (\meltB \mtimes \meltC) \tagH{cmra-assoc} \\
     \All \melt, \meltB.& \melt \mtimes \meltB = \meltB \mtimes \melt \tagH{cmra-comm} \\
-    \All \melt.& \munit(\melt) \mtimes \melt = \melt \tagH{cmra-unit-id} \\
-    \All \melt.& \munit(\munit(\melt)) = \munit(\melt) \tagH{cmra-unit-idem} \\
-    \All \melt, \meltB.& \melt \leq \meltB \Ra \munit(\melt) \leq \munit(\meltB) \tagH{cmra-unit-mono} \\
-    \All n, \melt, \meltB.& (\melt \mtimes \meltB) \in \mval_n \Ra \melt \in \mval_n \tagH{cmra-unit-op} \\
+    \All \melt.& \mcore\melt \mtimes \melt = \melt \tagH{cmra-core-id} \\
+    \All \melt.& \mcore{\mcore\melt} = \mcore\melt \tagH{cmra-core-idem} \\
+    \All \melt, \meltB.& \melt \leq \meltB \Ra \mcore\melt \leq \mcore\meltB \tagH{cmra-core-mono} \\
+    \All n, \melt, \meltB.& (\melt \mtimes \meltB) \in \mval_n \Ra \melt \in \mval_n \tagH{cmra-valid-op} \\
     \All \melt, \meltB.& \melt \leq \meltB \Ra \melt \mtimes (\meltB \mdiv \melt) = \meltB \tagH{cmra-div-op} \\
     \All n, \melt, \meltB_1, \meltB_2.& \omit\rlap{$\melt \in \mval_n \land \melt \nequiv{n} \meltB_1 \mtimes \meltB_2 \Ra {}$} \\
     &\Exists \meltC_1, \meltC_2. \melt = \meltC_1 \mtimes \meltC_2 \land \meltC_1 \nequiv{n} \meltB_1 \land \meltC_2 \nequiv{n} \meltB_2 \tagH{cmra-extend} \\

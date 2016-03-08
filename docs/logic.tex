@@ -107,7 +107,7 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
       \pi_i\; \term \mid
       \Lam \var:\type.\term \mid
       \term(\term)  \mid
-      \munit \mid
+      \mcore\term \mid
       \term \mtimes \term \mid
 \\&
     \FALSE \mid
@@ -214,7 +214,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 	{\vctx \proves \wtt{\term(\termB)}{\type'}}
 %%% monoids
 \and
-	\infer{}{\vctx \proves \wtt{\munit}{\textlog{M} \to \textlog{M}}}
+	\infer{\vctx \proves \wtt\melt{\textlog{M}}}{\vctx \proves \wtt{\mcore\melt}{\textlog{M}}}
 \and
 	\infer{\vctx \proves \wtt{\melt}{\textlog{M}} \and \vctx \proves \wtt{\meltB}{\textlog{M}}}
 		{\vctx \proves \wtt{\melt \mtimes \meltB}{\textlog{M}}}
@@ -477,7 +477,7 @@ This is entirely standard.
 \and
 { \knowInv\iname\prop \Ra \always \knowInv\iname\prop}
 \and
-{ \ownGGhost{\munit(\melt)} \Ra \always \ownGGhost{\munit(\melt)}}
+{ \ownGGhost{\mcore\melt} \Ra \always \ownGGhost{\mcore\melt}}
 \end{mathpar}
 
 \paragraph{Laws of primitive view shifts.}
