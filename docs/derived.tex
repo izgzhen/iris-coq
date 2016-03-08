@@ -15,6 +15,29 @@ Persistence is preserved by conjunction, disjunction, separating conjunction as 
 
 In our proofs, we will implicitly add and remove $\always$ from persistent assertions as necessary, and generally treat them like normal, non-linear assumptions.
 
+\paragraph{Timeless assertions.}
+
+We can show that the following additional closure properties hold for timeless assertions:
+
+\begin{mathparpagebreakable}
+  \infer
+  {\vctx \proves \timeless{\prop} \and \vctx \proves \timeless{\propB}}
+  {\vctx \proves \timeless{\prop \land \propB}}
+
+  \infer
+  {\vctx \proves \timeless{\prop} \and \vctx \proves \timeless{\propB}}
+  {\vctx \proves \timeless{\prop \lor \propB}}
+
+  \infer
+  {\vctx \proves \timeless{\prop} \and \vctx \proves \timeless{\propB}}
+  {\vctx \proves \timeless{\prop * \propB}}
+
+  \infer
+  {\vctx \proves \timeless{\prop}}
+  {\vctx \proves \timeless{\always\prop}}
+\end{mathparpagebreakable}
+
+
 \subsection{Program logic}
 
 \ralf{Sync this with Coq.}

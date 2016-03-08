@@ -137,6 +137,11 @@ Note that $\always$ and $\later$ bind more tightly than $*$, $\wand$, $\land$, $
 We will write $\pvs[\term] \prop$ for $\pvs[\term][\term] \prop$.
 If we omit the mask, then it is $\top$ for weakest precondition $\wpre\expr{\Ret\var.\prop}$ and $\emptyset$ for primitive view shifts $\pvs \prop$.
 
+Some propositions are \emph{timeless}, which intuitively means that step-indexing does not affect them.
+This is a \emph{meta-level} assertions about propositions, defined as follows:
+
+\[ \vctx \proves \timeless{\prop} \eqdef \vctx\mid\later\prop \proves \prop \lor \later\FALSE \]
+
 
 \paragraph{Metavariable conventions.}
 We introduce additional metavariables ranging over terms and generally let the choice of metavariable indicate the term's type:
@@ -293,15 +298,6 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 	}
 \end{mathparpagebreakable}
 
-\subsection{Timeless propositions}
-
-Some propositions are \emph{timeless}, which intuitively means that step-indexing does not affect them.
-This is a \emph{meta-level} assertions about propositions, defined by the following judgment.
-
-\judgment{Timeless Propositions}{\timeless{P}}
-
-\ralf{Define a judgment that defines them.}
-
 \subsection{Proof rules}
 
 The judgment $\vctx \mid \pfctx \proves \prop$ says that with free variables $\vctx$, proposition $\prop$ holds whenever all assumptions $\pfctx$ hold.
@@ -311,7 +307,7 @@ Axioms $\prop \Ra \propB$ stand for judgments $\vctx \mid \cdot \proves \prop \R
 (Bi-implications are analogous.)
 
 \judgment{}{\vctx \mid \pfctx \proves \prop}
-\paragraph{Laws of intuitionistic higher-order logic.}
+\paragraph{Laws of intuitionistic higher-order logic with equality.}
 This is entirely standard.
 \begin{mathparpagebreakable}
 \infer[Asm]
@@ -418,9 +414,10 @@ This is entirely standard.
 \begin{mathpar}
 \begin{array}{rMcMl}
 \ownGGhost{\melt} * \ownGGhost{\meltB} &\Lra&  \ownGGhost{\melt \mtimes \meltB} \\
-\TRUE &\Ra&  \ownGGhost{\munit}\\
-\ownGGhost{\melt} &\Ra& \melt \in \mval % * \ownGGhost{\melt}
+\ownGGhost{\melt} &\Ra& \melt \in \mval \\
+\TRUE &\Ra&  \ownGGhost{\munit}
 \end{array}
+\and
 \and
 \begin{array}{c}
 \ownPhys{\state} * \ownPhys{\state'} \Ra \FALSE
@@ -452,6 +449,36 @@ This is entirely standard.
   \later{(\prop * \propB)} &\Lra& \later\prop * \later\propB
 \end{array}
 \end{mathpar}
+
+\begin{mathpar}
+\infer
+{\text{$\term$ or $\term'$ is a discrete COFE element}}
+{\timeless{\term =_\type \term'}}
+
+\infer
+{\text{$\melt$ is a discrete COFE element}}
+{\timeless{\ownGGhost\melt}}
+
+\infer{}
+{}\timeless{\ownPhys\state}
+
+\infer
+{\vctx \proves \timeless{\propB}}
+{\vctx \proves \timeless{\prop \Ra \propB}}
+
+\infer
+{\vctx \proves \timeless{\propB}}
+{\vctx \proves \timeless{\prop \wand \propB}}
+
+\infer
+{\vctx,\var:\type \proves \timeless{\prop}}
+{\vctx \proves \timeless{\All\var:\type.\prop}}
+
+\infer
+{\vctx,\var:\type \proves \timeless{\prop}}
+{\vctx \proves \timeless{\Exists\var:\type.\prop}}
+\end{mathpar}
+
 
 \paragraph{Laws for the always modality.}
 \begin{mathpar}
