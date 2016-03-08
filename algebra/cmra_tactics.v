@@ -3,7 +3,7 @@ From algebra Require Import cmra_big_op.
 
 (** * Simple solver for validity and inclusion by reflection *)
 Module ra_reflection. Section ra_reflection.
-  Context `{CMRAIdentity A}.
+  Context `{CMRAUnit A}.
 
   Inductive expr :=
     | EVar : nat → expr

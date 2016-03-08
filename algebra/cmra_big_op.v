@@ -11,7 +11,7 @@ Instance: Params (@big_opM) 5.
 
 (** * Properties about big ops *)
 Section big_op.
-Context `{CMRAIdentity A}.
+Context `{CMRAUnit A}.
 
 (** * Big ops *)
 Lemma big_op_nil : big_op (@nil A) = ∅.

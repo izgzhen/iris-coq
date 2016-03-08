@@ -19,10 +19,10 @@ Implicit Types a : A.
 Instance inG_empty `{Empty A} :
   Empty (Σ inG_id (iPreProp Λ (globalF Σ))) := cmra_transport inG_prf ∅.
 Instance inG_empty_spec `{Empty A} :
-  CMRAIdentity A → CMRAIdentity (Σ inG_id (iPreProp Λ (globalF Σ))).
+  CMRAUnit A → CMRAUnit (Σ inG_id (iPreProp Λ (globalF Σ))).
 Proof.
   split.
-  - apply cmra_transport_valid, cmra_empty_valid.
+  - apply cmra_transport_valid, cmra_unit_valid.
   - intros x; rewrite /empty /inG_empty; destruct inG_prf. by rewrite left_id.
   - apply _.
 Qed.
@@ -52,7 +52,7 @@ Lemma own_valid_r γ a : own γ a ⊑ (own γ a ★ ✓ a).
 Proof. apply: uPred.always_entails_r. apply own_valid. Qed.
 Lemma own_valid_l γ a : own γ a ⊑ (✓ a ★ own γ a).
 Proof. by rewrite comm -own_valid_r. Qed.
-Lemma own_empty `{CMRAIdentity A} γ : True ⊑ own γ ∅.
+Lemma own_empty `{CMRAUnit A} γ : True ⊑ own γ ∅.
 Proof.
   rewrite ownG_empty /own. apply equiv_spec, ownG_proper.
   (* FIXME: rewrite to_globalF_empty. *)
@@ -99,13 +99,13 @@ Proof.
   by apply pvs_mono, exist_elim=> a''; apply const_elim_l=> ->.
 Qed.
 
-Lemma own_empty `{Empty A, !CMRAIdentity A} γ E :
+Lemma own_empty `{Empty A, !CMRAUnit A} γ E :
   True ⊑ (|={E}=> own γ ∅).
 Proof.
   rewrite ownG_empty /own. apply pvs_ownG_update, cmra_update_updateP.
   eapply iprod_singleton_updateP_empty;
       first by eapply map_singleton_updateP_empty', cmra_transport_updateP',
-               cmra_update_updateP, cmra_update_empty.
+               cmra_update_updateP, cmra_update_unit.
   naive_solver.
 Qed.
 End global.

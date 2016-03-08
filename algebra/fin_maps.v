@@ -159,7 +159,7 @@ Proof.
       by symmetry; apply option_op_positive_dist_r with (m1 !! i).
 Qed.
 Canonical Structure mapR : cmraT := CMRAT map_cofe_mixin map_cmra_mixin.
-Global Instance map_cmra_identity : CMRAIdentity mapR.
+Global Instance map_cmra_unit : CMRAUnit mapR.
 Proof.
   split.
   - by intros i; rewrite lookup_empty.
@@ -194,7 +194,7 @@ Lemma map_insert_valid m i x : ✓ x → ✓ m → ✓ <[i:=x]>m.
 Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_eq. Qed.
 Lemma map_singleton_validN n i x : ✓{n} ({[ i := x ]} : gmap K A) ↔ ✓{n} x.
 Proof.
-  split; [|by intros; apply map_insert_validN, cmra_empty_validN].
+  split; [|by intros; apply map_insert_validN, cmra_unit_validN].
   by move=>/(_ i); simplify_map_eq.
 Qed.
 Lemma map_singleton_valid i x : ✓ ({[ i := x ]} : gmap K A) ↔ ✓ x.
@@ -232,7 +232,7 @@ Proof.
   - intros (y&Hi&?); rewrite map_includedN_spec=>j.
     destruct (decide (i = j)); simplify_map_eq.
     + rewrite Hi. by apply (includedN_preserving _), cmra_included_includedN.
-    + apply: cmra_empty_leastN.
+    + apply: cmra_unit_leastN.
 Qed.
 Lemma map_dom_op m1 m2 : dom (gset K) (m1 ⋅ m2) ≡ dom _ m1 ∪ dom _ m2.
 Proof.
@@ -268,14 +268,14 @@ Proof. apply map_insert_updateP'. Qed.
 Lemma map_singleton_update i (x y : A) : x ~~> y → {[ i := x ]} ~~> {[ i := y ]}.
 Proof. apply map_insert_update. Qed.
 
-Lemma map_singleton_updateP_empty `{Empty A, !CMRAIdentity A}
+Lemma map_singleton_updateP_empty `{Empty A, !CMRAUnit A}
     (P : A → Prop) (Q : gmap K A → Prop) i :
   ∅ ~~>: P → (∀ y, P y → Q {[ i := y ]}) → ∅ ~~>: Q.
 Proof.
   intros Hx HQ n gf Hg.
   destruct (Hx n (from_option ∅ (gf !! i))) as (y&?&Hy).
   { move:(Hg i). rewrite !left_id.
-    case _: (gf !! i); simpl; auto using cmra_empty_validN. }
+    case _: (gf !! i); simpl; auto using cmra_unit_validN. }
   exists {[ i := y ]}; split; first by auto.
   intros i'; destruct (decide (i' = i)) as [->|].
   - rewrite lookup_op lookup_singleton.
@@ -283,7 +283,7 @@ Proof.
     by rewrite right_id.
   - move:(Hg i'). by rewrite !lookup_op lookup_singleton_ne // !left_id.
 Qed.
-Lemma map_singleton_updateP_empty' `{Empty A, !CMRAIdentity A} (P: A → Prop) i :
+Lemma map_singleton_updateP_empty' `{Empty A, !CMRAUnit A} (P: A → Prop) i :
   ∅ ~~>: P → ∅ ~~>: λ m, ∃ y, m = {[ i := y ]} ∧ P y.
 Proof. eauto using map_singleton_updateP_empty. Qed.
 

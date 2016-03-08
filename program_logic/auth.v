@@ -5,14 +5,14 @@ Import uPred.
 (* The CMRA we need. *)
 Class authG Λ Σ (A : cmraT) `{Empty A} := AuthG {
   auth_inG :> inG Λ Σ (authR A);
-  auth_identity :> CMRAIdentity A;
+  auth_identity :> CMRAUnit A;
   auth_timeless :> CMRADiscrete A;
 }.
 (* The Functor we need. *)
 Definition authGF (A : cmraT) : gFunctor := GFunctor (constRF (authR A)).
 (* Show and register that they match. *)
 Instance authGF_inGF (A : cmraT) `{inGF Λ Σ (authGF A)}
-  `{CMRAIdentity A, CMRADiscrete A} : authG Λ Σ A.
+  `{CMRAUnit A, CMRADiscrete A} : authG Λ Σ A.
 Proof. split; try apply _. apply: inGF_inG. Qed.
 
 Section definitions.

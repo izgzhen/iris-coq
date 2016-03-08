@@ -124,10 +124,10 @@ Proof.
     by exists (Res w σ m, Res w' σ' m').
 Qed.
 Canonical Structure resR : cmraT := CMRAT res_cofe_mixin res_cmra_mixin.
-Global Instance res_cmra_identity `{CMRAIdentity M} : CMRAIdentity resR.
+Global Instance res_cmra_unit `{CMRAUnit M} : CMRAUnit resR.
 Proof.
   split.
-  - split_and!; apply cmra_empty_valid.
+  - split_and!; apply cmra_unit_valid.
   - by split; rewrite /= left_id.
   - apply _.
 Qed.

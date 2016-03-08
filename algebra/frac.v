@@ -172,7 +172,7 @@ Proof.
     + exfalso; inversion_clear Hx'.
 Qed.
 Canonical Structure fracR : cmraT := CMRAT frac_cofe_mixin frac_cmra_mixin.
-Global Instance frac_cmra_identity : CMRAIdentity fracR.
+Global Instance frac_cmra_unit : CMRAUnit fracR.
 Proof. split. done. by intros []. apply _. Qed.
 Global Instance frac_cmra_discrete : CMRADiscrete A → CMRADiscrete fracR.
 Proof.
@@ -238,7 +238,7 @@ Proof.
   split; try apply _.
   - intros n [p a|]; destruct 1; split; auto using validN_preserving.
   - intros [q1 a1|] [q2 a2|] [[q3 a3|] Hx];
-      inversion Hx; setoid_subst; try apply: cmra_empty_least; auto.
+      inversion Hx; setoid_subst; try apply: cmra_unit_least; auto.
     destruct (included_preserving f a1 (a1 ⋅ a3)) as [b ?].
     { by apply cmra_included_l. }
     by exists (Frac q3 b); constructor.

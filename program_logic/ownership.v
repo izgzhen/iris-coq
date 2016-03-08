@@ -28,7 +28,7 @@ Qed.
 Lemma always_ownI i P : (□ ownI i P)%I ≡ ownI i P.
 Proof.
   apply uPred.always_ownM.
-  by rewrite Res_core !cmra_core_empty map_core_singleton.
+  by rewrite Res_core !cmra_core_unit map_core_singleton.
 Qed.
 Global Instance ownI_always_stable i P : AlwaysStable (ownI i P).
 Proof. by rewrite /AlwaysStable always_ownI. Qed.
@@ -55,7 +55,7 @@ Proof. move=>a b [c H]. rewrite H ownG_op. eauto with I. Qed.
 Lemma always_ownG_core m : (□ ownG (core m))%I ≡ ownG (core m).
 Proof.
   apply uPred.always_ownM.
-  by rewrite Res_core !cmra_core_empty -{2}(cmra_core_idemp m).
+  by rewrite Res_core !cmra_core_unit -{2}(cmra_core_idemp m).
 Qed.
 Lemma always_ownG m : core m ≡ m → (□ ownG m)%I ≡ ownG m.
 Proof. by intros <-; rewrite always_ownG_core. Qed.
@@ -82,17 +82,17 @@ Proof.
   - intros [(P'&Hi&HP) _]; rewrite Hi.
     by apply Some_dist, symmetry, agree_valid_includedN,
       (cmra_included_includedN _ P'),HP; apply map_lookup_validN with (wld r) i.
-  - intros ?; split_and?; try apply cmra_empty_leastN; eauto.
+  - intros ?; split_and?; try apply cmra_unit_leastN; eauto.
 Qed.
 Lemma ownP_spec n r σ : ✓{n} r → (ownP σ) n r ↔ pst r ≡ Excl σ.
 Proof.
   intros (?&?&?). rewrite /ownP; uPred.unseal.
   rewrite /uPred_holds /= res_includedN /= Excl_includedN //.
-  rewrite (timeless_iff n). naive_solver (apply cmra_empty_leastN).
+  rewrite (timeless_iff n). naive_solver (apply cmra_unit_leastN).
 Qed.
 Lemma ownG_spec n r m : (ownG m) n r ↔ m ≼{n} gst r.
 Proof.
   rewrite /ownG; uPred.unseal.
-  rewrite /uPred_holds /= res_includedN; naive_solver (apply cmra_empty_leastN).
+  rewrite /uPred_holds /= res_includedN; naive_solver (apply cmra_unit_leastN).
 Qed.
 End ownership.

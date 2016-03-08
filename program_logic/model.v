@@ -10,7 +10,7 @@ Structure iFunctor := IFunctor {
   iFunctor_F :> rFunctor;
   iFunctor_contractive : rFunctorContractive iFunctor_F;
   iFunctor_empty (A : cofeT) : Empty (iFunctor_F A);
-  iFunctor_identity (A : cofeT) : CMRAIdentity (iFunctor_F A);
+  iFunctor_identity (A : cofeT) : CMRAUnit (iFunctor_F A);
 }.
 Arguments IFunctor _ {_ _ _}.
 Existing Instances iFunctor_contractive iFunctor_empty iFunctor_identity.

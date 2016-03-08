@@ -156,12 +156,12 @@ Proof. uPred.unseal. by destruct x as [[]]. Qed.
 
 (** The notations ◯ and ● only work for CMRAs with an empty element. So, in
 what follows, we assume we have an empty element. *)
-Context `{Empty A, !CMRAIdentity A}.
+Context `{Empty A, !CMRAUnit A}.
 
-Global Instance auth_cmra_identity : CMRAIdentity authR.
+Global Instance auth_cmra_unit : CMRAUnit authR.
 Proof.
   split; simpl.
-  - by apply (@cmra_empty_valid A _).
+  - by apply (@cmra_unit_valid A _).
   - by intros x; constructor; rewrite /= left_id.
   - apply _.
 Qed.

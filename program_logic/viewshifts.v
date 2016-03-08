@@ -117,7 +117,7 @@ Proof. by intros; apply vs_alt, own_updateP. Qed.
 Lemma vs_update E γ a a' : a ~~> a' → own γ a ={E}=> own γ a'.
 Proof. by intros; apply vs_alt, own_update. Qed.
 
-Lemma vs_own_empty `{Empty A, !CMRAIdentity A} E γ :
+Lemma vs_own_empty `{Empty A, !CMRAUnit A} E γ :
   True ={E}=> own γ ∅.
 Proof. by intros; eapply vs_alt, own_empty. Qed.
 

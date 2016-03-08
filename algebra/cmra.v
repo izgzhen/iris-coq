@@ -124,15 +124,15 @@ Section cmra_mixin.
   Proof. apply (mixin_cmra_extend _ (cmra_mixin A)). Qed.
 End cmra_mixin.
 
-(** * CMRAs with a global identity element *)
+(** * CMRAs with a unit element *)
 (** We use the notation ∅ because for most instances (maps, sets, etc) the
-`empty' element is the global identity. *)
-Class CMRAIdentity (A : cmraT) `{Empty A} := {
-  cmra_empty_valid : ✓ ∅;
-  cmra_empty_left_id :> LeftId (≡) ∅ (⋅);
-  cmra_empty_timeless :> Timeless ∅
+`empty' element is the unit. *)
+Class CMRAUnit (A : cmraT) `{Empty A} := {
+  cmra_unit_valid : ✓ ∅;
+  cmra_unit_left_id :> LeftId (≡) ∅ (⋅);
+  cmra_unit_timeless :> Timeless ∅
 }.
-Instance cmra_identity_inhabited `{CMRAIdentity A} : Inhabited A := populate ∅.
+Instance cmra_unit_inhabited `{CMRAUnit A} : Inhabited A := populate ∅.
 
 (** * Discrete CMRAs *)
 Class CMRADiscrete (A : cmraT) := {
@@ -347,20 +347,20 @@ Lemma cmra_discrete_update `{CMRADiscrete A} (x y : A) :
   (∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z)) → x ~~> y.
 Proof. intros ? n. by setoid_rewrite <-cmra_discrete_valid_iff. Qed.
 
-(** ** RAs with an empty element *)
-Section identity.
-  Context `{Empty A, !CMRAIdentity A}.
-  Lemma cmra_empty_validN n : ✓{n} ∅.
-  Proof. apply cmra_valid_validN, cmra_empty_valid. Qed.
-  Lemma cmra_empty_leastN n x : ∅ ≼{n} x.
+(** ** RAs with a unit element *)
+Section unit.
+  Context `{Empty A, !CMRAUnit A}.
+  Lemma cmra_unit_validN n : ✓{n} ∅.
+  Proof. apply cmra_valid_validN, cmra_unit_valid. Qed.
+  Lemma cmra_unit_leastN n x : ∅ ≼{n} x.
   Proof. by exists x; rewrite left_id. Qed.
-  Lemma cmra_empty_least x : ∅ ≼ x.
+  Lemma cmra_unit_least x : ∅ ≼ x.
   Proof. by exists x; rewrite left_id. Qed.
-  Global Instance cmra_empty_right_id : RightId (≡) ∅ (⋅).
+  Global Instance cmra_unit_right_id : RightId (≡) ∅ (⋅).
   Proof. by intros x; rewrite (comm op) left_id. Qed.
-  Lemma cmra_core_empty : core ∅ ≡ ∅.
+  Lemma cmra_core_unit : core ∅ ≡ ∅.
   Proof. by rewrite -{2}(cmra_core_l ∅) right_id. Qed.
-End identity.
+End unit.
 
 (** ** Local updates *)
 Global Instance local_update_proper Lv (L : A → A) :
@@ -422,13 +422,13 @@ Qed.
 Lemma cmra_update_id x : x ~~> x.
 Proof. intro. auto. Qed.
 
-Section identity_updates.
-  Context `{Empty A, !CMRAIdentity A}.
-  Lemma cmra_update_empty x : x ~~> ∅.
+Section unit_updates.
+  Context `{Empty A, !CMRAUnit A}.
+  Lemma cmra_update_unit x : x ~~> ∅.
   Proof. intros n z; rewrite left_id; apply cmra_validN_op_r. Qed.
-  Lemma cmra_update_empty_alt y : ∅ ~~> y ↔ ∀ x, x ~~> y.
-  Proof. split; [intros; trans ∅|]; auto using cmra_update_empty. Qed.
-End identity_updates.
+  Lemma cmra_update_unit_alt y : ∅ ~~> y ↔ ∀ x, x ~~> y.
+  Proof. split; [intros; trans ∅|]; auto using cmra_update_unit. Qed.
+End unit_updates.
 End cmra.
 
 (** * Properties about monotone functions *)
@@ -531,7 +531,7 @@ Section unit.
   Proof. by split. Qed.
   Canonical Structure unitR : cmraT :=
     Eval cbv [unitC discreteR cofe_car] in discreteR unit_ra.
-  Global Instance unit_cmra_identity : CMRAIdentity unitR.
+  Global Instance unit_cmra_unit : CMRAUnit unitR.
   Global Instance unit_cmra_discrete : CMRADiscrete unitR.
   Proof. by apply discrete_cmra_discrete. Qed.
 End unit.
@@ -582,11 +582,11 @@ Section prod.
       by exists ((z1.1,z2.1),(z1.2,z2.2)).
   Qed.
   Canonical Structure prodR : cmraT := CMRAT prod_cofe_mixin prod_cmra_mixin.
-  Global Instance prod_cmra_identity `{Empty A, Empty B} :
-    CMRAIdentity A → CMRAIdentity B → CMRAIdentity prodR.
+  Global Instance prod_cmra_unit `{Empty A, Empty B} :
+    CMRAUnit A → CMRAUnit B → CMRAUnit prodR.
   Proof.
     split.
-    - split; apply cmra_empty_valid.
+    - split; apply cmra_unit_valid.
     - by split; rewrite /=left_id.
     - by intros ? [??]; split; apply (timeless _).
   Qed.

@@ -119,7 +119,7 @@ Proof.
     + exists (None,None); repeat constructor.
 Qed.
 Canonical Structure optionR := CMRAT option_cofe_mixin option_cmra_mixin.
-Global Instance option_cmra_identity : CMRAIdentity optionR.
+Global Instance option_cmra_unit : CMRAUnit optionR.
 Proof. split. done. by intros []. by inversion_clear 1. Qed.
 Global Instance option_cmra_discrete : CMRADiscrete A → CMRADiscrete optionR.
 Proof. split; [apply _|]. by intros [x|]; [apply (cmra_discrete_valid x)|]. Qed.
@@ -164,10 +164,10 @@ Lemma option_update x y : x ~~> y → Some x ~~> Some y.
 Proof.
   rewrite !cmra_update_updateP; eauto using option_updateP with congruence.
 Qed.
-Lemma option_update_None `{Empty A, !CMRAIdentity A} : ∅ ~~> Some ∅.
+Lemma option_update_None `{Empty A, !CMRAUnit A} : ∅ ~~> Some ∅.
 Proof.
   intros n [x|] ?; rewrite /op /cmra_op /validN /cmra_validN /= ?left_id;
-    auto using cmra_empty_validN.
+    auto using cmra_unit_validN.
 Qed.
 End cmra.
 Arguments optionR : clear implicits.

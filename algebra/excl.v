@@ -128,7 +128,7 @@ Proof.
       end; destruct y1, y2; inversion_clear Hx; repeat constructor.
 Qed.
 Canonical Structure exclR : cmraT := CMRAT excl_cofe_mixin excl_cmra_mixin.
-Global Instance excl_cmra_identity : CMRAIdentity exclR.
+Global Instance excl_cmra_unit : CMRAUnit exclR.
 Proof. split. done. by intros []. apply _. Qed.
 Global Instance excl_cmra_discrete : Discrete A → CMRADiscrete exclR.
 Proof. split. apply _. by intros []. Qed.

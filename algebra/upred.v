@@ -499,11 +499,11 @@ Proof.
   unseal; intros Hab Ha; split=> n x ??.
   apply HΨ with n a; auto. by symmetry; apply Hab with x. by apply Ha.
 Qed.
-Lemma eq_equiv `{Empty M, !CMRAIdentity M} {A : cofeT} (a b : A) :
+Lemma eq_equiv `{Empty M, !CMRAUnit M} {A : cofeT} (a b : A) :
   True ⊑ (a ≡ b) → a ≡ b.
 Proof.
   unseal=> Hab; apply equiv_dist; intros n; apply Hab with ∅; last done.
-  apply cmra_valid_validN, cmra_empty_valid.
+  apply cmra_valid_validN, cmra_unit_valid.
 Qed.
 Lemma iff_equiv P Q : True ⊑ (P ↔ Q) → P ≡ Q.
 Proof.
@@ -1002,7 +1002,7 @@ Lemma always_ownM (a : M) : core a ≡ a → (□ uPred_ownM a)%I ≡ uPred_ownM
 Proof. by intros <-; rewrite always_ownM_core. Qed.
 Lemma ownM_something : True ⊑ ∃ a, uPred_ownM a.
 Proof. unseal; split=> n x ??. by exists x; simpl. Qed.
-Lemma ownM_empty `{Empty M, !CMRAIdentity M} : True ⊑ uPred_ownM ∅.
+Lemma ownM_empty `{Empty M, !CMRAUnit M} : True ⊑ uPred_ownM ∅.
 Proof. unseal; split=> n x ??; by  exists x; rewrite left_id. Qed.
 
 (* Valid *)

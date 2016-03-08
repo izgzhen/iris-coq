@@ -160,11 +160,11 @@ Section iprod_cmra.
       split_and?; intros x; apply (proj2_sig (g x)).
   Qed.
   Canonical Structure iprodR : cmraT := CMRAT iprod_cofe_mixin iprod_cmra_mixin.
-  Global Instance iprod_cmra_identity `{∀ x, Empty (B x)} :
-    (∀ x, CMRAIdentity (B x)) → CMRAIdentity iprodR.
+  Global Instance iprod_cmra_unit `{∀ x, Empty (B x)} :
+    (∀ x, CMRAUnit (B x)) → CMRAUnit iprodR.
   Proof.
     intros ?; split.
-    - intros x; apply cmra_empty_valid.
+    - intros x; apply cmra_unit_valid.
     - by intros f x; rewrite iprod_lookup_op left_id.
     - by apply _.
   Qed.
@@ -201,14 +201,14 @@ Section iprod_cmra.
   Qed.
 
   (** Properties of iprod_singleton. *)
-  Context `{∀ x, Empty (B x), ∀ x, CMRAIdentity (B x)}.
+  Context `{∀ x, Empty (B x), ∀ x, CMRAUnit (B x)}.
 
   Lemma iprod_singleton_validN n x (y: B x) : ✓{n} iprod_singleton x y ↔ ✓{n} y.
   Proof.
     split; [by move=>/(_ x); rewrite iprod_lookup_singleton|].
     move=>Hx x'; destruct (decide (x = x')) as [->|];
       rewrite ?iprod_lookup_singleton ?iprod_lookup_singleton_ne //.
-    by apply cmra_empty_validN.
+    by apply cmra_unit_validN.
   Qed.
 
   Lemma iprod_core_singleton x (y : B x) :
@@ -216,7 +216,7 @@ Section iprod_cmra.
   Proof.
     by move=>x'; destruct (decide (x = x')) as [->|];
       rewrite iprod_lookup_core ?iprod_lookup_singleton
-      ?iprod_lookup_singleton_ne // cmra_core_empty.
+      ?iprod_lookup_singleton_ne // cmra_core_unit.
   Qed.
 
   Lemma iprod_op_singleton (x : A) (y1 y2 : B x) :
