@@ -25,7 +25,7 @@
 \end{defn}
 
 \begin{defn}
-  A function $f : \cofe \to \cofeB$ between two COFEs is \emph{non-expansive} if
+  A function $f : \cofe \to \cofeB$ between two COFEs is \emph{non-expansive} (written $f : \cofe \nfn \cofeB$) if
   \[\All n, x \in \cofe, y \in \cofe. x \nequiv{n} y \Ra f(x) \nequiv{n} f(y) \]
   It is \emph{contractive} if
   \[ \All n, x \in \cofe, y \in \cofe. (\All m < n. x \nequiv{m} y) \Ra f(x) \nequiv{n} f(x) \]
@@ -49,8 +49,9 @@ Note that $\COFEs$ is cartesian closed.
 \subsection{CMRA}
 
 \begin{defn}
-  A \emph{CMRA} is a tuple $(\monoid : \COFEs, (\mval_n \subseteq \monoid)_{n \in \mathbb{N}}, \mcore{-}: \monoid \to \monoid, (\mtimes) : \monoid \times \monoid \to \monoid, (\mdiv) : \monoid \times \monoid \to \monoid)$ satisfying
+  A \emph{CMRA} is a tuple $(\monoid : \COFEs, (\mval_n \subseteq \monoid)_{n \in \mathbb{N}}, \mcore{-}: \monoid \nfn \monoid, (\mtimes) : \monoid \times \monoid \nfn \monoid, (\mdiv) : \monoid \times \monoid \nfn \monoid)$ satisfying
   \begin{align*}
+    \All n, \melt, \meltB.& \melt \nequiv{n} \meltB \land \melt\in\mval_n \Ra \meltB\in\mval_n \tagH{cmra-valid-nonexp} \\
     \All n, m.& n \geq m \Ra V_n \subseteq V_m \tagH{cmra-valid-mono} \\
     \All \melt, \meltB, \meltC.& (\melt \mtimes \meltB) \mtimes \meltC = \melt \mtimes (\meltB \mtimes \meltC) \tagH{cmra-assoc} \\
     \All \melt, \meltB.& \melt \mtimes \meltB = \meltB \mtimes \melt \tagH{cmra-comm} \\
@@ -143,7 +144,7 @@ Note that every RA is a discrete CMRA, by picking the discrete COFE for the equi
 Furthermore, discrete CMRAs can be turned into RAs by ignoring their COFE structure, as well as the step-index of $\mval$.
 
 \begin{defn}
-  A function $f : \monoid_1 \to \monoid_2$ between two CMRAs is \emph{monotone} if it satisfies the following conditions:
+  A function $f : \monoid_1 \to \monoid_2$ between two CMRAs is \emph{monotone} (written $f : \monoid_1 \monra \monoid_2$) if it satisfies the following conditions:
   \begin{enumerate}[itemsep=0pt]
   \item $f$ is non-expansive
   \item $f$ preserves validity: \\
