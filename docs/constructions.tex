@@ -6,7 +6,7 @@
 
 Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
 \begin{align*}
-  \monoid \eqdef{}& \setComp{(c, V) \subseteq (\mathbb{N} \to T) \times \mathbb{N}}{ \All n, m. n \geq m \Ra n \in V \Ra m \in V  } \\
+  \monoid \eqdef{}& \setComp{(c, V) \in (\mathbb{N} \to T) \times \pset{\mathbb{N}}}{ \All n, m. n \geq m \Ra n \in V \Ra m \in V  } \\
   & \text{quotiented by} \\
   (c_1, V_1) \equiv (c_1, V_2) \eqdef{}& V_1 = V_2 \land \All n. n \in V_1 \Ra c_1(n) \nequiv{n} c_2(n) \\
   (c_1, V_1) \nequiv{n} (c_1, V_2) \eqdef{}& (\All m \leq n. m \in V_1 \Lra m \in V_2) \land (\All m \leq n. m \in V_1 \Ra c_1(m) \nequiv{m} c_2(m)) \\
