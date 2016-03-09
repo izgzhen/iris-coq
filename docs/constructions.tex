@@ -2,34 +2,30 @@
 
 \section{CMRA constructions}
 
-% We will use the notation $\mcarp{M} \eqdef |M| \setminus \{\mzero_M\}$ for the carrier of monoid $M$ without zero. When we define a carrier, a zero element is always implicitly added (we do not explicitly give it), and all cases of multiplication that are not defined (including those involving a zero element) go to that element.
-
-% To disambiguate which monoid an element is part of, we use the notation $a : M$ to denote an $a$ s.t.\ $a \in |M|$.
-
-% When defining a monoid, we will show some \emph{frame-preserving updates} $\melt \mupd \meltsB$ that it supports.
-% Remember that
-% \[
-% 	\melt \mupd \meltsB \eqdef \always\All \melt_f. \melt \sep \melt_f \Ra \Exists \meltB \in \meltsB. \meltB \sep \melt_f.
-% \]
-% The rule \ruleref{FpUpd} (and, later, \ruleref{GhostUpd}) allows us to use such updates in Hoare proofs.
-% The following principles generally hold for frame-preserving updates.
-% \begin{mathpar}
-% 	\infer{
-% 		\melt \mupd \meltsB
-% 	}{
-% 		\melt \mupd \meltsB \cup \meltsB'
-% 	}
-% 	\and
-% 	\infer{
-% 		\melt \mupd \meltsB
-% 	}{
-% 		\melt \mtimes \melt_f \mupd \{ \meltB \mtimes \melt_f \mid \meltB \in \meltsB \}
-% 	}
-% \end{mathpar}
-
 \subsection{Agreement}
 
-\ralf{Copy some stuff from the paper, at least in case we find that there are things which are too long for the paper.}
+Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
+\begin{align*}
+  \monoid \eqdef{}& \setComp{(c, V) \subseteq (\mathbb{N} \to T) \times \mathbb{N}}{ \All n, m. n \geq m \Ra n \in V \Ra m \in V  } \\
+  & \text{quotiented by} \\
+  (c_1, V_1) \equiv (c_1, V_2) \eqdef{}& V_1 = V_2 \land \All n. n \in V_1 \Ra c_1(n) \nequiv{n} c_2(n) \\
+  (c_1, V_1) \nequiv{n} (c_1, V_2) \eqdef{}& (\All m \leq n. m \in V_1 \Lra m \in V_2) \land (\All m \leq n. m \in V_1 \Ra c_1(m) \nequiv{m} c_2(m)) \\
+  \mval_n \eqdef{}& \setComp{(c, V) \in \monoid}{ n \in V \land \All m \leq n. c(n) \nequiv{m} c(m) } \\
+  \mcore\melt \eqdef{}& \melt \\
+  \melt \mtimes \meltB \eqdef{}& (\melt.c, \setComp{n}{n \in \melt.V \land n \in \meltB.V_2 \land \melt \nequiv{n} \meltB }) \\
+  \melt \mdiv \meltB \eqdef{}& \melt \\
+\end{align*}
+$\agm(-)$ is a locally non-expansive bifunctor from $\COFEs$ to $\CMRAs$.
+
+The reason we store a \emph{chain} $c$ of elements of $T$, rather than a single element, is that $\agm(\cofe)$ needs to be a COFE itself, so we need to be able to give a limit for every chain.
+\ralf{Figure out why exactly this is not possible without adding an explicit chain here.}
+
+There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can show the following:
+\begin{mathpar}
+  \axiomH{ag-dup}{\melt = \melt \mtimes \melt}
+  \and\axiomH{ag-agree}{\melt \mtimes \meltB \in \mval_n \Ra \melt \nequiv{n} \meltB}
+\end{mathpar}
+
 
 % \subsection{Exclusive monoid}
 

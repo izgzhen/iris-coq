@@ -37,7 +37,8 @@
 Note that $\COFEs$ is cartesian closed.
 
 \begin{defn}
-  A functor $F : \COFEs \to COFEs$ is called \emph{locally non-expansive} if its actions $F_1$ on arrows is itself a non-expansive map.
+  A functor $F : \COFEs \to \COFEs$ is called \emph{locally non-expansive} if its actions $F_1$ on arrows is itself a non-expansive map.
+  \ralf{We need bifunctors.}
   Similarly, $F$ is called \emph{locally contractive} if $F_1$ is a contractive map.
 \end{defn}
 
@@ -156,7 +157,7 @@ Furthermore, discrete CMRAs can be turned into RAs by ignoring their COFE struct
   The category $\CMRAs$ consists of CMRAs as objects, and monotone functions as arrows.
 \end{defn}
 Note that $\CMRAs$ is a subcategory of $\COFEs$.
-The notion of a locally non-expansive (or contractive) functor naturally generalizes to functors between these categories.
+The notion of a locally non-expansive (or contractive) bifunctor naturally generalizes to bifunctors between these categories.
 
 
 %%% Local Variables: 
