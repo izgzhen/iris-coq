@@ -3,11 +3,11 @@
 \subsection{COFE}
 
 \begin{defn}[Chain]
-  Given some set $T$ and an indexed family $({\nequiv{n}} \subseteq T \times T)_{n \in \mathbb{N}}$ of equivalence relations, a \emph{chain} is a function $c : \mathbb{N} \to T$ such that $\All n, m. n \leq m \Ra c (m) \nequiv{n} c (n)$.
+  Given some set $\cofe$ and an indexed family $({\nequiv{n}} \subseteq \cofe \times \cofe)_{n \in \mathbb{N}}$ of equivalence relations, a \emph{chain} is a function $c : \mathbb{N} \to \cofe$ such that $\All n, m. n \leq m \Ra c (m) \nequiv{n} c (n)$.
 \end{defn}
 
 \begin{defn}
-  A \emph{complete ordered family of equivalences} (COFE) is a tuple $(T, ({\nequiv{n}} \subseteq T \times T)_{n \in \mathbb{N}}, \lim : \chain(T) \to T)$ satisfying
+  A \emph{complete ordered family of equivalences} (COFE) is a tuple $(\cofe, ({\nequiv{n}} \subseteq \cofe \times \cofe)_{n \in \mathbb{N}}, \lim : \chain(\cofe) \to \cofe)$ satisfying
   \begin{align*}
     \All n. (\nequiv{n}) ~& \text{is an equivalence relation} \tagH{cofe-equiv} \\
     \All n, m.& n \geq m \Ra (\nequiv{n}) \subseteq (\nequiv{m}) \tagH{cofe-mono} \\
@@ -19,16 +19,16 @@
 \ralf{Copy the explanation from the paper, when that one is more polished.}
 
 \begin{defn}
-  An element $x \in A$ of a COFE is called \emph{discrete} if
-  \[ \All y \in A. x \nequiv{0} y \Ra x = y\]
+  An element $x \in \cofe$ of a COFE is called \emph{discrete} if
+  \[ \All y \in \cofe. x \nequiv{0} y \Ra x = y\]
   A COFE $A$ is called \emph{discrete} if all its elements are discrete.
 \end{defn}
 
 \begin{defn}
-  A function $f : A \to B$ between two COFEs is \emph{non-expansive} if
-  \[\All n, x \in A, y \in A. x \nequiv{n} y \Ra f(x) \nequiv{n} f(y) \]
+  A function $f : \cofe \to \cofeB$ between two COFEs is \emph{non-expansive} if
+  \[\All n, x \in \cofe, y \in \cofe. x \nequiv{n} y \Ra f(x) \nequiv{n} f(y) \]
   It is \emph{contractive} if
-  \[ \All n, x \in A, y \in A. (\All m < n. x \nequiv{m} y) \Ra f(x) \nequiv{n} f(x) \]
+  \[ \All n, x \in \cofe, y \in \cofe. (\All m < n. x \nequiv{m} y) \Ra f(x) \nequiv{n} f(x) \]
 \end{defn}
 
 \begin{defn}
@@ -135,20 +135,20 @@ Note that for RAs, this and the RA-based definition of a frame-preserving update
   \item $\val$ ignores the step-index: \\
     $\All \melt \in \monoid. \melt \in \mval_0 \Ra \All n, \melt \in \mval_n$
   \item $f$ preserves CMRA inclusion:\\
-    $\All \melt, \meltB. \melt \mincl \meltB \Ra f(\melt) \mincl f(\meltB)$
+    $\All \melt \in \monoid, \meltB \in \monoid. \melt \leq \meltB \Ra f(\melt) \leq f(\meltB)$
   \end{enumerate}
 \end{defn}
 Note that every RA is a discrete CMRA, by picking the discrete COFE for the equivalence relation.
 Furthermore, discrete CMRAs can be turned into RAs by ignoring their COFE structure, as well as the step-index of $\mval$.
 
 \begin{defn}
-  A function $f : M \to N$ between two CMRAs is \emph{monotone} if it satisfies the following conditions:
+  A function $f : \monoid_1 \to \monoid_2$ between two CMRAs is \emph{monotone} if it satisfies the following conditions:
   \begin{enumerate}[itemsep=0pt]
   \item $f$ is non-expansive
   \item $f$ preserves validity: \\
-    $\All n, \melt \in M. \melt \in \mval_n \Ra f(\melt) \in \mval_n$
+    $\All n, \melt \in \monoid_1. \melt \in \mval_n \Ra f(\melt) \in \mval_n$
   \item $f$ preserves CMRA inclusion:\\
-    $\All \melt, \meltB. \melt \mincl \meltB \Ra f(\melt) \mincl f(\meltB)$
+    $\All \melt \in \monoid_1, \meltB \in \monoid_1. \melt \leq \meltB \Ra f(\melt) \leq f(\meltB)$
   \end{enumerate}
 \end{defn}
 
