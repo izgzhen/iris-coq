@@ -138,14 +138,14 @@ Proof. by destruct mx, my; inversion_clear 1. Qed.
 
 (** Internalized properties *)
 Lemma option_equivI {M} (x y : option A) :
-  (x ≡ y)%I ≡ (match x, y with
+  (x ≡ y) ⊣⊢ (match x, y with
                | Some a, Some b => a ≡ b | None, None => True | _, _ => False
-               end : uPred M)%I.
+               end : uPred M).
 Proof.
   uPred.unseal. do 2 split. by destruct 1. by destruct x, y; try constructor.
 Qed.
 Lemma option_validI {M} (x : option A) :
-  (✓ x)%I ≡ (match x with Some a => ✓ a | None => True end : uPred M)%I.
+  (✓ x) ⊣⊢ (match x with Some a => ✓ a | None => True end : uPred M).
 Proof. uPred.unseal. by destruct x. Qed.
 
 (** Updates *)

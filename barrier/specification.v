@@ -12,12 +12,12 @@ Local Notation iProp := (iPropG heap_lang Σ).
 Lemma barrier_spec (heapN N : namespace) :
   heapN ⊥ N →
   ∃ recv send : loc → iProp -n> iProp,
-    (∀ P, heap_ctx heapN ⊑ {{ True }} newbarrier §() {{ λ v,
+    (∀ P, heap_ctx heapN ⊢ {{ True }} newbarrier §() {{ λ v,
                              ∃ l : loc, v = LocV l ★ recv l P ★ send l P }}) ∧
     (∀ l P, {{ send l P ★ P }} signal (LocV l) {{ λ _, True }}) ∧
     (∀ l P, {{ recv l P }} wait (LocV l) {{ λ _, P }}) ∧
     (∀ l P Q, recv l (P ★ Q) ={N}=> recv l P ★ recv l Q) ∧
-    (∀ l P Q, (P -★ Q) ⊑ (recv l P -★ recv l Q)).
+    (∀ l P Q, (P -★ Q) ⊢ (recv l P -★ recv l Q)).
 Proof.
   intros HN.
   exists (λ l, CofeMor (recv heapN N l)), (λ l, CofeMor (send heapN N l)).

@@ -19,16 +19,16 @@ Section client.
     (∃ f : val, y ↦{q} f ★ □ ∀ n : Z, #> f §n {{ λ v, v = §(n + 42) }})%I.
 
   Lemma y_inv_split q y :
-    y_inv q y ⊑ (y_inv (q/2) y ★ y_inv (q/2) y).
+    y_inv q y ⊢ (y_inv (q/2) y ★ y_inv (q/2) y).
   Proof.
     rewrite /y_inv. apply exist_elim=>f.
     rewrite -!(exist_intro f). rewrite heap_mapsto_op_split.
-    ecancel [y ↦{_} _; y ↦{_} _]%I. by rewrite [X in X ⊑ _]always_sep_dup.
+    ecancel [y ↦{_} _; y ↦{_} _]%I. by rewrite [X in X ⊢ _]always_sep_dup.
   Qed.
 
   Lemma worker_safe q (n : Z) (b y : loc) :
     (heap_ctx heapN ★ recv heapN N b (y_inv q y))
-      ⊑ #> worker n (%b) (%y) {{ λ _, True }}.
+      ⊢ #> worker n (%b) (%y) {{ λ _, True }}.
   Proof.
     rewrite /worker. wp_lam. wp_let. ewp apply wait_spec.
     rewrite comm. apply sep_mono_r. apply wand_intro_l.
@@ -42,7 +42,7 @@ Section client.
   Qed.
 
   Lemma client_safe :
-    heapN ⊥ N → heap_ctx heapN ⊑ #> client {{ λ _, True }}.
+    heapN ⊥ N → heap_ctx heapN ⊢ #> client {{ λ _, True }}.
   Proof.
     intros ?. rewrite /client.
     (ewp eapply wp_alloc); eauto with I. strip_later. apply forall_intro=>y.

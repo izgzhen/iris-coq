@@ -170,9 +170,9 @@ Section iprod_cmra.
   Qed.
 
   (** Internalized properties *)
-  Lemma iprod_equivI {M} g1 g2 : (g1 ≡ g2)%I ≡ (∀ i, g1 i ≡ g2 i : uPred M)%I.
+  Lemma iprod_equivI {M} g1 g2 : (g1 ≡ g2) ⊣⊢ (∀ i, g1 i ≡ g2 i : uPred M).
   Proof. by uPred.unseal. Qed.
-  Lemma iprod_validI {M} g : (✓ g)%I ≡ (∀ i, ✓ g i : uPred M)%I.
+  Lemma iprod_validI {M} g : (✓ g) ⊣⊢ (∀ i, ✓ g i : uPred M).
   Proof. by uPred.unseal. Qed.
 
   (** Properties of iprod_insert. *)

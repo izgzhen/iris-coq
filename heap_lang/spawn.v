@@ -51,7 +51,7 @@ Lemma spawn_spec (Ψ : val → iProp) e (f : val) (Φ : val → iProp) :
   to_val e = Some f →
   heapN ⊥ N →
   (heap_ctx heapN ★ #> f §() {{ Ψ }} ★ ∀ l, join_handle l Ψ -★ Φ (%l))
-  ⊑ #> spawn e {{ Φ }}.
+  ⊢ #> spawn e {{ Φ }}.
 Proof.
   intros Hval Hdisj. rewrite /spawn. ewp (by eapply wp_value). wp_let.
   wp eapply wp_alloc; eauto with I.
@@ -88,7 +88,7 @@ Qed.
 
 Lemma join_spec (Ψ : val → iProp) l (Φ : val → iProp) :
   (join_handle l Ψ ★ ∀ v, Ψ v -★ Φ v)
-  ⊑ #> join (%l) {{ Φ }}.
+  ⊢ #> join (%l) {{ Φ }}.
 Proof.
   wp_rec. wp_focus (! _)%E.
   rewrite {1}/join_handle sep_exist_l !sep_exist_r. apply exist_elim=>γ.
@@ -97,7 +97,7 @@ Proof.
   apply wand_intro_l. rewrite /spawn_inv {1}later_exist !sep_exist_r.
   apply exist_elim=>lv. rewrite later_sep.
   eapply wp_load; eauto with I ndisj. cancel [▷ (l ↦ lv)]%I. strip_later.
-  apply wand_intro_l. rewrite -later_intro -[X in _ ⊑ (X ★ _)](exist_intro lv).
+  apply wand_intro_l. rewrite -later_intro -[X in _ ⊢ (X ★ _)](exist_intro lv).
   cancel [l ↦ lv]%I. rewrite sep_or_r. apply or_elim.
   - (* Case 1 : nothing sent yet, we wait. *)
     rewrite -or_intro_l. apply const_elim_sep_l=>-> {lv}.

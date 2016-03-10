@@ -8,7 +8,7 @@ Local Notation "{{ P } } ef ?@ E {{ Φ } }" :=
   (at level 20, P, ef, Φ at level 200,
    format "{{  P  } }  ef  ?@  E  {{  Φ  } }") : uPred_scope.
 Local Notation "{{ P } } ef ?@ E {{ Φ } }" :=
-  (True ⊑ default True ef (λ e, ht E P e Φ))
+  (True ⊢ default True ef (λ e, ht E P e Φ))
   (at level 20, P, ef, Φ at level 200,
    format "{{  P  } }  ef  ?@  E  {{  Φ  } }") : C_scope.
 
@@ -27,7 +27,7 @@ Lemma ht_lift_step E1 E2
     (■ φ e2 σ2 ef ★ ownP σ2 ★ P' ={E2,E1}=> Φ1 e2 σ2 ef ★ Φ2 e2 σ2 ef) ∧
     {{ Φ1 e2 σ2 ef }} e2 @ E1 {{ Ψ }} ∧
     {{ Φ2 e2 σ2 ef }} ef ?@ ⊤ {{ λ _, True }})
-  ⊑ {{ P }} e1 @ E1 {{ Ψ }}.
+  ⊢ {{ P }} e1 @ E1 {{ Ψ }}.
 Proof.
   intros ?? Hsafe Hstep; apply: always_intro. apply impl_intro_l.
   rewrite (assoc _ P) {1}/vs always_elim impl_elim_r pvs_always_r.
@@ -53,7 +53,7 @@ Lemma ht_lift_atomic_step
   atomic e1 →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  (∀ e2 σ2 ef, {{ ■ φ e2 σ2 ef ★ P }} ef ?@ ⊤ {{ λ _, True }}) ⊑
+  (∀ e2 σ2 ef, {{ ■ φ e2 σ2 ef ★ P }} ef ?@ ⊤ {{ λ _, True }}) ⊢
   {{ ▷ ownP σ1 ★ ▷ P }} e1 @ E {{ λ v, ∃ σ2 ef, ownP σ2 ★ ■ φ (of_val v) σ2 ef }}.
 Proof.
   intros ? Hsafe Hstep; set (φ' e σ ef := is_Some (to_val e) ∧ φ e σ ef).
@@ -82,7 +82,7 @@ Lemma ht_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) P P' Ψ e
   (∀ e2 ef,
     {{ ■ φ e2 ef ★ P }} e2 @ E {{ Ψ }} ∧
     {{ ■ φ e2 ef ★ P' }} ef ?@ ⊤ {{ λ _, True }})
-  ⊑ {{ ▷(P ★ P') }} e1 @ E {{ Ψ }}.
+  ⊢ {{ ▷(P ★ P') }} e1 @ E {{ Ψ }}.
 Proof.
   intros ? Hsafe Hstep; apply: always_intro. apply impl_intro_l.
   rewrite -(wp_lift_pure_step E φ _ e1) //.
@@ -102,7 +102,7 @@ Lemma ht_lift_pure_det_step
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2' σ2 ef', prim_step e1 σ1 e2' σ2 ef' → σ1 = σ2 ∧ e2 = e2' ∧ ef = ef')→
   ({{ P }} e2 @ E {{ Ψ }} ∧ {{ P' }} ef ?@ ⊤ {{ λ _, True }})
-  ⊑ {{ ▷(P ★ P') }} e1 @ E {{ Ψ }}.
+  ⊢ {{ ▷(P ★ P') }} e1 @ E {{ Ψ }}.
 Proof.
   intros ? Hsafe Hdet.
   rewrite -(ht_lift_pure_step _ (λ e2' ef', e2 = e2' ∧ ef = ef')); eauto.

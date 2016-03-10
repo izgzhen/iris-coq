@@ -145,16 +145,16 @@ Qed.
 
 (** Internalized properties *)
 Lemma excl_equivI {M} (x y : excl A) :
-  (x ≡ y)%I ≡ (match x, y with
+  (x ≡ y) ⊣⊢ (match x, y with
                | Excl a, Excl b => a ≡ b
                | ExclUnit, ExclUnit | ExclBot, ExclBot => True
                | _, _ => False
-               end : uPred M)%I.
+               end : uPred M).
 Proof.
   uPred.unseal. do 2 split. by destruct 1. by destruct x, y; try constructor.
 Qed.
 Lemma excl_validI {M} (x : excl A) :
-  (✓ x)%I ≡ (if x is ExclBot then False else True : uPred M)%I.
+  (✓ x) ⊣⊢ (if x is ExclBot then False else True : uPred M).
 Proof. uPred.unseal. by destruct x. Qed.
 
 (** ** Local updates *)

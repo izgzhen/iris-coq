@@ -26,7 +26,7 @@ Section definitions.
 
   Global Instance auth_own_ne n : Proper (dist n ==> dist n) auth_own.
   Proof. solve_proper. Qed.
-  Global Instance auth_own_proper : Proper ((≡) ==> (≡)) auth_own.
+  Global Instance auth_own_proper : Proper ((≡) ==> (⊣⊢)) auth_own.
   Proof. solve_proper. Qed.
   Global Instance auth_own_timeless a : TimelessP (auth_own a).
   Proof. apply _. Qed.
@@ -41,21 +41,21 @@ Instance: Params (@auth_ctx) 7.
 
 Section auth.
   Context `{AuthI : authG Λ Σ A}.
-  Context (φ : A → iPropG Λ Σ) {φ_proper : Proper ((≡) ==> (≡)) φ}.
+  Context (φ : A → iPropG Λ Σ) {φ_proper : Proper ((≡) ==> (⊣⊢)) φ}.
   Implicit Types N : namespace.
   Implicit Types P Q R : iPropG Λ Σ.
   Implicit Types a b : A.
   Implicit Types γ : gname.
 
   Lemma auth_own_op γ a b :
-    auth_own γ (a ⋅ b) ≡ (auth_own γ a ★ auth_own γ b)%I.
+    auth_own γ (a ⋅ b) ⊣⊢ (auth_own γ a ★ auth_own γ b).
   Proof. by rewrite /auth_own -own_op auth_frag_op. Qed.
-  Lemma auth_own_valid γ a : auth_own γ a ⊑ ✓ a.
+  Lemma auth_own_valid γ a : auth_own γ a ⊢ ✓ a.
   Proof. by rewrite /auth_own own_valid auth_validI. Qed.
 
   Lemma auth_alloc N E a :
     ✓ a → nclose N ⊆ E →
-    ▷ φ a ⊑ (|={E}=> ∃ γ, auth_ctx γ N φ ∧ auth_own γ a).
+    ▷ φ a ⊢ (|={E}=> ∃ γ, auth_ctx γ N φ ∧ auth_own γ a).
   Proof.
     intros Ha HN. eapply sep_elim_True_r.
     { by eapply (own_alloc (Auth (Excl a) a) E). }
@@ -69,12 +69,12 @@ Section auth.
     by rewrite always_and_sep_l.
   Qed.
 
-  Lemma auth_empty γ E : True ⊑ |={E}=> auth_own γ ∅.
+  Lemma auth_empty γ E : True ⊢ |={E}=> auth_own γ ∅.
   Proof. by rewrite -own_empty. Qed.
 
   Lemma auth_opened E γ a :
     (▷ auth_inv γ φ ★ auth_own γ a)
-    ⊑ (|={E}=> ∃ a', ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') ★ own γ (● (a ⋅ a') ⋅ ◯ a)).
+    ⊢ (|={E}=> ∃ a', ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') ★ own γ (● (a ⋅ a') ⋅ ◯ a)).
   Proof.
     rewrite /auth_inv. rewrite later_exist sep_exist_r. apply exist_elim=>b.
     rewrite later_sep [(▷ own _ _)%I]pvs_timeless !pvs_frame_r. apply pvs_mono.
@@ -93,7 +93,7 @@ Section auth.
   Lemma auth_closing `{!LocalUpdate Lv L} E γ a a' :
     Lv a → ✓ (L a ⋅ a') →
     (▷ φ (L a ⋅ a') ★ own γ (● (a ⋅ a') ⋅ ◯ a))
-    ⊑ (|={E}=> ▷ auth_inv γ φ ★ auth_own γ (L a)).
+    ⊢ (|={E}=> ▷ auth_inv γ φ ★ auth_own γ (L a)).
   Proof.
     intros HL Hv. rewrite /auth_inv -(exist_intro (L a ⋅ a')).
     (* TODO it would be really nice to use cancel here *)
@@ -108,13 +108,13 @@ Section auth.
   Lemma auth_fsa E N P (Ψ : V → iPropG Λ Σ) γ a :
     fsaV →
     nclose N ⊆ E →
-    P ⊑ auth_ctx γ N φ →
-    P ⊑ (▷ auth_own γ a ★ ∀ a',
+    P ⊢ auth_ctx γ N φ →
+    P ⊢ (▷ auth_own γ a ★ ∀ a',
           ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
           fsa (E ∖ nclose N) (λ x, ∃ L Lv (Hup : LocalUpdate Lv L),
             ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
             (auth_own γ (L a) -★ Ψ x))) →
-    P ⊑ fsa E Ψ.
+    P ⊢ fsa E Ψ.
   Proof.
     rewrite /auth_ctx=>? HN Hinv Hinner.
     eapply (inv_fsa fsa); eauto. rewrite Hinner=>{Hinner Hinv P HN}.
@@ -140,13 +140,13 @@ Section auth.
   Lemma auth_fsa' L `{!LocalUpdate Lv L} E N P (Ψ : V → iPropG Λ Σ) γ a :
     fsaV →
     nclose N ⊆ E →
-    P ⊑ auth_ctx γ N φ →
-    P ⊑ (▷ auth_own γ a ★ (∀ a',
+    P ⊢ auth_ctx γ N φ →
+    P ⊢ (▷ auth_own γ a ★ (∀ a',
           ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
           fsa (E ∖ nclose N) (λ x,
             ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
             (auth_own γ (L a) -★ Ψ x)))) →
-    P ⊑ fsa E Ψ.
+    P ⊢ fsa E Ψ.
   Proof.
     intros ??? HP. eapply auth_fsa with N γ a; eauto.
     rewrite HP; apply sep_mono_r, forall_mono=> a'.

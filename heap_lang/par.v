@@ -23,7 +23,7 @@ Lemma par_spec (Ψ1 Ψ2 : val → iProp) e (f1 f2 : val) (Φ : val → iProp) :
   heapN ⊥ N → to_val e = Some (f1,f2)%V →
   (heap_ctx heapN ★ #> f1 §() {{ Ψ1 }} ★ #> f2 §() {{ Ψ2 }} ★
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
-  ⊑ #> par e {{ Φ }}.
+  ⊢ #> par e {{ Φ }}.
 Proof.
   intros. rewrite /par. ewp (by eapply wp_value). wp_let. wp_proj.
   ewp (eapply spawn_spec; wp_done).
@@ -40,7 +40,7 @@ Lemma wp_par (Ψ1 Ψ2 : val → iProp) (e1 e2 : expr []) (Φ : val → iProp) :
   heapN ⊥ N →
   (heap_ctx heapN ★ #> e1 {{ Ψ1 }} ★ #> e2 {{ Ψ2 }} ★
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
-  ⊑ #> ParV e1 e2 {{ Φ }}.
+  ⊢ #> ParV e1 e2 {{ Φ }}.
 Proof.
   intros. rewrite -par_spec //. repeat apply sep_mono; done || by wp_seq.
 Qed.

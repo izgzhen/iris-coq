@@ -54,18 +54,18 @@ Qed.
 Global Instance pvs_proper E1 E2 : Proper ((≡) ==> (≡)) (@pvs Λ Σ E1 E2).
 Proof. apply ne_proper, _. Qed.
 
-Lemma pvs_intro E P : P ⊑ |={E}=> P.
+Lemma pvs_intro E P : P ⊢ |={E}=> P.
 Proof.
   rewrite pvs_eq. split=> n r ? HP rf k Ef σ ???; exists r; split; last done.
   apply uPred_weaken with n r; eauto.
 Qed.
-Lemma pvs_mono E1 E2 P Q : P ⊑ Q → (|={E1,E2}=> P) ⊑ (|={E1,E2}=> Q).
+Lemma pvs_mono E1 E2 P Q : P ⊢ Q → (|={E1,E2}=> P) ⊢ (|={E1,E2}=> Q).
 Proof.
   rewrite pvs_eq. intros HPQ; split=> n r ? HP rf k Ef σ ???.
   destruct (HP rf k Ef σ) as (r2&?&?); eauto.
   exists r2; eauto using uPred_in_entails.
 Qed.
-Lemma pvs_timeless E P : TimelessP P → (▷ P) ⊑ (|={E}=> P).
+Lemma pvs_timeless E P : TimelessP P → (▷ P) ⊢ (|={E}=> P).
 Proof.
   rewrite pvs_eq uPred.timelessP_spec=> HP.
   uPred.unseal; split=>-[|n] r ? HP' rf k Ef σ ???; first lia.
@@ -73,19 +73,19 @@ Proof.
   apply HP, uPred_weaken with n r; eauto using cmra_validN_le.
 Qed.
 Lemma pvs_trans E1 E2 E3 P :
-  E2 ⊆ E1 ∪ E3 → (|={E1,E2}=> |={E2,E3}=> P) ⊑ (|={E1,E3}=> P).
+  E2 ⊆ E1 ∪ E3 → (|={E1,E2}=> |={E2,E3}=> P) ⊢ (|={E1,E3}=> P).
 Proof.
   rewrite pvs_eq. intros ?; split=> n r1 ? HP1 rf k Ef σ ???.
   destruct (HP1 rf k Ef σ) as (r2&HP2&?); auto.
 Qed.
 Lemma pvs_mask_frame E1 E2 Ef P :
-  Ef ∩ (E1 ∪ E2) = ∅ → (|={E1,E2}=> P) ⊑ (|={E1 ∪ Ef,E2 ∪ Ef}=> P).
+  Ef ∩ (E1 ∪ E2) = ∅ → (|={E1,E2}=> P) ⊢ (|={E1 ∪ Ef,E2 ∪ Ef}=> P).
 Proof.
   rewrite pvs_eq. intros ?; split=> n r ? HP rf k Ef' σ ???.
   destruct (HP rf k (Ef∪Ef') σ) as (r'&?&?); rewrite ?(assoc_L _); eauto.
   by exists r'; rewrite -(assoc_L _).
 Qed.
-Lemma pvs_frame_r E1 E2 P Q : ((|={E1,E2}=> P) ★ Q) ⊑ (|={E1,E2}=> P ★ Q).
+Lemma pvs_frame_r E1 E2 P Q : ((|={E1,E2}=> P) ★ Q) ⊢ (|={E1,E2}=> P ★ Q).
 Proof.
   rewrite pvs_eq. uPred.unseal; split; intros n r ? (r1&r2&Hr&HP&?) rf k Ef σ ???.
   destruct (HP (r2 ⋅ rf) k Ef σ) as (r'&?&?); eauto.
@@ -93,7 +93,7 @@ Proof.
   exists (r' ⋅ r2); split; last by rewrite -assoc.
   exists r', r2; split_and?; auto; apply uPred_weaken with n r2; auto.
 Qed.
-Lemma pvs_openI i P : ownI i P ⊑ (|={{[i]},∅}=> ▷ P).
+Lemma pvs_openI i P : ownI i P ⊢ (|={{[i]},∅}=> ▷ P).
 Proof.
   rewrite pvs_eq. uPred.unseal; split=> -[|n] r ? Hinv rf [|k] Ef σ ???; try lia.
   apply ownI_spec in Hinv; last auto.
@@ -102,7 +102,7 @@ Proof.
   exists (rP ⋅ r); split; last by rewrite (left_id_L _ _) -assoc.
   eapply uPred_weaken with (S k) rP; eauto using cmra_included_l.
 Qed.
-Lemma pvs_closeI i P : (ownI i P ∧ ▷ P) ⊑ (|={∅,{[i]}}=> True).
+Lemma pvs_closeI i P : (ownI i P ∧ ▷ P) ⊢ (|={∅,{[i]}}=> True).
 Proof.
   rewrite pvs_eq. uPred.unseal; split=> -[|n] r ? [? HP] rf [|k] Ef σ ? HE ?; try lia.
   exists ∅; split; [done|].
@@ -113,7 +113,7 @@ Proof.
   - apply uPred_weaken with n r; auto.
 Qed.
 Lemma pvs_ownG_updateP E m (P : iGst Λ Σ → Prop) :
-  m ~~>: P → ownG m ⊑ (|={E}=> ∃ m', ■ P m' ∧ ownG m').
+  m ~~>: P → ownG m ⊢ (|={E}=> ∃ m', ■ P m' ∧ ownG m').
 Proof.
   rewrite pvs_eq. intros Hup.
   uPred.unseal; split=> -[|n] r ? /ownG_spec Hinv rf [|k] Ef σ ???; try lia.
@@ -121,7 +121,7 @@ Proof.
   { apply cmra_includedN_le with (S n); auto. }
   by exists (update_gst m' r); split; [exists m'; split; [|apply ownG_spec]|].
 Qed.
-Lemma pvs_allocI E P : ¬set_finite E → ▷ P ⊑ (|={E}=> ∃ i, ■ (i ∈ E) ∧ ownI i P).
+Lemma pvs_allocI E P : ¬set_finite E → ▷ P ⊢ (|={E}=> ∃ i, ■ (i ∈ E) ∧ ownI i P).
 Proof.
   rewrite pvs_eq. intros ?; rewrite /ownI; uPred.unseal.
   split=> -[|n] r ? HP rf [|k] Ef σ ???; try lia.
@@ -133,40 +133,40 @@ Qed.
 
 (** * Derived rules *)
 Import uPred.
-Global Instance pvs_mono' E1 E2 : Proper ((⊑) ==> (⊑)) (@pvs Λ Σ E1 E2).
+Global Instance pvs_mono' E1 E2 : Proper ((⊢) ==> (⊢)) (@pvs Λ Σ E1 E2).
 Proof. intros P Q; apply pvs_mono. Qed.
 Global Instance pvs_flip_mono' E1 E2 :
-  Proper (flip (⊑) ==> flip (⊑)) (@pvs Λ Σ E1 E2).
+  Proper (flip (⊢) ==> flip (⊢)) (@pvs Λ Σ E1 E2).
 Proof. intros P Q; apply pvs_mono. Qed.
-Lemma pvs_trans' E P : (|={E}=> |={E}=> P) ⊑ (|={E}=> P).
+Lemma pvs_trans' E P : (|={E}=> |={E}=> P) ⊢ (|={E}=> P).
 Proof. apply pvs_trans; set_solver. Qed.
-Lemma pvs_strip_pvs E P Q : P ⊑ (|={E}=> Q) → (|={E}=> P) ⊑ (|={E}=> Q).
+Lemma pvs_strip_pvs E P Q : P ⊢ (|={E}=> Q) → (|={E}=> P) ⊢ (|={E}=> Q).
 Proof. move=>->. by rewrite pvs_trans'. Qed.
-Lemma pvs_frame_l E1 E2 P Q : (P ★ |={E1,E2}=> Q) ⊑ (|={E1,E2}=> P ★ Q).
+Lemma pvs_frame_l E1 E2 P Q : (P ★ |={E1,E2}=> Q) ⊢ (|={E1,E2}=> P ★ Q).
 Proof. rewrite !(comm _ P); apply pvs_frame_r. Qed.
 Lemma pvs_always_l E1 E2 P Q `{!AlwaysStable P} :
-  (P ∧ |={E1,E2}=> Q) ⊑ (|={E1,E2}=> P ∧ Q).
+  (P ∧ |={E1,E2}=> Q) ⊢ (|={E1,E2}=> P ∧ Q).
 Proof. by rewrite !always_and_sep_l pvs_frame_l. Qed.
 Lemma pvs_always_r E1 E2 P Q `{!AlwaysStable Q} :
-  ((|={E1,E2}=> P) ∧ Q) ⊑ (|={E1,E2}=> P ∧ Q).
+  ((|={E1,E2}=> P) ∧ Q) ⊢ (|={E1,E2}=> P ∧ Q).
 Proof. by rewrite !always_and_sep_r pvs_frame_r. Qed.
-Lemma pvs_impl_l E1 E2 P Q : (□ (P → Q) ∧ (|={E1,E2}=> P)) ⊑ (|={E1,E2}=> Q).
+Lemma pvs_impl_l E1 E2 P Q : (□ (P → Q) ∧ (|={E1,E2}=> P)) ⊢ (|={E1,E2}=> Q).
 Proof. by rewrite pvs_always_l always_elim impl_elim_l. Qed.
-Lemma pvs_impl_r E1 E2 P Q : ((|={E1,E2}=> P) ∧ □ (P → Q)) ⊑ (|={E1,E2}=> Q).
+Lemma pvs_impl_r E1 E2 P Q : ((|={E1,E2}=> P) ∧ □ (P → Q)) ⊢ (|={E1,E2}=> Q).
 Proof. by rewrite comm pvs_impl_l. Qed.
 Lemma pvs_wand_l E1 E2 P Q R :
-  P ⊑ (|={E1,E2}=> Q) → ((Q -★ R) ★ P) ⊑ (|={E1,E2}=> R).
+  P ⊢ (|={E1,E2}=> Q) → ((Q -★ R) ★ P) ⊢ (|={E1,E2}=> R).
 Proof. intros ->. rewrite pvs_frame_l. apply pvs_mono, wand_elim_l. Qed.
 Lemma pvs_wand_r E1 E2 P Q R :
-  P ⊑ (|={E1,E2}=> Q) → (P ★ (Q -★ R)) ⊑ (|={E1,E2}=> R).
+  P ⊢ (|={E1,E2}=> Q) → (P ★ (Q -★ R)) ⊢ (|={E1,E2}=> R).
 Proof. rewrite comm. apply pvs_wand_l. Qed.
 Lemma pvs_sep E P Q:
-  ((|={E}=> P) ★ (|={E}=> Q)) ⊑ (|={E}=> P ★ Q).
+  ((|={E}=> P) ★ (|={E}=> Q)) ⊢ (|={E}=> P ★ Q).
 Proof. rewrite pvs_frame_r pvs_frame_l pvs_trans //. set_solver. Qed.
 
 Lemma pvs_mask_frame' E1 E1' E2 E2' P :
   E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' →
-  (|={E1',E2'}=> P) ⊑ (|={E1,E2}=> P).
+  (|={E1',E2'}=> P) ⊢ (|={E1,E2}=> P).
 Proof.
   intros HE1 HE2 HEE.
   rewrite (pvs_mask_frame _ _ (E1 ∖ E1')); last set_solver.
@@ -175,7 +175,7 @@ Qed.
 
 Lemma pvs_mask_frame_mono E1 E1' E2 E2' P Q :
   E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' →
-  P ⊑ Q → (|={E1',E2'}=> P) ⊑ (|={E1,E2}=> Q).
+  P ⊢ Q → (|={E1',E2'}=> P) ⊢ (|={E1,E2}=> Q).
 Proof. intros HE1 HE2 HEE ->. by apply pvs_mask_frame'. Qed.
 
 (** It should be possible to give a stronger version of this rule
@@ -184,13 +184,13 @@ Proof. intros HE1 HE2 HEE ->. by apply pvs_mask_frame'. Qed.
    mask becomes really ugly then, and we have not found an instance
    where that would be useful. *)
 Lemma pvs_trans3 E1 E2 Q :
-  E2 ⊆ E1 → (|={E1,E2}=> |={E2}=> |={E2,E1}=> Q) ⊑ (|={E1}=> Q).
+  E2 ⊆ E1 → (|={E1,E2}=> |={E2}=> |={E2,E1}=> Q) ⊢ (|={E1}=> Q).
 Proof. intros HE. rewrite !pvs_trans; set_solver. Qed.
 
-Lemma pvs_mask_weaken E1 E2 P : E1 ⊆ E2 → (|={E1}=> P) ⊑ (|={E2}=> P).
+Lemma pvs_mask_weaken E1 E2 P : E1 ⊆ E2 → (|={E1}=> P) ⊢ (|={E2}=> P).
 Proof. auto using pvs_mask_frame'. Qed.
 
-Lemma pvs_ownG_update E m m' : m ~~> m' → ownG m ⊑ (|={E}=> ownG m').
+Lemma pvs_ownG_update E m m' : m ~~> m' → ownG m ⊢ (|={E}=> ownG m').
 Proof.
   intros; rewrite (pvs_ownG_updateP E _ (m' =)); last by apply cmra_update_updateP.
   by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.const_elim_l=> ->.
@@ -205,29 +205,29 @@ End pvs.
 Notation FSA Λ Σ A := (coPset → (A → iProp Λ Σ) → iProp Λ Σ).
 Class FrameShiftAssertion {Λ Σ A} (fsaV : Prop) (fsa : FSA Λ Σ A) := {
   fsa_mask_frame_mono E1 E2 Φ Ψ :
-    E1 ⊆ E2 → (∀ a, Φ a ⊑ Ψ a) → fsa E1 Φ ⊑ fsa E2 Ψ;
-  fsa_trans3 E Φ : (|={E}=> fsa E (λ a, |={E}=> Φ a)) ⊑ fsa E Φ;
+    E1 ⊆ E2 → (∀ a, Φ a ⊢ Ψ a) → fsa E1 Φ ⊢ fsa E2 Ψ;
+  fsa_trans3 E Φ : (|={E}=> fsa E (λ a, |={E}=> Φ a)) ⊢ fsa E Φ;
   fsa_open_close E1 E2 Φ :
-    fsaV → E2 ⊆ E1 → (|={E1,E2}=> fsa E2 (λ a, |={E2,E1}=> Φ a)) ⊑ fsa E1 Φ;
-  fsa_frame_r E P Φ : (fsa E Φ ★ P) ⊑ fsa E (λ a, Φ a ★ P)
+    fsaV → E2 ⊆ E1 → (|={E1,E2}=> fsa E2 (λ a, |={E2,E1}=> Φ a)) ⊢ fsa E1 Φ;
+  fsa_frame_r E P Φ : (fsa E Φ ★ P) ⊢ fsa E (λ a, Φ a ★ P)
 }.
 
 Section fsa.
 Context {Λ Σ A} (fsa : FSA Λ Σ A) `{!FrameShiftAssertion fsaV fsa}.
 Implicit Types Φ Ψ : A → iProp Λ Σ.
 
-Lemma fsa_mono E Φ Ψ : (∀ a, Φ a ⊑ Ψ a) → fsa E Φ ⊑ fsa E Ψ.
+Lemma fsa_mono E Φ Ψ : (∀ a, Φ a ⊢ Ψ a) → fsa E Φ ⊢ fsa E Ψ.
 Proof. apply fsa_mask_frame_mono; auto. Qed.
-Lemma fsa_mask_weaken E1 E2 Φ : E1 ⊆ E2 → fsa E1 Φ ⊑ fsa E2 Φ.
+Lemma fsa_mask_weaken E1 E2 Φ : E1 ⊆ E2 → fsa E1 Φ ⊢ fsa E2 Φ.
 Proof. intros. apply fsa_mask_frame_mono; auto. Qed.
-Lemma fsa_frame_l E P Φ : (P ★ fsa E Φ) ⊑ fsa E (λ a, P ★ Φ a).
+Lemma fsa_frame_l E P Φ : (P ★ fsa E Φ) ⊢ fsa E (λ a, P ★ Φ a).
 Proof. rewrite comm fsa_frame_r. apply fsa_mono=>a. by rewrite comm. Qed.
-Lemma fsa_strip_pvs E P Φ : P ⊑ fsa E Φ → (|={E}=> P) ⊑ fsa E Φ.
+Lemma fsa_strip_pvs E P Φ : P ⊢ fsa E Φ → (|={E}=> P) ⊢ fsa E Φ.
 Proof.
   move=>->. rewrite -{2}fsa_trans3.
   apply pvs_mono, fsa_mono=>a; apply pvs_intro.
 Qed.
-Lemma fsa_mono_pvs E Φ Ψ : (∀ a, Φ a ⊑ (|={E}=> Ψ a)) → fsa E Φ ⊑ fsa E Ψ.
+Lemma fsa_mono_pvs E Φ Ψ : (∀ a, Φ a ⊢ (|={E}=> Ψ a)) → fsa E Φ ⊢ fsa E Ψ.
 Proof. intros. rewrite -[fsa E Ψ]fsa_trans3 -pvs_intro. by apply fsa_mono. Qed.
 End fsa.
 
@@ -239,6 +239,6 @@ Proof.
 Qed.
 
 Lemma pvs_mk_fsa {Λ Σ} E (P Q : iProp Λ Σ) :
-  P ⊑ pvs_fsa E (λ _, Q) →
-  P ⊑ |={E}=> Q.
+  P ⊢ pvs_fsa E (λ _, Q) →
+  P ⊢ |={E}=> Q.
 Proof. by intros ?. Qed.

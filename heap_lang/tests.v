@@ -24,7 +24,7 @@ Section LiftingTests.
   Definition heap_e  : expr [] :=
     let: "x" := ref §1 in '"x" <- !'"x" + §1 ;; !'"x".
   Lemma heap_e_spec E N :
-     nclose N ⊆ E → heap_ctx N ⊑ #> heap_e @ E {{ λ v, v = §2 }}.
+     nclose N ⊆ E → heap_ctx N ⊢ #> heap_e @ E {{ λ v, v = §2 }}.
   Proof.
     rewrite /heap_e=>HN. rewrite -(wp_mask_weaken N E) //.
     wp eapply wp_alloc; eauto. apply forall_intro=>l; apply wand_intro_l.
@@ -44,7 +44,7 @@ Section LiftingTests.
 
   Lemma FindPred_spec n1 n2 E Φ :
     n1 < n2 → 
-    Φ §(n2 - 1) ⊑ #> FindPred §n2 §n1 @ E {{ Φ }}.
+    Φ §(n2 - 1) ⊢ #> FindPred §n2 §n1 @ E {{ Φ }}.
   Proof.
     revert n1. wp_rec=>n1 Hn.
     wp_let. wp_op. wp_let. wp_op=> ?; wp_if.
@@ -53,7 +53,7 @@ Section LiftingTests.
     - assert (n1 = n2 - 1) as -> by omega; auto with I.
   Qed.
 
-  Lemma Pred_spec n E Φ : ▷ Φ §(n - 1) ⊑ #> Pred §n @ E {{ Φ }}.
+  Lemma Pred_spec n E Φ : ▷ Φ §(n - 1) ⊢ #> Pred §n @ E {{ Φ }}.
   Proof.
     wp_lam. wp_op=> ?; wp_if.
     - wp_op. wp_op.
@@ -63,7 +63,7 @@ Section LiftingTests.
   Qed.
 
   Lemma Pred_user E :
-    (True : iProp) ⊑ #> let: "x" := Pred §42 in ^Pred '"x" @ E {{ λ v, v = §40 }}.
+    (True : iProp) ⊢ #> let: "x" := Pred §42 in ^Pred '"x" @ E {{ λ v, v = §40 }}.
   Proof.
     intros. ewp apply Pred_spec. wp_let. ewp apply Pred_spec. auto with I.
   Qed.
