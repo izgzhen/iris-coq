@@ -84,7 +84,7 @@ For every $n$, we obtain a proof that $\melt \mincl{n} \meltB$.
 From this, we could extract a sequence of witnesses $(\meltC_m)_{m}$, and we need to arrive at a single witness $\meltC$ showing that $\melt \leq \meltB$.
 Without the division operator, there is no reason to believe that such a witness exists.
 However, since we can use the division operator, and since we know that this operator is \emph{non-expansive}, we can pick $\meltC \eqdef \meltB \mdiv \melt$, and then we can prove that this is indeed the desired witness.
-\ralf{Do we actually need this property anywhere?}
+\ralf{The only reason we actually have division is that we are working constructively \emph{and}, at the same time, remain compatible with a classic interpretation of the existential. This is pretty silly.}
 
 \paragraph{The extension axiom (\ruleref{cmra-extend}).}
 Notice that the existential quantification in this axiom is \emph{constructive}, \ie it is a sigma type in Coq.
