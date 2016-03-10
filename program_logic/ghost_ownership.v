@@ -17,9 +17,9 @@ Implicit Types a : A.
 
 (** * Transport empty *)
 Instance inG_empty `{Empty A} :
-  Empty (Σ inG_id (iPreProp Λ (globalF Σ))) := cmra_transport inG_prf ∅.
+  Empty (projT2 Σ inG_id (iPreProp Λ (globalF Σ))) := cmra_transport inG_prf ∅.
 Instance inG_empty_spec `{Empty A} :
-  CMRAUnit A → CMRAUnit (Σ inG_id (iPreProp Λ (globalF Σ))).
+  CMRAUnit A → CMRAUnit (projT2 Σ inG_id (iPreProp Λ (globalF Σ))).
 Proof.
   split.
   - apply cmra_transport_valid, cmra_unit_valid.
