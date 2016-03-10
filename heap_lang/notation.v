@@ -1,4 +1,4 @@
-From heap_lang Require Export derived.
+From iris.heap_lang Require Export derived.
 Export heap_lang.
 
 Arguments wp {_ _} _ _%E _.

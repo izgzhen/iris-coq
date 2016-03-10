@@ -1,6 +1,6 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
-From prelude Require Export list.
+From iris.prelude Require Export list.
 
 Definition error (S E A : Type) : Type := S → E + (A * S).
 

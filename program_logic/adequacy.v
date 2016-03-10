@@ -1,5 +1,5 @@
-From program_logic Require Export hoare.
-From program_logic Require Import wsat ownership.
+From iris.program_logic Require Export hoare.
+From iris.program_logic Require Import wsat ownership.
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 100 (@eq coPset _ _) => eassumption || set_solver.
 Local Hint Extern 10 (✓{_} _) =>

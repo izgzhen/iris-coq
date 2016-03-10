@@ -1,6 +1,6 @@
 (** This file is essentially a bunch of testcases. *)
-From program_logic Require Import ownership hoare auth.
-From heap_lang Require Import wp_tactics heap notation.
+From iris.program_logic Require Import ownership hoare auth.
+From iris.heap_lang Require Import wp_tactics heap notation.
 Import uPred.
 
 Section LangTests.

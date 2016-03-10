@@ -1,5 +1,5 @@
-From algebra Require Export sts upred_tactics.
-From program_logic Require Export invariants ghost_ownership.
+From iris.algebra Require Export sts upred_tactics.
+From iris.program_logic Require Export invariants ghost_ownership.
 Import uPred.
 
 (** The CMRA we need. *)

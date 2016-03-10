@@ -1,4 +1,4 @@
-From program_logic Require Export weakestpre viewshifts.
+From iris.program_logic Require Export weakestpre viewshifts.
 
 Definition ht {Λ Σ} (E : coPset) (P : iProp Λ Σ)
     (e : expr Λ) (Φ : val Λ → iProp Λ Σ) : iProp Λ Σ :=

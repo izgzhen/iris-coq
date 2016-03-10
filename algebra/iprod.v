@@ -1,5 +1,5 @@
-From algebra Require Export cmra.
-From algebra Require Import upred.
+From iris.algebra Require Export cmra.
+From iris.algebra Require Import upred.
 
 (** * Indexed product *)
 (** Need to put this in a definition to make canonical structures to work. *)

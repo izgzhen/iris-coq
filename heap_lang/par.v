@@ -1,5 +1,5 @@
-From heap_lang Require Export heap spawn.
-From heap_lang Require Import wp_tactics notation.
+From iris.heap_lang Require Export heap spawn.
+From iris.heap_lang Require Import wp_tactics notation.
 Import uPred.
 
 Definition par : val :=

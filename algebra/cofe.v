@@ -1,4 +1,4 @@
-From algebra Require Export base.
+From iris.algebra Require Export base.
 
 (** This files defines (a shallow embedding of) the category of COFEs:
     Complete ordered families of equivalences. This is a cartesian closed

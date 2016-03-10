@@ -1,5 +1,5 @@
-From algebra Require Export upred_tactics.
-From program_logic Require Export pviewshifts.
+From iris.algebra Require Export upred_tactics.
+From iris.program_logic Require Export pviewshifts.
 Import uPred.
 
 Module uPred_reflection_pvs.

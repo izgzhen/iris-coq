@@ -8,8 +8,8 @@ However, we extend Leroy's implementation by packing the trees into a Sigma
 type such that canonicity of representation is ensured. This is necesarry for
 Leibniz equality to become extensional. *)
 From Coq Require Import PArith.
-From prelude Require Import mapset.
-From prelude Require Export fin_maps.
+From iris.prelude Require Import mapset.
+From iris.prelude Require Export fin_maps.
 
 Local Open Scope positive_scope.
 Local Hint Extern 0 (@eq positive _ _) => congruence.

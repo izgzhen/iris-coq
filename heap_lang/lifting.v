@@ -1,8 +1,8 @@
-From program_logic Require Export weakestpre.
-From heap_lang Require Export lang.
-From program_logic Require Import lifting.
-From program_logic Require Import ownership. (* for ownP *)
-From heap_lang Require Import tactics.
+From iris.program_logic Require Export weakestpre.
+From iris.heap_lang Require Export lang.
+From iris.program_logic Require Import lifting.
+From iris.program_logic Require Import ownership. (* for ownP *)
+From iris.heap_lang Require Import tactics.
 Import uPred.
 Local Hint Extern 0 (language.reducible _ _) => do_step ltac:(eauto 2).
 

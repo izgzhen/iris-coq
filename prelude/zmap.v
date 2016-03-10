@@ -2,8 +2,8 @@
 (* This file is distributed under the terms of the BSD license. *)
 (** This files extends the implementation of finite over [positive] to finite
 maps whose keys range over Coq's data type of binary naturals [Z]. *)
-From prelude Require Import pmap mapset.
-From prelude Require Export prelude fin_maps.
+From iris.prelude Require Import pmap mapset.
+From iris.prelude Require Export prelude fin_maps.
 Local Open Scope Z_scope.
 
 Record Zmap (A : Type) : Type :=

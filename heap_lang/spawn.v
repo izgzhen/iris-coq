@@ -1,6 +1,6 @@
-From program_logic Require Export global_functor.
-From heap_lang Require Export heap.
-From heap_lang Require Import wp_tactics notation.
+From iris.program_logic Require Export global_functor.
+From iris.heap_lang Require Export heap.
+From iris.heap_lang Require Import wp_tactics notation.
 Import uPred.
 
 Definition spawn : val :=

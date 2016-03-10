@@ -5,7 +5,7 @@ natural numbers, and the type [Z] for integers. It also declares some useful
 notations. *)
 From Coq Require Export Eqdep PArith NArith ZArith NPeano.
 From Coq Require Import QArith Qcanon.
-From prelude Require Export base decidable option.
+From iris.prelude Require Export base decidable option.
 Open Scope nat_scope.
 
 Coercion Z.of_nat : nat >-> Z.

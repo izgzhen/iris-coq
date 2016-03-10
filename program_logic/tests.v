@@ -1,5 +1,5 @@
 (** This file tests a bunch of things. *)
-From program_logic Require Import model saved_prop.
+From iris.program_logic Require Import model saved_prop.
 
 Module ModelTest. (* Make sure we got the notations right. *)
   Definition iResTest {Λ : language} {Σ : iFunctor}

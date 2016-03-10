@@ -1,6 +1,6 @@
-From program_logic Require Export language.
-From prelude Require Export strings.
-From prelude Require Import gmap.
+From iris.program_logic Require Export language.
+From iris.prelude Require Export strings.
+From iris.prelude Require Import gmap.
 
 Module heap_lang.
 Open Scope Z_scope.

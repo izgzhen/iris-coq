@@ -1,4 +1,4 @@
-From algebra Require Export cofe.
+From iris.algebra Require Export cofe.
 
 Class Core (A : Type) := core : A → A.
 Instance: Params (@core) 2.

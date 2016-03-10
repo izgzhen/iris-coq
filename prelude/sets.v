@@ -1,7 +1,7 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
 (** This file implements sets as functions into Prop. *)
-From prelude Require Export collections.
+From iris.prelude Require Export collections.
 
 Record set (A : Type) : Type := mkSet { set_car : A → Prop }.
 Add Printing Constructor set.

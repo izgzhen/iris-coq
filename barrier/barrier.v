@@ -1,4 +1,4 @@
-From heap_lang Require Export notation.
+From iris.heap_lang Require Export notation.
 
 Definition newbarrier : val := λ: <>, ref #0.
 Definition signal : val := λ: "x", '"x" <- #1.

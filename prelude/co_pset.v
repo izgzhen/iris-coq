@@ -2,8 +2,8 @@
 (* This file is distributed under the terms of the BSD license. *)
 (** This files implements an efficient implementation of finite/cofinite sets
 of positive binary naturals [positive]. *)
-From prelude Require Export collections.
-From prelude Require Import pmap gmap mapset.
+From iris.prelude Require Export collections.
+From iris.prelude Require Import pmap gmap mapset.
 Local Open Scope positive_scope.
 
 (** * The tree data structure *)

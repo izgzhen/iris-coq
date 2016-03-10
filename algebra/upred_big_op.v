@@ -1,5 +1,5 @@
-From algebra Require Export upred.
-From prelude Require Import gmap fin_collections.
+From iris.algebra Require Export upred.
+From iris.prelude Require Import gmap fin_collections.
 Import uPred.
 
 (** * Big ops over lists *)

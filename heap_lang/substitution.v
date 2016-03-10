@@ -1,4 +1,4 @@
-From heap_lang Require Export lang.
+From iris.heap_lang Require Export lang.
 Import heap_lang.
 
 (** The tactic [simpl_subst] performs substitutions in the goal. Its behavior

@@ -1,5 +1,5 @@
-From algebra Require Export upred.
-From algebra Require Export upred_big_op.
+From iris.algebra Require Export upred.
+From iris.algebra Require Export upred_big_op.
 Import uPred.
 
 Module uPred_reflection. Section uPred_reflection.

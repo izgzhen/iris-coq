@@ -1,4 +1,4 @@
-From algebra Require Export cmra.
+From iris.algebra Require Export cmra.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 Local Arguments op _ _ _ !_ /.

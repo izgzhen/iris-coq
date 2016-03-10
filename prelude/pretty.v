@@ -1,7 +1,7 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
-From prelude Require Export strings.
-From prelude Require Import relations.
+From iris.prelude Require Export strings.
+From iris.prelude Require Import relations.
 From Coq Require Import Ascii.
 
 Class Pretty A := pretty : A → string.

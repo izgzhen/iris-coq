@@ -1,5 +1,5 @@
-From program_logic Require Export pviewshifts.
-From program_logic Require Import wsat.
+From iris.program_logic Require Export pviewshifts.
+From iris.program_logic Require Import wsat.
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 100 (@eq coPset _ _) => eassumption || set_solver.
 Local Hint Extern 100 (_ ∉ _) => set_solver.

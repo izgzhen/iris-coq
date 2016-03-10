@@ -1,4 +1,4 @@
--Q . ""
+-Q . iris
 prelude/option.v
 prelude/fin_map_dom.v
 prelude/bsets.v

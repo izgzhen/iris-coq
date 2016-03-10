@@ -1,7 +1,7 @@
-From heap_lang Require Export lifting.
-From algebra Require Import upred_big_op frac dec_agree.
-From program_logic Require Export invariants ghost_ownership.
-From program_logic Require Import ownership auth.
+From iris.heap_lang Require Export lifting.
+From iris.algebra Require Import upred_big_op frac dec_agree.
+From iris.program_logic Require Export invariants ghost_ownership.
+From iris.program_logic Require Import ownership auth.
 Import uPred.
 (* TODO: The entire construction could be generalized to arbitrary languages that have
    a finmap as their state. Or maybe even beyond "as their state", i.e. arbitrary

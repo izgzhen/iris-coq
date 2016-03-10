@@ -1,4 +1,4 @@
-From prelude Require Export base tactics.
+From iris.prelude Require Export base tactics.
 
 Section definitions.
   Context {A T : Type} `{∀ a b : A, Decision (a = b)}.

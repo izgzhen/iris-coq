@@ -1,6 +1,6 @@
-From barrier Require Import proof.
-From heap_lang Require Import par.
-From program_logic Require Import auth sts saved_prop hoare ownership.
+From iris.barrier Require Import proof.
+From iris.heap_lang Require Import par.
+From iris.program_logic Require Import auth sts saved_prop hoare ownership.
 Import uPred.
 
 Definition worker (n : Z) : val :=

@@ -1,4 +1,4 @@
-From algebra Require Export cofe.
+From iris.algebra Require Export cofe.
 
 Record solution (F : cFunctor) := Solution {
   solution_car :> cofeT;

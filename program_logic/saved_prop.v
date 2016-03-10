@@ -1,5 +1,5 @@
-From algebra Require Export agree.
-From program_logic Require Export ghost_ownership.
+From iris.algebra Require Export agree.
+From iris.program_logic Require Export ghost_ownership.
 Import uPred.
 
 Class savedPropG (Λ : language) (Σ : gFunctors) (F : cFunctor) :=

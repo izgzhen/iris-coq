@@ -1,6 +1,6 @@
-From algebra Require Import upred_tactics.
-From program_logic Require Export hoare lifting.
-From program_logic Require Import ownership.
+From iris.algebra Require Import upred_tactics.
+From iris.program_logic Require Export hoare lifting.
+From iris.program_logic Require Import ownership.
 Import uPred.
 
 Local Notation "{{ P } } ef ?@ E {{ Φ } }" :=

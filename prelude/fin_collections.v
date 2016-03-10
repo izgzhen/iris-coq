@@ -4,8 +4,8 @@
 importantly, it implements a fold and size function and some useful induction
 principles on finite collections . *)
 From Coq Require Import Permutation.
-From prelude Require Import relations listset.
-From prelude Require Export numbers collections.
+From iris.prelude Require Import relations listset.
+From iris.prelude Require Export numbers collections.
 
 Instance collection_size `{Elements A C} : Size C := length ∘ elements.
 Definition collection_fold `{Elements A C} {B}

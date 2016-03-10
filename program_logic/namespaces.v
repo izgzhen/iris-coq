@@ -1,5 +1,5 @@
-From prelude Require Export countable co_pset.
-From algebra Require Export base.
+From iris.prelude Require Export countable co_pset.
+From iris.algebra Require Export base.
 
 Definition namespace := list positive.
 Definition nroot : namespace := nil.

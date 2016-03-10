@@ -5,7 +5,7 @@
 definitions from the standard library, but renames or changes their notations,
 so that it becomes more consistent with the naming conventions in this
 development. *)
-From prelude Require Import list finite.
+From iris.prelude Require Import list finite.
 Open Scope vector_scope.
 
 (** * The fin type *)

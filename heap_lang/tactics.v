@@ -1,5 +1,5 @@
-From heap_lang Require Export substitution.
-From prelude Require Import fin_maps.
+From iris.heap_lang Require Export substitution.
+From iris.prelude Require Import fin_maps.
 Import heap_lang.
 
 (** The tactic [inv_step] performs inversion on hypotheses of the shape

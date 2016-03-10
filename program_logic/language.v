@@ -1,4 +1,4 @@
-From algebra Require Export cofe.
+From iris.algebra Require Export cofe.
 
 Structure language := Language {
   expr : Type;

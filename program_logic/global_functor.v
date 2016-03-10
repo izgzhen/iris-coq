@@ -1,5 +1,5 @@
-From algebra Require Export iprod.
-From program_logic Require Export model.
+From iris.algebra Require Export iprod.
+From iris.program_logic Require Export model.
 
 (** Index of a CMRA in the product of global CMRAs. *)
 Definition gid := nat.

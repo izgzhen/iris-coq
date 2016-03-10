@@ -1,6 +1,6 @@
-From program_logic Require Export hoare.
-From barrier Require Export barrier.
-From barrier Require Import proof.
+From iris.program_logic Require Export hoare.
+From iris.barrier Require Export barrier.
+From iris.barrier Require Import proof.
 Import uPred.
 
 Section spec.

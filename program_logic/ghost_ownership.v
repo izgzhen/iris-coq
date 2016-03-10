@@ -1,7 +1,7 @@
-From prelude Require Export functions.
-From algebra Require Export iprod.
-From program_logic Require Export pviewshifts global_functor.
-From program_logic Require Import ownership.
+From iris.prelude Require Export functions.
+From iris.algebra Require Export iprod.
+From iris.program_logic Require Export pviewshifts global_functor.
+From iris.program_logic Require Import ownership.
 Import uPred.
 
 Definition own `{inG Λ Σ A} (γ : gname) (a : A) : iPropG Λ Σ :=

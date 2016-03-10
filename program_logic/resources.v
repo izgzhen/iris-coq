@@ -1,6 +1,6 @@
-From algebra Require Export fin_maps agree excl.
-From algebra Require Import upred.
-From program_logic Require Export language.
+From iris.algebra Require Export fin_maps agree excl.
+From iris.algebra Require Import upred.
+From iris.program_logic Require Export language.
 
 Record res (Λ : language) (A : cofeT) (M : cmraT) := Res {
   wld : mapR positive (agreeR A);

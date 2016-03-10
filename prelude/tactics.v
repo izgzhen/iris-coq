@@ -4,7 +4,7 @@
 the development. *)
 From Coq Require Import Omega.
 From Coq Require Export Psatz.
-From prelude Require Export decidable.
+From iris.prelude Require Export decidable.
 
 Lemma f_equal_dep {A B} (f g : ∀ x : A, B x) x : f = g → f x = g x.
 Proof. intros ->; reflexivity. Qed.

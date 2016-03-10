@@ -1,6 +1,6 @@
-From prelude Require Export co_pset.
-From program_logic Require Export model.
-From program_logic Require Import ownership wsat.
+From iris.prelude Require Export co_pset.
+From iris.program_logic Require Export model.
+From iris.program_logic Require Import ownership wsat.
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 100 (@eq coPset _ _) => set_solver.
 Local Hint Extern 100 (_ ∉ _) => set_solver.

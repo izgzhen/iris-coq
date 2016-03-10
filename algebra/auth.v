@@ -1,5 +1,5 @@
-From algebra Require Export excl.
-From algebra Require Import upred.
+From iris.algebra Require Export excl.
+From iris.algebra Require Import upred.
 Local Arguments valid _ _ !_ /.
 Local Arguments validN _ _ _ !_ /.
 

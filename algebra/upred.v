@@ -1,4 +1,4 @@
-From algebra Require Export cmra.
+From iris.algebra Require Export cmra.
 Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etrans; [|eassumption].
 Local Hint Extern 10 (_ ≤ _) => omega.

@@ -1,6 +1,6 @@
-From prelude Require Export sets.
-From algebra Require Export cmra.
-From algebra Require Import dra.
+From iris.prelude Require Export sets.
+From iris.algebra Require Export cmra.
+From iris.algebra Require Import dra.
 Local Arguments valid _ _ !_ /.
 Local Arguments op _ _ !_ !_ /.
 Local Arguments core _ _ !_ /.

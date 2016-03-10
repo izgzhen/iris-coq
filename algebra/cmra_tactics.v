@@ -1,5 +1,5 @@
-From algebra Require Export cmra.
-From algebra Require Import cmra_big_op.
+From iris.algebra Require Export cmra.
+From iris.algebra Require Import cmra_big_op.
 
 (** * Simple solver for validity and inclusion by reflection *)
 Module ra_reflection. Section ra_reflection.

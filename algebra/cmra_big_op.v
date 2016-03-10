@@ -1,5 +1,5 @@
-From algebra Require Export cmra.
-From prelude Require Import gmap.
+From iris.algebra Require Export cmra.
+From iris.prelude Require Import gmap.
 
 Fixpoint big_op {A : cmraT} `{Empty A} (xs : list A) : A :=
   match xs with [] => ∅ | x :: xs => x ⋅ big_op xs end.

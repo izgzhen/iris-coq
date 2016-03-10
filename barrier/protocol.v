@@ -1,5 +1,5 @@
-From algebra Require Export sts.
-From program_logic Require Import ghost_ownership.
+From iris.algebra Require Export sts.
+From iris.program_logic Require Import ghost_ownership.
 
 (** The STS describing the main barrier protocol. Every state has an index-set
     associated with it. These indices are actually [gname], because we use them

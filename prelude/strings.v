@@ -2,7 +2,7 @@
 (* This file is distributed under the terms of the BSD license. *)
 From Coq Require Import Ascii.
 From Coq Require Export String.
-From prelude Require Export countable.
+From iris.prelude Require Export countable.
 
 (** * Fix scopes *)
 Open Scope string_scope.

@@ -1,9 +1,9 @@
-From prelude Require Import functions.
-From algebra Require Import upred_big_op.
-From program_logic Require Import sts saved_prop tactics.
-From heap_lang Require Export heap wp_tactics.
-From barrier Require Export barrier.
-From barrier Require Import protocol.
+From iris.prelude Require Import functions.
+From iris.algebra Require Import upred_big_op.
+From iris.program_logic Require Import sts saved_prop tactics.
+From iris.heap_lang Require Export heap wp_tactics.
+From iris.barrier Require Export barrier.
+From iris.barrier Require Import protocol.
 Import uPred.
 
 (** The CMRAs we need. *)
