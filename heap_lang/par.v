@@ -5,7 +5,7 @@ Import uPred.
 Definition par : val :=
   λ: "fs",
     let: "handle" := ^spawn (Fst '"fs") in
-    let: "v2" := Snd '"fs" #() in
+    let: "v2" := Snd '"fs" §() in
     let: "v1" := ^join '"handle" in
     Pair '"v1" '"v2".
 Notation Par e1 e2 := (^par (Pair (λ: <>, e1) (λ: <>, e2)))%E.
@@ -21,7 +21,7 @@ Local Notation iProp := (iPropG heap_lang Σ).
 
 Lemma par_spec (Ψ1 Ψ2 : val → iProp) e (f1 f2 : val) (Φ : val → iProp) :
   heapN ⊥ N → to_val e = Some (f1,f2)%V →
-  (heap_ctx heapN ★ #> f1 #() {{ Ψ1 }} ★ #> f2 #() {{ Ψ2 }} ★
+  (heap_ctx heapN ★ #> f1 §() {{ Ψ1 }} ★ #> f2 §() {{ Ψ2 }} ★
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
   ⊑ #> par e {{ Φ }}.
 Proof.

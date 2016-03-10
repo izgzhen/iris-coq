@@ -5,8 +5,8 @@ Import uPred.
 
 Definition spawn : val :=
   λ: "f",
-    let: "c" := ref (InjL #0) in
-    Fork ('"c" <- InjR ('"f" #())) ;; '"c".
+    let: "c" := ref (InjL §0) in
+    Fork ('"c" <- InjR ('"f" §())) ;; '"c".
 Definition join : val :=
   rec: "join" "c" :=
     match: !'"c" with
@@ -33,7 +33,7 @@ Context (heapN N : namespace).
 Local Notation iProp := (iPropG heap_lang Σ).
 
 Definition spawn_inv (γ : gname) (l : loc) (Ψ : val → iProp) : iProp :=
-  (∃ lv, l ↦ lv ★ (lv = InjLV #0 ∨ ∃ v, lv = InjRV v ★ (Ψ v ∨ own γ (Excl ()))))%I.
+  (∃ lv, l ↦ lv ★ (lv = InjLV §0 ∨ ∃ v, lv = InjRV v ★ (Ψ v ∨ own γ (Excl ()))))%I.
 
 Definition join_handle (l : loc) (Ψ : val → iProp) : iProp :=
   (■ (heapN ⊥ N) ★ ∃ γ, heap_ctx heapN ★ own γ (Excl ()) ★
@@ -50,7 +50,7 @@ Proof. solve_proper. Qed.
 Lemma spawn_spec (Ψ : val → iProp) e (f : val) (Φ : val → iProp) :
   to_val e = Some f →
   heapN ⊥ N →
-  (heap_ctx heapN ★ #> f #() {{ Ψ }} ★ ∀ l, join_handle l Ψ -★ Φ (%l))
+  (heap_ctx heapN ★ #> f §() {{ Ψ }} ★ ∀ l, join_handle l Ψ -★ Φ (%l))
   ⊑ #> spawn e {{ Φ }}.
 Proof.
   intros Hval Hdisj. rewrite /spawn. ewp (by eapply wp_value). wp_let.
@@ -61,11 +61,11 @@ Proof.
   rewrite !pvs_frame_r. eapply wp_strip_pvs. rewrite !sep_exist_r.
   apply exist_elim=>γ.
   (* TODO: Figure out a better way to say "I want to establish ▷ spawn_inv". *)
-  trans (heap_ctx heapN ★ #> f #() {{ Ψ }} ★ (join_handle l Ψ -★ Φ (%l)%V) ★
+  trans (heap_ctx heapN ★ #> f §() {{ Ψ }} ★ (join_handle l Ψ -★ Φ (%l)%V) ★
          own γ (Excl ()) ★ ▷ (spawn_inv γ l Ψ))%I.
   { ecancel [ #> _ {{ _ }}; _ -★ _; heap_ctx _; own _ _]%I.
-    rewrite -later_intro /spawn_inv -(exist_intro (InjLV #0)).
-    cancel [l ↦ InjLV #0]%I. by apply or_intro_l', const_intro. }
+    rewrite -later_intro /spawn_inv -(exist_intro (InjLV §0)).
+    cancel [l ↦ InjLV §0]%I. by apply or_intro_l', const_intro. }
   rewrite (inv_alloc N) // !pvs_frame_l. eapply wp_strip_pvs.
   ewp eapply wp_fork. rewrite [heap_ctx _]always_sep_dup [inv _ _]always_sep_dup.
   sep_split left: [_ -★ _; inv _ _; own _ _; heap_ctx _]%I.

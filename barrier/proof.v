@@ -29,7 +29,7 @@ Definition ress (P : iProp) (I : gset gname) : iProp :=
     ▷ (P -★ Π★{set I} Ψ) ★ Π★{set I} (λ i, saved_prop_own i (Ψ i)))%I.
 
 Coercion state_to_val (s : state) : val :=
-  match s with State Low _ => #0 | State High _ => #1 end.
+  match s with State Low _ => §0 | State High _ => §1 end.
 Arguments state_to_val !_ /.
 
 Definition state_to_prop (s : state) (P : iProp) : iProp :=
@@ -112,7 +112,7 @@ Qed.
 Lemma newbarrier_spec (P : iProp) (Φ : val → iProp) :
   heapN ⊥ N →
   (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ (%l))
-  ⊑ #> newbarrier #() {{ Φ }}.
+  ⊑ #> newbarrier §() {{ Φ }}.
 Proof.
   intros HN. rewrite /newbarrier. wp_seq.
   rewrite -wp_pvs. wp eapply wp_alloc; eauto with I ndisj.
@@ -126,7 +126,7 @@ Proof.
     ▷ (barrier_inv l P (State Low {[ i ]})) ★ saved_prop_own i P)).
   - rewrite -pvs_intro. cancel [heap_ctx heapN].
     rewrite {1}[saved_prop_own _ _]always_sep_dup. cancel [saved_prop_own i P].
-    rewrite /barrier_inv /ress -later_intro. cancel [l ↦ #0]%I.
+    rewrite /barrier_inv /ress -later_intro. cancel [l ↦ §0]%I.
     rewrite -(exist_intro (const P)) /=. rewrite -[saved_prop_own _ _](left_id True%I (★)%I).
     by rewrite !big_sepS_singleton /= wand_diag -later_intro.
   - rewrite (sts_alloc (barrier_inv l P) ⊤ N); last by eauto.
@@ -151,7 +151,7 @@ Proof.
 Qed.
 
 Lemma signal_spec l P (Φ : val → iProp) :
-  (send l P ★ P ★ Φ #()) ⊑ #> signal (%l) {{ Φ }}.
+  (send l P ★ P ★ Φ §()) ⊑ #> signal (%l) {{ Φ }}.
 Proof.
   rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
   apply exist_elim=>γ. rewrite -!assoc. apply const_elim_sep_l=>?. wp_let.
@@ -162,8 +162,8 @@ Proof.
   apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
   apply const_elim_sep_l=>Hs. destruct p; last done.
   rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
-  eapply wp_store with (v' := #0); eauto with I ndisj. 
-  strip_later. cancel [l ↦ #0]%I.
+  eapply wp_store with (v' := §0); eauto with I ndisj. 
+  strip_later. cancel [l ↦ §0]%I.
   apply wand_intro_l. rewrite -(exist_intro (State High I)).
   rewrite -(exist_intro ∅). rewrite const_equiv /=; last by eauto using signal_step.
   rewrite left_id -later_intro {2}/barrier_inv -!assoc. apply sep_mono_r.
@@ -176,7 +176,7 @@ Proof.
 Qed.
 
 Lemma wait_spec l P (Φ : val → iProp) :
-  (recv l P ★ (P -★ Φ #())) ⊑ #> wait (%l) {{ Φ }}.
+  (recv l P ★ (P -★ Φ §())) ⊑ #> wait (%l) {{ Φ }}.
 Proof.
   rename P into R. wp_rec.
   rewrite {1}/recv /barrier_ctx. rewrite !sep_exist_r.

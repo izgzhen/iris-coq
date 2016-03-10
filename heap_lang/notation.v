@@ -19,11 +19,11 @@ Notation "<>" := BAnon : binder_scope.
 Notation "<>" := BAnon : expr_scope.
 
 (* No scope for the values, does not conflict and scope is often not inferred properly. *)
-Notation "# l" := (LitV l%Z%V) (at level 8, format "# l").
+Notation "§ l" := (LitV l%Z%V) (at level 8, format "§ l").
 Notation "% l" := (LocV l) (at level 8, format "% l").
-Notation "# l" := (LitV l%Z%V) (at level 8, format "# l") : val_scope.
+Notation "§ l" := (LitV l%Z%V) (at level 8, format "§ l") : val_scope.
 Notation "% l" := (LocV l) (at level 8, format "% l") : val_scope.
-Notation "# l" := (Lit l%Z%V) (at level 8, format "# l") : expr_scope.
+Notation "§ l" := (Lit l%Z%V) (at level 8, format "§ l") : expr_scope.
 Notation "% l" := (Loc l) (at level 8, format "% l") : expr_scope.
 
 Notation "' x" := (Var x) (at level 8, format "' x") : expr_scope.
