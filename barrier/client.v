@@ -16,7 +16,7 @@ Section client.
   Local Notation iProp := (iPropG heap_lang Σ).
 
   Definition y_inv q y : iProp :=
-    (∃ f : val, y ↦{q} f ★ □ ∀ n : Z, #> f §n {{ λ v, v = §(n + 42) }})%I.
+    (∃ f : val, y ↦{q} f ★ □ ∀ n : Z, WP f §n {{ λ v, v = §(n + 42) }})%I.
 
   Lemma y_inv_split q y :
     y_inv q y ⊢ (y_inv (q/2) y ★ y_inv (q/2) y).
@@ -28,7 +28,7 @@ Section client.
 
   Lemma worker_safe q (n : Z) (b y : loc) :
     (heap_ctx heapN ★ recv heapN N b (y_inv q y))
-      ⊢ #> worker n (%b) (%y) {{ λ _, True }}.
+      ⊢ WP worker n (%b) (%y) {{ λ _, True }}.
   Proof.
     rewrite /worker. wp_lam. wp_let. ewp apply wait_spec.
     rewrite comm. apply sep_mono_r. apply wand_intro_l.
@@ -42,7 +42,7 @@ Section client.
   Qed.
 
   Lemma client_safe :
-    heapN ⊥ N → heap_ctx heapN ⊢ #> client {{ λ _, True }}.
+    heapN ⊥ N → heap_ctx heapN ⊢ WP client {{ λ _, True }}.
   Proof.
     intros ?. rewrite /client.
     (ewp eapply wp_alloc); eauto with I. strip_later. apply forall_intro=>y.

@@ -55,7 +55,7 @@ Proof.
     by rewrite -Permutation_middle /= big_op_app.
 Qed.
 Lemma wp_adequacy_steps P Φ k n e1 t2 σ1 σ2 r1 :
-  P ⊢ #> e1 {{ Φ }} →
+  P ⊢ WP e1 {{ Φ }} →
   nsteps step k ([e1],σ1) (t2,σ2) →
   1 < n → wsat (k + n) ⊤ σ1 r1 →
   P (k + n) r1 →
@@ -69,7 +69,7 @@ Qed.
 
 Lemma wp_adequacy_own Φ e1 t2 σ1 m σ2 :
   ✓ m →
-  (ownP σ1 ★ ownG m) ⊢ #> e1 {{ Φ }} →
+  (ownP σ1 ★ ownG m) ⊢ WP e1 {{ Φ }} →
   rtc step ([e1],σ1) (t2,σ2) →
   ∃ rs2 Φs', wptp 2 t2 (Φ :: Φs') rs2 ∧ wsat 2 ⊤ σ2 (big_op rs2).
 Proof.
@@ -84,7 +84,7 @@ Qed.
 
 Theorem wp_adequacy_result E φ e v t2 σ1 m σ2 :
   ✓ m →
-  (ownP σ1 ★ ownG m) ⊢ #> e @ E {{ λ v', ■ φ v' }} →
+  (ownP σ1 ★ ownG m) ⊢ WP e @ E {{ λ v', ■ φ v' }} →
   rtc step ([e], σ1) (of_val v :: t2, σ2) →
   φ v.
 Proof.
@@ -110,7 +110,7 @@ Qed.
 
 Lemma wp_adequacy_reducible E Φ e1 e2 t2 σ1 m σ2 :
   ✓ m →
-  (ownP σ1 ★ ownG m) ⊢ #> e1 @ E {{ Φ }} →
+  (ownP σ1 ★ ownG m) ⊢ WP e1 @ E {{ Φ }} →
   rtc step ([e1], σ1) (t2, σ2) →
   e2 ∈ t2 → (is_Some (to_val e2) ∨ reducible e2 σ2).
 Proof.
@@ -128,7 +128,7 @@ Qed.
 (* Connect this up to the threadpool-semantics. *)
 Theorem wp_adequacy_safe E Φ e1 t2 σ1 m σ2 :
   ✓ m →
-  (ownP σ1 ★ ownG m) ⊢ #> e1 @ E {{ Φ }} →
+  (ownP σ1 ★ ownG m) ⊢ WP e1 @ E {{ Φ }} →
   rtc step ([e1], σ1) (t2, σ2) →
   Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ t3 σ3, step (t2, σ2) (t3, σ3).
 Proof.
