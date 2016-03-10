@@ -51,7 +51,7 @@ Note that $\COFEs$ is cartesian closed.
 \begin{defn}
   A \emph{CMRA} is a tuple $(\monoid : \COFEs, (\mval_n \subseteq \monoid)_{n \in \mathbb{N}}, \mcore{-}: \monoid \nfn \monoid, (\mtimes) : \monoid \times \monoid \nfn \monoid, (\mdiv) : \monoid \times \monoid \nfn \monoid)$ satisfying
   \begin{align*}
-    \All n, \melt, \meltB.& \melt \nequiv{n} \meltB \land \melt\in\mval_n \Ra \meltB\in\mval_n \tagH{cmra-valid-nonexp} \\
+    \All n, \melt, \meltB.& \melt \nequiv{n} \meltB \land \melt\in\mval_n \Ra \meltB\in\mval_n \tagH{cmra-valid-ne} \\
     \All n, m.& n \geq m \Ra V_n \subseteq V_m \tagH{cmra-valid-mono} \\
     \All \melt, \meltB, \meltC.& (\melt \mtimes \meltB) \mtimes \meltC = \melt \mtimes (\meltB \mtimes \meltC) \tagH{cmra-assoc} \\
     \All \melt, \meltB.& \melt \mtimes \meltB = \meltB \mtimes \melt \tagH{cmra-comm} \\
@@ -67,7 +67,8 @@ Note that $\COFEs$ is cartesian closed.
   \end{align*}
 \end{defn}
 
-\ralf{Copy the rest of the explanation from the paper, when that one is more polished.}
+This is a natural generalization of RAs over COFEs.
+All operations have to be non-expansive, and the validity predicate $\mval$ can now also depend on the step-index.
 
 \paragraph{The division operator $\mdiv$.}
 One way to describe $\mdiv$ is to say that it extracts the witness from the extension order: If $\melt \leq \meltB$, then $\melt \mdiv \meltB$ computes the difference between the two elements (\ruleref{cmra-div-op}).
@@ -84,13 +85,13 @@ For every $n$, we obtain a proof that $\melt \mincl{n} \meltB$.
 From this, we could extract a sequence of witnesses $(\meltC_m)_{m}$, and we need to arrive at a single witness $\meltC$ showing that $\melt \leq \meltB$.
 Without the division operator, there is no reason to believe that such a witness exists.
 However, since we can use the division operator, and since we know that this operator is \emph{non-expansive}, we can pick $\meltC \eqdef \meltB \mdiv \melt$, and then we can prove that this is indeed the desired witness.
-\ralf{The only reason we actually have division is that we are working constructively \emph{and}, at the same time, remain compatible with a classic interpretation of the existential. This is pretty silly.}
+\ralf{The only reason we actually have division is that we are working constructively in an impredicative universe. This is pretty silly.}
 
 \paragraph{The extension axiom (\ruleref{cmra-extend}).}
 Notice that the existential quantification in this axiom is \emph{constructive}, \ie it is a sigma type in Coq.
 The purpose of this axiom is to compute $\melt_1$, $\melt_2$ completing the following square:
 
-\ralf{Needs some magic to fix the baseline of the $\nequiv{n}$, or so}
+% RJ FIXME: Needs some magic to fix the baseline of the $\nequiv{n}$, or so
 \begin{center}
 \begin{tikzpicture}[every edge/.style={draw=none}]
   \node (a) at (0, 0) {$\melt$};
