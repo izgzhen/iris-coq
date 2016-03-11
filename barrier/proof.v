@@ -82,7 +82,7 @@ Lemma ress_split i i1 i2 Q R1 R2 P I :
   (saved_prop_own i2 R2 ★
     saved_prop_own i1 R1 ★ saved_prop_own i Q ★
     (Q -★ R1 ★ R2) ★ ress P I)
-  ⊑ ress P ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))).
+  ⊢ ress P ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))).
 Proof.
   intros. rewrite /ress !sep_exist_l. apply exist_elim=>Ψ.
   rewrite -(exist_intro (<[i1:=R1]> (<[i2:=R2]> Ψ))).
@@ -112,7 +112,7 @@ Qed.
 Lemma newbarrier_spec (P : iProp) (Φ : val → iProp) :
   heapN ⊥ N →
   (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ (%l))
-  ⊑ #> newbarrier #() {{ Φ }}.
+  ⊢ WP newbarrier #() {{ Φ }}.
 Proof.
   intros HN. rewrite /newbarrier. wp_seq.
   rewrite -wp_pvs. wp eapply wp_alloc; eauto with I ndisj.
@@ -151,7 +151,7 @@ Proof.
 Qed.
 
 Lemma signal_spec l P (Φ : val → iProp) :
-  (send l P ★ P ★ Φ #()) ⊑ #> signal (%l) {{ Φ }}.
+  (send l P ★ P ★ Φ #()) ⊢ WP signal (%l) {{ Φ }}.
 Proof.
   rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
   apply exist_elim=>γ. rewrite -!assoc. apply const_elim_sep_l=>?. wp_let.
@@ -176,7 +176,7 @@ Proof.
 Qed.
 
 Lemma wait_spec l P (Φ : val → iProp) :
-  (recv l P ★ (P -★ Φ #())) ⊑ #> wait (%l) {{ Φ }}.
+  (recv l P ★ (P -★ Φ #())) ⊢ WP wait (%l) {{ Φ }}.
 Proof.
   rename P into R. wp_rec.
   rewrite {1}/recv /barrier_ctx. rewrite !sep_exist_r.
@@ -226,7 +226,7 @@ Qed.
 
 Lemma recv_split E l P1 P2 :
   nclose N ⊆ E → 
-  recv l (P1 ★ P2) ⊑ |={E}=> recv l P1 ★ recv l P2.
+  recv l (P1 ★ P2) ⊢ |={E}=> recv l P1 ★ recv l P2.
 Proof.
   rename P1 into R1. rename P2 into R2. intros HN.
   rewrite {1}/recv /barrier_ctx. 
@@ -277,7 +277,7 @@ Proof.
 Qed.
 
 Lemma recv_weaken l P1 P2 :
-  (P1 -★ P2) ⊑ (recv l P1 -★ recv l P2).
+  (P1 -★ P2) ⊢ (recv l P1 -★ recv l P2).
 Proof.
   apply wand_intro_l. rewrite /recv. rewrite sep_exist_r. apply exist_mono=>γ.
   rewrite sep_exist_r. apply exist_mono=>P. rewrite sep_exist_r.
@@ -287,7 +287,7 @@ Proof.
 Qed.
 
 Lemma recv_mono l P1 P2 :
-  P1 ⊑ P2 → recv l P1 ⊑ recv l P2.
+  P1 ⊢ P2 → recv l P1 ⊢ recv l P2.
 Proof.
   intros HP%entails_wand. apply wand_entails. rewrite HP. apply recv_weaken.
 Qed.

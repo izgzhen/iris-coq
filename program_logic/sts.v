@@ -32,15 +32,15 @@ Section definitions.
   Global Instance sts_inv_proper :
     Proper (pointwise_relation _ (≡) ==> (≡)) sts_inv.
   Proof. solve_proper. Qed.
-  Global Instance sts_ownS_proper : Proper ((≡) ==> (≡) ==> (≡)) sts_ownS.
+  Global Instance sts_ownS_proper : Proper ((≡) ==> (≡) ==> (⊣⊢)) sts_ownS.
   Proof. solve_proper. Qed.
-  Global Instance sts_own_proper s : Proper ((≡) ==> (≡)) (sts_own s).
+  Global Instance sts_own_proper s : Proper ((≡) ==> (⊣⊢)) (sts_own s).
   Proof. solve_proper. Qed.
   Global Instance sts_ctx_ne n N :
     Proper (pointwise_relation _ (dist n) ==> dist n) (sts_ctx N).
   Proof. solve_proper. Qed.
   Global Instance sts_ctx_proper N :
-    Proper (pointwise_relation _ (≡) ==> (≡)) (sts_ctx N).
+    Proper (pointwise_relation _ (≡) ==> (⊣⊢)) (sts_ctx N).
   Proof. solve_proper. Qed.
   Global Instance sts_ctx_always_stable N φ : AlwaysStable (sts_ctx N φ).
   Proof. apply _. Qed.
@@ -63,22 +63,22 @@ Section sts.
      sts_frag_included. *)
   Lemma sts_ownS_weaken E γ S1 S2 T1 T2 :
     T2 ⊆ T1 → S1 ⊆ S2 → sts.closed S2 T2 →
-    sts_ownS γ S1 T1 ⊑ (|={E}=> sts_ownS γ S2 T2).
+    sts_ownS γ S1 T1 ⊢ (|={E}=> sts_ownS γ S2 T2).
   Proof. intros ? ? ?. by apply own_update, sts_update_frag. Qed.
 
   Lemma sts_own_weaken E γ s S T1 T2 :
     T2 ⊆ T1 → s ∈ S → sts.closed S T2 →
-    sts_own γ s T1 ⊑ (|={E}=> sts_ownS γ S T2).
+    sts_own γ s T1 ⊢ (|={E}=> sts_ownS γ S T2).
   Proof. intros ???. by apply own_update, sts_update_frag_up. Qed.
 
   Lemma sts_ownS_op γ S1 S2 T1 T2 :
     T1 ∩ T2 ⊆ ∅ → sts.closed S1 T1 → sts.closed S2 T2 →
-    sts_ownS γ (S1 ∩ S2) (T1 ∪ T2) ≡ (sts_ownS γ S1 T1 ★ sts_ownS γ S2 T2)%I.
+    sts_ownS γ (S1 ∩ S2) (T1 ∪ T2) ⊣⊢ (sts_ownS γ S1 T1 ★ sts_ownS γ S2 T2).
   Proof. intros. by rewrite /sts_ownS -own_op sts_op_frag. Qed.
 
   Lemma sts_alloc E N s :
     nclose N ⊆ E →
-    ▷ φ s ⊑ (|={E}=> ∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s)).
+    ▷ φ s ⊢ (|={E}=> ∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s)).
   Proof.
     intros HN. eapply sep_elim_True_r.
     { apply (own_alloc (sts_auth s (⊤ ∖ sts.tok s)) E).
@@ -95,7 +95,7 @@ Section sts.
 
   Lemma sts_opened E γ S T :
     (▷ sts_inv γ φ ★ sts_ownS γ S T)
-    ⊑ (|={E}=> ∃ s, ■ (s ∈ S) ★ ▷ φ s ★ own γ (sts_auth s T)).
+    ⊢ (|={E}=> ∃ s, ■ (s ∈ S) ★ ▷ φ s ★ own γ (sts_auth s T)).
   Proof.
     rewrite /sts_inv later_exist sep_exist_r. apply exist_elim=>s.
     rewrite later_sep pvs_timeless !pvs_frame_r. apply pvs_mono.
@@ -109,7 +109,7 @@ Section sts.
 
   Lemma sts_closing E γ s T s' T' :
     sts.steps (s, T) (s', T') →
-    (▷ φ s' ★ own γ (sts_auth s T)) ⊑ (|={E}=> ▷ sts_inv γ φ ★ sts_own γ s' T').
+    (▷ φ s' ★ own γ (sts_auth s T)) ⊢ (|={E}=> ▷ sts_inv γ φ ★ sts_own γ s' T').
   Proof.
     intros Hstep. rewrite /sts_inv -(exist_intro s') later_sep.
     (* TODO it would be really nice to use cancel here *)
@@ -125,13 +125,13 @@ Section sts.
 
   Lemma sts_fsaS E N P (Ψ : V → iPropG Λ Σ) γ S T :
     fsaV → nclose N ⊆ E →
-    P ⊑ sts_ctx γ N φ →
-    P ⊑ (sts_ownS γ S T ★ ∀ s,
+    P ⊢ sts_ctx γ N φ →
+    P ⊢ (sts_ownS γ S T ★ ∀ s,
           ■ (s ∈ S) ★ ▷ φ s -★
           fsa (E ∖ nclose N) (λ x, ∃ s' T',
             ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ★
             (sts_own γ s' T' -★ Ψ x))) →
-    P ⊑ fsa E Ψ.
+    P ⊢ fsa E Ψ.
   Proof.
     rewrite /sts_ctx=>? HN Hinv Hinner.
     eapply (inv_fsa fsa); eauto. rewrite Hinner=>{Hinner Hinv P HN}.
@@ -154,12 +154,12 @@ Section sts.
 
   Lemma sts_fsa E N P (Ψ : V → iPropG Λ Σ) γ s0 T :
     fsaV → nclose N ⊆ E →
-    P ⊑ sts_ctx γ N φ →
-    P ⊑ (sts_own γ s0 T ★ ∀ s,
+    P ⊢ sts_ctx γ N φ →
+    P ⊢ (sts_own γ s0 T ★ ∀ s,
           ■ (s ∈ sts.up s0 T) ★ ▷ φ s -★
           fsa (E ∖ nclose N) (λ x, ∃ s' T',
             ■ (sts.steps (s, T) (s', T')) ★ ▷ φ s' ★
             (sts_own γ s' T' -★ Ψ x))) →
-    P ⊑ fsa E Ψ.
+    P ⊢ fsa E Ψ.
   Proof. by apply sts_fsaS. Qed.
 End sts.

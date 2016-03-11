@@ -26,15 +26,15 @@ Proof. intros n ???. apply exist_ne=>i. by apply and_ne, ownI_contractive. Qed.
 Global Instance inv_always_stable N P : AlwaysStable (inv N P).
 Proof. rewrite /inv; apply _. Qed.
 
-Lemma always_inv N P : (□ inv N P)%I ≡ inv N P.
+Lemma always_inv N P : (□ inv N P) ⊣⊢ inv N P.
 Proof. by rewrite always_always. Qed.
 
 (** Invariants can be opened around any frame-shifting assertion. *)
 Lemma inv_fsa {A} (fsa : FSA Λ Σ A) `{!FrameShiftAssertion fsaV fsa} E N P Ψ R :
   fsaV → nclose N ⊆ E →
-  R ⊑ inv N P →
-  R ⊑ (▷ P -★ fsa (E ∖ nclose N) (λ a, ▷ P ★ Ψ a)) →
-  R ⊑ fsa E Ψ.
+  R ⊢ inv N P →
+  R ⊢ (▷ P -★ fsa (E ∖ nclose N) (λ a, ▷ P ★ Ψ a)) →
+  R ⊢ fsa E Ψ.
 Proof.
   intros ? HN Hinv Hinner.
   rewrite -[R](idemp (∧)%I) {1}Hinv Hinner =>{Hinv Hinner R}.
@@ -56,19 +56,19 @@ Qed.
 
 Lemma pvs_open_close E N P Q R :
   nclose N ⊆ E →
-  R ⊑ inv N P →
-  R ⊑ (▷ P -★ |={E ∖ nclose N}=> (▷ P ★ Q)) →
-  R ⊑ (|={E}=> Q).
+  R ⊢ inv N P →
+  R ⊢ (▷ P -★ |={E ∖ nclose N}=> (▷ P ★ Q)) →
+  R ⊢ (|={E}=> Q).
 Proof. intros. by apply: (inv_fsa pvs_fsa). Qed.
 
 Lemma wp_open_close E e N P Φ R :
   atomic e → nclose N ⊆ E →
-  R ⊑ inv N P →
-  R ⊑ (▷ P -★ #> e @ E ∖ nclose N {{ λ v, ▷ P ★ Φ v }}) →
-  R ⊑ #> e @ E {{ Φ }}.
+  R ⊢ inv N P →
+  R ⊢ (▷ P -★ WP e @ E ∖ nclose N {{ λ v, ▷ P ★ Φ v }}) →
+  R ⊢ WP e @ E {{ Φ }}.
 Proof. intros. by apply: (inv_fsa (wp_fsa e)). Qed.
 
-Lemma inv_alloc N E P : nclose N ⊆ E → ▷ P ⊑ |={E}=> inv N P.
+Lemma inv_alloc N E P : nclose N ⊆ E → ▷ P ⊢ |={E}=> inv N P.
 Proof.
   intros. rewrite -(pvs_mask_weaken N) //.
   by rewrite /inv (pvs_allocI N); last apply coPset_suffixes_infinite.

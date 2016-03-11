@@ -164,9 +164,9 @@ Global Instance map_cmra_discrete : CMRADiscrete A → CMRADiscrete mapR.
 Proof. split; [apply _|]. intros m ? i. by apply: cmra_discrete_valid. Qed.
 
 (** Internalized properties *)
-Lemma map_equivI {M} m1 m2 : (m1 ≡ m2)%I ≡ (∀ i, m1 !! i ≡ m2 !! i : uPred M)%I.
+Lemma map_equivI {M} m1 m2 : (m1 ≡ m2) ⊣⊢ (∀ i, m1 !! i ≡ m2 !! i : uPred M).
 Proof. by uPred.unseal. Qed.
-Lemma map_validI {M} m : (✓ m)%I ≡ (∀ i, ✓ (m !! i) : uPred M)%I.
+Lemma map_validI {M} m : (✓ m) ⊣⊢ (∀ i, ✓ (m !! i) : uPred M).
 Proof. by uPred.unseal. Qed.
 End cmra.
 

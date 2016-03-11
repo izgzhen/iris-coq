@@ -50,8 +50,8 @@ Proof. solve_proper. Qed.
 Lemma spawn_spec (Ψ : val → iProp) e (f : val) (Φ : val → iProp) :
   to_val e = Some f →
   heapN ⊥ N →
-  (heap_ctx heapN ★ #> f #() {{ Ψ }} ★ ∀ l, join_handle l Ψ -★ Φ (%l))
-  ⊑ #> spawn e {{ Φ }}.
+  (heap_ctx heapN ★ WP f #() {{ Ψ }} ★ ∀ l, join_handle l Ψ -★ Φ (%l))
+  ⊢ WP spawn e {{ Φ }}.
 Proof.
   intros Hval Hdisj. rewrite /spawn. ewp (by eapply wp_value). wp_let.
   wp eapply wp_alloc; eauto with I.
@@ -61,9 +61,9 @@ Proof.
   rewrite !pvs_frame_r. eapply wp_strip_pvs. rewrite !sep_exist_r.
   apply exist_elim=>γ.
   (* TODO: Figure out a better way to say "I want to establish ▷ spawn_inv". *)
-  trans (heap_ctx heapN ★ #> f #() {{ Ψ }} ★ (join_handle l Ψ -★ Φ (%l)%V) ★
+  trans (heap_ctx heapN ★ WP f #() {{ Ψ }} ★ (join_handle l Ψ -★ Φ (%l)%V) ★
          own γ (Excl ()) ★ ▷ (spawn_inv γ l Ψ))%I.
-  { ecancel [ #> _ {{ _ }}; _ -★ _; heap_ctx _; own _ _]%I.
+  { ecancel [ WP _ {{ _ }}; _ -★ _; heap_ctx _; own _ _]%I.
     rewrite -later_intro /spawn_inv -(exist_intro (InjLV #0)).
     cancel [l ↦ InjLV #0]%I. by apply or_intro_l', const_intro. }
   rewrite (inv_alloc N) // !pvs_frame_l. eapply wp_strip_pvs.
@@ -88,7 +88,7 @@ Qed.
 
 Lemma join_spec (Ψ : val → iProp) l (Φ : val → iProp) :
   (join_handle l Ψ ★ ∀ v, Ψ v -★ Φ v)
-  ⊑ #> join (%l) {{ Φ }}.
+  ⊢ WP join (%l) {{ Φ }}.
 Proof.
   wp_rec. wp_focus (! _)%E.
   rewrite {1}/join_handle sep_exist_l !sep_exist_r. apply exist_elim=>γ.
@@ -97,7 +97,7 @@ Proof.
   apply wand_intro_l. rewrite /spawn_inv {1}later_exist !sep_exist_r.
   apply exist_elim=>lv. rewrite later_sep.
   eapply wp_load; eauto with I ndisj. cancel [▷ (l ↦ lv)]%I. strip_later.
-  apply wand_intro_l. rewrite -later_intro -[X in _ ⊑ (X ★ _)](exist_intro lv).
+  apply wand_intro_l. rewrite -later_intro -[X in _ ⊢ (X ★ _)](exist_intro lv).
   cancel [l ↦ lv]%I. rewrite sep_or_r. apply or_elim.
   - (* Case 1 : nothing sent yet, we wait. *)
     rewrite -or_intro_l. apply const_elim_sep_l=>-> {lv}.

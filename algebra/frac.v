@@ -177,17 +177,17 @@ Proof. intros. by apply frac_validN_inv_l with 0 a, cmra_valid_validN. Qed.
 
 (** Internalized properties *)
 Lemma frac_equivI {M} (x y : frac A) :
-  (x ≡ y)%I ≡ (match x, y with
+  (x ≡ y) ⊣⊢ (match x, y with
                | Frac q1 a, Frac q2 b => q1 = q2 ∧ a ≡ b
                | FracUnit, FracUnit => True
                | _, _ => False
-               end : uPred M)%I.
+               end : uPred M).
 Proof.
   uPred.unseal; do 2 split; first by destruct 1.
   by destruct x, y; destruct 1; try constructor.
 Qed.
 Lemma frac_validI {M} (x : frac A) :
-  (✓ x)%I ≡ (if x is Frac q a then ■ (q ≤ 1)%Qc ∧ ✓ a else True : uPred M)%I.
+  (✓ x) ⊣⊢ (if x is Frac q a then ■ (q ≤ 1)%Qc ∧ ✓ a else True : uPred M).
 Proof. uPred.unseal. by destruct x. Qed.
 
 (** ** Local updates *)

@@ -31,7 +31,7 @@ Section definitions.
   Definition heap_ctx (N : namespace) : iPropG heap_lang Σ :=
     auth_ctx heap_name N heap_inv.
 
-  Global Instance heap_inv_proper : Proper ((≡) ==> (≡)) heap_inv.
+  Global Instance heap_inv_proper : Proper ((≡) ==> (⊣⊢)) heap_inv.
   Proof. solve_proper. Qed.
   Global Instance heap_ctx_always_stable N : AlwaysStable (heap_ctx N).
   Proof. apply _. Qed.
@@ -97,7 +97,7 @@ Section heap.
   (** Allocation *)
   Lemma heap_alloc N E σ :
     authG heap_lang Σ heapR → nclose N ⊆ E →
-    ownP σ ⊑ (|={E}=> ∃ _ : heapG Σ, heap_ctx N ∧ Π★{map σ} (λ l v, l ↦ v)).
+    ownP σ ⊢ (|={E}=> ∃ _ : heapG Σ, heap_ctx N ∧ Π★{map σ} (λ l v, l ↦ v)).
   Proof.
     intros. rewrite -{1}(from_to_heap σ). etrans.
     { rewrite [ownP _]later_intro.
@@ -119,30 +119,30 @@ Section heap.
 
   (** General properties of mapsto *)
   Lemma heap_mapsto_op_eq l q1 q2 v :
-    (l ↦{q1} v ★ l ↦{q2} v)%I ≡ (l ↦{q1+q2} v)%I.
+    (l ↦{q1} v ★ l ↦{q2} v) ⊣⊢ (l ↦{q1+q2} v).
   Proof. by rewrite -auth_own_op map_op_singleton Frac_op dec_agree_idemp. Qed.
 
   Lemma heap_mapsto_op l q1 q2 v1 v2 :
-    (l ↦{q1} v1 ★ l ↦{q2} v2)%I ≡ (v1 = v2 ∧ l ↦{q1+q2} v1)%I.
+    (l ↦{q1} v1 ★ l ↦{q2} v2) ⊣⊢ (v1 = v2 ∧ l ↦{q1+q2} v1).
   Proof.
     destruct (decide (v1 = v2)) as [->|].
     { by rewrite heap_mapsto_op_eq const_equiv // left_id. }
     rewrite -auth_own_op map_op_singleton Frac_op dec_agree_ne //.
-    apply (anti_symm (⊑)); last by apply const_elim_l.
+    apply (anti_symm (⊢)); last by apply const_elim_l.
     rewrite auth_own_valid map_validI (forall_elim l) lookup_singleton.
     rewrite option_validI frac_validI discrete_valid. by apply const_elim_r.
   Qed.
 
   Lemma heap_mapsto_op_split l q v :
-    (l ↦{q} v)%I ≡ (l ↦{q/2} v ★ l ↦{q/2} v)%I.
+    (l ↦{q} v) ⊣⊢ (l ↦{q/2} v ★ l ↦{q/2} v).
   Proof. by rewrite heap_mapsto_op_eq Qp_div_2. Qed.
 
   (** Weakest precondition *)
   Lemma wp_alloc N E e v P Φ :
     to_val e = Some v →
-    P ⊑ heap_ctx N → nclose N ⊆ E →
-    P ⊑ (▷ ∀ l, l ↦ v -★ Φ (LocV l)) →
-    P ⊑ #> Alloc e @ E {{ Φ }}.
+    P ⊢ heap_ctx N → nclose N ⊆ E →
+    P ⊢ (▷ ∀ l, l ↦ v -★ Φ (LocV l)) →
+    P ⊢ WP Alloc e @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv=> ??? HP.
     trans (|={E}=> auth_own heap_name ∅ ★ P)%I.
@@ -165,9 +165,9 @@ Section heap.
   Qed.
 
   Lemma wp_load N E l q v P Φ :
-    P ⊑ heap_ctx N → nclose N ⊆ E →
-    P ⊑ (▷ l ↦{q} v ★ ▷ (l ↦{q} v -★ Φ v)) →
-    P ⊑ #> Load (Loc l) @ E {{ Φ }}.
+    P ⊢ heap_ctx N → nclose N ⊆ E →
+    P ⊢ (▷ l ↦{q} v ★ ▷ (l ↦{q} v -★ Φ v)) →
+    P ⊢ WP Load (Loc l) @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv=> ?? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
@@ -182,9 +182,9 @@ Section heap.
 
   Lemma wp_store N E l v' e v P Φ :
     to_val e = Some v →
-    P ⊑ heap_ctx N → nclose N ⊆ E →
-    P ⊑ (▷ l ↦ v' ★ ▷ (l ↦ v -★ Φ (LitV LitUnit))) →
-    P ⊑ #> Store (Loc l) e @ E {{ Φ }}.
+    P ⊢ heap_ctx N → nclose N ⊆ E →
+    P ⊢ (▷ l ↦ v' ★ ▷ (l ↦ v -★ Φ (LitV LitUnit))) →
+    P ⊢ WP Store (Loc l) e @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv=> ??? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Frac 1 (DecAgree v)) l))
@@ -199,9 +199,9 @@ Section heap.
 
   Lemma wp_cas_fail N E l q v' e1 v1 e2 v2 P Φ :
     to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 →
-    P ⊑ heap_ctx N → nclose N ⊆ E →
-    P ⊑ (▷ l ↦{q} v' ★ ▷ (l ↦{q} v' -★ Φ (LitV (LitBool false)))) →
-    P ⊑ #> CAS (Loc l) e1 e2 @ E {{ Φ }}.
+    P ⊢ heap_ctx N → nclose N ⊆ E →
+    P ⊢ (▷ l ↦{q} v' ★ ▷ (l ↦{q} v' -★ Φ (LitV (LitBool false)))) →
+    P ⊢ WP CAS (Loc l) e1 e2 @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv=>????? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
@@ -216,9 +216,9 @@ Section heap.
 
   Lemma wp_cas_suc N E l e1 v1 e2 v2 P Φ :
     to_val e1 = Some v1 → to_val e2 = Some v2 →
-    P ⊑ heap_ctx N → nclose N ⊆ E →
-    P ⊑ (▷ l ↦ v1 ★ ▷ (l ↦ v2 -★ Φ (LitV (LitBool true)))) →
-    P ⊑ #> CAS (Loc l) e1 e2 @ E {{ Φ }}.
+    P ⊢ heap_ctx N → nclose N ⊆ E →
+    P ⊢ (▷ l ↦ v1 ★ ▷ (l ↦ v2 -★ Φ (LitV (LitBool true)))) →
+    P ⊢ WP CAS (Loc l) e1 e2 @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv=> ???? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Frac 1 (DecAgree v2)) l))
