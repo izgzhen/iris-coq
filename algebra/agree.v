@@ -61,7 +61,6 @@ Program Instance agree_op : Op (agree A) := λ x y,
      agree_is_valid n := agree_is_valid x n ∧ agree_is_valid y n ∧ x ≡{n}≡ y |}.
 Next Obligation. naive_solver eauto using agree_valid_S, dist_S. Qed.
 Instance agree_core : Core (agree A) := id.
-Instance agree_div : Div (agree A) := λ x y, x.
 
 Instance: Comm (≡) (@op (agree A) _).
 Proof. intros x y; split; [naive_solver|by intros n (?&?&Hxy); apply Hxy]. Qed.
@@ -108,13 +107,11 @@ Qed.
 Definition agree_cmra_mixin : CMRAMixin (agree A).
 Proof.
   split; try (apply _ || done).
-  - by intros n x1 x2 Hx y1 y2 Hy.
   - intros n x [? Hx]; split; [by apply agree_valid_S|intros n' ?].
     rewrite -(Hx n'); last auto.
     symmetry; apply dist_le with n; try apply Hx; auto.
   - intros x; apply agree_idemp.
   - by intros n x y [(?&?&?) ?].
-  - by intros x y; rewrite agree_included.
   - intros n x y1 y2 Hval Hx; exists (x,x); simpl; split.
     + by rewrite agree_idemp.
     + by move: Hval; rewrite Hx; move=> /agree_op_inv->; rewrite agree_idemp.

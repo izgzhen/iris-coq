@@ -79,8 +79,6 @@ Instance res_core : Core (res Λ A M) := λ r,
 Instance res_valid : Valid (res Λ A M) := λ r, ✓ wld r ∧ ✓ pst r ∧ ✓ gst r.
 Instance res_validN : ValidN (res Λ A M) := λ n r,
   ✓{n} wld r ∧ ✓{n} pst r ∧ ✓{n} gst r.
-Instance res_minus : Div (res Λ A M) := λ r1 r2,
-  Res (wld r1 ÷ wld r2) (pst r1 ÷ pst r2) (gst r1 ÷ gst r2).
 
 Lemma res_included (r1 r2 : res Λ A M) :
   r1 ≼ r2 ↔ wld r1 ≼ wld r2 ∧ pst r1 ≼ pst r2 ∧ gst r1 ≼ gst r2.
@@ -102,7 +100,6 @@ Proof.
   - by intros n x [???] ? [???]; constructor; cofe_subst.
   - by intros n [???] ? [???]; constructor; cofe_subst.
   - by intros n [???] ? [???] (?&?&?); split_and!; cofe_subst.
-  - by intros n [???] ? [???] [???] ? [???]; constructor; cofe_subst.
   - intros r; split.
     + intros (?&?&?) n; split_and!; by apply cmra_valid_validN.
     + intros Hr; split_and!; apply cmra_valid_validN=> n; apply Hr.
@@ -115,8 +112,6 @@ Proof.
     by intros (?&?&?); split_and!; apply cmra_core_preserving.
   - intros n r1 r2 (?&?&?);
       split_and!; simpl in *; eapply cmra_validN_op_l; eauto.
-  - intros r1 r2; rewrite res_included; intros (?&?&?).
-    by constructor; apply cmra_op_div.
   - intros n r r1 r2 (?&?&?) [???]; simpl in *.
     destruct (cmra_extend n (wld r) (wld r1) (wld r2)) as ([w w']&?&?&?),
       (cmra_extend n (pst r) (pst r1) (pst r2)) as ([σ σ']&?&?&?),

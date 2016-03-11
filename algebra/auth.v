@@ -73,7 +73,7 @@ Implicit Types x y : auth A.
 Global Instance auth_empty `{Empty A} : Empty (auth A) := Auth ∅ ∅.
 Instance auth_valid : Valid (auth A) := λ x,
   match authoritative x with
-  | Excl a => own x ≼ a ∧ ✓ a
+  | Excl a => (∀ n, own x ≼{n} a) ∧ ✓ a
   | ExclUnit => ✓ own x
   | ExclBot => False
   end.
@@ -89,8 +89,6 @@ Instance auth_core : Core (auth A) := λ x,
   Auth (core (authoritative x)) (core (own x)).
 Instance auth_op : Op (auth A) := λ x y,
   Auth (authoritative x ⋅ authoritative y) (own x ⋅ own y).
-Instance auth_div : Div (auth A) := λ x y,
-  Auth (authoritative x ÷ authoritative y) (own x ÷ own y).
 
 Lemma auth_included (x y : auth A) :
   x ≼ y ↔ authoritative x ≼ authoritative y ∧ own x ≼ own y.
@@ -110,8 +108,6 @@ Proof.
   - by intros n y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
   - intros n [x a] [y b] [Hx Ha]; simpl in *;
       destruct Hx; intros ?; cofe_subst; auto.
-  - by intros n x1 x2 [Hx Hx'] y1 y2 [Hy Hy'];
-      split; simpl; rewrite ?Hy ?Hy' ?Hx ?Hx'.
   - intros [[] ?]; rewrite /= ?cmra_included_includedN ?cmra_valid_validN;
       naive_solver eauto using O.
   - intros n [[] ?] ?; naive_solver eauto using cmra_includedN_S, cmra_validN_S.
@@ -125,8 +121,6 @@ Proof.
     { intros n a b1 b2 <-; apply cmra_includedN_l. }
    intros n [[a1| |] b1] [[a2| |] b2];
      naive_solver eauto using cmra_validN_op_l, cmra_validN_includedN.
-  - by intros ??; rewrite auth_included;
-      intros [??]; split; simpl; apply cmra_op_div.
   - intros n x y1 y2 ? [??]; simpl in *.
     destruct (cmra_extend n (authoritative x) (authoritative y1)
       (authoritative y2)) as (ea&?&?&?); auto using authoritative_validN.
@@ -138,9 +132,9 @@ Canonical Structure authR : cmraT := CMRAT auth_cofe_mixin auth_cmra_mixin.
 Global Instance auth_cmra_discrete : CMRADiscrete A → CMRADiscrete authR.
 Proof.
   split; first apply _.
-  intros [[] ?]; by rewrite /= /cmra_valid /cmra_validN /=
-    -?cmra_discrete_included_iff -?cmra_discrete_valid_iff.
-Qed.
+  intros [[] ?]; rewrite /= /cmra_valid /cmra_validN /=
+    -?cmra_discrete_included_iff -?cmra_discrete_valid_iff; auto.
+Admitted.
 
 (** Internalized properties *)
 Lemma auth_equivI {M} (x y : auth A) :

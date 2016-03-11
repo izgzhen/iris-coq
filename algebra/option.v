@@ -69,8 +69,6 @@ Instance option_validN : ValidN (option A) := λ n mx,
 Global Instance option_empty : Empty (option A) := None.
 Instance option_core : Core (option A) := fmap core.
 Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
-Instance option_div : Div (option A) :=
-  difference_with (λ x y, Some (x ÷ y)).
 
 Definition Some_valid a : ✓ Some a ↔ ✓ a := reflexivity _.
 Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl.
@@ -94,7 +92,6 @@ Proof.
   - by intros n [x|]; destruct 1; constructor; cofe_subst.
   - by destruct 1; constructor; cofe_subst.
   - by destruct 1; rewrite /validN /option_validN //=; cofe_subst.
-  - by destruct 1; inversion_clear 1; constructor; cofe_subst.
   - intros [x|]; [apply cmra_valid_validN|done].
   - intros n [x|]; unfold validN, option_validN; eauto using cmra_validN_S.
   - intros [x|] [y|] [z|]; constructor; rewrite ?assoc; auto.
@@ -105,9 +102,6 @@ Proof.
     right; exists (core x), (core y); eauto using cmra_core_preserving.
   - intros n [x|] [y|]; rewrite /validN /option_validN /=;
       eauto using cmra_validN_op_l.
-  - intros mx my; rewrite option_included.
-    intros [->|(x&y&->&->&?)]; [by destruct my|].
-    by constructor; apply cmra_op_div.
   - intros n mx my1 my2.
     destruct mx as [x|], my1 as [y1|], my2 as [y2|]; intros Hx Hx';
       try (by exfalso; inversion Hx'; auto).

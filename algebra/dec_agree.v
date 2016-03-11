@@ -27,12 +27,10 @@ Instance dec_agree_op : Op (dec_agree A) := λ x y,
   | _, _ => DecAgreeBot
   end.
 Instance dec_agree_core : Core (dec_agree A) := id.
-Instance dec_agree_div : Div (dec_agree A) := λ x y, x.
 
 Definition dec_agree_ra : RA (dec_agree A).
 Proof.
   split.
-  - apply _.
   - apply _.
   - apply _.
   - apply _.
@@ -42,8 +40,6 @@ Proof.
   - intros [?|]; by repeat (simplify_eq/= || case_match).
   - by intros [?|] [?|] ?.
   - by intros [?|] [?|] ?.
-  - intros [?|] [?|] [[?|]]; fold_leibniz;
-      intros; by repeat (simplify_eq/= || case_match).
 Qed.
 
 Canonical Structure dec_agreeR : cmraT := discreteR dec_agree_ra.
