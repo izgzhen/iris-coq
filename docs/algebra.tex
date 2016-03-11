@@ -70,22 +70,7 @@ Note that $\COFEs$ is cartesian closed.
 This is a natural generalization of RAs over COFEs.
 All operations have to be non-expansive, and the validity predicate $\mval$ can now also depend on the step-index.
 
-\paragraph{The division operator $\mdiv$.}
-One way to describe $\mdiv$ is to say that it extracts the witness from the extension order: If $\melt \leq \meltB$, then $\melt \mdiv \meltB$ computes the difference between the two elements (\ruleref{cmra-div-op}).
-Otherwise, $\mdiv$ can have arbitrary behavior.
-This means that, in classical logic, the division operator can be defined for any PCM using the axiom of choice, and it will trivially satisfy \ruleref{cmra-div-op}.
-However, notice that the division operator also has to be \emph{non-expansive} --- so if the carrier $\monoid$ is equipped with a non-trivial $\nequiv{n}$, there is an additional proof obligation here.
-This is crucial, for the following reason:
-Considering that the extension order is defined using \emph{equality}, there is a natural notion of a \emph{step-indexed extension} order using the step-indexed equivalence of the underlying COFE:
-\[ \melt \mincl{n} \meltB \eqdef \Exists \meltC. \meltB \nequiv{n} \melt \mtimes \meltC \tagH{cmra-inclM} \]
-One of the properties we would expect to hold is the usual correspondence between a step-indexed predicate and its non-step-indexed counterpart:
-\[ \All \melt, \meltB. \melt \leq \meltB \Lra (\All n. \melt \mincl{n} \meltB) \tagH{cmra-incl-limit} \]
-The right-to-left direction here is trick.
-For every $n$, we obtain a proof that $\melt \mincl{n} \meltB$.
-From this, we could extract a sequence of witnesses $(\meltC_m)_{m}$, and we need to arrive at a single witness $\meltC$ showing that $\melt \leq \meltB$.
-Without the division operator, there is no reason to believe that such a witness exists.
-However, since we can use the division operator, and since we know that this operator is \emph{non-expansive}, we can pick $\meltC \eqdef \meltB \mdiv \melt$, and then we can prove that this is indeed the desired witness.
-\ralf{The only reason we actually have division is that we are working constructively in an impredicative universe. This is pretty silly.}
+\ralf{TODO: Get rid of division.}
 
 \paragraph{The extension axiom (\ruleref{cmra-extend}).}
 Notice that the existential quantification in this axiom is \emph{constructive}, \ie it is a sigma type in Coq.
