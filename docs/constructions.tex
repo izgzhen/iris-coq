@@ -32,6 +32,36 @@ There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can 
   \axiomH{ag-agree}{\ag(x) \mtimes \ag(y) \in \mval_n \Ra x \nequiv{n} y}
 \end{mathpar}
 
+\subsection{One-shot}
+
+The purpose of the one-shot CMRA is to lazily initialize the state of a ghost location.
+Given some CMRA $\monoid$, we define $\oneshotm(\monoid)$ as follows:
+\begin{align*}
+  \monoid \eqdef{}& \ospending + \osshot(\monoid) + \munit + \bot \\
+  \mval_n \eqdef{}& \set{\ospending, \munit} \cup \setComp{\osshot(\melt)}{\melt \in \mval_n}
+\end{align*}
+\begin{align*}
+  \mcore{\ospending} \eqdef{}& \munit & \mcore{\osshot(\melt)} \eqdef{}& \mcore\melt \\
+  \mcore{\munit} \eqdef{}& \munit &  \mcore{\bot} \eqdef{}& \bot
+\end{align*}
+\begin{align*}
+  \osshot(\melt) \mtimes \osshot(\meltB) \eqdef{}& \osshot(\melt \mtimes \meltB) \\
+  \munit \mtimes \ospending \eqdef{}& \ospending \mtimes \munit \eqdef \ospending \\
+  \munit \mtimes \osshot(\melt) \eqdef{}& \osshot(\melt) \mtimes \munit \eqdef \osshot(\melt)
+\end{align*}
+The remaining cases of composition go to $\bot$.
+The step-indexed equivalence is inductively defined as follows:
+\begin{mathpar}
+  \axiom{\ospending \nequiv{n} \ospending}
+
+  \infer{\melt \nequiv{n} \meltB}{\osshot(\melt) \nequiv{n} \osshot(\meltB)}
+
+  \axiom{\munit \nequiv{n} \munit}
+
+  \axiom{\bot \nequiv{n} \bot}
+\end{mathpar}
+$\oneshotm(-)$ is a locally non-expansive bifunctor from $\CMRAs$ to $\CMRAs$.
+
 
 % \subsection{Exclusive monoid}
 
