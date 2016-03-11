@@ -5,24 +5,31 @@
 \subsection{Agreement}
 
 Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
+\newcommand{\agc}{\mathrm{c}} % the "c" field of an agreement element
+\newcommand{\agV}{\mathrm{V}} % the "V" field of an agreement element
 \begin{align*}
-  \monoid \eqdef{}& \recordComp{c : \mathbb{N} \to T , V : \pset{\mathbb{N}}}{ \All n, m. n \geq m \Ra n \in V \Ra m \in V  } \\
+  \monoid \eqdef{}& \recordComp{\agc : \mathbb{N} \to T , \agV : \pset{\mathbb{N}}}{ \All n, m. n \geq m \Ra n \in \agV \Ra m \in \agV  } \\
   & \text{quotiented by} \\
-  \melt \equiv \meltB \eqdef{}& \melt.V = \meltB.V \land \All n. n \in \melt.V \Ra \melt.c(n) \nequiv{n} \meltB.c(n) \\
-  \melt \nequiv{n} \meltB \eqdef{}& (\All m \leq n. m \in \melt.V \Lra m \in \meltB.V) \land (\All m \leq n. m \in \melt.V \Ra \melt.c(m) \nequiv{m} \meltB.c(m)) \\
-  \mval_n \eqdef{}& \setComp{\melt \in \monoid}{ n \in \melt.V \land \All m \leq n. \melt.c(n) \nequiv{m} \melt.c(m) } \\
+  \melt \equiv \meltB \eqdef{}& \melt.\agV = \meltB.\agV \land \All n. n \in \melt.\agV \Ra \melt.\agc(n) \nequiv{n} \meltB.\agc(n) \\
+  \melt \nequiv{n} \meltB \eqdef{}& (\All m \leq n. m \in \melt.\agV \Lra m \in \meltB.\agV) \land (\All m \leq n. m \in \melt.\agV \Ra \melt.\agc(m) \nequiv{m} \meltB.\agc(m)) \\
+  \mval_n \eqdef{}& \setComp{\melt \in \monoid}{ n \in \melt.\agV \land \All m \leq n. \melt.\agc(n) \nequiv{m} \melt.\agc(m) } \\
   \mcore\melt \eqdef{}& \melt \\
-  \melt \mtimes \meltB \eqdef{}& (\melt.c, \setComp{n}{n \in \melt.V \land n \in \meltB.V_2 \land \melt \nequiv{n} \meltB })
+  \melt \mtimes \meltB \eqdef{}& (\melt.\agc, \setComp{n}{n \in \melt.\agV \land n \in \meltB.\agV \land \melt \nequiv{n} \meltB })
 \end{align*}
 $\agm(-)$ is a locally non-expansive bifunctor from $\COFEs$ to $\CMRAs$.
 
 The reason we store a \emph{chain} $c$ of elements of $T$, rather than a single element, is that $\agm(\cofe)$ needs to be a COFE itself, so we need to be able to give a limit for every chain.
 \ralf{Figure out why exactly this is not possible without adding an explicit chain here.}
 
+We define an injection $\ag$ into $\agm(\cofe)$ as follows:
+\[ \ag(x) \eqdef \record{\mathrm c \eqdef \Lam \any. x, \mathrm V \eqdef \mathbb{N}} \]
 There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can show the following:
 \begin{mathpar}
-  \axiomH{ag-dup}{\melt = \melt \mtimes \melt}
-  \and\axiomH{ag-agree}{\melt \mtimes \meltB \in \mval_n \Ra \melt \nequiv{n} \meltB}
+  \axiomH{ag-val}{\ag(x) \in \mval_n}
+
+  \axiomH{ag-dup}{\ag(x) = \ag(x)\mtimes\ag(x)}
+  
+  \axiomH{ag-agree}{\ag(x) \mtimes \ag(y) \in \mval_n \Ra x \nequiv{n} y}
 \end{mathpar}
 
 
