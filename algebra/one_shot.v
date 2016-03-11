@@ -3,6 +3,7 @@ From iris.algebra Require Import upred.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 
+(* TODO: Really, we should have sums, and then this should be just "excl unit + A". *)
 Inductive one_shot {A : Type} :=
   | OneShotPending : one_shot
   | Shot : A → one_shot
