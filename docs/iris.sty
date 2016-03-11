@@ -51,13 +51,14 @@
 \newcommand{\ra}{\rightarrow}
 \newcommand{\Ra}{\Rightarrow}
 \newcommand{\Lra}{\Leftrightarrow}
-\newcommand\monra{\xrightarrow{\kern-0.25ex\textrm{mon}\kern-0.25ex}}
-\newcommand\nfn{\xrightarrow{\kern-0.15ex\textrm{n}\kern-0.05ex}}
+\newcommand\monra{\xrightarrow{\kern-0.15ex\textrm{mon}\kern-0.05ex}}
+\newcommand\nfn{\xrightarrow{\kern-0.15ex\textrm{ne}\kern-0.05ex}}
 \newcommand{\eqdef}{\triangleq}
 \newcommand{\bnfdef}{\vcentcolon\vcentcolon=}
 
 \newcommand*\setComp[2]{\left\{#1\spac\middle|\spac#2\right\}}
 \newcommand*\set[1]{\left\{#1\right\}}
+\newcommand*\record[1]{\left\{\spac#1\spac\right\}}
 
 \newenvironment{inbox}[1][]{
   \begin{array}[#1]{@{}l@{}}
@@ -141,7 +142,7 @@
 \newcommand{\mdiv}{\mathbin{\div}}
 
 \newcommand{\mupd}{\rightsquigarrow}
-\newcommand{\mincl}[1]{\ensuremath{\mathrel{\stackrel{#1}{\leq}}}}
+\newcommand{\mincl}[1][]{\ensuremath{\mathrel{\stackrel{#1}{\preccurlyeq}}}}
 
 \newcommand{\CMRAs}{\mathcal{R}} % category of CMRAs
 

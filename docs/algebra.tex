@@ -57,13 +57,13 @@ Note that $\COFEs$ is cartesian closed.
     \All \melt, \meltB.& \melt \mtimes \meltB = \meltB \mtimes \melt \tagH{cmra-comm} \\
     \All \melt.& \mcore\melt \mtimes \melt = \melt \tagH{cmra-core-id} \\
     \All \melt.& \mcore{\mcore\melt} = \mcore\melt \tagH{cmra-core-idem} \\
-    \All \melt, \meltB.& \melt \leq \meltB \Ra \mcore\melt \leq \mcore\meltB \tagH{cmra-core-mono} \\
+    \All \melt, \meltB.& \melt \mincl \meltB \Ra \mcore\melt \mincl \mcore\meltB \tagH{cmra-core-mono} \\
     \All n, \melt, \meltB.& (\melt \mtimes \meltB) \in \mval_n \Ra \melt \in \mval_n \tagH{cmra-valid-op} \\
     \All \melt, \meltB.& \melt \leq \meltB \Ra \melt \mtimes (\meltB \mdiv \melt) = \meltB \tagH{cmra-div-op} \\
     \All n, \melt, \meltB_1, \meltB_2.& \omit\rlap{$\melt \in \mval_n \land \melt \nequiv{n} \meltB_1 \mtimes \meltB_2 \Ra {}$} \\
     &\Exists \meltC_1, \meltC_2. \melt = \meltC_1 \mtimes \meltC_2 \land \meltC_1 \nequiv{n} \meltB_1 \land \meltC_2 \nequiv{n} \meltB_2 \tagH{cmra-extend} \\
     \text{where}\qquad\qquad\\
-    \melt \leq \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{cmra-incl}
+    \melt \mincl \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{cmra-incl}
   \end{align*}
 \end{defn}
 
@@ -122,8 +122,6 @@ Note that for RAs, this and the RA-based definition of a frame-preserving update
   \item $\monoid$ is a discrete COFE
   \item $\val$ ignores the step-index: \\
     $\All \melt \in \monoid. \melt \in \mval_0 \Ra \All n, \melt \in \mval_n$
-  \item $f$ preserves CMRA inclusion:\\
-    $\All \melt \in \monoid, \meltB \in \monoid. \melt \leq \meltB \Ra f(\melt) \leq f(\meltB)$
   \end{enumerate}
 \end{defn}
 Note that every RA is a discrete CMRA, by picking the discrete COFE for the equivalence relation.
@@ -136,7 +134,7 @@ Furthermore, discrete CMRAs can be turned into RAs by ignoring their COFE struct
   \item $f$ preserves validity: \\
     $\All n, \melt \in \monoid_1. \melt \in \mval_n \Ra f(\melt) \in \mval_n$
   \item $f$ preserves CMRA inclusion:\\
-    $\All \melt \in \monoid_1, \meltB \in \monoid_1. \melt \leq \meltB \Ra f(\melt) \leq f(\meltB)$
+    $\All \melt \in \monoid_1, \meltB \in \monoid_1. \melt \mincl \meltB \Ra f(\melt) \mincl f(\meltB)$
   \end{enumerate}
 \end{defn}
 
