@@ -179,7 +179,6 @@ Arguments frag {_} _ _.
 
 Section sts_dra.
 Context {sts : stsT}.
-Infix "≼" := dra_included.
 Implicit Types S : states sts.
 Implicit Types T : tokens sts.
 
@@ -212,13 +211,6 @@ Global Instance sts_op : Op (car sts) := λ x1 x2,
   | frag _ T1, auth s T2 => auth s (T1 ∪ T2)
   | auth s T1, auth _ T2 => auth s (T1 ∪ T2)(* never happens *)
   end.
-Global Instance sts_div : Div (car sts) := λ x1 x2,
-  match x1, x2 with
-  | frag S1 T1, frag S2 T2 => frag (up_set S1 (T1 ∖ T2)) (T1 ∖ T2)
-  | auth s T1, frag _ T2 => auth s (T1 ∖ T2)
-  | frag _ T2, auth s T1 => auth s (T1 ∖ T2) (* never happens *)
-  | auth s T1, auth _ T2 => frag (up s (T1 ∖ T2)) (T1 ∖ T2)
-  end.
 
 Hint Extern 50 (equiv (A:=set _) _ _) => set_solver : sts.
 Hint Extern 50 (¬equiv (A:=set _) _ _) => set_solver : sts.
@@ -239,16 +231,10 @@ Proof.
   - by destruct 1; constructor; setoid_subst.
   - by destruct 1; simpl; intros ?; setoid_subst.
   - by intros ? [|]; destruct 1; inversion_clear 1; constructor; setoid_subst.
-  - by do 2 destruct 1; constructor; setoid_subst.
   - destruct 3; simpl in *; destruct_and?; eauto using closed_op;
       match goal with H : closed _ _ |- _ => destruct H end; set_solver.
   - intros []; simpl; intros; destruct_and?; split;
       eauto using closed_up, up_non_empty, closed_up_set, up_set_empty with sts.
-  - intros ???? (z&Hy&?&Hxz); destruct Hxz; inversion Hy; clear Hy;
-      setoid_subst; destruct_and?; split_and?;
-      rewrite disjoint_union_difference //;
-      eauto using up_set_non_empty, up_non_empty, closed_up, closed_disjoint; [].
-    eapply closed_up_set=> s ?; eapply closed_disjoint; eauto with sts.
   - intros [] [] []; constructor; rewrite ?assoc; auto with sts.
   - destruct 4; inversion_clear 1; constructor; auto with sts.
   - destruct 4; inversion_clear 1; constructor; auto with sts.
@@ -259,33 +245,18 @@ Proof.
   - intros [s T|S T]; constructor; auto with sts.
     + rewrite (up_closed (up _ _)); auto using closed_up with sts.
     + rewrite (up_closed (up_set _ _)); eauto using closed_up_set with sts.
-  - intros x y ?? (z&Hy&?&Hxz); exists (core (x ⋅ y)); split_and?.
-    + destruct Hxz; inversion_clear Hy; constructor; unfold up_set; set_solver.
-    + destruct Hxz; inversion_clear Hy; simpl; split_and?;
+  - intros x y. exists (core (x ⋅ y))=> ?? Hxy; split_and?.
+    + destruct Hxy; constructor; unfold up_set; set_solver.
+    + destruct Hxy; simpl; split_and?;
         auto using closed_up_set_empty, closed_up_empty, up_non_empty; [].
       apply up_set_non_empty. set_solver.
-    + destruct Hxz; inversion_clear Hy; constructor;
+    + destruct Hxy; constructor;
         repeat match goal with
         | |- context [ up_set ?S ?T ] =>
            unless (S ⊆ up_set S T) by done; pose proof (subseteq_up_set S T)
         | |- context [ up ?s ?T ] =>
            unless (s ∈ up s T) by done; pose proof (elem_of_up s T)
         end; auto with sts.
-  - intros x y ?? (z&Hy&_&Hxz); destruct Hxz; inversion_clear Hy; constructor;
-      repeat match goal with
-      | |- context [ up_set ?S ?T ] =>
-         unless (S ⊆ up_set S T) by done; pose proof (subseteq_up_set S T)
-      | |- context [ up ?s ?T ] =>
-           unless (s ∈ up s T) by done; pose proof (elem_of_up s T)
-      end; auto with sts.
-  - intros x y ?? (z&Hy&?&Hxz); destruct Hxz as [S1 S2 T1 T2| |];
-      inversion Hy; clear Hy; constructor; setoid_subst;
-      rewrite ?disjoint_union_difference; auto.
-    split; [|apply intersection_greatest; auto using subseteq_up_set with sts].
-    apply intersection_greatest; [auto with sts|].
-    intros s2; rewrite elem_of_intersection. destruct_and?.
-    unfold up_set; rewrite elem_of_bind; intros (?&s1&?&?&?).
-    apply closed_steps with T2 s1; auto with sts.
 Qed.
 Canonical Structure R : cmraT := validityR (car sts).
 End sts_dra. End sts_dra.
@@ -420,6 +391,8 @@ Lemma sts_frag_included S1 S2 T1 T2 :
   (closed S1 T1 ∧ S1 ≢ ∅ ∧ ∃ Tf, T2 ≡ T1 ∪ Tf ∧ T1 ∩ Tf ≡ ∅ ∧
                                  S2 ≡ S1 ∩ up_set S2 Tf).
 Proof.
+  intros ??; split.
+  - intros [[???] ?]. (* 
   destruct (to_validity_included (sts_dra.car sts) (sts_dra.frag S1 T1) (sts_dra.frag S2 T2)) as [Hfincl Htoincl].
   intros Hcl2 HS2ne. split.
   - intros Hincl. destruct Hfincl as ((Hcl1 & ?) & (z & EQ & Hval & Hdisj)).
@@ -440,6 +413,7 @@ Proof.
       * by apply up_set_non_empty.
     + constructor; last done. by rewrite -HS.
 Qed.
+*) Admitted.
 
 Lemma sts_frag_included' S1 S2 T :
   closed S2 T → closed S1 T → S2 ≢ ∅ → S1 ≢ ∅ → S2 ≡ S1 ∩ up_set S2 ∅ →
@@ -448,7 +422,6 @@ Proof.
   intros. apply sts_frag_included; split_and?; auto.
   exists ∅; split_and?; done || set_solver+.
 Qed.
-
 End stsRA.
 
 (** STSs without tokens: Some stuff is simpler *)
@@ -524,4 +497,3 @@ Proof.
 Qed.
 
 End sts_notokRA.
-

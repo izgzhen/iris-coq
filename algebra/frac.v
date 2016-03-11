@@ -3,7 +3,6 @@ From iris.algebra Require Export cmra.
 From iris.algebra Require Import upred.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
-Local Arguments div _ _ !_ !_ /.
 
 Inductive frac (A : Type) :=
   | Frac : Qp → A → frac A
@@ -129,13 +128,6 @@ Instance frac_op : Op (frac A) := λ x y,
   | Frac q a, FracUnit | FracUnit, Frac q a => Frac q a
   | FracUnit, FracUnit => FracUnit
   end.
-Instance frac_div : Div (frac A) := λ x y,
-  match x, y with
-  | _, FracUnit => x
-  | Frac q1 a, Frac q2 b =>
-     match q1 - q2 with Some q => Frac q (a ÷ b) | None => FracUnit end%Qp
-  | FracUnit, _ => FracUnit
-  end.
 
 Lemma Frac_op q1 q2 a b : Frac q1 a ⋅ Frac q2 b = Frac (q1 + q2) (a ⋅ b).
 Proof. done. Qed.
@@ -146,7 +138,6 @@ Proof.
   - intros n []; destruct 1; constructor; by cofe_subst. 
   - constructor.
   - do 2 destruct 1; split; by cofe_subst.
-  - do 2 destruct 1; simplify_eq/=; try case_match; constructor; by cofe_subst.
   - intros [q a|]; rewrite /= ?cmra_valid_validN; naive_solver eauto using O.
   - intros n [q a|]; destruct 1; split; auto using cmra_validN_S.
   - intros [q1 a1|] [q2 a2|] [q3 a3|]; constructor; by rewrite ?assoc.
@@ -157,10 +148,6 @@ Proof.
   - intros n [q1 a1|] [q2 a2|]; destruct 1; split; eauto using cmra_validN_op_l.
     trans (q1 + q2)%Qp; simpl; last done.
     rewrite -{1}(Qcplus_0_r q1) -Qcplus_le_mono_l; auto using Qclt_le_weak.
-  - intros [q1 a1|] [q2 a2|] [[q3 a3|] Hx];
-      inversion_clear Hx; simplify_eq/=; auto.
-    + rewrite Qp_op_minus. by constructor; [|apply cmra_op_div; exists a3].
-    + rewrite Qp_minus_diag. by constructor.
   - intros n [q a|] y1 y2 Hx Hx'; last first.
     { by exists (∅, ∅); destruct y1, y2; inversion_clear Hx'. }
     destruct Hx, y1 as [q1 b1|], y2 as [q2 b2|].

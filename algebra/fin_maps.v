@@ -96,29 +96,26 @@ Instance map_op : Op (gmap K A) := merge op.
 Instance map_core : Core (gmap K A) := fmap core.
 Instance map_valid : Valid (gmap K A) := λ m, ∀ i, ✓ (m !! i).
 Instance map_validN : ValidN (gmap K A) := λ n m, ∀ i, ✓{n} (m !! i).
-Instance map_div : Div (gmap K A) := merge div.
 
 Lemma lookup_op m1 m2 i : (m1 ⋅ m2) !! i = m1 !! i ⋅ m2 !! i.
-Proof. by apply lookup_merge. Qed.
-Lemma lookup_div m1 m2 i : (m1 ÷ m2) !! i = m1 !! i ÷ m2 !! i.
 Proof. by apply lookup_merge. Qed.
 Lemma lookup_core m i : core m !! i = core (m !! i).
 Proof. by apply lookup_fmap. Qed.
 
 Lemma map_included_spec (m1 m2 : gmap K A) : m1 ≼ m2 ↔ ∀ i, m1 !! i ≼ m2 !! i.
 Proof.
-  split.
-  - by intros [m Hm]; intros i; exists (m !! i); rewrite -lookup_op Hm.
-  - intros Hm; exists (m2 ÷ m1); intros i.
-    by rewrite lookup_op lookup_div cmra_op_div.
-Qed.
-Lemma map_includedN_spec (m1 m2 : gmap K A) n :
-  m1 ≼{n} m2 ↔ ∀ i, m1 !! i ≼{n} m2 !! i.
-Proof.
-  split.
-  - by intros [m Hm]; intros i; exists (m !! i); rewrite -lookup_op Hm.
-  - intros Hm; exists (m2 ÷ m1); intros i.
-    by rewrite lookup_op lookup_div cmra_op_div'.
+  split; [by intros [m Hm] i; exists (m !! i); rewrite -lookup_op Hm|].
+  revert m2. induction m1 as [|i x m Hi IH] using map_ind=> m2 Hm.
+  { exists m2. by rewrite left_id. }
+  destruct (IH (delete i m2)) as [m2' Hm2'].
+  { intros j. move: (Hm j); destruct (decide (i = j)) as [->|].
+    - intros _. rewrite Hi. apply: cmra_unit_least.
+    - rewrite lookup_insert_ne // lookup_delete_ne //. }
+  destruct (Hm i) as [my Hi']; simplify_map_eq.
+  exists (partial_alter (λ _, my) i m2')=>j; destruct (decide (i = j)) as [->|].
+  - by rewrite Hi' lookup_op lookup_insert lookup_partial_alter.
+  - move: (Hm2' j). by rewrite !lookup_op lookup_delete_ne //
+      lookup_insert_ne // lookup_partial_alter_ne.
 Qed.
 
 Definition map_cmra_mixin : CMRAMixin (gmap K A).
@@ -127,7 +124,6 @@ Proof.
   - by intros n m1 m2 m3 Hm i; rewrite !lookup_op (Hm i).
   - by intros n m1 m2 Hm i; rewrite !lookup_core (Hm i).
   - by intros n m1 m2 Hm ? i; rewrite -(Hm i).
-  - by intros n m1 m1' Hm1 m2 m2' Hm2 i; rewrite !lookup_div (Hm1 i) (Hm2 i).
   - intros m; split.
     + by intros ? n i; apply cmra_valid_validN.
     + intros Hm i; apply cmra_valid_validN=> n; apply Hm.
@@ -140,8 +136,6 @@ Proof.
     by rewrite !lookup_core; apply cmra_core_preserving.
   - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
-  - intros x y; rewrite map_included_spec=> ? i.
-    by rewrite lookup_op lookup_div cmra_op_div.
   - intros n m m1 m2 Hm Hm12.
     assert (∀ i, m !! i ≡{n}≡ m1 !! i ⋅ m2 !! i) as Hm12'
       by (by intros i; rewrite -lookup_op).
@@ -222,17 +216,17 @@ Lemma map_op_singleton (i : K) (x y : A) :
 Proof. by apply (merge_singleton _ _ _ x y). Qed.
 
 Lemma singleton_includedN n m i x :
-  {[ i := x ]} ≼{n} m ↔ ∃ y, m !! i ≡{n}≡ Some y ∧ x ≼ y.
-  (* not m !! i = Some y ∧ x ≼{n} y to deal with n = 0 *)
+  {[ i := x ]} ≼{n} m ↔ ∃ y, m !! i ≡{n}≡ Some y ∧ x ≼{n} y.
 Proof.
   split.
-  - move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton=> Hm.
-    destruct (m' !! i) as [y|];
-      [exists (x ⋅ y)|exists x]; eauto using cmra_included_l.
-  - intros (y&Hi&?); rewrite map_includedN_spec=>j.
-    destruct (decide (i = j)); simplify_map_eq.
-    + rewrite Hi. by apply (includedN_preserving _), cmra_included_includedN.
-    + apply: cmra_unit_leastN.
+  - move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton.
+    case (m' !! i)=> [y|]=> Hm.
+    + exists (x ⋅ y); eauto using cmra_includedN_l.
+    + by exists x.
+  - intros (y&Hi&[z ?]).
+    exists (<[i:=z]>m)=> j; destruct (decide (i = j)) as [->|].
+    + rewrite Hi lookup_op lookup_singleton lookup_insert. by constructor.
+    + by rewrite lookup_op lookup_singleton_ne // lookup_insert_ne // left_id.
 Qed.
 Lemma map_dom_op m1 m2 : dom (gset K) (m1 ⋅ m2) ≡ dom _ m1 ∪ dom _ m2.
 Proof.

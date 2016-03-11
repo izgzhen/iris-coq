@@ -1,12 +1,6 @@
 From iris.algebra Require Export iprod.
 From iris.program_logic Require Export model.
 
-(** Index of a CMRA in the product of global CMRAs. *)
-Definition gid := nat.
-
-(** Name of one instance of a particular CMRA in the ghost state. *)
-Definition gname := positive.
-
 (** The "default" iFunctor is constructed as the dependent product of
     a bunch of gFunctor. *)
 Structure gFunctor := GFunctor {
@@ -17,14 +11,19 @@ Arguments GFunctor _ {_}.
 Existing Instance gFunctor_contractive.
 
 (** The global CMRA: Indexed product over a gid i to (gname --fin--> Σ i) *)
-Definition globalF (Σ : gid → gFunctor) : iFunctor :=
-  IFunctor (iprodRF (λ i, mapRF gname (Σ i))).
-Notation gFunctors := (gid → gFunctor).
+Definition gFunctors := { n : nat & fin n → gFunctor }.
+Definition gid (Σ : gFunctors) := fin (projT1 Σ).
+
+(** Name of one instance of a particular CMRA in the ghost state. *)
+Definition gname := positive.
+
+Definition globalF (Σ : gFunctors) : iFunctor :=
+  IFunctor (iprodRF (λ i, mapRF gname (projT2 Σ i))).
 Notation iPropG Λ Σ := (iProp Λ (globalF Σ)).
 
 Class inG (Λ : language) (Σ : gFunctors) (A : cmraT) := InG {
-  inG_id : gid;
-  inG_prf : A = Σ inG_id (iPreProp Λ (globalF Σ))
+  inG_id : gid Σ;
+  inG_prf : A = projT2 Σ inG_id (iPreProp Λ (globalF Σ))
 }.
 
 Definition to_globalF `{inG Λ Σ A} (γ : gname) (a : A) : iGst Λ (globalF Σ) :=
@@ -79,10 +78,10 @@ Notation "[ F ; .. ; F' ]" :=
   (gFunctorList.cons F .. (gFunctorList.cons F' gFunctorList.nil) ..) : gFunctor_scope.
 
 Module gFunctors.
-  Definition nil : gFunctors := const (GFunctor (constRF unitR)).
+  Definition nil : gFunctors := existT 0 (fin_0_inv _).
 
   Definition cons (F : gFunctor) (Σ : gFunctors) : gFunctors :=
-    λ n, match n with O => F | S n => Σ n end.
+   existT (S (projT1 Σ)) (fin_S_inv _ F (projT2 Σ)).
 
   Fixpoint app (Fs : gFunctorList) (Σ : gFunctors) : gFunctors :=
     match Fs with
@@ -102,8 +101,8 @@ Notation "#[ Fs ; .. ; Fs' ]" :=
    the functor breaks badly because Coq is unable to infer the correct
    typeclasses, it does not unfold the functor. *)
 Class inGF (Λ : language) (Σ : gFunctors) (F : gFunctor) := InGF {
-  inGF_id : gid;
-  inGF_prf : F = Σ inGF_id;
+  inGF_id : gid Σ;
+  inGF_prf : F = projT2 Σ inGF_id;
 }.
 (* Avoid eager type class search: this line ensures that type class search
 is only triggered if the first two arguments of inGF do not contain evars. Since
@@ -115,10 +114,10 @@ Hint Mode inGF + + - : typeclass_instances.
 Lemma inGF_inG `{inGF Λ Σ F} : inG Λ Σ (F (iPreProp Λ (globalF Σ))).
 Proof. exists inGF_id. by rewrite -inGF_prf. Qed.
 Instance inGF_here {Λ Σ} (F: gFunctor) : inGF Λ (gFunctors.cons F Σ) F.
-Proof. by exists 0. Qed.
+Proof. by exists 0%fin. Qed.
 Instance inGF_further {Λ Σ} (F F': gFunctor) :
   inGF Λ Σ F → inGF Λ (gFunctors.cons F' Σ) F.
-Proof. intros [i ?]. by exists (S i). Qed.
+Proof. intros [i ?]. by exists (FS i). Qed.
 
 (** For modules that need more than one functor, we offer a typeclass
     [inGFs] to demand a list of rFunctor to be available. We do

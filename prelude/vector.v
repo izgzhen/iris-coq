@@ -5,7 +5,7 @@
 definitions from the standard library, but renames or changes their notations,
 so that it becomes more consistent with the naming conventions in this
 development. *)
-From iris.prelude Require Import list finite.
+From iris.prelude Require Export list.
 Open Scope vector_scope.
 
 (** * The fin type *)
@@ -81,21 +81,6 @@ Lemma fin_to_of_nat n m (H : n < m) : fin_to_nat (Fin.of_nat_lt H) = n.
 Proof.
   revert m H. induction n; intros [|?]; simpl; auto; intros; exfalso; lia.
 Qed.
-
-Fixpoint fin_enum (n : nat) : list (fin n) :=
-  match n with 0 => [] | S n => 0%fin :: FS <$> fin_enum n end.
-Program Instance fin_finite n : Finite (fin n) := {| enum := fin_enum n |}.
-Next Obligation.
-  intros n. induction n; simpl; constructor.
-  - rewrite elem_of_list_fmap. by intros (?&?&?).
-  - by apply (NoDup_fmap _).
-Qed.
-Next Obligation.
-  intros n i. induction i as [|n i IH]; simpl;
-    rewrite elem_of_cons, ?elem_of_list_fmap; eauto.
-Qed.
-Lemma fin_card n : card (fin n) = n.
-Proof. unfold card; simpl. induction n; simpl; rewrite ?fmap_length; auto. Qed.
 
 (** * Vectors *)
 (** The type [vec n] represents lists of consisting of exactly [n] elements.

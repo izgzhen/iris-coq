@@ -98,19 +98,13 @@ Instance excl_op : Op (excl A) := λ x y,
   | ExclUnit, ExclUnit => ExclUnit
   | _, _=> ExclBot
   end.
-Instance excl_div : Div (excl A) := λ x y,
-  match x, y with
-  | _, ExclUnit => x
-  | Excl _, Excl _ => ExclUnit
-  | _, _ => ExclBot
-  end.
+
 Definition excl_cmra_mixin : CMRAMixin (excl A).
 Proof.
   split.
   - by intros n []; destruct 1; constructor.
   - constructor.
   - by destruct 1; intros ?.
-  - by destruct 1; inversion_clear 1; constructor.
   - intros x; split. done. by move=> /(_ 0).
   - intros n [?| |]; simpl; auto with lia.
   - by intros [?| |] [?| |] [?| |]; constructor.
@@ -119,7 +113,6 @@ Proof.
   - constructor.
   - by intros [?| |] [?| |]; exists ∅.
   - by intros n [?| |] [?| |].
-  - by intros [?| |] [?| |] [[?| |] Hz]; inversion_clear Hz; constructor.
   - intros n x y1 y2 ? Hx.
     by exists match y1, y2 with
       | Excl a1, Excl a2 => (Excl a1, Excl a2)
