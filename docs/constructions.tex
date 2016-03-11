@@ -6,11 +6,11 @@
 
 Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
 \begin{align*}
-  \monoid \eqdef{}& \setComp{(c, V) \in (\mathbb{N} \to T) \times \pset{\mathbb{N}}}{ \All n, m. n \geq m \Ra n \in V \Ra m \in V  } \\
+  \monoid \eqdef{}& \recordComp{c : \mathbb{N} \to T , V : \pset{\mathbb{N}}}{ \All n, m. n \geq m \Ra n \in V \Ra m \in V  } \\
   & \text{quotiented by} \\
-  (c_1, V_1) \equiv (c_1, V_2) \eqdef{}& V_1 = V_2 \land \All n. n \in V_1 \Ra c_1(n) \nequiv{n} c_2(n) \\
-  (c_1, V_1) \nequiv{n} (c_1, V_2) \eqdef{}& (\All m \leq n. m \in V_1 \Lra m \in V_2) \land (\All m \leq n. m \in V_1 \Ra c_1(m) \nequiv{m} c_2(m)) \\
-  \mval_n \eqdef{}& \setComp{(c, V) \in \monoid}{ n \in V \land \All m \leq n. c(n) \nequiv{m} c(m) } \\
+  \melt \equiv \meltB \eqdef{}& \melt.V = \meltB.V \land \All n. n \in \melt.V \Ra \melt.c(n) \nequiv{n} \meltB.c(n) \\
+  \melt \nequiv{n} \meltB \eqdef{}& (\All m \leq n. m \in \melt.V \Lra m \in \meltB.V) \land (\All m \leq n. m \in \melt.V \Ra \melt.c(m) \nequiv{m} \meltB.c(m)) \\
+  \mval_n \eqdef{}& \setComp{\melt \in \monoid}{ n \in \melt.V \land \All m \leq n. \melt.c(n) \nequiv{m} \melt.c(m) } \\
   \mcore\melt \eqdef{}& \melt \\
   \melt \mtimes \meltB \eqdef{}& (\melt.c, \setComp{n}{n \in \melt.V \land n \in \meltB.V_2 \land \melt \nequiv{n} \meltB }) \\
   \melt \mdiv \meltB \eqdef{}& \melt \\
