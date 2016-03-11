@@ -49,7 +49,7 @@ Note that $\COFEs$ is cartesian closed.
 \subsection{CMRA}
 
 \begin{defn}
-  A \emph{CMRA} is a tuple $(\monoid : \COFEs, (\mval_n \subseteq \monoid)_{n \in \mathbb{N}}, \mcore{-}: \monoid \nfn \monoid, (\mtimes) : \monoid \times \monoid \nfn \monoid, (\mdiv) : \monoid \times \monoid \nfn \monoid)$ satisfying
+  A \emph{CMRA} is a tuple $(\monoid : \COFEs, (\mval_n \subseteq \monoid)_{n \in \mathbb{N}}, \mcore{-}: \monoid \nfn \monoid, (\mtimes) : \monoid \times \monoid \nfn \monoid)$ satisfying
   \begin{align*}
     \All n, \melt, \meltB.& \melt \nequiv{n} \meltB \land \melt\in\mval_n \Ra \meltB\in\mval_n \tagH{cmra-valid-ne} \\
     \All n, m.& n \geq m \Ra V_n \subseteq V_m \tagH{cmra-valid-mono} \\
@@ -59,7 +59,6 @@ Note that $\COFEs$ is cartesian closed.
     \All \melt.& \mcore{\mcore\melt} = \mcore\melt \tagH{cmra-core-idem} \\
     \All \melt, \meltB.& \melt \mincl \meltB \Ra \mcore\melt \mincl \mcore\meltB \tagH{cmra-core-mono} \\
     \All n, \melt, \meltB.& (\melt \mtimes \meltB) \in \mval_n \Ra \melt \in \mval_n \tagH{cmra-valid-op} \\
-    \All \melt, \meltB.& \melt \leq \meltB \Ra \melt \mtimes (\meltB \mdiv \melt) = \meltB \tagH{cmra-div-op} \\
     \All n, \melt, \meltB_1, \meltB_2.& \omit\rlap{$\melt \in \mval_n \land \melt \nequiv{n} \meltB_1 \mtimes \meltB_2 \Ra {}$} \\
     &\Exists \meltC_1, \meltC_2. \melt = \meltC_1 \mtimes \meltC_2 \land \meltC_1 \nequiv{n} \meltB_1 \land \meltC_2 \nequiv{n} \meltB_2 \tagH{cmra-extend} \\
     \text{where}\qquad\qquad\\
@@ -69,8 +68,6 @@ Note that $\COFEs$ is cartesian closed.
 
 This is a natural generalization of RAs over COFEs.
 All operations have to be non-expansive, and the validity predicate $\mval$ can now also depend on the step-index.
-
-\ralf{TODO: Get rid of division.}
 
 \paragraph{The extension axiom (\ruleref{cmra-extend}).}
 Notice that the existential quantification in this axiom is \emph{constructive}, \ie it is a sigma type in Coq.

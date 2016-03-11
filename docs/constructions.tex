@@ -12,8 +12,7 @@ Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
   \melt \nequiv{n} \meltB \eqdef{}& (\All m \leq n. m \in \melt.V \Lra m \in \meltB.V) \land (\All m \leq n. m \in \melt.V \Ra \melt.c(m) \nequiv{m} \meltB.c(m)) \\
   \mval_n \eqdef{}& \setComp{\melt \in \monoid}{ n \in \melt.V \land \All m \leq n. \melt.c(n) \nequiv{m} \melt.c(m) } \\
   \mcore\melt \eqdef{}& \melt \\
-  \melt \mtimes \meltB \eqdef{}& (\melt.c, \setComp{n}{n \in \melt.V \land n \in \meltB.V_2 \land \melt \nequiv{n} \meltB }) \\
-  \melt \mdiv \meltB \eqdef{}& \melt \\
+  \melt \mtimes \meltB \eqdef{}& (\melt.c, \setComp{n}{n \in \melt.V \land n \in \meltB.V_2 \land \melt \nequiv{n} \meltB })
 \end{align*}
 $\agm(-)$ is a locally non-expansive bifunctor from $\COFEs$ to $\CMRAs$.
 
