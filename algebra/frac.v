@@ -4,11 +4,10 @@ From iris.algebra Require Import upred.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 
-Inductive frac (A : Type) :=
-  | Frac : Qp → A → frac A
-  | FracUnit : frac A.
-Arguments Frac {_} _ _.
-Arguments FracUnit {_}.
+Inductive frac {A : Type} :=
+  | Frac : Qp → A → frac
+  | FracUnit : frac.
+Arguments frac _ : clear implicits.
 Instance maybe_Frac {A} : Maybe2 (@Frac A) := λ x,
   match x with Frac q a => Some (q,a) | _ => None end.
 Instance: Params (@Frac) 2.

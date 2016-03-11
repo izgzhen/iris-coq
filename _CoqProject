@@ -54,6 +54,7 @@ algebra/upred.v
 algebra/upred_tactics.v
 algebra/upred_big_op.v
 algebra/frac.v
+algebra/one_shot.v
 program_logic/model.v
 program_logic/adequacy.v
 program_logic/hoare_lifting.v
