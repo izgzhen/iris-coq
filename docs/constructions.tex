@@ -1,5 +1,16 @@
 % !TEX root = ./appendix.tex
+\section{COFE constructions}
 
+\subsection{Next (type-level later)}
+
+Given a COFE $\cofe$, we define $\latert\cofe$ as follows:
+\begin{align*}
+  \latert\cofe \eqdef{}& \latertinj(\cofe) \\
+  \latertinj(x) \nequiv{n} \latertinj(y) \eqdef{}& n = 0 \lor x \nequiv{n-1} y
+\end{align*}
+$\latert(-)$ is a locally \emph{contractive} bifunctor from $\COFEs$ to $\COFEs$.
+
+\clearpage
 \section{CMRA constructions}
 
 \subsection{Product}
