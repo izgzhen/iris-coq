@@ -132,9 +132,11 @@ Canonical Structure authR : cmraT := CMRAT auth_cofe_mixin auth_cmra_mixin.
 Global Instance auth_cmra_discrete : CMRADiscrete A → CMRADiscrete authR.
 Proof.
   split; first apply _.
-  intros [[] ?]; rewrite /= /cmra_valid /cmra_validN /=
-    -?cmra_discrete_included_iff -?cmra_discrete_valid_iff; auto.
-Admitted.
+  intros [[] ?]; rewrite /= /cmra_valid /cmra_validN /=; auto.
+  - setoid_rewrite <-cmra_discrete_included_iff.
+    rewrite -cmra_discrete_valid_iff. tauto.
+  - by rewrite -cmra_discrete_valid_iff.
+Qed.
 
 (** Internalized properties *)
 Lemma auth_equivI {M} (x y : auth A) :
