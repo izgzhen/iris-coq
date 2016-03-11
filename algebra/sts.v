@@ -385,6 +385,7 @@ Qed.
 (* This is surprisingly different from to_validity_included. I am not sure
    whether this is because to_validity_included is non-canonical, or this
    one here is non-canonical - but I suspect both. *)
+(*
 Lemma sts_frag_included S1 S2 T1 T2 :
   closed S2 T2 → S2 ≢ ∅ →
   (sts_frag S1 T1 ≼ sts_frag S2 T2) ↔
@@ -392,7 +393,7 @@ Lemma sts_frag_included S1 S2 T1 T2 :
                                  S2 ≡ S1 ∩ up_set S2 Tf).
 Proof.
   intros ??; split.
-  - intros [[???] ?]. (* 
+  - intros [[???] ?].
   destruct (to_validity_included (sts_dra.car sts) (sts_dra.frag S1 T1) (sts_dra.frag S2 T2)) as [Hfincl Htoincl].
   intros Hcl2 HS2ne. split.
   - intros Hincl. destruct Hfincl as ((Hcl1 & ?) & (z & EQ & Hval & Hdisj)).
@@ -413,7 +414,6 @@ Proof.
       * by apply up_set_non_empty.
     + constructor; last done. by rewrite -HS.
 Qed.
-*) Admitted.
 
 Lemma sts_frag_included' S1 S2 T :
   closed S2 T → closed S1 T → S2 ≢ ∅ → S1 ≢ ∅ → S2 ≡ S1 ∩ up_set S2 ∅ →
@@ -421,7 +421,7 @@ Lemma sts_frag_included' S1 S2 T :
 Proof.
   intros. apply sts_frag_included; split_and?; auto.
   exists ∅; split_and?; done || set_solver+.
-Qed.
+Qed. *)
 End stsRA.
 
 (** STSs without tokens: Some stuff is simpler *)
