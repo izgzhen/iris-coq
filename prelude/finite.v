@@ -1,6 +1,6 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
-From iris.prelude Require Export countable list.
+From iris.prelude Require Export countable vector.
 
 Class Finite A `{∀ x y : A, Decision (x = y)} := {
   enum : list A;
@@ -59,6 +59,39 @@ Proof.
   intros Hx. destruct (list_find_elem_of P xs x) as [[i y] Hi]; auto.
   rewrite Hi. destruct (list_find_Some P xs i y); simplify_eq/=; auto.
   exists y. by rewrite !Nat2Pos.id by done.
+Qed.
+
+Definition encode_fin `{Finite A} (x : A) : fin (card A) :=
+  Fin.of_nat_lt (encode_lt_card x).
+Program Definition decode_fin `{Finite A} (i : fin (card A)) : A :=
+  match Some_dec (decode_nat i) return _ with
+  | inleft (exist x _) => x | inright _ => _
+  end.
+Next Obligation.
+  intros A ?? i ?; exfalso.
+  destruct (encode_decode A i); naive_solver auto using fin_to_nat_lt.
+Qed.
+Lemma decode_encode_fin `{Finite A} (x : A) : decode_fin (encode_fin x) = x.
+Proof.
+  unfold decode_fin, encode_fin. destruct (Some_dec _) as [[x' Hx]|Hx].
+  { by rewrite fin_to_of_nat, decode_encode_nat in Hx; simplify_eq. }
+  exfalso; by rewrite ->fin_to_of_nat, decode_encode_nat in Hx.
+Qed.
+
+Lemma fin_choice {n} {B : fin n → Type} (P : ∀ i, B i → Prop) :
+  (∀ i, ∃ y, P i y) → ∃ f, ∀ i, P i (f i).
+Proof.
+  induction n as [|n IH]; intros Hex.
+  { exists (fin_0_inv _); intros i; inv_fin i. }
+  destruct (IH _ _ (λ i, Hex (FS i))) as [f Hf], (Hex 0%fin) as [y Hy].
+  exists (fin_S_inv _ y f); intros i; by inv_fin i.
+Qed.
+Lemma finite_choice `{Finite A} {B : A → Type} (P : ∀ x, B x → Prop) :
+  (∀ x, ∃ y, P x y) → ∃ f, ∀ x, P x (f x).
+Proof.
+  intros Hex. destruct (fin_choice _ (λ i, Hex (decode_fin i))) as [f ?].
+  exists (λ x, eq_rect _ _ (f(encode_fin x)) _ (decode_encode_fin x)); intros x.
+  destruct (decode_encode_fin x); simpl; auto.
 Qed.
 
 Lemma card_0_inv P `{finA: Finite A} : card A = 0 → A → P.
@@ -297,3 +330,18 @@ Proof.
   induction (enum A) as [|x xs IH]; intros l; simpl; auto.
   by rewrite app_length, fmap_length, IH.
 Qed.
+
+Fixpoint fin_enum (n : nat) : list (fin n) :=
+  match n with 0 => [] | S n => 0%fin :: FS <$> fin_enum n end.
+Program Instance fin_finite n : Finite (fin n) := {| enum := fin_enum n |}.
+Next Obligation.
+  intros n. induction n; simpl; constructor.
+  - rewrite elem_of_list_fmap. by intros (?&?&?).
+  - by apply (NoDup_fmap _).
+Qed.
+Next Obligation.
+  intros n i. induction i as [|n i IH]; simpl;
+    rewrite elem_of_cons, ?elem_of_list_fmap; eauto.
+Qed.
+Lemma fin_card n : card (fin n) = n.
+Proof. unfold card; simpl. induction n; simpl; rewrite ?fmap_length; auto. Qed.
