@@ -113,4 +113,19 @@ Proof.
   rewrite (comm _ _ (▷ R)%I); setoid_rewrite (comm _ _ R).
   apply ht_frame_step_l.
 Qed.
+
+Lemma ht_inv N E P Φ R e :
+  atomic e → nclose N ⊆ E →
+  (inv N R ★ {{ ▷ R ★ P }} e @ E ∖ nclose N {{ λ v, ▷ R ★ Φ v }})
+    ⊢ {{ P }} e @ E {{ Φ }}.
+Proof.
+  intros; apply: always_intro. apply impl_intro_l.
+  rewrite always_and_sep_r assoc [(P ★ _)%I]comm -assoc.
+  eapply wp_inv; [by eauto with I..|].
+  rewrite sep_elim_r. apply wand_intro_l.
+  (* Oh wow, this is annyoing... *)
+  rewrite assoc -always_and_sep_r'.
+  by rewrite /ht always_elim impl_elim_r.
+Qed.
+
 End hoare.

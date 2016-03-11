@@ -87,13 +87,13 @@ Qed.
 Lemma vs_mask_frame' E Ef P Q : Ef ∩ E = ∅ → (P ={E}=> Q) ⊢ (P ={E ∪ Ef}=> Q).
 Proof. intros; apply vs_mask_frame; set_solver. Qed.
 
-Lemma vs_open_close N E P Q R :
+Lemma vs_inv N E P Q R :
   nclose N ⊆ E →
   (inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q)) ⊢ (P ={E}=> Q).
 Proof.
   intros; apply: always_intro. apply impl_intro_l.
   rewrite always_and_sep_r assoc [(P ★ _)%I]comm -assoc.
-  eapply pvs_open_close; [by eauto with I..|].
+  eapply pvs_inv; [by eauto with I..|].
   rewrite sep_elim_r. apply wand_intro_l.
   (* Oh wow, this is annyoing... *)
   rewrite assoc -always_and_sep_r'.

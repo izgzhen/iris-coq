@@ -54,14 +54,14 @@ Qed.
 
 (* Derive the concrete forms for pvs and wp, because they are useful. *)
 
-Lemma pvs_open_close E N P Q R :
+Lemma pvs_inv E N P Q R :
   nclose N ⊆ E →
   R ⊢ inv N P →
   R ⊢ (▷ P -★ |={E ∖ nclose N}=> (▷ P ★ Q)) →
   R ⊢ (|={E}=> Q).
 Proof. intros. by apply: (inv_fsa pvs_fsa). Qed.
 
-Lemma wp_open_close E e N P Φ R :
+Lemma wp_inv E e N P Φ R :
   atomic e → nclose N ⊆ E →
   R ⊢ inv N P →
   R ⊢ (▷ P -★ WP e @ E ∖ nclose N {{ λ v, ▷ P ★ Φ v }}) →
