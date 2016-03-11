@@ -8,7 +8,35 @@ Given a COFE $\cofe$, we define $\latert\cofe$ as follows:
   \latert\cofe \eqdef{}& \latertinj(\cofe) \\
   \latertinj(x) \nequiv{n} \latertinj(y) \eqdef{}& n = 0 \lor x \nequiv{n-1} y
 \end{align*}
-$\latert(-)$ is a locally \emph{contractive} bifunctor from $\COFEs$ to $\COFEs$.
+$\latert(-)$ is a locally \emph{contractive} functor from $\COFEs$ to $\COFEs$.
+
+\subsection{Uniform Predicates}
+
+Given a CMRA $\monoid$, we define the COFE $\UPred(\monoid)$ of \emph{uniform predicates} over $\monoid$ as follows:
+\begin{align*}
+  \UPred(\monoid) \eqdef{} \setComp{\pred: \mathbb{N} \times \monoid \to \mProp}{
+  \begin{inbox}[c]
+    (\All n, x, y. \pred(n, x) \land x \nequiv{n} y \Ra \pred(n, y)) \land {}\\
+    (\All n, m, x, y. \pred(n, x) \land x \mincl y \land m \leq n \land y \in \mval_m \Ra \pred(m, y))
+  \end{inbox}
+}
+\end{align*}
+where $\mProp$ is the set of meta-level propositions, \eg Coq's \texttt{Prop}.
+$\UPred(-)$ is a locally non-expansive functor from $\CMRAs$ to $\COFEs$.
+
+One way to understand this definition is to re-write it a little.
+We start by defining the COFE of \emph{step-indexed propositions}:
+\begin{align*}
+  \SProp \eqdef{}& \psetdown{\mathbb{N}} \\
+  \prop \nequiv{n} \propB \eqdef{}& \All m \leq n. m \in \prop \Lra m \in \propB
+\end{align*}
+where $\psetdown{N}$ denotes the set of \emph{down-closed} sets of natural numbers: If $n$ is in the set, then all smaller numbers also have to be in there.
+Now we can rewrite $\UPred(\monoid)$ as monotone step-indexed predicates over $\monoid$, where the definition of a ``monotone'' function here is a little funny.
+\begin{align*}
+  \UPred(\monoid) \approx{}& \monoid \monra \SProp \\
+     \eqdef{}& \setComp{\pred: \monoid \nfn \SProp}{\All n, m, x, y. n \in \pred(x) \land x \mincl y \land m \leq n \land y \in \mval_m \Ra m \in \pred(y)}
+\end{align*}
+The reason we chose the first definition is that it is easier to work with in Coq.
 
 \clearpage
 \section{CMRA constructions}
@@ -44,6 +72,7 @@ We obtain the following frame-preserving updates:
   {\melt \mupd \meltsB}
   {f[i \mapsto \melt] \mupd \setComp{ f[i \mapsto \meltB]}{\meltB \in \meltsB}}
 \end{mathpar}
+$K \fpfn (-)$ is a locally non-expansive functor from $\CMRAs$ to $\CMRAs$.
 
 \subsection{Agreement}
 
@@ -59,7 +88,7 @@ Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
   \mcore\melt \eqdef{}& \melt \\
   \melt \mtimes \meltB \eqdef{}& (\melt.\agc, \setComp{n}{n \in \melt.\agV \land n \in \meltB.\agV \land \melt \nequiv{n} \meltB })
 \end{align*}
-$\agm(-)$ is a locally non-expansive bifunctor from $\COFEs$ to $\CMRAs$.
+$\agm(-)$ is a locally non-expansive functor from $\COFEs$ to $\CMRAs$.
 
 You can think of the $\agc$ as a \emph{chain} of elements of $\cofe$ that has to converge only for $n \in \agV$ steps.
 The reason we store a chain, rather than a single element, is that $\agm(\cofe)$ needs to be a COFE itself, so we need to be able to give a limit for every chain of $\agm(\cofe)$.
@@ -84,7 +113,7 @@ There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can 
 The purpose of the one-shot CMRA is to lazily initialize the state of a ghost location.
 Given some CMRA $\monoid$, we define $\oneshotm(\monoid)$ as follows:
 \begin{align*}
-  \oneshot(\monoid) \eqdef{}& \ospending + \osshot(\monoid) + \munit + \bot \\
+  \oneshotm(\monoid) \eqdef{}& \ospending + \osshot(\monoid) + \munit + \bot \\
   \mval_n \eqdef{}& \set{\ospending, \munit} \cup \setComp{\osshot(\melt)}{\melt \in \mval_n}
 \end{align*}
 \begin{align*}
@@ -107,7 +136,7 @@ The step-indexed equivalence is inductively defined as follows:
 
   \axiom{\bot \nequiv{n} \bot}
 \end{mathpar}
-$\oneshotm(-)$ is a locally non-expansive bifunctor from $\CMRAs$ to $\CMRAs$.
+$\oneshotm(-)$ is a locally non-expansive functor from $\CMRAs$ to $\CMRAs$.
 
 We obtain the following frame-preserving updates:
 \begin{mathpar}

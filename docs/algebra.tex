@@ -34,12 +34,20 @@
 \begin{defn}
   The category $\COFEs$ consists of COFEs as objects, and non-expansive functions as arrows.
 \end{defn}
-Note that $\COFEs$ is cartesian closed.
+
+Note that $\COFEs$ is cartesian closed:
+\begin{defn}
+  Given two COFEs $\cofe$ and $\cofeB$, the set of non-expansive functions $\set{f : \cofe \nfn \cofeB}$ is itself a COFE with
+  \begin{align*}
+    f \nequiv{n} g \eqdef{}& \All x \in \cofe. f(x) \nequiv{n} g(x)
+  \end{align*}
+\end{defn}
 
 \begin{defn}
   A (bi)functor $F : \COFEs \to \COFEs$ is called \emph{locally non-expansive} if its action $F_1$ on arrows is itself a non-expansive map.
   Similarly, $F$ is called \emph{locally contractive} if $F_1$ is a contractive map.
 \end{defn}
+The function space $(-) \nfn (-)$ is a locally non-expansive bifunctor.
 Note that the composition of non-expansive (bi)functors is non-expansive, and the composition of a non-expansive and a contractive (bi)functor is contractive.
 
 \subsection{RA}
