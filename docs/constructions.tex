@@ -5,7 +5,7 @@
 \subsection{Product}
 \label{sec:prodm}
 
-Given a family $(M_i)_{i \in I}$ of CMRAs ($I$ finite), we construct a CMRA for the product $\prod_{i \in I} M_i$.
+Given a family $(M_i)_{i \in I}$ of CMRAs ($I$ finite), we construct a CMRA for the product $\prod_{i \in I} M_i$ by lifting everything pointwise.
 
 Frame-preserving updates on the $M_i$ lift to the product:
 \begin{mathpar}
@@ -27,7 +27,7 @@ We obtain the following frame-preserving updates:
 
   \inferH{fpfn-alloc}
   {\melt \in \mval}
-  {\emptyset \mupd \set{[\gname \mapsto \melt]}}
+  {\emptyset \mupd \setComp{[\gname \mapsto \melt]}{\gname \in K}}
 
   \inferH{fpfn-update}
   {\melt \mupd \meltsB}
@@ -40,7 +40,7 @@ Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
 \newcommand{\agc}{\mathrm{c}} % the "c" field of an agreement element
 \newcommand{\agV}{\mathrm{V}} % the "V" field of an agreement element
 \begin{align*}
-  \monoid \eqdef{}& \recordComp{\agc : \mathbb{N} \to T , \agV : \pset{\mathbb{N}}}{ \All n, m. n \geq m \Ra n \in \agV \Ra m \in \agV  } \\
+  \agm(\cofe) \eqdef{}& \recordComp{\agc : \mathbb{N} \to \cofe , \agV : \pset{\mathbb{N}}}{ \All n, m. n \geq m \Ra n \in \agV \Ra m \in \agV  } \\
   & \text{quotiented by} \\
   \melt \equiv \meltB \eqdef{}& \melt.\agV = \meltB.\agV \land \All n. n \in \melt.\agV \Ra \melt.\agc(n) \nequiv{n} \meltB.\agc(n) \\
   \melt \nequiv{n} \meltB \eqdef{}& (\All m \leq n. m \in \melt.\agV \Lra m \in \meltB.\agV) \land (\All m \leq n. m \in \melt.\agV \Ra \melt.\agc(m) \nequiv{m} \meltB.\agc(m)) \\
@@ -50,8 +50,12 @@ Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
 \end{align*}
 $\agm(-)$ is a locally non-expansive bifunctor from $\COFEs$ to $\CMRAs$.
 
-The reason we store a \emph{chain} $c$ of elements of $T$, rather than a single element, is that $\agm(\cofe)$ needs to be a COFE itself, so we need to be able to give a limit for every chain.
-\ralf{Figure out why exactly this is not possible without adding an explicit chain here.}
+You can think of the $\agc$ as a \emph{chain} of elements of $\cofe$ that has to converge only for $n \in \agV$ steps.
+The reason we store a chain, rather than a single element, is that $\agm(\cofe)$ needs to be a COFE itself, so we need to be able to give a limit for every chain of $\agm(\cofe)$.
+However, given such a chain, we cannot constructively define its limit: Clearly, the $\agV$ of the limit is the limit of the $\agV$ of the chain.
+But what to pick for the actual data, for the element of $\cofe$?
+Only if $\agV = \mathbb{N}$ we have a chain of $\cofe$ that we can take a limit of; if the $\agV$ is smaller, the chain ``cancels'', \ie stops converging as we reach indices $n \notin \agV$.
+To mitigate this, we apply the usual construction to close a set; we go from elements of $\cofe$ to chains of $\cofe$.
 
 We define an injection $\ag$ into $\agm(\cofe)$ as follows:
 \[ \ag(x) \eqdef \record{\mathrm c \eqdef \Lam \any. x, \mathrm V \eqdef \mathbb{N}} \]
@@ -69,7 +73,7 @@ There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can 
 The purpose of the one-shot CMRA is to lazily initialize the state of a ghost location.
 Given some CMRA $\monoid$, we define $\oneshotm(\monoid)$ as follows:
 \begin{align*}
-  \monoid \eqdef{}& \ospending + \osshot(\monoid) + \munit + \bot \\
+  \oneshot(\monoid) \eqdef{}& \ospending + \osshot(\monoid) + \munit + \bot \\
   \mval_n \eqdef{}& \set{\ospending, \munit} \cup \setComp{\osshot(\melt)}{\melt \in \mval_n}
 \end{align*}
 \begin{align*}

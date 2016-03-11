@@ -207,8 +207,8 @@ We can derive some specialized forms of the lifting axioms for the operational s
 \subsection{Global functor and ghost ownership}
 
 Hereinafter we assume the global CMRA functor (served up as a parameter to Iris) is obtained from a family of functors $(F_i)_{i \in I}$ for some finite $I$ by picking
-\[ F(\cofe) \eqdef \prod_{i \in I} \textdom{GhName} \fpfn F_i(\cofe) \]
-We don't care so much about what concretely $\textdom{GhName}$ is, as long as it is countable and infinite.
+\[ F(\cofe) \eqdef \prod_{i \in I} \textlog{GhName} \fpfn F_i(\cofe) \]
+We don't care so much about what concretely $\textlog{GhName}$ is, as long as it is countable and infinite.
 With $M_i \eqdef F_i(\iProp)$, we write $\ownGhost{\gname}{\melt : M_i}$ (or just $\ownGhost{\gname}{\melt}$ if $M_i$ is clear from the context) for $\ownGGhost{[i \mapsto [\gname \mapsto \melt]]}$.
 In other words, $\ownGhost{\gname}{\melt : M_i}$ asserts that in the current state of monoid $M_i$, the ``ghost location'' $\gname$ is allocated and we own piece $\melt$.
 
