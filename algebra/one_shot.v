@@ -249,6 +249,20 @@ Proof.
   intros Ha n [|b| |] ?; simpl; auto.
   apply cmra_validN_op_l with (core a1), Ha. by rewrite cmra_core_r.
 Qed.
+Lemma one_shot_updateP (P : A → Prop) (Q : one_shot A → Prop) a :
+  a ~~>: P → (∀ b, P b → Q (Shot b)) → Shot a ~~>: Q.
+Proof.
+  intros Hx HP n mf Hm. destruct mf as [|b| |]; try by destruct Hm.
+  - destruct (Hx n b) as (c&?&?); try done.
+    exists (Shot c). auto.
+  - destruct (Hx n (core a)) as (c&?&?); try done.
+    { rewrite cmra_core_r. done. }
+    exists (Shot c). split; first by auto.
+    simpl. by eapply cmra_validN_op_l.
+Qed.
+Lemma one_shot_updateP' (P : A → Prop) a :
+  a ~~>: P → Shot a ~~>: λ m', ∃ b, m' = Shot b ∧ P b.
+Proof. eauto using one_shot_updateP. Qed.
 
 End cmra.
 

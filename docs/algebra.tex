@@ -43,7 +43,7 @@ Note that $\COFEs$ is cartesian closed.
 
 \subsection{RA}
 
-\ralf{Define this, including frame-preserving updates.}
+\ralf{Copy this from the paper, when that one is more polished.}
 
 \subsection{CMRA}
 
@@ -67,6 +67,8 @@ Note that $\COFEs$ is cartesian closed.
 
 This is a natural generalization of RAs over COFEs.
 All operations have to be non-expansive, and the validity predicate $\mval$ can now also depend on the step-index.
+We define the plain $\mval$ as the ``limit'' of the $\mval_n$:
+\[ \mval \eqdef \bigcap_{n \in \mathbb{N}} \mval_n \]
 
 \paragraph{The extension axiom (\ruleref{cmra-extend}).}
 Notice that the existential quantification in this axiom is \emph{constructive}, \ie it is a sigma type in Coq.

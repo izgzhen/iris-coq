@@ -205,38 +205,37 @@ We can derive some specialized forms of the lifting axioms for the operational s
 \ralf{Add these.}
 
 \subsection{Global functor and ghost ownership}
-\ralf{Describe this.}
 
-% \subsection{Global monoid}
+Hereinafter we assume the global CMRA functor (served up as a parameter to Iris) is obtained from a family of functors $(F_i)_{i \in I}$ for some finite $I$ by picking
+\[ F(\cofe) \eqdef \prod_{i \in I} \textdom{GhName} \fpfn F_i(\cofe) \]
+We don't care so much about what concretely $\textdom{GhName}$ is, as long as it is countable and infinite.
+With $M_i \eqdef F_i(\iProp)$, we write $\ownGhost{\gname}{\melt : M_i}$ (or just $\ownGhost{\gname}{\melt}$ if $M_i$ is clear from the context) for $\ownGGhost{[i \mapsto [\gname \mapsto \melt]]}$.
+In other words, $\ownGhost{\gname}{\melt : M_i}$ asserts that in the current state of monoid $M_i$, the ``ghost location'' $\gname$ is allocated and we own piece $\melt$.
 
-% Hereinafter we assume the global monoid (served up as a parameter to Iris) is obtained from a family of monoids $(M_i)_{i \in I}$ by first applying the construction for finite partial functions to each~(\Sref{sec:fpfunm}), and then applying the product construction~(\Sref{sec:prodm}):
-% \[ M \eqdef \prod_{i \in I} \textdom{GhName} \fpfn M_i \]
-% We don't care so much about what concretely $\textdom{GhName}$ is, as long as it is countable and infinite.
-% We write $\ownGhost{\gname}{\melt : M_i}$ (or just $\ownGhost{\gname}{\melt}$ if $M_i$ is clear from the context) for $\ownGGhost{[i \mapsto [\gname \mapsto \melt]]}$ when $\melt \in \mcarp {M_i}$, and for $\FALSE$ when $\melt = \mzero_{M_i}$.
-% In other words, $\ownGhost{\gname}{\melt : M_i}$ asserts that in the current state of monoid $M_i$, the name $\gname$ is allocated and has at least value $\melt$.
+From~\ruleref{pvs-update}, \ruleref{vs-update} and the frame-preserving updates in~\Sref{sec:prodm} and~\Sref{sec:fpfnm}, we have the following derived rules.
+\begin{mathparpagebreakable}
+  \inferH{NewGhostStrong}{\text{$G$ infinite}}
+  {  \TRUE \vs \Exists\gname\in G. \ownGhost\gname{\melt : M_i}
+  }
+  \and
+  \axiomH{NewGhost}{
+    \TRUE \vs \Exists\gname. \ownGhost\gname{\melt : M_i}
+  }
+  \and
+  \inferH{GhostUpd}
+    {\melt \mupd_{M_i} B}
+    {\ownGhost\gname{\melt : M_i} \vs \Exists \meltB\in B. \ownGhost\gname{\meltB : M_i}}
+  \and
+  \axiomH{GhostEq}
+    {\ownGhost\gname{\melt : M_i} * \ownGhost\gname{\meltB : M_i} \Lra \ownGhost\gname{\melt\mtimes\meltB : M_i}}
 
-% From~\ruleref{FpUpd} and the multiplications and frame-preserving updates in~\Sref{sec:prodm} and~\Sref{sec:fpfunm}, we have the following derived rules.
-% \begin{mathpar}
-% 	\axiomH{NewGhost}{
-% 		\TRUE \vs \Exists\gname. \ownGhost\gname{\melt : M_i}
-% 	}
-% 	\and
-% 	\inferH{GhostUpd}
-%     {\melt \mupd_{M_i} B}
-%     {\ownGhost\gname{\melt : M_i} \vs \Exists \meltB\in B. \ownGhost\gname{\meltB : M_i}}
-%   \and
-%   \axiomH{GhostEq}
-%     {\ownGhost\gname{\melt : M_i} * \ownGhost\gname{\meltB : M_i} \Lra \ownGhost\gname{\melt\mtimes\meltB : M_i}}
+  \axiomH{GhostVal}
+    {\ownGhost\gname{\melt : M_i} \Ra \mval_{M_i}(\melt)}
 
-%   \axiomH{GhostUnit}
-%     {\TRUE \Ra \ownGhost{\gname}{\munit : M_i}}
-
-%   \axiomH{GhostZero}
-%     {\ownGhost\gname{\mzero : M_i} \Ra \FALSE}
-
-%   \axiomH{GhostTimeless}
-%     {\timeless{\ownGhost\gname{\melt : M_i}}}
-% \end{mathpar}
+  \inferH{GhostTimeless}
+    {\text{$\melt$ is a discrete COFE element}}
+    {\timeless{\ownGhost\gname{\melt : M_i}}}
+\end{mathparpagebreakable}
 
 \subsection{Invariant identifier namespaces}
 

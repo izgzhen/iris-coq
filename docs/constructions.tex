@@ -2,6 +2,38 @@
 
 \section{CMRA constructions}
 
+\subsection{Product}
+\label{sec:prodm}
+
+Given a family $(M_i)_{i \in I}$ of CMRAs ($I$ finite), we construct a CMRA for the product $\prod_{i \in I} M_i$.
+
+Frame-preserving updates on the $M_i$ lift to the product:
+\begin{mathpar}
+  \inferH{prod-update}
+  {\melt \mupd_{M_i} \meltsB}
+  {f[i \mapsto \melt] \mupd \setComp{ f[i \mapsto \meltB]}{\meltB \in \meltsB}}
+\end{mathpar}
+
+\subsection{Finite partial function}
+\label{sec:fpfnm}
+
+Given some countable $K$ and some CMRA $\monoid$, the set of finite partial functions $K \fpfn \monoid$ is equipped with a COFE and CMRA structure by lifting everything pointwise.
+
+We obtain the following frame-preserving updates:
+\begin{mathpar}
+  \inferH{fpfn-alloc-strong}
+  {\text{$G$ infinite} \and \melt \in \mval}
+  {\emptyset \mupd \setComp{[\gname \mapsto \melt]}{\gname \in G}}
+
+  \inferH{fpfn-alloc}
+  {\melt \in \mval}
+  {\emptyset \mupd \set{[\gname \mapsto \melt]}}
+
+  \inferH{fpfn-update}
+  {\melt \mupd \meltsB}
+  {f[i \mapsto \melt] \mupd \setComp{ f[i \mapsto \meltB]}{\meltB \in \meltsB}}
+\end{mathpar}
+
 \subsection{Agreement}
 
 Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
@@ -62,6 +94,16 @@ The step-indexed equivalence is inductively defined as follows:
 \end{mathpar}
 $\oneshotm(-)$ is a locally non-expansive bifunctor from $\CMRAs$ to $\CMRAs$.
 
+We obtain the following frame-preserving updates:
+\begin{mathpar}
+  \inferH{oneshot-shoot}
+  {\melt \in \mval}
+  {\ospending \mupd \osshot(\melt)}
+
+  \inferH{oneshot-update}
+  {\melt \mupd \meltsB}
+  {\osshot(\melt) \mupd \setComp{\osshot(\meltB)}{\meltB \in \meltsB}}
+\end{mathpar}
 
 % \subsection{Exclusive monoid}
 
@@ -89,26 +131,6 @@ $\oneshotm(-)$ is a locally non-expansive bifunctor from $\CMRAs$ to $\CMRAs$.
 % If $\melt_f \neq \munit$, then we must have $\melt = \meltB = \munit$, as otherwise one of the two products would be $\mzero$.
 % \end{proof}
 
-% \subsection{Agreement monoid}
-
-% Given a set $X$, we define a monoid such that everybody agrees on which $x \in X$ has been chosen.
-% Let $\agm{X}$ be the monoid with carrier $X \uplus \{ \munit \}$ and multiplication
-% \[
-% \melt \cdot \meltB \;\eqdef\;
-% \begin{cases}
-% \melt & \mbox{if } \meltB = \munit \lor \melt = \meltB \\
-% \meltB & \mbox{if } \melt = \munit
-% \end{cases}
-% \]
-
-% Agreement monoids are cancellative.
-% \begin{proof}[Proof of cancellativity]
-% 	If $\melt_f = \munit$, then the statement is trivial.
-% 	If $\melt_f \neq \munit$, then if $\melt = \munit$, we must have $\meltB = \munit$ and we are done.
-% 	Similar so for $\meltB = \munit$.
-% 	So let $\melt \neq \munit \neq \meltB$ and $\melt_f \mtimes \melt = \melt_f \mtimes \meltB \neq \mzero$.
-% 	It follows immediately that $\melt = \melt_f = \meltB$.
-% \end{proof}
 
 % \subsection{Finite Powerset Monoid}
 
@@ -137,35 +159,6 @@ $\oneshotm(-)$ is a locally non-expansive bifunctor from $\CMRAs$ to $\CMRAs$.
 % 	The other direction works the same way.
 % \end{proof}
 
-% \subsection{Product monoid}
-% \label{sec:prodm}
-
-% Given a family $(M_i)_{i \in I}$ of monoids ($I$ countable), we construct a product monoid.
-% Let $\prod_{i \in I} M_i$ be the monoid with carrier $\prod_{i \in I} \mcarp{M_i}$ and point-wise multiplication, non-zero when \emph{all} individual multiplications are non-zero.
-% For $f \in \prod_{i \in I} \mcarp{M_i}$, we write $f[i \mapsto a]$ for the disjoint union $f \uplus [i \mapsto a]$.
-
-% Frame-preserving updates on the $M_i$ lift to the product:
-% \begin{mathpar}
-%   \inferH{ProdUpd}
-%   {a \mupd_{M_i} B}
-%   {f[i \mapsto a] \mupd \{ f[i \mapsto b] \mid b \in B\}}
-% \end{mathpar}
-% \begin{proof}[Proof of \ruleref{ProdUpd}]
-% Assume some frame $g$ and let $c \eqdef g(i)$.
-% Since $f[i \mapsto a] \sep g$, we get $f \sep g$ and $a \sep_{M_i} c$.
-% Thus there exists $b \in B$ such that $b \sep_{M_i} c$.
-% It suffices to show $f[i \mapsto b] \sep g$.
-% Since multiplication is defined pointwise, this is the case if all components are compatible.
-% For $i$, we know this from $b \sep_{M_i} c$.
-% For all the other components, from $f \sep g$.
-% \end{proof}
-
-% If every $M_i$ is cancellative, then so is $\prod_{i \in I} M_i$.
-% \begin{proof}[Proof of cancellativity]
-% Let $\melt, \meltB, \melt_f \in \prod_{i \in I} \mcarp{M_i}$, and assume $\melt_f \mtimes \melt = \melt_f \mtimes \meltB \neq \mzero$.
-% By the definition of multiplication, this means that for all $i \in I$ we have $\melt_f(i) \mtimes \melt(i) = \melt_f(i) \mtimes \meltB(i) \neq \mzero_{M_i}$.
-% As all base monoids are cancellative, we obtain $\forall i \in I.\; \melt(i) = \meltB(i)$ from which we immediately get $\melt = \meltB$.
-% \end{proof}
 
 % \subsection{Fractional monoid}
 % \label{sec:fracm}
@@ -214,32 +207,6 @@ $\oneshotm(-)$ is a locally non-expansive bifunctor from $\CMRAs$ to $\CMRAs$.
 % The first is trivial, the second follows from cancellativitiy of $M$.
 % \end{proof}
 
-% \subsection{Finite partial function monoid}
-% \label{sec:fpfunm}
-
-% Given a countable set $X$ and a monoid $M$, we construct a monoid representing finite partial functions from $X$ to (non-unit, non-zero elements of) $M$.
-% \ralf{all outdated}
-% Let ${X} \fpfn {M}$ be the product monoid $\prod_{x \in X} M$, as defined in \secref{sec:prodm} but restricting the carrier to functions $f$ where the set $\dom(f) \eqdef \{ x \mid f(x) \neq \munit_M \}$ is finite.
-% This is well-defined as the set of these $f$ contains the unit and is closed under multiplication.
-% (We identify finite partial functions from $X$ to $\mcarp{M}\setminus\{\munit_M\}$ and total functions from $X$ to $\mcarp{M}$ with finite $\munit_M$-support.)
-
-% We use two frame-preserving updates:
-% \begin{mathpar}
-%   \inferH{FpFunAlloc}
-%   {a \in \mcarp{M}}
-%   {f \mupd \{ f[x \mapsto a] \mid x \notin \dom(f) \}}
-%   \and
-%   \inferH{FpFunUpd}
-%   {a \mupd_M B}
-%   {f[i \mapsto a] \mupd \{ f[i \mapsto b] \mid b \in B\}}
-% \end{mathpar}
-% Rule \ruleref{FpFunUpd} simply restates \ruleref{ProdUpd}.
-
-% \begin{proof}[Proof of \ruleref{FpFunAlloc}]
-%   Assume some $g \sep f$. Since $\dom(f \mtimes g)$ is finite, there will be some undefined element $x \notin \dom(f \mtimes g)$. Let $f' \eqdef f[x \mapsto a]$. This is compatible with $g$, so we are done.
-% \end{proof}
-
-% We write $[x \mapsto a]$ for the function mapping $x$ to $a$ and everything else in $X$ to $\munit$.
 
 % %\subsection{Disposable monoid}
 % %

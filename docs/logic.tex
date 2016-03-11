@@ -129,7 +129,7 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
     \All \var:\type. \prop \mid
 \\&
     \knowInv{\term}{\prop} \mid
-    \ownGGhost{\term} \mid
+    \ownGGhost{\term} \mid \mval(\term) \mid
     \ownPhys{\term} \mid
     \always\prop \mid
     {\later\prop} \mid
@@ -277,6 +277,9 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 	\infer{\vctx \proves \wtt{\melt}{\textlog{M}}}
 		{\vctx \proves \wtt{\ownGGhost{\melt}}{\Prop}}
 \and
+	\infer{\vctx \proves \wtt{\melt}{\textlog{M}}}
+		{\vctx \proves \wtt{\mval(\melt)}{\Prop}}
+\and
 	\infer{\vctx \proves \wtt{\state}{\textlog{State}}}
 		{\vctx \proves \wtt{\ownPhys{\state}}{\Prop}}
 \and
@@ -418,7 +421,7 @@ This is entirely standard.
 \begin{mathpar}
 \begin{array}{rMcMl}
 \ownGGhost{\melt} * \ownGGhost{\meltB} &\provesIff&  \ownGGhost{\melt \mtimes \meltB} \\
-\ownGGhost{\melt} &\provesIff& \melt \in \mval \\
+\ownGGhost{\melt} &\provesIff& \mval(\melt) \\
 \TRUE &\proves&  \ownGGhost{\munit}
 \end{array}
 \and
@@ -462,6 +465,10 @@ This is entirely standard.
 \infer
 {\text{$\melt$ is a discrete COFE element}}
 {\timeless{\ownGGhost\melt}}
+
+\infer
+{\text{$\melt$ is a discrete COFE element}}
+{\timeless{\mval(\melt)}}
 
 \infer{}
 {\timeless{\ownPhys\state}}
@@ -536,17 +543,17 @@ This is entirely standard.
 \infer[pvs-frame]
 {}{\propB * \pvs[\mask_1][\mask_2]\prop \proves \pvs[\mask_1][\mask_2] \propB * \prop}
 
-\infer[pvs-allocI]
+\inferH{pvs-allocI}
 {\text{$\mask$ is infinite}}
 {\later\prop \proves \pvs[\mask] \Exists \iname \in \mask. \knowInv\iname\prop}
 
-\infer[pvs-openI]
+\inferH{pvs-openI}
 {}{\knowInv\iname\prop \proves \pvs[\set\iname][\emptyset] \later\prop}
 
-\infer[pvs-closeI]
+\inferH{pvs-closeI}
 {}{\knowInv\iname\prop \land \later\prop \proves \pvs[\emptyset][\set\iname] \TRUE}
 
-\infer[pvs-update]
+\inferH{pvs-update}
 {\melt \mupd \meltsB}
 {\ownGGhost\melt \proves \pvs[\mask] \Exists\meltB\in\meltsB. \ownGGhost\meltB}
 \end{mathpar}
