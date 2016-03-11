@@ -29,9 +29,9 @@ Notation "'Π★{set' X } Φ" := (uPred_big_sepS X Φ)
   (at level 20, X at level 10, format "Π★{set  X }  Φ") : uPred_scope.
 
 (** * Always stability for lists *)
-Class AlwaysStableL {M} (Ps : list (uPred M)) :=
-  always_stableL : Forall AlwaysStable Ps.
-Arguments always_stableL {_} _ {_}.
+Class PersistentL {M} (Ps : list (uPred M)) :=
+  persistentL : Forall Persistent Ps.
+Arguments persistentL {_} _ {_}.
 
 Section big_op.
 Context {M : cmraT}.
@@ -216,20 +216,22 @@ Section gset.
 End gset.
 
 (* Always stable *)
-Local Notation AS := AlwaysStable.
-Local Notation ASL := AlwaysStableL.
-Global Instance big_and_always_stable Ps : ASL Ps → AS (Π∧ Ps).
+Global Instance big_and_persistent Ps : PersistentL Ps → Persistent (Π∧ Ps).
 Proof. induction 1; apply _. Qed.
-Global Instance big_sep_always_stable Ps : ASL Ps → AS (Π★ Ps).
+Global Instance big_sep_persistent Ps : PersistentL Ps → Persistent (Π★ Ps).
 Proof. induction 1; apply _. Qed.
 
-Global Instance nil_always_stable : ASL (@nil (uPred M)).
+Global Instance nil_persistent : PersistentL (@nil (uPred M)).
 Proof. constructor. Qed.
-Global Instance cons_always_stable P Ps : AS P → ASL Ps → ASL (P :: Ps).
+Global Instance cons_persistent P Ps :
+  Persistent P → PersistentL Ps → PersistentL (P :: Ps).
 Proof. by constructor. Qed.
-Global Instance app_always_stable Ps Ps' : ASL Ps → ASL Ps' → ASL (Ps ++ Ps').
+Global Instance app_persistent Ps Ps' :
+  PersistentL Ps → PersistentL Ps' → PersistentL (Ps ++ Ps').
 Proof. apply Forall_app_2. Qed.
-Global Instance zip_with_always_stable {A B} (f : A → B → uPred M) xs ys :
-  (∀ x y, AS (f x y)) → ASL (zip_with f xs ys).
-Proof. unfold ASL=> ?; revert ys; induction xs=> -[|??]; constructor; auto. Qed.
+Global Instance zip_with_persistent {A B} (f : A → B → uPred M) xs ys :
+  (∀ x y, Persistent (f x y)) → PersistentL (zip_with f xs ys).
+Proof.
+  unfold PersistentL=> ?; revert ys; induction xs=> -[|??]; constructor; auto.
+Qed.
 End big_op.

@@ -54,8 +54,8 @@ Lemma own_valid_l γ a : own γ a ⊢ (✓ a ★ own γ a).
 Proof. by rewrite comm -own_valid_r. Qed.
 Global Instance own_timeless γ a : Timeless a → TimelessP (own γ a).
 Proof. unfold own; apply _. Qed.
-Global Instance own_core_always_stable γ a : AlwaysStable (own γ (core a)).
-Proof. by rewrite /AlwaysStable always_own_core. Qed.
+Global Instance own_core_persistent γ a : Persistent (own γ (core a)).
+Proof. by rewrite /Persistent always_own_core. Qed.
 
 (* TODO: This also holds if we just have ✓ a at the current step-idx, as Iris
    assertion. However, the map_updateP_alloc does not suffice to show this. *)

@@ -50,8 +50,8 @@ Definition recv (l : loc) (R : iProp) : iProp :=
     barrier_ctx γ l P ★ sts_ownS γ (i_states i) {[ Change i ]} ★
     saved_prop_own i Q ★ ▷ (Q -★ R))%I.
 
-Global Instance barrier_ctx_always_stable (γ : gname) (l : loc) (P : iProp) :
-  AlwaysStable (barrier_ctx γ l P).
+Global Instance barrier_ctx_persistent (γ : gname) (l : loc) (P : iProp) :
+  Persistent (barrier_ctx γ l P).
 Proof. apply _. Qed.
 
 (* TODO: Figure out if this has a "Global" or "Local" effect.

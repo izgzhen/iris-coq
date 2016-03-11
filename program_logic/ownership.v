@@ -30,8 +30,8 @@ Proof.
   apply uPred.always_ownM.
   by rewrite Res_core !cmra_core_unit map_core_singleton.
 Qed.
-Global Instance ownI_always_stable i P : AlwaysStable (ownI i P).
-Proof. by rewrite /AlwaysStable always_ownI. Qed.
+Global Instance ownI_persistent i P : Persistent (ownI i P).
+Proof. by rewrite /Persistent always_ownI. Qed.
 Lemma ownI_sep_dup i P : ownI i P ⊣⊢ (ownI i P ★ ownI i P).
 Proof. apply (uPred.always_sep_dup _). Qed.
 
@@ -69,8 +69,8 @@ Lemma ownG_empty : True ⊢ (ownG ∅ : iProp Λ Σ).
 Proof. apply uPred.ownM_empty. Qed.
 Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
 Proof. rewrite /ownG; apply _. Qed.
-Global Instance ownG_core_always_stable m : AlwaysStable (ownG (core m)).
-Proof. by rewrite /AlwaysStable always_ownG_core. Qed.
+Global Instance ownG_core_persistent m : Persistent (ownG (core m)).
+Proof. by rewrite /Persistent always_ownG_core. Qed.
 
 (* inversion lemmas *)
 Lemma ownI_spec n r i P :

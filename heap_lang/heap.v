@@ -33,7 +33,7 @@ Section definitions.
 
   Global Instance heap_inv_proper : Proper ((≡) ==> (⊣⊢)) heap_inv.
   Proof. solve_proper. Qed.
-  Global Instance heap_ctx_always_stable N : AlwaysStable (heap_ctx N).
+  Global Instance heap_ctx_persistent N : Persistent (heap_ctx N).
   Proof. apply _. Qed.
 End definitions.
 Typeclasses Opaque heap_ctx heap_mapsto.

@@ -144,10 +144,10 @@ Lemma pvs_strip_pvs E P Q : P ⊢ (|={E}=> Q) → (|={E}=> P) ⊢ (|={E}=> Q).
 Proof. move=>->. by rewrite pvs_trans'. Qed.
 Lemma pvs_frame_l E1 E2 P Q : (P ★ |={E1,E2}=> Q) ⊢ (|={E1,E2}=> P ★ Q).
 Proof. rewrite !(comm _ P); apply pvs_frame_r. Qed.
-Lemma pvs_always_l E1 E2 P Q `{!AlwaysStable P} :
+Lemma pvs_always_l E1 E2 P Q `{!Persistent P} :
   (P ∧ |={E1,E2}=> Q) ⊢ (|={E1,E2}=> P ∧ Q).
 Proof. by rewrite !always_and_sep_l pvs_frame_l. Qed.
-Lemma pvs_always_r E1 E2 P Q `{!AlwaysStable Q} :
+Lemma pvs_always_r E1 E2 P Q `{!Persistent Q} :
   ((|={E1,E2}=> P) ∧ Q) ⊢ (|={E1,E2}=> P ∧ Q).
 Proof. by rewrite !always_and_sep_r pvs_frame_r. Qed.
 Lemma pvs_impl_l E1 E2 P Q : (□ (P → Q) ∧ (|={E1,E2}=> P)) ⊢ (|={E1,E2}=> Q).
