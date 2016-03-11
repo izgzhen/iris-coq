@@ -52,11 +52,6 @@ Lemma own_valid_r γ a : own γ a ⊢ (own γ a ★ ✓ a).
 Proof. apply: uPred.always_entails_r. apply own_valid. Qed.
 Lemma own_valid_l γ a : own γ a ⊢ (✓ a ★ own γ a).
 Proof. by rewrite comm -own_valid_r. Qed.
-Lemma own_empty `{CMRAUnit A} γ : True ⊢ own γ ∅.
-Proof.
-  rewrite ownG_empty /own. apply equiv_spec, ownG_proper.
-  (* FIXME: rewrite to_globalF_empty. *)
-Abort.
 Global Instance own_timeless γ a : Timeless a → TimelessP (own γ a).
 Proof. unfold own; apply _. Qed.
 Global Instance own_core_always_stable γ a : AlwaysStable (own γ (core a)).
