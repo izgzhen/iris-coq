@@ -385,6 +385,7 @@ Qed.
 (* This is surprisingly different from to_validity_included. I am not sure
    whether this is because to_validity_included is non-canonical, or this
    one here is non-canonical - but I suspect both. *)
+(* TODO: These have to be proven again. *)
 (*
 Lemma sts_frag_included S1 S2 T1 T2 :
   closed S2 T2 → S2 ≢ ∅ →

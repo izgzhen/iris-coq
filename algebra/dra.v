@@ -127,6 +127,7 @@ Lemma to_validity_op (x y : A) :
   to_validity (x ⋅ y) ≡ to_validity x ⋅ to_validity y.
 Proof. split; naive_solver auto using dra_op_valid. Qed.
 
+(* TODO: This has to be proven again. *)
 (*
 Lemma to_validity_included x y:
   (✓ y ∧ to_validity x ≼ to_validity y)%C ↔ (✓ x ∧ x ≼ y).
