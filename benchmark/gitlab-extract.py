@@ -65,6 +65,9 @@ for commit in parse_log.parse_git_commits(args.commits):
     if build['status'] == 'failed':
         # build failed
         continue
+    if build['status'] == 'running':
+        # build still running, don't fetch this or any later commit
+        break
     # now fetch the build times
     build_times = requests.get("{}/builds/{}/artifacts/file/build-time.txt".format(project['web_url'], build['id']))
     if build_times.status_code != 200:
