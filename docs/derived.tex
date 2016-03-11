@@ -239,7 +239,21 @@ We can derive some specialized forms of the lifting axioms for the operational s
 % \end{mathpar}
 
 \subsection{Invariant identifier namespaces}
-\ralf{Describe this.}
+
+Let $\namesp \ni \textlog{InvNamesp} \eqdef \textlog{list}(\textlog{InvName})$ be the type of \emph{namespaces} for invariant names.
+Notice that there is an injection $\textlog{namesp\_inj}: \textlog{InvNamesp} \ra \textlog{InvName}$.
+Whenever needed (in particular, for masks at view shifts and Hoare triples), we coerce $\namesp$ to its suffix-closure: \[\namecl\namesp \eqdef \setComp{\iname}{\Exists \namesp'. \iname = \textlog{namesp\_inj}(\namesp' \dplus \namesp)}\]
+We use the notation $\namesp.\iname$ for the namespace $[\iname] \dplus \namesp$.
+We will overload the usual Iris notation for invariant assertions in the following:
+\[ \knowInv\namesp\prop \eqdef \Exists \iname \in \namecl\namesp. \knowInv\iname{\prop} \]
+
+We define the inclusion relation on namespaces as $\namesp_1 \sqsubseteq \namesp_2 \Lra \Exists \namesp_3. \namesp_2 = \namesp_3 \dplus \namesp_1$, \ie $\namesp_1$ is a suffix of $\namesp_2$.
+We have that $\namesp_1 \sqsubseteq \namesp_2 \Ra \namecl\namesp_2 \subseteq \namecl\namesp_1$.
+
+Similarly, we define $\namesp_1 \sep \namesp_2 \eqdef   \Exists \namesp_1', \namesp_2'. \namesp_1' \sqsubseteq \namesp_1 \land \namesp_2' \sqsubseteq \namesp_2 \land |\namesp_1'| = |\namesp_2'| \land \namesp_1' \neq \namesp_2'$, \ie there exists a distinguishing suffix.
+We have that $\namesp_1 \sep \namesp_2 \Ra \namecl\namesp_2 \sep \namecl\namesp_1$, and furthermore $\iname_1 \neq \iname_2 \Ra \namesp.\iname_1 \sep \namesp.\iname_2$.
+
+\ralf{Give derived rules for invariants.}
 
 % \subsection{STSs with interpretation}\label{sec:stsinterp}
 
