@@ -33,7 +33,7 @@ We start by defining the COFE of \emph{step-indexed propositions}: For every ste
 \end{align*}
 Now we can rewrite $\UPred(\monoid)$ as monotone step-indexed predicates over $\monoid$, where the definition of a ``monotone'' function here is a little funny.
 \begin{align*}
-  \UPred(\monoid) \approx{}& \monoid \monra \SProp \\
+  \UPred(\monoid) \cong{}& \monoid \monra \SProp \\
      \eqdef{}& \setComp{\pred: \monoid \nfn \SProp}{\All n, m, x, y. n \in \pred(x) \land x \mincl y \land m \leq n \land y \in \mval_m \Ra m \in \pred(y)}
 \end{align*}
 The reason we chose the first definition is that it is easier to work with in Coq.
@@ -77,35 +77,35 @@ $K \fpfn (-)$ is a locally non-expansive functor from $\CMRAs$ to $\CMRAs$.
 \subsection{Agreement}
 
 Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
-\newcommand{\agc}{\mathrm{c}} % the "c" field of an agreement element
-\newcommand{\agV}{\mathrm{V}} % the "V" field of an agreement element
+\newcommand{\aginjc}{\mathrm{c}} % the "c" field of an agreement element
+\newcommand{\aginjV}{\mathrm{V}} % the "V" field of an agreement element
 \begin{align*}
-  \agm(\cofe) \eqdef{}& \record{\agc : \mathbb{N} \to \cofe , \agV : \SProp} \\
+  \agm(\cofe) \eqdef{}& \record{\aginjc : \mathbb{N} \to \cofe , \aginjV : \SProp} \\
   & \text{quotiented by} \\
-  \melt \equiv \meltB \eqdef{}& \melt.\agV = \meltB.\agV \land \All n. n \in \melt.\agV \Ra \melt.\agc(n) \nequiv{n} \meltB.\agc(n) \\
-  \melt \nequiv{n} \meltB \eqdef{}& (\All m \leq n. m \in \melt.\agV \Lra m \in \meltB.\agV) \land (\All m \leq n. m \in \melt.\agV \Ra \melt.\agc(m) \nequiv{m} \meltB.\agc(m)) \\
-  \mval_n \eqdef{}& \setComp{\melt \in \monoid}{ n \in \melt.\agV \land \All m \leq n. \melt.\agc(n) \nequiv{m} \melt.\agc(m) } \\
+  \melt \equiv \meltB \eqdef{}& \melt.\aginjV = \meltB.\aginjV \land \All n. n \in \melt.\aginjV \Ra \melt.\aginjc(n) \nequiv{n} \meltB.\aginjc(n) \\
+  \melt \nequiv{n} \meltB \eqdef{}& (\All m \leq n. m \in \melt.\aginjV \Lra m \in \meltB.\aginjV) \land (\All m \leq n. m \in \melt.\aginjV \Ra \melt.\aginjc(m) \nequiv{m} \meltB.\aginjc(m)) \\
+  \mval_n \eqdef{}& \setComp{\melt \in \monoid}{ n \in \melt.\aginjV \land \All m \leq n. \melt.\aginjc(n) \nequiv{m} \melt.\aginjc(m) } \\
   \mcore\melt \eqdef{}& \melt \\
-  \melt \mtimes \meltB \eqdef{}& (\melt.\agc, \setComp{n}{n \in \melt.\agV \land n \in \meltB.\agV \land \melt \nequiv{n} \meltB })
+  \melt \mtimes \meltB \eqdef{}& (\melt.\aginjc, \setComp{n}{n \in \melt.\aginjV \land n \in \meltB.\aginjV \land \melt \nequiv{n} \meltB })
 \end{align*}
 $\agm(-)$ is a locally non-expansive functor from $\COFEs$ to $\CMRAs$.
 
-You can think of the $\agc$ as a \emph{chain} of elements of $\cofe$ that has to converge only for $n \in \agV$ steps.
+You can think of the $\aginjc$ as a \emph{chain} of elements of $\cofe$ that has to converge only for $n \in \aginjV$ steps.
 The reason we store a chain, rather than a single element, is that $\agm(\cofe)$ needs to be a COFE itself, so we need to be able to give a limit for every chain of $\agm(\cofe)$.
-However, given such a chain, we cannot constructively define its limit: Clearly, the $\agV$ of the limit is the limit of the $\agV$ of the chain.
+However, given such a chain, we cannot constructively define its limit: Clearly, the $\aginjV$ of the limit is the limit of the $\aginjV$ of the chain.
 But what to pick for the actual data, for the element of $\cofe$?
-Only if $\agV = \mathbb{N}$ we have a chain of $\cofe$ that we can take a limit of; if the $\agV$ is smaller, the chain ``cancels'', \ie stops converging as we reach indices $n \notin \agV$.
+Only if $\aginjV = \mathbb{N}$ we have a chain of $\cofe$ that we can take a limit of; if the $\aginjV$ is smaller, the chain ``cancels'', \ie stops converging as we reach indices $n \notin \aginjV$.
 To mitigate this, we apply the usual construction to close a set; we go from elements of $\cofe$ to chains of $\cofe$.
 
-We define an injection $\ag$ into $\agm(\cofe)$ as follows:
-\[ \ag(x) \eqdef \record{\mathrm c \eqdef \Lam \any. x, \mathrm V \eqdef \mathbb{N}} \]
+We define an injection $\aginj$ into $\agm(\cofe)$ as follows:
+\[ \aginj(x) \eqdef \record{\mathrm c \eqdef \Lam \any. x, \mathrm V \eqdef \mathbb{N}} \]
 There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can show the following:
 \begin{mathpar}
-  \axiomH{ag-val}{\ag(x) \in \mval_n}
+  \axiomH{ag-val}{\aginj(x) \in \mval_n}
 
-  \axiomH{ag-dup}{\ag(x) = \ag(x)\mtimes\ag(x)}
+  \axiomH{ag-dup}{\aginj(x) = \aginj(x)\mtimes\aginj(x)}
   
-  \axiomH{ag-agree}{\ag(x) \mtimes \ag(y) \in \mval_n \Ra x \nequiv{n} y}
+  \axiomH{ag-agree}{\aginj(x) \mtimes \aginj(y) \in \mval_n \Ra x \nequiv{n} y}
 \end{mathpar}
 
 \subsection{One-shot}
@@ -115,17 +115,17 @@ Given some CMRA $\monoid$, we define $\oneshotm(\monoid)$ as follows:
 \begin{align*}
   \oneshotm(\monoid) \eqdef{}& \ospending + \osshot(\monoid) + \munit + \bot \\
   \mval_n \eqdef{}& \set{\ospending, \munit} \cup \setComp{\osshot(\melt)}{\melt \in \mval_n}
-\end{align*}
+\\%\end{align*}
+%\begin{align*}
+  \osshot(\melt) \mtimes \osshot(\meltB) \eqdef{}& \osshot(\melt \mtimes \meltB) \\
+  \munit \mtimes \ospending \eqdef{}& \ospending \mtimes \munit \eqdef \ospending \\
+  \munit \mtimes \osshot(\melt) \eqdef{}& \osshot(\melt) \mtimes \munit \eqdef \osshot(\melt)
+\end{align*}%
+The remaining cases of composition go to $\bot$.
 \begin{align*}
   \mcore{\ospending} \eqdef{}& \munit & \mcore{\osshot(\melt)} \eqdef{}& \mcore\melt \\
   \mcore{\munit} \eqdef{}& \munit &  \mcore{\bot} \eqdef{}& \bot
 \end{align*}
-\begin{align*}
-  \osshot(\melt) \mtimes \osshot(\meltB) \eqdef{}& \osshot(\melt \mtimes \meltB) \\
-  \munit \mtimes \ospending \eqdef{}& \ospending \mtimes \munit \eqdef \ospending \\
-  \munit \mtimes \osshot(\melt) \eqdef{}& \osshot(\melt) \mtimes \munit \eqdef \osshot(\melt)
-\end{align*}
-The remaining cases of composition go to $\bot$.
 The step-indexed equivalence is inductively defined as follows:
 \begin{mathpar}
   \axiom{\ospending \nequiv{n} \ospending}
@@ -149,34 +149,38 @@ We obtain the following frame-preserving updates:
   {\osshot(\melt) \mupd \setComp{\osshot(\meltB)}{\meltB \in \meltsB}}
 \end{mathpar}
 
+\subsection{Exclusive CMRA}
+
+Given a cofe $\cofe$, we define a CMRA $\exm(\cofe)$ such that at most one $x \in \cofe$ can be owned:
+\begin{align*}
+  \exm(\cofe) \eqdef{}& \exinj(\cofe) + \munit + \bot \\
+  \mval_n \eqdef{}& \setComp{\melt\in\exm(\cofe)}{\melt \neq \bot} \\
+  \munit \mtimes \exinj(x) \eqdef{}& \exinj(x) \mtimes \munit \eqdef \exinj(x)
+\end{align*}
+The remaining cases of composition go to $\bot$.
+\begin{align*}
+  \mcore{\exinj(x)} \eqdef{}& \munit & \mcore{\munit} \eqdef{}& \munit &
+  \mcore{\bot} \eqdef{}& \bot
+\end{align*}
+The step-indexed equivalence is inductively defined as follows:
+\begin{mathpar}
+  \infer{x \nequiv{n} y}{\exinj(x) \nequiv{n} \exinj(y)}
+
+  \axiom{\munit \nequiv{n} \munit}
+
+  \axiom{\bot \nequiv{n} \bot}
+\end{mathpar}
+$\exm(-)$ is a locally non-expansive functor from $\COFEs$ to $\CMRAs$.
+
+We obtain the following frame-preserving update:
+\begin{mathpar}
+  \inferH{ex-update}{}
+  {\exinj(x) \mupd \exinj(y)}
+\end{mathpar}
+
+
+
 %TODO: These need syncing with Coq
-% \subsection{Exclusive monoid}
-
-% Given a set $X$, we define a monoid such that at most one $x \in X$ can be owned.
-% Let $\exm{X}$ be the monoid with carrier $X \uplus \{ \munit \}$ and multiplication
-% \[
-% \melt \cdot \meltB \;\eqdef\;
-% \begin{cases}
-%   \melt & \mbox{if } \meltB = \munit \\
-%   \meltB & \mbox{if } \melt = \munit
-% \end{cases}
-% \]
-
-% The frame-preserving update
-% \begin{mathpar}
-% \inferH{ExUpd}
-%   {x \in X}
-%   {x \mupd \melt}
-% \end{mathpar}
-% is easily shown, as the only possible frame for $x$ is $\munit$.
-
-% Exclusive monoids are cancellative.
-% \begin{proof}[Proof of cancellativity]
-% If $\melt_f = \munit$, then the statement is trivial.
-% If $\melt_f \neq \munit$, then we must have $\melt = \meltB = \munit$, as otherwise one of the two products would be $\mzero$.
-% \end{proof}
-
-
 % \subsection{Finite Powerset Monoid}
 
 % Given an infinite set $X$, we define a monoid $\textmon{PowFin}$ with carrier $\mathcal{P}^{\textrm{fin}}(X)$ as follows:

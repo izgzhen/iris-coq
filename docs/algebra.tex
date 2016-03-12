@@ -23,6 +23,8 @@ This definition varies slightly from the original one in~\cite{catlogic}.
   An element $x \in \cofe$ of a COFE is called \emph{discrete} if
   \[ \All y \in \cofe. x \nequiv{0} y \Ra x = y\]
   A COFE $A$ is called \emph{discrete} if all its elements are discrete.
+  For a set $X$, we write $\Delta X$ for the discrete COFE with $x \nequiv{n} x' \eqdef x = x'$
+
 \end{defn}
 
 \begin{defn}
@@ -31,6 +33,7 @@ This definition varies slightly from the original one in~\cite{catlogic}.
   It is \emph{contractive} if
   \[ \All n, x \in \cofe, y \in \cofe. (\All m < n. x \nequiv{m} y) \Ra f(x) \nequiv{n} f(x) \]
 \end{defn}
+The reason that contractive functions are interesting is that for every contractive $f : \cofe \to \cofe$ with $\cofe$ inhabited, there exists a fixed-point $\fix(f)$ such that $\fix(f) = f(\fix(f))$.
 
 \begin{defn}
   The category $\COFEs$ consists of COFEs as objects, and non-expansive functions as arrows.

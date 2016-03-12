@@ -124,7 +124,7 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
     \prop * \prop \mid
     \prop \wand \prop \mid
 \\&
-    \MU \var:\type. \pred  \mid
+    \MU \var:\type. \term  \mid
     \Exists \var:\type. \prop \mid
     \All \var:\type. \prop \mid
 \\&
@@ -136,7 +136,7 @@ Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\t
     \pvs[\term][\term] \prop\mid
     \wpre{\term}[\term]{\Ret\var.\term}
 \end{align*}
-Recursive predicates must be \emph{guarded}: in $\MU \var. \pred$, the variable $\var$ can only appear under the later $\later$ modality.
+Recursive predicates must be \emph{guarded}: in $\MU \var. \term$, the variable $\var$ can only appear under the later $\later$ modality.
 
 Note that $\always$ and $\later$ bind more tightly than $*$, $\wand$, $\land$, $\lor$, and $\Ra$.
 We will write $\pvs[\term] \prop$ for $\pvs[\term][\term] \prop$.
