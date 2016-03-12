@@ -205,9 +205,64 @@ The following rules can be derived for Hoare triples.
 \end{mathparpagebreakable}
 
 \paragraph{Lifting of operational semantics.}
-We can derive some specialized forms of the lifting axioms for the operational semantics, as well as some forms that involve view shifts and Hoare triples.
+We can derive some specialized forms of the lifting axioms for the operational semantics.
+\begin{mathparpagebreakable}
+  \infer[wp-lift-atomic-step]
+  {\atomic(\expr_1) \and
+   \red(\expr_1, \state_1) \and
+   \All \expr_2, \state_2, \expr_\f. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \pred(\expr_2,\state_2,\expr_\f)}
+  {\later\ownPhys{\state_1} * \later\All \val_2, \state_2, \expr_\f. \pred(\ofval(\val), \state_2, \expr_\f) \land \ownPhys{\state_2} \wand \prop[\val_2/\var] * \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
 
-\ralf{Add these.}
+  \infer[wp-lift-atomic-det-step]
+  {\atomic(\expr_1) \and
+   \red(\expr_1, \state_1) \and
+   \All \expr'_2, \state'_2, \expr_\f'. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \state_2 = \state_2' \land \toval(\expr_2') = \val_2 \land \expr_\f = \expr_\f'}
+  {\later\ownPhys{\state_1} * \later(\ownPhys{\state_2} \wand \prop[\val_2/\var] * \wpre{\expr_\f}[\top]{\Ret\any.\TRUE}) \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
+
+  \infer[wp-lift-pure-det-step]
+  {\toval(\expr_1) = \bot \and
+   \All \state_1. \red(\expr_1, \state_1) \and
+   \All \state_1, \expr_2', \state_2, \expr_\f'. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \state_1 = \state_2 \land \expr_2 = \expr_2' \land \expr_\f = \expr_\f'}
+  {\later ( \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \wpre{\expr_\f}[\top]{\Ret\any.\TRUE}) \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
+\end{mathparpagebreakable}
+
+Furthermore, we derive some forms that directly involve view shifts and Hoare triples.
+\begin{mathparpagebreakable}
+  \infer[ht-lift-step]
+  {\mask_2 \subseteq \mask_1 \and
+   \toval(\expr_1) = \bot \and
+   \red(\expr_1, \state_1) \and
+   \All \expr_2, \state_2, \expr_\f. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \pred(\expr_2,\state_2,\expr_\f) \\\\
+   \prop \vs[\mask_1][\mask_2] \later\ownPhys{\state_1} * \later\prop' \and
+   \All \expr_2, \state_2, \expr_\f. \pred(\expr_2, \state_2, \expr_\f) * \ownPhys{\state_2} * \prop' \vs[\mask_2][\mask_1] \propB_1 * \propB_2 \\\\
+   \All \expr_2, \state_2, \expr_\f. \hoare{\propB_1}{\expr_2}{\Ret\val.\propC}[\mask_1] \and
+   \All \expr_2, \state_2, \expr_\f. \hoare{\propB_2}{\expr_\f}{\Ret\any. \TRUE}[\top]}
+  { \hoare\prop{\expr_1}{\Ret\val.\propC}[\mask_1] }
+
+  \infer[ht-lift-atomic-step]
+  {\atomic(\expr_1) \and
+   \red(\expr_1, \state_1) \and
+   \All \expr_2, \state_2, \expr_\f. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \pred(\expr_2,\state_2,\expr_\f) \\\\
+   \prop \vs[\mask_1][\mask_2] \later\ownPhys{\state_1} * \later\prop' \and
+   \All \expr_2, \state_2, \expr_\f. \hoare{\pred(\expr_2,\state_2,\expr_\f) * \prop}{\expr_\f}{\Ret\any. \TRUE}[\top]}
+  { \hoare{\later\ownPhys{\state_1} * \later\prop}{\expr_1}{\Ret\val.\Exists \state_2, \expr_\f. \ownPhys{\state_2} * \pred(\ofval(\expr_2),\state_2,\expr_\f)}[\mask_1] }
+
+  \infer[ht-lift-pure-step]
+  {\toval(\expr_1) = \bot \and
+   \All\state_1. \red(\expr_1, \state_1) \and
+   \All \state_1, \expr_2, \state_2, \expr_\f. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \state_1 = \state_2 \land \pred(\expr_2,\expr_\f) \\\\
+   \All \expr_2, \expr_\f. \hoare{\pred(\expr_2,\expr_\f) * \prop}{\expr_2}{\Ret\val.\propB}[\mask_1] \and
+   \All \expr_2, \expr_\f. \hoare{\pred(\expr_2,\expr_\f) * \prop'}{\expr_\f}{\Ret\any. \TRUE}[\top]}
+  { \hoare{\later(\prop*\prop')}{\expr_1}{\Ret\val.\propB}[\mask_1] }
+
+  \infer[ht-lift-pure-det-step]
+  {\toval(\expr_1) = \bot \and
+   \All\state_1. \red(\expr_1, \state_1) \and
+   \All \state_1, \expr_2', \state_2, \expr_\f'. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \state_1 = \state_2 \land \expr_2 = \expr_2' \land \expr_\f = \expr_\f' \\\\
+   \hoare{\prop}{\expr_2}{\Ret\val.\propB}[\mask_1] \and
+   \hoare{\prop'}{\expr_\f}{\Ret\any. \TRUE}[\top]}
+  { \hoare{\later(\prop*\prop')}{\expr_1}{\Ret\val.\propB}[\mask_1] }
+\end{mathparpagebreakable}
 
 \subsection{Global functor and ghost ownership}
 
@@ -282,6 +337,7 @@ We can now derive the following rules for this derived form of the invariant ass
   {\knowInv\namesp\prop \proves \propB \vs[\mask] \propC}
 \end{mathpar}
 
+% TODO: These need syncing with Coq
 % \subsection{STSs with interpretation}\label{sec:stsinterp}
 
 % Building on \Sref{sec:stsmon}, after constructing the monoid $\STSMon{\STSS}$ for a particular STS, we can use an invariant to tie an interpretation, $\pred : \STSS \to \Prop$, to the STS's current state, recovering CaReSL-style reasoning~\cite{caresl}.
@@ -382,21 +438,21 @@ We can now derive the following rules for this derived form of the invariant ass
 %   {\later\pred_\bot(a) \vs[\mask] \exists \iname \in \mask, \gname.\; \Auth(M, \pred, \gname, \iname) * \ownGhost{\gname}{\authfrag a : \auth{M}}}
 %  \and
 %  \axiomH{AuthOpen}
-%   {\Auth(M, \pred, \gname, \iname) \vdash \ownGhost{\gname}{\authfrag \melt : \auth{M}} \vsE[\{\iname\}][\emptyset] \exists \melt_f.\; \later\pred_\bot(\melt \mtimes \melt_f) * \ownGhost{\gname}{\authfull \melt \mtimes \melt_f, \authfrag a:\auth{M}}}
+%   {\Auth(M, \pred, \gname, \iname) \vdash \ownGhost{\gname}{\authfrag \melt : \auth{M}} \vsE[\{\iname\}][\emptyset] \exists \melt_\f.\; \later\pred_\bot(\melt \mtimes \melt_\f) * \ownGhost{\gname}{\authfull \melt \mtimes \melt_\f, \authfrag a:\auth{M}}}
 %  \and
 %  \axiomH{AuthClose}
-%   {\Auth(M, \pred, \gname, \iname) \vdash \later\pred_\bot(\meltB \mtimes \melt_f) * \ownGhost{\gname}{\authfull a \mtimes \melt_f, \authfrag a:\auth{M}} \vs[\emptyset][\{\iname\}] \ownGhost{\gname}{\authfrag \meltB : \auth{M}} }
+%   {\Auth(M, \pred, \gname, \iname) \vdash \later\pred_\bot(\meltB \mtimes \melt_\f) * \ownGhost{\gname}{\authfull a \mtimes \melt_\f, \authfrag a:\auth{M}} \vs[\emptyset][\{\iname\}] \ownGhost{\gname}{\authfrag \meltB : \auth{M}} }
 % \end{mathpar}
 
 % These view shifts in turn can be used to prove variants of the invariant rules:
 % \begin{mathpar}
 %  \inferH{Auth}
-%   {\forall \melt_f.\; \hoare{\later\pred_\bot(a \mtimes \melt_f) * P}{\expr}{\Ret\val. \exists \meltB.\; \later\pred_\bot(\meltB\mtimes \melt_f) * Q}[\mask]
+%   {\forall \melt_\f.\; \hoare{\later\pred_\bot(a \mtimes \melt_\f) * P}{\expr}{\Ret\val. \exists \meltB.\; \later\pred_\bot(\meltB\mtimes \melt_\f) * Q}[\mask]
 %    \and \physatomic{\expr}}
 %   {\Auth(M, \pred, \gname, \iname) \vdash \hoare{\ownGhost{\gname}{\authfrag a:\auth{M}} * P}{\expr}{\Ret\val. \exists \meltB.\; \ownGhost{\gname}{\authfrag \meltB:\auth{M}} * Q}[\mask \uplus \{\iname\}]}
 %  \and
 %  \inferH{VSAuth}
-%   {\forall \melt_f.\; \later\pred_\bot(a \mtimes \melt_f) * P \vs[\mask_1][\mask_2] \exists \meltB.\; \later\pred_\bot(\meltB \mtimes \melt_f) * Q(\meltB)}
+%   {\forall \melt_\f.\; \later\pred_\bot(a \mtimes \melt_\f) * P \vs[\mask_1][\mask_2] \exists \meltB.\; \later\pred_\bot(\meltB \mtimes \melt_\f) * Q(\meltB)}
 %   {\Auth(M, \pred, \gname, \iname) \vdash
 %    \ownGhost{\gname}{\authfrag a:\auth{M}} * P \vs[\mask_1 \uplus \{\iname\}][\mask_2 \uplus \{\iname\}]
 %    \exists \meltB.\; \ownGhost{\gname}{\authfrag \meltB:\auth{M}} * Q(\meltB)}

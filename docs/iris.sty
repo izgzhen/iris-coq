@@ -86,13 +86,15 @@
 
 \newcommand{\rs}{r}
 \newcommand{\rsB}{s}
+\newcommand{\rss}{R}
 
 \newcommand{\pres}{\pi}
 \newcommand{\wld}{w}
 \newcommand{\ghostRes}{g}
 
 %% Various pieces of syntax
-\newcommand{\wsat}[4]{#1 \models_{#2} #3; #4}
+\newcommand{\wsat}[3]{#1 \models_{#2} #3}
+\newcommand{\wsatpre}{\textdom{pre-wsat}}
 
 \newcommand{\wtt}[2]{#1 : #2} % well-typed term
 
@@ -114,6 +116,7 @@
 \newcommand{\UPred}{\textdom{UPred}}
 \newcommand{\mProp}{\textdom{Prop}} % meta-level prop
 \newcommand{\iProp}{\textdom{iProp}}
+\newcommand{\iPreProp}{\textdom{iPreProp}}
 \newcommand{\Wld}{\textdom{Wld}}
 \newcommand{\Res}{\textdom{Res}}
 
@@ -121,6 +124,7 @@
 \newcommand{\cofeB}{U}
 \newcommand{\COFEs}{\mathcal{U}} % category of COFEs
 \newcommand{\iFunc}{\Sigma}
+\newcommand{\fix}{\textdom{fix}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CMRA (RESOURCE ALGEBRA) SYMBOLS & NOTATION & IDENTIFIERS
@@ -135,6 +139,8 @@
 \newcommand{\meltC}{c}
 \newcommand{\melts}{A}
 \newcommand{\meltsB}{B}
+
+\newcommand{\f}{\mathrm{f}} % for "frame"
 
 \newcommand{\mcar}[1]{|#1|}
 \newcommand{\mcarp}[1]{\mcar{#1}^{+}}
@@ -221,7 +227,7 @@
 \newcommand*{\knowInv}[2]{\boxedassert{#2}[#1]}
 \newcommand*{\ownGhost}[2]{\boxedassert[densely dashed]{#2}[#1]}
 \newcommand*{\ownGGhost}[1]{\boxedassert[densely dashed]{#1}}
-
+\newcommand{\ownM}[1]{\textlog{Own}(#1)}
 \newcommand{\ownPhys}[1]{\textlog{Phy}(#1)}
 
 %% View Shifts
@@ -286,7 +292,7 @@
 
 %% Some commonly used identifiers
 \newcommand{\timeless}[1]{\textlog{timeless}(#1)}
-\newcommand{\physatomic}[1]{\textlog{$#1$ phys.\ atomic}}
+\newcommand{\physatomic}[1]{\textlog{atomic}($#1$)}
 \newcommand{\infinite}{\textlog{infinite}}
 
 \newcommand{\Prop}{\textlog{Prop}}
@@ -321,13 +327,14 @@
 
 % Agreement
 \newcommand{\agm}{\ensuremath{\textmon{Ag}}}
-\newcommand{\ag}{\textlog{ag}}
+\newcommand{\aginj}{\textlog{ag}}
 
 % Fraction
 \newcommand{\fracm}{\ensuremath{\textmon{Frac}}}
 
 % Exclusive
 \newcommand{\exm}{\ensuremath{\textmon{Ex}}}
+\newcommand{\exinj}{\textlog{ex}}
 
 % Auth
 \newcommand{\authm}{\textmon{Auth}}

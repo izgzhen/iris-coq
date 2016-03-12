@@ -25,16 +25,18 @@ Lemma wp_alloc_pst E σ e v Φ :
   ⊢ WP Alloc e @ E {{ Φ }}.
 Proof.
   (* TODO RJ: This works around ssreflect bug #22. *)
-  intros. set (φ v' σ' ef := ∃ l,
-    ef = None ∧ v' = LocV l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None).
+  intros. set (φ (e' : expr []) σ' ef := ∃ l,
+    ef = None ∧ e' = Loc l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None).
   rewrite -(wp_lift_atomic_step (Alloc e) φ σ) // /φ;
-    last by intros; inv_step; eauto 8.
+    last (by intros; inv_step; eauto 8); last (by simpl; eauto).
   apply sep_mono, later_mono; first done.
-  apply forall_intro=>e2; apply forall_intro=>σ2; apply forall_intro=>ef.
+  apply forall_intro=>v2; apply forall_intro=>σ2; apply forall_intro=>ef.
   apply wand_intro_l.
   rewrite always_and_sep_l -assoc -always_and_sep_l.
-  apply const_elim_l=>-[l [-> [-> [-> ?]]]].
-  by rewrite (forall_elim l) right_id const_equiv // left_id wand_elim_r.
+  apply const_elim_l=>-[l [-> [Hl [-> ?]]]].
+  rewrite (forall_elim l) right_id const_equiv // left_id wand_elim_r.
+  rewrite -(of_to_val (Loc l) (LocV l)) // in Hl. apply of_val_inj in Hl.
+  by subst.
 Qed.
 
 Lemma wp_load_pst E σ l v Φ :
@@ -42,7 +44,7 @@ Lemma wp_load_pst E σ l v Φ :
   (▷ ownP σ ★ ▷ (ownP σ -★ Φ v)) ⊢ WP Load (Loc l) @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_step σ v σ None) ?right_id //;
-    last by intros; inv_step; eauto using to_of_val.
+    last (by intros; inv_step; eauto using to_of_val); simpl; by eauto.
 Qed.
 
 Lemma wp_store_pst E σ l e v v' Φ :
@@ -51,7 +53,7 @@ Lemma wp_store_pst E σ l e v v' Φ :
   ⊢ WP Store (Loc l) e @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_step σ (LitV LitUnit) (<[l:=v]>σ) None)
-    ?right_id //; last by intros; inv_step; eauto.
+    ?right_id //; last (by intros; inv_step; eauto); simpl; by eauto.
 Qed.
 
 Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' Φ :
@@ -60,7 +62,8 @@ Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' Φ :
   ⊢ WP CAS (Loc l) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_step σ (LitV $ LitBool false) σ None)
-    ?right_id //; last by intros; inv_step; eauto.
+    ?right_id //; last (by intros; inv_step; eauto);
+    simpl; split_and?; by eauto.
 Qed.
 
 Lemma wp_cas_suc_pst E σ l e1 v1 e2 v2 Φ :
@@ -69,7 +72,8 @@ Lemma wp_cas_suc_pst E σ l e1 v1 e2 v2 Φ :
   ⊢ WP CAS (Loc l) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_step σ (LitV $ LitBool true)
-    (<[l:=v2]>σ) None) ?right_id //; last by intros; inv_step; eauto.
+    (<[l:=v2]>σ) None) ?right_id //; last (by intros; inv_step; eauto);
+    simpl; split_and?; by eauto.
 Qed.
 
 (** Base axioms for core primitives of the language: Stateless reductions *)
