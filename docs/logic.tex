@@ -590,9 +590,8 @@ This is entirely standard.
 {\wpre\expr[\mask]{\Ret\var. \wpre{\lctx(\ofval(\var))}[\mask]{\Ret\varB.\prop}} \proves \wpre{\lctx(\expr)}[\mask]{\Ret\varB.\prop}}
 \end{mathpar}
 
-\subsection{Lifting of operational semantics}\label{sec:lifting}
-
-\begin{mathparpagebreakable}
+\paragraph{Lifting of operational semantics.}~
+\begin{mathpar}
   \infer[wp-lift-step]
   {\mask_2 \subseteq \mask_1 \and
    \toval(\expr_1) = \bot \and
@@ -605,7 +604,7 @@ This is entirely standard.
    \All \state_1. \red(\expr_1, \state_1) \and
    \All \state_1, \expr_2, \state_2, \expr'. \expr_1,\state_1 \step \expr_2,\state_2,\expr' \Ra \state_1 = \state_2 \land \pred(\expr_2,\expr')}
   {\later\All \expr_2, \expr'. \pred(\expr_2, \expr')  \wand \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \wpre{\expr'}[\top]{\Ret\var.\TRUE} \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
-\end{mathparpagebreakable}
+\end{mathpar}
 
 Here we define $\wpre{\expr'}[\mask]{\Ret\var.\prop} \eqdef \TRUE$ if $\expr' = \bot$ (remember that our stepping relation can, but does not have to, define a forked-off expression).
 
