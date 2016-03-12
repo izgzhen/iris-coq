@@ -25,7 +25,7 @@ where $\mProp$ is the set of meta-level propositions, \eg Coq's \texttt{Prop}.
 $\UPred(-)$ is a locally non-expansive functor from $\CMRAs$ to $\COFEs$.
 
 One way to understand this definition is to re-write it a little.
-We start by defining the COFE of \emph{step-indexed propositions}:
+We start by defining the COFE of \emph{step-indexed propositions}: For every step-index, we proposition either holds or does not hold.
 \begin{align*}
   \SProp \eqdef{}& \psetdown{\mathbb{N}} \\
     \eqdef{}& \setComp{\prop \in \pset{\mathbb{N}}}{ \All n, m. n \geq m \Ra n \in \prop \Ra m \in \prop } \\
@@ -149,6 +149,7 @@ We obtain the following frame-preserving updates:
   {\osshot(\melt) \mupd \setComp{\osshot(\meltB)}{\meltB \in \meltsB}}
 \end{mathpar}
 
+%TODO: These need syncing with Coq
 % \subsection{Exclusive monoid}
 
 % Given a set $X$, we define a monoid such that at most one $x \in X$ can be owned.
@@ -372,8 +373,6 @@ We obtain the following frame-preserving updates:
 
 % \subsection{STS with tokens monoid}
 % \label{sec:stsmon}
-
-% \ralf{This needs syncing with the Coq development.}
 
 % Given a state-transition system~(STS) $(\STSS, \ra)$, a set of tokens $\STSS$, and a labeling $\STSL: \STSS \ra \mathcal{P}(\STST)$ of \emph{protocol-owned} tokens for each state, we construct a monoid modeling an authoritative current state and permitting transitions given a \emph{bound} on the current state and a set of \emph{locally-owned} tokens.
 

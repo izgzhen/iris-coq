@@ -1,527 +1,451 @@
 \section{Model and semantics}
 
-\ralf{What also needs to be done here: Define uPred and its later function; define black later; define the resource CMRA}
-
 The semantics closely follows the ideas laid out in~\cite{catlogic}.
-We just repeat some of the most important definitions here.
 
-An \emph{ordered family of equivalence relations} (o.f.e.\@) is a pair
-$(X,(\nequiv{n})_{n\in\mathbb{N}})$, with $X$ a set, and each $\nequiv{n}$ 
-an equivalence relation over $X$ satisfying
-\begin{itemize}
-	\item $\All x,x'. x \nequiv{0} x',$
-	\item $\All x,x',n. x \nequiv{n+1} x' \implies x \nequiv{n} x',$
-	\item $\All x,x'. (\All n. x\nequiv{n} x') \implies x = x'.$
-\end{itemize}
-\a
-Let $(X,(\nequivset{n}{X})_{n\in\mathbb{N}})$ and
-$(Y,(\nequivset{n}{Y})_{n\in\mathbb{N}})$ be o.f.e.'s. A function $f:
-X\to Y$ is \emph{non-expansive} if,   for all $x$, $x'$ and $n$,
-\[
-x \nequivset{n}{X} x' \implies 
-fx \nequivset{n}{Y} f x'.
-\]
-Let $(X,(\nequiv{n})_{n\in\mathbb{N}})$ be an o.f.e.
-A sequence $(x_i)_{i\in\mathbb{N}}$ of elements in $X$ is a
-\emph{chain} (aka \emph{Cauchy sequence}) if
-\[
-\All k. \Exists n. \All i,j\geq n. x_i \nequiv{k} x_j.
-\]
-A \emph{limit} of a chain $(x_i)_{i\in\mathbb{N}}$ is an element
-$x\in X$ such that
-\[
-\All n. \Exists k. \All i\geq k. x_i \nequiv{n} x.
-\]
-An o.f.e.\ $(X,(\nequiv{n})_{n\in\mathbb{N}})$ is \emph{complete} 
-if all chains have a limit.
-A complete o.f.e.\ is called a c.o.f.e.\ (pronounced ``coffee'').
-When the family of equivalence relations is clear from context we
-simply
-write $X$ for a c.o.f.e.\ $(X,(\nequiv{n})_{n\in\mathbb{N}})$.
+\subsection{Generic model of base logic}
 
+The base logic including equality, later, always, and a notion of ownership is defined on $\UPred(\monoid)$ for any CMRA $\monoid$.
 
-Let $\cal U$ be the category of c.o.f.e.'s and nonexpansive maps.
+\typedsection{Interpretation of base assertions}{\Sem{\vctx \proves \term : \Prop} : \Sem{\vctx} \to \UPred(\monoid)}
+Remember that $\UPred(\monoid)$ is isomorphic to $\monoid \monra \SProp$.
+We are thus going to define the assertions as mapping CMRA elements to sets of step-indices.
 
-Products and function spaces are defined as follows.
-For c.o.f.e.'s $(X,(\nequivset{n}{X})_{n\in\mathbb{N}})$ and
-$(Y,(\nequivset{n}{Y})_{n\in\mathbb{N}})$, their product 
-is 
-$(X\times Y, (\nequiv{n})_{n\in\mathbb{N}}),$
-where
-\[
-(x,y) \nequiv{n} (x',y') \iff
-x \nequiv{n} x' \land
-y \nequiv{n} y'.
-\]
-The function space is
-\[
-(\{\, f : X\to Y \mid f \text{ is non-expansive}\,\}, (\nequiv{n})_{n\in\mathbb{N}}),
-\]
-where
-\[
-f \nequiv{n} g \iff
-\All x. f(x)  \nequiv{n}  g(x).
-\]
-
-For a c.o.f.e.\ $(X,(\nequiv{n}_{n\in\mathbb{N}}))$, 
-$\latert (X,(\nequiv{n}_{n\in\mathbb{N}}))$ is the c.o.f.e.\@
-$(X,(\nequivB{n}_{n\in\mathbb{N}}))$,  where
-\[
-x \nequivB{n} x' \iff \begin{cases}
-\top	&\IF n=0 \\
-x \nequiv{n-1} x' &\IF n>0
-\end{cases}
-\]
-
-(Sidenote: $\latert$ extends to a functor on $\cal U$ by the identity
-action on morphisms).
-
-
-\subsection{Semantic structures: propositions}
-\ralf{This needs to be synced with the Coq development again.}
-
-\[
-\begin{array}[t]{rcl}
-%  \protStatus &::=& \enabled \ALT \disabled \\[0.4em]
-\textdom{Res} &\eqdef&
-\{\, \rs = (\pres, \ghostRes) \mid
-\pres \in \textdom{State} \uplus \{\munit\} \land \ghostRes \in \mcarp{\monoid} \,\} \\[0.5em]
-(\pres, \ghostRes) \rtimes
-(\pres', \ghostRes') &\eqdef&
-\begin{cases}
-(\pres, \ghostRes \mtimes \ghostRes')  & \mbox{if $\pres' = \munit$ and $\ghostRes \mtimes \ghostRes' \neq \mzero$} \\
-(\pres', \ghostRes \mtimes \ghostRes') & \mbox{if $\pres = \munit$ and $\ghostRes \mtimes \ghostRes' \neq \mzero$}
-\end{cases}
-\\[0.5em]
-%
-\rs \leq \rs' & \eqdef &
-\Exists \rs''. \rs' = \rs \rtimes \rs''\\[1em]
-%
-\UPred(\textdom{Res}) &\eqdef& 
-\{\, p \subseteq \mathbb{N} \times \textdom{Res} \mid
-\All (k,\rs) \in p.
-\All j\leq k.
-\All \rs' \geq \rs.
-(j,\rs')\in p \,\}\\[0.5em]
-\restr{p}{k} &\eqdef& 
-\{\, (j, \rs) \in p \mid j < k \,\}\\[0.5em]
-p \nequiv{n} q & \eqdef & \restr{p}{n} = \restr{q}{n}\\[1em]
-%
-\textdom{PreProp} & \cong  &
-\latert\big( \textdom{World} \monra \UPred(\textdom{Res})
-\big)\\[0.5em]
-%
-\textdom{World} & \eqdef &
-\mathbb{N} \fpfn \textdom{PreProp}\\[0.5em]
-%
-w \nequiv{n} w' & \eqdef & 
-n = 0 \lor
-\bigl(\dom(w) = \dom(w') \land \All i\in\dom(w). w(i) \nequiv{n} w'(i)\bigr)
-\\[0.5em]
-%
-w \leq w' & \eqdef & 
-\dom(w) \subseteq \dom(w') \land \All i \in \dom(w). w(i) = w'(i) 
-\\[0.5em]
-%
-\textdom{Prop} & \eqdef & \textdom{World} \monra \UPred(\textdom{Res})
-\end{array}
-\]
-
-For $p,q\in\UPred(\textdom{Res})$ with $p \nequiv{n} q$ defined
-as above, $\UPred(\textdom{Res})$ is a 
-c.o.f.e.
-
-$\textdom{Prop}$ is a c.o.f.e., which exists by America and Rutten's theorem~\cite{America-Rutten:JCSS89}.
-We do not need to consider how the object is constructed. 
-We only need the isomorphism, given by maps
-\begin{align*}
-	\wIso &: \latert \bigl(World \monra \UPred(\textdom{Res})\bigr) \to \textdom{PreProp} \\
-	\wIso^{-1} &: \textdom{PreProp} \to \latert \bigl(World \monra \UPred(\textdom{Res})\bigr)
-\end{align*}
-which are inverses to each other. 
-Note: this is an isomorphism in $\cal U$, i.e., $\wIso$ and
-$\wIso^{-1}$ are both non-expansive.
-
-$\textdom{World}$ is a c.o.f.e.\ with the family of equivalence
-relations defined as shown above.
-
-\subsection{Semantic structures: types and environments}
-
-For a set $X$, write $\Delta X$ for the discrete c.o.f.e.\ with $x \nequiv{n}
-x'$ iff $n = 0$ or $x = x'$
-\[
-\begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
-\Sem{\textsort{Unit}} &\eqdef& \Delta \{ \star \} \\
-\Sem{\textsort{InvName}} &\eqdef& \Delta \mathbb{N}  \\
-\Sem{\textsort{InvMask}} &\eqdef& \Delta \pset{\mathbb{N}} \\
-\Sem{\textsort{Monoid}} &\eqdef& \Delta |\monoid|
-\end{array}
-\qquad\qquad
-\begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
-\Sem{\textsort{Val}} &\eqdef& \Delta \textdom{Val} \\
-\Sem{\textsort{Exp}} &\eqdef& \Delta \textdom{Exp} \\
-\Sem{\textsort{Ectx}} &\eqdef& \Delta \textdom{Ectx} \\
-\Sem{\textsort{State}} &\eqdef& \Delta \textdom{State} \\
-\end{array}
-\qquad\qquad
-\begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
-\Sem{\sort \times \sort'} &\eqdef& \Sem{\sort} \times \Sem{\sort} \\
-\Sem{\sort \to \sort'} &\eqdef& \Sem{\sort} \to \Sem{\sort} \\
-\Sem{\Prop} &\eqdef& \textdom{Prop} \\
-\end{array}
-\]
-
-The balance of our signature $\Sig$ is interpreted as follows.
-For each base type $\type$ not covered by the preceding table, we pick an object $X_\type$ in $\cal U$ and define
-\[
-\Sem{\type} \eqdef X_\type
-\]
-For each function symbol $\sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \SigFn$, we pick an arrow $\Sem{\sigfn} : \Sem{\type_1} \times \dots \times \Sem{\type_n} \to \Sem{\type_{n+1}}$ in $\cal U$.
-
-An environment $\vctx$ is interpreted as the set of
-maps $\rho$, with $\dom(\rho) = \dom(\vctx)$ and
-$\rho(x)\in\Sem{\vctx(x)}$,
-and 
-$\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
-\All x\in\dom(\rho). \rho(x) \nequiv{n} \rho'(x)\bigr)$.
-
-\ralf{Re-check all the following definitions with the Coq development.}
-%\typedsection{Validity}{valid : \pset{\textdom{Prop}} \in Sets}
-%
-%\begin{align*}
-%valid(p) &\iff \All n \in \mathbb{N}. \All \rs \in \textdom{Res}. \All W \in \textdom{World}. (n, \rs) \in p(W)
-%\end{align*}
-
-\typedsection{Later modality}{\later : \textdom{Prop} \to \textdom{Prop} \in {\cal U}}
+We introduce an additional logical connective $\ownM\melt$, which will later be used to encode all of $\knowInv\iname\prop$, $\ownGGhost\melt$ and $\ownPhys\state$.
 
 \begin{align*}
-	\later p &\eqdef \Lam W. \{\, (n + 1, r) \mid (n, r) \in p(W) \,\} \cup \{\, (0, r) \mid r \in \textdom{Res} \,\}
-\end{align*}
-\begin{lem}
-	$\later{}$ is well-defined: $\later {p}$ is a valid proposition (this amounts to showing non-expansiveness), and $\later{}$ itself is a \emph{contractive} map.
-\end{lem}
-
-\typedsection{Always modality}{\always{} : \textdom{Prop} \to \textdom{Prop} \in {\cal U}}
-
-\begin{align*}
-	\always{p} \eqdef \Lam W. \{\, (n, r) \mid (n, \munit) \in p(W) \,\}
-\end{align*}
-\begin{lem}
-	$\always{}$ is well-defined: $\always{p}$ is a valid proposition (this amounts to showing non-expansiveness), and $\always{}$ itself is a non-expansive map.
-\end{lem}
-
-% PDS: p \Rightarrow q not defined.
-%\begin{lem}\label{lem:always-impl-valid}
-%\begin{align*}
-%&\forall p, q \in \textdom{Prop}.~\\
-%&\qquad
-%  (\forall n \in \mathbb{N}.~\forall \rs \in \textdom{Res}.~\forall W \in \textdom{World}.~(n, \rs) \in p(W) \Rightarrow (n, \rs) \in q(W)) \Leftrightarrow~valid(\always{(p \Rightarrow q)})
-%\end{align*}
-%\end{lem}
-
-\typedsection{Invariant definition}{inv : \Delta(\mathbb{N}) \times \textdom{Prop} \to \textdom{Prop} \in {\cal U}}
-\begin{align*}
-	\mathit{inv}(\iota, p) &\eqdef \Lam W. \{\, (n, r) \mid \iota\in\dom(W) \land W(\iota) \nequiv{n+1}_{\textdom{PreProp}} \wIso(p) \,\}
-\end{align*}
-\begin{lem}
-	$\mathit{inv}$ is well-defined: $\mathit{inv}(\iota, p)$ is a valid proposition (this amounts to showing non-expansiveness), and $\mathit{inv}$ itself is a non-expansive map.
-\end{lem}
-
-\typedsection{World satisfaction}{\wsat{-}{-}{-}{-} : 
-	\textdom{State} \times
-	\pset{\mathbb{N}} \times
-	\textdom{Res} \times
-	\textdom{World} \to \psetdown{\mathbb{N}} \in {\cal U}}
-\ralf{Make this Dave-compatible: Explicitly compose all the things in $s$}
-\begin{align*}
-	\wsat{\state}{\mask}{\rs}{W} &=
-	\begin{aligned}[t]
-		\{\, n + 1 \in \mathbb{N} \mid &\Exists  \rsB:\mathbb{N} \fpfn \textdom{Res}. (\rs \rtimes \rsB).\pres = \state \land{}\\
-		&\quad \All \iota \in \dom(W). \iota \in \dom(W) \leftrightarrow \iota \in \dom(\rsB) \land {}\\
-		&\quad\quad \iota \in \mask \ra (n, \rsB(\iota)) \in \wIso^{-1}(W(\iota))(W) \,\} \cup \{ 0 \}
-	\end{aligned}
-\end{align*}
-\begin{lem}\label{lem:fullsat-nonexpansive}
-	$\wsat{-}{-}{-}{-}$ is well-defined: It maps into $\psetdown{\mathbb{N}}$. (There is no need for it to be a non-expansive map, it doesn't itself live in $\cal U$.)
-\end{lem}
-
-\begin{lem}\label{lem:fullsat-weaken-mask}
-	\begin{align*}
-		\MoveEqLeft
-		\All \state \in \Delta(\textdom{State}).
-		\All \mask_1, \mask_2 \in \Delta(\pset{\mathbb{N}}).
-		\All \rs, \rsB \in \Delta(\textdom{Res}).
-		\All W \in \textdom{World}. \\&
-		\mask_1 \subseteq \mask_2 \implies (\wsat{\state}{\mask_2}{\rs}{W}) \subseteq (\wsat{\state}{\mask_1}{\rs}{W})
-	\end{align*}
-\end{lem}
-
-\begin{lem}\label{lem:nequal_ext_world}
-	\begin{align*}
-		&
-		\All n \in \mathbb{N}.
-		\All W_1, W_1', W_2 \in \textdom{World}.
-		W_1 \nequiv{n} W_2 \land W_1 \leq W_1' \implies \Exists W_2' \in \textdom{World}. W_1' \nequiv{n} W_2' \land W_2 \leq W_2'
-	\end{align*}
-\end{lem}
-
-\typedsection{Timeless}{\textit{timeless} : \textdom{Prop} \to \textdom{Prop}}
-
-\begin{align*}
-	\textit{timeless}(p) \eqdef 
-	\begin{aligned}[t]
-		\Lam W.
-		\{\, (n, r) &\mid \All W' \geq W. \All k \leq n. \All r' \in \textdom{Res}. \\
-		&\qquad
-		k > 0 \land (k - 1, r') \in p(W') \implies (k, r') \in p(W') \,\}
-	\end{aligned}
+	\Sem{\vctx \proves t =_\type u : \Prop}_\gamma &\eqdef
+	\Lam \any. \setComp{n}{\Sem{\vctx \proves t : \type}_\gamma \nequiv{n} \Sem{\vctx \proves u : \type}_\gamma} \\
+	\Sem{\vctx \proves \FALSE : \Prop}_\gamma &\eqdef \Lam \any. \emptyset \\
+	\Sem{\vctx \proves \TRUE : \Prop}_\gamma &\eqdef \Lam \any. \mathbb{N} \\
+	\Sem{\vctx \proves \prop \land \propB : \Prop}_\gamma &\eqdef
+	\Lam \melt. \Sem{\vctx \proves \prop : \Prop}_\gamma(\melt) \cap \Sem{\vctx \proves \propB : \Prop}_\gamma(\melt) \\
+	\Sem{\vctx \proves \prop \lor \propB : \Prop}_\gamma &\eqdef
+	\Lam \melt. \Sem{\vctx \proves \prop : \Prop}_\gamma(\melt) \cup \Sem{\vctx \proves \propB : \Prop}_\gamma(\melt) \\
+	\Sem{\vctx \proves \prop \Ra \propB : \Prop}_\gamma &\eqdef
+	\Lam \melt. \setComp{n}{\begin{aligned}
+            \All m, \meltB.& m \leq n \land \melt \mincl \meltB \land \meltB \in \mval_m \Ra {} \\
+            & m \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\melt) \Ra {}\\& m \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\melt)\end{aligned}}\\
+	\Sem{\vctx \proves \All x : \type. \prop : \Prop}_\gamma &\eqdef
+	\Lam \melt. \setComp{n}{ \All v \in \Sem{\type}. n \in \Sem{\vctx, x : \type \proves \prop : \Prop}_{\gamma[x \mapsto v]}(\melt) } \\
+	\Sem{\vctx \proves \Exists x : \type. \prop : \Prop}_\gamma &\eqdef
+        \Lam \melt. \setComp{n}{ \Exists v \in \Sem{\type}. n \in \Sem{\vctx, x : \type \proves \prop : \Prop}_{\gamma[x \mapsto v]}(\melt) } \\
+  ~\\
+	\Sem{\vctx \proves \always{\prop} : \Prop}_\gamma &\eqdef \Lam\melt. \Sem{\vctx \proves \prop : \Prop}_\gamma(\mcore\melt) \\
+	\Sem{\vctx \proves \later{\prop} : \Prop}_\gamma &\eqdef \Lam\melt. \setComp{n}{n = 0 \lor n-1 \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\melt)}\\
+	\Sem{\vctx \proves \prop * \propB : \Prop}_\gamma &\eqdef \Lam\melt. \setComp{n}{\begin{aligned}\Exists \meltB_1, \meltB_2. &\melt \nequiv{n} \meltB_1 \mtimes \meltB_2 \land {}\\& n \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB_1) \land n \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\meltB_2)\end{aligned}}
+\\
+	\Sem{\vctx \proves \prop \wand \propB : \Prop}_\gamma &\eqdef
+	\Lam \melt. \setComp{n}{\begin{aligned}
+            \All m, \meltB.& m \leq n \land  \melt\mtimes\meltB \in \mval_m \Ra {} \\
+            & m \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB) \Ra {}\\& m \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\melt\mtimes\meltB)\end{aligned}} \\
+        \Sem{\vctx \proves \ownM{\melt} : \Prop}_\gamma &\eqdef \Lam\meltB. \setComp{n}{\melt \mincl[n] \meltB}  \\
+        \Sem{\vctx \proves \mval(\melt) : \Prop}_\gamma &\eqdef \Lam\any. \setComp{n}{\melt \in \mval_n} \\
 \end{align*}
 
-\begin{lem}
-	\textit{timeless} is well-defined: \textit{timeless}(p) is a valid proposition, and \textit{timeless} itself is a non-expansive map.
-\end{lem}
 
-% PDS: \Ra undefined.
-%\begin{lem}
-%\begin{align*}
-%&
-%  \All p \in \textdom{Prop}.
-%  \All \mask \in \pset{\mathbb{N}}.
-%valid(\textit{timeless}(p) \Ra (\later p \vs[\mask][\mask] p))
-%\end{align*}
-%\end{lem}
+%\subsection{Iris model}
 
-\typedsection{View-shift}{\mathit{vs} : \Delta(\pset{\mathbb{N}}) \times \Delta(\pset{\mathbb{N}}) \times \textdom{Prop} \to \textdom{Prop} \in {\cal U}}
-\begin{align*}
-	\mathit{vs}_{\mask_1}^{\mask_2}(q) &= \Lam W.
-	\begin{aligned}[t]
-		\{\, (n, \rs) &\mid \All W_F \geq W. \All \rs_F, \mask_F, \state. \All k \leq n.\\
-		&\qquad 
-		k \in (\wsat{\state}{\mask_1 \cup \mask_F}{\rs \rtimes \rs_F}{W_F}) \land k > 0 \land \mask_F \sep (\mask_1 \cup \mask_2) \implies{} \\
-		&\qquad
-		\Exists W' \geq W_F. \Exists \rs'. k \in (\wsat{\state}{\mask_2 \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k, \rs') \in q(W')
-		\,\}
-	\end{aligned}
-\end{align*}
-\begin{lem}
-	$\mathit{vs}$ is well-defined: $\mathit{vs}_{\mask_1}^{\mask_2}(q)$ is a valid proposition, and $\mathit{vs}$ is a non-expansive map.
-\end{lem}
+% \subsection{Semantic structures: propositions}
+% \ralf{This needs to be synced with the Coq development again.}
 
+% \[
+% \begin{array}[t]{rcl}
+% %  \protStatus &::=& \enabled \ALT \disabled \\[0.4em]
+% \textdom{Res} &\eqdef&
+% \{\, \rs = (\pres, \ghostRes) \mid
+% \pres \in \textdom{State} \uplus \{\munit\} \land \ghostRes \in \mcarp{\monoid} \,\} \\[0.5em]
+% (\pres, \ghostRes) \rtimes
+% (\pres', \ghostRes') &\eqdef&
+% \begin{cases}
+% (\pres, \ghostRes \mtimes \ghostRes')  & \mbox{if $\pres' = \munit$ and $\ghostRes \mtimes \ghostRes' \neq \mzero$} \\
+% (\pres', \ghostRes \mtimes \ghostRes') & \mbox{if $\pres = \munit$ and $\ghostRes \mtimes \ghostRes' \neq \mzero$}
+% \end{cases}
+% \\[0.5em]
+% %
+% \rs \leq \rs' & \eqdef &
+% \Exists \rs''. \rs' = \rs \rtimes \rs''\\[1em]
+% %
+% \UPred(\textdom{Res}) &\eqdef& 
+% \{\, p \subseteq \mathbb{N} \times \textdom{Res} \mid
+% \All (k,\rs) \in p.
+% \All j\leq k.
+% \All \rs' \geq \rs.
+% (j,\rs')\in p \,\}\\[0.5em]
+% \restr{p}{k} &\eqdef& 
+% \{\, (j, \rs) \in p \mid j < k \,\}\\[0.5em]
+% p \nequiv{n} q & \eqdef & \restr{p}{n} = \restr{q}{n}\\[1em]
+% %
+% \textdom{PreProp} & \cong  &
+% \latert\big( \textdom{World} \monra \UPred(\textdom{Res})
+% \big)\\[0.5em]
+% %
+% \textdom{World} & \eqdef &
+% \mathbb{N} \fpfn \textdom{PreProp}\\[0.5em]
+% %
+% w \nequiv{n} w' & \eqdef & 
+% n = 0 \lor
+% \bigl(\dom(w) = \dom(w') \land \All i\in\dom(w). w(i) \nequiv{n} w'(i)\bigr)
+% \\[0.5em]
+% %
+% w \leq w' & \eqdef & 
+% \dom(w) \subseteq \dom(w') \land \All i \in \dom(w). w(i) = w'(i) 
+% \\[0.5em]
+% %
+% \textdom{Prop} & \eqdef & \textdom{World} \monra \UPred(\textdom{Res})
+% \end{array}
+% \]
 
-%\begin{lem}\label{lem:prim_view_shift_trans}
-%\begin{align*}
-%\MoveEqLeft
-%  \All \mask_1, \mask_2, \mask_3 \in \Delta(\pset{\mathbb{N}}).
-%  \All p, q \in \textdom{Prop}. \All W \in \textdom{World}.
-%  \All n \in \mathbb{N}.\\
-%&
-%  \mask_2 \subseteq \mask_1 \cup \mask_3 \land
-%  \bigl(\All W' \geq W. \All r \in \textdom{Res}. \All k \leq n. (k, r) \in p(W') \implies (k, r) \in vs_{\mask_2}^{\mask_3}(q)(W')\bigr) \\
-%&\qquad
-%  {}\implies \All r \in \textdom{Res}. (n, r) \in vs_{\mask_1}^{\mask_2}(p)(W) \implies (n, r) \in vs_{\mask_1}^{\mask_3}(q)(W)
-%\end{align*}
-%\end{lem}
+% For $p,q\in\UPred(\textdom{Res})$ with $p \nequiv{n} q$ defined
+% as above, $\UPred(\textdom{Res})$ is a 
+% c.o.f.e.
 
-% PDS: E_1 ==>> E_2 undefined.
-%\begin{lem}
-%\begin{align*}
-%&
-%  \forall \mask_1, \mask_2, \mask_3 \in \Delta(\pset{\mathbb{N}}).~
-%  \forall p_1, p_2, p_3 \in \textdom{Prop}.~\\
-%&\qquad
-%  \mask_2 \subseteq \mask_1 \cup \mask_3 \Rightarrow
-%  valid(((p_1 \vs[\mask_1][\mask_2] p_2) \land (p_2 \vs[\mask_2][\mask_3] p_3)) \Rightarrow (p_1 \vs[\mask_1][\mask_3] p_3))
-%\end{align*}
-%\end{lem}
-
-%\begin{lem}
-%\begin{align*}
-%\MoveEqLeft
-%  \All \iota \in \mathbb{N}.
-%  \All p \in \textdom{Prop}.
-%  \All W \in \textdom{World}.
-%  \All \rs \in \textdom{Res}.
-%  \All n \in \mathbb{N}. \\
-%&
-%  (n, \rs) \in inv(\iota, p)(W) \implies (n, \rs) \in vs_{\{ \iota \}}^{\emptyset}(\later p)(W)
-%\end{align*}
-%\end{lem}
-
-% PDS: * undefined.
-%\begin{lem}
-%\begin{align*}
-%&
-%  \forall \iota \in \mathbb{N}.~
-%  \forall p \in \textdom{Prop}.~
-%  \forall W \in \textdom{World}.~
-%  \forall \rs \in \textdom{Res}.~
-%  \forall n \in \mathbb{N}.~\\
-%&\qquad
-%  (n, \rs) \in (inv(\iota, p) * \later p)(W) \Rightarrow (n, \rs) \in vs^{\{ \iota \}}_{\emptyset}(\top)(W)
-%\end{align*}
-%\end{lem}
-
-% \begin{lem}
+% $\textdom{Prop}$ is a c.o.f.e., which exists by America and Rutten's theorem~\cite{America-Rutten:JCSS89}.
+% We do not need to consider how the object is constructed. 
+% We only need the isomorphism, given by maps
 % \begin{align*}
-% &
-%   \forall \mask_1, \mask_2 \in \Delta(\pset{\mathbb{N}}).~
-%   valid(\bot \vs[\mask_1][\mask_2] \bot)
+% 	\wIso &: \latert \bigl(World \monra \UPred(\textdom{Res})\bigr) \to \textdom{PreProp} \\
+% 	\wIso^{-1} &: \textdom{PreProp} \to \latert \bigl(World \monra \UPred(\textdom{Res})\bigr)
 % \end{align*}
+% which are inverses to each other. 
+% Note: this is an isomorphism in $\cal U$, i.e., $\wIso$ and
+% $\wIso^{-1}$ are both non-expansive.
+
+% $\textdom{World}$ is a c.o.f.e.\ with the family of equivalence
+% relations defined as shown above.
+
+% \subsection{Semantic structures: types and environments}
+
+% For a set $X$, write $\Delta X$ for the discrete c.o.f.e.\ with $x \nequiv{n}
+% x'$ iff $n = 0$ or $x = x'$
+% \[
+% \begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
+% \Sem{\textsort{Unit}} &\eqdef& \Delta \{ \star \} \\
+% \Sem{\textsort{InvName}} &\eqdef& \Delta \mathbb{N}  \\
+% \Sem{\textsort{InvMask}} &\eqdef& \Delta \pset{\mathbb{N}} \\
+% \Sem{\textsort{Monoid}} &\eqdef& \Delta |\monoid|
+% \end{array}
+% \qquad\qquad
+% \begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
+% \Sem{\textsort{Val}} &\eqdef& \Delta \textdom{Val} \\
+% \Sem{\textsort{Exp}} &\eqdef& \Delta \textdom{Exp} \\
+% \Sem{\textsort{Ectx}} &\eqdef& \Delta \textdom{Ectx} \\
+% \Sem{\textsort{State}} &\eqdef& \Delta \textdom{State} \\
+% \end{array}
+% \qquad\qquad
+% \begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
+% \Sem{\sort \times \sort'} &\eqdef& \Sem{\sort} \times \Sem{\sort} \\
+% \Sem{\sort \to \sort'} &\eqdef& \Sem{\sort} \to \Sem{\sort} \\
+% \Sem{\Prop} &\eqdef& \textdom{Prop} \\
+% \end{array}
+% \]
+
+% The balance of our signature $\Sig$ is interpreted as follows.
+% For each base type $\type$ not covered by the preceding table, we pick an object $X_\type$ in $\cal U$ and define
+% \[
+% \Sem{\type} \eqdef X_\type
+% \]
+% For each function symbol $\sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \SigFn$, we pick an arrow $\Sem{\sigfn} : \Sem{\type_1} \times \dots \times \Sem{\type_n} \to \Sem{\type_{n+1}}$ in $\cal U$.
+
+% An environment $\vctx$ is interpreted as the set of
+% maps $\rho$, with $\dom(\rho) = \dom(\vctx)$ and
+% $\rho(x)\in\Sem{\vctx(x)}$,
+% and 
+% $\rho\nequiv{n} \rho' \iff n=0 \lor \bigl(\dom(\rho)=\dom(\rho') \land
+% \All x\in\dom(\rho). \rho(x) \nequiv{n} \rho'(x)\bigr)$.
+
+% \ralf{Re-check all the following definitions with the Coq development.}
+% %\typedsection{Validity}{valid : \pset{\textdom{Prop}} \in Sets}
+% %
+% %\begin{align*}
+% %valid(p) &\iff \All n \in \mathbb{N}. \All \rs \in \textdom{Res}. \All W \in \textdom{World}. (n, \rs) \in p(W)
+% %\end{align*}
+
+% \typedsection{Later modality}{\later : \textdom{Prop} \to \textdom{Prop} \in {\cal U}}
+
+% \begin{align*}
+% 	\later p &\eqdef \Lam W. \{\, (n + 1, r) \mid (n, r) \in p(W) \,\} \cup \{\, (0, r) \mid r \in \textdom{Res} \,\}
+% \end{align*}
+% \begin{lem}
+% 	$\later{}$ is well-defined: $\later {p}$ is a valid proposition (this amounts to showing non-expansiveness), and $\later{}$ itself is a \emph{contractive} map.
 % \end{lem}
 
-% PDS: E_1 ==>> E_2 undefined.
-%\begin{lem}
-%\begin{align*}
-%&
-%  \forall p, q \in \textdom{Prop}.~
-%  \forall \mask \in \pset{\mathbb{N}}.~
-%valid(\always{(p \Rightarrow q)} \Rightarrow (p \vs[\mask][\mask] q))
-%\end{align*}
-%\end{lem}
-
-% PDS: E # E' and E_1 ==>> E_2 undefined.
-%\begin{lem}
-%\begin{align*}
-%&
-%  \forall p_1, p_2, p_3 \in \textdom{Prop}.~
-%  \forall \mask_1, \mask_2, \mask \in \pset{\mathbb{N}}.~
-%valid(\mask \sep \mask_1 \Ra \mask \sep \mask_2 \Ra (p_1 \vs[\mask_1][\mask_2] p_2) \Rightarrow (p_1 * p_3 \vs[\mask_1 \cup \mask][\mask_2 \cup \mask] p_2 * p_3))
-%\end{align*}
-%\end{lem}
-
-\typedsection{Weakest precondition}{\mathit{wp} : \Delta(\pset{\mathbb{N}}) \times \Delta(\textdom{Exp}) \times (\Delta(\textdom{Val}) \to \textdom{Prop}) \to \textdom{Prop} \in {\cal U}}
+% \typedsection{Always modality}{\always{} : \textdom{Prop} \to \textdom{Prop} \in {\cal U}}
 
 % \begin{align*}
-% 	\mathit{wp}_\mask(\expr, q) &\eqdef \Lam W.
+% 	\always{p} \eqdef \Lam W. \{\, (n, r) \mid (n, \munit) \in p(W) \,\}
+% \end{align*}
+% \begin{lem}
+% 	$\always{}$ is well-defined: $\always{p}$ is a valid proposition (this amounts to showing non-expansiveness), and $\always{}$ itself is a non-expansive map.
+% \end{lem}
+
+% % PDS: p \Rightarrow q not defined.
+% %\begin{lem}\label{lem:always-impl-valid}
+% %\begin{align*}
+% %&\forall p, q \in \textdom{Prop}.~\\
+% %&\qquad
+% %  (\forall n \in \mathbb{N}.~\forall \rs \in \textdom{Res}.~\forall W \in \textdom{World}.~(n, \rs) \in p(W) \Rightarrow (n, \rs) \in q(W)) \Leftrightarrow~valid(\always{(p \Rightarrow q)})
+% %\end{align*}
+% %\end{lem}
+
+% \typedsection{Invariant definition}{inv : \Delta(\mathbb{N}) \times \textdom{Prop} \to \textdom{Prop} \in {\cal U}}
+% \begin{align*}
+% 	\mathit{inv}(\iota, p) &\eqdef \Lam W. \{\, (n, r) \mid \iota\in\dom(W) \land W(\iota) \nequiv{n+1}_{\textdom{PreProp}} \wIso(p) \,\}
+% \end{align*}
+% \begin{lem}
+% 	$\mathit{inv}$ is well-defined: $\mathit{inv}(\iota, p)$ is a valid proposition (this amounts to showing non-expansiveness), and $\mathit{inv}$ itself is a non-expansive map.
+% \end{lem}
+
+% \typedsection{World satisfaction}{\wsat{-}{-}{-}{-} : 
+% 	\textdom{State} \times
+% 	\pset{\mathbb{N}} \times
+% 	\textdom{Res} \times
+% 	\textdom{World} \to \psetdown{\mathbb{N}} \in {\cal U}}
+% \ralf{Make this Dave-compatible: Explicitly compose all the things in $s$}
+% \begin{align*}
+% 	\wsat{\state}{\mask}{\rs}{W} &=
 % 	\begin{aligned}[t]
-% 		\{\, (n, \rs) &\mid \All W_F \geq W; k \leq n; \rs_F; \state; \mask_F \sep \mask. k > 0 \land k \in (\wsat{\state}{\mask \cup \mask_F}{\rs \rtimes \rs_F}{W_F}) \implies{}\\
+% 		\{\, n + 1 \in \mathbb{N} \mid &\Exists  \rsB:\mathbb{N} \fpfn \textdom{Res}. (\rs \rtimes \rsB).\pres = \state \land{}\\
+% 		&\quad \All \iota \in \dom(W). \iota \in \dom(W) \leftrightarrow \iota \in \dom(\rsB) \land {}\\
+% 		&\quad\quad \iota \in \mask \ra (n, \rsB(\iota)) \in \wIso^{-1}(W(\iota))(W) \,\} \cup \{ 0 \}
+% 	\end{aligned}
+% \end{align*}
+% \begin{lem}\label{lem:fullsat-nonexpansive}
+% 	$\wsat{-}{-}{-}{-}$ is well-defined: It maps into $\psetdown{\mathbb{N}}$. (There is no need for it to be a non-expansive map, it doesn't itself live in $\cal U$.)
+% \end{lem}
+
+% \begin{lem}\label{lem:fullsat-weaken-mask}
+% 	\begin{align*}
+% 		\MoveEqLeft
+% 		\All \state \in \Delta(\textdom{State}).
+% 		\All \mask_1, \mask_2 \in \Delta(\pset{\mathbb{N}}).
+% 		\All \rs, \rsB \in \Delta(\textdom{Res}).
+% 		\All W \in \textdom{World}. \\&
+% 		\mask_1 \subseteq \mask_2 \implies (\wsat{\state}{\mask_2}{\rs}{W}) \subseteq (\wsat{\state}{\mask_1}{\rs}{W})
+% 	\end{align*}
+% \end{lem}
+
+% \begin{lem}\label{lem:nequal_ext_world}
+% 	\begin{align*}
+% 		&
+% 		\All n \in \mathbb{N}.
+% 		\All W_1, W_1', W_2 \in \textdom{World}.
+% 		W_1 \nequiv{n} W_2 \land W_1 \leq W_1' \implies \Exists W_2' \in \textdom{World}. W_1' \nequiv{n} W_2' \land W_2 \leq W_2'
+% 	\end{align*}
+% \end{lem}
+
+% \typedsection{Timeless}{\textit{timeless} : \textdom{Prop} \to \textdom{Prop}}
+
+% \begin{align*}
+% 	\textit{timeless}(p) \eqdef 
+% 	\begin{aligned}[t]
+% 		\Lam W.
+% 		\{\, (n, r) &\mid \All W' \geq W. \All k \leq n. \All r' \in \textdom{Res}. \\
 % 		&\qquad
-% 		(\expr \in \textdom{Val} \implies \Exists W' \geq W_F. \Exists \rs'. \\
-% 		&\qquad\qquad
-% 		k \in (\wsat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k, \rs') \in q(\expr)(W'))~\land \\
+% 		k > 0 \land (k - 1, r') \in p(W') \implies (k, r') \in p(W') \,\}
+% 	\end{aligned}
+% \end{align*}
+
+% \begin{lem}
+% 	\textit{timeless} is well-defined: \textit{timeless}(p) is a valid proposition, and \textit{timeless} itself is a non-expansive map.
+% \end{lem}
+
+% % PDS: \Ra undefined.
+% %\begin{lem}
+% %\begin{align*}
+% %&
+% %  \All p \in \textdom{Prop}.
+% %  \All \mask \in \pset{\mathbb{N}}.
+% %valid(\textit{timeless}(p) \Ra (\later p \vs[\mask][\mask] p))
+% %\end{align*}
+% %\end{lem}
+
+% \typedsection{View-shift}{\mathit{vs} : \Delta(\pset{\mathbb{N}}) \times \Delta(\pset{\mathbb{N}}) \times \textdom{Prop} \to \textdom{Prop} \in {\cal U}}
+% \begin{align*}
+% 	\mathit{vs}_{\mask_1}^{\mask_2}(q) &= \Lam W.
+% 	\begin{aligned}[t]
+% 		\{\, (n, \rs) &\mid \All W_F \geq W. \All \rs_F, \mask_F, \state. \All k \leq n.\\
+% 		&\qquad 
+% 		k \in (\wsat{\state}{\mask_1 \cup \mask_F}{\rs \rtimes \rs_F}{W_F}) \land k > 0 \land \mask_F \sep (\mask_1 \cup \mask_2) \implies{} \\
 % 		&\qquad
-% 		(\All\ectx,\expr_0,\expr'_0,\state'. \expr = \ectx[\expr_0] \land \cfg{\state}{\expr_0} \step \cfg{\state'}{\expr'_0} \implies \Exists W' \geq W_F. \Exists \rs'. \\
-% 		&\qquad\qquad
-% 		k - 1 \in (\wsat{\state'}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k-1, \rs') \in wp_\mask(\ectx[\expr_0'], q)(W'))~\land \\
-% 		&\qquad
-% 		(\All\ectx,\expr'. \expr = \ectx[\fork{\expr'}] \implies \Exists W' \geq W_F. \Exists \rs', \rs_1', \rs_2'. \\
-% 		&\qquad\qquad
-% 		k - 1 \in (\wsat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land \rs' = \rs_1' \rtimes \rs_2'~\land \\
-% 		&\qquad\qquad
-% 		(k-1, \rs_1') \in \mathit{wp}_\mask(\ectx[\textsf{fRet}], q)(W') \land
-% 		(k-1, \rs_2') \in \mathit{wp}_\top(\expr', \Lam\any. \top)(W'))
+% 		\Exists W' \geq W_F. \Exists \rs'. k \in (\wsat{\state}{\mask_2 \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k, \rs') \in q(W')
 % 		\,\}
 % 	\end{aligned}
 % \end{align*}
-\begin{lem}
-	$\mathit{wp}$ is well-defined: $\mathit{wp}_{\mask}(\expr, q)$ is a valid proposition, and $\mathit{wp}$ is a non-expansive map. Besides, the dependency on the recursive occurrence is contractive, so $\mathit{wp}$ has a fixed-point.
-\end{lem}
+% \begin{lem}
+% 	$\mathit{vs}$ is well-defined: $\mathit{vs}_{\mask_1}^{\mask_2}(q)$ is a valid proposition, and $\mathit{vs}$ is a non-expansive map.
+% \end{lem}
 
-\begin{lem}
-	$\mathit{wp}$ on values and non-mask-changing $\mathit{vs}$ agree:
-	\[ \mathit{wp}_\mask(\val, q) = \mathit{vs}_{\mask}^{\mask}(q \: \val)  \]
-\end{lem}
 
-\typedsection{Interpretation of terms}{\Sem{\vctx \proves \term : \sort} : \Sem{\vctx} \to \Sem{\sort} \in {\cal U}}
+% %\begin{lem}\label{lem:prim_view_shift_trans}
+% %\begin{align*}
+% %\MoveEqLeft
+% %  \All \mask_1, \mask_2, \mask_3 \in \Delta(\pset{\mathbb{N}}).
+% %  \All p, q \in \textdom{Prop}. \All W \in \textdom{World}.
+% %  \All n \in \mathbb{N}.\\
+% %&
+% %  \mask_2 \subseteq \mask_1 \cup \mask_3 \land
+% %  \bigl(\All W' \geq W. \All r \in \textdom{Res}. \All k \leq n. (k, r) \in p(W') \implies (k, r) \in vs_{\mask_2}^{\mask_3}(q)(W')\bigr) \\
+% %&\qquad
+% %  {}\implies \All r \in \textdom{Res}. (n, r) \in vs_{\mask_1}^{\mask_2}(p)(W) \implies (n, r) \in vs_{\mask_1}^{\mask_3}(q)(W)
+% %\end{align*}
+% %\end{lem}
 
-%A term $\vctx \proves \term : \sort$ is interpreted as a non-expansive map from $\Sem{\vctx}$ to $\Sem{\sort}$.
+% % PDS: E_1 ==>> E_2 undefined.
+% %\begin{lem}
+% %\begin{align*}
+% %&
+% %  \forall \mask_1, \mask_2, \mask_3 \in \Delta(\pset{\mathbb{N}}).~
+% %  \forall p_1, p_2, p_3 \in \textdom{Prop}.~\\
+% %&\qquad
+% %  \mask_2 \subseteq \mask_1 \cup \mask_3 \Rightarrow
+% %  valid(((p_1 \vs[\mask_1][\mask_2] p_2) \land (p_2 \vs[\mask_2][\mask_3] p_3)) \Rightarrow (p_1 \vs[\mask_1][\mask_3] p_3))
+% %\end{align*}
+% %\end{lem}
 
-\begin{align*}
-	\Sem{\vctx \proves x : \sort}_\gamma &= \gamma(x) \\
-	\Sem{\vctx \proves \sigfn(\term_1, \dots, \term_n) : \type_{n+1}}_\gamma &= \Sem{\sigfn}(\Sem{\vctx \proves \term_1 : \type_1}_\gamma, \dots, \Sem{\vctx \proves \term_n : \type_n}_\gamma) \ \WHEN \sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \SigFn \\
-	\Sem{\vctx \proves \Lam x. \term : \sort \to \sort'}_\gamma &=
-	\Lam v : \Sem{\sort}. \Sem{\vctx, x : \sort \proves \term : \sort'}_{\gamma[x \mapsto v]} \\
-	\Sem{\vctx \proves \term~\termB : \sort'}_\gamma &=
-	\Sem{\vctx \proves \term : \sort \to \sort'}_\gamma(\Sem{\vctx \proves \termB : \sort}_\gamma) \\
-	\Sem{\vctx \proves \unitval : \unitsort}_\gamma &= \star \\
-	\Sem{\vctx \proves (\term_1, \term_2) : \sort_1 \times \sort_2}_\gamma &= (\Sem{\vctx \proves \term_1 : \sort_1}_\gamma, \Sem{\vctx \proves \term_2 : \sort_2}_\gamma) \\
-	\Sem{\vctx \proves \pi_i~\term : \sort_1}_\gamma &= \pi_i(\Sem{\vctx \proves \term : \sort_1 \times \sort_2}_\gamma)
-\end{align*}
-%
-\begin{align*}
-	\Sem{\vctx \proves \mzero : \textsort{Monoid}}_\gamma &= \mzero \\
-	\Sem{\vctx \proves \munit : \textsort{Monoid}}_\gamma &= \munit \\
-	\Sem{\vctx \proves \melt \mtimes \meltB : \textsort{Monoid}}_\gamma &=
-	\Sem{\vctx \proves \melt : \textsort{Monoid}}_\gamma \mtimes \Sem{\vctx \proves \meltB : \textsort{Monoid}}_\gamma
-\end{align*}
-%
-\begin{align*}
-	\Sem{\vctx \proves t =_\sort u : \Prop}_\gamma &=
-	\Lam W. \{\, (n, r) \mid \Sem{\vctx \proves t : \sort}_\gamma \nequiv{n+1} \Sem{\vctx \proves u : \sort}_\gamma \,\} \\
-	\Sem{\vctx \proves \FALSE : \Prop}_\gamma &= \Lam W. \emptyset \\
-	\Sem{\vctx \proves \TRUE : \Prop}_\gamma &= \Lam W. \mathbb{N} \times \textdom{Res} \\
-	\Sem{\vctx \proves P \land Q : \Prop}_\gamma &=
-	\Lam W. \Sem{\vctx \proves P : \Prop}_\gamma(W) \cap \Sem{\vctx \proves Q : \Prop}_\gamma(W) \\
-	\Sem{\vctx \proves P \lor Q : \Prop}_\gamma &=
-	\Lam W. \Sem{\vctx \proves P : \Prop}_\gamma(W) \cup \Sem{\vctx \proves Q : \Prop}_\gamma(W) \\
-	\Sem{\vctx \proves P \Ra Q : \Prop}_\gamma &=
-	\Lam W. \begin{aligned}[t]
-		\{\, (n, r) &\mid \All n' \leq n. \All W' \geq W. \All r' \geq r. \\
-		&\qquad
-		(n', r') \in \Sem{\vctx \proves P : \Prop}_\gamma(W')~ \\
-		&\qquad 
-		\implies (n', r') \in \Sem{\vctx \proves Q : \Prop}_\gamma(W') \,\}
-	\end{aligned} \\
-	\Sem{\vctx \proves \All x : \sort. P : \Prop}_\gamma &=
-	\Lam W. \{\, (n, r) \mid \All v \in \Sem{\sort}. (n, r) \in \Sem{\vctx, x : \sort \proves P : \Prop}_{\gamma[x \mapsto v]}(W) \,\} \\
-	\Sem{\vctx \proves \Exists x : \sort. P : \Prop}_\gamma &=
-	\Lam W. \{\, (n, r) \mid \Exists v \in \Sem{\sort}. (n, r) \in \Sem{\vctx, x : \sort \proves P : \Prop}_{\gamma[x \mapsto v]}(W) \,\}
-\end{align*}
-%
-\begin{align*}
-	\Sem{\vctx \proves \always{\prop} : \Prop}_\gamma &= \always{\Sem{\vctx \proves \prop : \Prop}_\gamma} \\
-	\Sem{\vctx \proves \later{\prop} : \Prop}_\gamma &= \later \Sem{\vctx \proves \prop : \Prop}_\gamma\\
-	\Sem{\vctx \proves \MU x. \pred : \sort \to \Prop}_\gamma &=
-	\mathit{fix}(\Lam v : \Sem{\sort \to \Prop}. \Sem{\vctx, x : \sort \to \Prop \proves \pred : \sort \to \Prop}_{\gamma[x \mapsto v]}) \\
-	\Sem{\vctx \proves \prop * \propB : \Prop}_\gamma &=
-	\begin{aligned}[t]
-		\Lam W. \{\, (n, r) &\mid \Exists r_1, r_2. r = r_1 \bullet r_2 \land{} \\
-		&\qquad
-		(n, r_1) \in \Sem{\vctx \proves \prop : \Prop}_\gamma \land{} \\
-		&\qquad
-		(n, r_2) \in \Sem{\vctx \proves \propB : \Prop}_\gamma \,\}
-	\end{aligned} \\
-	\Sem{\vctx \proves \prop \wand \propB : \Prop}_\gamma &=
-	\begin{aligned}[t]
-		\Lam W. \{\, (n, r) &\mid \All n' \leq n. \All W' \geq W. \All r'. \\
-		&\qquad
-		(n', r') \in \Sem{\vctx \proves \prop : \Prop}_\gamma(W') \land r \sep r' \\
-		&\qquad
-		\implies (n', r \bullet r') \in \Sem{\vctx \proves \propB : \Prop}_\gamma(W')
-		\}
-	\end{aligned} \\
-	\Sem{\vctx \proves \knowInv{\iname}{\prop} : \Prop}_\gamma &=
-	inv(\Sem{\vctx \proves \iname : \textsort{InvName}}_\gamma, \Sem{\vctx \proves \prop : \Prop}_\gamma) \\
-	\Sem{\vctx \proves \ownGGhost{\melt} : \Prop}_\gamma &=
-	\Lam W. \{\, (n, \rs) \mid \rs.\ghostRes \geq \Sem{\vctx \proves \melt : \textsort{Monoid}}_\gamma \,\} \\
-	\Sem{\vctx \proves \ownPhys{\state} : \Prop}_\gamma &=
-	\Lam W. \{\, (n, \rs) \mid \rs.\pres = \Sem{\vctx \proves \state : \textsort{State}}_\gamma \,\}
-\end{align*}
-%
-\begin{align*}
-	\Sem{\vctx \proves \pvsA{\prop}{\mask_1}{\mask_2} : \Prop}_\gamma &=
-	\textdom{vs}^{\Sem{\vctx \proves \mask_2 : \textsort{InvMask}}_\gamma}_{\Sem{\vctx \proves \mask_1 : \textsort{InvMask}}_\gamma}(\Sem{\vctx \proves \prop : \Prop}_\gamma) \\
-	\Sem{\vctx \proves \dynA{\expr}{\pred}{\mask} : \Prop}_\gamma &=
-	\textdom{wp}_{\Sem{\vctx \proves \mask : \textsort{InvMask}}_\gamma}(\Sem{\vctx \proves \expr : \textsort{Exp}}_\gamma, \Sem{\vctx \proves \pred : \textsort{Val} \to \Prop}_\gamma) \\
-	\Sem{\vctx \proves \wtt{\timeless{\prop}}{\Prop}}_\gamma &=
-	\textdom{timeless}(\Sem{\vctx \proves \prop : \Prop}_\gamma)
-\end{align*}
+% %\begin{lem}
+% %\begin{align*}
+% %\MoveEqLeft
+% %  \All \iota \in \mathbb{N}.
+% %  \All p \in \textdom{Prop}.
+% %  \All W \in \textdom{World}.
+% %  \All \rs \in \textdom{Res}.
+% %  \All n \in \mathbb{N}. \\
+% %&
+% %  (n, \rs) \in inv(\iota, p)(W) \implies (n, \rs) \in vs_{\{ \iota \}}^{\emptyset}(\later p)(W)
+% %\end{align*}
+% %\end{lem}
 
-\typedsection{Interpretation of entailment}{\Sem{\vctx \mid \pfctx \proves \prop} : 2 \in \mathit{Sets}}
+% % PDS: * undefined.
+% %\begin{lem}
+% %\begin{align*}
+% %&
+% %  \forall \iota \in \mathbb{N}.~
+% %  \forall p \in \textdom{Prop}.~
+% %  \forall W \in \textdom{World}.~
+% %  \forall \rs \in \textdom{Res}.~
+% %  \forall n \in \mathbb{N}.~\\
+% %&\qquad
+% %  (n, \rs) \in (inv(\iota, p) * \later p)(W) \Rightarrow (n, \rs) \in vs^{\{ \iota \}}_{\emptyset}(\top)(W)
+% %\end{align*}
+% %\end{lem}
 
-\[
-\Sem{\vctx \mid \pfctx \proves \propB} \eqdef
-\begin{aligned}[t]
-\MoveEqLeft
-\forall n \in \mathbb{N}.\;
-\forall W \in \textdom{World}.\;
-\forall \rs \in \textdom{Res}.\; 
-\forall \gamma \in \Sem{\vctx},\;
-\\&
-\bigl(\All \propB \in \pfctx. (n, \rs) \in \Sem{\vctx \proves \propB : \Prop}_\gamma(W)\bigr)
-\implies (n, \rs) \in \Sem{\vctx \proves \prop : \Prop}_\gamma(W)
-\end{aligned}
-\]
+% % \begin{lem}
+% % \begin{align*}
+% % &
+% %   \forall \mask_1, \mask_2 \in \Delta(\pset{\mathbb{N}}).~
+% %   valid(\bot \vs[\mask_1][\mask_2] \bot)
+% % \end{align*}
+% % \end{lem}
+
+% % PDS: E_1 ==>> E_2 undefined.
+% %\begin{lem}
+% %\begin{align*}
+% %&
+% %  \forall p, q \in \textdom{Prop}.~
+% %  \forall \mask \in \pset{\mathbb{N}}.~
+% %valid(\always{(p \Rightarrow q)} \Rightarrow (p \vs[\mask][\mask] q))
+% %\end{align*}
+% %\end{lem}
+
+% % PDS: E # E' and E_1 ==>> E_2 undefined.
+% %\begin{lem}
+% %\begin{align*}
+% %&
+% %  \forall p_1, p_2, p_3 \in \textdom{Prop}.~
+% %  \forall \mask_1, \mask_2, \mask \in \pset{\mathbb{N}}.~
+% %valid(\mask \sep \mask_1 \Ra \mask \sep \mask_2 \Ra (p_1 \vs[\mask_1][\mask_2] p_2) \Rightarrow (p_1 * p_3 \vs[\mask_1 \cup \mask][\mask_2 \cup \mask] p_2 * p_3))
+% %\end{align*}
+% %\end{lem}
+
+% \typedsection{Weakest precondition}{\mathit{wp} : \Delta(\pset{\mathbb{N}}) \times \Delta(\textdom{Exp}) \times (\Delta(\textdom{Val}) \to \textdom{Prop}) \to \textdom{Prop} \in {\cal U}}
+
+% % \begin{align*}
+% % 	\mathit{wp}_\mask(\expr, q) &\eqdef \Lam W.
+% % 	\begin{aligned}[t]
+% % 		\{\, (n, \rs) &\mid \All W_F \geq W; k \leq n; \rs_F; \state; \mask_F \sep \mask. k > 0 \land k \in (\wsat{\state}{\mask \cup \mask_F}{\rs \rtimes \rs_F}{W_F}) \implies{}\\
+% % 		&\qquad
+% % 		(\expr \in \textdom{Val} \implies \Exists W' \geq W_F. \Exists \rs'. \\
+% % 		&\qquad\qquad
+% % 		k \in (\wsat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k, \rs') \in q(\expr)(W'))~\land \\
+% % 		&\qquad
+% % 		(\All\ectx,\expr_0,\expr'_0,\state'. \expr = \ectx[\expr_0] \land \cfg{\state}{\expr_0} \step \cfg{\state'}{\expr'_0} \implies \Exists W' \geq W_F. \Exists \rs'. \\
+% % 		&\qquad\qquad
+% % 		k - 1 \in (\wsat{\state'}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land (k-1, \rs') \in wp_\mask(\ectx[\expr_0'], q)(W'))~\land \\
+% % 		&\qquad
+% % 		(\All\ectx,\expr'. \expr = \ectx[\fork{\expr'}] \implies \Exists W' \geq W_F. \Exists \rs', \rs_1', \rs_2'. \\
+% % 		&\qquad\qquad
+% % 		k - 1 \in (\wsat{\state}{\mask \cup \mask_F}{\rs' \rtimes \rs_F}{W'}) \land \rs' = \rs_1' \rtimes \rs_2'~\land \\
+% % 		&\qquad\qquad
+% % 		(k-1, \rs_1') \in \mathit{wp}_\mask(\ectx[\textsf{fRet}], q)(W') \land
+% % 		(k-1, \rs_2') \in \mathit{wp}_\top(\expr', \Lam\any. \top)(W'))
+% % 		\,\}
+% % 	\end{aligned}
+% % \end{align*}
+% \begin{lem}
+% 	$\mathit{wp}$ is well-defined: $\mathit{wp}_{\mask}(\expr, q)$ is a valid proposition, and $\mathit{wp}$ is a non-expansive map. Besides, the dependency on the recursive occurrence is contractive, so $\mathit{wp}$ has a fixed-point.
+% \end{lem}
+
+% \begin{lem}
+% 	$\mathit{wp}$ on values and non-mask-changing $\mathit{vs}$ agree:
+% 	\[ \mathit{wp}_\mask(\val, q) = \mathit{vs}_{\mask}^{\mask}(q \: \val)  \]
+% \end{lem}
+
+% \begin{align*}
+% 	\Sem{\vctx \proves x : \sort}_\gamma &= \gamma(x) \\
+% 	\Sem{\vctx \proves \sigfn(\term_1, \dots, \term_n) : \type_{n+1}}_\gamma &= \Sem{\sigfn}(\Sem{\vctx \proves \term_1 : \type_1}_\gamma, \dots, \Sem{\vctx \proves \term_n : \type_n}_\gamma) \ \WHEN \sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \SigFn \\
+% 	\Sem{\vctx \proves \Lam x. \term : \sort \to \sort'}_\gamma &=
+% 	\Lam v : \Sem{\sort}. \Sem{\vctx, x : \sort \proves \term : \sort'}_{\gamma[x \mapsto v]} \\
+% 	\Sem{\vctx \proves \term~\termB : \sort'}_\gamma &=
+% 	\Sem{\vctx \proves \term : \sort \to \sort'}_\gamma(\Sem{\vctx \proves \termB : \sort}_\gamma) \\
+% 	\Sem{\vctx \proves \unitval : \unitsort}_\gamma &= \star \\
+% 	\Sem{\vctx \proves (\term_1, \term_2) : \sort_1 \times \sort_2}_\gamma &= (\Sem{\vctx \proves \term_1 : \sort_1}_\gamma, \Sem{\vctx \proves \term_2 : \sort_2}_\gamma) \\
+% 	\Sem{\vctx \proves \pi_i~\term : \sort_1}_\gamma &= \pi_i(\Sem{\vctx \proves \term : \sort_1 \times \sort_2}_\gamma)
+% \end{align*}
+% %
+% \begin{align*}
+% 	\Sem{\vctx \proves \mzero : \textsort{Monoid}}_\gamma &= \mzero \\
+% 	\Sem{\vctx \proves \munit : \textsort{Monoid}}_\gamma &= \munit \\
+% 	\Sem{\vctx \proves \melt \mtimes \meltB : \textsort{Monoid}}_\gamma &=
+% 	\Sem{\vctx \proves \melt : \textsort{Monoid}}_\gamma \mtimes \Sem{\vctx \proves \meltB : \textsort{Monoid}}_\gamma
+% \end{align*}
+% %
+%	\Sem{\vctx \proves \MU x. \pred : \sort \to \Prop}_\gamma &\eqdef
+%	\mathit{fix}(\Lam v : \Sem{\sort \to \Prop}. \Sem{\vctx, x : \sort \to \Prop \proves \pred : \sort \to \Prop}_{\gamma[x \mapsto v]}) \\
+
+
+	% \Sem{\vctx \proves \knowInv{\iname}{\prop} : \Prop}_\gamma &=
+	% inv(\Sem{\vctx \proves \iname : \textsort{InvName}}_\gamma, \Sem{\vctx \proves \prop : \Prop}_\gamma) \\
+	% \Sem{\vctx \proves \ownGGhost{\melt} : \Prop}_\gamma &=
+	% \Lam W. \{\, (n, \rs) \mid \rs.\ghostRes \geq \Sem{\vctx \proves \melt : \textsort{Monoid}}_\gamma \,\} \\
+	% \Sem{\vctx \proves \ownPhys{\state} : \Prop}_\gamma &=
+	% \Lam W. \{\, (n, \rs) \mid \rs.\pres = \Sem{\vctx \proves \state : \textsort{State}}_\gamma \,\}
+
+
+% %
+% \begin{align*}
+% 	\Sem{\vctx \proves \pvsA{\prop}{\mask_1}{\mask_2} : \Prop}_\gamma &=
+% 	\textdom{vs}^{\Sem{\vctx \proves \mask_2 : \textsort{InvMask}}_\gamma}_{\Sem{\vctx \proves \mask_1 : \textsort{InvMask}}_\gamma}(\Sem{\vctx \proves \prop : \Prop}_\gamma) \\
+% 	\Sem{\vctx \proves \dynA{\expr}{\pred}{\mask} : \Prop}_\gamma &=
+% 	\textdom{wp}_{\Sem{\vctx \proves \mask : \textsort{InvMask}}_\gamma}(\Sem{\vctx \proves \expr : \textsort{Exp}}_\gamma, \Sem{\vctx \proves \pred : \textsort{Val} \to \Prop}_\gamma) \\
+% 	\Sem{\vctx \proves \wtt{\timeless{\prop}}{\Prop}}_\gamma &=
+% 	\textdom{timeless}(\Sem{\vctx \proves \prop : \Prop}_\gamma)
+% \end{align*}
+
+% \typedsection{Interpretation of entailment}{\Sem{\vctx \mid \pfctx \proves \prop} : 2 \in \mathit{Sets}}
+
+% \[
+% \Sem{\vctx \mid \pfctx \proves \propB} \eqdef
+% \begin{aligned}[t]
+% \MoveEqLeft
+% \forall n \in \mathbb{N}.\;
+% \forall W \in \textdom{World}.\;
+% \forall \rs \in \textdom{Res}.\; 
+% \forall \gamma \in \Sem{\vctx},\;
+% \\&
+% \bigl(\All \propB \in \pfctx. (n, \rs) \in \Sem{\vctx \proves \propB : \Prop}_\gamma(W)\bigr)
+% \implies (n, \rs) \in \Sem{\vctx \proves \prop : \Prop}_\gamma(W)
+% \end{aligned}
+% \]
 
 %%% Local Variables:
 %%% mode: latex

@@ -2,6 +2,7 @@
 
 \subsection{COFE}
 
+This definition varies slightly from the original one in~\cite{catlogic}.
 \begin{defn}[Chain]
   Given some set $\cofe$ and an indexed family $({\nequiv{n}} \subseteq \cofe \times \cofe)_{n \in \mathbb{N}}$ of equivalence relations, a \emph{chain} is a function $c : \mathbb{N} \to \cofe$ such that $\All n, m. n \leq m \Ra c (m) \nequiv{n} c (n)$.
 \end{defn}
@@ -94,7 +95,8 @@ Note that the composition of non-expansive (bi)functors is non-expansive, and th
     \All n, \melt, \meltB_1, \meltB_2.& \omit\rlap{$\melt \in \mval_n \land \melt \nequiv{n} \meltB_1 \mtimes \meltB_2 \Ra {}$} \\
     &\Exists \meltC_1, \meltC_2. \melt = \meltC_1 \mtimes \meltC_2 \land \meltC_1 \nequiv{n} \meltB_1 \land \meltC_2 \nequiv{n} \meltB_2 \tagH{cmra-extend} \\
     \text{where}\qquad\qquad\\
-    \melt \mincl \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{cmra-incl}
+    \melt \mincl \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{cmra-incl}\\
+    \melt \mincl[n] \meltB \eqdef{}& \Exists \meltC. \meltB \nequiv{n} \melt \mtimes \meltC \tagH{cmra-inclN}
   \end{align*}
 \end{defn}
 
