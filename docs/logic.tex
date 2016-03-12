@@ -7,7 +7,7 @@ A \emph{language} $\Lang$ consists of a set \textdom{Expr} of \emph{expressions}
 \end{mathpar}
 \item There exists a \emph{primitive reduction relation} \[(-,- \step -,-,-) \subseteq \textdom{Expr} \times \textdom{State} \times \textdom{Expr} \times \textdom{State} \times (\textdom{Expr} \uplus \set{\bot})\]
   We will write $\expr_1, \state_1 \step \expr_2, \state_2$ for $\expr_1, \state_1 \step \expr_2, \state_2, \bot$. \\
-  A reduction $\expr_1, \state_1 \step \expr_2, \state_2, \expr'$ indicates that, when $\expr_1$ reduces to $\expr$, a \emph{new thread} $\expr'$ is forked off.
+  A reduction $\expr_1, \state_1 \step \expr_2, \state_2, \expr_f$ indicates that, when $\expr_1$ reduces to $\expr$, a \emph{new thread} $\expr_f$ is forked off.
 \item All values are stuck:
 \[ \expr, \_ \step  \_, \_, \_ \Ra \toval(\expr) = \bot \]
 \item There is a predicate defining \emph{atomic} expressions satisfying
@@ -16,7 +16,7 @@ A \emph{language} $\Lang$ consists of a set \textdom{Expr} of \emph{expressions}
   {\All\expr. \atomic(\expr) \Ra \toval(\expr) = \bot} \and
   {{
     \begin{inbox}
-\All\expr_1, \state_1, \expr_2, \state_2, \expr'. \atomic(\expr_1) \land \expr_1, \state_1 \step \expr_2, \state_2, \expr' \Ra {}\\\qquad\qquad\qquad\quad~~ \Exists \val_2. \toval(\expr_2) = \val_2
+\All\expr_1, \state_1, \expr_2, \state_2, \expr_f. \atomic(\expr_1) \land \expr_1, \state_1 \step \expr_2, \state_2, \expr_f \Ra {}\\\qquad\qquad\qquad\quad~~ \Exists \val_2. \toval(\expr_2) = \val_2
     \end{inbox}
 }}
 \end{mathpar}
@@ -26,7 +26,7 @@ It does not matter whether they fork off an arbitrary expression.
 
 \begin{defn}
   An expression $\expr$ and state $\state$ are \emph{reducible} (written $\red(\expr, \state)$) if
-  \[ \Exists \expr_2, \state_2, \expr'. \expr,\state \step \expr_2,\state_2,\expr' \]
+  \[ \Exists \expr_2, \state_2, \expr_f. \expr,\state \step \expr_2,\state_2,\expr_f \]
 \end{defn}
 
 \begin{defn}[Context]
@@ -35,9 +35,9 @@ It does not matter whether they fork off an arbitrary expression.
   \item $\lctx$ does not turn non-values into values:\\
     $\All\expr. \toval(\expr) = \bot \Ra \toval(\lctx(\expr)) = \bot $
   \item One can perform reductions below $\lctx$:\\
-    $\All \expr_1, \state_1, \expr_2, \state_2, \expr'. \expr_1, \state_1 \step \expr_2,\state_2,\expr' \Ra \lctx(\expr_1), \state_1 \step \lctx(\expr_2),\state_2,\expr' $
+    $\All \expr_1, \state_1, \expr_2, \state_2, \expr_f. \expr_1, \state_1 \step \expr_2,\state_2,\expr_f \Ra \lctx(\expr_1), \state_1 \step \lctx(\expr_2),\state_2,\expr_f $
   \item Reductions stay below $\lctx$ until there is a value in the hole:\\
-    $\All \expr_1', \state_1, \expr_2, \state_2, \expr'. \toval(\expr_1') = \bot \land \lctx(\expr_1'), \state_1 \step \expr_2,\state_2,\expr' \Ra \Exists\expr_2'. \expr_2 = \lctx(\expr_2') \land \expr_1', \state_1 \step \expr_2',\state_2,\expr' $
+    $\All \expr_1', \state_1, \expr_2, \state_2, \expr_f. \toval(\expr_1') = \bot \land \lctx(\expr_1'), \state_1 \step \expr_2,\state_2,\expr_f \Ra \Exists\expr_2'. \expr_2 = \lctx(\expr_2') \land \expr_1', \state_1 \step \expr_2',\state_2,\expr_f $
   \end{enumerate}
 \end{defn}
 
@@ -54,9 +54,9 @@ For any language $\Lang$, we define the corresponding thread-pool semantics.
   \cfg{\tpool'}{\state'}}
 \begin{mathpar}
 \infer
-  {\expr_1, \state_1 \step \expr_2, \state_2, \expr' \and \expr' \neq ()}
+  {\expr_1, \state_1 \step \expr_2, \state_2, \expr_f \and \expr_f \neq \bot}
   {\cfg{\tpool \dplus [\expr_1] \dplus \tpool'}{\state} \step
-     \cfg{\tpool \dplus [\expr_2] \dplus \tpool' \dplus [\expr']}{\state'}}
+     \cfg{\tpool \dplus [\expr_2] \dplus \tpool' \dplus [\expr_f]}{\state'}}
 \and\infer
   {\expr_1, \state_1 \step \expr_2, \state_2}
   {\cfg{\tpool \dplus [\expr_1] \dplus \tpool'}{\state} \step
@@ -170,8 +170,6 @@ We introduce additional metavariables ranging over terms and generally let the c
 \]
 
 \paragraph{Variable conventions.}
-We often abuse notation, using the preceding \emph{term} meta-variables to range over (bound) \emph{variables}.
-We omit type annotations in binders, when the type is clear from context.
 We assume that, if a term occurs multiple times in a rule, its free variables are exactly those binders which are available at every occurrence.
 
 
@@ -596,17 +594,19 @@ This is entirely standard.
   {\mask_2 \subseteq \mask_1 \and
    \toval(\expr_1) = \bot \and
    \red(\expr_1, \state_1) \and
-   \All \expr_2, \state_2, \expr'. \expr_1,\state_1 \step \expr_2,\state_2,\expr' \Ra \pred(\expr_2,\state_2,\expr')}
-  {\pvs[\mask_1][\mask_2] \later\ownPhys{\state_1} * \later\All \expr_2, \state_2, \expr'. \pred(\expr_2, \state_2, \expr') \land \ownPhys{\state_2} \wand \pvs[\mask_2][\mask_1] \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \wpre{\expr'}[\top]{\Ret\var.\TRUE} {}\\\proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
+   \All \expr_2, \state_2, \expr_f. \expr_1,\state_1 \step \expr_2,\state_2,\expr_f \Ra \pred(\expr_2,\state_2,\expr_f)}
+  { {\begin{inbox} % for some crazy reason, LaTeX is actually sensitive to the space between the "{ {" here and the "} }" below...
+        ~~\pvs[\mask_1][\mask_2] \later\ownPhys{\state_1} * \later\All \expr_2, \state_2, \expr_f. \pred(\expr_2, \state_2, \expr_f) \land {}\\\qquad\qquad\qquad\qquad\qquad \ownPhys{\state_2} \wand \pvs[\mask_2][\mask_1] \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \wpre{\expr_f}[\top]{\Ret\any.\TRUE} {}\\\proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}
+      \end{inbox}} }
 
   \infer[wp-lift-pure-step]
   {\toval(\expr_1) = \bot \and
    \All \state_1. \red(\expr_1, \state_1) \and
-   \All \state_1, \expr_2, \state_2, \expr'. \expr_1,\state_1 \step \expr_2,\state_2,\expr' \Ra \state_1 = \state_2 \land \pred(\expr_2,\expr')}
-  {\later\All \expr_2, \expr'. \pred(\expr_2, \expr')  \wand \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \wpre{\expr'}[\top]{\Ret\var.\TRUE} \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
+   \All \state_1, \expr_2, \state_2, \expr_f. \expr_1,\state_1 \step \expr_2,\state_2,\expr_f \Ra \state_1 = \state_2 \land \pred(\expr_2,\expr_f)}
+  {\later\All \expr_2, \expr_f. \pred(\expr_2, \expr_f)  \Ra \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \wpre{\expr_f}[\top]{\Ret\any.\TRUE} \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
 \end{mathpar}
 
-Here we define $\wpre{\expr'}[\mask]{\Ret\var.\prop} \eqdef \TRUE$ if $\expr' = \bot$ (remember that our stepping relation can, but does not have to, define a forked-off expression).
+Here we define $\wpre{\expr_f}[\mask]{\Ret\var.\prop} \eqdef \TRUE$ if $\expr_f = \bot$ (remember that our stepping relation can, but does not have to, define a forked-off expression).
 
 \subsection{Adequacy}
 
