@@ -101,8 +101,7 @@ Section heap.
   Proof.
     intros. rewrite -{1}(from_to_heap σ). etrans.
     { rewrite [ownP _]later_intro.
-      apply (auth_alloc (ownP ∘ of_heap) N E (to_heap σ)); last done.
-      apply to_heap_valid. }
+      apply (auth_alloc (ownP ∘ of_heap) N E); auto using to_heap_valid. }
     apply pvs_mono, exist_elim=> γ.
     rewrite -(exist_intro (HeapG _ _ γ)) /heap_ctx; apply and_mono_r.
     rewrite /heap_mapsto /heap_name.
@@ -110,8 +109,7 @@ Section heap.
     { rewrite big_sepM_empty; apply True_intro. }
     rewrite to_heap_insert big_sepM_insert //.
     rewrite (map_insert_singleton_op (to_heap σ));
-      last rewrite lookup_fmap Hl; auto.
-    (* FIXME: investigate why we have to unfold auth_own here. *)
+      last by rewrite lookup_fmap Hl; auto.
     by rewrite auth_own_op IH. 
   Qed.
 
