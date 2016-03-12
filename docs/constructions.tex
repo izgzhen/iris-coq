@@ -195,16 +195,16 @@ We obtain the following frame-preserving update:
 % \end{mathpar}
 
 % \begin{proof}[Proof of \ruleref{PowFinUpd}]
-% 	Assume some frame $\melt_f \sep \emptyset$. Since $\melt_f$ is finite and $X$ is infinite, there exists an $x \notin \melt_f$.
+% 	Assume some frame $\melt_\f \sep \emptyset$. Since $\melt_\f$ is finite and $X$ is infinite, there exists an $x \notin \melt_\f$.
 % 	Pick that for the result.
 % \end{proof}
 
 % The powerset monoids is cancellative.
 % \begin{proof}[Proof of cancellativity]
-% 	Let $\melt_f \mtimes \melt = \melt_f \mtimes \meltB \neq \mzero$.
-% 	So we have $\melt_f \sep \melt$ and $\melt_f \sep \meltB$, and we have to show $\melt = \meltB$.
-% 	Assume $x \in \melt$. Hence $x \in \melt_f \mtimes \melt$ and thus $x \in \melt_f \mtimes \meltB$.
-% 	By disjointness, $x \notin \melt_f$ and hence $x \in meltB$.
+% 	Let $\melt_\f \mtimes \melt = \melt_\f \mtimes \meltB \neq \mzero$.
+% 	So we have $\melt_\f \sep \melt$ and $\melt_\f \sep \meltB$, and we have to show $\melt = \meltB$.
+% 	Assume $x \in \melt$. Hence $x \in \melt_\f \mtimes \melt$ and thus $x \in \melt_\f \mtimes \meltB$.
+% 	By disjointness, $x \notin \melt_\f$ and hence $x \in meltB$.
 % 	The other direction works the same way.
 % \end{proof}
 
@@ -238,20 +238,20 @@ We obtain the following frame-preserving update:
 % \begin{proof}[Proof of \ruleref{FracUpdLocal}]
 % 	Assume some $f \sep (q, a)$. If $f = \munit$, then $f \sep (q, b)$ is trivial for any $b \in B$. Just pick the one we obtain by choosing $\munit_M$ as the frame for $a$.
 	
-% 	In the interesting case, we have $f = (q_f, a_f)$.
-% 	Obtain $b$ such that $b \in B \land b \sep a_f$.
+% 	In the interesting case, we have $f = (q_\f, a_\f)$.
+% 	Obtain $b$ such that $b \in B \land b \sep a_\f$.
 % 	Then $(q, b) \sep f$, and we are done.
 % \end{proof}
 
 % $\fracm{M}$ is cancellative if $M$ is cancellative.
 % \begin{proof}[Proof of cancellativitiy]
-% If $\melt_f = \munit$, we are trivially done.
-% So let $\melt_f = (q_f, \melt_f')$.
+% If $\melt_\f = \munit$, we are trivially done.
+% So let $\melt_\f = (q_\f, \melt_\f')$.
 % If $\melt = \munit$, then $\meltB = \munit$ as otherwise the fractions could not match up.
 % Again, we are trivially done.
 % Similar so for $\meltB = \munit$.
 % So let $\melt = (q_a, \melt')$ and $\meltB = (q_b, \meltB')$.
-% We have $(q_f + q_a, \melt_f' \mtimes \melt') = (q_f + q_b, \melt_f' \mtimes \meltB')$.
+% We have $(q_\f + q_a, \melt_\f' \mtimes \melt') = (q_\f + q_b, \melt_\f' \mtimes \meltB')$.
 % We have to show $q_a = q_b$ and $\melt' = \meltB'$.
 % The first is trivial, the second follows from cancellativitiy of $M$.
 % \end{proof}
@@ -312,7 +312,7 @@ We obtain the following frame-preserving update:
 % The frame-preserving update involves a rather unwieldy side-condition:
 % \begin{mathpar}
 % 	\inferH{AuthUpd}{
-% 		\All\melt_f\in\mcar{\monoid}. \melt\sep\meltB \land \melt\mtimes\melt_f \le \meltB\mtimes\melt_f \Ra \melt'\mtimes\melt_f \le \melt'\mtimes\meltB \and
+% 		\All\melt_\f\in\mcar{\monoid}. \melt\sep\meltB \land \melt\mtimes\melt_\f \le \meltB\mtimes\melt_\f \Ra \melt'\mtimes\melt_\f \le \melt'\mtimes\meltB \and
 % 		\melt' \sep \meltB
 % 	}{
 % 		\authfull \melt \mtimes \meltB, \authfrag \melt \mupd \authfull \melt' \mtimes \meltB, \authfrag \melt'
@@ -392,11 +392,11 @@ We obtain the following frame-preserving update:
 % We have
 % \begin{quote}
 % 	If $(s, T) \ra (s', T')$\\
-% 	and $T_f \sep (T \uplus \STSL(s))$,\\
-% 	then $\textsf{frame}(s, T_f) \ra \textsf{frame}(s', T_f)$.
+% 	and $T_\f \sep (T \uplus \STSL(s))$,\\
+% 	then $\textsf{frame}(s, T_\f) \ra \textsf{frame}(s', T_\f)$.
 % \end{quote}
 % \begin{proof}
-% This follows directly by framing the tokens in $\STST \setminus (T_f \uplus T \uplus \STSL(s))$ around the given transition, which yields $(s, \STST \setminus (T_f \uplus \STSL{T}(s))) \ra (s', T' \uplus (\STST \setminus (T_f \uplus T \uplus \STSL{T}(s))))$.
+% This follows directly by framing the tokens in $\STST \setminus (T_\f \uplus T \uplus \STSL(s))$ around the given transition, which yields $(s, \STST \setminus (T_\f \uplus \STSL{T}(s))) \ra (s', T' \uplus (\STST \setminus (T_\f \uplus T \uplus \STSL{T}(s))))$.
 % This is exactly what we have to show, since we know $\STSL(s) \uplus T = \STSL(s') \uplus T'$.
 % \end{proof}
 
@@ -418,8 +418,8 @@ We obtain the following frame-preserving update:
 % 	 {(s, S, T) \mupd (s', \upclose(\{s'\}, T'), T')}
 % \end{mathpar}
 % \begin{proof}[Proof of \ruleref{StsStep}]
-% Assume some upwards-closed $S_f, T_f$ (the frame cannot be authoritative) s.t.\ $s \in S_f$ and $T_f \sep (T \uplus \STSL(s))$. We have to show that this frame combines with our final monoid element, which is the case if $s' \in S_f$ and $T_f \sep T'$.
-% By upward-closedness, it suffices to show $\textsf{frame}(s, T_f) \ststrans \textsf{frame}(s', T_f)$.
+% Assume some upwards-closed $S_\f, T_\f$ (the frame cannot be authoritative) s.t.\ $s \in S_\f$ and $T_\f \sep (T \uplus \STSL(s))$. We have to show that this frame combines with our final monoid element, which is the case if $s' \in S_\f$ and $T_\f \sep T'$.
+% By upward-closedness, it suffices to show $\textsf{frame}(s, T_\f) \ststrans \textsf{frame}(s', T_\f)$.
 % This follows by induction on the path $(s, T) \ststrans (s', T')$, and using the lemma proven above for each step.
 % \end{proof}
 

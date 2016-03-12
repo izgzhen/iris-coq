@@ -74,7 +74,7 @@ Note that the composition of non-expansive (bi)functors is non-expansive, and th
 
 \begin{defn}
   It is possible to do a \emph{frame-preserving update} from $\melt \in \monoid$ to $\meltsB \subseteq \monoid$, written $\melt \mupd \meltsB$, if
-  \[ \All \melt_f. \melt \mtimes \melt_f \in \mval \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \melt_f \in \mval \]
+  \[ \All \melt_\f. \melt \mtimes \melt_\f \in \mval \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \melt_\f \in \mval \]
 
   We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
 \end{defn}
@@ -146,7 +146,7 @@ This operation is needed to prove that $\later$ commutes with existential quanti
 
 \begin{defn}
   It is possible to do a \emph{frame-preserving update} from $\melt \in \monoid$ to $\meltsB \subseteq \monoid$, written $\melt \mupd \meltsB$, if
-  \[ \All n, \melt_f. \melt \mtimes \melt_f \in \mval_n \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \melt_f \in \mval_n \]
+  \[ \All n, \melt_\f. \melt \mtimes \melt_\f \in \mval_n \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \melt_\f \in \mval_n \]
 
   We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
 \end{defn}
