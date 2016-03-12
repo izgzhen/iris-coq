@@ -61,40 +61,42 @@ Qed.
 Import uPred.
 
 Lemma wp_lift_atomic_step {E Φ} e1
-    (φ : val Λ → state Λ → option (expr Λ) → Prop) σ1 :
-  to_val e1 = None →
+    (φ : expr Λ → state Λ → option (expr Λ) → Prop) σ1 :
+  atomic e1 →
   reducible e1 σ1 →
   (∀ e2 σ2 ef,
-    prim_step e1 σ1 e2 σ2 ef → ∃ v2, to_val e2 = Some v2 ∧ φ v2 σ2 ef) →
-  (▷ ownP σ1 ★ ▷ ∀ v2 σ2 ef, ■ φ v2 σ2 ef ∧ ownP σ2 -★ Φ v2 ★ wp_fork ef)
+    prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
+  (▷ ownP σ1 ★ ▷ ∀ v2 σ2 ef, ■ φ (of_val v2) σ2 ef ∧ ownP σ2 -★ Φ v2 ★ wp_fork ef)
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  intros. rewrite -(wp_lift_step E E (λ e2 σ2 ef, ∃ v2,
-    to_val e2 = Some v2 ∧ φ v2 σ2 ef) _ e1 σ1) //; [].
+  intros. rewrite -(wp_lift_step E E (λ e2 σ2 ef,
+    is_Some (to_val e2) ∧ φ e2 σ2 ef) _ e1 σ1) //;
+    try by (eauto using atomic_not_val, atomic_step).
   rewrite -pvs_intro. apply sep_mono, later_mono; first done.
   apply forall_intro=>e2'; apply forall_intro=>σ2'.
   apply forall_intro=>ef; apply wand_intro_l.
   rewrite always_and_sep_l -assoc -always_and_sep_l.
-  apply const_elim_l=>-[v2' [Hv ?]] /=.
+  apply const_elim_l=>-[[v2 Hv] ?] /=.
   rewrite -pvs_intro.
-  rewrite (forall_elim v2') (forall_elim σ2') (forall_elim ef) const_equiv //.
-  by rewrite left_id wand_elim_r -(wp_value _ _ e2' v2').
+  rewrite (forall_elim v2) (forall_elim σ2') (forall_elim ef) const_equiv //.
+  rewrite left_id wand_elim_r -(wp_value _ _ e2' v2) //.
+  by erewrite of_to_val.
 Qed.
 
 Lemma wp_lift_atomic_det_step {E Φ e1} σ1 v2 σ2 ef :
-  to_val e1 = None →
+  atomic e1 →
   reducible e1 σ1 →
   (∀ e2' σ2' ef', prim_step e1 σ1 e2' σ2' ef' →
     σ2 = σ2' ∧ to_val e2' = Some v2 ∧ ef = ef') →
   (▷ ownP σ1 ★ ▷ (ownP σ2 -★ Φ v2 ★ wp_fork ef)) ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  intros. rewrite -(wp_lift_atomic_step _ (λ v2' σ2' ef',
-    σ2 = σ2' ∧ v2 = v2' ∧ ef = ef') σ1) //; last naive_solver.
+  intros. rewrite -(wp_lift_atomic_step _ (λ e2' σ2' ef',
+    σ2 = σ2' ∧ to_val e2' = Some v2 ∧ ef = ef') σ1) //.
   apply sep_mono, later_mono; first done.
   apply forall_intro=>e2'; apply forall_intro=>σ2'; apply forall_intro=>ef'.
   apply wand_intro_l.
-  rewrite always_and_sep_l -assoc -always_and_sep_l.
-  apply const_elim_l=>-[-> [-> ->]] /=. by rewrite wand_elim_r.
+  rewrite always_and_sep_l -assoc -always_and_sep_l to_of_val.
+  apply const_elim_l=>-[-> [[->] ->]] /=. by rewrite wand_elim_r.
 Qed.
 
 Lemma wp_lift_pure_det_step {E Φ} e1 e2 ef :

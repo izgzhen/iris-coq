@@ -447,7 +447,7 @@ Proof.
     end; auto with f_equal.
 Qed.
 
-Instance: Inj (=) (=) of_val.
+Instance of_val_inj : Inj (=) (=) of_val.
 Proof. by intros ?? Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
 
 Instance fill_item_inj Ki : Inj (=) (=) (fill_item Ki).

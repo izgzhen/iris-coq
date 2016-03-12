@@ -208,13 +208,13 @@ The following rules can be derived for Hoare triples.
 We can derive some specialized forms of the lifting axioms for the operational semantics.
 \begin{mathparpagebreakable}
   \infer[wp-lift-atomic-step]
-  {\toval(\expr_1) = \bot \and
+  {\atomic(\expr_1) \and
    \red(\expr_1, \state_1) \and
-   \All \expr_2, \state_2, \expr_f. \expr_1,\state_1 \step \expr_2,\state_2,\expr_f \Ra \Exists\val_2. \toval(\expr_2) = \val_2 \land \pred(\val_2,\state_2,\expr_f)}
-  {\later\ownPhys{\state_1} * \later\All \val, \state_2, \expr_f. \pred(\val, \state_2, \expr_f) \land \ownPhys{\state_2} \wand \prop * \wpre{\expr_f}[\top]{\Ret\any.\TRUE} \proves \wpre{\expr_1}[\mask_1]{\Ret\val.\prop}}
+   \All \expr_2, \state_2, \expr_f. \expr_1,\state_1 \step \expr_2,\state_2,\expr_f \Ra \pred(\expr_2,\state_2,\expr_f)}
+  {\later\ownPhys{\state_1} * \later\All \val_2, \state_2, \expr_f. \pred(\ofval(\val), \state_2, \expr_f) \land \ownPhys{\state_2} \wand \prop[\val_2/\var] * \wpre{\expr_f}[\top]{\Ret\any.\TRUE} \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
 
   \infer[wp-lift-atomic-det-step]
-  {\toval(\expr_1) = \bot \and
+  {\atomic(\expr_1) \and
    \red(\expr_1, \state_1) \and
    \All \expr'_2, \state'_2, \expr_f'. \expr_1,\state_1 \step \expr_2,\state_2,\expr_f \Ra \state_2 = \state_2' \land \toval(\expr_2') = \val_2 \land \expr_f = \expr_f'}
   {\later\ownPhys{\state_1} * \later(\ownPhys{\state_2} \wand \prop[\val_2/\var] * \wpre{\expr_f}[\top]{\Ret\any.\TRUE}) \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
