@@ -52,7 +52,31 @@ Note that the composition of non-expansive (bi)functors is non-expansive, and th
 
 \subsection{RA}
 
-\ralf{Copy this from the paper, when that one is more polished.}
+\begin{defn}
+  A \emph{resource algebra} (RA) is a tuple \\
+  $(\monoid, \mval \subseteq \monoid, \mcore{-}:
+  \monoid \to \monoid, (\mtimes) : \monoid \times \monoid \to \monoid)$ satisfying
+  \begin{align*}
+    \All \melt, \meltB, \meltC.& (\melt \mtimes \meltB) \mtimes \meltC = \melt \mtimes (\meltB \mtimes \meltC) \tagH{ra-assoc} \\
+    \All \melt, \meltB.& \melt \mtimes \meltB = \meltB \mtimes \melt \tagH{ra-comm} \\
+    \All \melt.& \mcore\melt \mtimes \melt = \melt \tagH{ra-core-id} \\
+    \All \melt.& \mcore{\mcore\melt} = \mcore\melt \tagH{ra-core-idem} \\
+    \All \melt, \meltB.& \melt \mincl \meltB \Ra \mcore\melt \mincl \mcore\meltB \tagH{ra-core-mono} \\
+    \All \melt, \meltB.& (\melt \mtimes \meltB) \in \mval \Ra \melt \in \mval \tagH{ra-valid-op} \\
+    \text{where}\qquad %\qquad\\
+    \melt \mincl \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{ra-incl}
+  \end{align*}
+\end{defn}
+
+\begin{defn}
+  It is possible to do a \emph{frame-preserving update} from $\melt \in \monoid$ to $\meltsB \subseteq \monoid$, written $\melt \mupd \meltsB$, if
+  \[ \All \melt_f. \melt \mtimes \melt_f \in \mval \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \melt_f \in \mval \]
+
+  We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
+\end{defn}
+
+
+\ralf{Copy the explanation from the paper, when that one is more polished.}
 
 \subsection{CMRA}
 
