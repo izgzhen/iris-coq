@@ -28,9 +28,12 @@ One way to understand this definition is to re-write it a little.
 We start by defining the COFE of \emph{step-indexed propositions}: For every step-index, we proposition either holds or does not hold.
 \begin{align*}
   \SProp \eqdef{}& \psetdown{\mathbb{N}} \\
-    \eqdef{}& \setComp{\prop \in \pset{\mathbb{N}}}{ \All n, m. n \geq m \Ra n \in \prop \Ra m \in \prop } \\
-  \prop \nequiv{n} \propB \eqdef{}& \All m \leq n. m \in \prop \Lra m \in \propB
+    \eqdef{}& \setComp{X \in \pset{\mathbb{N}}}{ \All n, m. n \geq m \Ra n \in X \Ra m \in X } \\
+  X \nequiv{n} Y \eqdef{}& \All m \leq n. m \in X \Lra m \in Y
 \end{align*}
+Notice that with this notion of $\SProp$ is already hidden in the validity predicate $\mval_n$ of a CMRA:
+We could equivalently require every CMRA to define $\mval_{-}(-) : \monoid \nfn \SProp$, replacing \ruleref{cmra-valid-ne} and \ruleref{cmra-valid-mono}.
+
 Now we can rewrite $\UPred(\monoid)$ as monotone step-indexed predicates over $\monoid$, where the definition of a ``monotone'' function here is a little funny.
 \begin{align*}
   \UPred(\monoid) \cong{}& \monoid \monra \SProp \\
