@@ -38,6 +38,8 @@ Notation "|={ E1 , E2 }=> Q" := (pvs E1 E2 Q%I)
 Notation "|={ E }=> Q" := (pvs E E Q%I)
   (at level 199, E at level 50, Q at level 200,
    format "|={ E }=>  Q") : uPred_scope.
+Notation "|==> Q" := (pvs ⊤ ⊤ Q%I)
+  (at level 199, Q at level 200, format "|==>  Q") : uPred_scope.
 
 Section pvs.
 Context {Λ : language} {Σ : iFunctor}.
