@@ -19,7 +19,9 @@ This definition varies slightly from the original one in~\cite{catlogic}.
   \end{align*}
 \end{defn}
 
-\ralf{Copy the explanation from the paper, when that one is more polished.}
+The key intuition behind COFEs is that elements $x$ and $y$ are $n$-equivalent, notation $x \nequiv{n} y$, if they are \emph{equivalent for $n$ steps of computation}, \ie if they cannot be distinguished by a program running for no more than $n$ steps.
+In other words, as $n$ increases, $\nequiv{n}$ becomes more and more refined (\ruleref{cofe-mono})---and in the limit, it agrees with plain equality (\ruleref{cofe-limit}).
+In order to solve the recursive domain equation in \Sref{sec:model} it is also essential that COFEs are \emph{complete}, \ie that any chain has a limit (\ruleref{cofe-compl}).
 
 \begin{defn}
   An element $x \in \cofe$ of a COFE is called \emph{discrete} if
@@ -35,6 +37,8 @@ This definition varies slightly from the original one in~\cite{catlogic}.
   It is \emph{contractive} if
   \[ \All n, x \in \cofe, y \in \cofe. (\All m < n. x \nequiv{m} y) \Ra f(x) \nequiv{n} f(x) \]
 \end{defn}
+Intuitively, applying a non-expansive function to some data will not suddenly introduce differences between seemingly equal data.
+Elements that cannot be distinguished by programs within $n$ steps remain indistinguishable after applying $f$.
 The reason that contractive functions are interesting is that for every contractive $f : \cofe \to \cofe$ with $\cofe$ inhabited, there exists a fixed-point $\fix(f)$ such that $\fix(f) = f(\fix(f))$.
 
 \begin{defn}
@@ -73,6 +77,16 @@ Note that the composition of non-expansive (bi)functors is non-expansive, and th
     \melt \mincl \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{ra-incl}
   \end{align*}
 \end{defn}
+\noindent
+RAs are closely related to \emph{Partial Commutative Monoids} (PCMs), with two key differences:
+\begin{enumerate}
+\item The composition operation on RAs is total (as opposed to the partial composition operation of a PCM), but there is a specific subset of \emph{valid} elements that is compatible with the operation (\ruleref{ra-valid-op}).
+\item Instead of a single unit that is an identity to every element, there is a function $\mcore{-}$ assigning to every element $\melt$ its \emph{(duplicable) core} $\mcore\melt$, as demanded by \ruleref{ra-core-id}. \\
+  We further demand that $\mcore{-}$ is idempotent (\ruleref{ra-core-idem}) and monotone (\ruleref{ra-core-mono}) with respect to the usual \emph{extension order}, which is defined similar to PCMs (\ruleref{ra-incl}).
+
+  This idea of a core is closely related to the concept of \emph{multi-unit separation algebras}~\cite{Dockins+:aplas09}, with the key difference that the core is a \emph{function} defining a \emph{canonical} ``unit'' $\mcore\melt$ for every element~$\melt$.
+\end{enumerate}
+
 
 \begin{defn}
   It is possible to do a \emph{frame-preserving update} from $\melt \in \monoid$ to $\meltsB \subseteq \monoid$, written $\melt \mupd \meltsB$, if
@@ -80,9 +94,9 @@ Note that the composition of non-expansive (bi)functors is non-expansive, and th
 
   We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
 \end{defn}
-
-
-\ralf{Copy the explanation from the paper, when that one is more polished.}
+The assertion $\melt \mupd \meltsB$ says that every element $\melt_\f$ compatible with $\melt$ (we also call such elements \emph{frames}), must also be compatible with some $\meltB \in \meltsB$.
+Intuitively, this means that whatever assumptions the rest of the program is making about the state of $\gname$, if these assumptions are compatible with $\melt$, then updating to $\meltB$ will not invalidate any of these assumptions.
+Since Iris ensures that the global ghost state is valid, this means that we can soundly update the ghost state from $\melt$ to a non-deterministically picked $\meltB \in \meltsB$.
 
 \subsection{CMRA}
 
