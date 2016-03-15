@@ -140,6 +140,17 @@ Proof.
   apply wsubst_closed, not_elem_of_nil.
 Qed.
 
+(* Closed expressions *)
+Instance do_wsubst_expr_nil' {X} x es (H : X `included` [x]) e :
+  WSubst x es H (wexpr' e) e | 0.
+Proof. by rewrite /WSubst /wexpr' wsubst_wexpr' wsubst_closed_nil. Qed.
+Instance do_wsubst_wexpr' X Y x es (H : X `included` x :: Y) e :
+  WSubst x es H (wexpr' e) (wexpr' e) | 1.
+Proof.
+  rewrite /WSubst /wexpr' wsubst_wexpr'.
+  apply wsubst_closed, not_elem_of_nil.
+Qed.
+
 (* Boring connectives *)
 Section wsubst.
 Context {X Y} (x : string) (es : expr []) (H : X `included` x :: Y).
