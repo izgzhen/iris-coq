@@ -89,10 +89,10 @@ heap_lang/par.v
 heap_lang/tests.v
 heap_lang/substitution.v
 heap_lang/assert.v
-heap_lang/one_shot.v
 barrier/barrier.v
 barrier/specification.v
 barrier/protocol.v
 barrier/proof.v
 barrier/client.v
 examples/joining_existentials.v
+examples/one_shot.v
