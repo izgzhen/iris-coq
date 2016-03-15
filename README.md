@@ -15,7 +15,7 @@ fixed version of Ssreflect.
 
 Run the following command to build the full development:
 
-  make
+    make
 
 
 # STRUCTURE
