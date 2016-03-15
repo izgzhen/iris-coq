@@ -239,10 +239,10 @@ Proof.
   rewrite (comm _ (▷ R)%I); setoid_rewrite (comm _ R).
   apply wp_frame_step_r.
 Qed.
-Lemma wp_always_l E e Φ R `{!Persistent R} :
+Lemma wp_always_l E e Φ R `{!PersistentP R} :
   (R ∧ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ λ v, R ∧ Φ v }}.
 Proof. by setoid_rewrite (always_and_sep_l _ _); rewrite wp_frame_l. Qed.
-Lemma wp_always_r E e Φ R `{!Persistent R} :
+Lemma wp_always_r E e Φ R `{!PersistentP R} :
   (WP e @ E {{ Φ }} ∧ R) ⊢ WP e @ E {{ λ v, Φ v ∧ R }}.
 Proof. by setoid_rewrite (always_and_sep_r _ _); rewrite wp_frame_r. Qed.
 Lemma wp_impl_l E e Φ Ψ :

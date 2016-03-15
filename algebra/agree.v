@@ -118,6 +118,9 @@ Proof.
 Qed.
 Canonical Structure agreeR : cmraT := CMRAT agree_cofe_mixin agree_cmra_mixin.
 
+Global Instance agree_persistent (x : agree A) : Persistent x.
+Proof. done. Qed.
+
 Program Definition to_agree (x : A) : agree A :=
   {| agree_car n := x; agree_is_valid n := True |}.
 Solve Obligations with done.

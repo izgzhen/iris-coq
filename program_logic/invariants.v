@@ -23,7 +23,7 @@ Implicit Types Φ : val Λ → iProp Λ Σ.
 Global Instance inv_contractive N : Contractive (@inv Λ Σ N).
 Proof. intros n ???. apply exist_ne=>i. by apply and_ne, ownI_contractive. Qed.
 
-Global Instance inv_persistent N P : Persistent (inv N P).
+Global Instance inv_persistent N P : PersistentP (inv N P).
 Proof. rewrite /inv; apply _. Qed.
 
 Lemma always_inv N P : (□ inv N P) ⊣⊢ inv N P.
@@ -96,5 +96,4 @@ Proof.
   intros. rewrite -(pvs_mask_weaken N) //.
   by rewrite /inv (pvs_allocI N); last apply coPset_suffixes_infinite.
 Qed.
-
 End inv.

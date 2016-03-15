@@ -20,9 +20,8 @@ Section saved_prop.
   Implicit Types x y : F (iPropG Λ Σ).
   Implicit Types γ : gname.
 
-  Global Instance saved_prop_persistent γ x :
-    Persistent (saved_prop_own γ x).
-  Proof. by rewrite /Persistent always_own. Qed.
+  Global Instance saved_prop_persistent γ x : PersistentP (saved_prop_own γ x).
+  Proof. rewrite /saved_prop_own; apply _. Qed.
 
   Lemma saved_prop_alloc_strong N x (G : gset gname) :
     True ⊢ pvs N N (∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ x).

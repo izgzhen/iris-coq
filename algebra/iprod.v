@@ -208,10 +208,14 @@ Section iprod_cmra.
   Lemma iprod_core_singleton x (y : B x) :
     core (iprod_singleton x y) ≡ iprod_singleton x (core y).
   Proof.
-    by move=>x'; destruct (decide (x = x')) as [->|];
-      rewrite iprod_lookup_core ?iprod_lookup_singleton
-      ?iprod_lookup_singleton_ne // cmra_core_unit.
+    move=>x'; destruct (decide (x = x')) as [->|];
+      by rewrite iprod_lookup_core ?iprod_lookup_singleton
+      ?iprod_lookup_singleton_ne // (persistent ∅).
   Qed.
+
+  Global Instance iprod_singleton_persistent x (y : B x) :
+    Persistent y → Persistent (iprod_singleton x y).
+  Proof. intros. rewrite /Persistent iprod_core_singleton. by f_equiv. Qed.
 
   Lemma iprod_op_singleton (x : A) (y1 y2 : B x) :
     iprod_singleton x y1 ⋅ iprod_singleton x y2 ≡ iprod_singleton x (y1 ⋅ y2).

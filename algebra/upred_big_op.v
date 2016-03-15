@@ -30,7 +30,7 @@ Notation "'Π★{set' X } Φ" := (uPred_big_sepS X Φ)
 
 (** * Always stability for lists *)
 Class PersistentL {M} (Ps : list (uPred M)) :=
-  persistentL : Forall Persistent Ps.
+  persistentL : Forall PersistentP Ps.
 Arguments persistentL {_} _ {_}.
 
 Section big_op.
@@ -216,21 +216,21 @@ Section gset.
 End gset.
 
 (* Always stable *)
-Global Instance big_and_persistent Ps : PersistentL Ps → Persistent (Π∧ Ps).
+Global Instance big_and_persistent Ps : PersistentL Ps → PersistentP (Π∧ Ps).
 Proof. induction 1; apply _. Qed.
-Global Instance big_sep_persistent Ps : PersistentL Ps → Persistent (Π★ Ps).
+Global Instance big_sep_persistent Ps : PersistentL Ps → PersistentP (Π★ Ps).
 Proof. induction 1; apply _. Qed.
 
 Global Instance nil_persistent : PersistentL (@nil (uPred M)).
 Proof. constructor. Qed.
 Global Instance cons_persistent P Ps :
-  Persistent P → PersistentL Ps → PersistentL (P :: Ps).
+  PersistentP P → PersistentL Ps → PersistentL (P :: Ps).
 Proof. by constructor. Qed.
 Global Instance app_persistent Ps Ps' :
   PersistentL Ps → PersistentL Ps' → PersistentL (Ps ++ Ps').
 Proof. apply Forall_app_2. Qed.
 Global Instance zip_with_persistent {A B} (f : A → B → uPred M) xs ys :
-  (∀ x y, Persistent (f x y)) → PersistentL (zip_with f xs ys).
+  (∀ x y, PersistentP (f x y)) → PersistentL (zip_with f xs ys).
 Proof.
   unfold PersistentL=> ?; revert ys; induction xs=> -[|??]; constructor; auto.
 Qed.

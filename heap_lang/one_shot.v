@@ -103,9 +103,7 @@ Proof.
         rewrite -(exist_intro n). ecancel [inv _ _]%I.
         rewrite [(_ ★ _)%I]comm -assoc. apply const_elim_sep_l=>->.
         rewrite const_equiv // left_id /one_shot_inv -or_intro_r.
-        rewrite -(exist_intro n).
-        rewrite -(dec_agree_core_id (DecAgree n))
-          -(Shot_core (DecAgree n : dec_agreeR _)) {1}(always_sep_dup (own _ _)).
+        rewrite -(exist_intro n) {1}(always_sep_dup (own _ _)).
         solve_sep_entails. }
     cancel [one_shot_inv γ l].
     (* FIXME: why aren't laters stripped? *)

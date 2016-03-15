@@ -120,6 +120,10 @@ Class CMRAUnit (A : cmraT) `{Empty A} := {
 }.
 Instance cmra_unit_inhabited `{CMRAUnit A} : Inhabited A := populate ∅.
 
+(** * Persistent elements *)
+Class Persistent {A : cmraT} (x : A) := persistent : core x ≡ x.
+Arguments persistent {_} _ {_}.
+
 (** * Discrete CMRAs *)
 Class CMRADiscrete (A : cmraT) := {
   cmra_discrete :> Discrete A;
@@ -229,6 +233,8 @@ Lemma cmra_core_validN n x : ✓{n} x → ✓{n} core x.
 Proof. rewrite -{1}(cmra_core_l x); apply cmra_validN_op_l. Qed.
 Lemma cmra_core_valid x : ✓ x → ✓ core x.
 Proof. rewrite -{1}(cmra_core_l x); apply cmra_valid_op_l. Qed.
+Global Instance cmra_core_persistent x : Persistent (core x).
+Proof. apply cmra_core_idemp. Qed.
 
 (** ** Order *)
 Lemma cmra_included_includedN n x y : x ≼ y → x ≼{n} y.
@@ -336,8 +342,8 @@ Section unit.
   Proof. by exists x; rewrite left_id. Qed.
   Global Instance cmra_unit_right_id : RightId (≡) ∅ (⋅).
   Proof. by intros x; rewrite (comm op) left_id. Qed.
-  Lemma cmra_core_unit : core ∅ ≡ ∅.
-  Proof. by rewrite -{2}(cmra_core_l ∅) right_id. Qed.
+  Global Instance cmra_unit_persistent : Persistent ∅.
+  Proof. by rewrite /Persistent -{2}(cmra_core_l ∅) right_id. Qed.
 End unit.
 
 (** ** Local updates *)
@@ -454,6 +460,8 @@ Section cmra_transport.
   Proof. by destruct H. Qed.
   Global Instance cmra_transport_timeless x : Timeless x → Timeless (T x).
   Proof. by destruct H. Qed.
+  Global Instance cmra_transport_persistent x : Persistent x → Persistent (T x).
+  Proof. by destruct H. Qed.
   Lemma cmra_transport_updateP (P : A → Prop) (Q : B → Prop) x :
     x ~~>: P → (∀ y, P y → Q (T y)) → T x ~~>: Q.
   Proof. destruct H; eauto using cmra_updateP_weaken. Qed.
@@ -509,6 +517,8 @@ Section unit.
   Global Instance unit_cmra_unit : CMRAUnit unitR.
   Global Instance unit_cmra_discrete : CMRADiscrete unitR.
   Proof. by apply discrete_cmra_discrete. Qed.
+  Global Instance unit_persistent (x : ()) : Persistent x.
+  Proof. done. Qed.
 End unit.
 
 (** ** Product *)
@@ -563,6 +573,10 @@ Section prod.
   Global Instance prod_cmra_discrete :
     CMRADiscrete A → CMRADiscrete B → CMRADiscrete prodR.
   Proof. split. apply _. by intros ? []; split; apply cmra_discrete_valid. Qed.
+
+  Global Instance pair_persistent x y :
+    Persistent x → Persistent y → Persistent (x,y).
+  Proof. by split. Qed.
 
   Lemma prod_update x y : x.1 ~~> y.1 → x.2 ~~> y.2 → x ~~> y.
   Proof. intros ?? n z [??]; split; simpl in *; auto. Qed.
