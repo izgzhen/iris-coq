@@ -87,6 +87,7 @@ heap_lang/spawn.v
 heap_lang/par.v
 heap_lang/tests.v
 heap_lang/substitution.v
+heap_lang/assert.v
 barrier/barrier.v
 barrier/specification.v
 barrier/protocol.v
