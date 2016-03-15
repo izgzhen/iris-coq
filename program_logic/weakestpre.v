@@ -248,7 +248,7 @@ Proof. by setoid_rewrite (always_and_sep_r _ _); rewrite wp_frame_r. Qed.
 Lemma wp_impl_l E e Φ Ψ :
   ((□ ∀ v, Φ v → Ψ v) ∧ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ Ψ }}.
 Proof.
-  rewrite wp_always_l; apply wp_mono=> // v.
+  rewrite wp_always_l. apply wp_mono=> // v.
   by rewrite always_elim (forall_elim v) impl_elim_l.
 Qed.
 Lemma wp_impl_r E e Φ Ψ :
