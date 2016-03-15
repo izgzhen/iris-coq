@@ -158,6 +158,9 @@ Instance one_shot_op : Op (one_shot A) := λ x y,
 
 Lemma Shot_op a b : Shot a ⋅ Shot b = Shot (a ⋅ b).
 Proof. done. Qed.
+Lemma Shot_core a : core (Shot a) = Shot (core a).
+Proof. done. Qed.
+
 Lemma Shot_incl a b : Shot a ≼ Shot b ↔ a ≼ b.
 Proof.
   split; intros [c H].
