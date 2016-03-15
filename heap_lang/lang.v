@@ -16,12 +16,12 @@ Inductive bin_op : Set :=
   | PlusOp | MinusOp | LeOp | LtOp | EqOp.
 
 Inductive binder := BAnon | BNamed : string → binder.
+Delimit Scope binder_scope with bind.
+Bind Scope binder_scope with binder.
 
 Definition cons_binder (mx : binder) (X : list string) : list string :=
   match mx with BAnon => X | BNamed x => x :: X end.
 Infix ":b:" := cons_binder (at level 60, right associativity).
-Delimit Scope binder_scope with bind.
-Bind Scope binder_scope with binder.
 Instance binder_dec_eq (x1 x2 : binder) : Decision (x1 = x2).
 Proof. solve_decision. Defined.
 
