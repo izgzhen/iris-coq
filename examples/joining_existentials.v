@@ -28,7 +28,7 @@ Context (P' : iProp) (P P1 P2 Q Q1 Q2 : X → iProp).
 Context {P_split : (∃ x:X, P x) ⊢ ((∃ x:X, P1 x) ★ (∃ x:X, P2 x))}.
 Context {Q_join  : ((∃ x:X, Q1 x) ★ (∃ x:X, Q2 x)) ⊢ (∃ x:X, Q x)}.
 
-Lemma client_spec eM eM' eW1 eW1' eW2 eW2' (R : iProp) :
+Lemma client_spec (eM eW1 eW2 : expr []) (eM' eW1' eW2' : expr ("b" :b: [])) (R : iProp) :
   eM' = wexpr' eM → eW1' = wexpr' eW1 → eW2' = wexpr' eW2 →
   R ⊢ ({{ P' }} eM {{ λ _, ∃ x, P x }}) →
   R ⊢ (∀ x, {{ P1 x }} eW1 {{ λ _, Q1 x }}) →
