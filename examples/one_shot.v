@@ -1,4 +1,5 @@
 From iris.algebra Require Import one_shot dec_agree.
+From iris.program_logic Require Import hoare.
 From iris.heap_lang Require Import heap assert wp_tactics notation.
 Import uPred.
 
@@ -35,8 +36,8 @@ Definition one_shot_inv (γ : gname) (l : loc) : iProp :=
 
 Lemma wp_one_shot (Φ : val → iProp) :
   (heap_ctx heapN ★ ∀ f1 f2 : val,
-    (∀ n : Z, WP f1 #n {{ λ w, w = #true ∨ w = #false }}) ★
-    WP f2 #() {{ λ g, WP g #() {{ λ _, True }} }} -★ Φ (f1,f2)%V)
+    (∀ n : Z, □ WP f1 #n {{ λ w, w = #true ∨ w = #false }}) ★
+    □ WP f2 #() {{ λ g, □ WP g #() {{ λ _, True }} }} -★ Φ (f1,f2)%V)
   ⊢ WP one_shot_example #() {{ Φ }}.
 Proof.
   wp_let.
@@ -48,14 +49,14 @@ Proof.
   (* TODO: this is horrible *)
   trans (heap_ctx heapN ★ (|==> inv N (one_shot_inv γ l)) ★
     (∀ f1 f2 : val,
-      (∀ n : Z, WP f1 #n {{ λ w, w = #true ∨ w = #false }}) ★
-      WP f2 #() {{ λ g, WP g #() {{ λ _, True }} }} -★ Φ (f1, f2)%V))%I.
+      (∀ n : Z, □ WP f1 #n {{ λ w, w = #true ∨ w = #false }}) ★
+      □ WP f2 #() {{ λ g, □ WP g #() {{ λ _, True }} }} -★ Φ (f1, f2)%V))%I.
   { ecancel [heap_ctx _; ∀ _, _]%I. rewrite -inv_alloc // -later_intro.
     apply or_intro_l'. solve_sep_entails. }
   rewrite pvs_frame_r pvs_frame_l; apply wp_strip_pvs; wp_let.
   rewrite !assoc 2!forall_elim; eapply wand_apply_r'; first done.
   rewrite (always_sep_dup (_ ★ _)); apply sep_mono.
-  - apply forall_intro=>n. wp_let.
+  - apply forall_intro=>n. apply: always_intro. wp_let.
     eapply (wp_inv_timeless _ _ _ (one_shot_inv γ l));
       rewrite /= ?to_of_val; eauto 10 with I.
     rewrite (True_intro (inv _ _)) right_id.
@@ -75,7 +76,7 @@ Proof.
       ecancel [l ↦ _]%I; apply wand_intro_l, sep_intro_True_r; eauto with I.
       rewrite -later_intro /one_shot_inv -or_intro_r -(exist_intro m).
       solve_sep_entails.
-  - wp_seq.
+  - apply: always_intro. wp_seq.
     wp_focus (Load (%l))%I.
     eapply (wp_inv_timeless _ _ _ (one_shot_inv γ l));
       rewrite /= ?to_of_val; eauto 10 with I.
@@ -107,7 +108,8 @@ Proof.
         solve_sep_entails. }
     cancel [one_shot_inv γ l].
     (* FIXME: why aren't laters stripped? *)
-    wp_let. rewrite -later_intro. wp_seq. rewrite -later_intro.
+    wp_let. rewrite -later_intro.
+    apply: always_intro. wp_seq. rewrite -later_intro.
     rewrite !sep_or_l; apply or_elim.
     { rewrite assoc.
       apply const_elim_sep_r=>->. wp_case; wp_seq; eauto with I. }
@@ -132,5 +134,21 @@ Proof.
       { rewrite /one_shot_inv -or_intro_r -(exist_intro m). solve_sep_entails. }
       wp_case; fold of_val. wp_let. rewrite -wp_assert'.
       wp_op; by eauto using later_intro with I.
+Qed.
+
+Lemma hoare_one_shot (Φ : val → iProp) :
+  heap_ctx heapN ⊢ {{ True }} one_shot_example #()
+    {{ λ ff,
+      (∀ n : Z, {{ True }} Fst ff #n {{ λ w, w = #true ∨ w = #false }}) ★
+      {{ True }} Snd ff #() {{ λ g, {{ True }} g #() {{ λ _, True }} }}
+    }}.
+Proof.
+  apply: always_intro; rewrite left_id -wp_one_shot /=.
+  cancel [heap_ctx heapN].
+  apply forall_intro=> f1; apply forall_intro=> f2.
+  apply wand_intro_l; rewrite right_id; apply sep_mono.
+  - apply forall_mono=>n. apply always_mono; rewrite left_id. by wp_proj.
+  - apply always_mono; rewrite left_id. wp_proj.
+    apply wp_mono=> v. by apply always_mono; rewrite left_id.
 Qed.
 End proof.
