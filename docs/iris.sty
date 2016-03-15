@@ -36,7 +36,7 @@
 \newcommand{\upclose}{\mathord{\uparrow}}
 \newcommand{\ALT}{\ |\ }
 
-\newcommand{\spac}{\;} % a space
+\newcommand{\spac}{\,} % a space
 
 \def\All #1.{\forall #1.\spac}%
 \def\Exists #1.{\exists #1.\spac}%
@@ -292,6 +292,7 @@
 
 %% Some commonly used identifiers
 \newcommand{\timeless}[1]{\textlog{timeless}(#1)}
+\newcommand{\persistent}[1]{\textlog{persistent}(#1)}
 \newcommand{\physatomic}[1]{\textlog{atomic}($#1$)}
 \newcommand{\infinite}{\textlog{infinite}}
 
@@ -362,7 +363,7 @@
 \tikzstyle{sts_arrows} = [arrows={->[scale=1.5]},every node/.style={font=\sffamily\small}]
 
 %% Stored Propositions
-\newcommand{\mapstoprop}{\mathrel{\mapstochar\Ra}}
+\newcommand{\mapstoprop}{\mathrel{\kern-0.5ex\tikz[baseline=(m)]{\node at (0,0) (m){}; \draw[line cap=round] (0,0.16) -- (0,-0.004);}\kern-1.5ex\Ra}}
 
 
 \endinput
