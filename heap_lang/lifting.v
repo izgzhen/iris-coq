@@ -24,7 +24,7 @@ Lemma wp_alloc_pst E σ e v Φ :
   (▷ ownP σ ★ ▷ (∀ l, σ !! l = None ∧ ownP (<[l:=v]>σ) -★ Φ (LocV l)))
   ⊢ WP Alloc e @ E {{ Φ }}.
 Proof.
-  (* TODO RJ: This works around ssreflect bug #22. *)
+  (* TODO: This works around ssreflect bug #22. *)
   intros. set (φ (e' : expr []) σ' ef := ∃ l,
     ef = None ∧ e' = Loc l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None).
   rewrite -(wp_lift_atomic_step (Alloc e) φ σ) // /φ;
