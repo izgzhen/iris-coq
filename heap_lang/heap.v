@@ -116,6 +116,9 @@ Section heap.
   Context `{heapG Σ}.
 
   (** General properties of mapsto *)
+  Global Instance heap_mapsto_timeless l q v : TimelessP (l ↦{q} v).
+  Proof. rewrite /heap_mapsto. apply _. Qed.
+
   Lemma heap_mapsto_op_eq l q1 q2 v :
     (l ↦{q1} v ★ l ↦{q2} v) ⊣⊢ (l ↦{q1+q2} v).
   Proof. by rewrite -auth_own_op map_op_singleton Frac_op dec_agree_idemp. Qed.
