@@ -95,3 +95,4 @@ barrier/specification.v
 barrier/protocol.v
 barrier/proof.v
 barrier/client.v
+examples/joining_existentials.v

@@ -228,6 +228,10 @@ Program Fixpoint wexpr {X Y} (H : X `included` Y) (e : expr X) : expr Y :=
   end.
 Solve Obligations with set_solver.
 
+Program Definition wexpr' {X} (e : expr []) : expr X :=
+  wexpr _ e.
+Solve Obligations with set_solver.
+
 Definition of_val' {X} (v : val) : expr X := wexpr (included_nil _) (of_val v).
 
 Lemma wsubst_rec_true_prf {X Y x} (H : X `included` x :: Y) {f y}
@@ -242,7 +246,7 @@ Proof. move: Hfy=>/not_and_l [/dec_stable|/dec_stable]; set_solver. Qed.
 Program Fixpoint wsubst {X Y} (x : string) (es : expr [])
     (H : X `included` x :: Y) (e : expr X)  : expr Y :=
   match e return expr Y with
-  | Var y _ => if decide (x = y) then wexpr _ es else @Var _ y _
+  | Var y _ => if decide (x = y) then wexpr' es else @Var _ y _
   | Rec f y e =>
      Rec f y $ match decide (BNamed x ≠ f ∧ BNamed x ≠ y) return _ with
                | left Hfy => wsubst x es (wsubst_rec_true_prf H Hfy) e
@@ -390,7 +394,7 @@ Lemma wexpr_wsubst X Y Z x es (H1: X `included` x::Y) (H2: Y `included` Z) H3 e:
 Proof.
   revert Y Z H1 H2 H3.
   induction e; intros; repeat (case_decide || simplify_eq/=);
-    auto using var_proof_irrel, wexpr_wexpr with f_equal.
+    unfold wexpr'; auto using var_proof_irrel, wexpr_wexpr with f_equal.
 Qed.
 Lemma wsubst_wexpr X Y Z x es (H1: X `included` Y) (H2: Y `included` x::Z) H3 e:
   wsubst x es H2 (wexpr H1 e) = wsubst x es H3 e.
