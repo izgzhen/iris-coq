@@ -72,6 +72,7 @@ program_logic/tests.v
 program_logic/ghost_ownership.v
 program_logic/global_functor.v
 program_logic/saved_prop.v
+program_logic/saved_one_shot.v
 program_logic/auth.v
 program_logic/sts.v
 program_logic/namespaces.v
