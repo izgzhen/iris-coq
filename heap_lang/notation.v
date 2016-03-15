@@ -7,7 +7,7 @@ Notation "'WP' e @ E {{ Φ } }" := (wp E e%E Φ)
    format "'WP'  e  @  E  {{  Φ  } }") : uPred_scope.
 Notation "'WP' e {{ Φ } }" := (wp ⊤ e%E Φ)
   (at level 20, e, Φ at level 200,
-   format "'WP'  e   {{  Φ  } }") : uPred_scope.
+   format "'WP'  e  {{  Φ  } }") : uPred_scope.
 
 Coercion LitInt : Z >-> base_lit.
 Coercion LitBool : bool >-> base_lit.

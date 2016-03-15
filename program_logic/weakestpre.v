@@ -62,7 +62,7 @@ Notation "'WP' e @ E {{ Φ } }" := (wp E e Φ)
    format "'WP'  e  @  E  {{  Φ  } }") : uPred_scope.
 Notation "'WP' e {{ Φ } }" := (wp ⊤ e Φ)
   (at level 20, e, Φ at level 200,
-   format "'WP'  e   {{  Φ  } }") : uPred_scope.
+   format "'WP'  e  {{  Φ  } }") : uPred_scope.
 
 Section wp.
 Context {Λ : language} {Σ : iFunctor}.
