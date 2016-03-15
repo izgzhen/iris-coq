@@ -153,6 +153,8 @@ Lemma lookup_wld_op_r n r1 r2 i P :
 Proof. rewrite (comm _ r1) (comm _ (wld r1)); apply lookup_wld_op_l. Qed.
 Global Instance Res_timeless eσ m : Timeless m → Timeless (@Res Λ A M ∅ eσ m).
 Proof. by intros ? ? [???]; constructor; apply: timeless. Qed.
+Global Instance Res_persistent w m: Persistent m → Persistent (@Res Λ A M w ∅ m).
+Proof. constructor; apply (persistent _). Qed.
 
 (** Internalized properties *)
 Lemma res_equivI {M'} r1 r2 :

@@ -30,7 +30,7 @@ Section definitions.
   Proof. solve_proper. Qed.
   Global Instance auth_own_timeless a : TimelessP (auth_own a).
   Proof. apply _. Qed.
-  Global Instance auth_ctx_persistent N φ : Persistent (auth_ctx N φ).
+  Global Instance auth_ctx_persistent N φ : PersistentP (auth_ctx N φ).
   Proof. apply _. Qed.
 End definitions.
 

@@ -25,15 +25,8 @@ Proof.
   apply uPred.ownM_ne, Res_ne; auto; apply singleton_ne, to_agree_ne.
   by apply Next_contractive=> j ?; rewrite (HPQ j).
 Qed.
-Lemma always_ownI i P : (□ ownI i P) ⊣⊢ ownI i P.
-Proof.
-  apply uPred.always_ownM.
-  by rewrite Res_core !cmra_core_unit map_core_singleton.
-Qed.
-Global Instance ownI_persistent i P : Persistent (ownI i P).
-Proof. by rewrite /Persistent always_ownI. Qed.
-Lemma ownI_sep_dup i P : ownI i P ⊣⊢ (ownI i P ★ ownI i P).
-Proof. apply (uPred.always_sep_dup _). Qed.
+Global Instance ownI_persistent i P : PersistentP (ownI i P).
+Proof. rewrite /ownI. apply _. Qed.
 
 (* physical state *)
 Lemma ownP_twice σ1 σ2 : (ownP σ1 ★ ownP σ2 : iProp Λ Σ) ⊢ False.
@@ -52,25 +45,16 @@ Lemma ownG_op m1 m2 : ownG (m1 ⋅ m2) ⊣⊢ (ownG m1 ★ ownG m2).
 Proof. by rewrite /ownG -uPred.ownM_op Res_op !left_id. Qed.
 Global Instance ownG_mono : Proper (flip (≼) ==> (⊢)) (@ownG Λ Σ).
 Proof. move=>a b [c H]. rewrite H ownG_op. eauto with I. Qed.
-Lemma always_ownG_core m : (□ ownG (core m)) ⊣⊢ ownG (core m).
-Proof.
-  apply uPred.always_ownM.
-  by rewrite Res_core !cmra_core_unit -{2}(cmra_core_idemp m).
-Qed.
-Lemma always_ownG m : core m ≡ m → (□ ownG m) ⊣⊢ ownG m.
-Proof. by intros <-; rewrite always_ownG_core. Qed.
 Lemma ownG_valid m : ownG m ⊢ ✓ m.
-Proof.
-  rewrite /ownG uPred.ownM_valid res_validI /=; auto with I.
-Qed.
+Proof. rewrite /ownG uPred.ownM_valid res_validI /=; auto with I. Qed.
 Lemma ownG_valid_r m : ownG m ⊢ (ownG m ★ ✓ m).
 Proof. apply (uPred.always_entails_r _ _), ownG_valid. Qed.
 Lemma ownG_empty : True ⊢ (ownG ∅ : iProp Λ Σ).
 Proof. apply uPred.ownM_empty. Qed.
 Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
 Proof. rewrite /ownG; apply _. Qed.
-Global Instance ownG_core_persistent m : Persistent (ownG (core m)).
-Proof. by rewrite /Persistent always_ownG_core. Qed.
+Global Instance ownG_persistent m : Persistent m → PersistentP (ownG m).
+Proof. rewrite /ownG; apply _. Qed.
 
 (* inversion lemmas *)
 Lemma ownI_spec n r i P :

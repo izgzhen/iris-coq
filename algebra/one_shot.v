@@ -210,16 +210,15 @@ Proof.
   intros [|a| |]; simpl; auto using cmra_discrete_valid.
 Qed.
 
+Global Instance Shot_persistent a : Persistent a → Persistent (Shot a).
+Proof. by constructor. Qed.
+
 Lemma one_shot_validN_inv_l n y : ✓{n} (OneShotPending ⋅ y) → y = ∅.
-Proof.
-  destruct y as [|b| |]; [done| |done|done]. destruct 1.
-Qed.
+Proof. by destruct y; inversion_clear 1. Qed.
 Lemma one_shot_valid_inv_l y : ✓ (OneShotPending ⋅ y) → y = ∅.
 Proof. intros. by apply one_shot_validN_inv_l with 0, cmra_valid_validN. Qed.
 Lemma one_shot_bot_largest y : y ≼ OneShotBot.
-Proof.
-  destruct y; exists OneShotBot; constructor.
-Qed.
+Proof. destruct y; exists OneShotBot; constructor. Qed.
 
 (** Internalized properties *)
 Lemma one_shot_equivI {M} (x y : one_shot A) :
@@ -259,9 +258,8 @@ Proof.
   - destruct (Hx n b) as (c&?&?); try done.
     exists (Shot c). auto.
   - destruct (Hx n (core a)) as (c&?&?); try done.
-    { rewrite cmra_core_r. done. }
-    exists (Shot c). split; first by auto.
-    simpl. by eapply cmra_validN_op_l.
+    { by rewrite cmra_core_r. }
+    exists (Shot c). split; simpl; eauto using cmra_validN_op_l.
 Qed.
 Lemma one_shot_updateP' (P : A → Prop) a :
   a ~~>: P → Shot a ~~>: λ m', ∃ b, m' = Shot b ∧ P b.

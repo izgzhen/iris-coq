@@ -130,6 +130,12 @@ Proof. by destruct mx, my; inversion_clear 1. Qed.
 Lemma option_op_positive_dist_r n mx my : mx ⋅ my ≡{n}≡ None → my ≡{n}≡ None.
 Proof. by destruct mx, my; inversion_clear 1. Qed.
 
+Global Instance Some_persistent (x : A) : Persistent x → Persistent (Some x).
+Proof. by constructor. Qed.
+Global Instance option_persistent (mx : option A) :
+  (∀ x : A, Persistent x) → Persistent mx.
+Proof. intros. destruct mx. apply _. apply cmra_unit_persistent. Qed.
+
 (** Internalized properties *)
 Lemma option_equivI {M} (x y : option A) :
   (x ≡ y) ⊣⊢ (match x, y with

@@ -9,8 +9,7 @@ Definition oneShotGF (F : cFunctor) : gFunctor :=
 Instance inGF_oneShotG  `{inGF Λ Σ (oneShotGF F)} : oneShotG Λ Σ F.
 Proof. apply: inGF_inG. Qed.
 
-Definition one_shot_pending `{oneShotG Λ Σ F}
-    (γ : gname) : iPropG Λ Σ :=
+Definition one_shot_pending `{oneShotG Λ Σ F} (γ : gname) : iPropG Λ Σ :=
   own γ OneShotPending.
 Definition one_shot_own `{oneShotG Λ Σ F}
     (γ : gname) (x : F (iPropG Λ Σ)) : iPropG Λ Σ :=
@@ -23,9 +22,8 @@ Section one_shot.
   Implicit Types x y : F (iPropG Λ Σ).
   Implicit Types γ : gname.
 
-  Global Instance ne_shot_own_persistent γ x :
-    Persistent (one_shot_own γ x).
-  Proof. by rewrite /Persistent always_own. Qed.
+  Global Instance ne_shot_own_persistent γ x : PersistentP (one_shot_own γ x).
+  Proof. rewrite /one_shot_own; apply _. Qed.
 
   Lemma one_shot_alloc_strong N (G : gset gname) :
     True ⊢ pvs N N (∃ γ, ■ (γ ∉ G) ∧ one_shot_pending γ).

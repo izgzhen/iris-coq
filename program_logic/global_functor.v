@@ -41,12 +41,10 @@ Lemma to_globalF_op γ a1 a2 :
 Proof.
   by rewrite /to_globalF iprod_op_singleton map_op_singleton cmra_transport_op.
 Qed.
-Lemma to_globalF_core γ a : core (to_globalF γ a) ≡ to_globalF γ (core a).
-Proof.
-  by rewrite /to_globalF
-    iprod_core_singleton map_core_singleton cmra_transport_core.
-Qed.
-Global Instance to_globalF_timeless γ m : Timeless m → Timeless (to_globalF γ m).
+Global Instance to_globalF_timeless γ m: Timeless m → Timeless (to_globalF γ m).
+Proof. rewrite /to_globalF; apply _. Qed.
+Global Instance to_globalF_persistent γ m :
+  Persistent m → Persistent (to_globalF γ m).
 Proof. rewrite /to_globalF; apply _. Qed.
 End to_globalF.
 

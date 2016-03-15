@@ -42,7 +42,7 @@ Section definitions.
   Global Instance sts_ctx_proper N :
     Proper (pointwise_relation _ (≡) ==> (⊣⊢)) (sts_ctx N).
   Proof. solve_proper. Qed.
-  Global Instance sts_ctx_persistent N φ : Persistent (sts_ctx N φ).
+  Global Instance sts_ctx_persistent N φ : PersistentP (sts_ctx N φ).
   Proof. apply _. Qed.
 End definitions.
 Typeclasses Opaque sts_own sts_ownS sts_ctx.

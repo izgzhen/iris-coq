@@ -45,7 +45,7 @@ Qed.
 Canonical Structure dec_agreeR : cmraT := discreteR dec_agree_ra.
 
 (* Some properties of this CMRA *)
-Lemma dec_agree_core_id (x : dec_agree A) : core x = x.
+Global Instance dec_agree_persistent (x : dec_agreeR) : Persistent x.
 Proof. done. Qed.
 
 Lemma dec_agree_ne a b : a ≠ b → DecAgree a ⋅ DecAgree b = DecAgreeBot.
