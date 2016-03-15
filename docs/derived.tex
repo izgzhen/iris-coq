@@ -274,25 +274,25 @@ In other words, $\ownGhost{\gname}{\melt : M_i}$ asserts that in the current sta
 
 From~\ruleref{pvs-update}, \ruleref{vs-update} and the frame-preserving updates in~\Sref{sec:prodm} and~\Sref{sec:fpfnm}, we have the following derived rules.
 \begin{mathparpagebreakable}
-  \inferH{NewGhostStrong}{\text{$G$ infinite}}
+  \inferH{ghost-alloc-strong}{\text{$G$ infinite}}
   {  \TRUE \vs \Exists\gname\in G. \ownGhost\gname{\melt : M_i}
   }
   \and
-  \axiomH{NewGhost}{
+  \axiomH{ghost-alloc}{
     \TRUE \vs \Exists\gname. \ownGhost\gname{\melt : M_i}
   }
   \and
-  \inferH{GhostUpd}
+  \inferH{ghost-update}
     {\melt \mupd_{M_i} B}
     {\ownGhost\gname{\melt : M_i} \vs \Exists \meltB\in B. \ownGhost\gname{\meltB : M_i}}
   \and
-  \axiomH{GhostEq}
+  \axiomH{ghost-op}
     {\ownGhost\gname{\melt : M_i} * \ownGhost\gname{\meltB : M_i} \Lra \ownGhost\gname{\melt\mtimes\meltB : M_i}}
 
-  \axiomH{GhostVal}
+  \axiomH{ghost-valid}
     {\ownGhost\gname{\melt : M_i} \Ra \mval_{M_i}(\melt)}
 
-  \inferH{GhostTimeless}
+  \inferH{ghost-timeless}
     {\text{$\melt$ is a discrete COFE element}}
     {\timeless{\ownGhost\gname{\melt : M_i}}}
 \end{mathparpagebreakable}
