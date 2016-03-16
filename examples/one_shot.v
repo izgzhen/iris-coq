@@ -68,13 +68,13 @@ Proof.
       rewrite (own_update); (* FIXME: canonical structures are not working *)
         last by apply (one_shot_update_shoot (DecAgree n : dec_agreeR _)).
       rewrite pvs_frame_l; apply pvs_mono, sep_intro_True_r; eauto with I.
-      rewrite -later_intro /one_shot_inv -or_intro_r -(exist_intro n).
+      rewrite /one_shot_inv -or_intro_r -(exist_intro n).
       solve_sep_entails.
     + rewrite sep_exist_l; apply exist_elim=>m.
       eapply wp_cas_fail with (v':=InjRV #m) (q:=1%Qp);
         rewrite /= ?to_of_val; eauto with I ndisj; strip_later.
       ecancel [l ↦ _]%I; apply wand_intro_l, sep_intro_True_r; eauto with I.
-      rewrite -later_intro /one_shot_inv -or_intro_r -(exist_intro m).
+      rewrite /one_shot_inv -or_intro_r -(exist_intro m).
       solve_sep_entails.
   - apply: always_intro. wp_seq.
     wp_focus (Load (%l))%I.
@@ -92,7 +92,7 @@ Proof.
     rewrite !sep_exist_l; apply exist_elim=> w.
     eapply wp_load with (q:=1%Qp) (v:=w); eauto with I ndisj.
     rewrite -later_intro; cancel [l ↦ w]%I.
-    rewrite -later_intro; apply wand_intro_l; rewrite -later_intro.
+    rewrite -later_intro; apply wand_intro_l.
     trans (heap_ctx heapN ★ inv N (one_shot_inv γ l) ★ one_shot_inv γ l ★
       (w = InjLV #0 ∨ (∃ n : Z, w = InjRV #n ★ own γ (Shot (DecAgree n)))))%I.
     { cancel [heap_ctx heapN]. rewrite !sep_or_l; apply or_elim.
@@ -130,7 +130,7 @@ Proof.
       rewrite (True_intro (heap_ctx heapN)) left_id.
       rewrite -own_op own_valid_l one_shot_validI Shot_op /= discrete_valid.
       rewrite -assoc. apply const_elim_sep_l=> /dec_agree_op_inv [->].
-      rewrite dec_agree_idemp -later_intro. apply sep_intro_True_r.
+      rewrite dec_agree_idemp. apply sep_intro_True_r.
       { rewrite /one_shot_inv -or_intro_r -(exist_intro m). solve_sep_entails. }
       wp_case; fold of_val. wp_let. rewrite -wp_assert'.
       wp_op; by eauto using later_intro with I.
