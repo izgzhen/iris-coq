@@ -55,12 +55,13 @@ Lemma inv_fsa_timeless {A} (fsa : FSA Λ Σ A)
     `{!FrameShiftAssertion fsaV fsa} E N P `{!TimelessP P} Ψ R :
   fsaV → nclose N ⊆ E →
   R ⊢ inv N P →
-  R ⊢ (P -★ fsa (E ∖ nclose N) (λ a, ▷ P ★ Ψ a)) →
+  R ⊢ (P -★ fsa (E ∖ nclose N) (λ a, P ★ Ψ a)) →
   R ⊢ fsa E Ψ.
 Proof.
   intros ??? HR. eapply inv_fsa, wand_intro_l; eauto.
   trans (|={E ∖ N}=> P ★ R)%I; first by rewrite pvs_timeless pvs_frame_r.
-  apply (fsa_strip_pvs _). by rewrite HR wand_elim_r.
+  apply (fsa_strip_pvs _). rewrite HR wand_elim_r.
+  apply: fsa_mono=> v. by rewrite -later_intro.
 Qed.
 
 (* Derive the concrete forms for pvs and wp, because they are useful. *)
@@ -74,7 +75,7 @@ Proof. intros. by apply: (inv_fsa pvs_fsa). Qed.
 Lemma pvs_inv_timeless E N P `{!TimelessP P} Q R :
   nclose N ⊆ E →
   R ⊢ inv N P →
-  R ⊢ (P -★ |={E ∖ nclose N}=> (▷ P ★ Q)) →
+  R ⊢ (P -★ |={E ∖ nclose N}=> (P ★ Q)) →
   R ⊢ (|={E}=> Q).
 Proof. intros. by apply: (inv_fsa_timeless pvs_fsa). Qed.
 
@@ -87,7 +88,7 @@ Proof. intros. by apply: (inv_fsa (wp_fsa e)). Qed.
 Lemma wp_inv_timeless E e N P `{!TimelessP P} Φ R :
   atomic e → nclose N ⊆ E →
   R ⊢ inv N P →
-  R ⊢ (P -★ WP e @ E ∖ nclose N {{ λ v, ▷ P ★ Φ v }}) →
+  R ⊢ (P -★ WP e @ E ∖ nclose N {{ λ v, P ★ Φ v }}) →
   R ⊢ WP e @ E {{ Φ }}.
 Proof. intros. by apply: (inv_fsa_timeless (wp_fsa e)). Qed.
 
