@@ -17,7 +17,7 @@ Run the following command to build the full development:
 
     make
 
-The development can then be installed as the Coq user contribution `iris' by
+The development can then be installed as the Coq user contribution `iris` by
 running:
 
     make install
