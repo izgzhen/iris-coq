@@ -305,6 +305,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 \end{mathparpagebreakable}
 
 \subsection{Proof rules}
+\label{sec:proof-rules}
 
 The judgment $\vctx \mid \pfctx \proves \prop$ says that with free variables $\vctx$, proposition $\prop$ holds whenever all assumptions $\pfctx$ hold.
 We implicitly assume that an arbitrary variable context, $\vctx$, is added to every constituent of the rules.
@@ -516,6 +517,8 @@ This is entirely standard.
 { \knowInv\iname\prop \proves \always \knowInv\iname\prop}
 \and
 { \ownGGhost{\mcore\melt} \proves \always \ownGGhost{\mcore\melt}}
+\and
+{ \mval(\melt) \proves \always \mval(\melt)}
 \end{mathpar}
 
 \paragraph{Laws of primitive view shifts.}
