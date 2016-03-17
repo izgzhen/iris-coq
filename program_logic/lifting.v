@@ -15,7 +15,7 @@ Implicit Types σ : state Λ.
 Implicit Types P Q : iProp Λ Σ.
 Implicit Types Φ : val Λ → iProp Λ Σ.
 
-Notation wp_fork ef := (default True ef (flip (wp ⊤) (λ _, ■ True)))%I.
+Notation wp_fork ef := (default True ef (flip (wp ⊤) (λ _, True)))%I.
 
 Lemma wp_lift_step E1 E2
     (φ : expr Λ → state Λ → option (expr Λ) → Prop) Φ e1 σ1 :

@@ -252,9 +252,11 @@ Infix "-n>" := cofe_mor (at level 45, right associativity).
 Instance cofe_more_inhabited {A B : cofeT} `{Inhabited B} :
   Inhabited (A -n> B) := populate (CofeMor (λ _, inhabitant)).
 
-(** Identity and composition *)
+(** Identity and composition and constant function *)
 Definition cid {A} : A -n> A := CofeMor id.
 Instance: Params (@cid) 1.
+Definition cconst {A B : cofeT} (x : B) : A -n> B := CofeMor (const x).
+Instance: Params (@cconst) 2.
 
 Definition ccompose {A B C}
   (f : B -n> C) (g : A -n> B) : A -n> C := CofeMor (f ∘ g).

@@ -64,6 +64,7 @@ program_logic/viewshifts.v
 program_logic/wsat.v
 program_logic/ownership.v
 program_logic/weakestpre.v
+program_logic/weakestpre_fix.v
 program_logic/pviewshifts.v
 program_logic/resources.v
 program_logic/hoare.v
