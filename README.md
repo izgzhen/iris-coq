@@ -1,4 +1,8 @@
-# PREREQUISITES
+# IRIS COQ DEVELOPMENT
+
+This is the Coq development of the [Iris Project](http://plv.mpi-sws.org/iris/).
+
+## Prerequisites
 
 This version is known to compile with:
 
@@ -11,7 +15,7 @@ fetch the development branch yourself). Iris compiles fine even without this
 patch, but proof bullets will only be in 'strict' (enforcing) mode with the
 fixed version of Ssreflect.
  
-# BUILDING INSTRUCTIONS
+## Building Instructions
 
 Run the following command to build the full development:
 
@@ -22,7 +26,7 @@ running:
 
     make install
 
-# STRUCTURE
+## Structure
 
 * The folder `prelude` contains an extended "Standard Library" by Robbert
   Krebbers <http://robbertkrebbers.nl/thesis.html>.
@@ -36,7 +40,7 @@ running:
 * The folder `barrier` contains the implementation and proof of the barrier
   <http://doi.acm.org/10.1145/2818638>.
 
-# DOCUMENTATION
+## Documentation
 
 A LaTeX version of the core logic definitions and some derived forms is
 available in `docs/iris.tex`.
