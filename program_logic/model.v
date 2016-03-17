@@ -1,9 +1,6 @@
 From iris.algebra Require Export upred.
 From iris.program_logic Require Export resources.
-(* We'd prefer to only import this in the sealed module, to make sure it does
-   not "escape". However, for some reason, that breaks importing model.v
-   elsewhere. *)
-From iris.algebra Require Import cofe_solver.
+From iris.algebra Require cofe_solver.
 
 (* The Iris program logic is parametrized by a locally contractive functor
 from the category of COFEs to the category of CMRAs, which is instantiated
@@ -36,6 +33,7 @@ Parameter iProp_unfold_fold: ∀ {Λ Σ} (P : iPreProp Λ Σ),
 End iProp_solution_sig.
 
 Module Export iProp_solution : iProp_solution_sig.
+Import cofe_solver.
 Definition iProp_result (Λ : language) (Σ : iFunctor) :
   solution (uPredCF (resRF Λ (▶ ∙) Σ)) := solver.result _.
 
