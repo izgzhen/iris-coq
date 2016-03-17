@@ -1,5 +1,8 @@
 From iris.algebra Require Export upred.
 From iris.program_logic Require Export resources.
+(* We'd prefer to only import this in the sealed module, to make sure it does
+   not "escape". However, for some reason, that breaks importing model.v
+   elsewhere. *)
 From iris.algebra Require Import cofe_solver.
 
 (* The Iris program logic is parametrized by a locally contractive functor
