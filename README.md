@@ -33,5 +33,5 @@ running:
   language-independent derived constructions (e.g., STSs).
 * The folder `heap_lang` defines the ML-like concurrent heap language, and a
   few derived constructions (e.g., parallel composition).
-* The folder `barrier` contains the implementation and proof of the barrier.
-* The folder `examples` contains the examples given in the paper.
+* The folder `barrier` contains the implementation and proof of the barrier
+  <http://doi.acm.org/10.1145/2818638>.
