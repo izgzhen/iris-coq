@@ -35,3 +35,8 @@ running:
   few derived constructions (e.g., parallel composition).
 * The folder `barrier` contains the implementation and proof of the barrier
   <http://doi.acm.org/10.1145/2818638>.
+
+# DOCUMENTATION
+
+A LaTeX version of the core logic definitions and some derived forms is
+available in `docs/iris.tex`.
