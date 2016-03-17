@@ -92,6 +92,7 @@ Global Instance wp_proper E e :
 Proof.
   by intros Φ Φ' ?; apply equiv_dist=>n; apply wp_ne=>v; apply equiv_dist.
 Qed.
+
 Lemma wp_mask_frame_mono E1 E2 e Φ Ψ :
   E1 ⊆ E2 → (∀ v, Φ v ⊢ Ψ v) → WP e @ E1 {{ Φ }} ⊢ WP e @ E2 {{ Ψ }}.
 Proof.
@@ -108,6 +109,13 @@ Proof.
   exists r2, r2'; split_and?; [rewrite HE'|eapply IH|]; eauto.
 Qed.
 
+Lemma wp_zero E e Φ r : wp_def E e Φ 0 r.
+Proof.
+  case EQ: (to_val e).
+  - rewrite -(of_to_val _ _ EQ). constructor. rewrite pvs_eq.
+    exact: pvs_zero.
+  - constructor; first done. intros ?????. exfalso. omega.
+Qed.
 Lemma wp_value_inv E Φ v n r :
   wp_def E (of_val v) Φ n r → pvs E E (Φ v) n r.
 Proof.

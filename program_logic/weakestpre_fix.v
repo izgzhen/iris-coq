@@ -1,3 +1,4 @@
+From Coq Require Import Wf_nat.
 From iris.program_logic Require Import weakestpre wsat.
 
 (** This files provides an alternative definition of wp in terms of a
@@ -115,5 +116,61 @@ Section def.
 
   Definition wp_fix : coPsetC -n> exprC -n> (valC -n> iProp) -n> iProp := 
     fixpoint pre_wp_mor.
+
+  Lemma wp_fix_unfold E e Φ :
+    pre_wp_mor wp_fix E e Φ ⊣⊢ wp_fix E e Φ.
+  Proof. rewrite -fixpoint_unfold. done. Qed.
+
+  Lemma wp_fix_sound (E : coPset) (e : expr Λ) (Φ : val Λ -> iProp)
+    (Hproper : ∀ n, Proper (dist n ==> dist n) (Φ : valC -> iProp)) :
+    wp_fix E e (@CofeMor _ _ _ Hproper) ⊢ wp E e Φ.
+  Proof.
+    split. rewrite wp_eq /wp_def {2}/uPred_holds.
+    intros n. revert E e Φ Hproper.
+    induction n as [n IH] using lt_wf_ind=> E e Φ Hproper r1 Hr1 Hwp.
+    case EQ: (to_val e)=>[v|].
+    - rewrite -(of_to_val _ _ EQ) {IH}. constructor. rewrite pvs_eq.
+      intros rf k Ef σ ???. destruct k; first (exfalso; omega).
+      edestruct (Hwp rf k Ef σ); eauto with omega; set_solver.
+    - constructor; first done. intros ???? Hk ??.
+      apply wp_fix_unfold in Hwp; last done.
+      edestruct Hwp as [Hval Hstep]; [|done..|]; first omega.
+      edestruct Hstep as [Hred Hpstep]; [done|omega|]. clear Hstep.
+      split; first done. intros ????.
+      edestruct Hpstep as (r2 & r2' & Hw & He2 & Hef); [done..|].
+      exists r2, r2'. split_and?; first done.
+      + apply: IH; last done; first omega.
+        apply wsat_valid in Hw; last omega. solve_validN.
+      + intros e' ?. subst ef. apply: IH; last done; first omega.
+        apply wsat_valid in Hw; last omega. solve_validN.
+  Qed.
+
+  Lemma wp_fix_complete (E : coPset) (e : expr Λ) (Φ : val Λ -> iProp)
+    (Hproper : ∀ n, Proper (dist n ==> dist n) (Φ : valC -> iProp)) :
+    wp E e Φ ⊢ wp_fix E e (@CofeMor _ _ _ Hproper).
+  Proof.
+    split. rewrite wp_eq /wp_def {1}/uPred_holds.
+    intros n. revert E e Φ Hproper.
+    induction n as [n IH] using lt_wf_ind=> E e Φ Hproper r1 Hr1 Hwp.
+    (* FIXME: This is *slow* *)
+    apply wp_fix_unfold. { done. }
+    intros rf k Ef σ1 ???. split.
+    - intros ? Hval. destruct Hwp as [??? Hpvs|]; last by destruct (to_val e1).
+      rewrite pvs_eq in Hpvs.
+      edestruct (Hpvs rf (S k) Ef σ1) as (r2 & ? & ?); [omega|set_solver|done|].
+      exists r2. split; last done. rewrite to_of_val in Hval.
+      by simplify_option_eq.
+    - intros Hval ?. destruct Hwp as [|??? _ Hwp].
+      { by rewrite to_of_val in Hval. }
+      edestruct Hwp as [? Hpstep]; try done; first omega; [].
+      split; first done.
+      intros ????. edestruct Hpstep as (r2 & r2' & Hw & He2 & Hef); [done..|].
+      exists r2, r2'. split_and?; first done.
+      + apply IH, He2; first omega.
+        apply wsat_valid in Hw; last omega. solve_validN.
+      + destruct ef; last done.
+        apply IH, Hef; first omega; last done.
+        apply wsat_valid in Hw; last omega. solve_validN.
+  Qed.
 
 End def.

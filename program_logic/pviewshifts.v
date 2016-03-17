@@ -46,6 +46,9 @@ Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q : iProp Λ Σ.
 Implicit Types m : iGst Λ Σ.
 
+Lemma pvs_zero E1 E2 P r : pvs_def E1 E2 P 0 r.
+Proof. intros ?????. exfalso. omega. Qed.
+
 Global Instance pvs_ne E1 E2 n : Proper (dist n ==> dist n) (@pvs Λ Σ E1 E2).
 Proof.
   rewrite pvs_eq.
