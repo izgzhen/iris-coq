@@ -174,20 +174,25 @@ Next Obligation.
   - apply (contractive_0 f).
   - apply (contractive_S f), IH; auto with omega.
 Qed.
-Program Definition fixpoint {A : cofeT} `{Inhabited A} (f : A → A)
+
+Program Definition fixpoint_def {A : cofeT} `{Inhabited A} (f : A → A)
   `{!Contractive f} : A := compl (fixpoint_chain f).
+Definition fixpoint_aux : { x | x = @fixpoint_def }. by eexists. Qed.
+Definition fixpoint {A AiH} f {Hf} := proj1_sig fixpoint_aux A AiH f Hf.
+Definition fixpoint_eq : @fixpoint = @fixpoint_def := proj2_sig fixpoint_aux.
 
 Section fixpoint.
   Context {A : cofeT} `{Inhabited A} (f : A → A) `{!Contractive f}.
   Lemma fixpoint_unfold : fixpoint f ≡ f (fixpoint f).
   Proof.
-    apply equiv_dist=>n; rewrite /fixpoint (conv_compl n (fixpoint_chain f)) //.
+    apply equiv_dist=>n.
+    rewrite fixpoint_eq /fixpoint_def (conv_compl n (fixpoint_chain f)) //.
     induction n as [|n IH]; simpl; eauto using contractive_0, contractive_S.
   Qed.
   Lemma fixpoint_ne (g : A → A) `{!Contractive g} n :
     (∀ z, f z ≡{n}≡ g z) → fixpoint f ≡{n}≡ fixpoint g.
   Proof.
-    intros Hfg. rewrite /fixpoint
+    intros Hfg. rewrite fixpoint_eq /fixpoint_def
       (conv_compl n (fixpoint_chain f)) (conv_compl n (fixpoint_chain g)) /=.
     induction n as [|n IH]; simpl in *; [by rewrite !Hfg|].
     rewrite Hfg; apply contractive_S, IH; auto using dist_S.
@@ -196,7 +201,6 @@ Section fixpoint.
     (∀ x, f x ≡ g x) → fixpoint f ≡ fixpoint g.
   Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint_ne. Qed.
 End fixpoint.
-Global Opaque fixpoint.
 
 (** Function space *)
 Record cofeMor (A B : cofeT) : Type := CofeMor {

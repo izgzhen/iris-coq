@@ -117,8 +117,7 @@ Section def.
   Definition wp_fix : coPsetC -n> exprC -n> (valC -n> iProp) -n> iProp := 
     fixpoint pre_wp_mor.
 
-  Lemma wp_fix_unfold E e Φ :
-    pre_wp_mor wp_fix E e Φ ⊣⊢ wp_fix E e Φ.
+  Lemma wp_fix_unfold E e Φ : pre_wp_mor wp_fix E e Φ ⊣⊢ wp_fix E e Φ.
   Proof. rewrite -fixpoint_unfold. done. Qed.
 
   Lemma wp_fix_sound (E : coPset) (e : expr Λ) (Φ : val Λ -> iProp)
@@ -131,6 +130,7 @@ Section def.
     case EQ: (to_val e)=>[v|].
     - rewrite -(of_to_val _ _ EQ) {IH}. constructor. rewrite pvs_eq.
       intros rf k Ef σ ???. destruct k; first (exfalso; omega).
+      apply wp_fix_unfold in Hwp; last done.
       edestruct (Hwp rf k Ef σ); eauto with omega; set_solver.
     - constructor; first done. intros ???? Hk ??.
       apply wp_fix_unfold in Hwp; last done.
@@ -152,8 +152,7 @@ Section def.
     split. rewrite wp_eq /wp_def {1}/uPred_holds.
     intros n. revert E e Φ Hproper.
     induction n as [n IH] using lt_wf_ind=> E e Φ Hproper r1 Hr1 Hwp.
-    (* FIXME: This is *slow* *)
-    apply wp_fix_unfold. { done. }
+    apply wp_fix_unfold; first done.
     intros rf k Ef σ1 ???. split.
     - intros ? Hval. destruct Hwp as [??? Hpvs|]; last by destruct (to_val e1).
       rewrite pvs_eq in Hpvs.
@@ -172,5 +171,4 @@ Section def.
         apply IH, Hef; first omega; last done.
         apply wsat_valid in Hw; last omega. solve_validN.
   Qed.
-
 End def.
