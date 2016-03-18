@@ -10,12 +10,10 @@ Section def.
   Context {Λ : language} {Σ : iFunctor}.
   Local Notation iProp := (iProp Λ Σ).
 
-  Definition valC := leibnizC (val Λ).
-  Definition exprC := leibnizC (expr Λ).
   Definition coPsetC := leibnizC (coPset).
 
-  Definition pre_wp_def (wp : coPsetC -n> exprC -n> (valC -n> iProp) -n> iProp)
-             (E : coPset) (e1 : expr Λ) (Φ : valC -n> iProp)
+  Definition pre_wp_def (wp : coPsetC -n> exprC Λ -n> (valC Λ -n> iProp) -n> iProp)
+             (E : coPset) (e1 : expr Λ) (Φ : valC Λ -n> iProp)
              (n : nat) (r1 : iRes Λ Σ) : Prop :=
     ∀ rf k Ef σ1, 0 ≤ k < n → E ∩ Ef = ∅ →
                   wsat (S k) (E ∪ Ef) σ1 (r1 ⋅ rf) →
@@ -30,8 +28,8 @@ Section def.
                         default True ef (λ ef, wp ⊤ ef (cconst True%I) k r2'))).
 
   Program Definition pre_wp
-          (wp : coPsetC -n> exprC -n> (valC -n> iProp) -n> iProp)
-          (E : coPset) (e1 : expr Λ) (Φ : valC -n> iProp) :  iProp :=
+          (wp : coPsetC -n> exprC Λ -n> (valC Λ -n> iProp) -n> iProp)
+          (E : coPset) (e1 : expr Λ) (Φ : valC Λ -n> iProp) :  iProp :=
     {| uPred_holds := pre_wp_def wp E e1 Φ |}.
   Next Obligation.
     intros ????? r1 r1' Hwp EQr.
@@ -88,12 +86,12 @@ Section def.
       + apply wsat_valid in Hw; last omega. solve_validN.
   Qed.
 
-  Definition pre_wp_mor wp : coPsetC -n> exprC -n> (valC -n> iProp) -n> iProp :=
-    CofeMor (λ E : coPsetC, CofeMor (λ e : exprC, CofeMor (pre_wp wp E e))).
+  Definition pre_wp_mor wp : coPsetC -n> exprC Λ -n> (valC Λ -n> iProp) -n> iProp :=
+    CofeMor (λ E : coPsetC, CofeMor (λ e : exprC Λ, CofeMor (pre_wp wp E e))).
 
   Local Instance pre_wp_contractive : Contractive pre_wp_mor.
   Proof.
-    cut (∀ n (wp1 wp2 : coPsetC -n> exprC -n> (valC -n> iProp) -n> iProp),
+    cut (∀ n (wp1 wp2 : coPsetC -n> exprC Λ -n> (valC Λ -n> iProp) -n> iProp),
            (∀ i : nat, i < n → wp1 ≡{i}≡ wp2) → ∀ E e Φ r,
               pre_wp wp1 E e Φ n r → pre_wp wp2 E e Φ n r).
     { intros H n wp1 wp2 HI. split; split; eapply H; intros.
@@ -114,14 +112,14 @@ Section def.
       + apply wsat_valid in Hw; last omega. solve_validN.
   Qed.
 
-  Definition wp_fix : coPsetC -n> exprC -n> (valC -n> iProp) -n> iProp := 
+  Definition wp_fix : coPsetC -n> exprC Λ -n> (valC Λ -n> iProp) -n> iProp := 
     fixpoint pre_wp_mor.
 
   Lemma wp_fix_unfold E e Φ : pre_wp_mor wp_fix E e Φ ⊣⊢ wp_fix E e Φ.
   Proof. rewrite -fixpoint_unfold. done. Qed.
 
   Lemma wp_fix_sound (E : coPset) (e : expr Λ) (Φ : val Λ -> iProp)
-    (Hproper : ∀ n, Proper (dist n ==> dist n) (Φ : valC -> iProp)) :
+    (Hproper : ∀ n, Proper (dist n ==> dist n) (Φ : valC Λ -> iProp)) :
     wp_fix E e (@CofeMor _ _ _ Hproper) ⊢ wp E e Φ.
   Proof.
     split. rewrite wp_eq /wp_def {2}/uPred_holds.
@@ -146,7 +144,7 @@ Section def.
   Qed.
 
   Lemma wp_fix_complete (E : coPset) (e : expr Λ) (Φ : val Λ -> iProp)
-    (Hproper : ∀ n, Proper (dist n ==> dist n) (Φ : valC -> iProp)) :
+    (Hproper : ∀ n, Proper (dist n ==> dist n) (Φ : valC Λ -> iProp)) :
     wp E e Φ ⊢ wp_fix E e (@CofeMor _ _ _ Hproper).
   Proof.
     split. rewrite wp_eq /wp_def {1}/uPred_holds.
