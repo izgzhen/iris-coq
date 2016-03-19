@@ -248,7 +248,6 @@ Section cofe_mor.
     Proper ((≡) ==> (≡) ==> (≡)) (@cofe_mor_car A B) := ne_proper_2 _.
   Lemma cofe_mor_ext (f g : cofeMor A B) : f ≡ g ↔ ∀ x, f x ≡ g x.
   Proof. done. Qed.
-
 End cofe_mor.
 
 Arguments cofe_mor : clear implicits.

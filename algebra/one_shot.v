@@ -44,19 +44,11 @@ Proof. by inversion_clear 1. Qed.
 Global Instance One_Shot_dist_inj n : Inj (dist n) (dist n) (@Shot A).
 Proof. by inversion_clear 1. Qed.
 
-Program Definition one_shot_chain (c : chain (one_shot A)) (a : A)
-    (H : maybe Shot (c 0) = Some a) : chain A :=
+Program Definition one_shot_chain (c : chain (one_shot A)) (a : A) : chain A :=
   {| chain_car n := match c n return _ with Shot b => b | _ => a end |}.
-Next Obligation.
-  intros c a ? n i ?; simpl.
-  destruct (c 0) eqn:?; simplify_eq/=.
-  by feed inversion (chain_cauchy c n i).
-Qed.
+Next Obligation. intros c a n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
 Instance one_shot_compl : Compl (one_shot A) := λ c,
-  match Some_dec (maybe Shot (c 0)) with
-  | inleft (exist a H) => Shot (compl (one_shot_chain c a H))
-  | inright _ => c 0
-  end.
+  match c 0 with Shot a => Shot (compl (one_shot_chain c a)) | x => x end.
 Definition one_shot_cofe_mixin : CofeMixin (one_shot A).
 Proof.
   split.
@@ -69,16 +61,9 @@ Proof.
     + by destruct 1; constructor.
     + destruct 1; inversion_clear 1; constructor; etrans; eauto.
   - by inversion_clear 1; constructor; done || apply dist_S.
-  - intros n c; unfold compl, one_shot_compl.
-    destruct (Some_dec (maybe Shot (c 0))) as [[a Hx]|].
-    { assert (c 0 = Shot a) by (by destruct (c 0); simplify_eq/=).
-      assert (∃ b, c n = Shot b) as [y Hy].
-      { feed inversion (chain_cauchy c 0 n);
-          eauto with lia congruence f_equal. }
-      rewrite Hy; constructor; auto.
-      by rewrite (conv_compl n (one_shot_chain c a Hx)) /= Hy. }
-    feed inversion (chain_cauchy c 0 n); first lia;
-       constructor; destruct (c 0); simplify_eq/=.
+  - intros n c; rewrite /compl /one_shot_compl.
+    feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
+    rewrite (conv_compl n (one_shot_chain c _)) /=. destruct (c n); naive_solver.
 Qed.
 Canonical Structure one_shotC : cofeT := CofeT one_shot_cofe_mixin.
 Global Instance one_shot_discrete : Discrete A → Discrete one_shotC.

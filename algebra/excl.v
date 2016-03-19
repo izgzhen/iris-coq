@@ -39,18 +39,11 @@ Proof. by inversion_clear 1. Qed.
 Global Instance Excl_dist_inj n : Inj (dist n) (dist n) (@Excl A).
 Proof. by inversion_clear 1. Qed.
 
-Program Definition excl_chain
-    (c : chain (excl A)) (a : A) (H : maybe Excl (c 0) = Some a) : chain A :=
+Program Definition excl_chain (c : chain (excl A)) (a : A) : chain A :=
   {| chain_car n := match c n return _ with Excl y => y | _ => a end |}.
-Next Obligation.
-  intros c a ? n i ?; simpl.
-  destruct (c 0) eqn:?; simplify_eq/=.
-  by feed inversion (chain_cauchy c n i).
-Qed.
+Next Obligation. intros c a n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
 Instance excl_compl : Compl (excl A) := λ c,
-  match Some_dec (maybe Excl (c 0)) with
-  | inleft (exist a H) => Excl (compl (excl_chain c a H)) | inright _ => c 0
-  end.
+  match c 0 with Excl a => Excl (compl (excl_chain c a)) | x => x end.
 Definition excl_cofe_mixin : CofeMixin (excl A).
 Proof.
   split.
@@ -62,15 +55,9 @@ Proof.
     + by destruct 1; constructor.
     + destruct 1; inversion_clear 1; constructor; etrans; eauto.
   - by inversion_clear 1; constructor; apply dist_S.
-  - intros n c; unfold compl, excl_compl.
-    destruct (Some_dec (maybe Excl (c 0))) as [[a Ha]|].
-    { assert (c 0 = Excl a) by (by destruct (c 0); simplify_eq/=).
-      assert (∃ b, c n = Excl b) as [b Hb].
-      { feed inversion (chain_cauchy c 0 n); eauto with lia congruence. }
-      rewrite Hb; constructor.
-      by rewrite (conv_compl n (excl_chain c a Ha)) /= Hb. }
-    feed inversion (chain_cauchy c 0 n); first lia;
-       constructor; destruct (c 0); simplify_eq/=.
+  - intros n c; rewrite /compl /excl_compl.
+    feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
+    rewrite (conv_compl n (excl_chain c _)) /=. destruct (c n); naive_solver.
 Qed.
 Canonical Structure exclC : cofeT := CofeT excl_cofe_mixin.
 Global Instance excl_discrete : Discrete A → Discrete exclC.

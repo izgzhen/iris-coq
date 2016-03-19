@@ -8,18 +8,11 @@ Inductive option_dist : Dist (option A) :=
   | Some_dist n x y : x ≡{n}≡ y → Some x ≡{n}≡ Some y
   | None_dist n : None ≡{n}≡ None.
 Existing Instance option_dist.
-Program Definition option_chain
-    (c : chain (option A)) (x : A) (H : c 0 = Some x) : chain A :=
+Program Definition option_chain (c : chain (option A)) (x : A) : chain A :=
   {| chain_car n := from_option x (c n) |}.
-Next Obligation.
-  intros c x ? n i ?; simpl.
-  destruct (c 0) eqn:?; simplify_eq/=.
-  by feed inversion (chain_cauchy c n i).
-Qed.
+Next Obligation. intros c x n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
 Instance option_compl : Compl (option A) := λ c,
-  match Some_dec (c 0) with
-  | inleft (exist x H) => Some (compl (option_chain c x H)) | inright _ => None
-  end.
+  match c 0 with Some x => Some (compl (option_chain c x)) | None => None end.
 Definition option_cofe_mixin : CofeMixin (option A).
 Proof.
   split.
@@ -31,14 +24,9 @@ Proof.
     + by destruct 1; constructor.
     + destruct 1; inversion_clear 1; constructor; etrans; eauto.
   - by inversion_clear 1; constructor; apply dist_S.
-  - intros n c; unfold compl, option_compl.
-    destruct (Some_dec (c 0)) as [[x Hx]|].
-    { assert (is_Some (c n)) as [y Hy].
-      { feed inversion (chain_cauchy c 0 n); eauto with lia congruence. }
-      rewrite Hy; constructor.
-      by rewrite (conv_compl n (option_chain c x Hx)) /= Hy. }
-    feed inversion (chain_cauchy c 0 n); eauto with lia congruence.
-    constructor.
+  - intros n c; rewrite /compl /option_compl.
+    feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
+    rewrite (conv_compl n (option_chain c _)) /=. destruct (c n); naive_solver.
 Qed.
 Canonical Structure optionC := CofeT option_cofe_mixin.
 Global Instance option_discrete : Discrete A → Discrete optionC.
