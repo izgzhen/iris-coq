@@ -95,3 +95,5 @@ heap_lang/lib/barrier/proof.v
 heap_lang/lib/barrier/client.v
 tests/heap_lang.v
 tests/program_logic.v
+tests/one_shot.v
+tests/joining_existentials.v
