@@ -1,4 +1,4 @@
-From iris.barrier Require Import proof.
+From iris.heap_lang.lib.barrier Require Import proof.
 From iris.heap_lang Require Import par.
 From iris.program_logic Require Import auth sts saved_prop hoare ownership.
 Import uPred.

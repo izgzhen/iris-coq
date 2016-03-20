@@ -35,10 +35,14 @@ running:
 * The folder `program_logic` builds the semantic domain of Iris, defines and
   verifies primitive view shifts and weakest preconditions, and builds some
   language-independent derived constructions (e.g., STSs).
-* The folder `heap_lang` defines the ML-like concurrent heap language, and a
-  few derived constructions (e.g., parallel composition).
-* The folder `barrier` contains the implementation and proof of the barrier
-  <http://doi.acm.org/10.1145/2818638>.
+* The folder `heap_lang` defines the ML-like concurrent heap language
+  * The subfolder `lib` contains a few derived constructions within this
+    language, e.g., parallel composition.
+    Most notable here s `lib/barrier`, the implementation and proof of a barrier
+    as described in <http://doi.acm.org/10.1145/2818638>.
+* The folder `tests` contains modules we use to test our infrastructure.
+  Users of the Iris Coq library should *not* depend on these modules; they may
+  change or disappear without any notice.
 
 ## Documentation
 
