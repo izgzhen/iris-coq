@@ -4,40 +4,50 @@ From iris.algebra Require Import upred.
 (* COFE *)
 Section cofe.
 Context {A : cofeT}.
-Inductive option_dist : Dist (option A) :=
-  | Some_dist n x y : x ≡{n}≡ y → Some x ≡{n}≡ Some y
-  | None_dist n : None ≡{n}≡ None.
-Existing Instance option_dist.
+
+Inductive option_dist' (n : nat) : relation (option A) :=
+  | Some_dist x y : x ≡{n}≡ y → option_dist' n (Some x) (Some y)
+  | None_dist : option_dist' n None None.
+Instance option_dist : Dist (option A) := option_dist'.
+
+Lemma dist_option_Forall2 n mx my : mx ≡{n}≡ my ↔ option_Forall2 (dist n) mx my.
+Proof. split; destruct 1; constructor; auto. Qed.
+
 Program Definition option_chain (c : chain (option A)) (x : A) : chain A :=
   {| chain_car n := from_option x (c n) |}.
 Next Obligation. intros c x n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
 Instance option_compl : Compl (option A) := λ c,
   match c 0 with Some x => Some (compl (option_chain c x)) | None => None end.
+
 Definition option_cofe_mixin : CofeMixin (option A).
 Proof.
   split.
   - intros mx my; split; [by destruct 1; constructor; apply equiv_dist|].
-    intros Hxy; feed inversion (Hxy 1); subst; constructor; apply equiv_dist.
+    intros Hxy; destruct (Hxy 0); constructor; apply equiv_dist.
     by intros n; feed inversion (Hxy n).
   - intros n; split.
     + by intros [x|]; constructor.
     + by destruct 1; constructor.
     + destruct 1; inversion_clear 1; constructor; etrans; eauto.
-  - by inversion_clear 1; constructor; apply dist_S.
+  - destruct 1; constructor; by apply dist_S.
   - intros n c; rewrite /compl /option_compl.
     feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
     rewrite (conv_compl n (option_chain c _)) /=. destruct (c n); naive_solver.
 Qed.
 Canonical Structure optionC := CofeT option_cofe_mixin.
 Global Instance option_discrete : Discrete A → Discrete optionC.
-Proof. inversion_clear 2; constructor; by apply (timeless _). Qed.
+Proof. destruct 2; constructor; by apply (timeless _). Qed.
 
 Global Instance Some_ne : Proper (dist n ==> dist n) (@Some A).
 Proof. by constructor. Qed.
 Global Instance is_Some_ne n : Proper (dist n ==> iff) (@is_Some A).
-Proof. inversion_clear 1; split; eauto. Qed.
+Proof. destruct 1; split; eauto. Qed.
 Global Instance Some_dist_inj : Inj (dist n) (dist n) (@Some A).
 Proof. by inversion_clear 1. Qed.
+Global Instance from_option_ne n :
+  Proper (dist n ==> dist n ==> dist n) (@from_option A).
+Proof. by destruct 2. Qed.
+
 Global Instance None_timeless : Timeless (@None A).
 Proof. inversion_clear 1; constructor. Qed.
 Global Instance Some_timeless x : Timeless x → Timeless (Some x).
@@ -125,16 +135,16 @@ Global Instance option_persistent (mx : option A) :
 Proof. intros. destruct mx. apply _. apply cmra_unit_persistent. Qed.
 
 (** Internalized properties *)
-Lemma option_equivI {M} (x y : option A) :
-  (x ≡ y) ⊣⊢ (match x, y with
-               | Some a, Some b => a ≡ b | None, None => True | _, _ => False
-               end : uPred M).
+Lemma option_equivI {M} (mx my : option A) :
+  (mx ≡ my) ⊣⊢ (match mx, my with
+                | Some x, Some y => x ≡ y | None, None => True | _, _ => False
+                end : uPred M).
 Proof.
-  uPred.unseal. do 2 split. by destruct 1. by destruct x, y; try constructor.
+  uPred.unseal. do 2 split. by destruct 1. by destruct mx, my; try constructor.
 Qed.
-Lemma option_validI {M} (x : option A) :
-  (✓ x) ⊣⊢ (match x with Some a => ✓ a | None => True end : uPred M).
-Proof. uPred.unseal. by destruct x. Qed.
+Lemma option_validI {M} (mx : option A) :
+  (✓ mx) ⊣⊢ (match mx with Some x => ✓ x | None => True end : uPred M).
+Proof. uPred.unseal. by destruct mx. Qed.
 
 (** Updates *)
 Lemma option_updateP (P : A → Prop) (Q : option A → Prop) x :
@@ -146,7 +156,7 @@ Proof.
   by exists (Some y'); split; [auto|apply cmra_validN_op_l with (core x)].
 Qed.
 Lemma option_updateP' (P : A → Prop) x :
-  x ~~>: P → Some x ~~>: λ y, default False y P.
+  x ~~>: P → Some x ~~>: λ my, default False my P.
 Proof. eauto using option_updateP. Qed.
 Lemma option_update x y : x ~~> y → Some x ~~> Some y.
 Proof.
