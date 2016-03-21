@@ -1,4 +1,4 @@
-From iris.algebra Require Export upred.
+From iris.algebra Require Export upred list.
 From iris.prelude Require Import gmap fin_collections.
 Import uPred.
 
@@ -44,11 +44,9 @@ Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 Global Instance big_sep_proper : Proper ((≡) ==> (⊣⊢)) (@uPred_big_sep M).
 Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 
-Global Instance big_and_ne n :
-  Proper (Forall2 (dist n) ==> dist n) (@uPred_big_and M).
+Global Instance big_and_ne n : Proper (dist n ==> dist n) (@uPred_big_and M).
 Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
-Global Instance big_sep_ne n :
-  Proper (Forall2 (dist n) ==> dist n) (@uPred_big_sep M).
+Global Instance big_sep_ne n : Proper (dist n ==> dist n) (@uPred_big_sep M).
 Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 
 Global Instance big_and_mono' : Proper (Forall2 (⊢) ==> (⊢)) (@uPred_big_and M).
