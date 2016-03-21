@@ -8,15 +8,25 @@ From iris.prelude Require Export numbers base option.
 Arguments length {_} _.
 Arguments cons {_} _ _.
 Arguments app {_} _ _.
-Arguments Permutation {_} _ _.
-Arguments Forall_cons {_} _ _ _ _ _.
+
+Instance: Params (@length) 1.
+Instance: Params (@cons) 1.
+Instance: Params (@app) 1.
 
 Notation tail := tl.
 Notation take := firstn.
 Notation drop := skipn.
 
+Arguments tail {_} _.
 Arguments take {_} !_ !_ /.
 Arguments drop {_} !_ !_ /.
+
+Instance: Params (@tail) 1.
+Instance: Params (@take) 1.
+Instance: Params (@drop) 1.
+
+Arguments Permutation {_} _ _.
+Arguments Forall_cons {_} _ _ _ _ _.
 
 Notation "(::)" := cons (only parsing) : C_scope.
 Notation "( x ::)" := (cons x) (only parsing) : C_scope.
@@ -74,6 +84,7 @@ Fixpoint list_inserts {A} (i : nat) (k l : list A) : list A :=
   | [] => l
   | y :: k => <[i:=y]>(list_inserts (S i) k l)
   end.
+Instance: Params (@list_inserts) 1.
 
 (** The operation [delete i l] removes the [i]th element of [l] and moves
 all consecutive elements one position ahead. In case [i] is out of bounds,
@@ -88,7 +99,8 @@ Instance list_delete {A} : Delete nat (list A) :=
 (** The function [option_list o] converts an element [Some x] into the
 singleton list [[x]], and [None] into the empty list [[]]. *)
 Definition option_list {A} : option A → list A := option_rect _ (λ x, [x]) [].
-Definition list_singleton {A} (l : list A) : option A :=
+Instance: Params (@option_list) 1.
+Instance maybe_list_singleton {A} : Maybe (λ x : A, [x]) := λ l,
   match l with [x] => Some x | _ => None end.
 
 (** The function [filter P l] returns the list of elements of [l] that
@@ -108,19 +120,23 @@ Definition list_find {A} P `{∀ x, Decision (P x)} : list A → option (nat * A
   | [] => None
   | x :: l => if decide (P x) then Some (0,x) else prod_map S id <$> go l
   end.
+Instance: Params (@list_find) 3.
 
 (** The function [replicate n x] generates a list with length [n] of elements
 with value [x]. *)
 Fixpoint replicate {A} (n : nat) (x : A) : list A :=
   match n with 0 => [] | S n => x :: replicate n x end.
+Instance: Params (@replicate) 2.
 
 (** The function [reverse l] returns the elements of [l] in reverse order. *)
 Definition reverse {A} (l : list A) : list A := rev_append l [].
+Instance: Params (@reverse) 1.
 
 (** The function [last l] returns the last element of the list [l], or [None]
 if the list [l] is empty. *)
 Fixpoint last {A} (l : list A) : option A :=
   match l with [] => None | [x] => Some x | _ :: l => last l end.
+Instance: Params (@last) 1.
 
 (** The function [resize n y l] takes the first [n] elements of [l] in case
 [length l ≤ n], and otherwise appends elements with value [x] to [l] to obtain
@@ -131,6 +147,7 @@ Fixpoint resize {A} (n : nat) (y : A) (l : list A) : list A :=
   | x :: l => match n with 0 => [] | S n => x :: resize n y l end
   end.
 Arguments resize {_} !_ _ !_.
+Instance: Params (@resize) 2.
 
 (** The function [reshape k l] transforms [l] into a list of lists whose sizes
 are specified by [k]. In case [l] is too short, the resulting list will be
@@ -139,6 +156,7 @@ Fixpoint reshape {A} (szs : list nat) (l : list A) : list (list A) :=
   match szs with
   | [] => [] | sz :: szs => take sz l :: reshape szs (drop sz l)
   end.
+Instance: Params (@reshape) 2.
 
 Definition sublist_lookup {A} (i n : nat) (l : list A) : option (list A) :=
   guard (i + n ≤ length l); Some (take n (drop i l)).
@@ -366,27 +384,6 @@ Context {A : Type}.
 Implicit Types x y z : A.
 Implicit Types l k : list A.
 
-Section setoid.
-  Context `{Equiv A} `{!Equivalence ((≡) : relation A)}.
-  Global Instance map_equivalence : Equivalence ((≡) : relation (list A)).
-  Proof.
-    split.
-    - intros l; induction l; constructor; auto.
-    - induction 1; constructor; auto.
-    - intros l1 l2 l3 Hl; revert l3.
-      induction Hl; inversion_clear 1; constructor; try etrans; eauto.
-  Qed.
-  Global Instance cons_proper : Proper ((≡) ==> (≡) ==> (≡)) (@cons A).
-  Proof. by constructor. Qed.
-  Global Instance app_proper : Proper ((≡) ==> (≡) ==> (≡)) (@app A).
-  Proof.
-    induction 1 as [|x y l k ?? IH]; intros ?? Htl; simpl; auto.
-    by apply cons_equiv, IH.
-  Qed.
-  Global Instance list_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (list A).
-  Proof. induction 1; f_equal; fold_leibniz; auto. Qed.
-End setoid.
-
 Global Instance: Inj2 (=) (=) (=) (@cons A).
 Proof. by injection 1. Qed.
 Global Instance: ∀ k, Inj (=) (=) (k ++).
@@ -409,18 +406,18 @@ Lemma cons_middle x l1 l2 : l1 ++ x :: l2 = l1 ++ [x] ++ l2.
 Proof. done. Qed.
 Lemma list_eq l1 l2 : (∀ i, l1 !! i = l2 !! i) → l1 = l2.
 Proof.
-  revert l2. induction l1; intros [|??] H.
+  revert l2. induction l1 as [|x l1 IH]; intros [|y l2] H.
   - done.
   - discriminate (H 0).
   - discriminate (H 0).
-  - f_equal; [by injection (H 0)|]. apply (IHl1 _ $ λ i, H (S i)).
+  - f_equal; [by injection (H 0)|]. apply (IH _ $ λ i, H (S i)).
 Qed.
 Global Instance list_eq_dec {dec : ∀ x y, Decision (x = y)} : ∀ l k,
   Decision (l = k) := list_eq_dec dec.
 Global Instance list_eq_nil_dec l : Decision (l = []).
 Proof. by refine match l with [] => left _ | _ => right _ end. Defined.
 Lemma list_singleton_reflect l :
-  option_reflect (λ x, l = [x]) (length l ≠ 1) (list_singleton l).
+  option_reflect (λ x, l = [x]) (length l ≠ 1) (maybe (λ x, [x]) l).
 Proof. by destruct l as [|? []]; constructor. Defined.
 
 Definition nil_length : length (@nil A) = 0 := eq_refl.
@@ -434,15 +431,11 @@ Proof. by destruct i. Qed.
 Lemma lookup_tail l i : tail l !! i = l !! S i.
 Proof. by destruct l. Qed.
 Lemma lookup_lt_Some l i x : l !! i = Some x → i < length l.
-Proof.
-  revert i. induction l; intros [|?] ?; simplify_eq/=; auto with arith.
-Qed.
+Proof. revert i. induction l; intros [|?] ?; naive_solver auto with arith. Qed.
 Lemma lookup_lt_is_Some_1 l i : is_Some (l !! i) → i < length l.
 Proof. intros [??]; eauto using lookup_lt_Some. Qed.
 Lemma lookup_lt_is_Some_2 l i : i < length l → is_Some (l !! i).
-Proof.
-  revert i. induction l; intros [|?] ?; simplify_eq/=; eauto with lia.
-Qed.
+Proof. revert i. induction l; intros [|?] ?; naive_solver eauto with lia. Qed.
 Lemma lookup_lt_is_Some l i : is_Some (l !! i) ↔ i < length l.
 Proof. split; auto using lookup_lt_is_Some_1, lookup_lt_is_Some_2. Qed.
 Lemma lookup_ge_None l i : l !! i = None ↔ length l ≤ i.
@@ -462,7 +455,7 @@ Proof.
   - by rewrite lookup_ge_None, Hlen, <-lookup_ge_None.
 Qed.
 Lemma lookup_app_l l1 l2 i : i < length l1 → (l1 ++ l2) !! i = l1 !! i.
-Proof. revert i. induction l1; intros [|?]; simpl; auto with lia. Qed.
+Proof. revert i. induction l1; intros [|?]; naive_solver auto with lia. Qed.
 Lemma lookup_app_l_Some l1 l2 i x : l1 !! i = Some x → (l1 ++ l2) !! i = Some x.
 Proof. intros. rewrite lookup_app_l; eauto using lookup_lt_Some. Qed.
 Lemma lookup_app_r l1 l2 i :
@@ -491,15 +484,11 @@ Proof. revert i. by induction l; intros [|?]; f_equal/=. Qed.
 Lemma list_lookup_alter f l i : alter f i l !! i = f <$> l !! i.
 Proof. revert i. induction l. done. intros [|i]. done. apply (IHl i). Qed.
 Lemma list_lookup_alter_ne f l i j : i ≠ j → alter f i l !! j = l !! j.
-Proof.
-  revert i j. induction l; [done|]. intros [][] ?; csimpl; auto with congruence.
-Qed.
+Proof. revert i j. induction l; [done|]. intros [] []; naive_solver. Qed.
 Lemma list_lookup_insert l i x : i < length l → <[i:=x]>l !! i = Some x.
 Proof. revert i. induction l; intros [|?] ?; f_equal/=; auto with lia. Qed.
 Lemma list_lookup_insert_ne l i j x : i ≠ j → <[i:=x]>l !! j = l !! j.
-Proof.
-  revert i j. induction l; [done|]. intros [] [] ?; simpl; auto with congruence.
-Qed.
+Proof. revert i j. induction l; [done|]. intros [] []; naive_solver. Qed.
 Lemma list_lookup_insert_Some l i x j y :
   <[i:=x]>l !! j = Some y ↔
     i = j ∧ x = y ∧ j < length l ∨ i ≠ j ∧ l !! j = Some y.
@@ -814,9 +803,9 @@ Section find.
   Lemma list_find_Some l i x :
     list_find P l = Some (i,x) → l !! i = Some x ∧ P x.
   Proof.
-    revert i; induction l; intros [] ?;
-      repeat (match goal with x : prod _ _ |- _ => destruct x end
-              || simplify_option_eq); eauto.
+    revert i; induction l; intros [] ?; repeat first
+      [ match goal with x : prod _ _ |- _ => destruct x end
+      | simplify_option_eq ]; eauto.
   Qed.
   Lemma list_find_elem_of l x : x ∈ l → P x → is_Some (list_find P l).
   Proof.
@@ -1131,12 +1120,6 @@ Proof.
 Qed.
 Lemma lookup_resize_old l n x i : n ≤ i → resize n x l !! i = None.
 Proof. intros ?. apply lookup_ge_None_2. by rewrite resize_length. Qed.
-End general_properties.
-
-Section more_general_properties.
-Context {A : Type}.
-Implicit Types x y z : A.
-Implicit Types l k : list A.
 
 (** ** Properties of the [reshape] function *)
 Lemma reshape_length szs l : length (reshape szs l) = length szs.
@@ -1149,6 +1132,12 @@ Proof.
 Qed.
 Lemma sum_list_replicate n m : sum_list (replicate m n) = m * n.
 Proof. induction m; simpl; auto. Qed.
+End general_properties.
+
+Section more_general_properties.
+Context {A : Type}.
+Implicit Types x y z : A.
+Implicit Types l k : list A.
 
 (** ** Properties of [sublist_lookup] and [sublist_alter] *)
 Lemma sublist_lookup_length l i n k :
@@ -2026,10 +2015,9 @@ Global Instance included_preorder : PreOrder (@included A).
 Proof. split; firstorder. Qed.
 Lemma included_nil l : [] `included` l.
 Proof. intros x. by rewrite elem_of_nil. Qed.
-End more_general_properties.
 
 (** ** Properties of the [Forall] and [Exists] predicate *)
-Lemma Forall_Exists_dec {A} {P Q : A → Prop} (dec : ∀ x, {P x} + {Q x}) :
+Lemma Forall_Exists_dec {P Q : A → Prop} (dec : ∀ x, {P x} + {Q x}) :
   ∀ l, {Forall P l} + {Exists Q l}.
 Proof.
  refine (
@@ -2041,7 +2029,7 @@ Proof.
 Defined.
 
 Section Forall_Exists.
-  Context {A} (P : A → Prop).
+  Context (P : A → Prop).
 
   Definition Forall_nil_2 := @Forall_nil A.
   Definition Forall_cons_2 := @Forall_cons A.
@@ -2225,12 +2213,13 @@ Section Forall_Exists.
     end.
 End Forall_Exists.
 
-Lemma replicate_as_Forall {A} (x : A) n l :
+Lemma replicate_as_Forall (x : A) n l :
   replicate n x = l ↔ length l = n ∧ Forall (x =) l.
 Proof. rewrite replicate_as_elem_of, Forall_forall. naive_solver. Qed.
-Lemma replicate_as_Forall_2 {A} (x : A) n l :
+Lemma replicate_as_Forall_2 (x : A) n l :
   length l = n → Forall (x =) l → replicate n x = l.
 Proof. by rewrite replicate_as_Forall. Qed.
+End more_general_properties.
 
 Lemma Forall_swap {A B} (Q : A → B → Prop) l1 l2 :
   Forall (λ y, Forall (Q y) l1) l2 ↔ Forall (λ x, Forall (flip Q x) l2) l1.
@@ -2253,11 +2242,6 @@ Section Forall2.
   Implicit Types l : list A.
   Implicit Types k : list B.
 
-  Lemma Forall2_true l k :
-    (∀ x y, P x y) → length l = length k → Forall2 P l k.
-  Proof.
-    intro. revert k. induction l; intros [|??] ?; simplify_eq/=; auto.
-  Qed.
   Lemma Forall2_same_length l k :
     Forall2 (λ _ _, True) l k ↔ length l = length k.
   Proof.
@@ -2270,10 +2254,48 @@ Section Forall2.
   Proof. intros ? <-; symmetry. by apply Forall2_length. Qed.
   Lemma Forall2_length_r l k n : Forall2 P l k → length k = n → length l = n.
   Proof. intros ? <-. by apply Forall2_length. Qed.
+
+  Lemma Forall2_true l k : (∀ x y, P x y) → length l = length k → Forall2 P l k.
+  Proof. rewrite <-Forall2_same_length. induction 2; naive_solver. Qed.
+  Lemma Forall2_flip l k : Forall2 (flip P) k l ↔ Forall2 P l k.
+  Proof. split; induction 1; constructor; auto. Qed.
+  Lemma Forall2_transitive {C} (Q : B → C → Prop) (R : A → C → Prop) l k lC :
+    (∀ x y z, P x y → Q y z → R x z) →
+    Forall2 P l k → Forall2 Q k lC → Forall2 R l lC.
+  Proof. intros ? Hl. revert lC. induction Hl; inversion_clear 1; eauto. Qed.
+  Lemma Forall2_impl (Q : A → B → Prop) l k :
+    Forall2 P l k → (∀ x y, P x y → Q x y) → Forall2 Q l k.
+  Proof. intros H ?. induction H; auto. Defined.
+  Lemma Forall2_unique l k1 k2 :
+    Forall2 P l k1 → Forall2 P l k2 →
+    (∀ x y1 y2, P x y1 → P x y2 → y1 = y2) → k1 = k2.
+  Proof.
+    intros H. revert k2. induction H; inversion_clear 1; intros; f_equal; eauto.
+  Qed.
+  Lemma Forall2_forall `{Inhabited C} (Q : C → A → B → Prop) l k :
+    Forall2 (λ x y, ∀ z, Q z x y) l k ↔ ∀ z, Forall2 (Q z) l k.
+  Proof.
+    split; [induction 1; constructor; auto|].
+    intros Hlk. induction (Hlk inhabitant) as [|x y l k _ _ IH]; constructor.
+    - intros z. by feed inversion (Hlk z).
+    - apply IH. intros z. by feed inversion (Hlk z).
+  Qed.
+
+  Lemma Forall_Forall2 (Q : A → A → Prop) l :
+    Forall (λ x, Q x x) l → Forall2 Q l l.
+  Proof. induction 1; constructor; auto. Qed.
+  Lemma Forall2_Forall_l (Q : A → Prop) l k :
+    Forall2 P l k → Forall (λ y, ∀ x, P x y → Q x) k → Forall Q l.
+  Proof. induction 1; inversion_clear 1; eauto. Qed.
+  Lemma Forall2_Forall_r (Q : B → Prop) l k :
+    Forall2 P l k → Forall (λ x, ∀ y, P x y → Q y) l → Forall Q k.
+  Proof. induction 1; inversion_clear 1; eauto. Qed.
+
   Lemma Forall2_nil_inv_l k : Forall2 P [] k → k = [].
   Proof. by inversion 1. Qed.
   Lemma Forall2_nil_inv_r l : Forall2 P l [] → l = [].
   Proof. by inversion 1. Qed.
+
   Lemma Forall2_cons_inv x l y k :
     Forall2 P (x :: l) (y :: k) → P x y ∧ Forall2 P l k.
   Proof. by inversion 1. Qed.
@@ -2287,6 +2309,7 @@ Section Forall2.
   Proof. by inversion 1. Qed.
   Lemma Forall2_nil_cons_inv y k : Forall2 P [] (y :: k) → False.
   Proof. by inversion 1. Qed.
+
   Lemma Forall2_app_l l1 l2 k :
     Forall2 P l1 (take (length l1) k) → Forall2 P l2 (drop (length l1) k) →
     Forall2 P (l1 ++ l2) k.
@@ -2315,39 +2338,34 @@ Section Forall2.
     split; [|intros (?&?&?&?&->); by apply Forall2_app].
     revert l. induction k1; inversion 1; naive_solver.
   Qed.
-  Lemma Forall2_flip l k : Forall2 (flip P) k l ↔ Forall2 P l k.
-  Proof. split; induction 1; constructor; auto. Qed.
-  Lemma Forall2_impl (Q : A → B → Prop) l k :
-    Forall2 P l k → (∀ x y, P x y → Q x y) → Forall2 Q l k.
-  Proof. intros H ?. induction H; auto. Defined.
-  Lemma Forall2_unique l k1 k2 :
-    Forall2 P l k1 →  Forall2 P l k2 →
-    (∀ x y1 y2, P x y1 → P x y2 → y1 = y2) → k1 = k2.
+
+  Lemma Forall2_tail l k : Forall2 P l k → Forall2 P (tail l) (tail k).
+  Proof. destruct 1; simpl; auto. Qed.
+  Lemma Forall2_take l k n : Forall2 P l k → Forall2 P (take n l) (take n k).
+  Proof. intros Hl. revert n. induction Hl; intros [|?]; simpl; auto. Qed.
+  Lemma Forall2_drop l k n : Forall2 P l k → Forall2 P (drop n l) (drop n k).
+  Proof. intros Hl. revert n. induction Hl; intros [|?]; simpl; auto. Qed.
+
+  Lemma Forall2_lookup l k :
+    Forall2 P l k ↔ ∀ i, option_Forall2 P (l !! i) (k !! i).
   Proof.
-    intros H. revert k2. induction H; inversion_clear 1; intros; f_equal; eauto.
+    split; [induction 1; intros [|?]; simpl; try constructor; eauto|].
+    revert k. induction l as [|x l IH]; intros [| y k] H.
+    - done.
+    - feed inversion (H 0).
+    - feed inversion (H 0).
+    - constructor; [by feed inversion (H 0)|]. apply (IH _ $ λ i, H (S i)).
   Qed.
-  Lemma Forall2_Forall_l (Q : A → Prop) l k :
-    Forall2 P l k → Forall (λ y, ∀ x, P x y → Q x) k → Forall Q l.
-  Proof. induction 1; inversion_clear 1; eauto. Qed.
-  Lemma Forall2_Forall_r (Q : B → Prop) l k :
-    Forall2 P l k → Forall (λ x, ∀ y, P x y → Q y) l → Forall Q k.
-  Proof. induction 1; inversion_clear 1; eauto. Qed.
   Lemma Forall2_lookup_lr l k i x y :
     Forall2 P l k → l !! i = Some x → k !! i = Some y → P x y.
-  Proof.
-    intros H. revert i. induction H; intros [|?] ??; simplify_eq/=; eauto.
-  Qed.
+  Proof. rewrite Forall2_lookup; intros H; destruct (H i); naive_solver. Qed.
   Lemma Forall2_lookup_l l k i x :
     Forall2 P l k → l !! i = Some x → ∃ y, k !! i = Some y ∧ P x y.
-  Proof.
-    intros H. revert i. induction H; intros [|?] ?; simplify_eq/=; eauto.
-  Qed.
+  Proof. rewrite Forall2_lookup; intros H; destruct (H i); naive_solver. Qed.
   Lemma Forall2_lookup_r l k i y :
     Forall2 P l k → k !! i = Some y → ∃ x, l !! i = Some x ∧ P x y.
-  Proof.
-    intros H. revert i. induction H; intros [|?] ?; simplify_eq/=; eauto.
-  Qed.
-  Lemma Forall2_lookup_2 l k :
+  Proof. rewrite Forall2_lookup; intros H; destruct (H i); naive_solver. Qed.
+  Lemma Forall2_same_length_lookup_2 l k :
     length l = length k →
     (∀ i x y, l !! i = Some x → k !! i = Some y → P x y) → Forall2 P l k.
   Proof.
@@ -2355,14 +2373,15 @@ Section Forall2.
     induction Hl as [|?????? IH]; constructor; [by apply (Hlookup 0)|].
     apply IH. apply (λ i, Hlookup (S i)).
   Qed.
-  Lemma Forall2_lookup l k :
-    Forall2 P l k ↔ length l = length k ∧
+  Lemma Forall2_same_length_lookup l k :
+    Forall2 P l k ↔
+      length l = length k ∧
       (∀ i x y, l !! i = Some x → k !! i = Some y → P x y).
   Proof.
-    naive_solver eauto using Forall2_length, Forall2_lookup_lr,Forall2_lookup_2.
+    naive_solver eauto using Forall2_length,
+      Forall2_lookup_lr, Forall2_same_length_lookup_2.
   Qed.
-  Lemma Forall2_tail l k : Forall2 P l k → Forall2 P (tail l) (tail k).
-  Proof. destruct 1; simpl; auto. Qed.
+
   Lemma Forall2_alter_l f l k i :
     Forall2 P l k →
     (∀ x y, l !! i = Some x → k !! i = Some y → P x y → P (f x) y) →
@@ -2378,12 +2397,30 @@ Section Forall2.
     (∀ x y, l !! i = Some x → k !! i = Some y → P x y → P (f x) (g y)) →
     Forall2 P (alter f i l) (alter g i k).
   Proof. intros Hl. revert i. induction Hl; intros [|]; constructor; auto. Qed.
+
   Lemma Forall2_insert l k x y i :
     Forall2 P l k → P x y → Forall2 P (<[i:=x]> l) (<[i:=y]> k).
   Proof. intros Hl. revert i. induction Hl; intros [|]; constructor; auto. Qed.
+  Lemma Forall2_inserts l k l' k' i :
+    Forall2 P l k → Forall2 P l' k' →
+    Forall2 P (list_inserts i l' l) (list_inserts i k' k).
+  Proof. intros ? H. revert i. induction H; eauto using Forall2_insert. Qed.
+
   Lemma Forall2_delete l k i :
     Forall2 P l k → Forall2 P (delete i l) (delete i k).
   Proof. intros Hl. revert i. induction Hl; intros [|]; simpl; intuition. Qed.
+  Lemma Forall2_option_list mx my :
+    option_Forall2 P mx my → Forall2 P (option_list mx) (option_list my).
+  Proof. destruct 1; by constructor. Qed.
+
+  Lemma Forall2_filter Q1 Q2 `{∀ x, Decision (Q1 x), ∀ y, Decision (Q2 y)} l k:
+    (∀ x y, P x y → Q1 x ↔ Q2 y) →
+    Forall2 P l k → Forall2 P (filter Q1 l) (filter Q2 k).
+  Proof.
+    intros HP; induction 1 as [|x y l k]; unfold filter; simpl; auto.
+    simplify_option_eq by (by rewrite <-(HP x y)); repeat constructor; auto.
+  Qed.
+
   Lemma Forall2_replicate_l k n x :
     length k = n → Forall (P x) k → Forall2 P (replicate n x) k.
   Proof. intros <-. induction 1; simpl; auto. Qed.
@@ -2393,10 +2430,14 @@ Section Forall2.
   Lemma Forall2_replicate n x y :
     P x y → Forall2 P (replicate n x) (replicate n y).
   Proof. induction n; simpl; constructor; auto. Qed.
-  Lemma Forall2_take l k n : Forall2 P l k → Forall2 P (take n l) (take n k).
-  Proof. intros Hl. revert n. induction Hl; intros [|?]; simpl; auto. Qed.
-  Lemma Forall2_drop l k n : Forall2 P l k → Forall2 P (drop n l) (drop n k).
-  Proof. intros Hl. revert n. induction Hl; intros [|?]; simpl; auto. Qed.
+
+  Lemma Forall2_reverse l k : Forall2 P l k → Forall2 P (reverse l) (reverse k).
+  Proof.
+    induction 1; rewrite ?reverse_nil, ?reverse_cons; eauto using Forall2_app.
+  Qed.
+  Lemma Forall2_last l k : Forall2 P l k → option_Forall2 P (last l) (last k).
+  Proof. induction 1 as [|????? []]; simpl; repeat constructor; auto. Qed.
+
   Lemma Forall2_resize l k x y n :
     P x y → Forall2 P l k → Forall2 P (resize n x l) (resize n y k).
   Proof.
@@ -2436,6 +2477,7 @@ Section Forall2.
     intros ?? <- ?. rewrite <-(resize_all k y) at 2.
     apply Forall2_resize_r with n; auto using Forall_true.
   Qed.
+
   Lemma Forall2_sublist_lookup_l l k n i l' :
     Forall2 P l k → sublist_lookup n i l = Some l' →
     ∃ k', sublist_lookup n i k = Some k' ∧ Forall2 P l' k'.
@@ -2475,13 +2517,7 @@ Section Forall2.
       drop_length, <-Forall2_length, Min.min_l by eauto with lia; [done|].
     rewrite drop_drop; auto using Forall2_drop.
   Qed.
-  Lemma Forall2_transitive {C} (Q : B → C → Prop) (R : A → C → Prop) l k lC :
-    (∀ x y z, P x y → Q y z → R x z) →
-    Forall2 P l k → Forall2 Q k lC → Forall2 R l lC.
-  Proof. intros ? Hl. revert lC. induction Hl; inversion_clear 1; eauto. Qed.
-  Lemma Forall2_Forall (Q : A → A → Prop) l :
-    Forall (λ x, Q x x) l → Forall2 Q l l.
-  Proof. induction 1; constructor; auto. Qed.
+
   Global Instance Forall2_dec `{dec : ∀ x y, Decision (P x y)} :
     ∀ l k, Decision (Forall2 P l k).
   Proof.
@@ -2495,8 +2531,9 @@ Section Forall2.
   Defined.
 End Forall2.
 
-Section Forall2_order.
+Section Forall2_proper.
   Context  {A} (R : relation A).
+
   Global Instance: Reflexive R → Reflexive (Forall2 R).
   Proof. intros ? l. induction l; by constructor. Qed.
   Global Instance: Symmetric R → Symmetric (Forall2 R).
@@ -2509,25 +2546,53 @@ Section Forall2_order.
   Proof. split; apply _. Qed.
   Global Instance: AntiSymm (=) R → AntiSymm (=) (Forall2 R).
   Proof. induction 2; inversion_clear 1; f_equal; auto. Qed.
+
   Global Instance: Proper (R ==> Forall2 R ==> Forall2 R) (::).
   Proof. by constructor. Qed.
   Global Instance: Proper (Forall2 R ==> Forall2 R ==> Forall2 R) (++).
-  Proof. repeat intro. eauto using Forall2_app. Qed.
-  Global Instance: Proper (Forall2 R ==> Forall2 R) (delete i).
-  Proof. repeat intro. eauto using Forall2_delete. Qed.
-  Global Instance: Proper (R ==> Forall2 R) (replicate n).
-  Proof. repeat intro. eauto using Forall2_replicate. Qed.
+  Proof. repeat intro. by apply Forall2_app. Qed.
+  Global Instance: Proper (Forall2 R ==> (=)) length.
+  Proof. repeat intro. eauto using Forall2_length. Qed.
+  Global Instance: Proper (Forall2 R ==> Forall2 R) tail.
+  Proof. repeat intro. eauto using Forall2_tail. Qed.
   Global Instance: Proper (Forall2 R ==> Forall2 R) (take n).
   Proof. repeat intro. eauto using Forall2_take. Qed.
   Global Instance: Proper (Forall2 R ==> Forall2 R) (drop n).
   Proof. repeat intro. eauto using Forall2_drop. Qed.
+
+  Global Instance: Proper (Forall2 R ==> option_Forall2 R) (lookup i).
+  Proof. repeat intro. by apply Forall2_lookup. Qed.
+  Global Instance:
+    Proper (R ==> R) f → Proper (Forall2 R ==> Forall2 R) (alter f i).
+  Proof. repeat intro. eauto using Forall2_alter. Qed.
+  Global Instance: Proper (R ==> Forall2 R ==> Forall2 R) (insert i).
+  Proof. repeat intro. eauto using Forall2_insert. Qed.
+  Global Instance:
+    Proper (Forall2 R ==> Forall2 R ==> Forall2 R) (list_inserts i).
+  Proof. repeat intro. eauto using Forall2_inserts. Qed.
+  Global Instance: Proper (Forall2 R ==> Forall2 R) (delete i).
+  Proof. repeat intro. eauto using Forall2_delete. Qed.
+
+  Global Instance: Proper (option_Forall2 R ==> Forall2 R) option_list.
+  Proof. repeat intro. eauto using Forall2_option_list. Qed.
+  Global Instance: ∀ P `{∀ x, Decision (P x)},
+    Proper (R ==> iff) P → Proper (Forall2 R ==> Forall2 R) (filter P).
+  Proof. repeat intro; eauto using Forall2_filter. Qed.
+
+  Global Instance: Proper (R ==> Forall2 R) (replicate n).
+  Proof. repeat intro. eauto using Forall2_replicate. Qed.
+  Global Instance: Proper (Forall2 R ==> Forall2 R) reverse.
+  Proof. repeat intro. eauto using Forall2_reverse. Qed.
+  Global Instance: Proper (Forall2 R ==> option_Forall2 R) last.
+  Proof. repeat intro. eauto using Forall2_last. Qed.
   Global Instance: Proper (R ==> Forall2 R ==> Forall2 R) (resize n).
   Proof. repeat intro. eauto using Forall2_resize. Qed.
-End Forall2_order.
+End Forall2_proper.
 
 Section Forall3.
   Context {A B C} (P : A → B → C → Prop).
   Hint Extern 0 (Forall3 _ _ _ _) => constructor.
+
   Lemma Forall3_app l1 l2 k1 k2 k1' k2' :
     Forall3 P l1 k1 k1' → Forall3 P l2 k2 k2' →
     Forall3 P (l1 ++ l2) (k1 ++ k2) (k1' ++ k2').
@@ -2610,6 +2675,74 @@ Section Forall3.
   Proof. intros Hl. revert i. induction Hl; intros [|]; auto. Qed.
 End Forall3.
 
+(** Setoids *)
+Section setoid.
+  Context `{Equiv A} `{!Equivalence ((≡) : relation A)}.
+  Implicit Types l k : list A.
+
+  Lemma equiv_Forall2 l k : l ≡ k ↔ Forall2 (≡) l k.
+  Proof. split; induction 1; constructor; auto. Qed.
+  Lemma equiv_lookup l k : l ≡ k ↔ (∀ i, l !! i ≡ k !! i).
+  Proof.
+    rewrite equiv_Forall2, Forall2_lookup.
+    by setoid_rewrite equiv_option_Forall2.
+  Qed.
+
+  Global Instance list_equivalence : Equivalence ((≡) : relation (list A)).
+  Proof.
+    split.
+    - intros l. by apply equiv_Forall2.
+    - intros l k; rewrite !equiv_Forall2; by intros.
+    - intros l1 l2 l3; rewrite !equiv_Forall2; intros; by trans l2.
+  Qed.
+  Global Instance list_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (list A).
+  Proof. induction 1; f_equal; fold_leibniz; auto. Qed.
+
+  Global Instance cons_proper : Proper ((≡) ==> (≡) ==> (≡)) (@cons A).
+  Proof. by constructor. Qed.
+  Global Instance app_proper : Proper ((≡) ==> (≡) ==> (≡)) (@app A).
+  Proof. induction 1; intros ???; simpl; try constructor; auto. Qed.
+  Global Instance length_proper : Proper ((≡) ==> (=)) (@length A).
+  Proof. induction 1; f_equal/=; auto. Qed.
+  Global Instance tail_proper : Proper ((≡) ==> (≡)) (@tail A).
+  Proof. by destruct 1. Qed.
+  Global Instance take_proper n : Proper ((≡) ==> (≡)) (@take A n).
+  Proof. induction n; destruct 1; constructor; auto. Qed.
+  Global Instance drop_proper n : Proper ((≡) ==> (≡)) (@drop A n).
+  Proof. induction n; destruct 1; simpl; try constructor; auto. Qed.
+  Global Instance list_lookup_proper i :
+    Proper ((≡) ==> (≡)) (lookup (M:=list A) i).
+  Proof. induction i; destruct 1; simpl; f_equiv; auto. Qed.
+  Global Instance list_alter_proper f i :
+    Proper ((≡) ==> (≡)) f → Proper ((≡) ==> (≡)) (alter (M:=list A) f i).
+  Proof. intros. induction i; destruct 1; constructor; eauto. Qed.
+  Global Instance list_insert_proper i :
+    Proper ((≡) ==> (≡) ==> (≡)) (insert (M:=list A) i).
+  Proof. intros ???; induction i; destruct 1; constructor; eauto. Qed.
+  Global Instance list_inserts_proper i :
+    Proper ((≡) ==> (≡) ==> (≡)) (@list_inserts A i).
+  Proof.
+    intros k1 k2 Hk; revert i.
+    induction Hk; intros ????; simpl; try f_equiv; naive_solver.
+  Qed.
+  Global Instance list_delete_proper i :
+    Proper ((≡) ==> (≡)) (delete (M:=list A) i).
+  Proof. induction i; destruct 1; try constructor; eauto. Qed.
+  Global Instance option_list_proper : Proper ((≡) ==> (≡)) (@option_list A).
+  Proof. destruct 1; by constructor. Qed.
+  Global Instance list_filter_proper P `{∀ x, Decision (P x)} :
+    Proper ((≡) ==> iff) P → Proper ((≡) ==> (≡)) (filter (B:=list A) P).
+  Proof. intros ???. rewrite !equiv_Forall2. by apply Forall2_filter. Qed.
+  Global Instance replicate_proper n : Proper ((≡) ==> (≡)) (@replicate A n).
+  Proof. induction n; constructor; auto. Qed.
+  Global Instance reverse_proper : Proper ((≡) ==> (≡)) (@reverse A).
+  Proof. induction 1; rewrite ?reverse_cons; repeat (done || f_equiv). Qed.
+  Global Instance last_proper : Proper ((≡) ==> (≡)) (@last A).
+  Proof. induction 1 as [|????? []]; simpl; repeat (done || f_equiv). Qed.
+  Global Instance resize_proper n : Proper ((≡) ==> (≡) ==> (≡)) (@resize A n).
+  Proof. induction n; destruct 2; simpl; repeat (auto || f_equiv). Qed.
+End setoid.
+
 (** * Properties of the monadic operations *)
 Section fmap.
   Context {A B : Type} (f : A → B).
@@ -2621,13 +2754,19 @@ Section fmap.
   Lemma list_fmap_ext (g : A → B) (l1 l2 : list A) :
     (∀ x, f x = g x) → l1 = l2 → fmap f l1 = fmap g l2.
   Proof. intros ? <-. induction l1; f_equal/=; auto. Qed.
+  Lemma list_fmap_setoid_ext `{Equiv B} (g : A → B) l :
+    (∀ x, f x ≡ g x) → f <$> l ≡ g <$> l.
+  Proof. induction l; constructor; auto. Qed.
+
   Global Instance: Inj (=) (=) f → Inj (=) (=) (fmap f).
   Proof.
     intros ? l1. induction l1 as [|x l1 IH]; [by intros [|??]|].
     intros [|??]; intros; f_equal/=; simplify_eq; auto.
   Qed.
+
   Definition fmap_nil : f <$> [] = [] := eq_refl.
   Definition fmap_cons x l : f <$> x :: l = f x :: f <$> l := eq_refl.
+
   Lemma fmap_app l1 l2 : f <$> l1 ++ l2 = (f <$> l1) ++ (f <$> l2).
   Proof. by induction l1; f_equal/=. Qed.
   Lemma fmap_nil_inv k :  f <$> k = [] → k = [].
@@ -2642,6 +2781,7 @@ Section fmap.
     intros [|x l] ?; simplify_eq/=.
     destruct (IH l) as (l1&l2&->&->&->); [done|]. by exists (x :: l1), l2.
   Qed.
+
   Lemma fmap_length l : length (f <$> l) = length l.
   Proof. by induction l; f_equal/=. Qed.
   Lemma fmap_reverse l : f <$> reverse l = reverse (f <$> l).
@@ -2676,6 +2816,7 @@ Section fmap.
   Lemma list_alter_fmap (g : A → A) (h : B → B) l i :
     Forall (λ x, f (g x) = h (f x)) l → f <$> alter g i l = alter h i (f <$> l).
   Proof. intros Hl. revert i. by induction Hl; intros [|i]; f_equal/=. Qed.
+
   Lemma elem_of_list_fmap_1 l x : x ∈ l → f x ∈ f <$> l.
   Proof. induction 1; csimpl; rewrite elem_of_cons; intuition. Qed.
   Lemma elem_of_list_fmap_1_alt l x y : x ∈ l → y = f x → y ∈ f <$> l.
@@ -2690,6 +2831,7 @@ Section fmap.
   Proof.
     naive_solver eauto using elem_of_list_fmap_1_alt, elem_of_list_fmap_2.
   Qed.
+
   Lemma NoDup_fmap_1 l : NoDup (f <$> l) → NoDup l.
   Proof.
     induction l; simpl; inversion_clear 1; constructor; auto.
@@ -2702,12 +2844,14 @@ Section fmap.
   Qed.
   Lemma NoDup_fmap `{!Inj (=) (=) f} l : NoDup (f <$> l) ↔ NoDup l.
   Proof. split; auto using NoDup_fmap_1, NoDup_fmap_2. Qed.
+
   Global Instance fmap_sublist: Proper (sublist ==> sublist) (fmap f).
   Proof. induction 1; simpl; econstructor; eauto. Qed.
   Global Instance fmap_contains: Proper (contains ==> contains) (fmap f).
   Proof. induction 1; simpl; econstructor; eauto. Qed.
   Global Instance fmap_Permutation: Proper ((≡ₚ) ==> (≡ₚ)) (fmap f).
   Proof. induction 1; simpl; econstructor; eauto. Qed.
+
   Lemma Forall_fmap_ext_1 (g : A → B) (l : list A) :
     Forall (λ x, f x = g x) l → fmap f l = fmap g l.
   Proof. by induction 1; f_equal/=. Qed.
@@ -2721,6 +2865,7 @@ Section fmap.
   Proof. split; induction l; inversion_clear 1; constructor; auto. Qed.
   Lemma Exists_fmap (P : B → Prop) l : Exists P (f <$> l) ↔ Exists (P ∘ f) l.
   Proof. split; induction l; inversion 1; constructor; by auto. Qed.
+
   Lemma Forall2_fmap_l {C} (P : B → C → Prop) l1 l2 :
     Forall2 P (f <$> l1) l2 ↔ Forall2 (P ∘ f) l1 l2.
   Proof.
@@ -2740,6 +2885,7 @@ Section fmap.
   Lemma Forall2_fmap {C D} (g : C → D) (P : B → D → Prop) l1 l2 :
     Forall2 P (f <$> l1) (g <$> l2) ↔ Forall2 (λ x1 x2, P (f x1) (g x2)) l1 l2.
   Proof. split; auto using Forall2_fmap_1, Forall2_fmap_2. Qed.
+
   Lemma list_fmap_bind {C} (g : B → list C) l : (f <$> l) ≫= g = l ≫= g ∘ f.
   Proof. by induction l; f_equal/=. Qed.
 End fmap.
@@ -3468,7 +3614,7 @@ Ltac decompose_Forall := repeat
   | |- Forall _ (_ ++ _) => apply Forall_app_2
   | |- Forall _ (_ <$> _) => apply Forall_fmap
   | |- Forall _ (_ ≫= _) => apply Forall_bind
-  | |- Forall2 _ _ _ => apply Forall2_Forall
+  | |- Forall2 _ _ _ => apply Forall_Forall2
   | |- Forall2 _ [] [] => constructor
   | |- Forall2 _ (_ :: _) (_ :: _) => constructor
   | |- Forall2 _ (_ ++ _) (_ ++ _) => first
@@ -3482,7 +3628,7 @@ Ltac decompose_Forall := repeat
   | |- Forall _ _ =>
     apply Forall_lookup_2; intros ???; progress decompose_Forall_hyps
   | |- Forall2 _ _ _ =>
-    apply Forall2_lookup_2; [solve_length|];
+    apply Forall2_same_length_lookup_2; [solve_length|];
     intros ?????; progress decompose_Forall_hyps
   end.
 
