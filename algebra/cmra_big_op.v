@@ -64,7 +64,7 @@ Proof.
   { by intros m2; rewrite (symmetry_iff (≡)) map_equiv_empty; intros ->. }
   intros m2 Hm2; rewrite big_opM_insert //.
   rewrite (IH (delete i m2)); last by rewrite -Hm2 delete_insert.
-  destruct (map_equiv_lookup (<[i:=x]> m1) m2 i x)
+  destruct (map_equiv_lookup_l (<[i:=x]> m1) m2 i x)
     as (y&?&Hxy); auto using lookup_insert.
   rewrite Hxy -big_opM_insert; last auto using lookup_delete.
   by rewrite insert_delete.
