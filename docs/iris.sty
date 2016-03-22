@@ -29,9 +29,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \DeclareMathOperator*{\Sep}{\scalerel*{\ast}{\sum}}
-\newcommand{\bigast}{\Sep}
-
-\newcommand*{\sep}[1][]{\mathrel{\#_{#1}}}	% bad name; it's a different "sep"
+\newcommand*{\disj}[1][]{\mathrel{\#_{#1}}}
+\newcommand\pord{\sqsubseteq}
 \newcommand\dplus{\mathbin{+\kern-1.0ex+}}
 \newcommand{\upclose}{\mathord{\uparrow}}
 \newcommand{\ALT}{\ |\ }
@@ -44,10 +43,11 @@
 
 \newcommand{\any}{{\rule[-.2ex]{1ex}{.4pt}}}%
 
-\newcommand{\judgment}[2]{\paragraph{#1}\hspace{\stretch{1}}\fbox{$#2$}}
+\newcommand{\judgment}[2][]{\paragraph{#1}\hspace{\stretch{1}}\fbox{$#2$}}
 
 \newcommand{\pfn}{\rightharpoonup}
 \newcommand\fpfn{\xrightharpoonup{\kern-0.25ex\textrm{fin}\kern-0.25ex}}
+\newcommand{\la}{\leftarrow}
 \newcommand{\ra}{\rightarrow}
 \newcommand{\Ra}{\Rightarrow}
 \newcommand{\Lra}{\Leftrightarrow}

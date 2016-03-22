@@ -387,20 +387,20 @@ The construction follows the idea of STSs as described in CaReSL \cite{caresl}.
 We first lift the transition relation to $\STSS \times \wp(\STST)$ (implementing a \emph{law of token conservation}) and define a stepping relation for the \emph{frame} of a given token set:
 \begin{align*}
  (s, T) \stsstep (s', T') \eqdef{}& s \stsstep s' \land \STSL(s) \uplus T = \STSL(s') \uplus T' \\
- s \stsfstep{T} s' \eqdef{}& \Exists T_1, T_2. T_1 \sep \STSL(s) \cup T \l+and (s, T_1) \stsstep (s', T_2)
+ s \stsfstep{T} s' \eqdef{}& \Exists T_1, T_2. T_1 \disj \STSL(s) \cup T \l+and (s, T_1) \stsstep (s', T_2)
 \end{align*}
 
 We further define \emph{closed} sets of states (given a particular set of tokens) as well as the \emph{closure} of a set:
 \begin{align*}
-\STSclsd(S, T) \eqdef{}& \All s \in S. \STSL(s) \sep T \land \All s'. s \stsfstep{T} s' \Ra s' \in S \\
+\STSclsd(S, T) \eqdef{}& \All s \in S. \STSL(s) \disj T \land \All s'. s \stsfstep{T} s' \Ra s' \in S \\
 \upclose(S, T) \eqdef{}& \setComp{ s' \in \STSS}{\Exists s \in S. s \stsftrans{T} s' }
 \end{align*}
 
 The STS RA is defined as follows
 \begin{align*}
-  \monoid \eqdef{}& \setComp{\STSauth((s, T) \in \STSS \times \wp(\STST))}{\STSL(s) \sep T} +{}\\& \setComp{\STSfrag((S, T) \in \wp(\STSS) \times \wp(\STST))}{\STSclsd(S, T) \land S \neq \emptyset} + \bot \\
-  \STSfrag(S_1, T_1) \mtimes \STSfrag(S_2, T_2) \eqdef{}& \STSfrag(S_1 \cap S_2, T_1 \cup T_2) \qquad\qquad\qquad \text{if $T_1 \sep T_2$ and $S_1 \cap S_2 \neq \emptyset$} \\
-  \STSfrag(S, T) \mtimes \STSauth(s, T') \eqdef{}& \STSauth(s, T') \mtimes \STSfrag(S, T) \eqdef \STSauth(s, T \cup T') \qquad \text{if $T \sep T'$ and $s \in S$} \\
+  \monoid \eqdef{}& \setComp{\STSauth((s, T) \in \STSS \times \wp(\STST))}{\STSL(s) \disj T} +{}\\& \setComp{\STSfrag((S, T) \in \wp(\STSS) \times \wp(\STST))}{\STSclsd(S, T) \land S \neq \emptyset} + \bot \\
+  \STSfrag(S_1, T_1) \mtimes \STSfrag(S_2, T_2) \eqdef{}& \STSfrag(S_1 \cap S_2, T_1 \cup T_2) \qquad\qquad\qquad \text{if $T_1 \disj T_2$ and $S_1 \cap S_2 \neq \emptyset$} \\
+  \STSfrag(S, T) \mtimes \STSauth(s, T') \eqdef{}& \STSauth(s, T') \mtimes \STSfrag(S, T) \eqdef \STSauth(s, T \cup T') \qquad \text{if $T \disj T'$ and $s \in S$} \\
   \mcore{\STSfrag(S, T)} \eqdef{}& \STSfrag(\upclose(S, \emptyset), \emptyset) \\
   \mcore{\STSauth(s, T)} \eqdef{}& \STSfrag(\upclose(\set{s}, \emptyset), \emptyset)
 \end{align*}
