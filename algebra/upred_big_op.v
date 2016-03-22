@@ -1,4 +1,4 @@
-From iris.algebra Require Export upred.
+From iris.algebra Require Export upred list.
 From iris.prelude Require Import gmap fin_collections.
 Import uPred.
 
@@ -44,11 +44,9 @@ Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 Global Instance big_sep_proper : Proper ((≡) ==> (⊣⊢)) (@uPred_big_sep M).
 Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 
-Global Instance big_and_ne n :
-  Proper (Forall2 (dist n) ==> dist n) (@uPred_big_and M).
+Global Instance big_and_ne n : Proper (dist n ==> dist n) (@uPred_big_and M).
 Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
-Global Instance big_sep_ne n :
-  Proper (Forall2 (dist n) ==> dist n) (@uPred_big_sep M).
+Global Instance big_sep_ne n : Proper (dist n ==> dist n) (@uPred_big_sep M).
 Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 
 Global Instance big_and_mono' : Proper (Forall2 (⊢) ==> (⊢)) (@uPred_big_and M).
@@ -71,26 +69,26 @@ Proof.
   - etrans; eauto.
 Qed.
 
-Lemma big_and_app Ps Qs : (Π∧ (Ps ++ Qs)) ⊣⊢ (Π∧ Ps ∧ Π∧ Qs).
+Lemma big_and_app Ps Qs : Π∧ (Ps ++ Qs) ⊣⊢ (Π∧ Ps ∧ Π∧ Qs).
 Proof. by induction Ps as [|?? IH]; rewrite /= ?left_id -?assoc ?IH. Qed.
-Lemma big_sep_app Ps Qs : (Π★ (Ps ++ Qs)) ⊣⊢ (Π★ Ps ★ Π★ Qs).
+Lemma big_sep_app Ps Qs : Π★ (Ps ++ Qs) ⊣⊢ (Π★ Ps ★ Π★ Qs).
 Proof. by induction Ps as [|?? IH]; rewrite /= ?left_id -?assoc ?IH. Qed.
 
-Lemma big_and_contains Ps Qs : Qs `contains` Ps → (Π∧ Ps) ⊢ (Π∧ Qs).
+Lemma big_and_contains Ps Qs : Qs `contains` Ps → Π∧ Ps ⊢ Π∧ Qs.
 Proof.
   intros [Ps' ->]%contains_Permutation. by rewrite big_and_app and_elim_l.
 Qed.
-Lemma big_sep_contains Ps Qs : Qs `contains` Ps → (Π★ Ps) ⊢ (Π★ Qs).
+Lemma big_sep_contains Ps Qs : Qs `contains` Ps → Π★ Ps ⊢ Π★ Qs.
 Proof.
   intros [Ps' ->]%contains_Permutation. by rewrite big_sep_app sep_elim_l.
 Qed.
 
-Lemma big_sep_and Ps : (Π★ Ps) ⊢ (Π∧ Ps).
+Lemma big_sep_and Ps : Π★ Ps ⊢ Π∧ Ps.
 Proof. by induction Ps as [|P Ps IH]; simpl; auto with I. Qed.
 
-Lemma big_and_elem_of Ps P : P ∈ Ps → (Π∧ Ps) ⊢ P.
+Lemma big_and_elem_of Ps P : P ∈ Ps → Π∧ Ps ⊢ P.
 Proof. induction 1; simpl; auto with I. Qed.
-Lemma big_sep_elem_of Ps P : P ∈ Ps → (Π★ Ps) ⊢ P.
+Lemma big_sep_elem_of Ps P : P ∈ Ps → Π★ Ps ⊢ P.
 Proof. induction 1; simpl; auto with I. Qed.
 
 (* Big ops over finite maps *)
@@ -101,11 +99,11 @@ Section gmap.
 
   Lemma big_sepM_mono Φ Ψ m1 m2 :
     m2 ⊆ m1 → (∀ x k, m2 !! k = Some x → Φ k x ⊢ Ψ k x) →
-    (Π★{map m1} Φ) ⊢ (Π★{map m2} Ψ).
+    Π★{map m1} Φ ⊢ Π★{map m2} Ψ.
   Proof.
     intros HX HΦ. trans (Π★{map m2} Φ)%I.
     - by apply big_sep_contains, fmap_contains, map_to_list_contains.
-    - apply big_sep_mono', Forall2_fmap, Forall2_Forall.
+    - apply big_sep_mono', Forall2_fmap, Forall_Forall2.
       apply Forall_forall=> -[i x] ? /=. by apply HΦ, elem_of_map_to_list.
   Qed.
 
@@ -114,7 +112,7 @@ Section gmap.
            (uPred_big_sepM (M:=M) m).
   Proof.
     intros Φ1 Φ2 HΦ. apply big_sep_ne, Forall2_fmap.
-    apply Forall2_Forall, Forall_true=> -[i x]; apply HΦ.
+    apply Forall_Forall2, Forall_true=> -[i x]; apply HΦ.
   Qed.
   Global Instance big_sepM_proper m :
     Proper (pointwise_relation _ (pointwise_relation _ (⊣⊢)) ==> (⊣⊢))
@@ -128,25 +126,25 @@ Section gmap.
            (uPred_big_sepM (M:=M) m).
   Proof. intros Φ1 Φ2 HΦ. apply big_sepM_mono; intros; [done|apply HΦ]. Qed.
 
-  Lemma big_sepM_empty Φ : (Π★{map ∅} Φ) ⊣⊢ True.
+  Lemma big_sepM_empty Φ : Π★{map ∅} Φ ⊣⊢ True.
   Proof. by rewrite /uPred_big_sepM map_to_list_empty. Qed.
   Lemma big_sepM_insert Φ (m : gmap K A) i x :
-    m !! i = None → (Π★{map <[i:=x]> m} Φ) ⊣⊢ (Φ i x ★ Π★{map m} Φ).
+    m !! i = None → Π★{map <[i:=x]> m} Φ ⊣⊢ (Φ i x ★ Π★{map m} Φ).
   Proof. intros ?; by rewrite /uPred_big_sepM map_to_list_insert. Qed.
-  Lemma big_sepM_singleton Φ i x : (Π★{map {[i := x]}} Φ) ⊣⊢ (Φ i x).
+  Lemma big_sepM_singleton Φ i x : Π★{map {[i := x]}} Φ ⊣⊢ (Φ i x).
   Proof.
     rewrite -insert_empty big_sepM_insert/=; last auto using lookup_empty.
     by rewrite big_sepM_empty right_id.
   Qed.
 
   Lemma big_sepM_sepM Φ Ψ m :
-    (Π★{map m} (λ i x, Φ i x ★ Ψ i x)) ⊣⊢ (Π★{map m} Φ ★ Π★{map m} Ψ).
+    Π★{map m} (λ i x, Φ i x ★ Ψ i x) ⊣⊢ (Π★{map m} Φ ★ Π★{map m} Ψ).
   Proof.
     rewrite /uPred_big_sepM.
     induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?right_id //.
     by rewrite IH -!assoc (assoc _ (Ψ _ _)) [(Ψ _ _ ★ _)%I]comm -!assoc.
   Qed.
-  Lemma big_sepM_later Φ m : (▷ Π★{map m} Φ) ⊣⊢ (Π★{map m} (λ i x, ▷ Φ i x)).
+  Lemma big_sepM_later Φ m : ▷ Π★{map m} Φ ⊣⊢ Π★{map m} (λ i x, ▷ Φ i x).
   Proof.
     rewrite /uPred_big_sepM.
     induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?later_True //.
@@ -161,11 +159,11 @@ Section gset.
   Implicit Types Φ : A → uPred M.
 
   Lemma big_sepS_mono Φ Ψ X Y :
-    Y ⊆ X → (∀ x, x ∈ Y → Φ x ⊢ Ψ x) → (Π★{set X} Φ) ⊢ (Π★{set Y} Ψ).
+    Y ⊆ X → (∀ x, x ∈ Y → Φ x ⊢ Ψ x) → Π★{set X} Φ ⊢ Π★{set Y} Ψ.
   Proof.
     intros HX HΦ. trans (Π★{set Y} Φ)%I.
     - by apply big_sep_contains, fmap_contains, elements_contains.
-    - apply big_sep_mono', Forall2_fmap, Forall2_Forall.
+    - apply big_sep_mono', Forall2_fmap, Forall_Forall2.
       apply Forall_forall=> x ? /=. by apply HΦ, elem_of_elements.
   Qed.
 
@@ -173,7 +171,7 @@ Section gset.
     Proper (pointwise_relation _ (dist n) ==> dist n) (uPred_big_sepS (M:=M) X).
   Proof.
     intros Φ1 Φ2 HΦ. apply big_sep_ne, Forall2_fmap.
-    apply Forall2_Forall, Forall_true=> x; apply HΦ.
+    apply Forall_Forall2, Forall_true=> x; apply HΦ.
   Qed.
   Lemma big_sepS_proper X :
     Proper (pointwise_relation _ (⊣⊢) ==> (⊣⊢)) (uPred_big_sepS (M:=M) X).
@@ -185,29 +183,29 @@ Section gset.
     Proper (pointwise_relation _ (⊢) ==> (⊢)) (uPred_big_sepS (M:=M) X).
   Proof. intros Φ1 Φ2 HΦ. apply big_sepS_mono; naive_solver. Qed.
 
-  Lemma big_sepS_empty Φ : (Π★{set ∅} Φ) ⊣⊢ True.
+  Lemma big_sepS_empty Φ : Π★{set ∅} Φ ⊣⊢ True.
   Proof. by rewrite /uPred_big_sepS elements_empty. Qed.
   Lemma big_sepS_insert Φ X x :
-    x ∉ X → (Π★{set {[ x ]} ∪ X} Φ) ⊣⊢ (Φ x ★ Π★{set X} Φ).
+    x ∉ X → Π★{set {[ x ]} ∪ X} Φ ⊣⊢ (Φ x ★ Π★{set X} Φ).
   Proof. intros. by rewrite /uPred_big_sepS elements_union_singleton. Qed.
   Lemma big_sepS_delete Φ X x :
-    x ∈ X → (Π★{set X} Φ) ⊣⊢ (Φ x ★ Π★{set X ∖ {[ x ]}} Φ).
+    x ∈ X → Π★{set X} Φ ⊣⊢ (Φ x ★ Π★{set X ∖ {[ x ]}} Φ).
   Proof.
     intros. rewrite -big_sepS_insert; last set_solver.
     by rewrite -union_difference_L; last set_solver.
   Qed.
-  Lemma big_sepS_singleton Φ x : (Π★{set {[ x ]}} Φ) ⊣⊢ (Φ x).
+  Lemma big_sepS_singleton Φ x : Π★{set {[ x ]}} Φ ⊣⊢ (Φ x).
   Proof. intros. by rewrite /uPred_big_sepS elements_singleton /= right_id. Qed.
 
   Lemma big_sepS_sepS Φ Ψ X :
-    (Π★{set X} (λ x, Φ x ★ Ψ x)) ⊣⊢ (Π★{set X} Φ ★ Π★{set X} Ψ).
+    Π★{set X} (λ x, Φ x ★ Ψ x) ⊣⊢ (Π★{set X} Φ ★ Π★{set X} Ψ).
   Proof.
     rewrite /uPred_big_sepS.
     induction (elements X) as [|x l IH]; csimpl; first by rewrite ?right_id.
     by rewrite IH -!assoc (assoc _ (Ψ _)) [(Ψ _ ★ _)%I]comm -!assoc.
   Qed.
 
-  Lemma big_sepS_later Φ X : (▷ Π★{set X} Φ) ⊣⊢ (Π★{set X} (λ x, ▷ Φ x)).
+  Lemma big_sepS_later Φ X : ▷ Π★{set X} Φ ⊣⊢ Π★{set X} (λ x, ▷ Φ x).
   Proof.
     rewrite /uPred_big_sepS.
     induction (elements X) as [|x l IH]; csimpl; first by rewrite ?later_True.

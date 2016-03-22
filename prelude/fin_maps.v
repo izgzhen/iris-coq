@@ -173,11 +173,9 @@ Section setoid.
     split; [intros Hm; apply map_eq; intros i|by intros ->].
     by rewrite lookup_empty, <-equiv_None, Hm, lookup_empty.
   Qed.
-  Lemma map_equiv_lookup (m1 m2 : M A) i x :
+  Lemma map_equiv_lookup_l (m1 m2 : M A) i x :
     m1 ≡ m2 → m1 !! i = Some x → ∃ y, m2 !! i = Some y ∧ x ≡ y.
-  Proof.
-    intros Hm ?. destruct (equiv_Some (m1 !! i) (m2 !! i) x) as (y&?&?); eauto.
-  Qed.
+  Proof. generalize (equiv_Some_inv_l (m1 !! i) (m2 !! i) x); naive_solver. Qed.
 End setoid.
 
 (** ** General properties *)

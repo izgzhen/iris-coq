@@ -1,4 +1,4 @@
-From iris.algebra Require Export cmra.
+From iris.algebra Require Export cmra list.
 From iris.prelude Require Import gmap.
 
 Fixpoint big_op {A : cmraT} `{Empty A} (xs : list A) : A :=
@@ -25,8 +25,9 @@ Proof.
   - by rewrite !assoc (comm _ x).
   - by trans (big_op xs2).
 Qed.
-Global Instance big_op_proper : Proper ((≡) ==> (≡)) big_op.
+Global Instance big_op_ne n : Proper (dist n ==> dist n) big_op.
 Proof. by induction 1; simpl; repeat apply (_ : Proper (_ ==> _ ==> _) op). Qed.
+Global Instance big_op_proper : Proper ((≡) ==> (≡)) big_op := ne_proper _.
 Lemma big_op_app xs ys : big_op (xs ++ ys) ≡ big_op xs ⋅ big_op ys.
 Proof.
   induction xs as [|x xs IH]; simpl; first by rewrite ?left_id.
@@ -64,7 +65,7 @@ Proof.
   { by intros m2; rewrite (symmetry_iff (≡)) map_equiv_empty; intros ->. }
   intros m2 Hm2; rewrite big_opM_insert //.
   rewrite (IH (delete i m2)); last by rewrite -Hm2 delete_insert.
-  destruct (map_equiv_lookup (<[i:=x]> m1) m2 i x)
+  destruct (map_equiv_lookup_l (<[i:=x]> m1) m2 i x)
     as (y&?&Hxy); auto using lookup_insert.
   rewrite Hxy -big_opM_insert; last auto using lookup_delete.
   by rewrite insert_delete.

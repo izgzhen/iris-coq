@@ -10,69 +10,74 @@ Inductive option_reflect {A} (P : A → Prop) (Q : Prop) : option A → Type :=
 
 (** * General definitions and theorems *)
 (** Basic properties about equality. *)
-Lemma None_ne_Some {A} (a : A) : None ≠ Some a.
+Lemma None_ne_Some {A} (x : A) : None ≠ Some x.
 Proof. congruence. Qed.
-Lemma Some_ne_None {A} (a : A) : Some a ≠ None.
+Lemma Some_ne_None {A} (x : A) : Some x ≠ None.
 Proof. congruence. Qed.
-Lemma eq_None_ne_Some {A} (x : option A) a : x = None → x ≠ Some a.
+Lemma eq_None_ne_Some {A} (mx : option A) x : mx = None → mx ≠ Some x.
 Proof. congruence. Qed.
 Instance Some_inj {A} : Inj (=) (=) (@Some A).
 Proof. congruence. Qed.
 
 (** The non dependent elimination principle on the option type. *)
-Definition default {A B} (b : B) (x : option A) (f : A → B)  : B :=
-  match x with None => b | Some a => f a end.
+Definition default {A B} (y : B) (mx : option A) (f : A → B)  : B :=
+  match mx with None => y | Some x => f x end.
+Instance: Params (@default) 2.
 
 (** The [from_option] function allows us to get the value out of the option
 type by specifying a default value. *)
-Definition from_option {A} (a : A) (x : option A) : A :=
-  match x with None => a | Some b => b end.
+Definition from_option {A} (x : A) (mx : option A) : A :=
+  match mx with None => x | Some y => y end.
+Instance: Params (@from_option) 1.
 
 (** An alternative, but equivalent, definition of equality on the option
 data type. This theorem is useful to prove that two options are the same. *)
-Lemma option_eq {A} (x y : option A) : x = y ↔ ∀ a, x = Some a ↔ y = Some a.
-Proof. split; [by intros; by subst |]. destruct x, y; naive_solver. Qed.
-Lemma option_eq_1 {A} (x y : option A) a : x = y → x = Some a → y = Some a.
+Lemma option_eq {A} (mx my: option A): mx = my ↔ ∀ x, mx = Some x ↔ my = Some x.
+Proof. split; [by intros; by subst |]. destruct mx, my; naive_solver. Qed.
+Lemma option_eq_1 {A} (mx my: option A) x : mx = my → mx = Some x → my = Some x.
 Proof. congruence. Qed.
-Lemma option_eq_1_alt {A} (x y : option A) a : x = y → y = Some a → x = Some a.
+Lemma option_eq_1_alt {A} (mx my : option A) x :
+  mx = my → my = Some x → mx = Some x.
 Proof. congruence. Qed.
 
-Definition is_Some {A} (x : option A) := ∃ y, x = Some y.
-Lemma mk_is_Some {A} (x : option A) y : x = Some y → is_Some x.
+Definition is_Some {A} (mx : option A) := ∃ x, mx = Some x.
+Instance: Params (@is_Some) 1.
+
+Lemma mk_is_Some {A} (mx : option A) x : mx = Some x → is_Some mx.
 Proof. intros; red; subst; eauto. Qed.
 Hint Resolve mk_is_Some.
 Lemma is_Some_None {A} : ¬is_Some (@None A).
 Proof. by destruct 1. Qed.
 Hint Resolve is_Some_None.
 
-Instance is_Some_pi {A} (x : option A) : ProofIrrel (is_Some x).
+Instance is_Some_pi {A} (mx : option A) : ProofIrrel (is_Some mx).
 Proof.
-  set (P (y : option A) := match y with Some _ => True | _ => False end).
-  set (f x := match x return P x → is_Some x with
+  set (P (mx : option A) := match mx with Some _ => True | _ => False end).
+  set (f mx := match mx return P mx → is_Some mx with
     Some _ => λ _, ex_intro _ _ eq_refl | None => False_rect _ end).
-  set (g x (H : is_Some x) :=
-    match H return P x with ex_intro _ p => eq_rect _ _ I _ (eq_sym p) end).
-  assert (∀ x H, f x (g x H) = H) as f_g by (by intros ? [??]; subst).
-  intros p1 p2. rewrite <-(f_g _ p1), <-(f_g _ p2). by destruct x, p1.
+  set (g mx (H : is_Some mx) :=
+    match H return P mx with ex_intro _ p => eq_rect _ _ I _ (eq_sym p) end).
+  assert (∀ mx H, f mx (g mx H) = H) as f_g by (by intros ? [??]; subst).
+  intros p1 p2. rewrite <-(f_g _ p1), <-(f_g _ p2). by destruct mx, p1.
 Qed.
-Instance is_Some_dec {A} (x : option A) : Decision (is_Some x) :=
-  match x with
+Instance is_Some_dec {A} (mx : option A) : Decision (is_Some mx) :=
+  match mx with
   | Some x => left (ex_intro _ x eq_refl)
   | None => right is_Some_None
   end.
 
-Definition is_Some_proj {A} {x : option A} : is_Some x → A :=
-  match x with Some a => λ _, a | None => False_rect _ ∘ is_Some_None end.
-Definition Some_dec {A} (x : option A) : { a | x = Some a } + { x = None } :=
-  match x return { a | x = Some a } + { x = None } with
-  | Some a => inleft (a ↾ eq_refl _)
+Definition is_Some_proj {A} {mx : option A} : is_Some mx → A :=
+  match mx with Some x => λ _, x | None => False_rect _ ∘ is_Some_None end.
+Definition Some_dec {A} (mx : option A) : { x | mx = Some x } + { mx = None } :=
+  match mx return { x | mx = Some x } + { mx = None } with
+  | Some x => inleft (x ↾ eq_refl _)
   | None => inright eq_refl
   end.
 
-Lemma eq_None_not_Some {A} (x : option A) : x = None ↔ ¬is_Some x.
-Proof. destruct x; unfold is_Some; naive_solver. Qed.
-Lemma not_eq_None_Some `(x : option A) : x ≠ None ↔ is_Some x.
-Proof. rewrite eq_None_not_Some. split. apply dec_stable. tauto. Qed.
+Lemma eq_None_not_Some {A} (mx : option A) : mx = None ↔ ¬is_Some mx.
+Proof. destruct mx; unfold is_Some; naive_solver. Qed.
+Lemma not_eq_None_Some {A} (mx : option A) : mx ≠ None ↔ is_Some mx.
+Proof. rewrite eq_None_not_Some; apply dec_stable; tauto. Qed.
 
 (** Lifting a relation point-wise to option *)
 Inductive option_Forall2 {A B} (P: A → B → Prop) : option A → option B → Prop :=
@@ -90,7 +95,12 @@ Definition option_relation {A B} (R: A → B → Prop) (P: A → Prop) (Q: B →
 (** Setoids *)
 Section setoids.
   Context `{Equiv A} `{!Equivalence ((≡) : relation A)}.
+
   Global Instance option_equiv : Equiv (option A) := option_Forall2 (≡).
+
+  Lemma equiv_option_Forall2 mx my : mx ≡ my ↔ option_Forall2 (≡) mx my.
+  Proof. split; destruct 1; constructor; auto. Qed.
+
   Global Instance option_equivalence : Equivalence ((≡) : relation (option A)).
   Proof.
     split.
@@ -102,81 +112,86 @@ Section setoids.
   Proof. by constructor. Qed.
   Global Instance option_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (option A).
   Proof. intros x y; destruct 1; fold_leibniz; congruence. Qed.
+
   Lemma equiv_None (mx : option A) : mx ≡ None ↔ mx = None.
   Proof. split; [by inversion_clear 1|by intros ->]. Qed.
-  Lemma equiv_Some (mx my : option A) x :
+  Lemma equiv_Some_inv_l (mx my : option A) x :
     mx ≡ my → mx = Some x → ∃ y, my = Some y ∧ x ≡ y.
   Proof. destruct 1; naive_solver. Qed.
+  Lemma equiv_Some_inv_r (mx my : option A) y :
+    mx ≡ my → mx = Some y → ∃ x, mx = Some x ∧ x ≡ y.
+  Proof. destruct 1; naive_solver. Qed.
+
   Global Instance is_Some_proper : Proper ((≡) ==> iff) (@is_Some A).
   Proof. inversion_clear 1; split; eauto. Qed.
+  Global Instance from_option_proper :
+    Proper ((≡) ==> (≡) ==> (≡)) (@from_option A).
+  Proof. by destruct 2. Qed.
 End setoids.
 
 (** Equality on [option] is decidable. *)
-Instance option_eq_None_dec {A} (x : option A) : Decision (x = None) :=
-  match x with Some _ => right (Some_ne_None _) | None => left eq_refl end.
-Instance option_None_eq_dec {A} (x : option A) : Decision (None = x) :=
-  match x with Some _ => right (None_ne_Some _) | None => left eq_refl end.
-Instance option_eq_dec `{dec : ∀ x y : A, Decision (x = y)}
-  (x y : option A) : Decision (x = y).
+Instance option_eq_None_dec {A} (mx : option A) : Decision (mx = None) :=
+  match mx with Some _ => right (Some_ne_None _) | None => left eq_refl end.
+Instance option_None_eq_dec {A} (mx : option A) : Decision (None = mx) :=
+  match mx with Some _ => right (None_ne_Some _) | None => left eq_refl end.
+Instance option_eq_dec {A} {dec : ∀ x y : A, Decision (x = y)}
+  (mx my : option A) : Decision (mx = my).
 Proof.
  refine
-  match x, y with
-  | Some a, Some b => cast_if (decide (a = b))
+  match mx, my with
+  | Some x, Some y => cast_if (decide (x = y))
   | None, None => left _ | _, _ => right _
   end; clear dec; abstract congruence.
 Defined.
 
 (** * Monadic operations *)
 Instance option_ret: MRet option := @Some.
-Instance option_bind: MBind option := λ A B f x,
-  match x with Some a => f a | None => None end.
-Instance option_join: MJoin option := λ A x,
-  match x with Some x => x | None => None end.
+Instance option_bind: MBind option := λ A B f mx,
+  match mx with Some x => f x | None => None end.
+Instance option_join: MJoin option := λ A mmx,
+  match mmx with Some mx => mx | None => None end.
 Instance option_fmap: FMap option := @option_map.
-Instance option_guard: MGuard option := λ P dec A x,
-  match dec with left H => x H | _ => None end.
+Instance option_guard: MGuard option := λ P dec A f,
+  match dec with left H => f H | _ => None end.
 
-Lemma fmap_is_Some {A B} (f : A → B) x : is_Some (f <$> x) ↔ is_Some x.
-Proof. unfold is_Some; destruct x; naive_solver. Qed.
-Lemma fmap_Some {A B} (f : A → B) x y :
-  f <$> x = Some y ↔ ∃ x', x = Some x' ∧ y = f x'.
-Proof. destruct x; naive_solver. Qed.
-Lemma fmap_None {A B} (f : A → B) x : f <$> x = None ↔ x = None.
-Proof. by destruct x. Qed.
-Lemma option_fmap_id {A} (x : option A) : id <$> x = x.
-Proof. by destruct x. Qed.
-Lemma option_fmap_compose {A B} (f : A → B) {C} (g : B → C) x :
-  g ∘ f <$> x = g <$> f <$> x.
-Proof. by destruct x. Qed.
-Lemma option_fmap_ext {A B} (f g : A → B) x :
-  (∀ y, f y = g y) → f <$> x = g <$> x.
-Proof. destruct x; simpl; auto with f_equal. Qed.
-Lemma option_fmap_setoid_ext `{Equiv A, Equiv B} (f g : A → B) x :
-  (∀ y, f y ≡ g y) → f <$> x ≡ g <$> x.
-Proof. destruct x; constructor; auto. Qed.
-Lemma option_fmap_bind {A B C} (f : A → B) (g : B → option C) x :
-  (f <$> x) ≫= g = x ≫= g ∘ f.
-Proof. by destruct x. Qed.
+Lemma fmap_is_Some {A B} (f : A → B) mx : is_Some (f <$> mx) ↔ is_Some mx.
+Proof. unfold is_Some; destruct mx; naive_solver. Qed.
+Lemma fmap_Some {A B} (f : A → B) mx y :
+  f <$> mx = Some y ↔ ∃ x, mx = Some x ∧ y = f x.
+Proof. destruct mx; naive_solver. Qed.
+Lemma fmap_None {A B} (f : A → B) mx : f <$> mx = None ↔ mx = None.
+Proof. by destruct mx. Qed.
+Lemma option_fmap_id {A} (mx : option A) : id <$> mx = mx.
+Proof. by destruct mx. Qed.
+Lemma option_fmap_compose {A B} (f : A → B) {C} (g : B → C) mx :
+  g ∘ f <$> mx = g <$> f <$> mx.
+Proof. by destruct mx. Qed.
+Lemma option_fmap_ext {A B} (f g : A → B) mx :
+  (∀ x, f x = g x) → f <$> mx = g <$> mx.
+Proof. intros; destruct mx; f_equal/=; auto. Qed.
+Lemma option_fmap_setoid_ext `{Equiv A, Equiv B} (f g : A → B) mx :
+  (∀ x, f x ≡ g x) → f <$> mx ≡ g <$> mx.
+Proof. destruct mx; constructor; auto. Qed.
+Lemma option_fmap_bind {A B C} (f : A → B) (g : B → option C) mx :
+  (f <$> mx) ≫= g = mx ≫= g ∘ f.
+Proof. by destruct mx. Qed.
 Lemma option_bind_assoc {A B C} (f : A → option B)
-  (g : B → option C) (x : option A) : (x ≫= f) ≫= g = x ≫= (mbind g ∘ f).
-Proof. by destruct x; simpl. Qed.
-Lemma option_bind_ext {A B} (f g : A → option B) x y :
-  (∀ a, f a = g a) → x = y → x ≫= f = y ≫= g.
-Proof. intros. destruct x, y; simplify_eq; csimpl; auto. Qed.
-Lemma option_bind_ext_fun {A B} (f g : A → option B) x :
-  (∀ a, f a = g a) → x ≫= f = x ≫= g.
+  (g : B → option C) (mx : option A) : (mx ≫= f) ≫= g = mx ≫= (mbind g ∘ f).
+Proof. by destruct mx; simpl. Qed.
+Lemma option_bind_ext {A B} (f g : A → option B) mx my :
+  (∀ x, f x = g x) → mx = my → mx ≫= f = my ≫= g.
+Proof. destruct mx, my; naive_solver. Qed.
+Lemma option_bind_ext_fun {A B} (f g : A → option B) mx :
+  (∀ x, f x = g x) → mx ≫= f = mx ≫= g.
 Proof. intros. by apply option_bind_ext. Qed.
-Lemma bind_Some {A B} (f : A → option B) (x : option A) b :
-  x ≫= f = Some b ↔ ∃ a, x = Some a ∧ f a = Some b.
-Proof. split. by destruct x as [a|]; [exists a|]. by intros (?&->&?). Qed.
-Lemma bind_None {A B} (f : A → option B) (x : option A) :
-  x ≫= f = None ↔ x = None ∨ ∃ a, x = Some a ∧ f a = None.
-Proof.
-  split; [|by intros [->|(?&->&?)]].
-  destruct x; intros; simplify_eq/=; eauto.
-Qed.
-Lemma bind_with_Some {A} (x : option A) : x ≫= Some = x.
-Proof. by destruct x. Qed.
+Lemma bind_Some {A B} (f : A → option B) (mx : option A) y :
+  mx ≫= f = Some y ↔ ∃ x, mx = Some x ∧ f x = Some y.
+Proof. destruct mx; naive_solver. Qed.
+Lemma bind_None {A B} (f : A → option B) (mx : option A) :
+  mx ≫= f = None ↔ mx = None ∨ ∃ x, mx = Some x ∧ f x = None.
+Proof. destruct mx; naive_solver. Qed.
+Lemma bind_with_Some {A} (mx : option A) : mx ≫= Some = mx.
+Proof. by destruct mx. Qed.
 
 (** ** Inverses of constructors *)
 (** We can do this in a fancy way using dependent types, but rewrite does
@@ -206,25 +221,26 @@ Instance maybe_Some {A} : Maybe (@Some A) := id.
 Arguments maybe_Some _ !_ /.
 
 (** * Union, intersection and difference *)
-Instance option_union_with {A} : UnionWith A (option A) := λ f x y,
-  match x, y with
-  | Some a, Some b => f a b
-  | Some a, None => Some a
-  | None, Some b => Some b
+Instance option_union_with {A} : UnionWith A (option A) := λ f mx my,
+  match mx, my with
+  | Some x, Some y => f x y
+  | Some x, None => Some x
+  | None, Some y => Some y
   | None, None => None
   end.
 Instance option_intersection_with {A} : IntersectionWith A (option A) :=
-  λ f x y, match x, y with Some a, Some b => f a b | _, _ => None end.
-Instance option_difference_with {A} : DifferenceWith A (option A) := λ f x y,
-  match x, y with
-  | Some a, Some b => f a b
-  | Some a, None => Some a
+  λ f mx my, match mx, my with Some x, Some y => f x y | _, _ => None end.
+Instance option_difference_with {A} : DifferenceWith A (option A) := λ f mx my,
+  match mx, my with
+  | Some x, Some y => f x y
+  | Some x, None => Some x
   | None, _ => None
   end.
 Instance option_union {A} : Union (option A) := union_with (λ x _, Some x).
-Lemma option_union_Some {A} (x y : option A) z :
-  x ∪ y = Some z → x = Some z ∨ y = Some z.
-Proof. destruct x, y; intros; simplify_eq; auto. Qed.
+
+Lemma option_union_Some {A} (mx my : option A) z :
+  mx ∪ my = Some z → mx = Some z ∨ my = Some z.
+Proof. destruct mx, my; naive_solver. Qed.
 
 Section option_union_intersection_difference.
   Context {A} (f : A → A → option A).
@@ -248,61 +264,61 @@ End option_union_intersection_difference.
 Tactic Notation "case_option_guard" "as" ident(Hx) :=
   match goal with
   | H : appcontext C [@mguard option _ ?P ?dec] |- _ =>
-    change (@mguard option _ P dec) with (λ A (x : P → option A),
-      match @decide P dec with left H' => x H' | _ => None end) in *;
+    change (@mguard option _ P dec) with (λ A (f : P → option A),
+      match @decide P dec with left H' => f H' | _ => None end) in *;
     destruct_decide (@decide P dec) as Hx
   | |- appcontext C [@mguard option _ ?P ?dec] =>
-    change (@mguard option _ P dec) with (λ A (x : P → option A),
-      match @decide P dec with left H' => x H' | _ => None end) in *;
+    change (@mguard option _ P dec) with (λ A (f : P → option A),
+      match @decide P dec with left H' => f H' | _ => None end) in *;
     destruct_decide (@decide P dec) as Hx
   end.
 Tactic Notation "case_option_guard" :=
   let H := fresh in case_option_guard as H.
 
-Lemma option_guard_True {A} P `{Decision P} (x : option A) :
-  P → guard P; x = x.
+Lemma option_guard_True {A} P `{Decision P} (mx : option A) :
+  P → guard P; mx = mx.
 Proof. intros. by case_option_guard. Qed.
-Lemma option_guard_False {A} P `{Decision P} (x : option A) :
-  ¬P → guard P; x = None.
+Lemma option_guard_False {A} P `{Decision P} (mx : option A) :
+  ¬P → guard P; mx = None.
 Proof. intros. by case_option_guard. Qed.
-Lemma option_guard_iff {A} P Q `{Decision P, Decision Q} (x : option A) :
-  (P ↔ Q) → guard P; x = guard Q; x.
+Lemma option_guard_iff {A} P Q `{Decision P, Decision Q} (mx : option A) :
+  (P ↔ Q) → guard P; mx = guard Q; mx.
 Proof. intros [??]. repeat case_option_guard; intuition. Qed.
 
 Tactic Notation "simpl_option" "by" tactic3(tac) :=
-  let assert_Some_None A o H := first
+  let assert_Some_None A mx H := first
     [ let x := fresh in evar (x:A); let x' := eval unfold x in x in clear x;
-      assert (o = Some x') as H by tac
-    | assert (o = None) as H by tac ]
+      assert (mx = Some x') as H by tac
+    | assert (mx = None) as H by tac ]
   in repeat match goal with
   | H : appcontext [@mret _ _ ?A] |- _ =>
      change (@mret _ _ A) with (@Some A) in H
   | |- appcontext [@mret _ _ ?A] => change (@mret _ _ A) with (@Some A)
-  | H : context [mbind (M:=option) (A:=?A) ?f ?o] |- _ =>
-    let Hx := fresh in assert_Some_None A o Hx; rewrite Hx in H; clear Hx
-  | H : context [fmap (M:=option) (A:=?A) ?f ?o] |- _ =>
-    let Hx := fresh in assert_Some_None A o Hx; rewrite Hx in H; clear Hx
-  | H : context [default (A:=?A) _ ?o _] |- _ =>
-    let Hx := fresh in assert_Some_None A o Hx; rewrite Hx in H; clear Hx
-  | H : context [from_option (A:=?A) _ ?o] |- _ =>
-    let Hx := fresh in assert_Some_None A o Hx; rewrite Hx in H; clear Hx
-  | H : context [ match ?o with _ => _ end ] |- _ =>
-    match type of o with
+  | H : context [mbind (M:=option) (A:=?A) ?f ?mx] |- _ =>
+    let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
+  | H : context [fmap (M:=option) (A:=?A) ?f ?mx] |- _ =>
+    let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
+  | H : context [default (A:=?A) _ ?mx _] |- _ =>
+    let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
+  | H : context [from_option (A:=?A) _ ?mx] |- _ =>
+    let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
+  | H : context [ match ?mx with _ => _ end ] |- _ =>
+    match type of mx with
     | option ?A =>
-      let Hx := fresh in assert_Some_None A o Hx; rewrite Hx in H; clear Hx
+      let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
     end
-  | |- context [mbind (M:=option) (A:=?A) ?f ?o] =>
-    let Hx := fresh in assert_Some_None A o Hx; rewrite Hx; clear Hx
-  | |- context [fmap (M:=option) (A:=?A) ?f ?o] =>
-    let Hx := fresh in assert_Some_None A o Hx; rewrite Hx; clear Hx
-  | |- context [default (A:=?A) _ ?o _] =>
-    let Hx := fresh in assert_Some_None A o Hx; rewrite Hx; clear Hx
-  | |- context [from_option (A:=?A) _ ?o] =>
-    let Hx := fresh in assert_Some_None A o Hx; rewrite Hx; clear Hx
-  | |- context [ match ?o with _ => _ end ] =>
-    match type of o with
+  | |- context [mbind (M:=option) (A:=?A) ?f ?mx] =>
+    let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx; clear Hx
+  | |- context [fmap (M:=option) (A:=?A) ?f ?mx] =>
+    let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx; clear Hx
+  | |- context [default (A:=?A) _ ?mx _] =>
+    let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx; clear Hx
+  | |- context [from_option (A:=?A) _ ?mx] =>
+    let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx; clear Hx
+  | |- context [ match ?mx with _ => _ end ] =>
+    match type of mx with
     | option ?A =>
-      let Hx := fresh in assert_Some_None A o Hx; rewrite Hx; clear Hx
+      let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx; clear Hx
     end
   | H : context [decide _] |- _ => rewrite decide_True in H by tac
   | H : context [decide _] |- _ => rewrite decide_False in H by tac
@@ -326,26 +342,26 @@ Tactic Notation "simplify_option_eq" "by" tactic3(tac) :=
   | _ : maybe3 _ ?x = Some _ |- _ => is_var x; destruct x
   | _ : maybe4 _ ?x = Some _ |- _ => is_var x; destruct x
   | H : _ ∪ _ = Some _ |- _ => apply option_union_Some in H; destruct H
-  | H : mbind (M:=option) ?f ?o = ?x |- _ =>
-    match o with Some _ => fail 1 | None => fail 1 | _ => idtac end;
-    match x with Some _ => idtac | None => idtac | _ => fail 1 end;
-    let y := fresh in destruct o as [y|] eqn:?;
-      [change (f y = x) in H|change (None = x) in H]
-  | H : ?x = mbind (M:=option) ?f ?o |- _ =>
-    match o with Some _ => fail 1 | None => fail 1 | _ => idtac end;
-    match x with Some _ => idtac | None => idtac | _ => fail 1 end;
-    let y := fresh in destruct o as [y|] eqn:?;
-      [change (x = f y) in H|change (x = None) in H]
-  | H : fmap (M:=option) ?f ?o = ?x |- _ =>
-    match o with Some _ => fail 1 | None => fail 1 | _ => idtac end;
-    match x with Some _ => idtac | None => idtac | _ => fail 1 end;
-    let y := fresh in destruct o as [y|] eqn:?;
-      [change (Some (f y) = x) in H|change (None = x) in H]
-  | H : ?x = fmap (M:=option) ?f ?o |- _ =>
-    match o with Some _ => fail 1 | None => fail 1 | _ => idtac end;
-    match x with Some _ => idtac | None => idtac | _ => fail 1 end;
-    let y := fresh in destruct o as [y|] eqn:?;
-      [change (x = Some (f y)) in H|change (x = None) in H]
+  | H : mbind (M:=option) ?f ?mx = ?my |- _ =>
+    match mx with Some _ => fail 1 | None => fail 1 | _ => idtac end;
+    match my with Some _ => idtac | None => idtac | _ => fail 1 end;
+    let x := fresh in destruct mx as [x|] eqn:?;
+      [change (f x = my) in H|change (None = my) in H]
+  | H : ?my = mbind (M:=option) ?f ?mx |- _ =>
+    match mx with Some _ => fail 1 | None => fail 1 | _ => idtac end;
+    match my with Some _ => idtac | None => idtac | _ => fail 1 end;
+    let x := fresh in destruct mx as [x|] eqn:?;
+      [change (my = f x) in H|change (my = None) in H]
+  | H : fmap (M:=option) ?f ?mx = ?my |- _ =>
+    match mx with Some _ => fail 1 | None => fail 1 | _ => idtac end;
+    match my with Some _ => idtac | None => idtac | _ => fail 1 end;
+    let x := fresh in destruct mx as [x|] eqn:?;
+      [change (Some (f x) = my) in H|change (None = my) in H]
+  | H : ?my = fmap (M:=option) ?f ?mx |- _ =>
+    match mx with Some _ => fail 1 | None => fail 1 | _ => idtac end;
+    match my with Some _ => idtac | None => idtac | _ => fail 1 end;
+    let x := fresh in destruct mx as [x|] eqn:?;
+      [change (my = Some (f x)) in H|change (my = None) in H]
   | _ => progress case_decide
   | _ => progress case_option_guard
   end.
