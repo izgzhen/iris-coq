@@ -8,7 +8,7 @@ Section definitions.
     λ (g : T → T) a f b, if decide (a = b) then g (f a) else f b.
 End definitions.
 
-(* For now, we only have the properties here that do not need a notion
+(* TODO: For now, we only have the properties here that do not need a notion
    of equality of functions. *)
 
 Section functions.
