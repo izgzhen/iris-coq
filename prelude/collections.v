@@ -63,7 +63,7 @@ Section simple_collection.
   Global Instance elem_of_proper :
     Proper ((=) ==> (≡) ==> iff) (@elem_of A C _) | 5.
   Proof. intros ???; subst. firstorder. Qed.
-  Global Instance disjoint_prope : Proper ((≡) ==> (≡) ==> iff) (@disjoint C _).
+  Global Instance disjoint_proper: Proper ((≡) ==> (≡) ==> iff) (@disjoint C _).
   Proof. intros ??????. by rewrite !elem_of_disjoint; setoid_subst. Qed.
   Lemma elem_of_union_list Xs x : x ∈ ⋃ Xs ↔ ∃ X, X ∈ Xs ∧ x ∈ X.
   Proof.
