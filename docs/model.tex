@@ -53,19 +53,19 @@ For every definition, we have to show all the side-conditions: The maps have to 
 The first complicated task in building a model of full Iris is defining the semantic model of $\Prop$.
 We start by defining the functor that assembles the CMRAs we need to the global resource CMRA:
 \begin{align*}
-  \textdom{ResF}(\cofe) \eqdef{}& \record{\wld: \agm(\latert \cofe), \pres: \exm(\textdom{State}), \ghostRes: F(\cofe)}
+  \textdom{ResF}(\cofe^\op, \cofe) \eqdef{}& \record{\wld: \agm(\latert \cofe), \pres: \exm(\textdom{State}), \ghostRes: \iFunc(\cofe^\op, \cofe)}
 \end{align*}
-where $F$ is the user-chosen bifunctor from $\COFEs$ to $\CMRAs$.
-$\textdom{ResF}(\cofe)$ is a CMRA by lifting the individual CMRAs pointwise.
-Furthermore, if $F$ is locally contractive, then so is $\textdom{ResF}(-)$.
+Remember that $\iFunc$ is the user-chosen bifunctor from $\COFEs$ to $\CMRAs$.
+$\textdom{ResF}(\cofe^\op, \cofe)$ is a CMRA by lifting the individual CMRAs pointwise.
+Furthermore, if $F$ is locally contractive, then so is $\textdom{ResF}$.
 
 Now we can write down the recursive domain equation:
-\[ \iPreProp \cong \UPred(\textdom{ResF}(\iPreProp)) \]
+\[ \iPreProp \cong \UPred(\textdom{ResF}(\iPreProp, \iPreProp)) \]
 $\iPreProp$ is a COFE, which exists by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}.
 We do not need to consider how the object is constructed. 
 We only need the isomorphism, given by
 \begin{align*}
-  \Res &\eqdef \textdom{ResF}(\iPreProp) \\
+  \Res &\eqdef \textdom{ResF}(\iPreProp, \iPreProp) \\
   \iProp &\eqdef \UPred(\Res) \\
 	\wIso &: \iProp \nfn \iPreProp \\
 	\wIso^{-1} &: \iPreProp \nfn \iProp
@@ -77,7 +77,7 @@ We then pick $\iProp$ as the interpretation of $\Prop$:
 
 \paragraph{Interpretation of assertions.}
 $\iProp$ is a $\UPred$, and hence the definitions from \Sref{sec:upred-logic} apply.
-We only have to define the missing connectives, the most interesting bits being primitive view shifts and weakest preconditions.
+We only have to define the interpretation of the missing connectives, the most interesting bits being primitive view shifts and weakest preconditions.
 
 \typedsection{World satisfaction}{\wsat{-}{-}{-} : 
 	\Delta\textdom{State} \times
@@ -87,7 +87,7 @@ We only have to define the missing connectives, the most interesting bits being 
   \wsatpre(n, \mask, \state, \rss, \rs) & \eqdef \begin{inbox}[t]
     \rs \in \mval_{n+1} \land \rs.\pres = \exinj(\sigma) \land 
     \dom(\rss) \subseteq \mask \cap \dom( \rs.\wld) \land {}\\
-    \All\iname \in \mask, \prop. \rs.\wld(\iname) \nequiv{n+1} \aginj(\latertinj(\wIso(\prop))) \Ra n \in \prop(\rss(\iname))
+    \All\iname \in \mask, \prop. (\rs.\wld)(\iname) \nequiv{n+1} \aginj(\latertinj(\wIso(\prop))) \Ra n \in \prop(\rss(\iname))
   \end{inbox}\\
 	\wsat{\state}{\mask}{\rs} &\eqdef \set{0}\cup\setComp{n+1}{\Exists \rss : \mathbb{N} \fpfn \textdom{Res}. \wsatpre(n, \mask, \state, \rss, \rs \mtimes \prod_\iname \rss(\iname))}
 \end{align*}
@@ -106,9 +106,9 @@ $\textdom{wp}$ is defined as the fixed-point of a contractive function.
 \begin{align*}
   \textdom{pre-wp}(\textdom{wp})(\mask, \expr, \pred) &\eqdef \Lam\rs. \setComp{n}{\begin{aligned}
         \All &\rs_\f, m, \mask_\f, \state. 0 \leq m < n \land \mask \disj \mask_\f \land m+1 \in \wsat\state{\mask \cup \mask_\f}{\rs \mtimes \rs_\f} \Ra {}\\
-        &(\All\val. \toval(\expr) = \val \Ra \Exists \rsB. m+1 \in \prop(\rs') \land m+1 \in \wsat\state{\mask \cup \mask_\f}{\rs' \mtimes \rs_\f}) \land {}\\
+        &(\All\val. \toval(\expr) = \val \Ra \Exists \rsB. m+1 \in \pred(\rsB) \land m+1 \in \wsat\state{\mask \cup \mask_\f}{\rsB \mtimes \rs_\f}) \land {}\\
         &(\toval(\expr) = \bot \land 0 < m \Ra \red(\expr, \state) \land \All \expr_2, \state_2, \expr_\f. \expr,\state \step \expr_2,\state_2,\expr_\f \Ra {}\\
-        &\qquad \Exists \rsB_1, \rsB_2. m \in \wsat\state{\mask \cup \mask_\f}{\rs' \mtimes \rs_\f} \land  m \in \textdom{wp}(\mask, \expr_2, \pred)(\rsB_1) \land {}&\\
+        &\qquad \Exists \rsB_1, \rsB_2. m \in \wsat\state{\mask \cup \mask_\f}{\rsB \mtimes \rs_\f} \land  m \in \textdom{wp}(\mask, \expr_2, \pred)(\rsB_1) \land {}&\\
         &\qquad\qquad (\expr_\f = \bot \lor m \in \textdom{wp}(\top, \expr_\f, \Lam\any.\Lam\any.\mathbb{N})(\rsB_2))
     \end{aligned}} \\
   \textdom{wp}_\mask(\expr, \pred) &\eqdef \mathit{fix}(\textdom{pre-wp})(\mask, \expr, \pred)
@@ -117,10 +117,12 @@ $\textdom{wp}$ is defined as the fixed-point of a contractive function.
 
 \typedsection{Interpretation of program logic assertions}{\Sem{\vctx \proves \term : \Prop} : \Sem{\vctx} \nfn \iProp}
 
+$\knowInv\iname\prop$, $\ownGGhost\melt$ and $\ownPhys\state$ are just syntactic sugar for forms of $\ownM{-}$.
 \begin{align*}
-	\Sem{\vctx \proves \knowInv{\iname}{\prop} : \Prop}_\gamma &\eqdef \ownM{[\iname \mapsto \aginj(\latertinj(\wIso(\prop)))], \munit, \munit} \\
-	\Sem{\vctx \proves \ownGGhost{\melt} : \Prop}_\gamma &\eqdef \ownM{\munit, \munit, \melt} \\
-	\Sem{\vctx \proves \ownPhys{\state} : \Prop}_\gamma &\eqdef \ownM{\munit, \exinj(\state), \munit} \\
+	\knowInv{\iname}{\prop} &\eqdef \ownM{[\iname \mapsto \aginj(\latertinj(\wIso(\prop)))], \munit, \munit} \\
+	\ownGGhost{\melt} &\eqdef \ownM{\munit, \munit, \melt} \\
+	\ownPhys{\state} &\eqdef \ownM{\munit, \exinj(\state), \munit} \\
+~\\
 	\Sem{\vctx \proves \pvs[\mask_1][\mask_2] \prop : \Prop}_\gamma &\eqdef
 	\textdom{pvs}^{\Sem{\vctx \proves \mask_2 : \textlog{InvMask}}_\gamma}_{\Sem{\vctx \proves \mask_1 : \textlog{InvMask}}_\gamma}(\Sem{\vctx \proves \prop : \Prop}_\gamma) \\
 	\Sem{\vctx \proves \wpre{\expr}[\mask]{\Ret\var.\prop} : \Prop}_\gamma &\eqdef
@@ -149,9 +151,7 @@ The remaining domains are interpreted as follows:
 \Sem{\type \to \type'} &\eqdef& \Sem{\type} \nfn \Sem{\type} \\
 \end{array}
 \]
-
-The balance of our signature $\Sig$ is interpreted as follows.
-For each base type $\type$ not covered by the preceding table, we pick an object $X_\type$ in $\cal U$ and define
+For the remaining base types $\type$ defined by the signature $\Sig$, we pick an object $X_\type$ in $\cal U$ and define
 \[
 \Sem{\type} \eqdef X_\type
 \]
