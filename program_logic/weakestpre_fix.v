@@ -1,7 +1,7 @@
 From Coq Require Import Wf_nat.
 From iris.program_logic Require Import weakestpre wsat.
 Local Hint Extern 10 (_ ≤ _) => omega.
-Local Hint Extern 10 (@eq coPset _ _) => set_solver.
+Local Hint Extern 10 (_ ⊥ _) => set_solver.
 Local Hint Extern 10 (✓{_} _) =>
   repeat match goal with
   | H : wsat _ _ _ _ |- _ => apply wsat_valid in H; last omega
@@ -19,7 +19,7 @@ Program Definition wp_pre
     (wp : coPsetC -n> exprC Λ -n> (valC Λ -n> iProp) -n> iProp)
     (E : coPset) (e1 : expr Λ) (Φ : valC Λ -n> iProp) :  iProp :=
   {| uPred_holds n r1 := ∀ rf k Ef σ1,
-       0 ≤ k < n → E ∩ Ef = ∅ →
+       0 ≤ k < n → E ⊥ Ef →
        wsat (S k) (E ∪ Ef) σ1 (r1 ⋅ rf) →
        (∀ v, to_val e1 = Some v →
          ∃ r2, Φ v (S k) r2 ∧ wsat (S k) (E ∪ Ef) σ1 (r2 ⋅ rf)) ∧

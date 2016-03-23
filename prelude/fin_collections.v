@@ -92,9 +92,9 @@ Proof.
   - rewrite elem_of_singleton. eauto using size_singleton_inv.
   - set_solver.
 Qed.
-Lemma size_union X Y : X ∩ Y ≡ ∅ → size (X ∪ Y) = size X + size Y.
+Lemma size_union X Y : X ⊥ Y → size (X ∪ Y) = size X + size Y.
 Proof.
-  intros [E _]. unfold size, collection_size. simpl. rewrite <-app_length.
+  intros. unfold size, collection_size. simpl. rewrite <-app_length.
   apply Permutation_length, NoDup_Permutation.
   - apply NoDup_elements.
   - apply NoDup_app; repeat split; try apply NoDup_elements.

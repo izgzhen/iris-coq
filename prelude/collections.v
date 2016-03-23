@@ -5,9 +5,11 @@ importantly, it implements some tactics to automatically solve goals involving
 collections. *)
 From iris.prelude Require Export base tactics orders.
 
+Instance collection_disjoint `{ElemOf A C} : Disjoint C := λ X Y,
+  ∀ x, x ∈ X → x ∈ Y → False.
 Instance collection_subseteq `{ElemOf A C} : SubsetEq C := λ X Y,
   ∀ x, x ∈ X → x ∈ Y.
-Typeclasses Opaque collection_subseteq.
+Typeclasses Opaque collection_disjoint collection_subseteq.
 
 (** * Basic theorems *)
 Section simple_collection.
@@ -36,6 +38,9 @@ Section simple_collection.
   Proof. firstorder. Qed.
   Lemma elem_of_equiv_empty X : X ≡ ∅ ↔ ∀ x, x ∉ X.
   Proof. firstorder. Qed.
+  Lemma elem_of_disjoint X Y : X ⊥ Y ↔ ∀ x, x ∈ X → x ∈ Y → False.
+  Proof. done. Qed.
+
   Lemma collection_positive_l X Y : X ∪ Y ≡ ∅ → X ≡ ∅.
   Proof.
     rewrite !elem_of_equiv_empty. setoid_rewrite elem_of_union. naive_solver.
@@ -52,11 +57,14 @@ Section simple_collection.
     - intros ??. rewrite elem_of_singleton. by intros ->.
     - intros Ex. by apply (Ex x), elem_of_singleton.
   Qed.
+
   Global Instance singleton_proper : Proper ((=) ==> (≡)) (singleton (B:=C)).
   Proof. by repeat intro; subst. Qed.
   Global Instance elem_of_proper :
-    Proper ((=) ==> (≡) ==> iff) ((∈) : A → C → Prop) | 5.
+    Proper ((=) ==> (≡) ==> iff) (@elem_of A C _) | 5.
   Proof. intros ???; subst. firstorder. Qed.
+  Global Instance disjoint_prope : Proper ((≡) ==> (≡) ==> iff) (@disjoint C _).
+  Proof. intros ??????. by rewrite !elem_of_disjoint; setoid_subst. Qed.
   Lemma elem_of_union_list Xs x : x ∈ ⋃ Xs ↔ ∃ X, X ∈ Xs ∧ x ∈ X.
   Proof.
     split.
@@ -196,6 +204,10 @@ Section set_unfold_simple.
     constructor. rewrite subset_spec, elem_of_subseteq, elem_of_equiv.
     repeat f_equiv; naive_solver.
   Qed.
+  Global Instance set_unfold_disjoint (P Q : A → Prop) :
+    (∀ x, SetUnfold (x ∈ X) (P x)) → (∀ x, SetUnfold (x ∈ Y) (Q x)) →
+    SetUnfold (X ⊥ Y) (∀ x, P x → Q x → False).
+  Proof. constructor. rewrite elem_of_disjoint. naive_solver. Qed.
 
   Context `{!LeibnizEquiv C}.
   Global Instance set_unfold_equiv_same_L X : SetUnfold (X = X) True | 1.
@@ -387,7 +399,7 @@ Section collection.
   Proof. set_solver. Qed.
   Lemma difference_intersection_distr_l X Y Z : (X ∩ Y) ∖ Z ≡ X ∖ Z ∩ Y ∖ Z.
   Proof. set_solver. Qed.
-  Lemma disjoint_union_difference X Y : X ∩ Y ≡ ∅ → (X ∪ Y) ∖ X ≡ Y.
+  Lemma disjoint_union_difference X Y : X ⊥ Y → (X ∪ Y) ∖ X ≡ Y.
   Proof. set_solver. Qed.
 
   Section leibniz.
@@ -407,7 +419,7 @@ Section collection.
     Lemma difference_intersection_distr_l_L X Y Z :
       (X ∩ Y) ∖ Z = X ∖ Z ∩ Y ∖ Z.
     Proof. unfold_leibniz. apply difference_intersection_distr_l. Qed.
-    Lemma disjoint_union_difference_L X Y : X ∩ Y = ∅ → (X ∪ Y) ∖ X = Y.
+    Lemma disjoint_union_difference_L X Y : X ⊥ Y → (X ∪ Y) ∖ X = Y.
     Proof. unfold_leibniz. apply disjoint_union_difference. Qed.
   End leibniz.
 

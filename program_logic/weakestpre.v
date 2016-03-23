@@ -1,8 +1,8 @@
 From iris.program_logic Require Export pviewshifts.
 From iris.program_logic Require Import wsat.
 Local Hint Extern 10 (_ ≤ _) => omega.
-Local Hint Extern 100 (@eq coPset _ _) => eassumption || set_solver.
-Local Hint Extern 100 (_ ∉ _) => set_solver.
+Local Hint Extern 100 (_ ⊥ _) => set_solver.
+Local Hint Extern 100 (_ ∉_) => set_solver.
 Local Hint Extern 100 (@subseteq coPset _ _ _) => set_solver.
 Local Hint Extern 10 (✓{_} _) =>
   repeat match goal with
@@ -25,7 +25,7 @@ CoInductive wp_pre {Λ Σ} (E : coPset)
   | wp_pre_step n r1 e1 :
      to_val e1 = None →
      (∀ rf k Ef σ1,
-       0 < k < n → E ∩ Ef = ∅ →
+       0 < k < n → E ⊥ Ef →
        wsat (S k) (E ∪ Ef) σ1 (r1 ⋅ rf) →
        wp_go (E ∪ Ef) (wp_pre E Φ)
                       (wp_pre ⊤ (λ _, True%I)) k rf e1 σ1) →
@@ -122,7 +122,7 @@ Proof.
   by inversion 1 as [|??? He]; [|rewrite ?to_of_val in He]; simplify_eq.
 Qed.
 Lemma wp_step_inv E Ef Φ e k n σ r rf :
-  to_val e = None → 0 < k < n → E ∩ Ef = ∅ →
+  to_val e = None → 0 < k < n → E ⊥ Ef →
   wp_def E e Φ n r → wsat (S k) (E ∪ Ef) σ (r ⋅ rf) →
   wp_go (E ∪ Ef) (λ e, wp_def E e Φ) (λ e, wp_def ⊤ e (λ _, True%I)) k rf e σ.
 Proof.

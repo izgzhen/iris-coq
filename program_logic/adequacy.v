@@ -1,7 +1,7 @@
 From iris.program_logic Require Export hoare.
 From iris.program_logic Require Import wsat ownership.
 Local Hint Extern 10 (_ ≤ _) => omega.
-Local Hint Extern 100 (@eq coPset _ _) => eassumption || set_solver.
+Local Hint Extern 100 (_ ⊥ _) => set_solver.
 Local Hint Extern 10 (✓{_} _) =>
   repeat match goal with
   | H : wsat _ _ _ _ |- _ => apply wsat_valid in H; last omega
@@ -151,5 +151,4 @@ Proof.
   intros ? Hht. eapply wp_adequacy_safe with (E:=E) (Φ:=Φ); first done.
   move:Hht. by rewrite /ht uPred.always_elim=>/uPred.impl_entails.
 Qed.
-
 End adequacy.
