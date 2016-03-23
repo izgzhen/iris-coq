@@ -1,7 +1,7 @@
 From iris.program_logic Require Export weakestpre.
 From iris.program_logic Require Import wsat ownership.
 Local Hint Extern 10 (_ ≤ _) => omega.
-Local Hint Extern 100 (@eq coPset _ _) => set_solver.
+Local Hint Extern 100 (_ ⊥ _) => set_solver.
 Local Hint Extern 10 (✓{_} _) =>
   repeat match goal with
   | H : wsat _ _ _ _ |- _ => apply wsat_valid in H; last omega

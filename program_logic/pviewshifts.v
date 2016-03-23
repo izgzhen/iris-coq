@@ -2,7 +2,7 @@ From iris.prelude Require Export co_pset.
 From iris.program_logic Require Export model.
 From iris.program_logic Require Import ownership wsat.
 Local Hint Extern 10 (_ ≤ _) => omega.
-Local Hint Extern 100 (@eq coPset _ _) => set_solver.
+Local Hint Extern 100 (_ ⊥ _) => set_solver.
 Local Hint Extern 100 (_ ∉ _) => set_solver.
 Local Hint Extern 10 (✓{_} _) =>
   repeat match goal with
@@ -11,7 +11,7 @@ Local Hint Extern 10 (✓{_} _) =>
 
 Program Definition pvs_def {Λ Σ} (E1 E2 : coPset) (P : iProp Λ Σ) : iProp Λ Σ :=
   {| uPred_holds n r1 := ∀ rf k Ef σ,
-       0 < k ≤ n → (E1 ∪ E2) ∩ Ef = ∅ →
+       0 < k ≤ n → E1 ∪ E2 ⊥ Ef →
        wsat k (E1 ∪ Ef) σ (r1 ⋅ rf) →
        ∃ r2, P k r2 ∧ wsat k (E2 ∪ Ef) σ (r2 ⋅ rf) |}.
 Next Obligation.
@@ -84,7 +84,7 @@ Proof.
   destruct (HP1 rf k Ef σ) as (r2&HP2&?); auto.
 Qed.
 Lemma pvs_mask_frame E1 E2 Ef P :
-  Ef ∩ (E1 ∪ E2) = ∅ → (|={E1,E2}=> P) ⊢ (|={E1 ∪ Ef,E2 ∪ Ef}=> P).
+  Ef ⊥ E1 ∪ E2 → (|={E1,E2}=> P) ⊢ (|={E1 ∪ Ef,E2 ∪ Ef}=> P).
 Proof.
   rewrite pvs_eq. intros ?; split=> n r ? HP rf k Ef' σ ???.
   destruct (HP rf k (Ef∪Ef') σ) as (r'&?&?); rewrite ?(assoc_L _); eauto.
@@ -244,6 +244,5 @@ Proof.
 Qed.
 
 Lemma pvs_mk_fsa {Λ Σ} E (P Q : iProp Λ Σ) :
-  P ⊢ pvs_fsa E (λ _, Q) →
-  P ⊢ |={E}=> Q.
+  P ⊢ pvs_fsa E (λ _, Q) → P ⊢ |={E}=> Q.
 Proof. by intros ?. Qed.

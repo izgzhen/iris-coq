@@ -78,18 +78,17 @@ Lemma vs_frame_r E1 E2 P Q R : (P ={E1,E2}=> Q) ⊢ (P ★ R ={E1,E2}=> Q ★ R)
 Proof. rewrite !(comm _ _ R); apply vs_frame_l. Qed.
 
 Lemma vs_mask_frame E1 E2 Ef P Q :
-  Ef ∩ (E1 ∪ E2) = ∅ → (P ={E1,E2}=> Q) ⊢ (P ={E1 ∪ Ef,E2 ∪ Ef}=> Q).
+  Ef ⊥ E1 ∪ E2 → (P ={E1,E2}=> Q) ⊢ (P ={E1 ∪ Ef,E2 ∪ Ef}=> Q).
 Proof.
   intros ?; apply always_intro', impl_intro_l; rewrite (pvs_mask_frame _ _ Ef)//.
   by rewrite always_elim impl_elim_r.
 Qed.
 
-Lemma vs_mask_frame' E Ef P Q : Ef ∩ E = ∅ → (P ={E}=> Q) ⊢ (P ={E ∪ Ef}=> Q).
+Lemma vs_mask_frame' E Ef P Q : Ef ⊥ E → (P ={E}=> Q) ⊢ (P ={E ∪ Ef}=> Q).
 Proof. intros; apply vs_mask_frame; set_solver. Qed.
 
 Lemma vs_inv N E P Q R :
-  nclose N ⊆ E →
-  (inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q)) ⊢ (P ={E}=> Q).
+  nclose N ⊆ E → (inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q)) ⊢ (P ={E}=> Q).
 Proof.
   intros; apply: always_intro. apply impl_intro_l.
   rewrite always_and_sep_r assoc [(P ★ _)%I]comm -assoc.

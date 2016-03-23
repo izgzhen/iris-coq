@@ -49,13 +49,11 @@ Section ndisjoint.
   Lemma ndot_preserve_disjoint_r N1 N2 x : N1 ⊥ N2 → N1 ⊥ N2 .@ x .
   Proof. rewrite ![N1 ⊥ _]comm. apply ndot_preserve_disjoint_l. Qed.
 
-  Lemma ndisj_disjoint N1 N2 : N1 ⊥ N2 → nclose N1 ∩ nclose N2 = ∅.
+  Lemma ndisj_disjoint N1 N2 : N1 ⊥ N2 → nclose N1 ⊥ nclose N2.
   Proof.
-    intros (N1' & N2' & [N1'' ->] & [N2'' ->] & Hl & Hne).
-    apply elem_of_equiv_empty_L=> p; unfold nclose.
-    rewrite elem_of_intersection !elem_coPset_suffixes; intros [[q ->] [q' Hq]].
-    rewrite !list_encode_app !assoc in Hq.
-    by eapply Hne, list_encode_suffix_eq.
+    intros (N1' & N2' & [N1'' ->] & [N2'' ->] & Hl & Hne) p; unfold nclose.
+    rewrite !elem_coPset_suffixes; intros [q ->] [q' Hq]; destruct Hne.
+    by rewrite !list_encode_app !assoc in Hq; apply list_encode_suffix_eq in Hq.
   Qed.
 End ndisjoint.
 
@@ -63,20 +61,19 @@ End ndisjoint.
    of masks (i.e., coPsets) with set_solver, taking
    disjointness of namespaces into account. *)
 (* TODO: This tactic is by far now yet as powerful as it should be.
-   For example, given N1 ⊥ N2, it should be able to solve
-   nclose (ndot N1 x) ∩ N2 ≡ ∅. It should also solve
-   (ndot N x) ∩ (ndot N y) ≡ ∅ if x ≠ y is in the context or
+   For example, given [N1 ⊥ N2], it should be able to solve
+   [nclose (ndot N1 x) ⊥ N2]. It should also solve
+   [ndot N x ⊥ ndot N y] if x ≠ y is in the context or
    follows from [discriminate]. *)
 Ltac set_solver_ndisj :=
   repeat match goal with
-         (* TODO: Restrict these to have type namespace *)
-         | [ H : (?N1 ⊥ ?N2) |-_ ] => apply ndisj_disjoint in H
-         end;
-  set_solver.
+  (* TODO: Restrict these to have type namespace *)
+  | [ H : ?N1 ⊥ ?N2 |-_ ] => apply ndisj_disjoint in H
+  end; set_solver.
 (* TODO: restrict this to match only if this is ⊆ of coPset *)
 Hint Extern 500 (_ ⊆ _) => set_solver_ndisj : ndisj.
 (* The hope is that registering these will suffice to solve most goals
-   of the form N1 ⊥ N2.
+   of the form [N1 ⊥ N2].
    TODO: Can this prove x ≠ y if discriminate can? *)
 Hint Resolve ndot_ne_disjoint : ndisj.
 Hint Resolve ndot_preserve_disjoint_l : ndisj.
