@@ -50,7 +50,7 @@ For any language $\Lang$, we define the corresponding thread-pool semantics.
 	\tpool \in \textdom{ThreadPool} \eqdef \bigcup_n \textdom{Exp}^n
 \]
 
-\judgment{Machine reduction} {\cfg{\tpool}{\state} \step
+\judgment[Machine reduction]{\cfg{\tpool}{\state} \step
   \cfg{\tpool'}{\state'}}
 \begin{mathpar}
 \infer
@@ -181,7 +181,7 @@ The judgment $\vctx \proves \wtt{\term}{\type}$ expresses that, in variable cont
 A variable context, $\vctx = x_1:\type_1, \dots, x_n:\type_n$, declares a list of variables and their types.
 In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $\vctx$.
 
-\judgment{Well-typed terms}{\vctx \proves_\Sig \wtt{\term}{\type}}
+\judgment[Well-typed terms]{\vctx \proves_\Sig \wtt{\term}{\type}}
 \begin{mathparpagebreakable}
 %%% variables and function symbols
 	\axiom{x : \type \proves \wtt{x}{\type}}
@@ -312,7 +312,7 @@ We implicitly assume that an arbitrary variable context, $\vctx$, is added to ev
 Furthermore, an arbitrary \emph{boxed} assertion context $\always\pfctx$ may be added to every constituent.
 Axioms $\vctx \mid \prop \provesIff \propB$ indicate that both $\vctx \mid \prop \proves \propB$ and $\vctx \mid \propB \proves \prop$ can be derived.
 
-\judgment{}{\vctx \mid \pfctx \proves \prop}
+\judgment{\vctx \mid \pfctx \proves \prop}
 \paragraph{Laws of intuitionistic higher-order logic with equality.}
 This is entirely standard.
 \begin{mathparpagebreakable}

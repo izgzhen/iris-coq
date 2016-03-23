@@ -319,8 +319,8 @@ We use the notation $\namesp.\iname$ for the namespace $[\iname] \dplus \namesp$
 We define the inclusion relation on namespaces as $\namesp_1 \sqsubseteq \namesp_2 \Lra \Exists \namesp_3. \namesp_2 = \namesp_3 \dplus \namesp_1$, \ie $\namesp_1$ is a suffix of $\namesp_2$.
 We have that $\namesp_1 \sqsubseteq \namesp_2 \Ra \namecl{\namesp_2} \subseteq \namecl{\namesp_1}$.
 
-Similarly, we define $\namesp_1 \sep \namesp_2 \eqdef   \Exists \namesp_1', \namesp_2'. \namesp_1' \sqsubseteq \namesp_1 \land \namesp_2' \sqsubseteq \namesp_2 \land |\namesp_1'| = |\namesp_2'| \land \namesp_1' \neq \namesp_2'$, \ie there exists a distinguishing suffix.
-We have that $\namesp_1 \sep \namesp_2 \Ra \namecl{\namesp_2} \sep \namecl{\namesp_1}$, and furthermore $\iname_1 \neq \iname_2 \Ra \namesp.\iname_1 \sep \namesp.\iname_2$.
+Similarly, we define $\namesp_1 \disj \namesp_2 \eqdef   \Exists \namesp_1', \namesp_2'. \namesp_1' \sqsubseteq \namesp_1 \land \namesp_2' \sqsubseteq \namesp_2 \land |\namesp_1'| = |\namesp_2'| \land \namesp_1' \neq \namesp_2'$, \ie there exists a distinguishing suffix.
+We have that $\namesp_1 \disj \namesp_2 \Ra \namecl{\namesp_2} \disj \namecl{\namesp_1}$, and furthermore $\iname_1 \neq \iname_2 \Ra \namesp.\iname_1 \disj \namesp.\iname_2$.
 
 We will overload the usual Iris notation for invariant assertions in the following:
 \[ \knowInv\namesp\prop \eqdef \Exists \iname \in \namecl\namesp. \knowInv\iname{\prop} \]

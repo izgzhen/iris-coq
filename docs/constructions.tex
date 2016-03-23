@@ -42,7 +42,7 @@ Now we can rewrite $\UPred(\monoid)$ as monotone step-indexed predicates over $\
 The reason we chose the first definition is that it is easier to work with in Coq.
 
 \clearpage
-\section{CMRA constructions}
+\section{RA and CMRA constructions}
 
 \subsection{Product}
 \label{sec:prodm}
@@ -378,54 +378,79 @@ We obtain the following frame-preserving update:
 % 	}
 % \end{mathpar}
 
-% \subsection{STS with tokens monoid}
-% \label{sec:stsmon}
+\subsection{STS with tokens}
+\label{sec:stsmon}
 
-% Given a state-transition system~(STS) $(\STSS, \ra)$, a set of tokens $\STSS$, and a labeling $\STSL: \STSS \ra \mathcal{P}(\STST)$ of \emph{protocol-owned} tokens for each state, we construct a monoid modeling an authoritative current state and permitting transitions given a \emph{bound} on the current state and a set of \emph{locally-owned} tokens.
+Given a state-transition system~(STS, \ie a directed graph) $(\STSS, {\stsstep} \subseteq \STSS \times \STSS)$, a set of tokens $\STST$, and a labeling $\STSL: \STSS \ra \wp(\STST)$ of \emph{protocol-owned} tokens for each state, we construct a monoid modeling an authoritative current state and permitting transitions given a \emph{bound} on the current state and a set of \emph{locally-owned} tokens.
 
-% The construction follows the idea of STSs as described in CaReSL \cite{caresl}.
-% We first lift the transition relation to $\STSS \times \mathcal{P}(\STST)$ (implementing a \emph{law of token conservation}) and define upwards closure:
-% \begin{align*}
-%  (s, T) \ra (s', T') \eqdef&\, s \ra s' \land \STSL(s) \uplus T = \STSL(s') \uplus T' \\
-%  \textsf{frame}(s, T) \eqdef&\, (s, \STST \setminus (\STSL(s) \uplus T)) \\
-%  \upclose(S, T) \eqdef&\, \setComp{ s' \in \STSS}{\exists s \in S.\; \textsf{frame}(s, T) \ststrans \textsf{frame}(s', T) }
-% \end{align*}
+The construction follows the idea of STSs as described in CaReSL \cite{caresl}.
+We first lift the transition relation to $\STSS \times \wp(\STST)$ (implementing a \emph{law of token conservation}) and define a stepping relation for the \emph{frame} of a given token set:
+\begin{align*}
+ (s, T) \stsstep (s', T') \eqdef{}& s \stsstep s' \land \STSL(s) \uplus T = \STSL(s') \uplus T' \\
+ s \stsfstep{T} s' \eqdef{}& \Exists T_1, T_2. T_1 \disj \STSL(s) \cup T \l+and (s, T_1) \stsstep (s', T_2)
+\end{align*}
 
-% \noindent
-% We have
-% \begin{quote}
-% 	If $(s, T) \ra (s', T')$\\
-% 	and $T_\f \sep (T \uplus \STSL(s))$,\\
-% 	then $\textsf{frame}(s, T_\f) \ra \textsf{frame}(s', T_\f)$.
-% \end{quote}
-% \begin{proof}
-% This follows directly by framing the tokens in $\STST \setminus (T_\f \uplus T \uplus \STSL(s))$ around the given transition, which yields $(s, \STST \setminus (T_\f \uplus \STSL{T}(s))) \ra (s', T' \uplus (\STST \setminus (T_\f \uplus T \uplus \STSL{T}(s))))$.
-% This is exactly what we have to show, since we know $\STSL(s) \uplus T = \STSL(s') \uplus T'$.
-% \end{proof}
+We further define \emph{closed} sets of states (given a particular set of tokens) as well as the \emph{closure} of a set:
+\begin{align*}
+\STSclsd(S, T) \eqdef{}& \All s \in S. \STSL(s) \disj T \land \All s'. s \stsfstep{T} s' \Ra s' \in S \\
+\upclose(S, T) \eqdef{}& \setComp{ s' \in \STSS}{\Exists s \in S. s \stsftrans{T} s' }
+\end{align*}
 
-% Let $\STSMon{\STSS}$ be the monoid with carrier
-% \[
-% 	\setComp{ (s, S, T) \in \exm{\STSS} \times \mathcal{P}(\STSS) \times \mathcal{P}(\STST) }{ \begin{aligned} &(s = \munit \lor s \in S) \land \upclose(S, T) = S   \land{} \\& S \neq \emptyset \land \All s \in S. \STSL(s) \sep T  \end{aligned} }
-% \]
-% and multiplication
-% \[
-% 	(s, S, T) \mtimes (s', S', T') \eqdef (s'' \eqdef s \mtimes_{\exm{\STSS}} s', S'' \eqdef S \cap S', T'' \eqdef T \cup T') \quad \text{if }\begin{aligned}[t] &(s = \munit \lor s' = \munit) \land T \sep T' \land{} \\& S'' \neq \emptyset \land (s'' \neq \munit \Ra s'' \in S'') \end{aligned}
-% \]
+The STS RA is defined as follows
+\begin{align*}
+  \monoid \eqdef{}& \setComp{\STSauth((s, T) \in \STSS \times \wp(\STST))}{\STSL(s) \disj T} +{}\\& \setComp{\STSfrag((S, T) \in \wp(\STSS) \times \wp(\STST))}{\STSclsd(S, T) \land S \neq \emptyset} + \bot \\
+  \STSfrag(S_1, T_1) \mtimes \STSfrag(S_2, T_2) \eqdef{}& \STSfrag(S_1 \cap S_2, T_1 \cup T_2) \qquad\qquad\qquad \text{if $T_1 \disj T_2$ and $S_1 \cap S_2 \neq \emptyset$} \\
+  \STSfrag(S, T) \mtimes \STSauth(s, T') \eqdef{}& \STSauth(s, T') \mtimes \STSfrag(S, T) \eqdef \STSauth(s, T \cup T') \qquad \text{if $T \disj T'$ and $s \in S$} \\
+  \mcore{\STSfrag(S, T)} \eqdef{}& \STSfrag(\upclose(S, \emptyset), \emptyset) \\
+  \mcore{\STSauth(s, T)} \eqdef{}& \STSfrag(\upclose(\set{s}, \emptyset), \emptyset)
+\end{align*}
+The remaining cases are all $\bot$.
 
-% Some sugar makes it more convenient to assert being at least in a certain state and owning some tokens: $(s, T) : \STSMon{\STSS} \eqdef (\munit, \upclose(\{s\}, T), T) : \STSMon{\STSS}$, and
-% $s : \STSMon{\STSS} \eqdef (s, \emptyset) : \STSMon{\STSS}$.
+We will need the following frame-preserving update:
+\begin{mathpar}
+  \inferH{sts-step}{(s, T) \ststrans (s', T')}
+  {\STSauth(s, T) \mupd \STSauth(s', T')}
 
-% We will need the following frame-preserving update.
-% \begin{mathpar}
-% 	\inferH{StsStep}{(s, T) \ststrans (s', T')}
-% 	 {(s, S, T) \mupd (s', \upclose(\{s'\}, T'), T')}
-% \end{mathpar}
-% \begin{proof}[Proof of \ruleref{StsStep}]
-% Assume some upwards-closed $S_\f, T_\f$ (the frame cannot be authoritative) s.t.\ $s \in S_\f$ and $T_\f \sep (T \uplus \STSL(s))$. We have to show that this frame combines with our final monoid element, which is the case if $s' \in S_\f$ and $T_\f \sep T'$.
-% By upward-closedness, it suffices to show $\textsf{frame}(s, T_\f) \ststrans \textsf{frame}(s', T_\f)$.
-% This follows by induction on the path $(s, T) \ststrans (s', T')$, and using the lemma proven above for each step.
-% \end{proof}
+  \inferH{sts-weaken}
+  {\STSclsd(S_2, T_2) \and S_1 \subseteq S_2 \and T_2 \subseteq T_1}
+  {\STSfrag(S_1, T_1) \mupd \STSfrag(S_2, T_2)}
+\end{mathpar}
 
+\paragraph{The core is not a homomorphism.}
+The core of the STS construction is only satisfying the RA axioms because we are \emph{not} demanding the core to be a homomorphism---all we demand is for the core to be monotone with respect the \ruleref{ra-incl}.
+
+In other words, the following does \emph{not} hold for the STS core as defined above:
+\[ \mcore\melt \mtimes \mcore\meltB = \mcore{\melt\mtimes\meltB} \]
+
+To see why, consider the following STS:
+\newcommand\st{\textlog{s}}
+\newcommand\tok{\textmon{t}}
+\begin{center}
+  \begin{tikzpicture}[sts]
+    \node at (0,0)   (s1) {$\st_1$};
+    \node at (3,0)  (s2) {$\st_2$};
+    \node at (9,0) (s3) {$\st_3$};
+    \node at (6,0)  (s4) {$\st_4$\\$[\tok_1, \tok_2]$};
+    
+    \path[sts_arrows] (s2) edge  (s4);
+    \path[sts_arrows] (s3) edge  (s4);
+  \end{tikzpicture}
+\end{center}
+Now consider the following two elements of the STS RA:
+\[ \melt \eqdef \STSfrag(\set{\st_1,\st_2}, \set{\tok_1}) \qquad\qquad
+  \meltB \eqdef \STSfrag(\set{\st_1,\st_3}, \set{\tok_2}) \]
+
+We have:
+\begin{mathpar}
+  {\melt\mtimes\meltB = \STSfrag(\set{\st_1}, \set{\tok_1, \tok_2})}
+
+  {\mcore\melt = \STSfrag(\set{\st_1, \st_2, \st_4}, \emptyset)}
+
+  {\mcore\meltB = \STSfrag(\set{\st_1, \st_3, \st_4}, \emptyset)}
+
+  {\mcore\melt \mtimes \mcore\meltB = \STSfrag(\set{\st_1, \st_4}, \emptyset) \neq
+    \mcore{\melt \mtimes \meltB} = \STSfrag(\set{\st_1}, \emptyset)}
+\end{mathpar}
 
 %%% Local Variables: 
 %%% mode: latex

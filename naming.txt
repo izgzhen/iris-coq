@@ -4,8 +4,8 @@ b : B : cmraT or cofeT
 c
 d
 e : expr = expressions
-f
-g
+f : some generic function
+g : some generic function
 h : heap
 i
 j
@@ -16,8 +16,8 @@ n
 o
 p
 q
-r : res = resources
-s
+r : iRes = resources
+s : state (STSs)
 t
 u
 v : val = values of language
@@ -32,14 +32,15 @@ B : Type, cmraT or cofeT
 C
 D   
 E : coPset = Viewshift masks
-F
+F : a functor
 G
-H = hypotheses
+H : hypotheses
 I : indexing sets
 J
 K : ectx = evaluation contexts
+    keys of a map
 L
-M = maps / global CMRA
+M : maps / global CMRA
 N : namespace
 O 
 P : uPred, iProp or Prop
@@ -48,12 +49,17 @@ R : uPred, iProp or Prop
 S : set state = state sets in STSs
 T : set token = token sets in STSs
 U
-V : abstraction of values in frame shift assertions
+V : abstraction of value type in frame shift assertions
 W
 X : sets
 Y : sets
 Z : sets
 
 == small greek letters ==
-γ : gname.
+γ : gname
 σ : state = state of language
+φ : interpretation of STS/Auth
+
+== capital greek letters ==
+Φ : general predicate (over uPred, iProp or Prop)
+Ψ : general predicate (over uPred, iProp or Prop)

@@ -29,9 +29,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \DeclareMathOperator*{\Sep}{\scalerel*{\ast}{\sum}}
-\newcommand{\bigast}{\Sep}
-
-\newcommand*{\sep}[1][]{\mathrel{\#_{#1}}}	% bad name; it's a different "sep"
+\newcommand*{\disj}[1][]{\mathrel{\#_{#1}}}
+\newcommand\pord{\sqsubseteq}
 \newcommand\dplus{\mathbin{+\kern-1.0ex+}}
 \newcommand{\upclose}{\mathord{\uparrow}}
 \newcommand{\ALT}{\ |\ }
@@ -44,10 +43,11 @@
 
 \newcommand{\any}{{\rule[-.2ex]{1ex}{.4pt}}}%
 
-\newcommand{\judgment}[2]{\paragraph{#1}\hspace{\stretch{1}}\fbox{$#2$}}
+\newcommand{\judgment}[2][]{\paragraph{#1}\hspace{\stretch{1}}\fbox{$#2$}}
 
 \newcommand{\pfn}{\rightharpoonup}
 \newcommand\fpfn{\xrightharpoonup{\kern-0.25ex\textrm{fin}\kern-0.25ex}}
+\newcommand{\la}{\leftarrow}
 \newcommand{\ra}{\rightarrow}
 \newcommand{\Ra}{\Rightarrow}
 \newcommand{\Lra}{\Leftrightarrow}
@@ -353,10 +353,16 @@
 % STSs
 \newcommand{\STSCtx}{\textlog{StsCtx}}
 \newcommand{\STSSt}{\textlog{StsSt}}
+\newcommand{\STSclsd}{\textlog{closed}}
+\newcommand{\STSauth}{\textlog{auth}}
+\newcommand{\STSfrag}{\textlog{frag}}
 \newcommand{\STSS}{\mathcal{S}} % states
 \newcommand{\STST}{\mathcal{T}} % tokens
 \newcommand{\STSL}{\mathcal{L}} % labels
+\newcommand{\stsstep}{\ra}
 \newcommand{\ststrans}{\ra^{*}}%	the relation relevant to the STS rules
+\newcommand{\stsfstep}[1]{\xrightarrow{#1}}
+\newcommand{\stsftrans}[1]{\stsfstep{#1}^{*}}
 
 
 \tikzstyle{sts} = [->,every node/.style={rectangle, rounded corners, draw, minimum size=1.2cm, align=center}]
