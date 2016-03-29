@@ -122,6 +122,33 @@ Definition of_gset `{Countable A} (X : gset A) : set A := mkSet (λ x, x ∈ X).
 Lemma elem_of_of_gset `{Countable A} (X : gset A) x : x ∈ of_gset X ↔ x ∈ X.
 Proof. done. Qed.
 
+Definition to_gmap `{Countable K} {A} (x : A) (X : gset K) : gmap K A :=
+  (λ _, x) <$> mapset_car X.
+
+Lemma lookup_to_gmap `{Countable K} {A} (x : A) (X : gset K) i :
+  to_gmap x X !! i = guard (i ∈ X); Some x.
+Proof.
+  destruct X as [X]; unfold to_gmap, elem_of, mapset_elem_of; simpl.
+  rewrite lookup_fmap.
+  case_option_guard; destruct (X !! i) as [[]|]; naive_solver.
+Qed.
+Lemma lookup_to_gmap_Some `{Countable K} {A} (x : A) (X : gset K) i y :
+  to_gmap x X !! i = Some y ↔ i ∈ X ∧ x = y.
+Proof. rewrite lookup_to_gmap. simplify_option_eq; naive_solver. Qed.
+Lemma lookup_to_gmap_None `{Countable K} {A} (x : A) (X : gset K) i :
+  to_gmap x X !! i = None ↔ i ∉ X.
+Proof. rewrite lookup_to_gmap. simplify_option_eq; naive_solver. Qed.
+
+Lemma to_gmap_empty `{Countable K} {A} (x : A) : to_gmap x ∅ = ∅.
+Proof. apply fmap_empty. Qed.
+Lemma to_gmap_union_singleton `{Countable K} {A} (x : A) i Y :
+  to_gmap x ({[ i ]} ∪ Y) = <[i:=x]>(to_gmap x Y).
+Proof.
+  apply map_eq; intros j; apply option_eq; intros y.
+  rewrite lookup_insert_Some, !lookup_to_gmap_Some, elem_of_union,
+    elem_of_singleton; destruct (decide (i = j)); intuition.
+Qed.
+
 (** * Fresh elements *)
 (* This is pretty ad-hoc and just for the case of [gset positive]. We need a
 notion of countable non-finite types to generalize this. *)
