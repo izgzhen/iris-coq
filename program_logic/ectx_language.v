@@ -21,6 +21,12 @@ Class ectx_language (expr val ectx state : Type) := EctxLanguage {
   fill_inj K e1 e2 : fill K e1 = fill K e2 → e1 = e2;
   fill_not_val K e : to_val e = None → to_val (fill K e) = None;
 
+  (* There are a whole lot of sensible axioms we could demand for comp_ectx
+     and empty_ectx. However, this one is enough. *)
+  ectx_positive K1 K2 :
+    empty_ectx = comp_ectx K1 K2 →
+    K1 = empty_ectx ∧ K2 = empty_ectx;
+
   step_by_val K K' e1 e1' σ1 e2 σ2 ef :
     fill K e1 = fill K' e1' →
     to_val e1 = None →
@@ -52,6 +58,7 @@ Arguments fill_empty {_ _ _ _ _} _.
 Arguments fill_comp {_ _ _ _ _} _ _ _.
 Arguments fill_inj {_ _ _ _ _} _ _ _ _.
 Arguments fill_not_val {_ _ _ _ _} _ _ _.
+Arguments ectx_positive {_ _ _ _ _} _ _ _.
 Arguments step_by_val {_ _ _ _ _} _ _ _ _ _ _ _ _ _ _ _.
 Arguments atomic_not_val {_ _ _ _ _} _ _.
 Arguments atomic_step {_ _ _ _ _} _ _ _ _ _ _ _.
@@ -59,8 +66,11 @@ Arguments atomic_fill {_ _ _ _ _} _ _ _ _.
 
 (* From an ectx_language, we can construct a language. *)
 Section Language.
-  Context {expr val ectx state : Type} (Λ : ectx_language expr val ectx state).
+  Context {expr val ectx state : Type} {Λ : ectx_language expr val ectx state}.
   Implicit Types (e : expr) (K : ectx).
+
+  Definition head_reducible (e : expr) (σ : state) :=
+    ∃ e' σ' ef, head_step e σ e' σ' ef.
 
   Inductive prim_step (e1 : expr) (σ1 : state)
     (e2 : expr) (σ2: state) (ef: option expr) : Prop :=
@@ -89,6 +99,27 @@ Section Language.
     language.atomic_step := atomic_prim_step
   |}.
 
+  (* Some lemmas about this language *)
+  Lemma head_prim_reducible e σ :
+    head_reducible e σ → reducible e σ.
+  Proof.
+    intros (e'&?&?&?). do 3 eexists.
+    eapply Ectx_step with (K:=empty_ectx); rewrite ?fill_empty; done.
+  Qed.
+
+  Lemma head_reducible_prim_step e1 σ1 e2 σ2 ef :
+    head_reducible e1 σ1 → prim_step e1 σ1 e2 σ2 ef →
+    head_step e1 σ1 e2 σ2 ef.
+  Proof.
+    intros Hred Hstep. destruct Hstep as [? ? ? ? ? Hstep]; subst.
+    rename e1' into e1. rename e2' into e2.
+    destruct Hred as (e2'&σ2'&ef'&HstepK).
+    destruct (step_by_val K empty_ectx e1 (fill K e1) σ1 e2' σ2' ef')
+      as [K' [-> _]%ectx_positive];
+      eauto using fill_empty, fill_not_val, val_stuck.
+    by rewrite !fill_empty.
+  Qed.
+
   (* Every evaluation context is a context. *)
   Global Instance ectx_lang_ctx K : LanguageCtx ectx_lang (fill K).
   Proof.
@@ -104,6 +135,7 @@ Section Language.
   Qed.
 End Language.
   
+Arguments ectx_lang {_ _ _ _} _ : clear implicits.
 
 
 

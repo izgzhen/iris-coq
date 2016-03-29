@@ -584,7 +584,7 @@ Program Canonical Structure heap_ectx_lang :
 Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,
   heap_lang.val_stuck, heap_lang.atomic_not_val, heap_lang.atomic_step,
   heap_lang.fill_inj', heap_lang.fill_not_val, heap_lang.atomic_fill,
-  heap_lang.step_by_val, fold_right_app.
+  heap_lang.step_by_val, fold_right_app, app_eq_nil.
 
 Canonical Structure heap_lang := ectx_lang heap_ectx_lang.
 
