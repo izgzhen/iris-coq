@@ -7,7 +7,7 @@ Import uPred.
    a finmap as their state. Or maybe even beyond "as their state", i.e. arbitrary
    predicates over finmaps instead of just ownP. *)
 
-Definition heapR : cmraT := mapR loc (fracR (dec_agreeR val)).
+Definition heapR : cmraT := gmapR loc (fracR (dec_agreeR val)).
 
 (** The CMRA we need. *)
 Class heapG Σ := HeapG {
@@ -108,9 +108,9 @@ Section heap.
     induction σ as [|l v σ Hl IH] using map_ind.
     { rewrite big_sepM_empty; apply True_intro. }
     rewrite to_heap_insert big_sepM_insert //.
-    rewrite (map_insert_singleton_op (to_heap σ));
+    rewrite (insert_singleton_op (to_heap σ));
       last by rewrite lookup_fmap Hl; auto.
-    by rewrite auth_own_op IH. 
+    by rewrite auth_own_op IH.
   Qed.
 
   Context `{heapG Σ}.
@@ -121,16 +121,16 @@ Section heap.
 
   Lemma heap_mapsto_op_eq l q1 q2 v :
     (l ↦{q1} v ★ l ↦{q2} v) ⊣⊢ (l ↦{q1+q2} v).
-  Proof. by rewrite -auth_own_op map_op_singleton Frac_op dec_agree_idemp. Qed.
+  Proof. by rewrite -auth_own_op op_singleton Frac_op dec_agree_idemp. Qed.
 
   Lemma heap_mapsto_op l q1 q2 v1 v2 :
     (l ↦{q1} v1 ★ l ↦{q2} v2) ⊣⊢ (v1 = v2 ∧ l ↦{q1+q2} v1).
   Proof.
     destruct (decide (v1 = v2)) as [->|].
     { by rewrite heap_mapsto_op_eq const_equiv // left_id. }
-    rewrite -auth_own_op map_op_singleton Frac_op dec_agree_ne //.
+    rewrite -auth_own_op op_singleton Frac_op dec_agree_ne //.
     apply (anti_symm (⊢)); last by apply const_elim_l.
-    rewrite auth_own_valid map_validI (forall_elim l) lookup_singleton.
+    rewrite auth_own_valid gmap_validI (forall_elim l) lookup_singleton.
     rewrite option_validI frac_validI discrete_valid. by apply const_elim_r.
   Qed.
 
@@ -160,8 +160,8 @@ Section heap.
     repeat erewrite <-exist_intro by apply _; simpl.
     rewrite -of_heap_insert left_id right_id.
     rewrite /heap_mapsto. ecancel [_ -★ Φ _]%I.
-    rewrite -(map_insert_singleton_op h); last by apply of_heap_None.
-    rewrite const_equiv; last by apply (map_insert_valid h).
+    rewrite -(insert_singleton_op h); last by apply of_heap_None.
+    rewrite const_equiv; last by apply (insert_valid h).
     by rewrite left_id -later_intro.
   Qed.
 

@@ -41,7 +41,7 @@ algebra/cmra_big_op.v
 algebra/cmra_tactics.v
 algebra/sts.v
 algebra/auth.v
-algebra/fin_maps.v
+algebra/gmap.v
 algebra/cofe.v
 algebra/base.v
 algebra/dra.v

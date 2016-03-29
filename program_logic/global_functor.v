@@ -18,7 +18,7 @@ Definition gid (Σ : gFunctors) := fin (projT1 Σ).
 Definition gname := positive.
 
 Definition globalF (Σ : gFunctors) : iFunctor :=
-  IFunctor (iprodRF (λ i, mapRF gname (projT2 Σ i))).
+  IFunctor (iprodRF (λ i, gmapRF gname (projT2 Σ i))).
 Notation iPropG Λ Σ := (iProp Λ (globalF Σ)).
 
 Class inG (Λ : language) (Σ : gFunctors) (A : cmraT) := InG {
@@ -39,7 +39,7 @@ Proof. by intros a a' Ha; apply iprod_singleton_ne; rewrite Ha. Qed.
 Lemma to_globalF_op γ a1 a2 :
   to_globalF γ (a1 ⋅ a2) ≡ to_globalF γ a1 ⋅ to_globalF γ a2.
 Proof.
-  by rewrite /to_globalF iprod_op_singleton map_op_singleton cmra_transport_op.
+  by rewrite /to_globalF iprod_op_singleton op_singleton cmra_transport_op.
 Qed.
 Global Instance to_globalF_timeless γ m: Timeless m → Timeless (to_globalF γ m).
 Proof. rewrite /to_globalF; apply _. Qed.

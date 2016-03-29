@@ -1,9 +1,9 @@
-From iris.algebra Require Export fin_maps agree excl.
+From iris.algebra Require Export gmap agree excl.
 From iris.algebra Require Import upred.
 From iris.program_logic Require Export language.
 
 Record res (Λ : language) (A : cofeT) (M : cmraT) := Res {
-  wld : mapR positive (agreeR A);
+  wld : gmapR positive (agreeR A);
   pst : exclR (stateC Λ);
   gst : M;
 }.
@@ -216,7 +216,7 @@ Instance resC_map_ne {Λ A A' M M'} n :
   Proper (dist n ==> dist n ==> dist n) (@resC_map Λ A A' M M').
 Proof.
   intros f g Hfg r; split; simpl; auto.
-  - by apply (mapC_map_ne _ (agreeC_map f) (agreeC_map g)), agreeC_map_ne.
+  - by apply (gmapC_map_ne _ (agreeC_map f) (agreeC_map g)), agreeC_map_ne.
 Qed.
 
 Program Definition resRF (Λ : language)

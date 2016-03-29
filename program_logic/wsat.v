@@ -53,7 +53,7 @@ Proof.
   assert (P' ≡{S n}≡ to_agree $ Next $ iProp_unfold $
                        iProp_fold $ later_car $ P' (S n)) as HPiso.
   { rewrite iProp_unfold_fold later_eta to_agree_car //.
-    apply (map_lookup_validN _ (wld (r ⋅ big_opM rs)) i); rewrite ?HP'; auto. }
+    apply (lookup_validN _ (wld (r ⋅ big_opM rs)) i); rewrite ?HP'; auto. }
   assert (P ≡{n'}≡ iProp_fold (later_car (P' (S n)))) as HPP'.
   { apply (inj iProp_unfold), (inj Next), (inj to_agree).
     by rewrite -HiP -(dist_le _ _ _ _ HPiso). }

@@ -12,7 +12,7 @@ Typeclasses Opaque to_globalF own.
 
 (** Properties about ghost ownership *)
 Section global.
-Context `{i : inG Λ Σ A}.
+Context `{inG Λ Σ A}.
 Implicit Types a : A.
 
 (** * Transport empty *)
@@ -35,12 +35,12 @@ Global Instance own_proper γ : Proper ((≡) ==> (⊣⊢)) (own γ) := ne_prope
 Lemma own_op γ a1 a2 : own γ (a1 ⋅ a2) ⊣⊢ (own γ a1 ★ own γ a2).
 Proof. by rewrite /own -ownG_op to_globalF_op. Qed.
 Global Instance own_mono γ : Proper (flip (≼) ==> (⊢)) (own γ).
-Proof. move=>a b [c H]. rewrite H own_op. eauto with I. Qed.
+Proof. move=>a b [c ->]. rewrite own_op. eauto with I. Qed.
 Lemma own_valid γ a : own γ a ⊢ ✓ a.
 Proof.
   rewrite /own ownG_valid /to_globalF.
   rewrite iprod_validI (forall_elim inG_id) iprod_lookup_singleton.
-  rewrite map_validI (forall_elim γ) lookup_singleton option_validI.
+  rewrite gmap_validI (forall_elim γ) lookup_singleton option_validI.
   (* implicit arguments differ a bit *)
   by trans (✓ cmra_transport inG_prf a : iPropG Λ Σ)%I; last destruct inG_prf.
 Qed.
@@ -60,8 +60,9 @@ Lemma own_alloc_strong a E (G : gset gname) :
 Proof.
   intros Ha.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ γ, γ ∉ G ∧ m = to_globalF γ a) ∧ ownG m)%I).
-  - rewrite ownG_empty. eapply pvs_ownG_updateP, (iprod_singleton_updateP_empty inG_id);
-      first (eapply map_updateP_alloc_strong', cmra_transport_valid, Ha);
+  - rewrite ownG_empty.
+    eapply pvs_ownG_updateP, (iprod_singleton_updateP_empty inG_id);
+      first (eapply updateP_alloc_strong', cmra_transport_valid, Ha);
       naive_solver.
   - apply exist_elim=>m; apply const_elim_l=>-[γ [Hfresh ->]].
     by rewrite -(exist_intro γ) const_equiv // left_id.
@@ -78,7 +79,7 @@ Proof.
   intros Ha.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ a', m = to_globalF γ a' ∧ P a') ∧ ownG m)%I).
   - eapply pvs_ownG_updateP, iprod_singleton_updateP;
-      first by (eapply map_singleton_updateP', cmra_transport_updateP', Ha).
+      first by (eapply singleton_updateP', cmra_transport_updateP', Ha).
     naive_solver.
   - apply exist_elim=>m; apply const_elim_l=>-[a' [-> HP]].
     rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
@@ -90,13 +91,12 @@ Proof.
   by apply pvs_mono, exist_elim=> a''; apply const_elim_l=> ->.
 Qed.
 
-Lemma own_empty `{Empty A, !CMRAUnit A} γ E :
-  True ⊢ (|={E}=> own γ ∅).
+Lemma own_empty `{Empty A, !CMRAUnit A} γ E : True ⊢ (|={E}=> own γ ∅).
 Proof.
   rewrite ownG_empty /own. apply pvs_ownG_update, cmra_update_updateP.
   eapply iprod_singleton_updateP_empty;
-      first by eapply map_singleton_updateP_empty', cmra_transport_updateP',
-               cmra_update_updateP, cmra_update_unit.
+    first by eapply singleton_updateP_empty', cmra_transport_updateP',
+    cmra_update_updateP, cmra_update_unit.
   naive_solver.
 Qed.
 End global.
