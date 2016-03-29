@@ -5,13 +5,13 @@ Import uPred.
 
 Section LangTests.
   Definition add : expr [] := (#21 + #21)%E.
-  Goal ∀ σ, prim_step add σ (#42) σ None.
+  Goal ∀ σ, prim_step heap_ectx_lang add σ (#42) σ None.
   Proof. intros; do_step done. Qed.
   Definition rec_app : expr [] := ((rec: "f" "x" := '"f" '"x") #0)%E.
-  Goal ∀ σ, prim_step rec_app σ rec_app σ None.
+  Goal ∀ σ, prim_step heap_ectx_lang rec_app σ rec_app σ None.
   Proof. intros. rewrite /rec_app. do_step done. Qed.
   Definition lam : expr [] := (λ: "x", '"x" + #21)%E.
-  Goal ∀ σ, prim_step (lam #21)%E σ add σ None.
+  Goal ∀ σ, prim_step heap_ectx_lang (lam #21)%E σ add σ None.
   Proof. intros. rewrite /lam. do_step done. Qed.
 End LangTests.
 

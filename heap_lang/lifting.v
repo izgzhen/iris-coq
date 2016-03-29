@@ -15,8 +15,8 @@ Implicit Types ef : option (expr []).
 
 (** Bind. *)
 Lemma wp_bind {E e} K Φ :
-  WP e @ E {{ λ v, WP fill K (of_val v) @ E {{ Φ }}}} ⊢ WP fill K e @ E {{ Φ }}.
-Proof. apply weakestpre.wp_bind. Qed.
+  WP e @ E {{ λ v, WP fill K (of_val v) @ E {{ Φ }} }} ⊢ WP fill K e @ E {{ Φ }}.
+Proof. apply: weakestpre.wp_bind. Qed.
 
 (** Base axioms for core primitives of the language: Stateful reductions. *)
 Lemma wp_alloc_pst E σ e v Φ :

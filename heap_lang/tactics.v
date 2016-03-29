@@ -13,13 +13,13 @@ Ltac inv_step :=
   | _ => progress simplify_map_eq/= (* simplify memory stuff *)
   | H : to_val _ = Some _ |- _ => apply of_to_val in H
   | H : context [to_val (of_val _)] |- _ => rewrite to_of_val in H
-  | H : prim_step _ _ _ _ _ |- _ => destruct H; subst
+  | H : prim_step _ _ _ _ _ _ |- _ => destruct H; subst
   | H : _ = fill ?K ?e |- _ =>
      destruct K as [|[]];
      simpl in H; first [subst e|discriminate H|injection H as H]
      (* ensure that we make progress for each subgoal *)
   | H : head_step ?e _ _ _ _, Hv : of_val ?v = fill ?K ?e |- _ =>
-    apply val_head_stuck, (fill_not_val K) in H;
+    apply val_stuck, (fill_not_val K) in H;
     by rewrite -Hv to_of_val in H (* maybe use a helper lemma here? *)
   | H : head_step ?e _ _ _ _ |- _ =>
      try (is_var e; fail 1); (* inversion yields many goals if e is a variable
@@ -81,7 +81,7 @@ Ltac do_step tac :=
   try match goal with |- language.reducible _ _ => eexists _, _, _ end;
   simpl;
   match goal with
-  | |- prim_step ?e1 ?σ1 ?e2 ?σ2 ?ef =>
+  | |- prim_step _ ?e1 ?σ1 ?e2 ?σ2 ?ef =>
      reshape_expr e1 ltac:(fun K e1' =>
        eapply Ectx_step with K e1' _; [reflexivity|reflexivity|];
        first [apply alloc_fresh|econstructor; try reflexivity; simpl_subst];

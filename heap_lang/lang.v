@@ -1,4 +1,4 @@
-From iris.program_logic Require Export language.
+From iris.program_logic Require Export ectx_language.
 From iris.prelude Require Export strings.
 From iris.prelude Require Import gmap.
 
@@ -355,14 +355,6 @@ Definition atomic (e: expr []) : Prop :=
   | _ => False
   end.
 
-(** Close reduction under evaluation contexts.
-We could potentially make this a generic construction. *)
-Inductive prim_step (e1 : expr []) (σ1 : state)
-    (e2 : expr []) (σ2: state) (ef: option (expr [])) : Prop :=
-  Ectx_step K e1' e2' :
-    e1 = fill K e1' → e2 = fill K e2' →
-    head_step e1' σ1 e2' σ2 ef → prim_step e1 σ1 e2 σ2 ef.
-
 (** Substitution *)
 Lemma var_proof_irrel X x H1 H2 : @Var X x H1 = @Var X x H2.
 Proof. f_equal. by apply (proof_irrel _). Qed.
@@ -457,11 +449,12 @@ Proof. by intros ?? Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
 Instance fill_item_inj Ki : Inj (=) (=) (fill_item Ki).
 Proof. destruct Ki; intros ???; simplify_eq/=; auto with f_equal. Qed.
 
-Instance ectx_fill_inj K : Inj (=) (=) (fill K).
+Instance fill_inj K : Inj (=) (=) (fill K).
 Proof. red; induction K as [|Ki K IH]; naive_solver. Qed.
 
-Lemma fill_app K1 K2 e : fill (K1 ++ K2) e = fill K1 (fill K2 e).
-Proof. revert e; induction K1; simpl; auto with f_equal. Qed.
+Lemma fill_inj' K e1 e2 :
+  fill K e1 = fill K e2 → e1 = e2.
+Proof. eapply fill_inj. Qed.
 
 Lemma fill_val K e : is_Some (to_val (fill K e)) → is_Some (to_val e).
 Proof.
@@ -472,12 +465,9 @@ Qed.
 Lemma fill_not_val K e : to_val e = None → to_val (fill K e) = None.
 Proof. rewrite !eq_None_not_Some; eauto using fill_val. Qed.
 
-Lemma val_head_stuck e1 σ1 e2 σ2 ef :
+Lemma val_stuck e1 σ1 e2 σ2 ef :
   head_step e1 σ1 e2 σ2 ef → to_val e1 = None.
 Proof. destruct 1; naive_solver. Qed.
-
-Lemma val_stuck e1 σ1 e2 σ2 ef : prim_step e1 σ1 e2 σ2 ef → to_val e1 = None.
-Proof. intros [??? -> -> ?]; eauto using fill_not_val, val_head_stuck. Qed.
 
 Lemma atomic_not_val e : atomic e → to_val e = None.
 Proof. destruct e; naive_solver. Qed.
@@ -494,19 +484,11 @@ Proof.
   rewrite eq_None_not_Some=> /= ? []; eauto using atomic_fill_item, fill_val.
 Qed.
 
-Lemma atomic_head_step e1 σ1 e2 σ2 ef :
+Lemma atomic_step e1 σ1 e2 σ2 ef :
   atomic e1 → head_step e1 σ1 e2 σ2 ef → is_Some (to_val e2).
 Proof.
   destruct 2; simpl; rewrite ?to_of_val; try by eauto. subst.
   unfold subst'; repeat (case_match || contradiction || simplify_eq/=); eauto.
-Qed.
-
-Lemma atomic_step e1 σ1 e2 σ2 ef :
-  atomic e1 → prim_step e1 σ1 e2 σ2 ef → is_Some (to_val e2).
-Proof.
-  intros Hatomic [K e1' e2' -> -> Hstep].
-  assert (K = []) as -> by eauto 10 using atomic_fill, val_head_stuck.
-  naive_solver eauto using atomic_head_step.
 Qed.
 
 Lemma head_ctx_step_val Ki e σ1 e2 σ2 ef :
@@ -528,15 +510,15 @@ has a non-val [e] in the hole, then [K] is a left sub-context of [K'] - in
 other words, [e] also contains the reducible expression *)
 Lemma step_by_val K K' e1 e1' σ1 e2 σ2 ef :
   fill K e1 = fill K' e1' → to_val e1 = None → head_step e1' σ1 e2 σ2 ef →
-  K `prefix_of` K'.
+  exists K'', K' = K ++ K''. (* K `prefix_of` K' *)
 Proof.
   intros Hfill Hred Hnval; revert K' Hfill.
-  induction K as [|Ki K IH]; simpl; intros K' Hfill; auto using prefix_of_nil.
+  induction K as [|Ki K IH]; simpl; intros K' Hfill; first by eauto.
   destruct K' as [|Ki' K']; simplify_eq/=.
   { exfalso; apply (eq_None_not_Some (to_val (fill K e1)));
       eauto using fill_not_val, head_ctx_step_val. }
   cut (Ki = Ki'); [naive_solver eauto using prefix_of_cons|].
-  eauto using fill_item_no_val_inj, val_head_stuck, fill_not_val.
+  eauto using fill_item_no_val_inj, val_stuck, fill_not_val.
 Qed.
 
 Lemma alloc_fresh e v σ :
@@ -592,31 +574,23 @@ Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
 End heap_lang.
 
 (** Language *)
-Program Canonical Structure heap_lang : language := {|
-  expr := heap_lang.expr []; val := heap_lang.val; state := heap_lang.state;
-  of_val := heap_lang.of_val; to_val := heap_lang.to_val;
-  atomic := heap_lang.atomic; prim_step := heap_lang.prim_step;
-|}.
+Program Canonical Structure heap_ectx_lang :
+  ectx_language (heap_lang.expr []) heap_lang.val heap_lang.ectx heap_lang.state
+  := {|
+    of_val := heap_lang.of_val; to_val := heap_lang.to_val;
+    empty_ectx := []; comp_ectx := app; fill := heap_lang.fill; 
+    atomic := heap_lang.atomic; head_step := heap_lang.head_step;
+  |}.
 Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,
-  heap_lang.val_stuck, heap_lang.atomic_not_val, heap_lang.atomic_step.
+  heap_lang.val_stuck, heap_lang.atomic_not_val, heap_lang.atomic_step,
+  heap_lang.fill_inj', heap_lang.fill_not_val, heap_lang.atomic_fill,
+  heap_lang.step_by_val, fold_right_app.
 
-Global Instance heap_lang_ctx K : LanguageCtx heap_lang (heap_lang.fill K).
-Proof.
-  split.
-  - eauto using heap_lang.fill_not_val.
-  - intros ????? [K' e1' e2' Heq1 Heq2 Hstep].
-    by exists (K ++ K') e1' e2'; rewrite ?heap_lang.fill_app ?Heq1 ?Heq2.
-  - intros e1 σ1 e2 σ2 ? Hnval [K'' e1'' e2'' Heq1 -> Hstep].
-    destruct (heap_lang.step_by_val
-      K K'' e1 e1'' σ1 e2'' σ2 ef) as [K' ->]; eauto.
-    rewrite heap_lang.fill_app in Heq1; apply (inj _) in Heq1.
-    exists (heap_lang.fill K' e2''); rewrite heap_lang.fill_app; split; auto.
-    econstructor; eauto.
-Qed.
+Canonical Structure heap_lang := ectx_lang heap_ectx_lang.
 
 Global Instance heap_lang_ctx_item Ki :
   LanguageCtx heap_lang (heap_lang.fill_item Ki).
 Proof. change (LanguageCtx heap_lang (heap_lang.fill [Ki])). apply _. Qed.
 
-(* Prefer heap_lang names over language names. *)
+(* Prefer heap_lang names over ectx_language names. *)
 Export heap_lang.
