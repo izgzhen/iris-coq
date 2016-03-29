@@ -228,14 +228,12 @@ Program Fixpoint wexpr {X Y} (H : X `included` Y) (e : expr X) : expr Y :=
   end.
 Solve Obligations with set_solver.
 
-Program Definition wexpr' {X} (e : expr []) : expr X :=
-  wexpr _ e.
-Solve Obligations with set_solver.
+Definition wexpr' {X} (e : expr []) : expr X := wexpr (included_nil _) e.
 
 Definition of_val' {X} (v : val) : expr X := wexpr (included_nil _) (of_val v).
 
 Lemma wsubst_rec_true_prf {X Y x} (H : X `included` x :: Y) {f y}
-    (Hfy :BNamed x ≠ f ∧ BNamed x ≠ y) :
+    (Hfy : BNamed x ≠ f ∧ BNamed x ≠ y) :
   f :b: y :b: X `included` x :: f :b: y :b: Y.
 Proof. set_solver. Qed.
 Lemma wsubst_rec_false_prf {X Y x} (H : X `included` x :: Y) {f y}
@@ -413,21 +411,6 @@ Proof.
   apply wsubst_closed, not_elem_of_nil.
 Qed.
 
-Lemma of_val'_closed (v : val) :
-  of_val' v = of_val v.
-Proof. by rewrite /of_val' wexpr_id. Qed.
-
-(** to_val propagation.
-    TODO: automatically appliy in wp_tactics? *)
-Lemma to_val_InjL e v : to_val e = Some v → to_val (InjL e) = Some (InjLV v).
-Proof. move=>H. simpl. by rewrite H. Qed.
-Lemma to_val_InjR e v : to_val e = Some v → to_val (InjR e) = Some (InjRV v).
-Proof. move=>H. simpl. by rewrite H. Qed.
-Lemma to_val_Pair e1 e2 v1 v2 :
-  to_val e1 = Some v1 → to_val e2 = Some v2 →
-  to_val (Pair e1 e2) = Some (PairV v1 v2).
-Proof. move=>H1 H2. simpl. by rewrite H1 H2. Qed.
-
 (** Basic properties about the language *)
 Lemma to_of_val v : to_val (of_val v) = Some v.
 Proof. by induction v; simplify_option_eq. Qed.
@@ -451,10 +434,6 @@ Proof. destruct Ki; intros ???; simplify_eq/=; auto with f_equal. Qed.
 
 Instance fill_inj K : Inj (=) (=) (fill K).
 Proof. red; induction K as [|Ki K IH]; naive_solver. Qed.
-
-Lemma fill_inj' K e1 e2 :
-  fill K e1 = fill K e2 → e1 = e2.
-Proof. eapply fill_inj. Qed.
 
 Lemma fill_val K e : is_Some (to_val (fill K e)) → is_Some (to_val e).
 Proof.
@@ -574,16 +553,16 @@ Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
 End heap_lang.
 
 (** Language *)
-Program Canonical Structure heap_ectx_lang :
-  ectx_language (heap_lang.expr []) heap_lang.val heap_lang.ectx heap_lang.state
-  := {|
-    of_val := heap_lang.of_val; to_val := heap_lang.to_val;
-    empty_ectx := []; comp_ectx := app; fill := heap_lang.fill; 
-    atomic := heap_lang.atomic; head_step := heap_lang.head_step;
-  |}.
+Program Instance heap_ectx_lang :
+  EctxLanguage
+    (heap_lang.expr []) heap_lang.val heap_lang.ectx heap_lang.state := {|
+  of_val := heap_lang.of_val; to_val := heap_lang.to_val;
+  empty_ectx := []; comp_ectx := (++); fill := heap_lang.fill; 
+  atomic := heap_lang.atomic; head_step := heap_lang.head_step;
+|}.
 Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,
   heap_lang.val_stuck, heap_lang.atomic_not_val, heap_lang.atomic_step,
-  heap_lang.fill_inj', heap_lang.fill_not_val, heap_lang.atomic_fill,
+  heap_lang.fill_not_val, heap_lang.atomic_fill,
   heap_lang.step_by_val, fold_right_app, app_eq_nil.
 
 Canonical Structure heap_lang := ectx_lang heap_ectx_lang.

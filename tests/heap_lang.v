@@ -6,13 +6,13 @@ Import uPred.
 Section LangTests.
   Definition add : expr [] := (#21 + #21)%E.
   Goal ∀ σ, head_step add σ (#42) σ None.
-  Proof. intros; do_step done. Qed.
+  Proof. intros; do_head_step done. Qed.
   Definition rec_app : expr [] := ((rec: "f" "x" := '"f" '"x") #0)%E.
   Goal ∀ σ, head_step rec_app σ rec_app σ None.
-  Proof. intros. rewrite /rec_app. do_step simpl_subst. Qed.
+  Proof. intros. rewrite /rec_app. do_head_step done. Qed.
   Definition lam : expr [] := (λ: "x", '"x" + #21)%E.
   Goal ∀ σ, head_step (lam #21)%E σ add σ None.
-  Proof. intros. rewrite /lam. do_step done. Qed.
+  Proof. intros. rewrite /lam. do_head_step done. Qed.
 End LangTests.
 
 Section LiftingTests.

@@ -3,7 +3,7 @@ From iris.program_logic Require Import ownership. (* for ownP *)
 From iris.heap_lang Require Export lang.
 From iris.heap_lang Require Import tactics.
 Import uPred.
-Local Hint Extern 0 (head_reducible _ _) => do_step eauto 2.
+Local Hint Extern 0 (head_reducible _ _) => do_head_step eauto 2.
 
 Section lifting.
 Context {Σ : iFunctor}.
@@ -27,7 +27,7 @@ Proof.
   intros. set (φ (e' : expr []) σ' ef := ∃ l,
     ef = None ∧ e' = Loc l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None).
   rewrite -(wp_lift_atomic_head_step (Alloc e) φ σ) // /φ;
-    last (by intros; inv_step; eauto 8); last (by simpl; eauto).
+    last (by intros; inv_head_step; eauto 8); last (by simpl; eauto).
   apply sep_mono, later_mono; first done.
   apply forall_intro=>v2; apply forall_intro=>σ2; apply forall_intro=>ef.
   apply wand_intro_l.
@@ -43,7 +43,7 @@ Lemma wp_load_pst E σ l v Φ :
   (▷ ownP σ ★ ▷ (ownP σ -★ Φ v)) ⊢ WP Load (Loc l) @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_head_step σ v σ None) ?right_id //;
-    last (by intros; inv_step; eauto using to_of_val); simpl; by eauto.
+    last (by intros; inv_head_step; eauto using to_of_val); simpl; by eauto.
 Qed.
 
 Lemma wp_store_pst E σ l e v v' Φ :
@@ -52,7 +52,7 @@ Lemma wp_store_pst E σ l e v v' Φ :
   ⊢ WP Store (Loc l) e @ E {{ Φ }}.
 Proof.
   intros. rewrite-(wp_lift_atomic_det_head_step σ (LitV LitUnit) (<[l:=v]>σ) None)
-    ?right_id //; last (by intros; inv_step; eauto); simpl; by eauto.
+    ?right_id //; last (by intros; inv_head_step; eauto); simpl; by eauto.
 Qed.
 
 Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' Φ :
@@ -61,7 +61,7 @@ Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' Φ :
   ⊢ WP CAS (Loc l) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_head_step σ (LitV $ LitBool false) σ None)
-    ?right_id //; last (by intros; inv_step; eauto);
+    ?right_id //; last (by intros; inv_head_step; eauto);
     simpl; split_and?; by eauto.
 Qed.
 
@@ -71,7 +71,7 @@ Lemma wp_cas_suc_pst E σ l e1 v1 e2 v2 Φ :
   ⊢ WP CAS (Loc l) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_head_step σ (LitV $ LitBool true)
-    (<[l:=v2]>σ) None) ?right_id //; last (by intros; inv_step; eauto);
+    (<[l:=v2]>σ) None) ?right_id //; last (by intros; inv_head_step; eauto);
     simpl; split_and?; by eauto.
 Qed.
 
@@ -80,7 +80,7 @@ Lemma wp_fork E e Φ :
   (▷ Φ (LitV LitUnit) ★ ▷ WP e {{ λ _, True }}) ⊢ WP Fork e @ E {{ Φ }}.
 Proof.
   rewrite -(wp_lift_pure_det_head_step (Fork e) (Lit LitUnit) (Some e)) //=;
-    last by intros; inv_step; eauto.
+    last by intros; inv_head_step; eauto.
   rewrite later_sep -(wp_value _ _ (Lit _)) //.
 Qed.
 
@@ -91,7 +91,7 @@ Lemma wp_rec E f x e1 e2 v Φ :
 Proof.
   intros. rewrite -(wp_lift_pure_det_head_step (App _ _)
     (subst' x e2 (subst' f (Rec f x e1) e1)) None) //= ?right_id;
-    intros; inv_step; eauto.
+    intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_rec' E f x erec e1 e2 v2 Φ :
@@ -106,7 +106,7 @@ Lemma wp_un_op E op l l' Φ :
   ▷ Φ (LitV l') ⊢ WP UnOp op (Lit l) @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_head_step (UnOp op _) (Lit l') None)
-    ?right_id -?wp_value //; intros; inv_step; eauto.
+    ?right_id -?wp_value //; intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_bin_op E op l1 l2 l' Φ :
@@ -114,21 +114,21 @@ Lemma wp_bin_op E op l1 l2 l' Φ :
   ▷ Φ (LitV l') ⊢ WP BinOp op (Lit l1) (Lit l2) @ E {{ Φ }}.
 Proof.
   intros Heval. rewrite -(wp_lift_pure_det_head_step (BinOp op _ _) (Lit l') None)
-    ?right_id -?wp_value //; intros; inv_step; eauto.
+    ?right_id -?wp_value //; intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_if_true E e1 e2 Φ :
   ▷ WP e1 @ E {{ Φ }} ⊢ WP If (Lit (LitBool true)) e1 e2 @ E {{ Φ }}.
 Proof.
   rewrite -(wp_lift_pure_det_head_step (If _ _ _) e1 None)
-    ?right_id //; intros; inv_step; eauto.
+    ?right_id //; intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_if_false E e1 e2 Φ :
   ▷ WP e2 @ E {{ Φ }} ⊢ WP If (Lit (LitBool false)) e1 e2 @ E {{ Φ }}.
 Proof.
   rewrite -(wp_lift_pure_det_head_step (If _ _ _) e2 None)
-    ?right_id //; intros; inv_step; eauto.
+    ?right_id //; intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_fst E e1 v1 e2 v2 Φ :
@@ -136,7 +136,7 @@ Lemma wp_fst E e1 v1 e2 v2 Φ :
   ▷ Φ v1 ⊢ WP Fst (Pair e1 e2) @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_head_step (Fst _) e1 None)
-    ?right_id -?wp_value //; intros; inv_step; eauto.
+    ?right_id -?wp_value //; intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_snd E e1 v1 e2 v2 Φ :
@@ -144,7 +144,7 @@ Lemma wp_snd E e1 v1 e2 v2 Φ :
   ▷ Φ v2 ⊢ WP Snd (Pair e1 e2) @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_head_step (Snd _) e2 None)
-    ?right_id -?wp_value //; intros; inv_step; eauto.
+    ?right_id -?wp_value //; intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_case_inl E e0 v0 e1 e2 Φ :
@@ -152,7 +152,7 @@ Lemma wp_case_inl E e0 v0 e1 e2 Φ :
   ▷ WP App e1 e0 @ E {{ Φ }} ⊢ WP Case (InjL e0) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_head_step (Case _ _ _)
-    (App e1 e0) None) ?right_id //; intros; inv_step; eauto.
+    (App e1 e0) None) ?right_id //; intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_case_inr E e0 v0 e1 e2 Φ :
@@ -160,7 +160,6 @@ Lemma wp_case_inr E e0 v0 e1 e2 Φ :
   ▷ WP App e2 e0 @ E {{ Φ }} ⊢ WP Case (InjR e0) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_head_step (Case _ _ _)
-    (App e2 e0) None) ?right_id //; intros; inv_step; eauto.
+    (App e2 e0) None) ?right_id //; intros; inv_head_step; eauto.
 Qed.
-
 End lifting.

@@ -74,12 +74,11 @@ Proof.
     solve_sep_entails.
   - wp_focus (f _). rewrite wp_frame_r wp_frame_l.
     rewrite (of_to_val e) //. apply wp_mono=>v.
-    eapply (inv_fsa (wp_fsa _)) with (N0:=N); simpl;
-      (* TODO: Collect these in some Hint DB? Or add to an existing one? *)
-      eauto using to_val_InjR,to_val_InjL,to_of_val with I ndisj.
+    eapply (inv_fsa (wp_fsa _)) with (N0:=N);
+      rewrite /= ?to_of_val; eauto with I ndisj.
     apply wand_intro_l. rewrite /spawn_inv {1}later_exist !sep_exist_r.
     apply exist_elim=>lv. rewrite later_sep.
-    eapply wp_store; eauto using to_val_InjR,to_val_InjL,to_of_val with I ndisj.
+    eapply wp_store; rewrite /= ?to_of_val; eauto with I ndisj.
     cancel [▷ (l ↦ lv)]%I. strip_later. apply wand_intro_l.
     rewrite right_id -later_intro -{2}[(∃ _, _ ↦ _ ★ _)%I](exist_intro (InjRV v)).
     ecancel [l ↦ _]%I. apply or_intro_r'. rewrite sep_elim_r sep_elim_r sep_elim_l.
@@ -115,5 +114,4 @@ Proof.
     wp_case. wp_let. ewp (eapply wp_value; wp_done).
     rewrite (forall_elim v). rewrite !assoc. eapply wand_apply_r'; eauto with I.
 Qed.
-
 End proof.

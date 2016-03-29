@@ -422,7 +422,6 @@ Proof.
   apply cofe_morC_map_ne; apply cFunctor_contractive=>i ?; split; by apply Hfg.
 Qed.
 
-
 (** Discrete cofe *)
 Section discrete_cofe.
   Context `{Equiv A, @Equivalence A (≡)}.
