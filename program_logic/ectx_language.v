@@ -1,7 +1,7 @@
 (** An axiomatization of evaluation-context based languages, including a proof
     that this gives rise to a "language" in the Iris sense. *)
 From iris.algebra Require Export base.
-From iris.program_logic Require Export language.
+From iris.program_logic Require Import language.
 
 (* We need to make thos arguments indices that we want canonical structure
    inference to use a keys. *)
@@ -137,4 +137,4 @@ Section ectx_language.
   Qed.
 End ectx_language.
 
-Arguments ectx_lang {_ _ _ _} _.
+Arguments ectx_lang _ {_ _ _ _}.

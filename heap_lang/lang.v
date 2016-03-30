@@ -1,4 +1,4 @@
-From iris.program_logic Require Export ectx_language.
+From iris.program_logic Require Export ectx_language ectxi_language.
 From iris.prelude Require Export strings.
 From iris.prelude Require Import gmap.
 
@@ -171,8 +171,6 @@ Inductive ectx_item :=
   | CasMCtx (v0 : val) (e2 : expr [])
   | CasRCtx (v0 : val) (v1 : val).
 
-Notation ectx := (list ectx_item).
-
 Definition fill_item (Ki : ectx_item) (e : expr []) : expr [] :=
   match Ki with
   | AppLCtx e2 => App e e2
@@ -196,7 +194,6 @@ Definition fill_item (Ki : ectx_item) (e : expr []) : expr [] :=
   | CasMCtx v0 e2 => CAS (of_val v0) e e2
   | CasRCtx v0 v1 => CAS (of_val v0) (of_val v1) e
   end.
-Definition fill (K : ectx) (e : expr []) : expr [] := fold_right fill_item e K.
 
 (** Substitution *)
 (** We have [subst' e BAnon v = e] to deal with anonymous binders *)
@@ -432,17 +429,9 @@ Proof. by intros ?? Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
 Instance fill_item_inj Ki : Inj (=) (=) (fill_item Ki).
 Proof. destruct Ki; intros ???; simplify_eq/=; auto with f_equal. Qed.
 
-Instance fill_inj K : Inj (=) (=) (fill K).
-Proof. red; induction K as [|Ki K IH]; naive_solver. Qed.
-
-Lemma fill_val K e : is_Some (to_val (fill K e)) → is_Some (to_val e).
-Proof.
-  intros [v' Hv']; revert v' Hv'.
-  induction K as [|[]]; intros; simplify_option_eq; eauto.
-Qed.
-
-Lemma fill_not_val K e : to_val e = None → to_val (fill K e) = None.
-Proof. rewrite !eq_None_not_Some; eauto using fill_val. Qed.
+Lemma fill_item_val Ki e :
+  is_Some (to_val (fill_item Ki e)) → is_Some (to_val e).
+Proof. intros [v ?]. destruct Ki; simplify_option_eq; eauto. Qed.
 
 Lemma val_stuck e1 σ1 e2 σ2 ef :
   head_step e1 σ1 e2 σ2 ef → to_val e1 = None.
@@ -455,12 +444,6 @@ Lemma atomic_fill_item Ki e : atomic (fill_item Ki e) → is_Some (to_val e).
 Proof.
   intros. destruct Ki; simplify_eq/=; destruct_and?;
     repeat (case_match || contradiction); eauto.
-Qed.
-
-Lemma atomic_fill K e : atomic (fill K e) → to_val e = None → K = [].
-Proof.
-  destruct K as [|Ki K]; [done|].
-  rewrite eq_None_not_Some=> /= ? []; eauto using atomic_fill_item, fill_val.
 Qed.
 
 Lemma atomic_step e1 σ1 e2 σ2 ef :
@@ -482,22 +465,6 @@ Proof.
     repeat match goal with
     | H : to_val (of_val _) = None |- _ => by rewrite to_of_val in H
     end; auto.
-Qed.
-
-(* When something does a step, and another decomposition of the same expression
-has a non-val [e] in the hole, then [K] is a left sub-context of [K'] - in
-other words, [e] also contains the reducible expression *)
-Lemma step_by_val K K' e1 e1' σ1 e2 σ2 ef :
-  fill K e1 = fill K' e1' → to_val e1 = None → head_step e1' σ1 e2 σ2 ef →
-  exists K'', K' = K ++ K''. (* K `prefix_of` K' *)
-Proof.
-  intros Hfill Hred Hnval; revert K' Hfill.
-  induction K as [|Ki K IH]; simpl; intros K' Hfill; first by eauto.
-  destruct K' as [|Ki' K']; simplify_eq/=.
-  { exfalso; apply (eq_None_not_Some (to_val (fill K e1)));
-      eauto using fill_not_val, head_ctx_step_val. }
-  cut (Ki = Ki'); [naive_solver eauto using prefix_of_cons|].
-  eauto using fill_item_no_val_inj, val_stuck, fill_not_val.
 Qed.
 
 Lemma alloc_fresh e v σ :
@@ -553,23 +520,19 @@ Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
 End heap_lang.
 
 (** Language *)
-Program Instance heap_ectx_lang :
-  EctxLanguage
-    (heap_lang.expr []) heap_lang.val heap_lang.ectx heap_lang.state := {|
+Program Instance heap_ectxi_lang :
+  EctxiLanguage
+    (heap_lang.expr []) heap_lang.val heap_lang.ectx_item heap_lang.state := {|
   of_val := heap_lang.of_val; to_val := heap_lang.to_val;
-  empty_ectx := []; comp_ectx := (++); fill := heap_lang.fill; 
+  fill_item := heap_lang.fill_item; 
   atomic := heap_lang.atomic; head_step := heap_lang.head_step;
 |}.
 Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,
   heap_lang.val_stuck, heap_lang.atomic_not_val, heap_lang.atomic_step,
-  heap_lang.fill_not_val, heap_lang.atomic_fill,
-  heap_lang.step_by_val, fold_right_app, app_eq_nil.
+  heap_lang.fill_item_val, heap_lang.atomic_fill_item,
+  heap_lang.fill_item_no_val_inj, heap_lang.head_ctx_step_val.
 
-Canonical Structure heap_lang := ectx_lang heap_ectx_lang.
-
-Global Instance heap_lang_ctx_item Ki :
-  LanguageCtx heap_lang (heap_lang.fill_item Ki).
-Proof. change (LanguageCtx heap_lang (heap_lang.fill [Ki])). apply _. Qed.
+Canonical Structure heap_lang := ectx_lang (heap_lang.expr []).
 
 (* Prefer heap_lang names over ectx_language names. *)
 Export heap_lang.
