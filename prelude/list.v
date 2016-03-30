@@ -27,6 +27,7 @@ Instance: Params (@drop) 1.
 
 Arguments Permutation {_} _ _.
 Arguments Forall_cons {_} _ _ _ _ _.
+Remove Hints Permutation_cons : typeclass_instances.
 
 Notation "(::)" := cons (only parsing) : C_scope.
 Notation "( x ::)" := (cons x) (only parsing) : C_scope.
@@ -1331,7 +1332,10 @@ Definition Permutation_skip := @perm_skip A.
 Definition Permutation_swap := @perm_swap A.
 Definition Permutation_singleton_inj := @Permutation_length_1 A.
 
+Global Instance Permutation_cons : Proper ((≡ₚ) ==> (≡ₚ)) (@cons A x).
+Proof. by constructor. Qed.
 Global Existing Instance Permutation_app'.
+
 Global Instance: Proper ((≡ₚ) ==> (=)) (@length A).
 Proof. induction 1; simpl; auto with lia. Qed.
 Global Instance: Comm (≡ₚ) (@app A).
@@ -1348,9 +1352,7 @@ Proof.
   intros. by apply IH, (inj (x ::)).
 Qed.
 Global Instance: ∀ k : list A, Inj (≡ₚ) (≡ₚ) (++ k).
-Proof.
-  intros k l1 l2. rewrite !(comm (++) _ k). by apply (inj (k ++)).
-Qed.
+Proof. intros k l1 l2. rewrite !(comm (++) _ k). by apply (inj (k ++)). Qed.
 Lemma replicate_Permutation n x l : replicate n x ≡ₚ l → replicate n x = l.
 Proof.
   intros Hl. apply replicate_as_elem_of. split.
