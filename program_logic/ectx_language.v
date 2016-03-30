@@ -1,3 +1,5 @@
+(** An axiomatization of evaluation-context based languages, including a proof
+    that this gives rise to a "language" in the Iris sense. *)
 From iris.algebra Require Export base.
 From iris.program_logic Require Export language.
 
