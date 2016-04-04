@@ -107,9 +107,7 @@ Proof.
         rewrite -(exist_intro n) {1}(always_sep_dup (own _ _)).
         solve_sep_entails. }
     cancel [one_shot_inv γ l].
-    (* FIXME: why aren't laters stripped? *)
-    wp_let. rewrite -later_intro.
-    apply: always_intro. wp_seq. rewrite -later_intro.
+    wp_let. apply: always_intro. wp_seq.
     rewrite !sep_or_l; apply or_elim.
     { rewrite assoc.
       apply const_elim_sep_r=>->. wp_case; wp_seq; eauto with I. }

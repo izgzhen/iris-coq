@@ -94,16 +94,16 @@ Proof.
   rewrite -!assoc. apply const_elim_sep_l=>Hdisj.
   eapply (inv_fsa (wp_fsa _)) with (N0:=N); simpl; eauto with I ndisj.
   apply wand_intro_l. rewrite /spawn_inv {1}later_exist !sep_exist_r.
-  apply exist_elim=>lv. rewrite later_sep.
-  eapply wp_load; eauto with I ndisj. cancel [▷ (l ↦ lv)]%I. strip_later.
+  apply exist_elim=>lv.
+  wp eapply wp_load; eauto with I ndisj. cancel [l ↦ lv]%I.
   apply wand_intro_l. rewrite -later_intro -[X in _ ⊢ (X ★ _)](exist_intro lv).
   cancel [l ↦ lv]%I. rewrite sep_or_r. apply or_elim.
   - (* Case 1 : nothing sent yet, we wait. *)
     rewrite -or_intro_l. apply const_elim_sep_l=>-> {lv}.
-    do 2 rewrite const_equiv // left_id. wp_case.
+    rewrite (const_equiv (_ = _)) // left_id. wp_case.
     wp_seq. rewrite -always_wand_impl always_elim.
     rewrite !assoc. eapply wand_apply_r'; first done.
-    rewrite -(exist_intro γ). solve_sep_entails.
+    rewrite -(exist_intro γ) const_equiv //. solve_sep_entails.
   - rewrite [(_ ★ □ _)%I]sep_elim_l -or_intro_r !sep_exist_r. apply exist_mono=>v.
     rewrite -!assoc. apply const_elim_sep_l=>->{lv}. rewrite const_equiv // left_id.
     rewrite sep_or_r. apply or_elim; last first.

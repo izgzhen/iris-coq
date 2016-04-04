@@ -205,43 +205,49 @@ Tactic Notation "sep_split" "right:" open_constr(Ps) :=
 Tactic Notation "sep_split" "left:" open_constr(Ps) :=
   to_front Ps; apply sep_mono.
 
+Class StripLaterR {M} (P Q : uPred M) := strip_later_r : P ⊢ ▷ Q.
+Arguments strip_later_r {_} _ _ {_}.
+Class StripLaterL {M} (P Q : uPred M) := strip_later_l : ▷ Q ⊢ P.
+Arguments strip_later_l {_} _ _ {_}.
+
+Section strip_later.
+Context {M : cmraT}.
+Implicit Types P Q : uPred M. 
+
+Global Instance strip_later_r_fallthrough P : StripLaterR P P | 1000.
+Proof. apply later_intro. Qed.
+Global Instance strip_later_r_later P : StripLaterR (▷ P) P.
+Proof. done. Qed.
+Global Instance strip_later_r_and P1 P2 Q1 Q2 :
+  StripLaterR P1 Q1 → StripLaterR P2 Q2 → StripLaterR (P1 ∧ P2) (Q1 ∧ Q2).
+Proof. intros ??; red. by rewrite later_and; apply and_mono. Qed.
+Global Instance strip_later_r_or P1 P2 Q1 Q2 :
+  StripLaterR P1 Q1 → StripLaterR P2 Q2 → StripLaterR (P1 ∨ P2) (Q1 ∨ Q2).
+Proof. intros ??; red. by rewrite later_or; apply or_mono. Qed.
+Global Instance strip_later_r_sep P1 P2 Q1 Q2 :
+  StripLaterR P1 Q1 → StripLaterR P2 Q2 → StripLaterR (P1 ★ P2) (Q1 ★ Q2).
+Proof. intros ??; red. by rewrite later_sep; apply sep_mono. Qed.
+
+Global Instance strip_later_l_later P : StripLaterL (▷ P) P.
+Proof. done. Qed.
+Global Instance strip_later_l_and P1 P2 Q1 Q2 :
+  StripLaterL P1 Q1 → StripLaterL P2 Q2 → StripLaterL (P1 ∧ P2) (Q1 ∧ Q2).
+Proof. intros ??; red. by rewrite later_and; apply and_mono. Qed.
+Global Instance strip_later_l_or P1 P2 Q1 Q2 :
+  StripLaterL P1 Q1 → StripLaterL P2 Q2 → StripLaterL (P1 ∨ P2) (Q1 ∨ Q2).
+Proof. intros ??; red. by rewrite later_or; apply or_mono. Qed.
+Global Instance strip_later_l_sep P1 P2 Q1 Q2 :
+  StripLaterL P1 Q1 → StripLaterL P2 Q2 → StripLaterL (P1 ★ P2) (Q1 ★ Q2).
+Proof. intros ??; red. by rewrite later_sep; apply sep_mono. Qed.
+End strip_later.
+
 (** Assumes a goal of the shape P ⊢ ▷ Q. Alterantively, if Q
     is built of ★, ∧, ∨ with ▷ in all branches; that will work, too.
     Will turn this goal into P ⊢ Q and strip ▷ in P below ★, ∧, ∨. *)
 Ltac strip_later :=
-  let rec strip :=
-    lazymatch goal with
-    | |- (_ ★ _) ⊢ ▷ _  =>
-      etrans; last (eapply equiv_entails_sym, later_sep);
-      apply sep_mono; strip
-    | |- (_ ∧ _) ⊢ ▷ _  =>
-      etrans; last (eapply equiv_entails_sym, later_and);
-      apply sep_mono; strip
-    | |- (_ ∨ _) ⊢ ▷ _  =>
-      etrans; last (eapply equiv_entails_sym, later_or);
-      apply sep_mono; strip
-    | |- ▷ _ ⊢ ▷ _ => apply later_mono; reflexivity
-    | |- _ ⊢ ▷ _ => apply later_intro; reflexivity
-    end
-  in let rec shape_Q :=
-    lazymatch goal with
-    | |- _ ⊢ (_ ★ _) =>
-      (* Force the later on the LHS to be top-level, matching laters
-         below ★ on the RHS *)
-      etrans; first (apply equiv_entails, later_sep; reflexivity);
-      (* Match the arm recursively *)
-      apply sep_mono; shape_Q
-    | |- _ ⊢ (_ ∧ _) =>
-      etrans; first (apply equiv_entails, later_and; reflexivity);
-      apply sep_mono; shape_Q
-    | |- _ ⊢ (_ ∨ _) =>
-      etrans; first (apply equiv_entails, later_or; reflexivity);
-      apply sep_mono; shape_Q
-    | |- _ ⊢ ▷ _ => apply later_mono; reflexivity
-    (* We fail if we don't find laters in all branches. *)
-    end
-  in intros_revert ltac:(etrans; [|shape_Q];
-                         etrans; last eapply later_mono; first solve [ strip ]).
+  intros_revert ltac:(
+    etrans; [apply: strip_later_r|];
+    etrans; [|apply: strip_later_l]; apply later_mono).
 
 (** Transforms a goal of the form ∀ ..., ?0... → ?1 ⊢ ?2
     into True ⊢ ∀..., ■?0... → ?1 → ?2, applies tac, and
