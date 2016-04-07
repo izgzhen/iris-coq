@@ -57,12 +57,11 @@ Proof.
   rewrite !assoc 2!forall_elim; eapply wand_apply_r'; first done.
   rewrite (always_sep_dup (_ ★ _)); apply sep_mono.
   - apply forall_intro=>n. apply: always_intro. wp_let.
-    eapply (wp_inv_timeless _ _ _ (one_shot_inv γ l));
-      rewrite /= ?to_of_val; eauto 10 with I.
+    eapply (wp_inv_timeless _ _ _ (one_shot_inv γ l)); eauto 10 with I.
     rewrite (True_intro (inv _ _)) right_id.
     apply wand_intro_r; rewrite sep_or_l; apply or_elim.
     + rewrite -wp_pvs.
-      wp eapply wp_cas_suc; rewrite /= ?to_of_val; eauto with I ndisj.
+      wp eapply wp_cas_suc; eauto with I ndisj.
       rewrite (True_intro (heap_ctx _)) left_id.
       ecancel [l ↦ _]%I; apply wand_intro_l.
       rewrite (own_update); (* FIXME: canonical structures are not working *)
@@ -72,14 +71,13 @@ Proof.
       solve_sep_entails.
     + rewrite sep_exist_l; apply exist_elim=>m.
       eapply wp_cas_fail with (v':=InjRV #m) (q:=1%Qp);
-        rewrite /= ?to_of_val; eauto with I ndisj; strip_later.
+        eauto with I ndisj; strip_later.
       ecancel [l ↦ _]%I; apply wand_intro_l, sep_intro_True_r; eauto with I.
       rewrite /one_shot_inv -or_intro_r -(exist_intro m).
       solve_sep_entails.
   - apply: always_intro. wp_seq.
     wp_focus (Load (%l))%I.
-    eapply (wp_inv_timeless _ _ _ (one_shot_inv γ l));
-      rewrite /= ?to_of_val; eauto 10 with I.
+    eapply (wp_inv_timeless _ _ _ (one_shot_inv γ l)); eauto 10 with I.
     apply wand_intro_r.
     trans (heap_ctx heapN ★ inv N (one_shot_inv γ l) ★ ∃ v, l ↦ v ★
       ((v = InjLV #0 ★ own γ OneShotPending) ∨
@@ -115,8 +113,7 @@ Proof.
     rewrite [(w=_ ★ _)%I]comm !assoc; apply const_elim_sep_r=>->.
     (* FIXME: why do we need to fold? *)
     wp_case; fold of_val. wp_let. wp_focus (Load (%l))%I.
-    eapply (wp_inv_timeless _ _ _ (one_shot_inv γ l));
-      rewrite /= ?to_of_val; eauto 10 with I.
+    eapply (wp_inv_timeless _ _ _ (one_shot_inv γ l)); eauto 10 with I.
     rewrite (True_intro (inv _ _)) right_id.
     apply wand_intro_r; rewrite sep_or_l; apply or_elim.
     + rewrite (True_intro (heap_ctx _)) (True_intro (l ↦ _)) !left_id.

@@ -9,7 +9,7 @@ Class EctxLanguage (expr val ectx state : Type) := {
   empty_ectx : ectx;
   comp_ectx : ectx → ectx → ectx;
   fill : ectx → expr → expr;
-  atomic : expr → Prop;
+  atomic : expr → bool;
   head_step : expr → state → expr → state → option expr → Prop;
 
   to_of_val v : to_val (of_val v) = Some v;

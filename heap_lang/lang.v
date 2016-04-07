@@ -342,15 +342,16 @@ Inductive head_step : expr [] → state → expr [] → state → option (expr [
      head_step (CAS (Loc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) None.
 
 (** Atomic expressions *)
-Definition atomic (e: expr []) : Prop :=
+Definition atomic (e: expr []) : bool :=
   match e with
-  | Alloc e => is_Some (to_val e)
-  | Load e => is_Some (to_val e)
-  | Store e1 e2 => is_Some (to_val e1) ∧ is_Some (to_val e2)
-  | CAS e0 e1 e2 => is_Some (to_val e0) ∧ is_Some (to_val e1) ∧ is_Some (to_val e2)
+  | Alloc e => bool_decide (is_Some (to_val e))
+  | Load e => bool_decide (is_Some (to_val e))
+  | Store e1 e2 => bool_decide (is_Some (to_val e1) ∧ is_Some (to_val e2))
+  | CAS e0 e1 e2 =>
+    bool_decide (is_Some (to_val e0) ∧ is_Some (to_val e1) ∧ is_Some (to_val e2))
   (* Make "skip" atomic *)
-  | App (Rec _ _ (Lit _)) (Lit _) => True
-  | _ => False
+  | App (Rec _ _ (Lit _)) (Lit _) => true
+  | _ => false
   end.
 
 (** Substitution *)
@@ -449,7 +450,7 @@ Lemma val_stuck e1 σ1 e2 σ2 ef :
 Proof. destruct 1; naive_solver. Qed.
 
 Lemma atomic_not_val e : atomic e → to_val e = None.
-Proof. destruct e; naive_solver. Qed.
+Proof. by destruct e. Qed.
 
 Lemma atomic_fill_item Ki e : atomic (fill_item Ki e) → is_Some (to_val e).
 Proof.

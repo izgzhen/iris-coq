@@ -113,6 +113,7 @@ Lemma bool_decide_unpack (P : Prop) {dec : Decision P} : bool_decide P → P.
 Proof. rewrite bool_decide_spec; trivial. Qed.
 Lemma bool_decide_pack (P : Prop) {dec : Decision P} : P → bool_decide P.
 Proof. rewrite bool_decide_spec; trivial. Qed.
+Hint Resolve bool_decide_pack.
 Lemma bool_decide_true (P : Prop) `{Decision P} : P → bool_decide P = true.
 Proof. case_bool_decide; tauto. Qed.
 Lemma bool_decide_false (P : Prop) `{Decision P} : ¬P → bool_decide P = false.

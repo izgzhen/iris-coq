@@ -34,8 +34,8 @@ Proof.
   rewrite always_and_sep_l -assoc -always_and_sep_l.
   apply const_elim_l=>-[l [-> [Hl [-> ?]]]].
   rewrite (forall_elim l) right_id const_equiv // left_id wand_elim_r.
-  rewrite -(of_to_val (Loc l) (LocV l)) // in Hl. apply of_val_inj in Hl.
-  by subst.
+  rewrite -(of_to_val (Loc l) (LocV l)) // in Hl.
+  by apply of_val_inj in Hl as ->.
 Qed.
 
 Lemma wp_load_pst E σ l v Φ :
@@ -62,7 +62,7 @@ Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' Φ :
 Proof.
   intros. rewrite -(wp_lift_atomic_det_head_step σ (LitV $ LitBool false) σ None)
     ?right_id //; last (by intros; inv_head_step; eauto);
-    simpl; split_and?; by eauto.
+    simpl; by eauto 10.
 Qed.
 
 Lemma wp_cas_suc_pst E σ l e1 v1 e2 v2 Φ :
@@ -72,7 +72,7 @@ Lemma wp_cas_suc_pst E σ l e1 v1 e2 v2 Φ :
 Proof.
   intros. rewrite -(wp_lift_atomic_det_head_step σ (LitV $ LitBool true)
     (<[l:=v2]>σ) None) ?right_id //; last (by intros; inv_head_step; eauto);
-    simpl; split_and?; by eauto.
+    simpl; by eauto 10.
 Qed.
 
 (** Base axioms for core primitives of the language: Stateless reductions *)
