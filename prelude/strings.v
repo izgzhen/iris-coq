@@ -25,6 +25,21 @@ Fixpoint string_rev_app (s1 s2 : string) : string :=
   end.
 Definition string_rev (s : string) : string := string_rev_app s "".
 
+(* Break a string up into lists of words, delimited by white space *)
+Fixpoint words_go (cur : option string) (s : string) : list string :=
+  match s with
+  | "" => option_list (string_rev <$> cur)
+  | String " " s => option_list (string_rev <$> cur) ++ words_go None s
+  | String a s => words_go (Some (default (String a "") cur (String a))) s
+  end.
+Definition words : string → list string := words_go None.
+
+Ltac words s :=
+  match type of s with
+  | list string => s
+  | string => eval vm_compute in (words s)
+  end.
+
 (** * Encoding and decoding *)
 (** In order to reuse or existing implementation of radix-2 search trees over
 positive binary naturals [positive], we define an injection [string_to_pos]
@@ -71,4 +86,3 @@ Program Instance string_countable : Countable string := {|
   encode := string_to_pos; decode p := Some (string_of_pos p)
 |}.
 Solve Obligations with naive_solver eauto using string_of_to_pos with f_equal.
-
