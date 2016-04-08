@@ -8,22 +8,23 @@ Ltac wp_bind K :=
   | [] => idtac
   | _ => etrans; [|fast_by apply (wp_bind K)]; simpl
   end.
+
 Ltac wp_finish :=
-  let rec go :=
-  match goal with
-  | |- _ ⊢ ▷ _ => etrans; [|fast_by apply later_mono; go]
-  | |- _ ⊢ wp _ _ _ =>
-    etrans; [|eapply wp_value_pvs; fast_done];
-    (* sometimes, we will have to do a final view shift, so only apply
-    pvs_intro if we obtain a consecutive wp *)
-    try (eapply pvs_intro;
-         match goal with |- _ ⊢ wp _ _ _ => simpl | _ => fail end)
-  | _ => idtac
-  end in simpl; intros_revert go.
+  intros_revert ltac:(
+    try strip_later;
+    match goal with
+    | |- _ ⊢ wp _ _ _ =>
+      etrans; [|eapply wp_value_pvs; fast_done]; lazy beta;
+      (* sometimes, we will have to do a final view shift, so only apply
+      pvs_intro if we obtain a consecutive wp *)
+      try (etrans; [|apply pvs_intro];
+           match goal with |- _ ⊢ wp _ _ _ => simpl | _ => fail end)
+    | _ => idtac
+    end).
 
 Ltac wp_done := rewrite -/of_val /= ?to_of_val; fast_done.
 
-Tactic Notation "wp_rec" ">" :=
+Tactic Notation "wp_rec" :=
   löb ltac:(
     (* Find the redex and apply wp_rec *)
     idtac; (* <https://coq.inria.fr/bugs/show_bug.cgi?id=4584> *)
@@ -35,9 +36,8 @@ Tactic Notation "wp_rec" ">" :=
       wp_bind K; etrans; [|eapply wp_rec'; wp_done]; simpl_subst; wp_finish
 (*      end *) end)
      end).
-Tactic Notation "wp_rec" := wp_rec>; try strip_later.
 
-Tactic Notation "wp_lam" ">" :=
+Tactic Notation "wp_lam" :=
   match goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with App ?e1 _ =>
@@ -45,14 +45,11 @@ Tactic Notation "wp_lam" ">" :=
     wp_bind K; etrans; [|eapply wp_lam; wp_done]; simpl_subst; wp_finish
 (*    end *) end)
   end.
-Tactic Notation "wp_lam" := wp_lam>; try strip_later.
 
-Tactic Notation "wp_let" ">" := wp_lam>.
 Tactic Notation "wp_let" := wp_lam.
-Tactic Notation "wp_seq" ">" := wp_let>.
 Tactic Notation "wp_seq" := wp_let.
 
-Tactic Notation "wp_op" ">" :=
+Tactic Notation "wp_op" :=
   match goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
@@ -65,9 +62,8 @@ Tactic Notation "wp_op" ">" :=
        wp_bind K; etrans; [|eapply wp_un_op; try fast_done]; wp_finish
     end)
   end.
-Tactic Notation "wp_op" := wp_op>; try strip_later.
 
-Tactic Notation "wp_proj" ">" :=
+Tactic Notation "wp_proj" :=
   match goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
@@ -75,9 +71,8 @@ Tactic Notation "wp_proj" ">" :=
     | Snd _ => wp_bind K; etrans; [|eapply wp_snd; wp_done]; wp_finish
     end)
   end.
-Tactic Notation "wp_proj" := wp_proj>; try strip_later.
 
-Tactic Notation "wp_if" ">" :=
+Tactic Notation "wp_if" :=
   match goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with If _ _ _ =>
@@ -85,9 +80,8 @@ Tactic Notation "wp_if" ">" :=
     etrans; [|eapply wp_if_true || eapply wp_if_false]; wp_finish
     end)
   end.
-Tactic Notation "wp_if" := wp_if>; try strip_later.
 
-Tactic Notation "wp_case" ">" :=
+Tactic Notation "wp_case" :=
   match goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with Case _ _ _ =>
@@ -96,7 +90,6 @@ Tactic Notation "wp_case" ">" :=
       wp_finish
     end)
   end.
-Tactic Notation "wp_case" := wp_case>; try strip_later.
 
 Tactic Notation "wp_focus" open_constr(efoc) :=
   match goal with
@@ -104,13 +97,12 @@ Tactic Notation "wp_focus" open_constr(efoc) :=
     match e' with efoc => unify e' efoc; wp_bind K end)
   end.
 
-Tactic Notation "wp" ">" tactic(tac) :=
+Tactic Notation "wp" tactic(tac) :=
   match goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' => wp_bind K; tac)
+  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
+    wp_bind K; tac; [try strip_later|..])
   end.
-Tactic Notation "wp" tactic(tac) := (wp> tac); [try strip_later|..].
 
 (* In case the precondition does not match.
    TODO: Have one tactic unifying wp and ewp. *)
 Tactic Notation "ewp" tactic(tac) := wp (etrans; [|tac]).
-Tactic Notation "ewp" ">" tactic(tac) := wp> (etrans; [|tac]).

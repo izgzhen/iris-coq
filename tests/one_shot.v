@@ -54,6 +54,7 @@ Proof.
   { ecancel [heap_ctx _; ∀ _, _]%I. rewrite -inv_alloc // -later_intro.
     apply or_intro_l'. solve_sep_entails. }
   rewrite pvs_frame_r pvs_frame_l; apply wp_strip_pvs; wp_let.
+  rewrite -pvs_intro.
   rewrite !assoc 2!forall_elim; eapply wand_apply_r'; first done.
   rewrite (always_sep_dup (_ ★ _)); apply sep_mono.
   - apply forall_intro=>n. apply: always_intro. wp_let.
@@ -105,10 +106,10 @@ Proof.
         rewrite -(exist_intro n) {1}(always_sep_dup (own _ _)).
         solve_sep_entails. }
     cancel [one_shot_inv γ l].
-    wp_let. apply: always_intro. wp_seq.
+    wp_let. rewrite -pvs_intro. apply: always_intro. wp_seq.
     rewrite !sep_or_l; apply or_elim.
     { rewrite assoc.
-      apply const_elim_sep_r=>->. wp_case; wp_seq; eauto with I. }
+      apply const_elim_sep_r=>->. wp_case; wp_seq; rewrite -pvs_intro; eauto with I. }
     rewrite !sep_exist_l; apply exist_elim=> n.
     rewrite [(w=_ ★ _)%I]comm !assoc; apply const_elim_sep_r=>->.
     (* FIXME: why do we need to fold? *)

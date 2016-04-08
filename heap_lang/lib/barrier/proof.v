@@ -219,7 +219,7 @@ Proof.
   ecancel [▷ Π★{set _} Ψ; Π★{set _} (λ _, saved_prop_own _ _)]%I.
   apply wand_intro_l.  set savedΨ := _ i (Ψ _). set savedQ := _ i Q.
   to_front [savedΨ; savedQ]. rewrite saved_prop_agree /=.
-  wp_op; [|done]=> _. wp_if. rewrite !assoc. eapply wand_apply_r'; first done.
+  wp_op; [|done]=> _. wp_if. rewrite -pvs_intro. rewrite !assoc. eapply wand_apply_r'; first done.
   eapply wand_apply_r'; first done.
   apply: (eq_rewrite (Ψ i) Q (λ x, x)%I); by eauto with I.
 Qed.
