@@ -957,7 +957,7 @@ Proof. intros P Q; apply later_mono. Qed.
 Global Instance later_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@uPred_later M).
 Proof. intros P Q; apply later_mono. Qed.
-Lemma later_True : (▷ True) ⊣⊢ True.
+Lemma later_True : ▷ True ⊣⊢ True.
 Proof. apply (anti_symm (⊢)); auto using later_intro. Qed.
 Lemma later_impl P Q : ▷ (P → Q) ⊢ (▷ P → ▷ Q).
 Proof.
@@ -969,7 +969,7 @@ Lemma later_exist `{Inhabited A} (Φ : A → uPred M) :
 Proof. apply: anti_symm; eauto using later_exist', later_exist_1. Qed.
 Lemma later_wand P Q : ▷ (P -★ Q) ⊢ (▷ P -★ ▷ Q).
 Proof. apply wand_intro_r;rewrite -later_sep; apply later_mono,wand_elim_l. Qed.
-Lemma later_iff P Q : (▷ (P ↔ Q)) ⊢ (▷ P ↔ ▷ Q).
+Lemma later_iff P Q : ▷ (P ↔ Q) ⊢ (▷ P ↔ ▷ Q).
 Proof. by rewrite /uPred_iff later_and !later_impl. Qed.
 Lemma löb_strong P Q : (P ∧ ▷ Q) ⊢ Q → P ⊢ Q.
 Proof.
@@ -1119,7 +1119,7 @@ Proof.
     cmra_timeless_included_l; eauto using cmra_validN_le.
 Qed.
 
-(* Always stable *)
+(* Persistence *)
 Global Instance const_persistent φ : PersistentP (■ φ : uPred M)%I.
 Proof. by rewrite /PersistentP always_const. Qed.
 Global Instance always_persistent P : PersistentP (□ P).
@@ -1153,7 +1153,7 @@ Global Instance default_persistent {A} P (Ψ : A → uPred M) (mx : option A) :
   PersistentP P → (∀ x, PersistentP (Ψ x)) → PersistentP (default P mx Ψ).
 Proof. destruct mx; apply _. Qed.
 
-(* Derived lemmas for always stable *)
+(* Derived lemmas for persistence *)
 Lemma always_always P `{!PersistentP P} : (□ P) ⊣⊢ P.
 Proof. apply (anti_symm (⊢)); auto using always_elim. Qed.
 Lemma always_intro P Q `{!PersistentP P} : P ⊢ Q → P ⊢ □ Q.

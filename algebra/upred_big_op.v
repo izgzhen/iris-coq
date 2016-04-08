@@ -28,17 +28,18 @@ Instance: Params (@uPred_big_sepS) 5.
 Notation "'Π★{set' X } Φ" := (uPred_big_sepS X Φ)
   (at level 20, X at level 10, format "Π★{set  X }  Φ") : uPred_scope.
 
-(** * Always stability for lists *)
+(** * Persistence of lists of uPreds *)
 Class PersistentL {M} (Ps : list (uPred M)) :=
   persistentL : Forall PersistentP Ps.
 Arguments persistentL {_} _ {_}.
 
+(** * Properties *)
 Section big_op.
 Context {M : cmraT}.
 Implicit Types Ps Qs : list (uPred M).
 Implicit Types A : Type.
 
-(* Big ops *)
+(** ** Big ops over lists *)
 Global Instance big_and_proper : Proper ((≡) ==> (⊣⊢)) (@uPred_big_and M).
 Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 Global Instance big_sep_proper : Proper ((≡) ==> (⊣⊢)) (@uPred_big_sep M).
@@ -91,7 +92,7 @@ Proof. induction 1; simpl; auto with I. Qed.
 Lemma big_sep_elem_of Ps P : P ∈ Ps → Π★ Ps ⊢ P.
 Proof. induction 1; simpl; auto with I. Qed.
 
-(* Big ops over finite maps *)
+(** ** Big ops over finite maps *)
 Section gmap.
   Context `{Countable K} {A : Type}.
   Implicit Types m : gmap K A.
@@ -152,7 +153,7 @@ Section gmap.
   Qed.
 End gmap.
 
-(* Big ops over finite sets *)
+(** ** Big ops over finite sets *)
 Section gset.
   Context `{Countable A}.
   Implicit Types X : gset A.
@@ -213,7 +214,7 @@ Section gset.
   Qed.
 End gset.
 
-(* Always stable *)
+(** ** Persistence *)
 Global Instance big_and_persistent Ps : PersistentL Ps → PersistentP (Π∧ Ps).
 Proof. induction 1; apply _. Qed.
 Global Instance big_sep_persistent Ps : PersistentL Ps → PersistentP (Π★ Ps).
