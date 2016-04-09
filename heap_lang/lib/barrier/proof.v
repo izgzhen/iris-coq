@@ -117,7 +117,7 @@ Proof.
   intros HN. rewrite /newbarrier. wp_seq.
   rewrite -wp_pvs. wp eapply wp_alloc; eauto with I ndisj.
   apply forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
-  rewrite !assoc. apply pvs_wand_r.
+  rewrite !assoc. rewrite- pvs_wand_r; apply sep_mono_l.
   (* The core of this proof: Allocating the STS and the saved prop. *)
   eapply sep_elim_True_r; first by eapply (saved_prop_alloc (F:=idCF) _ P).
   rewrite pvs_frame_l. apply pvs_strip_pvs. rewrite sep_exist_l.
@@ -201,7 +201,7 @@ Proof.
     rewrite -!assoc. apply sep_mono_r, sep_mono_r, wand_intro_l.
     wp_op; first done. intros _. wp_if. rewrite !assoc.
     rewrite -always_wand_impl always_elim.
-    rewrite -{2}pvs_wp. apply pvs_wand_r.
+    rewrite -{2}pvs_wp. rewrite -pvs_wand_r; apply sep_mono_l.
     rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro Q) -(exist_intro i).
     rewrite const_equiv // left_id -later_intro.
     ecancel_pvs [heap_ctx _; saved_prop_own _ _; Q -★ _; R -★ _; sts_ctx _ _ _]%I.

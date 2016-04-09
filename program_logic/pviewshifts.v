@@ -159,12 +159,10 @@ Lemma pvs_impl_l E1 E2 P Q : (□ (P → Q) ∧ (|={E1,E2}=> P)) ⊢ (|={E1,E2}=
 Proof. by rewrite pvs_always_l always_elim impl_elim_l. Qed.
 Lemma pvs_impl_r E1 E2 P Q : ((|={E1,E2}=> P) ∧ □ (P → Q)) ⊢ (|={E1,E2}=> Q).
 Proof. by rewrite comm pvs_impl_l. Qed.
-Lemma pvs_wand_l E1 E2 P Q R :
-  P ⊢ (|={E1,E2}=> Q) → ((Q -★ R) ★ P) ⊢ (|={E1,E2}=> R).
-Proof. intros ->. rewrite pvs_frame_l. apply pvs_mono, wand_elim_l. Qed.
-Lemma pvs_wand_r E1 E2 P Q R :
-  P ⊢ (|={E1,E2}=> Q) → (P ★ (Q -★ R)) ⊢ (|={E1,E2}=> R).
-Proof. rewrite comm. apply pvs_wand_l. Qed.
+Lemma pvs_wand_l E1 E2 P Q : ((P -★ Q) ★ (|={E1,E2}=> P)) ⊢ (|={E1,E2}=> Q).
+Proof. by rewrite pvs_frame_l wand_elim_l. Qed.
+Lemma pvs_wand_r E1 E2 P Q : ((|={E1,E2}=> P) ★ (P -★ Q)) ⊢ (|={E1,E2}=> Q).
+Proof. by rewrite pvs_frame_r wand_elim_r. Qed.
 Lemma pvs_sep E P Q:
   ((|={E}=> P) ★ (|={E}=> Q)) ⊢ (|={E}=> P ★ Q).
 Proof. rewrite pvs_frame_r pvs_frame_l pvs_trans //. set_solver. Qed.
