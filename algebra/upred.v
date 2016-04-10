@@ -509,11 +509,6 @@ Proof.
   unseal=> Hab; apply equiv_dist; intros n; apply Hab with ∅; last done.
   apply cmra_valid_validN, cmra_unit_valid.
 Qed.
-Lemma iff_equiv P Q : True ⊢ (P ↔ Q) → P ⊣⊢ Q.
-Proof.
-  rewrite /uPred_iff; unseal=> HPQ.
-  split=> n x ?; split; intros; by apply HPQ with n x.
-Qed.
 
 (* Derived logical stuff *)
 Lemma True_intro P : P ⊢ True.
@@ -549,6 +544,16 @@ Lemma impl_entails P Q : True ⊢ (P → Q) → P ⊢ Q.
 Proof. intros HPQ; apply impl_elim with P; rewrite -?HPQ; auto. Qed.
 Lemma entails_impl P Q : (P ⊢ Q) → True ⊢ (P → Q).
 Proof. auto using impl_intro_l. Qed.
+
+Lemma iff_refl Q P : Q ⊢ (P ↔ P).
+Proof. rewrite /uPred_iff; apply and_intro; apply impl_intro_l; auto. Qed.
+Lemma iff_equiv P Q : True ⊢ (P ↔ Q) → P ⊣⊢ Q.
+Proof.
+  intros HPQ; apply (anti_symm (⊢));
+    apply impl_entails; rewrite HPQ /uPred_iff; auto.
+Qed.
+Lemma equiv_iff P Q : P ⊣⊢ Q → True ⊢ (P ↔ Q).
+Proof. intros ->; apply iff_refl. Qed.
 
 Lemma const_mono φ1 φ2 : (φ1 → φ2) → ■ φ1 ⊢ ■ φ2.
 Proof. intros; apply const_elim with φ1; eauto using const_intro. Qed.
@@ -633,8 +638,6 @@ Proof.
   - by rewrite -(left_id True%I uPred_and (_ → _)%I) impl_elim_r.
   - by apply impl_intro_l; rewrite left_id.
 Qed.
-Lemma iff_refl Q P : Q ⊢ (P ↔ P).
-Proof. rewrite /uPred_iff; apply and_intro; apply impl_intro_l; auto. Qed.
 
 Lemma or_and_l P Q R : (P ∨ Q ∧ R) ⊣⊢ ((P ∨ Q) ∧ (P ∨ R)).
 Proof.
