@@ -56,7 +56,7 @@ Ltac done :=
     | contradiction
     | solve [apply not_symmetry; trivial]
     | split ]
-  | match goal with H : ¬_ |- _ => solve [destruct H; trivial] end ].
+  | match goal with H : ¬_ |- _ => solve [case H; trivial] end ].
 Tactic Notation "by" tactic(tac) :=
   tac; done.
 
