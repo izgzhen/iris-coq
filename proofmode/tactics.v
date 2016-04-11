@@ -681,7 +681,7 @@ Tactic Notation "iIntros" constr(pat) :=
     | IName ?H :: ?pats => iIntro H; go pats
     | IPersistent IAnom :: ?pats => let H := iFresh in iIntro #H; go pats
     | IAnom :: ?pats => let H := iFresh in iIntro H; go pats
-    | IAnomPure :: ?pats => iPureIntro; go pats
+    | IAnomPure :: ?pats => iIntro {?}; go pats
     | IPersistent ?pat :: ?pats =>
        let H := iFresh in iIntro #H; iDestructHyp H as pat; go pats
     | ?pat :: ?pats =>
