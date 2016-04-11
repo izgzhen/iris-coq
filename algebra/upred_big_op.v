@@ -1,5 +1,5 @@
 From iris.algebra Require Export upred list.
-From iris.prelude Require Import gmap fin_collections.
+From iris.prelude Require Import gmap fin_collections functions.
 Import uPred.
 
 (** * Big ops over lists *)
@@ -107,6 +107,13 @@ Section gmap.
     - apply big_sep_mono', Forall2_fmap, Forall_Forall2.
       apply Forall_forall=> -[i x] ? /=. by apply HΦ, elem_of_map_to_list.
   Qed.
+  Lemma big_sepM_proper Φ Ψ m1 m2 :
+    m1 ≡ m2 → (∀ x k, m1 !! k = Some x → m2 !! k = Some x → Φ k x ⊣⊢ Ψ k x) →
+    Π★{map m1} Φ ⊣⊢ Π★{map m2} Ψ.
+  Proof.
+    intros [??] ?; apply (anti_symm (⊢)); apply big_sepM_mono;
+      eauto using equiv_entails, equiv_entails_sym, lookup_weaken.
+  Qed.
 
   Global Instance big_sepM_ne m n :
     Proper (pointwise_relation _ (pointwise_relation _ (dist n)) ==> (dist n))
@@ -115,17 +122,14 @@ Section gmap.
     intros Φ1 Φ2 HΦ. apply big_sep_ne, Forall2_fmap.
     apply Forall_Forall2, Forall_true=> -[i x]; apply HΦ.
   Qed.
-  Global Instance big_sepM_proper m :
+  Global Instance big_sepM_proper' m :
     Proper (pointwise_relation _ (pointwise_relation _ (⊣⊢)) ==> (⊣⊢))
            (uPred_big_sepM (M:=M) m).
-  Proof.
-    intros Φ1 Φ2 HΦ; apply equiv_dist=> n.
-    apply big_sepM_ne=> k x; apply equiv_dist, HΦ.
-  Qed.
+  Proof. intros Φ1 Φ2 HΦ. by apply big_sepM_proper; intros; last apply HΦ. Qed.
   Global Instance big_sepM_mono' m :
     Proper (pointwise_relation _ (pointwise_relation _ (⊢)) ==> (⊢))
            (uPred_big_sepM (M:=M) m).
-  Proof. intros Φ1 Φ2 HΦ. apply big_sepM_mono; intros; [done|apply HΦ]. Qed.
+  Proof. intros Φ1 Φ2 HΦ. by apply big_sepM_mono; intros; last apply HΦ. Qed.
 
   Lemma big_sepM_empty Φ : Π★{map ∅} Φ ⊣⊢ True.
   Proof. by rewrite /uPred_big_sepM map_to_list_empty. Qed.
@@ -167,6 +171,12 @@ Section gset.
     - apply big_sep_mono', Forall2_fmap, Forall_Forall2.
       apply Forall_forall=> x ? /=. by apply HΦ, elem_of_elements.
   Qed.
+  Lemma big_sepS_proper Φ Ψ X Y :
+    X ≡ Y → (∀ x, x ∈ X → x ∈ Y → Φ x ⊣⊢ Ψ x) → Π★{set X} Φ ⊣⊢ Π★{set Y} Ψ.
+  Proof.
+    intros [??] ?; apply (anti_symm (⊢)); apply big_sepS_mono;
+      eauto using equiv_entails, equiv_entails_sym.
+  Qed.
 
   Lemma big_sepS_ne X n :
     Proper (pointwise_relation _ (dist n) ==> dist n) (uPred_big_sepS (M:=M) X).
@@ -174,27 +184,39 @@ Section gset.
     intros Φ1 Φ2 HΦ. apply big_sep_ne, Forall2_fmap.
     apply Forall_Forall2, Forall_true=> x; apply HΦ.
   Qed.
-  Lemma big_sepS_proper X :
+  Lemma big_sepS_proper' X :
     Proper (pointwise_relation _ (⊣⊢) ==> (⊣⊢)) (uPred_big_sepS (M:=M) X).
-  Proof.
-    intros Φ1 Φ2 HΦ; apply equiv_dist=> n.
-    apply big_sepS_ne=> x; apply equiv_dist, HΦ.
-  Qed.
+  Proof. intros Φ1 Φ2 HΦ. apply big_sepS_proper; naive_solver. Qed.
   Lemma big_sepS_mono' X :
     Proper (pointwise_relation _ (⊢) ==> (⊢)) (uPred_big_sepS (M:=M) X).
   Proof. intros Φ1 Φ2 HΦ. apply big_sepS_mono; naive_solver. Qed.
 
   Lemma big_sepS_empty Φ : Π★{set ∅} Φ ⊣⊢ True.
   Proof. by rewrite /uPred_big_sepS elements_empty. Qed.
+
   Lemma big_sepS_insert Φ X x :
     x ∉ X → Π★{set {[ x ]} ∪ X} Φ ⊣⊢ (Φ x ★ Π★{set X} Φ).
   Proof. intros. by rewrite /uPred_big_sepS elements_union_singleton. Qed.
+  Lemma big_sepS_insert' (Ψ : A → uPred M → uPred M) Φ X x P :
+    x ∉ X →
+    Π★{set {[ x ]} ∪ X} (λ y, Ψ y (<[x:=P]> Φ y))
+    ⊣⊢ (Ψ x P ★ Π★{set X} (λ y, Ψ y (Φ y))).
+  Proof.
+    intros. rewrite big_sepS_insert // fn_lookup_insert.
+    apply sep_proper, big_sepS_proper; auto=> y ??.
+    by rewrite fn_lookup_insert_ne; last set_solver.
+  Qed.
+  Lemma big_sepS_insert'' Φ X x P :
+    x ∉ X → Π★{set {[ x ]} ∪ X} (<[x:=P]> Φ) ⊣⊢ (P ★ Π★{set X} Φ).
+  Proof. apply (big_sepS_insert' (λ y, id)). Qed.
+
   Lemma big_sepS_delete Φ X x :
     x ∈ X → Π★{set X} Φ ⊣⊢ (Φ x ★ Π★{set X ∖ {[ x ]}} Φ).
   Proof.
     intros. rewrite -big_sepS_insert; last set_solver.
     by rewrite -union_difference_L; last set_solver.
   Qed.
+
   Lemma big_sepS_singleton Φ x : Π★{set {[ x ]}} Φ ⊣⊢ (Φ x).
   Proof. intros. by rewrite /uPred_big_sepS elements_singleton /= right_id. Qed.
 
