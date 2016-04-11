@@ -1,4 +1,5 @@
 From iris.program_logic Require Export weakestpre viewshifts.
+From iris.proofmode Require Import weakestpre.
 
 Definition ht {Λ Σ} (E : coPset) (P : iProp Λ Σ)
     (e : expr Λ) (Φ : val Λ → iProp Λ Σ) : iProp Λ Σ :=
@@ -39,24 +40,19 @@ Global Instance ht_mono' E :
 Proof. solve_proper. Qed.
 
 Lemma ht_alt E P Φ e : (P ⊢ WP e @ E {{ Φ }}) → {{ P }} e @ E {{ Φ }}.
-Proof.
-  intros; rewrite -{1}always_const. apply: always_intro. apply impl_intro_l.
-  by rewrite always_const right_id.
-Qed.
+Proof. iIntros {Hwp} "! HP". by iApply Hwp. Qed.
 
 Lemma ht_val E v :
   {{ True : iProp Λ Σ }} of_val v @ E {{ λ v', v = v' }}.
-Proof. apply ht_alt. by rewrite -wp_value'; apply const_intro. Qed.
+Proof. iIntros "! _". by iApply wp_value'. Qed.
 
 Lemma ht_vs E P P' Φ Φ' e :
   ((P ={E}=> P') ∧ {{ P' }} e @ E {{ Φ' }} ∧ ∀ v, Φ' v ={E}=> Φ v)
   ⊢ {{ P }} e @ E {{ Φ }}.
 Proof.
-  apply: always_intro. apply impl_intro_l.
-  rewrite (assoc _ P) {1}/vs always_elim impl_elim_r.
-  rewrite assoc pvs_impl_r pvs_always_r wp_always_r.
-  rewrite -(pvs_wp E e Φ) -(wp_pvs E e Φ); apply pvs_mono, wp_mono=> v.
-  by rewrite (forall_elim v) {1}/vs always_elim impl_elim_r.
+  iIntros "(#Hvs&#Hwp&#HΦ) ! HP". iPvs "Hvs" "HP" as "HP".
+  iApply wp_pvs; iApply wp_wand_r; iSplitL; [by iApply "Hwp"|].
+  iIntros {v} "Hv". by iApply "HΦ" "!".
 Qed.
 
 Lemma ht_atomic E1 E2 P P' Φ Φ' e :
@@ -64,33 +60,32 @@ Lemma ht_atomic E1 E2 P P' Φ Φ' e :
   ((P ={E1,E2}=> P') ∧ {{ P' }} e @ E2 {{ Φ' }} ∧ ∀ v, Φ' v ={E2,E1}=> Φ v)
   ⊢ {{ P }} e @ E1 {{ Φ }}.
 Proof.
-  intros ??; apply: always_intro. apply impl_intro_l.
-  rewrite (assoc _ P) {1}/vs always_elim impl_elim_r.
-  rewrite assoc pvs_impl_r pvs_always_r wp_always_r.
-  rewrite -(wp_atomic E1 E2) //; apply pvs_mono, wp_mono=> v.
-  by rewrite (forall_elim v) {1}/vs always_elim impl_elim_r.
+  iIntros {??} "(#Hvs&#Hwp&#HΦ) ! HP". iApply (wp_atomic _ E2); auto.
+  iPvs "Hvs" "HP" as "HP"; first set_solver. iPvsIntro.
+  iApply wp_wand_r; iSplitL; [by iApply "Hwp"|].
+  iIntros {v} "Hv". by iApply "HΦ" "!".
 Qed.
 
 Lemma ht_bind `{LanguageCtx Λ K} E P Φ Φ' e :
   ({{ P }} e @ E {{ Φ }} ∧ ∀ v, {{ Φ v }} K (of_val v) @ E {{ Φ' }})
   ⊢ {{ P }} K e @ E {{ Φ' }}.
 Proof.
-  intros; apply: always_intro. apply impl_intro_l.
-  rewrite (assoc _ P) {1}/ht always_elim impl_elim_r.
-  rewrite wp_always_r -wp_bind //; apply wp_mono=> v.
-  by rewrite (forall_elim v) /ht always_elim impl_elim_r.
+  iIntros "(#Hwpe&#HwpK) ! HP". iApply wp_bind.
+  iApply wp_wand_r; iSplitL; [by iApply "Hwpe"|].
+  iIntros {v} "Hv". by iApply "HwpK" "!".
 Qed.
 
 Lemma ht_mask_weaken E1 E2 P Φ e :
   E1 ⊆ E2 → {{ P }} e @ E1 {{ Φ }} ⊢ {{ P }} e @ E2 {{ Φ }}.
-Proof. intros. by apply always_mono, impl_mono, wp_mask_frame_mono. Qed.
+Proof.
+  iIntros {?} "#Hwp ! HP". iApply (wp_mask_frame_mono E1 E2); try done.
+  by iApply "Hwp".
+Qed.
 
 Lemma ht_frame_l E P Φ R e :
   {{ P }} e @ E {{ Φ }} ⊢ {{ R ★ P }} e @ E {{ λ v, R ★ Φ v }}.
 Proof.
-  apply always_intro', impl_intro_l.
-  rewrite always_and_sep_r -assoc (sep_and P) always_elim impl_elim_r.
-  by rewrite wp_frame_l.
+  iIntros "#Hwp ! [HR HP]". iApply wp_frame_l; iFrame "HR". by iApply "Hwp".
 Qed.
 
 Lemma ht_frame_r E P Φ R e :
@@ -101,17 +96,16 @@ Lemma ht_frame_step_l E P R e Φ :
   to_val e = None →
   {{ P }} e @ E {{ Φ }} ⊢ {{ ▷ R ★ P }} e @ E {{ λ v, R ★ Φ v }}.
 Proof.
-  intros; apply always_intro', impl_intro_l.
-  rewrite always_and_sep_r -assoc (sep_and P) always_elim impl_elim_r.
-  by rewrite wp_frame_step_l //; apply wp_mono=>v; rewrite pvs_frame_l.
+  iIntros {?} "#Hwp ! [HR HP]".
+  iApply wp_frame_step_l; try done. iFrame "HR". by iApply "Hwp".
 Qed.
 
 Lemma ht_frame_step_r E P Φ R e :
   to_val e = None →
   {{ P }} e @ E {{ Φ }} ⊢ {{ P ★ ▷ R }} e @ E {{ λ v, Φ v ★ R }}.
 Proof.
-  rewrite (comm _ _ (▷ R)%I); setoid_rewrite (comm _ _ R).
-  apply ht_frame_step_l.
+  iIntros {?} "#Hwp ! [HP HR]".
+  iApply wp_frame_step_r; try done. iFrame "HR". by iApply "Hwp".
 Qed.
 
 Lemma ht_inv N E P Φ R e :
@@ -119,13 +113,7 @@ Lemma ht_inv N E P Φ R e :
   (inv N R ★ {{ ▷ R ★ P }} e @ E ∖ nclose N {{ λ v, ▷ R ★ Φ v }})
     ⊢ {{ P }} e @ E {{ Φ }}.
 Proof.
-  intros; apply: always_intro. apply impl_intro_l.
-  rewrite always_and_sep_r assoc [(P ★ _)%I]comm -assoc.
-  eapply wp_inv; [by eauto with I..|].
-  rewrite sep_elim_r. apply wand_intro_l.
-  (* Oh wow, this is annyoing... *)
-  rewrite assoc -always_and_sep_r'.
-  by rewrite /ht always_elim impl_elim_r.
+  iIntros {??} "[#? #Hwp] ! HP". eapply wp_inv; eauto.
+  iIntros "HR". iApply "Hwp". by iSplitL "HR".
 Qed.
-
 End hoare.

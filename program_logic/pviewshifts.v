@@ -70,7 +70,7 @@ Proof.
   destruct (HP rf k Ef σ) as (r2&?&?); eauto.
   exists r2; eauto using uPred_in_entails.
 Qed.
-Lemma pvs_timeless E P : TimelessP P → (▷ P) ⊢ (|={E}=> P).
+Lemma pvs_timeless E P : TimelessP P → ▷ P ⊢ (|={E}=> P).
 Proof.
   rewrite pvs_eq uPred.timelessP_spec=> HP.
   uPred.unseal; split=>-[|n] r ? HP' rf k Ef σ ???; first lia.
@@ -163,8 +163,7 @@ Lemma pvs_wand_l E1 E2 P Q : ((P -★ Q) ★ (|={E1,E2}=> P)) ⊢ (|={E1,E2}=> Q
 Proof. by rewrite pvs_frame_l wand_elim_l. Qed.
 Lemma pvs_wand_r E1 E2 P Q : ((|={E1,E2}=> P) ★ (P -★ Q)) ⊢ (|={E1,E2}=> Q).
 Proof. by rewrite pvs_frame_r wand_elim_r. Qed.
-Lemma pvs_sep E P Q:
-  ((|={E}=> P) ★ (|={E}=> Q)) ⊢ (|={E}=> P ★ Q).
+Lemma pvs_sep E P Q : ((|={E}=> P) ★ (|={E}=> Q)) ⊢ (|={E}=> P ★ Q).
 Proof. rewrite pvs_frame_r pvs_frame_l pvs_trans //. set_solver. Qed.
 
 Lemma pvs_mask_frame' E1 E1' E2 E2' P :
@@ -230,17 +229,17 @@ Proof.
   move=>->. rewrite -{2}fsa_trans3.
   apply pvs_mono, fsa_mono=>a; apply pvs_intro.
 Qed.
+Lemma fsa_pvs_fsa E Φ : (|={E}=> fsa E Φ) ⊣⊢ fsa E Φ.
+Proof. apply (anti_symm (⊢)); [by apply fsa_strip_pvs|apply pvs_intro]. Qed.
 Lemma fsa_mono_pvs E Φ Ψ : (∀ a, Φ a ⊢ (|={E}=> Ψ a)) → fsa E Φ ⊢ fsa E Ψ.
 Proof. intros. rewrite -[fsa E Ψ]fsa_trans3 -pvs_intro. by apply fsa_mono. Qed.
 End fsa.
 
 Definition pvs_fsa {Λ Σ} : FSA Λ Σ () := λ E Φ, (|={E}=> Φ ())%I.
+Arguments pvs_fsa _ _ _ _/.
+
 Instance pvs_fsa_prf {Λ Σ} : FrameShiftAssertion True (@pvs_fsa Λ Σ).
 Proof.
   rewrite /pvs_fsa.
   split; auto using pvs_mask_frame_mono, pvs_trans3, pvs_frame_r.
 Qed.
-
-Lemma pvs_mk_fsa {Λ Σ} E (P Q : iProp Λ Σ) :
-  P ⊢ pvs_fsa E (λ _, Q) → P ⊢ |={E}=> Q.
-Proof. by intros ?. Qed.

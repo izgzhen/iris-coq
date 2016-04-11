@@ -1,7 +1,7 @@
 From iris.algebra Require Import upred_tactics.
 From iris.program_logic Require Export hoare lifting.
 From iris.program_logic Require Import ownership.
-Import uPred.
+From iris.proofmode Require Import tactics pviewshifts.
 
 Local Notation "{{ P } } ef ?@ E {{ Φ } }" :=
   (default True%I ef (λ e, ht E P e Φ))
@@ -29,23 +29,15 @@ Lemma ht_lift_step E1 E2
    (∀ e2 σ2 ef, {{ Φ2 e2 σ2 ef }} ef ?@ ⊤ {{ λ _, True }}))
   ⊢ {{ P }} e1 @ E1 {{ Ψ }}.
 Proof.
-  intros ?? Hsafe Hstep; apply: always_intro. apply impl_intro_l.
-  rewrite (assoc _ P) {1}/vs always_elim impl_elim_r pvs_always_r.
-  rewrite -(wp_lift_step E1 E2 φ _ e1 σ1) //; apply pvs_mono.
-  rewrite always_and_sep_r -assoc; apply sep_mono_r.
-  rewrite [(_ ∧ _)%I]later_intro -later_sep; apply later_mono.
-  apply forall_intro=>e2; apply forall_intro=>σ2; apply forall_intro=>ef.
-  do 3 rewrite (forall_elim e2) (forall_elim σ2) (forall_elim ef).
-  apply wand_intro_l; rewrite !always_and_sep_l.
-  (* Apply the view shift. *)
-  rewrite (assoc _ _ P') -(assoc _ _ _ P') assoc.
-  rewrite {1}/vs -always_wand_impl always_elim wand_elim_r.
-  rewrite pvs_frame_r; apply pvs_mono.
-  (* Now we're almost done. *)
-  sep_split left: [Φ1 _ _ _; {{ Φ1 _ _ _ }} e2 @ E1 {{ Ψ }}]%I.
-  - rewrite {1}/ht -always_wand_impl always_elim wand_elim_r //.
-  - destruct ef as [e'|]; simpl; [|by apply const_intro].
-    rewrite {1}/ht -always_wand_impl always_elim wand_elim_r //.
+  iIntros {?? Hsafe Hstep} "#(#Hvs&HΦ&He2&Hef) ! HP".
+  iApply (wp_lift_step E1 E2 φ _ e1 σ1); auto.
+  iPvs "Hvs" "HP" as "[Hσ HP]"; first set_solver.
+  iPvsIntro. iNext. iSplitL "Hσ"; [done|iIntros {e2 σ2 ef} "[#Hφ Hown]"].
+  iSpecialize "HΦ" {e2 σ2 ef} "! -". by iFrame "Hφ HP Hown".
+  iPvs "HΦ" as "[H1 H2]"; first by set_solver.
+  iPvsIntro. iSplitL "H1".
+  - by iApply "He2" "!".
+  - destruct ef as [e|]; last done. by iApply "Hef" {_ _ (Some e)} "!".
 Qed.
 
 Lemma ht_lift_atomic_step
@@ -56,24 +48,19 @@ Lemma ht_lift_atomic_step
   (∀ e2 σ2 ef, {{ ■ φ e2 σ2 ef ★ P }} ef ?@ ⊤ {{ λ _, True }}) ⊢
   {{ ▷ ownP σ1 ★ ▷ P }} e1 @ E {{ λ v, ∃ σ2 ef, ownP σ2 ★ ■ φ (of_val v) σ2 ef }}.
 Proof.
-  intros ? Hsafe Hstep; set (φ' e σ ef := is_Some (to_val e) ∧ φ e σ ef).
-  rewrite -(ht_lift_step E E φ'  _ P
+  iIntros {? Hsafe Hstep} "#Hef".
+  set (φ' e σ ef := is_Some (to_val e) ∧ φ e σ ef).
+  iApply (ht_lift_step E E φ'  _ P
     (λ e2 σ2 ef, ownP σ2 ★ ■ (φ' e2 σ2 ef))%I
     (λ e2 σ2 ef, ■ φ e2 σ2 ef ★ P)%I);
     try by (rewrite /φ'; eauto using atomic_not_val, atomic_step).
-  apply and_intro; [by rewrite -vs_reflexive; apply const_intro|].
-  apply and_intro; [|apply and_intro; [|done]].
-  - apply forall_mono=>e2; apply forall_mono=>σ2; apply forall_mono=>ef.
-    rewrite -vs_impl; apply: always_intro. apply impl_intro_l.
-    rewrite and_elim_l !assoc; apply sep_mono; last done.
-    rewrite -!always_and_sep_l -!always_and_sep_r; apply const_elim_l=>-[??].
-    by repeat apply and_intro; try apply const_intro.
-  - apply forall_mono=>e2; apply forall_mono=>σ2; apply forall_mono=>ef.
-    apply (always_intro _ _), impl_intro_l; rewrite and_elim_l.
-    rewrite -always_and_sep_r; apply const_elim_r=>-[[v Hv] ?].
-    rewrite -(of_to_val e2 v) // -wp_value'; [].
-    rewrite -(exist_intro σ2) -(exist_intro ef) (of_to_val e2) //.
-    by rewrite -always_and_sep_r; apply and_intro; try apply const_intro.
+  repeat iSplit.
+  - by iApply vs_reflexive.
+  - iIntros {e2 σ2 ef} "! (#Hφ&Hown&HP)"; iPvsIntro.
+    iSplitL "Hown". by iSplit. iSplit. by iPure "Hφ" as [_ ?]. done.
+  - iIntros {e2 σ2 ef} "! [Hown #Hφ]"; iPure "Hφ" as [[v2 <-%of_to_val] ?].
+    iApply wp_value'. iExists σ2, ef. by iSplit.
+  - done.
 Qed.
 
 Lemma ht_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) P P' Ψ e1 :
@@ -84,16 +71,11 @@ Lemma ht_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) P P' Ψ e
    (∀ e2 ef, {{ ■ φ e2 ef ★ P' }} ef ?@ ⊤ {{ λ _, True }}))
   ⊢ {{ ▷(P ★ P') }} e1 @ E {{ Ψ }}.
 Proof.
-  intros ? Hsafe Hstep; apply: always_intro. apply impl_intro_l.
-  rewrite -(wp_lift_pure_step E φ _ e1) //.
-  rewrite [(_ ∧ ∀ _, _)%I]later_intro -later_and; apply later_mono.
-  apply forall_intro=>e2; apply forall_intro=>ef; apply impl_intro_l.
-  do 2 rewrite (forall_elim e2) (forall_elim ef).
-  rewrite always_and_sep_l !always_and_sep_r {1}(always_sep_dup (■ _)).
-  sep_split left: [■ φ _ _; P; {{ ■ φ _ _ ★ P }} e2 @ E {{ Ψ }}]%I.
-  - rewrite assoc {1}/ht -always_wand_impl always_elim wand_elim_r //.
-  - destruct ef as [e'|]; simpl; [|by apply const_intro].
-    rewrite assoc {1}/ht -always_wand_impl always_elim wand_elim_r //.
+  iIntros {? Hsafe Hstep} "[#He2 #Hef] ! HP".
+  iApply (wp_lift_pure_step E φ _ e1); auto.
+  iNext; iIntros {e2 ef Hφ}. iDestruct "HP" as "[HP HP']"; iSplitL "HP".
+  - iApply "He2" "!"; by iSplit.
+  - destruct ef as [e|]; last done. iApply "Hef" {_ (Some e)} "!"; by iSplit.
 Qed.
 
 Lemma ht_lift_pure_det_step
@@ -104,18 +86,11 @@ Lemma ht_lift_pure_det_step
   ({{ P }} e2 @ E {{ Ψ }} ∧ {{ P' }} ef ?@ ⊤ {{ λ _, True }})
   ⊢ {{ ▷(P ★ P') }} e1 @ E {{ Ψ }}.
 Proof.
-  intros ? Hsafe Hdet.
-  rewrite -(ht_lift_pure_step _ (λ e2' ef', e2 = e2' ∧ ef = ef')); eauto.
-  apply and_mono.
-  - apply forall_intro=>e2'; apply forall_intro=>ef'.
-    apply: always_intro. apply impl_intro_l.
-    rewrite -always_and_sep_l -assoc; apply const_elim_l=>-[??]; subst.
-    by rewrite /ht always_elim impl_elim_r.
-  - apply forall_intro=>e2'; apply forall_intro=>ef'.
-    destruct ef' as [e'|]; simpl; [|by apply const_intro].
-    apply: always_intro. apply impl_intro_l.
-    rewrite -always_and_sep_l -assoc; apply const_elim_l=>-[??]; subst.
-    by rewrite /= /ht always_elim impl_elim_r.
+  iIntros {? Hsafe Hdet} "[#He2 #Hef]".
+  iApply (ht_lift_pure_step _ (λ e2' ef', e2 = e2' ∧ ef = ef')); eauto.
+  iSplit; iIntros {e2' ef'}.
+  - iIntros "! [#He ?]"; iPure "He" as [-> ->]. by iApply "He2".
+  - destruct ef' as [e'|]; last done.
+    iIntros "! [#He ?]"; iPure "He" as [-> ->]. by iApply "Hef" "!".
 Qed.
-
 End lifting.

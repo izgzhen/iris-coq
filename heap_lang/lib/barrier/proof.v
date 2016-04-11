@@ -1,7 +1,8 @@
 From iris.prelude Require Import functions.
 From iris.algebra Require Import upred_big_op.
-From iris.program_logic Require Import sts saved_prop tactics.
-From iris.heap_lang Require Export heap wp_tactics.
+From iris.program_logic Require Import saved_prop.
+From iris.heap_lang Require Import proofmode.
+From iris.proofmode Require Import sts.
 From iris.heap_lang.lib.barrier Require Export barrier.
 From iris.heap_lang.lib.barrier Require Import protocol.
 Import uPred.
@@ -22,6 +23,7 @@ Proof. destruct H as (?&?&?). split; apply _. Qed.
 Section proof.
 Context {Σ : gFunctors} `{!heapG Σ, !barrierG Σ}.
 Context (heapN N : namespace).
+Implicit Types I : gset gname.
 Local Notation iProp := (iPropG heap_lang Σ).
 
 Definition ress (P : iProp) (I : gset gname) : iProp :=
@@ -30,11 +32,11 @@ Definition ress (P : iProp) (I : gset gname) : iProp :=
 
 Coercion state_to_val (s : state) : val :=
   match s with State Low _ => #0 | State High _ => #1 end.
-Arguments state_to_val !_ /.
+Arguments state_to_val !_ / : simpl nomatch.
 
 Definition state_to_prop (s : state) (P : iProp) : iProp :=
   match s with State Low _ => P | State High _ => True%I end.
-Arguments state_to_val !_ /.
+Arguments state_to_prop !_ _ / : simpl nomatch.
 
 Definition barrier_inv (l : loc) (P : iProp) (s : state) : iProp :=
   (l ↦ s ★ ress (state_to_prop s P) (state_I s))%I.
@@ -54,11 +56,7 @@ Global Instance barrier_ctx_persistent (γ : gname) (l : loc) (P : iProp) :
   PersistentP (barrier_ctx γ l P).
 Proof. apply _. Qed.
 
-(* TODO: Figure out if this has a "Global" or "Local" effect.
-   We want it to be Global. *)
 Typeclasses Opaque barrier_ctx send recv.
-
-Implicit Types I : gset gname.
 
 (** Setoids *)
 Global Instance ress_ne n : Proper (dist n ==> (=) ==> dist n) ress.
@@ -79,33 +77,19 @@ Proof. solve_proper. Qed.
 (** Helper lemmas *)
 Lemma ress_split i i1 i2 Q R1 R2 P I :
   i ∈ I → i1 ∉ I → i2 ∉ I → i1 ≠ i2 →
-  (saved_prop_own i2 R2 ★
-    saved_prop_own i1 R1 ★ saved_prop_own i Q ★
+  (saved_prop_own i Q ★ saved_prop_own i1 R1 ★ saved_prop_own i2 R2 ★
     (Q -★ R1 ★ R2) ★ ress P I)
   ⊢ ress P ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))).
 Proof.
-  intros. rewrite /ress !sep_exist_l. apply exist_elim=>Ψ.
-  rewrite -(exist_intro (<[i1:=R1]> (<[i2:=R2]> Ψ))).
-  rewrite [(Π★{set _} (λ _, saved_prop_own _ _))%I](big_sepS_delete _ I i) //.
-  do 4 (rewrite big_sepS_insert; last set_solver).
-  rewrite !fn_lookup_insert fn_lookup_insert_ne // !fn_lookup_insert.
-  set savedQ := _ i Q. set savedΨ := _ i (Ψ _).
-  sep_split left: [savedQ; savedΨ; Q -★ _; ▷ (_ -★ Π★{set I} _)]%I.
-  - rewrite !assoc saved_prop_agree /=. strip_later.
-    apply wand_intro_l. to_front [P; P -★ _]%I. rewrite wand_elim_r.
-    rewrite (big_sepS_delete _ I i) //.
-    sep_split right: [Π★{set _} _]%I.
-    + rewrite !assoc.
-      eapply wand_apply_r'; first done.
-      apply: (eq_rewrite (Ψ i) Q (λ x, x)%I); last by eauto with I.
-      rewrite eq_sym. eauto with I.
-    + apply big_sepS_mono; [done|] => j.
-      rewrite elem_of_difference not_elem_of_singleton=> -[??].
-      by do 2 (rewrite fn_lookup_insert_ne; last naive_solver).
-  - rewrite !assoc [(saved_prop_own i2 _ ★ _)%I]comm; apply sep_mono_r.
-    apply big_sepS_mono; [done|]=> j.
-    rewrite elem_of_difference not_elem_of_singleton=> -[??].
-    by do 2 (rewrite fn_lookup_insert_ne; last naive_solver).
+  iIntros {????} "(#HQ&#H1&#H2&HQR&H)"; iDestruct "H" as {Ψ} "[HPΨ HΨ]".
+  iDestruct (big_sepS_delete _ _ i) "HΨ" as "[#HΨi HΨ]"; first done.
+  iExists (<[i1:=R1]> (<[i2:=R2]> Ψ)). iSplitL "HQR HPΨ".
+  - iPoseProof (saved_prop_agree i Q (Ψ i)) "#" as "Heq"; first by iSplit.
+    iNext. iRewrite "Heq" in "HQR". iIntros "HP". iSpecialize "HPΨ" "HP". 
+    iDestruct (big_sepS_delete _ _ i) "HPΨ" as "[HΨ HPΨ]"; first done.
+    iDestruct "HQR" "HΨ" as "[HR1 HR2]".
+    rewrite !big_sepS_insert''; [|set_solver ..]. by iFrame "HR1 HR2".
+  - rewrite !big_sepS_insert'; [|set_solver ..]. by repeat iSplit.
 Qed.
 
 (** Actual proofs *)
@@ -114,176 +98,110 @@ Lemma newbarrier_spec (P : iProp) (Φ : val → iProp) :
   (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ (%l))
   ⊢ WP newbarrier #() {{ Φ }}.
 Proof.
-  intros HN. rewrite /newbarrier. wp_seq.
-  rewrite -wp_pvs. wp eapply wp_alloc; eauto with I ndisj.
-  apply forall_intro=>l. rewrite (forall_elim l). apply wand_intro_l.
-  rewrite !assoc. rewrite- pvs_wand_r; apply sep_mono_l.
-  (* The core of this proof: Allocating the STS and the saved prop. *)
-  eapply sep_elim_True_r; first by eapply (saved_prop_alloc (F:=idCF) _ P).
-  rewrite pvs_frame_l. apply pvs_strip_pvs. rewrite sep_exist_l.
-  apply exist_elim=>i.
-  trans (pvs ⊤ ⊤ (heap_ctx heapN ★
-    ▷ (barrier_inv l P (State Low {[ i ]})) ★ saved_prop_own i P)).
-  - rewrite -pvs_intro. cancel [heap_ctx heapN].
-    rewrite {1}[saved_prop_own _ _]always_sep_dup. cancel [saved_prop_own i P].
-    rewrite /barrier_inv /ress -later_intro. cancel [l ↦ #0]%I.
-    rewrite -(exist_intro (const P)) /=. rewrite -[saved_prop_own _ _](left_id True%I (★)%I).
-    by rewrite !big_sepS_singleton /= wand_diag -later_intro.
-  - rewrite (sts_alloc (barrier_inv l P) ⊤ N); last by eauto.
-    rewrite !pvs_frame_r !pvs_frame_l. 
-    rewrite pvs_trans'. apply pvs_strip_pvs. rewrite sep_exist_r sep_exist_l.
-    apply exist_elim=>γ.
-    rewrite /recv /send. rewrite -(exist_intro γ) -(exist_intro P).
-    rewrite -(exist_intro P) -(exist_intro i) -(exist_intro γ).
-    rewrite always_and_sep_l wand_diag later_True right_id.
-    rewrite [heap_ctx _]always_sep_dup [sts_ctx _ _ _]always_sep_dup.
-    rewrite /barrier_ctx const_equiv // left_id.
-    ecancel_pvs [saved_prop_own i _; heap_ctx _; heap_ctx _;
-                 sts_ctx _ _ _; sts_ctx _ _ _].
-    rewrite (sts_own_weaken ⊤ _ _ (i_states i ∩ low_states) _ 
-                            ({[ Change i ]} ∪ {[ Send ]})).
-    + apply pvs_mono.
-      rewrite -sts_ownS_op; eauto using i_states_closed, low_states_closed.
-      set_solver.
-    + intros []; set_solver.
+  iIntros {HN} "[#? HΦ]".
+  rewrite /newbarrier. wp_seq. iApply wp_pvs. wp_alloc l as "Hl".
+  iApply "HΦ".
+  iPvs (saved_prop_alloc (F:=idCF) _ P) as {γ} "#?".
+  iPvs (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}))
+    "-" as {γ'} "[#? Hγ']"; eauto.
+  { iNext. iFrame "Hl". iExists (const P). rewrite !big_sepS_singleton /=.
+    iSplit; [|done]. by iNext; iIntros "?". }
+  iAssert (barrier_ctx γ' l P)%I as "#?".
+  { rewrite /barrier_ctx. by repeat iSplit. }
+  iPvsAssert (sts_ownS γ' (i_states γ) {[Change γ]}
+    ★ sts_ownS γ' low_states {[Send]})%I as "[Hr Hs]" with "-".
+  { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
     + set_solver.
-    + auto using sts.closed_op, i_states_closed, low_states_closed.
+    + iApply sts_own_weaken "Hγ'";
+        auto using sts.closed_op, i_states_closed, low_states_closed;
+        set_solver. }
+  iPvsIntro. rewrite /recv /send. iSplitL "Hr".
+  - iExists γ', P, P, γ. iFrame "Hr". repeat iSplit; auto. iNext; by iIntros "?".
+  - iExists γ'. by iSplit.
 Qed.
 
 Lemma signal_spec l P (Φ : val → iProp) :
   (send l P ★ P ★ Φ #()) ⊢ WP signal (%l) {{ Φ }}.
 Proof.
-  rewrite /signal /send /barrier_ctx. rewrite sep_exist_r.
-  apply exist_elim=>γ. rewrite -!assoc. apply const_elim_sep_l=>?. wp_let.
-  (* I think some evars here are better than repeating *everything* *)
-  eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
-    eauto with I ndisj.
-  ecancel [sts_ownS γ _ _]. 
-  apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
-  apply const_elim_sep_l=>Hs. destruct p; last done.
-  rewrite {1}/barrier_inv =>/={Hs}. rewrite later_sep.
-  eapply wp_store with (v' := #0); eauto with I ndisj. 
-  strip_later. cancel [l ↦ #0]%I.
-  apply wand_intro_l. rewrite -(exist_intro (State High I)).
-  rewrite -(exist_intro ∅). rewrite const_equiv /=; last by eauto using signal_step.
-  rewrite left_id -later_intro {2}/barrier_inv -!assoc. apply sep_mono_r.
-  sep_split right: [Φ _]; last first.
-  { apply wand_intro_l. eauto with I. }
-  (* Now we come to the core of the proof: Updating from waiting to ress. *)
-  rewrite /ress sep_exist_r. apply exist_mono=>{Φ} Φ.
-  ecancel [Π★{set I} (λ _, saved_prop_own _ _)]%I. strip_later.
-  rewrite wand_True. eapply wand_apply_l'; eauto with I.
+  rewrite /signal /send /barrier_ctx.
+  iIntros "(Hs&HP&HΦ)"; iDestruct "Hs" as {γ} "[#(%&Hh&Hsts) Hγ]". wp_let.
+  iSts γ as [p I]; iDestruct "Hγ" as "[Hl Hr]".
+  wp_store. destruct p; [|done].
+  iExists (State High I), (∅ : set token).
+  iSplit; [iPureIntro; by eauto using signal_step|].
+  iSplitR "HΦ"; [iNext|by iIntros "?"].
+  rewrite {2}/barrier_inv /ress /=; iFrame "Hl".
+  iDestruct "Hr" as {Ψ} "[? Hsp]"; iExists Ψ; iFrame "Hsp".
+  iNext; iIntros "_"; by iApply "Hr".
 Qed.
 
 Lemma wait_spec l P (Φ : val → iProp) :
   (recv l P ★ (P -★ Φ #())) ⊢ WP wait (%l) {{ Φ }}.
 Proof.
-  rename P into R. wp_rec.
-  rewrite {1}/recv /barrier_ctx. rewrite !sep_exist_r.
-  apply exist_elim=>γ. rewrite !sep_exist_r. apply exist_elim=>P.
-  rewrite !sep_exist_r. apply exist_elim=>Q. rewrite !sep_exist_r.
-  apply exist_elim=>i. rewrite -!(assoc (★)%I). apply const_elim_sep_l=>?.
-  wp_focus (! _)%E.
-  (* I think some evars here are better than repeating *everything* *)
-  eapply (sts_fsaS _ (wp_fsa _)) with (N0:=N) (γ0:=γ); simpl;
-    eauto with I ndisj.
-  ecancel [sts_ownS γ _ _].
-  apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
-  apply const_elim_sep_l=>Hs.
-  rewrite {1}/barrier_inv =>/=. rewrite later_sep.
-  eapply wp_load; eauto with I ndisj.
-  ecancel [▷ l ↦{_} _]%I. strip_later.
-  apply wand_intro_l. destruct p.
-  { (* a Low state. The comparison fails, and we recurse. *)
-    rewrite -(exist_intro (State Low I)) -(exist_intro {[ Change i ]}).
-    rewrite [(■ sts.steps _ _ )%I]const_equiv /=; last by apply rtc_refl.
-    rewrite left_id -[(▷ barrier_inv _ _ _)%I]later_intro {3}/barrier_inv.
-    rewrite -!assoc. apply sep_mono_r, sep_mono_r, wand_intro_l.
-    wp_op; first done. intros _. wp_if. rewrite !assoc.
-    rewrite -always_wand_impl always_elim.
-    rewrite -{2}pvs_wp. rewrite -pvs_wand_r; apply sep_mono_l.
-    rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro Q) -(exist_intro i).
-    rewrite const_equiv // left_id -later_intro.
-    ecancel_pvs [heap_ctx _; saved_prop_own _ _; Q -★ _; R -★ _; sts_ctx _ _ _]%I.
-    apply sts_own_weaken; eauto using i_states_closed. }
-  (* a High state: the comparison succeeds, and we perform a transition and
-     return to the client *)
-  rewrite [(_ ★ □ (_ → _ ))%I]sep_elim_l.
-  rewrite -(exist_intro (State High (I ∖ {[ i ]}))) -(exist_intro ∅).
-  change (i ∈ I) in Hs.
-  rewrite const_equiv /=; last by eauto using wait_step.
-  rewrite left_id -[(▷ barrier_inv _ _ _)%I]later_intro {2}/barrier_inv.
-  rewrite -!assoc. apply sep_mono_r. rewrite /ress.
-  rewrite !sep_exist_r. apply exist_mono=>Ψ.
-  rewrite !(big_sepS_delete _ I i) //= !wand_True later_sep.
-  ecancel [▷ Π★{set _} Ψ; Π★{set _} (λ _, saved_prop_own _ _)]%I.
-  apply wand_intro_l.  set savedΨ := _ i (Ψ _). set savedQ := _ i Q.
-  to_front [savedΨ; savedQ]. rewrite saved_prop_agree /=.
-  wp_op; [|done]=> _. wp_if. rewrite -pvs_intro. rewrite !assoc. eapply wand_apply_r'; first done.
-  eapply wand_apply_r'; first done.
-  apply: (eq_rewrite (Ψ i) Q (λ x, x)%I); by eauto with I.
+  rename P into R; rewrite /recv /barrier_ctx.
+  iIntros "[Hr HΦ]"; iDestruct "Hr" as {γ P Q i} "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
+  iLöb "Hγ HQR HΦ" as "IH". wp_rec. wp_focus (! _)%E.
+  iSts γ as [p I]; iDestruct "Hγ" as "[Hl Hr]".
+  wp_load. destruct p.
+  - (* a Low state. The comparison fails, and we recurse. *)
+    iExists (State Low I), {[ Change i ]}; iSplit; [done|iSplitL "Hl Hr"].
+    { iNext. rewrite {2}/barrier_inv /=. by iFrame "Hl". }
+    iIntros "Hγ".
+    iPvsAssert (sts_ownS γ (i_states i) {[Change i]})%I as "Hγ" with "[Hγ]".
+    { iApply sts_own_weaken "Hγ"; eauto using i_states_closed. }
+    wp_op=> ?; simplify_eq; wp_if. iApply "IH" "Hγ [HQR] HΦ". by iNext.
+  - (* a High state: the comparison succeeds, and we perform a transition and
+    return to the client *)
+    iExists (State High (I ∖ {[ i ]})), (∅ : set token).
+    iSplit; [iPureIntro; by eauto using wait_step|].
+    iDestruct "Hr" as {Ψ} "[HΨ Hsp]".
+    iDestruct (big_sepS_delete _ _ i) "Hsp" as "[#HΨi Hsp]"; first done.
+    iAssert (▷ Ψ i ★ ▷ Π★{set (I ∖ {[i]})} Ψ)%I as "[HΨ HΨ']" with "[HΨ]".
+    { iNext. iApply (big_sepS_delete _ _ i); first done. by iApply "HΨ". }
+    iSplitL "HΨ' Hl Hsp"; [iNext|].
+    + rewrite {2}/barrier_inv /=; iFrame "Hl".
+      iExists Ψ; iFrame "Hsp". iNext; by iIntros "_".
+    + iPoseProof (saved_prop_agree i Q (Ψ i)) "#" as "Heq"; first by iSplit.
+      iIntros "_". wp_op=> ?; simplify_eq/=; wp_if.
+      iPvsIntro. iApply "HΦ". iApply "HQR". by iRewrite "Heq".
 Qed.
 
 Lemma recv_split E l P1 P2 :
-  nclose N ⊆ E → 
-  recv l (P1 ★ P2) ⊢ |={E}=> recv l P1 ★ recv l P2.
+  nclose N ⊆ E → recv l (P1 ★ P2) ⊢ |={E}=> recv l P1 ★ recv l P2.
 Proof.
-  rename P1 into R1. rename P2 into R2. intros HN.
-  rewrite {1}/recv /barrier_ctx. 
-  apply exist_elim=>γ. rewrite sep_exist_r.  apply exist_elim=>P. 
-  apply exist_elim=>Q. apply exist_elim=>i. rewrite -!(assoc (★)%I).
-  apply const_elim_sep_l=>?. rewrite -pvs_trans'.
-  (* I think some evars here are better than repeating *everything* *)
-  eapply pvs_mk_fsa, (sts_fsaS _ pvs_fsa) with (N0:=N) (γ0:=γ); simpl;
-    eauto with I ndisj.
-  ecancel [sts_ownS γ _ _].
-  apply forall_intro=>-[p I]. apply wand_intro_l. rewrite -!assoc.
-  apply const_elim_sep_l=>Hs. rewrite /pvs_fsa.
-  eapply sep_elim_True_l.
-  { eapply saved_prop_alloc_strong with (x := R1) (G := I). }
-  rewrite pvs_frame_r. apply pvs_strip_pvs. rewrite sep_exist_r.
-  apply exist_elim=>i1. rewrite always_and_sep_l. rewrite -assoc.
-  apply const_elim_sep_l=>Hi1. eapply sep_elim_True_l.
-  { eapply saved_prop_alloc_strong with (x := R2) (G := I ∪ {[ i1 ]}). }
-  rewrite pvs_frame_r. apply pvs_mono. rewrite sep_exist_r.
-  apply exist_elim=>i2. rewrite always_and_sep_l. rewrite -assoc.
-  apply const_elim_sep_l=>Hi2.
-  rewrite ->not_elem_of_union, elem_of_singleton in Hi2.
-  destruct Hi2 as [Hi2 Hi12]. change (i ∈ I) in Hs.
-  (* Update to new state. *)
-  rewrite -(exist_intro (State p ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))))).
-  rewrite -(exist_intro ({[Change i1 ]} ∪ {[ Change i2 ]})).
-  rewrite [(■ sts.steps _ _)%I]const_equiv; last by eauto using split_step.
-  rewrite left_id {1 3}/barrier_inv.
-  (* FIXME ssreflect rewrite fails if there are evars around. Also, this is very slow because we don't have a proof mode. *)
-  rewrite -(ress_split _ _ _ Q R1 R2); [|done..].
-  rewrite {1}[saved_prop_own i1 _]always_sep_dup.
-  rewrite {1}[saved_prop_own i2 _]always_sep_dup !later_sep.
-  rewrite -![(▷ saved_prop_own _ _)%I]later_intro.
-  ecancel [▷ l ↦ _; saved_prop_own i1 _; saved_prop_own i2 _ ;
-           ▷ ress _ _ ; ▷ (Q -★ _) ; saved_prop_own i _]%I. 
-  apply wand_intro_l. rewrite !assoc. rewrite /recv.
-  rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R1) -(exist_intro i1).
-  rewrite -(exist_intro γ) -(exist_intro P) -(exist_intro R2) -(exist_intro i2).
-  rewrite [heap_ctx _]always_sep_dup [sts_ctx _ _ _]always_sep_dup.
-  rewrite /barrier_ctx const_equiv // left_id.
-  ecancel_pvs [saved_prop_own i1 _; saved_prop_own i2 _; heap_ctx _; heap_ctx _;
-               sts_ctx _ _ _; sts_ctx _ _ _].
-  rewrite !wand_diag later_True !right_id.
-  rewrite -sts_ownS_op; eauto using i_states_closed.
-  - apply sts_own_weaken;
-      eauto using sts.closed_op, i_states_closed. set_solver.
-  - set_solver.
+  rename P1 into R1; rename P2 into R2. rewrite {1}/recv /barrier_ctx.
+  iIntros {?} "Hr"; iDestruct "Hr" as {γ P Q i} "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
+  iApply pvs_trans'.
+  iSts γ as [p I]; iDestruct "Hγ" as "[Hl Hr]".
+  iPvs (saved_prop_alloc_strong _ (R1: ∙%CF iProp) I) as {i1} "[% #Hi1]".
+  iPvs (saved_prop_alloc_strong _ (R2: ∙%CF iProp) (I ∪ {[i1]}))
+    as {i2} "[Hi2' #Hi2]"; iPure "Hi2'" as Hi2; iPvsIntro.
+  rewrite ->not_elem_of_union, elem_of_singleton in Hi2; destruct Hi2.
+  iExists (State p ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]})))).
+  iExists ({[Change i1 ]} ∪ {[ Change i2 ]}).
+  iSplit; [by eauto using split_step|iSplitL].
+  - iNext. rewrite {2}/barrier_inv /=. iFrame "Hl".
+    iApply (ress_split _ _ _ Q R1 R2); eauto. iFrame "Hr HQR". by repeat iSplit.
+  - iIntros "Hγ".
+    iPvsAssert (sts_ownS γ (i_states i1) {[Change i1]}
+      ★ sts_ownS γ (i_states i2) {[Change i2]})%I as "[Hγ1 Hγ2]" with "-".
+    { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
+      + set_solver.
+      + iApply sts_own_weaken "Hγ"; eauto using sts.closed_op, i_states_closed.
+        set_solver. }
+    iPvsIntro; iSplitL "Hγ1"; rewrite /recv /barrier_ctx.
+    + iExists γ, P, R1, i1. iFrame "Hγ1 Hi1". repeat iSplit; auto.
+      by iNext; iIntros "?".
+    + iExists γ, P, R2, i2. iFrame "Hγ2 Hi2". repeat iSplit; auto.
+      by iNext; iIntros "?".
 Qed.
 
-Lemma recv_weaken l P1 P2 :
-  (P1 -★ P2) ⊢ (recv l P1 -★ recv l P2).
+Lemma recv_weaken l P1 P2 : (P1 -★ P2) ⊢ (recv l P1 -★ recv l P2).
 Proof.
-  apply wand_intro_l. rewrite /recv. rewrite sep_exist_r. apply exist_mono=>γ.
-  rewrite sep_exist_r. apply exist_mono=>P. rewrite sep_exist_r.
-  apply exist_mono=>Q. rewrite sep_exist_r. apply exist_mono=>i.
-  ecancel [barrier_ctx _ _ _; sts_ownS _ _ _; saved_prop_own _ _].
-  strip_later. apply wand_intro_l. by rewrite !assoc wand_elim_r wand_elim_r.
+  rewrite /recv.
+  iIntros "HP HP1"; iDestruct "HP1" as {γ P Q i} "(#Hctx&Hγ&Hi&HP1)".
+  iExists γ, P, Q, i; iFrame "Hctx Hγ Hi".
+  iNext; iIntros "HQ". by iApply "HP"; iApply "HP1".
 Qed.
 
 Lemma recv_mono l P1 P2 :
@@ -291,5 +209,6 @@ Lemma recv_mono l P1 P2 :
 Proof.
   intros HP%entails_wand. apply wand_entails. rewrite HP. apply recv_weaken.
 Qed.
-
 End proof.
+
+Typeclasses Opaque barrier_ctx send recv.

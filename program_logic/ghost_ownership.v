@@ -69,8 +69,8 @@ Proof.
 Qed.
 Lemma own_alloc a E : ✓ a → True ⊢ (|={E}=> ∃ γ, own γ a).
 Proof.
-  intros Ha. rewrite (own_alloc_strong a E ∅) //; []. apply pvs_mono.
-  apply exist_mono=>?. eauto with I.
+  intros Ha. rewrite (own_alloc_strong a E ∅) //; [].
+  apply pvs_mono, exist_mono=>?. eauto with I.
 Qed.
 
 Lemma own_updateP P γ a E :

@@ -26,7 +26,7 @@ Proof. intros n ???. apply exist_ne=>i. by apply and_ne, ownI_contractive. Qed.
 Global Instance inv_persistent N P : PersistentP (inv N P).
 Proof. rewrite /inv; apply _. Qed.
 
-Lemma always_inv N P : (□ inv N P) ⊣⊢ inv N P.
+Lemma always_inv N P : □ inv N P ⊣⊢ inv N P.
 Proof. by rewrite always_always. Qed.
 
 (** Invariants can be opened around any frame-shifting assertion. *)

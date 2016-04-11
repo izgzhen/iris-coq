@@ -974,19 +974,6 @@ Lemma later_wand P Q : ▷ (P -★ Q) ⊢ (▷ P -★ ▷ Q).
 Proof. apply wand_intro_r;rewrite -later_sep; apply later_mono,wand_elim_l. Qed.
 Lemma later_iff P Q : ▷ (P ↔ Q) ⊢ (▷ P ↔ ▷ Q).
 Proof. by rewrite /uPred_iff later_and !later_impl. Qed.
-Lemma löb_strong P Q : (P ∧ ▷ Q) ⊢ Q → P ⊢ Q.
-Proof.
-  intros Hlöb. apply impl_entails. rewrite -(löb (P → Q)).
-  apply entails_impl, impl_intro_l. rewrite -{2}Hlöb.
-  apply and_intro; first by eauto.
-  by rewrite {1}(later_intro P) later_impl impl_elim_r.
-Qed.
-Lemma löb_strong_sep P Q : (P ★ ▷ (P -★ Q)) ⊢ Q → P ⊢ Q.
-Proof.
-  move/wand_intro_l=>Hlöb. apply impl_entails.
-  rewrite -[(_ → _)%I]always_elim. apply löb_strong.
-  by rewrite left_id -always_wand_impl -always_later Hlöb.
-Qed.
 
 (* Own *)
 Lemma ownM_op (a1 a2 : M) :

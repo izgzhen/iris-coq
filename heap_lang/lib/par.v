@@ -1,5 +1,5 @@
 From iris.heap_lang Require Export heap spawn.
-From iris.heap_lang Require Import wp_tactics notation.
+From iris.heap_lang Require Import proofmode notation.
 Import uPred.
 
 Definition par : val :=
@@ -25,15 +25,12 @@ Lemma par_spec (Ψ1 Ψ2 : val → iProp) e (f1 f2 : val) (Φ : val → iProp) :
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
   ⊢ WP par e {{ Φ }}.
 Proof.
-  intros. rewrite /par. ewp (by eapply wp_value). wp_let. wp_proj.
-  ewp (eapply spawn_spec; wp_done).
-  apply sep_mono_r, sep_mono_r.
-  apply forall_intro=>h. apply wand_intro_l. wp_let. wp_proj.
-  wp_focus (f2 _). rewrite wp_frame_r wp_frame_l. apply wp_mono=>v2. wp_let.
-  ewp (by eapply join_spec).
-  apply sep_mono_r, forall_intro=>v1; apply wand_intro_l.
-  rewrite (forall_elim v1) (forall_elim v2). rewrite assoc wand_elim_r.
-  wp_let. apply wp_value; wp_done.
+  iIntros {??} "(#Hh&Hf1&Hf2&HΦ)". wp_value. wp_let. wp_proj.
+  wp_apply spawn_spec; try wp_done. iFrame "Hf1 Hh".
+  iIntros {l} "Hl". wp_let. wp_proj. wp_focus (f2 _).
+  iApply wp_wand_l; iFrame "Hf2"; iIntros {v} "H2". wp_let.
+  wp_apply join_spec; iFrame "Hl". iIntros {w} "H1".
+  iSpecialize "HΦ" "-"; first by iSplitL "H1". wp_let. by iPvsIntro.
 Qed.
 
 Lemma wp_par (Ψ1 Ψ2 : val → iProp) (e1 e2 : expr []) (Φ : val → iProp) :
@@ -42,6 +39,7 @@ Lemma wp_par (Ψ1 Ψ2 : val → iProp) (e1 e2 : expr []) (Φ : val → iProp) :
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
   ⊢ WP ParV e1 e2 {{ Φ }}.
 Proof.
-  intros. rewrite -par_spec //. repeat apply sep_mono; done || by wp_seq.
+  iIntros {?} "(#Hh&H1&H2&H)". iApply par_spec; auto.
+  iFrame "Hh H". iSplitL "H1"; by wp_let.
 Qed.
 End proof.

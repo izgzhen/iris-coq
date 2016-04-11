@@ -9,33 +9,37 @@ Ltac wp_bind K :=
   | _ => etrans; [|fast_by apply (wp_bind K)]; simpl
   end.
 
-Ltac wp_finish :=
-  intros_revert ltac:(
-    try strip_later;
-    match goal with
-    | |- _ ⊢ wp _ _ _ =>
-      etrans; [|eapply wp_value_pvs; fast_done]; lazy beta;
-      (* sometimes, we will have to do a final view shift, so only apply
-      pvs_intro if we obtain a consecutive wp *)
-      try (etrans; [|apply pvs_intro];
-           match goal with |- _ ⊢ wp _ _ _ => simpl | _ => fail end)
-    | _ => idtac
-    end).
-
 Ltac wp_done := rewrite -/of_val /= ?to_of_val; fast_done.
 
+Ltac wp_value_head :=
+  match goal with
+  | |- _ ⊢ wp _ _ _ =>
+    etrans; [|eapply wp_value_pvs; wp_done]; lazy beta;
+    (* sometimes, we will have to do a final view shift, so only apply
+    pvs_intro if we obtain a consecutive wp *)
+    try (
+      etrans; [|apply pvs_intro];
+      match goal with |- _ ⊢ wp _ _ _ => simpl | _ => fail end)
+  end.
+
+Ltac wp_finish := intros_revert ltac:(
+  rewrite -/of_val /= ?to_of_val; try strip_later; try wp_value_head).
+
+Tactic Notation "wp_value" :=
+  match goal with
+  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
+    wp_bind K; wp_value_head)
+  end.
+
 Tactic Notation "wp_rec" :=
-  löb ltac:(
-    (* Find the redex and apply wp_rec *)
-    idtac; (* <https://coq.inria.fr/bugs/show_bug.cgi?id=4584> *)
-    lazymatch goal with
-    | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-      match eval hnf in e' with App ?e1 _ =>
+  lazymatch goal with
+  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
+    match eval hnf in e' with App ?e1 _ =>
 (* hnf does not reduce through an of_val *)
 (*      match eval hnf in e1 with Rec _ _ _ => *)
-      wp_bind K; etrans; [|eapply wp_rec'; wp_done]; simpl_subst; wp_finish
+    wp_bind K; etrans; [|eapply wp_rec'; wp_done]; simpl_subst; wp_finish
 (*      end *) end)
-     end).
+   end.
 
 Tactic Notation "wp_lam" :=
   match goal with
@@ -96,13 +100,3 @@ Tactic Notation "wp_focus" open_constr(efoc) :=
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match e' with efoc => unify e' efoc; wp_bind K end)
   end.
-
-Tactic Notation "wp" tactic(tac) :=
-  match goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    wp_bind K; tac; [try strip_later|..])
-  end.
-
-(* In case the precondition does not match.
-   TODO: Have one tactic unifying wp and ewp. *)
-Tactic Notation "ewp" tactic(tac) := wp (etrans; [|tac]).

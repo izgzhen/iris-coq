@@ -1,6 +1,6 @@
 (** This file is essentially a bunch of testcases. *)
 From iris.program_logic Require Import ownership hoare auth.
-From iris.heap_lang Require Import wp_tactics heap notation.
+From iris.heap_lang Require Import proofmode notation.
 Import uPred.
 
 Section LangTests.
@@ -26,12 +26,8 @@ Section LiftingTests.
   Lemma heap_e_spec E N :
      nclose N ⊆ E → heap_ctx N ⊢ WP heap_e @ E {{ λ v, v = #2 }}.
   Proof.
-    rewrite /heap_e=>HN. rewrite -(wp_mask_weaken N E) //.
-    wp eapply wp_alloc; eauto. apply forall_intro=>l; apply wand_intro_l.
-    wp_let. wp eapply wp_load; eauto with I. apply sep_mono_r, wand_intro_l.
-    wp_op. wp eapply wp_store; eauto with I. apply sep_mono_r, wand_intro_l.
-    wp_seq. wp eapply wp_load; eauto with I. apply sep_mono_r, wand_intro_l.
-      by apply const_intro.
+    iIntros {HN} "#?". rewrite /heap_e. iApply (wp_mask_weaken N); first done.
+    wp_alloc l as "Hl". wp_let. wp_load. wp_op. wp_store. wp_seq. by wp_load.
   Qed.
 
   Definition FindPred : val :=
@@ -43,30 +39,27 @@ Section LiftingTests.
       if: '"x" ≤ #0 then -^FindPred (-'"x" + #2) #0 else ^FindPred '"x" #0.
 
   Lemma FindPred_spec n1 n2 E Φ :
-    n1 < n2 → 
+    n1 < n2 →
     Φ #(n2 - 1) ⊢ WP FindPred #n2 #n1 @ E {{ Φ }}.
   Proof.
-    revert n1. wp_rec=> n1 Hn.
-    wp_let. wp_op. wp_let. wp_op=> ?; wp_if.
-    - rewrite (forall_elim (n1 + 1)) const_equiv; last omega.
-      by rewrite left_id -always_wand_impl always_elim wand_elim_r.
-    - rewrite -pvs_intro. assert (n1 = n2 - 1) as -> by omega; auto with I.
+    iIntros {Hn} "HΦ". iLöb {n1 Hn} "HΦ" as "IH".
+    wp_rec. wp_let. wp_op. wp_let. wp_op=> ?; wp_if.
+    - iApply "IH" "% HΦ". omega.
+    - iPvsIntro. by assert (n1 = n2 - 1) as -> by omega.
   Qed.
 
   Lemma Pred_spec n E Φ : ▷ Φ #(n - 1) ⊢ WP Pred #n @ E {{ Φ }}.
   Proof.
-    wp_lam. wp_op=> ?; wp_if.
+    iIntros "HΦ". wp_lam. wp_op=> ?; wp_if.
     - wp_op. wp_op.
-      ewp apply FindPred_spec; last omega.
+      wp_apply FindPred_spec; first omega.
       wp_op. by replace (n - 1) with (- (-n + 2 - 1)) by omega.
-    - by ewp apply FindPred_spec; eauto with omega.
+    - wp_apply FindPred_spec; eauto with omega.
   Qed.
 
   Lemma Pred_user E :
     (True : iProp) ⊢ WP let: "x" := Pred #42 in ^Pred '"x" @ E {{ λ v, v = #40 }}.
-  Proof.
-    intros. ewp apply Pred_spec. wp_let. ewp apply Pred_spec. auto with I.
-  Qed.
+  Proof. iIntros "". wp_apply Pred_spec. wp_let. by wp_apply Pred_spec. Qed.
 End LiftingTests.
 
 Section ClosedProofs.
@@ -75,8 +68,8 @@ Section ClosedProofs.
 
   Lemma heap_e_closed σ : {{ ownP σ : iProp }} heap_e {{ λ v, v = #2 }}.
   Proof.
-    apply ht_alt. rewrite (heap_alloc nroot ⊤); last by rewrite nclose_nroot.
-    apply wp_strip_pvs, exist_elim=> ?. rewrite and_elim_l.
-    rewrite -heap_e_spec; first by eauto with I. by rewrite nclose_nroot.
+    iProof. iIntros "! Hσ".
+    iPvs (heap_alloc nroot) "Hσ" as {h} "[? _]"; first by rewrite nclose_nroot.
+    by iApply heap_e_spec; first by rewrite nclose_nroot.
   Qed.
 End ClosedProofs.

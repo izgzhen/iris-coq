@@ -1,6 +1,7 @@
 From iris.program_logic Require Export hoare.
 From iris.heap_lang.lib.barrier Require Export barrier.
 From iris.heap_lang.lib.barrier Require Import proof.
+From iris.heap_lang Require Import proofmode.
 Import uPred.
 
 Section spec.
@@ -22,14 +23,11 @@ Proof.
   intros HN.
   exists (λ l, CofeMor (recv heapN N l)), (λ l, CofeMor (send heapN N l)).
   split_and?; simpl.
-  - intros P. apply: always_intro. apply impl_intro_r.
-    rewrite -(newbarrier_spec heapN N P) // always_and_sep_r.
-    apply sep_mono_r, forall_intro=>l; apply wand_intro_l.
-    by rewrite right_id -(exist_intro l) const_equiv // left_id.
-  - intros l P. apply ht_alt. by rewrite -signal_spec right_id.
-  - intros l P. apply ht_alt.
-    by rewrite -(wait_spec heapN N l P) wand_diag right_id.
-  - intros l P Q. apply vs_alt. rewrite -(recv_split heapN N N l P Q) //.
-  - intros l P Q. apply recv_weaken.
+  - iIntros {P} "#? ! _". iApply (newbarrier_spec _ _ P); first done.
+    iSplit; [done|]; iIntros {l} "?"; iExists l; by iSplit.
+  - iIntros {l P} "! [Hl HP]". by iApply signal_spec; iFrame "Hl HP".
+  - iIntros {l P} "! Hl". iApply wait_spec; iFrame "Hl". by iIntros "?".
+  - iIntros {l P Q} "! Hl". by iApply recv_split.
+  - apply recv_weaken.
 Qed.
 End spec.
