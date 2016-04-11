@@ -1,11 +1,12 @@
+(** Some derived lemmas for ectx-based languages *)
 From iris.program_logic Require Export ectx_language weakestpre lifting.
 From iris.program_logic Require Import ownership.
 
 Section wp.
 Context {expr val ectx state} {Λ : EctxLanguage expr val ectx state}.
 Context {Σ : iFunctor}.
-Implicit Types P : iProp (ectx_lang Λ) Σ.
-Implicit Types Φ : val → iProp (ectx_lang Λ) Σ.
+Implicit Types P : iProp (ectx_lang expr) Σ.
+Implicit Types Φ : val → iProp (ectx_lang expr) Σ.
 Implicit Types v : val.
 Implicit Types e : expr.
 Hint Resolve head_prim_reducible head_reducible_prim_step.
