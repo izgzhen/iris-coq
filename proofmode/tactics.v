@@ -4,7 +4,7 @@ From iris.proofmode Require Export notation.
 From iris.prelude Require Import stringmap.
 
 Declare Reduction env_cbv := cbv [
-  env_lookup env_lookup_delete env_delete env_app
+  env_lookup env_fold env_lookup_delete env_delete env_app
     env_replace env_split_go env_split
   decide (* operational classes *)
   sumbool_rec sumbool_rect (* sumbool *)
@@ -13,7 +13,7 @@ Declare Reduction env_cbv := cbv [
   string_eq_dec string_rec string_rect (* strings *)
   env_persistent env_spatial envs_persistent
   envs_lookup envs_lookup_delete envs_delete envs_app
-    envs_simple_replace envs_replace envs_split].
+    envs_simple_replace envs_replace envs_split envs_clear_spatial].
 Ltac env_cbv :=
   match goal with |- ?u => let v := eval env_cbv in u in change v end.
 
@@ -365,6 +365,8 @@ Tactic Notation "iApply" open_constr (H) "{" open_constr(x1) open_constr(x2)
   iSpecialize H { x1 x2 x3 x4 x5 x6 x7 x8 }; last iApply H Hs.
 
 (** * Revert *)
+Tactic Notation "iRevert" "★" := eapply tac_revert_spatial; env_cbv.
+
 Tactic Notation "iForallRevert" ident(x) :=
   match type of x with
   | _ : Prop => revert x; apply tac_pure_revert
@@ -753,60 +755,45 @@ Tactic Notation "iNext":=
     |let P := match goal with |- upred_tactics.StripLaterL ?P _ => P end in
      apply _ || fail "iNext:" P "does not contain laters"|].
 
-Tactic Notation "iLöb" "as" constr (H) :=
-  eapply tac_löb with _ H;
-    [reflexivity || fail "iLöb: non-empty spatial context"
-    |env_cbv; reflexivity || fail "iLöb:" H "not fresh"|].
+(* This is pretty ugly, but without Ltac support for manipulating lists of
+idents I do not know how to do this better. *)
+Ltac iLöbCore IH tac_before tac_after :=
+  match goal with
+  | |- of_envs ?Δ ⊢ _ =>
+     let Hs := constr:(rev (env_dom_list (env_spatial Δ))) in
+     iRevert ★; tac_before;
+     eapply tac_löb with _ IH;
+       [reflexivity
+       |env_cbv; reflexivity || fail "iLöb:" IH "not fresh"|];
+    tac_after;  iIntros Hs
+  end.
 
-Tactic Notation "iLöb" "{" ident(x1) "}" "as" constr (H) :=
-  iRevert { x1 }; iLöb as H; iIntros { x1 }.
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) "}" "as" constr (H) :=
-  iRevert { x1 x2 }; iLöb as H; iIntros { x1 x2 }.
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) "}" "as" constr (H) :=
-  iRevert { x1 x2 x3 }; iLöb as H; iIntros { x1 x2 x3 }.
+Tactic Notation "iLöb" "as" constr (IH) := iLöbCore IH idtac idtac.
+Tactic Notation "iLöb" "{" ident(x1) "}" "as" constr (IH) :=
+  iLöbCore IH ltac:(iRevert { x1 }) ltac:(iIntros { x1 }).
+Tactic Notation "iLöb" "{" ident(x1) ident(x2) "}" "as" constr (IH) :=
+  iLöbCore IH ltac:(iRevert { x1 x2 }) ltac:(iIntros { x1 x2 }).
+Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) "}" "as" constr (IH) :=
+  iLöbCore IH ltac:(iRevert { x1 x2 x3 }) ltac:(iIntros { x1 x2 x3 }).
 Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4) "}" "as"
-    constr (H):=
-  iRevert { x1 x2 x3 x4 }; iLöb as H; iIntros { x1 x2 x3 x4 }.
+    constr (IH):=
+  iLöbCore IH ltac:(iRevert { x1 x2 x3 x4 }) ltac:(iIntros { x1 x2 x3 x4 }).
 Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) "}" "as" constr (H) :=
-  iRevert { x1 x2 x3 x4 x5 }; iLöb as H; iIntros { x1 x2 x3 x4 x5 }.
+    ident(x5) "}" "as" constr (IH) :=
+  iLöbCore IH ltac:(iRevert { x1 x2 x3 x4 x5 })
+              ltac:(iIntros { x1 x2 x3 x4 x5 }).
 Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) "}" "as" constr (H) :=
-  iRevert { x1 x2 x3 x4 x5 x6 }; iLöb as H; iIntros { x1 x2 x3 x4 x5 x6 }.
+    ident(x5) ident(x6) "}" "as" constr (IH) :=
+  iLöbCore IH ltac:(iRevert { x1 x2 x3 x4 x5 x6 })
+              ltac:(iIntros { x1 x2 x3 x4 x5 x6 }).
 Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) ident(x7) "}" "as" constr (H) :=
-  iRevert { x1 x2 x3 x4 x5 x6 x7 }; iLöb as H; iIntros { x1 x2 x3 x4 x5 x6 x7 }.
+    ident(x5) ident(x6) ident(x7) "}" "as" constr (IH) :=
+  iLöbCore IH ltac:(iRevert { x1 x2 x3 x4 x5 x6 x7 })
+              ltac:(iIntros { x1 x2 x3 x4 x5 x6 x7 }).
 Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) ident(x7) ident(x8) "}" "as" constr (H) :=
-  iRevert { x1 x2 x3 x4 x5 x6 x7 x8 };
-    iLöb as H; iIntros { x1 x2 x3 x4 x5 x6 x7 x8 }.
-
-Tactic Notation "iLöb" constr(Hs) "as" constr (H) :=
-  iRevert Hs; iLöb as H; iIntros Hs.
-Tactic Notation "iLöb" "{" ident(x1) "}" constr(Hs) "as" constr (H) :=
-  iRevert { x1 } Hs; iLöb as H; iIntros { x1 } Hs.
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) "}" constr(Hs) "as" constr (H) :=
-  iRevert { x1 x2 } Hs; iLöb as H; iIntros { x1 x2 } Hs.
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) "}" constr(Hs) "as"
-    constr (H) :=
-  iRevert { x1 x2 x3 } Hs; iLöb as H; iIntros { x1 x2 x3 } Hs.
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4) "}"
-    constr(Hs) "as" constr (H) :=
-  iRevert { x1 x2 x3 x4 } Hs; iLöb as H; iIntros { x1 x2 x3 x4 } Hs.
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) "}" constr(Hs) "as" constr (H) :=
-  iRevert { x1 x2 x3 x4 x5 } Hs; iLöb as H; iIntros { x1 x2 x3 x4 x5 } Hs.
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) "}" constr(Hs) "as" constr (H) :=
-  iRevert { x1 x2 x3 x4 x5 x6 } Hs; iLöb as H; iIntros { x1 x2 x3 x4 x5 x6 } Hs.
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) ident(x7) "}" constr(Hs) "as" constr (H) :=
-  iRevert { x1 x2 x3 x4 x5 x6 x7 } Hs;
-    iLöb as H; iIntros { x1 x2 x3 x4 x5 x6 x7 } Hs.
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) ident(x7) ident(x8) "}" constr(Hs) "as" constr (H) :=
-  iRevert { x1 x2 x3 x4 x5 x6 x7 x8 } Hs;
-    iLöb as H; iIntros { x1 x2 x3 x4 x5 x6 x7 x8 } Hs.
+    ident(x5) ident(x6) ident(x7) ident(x8) "}" "as" constr (IH) :=
+  iLöbCore IH ltac:(iRevert { x1 x2 x3 x4 x5 x6 x7 x8 })
+              ltac:(iIntros { x1 x2 x3 x4 x5 x6 x7 x8 }).
 
 (** * Assert *)
 Tactic Notation "iAssert" constr(Q) "as" constr(pat) "with" constr(Hs) :=

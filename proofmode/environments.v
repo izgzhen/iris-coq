@@ -28,9 +28,18 @@ Inductive env_wf {A} : env A → Prop :=
 Fixpoint env_to_list {A} (E : env A) : list A :=
   match E with Enil => [] | Esnoc Γ _ x => x :: env_to_list Γ end.
 Coercion env_to_list : env >-> list.
+
 Instance env_dom {A} : Dom (env A) stringset :=
   fix go Γ := let _ : Dom _ _ := @go in
   match Γ with Enil => ∅ | Esnoc Γ i _ => {[ i ]} ∪ dom stringset Γ end.
+Fixpoint env_dom_list {A} (Γ : env A) : list string :=
+  match Γ with Enil => [] | Esnoc Γ i _ => i :: env_dom_list Γ end.
+
+Fixpoint env_fold {A B} (f : B → A → A) (x : A) (Γ : env B) : A :=
+  match Γ with
+  | Enil => x
+  | Esnoc Γ _ y => env_fold f (f y x) Γ
+  end.
 
 Fixpoint env_app {A} (Γapp : env A) (Γ : env A) : option (env A) :=
   match Γapp with

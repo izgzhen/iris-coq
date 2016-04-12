@@ -118,15 +118,21 @@ Definition parse (s : string) : option (list intro_pat) :=
 Ltac parse s :=
   lazymatch type of s with
   | list intro_pat => s
-  | string => lazymatch eval vm_compute in (parse s) with
-              | Some ?pats => pats | _ => fail "invalid list intro_pat" s
-              end
+  | list string =>
+     lazymatch eval vm_compute in (mjoin <$> mapM parse s) with
+     | Some ?pats => pats | _ => fail "invalid list intro_pat" s
+     end
+  | string =>
+     lazymatch eval vm_compute in (parse s) with
+     | Some ?pats => pats | _ => fail "invalid list intro_pat" s
+     end
   end.
 Ltac parse_one s :=
   lazymatch type of s with
   | intro_pat => s
-  | string => lazymatch eval vm_compute in (parse s) with
-              | Some [?pat] => pat | _ => fail "invalid intro_pat" s
-              end
+  | string =>
+     lazymatch eval vm_compute in (parse s) with
+     | Some [?pat] => pat | _ => fail "invalid intro_pat" s
+     end
   end.
 End intro_pat.

@@ -796,6 +796,12 @@ Proof.
 Qed.
 Lemma entails_wand P Q : (P ⊢ Q) → True ⊢ (P -★ Q).
 Proof. auto using wand_intro_l. Qed.
+Lemma wand_curry P Q R : (P -★ Q -★ R) ⊣⊢ (P ★ Q -★ R).
+Proof.
+  apply (anti_symm _).
+  - apply wand_intro_l. by rewrite (comm _ P) -assoc !wand_elim_r.
+  - do 2 apply wand_intro_l. by rewrite assoc (comm _ Q) wand_elim_r.
+Qed.
 
 Lemma sep_and P Q : (P ★ Q) ⊢ (P ∧ Q).
 Proof. auto. Qed.
