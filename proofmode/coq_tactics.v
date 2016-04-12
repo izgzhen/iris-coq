@@ -85,19 +85,12 @@ Definition envs_split {M}
 Definition envs_persistent {M} (Δ : envs M) :=
   if env_spatial Δ is Enil then true else false.
 
-Definition envs_clear_spatial {M} (Δ : envs M) : envs M :=
-  Envs (env_persistent Δ) Enil.
-
 (* Coq versions of the tactics *)
 Section tactics.
 Context {M : cmraT}.
 Implicit Types Γ : env (uPred M).
 Implicit Types Δ : envs M.
 Implicit Types P Q : uPred M.
-
-Lemma of_envs_def Δ :
-  of_envs Δ = (■ envs_wf Δ ★ □ Π∧ env_persistent Δ ★ Π★ env_spatial Δ)%I.
-Proof. done. Qed.
 
 Lemma envs_lookup_delete_Some Δ Δ' i p P :
   envs_lookup_delete i Δ = Some (p,P,Δ')
@@ -234,23 +227,9 @@ Proof.
       env_split_fresh_1, env_split_fresh_2.
 Qed.
 
-Lemma envs_clear_spatial_sound Δ :
-  Δ ⊢ (envs_clear_spatial Δ ★ Π★ env_spatial Δ)%I.
-Proof.
-  rewrite /of_envs /envs_clear_spatial /=; apply const_elim_sep_l=> Hwf.
-  rewrite right_id -assoc; apply sep_intro_True_l; [apply const_intro|done].
-  destruct Hwf; constructor; simpl; auto using Enil_wf.
-Qed.
-
-Lemma env_fold_wand Γ Q : env_fold uPred_wand Q Γ ⊣⊢ (Π★ Γ -★ Q).
-Proof.
-  revert Q; induction Γ as [|Γ IH i P]=> Q /=; [by rewrite wand_True|].
-  by rewrite IH wand_curry (comm uPred_sep).
-Qed.
-
-Lemma envs_persistent_persistent Δ : envs_persistent Δ = true → PersistentP Δ.
+Lemma env_special_nil_persistent Δ : envs_persistent Δ = true → PersistentP Δ.
 Proof. intros; destruct Δ as [? []]; simplify_eq/=; apply _. Qed.
-Hint Immediate envs_persistent_persistent : typeclass_instances.
+Hint Immediate env_special_nil_persistent : typeclass_instances.
 
 (** * Adequacy *)
 Lemma tac_adequate P : Envs Enil Enil ⊢ P → True ⊢ P.
@@ -274,9 +253,9 @@ Qed.
 Lemma tac_clear Δ Δ' i p P Q :
   envs_lookup_delete i Δ = Some (p,P,Δ') → Δ' ⊢ Q → Δ ⊢ Q.
 Proof. intros. by rewrite envs_lookup_delete_sound // sep_elim_r. Qed.
-Lemma tac_clear_spatial Δ Δ' Q :
-  envs_clear_spatial Δ = Δ' → Δ' ⊢ Q → Δ ⊢ Q.
-Proof. intros <- ?. by rewrite envs_clear_spatial_sound // sep_elim_l. Qed.
+Lemma tac_clear_spatial Δ Δ1 Δ2 Q :
+  envs_split true [] Δ = Some (Δ1,Δ2) → Δ1 ⊢ Q → Δ ⊢ Q.
+Proof. intros. by rewrite envs_split_sound // sep_elim_l. Qed.
 
 Lemma tac_duplicate Δ Δ' i p j P Q :
   envs_lookup i Δ = Some (p, P) →
@@ -350,16 +329,14 @@ Lemma tac_next Δ Δ' Q Q' :
 Proof. intros ?? HQ. by rewrite -(strip_later_l Q) strip_later_env_sound HQ. Qed.
 
 Lemma tac_löb Δ Δ' i Q :
-  envs_app true (Esnoc Enil i
-    (▷ env_fold uPred_wand Q (env_spatial Δ)))%I Δ = Some Δ' →
+  envs_persistent Δ = true →
+  envs_app true (Esnoc Enil i (▷ Q)%I) Δ = Some Δ' →
   Δ' ⊢ Q → Δ ⊢ Q.
 Proof.
-  intros ? HQ. rewrite /of_envs assoc. apply wand_elim_l'.
-  rewrite -(always_elim (_ -★ Q))%I -(löb (□ (_ -★ _)))%I; apply impl_intro_l.
-  apply (always_intro _ _), wand_intro_r.
-  rewrite always_and_sep_l -(assoc _ (▷ _))%I -(assoc _ (■ _))%I -of_envs_def.
-  rewrite envs_app_sound //; simpl; rewrite right_id env_fold_wand HQ.
-  by rewrite -always_later wand_elim_r.
+  intros ?? HQ. rewrite (persistentP Δ) envs_app_sound //; simpl.
+  rewrite right_id -{2}(always_elim Q) -(löb (□ Q)); apply impl_intro_l.
+  rewrite -always_later -{1}(always_always (□ (▷ Q))) always_and_sep_l'.
+  by rewrite -always_sep wand_elim_r HQ.
 Qed.
 
 (** * Always *)

@@ -81,6 +81,7 @@ Proof.
   eauto using tac_pvs_timeless.
 Qed.
 
+Hint Immediate env_special_nil_persistent : typeclass_instances.
 Lemma tac_pvs_assert {A} (fsa : FSA Λ Σ A) fsaV Δ Δ1 Δ2 Δ2' E lr js j P Q Φ :
   FSASplit Q E fsa fsaV Φ →
   envs_split lr js Δ = Some (Δ1,Δ2) →

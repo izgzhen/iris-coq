@@ -4,7 +4,7 @@ From iris.proofmode Require Export notation.
 From iris.prelude Require Import stringmap.
 
 Declare Reduction env_cbv := cbv [
-  env_lookup env_fold env_lookup_delete env_delete env_app
+  env_lookup env_lookup_delete env_delete env_app
     env_replace env_split_go env_split
   decide (* operational classes *)
   sumbool_rec sumbool_rect (* sumbool *)
@@ -755,7 +755,8 @@ Tactic Notation "iNext":=
 
 Tactic Notation "iLöb" "as" constr (H) :=
   eapply tac_löb with _ H;
-    [env_cbv; reflexivity || fail "iLöb:" H "not fresh"|].
+    [reflexivity || fail "iLöb: non-empty spatial context"
+    |env_cbv; reflexivity || fail "iLöb:" H "not fresh"|].
 
 Tactic Notation "iLöb" "{" ident(x1) "}" "as" constr (H) :=
   iRevert { x1 }; iLöb as H; iIntros { x1 }.

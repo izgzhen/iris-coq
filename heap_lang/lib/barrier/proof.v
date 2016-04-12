@@ -140,7 +140,7 @@ Lemma wait_spec l P (Φ : val → iProp) :
 Proof.
   rename P into R; rewrite /recv /barrier_ctx.
   iIntros "[Hr HΦ]"; iDestruct "Hr" as {γ P Q i} "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
-  iLöb as "IH". wp_rec. wp_focus (! _)%E.
+  iLöb "Hγ HQR HΦ" as "IH". wp_rec. wp_focus (! _)%E.
   iSts γ as [p I]; iDestruct "Hγ" as "[Hl Hr]".
   wp_load. destruct p.
   - (* a Low state. The comparison fails, and we recurse. *)

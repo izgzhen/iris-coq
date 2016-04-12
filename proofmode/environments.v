@@ -32,12 +32,6 @@ Instance env_dom {A} : Dom (env A) stringset :=
   fix go Γ := let _ : Dom _ _ := @go in
   match Γ with Enil => ∅ | Esnoc Γ i _ => {[ i ]} ∪ dom stringset Γ end.
 
-Fixpoint env_fold {A B} (f : B → A → A) (x : A) (Γ : env B) : A :=
-  match Γ with
-  | Enil => x
-  | Esnoc Γ _ y => env_fold f (f y x) Γ
-  end.
-
 Fixpoint env_app {A} (Γapp : env A) (Γ : env A) : option (env A) :=
   match Γapp with
   | Enil => Some Γ
