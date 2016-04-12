@@ -368,10 +368,11 @@ Tactic Notation "iApply" open_constr (H) "{" open_constr(x1) open_constr(x2)
 Tactic Notation "iRevert" "★" := eapply tac_revert_spatial; env_cbv.
 
 Tactic Notation "iForallRevert" ident(x) :=
-  match type of x with
-  | _ : Prop => revert x; apply tac_pure_revert
+  let A := type of x in
+  lazymatch type of A with
+  | Prop => revert x; apply tac_pure_revert
   | _ => revert x; apply tac_forall_revert
-  end.
+  end || fail "iRevert: cannot revert" x.
 
 Tactic Notation "iImplRevert" constr(H) :=
   eapply tac_revert with _ H _ _; (* (i:=H) *)
