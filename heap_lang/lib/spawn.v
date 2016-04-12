@@ -75,7 +75,7 @@ Lemma join_spec (Ψ : val → iProp) l (Φ : val → iProp) :
   (join_handle l Ψ ★ ∀ v, Ψ v -★ Φ v) ⊢ WP join (%l) {{ Φ }}.
 Proof.
   rewrite /join_handle; iIntros "[[% H] Hv]"; iDestruct "H" as {γ} "(#?&Hγ&#?)".
-  iLöb "Hγ Hv" as "IH". wp_rec. wp_focus (! _)%E.
+  iLöb as "IH". wp_rec. wp_focus (! _)%E.
   iInv N as "Hinv"; iDestruct "Hinv" as {v} "[Hl Hinv]".
   wp_load. iDestruct "Hinv" as "[%|Hinv]"; subst.
   - iSplitL "Hl"; [iNext; iExists _; iFrame "Hl"; by iLeft|].
