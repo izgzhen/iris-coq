@@ -1,4 +1,4 @@
-From iris.heap_lang Require Export heap spawn.
+From iris.heap_lang Require Export spawn.
 From iris.heap_lang Require Import proofmode notation.
 Import uPred.
 

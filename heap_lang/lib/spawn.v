@@ -1,5 +1,4 @@
 From iris.program_logic Require Export global_functor.
-From iris.heap_lang Require Export heap.
 From iris.proofmode Require Import invariants ghost_ownership.
 From iris.heap_lang Require Import proofmode notation.
 Import uPred.

@@ -1,6 +1,6 @@
 From iris.algebra Require Import one_shot dec_agree.
 From iris.program_logic Require Import hoare.
-From iris.heap_lang Require Import heap assert proofmode notation.
+From iris.heap_lang Require Import assert proofmode notation.
 From iris.proofmode Require Import invariants ghost_ownership.
 Import uPred.
 
