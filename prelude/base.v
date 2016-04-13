@@ -136,6 +136,7 @@ Class Inhabited (A : Type) : Type := populate { inhabitant : A }.
 Arguments populate {_} _.
 
 Instance unit_inhabited: Inhabited unit := populate ().
+Instance bool_inhabated : Inhabited bool := populate true.
 Instance list_inhabited {A} : Inhabited (list A) := populate [].
 Instance prod_inhabited {A B} (iA : Inhabited A)
     (iB : Inhabited B) : Inhabited (A * B) :=
