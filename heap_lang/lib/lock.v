@@ -41,6 +41,12 @@ Proof. solve_proper. Qed.
 Global Instance is_lock_persistent l R : PersistentP (is_lock l R).
 Proof. apply _. Qed.
 
+Lemma locked_is_lock l R : locked l R ⊢ is_lock l R.
+Proof.
+  iIntros "Hl"; iDestruct "Hl" as {N γ} "(?&?&?&_)".
+  iExists N, γ; by repeat iSplit.
+Qed.
+
 Lemma newlock_spec N (R : iProp) Φ :
   heapN ⊥ N →
   (heap_ctx heapN ★ R ★ (∀ l, is_lock l R -★ Φ (LocV l)))
@@ -69,14 +75,12 @@ Proof.
 Qed.
 
 Lemma release_spec R l (Φ : val → iProp) :
-  (locked l R ★ R ★ (is_lock l R -★ Φ #())) ⊢ WP release (%l) {{ Φ }}.
+  (locked l R ★ R ★ Φ #()) ⊢ WP release (%l) {{ Φ }}.
 Proof.
   iIntros "(Hl&HR&HΦ)"; iDestruct "Hl" as {N γ} "(%&#?&#?&Hγ)".
   rewrite /release. wp_let.
   iInv N as "Hinv". iDestruct "Hinv" as {b} "[Hl Hγ']"; destruct b.
-  - wp_store. iSplitL "Hl HR Hγ".
-    + iNext. iExists false. by iFrame "Hl HR Hγ".
-    + iApply "HΦ". iExists N, γ. by repeat iSplit.
+  - wp_store. iFrame "HΦ". iNext. iExists false. by iFrame "Hl HR Hγ".
   - wp_store. iDestruct "Hγ'" as "[Hγ' _]".
     iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct own_valid "Hγ" as "%".
 Qed.
