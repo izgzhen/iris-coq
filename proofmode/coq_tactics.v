@@ -570,7 +570,7 @@ Qed.
 (** * Rewriting *)
 Lemma tac_rewrite Δ i p Pxy (lr : bool) Q :
   envs_lookup i Δ = Some (p, Pxy) →
-  ∀ {A : cofeT} x y (Φ : A → uPred M),
+  ∀ {A : cofeT} (x y : A) (Φ : A → uPred M),
     Pxy ⊢ (x ≡ y)%I →
     Q ⊣⊢ Φ (if lr then y else x) →
     (∀ n, Proper (dist n ==> dist n) Φ) →
@@ -761,7 +761,7 @@ Global Instance or_destruct_later P Q1 Q2 :
 Proof. rewrite /OrDestruct=>->. by rewrite later_or. Qed.
 
 Lemma tac_or_destruct Δ Δ1 Δ2 i p j1 j2 P P1 P2 Q :
-  envs_lookup i Δ = Some (p, P)%I → OrDestruct P P1 P2 →
+  envs_lookup i Δ = Some (p, P) → OrDestruct P P1 P2 →
   envs_simple_replace i p (Esnoc Enil j1 P1) Δ = Some Δ1 →
   envs_simple_replace i p (Esnoc Enil j2 P2) Δ = Some Δ2 →
   Δ1 ⊢ Q → Δ2 ⊢ Q → Δ ⊢ Q.

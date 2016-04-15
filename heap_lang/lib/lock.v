@@ -52,12 +52,12 @@ Lemma newlock_spec N (R : iProp) Φ :
   (heap_ctx heapN ★ R ★ (∀ l, is_lock l R -★ Φ (LocV l)))
   ⊢ WP newlock #() {{ Φ }}.
 Proof.
-  iIntros {?} "(#Hh&HR&HΦ)". rewrite /newlock.
+  iIntros {?} "(#Hh & HR & HΦ)". rewrite /newlock.
   wp_seq. iApply wp_pvs. wp_alloc l as "Hl".
   iPvs (own_alloc (Excl ())) as {γ} "Hγ"; first done.
-  iPvs (inv_alloc N _ (lock_inv γ l R)) "[HR Hl Hγ]" as "#?"; first done.
+  iPvs (inv_alloc N _ (lock_inv γ l R)) "-[HΦ]" as "#?"; first done.
   { iNext. iExists false. by iFrame "Hl HR". }
-  iPvsIntro; iApply "HΦ". iExists N, γ. by repeat iSplit.
+  iPvsIntro. iApply "HΦ". iExists N, γ. by repeat iSplit.
 Qed.
 
 Lemma acquire_spec l R (Φ : val → iProp) :

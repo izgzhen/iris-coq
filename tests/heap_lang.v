@@ -70,6 +70,6 @@ Section ClosedProofs.
   Proof.
     iProof. iIntros "! Hσ".
     iPvs (heap_alloc nroot) "Hσ" as {h} "[? _]"; first by rewrite nclose_nroot.
-    iApply heap_e_spec; last done ; by rewrite nclose_nroot.
+    iApply heap_e_spec; last done; by rewrite nclose_nroot.
   Qed.
 End ClosedProofs.
