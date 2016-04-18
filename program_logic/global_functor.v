@@ -72,8 +72,9 @@ Arguments gFunctorList.cons _ _%gFunctor.
 
 Notation "[ ]" := gFunctorList.nil (format "[ ]") : gFunctor_scope.
 Notation "[ F ]" := (gFunctorList.cons F gFunctorList.nil) : gFunctor_scope.
-Notation "[ F ; .. ; F' ]" :=
-  (gFunctorList.cons F .. (gFunctorList.cons F' gFunctorList.nil) ..) : gFunctor_scope.
+Notation "[ F1 ; F2 ; .. ; Fn ]" :=
+  (gFunctorList.cons F1 (gFunctorList.cons F2 ..
+    (gFunctorList.cons Fn gFunctorList.nil) ..)) : gFunctor_scope.
 
 Module gFunctors.
   Definition nil : gFunctors := existT 0 (fin_0_inv _).
@@ -92,8 +93,9 @@ End gFunctors.
 notation hiding a more complex type. *)
 Notation "#[ ]" := gFunctors.nil (format "#[ ]").
 Notation "#[ Fs ]" := (gFunctors.app Fs gFunctors.nil).
-Notation "#[ Fs ; .. ; Fs' ]" :=
-  (gFunctors.app Fs .. (gFunctors.app Fs' gFunctors.nil) ..).
+Notation "#[ Fs1 ; Fs2 ; .. ; Fsn ]" :=
+  (gFunctors.app Fs1 (gFunctors.app Fs2 ..
+    (gFunctors.app Fsn gFunctors.nil) ..)).
 
 (** We need another typeclass to identify the *functor* in the Σ. Basing inG on
    the functor breaks badly because Coq is unable to infer the correct

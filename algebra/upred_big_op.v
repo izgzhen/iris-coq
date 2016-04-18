@@ -111,8 +111,11 @@ Section gmap.
     m1 ≡ m2 → (∀ x k, m1 !! k = Some x → m2 !! k = Some x → Φ k x ⊣⊢ Ψ k x) →
     Π★{map m1} Φ ⊣⊢ Π★{map m2} Ψ.
   Proof.
+    (* FIXME: Coq bug since 8.5pl1. Without the @ in [@lookup_weaken] it gives
+    File "./algebra/upred_big_op.v", line 114, characters 4-131:
+    Anomaly: Uncaught exception Univ.AlreadyDeclared. Please report. *)
     intros [??] ?; apply (anti_symm (⊢)); apply big_sepM_mono;
-      eauto using equiv_entails, equiv_entails_sym, lookup_weaken.
+      eauto using equiv_entails, equiv_entails_sym, @lookup_weaken.
   Qed.
 
   Global Instance big_sepM_ne m n :
