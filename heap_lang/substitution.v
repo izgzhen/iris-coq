@@ -85,6 +85,13 @@ Class WSubst {X Y} (x : string) (es : expr []) H (e : expr X) (er : expr Y) :=
   do_wsubst : wsubst x es H e = er.
 Hint Mode WSubst + + + + + + - : typeclass_instances.
 
+Lemma do_wsubst_closed (e: ∀ {X}, expr X) {X Y} x es (H : X `included` x :: Y) :
+  (∀ X, WExpr (included_nil X) e e) → WSubst x es H e e.
+Proof.
+  rewrite /WSubst /WExpr=> He. rewrite -(He X) wsubst_wexpr'.
+  by rewrite (wsubst_closed _ _ _ _ _ (included_nil _)); last set_solver.
+Qed.
+
 (* Variables *)
 Lemma do_wsubst_var_eq {X Y x es} {H : X `included` x :: Y} `{VarBound x X} er :
   WExpr (included_nil _) es er → WSubst x es H (Var x) er.
