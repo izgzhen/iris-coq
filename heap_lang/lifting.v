@@ -39,10 +39,7 @@ Proof.
   destruct H0 as (l & -> & ? & -> & ?).
   rewrite -(of_to_val (Loc l) (LocV l)) // in H0.
   apply of_val_inj in H0 as ->.
-  simpl. iSplitL; last done.
-  (* FIXME: I should be able to do [iSpecialize "HΦ" l]. *)
-  (* FIXME: I should be able to do [iApply "HΦ" l]. *)
-  iApply "HΦ". iSplit; done.
+  simpl. iSplitL; last done. iApply "HΦ" {l}. iSplit; done.
 Qed.
 
 Lemma wp_load_pst E σ l v Φ :
