@@ -198,33 +198,37 @@ Proof.
 Qed.
 Lemma wp_frame_step_r E E1 E2 e Φ R :
   to_val e = None → E ⊥ E1 → E2 ⊆ E1 →
-  (WP e @ E {{ Φ }} ★ |={E1,E2}=> ▷ |={E2,E1}=> R)
-  ⊢ WP e @ (E ∪ E1) {{ v, Φ v ★ R }}.
+    (WP e @ E {{ Φ }} ★ |={E1,E2}=> ▷ |={E2,E1}=> R)
+  ⊢ WP e @ E ∪ E1 {{ v, Φ v ★ R }}.
+Proof.
   rewrite wp_eq pvs_eq=> He ??.
   uPred.unseal; split; intros n r' Hvalid (r&rR&Hr&Hwp&HR); cofe_subst.
   constructor; [done|]=>rf k Ef σ1 ?? Hws1.
   destruct Hwp as [|n r e ? Hgo]; [by rewrite to_of_val in He|].
   (* "execute" HR *)
-  edestruct (HR (r ⋅ rf) (S k) (E ∪ Ef) σ1) as [s [Hvs Hws2]]; [omega|set_solver| |].
-  { eapply wsat_change, Hws1; first by set_solver+.
-    rewrite assoc [rR ⋅ _]comm. done. } clear Hws1 HR.
+  destruct (HR (r ⋅ rf) (S k) (E ∪ Ef) σ1) as (s&Hvs&Hws2); auto.
+  { eapply wsat_proper, Hws1; first by set_solver+.
+    by rewrite assoc [rR ⋅ _]comm. }
+  clear Hws1 HR.
   (* Take a step *)
-  destruct (Hgo (s⋅rf) k (E2 ∪ Ef) σ1) as [Hsafe Hstep]; [done|set_solver| |].
-  { eapply wsat_change, Hws2; first by set_solver+.
-    rewrite !assoc [s ⋅ _]comm. done. } clear Hgo.
+  destruct (Hgo (s⋅rf) k (E2 ∪ Ef) σ1) as [Hsafe Hstep]; auto.
+  { eapply wsat_proper, Hws2; first by set_solver+.
+    by rewrite !assoc [s ⋅ _]comm. }
+  clear Hgo.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&Hws3&?&?); auto. clear Hws2.
   (* Execute 2nd part of the view shift *)
-  edestruct (Hvs (r2 ⋅ r2' ⋅ rf) k (E ∪ Ef) σ2) as [t [HR Hws4]]; [omega|set_solver| |].
-  { eapply wsat_change, Hws3; first by set_solver+.
-    rewrite !assoc [_ ⋅ s]comm !assoc. done. } clear Hvs Hws3.
+  destruct (Hvs (r2 ⋅ r2' ⋅ rf) k (E ∪ Ef) σ2) as (t&HR&Hws4); auto.
+  { eapply wsat_proper, Hws3; first by set_solver+.
+    by rewrite !assoc [_ ⋅ s]comm !assoc. }
+  clear Hvs Hws3.
   (* Execute the rest of e *)
   exists (r2 ⋅ t), r2'. split_and?; auto.
-  - eapply wsat_change, Hws4; first by set_solver+.
-    rewrite !assoc [_ ⋅ t]comm. done.
-  - rewrite -uPred_sep_eq. move:(wp_frame_r). rewrite wp_eq=>Hframe.
+  - eapply wsat_proper, Hws4; first by set_solver+.
+    by rewrite !assoc [_ ⋅ t]comm.
+  - rewrite -uPred_sep_eq. move: wp_frame_r. rewrite wp_eq=>Hframe.
     apply Hframe; first by auto. uPred.unseal; exists r2, t; split_and?; auto.
-    move:(wp_mask_frame_mono). rewrite wp_eq=>Hmask.
+    move: wp_mask_frame_mono. rewrite wp_eq=>Hmask.
     eapply (Hmask E); by auto.
 Qed.
 Lemma wp_bind `{LanguageCtx Λ K} E e Φ :

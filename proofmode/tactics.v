@@ -63,13 +63,10 @@ Tactic Notation "iClear" "★" :=
 
 (** * Assumptions *)
 Tactic Notation "iExact" constr(H) :=
-  eapply tac_exact with H _; (* (i:=H) *)
-    env_cbv;
-    lazymatch goal with
-    | |- None = Some _ => fail "iExact:" H "not found"
-    | |- Some (_, ?P) = Some _ =>
-       reflexivity || fail "iExact:" H ":" P "does not match goal"
-    end.
+  eapply tac_assumption with H _ _; (* (i:=H) *)
+    [env_cbv; reflexivity || fail "iExact:" H "not found"
+    |let P := match goal with |- ToAssumption _ ?P _ => P end in
+     apply _ || fail "iExact:" H ":" P "does not match goal"].
 
 Tactic Notation "iAssumptionCore" :=
   let rec find Γ i P :=
@@ -82,9 +79,21 @@ Tactic Notation "iAssumptionCore" :=
   | |- envs_lookup ?i (Envs ?Γp ?Γs) = Some (_, ?P) =>
      is_evar i; first [find Γp i P | find Γs i P]; env_cbv; reflexivity
   end.
+
 Tactic Notation "iAssumption" :=
-  eapply tac_exact; iAssumptionCore;
-  match goal with |- _ = Some (_, ?P) => fail "iAssumption:" P "not found" end.
+  let Hass := fresh in
+  let rec find p Γ Q :=
+    match Γ with
+    | Esnoc ?Γ ?j ?P => first
+       [pose proof (_ : ToAssumption p P Q) as Hass;
+        apply (tac_assumption _ j p P); [env_cbv; reflexivity|apply Hass]
+       |find p Γ Q]
+    end in
+  match goal with
+  | |- of_envs (Envs ?Γp ?Γs) ⊢ ?Q =>
+     first [find true Γp Q | find false Γs Q
+           |fail "iAssumption:" Q "not found"]
+  end.
 
 (** * False *)
 Tactic Notation "iExFalso" := apply tac_ex_falso.
@@ -302,8 +311,8 @@ Tactic Notation "iApply" open_constr (lem) :=
   iPoseProof lem as (fun H => repeat (iForallSpecialize H _); first
     [iExact H
     |eapply tac_apply with _ H _ _ _;
-       [env_cbv; reflexivity || fail "iApply:" lem "not found"
-       |apply _ || fail "iApply: cannot apply" lem|]]).
+       [env_cbv; reflexivity || fail 1 "iApply:" lem "not found"
+       |apply _ || fail 1 "iApply: cannot apply" lem|]]).
 Tactic Notation "iApply" open_constr (H) "{" open_constr(x1) "}" :=
   iSpecialize H { x1 }; last iApply H.
 Tactic Notation "iApply" open_constr (H) "{" open_constr(x1)
@@ -335,8 +344,8 @@ Tactic Notation "iApply" open_constr (lem) constr(Hs) :=
   iPoseProof lem Hs as (fun H => first
     [iExact H
     |eapply tac_apply with _ H _ _ _;
-       [env_cbv; reflexivity || fail "iApply:" lem "not found"
-       |apply _ || fail "iApply: cannot apply" lem|]]).
+       [env_cbv; reflexivity || fail 1 "iApply:" lem "not found"
+       |apply _ || fail 1 "iApply: cannot apply" lem|]]).
 Tactic Notation "iApply" open_constr (H) "{" open_constr(x1) "}" constr(Hs) :=
   iSpecialize H { x1 }; last iApply H Hs.
 Tactic Notation "iApply" open_constr (H) "{" open_constr(x1) open_constr(x2) "}"

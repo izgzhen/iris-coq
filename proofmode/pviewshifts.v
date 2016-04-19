@@ -7,6 +7,9 @@ Section pvs.
 Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q : iProp Λ Σ.
 
+Global Instance to_assumption_pvs E p P Q :
+  ToAssumption p P Q → ToAssumption p P (|={E}=> Q)%I.
+Proof. rewrite /ToAssumption=>->. apply pvs_intro. Qed.
 Global Instance sep_split_pvs E P Q1 Q2 :
   SepSplit P Q1 Q2 → SepSplit (|={E}=> P) (|={E}=> Q1) (|={E}=> Q2).
 Proof. rewrite /SepSplit=><-. apply pvs_sep. Qed.
@@ -106,7 +109,7 @@ Tactic Notation "iPvsCore" constr(H) :=
     eapply tac_pvs_elim_fsa with _ _ _ _ H _ _ _;
       [env_cbv; reflexivity || fail "iPvs:" H "not found"
       |let P := match goal with |- FSASplit ?P _ _ _ _ => P end in
-       apply _ || fail "iPvs: " P "not a pvs"
+       apply _ || fail "iPvs:" P "not a pvs"
       |env_cbv; reflexivity|simpl]
   end.
 
