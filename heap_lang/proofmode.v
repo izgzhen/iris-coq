@@ -21,7 +21,8 @@ Lemma tac_wp_alloc Δ Δ' N E j e v Φ :
   Δ ⊢ heap_ctx N → nclose N ⊆ E →
   StripLaterEnvs Δ Δ' →
   (∀ l, ∃ Δ'',
-    envs_app false (Esnoc Enil j (l ↦ v)) Δ' = Some Δ'' ∧ Δ'' ⊢ Φ (LocV l)) →
+    envs_app false (Esnoc Enil j (l ↦ v)) Δ' = Some Δ'' ∧
+    Δ'' ⊢ Φ (LitV (LitLoc l))) →
   Δ ⊢ WP Alloc e @ E {{ Φ }}.
 Proof.
   intros ???? HΔ; eapply wp_alloc; eauto.
@@ -35,7 +36,7 @@ Lemma tac_wp_load Δ Δ' N E i l q v Φ :
   StripLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I →
   Δ' ⊢ Φ v →
-  Δ ⊢ WP Load (Loc l) @ E {{ Φ }}.
+  Δ ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
 Proof.
   intros. eapply wp_load; eauto.
   rewrite strip_later_env_sound -later_sep envs_lookup_split //; simpl.
@@ -48,7 +49,7 @@ Lemma tac_wp_store Δ Δ' Δ'' N E i l v e v' Φ :
   StripLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v')) Δ' = Some Δ'' →
-  Δ'' ⊢ Φ (LitV LitUnit) → Δ ⊢ WP Store (Loc l) e @ E {{ Φ }}.
+  Δ'' ⊢ Φ (LitV LitUnit) → Δ ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
 Proof.
   intros. eapply wp_store; eauto.
   rewrite strip_later_env_sound -later_sep envs_simple_replace_sound //; simpl.
@@ -61,7 +62,7 @@ Lemma tac_wp_cas_fail Δ Δ' N E i l q v e1 v1 e2 v2 Φ :
   StripLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I → v ≠ v1 →
   Δ' ⊢ Φ (LitV (LitBool false)) →
-  Δ ⊢ WP CAS (Loc l) e1 e2 @ E {{ Φ }}.
+  Δ ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. eapply wp_cas_fail; eauto.
   rewrite strip_later_env_sound -later_sep envs_lookup_split //; simpl.
@@ -74,7 +75,7 @@ Lemma tac_wp_cas_suc Δ Δ' Δ'' N E i l e1 v1 e2 v2 Φ :
   StripLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v1)%I →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v2)) Δ' = Some Δ'' →
-  Δ'' ⊢ Φ (LitV (LitBool true)) → Δ ⊢ WP CAS (Loc l) e1 e2 @ E {{ Φ }}.
+  Δ'' ⊢ Φ (LitV (LitBool true)) → Δ ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. eapply wp_cas_suc; eauto.
   rewrite strip_later_env_sound -later_sep envs_simple_replace_sound //; simpl.
@@ -115,7 +116,7 @@ Tactic Notation "wp_load" :=
   match goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
-    | Load (Loc ?l) =>
+    | Load (Lit (LitLoc ?l)) =>
        wp_bind K; eapply tac_wp_load;
          [iAssumption || fail 2 "wp_load: cannot find heap_ctx"
          |done || eauto with ndisj
@@ -145,7 +146,7 @@ Tactic Notation "wp_cas_fail" :=
   match goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
-    | CAS (Loc ?l) ?e1 ?e2 =>
+    | CAS (Lit (LitLoc ?l)) ?e1 ?e2 =>
        wp_bind K; eapply tac_wp_cas_fail;
          [wp_done || fail 2 "wp_cas_fail:" e1 "not a value"
          |wp_done || fail 2 "wp_cas_fail:" e2 "not a value"
@@ -162,7 +163,7 @@ Tactic Notation "wp_cas_suc" :=
   match goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
-    | CAS (Loc ?l) ?e1 ?e2 =>
+    | CAS (Lit (LitLoc ?l)) ?e1 ?e2 =>
        wp_bind K; eapply tac_wp_cas_suc;
          [wp_done || fail 2 "wp_cas_suc:" e1 "not a value"
          |wp_done || fail 2 "wp_cas_suc:" e1 "not a value"

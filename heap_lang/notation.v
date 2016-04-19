@@ -19,20 +19,20 @@ Notation "'WP' e {{ v , Q } }" := (wp ⊤ e%E (λ v, Q))
 
 Coercion LitInt : Z >-> base_lit.
 Coercion LitBool : bool >-> base_lit.
+Coercion LitLoc : loc >-> base_lit.
+
 Coercion App : expr >-> Funclass.
 Coercion of_val : val >-> expr.
 
 Coercion BNamed : string >-> binder.
 Notation "<>" := BAnon : binder_scope.
 
-(* No scope for the values, does not conflict and scope is often not inferred properly. *)
+(* No scope for the values, does not conflict and scope is often not inferred
+properly. *)
 Notation "# l" := (LitV l%Z%V) (at level 8, format "# l").
-Notation "% l" := (LocV l) (at level 8, format "% l").
-Notation "# l" := (LitV l%Z%V) (at level 8, format "# l") : val_scope.
-Notation "% l" := (LocV l) (at level 8, format "% l") : val_scope.
 Notation "# l" := (Lit l%Z%V) (at level 8, format "# l") : expr_scope.
-Notation "% l" := (Loc l) (at level 8, format "% l") : expr_scope.
 
+Check of_val'.
 Notation "' x" := (Var x) (at level 8, format "' x") : expr_scope.
 Notation "^ v" := (of_val' v%V) (at level 8, format "^ v") : expr_scope.
 

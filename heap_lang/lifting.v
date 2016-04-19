@@ -25,13 +25,13 @@ Proof. exact: weakestpre.wp_bind. Qed.
 (** Base axioms for core primitives of the language: Stateful reductions. *)
 Lemma wp_alloc_pst E σ e v Φ :
   to_val e = Some v →
-  (▷ ownP σ ★ ▷ (∀ l, σ !! l = None ∧ ownP (<[l:=v]>σ) -★ Φ (LocV l)))
+  (▷ ownP σ ★ ▷ (∀ l, σ !! l = None ∧ ownP (<[l:=v]>σ) -★ Φ (LitV (LitLoc l))))
   ⊢ WP Alloc e @ E {{ Φ }}.
 Proof.
   iIntros {?}  "[HP HΦ]".
   (* TODO: This works around ssreflect bug #22. *)
   set (φ (e' : expr []) σ' ef := ∃ l,
-    ef = None ∧ e' = Loc l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None).
+    ef = None ∧ e' = Lit (LitLoc l) ∧ σ' = <[l:=v]>σ ∧ σ !! l = None).
   iApply (wp_lift_atomic_head_step (Alloc e) φ σ); try (by simpl; eauto);
     [by intros; subst φ; inv_head_step; eauto 8|].
   iFrame "HP". iNext. iIntros {v2 σ2 ef} "[% HP]".
@@ -42,7 +42,7 @@ Qed.
 
 Lemma wp_load_pst E σ l v Φ :
   σ !! l = Some v →
-  (▷ ownP σ ★ ▷ (ownP σ -★ Φ v)) ⊢ WP Load (Loc l) @ E {{ Φ }}.
+  (▷ ownP σ ★ ▷ (ownP σ -★ Φ v)) ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_head_step σ v σ None) ?right_id //;
     last (by intros; inv_head_step; eauto using to_of_val); simpl; by eauto.
@@ -51,7 +51,7 @@ Qed.
 Lemma wp_store_pst E σ l e v v' Φ :
   to_val e = Some v → σ !! l = Some v' →
   (▷ ownP σ ★ ▷ (ownP (<[l:=v]>σ) -★ Φ (LitV LitUnit)))
-  ⊢ WP Store (Loc l) e @ E {{ Φ }}.
+  ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
 Proof.
   intros. rewrite-(wp_lift_atomic_det_head_step σ (LitV LitUnit) (<[l:=v]>σ) None)
     ?right_id //; last (by intros; inv_head_step; eauto); simpl; by eauto.
@@ -60,7 +60,7 @@ Qed.
 Lemma wp_cas_fail_pst E σ l e1 v1 e2 v2 v' Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v' → v' ≠ v1 →
   (▷ ownP σ ★ ▷ (ownP σ -★ Φ (LitV $ LitBool false)))
-  ⊢ WP CAS (Loc l) e1 e2 @ E {{ Φ }}.
+  ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_head_step σ (LitV $ LitBool false) σ None)
     ?right_id //; last (by intros; inv_head_step; eauto);
@@ -70,7 +70,7 @@ Qed.
 Lemma wp_cas_suc_pst E σ l e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 → σ !! l = Some v1 →
   (▷ ownP σ ★ ▷ (ownP (<[l:=v2]>σ) -★ Φ (LitV $ LitBool true)))
-  ⊢ WP CAS (Loc l) e1 e2 @ E {{ Φ }}.
+  ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_head_step σ (LitV $ LitBool true)
     (<[l:=v2]>σ) None) ?right_id //; last (by intros; inv_head_step; eauto);

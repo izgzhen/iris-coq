@@ -41,8 +41,6 @@ Notation W := (WExpr H).
 (* Ground terms *)
 Global Instance do_wexpr_lit l : W (Lit l) (Lit l).
 Proof. done. Qed.
-Global Instance do_wexpr_loc l : W (Loc l) (Loc l).
-Proof. done. Qed.
 Global Instance do_wexpr_app e1 e2 e1r e2r :
   W e1 e1r → W e2 e2r → W (App e1 e2) (App e1r e2r).
 Proof. intros; red; f_equal/=; apply: do_wexpr. Qed.
@@ -158,8 +156,6 @@ Notation Sub := (WSubst x es H).
 
 (* Ground terms *)
 Global Instance do_wsubst_lit l : Sub (Lit l) (Lit l).
-Proof. done. Qed.
-Global Instance do_wsubst_loc l : Sub (Loc l) (Loc l).
 Proof. done. Qed.
 Global Instance do_wsubst_app e1 e2 e1r e2r :
   Sub e1 e1r → Sub e2 e2r → Sub (App e1 e2) (App e1r e2r).

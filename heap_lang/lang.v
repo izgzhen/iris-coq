@@ -9,7 +9,7 @@ Open Scope Z_scope.
 Definition loc := positive. (* Really, any countable type. *)
 
 Inductive base_lit : Set :=
-  | LitInt (n : Z) | LitBool (b : bool) | LitUnit.
+  | LitInt (n : Z) | LitBool (b : bool) | LitUnit | LitLoc (l : loc).
 Inductive un_op : Set :=
   | NegOp | MinusUnOp.
 Inductive bin_op : Set :=
@@ -80,7 +80,6 @@ Inductive expr (X : list string) :=
   (* Concurrency *)
   | Fork (e : expr X)
   (* Heap *)
-  | Loc (l : loc)
   | Alloc (e : expr X)
   | Load (e : expr X)
   | Store (e1 : expr X) (e2 : expr X)
@@ -102,7 +101,6 @@ Arguments InjL {_} _%E.
 Arguments InjR {_} _%E.
 Arguments Case {_} _%E _%E _%E.
 Arguments Fork {_} _%E.
-Arguments Loc {_} _.
 Arguments Alloc {_} _%E.
 Arguments Load {_} _%E.
 Arguments Store {_} _%E _%E.
@@ -113,8 +111,7 @@ Inductive val :=
   | LitV (l : base_lit)
   | PairV (v1 v2 : val)
   | InjLV (v : val)
-  | InjRV (v : val)
-  | LocV (l : loc).
+  | InjRV (v : val).
 
 Bind Scope val_scope with val.
 Delimit Scope val_scope with V.
@@ -131,7 +128,6 @@ Fixpoint of_val (v : val) : expr [] :=
   | PairV v1 v2 => Pair (of_val v1) (of_val v2)
   | InjLV v => InjL (of_val v)
   | InjRV v => InjR (of_val v)
-  | LocV l => Loc l
   end.
 
 Fixpoint to_val (e : expr []) : option val :=
@@ -141,7 +137,6 @@ Fixpoint to_val (e : expr []) : option val :=
   | Pair e1 e2 => v1 ← to_val e1; v2 ← to_val e2; Some (PairV v1 v2)
   | InjL e => InjLV <$> to_val e
   | InjR e => InjRV <$> to_val e
-  | Loc l => Some (LocV l)
   | _ => None
   end.
 
@@ -217,7 +212,6 @@ Program Fixpoint wexpr {X Y} (H : X `included` Y) (e : expr X) : expr Y :=
   | InjR e => InjR (wexpr H e)
   | Case e0 e1 e2 => Case (wexpr H e0) (wexpr H e1) (wexpr H e2)
   | Fork e => Fork (wexpr H e)
-  | Loc l => Loc l
   | Alloc e => Alloc (wexpr H e)
   | Load  e => Load (wexpr H e)
   | Store e1 e2 => Store (wexpr H e1) (wexpr H e2)
@@ -260,7 +254,6 @@ Program Fixpoint wsubst {X Y} (x : string) (es : expr [])
   | Case e0 e1 e2 =>
      Case (wsubst x es H e0) (wsubst x es H e1) (wsubst x es H e2)
   | Fork e => Fork (wsubst x es H e)
-  | Loc l => Loc l
   | Alloc e => Alloc (wsubst x es H e)
   | Load e => Load (wsubst x es H e)
   | Store e1 e2 => Store (wsubst x es H e1) (wsubst x es H e2)
@@ -322,21 +315,21 @@ Inductive head_step : expr [] → state → expr [] → state → option (expr [
      head_step (Fork e) σ (Lit LitUnit) σ (Some e)
   | AllocS e v σ l :
      to_val e = Some v → σ !! l = None →
-     head_step (Alloc e) σ (Loc l) (<[l:=v]>σ) None
+     head_step (Alloc e) σ (Lit $ LitLoc l) (<[l:=v]>σ) None
   | LoadS l v σ :
      σ !! l = Some v →
-     head_step (Load (Loc l)) σ (of_val v) σ None
+     head_step (Load (Lit $ LitLoc l)) σ (of_val v) σ None
   | StoreS l e v σ :
      to_val e = Some v → is_Some (σ !! l) →
-     head_step (Store (Loc l) e) σ (Lit LitUnit) (<[l:=v]>σ) None
+     head_step (Store (Lit $ LitLoc l) e) σ (Lit LitUnit) (<[l:=v]>σ) None
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some vl → vl ≠ v1 →
-     head_step (CAS (Loc l) e1 e2) σ (Lit $ LitBool false) σ None
+     head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool false) σ None
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some v1 →
-     head_step (CAS (Loc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) None.
+     head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) None.
 
 (** Atomic expressions *)
 Definition atomic (e: expr []) : bool :=
@@ -470,7 +463,7 @@ Qed.
 
 Lemma alloc_fresh e v σ :
   let l := fresh (dom _ σ) in
-  to_val e = Some v → head_step (Alloc e) σ (Loc l) (<[l:=v]>σ) None.
+  to_val e = Some v → head_step (Alloc e) σ (Lit (LitLoc l)) (<[l:=v]>σ) None.
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset _)), is_fresh. Qed.
 
 (** Equality and other typeclass stuff *)
@@ -497,7 +490,6 @@ Fixpoint expr_beq {X Y} (e : expr X) (e' : expr Y) : bool :=
      expr_beq e0 e0' && expr_beq e1 e1' && expr_beq e2 e2'
   | Fst e, Fst e' | Snd e, Snd e' | InjL e, InjL e' | InjR e, InjR e' |
     Fork e, Fork e' | Alloc e, Alloc e' | Load e, Load e' => expr_beq e e'
-  | Loc l, Loc l' => bool_decide (l = l')
   | _, _ => false
   end.
 Lemma expr_beq_correct {X} (e1 e2 : expr X) : expr_beq e1 e2 ↔ e1 = e2.
@@ -525,7 +517,7 @@ Program Instance heap_ectxi_lang :
   EctxiLanguage
     (heap_lang.expr []) heap_lang.val heap_lang.ectx_item heap_lang.state := {|
   of_val := heap_lang.of_val; to_val := heap_lang.to_val;
-  fill_item := heap_lang.fill_item; 
+  fill_item := heap_lang.fill_item;
   atomic := heap_lang.atomic; head_step := heap_lang.head_step;
 |}.
 Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,

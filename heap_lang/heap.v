@@ -142,7 +142,7 @@ Section heap.
   Lemma wp_alloc N E e v P Φ :
     to_val e = Some v →
     P ⊢ heap_ctx N → nclose N ⊆ E →
-    P ⊢ (▷ ∀ l, l ↦ v -★ Φ (LocV l)) →
+    P ⊢ (▷ ∀ l, l ↦ v -★ Φ (LitV (LitLoc l))) →
     P ⊢ WP Alloc e @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv=> ??? HP.
@@ -168,7 +168,7 @@ Section heap.
   Lemma wp_load N E l q v P Φ :
     P ⊢ heap_ctx N → nclose N ⊆ E →
     P ⊢ (▷ l ↦{q} v ★ ▷ (l ↦{q} v -★ Φ v)) →
-    P ⊢ WP Load (Loc l) @ E {{ Φ }}.
+    P ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv=> ?? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
@@ -185,7 +185,7 @@ Section heap.
     to_val e = Some v →
     P ⊢ heap_ctx N → nclose N ⊆ E →
     P ⊢ (▷ l ↦ v' ★ ▷ (l ↦ v -★ Φ (LitV LitUnit))) →
-    P ⊢ WP Store (Loc l) e @ E {{ Φ }}.
+    P ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv=> ??? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Frac 1 (DecAgree v)) l))
@@ -202,7 +202,7 @@ Section heap.
     to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 →
     P ⊢ heap_ctx N → nclose N ⊆ E →
     P ⊢ (▷ l ↦{q} v' ★ ▷ (l ↦{q} v' -★ Φ (LitV (LitBool false)))) →
-    P ⊢ WP CAS (Loc l) e1 e2 @ E {{ Φ }}.
+    P ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv=>????? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
@@ -219,7 +219,7 @@ Section heap.
     to_val e1 = Some v1 → to_val e2 = Some v2 →
     P ⊢ heap_ctx N → nclose N ⊆ E →
     P ⊢ (▷ l ↦ v1 ★ ▷ (l ↦ v2 -★ Φ (LitV (LitBool true)))) →
-    P ⊢ WP CAS (Loc l) e1 e2 @ E {{ Φ }}.
+    P ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
   Proof.
     rewrite /heap_ctx /heap_inv=> ???? HPΦ.
     apply (auth_fsa' heap_inv (wp_fsa _) (alter (λ _, Frac 1 (DecAgree v2)) l))

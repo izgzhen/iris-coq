@@ -20,7 +20,7 @@ Definition barrier_res γ (Φ : X → iProp) : iProp :=
 
 Lemma worker_spec e γ l (Φ Ψ : X → iProp) :
   (recv heapN N l (barrier_res γ Φ) ★ ∀ x, {{ Φ x }} e {{ _, Ψ x }})
-  ⊢ WP wait (%l) ;; e {{ _, barrier_res γ Ψ }}.
+  ⊢ WP wait #l ;; e {{ _, barrier_res γ Ψ }}.
 Proof.
   iIntros "[Hl #He]". wp_apply wait_spec; iFrame "Hl".
   iIntros "Hγ"; iDestruct "Hγ" as {x} "[#Hγ Hx]".
