@@ -96,13 +96,13 @@ heap_lang/lib/barrier/barrier.v
 heap_lang/lib/barrier/specification.v
 heap_lang/lib/barrier/protocol.v
 heap_lang/lib/barrier/proof.v
-heap_lang/lib/barrier/client.v
 heap_lang/proofmode.v
 tests/heap_lang.v
 tests/program_logic.v
 tests/one_shot.v
 tests/joining_existentials.v
 tests/proofmode.v
+tests/barrier_client.v
 proofmode/coq_tactics.v
 proofmode/pviewshifts.v
 proofmode/environments.v
