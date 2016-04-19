@@ -24,7 +24,7 @@ Section LiftingTests.
   Definition heap_e  : expr [] :=
     let: "x" := ref #1 in '"x" <- !'"x" + #1 ;; !'"x".
   Lemma heap_e_spec E N :
-     nclose N ⊆ E → heap_ctx N ⊢ WP heap_e @ E {{ λ v, v = #2 }}.
+     nclose N ⊆ E → heap_ctx N ⊢ WP heap_e @ E {{ v, v = #2 }}.
   Proof.
     iIntros {HN} "#?". rewrite /heap_e. iApply (wp_mask_weaken N); first done.
     wp_alloc l as "Hl". wp_let. wp_load. wp_op. wp_store. wp_seq. by wp_load.
@@ -58,7 +58,7 @@ Section LiftingTests.
   Qed.
 
   Lemma Pred_user E :
-    (True : iProp) ⊢ WP let: "x" := Pred #42 in ^Pred '"x" @ E {{ λ v, v = #40 }}.
+    (True : iProp) ⊢ WP let: "x" := Pred #42 in ^Pred '"x" @ E {{ v, v = #40 }}.
   Proof. iIntros "". wp_apply Pred_spec. wp_let. by wp_apply Pred_spec. Qed.
 End LiftingTests.
 
@@ -66,7 +66,7 @@ Section ClosedProofs.
   Definition Σ : gFunctors := #[ heapGF ].
   Notation iProp := (iPropG heap_lang Σ).
 
-  Lemma heap_e_closed σ : {{ ownP σ : iProp }} heap_e {{ λ v, v = #2 }}.
+  Lemma heap_e_closed σ : {{ ownP σ : iProp }} heap_e {{ v, v = #2 }}.
   Proof.
     iProof. iIntros "! Hσ".
     iPvs (heap_alloc nroot) "Hσ" as {h} "[? _]"; first by rewrite nclose_nroot.

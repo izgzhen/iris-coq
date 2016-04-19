@@ -64,6 +64,13 @@ Notation "'WP' e {{ Φ } }" := (wp ⊤ e Φ)
   (at level 20, e, Φ at level 200,
    format "'WP'  e  {{  Φ  } }") : uPred_scope.
 
+Notation "'WP' e @ E {{ v , Q } }" := (wp E e (λ v, Q))
+  (at level 20, e, Q at level 200,
+   format "'WP'  e  @  E  {{  v ,  Q  } }") : uPred_scope.
+Notation "'WP' e {{ v , Q } }" := (wp ⊤ e (λ v, Q))
+  (at level 20, e, Q at level 200,
+   format "'WP'  e  {{  v ,  Q  } }") : uPred_scope.
+
 Section wp.
 Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P : iProp Λ Σ.
@@ -141,7 +148,7 @@ Proof.
   rewrite pvs_eq in Hvs. destruct (Hvs rf (S k) Ef σ1) as (r'&Hwp&?); auto.
   eapply wp_step_inv with (S k) r'; eauto.
 Qed.
-Lemma wp_pvs E e Φ : WP e @  E {{ λ v, |={E}=> Φ v }} ⊢ WP e @ E {{ Φ }}.
+Lemma wp_pvs E e Φ : WP e @  E {{ v, |={E}=> Φ v }} ⊢ WP e @ E {{ Φ }}.
 Proof.
   rewrite wp_eq. split=> n r; revert e r;
     induction n as [n IH] using lt_wf_ind=> e r Hr HΦ.
@@ -155,7 +162,7 @@ Proof.
 Qed.
 Lemma wp_atomic E1 E2 e Φ :
   E2 ⊆ E1 → atomic e →
-  (|={E1,E2}=> WP e @ E2 {{ λ v, |={E2,E1}=> Φ v }}) ⊢ WP e @ E1 {{ Φ }}.
+  (|={E1,E2}=> WP e @ E2 {{ v, |={E2,E1}=> Φ v }}) ⊢ WP e @ E1 {{ Φ }}.
 Proof.
   rewrite wp_eq pvs_eq. intros ? He; split=> n r ? Hvs; constructor.
   eauto using atomic_not_val. intros rf k Ef σ1 ???.
@@ -172,7 +179,7 @@ Proof.
   - by rewrite -assoc.
   - constructor; apply pvs_intro; auto.
 Qed.
-Lemma wp_frame_r E e Φ R : (WP e @ E {{ Φ }} ★ R) ⊢ WP e @ E {{ λ v, Φ v ★ R }}.
+Lemma wp_frame_r E e Φ R : (WP e @ E {{ Φ }} ★ R) ⊢ WP e @ E {{ v, Φ v ★ R }}.
 Proof.
   rewrite wp_eq. uPred.unseal; split; intros n r' Hvalid (r&rR&Hr&Hwp&?).
   revert Hvalid. rewrite Hr; clear Hr; revert e r Hwp.
@@ -190,7 +197,7 @@ Proof.
   - apply IH; eauto using uPred_weaken.
 Qed.
 Lemma wp_frame_step_r E e Φ R :
-  to_val e = None → (WP e @ E {{ Φ }} ★ ▷ R) ⊢ WP e @ E {{ λ v, Φ v ★ R }}.
+  to_val e = None → (WP e @ E {{ Φ }} ★ ▷ R) ⊢ WP e @ E {{ v, Φ v ★ R }}.
 Proof.
   rewrite wp_eq.
   intros He; uPred.unseal; split; intros n r' Hvalid (r&rR&Hr&Hwp&?).
@@ -207,7 +214,7 @@ Proof.
     eapply uPred_weaken with n rR; eauto.
 Qed.
 Lemma wp_bind `{LanguageCtx Λ K} E e Φ :
-  WP e @ E {{ λ v, WP K (of_val v) @ E {{ Φ }} }} ⊢ WP K e @ E {{ Φ }}.
+  WP e @ E {{ v, WP K (of_val v) @ E {{ Φ }} }} ⊢ WP K e @ E {{ Φ }}.
 Proof.
   rewrite wp_eq. split=> n r; revert e r;
     induction n as [n IH] using lt_wf_ind=> e r ?.
@@ -239,19 +246,19 @@ Proof. intros; rewrite -(of_to_val e v) //; by apply wp_value'. Qed.
 Lemma wp_value_pvs E Φ e v :
   to_val e = Some v → (|={E}=> Φ v) ⊢ WP e @ E {{ Φ }}.
 Proof. intros. rewrite -wp_pvs. rewrite -wp_value //. Qed.
-Lemma wp_frame_l E e Φ R : (R ★ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ λ v, R ★ Φ v }}.
+Lemma wp_frame_l E e Φ R : (R ★ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ v, R ★ Φ v }}.
 Proof. setoid_rewrite (comm _ R); apply wp_frame_r. Qed.
 Lemma wp_frame_step_l E e Φ R :
-  to_val e = None → (▷ R ★ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ λ v, R ★ Φ v }}.
+  to_val e = None → (▷ R ★ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ v, R ★ Φ v }}.
 Proof.
   rewrite (comm _ (▷ R)%I); setoid_rewrite (comm _ R).
   apply wp_frame_step_r.
 Qed.
 Lemma wp_always_l E e Φ R `{!PersistentP R} :
-  (R ∧ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ λ v, R ∧ Φ v }}.
+  (R ∧ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ v, R ∧ Φ v }}.
 Proof. by setoid_rewrite (always_and_sep_l _ _); rewrite wp_frame_l. Qed.
 Lemma wp_always_r E e Φ R `{!PersistentP R} :
-  (WP e @ E {{ Φ }} ∧ R) ⊢ WP e @ E {{ λ v, Φ v ∧ R }}.
+  (WP e @ E {{ Φ }} ∧ R) ⊢ WP e @ E {{ v, Φ v ∧ R }}.
 Proof. by setoid_rewrite (always_and_sep_r _ _); rewrite wp_frame_r. Qed.
 Lemma wp_wand_l E e Φ Ψ :
   ((∀ v, Φ v -★ Ψ v) ★ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ Ψ }}.

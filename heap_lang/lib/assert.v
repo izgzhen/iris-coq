@@ -16,7 +16,7 @@ Lemma wp_assert {Σ} (Φ : val → iProp heap_lang Σ) :
 Proof. by rewrite -wp_if_true -wp_value. Qed.
 
 Lemma wp_assert' {Σ} (Φ : val → iProp heap_lang Σ) e :
-  WP e {{ λ v, v = #true ∧ ▷ Φ #() }} ⊢ WP Assert e {{ Φ }}.
+  WP e {{ v, v = #true ∧ ▷ Φ #() }} ⊢ WP Assert e {{ Φ }}.
 Proof.
   rewrite /Assert. wp_focus e; apply wp_mono=>v.
   apply uPred.const_elim_l=>->. apply wp_assert.

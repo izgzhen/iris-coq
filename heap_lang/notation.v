@@ -2,12 +2,20 @@ From iris.heap_lang Require Export derived.
 Export heap_lang.
 
 Arguments wp {_ _} _ _%E _.
+
 Notation "'WP' e @ E {{ Φ } }" := (wp E e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'WP'  e  @  E  {{  Φ  } }") : uPred_scope.
 Notation "'WP' e {{ Φ } }" := (wp ⊤ e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'WP'  e  {{  Φ  } }") : uPred_scope.
+
+Notation "'WP' e @ E {{ v , Q } }" := (wp E e%E (λ v, Q))
+  (at level 20, e, Q at level 200,
+   format "'WP'  e  @  E  {{  v ,  Q  } }") : uPred_scope.
+Notation "'WP' e {{ v , Q } }" := (wp ⊤ e%E (λ v, Q))
+  (at level 20, e, Q at level 200,
+   format "'WP'  e  {{  v ,  Q  } }") : uPred_scope.
 
 Coercion LitInt : Z >-> base_lit.
 Coercion LitBool : bool >-> base_lit.
