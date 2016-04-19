@@ -5,6 +5,7 @@ Inductive intro_pat :=
   | IAnom : intro_pat
   | IAnomPure : intro_pat
   | IClear : intro_pat
+  | IFrame : intro_pat
   | IPersistent : intro_pat → intro_pat
   | IList : list (list intro_pat) → intro_pat
   | ISimpl : intro_pat
@@ -16,6 +17,7 @@ Inductive token :=
   | TAnom : token
   | TAnomPure : token
   | TClear : token
+  | TFrame : token
   | TPersistent : token
   | TBar : token
   | TBracketL : token
@@ -35,6 +37,7 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String "?" s => tokenize_go s (TAnom :: cons_name kn k) ""
   | String "%" s => tokenize_go s (TAnomPure :: cons_name kn k) ""
   | String "_" s => tokenize_go s (TClear :: cons_name kn k) ""
+  | String "$" s => tokenize_go s (TFrame :: cons_name kn k) ""
   | String "#" s => tokenize_go s (TPersistent :: cons_name kn k) ""
   | String "[" s => tokenize_go s (TBracketL :: cons_name kn k) ""
   | String "]" s => tokenize_go s (TBracketR :: cons_name kn k) ""
@@ -99,6 +102,7 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   | TAnom :: ts => parse_go ts (SPat IAnom :: k)
   | TAnomPure :: ts => parse_go ts (SPat IAnomPure :: k)
   | TClear :: ts => parse_go ts (SPat IClear :: k)
+  | TFrame :: ts => parse_go ts (SPat IFrame :: k)
   | TPersistent :: ts => parse_go ts (SPersistent :: k)
   | TBracketL :: ts => parse_go ts (SList :: k)
   | TBar :: ts => parse_go ts (SBar :: k)

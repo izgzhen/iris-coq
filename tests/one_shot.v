@@ -63,11 +63,11 @@ Proof.
       + iExists (InjRV #m). iFrame "Hl". iRight; iExists m; by iSplit. }
     iDestruct "Hv" as {v} "[Hl Hv]". wp_load.
     iAssert (one_shot_inv γ l ★ (v = InjLV #0 ∨ ∃ n : Z,
-      v = InjRV #n ★ own γ (Shot (DecAgree n))))%I as "[Hl #Hv]" with "-".
+      v = InjRV #n ★ own γ (Shot (DecAgree n))))%I as "[$ #Hv]" with "-".
     { iDestruct "Hv" as "[[% ?]|Hv]"; last iDestruct "Hv" as {m} "[% ?]"; subst.
       + iSplit. iLeft; by iSplitL "Hl". by iLeft.
       + iSplit. iRight; iExists m; by iSplitL "Hl". iRight; iExists m; by iSplit. }
-    iFrame "Hl". wp_let. iPvsIntro. iIntros "!". wp_seq.
+    wp_let. iPvsIntro. iIntros "!". wp_seq.
     iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as {m} "[% Hγ']"; subst.
     { wp_case. wp_seq. by iPvsIntro. }
     wp_case. wp_let. wp_focus (! _)%E.

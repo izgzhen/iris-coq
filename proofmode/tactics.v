@@ -551,6 +551,7 @@ Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
     | IAnom => idtac
     | IAnomPure => iPure Hz
     | IClear => iClear Hz
+    | IFrame => iFrame Hz
     | IName ?y => iRename Hz into y
     | IPersistent ?pat => iPersistent Hz; go Hz pat
     | IList [[]] => iContradiction Hz

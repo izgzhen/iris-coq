@@ -77,10 +77,10 @@ Lemma vs_impl E P Q : □ (P → Q) ⊢ (P ={E}=> Q).
 Proof. iIntros "#HPQ ! HP". by iApply "HPQ". Qed.
 
 Lemma vs_frame_l E1 E2 P Q R : (P ={E1,E2}=> Q) ⊢ (R ★ P ={E1,E2}=> R ★ Q).
-Proof. iIntros "#Hvs ! [HR HP]". iFrame "HR". by iApply "Hvs". Qed.
+Proof. iIntros "#Hvs ! [$ HP]". by iApply "Hvs". Qed.
 
 Lemma vs_frame_r E1 E2 P Q R : (P ={E1,E2}=> Q) ⊢ (P ★ R ={E1,E2}=> Q ★ R).
-Proof. iIntros "#Hvs ! [HP HR]". iFrame "HR". by iApply "Hvs". Qed.
+Proof. iIntros "#Hvs ! [HP $]". by iApply "Hvs". Qed.
 
 Lemma vs_mask_frame E1 E2 Ef P Q :
   Ef ⊥ E1 ∪ E2 → (P ={E1,E2}=> Q) ⊢ (P ={E1 ∪ Ef,E2 ∪ Ef}=> Q).
