@@ -683,6 +683,13 @@ Tactic Notation "iAlways":=
    apply tac_always_intro;
      [reflexivity || fail "iAlways: spatial context non-empty"|].
 
+(** * Later *)
+Tactic Notation "iNext":=
+  eapply tac_next;
+    [apply _
+    |let P := match goal with |- upred_tactics.StripLaterL ?P _ => P end in
+     apply _ || fail "iNext:" P "does not contain laters"|].
+
 (** * Introduction tactic *)
 Tactic Notation "iIntros" constr(pat) :=
   let rec go pats :=
@@ -690,6 +697,7 @@ Tactic Notation "iIntros" constr(pat) :=
     | [] => idtac
     | ISimpl :: ?pats => simpl; go pats
     | IAlways :: ?pats => iAlways; go pats
+    | INext :: ?pats => iNext; go pats
     | IPersistent (IName ?H) :: ?pats => iIntro #H; go pats
     | IName ?H :: ?pats => iIntro H; go pats
     | IPersistent IAnom :: ?pats => let H := iFresh in iIntro #H; go pats
@@ -758,13 +766,6 @@ Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
     simple_intropattern(x6) simple_intropattern(x7) simple_intropattern(x8)
     "}" constr(p) :=
   iIntros { x1 x2 x3 x4 x5 x6 x7 x8 }; iIntros p.
-
-(** * Later *)
-Tactic Notation "iNext":=
-  eapply tac_next;
-    [apply _
-    |let P := match goal with |- upred_tactics.StripLaterL ?P _ => P end in
-     apply _ || fail "iNext:" P "does not contain laters"|].
 
 (* This is pretty ugly, but without Ltac support for manipulating lists of
 idents I do not know how to do this better. *)

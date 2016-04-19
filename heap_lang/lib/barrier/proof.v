@@ -105,7 +105,7 @@ Proof.
   iPvs (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}))
     "-" as {γ'} "[#? Hγ']"; eauto.
   { iNext. iFrame "Hl". iExists (const P). rewrite !big_sepS_singleton /=.
-    iSplit; [|done]. by iNext; iIntros "?". }
+    iSplit; [|done]. by iIntros "> ?". }
   iAssert (barrier_ctx γ' l P)%I as "#?".
   { rewrite /barrier_ctx. by repeat iSplit. }
   iPvsAssert (sts_ownS γ' (i_states γ) {[Change γ]}
@@ -116,7 +116,7 @@ Proof.
         auto using sts.closed_op, i_states_closed, low_states_closed;
         set_solver. }
   iPvsIntro. rewrite /recv /send. iSplitL "Hr".
-  - iExists γ', P, P, γ. iFrame "Hr". repeat iSplit; auto. iNext; by iIntros "?".
+  - iExists γ', P, P, γ. iFrame "Hr". repeat iSplit; auto. by iIntros "> ?".
   - iExists γ'. by iSplit.
 Qed.
 
@@ -132,7 +132,7 @@ Proof.
   iSplitR "HΦ"; [iNext|by iIntros "?"].
   rewrite {2}/barrier_inv /ress /=; iFrame "Hl".
   iDestruct "Hr" as {Ψ} "[? Hsp]"; iExists Ψ; iFrame "Hsp".
-  iNext; iIntros "_"; by iApply "Hr".
+  iIntros "> _"; by iApply "Hr".
 Qed.
 
 Lemma wait_spec l P (Φ : val → iProp) :
@@ -160,7 +160,7 @@ Proof.
     { iNext. iApply (big_sepS_delete _ _ i); first done. by iApply "HΨ". }
     iSplitL "HΨ' Hl Hsp"; [iNext|].
     + rewrite {2}/barrier_inv /=; iFrame "Hl".
-      iExists Ψ; iFrame "Hsp". iNext; by iIntros "_".
+      iExists Ψ; iFrame "Hsp". by iIntros "> _".
     + iPoseProof (saved_prop_agree i Q (Ψ i)) "#" as "Heq"; first by iSplit.
       iIntros "_". wp_op=> ?; simplify_eq/=; wp_if.
       iPvsIntro. iApply "HΦ". iApply "HQR". by iRewrite "Heq".
@@ -191,9 +191,9 @@ Proof.
         set_solver. }
     iPvsIntro; iSplitL "Hγ1"; rewrite /recv /barrier_ctx.
     + iExists γ, P, R1, i1. iFrame "Hγ1 Hi1". repeat iSplit; auto.
-      by iNext; iIntros "?".
+      by iIntros "> ?".
     + iExists γ, P, R2, i2. iFrame "Hγ2 Hi2". repeat iSplit; auto.
-      by iNext; iIntros "?".
+      by iIntros "> ?".
 Qed.
 
 Lemma recv_weaken l P1 P2 : (P1 -★ P2) ⊢ (recv l P1 -★ recv l P2).
@@ -201,7 +201,7 @@ Proof.
   rewrite /recv.
   iIntros "HP HP1"; iDestruct "HP1" as {γ P Q i} "(#Hctx&Hγ&Hi&HP1)".
   iExists γ, P, Q, i; iFrame "Hctx Hγ Hi".
-  iNext; iIntros "HQ". by iApply "HP"; iApply "HP1".
+  iIntros "> HQ". by iApply "HP"; iApply "HP1".
 Qed.
 
 Lemma recv_mono l P1 P2 :

@@ -75,7 +75,7 @@ Proof.
     iSplit; [done|]; iSplitL "H1"; [|iSplitL "H2"].
     + by iApply worker_spec; iSplitL "H1".
     + by iApply worker_spec; iSplitL "H2".
-    + iIntros {v1 v2} "?". by iNext.
+    + by iIntros {v1 v2} "? >".
   - iIntros {_ v} "[_ H]"; iPoseProof Q_res_join "H". by iNext; iExists γ.
 Qed.
 End proof.

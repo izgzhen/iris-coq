@@ -9,7 +9,8 @@ Inductive intro_pat :=
   | IPersistent : intro_pat → intro_pat
   | IList : list (list intro_pat) → intro_pat
   | ISimpl : intro_pat
-  | IAlways : intro_pat.
+  | IAlways : intro_pat
+  | INext : intro_pat.
 
 Module intro_pat.
 Inductive token :=
@@ -26,7 +27,8 @@ Inductive token :=
   | TParenL : token
   | TParenR : token
   | TSimpl : token
-  | TAlways : token.
+  | TAlways : token
+  | TNext : token.
 
 Fixpoint cons_name (kn : string) (k : list token) : list token :=
   match kn with "" => k | _ => TName (string_rev kn) :: k end.
@@ -46,6 +48,7 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String ")" s => tokenize_go s (TParenR :: cons_name kn k) ""
   | String "&" s => tokenize_go s (TAmp :: cons_name kn k) ""
   | String "!" s => tokenize_go s (TAlways :: cons_name kn k) ""
+  | String ">" s => tokenize_go s (TNext :: cons_name kn k) ""
   | String "/" (String "=" s) => tokenize_go s (TSimpl :: cons_name kn k) ""
   | String a s => tokenize_go s k (String a kn)
   end.
@@ -112,6 +115,7 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   | TParenR :: ts => close_conj_list k None [] ≫= parse_go ts
   | TSimpl :: ts => parse_go ts (SPat ISimpl :: k)
   | TAlways :: ts => parse_go ts (SPat IAlways :: k)
+  | TNext :: ts => parse_go ts (SPat INext :: k)
   end.
 Definition parse (s : string) : option (list intro_pat) :=
   match k ← parse_go (tokenize s) [SList]; close_list k [] [] with
