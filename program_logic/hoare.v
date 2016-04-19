@@ -115,7 +115,7 @@ Proof.
   - iPvs "Hvs1" "HR" as "HR"; first by set_solver.
     iPvsIntro. iNext. iPvs "Hvs2" "HR" as "HR"; first by set_solver.
     iPvsIntro. iApply "HR".
-  - iApply "Hwp". done.
+  - iApply "Hwp" "HP".
 Qed.
 
 Lemma ht_frame_step_r E E1 E2 P R1 R2 R3 e Φ :
