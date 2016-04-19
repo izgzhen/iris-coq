@@ -96,13 +96,11 @@ Qed.
 
 Lemma ht_frame_l E P Φ R e :
   {{ P }} e @ E {{ Φ }} ⊢ {{ R ★ P }} e @ E {{ v, R ★ Φ v }}.
-Proof.
-  iIntros "#Hwp ! [HR HP]". iApply wp_frame_l; iFrame "HR". by iApply "Hwp".
-Qed.
+Proof. iIntros "#Hwp ! [$ HP]". by iApply "Hwp". Qed.
 
 Lemma ht_frame_r E P Φ R e :
   {{ P }} e @ E {{ Φ }} ⊢ {{ P ★ R }} e @ E {{ v, Φ v ★ R }}.
-Proof. setoid_rewrite (comm _ _ R); apply ht_frame_l. Qed.
+Proof. iIntros "#Hwp ! [HP $]". by iApply "Hwp". Qed.
 
 Lemma ht_frame_step_l E E1 E2 P R1 R2 R3 e Φ :
   to_val e = None → E ⊥ E1 → E2 ⊆ E1 →
