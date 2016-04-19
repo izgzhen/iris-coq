@@ -37,8 +37,8 @@ Definition spawn_inv (γ : gname) (l : loc) (Ψ : val → iProp) : iProp :=
                    ∃ v, lv = InjRV v ★ (Ψ v ∨ own γ (Excl ()))))%I.
 
 Definition join_handle (l : loc) (Ψ : val → iProp) : iProp :=
-  (■ (heapN ⊥ N) ★ ∃ γ, heap_ctx heapN ★ own γ (Excl ()) ★
-                        inv N (spawn_inv γ l Ψ))%I.
+  (heapN ⊥ N ★ ∃ γ, heap_ctx heapN ★ own γ (Excl ()) ★
+                    inv N (spawn_inv γ l Ψ))%I.
 
 Typeclasses Opaque join_handle.
 

@@ -19,6 +19,19 @@ Notation "{{ P } } e {{ Φ } }" := (True ⊢ ht ⊤ P e Φ)
   (at level 20, P, e, Φ at level 200,
    format "{{  P  } }  e  {{  Φ  } }") : C_scope.
 
+Notation "{{ P } } e @ E {{ v , Q } }" := (ht E P e (λ v, Q))
+  (at level 20, P, e, Q at level 200,
+   format "{{  P  } }  e  @  E  {{  v ,  Q  } }") : uPred_scope.
+Notation "{{ P } } e {{ v , Q } }" := (ht ⊤ P e (λ v, Q))
+  (at level 20, P, e, Q at level 200,
+   format "{{  P  } }  e  {{  v ,  Q  } }") : uPred_scope.
+Notation "{{ P } } e @ E {{ v , Q } }" := (True ⊢ ht E P e (λ v, Q))
+  (at level 20, P, e, Q at level 200,
+   format "{{  P  } }  e  @  E  {{  v ,  Q  } }") : C_scope.
+Notation "{{ P } } e {{ v , Q } }" := (True ⊢ ht ⊤ P e (λ v, Q))
+  (at level 20, P, e, Q at level 200,
+   format "{{  P  } }  e  {{  v ,  Q  } }") : C_scope.
+
 Section hoare.
 Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q : iProp Λ Σ.
@@ -42,8 +55,7 @@ Proof. solve_proper. Qed.
 Lemma ht_alt E P Φ e : (P ⊢ WP e @ E {{ Φ }}) → {{ P }} e @ E {{ Φ }}.
 Proof. iIntros {Hwp} "! HP". by iApply Hwp. Qed.
 
-Lemma ht_val E v :
-  {{ True : iProp Λ Σ }} of_val v @ E {{ λ v', v = v' }}.
+Lemma ht_val E v : {{ True : iProp Λ Σ }} of_val v @ E {{ v', v = v' }}.
 Proof. iIntros "! _". by iApply wp_value'. Qed.
 
 Lemma ht_vs E P P' Φ Φ' e :
@@ -83,13 +95,13 @@ Proof.
 Qed.
 
 Lemma ht_frame_l E P Φ R e :
-  {{ P }} e @ E {{ Φ }} ⊢ {{ R ★ P }} e @ E {{ λ v, R ★ Φ v }}.
+  {{ P }} e @ E {{ Φ }} ⊢ {{ R ★ P }} e @ E {{ v, R ★ Φ v }}.
 Proof.
   iIntros "#Hwp ! [HR HP]". iApply wp_frame_l; iFrame "HR". by iApply "Hwp".
 Qed.
 
 Lemma ht_frame_r E P Φ R e :
-  {{ P }} e @ E {{ Φ }} ⊢ {{ P ★ R }} e @ E {{ λ v, Φ v ★ R }}.
+  {{ P }} e @ E {{ Φ }} ⊢ {{ P ★ R }} e @ E {{ v, Φ v ★ R }}.
 Proof. setoid_rewrite (comm _ _ R); apply ht_frame_l. Qed.
 
 Lemma ht_frame_step_l E E1 E2 P R1 R2 R3 e Φ :
@@ -122,7 +134,7 @@ Qed.
 
 Lemma ht_frame_step_l' E P R e Φ :
   to_val e = None →
-  {{ P }} e @ E {{ Φ }} ⊢ {{ ▷ R ★ P }} e @ E {{ λ v, R ★ Φ v }}.
+  {{ P }} e @ E {{ Φ }} ⊢ {{ ▷ R ★ P }} e @ E {{ v, R ★ Φ v }}.
 Proof.
   iIntros {?} "#Hwp ! [HR HP]".
   iApply wp_frame_step_l'; try done. iFrame "HR". by iApply "Hwp".
@@ -130,7 +142,7 @@ Qed.
 
 Lemma ht_frame_step_r' E P Φ R e :
   to_val e = None →
-  {{ P }} e @ E {{ Φ }} ⊢ {{ P ★ ▷ R }} e @ E {{ λ v, Φ v ★ R }}.
+  {{ P }} e @ E {{ Φ }} ⊢ {{ P ★ ▷ R }} e @ E {{ v, Φ v ★ R }}.
 Proof.
   iIntros {?} "#Hwp ! [HP HR]".
   iApply wp_frame_step_r'; try done. iFrame "HR". by iApply "Hwp".
@@ -138,7 +150,7 @@ Qed.
 
 Lemma ht_inv N E P Φ R e :
   atomic e → nclose N ⊆ E →
-  (inv N R ★ {{ ▷ R ★ P }} e @ E ∖ nclose N {{ λ v, ▷ R ★ Φ v }})
+  (inv N R ★ {{ ▷ R ★ P }} e @ E ∖ nclose N {{ v, ▷ R ★ Φ v }})
     ⊢ {{ P }} e @ E {{ Φ }}.
 Proof.
   iIntros {??} "[#? #Hwp] ! HP". eapply wp_inv; eauto.

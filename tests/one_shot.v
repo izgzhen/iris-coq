@@ -37,8 +37,8 @@ Definition one_shot_inv (γ : gname) (l : loc) : iProp :=
 
 Lemma wp_one_shot (Φ : val → iProp) :
   (heap_ctx heapN ★ ∀ f1 f2 : val,
-    (∀ n : Z, □ WP f1 #n {{ λ w, w = #true ∨ w = #false }}) ★
-    □ WP f2 #() {{ λ g, □ WP g #() {{ λ _, True }} }} -★ Φ (f1,f2)%V)
+    (∀ n : Z, □ WP f1 #n {{ w, w = #true ∨ w = #false }}) ★
+    □ WP f2 #() {{ g, □ WP g #() {{ _, True }} }} -★ Φ (f1,f2)%V)
   ⊢ WP one_shot_example #() {{ Φ }}.
 Proof.
   iIntros "[#? Hf] /=".
@@ -83,9 +83,9 @@ Qed.
 
 Lemma hoare_one_shot (Φ : val → iProp) :
   heap_ctx heapN ⊢ {{ True }} one_shot_example #()
-    {{ λ ff,
-      (∀ n : Z, {{ True }} Fst ff #n {{ λ w, w = #true ∨ w = #false }}) ★
-      {{ True }} Snd ff #() {{ λ g, {{ True }} g #() {{ λ _, True }} }}
+    {{ ff,
+      (∀ n : Z, {{ True }} Fst ff #n {{ w, w = #true ∨ w = #false }}) ★
+      {{ True }} Snd ff #() {{ g, {{ True }} g #() {{ _, True }} }}
     }}.
 Proof.
   iIntros "#? ! _". iApply wp_one_shot. iSplit; first done.

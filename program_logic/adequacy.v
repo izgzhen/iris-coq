@@ -84,7 +84,7 @@ Qed.
 
 Theorem wp_adequacy_result E φ e v t2 σ1 m σ2 :
   ✓ m →
-  (ownP σ1 ★ ownG m) ⊢ WP e @ E {{ λ v', ■ φ v' }} →
+  (ownP σ1 ★ ownG m) ⊢ WP e @ E {{ v', ■ φ v' }} →
   rtc step ([e], σ1) (of_val v :: t2, σ2) →
   φ v.
 Proof.
@@ -100,7 +100,7 @@ Qed.
 
 Lemma ht_adequacy_result E φ e v t2 σ1 m σ2 :
   ✓ m →
-  {{ ownP σ1 ★ ownG m }} e @ E {{ λ v', ■ φ v' }} →
+  {{ ownP σ1 ★ ownG m }} e @ E {{ v', ■ φ v' }} →
   rtc step ([e], σ1) (of_val v :: t2, σ2) →
   φ v.
 Proof.

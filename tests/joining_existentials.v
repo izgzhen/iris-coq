@@ -19,8 +19,8 @@ Definition barrier_res γ (Φ : X → iProp) : iProp :=
   (∃ x, one_shot_own γ x ★ Φ x)%I.
 
 Lemma worker_spec e γ l (Φ Ψ : X → iProp) :
-  (recv heapN N l (barrier_res γ Φ) ★ ∀ x, {{ Φ x }} e {{ λ _, Ψ x }})
-  ⊢ WP wait (%l) ;; e {{ λ _, barrier_res γ Ψ }}.
+  (recv heapN N l (barrier_res γ Φ) ★ ∀ x, {{ Φ x }} e {{ _, Ψ x }})
+  ⊢ WP wait (%l) ;; e {{ _, barrier_res γ Ψ }}.
 Proof.
   iIntros "[Hl #He]". wp_apply wait_spec; iFrame "Hl".
   iIntros "Hγ"; iDestruct "Hγ" as {x} "[#Hγ Hx]".
@@ -50,10 +50,10 @@ Qed.
 Lemma client_spec_new (eM eW1 eW2 : expr []) (eM' eW1' eW2' : expr ("b" :b: [])) :
   heapN ⊥ N → eM' = wexpr' eM → eW1' = wexpr' eW1 → eW2' = wexpr' eW2 →
   (heap_ctx heapN ★ P
-  ★ {{ P }} eM {{ λ _, ∃ x, Φ x }}
-  ★ (∀ x, {{ Φ1 x }} eW1 {{ λ _, Ψ1 x }})
-  ★ (∀ x, {{ Φ2 x }} eW2 {{ λ _, Ψ2 x }}))
-  ⊢ WP client eM' eW1' eW2' {{ λ _, ∃ γ, barrier_res γ Ψ }}.
+  ★ {{ P }} eM {{ _, ∃ x, Φ x }}
+  ★ (∀ x, {{ Φ1 x }} eW1 {{ _, Ψ1 x }})
+  ★ (∀ x, {{ Φ2 x }} eW2 {{ _, Ψ2 x }}))
+  ⊢ WP client eM' eW1' eW2' {{ _, ∃ γ, barrier_res γ Ψ }}.
 Proof.
   iIntros {HN -> -> ->} "/= (#Hh&HP&#He&#He1&#He2)"; rewrite /client.
   iPvs one_shot_alloc as {γ} "Hγ".

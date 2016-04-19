@@ -8,15 +8,30 @@ Definition vs {Λ Σ} (E1 E2 : coPset) (P Q : iProp Λ Σ) : iProp Λ Σ :=
 Arguments vs {_ _} _ _ _%I _%I.
 Instance: Params (@vs) 4.
 Notation "P ={ E1 , E2 }=> Q" := (vs E1 E2 P%I Q%I)
-  (at level 199, E1,E2 at level 50,
+  (at level 99, E1,E2 at level 50, Q at level 200,
    format "P  ={ E1 , E2 }=>  Q") : uPred_scope.
-Notation "P ={ E1 , E2 }=> Q" := (True ⊢ vs E1 E2 P%I Q%I)
-  (at level 199, E1, E2 at level 50,
+Notation "P ={ E1 , E2 }=> Q" := (True ⊢ (P ={E1,E2}=> Q)%I)
+  (at level 99, E1, E2 at level 50, Q at level 200,
    format "P  ={ E1 , E2 }=>  Q") : C_scope.
-Notation "P ={ E }=> Q" := (vs E E P%I Q%I)
-  (at level 199, E at level 50, format "P  ={ E }=>  Q") : uPred_scope.
-Notation "P ={ E }=> Q" := (True ⊢ vs E E P%I Q%I)
-  (at level 199, E at level 50, format "P  ={ E }=>  Q") : C_scope.
+Notation "P ={ E }=> Q" := (P ={E,E}=> Q)%I
+  (at level 99, E at level 50, Q at level 200,
+   format "P  ={ E }=>  Q") : uPred_scope.
+Notation "P ={ E }=> Q" := (True ⊢ (P ={E}=> Q)%I)
+  (at level 99, E at level 50, Q at level 200,
+   format "P  ={ E }=>  Q") : C_scope.
+
+Notation "P <={ E1 , E2 }=> Q" := ((P ={E1,E2}=> Q) ∧ (Q ={E2,E1}=> P))%I
+  (at level 99, E1,E2 at level 50, Q at level 200,
+   format "P  <={ E1 , E2 }=>  Q") : uPred_scope.
+Notation "P <={ E1 , E2 }=> Q" := (True ⊢ (P <={E1,E2}=> Q)%I)
+  (at level 99, E1, E2 at level 50, Q at level 200,
+   format "P  <={ E1 , E2 }=>  Q") : C_scope.
+Notation "P <={ E }=> Q" := (P <={E,E}=> Q)%I
+  (at level 99, E at level 50, Q at level 200,
+   format "P  <={ E }=>  Q") : uPred_scope.
+Notation "P <={ E }=> Q" := (True ⊢ (P <={E}=> Q)%I)
+  (at level 99, E at level 50, Q at level 200,
+   format "P  <={ E }=>  Q") : C_scope.
 
 Section vs.
 Context {Λ : language} {Σ : iFunctor}.

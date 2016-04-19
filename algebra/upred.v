@@ -276,6 +276,7 @@ Notation "(⊣⊢)" := (equiv (A:=uPred _)) (only parsing) : C_scope.
 Notation "■ φ" := (uPred_const φ%C%type)
   (at level 20, right associativity) : uPred_scope.
 Notation "x = y" := (uPred_const (x%C%type = y%C%type)) : uPred_scope.
+Notation "x ⊥ y" := (uPred_const (x%C%type ⊥ y%C%type)) : uPred_scope.
 Notation "'False'" := (uPred_const False) : uPred_scope.
 Notation "'True'" := (uPred_const True) : uPred_scope.
 Infix "∧" := uPred_and : uPred_scope.

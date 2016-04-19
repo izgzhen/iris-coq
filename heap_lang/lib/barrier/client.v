@@ -17,7 +17,7 @@ Section client.
   Local Notation iProp := (iPropG heap_lang Σ).
 
   Definition y_inv (q : Qp) (l : loc) : iProp :=
-    (∃ f : val, l ↦{q} f ★ □ ∀ n : Z, WP f #n {{ λ v, v = #(n + 42) }})%I.
+    (∃ f : val, l ↦{q} f ★ □ ∀ n : Z, WP f #n {{ v, v = #(n + 42) }})%I.
 
   Lemma y_inv_split q l : y_inv q l ⊢ (y_inv (q/2) l ★ y_inv (q/2) l).
   Proof.
@@ -27,7 +27,7 @@ Section client.
 
   Lemma worker_safe q (n : Z) (b y : loc) :
     (heap_ctx heapN ★ recv heapN N b (y_inv q y))
-    ⊢ WP worker n (%b) (%y) {{ λ _, True }}.
+    ⊢ WP worker n (%b) (%y) {{ _, True }}.
   Proof.
     iIntros "[#Hh Hrecv]". wp_lam. wp_let.
     wp_apply wait_spec; iFrame "Hrecv".
@@ -36,7 +36,7 @@ Section client.
     iApply wp_wand_r; iSplitR; [iApply "Hf"|by iIntros {v} "_"].
   Qed.
 
-  Lemma client_safe : heapN ⊥ N → heap_ctx heapN ⊢ WP client {{ λ _, True }}.
+  Lemma client_safe : heapN ⊥ N → heap_ctx heapN ⊢ WP client {{ _, True }}.
   Proof.
     iIntros {?} "#Hh"; rewrite /client. wp_alloc y as "Hy". wp_let.
     wp_apply (newbarrier_spec heapN N (y_inv 1 y)); first done.
@@ -61,7 +61,7 @@ Section ClosedProofs.
   Definition Σ : gFunctors := #[ heapGF ; barrierGF ; spawnGF ].
   Notation iProp := (iPropG heap_lang Σ).
 
-  Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ λ v, True }}.
+  Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ v, True }}.
   Proof.
     iIntros "! Hσ".
     iPvs (heap_alloc (nroot .@ "Barrier")) "Hσ" as {h} "[#Hh _]"; first done.

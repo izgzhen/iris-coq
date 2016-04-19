@@ -24,10 +24,10 @@ Definition lock_inv (γ : gname) (l : loc) (R : iProp) : iProp :=
   (∃ b : bool, l ↦ #b ★ if b then True else own γ (Excl ()) ★ R)%I.
 
 Definition is_lock (l : loc) (R : iProp) : iProp :=
-  (∃ N γ, ■ (heapN ⊥ N) ∧ heap_ctx heapN ∧ inv N (lock_inv γ l R))%I.
+  (∃ N γ, heapN ⊥ N ∧ heap_ctx heapN ∧ inv N (lock_inv γ l R))%I.
 
 Definition locked (l : loc) (R : iProp) : iProp :=
-  (∃ N γ, ■ (heapN ⊥ N) ∧ heap_ctx heapN ∧
+  (∃ N γ, heapN ⊥ N ∧ heap_ctx heapN ∧
           inv N (lock_inv γ l R) ∧ own γ (Excl ()))%I.
 
 Global Instance lock_inv_ne n γ l : Proper (dist n ==> dist n) (lock_inv γ l).

@@ -3,14 +3,14 @@ From iris.program_logic Require Export hoare lifting.
 From iris.program_logic Require Import ownership.
 From iris.proofmode Require Import tactics pviewshifts.
 
-Local Notation "{{ P } } ef ?@ E {{ Φ } }" :=
-  (default True%I ef (λ e, ht E P e Φ))
-  (at level 20, P, ef, Φ at level 200,
-   format "{{  P  } }  ef  ?@  E  {{  Φ  } }") : uPred_scope.
-Local Notation "{{ P } } ef ?@ E {{ Φ } }" :=
-  (True ⊢ default True ef (λ e, ht E P e Φ))
-  (at level 20, P, ef, Φ at level 200,
-   format "{{  P  } }  ef  ?@  E  {{  Φ  } }") : C_scope.
+Local Notation "{{ P } } ef ?@ E {{ v , Q } }" :=
+  (default True%I ef (λ e, ht E P e (λ v, Q)))
+  (at level 20, P, ef, Q at level 200,
+   format "{{  P  } }  ef  ?@  E  {{  v ,  Q  } }") : uPred_scope.
+Local Notation "{{ P } } ef ?@ E {{ v , Q } }" :=
+  (True ⊢ default True ef (λ e, ht E P e (λ v, Q)))
+  (at level 20, P, ef, Q at level 200,
+   format "{{  P  } }  ef  ?@  E  {{  v ,  Q  } }") : C_scope.
 
 Section lifting.
 Context {Λ : language} {Σ : iFunctor}.
@@ -26,7 +26,7 @@ Lemma ht_lift_step E1 E2
   ((P ={E1,E2}=> ▷ ownP σ1 ★ ▷ P') ∧
    (∀ e2 σ2 ef, ■ φ e2 σ2 ef ★ ownP σ2 ★ P' ={E2,E1}=> Φ1 e2 σ2 ef ★ Φ2 e2 σ2 ef) ∧
    (∀ e2 σ2 ef, {{ Φ1 e2 σ2 ef }} e2 @ E1 {{ Ψ }}) ∧
-   (∀ e2 σ2 ef, {{ Φ2 e2 σ2 ef }} ef ?@ ⊤ {{ λ _, True }}))
+   (∀ e2 σ2 ef, {{ Φ2 e2 σ2 ef }} ef ?@ ⊤ {{ _, True }}))
   ⊢ {{ P }} e1 @ E1 {{ Ψ }}.
 Proof.
   iIntros {?? Hsafe Hstep} "#(#Hvs&HΦ&He2&Hef) ! HP".
@@ -45,8 +45,8 @@ Lemma ht_lift_atomic_step
   atomic e1 →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  (∀ e2 σ2 ef, {{ ■ φ e2 σ2 ef ★ P }} ef ?@ ⊤ {{ λ _, True }}) ⊢
-  {{ ▷ ownP σ1 ★ ▷ P }} e1 @ E {{ λ v, ∃ σ2 ef, ownP σ2 ★ ■ φ (of_val v) σ2 ef }}.
+  (∀ e2 σ2 ef, {{ ■ φ e2 σ2 ef ★ P }} ef ?@ ⊤ {{ _, True }}) ⊢
+  {{ ▷ ownP σ1 ★ ▷ P }} e1 @ E {{ v, ∃ σ2 ef, ownP σ2 ★ ■ φ (of_val v) σ2 ef }}.
 Proof.
   iIntros {? Hsafe Hstep} "#Hef".
   set (φ' e σ ef := is_Some (to_val e) ∧ φ e σ ef).
@@ -68,7 +68,7 @@ Lemma ht_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) P P' Ψ e
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →
   ((∀ e2 ef, {{ ■ φ e2 ef ★ P }} e2 @ E {{ Ψ }}) ∧
-   (∀ e2 ef, {{ ■ φ e2 ef ★ P' }} ef ?@ ⊤ {{ λ _, True }}))
+   (∀ e2 ef, {{ ■ φ e2 ef ★ P' }} ef ?@ ⊤ {{ _, True }}))
   ⊢ {{ ▷(P ★ P') }} e1 @ E {{ Ψ }}.
 Proof.
   iIntros {? Hsafe Hstep} "[#He2 #Hef] ! HP".
@@ -83,7 +83,7 @@ Lemma ht_lift_pure_det_step
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2' σ2 ef', prim_step e1 σ1 e2' σ2 ef' → σ1 = σ2 ∧ e2 = e2' ∧ ef = ef')→
-  ({{ P }} e2 @ E {{ Ψ }} ∧ {{ P' }} ef ?@ ⊤ {{ λ _, True }})
+  ({{ P }} e2 @ E {{ Ψ }} ∧ {{ P' }} ef ?@ ⊤ {{ _, True }})
   ⊢ {{ ▷(P ★ P') }} e1 @ E {{ Ψ }}.
 Proof.
   iIntros {? Hsafe Hdet} "[#He2 #Hef]".

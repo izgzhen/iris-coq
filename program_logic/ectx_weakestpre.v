@@ -14,7 +14,7 @@ Hint Resolve head_prim_reducible head_reducible_prim_step.
 Notation wp_fork ef := (default True ef (flip (wp ⊤) (λ _, True)))%I.
 
 Lemma wp_ectx_bind {E e} K Φ :
-  WP e @ E {{ λ v, WP fill K (of_val v) @ E {{ Φ }} }} ⊢ WP fill K e @ E {{ Φ }}.
+  WP e @ E {{ v, WP fill K (of_val v) @ E {{ Φ }} }} ⊢ WP fill K e @ E {{ Φ }}.
 Proof. apply: weakestpre.wp_bind. Qed.
 
 Lemma wp_lift_head_step E1 E2

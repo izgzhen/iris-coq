@@ -82,13 +82,13 @@ Proof. intros. by apply: (inv_fsa_timeless pvs_fsa). Qed.
 Lemma wp_inv E e N P Φ R :
   atomic e → nclose N ⊆ E →
   R ⊢ inv N P →
-  R ⊢ (▷ P -★ WP e @ E ∖ nclose N {{ λ v, ▷ P ★ Φ v }}) →
+  R ⊢ (▷ P -★ WP e @ E ∖ nclose N {{ v, ▷ P ★ Φ v }}) →
   R ⊢ WP e @ E {{ Φ }}.
 Proof. intros. by apply: (inv_fsa (wp_fsa e)). Qed.
 Lemma wp_inv_timeless E e N P `{!TimelessP P} Φ R :
   atomic e → nclose N ⊆ E →
   R ⊢ inv N P →
-  R ⊢ (P -★ WP e @ E ∖ nclose N {{ λ v, P ★ Φ v }}) →
+  R ⊢ (P -★ WP e @ E ∖ nclose N {{ v, P ★ Φ v }}) →
   R ⊢ WP e @ E {{ Φ }}.
 Proof. intros. by apply: (inv_fsa_timeless (wp_fsa e)). Qed.
 
