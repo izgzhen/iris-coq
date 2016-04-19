@@ -92,20 +92,20 @@ Lemma ht_frame_r E P Φ R e :
   {{ P }} e @ E {{ Φ }} ⊢ {{ P ★ R }} e @ E {{ λ v, Φ v ★ R }}.
 Proof. setoid_rewrite (comm _ _ R); apply ht_frame_l. Qed.
 
-Lemma ht_frame_step_l E P R e Φ :
+Lemma ht_frame_step_l' E P R e Φ :
   to_val e = None →
   {{ P }} e @ E {{ Φ }} ⊢ {{ ▷ R ★ P }} e @ E {{ λ v, R ★ Φ v }}.
 Proof.
   iIntros {?} "#Hwp ! [HR HP]".
-  iApply wp_frame_step_l; try done. iFrame "HR". by iApply "Hwp".
+  iApply wp_frame_step_l'; try done. iFrame "HR". by iApply "Hwp".
 Qed.
 
-Lemma ht_frame_step_r E P Φ R e :
+Lemma ht_frame_step_r' E P Φ R e :
   to_val e = None →
   {{ P }} e @ E {{ Φ }} ⊢ {{ P ★ ▷ R }} e @ E {{ λ v, Φ v ★ R }}.
 Proof.
   iIntros {?} "#Hwp ! [HP HR]".
-  iApply wp_frame_step_r; try done. iFrame "HR". by iApply "Hwp".
+  iApply wp_frame_step_r'; try done. iFrame "HR". by iApply "Hwp".
 Qed.
 
 Lemma ht_inv N E P Φ R e :

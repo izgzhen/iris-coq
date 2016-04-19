@@ -189,22 +189,37 @@ Proof.
   - by rewrite -(assoc _ r2) (comm _ rR) !assoc -(assoc _ _ rR).
   - apply IH; eauto using uPred_weaken.
 Qed.
-Lemma wp_frame_step_r E e Φ R :
-  to_val e = None → (WP e @ E {{ Φ }} ★ ▷ R) ⊢ WP e @ E {{ λ v, Φ v ★ R }}.
+Lemma wp_frame_step_r E E1 E2 e Φ R :
+  to_val e = None → E ⊥ E1 → E2 ⊆ E1 →
+  (WP e @ E {{ Φ }} ★ |={E1,E2}=> ▷ |={E2,E1}=> R)
+  ⊢ WP e @ (E ∪ E1) {{ λ v, Φ v ★ R }}.
 Proof.
-  rewrite wp_eq.
-  intros He; uPred.unseal; split; intros n r' Hvalid (r&rR&Hr&Hwp&?).
-  revert Hvalid; rewrite Hr; clear Hr.
+  rewrite wp_eq pvs_eq=> He ??.
+  uPred.unseal; split; intros n r' Hvalid (r&rR&Hr&Hwp&HR); cofe_subst.
+  constructor; [done|]=>rf k Ef σ1 ?? Hws1.
   destruct Hwp as [|n r e ? Hgo]; [by rewrite to_of_val in He|].
-  constructor; [done|]=>rf k Ef σ1 ???; destruct n as [|n]; first omega.
-  destruct (Hgo (rR⋅rf) k Ef σ1) as [Hsafe Hstep];rewrite ?assoc;auto.
+  (* "execute" HR *)
+  edestruct (HR (r ⋅ rf) (S k) (E ∪ Ef) σ1) as [s [Hvs Hws2]]; [omega|set_solver| |].
+  { eapply wsat_change, Hws1; first by set_solver+.
+    rewrite assoc [rR ⋅ _]comm. done. } clear Hws1 HR.
+  (* Take a step *)
+  destruct (Hgo (s⋅rf) k (E2 ∪ Ef) σ1) as [Hsafe Hstep]; [done|set_solver| |].
+  { eapply wsat_change, Hws2; first by set_solver+.
+    rewrite !assoc [s ⋅ _]comm. done. } clear Hgo.
   split; [done|intros e2 σ2 ef ?].
-  destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
-  exists (r2 ⋅ rR), r2'; split_and?; auto.
-  - by rewrite -(assoc _ r2) (comm _ rR) !assoc -(assoc _ _ rR).
+  destruct (Hstep e2 σ2 ef) as (r2&r2'&Hws3&?&?); auto. clear Hws2.
+  (* Execute 2nd part of the view shift *)
+  edestruct (Hvs (r2 ⋅ r2' ⋅ rf) k (E ∪ Ef) σ2) as [t [HR Hws4]]; [omega|set_solver| |].
+  { eapply wsat_change, Hws3; first by set_solver+.
+    rewrite !assoc [_ ⋅ s]comm !assoc. done. } clear Hvs Hws3.
+  (* Execute the rest of e *)
+  exists (r2 ⋅ t), r2'. split_and?; auto.
+  - eapply wsat_change, Hws4; first by set_solver+.
+    rewrite !assoc [_ ⋅ t]comm. done.
   - rewrite -uPred_sep_eq. move:(wp_frame_r). rewrite wp_eq=>Hframe.
-    apply Hframe; [auto|uPred.unseal; exists r2, rR; split_and?; auto].
-    eapply uPred_weaken with n rR; eauto.
+    apply Hframe; first by auto. uPred.unseal; exists r2, t; split_and?; auto.
+    move:(wp_mask_frame_mono). rewrite wp_eq=>Hmask.
+    eapply (Hmask E); by auto.
 Qed.
 Lemma wp_bind `{LanguageCtx Λ K} E e Φ :
   WP e @ E {{ λ v, WP K (of_val v) @ E {{ Φ }} }} ⊢ WP K e @ E {{ Φ }}.
@@ -241,11 +256,26 @@ Lemma wp_value_pvs E Φ e v :
 Proof. intros. rewrite -wp_pvs. rewrite -wp_value //. Qed.
 Lemma wp_frame_l E e Φ R : (R ★ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ λ v, R ★ Φ v }}.
 Proof. setoid_rewrite (comm _ R); apply wp_frame_r. Qed.
-Lemma wp_frame_step_l E e Φ R :
+Lemma wp_frame_step_r' E e Φ R :
+  to_val e = None → (WP e @ E {{ Φ }} ★ ▷ R) ⊢ WP e @ E {{ λ v, Φ v ★ R }}.
+Proof.
+  intros. rewrite {2}(_ : E = E ∪ ∅); last by set_solver.
+  rewrite -(wp_frame_step_r E ∅ ∅); [|auto|set_solver..].
+  apply sep_mono_r. rewrite -!pvs_intro. done.
+Qed.
+Lemma wp_frame_step_l E E1 E2 e Φ R :
+  to_val e = None → E ⊥ E1 → E2 ⊆ E1 →
+  ((|={E1,E2}=> ▷ |={E2,E1}=> R) ★ WP e @ E {{ Φ }})
+  ⊢ WP e @ (E ∪ E1) {{ λ v, R ★ Φ v }}.
+Proof.
+  rewrite [((|={E1,E2}=> _) ★ _)%I]comm; setoid_rewrite (comm _ R).
+  apply wp_frame_step_r.
+Qed.
+Lemma wp_frame_step_l' E e Φ R :
   to_val e = None → (▷ R ★ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ λ v, R ★ Φ v }}.
 Proof.
   rewrite (comm _ (▷ R)%I); setoid_rewrite (comm _ R).
-  apply wp_frame_step_r.
+  apply wp_frame_step_r'.
 Qed.
 Lemma wp_always_l E e Φ R `{!PersistentP R} :
   (R ∧ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ λ v, R ∧ Φ v }}.

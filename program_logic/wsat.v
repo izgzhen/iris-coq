@@ -44,6 +44,9 @@ Global Instance wsat_ne n : Proper (dist n ==> iff) (@wsat Λ Σ n E σ) | 1.
 Proof. by intros E σ w1 w2 Hw; split; apply wsat_ne'. Qed.
 Global Instance wsat_proper n : Proper ((≡) ==> iff) (@wsat Λ Σ n E σ) | 1.
 Proof. by intros E σ w1 w2 Hw; apply wsat_ne, equiv_dist. Qed.
+Lemma wsat_change n E1 E2 σ r1 r2 :
+  E1 = E2 → r1 ≡ r2 → wsat n E1 σ r1 → wsat n E2 σ r2.
+Proof. move=>->->. done. Qed.
 Lemma wsat_le n n' E σ r : wsat n E σ r → n' ≤ n → wsat n' E σ r.
 Proof.
   destruct n as [|n], n' as [|n']; simpl; try by (auto with lia).
