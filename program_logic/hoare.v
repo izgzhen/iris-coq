@@ -118,10 +118,10 @@ Qed.
 Lemma ht_frame_step_r E E1 E2 P R1 R2 R3 e Φ :
   to_val e = None → E ⊥ E1 → E2 ⊆ E1 →
   ((R1 ={E1,E2}=> ▷ R2) ∧ (R2 ={E2,E1}=> R3) ∧ {{ P }} e @ E {{ Φ }})
-    ⊢ {{ R1 ★ P }} e @ (E ∪ E1) {{ λ v, Φ v ★ R3 }}.
+    ⊢ {{ P ★ R1 }} e @ (E ∪ E1) {{ λ v, Φ v ★ R3 }}.
 Proof.
   iIntros {???} "[#Hvs1 [#Hvs2 #Hwp]]".
-  setoid_rewrite (comm _ _ R3).
+  setoid_rewrite (comm _ _ R3); rewrite (comm _ _ R1).
   iApply (ht_frame_step_l _ _ E2); by repeat iSplit.
 Qed.
 
