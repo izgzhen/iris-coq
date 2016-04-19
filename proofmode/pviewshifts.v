@@ -106,7 +106,7 @@ Tactic Notation "iPvsCore" constr(H) :=
     eapply tac_pvs_elim_fsa with _ _ _ _ H _ _ _;
       [env_cbv; reflexivity || fail "iPvs:" H "not found"
       |let P := match goal with |- FSASplit ?P _ _ _ _ => P end in
-       apply _ || fail "iPvs: " P "not a pvs"
+       apply _ || fail "iPvs:" P "not a pvs"
       |env_cbv; reflexivity|simpl]
   end.
 
