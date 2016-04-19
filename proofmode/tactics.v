@@ -302,8 +302,8 @@ Tactic Notation "iApply" open_constr (lem) :=
   iPoseProof lem as (fun H => repeat (iForallSpecialize H _); first
     [iExact H
     |eapply tac_apply with _ H _ _ _;
-       [env_cbv; reflexivity || fail "iApply:" lem "not found"
-       |apply _ || fail "iApply: cannot apply" lem|]]).
+       [env_cbv; reflexivity || fail 1 "iApply:" lem "not found"
+       |apply _ || fail 1 "iApply: cannot apply" lem|]]).
 Tactic Notation "iApply" open_constr (H) "{" open_constr(x1) "}" :=
   iSpecialize H { x1 }; last iApply H.
 Tactic Notation "iApply" open_constr (H) "{" open_constr(x1)
@@ -335,8 +335,8 @@ Tactic Notation "iApply" open_constr (lem) constr(Hs) :=
   iPoseProof lem Hs as (fun H => first
     [iExact H
     |eapply tac_apply with _ H _ _ _;
-       [env_cbv; reflexivity || fail "iApply:" lem "not found"
-       |apply _ || fail "iApply: cannot apply" lem|]]).
+       [env_cbv; reflexivity || fail 1 "iApply:" lem "not found"
+       |apply _ || fail 1 "iApply: cannot apply" lem|]]).
 Tactic Notation "iApply" open_constr (H) "{" open_constr(x1) "}" constr(Hs) :=
   iSpecialize H { x1 }; last iApply H Hs.
 Tactic Notation "iApply" open_constr (H) "{" open_constr(x1) open_constr(x2) "}"
