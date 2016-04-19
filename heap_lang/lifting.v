@@ -2,6 +2,7 @@ From iris.program_logic Require Export ectx_weakestpre.
 From iris.program_logic Require Import ownership. (* for ownP *)
 From iris.heap_lang Require Export lang.
 From iris.heap_lang Require Import tactics.
+From iris.proofmode Require Import weakestpre.
 Import uPred.
 Local Hint Extern 0 (head_reducible _ _) => do_head_step eauto 2.
 
@@ -32,14 +33,16 @@ Proof.
     ef = None ∧ e' = Loc l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None).
   rewrite -(wp_lift_atomic_head_step (Alloc e) φ σ) // /φ;
     last (by intros; inv_head_step; eauto 8); last (by simpl; eauto).
-  apply sep_mono, later_mono; first done.
-  apply forall_intro=>v2; apply forall_intro=>σ2; apply forall_intro=>ef.
-  apply wand_intro_l.
-  rewrite always_and_sep_l -assoc -always_and_sep_l.
-  apply const_elim_l=>-[l [-> [Hl [-> ?]]]].
-  rewrite (forall_elim l) right_id const_equiv // left_id wand_elim_r.
-  rewrite -(of_to_val (Loc l) (LocV l)) // in Hl.
-  by apply of_val_inj in Hl as ->.
+  iIntros  "[HP HΦ]". iFrame "HP". iNext.
+  iIntros {v2 σ2 ef} "[% HP]".
+  (* FIXME: I should not have to refer to "H0". *)
+  destruct H0 as (l & -> & ? & -> & ?).
+  rewrite -(of_to_val (Loc l) (LocV l)) // in H0.
+  apply of_val_inj in H0 as ->.
+  simpl. iSplitL; last done.
+  (* FIXME: I should be able to do [iSpecialize "HΦ" l]. *)
+  (* FIXME: I should be able to do [iApply "HΦ" l]. *)
+  iApply "HΦ". iSplit; done.
 Qed.
 
 Lemma wp_load_pst E σ l v Φ :
