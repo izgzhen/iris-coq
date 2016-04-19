@@ -28,12 +28,13 @@ Lemma wp_alloc_pst E σ e v Φ :
   (▷ ownP σ ★ ▷ (∀ l, σ !! l = None ∧ ownP (<[l:=v]>σ) -★ Φ (LocV l)))
   ⊢ WP Alloc e @ E {{ Φ }}.
 Proof.
+  iIntros {?}  "[HP HΦ]".
   (* TODO: This works around ssreflect bug #22. *)
-  intros. set (φ (e' : expr []) σ' ef := ∃ l,
+  set (φ (e' : expr []) σ' ef := ∃ l,
     ef = None ∧ e' = Loc l ∧ σ' = <[l:=v]>σ ∧ σ !! l = None).
-  rewrite -(wp_lift_atomic_head_step (Alloc e) φ σ) // /φ;
-    last (by intros; inv_head_step; eauto 8); last (by simpl; eauto).
-  iIntros  "[$ HΦ] >"; iIntros {v2 σ2 ef} "[% HP]".
+  iApply (wp_lift_atomic_head_step (Alloc e) φ σ); try (by simpl; eauto);
+    [by intros; subst φ; inv_head_step; eauto 8|].
+  iFrame "HP". iNext. iIntros {v2 σ2 ef} "[% HP]".
   (* FIXME: I should not have to refer to "H0". *)
   destruct H0 as (l & -> & [= <-]%of_to_val_flip & -> & ?); simpl.
   iSplit; last done. iApply "HΦ"; by iSplit.

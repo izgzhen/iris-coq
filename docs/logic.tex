@@ -584,8 +584,8 @@ This is entirely standard.
 {}{\propB * \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\propB*\prop}}
 
 \infer[wp-frame-step]
-{\toval(\expr) = \bot}
-{\later\propB * \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\propB*\prop}}
+{\toval(\expr) = \bot \and \mask_2 \subseteq \mask_1}
+{\wpre\expr[\mask]{\Ret\var.\prop} * \pvs[\mask_1][\mask_2]\later\pvs[\mask_2][\mask_1]\propB \proves \wpre\expr[\mask \uplus \mask_1]{\Ret\var.\propB*\prop}}
 
 \infer[wp-bind]
 {\text{$\lctx$ is a context}}

@@ -176,8 +176,8 @@ The following rules can be derived for Hoare triples.
   {\hoare{\prop * \propC}{\expr}{\Ret\val. \propB * \propC}[\mask]}
 \and
 \inferH{Ht-frame-step}
-  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask] \and \toval(\expr) = \bot}
-  {\hoare{\prop * \later\propC}{\expr}{\Ret\val. \propB * \propC}[\mask]}
+  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask] \and \toval(\expr) = \bot \and \mask_2 \subseteq \mask_2 \\\\ \propC_1 \vs[\mask_1][\mask_2] \later\propC_2 \and \propC_2 \vs[\mask_2][\mask_1] \propC_3}
+  {\hoare{\prop * \propC_1}{\expr}{\Ret\val. \propB * \propC_3}[\mask \uplus \mask_1]}
 \and
 \inferH{Ht-atomic}
   {\prop \vs[\mask \uplus \mask'][\mask] \prop' \\
