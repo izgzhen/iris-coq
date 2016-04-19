@@ -114,8 +114,7 @@ Proof.
   iSplitL "HR"; [|by iApply "Hwp"].
   iPvs "Hvs1" "HR"; first by set_solver.
   iPvsIntro. iNext.
-  iPvs "Hvs2" "Hvs1"; first by set_solver.
-  by iPvsIntro.
+  by iPvs "Hvs2" "Hvs1"; first by set_solver.
 Qed.
 
 Lemma ht_frame_step_r E E1 E2 P R1 R2 R3 e Φ :
@@ -125,7 +124,7 @@ Lemma ht_frame_step_r E E1 E2 P R1 R2 R3 e Φ :
 Proof.
   iIntros {???} "[#Hvs1 [#Hvs2 #Hwp]]".
   setoid_rewrite (comm _ _ R3).
-  iApply ht_frame_step_l; try eassumption. repeat iSplit; by iIntros "!".
+  iApply (ht_frame_step_l _ _ E2); by repeat iSplit.
 Qed.
 
 Lemma ht_frame_step_l' E P R e Φ :

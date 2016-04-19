@@ -71,10 +71,10 @@ Qed.
 Lemma vs_transitive' E P Q R : ((P ={E}=> Q) ∧ (Q ={E}=> R)) ⊢ (P ={E}=> R).
 Proof. apply vs_transitive; set_solver. Qed.
 Lemma vs_reflexive E P : P ={E}=> P.
-Proof. iIntros "! HP"; by iPvsIntro. Qed.
+Proof. by iIntros "! HP". Qed.
 
 Lemma vs_impl E P Q : □ (P → Q) ⊢ (P ={E}=> Q).
-Proof. iIntros "#HPQ ! HP". iPvsIntro. by iApply "HPQ". Qed.
+Proof. iIntros "#HPQ ! HP". by iApply "HPQ". Qed.
 
 Lemma vs_frame_l E1 E2 P Q R : (P ={E1,E2}=> Q) ⊢ (R ★ P ={E1,E2}=> R ★ Q).
 Proof. iIntros "#Hvs ! [HR HP]". iFrame "HR". by iApply "Hvs". Qed.

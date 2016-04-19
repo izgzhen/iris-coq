@@ -260,8 +260,17 @@ Proof.
 Qed.
 
 (** * Basic rules *)
-Lemma tac_exact Δ i p P : envs_lookup i Δ = Some (p,P) → Δ ⊢ P.
-Proof. intros. by rewrite envs_lookup_sound' // sep_elim_l. Qed.
+Class ToAssumption (p : bool) (P Q : uPred M) :=
+  to_assumption : (if p then □ P else P) ⊢ Q.
+Global Instance to_assumption_exact p P : ToAssumption p P P.
+Proof. destruct p; by rewrite /ToAssumption ?always_elim. Qed.
+Global Instance to_assumption_always P Q :
+  ToAssumption true P Q → ToAssumption true P (□ Q).
+Proof. rewrite /ToAssumption=><-. by rewrite always_always. Qed.
+
+Lemma tac_assumption Δ i p P Q :
+  envs_lookup i Δ = Some (p,P) → ToAssumption p P Q → Δ ⊢ Q.
+Proof. intros. by rewrite envs_lookup_sound // sep_elim_l. Qed.
 
 Lemma tac_rename Δ Δ' i j p P Q :
   envs_lookup i Δ = Some (p,P) →
