@@ -104,20 +104,48 @@ Lemma ht_frame_r E P Φ R e :
   {{ P }} e @ E {{ Φ }} ⊢ {{ P ★ R }} e @ E {{ v, Φ v ★ R }}.
 Proof. setoid_rewrite (comm _ _ R); apply ht_frame_l. Qed.
 
-Lemma ht_frame_step_l E P R e Φ :
+Lemma ht_frame_step_l E E1 E2 P R1 R2 R3 e Φ :
+  to_val e = None → E ⊥ E1 → E2 ⊆ E1 →
+  ((R1 ={E1,E2}=> ▷ R2) ∧ (R2 ={E2,E1}=> R3) ∧ {{ P }} e @ E {{ Φ }})
+    ⊢ {{ R1 ★ P }} e @ (E ∪ E1) {{ λ v, R3 ★ Φ v }}.
+Proof.
+  iIntros {???} "[#Hvs1 [#Hvs2 #Hwp]] ! [HR HP]".
+  iApply (wp_frame_step_l E E1 E2); try done.
+  iSplitL "HR".
+  - (* TODO: Is there a way to do "apply Hvs1 in Hr"? *)
+    iPvs "Hvs1" "HR"; first by set_solver.
+    (* TODO: iApply pvs_intro? *)
+    rewrite -pvs_intro.
+    iNext. iPvs "Hvs2" "Hvs1"; first by set_solver.
+    rewrite -pvs_intro. done.
+  - iApply "Hwp". done.
+Qed.
+
+Lemma ht_frame_step_r E E1 E2 P R1 R2 R3 e Φ :
+  to_val e = None → E ⊥ E1 → E2 ⊆ E1 →
+  ((R1 ={E1,E2}=> ▷ R2) ∧ (R2 ={E2,E1}=> R3) ∧ {{ P }} e @ E {{ Φ }})
+    ⊢ {{ R1 ★ P }} e @ (E ∪ E1) {{ λ v, Φ v ★ R3 }}.
+Proof.
+  iIntros {???} "[#Hvs1 [#Hvs2 #Hwp]]".
+  setoid_rewrite (comm _ _ R3).
+  iApply ht_frame_step_l; try eassumption. iSplit; last iSplit;
+     iIntros "!"; done.
+Qed.
+
+Lemma ht_frame_step_l' E P R e Φ :
   to_val e = None →
   {{ P }} e @ E {{ Φ }} ⊢ {{ ▷ R ★ P }} e @ E {{ v, R ★ Φ v }}.
 Proof.
   iIntros {?} "#Hwp ! [HR HP]".
-  iApply wp_frame_step_l; try done. iFrame "HR". by iApply "Hwp".
+  iApply wp_frame_step_l'; try done. iFrame "HR". by iApply "Hwp".
 Qed.
 
-Lemma ht_frame_step_r E P Φ R e :
+Lemma ht_frame_step_r' E P Φ R e :
   to_val e = None →
   {{ P }} e @ E {{ Φ }} ⊢ {{ P ★ ▷ R }} e @ E {{ v, Φ v ★ R }}.
 Proof.
   iIntros {?} "#Hwp ! [HP HR]".
-  iApply wp_frame_step_r; try done. iFrame "HR". by iApply "Hwp".
+  iApply wp_frame_step_r'; try done. iFrame "HR". by iApply "Hwp".
 Qed.
 
 Lemma ht_inv N E P Φ R e :
