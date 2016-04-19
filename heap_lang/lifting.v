@@ -36,10 +36,8 @@ Proof.
   iIntros  "[HP HΦ]". iFrame "HP". iNext.
   iIntros {v2 σ2 ef} "[% HP]".
   (* FIXME: I should not have to refer to "H0". *)
-  destruct H0 as (l & -> & ? & -> & ?).
-  rewrite -(of_to_val (Loc l) (LocV l)) // in H0.
-  apply of_val_inj in H0 as ->.
-  simpl. iSplitL; last done. iApply "HΦ" {l}. iSplit; done.
+  destruct H0 as (l & -> & [= <-]%of_to_val_flip & -> & ?); simpl.
+  iSplit; last done. iApply "HΦ"; by iSplit.
 Qed.
 
 Lemma wp_load_pst E σ l v Φ :
