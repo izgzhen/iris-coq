@@ -112,12 +112,9 @@ Proof.
   iIntros {???} "[#Hvs1 [#Hvs2 #Hwp]] ! [HR HP]".
   iApply (wp_frame_step_l E E1 E2); try done.
   iSplitL "HR".
-  - (* TODO: Is there a way to do "apply Hvs1 in Hr"? *)
-    iPvs "Hvs1" "HR"; first by set_solver.
-    (* TODO: iApply pvs_intro? *)
-    rewrite -pvs_intro.
-    iNext. iPvs "Hvs2" "Hvs1"; first by set_solver.
-    rewrite -pvs_intro. done.
+  - iPvs "Hvs1" "HR" as "HR"; first by set_solver.
+    iPvsIntro. iNext. iPvs "Hvs2" "HR" as "HR"; first by set_solver.
+    iPvsIntro. iApply "HR".
   - iApply "Hwp". done.
 Qed.
 
@@ -126,10 +123,10 @@ Lemma ht_frame_step_r E E1 E2 P R1 R2 R3 e Φ :
   ((R1 ={E1,E2}=> ▷ R2) ∧ (R2 ={E2,E1}=> R3) ∧ {{ P }} e @ E {{ Φ }})
     ⊢ {{ R1 ★ P }} e @ (E ∪ E1) {{ λ v, Φ v ★ R3 }}.
 Proof.
-  iIntros {???} "[#Hvs1 [#Hvs2 #Hwp]]".
+  iIntros {???} "[Hvs1 [Hvs2 Hwp]]".
   setoid_rewrite (comm _ _ R3).
-  iApply ht_frame_step_l; try eassumption. iSplit; last iSplit;
-     iIntros "!"; done.
+  iApply ht_frame_step_l; try eassumption.
+  iSplit; last iSplit; done.
 Qed.
 
 Lemma ht_frame_step_l' E P R e Φ :
