@@ -46,6 +46,8 @@ Section language.
        prim_step e1 σ1 e2 σ2 ef →
        step ρ1 ρ2.
 
+  Lemma of_to_val_flip v e : of_val v = e → to_val e = Some v.
+  Proof. intros <-. by rewrite to_of_val. Qed.
   Lemma reducible_not_val e σ : reducible e σ → to_val e = None.
   Proof. intros (?&?&?&?); eauto using val_stuck. Qed.
   Lemma atomic_of_val v : ¬atomic (of_val v).
