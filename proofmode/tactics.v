@@ -506,34 +506,31 @@ Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
     |env_cbv; reflexivity || fail "iCombine:" H "not fresh"|].
 
 (** * Existential *)
-Tactic Notation "iExists" open_constr(x1) :=
-  eapply tac_exist with _ x1 ;
+Tactic Notation "iExists" uconstr(x1) :=
+  eapply tac_exist;
     [let P := match goal with |- ExistSplit ?P _ => P end in
      apply _ || fail "iExists:" P "not an existential"
-    |cbv beta].
+    |cbv beta; eexists x1].
 
-Tactic Notation "iExists" open_constr(x1) "," open_constr(x2) :=
+Tactic Notation "iExists" uconstr(x1) "," uconstr(x2) :=
   iExists x1; iExists x2.
-Tactic Notation "iExists" open_constr(x1) "," open_constr(x2) ","
-    open_constr(x3) :=
+Tactic Notation "iExists" uconstr(x1) "," uconstr(x2) "," uconstr(x3) :=
   iExists x1; iExists x2, x3.
-Tactic Notation "iExists" open_constr(x1) "," open_constr(x2) ","
-    open_constr(x3) "," open_constr(x4) :=
+Tactic Notation "iExists" uconstr(x1) "," uconstr(x2) "," uconstr(x3) ","
+    uconstr(x4) :=
   iExists x1; iExists x2, x3, x4.
-Tactic Notation "iExists" open_constr(x1) "," open_constr(x2) ","
-    open_constr(x3) "," open_constr(x4) "," open_constr(x5) :=
+Tactic Notation "iExists" uconstr(x1) "," uconstr(x2) "," uconstr(x3) ","
+    uconstr(x4) "," uconstr(x5) :=
   iExists x1; iExists x2, x3, x4, x5.
-Tactic Notation "iExists" open_constr(x1) "," open_constr(x2) ","
-    open_constr(x3) "," open_constr(x4) "," open_constr(x5) ","
-    open_constr(x6) :=
+Tactic Notation "iExists" uconstr(x1) "," uconstr(x2) "," uconstr(x3) ","
+    uconstr(x4) "," uconstr(x5) "," uconstr(x6) :=
   iExists x1; iExists x2, x3, x4, x5, x6.
-Tactic Notation "iExists" open_constr(x1) "," open_constr(x2) ","
-    open_constr(x3) "," open_constr(x4) "," open_constr(x5) ","
-    open_constr(x6) "," open_constr(x7) :=
+Tactic Notation "iExists" uconstr(x1) "," uconstr(x2) "," uconstr(x3) ","
+    uconstr(x4) "," uconstr(x5) "," uconstr(x6) "," uconstr(x7) :=
   iExists x1; iExists x2, x3, x4, x5, x6, x7.
-Tactic Notation "iExists" open_constr(x1) "," open_constr(x2) ","
-    open_constr(x3) "," open_constr(x4) "," open_constr(x5) ","
-    open_constr(x6) "," open_constr(x7) "," open_constr(x8) :=
+Tactic Notation "iExists" uconstr(x1) "," uconstr(x2) "," uconstr(x3) ","
+    uconstr(x4) "," uconstr(x5) "," uconstr(x6) "," uconstr(x7) ","
+    uconstr(x8) :=
   iExists x1; iExists x2, x3, x4, x5, x6, x7, x8.
 
 Tactic Notation "iExistDestruct" constr(H) "as" ident(x) constr(Hx) :=

@@ -835,8 +835,9 @@ Arguments exist_split {_} _ _ {_}.
 Global Instance exist_split_exist {A} (Φ: A → uPred M): ExistSplit (∃ a, Φ a) Φ.
 Proof. done. Qed.
 
-Lemma tac_exist {A} Δ P (Φ : A → uPred M) a : ExistSplit P Φ → Δ ⊢ Φ a → Δ ⊢ P.
-Proof. intros. rewrite -(exist_split P). eauto using exist_intro'. Qed.
+Lemma tac_exist {A} Δ P (Φ : A → uPred M) :
+  ExistSplit P Φ → (∃ a, Δ ⊢ Φ a) → Δ ⊢ P.
+Proof. intros ? [a ?]. rewrite -(exist_split P). eauto using exist_intro'. Qed.
 
 Class ExistDestruct {A} (P : uPred M) (Φ : A → uPred M) :=
   exist_destruct : P ⊢ (∃ x, Φ x).
