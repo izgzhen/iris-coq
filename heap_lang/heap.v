@@ -140,13 +140,13 @@ Section heap.
   Proof. by rewrite heap_mapsto_op_eq Qp_div_2. Qed.
 
   (** Weakest precondition *)
-  Lemma wp_alloc N E e v P Φ :
+  Lemma wp_alloc N E e v Φ :
     to_val e = Some v → nclose N ⊆ E →
     (heap_ctx N ★ ▷ ∀ l, l ↦ v -★ Φ (LitV $ LitLoc l)) ⊢ WP Alloc e @ E {{ Φ }}.
   Proof.
     iIntros {??} "[#Hinv HΦ]". rewrite /heap_ctx.
     iPvs (auth_empty heap_name) as "Hheap".
-    (* TODO: use an iTactic *)
+    (* TODO: change [auth_fsa] to single turnstile and use [iApply] *)
     apply (auth_fsa heap_inv (wp_fsa (Alloc e)))
       with N heap_name ∅; simpl; eauto with I.
     iFrame "Hheap". iIntros {h}. rewrite [∅ ⋅ h]left_id.
@@ -156,10 +156,8 @@ Section heap.
     rewrite [{[ _ := _ ]} ⋅ ∅]right_id.
     rewrite -of_heap_insert -(insert_singleton_op h); last by apply of_heap_None.
     iFrame "Hheap". iSplit.
-    { (* FIXME iTactic for introduction of constant assertions? *)
-      rewrite const_equiv; first done. split; first done.
-      by apply (insert_valid h). }
-    iIntros "Hheap". iApply "HΦ". rewrite /heap_mapsto. done.
+    { iPureIntro; split; first done. by apply (insert_valid h). }
+    iIntros "Hheap". iApply "HΦ". by rewrite /heap_mapsto.
   Qed.
 
   Lemma wp_load N E l q v P Φ :
