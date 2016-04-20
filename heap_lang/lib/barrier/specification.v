@@ -9,7 +9,6 @@ Context {Σ : gFunctors} `{!heapG Σ} `{!barrierG Σ}.
 
 Local Notation iProp := (iPropG heap_lang Σ).
 
-(* TODO: Maybe notation for LocV (and Loc)? *)
 Lemma barrier_spec (heapN N : namespace) :
   heapN ⊥ N →
   ∃ recv send : loc → iProp -n> iProp,
