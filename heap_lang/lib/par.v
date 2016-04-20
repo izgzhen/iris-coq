@@ -11,8 +11,8 @@ Definition par {X} : expr X :=
 Notation Par e1 e2 := (par (Pair (λ: <>, e1) (λ: <>, e2)))%E.
 Infix "||" := Par : expr_scope.
 
-Instance do_wexpr_assert {X Y} (H : X `included` Y) : WExpr H par par := _.
-Instance do_wsubst_assert {X Y} x es (H : X `included` x :: Y) :
+Instance do_wexpr_par {X Y} (H : X `included` Y) : WExpr H par par := _.
+Instance do_wsubst_par {X Y} x es (H : X `included` x :: Y) :
   WSubst x es H par par := do_wsubst_closed _ x es H _.
 Typeclasses Opaque par.
 
