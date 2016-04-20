@@ -41,7 +41,7 @@ Lemma wp_par (Ψ1 Ψ2 : val → iProp) (e1 e2 : expr []) (Φ : val → iProp) :
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
   ⊢ WP e1 || e2 {{ Φ }}.
 Proof.
-  iIntros {?} "(#Hh&H1&H2&H)". iApply par_spec; auto.
+  iIntros {?} "(#Hh&H1&H2&H)". iApply (par_spec Ψ1 Ψ2); auto.
   iFrame "Hh H". iSplitL "H1"; by wp_let.
 Qed.
 End proof.

@@ -712,42 +712,65 @@ Proof.
 Qed.
 
 (** * Framing *)
-Class Frame (R P Q : uPred M) := frame : (R ★ Q) ⊢ P.
+(** The [option] is to account for formulas that can be framed entirely, so
+we do not end up with [True]s everywhere. *)
+Class Frame (R P : uPred M) (mQ : option (uPred M)) :=
+  frame : (R ★ from_option True mQ) ⊢ P.
 Arguments frame : clear implicits.
 
-Global Instance frame_here R : Frame R R True | 1.
+Instance frame_here R : Frame R R None | 1.
 Proof. by rewrite /Frame right_id. Qed.
-Global Instance frame_here_l R P : Frame R (R ★ P) P | 0.
-Proof. done. Qed.
-Global Instance frame_here_r R P : Frame R (P ★ R) P | 0.
-Proof. by rewrite /Frame comm. Qed.
-Global Instance frame_here_and_l R P : Frame R (R ∧ P) P | 0.
-Proof. by rewrite /Frame sep_and. Qed.
-Global Instance frame_here_and_r R P : Frame R (P ∧ R) P | 0.
-Proof. by rewrite /Frame sep_and comm. Qed.
-Global Instance frame_sep_l R P1 P2 Q :
-  Frame R P1 Q → Frame R (P1 ★ P2) (Q ★ P2).
-Proof. rewrite /Frame => <-. solve_sep_entails. Qed.
-Global Instance frame_sep_r R P1 P2 Q :
-  Frame R P2 Q → Frame R (P1 ★ P2) (P1 ★ Q).
-Proof. rewrite /Frame => <-. solve_sep_entails. Qed.
-Global Instance frame_or R P1 P2 Q1 Q2 :
-  Frame R P1 Q1 → Frame R P2 Q2 → Frame R (P1 ∨ P2) (Q1 ∨ Q2).
-Proof. rewrite /Frame=> <- <-. by rewrite -sep_or_l. Qed.
-Global Instance frame_exist {A} R (Φ Ψ : A → uPred M) :
-  (∀ a, Frame R (Φ a) (Ψ a)) → Frame R (∃ x, Φ x) (∃ x, Ψ x).
+Instance frame_sep_l R P1 P2 mQ :
+  Frame R P1 mQ →
+  Frame R (P1 ★ P2) (Some $ if mQ is Some Q then Q ★ P2 else P2)%I.
+Proof. rewrite /Frame => <-. destruct mQ; simpl; solve_sep_entails. Qed.
+Instance frame_sep_r R P1 P2 mQ :
+  Frame R P2 mQ →
+  Frame R (P1 ★ P2) (Some $ if mQ is Some Q then P1 ★ Q else P1)%I.
+Proof. rewrite /Frame => <-. destruct mQ; simpl; solve_sep_entails. Qed.
+Instance frame_and_l R P1 P2 mQ :
+  Frame R P1 mQ →
+  Frame R (P1 ∧ P2) (Some $ if mQ is Some Q then Q ∧ P2 else P2)%I.
+Proof. rewrite /Frame => <-. destruct mQ; simpl; eauto 10 with I. Qed.
+Instance frame_and_r R P1 P2 mQ :
+  Frame R P2 mQ →
+  Frame R (P1 ∧ P2) (Some $ if mQ is Some Q then P1 ∧ Q else P1)%I.
+Proof. rewrite /Frame => <-. destruct mQ; simpl; eauto 10 with I. Qed.
+Instance frame_or R P1 P2 mQ1 mQ2 :
+  Frame R P1 mQ1 → Frame R P2 mQ2 →
+  Frame R (P1 ∨ P2) (match mQ1, mQ2 with
+                     | Some Q1, Some Q2 => Some (Q1 ∨ Q2)%I | _, _ => None
+                     end).
+Proof.
+  rewrite /Frame=> <- <-.
+  destruct mQ1 as [Q1|], mQ2 as [Q2|]; simpl; auto with I.
+  by rewrite -sep_or_l.
+Qed.
+Instance frame_later R P mQ :
+  Frame R P mQ → Frame R (▷ P) (if mQ is Some Q then Some (▷ Q) else None)%I.
+Proof.
+  rewrite /Frame=><-.
+  by destruct mQ; rewrite /= later_sep -(later_intro R) ?later_True.
+Qed.
+Instance frame_exist {A} R (Φ : A → uPred M) mΨ :
+  (∀ a, Frame R (Φ a) (mΨ a)) →
+  Frame R (∃ x, Φ x) (Some (∃ x, if mΨ x is Some Q then Q else True))%I.
 Proof. rewrite /Frame=> ?. by rewrite sep_exist_l; apply exist_mono. Qed.
-Global Instance frame_forall {A} R (Φ Ψ : A → uPred M) :
-  (∀ a, Frame R (Φ a) (Ψ a)) → Frame R (∀ x, Φ x) (∀ x, Ψ x).
+Instance frame_forall {A} R (Φ : A → uPred M) mΨ :
+  (∀ a, Frame R (Φ a) (mΨ a)) →
+  Frame R (∀ x, Φ x) (Some (∀ x, if mΨ x is Some Q then Q else True))%I.
 Proof. rewrite /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
 
-Lemma tac_frame Δ Δ' i p R P Q :
-  envs_lookup_delete i Δ = Some (p, R, Δ')%I → Frame R P Q →
-  (if p then Δ else Δ') ⊢ Q → Δ ⊢ P.
+Lemma tac_frame Δ Δ' i p R P mQ :
+  envs_lookup_delete i Δ = Some (p, R, Δ')%I → Frame R P mQ →
+  (if mQ is Some Q then (if p then Δ else Δ') ⊢ Q else True) →
+  Δ ⊢ P.
 Proof.
-  intros [? ->]%envs_lookup_delete_Some ? HQ; destruct p.
-  - by rewrite envs_lookup_persistent_sound // HQ always_elim.
-  - rewrite envs_lookup_sound //; simpl. by rewrite HQ.
+  intros [? ->]%envs_lookup_delete_Some ? HQ. destruct p.
+  - rewrite envs_lookup_persistent_sound // always_elim.
+    rewrite -(frame R P). destruct mQ as [Q|]; rewrite ?HQ /=; auto with I.
+  - rewrite envs_lookup_sound //; simpl.
+    rewrite -(frame R P). destruct mQ as [Q|]; rewrite ?HQ /=; auto with I.
 Qed.
 
 (** * Disjunction *)
@@ -842,3 +865,19 @@ Proof.
     by rewrite right_id wand_elim_r.
 Qed.
 End tactics.
+
+(** Make sure we can frame in the presence of evars without making Coq loop due
+to it applying these rules too eager.
+
+Note: that [Hint Mode Frame - + + - : typeclass_instances] would disable framing
+with evars entirely.
+Note: we give presence to framing on the left. *)
+Hint Extern 0 (Frame _ ?R _) => class_apply @frame_here : typeclass_instances.
+Hint Extern 9 (Frame _ (_ ★ _) _) => class_apply @frame_sep_l : typeclass_instances.
+Hint Extern 10 (Frame _ (_ ★ _) _) => class_apply @frame_sep_r : typeclass_instances.
+Hint Extern 9 (Frame _ (_ ∧ _) _) => class_apply @frame_and_l : typeclass_instances.
+Hint Extern 10 (Frame _ (_ ∧ _) _) => class_apply @frame_and_r : typeclass_instances.
+Hint Extern 10 (Frame _ (_ ∨ _) _) => class_apply @frame_or : typeclass_instances.
+Hint Extern 10 (Frame _ (▷ _) _) => class_apply @frame_later : typeclass_instances.
+Hint Extern 10 (Frame _ (∃ _, _) _) => class_apply @frame_exist : typeclass_instances.
+Hint Extern 10 (Frame _ (∀ _, _) _) => class_apply @frame_forall : typeclass_instances.

@@ -21,8 +21,9 @@ Global Instance exists_split_pvs {A} E1 E2 P (Φ : A → iProp Λ Σ) :
 Proof.
   rewrite /ExistSplit=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
 Qed.
-Global Instance frame_pvs E1 E2 R P Q :
-  Frame R P Q → Frame R (|={E1,E2}=> P) (|={E1,E2}=> Q).
+Instance frame_pvs E1 E2 R P mQ :
+  Frame R P mQ →
+  Frame R (|={E1,E2}=> P) (Some (|={E1,E2}=> from_option True mQ))%I.
 Proof. rewrite /Frame=><-. by rewrite pvs_frame_l. Qed.
 Global Instance to_wand_pvs E1 E2 R P Q :
   ToWand R P Q → ToWand R (|={E1,E2}=> P) (|={E1,E2}=> Q).
@@ -95,6 +96,9 @@ Proof.
   by rewrite right_id pvs_frame_r wand_elim_r.
 Qed.
 End pvs.
+
+Hint Extern 10 (Frame _ (|={_,_}=> _) _) =>
+  class_apply frame_pvs : typeclass_instances.
 
 Tactic Notation "iPvsIntro" := apply tac_pvs_intro.
 

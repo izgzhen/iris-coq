@@ -40,3 +40,7 @@ Proof.
   * iFrame "H3". by iRight.
   * iSplitL "HQ". iAssumption. by iSplitL "H1".
 Qed.
+
+Lemma demo_3 (M : cmraT) (P1 P2 P3 : uPred M) :
+  (P1 ★ P2 ★ P3) ⊢ (▷ P1 ★ ▷ (P2 ★ ∃ x, (P3 ∧ x = 0) ∨ P3)).
+Proof. iIntros "($ & $ & H)". iFrame "H". simpl. iNext. by iExists 0. Qed.

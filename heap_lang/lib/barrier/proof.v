@@ -104,7 +104,8 @@ Proof.
   iPvs (saved_prop_alloc (F:=idCF) _ P) as {γ} "#?".
   iPvs (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}))
     "-" as {γ'} "[#? Hγ']"; eauto.
-  { iNext. iFrame "Hl". iExists (const P). rewrite !big_sepS_singleton /=.
+  { iNext. rewrite /barrier_inv /=. iFrame "Hl".
+    iExists (const P). rewrite !big_sepS_singleton /=.
     iSplit; [|done]. by iIntros "> ?". }
   iAssert (barrier_ctx γ' l P)%I as "#?".
   { rewrite /barrier_ctx. by repeat iSplit. }
