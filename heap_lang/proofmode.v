@@ -25,7 +25,8 @@ Lemma tac_wp_alloc Δ Δ' N E j e v Φ :
     Δ'' ⊢ Φ (LitV (LitLoc l))) →
   Δ ⊢ WP Alloc e @ E {{ Φ }}.
 Proof.
-  intros ???? HΔ; eapply wp_alloc; eauto.
+  intros ???? HΔ. etrans; last apply: wp_alloc; eauto.
+  rewrite -always_and_sep_l. iSplit; first done.
   rewrite strip_later_env_sound; apply later_mono, forall_intro=> l.
   destruct (HΔ l) as (Δ''&?&HΔ'). rewrite envs_app_sound //; simpl.
   by rewrite right_id HΔ'.
