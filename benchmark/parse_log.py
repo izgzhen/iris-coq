@@ -32,8 +32,7 @@ def parse(file, parse_times = True):
                 time = float(m.group(2))
                 times[name] = time
             continue
-        # nothing else we know about
-        raise Exception("Unexpected line: {}".format(line))
+        # nothing else we know about, ignore
     # end of file. previous commit, if any, is done now.
     if commit is not None:
         yield Result(commit, times)
