@@ -170,7 +170,7 @@ Section heap.
     iFrame "Hmapsto". iIntros {h} "[% Hheap]". rewrite /heap_inv.
     iApply (wp_load_pst _ (<[l:=v]>(of_heap h)));first by rewrite lookup_insert.
     rewrite of_heap_singleton_op //. iFrame "Hheap". iNext.
-    iIntros "Hheap". iFrame "Hheap". iSplit; first by iPureIntro. done.
+    iIntros "$". by iSplit.
   Qed.
 
   Lemma wp_store N E l v' e v P Φ :
