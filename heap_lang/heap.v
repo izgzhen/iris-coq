@@ -160,20 +160,17 @@ Section heap.
     iIntros "Hheap". iApply "HΦ". by rewrite /heap_mapsto.
   Qed.
 
-  Lemma wp_load N E l q v P Φ :
-    P ⊢ heap_ctx N → nclose N ⊆ E →
-    P ⊢ (▷ l ↦{q} v ★ ▷ (l ↦{q} v -★ Φ v)) →
-    P ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
+  Lemma wp_load N E l q v Φ :
+    nclose N ⊆ E →
+    (heap_ctx N ★ ▷ l ↦{q} v ★ ▷ (l ↦{q} v -★ Φ v)) ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
   Proof.
-    rewrite /heap_ctx /heap_inv=> ?? HPΦ.
+    iIntros {?} "[#Hinv [Hmapsto HΦ]]". rewrite /heap_ctx /heap_mapsto.
     apply (auth_fsa' heap_inv (wp_fsa _) id)
       with N heap_name {[ l := Frac q (DecAgree v) ]}; simpl; eauto with I.
-    rewrite HPΦ{HPΦ}; apply sep_mono_r, forall_intro=> h; apply wand_intro_l.
-    rewrite -assoc; apply const_elim_sep_l=> ?.
-    rewrite -(wp_load_pst _ (<[l:=v]>(of_heap h))) ?lookup_insert //.
-    rewrite const_equiv // left_id.
-    rewrite /heap_inv of_heap_singleton_op //.
-    apply sep_mono_r, later_mono, wand_intro_l. by rewrite -later_intro.
+    iFrame "Hmapsto". iIntros {h} "[% Hheap]". rewrite /heap_inv.
+    iApply (wp_load_pst _ (<[l:=v]>(of_heap h)));first by rewrite lookup_insert.
+    rewrite of_heap_singleton_op //. iFrame "Hheap". iNext.
+    iIntros "Hheap". iFrame "Hheap". iSplit; first by iPureIntro. done.
   Qed.
 
   Lemma wp_store N E l v' e v P Φ :

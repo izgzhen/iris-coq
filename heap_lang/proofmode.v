@@ -39,7 +39,7 @@ Lemma tac_wp_load Δ Δ' N E i l q v Φ :
   Δ' ⊢ Φ v →
   Δ ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
 Proof.
-  intros. eapply wp_load; eauto.
+  intros. rewrite -wp_load // -always_and_sep_l. apply and_intro; first done.
   rewrite strip_later_env_sound -later_sep envs_lookup_split //; simpl.
   by apply later_mono, sep_mono_r, wand_mono.
 Qed.
