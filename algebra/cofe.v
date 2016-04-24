@@ -464,13 +464,14 @@ Section later.
     match n with 0 => True | S n => later_car x ≡{n}≡ later_car y end.
   Program Definition later_chain (c : chain (later A)) : chain A :=
     {| chain_car n := later_car (c (S n)) |}.
-  Next Obligation. intros c n i ?; apply (chain_cauchy c (S n)); lia. Qed.
+  Next Obligation. intros c n i ?. apply (chain_cauchy c (S n)); lia. Qed.
   Instance later_compl : Compl (later A) := λ c, Next (compl (later_chain c)).
   Definition later_cofe_mixin : CofeMixin (later A).
   Proof.
     split.
-    - intros x y; unfold equiv, later_equiv; rewrite !equiv_dist.
-      split. intros Hxy [|n]; [done|apply Hxy]. intros Hxy n; apply (Hxy (S n)).
+    - intros x y; unfold equiv, later_equiv; rewrite !equiv_dist. split.
+      + intros Hxy [|n]; [done|apply Hxy].
+      + intros Hxy n; apply (Hxy (S n)).
     - intros [|n]; [by split|split]; unfold dist, later_dist.
       + by intros [x].
       + by intros [x] [y].
@@ -528,6 +529,48 @@ Proof.
   intros A1 A2 B1 B2 n fg fg' Hfg.
   apply laterC_map_contractive => i ?. by apply cFunctor_ne, Hfg.
 Qed.
+
+(** Earlier *)
+Inductive earlier (A : Type) : Type := Prev { earlier_car : A }.
+Add Printing Constructor earlier.
+Arguments Prev {_} _.
+Arguments earlier_car {_} _.
+Lemma earlier_eta {A} (x : earlier A) : Prev (earlier_car x) = x.
+Proof. by destruct x. Qed.
+
+Section earlier.
+  Context {A : cofeT}.
+  Instance earlier_equiv : Equiv (earlier A) :=
+    λ x y, earlier_car x ≡ earlier_car y.
+  Instance earlier_dist : Dist (earlier A) :=
+    λ n x y, earlier_car x ≡{S n}≡ earlier_car y.
+  Program Definition earlier_chain (c : chain (earlier A)) : chain A :=
+    {| chain_car n := earlier_car (c n) |}.
+  Next Obligation. intros c n i ?. by apply dist_S, (chain_cauchy c). Qed.
+  Instance earlier_compl : Compl (earlier A) :=
+    λ c, Prev (compl (earlier_chain c)).
+  Definition earlier_cofe_mixin : CofeMixin (earlier A).
+  Proof.
+    split.
+    - intros x y; unfold equiv, earlier_equiv; rewrite !equiv_dist. split.
+      + intros Hxy n; apply dist_S, Hxy.
+      + intros Hxy [|n]; [apply dist_S, Hxy|apply Hxy].
+    - intros n; split; unfold dist, earlier_dist.
+      + by intros [x].
+      + by intros [x] [y].
+      + by intros [x] [y] [z] ??; trans y.
+    - intros n [x] [y] ?; unfold dist, earlier_dist; by apply dist_S.
+    - intros n c. rewrite /compl /earlier_compl /dist /earlier_dist /=.
+      rewrite (conv_compl (S n) (earlier_chain c)). simpl.
+      apply (chain_cauchy c n). omega.
+  Qed.
+  Canonical Structure earlierC : cofeT := CofeT earlier_cofe_mixin.
+  Global Instance Earlier_inj n : Inj (dist (S n)) (dist n) (@Prev A).
+  Proof. by intros x y. Qed.
+End earlier.
+
+Arguments earlierC : clear implicits.
+
 
 (** Notation for writing functors *)
 Notation "∙" := idCF : cFunctor_scope.
