@@ -467,8 +467,6 @@ Lemma const_elim φ Q R : Q ⊢ ■ φ → (φ → Q ⊢ R) → Q ⊢ R.
 Proof.
   unseal; intros HQP HQR; split=> n x ??; apply HQR; first eapply HQP; eauto.
 Qed.
-Lemma False_elim P : False ⊢ P.
-Proof. by unseal; split=> n x ?. Qed.
 Lemma and_elim_l P Q : (P ∧ Q) ⊢ P.
 Proof. by unseal; split=> n x ? [??]. Qed.
 Lemma and_elim_r P Q : (P ∧ Q) ⊢ Q.
@@ -512,6 +510,8 @@ Proof.
 Qed.
 
 (* Derived logical stuff *)
+Lemma False_elim P : False ⊢ P.
+Proof. by apply (const_elim False). Qed.
 Lemma True_intro P : P ⊢ True.
 Proof. by apply const_intro. Qed.
 Lemma and_elim_l' P Q R : P ⊢ R → (P ∧ Q) ⊢ R.
