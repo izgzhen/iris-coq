@@ -547,7 +547,7 @@ Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
     lazymatch pat with
     | IAnom => idtac
     | IAnomPure => iPure Hz
-    | IClear => iClear Hz
+    | IDrop => iClear Hz
     | IFrame => iFrame Hz
     | IName ?y => iRename Hz into y
     | IPersistent ?pat => iPersistent Hz; go Hz pat
@@ -695,6 +695,7 @@ Tactic Notation "iIntros" constr(pat) :=
     | ISimpl :: ?pats => simpl; go pats
     | IAlways :: ?pats => iAlways; go pats
     | INext :: ?pats => iNext; go pats
+    | IClear ?Hs :: ?pats => iClear Hs; go pats
     | IPersistent (IName ?H) :: ?pats => iIntro #H; go pats
     | IName ?H :: ?pats => iIntro H; go pats
     | IPersistent IAnom :: ?pats => let H := iFresh in iIntro #H; go pats

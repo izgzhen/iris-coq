@@ -13,7 +13,8 @@ Proof.
   { iLeft. by iNext. }
   iRight.
   iDestruct "H1" as {z1 z2 c} "(H1&_&#Hc)".
-  iRevert {a b} "Ha Hb". iIntros {b a} "Hb Ha".
+  iDuplicate "Hc" as "foo".
+  iRevert {a b} "Ha Hb". iIntros {b a} "Hb {foo} Ha".
   iAssert (uPred_ownM (a ⋅ core a))%I as "[Ha #Hac]" with "[Ha]".
   { by rewrite cmra_core_r. }
   iFrame "Ha Hac".
