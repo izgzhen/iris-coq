@@ -5,7 +5,8 @@ Import uPred.
 
 Definition newlock : val := λ: <>, ref #false.
 Definition acquire : val :=
-  rec: "lock" "l" := if: CAS '"l" #false #true then #() else '"lock" '"l".
+  rec: "acquire" "l" :=
+    if: CAS '"l" #false #true then #() else '"acquire" '"l".
 Definition release : val := λ: "l", '"l" <- #false.
 
 (** The CMRA we need. *)
