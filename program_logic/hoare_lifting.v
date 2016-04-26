@@ -57,8 +57,8 @@ Proof.
   repeat iSplit.
   - by iApply vs_reflexive.
   - iIntros {e2 σ2 ef} "! (#Hφ&Hown&HP)"; iPvsIntro.
-    iSplitL "Hown". by iSplit. iSplit. by iPure "Hφ" as [_ ?]. done.
-  - iIntros {e2 σ2 ef} "! [Hown #Hφ]"; iPure "Hφ" as [[v2 <-%of_to_val] ?].
+    iSplitL "Hown". by iSplit. iSplit. by iDestruct "Hφ" as %[_ ?]. done.
+  - iIntros {e2 σ2 ef} "! [Hown #Hφ]"; iDestruct "Hφ" as %[[v2 <-%of_to_val] ?].
     iApply wp_value'. iExists σ2, ef. by iSplit.
   - done.
 Qed.
@@ -89,8 +89,8 @@ Proof.
   iIntros {? Hsafe Hdet} "[#He2 #Hef]".
   iApply (ht_lift_pure_step _ (λ e2' ef', e2 = e2' ∧ ef = ef')); eauto.
   iSplit; iIntros {e2' ef'}.
-  - iIntros "! [#He ?]"; iPure "He" as [-> ->]. by iApply "He2".
+  - iIntros "! [#He ?]"; iDestruct "He" as %[-> ->]. by iApply "He2".
   - destruct ef' as [e'|]; last done.
-    iIntros "! [#He ?]"; iPure "He" as [-> ->]. by iApply "Hef" "!".
+    iIntros "! [#He ?]"; iDestruct "He" as %[-> ->]. by iApply "Hef" "!".
 Qed.
 End lifting.

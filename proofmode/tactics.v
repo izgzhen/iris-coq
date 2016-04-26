@@ -138,7 +138,7 @@ Local Tactic Notation "iIntro" "#" constr(H) :=
   end.
 
 (** * Making hypotheses persistent or pure *)
-Tactic Notation "iPersistent" constr(H) :=
+Local Tactic Notation "iPersistent" constr(H) :=
   eapply tac_persistent with _ H _ _ _; (* (i:=H) *)
     [env_cbv; reflexivity || fail "iPersistent:" H "not found"
     |let Q := match goal with |- ToPersistentP ?Q _ => Q end in
@@ -153,13 +153,12 @@ Tactic Notation "iDuplicate" constr(H1) "as" constr(H2) :=
 Tactic Notation "iDuplicate" "#" constr(H1) "as" constr(H2) :=
   iPersistent H1; iDuplicate H1 as H2.
 
-Tactic Notation "iPure" constr(H) "as" simple_intropattern(pat) :=
+Local Tactic Notation "iPure" constr(H) "as" simple_intropattern(pat) :=
   eapply tac_pure with _ H _ _ _; (* (i:=H1) *)
     [env_cbv; reflexivity || fail "iPure:" H "not found"
     |let P := match goal with |- ToPure ?P _ => P end in
      apply _ || fail "iPure:" H ":" P "not pure"
     |intros pat].
-Tactic Notation "iPure" constr(H) := iPure H as ?.
 
 Tactic Notation "iPureIntro" := apply uPred.const_intro.
 
@@ -544,7 +543,7 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
   let rec go Hz pat :=
     lazymatch pat with
     | IAnom => idtac
-    | IAnomPure => iPure Hz
+    | IAnomPure => iPure Hz as ?
     | IDrop => iClear Hz
     | IFrame => iFrame Hz
     | IName ?y => iRename Hz into y

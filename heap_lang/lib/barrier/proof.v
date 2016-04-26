@@ -176,7 +176,7 @@ Proof.
   iSts γ as [p I]; iDestruct "Hγ" as "[Hl Hr]".
   iPvs (saved_prop_alloc_strong _ (R1: ∙%CF iProp) I) as {i1} "[% #Hi1]".
   iPvs (saved_prop_alloc_strong _ (R2: ∙%CF iProp) (I ∪ {[i1]}))
-    as {i2} "[Hi2' #Hi2]"; iPure "Hi2'" as Hi2; iPvsIntro.
+    as {i2} "[Hi2' #Hi2]"; iDestruct "Hi2'" as %Hi2; iPvsIntro.
   rewrite ->not_elem_of_union, elem_of_singleton in Hi2; destruct Hi2.
   iExists (State p ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]})))).
   iExists ({[Change i1 ]} ∪ {[ Change i2 ]}).
