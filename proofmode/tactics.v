@@ -17,17 +17,18 @@ Declare Reduction env_cbv := cbv [
 Ltac env_cbv :=
   match goal with |- ?u => let v := eval env_cbv in u in change v end.
 
+(** * Misc *)
 Ltac iFresh :=
   lazymatch goal with
   |- of_envs ?Δ ⊢ _ =>
       match goal with
       | _ => eval vm_compute in (fresh_string_of_set "~" (dom stringset Δ))
+      (* [vm_compute fails] if [Δ] contains evars, so fall-back to [cbv] *)
       | _ => eval cbv in (fresh_string_of_set "~" (dom stringset Δ))
       end
   | _ => constr:"~"
   end.
 
-(** * Misc *)
 Tactic Notation "iTypeOf" constr(H) tactic(tac):=
   let Δ := match goal with |- of_envs ?Δ ⊢ _ => Δ end in
   match eval env_cbv in (envs_lookup H Δ) with
@@ -99,7 +100,7 @@ Tactic Notation "iAssumption" :=
 Tactic Notation "iExFalso" := apply tac_ex_falso.
 
 (** * Pure introduction *)
-Tactic Notation "iIntro" "{" simple_intropattern(x) "}" :=
+Local Tactic Notation "iIntro" "{" simple_intropattern(x) "}" :=
   lazymatch goal with
   | |- _ ⊢ (∀ _, _) => apply tac_forall_intro; intros x
   | |- _ ⊢ (?P → _) =>
@@ -112,7 +113,7 @@ Tactic Notation "iIntro" "{" simple_intropattern(x) "}" :=
   end.
 
 (** * Introduction *)
-Tactic Notation "iIntro" constr(H) :=
+Local Tactic Notation "iIntro" constr(H) :=
   lazymatch goal with
   | |- _ ⊢ (?Q → _) =>
     eapply tac_impl_intro with _ H; (* (i:=H) *)
@@ -125,7 +126,7 @@ Tactic Notation "iIntro" constr(H) :=
   | _ => fail "iIntro: nothing to introduce"
   end.
 
-Tactic Notation "iIntro" "#" constr(H) :=
+Local Tactic Notation "iIntro" "#" constr(H) :=
   lazymatch goal with
   | |- _ ⊢ (?P → _) =>
     eapply tac_impl_intro_persistent with _ H _; (* (i:=H) *)
@@ -165,7 +166,7 @@ Tactic Notation "iPure" constr(H) := iPure H as ?.
 Tactic Notation "iPureIntro" := apply uPred.const_intro.
 
 (** * Specialize *)
-Tactic Notation "iForallSpecialize" constr(H) open_constr(x) :=
+Local Tactic Notation "iForallSpecialize" constr(H) open_constr(x) :=
   eapply tac_forall_specialize with _ H _ _ x; (* (i:=H) (a:=x) *)
     [env_cbv; reflexivity || fail "iSpecialize:" H "not found"
     |env_cbv; reflexivity|].
@@ -374,14 +375,14 @@ Tactic Notation "iApply" open_constr (H) "{" open_constr(x1) open_constr(x2)
 (** * Revert *)
 Tactic Notation "iRevert" "★" := eapply tac_revert_spatial; env_cbv.
 
-Tactic Notation "iForallRevert" ident(x) :=
+Local Tactic Notation "iForallRevert" ident(x) :=
   let A := type of x in
   lazymatch type of A with
   | Prop => revert x; apply tac_pure_revert
   | _ => revert x; apply tac_forall_revert
   end || fail "iRevert: cannot revert" x.
 
-Tactic Notation "iImplRevert" constr(H) :=
+Local Tactic Notation "iImplRevert" constr(H) :=
   eapply tac_revert with _ H _ _; (* (i:=H) *)
     [env_cbv; reflexivity || fail "iRevert:" H "not found"
     |env_cbv].
@@ -444,7 +445,7 @@ Tactic Notation "iRight" :=
     [let P := match goal with |- OrSplit ?P _ _ => P end in
      apply _ || fail "iRight:" P "not a disjunction"|].
 
-Tactic Notation "iOrDestruct" constr(H) "as" constr(H1) constr(H2) :=
+Local Tactic Notation "iOrDestruct" constr(H) "as" constr(H1) constr(H2) :=
   eapply tac_or_destruct with _ _ H _ H1 H2 _ _ _; (* (i:=H) (j1:=H1) (j2:=H2) *)
     [env_cbv; reflexivity || fail "iOrDestruct:" H "not found"
     |let P := match goal with |- OrDestruct ?P _ _ => P end in
@@ -474,7 +475,7 @@ Tactic Notation "iSplitR" constr(Hs) :=
 Tactic Notation "iSplitL" := iSplitR "".
 Tactic Notation "iSplitR" := iSplitL "".
 
-Tactic Notation "iSepDestruct" constr(H) "as" constr(H1) constr(H2) :=
+Local Tactic Notation "iSepDestruct" constr(H) "as" constr(H1) constr(H2) :=
   eapply tac_sep_destruct with _ H _ H1 H2 _ _ _; (* (i:=H) (j1:=H1) (j2:=H2) *)
     [env_cbv; reflexivity || fail "iSepDestruct:" H "not found"
     |let P := match goal with |- SepDestruct _ ?P _ _ => P end in
@@ -531,7 +532,7 @@ Tactic Notation "iExists" uconstr(x1) "," uconstr(x2) "," uconstr(x3) ","
     uconstr(x8) :=
   iExists x1; iExists x2, x3, x4, x5, x6, x7, x8.
 
-Tactic Notation "iExistDestruct" constr(H) "as" ident(x) constr(Hx) :=
+Local Tactic Notation "iExistDestruct" constr(H) "as" ident(x) constr(Hx) :=
   eapply tac_exist_destruct with H _ Hx _ _; (* (i:=H) (j:=Hx) *)
     [env_cbv; reflexivity || fail "iExistDestruct:" H "not found"
     |let P := match goal with |- ExistDestruct ?P _ => P end in
@@ -540,7 +541,7 @@ Tactic Notation "iExistDestruct" constr(H) "as" ident(x) constr(Hx) :=
     [env_cbv; reflexivity || fail "iExistDestruct:" Hx "not fresh"|].
 
 (** * Destruct tactic *)
-Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
+Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
   let rec go Hz pat :=
     lazymatch pat with
     | IAnom => idtac
@@ -557,33 +558,33 @@ Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
     end
   in let pat := intro_pat.parse_one pat in go H pat.
 
-Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1) "}"
+Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1) "}"
     constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as @ pat.
-Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
+Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
     simple_intropattern(x2) "}" constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as { x2 } pat.
-Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
+Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) "}" constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as { x2 x3 } pat.
-Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
+Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) "}"
     constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as { x2 x3 x4 } pat.
-Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
+Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) "}" constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as { x2 x3 x4 x5 } pat.
-Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
+Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) "}" constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as { x2 x3 x4 x5 x6 } pat.
-Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
+Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) "}"
     constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as { x2 x3 x4 x5 x6 x7 } pat.
-Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
+Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
     simple_intropattern(x8) "}" constr(pat) :=
@@ -765,7 +766,7 @@ Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
 
 (* This is pretty ugly, but without Ltac support for manipulating lists of
 idents I do not know how to do this better. *)
-Ltac iLöbCore IH tac_before tac_after :=
+Local Ltac iLöbCore IH tac_before tac_after :=
   match goal with
   | |- of_envs ?Δ ⊢ _ =>
      let Hs := constr:(rev (env_dom_list (env_spatial Δ))) in
@@ -824,24 +825,25 @@ Tactic Notation "iAssert" constr(Q) "as" constr(pat) :=
   iAssert Q as pat with "[]".
 
 (** * Rewrite *)
-Ltac iRewriteFindPred :=
+Local Ltac iRewriteFindPred :=
   match goal with
   | |- _ ⊣⊢ ?Φ ?x =>
      generalize x;
      match goal with |- (∀ y, @?Ψ y ⊣⊢ _) => unify Φ Ψ; reflexivity end
   end.
 
-Tactic Notation "iRewriteCore" constr(lr) constr(Heq) :=
+Local Tactic Notation "iRewriteCore" constr(lr) constr(Heq) :=
   eapply (tac_rewrite _ Heq _ _ lr);
     [env_cbv; reflexivity || fail "iRewrite:" Heq "not found"
     |let P := match goal with |- ?P ⊢ _ => P end in
      reflexivity || fail "iRewrite:" Heq ":" P "not an equality"
     |iRewriteFindPred
     |intros ??? ->; reflexivity|lazy beta].
+
 Tactic Notation "iRewrite" constr(Heq) := iRewriteCore false Heq.
 Tactic Notation "iRewrite" "-" constr(Heq) := iRewriteCore true Heq.
 
-Tactic Notation "iRewriteCore" constr(lr) constr(Heq) "in" constr(H) :=
+Local Tactic Notation "iRewriteCore" constr(lr) constr(Heq) "in" constr(H) :=
   eapply (tac_rewrite_in _ Heq _ _ H _ _ lr);
     [env_cbv; reflexivity || fail "iRewrite:" Heq "not found"
     |env_cbv; reflexivity || fail "iRewrite:" H "not found"
@@ -850,6 +852,7 @@ Tactic Notation "iRewriteCore" constr(lr) constr(Heq) "in" constr(H) :=
     |iRewriteFindPred
     |intros ??? ->; reflexivity
     |env_cbv; reflexivity|lazy beta].
+
 Tactic Notation "iRewrite" constr(Heq) "in" constr(H) :=
   iRewriteCore false Heq in H.
 Tactic Notation "iRewrite" "-" constr(Heq) "in" constr(H) :=
