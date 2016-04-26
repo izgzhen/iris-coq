@@ -97,8 +97,6 @@ Tactic Notation "iAssumption" :=
 
 (** * False *)
 Tactic Notation "iExFalso" := apply tac_ex_falso.
-Tactic Notation "iContradiction" constr(H) := iExFalso; iExact H.
-Tactic Notation "iContradiction" := iExFalso; iAssumption.
 
 (** * Pure introduction *)
 Tactic Notation "iIntro" "{" simple_intropattern(x) "}" :=
@@ -551,7 +549,7 @@ Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
     | IFrame => iFrame Hz
     | IName ?y => iRename Hz into y
     | IPersistent ?pat => iPersistent Hz; go Hz pat
-    | IList [[]] => iContradiction Hz
+    | IList [[]] => iExFalso; iExact Hz
     | IList [[?pat1; ?pat2]] =>
        let Hy := iFresh in iSepDestruct Hz as Hz Hy; go Hz pat1; go Hy pat2
     | IList [[?pat1];[?pat2]] => iOrDestruct Hz as Hz Hz; [go Hz pat1|go Hz pat2]
