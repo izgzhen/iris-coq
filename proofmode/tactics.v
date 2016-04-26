@@ -53,14 +53,12 @@ Tactic Notation "iClear" constr(Hs) :=
   let rec go Hs :=
     match Hs with
     | [] => idtac
+    | "★" :: ?Hs => eapply tac_clear_spatial; [env_cbv; reflexivity|go Hs]
     | ?H :: ?Hs =>
        eapply tac_clear with _ H _ _; (* (i:=H) *)
          [env_cbv; reflexivity || fail "iClear:" H "not found"|go Hs]
     end in
   let Hs := words Hs in go Hs.
-
-Tactic Notation "iClear" "★" :=
-  eapply tac_clear_spatial; [env_cbv; reflexivity|].
 
 (** * Assumptions *)
 Tactic Notation "iExact" constr(H) :=
@@ -373,8 +371,6 @@ Tactic Notation "iApply" open_constr (H) "{" open_constr(x1) open_constr(x2)
   iSpecialize H { x1 x2 x3 x4 x5 x6 x7 x8 }; last iApply H Hs.
 
 (** * Revert *)
-Tactic Notation "iRevert" "★" := eapply tac_revert_spatial; env_cbv.
-
 Local Tactic Notation "iForallRevert" ident(x) :=
   let A := type of x in
   lazymatch type of A with
@@ -382,14 +378,17 @@ Local Tactic Notation "iForallRevert" ident(x) :=
   | _ => revert x; apply tac_forall_revert
   end || fail "iRevert: cannot revert" x.
 
-Local Tactic Notation "iImplRevert" constr(H) :=
-  eapply tac_revert with _ H _ _; (* (i:=H) *)
-    [env_cbv; reflexivity || fail "iRevert:" H "not found"
-    |env_cbv].
-
 Tactic Notation "iRevert" constr(Hs) :=
   let rec go H2s :=
-    match H2s with [] => idtac | ?H2 :: ?H2s => go H2s; iImplRevert H2 end in
+    match H2s with
+    | [] => idtac
+    | "★" :: ?H2s => go H2s; eapply tac_revert_spatial; env_cbv
+    | ?H2 :: ?H2s =>
+       go H2s;
+       eapply tac_revert with _ H2 _ _; (* (i:=H2) *)
+         [env_cbv; reflexivity || fail "iRevert:" H2 "not found"
+         |env_cbv]
+    end in
   let Hs := words Hs in go Hs.
 
 Tactic Notation "iRevert" "{" ident(x1) "}" :=
@@ -769,12 +768,12 @@ idents I do not know how to do this better. *)
 Local Ltac iLöbCore IH tac_before tac_after :=
   match goal with
   | |- of_envs ?Δ ⊢ _ =>
-     let Hs := constr:(rev (env_dom_list (env_spatial Δ))) in
-     iRevert ★; tac_before;
+     let Hs := constr:(reverse (env_dom_list (env_spatial Δ))) in
+     iRevert ["★"]; tac_before;
      eapply tac_löb with _ IH;
        [reflexivity
        |env_cbv; reflexivity || fail "iLöb:" IH "not fresh"|];
-    tac_after;  iIntros Hs
+    tac_after; iIntros Hs
   end.
 
 Tactic Notation "iLöb" "as" constr (IH) := iLöbCore IH idtac idtac.
