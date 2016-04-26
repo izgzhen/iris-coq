@@ -45,7 +45,7 @@ Section LiftingTests.
     iIntros {Hn} "HΦ". iLöb {n1 Hn} as "IH".
     wp_rec. wp_let. wp_op. wp_let. wp_op=> ?; wp_if.
     - iApply "IH" "% HΦ". omega.
-    - iPvsIntro. by assert (n1 = n2 - 1) as -> by omega.
+    - iApply pvs_intro. by assert (n1 = n2 - 1) as -> by omega.
   Qed.
 
   Lemma Pred_spec n E Φ : ▷ Φ #(n - 1) ⊢ WP Pred #n @ E {{ Φ }}.

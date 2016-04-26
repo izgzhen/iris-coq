@@ -282,11 +282,11 @@ Tactic Notation "iSpecialize" constr (H) "{" open_constr(x1) open_constr(x2)
 
 (** * Pose proof *)
 Tactic Notation "iPoseProof" open_constr(lem) "as" constr(H) :=
-  eapply tac_pose_proof with _ H _; (* (j:=H) *)
+  eapply tac_pose_proof with _ H _ _ _; (* (j:=H) *)
     [first
        [eapply lem
-       |apply uPred.entails_impl; eapply lem
        |apply uPred.equiv_iff; eapply lem]
+    |apply _
     |env_cbv; reflexivity || fail "iPoseProof:" H "not fresh"|].
 
 Tactic Notation "iPoseProof" open_constr(lem) constr(Hs) "as" constr(H) :=
