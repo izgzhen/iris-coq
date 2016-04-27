@@ -45,3 +45,9 @@ Qed.
 Lemma demo_3 (M : cmraT) (P1 P2 P3 : uPred M) :
   (P1 ★ P2 ★ P3) ⊢ (▷ P1 ★ ▷ (P2 ★ ∃ x, (P3 ∧ x = 0) ∨ P3)).
 Proof. iIntros "($ & $ & H)". iFrame "H". iNext. by iExists 0. Qed.
+
+Definition foo {M} (P : uPred M) := (P → P)%I.
+Definition bar {M} : uPred M := (∀ P, foo P)%I.
+
+Lemma demo_4 (M : cmraT) : True ⊢ @bar M.
+Proof. iIntros {P} "HP". done. Qed.

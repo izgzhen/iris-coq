@@ -645,43 +645,41 @@ Tactic Notation "iNext":=
      apply _ || fail "iNext:" P "does not contain laters"|].
 
 (** * Introduction tactic *)
-Local Tactic Notation "iIntro" "{" simple_intropattern(x) "}" :=
-  lazymatch goal with
-  | |- _ ⊢ (∀ _, _) => apply tac_forall_intro; intros x
-  | |- _ ⊢ (?P → _) =>
-     eapply tac_impl_intro_pure;
-       [apply _ || fail "iIntro:" P "not pure"|]; intros x
-  | |- _ ⊢ (?P -★ _) =>
-     eapply tac_wand_intro_pure;
-       [apply _ || fail "iIntro:" P "not pure"|]; intros x
-  | |- _ => intros x
-  end.
+Local Tactic Notation "iIntro" "{" simple_intropattern(x) "}" := first
+  [ (* (∀ _, _) *) apply tac_forall_intro; intros x
+  | (* (?P → _) *) eapply tac_impl_intro_pure;
+     [let P := match goal with |- ToPure ?P _ => P end in
+      apply _ || fail "iIntro:" P "not pure"
+     |intros x]
+  | (* (?P -★ _) *) eapply tac_wand_intro_pure;
+     [let P := match goal with |- ToPure ?P _ => P end in
+      apply _ || fail "iIntro:" P "not pure"
+     |intros x]
+  |intros x].
 
-Local Tactic Notation "iIntro" constr(H) :=
-  lazymatch goal with
-  | |- _ ⊢ (?Q → _) =>
+Local Tactic Notation "iIntro" constr(H) := first
+  [ (* (?Q → _) *)
     eapply tac_impl_intro with _ H; (* (i:=H) *)
-      [reflexivity || fail "iIntro: introducing " H ":" Q
-                           "into non-empty spatial context"
+      [reflexivity || fail 1 "iIntro: introducing" H
+                             "into non-empty spatial context"
       |env_cbv; reflexivity || fail "iIntro:" H "not fresh"|]
-  | |- _ ⊢ (_ -★ _) =>
+  | (* (_ -★ _) *)
     eapply tac_wand_intro with _ H; (* (i:=H) *)
-      [env_cbv; reflexivity || fail "iIntro:" H "not fresh"|]
-  | _ => fail "iIntro: nothing to introduce"
-  end.
+      [env_cbv; reflexivity || fail 1 "iIntro:" H "not fresh"|]
+  | fail 1 "iIntro: nothing to introduce" ].
 
-Local Tactic Notation "iIntro" "#" constr(H) :=
-  lazymatch goal with
-  | |- _ ⊢ (?P → _) =>
+Local Tactic Notation "iIntro" "#" constr(H) := first
+  [ (* (?P → _) *)
     eapply tac_impl_intro_persistent with _ H _; (* (i:=H) *)
-      [apply _ || fail "iIntro: " P " not persistent"
-      |env_cbv; reflexivity || fail "iIntro:" H "not fresh"|]
-  | |- _ ⊢ (?P -★ _) =>
+      [let P := match goal with |- ToPersistentP ?P _ => P end in
+       apply _ || fail 1 "iIntro: " P " not persistent"
+      |env_cbv; reflexivity || fail 1 "iIntro:" H "not fresh"|]
+  | (* (?P -★ _) *)
     eapply tac_wand_intro_persistent with _ H _; (* (i:=H) *)
-      [apply _ || fail "iIntro: " P " not persistent"
-      |env_cbv; reflexivity || fail "iIntro:" H "not fresh"|]
-  | _ => fail "iIntro: nothing to introduce"
-  end.
+      [let P := match goal with |- ToPersistentP ?P _ => P end in
+       apply _ || fail 1 "iIntro: " P " not persistent"
+      |env_cbv; reflexivity || fail 1 "iIntro:" H "not fresh"|]
+  | fail 1 "iIntro: nothing to introduce" ].
 
 Tactic Notation "iIntros" constr(pat) :=
   let rec go pats :=
