@@ -703,18 +703,20 @@ Local Ltac iRewriteFindPred :=
      match goal with |- (∀ y, @?Ψ y ⊣⊢ _) => unify Φ Ψ; reflexivity end
   end.
 
-Local Tactic Notation "iRewriteCore" constr(lr) constr(Heq) :=
+Local Tactic Notation "iRewriteCore" constr(lr) open_constr(t) :=
+  let Heq := iFresh in iPoseProof t as Heq; last (
   eapply (tac_rewrite _ Heq _ _ lr);
     [env_cbv; reflexivity || fail "iRewrite:" Heq "not found"
     |let P := match goal with |- ?P ⊢ _ => P end in
      reflexivity || fail "iRewrite:" Heq ":" P "not an equality"
     |iRewriteFindPred
-    |intros ??? ->; reflexivity|lazy beta].
+    |intros ??? ->; reflexivity|lazy beta; iClear Heq]).
 
-Tactic Notation "iRewrite" constr(Heq) := iRewriteCore false Heq.
-Tactic Notation "iRewrite" "-" constr(Heq) := iRewriteCore true Heq.
+Tactic Notation "iRewrite" open_constr(t) := iRewriteCore false t.
+Tactic Notation "iRewrite" "-" open_constr(t) := iRewriteCore true t.
 
-Local Tactic Notation "iRewriteCore" constr(lr) constr(Heq) "in" constr(H) :=
+Local Tactic Notation "iRewriteCore" constr(lr) open_constr(t) "in" constr(H) :=
+  let Heq := iFresh in iPoseProof t as Heq; last (
   eapply (tac_rewrite_in _ Heq _ _ H _ _ lr);
     [env_cbv; reflexivity || fail "iRewrite:" Heq "not found"
     |env_cbv; reflexivity || fail "iRewrite:" H "not found"
@@ -722,12 +724,12 @@ Local Tactic Notation "iRewriteCore" constr(lr) constr(Heq) "in" constr(H) :=
      reflexivity || fail "iRewrite:" Heq ":" P "not an equality"
     |iRewriteFindPred
     |intros ??? ->; reflexivity
-    |env_cbv; reflexivity|lazy beta].
+    |env_cbv; reflexivity|lazy beta; iClear Heq]).
 
-Tactic Notation "iRewrite" constr(Heq) "in" constr(H) :=
-  iRewriteCore false Heq in H.
-Tactic Notation "iRewrite" "-" constr(Heq) "in" constr(H) :=
-  iRewriteCore true Heq in H.
+Tactic Notation "iRewrite" open_constr(t) "in" constr(H) :=
+  iRewriteCore false t in H.
+Tactic Notation "iRewrite" "-" open_constr(t) "in" constr(H) :=
+  iRewriteCore true t in H.
 
 (* Make sure that by and done solve trivial things in proof mode *)
 Hint Extern 0 (of_envs _ ⊢ _) => by apply tac_pure_intro.

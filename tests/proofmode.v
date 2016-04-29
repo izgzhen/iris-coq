@@ -61,3 +61,13 @@ Definition bar {M} : uPred M := (∀ P, foo P)%I.
 
 Lemma demo_4 (M : cmraT) : True ⊢ @bar M.
 Proof. iIntros {P} "HP". done. Qed.
+
+Lemma demo_5 (M : cmraT) (x y : M) (P : uPred M) :
+  (∀ z, P → z ≡ y) ⊢ (P -★ (x,x) ≡ (y,x)).
+Proof.
+  iIntros "H1 H2".
+  iRewrite (uPred.eq_sym x x with "- !"). iApply uPred.eq_refl.
+  iRewrite -("H1" $! _ with "- !"); first done.
+  iApply uPred.eq_refl.
+Qed.
+
