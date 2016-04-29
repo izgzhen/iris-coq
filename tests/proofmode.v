@@ -60,7 +60,7 @@ Definition foo {M} (P : uPred M) := (P → P)%I.
 Definition bar {M} : uPred M := (∀ P, foo P)%I.
 
 Lemma demo_4 (M : cmraT) : True ⊢ @bar M.
-Proof. iIntros {P} "HP". done. Qed.
+Proof. iIntros. iIntros {P} "HP". done. Qed.
 
 Lemma demo_5 (M : cmraT) (x y : M) (P : uPred M) :
   (∀ z, P → z ≡ y) ⊢ (P -★ (x,x) ≡ (y,x)).
@@ -71,3 +71,10 @@ Proof.
   iApply uPred.eq_refl.
 Qed.
 
+Lemma demo_6 (M : cmraT) (P Q : uPred M) :
+  True ⊢ (∀ x y z, x = 0 → y = 0 → z = 0 → P → □ Q → foo False).
+Proof.
+  iIntros {a} "*".
+  iIntros "#Hfoo **".
+  by iIntros "%".
+Qed.

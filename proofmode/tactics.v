@@ -558,10 +558,25 @@ Local Tactic Notation "iIntro" "#" constr(H) := first
       |env_cbv; reflexivity || fail 1 "iIntro:" H "not fresh"|]
   | fail 1 "iIntro: nothing to introduce" ].
 
+Local Tactic Notation "iIntroForall" :=
+  lazymatch goal with
+  | |- ∀ _, ?P => fail
+  | |- ∀ _, _ => intro
+  | |- _ ⊢ (∀ _, _) => iIntro {?}
+  end.
+Local Tactic Notation "iIntro" :=
+  lazymatch goal with
+  | |- _ → ?P => intro
+  | |- _ ⊢ (_ -★ _) => iIntro {?} || let H := iFresh in iIntro #H || iIntro H
+  | |- _ ⊢ (_ → _) => iIntro {?} || let H := iFresh in iIntro #H || iIntro H
+  end.
+
 Tactic Notation "iIntros" constr(pat) :=
   let rec go pats :=
     lazymatch pats with
     | [] => idtac
+    | IForall :: ?pats => repeat iIntroForall; go pats
+    | IAll :: ?pats => repeat (iIntroForall || iIntro); go pats
     | ISimpl :: ?pats => simpl; go pats
     | IAlways :: ?pats => iAlways; go pats
     | INext :: ?pats => iNext; go pats
@@ -578,6 +593,7 @@ Tactic Notation "iIntros" constr(pat) :=
     | _ => fail "iIntro: failed with" pats
     end
   in let pats := intro_pat.parse pat in try iProof; go pats.
+Tactic Notation "iIntros" := iIntros "**".
 
 Tactic Notation "iIntros" "{" simple_intropattern(x1) "}" :=
   try iProof; iIntro { x1 }.

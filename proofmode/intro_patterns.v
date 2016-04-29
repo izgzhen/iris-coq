@@ -11,6 +11,8 @@ Inductive intro_pat :=
   | ISimpl : intro_pat
   | IAlways : intro_pat
   | INext : intro_pat
+  | IForall : intro_pat
+  | IAll : intro_pat
   | IClear : list string → intro_pat.
 
 Module intro_pat.
@@ -31,7 +33,9 @@ Inductive token :=
   | TAlways : token
   | TNext : token
   | TClearL : token
-  | TClearR : token.
+  | TClearR : token
+  | TForall : token
+  | TAll : token.
 
 Fixpoint cons_name (kn : string) (k : list token) : list token :=
   match kn with "" => k | _ => TName (string_rev kn) :: k end.
@@ -55,6 +59,8 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String "{" s => tokenize_go s (TClearL :: cons_name kn k) ""
   | String "}" s => tokenize_go s (TClearR :: cons_name kn k) ""
   | String "/" (String "=" s) => tokenize_go s (TSimpl :: cons_name kn k) ""
+  | String "*" (String "*" s) => tokenize_go s (TAll :: cons_name kn k) ""
+  | String "*" s => tokenize_go s (TForall :: cons_name kn k) ""
   | String a s => tokenize_go s k (String a kn)
   end.
 Definition tokenize (s : string) : list token := tokenize_go s [] "".
@@ -127,6 +133,8 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   | TSimpl :: ts => parse_go ts (SPat ISimpl :: k)
   | TAlways :: ts => parse_go ts (SPat IAlways :: k)
   | TNext :: ts => parse_go ts (SPat INext :: k)
+  | TAll :: ts => parse_go ts (SPat IAll :: k)
+  | TForall :: ts => parse_go ts (SPat IForall :: k)
   | TClearL :: ts => parse_go ts (SClear :: k)
   | TClearR :: ts => close_clear k [] ≫= parse_go ts
   end.
