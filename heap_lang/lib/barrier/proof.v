@@ -82,12 +82,12 @@ Lemma ress_split i i1 i2 Q R1 R2 P I :
   ⊢ ress P ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))).
 Proof.
   iIntros {????} "(#HQ&#H1&#H2&HQR&H)"; iDestruct "H" as {Ψ} "[HPΨ HΨ]".
-  iDestruct (big_sepS_delete _ _ i) "HΨ" as "[#HΨi HΨ]"; first done.
+  iDestruct (big_sepS_delete _ _ i with "HΨ") as "[#HΨi HΨ]"; first done.
   iExists (<[i1:=R1]> (<[i2:=R2]> Ψ)). iSplitL "HQR HPΨ".
-  - iPoseProof (saved_prop_agree i Q (Ψ i)) "#" as "Heq"; first by iSplit.
-    iNext. iRewrite "Heq" in "HQR". iIntros "HP". iSpecialize "HPΨ" "HP". 
-    iDestruct (big_sepS_delete _ _ i) "HPΨ" as "[HΨ HPΨ]"; first done.
-    iDestruct "HQR" "HΨ" as "[HR1 HR2]".
+  - iPoseProof (saved_prop_agree i Q (Ψ i) with "#") as "Heq"; first by iSplit.
+    iNext. iRewrite "Heq" in "HQR". iIntros "HP". iSpecialize ("HPΨ" with "HP").
+    iDestruct (big_sepS_delete _ _ i with "HPΨ") as "[HΨ HPΨ]"; first done.
+    iDestruct ("HQR" with "HΨ") as "[HR1 HR2]".
     rewrite !big_sepS_insert''; [|set_solver ..]. by iFrame "HR1 HR2".
   - rewrite !big_sepS_insert'; [|set_solver ..]. by repeat iSplit.
 Qed.
@@ -102,8 +102,8 @@ Proof.
   rewrite /newbarrier. wp_seq. iApply wp_pvs. wp_alloc l as "Hl".
   iApply "HΦ".
   iPvs (saved_prop_alloc (F:=idCF) _ P) as {γ} "#?".
-  iPvs (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}))
-    "-" as {γ'} "[#? Hγ']"; eauto.
+  iPvs (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}) with "-")
+    as {γ'} "[#? Hγ']"; eauto.
   { iNext. rewrite /barrier_inv /=. iFrame "Hl".
     iExists (const P). rewrite !big_sepS_singleton /=.
     iSplit; [|done]. by iIntros "> ?". }
@@ -113,7 +113,7 @@ Proof.
     ★ sts_ownS γ' low_states {[Send]})%I as "[Hr Hs]" with "-".
   { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
     + set_solver.
-    + iApply sts_own_weaken "Hγ'";
+    + iApply (sts_own_weaken with "Hγ'");
         auto using sts.closed_op, i_states_closed, low_states_closed;
         set_solver. }
   iPvsIntro. rewrite /recv /send. iSplitL "Hr".
@@ -132,7 +132,7 @@ Proof.
   iSplit; [iPureIntro; by eauto using signal_step|].
   iSplitR "HΦ"; [iNext|by iIntros "?"].
   rewrite {2}/barrier_inv /ress /=; iFrame "Hl".
-  iDestruct "Hr" as {Ψ} "[? Hsp]"; iExists Ψ; iFrame "Hsp".
+  iDestruct "Hr" as {Ψ} "[Hr Hsp]"; iExists Ψ; iFrame "Hsp".
   iIntros "> _"; by iApply "Hr".
 Qed.
 
@@ -149,20 +149,20 @@ Proof.
     { iNext. rewrite {2}/barrier_inv /=. by iFrame "Hl". }
     iIntros "Hγ".
     iPvsAssert (sts_ownS γ (i_states i) {[Change i]})%I as "Hγ" with "[Hγ]".
-    { iApply sts_own_weaken "Hγ"; eauto using i_states_closed. }
-    wp_op=> ?; simplify_eq; wp_if. iApply "IH" "Hγ [HQR] HΦ". by iNext.
+    { iApply (sts_own_weaken with "Hγ"); eauto using i_states_closed. }
+    wp_op=> ?; simplify_eq; wp_if. iApply ("IH" with "Hγ [HQR] HΦ"). by iNext.
   - (* a High state: the comparison succeeds, and we perform a transition and
     return to the client *)
     iExists (State High (I ∖ {[ i ]})), (∅ : set token).
     iSplit; [iPureIntro; by eauto using wait_step|].
     iDestruct "Hr" as {Ψ} "[HΨ Hsp]".
-    iDestruct (big_sepS_delete _ _ i) "Hsp" as "[#HΨi Hsp]"; first done.
+    iDestruct (big_sepS_delete _ _ i with "Hsp") as "[#HΨi Hsp]"; first done.
     iAssert (▷ Ψ i ★ ▷ Π★{set (I ∖ {[i]})} Ψ)%I as "[HΨ HΨ']" with "[HΨ]".
     { iNext. iApply (big_sepS_delete _ _ i); first done. by iApply "HΨ". }
     iSplitL "HΨ' Hl Hsp"; [iNext|].
     + rewrite {2}/barrier_inv /=; iFrame "Hl".
       iExists Ψ; iFrame "Hsp". by iIntros "> _".
-    + iPoseProof (saved_prop_agree i Q (Ψ i)) "#" as "Heq"; first by iSplit.
+    + iPoseProof (saved_prop_agree i Q (Ψ i) with "#") as "Heq"; first by iSplit.
       iIntros "_". wp_op=> ?; simplify_eq/=; wp_if.
       iPvsIntro. iApply "HΦ". iApply "HQR". by iRewrite "Heq".
 Qed.
@@ -188,7 +188,8 @@ Proof.
       ★ sts_ownS γ (i_states i2) {[Change i2]})%I as "[Hγ1 Hγ2]" with "-".
     { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
       + set_solver.
-      + iApply sts_own_weaken "Hγ"; eauto using sts.closed_op, i_states_closed.
+      + iApply (sts_own_weaken with "Hγ");
+          eauto using sts.closed_op, i_states_closed.
         set_solver. }
     iPvsIntro; iSplitL "Hγ1"; rewrite /recv /barrier_ctx.
     + iExists γ, P, R1, i1. iFrame "Hγ1 Hi1". repeat iSplit; auto.
@@ -205,8 +206,7 @@ Proof.
   iIntros "> HQ". by iApply "HP"; iApply "HP1".
 Qed.
 
-Lemma recv_mono l P1 P2 :
-  P1 ⊢ P2 → recv l P1 ⊢ recv l P2.
+Lemma recv_mono l P1 P2 : P1 ⊢ P2 → recv l P1 ⊢ recv l P2.
 Proof.
   intros HP%entails_wand. apply wand_entails. rewrite HP. apply recv_weaken.
 Qed.

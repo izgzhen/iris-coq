@@ -56,7 +56,7 @@ Proof.
   iIntros {?} "(#Hh & HR & HΦ)". rewrite /newlock.
   wp_seq. iApply wp_pvs. wp_alloc l as "Hl".
   iPvs (own_alloc (Excl ())) as {γ} "Hγ"; first done.
-  iPvs (inv_alloc N _ (lock_inv γ l R)) "-[HΦ]" as "#?"; first done.
+  iPvs (inv_alloc N _ (lock_inv γ l R) with "-[HΦ]") as "#?"; first done.
   { iNext. iExists false. by iFrame "Hl HR". }
   iPvsIntro. iApply "HΦ". iExists N, γ. by repeat iSplit.
 Qed.
@@ -72,7 +72,7 @@ Proof.
     + wp_if. by iApply "IH".
   - wp_cas_suc. iDestruct "HR" as "[Hγ HR]". iSplitL "Hl".
     + iNext. iExists true. by iSplit.
-    + wp_if. iPvsIntro. iApply "HΦ" "-[HR] HR". iExists N, γ. by repeat iSplit.
+    + wp_if. iApply ("HΦ" with "-[HR] HR"). iExists N, γ. by repeat iSplit.
 Qed.
 
 Lemma release_spec R l (Φ : val → iProp) :
@@ -83,6 +83,6 @@ Proof.
   iInv N as "Hinv". iDestruct "Hinv" as {b} "[Hl Hγ']"; destruct b.
   - wp_store. iFrame "HΦ". iNext. iExists false. by iFrame "Hl HR Hγ".
   - wp_store. iDestruct "Hγ'" as "[Hγ' _]".
-    iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct own_valid "Hγ" as "%".
+    iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct (own_valid with "Hγ") as "%".
 Qed.
 End proof.

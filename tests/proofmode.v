@@ -1,27 +1,37 @@
 From iris.proofmode Require Import tactics.
 
+Lemma demo_0 {M : cmraT} (P Q : uPred M) :
+  □ (P ∨ Q) ⊢ ((∀ x, x = 0 ∨ x = 1) → (Q ∨ P)).
+Proof.
+  iIntros "#H #H2".
+  (* should remove the disjunction "H" *)
+  iDestruct "H" as "[?|?]"; last by iLeft.
+  (* should keep the disjunction "H" because it is instantiated *)
+  iDestruct ("H2" $! 10) as "[%|%]". done. done.
+Qed.
+
 Lemma demo_1 (M : cmraT) (P1 P2 P3 : nat → uPred M) :
   True ⊢ (∀ (x y : nat) a b,
     x ≡ y →
     □ (uPred_ownM (a ⋅ b) -★
     (∃ y1 y2 c, P1 ((x + y1) + y2) ∧ True ∧ □ uPred_ownM c) -★
-    ▷ (∀ z, P2 z) -★
+    □ ▷ (∀ z, P2 z ∨ True → P2 z) -★
     ▷ (∀ n m : nat, P1 n → □ ((True ∧ P2 n) → □ (n = n ↔ P3 n))) -★
     ▷ (x = 0) ∨ ∃ x z, ▷ P3 (x + z) ★ uPred_ownM b ★ uPred_ownM (core b))).
 Proof.
-  iIntros {i [|j] a b ?} "! [Ha Hb] H1 H2 H3"; setoid_subst.
+  iIntros {i [|j] a b ?} "! [Ha Hb] H1 #H2 H3"; setoid_subst.
   { iLeft. by iNext. }
   iRight.
   iDestruct "H1" as {z1 z2 c} "(H1&_&#Hc)".
-  iDuplicate "Hc" as "foo".
+  iPoseProof "Hc" as "foo".
   iRevert {a b} "Ha Hb". iIntros {b a} "Hb {foo} Ha".
   iAssert (uPred_ownM (a ⋅ core a))%I as "[Ha #Hac]" with "[Ha]".
   { by rewrite cmra_core_r. }
   iFrame "Ha Hac".
   iExists (S j + z1), z2.
   iNext.
-  iApply "H3" { _ 0 } "H1 ! [H2] !".
-  - iSplit. done. iApply "H2".
+  iApply ("H3" $! _ 0 with "H1 ! [] !").
+  - iSplit. done. iApply "H2". iLeft. iApply "H2". by iRight.
   - done.
 Qed.
 

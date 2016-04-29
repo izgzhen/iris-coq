@@ -48,9 +48,9 @@ Section client.
       iExists _; iSplitL; [done|]. iAlways; iIntros {n}. wp_let. by wp_op.
     - (* The two spawned threads, the waiters. *)
       iSplitL; [|by iIntros {_ _} "_ >"].
-      iDestruct recv_weaken "[] Hr" as "Hr".
-      { iIntros "Hy". by iApply y_inv_split "Hy". }
-      iPvs recv_split "Hr" as "[H1 H2]"; first done.
+      iDestruct (recv_weaken with "[] Hr") as "Hr".
+      { iIntros "Hy". by iApply (y_inv_split with "Hy"). }
+      iPvs (recv_split with "Hr") as "[H1 H2]"; first done.
       iApply (wp_par heapN N (λ _, True%I) (λ _, True%I)); eauto.
       iFrame "Hh"; iSplitL "H1"; [|iSplitL "H2"; [|by iIntros {_ _} "_ >"]];
         iApply worker_safe; by iSplit.
@@ -64,7 +64,7 @@ Section ClosedProofs.
   Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ v, True }}.
   Proof.
     iIntros "! Hσ".
-    iPvs (heap_alloc (nroot .@ "Barrier")) "Hσ" as {h} "[#Hh _]"; first done.
+    iPvs (heap_alloc (nroot .@ "Barrier") with "Hσ") as {h} "[#Hh _]"; first done.
     iApply (client_safe (nroot .@ "Barrier") (nroot .@ "Heap")); auto with ndisj.
   Qed.
 

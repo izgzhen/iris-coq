@@ -59,11 +59,11 @@ Proof.
   iIntros {<-%of_to_val ?} "(#Hh&Hf&HΦ)". rewrite /spawn.
   wp_let; wp_alloc l as "Hl"; wp_let.
   iPvs (own_alloc (Excl ())) as {γ} "Hγ"; first done.
-  iPvs (inv_alloc N _ (spawn_inv γ l Ψ)) "[Hl]" as "#?"; first done.
+  iPvs (inv_alloc N _ (spawn_inv γ l Ψ) with "[Hl]") as "#?"; first done.
   { iNext. iExists (InjLV #0). iFrame "Hl". by iLeft. }
   wp_apply wp_fork. iSplitR "Hf".
-  - wp_seq. iPvsIntro. iApply "HΦ"; rewrite /join_handle. iSplit; first done.
-    iExists γ. iFrame "Hγ"; by iSplit.
+  - wp_seq. iPvsIntro. iApply "HΦ"; rewrite /join_handle.
+    iSplit; first done. iExists γ. iFrame "Hγ"; by iSplit.
   - wp_focus (f _). iApply wp_wand_l; iFrame "Hf"; iIntros {v} "Hv".
     iInv N as "Hinv"; first wp_done; iDestruct "Hinv" as {v'} "[Hl _]".
     wp_store. iSplit; [iNext|done].
@@ -78,13 +78,13 @@ Proof.
   iInv N as "Hinv"; iDestruct "Hinv" as {v} "[Hl Hinv]".
   wp_load. iDestruct "Hinv" as "[%|Hinv]"; subst.
   - iSplitL "Hl"; [iNext; iExists _; iFrame "Hl"; by iLeft|].
-    wp_case. wp_seq. iApply "IH" "Hγ Hv".
+    wp_case. wp_seq. iApply ("IH" with "Hγ Hv").
   - iDestruct "Hinv" as {v'} "[% [HΨ|Hγ']]"; subst.
     + iSplitL "Hl Hγ".
       { iNext. iExists _; iFrame "Hl"; iRight.
         iExists _; iSplit; [done|by iRight]. }
       wp_case. wp_let. iPvsIntro. by iApply "Hv".
-    + iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct own_valid "Hγ" as "%".
+    + iCombine "Hγ" "Hγ'" as "Hγ". iDestruct (own_valid with "Hγ") as %[].
 Qed.
 End proof.
 

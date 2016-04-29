@@ -90,12 +90,6 @@ Tactic Notation "wp_apply" open_constr(lem) :=
     wp_bind K; iApply lem; try iNext)
   end.
 
-Tactic Notation "wp_apply" open_constr(lem) constr(Hs) :=
-  match goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    wp_bind K; iApply lem Hs; try iNext)
-  end.
-
 Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
   match goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>

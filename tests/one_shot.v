@@ -44,13 +44,13 @@ Proof.
   iIntros "[#? Hf] /=".
   rewrite /one_shot_example. wp_seq. wp_alloc l as "Hl". wp_let.
   iPvs (own_alloc OneShotPending) as {γ} "Hγ"; first done.
-  iPvs (inv_alloc N _ (one_shot_inv γ l)) "[Hl Hγ]" as "#HN"; first done.
+  iPvs (inv_alloc N _ (one_shot_inv γ l) with "[Hl Hγ]") as "#HN"; first done.
   { iNext. iLeft. by iSplitL "Hl". }
   iPvsIntro. iApply "Hf"; iSplit.
   - iIntros {n} "!". wp_let.
     iInv> N as "[[Hl Hγ]|H]"; last iDestruct "H" as {m} "[Hl Hγ]".
     + iApply wp_pvs. wp_cas_suc. iSplitL; [|by iLeft; iPvsIntro].
-      iPvs own_update "Hγ" as "Hγ".
+      iPvs (own_update with "Hγ") as "Hγ".
       { (* FIXME: canonical structures are not working *)
         by apply (one_shot_update_shoot (DecAgree n : dec_agreeR _)). }
       iPvsIntro; iRight; iExists n; by iSplitL "Hl".
@@ -72,10 +72,10 @@ Proof.
     { wp_case. wp_seq. by iPvsIntro. }
     wp_case. wp_let. wp_focus (! _)%E.
     iInv> N as "[[Hl Hγ]|Hinv]"; last iDestruct "Hinv" as {m'} "[Hl Hγ]".
-    { iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct own_valid "Hγ" as "%". }
+    { iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct (own_valid with "Hγ") as "%". }
     wp_load.
     iCombine "Hγ" "Hγ'" as "Hγ".
-    iDestruct own_valid "Hγ !" as % [=->]%dec_agree_op_inv.
+    iDestruct (own_valid with "Hγ !") as % [=->]%dec_agree_op_inv.
     iSplitL "Hl"; [iRight; iExists m; by iSplit|].
     wp_case. wp_let. iApply wp_assert'. wp_op=>?; simplify_eq/=.
     iSplit. done. by iNext.
@@ -90,7 +90,7 @@ Lemma hoare_one_shot (Φ : val → iProp) :
 Proof.
   iIntros "#? ! _". iApply wp_one_shot. iSplit; first done.
   iIntros {f1 f2} "[#Hf1 #Hf2]"; iSplit.
-  - iIntros {n} "! _". wp_proj. iApply "Hf1" "!".
+  - iIntros {n} "! _". wp_proj. iApply ("Hf1" with "!").
   - iIntros "! _". wp_proj.
     iApply wp_wand_l; iFrame "Hf2". by iIntros {v} "#? ! _".
 Qed.

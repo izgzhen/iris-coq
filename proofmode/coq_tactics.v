@@ -1,7 +1,7 @@
 From iris.algebra Require Export upred.
 From iris.algebra Require Import upred_big_op upred_tactics.
 From iris.proofmode Require Export environments.
-From iris.prelude Require Import stringmap.
+From iris.prelude Require Import stringmap hlist.
 Import uPred.
 
 Local Notation "Γ !! j" := (env_lookup j Γ).
@@ -287,16 +287,6 @@ Lemma tac_clear_spatial Δ Δ' Q :
   envs_clear_spatial Δ = Δ' → Δ' ⊢ Q → Δ ⊢ Q.
 Proof. intros <- ?. by rewrite envs_clear_spatial_sound // sep_elim_l. Qed.
 
-Lemma tac_duplicate Δ Δ' i p j P Q :
-  envs_lookup i Δ = Some (p, P) →
-  p = true →
-  envs_simple_replace i true (Esnoc (Esnoc Enil i P) j P) Δ = Some Δ' →
-  Δ' ⊢ Q → Δ ⊢ Q.
-Proof.
-  intros ? -> ??. rewrite envs_simple_replace_sound //; simpl.
-  by rewrite right_id idemp wand_elim_r.
-Qed.
-
 (** * False *)
 Lemma tac_ex_falso Δ Q : Δ ⊢ False → Δ ⊢ Q.
 Proof. by rewrite -(False_elim Q). Qed.
@@ -560,7 +550,7 @@ Proof.
   by rewrite right_id {1}(persistentP P) always_and_sep_l wand_elim_r.
 Qed.
 
-(** Whenever posing [lem : True ⊢ Q] as [H} we want it to appear as [H : Q] and
+(** Whenever posing [lem : True ⊢ Q] as [H] we want it to appear as [H : Q] and
 not as [H : True -★ Q]. The class [ToPosedProof] is used to strip off the
 [True]. Note that [to_posed_proof_True] is declared using a [Hint Extern] to
 make sure it is not used while posing [lem : ?P ⊢ Q] with [?P] an evar. *)
@@ -577,6 +567,18 @@ Lemma tac_pose_proof Δ Δ' j P1 P2 R Q :
 Proof.
   intros HP ?? <-. rewrite envs_app_sound //; simpl.
   by rewrite right_id -(to_pose_proof P1 P2 R) // always_const wand_True.
+Qed.
+
+Lemma tac_pose_proof_hyp Δ Δ' Δ'' i p j P Q :
+  envs_lookup_delete i Δ = Some (p, P, Δ') →
+  envs_app p (Esnoc Enil j P) (if p then Δ else Δ') = Some Δ'' →
+  Δ'' ⊢ Q → Δ ⊢ Q.
+Proof.
+  intros [? ->]%envs_lookup_delete_Some ? <-. destruct p.
+  - rewrite envs_lookup_persistent_sound // envs_app_sound //; simpl.
+    by rewrite right_id wand_elim_r.
+  - rewrite envs_lookup_sound // envs_app_sound //; simpl.
+    by rewrite right_id wand_elim_r.
 Qed.
 
 Lemma tac_apply Δ Δ' i p R P1 P2 :
@@ -826,13 +828,26 @@ Qed.
 Lemma tac_forall_intro {A} Δ (Φ : A → uPred M) : (∀ a, Δ ⊢ Φ a) → Δ ⊢ (∀ a, Φ a).
 Proof. apply forall_intro. Qed.
 
-Lemma tac_forall_specialize {A} Δ Δ' i p (Φ : A → uPred M) Q a :
-  envs_lookup i Δ = Some (p, ∀ a, Φ a)%I →
-  envs_simple_replace i p (Esnoc Enil i (Φ a)) Δ = Some Δ' →
+Class ForallSpecialize {As} (xs : hlist As)
+    (P : uPred M) (Φ : himpl As (uPred M)) :=
+  forall_specialize : P ⊢ happly Φ xs.
+Arguments forall_specialize {_} _ _ _ {_}.
+
+Global Instance forall_specialize_nil P : ForallSpecialize hnil P P | 100.
+Proof. done. Qed.
+Global Instance forall_specialize_cons A As x xs Φ (Ψ : A → himpl As (uPred M)) :
+  (∀ x, ForallSpecialize xs (Φ x) (Ψ x)) →
+  ForallSpecialize (hcons x xs) (∀ x : A, Φ x) Ψ.
+Proof. rewrite /ForallSpecialize /= => <-. by rewrite (forall_elim x). Qed.
+
+Lemma tac_forall_specialize {As} Δ Δ' i p P (Φ : himpl As (uPred M)) Q xs :
+  envs_lookup i Δ = Some (p, P) → ForallSpecialize xs P Φ →
+  envs_simple_replace i p (Esnoc Enil i (happly Φ xs)) Δ = Some Δ' →
   Δ' ⊢ Q → Δ ⊢ Q.
 Proof.
-  intros. rewrite envs_simple_replace_sound //; simpl.
-  destruct p; by rewrite /= right_id (forall_elim a) wand_elim_r.
+  intros. rewrite envs_simple_replace_sound //; simpl. destruct p.
+  - by rewrite right_id (forall_specialize _ P) wand_elim_r.
+  - by rewrite right_id (forall_specialize _ P) wand_elim_r.
 Qed.
 
 Lemma tac_forall_revert {A} Δ (Φ : A → uPred M) :
