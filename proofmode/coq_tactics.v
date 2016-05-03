@@ -731,25 +731,25 @@ Class Frame (R P : uPred M) (mQ : option (uPred M)) :=
   frame : (R ★ from_option True mQ) ⊢ P.
 Arguments frame : clear implicits.
 
-Instance frame_here R : Frame R R None | 1.
+Global Instance frame_here R : Frame R R None.
 Proof. by rewrite /Frame right_id. Qed.
-Instance frame_sep_l R P1 P2 mQ :
+Global Instance frame_sep_l R P1 P2 mQ :
   Frame R P1 mQ →
-  Frame R (P1 ★ P2) (Some $ if mQ is Some Q then Q ★ P2 else P2)%I.
+  Frame R (P1 ★ P2) (Some $ if mQ is Some Q then Q ★ P2 else P2)%I | 9.
 Proof. rewrite /Frame => <-. destruct mQ; simpl; solve_sep_entails. Qed.
-Instance frame_sep_r R P1 P2 mQ :
+Global Instance frame_sep_r R P1 P2 mQ :
   Frame R P2 mQ →
-  Frame R (P1 ★ P2) (Some $ if mQ is Some Q then P1 ★ Q else P1)%I.
+  Frame R (P1 ★ P2) (Some $ if mQ is Some Q then P1 ★ Q else P1)%I | 10.
 Proof. rewrite /Frame => <-. destruct mQ; simpl; solve_sep_entails. Qed.
-Instance frame_and_l R P1 P2 mQ :
+Global Instance frame_and_l R P1 P2 mQ :
   Frame R P1 mQ →
-  Frame R (P1 ∧ P2) (Some $ if mQ is Some Q then Q ∧ P2 else P2)%I.
+  Frame R (P1 ∧ P2) (Some $ if mQ is Some Q then Q ∧ P2 else P2)%I | 9.
 Proof. rewrite /Frame => <-. destruct mQ; simpl; eauto 10 with I. Qed.
-Instance frame_and_r R P1 P2 mQ :
+Global Instance frame_and_r R P1 P2 mQ :
   Frame R P2 mQ →
-  Frame R (P1 ∧ P2) (Some $ if mQ is Some Q then P1 ∧ Q else P1)%I.
+  Frame R (P1 ∧ P2) (Some $ if mQ is Some Q then P1 ∧ Q else P1)%I | 10.
 Proof. rewrite /Frame => <-. destruct mQ; simpl; eauto 10 with I. Qed.
-Instance frame_or R P1 P2 mQ1 mQ2 :
+Global Instance frame_or R P1 P2 mQ1 mQ2 :
   Frame R P1 mQ1 → Frame R P2 mQ2 →
   Frame R (P1 ∨ P2) (match mQ1, mQ2 with
                      | Some Q1, Some Q2 => Some (Q1 ∨ Q2)%I | _, _ => None
@@ -759,17 +759,17 @@ Proof.
   destruct mQ1 as [Q1|], mQ2 as [Q2|]; simpl; auto with I.
   by rewrite -sep_or_l.
 Qed.
-Instance frame_later R P mQ :
+Global Instance frame_later R P mQ :
   Frame R P mQ → Frame R (▷ P) (if mQ is Some Q then Some (▷ Q) else None)%I.
 Proof.
   rewrite /Frame=><-.
   by destruct mQ; rewrite /= later_sep -(later_intro R) ?later_True.
 Qed.
-Instance frame_exist {A} R (Φ : A → uPred M) mΨ :
+Global Instance frame_exist {A} R (Φ : A → uPred M) mΨ :
   (∀ a, Frame R (Φ a) (mΨ a)) →
   Frame R (∃ x, Φ x) (Some (∃ x, if mΨ x is Some Q then Q else True))%I.
 Proof. rewrite /Frame=> ?. by rewrite sep_exist_l; apply exist_mono. Qed.
-Instance frame_forall {A} R (Φ : A → uPred M) mΨ :
+Global Instance frame_forall {A} R (Φ : A → uPred M) mΨ :
   (∀ a, Frame R (Φ a) (mΨ a)) →
   Frame R (∀ x, Φ x) (Some (∀ x, if mΨ x is Some Q then Q else True))%I.
 Proof. rewrite /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
@@ -895,18 +895,3 @@ End tactics.
 
 Hint Extern 0 (ToPosedProof True _ _) =>
   class_apply @to_posed_proof_True : typeclass_instances.
-(** Make sure we can frame in the presence of evars without making Coq loop due
-to it applying these rules too eager.
-
-Note: that [Hint Mode Frame - + + - : typeclass_instances] would disable framing
-with evars entirely.
-Note: we give presence to framing on the left. *)
-Hint Extern 0 (Frame _ ?R _) => class_apply @frame_here : typeclass_instances.
-Hint Extern 9 (Frame _ (_ ★ _) _) => class_apply @frame_sep_l : typeclass_instances.
-Hint Extern 10 (Frame _ (_ ★ _) _) => class_apply @frame_sep_r : typeclass_instances.
-Hint Extern 9 (Frame _ (_ ∧ _) _) => class_apply @frame_and_l : typeclass_instances.
-Hint Extern 10 (Frame _ (_ ∧ _) _) => class_apply @frame_and_r : typeclass_instances.
-Hint Extern 10 (Frame _ (_ ∨ _) _) => class_apply @frame_or : typeclass_instances.
-Hint Extern 10 (Frame _ (▷ _) _) => class_apply @frame_later : typeclass_instances.
-Hint Extern 10 (Frame _ (∃ _, _) _) => class_apply @frame_exist : typeclass_instances.
-Hint Extern 10 (Frame _ (∀ _, _) _) => class_apply @frame_forall : typeclass_instances.
