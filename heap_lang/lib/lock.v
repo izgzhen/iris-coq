@@ -66,7 +66,7 @@ Lemma acquire_spec l R (Φ : val → iProp) :
 Proof.
   iIntros "[Hl HΦ]". iDestruct "Hl" as {N γ} "(%&#?&#?)".
   iLöb as "IH". wp_rec. wp_focus (CAS _ _ _)%E.
-  iInv N as "Hinv". iDestruct "Hinv" as { [] } "[Hl HR]".
+  iInv N as { [] } "[Hl HR]".
   - wp_cas_fail. iSplitL "Hl".
     + iNext. iExists true. by iSplit.
     + wp_if. by iApply "IH".
@@ -79,8 +79,7 @@ Lemma release_spec R l (Φ : val → iProp) :
   (locked l R ★ R ★ Φ #()) ⊢ WP release #l {{ Φ }}.
 Proof.
   iIntros "(Hl&HR&HΦ)"; iDestruct "Hl" as {N γ} "(% & #? & #? & Hγ)".
-  rewrite /release. wp_let.
-  iInv N as "Hinv". iDestruct "Hinv" as {b} "[Hl _]".
+  rewrite /release. wp_let. iInv N as {b} "[Hl _]".
   wp_store. iFrame "HΦ". iNext. iExists false. by iFrame "Hl HR Hγ".
 Qed.
 End proof.

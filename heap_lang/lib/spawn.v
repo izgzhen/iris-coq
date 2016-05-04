@@ -65,7 +65,7 @@ Proof.
   - wp_seq. iPvsIntro. iApply "HΦ"; rewrite /join_handle.
     iSplit; first done. iExists γ. iFrame "Hγ"; by iSplit.
   - wp_focus (f _). iApply wp_wand_l; iFrame "Hf"; iIntros {v} "Hv".
-    iInv N as "Hinv"; first wp_done; iDestruct "Hinv" as {v'} "[Hl _]".
+    iInv N as {v'} "[Hl _]"; first wp_done.
     wp_store. iSplit; [iNext|done].
     iExists (InjRV v); iFrame "Hl"; iRight; iExists v; iSplit; [done|by iLeft].
 Qed.
@@ -74,8 +74,7 @@ Lemma join_spec (Ψ : val → iProp) l (Φ : val → iProp) :
   (join_handle l Ψ ★ ∀ v, Ψ v -★ Φ v) ⊢ WP join #l {{ Φ }}.
 Proof.
   rewrite /join_handle; iIntros "[[% H] Hv]"; iDestruct "H" as {γ} "(#?&Hγ&#?)".
-  iLöb as "IH". wp_rec. wp_focus (! _)%E.
-  iInv N as "Hinv"; iDestruct "Hinv" as {v} "[Hl Hinv]".
+  iLöb as "IH". wp_rec. wp_focus (! _)%E. iInv N as {v} "[Hl Hinv]".
   wp_load. iDestruct "Hinv" as "[%|Hinv]"; subst.
   - iSplitL "Hl"; [iNext; iExists _; iFrame "Hl"; by iLeft|].
     wp_case. wp_seq. iApply ("IH" with "Hγ Hv").
