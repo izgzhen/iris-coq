@@ -66,7 +66,7 @@ Lemma acquire_spec l R (Φ : val → iProp) :
 Proof.
   iIntros "[Hl HΦ]". iDestruct "Hl" as {N γ} "(%&#?&#?)".
   iLöb as "IH". wp_rec. wp_focus (CAS _ _ _)%E.
-  iInv N as "Hinv". iDestruct "Hinv" as {b} "[Hl HR]"; destruct b.
+  iInv N as "Hinv". iDestruct "Hinv" as { [] } "[Hl HR]".
   - wp_cas_fail. iSplitL "Hl".
     + iNext. iExists true. by iSplit.
     + wp_if. by iApply "IH".

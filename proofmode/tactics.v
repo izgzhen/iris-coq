@@ -402,13 +402,16 @@ Tactic Notation "iExists" uconstr(x1) "," uconstr(x2) "," uconstr(x3) ","
     uconstr(x8) :=
   iExists x1; iExists x2, x3, x4, x5, x6, x7, x8.
 
-Local Tactic Notation "iExistDestruct" constr(H) "as" ident(x) constr(Hx) :=
+Local Tactic Notation "iExistDestruct" constr(H)
+    "as" simple_intropattern(x) constr(Hx) :=
   eapply tac_exist_destruct with H _ Hx _ _; (* (i:=H) (j:=Hx) *)
     [env_cbv; reflexivity || fail "iExistDestruct:" H "not found"
     |let P := match goal with |- ExistDestruct ?P _ => P end in
      apply _ || fail "iExistDestruct:" H ":" P "not an existential"|];
-  intros x; eexists; split;
-    [env_cbv; reflexivity || fail "iExistDestruct:" Hx "not fresh"|].
+  let y := fresh in
+  intros y; eexists; split;
+    [env_cbv; reflexivity || fail "iExistDestruct:" Hx "not fresh"
+    |revert y; intros x].
 
 (** * Destruct tactic *)
 Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
