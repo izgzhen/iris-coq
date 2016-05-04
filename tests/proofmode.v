@@ -72,9 +72,10 @@ Proof.
 Qed.
 
 Lemma demo_6 (M : cmraT) (P Q : uPred M) :
-  True ⊢ (∀ x y z, x = 0 → y = 0 → z = 0 → P → □ Q → foo False).
+  True ⊢ (∀ x y z : nat,
+    x = plus 0 x → y = 0 → z = 0 → P → □ Q → foo (x ≡ x)).
 Proof.
   iIntros {a} "*".
   iIntros "#Hfoo **".
-  by iIntros "%".
+  by iIntros "# _".
 Qed.

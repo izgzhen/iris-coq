@@ -292,10 +292,7 @@ Lemma tac_ex_falso Δ Q : Δ ⊢ False → Δ ⊢ Q.
 Proof. by rewrite -(False_elim Q). Qed.
 
 (** * Pure *)
-Lemma tac_pure_intro Δ (φ : Prop) : φ → Δ ⊢ ■ φ.
-Proof. apply const_intro. Qed.
-
-Class ToPure (P : uPred M) (φ : Prop) := to_pure : P ⊢ ■ φ.
+Class ToPure (P : uPred M) (φ : Prop) := to_pure : P ⊣⊢ ■ φ.
 Arguments to_pure : clear implicits.
 Global Instance to_pure_const φ : ToPure (■ φ) φ.
 Proof. done. Qed.
@@ -304,6 +301,9 @@ Global Instance to_pure_eq {A : cofeT} (a b : A) :
 Proof. intros; red. by rewrite timeless_eq. Qed.
 Global Instance to_pure_valid `{CMRADiscrete A} (a : A) : ToPure (✓ a) (✓ a).
 Proof. intros; red. by rewrite discrete_valid. Qed.
+
+Lemma tac_pure_intro Δ Q (φ : Prop) : ToPure Q φ → φ → Δ ⊢ Q.
+Proof. intros ->. apply const_intro. Qed.
 
 Lemma tac_pure Δ Δ' i p P φ Q :
   envs_lookup_delete i Δ = Some (p, P, Δ') → ToPure P φ →

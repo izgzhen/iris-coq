@@ -113,7 +113,10 @@ Local Tactic Notation "iPure" constr(H) "as" simple_intropattern(pat) :=
      apply _ || fail "iPure:" H ":" P "not pure"
     |intros pat].
 
-Tactic Notation "iPureIntro" := apply uPred.const_intro.
+Tactic Notation "iPureIntro" :=
+  eapply tac_pure_intro;
+    [let P := match goal with |- ToPure ?P _ => P end in
+     apply _ || fail "iPureIntro:" P "not pure"|].
 
 (** * Specialize *)
 Record iTrm {X As} :=
@@ -751,5 +754,5 @@ Tactic Notation "iRewrite" "-" open_constr(t) "in" constr(H) :=
   iRewriteCore true t in H.
 
 (* Make sure that by and done solve trivial things in proof mode *)
-Hint Extern 0 (of_envs _ ⊢ _) => by apply tac_pure_intro.
+Hint Extern 0 (of_envs _ ⊢ _) => by iPureIntro.
 Hint Extern 0 (of_envs _ ⊢ _) => iAssumption.
