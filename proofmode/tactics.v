@@ -694,14 +694,14 @@ Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
 (** * Assert *)
 Tactic Notation "iAssert" constr(Q) "as" constr(pat) "with" constr(Hs) :=
   let H := iFresh in
-  let Hs := spec_pat.parse_one Hs in
+  let Hs := spec_pat.parse Hs in
   lazymatch Hs with
-  | SAssert ?lr ?Hs =>
+  | [SAssert ?lr ?Hs] =>
      eapply tac_assert with _ _ _ lr Hs H Q; (* (js:=Hs) (j:=H) (P:=Q) *)
        [env_cbv; reflexivity || fail "iAssert:" Hs "not found"
        |env_cbv; reflexivity|
        |iDestructHyp H as pat]
-  | SPersistent =>
+  | [SAssert true [] :: SAlways]  =>
      eapply tac_assert_persistent with _ H Q; (* (j:=H) (P:=Q) *)
        [apply _ || fail "iAssert:" Q "not persistent"
        |env_cbv; reflexivity|
