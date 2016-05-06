@@ -515,7 +515,7 @@ Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
   iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 x7 x8 } pat).
 
 Tactic Notation "iDestruct" open_constr(H) "as" "%" simple_intropattern(pat) :=
-  let Htmp := iFresh in iDestruct H as Htmp; iPure Htmp as pat.
+  let Htmp := iFresh in iDestruct H as Htmp; last iPure Htmp as pat.
 
 (** * Always *)
 Tactic Notation "iAlways":=
