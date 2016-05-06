@@ -23,7 +23,7 @@ Proof.
 Qed.
 Global Instance frame_pvs E1 E2 R P mQ :
   Frame R P mQ →
-  Frame R (|={E1,E2}=> P) (Some (|={E1,E2}=> from_option True mQ))%I.
+  Frame R (|={E1,E2}=> P) (Some (|={E1,E2}=> if mQ is Some Q then Q else True))%I.
 Proof. rewrite /Frame=><-. by rewrite pvs_frame_l. Qed.
 Global Instance to_wand_pvs E1 E2 R P Q :
   ToWand R P Q → ToWand R (|={E1,E2}=> P) (|={E1,E2}=> Q).
@@ -32,12 +32,15 @@ Proof. rewrite /ToWand=>->. apply wand_intro_l. by rewrite pvs_wand_r. Qed.
 Class FSASplit {A} (P : iProp Λ Σ) (E : coPset)
     (fsa : FSA Λ Σ A) (fsaV : Prop) (Φ : A → iProp Λ Σ) := {
   fsa_split : fsa E Φ ⊢ P;
-  fsa_split_fsa :> FrameShiftAssertion fsaV fsa;
+  fsa_split_is_fsa :> FrameShiftAssertion fsaV fsa;
 }.
 Global Arguments fsa_split {_} _ _ _ _ _ {_}.
 Global Instance fsa_split_pvs E P :
   FSASplit (|={E}=> P)%I E pvs_fsa True (λ _, P).
 Proof. split. done. apply _. Qed.
+Global Instance fsa_split_fsa {A} (fsa : FSA Λ Σ A) E Φ :
+  FrameShiftAssertion fsaV fsa → FSASplit (fsa E Φ) E fsa fsaV Φ.
+Proof. done. Qed.
 
 Lemma tac_pvs_intro Δ E Q : Δ ⊢ Q → Δ ⊢ |={E}=> Q.
 Proof. intros ->. apply pvs_intro. Qed.
