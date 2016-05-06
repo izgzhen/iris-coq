@@ -570,7 +570,7 @@ Local Tactic Notation "iIntroForall" :=
   lazymatch goal with
   | |- ∀ _, ?P => fail
   | |- ∀ _, _ => intro
-  | |- _ ⊢ (∀ _, _) => iIntro {?}
+  | |- _ ⊢ (∀ x : _, _) => iIntro {x}
   end.
 Local Tactic Notation "iIntro" :=
   lazymatch goal with
