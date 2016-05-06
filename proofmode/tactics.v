@@ -169,7 +169,9 @@ Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
        eapply tac_specialize with _ _ H2 _ H1 _ _ _ _; (* (j:=H1) (i:=H2) *)
          [env_cbv; reflexivity || fail "iSpecialize:" H2 "not found"
          |env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
-         |solve_to_wand H1
+         |let P := match goal with |- ToWand ?P ?Q _ => P end in
+          let Q := match goal with |- ToWand ?P ?Q _ => Q end in
+          apply _ || fail "iSpecialize: cannot instantiate" H1 ":" P "with" H2 ":" Q
          |env_cbv; reflexivity|go H1 pats]
     | SPersistent :: ?pats =>
        eapply tac_specialize_range_persistent with _ _ H1 _ _ _ _;
