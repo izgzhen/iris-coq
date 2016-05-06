@@ -88,8 +88,8 @@ Proof.
     iNext. iRewrite "Heq" in "HQR". iIntros "HP". iSpecialize ("HPΨ" with "HP").
     iDestruct (big_sepS_delete _ _ i with "HPΨ") as "[HΨ HPΨ]"; first done.
     iDestruct ("HQR" with "HΨ") as "[HR1 HR2]".
-    rewrite !big_sepS_insert''; [|set_solver ..]. by iFrame "HR1 HR2".
-  - rewrite !big_sepS_insert'; [|set_solver ..]. by repeat iSplit.
+    rewrite !big_sepS_insert''; [|abstract set_solver ..]. by iFrame "HR1 HR2".
+  - rewrite !big_sepS_insert'; [|abstract set_solver ..]. by repeat iSplit.
 Qed.
 
 (** Actual proofs *)
@@ -115,7 +115,7 @@ Proof.
     + set_solver.
     + iApply (sts_own_weaken with "Hγ'");
         auto using sts.closed_op, i_states_closed, low_states_closed;
-        set_solver. }
+        abstract set_solver. }
   iPvsIntro. rewrite /recv /send. iSplitL "Hr".
   - iExists γ', P, P, γ. iFrame "Hr". repeat iSplit; auto. by iIntros "> ?".
   - iExists γ'. by iSplit.
@@ -190,7 +190,7 @@ Proof.
       + set_solver.
       + iApply (sts_own_weaken with "Hγ");
           eauto using sts.closed_op, i_states_closed.
-        set_solver. }
+        abstract set_solver. }
     iPvsIntro; iSplitL "Hγ1"; rewrite /recv /barrier_ctx.
     + iExists γ, P, R1, i1. iFrame "Hγ1 Hi1". repeat iSplit; auto.
       by iIntros "> ?".
