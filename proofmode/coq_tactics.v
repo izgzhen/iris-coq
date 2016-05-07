@@ -26,6 +26,12 @@ Record envs_wf {M} (Δ : envs M) := {
 
 Coercion of_envs {M} (Δ : envs M) : uPred M :=
   (■ envs_wf Δ ★ □ Π∧ env_persistent Δ ★ Π★ env_spatial Δ)%I.
+Instance: Params (@of_envs) 1.
+
+Record envs_Forall2 {M} (R : relation (uPred M)) (Δ1 Δ2 : envs M) : Prop := {
+  env_persistent_Forall2 : env_Forall2 R (env_persistent Δ1) (env_persistent Δ2);
+  env_spatial_Forall2 : env_Forall2 R (env_spatial Δ1) (env_spatial Δ2)
+}.
 
 Instance envs_dom {M} : Dom (envs M) stringset := λ Δ,
   dom stringset (env_persistent Δ) ∪ dom stringset (env_spatial Δ).
@@ -251,6 +257,39 @@ Qed.
 Lemma envs_persistent_persistent Δ : envs_persistent Δ = true → PersistentP Δ.
 Proof. intros; destruct Δ as [? []]; simplify_eq/=; apply _. Qed.
 Hint Immediate envs_persistent_persistent : typeclass_instances.
+
+Global Instance envs_Forall2_refl (R : relation (uPred M)) :
+  Reflexive R → Reflexive (envs_Forall2 R).
+Proof. by constructor. Qed.
+Global Instance envs_Forall2_sym (R : relation (uPred M)) :
+  Symmetric R → Symmetric (envs_Forall2 R).
+Proof. intros ??? [??]; by constructor. Qed.
+Global Instance envs_Forall2_trans (R : relation (uPred M)) :
+  Transitive R → Transitive (envs_Forall2 R).
+Proof. intros ??? [??] [??] [??]; constructor; etrans; eauto. Qed.
+Global Instance envs_Forall2_antisymm (R R' : relation (uPred M)) :
+  AntiSymm R R' → AntiSymm (envs_Forall2 R) (envs_Forall2 R').
+Proof. intros ??? [??] [??]; constructor; by eapply (anti_symm _). Qed.
+Lemma envs_Forall2_impl (R R' : relation (uPred M)) Δ1 Δ2 :
+  envs_Forall2 R Δ1 Δ2 → (∀ P Q, R P Q → R' P Q) → envs_Forall2 R' Δ1 Δ2.
+Proof. intros [??] ?; constructor; eauto using env_Forall2_impl. Qed.
+
+Global Instance of_envs_mono : Proper (envs_Forall2 (⊢) ==> (⊢)) (@of_envs M).
+Proof.
+  intros [Γp1 Γs1] [Γp2 Γs2] [Hp Hs]; unfold of_envs; simpl in *.
+  apply const_elim_sep_l=>Hwf. apply sep_intro_True_l.
+  - destruct Hwf; apply const_intro; constructor;
+      naive_solver eauto using env_Forall2_wf, env_Forall2_fresh.
+  - by repeat f_equiv.
+Qed.
+Global Instance of_envs_proper : Proper (envs_Forall2 (⊣⊢) ==> (⊣⊢)) (@of_envs M).
+Proof.
+  intros Δ1 Δ2 ?; apply (anti_symm (⊢)); apply of_envs_mono;
+    eapply envs_Forall2_impl; [| |symmetry|]; eauto using equiv_entails.
+Qed.
+Global Instance Envs_mono (R : relation (uPred M)) :
+  Proper (env_Forall2 R ==> env_Forall2 R ==> envs_Forall2 R) (@Envs M).
+Proof. by constructor. Qed.
 
 (** * Adequacy *)
 Lemma tac_adequate P : Envs Enil Enil ⊢ P → True ⊢ P.
