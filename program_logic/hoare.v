@@ -1,5 +1,5 @@
 From iris.program_logic Require Export weakestpre viewshifts.
-From iris.proofmode Require Import weakestpre.
+From iris.proofmode Require Import weakestpre invariants.
 
 Definition ht {Λ Σ} (E : coPset) (P : iProp Λ Σ)
     (e : expr Λ) (Φ : val Λ → iProp Λ Σ) : iProp Λ Σ :=
@@ -145,7 +145,6 @@ Lemma ht_inv N E P Φ R e :
   (inv N R ★ {{ ▷ R ★ P }} e @ E ∖ nclose N {{ v, ▷ R ★ Φ v }})
     ⊢ {{ P }} e @ E {{ Φ }}.
 Proof.
-  iIntros {??} "[#? #Hwp] ! HP". eapply wp_inv; eauto.
-  iIntros "HR". iApply "Hwp". by iSplitL "HR".
+  iIntros {??} "[#? #Hwp] ! HP". iInv N as "HR". iApply "Hwp". by iSplitL "HR".
 Qed.
 End hoare.

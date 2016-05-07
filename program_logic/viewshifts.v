@@ -1,6 +1,6 @@
 From iris.program_logic Require Import ownership.
 From iris.program_logic Require Export pviewshifts invariants ghost_ownership.
-From iris.proofmode Require Import pviewshifts.
+From iris.proofmode Require Import pviewshifts invariants.
 Import uPred.
 
 Definition vs {Λ Σ} (E1 E2 : coPset) (P Q : iProp Λ Σ) : iProp Λ Σ :=
@@ -94,8 +94,8 @@ Proof. intros; apply vs_mask_frame; set_solver. Qed.
 Lemma vs_inv N E P Q R :
   nclose N ⊆ E → (inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q)) ⊢ (P ={E}=> Q).
 Proof.
-  iIntros {?} "#[? Hvs] ! HP". eapply pvs_inv; eauto.
-  iIntros "HR". iApply ("Hvs" with "!"). by iSplitL "HR".
+  iIntros {?} "#[? Hvs] ! HP". iInv N as "HR".
+  iApply ("Hvs" with "!"). by iSplitL "HR".
 Qed.
 
 Lemma vs_alloc N P : ▷ P ={N}=> inv N P.

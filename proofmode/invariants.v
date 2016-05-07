@@ -14,7 +14,8 @@ Lemma tac_inv_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E N i P Q Φ :
   envs_app false (Esnoc Enil i (▷ P)) Δ = Some Δ' →
   Δ' ⊢ fsa (E ∖ nclose N) (λ a, ▷ P ★ Φ a) → Δ ⊢ Q.
 Proof.
-  intros ????? HΔ'. rewrite -(fsa_split Q). eapply (inv_fsa fsa); eauto.
+  intros ????? HΔ'. rewrite -(fsa_split Q) -(inv_fsa fsa _ _ P) //.
+  rewrite // -always_and_sep_l. apply and_intro; first done.
   rewrite envs_app_sound //; simpl. by rewrite right_id HΔ'.
 Qed.
 
@@ -24,9 +25,12 @@ Lemma tac_inv_fsa_timeless {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E N i P Q Φ :
   envs_app false (Esnoc Enil i P) Δ = Some Δ' →
   Δ' ⊢ fsa (E ∖ nclose N) (λ a, P ★ Φ a) → Δ ⊢ Q.
 Proof.
-  intros ?????? HΔ'. rewrite -(fsa_split Q).
-  eapply (inv_fsa_timeless fsa); eauto.
-  rewrite envs_app_sound //; simpl. by rewrite right_id HΔ'.
+  intros ?????? HΔ'. rewrite -(fsa_split Q) -(inv_fsa fsa _ _ P) //.
+  rewrite // -always_and_sep_l. apply and_intro, wand_intro_l; first done.
+  trans (|={E ∖ N}=> P ★ Δ)%I; first by rewrite pvs_timeless pvs_frame_r.
+  apply (fsa_strip_pvs _).
+  rewrite envs_app_sound //; simpl. rewrite right_id HΔ' wand_elim_r.
+  apply: fsa_mono=> v. by rewrite -later_intro.
 Qed.
 End invariants.
 
