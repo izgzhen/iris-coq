@@ -174,6 +174,10 @@ Proof.
   rewrite (pvs_mask_frame _ _ (E1 ∖ E1')); last set_solver.
   by rewrite {2}HEE -!union_difference_L.
 Qed.
+Lemma pvs_openI' E i P : i ∈ E → ownI i P ⊢ (|={E, E ∖ {[i]}}=> ▷ P).
+Proof. intros. etrans. apply pvs_openI. apply pvs_mask_frame'; set_solver. Qed.
+Lemma pvs_closeI' E i P : i ∈ E → (ownI i P ∧ ▷ P) ⊢ (|={E ∖ {[i]}, E}=> True).
+Proof. intros. etrans. apply pvs_closeI. apply pvs_mask_frame'; set_solver. Qed.
 
 Lemma pvs_mask_frame_mono E1 E1' E2 E2' P Q :
   E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' →
