@@ -217,6 +217,7 @@ Class FrameShiftAssertion {Λ Σ A} (fsaV : Prop) (fsa : FSA Λ Σ A) := {
 Section fsa.
 Context {Λ Σ A} (fsa : FSA Λ Σ A) `{!FrameShiftAssertion fsaV fsa}.
 Implicit Types Φ Ψ : A → iProp Λ Σ.
+Import uPred.
 
 Lemma fsa_mono E Φ Ψ : (∀ a, Φ a ⊢ Ψ a) → fsa E Φ ⊢ fsa E Ψ.
 Proof. apply fsa_mask_frame_mono; auto. Qed.
@@ -231,8 +232,20 @@ Proof.
 Qed.
 Lemma fsa_pvs_fsa E Φ : (|={E}=> fsa E Φ) ⊣⊢ fsa E Φ.
 Proof. apply (anti_symm (⊢)); [by apply fsa_strip_pvs|apply pvs_intro]. Qed.
+Lemma pvs_fsa_fsa E Φ : fsa E (λ a, |={E}=> Φ a) ⊣⊢ fsa E Φ.
+Proof.
+  apply (anti_symm (⊢)); [|apply fsa_mono=> a; apply pvs_intro].
+  by rewrite (pvs_intro E (fsa E _)) fsa_trans3.
+Qed.
 Lemma fsa_mono_pvs E Φ Ψ : (∀ a, Φ a ⊢ (|={E}=> Ψ a)) → fsa E Φ ⊢ fsa E Ψ.
 Proof. intros. rewrite -[fsa E Ψ]fsa_trans3 -pvs_intro. by apply fsa_mono. Qed.
+Lemma fsa_wand_l E Φ Ψ : ((∀ a, Φ a -★ Ψ a) ★ fsa E Φ) ⊢ (fsa E Ψ).
+Proof.
+  rewrite fsa_frame_l. apply fsa_mono=> a.
+  by rewrite (forall_elim a) wand_elim_l.
+Qed.
+Lemma fsa_wand_r E Φ Ψ : (fsa E Φ ★ ∀ a, Φ a -★ Ψ a) ⊢ (fsa E Ψ).
+Proof. by rewrite (comm _ (fsa _ _)) fsa_wand_l. Qed.
 End fsa.
 
 Definition pvs_fsa {Λ Σ} : FSA Λ Σ () := λ E Φ, (|={E}=> Φ ())%I.
