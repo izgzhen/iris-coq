@@ -88,6 +88,7 @@ Tactic Notation "wp_apply" open_constr(lem) :=
   match goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     wp_bind K; iApply lem; try iNext)
+  | _ => fail "wp_apply: not a 'wp'"
   end.
 
 Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
@@ -103,9 +104,11 @@ Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
          |intros l; eexists; split;
            [env_cbv; reflexivity || fail 2 "wp_alloc:" H "not fresh"
            |wp_finish]]
-    end)
+    end) || fail "wp_alloc: cannot find 'Alloc' in" e
+  | _ => fail "wp_alloc: not a 'wp'"
   end.
-Tactic Notation "wp_alloc" ident(l) := let H := iFresh in wp_alloc l as H.
+Tactic Notation "wp_alloc" ident(l) :=
+  let H := iFresh in wp_alloc l as H.
 
 Tactic Notation "wp_load" :=
   match goal with
@@ -118,7 +121,8 @@ Tactic Notation "wp_load" :=
          |apply _
          |iAssumptionCore || fail 2 "wp_cas_fail: cannot find" l "↦ ?"
          |wp_finish]
-    end)
+    end) || fail "wp_load: cannot find 'Load' in" e
+  | _ => fail "wp_load: not a 'wp'"
   end.
 
 Tactic Notation "wp_store" :=
@@ -134,14 +138,15 @@ Tactic Notation "wp_store" :=
          |iAssumptionCore || fail 2 "wp_store: cannot find" l "↦ ?"
          |env_cbv; reflexivity
          |wp_finish]
-    end)
+    end) || fail "wp_store: cannot find 'Store' in" e
+  | _ => fail "wp_store: not a 'wp'"
   end.
 
 Tactic Notation "wp_cas_fail" :=
   match goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
-    | CAS (Lit (LitLoc ?l)) ?e1 ?e2 =>
+    | CAS ?l ?e1 ?e2 =>
        wp_bind K; eapply tac_wp_cas_fail;
          [wp_done || fail 2 "wp_cas_fail:" e1 "not a value"
          |wp_done || fail 2 "wp_cas_fail:" e2 "not a value"
@@ -151,14 +156,15 @@ Tactic Notation "wp_cas_fail" :=
          |iAssumptionCore || fail 2 "wp_cas_fail: cannot find" l "↦ ?"
          |try discriminate
          |wp_finish]
-    end)
+    end) || fail "wp_cas_fail: cannot find 'CAS' in" e
+  | _ => fail "wp_cas_fail: not a 'wp'"
   end.
 
 Tactic Notation "wp_cas_suc" :=
   match goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
-    | CAS (Lit (LitLoc ?l)) ?e1 ?e2 =>
+    | CAS ?l ?e1 ?e2 =>
        wp_bind K; eapply tac_wp_cas_suc;
          [wp_done || fail 2 "wp_cas_suc:" e1 "not a value"
          |wp_done || fail 2 "wp_cas_suc:" e1 "not a value"
@@ -168,5 +174,6 @@ Tactic Notation "wp_cas_suc" :=
          |iAssumptionCore || fail 2 "wp_cas_suc: cannot find" l "↦ ?"
          |env_cbv; reflexivity
          |wp_finish]
-    end)
+    end) || fail "wp_cas_suc: cannot find 'CAS' in" e
+  | _ => fail "wp_cas_suc: not a 'wp'"
   end.
