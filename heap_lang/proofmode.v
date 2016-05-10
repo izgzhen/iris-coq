@@ -155,7 +155,7 @@ Tactic Notation "wp_cas_fail" :=
          |done || eauto with ndisj
          |apply _
          |iAssumptionCore || fail 2 "wp_cas_fail: cannot find" l "↦ ?"
-         |try discriminate
+         |try congruence
          |wp_finish]
     end) || fail "wp_cas_fail: cannot find 'CAS' in" e
   | _ => fail "wp_cas_fail: not a 'wp'"
@@ -173,7 +173,7 @@ Tactic Notation "wp_cas_suc" :=
          |done || eauto with ndisj
          |apply _
          |iAssumptionCore || fail 2 "wp_cas_suc: cannot find" l "↦ ?"
-         |try reflexivity
+         |try congruence
          |env_cbv; reflexivity
          |wp_finish]
     end) || fail "wp_cas_suc: cannot find 'CAS' in" e
