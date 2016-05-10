@@ -70,15 +70,16 @@ Proof.
   by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
-Lemma tac_wp_cas_suc Δ Δ' Δ'' N E i l e1 v1 e2 v2 Φ :
+Lemma tac_wp_cas_suc Δ Δ' Δ'' N E i l v e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
   Δ ⊢ heap_ctx N → nclose N ⊆ E →
   StripLaterEnvs Δ Δ' →
-  envs_lookup i Δ' = Some (false, l ↦ v1)%I →
+  envs_lookup i Δ' = Some (false, l ↦ v)%I → v = v1 →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v2)) Δ' = Some Δ'' →
   Δ'' ⊢ Φ (LitV (LitBool true)) → Δ ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
 Proof.
-  intros. rewrite -wp_cas_suc // -always_and_sep_l. apply and_intro; first done.
+  intros; subst.
+  rewrite -wp_cas_suc // -always_and_sep_l. apply and_intro; first done.
   rewrite strip_later_env_sound -later_sep envs_simple_replace_sound //; simpl.
   rewrite right_id. by apply later_mono, sep_mono_r, wand_mono.
 Qed.
@@ -172,6 +173,7 @@ Tactic Notation "wp_cas_suc" :=
          |done || eauto with ndisj
          |apply _
          |iAssumptionCore || fail 2 "wp_cas_suc: cannot find" l "↦ ?"
+         |try reflexivity
          |env_cbv; reflexivity
          |wp_finish]
     end) || fail "wp_cas_suc: cannot find 'CAS' in" e
