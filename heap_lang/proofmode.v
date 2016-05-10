@@ -115,7 +115,7 @@ Tactic Notation "wp_load" :=
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
-    | Load (Lit (LitLoc ?l)) =>
+    | Load ?l =>
        wp_bind K; eapply tac_wp_load;
          [iAssumption || fail 2 "wp_load: cannot find heap_ctx"
          |done || eauto with ndisj

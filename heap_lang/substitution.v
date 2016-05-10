@@ -16,7 +16,7 @@ Hint Extern 0 (WExpr _ (Var ?y) _) =>
 
 (* Rec *)
 Instance do_wexpr_rec_true {X Y f y e} {H : X `included` Y} er :
-  WExpr (wexpr_rec_prf H) e er → WExpr H (Rec f y e) (Rec f y er).
+  WExpr (wexpr_rec_prf H) e er → WExpr H (Rec f y e) (Rec f y er) | 10.
 Proof. intros; red; f_equal/=. by etrans; [apply wexpr_proof_irrel|]. Qed.
 
 (* Values *)
