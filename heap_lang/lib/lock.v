@@ -8,6 +8,7 @@ Definition acquire : val :=
   rec: "acquire" "l" :=
     if: CAS '"l" #false #true then #() else '"acquire" '"l".
 Definition release : val := λ: "l", '"l" <- #false.
+Global Opaque newlock acquire release.
 
 (** The CMRA we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)

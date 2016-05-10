@@ -196,4 +196,3 @@ Ltac simpl_subst :=
 Arguments wexpr : simpl never.
 Arguments subst : simpl never.
 Arguments wsubst : simpl never.
-Arguments of_val : simpl never.

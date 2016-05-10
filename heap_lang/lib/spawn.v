@@ -13,6 +13,7 @@ Definition join : val :=
       InjR "x" => '"x"
     | InjL <>  => '"join" '"c"
     end.
+Global Opaque spawn join.
 
 (** The CMRA we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)

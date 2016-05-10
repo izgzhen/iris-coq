@@ -9,7 +9,7 @@ Ltac wp_bind K :=
   | _ => etrans; [|fast_by apply (wp_bind K)]; simpl
   end.
 
-Ltac wp_done := rewrite -/of_val /= ?to_of_val; fast_done.
+Ltac wp_done := rewrite /= ?to_of_val; fast_done.
 
 Ltac wp_value_head :=
   match goal with
@@ -23,7 +23,7 @@ Ltac wp_value_head :=
   end.
 
 Ltac wp_finish := intros_revert ltac:(
-  rewrite -/of_val /= ?to_of_val; try strip_later; try wp_value_head).
+  rewrite /= ?to_of_val; try strip_later; try wp_value_head).
 
 Tactic Notation "wp_value" :=
   lazymatch goal with

@@ -18,6 +18,7 @@ Definition one_shot_example : val := λ: <>,
        | InjR "m" => Assert ('"n" = '"m")
        end
     end)).
+Global Opaque one_shot_example.
 
 Class one_shotG Σ :=
   OneShotG { one_shot_inG :> inG heap_lang Σ (one_shotR (dec_agreeR Z)) }.
