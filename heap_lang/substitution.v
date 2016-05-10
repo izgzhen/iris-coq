@@ -2,8 +2,7 @@ From iris.heap_lang Require Export lang.
 Import heap_lang.
 
 (** The tactic [simpl_subst] performs substitutions in the goal. Its behavior
-can be tuned using instances of the type class [Closed e], which can be used
-to mark that expressions are closed, and should thus not be substituted into. *)
+can be tuned by declaring [WExpr] and [WSubst] instances. *)
 
 (** * Weakening *)
 Class WExpr {X Y} (H : X `included` Y) (e : expr X) (er : expr Y) :=
