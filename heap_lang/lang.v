@@ -119,8 +119,6 @@ Arguments PairV _%V _%V.
 Arguments InjLV _%V.
 Arguments InjRV _%V.
 
-Definition signal : val := RecV BAnon (BNamed "x") (Store (Var "x") (Lit (LitInt 1))).
-
 Fixpoint of_val (v : val) : expr [] :=
   match v with
   | RecV f x e => Rec f x e
