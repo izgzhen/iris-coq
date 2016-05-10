@@ -38,7 +38,7 @@ Tactic Notation "wp_rec" :=
     match eval hnf in e' with App ?e1 _ =>
 (* hnf does not reduce through an of_val *)
 (*      match eval hnf in e1 with Rec _ _ _ => *)
-    wp_bind K; etrans; [|eapply wp_rec'; wp_done]; simpl_subst; wp_finish
+    wp_bind K; etrans; [|eapply wp_rec; wp_done]; simpl_subst; wp_finish
 (*      end *) end) || fail "wp_rec: cannot find 'Rec' in" e
   | _ => fail "wp_rec: not a 'wp'"
   end.

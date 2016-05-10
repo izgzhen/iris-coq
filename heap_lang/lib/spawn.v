@@ -57,7 +57,7 @@ Lemma spawn_spec (Ψ : val → iProp) e (f : val) (Φ : val → iProp) :
   ⊢ WP spawn e {{ Φ }}.
 Proof.
   iIntros {<-%of_to_val ?} "(#Hh&Hf&HΦ)". rewrite /spawn.
-  wp_let; wp_alloc l as "Hl"; wp_let.
+  wp_let. wp_alloc l as "Hl". wp_let.
   iPvs (own_alloc (Excl ())) as {γ} "Hγ"; first done.
   iPvs (inv_alloc N _ (spawn_inv γ l Ψ) with "[Hl]") as "#?"; first done.
   { iNext. iExists (InjLV #0). iFrame "Hl". by iLeft. }

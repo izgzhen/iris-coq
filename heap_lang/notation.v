@@ -33,7 +33,7 @@ Notation "# l" := (LitV l%Z%V) (at level 8, format "# l").
 Notation "# l" := (Lit l%Z%V) (at level 8, format "# l") : expr_scope.
 
 Notation "' x" := (Var x) (at level 8, format "' x") : expr_scope.
-Notation "^ v" := (of_val' v%V) (at level 8, format "^ v") : expr_scope.
+Notation "^ e" := (wexpr' e) (at level 8, format "^ e") : expr_scope.
 
 (** Syntax inspired by Coq/Ocaml. Constructions with higher precedence come
     first. *)
