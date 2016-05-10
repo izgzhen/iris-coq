@@ -94,88 +94,105 @@ Tactic Notation "wp_apply" open_constr(lem) :=
 
 Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
   lazymatch goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval hnf in e' with
-    | Alloc ?e =>
-       wp_bind K; eapply tac_wp_alloc with _ _ H _;
-         [wp_done || fail 2 "wp_alloc:" e "not a value"
-         |iAssumption || fail 2 "wp_alloc: cannot find heap_ctx"
-         |done || eauto with ndisj
-         |apply _
-         |intros l; eexists; split;
-           [env_cbv; reflexivity || fail 2 "wp_alloc:" H "not fresh"
-           |wp_finish]]
-    end) || fail "wp_alloc: cannot find 'Alloc' in" e
+  | |- _ ⊢ wp ?E ?e ?Q =>
+    first
+      [reshape_expr e ltac:(fun K e' =>
+         match eval hnf in e' with Alloc _ => wp_bind K end)
+      |fail 1 "wp_alloc: cannot find 'Alloc' in" e];
+    eapply tac_wp_alloc with _ _ H _;
+      [let e' := match goal with |- to_val ?e' = _ => e' end in
+       wp_done || fail "wp_alloc:" e' "not a value"
+      |iAssumption || fail "wp_alloc: cannot find heap_ctx"
+      |done || eauto with ndisj
+      |apply _
+      |first [intros l | fail 1 "wp_alloc:" l "not fresh"];
+        eexists; split;
+          [env_cbv; reflexivity || fail "wp_alloc:" H "not fresh"
+          |wp_finish]]
   | _ => fail "wp_alloc: not a 'wp'"
   end.
+
 Tactic Notation "wp_alloc" ident(l) :=
   let H := iFresh in wp_alloc l as H.
 
 Tactic Notation "wp_load" :=
   lazymatch goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval hnf in e' with
-    | Load ?l =>
-       wp_bind K; eapply tac_wp_load;
-         [iAssumption || fail 2 "wp_load: cannot find heap_ctx"
-         |done || eauto with ndisj
-         |apply _
-         |iAssumptionCore || fail 2 "wp_cas_fail: cannot find" l "↦ ?"
-         |wp_finish]
-    end) || fail "wp_load: cannot find 'Load' in" e
+  | |- _ ⊢ wp ?E ?e ?Q =>
+    first
+      [reshape_expr e ltac:(fun K e' =>
+         match eval hnf in e' with Load _ => wp_bind K end)
+      |fail 1 "wp_load: cannot find 'Load' in" e];
+    eapply tac_wp_load;
+      [iAssumption || fail "wp_load: cannot find heap_ctx"
+      |done || eauto with ndisj
+      |apply _
+      |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
+       iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?"
+      |wp_finish]
   | _ => fail "wp_load: not a 'wp'"
   end.
 
 Tactic Notation "wp_store" :=
   lazymatch goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval hnf in e' with
-    | Store ?l ?e =>
-       wp_bind K; eapply tac_wp_store;
-         [wp_done || fail 2 "wp_store:" e "not a value"
-         |iAssumption || fail 2 "wp_store: cannot find heap_ctx"
-         |done || eauto with ndisj
-         |apply _
-         |iAssumptionCore || fail 2 "wp_store: cannot find" l "↦ ?"
-         |env_cbv; reflexivity
-         |wp_finish]
-    end) || fail "wp_store: cannot find 'Store' in" e
+  | |- _ ⊢ wp ?E ?e ?Q =>
+    first
+      [reshape_expr e ltac:(fun K e' =>
+         match eval hnf in e' with Store _ _ => wp_bind K end)
+      |fail 1 "wp_store: cannot find 'Store' in" e];
+    eapply tac_wp_store;
+      [let e' := match goal with |- to_val ?e' = _ => e' end in
+       wp_done || fail "wp_store:" e' "not a value"
+      |iAssumption || fail "wp_store: cannot find heap_ctx"
+      |done || eauto with ndisj
+      |apply _
+      |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
+       iAssumptionCore || fail "wp_store: cannot find" l "↦ ?"
+      |env_cbv; reflexivity
+      |wp_finish]
   | _ => fail "wp_store: not a 'wp'"
   end.
 
 Tactic Notation "wp_cas_fail" :=
   lazymatch goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval hnf in e' with
-    | CAS ?l ?e1 ?e2 =>
-       wp_bind K; eapply tac_wp_cas_fail;
-         [wp_done || fail 2 "wp_cas_fail:" e1 "not a value"
-         |wp_done || fail 2 "wp_cas_fail:" e2 "not a value"
-         |iAssumption || fail 2 "wp_cas_fail: cannot find heap_ctx"
-         |done || eauto with ndisj
-         |apply _
-         |iAssumptionCore || fail 2 "wp_cas_fail: cannot find" l "↦ ?"
-         |try congruence
-         |wp_finish]
-    end) || fail "wp_cas_fail: cannot find 'CAS' in" e
+  | |- _ ⊢ wp ?E ?e ?Q =>
+    first
+      [reshape_expr e ltac:(fun K e' =>
+         match eval hnf in e' with CAS _ _ _ => wp_bind K end)
+      |fail 1 "wp_cas_fail: cannot find 'CAS' in" e];
+    eapply tac_wp_cas_fail;
+      [let e' := match goal with |- to_val ?e' = _ => e' end in
+       wp_done || fail "wp_cas_fail:" e' "not a value"
+      |let e' := match goal with |- to_val ?e' = _ => e' end in
+       wp_done || fail "wp_cas_fail:" e' "not a value"
+      |iAssumption || fail "wp_cas_fail: cannot find heap_ctx"
+      |done || eauto with ndisj
+      |apply _
+      |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
+       iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?"
+      |try congruence
+      |wp_finish]
   | _ => fail "wp_cas_fail: not a 'wp'"
   end.
 
 Tactic Notation "wp_cas_suc" :=
   lazymatch goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval hnf in e' with
-    | CAS ?l ?e1 ?e2 =>
-       wp_bind K; eapply tac_wp_cas_suc;
-         [wp_done || fail 2 "wp_cas_suc:" e1 "not a value"
-         |wp_done || fail 2 "wp_cas_suc:" e1 "not a value"
-         |iAssumption || fail 2 "wp_cas_suc: cannot find heap_ctx"
-         |done || eauto with ndisj
-         |apply _
-         |iAssumptionCore || fail 2 "wp_cas_suc: cannot find" l "↦ ?"
-         |try congruence
-         |env_cbv; reflexivity
-         |wp_finish]
-    end) || fail "wp_cas_suc: cannot find 'CAS' in" e
+  | |- _ ⊢ wp ?E ?e ?Q =>
+    first
+      [reshape_expr e ltac:(fun K e' =>
+         match eval hnf in e' with CAS _ _ _ => wp_bind K end)
+      |fail 1 "wp_cas_suc: cannot find 'CAS' in" e];
+    eapply tac_wp_cas_suc;
+      [let e' := match goal with |- to_val ?e' = _ => e' end in
+       wp_done || fail "wp_cas_suc:" e' "not a value"
+      |let e' := match goal with |- to_val ?e' = _ => e' end in
+       wp_done || fail "wp_cas_suc:" e' "not a value"
+      |iAssumption || fail "wp_cas_suc: cannot find heap_ctx"
+      |done || eauto with ndisj
+      |apply _
+      |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
+       iAssumptionCore || fail "wp_cas_suc: cannot find" l "↦ ?"
+      |try congruence
+      |env_cbv; reflexivity
+      |wp_finish]
   | _ => fail "wp_cas_suc: not a 'wp'"
   end.
