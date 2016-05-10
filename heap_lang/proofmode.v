@@ -86,14 +86,14 @@ Qed.
 End heap.
 
 Tactic Notation "wp_apply" open_constr(lem) :=
-  match goal with
+  lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     wp_bind K; iApply lem; try iNext)
   | _ => fail "wp_apply: not a 'wp'"
   end.
 
 Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
-  match goal with
+  lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
     | Alloc ?e =>
@@ -112,7 +112,7 @@ Tactic Notation "wp_alloc" ident(l) :=
   let H := iFresh in wp_alloc l as H.
 
 Tactic Notation "wp_load" :=
-  match goal with
+  lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
     | Load (Lit (LitLoc ?l)) =>
@@ -127,7 +127,7 @@ Tactic Notation "wp_load" :=
   end.
 
 Tactic Notation "wp_store" :=
-  match goal with
+  lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
     | Store ?l ?e =>
@@ -144,7 +144,7 @@ Tactic Notation "wp_store" :=
   end.
 
 Tactic Notation "wp_cas_fail" :=
-  match goal with
+  lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
     | CAS ?l ?e1 ?e2 =>
@@ -162,7 +162,7 @@ Tactic Notation "wp_cas_fail" :=
   end.
 
 Tactic Notation "wp_cas_suc" :=
-  match goal with
+  lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
     | CAS ?l ?e1 ?e2 =>
