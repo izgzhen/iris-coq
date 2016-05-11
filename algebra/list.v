@@ -357,7 +357,68 @@ Section properties.
     eapply Forall_lookup in H1; eauto.
   Qed.
 
-  (* We consider two operations update *)
+  Global Instance list_persistent l : (∀ x : A, Persistent x) → Persistent l.
+  Proof.
+    intros H.
+    apply equiv_Forall2, Forall2_lookup => i; rewrite list_lookup_core persistent.
+    match goal with [|- option_Forall2 _ ?A ?B] => change B with A end.
+    destruct (l !! i); constructor; trivial.
+  Qed.
+
+  (* Singleton list *)
+
+  Global Instance list_singleton `{Empty A} : SingletonM nat A (list A) :=
+    λ n x, (repeat ∅ n) ++ x :: [].
+
+  Global Instance list_singleton_proper `{Empty A} i :
+    Proper ((≡) ==> (≡)) (list_singleton i).
+  Proof. intros x y Hx; induction i; constructor; trivial. Qed.
+
+  Global Instance list_singleton_ne `{Empty A} n i :
+    Proper ((dist n) ==> (dist n)) (list_singleton i).
+  Proof. intros x y Hx; induction i; constructor; trivial. Qed.
+
+  Lemma in_list_singleton `{Empty A} i z x : z ∈ {[i := x]} → z = ∅ ∨ z = x.
+  Proof.
+    induction i; cbn.
+    - inversion_clear 1; [right | inversion H1]; trivial.
+    - inversion 1; subst; [left|]; auto.
+  Qed.
+  Lemma list_Singleton_lookup `{Empty A} i x : {[ i := x ]} !! i = Some x.
+  Proof.
+    induction i; cbn; trivial.
+  Qed.
+  Lemma list_singleton_validN `{CMRAUnit A} n i x : ✓{n} {[ i := x ]} ↔ ✓{n} x.
+  Proof.
+    split.
+    - intros H'1; eapply (list_lookup_validN _ _ i); eauto.
+      rewrite list_Singleton_lookup; trivial.
+    - intros H'2. apply Forall_forall; intros z H'3.
+        apply in_list_singleton in H'3; destruct H'3; subst; trivial.
+        eapply cmra_valid_validN, cmra_unit_valid.
+  Qed.
+  Lemma list_singleton_valid `{CMRAUnit A} i x : ✓ ({[ i := x ]}) ↔ ✓ x.
+  Proof. rewrite !cmra_valid_validN. by setoid_rewrite list_singleton_validN. Qed.
+
+  Lemma list_core_singleton `{Empty A} i (x : A) :
+    core ∅ ≡ ∅ → core ({[ i := x ]}) ≡ {[ i := core x ]}.
+  Proof.
+    induction i => H'; trivial.
+    unfold core, cmra_core; cbn.
+    constructor; auto.
+  Qed.
+  Lemma list_op_singleton `{CMRAUnit A} i (x y : A) :
+    {[ i := x ]} ⋅ {[ i := y ]} ≡ ({[ i := x ⋅ y ]}).
+  Proof.
+    induction i; cbn; trivial.
+    unfold op, cmra_op, list_op; cbn.
+    constructor; auto.
+    eapply cmra_unit_left_id; eauto.
+  Qed.
+
+  Global Instance list_singleton_persistent `{CMRAUnit A} i (x : A) :
+  core ∅ ≡ ∅ → Persistent x → Persistent {[ i := x ]}.
+  Proof. intros. by rewrite /Persistent list_core_singleton persistent. Qed.
 
   Lemma list_update_updateP (P : A → Prop) (Q : list A → Prop) l1 x l2 :
     x ~~>: P → (∀ y, P y → Q (l1 ++ y :: l2)) → l1 ++ x :: l2 ~~>: Q.
