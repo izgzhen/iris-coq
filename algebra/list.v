@@ -342,6 +342,19 @@ Section properties.
   Implicit Types l : list A.
   Implicit Types a : A.
 
+  Lemma list_op_nil l : l ⋅ [] = l.
+  Proof.
+    destruct l; trivial.
+  Qed.
+  Lemma list_op_app l1 l2 l3 :
+    length l2 ≤ length l1 → ((l1 ++ l3) ⋅ l2) = (l1 ⋅ l2) ++ l3.
+  Proof.
+    revert l2 l3; induction l1; cbn.
+    - intros []; inversion 1. apply list_op_nil.
+    - intros [] l3; inversion 1; cbn in *; auto with omega;
+        apply (f_equal (cons _)); trivial; apply IHl1; trivial; auto with omega.
+  Qed.
+
   Lemma list_lookup_validN n l i x : ✓{n} l → l !! i ≡{n}≡ Some x → ✓{n} x.
   Proof.
     intros H1 H2.
@@ -366,28 +379,30 @@ Section properties.
   Qed.
 
   (* Singleton list *)
-
-  Global Instance list_singleton `{Empty A} : SingletonM nat A (list A) :=
+  Global Instance list_singleton `{CMRAUnit A} : SingletonM nat A (list A) :=
     λ n x, (repeat ∅ n) ++ x :: [].
 
-  Global Instance list_singleton_proper `{Empty A} i :
+  Global Instance list_singleton_proper `{CMRAUnit A} i :
     Proper ((≡) ==> (≡)) (list_singleton i).
   Proof. intros x y Hx; induction i; constructor; trivial. Qed.
 
-  Global Instance list_singleton_ne `{Empty A} n i :
+  Global Instance list_singleton_ne `{CMRAUnit A} n i :
     Proper ((dist n) ==> (dist n)) (list_singleton i).
   Proof. intros x y Hx; induction i; constructor; trivial. Qed.
 
-  Lemma in_list_singleton `{Empty A} i z x : z ∈ {[i := x]} → z = ∅ ∨ z = x.
+  Lemma in_list_singleton `{CMRAUnit A} i z x : z ∈ {[i := x]} → z = ∅ ∨ z = x.
   Proof.
     induction i; cbn.
-    - inversion_clear 1; [right | inversion H1]; trivial.
+    - inversion_clear 1 as [|? ? ? H2]; [right | inversion H2]; trivial.
     - inversion 1; subst; [left|]; auto.
   Qed.
-  Lemma list_Singleton_lookup `{Empty A} i x : {[ i := x ]} !! i = Some x.
+  Lemma list_Singleton_lookup `{CMRAUnit A} i x : {[ i := x ]} !! i = Some x.
   Proof.
     induction i; cbn; trivial.
   Qed.
+  Lemma list_Singleton_lookup_2 `{CMRAUnit A} i j x :
+    i ≠ j → {[ i := x ]} !! j = None ∨ {[ i := x ]} !! j = Some ∅.
+  Proof. revert j; induction i; destruct j; cbn; auto with omega. Qed.
   Lemma list_singleton_validN `{CMRAUnit A} n i x : ✓{n} {[ i := x ]} ↔ ✓{n} x.
   Proof.
     split.
@@ -400,12 +415,14 @@ Section properties.
   Lemma list_singleton_valid `{CMRAUnit A} i x : ✓ ({[ i := x ]}) ↔ ✓ x.
   Proof. rewrite !cmra_valid_validN. by setoid_rewrite list_singleton_validN. Qed.
 
-  Lemma list_core_singleton `{Empty A} i (x : A) :
-    core ∅ ≡ ∅ → core ({[ i := x ]}) ≡ {[ i := core x ]}.
+  Lemma list_core_singleton `{CMRAUnit A} i (x : A) :
+    core ({[ i := x ]}) ≡ {[ i := core x ]}.
   Proof.
-    induction i => H'; trivial.
+    induction i; trivial.
     unfold core, cmra_core; cbn.
     constructor; auto.
+    etrans; [|apply cmra_core_l]; rewrite comm.
+    rewrite cmra_unit_left_id; trivial.
   Qed.
   Lemma list_op_singleton `{CMRAUnit A} i (x y : A) :
     {[ i := x ]} ⋅ {[ i := y ]} ≡ ({[ i := x ⋅ y ]}).
@@ -417,9 +434,10 @@ Section properties.
   Qed.
 
   Global Instance list_singleton_persistent `{CMRAUnit A} i (x : A) :
-  core ∅ ≡ ∅ → Persistent x → Persistent {[ i := x ]}.
+  Persistent x → Persistent {[ i := x ]}.
   Proof. intros. by rewrite /Persistent list_core_singleton persistent. Qed.
 
+  (* list update *)
   Lemma list_update_updateP (P : A → Prop) (Q : list A → Prop) l1 x l2 :
     x ~~>: P → (∀ y, P y → Q (l1 ++ y :: l2)) → l1 ++ x :: l2 ~~>: Q.
   Proof.
@@ -469,6 +487,39 @@ Section properties.
   Proof.
     rewrite !cmra_update_updateP => H; eauto using list_update_updateP with subst.
   Qed.
+
+  Lemma list_op_add_unit `{CMRAUnit A} l n mf :
+    ✓{n} (l ⋅ mf) → ✓{n} ((l ++ (repeat ∅ (length mf - length l))) ⋅ mf).
+  Proof.
+    revert l mf; induction l; [induction mf|]; cbn; trivial.
+    - inversion_clear 1; subst; constructor.
+      + rewrite cmra_unit_left_id; trivial.
+      + replace (length mf) with (length mf - 0) by omega. apply IHmf; trivial.
+    - intros [|z mf]; cbn.
+      + rewrite ?list_op_nil app_nil_r; trivial.
+      + inversion_clear 1; subst; constructor; trivial.
+        apply IHl; trivial.
+  Qed.
+  Lemma list_allocate_lemma `{CMRAUnit A} l x n mf :
+    ✓ x → ✓{n} (l ⋅ mf) → ✓{n} ((l ++ {[ (length mf - length l) := x]}) ⋅ mf).
+  Proof.
+    intros H1 H2. rewrite app_assoc. rewrite list_op_app.
+    - apply Forall_app; split; [|repeat constructor; apply cmra_valid_validN; trivial].
+      apply list_op_add_unit; trivial.
+    - rewrite app_length repeat_length; omega.
+  Qed.
+
+  (* list allocate update *)
+  Lemma list_alloc_updateP `{CMRAUnit A} (P : A → Prop) (Q : list A → Prop) l x :
+    ✓ x → (∀ i, Q (l ++ {[ i := x]})) → l ~~>: Q.
+  Proof.
+    intros Hx HP n mf Hm.
+    exists (l ++ {[ (length mf - length l) := x]}); split; auto using list_allocate_lemma.
+  Qed.
+
+  Lemma list_alloc_update `{CMRAUnit A} l x :
+    ✓ x → l ~~>: λ l', ∃ i, l' = (l ++ {[ i := x]}).
+  Proof. intros H1 n; eauto using list_allocate_lemma. Qed.
 
   (* Applying a local update at a position we own is a local update. *)
   Global Instance list_alter_update `{LocalUpdate A Lv L} i :
