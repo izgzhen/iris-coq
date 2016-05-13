@@ -4,20 +4,23 @@ Inductive intro_pat :=
   | IName : string → intro_pat
   | IAnom : intro_pat
   | IAnomPure : intro_pat
-  | IClear : intro_pat
+  | IDrop : intro_pat
   | IFrame : intro_pat
   | IPersistent : intro_pat → intro_pat
   | IList : list (list intro_pat) → intro_pat
   | ISimpl : intro_pat
   | IAlways : intro_pat
-  | INext : intro_pat.
+  | INext : intro_pat
+  | IForall : intro_pat
+  | IAll : intro_pat
+  | IClear : list string → intro_pat.
 
 Module intro_pat.
 Inductive token :=
   | TName : string → token
   | TAnom : token
   | TAnomPure : token
-  | TClear : token
+  | TDrop : token
   | TFrame : token
   | TPersistent : token
   | TBar : token
@@ -28,7 +31,11 @@ Inductive token :=
   | TParenR : token
   | TSimpl : token
   | TAlways : token
-  | TNext : token.
+  | TNext : token
+  | TClearL : token
+  | TClearR : token
+  | TForall : token
+  | TAll : token.
 
 Fixpoint cons_name (kn : string) (k : list token) : list token :=
   match kn with "" => k | _ => TName (string_rev kn) :: k end.
@@ -38,7 +45,7 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String " " s => tokenize_go s (cons_name kn k) ""
   | String "?" s => tokenize_go s (TAnom :: cons_name kn k) ""
   | String "%" s => tokenize_go s (TAnomPure :: cons_name kn k) ""
-  | String "_" s => tokenize_go s (TClear :: cons_name kn k) ""
+  | String "_" s => tokenize_go s (TDrop :: cons_name kn k) ""
   | String "$" s => tokenize_go s (TFrame :: cons_name kn k) ""
   | String "#" s => tokenize_go s (TPersistent :: cons_name kn k) ""
   | String "[" s => tokenize_go s (TBracketL :: cons_name kn k) ""
@@ -49,7 +56,11 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String "&" s => tokenize_go s (TAmp :: cons_name kn k) ""
   | String "!" s => tokenize_go s (TAlways :: cons_name kn k) ""
   | String ">" s => tokenize_go s (TNext :: cons_name kn k) ""
+  | String "{" s => tokenize_go s (TClearL :: cons_name kn k) ""
+  | String "}" s => tokenize_go s (TClearR :: cons_name kn k) ""
   | String "/" (String "=" s) => tokenize_go s (TSimpl :: cons_name kn k) ""
+  | String "*" (String "*" s) => tokenize_go s (TAll :: cons_name kn k) ""
+  | String "*" s => tokenize_go s (TForall :: cons_name kn k) ""
   | String a s => tokenize_go s k (String a kn)
   end.
 Definition tokenize (s : string) : list token := tokenize_go s [] "".
@@ -60,19 +71,19 @@ Inductive stack_item :=
   | SList : stack_item
   | SConjList : stack_item
   | SBar : stack_item
-  | SAmp : stack_item.
+  | SAmp : stack_item
+  | SClear : stack_item.
 Notation stack := (list stack_item).
 
 Fixpoint close_list (k : stack)
     (ps : list intro_pat) (pss : list (list intro_pat)) : option stack :=
   match k with
-  | [] => None
   | SList :: k => Some (SPat (IList (ps :: pss)) :: k)
   | SPat pat :: k => close_list k (pat :: ps) pss
   | SPersistent :: k =>
      '(p,ps) ← maybe2 (::) ps; close_list k (IPersistent p :: ps) pss
   | SBar :: k => close_list k [] (ps :: pss)
-  | (SAmp | SConjList) :: _ => None
+  | _ => None
   end.
 
 Fixpoint big_conj (ps : list intro_pat) : intro_pat :=
@@ -86,7 +97,6 @@ Fixpoint big_conj (ps : list intro_pat) : intro_pat :=
 Fixpoint close_conj_list (k : stack)
     (cur : option intro_pat) (ps : list intro_pat) : option stack :=
   match k with
-  | [] => None
   | SConjList :: k =>
      ps ← match cur with
           | None => guard (ps = []); Some [] | Some p => Some (p :: ps)
@@ -95,7 +105,14 @@ Fixpoint close_conj_list (k : stack)
   | SPat pat :: k => guard (cur = None); close_conj_list k (Some pat) ps
   | SPersistent :: k => p ← cur; close_conj_list k (Some (IPersistent p)) ps
   | SAmp :: k => p ← cur; close_conj_list k None (p :: ps)
-  | (SBar | SList) :: _ => None
+  | _ => None
+  end.
+
+Fixpoint close_clear (k : stack) (ss : list string) : option stack :=
+  match k with
+  | SPat (IName s) :: k => close_clear k (s :: ss)
+  | SClear :: k => Some (SPat (IClear (reverse ss)) :: k)
+  | _ => None
   end.
 
 Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
@@ -104,7 +121,7 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   | TName s :: ts => parse_go ts (SPat (IName s) :: k)
   | TAnom :: ts => parse_go ts (SPat IAnom :: k)
   | TAnomPure :: ts => parse_go ts (SPat IAnomPure :: k)
-  | TClear :: ts => parse_go ts (SPat IClear :: k)
+  | TDrop :: ts => parse_go ts (SPat IDrop :: k)
   | TFrame :: ts => parse_go ts (SPat IFrame :: k)
   | TPersistent :: ts => parse_go ts (SPersistent :: k)
   | TBracketL :: ts => parse_go ts (SList :: k)
@@ -116,6 +133,10 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   | TSimpl :: ts => parse_go ts (SPat ISimpl :: k)
   | TAlways :: ts => parse_go ts (SPat IAlways :: k)
   | TNext :: ts => parse_go ts (SPat INext :: k)
+  | TAll :: ts => parse_go ts (SPat IAll :: k)
+  | TForall :: ts => parse_go ts (SPat IForall :: k)
+  | TClearL :: ts => parse_go ts (SClear :: k)
+  | TClearR :: ts => close_clear k [] ≫= parse_go ts
   end.
 Definition parse (s : string) : option (list intro_pat) :=
   match k ← parse_go (tokenize s) [SList]; close_list k [] [] with

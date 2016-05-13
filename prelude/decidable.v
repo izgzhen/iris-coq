@@ -180,8 +180,6 @@ Instance curry_dec `(P_dec : ∀ (x : A) (y : B), Decision (P x y)) p :
   match p as p return Decision (curry P p) with
   | (x,y) => P_dec x y
   end.
-Instance uncurry_dec `(P_dec : ∀ (p : A * B), Decision (P p)) x y :
-  Decision (uncurry P x y) := P_dec (x,y).
 
 Instance sig_eq_dec `(P : A → Prop) `{∀ x, ProofIrrel (P x)}
   `{∀ x y : A, Decision (x = y)} (x y : sig P) : Decision (x = y).

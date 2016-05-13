@@ -5,8 +5,10 @@ Import uPred.
 
 Definition newlock : val := λ: <>, ref #false.
 Definition acquire : val :=
-  rec: "lock" "l" := if: CAS '"l" #false #true then #() else '"lock" '"l".
+  rec: "acquire" "l" :=
+    if: CAS '"l" #false #true then #() else '"acquire" '"l".
 Definition release : val := λ: "l", '"l" <- #false.
+Global Opaque newlock acquire release.
 
 (** The CMRA we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
@@ -55,8 +57,8 @@ Proof.
   iIntros {?} "(#Hh & HR & HΦ)". rewrite /newlock.
   wp_seq. iApply wp_pvs. wp_alloc l as "Hl".
   iPvs (own_alloc (Excl ())) as {γ} "Hγ"; first done.
-  iPvs (inv_alloc N _ (lock_inv γ l R)) "-[HΦ]" as "#?"; first done.
-  { iNext. iExists false. by iFrame "Hl HR". }
+  iPvs (inv_alloc N _ (lock_inv γ l R) with "-[HΦ]") as "#?"; first done.
+  { iIntros ">". iExists false. by iFrame "Hl HR". }
   iPvsIntro. iApply "HΦ". iExists N, γ. by repeat iSplit.
 Qed.
 
@@ -65,23 +67,20 @@ Lemma acquire_spec l R (Φ : val → iProp) :
 Proof.
   iIntros "[Hl HΦ]". iDestruct "Hl" as {N γ} "(%&#?&#?)".
   iLöb as "IH". wp_rec. wp_focus (CAS _ _ _)%E.
-  iInv N as "Hinv". iDestruct "Hinv" as {b} "[Hl HR]"; destruct b.
+  iInv N as { [] } "[Hl HR]".
   - wp_cas_fail. iSplitL "Hl".
     + iNext. iExists true. by iSplit.
     + wp_if. by iApply "IH".
   - wp_cas_suc. iDestruct "HR" as "[Hγ HR]". iSplitL "Hl".
     + iNext. iExists true. by iSplit.
-    + wp_if. iPvsIntro. iApply "HΦ" "-[HR] HR". iExists N, γ. by repeat iSplit.
+    + wp_if. iApply ("HΦ" with "-[HR] HR"). iExists N, γ. by repeat iSplit.
 Qed.
 
 Lemma release_spec R l (Φ : val → iProp) :
   (locked l R ★ R ★ Φ #()) ⊢ WP release #l {{ Φ }}.
 Proof.
-  iIntros "(Hl&HR&HΦ)"; iDestruct "Hl" as {N γ} "(%&#?&#?&Hγ)".
-  rewrite /release. wp_let.
-  iInv N as "Hinv". iDestruct "Hinv" as {b} "[Hl Hγ']"; destruct b.
-  - wp_store. iFrame "HΦ". iNext. iExists false. by iFrame "Hl HR Hγ".
-  - wp_store. iDestruct "Hγ'" as "[Hγ' _]".
-    iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct own_valid "Hγ" as "%".
+  iIntros "(Hl&HR&HΦ)"; iDestruct "Hl" as {N γ} "(% & #? & #? & Hγ)".
+  rewrite /release. wp_let. iInv N as {b} "[Hl _]".
+  wp_store. iFrame "HΦ". iNext. iExists false. by iFrame "Hl HR Hγ".
 Qed.
 End proof.

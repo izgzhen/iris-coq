@@ -7,6 +7,8 @@ Inductive env (A : Type) : Type :=
   | Esnoc : env A → string → A → env A.
 Arguments Enil {_}.
 Arguments Esnoc {_} _ _%string _.
+Instance: Params (@Enil) 1.
+Instance: Params (@Esnoc) 1.
 
 Local Notation "x ← y ; z" := (match y with Some x => z | None => None end).
 Local Notation "' ( x1 , x2 ) ← y ; z" :=
@@ -28,6 +30,7 @@ Inductive env_wf {A} : env A → Prop :=
 Fixpoint env_to_list {A} (E : env A) : list A :=
   match E with Enil => [] | Esnoc Γ _ x => x :: env_to_list Γ end.
 Coercion env_to_list : env >-> list.
+Instance: Params (@env_to_list) 1.
 
 Instance env_dom {A} : Dom (env A) stringset :=
   fix go Γ := let _ : Dom _ _ := @go in
@@ -200,6 +203,32 @@ Lemma env_split_wf_2 Γ Γ1 Γ2 js :
 Proof. intros. apply (env_split_go_wf Enil Γ Γ1 Γ2 js); eauto. Qed.
 Lemma env_split_perm Γ Γ1 Γ2 js : env_split js Γ = Some (Γ1,Γ2) → Γ ≡ₚ Γ1 ++ Γ2.
 Proof. apply env_split_go_perm. Qed.
+
+Global Instance env_Forall2_refl (P : relation A) :
+  Reflexive P → Reflexive (env_Forall2 P).
+Proof. intros ? Γ. induction Γ; constructor; auto. Qed.
+Global Instance env_Forall2_sym (P : relation A) :
+  Symmetric P → Symmetric (env_Forall2 P).
+Proof. induction 2; constructor; auto. Qed.
+Global Instance env_Forall2_trans (P : relation A) :
+  Transitive P → Transitive (env_Forall2 P).
+Proof.
+  intros ? Γ1 Γ2 Γ3 HΓ; revert Γ3.
+  induction HΓ; inversion_clear 1; constructor; eauto.
+Qed.
+Global Instance env_Forall2_antisymm (P Q : relation A) :
+  AntiSymm P Q → AntiSymm (env_Forall2 P) (env_Forall2 Q).
+Proof. induction 2; inversion_clear 1; constructor; auto. Qed.
+Lemma env_Forall2_impl {B} (P Q : A → B → Prop) Γ Σ :
+  env_Forall2 P Γ Σ → (∀ x y, P x y → Q x y) → env_Forall2 Q Γ Σ.
+Proof. induction 1; constructor; eauto. Qed.
+
+Global Instance Esnoc_proper (P : relation A) :
+  Proper (env_Forall2 P ==> (=) ==> P ==> env_Forall2 P) Esnoc.
+Proof. intros Γ1 Γ2 HΓ i ? <-; by constructor. Qed.
+Global Instance env_to_list_proper (P : relation A) :
+  Proper (env_Forall2 P ==> Forall2 P) env_to_list.
+Proof. induction 1; constructor; auto. Qed.
 
 Lemma env_Forall2_fresh {B} (P : A → B → Prop) Γ Σ i :
   env_Forall2 P Γ Σ → Γ !! i = None → Σ !! i = None.

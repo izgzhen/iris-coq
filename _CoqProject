@@ -35,6 +35,7 @@ prelude/decidable.v
 prelude/list.v
 prelude/error.v
 prelude/functions.v
+prelude/hlist.v
 algebra/option.v
 algebra/cmra.v
 algebra/cmra_big_op.v
@@ -72,7 +73,7 @@ program_logic/hoare.v
 program_logic/language.v
 program_logic/ectx_language.v
 program_logic/ectxi_language.v
-program_logic/ectx_weakestpre.v
+program_logic/ectx_lifting.v
 program_logic/ghost_ownership.v
 program_logic/global_functor.v
 program_logic/saved_prop.v

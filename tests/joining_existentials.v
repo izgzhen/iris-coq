@@ -7,6 +7,7 @@ Import uPred.
 Definition client eM eW1 eW2 : expr [] :=
   let: "b" := newbarrier #() in
   (eM ;; ^signal '"b") || ((^wait '"b" ;; eW1) || (^wait '"b" ;; eW2)).
+Global Opaque client.
 
 Section proof.
 Context (G : cFunctor).
@@ -24,7 +25,7 @@ Lemma worker_spec e γ l (Φ Ψ : X → iProp) :
 Proof.
   iIntros "[Hl #He]". wp_apply wait_spec; iFrame "Hl".
   iIntros "Hγ"; iDestruct "Hγ" as {x} "[#Hγ Hx]".
-  wp_seq. iApply wp_wand_l. iSplitR; [|by iApply "He" "!"].
+  wp_seq. iApply wp_wand_l. iSplitR; [|by iApply ("He" with "!")].
   iIntros {v} "?"; iExists x; by iSplit.
 Qed.
 
@@ -35,14 +36,14 @@ Context {Ψ_join  : ∀ x, (Ψ1 x ★ Ψ2 x) ⊢ Ψ x}.
 Lemma P_res_split γ : barrier_res γ Φ ⊢ (barrier_res γ Φ1 ★ barrier_res γ Φ2).
 Proof.
   iIntros "Hγ"; iDestruct "Hγ" as {x} "[#Hγ Hx]".
-  iDestruct Φ_split "Hx" as "[H1 H2]". by iSplitL "H1"; iExists x; iSplit.
+  iDestruct (Φ_split with "Hx") as "[H1 H2]". by iSplitL "H1"; iExists x; iSplit.
 Qed.
 
 Lemma Q_res_join γ : (barrier_res γ Ψ1 ★ barrier_res γ Ψ2) ⊢ ▷ barrier_res γ Ψ.
 Proof.
   iIntros "[Hγ Hγ']";
   iDestruct "Hγ" as {x} "[#Hγ Hx]"; iDestruct "Hγ'" as {x'} "[#Hγ' Hx']".
-  iDestruct (one_shot_agree γ x x') "- !" as "Hxx"; first (by iSplit).
+  iDestruct (one_shot_agree γ x x' with "- !") as "Hxx"; first (by iSplit).
   iNext. iRewrite -"Hxx" in "Hx'".
   iExists x; iFrame "Hγ". iApply Ψ_join; by iSplitL "Hx".
 Qed.
@@ -62,20 +63,20 @@ Proof.
   set (workers_post (v : val) := (barrier_res γ Ψ1 ★ barrier_res γ Ψ2)%I).
   wp_let. wp_apply (wp_par _ _ (λ _, True)%I workers_post); first done.
   iFrame "Hh". iSplitL "HP Hs Hγ"; [|iSplitL "Hr"].
-  - wp_focus eM. iApply wp_wand_l; iSplitR "HP"; [|iApply "He" "HP"].
+  - wp_focus eM. iApply wp_wand_l; iSplitR "HP"; [|by iApply "He"].
     iIntros {v} "HP"; iDestruct "HP" as {x} "HP". wp_let.
-    iPvs (one_shot_init _ _ x) "Hγ" as "Hx".
+    iPvs (one_shot_init _ _ x with "Hγ") as "Hx".
     iApply signal_spec; iFrame "Hs"; iSplit; last done.
     iExists x; by iSplitL "Hx".
-  - iDestruct recv_weaken "[] Hr" as "Hr".
-    { iIntros "?". by iApply P_res_split "-". }
-    iPvs recv_split "Hr" as "[H1 H2]"; first done.
+  - iDestruct (recv_weaken with "[] Hr") as "Hr".
+    { iIntros "?". by iApply (P_res_split with "-"). }
+    iPvs (recv_split with "Hr") as "[H1 H2]"; first done.
     wp_apply (wp_par _ _ (λ _, barrier_res γ Ψ1)%I
       (λ _, barrier_res γ Ψ2)%I); first done.
     iSplit; [done|]; iSplitL "H1"; [|iSplitL "H2"].
     + by iApply worker_spec; iSplitL "H1".
     + by iApply worker_spec; iSplitL "H2".
     + by iIntros {v1 v2} "? >".
-  - iIntros {_ v} "[_ H]"; iPoseProof Q_res_join "H". by iNext; iExists γ.
+  - iIntros {_ v} "[_ H]"; iPoseProof (Q_res_join with "H"). by iNext; iExists γ.
 Qed.
 End proof.

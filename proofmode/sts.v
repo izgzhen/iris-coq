@@ -18,7 +18,8 @@ Lemma tac_sts_fsa {A} (fsa : FSA Λ _ A) fsaV Δ E N i γ S T Q Φ :
       ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ★ (sts_own γ s' T' -★ Φ a))) →
   Δ ⊢ Q.
 Proof.
-  intros ????? HΔ'. rewrite -(fsa_split Q); eapply (sts_fsaS φ fsa); eauto.
+  intros ????? HΔ'. rewrite -(fsa_split Q) -(sts_fsaS φ fsa) //.
+  rewrite // -always_and_sep_l. apply and_intro; first done.
   rewrite envs_lookup_sound //; simpl; apply sep_mono_r.
   apply forall_intro=>s; apply wand_intro_l.
   rewrite -assoc; apply const_elim_sep_l=> Hs.

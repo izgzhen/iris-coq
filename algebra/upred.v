@@ -467,8 +467,6 @@ Lemma const_elim φ Q R : Q ⊢ ■ φ → (φ → Q ⊢ R) → Q ⊢ R.
 Proof.
   unseal; intros HQP HQR; split=> n x ??; apply HQR; first eapply HQP; eauto.
 Qed.
-Lemma False_elim P : False ⊢ P.
-Proof. by unseal; split=> n x ?. Qed.
 Lemma and_elim_l P Q : (P ∧ Q) ⊢ P.
 Proof. by unseal; split=> n x ? [??]. Qed.
 Lemma and_elim_r P Q : (P ∧ Q) ⊢ Q.
@@ -496,7 +494,7 @@ Lemma exist_intro {A} {Ψ : A → uPred M} a : Ψ a ⊢ (∃ a, Ψ a).
 Proof. unseal; split=> n x ??; by exists a. Qed.
 Lemma exist_elim {A} (Φ : A → uPred M) Q : (∀ a, Φ a ⊢ Q) → (∃ a, Φ a) ⊢ Q.
 Proof. unseal; intros HΦΨ; split=> n x ? [a ?]; by apply HΦΨ with a. Qed.
-Lemma eq_refl {A : cofeT} (a : A) P : P ⊢ (a ≡ a).
+Lemma eq_refl {A : cofeT} (a : A) : True ⊢ (a ≡ a).
 Proof. unseal; by split=> n x ??; simpl. Qed.
 Lemma eq_rewrite {A : cofeT} a b (Ψ : A → uPred M) P
   `{HΨ : ∀ n, Proper (dist n ==> dist n) Ψ} : P ⊢ (a ≡ b) → P ⊢ Ψ a → P ⊢ Ψ b.
@@ -512,6 +510,8 @@ Proof.
 Qed.
 
 (* Derived logical stuff *)
+Lemma False_elim P : False ⊢ P.
+Proof. by apply (const_elim False). Qed.
 Lemma True_intro P : P ⊢ True.
 Proof. by apply const_intro. Qed.
 Lemma and_elim_l' P Q R : P ⊢ R → (P ∧ Q) ⊢ R.
@@ -679,10 +679,13 @@ Lemma const_elim_r φ Q R : (φ → Q ⊢ R) → (Q ∧ ■ φ) ⊢ R.
 Proof. intros; apply const_elim with φ; eauto. Qed.
 Lemma const_equiv (φ : Prop) : φ → (■ φ) ⊣⊢ True.
 Proof. intros; apply (anti_symm _); auto using const_intro. Qed.
+Lemma eq_refl' {A : cofeT} (a : A) P : P ⊢ (a ≡ a).
+Proof. rewrite (True_intro P). apply eq_refl. Qed.
+Hint Resolve eq_refl'.
 Lemma equiv_eq {A : cofeT} P (a b : A) : a ≡ b → P ⊢ (a ≡ b).
-Proof. intros ->; apply eq_refl. Qed.
+Proof. by intros ->. Qed.
 Lemma eq_sym {A : cofeT} (a b : A) : (a ≡ b) ⊢ (b ≡ a).
-Proof. apply (eq_rewrite a b (λ b, b ≡ a)%I); auto using eq_refl. solve_proper. Qed.
+Proof. apply (eq_rewrite a b (λ b, b ≡ a)%I); auto. solve_proper. Qed.
 
 (* BI connectives *)
 Lemma sep_mono P P' Q Q' : P ⊢ Q → P' ⊢ Q' → (P ★ P') ⊢ (Q ★ Q').
@@ -898,7 +901,7 @@ Proof.
   apply (anti_symm (⊢)); auto using always_elim.
   apply (eq_rewrite a b (λ b, □ (a ≡ b))%I); auto.
   { intros n; solve_proper. }
-  rewrite -(eq_refl a True) always_const; auto.
+  rewrite -(eq_refl a) always_const; auto.
 Qed.
 Lemma always_and_sep P Q : (□ (P ∧ Q)) ⊣⊢ (□ (P ★ Q)).
 Proof. apply (anti_symm (⊢)); auto using always_and_sep_1. Qed.
@@ -1174,5 +1177,5 @@ Hint Resolve and_intro and_elim_l' and_elim_r' : I.
 Hint Resolve always_mono : I.
 Hint Resolve sep_elim_l' sep_elim_r' sep_mono : I.
 Hint Immediate True_intro False_elim : I.
-Hint Immediate iff_refl eq_refl : I.
+Hint Immediate iff_refl eq_refl' : I.
 End uPred.

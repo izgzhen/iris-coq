@@ -27,7 +27,7 @@ Section LiftingTests.
      nclose N ⊆ E → heap_ctx N ⊢ WP heap_e @ E {{ v, v = #2 }}.
   Proof.
     iIntros {HN} "#?". rewrite /heap_e. iApply (wp_mask_weaken N); first done.
-    wp_alloc l as "Hl". wp_let. wp_load. wp_op. wp_store. wp_seq. by wp_load.
+    wp_alloc l. wp_let. wp_load. wp_op. wp_store. wp_seq. by wp_load.
   Qed.
 
   Definition FindPred : val :=
@@ -37,6 +37,7 @@ Section LiftingTests.
   Definition Pred : val :=
     λ: "x",
       if: '"x" ≤ #0 then -^FindPred (-'"x" + #2) #0 else ^FindPred '"x" #0.
+  Global Opaque FindPred Pred.
 
   Lemma FindPred_spec n1 n2 E Φ :
     n1 < n2 →
@@ -44,8 +45,8 @@ Section LiftingTests.
   Proof.
     iIntros {Hn} "HΦ". iLöb {n1 Hn} as "IH".
     wp_rec. wp_let. wp_op. wp_let. wp_op=> ?; wp_if.
-    - iApply "IH" "% HΦ". omega.
-    - iPvsIntro. by assert (n1 = n2 - 1) as -> by omega.
+    - iApply ("IH" with "% HΦ"). omega.
+    - iApply pvs_intro. by assert (n1 = n2 - 1) as -> by omega.
   Qed.
 
   Lemma Pred_spec n E Φ : ▷ Φ #(n - 1) ⊢ WP Pred #n @ E {{ Φ }}.
@@ -69,7 +70,7 @@ Section ClosedProofs.
   Lemma heap_e_closed σ : {{ ownP σ : iProp }} heap_e {{ v, v = #2 }}.
   Proof.
     iProof. iIntros "! Hσ".
-    iPvs (heap_alloc nroot) "Hσ" as {h} "[? _]"; first by rewrite nclose_nroot.
+    iPvs (heap_alloc nroot with "Hσ") as {h} "[? _]"; first by rewrite nclose_nroot.
     iApply heap_e_spec; last done; by rewrite nclose_nroot.
   Qed.
 End ClosedProofs.

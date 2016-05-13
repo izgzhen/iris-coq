@@ -1,5 +1,5 @@
-From iris.program_logic Require Export ectx_weakestpre.
-From iris.program_logic Require Import ownership. (* for ownP *)
+From iris.program_logic Require Export weakestpre.
+From iris.program_logic Require Import ownership ectx_lifting. (* for ownP *)
 From iris.heap_lang Require Export lang.
 From iris.heap_lang Require Import tactics.
 From iris.proofmode Require Import weakestpre.
@@ -86,22 +86,16 @@ Proof.
   rewrite later_sep -(wp_value _ _ (Lit _)) //.
 Qed.
 
-Lemma wp_rec E f x e1 e2 v Φ :
-  to_val e2 = Some v →
-  ▷ WP subst' x e2 (subst' f (Rec f x e1) e1) @ E {{ Φ }}
-  ⊢ WP App (Rec f x e1) e2 @ E {{ Φ }}.
-Proof.
-  intros. rewrite -(wp_lift_pure_det_head_step (App _ _)
-    (subst' x e2 (subst' f (Rec f x e1) e1)) None) //= ?right_id;
-    intros; inv_head_step; eauto.
-Qed.
-
-Lemma wp_rec' E f x erec e1 e2 v2 Φ :
+Lemma wp_rec E f x erec e1 e2 v2 Φ :
   e1 = Rec f x erec →
   to_val e2 = Some v2 →
   ▷ WP subst' x e2 (subst' f e1 erec) @ E {{ Φ }}
   ⊢ WP App e1 e2 @ E {{ Φ }}.
-Proof. intros ->. apply wp_rec. Qed.
+Proof.
+  intros -> ?. rewrite -(wp_lift_pure_det_head_step (App _ _)
+    (subst' x e2 (subst' f (Rec f x erec) erec)) None) //= ?right_id;
+    intros; inv_head_step; eauto.
+Qed.
 
 Lemma wp_un_op E op l l' Φ :
   un_op_eval op l = Some l' →

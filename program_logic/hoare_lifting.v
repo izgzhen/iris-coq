@@ -31,13 +31,13 @@ Lemma ht_lift_step E1 E2
 Proof.
   iIntros {?? Hsafe Hstep} "#(#Hvs&HΦ&He2&Hef) ! HP".
   iApply (wp_lift_step E1 E2 φ _ e1 σ1); auto.
-  iPvs "Hvs" "HP" as "[Hσ HP]"; first set_solver.
+  iPvs ("Hvs" with "HP") as "[Hσ HP]"; first set_solver.
   iPvsIntro. iNext. iSplitL "Hσ"; [done|iIntros {e2 σ2 ef} "[#Hφ Hown]"].
-  iSpecialize "HΦ" {e2 σ2 ef} "! -". by iFrame "Hφ HP Hown".
+  iSpecialize ("HΦ" $! e2 σ2 ef with "! -"). by iFrame "Hφ HP Hown".
   iPvs "HΦ" as "[H1 H2]"; first by set_solver.
   iPvsIntro. iSplitL "H1".
-  - by iApply "He2" "!".
-  - destruct ef as [e|]; last done. by iApply "Hef" {_ _ (Some e)} "!".
+  - by iApply ("He2" with "!").
+  - destruct ef as [e|]; last done. by iApply ("Hef" $! _ _ (Some e) with "!").
 Qed.
 
 Lemma ht_lift_atomic_step
@@ -57,8 +57,8 @@ Proof.
   repeat iSplit.
   - by iApply vs_reflexive.
   - iIntros {e2 σ2 ef} "! (#Hφ&Hown&HP)"; iPvsIntro.
-    iSplitL "Hown". by iSplit. iSplit. by iPure "Hφ" as [_ ?]. done.
-  - iIntros {e2 σ2 ef} "! [Hown #Hφ]"; iPure "Hφ" as [[v2 <-%of_to_val] ?].
+    iSplitL "Hown". by iSplit. iSplit. by iDestruct "Hφ" as %[_ ?]. done.
+  - iIntros {e2 σ2 ef} "! [Hown #Hφ]"; iDestruct "Hφ" as %[[v2 <-%of_to_val] ?].
     iApply wp_value'. iExists σ2, ef. by iSplit.
   - done.
 Qed.
@@ -74,8 +74,9 @@ Proof.
   iIntros {? Hsafe Hstep} "[#He2 #Hef] ! HP".
   iApply (wp_lift_pure_step E φ _ e1); auto.
   iNext; iIntros {e2 ef Hφ}. iDestruct "HP" as "[HP HP']"; iSplitL "HP".
-  - iApply "He2" "!"; by iSplit.
-  - destruct ef as [e|]; last done. iApply "Hef" {_ (Some e)} "!"; by iSplit.
+  - iApply ("He2" with "!"); by iSplit.
+  - destruct ef as [e|]; last done.
+    iApply ("Hef" $! _ (Some e) with "!"); by iSplit.
 Qed.
 
 Lemma ht_lift_pure_det_step
@@ -89,8 +90,8 @@ Proof.
   iIntros {? Hsafe Hdet} "[#He2 #Hef]".
   iApply (ht_lift_pure_step _ (λ e2' ef', e2 = e2' ∧ ef = ef')); eauto.
   iSplit; iIntros {e2' ef'}.
-  - iIntros "! [#He ?]"; iPure "He" as [-> ->]. by iApply "He2".
+  - iIntros "! [#He ?]"; iDestruct "He" as %[-> ->]. by iApply "He2".
   - destruct ef' as [e'|]; last done.
-    iIntros "! [#He ?]"; iPure "He" as [-> ->]. by iApply "Hef" "!".
+    iIntros "! [#He ?]"; iDestruct "He" as %[-> ->]. by iApply ("Hef" with "!").
 Qed.
 End lifting.

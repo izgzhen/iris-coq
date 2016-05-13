@@ -20,7 +20,7 @@ Implicit Types Φ : val → iProp heap_lang Σ.
 Lemma wp_lam E x ef e v Φ :
   to_val e = Some v →
   ▷ WP subst' x e ef @ E {{ Φ }} ⊢ WP App (Lam x ef) e @ E {{ Φ }}.
-Proof. intros. by rewrite -wp_rec. Qed.
+Proof. intros. by rewrite -(wp_rec _ BAnon) //. Qed.
 
 Lemma wp_let E x e1 e2 v Φ :
   to_val e1 = Some v →

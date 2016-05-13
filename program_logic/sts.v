@@ -1,5 +1,6 @@
 From iris.algebra Require Export sts upred_tactics.
 From iris.program_logic Require Export invariants ghost_ownership.
+From iris.proofmode Require Import invariants ghost_ownership.
 Import uPred.
 
 (** The CMRA we need. *)
@@ -64,7 +65,7 @@ Section sts.
   Lemma sts_ownS_weaken E γ S1 S2 T1 T2 :
     T2 ⊆ T1 → S1 ⊆ S2 → sts.closed S2 T2 →
     sts_ownS γ S1 T1 ⊢ (|={E}=> sts_ownS γ S2 T2).
-  Proof. intros ? ? ?. by apply own_update, sts_update_frag. Qed.
+  Proof. intros ???. by apply own_update, sts_update_frag. Qed.
 
   Lemma sts_own_weaken E γ s S T1 T2 :
     T2 ⊆ T1 → s ∈ S → sts.closed S T2 →
@@ -80,86 +81,46 @@ Section sts.
     nclose N ⊆ E →
     ▷ φ s ⊢ (|={E}=> ∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s)).
   Proof.
-    intros HN. eapply sep_elim_True_r.
-    { apply (own_alloc (sts_auth s (⊤ ∖ sts.tok s)) E).
-      apply sts_auth_valid; set_solver. }
-    rewrite pvs_frame_l. apply pvs_strip_pvs.
-    rewrite sep_exist_l. apply exist_elim=>γ. rewrite -(exist_intro γ).
-    trans (▷ sts_inv γ φ ★ sts_own γ s (⊤ ∖ sts.tok s))%I.
-    { rewrite /sts_inv -(exist_intro s) later_sep.
-      ecancel [▷ φ _]%I.
-      by rewrite -later_intro -own_op sts_op_auth_frag_up; last set_solver. }
-    rewrite (inv_alloc N E) // /sts_ctx pvs_frame_r.
-    by rewrite always_and_sep_l.
-  Qed.
-
-  Lemma sts_opened E γ S T :
-    (▷ sts_inv γ φ ★ sts_ownS γ S T)
-    ⊢ (|={E}=> ∃ s, ■ (s ∈ S) ★ ▷ φ s ★ own γ (sts_auth s T)).
-  Proof.
-    rewrite /sts_inv later_exist sep_exist_r. apply exist_elim=>s.
-    rewrite later_sep pvs_timeless !pvs_frame_r. apply pvs_mono.
-    rewrite -(exist_intro s). ecancel [▷ φ _]%I.
-    rewrite -own_op own_valid_l discrete_valid.
-    apply const_elim_sep_l=> Hvalid.
-    assert (s ∈ S) by eauto using sts_auth_frag_valid_inv.
-    rewrite const_equiv // left_id sts_op_auth_frag //.
-    by assert (✓ sts_frag S T) as [??] by eauto using cmra_valid_op_r.
-  Qed.
-
-  Lemma sts_closing E γ s T s' T' :
-    sts.steps (s, T) (s', T') →
-    (▷ φ s' ★ own γ (sts_auth s T)) ⊢ (|={E}=> ▷ sts_inv γ φ ★ sts_own γ s' T').
-  Proof.
-    intros Hstep. rewrite /sts_inv -(exist_intro s') later_sep.
-    (* TODO it would be really nice to use cancel here *)
-    rewrite [(_ ★ ▷ φ _)%I]comm -assoc.
-    rewrite -pvs_frame_l. apply sep_mono_r. rewrite -later_intro.
-    rewrite own_valid_l discrete_valid. apply const_elim_sep_l=>Hval.
-    trans (|={E}=> own γ (sts_auth s' T'))%I.
-    { by apply own_update, sts_update_auth. }
-    by rewrite -own_op sts_op_auth_frag_up.
+    iIntros {?} "Hφ". rewrite /sts_ctx /sts_own.
+    iPvs (own_alloc (sts_auth s (⊤ ∖ sts.tok s))) as {γ} "Hγ".
+    { apply sts_auth_valid; set_solver. }
+    iExists γ; iRevert "Hγ"; rewrite -sts_op_auth_frag_up; iIntros "[Hγ $]".
+    iPvs (inv_alloc N _ (sts_inv γ φ) with "[Hφ Hγ]") as "#?"; auto.
+    iNext. iExists s. by iFrame "Hφ".
   Qed.
 
   Context {V} (fsa : FSA Λ (globalF Σ) V) `{!FrameShiftAssertion fsaV fsa}.
 
-  Lemma sts_fsaS E N P (Ψ : V → iPropG Λ Σ) γ S T :
+  Lemma sts_fsaS E N (Ψ : V → iPropG Λ Σ) γ S T :
     fsaV → nclose N ⊆ E →
-    P ⊢ sts_ctx γ N φ →
-    P ⊢ (sts_ownS γ S T ★ ∀ s,
-          ■ (s ∈ S) ★ ▷ φ s -★
-          fsa (E ∖ nclose N) (λ x, ∃ s' T',
-            ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ★
-            (sts_own γ s' T' -★ Ψ x))) →
-    P ⊢ fsa E Ψ.
+    (sts_ctx γ N φ ★ sts_ownS γ S T ★ ∀ s,
+      ■ (s ∈ S) ★ ▷ φ s -★
+      fsa (E ∖ nclose N) (λ x, ∃ s' T',
+        ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ★ (sts_own γ s' T' -★ Ψ x)))
+    ⊢ fsa E Ψ.
   Proof.
-    rewrite /sts_ctx=>? HN Hinv Hinner.
-    eapply (inv_fsa fsa); eauto. rewrite Hinner=>{Hinner Hinv P HN}.
-    apply wand_intro_l. rewrite assoc.
-    rewrite (sts_opened (E ∖ N)) !pvs_frame_r !sep_exist_r.
-    apply (fsa_strip_pvs fsa). apply exist_elim=>s.
-    rewrite (forall_elim s). rewrite [(▷_ ★ _)%I]comm.
-    eapply wand_apply_r; first (by eapply (wand_frame_l (own γ _))); last first.
-    { rewrite assoc [(_ ★ own _ _)%I]comm -assoc. done. }
-    rewrite fsa_frame_l.
-    apply (fsa_mono_pvs fsa)=> x.
-    rewrite sep_exist_l; apply exist_elim=> s'.
-    rewrite sep_exist_l; apply exist_elim=>T'.
-    rewrite comm -!assoc. apply const_elim_sep_l=>-Hstep.
-    rewrite assoc [(_ ★ (_ -★ _))%I]comm -assoc.
-    rewrite (sts_closing (E ∖ N)) //; [].
-    rewrite pvs_frame_l. apply pvs_mono.
-    by rewrite assoc [(_ ★ ▷_)%I]comm -assoc wand_elim_l.
+    iIntros {??} "(#? & Hγf & HΨ)". rewrite /sts_ctx /sts_ownS /sts_inv /sts_own.
+    iInv N as {s} "[Hγ Hφ]"; iTimeless "Hγ".
+    iCombine "Hγ" "Hγf" as "Hγ"; iDestruct (own_valid with "Hγ !") as %Hvalid.
+    assert (s ∈ S) by eauto using sts_auth_frag_valid_inv.
+    assert (✓ sts_frag S T) as [??] by eauto using cmra_valid_op_r.
+    iRevert "Hγ"; rewrite sts_op_auth_frag //; iIntros "Hγ".
+    iApply pvs_fsa_fsa; iApply fsa_wand_r; iSplitL "HΨ Hφ".
+    { iApply "HΨ"; by iSplit. }
+    iIntros {a} "H"; iDestruct "H" as {s' T'} "(% & Hφ & HΨ)".
+    iPvs (own_update with "Hγ") as "Hγ"; first eauto using sts_update_auth.
+    iRevert "Hγ"; rewrite -sts_op_auth_frag_up; iIntros "[Hγ Hγf]".
+    iPvsIntro; iSplitL "Hφ Hγ"; last by iApply "HΨ".
+    iNext; iExists s'; by iFrame "Hφ".
   Qed.
 
-  Lemma sts_fsa E N P (Ψ : V → iPropG Λ Σ) γ s0 T :
+  Lemma sts_fsa E N (Ψ : V → iPropG Λ Σ) γ s0 T :
     fsaV → nclose N ⊆ E →
-    P ⊢ sts_ctx γ N φ →
-    P ⊢ (sts_own γ s0 T ★ ∀ s,
-          ■ (s ∈ sts.up s0 T) ★ ▷ φ s -★
-          fsa (E ∖ nclose N) (λ x, ∃ s' T',
-            ■ (sts.steps (s, T) (s', T')) ★ ▷ φ s' ★
-            (sts_own γ s' T' -★ Ψ x))) →
-    P ⊢ fsa E Ψ.
+    (sts_ctx γ N φ ★ sts_own γ s0 T ★ ∀ s,
+      ■ (s ∈ sts.up s0 T) ★ ▷ φ s -★
+      fsa (E ∖ nclose N) (λ x, ∃ s' T',
+        ■ (sts.steps (s, T) (s', T')) ★ ▷ φ s' ★
+        (sts_own γ s' T' -★ Ψ x)))
+    ⊢ fsa E Ψ.
   Proof. by apply sts_fsaS. Qed.
 End sts.

@@ -1,7 +1,7 @@
 From iris.algebra Require Export upred.
 From iris.algebra Require Import upred_big_op upred_tactics.
 From iris.proofmode Require Export environments.
-From iris.prelude Require Import stringmap.
+From iris.prelude Require Import stringmap hlist.
 Import uPred.
 
 Local Notation "Γ !! j" := (env_lookup j Γ).
@@ -26,6 +26,12 @@ Record envs_wf {M} (Δ : envs M) := {
 
 Coercion of_envs {M} (Δ : envs M) : uPred M :=
   (■ envs_wf Δ ★ □ Π∧ env_persistent Δ ★ Π★ env_spatial Δ)%I.
+Instance: Params (@of_envs) 1.
+
+Record envs_Forall2 {M} (R : relation (uPred M)) (Δ1 Δ2 : envs M) : Prop := {
+  env_persistent_Forall2 : env_Forall2 R (env_persistent Δ1) (env_persistent Δ2);
+  env_spatial_Forall2 : env_Forall2 R (env_spatial Δ1) (env_spatial Δ2)
+}.
 
 Instance envs_dom {M} : Dom (envs M) stringset := λ Δ,
   dom stringset (env_persistent Δ) ∪ dom stringset (env_spatial Δ).
@@ -252,6 +258,39 @@ Lemma envs_persistent_persistent Δ : envs_persistent Δ = true → PersistentP 
 Proof. intros; destruct Δ as [? []]; simplify_eq/=; apply _. Qed.
 Hint Immediate envs_persistent_persistent : typeclass_instances.
 
+Global Instance envs_Forall2_refl (R : relation (uPred M)) :
+  Reflexive R → Reflexive (envs_Forall2 R).
+Proof. by constructor. Qed.
+Global Instance envs_Forall2_sym (R : relation (uPred M)) :
+  Symmetric R → Symmetric (envs_Forall2 R).
+Proof. intros ??? [??]; by constructor. Qed.
+Global Instance envs_Forall2_trans (R : relation (uPred M)) :
+  Transitive R → Transitive (envs_Forall2 R).
+Proof. intros ??? [??] [??] [??]; constructor; etrans; eauto. Qed.
+Global Instance envs_Forall2_antisymm (R R' : relation (uPred M)) :
+  AntiSymm R R' → AntiSymm (envs_Forall2 R) (envs_Forall2 R').
+Proof. intros ??? [??] [??]; constructor; by eapply (anti_symm _). Qed.
+Lemma envs_Forall2_impl (R R' : relation (uPred M)) Δ1 Δ2 :
+  envs_Forall2 R Δ1 Δ2 → (∀ P Q, R P Q → R' P Q) → envs_Forall2 R' Δ1 Δ2.
+Proof. intros [??] ?; constructor; eauto using env_Forall2_impl. Qed.
+
+Global Instance of_envs_mono : Proper (envs_Forall2 (⊢) ==> (⊢)) (@of_envs M).
+Proof.
+  intros [Γp1 Γs1] [Γp2 Γs2] [Hp Hs]; unfold of_envs; simpl in *.
+  apply const_elim_sep_l=>Hwf. apply sep_intro_True_l.
+  - destruct Hwf; apply const_intro; constructor;
+      naive_solver eauto using env_Forall2_wf, env_Forall2_fresh.
+  - by repeat f_equiv.
+Qed.
+Global Instance of_envs_proper : Proper (envs_Forall2 (⊣⊢) ==> (⊣⊢)) (@of_envs M).
+Proof.
+  intros Δ1 Δ2 ?; apply (anti_symm (⊢)); apply of_envs_mono;
+    eapply envs_Forall2_impl; [| |symmetry|]; eauto using equiv_entails.
+Qed.
+Global Instance Envs_mono (R : relation (uPred M)) :
+  Proper (env_Forall2 R ==> env_Forall2 R ==> envs_Forall2 R) (@Envs M).
+Proof. by constructor. Qed.
+
 (** * Adequacy *)
 Lemma tac_adequate P : Envs Enil Enil ⊢ P → True ⊢ P.
 Proof.
@@ -287,25 +326,12 @@ Lemma tac_clear_spatial Δ Δ' Q :
   envs_clear_spatial Δ = Δ' → Δ' ⊢ Q → Δ ⊢ Q.
 Proof. intros <- ?. by rewrite envs_clear_spatial_sound // sep_elim_l. Qed.
 
-Lemma tac_duplicate Δ Δ' i p j P Q :
-  envs_lookup i Δ = Some (p, P) →
-  p = true →
-  envs_simple_replace i true (Esnoc (Esnoc Enil i P) j P) Δ = Some Δ' →
-  Δ' ⊢ Q → Δ ⊢ Q.
-Proof.
-  intros ? -> ??. rewrite envs_simple_replace_sound //; simpl.
-  by rewrite right_id idemp wand_elim_r.
-Qed.
-
 (** * False *)
 Lemma tac_ex_falso Δ Q : Δ ⊢ False → Δ ⊢ Q.
 Proof. by rewrite -(False_elim Q). Qed.
 
 (** * Pure *)
-Lemma tac_pure_intro Δ (φ : Prop) : φ → Δ ⊢ ■ φ.
-Proof. apply const_intro. Qed.
-
-Class ToPure (P : uPred M) (φ : Prop) := to_pure : P ⊢ ■ φ.
+Class ToPure (P : uPred M) (φ : Prop) := to_pure : P ⊣⊢ ■ φ.
 Arguments to_pure : clear implicits.
 Global Instance to_pure_const φ : ToPure (■ φ) φ.
 Proof. done. Qed.
@@ -314,6 +340,9 @@ Global Instance to_pure_eq {A : cofeT} (a b : A) :
 Proof. intros; red. by rewrite timeless_eq. Qed.
 Global Instance to_pure_valid `{CMRADiscrete A} (a : A) : ToPure (✓ a) (✓ a).
 Proof. intros; red. by rewrite discrete_valid. Qed.
+
+Lemma tac_pure_intro Δ Q (φ : Prop) : ToPure Q φ → φ → Δ ⊢ Q.
+Proof. intros ->. apply const_intro. Qed.
 
 Lemma tac_pure Δ Δ' i p P φ Q :
   envs_lookup_delete i Δ = Some (p, P, Δ') → ToPure P φ →
@@ -560,12 +589,35 @@ Proof.
   by rewrite right_id {1}(persistentP P) always_and_sep_l wand_elim_r.
 Qed.
 
-Lemma tac_pose_proof Δ Δ' j P Q :
-  True ⊢ P → envs_app true (Esnoc Enil j P) Δ = Some Δ' →
+(** Whenever posing [lem : True ⊢ Q] as [H] we want it to appear as [H : Q] and
+not as [H : True -★ Q]. The class [ToPosedProof] is used to strip off the
+[True]. Note that [to_posed_proof_True] is declared using a [Hint Extern] to
+make sure it is not used while posing [lem : ?P ⊢ Q] with [?P] an evar. *)
+Class ToPosedProof (P1 P2 R : uPred M) := to_pose_proof : P1 ⊢ P2 → True ⊢ R.
+Arguments to_pose_proof : clear implicits.
+Instance to_posed_proof_True P : ToPosedProof True P P.
+Proof. by rewrite /ToPosedProof. Qed.
+Global Instance to_posed_proof_wand P Q : ToPosedProof P Q (P -★ Q).
+Proof. rewrite /ToPosedProof. apply entails_wand. Qed.
+
+Lemma tac_pose_proof Δ Δ' j P1 P2 R Q :
+  P1 ⊢ P2 → ToPosedProof P1 P2 R → envs_app true (Esnoc Enil j R) Δ = Some Δ' →
   Δ' ⊢ Q → Δ ⊢ Q.
 Proof.
-  intros HP ? <-. rewrite envs_app_sound //; simpl.
-  by rewrite -HP left_id always_const wand_True.
+  intros HP ?? <-. rewrite envs_app_sound //; simpl.
+  by rewrite right_id -(to_pose_proof P1 P2 R) // always_const wand_True.
+Qed.
+
+Lemma tac_pose_proof_hyp Δ Δ' Δ'' i p j P Q :
+  envs_lookup_delete i Δ = Some (p, P, Δ') →
+  envs_app p (Esnoc Enil j P) (if p then Δ else Δ') = Some Δ'' →
+  Δ'' ⊢ Q → Δ ⊢ Q.
+Proof.
+  intros [? ->]%envs_lookup_delete_Some ? <-. destruct p.
+  - rewrite envs_lookup_persistent_sound // envs_app_sound //; simpl.
+    by rewrite right_id wand_elim_r.
+  - rewrite envs_lookup_sound // envs_app_sound //; simpl.
+    by rewrite right_id wand_elim_r.
 Qed.
 
 Lemma tac_apply Δ Δ' i p R P1 P2 :
@@ -718,25 +770,25 @@ Class Frame (R P : uPred M) (mQ : option (uPred M)) :=
   frame : (R ★ from_option True mQ) ⊢ P.
 Arguments frame : clear implicits.
 
-Instance frame_here R : Frame R R None | 1.
+Global Instance frame_here R : Frame R R None.
 Proof. by rewrite /Frame right_id. Qed.
-Instance frame_sep_l R P1 P2 mQ :
+Global Instance frame_sep_l R P1 P2 mQ :
   Frame R P1 mQ →
-  Frame R (P1 ★ P2) (Some $ if mQ is Some Q then Q ★ P2 else P2)%I.
+  Frame R (P1 ★ P2) (Some $ if mQ is Some Q then Q ★ P2 else P2)%I | 9.
 Proof. rewrite /Frame => <-. destruct mQ; simpl; solve_sep_entails. Qed.
-Instance frame_sep_r R P1 P2 mQ :
+Global Instance frame_sep_r R P1 P2 mQ :
   Frame R P2 mQ →
-  Frame R (P1 ★ P2) (Some $ if mQ is Some Q then P1 ★ Q else P1)%I.
+  Frame R (P1 ★ P2) (Some $ if mQ is Some Q then P1 ★ Q else P1)%I | 10.
 Proof. rewrite /Frame => <-. destruct mQ; simpl; solve_sep_entails. Qed.
-Instance frame_and_l R P1 P2 mQ :
+Global Instance frame_and_l R P1 P2 mQ :
   Frame R P1 mQ →
-  Frame R (P1 ∧ P2) (Some $ if mQ is Some Q then Q ∧ P2 else P2)%I.
+  Frame R (P1 ∧ P2) (Some $ if mQ is Some Q then Q ∧ P2 else P2)%I | 9.
 Proof. rewrite /Frame => <-. destruct mQ; simpl; eauto 10 with I. Qed.
-Instance frame_and_r R P1 P2 mQ :
+Global Instance frame_and_r R P1 P2 mQ :
   Frame R P2 mQ →
-  Frame R (P1 ∧ P2) (Some $ if mQ is Some Q then P1 ∧ Q else P1)%I.
+  Frame R (P1 ∧ P2) (Some $ if mQ is Some Q then P1 ∧ Q else P1)%I | 10.
 Proof. rewrite /Frame => <-. destruct mQ; simpl; eauto 10 with I. Qed.
-Instance frame_or R P1 P2 mQ1 mQ2 :
+Global Instance frame_or R P1 P2 mQ1 mQ2 :
   Frame R P1 mQ1 → Frame R P2 mQ2 →
   Frame R (P1 ∨ P2) (match mQ1, mQ2 with
                      | Some Q1, Some Q2 => Some (Q1 ∨ Q2)%I | _, _ => None
@@ -746,17 +798,17 @@ Proof.
   destruct mQ1 as [Q1|], mQ2 as [Q2|]; simpl; auto with I.
   by rewrite -sep_or_l.
 Qed.
-Instance frame_later R P mQ :
+Global Instance frame_later R P mQ :
   Frame R P mQ → Frame R (▷ P) (if mQ is Some Q then Some (▷ Q) else None)%I.
 Proof.
   rewrite /Frame=><-.
   by destruct mQ; rewrite /= later_sep -(later_intro R) ?later_True.
 Qed.
-Instance frame_exist {A} R (Φ : A → uPred M) mΨ :
+Global Instance frame_exist {A} R (Φ : A → uPred M) mΨ :
   (∀ a, Frame R (Φ a) (mΨ a)) →
   Frame R (∃ x, Φ x) (Some (∃ x, if mΨ x is Some Q then Q else True))%I.
 Proof. rewrite /Frame=> ?. by rewrite sep_exist_l; apply exist_mono. Qed.
-Instance frame_forall {A} R (Φ : A → uPred M) mΨ :
+Global Instance frame_forall {A} R (Φ : A → uPred M) mΨ :
   (∀ a, Frame R (Φ a) (mΨ a)) →
   Frame R (∀ x, Φ x) (Some (∀ x, if mΨ x is Some Q then Q else True))%I.
 Proof. rewrite /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
@@ -815,13 +867,26 @@ Qed.
 Lemma tac_forall_intro {A} Δ (Φ : A → uPred M) : (∀ a, Δ ⊢ Φ a) → Δ ⊢ (∀ a, Φ a).
 Proof. apply forall_intro. Qed.
 
-Lemma tac_forall_specialize {A} Δ Δ' i p (Φ : A → uPred M) Q a :
-  envs_lookup i Δ = Some (p, ∀ a, Φ a)%I →
-  envs_simple_replace i p (Esnoc Enil i (Φ a)) Δ = Some Δ' →
+Class ForallSpecialize {As} (xs : hlist As)
+    (P : uPred M) (Φ : himpl As (uPred M)) :=
+  forall_specialize : P ⊢ happly Φ xs.
+Arguments forall_specialize {_} _ _ _ {_}.
+
+Global Instance forall_specialize_nil P : ForallSpecialize hnil P P | 100.
+Proof. done. Qed.
+Global Instance forall_specialize_cons A As x xs Φ (Ψ : A → himpl As (uPred M)) :
+  (∀ x, ForallSpecialize xs (Φ x) (Ψ x)) →
+  ForallSpecialize (hcons x xs) (∀ x : A, Φ x) Ψ.
+Proof. rewrite /ForallSpecialize /= => <-. by rewrite (forall_elim x). Qed.
+
+Lemma tac_forall_specialize {As} Δ Δ' i p P (Φ : himpl As (uPred M)) Q xs :
+  envs_lookup i Δ = Some (p, P) → ForallSpecialize xs P Φ →
+  envs_simple_replace i p (Esnoc Enil i (happly Φ xs)) Δ = Some Δ' →
   Δ' ⊢ Q → Δ ⊢ Q.
 Proof.
-  intros. rewrite envs_simple_replace_sound //; simpl.
-  destruct p; by rewrite /= right_id (forall_elim a) wand_elim_r.
+  intros. rewrite envs_simple_replace_sound //; simpl. destruct p.
+  - by rewrite right_id (forall_specialize _ P) wand_elim_r.
+  - by rewrite right_id (forall_specialize _ P) wand_elim_r.
 Qed.
 
 Lemma tac_forall_revert {A} Δ (Φ : A → uPred M) :
@@ -846,8 +911,8 @@ Global Instance exist_destruct_exist {A} (Φ : A → uPred M) :
   ExistDestruct (∃ a, Φ a) Φ.
 Proof. done. Qed.
 Global Instance exist_destruct_later {A} P (Φ : A → uPred M) :
-  Inhabited A → ExistDestruct P Φ → ExistDestruct (▷ P) (λ a, ▷ (Φ a))%I.
-Proof. rewrite /ExistDestruct=> ? ->. by rewrite later_exist. Qed.
+  ExistDestruct P Φ → Inhabited A → ExistDestruct (▷ P) (λ a, ▷ (Φ a))%I.
+Proof. rewrite /ExistDestruct=> HP ?. by rewrite HP later_exist. Qed.
 
 Lemma tac_exist_destruct {A} Δ i p j P (Φ : A → uPred M) Q :
   envs_lookup i Δ = Some (p, P)%I → ExistDestruct P Φ →
@@ -867,18 +932,5 @@ Proof.
 Qed.
 End tactics.
 
-(** Make sure we can frame in the presence of evars without making Coq loop due
-to it applying these rules too eager.
-
-Note: that [Hint Mode Frame - + + - : typeclass_instances] would disable framing
-with evars entirely.
-Note: we give presence to framing on the left. *)
-Hint Extern 0 (Frame _ ?R _) => class_apply @frame_here : typeclass_instances.
-Hint Extern 9 (Frame _ (_ ★ _) _) => class_apply @frame_sep_l : typeclass_instances.
-Hint Extern 10 (Frame _ (_ ★ _) _) => class_apply @frame_sep_r : typeclass_instances.
-Hint Extern 9 (Frame _ (_ ∧ _) _) => class_apply @frame_and_l : typeclass_instances.
-Hint Extern 10 (Frame _ (_ ∧ _) _) => class_apply @frame_and_r : typeclass_instances.
-Hint Extern 10 (Frame _ (_ ∨ _) _) => class_apply @frame_or : typeclass_instances.
-Hint Extern 10 (Frame _ (▷ _) _) => class_apply @frame_later : typeclass_instances.
-Hint Extern 10 (Frame _ (∃ _, _) _) => class_apply @frame_exist : typeclass_instances.
-Hint Extern 10 (Frame _ (∀ _, _) _) => class_apply @frame_forall : typeclass_instances.
+Hint Extern 0 (ToPosedProof True _ _) =>
+  class_apply @to_posed_proof_True : typeclass_instances.

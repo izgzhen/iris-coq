@@ -2,8 +2,7 @@ From iris.heap_lang Require Export lang.
 Import heap_lang.
 
 (** The tactic [simpl_subst] performs substitutions in the goal. Its behavior
-can be tuned using instances of the type class [Closed e], which can be used
-to mark that expressions are closed, and should thus not be substituted into. *)
+can be tuned by declaring [WExpr] and [WSubst] instances. *)
 
 (** * Weakening *)
 Class WExpr {X Y} (H : X `included` Y) (e : expr X) (er : expr Y) :=
@@ -16,22 +15,18 @@ Hint Extern 0 (WExpr _ (Var ?y) _) =>
 
 (* Rec *)
 Instance do_wexpr_rec_true {X Y f y e} {H : X `included` Y} er :
-  WExpr (wexpr_rec_prf H) e er → WExpr H (Rec f y e) (Rec f y er).
+  WExpr (wexpr_rec_prf H) e er → WExpr H (Rec f y e) (Rec f y er) | 10.
 Proof. intros; red; f_equal/=. by etrans; [apply wexpr_proof_irrel|]. Qed.
 
 (* Values *)
-Instance do_wexpr_of_val_nil (H : [] `included` []) v :
-  WExpr H (of_val v) (of_val v) | 0.
+Instance do_wexpr_wexpr X Y Z (H1 : X `included` Y) (H2 : Y `included` Z) e er :
+  WExpr (transitivity H1 H2) e er → WExpr H2 (wexpr H1 e) er | 0.
+Proof. by rewrite /WExpr wexpr_wexpr'. Qed.
+Instance do_wexpr_closed_closed (H : [] `included` []) e : WExpr H e e | 1.
 Proof. apply wexpr_id. Qed.
-Instance do_wexpr_of_val_nil' X (H : X `included` []) v :
-  WExpr H (of_val' v) (of_val v) | 0.
-Proof. by rewrite /WExpr /of_val' wexpr_wexpr' wexpr_id. Qed.
-Instance do_wexpr_of_val Y (H : [] `included` Y) v :
-  WExpr H (of_val v) (of_val' v) | 1.
+Instance do_wexpr_closed_wexpr Y (H : [] `included` Y) e :
+  WExpr H e (wexpr' e) | 2.
 Proof. apply wexpr_proof_irrel. Qed.
-Instance do_wexpr_of_val' X Y (H : X `included` Y) v :
-  WExpr H (of_val' v) (of_val' v) | 1.
-Proof. apply wexpr_wexpr. Qed.
 
 (* Boring connectives *)
 Section do_wexpr.
@@ -129,32 +124,16 @@ Hint Extern 0 (WSubst ?x ?v _ (Rec ?f ?y ?e) _) =>
   end : typeclass_instances.
 
 (* Values *)
-Instance do_wsubst_of_val_nil x es (H : [] `included` [x]) w :
-  WSubst x es H (of_val w) (of_val w) | 0.
+Instance do_wsubst_wexpr X Y Z x es
+    (H1 : X `included` Y) (H2 : Y `included` x :: Z) e er :
+  WSubst x es (transitivity H1 H2) e er → WSubst x es H2 (wexpr H1 e) er | 0.
+Proof. by rewrite /WSubst wsubst_wexpr'. Qed.
+Instance do_wsubst_closed_closed x es (H : [] `included` [x]) e :
+  WSubst x es H e e | 1.
 Proof. apply wsubst_closed_nil. Qed.
-Instance do_wsubst_of_val_nil' {X} x es (H : X `included` [x]) w :
-  WSubst x es H (of_val' w) (of_val w) | 0.
-Proof. by rewrite /WSubst /of_val' wsubst_wexpr' wsubst_closed_nil. Qed.
-Instance do_wsubst_of_val Y x es (H : [] `included` x :: Y) w :
-  WSubst x es H (of_val w) (of_val' w) | 1.
+Instance do_wsubst_closed_wexpr Y x es (H : [] `included` x :: Y) e :
+  WSubst x es H e (wexpr' e) | 2.
 Proof. apply wsubst_closed, not_elem_of_nil. Qed.
-Instance do_wsubst_of_val' X Y x es (H : X `included` x :: Y) w :
-  WSubst x es H (of_val' w) (of_val' w) | 1.
-Proof.
-  rewrite /WSubst /of_val' wsubst_wexpr'.
-  apply wsubst_closed, not_elem_of_nil.
-Qed.
-
-(* Closed expressions *)
-Instance do_wsubst_expr_nil' {X} x es (H : X `included` [x]) e :
-  WSubst x es H (wexpr' e) e | 0.
-Proof. by rewrite /WSubst /wexpr' wsubst_wexpr' wsubst_closed_nil. Qed.
-Instance do_wsubst_wexpr' X Y x es (H : X `included` x :: Y) e :
-  WSubst x es H (wexpr' e) (wexpr' e) | 1.
-Proof.
-  rewrite /WSubst /wexpr' wsubst_wexpr'.
-  apply wsubst_closed, not_elem_of_nil.
-Qed.
 
 (* Boring connectives *)
 Section wsubst.
@@ -216,5 +195,3 @@ Ltac simpl_subst :=
 Arguments wexpr : simpl never.
 Arguments subst : simpl never.
 Arguments wsubst : simpl never.
-Arguments of_val : simpl never.
-Arguments of_val' : simpl never.
