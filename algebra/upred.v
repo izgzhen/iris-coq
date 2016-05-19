@@ -497,16 +497,25 @@ Proof. unseal; intros HΦΨ; split=> n x ? [a ?]; by apply HΦΨ with a. Qed.
 Lemma eq_refl {A : cofeT} (a : A) : True ⊢ (a ≡ a).
 Proof. unseal; by split=> n x ??; simpl. Qed.
 Lemma eq_rewrite {A : cofeT} a b (Ψ : A → uPred M) P
-  `{HΨ : ∀ n, Proper (dist n ==> dist n) Ψ} : P ⊢ (a ≡ b) → P ⊢ Ψ a → P ⊢ Ψ b.
+  {HΨ : ∀ n, Proper (dist n ==> dist n) Ψ} : P ⊢ (a ≡ b) → P ⊢ Ψ a → P ⊢ Ψ b.
 Proof.
-  unseal; intros Hab Ha; split=> n x ??.
-  apply HΨ with n a; auto. by symmetry; apply Hab with x. by apply Ha.
+  unseal; intros Hab Ha; split=> n x ??. apply HΨ with n a; auto.
+  - by symmetry; apply Hab with x.
+  - by apply Ha.
 Qed.
 Lemma eq_equiv `{Empty M, !CMRAUnit M} {A : cofeT} (a b : A) :
   True ⊢ (a ≡ b) → a ≡ b.
 Proof.
   unseal=> Hab; apply equiv_dist; intros n; apply Hab with ∅; last done.
   apply cmra_valid_validN, cmra_unit_valid.
+Qed.
+Lemma eq_rewrite_contractive {A : cofeT} a b (Ψ : A → uPred M) P
+  {HΨ : Contractive Ψ} : P ⊢ ▷ (a ≡ b) → P ⊢ Ψ a → P ⊢ Ψ b.
+Proof.
+  unseal; intros Hab Ha; split=> n x ??. apply HΨ with n a; auto.
+  - destruct n; intros m ?; first omega. apply (dist_le n); last omega.
+    symmetry. by destruct Hab as [Hab]; eapply (Hab (S n)).
+  - by apply Ha.
 Qed.
 
 (* Derived logical stuff *)
