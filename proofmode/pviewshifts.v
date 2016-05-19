@@ -45,23 +45,24 @@ Proof. done. Qed.
 Lemma tac_pvs_intro Δ E Q : Δ ⊢ Q → Δ ⊢ |={E}=> Q.
 Proof. intros ->. apply pvs_intro. Qed.
 
-Lemma tac_pvs_elim Δ Δ' E1 E2 E3 i p P Q :
-  envs_lookup i Δ = Some (p, |={E1,E2}=> P)%I →
+Lemma tac_pvs_elim Δ Δ' E1 E2 E3 i p P' P Q :
+  envs_lookup i Δ = Some (p, P') → P' = (|={E1,E2}=> P)%I →
   envs_replace i p false (Esnoc Enil i P) Δ = Some Δ' →
   E2 ⊆ E1 ∪ E3 →
   Δ' ⊢ (|={E2,E3}=> Q) → Δ ⊢ |={E1,E3}=> Q.
 Proof.
-  intros ??? HQ. rewrite envs_replace_sound //; simpl. destruct p.
+  intros ? -> ?? HQ. rewrite envs_replace_sound //; simpl. destruct p.
   - by rewrite always_elim right_id pvs_frame_r wand_elim_r HQ pvs_trans.
   - by rewrite right_id pvs_frame_r wand_elim_r HQ pvs_trans.
 Qed.
 
-Lemma tac_pvs_elim_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E i p P Q Φ :
-  envs_lookup i Δ = Some (p, |={E}=> P)%I → FSASplit Q E fsa fsaV Φ →
+Lemma tac_pvs_elim_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E i p P' P Q Φ :
+  envs_lookup i Δ = Some (p, P') → P' = (|={E}=> P)%I →
+  FSASplit Q E fsa fsaV Φ →
   envs_replace i p false (Esnoc Enil i P) Δ = Some Δ' →
   Δ' ⊢ fsa E Φ → Δ ⊢ Q.
 Proof.
-  intros ???. rewrite -(fsa_split Q) -fsa_pvs_fsa.
+  intros ? -> ??. rewrite -(fsa_split Q) -fsa_pvs_fsa.
   eapply tac_pvs_elim; set_solver.
 Qed.
 
@@ -105,13 +106,17 @@ Tactic Notation "iPvsIntro" := apply tac_pvs_intro.
 Tactic Notation "iPvsCore" constr(H) :=
   match goal with
   | |- _ ⊢ |={_,_}=> _ =>
-    eapply tac_pvs_elim with _ _ H _ _;
+    eapply tac_pvs_elim with _ _ H _ _ _;
       [env_cbv; reflexivity || fail "iPvs:" H "not found"
+      |let P := match goal with |- ?P = _ => P end in
+       reflexivity || fail "iPvs:" H ":" P "not a pvs with the right mask"
       |env_cbv; reflexivity
       |try (rewrite (idemp_L (∪)); reflexivity)|]
   | |- _ =>
-    eapply tac_pvs_elim_fsa with _ _ _ _ H _ _ _;
+    eapply tac_pvs_elim_fsa with _ _ _ _ H _ _ _ _;
       [env_cbv; reflexivity || fail "iPvs:" H "not found"
+      |let P := match goal with |- ?P = _ => P end in
+       reflexivity || fail "iPvs:" H ":" P "not a pvs with the right mask"
       |let P := match goal with |- FSASplit ?P _ _ _ _ => P end in
        apply _ || fail "iPvs:" P "not a pvs"
       |env_cbv; reflexivity|simpl]
