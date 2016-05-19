@@ -556,6 +556,15 @@ Section properties.
         * apply IHj; eauto.
           inversion Hm; trivial.
   Qed.
+
+  (* altering a singleton is just altering the underlying element. *)
+  Lemma list_alter_singleton `{CMRAUnit A} {L : A → A} i x :
+    alter L i {[i := x]} = {[i := L x]}.
+  Proof.
+    induction i; simpl; trivial.
+    apply (f_equal (cons _)); simpl; trivial.
+  Qed.
+
 End properties.
 
 (** Functor *)
