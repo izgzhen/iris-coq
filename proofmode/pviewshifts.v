@@ -42,17 +42,20 @@ Global Instance fsa_split_fsa {A} (fsa : FSA Λ Σ A) E Φ :
   FrameShiftAssertion fsaV fsa → FSASplit (fsa E Φ) E fsa fsaV Φ.
 Proof. done. Qed.
 
-Lemma tac_pvs_intro Δ E Q : Δ ⊢ Q → Δ ⊢ |={E}=> Q.
-Proof. intros ->. apply pvs_intro. Qed.
+Lemma tac_pvs_intro Δ E1 E2 Q : E1 = E2 → Δ ⊢ Q → Δ ⊢ |={E1,E2}=> Q.
+Proof. intros -> ->. apply pvs_intro. Qed.
 
-Lemma tac_pvs_elim Δ Δ' E1 E2 E3 i p P' P Q :
-  envs_lookup i Δ = Some (p, P') → P' = (|={E1,E2}=> P)%I →
+Lemma tac_pvs_elim Δ Δ' E1 E2 E3 i p P' E1' E2' P Q :
+  envs_lookup i Δ = Some (p, P') → P' = (|={E1',E2'}=> P)%I →
+  (E1' = E1 ∧ E2' = E2 ∧ E2 ⊆ E1 ∪ E3
+  ∨ E2 = E2' ∪ E1 ∖ E1' ∧ E2' ⊥ E1 ∖ E1' ∧ E1' ⊆ E1 ∧ E2' ⊆ E1' ∪ E3) →
   envs_replace i p false (Esnoc Enil i P) Δ = Some Δ' →
-  E2 ⊆ E1 ∪ E3 →
   Δ' ⊢ (|={E2,E3}=> Q) → Δ ⊢ |={E1,E3}=> Q.
 Proof.
-  intros ? -> ?? HQ. rewrite envs_replace_sound //; simpl.
-  by rewrite always_if_elim right_id pvs_frame_r wand_elim_r HQ pvs_trans.
+  intros ? -> HE ? HQ. rewrite envs_replace_sound //; simpl.
+  rewrite always_if_elim right_id pvs_frame_r wand_elim_r HQ.
+  destruct HE as [(?&?&?)|(?&?&?&?)]; subst; first (by apply pvs_trans).
+  etrans; [eapply pvs_mask_frame'|apply pvs_trans]; auto; set_solver.
 Qed.
 
 Lemma tac_pvs_elim_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E i p P' P Q Φ :
@@ -97,17 +100,20 @@ Proof.
 Qed.
 End pvs.
 
-Tactic Notation "iPvsIntro" := apply tac_pvs_intro.
+Tactic Notation "iPvsIntro" := apply tac_pvs_intro; first try fast_done.
 
 Tactic Notation "iPvsCore" constr(H) :=
   match goal with
   | |- _ ⊢ |={_,_}=> _ =>
-    eapply tac_pvs_elim with _ _ H _ _ _;
+    eapply tac_pvs_elim with _ _ H _ _ _ _ _;
       [env_cbv; reflexivity || fail "iPvs:" H "not found"
       |let P := match goal with |- ?P = _ => P end in
        reflexivity || fail "iPvs:" H ":" P "not a pvs with the right mask"
-      |env_cbv; reflexivity
-      |try (rewrite (idemp_L (∪)); reflexivity)|]
+      |first
+         [left; split_and!;
+            [reflexivity|reflexivity|try (rewrite (idemp_L (∪)); reflexivity)]
+         |right; split; first reflexivity]
+      |env_cbv; reflexivity|]
   | |- _ =>
     eapply tac_pvs_elim_fsa with _ _ _ _ H _ _ _ _;
       [env_cbv; reflexivity || fail "iPvs:" H "not found"
