@@ -51,9 +51,8 @@ Lemma tac_pvs_elim Δ Δ' E1 E2 E3 i p P' P Q :
   E2 ⊆ E1 ∪ E3 →
   Δ' ⊢ (|={E2,E3}=> Q) → Δ ⊢ |={E1,E3}=> Q.
 Proof.
-  intros ? -> ?? HQ. rewrite envs_replace_sound //; simpl. destruct p.
-  - by rewrite always_elim right_id pvs_frame_r wand_elim_r HQ pvs_trans.
-  - by rewrite right_id pvs_frame_r wand_elim_r HQ pvs_trans.
+  intros ? -> ?? HQ. rewrite envs_replace_sound //; simpl.
+  by rewrite always_if_elim right_id pvs_frame_r wand_elim_r HQ pvs_trans.
 Qed.
 
 Lemma tac_pvs_elim_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E i p P' P Q Φ :
@@ -72,11 +71,8 @@ Lemma tac_pvs_timeless Δ Δ' E1 E2 i p P Q :
   Δ' ⊢ (|={E1,E2}=> Q) → Δ ⊢ (|={E1,E2}=> Q).
 Proof.
   intros ??? HQ. rewrite envs_simple_replace_sound //; simpl.
-  destruct p.
-  - rewrite always_later (pvs_timeless E1 (□ P)%I) pvs_frame_r.
-    by rewrite right_id wand_elim_r HQ pvs_trans; last set_solver.
-  - rewrite (pvs_timeless E1 P) pvs_frame_r right_id wand_elim_r HQ.
-    by rewrite pvs_trans; last set_solver.
+  rewrite always_if_later (pvs_timeless E1 (□?_ P)%I) pvs_frame_r.
+  by rewrite right_id wand_elim_r HQ pvs_trans; last set_solver.
 Qed.
 
 Lemma tac_pvs_timeless_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E i p P Q Φ :
