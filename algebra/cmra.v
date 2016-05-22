@@ -344,6 +344,8 @@ Section unit.
   Proof. by intros x; rewrite (comm op) left_id. Qed.
   Global Instance cmra_unit_persistent : Persistent ∅.
   Proof. by rewrite /Persistent -{2}(cmra_core_l ∅) right_id. Qed.
+  Lemma cmra_core_unit : core (∅:A) ≡ ∅.
+  Proof. by rewrite -{2}(cmra_core_l ∅) right_id. Qed.
 End unit.
 
 (** ** Local updates *)
