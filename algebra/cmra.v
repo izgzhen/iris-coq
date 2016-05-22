@@ -590,7 +590,18 @@ Section prod.
   Lemma prod_updateP' P1 P2 x :
     x.1 ~~>: P1 → x.2 ~~>: P2 → x ~~>: λ y, P1 (y.1) ∧ P2 (y.2).
   Proof. eauto using prod_updateP. Qed.
+
+  Global Instance prod_local_update
+      (LA : A → A) `{!LocalUpdate LvA LA} (LB : B → B) `{!LocalUpdate LvB LB} :
+    LocalUpdate (λ x, LvA (x.1) ∧ LvB (x.2)) (prod_map LA LB).
+  Proof.
+    constructor.
+    - intros n x y [??]; constructor; simpl; by apply local_update_ne.
+    - intros n ?? [??] [??];
+        constructor; simpl in *; eapply local_updateN; eauto.
+  Qed.
 End prod.
+
 Arguments prodR : clear implicits.
 
 Instance prod_map_cmra_monotone {A A' B B' : cmraT} (f : A → A') (g : B → B') :
