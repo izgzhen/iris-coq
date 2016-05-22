@@ -1,10 +1,14 @@
-From iris.algebra Require Export option.
-From iris.prelude Require Export list.
+From iris.algebra Require Import cmra option.
+From iris.prelude Require Import list.
+From iris.algebra Require Import upred.
 
 Section cofe.
 Context {A : cofeT}.
 
 Instance list_dist : Dist (list A) := λ n, Forall2 (dist n).
+
+Lemma list_dist_lookup n l1 l2 : l1 ≡{n}≡ l2 ↔ ∀ i, l1 !! i ≡{n}≡ l2 !! i.
+Proof. setoid_rewrite dist_option_Forall2. apply Forall2_lookup. Qed.
 
 Global Instance cons_ne n : Proper (dist n ==> dist n ==> dist n) (@cons A) := _.
 Global Instance app_ne n : Proper (dist n ==> dist n ==> dist n) (@app A) := _.

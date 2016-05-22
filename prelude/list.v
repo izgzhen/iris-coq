@@ -2684,7 +2684,7 @@ Section setoid.
 
   Lemma equiv_Forall2 l k : l ≡ k ↔ Forall2 (≡) l k.
   Proof. split; induction 1; constructor; auto. Qed.
-  Lemma equiv_lookup l k : l ≡ k ↔ (∀ i, l !! i ≡ k !! i).
+  Lemma list_equiv_lookup l k : l ≡ k ↔ ∀ i, l !! i ≡ k !! i.
   Proof.
     rewrite equiv_Forall2, Forall2_lookup.
     by setoid_rewrite equiv_option_Forall2.
