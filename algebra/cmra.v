@@ -580,6 +580,10 @@ Section prod.
     Persistent x → Persistent y → Persistent (x,y).
   Proof. by split. Qed.
 
+  Lemma pair_split `{CMRAUnit A, CMRAUnit B} (x : A) (y : B) :
+    (x, y) ≡ (x, ∅) ⋅ (∅, y).
+  Proof. constructor; by rewrite /= ?left_id ?right_id. Qed.
+
   Lemma prod_update x y : x.1 ~~> y.1 → x.2 ~~> y.2 → x ~~> y.
   Proof. intros ?? n z [??]; split; simpl in *; auto. Qed.
   Lemma prod_updateP P1 P2 (Q : A * B → Prop)  x :
