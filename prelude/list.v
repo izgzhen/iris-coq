@@ -983,6 +983,11 @@ Proof.
   - intros [-> Hi]. revert i Hi.
     induction n; intros [|?]; naive_solver auto with lia.
 Qed.
+Lemma elem_of_replicate n x y : y ∈ replicate n x ↔ y = x ∧ n ≠ 0.
+Proof.
+  rewrite elem_of_list_lookup, Nat.neq_0_lt_0.
+  setoid_rewrite lookup_replicate; naive_solver eauto with lia.
+Qed.
 Lemma lookup_replicate_1 n x y i :
   replicate n x !! i = Some y → y = x ∧ i < n.
 Proof. by rewrite lookup_replicate. Qed.
@@ -2684,7 +2689,7 @@ Section setoid.
 
   Lemma equiv_Forall2 l k : l ≡ k ↔ Forall2 (≡) l k.
   Proof. split; induction 1; constructor; auto. Qed.
-  Lemma equiv_lookup l k : l ≡ k ↔ (∀ i, l !! i ≡ k !! i).
+  Lemma list_equiv_lookup l k : l ≡ k ↔ ∀ i, l !! i ≡ k !! i.
   Proof.
     rewrite equiv_Forall2, Forall2_lookup.
     by setoid_rewrite equiv_option_Forall2.

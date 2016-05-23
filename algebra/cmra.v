@@ -344,6 +344,8 @@ Section unit.
   Proof. by intros x; rewrite (comm op) left_id. Qed.
   Global Instance cmra_unit_persistent : Persistent ∅.
   Proof. by rewrite /Persistent -{2}(cmra_core_l ∅) right_id. Qed.
+  Lemma cmra_core_unit : core (∅:A) ≡ ∅.
+  Proof. by rewrite -{2}(cmra_core_l ∅) right_id. Qed.
 End unit.
 
 (** ** Local updates *)
@@ -578,6 +580,10 @@ Section prod.
     Persistent x → Persistent y → Persistent (x,y).
   Proof. by split. Qed.
 
+  Lemma pair_split `{CMRAUnit A, CMRAUnit B} (x : A) (y : B) :
+    (x, y) ≡ (x, ∅) ⋅ (∅, y).
+  Proof. constructor; by rewrite /= ?left_id ?right_id. Qed.
+
   Lemma prod_update x y : x.1 ~~> y.1 → x.2 ~~> y.2 → x ~~> y.
   Proof. intros ?? n z [??]; split; simpl in *; auto. Qed.
   Lemma prod_updateP P1 P2 (Q : A * B → Prop)  x :
@@ -590,7 +596,18 @@ Section prod.
   Lemma prod_updateP' P1 P2 x :
     x.1 ~~>: P1 → x.2 ~~>: P2 → x ~~>: λ y, P1 (y.1) ∧ P2 (y.2).
   Proof. eauto using prod_updateP. Qed.
+
+  Global Instance prod_local_update
+      (LA : A → A) `{!LocalUpdate LvA LA} (LB : B → B) `{!LocalUpdate LvB LB} :
+    LocalUpdate (λ x, LvA (x.1) ∧ LvB (x.2)) (prod_map LA LB).
+  Proof.
+    constructor.
+    - intros n x y [??]; constructor; simpl; by apply local_update_ne.
+    - intros n ?? [??] [??];
+        constructor; simpl in *; eapply local_updateN; eauto.
+  Qed.
 End prod.
+
 Arguments prodR : clear implicits.
 
 Instance prod_map_cmra_monotone {A A' B B' : cmraT} (f : A → A') (g : B → B') :

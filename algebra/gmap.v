@@ -102,7 +102,7 @@ Proof. by apply lookup_merge. Qed.
 Lemma lookup_core m i : core m !! i = core (m !! i).
 Proof. by apply lookup_fmap. Qed.
 
-Lemma gmap_included_spec (m1 m2 : gmap K A) : m1 ≼ m2 ↔ ∀ i, m1 !! i ≼ m2 !! i.
+Lemma lookup_included (m1 m2 : gmap K A) : m1 ≼ m2 ↔ ∀ i, m1 !! i ≼ m2 !! i.
 Proof.
   split; [by intros [m Hm] i; exists (m !! i); rewrite -lookup_op Hm|].
   revert m2. induction m1 as [|i x m Hi IH] using map_ind=> m2 Hm.
@@ -132,7 +132,7 @@ Proof.
   - by intros m1 m2 i; rewrite !lookup_op comm.
   - by intros m i; rewrite lookup_op !lookup_core cmra_core_l.
   - by intros m i; rewrite !lookup_core cmra_core_idemp.
-  - intros x y; rewrite !gmap_included_spec; intros Hm i.
+  - intros x y; rewrite !lookup_included; intros Hm i.
     by rewrite !lookup_core; apply cmra_core_preserving.
   - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
@@ -178,9 +178,9 @@ Implicit Types m : gmap K A.
 Implicit Types i : K.
 Implicit Types a : A.
 
-Lemma lookup_validN n m i x : ✓{n} m → m !! i ≡{n}≡ Some x → ✓{n} x.
+Lemma lookup_validN_Some n m i x : ✓{n} m → m !! i ≡{n}≡ Some x → ✓{n} x.
 Proof. by move=> /(_ i) Hm Hi; move:Hm; rewrite Hi. Qed.
-Lemma lookup_valid m i x : ✓ m → m !! i ≡ Some x → ✓ x.
+Lemma lookup_valid_Some m i x : ✓ m → m !! i ≡ Some x → ✓ x.
 Proof. move=> Hm Hi. move:(Hm i). by rewrite Hi. Qed.
 Lemma insert_validN n m i x : ✓{n} x → ✓{n} m → ✓{n} <[i:=x]>m.
 Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_eq. Qed.
@@ -336,7 +336,7 @@ Instance gmap_fmap_cmra_monotone `{Countable K} {A B : cmraT} (f : A → B)
 Proof.
   split; try apply _.
   - by intros n m ? i; rewrite lookup_fmap; apply (validN_preserving _).
-  - intros m1 m2; rewrite !gmap_included_spec=> Hm i.
+  - intros m1 m2; rewrite !lookup_included=> Hm i.
     by rewrite !lookup_fmap; apply: included_preserving.
 Qed.
 Definition gmapC_map `{Countable K} {A B} (f: A -n> B) :

@@ -6,20 +6,20 @@ Import uPred.
 
 Definition own `{inG Λ Σ A} (γ : gname) (a : A) : iPropG Λ Σ :=
   ownG (to_globalF γ a).
-Instance: Params (@to_globalF) 5.
 Instance: Params (@own) 5.
-Typeclasses Opaque to_globalF own.
+Typeclasses Opaque own.
 
 (** Properties about ghost ownership *)
 Section global.
-Context `{inG Λ Σ A}.
+Context `{i : inG Λ Σ A}.
 Implicit Types a : A.
 
 (** * Transport empty *)
 Instance inG_empty `{Empty A} :
-  Empty (projT2 Σ inG_id (iPreProp Λ (globalF Σ))) := cmra_transport inG_prf ∅.
+  Empty (projT2 Σ (inG_id i) (iPreProp Λ (globalF Σ))) :=
+  cmra_transport inG_prf ∅.
 Instance inG_empty_spec `{Empty A} :
-  CMRAUnit A → CMRAUnit (projT2 Σ inG_id (iPreProp Λ (globalF Σ))).
+  CMRAUnit A → CMRAUnit (projT2 Σ (inG_id i) (iPreProp Λ (globalF Σ))).
 Proof.
   split.
   - apply cmra_transport_valid, cmra_unit_valid.
@@ -39,7 +39,7 @@ Proof. move=>a b [c ->]. rewrite own_op. eauto with I. Qed.
 Lemma own_valid γ a : own γ a ⊢ ✓ a.
 Proof.
   rewrite /own ownG_valid /to_globalF.
-  rewrite iprod_validI (forall_elim inG_id) iprod_lookup_singleton.
+  rewrite iprod_validI (forall_elim (inG_id i)) iprod_lookup_singleton.
   rewrite gmap_validI (forall_elim γ) lookup_singleton option_validI.
   (* implicit arguments differ a bit *)
   by trans (✓ cmra_transport inG_prf a : iPropG Λ Σ)%I; last destruct inG_prf.
@@ -61,7 +61,7 @@ Proof.
   intros Ha.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ γ, γ ∉ G ∧ m = to_globalF γ a) ∧ ownG m)%I).
   - rewrite ownG_empty.
-    eapply pvs_ownG_updateP, (iprod_singleton_updateP_empty inG_id);
+    eapply pvs_ownG_updateP, (iprod_singleton_updateP_empty (inG_id i));
       first (eapply updateP_alloc_strong', cmra_transport_valid, Ha);
       naive_solver.
   - apply exist_elim=>m; apply const_elim_l=>-[γ [Hfresh ->]].

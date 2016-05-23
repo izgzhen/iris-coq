@@ -1,4 +1,5 @@
 From iris.proofmode Require Import tactics.
+From iris.proofmode Require Import pviewshifts.
 
 Lemma demo_0 {M : cmraT} (P Q : uPred M) :
   □ (P ∨ Q) ⊢ ((∀ x, x = 0 ∨ x = 1) → (Q ∨ P)).
@@ -79,3 +80,16 @@ Proof.
   iIntros "#Hfoo **".
   by iIntros "# _".
 Qed.
+
+Section iris.
+  Context {Λ : language} {Σ : iFunctor}.
+
+  Lemma demo_7 (E1 E2 E : coPset) (P : iProp Λ Σ) :
+    E1 ⊆ E2 → E ⊆ E1 →
+    (|={E1,E}=> ▷ P) ⊢ (|={E2,E ∪ E2 ∖ E1}=> ▷ P).
+  Proof.
+    iIntros {? ?} "Hpvs".
+    iPvs "Hpvs"; first (split_and?; set_solver).
+    done.
+  Qed.
+End iris.

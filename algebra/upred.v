@@ -300,7 +300,15 @@ Infix "≡" := uPred_eq : uPred_scope.
 Notation "✓ x" := (uPred_valid x) (at level 20) : uPred_scope.
 
 Definition uPred_iff {M} (P Q : uPred M) : uPred M := ((P → Q) ∧ (Q → P))%I.
+Instance: Params (@uPred_iff) 1.
 Infix "↔" := uPred_iff : uPred_scope.
+
+Definition uPred_always_if {M} (p : bool) (P : uPred M) : uPred M :=
+  (if p then □ P else P)%I.
+Instance: Params (@uPred_always_if) 2.
+Arguments uPred_always_if _ !_ _/.
+Notation "□? p P" := (uPred_always_if p P)
+  (at level 20, p at level 0, P at level 20, format "□? p  P").
 
 Class TimelessP {M} (P : uPred M) := timelessP : ▷ P ⊢ (P ∨ ▷ False).
 Arguments timelessP {_} _ {_}.
@@ -497,16 +505,25 @@ Proof. unseal; intros HΦΨ; split=> n x ? [a ?]; by apply HΦΨ with a. Qed.
 Lemma eq_refl {A : cofeT} (a : A) : True ⊢ (a ≡ a).
 Proof. unseal; by split=> n x ??; simpl. Qed.
 Lemma eq_rewrite {A : cofeT} a b (Ψ : A → uPred M) P
-  `{HΨ : ∀ n, Proper (dist n ==> dist n) Ψ} : P ⊢ (a ≡ b) → P ⊢ Ψ a → P ⊢ Ψ b.
+  {HΨ : ∀ n, Proper (dist n ==> dist n) Ψ} : P ⊢ (a ≡ b) → P ⊢ Ψ a → P ⊢ Ψ b.
 Proof.
-  unseal; intros Hab Ha; split=> n x ??.
-  apply HΨ with n a; auto. by symmetry; apply Hab with x. by apply Ha.
+  unseal; intros Hab Ha; split=> n x ??. apply HΨ with n a; auto.
+  - by symmetry; apply Hab with x.
+  - by apply Ha.
 Qed.
 Lemma eq_equiv `{Empty M, !CMRAUnit M} {A : cofeT} (a b : A) :
   True ⊢ (a ≡ b) → a ≡ b.
 Proof.
   unseal=> Hab; apply equiv_dist; intros n; apply Hab with ∅; last done.
   apply cmra_valid_validN, cmra_unit_valid.
+Qed.
+Lemma eq_rewrite_contractive {A : cofeT} a b (Ψ : A → uPred M) P
+  {HΨ : Contractive Ψ} : P ⊢ ▷ (a ≡ b) → P ⊢ Ψ a → P ⊢ Ψ b.
+Proof.
+  unseal; intros Hab Ha; split=> n x ??. apply HΨ with n a; auto.
+  - destruct n; intros m ?; first omega. apply (dist_le n); last omega.
+    symmetry. by destruct Hab as [Hab]; eapply (Hab (S n)).
+  - by apply Ha.
 Qed.
 
 (* Derived logical stuff *)
@@ -926,6 +943,28 @@ Proof. intros; rewrite -always_and_sep_l'; auto. Qed.
 Lemma always_entails_r' P Q : (P ⊢ □ Q) → P ⊢ (P ★ □ Q).
 Proof. intros; rewrite -always_and_sep_r'; auto. Qed.
 
+Global Instance always_if_ne n p : Proper (dist n ==> dist n) (@uPred_always_if M p).
+Proof. solve_proper. Qed.
+Global Instance always_if_proper p : Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_always_if M p).
+Proof. solve_proper. Qed.
+Global Instance always_if_mono p : Proper ((⊢) ==> (⊢)) (@uPred_always_if M p).
+Proof. solve_proper. Qed.
+
+Lemma always_if_elim p P : □?p P ⊢ P.
+Proof. destruct p; simpl; auto using always_elim. Qed.
+Lemma always_elim_if p P : □ P ⊢ □?p P.
+Proof. destruct p; simpl; auto using always_elim. Qed.
+Lemma always_if_and p P Q : □?p (P ∧ Q) ⊣⊢ (□?p P ∧ □?p Q).
+Proof. destruct p; simpl; auto using always_and. Qed.
+Lemma always_if_or p P Q : □?p (P ∨ Q) ⊣⊢ (□?p P ∨ □?p Q).
+Proof. destruct p; simpl; auto using always_or. Qed.
+Lemma always_if_exist {A} p (Ψ : A → uPred M) : (□?p ∃ a, Ψ a) ⊣⊢ (∃ a, □?p Ψ a).
+Proof. destruct p; simpl; auto using always_exist. Qed.
+Lemma always_if_sep p P Q : □?p (P ★ Q) ⊣⊢ (□?p P ★ □?p Q).
+Proof. destruct p; simpl; auto using always_sep. Qed.
+Lemma always_if_later p P : (□?p ▷ P) ⊣⊢ (▷ □?p P).
+Proof. destruct p; simpl; auto using always_later. Qed.
+
 (* Later *)
 Lemma later_mono P Q : P ⊢ Q → ▷ P ⊢ ▷ Q.
 Proof.
@@ -1108,6 +1147,8 @@ Proof.
   intros ?; rewrite /TimelessP.
   by rewrite -always_const -!always_later -always_or; apply always_mono.
 Qed.
+Global Instance always_if_timeless p P : TimelessP P → TimelessP (□?p P).
+Proof. destruct p; apply _. Qed.
 Global Instance eq_timeless {A : cofeT} (a b : A) :
   Timeless a → TimelessP (a ≡ b : uPred M)%I.
 Proof.
@@ -1156,6 +1197,8 @@ Proof. destruct mx; apply _. Qed.
 (* Derived lemmas for persistence *)
 Lemma always_always P `{!PersistentP P} : (□ P) ⊣⊢ P.
 Proof. apply (anti_symm (⊢)); auto using always_elim. Qed.
+Lemma always_if_always p P `{!PersistentP P} : □?p P ⊣⊢ P.
+Proof. destruct p; simpl; auto using always_always. Qed.
 Lemma always_intro P Q `{!PersistentP P} : P ⊢ Q → P ⊢ □ Q.
 Proof. rewrite -(always_always P); apply always_intro'. Qed.
 Lemma always_and_sep_l P Q `{!PersistentP P} : (P ∧ Q) ⊣⊢ (P ★ Q).

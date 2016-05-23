@@ -7,6 +7,9 @@ Context {A : cofeT}.
 
 Instance list_dist : Dist (list A) := λ n, Forall2 (dist n).
 
+Lemma list_dist_lookup n l1 l2 : l1 ≡{n}≡ l2 ↔ ∀ i, l1 !! i ≡{n}≡ l2 !! i.
+Proof. setoid_rewrite dist_option_Forall2. apply Forall2_lookup. Qed.
+
 Global Instance cons_ne n : Proper (dist n ==> dist n ==> dist n) (@cons A) := _.
 Global Instance app_ne n : Proper (dist n ==> dist n ==> dist n) (@app A) := _.
 Global Instance length_ne n : Proper (dist n ==> (=)) (@length A) := _.
@@ -112,476 +115,248 @@ Qed.
 Section cmra.
   Context {A : cmraT}.
   Implicit Types l : list A.
+  Local Arguments op _ _ !_ !_ / : simpl nomatch.
 
-  Instance list_core : Core (list A) := map core.
-
-  Fixpoint list_op_fix (l1 l2 : list A) : list A :=
-    match l1 with
-    | [] => l2
-    | x :: l1' =>
-      match l2 with
-      | [] => x :: l1'
-      | y :: l2' => op x y :: list_op_fix l1' l2'
-      end
+  Instance list_op : Op (list A) :=
+    fix go l1 l2 := let _ : Op _ := @go in
+    match l1, l2 with
+    | [], _ => l2
+    | _, [] => l1
+    | x :: l1, y :: l2 => x ⋅ y :: l1 ⋅ l2
     end.
-
-  Instance list_op : Op (list A) := list_op_fix.
+  Instance list_core : Core (list A) := fmap core.
 
   Instance list_valid : Valid (list A) := Forall (λ x, ✓ x).
   Instance list_validN : ValidN (list A) := λ n, Forall (λ x, ✓{n} x).
 
-  Lemma list_op_lookup i l1 l2 : (l1 ⋅ l2) !! i = l1 !! i ⋅ l2 !! i.
+  Lemma list_lookup_valid l : ✓ l ↔ ∀ i, ✓ (l !! i).
   Proof.
-    revert i l2; induction l1 as [|a l1]; intros i [|z l2]; cbn; trivial.
-    - destruct ((z :: l2) !! i); trivial.
-    - destruct ((a :: l1) !! i); trivial.
-    - destruct i; cbn; trivial.
+    rewrite {1}/valid /list_valid Forall_lookup; split.
+    - intros Hl i. by destruct (l !! i) as [x|] eqn:?; [apply (Hl i)|].
+    - intros Hl i x Hi. move: (Hl i); by rewrite Hi.
   Qed.
-
-  Lemma list_op_ne n (l l' l'' : list A) :
-    l' ≡{n}≡ l'' → l ⋅ l' ≡{n}≡ l ⋅ l''.
+  Lemma list_lookup_validN n l : ✓{n} l ↔ ∀ i, ✓{n} (l !! i).
   Proof.
-    revert l' l''.
-    induction l; cbn; trivial.
-    destruct l'; destruct l''; inversion 1; subst; trivial.
-    constructor; [apply cmra_op_ne|]; trivial.
-    apply IHl; trivial.
+    rewrite {1}/validN /list_validN Forall_lookup; split.
+    - intros Hl i. by destruct (l !! i) as [x|] eqn:?; [apply (Hl i)|].
+    - intros Hl i x Hi. move: (Hl i); by rewrite Hi.
   Qed.
-
-  Lemma list_op_assoc (l l' l'' : list A) :  l ⋅ (l' ⋅ l'') ≡ l ⋅ l' ⋅ l''.
-  Proof.
-    revert l' l''.
-    induction l; cbn; trivial.
-    destruct l'; cbn; trivial.
-    destruct l''; cbn; trivial.
-    rewrite cmra_assoc; constructor; trivial.
-  Qed.
-
-  Lemma list_op_comm (l l' : list A) :  l ⋅ l' ≡ l' ⋅ l.
-  Proof.
-    revert l'.
-    induction l; destruct l'; cbn; trivial.
-    rewrite cmra_comm; constructor; trivial.
-  Qed.
-
-  Lemma list_op_core_l (l : list A) :  core l ⋅ l ≡ l.
-  Proof.
-    induction l; cbn; trivial.
-    constructor; auto using cmra_core_l.
-  Qed.
-
-  Lemma list_included_app (x y : A) (l l' : list A) :
-    (x :: l) ≼ (y :: l') ↔ (x  ≼ y) ∧ (l ≼ l').
-  Proof.
-    split.
-    - intros [[|z l''] H].
-      + inversion H; subst.
-        split.
-        * exists (core x); rewrite comm; rewrite cmra_core_l; trivial.
-        * exists (core l); rewrite list_op_comm; rewrite list_op_core_l; trivial.
-      + inversion H; subst. split.
-        * exists z; trivial.
-        * exists l''; trivial.
-    - intros [[z H1] [l'' H2]].
-      eexists (z :: l''); constructor; trivial.
-  Qed.
-
-  Lemma list_core_preserving (l l' : list A) : l ≼ l' → core l ≼ core l'.
-  Proof.
-    revert l'.
-    induction l; destruct l'; cbn; trivial; intros H.
-    - inversion H as [l'' H']; inversion H'; subst; cbn in *.
-      eexists; cbn; trivial.
-    - inversion H as [[|? ?] H']; inversion H'.
-    - apply list_included_app; apply list_included_app in H.
-      intuition auto using cmra_core_preserving.
-  Qed.
-
   Lemma list_lookup_op l1 l2 i : (l1 ⋅ l2) !! i = l1 !! i ⋅ l2 !! i.
   Proof.
-    revert l2 i; induction l1.
-    - induction l2; cbn in *; trivial.
-      destruct i as [|i]; cbn; trivial.
-    - intros [| z l2] i; cbn.
-      + destruct i as [|i]; cbn; trivial. destruct (l1 !! i); trivial.
-      + destruct i as [|i]; cbn; trivial.
+    revert i l2. induction l1 as [|x l1]; intros [|i] [|y l2];
+      by rewrite /= ?left_id_L ?right_id_L.
   Qed.
-
   Lemma list_lookup_core l i : core l !! i = core (l !! i).
-  Proof. revert i; induction l; cbn; trivial. intros [|i]; cbn; trivial. Qed.
+  Proof. revert i; induction l; intros [|i]; simpl; auto. Qed.
 
-  Lemma list_included_spec (l1 l2 : list A) : l1 ≼ l2 ↔ ∀ i, l1 !! i ≼ l2 !! i.
+  Lemma list_lookup_included l1 l2 : l1 ≼ l2 ↔ ∀ i, l1 !! i ≼ l2 !! i.
   Proof.
     split.
-    - revert l2; induction l1; intros [|z l2] H1; cbn; auto.
-      + inversion H1; cbn in *.
-        intros [|i]; [eexists (Some z)|eexists (l2 !! i)]; cbn; eauto.
-        destruct (l2 !! i); trivial.
-      + inversion H1; destruct x; cbn in *;
-          match goal with [H : _ ≡ _ |- _] => inversion H end.
-      + inversion H1; destruct x; cbn in *.
-        * intros i; eexists None.
-          match goal with [H : _ ≡ _ |- _] => rewrite H end.
-          destruct ((a :: l1) !! i); trivial.
-        * intros i.
-          match goal with [H : _ ≡ _ |- _] => rewrite H end.
-          destruct i; cbn; [eexists (Some c); trivial|].
-          apply IHl1.
-          exists x; trivial.
-    - revert l2; induction l1; intros [|z l2] H1; cbn.
-      + eexists []; trivial.
-      + eexists; eauto; cbn; trivial.
-      + specialize (H1 0); cbn in H1.
-        inversion H1 as [x H1']; destruct x; inversion H1'.
-      + set (H2 := H1 0); clearbody H2; cbn in H2.
-        apply list_included_app; split.
-        * inversion H2 as [x H2']; destruct x; inversion H2'; subst;
-            [eexists|eexists (core a)]; eauto.
-          rewrite comm; rewrite cmra_core_l; trivial.
-        * apply IHl1. intros i; apply (H1 (S i)).
+    { intros [l Hl] i. exists (l !! i). by rewrite Hl list_lookup_op. }
+    revert l1. induction l2 as [|y l2 IH]=>-[|x l1] Hl.
+    - by exists [].
+    - destruct (Hl 0) as [[z|] Hz]; inversion Hz.
+    - by exists (y :: l2).
+    - destruct (IH l1) as [l3 ?]; first (intros i; apply (Hl (S i))).
+      destruct (Hl 0) as [[z|] Hz]; inversion_clear Hz; simplify_eq/=.
+      + exists (z :: l3); by constructor.
+      + exists (core x :: l3); constructor; by rewrite ?cmra_core_r.
   Qed.
 
   Definition list_cmra_mixin : CMRAMixin (list A).
   Proof.
     split.
-    - intros n l l' l'' H; apply list_op_ne; trivial.
-    - intros n l l' H ;rewrite H; trivial.
-    - intros n l l' H1 H2.
-      apply (Forall2_Forall_r _ _ _ _ H1).
-      apply Forall_forall => x H3 y H4.
-      eapply Forall_forall in H2; [|eauto]; rewrite -H4; trivial.
-    - intros l; split.
-      + intros H n; apply Forall_forall => x H2.
-        eapply Forall_forall in H2; [|eauto]; eapply cmra_valid_validN; trivial.
-      + intros H; apply Forall_forall => x H2.
-        apply cmra_valid_validN => n.
-        eapply Forall_forall in H; eauto.
-    - intros n l H. apply Forall_forall; intros.
-      eapply Forall_forall in H; eauto using cmra_validN_S.
-    - intros l l' l''; apply list_op_assoc.
-    - intros l l'; apply list_op_comm.
-    - intros l; induction l; [|constructor]; cbn; auto using cmra_core_l.
-    - intros l; induction l; [|constructor]; cbn; auto using cmra_core_idemp.
-    - apply list_core_preserving.
-    - intros n l; induction l; intros [|z l'] H; cbn in *; auto.
-      + constructor.
-      + inversion H; subst; constructor.
-        eapply cmra_validN_op_l; eauto.
-        eapply IHl; eauto.
-    - intros n l; induction l; intros [|z' l']; intros [|z'' l''] H1 H2;
-        try (exfalso; inversion H2; fail); cbn in *.
-      + eexists ([], []); repeat split; trivial; cbn in *.
-      + eexists ([], _); repeat split; cbn in *; eauto.
-      + eexists (_, []); repeat split; do 2 (cbn in *; eauto).
-      + edestruct IHl as [[z1 z2] [H31 [H32 H33]]]; cbn in *.
-        { inversion H1; trivial. }
-        { inversion H2 as [|? ? ? ? H31 H32]; subst; exact H32. }
-        edestruct (cmra_extend n a) as [[w1 w2] [H41 [H42 H43]]]; cbn in *.
-        { inversion H1; trivial. }
-        { inversion H2 as [|? ? ? ? H41 H42]; subst; exact H41. }
-        eexists (w1 :: z1, w2 :: z2); repeat split; cbn.
-        * inversion H2; subst; constructor;eauto.
-        * constructor; auto.
-        * constructor; auto.
+    - intros n l l1 l2; rewrite !list_dist_lookup=> Hl i.
+      by rewrite !list_lookup_op Hl.
+    - apply _.
+    - intros n l1 l2; rewrite !list_dist_lookup !list_lookup_validN=> Hl ? i.
+      by rewrite -Hl.
+    - intros l. rewrite list_lookup_valid. setoid_rewrite list_lookup_validN.
+      setoid_rewrite cmra_valid_validN. naive_solver.
+    - intros n x. rewrite !list_lookup_validN. auto using cmra_validN_S.
+    - intros l1 l2 l3; rewrite list_equiv_lookup=> i.
+      by rewrite !list_lookup_op assoc.
+    - intros l1 l2; rewrite list_equiv_lookup=> i.
+      by rewrite !list_lookup_op comm.
+    - intros l; rewrite list_equiv_lookup=> i.
+      by rewrite list_lookup_op list_lookup_core cmra_core_l.
+    - intros l; rewrite list_equiv_lookup=> i.
+      by rewrite !list_lookup_core cmra_core_idemp.
+    - intros l1 l2; rewrite !list_lookup_included=> Hl i.
+      rewrite !list_lookup_core. by apply cmra_core_preserving.
+    - intros n l1 l2. rewrite !list_lookup_validN.
+      setoid_rewrite list_lookup_op. eauto using cmra_validN_op_l.
+    - intros n l. induction l as [|x l IH]=> -[|y1 l1] [|y2 l2] Hl Hl';
+        try (by exfalso; inversion_clear Hl').
+      + by exists ([], []).
+      + by exists ([], x :: l).
+      + by exists (x :: l, []).
+      + destruct (IH l1 l2) as ([l1' l2']&?&?&?),
+          (cmra_extend n x y1 y2) as ([y1' y2']&?&?&?);
+          [inversion_clear Hl; inversion_clear Hl'; auto ..|]; simplify_eq/=.
+        exists (y1' :: l1', y2' :: l2'); repeat constructor; auto.
   Qed.
-
-  Global Instance empty_list {B : Type} : Empty (list B) := [].
-
   Canonical Structure listR : cmraT := CMRAT list_cofe_mixin list_cmra_mixin.
 
+  Global Instance empty_list : Empty (list A) := [].
   Global Instance list_cmra_unit : CMRAUnit listR.
   Proof.
     split.
     - constructor.
-    - intros h; reflexivity.
-    - intros n H; inversion H; subst; trivial.
+    - by intros l.
+    - by inversion_clear 1.
   Qed.
 
   Global Instance list_cmra_discrete : CMRADiscrete A → CMRADiscrete listR.
-  Proof. split; [apply _|]. intros m H1.
-         apply Forall_forall => x H2; eapply Forall_forall in H1.
-         - apply cmra_discrete_valid; eauto. - trivial.
-  Qed.
-
-  (** Internalized properties *)
-  Lemma list_equivI {M} l1 l2 : (l1 ≡ l2) ⊣⊢ (∀ i, l1 !! i ≡ l2 !! i : uPred M).
   Proof.
-    uPred.unseal.
-    constructor; split => H'.
-    - induction H'; cbn; auto.
-      + constructor.
-      + intros [|i]; cbn; auto.
-        constructor; auto.
-    - revert l2 H'; induction l1; intros [|z l2] H'.
-      + constructor.
-      + specialize (H' 0); inversion H'.
-      + specialize (H' 0); inversion H'.
-      + constructor; auto.
-        * specialize (H' 0); inversion H'; trivial.
-        * apply IHl1. intros i; apply (H' (S i)).
-  Qed.
-  Lemma list_validI {M} l : (✓ l) ⊣⊢ (∀ i, ✓ (l !! i) : uPred M).
-  Proof.
-    uPred.unseal.
-    constructor; split => H'.
-    - induction H'; cbn; auto.
-      + constructor.
-      + intros [|i]; cbn; auto.
-    - revert H'; induction l; intros H'.
-      + constructor.
-      + constructor; auto.
-        * specialize (H' 0); trivial.
-        * apply IHl. intros i; apply (H' (S i)).
-  Qed.
-End cmra.
-
-Arguments listR : clear implicits.
-
-Section properties.
-  Context {A : cmraT}.
-  Implicit Types l : list A.
-  Implicit Types a : A.
-
-  Lemma list_op_nil l : l ⋅ [] = l.
-  Proof.
-    destruct l; trivial.
-  Qed.
-  Lemma list_op_app l1 l2 l3 :
-    length l2 ≤ length l1 → ((l1 ++ l3) ⋅ l2) = (l1 ⋅ l2) ++ l3.
-  Proof.
-    revert l2 l3; induction l1; cbn.
-    - intros []; inversion 1. apply list_op_nil.
-    - intros [] l3; inversion 1; cbn in *; auto with omega;
-        apply (f_equal (cons _)); trivial; apply IHl1; trivial; auto with omega.
-  Qed.
-
-  Lemma list_lookup_validN n l i x : ✓{n} l → l !! i ≡{n}≡ Some x → ✓{n} x.
-  Proof.
-    intros H1 H2.
-    destruct (l !! i) as [z|] eqn:Heq; inversion H2; subst.
-    match goal with [H : _ ≡{n}≡ _ |- _] => rewrite -H end.
-    eapply Forall_lookup in H1; eauto.
-  Qed.
-  Lemma list_lookup_valid l i x : ✓ l → l !! i ≡ Some x → ✓ x.
-  Proof.
-    intros H1 H2.
-    destruct (l !! i) as [z|] eqn:Heq; inversion H2; subst.
-    match goal with [H : _ ≡ _ |- _] => rewrite -H end.
-    eapply Forall_lookup in H1; eauto.
+    split; [apply _|]=> l; rewrite list_lookup_valid list_lookup_validN=> Hl i.
+    by apply cmra_discrete_valid.
   Qed.
 
   Global Instance list_persistent l : (∀ x : A, Persistent x) → Persistent l.
   Proof.
-    intros H.
-    apply equiv_Forall2, Forall2_lookup => i; rewrite list_lookup_core persistent.
-    match goal with [|- option_Forall2 _ ?A ?B] => change B with A end.
-    destruct (l !! i); constructor; trivial.
+    intros ?; apply list_equiv_lookup=> i.
+    by rewrite list_lookup_core (persistent (l !! i)).
   Qed.
 
-  (* Singleton list *)
-  Global Instance list_singleton `{CMRAUnit A} : SingletonM nat A (list A) :=
-    λ n x, (repeat ∅ n) ++ x :: [].
+  (** Internalized properties *)
+  Lemma list_equivI {M} l1 l2 : (l1 ≡ l2) ⊣⊢ (∀ i, l1 !! i ≡ l2 !! i : uPred M).
+  Proof. uPred.unseal; constructor=> n x ?. apply list_dist_lookup. Qed.
+  Lemma list_validI {M} l : (✓ l) ⊣⊢ (∀ i, ✓ (l !! i) : uPred M).
+  Proof. uPred.unseal; constructor=> n x ?. apply list_lookup_validN. Qed.
+End cmra.
 
-  Global Instance list_singleton_proper `{CMRAUnit A} i :
-    Proper ((≡) ==> (≡)) (list_singleton i).
-  Proof. intros x y Hx; induction i; constructor; trivial. Qed.
+Arguments listR : clear implicits.
 
-  Global Instance list_singleton_ne `{CMRAUnit A} n i :
-    Proper ((dist n) ==> (dist n)) (list_singleton i).
-  Proof. intros x y Hx; induction i; constructor; trivial. Qed.
+Global Instance list_singletonM `{Empty A} : SingletonM nat A (list A) := λ n x,
+  replicate n ∅ ++ [x].
 
-  Lemma in_list_singleton `{CMRAUnit A} i z x : z ∈ {[i := x]} → z = ∅ ∨ z = x.
+Section properties.
+  Context {A : cmraT}.
+  Implicit Types l : list A.
+  Local Arguments op _ _ !_ !_ / : simpl nomatch.
+  Local Arguments cmra_op _ !_ !_ / : simpl nomatch.
+
+  Lemma list_op_app l1 l2 l3 :
+    length l2 ≤ length l1 → (l1 ++ l3) ⋅ l2 = (l1 ⋅ l2) ++ l3.
   Proof.
-    induction i; cbn.
-    - inversion_clear 1 as [|? ? ? H2]; [right | inversion H2]; trivial.
-    - inversion 1; subst; [left|]; auto.
-  Qed.
-  Lemma list_Singleton_lookup `{CMRAUnit A} i x : {[ i := x ]} !! i = Some x.
-  Proof.
-    induction i; cbn; trivial.
-  Qed.
-  Lemma list_Singleton_lookup_2 `{CMRAUnit A} i j x :
-    i ≠ j → {[ i := x ]} !! j = None ∨ {[ i := x ]} !! j = Some ∅.
-  Proof. revert j; induction i; destruct j; cbn; auto with omega. Qed.
-  Lemma list_singleton_validN `{CMRAUnit A} n i x : ✓{n} {[ i := x ]} ↔ ✓{n} x.
-  Proof.
-    split.
-    - intros H'1; eapply (list_lookup_validN _ _ i); eauto.
-      rewrite list_Singleton_lookup; trivial.
-    - intros H'2. apply Forall_forall; intros z H'3.
-        apply in_list_singleton in H'3; destruct H'3; subst; trivial.
-        eapply cmra_valid_validN, cmra_unit_valid.
-  Qed.
-  Lemma list_singleton_valid `{CMRAUnit A} i x : ✓ ({[ i := x ]}) ↔ ✓ x.
-  Proof. rewrite !cmra_valid_validN. by setoid_rewrite list_singleton_validN. Qed.
-
-  Lemma list_core_singleton `{CMRAUnit A} i (x : A) :
-    core ({[ i := x ]}) ≡ {[ i := core x ]}.
-  Proof.
-    induction i; trivial.
-    unfold core, cmra_core; cbn.
-    constructor; auto.
-    etrans; [|apply cmra_core_l]; rewrite comm.
-    rewrite cmra_unit_left_id; trivial.
-  Qed.
-  Lemma list_op_singleton `{CMRAUnit A} i (x y : A) :
-    {[ i := x ]} ⋅ {[ i := y ]} ≡ ({[ i := x ⋅ y ]}).
-  Proof.
-    induction i; cbn; trivial.
-    unfold op, cmra_op, list_op; cbn.
-    constructor; auto.
-    eapply cmra_unit_left_id; eauto.
+    revert l2 l3.
+    induction l1 as [|x1 l1]=> -[|x2 l2] [|x3 l3] ?; f_equal/=; auto with lia.
   Qed.
 
-  Global Instance list_singleton_persistent `{CMRAUnit A} i (x : A) :
-  Persistent x → Persistent {[ i := x ]}.
-  Proof. intros. by rewrite /Persistent list_core_singleton persistent. Qed.
+  Lemma list_lookup_validN_Some n l i x : ✓{n} l → l !! i ≡{n}≡ Some x → ✓{n} x.
+  Proof. move=> /list_lookup_validN /(_ i)=> Hl Hi; move: Hl. by rewrite Hi. Qed.
+  Lemma list_lookup_valid_Some l i x : ✓ l → l !! i ≡ Some x → ✓ x.
+  Proof. move=> /list_lookup_valid /(_ i)=> Hl Hi; move: Hl. by rewrite Hi. Qed.
 
-  (* list update *)
+  Lemma list_op_length l1 l2 : length (l1 ⋅ l2) = max (length l1) (length l2).
+  Proof. revert l2. induction l1; intros [|??]; f_equal/=; auto. Qed.
+
+  Lemma replicate_valid n (x : A) : ✓ x → ✓ replicate n x.
+  Proof. apply Forall_replicate. Qed.
+
+  (* Singleton lists *)
+  Section singleton.
+    Context `{CMRAUnit A}.
+
+    Global Instance list_singletonM_ne n i :
+      Proper (dist n ==> dist n) (list_singletonM i).
+    Proof. intros l1 l2 ?. apply Forall2_app; by repeat constructor. Qed.
+    Global Instance list_singletonM_proper i :
+      Proper ((≡) ==> (≡)) (list_singletonM i) := ne_proper _.
+
+    Lemma elem_of_list_singletonM i z x : z ∈ {[i := x]} → z = ∅ ∨ z = x.
+    Proof.
+      rewrite elem_of_app elem_of_list_singleton elem_of_replicate. naive_solver.
+    Qed.
+    Lemma list_lookup_singletonM i x : {[ i := x ]} !! i = Some x.
+    Proof. induction i; by f_equal/=. Qed.
+    Lemma list_lookup_singletonM_ne i j x :
+      i ≠ j → {[ i := x ]} !! j = None ∨ {[ i := x ]} !! j = Some ∅.
+    Proof. revert j; induction i; intros [|j]; naive_solver auto with omega. Qed.
+    Lemma list_singletonM_validN n i x : ✓{n} {[ i := x ]} ↔ ✓{n} x.
+    Proof.
+      rewrite list_lookup_validN. split.
+      { move=> /(_ i). by rewrite list_lookup_singletonM. }
+      intros Hx j; destruct (decide (i = j)); subst.
+      - by rewrite list_lookup_singletonM.
+      - destruct (list_lookup_singletonM_ne i j x) as [Hi|Hi]; first done;
+          rewrite Hi; by try apply (cmra_unit_validN (A:=A)).
+    Qed.
+    Lemma list_singleton_valid  i x : ✓ {[ i := x ]} ↔ ✓ x.
+    Proof.
+      rewrite !cmra_valid_validN. by setoid_rewrite list_singletonM_validN.
+    Qed.
+    Lemma list_singletonM_length i x : length {[ i := x ]} = S i.
+    Proof.
+      rewrite /singletonM /list_singletonM app_length replicate_length /=; lia.
+    Qed.
+
+    Lemma list_core_singletonM i (x : A) : core {[ i := x ]} ≡ {[ i := core x ]}.
+    Proof.
+      rewrite /singletonM /list_singletonM /=.
+      induction i; constructor; auto using cmra_core_unit.
+    Qed.
+    Lemma list_op_singletonM i (x y : A) :
+      {[ i := x ]} ⋅ {[ i := y ]} ≡ {[ i := x ⋅ y ]}.
+    Proof.
+      rewrite /singletonM /list_singletonM /=.
+      induction i; constructor; rewrite ?left_id; auto.
+    Qed.
+    Lemma list_alter_singletonM f i x : alter f i {[i := x]} = {[i := f x]}.
+    Proof.
+      rewrite /singletonM /list_singletonM /=.
+      induction i; f_equal/=; auto.
+    Qed.
+    Global Instance list_singleton_persistent i (x : A) :
+      Persistent x → Persistent {[ i := x ]}.
+    Proof. intros. by rewrite /Persistent list_core_singletonM persistent. Qed.
+  End singleton.
+
+  (* Update *)
   Lemma list_update_updateP (P : A → Prop) (Q : list A → Prop) l1 x l2 :
     x ~~>: P → (∀ y, P y → Q (l1 ++ y :: l2)) → l1 ++ x :: l2 ~~>: Q.
   Proof.
-    intros Hx%option_updateP' HP n mf Hm.
-    destruct (Hx n (mf !! (length l1))) as ([y|]&H1&H2); try done.
-    { replace (Some x) with ((l1 ++ x :: l2) !! length l1).
-      - rewrite -list_op_lookup.
-        destruct (((l1 ++ x :: l2) ⋅ mf) !! length l1) eqn:Heq.
-        + eapply Forall_lookup in Hm; eauto; trivial.
-        + contradict Heq.
-          rewrite list_op_lookup.
-          rewrite lookup_app_r; trivial.
-          replace (length l1 - length l1) with 0 by omega.
-          match goal with
-            [|- _ ⋅ ?A ≠ _] => destruct A; unfold op, cmra_op; cbn; congruence
-          end.
-      - rewrite lookup_app_r; trivial.
-        replace (length l1 - length l1) with 0 by omega; trivial.
-    }
-    eexists. split.
-    { apply HP; apply H1. }
-    apply Forall_lookup => i z H'.
-    rewrite list_op_lookup in H'.
-    destruct (lt_dec i (length l1)).
-    { rewrite lookup_app_l in H'; trivial.
-      eapply Forall_lookup in Hm; eauto.
-      rewrite list_op_lookup.
-      rewrite lookup_app_l; eauto.
-    }
-    destruct (eq_nat_dec i (length l1)); subst.
-    { rewrite lookup_app_r in H'; trivial.
-      replace (length l1 - length l1) with 0 in H' by omega.
-      cbn in H'.
-      rewrite H' in H2; trivial.
-    }
-    {
-      rewrite lookup_app_r in H'; try omega.
-      destruct (i - length l1) as [|j] eqn:Heq; try omega.
-      eapply Forall_lookup in Hm; eauto.
-      rewrite list_op_lookup; trivial.
-      erewrite (lookup_app_r _ _ i); auto with omega.
-      rewrite Heq; trivial.
-    }
+    intros Hx%option_updateP' HP n mf; rewrite list_lookup_validN=> Hm.
+    destruct (Hx n (mf !! length l1)) as ([y|]&H1&H2); simpl in *; try done.
+    { move: (Hm (length l1)). by rewrite list_lookup_op list_lookup_middle. }
+    exists (l1 ++ y :: l2); split; auto.
+    apply list_lookup_validN=> i.
+    destruct (lt_eq_lt_dec i (length l1)) as [[?|?]|?]; subst.
+    - move: (Hm i); by rewrite !list_lookup_op !lookup_app_l.
+    - by rewrite list_lookup_op list_lookup_middle.
+    - move: (Hm i). rewrite !(cons_middle _ l1 l2) !assoc.
+      rewrite !list_lookup_op !lookup_app_r !app_length //=; lia.
   Qed.
 
-  Lemma list_update_update l1 l2 x y : x ~~> y → (l1 ++ x :: l2) ~~> (l1 ++ y :: l2).
+  Lemma list_update_update l1 l2 x y : x ~~> y → l1 ++ x :: l2 ~~> l1 ++ y :: l2.
   Proof.
     rewrite !cmra_update_updateP => H; eauto using list_update_updateP with subst.
   Qed.
-
-  Lemma list_op_add_unit `{CMRAUnit A} l n mf :
-    ✓{n} (l ⋅ mf) → ✓{n} ((l ++ (repeat ∅ (length mf - length l))) ⋅ mf).
-  Proof.
-    revert l mf; induction l; [induction mf|]; cbn; trivial.
-    - inversion_clear 1; subst; constructor.
-      + rewrite cmra_unit_left_id; trivial.
-      + replace (length mf) with (length mf - 0) by omega. apply IHmf; trivial.
-    - intros [|z mf]; cbn.
-      + rewrite ?list_op_nil app_nil_r; trivial.
-      + inversion_clear 1; subst; constructor; trivial.
-        apply IHl; trivial.
-  Qed.
-  Lemma list_allocate_lemma `{CMRAUnit A} l x n mf :
-    ✓ x → ✓{n} (l ⋅ mf) → ✓{n} ((l ++ {[ (length mf - length l) := x]}) ⋅ mf).
-  Proof.
-    intros H1 H2. rewrite app_assoc. rewrite list_op_app.
-    - apply Forall_app; split; [|repeat constructor; apply cmra_valid_validN; trivial].
-      apply list_op_add_unit; trivial.
-    - rewrite app_length repeat_length; omega.
-  Qed.
-
-  (* list allocate update *)
-  Lemma list_alloc_updateP `{CMRAUnit A} (P : A → Prop) (Q : list A → Prop) l x :
-    ✓ x → (∀ i, Q (l ++ {[ i := x]})) → l ~~>: Q.
-  Proof.
-    intros Hx HP n mf Hm.
-    exists (l ++ {[ (length mf - length l) := x]}); split; auto using list_allocate_lemma.
-  Qed.
-
-  Lemma list_alloc_update `{CMRAUnit A} l x :
-    ✓ x → l ~~>: λ l', ∃ i, l' = (l ++ {[ i := x]}).
-  Proof. intros H1 n; eauto using list_allocate_lemma. Qed.
 
   (* Applying a local update at a position we own is a local update. *)
   Global Instance list_alter_update `{LocalUpdate A Lv L} i :
     LocalUpdate (λ L, ∃ x, L !! i = Some x ∧ Lv x) (alter L i).
   Proof.
-    split; first apply _.
-    intros n l1 l2 (x&Hix&?) Hm. apply Forall2_lookup => j.
-    destruct (decide (i = j)) as [->|Heq].
-    - revert l1 l2 Hix Hm.
-      induction j; intros [|z l1] [|z' l2] Hix Hm; cbn;
-        try congruence; try inversion Hix; subst.
-      + constructor; trivial.
-      + constructor.
-        eapply local_updateN; eauto. inversion Hm; trivial.
-      + unfold op, cmra_op; cbn.
-        match goal with [|- option_Forall2 _ ?A ?A] => destruct A; constructor; trivial end.
-      + unfold op, cmra_op; cbn.
-        apply IHj; trivial.
-        inversion Hm; trivial.
-    - revert i Heq l1 l2 Hix Hm.
-      induction j; intros i Heq [|z l1] [|z' l2] Hix Hm; cbn;
-        try congruence; try inversion Hix; subst.
-      + unfold op, cmra_op; destruct i; cbn; constructor; trivial.
-      + unfold op, cmra_op; destruct i; cbn; constructor; trivial.
-        inversion H2; subst.
-        eapply local_updateN; eauto. inversion Hm; trivial.
-      + unfold op, cmra_op; cbn.
-        unfold op, cmra_op; destruct i; cbn;
-          match goal with [|- option_Forall2 _ ?A ?A] =>
-                          destruct A; constructor; trivial end.
-      + unfold op, cmra_op; destruct i; cbn.
-        * match goal with [|- option_Forall2 _ ?A ?A] =>
-                          destruct A; constructor; trivial end.
-        * apply IHj; eauto.
-          inversion Hm; trivial.
+    split; [apply _|]; intros n l1 l2 (x&Hi1&?) Hm; apply list_dist_lookup=> j.
+    destruct (decide (j = i)); subst; last first.
+    { by rewrite list_lookup_op !list_lookup_alter_ne // list_lookup_op. }
+    rewrite list_lookup_op !list_lookup_alter list_lookup_op Hi1.
+    destruct (l2 !! i) as [y|] eqn:Hi2; rewrite Hi2; constructor; auto.
+    eapply (local_updateN L), (list_lookup_validN_Some _ _ i); eauto.
+    by rewrite list_lookup_op Hi1 Hi2.
   Qed.
-
-  (* altering a singleton is just altering the underlying element. *)
-  Lemma list_alter_singleton `{CMRAUnit A} {L : A → A} i x :
-    alter L i {[i := x]} = {[i := L x]}.
-  Proof.
-    induction i; simpl; trivial.
-    apply (f_equal (cons _)); simpl; trivial.
-  Qed.
-
 End properties.
 
 (** Functor *)
 Instance list_fmap_cmra_monotone {A B : cmraT} (f : A → B)
-  `{!CMRAMonotone f} : CMRAMonotone (map f).
+  `{!CMRAMonotone f} : CMRAMonotone (fmap f : list A → list B).
 Proof.
   split; try apply _.
-  - intros n l H1. induction l; inversion H1; constructor.
-    + apply validN_preserving; trivial.
-    + apply IHl; trivial.
-  - intros l1 l2 H1.
-    apply list_included_spec.
-    intros i.
-    do 2 rewrite list_lookup_fmap.
-    apply included_preserving; eauto.
-    typeclasses eauto.
-    apply list_included_spec; trivial.
+  - intros n l. rewrite !list_lookup_validN=> Hl i. rewrite list_lookup_fmap.
+    by apply (validN_preserving (fmap f : option A → option B)).
+  - intros l1 l2. rewrite !list_lookup_included=> Hl i. rewrite !list_lookup_fmap.
+    by apply (included_preserving (fmap f : option A → option B)).
 Qed.
 
 Program Definition listRF (F : rFunctor) : rFunctor := {|
@@ -592,16 +367,14 @@ Next Obligation.
   by intros F ???? n f g Hfg; apply listC_map_ne, rFunctor_ne.
 Qed.
 Next Obligation.
-  intros F ?? x; cbn in *.
-  apply equiv_Forall2, Forall2_fmap_l, Forall_Forall2, Forall_forall;
-    auto using rFunctor_id.
+  intros F A B x. rewrite /= -{2}(list_fmap_id x).
+  apply list_fmap_setoid_ext=>y. apply rFunctor_id.
 Qed.
 Next Obligation.
-  intros F A1 A2 A3 B1 B2 B3 f g f' g' x; cbn in *.
-  rewrite -list_fmap_compose.
-  apply equiv_Forall2, Forall2_fmap, Forall_Forall2, Forall_forall.
-  intros; apply rFunctor_compose.
+  intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -list_fmap_compose.
+  apply list_fmap_setoid_ext=>y; apply rFunctor_compose.
 Qed.
+
 Instance listRF_contractive F :
   rFunctorContractive F → rFunctorContractive (listRF F).
 Proof.
