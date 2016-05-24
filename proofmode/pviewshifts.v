@@ -186,7 +186,7 @@ Tactic Notation "iTimeless" constr(H) :=
 Tactic Notation "iTimeless" constr(H) "as" constr(Hs) :=
   iTimeless H; iDestruct H as Hs.
 
-Tactic Notation "iPvsAssert" constr(Q) "as" constr(pat) "with" constr(Hs) :=
+Tactic Notation "iPvsAssert" constr(Q) "with" constr(Hs) "as" constr(pat) :=
   let H := iFresh in
   let Hs := spec_pat.parse_one Hs in
   lazymatch Hs with
@@ -200,4 +200,4 @@ Tactic Notation "iPvsAssert" constr(Q) "as" constr(pat) "with" constr(Hs) :=
   | ?pat => fail "iPvsAssert: invalid pattern" pat
   end.
 Tactic Notation "iPvsAssert" constr(Q) "as" constr(pat) :=
-  iPvsAssert Q as pat with "[]".
+  iPvsAssert Q with "[]" as pat.

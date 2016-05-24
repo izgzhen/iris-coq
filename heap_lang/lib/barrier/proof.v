@@ -110,7 +110,7 @@ Proof.
   iAssert (barrier_ctx γ' l P)%I as "#?".
   { rewrite /barrier_ctx. by repeat iSplit. }
   iPvsAssert (sts_ownS γ' (i_states γ) {[Change γ]}
-    ★ sts_ownS γ' low_states {[Send]})%I as "[Hr Hs]" with "[-]".
+    ★ sts_ownS γ' low_states {[Send]})%I with "[-]" as "[Hr Hs]".
   { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
     + set_solver.
     + iApply (sts_own_weaken with "Hγ'");
@@ -148,7 +148,7 @@ Proof.
     iExists (State Low I), {[ Change i ]}; iSplit; [done|iSplitL "Hl Hr"].
     { iNext. rewrite {2}/barrier_inv /=. by iFrame "Hl". }
     iIntros "Hγ".
-    iPvsAssert (sts_ownS γ (i_states i) {[Change i]})%I as "Hγ" with "[Hγ]".
+    iPvsAssert (sts_ownS γ (i_states i) {[Change i]})%I with "[Hγ]" as "Hγ".
     { iApply (sts_own_weaken with "Hγ"); eauto using i_states_closed. }
     wp_op=> ?; simplify_eq; wp_if. iApply ("IH" with "Hγ [HQR] HΦ"). by iNext.
   - (* a High state: the comparison succeeds, and we perform a transition and
@@ -157,7 +157,7 @@ Proof.
     iSplit; [iPureIntro; by eauto using wait_step|].
     iDestruct "Hr" as {Ψ} "[HΨ Hsp]".
     iDestruct (big_sepS_delete _ _ i with "Hsp") as "[#HΨi Hsp]"; first done.
-    iAssert (▷ Ψ i ★ ▷ Π★{set (I ∖ {[i]})} Ψ)%I as "[HΨ HΨ']" with "[HΨ]".
+    iAssert (▷ Ψ i ★ ▷ Π★{set (I ∖ {[i]})} Ψ)%I with "[HΨ]" as "[HΨ HΨ']".
     { iNext. iApply (big_sepS_delete _ _ i); first done. by iApply "HΨ". }
     iSplitL "HΨ' Hl Hsp"; [iNext|].
     + rewrite {2}/barrier_inv /=; iFrame "Hl".
@@ -185,7 +185,7 @@ Proof.
     iApply (ress_split _ _ _ Q R1 R2); eauto. iFrame "Hr HQR". by repeat iSplit.
   - iIntros "Hγ".
     iPvsAssert (sts_ownS γ (i_states i1) {[Change i1]}
-      ★ sts_ownS γ (i_states i2) {[Change i2]})%I as "[Hγ1 Hγ2]" with "[-]".
+      ★ sts_ownS γ (i_states i2) {[Change i2]})%I with "[-]" as "[Hγ1 Hγ2]".
     { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
       + set_solver.
       + iApply (sts_own_weaken with "Hγ");

@@ -26,7 +26,7 @@ Proof.
   iDestruct "H1" as {z1 z2 c} "(H1&_&#Hc)".
   iPoseProof "Hc" as "foo".
   iRevert {a b} "Ha Hb". iIntros {b a} "Hb {foo} Ha".
-  iAssert (uPred_ownM (a ⋅ core a))%I as "[Ha #Hac]" with "[Ha]".
+  iAssert (uPred_ownM (a ⋅ core a)) with "[Ha]" as "[Ha #Hac]".
   { by rewrite cmra_core_r. }
   iFrame "Ha Hac".
   iExists (S j + z1), z2.

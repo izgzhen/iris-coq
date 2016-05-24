@@ -699,7 +699,7 @@ Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
               ltac:(iIntros { x1 x2 x3 x4 x5 x6 x7 x8 }).
 
 (** * Assert *)
-Tactic Notation "iAssert" constr(Q) "as" constr(pat) "with" constr(Hs) :=
+Tactic Notation "iAssert" constr(Q) "with" constr(Hs) "as" constr(pat) :=
   let H := iFresh in
   let Hs := spec_pat.parse Hs in
   lazymatch Hs with
@@ -716,7 +716,7 @@ Tactic Notation "iAssert" constr(Q) "as" constr(pat) "with" constr(Hs) :=
   | ?pat => fail "iAssert: invalid pattern" pat
   end.
 Tactic Notation "iAssert" constr(Q) "as" constr(pat) :=
-  iAssert Q as pat with "[]".
+  iAssert Q with "[]" as pat.
 
 (** * Rewrite *)
 Local Ltac iRewriteFindPred :=
