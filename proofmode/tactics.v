@@ -190,7 +190,10 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
        eapply tac_specialize_assert with _ _ _ H1 _ lr Hs _ _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
-         |match k with GoalStd => apply to_assert_fallthrough | GoalPvs => apply _ end
+         |match k with
+          | GoalStd => apply to_assert_fallthrough
+          | GoalPvs => apply _ || fail "iSpecialize: cannot generate pvs goal"
+          end
          |env_cbv; reflexivity || fail "iSpecialize:" Hs "not found"
          |(*goal*)
          |go H1 pats]
@@ -713,7 +716,10 @@ Tactic Notation "iAssert" constr(Q) "with" constr(Hs) "as" constr(pat) :=
        |iDestructHyp H as pat]
   | [SGoal ?k ?lr ?Hs] =>
      eapply tac_assert with _ _ _ lr Hs H Q _; (* (js:=Hs) (j:=H) (P:=Q) *)
-       [match k with GoalStd => apply to_assert_fallthrough | GoalPvs => apply _ end
+       [match k with
+        | GoalStd => apply to_assert_fallthrough
+        | GoalPvs => apply _ || fail "iAssert: cannot generate pvs goal"
+        end
        |env_cbv; reflexivity || fail "iAssert:" Hs "not found"
        |env_cbv; reflexivity|
        |iDestructHyp H as pat]
