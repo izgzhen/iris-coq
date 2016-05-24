@@ -1,7 +1,9 @@
 From iris.prelude Require Export strings.
 
+Inductive spec_goal_kind := GoalStd | GoalPvs.
+
 Inductive spec_pat :=
-  | SGoal : bool → list string → spec_pat
+  | SGoal : spec_goal_kind → bool → list string → spec_pat
   | SGoalPersistent : spec_pat
   | SGoalPure : spec_pat
   | SName : bool → string → spec_pat (* first arg = persistent *)
@@ -15,7 +17,8 @@ Inductive token :=
   | TBracketR : token
   | TPersistent : token
   | TPure : token
-  | TForall : token.
+  | TForall : token
+  | TPvs : token.
 
 Fixpoint cons_name (kn : string) (k : list token) : list token :=
   match kn with "" => k | _ => TName (string_rev kn) :: k end.
@@ -29,13 +32,14 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String "#" s => tokenize_go s (TPersistent :: cons_name kn k) ""
   | String "%" s => tokenize_go s (TPure :: cons_name kn k) ""
   | String "*" s => tokenize_go s (TForall :: cons_name kn k) ""
+  | String "=" (String ">" s) => tokenize_go s (TPvs :: cons_name kn k) ""
   | String a s => tokenize_go s k (String a kn)
   end.
 Definition tokenize (s : string) : list token := tokenize_go s [] "".
 
 Inductive state :=
   | StTop : state
-  | StAssert : bool → list string → state.
+  | StAssert : spec_goal_kind → bool → list string → state.
 
 Fixpoint parse_go (ts : list token) (s : state)
     (k : list spec_pat) : option (list spec_pat) :=
@@ -46,16 +50,18 @@ Fixpoint parse_go (ts : list token) (s : state)
      | TName s :: ts => parse_go ts StTop (SName false s :: k)
      | TBracketL :: TPersistent :: TBracketR :: ts => parse_go ts StTop (SGoalPersistent :: k)
      | TBracketL :: TPure :: TBracketR :: ts => parse_go ts StTop (SGoalPure :: k)
-     | TBracketL :: ts => parse_go ts (StAssert false []) k
+     | TBracketL :: ts => parse_go ts (StAssert GoalStd false []) k
+     | TPvs :: TBracketL :: ts => parse_go ts (StAssert GoalPvs false []) k
+     | TPvs :: ts => parse_go ts StTop (SGoal GoalPvs true [] :: k)
      | TPersistent :: TName s :: ts => parse_go ts StTop (SName true s :: k)
      | TForall :: ts => parse_go ts StTop (SForall :: k)
      | _ => None
      end
-  | StAssert neg ss =>
+  | StAssert kind neg ss =>
      match ts with
-     | TMinus :: ts => guard (¬neg ∧ ss = []); parse_go ts (StAssert true ss) k
-     | TName s :: ts => parse_go ts (StAssert neg (s :: ss)) k
-     | TBracketR :: ts => parse_go ts StTop (SGoal neg (rev ss) :: k)
+     | TMinus :: ts => guard (¬neg ∧ ss = []); parse_go ts (StAssert kind true ss) k
+     | TName s :: ts => parse_go ts (StAssert kind neg (s :: ss)) k
+     | TBracketR :: ts => parse_go ts StTop (SGoal kind neg (rev ss) :: k)
      | _ => None
      end
   end.

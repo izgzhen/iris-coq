@@ -494,24 +494,28 @@ Proof.
     by rewrite right_id assoc (to_wand R) always_if_elim wand_elim_r wand_elim_r.
 Qed.
 
-Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q lr js P1 P2 R Q :
+Class ToAssert (P : uPred M) (Q : uPred M) (R : uPred M) :=
+  to_assert : (R ★ (P -★ Q)) ⊢ Q.
+Global Arguments to_assert _ _ _ {_}.
+Lemma to_assert_fallthrough P Q : ToAssert P Q P.
+Proof. by rewrite /ToAssert wand_elim_r. Qed.
+
+Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q lr js R P1 P2 P1' Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
-  ToWand R P1 P2 →
+  ToWand R P1 P2 → ToAssert P1 Q P1' →
   ('(Δ1,Δ2) ← envs_split lr js Δ';
-    Δ2' ← envs_app (envs_persistent Δ1 && q) (Esnoc Enil j P2) Δ2;
+    Δ2' ← envs_app false (Esnoc Enil j P2) Δ2;
     Some (Δ1,Δ2')) = Some (Δ1,Δ2') → (* does not preserve position of [j] *)
-  Δ1 ⊢ P1 → Δ2' ⊢ Q → Δ ⊢ Q.
+  Δ1 ⊢ P1' → Δ2' ⊢ Q → Δ ⊢ Q.
 Proof.
-  intros [? ->]%envs_lookup_delete_Some ?? HP1 <-.
+  intros [? ->]%envs_lookup_delete_Some ??? HP1 HQ.
   destruct (envs_split _ _ _) as [[? Δ2]|] eqn:?; simplify_eq/=;
     destruct (envs_app _ _ _) eqn:?; simplify_eq/=.
   rewrite envs_lookup_sound // envs_split_sound //.
   rewrite (envs_app_sound Δ2) //; simpl.
-  destruct (envs_persistent Δ1) eqn:?; simplify_eq/=.
-  - rewrite right_id (to_wand R) (persistentP Δ1) HP1.
-    by rewrite assoc (always_elim_if q) -always_if_sep wand_elim_l wand_elim_r.
-  - rewrite right_id (to_wand R).
-    by rewrite always_if_elim assoc HP1 wand_elim_l wand_elim_r.
+  rewrite right_id (to_wand R) HP1 assoc -(comm _ P1') -assoc.
+  rewrite -(to_assert P1 Q); apply sep_mono_r, wand_intro_l.
+  by rewrite always_if_elim assoc !wand_elim_r.
 Qed.
 
 Lemma tac_specialize_pure Δ Δ' j q R P1 P2 φ Q :
@@ -559,14 +563,15 @@ Proof.
   intros HΔ. by rewrite envs_clear_spatial_sound HΔ env_fold_wand wand_elim_l.
 Qed.
 
-Lemma tac_assert Δ Δ1 Δ2 Δ2' lr js j P Q :
+Lemma tac_assert Δ Δ1 Δ2 Δ2' lr js j P Q R :
+  ToAssert P Q R →
   envs_split lr js Δ = Some (Δ1,Δ2) →
   envs_app false (Esnoc Enil j P) Δ2 = Some Δ2' →
-  Δ1 ⊢ P → Δ2' ⊢ Q → Δ ⊢ Q.
+  Δ1 ⊢ R → Δ2' ⊢ Q → Δ ⊢ Q.
 Proof.
-  intros ?? HP HQ. rewrite envs_split_sound //.
+  intros ??? HP HQ. rewrite envs_split_sound //.
   rewrite (envs_app_sound Δ2) //; simpl.
-  by rewrite right_id HP HQ wand_elim_r.
+  by rewrite right_id HP HQ.
 Qed.
 
 Lemma tac_assert_persistent Δ Δ' j P Q :

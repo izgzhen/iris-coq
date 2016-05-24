@@ -1,5 +1,5 @@
 From iris.proofmode Require Import tactics.
-From iris.proofmode Require Import pviewshifts.
+From iris.proofmode Require Import pviewshifts invariants.
 
 Lemma demo_0 {M : cmraT} (P Q : uPred M) :
   □ (P ∨ Q) ⊢ ((∀ x, x = 0 ∨ x = 1) → (Q ∨ P)).
@@ -83,13 +83,26 @@ Qed.
 
 Section iris.
   Context {Λ : language} {Σ : iFunctor}.
+  Implicit Types E : coPset.
+  Implicit Types P Q : iProp Λ Σ.
 
-  Lemma demo_7 (E1 E2 E : coPset) (P : iProp Λ Σ) :
+  Lemma demo_7 E1 E2 E P :
     E1 ⊆ E2 → E ⊆ E1 →
     (|={E1,E}=> ▷ P) ⊢ (|={E2,E ∪ E2 ∖ E1}=> ▷ P).
   Proof.
     iIntros {? ?} "Hpvs".
-    iPvs "Hpvs"; first (split_and?; set_solver).
+    iPvs "Hpvs"; first set_solver.
     done.
+  Qed.
+
+  Lemma demo_8 N E P Q R :
+    nclose N ⊆ E →
+    (True -★ P -★ inv N Q -★ True -★ R) ⊢ (P -★ ▷ Q -★ |={E}=> R).
+  Proof.
+    iIntros {?} "H HP HQ".
+    iApply ("H" with "[#] HP =>[HQ] =>").
+    - done.
+    - by iApply inv_alloc.
+    - by iPvsIntro.
   Qed.
 End iris.

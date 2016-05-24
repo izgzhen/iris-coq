@@ -186,10 +186,11 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
          |env_cbv; reflexivity
          |(*goal*)
          |go H1 pats]
-    | SGoal ?lr ?Hs :: ?pats =>
-       eapply tac_specialize_assert with _ _ _ H1 _ lr Hs _ _ _;
+    | SGoal ?k ?lr ?Hs :: ?pats =>
+       eapply tac_specialize_assert with _ _ _ H1 _ lr Hs _ _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
+         |match k with GoalStd => apply to_assert_fallthrough | GoalPvs => apply _ end
          |env_cbv; reflexivity || fail "iSpecialize:" Hs "not found"
          |(*goal*)
          |go H1 pats]
@@ -225,24 +226,25 @@ Tactic Notation "iPoseProof" open_constr(t) :=
   let H := iFresh in iPoseProof t as H.
 
 (** * Apply *)
-Tactic Notation "iApplyCore" constr(H) := first
-  [iExact H
-  |eapply tac_apply with _ H _ _ _;
-     [env_cbv; reflexivity || fail 1 "iApply:" H "not found"
-     |apply _ || fail 1 "iApply: cannot apply" H|]].
-
 Tactic Notation "iApply" open_constr(t) :=
+  let finish H := first
+    [iExact H
+    |eapply tac_apply with _ H _ _ _;
+       [env_cbv; reflexivity || fail 1 "iApply:" H "not found"
+       |let P := match goal with |- ToWand ?P _ _ => P end in
+        apply _ || fail 1 "iApply: cannot apply" H ":" P
+       |lazy beta (* reduce betas created by instantiation *)]] in
   let Htmp := iFresh in
   lazymatch t with
   | ITrm ?H ?xs ?pat =>
      iPoseProofCore H as Htmp; last (
        iSpecializeArgs Htmp xs;
        try (iSpecializeArgs Htmp (hcons _ _));
-       iSpecializePat Htmp pat; last iApplyCore Htmp)
+       iSpecializePat Htmp pat; last finish Htmp)
   | _ =>
      iPoseProofCore t as Htmp; last (
        try (iSpecializeArgs Htmp (hcons _ _));
-       iApplyCore Htmp)
+       finish Htmp)
   end; try apply _.
 
 (** * Revert *)
@@ -703,18 +705,21 @@ Tactic Notation "iAssert" constr(Q) "with" constr(Hs) "as" constr(pat) :=
   let H := iFresh in
   let Hs := spec_pat.parse Hs in
   lazymatch Hs with
-  | [SGoal ?lr ?Hs] =>
-     eapply tac_assert with _ _ _ lr Hs H Q; (* (js:=Hs) (j:=H) (P:=Q) *)
-       [env_cbv; reflexivity || fail "iAssert:" Hs "not found"
-       |env_cbv; reflexivity|
-       |iDestructHyp H as pat]
-  | [SGoalPersistent]  =>
+  | [SGoalPersistent] =>
      eapply tac_assert_persistent with _ H Q; (* (j:=H) (P:=Q) *)
-       [apply _ || fail "iAssert:" Q "not persistent"
+       [env_cbv; reflexivity
+       |(*goal*)
+       |apply _ || fail "iAssert:" Q "not persistent"
+       |iDestructHyp H as pat]
+  | [SGoal ?k ?lr ?Hs] =>
+     eapply tac_assert with _ _ _ lr Hs H Q _; (* (js:=Hs) (j:=H) (P:=Q) *)
+       [match k with GoalStd => apply to_assert_fallthrough | GoalPvs => apply _ end
+       |env_cbv; reflexivity || fail "iAssert:" Hs "not found"
        |env_cbv; reflexivity|
        |iDestructHyp H as pat]
   | ?pat => fail "iAssert: invalid pattern" pat
   end.
+
 Tactic Notation "iAssert" constr(Q) "as" constr(pat) :=
   iAssert Q with "[]" as pat.
 
