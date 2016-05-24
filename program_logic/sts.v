@@ -101,7 +101,7 @@ Section sts.
   Proof.
     iIntros {??} "(#? & Hγf & HΨ)". rewrite /sts_ctx /sts_ownS /sts_inv /sts_own.
     iInv N as {s} "[Hγ Hφ]"; iTimeless "Hγ".
-    iCombine "Hγ" "Hγf" as "Hγ"; iDestruct (own_valid with "Hγ !") as %Hvalid.
+    iCombine "Hγ" "Hγf" as "Hγ"; iDestruct (own_valid with "#Hγ") as %Hvalid.
     assert (s ∈ S) by eauto using sts_auth_frag_valid_inv.
     assert (✓ sts_frag S T) as [??] by eauto using cmra_valid_op_r.
     iRevert "Hγ"; rewrite sts_op_auth_frag //; iIntros "Hγ".

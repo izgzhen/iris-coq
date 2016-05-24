@@ -84,7 +84,7 @@ Proof.
   iIntros {????} "(#HQ&#H1&#H2&HQR&H)"; iDestruct "H" as {Ψ} "[HPΨ HΨ]".
   iDestruct (big_sepS_delete _ _ i with "HΨ") as "[#HΨi HΨ]"; first done.
   iExists (<[i1:=R1]> (<[i2:=R2]> Ψ)). iSplitL "HQR HPΨ".
-  - iPoseProof (saved_prop_agree i Q (Ψ i) with "#") as "Heq"; first by iSplit.
+  - iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by iSplit.
     iNext. iRewrite "Heq" in "HQR". iIntros "HP". iSpecialize ("HPΨ" with "HP").
     iDestruct (big_sepS_delete _ _ i with "HPΨ") as "[HΨ HPΨ]"; first done.
     iDestruct ("HQR" with "HΨ") as "[HR1 HR2]".
@@ -102,7 +102,7 @@ Proof.
   rewrite /newbarrier. wp_seq. iApply wp_pvs. wp_alloc l as "Hl".
   iApply "HΦ".
   iPvs (saved_prop_alloc (F:=idCF) _ P) as {γ} "#?".
-  iPvs (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}) with "-")
+  iPvs (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}) with "[-]")
     as {γ'} "[#? Hγ']"; eauto.
   { iNext. rewrite /barrier_inv /=. iFrame "Hl".
     iExists (const P). rewrite !big_sepS_singleton /=.
@@ -110,7 +110,7 @@ Proof.
   iAssert (barrier_ctx γ' l P)%I as "#?".
   { rewrite /barrier_ctx. by repeat iSplit. }
   iPvsAssert (sts_ownS γ' (i_states γ) {[Change γ]}
-    ★ sts_ownS γ' low_states {[Send]})%I as "[Hr Hs]" with "-".
+    ★ sts_ownS γ' low_states {[Send]})%I as "[Hr Hs]" with "[-]".
   { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
     + set_solver.
     + iApply (sts_own_weaken with "Hγ'");
@@ -162,7 +162,7 @@ Proof.
     iSplitL "HΨ' Hl Hsp"; [iNext|].
     + rewrite {2}/barrier_inv /=; iFrame "Hl".
       iExists Ψ; iFrame "Hsp". by iIntros "> _".
-    + iPoseProof (saved_prop_agree i Q (Ψ i) with "#") as "Heq"; first by iSplit.
+    + iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by iSplit.
       iIntros "_". wp_op=> ?; simplify_eq/=; wp_if.
       iPvsIntro. iApply "HΦ". iApply "HQR". by iRewrite "Heq".
 Qed.
@@ -185,7 +185,7 @@ Proof.
     iApply (ress_split _ _ _ Q R1 R2); eauto. iFrame "Hr HQR". by repeat iSplit.
   - iIntros "Hγ".
     iPvsAssert (sts_ownS γ (i_states i1) {[Change i1]}
-      ★ sts_ownS γ (i_states i2) {[Change i2]})%I as "[Hγ1 Hγ2]" with "-".
+      ★ sts_ownS γ (i_states i2) {[Change i2]})%I as "[Hγ1 Hγ2]" with "[-]".
     { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
       + set_solver.
       + iApply (sts_own_weaken with "Hγ");

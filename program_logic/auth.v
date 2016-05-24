@@ -61,7 +61,7 @@ Section auth.
     iIntros {??} "Hφ". rewrite /auth_own /auth_ctx.
     iPvs (own_alloc (Auth (Excl a) a)) as {γ} "Hγ"; first done.
     iRevert "Hγ"; rewrite auth_both_op; iIntros "[Hγ Hγ']".
-    iPvs (inv_alloc N _ (auth_inv γ φ) with "-[Hγ']"); first done.
+    iPvs (inv_alloc N _ (auth_inv γ φ) with "[-Hγ']"); first done.
     { iNext. iExists a. by iFrame "Hφ". }
     iPvsIntro; iExists γ; by iFrame "Hγ'".
   Qed.
@@ -83,7 +83,7 @@ Section auth.
     iIntros {??} "(#? & Hγf & HΨ)". rewrite /auth_ctx /auth_own.
     iInv N as {a'} "[Hγ Hφ]".
     iTimeless "Hγ"; iTimeless "Hγf"; iCombine "Hγ" "Hγf" as "Hγ".
-    iDestruct (own_valid _ with "Hγ !") as "Hvalid".
+    iDestruct (own_valid _ with "#Hγ") as "Hvalid".
     iDestruct (auth_validI _ with "Hvalid") as "[Ha' %]"; simpl; iClear "Hvalid".
     iDestruct "Ha'" as {b} "Ha'"; iDestruct "Ha'" as %Ha'.
     rewrite ->(left_id _ _) in Ha'; setoid_subst.

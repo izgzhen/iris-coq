@@ -31,7 +31,7 @@ Proof.
   iFrame "Ha Hac".
   iExists (S j + z1), z2.
   iNext.
-  iApply ("H3" $! _ 0 with "H1 ! [] !").
+  iApply ("H3" $! _ 0 with "H1 []").
   - iSplit. done. iApply "H2". iLeft. iApply "H2". by iRight.
   - done.
 Qed.
@@ -67,8 +67,8 @@ Lemma demo_5 (M : cmraT) (x y : M) (P : uPred M) :
   (∀ z, P → z ≡ y) ⊢ (P -★ (x,x) ≡ (y,x)).
 Proof.
   iIntros "H1 H2".
-  iRewrite (uPred.eq_sym x x with "- !"). iApply uPred.eq_refl.
-  iRewrite -("H1" $! _ with "- !"); first done.
+  iRewrite (uPred.eq_sym x x with "[#]"). iApply uPred.eq_refl.
+  iRewrite -("H1" $! _ with "[#]"); first done.
   iApply uPred.eq_refl.
 Qed.
 

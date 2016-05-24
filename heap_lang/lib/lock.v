@@ -57,7 +57,7 @@ Proof.
   iIntros {?} "(#Hh & HR & HΦ)". rewrite /newlock.
   wp_seq. iApply wp_pvs. wp_alloc l as "Hl".
   iPvs (own_alloc (Excl ())) as {γ} "Hγ"; first done.
-  iPvs (inv_alloc N _ (lock_inv γ l R) with "-[HΦ]") as "#?"; first done.
+  iPvs (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?"; first done.
   { iIntros ">". iExists false. by iFrame "Hl HR". }
   iPvsIntro. iApply "HΦ". iExists N, γ. by repeat iSplit.
 Qed.
@@ -73,7 +73,7 @@ Proof.
     + wp_if. by iApply "IH".
   - wp_cas_suc. iDestruct "HR" as "[Hγ HR]". iSplitL "Hl".
     + iNext. iExists true. by iSplit.
-    + wp_if. iApply ("HΦ" with "-[HR] HR"). iExists N, γ. by repeat iSplit.
+    + wp_if. iApply ("HΦ" with "[-HR] HR"). iExists N, γ. by repeat iSplit.
 Qed.
 
 Lemma release_spec R l (Φ : val → iProp) :

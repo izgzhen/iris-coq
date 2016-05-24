@@ -65,7 +65,7 @@ Lemma vs_transitive E1 E2 E3 P Q R :
   E2 ⊆ E1 ∪ E3 → ((P ={E1,E2}=> Q) ∧ (Q ={E2,E3}=> R)) ⊢ (P ={E1,E3}=> R).
 Proof.
   iIntros {?} "#[HvsP HvsQ] ! HP".
-  iPvs ("HvsP" with "! HP") as "HQ"; first done. by iApply ("HvsQ" with "!").
+  iPvs ("HvsP" with "HP") as "HQ"; first done. by iApply "HvsQ".
 Qed.
 
 Lemma vs_transitive' E P Q R : ((P ={E}=> Q) ∧ (Q ={E}=> R)) ⊢ (P ={E}=> R).
@@ -94,8 +94,7 @@ Proof. intros; apply vs_mask_frame; set_solver. Qed.
 Lemma vs_inv N E P Q R :
   nclose N ⊆ E → (inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q)) ⊢ (P ={E}=> Q).
 Proof.
-  iIntros {?} "#[? Hvs] ! HP". iInv N as "HR".
-  iApply ("Hvs" with "!"). by iSplitL "HR".
+  iIntros {?} "#[? Hvs] ! HP". iInv N as "HR". iApply "Hvs". by iSplitL "HR".
 Qed.
 
 Lemma vs_alloc N P : ▷ P ={N}=> inv N P.

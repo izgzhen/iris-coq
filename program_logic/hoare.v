@@ -64,7 +64,7 @@ Lemma ht_vs E P P' Φ Φ' e :
 Proof.
   iIntros "(#Hvs&#Hwp&#HΦ) ! HP". iPvs ("Hvs" with "HP") as "HP".
   iApply wp_pvs; iApply wp_wand_r; iSplitL; [by iApply "Hwp"|].
-  iIntros {v} "Hv". by iApply ("HΦ" with "!").
+  iIntros {v} "Hv". by iApply "HΦ".
 Qed.
 
 Lemma ht_atomic E1 E2 P P' Φ Φ' e :
@@ -75,7 +75,7 @@ Proof.
   iIntros {??} "(#Hvs&#Hwp&#HΦ) ! HP". iApply (wp_atomic _ E2); auto.
   iPvs ("Hvs" with "HP") as "HP"; first set_solver. iPvsIntro.
   iApply wp_wand_r; iSplitL; [by iApply "Hwp"|].
-  iIntros {v} "Hv". by iApply ("HΦ" with "!").
+  iIntros {v} "Hv". by iApply "HΦ".
 Qed.
 
 Lemma ht_bind `{LanguageCtx Λ K} E P Φ Φ' e :
@@ -84,7 +84,7 @@ Lemma ht_bind `{LanguageCtx Λ K} E P Φ Φ' e :
 Proof.
   iIntros "(#Hwpe&#HwpK) ! HP". iApply wp_bind.
   iApply wp_wand_r; iSplitL; [by iApply "Hwpe"|].
-  iIntros {v} "Hv". by iApply ("HwpK" with "!").
+  iIntros {v} "Hv". by iApply "HwpK".
 Qed.
 
 Lemma ht_mask_weaken E1 E2 P Φ e :

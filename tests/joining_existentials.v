@@ -25,7 +25,7 @@ Lemma worker_spec e γ l (Φ Ψ : X → iProp) :
 Proof.
   iIntros "[Hl #He]". wp_apply wait_spec; iFrame "Hl".
   iIntros "Hγ"; iDestruct "Hγ" as {x} "[#Hγ Hx]".
-  wp_seq. iApply wp_wand_l. iSplitR; [|by iApply ("He" with "!")].
+  wp_seq. iApply wp_wand_l. iSplitR; [|by iApply "He"].
   iIntros {v} "?"; iExists x; by iSplit.
 Qed.
 
@@ -43,7 +43,7 @@ Lemma Q_res_join γ : (barrier_res γ Ψ1 ★ barrier_res γ Ψ2) ⊢ ▷ barrie
 Proof.
   iIntros "[Hγ Hγ']";
   iDestruct "Hγ" as {x} "[#Hγ Hx]"; iDestruct "Hγ'" as {x'} "[#Hγ' Hx']".
-  iDestruct (one_shot_agree γ x x' with "- !") as "Hxx"; first (by iSplit).
+  iDestruct (one_shot_agree γ x x' with "[#]") as "Hxx"; first (by iSplit).
   iNext. iRewrite -"Hxx" in "Hx'".
   iExists x; iFrame "Hγ". iApply Ψ_join; by iSplitL "Hx".
 Qed.
@@ -68,8 +68,7 @@ Proof.
     iPvs (one_shot_init _ _ x with "Hγ") as "Hx".
     iApply signal_spec; iFrame "Hs"; iSplit; last done.
     iExists x; by iSplitL "Hx".
-  - iDestruct (recv_weaken with "[] Hr") as "Hr".
-    { iIntros "?". by iApply (P_res_split with "-"). }
+  - iDestruct (recv_weaken with "[] Hr") as "Hr"; first by iApply P_res_split.
     iPvs (recv_split with "Hr") as "[H1 H2]"; first done.
     wp_apply (wp_par _ _ (λ _, barrier_res γ Ψ1)%I
       (λ _, barrier_res γ Ψ2)%I); first done.

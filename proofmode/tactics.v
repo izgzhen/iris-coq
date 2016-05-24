@@ -129,7 +129,7 @@ Notation "( H $! x1 .. xn 'with' pat )" :=
   (ITrm H (hcons x1 .. (hcons xn hnil) ..) pat) (at level 0, x1, xn at level 0).
 Notation "( H 'with' pat )" := (ITrm H hnil pat) (at level 0).
 
-Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
+Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
   match xs with
   | hnil => idtac
   | _ =>
@@ -139,7 +139,7 @@ Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
       |env_cbv; reflexivity|]
   end.
 
-Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
+Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
   let solve_to_wand H1 :=
     let P := match goal with |- ToWand ?P _ _ => P end in
     apply _ || fail "iSpecialize:" H1 ":" P "not an implication/wand" in
@@ -147,25 +147,7 @@ Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
     lazymatch pats with
     | [] => idtac
     | SForall :: ?pats => try (iSpecializeArgs H1 (hcons _ _)); go H1 pats
-    | SAlways :: ?pats => iPersistent H1; go H1 pats
-    | SAssert true [] :: SAlways :: ?pats =>
-       eapply tac_specialize_domain_persistent with _ _ H1 _ _ _ _ _;
-         [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
-         |solve_to_wand H1
-         |let Q := match goal with |- ToPersistentP ?Q _ => Q end in
-          apply _ || fail "iSpecialize:" Q "not persistent"
-         |env_cbv; reflexivity
-         | |go H1 pats]
-    | SName ?H2 :: SAlways :: ?pats =>
-       eapply tac_specialize_domain_persistent with _ _ H1 _ _ _ _ _;
-         [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
-         |solve_to_wand H1
-         |let Q := match goal with |- ToPersistentP ?Q _ => Q end in
-          apply _ || fail "iSpecialize:" Q "not persistent"
-         |env_cbv; reflexivity
-         |iExact H2 || fail "iSpecialize:" H2 "not found or wrong type"
-         |go H1 pats]
-    | SName ?H2 :: ?pats =>
+    | SName false ?H2 :: ?pats =>
        eapply tac_specialize with _ _ H2 _ H1 _ _ _ _; (* (j:=H1) (i:=H2) *)
          [env_cbv; reflexivity || fail "iSpecialize:" H2 "not found"
          |env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
@@ -173,26 +155,43 @@ Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
           let Q := match goal with |- ToWand ?P ?Q _ => Q end in
           apply _ || fail "iSpecialize: cannot instantiate" H1 ":" P "with" H2 ":" Q
          |env_cbv; reflexivity|go H1 pats]
-    | SPersistent :: ?pats =>
-       eapply tac_specialize_range_persistent with _ _ H1 _ _ _ _;
+    | SName true ?H2 :: ?pats =>
+       eapply tac_specialize_persistent with _ _ H1 _ _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
-         |let Q := match goal with |- PersistentP ?Q => Q end in
-          apply _ || fail "iSpecialize:" Q "not persistent"
-         |env_cbv; reflexivity| |go H1 pats]
-    | SPure :: ?pats =>
-       eapply tac_specialize_range_persistent with _ _ H1 _ _ _ _;
-         (* make custom tac_ lemma *)
+         |env_cbv; reflexivity
+         |iExact H2 || fail "iSpecialize:" H2 "not found or wrong type"
+         |let Q1 := match goal with |- PersistentP ?Q1 ∨ _ => Q1 end in
+          let Q2 := match goal with |- _ ∨ PersistentP ?Q2 => Q2 end in
+          first [left; apply _ | right; apply _]
+            || fail "iSpecialize:" Q1 "nor" Q2 "persistent"
+         |go H1 pats]
+    | SGoalPersistent :: ?pats =>
+       eapply tac_specialize_persistent with _ _ H1 _ _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
-         |let Q := match goal with |- PersistentP ?Q => Q end in
-          apply _ || fail "iSpecialize:" Q "not persistent"
-         |env_cbv; reflexivity|iPureIntro|go H1 pats]
-    | SAssert ?lr ?Hs :: ?pats =>
+         |env_cbv; reflexivity
+         |(*goal*)
+         |let Q1 := match goal with |- PersistentP ?Q1 ∨ _ => Q1 end in
+          let Q2 := match goal with |- _ ∨ PersistentP ?Q2 => Q2 end in
+          first [left; apply _ | right; apply _]
+            || fail "iSpecialize:" Q1 "nor" Q2 "persistent"
+         |go H1 pats]
+    | SGoalPure :: ?pats =>
+       eapply tac_specialize_pure with _ H1 _ _ _ _ _;
+         [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
+         |solve_to_wand H1
+         |let Q := match goal with |- ToPure ?Q _ => Q end in
+          apply _ || fail "iSpecialize:" Q "not pure"
+         |env_cbv; reflexivity
+         |(*goal*)
+         |go H1 pats]
+    | SGoal ?lr ?Hs :: ?pats =>
        eapply tac_specialize_assert with _ _ _ H1 _ lr Hs _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
-         |env_cbv; reflexivity || fail "iSpecialize:" Hs "not found"|
+         |env_cbv; reflexivity || fail "iSpecialize:" Hs "not found"
+         |(*goal*)
          |go H1 pats]
     end in let pats := spec_pat.parse pat in go H pats.
 
@@ -202,7 +201,7 @@ Tactic Notation "iSpecialize" open_constr(t) :=
   end.
 
 (** * Pose proof *)
-Tactic Notation "iPoseProofCore" open_constr(H1) "as" constr(H2) :=
+Local Tactic Notation "iPoseProofCore" open_constr(H1) "as" constr(H2) :=
   lazymatch type of H1 with
   | string =>
      eapply tac_pose_proof_hyp with _ _ H1 _ H2 _;
@@ -704,12 +703,12 @@ Tactic Notation "iAssert" constr(Q) "as" constr(pat) "with" constr(Hs) :=
   let H := iFresh in
   let Hs := spec_pat.parse Hs in
   lazymatch Hs with
-  | [SAssert ?lr ?Hs] =>
+  | [SGoal ?lr ?Hs] =>
      eapply tac_assert with _ _ _ lr Hs H Q; (* (js:=Hs) (j:=H) (P:=Q) *)
        [env_cbv; reflexivity || fail "iAssert:" Hs "not found"
        |env_cbv; reflexivity|
        |iDestructHyp H as pat]
-  | [SAssert true [] :: SAlways]  =>
+  | [SGoalPersistent]  =>
      eapply tac_assert_persistent with _ H Q; (* (j:=H) (P:=Q) *)
        [apply _ || fail "iAssert:" Q "not persistent"
        |env_cbv; reflexivity|

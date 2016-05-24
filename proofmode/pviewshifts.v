@@ -26,7 +26,7 @@ Global Instance frame_pvs E1 E2 R P mQ :
   Frame R (|={E1,E2}=> P) (Some (|={E1,E2}=> if mQ is Some Q then Q else True))%I.
 Proof. rewrite /Frame=><-. by rewrite pvs_frame_l. Qed.
 Global Instance to_wand_pvs E1 E2 R P Q :
-  ToWand R P Q → ToWand R (|={E1,E2}=> P) (|={E1,E2}=> Q).
+  ToWand R P Q → ToWand R (|={E1,E2}=> P) (|={E1,E2}=> Q) | 100.
 Proof. rewrite /ToWand=>->. apply wand_intro_l. by rewrite pvs_wand_r. Qed.
 
 Class FSASplit {A} (P : iProp Λ Σ) (E : coPset)
@@ -190,7 +190,7 @@ Tactic Notation "iPvsAssert" constr(Q) "as" constr(pat) "with" constr(Hs) :=
   let H := iFresh in
   let Hs := spec_pat.parse_one Hs in
   lazymatch Hs with
-  | SAssert ?lr ?Hs =>
+  | SGoal ?lr ?Hs =>
      eapply tac_pvs_assert with _ _ _ _ _ _ lr Hs H Q _;
        [let P := match goal with |- FSASplit ?P _ _ _ _ => P end in
         apply _ || fail "iPvsAssert: " P "not a pvs"

@@ -33,11 +33,11 @@ Proof.
   iApply (wp_lift_step E1 E2 φ _ e1 σ1); auto.
   iPvs ("Hvs" with "HP") as "[Hσ HP]"; first set_solver.
   iPvsIntro. iNext. iSplitL "Hσ"; [done|iIntros {e2 σ2 ef} "[#Hφ Hown]"].
-  iSpecialize ("HΦ" $! e2 σ2 ef with "! -"). by iFrame "Hφ HP Hown".
+  iSpecialize ("HΦ" $! e2 σ2 ef with "[-]"). by iFrame "Hφ HP Hown".
   iPvs "HΦ" as "[H1 H2]"; first by set_solver.
   iPvsIntro. iSplitL "H1".
-  - by iApply ("He2" with "!").
-  - destruct ef as [e|]; last done. by iApply ("Hef" $! _ _ (Some e) with "!").
+  - by iApply "He2".
+  - destruct ef as [e|]; last done. by iApply ("Hef" $! _ _ (Some e)).
 Qed.
 
 Lemma ht_lift_atomic_step
@@ -74,9 +74,9 @@ Proof.
   iIntros {? Hsafe Hstep} "[#He2 #Hef] ! HP".
   iApply (wp_lift_pure_step E φ _ e1); auto.
   iNext; iIntros {e2 ef Hφ}. iDestruct "HP" as "[HP HP']"; iSplitL "HP".
-  - iApply ("He2" with "!"); by iSplit.
+  - iApply "He2"; by iSplit.
   - destruct ef as [e|]; last done.
-    iApply ("Hef" $! _ (Some e) with "!"); by iSplit.
+    iApply ("Hef" $! _ (Some e)); by iSplit.
 Qed.
 
 Lemma ht_lift_pure_det_step
@@ -92,6 +92,6 @@ Proof.
   iSplit; iIntros {e2' ef'}.
   - iIntros "! [#He ?]"; iDestruct "He" as %[-> ->]. by iApply "He2".
   - destruct ef' as [e'|]; last done.
-    iIntros "! [#He ?]"; iDestruct "He" as %[-> ->]. by iApply ("Hef" with "!").
+    iIntros "! [#He ?]"; iDestruct "He" as %[-> ->]. by iApply "Hef".
 Qed.
 End lifting.

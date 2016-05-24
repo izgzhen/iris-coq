@@ -45,7 +45,7 @@ Section LiftingTests.
   Proof.
     iIntros {Hn} "HΦ". iLöb {n1 Hn} as "IH".
     wp_rec. wp_let. wp_op. wp_let. wp_op=> ?; wp_if.
-    - iApply ("IH" with "% HΦ"). omega.
+    - iApply ("IH" with "[%] HΦ"). omega.
     - iApply pvs_intro. by assert (n1 = n2 - 1) as -> by omega.
   Qed.
 
