@@ -79,7 +79,7 @@ Lemma ress_split i i1 i2 Q R1 R2 P I :
   i ∈ I → i1 ∉ I → i2 ∉ I → i1 ≠ i2 →
   (saved_prop_own i Q ★ saved_prop_own i1 R1 ★ saved_prop_own i2 R2 ★
     (Q -★ R1 ★ R2) ★ ress P I)
-  ⊢ ress P ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))).
+  ⊢ ress P ({[i1;i2]} ∪ I ∖ {[i]}).
 Proof.
   iIntros {????} "(#HQ&#H1&#H2&HQR&H)"; iDestruct "H" as {Ψ} "[HPΨ HΨ]".
   iDestruct (big_sepS_delete _ _ i with "HΨ") as "[#HΨi HΨ]"; first done.
@@ -88,8 +88,10 @@ Proof.
     iNext. iRewrite "Heq" in "HQR". iIntros "HP". iSpecialize ("HPΨ" with "HP").
     iDestruct (big_sepS_delete _ _ i with "HPΨ") as "[HΨ HPΨ]"; first done.
     iDestruct ("HQR" with "HΨ") as "[HR1 HR2]".
-    rewrite !big_sepS_insert''; [|abstract set_solver ..]. by iFrame "HR1 HR2".
-  - rewrite !big_sepS_insert'; [|abstract set_solver ..]. by repeat iSplit.
+    rewrite -assoc_L !big_sepS_insert''; [|abstract set_solver ..].
+    by iFrame "HR1 HR2".
+  - rewrite -assoc_L !big_sepS_insert'; [|abstract set_solver ..].
+    by repeat iSplit.
 Qed.
 
 (** Actual proofs *)
@@ -178,8 +180,8 @@ Proof.
   iPvs (saved_prop_alloc_strong _ (R2: ∙%CF iProp) (I ∪ {[i1]}))
     as {i2} "[Hi2' #Hi2]"; iDestruct "Hi2'" as %Hi2; iPvsIntro.
   rewrite ->not_elem_of_union, elem_of_singleton in Hi2; destruct Hi2.
-  iExists (State p ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]})))).
-  iExists ({[Change i1 ]} ∪ {[ Change i2 ]}).
+  iExists (State p ({[i1; i2]} ∪ I ∖ {[i]})).
+  iExists ({[Change i1; Change i2 ]}).
   iSplit; [by eauto using split_step|iSplitL].
   - iNext. rewrite {2}/barrier_inv /=. iFrame "Hl".
     iApply (ress_split _ _ _ Q R1 R2); eauto. iFrame "Hr HQR". by repeat iSplit.
