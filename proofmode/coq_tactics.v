@@ -411,7 +411,7 @@ Global Instance to_persistentP_persistent P :
 Proof. done. Qed.
 
 Lemma tac_persistent Δ Δ' i p P P' Q :
-  envs_lookup i Δ = Some (p, P)%I → ToPersistentP P P' →
+  envs_lookup i Δ = Some (p, P) → ToPersistentP P P' →
   envs_replace i p true (Esnoc Enil i P') Δ = Some Δ' →
   Δ' ⊢ Q → Δ ⊢ Q.
 Proof.
@@ -476,7 +476,7 @@ Global Instance to_wand_always R P Q : ToWand R P Q → ToWand (□ R) P Q.
 but it is doing some work to keep the order of hypotheses preserved. *)
 Lemma tac_specialize Δ Δ' Δ'' i p j q P1 P2 R Q :
   envs_lookup_delete i Δ = Some (p, P1, Δ') →
-  envs_lookup j (if p then Δ else Δ') = Some (q, R)%I →
+  envs_lookup j (if p then Δ else Δ') = Some (q, R) →
   ToWand R P1 P2 →
   match p with
   | true  => envs_simple_replace j q (Esnoc Enil j P2) Δ
@@ -495,7 +495,7 @@ Proof.
 Qed.
 
 Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q lr js P1 P2 R Q :
-  envs_lookup_delete j Δ = Some (q, R, Δ')%I →
+  envs_lookup_delete j Δ = Some (q, R, Δ') →
   ToWand R P1 P2 →
   ('(Δ1,Δ2) ← envs_split lr js Δ';
     Δ2' ← envs_app (envs_persistent Δ1 && q) (Esnoc Enil j P2) Δ2;
@@ -610,7 +610,7 @@ Proof.
 Qed.
 
 Lemma tac_apply Δ Δ' i p R P1 P2 :
-  envs_lookup_delete i Δ = Some (p, R, Δ')%I → ToWand R P1 P2 →
+  envs_lookup_delete i Δ = Some (p, R, Δ') → ToWand R P1 P2 →
   Δ' ⊢ P1 → Δ ⊢ P2.
 Proof.
   intros ?? HP1. rewrite envs_lookup_delete_sound' //.
@@ -621,7 +621,7 @@ Qed.
 Lemma tac_rewrite Δ i p Pxy (lr : bool) Q :
   envs_lookup i Δ = Some (p, Pxy) →
   ∀ {A : cofeT} (x y : A) (Φ : A → uPred M),
-    Pxy ⊢ (x ≡ y)%I →
+    Pxy ⊢ (x ≡ y) →
     Q ⊣⊢ Φ (if lr then y else x) →
     (∀ n, Proper (dist n ==> dist n) Φ) →
     Δ ⊢ Φ (if lr then x else y) → Δ ⊢ Q.
@@ -633,9 +633,9 @@ Qed.
 
 Lemma tac_rewrite_in Δ i p Pxy j q P (lr : bool) Q :
   envs_lookup i Δ = Some (p, Pxy) →
-  envs_lookup j Δ = Some (q, P)%I →
+  envs_lookup j Δ = Some (q, P) →
   ∀ {A : cofeT} Δ' x y (Φ : A → uPred M),
-    Pxy ⊢ (x ≡ y)%I →
+    Pxy ⊢ (x ≡ y) →
     P ⊣⊢ Φ (if lr then y else x) →
     (∀ n, Proper (dist n ==> dist n) Φ) →
     envs_simple_replace j q (Esnoc Enil j (Φ (if lr then x else y))) Δ = Some Δ' →
@@ -735,7 +735,7 @@ Global Instance sep_destruct_later p P Q1 Q2 :
 Proof. by rewrite /SepDestruct -later_sep !always_if_later=> ->. Qed.
 
 Lemma tac_sep_destruct Δ Δ' i p j1 j2 P P1 P2 Q :
-  envs_lookup i Δ = Some (p, P)%I → SepDestruct p P P1 P2 →
+  envs_lookup i Δ = Some (p, P) → SepDestruct p P P1 P2 →
   envs_simple_replace i p (Esnoc (Esnoc Enil j1 P1) j2 P2) Δ = Some Δ' →
   Δ' ⊢ Q → Δ ⊢ Q.
 Proof.
@@ -794,7 +794,7 @@ Global Instance frame_forall {A} R (Φ : A → uPred M) mΨ :
 Proof. rewrite /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
 
 Lemma tac_frame Δ Δ' i p R P mQ :
-  envs_lookup_delete i Δ = Some (p, R, Δ')%I → Frame R P mQ →
+  envs_lookup_delete i Δ = Some (p, R, Δ') → Frame R P mQ →
   (if mQ is Some Q then (if p then Δ else Δ') ⊢ Q else True) →
   Δ ⊢ P.
 Proof.
@@ -889,7 +889,7 @@ Global Instance exist_destruct_later {A} P (Φ : A → uPred M) :
 Proof. rewrite /ExistDestruct=> HP ?. by rewrite HP later_exist. Qed.
 
 Lemma tac_exist_destruct {A} Δ i p j P (Φ : A → uPred M) Q :
-  envs_lookup i Δ = Some (p, P)%I → ExistDestruct P Φ →
+  envs_lookup i Δ = Some (p, P) → ExistDestruct P Φ →
   (∀ a, ∃ Δ',
     envs_simple_replace i p (Esnoc Enil j (Φ a)) Δ = Some Δ' ∧ Δ' ⊢ Q) →
   Δ ⊢ Q.
