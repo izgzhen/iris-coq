@@ -139,6 +139,9 @@ Section gmap.
   Lemma big_sepM_insert Φ (m : gmap K A) i x :
     m !! i = None → Π★{map <[i:=x]> m} Φ ⊣⊢ (Φ i x ★ Π★{map m} Φ).
   Proof. intros ?; by rewrite /uPred_big_sepM map_to_list_insert. Qed.
+  Lemma big_sepM_delete Φ (m : gmap K A) i x :
+    m !! i = Some x → Π★{map m} Φ ⊣⊢ (Φ i x ★ Π★{map delete i m} Φ).
+  Proof. intros. by rewrite -big_sepM_insert ?lookup_delete // insert_delete. Qed.
   Lemma big_sepM_singleton Φ i x : Π★{map {[i := x]}} Φ ⊣⊢ (Φ i x).
   Proof.
     rewrite -insert_empty big_sepM_insert/=; last auto using lookup_empty.
