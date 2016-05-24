@@ -98,7 +98,7 @@ Section heap.
   (** Allocation *)
   Lemma heap_alloc N E σ :
     authG heap_lang Σ heapR → nclose N ⊆ E →
-    ownP σ ⊢ (|={E}=> ∃ _ : heapG Σ, heap_ctx N ∧ Π★{map σ} (λ l v, l ↦ v)).
+    ownP σ ⊢ (|={E}=> ∃ _ : heapG Σ, heap_ctx N ∧ [★ map] l↦v ∈ σ, l ↦ v).
   Proof.
     intros. rewrite -{1}(from_to_heap σ). etrans.
     { rewrite [ownP _]later_intro.

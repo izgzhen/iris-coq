@@ -28,7 +28,7 @@ Local Notation iProp := (iPropG heap_lang Σ).
 
 Definition ress (P : iProp) (I : gset gname) : iProp :=
   (∃ Ψ : gname → iProp,
-    ▷ (P -★ Π★{set I} Ψ) ★ Π★{set I} (λ i, saved_prop_own i (Ψ i)))%I.
+    ▷ (P -★ [★ set] i ∈ I, Ψ i) ★ [★ set] i ∈ I, saved_prop_own i (Ψ i))%I.
 
 Coercion state_to_val (s : state) : val :=
   match s with State Low _ => #0 | State High _ => #1 end.
@@ -159,7 +159,7 @@ Proof.
     iSplit; [iPureIntro; by eauto using wait_step|].
     iDestruct "Hr" as {Ψ} "[HΨ Hsp]".
     iDestruct (big_sepS_delete _ _ i with "Hsp") as "[#HΨi Hsp]"; first done.
-    iAssert (▷ Ψ i ★ ▷ Π★{set (I ∖ {[i]})} Ψ)%I with "[HΨ]" as "[HΨ HΨ']".
+    iAssert (▷ Ψ i ★ ▷ [★ set] j ∈ I ∖ {[i]}, Ψ j)%I with "[HΨ]" as "[HΨ HΨ']".
     { iNext. iApply (big_sepS_delete _ _ i); first done. by iApply "HΨ". }
     iSplitL "HΨ' Hl Hsp"; [iNext|].
     + rewrite {2}/barrier_inv /=; iFrame "Hl".

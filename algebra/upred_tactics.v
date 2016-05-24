@@ -22,8 +22,7 @@ Module uPred_reflection. Section uPred_reflection.
     | ESep e1 e2 => flatten e1 ++ flatten e2
     end.
 
-  Notation eval_list Σ l :=
-    (uPred_big_sep ((λ n, from_option True%I (Σ !! n)) <$> l)).
+  Notation eval_list Σ l := ([★] ((λ n, from_option True%I (Σ !! n)) <$> l))%I.
   Lemma eval_flatten Σ e : eval Σ e ⊣⊢ eval_list Σ (flatten e).
   Proof.
     induction e as [| |e1 IH1 e2 IH2];

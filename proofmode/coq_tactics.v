@@ -25,7 +25,7 @@ Record envs_wf {M} (Δ : envs M) := {
 }.
 
 Coercion of_envs {M} (Δ : envs M) : uPred M :=
-  (■ envs_wf Δ ★ □ Π∧ env_persistent Δ ★ Π★ env_spatial Δ)%I.
+  (■ envs_wf Δ ★ □ [∧] env_persistent Δ ★ [★] env_spatial Δ)%I.
 Instance: Params (@of_envs) 1.
 
 Record envs_Forall2 {M} (R : relation (uPred M)) (Δ1 Δ2 : envs M) : Prop := {
@@ -102,7 +102,7 @@ Implicit Types Δ : envs M.
 Implicit Types P Q : uPred M.
 
 Lemma of_envs_def Δ :
-  of_envs Δ = (■ envs_wf Δ ★ □ Π∧ env_persistent Δ ★ Π★ env_spatial Δ)%I.
+  of_envs Δ = (■ envs_wf Δ ★ □ [∧] env_persistent Δ ★ [★] env_spatial Δ)%I.
 Proof. done. Qed.
 
 Lemma envs_lookup_delete_Some Δ Δ' i p P :
@@ -120,12 +120,12 @@ Proof.
   rewrite /envs_lookup /envs_delete /of_envs=>?; apply const_elim_sep_l=> Hwf.
   destruct Δ as [Γp Γs], (Γp !! i) eqn:?; simplify_eq/=.
   - rewrite (env_lookup_perm Γp) //= always_and_sep always_sep.
-    ecancel [□ Π∧ _; □ P; Π★ _]%I; apply const_intro.
+    ecancel [□ [∧] _; □ P; [★] _]%I; apply const_intro.
     destruct Hwf; constructor;
       naive_solver eauto using env_delete_wf, env_delete_fresh.
   - destruct (Γs !! i) eqn:?; simplify_eq/=.
     rewrite (env_lookup_perm Γs) //=.
-    ecancel [□ Π∧ _; P; Π★ _]%I; apply const_intro.
+    ecancel [□ [∧] _; P; [★] _]%I; apply const_intro.
     destruct Hwf; constructor;
       naive_solver eauto using env_delete_wf, env_delete_fresh.
 Qed.
@@ -158,7 +158,7 @@ Lemma envs_lookup_delete_sound' Δ Δ' i p P :
   envs_lookup_delete i Δ = Some (p,P,Δ') → Δ ⊢ (P ★ Δ')%I.
 Proof. intros [? ->]%envs_lookup_delete_Some. by apply envs_lookup_sound'. Qed.
 
-Lemma envs_app_sound Δ Δ' p Γ : envs_app p Γ Δ = Some Δ' → Δ ⊢ (□?p Π★ Γ -★ Δ').
+Lemma envs_app_sound Δ Δ' p Γ : envs_app p Γ Δ = Some Δ' → Δ ⊢ (□?p [★] Γ -★ Δ').
 Proof.
   rewrite /of_envs /envs_app=> ?; apply const_elim_sep_l=> Hwf.
   destruct Δ as [Γp Γs], p; simplify_eq/=.
@@ -182,7 +182,7 @@ Qed.
 
 Lemma envs_simple_replace_sound' Δ Δ' i p Γ :
   envs_simple_replace i p Γ Δ = Some Δ' →
-  envs_delete i p Δ ⊢ (□?p Π★ Γ -★ Δ')%I.
+  envs_delete i p Δ ⊢ (□?p [★] Γ -★ Δ')%I.
 Proof.
   rewrite /envs_simple_replace /envs_delete /of_envs=> ?.
   apply const_elim_sep_l=> Hwf. destruct Δ as [Γp Γs], p; simplify_eq/=.
@@ -206,11 +206,11 @@ Qed.
 
 Lemma envs_simple_replace_sound Δ Δ' i p P Γ :
   envs_lookup i Δ = Some (p,P) → envs_simple_replace i p Γ Δ = Some Δ' →
-  Δ ⊢ (□?p P ★ (□?p Π★ Γ -★ Δ'))%I.
+  Δ ⊢ (□?p P ★ (□?p [★] Γ -★ Δ'))%I.
 Proof. intros. by rewrite envs_lookup_sound// envs_simple_replace_sound'//. Qed.
 
 Lemma envs_replace_sound' Δ Δ' i p q Γ :
-  envs_replace i p q Γ Δ = Some Δ' → envs_delete i p Δ ⊢ (□?q Π★ Γ -★ Δ')%I.
+  envs_replace i p q Γ Δ = Some Δ' → envs_delete i p Δ ⊢ (□?q [★] Γ -★ Δ')%I.
 Proof.
   rewrite /envs_replace; destruct (eqb _ _) eqn:Hpq.
   - apply eqb_prop in Hpq as ->. apply envs_simple_replace_sound'.
@@ -219,7 +219,7 @@ Qed.
 
 Lemma envs_replace_sound Δ Δ' i p q P Γ :
   envs_lookup i Δ = Some (p,P) → envs_replace i p q Γ Δ = Some Δ' →
-  Δ ⊢ (□?p P ★ (□?q Π★ Γ -★ Δ'))%I.
+  Δ ⊢ (□?p P ★ (□?q [★] Γ -★ Δ'))%I.
 Proof. intros. by rewrite envs_lookup_sound// envs_replace_sound'//. Qed.
 
 Lemma envs_split_sound Δ lr js Δ1 Δ2 :
@@ -228,21 +228,21 @@ Proof.
   rewrite /envs_split /of_envs=> ?; apply const_elim_sep_l=> Hwf.
   destruct Δ as [Γp Γs], (env_split js _) as [[Γs1 Γs2]|] eqn:?; simplify_eq/=.
   rewrite (env_split_perm Γs) // big_sep_app {1}always_sep_dup'.
-  destruct lr; simplify_eq/=; cancel [□ Π∧ Γp; □ Π∧ Γp; Π★ Γs1; Π★ Γs2]%I;
+  destruct lr; simplify_eq/=; cancel [□ [∧] Γp; □ [∧] Γp; [★] Γs1; [★] Γs2]%I;
     destruct Hwf; apply sep_intro_True_l; apply const_intro; constructor;
       naive_solver eauto using env_split_wf_1, env_split_wf_2,
       env_split_fresh_1, env_split_fresh_2.
 Qed.
 
 Lemma envs_clear_spatial_sound Δ :
-  Δ ⊢ (envs_clear_spatial Δ ★ Π★ env_spatial Δ)%I.
+  Δ ⊢ (envs_clear_spatial Δ ★ [★] env_spatial Δ)%I.
 Proof.
   rewrite /of_envs /envs_clear_spatial /=; apply const_elim_sep_l=> Hwf.
   rewrite right_id -assoc; apply sep_intro_True_l; [apply const_intro|done].
   destruct Hwf; constructor; simpl; auto using Enil_wf.
 Qed.
 
-Lemma env_fold_wand Γ Q : env_fold uPred_wand Q Γ ⊣⊢ (Π★ Γ -★ Q).
+Lemma env_fold_wand Γ Q : env_fold uPred_wand Q Γ ⊣⊢ ([★] Γ -★ Q).
 Proof.
   revert Q; induction Γ as [|Γ IH i P]=> Q /=; [by rewrite wand_True|].
   by rewrite IH wand_curry (comm uPred_sep).
