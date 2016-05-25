@@ -454,13 +454,10 @@ Canonical Structure boolC := leibnizC bool.
 Section option.
   Context {A : cofeT}.
 
-  Inductive option_dist' (n : nat) : relation (option A) :=
-    | Some_dist x y : x ≡{n}≡ y → option_dist' n (Some x) (Some y)
-    | None_dist : option_dist' n None None.
-  Instance option_dist : Dist (option A) := option_dist'.
+  Instance option_dist : Dist (option A) := λ n, option_Forall2 (dist n).
 
   Lemma dist_option_Forall2 n mx my : mx ≡{n}≡ my ↔ option_Forall2 (dist n) mx my.
-  Proof. split; destruct 1; constructor; auto. Qed.
+  Proof. done. Qed.
 
   Program Definition option_chain (c : chain (option A)) (x : A) : chain A :=
     {| chain_car n := from_option x (c n) |}.
@@ -474,10 +471,7 @@ Section option.
     - intros mx my; split; [by destruct 1; constructor; apply equiv_dist|].
       intros Hxy; destruct (Hxy 0); constructor; apply equiv_dist.
       by intros n; feed inversion (Hxy n).
-    - intros n; split.
-      + by intros [x|]; constructor.
-      + by destruct 1; constructor.
-      + destruct 1; inversion_clear 1; constructor; etrans; eauto.
+    - apply _.
     - destruct 1; constructor; by apply dist_S.
     - intros n c; rewrite /compl /option_compl.
       feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
@@ -503,6 +497,7 @@ Section option.
   Proof. by intros ?; inversion_clear 1; constructor; apply timeless. Qed.
 End option.
 
+Typeclasses Opaque option_dist.
 Arguments optionC : clear implicits.
 
 Instance option_fmap_ne {A B : cofeT} (f : A → B) n:

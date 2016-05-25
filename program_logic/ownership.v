@@ -64,7 +64,7 @@ Proof.
   intros (?&?&?). rewrite /ownI; uPred.unseal.
   rewrite /uPred_holds/=res_includedN/= singleton_includedN; split.
   - intros [(P'&Hi&HP) _]; rewrite Hi.
-    apply Some_dist, symmetry, agree_valid_includedN; last done.
+    constructor; symmetry; apply agree_valid_includedN; last done.
     by apply lookup_validN_Some with (wld r) i.
   - intros ?; split_and?; try apply cmra_unit_leastN; eauto.
 Qed.
