@@ -340,7 +340,7 @@ Proof. intros f f' Hf g g' Hg [??]; split; [apply Hf|apply Hg]. Qed.
 
 (** Functors *)
 Structure cFunctor := CFunctor {
-  cFunctor_car : cofeT → cofeT -> cofeT;
+  cFunctor_car : cofeT → cofeT → cofeT;
   cFunctor_map {A1 A2 B1 B2} :
     ((A2 -n> A1) * (B1 -n> B2)) → cFunctor_car A1 B1 -n> cFunctor_car A2 B2;
   cFunctor_ne {A1 A2 B1 B2} n :

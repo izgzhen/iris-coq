@@ -443,7 +443,7 @@ End cmra_monotone.
 
 (** Functors *)
 Structure rFunctor := RFunctor {
-  rFunctor_car : cofeT → cofeT -> cmraT;
+  rFunctor_car : cofeT → cofeT → cmraT;
   rFunctor_map {A1 A2 B1 B2} :
     ((A2 -n> A1) * (B1 -n> B2)) → rFunctor_car A1 B1 -n> rFunctor_car A2 B2;
   rFunctor_ne A1 A2 B1 B2 n :

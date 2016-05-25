@@ -91,8 +91,8 @@ Notation "(, y )" := (λ x, (x,y)) (only parsing) : C_scope.
 Notation "p .1" := (fst p) (at level 10, format "p .1").
 Notation "p .2" := (snd p) (at level 10, format "p .2").
 
-Definition fun_map {A A' B B'} (f : A' -> A) (g : B -> B')
-  (h : A -> B) : A' -> B' := g ∘ h ∘ f.
+Definition fun_map {A A' B B'} (f : A' → A) (g : B → B')
+  (h : A → B) : A' → B' := g ∘ h ∘ f.
 Definition prod_map {A A' B B'} (f : A → A') (g : B → B')
   (p : A * B) : A' * B' := (f (p.1), g (p.2)).
 Arguments prod_map {_ _ _ _} _ _ !_ /.
