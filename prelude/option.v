@@ -80,9 +80,9 @@ Lemma not_eq_None_Some {A} (mx : option A) : mx ≠ None ↔ is_Some mx.
 Proof. rewrite eq_None_not_Some; apply dec_stable; tauto. Qed.
 
 (** Lifting a relation point-wise to option *)
-Inductive option_Forall2 {A B} (P: A → B → Prop) : option A → option B → Prop :=
-  | Some_Forall2 x y : P x y → option_Forall2 P (Some x) (Some y)
-  | None_Forall2 : option_Forall2 P None None.
+Inductive option_Forall2 {A B} (R: A → B → Prop) : option A → option B → Prop :=
+  | Some_Forall2 x y : R x y → option_Forall2 R (Some x) (Some y)
+  | None_Forall2 : option_Forall2 R None None.
 Definition option_relation {A B} (R: A → B → Prop) (P: A → Prop) (Q: B → Prop)
     (mx : option A) (my : option B) : Prop :=
   match mx, my with
@@ -92,22 +92,30 @@ Definition option_relation {A B} (R: A → B → Prop) (P: A → Prop) (Q: B →
   | None, None => True
   end.
 
+Section Forall2.
+  Context {A} (R : relation A).
+
+  Global Instance option_Forall2_refl : Reflexive R → Reflexive (option_Forall2 R).
+  Proof. intros ? [?|]; by constructor. Qed.
+  Global Instance option_Forall2_sym : Symmetric R → Symmetric (option_Forall2 R).
+  Proof. destruct 2; by constructor. Qed.
+  Global Instance option_Forall2_trans : Transitive R → Transitive (option_Forall2 R).
+  Proof. destruct 2; inversion_clear 1; constructor; etrans; eauto. Qed.
+  Global Instance option_Forall2_equiv : Equivalence R → Equivalence (option_Forall2 R).
+  Proof. destruct 1; split; apply _. Qed.
+End Forall2.
+
 (** Setoids *)
+Instance option_equiv `{Equiv A} : Equiv (option A) := option_Forall2 (≡).
+
 Section setoids.
   Context `{Equiv A} `{!Equivalence ((≡) : relation A)}.
 
-  Global Instance option_equiv : Equiv (option A) := option_Forall2 (≡).
-
   Lemma equiv_option_Forall2 mx my : mx ≡ my ↔ option_Forall2 (≡) mx my.
-  Proof. split; destruct 1; constructor; auto. Qed.
+  Proof. done. Qed.
 
   Global Instance option_equivalence : Equivalence ((≡) : relation (option A)).
-  Proof.
-    split.
-    - by intros []; constructor.
-    - by destruct 1; constructor.
-    - destruct 1; inversion 1; constructor; etrans; eauto.
-  Qed.
+  Proof. apply _. Qed.
   Global Instance Some_proper : Proper ((≡) ==> (≡)) (@Some A).
   Proof. by constructor. Qed.
   Global Instance option_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (option A).
@@ -128,6 +136,8 @@ Section setoids.
     Proper ((≡) ==> (≡) ==> (≡)) (@from_option A).
   Proof. by destruct 2. Qed.
 End setoids.
+
+Typeclasses Opaque option_equiv.
 
 (** Equality on [option] is decidable. *)
 Instance option_eq_None_dec {A} (mx : option A) : Decision (mx = None) :=
