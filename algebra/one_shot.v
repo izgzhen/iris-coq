@@ -65,7 +65,7 @@ Proof.
     feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
     rewrite (conv_compl n (one_shot_chain c _)) /=. destruct (c n); naive_solver.
 Qed.
-Canonical Structure one_shotC : cofeT := CofeT one_shot_cofe_mixin.
+Canonical Structure one_shotC : cofeT := CofeT (one_shot A) one_shot_cofe_mixin.
 Global Instance one_shot_discrete : Discrete A → Discrete one_shotC.
 Proof. by inversion_clear 2; constructor; done || apply (timeless _). Qed.
 Global Instance one_shot_leibniz : LeibnizEquiv A → LeibnizEquiv (one_shot A).
@@ -186,7 +186,8 @@ Proof.
        * exists (Shot a, ∅). inversion_clear Hx'. by repeat constructor.
        * exists (∅, Shot a). inversion_clear Hx'. by repeat constructor.
 Qed.
-Canonical Structure one_shotR : cmraT := CMRAT one_shot_cofe_mixin one_shot_cmra_mixin.
+Canonical Structure one_shotR : cmraT :=
+  CMRAT (one_shot A) one_shot_cofe_mixin one_shot_cmra_mixin.
 Global Instance one_shot_cmra_unit : CMRAUnit one_shotR.
 Proof. split. done. by intros []. apply _. Qed.
 Global Instance one_shot_cmra_discrete : CMRADiscrete A → CMRADiscrete one_shotR.

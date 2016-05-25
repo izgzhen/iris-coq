@@ -68,7 +68,7 @@ Proof.
     rewrite lookup_seq //= (conv_compl n (list_chain c _ _)) /=.
     by destruct (lookup_lt_is_Some_2 (c n) i) as [? ->].
 Qed.
-Canonical Structure listC := CofeT list_cofe_mixin.
+Canonical Structure listC := CofeT (list A) list_cofe_mixin.
 Global Instance list_discrete : Discrete A → Discrete listC.
 Proof. induction 2; constructor; try apply (timeless _); auto. Qed.
 
@@ -196,7 +196,8 @@ Section cmra.
           [inversion_clear Hl; inversion_clear Hl'; auto ..|]; simplify_eq/=.
         exists (y1' :: l1', y2' :: l2'); repeat constructor; auto.
   Qed.
-  Canonical Structure listR : cmraT := CMRAT list_cofe_mixin list_cmra_mixin.
+  Canonical Structure listR : cmraT :=
+    CMRAT (list A) list_cofe_mixin list_cmra_mixin.
 
   Global Instance empty_list : Empty (list A) := [].
   Global Instance list_cmra_unit : CMRAUnit listR.

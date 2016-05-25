@@ -28,7 +28,7 @@ Instance dec_agree_op : Op (dec_agree A) := λ x y,
   end.
 Instance dec_agree_core : Core (dec_agree A) := id.
 
-Definition dec_agree_ra : RA (dec_agree A).
+Definition dec_agree_ra_mixin : RAMixin (dec_agree A).
 Proof.
   split.
   - apply _.
@@ -42,7 +42,8 @@ Proof.
   - by intros [?|] [?|] ?.
 Qed.
 
-Canonical Structure dec_agreeR : cmraT := discreteR dec_agree_ra.
+Canonical Structure dec_agreeR : cmraT :=
+  discreteR (dec_agree A) dec_agree_ra_mixin.
 
 (* Some properties of this CMRA *)
 Global Instance dec_agree_persistent (x : dec_agreeR) : Persistent x.

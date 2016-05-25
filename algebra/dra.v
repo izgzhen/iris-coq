@@ -1,53 +1,112 @@
 From iris.algebra Require Export cmra.
 
-(** From disjoint pcm *)
-Record validity {A} (P : A → Prop) : Type := Validity {
-  validity_car : A;
-  validity_is_valid : Prop;
-  validity_prf : validity_is_valid → P validity_car
-}.
-Add Printing Constructor validity.
-Arguments Validity {_ _} _ _ _.
-Arguments validity_car {_ _} _.
-Arguments validity_is_valid {_ _} _.
-
-Definition to_validity {A} {P : A → Prop} (x : A) : validity P :=
-  Validity x (P x) id.
-
-Class DRA A `{Equiv A, Valid A, Core A, Disjoint A, Op A} := {
+Record DRAMixin A `{Equiv A, Core A, Disjoint A, Op A, Valid A} := {
   (* setoids *)
-  dra_equivalence :> Equivalence ((≡) : relation A);
-  dra_op_proper :> Proper ((≡) ==> (≡) ==> (≡)) (⋅);
-  dra_core_proper :> Proper ((≡) ==> (≡)) core;
-  dra_valid_proper :> Proper ((≡) ==> impl) valid;
-  dra_disjoint_proper :> ∀ x, Proper ((≡) ==> impl) (disjoint x);
+  mixin_dra_equivalence : Equivalence ((≡) : relation A);
+  mixin_dra_op_proper : Proper ((≡) ==> (≡) ==> (≡)) (⋅);
+  mixin_dra_core_proper : Proper ((≡) ==> (≡)) core;
+  mixin_dra_valid_proper : Proper ((≡) ==> impl) valid;
+  mixin_dra_disjoint_proper x : Proper ((≡) ==> impl) (disjoint x);
   (* validity *)
-  dra_op_valid x y : ✓ x → ✓ y → x ⊥ y → ✓ (x ⋅ y);
-  dra_core_valid x : ✓ x → ✓ core x;
+  mixin_dra_op_valid x y : ✓ x → ✓ y → x ⊥ y → ✓ (x ⋅ y);
+  mixin_dra_core_valid x : ✓ x → ✓ core x;
   (* monoid *)
-  dra_assoc :> Assoc (≡) (⋅);
-  dra_disjoint_ll x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ z;
-  dra_disjoint_move_l x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ y ⋅ z;
-  dra_symmetric :> Symmetric (@disjoint A _);
-  dra_comm x y : ✓ x → ✓ y → x ⊥ y → x ⋅ y ≡ y ⋅ x;
-  dra_core_disjoint_l x : ✓ x → core x ⊥ x;
-  dra_core_l x : ✓ x → core x ⋅ x ≡ x;
-  dra_core_idemp x : ✓ x → core (core x) ≡ core x;
-  dra_core_preserving x y : 
+  mixin_dra_assoc : Assoc (≡) (⋅);
+  mixin_dra_disjoint_ll x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ z;
+  mixin_dra_disjoint_move_l x y z :
+    ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ y ⋅ z;
+  mixin_dra_symmetric : Symmetric (@disjoint A _);
+  mixin_dra_comm x y : ✓ x → ✓ y → x ⊥ y → x ⋅ y ≡ y ⋅ x;
+  mixin_dra_core_disjoint_l x : ✓ x → core x ⊥ x;
+  mixin_dra_core_l x : ✓ x → core x ⋅ x ≡ x;
+  mixin_dra_core_idemp x : ✓ x → core (core x) ≡ core x;
+  mixin_dra_core_preserving x y : 
     ∃ z, ✓ x → ✓ y → x ⊥ y → core (x ⋅ y) ≡ core x ⋅ z ∧ ✓ z ∧ core x ⊥ z
 }.
+Structure draT := DRAT {
+  dra_car :> Type;
+  dra_equiv : Equiv dra_car;
+  dra_core : Core dra_car;
+  dra_disjoint : Disjoint dra_car;
+  dra_op : Op dra_car;
+  dra_valid : Valid dra_car;
+  dra_mixin : DRAMixin dra_car
+}.
+Arguments DRAT _ {_ _ _ _ _} _.
+Arguments dra_car : simpl never.
+Arguments dra_equiv : simpl never.
+Arguments dra_core : simpl never.
+Arguments dra_disjoint : simpl never.
+Arguments dra_op : simpl never.
+Arguments dra_valid : simpl never.
+Arguments dra_mixin : simpl never.
+Add Printing Constructor draT.
+Existing Instances dra_equiv dra_core dra_disjoint dra_op dra_valid.
 
+(** Lifting properties from the mixin *)
+Section dra_mixin.
+  Context {A : draT}.
+  Implicit Types x y : A.
+  Global Instance dra_equivalence : Equivalence ((≡) : relation A).
+  Proof. apply (mixin_dra_equivalence _ (dra_mixin A)). Qed.
+  Global Instance dra_op_proper : Proper ((≡) ==> (≡) ==> (≡)) (@op A _).
+  Proof. apply (mixin_dra_op_proper _ (dra_mixin A)). Qed.
+  Global Instance dra_core_proper : Proper ((≡) ==> (≡)) (@core A _).
+  Proof. apply (mixin_dra_core_proper _ (dra_mixin A)). Qed.
+  Global Instance dra_valid_proper : Proper ((≡) ==> impl) (@valid A _).
+  Proof. apply (mixin_dra_valid_proper _ (dra_mixin A)). Qed.
+  Global Instance dra_disjoint_proper x : Proper ((≡) ==> impl) (disjoint x).
+  Proof. apply (mixin_dra_disjoint_proper _ (dra_mixin A)). Qed.
+  Lemma dra_op_valid x y : ✓ x → ✓ y → x ⊥ y → ✓ (x ⋅ y).
+  Proof. apply (mixin_dra_op_valid _ (dra_mixin A)). Qed.
+  Lemma dra_core_valid x : ✓ x → ✓ core x.
+  Proof. apply (mixin_dra_core_valid _ (dra_mixin A)). Qed.
+  Global Instance dra_assoc : Assoc (≡) (@op A _).
+  Proof. apply (mixin_dra_assoc _ (dra_mixin A)). Qed.
+  Lemma dra_disjoint_ll x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ z.
+  Proof. apply (mixin_dra_disjoint_ll _ (dra_mixin A)). Qed.
+  Lemma dra_disjoint_move_l x y z :
+    ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ y ⋅ z.
+  Proof. apply (mixin_dra_disjoint_move_l _ (dra_mixin A)). Qed.
+  Global Instance  dra_symmetric : Symmetric (@disjoint A _).
+  Proof. apply (mixin_dra_symmetric _ (dra_mixin A)). Qed.
+  Lemma dra_comm x y : ✓ x → ✓ y → x ⊥ y → x ⋅ y ≡ y ⋅ x.
+  Proof. apply (mixin_dra_comm _ (dra_mixin A)). Qed.
+  Lemma dra_core_disjoint_l x : ✓ x → core x ⊥ x.
+  Proof. apply (mixin_dra_core_disjoint_l _ (dra_mixin A)). Qed.
+  Lemma dra_core_l x : ✓ x → core x ⋅ x ≡ x.
+  Proof. apply (mixin_dra_core_l _ (dra_mixin A)). Qed.
+  Lemma dra_core_idemp x : ✓ x → core (core x) ≡ core x.
+  Proof. apply (mixin_dra_core_idemp _ (dra_mixin A)). Qed.
+  Lemma dra_core_preserving x y : 
+    ∃ z, ✓ x → ✓ y → x ⊥ y → core (x ⋅ y) ≡ core x ⋅ z ∧ ✓ z ∧ core x ⊥ z.
+  Proof. apply (mixin_dra_core_preserving _ (dra_mixin A)). Qed.
+End dra_mixin.
+
+Record validity (A : draT) := Validity {
+  validity_car : A;
+  validity_is_valid : Prop;
+  validity_prf : validity_is_valid → valid validity_car
+}.
+Add Printing Constructor validity.
+Arguments Validity {_} _ _ _.
+Arguments validity_car {_} _.
+Arguments validity_is_valid {_} _.
+
+Definition to_validity {A : draT} (x : A) : validity A :=
+  Validity x (valid x) id.
+
+(* The actual construction *)
 Section dra.
-Context A `{DRA A}.
+Context (A : draT).
+Implicit Types a b : A.
+Implicit Types x y z : validity A.
 Arguments valid _ _ !_ /.
-Hint Immediate dra_op_proper : typeclass_instances.
 
-Notation T := (validity (valid : A → Prop)).
-
-Instance validity_valid : Valid T := validity_is_valid.
-Instance validity_equiv : Equiv T := λ x y,
+Instance validity_valid : Valid (validity A) := validity_is_valid.
+Instance validity_equiv : Equiv (validity A) := λ x y,
   (valid x ↔ valid y) ∧ (valid x → validity_car x ≡ validity_car y).
-Instance validity_equivalence : Equivalence ((≡) : relation T).
+Instance validity_equivalence : Equivalence (@equiv (validity A) _).
 Proof.
   split; unfold equiv, validity_equiv.
   - by intros [x px ?]; simpl.
@@ -55,40 +114,43 @@ Proof.
   - intros [x px ?] [y py ?] [z pz ?] [? Hxy] [? Hyz]; simpl in *.
     split; [|intros; trans y]; tauto.
 Qed.
+Canonical Structure validityC : cofeT := discreteC (validity A).
+
 Instance dra_valid_proper' : Proper ((≡) ==> iff) (valid : A → Prop).
-Proof. by split; apply dra_valid_proper. Qed.
-Instance to_validity_proper : Proper ((≡) ==> (≡)) to_validity.
+Proof. by split; apply: dra_valid_proper. Qed.
+Global Instance to_validity_proper : Proper ((≡) ==> (≡)) to_validity.
 Proof. by intros x1 x2 Hx; split; rewrite /= Hx. Qed.
-Instance: Proper ((≡) ==> (≡) ==> iff) (⊥).
+Instance: Proper ((≡) ==> (≡) ==> iff) (disjoint : relation A).
 Proof.
   intros x1 x2 Hx y1 y2 Hy; split.
   - by rewrite Hy (symmetry_iff (⊥) x1) (symmetry_iff (⊥) x2) Hx.
   - by rewrite -Hy (symmetry_iff (⊥) x2) (symmetry_iff (⊥) x1) -Hx.
 Qed.
-Lemma dra_disjoint_rl x y z : ✓ x → ✓ y → ✓ z → y ⊥ z → x ⊥ y ⋅ z → x ⊥ y.
-Proof. intros ???. rewrite !(symmetry_iff _ x). by apply dra_disjoint_ll. Qed.
-Lemma dra_disjoint_lr x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → y ⊥ z.
+
+Lemma dra_disjoint_rl a b c : ✓ a → ✓ b → ✓ c → b ⊥ c → a ⊥ b ⋅ c → a ⊥ b.
+Proof. intros ???. rewrite !(symmetry_iff _ a). by apply dra_disjoint_ll. Qed.
+Lemma dra_disjoint_lr a b c : ✓ a → ✓ b → ✓ c → a ⊥ b → a ⋅ b ⊥ c → b ⊥ c.
 Proof. intros ????. rewrite dra_comm //. by apply dra_disjoint_ll. Qed.
-Lemma dra_disjoint_move_r x y z :
-  ✓ x → ✓ y → ✓ z → y ⊥ z → x ⊥ y ⋅ z → x ⋅ y ⊥ z.
+Lemma dra_disjoint_move_r a b c :
+  ✓ a → ✓ b → ✓ c → b ⊥ c → a ⊥ b ⋅ c → a ⋅ b ⊥ c.
 Proof.
   intros; symmetry; rewrite dra_comm; eauto using dra_disjoint_rl.
   apply dra_disjoint_move_l; auto; by rewrite dra_comm.
 Qed.
 Hint Immediate dra_disjoint_move_l dra_disjoint_move_r.
 
-Lemma validity_valid_car_valid (z : T) : ✓ z → ✓ validity_car z.
+Lemma validity_valid_car_valid z : ✓ z → ✓ validity_car z.
 Proof. apply validity_prf. Qed.
 Hint Resolve validity_valid_car_valid.
-Program Instance validity_core : Core T := λ x,
+Program Instance validity_core : Core (validity A) := λ x,
   Validity (core (validity_car x)) (✓ x) _.
-Solve Obligations with naive_solver auto using dra_core_valid.
-Program Instance validity_op : Op T := λ x y,
+Solve Obligations with naive_solver eauto using dra_core_valid.
+Program Instance validity_op : Op (validity A) := λ x y,
   Validity (validity_car x ⋅ validity_car y)
            (✓ x ∧ ✓ y ∧ validity_car x ⊥ validity_car y) _.
-Solve Obligations with naive_solver auto using dra_op_valid.
+Solve Obligations with naive_solver eauto using dra_op_valid.
 
-Definition validity_ra : RA (discreteC T).
+Definition validity_ra_mixin : RAMixin (validity A).
 Proof.
   split.
   - intros ??? [? Heq]; split; simpl; [|by intros (?&?&?); rewrite Heq].
@@ -98,7 +160,7 @@ Proof.
   - intros ?? [??]; naive_solver.
   - intros [x px ?] [y py ?] [z pz ?]; split; simpl;
       [intuition eauto 2 using dra_disjoint_lr, dra_disjoint_rl
-      |by intros; rewrite assoc].
+      |intros; by rewrite assoc].
   - intros [x px ?] [y py ?]; split; naive_solver eauto using dra_comm.
   - intros [x px ?]; split;
       naive_solver eauto using dra_core_l, dra_core_disjoint_l.
@@ -111,21 +173,20 @@ Proof.
     + intros. rewrite Hy //. tauto.
   - by intros [x px ?] [y py ?] (?&?&?).
 Qed.
-Definition validityR : cmraT := discreteR validity_ra.
-Instance validity_cmra_discrete :
-  CMRADiscrete validityR := discrete_cmra_discrete _.
+Canonical Structure validityR : cmraT :=
+  discreteR (validity A) validity_ra_mixin.
 
-Lemma validity_update (x y : validityR) :
-  (∀ z, ✓ x → ✓ z → validity_car x ⊥ z → ✓ y ∧ validity_car y ⊥ z) → x ~~> y.
+Lemma validity_update x y :
+  (∀ c, ✓ x → ✓ c → validity_car x ⊥ c → ✓ y ∧ validity_car y ⊥ c) → x ~~> y.
 Proof.
   intros Hxy; apply cmra_discrete_update=> z [?[??]].
   split_and!; try eapply Hxy; eauto.
 Qed.
 
-Lemma to_validity_op (x y : A) :
-  (✓ (x ⋅ y) → ✓ x ∧ ✓ y ∧ x ⊥ y) →
-  to_validity (x ⋅ y) ≡ to_validity x ⋅ to_validity y.
-Proof. split; naive_solver auto using dra_op_valid. Qed.
+Lemma to_validity_op a b :
+  (✓ (a ⋅ b) → ✓ a ∧ ✓ b ∧ a ⊥ b) →
+  to_validity (a ⋅ b) ≡ to_validity a ⋅ to_validity b.
+Proof. split; naive_solver eauto using dra_op_valid. Qed.
 
 (* TODO: This has to be proven again. *)
 (*

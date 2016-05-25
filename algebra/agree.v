@@ -49,7 +49,7 @@ Proof.
   - intros n c; apply and_wlog_r; intros;
       symmetry; apply (chain_cauchy c); naive_solver.
 Qed.
-Canonical Structure agreeC := CofeT agree_cofe_mixin.
+Canonical Structure agreeC := CofeT (agree A) agree_cofe_mixin.
 
 Lemma agree_car_ne n (x y : agree A) : ✓{n} x → x ≡{n}≡ y → x n ≡{n}≡ y n.
 Proof. by intros [??] Hxy; apply Hxy. Qed.
@@ -116,7 +116,8 @@ Proof.
     + by rewrite agree_idemp.
     + by move: Hval; rewrite Hx; move=> /agree_op_inv->; rewrite agree_idemp.
 Qed.
-Canonical Structure agreeR : cmraT := CMRAT agree_cofe_mixin agree_cmra_mixin.
+Canonical Structure agreeR : cmraT :=
+  CMRAT (agree A) agree_cofe_mixin agree_cmra_mixin.
 
 Global Instance agree_persistent (x : agree A) : Persistent x.
 Proof. done. Qed.

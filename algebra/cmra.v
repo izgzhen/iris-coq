@@ -62,7 +62,7 @@ Structure cmraT := CMRAT {
   cmra_cofe_mixin : CofeMixin cmra_car;
   cmra_mixin : CMRAMixin cmra_car
 }.
-Arguments CMRAT {_ _ _ _ _ _ _ _} _ _.
+Arguments CMRAT _ {_ _ _ _ _ _ _} _ _.
 Arguments cmra_car : simpl never.
 Arguments cmra_equiv : simpl never.
 Arguments cmra_dist : simpl never.
@@ -75,7 +75,7 @@ Arguments cmra_cofe_mixin : simpl never.
 Arguments cmra_mixin : simpl never.
 Add Printing Constructor cmraT.
 Existing Instances cmra_core cmra_op cmra_valid cmra_validN.
-Coercion cmra_cofeC (A : cmraT) : cofeT := CofeT (cmra_cofe_mixin A).
+Coercion cmra_cofeC (A : cmraT) : cofeT := CofeT A (cmra_cofe_mixin A).
 Canonical Structure cmra_cofeC.
 
 (** Lifting properties from the mixin *)
@@ -474,14 +474,14 @@ End cmra_transport.
 
 (** * Instances *)
 (** ** Discrete CMRA *)
-Class RA A `{Equiv A, Core A, Op A, Valid A} := {
+Record RAMixin A `{Equiv A, Core A, Op A, Valid A} := {
   (* setoids *)
   ra_op_ne (x : A) : Proper ((≡) ==> (≡)) (op x);
-  ra_core_ne :> Proper ((≡) ==> (≡)) core;
-  ra_validN_ne :> Proper ((≡) ==> impl) valid;
+  ra_core_ne : Proper ((≡) ==> (≡)) core;
+  ra_validN_ne : Proper ((≡) ==> impl) valid;
   (* monoid *)
-  ra_assoc :> Assoc (≡) (⋅);
-  ra_comm :> Comm (≡) (⋅);
+  ra_assoc : Assoc (≡) (⋅);
+  ra_comm : Comm (≡) (⋅);
   ra_core_l x : core x ⋅ x ≡ x;
   ra_core_idemp x : core (core x) ≡ core x;
   ra_core_preserving x y : x ≼ y → core x ≼ core y;
@@ -489,36 +489,41 @@ Class RA A `{Equiv A, Core A, Op A, Valid A} := {
 }.
 
 Section discrete.
-  Context {A : cofeT} `{Discrete A}.
-  Context `{Core A, Op A, Valid A} (ra : RA A).
+  Context `{Equiv A, Core A, Op A, Valid A, @Equivalence A (≡)}.
+  Context (ra_mix : RAMixin A).
+  Existing Instances discrete_dist discrete_compl.
 
   Instance discrete_validN : ValidN A := λ n x, ✓ x.
   Definition discrete_cmra_mixin : CMRAMixin A.
   Proof.
-    destruct ra; split; unfold Proper, respectful, includedN;
-      try setoid_rewrite <-(timeless_iff _ _); try done.
+    destruct ra_mix; split; try done.
     - intros x; split; first done. by move=> /(_ 0).
-    - intros n x y1 y2 ??; exists (y1,y2); split_and?; auto.
-      apply (timeless _), dist_le with n; auto with lia.
+    - intros n x y1 y2 ??; by exists (y1,y2).
   Qed.
-  Definition discreteR : cmraT := CMRAT (cofe_mixin A) discrete_cmra_mixin.
-  Global Instance discrete_cmra_discrete : CMRADiscrete discreteR.
-  Proof. split. change (Discrete A); apply _. by intros x ?. Qed.
 End discrete.
+
+Notation discreteR A ra_mix :=
+  (CMRAT A discrete_cofe_mixin (discrete_cmra_mixin ra_mix)).
+Notation discreteLeibnizR A ra_mix :=
+  (CMRAT A (@discrete_cofe_mixin _ equivL _) (discrete_cmra_mixin ra_mix)).
+
+Global Instance discrete_cmra_discrete `{Equiv A, Core A, Op A, Valid A,
+  @Equivalence A (≡)} (ra_mix : RAMixin A) : CMRADiscrete (discreteR A ra_mix).
+Proof. split. apply _. done. Qed.
 
 (** ** CMRA for the unit type *)
 Section unit.
   Instance unit_valid : Valid () := λ x, True.
+  Instance unit_validN : ValidN () := λ n x, True.
   Instance unit_core : Core () := λ x, x.
   Instance unit_op : Op () := λ x y, ().
   Global Instance unit_empty : Empty () := ().
-  Definition unit_ra : RA ().
-  Proof. by split. Qed.
-  Canonical Structure unitR : cmraT :=
-    Eval cbv [unitC discreteR cofe_car] in discreteR unit_ra.
+  Definition unit_cmra_mixin : CMRAMixin ().
+  Proof. by split; last exists ((),()). Qed.
+  Canonical Structure unitR : cmraT := CMRAT () unit_cofe_mixin unit_cmra_mixin.
   Global Instance unit_cmra_unit : CMRAUnit unitR.
   Global Instance unit_cmra_discrete : CMRADiscrete unitR.
-  Proof. by apply discrete_cmra_discrete. Qed.
+  Proof. done. Qed.
   Global Instance unit_persistent (x : ()) : Persistent x.
   Proof. done. Qed.
 End unit.
@@ -563,7 +568,8 @@ Section prod.
       destruct (cmra_extend n (x.2) (y1.2) (y2.2)) as (z2&?&?&?); auto.
       by exists ((z1.1,z2.1),(z1.2,z2.2)).
   Qed.
-  Canonical Structure prodR : cmraT := CMRAT prod_cofe_mixin prod_cmra_mixin.
+  Canonical Structure prodR : cmraT :=
+    CMRAT (A * B) prod_cofe_mixin prod_cmra_mixin.
   Global Instance prod_cmra_unit `{Empty A, Empty B} :
     CMRAUnit A → CMRAUnit B → CMRAUnit prodR.
   Proof.

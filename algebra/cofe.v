@@ -65,7 +65,7 @@ Structure cofeT := CofeT {
   cofe_compl : Compl cofe_car;
   cofe_mixin : CofeMixin cofe_car
 }.
-Arguments CofeT {_ _ _ _} _.
+Arguments CofeT _ {_ _ _} _.
 Add Printing Constructor cofeT.
 Existing Instances cofe_equiv cofe_dist cofe_compl.
 Arguments cofe_car : simpl never.
@@ -239,7 +239,7 @@ Section cofe_mor.
     - intros n c x; simpl.
       by rewrite (conv_compl n (fun_chain c x)) /=.
   Qed.
-  Canonical Structure cofe_mor : cofeT := CofeT cofe_mor_cofe_mixin.
+  Canonical Structure cofe_mor : cofeT := CofeT (cofeMor A B) cofe_mor_cofe_mixin.
 
   Global Instance cofe_mor_car_ne n :
     Proper (dist n ==> dist n ==> dist n) (@cofe_mor_car A B).
@@ -291,7 +291,7 @@ Section unit.
   Instance unit_compl : Compl unit := λ _, ().
   Definition unit_cofe_mixin : CofeMixin unit.
   Proof. by repeat split; try exists 0. Qed.
-  Canonical Structure unitC : cofeT := CofeT unit_cofe_mixin.
+  Canonical Structure unitC : cofeT := CofeT unit unit_cofe_mixin.
   Global Instance unit_discrete_cofe : Discrete unitC.
   Proof. done. Qed.
 End unit.
@@ -317,7 +317,7 @@ Section product.
     - intros n c; split. apply (conv_compl n (chain_map fst c)).
       apply (conv_compl n (chain_map snd c)).
   Qed.
-  Canonical Structure prodC : cofeT := CofeT prod_cofe_mixin.
+  Canonical Structure prodC : cofeT := CofeT (A * B) prod_cofe_mixin.
   Global Instance pair_timeless (x : A) (y : B) :
     Timeless x → Timeless y → Timeless (x,y).
   Proof. by intros ?? [x' y'] [??]; split; apply (timeless _). Qed.
@@ -436,15 +436,16 @@ Section discrete_cofe.
     - intros n c. rewrite /compl /discrete_compl /=;
       symmetry; apply (chain_cauchy c 0 n). omega.
   Qed.
-  Definition discreteC : cofeT := CofeT discrete_cofe_mixin.
-  Global Instance discrete_discrete_cofe : Discrete discreteC.
-  Proof. by intros x y. Qed.
 End discrete_cofe.
-Arguments discreteC _ {_ _}.
 
-Definition leibnizC (A : Type) : cofeT := @discreteC A equivL _.
-Instance leibnizC_leibniz : LeibnizEquiv (leibnizC A).
-Proof. by intros A x y. Qed.
+Notation discreteC A := (CofeT A discrete_cofe_mixin).
+Notation leibnizC A := (CofeT A (@discrete_cofe_mixin _ equivL _)).
+
+Instance discrete_discrete_cofe `{Equiv A, @Equivalence A (≡)} :
+  Discrete (discreteC A).
+Proof. by intros x y. Qed.
+Instance leibnizC_leibniz A : LeibnizEquiv (leibnizC A).
+Proof. by intros x y. Qed.
 
 Canonical Structure natC := leibnizC nat.
 Canonical Structure boolC := leibnizC bool.
@@ -478,7 +479,7 @@ Section later.
     - intros [|n] [x] [y] ?; [done|]; unfold dist, later_dist; by apply dist_S.
     - intros [|n] c; [done|by apply (conv_compl n (later_chain c))].
   Qed.
-  Canonical Structure laterC : cofeT := CofeT later_cofe_mixin.
+  Canonical Structure laterC : cofeT := CofeT (later A) later_cofe_mixin.
   Global Instance Next_contractive : Contractive (@Next A).
   Proof. intros [|n] x y Hxy; [done|]; apply Hxy; lia. Qed.
   Global Instance Later_inj n : Inj (dist n) (dist (S n)) (@Next A).

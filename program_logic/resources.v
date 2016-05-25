@@ -66,7 +66,7 @@ Proof.
     + apply (conv_compl n (chain_map pst c)).
     + apply (conv_compl n (chain_map gst c)).
 Qed.
-Canonical Structure resC : cofeT := CofeT res_cofe_mixin.
+Canonical Structure resC : cofeT := CofeT (res Λ A M) res_cofe_mixin.
 Global Instance res_timeless r :
   Timeless (wld r) → Timeless (gst r) → Timeless r.
 Proof. by destruct 3; constructor; try apply: timeless. Qed.
@@ -118,7 +118,8 @@ Proof.
       (cmra_extend n (gst r) (gst r1) (gst r2)) as ([m m']&?&?&?); auto.
     by exists (Res w σ m, Res w' σ' m').
 Qed.
-Canonical Structure resR : cmraT := CMRAT res_cofe_mixin res_cmra_mixin.
+Canonical Structure resR : cmraT :=
+  CMRAT (res Λ A M) res_cofe_mixin res_cmra_mixin.
 Global Instance res_cmra_unit `{CMRAUnit M} : CMRAUnit resR.
 Proof.
   split.

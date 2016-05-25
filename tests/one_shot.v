@@ -52,8 +52,7 @@ Proof.
     iInv> N as "[[Hl Hγ]|H]"; last iDestruct "H" as {m} "[Hl Hγ]".
     + iApply wp_pvs. wp_cas_suc. iSplitL; [|by iLeft; iPvsIntro].
       iPvs (own_update with "Hγ") as "Hγ".
-      { (* FIXME: canonical structures are not working *)
-        by apply (one_shot_update_shoot (DecAgree n : dec_agreeR _)). }
+      { by apply (one_shot_update_shoot (DecAgree n)). }
       iPvsIntro; iRight; iExists n; by iSplitL "Hl".
     + wp_cas_fail. iSplitL. iRight; iExists m; by iSplitL "Hl". by iRight.
   - iIntros "!". wp_seq. wp_focus (! _)%E. iInv> N as "Hγ".

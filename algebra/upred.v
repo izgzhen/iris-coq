@@ -47,7 +47,7 @@ Section cofe.
     - intros n P Q HPQ; split=> i x ??; apply HPQ; auto.
     - intros n c; split=>i x ??; symmetry; apply (chain_cauchy c i n); auto.
   Qed.
-  Canonical Structure uPredC : cofeT := CofeT uPred_cofe_mixin.
+  Canonical Structure uPredC : cofeT := CofeT (uPred M) uPred_cofe_mixin.
 End cofe.
 Arguments uPredC : clear implicits.
 

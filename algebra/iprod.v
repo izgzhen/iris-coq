@@ -42,7 +42,7 @@ Section iprod_cofe.
       rewrite /compl /iprod_compl (conv_compl n (iprod_chain c x)).
       apply (chain_cauchy c); lia.
   Qed.
-  Canonical Structure iprodC : cofeT := CofeT iprod_cofe_mixin.
+  Canonical Structure iprodC : cofeT := CofeT (iprod B) iprod_cofe_mixin.
 
   (** Properties of empty *)
   Section empty.
@@ -153,7 +153,8 @@ Section iprod_cmra.
       exists ((λ x, (proj1_sig (g x)).1), (λ x, (proj1_sig (g x)).2)).
       split_and?; intros x; apply (proj2_sig (g x)).
   Qed.
-  Canonical Structure iprodR : cmraT := CMRAT iprod_cofe_mixin iprod_cmra_mixin.
+  Canonical Structure iprodR : cmraT :=
+    CMRAT (iprod B) iprod_cofe_mixin iprod_cmra_mixin.
   Global Instance iprod_cmra_unit `{∀ x, Empty (B x)} :
     (∀ x, CMRAUnit (B x)) → CMRAUnit iprodR.
   Proof.

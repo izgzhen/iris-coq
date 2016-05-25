@@ -28,7 +28,7 @@ Proof.
     feed inversion (λ H, chain_cauchy c 0 n H k); simpl; auto with lia.
     by rewrite conv_compl /=; apply reflexive_eq.
 Qed.
-Canonical Structure gmapC : cofeT := CofeT gmap_cofe_mixin.
+Canonical Structure gmapC : cofeT := CofeT (gmap K A) gmap_cofe_mixin.
 Global Instance gmap_discrete : Discrete A → Discrete gmapC.
 Proof. intros ? m m' ? i. by apply (timeless _). Qed.
 (* why doesn't this go automatic? *)
@@ -152,7 +152,8 @@ Proof.
       pose proof (Hm12' i) as Hm12''; rewrite Hx in Hm12''.
       by symmetry; apply option_op_positive_dist_r with (m1 !! i).
 Qed.
-Canonical Structure gmapR : cmraT := CMRAT gmap_cofe_mixin gmap_cmra_mixin.
+Canonical Structure gmapR : cmraT :=
+  CMRAT (gmap K A) gmap_cofe_mixin gmap_cmra_mixin.
 Global Instance gmap_cmra_unit : CMRAUnit gmapR.
 Proof.
   split.

@@ -51,7 +51,7 @@ Proof.
   - intros n c; split. apply (conv_compl n (chain_map authoritative c)).
     apply (conv_compl n (chain_map own c)).
 Qed.
-Canonical Structure authC := CofeT auth_cofe_mixin.
+Canonical Structure authC := CofeT (auth A) auth_cofe_mixin.
 
 Global Instance Auth_timeless a b :
   Timeless a → Timeless b → Timeless (Auth a b).
@@ -128,7 +128,8 @@ Proof.
       as (b&?&?&?); auto using own_validN.
     by exists (Auth (ea.1) (b.1), Auth (ea.2) (b.2)).
 Qed.
-Canonical Structure authR : cmraT := CMRAT auth_cofe_mixin auth_cmra_mixin.
+Canonical Structure authR : cmraT :=
+  CMRAT (auth A) auth_cofe_mixin auth_cmra_mixin.
 Global Instance auth_cmra_discrete : CMRADiscrete A → CMRADiscrete authR.
 Proof.
   split; first apply _.

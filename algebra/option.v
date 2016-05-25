@@ -34,7 +34,7 @@ Proof.
     feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
     rewrite (conv_compl n (option_chain c _)) /=. destruct (c n); naive_solver.
 Qed.
-Canonical Structure optionC := CofeT option_cofe_mixin.
+Canonical Structure optionC := CofeT (option A) option_cofe_mixin.
 Global Instance option_discrete : Discrete A → Discrete optionC.
 Proof. destruct 2; constructor; by apply (timeless _). Qed.
 
@@ -110,7 +110,8 @@ Proof.
     + by exists (None,Some x); inversion Hx'; repeat constructor.
     + exists (None,None); repeat constructor.
 Qed.
-Canonical Structure optionR := CMRAT option_cofe_mixin option_cmra_mixin.
+Canonical Structure optionR :=
+  CMRAT (option A) option_cofe_mixin option_cmra_mixin.
 Global Instance option_cmra_unit : CMRAUnit optionR.
 Proof. split. done. by intros []. by inversion_clear 1. Qed.
 Global Instance option_cmra_discrete : CMRADiscrete A → CMRADiscrete optionR.

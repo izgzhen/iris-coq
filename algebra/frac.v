@@ -72,7 +72,7 @@ Proof.
     feed inversion (chain_cauchy c 0 n); first lia;
        constructor; destruct (c 0); simplify_eq/=.
 Qed.
-Canonical Structure fracC : cofeT := CofeT frac_cofe_mixin.
+Canonical Structure fracC : cofeT := CofeT (frac A) frac_cofe_mixin.
 Global Instance frac_discrete : Discrete A → Discrete fracC.
 Proof. by inversion_clear 2; constructor; done || apply (timeless _). Qed.
 Global Instance frac_leibniz : LeibnizEquiv A → LeibnizEquiv (frac A).
@@ -157,7 +157,8 @@ Proof.
     + exists (∅, Frac q a); inversion_clear Hx'; by repeat constructor.
     + exfalso; inversion_clear Hx'.
 Qed.
-Canonical Structure fracR : cmraT := CMRAT frac_cofe_mixin frac_cmra_mixin.
+Canonical Structure fracR : cmraT :=
+  CMRAT (frac A) frac_cofe_mixin frac_cmra_mixin.
 Global Instance frac_cmra_unit : CMRAUnit fracR.
 Proof. split. done. by intros []. apply _. Qed.
 Global Instance frac_cmra_discrete : CMRADiscrete A → CMRADiscrete fracR.

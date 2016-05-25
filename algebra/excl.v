@@ -59,7 +59,7 @@ Proof.
     feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
     rewrite (conv_compl n (excl_chain c _)) /=. destruct (c n); naive_solver.
 Qed.
-Canonical Structure exclC : cofeT := CofeT excl_cofe_mixin.
+Canonical Structure exclC : cofeT := CofeT (excl A) excl_cofe_mixin.
 Global Instance excl_discrete : Discrete A → Discrete exclC.
 Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
 Global Instance excl_leibniz : LeibnizEquiv A → LeibnizEquiv (excl A).
@@ -107,7 +107,8 @@ Proof.
       | ExclUnit, _ => (ExclUnit, x) | _, ExclUnit => (x, ExclUnit)
       end; destruct y1, y2; inversion_clear Hx; repeat constructor.
 Qed.
-Canonical Structure exclR : cmraT := CMRAT excl_cofe_mixin excl_cmra_mixin.
+Canonical Structure exclR : cmraT :=
+  CMRAT (excl A) excl_cofe_mixin excl_cmra_mixin.
 Global Instance excl_cmra_unit : CMRAUnit exclR.
 Proof. split. done. by intros []. apply _. Qed.
 Global Instance excl_cmra_discrete : Discrete A → CMRADiscrete exclR.
