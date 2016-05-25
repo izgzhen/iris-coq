@@ -1,5 +1,5 @@
-From iris.algebra Require Import cmra option.
-From iris.prelude Require Import list.
+From iris.algebra Require Export cmra.
+From iris.prelude Require Export list.
 From iris.algebra Require Import upred.
 
 Section cofe.

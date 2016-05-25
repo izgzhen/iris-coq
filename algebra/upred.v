@@ -1091,6 +1091,18 @@ Proof.
   unseal=> ?. apply (anti_symm (⊢)); split=> n x ?; by apply (timeless_iff n).
 Qed.
 
+(* Option *)
+Lemma option_equivI {A : cofeT} (mx my : option A) :
+  (mx ≡ my) ⊣⊢ (match mx, my with
+                | Some x, Some y => x ≡ y | None, None => True | _, _ => False
+                end : uPred M).
+Proof.
+  uPred.unseal. do 2 split. by destruct 1. by destruct mx, my; try constructor.
+Qed.
+Lemma option_validI {A : cmraT} (mx : option A) :
+  (✓ mx) ⊣⊢ (match mx with Some x => ✓ x | None => True end : uPred M).
+Proof. uPred.unseal. by destruct mx. Qed.
+
 (* Timeless *)
 Lemma timelessP_spec P : TimelessP P ↔ ∀ n x, ✓{n} x → P 0 x → P n x.
 Proof.

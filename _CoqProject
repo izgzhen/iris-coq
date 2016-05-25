@@ -36,7 +36,6 @@ prelude/list.v
 prelude/error.v
 prelude/functions.v
 prelude/hlist.v
-algebra/option.v
 algebra/cmra.v
 algebra/cmra_big_op.v
 algebra/cmra_tactics.v

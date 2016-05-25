@@ -450,6 +450,91 @@ Proof. by intros x y. Qed.
 Canonical Structure natC := leibnizC nat.
 Canonical Structure boolC := leibnizC bool.
 
+(* Option *)
+Section option.
+  Context {A : cofeT}.
+
+  Inductive option_dist' (n : nat) : relation (option A) :=
+    | Some_dist x y : x ≡{n}≡ y → option_dist' n (Some x) (Some y)
+    | None_dist : option_dist' n None None.
+  Instance option_dist : Dist (option A) := option_dist'.
+
+  Lemma dist_option_Forall2 n mx my : mx ≡{n}≡ my ↔ option_Forall2 (dist n) mx my.
+  Proof. split; destruct 1; constructor; auto. Qed.
+
+  Program Definition option_chain (c : chain (option A)) (x : A) : chain A :=
+    {| chain_car n := from_option x (c n) |}.
+  Next Obligation. intros c x n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
+  Instance option_compl : Compl (option A) := λ c,
+    match c 0 with Some x => Some (compl (option_chain c x)) | None => None end.
+
+  Definition option_cofe_mixin : CofeMixin (option A).
+  Proof.
+    split.
+    - intros mx my; split; [by destruct 1; constructor; apply equiv_dist|].
+      intros Hxy; destruct (Hxy 0); constructor; apply equiv_dist.
+      by intros n; feed inversion (Hxy n).
+    - intros n; split.
+      + by intros [x|]; constructor.
+      + by destruct 1; constructor.
+      + destruct 1; inversion_clear 1; constructor; etrans; eauto.
+    - destruct 1; constructor; by apply dist_S.
+    - intros n c; rewrite /compl /option_compl.
+      feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
+      rewrite (conv_compl n (option_chain c _)) /=. destruct (c n); naive_solver.
+  Qed.
+  Canonical Structure optionC := CofeT (option A) option_cofe_mixin.
+  Global Instance option_discrete : Discrete A → Discrete optionC.
+  Proof. destruct 2; constructor; by apply (timeless _). Qed.
+
+  Global Instance Some_ne : Proper (dist n ==> dist n) (@Some A).
+  Proof. by constructor. Qed.
+  Global Instance is_Some_ne n : Proper (dist n ==> iff) (@is_Some A).
+  Proof. destruct 1; split; eauto. Qed.
+  Global Instance Some_dist_inj : Inj (dist n) (dist n) (@Some A).
+  Proof. by inversion_clear 1. Qed.
+  Global Instance from_option_ne n :
+    Proper (dist n ==> dist n ==> dist n) (@from_option A).
+  Proof. by destruct 2. Qed.
+
+  Global Instance None_timeless : Timeless (@None A).
+  Proof. inversion_clear 1; constructor. Qed.
+  Global Instance Some_timeless x : Timeless x → Timeless (Some x).
+  Proof. by intros ?; inversion_clear 1; constructor; apply timeless. Qed.
+End option.
+
+Arguments optionC : clear implicits.
+
+Instance option_fmap_ne {A B : cofeT} (f : A → B) n:
+  Proper (dist n ==> dist n) f → Proper (dist n==>dist n) (fmap (M:=option) f).
+Proof. by intros Hf; destruct 1; constructor; apply Hf. Qed.
+Definition optionC_map {A B} (f : A -n> B) : optionC A -n> optionC B :=
+  CofeMor (fmap f : optionC A → optionC B).
+Instance optionC_map_ne A B n : Proper (dist n ==> dist n) (@optionC_map A B).
+Proof. by intros f f' Hf []; constructor; apply Hf. Qed.
+
+Program Definition optionCF (F : cFunctor) : cFunctor := {|
+  cFunctor_car A B := optionC (cFunctor_car F A B);
+  cFunctor_map A1 A2 B1 B2 fg := optionC_map (cFunctor_map F fg)
+|}.
+Next Obligation.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, cFunctor_ne.
+Qed.
+Next Obligation.
+  intros F A B x. rewrite /= -{2}(option_fmap_id x).
+  apply option_fmap_setoid_ext=>y; apply cFunctor_id.
+Qed.
+Next Obligation.
+  intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -option_fmap_compose.
+  apply option_fmap_setoid_ext=>y; apply cFunctor_compose.
+Qed.
+
+Instance optionCF_contractive F :
+  cFunctorContractive F → cFunctorContractive (optionCF F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, cFunctor_contractive.
+Qed.
+
 (** Later *)
 Inductive later (A : Type) : Type := Next { later_car : A }.
 Add Printing Constructor later.

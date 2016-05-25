@@ -441,6 +441,36 @@ Section cmra_monotone.
   Proof. rewrite !cmra_valid_validN; eauto using validN_preserving. Qed.
 End cmra_monotone.
 
+(** Functors *)
+Structure rFunctor := RFunctor {
+  rFunctor_car : cofeT → cofeT -> cmraT;
+  rFunctor_map {A1 A2 B1 B2} :
+    ((A2 -n> A1) * (B1 -n> B2)) → rFunctor_car A1 B1 -n> rFunctor_car A2 B2;
+  rFunctor_ne A1 A2 B1 B2 n :
+    Proper (dist n ==> dist n) (@rFunctor_map A1 A2 B1 B2);
+  rFunctor_id {A B} (x : rFunctor_car A B) : rFunctor_map (cid,cid) x ≡ x;
+  rFunctor_compose {A1 A2 A3 B1 B2 B3}
+      (f : A2 -n> A1) (g : A3 -n> A2) (f' : B1 -n> B2) (g' : B2 -n> B3) x :
+    rFunctor_map (f◎g, g'◎f') x ≡ rFunctor_map (g,g') (rFunctor_map (f,f') x);
+  rFunctor_mono {A1 A2 B1 B2} (fg : (A2 -n> A1) * (B1 -n> B2)) :
+    CMRAMonotone (rFunctor_map fg) 
+}.
+Existing Instances rFunctor_ne rFunctor_mono.
+Instance: Params (@rFunctor_map) 5.
+
+Class rFunctorContractive (F : rFunctor) :=
+  rFunctor_contractive A1 A2 B1 B2 :> Contractive (@rFunctor_map F A1 A2 B1 B2).
+
+Definition rFunctor_diag (F: rFunctor) (A: cofeT) : cmraT := rFunctor_car F A A.
+Coercion rFunctor_diag : rFunctor >-> Funclass.
+
+Program Definition constRF (B : cmraT) : rFunctor :=
+  {| rFunctor_car A1 A2 := B; rFunctor_map A1 A2 B1 B2 f := cid |}.
+Solve Obligations with done.
+
+Instance constRF_contractive B : rFunctorContractive (constRF B).
+Proof. rewrite /rFunctorContractive; apply _. Qed.
+
 (** * Transporting a CMRA equality *)
 Definition cmra_transport {A B : cmraT} (H : A = B) (x : A) : B :=
   eq_rect A id x _ H.
@@ -624,37 +654,6 @@ Proof.
   - intros x y; rewrite !prod_included=> -[??] /=.
     by split; apply included_preserving.
 Qed.
-
-(** Functors *)
-Structure rFunctor := RFunctor {
-  rFunctor_car : cofeT → cofeT -> cmraT;
-  rFunctor_map {A1 A2 B1 B2} :
-    ((A2 -n> A1) * (B1 -n> B2)) → rFunctor_car A1 B1 -n> rFunctor_car A2 B2;
-  rFunctor_ne A1 A2 B1 B2 n :
-    Proper (dist n ==> dist n) (@rFunctor_map A1 A2 B1 B2);
-  rFunctor_id {A B} (x : rFunctor_car A B) : rFunctor_map (cid,cid) x ≡ x;
-  rFunctor_compose {A1 A2 A3 B1 B2 B3}
-      (f : A2 -n> A1) (g : A3 -n> A2) (f' : B1 -n> B2) (g' : B2 -n> B3) x :
-    rFunctor_map (f◎g, g'◎f') x ≡ rFunctor_map (g,g') (rFunctor_map (f,f') x);
-  rFunctor_mono {A1 A2 B1 B2} (fg : (A2 -n> A1) * (B1 -n> B2)) :
-    CMRAMonotone (rFunctor_map fg) 
-}.
-Existing Instances rFunctor_ne rFunctor_mono.
-Instance: Params (@rFunctor_map) 5.
-
-Class rFunctorContractive (F : rFunctor) :=
-  rFunctor_contractive A1 A2 B1 B2 :> Contractive (@rFunctor_map F A1 A2 B1 B2).
-
-Definition rFunctor_diag (F: rFunctor) (A: cofeT) : cmraT := rFunctor_car F A A.
-Coercion rFunctor_diag : rFunctor >-> Funclass.
-
-Program Definition constRF (B : cmraT) : rFunctor :=
-  {| rFunctor_car A1 A2 := B; rFunctor_map A1 A2 B1 B2 f := cid |}.
-Solve Obligations with done.
-
-Instance constRF_contractive B : rFunctorContractive (constRF B).
-Proof. rewrite /rFunctorContractive; apply _. Qed.
-
 Program Definition prodRF (F1 F2 : rFunctor) : rFunctor := {|
   rFunctor_car A B := prodR (rFunctor_car F1 A B) (rFunctor_car F2 A B);
   rFunctor_map A1 A2 B1 B2 fg :=
@@ -675,4 +674,138 @@ Instance prodRF_contractive F1 F2 :
 Proof.
   intros ?? A1 A2 B1 B2 n ???;
     by apply prodC_map_ne; apply rFunctor_contractive.
+Qed.
+
+(** ** CMRA for the option type *)
+Section option.
+  Context {A : cmraT}.
+
+  Instance option_valid : Valid (option A) := λ mx,
+    match mx with Some x => ✓ x | None => True end.
+  Instance option_validN : ValidN (option A) := λ n mx,
+    match mx with Some x => ✓{n} x | None => True end.
+  Global Instance option_empty : Empty (option A) := None.
+  Instance option_core : Core (option A) := fmap core.
+  Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
+
+  Definition Some_valid a : ✓ Some a ↔ ✓ a := reflexivity _.
+  Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl.
+
+  Lemma option_included (mx my : option A) :
+    mx ≼ my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ x ≼ y.
+  Proof.
+    split.
+    - intros [mz Hmz].
+      destruct mx as [x|]; [right|by left].
+      destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
+      destruct mz as [z|]; inversion_clear Hmz; split_and?; auto;
+        setoid_subst; eauto using cmra_included_l.
+    - intros [->|(x&y&->&->&z&Hz)]; try (by exists my; destruct my; constructor).
+      by exists (Some z); constructor.
+  Qed.
+
+  Definition option_cmra_mixin  : CMRAMixin (option A).
+  Proof.
+    split.
+    - by intros n [x|]; destruct 1; constructor; cofe_subst.
+    - by destruct 1; constructor; cofe_subst.
+    - by destruct 1; rewrite /validN /option_validN //=; cofe_subst.
+    - intros [x|]; [apply cmra_valid_validN|done].
+    - intros n [x|]; unfold validN, option_validN; eauto using cmra_validN_S.
+    - intros [x|] [y|] [z|]; constructor; rewrite ?assoc; auto.
+    - intros [x|] [y|]; constructor; rewrite 1?comm; auto.
+    - by intros [x|]; constructor; rewrite cmra_core_l.
+    - by intros [x|]; constructor; rewrite cmra_core_idemp.
+    - intros mx my; rewrite !option_included ;intros [->|(x&y&->&->&?)]; auto.
+      right; exists (core x), (core y); eauto using cmra_core_preserving.
+    - intros n [x|] [y|]; rewrite /validN /option_validN /=;
+        eauto using cmra_validN_op_l.
+    - intros n mx my1 my2.
+      destruct mx as [x|], my1 as [y1|], my2 as [y2|]; intros Hx Hx';
+        try (by exfalso; inversion Hx'; auto).
+      + destruct (cmra_extend n x y1 y2) as ([z1 z2]&?&?&?); auto.
+        { by inversion_clear Hx'. }
+        by exists (Some z1, Some z2); repeat constructor.
+      + by exists (Some x,None); inversion Hx'; repeat constructor.
+      + by exists (None,Some x); inversion Hx'; repeat constructor.
+      + exists (None,None); repeat constructor.
+  Qed.
+  Canonical Structure optionR :=
+    CMRAT (option A) option_cofe_mixin option_cmra_mixin.
+  Global Instance option_cmra_unit : CMRAUnit optionR.
+  Proof. split. done. by intros []. by inversion_clear 1. Qed.
+  Global Instance option_cmra_discrete : CMRADiscrete A → CMRADiscrete optionR.
+  Proof. split; [apply _|]. by intros [x|]; [apply (cmra_discrete_valid x)|]. Qed.
+
+  (** Misc *)
+  Global Instance Some_cmra_monotone : CMRAMonotone Some.
+  Proof. split; [apply _|done|intros x y [z ->]; by exists (Some z)]. Qed.
+  Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my.
+  Proof.
+    destruct mx, my; rewrite /op /option_op /= -!not_eq_None_Some; naive_solver.
+  Qed.
+  Lemma option_op_positive_dist_l n mx my : mx ⋅ my ≡{n}≡ None → mx ≡{n}≡ None.
+  Proof. by destruct mx, my; inversion_clear 1. Qed.
+  Lemma option_op_positive_dist_r n mx my : mx ⋅ my ≡{n}≡ None → my ≡{n}≡ None.
+  Proof. by destruct mx, my; inversion_clear 1. Qed.
+
+  Global Instance Some_persistent (x : A) : Persistent x → Persistent (Some x).
+  Proof. by constructor. Qed.
+  Global Instance option_persistent (mx : option A) :
+    (∀ x : A, Persistent x) → Persistent mx.
+  Proof. intros. destruct mx. apply _. apply cmra_unit_persistent. Qed.
+
+  (** Updates *)
+  Lemma option_updateP (P : A → Prop) (Q : option A → Prop) x :
+    x ~~>: P → (∀ y, P y → Q (Some y)) → Some x ~~>: Q.
+  Proof.
+    intros Hx Hy n [y|] ?.
+    { destruct (Hx n y) as (y'&?&?); auto. exists (Some y'); auto. }
+    destruct (Hx n (core x)) as (y'&?&?); rewrite ?cmra_core_r; auto.
+    by exists (Some y'); split; [auto|apply cmra_validN_op_l with (core x)].
+  Qed.
+  Lemma option_updateP' (P : A → Prop) x :
+    x ~~>: P → Some x ~~>: λ my, default False my P.
+  Proof. eauto using option_updateP. Qed.
+  Lemma option_update x y : x ~~> y → Some x ~~> Some y.
+  Proof.
+    rewrite !cmra_update_updateP; eauto using option_updateP with congruence.
+  Qed.
+  Lemma option_update_None `{Empty A, !CMRAUnit A} : ∅ ~~> Some ∅.
+  Proof.
+    intros n [x|] ?; rewrite /op /cmra_op /validN /cmra_validN /= ?left_id;
+      auto using cmra_unit_validN.
+  Qed.
+End option.
+
+Arguments optionR : clear implicits.
+
+Instance option_fmap_cmra_monotone {A B : cmraT} (f: A → B) `{!CMRAMonotone f} :
+  CMRAMonotone (fmap f : option A → option B).
+Proof.
+  split; first apply _.
+  - intros n [x|] ?; rewrite /cmra_validN //=. by apply (validN_preserving f).
+  - intros mx my; rewrite !option_included.
+    intros [->|(x&y&->&->&?)]; simpl; eauto 10 using @included_preserving.
+Qed.
+Program Definition optionRF (F : rFunctor) : rFunctor := {|
+  rFunctor_car A B := optionR (rFunctor_car F A B);
+  rFunctor_map A1 A2 B1 B2 fg := optionC_map (rFunctor_map F fg)
+|}.
+Next Obligation.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_ne.
+Qed.
+Next Obligation.
+  intros F A B x. rewrite /= -{2}(option_fmap_id x).
+  apply option_fmap_setoid_ext=>y; apply rFunctor_id.
+Qed.
+Next Obligation.
+  intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -option_fmap_compose.
+  apply option_fmap_setoid_ext=>y; apply rFunctor_compose.
+Qed.
+
+Instance optionRF_contractive F :
+  rFunctorContractive F → rFunctorContractive (optionRF F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_contractive.
 Qed.
