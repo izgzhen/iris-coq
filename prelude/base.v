@@ -474,8 +474,11 @@ Section prod_relation.
   Global Instance prod_relation_equiv :
     Equivalence R1 → Equivalence R2 → Equivalence (prod_relation R1 R2).
   Proof. split; apply _. Qed.
+
   Global Instance pair_proper' : Proper (R1 ==> R2 ==> prod_relation R1 R2) pair.
   Proof. firstorder eauto. Qed.
+  Global Instance pair_inj' : Inj2 R1 R2 (prod_relation R1 R2) pair.
+  Proof. inversion_clear 1; eauto. Qed.
   Global Instance fst_proper' : Proper (prod_relation R1 R2 ==> R1) fst.
   Proof. firstorder eauto. Qed.
   Global Instance snd_proper' : Proper (prod_relation R1 R2 ==> R2) snd.
@@ -484,7 +487,8 @@ End prod_relation.
 
 Instance prod_equiv `{Equiv A,Equiv B} : Equiv (A * B) := prod_relation (≡) (≡).
 Instance pair_proper `{Equiv A, Equiv B} :
-  Proper ((≡) ==> (≡) ==> (≡)) (@pair A B) | 0 := _.
+  Proper ((≡) ==> (≡) ==> (≡)) (@pair A B) := _.
+Instance pair_equiv_inj `{Equiv A, Equiv B} : Inj2 (≡) (≡) (≡) (@pair A B) := _.
 Instance fst_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@fst A B) := _.
 Instance snd_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@snd A B) := _.
 Typeclasses Opaque prod_equiv.
@@ -531,11 +535,17 @@ Section sum_relation.
   Proof. constructor; auto. Qed.
   Global Instance inr_proper' : Proper (R2 ==> sum_relation R1 R2) inr.
   Proof. constructor; auto. Qed.
+  Global Instance inl_inj' : Inj R1 (sum_relation R1 R2) inl.
+  Proof. inversion_clear 1; auto. Qed.
+  Global Instance inr_inj' : Inj R2 (sum_relation R1 R2) inr.
+  Proof. inversion_clear 1; auto. Qed.
 End sum_relation.
 
 Instance sum_equiv `{Equiv A, Equiv B} : Equiv (A + B) := sum_relation (≡) (≡).
 Instance inl_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@inl A B) := _.
 Instance inr_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@inr A B) := _.
+Instance inl_equiv_inj `{Equiv A, Equiv B} : Inj (≡) (≡) (@inl A B) := _.
+Instance inr_equiv_inj `{Equiv A, Equiv B} : Inj (≡) (≡) (@inr A B) := _.
 Typeclasses Opaque sum_equiv.
 
 (** ** Option *)
