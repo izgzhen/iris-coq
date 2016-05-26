@@ -613,6 +613,6 @@ Qed.
 (** Notation for writing functors *)
 Notation "∙" := idCF : cFunctor_scope.
 Notation "F1 -n> F2" := (cofe_morCF F1%CF F2%CF) : cFunctor_scope.
-Notation "( F1 , F2 , .. , Fn )" := (prodCF .. (prodCF F1%CF F2%CF) .. Fn%CF) : cFunctor_scope.
+Notation "F1 * F2" := (prodCF F1%CF F2%CF) : cFunctor_scope.
 Notation "▶ F"  := (laterCF F%CF) (at level 20, right associativity) : cFunctor_scope.
 Coercion constCF : cofeT >-> cFunctor.
