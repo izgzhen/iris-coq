@@ -1202,8 +1202,8 @@ Global Instance later_persistent P : PersistentP P → PersistentP (▷ P).
 Proof. by intros; rewrite /PersistentP always_later; apply later_mono. Qed.
 Global Instance ownM_persistent : Persistent a → PersistentP (@uPred_ownM M a).
 Proof. intros. by rewrite /PersistentP always_ownM. Qed.
-Global Instance default_persistent {A} P (Ψ : A → uPred M) (mx : option A) :
-  PersistentP P → (∀ x, PersistentP (Ψ x)) → PersistentP (default P mx Ψ).
+Global Instance from_option_persistent {A} P (Ψ : A → uPred M) (mx : option A) :
+  (∀ x, PersistentP (Ψ x)) → PersistentP P → PersistentP (from_option Ψ P mx).
 Proof. destruct mx; apply _. Qed.
 
 (* Derived lemmas for persistence *)

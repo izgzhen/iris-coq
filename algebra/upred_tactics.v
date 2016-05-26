@@ -12,7 +12,7 @@ Module uPred_reflection. Section uPred_reflection.
   Fixpoint eval (Σ : list (uPred M)) (e : expr) : uPred M :=
     match e with
     | ETrue => True
-    | EVar n => from_option True%I (Σ !! n)
+    | EVar n => from_option id True%I (Σ !! n)
     | ESep e1 e2 => eval Σ e1 ★ eval Σ e2
     end.
   Fixpoint flatten (e : expr) : list nat :=
@@ -22,7 +22,7 @@ Module uPred_reflection. Section uPred_reflection.
     | ESep e1 e2 => flatten e1 ++ flatten e2
     end.
 
-  Notation eval_list Σ l := ([★] ((λ n, from_option True%I (Σ !! n)) <$> l))%I.
+  Notation eval_list Σ l := ([★] ((λ n, from_option id True%I (Σ !! n)) <$> l))%I.
   Lemma eval_flatten Σ e : eval Σ e ⊣⊢ eval_list Σ (flatten e).
   Proof.
     induction e as [| |e1 IH1 e2 IH2];

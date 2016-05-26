@@ -19,16 +19,15 @@ Proof. congruence. Qed.
 Instance Some_inj {A} : Inj (=) (=) (@Some A).
 Proof. congruence. Qed.
 
-(** The non dependent elimination principle on the option type. *)
-Definition default {A B} (y : B) (mx : option A) (f : A → B)  : B :=
+(** The [from_option] is the eliminator for option. *)
+Definition from_option {A B} (f : A → B) (y : B) (mx : option A) : B :=
   match mx with None => y | Some x => f x end.
-Instance: Params (@default) 2.
+Instance: Params (@from_option) 3.
+Arguments from_option {_ _} _ _ !_ /.
 
-(** The [from_option] function allows us to get the value out of the option
-type by specifying a default value. *)
-Definition from_option {A} (x : A) (mx : option A) : A :=
-  match mx with None => x | Some y => y end.
-Instance: Params (@from_option) 1.
+(* The eliminator again, but with the arguments in different order, which is
+sometimes more convenient. *)
+Notation default y mx f := (from_option f y mx) (only parsing).
 
 (** An alternative, but equivalent, definition of equality on the option
 data type. This theorem is useful to prove that two options are the same. *)
@@ -137,9 +136,9 @@ Section setoids.
 
   Global Instance is_Some_proper : Proper ((≡) ==> iff) (@is_Some A).
   Proof. inversion_clear 1; split; eauto. Qed.
-  Global Instance from_option_proper :
-    Proper ((≡) ==> (≡) ==> (≡)) (@from_option A).
-  Proof. by destruct 2. Qed.
+  Global Instance from_option_proper {B} (R : relation B) (f : A → B) :
+    Proper ((≡) ==> R) f → Proper (R ==> (≡) ==> R) (from_option f).
+  Proof. destruct 3; simpl; auto. Qed.
 End setoids.
 
 Typeclasses Opaque option_equiv.
@@ -323,9 +322,7 @@ Tactic Notation "simpl_option" "by" tactic3(tac) :=
     let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
   | H : context [fmap (M:=option) (A:=?A) ?f ?mx] |- _ =>
     let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
-  | H : context [default (A:=?A) _ ?mx _] |- _ =>
-    let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
-  | H : context [from_option (A:=?A) _ ?mx] |- _ =>
+  | H : context [from_option (A:=?A) _ _ ?mx] |- _ =>
     let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
   | H : context [ match ?mx with _ => _ end ] |- _ =>
     match type of mx with
@@ -336,9 +333,7 @@ Tactic Notation "simpl_option" "by" tactic3(tac) :=
     let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx; clear Hx
   | |- context [fmap (M:=option) (A:=?A) ?f ?mx] =>
     let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx; clear Hx
-  | |- context [default (A:=?A) _ ?mx _] =>
-    let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx; clear Hx
-  | |- context [from_option (A:=?A) _ ?mx] =>
+  | |- context [from_option (A:=?A) _ _ ?mx] =>
     let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx; clear Hx
   | |- context [ match ?mx with _ => _ end ] =>
     match type of mx with

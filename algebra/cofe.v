@@ -542,7 +542,7 @@ Section option.
   Proof. done. Qed.
 
   Program Definition option_chain (c : chain (option A)) (x : A) : chain A :=
-    {| chain_car n := from_option x (c n) |}.
+    {| chain_car n := from_option id x (c n) |}.
   Next Obligation. intros c x n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
   Instance option_compl : Compl (option A) := λ c,
     match c 0 with Some x => Some (compl (option_chain c x)) | None => None end.
@@ -569,9 +569,6 @@ Section option.
   Proof. destruct 1; split; eauto. Qed.
   Global Instance Some_dist_inj : Inj (dist n) (dist n) (@Some A).
   Proof. by inversion_clear 1. Qed.
-  Global Instance from_option_ne n :
-    Proper (dist n ==> dist n ==> dist n) (@from_option A).
-  Proof. by destruct 2. Qed.
 
   Global Instance None_timeless : Timeless (@None A).
   Proof. inversion_clear 1; constructor. Qed.
@@ -594,6 +591,11 @@ End option.
 
 Typeclasses Opaque option_dist.
 Arguments optionC : clear implicits.
+
+Instance from_option_ne {A B : cofeT} (f : A → B) n :
+  Proper (dist n ==> dist n) f →
+  Proper (dist n ==> dist n ==> dist n) (from_option f).
+Proof. destruct 3; simpl; auto. Qed.
 
 Instance option_fmap_ne {A B : cofeT} (f : A → B) n:
   Proper (dist n ==> dist n) f → Proper (dist n==>dist n) (fmap (M:=option) f).

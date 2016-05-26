@@ -43,7 +43,7 @@ Global Instance resize_ne n :
 
 Program Definition list_chain
     (c : chain (list A)) (x : A) (k : nat) : chain A :=
-  {| chain_car n := from_option x (c n !! k) |}.
+  {| chain_car n := from_option id x (c n !! k) |}.
 Next Obligation. intros c x k n i ?. by rewrite /= (chain_cauchy c n i). Qed.
 Instance list_compl : Compl (list A) := λ c,
   match c 0 with

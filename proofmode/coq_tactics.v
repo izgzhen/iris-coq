@@ -752,7 +752,7 @@ Qed.
 (** The [option] is to account for formulas that can be framed entirely, so
 we do not end up with [True]s everywhere. *)
 Class Frame (R P : uPred M) (mQ : option (uPred M)) :=
-  frame : (R ★ from_option True mQ) ⊢ P.
+  frame : (R ★ from_option id True mQ) ⊢ P.
 Arguments frame : clear implicits.
 
 Global Instance frame_here R : Frame R R None.

@@ -270,7 +270,7 @@ Lemma singleton_updateP_empty `{Empty A, !CMRAUnit A}
   ∅ ~~>: P → (∀ y, P y → Q {[ i := y ]}) → ∅ ~~>: Q.
 Proof.
   intros Hx HQ n gf Hg.
-  destruct (Hx n (from_option ∅ (gf !! i))) as (y&?&Hy).
+  destruct (Hx n (from_option id ∅ (gf !! i))) as (y&?&Hy).
   { move:(Hg i). rewrite !left_id.
     case _: (gf !! i); simpl; auto using cmra_unit_validN. }
   exists {[ i := y ]}; split; first by auto.

@@ -3393,7 +3393,7 @@ Definition eval {A} (E : env A) : rlist nat → list A :=
   fix go t :=
   match t with
   | rnil => []
-  | rnode i => from_option [] (E !! i)
+  | rnode i => from_option id [] (E !! i)
   | rapp t1 t2 => go t1 ++ go t2
   end.
 
@@ -3427,7 +3427,7 @@ End quote.
 Section eval.
   Context {A} (E : env A).
 
-  Lemma eval_alt t : eval E t = to_list t ≫= from_option [] ∘ (E !!).
+  Lemma eval_alt t : eval E t = to_list t ≫= from_option id [] ∘ (E !!).
   Proof.
     induction t; csimpl.
     - done.

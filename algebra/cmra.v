@@ -765,7 +765,7 @@ Section option.
     by exists (Some y'); split; [auto|apply cmra_validN_op_l with (core x)].
   Qed.
   Lemma option_updateP' (P : A → Prop) x :
-    x ~~>: P → Some x ~~>: λ my, default False my P.
+    x ~~>: P → Some x ~~>: from_option P False.
   Proof. eauto using option_updateP. Qed.
   Lemma option_update x y : x ~~> y → Some x ~~> Some y.
   Proof.
