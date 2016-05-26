@@ -110,6 +110,7 @@ Instance option_equiv `{Equiv A} : Equiv (option A) := option_Forall2 (≡).
 
 Section setoids.
   Context `{Equiv A} `{!Equivalence ((≡) : relation A)}.
+  Implicit Types mx my : option A.
 
   Lemma equiv_option_Forall2 mx my : mx ≡ my ↔ option_Forall2 (≡) mx my.
   Proof. done. Qed.
@@ -121,14 +122,18 @@ Section setoids.
   Global Instance option_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (option A).
   Proof. intros x y; destruct 1; fold_leibniz; congruence. Qed.
 
-  Lemma equiv_None (mx : option A) : mx ≡ None ↔ mx = None.
+  Lemma equiv_None mx : mx ≡ None ↔ mx = None.
   Proof. split; [by inversion_clear 1|by intros ->]. Qed.
-  Lemma equiv_Some_inv_l (mx my : option A) x :
+  Lemma equiv_Some_inv_l mx my x :
     mx ≡ my → mx = Some x → ∃ y, my = Some y ∧ x ≡ y.
   Proof. destruct 1; naive_solver. Qed.
-  Lemma equiv_Some_inv_r (mx my : option A) y :
-    mx ≡ my → mx = Some y → ∃ x, mx = Some x ∧ x ≡ y.
+  Lemma equiv_Some_inv_r mx my y :
+    mx ≡ my → my = Some y → ∃ x, mx = Some x ∧ x ≡ y.
   Proof. destruct 1; naive_solver. Qed.
+  Lemma equiv_Some_inv_l' my x : Some x ≡ my → ∃ x', Some x' = my ∧ x ≡ x'.
+  Proof. intros ?%(equiv_Some_inv_l _ _ x); naive_solver. Qed.
+  Lemma equiv_Some_inv_r' mx y : mx ≡ Some y → ∃ y', mx = Some y' ∧ y ≡ y'.
+  Proof. intros ?%(equiv_Some_inv_r _ _ y); naive_solver. Qed.
 
   Global Instance is_Some_proper : Proper ((≡) ==> iff) (@is_Some A).
   Proof. inversion_clear 1; split; eauto. Qed.

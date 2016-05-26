@@ -577,6 +577,19 @@ Section option.
   Proof. inversion_clear 1; constructor. Qed.
   Global Instance Some_timeless x : Timeless x → Timeless (Some x).
   Proof. by intros ?; inversion_clear 1; constructor; apply timeless. Qed.
+
+  Lemma dist_None n mx : mx ≡{n}≡ None ↔ mx = None.
+  Proof. split; [by inversion_clear 1|by intros ->]. Qed.
+  Lemma dist_Some_inv_l n mx my x :
+    mx ≡{n}≡ my → mx = Some x → ∃ y, my = Some y ∧ x ≡{n}≡ y.
+  Proof. destruct 1; naive_solver. Qed.
+  Lemma dist_Some_inv_r n mx my y :
+    mx ≡{n}≡ my → my = Some y → ∃ x, mx = Some x ∧ x ≡{n}≡ y.
+  Proof. destruct 1; naive_solver. Qed.
+  Lemma dist_Some_inv_l' n my x : Some x ≡{n}≡ my → ∃ x', Some x' = my ∧ x ≡{n}≡ x'.
+  Proof. intros ?%(dist_Some_inv_l _ _ _ x); naive_solver. Qed.
+  Lemma dist_Some_inv_r' n mx y : mx ≡{n}≡ Some y → ∃ y', mx = Some y' ∧ y ≡{n}≡ y'.
+  Proof. intros ?%(dist_Some_inv_r _ _ _ y); naive_solver. Qed.
 End option.
 
 Typeclasses Opaque option_dist.
