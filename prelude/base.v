@@ -490,6 +490,10 @@ Instance snd_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@snd A B) :=
 Typeclasses Opaque prod_equiv.
 
 (** ** Sums *)
+Definition sum_map {A A' B B'} (f: A → A') (g: B → B') (xy : A + B) : A' + B' :=
+  match xy with inl x => inl (f x) | inr y => inr (g y) end.
+Arguments sum_map {_ _ _ _} _ _ !_ /.
+
 Instance sum_inhabited_l {A B} (iA : Inhabited A) : Inhabited (A + B) :=
   match iA with populate x => populate (inl x) end.
 Instance sum_inhabited_r {A B} (iB : Inhabited A) : Inhabited (A + B) :=
@@ -499,6 +503,40 @@ Instance inl_inj : Inj (=) (=) (@inl A B).
 Proof. injection 1; auto. Qed.
 Instance inr_inj : Inj (=) (=) (@inr A B).
 Proof. injection 1; auto. Qed.
+
+Instance sum_map_inj {A A' B B'} (f : A → A') (g : B → B') :
+  Inj (=) (=) f → Inj (=) (=) g → Inj (=) (=) (sum_map f g).
+Proof. intros ?? [?|?] [?|?] [=]; f_equal; apply (inj _); auto. Qed.
+
+Inductive sum_relation {A B}
+     (R1 : relation A) (R2 : relation B) : relation (A + B) :=
+  | inl_related x1 x2 : R1 x1 x2 → sum_relation R1 R2 (inl x1) (inl x2)
+  | inr_related y1 y2 : R2 y1 y2 → sum_relation R1 R2 (inr y1) (inr y2).
+
+Section sum_relation.
+  Context `{R1 : relation A, R2 : relation B}.
+  Global Instance sum_relation_refl :
+    Reflexive R1 → Reflexive R2 → Reflexive (sum_relation R1 R2).
+  Proof. intros ?? [?|?]; constructor; reflexivity. Qed.
+  Global Instance sum_relation_sym :
+    Symmetric R1 → Symmetric R2 → Symmetric (sum_relation R1 R2).
+  Proof. destruct 3; constructor; eauto. Qed.
+  Global Instance sum_relation_trans :
+    Transitive R1 → Transitive R2 → Transitive (sum_relation R1 R2).
+  Proof. destruct 3; inversion_clear 1; constructor; eauto. Qed.
+  Global Instance sum_relation_equiv :
+    Equivalence R1 → Equivalence R2 → Equivalence (sum_relation R1 R2).
+  Proof. split; apply _. Qed.
+  Global Instance inl_proper' : Proper (R1 ==> sum_relation R1 R2) inl.
+  Proof. constructor; auto. Qed.
+  Global Instance inr_proper' : Proper (R2 ==> sum_relation R1 R2) inr.
+  Proof. constructor; auto. Qed.
+End sum_relation.
+
+Instance sum_equiv `{Equiv A, Equiv B} : Equiv (A + B) := sum_relation (≡) (≡).
+Instance inl_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@inl A B) := _.
+Instance inr_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@inr A B) := _.
+Typeclasses Opaque sum_equiv.
 
 (** ** Option *)
 Instance option_inhabited {A} : Inhabited (option A) := populate None.
