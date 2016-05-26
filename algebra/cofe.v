@@ -422,6 +422,89 @@ Proof.
   apply cofe_morC_map_ne; apply cFunctor_contractive=>i ?; split; by apply Hfg.
 Qed.
 
+(** Sum *)
+Section sum.
+  Context {A B : cofeT}.
+
+  Instance sum_dist : Dist (A + B) := λ n, sum_relation (dist n) (dist n).
+  Global Instance inl_ne : Proper (dist n ==> dist n) (@inl A B) := _.
+  Global Instance inr_ne : Proper (dist n ==> dist n) (@inr A B) := _.
+  Global Instance inl_ne_inj : Inj (dist n) (dist n) (@inl A B) := _.
+  Global Instance inr_ne_inj : Inj (dist n) (dist n) (@inr A B) := _.
+
+  Program Definition inl_chain (c : chain (A + B)) (a : A) : chain A :=
+    {| chain_car n := match c n return _ with inl a' => a' | _ => a end |}.
+  Next Obligation. intros c a n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
+  Program Definition inr_chain (c : chain (A + B)) (b : B) : chain B :=
+    {| chain_car n := match c n return _ with inr b' => b' | _ => b end |}.
+  Next Obligation. intros c b n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
+
+  Instance sum_compl : Compl (A + B) := λ c,
+    match c 0 with
+    | inl a => inl (compl (inl_chain c a))
+    | inr b => inr (compl (inr_chain c b))
+    end.
+
+  Definition sum_cofe_mixin : CofeMixin (A + B).
+  Proof.
+    split.
+    - intros x y; split=> Hx.
+      + destruct Hx=> n; constructor; by apply equiv_dist.
+      + destruct (Hx 0); constructor; apply equiv_dist=> n; by apply (inj _).
+    - apply _.
+    - destruct 1; constructor; by apply dist_S.
+    - intros n c; rewrite /compl /sum_compl.
+      feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
+      + rewrite (conv_compl n (inl_chain c _)) /=. destruct (c n); naive_solver.
+      + rewrite (conv_compl n (inr_chain c _)) /=. destruct (c n); naive_solver.
+  Qed.
+  Canonical Structure sumC : cofeT := CofeT (A + B) sum_cofe_mixin.
+
+  Global Instance inl_timeless (x : A) : Timeless x → Timeless (inl x).
+  Proof. inversion_clear 2; constructor; by apply (timeless _). Qed.
+  Global Instance inr_timeless (y : B) : Timeless y → Timeless (inr y).
+  Proof. inversion_clear 2; constructor; by apply (timeless _). Qed.
+  Global Instance sum_discrete_cofe : Discrete A → Discrete B → Discrete sumC.
+  Proof. intros ?? [?|?]; apply _. Qed.
+End sum.
+
+Arguments sumC : clear implicits.
+Typeclasses Opaque sum_dist.
+
+Instance sum_map_ne {A A' B B' : cofeT} n :
+  Proper ((dist n ==> dist n) ==> (dist n ==> dist n) ==>
+           dist n ==> dist n) (@sum_map A A' B B').
+Proof.
+  intros f f' Hf g g' Hg ??; destruct 1; constructor; [by apply Hf|by apply Hg].
+Qed.
+Definition sumC_map {A A' B B'} (f : A -n> A') (g : B -n> B') :
+  sumC A B -n> sumC A' B' := CofeMor (sum_map f g).
+Instance sumC_map_ne {A A' B B'} n :
+  Proper (dist n ==> dist n ==> dist n) (@sumC_map A A' B B').
+Proof. intros f f' Hf g g' Hg [?|?]; constructor; [apply Hf|apply Hg]. Qed.
+
+Program Definition sumCF (F1 F2 : cFunctor) : cFunctor := {|
+  cFunctor_car A B := sumC (cFunctor_car F1 A B) (cFunctor_car F2 A B);
+  cFunctor_map A1 A2 B1 B2 fg :=
+    sumC_map (cFunctor_map F1 fg) (cFunctor_map F2 fg)
+|}.
+Next Obligation.
+  intros ?? A1 A2 B1 B2 n ???; by apply sumC_map_ne; apply cFunctor_ne.
+Qed.
+Next Obligation. by intros F1 F2 A B [?|?]; rewrite /= !cFunctor_id. Qed.
+Next Obligation.
+  intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [?|?]; simpl;
+    by rewrite !cFunctor_compose.
+Qed.
+
+Instance sumCF_contractive F1 F2 :
+  cFunctorContractive F1 → cFunctorContractive F2 →
+  cFunctorContractive (sumCF F1 F2).
+Proof.
+  intros ?? A1 A2 B1 B2 n ???;
+    by apply sumC_map_ne; apply cFunctor_contractive.
+Qed.
+
 (** Discrete cofe *)
 Section discrete_cofe.
   Context `{Equiv A, @Equivalence A (≡)}.
@@ -455,7 +538,6 @@ Section option.
   Context {A : cofeT}.
 
   Instance option_dist : Dist (option A) := λ n, option_Forall2 (dist n).
-
   Lemma dist_option_Forall2 n mx my : mx ≡{n}≡ my ↔ option_Forall2 (dist n) mx my.
   Proof. done. Qed.
 
@@ -614,5 +696,6 @@ Qed.
 Notation "∙" := idCF : cFunctor_scope.
 Notation "F1 -n> F2" := (cofe_morCF F1%CF F2%CF) : cFunctor_scope.
 Notation "F1 * F2" := (prodCF F1%CF F2%CF) : cFunctor_scope.
+Notation "F1 + F2" := (sumCF F1%CF F2%CF) : cFunctor_scope.
 Notation "▶ F"  := (laterCF F%CF) (at level 20, right associativity) : cFunctor_scope.
 Coercion constCF : cofeT >-> cFunctor.
