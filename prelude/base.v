@@ -10,41 +10,19 @@ Global Set Asymmetric Patterns.
 From Coq Require Export Morphisms RelationClasses List Bool Utf8 Program Setoid.
 Obligation Tactic := idtac.
 
-(** * General *)
-(** Zipping lists. *)
-Definition zip_with {A B C} (f : A → B → C) : list A → list B → list C :=
-  fix go l1 l2 :=
-  match l1, l2 with x1 :: l1, x2 :: l2 => f x1 x2 :: go l1 l2 | _ , _ => [] end.
-Notation zip := (zip_with pair).
-
-(** Ensure that [simpl] unfolds [id], [compose], and [flip] when fully
-applied. *)
-Arguments id _ _ /.
-Arguments compose _ _ _ _ _ _ /.
-Arguments flip _ _ _ _ _ _ /.
-Arguments const _ _ _ _ /.
-Typeclasses Transparent id compose flip const.
-Instance: Params (@pair) 2.
-
-(** Change [True] and [False] into notations in order to enable overloading.
-We will use this in the file [assertions] to give [True] and [False] a
-different interpretation in [assert_scope] used for assertions of our axiomatic
-semantics. *)
-Notation "'True'" := True : type_scope.
-Notation "'False'" := False : type_scope.
-
-Notation curry := prod_curry.
-Notation uncurry := prod_uncurry.
-Definition curry3 {A B C D} (f : A → B → C → D) (p : A * B * C) : D :=
-  let '(a,b,c) := p in f a b c.
-Definition curry4 {A B C D E} (f : A → B → C → D → E) (p : A * B * C * D) : E :=
-  let '(a,b,c,d) := p in f a b c d.
-
 (** Throughout this development we use [C_scope] for all general purpose
 notations that do not belong to a more specific scope. *)
 Delimit Scope C_scope with C.
 Global Open Scope C_scope.
 
+(** Change [True] and [False] into notations in order to enable overloading.
+We will use this to give [True] and [False] a different interpretation for
+embedded logics. *)
+Notation "'True'" := True : type_scope.
+Notation "'False'" := False : type_scope.
+
+
+(** * Equality *)
 (** Introduce some Haskell style like notations. *)
 Notation "(=)" := eq (only parsing) : C_scope.
 Notation "( x =)" := (eq x) (only parsing) : C_scope.
@@ -56,102 +34,8 @@ Notation "(≠ x )" := (λ y, y ≠ x) (only parsing) : C_scope.
 Hint Extern 0 (_ = _) => reflexivity.
 Hint Extern 100 (_ ≠ _) => discriminate.
 
-Notation "(→)" := (λ A B, A → B) (only parsing) : C_scope.
-Notation "( A →)" := (λ B, A → B) (only parsing) : C_scope.
-Notation "(→ B )" := (λ A, A → B) (only parsing) : C_scope.
-
-Notation "t $ r" := (t r)
-  (at level 65, right associativity, only parsing) : C_scope.
-Notation "($)" := (λ f x, f x) (only parsing) : C_scope.
-Notation "($ x )" := (λ f, f x) (only parsing) : C_scope.
-
-Infix "∘" := compose : C_scope.
-Notation "(∘)" := compose (only parsing) : C_scope.
-Notation "( f ∘)" := (compose f) (only parsing) : C_scope.
-Notation "(∘ f )" := (λ g, compose g f) (only parsing) : C_scope.
-
-Notation "(∧)" := and (only parsing) : C_scope.
-Notation "( A ∧)" := (and A) (only parsing) : C_scope.
-Notation "(∧ B )" := (λ A, A ∧ B) (only parsing) : C_scope.
-
-Notation "(∨)" := or (only parsing) : C_scope.
-Notation "( A ∨)" := (or A) (only parsing) : C_scope.
-Notation "(∨ B )" := (λ A, A ∨ B) (only parsing) : C_scope.
-
-Notation "(↔)" := iff (only parsing) : C_scope.
-Notation "( A ↔)" := (iff A) (only parsing) : C_scope.
-Notation "(↔ B )" := (λ A, A ↔ B) (only parsing) : C_scope.
-
-Hint Extern 0 (_ ↔ _) => reflexivity.
-Hint Extern 0 (_ ↔ _) => symmetry; assumption.
-
-Notation "( x ,)" := (pair x) (only parsing) : C_scope.
-Notation "(, y )" := (λ x, (x,y)) (only parsing) : C_scope.
-
-Notation "p .1" := (fst p) (at level 10, format "p .1").
-Notation "p .2" := (snd p) (at level 10, format "p .2").
-
-Definition fun_map {A A' B B'} (f : A' → A) (g : B → B')
-  (h : A → B) : A' → B' := g ∘ h ∘ f.
-Definition prod_map {A A' B B'} (f : A → A') (g : B → B')
-  (p : A * B) : A' * B' := (f (p.1), g (p.2)).
-Arguments prod_map {_ _ _ _} _ _ !_ /.
-Definition prod_zip {A A' A'' B B' B''} (f : A → A' → A'') (g : B → B' → B'')
-    (p : A * B) (q : A' * B') : A'' * B'' := (f (p.1) (q.1), g (p.2) (q.2)).
-Arguments prod_zip {_ _ _ _ _ _} _ _ !_ !_ /.
-
-(** Set convenient implicit arguments for [existT] and introduce notations. *)
-Arguments existT {_ _} _ _.
-Arguments proj1_sig {_ _} _.
-Notation "x ↾ p" := (exist _ x p) (at level 20) : C_scope.
-Notation "` x" := (proj1_sig x) (at level 10, format "` x") : C_scope.
-
-(** * Type classes *)
-(** ** Provable propositions *)
-(** This type class collects provable propositions. It is useful to constraint
-type classes by arbitrary propositions. *)
-Class PropHolds (P : Prop) := prop_holds: P.
-
-Hint Extern 0 (PropHolds _) => assumption : typeclass_instances.
-Instance: Proper (iff ==> iff) PropHolds.
-Proof. repeat intro; trivial. Qed.
-
-Ltac solve_propholds :=
-  match goal with
-  | |- PropHolds (?P) => apply _
-  | |- ?P => change (PropHolds P); apply _
-  end.
-
-(** ** Decidable propositions *)
-(** This type class by (Spitters/van der Weegen, 2011) collects decidable
-propositions. For example to declare a parameter expressing decidable equality
-on a type [A] we write [`{∀ x y : A, Decision (x = y)}] and use it by writing
-[decide (x = y)]. *)
-Class Decision (P : Prop) := decide : {P} + {¬P}.
-Arguments decide _ {_}.
-
-(** ** Inhabited types *)
-(** This type class collects types that are inhabited. *)
-Class Inhabited (A : Type) : Type := populate { inhabitant : A }.
-Arguments populate {_} _.
-
-Instance unit_inhabited: Inhabited unit := populate ().
-Instance bool_inhabated : Inhabited bool := populate true.
-Instance list_inhabited {A} : Inhabited (list A) := populate [].
-Instance prod_inhabited {A B} (iA : Inhabited A)
-    (iB : Inhabited B) : Inhabited (A * B) :=
-  match iA, iB with populate x, populate y => populate (x,y) end.
-Instance sum_inhabited_l {A B} (iA : Inhabited A) : Inhabited (A + B) :=
-  match iA with populate x => populate (inl x) end.
-Instance sum_inhabited_r {A B} (iB : Inhabited A) : Inhabited (A + B) :=
-  match iB with populate y => populate (inl y) end.
-Instance option_inhabited {A} : Inhabited (option A) := populate None.
-
-(** ** Proof irrelevant types *)
-(** This type class collects types that are proof irrelevant. That means, all
-elements of the type are equal. We use this notion only used for propositions,
-but by universe polymorphism we can generalize it. *)
-Class ProofIrrel (A : Type) : Prop := proof_irrel (x y : A) : x = y.
+Instance: @PreOrder A (=).
+Proof. split; repeat intro; congruence. Qed.
 
 (** ** Setoid equality *)
 (** We define an operational type class for setoid equality. This is based on
@@ -204,7 +88,445 @@ Instance equiv_default_relation `{Equiv A} : DefaultRelation (≡) | 3.
 Hint Extern 0 (_ ≡ _) => reflexivity.
 Hint Extern 0 (_ ≡ _) => symmetry; assumption.
 
-(** ** Operations on collections *)
+
+(** * Type classes *)
+(** ** Provable propositions *)
+(** This type class collects provable propositions. It is useful to constraint
+type classes by arbitrary propositions. *)
+Class PropHolds (P : Prop) := prop_holds: P.
+
+Hint Extern 0 (PropHolds _) => assumption : typeclass_instances.
+Instance: Proper (iff ==> iff) PropHolds.
+Proof. repeat intro; trivial. Qed.
+
+Ltac solve_propholds :=
+  match goal with
+  | |- PropHolds (?P) => apply _
+  | |- ?P => change (PropHolds P); apply _
+  end.
+
+(** ** Decidable propositions *)
+(** This type class by (Spitters/van der Weegen, 2011) collects decidable
+propositions. For example to declare a parameter expressing decidable equality
+on a type [A] we write [`{∀ x y : A, Decision (x = y)}] and use it by writing
+[decide (x = y)]. *)
+Class Decision (P : Prop) := decide : {P} + {¬P}.
+Arguments decide _ {_}.
+
+(** ** Inhabited types *)
+(** This type class collects types that are inhabited. *)
+Class Inhabited (A : Type) : Type := populate { inhabitant : A }.
+Arguments populate {_} _.
+
+(** ** Proof irrelevant types *)
+(** This type class collects types that are proof irrelevant. That means, all
+elements of the type are equal. We use this notion only used for propositions,
+but by universe polymorphism we can generalize it. *)
+Class ProofIrrel (A : Type) : Prop := proof_irrel (x y : A) : x = y.
+
+(** ** Common properties *)
+(** These operational type classes allow us to refer to common mathematical
+properties in a generic way. For example, for injectivity of [(k ++)] it
+allows us to write [inj (k ++)] instead of [app_inv_head k]. *)
+Class Inj {A B} (R : relation A) (S : relation B) (f : A → B) : Prop :=
+  inj x y : S (f x) (f y) → R x y.
+Class Inj2 {A B C} (R1 : relation A) (R2 : relation B)
+    (S : relation C) (f : A → B → C) : Prop :=
+  inj2 x1 x2 y1 y2 : S (f x1 x2) (f y1 y2) → R1 x1 y1 ∧ R2 x2 y2.
+Class Cancel {A B} (S : relation B) (f : A → B) (g : B → A) : Prop :=
+  cancel : ∀ x, S (f (g x)) x.
+Class Surj {A B} (R : relation B) (f : A → B) :=
+  surj y : ∃ x, R (f x) y.
+Class IdemP {A} (R : relation A) (f : A → A → A) : Prop :=
+  idemp x : R (f x x) x.
+Class Comm {A B} (R : relation A) (f : B → B → A) : Prop :=
+  comm x y : R (f x y) (f y x).
+Class LeftId {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
+  left_id x : R (f i x) x.
+Class RightId {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
+  right_id x : R (f x i) x.
+Class Assoc {A} (R : relation A) (f : A → A → A) : Prop :=
+  assoc x y z : R (f x (f y z)) (f (f x y) z).
+Class LeftAbsorb {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
+  left_absorb x : R (f i x) i.
+Class RightAbsorb {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
+  right_absorb x : R (f x i) i.
+Class AntiSymm {A} (R S : relation A) : Prop :=
+  anti_symm x y : S x y → S y x → R x y.
+Class Total {A} (R : relation A) := total x y : R x y ∨ R y x.
+Class Trichotomy {A} (R : relation A) :=
+  trichotomy x y : R x y ∨ x = y ∨ R y x.
+Class TrichotomyT {A} (R : relation A) :=
+  trichotomyT x y : {R x y} + {x = y} + {R y x}.
+
+Arguments irreflexivity {_} _ {_} _ _.
+Arguments inj {_ _ _ _} _ {_} _ _ _.
+Arguments inj2 {_ _ _ _ _ _} _ {_} _ _ _ _ _.
+Arguments cancel {_ _ _} _ _ {_} _.
+Arguments surj {_ _ _} _ {_} _.
+Arguments idemp {_ _} _ {_} _.
+Arguments comm {_ _ _} _ {_} _ _.
+Arguments left_id {_ _} _ _ {_} _.
+Arguments right_id {_ _} _ _ {_} _.
+Arguments assoc {_ _} _ {_} _ _ _.
+Arguments left_absorb {_ _} _ _ {_} _.
+Arguments right_absorb {_ _} _ _ {_} _.
+Arguments anti_symm {_ _} _ {_} _ _ _ _.
+Arguments total {_} _ {_} _ _.
+Arguments trichotomy {_} _ {_} _ _.
+Arguments trichotomyT {_} _ {_} _ _.
+
+Instance left_id_propholds {A} (R : relation A) i f :
+  LeftId R i f → ∀ x, PropHolds (R (f i x) x).
+Proof. red. trivial. Qed.
+Instance right_id_propholds {A} (R : relation A) i f :
+  RightId R i f → ∀ x, PropHolds (R (f x i) x).
+Proof. red. trivial. Qed.
+Instance left_absorb_propholds {A} (R : relation A) i f :
+  LeftAbsorb R i f → ∀ x, PropHolds (R (f i x) i).
+Proof. red. trivial. Qed.
+Instance right_absorb_propholds {A} (R : relation A) i f :
+  RightAbsorb R i f → ∀ x, PropHolds (R (f x i) i).
+Proof. red. trivial. Qed.
+Instance idem_propholds {A} (R : relation A) f :
+  IdemP R f → ∀ x, PropHolds (R (f x x) x).
+Proof. red. trivial. Qed.
+
+Lemma not_symmetry `{R : relation A, !Symmetric R} x y : ¬R x y → ¬R y x.
+Proof. intuition. Qed.
+Lemma symmetry_iff `(R : relation A) `{!Symmetric R} x y : R x y ↔ R y x.
+Proof. intuition. Qed.
+
+Lemma not_inj `{Inj A B R R' f} x y : ¬R x y → ¬R' (f x) (f y).
+Proof. intuition. Qed.
+Lemma not_inj2_1 `{Inj2 A B C R R' R'' f} x1 x2 y1 y2 :
+  ¬R x1 x2 → ¬R'' (f x1 y1) (f x2 y2).
+Proof. intros HR HR''. destruct (inj2 f x1 y1 x2 y2); auto. Qed.
+Lemma not_inj2_2 `{Inj2 A B C R R' R'' f} x1 x2 y1 y2 :
+  ¬R' y1 y2 → ¬R'' (f x1 y1) (f x2 y2).
+Proof. intros HR' HR''. destruct (inj2 f x1 y1 x2 y2); auto. Qed.
+
+Lemma inj_iff {A B} {R : relation A} {S : relation B} (f : A → B)
+  `{!Inj R S f} `{!Proper (R ==> S) f} x y : S (f x) (f y) ↔ R x y.
+Proof. firstorder. Qed.
+Instance inj2_inj_1 `{Inj2 A B C R1 R2 R3 f} y : Inj R1 R3 (λ x, f x y).
+Proof. repeat intro; edestruct (inj2 f); eauto. Qed.
+Instance inj2_inj_2 `{Inj2 A B C R1 R2 R3 f} x : Inj R2 R3 (f x).
+Proof. repeat intro; edestruct (inj2 f); eauto. Qed.
+
+Lemma cancel_inj `{Cancel A B R1 f g, !Equivalence R1, !Proper (R2 ==> R1) f} :
+  Inj R1 R2 g.
+Proof.
+  intros x y E. rewrite <-(cancel f g x), <-(cancel f g y), E. reflexivity.
+Qed.
+Lemma cancel_surj `{Cancel A B R1 f g} : Surj R1 f.
+Proof. intros y. exists (g y). auto. Qed.
+
+(** The following lemmas are specific versions of the projections of the above
+type classes for Leibniz equality. These lemmas allow us to enforce Coq not to
+use the setoid rewriting mechanism. *)
+Lemma idemp_L {A} f `{!@IdemP A (=) f} x : f x x = x.
+Proof. auto. Qed.
+Lemma comm_L {A B} f `{!@Comm A B (=) f} x y : f x y = f y x.
+Proof. auto. Qed.
+Lemma left_id_L {A} i f `{!@LeftId A (=) i f} x : f i x = x.
+Proof. auto. Qed.
+Lemma right_id_L {A} i f `{!@RightId A (=) i f} x : f x i = x.
+Proof. auto. Qed.
+Lemma assoc_L {A} f `{!@Assoc A (=) f} x y z : f x (f y z) = f (f x y) z.
+Proof. auto. Qed.
+Lemma left_absorb_L {A} i f `{!@LeftAbsorb A (=) i f} x : f i x = i.
+Proof. auto. Qed.
+Lemma right_absorb_L {A} i f `{!@RightAbsorb A (=) i f} x : f x i = i.
+Proof. auto. Qed.
+
+(** ** Generic orders *)
+(** The classes [PreOrder], [PartialOrder], and [TotalOrder] use an arbitrary
+relation [R] instead of [⊆] to support multiple orders on the same type. *)
+Definition strict {A} (R : relation A) : relation A := λ X Y, R X Y ∧ ¬R Y X.
+Instance: Params (@strict) 2.
+Class PartialOrder {A} (R : relation A) : Prop := {
+  partial_order_pre :> PreOrder R;
+  partial_order_anti_symm :> AntiSymm (=) R
+}.
+Class TotalOrder {A} (R : relation A) : Prop := {
+  total_order_partial :> PartialOrder R;
+  total_order_trichotomy :> Trichotomy (strict R)
+}.
+
+(** * Logic *)
+Notation "(∧)" := and (only parsing) : C_scope.
+Notation "( A ∧)" := (and A) (only parsing) : C_scope.
+Notation "(∧ B )" := (λ A, A ∧ B) (only parsing) : C_scope.
+
+Notation "(∨)" := or (only parsing) : C_scope.
+Notation "( A ∨)" := (or A) (only parsing) : C_scope.
+Notation "(∨ B )" := (λ A, A ∨ B) (only parsing) : C_scope.
+
+Notation "(↔)" := iff (only parsing) : C_scope.
+Notation "( A ↔)" := (iff A) (only parsing) : C_scope.
+Notation "(↔ B )" := (λ A, A ↔ B) (only parsing) : C_scope.
+
+Hint Extern 0 (_ ↔ _) => reflexivity.
+Hint Extern 0 (_ ↔ _) => symmetry; assumption.
+
+Lemma or_l P Q : ¬Q → P ∨ Q ↔ P.
+Proof. tauto. Qed.
+Lemma or_r P Q : ¬P → P ∨ Q ↔ Q.
+Proof. tauto. Qed.
+Lemma and_wlog_l (P Q : Prop) : (Q → P) → Q → (P ∧ Q).
+Proof. tauto. Qed.
+Lemma and_wlog_r (P Q : Prop) : P → (P → Q) → (P ∧ Q).
+Proof. tauto. Qed.
+Lemma impl_transitive (P Q R : Prop) : (P → Q) → (Q → R) → (P → R).
+Proof. tauto. Qed.
+
+Instance: Comm (↔) (@eq A).
+Proof. red; intuition. Qed.
+Instance: Comm (↔) (λ x y, @eq A y x).
+Proof. red; intuition. Qed.
+Instance: Comm (↔) (↔).
+Proof. red; intuition. Qed.
+Instance: Comm (↔) (∧).
+Proof. red; intuition. Qed.
+Instance: Assoc (↔) (∧).
+Proof. red; intuition. Qed.
+Instance: IdemP (↔) (∧).
+Proof. red; intuition. Qed.
+Instance: Comm (↔) (∨).
+Proof. red; intuition. Qed.
+Instance: Assoc (↔) (∨).
+Proof. red; intuition. Qed.
+Instance: IdemP (↔) (∨).
+Proof. red; intuition. Qed.
+Instance: LeftId (↔) True (∧).
+Proof. red; intuition. Qed.
+Instance: RightId (↔) True (∧).
+Proof. red; intuition. Qed.
+Instance: LeftAbsorb (↔) False (∧).
+Proof. red; intuition. Qed.
+Instance: RightAbsorb (↔) False (∧).
+Proof. red; intuition. Qed.
+Instance: LeftId (↔) False (∨).
+Proof. red; intuition. Qed.
+Instance: RightId (↔) False (∨).
+Proof. red; intuition. Qed.
+Instance: LeftAbsorb (↔) True (∨).
+Proof. red; intuition. Qed.
+Instance: RightAbsorb (↔) True (∨).
+Proof. red; intuition. Qed.
+Instance: LeftId (↔) True impl.
+Proof. unfold impl. red; intuition. Qed.
+Instance: RightAbsorb (↔) True impl.
+Proof. unfold impl. red; intuition. Qed.
+
+
+(** * Common data types *)
+(** ** Functions *)
+Notation "(→)" := (λ A B, A → B) (only parsing) : C_scope.
+Notation "( A →)" := (λ B, A → B) (only parsing) : C_scope.
+Notation "(→ B )" := (λ A, A → B) (only parsing) : C_scope.
+
+Notation "t $ r" := (t r)
+  (at level 65, right associativity, only parsing) : C_scope.
+Notation "($)" := (λ f x, f x) (only parsing) : C_scope.
+Notation "($ x )" := (λ f, f x) (only parsing) : C_scope.
+
+Infix "∘" := compose : C_scope.
+Notation "(∘)" := compose (only parsing) : C_scope.
+Notation "( f ∘)" := (compose f) (only parsing) : C_scope.
+Notation "(∘ f )" := (λ g, compose g f) (only parsing) : C_scope.
+
+(** Ensure that [simpl] unfolds [id], [compose], and [flip] when fully
+applied. *)
+Arguments id _ _ /.
+Arguments compose _ _ _ _ _ _ /.
+Arguments flip _ _ _ _ _ _ /.
+Arguments const _ _ _ _ /.
+Typeclasses Transparent id compose flip const.
+Instance: Params (@pair) 2.
+
+Definition fun_map {A A' B B'} (f: A' → A) (g: B → B') (h : A → B) : A' → B' :=
+  g ∘ h ∘ f.
+
+Instance const_proper `{R1 : relation A, R2 : relation B} (x : B) :
+  Reflexive R2 → Proper (R1 ==> R2) (λ _, x).
+Proof. intros ? y1 y2; reflexivity. Qed.
+
+Instance id_inj {A} : Inj (=) (=) (@id A).
+Proof. intros ??; auto. Qed.
+Instance compose_inj {A B C} R1 R2 R3 (f : A → B) (g : B → C) :
+  Inj R1 R2 f → Inj R2 R3 g → Inj R1 R3 (g ∘ f).
+Proof. red; intuition. Qed.
+
+Instance id_surj {A} : Surj (=) (@id A).
+Proof. intros y; exists y; reflexivity. Qed.
+Instance compose_surj {A B C} R (f : A → B) (g : B → C) :
+  Surj (=) f → Surj R g → Surj R (g ∘ f).
+Proof.
+  intros ?? x. unfold compose. destruct (surj g x) as [y ?].
+  destruct (surj f y) as [z ?]. exists z. congruence.
+Qed.
+
+Instance id_comm {A B} (x : B) : Comm (=) (λ _ _ : A, x).
+Proof. intros ?; reflexivity. Qed.
+Instance id_assoc {A} (x : A) : Assoc (=) (λ _ _ : A, x).
+Proof. intros ???; reflexivity. Qed.
+Instance const1_assoc {A} : Assoc (=) (λ x _ : A, x).
+Proof. intros ???; reflexivity. Qed.
+Instance const2_assoc {A} : Assoc (=) (λ _ x : A, x).
+Proof. intros ???; reflexivity. Qed.
+Instance const1_idemp {A} : IdemP (=) (λ x _ : A, x).
+Proof. intros ?; reflexivity. Qed.
+Instance const2_idemp {A} : IdemP (=) (λ _ x : A, x).
+Proof. intros ?; reflexivity. Qed.
+
+(** ** Lists *)
+Instance list_inhabited {A} : Inhabited (list A) := populate [].
+
+Definition zip_with {A B C} (f : A → B → C) : list A → list B → list C :=
+  fix go l1 l2 :=
+  match l1, l2 with x1 :: l1, x2 :: l2 => f x1 x2 :: go l1 l2 | _ , _ => [] end.
+Notation zip := (zip_with pair).
+
+(** ** Booleans *)
+(** The following coercion allows us to use Booleans as propositions. *)
+Coercion Is_true : bool >-> Sortclass.
+Hint Unfold Is_true.
+Hint Immediate Is_true_eq_left.
+Hint Resolve orb_prop_intro andb_prop_intro.
+Notation "(&&)" := andb (only parsing).
+Notation "(||)" := orb (only parsing).
+Infix "&&*" := (zip_with (&&)) (at level 40).
+Infix "||*" := (zip_with (||)) (at level 50).
+
+Instance bool_inhabated : Inhabited bool := populate true.
+
+Definition bool_le (β1 β2 : bool) : Prop := negb β1 || β2.
+Infix "=.>" := bool_le (at level 70).
+Infix "=.>*" := (Forall2 bool_le) (at level 70).
+Instance: PartialOrder bool_le.
+Proof. repeat split; repeat intros [|]; compute; tauto. Qed.
+
+Lemma andb_True b1 b2 : b1 && b2 ↔ b1 ∧ b2.
+Proof. destruct b1, b2; simpl; tauto. Qed.
+Lemma orb_True b1 b2 : b1 || b2 ↔ b1 ∨ b2.
+Proof. destruct b1, b2; simpl; tauto. Qed.
+Lemma negb_True b : negb b ↔ ¬b.
+Proof. destruct b; simpl; tauto. Qed.
+Lemma Is_true_false (b : bool) : b = false → ¬b.
+Proof. now intros -> ?. Qed.
+
+(** ** Unit *)
+Instance unit_equiv : Equiv unit := λ _ _, True.
+Instance unit_equivalence : Equivalence (@equiv unit _).
+Proof. repeat split. Qed.
+Instance unit_inhabited: Inhabited unit := populate ().
+
+(** ** Products *)
+Notation "( x ,)" := (pair x) (only parsing) : C_scope.
+Notation "(, y )" := (λ x, (x,y)) (only parsing) : C_scope.
+
+Notation "p .1" := (fst p) (at level 10, format "p .1").
+Notation "p .2" := (snd p) (at level 10, format "p .2").
+
+Notation curry := prod_curry.
+Notation uncurry := prod_uncurry.
+Definition curry3 {A B C D} (f : A → B → C → D) (p : A * B * C) : D :=
+  let '(a,b,c) := p in f a b c.
+Definition curry4 {A B C D E} (f : A → B → C → D → E) (p : A * B * C * D) : E :=
+  let '(a,b,c,d) := p in f a b c d.
+
+Definition prod_map {A A' B B'} (f: A → A') (g: B → B') (p : A * B) : A' * B' :=
+  (f (p.1), g (p.2)).
+Arguments prod_map {_ _ _ _} _ _ !_ /.
+
+Definition prod_zip {A A' A'' B B' B''} (f : A → A' → A'') (g : B → B' → B'')
+    (p : A * B) (q : A' * B') : A'' * B'' := (f (p.1) (q.1), g (p.2) (q.2)).
+Arguments prod_zip {_ _ _ _ _ _} _ _ !_ !_ /.
+
+Instance prod_inhabited {A B} (iA : Inhabited A)
+    (iB : Inhabited B) : Inhabited (A * B) :=
+  match iA, iB with populate x, populate y => populate (x,y) end.
+
+Instance pair_inj : Inj2 (=) (=) (=) (@pair A B).
+Proof. injection 1; auto. Qed.
+Instance prod_map_inj {A A' B B'} (f : A → A') (g : B → B') :
+  Inj (=) (=) f → Inj (=) (=) g → Inj (=) (=) (prod_map f g).
+Proof.
+  intros ?? [??] [??] ?; simpl in *; f_equal;
+    [apply (inj f)|apply (inj g)]; congruence.
+Qed.
+
+Definition prod_relation {A B} (R1 : relation A) (R2 : relation B) :
+  relation (A * B) := λ x y, R1 (x.1) (y.1) ∧ R2 (x.2) (y.2).
+Section prod_relation.
+  Context `{R1 : relation A, R2 : relation B}.
+  Global Instance prod_relation_refl :
+    Reflexive R1 → Reflexive R2 → Reflexive (prod_relation R1 R2).
+  Proof. firstorder eauto. Qed.
+  Global Instance prod_relation_sym :
+    Symmetric R1 → Symmetric R2 → Symmetric (prod_relation R1 R2).
+  Proof. firstorder eauto. Qed.
+  Global Instance prod_relation_trans :
+    Transitive R1 → Transitive R2 → Transitive (prod_relation R1 R2).
+  Proof. firstorder eauto. Qed.
+  Global Instance prod_relation_equiv :
+    Equivalence R1 → Equivalence R2 → Equivalence (prod_relation R1 R2).
+  Proof. split; apply _. Qed.
+  Global Instance pair_proper' : Proper (R1 ==> R2 ==> prod_relation R1 R2) pair.
+  Proof. firstorder eauto. Qed.
+  Global Instance fst_proper' : Proper (prod_relation R1 R2 ==> R1) fst.
+  Proof. firstorder eauto. Qed.
+  Global Instance snd_proper' : Proper (prod_relation R1 R2 ==> R2) snd.
+  Proof. firstorder eauto. Qed.
+End prod_relation.
+
+Instance prod_equiv `{Equiv A,Equiv B} : Equiv (A * B) := prod_relation (≡) (≡).
+Instance pair_proper `{Equiv A, Equiv B} :
+  Proper ((≡) ==> (≡) ==> (≡)) (@pair A B) | 0 := _.
+Instance fst_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@fst A B) := _.
+Instance snd_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@snd A B) := _.
+Typeclasses Opaque prod_equiv.
+
+(** ** Sums *)
+Instance sum_inhabited_l {A B} (iA : Inhabited A) : Inhabited (A + B) :=
+  match iA with populate x => populate (inl x) end.
+Instance sum_inhabited_r {A B} (iB : Inhabited A) : Inhabited (A + B) :=
+  match iB with populate y => populate (inl y) end.
+
+Instance inl_inj : Inj (=) (=) (@inl A B).
+Proof. injection 1; auto. Qed.
+Instance inr_inj : Inj (=) (=) (@inr A B).
+Proof. injection 1; auto. Qed.
+
+(** ** Option *)
+Instance option_inhabited {A} : Inhabited (option A) := populate None.
+
+(** ** Sigma types *)
+Arguments existT {_ _} _ _.
+Arguments proj1_sig {_ _} _.
+Notation "x ↾ p" := (exist _ x p) (at level 20) : C_scope.
+Notation "` x" := (proj1_sig x) (at level 10, format "` x") : C_scope.
+
+Lemma proj1_sig_inj {A} (P : A → Prop) x (Px : P x) y (Py : P y) :
+  x↾Px = y↾Py → x = y.
+Proof. injection 1; trivial. Qed.
+
+Section sig_map.
+  Context `{P : A → Prop} `{Q : B → Prop} (f : A → B) (Hf : ∀ x, P x → Q (f x)).
+  Definition sig_map (x : sig P) : sig Q := f (`x) ↾ Hf _ (proj2_sig x).
+  Global Instance sig_map_inj:
+    (∀ x, ProofIrrel (P x)) → Inj (=) (=) f → Inj (=) (=) sig_map.
+  Proof.
+    intros ?? [x Hx] [y Hy]. injection 1. intros Hxy.
+    apply (inj f) in Hxy; subst. rewrite (proof_irrel _ Hy). auto.
+  Qed.
+End sig_map.
+Arguments sig_map _ _ _ _ _ _ !_ /.
+
+
+(** * Operations on collections *)
 (** We define operational type classes for the traditional operations and
 relations on collections: the empty collection [∅], the union [(∪)],
 intersection [(∩)], and difference [(∖)], the singleton [{[_]}], the subset
@@ -285,8 +607,6 @@ Hint Extern 0 (_ ⊆ _) => reflexivity.
 Hint Extern 0 (_ ⊆* _) => reflexivity.
 Hint Extern 0 (_ ⊆** _) => reflexivity.
 
-Definition strict {A} (R : relation A) : relation A := λ X Y, R X Y ∧ ¬R Y X.
-Instance: Params (@strict) 2.
 Infix "⊂" := (strict (⊆)) (at level 70) : C_scope.
 Notation "(⊂)" := (strict (⊆)) (only parsing) : C_scope.
 Notation "( X ⊂ )" := (strict (⊆) X) (only parsing) : C_scope.
@@ -363,7 +683,8 @@ End disjoint_list.
 
 Class Filter A B := filter: ∀ (P : A → Prop) `{∀ x, Decision (P x)}, B → B.
 
-(** ** Monadic operations *)
+
+(** * Monadic operations *)
 (** We define operational type classes for the monadic operations bind, join 
 and fmap. We use these type classes merely for convenient overloading of
 notations and do not formalize any theory on monads (we do not even define a
@@ -421,7 +742,8 @@ Notation "'guard' P ; o" := (mguard P (λ _, o))
 Notation "'guard' P 'as' H ; o" := (mguard P (λ H, o))
   (at level 65, only parsing, right associativity) : C_scope.
 
-(** ** Operations on maps *)
+
+(** * Operations on maps *)
 (** In this section we define operational type classes for the operations
 on maps. In the file [fin_maps] we will axiomatize finite maps.
 The function look up [m !! k] should yield the element at key [k] in [m]. *)
@@ -517,95 +839,8 @@ Notation "<[ k := a ]{ Γ }>" := (insertE Γ k a)
   (at level 5, right associativity, format "<[ k := a ]{ Γ }>") : C_scope.
 Arguments insertE _ _ _ _ _ _ !_ _ !_ / : simpl nomatch.
 
-(** ** Common properties *)
-(** These operational type classes allow us to refer to common mathematical
-properties in a generic way. For example, for injectivity of [(k ++)] it
-allows us to write [inj (k ++)] instead of [app_inv_head k]. *)
-Class Inj {A B} (R : relation A) (S : relation B) (f : A → B) : Prop :=
-  inj x y : S (f x) (f y) → R x y.
-Class Inj2 {A B C} (R1 : relation A) (R2 : relation B)
-    (S : relation C) (f : A → B → C) : Prop :=
-  inj2 x1 x2 y1 y2 : S (f x1 x2) (f y1 y2) → R1 x1 y1 ∧ R2 x2 y2.
-Class Cancel {A B} (S : relation B) (f : A → B) (g : B → A) : Prop :=
-  cancel : ∀ x, S (f (g x)) x.
-Class Surj {A B} (R : relation B) (f : A → B) :=
-  surj y : ∃ x, R (f x) y.
-Class IdemP {A} (R : relation A) (f : A → A → A) : Prop :=
-  idemp x : R (f x x) x.
-Class Comm {A B} (R : relation A) (f : B → B → A) : Prop :=
-  comm x y : R (f x y) (f y x).
-Class LeftId {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
-  left_id x : R (f i x) x.
-Class RightId {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
-  right_id x : R (f x i) x.
-Class Assoc {A} (R : relation A) (f : A → A → A) : Prop :=
-  assoc x y z : R (f x (f y z)) (f (f x y) z).
-Class LeftAbsorb {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
-  left_absorb x : R (f i x) i.
-Class RightAbsorb {A} (R : relation A) (i : A) (f : A → A → A) : Prop :=
-  right_absorb x : R (f x i) i.
-Class AntiSymm {A} (R S : relation A) : Prop :=
-  anti_symm x y : S x y → S y x → R x y.
-Class Total {A} (R : relation A) := total x y : R x y ∨ R y x.
-Class Trichotomy {A} (R : relation A) :=
-  trichotomy x y : R x y ∨ x = y ∨ R y x.
-Class TrichotomyT {A} (R : relation A) :=
-  trichotomyT x y : {R x y} + {x = y} + {R y x}.
 
-Arguments irreflexivity {_} _ {_} _ _.
-Arguments inj {_ _ _ _} _ {_} _ _ _.
-Arguments inj2 {_ _ _ _ _ _} _ {_} _ _ _ _ _.
-Arguments cancel {_ _ _} _ _ {_} _.
-Arguments surj {_ _ _} _ {_} _.
-Arguments idemp {_ _} _ {_} _.
-Arguments comm {_ _ _} _ {_} _ _.
-Arguments left_id {_ _} _ _ {_} _.
-Arguments right_id {_ _} _ _ {_} _.
-Arguments assoc {_ _} _ {_} _ _ _.
-Arguments left_absorb {_ _} _ _ {_} _.
-Arguments right_absorb {_ _} _ _ {_} _.
-Arguments anti_symm {_ _} _ {_} _ _ _ _.
-Arguments total {_} _ {_} _ _.
-Arguments trichotomy {_} _ {_} _ _.
-Arguments trichotomyT {_} _ {_} _ _.
-
-Instance id_inj {A} : Inj (=) (=) (@id A).
-Proof. intros ??; auto. Qed.
-
-(** The following lemmas are specific versions of the projections of the above
-type classes for Leibniz equality. These lemmas allow us to enforce Coq not to
-use the setoid rewriting mechanism. *)
-Lemma idemp_L {A} (f : A → A → A) `{!IdemP (=) f} x : f x x = x.
-Proof. auto. Qed.
-Lemma comm_L {A B} (f : B → B → A) `{!Comm (=) f} x y :
-  f x y = f y x.
-Proof. auto. Qed.
-Lemma left_id_L {A} (i : A) (f : A → A → A) `{!LeftId (=) i f} x : f i x = x.
-Proof. auto. Qed.
-Lemma right_id_L {A} (i : A) (f : A → A → A) `{!RightId (=) i f} x : f x i = x.
-Proof. auto. Qed.
-Lemma assoc_L {A} (f : A → A → A) `{!Assoc (=) f} x y z :
-  f x (f y z) = f (f x y) z.
-Proof. auto. Qed.
-Lemma left_absorb_L {A} (i : A) (f : A → A → A) `{!LeftAbsorb (=) i f} x :
-  f i x = i.
-Proof. auto. Qed.
-Lemma right_absorb_L {A} (i : A) (f : A → A → A) `{!RightAbsorb (=) i f} x :
-  f x i = i.
-Proof. auto. Qed.
-
-(** ** Axiomatization of ordered structures *)
-(** The classes [PreOrder], [PartialOrder], and [TotalOrder] use an arbitrary
-relation [R] instead of [⊆] to support multiple orders on the same type. *)
-Class PartialOrder {A} (R : relation A) : Prop := {
-  partial_order_pre :> PreOrder R;
-  partial_order_anti_symm :> AntiSymm (=) R
-}.
-Class TotalOrder {A} (R : relation A) : Prop := {
-  total_order_partial :> PartialOrder R;
-  total_order_trichotomy :> Trichotomy (strict R)
-}.
-
+(** * Ordered structures *)
 (** We do not use a setoid equality in the following interfaces to avoid the
 need for proofs that the relations and operations are proper. Instead, we
 define setoid equality generically [λ X Y, X ⊆ Y ∧ Y ⊆ X]. *)
@@ -712,222 +947,7 @@ Class FreshSpec A C `{ElemOf A C,
   is_fresh (X : C) : fresh X ∉ X
 }.
 
-(** * Booleans *)
-(** The following coercion allows us to use Booleans as propositions. *)
-Coercion Is_true : bool >-> Sortclass.
-Hint Unfold Is_true.
-Hint Immediate Is_true_eq_left.
-Hint Resolve orb_prop_intro andb_prop_intro.
-Notation "(&&)" := andb (only parsing).
-Notation "(||)" := orb (only parsing).
-Infix "&&*" := (zip_with (&&)) (at level 40).
-Infix "||*" := (zip_with (||)) (at level 50).
-
-Definition bool_le (β1 β2 : bool) : Prop := negb β1 || β2.
-Infix "=.>" := bool_le (at level 70).
-Infix "=.>*" := (Forall2 bool_le) (at level 70).
-Instance: PartialOrder bool_le.
-Proof. repeat split; repeat intros [|]; compute; tauto. Qed.
-
-Lemma andb_True b1 b2 : b1 && b2 ↔ b1 ∧ b2.
-Proof. destruct b1, b2; simpl; tauto. Qed.
-Lemma orb_True b1 b2 : b1 || b2 ↔ b1 ∨ b2.
-Proof. destruct b1, b2; simpl; tauto. Qed.
-Lemma negb_True b : negb b ↔ ¬b.
-Proof. destruct b; simpl; tauto. Qed.
-Lemma Is_true_false (b : bool) : b = false → ¬b.
-Proof. now intros -> ?. Qed.
-
 (** * Miscellaneous *)
 Class Half A := half: A → A.
 Notation "½" := half : C_scope.
 Notation "½*" := (fmap (M:=list) half) : C_scope.
-
-Lemma proj1_sig_inj {A} (P : A → Prop) x (Px : P x) y (Py : P y) :
-  x↾Px = y↾Py → x = y.
-Proof. injection 1; trivial. Qed.
-Lemma not_symmetry `{R : relation A, !Symmetric R} x y : ¬R x y → ¬R y x.
-Proof. intuition. Qed.
-Lemma symmetry_iff `(R : relation A) `{!Symmetric R} x y : R x y ↔ R y x.
-Proof. intuition. Qed.
-
-(** ** Unit *)
-Instance unit_equiv : Equiv unit := λ _ _, True.
-Instance unit_equivalence : Equivalence (@equiv unit _).
-Proof. repeat split. Qed.
-
-(** ** Products *)
-Instance prod_map_inj {A A' B B'} (f : A → A') (g : B → B') :
-  Inj (=) (=) f → Inj (=) (=) g → Inj (=) (=) (prod_map f g).
-Proof.
-  intros ?? [??] [??] ?; simpl in *; f_equal;
-    [apply (inj f)|apply (inj g)]; congruence.
-Qed.
-
-Definition prod_relation {A B} (R1 : relation A) (R2 : relation B) :
-  relation (A * B) := λ x y, R1 (x.1) (y.1) ∧ R2 (x.2) (y.2).
-Section prod_relation.
-  Context `{R1 : relation A, R2 : relation B}.
-  Global Instance:
-    Reflexive R1 → Reflexive R2 → Reflexive (prod_relation R1 R2).
-  Proof. firstorder eauto. Qed.
-  Global Instance:
-    Symmetric R1 → Symmetric R2 → Symmetric (prod_relation R1 R2).
-  Proof. firstorder eauto. Qed.
-  Global Instance:
-    Transitive R1 → Transitive R2 → Transitive (prod_relation R1 R2).
-  Proof. firstorder eauto. Qed.
-  Global Instance:
-    Equivalence R1 → Equivalence R2 → Equivalence (prod_relation R1 R2).
-  Proof. split; apply _. Qed.
-  Global Instance: Proper (R1 ==> R2 ==> prod_relation R1 R2) pair.
-  Proof. firstorder eauto. Qed.
-  Global Instance: Proper (prod_relation R1 R2 ==> R1) fst.
-  Proof. firstorder eauto. Qed.
-  Global Instance: Proper (prod_relation R1 R2 ==> R2) snd.
-  Proof. firstorder eauto. Qed.
-End prod_relation.
-
-Instance prod_equiv `{Equiv A,Equiv B} : Equiv (A * B) := prod_relation (≡) (≡).
-Instance pair_proper `{Equiv A, Equiv B} :
-  Proper ((≡) ==> (≡) ==> (≡)) (@pair A B) | 0 := _.
-Instance fst_proper `{Equiv A, Equiv B} :
-  Proper ((≡) ==> (≡)) (@fst A B) | 0 := _.
-Instance snd_proper `{Equiv A, Equiv B} :
-  Proper ((≡) ==> (≡)) (@snd A B) | 0 := _.
-Typeclasses Opaque prod_equiv.
-
-(** ** Other *)
-Lemma or_l P Q : ¬Q → P ∨ Q ↔ P.
-Proof. tauto. Qed.
-Lemma or_r P Q : ¬P → P ∨ Q ↔ Q.
-Proof. tauto. Qed.
-Lemma and_wlog_l (P Q : Prop) : (Q → P) → Q → (P ∧ Q).
-Proof. tauto. Qed.
-Lemma and_wlog_r (P Q : Prop) : P → (P → Q) → (P ∧ Q).
-Proof. tauto. Qed.
-Instance: ∀ A B (x : B), Comm (=) (λ _ _ : A, x).
-Proof. red. trivial. Qed.
-Instance: ∀ A (x : A), Assoc (=) (λ _ _ : A, x).
-Proof. red. trivial. Qed.
-Instance: ∀ A, Assoc (=) (λ x _ : A, x).
-Proof. red. trivial. Qed.
-Instance: ∀ A, Assoc (=) (λ _ x : A, x).
-Proof. red. trivial. Qed.
-Instance: ∀ A, IdemP (=) (λ x _ : A, x).
-Proof. red. trivial. Qed.
-Instance: ∀ A, IdemP (=) (λ _ x : A, x).
-Proof. red. trivial. Qed.
-
-Instance left_id_propholds {A} (R : relation A) i f :
-  LeftId R i f → ∀ x, PropHolds (R (f i x) x).
-Proof. red. trivial. Qed.
-Instance right_id_propholds {A} (R : relation A) i f :
-  RightId R i f → ∀ x, PropHolds (R (f x i) x).
-Proof. red. trivial. Qed.
-Instance left_absorb_propholds {A} (R : relation A) i f :
-  LeftAbsorb R i f → ∀ x, PropHolds (R (f i x) i).
-Proof. red. trivial. Qed.
-Instance right_absorb_propholds {A} (R : relation A) i f :
-  RightAbsorb R i f → ∀ x, PropHolds (R (f x i) i).
-Proof. red. trivial. Qed.
-Instance idem_propholds {A} (R : relation A) f :
-  IdemP R f → ∀ x, PropHolds (R (f x x) x).
-Proof. red. trivial. Qed.
-
-Instance: ∀ `{R1 : relation A, R2 : relation B} (x : B),
-  Reflexive R2 → Proper (R1 ==> R2) (λ _, x).
-Proof. intros A R1 B R2 x ? y1 y2; reflexivity. Qed.
-Instance: @PreOrder A (=).
-Proof. split; repeat intro; congruence. Qed.
-Lemma inj_iff {A B} {R : relation A} {S : relation B} (f : A → B)
-  `{!Inj R S f} `{!Proper (R ==> S) f} x y : S (f x) (f y) ↔ R x y.
-Proof. firstorder. Qed.
-Instance: Inj (=) (=) (@inl A B).
-Proof. injection 1; auto. Qed.
-Instance: Inj (=) (=) (@inr A B).
-Proof. injection 1; auto. Qed.
-Instance: Inj2 (=) (=) (=) (@pair A B).
-Proof. injection 1; auto. Qed.
-Instance: ∀ `{Inj2 A B C R1 R2 R3 f} y, Inj R1 R3 (λ x, f x y).
-Proof. repeat intro; edestruct (inj2 f); eauto. Qed.
-Instance: ∀ `{Inj2 A B C R1 R2 R3 f} x, Inj R2 R3 (f x).
-Proof. repeat intro; edestruct (inj2 f); eauto. Qed.
-
-Lemma cancel_inj `{Cancel A B R1 f g}
-  `{!Equivalence R1} `{!Proper (R2 ==> R1) f} : Inj R1 R2 g.
-Proof.
-  intros x y E. rewrite <-(cancel f g x), <-(cancel f g y), E. reflexivity.
-Qed.
-Lemma cancel_surj `{Cancel A B R1 f g} : Surj R1 f.
-Proof. intros y. exists (g y). auto. Qed.
-
-Lemma impl_transitive (P Q R : Prop) : (P → Q) → (Q → R) → (P → R).
-Proof. tauto. Qed.
-Instance: Comm (↔) (@eq A).
-Proof. red; intuition. Qed.
-Instance: Comm (↔) (λ x y, @eq A y x).
-Proof. red; intuition. Qed.
-Instance: Comm (↔) (↔).
-Proof. red; intuition. Qed.
-Instance: Comm (↔) (∧).
-Proof. red; intuition. Qed.
-Instance: Assoc (↔) (∧).
-Proof. red; intuition. Qed.
-Instance: IdemP (↔) (∧).
-Proof. red; intuition. Qed.
-Instance: Comm (↔) (∨).
-Proof. red; intuition. Qed.
-Instance: Assoc (↔) (∨).
-Proof. red; intuition. Qed.
-Instance: IdemP (↔) (∨).
-Proof. red; intuition. Qed.
-Instance: LeftId (↔) True (∧).
-Proof. red; intuition. Qed.
-Instance: RightId (↔) True (∧).
-Proof. red; intuition. Qed.
-Instance: LeftAbsorb (↔) False (∧).
-Proof. red; intuition. Qed.
-Instance: RightAbsorb (↔) False (∧).
-Proof. red; intuition. Qed.
-Instance: LeftId (↔) False (∨).
-Proof. red; intuition. Qed.
-Instance: RightId (↔) False (∨).
-Proof. red; intuition. Qed.
-Instance: LeftAbsorb (↔) True (∨).
-Proof. red; intuition. Qed.
-Instance: RightAbsorb (↔) True (∨).
-Proof. red; intuition. Qed.
-Instance: LeftId (↔) True impl.
-Proof. unfold impl. red; intuition. Qed.
-Instance: RightAbsorb (↔) True impl.
-Proof. unfold impl. red; intuition. Qed.
-Lemma not_inj `{Inj A B R R' f} x y : ¬R x y → ¬R' (f x) (f y).
-Proof. intuition. Qed.
-Lemma not_inj2_1 `{Inj2 A B C R R' R'' f} x1 x2 y1 y2 :
-  ¬R x1 x2 → ¬R'' (f x1 y1) (f x2 y2).
-Proof. intros HR HR''. destruct (inj2 f x1 y1 x2 y2); auto. Qed.
-Lemma not_inj2_2 `{Inj2 A B C R R' R'' f} x1 x2 y1 y2 :
-  ¬R' y1 y2 → ¬R'' (f x1 y1) (f x2 y2).
-Proof. intros HR' HR''. destruct (inj2 f x1 y1 x2 y2); auto. Qed.
-Instance inj_compose {A B C} R1 R2 R3 (f : A → B) (g : B → C) :
-  Inj R1 R2 f → Inj R2 R3 g → Inj R1 R3 (g ∘ f).
-Proof. red; intuition. Qed.
-Instance surj_compose {A B C} R (f : A → B) (g : B → C) :
-  Surj (=) f → Surj R g → Surj R (g ∘ f).
-Proof.
-  intros ?? x. unfold compose. destruct (surj g x) as [y ?].
-  destruct (surj f y) as [z ?]. exists z. congruence.
-Qed.
-
-Section sig_map.
-  Context `{P : A → Prop} `{Q : B → Prop} (f : A → B) (Hf : ∀ x, P x → Q (f x)).
-  Definition sig_map (x : sig P) : sig Q := f (`x) ↾ Hf _ (proj2_sig x).
-  Global Instance sig_map_inj:
-    (∀ x, ProofIrrel (P x)) → Inj (=) (=) f → Inj (=) (=) sig_map.
-  Proof.
-    intros ?? [x Hx] [y Hy]. injection 1. intros Hxy.
-    apply (inj f) in Hxy; subst. rewrite (proof_irrel _ Hy). auto.
-  Qed.
-End sig_map.
-Arguments sig_map _ _ _ _ _ _ !_ /.
