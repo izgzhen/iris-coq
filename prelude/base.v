@@ -90,21 +90,6 @@ Hint Extern 0 (_ ≡ _) => symmetry; assumption.
 
 
 (** * Type classes *)
-(** ** Provable propositions *)
-(** This type class collects provable propositions. It is useful to constraint
-type classes by arbitrary propositions. *)
-Class PropHolds (P : Prop) := prop_holds: P.
-
-Hint Extern 0 (PropHolds _) => assumption : typeclass_instances.
-Instance: Proper (iff ==> iff) PropHolds.
-Proof. repeat intro; trivial. Qed.
-
-Ltac solve_propholds :=
-  match goal with
-  | |- PropHolds (?P) => apply _
-  | |- ?P => change (PropHolds P); apply _
-  end.
-
 (** ** Decidable propositions *)
 (** This type class by (Spitters/van der Weegen, 2011) collects decidable
 propositions. For example to declare a parameter expressing decidable equality
@@ -175,22 +160,6 @@ Arguments anti_symm {_ _} _ {_} _ _ _ _.
 Arguments total {_} _ {_} _ _.
 Arguments trichotomy {_} _ {_} _ _.
 Arguments trichotomyT {_} _ {_} _ _.
-
-Instance left_id_propholds {A} (R : relation A) i f :
-  LeftId R i f → ∀ x, PropHolds (R (f i x) x).
-Proof. red. trivial. Qed.
-Instance right_id_propholds {A} (R : relation A) i f :
-  RightId R i f → ∀ x, PropHolds (R (f x i) x).
-Proof. red. trivial. Qed.
-Instance left_absorb_propholds {A} (R : relation A) i f :
-  LeftAbsorb R i f → ∀ x, PropHolds (R (f i x) i).
-Proof. red. trivial. Qed.
-Instance right_absorb_propholds {A} (R : relation A) i f :
-  RightAbsorb R i f → ∀ x, PropHolds (R (f x i) i).
-Proof. red. trivial. Qed.
-Instance idem_propholds {A} (R : relation A) f :
-  IdemP R f → ∀ x, PropHolds (R (f x x) x).
-Proof. red. trivial. Qed.
 
 Lemma not_symmetry `{R : relation A, !Symmetric R} x y : ¬R x y → ¬R y x.
 Proof. intuition. Qed.

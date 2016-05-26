@@ -3668,5 +3668,3 @@ Ltac solve_suffix_of := by intuition (repeat
   | |- suffix_of _ (_ ++ _) => apply suffix_of_app_r
   | H : suffix_of _ _ → False |- _ => destruct H
   end).
-Hint Extern 0 (PropHolds (suffix_of _ _)) =>
-  unfold PropHolds; solve_suffix_of : typeclass_instances.

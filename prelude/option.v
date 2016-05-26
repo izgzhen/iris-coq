@@ -257,23 +257,33 @@ Lemma option_union_Some {A} (mx my : option A) z :
   mx ∪ my = Some z → mx = Some z ∨ my = Some z.
 Proof. destruct mx, my; naive_solver. Qed.
 
-Section option_union_intersection_difference.
+Class DiagNone {A B C} (f : option A → option B → option C) :=
+  diag_none : f None None = None.
+
+Section union_intersection_difference.
   Context {A} (f : A → A → option A).
-  Global Instance: LeftId (=) None (union_with f).
+
+  Global Instance union_with_diag_none : DiagNone (union_with f).
+  Proof. reflexivity. Qed.
+  Global Instance intersection_with_diag_none : DiagNone (intersection_with f).
+  Proof. reflexivity. Qed.
+  Global Instance difference_with_diag_none : DiagNone (difference_with f).
+  Proof. reflexivity. Qed.
+  Global Instance union_with_left_id : LeftId (=) None (union_with f).
   Proof. by intros [?|]. Qed.
-  Global Instance: RightId (=) None (union_with f).
+  Global Instance union_with_right_id : RightId (=) None (union_with f).
   Proof. by intros [?|]. Qed.
-  Global Instance: Comm (=) f → Comm (=) (union_with f).
+  Global Instance union_with_comm : Comm (=) f → Comm (=) (union_with f).
   Proof. by intros ? [?|] [?|]; compute; rewrite 1?(comm f). Qed.
-  Global Instance: LeftAbsorb (=) None (intersection_with f).
+  Global Instance intersection_with_left_ab : LeftAbsorb (=) None (intersection_with f).
   Proof. by intros [?|]. Qed.
-  Global Instance: RightAbsorb (=) None (intersection_with f).
+  Global Instance intersection_with_right_ab : RightAbsorb (=) None (intersection_with f).
   Proof. by intros [?|]. Qed.
-  Global Instance: Comm (=) f → Comm (=) (intersection_with f).
+  Global Instance difference_with_comm : Comm (=) f → Comm (=) (intersection_with f).
   Proof. by intros ? [?|] [?|]; compute; rewrite 1?(comm f). Qed.
-  Global Instance: RightId (=) None (difference_with f).
+  Global Instance difference_with_right_id : RightId (=) None (difference_with f).
   Proof. by intros [?|]. Qed.
-End option_union_intersection_difference.
+End union_intersection_difference.
 
 (** * Tactics *)
 Tactic Notation "case_option_guard" "as" ident(Hx) :=

@@ -39,8 +39,7 @@ Class FinMap K M `{FMap M, ∀ A, Lookup K A (M A), ∀ A, Empty (M A), ∀ A,
   elem_of_map_to_list {A} (m : M A) i x :
     (i,x) ∈ map_to_list m ↔ m !! i = Some x;
   lookup_omap {A B} (f : A → option B) m i : omap f m !! i = m !! i ≫= f;
-  lookup_merge {A B C} (f : option A → option B → option C)
-      `{!PropHolds (f None None = None)} m1 m2 i :
+  lookup_merge {A B C} (f: option A → option B → option C) `{!DiagNone f} m1 m2 i :
     merge f m1 m2 !! i = f (m1 !! i) (m2 !! i)
 }.
 
@@ -150,8 +149,7 @@ Section setoid.
     intros ?? Hf; apply partial_alter_proper.
     by destruct 1; constructor; apply Hf.
   Qed.
-  Lemma merge_ext f g
-      `{!PropHolds (f None None = None), !PropHolds (g None None = None)} :
+  Lemma merge_ext f g `{!DiagNone f, !DiagNone g} :
     ((≡) ==> (≡) ==> (≡))%signature f g →
     ((≡) ==> (≡) ==> (≡))%signature (merge (M:=M) f) (merge g).
   Proof.
@@ -825,8 +823,7 @@ End map_Forall.
 
 (** ** Properties of the [merge] operation *)
 Section merge.
-Context {A} (f : option A → option A → option A).
-Context `{!PropHolds (f None None = None)}.
+Context {A} (f : option A → option A → option A) `{!DiagNone f}.
 Global Instance: LeftId (=) None f → LeftId (=) ∅ (merge f).
 Proof.
   intros ??. apply map_eq. intros.
@@ -841,29 +838,25 @@ Lemma merge_comm m1 m2 :
   (∀ i, f (m1 !! i) (m2 !! i) = f (m2 !! i) (m1 !! i)) →
   merge f m1 m2 = merge f m2 m1.
 Proof. intros. apply map_eq. intros. by rewrite !(lookup_merge f). Qed.
-Global Instance: Comm (=) f → Comm (=) (merge f).
-Proof.
-  intros ???. apply merge_comm. intros. by apply (comm f).
-Qed.
+Global Instance merge_comm' : Comm (=) f → Comm (=) (merge f).
+Proof. intros ???. apply merge_comm. intros. by apply (comm f). Qed.
 Lemma merge_assoc m1 m2 m3 :
   (∀ i, f (m1 !! i) (f (m2 !! i) (m3 !! i)) =
         f (f (m1 !! i) (m2 !! i)) (m3 !! i)) →
   merge f m1 (merge f m2 m3) = merge f (merge f m1 m2) m3.
 Proof. intros. apply map_eq. intros. by rewrite !(lookup_merge f). Qed.
-Global Instance: Assoc (=) f → Assoc (=) (merge f).
-Proof.
-  intros ????. apply merge_assoc. intros. by apply (assoc_L f).
-Qed.
+Global Instance merge_assoc' : Assoc (=) f → Assoc (=) (merge f).
+Proof. intros ????. apply merge_assoc. intros. by apply (assoc_L f). Qed.
 Lemma merge_idemp m1 :
   (∀ i, f (m1 !! i) (m1 !! i) = m1 !! i) → merge f m1 m1 = m1.
 Proof. intros. apply map_eq. intros. by rewrite !(lookup_merge f). Qed.
-Global Instance: IdemP (=) f → IdemP (=) (merge f).
+Global Instance merge_idemp' : IdemP (=) f → IdemP (=) (merge f).
 Proof. intros ??. apply merge_idemp. intros. by apply (idemp f). Qed.
 End merge.
 
 Section more_merge.
-Context {A B C} (f : option A → option B → option C).
-Context `{!PropHolds (f None None = None)}.
+Context {A B C} (f : option A → option B → option C) `{!DiagNone f}.
+
 Lemma merge_Some m1 m2 m :
   (∀ i, m !! i = f (m1 !! i) (m2 !! i)) ↔ merge f m1 m2 = m.
 Proof.
@@ -983,7 +976,7 @@ Proof.
   split; [|naive_solver].
   intros [i[(x&y&?&?&?)|[(x&?&?&[])|(y&?&?&[])]]]; naive_solver.
 Qed.
-Global Instance: Symmetric (map_disjoint : relation (M A)).
+Global Instance map_disjoint_sym : Symmetric (map_disjoint : relation (M A)).
 Proof. intros A m1 m2. rewrite !map_disjoint_spec. naive_solver. Qed.
 Lemma map_disjoint_empty_l {A} (m : M A) : ∅ ⊥ₘ m.
 Proof. rewrite !map_disjoint_spec. intros i x y. by rewrite lookup_empty. Qed.
