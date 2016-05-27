@@ -52,7 +52,7 @@ Proof.
       apply Forall3_app, Forall3_cons; eauto using wptp_le.
       rewrite wp_eq.
       apply uPred_closed with (k + n);
-        first apply uPred_mono with r2; eauto using cmra_included_l. }
+        first apply uPred_mono with r2; eauto using cmra_includedN_l. }
     by rewrite -Permutation_middle /= big_op_app.
 Qed.
 Lemma wp_adequacy_steps P Φ k n e1 t2 σ1 σ2 r1 :

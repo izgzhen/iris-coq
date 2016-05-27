@@ -15,14 +15,11 @@ Program Definition pvs_def {Λ Σ} (E1 E2 : coPset) (P : iProp Λ Σ) : iProp Λ
        wsat k (E1 ∪ Ef) σ (r1 ⋅ rf) →
        ∃ r2, P k r2 ∧ wsat k (E2 ∪ Ef) σ (r2 ⋅ rf) |}.
 Next Obligation.
-  intros Λ Σ E1 E2 P r1 r2 n HP Hr rf k Ef σ ?? Hwsat; simpl in *.
-  apply HP; auto. by rewrite (dist_le _ _ _ _ Hr); last lia.
-Qed.
-Next Obligation.
-  intros Λ Σ E1 E2 P n r1 r2 HP [r3 ?] rf k Ef σ ?? Hws; setoid_subst.
+  intros Λ Σ E1 E2 P n r1 r2 HP [r3 Hr2] rf k Ef σ ??.
+  rewrite (dist_le _ _ _ _ Hr2); last lia. intros Hws.
   destruct (HP (r3 ⋅ rf) k Ef σ) as (r'&?&Hws'); rewrite ?(assoc op); auto.
   exists (r' ⋅ r3); rewrite -assoc; split; last done.
-  apply uPred_mono with r'; eauto using cmra_included_l.
+  apply uPred_mono with r'; eauto using cmra_includedN_l.
 Qed.
 Next Obligation. naive_solver. Qed.
 
@@ -106,7 +103,7 @@ Proof.
   destruct (wsat_open k Ef σ (r ⋅ rf) i P) as (rP&?&?); auto.
   { rewrite lookup_wld_op_l ?Hinv; eauto; apply dist_le with (S n); eauto. }
   exists (rP ⋅ r); split; last by rewrite (left_id_L _ _) -assoc.
-  eapply uPred_mono with rP; eauto using cmra_included_l.
+  eapply uPred_mono with rP; eauto using cmra_includedN_l.
 Qed.
 Lemma pvs_closeI i P : (ownI i P ∧ ▷ P) ⊢ (|={∅,{[i]}}=> True).
 Proof.

@@ -33,20 +33,15 @@ CoInductive wp_pre {Λ Σ} (E : coPset)
 Program Definition wp_def {Λ Σ} (E : coPset) (e : expr Λ)
   (Φ : val Λ → iProp Λ Σ) : iProp Λ Σ := {| uPred_holds := wp_pre E Φ e |}.
 Next Obligation.
-  intros Λ Σ E e Φ n r1 r2 Hwp Hr.
-  destruct Hwp as [|n r1 e2 ? Hgo]; constructor; rewrite -?Hr; auto.
-  intros rf k Ef σ1 ?; rewrite -(dist_le _ _ _ _ Hr); naive_solver.
-Qed.
-Next Obligation.
   intros Λ Σ E e Φ n r1 r2; revert Φ E e r1 r2.
   induction n as [n IH] using lt_wf_ind; intros Φ E e r1 r1'.
   destruct 1 as [|n r1 e1 ? Hgo].
   - constructor; eauto using uPred_mono.
   - intros [rf' Hr]; constructor; [done|intros rf k Ef σ1 ???].
     destruct (Hgo (rf' ⋅ rf) k Ef σ1) as [Hsafe Hstep];
-      rewrite ?assoc -?Hr; auto; constructor; [done|].
+      rewrite ?assoc -?(dist_le _ _ _ _ Hr); auto; constructor; [done|].
     intros e2 σ2 ef ?; destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
-    exists r2, (r2' ⋅ rf'); split_and?; eauto 10 using (IH k), cmra_included_l.
+    exists r2, (r2' ⋅ rf'); split_and?; eauto 10 using (IH k), cmra_includedN_l.
     by rewrite -!assoc (assoc _ r2).
 Qed.
 Next Obligation. destruct 1; constructor; eauto using uPred_closed. Qed.
