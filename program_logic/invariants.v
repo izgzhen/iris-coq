@@ -1,5 +1,5 @@
 From iris.program_logic Require Import ownership.
-From iris.program_logic Require Export namespaces.
+From iris.program_logic Require Export namespaces lviewshifts.
 From iris.proofmode Require Import pviewshifts.
 Import uPred.
 
@@ -31,16 +31,34 @@ Proof.
   by rewrite /inv (pvs_allocI N); last apply coPset_suffixes_infinite.
 Qed.
 
-(** Invariants can be opened around any frame-shifting assertion. *)
+(** Fairly explicit form of opening invariants *)
+Lemma inv_open E N P :
+  nclose N ⊆ E →
+  inv N P ⊢ ∃ E', ■ (E ∖ nclose N ⊆ E' ∧ E' ⊆ E) ★
+                    |={E,E'}=> ▷ P ★ (▷ P ={E',E}=★ True).
+Proof.
+  rewrite /inv. iIntros {?} "Hinv". iDestruct "Hinv" as {i} "[% #Hi]".
+  iExists (E ∖ {[ i ]}). iSplit. { iPureIntro. set_solver. }
+  iPvs (pvs_openI' with "Hi") as "HP"; [set_solver..|].
+  iPvsIntro. iSplitL "HP"; first done. iIntros "HP".
+  iPvs (pvs_closeI' _ _ P with "[HP]"); [set_solver|iSplit; done|set_solver|].
+  iPvsIntro. done.
+Qed.
+
+(** Invariants can be opened around any frame-shifting assertion. This is less
+    verbose to apply than [inv_open]. *)
 Lemma inv_fsa {A} (fsa : FSA Λ Σ A) `{!FrameShiftAssertion fsaV fsa} E N P Ψ :
   fsaV → nclose N ⊆ E →
   (inv N P ★ (▷ P -★ fsa (E ∖ nclose N) (λ a, ▷ P ★ Ψ a))) ⊢ fsa E Ψ.
 Proof.
-  iIntros {??} "[#Hinv HΨ]"; rewrite /inv; iDestruct "Hinv" as {i} "[% Hi]".
-  iApply (fsa_open_close E (E ∖ {[encode i]})); auto; first by set_solver.
-  iPvs (pvs_openI' _ _ with "Hi") as "HP"; [set_solver..|iPvsIntro].
-  iApply (fsa_mask_weaken _ (E ∖ N)); first set_solver.
-  iApply fsa_wand_r; iSplitL; [by iApply "HΨ"|iIntros {v} "[HP HΨ]"].
-  iPvs (pvs_closeI' _ _ P with "[HP]"); [auto|by iSplit|set_solver|done].
+  iIntros {??} "[Hinv HΨ]".
+  iDestruct (inv_open E N P with "Hinv") as {E'} "[% Hvs]"; first done.
+  iApply (fsa_open_close E E'); auto; first set_solver.
+  iPvs "Hvs" as "[HP Hvs]";first set_solver.
+  (* TODO: How do I do sth. like [iSpecialize "HΨ HP"]? *)
+  iPvsIntro. iApply (fsa_mask_weaken _ (E ∖ N)); first set_solver.
+  iApply fsa_wand_r. iSplitR "Hvs"; first by iApply "HΨ".
+  simpl. iIntros {v} "[HP HΨ]". iPvs ("Hvs" with "HP"); first set_solver.
+  by iPvsIntro.
 Qed.
 End inv.
