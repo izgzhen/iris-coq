@@ -119,8 +119,7 @@ Instance frac_valid : Valid (frac A) := λ x,
   match x with Frac q a => (q ≤ 1)%Qc ∧ ✓ a | FracUnit => True end.
 Instance frac_validN : ValidN (frac A) := λ n x,
   match x with Frac q a => (q ≤ 1)%Qc ∧ ✓{n} a | FracUnit => True end.
-Global Instance frac_empty : Empty (frac A) := FracUnit.
-Instance frac_core : Core (frac A) := λ _, ∅.
+Instance frac_core : Core (frac A) := λ _, FracUnit.
 Instance frac_op : Op (frac A) := λ x y,
   match x, y with
   | Frac q1 a, Frac q2 b => Frac (q1 + q2) (a ⋅ b)
@@ -148,24 +147,29 @@ Proof.
     trans (q1 + q2)%Qp; simpl; last done.
     rewrite -{1}(Qcplus_0_r q1) -Qcplus_le_mono_l; auto using Qclt_le_weak.
   - intros n [q a|] y1 y2 Hx Hx'; last first.
-    { by exists (∅, ∅); destruct y1, y2; inversion_clear Hx'. }
+    { by exists (FracUnit, FracUnit); destruct y1, y2; inversion_clear Hx'. }
     destruct Hx, y1 as [q1 b1|], y2 as [q2 b2|].
     + apply (inj2 Frac) in Hx'; destruct Hx' as [-> ?].
       destruct (cmra_extend n a b1 b2) as ([z1 z2]&?&?&?); auto.
       exists (Frac q1 z1,Frac q2 z2); by repeat constructor.
-    + exists (Frac q a, ∅); inversion_clear Hx'; by repeat constructor.
-    + exists (∅, Frac q a); inversion_clear Hx'; by repeat constructor.
+    + exists (Frac q a, FracUnit); inversion_clear Hx'; by repeat constructor.
+    + exists (FracUnit, Frac q a); inversion_clear Hx'; by repeat constructor.
     + exfalso; inversion_clear Hx'.
 Qed.
-Canonical Structure fracR : cmraT :=
+Canonical Structure fracR :=
   CMRAT (frac A) frac_cofe_mixin frac_cmra_mixin.
-Global Instance frac_cmra_unit : CMRAUnit fracR.
-Proof. split. done. by intros []. apply _. Qed.
+
 Global Instance frac_cmra_discrete : CMRADiscrete A → CMRADiscrete fracR.
 Proof.
   split; first apply _.
   intros [q a|]; destruct 1; split; auto using cmra_discrete_valid.
 Qed.
+
+Instance frac_empty : Empty (frac A) := FracUnit.
+Definition frac_ucmra_mixin : UCMRAMixin (frac A).
+Proof. split. done. by intros []. apply _. Qed.
+Canonical Structure fracUR :=
+  UCMRAT (frac A) frac_cofe_mixin frac_cmra_mixin frac_ucmra_mixin.
 
 Lemma frac_validN_inv_l n y a : ✓{n} (Frac 1 a ⋅ y) → y = ∅.
 Proof.
@@ -217,6 +221,7 @@ Qed.
 End cmra.
 
 Arguments fracR : clear implicits.
+Arguments fracUR : clear implicits.
 
 (* Functor *)
 Instance frac_map_cmra_monotone {A B : cmraT} (f : A → B) :
@@ -225,15 +230,15 @@ Proof.
   split; try apply _.
   - intros n [p a|]; destruct 1; split; auto using validN_preserving.
   - intros [q1 a1|] [q2 a2|] [[q3 a3|] Hx];
-      inversion Hx; setoid_subst; try apply: cmra_unit_least; auto.
+      inversion Hx; setoid_subst; try apply: ucmra_unit_least; auto.
     destruct (included_preserving f a1 (a1 ⋅ a3)) as [b ?].
     { by apply cmra_included_l. }
     by exists (Frac q3 b); constructor.
 Qed.
 
-Program Definition fracRF (F : rFunctor) : rFunctor := {|
-  rFunctor_car A B := fracR (rFunctor_car F A B);
-  rFunctor_map A1 A2 B1 B2 fg := fracC_map (rFunctor_map F fg)
+Program Definition fracURF (F : rFunctor) : urFunctor := {|
+  urFunctor_car A B := fracUR (rFunctor_car F A B);
+  urFunctor_map A1 A2 B1 B2 fg := fracC_map (rFunctor_map F fg)
 |}.
 Next Obligation.
   by intros F A1 A2 B1 B2 n f g Hfg; apply fracC_map_ne, rFunctor_ne.
@@ -247,8 +252,8 @@ Next Obligation.
   apply frac_map_ext=>y; apply rFunctor_compose.
 Qed.
 
-Instance fracRF_contractive F :
-  rFunctorContractive F → rFunctorContractive (fracRF F).
+Instance fracURF_contractive F :
+  rFunctorContractive F → urFunctorContractive (fracURF F).
 Proof.
   by intros ? A1 A2 B1 B2 n f g Hfg; apply fracC_map_ne, rFunctor_contractive.
 Qed.

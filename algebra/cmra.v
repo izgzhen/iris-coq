@@ -113,12 +113,57 @@ End cmra_mixin.
 (** * CMRAs with a unit element *)
 (** We use the notation ∅ because for most instances (maps, sets, etc) the
 `empty' element is the unit. *)
-Class CMRAUnit (A : cmraT) `{Empty A} := {
-  cmra_unit_valid : ✓ ∅;
-  cmra_unit_left_id :> LeftId (≡) ∅ (⋅);
-  cmra_unit_timeless :> Timeless ∅
+Record UCMRAMixin A `{Dist A, Equiv A, Op A, Valid A, Empty A} := {
+  mixin_ucmra_unit_valid : ✓ ∅;
+  mixin_ucmra_unit_left_id : LeftId (≡) ∅ (⋅);
+  mixin_ucmra_unit_timeless : Timeless ∅
 }.
-Instance cmra_unit_inhabited `{CMRAUnit A} : Inhabited A := populate ∅.
+
+Structure ucmraT := UCMRAT {
+  ucmra_car :> Type;
+  ucmra_equiv : Equiv ucmra_car;
+  ucmra_dist : Dist ucmra_car;
+  ucmra_compl : Compl ucmra_car;
+  ucmra_core : Core ucmra_car;
+  ucmra_op : Op ucmra_car;
+  ucmra_valid : Valid ucmra_car;
+  ucmra_validN : ValidN ucmra_car;
+  ucmra_empty : Empty ucmra_car;
+  ucmra_cofe_mixin : CofeMixin ucmra_car;
+  ucmra_cmra_mixin : CMRAMixin ucmra_car;
+  ucmra_mixin : UCMRAMixin ucmra_car
+}.
+Arguments UCMRAT _ {_ _ _ _ _ _ _ _} _ _ _.
+Arguments ucmra_car : simpl never.
+Arguments ucmra_equiv : simpl never.
+Arguments ucmra_dist : simpl never.
+Arguments ucmra_compl : simpl never.
+Arguments ucmra_core : simpl never.
+Arguments ucmra_op : simpl never.
+Arguments ucmra_valid : simpl never.
+Arguments ucmra_validN : simpl never.
+Arguments ucmra_cofe_mixin : simpl never.
+Arguments ucmra_cmra_mixin : simpl never.
+Arguments ucmra_mixin : simpl never.
+Add Printing Constructor ucmraT.
+Existing Instances ucmra_empty.
+Coercion ucmra_cofeC (A : ucmraT) : cofeT := CofeT A (ucmra_cofe_mixin A).
+Canonical Structure ucmra_cofeC.
+Coercion ucmra_cmraR (A : ucmraT) : cmraT :=
+  CMRAT A (ucmra_cofe_mixin A) (ucmra_cmra_mixin A).
+Canonical Structure ucmra_cmraR.
+
+(** Lifting properties from the mixin *)
+Section ucmra_mixin.
+  Context {A : ucmraT}.
+  Implicit Types x y : A.
+  Lemma ucmra_unit_valid : ✓ (∅ : A).
+  Proof. apply (mixin_ucmra_unit_valid _ (ucmra_mixin A)). Qed.
+  Global Instance ucmra_unit_left_id : LeftId (≡) ∅ (@op A _).
+  Proof. apply (mixin_ucmra_unit_left_id _ (ucmra_mixin A)). Qed.
+  Global Instance ucmra_unit_timeless : Timeless (∅ : A).
+  Proof. apply (mixin_ucmra_unit_timeless _ (ucmra_mixin A)). Qed.
+End ucmra_mixin.
 
 (** * Persistent elements *)
 Class Persistent {A : cmraT} (x : A) := persistent : core x ≡ x.
@@ -331,23 +376,6 @@ Lemma cmra_discrete_update `{CMRADiscrete A} (x y : A) :
   (∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z)) → x ~~> y.
 Proof. intros ? n. by setoid_rewrite <-cmra_discrete_valid_iff. Qed.
 
-(** ** RAs with a unit element *)
-Section unit.
-  Context `{Empty A, !CMRAUnit A}.
-  Lemma cmra_unit_validN n : ✓{n} ∅.
-  Proof. apply cmra_valid_validN, cmra_unit_valid. Qed.
-  Lemma cmra_unit_leastN n x : ∅ ≼{n} x.
-  Proof. by exists x; rewrite left_id. Qed.
-  Lemma cmra_unit_least x : ∅ ≼ x.
-  Proof. by exists x; rewrite left_id. Qed.
-  Global Instance cmra_unit_right_id : RightId (≡) ∅ (⋅).
-  Proof. by intros x; rewrite (comm op) left_id. Qed.
-  Global Instance cmra_unit_persistent : Persistent ∅.
-  Proof. by rewrite /Persistent -{2}(cmra_core_l ∅) right_id. Qed.
-  Lemma cmra_core_unit : core (∅:A) ≡ ∅.
-  Proof. by rewrite -{2}(cmra_core_l ∅) right_id. Qed.
-End unit.
-
 (** ** Local updates *)
 Global Instance local_update_proper Lv (L : A → A) :
   LocalUpdate Lv L → Proper ((≡) ==> (≡)) L.
@@ -407,15 +435,33 @@ Proof.
 Qed.
 Lemma cmra_update_id x : x ~~> x.
 Proof. intro. auto. Qed.
-
-Section unit_updates.
-  Context `{Empty A, !CMRAUnit A}.
-  Lemma cmra_update_unit x : x ~~> ∅.
-  Proof. intros n z; rewrite left_id; apply cmra_validN_op_r. Qed.
-  Lemma cmra_update_unit_alt y : ∅ ~~> y ↔ ∀ x, x ~~> y.
-  Proof. split; [intros; trans ∅|]; auto using cmra_update_unit. Qed.
-End unit_updates.
 End cmra.
+
+(** * Properties about CMRAs with a unit element **)
+Section ucmra.
+Context {A : ucmraT}.
+Implicit Types x y z : A.
+
+Global Instance ucmra_unit_inhabited : Inhabited A := populate ∅.
+
+Lemma ucmra_unit_validN n : ✓{n} (∅:A).
+Proof. apply cmra_valid_validN, ucmra_unit_valid. Qed.
+Lemma ucmra_unit_leastN n x : ∅ ≼{n} x.
+Proof. by exists x; rewrite left_id. Qed.
+Lemma ucmra_unit_least x : ∅ ≼ x.
+Proof. by exists x; rewrite left_id. Qed.
+Global Instance ucmra_unit_right_id : RightId (≡) ∅ (@op A _).
+Proof. by intros x; rewrite (comm op) left_id. Qed.
+Global Instance ucmra_unit_persistent : Persistent (∅:A).
+Proof. by rewrite /Persistent -{2}(cmra_core_l ∅) right_id. Qed.
+Lemma ucmra_core_unit : core (∅:A) ≡ ∅.
+Proof. by rewrite -{2}(cmra_core_l ∅) right_id. Qed.
+
+Lemma ucmra_update_unit x : x ~~> ∅.
+Proof. intros n z; rewrite left_id; apply cmra_validN_op_r. Qed.
+Lemma ucmra_update_unit_alt y : ∅ ~~> y ↔ ∀ x, x ~~> y.
+Proof. split; [intros; trans ∅|]; auto using ucmra_update_unit. Qed.
+End ucmra.
 
 (** * Properties about monotone functions *)
 Instance cmra_monotone_id {A : cmraT} : CMRAMonotone (@id A).
@@ -470,6 +516,35 @@ Solve Obligations with done.
 
 Instance constRF_contractive B : rFunctorContractive (constRF B).
 Proof. rewrite /rFunctorContractive; apply _. Qed.
+
+Structure urFunctor := URFunctor {
+  urFunctor_car : cofeT → cofeT → ucmraT;
+  urFunctor_map {A1 A2 B1 B2} :
+    ((A2 -n> A1) * (B1 -n> B2)) → urFunctor_car A1 B1 -n> urFunctor_car A2 B2;
+  urFunctor_ne A1 A2 B1 B2 n :
+    Proper (dist n ==> dist n) (@urFunctor_map A1 A2 B1 B2);
+  urFunctor_id {A B} (x : urFunctor_car A B) : urFunctor_map (cid,cid) x ≡ x;
+  urFunctor_compose {A1 A2 A3 B1 B2 B3}
+      (f : A2 -n> A1) (g : A3 -n> A2) (f' : B1 -n> B2) (g' : B2 -n> B3) x :
+    urFunctor_map (f◎g, g'◎f') x ≡ urFunctor_map (g,g') (urFunctor_map (f,f') x);
+  urFunctor_mono {A1 A2 B1 B2} (fg : (A2 -n> A1) * (B1 -n> B2)) :
+    CMRAMonotone (urFunctor_map fg) 
+}.
+Existing Instances urFunctor_ne urFunctor_mono.
+Instance: Params (@urFunctor_map) 5.
+
+Class urFunctorContractive (F : urFunctor) :=
+  urFunctor_contractive A1 A2 B1 B2 :> Contractive (@urFunctor_map F A1 A2 B1 B2).
+
+Definition urFunctor_diag (F: urFunctor) (A: cofeT) : ucmraT := urFunctor_car F A A.
+Coercion urFunctor_diag : urFunctor >-> Funclass.
+
+Program Definition constURF (B : ucmraT) : urFunctor :=
+  {| urFunctor_car A1 A2 := B; urFunctor_map A1 A2 B1 B2 f := cid |}.
+Solve Obligations with done.
+
+Instance constURF_contractive B : urFunctorContractive (constURF B).
+Proof. rewrite /urFunctorContractive; apply _. Qed.
 
 (** * Transporting a CMRA equality *)
 Definition cmra_transport {A B : cmraT} (H : A = B) (x : A) : B :=
@@ -547,11 +622,17 @@ Section unit.
   Instance unit_validN : ValidN () := λ n x, True.
   Instance unit_core : Core () := λ x, x.
   Instance unit_op : Op () := λ x y, ().
-  Global Instance unit_empty : Empty () := ().
-  Definition unit_cmra_mixin : CMRAMixin ().
+
+  Lemma unit_cmra_mixin : CMRAMixin ().
   Proof. by split; last exists ((),()). Qed.
   Canonical Structure unitR : cmraT := CMRAT () unit_cofe_mixin unit_cmra_mixin.
-  Global Instance unit_cmra_unit : CMRAUnit unitR.
+
+  Instance unit_empty : Empty () := ().
+  Lemma unit_ucmra_mixin : UCMRAMixin ().
+  Proof. done. Qed.
+  Canonical Structure unitUR : ucmraT :=
+    UCMRAT () unit_cofe_mixin unit_cmra_mixin unit_ucmra_mixin.
+
   Global Instance unit_cmra_discrete : CMRADiscrete unitR.
   Proof. done. Qed.
   Global Instance unit_persistent (x : ()) : Persistent x.
@@ -562,10 +643,10 @@ End unit.
 Section prod.
   Context {A B : cmraT}.
   Instance prod_op : Op (A * B) := λ x y, (x.1 ⋅ y.1, x.2 ⋅ y.2).
-  Global Instance prod_empty `{Empty A, Empty B} : Empty (A * B) := (∅, ∅).
   Instance prod_core : Core (A * B) := λ x, (core (x.1), core (x.2)).
   Instance prod_valid : Valid (A * B) := λ x, ✓ x.1 ∧ ✓ x.2.
   Instance prod_validN : ValidN (A * B) := λ n x, ✓{n} x.1 ∧ ✓{n} x.2.
+
   Lemma prod_included (x y : A * B) : x ≼ y ↔ x.1 ≼ y.1 ∧ x.2 ≼ y.2.
   Proof.
     split; [intros [z Hz]; split; [exists (z.1)|exists (z.2)]; apply Hz|].
@@ -576,6 +657,7 @@ Section prod.
     split; [intros [z Hz]; split; [exists (z.1)|exists (z.2)]; apply Hz|].
     intros [[z1 Hz1] [z2 Hz2]]; exists (z1,z2); split; auto.
   Qed.
+
   Definition prod_cmra_mixin : CMRAMixin (A * B).
   Proof.
     split; try apply _.
@@ -598,16 +680,9 @@ Section prod.
       destruct (cmra_extend n (x.2) (y1.2) (y2.2)) as (z2&?&?&?); auto.
       by exists ((z1.1,z2.1),(z1.2,z2.2)).
   Qed.
-  Canonical Structure prodR : cmraT :=
+  Canonical Structure prodR :=
     CMRAT (A * B) prod_cofe_mixin prod_cmra_mixin.
-  Global Instance prod_cmra_unit `{Empty A, Empty B} :
-    CMRAUnit A → CMRAUnit B → CMRAUnit prodR.
-  Proof.
-    split.
-    - split; apply cmra_unit_valid.
-    - by split; rewrite /=left_id.
-    - by intros ? [??]; split; apply (timeless _).
-  Qed.
+
   Global Instance prod_cmra_discrete :
     CMRADiscrete A → CMRADiscrete B → CMRADiscrete prodR.
   Proof. split. apply _. by intros ? []; split; apply cmra_discrete_valid. Qed.
@@ -615,10 +690,6 @@ Section prod.
   Global Instance pair_persistent x y :
     Persistent x → Persistent y → Persistent (x,y).
   Proof. by split. Qed.
-
-  Lemma pair_split `{CMRAUnit A, CMRAUnit B} (x : A) (y : B) :
-    (x, y) ≡ (x, ∅) ⋅ (∅, y).
-  Proof. constructor; by rewrite /= ?left_id ?right_id. Qed.
 
   Lemma prod_update x y : x.1 ~~> y.1 → x.2 ~~> y.2 → x ~~> y.
   Proof. intros ?? n z [??]; split; simpl in *; auto. Qed.
@@ -646,6 +717,26 @@ End prod.
 
 Arguments prodR : clear implicits.
 
+Section prod_unit.
+  Context {A B : ucmraT}.
+
+  Instance prod_empty `{Empty A, Empty B} : Empty (A * B) := (∅, ∅).
+  Lemma prod_ucmra_mixin : UCMRAMixin (A * B).
+  Proof.
+    split.
+    - split; apply ucmra_unit_valid.
+    - by split; rewrite /=left_id.
+    - by intros ? [??]; split; apply (timeless _).
+  Qed.
+  Canonical Structure prodUR :=
+    UCMRAT (A * B) prod_cofe_mixin prod_cmra_mixin prod_ucmra_mixin.
+
+  Lemma pair_split (x : A) (y : B) : (x, y) ≡ (x, ∅) ⋅ (∅, y).
+  Proof. constructor; by rewrite /= ?left_id ?right_id. Qed.
+End prod_unit.
+
+Arguments prodUR : clear implicits.
+
 Instance prod_map_cmra_monotone {A A' B B' : cmraT} (f : A → A') (g : B → B') :
   CMRAMonotone f → CMRAMonotone g → CMRAMonotone (prod_map f g).
 Proof.
@@ -654,13 +745,14 @@ Proof.
   - intros x y; rewrite !prod_included=> -[??] /=.
     by split; apply included_preserving.
 Qed.
+
 Program Definition prodRF (F1 F2 : rFunctor) : rFunctor := {|
   rFunctor_car A B := prodR (rFunctor_car F1 A B) (rFunctor_car F2 A B);
   rFunctor_map A1 A2 B1 B2 fg :=
     prodC_map (rFunctor_map F1 fg) (rFunctor_map F2 fg)
 |}.
 Next Obligation.
-  intros F1 F2 A1 A2 B1 B2 n ???; by apply prodC_map_ne; apply rFunctor_ne.
+  intros F1 F2 A1 A2 B1 B2 n ???. by apply prodC_map_ne; apply rFunctor_ne.
 Qed.
 Next Obligation. by intros F1 F2 A B [??]; rewrite /= !rFunctor_id. Qed.
 Next Obligation.
@@ -676,6 +768,28 @@ Proof.
     by apply prodC_map_ne; apply rFunctor_contractive.
 Qed.
 
+Program Definition prodURF (F1 F2 : urFunctor) : urFunctor := {|
+  urFunctor_car A B := prodUR (urFunctor_car F1 A B) (urFunctor_car F2 A B);
+  urFunctor_map A1 A2 B1 B2 fg :=
+    prodC_map (urFunctor_map F1 fg) (urFunctor_map F2 fg)
+|}.
+Next Obligation.
+  intros F1 F2 A1 A2 B1 B2 n ???. by apply prodC_map_ne; apply urFunctor_ne.
+Qed.
+Next Obligation. by intros F1 F2 A B [??]; rewrite /= !urFunctor_id. Qed.
+Next Obligation.
+  intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??]; simpl.
+  by rewrite !urFunctor_compose.
+Qed.
+
+Instance prodURF_contractive F1 F2 :
+  urFunctorContractive F1 → urFunctorContractive F2 →
+  urFunctorContractive (prodURF F1 F2).
+Proof.
+  intros ?? A1 A2 B1 B2 n ???;
+    by apply prodC_map_ne; apply urFunctor_contractive.
+Qed.
+
 (** ** CMRA for the option type *)
 Section option.
   Context {A : cmraT}.
@@ -684,7 +798,8 @@ Section option.
     match mx with Some x => ✓ x | None => True end.
   Instance option_validN : ValidN (option A) := λ n mx,
     match mx with Some x => ✓{n} x | None => True end.
-  Global Instance option_empty : Empty (option A) := None.
+  Instance option_empty : Empty (option A) := None.
+
   Instance option_core : Core (option A) := fmap core.
   Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
 
@@ -704,7 +819,7 @@ Section option.
       by exists (Some z); constructor.
   Qed.
 
-  Definition option_cmra_mixin  : CMRAMixin (option A).
+  Lemma option_cmra_mixin : CMRAMixin (option A).
   Proof.
     split.
     - by intros n [x|]; destruct 1; constructor; cofe_subst.
@@ -732,10 +847,14 @@ Section option.
   Qed.
   Canonical Structure optionR :=
     CMRAT (option A) option_cofe_mixin option_cmra_mixin.
-  Global Instance option_cmra_unit : CMRAUnit optionR.
-  Proof. split. done. by intros []. by inversion_clear 1. Qed.
+
   Global Instance option_cmra_discrete : CMRADiscrete A → CMRADiscrete optionR.
   Proof. split; [apply _|]. by intros [x|]; [apply (cmra_discrete_valid x)|]. Qed.
+
+  Lemma option_ucmra_mixin : UCMRAMixin optionR.
+  Proof. split. done. by intros []. by inversion_clear 1. Qed.
+  Canonical Structure optionUR :=
+    UCMRAT (option A) option_cofe_mixin option_cmra_mixin option_ucmra_mixin.
 
   (** Misc *)
   Global Instance Some_cmra_monotone : CMRAMonotone Some.
@@ -753,7 +872,7 @@ Section option.
   Proof. by constructor. Qed.
   Global Instance option_persistent (mx : option A) :
     (∀ x : A, Persistent x) → Persistent mx.
-  Proof. intros. destruct mx. apply _. apply cmra_unit_persistent. Qed.
+  Proof. intros. destruct mx. apply _. constructor. Qed.
 
   (** Updates *)
   Lemma option_updateP (P : A → Prop) (Q : option A → Prop) x :
@@ -771,14 +890,10 @@ Section option.
   Proof.
     rewrite !cmra_update_updateP; eauto using option_updateP with congruence.
   Qed.
-  Lemma option_update_None `{Empty A, !CMRAUnit A} : ∅ ~~> Some ∅.
-  Proof.
-    intros n [x|] ?; rewrite /op /cmra_op /validN /cmra_validN /= ?left_id;
-      auto using cmra_unit_validN.
-  Qed.
 End option.
 
 Arguments optionR : clear implicits.
+Arguments optionUR : clear implicits.
 
 Instance option_fmap_cmra_monotone {A B : cmraT} (f: A → B) `{!CMRAMonotone f} :
   CMRAMonotone (fmap f : option A → option B).
@@ -788,9 +903,9 @@ Proof.
   - intros mx my; rewrite !option_included.
     intros [->|(x&y&->&->&?)]; simpl; eauto 10 using @included_preserving.
 Qed.
-Program Definition optionRF (F : rFunctor) : rFunctor := {|
-  rFunctor_car A B := optionR (rFunctor_car F A B);
-  rFunctor_map A1 A2 B1 B2 fg := optionC_map (rFunctor_map F fg)
+Program Definition optionURF (F : rFunctor) : urFunctor := {|
+  urFunctor_car A B := optionUR (rFunctor_car F A B);
+  urFunctor_map A1 A2 B1 B2 fg := optionC_map (rFunctor_map F fg)
 |}.
 Next Obligation.
   by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_ne.
@@ -804,8 +919,8 @@ Next Obligation.
   apply option_fmap_setoid_ext=>y; apply rFunctor_compose.
 Qed.
 
-Instance optionRF_contractive F :
-  rFunctorContractive F → rFunctorContractive (optionRF F).
+Instance optionURF_contractive F :
+  rFunctorContractive F → urFunctorContractive (optionURF F).
 Proof.
   by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_contractive.
 Qed.

@@ -18,7 +18,7 @@ Definition gid (Σ : gFunctors) := fin (projT1 Σ).
 Definition gname := positive.
 
 Definition globalF (Σ : gFunctors) : iFunctor :=
-  IFunctor (iprodRF (λ i, gmapRF gname (projT2 Σ i))).
+  IFunctor (iprodURF (λ i, gmapURF gname (projT2 Σ i))).
 Notation iPropG Λ Σ := (iProp Λ (globalF Σ)).
 
 Class inG (Λ : language) (Σ : gFunctors) (A : cmraT) := InG {

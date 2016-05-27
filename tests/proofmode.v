@@ -1,7 +1,7 @@
 From iris.proofmode Require Import tactics.
 From iris.proofmode Require Import pviewshifts invariants.
 
-Lemma demo_0 {M : cmraT} (P Q : uPred M) :
+Lemma demo_0 {M : ucmraT} (P Q : uPred M) :
   □ (P ∨ Q) ⊢ ((∀ x, x = 0 ∨ x = 1) → (Q ∨ P)).
 Proof.
   iIntros "#H #H2".
@@ -11,7 +11,7 @@ Proof.
   iDestruct ("H2" $! 10) as "[%|%]". done. done.
 Qed.
 
-Lemma demo_1 (M : cmraT) (P1 P2 P3 : nat → uPred M) :
+Lemma demo_1 (M : ucmraT) (P1 P2 P3 : nat → uPred M) :
   True ⊢ (∀ (x y : nat) a b,
     x ≡ y →
     □ (uPred_ownM (a ⋅ b) -★
@@ -36,7 +36,7 @@ Proof.
   - done.
 Qed.
 
-Lemma demo_2 (M : cmraT) (P1 P2 P3 P4 Q : uPred M) (P5 : nat → uPredC M):
+Lemma demo_2 (M : ucmraT) (P1 P2 P3 P4 Q : uPred M) (P5 : nat → uPredC M):
     (P2 ★ (P3 ★ Q) ★ True ★ P1 ★ P2 ★ (P4 ★ (∃ x:nat, P5 x ∨ P3)) ★ True)
   ⊢ (P1 -★ (True ★ True) -★ (((P2 ∧ False ∨ P2 ∧ 0 = 0) ★ P3) ★ Q ★ P1 ★ True) ∧
      (P2 ∨ False) ∧ (False → P5 0)).
@@ -53,17 +53,17 @@ Proof.
   * iSplitL "HQ". iAssumption. by iSplitL "H1".
 Qed.
 
-Lemma demo_3 (M : cmraT) (P1 P2 P3 : uPred M) :
+Lemma demo_3 (M : ucmraT) (P1 P2 P3 : uPred M) :
   (P1 ★ P2 ★ P3) ⊢ (▷ P1 ★ ▷ (P2 ★ ∃ x, (P3 ∧ x = 0) ∨ P3)).
 Proof. iIntros "($ & $ & H)". iFrame "H". iNext. by iExists 0. Qed.
 
 Definition foo {M} (P : uPred M) := (P → P)%I.
 Definition bar {M} : uPred M := (∀ P, foo P)%I.
 
-Lemma demo_4 (M : cmraT) : True ⊢ @bar M.
+Lemma demo_4 (M : ucmraT) : True ⊢ @bar M.
 Proof. iIntros. iIntros {P} "HP". done. Qed.
 
-Lemma demo_5 (M : cmraT) (x y : M) (P : uPred M) :
+Lemma demo_5 (M : ucmraT) (x y : M) (P : uPred M) :
   (∀ z, P → z ≡ y) ⊢ (P -★ (x,x) ≡ (y,x)).
 Proof.
   iIntros "H1 H2".
@@ -72,7 +72,7 @@ Proof.
   iApply uPred.eq_refl.
 Qed.
 
-Lemma demo_6 (M : cmraT) (P Q : uPred M) :
+Lemma demo_6 (M : ucmraT) (P Q : uPred M) :
   True ⊢ (∀ x y z : nat,
     x = plus 0 x → y = 0 → z = 0 → P → □ Q → foo (x ≡ x)).
 Proof.

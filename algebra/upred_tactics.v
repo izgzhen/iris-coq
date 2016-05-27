@@ -3,7 +3,7 @@ From iris.algebra Require Export upred_big_op.
 Import uPred.
 
 Module uPred_reflection. Section uPred_reflection.
-  Context {M : cmraT}.
+  Context {M : ucmraT}.
 
   Inductive expr :=
     | ETrue : expr
@@ -210,7 +210,7 @@ Class StripLaterL {M} (P Q : uPred M) := strip_later_l : ▷ Q ⊢ P.
 Arguments strip_later_l {_} _ _ {_}.
 
 Section strip_later.
-Context {M : cmraT}.
+Context {M : ucmraT}.
 Implicit Types P Q : uPred M. 
 
 Global Instance strip_later_r_fallthrough P : StripLaterR P P | 1000.

@@ -66,11 +66,10 @@ Arguments authC : clear implicits.
 
 (* CMRA *)
 Section cmra.
-Context {A : cmraT}.
+Context {A : ucmraT}.
 Implicit Types a b : A.
 Implicit Types x y : auth A.
 
-Global Instance auth_empty `{Empty A} : Empty (auth A) := Auth ∅ ∅.
 Instance auth_valid : Valid (auth A) := λ x,
   match authoritative x with
   | Excl a => (∀ n, own x ≼{n} a) ∧ ✓ a
@@ -101,7 +100,7 @@ Proof. by destruct x as [[]]. Qed.
 Lemma own_validN n (x : auth A) : ✓{n} x → ✓{n} own x.
 Proof. destruct x as [[]]; naive_solver eauto using cmra_validN_includedN. Qed.
 
-Definition auth_cmra_mixin : CMRAMixin (auth A).
+Lemma auth_cmra_mixin : CMRAMixin (auth A).
 Proof.
   split.
   - by intros n x y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
@@ -128,7 +127,7 @@ Proof.
       as (b&?&?&?); auto using own_validN.
     by exists (Auth (ea.1) (b.1), Auth (ea.2) (b.2)).
 Qed.
-Canonical Structure authR : cmraT :=
+Canonical Structure authR :=
   CMRAT (auth A) auth_cofe_mixin auth_cmra_mixin.
 Global Instance auth_cmra_discrete : CMRADiscrete A → CMRADiscrete authR.
 Proof.
@@ -138,6 +137,17 @@ Proof.
     rewrite -cmra_discrete_valid_iff. tauto.
   - by rewrite -cmra_discrete_valid_iff.
 Qed.
+
+Instance auth_empty : Empty (auth A) := Auth ∅ ∅.
+Lemma auth_ucmra_mixin : UCMRAMixin (auth A).
+Proof.
+  split; simpl.
+  - apply (@ucmra_unit_valid A).
+  - by intros x; constructor; rewrite /= left_id.
+  - apply _.
+Qed.
+Canonical Structure authUR :=
+  UCMRAT (auth A) auth_cofe_mixin auth_cmra_mixin auth_ucmra_mixin.
 
 (** Internalized properties *)
 Lemma auth_equivI {M} (x y : auth A) :
@@ -151,17 +161,6 @@ Lemma auth_validI {M} (x : auth A) :
              end : uPred M).
 Proof. uPred.unseal. by destruct x as [[]]. Qed.
 
-(** The notations ◯ and ● only work for CMRAs with an empty element. So, in
-what follows, we assume we have an empty element. *)
-Context `{Empty A, !CMRAUnit A}.
-
-Global Instance auth_cmra_unit : CMRAUnit authR.
-Proof.
-  split; simpl.
-  - by apply (@cmra_unit_valid A _).
-  - by intros x; constructor; rewrite /= left_id.
-  - apply _.
-Qed.
 Lemma auth_frag_op a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.
 Lemma auth_both_op a b : Auth (Excl a) b ≡ ● a ⋅ ◯ b.
@@ -206,6 +205,7 @@ Qed.
 End cmra.
 
 Arguments authR : clear implicits.
+Arguments authUR : clear implicits.
 
 (* Functor *)
 Definition auth_map {A B} (f : A → B) (x : auth A) : auth B :=
@@ -223,7 +223,7 @@ Instance auth_map_cmra_ne {A B : cofeT} n :
 Proof.
   intros f g Hf [??] [??] [??]; split; [by apply excl_map_cmra_ne|by apply Hf].
 Qed.
-Instance auth_map_cmra_monotone {A B : cmraT} (f : A → B) :
+Instance auth_map_cmra_monotone {A B : ucmraT} (f : A → B) :
   CMRAMonotone f → CMRAMonotone (auth_map f).
 Proof.
   split; try apply _.
@@ -237,24 +237,24 @@ Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=
 Lemma authC_map_ne A B n : Proper (dist n ==> dist n) (@authC_map A B).
 Proof. intros f f' Hf [[a| |] b]; repeat constructor; apply Hf. Qed.
 
-Program Definition authRF (F : rFunctor) : rFunctor := {|
-  rFunctor_car A B := authR (rFunctor_car F A B);
-  rFunctor_map A1 A2 B1 B2 fg := authC_map (rFunctor_map F fg)
+Program Definition authURF (F : urFunctor) : urFunctor := {|
+  urFunctor_car A B := authUR (urFunctor_car F A B);
+  urFunctor_map A1 A2 B1 B2 fg := authC_map (urFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros F A1 A2 B1 B2 n f g Hfg; apply authC_map_ne, rFunctor_ne.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply authC_map_ne, urFunctor_ne.
 Qed.
 Next Obligation.
   intros F A B x. rewrite /= -{2}(auth_map_id x).
-  apply auth_map_ext=>y; apply rFunctor_id.
+  apply auth_map_ext=>y; apply urFunctor_id.
 Qed.
 Next Obligation.
   intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -auth_map_compose.
-  apply auth_map_ext=>y; apply rFunctor_compose.
+  apply auth_map_ext=>y; apply urFunctor_compose.
 Qed.
 
-Instance authRF_contractive F :
-  rFunctorContractive F → rFunctorContractive (authRF F).
+Instance authURF_contractive F :
+  urFunctorContractive F → urFunctorContractive (authURF F).
 Proof.
-  by intros ? A1 A2 B1 B2 n f g Hfg; apply authC_map_ne, rFunctor_contractive.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply authC_map_ne, urFunctor_contractive.
 Qed.

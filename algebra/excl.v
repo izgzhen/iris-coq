@@ -77,8 +77,7 @@ Instance excl_valid : Valid (excl A) := λ x,
   match x with Excl _ | ExclUnit => True | ExclBot => False end.
 Instance excl_validN : ValidN (excl A) := λ n x,
   match x with Excl _ | ExclUnit => True | ExclBot => False end.
-Global Instance excl_empty : Empty (excl A) := ExclUnit.
-Instance excl_core : Core (excl A) := λ _, ∅.
+Instance excl_core : Core (excl A) := λ _, ExclUnit.
 Instance excl_op : Op (excl A) := λ x y,
   match x, y with
   | Excl a, ExclUnit | ExclUnit, Excl a => Excl a
@@ -86,7 +85,7 @@ Instance excl_op : Op (excl A) := λ x y,
   | _, _=> ExclBot
   end.
 
-Definition excl_cmra_mixin : CMRAMixin (excl A).
+Lemma excl_cmra_mixin : CMRAMixin (excl A).
 Proof.
   split.
   - by intros n []; destruct 1; constructor.
@@ -98,7 +97,7 @@ Proof.
   - by intros [?| |] [?| |]; constructor.
   - by intros [?| |]; constructor.
   - constructor.
-  - by intros [?| |] [?| |]; exists ∅.
+  - by intros [?| |] [?| |]; exists ExclUnit.
   - by intros n [?| |] [?| |].
   - intros n x y1 y2 ? Hx.
     by exists match y1, y2 with
@@ -107,12 +106,17 @@ Proof.
       | ExclUnit, _ => (ExclUnit, x) | _, ExclUnit => (x, ExclUnit)
       end; destruct y1, y2; inversion_clear Hx; repeat constructor.
 Qed.
-Canonical Structure exclR : cmraT :=
+Canonical Structure exclR :=
   CMRAT (excl A) excl_cofe_mixin excl_cmra_mixin.
-Global Instance excl_cmra_unit : CMRAUnit exclR.
-Proof. split. done. by intros []. apply _. Qed.
+
 Global Instance excl_cmra_discrete : Discrete A → CMRADiscrete exclR.
 Proof. split. apply _. by intros []. Qed.
+
+Instance excl_empty : Empty (excl A) := ExclUnit.
+Lemma excl_ucmra_mixin : UCMRAMixin (excl A).
+Proof. split. done. by intros []. apply _. Qed.
+Canonical Structure exclUR :=
+  UCMRAT (excl A) excl_cofe_mixin excl_cmra_mixin excl_ucmra_mixin.
 
 Lemma excl_validN_inv_l n x a : ✓{n} (Excl a ⋅ x) → x = ∅.
 Proof. by destruct x. Qed.
@@ -152,6 +156,7 @@ End excl.
 
 Arguments exclC : clear implicits.
 Arguments exclR : clear implicits.
+Arguments exclUR : clear implicits.
 
 (* Functor *)
 Definition excl_map {A B} (f : A → B) (x : excl A) : excl B :=
@@ -182,9 +187,9 @@ Definition exclC_map {A B} (f : A -n> B) : exclC A -n> exclC B :=
 Instance exclC_map_ne A B n : Proper (dist n ==> dist n) (@exclC_map A B).
 Proof. by intros f f' Hf []; constructor; apply Hf. Qed.
 
-Program Definition exclRF (F : cFunctor) : rFunctor := {|
-  rFunctor_car A B := exclR (cFunctor_car F A B);
-  rFunctor_map A1 A2 B1 B2 fg := exclC_map (cFunctor_map F fg)
+Program Definition exclURF (F : cFunctor) : urFunctor := {|
+  urFunctor_car A B := (exclUR (cFunctor_car F A B) : ucmraT);
+  urFunctor_map A1 A2 B1 B2 fg := exclC_map (cFunctor_map F fg)
 |}.
 Next Obligation.
   intros F A1 A2 B1 B2 n x1 x2 ??. by apply exclC_map_ne, cFunctor_ne.
@@ -198,8 +203,8 @@ Next Obligation.
   apply excl_map_ext=>y; apply cFunctor_compose.
 Qed.
 
-Instance exclRF_contractive F :
-  cFunctorContractive F → rFunctorContractive (exclRF F).
+Instance exclURF_contractive F :
+  cFunctorContractive F → urFunctorContractive (exclURF F).
 Proof.
   intros A1 A2 B1 B2 n x1 x2 ??. by apply exclC_map_ne, cFunctor_contractive.
 Qed.

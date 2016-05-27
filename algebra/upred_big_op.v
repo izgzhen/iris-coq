@@ -48,7 +48,7 @@ Arguments persistentL {_} _ {_}.
 
 (** * Properties *)
 Section big_op.
-Context {M : cmraT}.
+Context {M : ucmraT}.
 Implicit Types Ps Qs : list (uPred M).
 Implicit Types A : Type.
 

@@ -50,7 +50,7 @@ Proof. rewrite /ownG uPred.ownM_valid res_validI /=; auto with I. Qed.
 Lemma ownG_valid_r m : ownG m ⊢ (ownG m ★ ✓ m).
 Proof. apply (uPred.always_entails_r _ _), ownG_valid. Qed.
 Lemma ownG_empty : True ⊢ (ownG ∅ : iProp Λ Σ).
-Proof. apply uPred.ownM_empty. Qed.
+Proof. apply: uPred.ownM_empty. Qed.
 Global Instance ownG_timeless m : Timeless m → TimelessP (ownG m).
 Proof. rewrite /ownG; apply _. Qed.
 Global Instance ownG_persistent m : Persistent m → PersistentP (ownG m).
@@ -66,17 +66,17 @@ Proof.
   - intros [(P'&Hi&HP) _]; rewrite Hi.
     constructor; symmetry; apply agree_valid_includedN; last done.
     by apply lookup_validN_Some with (wld r) i.
-  - intros ?; split_and?; try apply cmra_unit_leastN; eauto.
+  - intros ?; split_and?; try apply ucmra_unit_leastN; eauto.
 Qed.
 Lemma ownP_spec n r σ : ✓{n} r → (ownP σ) n r ↔ pst r ≡ Excl σ.
 Proof.
   intros (?&?&?). rewrite /ownP; uPred.unseal.
   rewrite /uPred_holds /= res_includedN /= Excl_includedN //.
-  rewrite (timeless_iff n). naive_solver (apply cmra_unit_leastN).
+  rewrite (timeless_iff n). naive_solver (apply ucmra_unit_leastN).
 Qed.
 Lemma ownG_spec n r m : (ownG m) n r ↔ m ≼{n} gst r.
 Proof.
   rewrite /ownG; uPred.unseal.
-  rewrite /uPred_holds /= res_includedN; naive_solver (apply cmra_unit_leastN).
+  rewrite /uPred_holds /= res_includedN; naive_solver (apply ucmra_unit_leastN).
 Qed.
 End ownership.

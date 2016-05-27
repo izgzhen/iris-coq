@@ -3,7 +3,7 @@ Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etrans; [|eassumption].
 Local Hint Extern 10 (_ ≤ _) => omega.
 
-Record uPred (M : cmraT) : Type := IProp {
+Record uPred (M : ucmraT) : Type := IProp {
   uPred_holds :> nat → M → Prop;
   uPred_ne n x1 x2 : uPred_holds n x1 → x1 ≡{n}≡ x2 → uPred_holds n x2;
   uPred_weaken  n1 n2 x1 x2 :
@@ -18,7 +18,7 @@ Bind Scope uPred_scope with uPred.
 Arguments uPred_holds {_} _%I _ _.
 
 Section cofe.
-  Context {M : cmraT}.
+  Context {M : ucmraT}.
 
   Inductive uPred_equiv' (P Q : uPred M) : Prop :=
     { uPred_in_equiv : ∀ n x, ✓{n} x → P n x ↔ Q n x }.
@@ -64,32 +64,32 @@ Lemma uPred_weaken' {M} (P : uPred M) n1 n2 x1 x2 :
 Proof. eauto using uPred_weaken. Qed.
 
 (** functor *)
-Program Definition uPred_map {M1 M2 : cmraT} (f : M2 -n> M1)
+Program Definition uPred_map {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CMRAMonotone f} (P : uPred M1) :
   uPred M2 := {| uPred_holds n x := P n (f x) |}.
 Next Obligation. by intros M1 M2 f ? P y1 y2 n ? Hy; rewrite /= -Hy. Qed.
 Next Obligation.
   naive_solver eauto using uPred_weaken, included_preserving, validN_preserving.
 Qed.
-Instance uPred_map_ne {M1 M2 : cmraT} (f : M2 -n> M1)
+Instance uPred_map_ne {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CMRAMonotone f} n : Proper (dist n ==> dist n) (uPred_map f).
 Proof.
   intros x1 x2 Hx; split=> n' y ??.
   split; apply Hx; auto using validN_preserving.
 Qed.
-Lemma uPred_map_id {M : cmraT} (P : uPred M): uPred_map cid P ≡ P.
+Lemma uPred_map_id {M : ucmraT} (P : uPred M): uPred_map cid P ≡ P.
 Proof. by split=> n x ?. Qed.
-Lemma uPred_map_compose {M1 M2 M3 : cmraT} (f : M1 -n> M2) (g : M2 -n> M3)
+Lemma uPred_map_compose {M1 M2 M3 : ucmraT} (f : M1 -n> M2) (g : M2 -n> M3)
     `{!CMRAMonotone f, !CMRAMonotone g} (P : uPred M3):
   uPred_map (g ◎ f) P ≡ uPred_map f (uPred_map g P).
 Proof. by split=> n x Hx. Qed.
-Lemma uPred_map_ext {M1 M2 : cmraT} (f g : M1 -n> M2)
+Lemma uPred_map_ext {M1 M2 : ucmraT} (f g : M1 -n> M2)
       `{!CMRAMonotone f} `{!CMRAMonotone g}:
   (∀ x, f x ≡ g x) → ∀ x, uPred_map f x ≡ uPred_map g x.
 Proof. intros Hf P; split=> n x Hx /=; by rewrite /uPred_holds /= Hf. Qed.
-Definition uPredC_map {M1 M2 : cmraT} (f : M2 -n> M1) `{!CMRAMonotone f} :
+Definition uPredC_map {M1 M2 : ucmraT} (f : M2 -n> M1) `{!CMRAMonotone f} :
   uPredC M1 -n> uPredC M2 := CofeMor (uPred_map f : uPredC M1 → uPredC M2).
-Lemma uPredC_map_ne {M1 M2 : cmraT} (f g : M2 -n> M1)
+Lemma uPredC_map_ne {M1 M2 : ucmraT} (f g : M2 -n> M1)
     `{!CMRAMonotone f, !CMRAMonotone g} n :
   f ≡{n}≡ g → uPredC_map f ≡{n}≡ uPredC_map g.
 Proof.
@@ -97,28 +97,28 @@ Proof.
     rewrite /uPred_holds /= (dist_le _ _ _ _(Hfg y)); last lia.
 Qed.
 
-Program Definition uPredCF (F : rFunctor) : cFunctor := {|
-  cFunctor_car A B := uPredC (rFunctor_car F B A);
-  cFunctor_map A1 A2 B1 B2 fg := uPredC_map (rFunctor_map F (fg.2, fg.1))
+Program Definition uPredCF (F : urFunctor) : cFunctor := {|
+  cFunctor_car A B := uPredC (urFunctor_car F B A);
+  cFunctor_map A1 A2 B1 B2 fg := uPredC_map (urFunctor_map F (fg.2, fg.1))
 |}.
 Next Obligation.
   intros F A1 A2 B1 B2 n P Q HPQ.
-  apply uPredC_map_ne, rFunctor_ne; split; by apply HPQ.
+  apply uPredC_map_ne, urFunctor_ne; split; by apply HPQ.
 Qed.
 Next Obligation.
   intros F A B P; simpl. rewrite -{2}(uPred_map_id P).
-  apply uPred_map_ext=>y. by rewrite rFunctor_id.
+  apply uPred_map_ext=>y. by rewrite urFunctor_id.
 Qed.
 Next Obligation.
   intros F A1 A2 A3 B1 B2 B3 f g f' g' P; simpl. rewrite -uPred_map_compose.
-  apply uPred_map_ext=>y; apply rFunctor_compose.
+  apply uPred_map_ext=>y; apply urFunctor_compose.
 Qed.
 
 Instance uPredCF_contractive F :
-  rFunctorContractive F → cFunctorContractive (uPredCF F).
+  urFunctorContractive F → cFunctorContractive (uPredCF F).
 Proof.
   intros ? A1 A2 B1 B2 n P Q HPQ.
-  apply uPredC_map_ne, rFunctor_contractive=> i ?; split; by apply HPQ.
+  apply uPredC_map_ne, urFunctor_contractive=> i ?; split; by apply HPQ.
 Qed.
 
 (** logical entailement *)
@@ -249,7 +249,7 @@ Definition uPred_later {M} := proj1_sig uPred_later_aux M.
 Definition uPred_later_eq :
   @uPred_later = @uPred_later_def := proj2_sig uPred_later_aux.
 
-Program Definition uPred_ownM_def {M : cmraT} (a : M) : uPred M :=
+Program Definition uPred_ownM_def {M : ucmraT} (a : M) : uPred M :=
   {| uPred_holds n x := a ≼{n} x |}.
 Next Obligation. by intros M a n x1 x2 [a' ?] Hx; exists a'; rewrite -Hx. Qed.
 Next Obligation.
@@ -261,7 +261,7 @@ Definition uPred_ownM {M} := proj1_sig uPred_ownM_aux M.
 Definition uPred_ownM_eq :
   @uPred_ownM = @uPred_ownM_def := proj2_sig uPred_ownM_aux.
 
-Program Definition uPred_valid_def {M A : cmraT} (a : A) : uPred M :=
+Program Definition uPred_valid_def {M : ucmraT} {A : cmraT} (a : A) : uPred M :=
   {| uPred_holds n x := ✓{n} a |}.
 Solve Obligations with naive_solver eauto 2 using cmra_validN_le.
 Definition uPred_valid_aux : { x | x = @uPred_valid_def }. by eexists. Qed.
@@ -324,7 +324,7 @@ Definition unseal :=
 Ltac unseal := rewrite !unseal.
 
 Section uPred_logic.
-Context {M : cmraT}.
+Context {M : ucmraT}.
 Implicit Types φ : Prop.
 Implicit Types P Q : uPred M.
 Implicit Types A : Type.
@@ -511,11 +511,10 @@ Proof.
   - by symmetry; apply Hab with x.
   - by apply Ha.
 Qed.
-Lemma eq_equiv `{Empty M, !CMRAUnit M} {A : cofeT} (a b : A) :
-  True ⊢ (a ≡ b) → a ≡ b.
+Lemma eq_equiv {A : cofeT} (a b : A) : True ⊢ (a ≡ b) → a ≡ b.
 Proof.
   unseal=> Hab; apply equiv_dist; intros n; apply Hab with ∅; last done.
-  apply cmra_valid_validN, cmra_unit_valid.
+  apply cmra_valid_validN, ucmra_unit_valid.
 Qed.
 Lemma eq_rewrite_contractive {A : cofeT} a b (Ψ : A → uPred M) P
   {HΨ : Contractive Ψ} : P ⊢ ▷ (a ≡ b) → P ⊢ Ψ a → P ⊢ Ψ b.
@@ -1045,7 +1044,7 @@ Lemma always_ownM (a : M) : Persistent a → (□ uPred_ownM a) ⊣⊢ uPred_own
 Proof. intros. by rewrite -(persistent a) always_ownM_core. Qed.
 Lemma ownM_something : True ⊢ ∃ a, uPred_ownM a.
 Proof. unseal; split=> n x ??. by exists x; simpl. Qed.
-Lemma ownM_empty `{Empty M, !CMRAUnit M} : True ⊢ uPred_ownM ∅.
+Lemma ownM_empty : True ⊢ uPred_ownM ∅.
 Proof. unseal; split=> n x ??; by  exists x; rewrite left_id. Qed.
 
 (* Valid *)

@@ -11,7 +11,7 @@ Local Notation "' ( x1 , x2 ) ← y ; z" :=
 Local Notation "' ( x1 , x2 , x3 ) ← y ; z" :=
   (match y with Some (x1,x2,x3) => z | None => None end).
 
-Record envs (M : cmraT) :=
+Record envs (M : ucmraT) :=
   Envs { env_persistent : env (uPred M); env_spatial : env (uPred M) }.
 Add Printing Constructor envs.
 Arguments Envs {_} _ _.
@@ -96,7 +96,7 @@ Definition envs_clear_spatial {M} (Δ : envs M) : envs M :=
 
 (* Coq versions of the tactics *)
 Section tactics.
-Context {M : cmraT}.
+Context {M : ucmraT}.
 Implicit Types Γ : env (uPred M).
 Implicit Types Δ : envs M.
 Implicit Types P Q : uPred M.

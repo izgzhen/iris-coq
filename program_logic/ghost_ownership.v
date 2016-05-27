@@ -14,19 +14,6 @@ Section global.
 Context `{i : inG Λ Σ A}.
 Implicit Types a : A.
 
-(** * Transport empty *)
-Instance inG_empty `{Empty A} :
-  Empty (projT2 Σ (inG_id i) (iPreProp Λ (globalF Σ))) :=
-  cmra_transport inG_prf ∅.
-Instance inG_empty_spec `{Empty A} :
-  CMRAUnit A → CMRAUnit (projT2 Σ (inG_id i) (iPreProp Λ (globalF Σ))).
-Proof.
-  split.
-  - apply cmra_transport_valid, cmra_unit_valid.
-  - intros x; rewrite /empty /inG_empty; destruct inG_prf. by rewrite left_id.
-  - apply _.
-Qed.
-
 (** * Properties of own *)
 Global Instance own_ne γ n : Proper (dist n ==> dist n) (own γ).
 Proof. solve_proper. Qed.
@@ -90,13 +77,17 @@ Proof.
   intros; rewrite (own_updateP (a' =)); last by apply cmra_update_updateP.
   by apply pvs_mono, exist_elim=> a''; apply const_elim_l=> ->.
 Qed.
-
-Lemma own_empty `{Empty A, !CMRAUnit A} γ E : True ⊢ (|={E}=> own γ ∅).
-Proof.
-  rewrite ownG_empty /own. apply pvs_ownG_update, cmra_update_updateP.
-  eapply iprod_singleton_updateP_empty;
-    first by eapply singleton_updateP_empty', cmra_transport_updateP',
-    cmra_update_updateP, cmra_update_unit.
-  naive_solver.
-Qed.
 End global.
+
+Section global_empty.
+Context `{i : inG Λ Σ (A:ucmraT)}.
+Implicit Types a : A.
+
+Lemma own_empty γ E : True ⊢ (|={E}=> own γ ∅).
+Proof.
+  rewrite ownG_empty /own. apply pvs_ownG_update, iprod_singleton_update_empty.
+  apply (singleton_update_unit (cmra_transport inG_prf ∅)); last done.
+  - apply cmra_transport_valid, ucmra_unit_valid.
+  - intros x; destruct inG_prf. by rewrite left_id.
+Qed.
+End global_empty.

@@ -8,18 +8,18 @@ Import uPred.
    a finmap as their state. Or maybe even beyond "as their state", i.e. arbitrary
    predicates over finmaps instead of just ownP. *)
 
-Definition heapR : cmraT := gmapR loc (fracR (dec_agreeR val)).
+Definition heapUR : ucmraT := gmapUR loc (fracR (dec_agreeR val)).
 
 (** The CMRA we need. *)
 Class heapG Σ := HeapG {
-  heap_inG :> authG heap_lang Σ heapR;
+  heap_inG :> authG heap_lang Σ heapUR;
   heap_name : gname
 }.
 (** The Functor we need. *)
-Definition heapGF : gFunctor := authGF heapR.
+Definition heapGF : gFunctor := authGF heapUR.
 
-Definition to_heap : state → heapR := fmap (λ v, Frac 1 (DecAgree v)).
-Definition of_heap : heapR → state :=
+Definition to_heap : state → heapUR := fmap (λ v, Frac 1 (DecAgree v)).
+Definition of_heap : heapUR → state :=
   omap (mbind (maybe DecAgree ∘ snd) ∘ maybe2 Frac).
 
 Section definitions.
@@ -27,7 +27,7 @@ Section definitions.
 
   Definition heap_mapsto (l : loc) (q : Qp) (v: val) : iPropG heap_lang Σ :=
     auth_own heap_name {[ l := Frac q (DecAgree v) ]}.
-  Definition heap_inv (h : heapR) : iPropG heap_lang Σ :=
+  Definition heap_inv (h : heapUR) : iPropG heap_lang Σ :=
     ownP (of_heap h).
   Definition heap_ctx (N : namespace) : iPropG heap_lang Σ :=
     auth_ctx heap_name N heap_inv.
@@ -49,7 +49,7 @@ Section heap.
   Implicit Types P Q : iPropG heap_lang Σ.
   Implicit Types Φ : val → iPropG heap_lang Σ.
   Implicit Types σ : state.
-  Implicit Types h g : heapR.
+  Implicit Types h g : heapUR.
 
   (** Conversion to heaps and back *)
   Global Instance of_heap_proper : Proper ((≡) ==> (=)) of_heap.
@@ -73,7 +73,7 @@ Section heap.
       case _:(h !! l)=>[[q' [v'|]|]|] //=; last by move=> [??].
       move=> [? /dec_agree_op_inv [->]]. by rewrite dec_agree_idemp.
     - rewrite /of_heap lookup_insert_ne // !lookup_omap.
-      by rewrite (lookup_op _ h) lookup_singleton_ne // left_id.
+      by rewrite (lookup_op _ h) lookup_singleton_ne // left_id_L.
   Qed.
   Lemma to_heap_insert l v σ :
     to_heap (<[l:=v]> σ) = <[l:=Frac 1 (DecAgree v)]> (to_heap σ).
@@ -97,7 +97,7 @@ Section heap.
 
   (** Allocation *)
   Lemma heap_alloc N E σ :
-    authG heap_lang Σ heapR → nclose N ⊆ E →
+    authG heap_lang Σ heapUR → nclose N ⊆ E →
     ownP σ ⊢ (|={E}=> ∃ _ : heapG Σ, heap_ctx N ∧ [★ map] l↦v ∈ σ, l ↦ v).
   Proof.
     intros. rewrite -{1}(from_to_heap σ). etrans.

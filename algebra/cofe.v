@@ -91,8 +91,8 @@ End cofe_mixin.
 (** Discrete COFEs and Timeless elements *)
 (* TODO: On paper, We called these "discrete elements". I think that makes
    more sense. *)
-Class Timeless {A : cofeT} (x : A) := timeless y : x ≡{0}≡ y → x ≡ y.
-Arguments timeless {_} _ {_} _ _.
+Class Timeless `{Equiv A, Dist A} (x : A) := timeless y : x ≡{0}≡ y → x ≡ y.
+Arguments timeless {_ _ _} _ {_} _ _.
 Class Discrete (A : cofeT) := discrete_timeless (x : A) :> Timeless x.
 
 (** General properties *)

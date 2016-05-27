@@ -4,16 +4,15 @@ From iris.proofmode Require Import invariants ghost_ownership.
 Import uPred.
 
 (* The CMRA we need. *)
-Class authG Λ Σ (A : cmraT) `{Empty A} := AuthG {
+Class authG Λ Σ (A : ucmraT) := AuthG {
   auth_inG :> inG Λ Σ (authR A);
-  auth_identity :> CMRAUnit A;
   auth_timeless :> CMRADiscrete A;
 }.
 (* The Functor we need. *)
-Definition authGF (A : cmraT) : gFunctor := GFunctor (constRF (authR A)).
+Definition authGF (A : ucmraT) : gFunctor := GFunctor (constRF (authR A)).
 (* Show and register that they match. *)
-Instance authGF_inGF (A : cmraT) `{inGF Λ Σ (authGF A)}
-  `{CMRAUnit A, CMRADiscrete A} : authG Λ Σ A.
+Instance authGF_inGF (A : ucmraT) `{inGF Λ Σ (authGF A)}
+  `{CMRADiscrete A} : authG Λ Σ A.
 Proof. split; try apply _. apply: inGF_inG. Qed.
 
 Section definitions.

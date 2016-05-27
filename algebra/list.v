@@ -113,7 +113,7 @@ Qed.
 
 (* CMRA *)
 Section cmra.
-  Context {A : cmraT}.
+  Context {A : ucmraT}.
   Implicit Types l : list A.
   Local Arguments op _ _ !_ !_ / : simpl nomatch.
 
@@ -196,17 +196,19 @@ Section cmra.
           [inversion_clear Hl; inversion_clear Hl'; auto ..|]; simplify_eq/=.
         exists (y1' :: l1', y2' :: l2'); repeat constructor; auto.
   Qed.
-  Canonical Structure listR : cmraT :=
+  Canonical Structure listR :=
     CMRAT (list A) list_cofe_mixin list_cmra_mixin.
 
   Global Instance empty_list : Empty (list A) := [].
-  Global Instance list_cmra_unit : CMRAUnit listR.
+  Definition list_ucmra_mixin : UCMRAMixin (list A).
   Proof.
     split.
     - constructor.
     - by intros l.
     - by inversion_clear 1.
   Qed.
+  Canonical Structure listUR :=
+    UCMRAT (list A) list_cofe_mixin list_cmra_mixin list_ucmra_mixin.
 
   Global Instance list_cmra_discrete : CMRADiscrete A → CMRADiscrete listR.
   Proof.
@@ -228,13 +230,15 @@ Section cmra.
 End cmra.
 
 Arguments listR : clear implicits.
+Arguments listUR : clear implicits.
 
-Global Instance list_singletonM `{Empty A} : SingletonM nat A (list A) := λ n x,
+Instance list_singletonM {A : ucmraT} : SingletonM nat A (list A) := λ n x,
   replicate n ∅ ++ [x].
 
 Section properties.
-  Context {A : cmraT}.
+  Context {A : ucmraT}.
   Implicit Types l : list A.
+  Implicit Types x y z : A.
   Local Arguments op _ _ !_ !_ / : simpl nomatch.
   Local Arguments cmra_op _ !_ !_ / : simpl nomatch.
 
@@ -255,64 +259,58 @@ Section properties.
 
   Lemma replicate_valid n (x : A) : ✓ x → ✓ replicate n x.
   Proof. apply Forall_replicate. Qed.
+  Global Instance list_singletonM_ne n i :
+    Proper (dist n ==> dist n) (@list_singletonM A i).
+  Proof. intros l1 l2 ?. apply Forall2_app; by repeat constructor. Qed.
+  Global Instance list_singletonM_proper i :
+    Proper ((≡) ==> (≡)) (list_singletonM i) := ne_proper _.
 
-  (* Singleton lists *)
-  Section singleton.
-    Context `{CMRAUnit A}.
+  Lemma elem_of_list_singletonM i z x : z ∈ {[i := x]} → z = ∅ ∨ z = x.
+  Proof.
+    rewrite elem_of_app elem_of_list_singleton elem_of_replicate. naive_solver.
+  Qed.
+  Lemma list_lookup_singletonM i x : {[ i := x ]} !! i = Some x.
+  Proof. induction i; by f_equal/=. Qed.
+  Lemma list_lookup_singletonM_ne i j x :
+    i ≠ j → {[ i := x ]} !! j = None ∨ {[ i := x ]} !! j = Some ∅.
+  Proof. revert j; induction i; intros [|j]; naive_solver auto with omega. Qed.
+  Lemma list_singletonM_validN n i x : ✓{n} {[ i := x ]} ↔ ✓{n} x.
+  Proof.
+    rewrite list_lookup_validN. split.
+    { move=> /(_ i). by rewrite list_lookup_singletonM. }
+    intros Hx j; destruct (decide (i = j)); subst.
+    - by rewrite list_lookup_singletonM.
+    - destruct (list_lookup_singletonM_ne i j x) as [Hi|Hi]; first done;
+        rewrite Hi; by try apply (ucmra_unit_validN (A:=A)).
+  Qed.
+  Lemma list_singleton_valid  i x : ✓ {[ i := x ]} ↔ ✓ x.
+  Proof.
+    rewrite !cmra_valid_validN. by setoid_rewrite list_singletonM_validN.
+  Qed.
+  Lemma list_singletonM_length i x : length {[ i := x ]} = S i.
+  Proof.
+    rewrite /singletonM /list_singletonM app_length replicate_length /=; lia.
+  Qed.
 
-    Global Instance list_singletonM_ne n i :
-      Proper (dist n ==> dist n) (list_singletonM i).
-    Proof. intros l1 l2 ?. apply Forall2_app; by repeat constructor. Qed.
-    Global Instance list_singletonM_proper i :
-      Proper ((≡) ==> (≡)) (list_singletonM i) := ne_proper _.
-
-    Lemma elem_of_list_singletonM i z x : z ∈ {[i := x]} → z = ∅ ∨ z = x.
-    Proof.
-      rewrite elem_of_app elem_of_list_singleton elem_of_replicate. naive_solver.
-    Qed.
-    Lemma list_lookup_singletonM i x : {[ i := x ]} !! i = Some x.
-    Proof. induction i; by f_equal/=. Qed.
-    Lemma list_lookup_singletonM_ne i j x :
-      i ≠ j → {[ i := x ]} !! j = None ∨ {[ i := x ]} !! j = Some ∅.
-    Proof. revert j; induction i; intros [|j]; naive_solver auto with omega. Qed.
-    Lemma list_singletonM_validN n i x : ✓{n} {[ i := x ]} ↔ ✓{n} x.
-    Proof.
-      rewrite list_lookup_validN. split.
-      { move=> /(_ i). by rewrite list_lookup_singletonM. }
-      intros Hx j; destruct (decide (i = j)); subst.
-      - by rewrite list_lookup_singletonM.
-      - destruct (list_lookup_singletonM_ne i j x) as [Hi|Hi]; first done;
-          rewrite Hi; by try apply (cmra_unit_validN (A:=A)).
-    Qed.
-    Lemma list_singleton_valid  i x : ✓ {[ i := x ]} ↔ ✓ x.
-    Proof.
-      rewrite !cmra_valid_validN. by setoid_rewrite list_singletonM_validN.
-    Qed.
-    Lemma list_singletonM_length i x : length {[ i := x ]} = S i.
-    Proof.
-      rewrite /singletonM /list_singletonM app_length replicate_length /=; lia.
-    Qed.
-
-    Lemma list_core_singletonM i (x : A) : core {[ i := x ]} ≡ {[ i := core x ]}.
-    Proof.
-      rewrite /singletonM /list_singletonM /=.
-      induction i; constructor; auto using cmra_core_unit.
-    Qed.
-    Lemma list_op_singletonM i (x y : A) :
-      {[ i := x ]} ⋅ {[ i := y ]} ≡ {[ i := x ⋅ y ]}.
-    Proof.
-      rewrite /singletonM /list_singletonM /=.
-      induction i; constructor; rewrite ?left_id; auto.
-    Qed.
-    Lemma list_alter_singletonM f i x : alter f i {[i := x]} = {[i := f x]}.
-    Proof.
-      rewrite /singletonM /list_singletonM /=.
-      induction i; f_equal/=; auto.
-    Qed.
-    Global Instance list_singleton_persistent i (x : A) :
-      Persistent x → Persistent {[ i := x ]}.
-    Proof. intros. by rewrite /Persistent list_core_singletonM persistent. Qed.
-  End singleton.
+  Lemma list_core_singletonM i (x : A) : core {[ i := x ]} ≡ {[ i := core x ]}.
+  Proof.
+    rewrite /singletonM /list_singletonM /=.
+    induction i; constructor; auto using ucmra_core_unit.
+  Qed.
+  Lemma list_op_singletonM i (x y : A) :
+    {[ i := x ]} ⋅ {[ i := y ]} ≡ {[ i := x ⋅ y ]}.
+  Proof.
+    rewrite /singletonM /list_singletonM /=.
+    induction i; constructor; rewrite ?left_id; auto.
+  Qed.
+  Lemma list_alter_singletonM f i x : alter f i {[i := x]} = {[i := f x]}.
+  Proof.
+    rewrite /singletonM /list_singletonM /=.
+    induction i; f_equal/=; auto.
+  Qed.
+  Global Instance list_singleton_persistent i (x : A) :
+    Persistent x → Persistent {[ i := x ]}.
+  Proof. intros. by rewrite /Persistent list_core_singletonM persistent. Qed.
 
   (* Update *)
   Lemma list_update_updateP (P : A → Prop) (Q : list A → Prop) l1 x l2 :
@@ -350,7 +348,7 @@ Section properties.
 End properties.
 
 (** Functor *)
-Instance list_fmap_cmra_monotone {A B : cmraT} (f : A → B)
+Instance list_fmap_cmra_monotone {A B : ucmraT} (f : A → B)
   `{!CMRAMonotone f} : CMRAMonotone (fmap f : list A → list B).
 Proof.
   split; try apply _.
@@ -360,24 +358,24 @@ Proof.
     by apply (included_preserving (fmap f : option A → option B)).
 Qed.
 
-Program Definition listRF (F : rFunctor) : rFunctor := {|
-  rFunctor_car A B := listR (rFunctor_car F A B);
-  rFunctor_map A1 A2 B1 B2 fg := listC_map (rFunctor_map F fg)
+Program Definition listURF (F : urFunctor) : urFunctor := {|
+  urFunctor_car A B := listUR (urFunctor_car F A B);
+  urFunctor_map A1 A2 B1 B2 fg := listC_map (urFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros F ???? n f g Hfg; apply listC_map_ne, rFunctor_ne.
+  by intros F ???? n f g Hfg; apply listC_map_ne, urFunctor_ne.
 Qed.
 Next Obligation.
   intros F A B x. rewrite /= -{2}(list_fmap_id x).
-  apply list_fmap_setoid_ext=>y. apply rFunctor_id.
+  apply list_fmap_setoid_ext=>y. apply urFunctor_id.
 Qed.
 Next Obligation.
   intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -list_fmap_compose.
-  apply list_fmap_setoid_ext=>y; apply rFunctor_compose.
+  apply list_fmap_setoid_ext=>y; apply urFunctor_compose.
 Qed.
 
-Instance listRF_contractive F :
-  rFunctorContractive F → rFunctorContractive (listRF F).
+Instance listURF_contractive F :
+  urFunctorContractive F → urFunctorContractive (listURF F).
 Proof.
-  by intros ? A1 A2 B1 B2 n f g Hfg; apply listC_map_ne, rFunctor_contractive.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply listC_map_ne, urFunctor_contractive.
 Qed.

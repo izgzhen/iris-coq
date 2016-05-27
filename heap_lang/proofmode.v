@@ -10,7 +10,7 @@ Context {Σ : gFunctors} `{heapG Σ}.
 Implicit Types N : namespace.
 Implicit Types P Q : iPropG heap_lang Σ.
 Implicit Types Φ : val → iPropG heap_lang Σ.
-Implicit Types Δ : envs (iResR heap_lang (globalF Σ)).
+Implicit Types Δ : envs (iResUR heap_lang (globalF Σ)).
 
 Global Instance sep_destruct_mapsto l q v :
   SepDestruct false (l ↦{q} v) (l ↦{q/2} v) (l ↦{q/2} v).

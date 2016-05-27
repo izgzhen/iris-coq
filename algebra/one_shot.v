@@ -125,12 +125,11 @@ Instance one_shot_validN : ValidN (one_shot A) := λ n x,
   | OneShotUnit => True
   | OneShotBot => False
   end.
-Global Instance one_shot_empty : Empty (one_shot A) := OneShotUnit.
 Instance one_shot_core : Core (one_shot A) := λ x,
   match x with
   | Shot a => Shot (core a)
   | OneShotBot => OneShotBot
-  | _ => ∅
+  | _ => OneShotUnit
   end.
 Instance one_shot_op : Op (one_shot A) := λ x y,
   match x, y with
@@ -154,7 +153,7 @@ Proof.
   - exists (Shot c). constructor. done.
 Qed. 
 
-Definition one_shot_cmra_mixin : CMRAMixin (one_shot A).
+Lemma one_shot_cmra_mixin : CMRAMixin (one_shot A).
 Proof.
   split.
   - intros n []; destruct 1; constructor; by cofe_subst. 
@@ -174,7 +173,7 @@ Proof.
     + intros _. exists (Shot (core a2)). by constructor.
   - intros n [|a1| |] [|a2| |]; simpl; eauto using cmra_validN_op_l; done.
   - intros n [|a| |] y1 y2 Hx Hx'; last 2 first.
-    + by exists (∅, ∅); destruct y1, y2; inversion_clear Hx'.
+    + by exists (OneShotUnit, OneShotUnit); destruct y1, y2; inversion_clear Hx'.
     + by exists (OneShotBot, OneShotBot); destruct y1, y2; inversion_clear Hx'.
     + destruct y1, y2; try (exfalso; by inversion_clear Hx').
       * by exists (OneShotPending, OneShotUnit).
@@ -183,18 +182,22 @@ Proof.
        * apply (inj Shot) in Hx'.
          destruct (cmra_extend n a b1 b2) as ([z1 z2]&?&?&?); auto.
          exists (Shot z1, Shot z2). by repeat constructor.
-       * exists (Shot a, ∅). inversion_clear Hx'. by repeat constructor.
-       * exists (∅, Shot a). inversion_clear Hx'. by repeat constructor.
+       * exists (Shot a, OneShotUnit). inversion_clear Hx'. by repeat constructor.
+       * exists (OneShotUnit, Shot a). inversion_clear Hx'. by repeat constructor.
 Qed.
-Canonical Structure one_shotR : cmraT :=
+Canonical Structure one_shotR :=
   CMRAT (one_shot A) one_shot_cofe_mixin one_shot_cmra_mixin.
-Global Instance one_shot_cmra_unit : CMRAUnit one_shotR.
-Proof. split. done. by intros []. apply _. Qed.
 Global Instance one_shot_cmra_discrete : CMRADiscrete A → CMRADiscrete one_shotR.
 Proof.
   split; first apply _.
   intros [|a| |]; simpl; auto using cmra_discrete_valid.
 Qed.
+
+Instance one_shot_empty : Empty (one_shot A) := OneShotUnit.
+Lemma one_shot_ucmra_mixin : UCMRAMixin (one_shot A).
+Proof. split. done. by intros []. apply _. Qed.
+Canonical Structure one_shotUR :=
+  UCMRAT (one_shot A) one_shot_cofe_mixin one_shot_cmra_mixin one_shot_ucmra_mixin.
 
 Global Instance Shot_persistent a : Persistent a → Persistent (Shot a).
 Proof. by constructor. Qed.
@@ -254,6 +257,7 @@ Proof. eauto using one_shot_updateP. Qed.
 End cmra.
 
 Arguments one_shotR : clear implicits.
+Arguments one_shotUR : clear implicits.
 
 (* Functor *)
 Instance one_shot_map_cmra_monotone {A B : cmraT} (f : A → B) :
@@ -262,7 +266,7 @@ Proof.
   split; try apply _.
   - intros n [|a| |]; simpl; auto using validN_preserving.
   - intros [|a1| |] [|a2| |] [[|a3| |] Hx];
-      inversion Hx; setoid_subst; try apply cmra_unit_least;
+      inversion Hx; setoid_subst; try apply: ucmra_unit_least;
         try apply one_shot_bot_largest; auto; [].
     destruct (included_preserving f a1 (a1 ⋅ a3)) as [b ?].
     { by apply cmra_included_l. }
@@ -287,6 +291,28 @@ Qed.
 
 Instance one_shotRF_contractive F :
   rFunctorContractive F → rFunctorContractive (one_shotRF F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply one_shotC_map_ne, rFunctor_contractive.
+Qed.
+
+Program Definition one_shotURF (F : rFunctor) : urFunctor := {|
+  urFunctor_car A B := one_shotUR (rFunctor_car F A B);
+  urFunctor_map A1 A2 B1 B2 fg := one_shotC_map (rFunctor_map F fg)
+|}.
+Next Obligation.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply one_shotC_map_ne, rFunctor_ne.
+Qed.
+Next Obligation.
+  intros F A B x. rewrite /= -{2}(one_shot_map_id x).
+  apply one_shot_map_ext=>y; apply rFunctor_id.
+Qed.
+Next Obligation.
+  intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -one_shot_map_compose.
+  apply one_shot_map_ext=>y; apply rFunctor_compose.
+Qed.
+
+Instance one_shotURF_contractive F :
+  rFunctorContractive F → urFunctorContractive (one_shotURF F).
 Proof.
   by intros ? A1 A2 B1 B2 n f g Hfg; apply one_shotC_map_ne, rFunctor_contractive.
 Qed.
