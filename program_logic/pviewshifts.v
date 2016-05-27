@@ -19,11 +19,12 @@ Next Obligation.
   apply HP; auto. by rewrite (dist_le _ _ _ _ Hr); last lia.
 Qed.
 Next Obligation.
-  intros Λ Σ E1 E2 P r1 r2 n1 n2 HP [r3 ?] Hn ? rf k Ef σ ?? Hws; setoid_subst.
-  destruct (HP (r3⋅rf) k Ef σ) as (r'&?&Hws'); rewrite ?(assoc op); auto.
+  intros Λ Σ E1 E2 P n r1 r2 HP [r3 ?] rf k Ef σ ?? Hws; setoid_subst.
+  destruct (HP (r3 ⋅ rf) k Ef σ) as (r'&?&Hws'); rewrite ?(assoc op); auto.
   exists (r' ⋅ r3); rewrite -assoc; split; last done.
-  apply uPred_weaken with k r'; eauto using cmra_included_l.
+  apply uPred_mono with r'; eauto using cmra_included_l.
 Qed.
+Next Obligation. naive_solver. Qed.
 
 Definition pvs_aux : { x | x = @pvs_def }. by eexists. Qed.
 Definition pvs := proj1_sig pvs_aux.
@@ -62,7 +63,7 @@ Proof. apply ne_proper, _. Qed.
 Lemma pvs_intro E P : P ⊢ |={E}=> P.
 Proof.
   rewrite pvs_eq. split=> n r ? HP rf k Ef σ ???; exists r; split; last done.
-  apply uPred_weaken with n r; eauto.
+  apply uPred_closed with n; eauto.
 Qed.
 Lemma pvs_mono E1 E2 P Q : P ⊢ Q → (|={E1,E2}=> P) ⊢ (|={E1,E2}=> Q).
 Proof.
@@ -75,7 +76,7 @@ Proof.
   rewrite pvs_eq uPred.timelessP_spec=> HP.
   uPred.unseal; split=>-[|n] r ? HP' rf k Ef σ ???; first lia.
   exists r; split; last done.
-  apply HP, uPred_weaken with n r; eauto using cmra_validN_le.
+  apply HP, uPred_closed with n; eauto using cmra_validN_le.
 Qed.
 Lemma pvs_trans E1 E2 E3 P :
   E2 ⊆ E1 ∪ E3 → (|={E1,E2}=> |={E2,E3}=> P) ⊢ (|={E1,E3}=> P).
@@ -96,7 +97,7 @@ Proof.
   destruct (HP (r2 ⋅ rf) k Ef σ) as (r'&?&?); eauto.
   { by rewrite assoc -(dist_le _ _ _ _ Hr); last lia. }
   exists (r' ⋅ r2); split; last by rewrite -assoc.
-  exists r', r2; split_and?; auto; apply uPred_weaken with n r2; auto.
+  exists r', r2; split_and?; auto. apply uPred_closed with n; auto.
 Qed.
 Lemma pvs_openI i P : ownI i P ⊢ (|={{[i]},∅}=> ▷ P).
 Proof.
@@ -105,17 +106,17 @@ Proof.
   destruct (wsat_open k Ef σ (r ⋅ rf) i P) as (rP&?&?); auto.
   { rewrite lookup_wld_op_l ?Hinv; eauto; apply dist_le with (S n); eauto. }
   exists (rP ⋅ r); split; last by rewrite (left_id_L _ _) -assoc.
-  eapply uPred_weaken with (S k) rP; eauto using cmra_included_l.
+  eapply uPred_mono with rP; eauto using cmra_included_l.
 Qed.
 Lemma pvs_closeI i P : (ownI i P ∧ ▷ P) ⊢ (|={∅,{[i]}}=> True).
 Proof.
   rewrite pvs_eq. uPred.unseal; split=> -[|n] r ? [? HP] rf [|k] Ef σ ? HE ?; try lia.
   exists ∅; split; [done|].
   rewrite left_id; apply wsat_close with P r.
-  - apply ownI_spec, uPred_weaken with (S n) r; auto.
+  - apply ownI_spec, uPred_closed with (S n); auto.
   - set_solver +HE.
   - by rewrite -(left_id_L ∅ (∪) Ef).
-  - apply uPred_weaken with n r; auto.
+  - apply uPred_closed with n; auto.
 Qed.
 Lemma pvs_ownG_updateP E m (P : iGst Λ Σ → Prop) :
   m ~~>: P → ownG m ⊢ (|={E}=> ∃ m', ■ P m' ∧ ownG m').
@@ -131,7 +132,7 @@ Proof.
   rewrite pvs_eq. intros ?; rewrite /ownI; uPred.unseal.
   split=> -[|n] r ? HP rf [|k] Ef σ ???; try lia.
   destruct (wsat_alloc k E Ef σ rf P r) as (i&?&?&?); auto.
-  { apply uPred_weaken with n r; eauto. }
+  { apply uPred_closed with n; eauto. }
   exists (Res {[ i := to_agree (Next (iProp_unfold P)) ]} ∅ ∅).
   split; [|done]. by exists i; split; rewrite /uPred_holds /=.
 Qed.

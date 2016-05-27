@@ -36,18 +36,19 @@ Next Obligation.
   by rewrite (dist_le _ _ _ _ Hr1); last omega.
 Qed.
 Next Obligation.
-  intros wp E e1 Φ n1 n2 r1 ? Hwp [r2 ?] ?? rf k Ef σ1 ???; setoid_subst.
+  intros wp E e1 Φ n r1 ? Hwp [r2 ?] rf k Ef σ1 ???; setoid_subst.
   destruct (Hwp (r2 ⋅ rf) k Ef σ1) as [Hval Hstep]; rewrite ?assoc; auto.
   split.
   - intros v Hv. destruct (Hval v Hv) as [r3 [??]].
-    exists (r3 ⋅ r2). rewrite -assoc. eauto using uPred_weaken, cmra_included_l.
+    exists (r3 ⋅ r2). rewrite -assoc. eauto using uPred_mono, cmra_included_l.
   - intros ??. destruct Hstep as [Hred Hpstep]; auto.
     split; [done|]=> e2 σ2 ef ?.
     edestruct Hpstep as (r3&r3'&?&?&?); eauto.
     exists r3, (r3' ⋅ r2); split_and?; auto.
     + by rewrite assoc -assoc.
-    + destruct ef; simpl in *; eauto using uPred_weaken, cmra_included_l.
+    + destruct ef; simpl in *; eauto using uPred_mono, cmra_included_l.
 Qed.
+Next Obligation. repeat intro; eauto. Qed.
 
 Lemma wp_pre_contractive' n E e Φ1 Φ2 r
     (wp1 wp2 : coPsetC -n> exprC Λ -n> (valC Λ -n> iProp) -n> iProp) :

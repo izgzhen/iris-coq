@@ -18,7 +18,7 @@ Implicit Types m : iGst Λ Σ.
 Notation wptp n := (Forall3 (λ e Φ r, uPred_holds (wp ⊤ e Φ) n r)).
 Lemma wptp_le Φs es rs n n' :
   ✓{n'} (big_op rs) → wptp n es Φs rs → n' ≤ n → wptp n' es Φs rs.
-Proof. induction 2; constructor; eauto using uPred_weaken. Qed.
+Proof. induction 2; constructor; eauto using uPred_closed. Qed.
 Lemma nsteps_wptp Φs k n tσ1 tσ2 rs1 :
   nsteps step k tσ1 tσ2 →
   1 < n → wptp (k + n) (tσ1.1) Φs rs1 →
@@ -51,7 +51,8 @@ Proof.
     { rewrite /option_list right_id_L.
       apply Forall3_app, Forall3_cons; eauto using wptp_le.
       rewrite wp_eq.
-      apply uPred_weaken with (k + n) r2; eauto using cmra_included_l. }
+      apply uPred_closed with (k + n);
+        first apply uPred_mono with r2; eauto using cmra_included_l. }
     by rewrite -Permutation_middle /= big_op_app.
 Qed.
 Lemma wp_adequacy_steps P Φ k n e1 t2 σ1 σ2 r1 :

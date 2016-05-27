@@ -63,7 +63,7 @@ Proof.
   destruct (Hwld i (iProp_fold (later_car (P' (S n))))) as (r'&?&?); auto.
   { by rewrite HP' -HPiso. }
   assert (✓{S n} r') by (apply (big_opM_lookup_valid _ rs i); auto).
-  exists r'; split; [done|apply HPP', uPred_weaken with n r'; auto].
+  exists r'; split; [done|]. apply HPP', uPred_closed with n; auto.
 Qed.
 Lemma wsat_valid n E σ r : n ≠ 0 → wsat n E σ r → ✓{n} r.
 Proof.

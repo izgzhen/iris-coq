@@ -38,17 +38,19 @@ Next Obligation.
   intros rf k Ef σ1 ?; rewrite -(dist_le _ _ _ _ Hr); naive_solver.
 Qed.
 Next Obligation.
-  intros Λ Σ E e Φ n1 n2 r1 r2; revert Φ E e n2 r1 r2.
-  induction n1 as [n1 IH] using lt_wf_ind; intros Φ E e n2 r1 r1'.
-  destruct 1 as [|n1 r1 e1 ? Hgo].
-  - constructor; eauto using uPred_weaken.
-  - intros [rf' Hr] ??; constructor; [done|intros rf k Ef σ1 ???].
+  intros Λ Σ E e Φ n r1 r2; revert Φ E e r1 r2.
+  induction n as [n IH] using lt_wf_ind; intros Φ E e r1 r1'.
+  destruct 1 as [|n r1 e1 ? Hgo].
+  - constructor; eauto using uPred_mono.
+  - intros [rf' Hr]; constructor; [done|intros rf k Ef σ1 ???].
     destruct (Hgo (rf' ⋅ rf) k Ef σ1) as [Hsafe Hstep];
       rewrite ?assoc -?Hr; auto; constructor; [done|].
     intros e2 σ2 ef ?; destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
     exists r2, (r2' ⋅ rf'); split_and?; eauto 10 using (IH k), cmra_included_l.
     by rewrite -!assoc (assoc _ r2).
 Qed.
+Next Obligation. destruct 1; constructor; eauto using uPred_closed. Qed.
+
 (* Perform sealing. *)
 Definition wp_aux : { x | x = @wp_def }. by eexists. Qed.
 Definition wp := proj1_sig wp_aux.
@@ -194,7 +196,7 @@ Proof.
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
   exists (r2 ⋅ rR), r2'; split_and?; auto.
   - by rewrite -(assoc _ r2) (comm _ rR) !assoc -(assoc _ _ rR).
-  - apply IH; eauto using uPred_weaken.
+  - apply IH; eauto using uPred_closed.
 Qed.
 Lemma wp_frame_step_r E E1 E2 e Φ R :
   to_val e = None → E ⊥ E1 → E2 ⊆ E1 →
