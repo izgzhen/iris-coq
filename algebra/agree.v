@@ -60,7 +60,7 @@ Program Instance agree_op : Op (agree A) := λ x y,
   {| agree_car := x;
      agree_is_valid n := agree_is_valid x n ∧ agree_is_valid y n ∧ x ≡{n}≡ y |}.
 Next Obligation. naive_solver eauto using agree_valid_S, dist_S. Qed.
-Instance agree_core : Core (agree A) := id.
+Instance agree_pcore : PCore (agree A) := Some.
 
 Instance: Comm (≡) (@op (agree A) _).
 Proof. intros x y; split; [naive_solver|by intros n (?&?&Hxy); apply Hxy]. Qed.
@@ -106,11 +106,11 @@ Qed.
 
 Definition agree_cmra_mixin : CMRAMixin (agree A).
 Proof.
-  split; try (apply _ || done).
+  apply cmra_total_mixin; try apply _ || by eauto.
   - intros n x [? Hx]; split; [by apply agree_valid_S|intros n' ?].
     rewrite -(Hx n'); last auto.
     symmetry; apply dist_le with n; try apply Hx; auto.
-  - intros x; apply agree_idemp.
+  - intros x. apply agree_idemp.
   - by intros n x y [(?&?&?) ?].
   - intros n x y1 y2 Hval Hx; exists (x,x); simpl; split.
     + by rewrite agree_idemp.
@@ -119,8 +119,10 @@ Qed.
 Canonical Structure agreeR : cmraT :=
   CMRAT (agree A) agree_cofe_mixin agree_cmra_mixin.
 
+Global Instance agree_total : CMRATotal agreeR.
+Proof. rewrite /CMRATotal; eauto. Qed.
 Global Instance agree_persistent (x : agree A) : Persistent x.
-Proof. done. Qed.
+Proof. by constructor. Qed.
 
 Program Definition to_agree (x : A) : agree A :=
   {| agree_car n := x; agree_is_valid n := True |}.

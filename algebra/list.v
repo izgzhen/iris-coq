@@ -124,7 +124,7 @@ Section cmra.
     | _, [] => l1
     | x :: l1, y :: l2 => x ⋅ y :: l1 ⋅ l2
     end.
-  Instance list_core : Core (list A) := fmap core.
+  Instance list_pcore : PCore (list A) := λ l, Some (core <$> l).
 
   Instance list_valid : Valid (list A) := Forall (λ x, ✓ x).
   Instance list_validN : ValidN (list A) := λ n, Forall (λ x, ✓{n} x).
@@ -147,7 +147,10 @@ Section cmra.
       by rewrite /= ?left_id_L ?right_id_L.
   Qed.
   Lemma list_lookup_core l i : core l !! i = core (l !! i).
-  Proof. revert i; induction l; intros [|i]; simpl; auto. Qed.
+  Proof.
+    rewrite /core /= list_lookup_fmap.
+    destruct (l !! i); by rewrite /= ?Some_core.
+  Qed.
 
   Lemma list_lookup_included l1 l2 : l1 ≼ l2 ↔ ∀ i, l1 !! i ≼ l2 !! i.
   Proof.
@@ -165,10 +168,11 @@ Section cmra.
 
   Definition list_cmra_mixin : CMRAMixin (list A).
   Proof.
-    split.
+    apply cmra_total_mixin.
+    - eauto.
     - intros n l l1 l2; rewrite !list_dist_lookup=> Hl i.
       by rewrite !list_lookup_op Hl.
-    - apply _.
+    - intros n l1 l2 Hl; by rewrite /core /= Hl.
     - intros n l1 l2; rewrite !list_dist_lookup !list_lookup_validN=> Hl ? i.
       by rewrite -Hl.
     - intros l. rewrite list_lookup_valid. setoid_rewrite list_lookup_validN.
@@ -196,8 +200,7 @@ Section cmra.
           [inversion_clear Hl; inversion_clear Hl'; auto ..|]; simplify_eq/=.
         exists (y1' :: l1', y2' :: l2'); repeat constructor; auto.
   Qed.
-  Canonical Structure listR :=
-    CMRAT (list A) list_cofe_mixin list_cmra_mixin.
+  Canonical Structure listR := CMRAT (list A) list_cofe_mixin list_cmra_mixin.
 
   Global Instance empty_list : Empty (list A) := [].
   Definition list_ucmra_mixin : UCMRAMixin (list A).
@@ -206,6 +209,7 @@ Section cmra.
     - constructor.
     - by intros l.
     - by inversion_clear 1.
+    - by constructor.
   Qed.
   Canonical Structure listUR :=
     UCMRAT (list A) list_cofe_mixin list_cmra_mixin list_ucmra_mixin.
@@ -218,8 +222,8 @@ Section cmra.
 
   Global Instance list_persistent l : (∀ x : A, Persistent x) → Persistent l.
   Proof.
-    intros ?; apply list_equiv_lookup=> i.
-    by rewrite list_lookup_core (persistent (l !! i)).
+    intros ?; constructor; apply list_equiv_lookup=> i.
+    by rewrite list_lookup_core (persistent_core (l !! i)).
   Qed.
 
   (** Internalized properties *)
@@ -294,8 +298,8 @@ Section properties.
 
   Lemma list_core_singletonM i (x : A) : core {[ i := x ]} ≡ {[ i := core x ]}.
   Proof.
-    rewrite /singletonM /list_singletonM /=.
-    induction i; constructor; auto using ucmra_core_unit.
+    rewrite /singletonM /list_singletonM.
+    by rewrite {1}/core /= fmap_app fmap_replicate (persistent_core ∅).
   Qed.
   Lemma list_op_singletonM i (x y : A) :
     {[ i := x ]} ⋅ {[ i := y ]} ≡ {[ i := x ⋅ y ]}.
@@ -305,19 +309,19 @@ Section properties.
   Qed.
   Lemma list_alter_singletonM f i x : alter f i {[i := x]} = {[i := f x]}.
   Proof.
-    rewrite /singletonM /list_singletonM /=.
-    induction i; f_equal/=; auto.
+    rewrite /singletonM /list_singletonM /=. induction i; f_equal/=; auto.
   Qed.
   Global Instance list_singleton_persistent i (x : A) :
     Persistent x → Persistent {[ i := x ]}.
-  Proof. intros. by rewrite /Persistent list_core_singletonM persistent. Qed.
+  Proof. by rewrite !persistent_total list_core_singletonM=> ->. Qed.
 
   (* Update *)
   Lemma list_update_updateP (P : A → Prop) (Q : list A → Prop) l1 x l2 :
     x ~~>: P → (∀ y, P y → Q (l1 ++ y :: l2)) → l1 ++ x :: l2 ~~>: Q.
   Proof.
-    intros Hx%option_updateP' HP n mf; rewrite list_lookup_validN=> Hm.
-    destruct (Hx n (mf !! length l1)) as ([y|]&H1&H2); simpl in *; try done.
+    intros Hx%option_updateP' HP.
+    apply cmra_total_updateP=> n mf; rewrite list_lookup_validN=> Hm.
+    destruct (Hx n (Some (mf !! length l1))) as ([y|]&H1&H2); simpl in *; try done.
     { move: (Hm (length l1)). by rewrite list_lookup_op list_lookup_middle. }
     exists (l1 ++ y :: l2); split; auto.
     apply list_lookup_validN=> i.

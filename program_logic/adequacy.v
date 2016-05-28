@@ -75,9 +75,9 @@ Lemma wp_adequacy_own Φ e1 t2 σ1 m σ2 :
   ∃ rs2 Φs', wptp 2 t2 (Φ :: Φs') rs2 ∧ wsat 2 ⊤ σ2 (big_op rs2).
 Proof.
   intros Hv ? [k ?]%rtc_nsteps.
-  eapply wp_adequacy_steps with (r1 := (Res ∅ (Excl σ1) m)); eauto; [|].
+  eapply wp_adequacy_steps with (r1 := (Res ∅ (Excl' σ1) m)); eauto; [|].
   { by rewrite Nat.add_comm; apply wsat_init, cmra_valid_validN. }
-  uPred.unseal; exists (Res ∅ (Excl σ1) ∅), (Res ∅ ∅ m); split_and?.
+  uPred.unseal; exists (Res ∅ (Excl' σ1) ∅), (Res ∅ ∅ m); split_and?.
   - by rewrite Res_op ?left_id ?right_id.
   - rewrite /ownP; uPred.unseal; rewrite /uPred_holds //=.
   - by apply ownG_spec.

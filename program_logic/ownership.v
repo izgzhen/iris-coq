@@ -3,7 +3,7 @@ From iris.program_logic Require Export model.
 Definition ownI {Λ Σ} (i : positive) (P : iProp Λ Σ) : iProp Λ Σ :=
   uPred_ownM (Res {[ i := to_agree (Next (iProp_unfold P)) ]} ∅ ∅).
 Arguments ownI {_ _} _ _%I.
-Definition ownP {Λ Σ} (σ: state Λ) : iProp Λ Σ := uPred_ownM (Res ∅ (Excl σ) ∅).
+Definition ownP {Λ Σ} (σ: state Λ) : iProp Λ Σ := uPred_ownM (Res ∅ (Excl' σ) ∅).
 Definition ownG {Λ Σ} (m: iGst Λ Σ) : iProp Λ Σ := uPred_ownM (Res ∅ ∅ m).
 Instance: Params (@ownI) 3.
 Instance: Params (@ownP) 2.
@@ -64,11 +64,12 @@ Proof.
   intros (?&?&?). rewrite /ownI; uPred.unseal.
   rewrite /uPred_holds/=res_includedN/= singleton_includedN; split.
   - intros [(P'&Hi&HP) _]; rewrite Hi.
-    constructor; symmetry; apply agree_valid_includedN; last done.
-    by apply lookup_validN_Some with (wld r) i.
+    constructor; symmetry; apply agree_valid_includedN.
+    + by apply lookup_validN_Some with (wld r) i.
+    + by destruct HP as [?| ->].
   - intros ?; split_and?; try apply ucmra_unit_leastN; eauto.
 Qed.
-Lemma ownP_spec n r σ : ✓{n} r → (ownP σ) n r ↔ pst r ≡ Excl σ.
+Lemma ownP_spec n r σ : ✓{n} r → (ownP σ) n r ↔ pst r ≡ Excl' σ.
 Proof.
   intros (?&?&?). rewrite /ownP; uPred.unseal.
   rewrite /uPred_holds /= res_includedN /= Excl_includedN //.

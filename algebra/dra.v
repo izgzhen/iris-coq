@@ -142,8 +142,8 @@ Hint Immediate dra_disjoint_move_l dra_disjoint_move_r.
 Lemma validity_valid_car_valid z : ✓ z → ✓ validity_car z.
 Proof. apply validity_prf. Qed.
 Hint Resolve validity_valid_car_valid.
-Program Instance validity_core : Core (validity A) := λ x,
-  Validity (core (validity_car x)) (✓ x) _.
+Program Instance validity_pcore : PCore (validity A) := λ x,
+  Some (Validity (core (validity_car x)) (✓ x) _).
 Solve Obligations with naive_solver eauto using dra_core_valid.
 Program Instance validity_op : Op (validity A) := λ x y,
   Validity (validity_car x ⋅ validity_car y)
@@ -152,7 +152,7 @@ Solve Obligations with naive_solver eauto using dra_op_valid.
 
 Definition validity_ra_mixin : RAMixin (validity A).
 Proof.
-  split.
+  apply ra_total_mixin; first eauto.
   - intros ??? [? Heq]; split; simpl; [|by intros (?&?&?); rewrite Heq].
     split; intros (?&?&?); split_and!;
       first [rewrite ?Heq; tauto|rewrite -?Heq; tauto|tauto].
@@ -175,6 +175,9 @@ Proof.
 Qed.
 Canonical Structure validityR : cmraT :=
   discreteR (validity A) validity_ra_mixin.
+
+Global Instance validity_cmra_total : CMRATotal validityR.
+Proof. rewrite /CMRATotal; eauto. Qed.
 
 Lemma validity_update x y :
   (∀ c, ✓ x → ✓ c → validity_car x ⊥ c → ✓ y ∧ validity_car y ⊥ c) → x ~~> y.

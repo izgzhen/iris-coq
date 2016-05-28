@@ -215,8 +215,10 @@ Definition uPred_wand_eq :
 
 Program Definition uPred_always_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n (core x) |}.
-Next Obligation. naive_solver eauto using uPred_mono, cmra_core_preservingN. Qed.
-Next Obligation. naive_solver eauto using uPred_closed, cmra_core_validN. Qed.
+Next Obligation.
+  intros M; naive_solver eauto using uPred_mono, @cmra_core_preservingN.
+Qed.
+Next Obligation. naive_solver eauto using uPred_closed, @cmra_core_validN. Qed.
 Definition uPred_always_aux : { x | x = @uPred_always_def }. by eexists. Qed.
 Definition uPred_always {M} := proj1_sig uPred_always_aux M.
 Definition uPred_always_eq :
@@ -431,7 +433,7 @@ Global Instance later_proper :
 Global Instance always_ne n : Proper (dist n ==> dist n) (@uPred_always M).
 Proof.
   intros P1 P2 HP.
-  unseal; split=> n' x; split; apply HP; eauto using cmra_core_validN.
+  unseal; split=> n' x; split; apply HP; eauto using @cmra_core_validN.
 Qed.
 Global Instance always_proper :
   Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_always M) := ne_proper _.
@@ -856,11 +858,11 @@ Proof. by unseal. Qed.
 Lemma always_elim P : □ P ⊢ P.
 Proof.
   unseal; split=> n x ? /=.
-  eauto using uPred_mono, cmra_included_core, cmra_included_includedN.
+  eauto using uPred_mono, @cmra_included_core, cmra_included_includedN.
 Qed.
 Lemma always_intro' P Q : □ P ⊢ Q → □ P ⊢ □ Q.
 Proof.
-  unseal=> HPQ; split=> n x ??; apply HPQ; simpl; auto using cmra_core_validN.
+  unseal=> HPQ; split=> n x ??; apply HPQ; simpl; auto using @cmra_core_validN.
   by rewrite cmra_core_idemp.
 Qed.
 Lemma always_and P Q : □ (P ∧ Q) ⊣⊢ (□ P ∧ □ Q).
@@ -1023,7 +1025,7 @@ Qed.
 Lemma always_ownM (a : M) : Persistent a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
 Proof.
   split=> n x /=; split; [by apply always_elim|unseal; intros Hx]; simpl.
-  rewrite -(persistent a). by apply cmra_core_preservingN.
+  rewrite -(persistent_core a). by apply cmra_core_preservingN.
 Qed.
 Lemma ownM_something : True ⊢ ∃ a, uPred_ownM a.
 Proof. unseal; split=> n x ??. by exists x; simpl. Qed.

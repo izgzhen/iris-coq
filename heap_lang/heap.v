@@ -19,8 +19,7 @@ Class heapG Σ := HeapG {
 Definition heapGF : gFunctor := authGF heapUR.
 
 Definition to_heap : state → heapUR := fmap (λ v, Frac 1 (DecAgree v)).
-Definition of_heap : heapUR → state :=
-  omap (mbind (maybe DecAgree ∘ snd) ∘ maybe2 Frac).
+Definition of_heap : heapUR → state := omap (maybe DecAgree ∘ frac_car).
 
 Section definitions.
   Context `{i : heapG Σ}.
@@ -70,7 +69,7 @@ Section heap.
     intros Hv. apply map_eq=> l'; destruct (decide (l' = l)) as [->|].
     - move: (Hv l). rewrite /of_heap lookup_insert
         lookup_omap (lookup_op _ h) lookup_singleton.
-      case _:(h !! l)=>[[q' [v'|]|]|] //=; last by move=> [??].
+      case _:(h !! l)=>[[q' [v'|]]|] //=; last by move=> [??].
       move=> [? /dec_agree_op_inv [->]]. by rewrite dec_agree_idemp.
     - rewrite /of_heap lookup_insert_ne // !lookup_omap.
       by rewrite (lookup_op _ h) lookup_singleton_ne // left_id_L.
@@ -79,10 +78,10 @@ Section heap.
     to_heap (<[l:=v]> σ) = <[l:=Frac 1 (DecAgree v)]> (to_heap σ).
   Proof. by rewrite /to_heap -fmap_insert. Qed.
   Lemma of_heap_None h l :
-    ✓ h → of_heap h !! l = None → h !! l = None ∨ h !! l ≡ Some FracUnit.
+    ✓ h → of_heap h !! l = None → h !! l = None.
   Proof.
     move=> /(_ l). rewrite /of_heap lookup_omap.
-    by case: (h !! l)=> [[q [v|]|]|] //=; destruct 1; auto.
+    by case: (h !! l)=> [[q [v|]]|] //=; destruct 1; auto.
   Qed.
   Lemma heap_store_valid l h v1 v2 :
     ✓ ({[l := Frac 1 (DecAgree v1)]} ⋅ h) →
@@ -90,7 +89,7 @@ Section heap.
   Proof.
     intros Hv l'; move: (Hv l'). destruct (decide (l' = l)) as [->|].
     - rewrite !lookup_op !lookup_singleton.
-      case: (h !! l)=>[x|]; [|done]=> /frac_valid_inv_l=>-> //.
+      by case: (h !! l)=> [x|] // /frac_valid_inv_l.
     - by rewrite !lookup_op !lookup_singleton_ne.
   Qed.
   Hint Resolve heap_store_valid.

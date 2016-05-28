@@ -88,6 +88,8 @@ Section cofe_mixin.
   Proof. apply (mixin_conv_compl _ (cofe_mixin A)). Qed.
 End cofe_mixin.
 
+Hint Extern 1 (_ ≡{_}≡ _) => apply equiv_dist; assumption.
+
 (** Discrete COFEs and Timeless elements *)
 (* TODO: On paper, We called these "discrete elements". I think that makes
    more sense. *)
@@ -151,8 +153,7 @@ Section cofe.
   Qed.
   Lemma timeless_iff n (x : A) `{!Timeless x} y : x ≡ y ↔ x ≡{n}≡ y.
   Proof.
-    split; intros; [by apply equiv_dist|].
-    apply (timeless _), dist_le with n; auto with lia.
+    split; intros; auto. apply (timeless _), dist_le with n; auto with lia.
   Qed.
 End cofe.
 
@@ -569,6 +570,9 @@ Section option.
   Proof. destruct 1; split; eauto. Qed.
   Global Instance Some_dist_inj : Inj (dist n) (dist n) (@Some A).
   Proof. by inversion_clear 1. Qed.
+  Global Instance from_option_ne {B} (R : relation B) (f : A → B) n :
+    Proper (dist n ==> R) f → Proper (R ==> dist n ==> R) (from_option f).
+  Proof. destruct 3; simpl; auto. Qed.
 
   Global Instance None_timeless : Timeless (@None A).
   Proof. inversion_clear 1; constructor. Qed.
@@ -592,14 +596,9 @@ End option.
 Typeclasses Opaque option_dist.
 Arguments optionC : clear implicits.
 
-Instance from_option_ne {A B : cofeT} (f : A → B) n :
-  Proper (dist n ==> dist n) f →
-  Proper (dist n ==> dist n ==> dist n) (from_option f).
-Proof. destruct 3; simpl; auto. Qed.
-
-Instance option_fmap_ne {A B : cofeT} (f : A → B) n:
-  Proper (dist n ==> dist n) f → Proper (dist n==>dist n) (fmap (M:=option) f).
-Proof. by intros Hf; destruct 1; constructor; apply Hf. Qed.
+Instance option_fmap_ne {A B : cofeT} n:
+  Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@fmap option _ A B).
+Proof. intros f f' Hf ?? []; constructor; auto. Qed.
 Definition optionC_map {A B} (f : A -n> B) : optionC A -n> optionC B :=
   CofeMor (fmap f : optionC A → optionC B).
 Instance optionC_map_ne A B n : Proper (dist n ==> dist n) (@optionC_map A B).

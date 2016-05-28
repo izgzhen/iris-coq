@@ -4,7 +4,7 @@ From iris.program_logic Require Export language.
 
 Record res (Λ : language) (A : cofeT) (M : cmraT) := Res {
   wld : gmapR positive (agreeR A);
-  pst : exclR (stateC Λ);
+  pst : optionR (exclR (stateC Λ));
   gst : M;
 }.
 Add Printing Constructor res.
@@ -73,8 +73,8 @@ Proof. destruct 3; constructor; by apply (timeless _). Qed.
 
 Instance res_op : Op (res Λ A M) := λ r1 r2,
   Res (wld r1 ⋅ wld r2) (pst r1 ⋅ pst r2) (gst r1 ⋅ gst r2).
-Instance res_core : Core (res Λ A M) := λ r,
-  Res (core (wld r)) (core (pst r)) (core (gst r)).
+Instance res_pcore : PCore (res Λ A M) := λ r,
+  Some $ Res (core (wld r)) (core (pst r)) (core (gst r)).
 Instance res_valid : Valid (res Λ A M) := λ r, ✓ wld r ∧ ✓ pst r ∧ ✓ gst r.
 Instance res_validN : ValidN (res Λ A M) := λ n r,
   ✓{n} wld r ∧ ✓{n} pst r ∧ ✓{n} gst r.
@@ -95,7 +95,8 @@ Proof.
 Qed.
 Definition res_cmra_mixin : CMRAMixin (res Λ A M).
 Proof.
-  split.
+  apply cmra_total_mixin.
+  - eauto.
   - by intros n x [???] ? [???]; constructor; cofe_subst.
   - by intros n [???] ? [???]; constructor; cofe_subst.
   - by intros n [???] ? [???] (?&?&?); split_and!; cofe_subst.
@@ -117,8 +118,7 @@ Proof.
       (cmra_extend n (gst r) (gst r1) (gst r2)) as ([m m']&?&?&?); auto.
     by exists (Res w σ m, Res w' σ' m').
 Qed.
-Canonical Structure resR :=
-  CMRAT (res Λ A M) res_cofe_mixin res_cmra_mixin.
+Canonical Structure resR := CMRAT (res Λ A M) res_cofe_mixin res_cmra_mixin.
 
 Instance res_empty : Empty (res Λ A M) := Res ∅ ∅ ∅.
 Definition res_ucmra_mixin : UCMRAMixin (res Λ A M).
@@ -127,12 +127,13 @@ Proof.
   - split_and!; apply ucmra_unit_valid.
   - by split; rewrite /= left_id.
   - apply _.
+  - do 2 constructor; simpl; apply (persistent_core _).
 Qed.
 Canonical Structure resUR :=
   UCMRAT (res Λ A M) res_cofe_mixin res_cmra_mixin res_ucmra_mixin.
 
 Definition update_pst (σ : state Λ) (r : res Λ A M) : res Λ A M :=
-  Res (wld r) (Excl σ) (gst r).
+  Res (wld r) (Excl' σ) (gst r).
 Definition update_gst (m : M) (r : res Λ A M) : res Λ A M :=
   Res (wld r) (pst r) m.
 
@@ -158,7 +159,7 @@ Proof. rewrite (comm _ r1) (comm _ (wld r1)); apply lookup_wld_op_l. Qed.
 Global Instance Res_timeless eσ m : Timeless m → Timeless (@Res Λ A M ∅ eσ m).
 Proof. by intros ? ? [???]; constructor; apply (timeless _). Qed.
 Global Instance Res_persistent w m: Persistent m → Persistent (@Res Λ A M w ∅ m).
-Proof. constructor; apply (persistent _). Qed.
+Proof. do 2 constructor; apply (persistent_core _). Qed.
 
 (** Internalized properties *)
 Lemma res_equivI {M'} r1 r2 :

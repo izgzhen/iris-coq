@@ -19,7 +19,7 @@ Definition iGst (Λ : language) (Σ : iFunctor) : ucmraT := Σ (iPreProp Λ Σ).
 Definition iRes Λ Σ := res Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
 Definition iResUR Λ Σ := resUR Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
 Definition iWld Λ Σ := gmap positive (agree (laterC (iPreProp Λ Σ))).
-Definition iPst Λ := excl (state Λ).
+Definition iPst Λ := option (excl (state Λ)).
 Definition iProp (Λ : language) (Σ : iFunctor) : cofeT := uPredC (iResUR Λ Σ).
 
 Parameter iProp_unfold: ∀ {Λ Σ}, iProp Λ Σ -n> iPreProp Λ Σ.
@@ -40,7 +40,7 @@ Definition iGst (Λ : language) (Σ : iFunctor) : ucmraT := Σ (iPreProp Λ Σ).
 Definition iRes Λ Σ := res Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
 Definition iResUR Λ Σ := resUR Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
 Definition iWld Λ Σ := gmap positive (agree (laterC (iPreProp Λ Σ))).
-Definition iPst Λ := excl (state Λ).
+Definition iPst Λ := option (excl (state Λ)).
 
 Definition iProp (Λ : language) (Σ : iFunctor) : cofeT := uPredC (iResUR Λ Σ).
 Definition iProp_unfold {Λ Σ} : iProp Λ Σ -n> iPreProp Λ Σ :=

@@ -58,7 +58,7 @@ Section auth.
     ▷ φ a ⊢ (|={E}=> ∃ γ, auth_ctx γ N φ ∧ auth_own γ a).
   Proof.
     iIntros {??} "Hφ". rewrite /auth_own /auth_ctx.
-    iPvs (own_alloc (Auth (Excl a) a)) as {γ} "Hγ"; first done.
+    iPvs (own_alloc (Auth (Excl' a) a)) as {γ} "Hγ"; first done.
     iRevert "Hγ"; rewrite auth_both_op; iIntros "[Hγ Hγ']".
     iPvs (inv_alloc N _ (auth_inv γ φ) with "[-Hγ']"); first done.
     { iNext. iExists a. by iFrame "Hφ". }

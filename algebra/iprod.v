@@ -85,7 +85,7 @@ Section iprod_cmra.
   Implicit Types f g : iprod B.
 
   Instance iprod_op : Op (iprod B) := λ f g x, f x ⋅ g x.
-  Instance iprod_core : Core (iprod B) := λ f x, core (f x).
+  Instance iprod_pcore : PCore (iprod B) := λ f, Some (λ x, core (f x)).
   Instance iprod_valid : Valid (iprod B) := λ f, ∀ x, ✓ f x.
   Instance iprod_validN : ValidN (iprod B) := λ n f, ∀ x, ✓{n} f x.
 
@@ -100,7 +100,8 @@ Section iprod_cmra.
 
   Lemma iprod_cmra_mixin : CMRAMixin (iprod B).
   Proof.
-    split.
+    apply cmra_total_mixin.
+    - eauto.
     - by intros n f1 f2 f3 Hf x; rewrite iprod_lookup_op (Hf x).
     - by intros n f1 f2 Hf x; rewrite iprod_lookup_core (Hf x).
     - by intros n f1 f2 Hf ? x; rewrite -(Hf x).
@@ -132,6 +133,7 @@ Section iprod_cmra.
     - intros x; apply ucmra_unit_valid.
     - by intros f x; rewrite iprod_lookup_op left_id.
     - intros f Hf x. by apply: timeless.
+    - constructor=> x. apply persistent_core, _.
   Qed.
   Canonical Structure iprodUR :=
     UCMRAT (iprod B) iprod_cofe_mixin iprod_cmra_mixin iprod_ucmra_mixin.
@@ -147,7 +149,8 @@ Section iprod_cmra.
     y1 ~~>: P → (∀ y2, P y2 → Q (iprod_insert x y2 g)) →
     iprod_insert x y1 g ~~>: Q.
   Proof.
-    intros Hy1 HP n gf Hg. destruct (Hy1 n (gf x)) as (y2&?&?).
+    intros Hy1 HP; apply cmra_total_updateP.
+    intros n gf Hg. destruct (Hy1 n (Some (gf x))) as (y2&?&?).
     { move: (Hg x). by rewrite iprod_lookup_op iprod_lookup_insert. }
     exists (iprod_insert x y2 g); split; [auto|].
     intros x'; destruct (decide (x' = x)) as [->|];
@@ -205,12 +208,12 @@ Section iprod_singleton.
   Proof.
     move=>x'; destruct (decide (x = x')) as [->|];
       by rewrite iprod_lookup_core ?iprod_lookup_singleton
-      ?iprod_lookup_singleton_ne // (persistent ∅).
+      ?iprod_lookup_singleton_ne // (persistent_core ∅).
   Qed.
 
   Global Instance iprod_singleton_persistent x (y : B x) :
     Persistent y → Persistent (iprod_singleton x y).
-  Proof. intros. rewrite /Persistent iprod_core_singleton. by f_equiv. Qed.
+  Proof. by rewrite !persistent_total iprod_core_singleton=> ->. Qed.
 
   Lemma iprod_op_singleton (x : A) (y1 y2 : B x) :
     iprod_singleton x y1 ⋅ iprod_singleton x y2 ≡ iprod_singleton x (y1 ⋅ y2).
@@ -235,7 +238,8 @@ Section iprod_singleton.
   Lemma iprod_singleton_updateP_empty x (P : B x → Prop) (Q : iprod B → Prop) :
     ∅ ~~>: P → (∀ y2, P y2 → Q (iprod_singleton x y2)) → ∅ ~~>: Q.
   Proof.
-    intros Hx HQ n gf Hg. destruct (Hx n (gf x)) as (y2&?&?); first apply Hg.
+    intros Hx HQ; apply cmra_total_updateP.
+    intros n gf Hg. destruct (Hx n (Some (gf x))) as (y2&?&?); first apply Hg.
     exists (iprod_singleton x y2); split; [by apply HQ|].
     intros x'; destruct (decide (x' = x)) as [->|].
     - by rewrite iprod_lookup_op iprod_lookup_singleton.
