@@ -334,9 +334,18 @@ Qed.
 End freshness.
 
 (* Allocation is a local update: Just use composition with a singleton map. *)
-(* Deallocation is *not* a local update. The trouble is that if we
-   own {[ i ↦ x ]}, then the frame could always own "core x", and prevent
-   deallocation. *)
+
+Global Instance gmap_delete_update :
+  LocalUpdate (λ m, ∃ x, m !! i = Some x ∧ ∀ y, ¬ ✓{0} (x ⋅ y)) (delete i).
+Proof.
+  split; first apply _.
+  intros n m1 m2 (x&Hix&Hv) Hm j; destruct (decide (i = j)) as [<-|].
+  - rewrite lookup_delete !lookup_op lookup_delete.
+    case Hiy: (m2 !! i)=> [y|]; last constructor.
+    destruct (Hv y); apply cmra_validN_le with n; last omega.
+    move: (Hm i). by rewrite lookup_op Hix Hiy.
+  - by rewrite lookup_op !lookup_delete_ne // lookup_op.
+Qed.
 
 (* Applying a local update at a position we own is a local update. *)
 Global Instance gmap_alter_update `{!LocalUpdate Lv L} i :
