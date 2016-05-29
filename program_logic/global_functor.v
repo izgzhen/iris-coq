@@ -16,6 +16,7 @@ Definition gid (Σ : gFunctors) := fin (projT1 Σ).
 
 (** Name of one instance of a particular CMRA in the ghost state. *)
 Definition gname := positive.
+Canonical Structure gnameC := leibnizC gname.
 
 Definition globalF (Σ : gFunctors) : iFunctor :=
   IFunctor (iprodURF (λ i, gmapURF gname (projT2 Σ i))).
