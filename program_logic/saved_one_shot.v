@@ -3,7 +3,7 @@ From iris.program_logic Require Export ghost_ownership.
 Import uPred.
 
 Class oneShotG (Λ : language) (Σ : gFunctors) (F : cFunctor) :=
-  one_shot_inG :> inG Λ Σ (one_shotR $ agreeR $ laterC $ F (iPreProp Λ (globalF Σ))).
+  one_shot_inG :> inG Λ Σ (one_shotR $ agreeR $ laterC $ F (iPrePropG Λ Σ)).
 Definition oneShotGF (F : cFunctor) : gFunctor :=
   GFunctor (one_shotRF (agreeRF (▶ F))).
 Instance inGF_oneShotG  `{inGF Λ Σ (oneShotGF F)} : oneShotG Λ Σ F.

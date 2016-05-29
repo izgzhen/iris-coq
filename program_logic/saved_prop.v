@@ -3,7 +3,7 @@ From iris.program_logic Require Export ghost_ownership.
 Import uPred.
 
 Class savedPropG (Λ : language) (Σ : gFunctors) (F : cFunctor) :=
-  saved_prop_inG :> inG Λ Σ (agreeR (laterC (F (iPreProp Λ (globalF Σ))))).
+  saved_prop_inG :> inG Λ Σ (agreeR (laterC (F (iPrePropG Λ Σ)))).
 Definition savedPropGF (F : cFunctor) : gFunctor :=
   GFunctor (agreeRF (▶ F)).
 Instance inGF_savedPropG  `{inGF Λ Σ (savedPropGF F)} : savedPropG Λ Σ F.
