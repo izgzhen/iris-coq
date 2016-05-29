@@ -306,6 +306,9 @@ Notation "(∘)" := compose (only parsing) : C_scope.
 Notation "( f ∘)" := (compose f) (only parsing) : C_scope.
 Notation "(∘ f )" := (λ g, compose g f) (only parsing) : C_scope.
 
+Instance impl_inhabited {A} `{Inhabited B} : Inhabited (A → B) :=
+  populate (λ _, inhabitant).
+
 (** Ensure that [simpl] unfolds [id], [compose], and [flip] when fully
 applied. *)
 Arguments id _ _ /.
