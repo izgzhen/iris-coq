@@ -25,26 +25,24 @@ Section one_shot.
   Global Instance ne_shot_own_persistent γ x : PersistentP (one_shot_own γ x).
   Proof. rewrite /one_shot_own; apply _. Qed.
 
-  Lemma one_shot_alloc_strong N (G : gset gname) :
-    True ⊢ pvs N N (∃ γ, ■ (γ ∉ G) ∧ one_shot_pending γ).
+  Lemma one_shot_alloc_strong E (G : gset gname) :
+    True ⊢ |={E}=> ∃ γ, ■ (γ ∉ G) ∧ one_shot_pending γ.
   Proof. by apply own_alloc_strong. Qed.
 
-  Lemma one_shot_alloc N : True ⊢ pvs N N (∃ γ, one_shot_pending γ).
+  Lemma one_shot_alloc E : True ⊢ |={E}=> ∃ γ, one_shot_pending γ.
   Proof. by apply own_alloc. Qed.
 
-  Lemma one_shot_init N γ x :
-    one_shot_pending γ ⊢ pvs N N (one_shot_own γ x).
+  Lemma one_shot_init E γ x : one_shot_pending γ ⊢ |={E}=> one_shot_own γ x.
   Proof. by apply own_update, one_shot_update_shoot. Qed.
 
-  Lemma one_shot_alloc_init N x : True ⊢ pvs N N (∃ γ, one_shot_own γ x).
+  Lemma one_shot_alloc_init E x : True ⊢ |={E}=> ∃ γ, one_shot_own γ x.
   Proof.
-    rewrite (one_shot_alloc N). apply pvs_strip_pvs.
+    rewrite (one_shot_alloc E). apply pvs_strip_pvs.
     apply exist_elim=>γ. rewrite -(exist_intro γ).
     apply one_shot_init.
   Qed.
 
-  Lemma one_shot_agree γ x y :
-    (one_shot_own γ x ★ one_shot_own γ y) ⊢ ▷(x ≡ y).
+  Lemma one_shot_agree γ x y : (one_shot_own γ x ★ one_shot_own γ y) ⊢ ▷(x ≡ y).
   Proof.
     rewrite -own_op own_valid one_shot_validI /= agree_validI.
     rewrite agree_equivI later_equivI.
