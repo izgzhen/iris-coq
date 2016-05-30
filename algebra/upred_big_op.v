@@ -154,19 +154,6 @@ Section gmap.
     m !! i = None →
     ([★ map] k↦y ∈ <[i:=x]> m, Φ k y) ⊣⊢ (Φ i x ★ [★ map] k↦y ∈ m, Φ k y).
   Proof. intros ?; by rewrite /uPred_big_sepM map_to_list_insert. Qed.
-  Lemma big_sepM_fn_insert (Ψ : K → A → uPred M → uPred M) (Φ : K → uPred M) m i x P :
-    m !! i = None →
-       ([★ map] k↦y ∈ <[i:=x]> m, Ψ k y (<[i:=P]> Φ k))
-    ⊣⊢ (Ψ i x P ★ [★ map] k↦y ∈ m, Ψ k y (Φ k)).
-  Proof.
-    intros. rewrite big_sepM_insert // fn_lookup_insert.
-    apply sep_proper, big_sepM_proper; auto=> k y ??.
-    by rewrite fn_lookup_insert_ne; last set_solver.
-  Qed.
-  Lemma big_sepM_fn_insert' (Φ : K → uPred M) m i x P :
-    m !! i = None →
-    ([★ map] k↦y ∈ <[i:=x]> m, <[i:=P]> Φ k) ⊣⊢ (P ★ [★ map] k↦y ∈ m, Φ k).
-  Proof. apply (big_sepM_fn_insert (λ _ _, id)). Qed.
 
   Lemma big_sepM_delete Φ (m : gmap K A) i x :
     m !! i = Some x →
@@ -182,6 +169,35 @@ Section gmap.
     by rewrite big_sepM_empty right_id.
   Qed.
 
+  Lemma big_sepM_fmap {B} (f : A → B) (Φ : K → B → uPred M) m :
+    ([★ map] k↦y ∈ f <$> m, Φ k y) ⊣⊢ ([★ map] k↦y ∈ m, Φ k (f y)).
+  Proof.
+    rewrite /uPred_big_sepM map_to_list_fmap -list_fmap_compose.
+    f_equiv; apply reflexive_eq, list_fmap_ext. by intros []. done.
+  Qed.
+
+  Lemma big_sepM_insert_override (Φ : K → uPred M) (m : gmap K A) i x :
+    m !! i = Some x →
+    ([★ map] k↦_ ∈ <[i:=x]> m, Φ k) ⊣⊢ ([★ map] k↦_ ∈ m, Φ k).
+  Proof.
+    intros. rewrite -insert_delete big_sepM_insert ?lookup_delete //.
+    by rewrite -big_sepM_delete.
+  Qed.
+
+  Lemma big_sepM_fn_insert (Ψ : K → A → uPred M → uPred M) (Φ : K → uPred M) m i x P :
+    m !! i = None →
+       ([★ map] k↦y ∈ <[i:=x]> m, Ψ k y (<[i:=P]> Φ k))
+    ⊣⊢ (Ψ i x P ★ [★ map] k↦y ∈ m, Ψ k y (Φ k)).
+  Proof.
+    intros. rewrite big_sepM_insert // fn_lookup_insert.
+    apply sep_proper, big_sepM_proper; auto=> k y ??.
+    by rewrite fn_lookup_insert_ne; last set_solver.
+  Qed.
+  Lemma big_sepM_fn_insert' (Φ : K → uPred M) m i x P :
+    m !! i = None →
+    ([★ map] k↦y ∈ <[i:=x]> m, <[i:=P]> Φ k) ⊣⊢ (P ★ [★ map] k↦y ∈ m, Φ k).
+  Proof. apply (big_sepM_fn_insert (λ _ _, id)). Qed.
+
   Lemma big_sepM_sepM Φ Ψ m :
        ([★ map] k↦x ∈ m, Φ k x ★ Ψ k x)
     ⊣⊢ (([★ map] k↦x ∈ m, Φ k x) ★ ([★ map] k↦x ∈ m, Ψ k x)).
@@ -190,6 +206,7 @@ Section gmap.
     induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?right_id //.
     by rewrite IH -!assoc (assoc _ (Ψ _ _)) [(Ψ _ _ ★ _)%I]comm -!assoc.
   Qed.
+
   Lemma big_sepM_later Φ m :
     (▷ [★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, ▷ Φ k x).
   Proof.

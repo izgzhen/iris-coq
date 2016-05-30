@@ -647,6 +647,19 @@ Proof.
   intros. rewrite <-(map_of_to_list m1).
   auto using map_of_list_proper, NoDup_fst_map_to_list.
 Qed.
+
+Lemma map_of_list_nil {A} : map_of_list (@nil (K * A)) = ∅.
+Proof. done. Qed.
+Lemma map_of_list_cons {A} (l : list (K * A)) i x :
+  map_of_list ((i, x) :: l) = <[i:=x]>(map_of_list l).
+Proof. done. Qed.
+Lemma map_of_list_fmap {A B} (f : A → B) l :
+  map_of_list (prod_map id f <$> l) = f <$> map_of_list l.
+Proof.
+  induction l as [|[i x] l IH]; csimpl; rewrite ?fmap_empty; auto.
+  rewrite <-map_of_list_cons; simpl. by rewrite IH, <-fmap_insert.
+Qed.
+
 Lemma map_to_list_empty {A} : map_to_list ∅ = @nil (K * A).
 Proof.
   apply elem_of_nil_inv. intros [i x].
@@ -668,11 +681,16 @@ Proof.
   intros; apply NoDup_contains; auto using NoDup_map_to_list.
   intros [i x]. rewrite !elem_of_map_to_list; eauto using lookup_weaken.
 Qed.
-Lemma map_of_list_nil {A} : map_of_list (@nil (K * A)) = ∅.
-Proof. done. Qed.
-Lemma map_of_list_cons {A} (l : list (K * A)) i x :
-  map_of_list ((i, x) :: l) = <[i:=x]>(map_of_list l).
-Proof. done. Qed.
+Lemma map_to_list_fmap {A B} (f : A → B) m :
+  map_to_list (f <$> m) ≡ₚ prod_map id f <$> map_to_list m.
+Proof.
+  assert (NoDup ((prod_map id f <$> map_to_list m).*1)).
+  { erewrite <-list_fmap_compose, (list_fmap_ext _ fst) by done.
+    apply NoDup_fst_map_to_list. }
+  rewrite <-(map_of_to_list m) at 1.
+  by rewrite <-map_of_list_fmap, map_to_of_list.
+Qed.
+
 Lemma map_to_list_empty_inv_alt {A}  (m : M A) : map_to_list m ≡ₚ [] → m = ∅.
 Proof. rewrite <-map_to_list_empty. apply map_to_list_inj. Qed.
 Lemma map_to_list_empty_inv {A} (m : M A) : map_to_list m = [] → m = ∅.
@@ -687,6 +705,7 @@ Proof.
   rewrite Hperm, map_to_list_insert, map_to_of_list;
     auto using not_elem_of_map_of_list_1.
 Qed.
+
 Lemma map_choose {A} (m : M A) : m ≠ ∅ → ∃ i x, m !! i = Some x.
 Proof.
   intros Hemp. destruct (map_to_list m) as [|[i x] l] eqn:Hm.
