@@ -116,7 +116,7 @@ Proof. uPred.unseal. by destruct x. Qed.
 
 (** ** Local updates *)
 Global Instance excl_local_update y :
-  LocalUpdate (λ x, if x is Excl _ then ✓ y else False) (λ _, y).
+  LocalUpdate (λ _, True) (λ _, y).
 Proof. split. apply _. by destruct y; intros n [a|] [b'|]. Qed.
 
 (** Updates *)
