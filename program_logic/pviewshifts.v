@@ -1,4 +1,5 @@
 From iris.prelude Require Export co_pset.
+From iris.algebra Require Export upred_big_op.
 From iris.program_logic Require Export model.
 From iris.program_logic Require Import ownership wsat.
 Local Hint Extern 10 (_ ≤ _) => omega.
@@ -163,6 +164,20 @@ Lemma pvs_wand_r E1 E2 P Q : ((|={E1,E2}=> P) ★ (P -★ Q)) ⊢ (|={E1,E2}=> Q
 Proof. by rewrite pvs_frame_r wand_elim_r. Qed.
 Lemma pvs_sep E P Q : ((|={E}=> P) ★ (|={E}=> Q)) ⊢ (|={E}=> P ★ Q).
 Proof. rewrite pvs_frame_r pvs_frame_l pvs_trans //. set_solver. Qed.
+Lemma pvs_big_sepM `{Countable K} {A} E (Φ : K → A → iProp Λ Σ) (m : gmap K A) :
+  ([★ map] k↦x ∈ m, |={E}=> Φ k x) ⊢ (|={E}=> [★ map] k↦x ∈ m, Φ k x).
+Proof.
+  rewrite /uPred_big_sepM.
+  induction (map_to_list m) as [|[i x] l IH]; csimpl; auto using pvs_intro.
+  by rewrite IH pvs_sep.
+Qed.
+Lemma pvs_big_sepS `{Countable A} E (Φ : A → iProp Λ Σ) X :
+  ([★ set] x ∈ X, |={E}=> Φ x) ⊢ (|={E}=> [★ set] x ∈ X, Φ x).
+Proof.
+  rewrite /uPred_big_sepS.
+  induction (elements X) as [|x l IH]; csimpl; csimpl; auto using pvs_intro.
+  by rewrite IH pvs_sep.
+Qed.
 
 Lemma pvs_mask_frame' E1 E1' E2 E2' P :
   E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' →
