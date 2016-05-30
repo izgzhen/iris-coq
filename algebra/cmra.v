@@ -320,10 +320,10 @@ Lemma cmra_pcore_r' x cx : pcore x ≡ Some cx → x ⋅ cx ≡ x.
 Proof. intros (cx'&?&->)%equiv_Some_inv_r'. by apply cmra_pcore_r. Qed. 
 Lemma cmra_pcore_idemp' x cx : pcore x ≡ Some cx → pcore cx ≡ Some cx.
 Proof. intros (cx'&?&->)%equiv_Some_inv_r'. eauto using cmra_pcore_idemp. Qed. 
-Lemma cmra_pcore_pcore x cx : pcore x = Some cx → cx ⋅ cx ≡ cx.
-Proof. eauto using cmra_pcore_r', cmra_pcore_idemp. Qed.
-Lemma cmra_pcore_pcore' x cx : pcore x ≡ Some cx → cx ⋅ cx ≡ cx.
-Proof. eauto using cmra_pcore_r', cmra_pcore_idemp'. Qed.
+Lemma cmra_pcore_dup x cx : pcore x = Some cx → cx ≡ cx ⋅ cx.
+Proof. intros; symmetry; eauto using cmra_pcore_r', cmra_pcore_idemp. Qed.
+Lemma cmra_pcore_dup' x cx : pcore x ≡ Some cx → cx ≡ cx ⋅ cx.
+Proof. intros; symmetry; eauto using cmra_pcore_r', cmra_pcore_idemp'. Qed.
 Lemma cmra_pcore_validN n x cx : ✓{n} x → pcore x = Some cx → ✓{n} cx.
 Proof.
   intros Hvx Hx%cmra_pcore_l. move: Hvx; rewrite -Hx. apply cmra_validN_op_l.
@@ -332,6 +332,10 @@ Lemma cmra_pcore_valid x cx : ✓ x → pcore x = Some cx → ✓ cx.
 Proof.
   intros Hv Hx%cmra_pcore_l. move: Hv; rewrite -Hx. apply cmra_valid_op_l.
 Qed.
+
+(** ** Persistent elements *)
+Lemma persistent_dup x `{!Persistent x} : x ≡ x ⋅ x.
+Proof. by apply cmra_pcore_dup' with x. Qed.
 
 (** ** Order *)
 Lemma cmra_included_includedN n x y : x ≼ y → x ≼{n} y.
@@ -428,8 +432,8 @@ Section total_core.
 
   Lemma cmra_core_r x : x ⋅ core x ≡ x.
   Proof. by rewrite (comm _ x) cmra_core_l. Qed.
-  Lemma cmra_core_core x : core x ⋅ core x ≡ core x.
-  Proof. by rewrite -{2}(cmra_core_idemp x) cmra_core_r. Qed.
+  Lemma cmra_core_dup x : core x ≡ core x ⋅ core x.
+  Proof. by rewrite -{3}(cmra_core_idemp x) cmra_core_r. Qed.
   Lemma cmra_core_validN n x : ✓{n} x → ✓{n} core x.
   Proof. rewrite -{1}(cmra_core_l x); apply cmra_validN_op_l. Qed.
   Lemma cmra_core_valid x : ✓ x → ✓ core x.
