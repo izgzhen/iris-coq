@@ -683,6 +683,7 @@ Lemma const_elim_r φ Q R : (φ → Q ⊢ R) → (Q ∧ ■ φ) ⊢ R.
 Proof. intros; apply const_elim with φ; eauto. Qed.
 Lemma const_equiv (φ : Prop) : φ → (■ φ) ⊣⊢ True.
 Proof. intros; apply (anti_symm _); auto using const_intro. Qed.
+
 Lemma eq_refl' {A : cofeT} (a : A) P : P ⊢ (a ≡ a).
 Proof. rewrite (True_intro P). apply eq_refl. Qed.
 Hint Resolve eq_refl'.
@@ -690,6 +691,10 @@ Lemma equiv_eq {A : cofeT} P (a b : A) : a ≡ b → P ⊢ (a ≡ b).
 Proof. by intros ->. Qed.
 Lemma eq_sym {A : cofeT} (a b : A) : (a ≡ b) ⊢ (b ≡ a).
 Proof. apply (eq_rewrite a b (λ b, b ≡ a)%I); auto. solve_proper. Qed.
+Lemma eq_iff P Q : (P ≡ Q) ⊢ (P ↔ Q).
+Proof.
+  apply (eq_rewrite P Q (λ Q, P ↔ Q))%I; first solve_proper; auto using iff_refl.
+Qed.
 
 (* BI connectives *)
 Lemma sep_mono P P' Q Q' : P ⊢ Q → P' ⊢ Q' → (P ★ P') ⊢ (Q ★ Q').
