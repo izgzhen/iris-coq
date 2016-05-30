@@ -112,7 +112,7 @@ Section gmap.
   Implicit Types Φ Ψ : K → A → uPred M.
 
   Lemma big_sepM_mono Φ Ψ m1 m2 :
-    m2 ⊆ m1 → (∀ x k, m2 !! k = Some x → Φ k x ⊢ Ψ k x) →
+    m2 ⊆ m1 → (∀ k x, m2 !! k = Some x → Φ k x ⊢ Ψ k x) →
     ([★ map] k ↦ x ∈ m1, Φ k x) ⊢ ([★ map] k ↦ x ∈ m2, Ψ k x).
   Proof.
     intros HX HΦ. trans ([★ map] k↦x ∈ m2, Φ k x)%I.
@@ -121,7 +121,7 @@ Section gmap.
       apply Forall_forall=> -[i x] ? /=. by apply HΦ, elem_of_map_to_list.
   Qed.
   Lemma big_sepM_proper Φ Ψ m1 m2 :
-    m1 ≡ m2 → (∀ x k, m1 !! k = Some x → m2 !! k = Some x → Φ k x ⊣⊢ Ψ k x) →
+    m1 ≡ m2 → (∀ k x, m1 !! k = Some x → m2 !! k = Some x → Φ k x ⊣⊢ Ψ k x) →
     ([★ map] k ↦ x ∈ m1, Φ k x) ⊣⊢ ([★ map] k ↦ x ∈ m2, Ψ k x).
   Proof.
     (* FIXME: Coq bug since 8.5pl1. Without the @ in [@lookup_weaken] it gives
@@ -149,14 +149,30 @@ Section gmap.
 
   Lemma big_sepM_empty Φ : ([★ map] k↦x ∈ ∅, Φ k x) ⊣⊢ True.
   Proof. by rewrite /uPred_big_sepM map_to_list_empty. Qed.
+
   Lemma big_sepM_insert Φ (m : gmap K A) i x :
     m !! i = None →
     ([★ map] k↦y ∈ <[i:=x]> m, Φ k y) ⊣⊢ (Φ i x ★ [★ map] k↦y ∈ m, Φ k y).
   Proof. intros ?; by rewrite /uPred_big_sepM map_to_list_insert. Qed.
+  Lemma big_sepM_fn_insert (Ψ : K → A → uPred M → uPred M) (Φ : K → uPred M) m i x P :
+    m !! i = None →
+       ([★ map] k↦y ∈ <[i:=x]> m, Ψ k y (<[i:=P]> Φ k))
+    ⊣⊢ (Ψ i x P ★ [★ map] k↦y ∈ m, Ψ k y (Φ k)).
+  Proof.
+    intros. rewrite big_sepM_insert // fn_lookup_insert.
+    apply sep_proper, big_sepM_proper; auto=> k y ??.
+    by rewrite fn_lookup_insert_ne; last set_solver.
+  Qed.
+  Lemma big_sepM_fn_insert' (Φ : K → uPred M) m i x P :
+    m !! i = None →
+    ([★ map] k↦y ∈ <[i:=x]> m, <[i:=P]> Φ k) ⊣⊢ (P ★ [★ map] k↦y ∈ m, Φ k).
+  Proof. apply (big_sepM_fn_insert (λ _ _, id)). Qed.
+
   Lemma big_sepM_delete Φ (m : gmap K A) i x :
     m !! i = Some x →
     ([★ map] k↦y ∈ m, Φ k y) ⊣⊢ (Φ i x ★ [★ map] k↦y ∈ delete i m, Φ k y).
   Proof. intros. by rewrite -big_sepM_insert ?lookup_delete // insert_delete. Qed.
+
   Lemma big_sepM_singleton Φ i x : ([★ map] k↦y ∈ {[i:=x]}, Φ k y) ⊣⊢ Φ i x.
   Proof.
     rewrite -insert_empty big_sepM_insert/=; last auto using lookup_empty.
@@ -222,7 +238,7 @@ Section gset.
   Lemma big_sepS_insert Φ X x :
     x ∉ X → ([★ set] y ∈ {[ x ]} ∪ X, Φ y) ⊣⊢ (Φ x ★ [★ set] y ∈ X, Φ y).
   Proof. intros. by rewrite /uPred_big_sepS elements_union_singleton. Qed.
-  Lemma big_sepS_insert' (Ψ : A → uPred M → uPred M) Φ X x P :
+  Lemma big_sepS_fn_insert (Ψ : A → uPred M → uPred M) Φ X x P :
     x ∉ X →
        ([★ set] y ∈ {[ x ]} ∪ X, Ψ y (<[x:=P]> Φ y))
     ⊣⊢ (Ψ x P ★ [★ set] y ∈ X, Ψ y (Φ y)).
@@ -231,9 +247,9 @@ Section gset.
     apply sep_proper, big_sepS_proper; auto=> y ??.
     by rewrite fn_lookup_insert_ne; last set_solver.
   Qed.
-  Lemma big_sepS_insert'' Φ X x P :
+  Lemma big_sepS_fn_insert' Φ X x P :
     x ∉ X → ([★ set] y ∈ {[ x ]} ∪ X, <[x:=P]> Φ y) ⊣⊢ (P ★ [★ set] y ∈ X, Φ y).
-  Proof. apply (big_sepS_insert' (λ y, id)). Qed.
+  Proof. apply (big_sepS_fn_insert (λ y, id)). Qed.
 
   Lemma big_sepS_delete Φ X x :
     x ∈ X → ([★ set] y ∈ X, Φ y) ⊣⊢ (Φ x ★ [★ set] y ∈ X ∖ {[ x ]}, Φ y).
