@@ -53,7 +53,8 @@ Proof. intros ?; by rewrite /big_opM map_to_list_insert. Qed.
 Lemma big_opM_delete m i x :
   m !! i = Some x → x ⋅ big_opM (delete i m) ≡ big_opM m.
 Proof.
-  intros. by rewrite -{2}(insert_delete m i x) // big_opM_insert ?lookup_delete.
+  intros. rewrite -{2}(insert_id m i x) // -insert_delete.
+  by rewrite big_opM_insert ?lookup_delete.
 Qed.
 Lemma big_opM_singleton i x : big_opM ({[i := x]} : gmap K A) ≡ x.
 Proof.
@@ -69,7 +70,7 @@ Proof.
   destruct (map_equiv_lookup_l (<[i:=x]> m1) m2 i x)
     as (y&?&Hxy); auto using lookup_insert.
   rewrite Hxy -big_opM_insert; last auto using lookup_delete.
-  by rewrite insert_delete.
+  by rewrite insert_delete insert_id.
 Qed.
 Lemma big_opM_lookup_valid n m i x : ✓{n} big_opM m → m !! i = Some x → ✓{n} x.
 Proof.

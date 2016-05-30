@@ -366,13 +366,8 @@ Qed.
 Lemma delete_insert {A} (m : M A) i x :
   m !! i = None → delete i (<[i:=x]>m) = m.
 Proof. apply delete_partial_alter. Qed.
-Lemma insert_delete {A} (m : M A) i x :
-  m !! i = Some x → <[i:=x]>(delete i m) = m.
-Proof.
-  intros Hmi. unfold delete, map_delete, insert, map_insert.
-  rewrite <-partial_alter_compose. unfold compose. rewrite <-Hmi.
-  by apply partial_alter_self_alt.
-Qed.
+Lemma insert_delete {A} (m : M A) i x : <[i:=x]>(delete i m) = <[i:=x]> m.
+Proof. symmetry; apply (partial_alter_compose (λ _, Some x)). Qed.
 Lemma delete_subseteq {A} (m : M A) i : delete i m ⊆ m.
 Proof.
   rewrite !map_subseteq_spec. intros j x. rewrite lookup_delete_Some. tauto.
@@ -473,8 +468,8 @@ Lemma insert_subset_inv {A} (m1 m2 : M A) i x :
   ∃ m2', m2 = <[i:=x]>m2' ∧ m1 ⊂ m2' ∧ m2' !! i = None.
 Proof.
   intros Hi Hm1m2. exists (delete i m2). split_and?.
-  - rewrite insert_delete. done. eapply lookup_weaken, strict_include; eauto.
-    by rewrite lookup_insert.
+  - rewrite insert_delete, insert_id. done.
+    eapply lookup_weaken, strict_include; eauto. by rewrite lookup_insert.
   - eauto using insert_delete_subset.
   - by rewrite lookup_delete.
 Qed.

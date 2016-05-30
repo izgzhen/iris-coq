@@ -171,7 +171,10 @@ Section gmap.
   Lemma big_sepM_delete Φ (m : gmap K A) i x :
     m !! i = Some x →
     ([★ map] k↦y ∈ m, Φ k y) ⊣⊢ (Φ i x ★ [★ map] k↦y ∈ delete i m, Φ k y).
-  Proof. intros. by rewrite -big_sepM_insert ?lookup_delete // insert_delete. Qed.
+  Proof.
+    intros. rewrite -big_sepM_insert ?lookup_delete //.
+    by rewrite insert_delete insert_id.
+  Qed.
 
   Lemma big_sepM_singleton Φ i x : ([★ map] k↦y ∈ {[i:=x]}, Φ k y) ⊣⊢ Φ i x.
   Proof.
