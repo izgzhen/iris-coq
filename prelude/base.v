@@ -316,7 +316,6 @@ Arguments compose _ _ _ _ _ _ /.
 Arguments flip _ _ _ _ _ _ /.
 Arguments const _ _ _ _ /.
 Typeclasses Transparent id compose flip const.
-Instance: Params (@pair) 2.
 
 Definition fun_map {A A' B B'} (f: A' → A) (g: B → B') (h : A → B) : A' → B' :=
   g ∘ h ∘ f.
@@ -401,6 +400,8 @@ Notation "(, y )" := (λ x, (x,y)) (only parsing) : C_scope.
 
 Notation "p .1" := (fst p) (at level 10, format "p .1").
 Notation "p .2" := (snd p) (at level 10, format "p .2").
+
+Instance: Params (@pair) 2.
 
 Notation curry := prod_curry.
 Notation uncurry := prod_uncurry.

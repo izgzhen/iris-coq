@@ -717,14 +717,34 @@ Qed.
 Class SepDestruct (p : bool) (P Q1 Q2 : uPred M) :=
   sep_destruct : □?p P ⊢ □?p (Q1 ★ Q2).
 Arguments sep_destruct : clear implicits.
+Class OpDestruct {A : cmraT} (a b1 b2 : A) :=
+  op_destruct : a ≡ b1 ⋅ b2.
+Arguments op_destruct {_} _ _ _ {_}.
+
+Global Instance op_destruct_op {A : cmraT} (a b : A) : OpDestruct (a ⋅ b) a b.
+Proof. by rewrite /OpDestruct. Qed.
+Global Instance op_destruct_persistent {A : cmraT} (a : A) :
+  Persistent a → OpDestruct a a a.
+Proof. intros; apply (persistent_dup a). Qed.
+Global Instance op_destruct_pair {A B : cmraT} (a b1 b2 : A) (a' b1' b2' : B) :
+  OpDestruct a b1 b2 → OpDestruct a' b1' b2' →
+  OpDestruct (a,a') (b1,b1') (b2,b2').
+Proof. by constructor. Qed.
+Global Instance op_destruct_Some {A : cmraT} (a : A) b1 b2 :
+  OpDestruct a b1 b2 → OpDestruct (Some a) (Some b1) (Some b2).
+Proof. by constructor. Qed.
+
 Lemma sep_destruct_spatial p P Q1 Q2 : P ⊢ (Q1 ★ Q2) → SepDestruct p P Q1 Q2.
 Proof. rewrite /SepDestruct=> ->. by rewrite always_if_sep. Qed.
 
 Global Instance sep_destruct_sep p P Q : SepDestruct p (P ★ Q) P Q.
-Proof. by apply sep_destruct_spatial. Qed.
-Global Instance sep_destruct_ownM p (a b : M) :
-  SepDestruct p (uPred_ownM (a ⋅ b)) (uPred_ownM a) (uPred_ownM b).
-Proof. apply sep_destruct_spatial. by rewrite ownM_op. Qed.
+Proof. rewrite /SepDestruct. by rewrite always_if_sep. Qed.
+Global Instance sep_destruct_ownM p (a b1 b2 : M) :
+  OpDestruct a b1 b2 →
+  SepDestruct p (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
+Proof.
+  rewrite /OpDestruct /SepDestruct=> ->. by rewrite ownM_op always_if_sep.
+Qed.
 
 Global Instance sep_destruct_and P Q : SepDestruct true (P ∧ Q) P Q.
 Proof. by rewrite /SepDestruct /= always_and_sep. Qed.

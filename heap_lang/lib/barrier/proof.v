@@ -88,9 +88,9 @@ Proof.
     iNext. iRewrite "Heq" in "HQR". iIntros "HP". iSpecialize ("HPΨ" with "HP").
     iDestruct (big_sepS_delete _ _ i with "HPΨ") as "[HΨ HPΨ]"; first done.
     iDestruct ("HQR" with "HΨ") as "[HR1 HR2]".
-    rewrite -assoc_L !big_sepS_insert''; [|abstract set_solver ..].
+    rewrite -assoc_L !big_sepS_fn_insert'; [|abstract set_solver ..].
     by iFrame "HR1 HR2".
-  - rewrite -assoc_L !big_sepS_insert'; [|abstract set_solver ..].
+  - rewrite -assoc_L !big_sepS_fn_insert; [|abstract set_solver ..].
     by repeat iSplit.
 Qed.
 

@@ -768,3 +768,4 @@ Tactic Notation "iRewrite" "-" open_constr(t) "in" constr(H) :=
 (* Make sure that by and done solve trivial things in proof mode *)
 Hint Extern 0 (of_envs _ ⊢ _) => by iPureIntro.
 Hint Extern 0 (of_envs _ ⊢ _) => iAssumption.
+Hint Resolve uPred.eq_refl'. (* Maybe make an [iReflexivity] tactic *)
