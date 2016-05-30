@@ -681,6 +681,20 @@ Proof. done. Qed.
 Global Instance sep_split_ownM (a b : M) :
   SepSplit (uPred_ownM (a ⋅ b)) (uPred_ownM a) (uPred_ownM b) | 99.
 Proof. by rewrite /SepSplit ownM_op. Qed.
+Global Instance sep_split_big_sepM
+    `{Countable K} {A} (Φ Ψ1 Ψ2 : K → A → uPred M) m :
+  (∀ k x, SepSplit (Φ k x) (Ψ1 k x) (Ψ2 k x)) →
+  SepSplit ([★ map] k ↦ x ∈ m, Φ k x)
+    ([★ map] k ↦ x ∈ m, Ψ1 k x) ([★ map] k ↦ x ∈ m, Ψ2 k x).
+Proof.
+  rewrite /SepSplit=> ?. rewrite -big_sepM_sepM. by apply big_sepM_mono.
+Qed.
+Global Instance sep_split_big_sepS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) X :
+  (∀ x, SepSplit (Φ x) (Ψ1 x) (Ψ2 x)) →
+  SepSplit ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ1 x) ([★ set] x ∈ X, Ψ2 x).
+Proof.
+  rewrite /SepSplit=> ?. rewrite -big_sepS_sepS. by apply big_sepS_mono.
+Qed.
 
 Lemma tac_sep_split Δ Δ1 Δ2 lr js P Q1 Q2 :
   SepSplit P Q1 Q2 →
@@ -758,6 +772,23 @@ Proof. intros; by rewrite /SepDestruct /= always_and_sep_r. Qed.
 Global Instance sep_destruct_later p P Q1 Q2 :
   SepDestruct p P Q1 Q2 → SepDestruct p (▷ P) (▷ Q1) (▷ Q2).
 Proof. by rewrite /SepDestruct -later_sep !always_if_later=> ->. Qed.
+
+Global Instance sep_destruct_big_sepM
+    `{Countable K} {A} (Φ Ψ1 Ψ2 : K → A → uPred M) p m :
+  (∀ k x, SepDestruct p (Φ k x) (Ψ1 k x) (Ψ2 k x)) →
+  SepDestruct p ([★ map] k ↦ x ∈ m, Φ k x)
+    ([★ map] k ↦ x ∈ m, Ψ1 k x) ([★ map] k ↦ x ∈ m, Ψ2 k x).
+Proof.
+  rewrite /SepDestruct=> ?. rewrite -big_sepM_sepM !big_sepM_always_if.
+  by apply big_sepM_mono.
+Qed.
+Global Instance sep_destruct_big_sepS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) p X :
+  (∀ x, SepDestruct p (Φ x) (Ψ1 x) (Ψ2 x)) →
+  SepDestruct p ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ1 x) ([★ set] x ∈ X, Ψ2 x).
+Proof.
+  rewrite /SepDestruct=> ?. rewrite -big_sepS_sepS !big_sepS_always_if.
+  by apply big_sepS_mono.
+Qed.
 
 Lemma tac_sep_destruct Δ Δ' i p j1 j2 P P1 P2 Q :
   envs_lookup i Δ = Some (p, P) → SepDestruct p P P1 P2 →

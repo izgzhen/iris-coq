@@ -214,6 +214,18 @@ Section gmap.
     induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?later_True //.
     by rewrite later_sep IH.
   Qed.
+
+  Lemma big_sepM_always Φ m :
+    (□ [★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, □ Φ k x).
+  Proof.
+    rewrite /uPred_big_sepM.
+    induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?always_const //.
+    by rewrite always_sep IH.
+  Qed.
+
+  Lemma big_sepM_always_if p Φ m :
+    (□?p [★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, □?p Φ k x).
+  Proof. destruct p; simpl; auto using big_sepM_always. Qed.
 End gmap.
 
 (** ** Big ops over finite sets *)
@@ -295,6 +307,17 @@ Section gset.
     induction (elements X) as [|x l IH]; csimpl; first by rewrite ?later_True.
     by rewrite later_sep IH.
   Qed.
+
+  Lemma big_sepS_always Φ X : (□ [★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, □ Φ y).
+  Proof.
+    rewrite /uPred_big_sepS.
+    induction (elements X) as [|x l IH]; csimpl; first by rewrite ?always_const.
+    by rewrite always_sep IH.
+  Qed.
+
+  Lemma big_sepS_always_if q Φ X :
+    (□?q [★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, □?q Φ y).
+  Proof. destruct q; simpl; auto using big_sepS_always. Qed.
 End gset.
 
 (** ** Persistence *)
