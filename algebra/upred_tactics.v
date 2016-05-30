@@ -1,3 +1,4 @@
+From iris.prelude Require Import gmap.
 From iris.algebra Require Export upred.
 From iris.algebra Require Export upred_big_op.
 Import uPred.
@@ -226,6 +227,21 @@ Proof. intros ??; red. by rewrite later_or; apply or_mono. Qed.
 Global Instance strip_later_r_sep P1 P2 Q1 Q2 :
   StripLaterR P1 Q1 → StripLaterR P2 Q2 → StripLaterR (P1 ★ P2) (Q1 ★ Q2).
 Proof. intros ??; red. by rewrite later_sep; apply sep_mono. Qed.
+
+Global Instance strip_later_r_big_sepM `{Countable K} {A}
+    (Φ Ψ : K → A → uPred M) (m : gmap K A) :
+  (∀ x k, StripLaterR (Φ k x) (Ψ k x)) →
+  StripLaterR ([★ map] k ↦ x ∈ m, Φ k x) ([★ map] k ↦ x ∈ m, Ψ k x).
+Proof.
+  rewrite /StripLaterR=> ?. rewrite big_sepM_later; by apply big_sepM_mono.
+Qed.
+Global Instance strip_later_r_big_sepS `{Countable A}
+    (Φ Ψ : A → uPred M) (X : gset A) :
+  (∀ x, StripLaterR (Φ x) (Ψ x)) →
+  StripLaterR ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ x).
+Proof.
+  rewrite /StripLaterR=> ?. rewrite big_sepS_later; by apply big_sepS_mono.
+Qed.
 
 Global Instance strip_later_l_later P : StripLaterL (▷ P) P.
 Proof. done. Qed.
