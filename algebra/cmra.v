@@ -1143,6 +1143,21 @@ Section option.
   Proof. intros. destruct mx; apply _. Qed.
 
   (** Updates *)
+  Global Instance option_local_fmap_update L Lv :
+    LocalUpdate Lv L →
+    LocalUpdate (λ mx, if mx is Some x then Lv x else False) (fmap L).
+  Proof.
+    split; first apply _.
+    intros n [x|] [z|]; constructor; by eauto using (local_updateN L).
+  Qed.
+  Global Instance option_local_const_update Lv y :
+    LocalUpdate Lv (λ _, y) →
+    LocalUpdate (λ mx, if mx is Some x then Lv x else False) (λ _, Some y).
+  Proof.
+    split; first apply _.
+    intros n [x|] [z|]; constructor; by eauto using (local_updateN (λ _, y)).
+  Qed.
+
   Lemma option_updateP (P : A → Prop) (Q : option A → Prop) x :
     x ~~>: P → (∀ y, P y → Q (Some y)) → Some x ~~>: Q.
   Proof.
