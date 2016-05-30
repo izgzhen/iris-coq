@@ -100,6 +100,17 @@ Proof. by destruct x as [[[]|]]. Qed.
 Lemma own_validN n (x : auth A) : ✓{n} x → ✓{n} own x.
 Proof. destruct x as [[[]|]]; naive_solver eauto using cmra_validN_includedN. Qed.
 
+Lemma auth_valid_discrete `{CMRADiscrete A} x :
+  ✓ x ↔ match authoritative x with
+        | Excl' a => own x ≼ a ∧ ✓ a
+        | None => ✓ own x
+        | ExclBot' => False
+        end.
+Proof.
+  destruct x as [[[?|]|] ?]; simpl; try done.
+  setoid_rewrite <-cmra_discrete_included_iff; naive_solver eauto using 0.
+Qed.
+
 Lemma auth_cmra_mixin : CMRAMixin (auth A).
 Proof.
   apply cmra_total_mixin.
