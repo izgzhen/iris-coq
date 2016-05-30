@@ -150,18 +150,22 @@ Section gmap.
   Lemma big_sepM_empty Φ : ([★ map] k↦x ∈ ∅, Φ k x) ⊣⊢ True.
   Proof. by rewrite /uPred_big_sepM map_to_list_empty. Qed.
 
-  Lemma big_sepM_insert Φ (m : gmap K A) i x :
+  Lemma big_sepM_insert Φ m i x :
     m !! i = None →
     ([★ map] k↦y ∈ <[i:=x]> m, Φ k y) ⊣⊢ (Φ i x ★ [★ map] k↦y ∈ m, Φ k y).
   Proof. intros ?; by rewrite /uPred_big_sepM map_to_list_insert. Qed.
 
-  Lemma big_sepM_delete Φ (m : gmap K A) i x :
+  Lemma big_sepM_delete Φ m i x :
     m !! i = Some x →
     ([★ map] k↦y ∈ m, Φ k y) ⊣⊢ (Φ i x ★ [★ map] k↦y ∈ delete i m, Φ k y).
   Proof.
     intros. rewrite -big_sepM_insert ?lookup_delete //.
     by rewrite insert_delete insert_id.
   Qed.
+
+  Lemma big_sepM_lookup Φ m i x :
+    m !! i = Some x → ([★ map] k↦y ∈ m, Φ k y) ⊢ Φ i x.
+  Proof. intros. by rewrite big_sepM_delete // sep_elim_l. Qed.
 
   Lemma big_sepM_singleton Φ i x : ([★ map] k↦y ∈ {[i:=x]}, Φ k y) ⊣⊢ Φ i x.
   Proof.
@@ -176,7 +180,7 @@ Section gmap.
     f_equiv; apply reflexive_eq, list_fmap_ext. by intros []. done.
   Qed.
 
-  Lemma big_sepM_insert_override (Φ : K → uPred M) (m : gmap K A) i x :
+  Lemma big_sepM_insert_override (Φ : K → uPred M) m i x :
     m !! i = Some x →
     ([★ map] k↦_ ∈ <[i:=x]> m, Φ k) ⊣⊢ ([★ map] k↦_ ∈ m, Φ k).
   Proof.
@@ -226,6 +230,33 @@ Section gmap.
   Lemma big_sepM_always_if p Φ m :
     (□?p [★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, □?p Φ k x).
   Proof. destruct p; simpl; auto using big_sepM_always. Qed.
+
+  Lemma big_sepM_forall Φ m :
+    (∀ k x, PersistentP (Φ k x)) →
+    ([★ map] k↦x ∈ m, Φ k x) ⊣⊢ (∀ k x, m !! k = Some x → Φ k x).
+  Proof.
+    intros. apply (anti_symm _).
+    { apply forall_intro=> k; apply forall_intro=> x.
+      apply impl_intro_l, const_elim_l=> ?; by apply big_sepM_lookup. }
+    rewrite /uPred_big_sepM. setoid_rewrite <-elem_of_map_to_list.
+    induction (map_to_list m) as [|[i x] l IH]; csimpl; auto.
+    rewrite -always_and_sep_l; apply and_intro.
+    - rewrite (forall_elim i) (forall_elim x) const_equiv; last by left.
+      by rewrite True_impl.
+    - rewrite -IH. apply forall_mono=> k; apply forall_mono=> y.
+      apply impl_intro_l, const_elim_l=> ?. rewrite const_equiv; last by right.
+      by rewrite True_impl.
+  Qed.
+
+  Lemma big_sepM_impl Φ Ψ m :
+      (□ (∀ k x, m !! k = Some x → Φ k x → Ψ k x) ∧ [★ map] k↦x ∈ m, Φ k x)
+    ⊢ [★ map] k↦x ∈ m, Ψ k x.
+  Proof.
+    rewrite always_and_sep_l. do 2 setoid_rewrite always_forall.
+    setoid_rewrite always_impl; setoid_rewrite always_const.
+    rewrite -big_sepM_forall -big_sepM_sepM. apply big_sepM_mono; auto=> k x ?.
+    by rewrite -always_wand_impl always_elim wand_elim_l.
+  Qed.
 End gmap.
 
 (** ** Big ops over finite sets *)
@@ -290,6 +321,9 @@ Section gset.
     by rewrite -union_difference_L; last set_solver.
   Qed.
 
+  Lemma big_sepS_elem_of Φ X x : x ∈ X → ([★ set] y ∈ X, Φ y) ⊢ Φ x.
+  Proof. intros. by rewrite big_sepS_delete // sep_elim_l. Qed.
+
   Lemma big_sepS_singleton Φ x : ([★ set] y ∈ {[ x ]}, Φ y) ⊣⊢ Φ x.
   Proof. intros. by rewrite /uPred_big_sepS elements_singleton /= right_id. Qed.
 
@@ -318,6 +352,30 @@ Section gset.
   Lemma big_sepS_always_if q Φ X :
     (□?q [★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, □?q Φ y).
   Proof. destruct q; simpl; auto using big_sepS_always. Qed.
+
+  Lemma big_sepS_forall Φ X :
+    (∀ x, PersistentP (Φ x)) → ([★ set] x ∈ X, Φ x) ⊣⊢ (∀ x, ■ (x ∈ X) → Φ x).
+  Proof.
+    intros. apply (anti_symm _).
+    { apply forall_intro=> x.
+      apply impl_intro_l, const_elim_l=> ?; by apply big_sepS_elem_of. }
+    rewrite /uPred_big_sepS. setoid_rewrite <-elem_of_elements.
+    induction (elements X) as [|x l IH]; csimpl; auto.
+    rewrite -always_and_sep_l; apply and_intro.
+    - rewrite (forall_elim x) const_equiv; last by left. by rewrite True_impl.
+    - rewrite -IH. apply forall_mono=> y.
+      apply impl_intro_l, const_elim_l=> ?. rewrite const_equiv; last by right.
+      by rewrite True_impl.
+  Qed.
+
+  Lemma big_sepS_impl Φ Ψ X :
+      (□ (∀ x, ■ (x ∈ X) → Φ x → Ψ x) ∧ [★ set] x ∈ X, Φ x) ⊢ [★ set] x ∈ X, Ψ x.
+  Proof.
+    rewrite always_and_sep_l always_forall.
+    setoid_rewrite always_impl; setoid_rewrite always_const.
+    rewrite -big_sepS_forall -big_sepS_sepS. apply big_sepS_mono; auto=> x ?.
+    by rewrite -always_wand_impl always_elim wand_elim_l.
+  Qed.
 End gset.
 
 (** ** Persistence *)
