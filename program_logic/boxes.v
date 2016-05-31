@@ -32,11 +32,30 @@ Section box_defs.
                          inv N (box_inv γ (Φ γ)))%I.
 End box_defs.
 
+Instance: Params (@box_own_auth) 4.
+Instance: Params (@box_own_prop) 4.
+Instance: Params (@box_inv) 4.
+Instance: Params (@box_slice) 5.
+Instance: Params (@box) 5.
+
 Section box.
 Context `{boxG Λ Σ} (N : namespace).
 Notation iProp := (iPropG Λ Σ).
 Implicit Types P Q : iProp.
 
+(* FIXME: solve_proper picks the eq ==> instance for Next. *)
+Global Instance box_own_prop_ne n γ : Proper (dist n ==> dist n) (box_own_prop γ).
+Proof. intros P P' HP. by rewrite /box_own_prop HP. Qed.
+Global Instance box_inv_ne n γ : Proper (dist n ==> dist n) (box_inv γ).
+Proof. solve_proper. Qed.
+Global Instance box_slice_ne n γ : Proper (dist n ==> dist n) (box_slice N γ).
+Proof. solve_proper. Qed.
+Global Instance box_ne n f : Proper (dist n ==> dist n) (box N f).
+Proof. solve_proper. Qed.
+Global Instance box_slice_persistent γ P : PersistentP (box_slice N γ P).
+Proof. apply _. Qed.
+
+(* This should go automatic *)
 Instance box_own_auth_timeless γ
   (a : auth (option (excl bool))) : TimelessP (box_own_auth γ a).
 Proof. apply own_timeless, pair_timeless; apply _. Qed.
@@ -188,3 +207,5 @@ Proof.
   - iExists Φ; iSplit; by rewrite big_sepM_fmap.
 Qed.
 End box.
+
+Typeclasses Opaque box_slice box.
