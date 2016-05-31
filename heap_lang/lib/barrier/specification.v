@@ -26,7 +26,7 @@ Proof.
     iSplit; [done|]; iIntros {l} "?"; iExists l; by iSplit.
   - iIntros {l P} "! [Hl HP]". by iApply signal_spec; iFrame "Hl HP".
   - iIntros {l P} "! Hl". iApply wait_spec; iFrame "Hl". by iIntros "?".
-  - iIntros {l P Q} "! Hl". by iApply recv_split.
+  - intros; by apply recv_split.
   - apply recv_weaken.
 Qed.
 End spec.

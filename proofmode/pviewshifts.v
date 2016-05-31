@@ -57,7 +57,7 @@ Lemma tac_pvs_elim Δ Δ' E1 E2 E3 i p P' E1' E2' P Q :
   (E1' = E1 ∧ E2' = E2 ∧ E2 ⊆ E1 ∪ E3
   ∨ E2 = E2' ∪ E1 ∖ E1' ∧ E2' ⊥ E1 ∖ E1' ∧ E1' ⊆ E1 ∧ E2' ⊆ E1' ∪ E3) →
   envs_replace i p false (Esnoc Enil i P) Δ = Some Δ' →
-  Δ' ⊢ (|={E2,E3}=> Q) → Δ ⊢ |={E1,E3}=> Q.
+  (Δ' ={E2,E3}=> Q) → Δ ={E1,E3}=> Q.
 Proof.
   intros ? -> HE ? HQ. rewrite envs_replace_sound //; simpl.
   rewrite always_if_elim right_id pvs_frame_r wand_elim_r HQ.
@@ -78,7 +78,7 @@ Qed.
 Lemma tac_pvs_timeless Δ Δ' E1 E2 i p P Q :
   envs_lookup i Δ = Some (p, ▷ P)%I → TimelessP P →
   envs_simple_replace i p (Esnoc Enil i P) Δ = Some Δ' →
-  Δ' ⊢ (|={E1,E2}=> Q) → Δ ⊢ (|={E1,E2}=> Q).
+  (Δ' ={E1,E2}=> Q) → Δ ={E1,E2}=> Q.
 Proof.
   intros ??? HQ. rewrite envs_simple_replace_sound //; simpl.
   rewrite always_if_later (pvs_timeless E1 (□?_ P)%I) pvs_frame_r.

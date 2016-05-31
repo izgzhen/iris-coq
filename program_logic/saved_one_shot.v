@@ -26,16 +26,16 @@ Section one_shot.
   Proof. rewrite /one_shot_own; apply _. Qed.
 
   Lemma one_shot_alloc_strong E (G : gset gname) :
-    True ⊢ |={E}=> ∃ γ, ■ (γ ∉ G) ∧ one_shot_pending γ.
+    True ={E}=> ∃ γ, ■ (γ ∉ G) ∧ one_shot_pending γ.
   Proof. by apply own_alloc_strong. Qed.
 
-  Lemma one_shot_alloc E : True ⊢ |={E}=> ∃ γ, one_shot_pending γ.
+  Lemma one_shot_alloc E : True ={E}=> ∃ γ, one_shot_pending γ.
   Proof. by apply own_alloc. Qed.
 
-  Lemma one_shot_init E γ x : one_shot_pending γ ⊢ |={E}=> one_shot_own γ x.
+  Lemma one_shot_init E γ x : one_shot_pending γ ={E}=> one_shot_own γ x.
   Proof. by apply own_update, one_shot_update_shoot. Qed.
 
-  Lemma one_shot_alloc_init E x : True ⊢ |={E}=> ∃ γ, one_shot_own γ x.
+  Lemma one_shot_alloc_init E x : True ={E}=> ∃ γ, one_shot_own γ x.
   Proof.
     rewrite (one_shot_alloc E). apply pvs_strip_pvs.
     apply exist_elim=>γ. rewrite -(exist_intro γ).

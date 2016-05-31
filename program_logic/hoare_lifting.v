@@ -55,7 +55,7 @@ Proof.
     (λ e2 σ2 ef, ■ φ e2 σ2 ef ★ P)%I);
     try by (rewrite /φ'; eauto using atomic_not_val, atomic_step).
   repeat iSplit.
-  - by iApply vs_reflexive.
+  - by iIntros "! ?".
   - iIntros {e2 σ2 ef} "! (#Hφ&Hown&HP)"; iPvsIntro.
     iSplitL "Hown". by iSplit. iSplit. by iDestruct "Hφ" as %[_ ?]. done.
   - iIntros {e2 σ2 ef} "! [Hown #Hφ]"; iDestruct "Hφ" as %[[v2 <-%of_to_val] ?].

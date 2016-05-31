@@ -10,36 +10,14 @@ Instance: Params (@vs) 4.
 Notation "P ={ E1 , E2 }=> Q" := (vs E1 E2 P%I Q%I)
   (at level 99, E1,E2 at level 50, Q at level 200,
    format "P  ={ E1 , E2 }=>  Q") : uPred_scope.
-Notation "P ={ E1 , E2 }=> Q" := (True ⊢ (P ={E1,E2}=> Q)%I)
-  (at level 99, E1, E2 at level 50, Q at level 200,
-   format "P  ={ E1 , E2 }=>  Q") : C_scope.
 Notation "P ={ E }=> Q" := (P ={E,E}=> Q)%I
   (at level 99, E at level 50, Q at level 200,
    format "P  ={ E }=>  Q") : uPred_scope.
-Notation "P ={ E }=> Q" := (True ⊢ (P ={E}=> Q)%I)
-  (at level 99, E at level 50, Q at level 200,
-   format "P  ={ E }=>  Q") : C_scope.
-
-Notation "P <={ E1 , E2 }=> Q" := ((P ={E1,E2}=> Q) ∧ (Q ={E2,E1}=> P))%I
-  (at level 99, E1,E2 at level 50, Q at level 200,
-   format "P  <={ E1 , E2 }=>  Q") : uPred_scope.
-Notation "P <={ E1 , E2 }=> Q" := (True ⊢ (P <={E1,E2}=> Q)%I)
-  (at level 99, E1, E2 at level 50, Q at level 200,
-   format "P  <={ E1 , E2 }=>  Q") : C_scope.
-Notation "P <={ E }=> Q" := (P <={E,E}=> Q)%I
-  (at level 99, E at level 50, Q at level 200,
-   format "P  <={ E }=>  Q") : uPred_scope.
-Notation "P <={ E }=> Q" := (True ⊢ (P <={E}=> Q)%I)
-  (at level 99, E at level 50, Q at level 200,
-   format "P  <={ E }=>  Q") : C_scope.
 
 Section vs.
 Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q R : iProp Λ Σ.
 Implicit Types N : namespace.
-
-Lemma vs_alt E1 E2 P Q : P ⊢ (|={E1,E2}=> Q) → P ={E1,E2}=> Q.
-Proof. iIntros {Hvs} "! ?". by iApply Hvs. Qed.
 
 Global Instance vs_ne E1 E2 n :
   Proper (dist n ==> dist n ==> dist n) (@vs Λ Σ E1 E2).
@@ -57,9 +35,9 @@ Global Instance vs_mono' E1 E2 :
 Proof. solve_proper. Qed.
 
 Lemma vs_false_elim E1 E2 P : False ={E1,E2}=> P.
-Proof. iIntros "! []". Qed.
+Proof. iIntros "[]". Qed.
 Lemma vs_timeless E P : TimelessP P → ▷ P ={E}=> P.
-Proof. iIntros {?} "! HP". by iApply pvs_timeless. Qed.
+Proof. by apply pvs_timeless. Qed.
 
 Lemma vs_transitive E1 E2 E3 P Q R :
   E2 ⊆ E1 ∪ E3 → ((P ={E1,E2}=> Q) ∧ (Q ={E2,E3}=> R)) ⊢ (P ={E1,E3}=> R).
@@ -71,7 +49,7 @@ Qed.
 Lemma vs_transitive' E P Q R : ((P ={E}=> Q) ∧ (Q ={E}=> R)) ⊢ (P ={E}=> R).
 Proof. apply vs_transitive; set_solver. Qed.
 Lemma vs_reflexive E P : P ={E}=> P.
-Proof. by iIntros "! HP". Qed.
+Proof. by iIntros "HP". Qed.
 
 Lemma vs_impl E P Q : □ (P → Q) ⊢ (P ={E}=> Q).
 Proof. iIntros "#HPQ ! HP". by iApply "HPQ". Qed.
@@ -98,21 +76,5 @@ Proof.
 Qed.
 
 Lemma vs_alloc N P : ▷ P ={N}=> inv N P.
-Proof. iIntros "! HP". by iApply inv_alloc. Qed.
+Proof. iIntros "HP". by iApply inv_alloc. Qed.
 End vs.
-
-Section vs_ghost.
-Context `{inG Λ Σ A}.
-Implicit Types a : A.
-Implicit Types P Q R : iPropG Λ Σ.
-
-Lemma vs_own_updateP E γ a φ :
-  a ~~>: φ → own γ a ={E}=> ∃ a', ■ φ a' ∧ own γ a'.
-Proof. by intros; apply vs_alt, own_updateP. Qed.
-
-Lemma vs_update E γ a a' : a ~~> a' → own γ a ={E}=> own γ a'.
-Proof. by intros; apply vs_alt, own_update. Qed.
-End vs_ghost.
-
-Lemma vs_own_empty `{inG Λ Σ (A:ucmraT)} E γ : True ={E}=> own γ ∅.
-Proof. by intros; eapply vs_alt, own_empty. Qed.

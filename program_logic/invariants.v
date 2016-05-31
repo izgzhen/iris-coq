@@ -25,7 +25,7 @@ Proof. rewrite /inv; apply _. Qed.
 Lemma always_inv N P : □ inv N P ⊣⊢ inv N P.
 Proof. by rewrite always_always. Qed.
 
-Lemma inv_alloc N E P : nclose N ⊆ E → ▷ P ⊢ |={E}=> inv N P.
+Lemma inv_alloc N E P : nclose N ⊆ E → ▷ P ={E}=> inv N P.
 Proof.
   intros. rewrite -(pvs_mask_weaken N) //.
   by rewrite /inv (pvs_allocI N); last apply coPset_suffixes_infinite.

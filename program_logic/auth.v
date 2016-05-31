@@ -17,7 +17,7 @@ Proof. split; try apply _. apply: inGF_inG. Qed.
 
 Section definitions.
   Context `{authG Λ Σ A} (γ : gname).
-  Definition auth_own  (a : A) : iPropG Λ Σ :=
+  Definition auth_own (a : A) : iPropG Λ Σ :=
     own γ (◯ a).
   Definition auth_inv (φ : A → iPropG Λ Σ) : iPropG Λ Σ :=
     (∃ a, own γ (● a) ★ φ a)%I.
@@ -55,7 +55,7 @@ Section auth.
 
   Lemma auth_alloc N E a :
     ✓ a → nclose N ⊆ E →
-    ▷ φ a ⊢ (|={E}=> ∃ γ, auth_ctx γ N φ ∧ auth_own γ a).
+    ▷ φ a ={E}=> ∃ γ, auth_ctx γ N φ ∧ auth_own γ a.
   Proof.
     iIntros {??} "Hφ". rewrite /auth_own /auth_ctx.
     iPvs (own_alloc (Auth (Excl' a) a)) as {γ} "Hγ"; first done.
@@ -65,7 +65,7 @@ Section auth.
     iPvsIntro; iExists γ; by iFrame "Hγ'".
   Qed.
 
-  Lemma auth_empty γ E : True ⊢ |={E}=> auth_own γ ∅.
+  Lemma auth_empty γ E : True ={E}=> auth_own γ ∅.
   Proof. by rewrite -own_empty. Qed.
 
   Context {V} (fsa : FSA Λ (globalF Σ) V) `{!FrameShiftAssertion fsaV fsa}.

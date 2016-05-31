@@ -88,7 +88,7 @@ Section iris.
 
   Lemma demo_7 E1 E2 E P :
     E1 ⊆ E2 → E ⊆ E1 →
-    (|={E1,E}=> ▷ P) ⊢ (|={E2,E ∪ E2 ∖ E1}=> ▷ P).
+    (|={E1,E}=> ▷ P) ={E2,E ∪ E2 ∖ E1}=> ▷ P.
   Proof.
     iIntros {? ?} "Hpvs".
     iPvs "Hpvs"; first set_solver.

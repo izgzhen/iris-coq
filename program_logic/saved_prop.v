@@ -24,10 +24,10 @@ Section saved_prop.
   Proof. rewrite /saved_prop_own; apply _. Qed.
 
   Lemma saved_prop_alloc_strong E x (G : gset gname) :
-    True ⊢ |={E}=> ∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ x.
+    True ={E}=> ∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ x.
   Proof. by apply own_alloc_strong. Qed.
 
-  Lemma saved_prop_alloc E x : True ⊢ |={E}=> ∃ γ, saved_prop_own γ x.
+  Lemma saved_prop_alloc E x : True ={E}=> ∃ γ, saved_prop_own γ x.
   Proof. by apply own_alloc. Qed.
 
   Lemma saved_prop_agree γ x y :

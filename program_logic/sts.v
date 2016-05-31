@@ -64,12 +64,12 @@ Section sts.
      sts_frag_included. *)
   Lemma sts_ownS_weaken E γ S1 S2 T1 T2 :
     T2 ⊆ T1 → S1 ⊆ S2 → sts.closed S2 T2 →
-    sts_ownS γ S1 T1 ⊢ (|={E}=> sts_ownS γ S2 T2).
+    sts_ownS γ S1 T1 ={E}=> sts_ownS γ S2 T2.
   Proof. intros ???. by apply own_update, sts_update_frag. Qed.
 
   Lemma sts_own_weaken E γ s S T1 T2 :
     T2 ⊆ T1 → s ∈ S → sts.closed S T2 →
-    sts_own γ s T1 ⊢ (|={E}=> sts_ownS γ S T2).
+    sts_own γ s T1 ={E}=> sts_ownS γ S T2.
   Proof. intros ???. by apply own_update, sts_update_frag_up. Qed.
 
   Lemma sts_ownS_op γ S1 S2 T1 T2 :
@@ -79,7 +79,7 @@ Section sts.
 
   Lemma sts_alloc E N s :
     nclose N ⊆ E →
-    ▷ φ s ⊢ (|={E}=> ∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s)).
+    ▷ φ s ={E}=> ∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s).
   Proof.
     iIntros {?} "Hφ". rewrite /sts_ctx /sts_own.
     iPvs (own_alloc (sts_auth s (⊤ ∖ sts.tok s))) as {γ} "Hγ".
