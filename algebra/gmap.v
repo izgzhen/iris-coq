@@ -336,7 +336,7 @@ End freshness.
 (* Allocation is a local update: Just use composition with a singleton map. *)
 
 Global Instance gmap_delete_update :
-  LocalUpdate (λ m, ∃ x, m !! i = Some x ∧ ∀ y, ¬ ✓{0} (x ⋅ y)) (delete i).
+  LocalUpdate (λ m, ∃ x, m !! i = Some x ∧ Exclusive x) (delete i).
 Proof.
   split; first apply _.
   intros n m1 m2 (x&Hix&Hv) Hm j; destruct (decide (i = j)) as [<-|].

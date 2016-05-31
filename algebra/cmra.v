@@ -123,9 +123,8 @@ Class Persistent {A : cmraT} (x : A) := persistent : pcore x ≡ Some x.
 Arguments persistent {_} _ {_}.
 
 (** * Exclusive elements (i.e., elements that cannot have a frame). *)
-Class Exclusive {A : cmraT} (x : A) :=
-  exclusiveN_r : ∀ n y, ✓{n} (x ⋅ y) → False.
-Arguments exclusiveN_r {_} _ {_} _ _ _.
+Class Exclusive {A : cmraT} (x : A) := exclusive0_r : ∀ y, ✓{0} (x ⋅ y) → False.
+Arguments exclusive0_r {_} _ {_} _ _.
 
 (** * CMRAs whose core is total *)
 (** The function [core] may return a dummy when used on CMRAs without total
@@ -343,6 +342,9 @@ Lemma persistent_dup x `{!Persistent x} : x ≡ x ⋅ x.
 Proof. by apply cmra_pcore_dup' with x. Qed.
 
 (** ** Exclusive elements *)
+Lemma exclusiveN_r x `{!Exclusive x} :
+  ∀ (n : nat) (y : A), ✓{n} (x ⋅ y) → False.
+Proof. intros ???%cmra_validN_le%exclusive0_r; auto with arith. Qed.
 Lemma exclusiveN_l x `{!Exclusive x} :
   ∀ (n : nat) (y : A), ✓{n} (y ⋅ x) → False.
 Proof. intros ??. rewrite comm. by apply exclusiveN_r. Qed.
@@ -534,7 +536,7 @@ Proof. split; auto with typeclass_instances. Qed.
 
 Global Instance exclusive_local_update y :
   LocalUpdate Exclusive (λ _, y) | 1000.
-Proof. split. apply _. by intros ??? H ?%H. Qed.
+Proof. split. apply _. by intros ?????%exclusiveN_r. Qed.
 
 (** ** Updates *)
 Lemma cmra_update_updateP x y : x ~~> y ↔ x ~~>: (y =).
@@ -964,10 +966,10 @@ Section prod.
 
   Global Instance pair_exclusive_l x y :
     Exclusive x → Exclusive (x,y).
-  Proof. by intros ??[][?%exclusiveN_r]. Qed.
+  Proof. by intros ?[][?%exclusive0_r]. Qed.
   Global Instance pair_exclusive_r x y :
     Exclusive y → Exclusive (x,y).
-  Proof. by intros ??[][??%exclusiveN_r]. Qed.
+  Proof. by intros ?[][??%exclusive0_r]. Qed.
 
   Lemma prod_updateP P1 P2 (Q : A * B → Prop)  x :
     x.1 ~~>: P1 → x.2 ~~>: P2 → (∀ a b, P1 a → P2 b → Q (a,b)) → x ~~>: Q.

@@ -154,7 +154,7 @@ Proof. by uPred.unseal. Qed.
 (** Exclusive *)
 Global Instance frac_full_exclusive a : Exclusive (Frac 1 a).
 Proof.
-  move => ?[[??]?][/Qcle_not_lt[]]; simpl in *.
+  move => [[??]?][/Qcle_not_lt[]]; simpl in *.
   by rewrite -{1}(Qcplus_0_r 1) -Qcplus_lt_mono_l.
 Qed.
 
