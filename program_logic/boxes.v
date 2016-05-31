@@ -161,7 +161,7 @@ Proof.
   iDestruct (box_own_auth_agree γ b true with "[#]")
     as "%"; subst; first by iFrame "Hγ".
   iFrame "HQ".
-  iPvs (box_own_auth_update _ γ true true false with "[Hγ Hγ']")
+  iPvs (box_own_auth_update _ γ with "[Hγ Hγ']")
     as "[Hγ Hγ']"; first by iFrame "Hγ".
   iPvsIntro; iNext; iSplitL "Hγ"; first (iExists false; by repeat iSplit).
   iExists Φ; iSplit.
@@ -181,7 +181,7 @@ Proof.
   iApply (big_sepM_impl _ _ f); iFrame "Hf".
   iAlways; iIntros {γ b' ?} "[(Hγ' & #$ & #$) HΦ]".
   iInv N as {b} "[Hγ _]"; iTimeless "Hγ".
-  iPvs (box_own_auth_update _ γ b b' true with "[Hγ Hγ']")
+  iPvs (box_own_auth_update _ γ with "[Hγ Hγ']")
     as "[Hγ $]"; first by iFrame "Hγ".
   iPvsIntro; iNext; iExists true. by iFrame "HΦ Hγ".
 Qed.
