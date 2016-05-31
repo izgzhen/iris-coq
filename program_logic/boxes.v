@@ -191,7 +191,7 @@ Lemma box_empty_all f P Q :
 Proof.
   iIntros {?} "H"; iDestruct "H" as {Φ} "[#HeqP Hf]".
   iAssert ([★ map] γ↦b ∈ f, ▷ Φ γ ★ box_own_auth γ (◯ Excl' false) ★
-    box_own_prop γ (Φ γ) ★ inv N (box_inv γ (Φ γ)))%I with "=>[Hf]" as "[HΦ ?]".
+    box_own_prop γ (Φ γ) ★ inv N (box_slice_inv γ (Φ γ)))%I with "=>[Hf]" as "[HΦ ?]".
   { iApply (pvs_big_sepM _ _ f); iApply (big_sepM_impl _ _ f); iFrame "Hf".
     iAlways; iIntros {γ b ?} "(Hγ' & #$ & #$)".
     assert (true = b) as <- by eauto.
