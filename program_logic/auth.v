@@ -30,6 +30,12 @@ Section definitions.
   Proof. solve_proper. Qed.
   Global Instance auth_own_timeless a : TimelessP (auth_own a).
   Proof. apply _. Qed.
+  Global Instance auth_inv_ne n : 
+    Proper (pointwise_relation A (dist n) ==> dist n) (auth_inv).
+  Proof. solve_proper. Qed.
+  Global Instance auth_ctx_ne n N :
+    Proper (pointwise_relation A (dist n) ==> dist n) (auth_ctx N).
+  Proof. solve_proper. Qed.
   Global Instance auth_ctx_persistent N φ : PersistentP (auth_ctx N φ).
   Proof. apply _. Qed.
 End definitions.
@@ -53,16 +59,24 @@ Section auth.
   Lemma auth_own_valid γ a : auth_own γ a ⊢ ✓ a.
   Proof. by rewrite /auth_own own_valid auth_validI. Qed.
 
+  Lemma auth_alloc_strong N E a (G : gset gname) :
+    ✓ a → nclose N ⊆ E →
+    ▷ φ a ={E}=> ∃ γ, ■(γ ∉ G) ∧ auth_ctx γ N φ ∧ auth_own γ a.
+  Proof.
+    iIntros {??} "Hφ". rewrite /auth_own /auth_ctx.
+    iPvs (own_alloc_strong (Auth (Excl' a) a) _ G) as {γ} "[% Hγ]"; first done.
+    iRevert "Hγ"; rewrite auth_both_op; iIntros "[Hγ Hγ']".
+    iPvs (inv_alloc N _ (auth_inv γ φ) with "[-Hγ']"); first done.
+    { iNext. iExists a. by iFrame "Hφ". }
+    iPvsIntro; iExists γ. iSplit; first by iPureIntro. by iFrame "Hγ'".
+  Qed.
+
   Lemma auth_alloc N E a :
     ✓ a → nclose N ⊆ E →
     ▷ φ a ={E}=> ∃ γ, auth_ctx γ N φ ∧ auth_own γ a.
   Proof.
-    iIntros {??} "Hφ". rewrite /auth_own /auth_ctx.
-    iPvs (own_alloc (Auth (Excl' a) a)) as {γ} "Hγ"; first done.
-    iRevert "Hγ"; rewrite auth_both_op; iIntros "[Hγ Hγ']".
-    iPvs (inv_alloc N _ (auth_inv γ φ) with "[-Hγ']"); first done.
-    { iNext. iExists a. by iFrame "Hφ". }
-    iPvsIntro; iExists γ; by iFrame "Hγ'".
+    iIntros {??} "Hφ". iPvs (auth_alloc_strong N E a ∅ with "Hφ") as {γ} "[_ ?]"; [done..|].
+    by iExists γ.
   Qed.
 
   Lemma auth_empty γ E : True ={E}=> auth_own γ ∅.
