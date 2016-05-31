@@ -82,6 +82,7 @@ program_logic/saved_one_shot.v
 program_logic/auth.v
 program_logic/sts.v
 program_logic/namespaces.v
+program_logic/boxes.v
 heap_lang/lang.v
 heap_lang/tactics.v
 heap_lang/wp_tactics.v
