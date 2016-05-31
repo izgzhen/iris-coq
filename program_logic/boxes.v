@@ -131,16 +131,16 @@ Proof.
   - iExists Φ; by iSplit; [iNext|].
 Qed.
 
-Lemma box_fill f γ b P Q :
-  f !! γ = Some b →
+Lemma box_fill f γ P Q :
+  f !! γ = Some false →
   (box_slice N γ Q ★ ▷ Q ★ ▷ box N f P) ⊢ |={N}=> ▷ box N (<[γ:=true]> f) P.
 Proof.
   iIntros {?} "(#Hinv & HQ & H)"; iDestruct "H" as {Φ} "[#HeqP Hf]".
   iInv N as {b'} "(Hγ & #HγQ & _)"; iTimeless "Hγ".
   iDestruct (big_sepM_later _ f with "Hf") as "Hf".
-  iDestruct (big_sepM_delete _ f _ b with "Hf")
+  iDestruct (big_sepM_delete _ f _ false with "Hf")
     as "[[Hγ' #[HγΦ Hinv']] ?]"; first done; iTimeless "Hγ'".
-  iPvs (box_own_auth_update _ γ b' b true with "[Hγ Hγ']")
+  iPvs (box_own_auth_update _ γ b' false true with "[Hγ Hγ']")
     as "[Hγ Hγ']"; first by iFrame "Hγ".
   iPvsIntro; iNext; iSplitL "Hγ HQ"; first (iExists true; by iFrame "Hγ HQ").
   iExists Φ; iSplit.
