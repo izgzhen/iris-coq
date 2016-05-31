@@ -250,11 +250,13 @@ Ltac setoid_subst :=
   | H : @equiv ?A ?e _ ?x |- _ => symmetry in H; setoid_subst_aux (@equiv A e) x
   end.
 
-(** f_equiv works on goals of the form "f _ = f _", for any relation and any
-number of arguments. It looks for an appropriate "Proper" instance, and applies
+(** f_equiv works on goals of the form [f _ = f _], for any relation and any
+number of arguments. It looks for an appropriate [Proper] instance, and applies
 it. The tactic is somewhat limited, since it cannot be used to backtrack on
 the Proper instances that has been found. To that end, we try to ensure the
-trivial instance in which the resulting goals have an [eq]. *)
+trivial instance in which the resulting goals have an [eq]. More generally,
+when having [Proper (equiv ==> dist) f] and [Proper (dist ==> dist) f], it will
+favor the second. *)
 Ltac f_equiv :=
   match goal with
   | _ => reflexivity
