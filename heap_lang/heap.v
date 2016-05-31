@@ -89,7 +89,7 @@ Section heap.
   Proof.
     intros Hv l'; move: (Hv l'). destruct (decide (l' = l)) as [->|].
     - rewrite !lookup_op !lookup_singleton.
-      by case: (h !! l)=> [x|] // /frac_valid_inv_l.
+      by case: (h !! l)=> [x|] // /Some_valid/exclusive_r.
     - by rewrite !lookup_op !lookup_singleton_ne.
   Qed.
   Hint Resolve heap_store_valid.
@@ -180,7 +180,8 @@ Section heap.
     iFrame "Hh Hl". iIntros {h} "[% Hl]". rewrite /heap_inv.
     iApply (wp_store_pst _ (<[l:=v']>(of_heap h))); rewrite ?lookup_insert //.
     rewrite alter_singleton insert_insert !of_heap_singleton_op; eauto.
-    iFrame "Hl". iNext. iIntros "$". iFrame "HΦ". iPureIntro; naive_solver.
+    iFrame "Hl". iNext. iIntros "$". iFrame "HΦ".
+    iPureIntro. eauto with typeclass_instances.
   Qed.
 
   Lemma wp_cas_fail N E l q v' e1 v1 e2 v2 Φ :
@@ -208,6 +209,7 @@ Section heap.
     iFrame "Hh Hl". iIntros {h} "[% Hl]". rewrite /heap_inv.
     iApply (wp_cas_suc_pst _ (<[l:=v1]>(of_heap h))); rewrite ?lookup_insert //.
     rewrite alter_singleton insert_insert !of_heap_singleton_op; eauto.
-    iFrame "Hl". iNext. iIntros "$". iFrame "HΦ". iPureIntro; naive_solver.
+    iFrame "Hl". iNext. iIntros "$". iFrame "HΦ".
+    iPureIntro.  eauto with typeclass_instances.
   Qed.
 End heap.

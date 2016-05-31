@@ -234,6 +234,11 @@ Proof. rewrite /Persistent /=. inversion_clear 1; by repeat constructor. Qed.
 Global Instance Cinr_persistent b : Persistent b → Persistent (Cinr b).
 Proof. rewrite /Persistent /=. inversion_clear 1; by repeat constructor. Qed.
 
+Global Instance Cinl_exclusive a : Exclusive a → Exclusive (Cinl a).
+Proof. by move=> H n[]? =>[/H||]. Qed.
+Global Instance Cinr_exclusive b : Exclusive b → Exclusive (Cinr b).
+Proof. by move=> H n[]? =>[|/H|]. Qed.
+
 (** Internalized properties *)
 Lemma csum_equivI {M} (x y : csum A B) :
   (x ≡ y) ⊣⊢ (match x, y with

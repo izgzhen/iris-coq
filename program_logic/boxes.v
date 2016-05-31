@@ -74,7 +74,7 @@ Lemma box_own_auth_update E γ b1 b2 b3 :
 Proof.
   rewrite /box_own_prop -!own_op.
   apply own_update, prod_update; simpl; last reflexivity.
-  by apply (auth_local_update (λ _, Excl' b3)).
+  apply (auth_local_update (λ _, Excl' b3)). apply _. done.
 Qed.
 
 Lemma box_own_agree γ Q1 Q2 :

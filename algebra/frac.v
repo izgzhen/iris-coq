@@ -143,14 +143,6 @@ Proof.
   intros [q a]; destruct 1; split; auto using cmra_discrete_valid.
 Qed.
 
-Lemma frac_validN_inv_l n x y : ✓{n} (x ⋅ y) → frac_perm x ≠ 1%Qp.
-Proof.
-  intros [Hq _] Hx; simpl in *; destruct (Qcle_not_lt _ _ Hq).
-  by rewrite Hx -{1}(Qcplus_0_r 1) -Qcplus_lt_mono_l.
-Qed.
-Lemma frac_valid_inv_l x y : ✓ (x ⋅ y) → frac_perm x ≠ 1%Qp.
-Proof. intros. by apply frac_validN_inv_l with 0 y, cmra_valid_validN. Qed.
-
 (** Internalized properties *)
 Lemma frac_equivI {M} (x y : frac A) :
   (x ≡ y) ⊣⊢ (frac_perm x = frac_perm y ∧ frac_car x ≡ frac_car y : uPred M).
@@ -159,10 +151,14 @@ Lemma frac_validI {M} (x : frac A) :
   ✓ x ⊣⊢ (■ (frac_perm x ≤ 1)%Qc ∧ ✓ frac_car x : uPred M).
 Proof. by uPred.unseal. Qed.
 
+(** Exclusive *)
+Global Instance frac_full_exclusive a : Exclusive (Frac 1 a).
+Proof.
+  move => ?[[??]?][/Qcle_not_lt[]]; simpl in *.
+  by rewrite -{1}(Qcplus_0_r 1) -Qcplus_lt_mono_l.
+Qed.
+
 (** ** Local updates *)
-Global Instance frac_local_update_full p a :
-  LocalUpdate (λ x, frac_perm x = 1%Qp) (λ _, Frac p a).
-Proof. split; first by intros ???. by intros n x y ? ?%frac_validN_inv_l. Qed.
 Global Instance frac_local_update `{!LocalUpdate Lv L} :
   LocalUpdate (λ x, Lv (frac_car x)) (frac_map L).
 Proof.
@@ -171,11 +167,6 @@ Proof.
 Qed.
 
 (** Updates *)
-Lemma frac_update_full (a1 a2 : A) : ✓ a2 → Frac 1 a1 ~~> Frac 1 a2.
-Proof.
-  move=> ? n [y|]; last (intros; by apply cmra_valid_validN).
-  by intros ?%frac_validN_inv_l.
-Qed.
 Lemma frac_update (a1 a2 : A) p : a1 ~~> a2 → Frac p a1 ~~> Frac p a2.
 Proof.
   intros Ha n mz [??]; split; first by destruct mz.

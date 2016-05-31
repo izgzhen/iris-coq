@@ -114,16 +114,9 @@ Lemma excl_validI {M} (x : excl A) :
   ✓ x ⊣⊢ (if x is ExclBot then False else True : uPred M).
 Proof. uPred.unseal. by destruct x. Qed.
 
-(** ** Local updates *)
-Global Instance excl_local_update y :
-  LocalUpdate (λ _, True) (λ _, y).
-Proof. split. apply _. by destruct y; intros n [a|] [b'|]. Qed.
-
-(** Updates *)
-Lemma excl_update a y : ✓ y → Excl a ~~> y.
-Proof. destruct y=> ? n [z|]; eauto. Qed.
-Lemma excl_updateP (P : excl A → Prop) a y : ✓ y → P y → Excl a ~~>: P.
-Proof. destruct y=> ?? n [z|]; eauto. Qed.
+(** Exclusive *)
+Global Instance excl_exclusive x : Exclusive x.
+Proof. by destruct x; intros n []. Qed.
 
 (** Option excl *)
 Lemma excl_validN_inv_l n mx a : ✓{n} (Excl' a ⋅ mx) → mx = None.

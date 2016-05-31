@@ -122,6 +122,11 @@ Infix "⋅?" := opM (at level 50, left associativity) : C_scope.
 Class Persistent {A : cmraT} (x : A) := persistent : pcore x ≡ Some x.
 Arguments persistent {_} _ {_}.
 
+(** * Exclusive elements (i.e., elements that cannot have a frame). *)
+Class Exclusive {A : cmraT} (x : A) :=
+  exclusiveN_r : ∀ n y, ✓{n} (x ⋅ y) → False.
+Arguments exclusiveN_r {_} _ {_} _ _ _.
+
 (** * CMRAs whose core is total *)
 (** The function [core] may return a dummy when used on CMRAs without total
 core. *)
@@ -337,6 +342,15 @@ Qed.
 Lemma persistent_dup x `{!Persistent x} : x ≡ x ⋅ x.
 Proof. by apply cmra_pcore_dup' with x. Qed.
 
+(** ** Exclusive elements *)
+Lemma exclusiveN_l x `{!Exclusive x} :
+  ∀ (n : nat) (y : A), ✓{n} (y ⋅ x) → False.
+Proof. intros ??. rewrite comm. by apply exclusiveN_r. Qed.
+Lemma exclusive_r x `{!Exclusive x} : ∀ (y : A), ✓ (x ⋅ y) → False.
+Proof. by intros ? ?%cmra_valid_validN%(exclusiveN_r _ 0). Qed.
+Lemma exclusive_l x `{!Exclusive x} : ∀ (y : A), ✓ (y ⋅ x) → False.
+Proof. by intros ? ?%cmra_valid_validN%(exclusiveN_l _ 0). Qed.
+
 (** ** Order *)
 Lemma cmra_included_includedN n x y : x ≼ y → x ≼{n} y.
 Proof. intros [z ->]. by exists z. Qed.
@@ -518,6 +532,10 @@ Proof. split. apply _. by intros n y1 y2 _ _; rewrite assoc. Qed.
 Global Instance local_update_id : LocalUpdate (λ _, True) (@id A).
 Proof. split; auto with typeclass_instances. Qed.
 
+Global Instance exclusive_local_update y :
+  LocalUpdate Exclusive (λ _, y) | 1000.
+Proof. split. apply _. by intros ??? H ?%H. Qed.
+
 (** ** Updates *)
 Lemma cmra_update_updateP x y : x ~~> y ↔ x ~~>: (y =).
 Proof. split=> Hup n z ?; eauto. destruct (Hup n z) as (?&<-&?); auto. Qed.
@@ -541,6 +559,9 @@ Proof.
   - intros x y z. rewrite !cmra_update_updateP.
     eauto using cmra_updateP_compose with subst.
 Qed.
+Lemma cmra_update_exclusive `{!Exclusive x} y:
+  ✓ y → x ~~> y.
+Proof. move=>??[z|]=>[/exclusiveN_r[]|_]. by apply cmra_valid_validN. Qed.
 
 Lemma cmra_updateP_op (P1 P2 Q : A → Prop) x1 x2 :
   x1 ~~>: P1 → x2 ~~>: P2 → (∀ y1 y2, P1 y1 → P2 y2 → Q (y1 ⋅ y2)) →
@@ -940,6 +961,13 @@ Section prod.
   Global Instance pair_persistent x y :
     Persistent x → Persistent y → Persistent (x,y).
   Proof. by rewrite /Persistent prod_pcore_Some'. Qed.
+
+  Global Instance pair_exclusive_l x y :
+    Exclusive x → Exclusive (x,y).
+  Proof. by intros ??[][?%exclusiveN_r]. Qed.
+  Global Instance pair_exclusive_r x y :
+    Exclusive y → Exclusive (x,y).
+  Proof. by intros ??[][??%exclusiveN_r]. Qed.
 
   Lemma prod_updateP P1 P2 (Q : A * B → Prop)  x :
     x.1 ~~>: P1 → x.2 ~~>: P2 → (∀ a b, P1 a → P2 b → Q (a,b)) → x ~~>: Q.
