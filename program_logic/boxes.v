@@ -61,7 +61,7 @@ Instance box_own_auth_timeless γ
 Proof. apply own_timeless, pair_timeless; apply _. Qed.
 
 Lemma box_own_auth_agree γ b1 b2 :
-  (box_own_auth γ (● Excl' b1) ★ box_own_auth γ (◯ Excl' b2)) ⊢ (b1 = b2).
+  box_own_auth γ (● Excl' b1) ★ box_own_auth γ (◯ Excl' b2) ⊢ b1 = b2.
 Proof.
   rewrite /box_own_prop -own_op own_valid prod_validI /= and_elim_l.
   iIntros "Hb".

@@ -29,7 +29,7 @@ Global Instance ownI_persistent i P : PersistentP (ownI i P).
 Proof. rewrite /ownI. apply _. Qed.
 
 (* physical state *)
-Lemma ownP_twice σ1 σ2 : (ownP σ1 ★ ownP σ2 : iProp Λ Σ) ⊢ False.
+Lemma ownP_twice σ1 σ2 : ownP σ1 ★ ownP σ2 ⊢ (False : iProp Λ Σ).
 Proof.
   rewrite /ownP -uPred.ownM_op Res_op.
   by apply uPred.ownM_invalid; intros (_&?&_).
@@ -41,13 +41,13 @@ Proof. rewrite /ownP; apply _. Qed.
 Global Instance ownG_ne n : Proper (dist n ==> dist n) (@ownG Λ Σ).
 Proof. solve_proper. Qed.
 Global Instance ownG_proper : Proper ((≡) ==> (⊣⊢)) (@ownG Λ Σ) := ne_proper _.
-Lemma ownG_op m1 m2 : ownG (m1 ⋅ m2) ⊣⊢ (ownG m1 ★ ownG m2).
+Lemma ownG_op m1 m2 : ownG (m1 ⋅ m2) ⊣⊢ ownG m1 ★ ownG m2.
 Proof. by rewrite /ownG -uPred.ownM_op Res_op !left_id. Qed.
 Global Instance ownG_mono : Proper (flip (≼) ==> (⊢)) (@ownG Λ Σ).
 Proof. move=>a b [c H]. rewrite H ownG_op. eauto with I. Qed.
 Lemma ownG_valid m : ownG m ⊢ ✓ m.
 Proof. rewrite /ownG uPred.ownM_valid res_validI /=; auto with I. Qed.
-Lemma ownG_valid_r m : ownG m ⊢ (ownG m ★ ✓ m).
+Lemma ownG_valid_r m : ownG m ⊢ ownG m ★ ✓ m.
 Proof. apply (uPred.always_entails_r _ _), ownG_valid. Qed.
 Lemma ownG_empty : True ⊢ (ownG ∅ : iProp Λ Σ).
 Proof. apply: uPred.ownM_empty. Qed.

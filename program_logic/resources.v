@@ -163,12 +163,11 @@ Proof. do 2 constructor; apply (persistent_core _). Qed.
 
 (** Internalized properties *)
 Lemma res_equivI {M'} r1 r2 :
-  (r1 ≡ r2)
-  ⊣⊢ (wld r1 ≡ wld r2 ∧ pst r1 ≡ pst r2 ∧ gst r1 ≡ gst r2: uPred M').
+  r1 ≡ r2 ⊣⊢ (wld r1 ≡ wld r2 ∧ pst r1 ≡ pst r2 ∧ gst r1 ≡ gst r2 : uPred M').
 Proof.
   uPred.unseal. do 2 split. by destruct 1. by intros (?&?&?); by constructor.
 Qed.
-Lemma res_validI {M'} r : (✓ r) ⊣⊢ (✓ wld r ∧ ✓ pst r ∧ ✓ gst r : uPred M').
+Lemma res_validI {M'} r : ✓ r ⊣⊢ (✓ wld r ∧ ✓ pst r ∧ ✓ gst r : uPred M').
 Proof. by uPred.unseal. Qed.
 End res.
 

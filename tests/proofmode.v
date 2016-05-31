@@ -2,7 +2,7 @@ From iris.proofmode Require Import tactics.
 From iris.proofmode Require Import pviewshifts invariants.
 
 Lemma demo_0 {M : ucmraT} (P Q : uPred M) :
-  □ (P ∨ Q) ⊢ ((∀ x, x = 0 ∨ x = 1) → (Q ∨ P)).
+  □ (P ∨ Q) ⊢ (∀ x, x = 0 ∨ x = 1) → (Q ∨ P).
 Proof.
   iIntros "#H #H2".
   (* should remove the disjunction "H" *)
@@ -12,13 +12,13 @@ Proof.
 Qed.
 
 Lemma demo_1 (M : ucmraT) (P1 P2 P3 : nat → uPred M) :
-  True ⊢ (∀ (x y : nat) a b,
+  True ⊢ ∀ (x y : nat) a b,
     x ≡ y →
     □ (uPred_ownM (a ⋅ b) -★
     (∃ y1 y2 c, P1 ((x + y1) + y2) ∧ True ∧ □ uPred_ownM c) -★
     □ ▷ (∀ z, P2 z ∨ True → P2 z) -★
     ▷ (∀ n m : nat, P1 n → □ ((True ∧ P2 n) → □ (n = n ↔ P3 n))) -★
-    ▷ (x = 0) ∨ ∃ x z, ▷ P3 (x + z) ★ uPred_ownM b ★ uPred_ownM (core b))).
+    ▷ (x = 0) ∨ ∃ x z, ▷ P3 (x + z) ★ uPred_ownM b ★ uPred_ownM (core b)).
 Proof.
   iIntros {i [|j] a b ?} "! [Ha Hb] H1 #H2 H3"; setoid_subst.
   { iLeft. by iNext. }
@@ -37,9 +37,9 @@ Proof.
 Qed.
 
 Lemma demo_2 (M : ucmraT) (P1 P2 P3 P4 Q : uPred M) (P5 : nat → uPredC M):
-    (P2 ★ (P3 ★ Q) ★ True ★ P1 ★ P2 ★ (P4 ★ (∃ x:nat, P5 x ∨ P3)) ★ True)
-  ⊢ (P1 -★ (True ★ True) -★ (((P2 ∧ False ∨ P2 ∧ 0 = 0) ★ P3) ★ Q ★ P1 ★ True) ∧
-     (P2 ∨ False) ∧ (False → P5 0)).
+    P2 ★ (P3 ★ Q) ★ True ★ P1 ★ P2 ★ (P4 ★ (∃ x:nat, P5 x ∨ P3)) ★ True
+  ⊢ P1 -★ (True ★ True) -★ (((P2 ∧ False ∨ P2 ∧ 0 = 0) ★ P3) ★ Q ★ P1 ★ True) ∧
+     (P2 ∨ False) ∧ (False → P5 0).
 Proof.
   (* Intro-patterns do something :) *)
   iIntros "[H2 ([H3 HQ]&?&H1&H2'&foo&_)] ? [??]".
@@ -54,7 +54,7 @@ Proof.
 Qed.
 
 Lemma demo_3 (M : ucmraT) (P1 P2 P3 : uPred M) :
-  (P1 ★ P2 ★ P3) ⊢ (▷ P1 ★ ▷ (P2 ★ ∃ x, (P3 ∧ x = 0) ∨ P3)).
+  P1 ★ P2 ★ P3 ⊢ ▷ P1 ★ ▷ (P2 ★ ∃ x, (P3 ∧ x = 0) ∨ P3).
 Proof. iIntros "($ & $ & H)". iFrame "H". iNext. by iExists 0. Qed.
 
 Definition foo {M} (P : uPred M) := (P → P)%I.
@@ -73,8 +73,8 @@ Proof.
 Qed.
 
 Lemma demo_6 (M : ucmraT) (P Q : uPred M) :
-  True ⊢ (∀ x y z : nat,
-    x = plus 0 x → y = 0 → z = 0 → P → □ Q → foo (x ≡ x)).
+  True ⊢ ∀ x y z : nat,
+    x = plus 0 x → y = 0 → z = 0 → P → □ Q → foo (x ≡ x).
 Proof.
   iIntros {a} "*".
   iIntros "#Hfoo **".
@@ -97,7 +97,7 @@ Section iris.
 
   Lemma demo_8 N E P Q R :
     nclose N ⊆ E →
-    (True -★ P -★ inv N Q -★ True -★ R) ⊢ (P -★ ▷ Q -★ |={E}=> R).
+    (True -★ P -★ inv N Q -★ True -★ R) ⊢ P -★ ▷ Q -★ |={E}=> R.
   Proof.
     iIntros {?} "H HP HQ".
     iApply ("H" with "[#] HP =>[HQ] =>").

@@ -49,7 +49,7 @@ Proof.
   by rewrite /ToAssert pvs_frame_r wand_elim_r -(fsa_split Q) fsa_pvs_fsa.
 Qed.
 
-Lemma tac_pvs_intro Δ E1 E2 Q : E1 = E2 → Δ ⊢ Q → Δ ⊢ |={E1,E2}=> Q.
+Lemma tac_pvs_intro Δ E1 E2 Q : E1 = E2 → (Δ ⊢ Q) → Δ ⊢ |={E1,E2}=> Q.
 Proof. intros -> ->. apply pvs_intro. Qed.
 
 Lemma tac_pvs_elim Δ Δ' E1 E2 E3 i p P' E1' E2' P Q :
@@ -69,7 +69,7 @@ Lemma tac_pvs_elim_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E i p P' P Q Φ :
   envs_lookup i Δ = Some (p, P') → P' = (|={E}=> P)%I →
   FSASplit Q E fsa fsaV Φ →
   envs_replace i p false (Esnoc Enil i P) Δ = Some Δ' →
-  Δ' ⊢ fsa E Φ → Δ ⊢ Q.
+  (Δ' ⊢ fsa E Φ) → Δ ⊢ Q.
 Proof.
   intros ? -> ??. rewrite -(fsa_split Q) -fsa_pvs_fsa.
   eapply tac_pvs_elim; set_solver.
@@ -89,7 +89,7 @@ Lemma tac_pvs_timeless_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E i p P Q Φ :
   FSASplit Q E fsa fsaV Φ →
   envs_lookup i Δ = Some (p, ▷ P)%I → TimelessP P →
   envs_simple_replace i p (Esnoc Enil i P) Δ = Some Δ' →
-  Δ' ⊢ fsa E Φ → Δ ⊢ Q.
+  (Δ' ⊢ fsa E Φ) → Δ ⊢ Q.
 Proof.
   intros ????. rewrite -(fsa_split Q) -fsa_pvs_fsa.
   eauto using tac_pvs_timeless.

@@ -38,9 +38,8 @@ Lemma wp_lift_atomic_head_step {E Φ} e1
     (φ : expr → state → option expr → Prop) σ1 :
   atomic e1 →
   head_reducible e1 σ1 →
-  (∀ e2 σ2 ef,
-    head_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  (▷ ownP σ1 ★ ▷ ∀ v2 σ2 ef, ■ φ (of_val v2) σ2 ef ∧ ownP σ2 -★ Φ v2 ★ wp_fork ef)
+  (∀ e2 σ2 ef, head_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
+  ▷ ownP σ1 ★ ▷ (∀ v2 σ2 ef, ■ φ (of_val v2) σ2 ef ∧ ownP σ2 -★ Φ v2 ★ wp_fork ef)
   ⊢ WP e1 @ E {{ Φ }}.
 Proof. eauto using wp_lift_atomic_step. Qed.
 
@@ -49,7 +48,7 @@ Lemma wp_lift_atomic_det_head_step {E Φ e1} σ1 v2 σ2 ef :
   head_reducible e1 σ1 →
   (∀ e2' σ2' ef', head_step e1 σ1 e2' σ2' ef' →
     σ2 = σ2' ∧ to_val e2' = Some v2 ∧ ef = ef') →
-  (▷ ownP σ1 ★ ▷ (ownP σ2 -★ Φ v2 ★ wp_fork ef)) ⊢ WP e1 @ E {{ Φ }}.
+  ▷ ownP σ1 ★ ▷ (ownP σ2 -★ Φ v2 ★ wp_fork ef) ⊢ WP e1 @ E {{ Φ }}.
 Proof. eauto using wp_lift_atomic_det_step. Qed.
 
 Lemma wp_lift_pure_det_head_step {E Φ} e1 e2 ef :

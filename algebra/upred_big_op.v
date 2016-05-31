@@ -83,9 +83,9 @@ Proof.
   - etrans; eauto.
 Qed.
 
-Lemma big_and_app Ps Qs : [∧] (Ps ++ Qs) ⊣⊢ ([∧] Ps ∧ [∧] Qs).
+Lemma big_and_app Ps Qs : [∧] (Ps ++ Qs) ⊣⊢ [∧] Ps ∧ [∧] Qs.
 Proof. induction Ps as [|?? IH]; by rewrite /= ?left_id -?assoc ?IH. Qed.
-Lemma big_sep_app Ps Qs : [★] (Ps ++ Qs) ⊣⊢ ([★] Ps ★ [★] Qs).
+Lemma big_sep_app Ps Qs : [★] (Ps ++ Qs) ⊣⊢ [★] Ps ★ [★] Qs.
 Proof. by induction Ps as [|?? IH]; rewrite /= ?left_id -?assoc ?IH. Qed.
 
 Lemma big_and_contains Ps Qs : Qs `contains` Ps → [∧] Ps ⊢ [∧] Qs.
@@ -113,7 +113,7 @@ Section gmap.
 
   Lemma big_sepM_mono Φ Ψ m1 m2 :
     m2 ⊆ m1 → (∀ k x, m2 !! k = Some x → Φ k x ⊢ Ψ k x) →
-    ([★ map] k ↦ x ∈ m1, Φ k x) ⊢ ([★ map] k ↦ x ∈ m2, Ψ k x).
+    ([★ map] k ↦ x ∈ m1, Φ k x) ⊢ [★ map] k ↦ x ∈ m2, Ψ k x.
   Proof.
     intros HX HΦ. trans ([★ map] k↦x ∈ m2, Φ k x)%I.
     - by apply big_sep_contains, fmap_contains, map_to_list_contains.
@@ -152,12 +152,12 @@ Section gmap.
 
   Lemma big_sepM_insert Φ m i x :
     m !! i = None →
-    ([★ map] k↦y ∈ <[i:=x]> m, Φ k y) ⊣⊢ (Φ i x ★ [★ map] k↦y ∈ m, Φ k y).
+    ([★ map] k↦y ∈ <[i:=x]> m, Φ k y) ⊣⊢ Φ i x ★ [★ map] k↦y ∈ m, Φ k y.
   Proof. intros ?; by rewrite /uPred_big_sepM map_to_list_insert. Qed.
 
   Lemma big_sepM_delete Φ m i x :
     m !! i = Some x →
-    ([★ map] k↦y ∈ m, Φ k y) ⊣⊢ (Φ i x ★ [★ map] k↦y ∈ delete i m, Φ k y).
+    ([★ map] k↦y ∈ m, Φ k y) ⊣⊢ Φ i x ★ [★ map] k↦y ∈ delete i m, Φ k y.
   Proof.
     intros. rewrite -big_sepM_insert ?lookup_delete //.
     by rewrite insert_delete insert_id.
@@ -204,7 +204,7 @@ Section gmap.
 
   Lemma big_sepM_sepM Φ Ψ m :
        ([★ map] k↦x ∈ m, Φ k x ★ Ψ k x)
-    ⊣⊢ (([★ map] k↦x ∈ m, Φ k x) ★ ([★ map] k↦x ∈ m, Ψ k x)).
+    ⊣⊢ ([★ map] k↦x ∈ m, Φ k x) ★ ([★ map] k↦x ∈ m, Ψ k x).
   Proof.
     rewrite /uPred_big_sepM.
     induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?right_id //.
@@ -212,7 +212,7 @@ Section gmap.
   Qed.
 
   Lemma big_sepM_later Φ m :
-    (▷ [★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, ▷ Φ k x).
+    ▷ ([★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, ▷ Φ k x).
   Proof.
     rewrite /uPred_big_sepM.
     induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?later_True //.
@@ -228,7 +228,7 @@ Section gmap.
   Qed.
 
   Lemma big_sepM_always_if p Φ m :
-    (□?p [★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, □?p Φ k x).
+    □?p ([★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, □?p Φ k x).
   Proof. destruct p; simpl; auto using big_sepM_always. Qed.
 
   Lemma big_sepM_forall Φ m :
@@ -249,7 +249,7 @@ Section gmap.
   Qed.
 
   Lemma big_sepM_impl Φ Ψ m :
-      (□ (∀ k x, m !! k = Some x → Φ k x → Ψ k x) ∧ [★ map] k↦x ∈ m, Φ k x)
+    □ (∀ k x, m !! k = Some x → Φ k x → Ψ k x) ∧ ([★ map] k↦x ∈ m, Φ k x)
     ⊢ [★ map] k↦x ∈ m, Ψ k x.
   Proof.
     rewrite always_and_sep_l. do 2 setoid_rewrite always_forall.
@@ -267,7 +267,7 @@ Section gset.
 
   Lemma big_sepS_mono Φ Ψ X Y :
     Y ⊆ X → (∀ x, x ∈ Y → Φ x ⊢ Ψ x) →
-    ([★ set] x ∈ X, Φ x) ⊢ ([★ set] x ∈ Y, Ψ x).
+    ([★ set] x ∈ X, Φ x) ⊢ [★ set] x ∈ Y, Ψ x.
   Proof.
     intros HX HΦ. trans ([★ set] x ∈ Y, Φ x)%I.
     - by apply big_sep_contains, fmap_contains, elements_contains.
@@ -315,7 +315,7 @@ Section gset.
   Proof. apply (big_sepS_fn_insert (λ y, id)). Qed.
 
   Lemma big_sepS_delete Φ X x :
-    x ∈ X → ([★ set] y ∈ X, Φ y) ⊣⊢ (Φ x ★ [★ set] y ∈ X ∖ {[ x ]}, Φ y).
+    x ∈ X → ([★ set] y ∈ X, Φ y) ⊣⊢ Φ x ★ [★ set] y ∈ X ∖ {[ x ]}, Φ y.
   Proof.
     intros. rewrite -big_sepS_insert; last set_solver.
     by rewrite -union_difference_L; last set_solver.
@@ -328,21 +328,21 @@ Section gset.
   Proof. intros. by rewrite /uPred_big_sepS elements_singleton /= right_id. Qed.
 
   Lemma big_sepS_sepS Φ Ψ X :
-    ([★ set] y ∈ X, Φ y ★ Ψ y) ⊣⊢ (([★ set] y ∈ X, Φ y) ★ [★ set] y ∈ X, Ψ y).
+    ([★ set] y ∈ X, Φ y ★ Ψ y) ⊣⊢ ([★ set] y ∈ X, Φ y) ★ ([★ set] y ∈ X, Ψ y).
   Proof.
     rewrite /uPred_big_sepS.
     induction (elements X) as [|x l IH]; csimpl; first by rewrite ?right_id.
     by rewrite IH -!assoc (assoc _ (Ψ _)) [(Ψ _ ★ _)%I]comm -!assoc.
   Qed.
 
-  Lemma big_sepS_later Φ X : (▷ [★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, ▷ Φ y).
+  Lemma big_sepS_later Φ X : ▷ ([★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, ▷ Φ y).
   Proof.
     rewrite /uPred_big_sepS.
     induction (elements X) as [|x l IH]; csimpl; first by rewrite ?later_True.
     by rewrite later_sep IH.
   Qed.
 
-  Lemma big_sepS_always Φ X : (□ [★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, □ Φ y).
+  Lemma big_sepS_always Φ X : □ ([★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, □ Φ y).
   Proof.
     rewrite /uPred_big_sepS.
     induction (elements X) as [|x l IH]; csimpl; first by rewrite ?always_const.
@@ -350,7 +350,7 @@ Section gset.
   Qed.
 
   Lemma big_sepS_always_if q Φ X :
-    (□?q [★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, □?q Φ y).
+    □?q ([★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, □?q Φ y).
   Proof. destruct q; simpl; auto using big_sepS_always. Qed.
 
   Lemma big_sepS_forall Φ X :
@@ -369,7 +369,7 @@ Section gset.
   Qed.
 
   Lemma big_sepS_impl Φ Ψ X :
-      (□ (∀ x, ■ (x ∈ X) → Φ x → Ψ x) ∧ [★ set] x ∈ X, Φ x) ⊢ [★ set] x ∈ X, Ψ x.
+      □ (∀ x, ■ (x ∈ X) → Φ x → Ψ x) ∧ ([★ set] x ∈ X, Φ x) ⊢ [★ set] x ∈ X, Ψ x.
   Proof.
     rewrite always_and_sep_l always_forall.
     setoid_rewrite always_impl; setoid_rewrite always_const.

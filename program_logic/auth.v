@@ -75,7 +75,8 @@ Section auth.
     ✓ a → nclose N ⊆ E →
     ▷ φ a ={E}=> ∃ γ, auth_ctx γ N φ ∧ auth_own γ a.
   Proof.
-    iIntros {??} "Hφ". iPvs (auth_alloc_strong N E a ∅ with "Hφ") as {γ} "[_ ?]"; [done..|].
+    iIntros {??} "Hφ".
+    iPvs (auth_alloc_strong N E a ∅ with "Hφ") as {γ} "[_ ?]"; [done..|].
     by iExists γ.
   Qed.
 
@@ -86,7 +87,7 @@ Section auth.
 
   Lemma auth_fsa E N (Ψ : V → iPropG Λ Σ) γ a :
     fsaV → nclose N ⊆ E →
-    (auth_ctx γ N φ ★ ▷ auth_own γ a ★ ∀ a',
+    auth_ctx γ N φ ★ ▷ auth_own γ a ★ (∀ a',
       ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
       fsa (E ∖ nclose N) (λ x, ∃ L Lv (Hup : LocalUpdate Lv L),
         ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
@@ -111,11 +112,11 @@ Section auth.
 
   Lemma auth_fsa' L `{!LocalUpdate Lv L} E N (Ψ : V → iPropG Λ Σ) γ a :
     fsaV → nclose N ⊆ E →
-    (auth_ctx γ N φ ★ ▷ auth_own γ a ★ (∀ a',
+    auth_ctx γ N φ ★ ▷ auth_own γ a ★ (∀ a',
       ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
       fsa (E ∖ nclose N) (λ x,
         ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
-        (auth_own γ (L a) -★ Ψ x))))
+        (auth_own γ (L a) -★ Ψ x)))
     ⊢ fsa E Ψ.
   Proof.
     iIntros {??} "(#Ha & Hγf & HΨ)"; iApply (auth_fsa E N Ψ γ a); auto.

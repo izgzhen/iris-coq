@@ -153,7 +153,7 @@ Proof. intros. by apply frac_validN_inv_l with 0 y, cmra_valid_validN. Qed.
 
 (** Internalized properties *)
 Lemma frac_equivI {M} (x y : frac A) :
-  (x ≡ y) ⊣⊢ (frac_perm x = frac_perm y ∧ frac_car x ≡ frac_car y : uPred M).
+  x ≡ y ⊣⊢ (frac_perm x = frac_perm y ∧ frac_car x ≡ frac_car y : uPred M).
 Proof. by uPred.unseal. Qed.
 Lemma frac_validI {M} (x : frac A) :
   ✓ x ⊣⊢ (■ (frac_perm x ≤ 1)%Qc ∧ ✓ frac_car x : uPred M).

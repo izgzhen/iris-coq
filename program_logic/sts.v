@@ -93,7 +93,7 @@ Section sts.
 
   Lemma sts_fsaS E N (Ψ : V → iPropG Λ Σ) γ S T :
     fsaV → nclose N ⊆ E →
-    (sts_ctx γ N φ ★ sts_ownS γ S T ★ ∀ s,
+    sts_ctx γ N φ ★ sts_ownS γ S T ★ (∀ s,
       ■ (s ∈ S) ★ ▷ φ s -★
       fsa (E ∖ nclose N) (λ x, ∃ s' T',
         ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ★ (sts_own γ s' T' -★ Ψ x)))
@@ -116,7 +116,7 @@ Section sts.
 
   Lemma sts_fsa E N (Ψ : V → iPropG Λ Σ) γ s0 T :
     fsaV → nclose N ⊆ E →
-    (sts_ctx γ N φ ★ sts_own γ s0 T ★ ∀ s,
+    sts_ctx γ N φ ★ sts_own γ s0 T ★ (∀ s,
       ■ (s ∈ sts.up s0 T) ★ ▷ φ s -★
       fsa (E ∖ nclose N) (λ x, ∃ s' T',
         ■ (sts.steps (s, T) (s', T')) ★ ▷ φ s' ★

@@ -66,7 +66,7 @@ Lemma wp_lift_atomic_step {E Φ} e1
   reducible e1 σ1 →
   (∀ e2 σ2 ef,
     prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  (▷ ownP σ1 ★ ▷ ∀ v2 σ2 ef, ■ φ (of_val v2) σ2 ef ∧ ownP σ2 -★ Φ v2 ★ wp_fork ef)
+  ▷ ownP σ1 ★ ▷ (∀ v2 σ2 ef, ■ φ (of_val v2) σ2 ef ∧ ownP σ2 -★ Φ v2 ★ wp_fork ef)
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_step E E (λ e2 σ2 ef,
@@ -88,7 +88,7 @@ Lemma wp_lift_atomic_det_step {E Φ e1} σ1 v2 σ2 ef :
   reducible e1 σ1 →
   (∀ e2' σ2' ef', prim_step e1 σ1 e2' σ2' ef' →
     σ2 = σ2' ∧ to_val e2' = Some v2 ∧ ef = ef') →
-  (▷ ownP σ1 ★ ▷ (ownP σ2 -★ Φ v2 ★ wp_fork ef)) ⊢ WP e1 @ E {{ Φ }}.
+  ▷ ownP σ1 ★ ▷ (ownP σ2 -★ Φ v2 ★ wp_fork ef) ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_step _ (λ e2' σ2' ef',
     σ2 = σ2' ∧ to_val e2' = Some v2 ∧ ef = ef') σ1) //.
@@ -110,5 +110,4 @@ Proof.
   apply later_mono, forall_intro=>e'; apply forall_intro=>ef'.
   by apply impl_intro_l, const_elim_l=>-[-> ->].
 Qed.
-
 End lifting.

@@ -77,8 +77,8 @@ Proof. solve_proper. Qed.
 (** Helper lemmas *)
 Lemma ress_split i i1 i2 Q R1 R2 P I :
   i ∈ I → i1 ∉ I → i2 ∉ I → i1 ≠ i2 →
-  (saved_prop_own i Q ★ saved_prop_own i1 R1 ★ saved_prop_own i2 R2 ★
-    (Q -★ R1 ★ R2) ★ ress P I)
+  saved_prop_own i Q ★ saved_prop_own i1 R1 ★ saved_prop_own i2 R2 ★
+    (Q -★ R1 ★ R2) ★ ress P I
   ⊢ ress P ({[i1;i2]} ∪ I ∖ {[i]}).
 Proof.
   iIntros {????} "(#HQ&#H1&#H2&HQR&H)"; iDestruct "H" as {Ψ} "[HPΨ HΨ]".
@@ -97,7 +97,7 @@ Qed.
 (** Actual proofs *)
 Lemma newbarrier_spec (P : iProp) (Φ : val → iProp) :
   heapN ⊥ N →
-  (heap_ctx heapN ★ ∀ l, recv l P ★ send l P -★ Φ #l)
+  heap_ctx heapN ★ (∀ l, recv l P ★ send l P -★ Φ #l)
   ⊢ WP newbarrier #() {{ Φ }}.
 Proof.
   iIntros {HN} "[#? HΦ]".
@@ -124,7 +124,7 @@ Proof.
 Qed.
 
 Lemma signal_spec l P (Φ : val → iProp) :
-  (send l P ★ P ★ Φ #()) ⊢ WP signal #l {{ Φ }}.
+  send l P ★ P ★ Φ #() ⊢ WP signal #l {{ Φ }}.
 Proof.
   rewrite /signal /send /barrier_ctx.
   iIntros "(Hs&HP&HΦ)"; iDestruct "Hs" as {γ} "[#(%&Hh&Hsts) Hγ]". wp_let.
@@ -139,7 +139,7 @@ Proof.
 Qed.
 
 Lemma wait_spec l P (Φ : val → iProp) :
-  (recv l P ★ (P -★ Φ #())) ⊢ WP wait #l {{ Φ }}.
+  recv l P ★ (P -★ Φ #()) ⊢ WP wait #l {{ Φ }}.
 Proof.
   rename P into R; rewrite /recv /barrier_ctx.
   iIntros "[Hr HΦ]"; iDestruct "Hr" as {γ P Q i} "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
@@ -200,7 +200,7 @@ Proof.
       by iIntros "> ?".
 Qed.
 
-Lemma recv_weaken l P1 P2 : (P1 -★ P2) ⊢ (recv l P1 -★ recv l P2).
+Lemma recv_weaken l P1 P2 : (P1 -★ P2) ⊢ recv l P1 -★ recv l P2.
 Proof.
   rewrite /recv.
   iIntros "HP HP1"; iDestruct "HP1" as {γ P Q i} "(#Hctx&Hγ&Hi&HP1)".
@@ -208,7 +208,7 @@ Proof.
   iIntros "> HQ". by iApply "HP"; iApply "HP1".
 Qed.
 
-Lemma recv_mono l P1 P2 : P1 ⊢ P2 → recv l P1 ⊢ recv l P2.
+Lemma recv_mono l P1 P2 : (P1 ⊢ P2) → recv l P1 ⊢ recv l P2.
 Proof.
   intros HP%entails_wand. apply wand_entails. rewrite HP. apply recv_weaken.
 Qed.

@@ -164,14 +164,14 @@ Canonical Structure authUR :=
 
 (** Internalized properties *)
 Lemma auth_equivI {M} (x y : auth A) :
-  (x ≡ y) ⊣⊢ (authoritative x ≡ authoritative y ∧ own x ≡ own y : uPred M).
+  x ≡ y ⊣⊢ (authoritative x ≡ authoritative y ∧ own x ≡ own y : uPred M).
 Proof. by uPred.unseal. Qed.
 Lemma auth_validI {M} (x : auth A) :
-  (✓ x) ⊣⊢ (match authoritative x with
-             | Excl' a => (∃ b, a ≡ own x ⋅ b) ∧ ✓ a
-             | None => ✓ own x
-             | ExclBot' => False
-             end : uPred M).
+  ✓ x ⊣⊢ (match authoritative x with
+          | Excl' a => (∃ b, a ≡ own x ⋅ b) ∧ ✓ a
+          | None => ✓ own x
+          | ExclBot' => False
+          end : uPred M).
 Proof. uPred.unseal. by destruct x as [[[]|]]. Qed.
 
 Lemma auth_frag_op a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.

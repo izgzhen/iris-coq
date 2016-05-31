@@ -196,22 +196,22 @@ Proof. rewrite /Persistent /=. inversion_clear 1; by repeat constructor. Qed.
 
 (** Internalized properties *)
 Lemma one_shot_equivI {M} (x y : one_shot A) :
-  (x ≡ y) ⊣⊢ (match x, y with
-               | OneShotPending, OneShotPending => True
-               | Shot a, Shot b => a ≡ b
-               | OneShotBot, OneShotBot => True
-               | _, _ => False
-               end : uPred M).
+  x ≡ y ⊣⊢ (match x, y with
+            | OneShotPending, OneShotPending => True
+            | Shot a, Shot b => a ≡ b
+            | OneShotBot, OneShotBot => True
+            | _, _ => False
+            end : uPred M).
 Proof.
   uPred.unseal; do 2 split; first by destruct 1.
   by destruct x, y; try destruct 1; try constructor.
 Qed.
 Lemma one_shot_validI {M} (x : one_shot A) :
-  (✓ x) ⊣⊢ (match x with
-            | Shot a => ✓ a 
-            | OneShotBot => False
-            | _ => True
-            end : uPred M).
+  ✓ x ⊣⊢ (match x with
+          | Shot a => ✓ a 
+          | OneShotBot => False
+          | _ => True
+          end : uPred M).
 Proof. uPred.unseal. by destruct x. Qed.
 
 (** Updates *)

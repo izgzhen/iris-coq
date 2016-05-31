@@ -37,7 +37,7 @@ Definition one_shot_inv (γ : gname) (l : loc) : iProp :=
   ∃ n : Z, l ↦ InjRV #n ★ own γ (Shot (DecAgree n)))%I.
 
 Lemma wp_one_shot (Φ : val → iProp) :
-  (heap_ctx heapN ★ ∀ f1 f2 : val,
+  heap_ctx heapN ★ (∀ f1 f2 : val,
     (∀ n : Z, □ WP f1 #n {{ w, w = #true ∨ w = #false }}) ★
     □ WP f2 #() {{ g, □ WP g #() {{ _, True }} }} -★ Φ (f1,f2)%V)
   ⊢ WP one_shot_example #() {{ Φ }}.

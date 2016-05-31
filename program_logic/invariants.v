@@ -49,7 +49,7 @@ Qed.
     verbose to apply than [inv_open]. *)
 Lemma inv_fsa {A} (fsa : FSA Λ Σ A) `{!FrameShiftAssertion fsaV fsa} E N P Ψ :
   fsaV → nclose N ⊆ E →
-  (inv N P ★ (▷ P -★ fsa (E ∖ nclose N) (λ a, ▷ P ★ Ψ a))) ⊢ fsa E Ψ.
+  inv N P ★ (▷ P -★ fsa (E ∖ nclose N) (λ a, ▷ P ★ Ψ a)) ⊢ fsa E Ψ.
 Proof.
   iIntros {??} "[Hinv HΨ]".
   iDestruct (inv_open E N P with "Hinv") as {E'} "[% Hvs]"; first done.

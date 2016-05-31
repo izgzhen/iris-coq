@@ -86,7 +86,7 @@ Module uPred_reflection. Section uPred_reflection.
   Qed.
   Lemma cancel_entails Σ e1 e2 e1' e2' ns :
     cancel ns e1 = Some e1' → cancel ns e2 = Some e2' →
-    eval Σ e1' ⊢ eval Σ e2' → eval Σ e1 ⊢ eval Σ e2.
+    (eval Σ e1' ⊢ eval Σ e2') → eval Σ e1 ⊢ eval Σ e2.
   Proof.
     intros ??. rewrite !eval_flatten.
     rewrite (flatten_cancel e1 e1' ns) // (flatten_cancel e2 e2' ns) //; csimpl.

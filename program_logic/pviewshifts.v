@@ -70,7 +70,7 @@ Proof.
   rewrite pvs_eq. split=> n r ? HP rf k Ef σ ???; exists r; split; last done.
   apply uPred_closed with n; eauto.
 Qed.
-Lemma pvs_mono E1 E2 P Q : P ⊢ Q → (|={E1,E2}=> P) ={E1,E2}=> Q.
+Lemma pvs_mono E1 E2 P Q : (P ⊢ Q) → (|={E1,E2}=> P) ={E1,E2}=> Q.
 Proof.
   rewrite pvs_eq. intros HPQ; split=> n r ? HP rf k Ef σ ???.
   destruct (HP rf k Ef σ) as (r2&?&?); eauto.
@@ -157,7 +157,7 @@ Proof. move=>->. by rewrite pvs_trans'. Qed.
 Lemma pvs_frame_l E1 E2 P Q : (P ★ |={E1,E2}=> Q) ={E1,E2}=> P ★ Q.
 Proof. rewrite !(comm _ P); apply pvs_frame_r. Qed.
 Lemma pvs_always_l E1 E2 P Q `{!PersistentP P} :
-  (P ∧ |={E1,E2}=> Q) ={E1,E2}=> P ∧ Q.
+  P ∧ (|={E1,E2}=> Q) ={E1,E2}=> P ∧ Q.
 Proof. by rewrite !always_and_sep_l pvs_frame_l. Qed.
 Lemma pvs_always_r E1 E2 P Q `{!PersistentP Q} :
   (|={E1,E2}=> P) ∧ Q ={E1,E2}=> P ∧ Q.
@@ -201,7 +201,7 @@ Proof. intros. etrans. apply pvs_closeI. apply pvs_mask_frame'; set_solver. Qed.
 
 Lemma pvs_mask_frame_mono E1 E1' E2 E2' P Q :
   E1' ⊆ E1 → E2' ⊆ E2 → E1 ∖ E1' = E2 ∖ E2' →
-  P ⊢ Q → (|={E1',E2'}=> P) ={E1,E2}=> Q.
+  (P ⊢ Q) → (|={E1',E2'}=> P) ={E1,E2}=> Q.
 Proof. intros HE1 HE2 HEE ->. by apply pvs_mask_frame'. Qed.
 
 (** It should be possible to give a stronger version of this rule
@@ -247,9 +247,9 @@ Lemma fsa_mono E Φ Ψ : (∀ a, Φ a ⊢ Ψ a) → fsa E Φ ⊢ fsa E Ψ.
 Proof. apply fsa_mask_frame_mono; auto. Qed.
 Lemma fsa_mask_weaken E1 E2 Φ : E1 ⊆ E2 → fsa E1 Φ ⊢ fsa E2 Φ.
 Proof. intros. apply fsa_mask_frame_mono; auto. Qed.
-Lemma fsa_frame_l E P Φ : (P ★ fsa E Φ) ⊢ fsa E (λ a, P ★ Φ a).
+Lemma fsa_frame_l E P Φ : P ★ fsa E Φ ⊢ fsa E (λ a, P ★ Φ a).
 Proof. rewrite comm fsa_frame_r. apply fsa_mono=>a. by rewrite comm. Qed.
-Lemma fsa_strip_pvs E P Φ : P ⊢ fsa E Φ → (|={E}=> P) ⊢ fsa E Φ.
+Lemma fsa_strip_pvs E P Φ : (P ⊢ fsa E Φ) → (|={E}=> P) ⊢ fsa E Φ.
 Proof.
   move=>->. rewrite -{2}fsa_trans3.
   apply pvs_mono, fsa_mono=>a; apply pvs_intro.
@@ -263,12 +263,12 @@ Proof.
 Qed.
 Lemma fsa_mono_pvs E Φ Ψ : (∀ a, Φ a ={E}=> Ψ a) → fsa E Φ ⊢ fsa E Ψ.
 Proof. intros. rewrite -[fsa E Ψ]fsa_trans3 -pvs_intro. by apply fsa_mono. Qed.
-Lemma fsa_wand_l E Φ Ψ : ((∀ a, Φ a -★ Ψ a) ★ fsa E Φ) ⊢ fsa E Ψ.
+Lemma fsa_wand_l E Φ Ψ : (∀ a, Φ a -★ Ψ a) ★ fsa E Φ ⊢ fsa E Ψ.
 Proof.
   rewrite fsa_frame_l. apply fsa_mono=> a.
   by rewrite (forall_elim a) wand_elim_l.
 Qed.
-Lemma fsa_wand_r E Φ Ψ : (fsa E Φ ★ ∀ a, Φ a -★ Ψ a) ⊢ fsa E Ψ.
+Lemma fsa_wand_r E Φ Ψ : fsa E Φ ★ (∀ a, Φ a -★ Ψ a) ⊢ fsa E Ψ.
 Proof. by rewrite (comm _ (fsa _ _)) fsa_wand_l. Qed.
 End fsa.
 

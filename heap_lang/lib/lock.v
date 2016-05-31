@@ -51,8 +51,7 @@ Qed.
 
 Lemma newlock_spec N (R : iProp) Φ :
   heapN ⊥ N →
-  (heap_ctx heapN ★ R ★ (∀ l, is_lock l R -★ Φ #l))
-  ⊢ WP newlock #() {{ Φ }}.
+  heap_ctx heapN ★ R ★ (∀ l, is_lock l R -★ Φ #l) ⊢ WP newlock #() {{ Φ }}.
 Proof.
   iIntros {?} "(#Hh & HR & HΦ)". rewrite /newlock.
   wp_seq. iApply wp_pvs. wp_alloc l as "Hl".
@@ -63,7 +62,7 @@ Proof.
 Qed.
 
 Lemma acquire_spec l R (Φ : val → iProp) :
-  (is_lock l R ★ (locked l R -★ R -★ Φ #())) ⊢ WP acquire #l {{ Φ }}.
+  is_lock l R ★ (locked l R -★ R -★ Φ #()) ⊢ WP acquire #l {{ Φ }}.
 Proof.
   iIntros "[Hl HΦ]". iDestruct "Hl" as {N γ} "(%&#?&#?)".
   iLöb as "IH". wp_rec. wp_focus (CAS _ _ _)%E.
@@ -77,7 +76,7 @@ Proof.
 Qed.
 
 Lemma release_spec R l (Φ : val → iProp) :
-  (locked l R ★ R ★ Φ #()) ⊢ WP release #l {{ Φ }}.
+  locked l R ★ R ★ Φ #() ⊢ WP release #l {{ Φ }}.
 Proof.
   iIntros "(Hl&HR&HΦ)"; iDestruct "Hl" as {N γ} "(% & #? & #? & Hγ)".
   rewrite /release. wp_let. iInv N as {b} "[Hl _]".
