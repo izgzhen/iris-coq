@@ -45,7 +45,7 @@ Implicit Types P Q : iProp.
 
 (* FIXME: solve_proper picks the eq ==> instance for Next. *)
 Global Instance box_own_prop_ne n γ : Proper (dist n ==> dist n) (box_own_prop γ).
-Proof. intros P P' HP. by rewrite /box_own_prop HP. Qed.
+Proof. solve_proper. Qed.
 Global Instance box_inv_ne n γ : Proper (dist n ==> dist n) (box_inv γ).
 Proof. solve_proper. Qed.
 Global Instance box_slice_ne n γ : Proper (dist n ==> dist n) (box_slice N γ).
