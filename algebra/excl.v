@@ -102,11 +102,11 @@ Proof. split. apply _. by intros []. Qed.
 
 (** Internalized properties *)
 Lemma excl_equivI {M} (x y : excl A) :
-  (x ≡ y) ⊣⊢ (match x, y with
-               | Excl a, Excl b => a ≡ b
-               | ExclBot, ExclBot => True
-               | _, _ => False
-               end : uPred M).
+  x ≡ y ⊣⊢ (match x, y with
+            | Excl a, Excl b => a ≡ b
+            | ExclBot, ExclBot => True
+            | _, _ => False
+            end : uPred M).
 Proof.
   uPred.unseal. do 2 split. by destruct 1. by destruct x, y; try constructor.
 Qed.

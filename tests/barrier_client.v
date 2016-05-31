@@ -27,7 +27,7 @@ Section client.
   Qed.
 
   Lemma worker_safe q (n : Z) (b y : loc) :
-    (heap_ctx heapN ★ recv heapN N b (y_inv q y))
+    heap_ctx heapN ★ recv heapN N b (y_inv q y)
     ⊢ WP worker n #b #y {{ _, True }}.
   Proof.
     iIntros "[#Hh Hrecv]". wp_lam. wp_let.

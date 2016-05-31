@@ -17,7 +17,7 @@ Lemma barrier_spec (heapN N : namespace) :
     (∀ l P, {{ send l P ★ P }} signal #l {{ _, True }}) ∧
     (∀ l P, {{ recv l P }} wait #l {{ _, P }}) ∧
     (∀ l P Q, recv l (P ★ Q) ={N}=> recv l P ★ recv l Q) ∧
-    (∀ l P Q, (P -★ Q) ⊢ (recv l P -★ recv l Q)).
+    (∀ l P Q, (P -★ Q) ⊢ recv l P -★ recv l Q).
 Proof.
   intros HN.
   exists (λ l, CofeMor (recv heapN N l)), (λ l, CofeMor (send heapN N l)).

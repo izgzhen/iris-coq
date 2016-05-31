@@ -11,11 +11,11 @@ Lemma tac_sts_fsa {A} (fsa : FSA Λ _ A) fsaV Δ E N i γ S T Q Φ :
   FSASplit Q E fsa fsaV Φ →
   fsaV →
   envs_lookup i Δ = Some (false, sts_ownS γ S T) →
-  of_envs Δ ⊢ sts_ctx γ N φ → nclose N ⊆ E →
+  (of_envs Δ ⊢ sts_ctx γ N φ) → nclose N ⊆ E →
   (∀ s, s ∈ S → ∃ Δ',
     envs_simple_replace i false (Esnoc Enil i (▷ φ s)) Δ = Some Δ' ∧
-    Δ' ⊢ fsa (E ∖ nclose N) (λ a, ∃ s' T',
-      ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ★ (sts_own γ s' T' -★ Φ a))) →
+    (Δ' ⊢ fsa (E ∖ nclose N) (λ a, ∃ s' T',
+      ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ★ (sts_own γ s' T' -★ Φ a)))) →
   Δ ⊢ Q.
 Proof.
   intros ????? HΔ'. rewrite -(fsa_split Q) -(sts_fsaS φ fsa) //.

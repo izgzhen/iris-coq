@@ -136,7 +136,7 @@ Lemma to_agree_car n (x : agree A) : ✓{n} x → to_agree (x n) ≡{n}≡ x.
 Proof. intros [??]; split; naive_solver eauto using agree_valid_le. Qed.
 
 (** Internalized properties *)
-Lemma agree_equivI {M} a b : (to_agree a ≡ to_agree b) ⊣⊢ (a ≡ b : uPred M).
+Lemma agree_equivI {M} a b : to_agree a ≡ to_agree b ⊣⊢ (a ≡ b : uPred M).
 Proof.
   uPred.unseal. do 2 split. by intros [? Hv]; apply (Hv n). apply: to_agree_ne.
 Qed.

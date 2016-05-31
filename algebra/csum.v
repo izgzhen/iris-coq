@@ -241,22 +241,22 @@ Proof. by move=> H n[]? =>[|/H|]. Qed.
 
 (** Internalized properties *)
 Lemma csum_equivI {M} (x y : csum A B) :
-  (x ≡ y) ⊣⊢ (match x, y with
-               | Cinl a, Cinl a' => a ≡ a'
-               | Cinr b, Cinr b' => b ≡ b'
-               | CsumBot, CsumBot => True
-               | _, _ => False
-               end : uPred M).
+  x ≡ y ⊣⊢ (match x, y with
+            | Cinl a, Cinl a' => a ≡ a'
+            | Cinr b, Cinr b' => b ≡ b'
+            | CsumBot, CsumBot => True
+            | _, _ => False
+            end : uPred M).
 Proof.
   uPred.unseal; do 2 split; first by destruct 1.
   by destruct x, y; try destruct 1; try constructor.
 Qed.
 Lemma csum_validI {M} (x : csum A B) :
-  (✓ x) ⊣⊢ (match x with
-            | Cinl a => ✓ a
-            | Cinr b => ✓ b
-            | CsumBot => False
-            end : uPred M).
+  ✓ x ⊣⊢ (match x with
+          | Cinl a => ✓ a
+          | Cinr b => ✓ b
+          | CsumBot => False
+          end : uPred M).
 Proof. uPred.unseal. by destruct x. Qed.
 
 (** Updates *)

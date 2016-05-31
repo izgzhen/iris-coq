@@ -19,7 +19,7 @@ Global Instance own_ne γ n : Proper (dist n ==> dist n) (own γ).
 Proof. solve_proper. Qed.
 Global Instance own_proper γ : Proper ((≡) ==> (⊣⊢)) (own γ) := ne_proper _.
 
-Lemma own_op γ a1 a2 : own γ (a1 ⋅ a2) ⊣⊢ (own γ a1 ★ own γ a2).
+Lemma own_op γ a1 a2 : own γ (a1 ⋅ a2) ⊣⊢ own γ a1 ★ own γ a2.
 Proof. by rewrite /own -ownG_op to_globalF_op. Qed.
 Global Instance own_mono γ : Proper (flip (≼) ==> (⊢)) (own γ).
 Proof. move=>a b [c ->]. rewrite own_op. eauto with I. Qed.
@@ -31,9 +31,9 @@ Proof.
   (* implicit arguments differ a bit *)
   by trans (✓ cmra_transport inG_prf a : iPropG Λ Σ)%I; last destruct inG_prf.
 Qed.
-Lemma own_valid_r γ a : own γ a ⊢ (own γ a ★ ✓ a).
+Lemma own_valid_r γ a : own γ a ⊢ own γ a ★ ✓ a.
 Proof. apply: uPred.always_entails_r. apply own_valid. Qed.
-Lemma own_valid_l γ a : own γ a ⊢ (✓ a ★ own γ a).
+Lemma own_valid_l γ a : own γ a ⊢ ✓ a ★ own γ a.
 Proof. by rewrite comm -own_valid_r. Qed.
 Global Instance own_timeless γ a : Timeless a → TimelessP (own γ a).
 Proof. rewrite /own; apply _. Qed.

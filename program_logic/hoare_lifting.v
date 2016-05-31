@@ -23,10 +23,10 @@ Lemma ht_lift_step E1 E2
   E2 ⊆ E1 → to_val e1 = None →
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  ((P ={E1,E2}=> ▷ ownP σ1 ★ ▷ P') ∧
+  (P ={E1,E2}=> ▷ ownP σ1 ★ ▷ P') ∧
    (∀ e2 σ2 ef, ■ φ e2 σ2 ef ★ ownP σ2 ★ P' ={E2,E1}=> Φ1 e2 σ2 ef ★ Φ2 e2 σ2 ef) ∧
    (∀ e2 σ2 ef, {{ Φ1 e2 σ2 ef }} e2 @ E1 {{ Ψ }}) ∧
-   (∀ e2 σ2 ef, {{ Φ2 e2 σ2 ef }} ef ?@ ⊤ {{ _, True }}))
+   (∀ e2 σ2 ef, {{ Φ2 e2 σ2 ef }} ef ?@ ⊤ {{ _, True }})
   ⊢ {{ P }} e1 @ E1 {{ Ψ }}.
 Proof.
   iIntros {?? Hsafe Hstep} "#(#Hvs&HΦ&He2&Hef) ! HP".
@@ -67,8 +67,8 @@ Lemma ht_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) P P' Ψ e
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →
-  ((∀ e2 ef, {{ ■ φ e2 ef ★ P }} e2 @ E {{ Ψ }}) ∧
-   (∀ e2 ef, {{ ■ φ e2 ef ★ P' }} ef ?@ ⊤ {{ _, True }}))
+  (∀ e2 ef, {{ ■ φ e2 ef ★ P }} e2 @ E {{ Ψ }}) ∧
+    (∀ e2 ef, {{ ■ φ e2 ef ★ P' }} ef ?@ ⊤ {{ _, True }})
   ⊢ {{ ▷(P ★ P') }} e1 @ E {{ Ψ }}.
 Proof.
   iIntros {? Hsafe Hstep} "[#He2 #Hef] ! HP".
@@ -84,7 +84,7 @@ Lemma ht_lift_pure_det_step
   to_val e1 = None →
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2' σ2 ef', prim_step e1 σ1 e2' σ2 ef' → σ1 = σ2 ∧ e2 = e2' ∧ ef = ef')→
-  ({{ P }} e2 @ E {{ Ψ }} ∧ {{ P' }} ef ?@ ⊤ {{ _, True }})
+  {{ P }} e2 @ E {{ Ψ }} ∧ {{ P' }} ef ?@ ⊤ {{ _, True }}
   ⊢ {{ ▷(P ★ P') }} e1 @ E {{ Ψ }}.
 Proof.
   iIntros {? Hsafe Hdet} "[#He2 #Hef]".

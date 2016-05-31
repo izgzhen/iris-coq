@@ -171,9 +171,9 @@ Canonical Structure gmapUR :=
   UCMRAT (gmap K A) gmap_cofe_mixin gmap_cmra_mixin gmap_ucmra_mixin.
 
 (** Internalized properties *)
-Lemma gmap_equivI {M} m1 m2 : (m1 ≡ m2) ⊣⊢ (∀ i, m1 !! i ≡ m2 !! i : uPred M).
+Lemma gmap_equivI {M} m1 m2 : m1 ≡ m2 ⊣⊢ (∀ i, m1 !! i ≡ m2 !! i : uPred M).
 Proof. by uPred.unseal. Qed.
-Lemma gmap_validI {M} m : (✓ m) ⊣⊢ (∀ i, ✓ (m !! i) : uPred M).
+Lemma gmap_validI {M} m : ✓ m ⊣⊢ (∀ i, ✓ (m !! i) : uPred M).
 Proof. by uPred.unseal. Qed.
 End cmra.
 

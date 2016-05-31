@@ -227,9 +227,9 @@ Section cmra.
   Qed.
 
   (** Internalized properties *)
-  Lemma list_equivI {M} l1 l2 : (l1 ≡ l2) ⊣⊢ (∀ i, l1 !! i ≡ l2 !! i : uPred M).
+  Lemma list_equivI {M} l1 l2 : l1 ≡ l2 ⊣⊢ (∀ i, l1 !! i ≡ l2 !! i : uPred M).
   Proof. uPred.unseal; constructor=> n x ?. apply list_dist_lookup. Qed.
-  Lemma list_validI {M} l : (✓ l) ⊣⊢ (∀ i, ✓ (l !! i) : uPred M).
+  Lemma list_validI {M} l : ✓ l ⊣⊢ (∀ i, ✓ (l !! i) : uPred M).
   Proof. uPred.unseal; constructor=> n x ?. apply list_lookup_validN. Qed.
 End cmra.
 

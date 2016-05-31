@@ -20,7 +20,7 @@ Definition barrier_res γ (Φ : X → iProp) : iProp :=
   (∃ x, one_shot_own γ x ★ Φ x)%I.
 
 Lemma worker_spec e γ l (Φ Ψ : X → iProp) :
-  (recv heapN N l (barrier_res γ Φ) ★ ∀ x, {{ Φ x }} e {{ _, Ψ x }})
+  recv heapN N l (barrier_res γ Φ) ★ (∀ x, {{ Φ x }} e {{ _, Ψ x }})
   ⊢ WP wait #l ;; e {{ _, barrier_res γ Ψ }}.
 Proof.
   iIntros "[Hl #He]". wp_apply wait_spec; iFrame "Hl".
@@ -33,13 +33,13 @@ Context (P : iProp) (Φ Φ1 Φ2 Ψ Ψ1 Ψ2 : X -n> iProp).
 Context {Φ_split : ∀ x, Φ x ⊢ (Φ1 x ★ Φ2 x)}.
 Context {Ψ_join  : ∀ x, (Ψ1 x ★ Ψ2 x) ⊢ Ψ x}.
 
-Lemma P_res_split γ : barrier_res γ Φ ⊢ (barrier_res γ Φ1 ★ barrier_res γ Φ2).
+Lemma P_res_split γ : barrier_res γ Φ ⊢ barrier_res γ Φ1 ★ barrier_res γ Φ2.
 Proof.
   iIntros "Hγ"; iDestruct "Hγ" as {x} "[#Hγ Hx]".
   iDestruct (Φ_split with "Hx") as "[H1 H2]". by iSplitL "H1"; iExists x; iSplit.
 Qed.
 
-Lemma Q_res_join γ : (barrier_res γ Ψ1 ★ barrier_res γ Ψ2) ⊢ ▷ barrier_res γ Ψ.
+Lemma Q_res_join γ : barrier_res γ Ψ1 ★ barrier_res γ Ψ2 ⊢ ▷ barrier_res γ Ψ.
 Proof.
   iIntros "[Hγ Hγ']";
   iDestruct "Hγ" as {x} "[#Hγ Hx]"; iDestruct "Hγ'" as {x'} "[#Hγ' Hx']".
@@ -50,10 +50,10 @@ Qed.
 
 Lemma client_spec_new (eM eW1 eW2 : expr []) (eM' eW1' eW2' : expr ("b" :b: [])) :
   heapN ⊥ N → eM' = wexpr' eM → eW1' = wexpr' eW1 → eW2' = wexpr' eW2 →
-  (heap_ctx heapN ★ P
+  heap_ctx heapN ★ P
   ★ {{ P }} eM {{ _, ∃ x, Φ x }}
   ★ (∀ x, {{ Φ1 x }} eW1 {{ _, Ψ1 x }})
-  ★ (∀ x, {{ Φ2 x }} eW2 {{ _, Ψ2 x }}))
+  ★ (∀ x, {{ Φ2 x }} eW2 {{ _, Ψ2 x }})
   ⊢ WP client eM' eW1' eW2' {{ _, ∃ γ, barrier_res γ Ψ }}.
 Proof.
   iIntros {HN -> -> ->} "/= (#Hh&HP&#He&#He1&#He2)"; rewrite /client.

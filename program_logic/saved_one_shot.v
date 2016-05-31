@@ -42,7 +42,7 @@ Section one_shot.
     apply one_shot_init.
   Qed.
 
-  Lemma one_shot_agree γ x y : (one_shot_own γ x ★ one_shot_own γ y) ⊢ ▷(x ≡ y).
+  Lemma one_shot_agree γ x y : one_shot_own γ x ★ one_shot_own γ y ⊢ ▷ (x ≡ y).
   Proof.
     rewrite -own_op own_valid one_shot_validI /= agree_validI.
     rewrite agree_equivI later_equivI.

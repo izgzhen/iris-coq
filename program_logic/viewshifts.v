@@ -27,7 +27,7 @@ Global Instance vs_proper E1 E2 : Proper ((≡) ==> (≡) ==> (≡)) (@vs Λ Σ 
 Proof. apply ne_proper_2, _. Qed.
 
 Lemma vs_mono E1 E2 P P' Q Q' :
-  P ⊢ P' → Q' ⊢ Q → (P' ={E1,E2}=> Q') ⊢ (P ={E1,E2}=> Q).
+  (P ⊢ P') → (Q' ⊢ Q) → (P' ={E1,E2}=> Q') ⊢ P ={E1,E2}=> Q.
 Proof. by intros HP HQ; rewrite /vs -HP HQ. Qed.
 
 Global Instance vs_mono' E1 E2 :
@@ -40,37 +40,37 @@ Lemma vs_timeless E P : TimelessP P → ▷ P ={E}=> P.
 Proof. by apply pvs_timeless. Qed.
 
 Lemma vs_transitive E1 E2 E3 P Q R :
-  E2 ⊆ E1 ∪ E3 → ((P ={E1,E2}=> Q) ∧ (Q ={E2,E3}=> R)) ⊢ (P ={E1,E3}=> R).
+  E2 ⊆ E1 ∪ E3 → (P ={E1,E2}=> Q) ∧ (Q ={E2,E3}=> R) ⊢ P ={E1,E3}=> R.
 Proof.
   iIntros {?} "#[HvsP HvsQ] ! HP".
   iPvs ("HvsP" with "HP") as "HQ"; first done. by iApply "HvsQ".
 Qed.
 
-Lemma vs_transitive' E P Q R : ((P ={E}=> Q) ∧ (Q ={E}=> R)) ⊢ (P ={E}=> R).
+Lemma vs_transitive' E P Q R : (P ={E}=> Q) ∧ (Q ={E}=> R) ⊢ (P ={E}=> R).
 Proof. apply vs_transitive; set_solver. Qed.
 Lemma vs_reflexive E P : P ={E}=> P.
 Proof. by iIntros "HP". Qed.
 
-Lemma vs_impl E P Q : □ (P → Q) ⊢ (P ={E}=> Q).
+Lemma vs_impl E P Q : □ (P → Q) ⊢ P ={E}=> Q.
 Proof. iIntros "#HPQ ! HP". by iApply "HPQ". Qed.
 
-Lemma vs_frame_l E1 E2 P Q R : (P ={E1,E2}=> Q) ⊢ (R ★ P ={E1,E2}=> R ★ Q).
+Lemma vs_frame_l E1 E2 P Q R : (P ={E1,E2}=> Q) ⊢ R ★ P ={E1,E2}=> R ★ Q.
 Proof. iIntros "#Hvs ! [$ HP]". by iApply "Hvs". Qed.
 
-Lemma vs_frame_r E1 E2 P Q R : (P ={E1,E2}=> Q) ⊢ (P ★ R ={E1,E2}=> Q ★ R).
+Lemma vs_frame_r E1 E2 P Q R : (P ={E1,E2}=> Q) ⊢ P ★ R ={E1,E2}=> Q ★ R.
 Proof. iIntros "#Hvs ! [HP $]". by iApply "Hvs". Qed.
 
 Lemma vs_mask_frame E1 E2 Ef P Q :
-  Ef ⊥ E1 ∪ E2 → (P ={E1,E2}=> Q) ⊢ (P ={E1 ∪ Ef,E2 ∪ Ef}=> Q).
+  Ef ⊥ E1 ∪ E2 → (P ={E1,E2}=> Q) ⊢ P ={E1 ∪ Ef,E2 ∪ Ef}=> Q.
 Proof.
   iIntros {?} "#Hvs ! HP". iApply pvs_mask_frame; auto. by iApply "Hvs".
 Qed.
 
-Lemma vs_mask_frame' E Ef P Q : Ef ⊥ E → (P ={E}=> Q) ⊢ (P ={E ∪ Ef}=> Q).
+Lemma vs_mask_frame' E Ef P Q : Ef ⊥ E → (P ={E}=> Q) ⊢ P ={E ∪ Ef}=> Q.
 Proof. intros; apply vs_mask_frame; set_solver. Qed.
 
 Lemma vs_inv N E P Q R :
-  nclose N ⊆ E → (inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q)) ⊢ (P ={E}=> Q).
+  nclose N ⊆ E → inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q) ⊢ P ={E}=> Q.
 Proof.
   iIntros {?} "#[? Hvs] ! HP". iInv N as "HR". iApply "Hvs". by iSplitL "HR".
 Qed.
