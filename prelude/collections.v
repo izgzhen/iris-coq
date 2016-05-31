@@ -41,6 +41,25 @@ Section simple_collection.
   Lemma elem_of_disjoint X Y : X ⊥ Y ↔ ∀ x, x ∈ X → x ∈ Y → False.
   Proof. done. Qed.
 
+  Global Instance disjoint_sym : Symmetric (@disjoint C _).
+  Proof. intros ??. rewrite !elem_of_disjoint; naive_solver. Qed.
+  Lemma disjoint_empty_l Y : ∅ ⊥ Y.
+  Proof. rewrite elem_of_disjoint; intros x; by rewrite elem_of_empty. Qed.
+  Lemma disjoint_empty_r X : X ⊥ ∅.
+  Proof. rewrite (symmetry_iff _); apply disjoint_empty_l. Qed.
+  Lemma disjoint_singleton_l x Y : {[ x ]} ⊥ Y ↔ x ∉ Y.
+  Proof.
+    rewrite elem_of_disjoint; setoid_rewrite elem_of_singleton; naive_solver.
+  Qed.
+  Lemma disjoint_singleton_r y X : X ⊥ {[ y ]} ↔ y ∉ X.
+  Proof. rewrite (symmetry_iff (⊥)). apply disjoint_singleton_l. Qed.
+  Lemma disjoint_union_l X1 X2 Y : X1 ∪ X2 ⊥ Y ↔ X1 ⊥ Y ∧ X2 ⊥ Y.
+  Proof.
+    rewrite !elem_of_disjoint; setoid_rewrite elem_of_union; naive_solver.
+  Qed.
+  Lemma disjoint_union_r X Y1 Y2 : X ⊥ Y1 ∪ Y2 ↔ X ⊥ Y1 ∧ X ⊥ Y2.
+  Proof. rewrite !(symmetry_iff (⊥) X). apply disjoint_union_l. Qed.
+
   Lemma collection_positive_l X Y : X ∪ Y ≡ ∅ → X ≡ ∅.
   Proof.
     rewrite !elem_of_equiv_empty. setoid_rewrite elem_of_union. naive_solver.
