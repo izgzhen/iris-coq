@@ -316,6 +316,7 @@ Ltac solve_proper :=
   repeat lazymatch goal with
   | |- Proper _ _ => intros ???
   | |- (_ ==> _)%signature _ _ => intros ???
+  | |- pointwise_relation _ _ _ _ => intros ?
   end;
   (* Unfold the head symbol, which is the one we are proving a new property about *)
   lazymatch goal with
