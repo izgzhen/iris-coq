@@ -156,7 +156,7 @@ Proof.
   iIntros {?} "[#Hinv H]"; iDestruct "H" as {Φ} "[#HeqP Hf]".
   iInv N as {b} "(Hγ & #HγQ & HQ)"; iTimeless "Hγ".
   iDestruct (big_sepM_later _ f with "Hf") as "Hf".
-  iDestruct (big_sepM_delete _ f _ true with "Hf")
+  iDestruct (big_sepM_delete _ f with "Hf")
     as "[[Hγ' #[HγΦ Hinv']] ?]"; first done; iTimeless "Hγ'".
   iDestruct (box_own_auth_agree γ b true with "[#]")
     as "%"; subst; first by iFrame "Hγ".
