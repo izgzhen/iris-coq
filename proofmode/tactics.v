@@ -24,8 +24,10 @@ Ltac iFresh :=
   |- of_envs ?Δ ⊢ _ =>
       match goal with
       | _ => eval vm_compute in (fresh_string_of_set "~" (dom stringset Δ))
-      (* [vm_compute fails] if [Δ] contains evars, so fall-back to [cbv] *)
-      | _ => eval cbv in (fresh_string_of_set "~" (dom stringset Δ))
+      | _ =>
+         (* [vm_compute fails] if [Δ] contains evars, so fall-back to [cbv] *)
+         let Hs := eval cbv in (dom stringset Δ) in
+         eval vm_compute in (fresh_string_of_set "~" Hs)
       end
   | _ => constr:"~"
   end.
