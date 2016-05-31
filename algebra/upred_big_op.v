@@ -180,9 +180,9 @@ Section gmap.
     f_equiv; apply reflexive_eq, list_fmap_ext. by intros []. done.
   Qed.
 
-  Lemma big_sepM_insert_override (Φ : K → uPred M) m i x :
+  Lemma big_sepM_insert_override (Φ : K → uPred M) m i x y :
     m !! i = Some x →
-    ([★ map] k↦_ ∈ <[i:=x]> m, Φ k) ⊣⊢ ([★ map] k↦_ ∈ m, Φ k).
+    ([★ map] k↦_ ∈ <[i:=y]> m, Φ k) ⊣⊢ ([★ map] k↦_ ∈ m, Φ k).
   Proof.
     intros. rewrite -insert_delete big_sepM_insert ?lookup_delete //.
     by rewrite -big_sepM_delete.

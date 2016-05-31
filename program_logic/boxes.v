@@ -144,7 +144,7 @@ Proof.
     as "[Hγ Hγ']"; first by iFrame "Hγ".
   iPvsIntro; iNext; iSplitL "Hγ HQ"; first (iExists true; by iFrame "Hγ HQ").
   iExists Φ; iSplit.
-  - by rewrite -insert_delete big_sepM_insert ?lookup_delete // big_sepM_delete.
+  - by rewrite big_sepM_insert_override.
   - rewrite -insert_delete big_sepM_insert ?lookup_delete //.
     iFrame "Hγ'". by repeat iSplit.
 Qed.
@@ -165,7 +165,7 @@ Proof.
     as "[Hγ Hγ']"; first by iFrame "Hγ".
   iPvsIntro; iNext; iSplitL "Hγ"; first (iExists false; by repeat iSplit).
   iExists Φ; iSplit.
-  - by rewrite -insert_delete big_sepM_insert ?lookup_delete // big_sepM_delete.
+  - by rewrite big_sepM_insert_override.
   - rewrite -insert_delete big_sepM_insert ?lookup_delete //.
     iFrame "Hγ'". by repeat iSplit.
 Qed.
