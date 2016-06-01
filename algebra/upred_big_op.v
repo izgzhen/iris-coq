@@ -188,10 +188,10 @@ Section gmap.
     by rewrite -big_sepM_delete.
   Qed.
 
-  Lemma big_sepM_fn_insert (Ψ : K → A → uPred M → uPred M) (Φ : K → uPred M) m i x P :
+  Lemma big_sepM_fn_insert {B} (Ψ : K → A → B → uPred M) (f : K → B) m i x b :
     m !! i = None →
-       ([★ map] k↦y ∈ <[i:=x]> m, Ψ k y (<[i:=P]> Φ k))
-    ⊣⊢ (Ψ i x P ★ [★ map] k↦y ∈ m, Ψ k y (Φ k)).
+       ([★ map] k↦y ∈ <[i:=x]> m, Ψ k y (<[i:=b]> f k))
+    ⊣⊢ (Ψ i x b ★ [★ map] k↦y ∈ m, Ψ k y (f k)).
   Proof.
     intros. rewrite big_sepM_insert // fn_lookup_insert.
     apply sep_proper, big_sepM_proper; auto=> k y ??.
@@ -301,10 +301,10 @@ Section gset.
   Lemma big_sepS_insert Φ X x :
     x ∉ X → ([★ set] y ∈ {[ x ]} ∪ X, Φ y) ⊣⊢ (Φ x ★ [★ set] y ∈ X, Φ y).
   Proof. intros. by rewrite /uPred_big_sepS elements_union_singleton. Qed.
-  Lemma big_sepS_fn_insert (Ψ : A → uPred M → uPred M) Φ X x P :
+  Lemma big_sepS_fn_insert {B} (Ψ : A → B → uPred M) f X x b :
     x ∉ X →
-       ([★ set] y ∈ {[ x ]} ∪ X, Ψ y (<[x:=P]> Φ y))
-    ⊣⊢ (Ψ x P ★ [★ set] y ∈ X, Ψ y (Φ y)).
+       ([★ set] y ∈ {[ x ]} ∪ X, Ψ y (<[x:=b]> f y))
+    ⊣⊢ (Ψ x b ★ [★ set] y ∈ X, Ψ y (f y)).
   Proof.
     intros. rewrite big_sepS_insert // fn_lookup_insert.
     apply sep_proper, big_sepS_proper; auto=> y ??.

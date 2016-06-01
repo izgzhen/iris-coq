@@ -13,29 +13,31 @@ Section box_defs.
   Context `{boxG Λ Σ} (N : namespace).
   Notation iProp := (iPropG Λ Σ).
 
-  Definition box_own_auth (γ : gname) (a : auth (option (excl bool))) : iProp :=
-    own γ (a, ∅).
+  Definition slice_name := gname.
 
-  Definition box_own_prop (γ : gname) (P : iProp) : iProp :=
+  Definition box_own_auth (γ : slice_name)
+    (a : auth (option (excl bool))) : iProp := own γ (a, ∅).
+
+  Definition box_own_prop (γ : slice_name) (P : iProp) : iProp :=
     own γ (∅:auth _, Some (to_agree (Next (iProp_unfold P)))).
 
-  Definition box_slice_inv (γ : gname) (P : iProp) : iProp :=
+  Definition slice_inv (γ : slice_name) (P : iProp) : iProp :=
     (∃ b, box_own_auth γ (● Excl' b) ★ box_own_prop γ P ★ if b then P else True)%I.
 
-  Definition box_slice (γ : gname) (P : iProp) : iProp :=
-    inv N (box_slice_inv γ P).
+  Definition slice (γ : slice_name) (P : iProp) : iProp :=
+    inv N (slice_inv γ P).
 
-  Definition box (f : gmap gname bool) (P : iProp) : iProp :=
-    (∃ Φ : gname → iProp,
+  Definition box (f : gmap slice_name bool) (P : iProp) : iProp :=
+    (∃ Φ : slice_name → iProp,
       ▷ (P ≡ [★ map] γ ↦ b ∈ f, Φ γ) ★
       [★ map] γ ↦ b ∈ f, box_own_auth γ (◯ Excl' b) ★ box_own_prop γ (Φ γ) ★
-                         inv N (box_slice_inv γ (Φ γ)))%I.
+                         inv N (slice_inv γ (Φ γ)))%I.
 End box_defs.
 
 Instance: Params (@box_own_auth) 4.
 Instance: Params (@box_own_prop) 4.
-Instance: Params (@box_slice_inv) 4.
-Instance: Params (@box_slice) 5.
+Instance: Params (@slice_inv) 4.
+Instance: Params (@slice) 5.
 Instance: Params (@box) 5.
 
 Section box.
@@ -46,13 +48,13 @@ Implicit Types P Q : iProp.
 (* FIXME: solve_proper picks the eq ==> instance for Next. *)
 Global Instance box_own_prop_ne n γ : Proper (dist n ==> dist n) (box_own_prop γ).
 Proof. solve_proper. Qed.
-Global Instance box_inv_ne n γ : Proper (dist n ==> dist n) (box_slice_inv γ).
+Global Instance box_inv_ne n γ : Proper (dist n ==> dist n) (slice_inv γ).
 Proof. solve_proper. Qed.
-Global Instance box_slice_ne n γ : Proper (dist n ==> dist n) (box_slice N γ).
+Global Instance slice_ne n γ : Proper (dist n ==> dist n) (slice N γ).
 Proof. solve_proper. Qed.
 Global Instance box_ne n f : Proper (dist n ==> dist n) (box N f).
 Proof. solve_proper. Qed.
-Global Instance box_slice_persistent γ P : PersistentP (box_slice N γ P).
+Global Instance slice_persistent γ P : PersistentP (slice N γ P).
 Proof. apply _. Qed.
 
 (* This should go automatic *)
@@ -95,7 +97,7 @@ Qed.
 
 Lemma box_insert f P Q :
   ▷ box N f P ={N}=> ∃ γ, f !! γ = None ★
-    box_slice N γ Q ★ ▷ box N (<[γ:=false]> f) (Q ★ P).
+    slice N γ Q ★ ▷ box N (<[γ:=false]> f) (Q ★ P).
 Proof.
   iIntros "H"; iDestruct "H" as {Φ} "[#HeqP Hf]".
   iPvs (own_alloc_strong (● Excl' false ⋅ ◯ Excl' false,
@@ -103,7 +105,7 @@ Proof.
     as {γ} "[Hdom Hγ]"; first done.
   rewrite pair_split. iDestruct "Hγ" as "[[Hγ Hγ'] #HγQ]".
   iDestruct "Hdom" as % ?%not_elem_of_dom.
-  iPvs (inv_alloc N _ (box_slice_inv γ Q) with "[Hγ]") as "#Hinv"; first done.
+  iPvs (inv_alloc N _ (slice_inv γ Q) with "[Hγ]") as "#Hinv"; first done.
   { iNext. iExists false; eauto. }
   iPvsIntro; iExists γ; repeat iSplit; auto.
   iNext. iExists (<[γ:=Q]> Φ); iSplit.
@@ -114,7 +116,7 @@ Qed.
 
 Lemma box_delete f P Q γ :
   f !! γ = Some false →
-  box_slice N γ Q ★ ▷ box N f P ={N}=> ∃ P',
+  slice N γ Q ★ ▷ box N f P ={N}=> ∃ P',
     ▷ ▷ (P ≡ (Q ★ P')) ★ ▷ box N (delete γ f) P'.
 Proof.
   iIntros {?} "[#Hinv H]"; iDestruct "H" as {Φ} "[#HeqP Hf]".
@@ -133,7 +135,7 @@ Qed.
 
 Lemma box_fill f γ P Q :
   f !! γ = Some false →
-  box_slice N γ Q ★ ▷ Q ★ ▷ box N f P ={N}=> ▷ box N (<[γ:=true]> f) P.
+  slice N γ Q ★ ▷ Q ★ ▷ box N f P ={N}=> ▷ box N (<[γ:=true]> f) P.
 Proof.
   iIntros {?} "(#Hinv & HQ & H)"; iDestruct "H" as {Φ} "[#HeqP Hf]".
   iInv N as {b'} "(Hγ & #HγQ & _)"; iTimeless "Hγ".
@@ -151,7 +153,7 @@ Qed.
 
 Lemma box_empty f P Q γ :
   f !! γ = Some true →
-  box_slice N γ Q ★ ▷ box N f P ={N}=> ▷ Q ★ ▷ box N (<[γ:=false]> f) P.
+  slice N γ Q ★ ▷ box N f P ={N}=> ▷ Q ★ ▷ box N (<[γ:=false]> f) P.
 Proof.
   iIntros {?} "[#Hinv H]"; iDestruct "H" as {Φ} "[#HeqP Hf]".
   iInv N as {b} "(Hγ & #HγQ & HQ)"; iTimeless "Hγ".
@@ -191,7 +193,7 @@ Lemma box_empty_all f P Q :
 Proof.
   iIntros {?} "H"; iDestruct "H" as {Φ} "[#HeqP Hf]".
   iAssert ([★ map] γ↦b ∈ f, ▷ Φ γ ★ box_own_auth γ (◯ Excl' false) ★
-    box_own_prop γ (Φ γ) ★ inv N (box_slice_inv γ (Φ γ)))%I with "=>[Hf]" as "[HΦ ?]".
+    box_own_prop γ (Φ γ) ★ inv N (slice_inv γ (Φ γ)))%I with "|==>[Hf]" as "[HΦ ?]".
   { iApply (pvs_big_sepM _ _ f); iApply (big_sepM_impl _ _ f); iFrame "Hf".
     iAlways; iIntros {γ b ?} "(Hγ' & #$ & #$)".
     assert (true = b) as <- by eauto.
@@ -207,4 +209,4 @@ Proof.
 Qed.
 End box.
 
-Typeclasses Opaque box_slice box.
+Typeclasses Opaque slice_name slice box.
