@@ -14,7 +14,7 @@ Instance frac_op : Op frac := λ x y, (x + y)%Qp.
 Definition frac_ra_mixin : RAMixin frac.
 Proof.
   split; try apply _; try done.
-  unfold valid, op, frac_op, frac_valid. intros. trans (x+y)%Qp. 2:done.
+  unfold valid, op, frac_op, frac_valid. intros x y. trans (x+y)%Qp; last done.
   rewrite -{1}(Qcplus_0_r x) -Qcplus_le_mono_l; auto using Qclt_le_weak.
 Qed.
 Canonical Structure fracR := discreteR frac frac_ra_mixin.
