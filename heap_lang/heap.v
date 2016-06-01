@@ -166,7 +166,7 @@ Section heap.
     iFrame "Hh Hl". iIntros {h} "[% Hl]". rewrite /heap_inv.
     iApply (wp_load_pst _ (<[l:=v]>(of_heap h)));first by rewrite lookup_insert.
     rewrite of_heap_singleton_op //. iFrame "Hl". iNext.
-    iIntros "$". by iSplit.
+    iIntros "$"; eauto.
   Qed.
 
   Lemma wp_store N E l v' e v Φ :
@@ -195,7 +195,7 @@ Section heap.
     iFrame "Hh Hl". iIntros {h} "[% Hl]". rewrite /heap_inv.
     iApply (wp_cas_fail_pst _ (<[l:=v']>(of_heap h))); rewrite ?lookup_insert //.
     rewrite of_heap_singleton_op //. iFrame "Hl". iNext.
-    iIntros "$". by iSplit.
+    iIntros "$"; eauto.
   Qed.
 
   Lemma wp_cas_suc N E l e1 v1 e2 v2 Φ :

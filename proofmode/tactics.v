@@ -770,4 +770,20 @@ Tactic Notation "iRewrite" "-" open_constr(t) "in" constr(H) :=
 (* Make sure that by and done solve trivial things in proof mode *)
 Hint Extern 0 (of_envs _ ⊢ _) => by iPureIntro.
 Hint Extern 0 (of_envs _ ⊢ _) => iAssumption.
+Hint Extern 0 (of_envs _ ⊢ _) => progress iIntros.
 Hint Resolve uPred.eq_refl'. (* Maybe make an [iReflexivity] tactic *)
+
+(* We should be able to write [Hint Extern 1 (of_envs _ ⊢ (_ ★ _)%I) => ...],
+but then [eauto] mysteriously fails. See bug 4762 *)
+Hint Extern 1 (of_envs _ ⊢ _) =>
+  match goal with
+  | |- _ ⊢ (_ ∧ _)%I => iSplit
+  | |- _ ⊢ (_ ★ _)%I => iSplit
+  | |- _ ⊢ (▷ _)%I => iNext
+  | |- _ ⊢ (□ _)%I => iClear "*"; iAlways
+  | |- _ ⊢ (∃ _, _)%I => iExists _
+  end.
+Hint Extern 1 (of_envs _ ⊢ _) =>
+  match goal with |- _ ⊢ (_ ∨ _)%I => iLeft end.
+Hint Extern 1 (of_envs _ ⊢ _) =>
+  match goal with |- _ ⊢ (_ ∨ _)%I => iRight end.

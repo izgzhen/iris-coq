@@ -59,14 +59,14 @@ Proof.
     iAssert (∃ v, l ↦ v ★ ((v = InjLV #0 ★ own γ OneShotPending) ∨
        ∃ n : Z, v = InjRV #n ★ own γ (Shot (DecAgree n))))%I with "[-]" as "Hv".
     { iDestruct "Hγ" as "[[Hl Hγ]|Hl]"; last iDestruct "Hl" as {m} "[Hl Hγ]".
-      + iExists (InjLV #0). iFrame "Hl". iLeft; by iSplit.
-      + iExists (InjRV #m). iFrame "Hl". iRight; iExists m; by iSplit. }
+      + iExists (InjLV #0). iFrame "Hl". eauto.
+      + iExists (InjRV #m). iFrame "Hl". eauto. }
     iDestruct "Hv" as {v} "[Hl Hv]". wp_load.
     iAssert (one_shot_inv γ l ★ (v = InjLV #0 ∨ ∃ n : Z,
       v = InjRV #n ★ own γ (Shot (DecAgree n))))%I with "[-]" as "[$ #Hv]".
     { iDestruct "Hv" as "[[% ?]|Hv]"; last iDestruct "Hv" as {m} "[% ?]"; subst.
-      + iSplit. iLeft; by iSplitL "Hl". by iLeft.
-      + iSplit. iRight; iExists m; by iSplitL "Hl". iRight; iExists m; by iSplit. }
+      + iSplit. iLeft; by iSplitL "Hl". eauto.
+      + iSplit. iRight; iExists m; by iSplitL "Hl". eauto. }
     wp_let. iPvsIntro. iIntros "!". wp_seq.
     iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as {m} "[% Hγ']"; subst.
     { wp_case. wp_seq. by iPvsIntro. }
@@ -76,9 +76,8 @@ Proof.
     wp_load.
     iCombine "Hγ" "Hγ'" as "Hγ".
     iDestruct (own_valid with "#Hγ") as %[=->]%dec_agree_op_inv.
-    iSplitL "Hl"; [iRight; iExists m; by iSplit|].
-    wp_case. wp_let. iApply wp_assert'. wp_op=>?; simplify_eq/=.
-    iSplit. done. by iNext.
+    iSplitL "Hl"; [iRight; by eauto|].
+    wp_case. wp_let. iApply wp_assert'. wp_op=>?; simplify_eq/=; eauto.
 Qed.
 
 Lemma hoare_one_shot (Φ : val → iProp) :

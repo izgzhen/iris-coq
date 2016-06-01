@@ -90,8 +90,7 @@ Proof.
     iDestruct ("HQR" with "HΨ") as "[HR1 HR2]".
     rewrite -assoc_L !big_sepS_fn_insert'; [|abstract set_solver ..].
     by iFrame "HR1 HR2".
-  - rewrite -assoc_L !big_sepS_fn_insert; [|abstract set_solver ..].
-    by repeat iSplit.
+  - rewrite -assoc_L !big_sepS_fn_insert; [|abstract set_solver ..]. eauto.
 Qed.
 
 (** Actual proofs *)
@@ -107,8 +106,7 @@ Proof.
   iPvs (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}) with "[-]")
     as {γ'} "[#? Hγ']"; eauto.
   { iNext. rewrite /barrier_inv /=. iFrame "Hl".
-    iExists (const P). rewrite !big_sepS_singleton /=.
-    iSplit; [|done]. by iIntros "> ?". }
+    iExists (const P). rewrite !big_sepS_singleton /=. eauto. }
   iAssert (barrier_ctx γ' l P)%I as "#?".
   { rewrite /barrier_ctx. by repeat iSplit. }
   iAssert (sts_ownS γ' (i_states γ) {[Change γ]}
@@ -119,8 +117,8 @@ Proof.
         auto using sts.closed_op, i_states_closed, low_states_closed;
         abstract set_solver. }
   iPvsIntro. rewrite /recv /send. iSplitL "Hr".
-  - iExists γ', P, P, γ. iFrame "Hr". repeat iSplit; auto. by iIntros "> ?".
-  - iExists γ'. by iSplit.
+  - iExists γ', P, P, γ. iFrame "Hr". auto.
+  - auto.
 Qed.
 
 Lemma signal_spec l P (Φ : val → iProp) :
@@ -132,7 +130,7 @@ Proof.
   wp_store. destruct p; [|done].
   iExists (State High I), (∅ : set token).
   iSplit; [iPureIntro; by eauto using signal_step|].
-  iSplitR "HΦ"; [iNext|by iIntros "?"].
+  iSplitR "HΦ"; [iNext|by auto].
   rewrite {2}/barrier_inv /ress /=; iFrame "Hl".
   iDestruct "Hr" as {Ψ} "[Hr Hsp]"; iExists Ψ; iFrame "Hsp".
   iIntros "> _"; by iApply "Hr".
@@ -152,7 +150,7 @@ Proof.
     iIntros "Hγ".
     iAssert (sts_ownS γ (i_states i) {[Change i]})%I with "=>[Hγ]" as "Hγ".
     { iApply (sts_own_weaken with "Hγ"); eauto using i_states_closed. }
-    wp_op=> ?; simplify_eq; wp_if. iApply ("IH" with "Hγ [HQR] HΦ"). by iNext.
+    wp_op=> ?; simplify_eq; wp_if. iApply ("IH" with "Hγ [HQR] HΦ"). auto.
   - (* a High state: the comparison succeeds, and we perform a transition and
     return to the client *)
     iExists (State High (I ∖ {[ i ]})), (∅ : set token).
@@ -163,8 +161,8 @@ Proof.
     { iNext. iApply (big_sepS_delete _ _ i); first done. by iApply "HΨ". }
     iSplitL "HΨ' Hl Hsp"; [iNext|].
     + rewrite {2}/barrier_inv /=; iFrame "Hl".
-      iExists Ψ; iFrame "Hsp". by iIntros "> _".
-    + iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by iSplit.
+      iExists Ψ; iFrame "Hsp". auto.
+    + iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by auto.
       iIntros "_". wp_op=> ?; simplify_eq/=; wp_if.
       iPvsIntro. iApply "HΦ". iApply "HQR". by iRewrite "Heq".
 Qed.
@@ -184,7 +182,7 @@ Proof.
   iExists ({[Change i1; Change i2 ]}).
   iSplit; [by eauto using split_step|iSplitL].
   - iNext. rewrite {2}/barrier_inv /=. iFrame "Hl".
-    iApply (ress_split _ _ _ Q R1 R2); eauto. iFrame "Hr HQR". by repeat iSplit.
+    iApply (ress_split _ _ _ Q R1 R2); eauto. iFrame "Hr HQR". auto.
   - iIntros "Hγ".
     iAssert (sts_ownS γ (i_states i1) {[Change i1]}
       ★ sts_ownS γ (i_states i2) {[Change i2]})%I with "=>[-]" as "[Hγ1 Hγ2]".
@@ -194,10 +192,8 @@ Proof.
           eauto using sts.closed_op, i_states_closed.
         abstract set_solver. }
     iPvsIntro; iSplitL "Hγ1"; rewrite /recv /barrier_ctx.
-    + iExists γ, P, R1, i1. iFrame "Hγ1 Hi1". repeat iSplit; auto.
-      by iIntros "> ?".
-    + iExists γ, P, R2, i2. iFrame "Hγ2 Hi2". repeat iSplit; auto.
-      by iIntros "> ?".
+    + iExists γ, P, R1, i1. iFrame "Hγ1 Hi1"; auto.
+    + iExists γ, P, R2, i2. iFrame "Hγ2 Hi2"; auto.
 Qed.
 
 Lemma recv_weaken l P1 P2 : (P1 -★ P2) ⊢ recv l P1 -★ recv l P2.

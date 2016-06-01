@@ -104,12 +104,12 @@ Proof.
   rewrite pair_split. iDestruct "Hγ" as "[[Hγ Hγ'] #HγQ]".
   iDestruct "Hdom" as % ?%not_elem_of_dom.
   iPvs (inv_alloc N _ (box_slice_inv γ Q) with "[Hγ]") as "#Hinv"; first done.
-  { iNext. iExists false. by repeat iSplit. }
+  { iNext. iExists false; eauto. }
   iPvsIntro; iExists γ; repeat iSplit; auto.
   iNext. iExists (<[γ:=Q]> Φ); iSplit.
   - iNext. iRewrite "HeqP". by rewrite big_sepM_fn_insert'.
   - rewrite (big_sepM_fn_insert (λ _ _ P',  _ ★ _ _ P' ★ _ _ (_ _ P')))%I //.
-    iFrame "Hf Hγ'". by iSplit.
+    iFrame "Hf Hγ'". eauto.
 Qed.
 
 Lemma box_delete f P Q γ :
@@ -122,13 +122,13 @@ Proof.
   iInv N as {b} "(Hγ & #HγQ &_)"; iPvsIntro; iNext.
   iDestruct (big_sepM_delete _ f _ false with "Hf")
     as "[[Hγ' #[HγΦ ?]] ?]"; first done.
-  iDestruct (box_own_agree γ Q (Φ γ) with "[#]") as "HeqQ"; first by iSplit.
+  iDestruct (box_own_agree γ Q (Φ γ) with "[#]") as "HeqQ"; first by eauto.
   iDestruct (box_own_auth_agree γ b false with "[#]")
     as "%"; subst; first by iFrame "Hγ".
   iSplitL "Hγ"; last iSplit.
-  - iExists false; repeat iSplit; auto.
+  - iExists false; eauto.
   - iNext. iRewrite "HeqP". iRewrite "HeqQ". by rewrite -big_sepM_delete.
-  - iExists Φ; by iSplit; [iNext|].
+  - iExists Φ; eauto.
 Qed.
 
 Lemma box_fill f γ P Q :
@@ -146,7 +146,7 @@ Proof.
   iExists Φ; iSplit.
   - by rewrite big_sepM_insert_override.
   - rewrite -insert_delete big_sepM_insert ?lookup_delete //.
-    iFrame "Hγ'". by repeat iSplit.
+    iFrame "Hγ'"; eauto.
 Qed.
 
 Lemma box_empty f P Q γ :
@@ -167,7 +167,7 @@ Proof.
   iExists Φ; iSplit.
   - by rewrite big_sepM_insert_override.
   - rewrite -insert_delete big_sepM_insert ?lookup_delete //.
-    iFrame "Hγ'". by repeat iSplit.
+    iFrame "Hγ'"; eauto.
 Qed.
 
 Lemma box_fill_all f P Q : box N f P ★ ▷ P ={N}=> box N (const true <$> f) P.
@@ -200,7 +200,7 @@ Proof.
       as "%"; subst; first by iFrame "Hγ".
     iPvs (box_own_auth_update _ γ true true false with "[Hγ Hγ']")
       as "[Hγ $]"; first by iFrame "Hγ".
-    iPvsIntro; iNext. iFrame "HΦ". iExists false. by iFrame "Hγ"; iSplit. }
+    iPvsIntro; iNext. iFrame "HΦ". iExists false. iFrame "Hγ"; eauto. }
   iPvsIntro; iSplitL "HΦ".
   - rewrite eq_iff later_iff big_sepM_later. by iApply "HeqP".
   - iExists Φ; iSplit; by rewrite big_sepM_fmap.

@@ -42,7 +42,7 @@ Proof.
   iPvs (pvs_openI' with "Hi") as "HP"; [set_solver..|].
   iPvsIntro. iSplitL "HP"; first done. iIntros "HP".
   iPvs (pvs_closeI' _ _ P with "[HP]"); [set_solver|iSplit; done|set_solver|].
-  iPvsIntro. done.
+  done.
 Qed.
 
 (** Invariants can be opened around any frame-shifting assertion. This is less
@@ -54,11 +54,11 @@ Proof.
   iIntros {??} "[Hinv HΨ]".
   iDestruct (inv_open E N P with "Hinv") as {E'} "[% Hvs]"; first done.
   iApply (fsa_open_close E E'); auto; first set_solver.
-  iPvs "Hvs" as "[HP Hvs]";first set_solver.
+  iPvs "Hvs" as "[HP Hvs]"; first set_solver.
   (* TODO: How do I do sth. like [iSpecialize "HΨ HP"]? *)
   iPvsIntro. iApply (fsa_mask_weaken _ (E ∖ N)); first set_solver.
   iApply fsa_wand_r. iSplitR "Hvs"; first by iApply "HΨ".
   simpl. iIntros {v} "[HP HΨ]". iPvs ("Hvs" with "HP"); first set_solver.
-  by iPvsIntro.
+  done.
 Qed.
 End inv.
