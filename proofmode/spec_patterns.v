@@ -32,7 +32,8 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String "#" s => tokenize_go s (TPersistent :: cons_name kn k) ""
   | String "%" s => tokenize_go s (TPure :: cons_name kn k) ""
   | String "*" s => tokenize_go s (TForall :: cons_name kn k) ""
-  | String "=" (String ">" s) => tokenize_go s (TPvs :: cons_name kn k) ""
+  | String "|" (String "=" (String "=" (String ">" s))) =>
+     tokenize_go s (TPvs :: cons_name kn k) ""
   | String a s => tokenize_go s k (String a kn)
   end.
 Definition tokenize (s : string) : list token := tokenize_go s [] "".

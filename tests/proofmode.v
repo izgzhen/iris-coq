@@ -100,7 +100,7 @@ Section iris.
     (True -★ P -★ inv N Q -★ True -★ R) ⊢ P -★ ▷ Q -★ |={E}=> R.
   Proof.
     iIntros {?} "H HP HQ".
-    iApply ("H" with "[#] HP =>[HQ] =>").
+    iApply ("H" with "[#] HP |==>[HQ] |==>").
     - done.
     - by iApply inv_alloc.
     - by iPvsIntro.
