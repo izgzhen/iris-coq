@@ -67,15 +67,15 @@ Proof.
     iIntros {v} "HP"; iDestruct "HP" as {x} "HP". wp_let.
     iPvs (one_shot_init _ _ x with "Hγ") as "Hx".
     iApply signal_spec; iFrame "Hs"; iSplit; last done.
-    iExists x; by iSplitL "Hx".
+    iExists x; auto.
   - iDestruct (recv_weaken with "[] Hr") as "Hr"; first by iApply P_res_split.
     iPvs (recv_split with "Hr") as "[H1 H2]"; first done.
     wp_apply (wp_par _ _ (λ _, barrier_res γ Ψ1)%I
       (λ _, barrier_res γ Ψ2)%I); first done.
     iSplit; [done|]; iSplitL "H1"; [|iSplitL "H2"].
-    + by iApply worker_spec; iSplitL "H1".
-    + by iApply worker_spec; iSplitL "H2".
-    + by iIntros {v1 v2} "? >".
-  - iIntros {_ v} "[_ H]"; iPoseProof (Q_res_join with "H"). by iNext; iExists γ.
+    + iApply worker_spec; auto.
+    + iApply worker_spec; auto.
+    + auto.
+  - iIntros {_ v} "[_ H]"; iPoseProof (Q_res_join with "H"). auto.
 Qed.
 End proof.

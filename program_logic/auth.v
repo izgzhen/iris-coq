@@ -67,8 +67,8 @@ Section auth.
     iPvs (own_alloc_strong (Auth (Excl' a) a) _ G) as {γ} "[% Hγ]"; first done.
     iRevert "Hγ"; rewrite auth_both_op; iIntros "[Hγ Hγ']".
     iPvs (inv_alloc N _ (auth_inv γ φ) with "[-Hγ']"); first done.
-    { iNext. iExists a. by iFrame "Hφ". }
-    iPvsIntro; iExists γ. iSplit; first by iPureIntro. by iFrame "Hγ'".
+    { iNext. iExists a. by iFrame. }
+    iPvsIntro; iExists γ. iSplit; first by iPureIntro. by iFrame.
   Qed.
 
   Lemma auth_alloc N E a :
@@ -107,7 +107,7 @@ Section auth.
     iPvs (own_update _ with "Hγ") as "[Hγ Hγf]".
     { apply (auth_local_update_l L); tauto. }
     iPvsIntro. iSplitL "Hφ Hγ"; last by iApply "HΨ".
-    iNext. iExists (L a ⋅ b). by iFrame "Hφ".
+    iNext. iExists (L a ⋅ b). by iFrame.
   Qed.
 
   Lemma auth_fsa' L `{!LocalUpdate Lv L} E N (Ψ : V → iPropG Λ Σ) γ a :

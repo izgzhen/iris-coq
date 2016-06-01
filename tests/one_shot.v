@@ -59,8 +59,8 @@ Proof.
     iAssert (∃ v, l ↦ v ★ ((v = InjLV #0 ★ own γ OneShotPending) ∨
        ∃ n : Z, v = InjRV #n ★ own γ (Shot (DecAgree n))))%I with "[-]" as "Hv".
     { iDestruct "Hγ" as "[[Hl Hγ]|Hl]"; last iDestruct "Hl" as {m} "[Hl Hγ]".
-      + iExists (InjLV #0). iFrame "Hl". eauto.
-      + iExists (InjRV #m). iFrame "Hl". eauto. }
+      + iExists (InjLV #0). iFrame. eauto.
+      + iExists (InjRV #m). iFrame. eauto. }
     iDestruct "Hv" as {v} "[Hl Hv]". wp_load.
     iAssert (one_shot_inv γ l ★ (v = InjLV #0 ∨ ∃ n : Z,
       v = InjRV #n ★ own γ (Shot (DecAgree n))))%I with "[-]" as "[$ #Hv]".

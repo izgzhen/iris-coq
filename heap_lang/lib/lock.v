@@ -56,7 +56,7 @@ Proof.
   wp_seq. iApply wp_pvs. wp_alloc l as "Hl".
   iPvs (own_alloc (Excl ())) as {γ} "Hγ"; first done.
   iPvs (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?"; first done.
-  { iIntros ">". iExists false. by iFrame "Hl HR". }
+  { iIntros ">". iExists false. by iFrame. }
   iPvsIntro. iApply "HΦ". iExists N, γ; eauto.
 Qed.
 
@@ -79,6 +79,6 @@ Lemma release_spec R l (Φ : val → iProp) :
 Proof.
   iIntros "(Hl&HR&HΦ)"; iDestruct "Hl" as {N γ} "(% & #? & #? & Hγ)".
   rewrite /release. wp_let. iInv N as {b} "[Hl _]".
-  wp_store. iFrame "HΦ". iNext. iExists false. by iFrame "Hl HR Hγ".
+  wp_store. iFrame "HΦ". iNext. iExists false. by iFrame.
 Qed.
 End proof.

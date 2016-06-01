@@ -86,7 +86,7 @@ Section sts.
     { apply sts_auth_valid; set_solver. }
     iExists γ; iRevert "Hγ"; rewrite -sts_op_auth_frag_up; iIntros "[Hγ $]".
     iPvs (inv_alloc N _ (sts_inv γ φ) with "[Hφ Hγ]") as "#?"; auto.
-    iNext. iExists s. by iFrame "Hφ".
+    iNext. iExists s. by iFrame.
   Qed.
 
   Context {V} (fsa : FSA Λ (globalF Σ) V) `{!FrameShiftAssertion fsaV fsa}.
@@ -111,7 +111,7 @@ Section sts.
     iPvs (own_update with "Hγ") as "Hγ"; first eauto using sts_update_auth.
     iRevert "Hγ"; rewrite -sts_op_auth_frag_up; iIntros "[Hγ Hγf]".
     iPvsIntro; iSplitL "Hφ Hγ"; last by iApply "HΨ".
-    iNext; iExists s'; by iFrame "Hφ".
+    iNext; iExists s'; by iFrame.
   Qed.
 
   Lemma sts_fsa E N (Ψ : V → iPropG Λ Σ) γ s0 T :

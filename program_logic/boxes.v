@@ -109,7 +109,7 @@ Proof.
   iNext. iExists (<[γ:=Q]> Φ); iSplit.
   - iNext. iRewrite "HeqP". by rewrite big_sepM_fn_insert'.
   - rewrite (big_sepM_fn_insert (λ _ _ P',  _ ★ _ _ P' ★ _ _ (_ _ P')))%I //.
-    iFrame "Hf Hγ'". eauto.
+    iFrame; eauto.
 Qed.
 
 Lemma box_delete f P Q γ :
@@ -124,7 +124,7 @@ Proof.
     as "[[Hγ' #[HγΦ ?]] ?]"; first done.
   iDestruct (box_own_agree γ Q (Φ γ) with "[#]") as "HeqQ"; first by eauto.
   iDestruct (box_own_auth_agree γ b false with "[#]")
-    as "%"; subst; first by iFrame "Hγ".
+    as "%"; subst; first by iFrame.
   iSplitL "Hγ"; last iSplit.
   - iExists false; eauto.
   - iNext. iRewrite "HeqP". iRewrite "HeqQ". by rewrite -big_sepM_delete.
@@ -141,12 +141,12 @@ Proof.
   iDestruct (big_sepM_delete _ f _ false with "Hf")
     as "[[Hγ' #[HγΦ Hinv']] ?]"; first done; iTimeless "Hγ'".
   iPvs (box_own_auth_update _ γ b' false true with "[Hγ Hγ']")
-    as "[Hγ Hγ']"; first by iFrame "Hγ".
+    as "[Hγ Hγ']"; first by iFrame.
   iPvsIntro; iNext; iSplitL "Hγ HQ"; first (iExists true; by iFrame "Hγ HQ").
   iExists Φ; iSplit.
   - by rewrite big_sepM_insert_override.
   - rewrite -insert_delete big_sepM_insert ?lookup_delete //.
-    iFrame "Hγ'"; eauto.
+    iFrame; eauto.
 Qed.
 
 Lemma box_empty f P Q γ :
@@ -159,15 +159,15 @@ Proof.
   iDestruct (big_sepM_delete _ f with "Hf")
     as "[[Hγ' #[HγΦ Hinv']] ?]"; first done; iTimeless "Hγ'".
   iDestruct (box_own_auth_agree γ b true with "[#]")
-    as "%"; subst; first by iFrame "Hγ".
+    as "%"; subst; first by iFrame.
   iFrame "HQ".
   iPvs (box_own_auth_update _ γ with "[Hγ Hγ']")
-    as "[Hγ Hγ']"; first by iFrame "Hγ".
+    as "[Hγ Hγ']"; first by iFrame.
   iPvsIntro; iNext; iSplitL "Hγ"; first (iExists false; by repeat iSplit).
   iExists Φ; iSplit.
   - by rewrite big_sepM_insert_override.
   - rewrite -insert_delete big_sepM_insert ?lookup_delete //.
-    iFrame "Hγ'"; eauto.
+    iFrame; eauto.
 Qed.
 
 Lemma box_fill_all f P Q : box N f P ★ ▷ P ={N}=> box N (const true <$> f) P.
@@ -181,8 +181,8 @@ Proof.
   iAlways; iIntros {γ b' ?} "[(Hγ' & #$ & #$) HΦ]".
   iInv N as {b} "[Hγ _]"; iTimeless "Hγ".
   iPvs (box_own_auth_update _ γ with "[Hγ Hγ']")
-    as "[Hγ $]"; first by iFrame "Hγ".
-  iPvsIntro; iNext; iExists true. by iFrame "HΦ Hγ".
+    as "[Hγ $]"; first by iFrame.
+  iPvsIntro; iNext; iExists true. by iFrame.
 Qed.
 
 Lemma box_empty_all f P Q :
@@ -197,10 +197,10 @@ Proof.
     assert (true = b) as <- by eauto.
     iInv N as {b} "(Hγ & _ & HΦ)"; iTimeless "Hγ".
     iDestruct (box_own_auth_agree γ b true with "[#]")
-      as "%"; subst; first by iFrame "Hγ".
+      as "%"; subst; first by iFrame.
     iPvs (box_own_auth_update _ γ true true false with "[Hγ Hγ']")
-      as "[Hγ $]"; first by iFrame "Hγ".
-    iPvsIntro; iNext. iFrame "HΦ". iExists false. iFrame "Hγ"; eauto. }
+      as "[Hγ $]"; first by iFrame.
+    iPvsIntro; iNext. iFrame "HΦ". iExists false. iFrame; eauto. }
   iPvsIntro; iSplitL "HΦ".
   - rewrite eq_iff later_iff big_sepM_later. by iApply "HeqP".
   - iExists Φ; iSplit; by rewrite big_sepM_fmap.

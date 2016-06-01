@@ -376,6 +376,17 @@ Tactic Notation "iFrame" constr(Hs) :=
     end
   in let Hs := words Hs in go Hs.
 
+Tactic Notation "iFrame" :=
+  let rec go Hs :=
+    match Hs with
+    | [] => idtac
+    | ?H :: ?Hs => try iFrame H; go Hs
+    end in
+  match goal with
+  | |- of_envs ?Δ ⊢ _ =>
+        let Hs := eval cbv in (env_dom_list (env_spatial Δ)) in go Hs
+  end.
+
 Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
   eapply tac_combine with _ _ _ H1 _ _ H2 _ _ H _;
     [env_cbv; reflexivity || fail "iCombine:" H1 "not found"
