@@ -466,6 +466,11 @@ Instance fst_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@fst A B) :=
 Instance snd_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@snd A B) := _.
 Typeclasses Opaque prod_equiv.
 
+Instance prod_leibniz `{LeibnizEquiv A, !Equivalence ((≡) : relation A),
+                        LeibnizEquiv B, !Equivalence ((≡) : relation B)}
+  : LeibnizEquiv (A * B).
+Proof. intros [] [] []; fold_leibniz; simpl; congruence. Qed.
+
 (** ** Sums *)
 Definition sum_map {A A' B B'} (f: A → A') (g: B → B') (xy : A + B) : A' + B' :=
   match xy with inl x => inl (f x) | inr y => inr (g y) end.

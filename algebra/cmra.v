@@ -950,6 +950,10 @@ Section prod.
   Canonical Structure prodR :=
     CMRAT (A * B) prod_cofe_mixin prod_cmra_mixin.
 
+  Lemma pair_op (a a' : A) (b b' : B) :
+    (a, b) ⋅ (a', b') ≡ (a ⋅ a', b ⋅ b').
+  Proof. done. Qed.
+
   Global Instance prod_cmra_total : CMRATotal A → CMRATotal B → CMRATotal prodR.
   Proof.
     intros H1 H2 [a b]. destruct (H1 a) as [ca ?], (H2 b) as [cb ?].
@@ -1017,7 +1021,7 @@ Section prod_unit.
     UCMRAT (A * B) prod_cofe_mixin prod_cmra_mixin prod_ucmra_mixin.
 
   Lemma pair_split (x : A) (y : B) : (x, y) ≡ (x, ∅) ⋅ (∅, y).
-  Proof. constructor; by rewrite /= ?left_id ?right_id. Qed.
+  Proof. by rewrite pair_op left_id right_id. Qed.
 End prod_unit.
 
 Arguments prodUR : clear implicits.
