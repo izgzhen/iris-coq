@@ -34,7 +34,7 @@ Qed.
 (** Fairly explicit form of opening invariants *)
 Lemma inv_open E N P :
   nclose N ⊆ E →
-  inv N P ⊢ ∃ E', ■ (E ∖ nclose N ⊆ E' ∧ E' ⊆ E) ★
+  inv N P ⊢ ∃ E', ■ (E ∖ nclose N ⊆ E' ⊆ E) ★
                     |={E,E'}=> ▷ P ★ (▷ P ={E',E}=★ True).
 Proof.
   rewrite /inv. iIntros {?} "Hinv". iDestruct "Hinv" as {i} "[% #Hi]".

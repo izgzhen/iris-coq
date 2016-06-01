@@ -637,6 +637,11 @@ Notation "(⊄)" := (λ X Y, X ⊄ Y) (only parsing) : C_scope.
 Notation "( X ⊄ )" := (λ Y, X ⊄ Y) (only parsing) : C_scope.
 Notation "( ⊄ X )" := (λ Y, Y ⊄ X) (only parsing) : C_scope.
 
+Notation "X ⊆ Y ⊆ Z" := (X ⊆ Y ∧ Y ⊆ Z) (at level 70, Y at next level) : C_scope.
+Notation "X ⊆ Y ⊂ Z" := (X ⊆ Y ∧ Y ⊂ Z) (at level 70, Y at next level) : C_scope.
+Notation "X ⊂ Y ⊆ Z" := (X ⊂ Y ∧ Y ⊆ Z) (at level 70, Y at next level) : C_scope.
+Notation "X ⊂ Y ⊂ Z" := (X ⊂ Y ∧ Y ⊂ Z) (at level 70, Y at next level) : C_scope.
+
 (** The class [Lexico A] is used for the lexicographic order on [A]. This order
 is used to create finite maps, finite sets, etc, and is typically different from
 the order [(⊆)]. *)
