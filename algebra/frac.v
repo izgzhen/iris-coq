@@ -1,9 +1,6 @@
 From Coq.QArith Require Import Qcanon.
 From iris.algebra Require Export cmra.
 From iris.algebra Require Import upred.
-Local Arguments op _ _ !_ !_ /.
-Local Arguments validN _ _ _ !_ /.
-Local Arguments valid _ _  !_ /.
 
 Notation frac := Qp.
 
