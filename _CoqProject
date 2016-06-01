@@ -54,7 +54,6 @@ algebra/upred.v
 algebra/upred_tactics.v
 algebra/upred_big_op.v
 algebra/frac.v
-algebra/one_shot.v
 algebra/csum.v
 algebra/list.v
 program_logic/model.v
@@ -78,7 +77,6 @@ program_logic/ectx_lifting.v
 program_logic/ghost_ownership.v
 program_logic/global_functor.v
 program_logic/saved_prop.v
-program_logic/saved_one_shot.v
 program_logic/auth.v
 program_logic/sts.v
 program_logic/namespaces.v

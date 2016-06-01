@@ -1,4 +1,4 @@
-From iris.algebra Require Import one_shot dec_agree.
+From iris.algebra Require Import dec_agree csum.
 From iris.program_logic Require Import hoare.
 From iris.heap_lang Require Import assert proofmode notation.
 From iris.proofmode Require Import invariants ghost_ownership.
@@ -21,11 +21,13 @@ Definition one_shot_example : val := λ: <>,
 Global Opaque one_shot_example.
 
 Class one_shotG Σ :=
-  OneShotG { one_shot_inG :> inG heap_lang Σ (one_shotR (dec_agreeR Z)) }.
+  one_shot_inG :> inG heap_lang Σ (csumR (exclR unitC)(dec_agreeR Z)).
 Definition one_shotGF : gFunctorList :=
-  [GFunctor (constRF (one_shotR (dec_agreeR Z)))].
+  [GFunctor (constRF (csumR (exclR unitC)(dec_agreeR Z)))].
 Instance inGF_one_shotG Σ : inGFs heap_lang Σ one_shotGF → one_shotG Σ.
-Proof. intros [? _]; split; apply: inGF_inG. Qed.
+Proof. intros [? _]; apply: inGF_inG. Qed.
+
+Notation Pending := (Cinl (Excl ())).
 
 Section proof.
 Context {Σ : gFunctors} `{!heapG Σ, !one_shotG Σ}.
@@ -33,8 +35,8 @@ Context (heapN N : namespace) (HN : heapN ⊥ N).
 Local Notation iProp := (iPropG heap_lang Σ).
 
 Definition one_shot_inv (γ : gname) (l : loc) : iProp :=
-  (l ↦ InjLV #0 ★ own γ OneShotPending ∨
-  ∃ n : Z, l ↦ InjRV #n ★ own γ (Shot (DecAgree n)))%I.
+  (l ↦ InjLV #0 ★ own γ Pending ∨
+  ∃ n : Z, l ↦ InjRV #n ★ own γ (Cinr (DecAgree n)))%I.
 
 Lemma wp_one_shot (Φ : val → iProp) :
   heap_ctx heapN ★ (∀ f1 f2 : val,
@@ -44,7 +46,7 @@ Lemma wp_one_shot (Φ : val → iProp) :
 Proof.
   iIntros "[#? Hf] /=".
   rewrite /one_shot_example. wp_seq. wp_alloc l as "Hl". wp_let.
-  iPvs (own_alloc OneShotPending) as {γ} "Hγ"; first done.
+  iPvs (own_alloc Pending) as {γ} "Hγ"; first done.
   iPvs (inv_alloc N _ (one_shot_inv γ l) with "[Hl Hγ]") as "#HN"; first done.
   { iNext. iLeft. by iSplitL "Hl". }
   iPvsIntro. iApply "Hf"; iSplit.
@@ -52,18 +54,18 @@ Proof.
     iInv> N as "[[Hl Hγ]|H]"; last iDestruct "H" as {m} "[Hl Hγ]".
     + iApply wp_pvs. wp_cas_suc. iSplitL; [|by iLeft; iPvsIntro].
       iPvs (own_update with "Hγ") as "Hγ".
-      { by apply (one_shot_update_shoot (DecAgree n)). }
+      { by apply cmra_update_exclusive with (y:=Cinr (DecAgree n)). }
       iPvsIntro; iRight; iExists n; by iSplitL "Hl".
     + wp_cas_fail. iSplitL. iRight; iExists m; by iSplitL "Hl". by iRight.
   - iIntros "!". wp_seq. wp_focus (! _)%E. iInv> N as "Hγ".
-    iAssert (∃ v, l ↦ v ★ ((v = InjLV #0 ★ own γ OneShotPending) ∨
-       ∃ n : Z, v = InjRV #n ★ own γ (Shot (DecAgree n))))%I with "[-]" as "Hv".
+    iAssert (∃ v, l ↦ v ★ ((v = InjLV #0 ★ own γ Pending) ∨
+       ∃ n : Z, v = InjRV #n ★ own γ (Cinr (DecAgree n))))%I with "[-]" as "Hv".
     { iDestruct "Hγ" as "[[Hl Hγ]|Hl]"; last iDestruct "Hl" as {m} "[Hl Hγ]".
       + iExists (InjLV #0). iFrame. eauto.
       + iExists (InjRV #m). iFrame. eauto. }
     iDestruct "Hv" as {v} "[Hl Hv]". wp_load.
     iAssert (one_shot_inv γ l ★ (v = InjLV #0 ∨ ∃ n : Z,
-      v = InjRV #n ★ own γ (Shot (DecAgree n))))%I with "[-]" as "[$ #Hv]".
+      v = InjRV #n ★ own γ (Cinr (DecAgree n))))%I with "[-]" as "[$ #Hv]".
     { iDestruct "Hv" as "[[% ?]|Hv]"; last iDestruct "Hv" as {m} "[% ?]"; subst.
       + iSplit. iLeft; by iSplitL "Hl". eauto.
       + iSplit. iRight; iExists m; by iSplitL "Hl". eauto. }
