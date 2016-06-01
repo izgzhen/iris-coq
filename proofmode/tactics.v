@@ -22,13 +22,10 @@ Ltac env_cbv :=
 Ltac iFresh :=
   lazymatch goal with
   |- of_envs ?Δ ⊢ _ =>
-      match goal with
-      | _ => eval vm_compute in (fresh_string_of_set "~" (dom stringset Δ))
-      | _ =>
-         (* [vm_compute fails] if [Δ] contains evars, so fall-back to [cbv] *)
-         let Hs := eval cbv in (dom stringset Δ) in
-         eval vm_compute in (fresh_string_of_set "~" Hs)
-      end
+     (* [vm_compute fails] if any of the hypotheses in [Δ] contain evars, so
+     first use [cbv] to compute the domain of [Δ] *)
+     let Hs := eval cbv in (envs_dom Δ) in
+     eval vm_compute in (fresh_string_of_set "~" (of_list Hs))
   | _ => constr:"~"
   end.
 
@@ -383,8 +380,7 @@ Tactic Notation "iFrame" :=
     | ?H :: ?Hs => try iFrame H; go Hs
     end in
   match goal with
-  | |- of_envs ?Δ ⊢ _ =>
-        let Hs := eval cbv in (env_dom_list (env_spatial Δ)) in go Hs
+  | |- of_envs ?Δ ⊢ _ => let Hs := eval cbv in (env_dom (env_spatial Δ)) in go Hs
   end.
 
 Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
@@ -681,7 +677,7 @@ idents I do not know how to do this better. *)
 Local Ltac iLöbHelp IH tac_before tac_after :=
   match goal with
   | |- of_envs ?Δ ⊢ _ =>
-     let Hs := constr:(reverse (env_dom_list (env_spatial Δ))) in
+     let Hs := constr:(reverse (env_dom (env_spatial Δ))) in
      iRevert ["★"]; tac_before;
      eapply tac_löb with _ IH;
        [reflexivity

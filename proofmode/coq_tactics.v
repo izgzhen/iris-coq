@@ -33,8 +33,8 @@ Record envs_Forall2 {M} (R : relation (uPred M)) (Δ1 Δ2 : envs M) : Prop := {
   env_spatial_Forall2 : env_Forall2 R (env_spatial Δ1) (env_spatial Δ2)
 }.
 
-Instance envs_dom {M} : Dom (envs M) stringset := λ Δ,
-  dom stringset (env_persistent Δ) ∪ dom stringset (env_spatial Δ).
+Definition envs_dom {M} (Δ : envs M) : list string :=
+  env_dom (env_persistent Δ) ++ env_dom (env_spatial Δ).
 
 Definition envs_lookup {M} (i : string) (Δ : envs M) : option (bool * uPred M) :=
   let (Γp,Γs) := Δ in

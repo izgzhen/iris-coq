@@ -32,11 +32,8 @@ Fixpoint env_to_list {A} (E : env A) : list A :=
 Coercion env_to_list : env >-> list.
 Instance: Params (@env_to_list) 1.
 
-Instance env_dom {A} : Dom (env A) stringset :=
-  fix go Γ := let _ : Dom _ _ := @go in
-  match Γ with Enil => ∅ | Esnoc Γ i _ => {[ i ]} ∪ dom stringset Γ end.
-Fixpoint env_dom_list {A} (Γ : env A) : list string :=
-  match Γ with Enil => [] | Esnoc Γ i _ => i :: env_dom_list Γ end.
+Fixpoint env_dom {A} (Γ : env A) : list string :=
+  match Γ with Enil => [] | Esnoc Γ i _ => i :: env_dom Γ end.
 
 Fixpoint env_fold {A B} (f : B → A → A) (x : A) (Γ : env B) : A :=
   match Γ with
