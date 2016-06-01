@@ -53,7 +53,7 @@ Lemma Q_res_join γ : barrier_res γ Ψ1 ★ barrier_res γ Ψ2 ⊢ ▷ barrier_
 Proof.
   iIntros "[Hγ Hγ']";
   iDestruct "Hγ" as {x} "[#Hγ Hx]"; iDestruct "Hγ'" as {x'} "[#Hγ' Hx']".
-  iAssert (▷ (x ≡ x'):iProp)%I as "Hxx" .
+  iAssert (▷ (x ≡ x'))%I as "Hxx" .
   { iCombine "Hγ" "Hγ'" as "Hγ2". iClear "Hγ Hγ'".
     rewrite own_valid csum_validI /= agree_validI agree_equivI later_equivI /=.
     rewrite -{2}[x]cFunctor_id -{2}[x']cFunctor_id.
