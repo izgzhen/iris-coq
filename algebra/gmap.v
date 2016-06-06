@@ -314,12 +314,12 @@ Proof.
   intros ?? Hx HQ. apply cmra_total_updateP=> n gf Hg.
   destruct (Hx n (gf !! i)) as (y&?&Hy).
   { move:(Hg i). rewrite !left_id.
-    case _: (gf !! i)=>[x|]; rewrite /= ?left_id //.
+    case: (gf !! i)=>[x|]; rewrite /= ?left_id //.
     intros; by apply cmra_valid_validN. }
   exists {[ i := y ]}; split; first by auto.
   intros i'; destruct (decide (i' = i)) as [->|].
   - rewrite lookup_op lookup_singleton.
-    move:Hy; case _: (gf !! i)=>[x|]; rewrite /= ?right_id //.
+    move:Hy; case: (gf !! i)=>[x|]; rewrite /= ?right_id //.
   - move:(Hg i'). by rewrite !lookup_op lookup_singleton_ne // !left_id.
 Qed.
 Lemma singleton_updateP_unit' (P: A → Prop) u i :
