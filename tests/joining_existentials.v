@@ -57,8 +57,8 @@ Proof.
   { iCombine "Hγ" "Hγ'" as "Hγ2". iClear "Hγ Hγ'".
     rewrite own_valid csum_validI /= agree_validI agree_equivI later_equivI /=.
     rewrite -{2}[x]cFunctor_id -{2}[x']cFunctor_id.
-    rewrite (ne_proper (cFunctor_map G) (cid, cid) (_ ◎ _, _ ◎ _)).
-    2:by split; intro; simpl; symmetry; apply iProp_fold_unfold.
+    rewrite (ne_proper (cFunctor_map G) (cid, cid) (_ ◎ _, _ ◎ _)); last first.
+    { by split; intro; simpl; symmetry; apply iProp_fold_unfold. }
     rewrite !cFunctor_compose. iNext. by iRewrite "Hγ2". }
   iNext. iRewrite -"Hxx" in "Hx'".
   iExists x; iFrame "Hγ". iApply Ψ_join; by iSplitL "Hx".
