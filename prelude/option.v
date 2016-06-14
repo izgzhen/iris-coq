@@ -207,6 +207,10 @@ Proof. destruct mx; naive_solver. Qed.
 Lemma bind_with_Some {A} (mx : option A) : mx ≫= Some = mx.
 Proof. by destruct mx. Qed.
 
+Instance option_fmap_proper `{Equiv A, Equiv B} (f : A → B) :
+  Proper ((≡) ==> (≡)) f → Proper ((≡) ==> (≡)) (fmap (M:=option) f).
+Proof. destruct 2; constructor; auto. Qed.
+
 (** ** Inverses of constructors *)
 (** We can do this in a fancy way using dependent types, but rewrite does
 not particularly like type level reductions. *)

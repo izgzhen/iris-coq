@@ -174,6 +174,11 @@ Section setoid.
   Lemma map_equiv_lookup_l (m1 m2 : M A) i x :
     m1 ≡ m2 → m1 !! i = Some x → ∃ y, m2 !! i = Some y ∧ x ≡ y.
   Proof. generalize (equiv_Some_inv_l (m1 !! i) (m2 !! i) x); naive_solver. Qed.
+  Global Instance map_fmap_proper `{Equiv B} (f : A → B) :
+    Proper ((≡) ==> (≡)) f → Proper ((≡) ==> (≡)) (fmap (M:=M) f).
+  Proof.
+    intros ? m m' ? k; rewrite !lookup_fmap. by apply option_fmap_proper.
+  Qed.
 End setoid.
 
 (** ** General properties *)
