@@ -985,8 +985,7 @@ Section prod.
   Canonical Structure prodR :=
     CMRAT (A * B) prod_cofe_mixin prod_cmra_mixin.
 
-  Lemma pair_op (a a' : A) (b b' : B) :
-    (a, b) ⋅ (a', b') ≡ (a ⋅ a', b ⋅ b').
+  Lemma pair_op (a a' : A) (b b' : B) : (a, b) ⋅ (a', b') = (a ⋅ a', b ⋅ b').
   Proof. done. Qed.
 
   Global Instance prod_cmra_total : CMRATotal A → CMRATotal B → CMRATotal prodR.
