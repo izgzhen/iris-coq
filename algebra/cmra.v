@@ -76,7 +76,10 @@ Arguments cmra_validN : simpl never.
 Arguments cmra_cofe_mixin : simpl never.
 Arguments cmra_mixin : simpl never.
 Add Printing Constructor cmraT.
-Existing Instances cmra_pcore cmra_op cmra_valid cmra_validN.
+Hint Extern 0 (PCore _) => eapply (@cmra_pcore _) : typeclass_instances.
+Hint Extern 0 (Op _) => eapply (@cmra_op _) : typeclass_instances.
+Hint Extern 0 (Valid _) => eapply (@cmra_valid _) : typeclass_instances.
+Hint Extern 0 (ValidN _) => eapply (@cmra_validN _) : typeclass_instances.
 Coercion cmra_cofeC (A : cmraT) : cofeT := CofeT A (cmra_cofe_mixin A).
 Canonical Structure cmra_cofeC.
 
@@ -174,7 +177,7 @@ Arguments ucmra_cofe_mixin : simpl never.
 Arguments ucmra_cmra_mixin : simpl never.
 Arguments ucmra_mixin : simpl never.
 Add Printing Constructor ucmraT.
-Existing Instances ucmra_empty.
+Hint Extern 0 (Empty _) => eapply (@ucmra_empty _) : typeclass_instances.
 Coercion ucmra_cofeC (A : ucmraT) : cofeT := CofeT A (ucmra_cofe_mixin A).
 Canonical Structure ucmra_cofeC.
 Coercion ucmra_cmraR (A : ucmraT) : cmraT :=

@@ -67,7 +67,9 @@ Structure cofeT := CofeT {
 }.
 Arguments CofeT _ {_ _ _} _.
 Add Printing Constructor cofeT.
-Existing Instances cofe_equiv cofe_dist cofe_compl.
+Hint Extern 0 (Equiv _) => eapply (@cofe_equiv _) : typeclass_instances.
+Hint Extern 0 (Dist _) => eapply (@cofe_dist _) : typeclass_instances.
+Hint Extern 0 (Compl _) => eapply (@cofe_compl _) : typeclass_instances.
 Arguments cofe_car : simpl never.
 Arguments cofe_equiv : simpl never.
 Arguments cofe_dist : simpl never.
