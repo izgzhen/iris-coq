@@ -867,7 +867,7 @@ Section unit.
   Instance unit_pcore : PCore () := λ x, Some x.
   Instance unit_op : Op () := λ x y, ().
   Lemma unit_cmra_mixin : CMRAMixin ().
-  Proof. apply cmra_total_mixin; try done. eauto. by exists ((),()). Qed.
+  Proof. apply discrete_cmra_mixin, ra_total_mixin; by eauto. Qed.
   Canonical Structure unitR : cmraT := CMRAT () unit_cofe_mixin unit_cmra_mixin.
 
   Instance unit_empty : Empty () := ().
@@ -881,6 +881,41 @@ Section unit.
   Global Instance unit_persistent (x : ()) : Persistent x.
   Proof. by constructor. Qed.
 End unit.
+
+(** ** Natural numbers *)
+Section nat.
+  Instance nat_valid : Valid nat := λ x, True.
+  Instance nat_validN : ValidN nat := λ n x, True.
+  Instance nat_pcore : PCore nat := λ x, Some 0.
+  Instance nat_op : Op nat := plus.
+  Lemma nat_included (x y : nat) : x ≼ y ↔ x ≤ y.
+  Proof.
+    split.
+    - intros [z ->]; unfold op, nat_op; lia.
+    - exists (y - x). by apply le_plus_minus.
+  Qed.
+  Lemma nat_cmra_mixin : CMRAMixin nat.
+  Proof.
+    apply discrete_cmra_mixin, ra_total_mixin; try by eauto.
+    - solve_proper.
+    - intros x y z. apply Nat.add_assoc.
+    - intros x y. apply Nat.add_comm.
+    - by exists 0.
+  Qed.
+  Canonical Structure natR : cmraT :=
+    CMRAT nat (@discrete_cofe_mixin _ equivL _) nat_cmra_mixin.
+
+  Instance nat_empty : Empty nat := 0.
+  Lemma nat_ucmra_mixin : UCMRAMixin nat.
+  Proof. split; apply _ || done. Qed.
+  Canonical Structure natUR : ucmraT :=
+    UCMRAT nat (@discrete_cofe_mixin _ equivL _) nat_cmra_mixin nat_ucmra_mixin.
+
+  Global Instance nat_cmra_discrete : CMRADiscrete natR.
+  Proof. constructor; apply _ || done. Qed.
+  Global Instance nat_persistent (x : ()) : Persistent x.
+  Proof. by constructor. Qed.
+End nat.
 
 (** ** Product *)
 Section prod.
