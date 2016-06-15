@@ -535,10 +535,10 @@ Proof.
   by rewrite cmra_valid_validN equiv_dist=>?? n; apply (local_updateN L).
 Qed.
 
-Global Instance local_update_op x : LocalUpdate (λ _, True) (op x).
+Global Instance op_local_update x : LocalUpdate (λ _, True) (op x).
 Proof. split. apply _. by intros n y1 y2 _ _; rewrite assoc. Qed.
 
-Global Instance local_update_id : LocalUpdate (λ _, True) (@id A).
+Global Instance id_local_update : LocalUpdate (λ _, True) (@id A).
 Proof. split; auto with typeclass_instances. Qed.
 
 Global Instance exclusive_local_update y :
@@ -1218,14 +1218,14 @@ Section option.
   Proof. intros. destruct mx; apply _. Qed.
 
   (** Updates *)
-  Global Instance option_local_fmap_update L Lv :
+  Global Instance option_fmap_local_update L Lv :
     LocalUpdate Lv L →
     LocalUpdate (λ mx, if mx is Some x then Lv x else False) (fmap L).
   Proof.
     split; first apply _.
     intros n [x|] [z|]; constructor; by eauto using (local_updateN L).
   Qed.
-  Global Instance option_local_const_update Lv y :
+  Global Instance option_const_local_update Lv y :
     LocalUpdate Lv (λ _, y) →
     LocalUpdate (λ mx, if mx is Some x then Lv x else False) (λ _, Some y).
   Proof.

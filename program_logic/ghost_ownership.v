@@ -49,7 +49,7 @@ Proof.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ γ, γ ∉ G ∧ m = to_globalF γ a) ∧ ownG m)%I).
   - rewrite ownG_empty.
     eapply pvs_ownG_updateP, (iprod_singleton_updateP_empty (inG_id i));
-      first (eapply updateP_alloc_strong', cmra_transport_valid, Ha);
+      first (eapply alloc_updateP_strong', cmra_transport_valid, Ha);
       naive_solver.
   - apply exist_elim=>m; apply const_elim_l=>-[γ [Hfresh ->]].
     by rewrite -(exist_intro γ) const_equiv // left_id.

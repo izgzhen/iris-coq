@@ -283,7 +283,7 @@ Proof. apply insert_update. Qed.
 
 Section freshness.
 Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
-Lemma updateP_alloc_strong (Q : gmap K A → Prop) (I : gset K) m x :
+Lemma alloc_updateP_strong (Q : gmap K A → Prop) (I : gset K) m x :
   ✓ x → (∀ i, m !! i = None → i ∉ I → Q (<[i:=x]>m)) → m ~~>: Q.
 Proof.
   intros ? HQ. apply cmra_total_updateP.
@@ -297,15 +297,15 @@ Proof.
     last by apply not_elem_of_dom; rewrite dom_op not_elem_of_union.
   by apply insert_validN; [apply cmra_valid_validN|].
 Qed.
-Lemma updateP_alloc (Q : gmap K A → Prop) m x :
+Lemma alloc_updateP (Q : gmap K A → Prop) m x :
   ✓ x → (∀ i, m !! i = None → Q (<[i:=x]>m)) → m ~~>: Q.
-Proof. move=>??. eapply updateP_alloc_strong with (I:=∅); by eauto. Qed.
-Lemma updateP_alloc_strong' m x (I : gset K) :
+Proof. move=>??. eapply alloc_updateP_strong with (I:=∅); by eauto. Qed.
+Lemma alloc_updateP_strong' m x (I : gset K) :
   ✓ x → m ~~>: λ m', ∃ i, i ∉ I ∧ m' = <[i:=x]>m ∧ m !! i = None.
-Proof. eauto using updateP_alloc_strong. Qed.
-Lemma updateP_alloc' m x :
+Proof. eauto using alloc_updateP_strong. Qed.
+Lemma alloc_updateP' m x :
   ✓ x → m ~~>: λ m', ∃ i, m' = <[i:=x]>m ∧ m !! i = None.
-Proof. eauto using updateP_alloc. Qed.
+Proof. eauto using alloc_updateP. Qed.
 
 Lemma singleton_updateP_unit (P : A → Prop) (Q : gmap K A → Prop) u i :
   ✓ u → LeftId (≡) u (⋅) →
@@ -335,7 +335,7 @@ End freshness.
 
 (* Allocation is a local update: Just use composition with a singleton map. *)
 
-Global Instance gmap_delete_update :
+Global Instance delete_local_update :
   LocalUpdate (λ m, ∃ x, m !! i = Some x ∧ Exclusive x) (delete i).
 Proof.
   split; first apply _.
@@ -348,7 +348,7 @@ Proof.
 Qed.
 
 (* Applying a local update at a position we own is a local update. *)
-Global Instance gmap_alter_update `{!LocalUpdate Lv L} i :
+Global Instance alter_local_update `{!LocalUpdate Lv L} i :
   LocalUpdate (λ m, ∃ x, m !! i = Some x ∧ Lv x) (alter L i).
 Proof.
   split; first apply _.

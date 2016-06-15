@@ -316,7 +316,7 @@ Section properties.
   Proof. by rewrite !persistent_total list_core_singletonM=> ->. Qed.
 
   (* Update *)
-  Lemma list_update_updateP (P : A → Prop) (Q : list A → Prop) l1 x l2 :
+  Lemma list_middle_updateP (P : A → Prop) (Q : list A → Prop) l1 x l2 :
     x ~~>: P → (∀ y, P y → Q (l1 ++ y :: l2)) → l1 ++ x :: l2 ~~>: Q.
   Proof.
     intros Hx%option_updateP' HP.
@@ -332,13 +332,13 @@ Section properties.
       rewrite !list_lookup_op !lookup_app_r !app_length //=; lia.
   Qed.
 
-  Lemma list_update_update l1 l2 x y : x ~~> y → l1 ++ x :: l2 ~~> l1 ++ y :: l2.
+  Lemma list_middle_update l1 l2 x y : x ~~> y → l1 ++ x :: l2 ~~> l1 ++ y :: l2.
   Proof.
-    rewrite !cmra_update_updateP => H; eauto using list_update_updateP with subst.
+    rewrite !cmra_update_updateP => H; eauto using list_middle_updateP with subst.
   Qed.
 
   (* Applying a local update at a position we own is a local update. *)
-  Global Instance list_alter_update `{LocalUpdate A Lv L} i :
+  Global Instance list_alter_local_update `{LocalUpdate A Lv L} i :
     LocalUpdate (λ L, ∃ x, L !! i = Some x ∧ Lv x) (alter L i).
   Proof.
     split; [apply _|]; intros n l1 l2 (x&Hi1&?) Hm; apply list_dist_lookup=> j.
