@@ -119,11 +119,11 @@ Section heap.
   Global Instance heap_mapsto_timeless l q v : TimelessP (l ↦{q} v).
   Proof. rewrite /heap_mapsto. apply _. Qed.
 
-  Lemma heap_mapsto_op_eq l q1 q2 v : (l ↦{q1} v ★ l ↦{q2} v) ⊣⊢ l ↦{q1+q2} v.
+  Lemma heap_mapsto_op_eq l q1 q2 v : l ↦{q1} v ★ l ↦{q2} v ⊣⊢ l ↦{q1+q2} v.
   Proof. by rewrite -auth_own_op op_singleton pair_op dec_agree_idemp. Qed.
 
   Lemma heap_mapsto_op l q1 q2 v1 v2 :
-    (l ↦{q1} v1 ★ l ↦{q2} v2) ⊣⊢ (v1 = v2 ∧ l ↦{q1+q2} v1).
+    l ↦{q1} v1 ★ l ↦{q2} v2 ⊣⊢ v1 = v2 ∧ l ↦{q1+q2} v1.
   Proof.
     destruct (decide (v1 = v2)) as [->|].
     { by rewrite heap_mapsto_op_eq const_equiv // left_id. }
@@ -139,7 +139,7 @@ Section heap.
   (** Weakest precondition *)
   Lemma wp_alloc N E e v Φ :
     to_val e = Some v → nclose N ⊆ E →
-    (heap_ctx N ★ ▷ ∀ l, l ↦ v -★ Φ (LitV $ LitLoc l)) ⊢ WP Alloc e @ E {{ Φ }}.
+    heap_ctx N ★ ▷ (∀ l, l ↦ v -★ Φ (LitV $ LitLoc l)) ⊢ WP Alloc e @ E {{ Φ }}.
   Proof.
     iIntros {??} "[#Hinv HΦ]". rewrite /heap_ctx.
     iPvs (auth_empty heap_name) as "Hheap".
@@ -157,7 +157,7 @@ Section heap.
 
   Lemma wp_load N E l q v Φ :
     nclose N ⊆ E →
-    (heap_ctx N ★ ▷ l ↦{q} v ★ ▷ (l ↦{q} v -★ Φ v))
+    heap_ctx N ★ ▷ l ↦{q} v ★ ▷ (l ↦{q} v -★ Φ v)
     ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
   Proof.
     iIntros {?} "[#Hh [Hl HΦ]]". rewrite /heap_ctx /heap_mapsto.
@@ -171,7 +171,7 @@ Section heap.
 
   Lemma wp_store N E l v' e v Φ :
     to_val e = Some v → nclose N ⊆ E →
-    (heap_ctx N ★ ▷ l ↦ v' ★ ▷ (l ↦ v -★ Φ (LitV LitUnit)))
+    heap_ctx N ★ ▷ l ↦ v' ★ ▷ (l ↦ v -★ Φ (LitV LitUnit))
     ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
   Proof.
     iIntros {??} "[#Hh [Hl HΦ]]". rewrite /heap_ctx /heap_mapsto.
@@ -186,7 +186,7 @@ Section heap.
 
   Lemma wp_cas_fail N E l q v' e1 v1 e2 v2 Φ :
     to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 → nclose N ⊆ E →
-    (heap_ctx N ★ ▷ l ↦{q} v' ★ ▷ (l ↦{q} v' -★ Φ (LitV (LitBool false))))
+    heap_ctx N ★ ▷ l ↦{q} v' ★ ▷ (l ↦{q} v' -★ Φ (LitV (LitBool false)))
     ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
   Proof.
     iIntros {????} "[#Hh [Hl HΦ]]". rewrite /heap_ctx /heap_mapsto.
@@ -200,7 +200,7 @@ Section heap.
 
   Lemma wp_cas_suc N E l e1 v1 e2 v2 Φ :
     to_val e1 = Some v1 → to_val e2 = Some v2 → nclose N ⊆ E →
-    (heap_ctx N ★ ▷ l ↦ v1 ★ ▷ (l ↦ v2 -★ Φ (LitV (LitBool true))))
+    heap_ctx N ★ ▷ l ↦ v1 ★ ▷ (l ↦ v2 -★ Φ (LitV (LitBool true)))
     ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
   Proof.
     iIntros {???} "[#Hh [Hl HΦ]]". rewrite /heap_ctx /heap_mapsto.
