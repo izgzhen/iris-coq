@@ -56,7 +56,7 @@ Proof. split; auto with typeclass_instances. Qed.
 
 Global Instance exclusive_local_update y :
   LocalUpdate Exclusive (λ _, y) | 1000.
-Proof. split. apply _. by intros ?????%exclusiveN_r. Qed.
+Proof. split. apply _. by intros ?????%exclusiveN_l. Qed.
 
 (** ** Frame preserving updates *)
 Lemma cmra_update_updateP x y : x ~~> y ↔ x ~~>: (y =).
@@ -83,7 +83,7 @@ Proof.
 Qed.
 Lemma cmra_update_exclusive `{!Exclusive x} y:
   ✓ y → x ~~> y.
-Proof. move=>??[z|]=>[/exclusiveN_r[]|_]. by apply cmra_valid_validN. Qed.
+Proof. move=>??[z|]=>[/exclusiveN_l[]|_]. by apply cmra_valid_validN. Qed.
 
 Lemma cmra_updateP_op (P1 P2 Q : A → Prop) x1 x2 :
   x1 ~~>: P1 → x2 ~~>: P2 → (∀ y1 y2, P1 y1 → P2 y2 → Q (y1 ⋅ y2)) →

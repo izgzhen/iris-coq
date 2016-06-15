@@ -89,7 +89,7 @@ Section heap.
   Proof.
     intros Hv l'; move: (Hv l'). destruct (decide (l' = l)) as [->|].
     - rewrite !lookup_op !lookup_singleton.
-      by case: (h !! l)=> [x|] // /Some_valid/exclusive_r.
+      by case: (h !! l)=> [x|] // /Some_valid/exclusive_l.
     - by rewrite !lookup_op !lookup_singleton_ne.
   Qed.
   Hint Resolve heap_store_valid.

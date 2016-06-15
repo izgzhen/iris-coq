@@ -128,8 +128,8 @@ Class Persistent {A : cmraT} (x : A) := persistent : pcore x ≡ Some x.
 Arguments persistent {_} _ {_}.
 
 (** * Exclusive elements (i.e., elements that cannot have a frame). *)
-Class Exclusive {A : cmraT} (x : A) := exclusive0_r : ∀ y, ✓{0} (x ⋅ y) → False.
-Arguments exclusive0_r {_} _ {_} _ _.
+Class Exclusive {A : cmraT} (x : A) := exclusive0_l y : ✓{0} (x ⋅ y) → False.
+Arguments exclusive0_l {_} _ {_} _ _.
 
 (** * CMRAs whose core is total *)
 (** The function [core] may return a dummy when used on CMRAs without total
@@ -318,16 +318,14 @@ Lemma persistent_dup x `{!Persistent x} : x ≡ x ⋅ x.
 Proof. by apply cmra_pcore_dup' with x. Qed.
 
 (** ** Exclusive elements *)
-Lemma exclusiveN_r x `{!Exclusive x} :
-  ∀ (n : nat) (y : A), ✓{n} (x ⋅ y) → False.
-Proof. intros ???%cmra_validN_le%exclusive0_r; auto with arith. Qed.
-Lemma exclusiveN_l x `{!Exclusive x} :
-  ∀ (n : nat) (y : A), ✓{n} (y ⋅ x) → False.
-Proof. intros ??. rewrite comm. by apply exclusiveN_r. Qed.
-Lemma exclusive_r x `{!Exclusive x} : ∀ (y : A), ✓ (x ⋅ y) → False.
-Proof. by intros ? ?%cmra_valid_validN%(exclusiveN_r _ 0). Qed.
-Lemma exclusive_l x `{!Exclusive x} : ∀ (y : A), ✓ (y ⋅ x) → False.
-Proof. by intros ? ?%cmra_valid_validN%(exclusiveN_l _ 0). Qed.
+Lemma exclusiveN_l n x `{!Exclusive x} y : ✓{n} (x ⋅ y) → False.
+Proof. intros ?%cmra_validN_le%exclusive0_l; auto with arith. Qed.
+Lemma exclusiveN_r n x `{!Exclusive x} y : ✓{n} (y ⋅ x) → False.
+Proof. rewrite comm. by apply exclusiveN_l. Qed.
+Lemma exclusive_l x `{!Exclusive x} y : ✓ (x ⋅ y) → False.
+Proof. by move /cmra_valid_validN /(_ 0) /exclusive0_l. Qed.
+Lemma exclusive_r x `{!Exclusive x} y : ✓ (y ⋅ x) → False.
+Proof. rewrite comm. by apply exclusive_l. Qed.
 
 (** ** Order *)
 Lemma cmra_included_includedN n x y : x ≼ y → x ≼{n} y.
@@ -868,9 +866,9 @@ Section prod.
   Proof. by rewrite /Persistent prod_pcore_Some'. Qed.
 
   Global Instance pair_exclusive_l x y : Exclusive x → Exclusive (x,y).
-  Proof. by intros ?[][?%exclusive0_r]. Qed.
+  Proof. by intros ?[][?%exclusive0_l]. Qed.
   Global Instance pair_exclusive_r x y : Exclusive y → Exclusive (x,y).
-  Proof. by intros ?[][??%exclusive0_r]. Qed.
+  Proof. by intros ?[][??%exclusive0_l]. Qed.
 End prod.
 
 Arguments prodR : clear implicits.
@@ -1045,6 +1043,13 @@ Section option.
   Global Instance option_persistent (mx : option A) :
     (∀ x : A, Persistent x) → Persistent mx.
   Proof. intros. destruct mx; apply _. Qed.
+
+  Lemma exclusiveN_Some_l n x `{!Exclusive x} my :
+    ✓{n} (Some x ⋅ my) → my = None.
+  Proof. destruct my. move=> /(exclusiveN_l _ x) []. done. Qed.
+  Lemma exclusiveN_Some_r n x `{!Exclusive x} my :
+    ✓{n} (my ⋅ Some x) → my = None.
+  Proof. rewrite comm. by apply exclusiveN_Some_l. Qed.
 End option.
 
 Arguments optionR : clear implicits.
