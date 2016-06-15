@@ -1,4 +1,4 @@
-From iris.algebra Require Export cmra.
+From iris.algebra Require Export cmra updates.
 From iris.prelude Require Export list.
 From iris.algebra Require Import upred.
 

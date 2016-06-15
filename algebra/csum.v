@@ -1,4 +1,4 @@
-From iris.algebra Require Export cmra.
+From iris.algebra Require Export cmra updates.
 From iris.algebra Require Import upred.
 Local Arguments pcore _ _ !_ /.
 Local Arguments cmra_pcore _ !_ /.

@@ -1,4 +1,4 @@
-From iris.algebra Require Export cmra.
+From iris.algebra Require Export cmra updates.
 
 Record DRAMixin A `{Equiv A, Core A, Disjoint A, Op A, Valid A} := {
   (* setoids *)
