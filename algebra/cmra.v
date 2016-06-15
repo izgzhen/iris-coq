@@ -52,7 +52,7 @@ Record CMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A} := {
 }.
 
 (** Bundeled version *)
-Structure cmraT := CMRAT {
+Structure cmraT := CMRAT' {
   cmra_car :> Type;
   cmra_equiv : Equiv cmra_car;
   cmra_dist : Dist cmra_car;
@@ -62,9 +62,11 @@ Structure cmraT := CMRAT {
   cmra_valid : Valid cmra_car;
   cmra_validN : ValidN cmra_car;
   cmra_cofe_mixin : CofeMixin cmra_car;
-  cmra_mixin : CMRAMixin cmra_car
+  cmra_mixin : CMRAMixin cmra_car;
+  cmra_car' : Type
 }.
-Arguments CMRAT _ {_ _ _ _ _ _ _} _ _.
+Arguments CMRAT' _ {_ _ _ _ _ _ _} _ _ _.
+Notation CMRAT A m m' := (CMRAT' A m m' A).
 Arguments cmra_car : simpl never.
 Arguments cmra_equiv : simpl never.
 Arguments cmra_dist : simpl never.
@@ -150,7 +152,7 @@ Record UCMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, Empty A} := {
   mixin_ucmra_pcore_unit : pcore ∅ ≡ Some ∅
 }.
 
-Structure ucmraT := UCMRAT {
+Structure ucmraT := UCMRAT' {
   ucmra_car :> Type;
   ucmra_equiv : Equiv ucmra_car;
   ucmra_dist : Dist ucmra_car;
@@ -162,9 +164,11 @@ Structure ucmraT := UCMRAT {
   ucmra_empty : Empty ucmra_car;
   ucmra_cofe_mixin : CofeMixin ucmra_car;
   ucmra_cmra_mixin : CMRAMixin ucmra_car;
-  ucmra_mixin : UCMRAMixin ucmra_car
+  ucmra_mixin : UCMRAMixin ucmra_car;
+  ucmra_car' : Type;
 }.
-Arguments UCMRAT _ {_ _ _ _ _ _ _ _} _ _ _.
+Arguments UCMRAT' _ {_ _ _ _ _ _ _ _} _ _ _ _.
+Notation UCMRAT A m m' m'' := (UCMRAT' A m m' m'' A).
 Arguments ucmra_car : simpl never.
 Arguments ucmra_equiv : simpl never.
 Arguments ucmra_dist : simpl never.

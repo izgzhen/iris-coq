@@ -58,14 +58,16 @@ Class Contractive `{Dist A, Dist B} (f : A → B) :=
   contractive n x y : (∀ i, i < n → x ≡{i}≡ y) → f x ≡{n}≡ f y.
 
 (** Bundeled version *)
-Structure cofeT := CofeT {
+Structure cofeT := CofeT' {
   cofe_car :> Type;
   cofe_equiv : Equiv cofe_car;
   cofe_dist : Dist cofe_car;
   cofe_compl : Compl cofe_car;
-  cofe_mixin : CofeMixin cofe_car
+  cofe_mixin : CofeMixin cofe_car;
+  cofe_car' : Type
 }.
-Arguments CofeT _ {_ _ _} _.
+Arguments CofeT' _ {_ _ _} _ _.
+Notation CofeT A m := (CofeT' A m A).
 Add Printing Constructor cofeT.
 Hint Extern 0 (Equiv _) => eapply (@cofe_equiv _) : typeclass_instances.
 Hint Extern 0 (Dist _) => eapply (@cofe_dist _) : typeclass_instances.
