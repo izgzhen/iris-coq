@@ -939,6 +939,9 @@ Proof. done. Qed.
 Global Instance exist_destruct_later {A} P (Φ : A → uPred M) :
   ExistDestruct P Φ → Inhabited A → ExistDestruct (▷ P) (λ a, ▷ (Φ a))%I.
 Proof. rewrite /ExistDestruct=> HP ?. by rewrite HP later_exist. Qed.
+Global Instance exist_destruct_always {A} P (Φ : A → uPred M) :
+  ExistDestruct P Φ → ExistDestruct (□ P) (λ a, □ (Φ a))%I.
+Proof. rewrite /ExistDestruct=> HP. by rewrite HP always_exist. Qed.
 
 Lemma tac_exist_destruct {A} Δ i p j P (Φ : A → uPred M) Q :
   envs_lookup i Δ = Some (p, P) → ExistDestruct P Φ →
