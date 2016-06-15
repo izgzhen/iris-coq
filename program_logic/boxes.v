@@ -57,11 +57,6 @@ Proof. solve_proper. Qed.
 Global Instance slice_persistent γ P : PersistentP (slice N γ P).
 Proof. apply _. Qed.
 
-(* This should go automatic *)
-Instance box_own_auth_timeless γ
-  (a : auth (option (excl bool))) : TimelessP (box_own_auth γ a).
-Proof. apply own_timeless, pair_timeless; apply _. Qed.
-
 Lemma box_own_auth_agree γ b1 b2 :
   box_own_auth γ (● Excl' b1) ★ box_own_auth γ (◯ Excl' b2) ⊢ b1 = b2.
 Proof.

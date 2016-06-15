@@ -323,9 +323,9 @@ Section product.
       apply (conv_compl n (chain_map snd c)).
   Qed.
   Canonical Structure prodC : cofeT := CofeT (A * B) prod_cofe_mixin.
-  Global Instance pair_timeless (x : A) (y : B) :
-    Timeless x → Timeless y → Timeless (x,y).
-  Proof. by intros ?? [x' y'] [??]; split; apply (timeless _). Qed.
+  Global Instance prod_timeless (x : A * B) :
+    Timeless (x.1) → Timeless (x.2) → Timeless x.
+  Proof. by intros ???[??]; split; apply (timeless _). Qed.
   Global Instance prod_discrete_cofe : Discrete A → Discrete B → Discrete prodC.
   Proof. intros ?? [??]; apply _. Qed.
 End product.
