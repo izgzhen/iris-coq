@@ -64,7 +64,7 @@ Structure cofeT := CofeT' {
   cofe_dist : Dist cofe_car;
   cofe_compl : Compl cofe_car;
   cofe_mixin : CofeMixin cofe_car;
-  cofe_car' : Type
+  _ : Type
 }.
 Arguments CofeT' _ {_ _ _} _ _.
 Notation CofeT A m := (CofeT' A m A).

@@ -63,7 +63,7 @@ Structure cmraT := CMRAT' {
   cmra_validN : ValidN cmra_car;
   cmra_cofe_mixin : CofeMixin cmra_car;
   cmra_mixin : CMRAMixin cmra_car;
-  cmra_car' : Type
+  _ : Type
 }.
 Arguments CMRAT' _ {_ _ _ _ _ _ _} _ _ _.
 Notation CMRAT A m m' := (CMRAT' A m m' A).
@@ -165,7 +165,7 @@ Structure ucmraT := UCMRAT' {
   ucmra_cofe_mixin : CofeMixin ucmra_car;
   ucmra_cmra_mixin : CMRAMixin ucmra_car;
   ucmra_mixin : UCMRAMixin ucmra_car;
-  ucmra_car' : Type;
+  _ : Type;
 }.
 Arguments UCMRAT' _ {_ _ _ _ _ _ _ _} _ _ _ _.
 Notation UCMRAT A m m' m'' := (UCMRAT' A m m' m'' A).
