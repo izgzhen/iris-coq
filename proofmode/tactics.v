@@ -333,9 +333,13 @@ Local Tactic Notation "iOrDestruct" constr(H) "as" constr(H1) constr(H2) :=
 
 (** * Conjunction and separating conjunction *)
 Tactic Notation "iSplit" :=
-  eapply tac_and_split;
-    [let P := match goal with |- AndSplit ?P _ _ => P end in
-     apply _ || fail "iSplit:" P "not a conjunction"| |].
+  lazymatch goal with
+  | |- _ ⊢ _ =>
+    eapply tac_and_split;
+      [let P := match goal with |- AndSplit ?P _ _ => P end in
+       apply _ || fail "iSplit:" P "not a conjunction"| |]
+  | |- _ ⊣⊢ _ => apply (anti_symm (⊢))
+  end.
 
 Tactic Notation "iSplitL" constr(Hs) :=
   let Hs := words Hs in
