@@ -36,7 +36,11 @@ Section definitions.
   Global Instance heap_ctx_persistent N : PersistentP (heap_ctx N).
   Proof. apply _. Qed.
 End definitions.
+
 Typeclasses Opaque heap_ctx heap_mapsto.
+Instance: Params (@heap_inv) 1.
+Instance: Params (@heap_mapsto) 4.
+Instance: Params (@heap_ctx) 2.
 
 Notation "l ↦{ q } v" := (heap_mapsto l q v)
   (at level 20, q at level 50, format "l  ↦{ q }  v") : uPred_scope.

@@ -46,6 +46,7 @@ Section definitions.
   Global Instance sts_ctx_persistent N φ : PersistentP (sts_ctx N φ).
   Proof. apply _. Qed.
 End definitions.
+
 Typeclasses Opaque sts_own sts_ownS sts_ctx.
 Instance: Params (@sts_inv) 5.
 Instance: Params (@sts_ownS) 5.
