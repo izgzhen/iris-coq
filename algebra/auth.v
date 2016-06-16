@@ -179,42 +179,15 @@ Proof. done. Qed.
 Lemma auth_both_op a b : Auth (Excl' a) b ≡ ● a ⋅ ◯ b.
 Proof. by rewrite /op /auth_op /= left_id. Qed.
 
-Lemma auth_update a a' b b' :
-  (∀ n af, ✓{n} a → a ≡{n}≡ a' ⋅ af → b ≡{n}≡ b' ⋅ af ∧ ✓{n} b) →
-  ● a ⋅ ◯ a' ~~> ● b ⋅ ◯ b'.
+Lemma auth_update a af b :
+  a ~l~> b @ Some af →
+  ● (a ⋅ af) ⋅ ◯ a ~~> ● (b ⋅ af) ⋅ ◯ b.
 Proof.
-  intros Hab; apply cmra_total_update.
+  intros [Hab Hab']; apply cmra_total_update.
   move=> n [[[?|]|] bf1] // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
-  destruct (Hab n (bf1 ⋅ bf2)) as [Ha' ?]; auto.
-  { by rewrite Ha left_id assoc. }
-  split; [by rewrite Ha' left_id assoc; apply cmra_includedN_l|done].
-Qed.
-
-Lemma auth_local_update L `{!LocalUpdate Lv L} a a' :
-  Lv a → ✓ L a' →
-  ● a' ⋅ ◯ a ~~> ● L a' ⋅ ◯ L a.
-Proof.
-  intros. apply auth_update=>n af ? EQ; split; last by apply cmra_valid_validN.
-  by rewrite EQ (local_updateN L) // -EQ.
-Qed.
-
-Lemma auth_update_op_l a a' b :
-  ✓ (b ⋅ a) → ● a ⋅ ◯ a' ~~> ● (b ⋅ a) ⋅ ◯ (b ⋅ a').
-Proof. by intros; apply (auth_local_update _). Qed.
-Lemma auth_update_op_r a a' b :
-  ✓ (a ⋅ b) → ● a ⋅ ◯ a' ~~> ● (a ⋅ b) ⋅ ◯ (a' ⋅ b).
-Proof. rewrite -!(comm _ b); apply auth_update_op_l. Qed.
-
-(* This does not seem to follow from auth_local_update.
-   The trouble is that given ✓ (L a ⋅ a'), Lv a
-   we need ✓ (a ⋅ a'). I think this should hold for every local update,
-   but adding an extra axiom to local updates just for this is silly. *)
-Lemma auth_local_update_l L `{!LocalUpdate Lv L} a a' :
-  Lv a → ✓ (L a ⋅ a') →
-  ● (a ⋅ a') ⋅ ◯ a ~~> ● (L a ⋅ a') ⋅ ◯ L a.
-Proof.
-  intros. apply auth_update=>n af ? EQ; split; last by apply cmra_valid_validN.
-  by rewrite -(local_updateN L) // EQ -(local_updateN L) // -EQ.
+  move: Ha; rewrite !left_id=> Hm; split; auto.
+  exists bf2. rewrite -assoc.
+  apply (Hab' _ (Some _)); auto. by rewrite /= assoc.
 Qed.
 End cmra.
 

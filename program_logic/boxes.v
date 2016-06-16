@@ -45,7 +45,6 @@ Context `{boxG Λ Σ} (N : namespace).
 Notation iProp := (iPropG Λ Σ).
 Implicit Types P Q : iProp.
 
-(* FIXME: solve_proper picks the eq ==> instance for Next. *)
 Global Instance box_own_prop_ne n γ : Proper (dist n ==> dist n) (box_own_prop γ).
 Proof. solve_proper. Qed.
 Global Instance box_inv_ne n γ : Proper (dist n ==> dist n) (slice_inv γ).
@@ -69,9 +68,11 @@ Lemma box_own_auth_update E γ b1 b2 b3 :
   box_own_auth γ (● Excl' b1) ★ box_own_auth γ (◯ Excl' b2)
   ={E}=> box_own_auth γ (● Excl' b3) ★ box_own_auth γ (◯ Excl' b3).
 Proof.
-  rewrite /box_own_prop -!own_op.
-  apply own_update, prod_update; simpl; last reflexivity.
-  apply (auth_local_update (λ _, Excl' b3)). apply _. done.
+  rewrite /box_own_prop -!own_op own_valid_l prod_validI; iIntros "[[Hb _] Hγ]".
+  iDestruct "Hb" as % [[[] [= ->]%leibniz_equiv] ?]%auth_valid_discrete.
+  iApply (own_update with "Hγ"); apply prod_update; simpl; last reflexivity.
+  rewrite -{1}(right_id ∅ _ (Excl' b2)) -{1}(right_id ∅ _ (Excl' b3)).
+  by apply auth_update, option_local_update, exclusive_local_update.
 Qed.
 
 Lemma box_own_agree γ Q1 Q2 :

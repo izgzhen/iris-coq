@@ -1,13 +1,13 @@
 From iris.algebra Require Export cmra.
 
 (** * Local updates *)
-(** The idea is that lemams taking this class will usually have L explicit,
-    and leave Lv implicit - it will be inferred by the typeclass machinery. *)
-Class LocalUpdate {A : cmraT} (Lv : A → Prop) (L : A → A) := {
-  local_update_ne n :> Proper (dist n ==> dist n) L;
-  local_updateN n x y : Lv x → ✓{n} (x ⋅ y) → L (x ⋅ y) ≡{n}≡ L x ⋅ y
+Record local_update {A : cmraT} (mz : option A) (x y : A) := {
+  local_update_valid n : ✓{n} (x ⋅? mz) → ✓{n} (y ⋅? mz);
+  local_update_go n mz' :
+    ✓{n} (x ⋅? mz) → x ⋅? mz ≡{n}≡ x ⋅? mz' → y ⋅? mz ≡{n}≡ y ⋅? mz'
 }.
-Arguments local_updateN {_ _} _ {_} _ _ _ _ _.
+Notation "x ~l~> y @ mz" := (local_update mz x y) (at level 70).
+Instance: Params (@local_update) 1.
 
 (** * Frame preserving updates *)
 Definition cmra_updateP {A : cmraT} (x : A) (P : A → Prop) := ∀ n mz,
@@ -25,6 +25,13 @@ Section cmra.
 Context {A : cmraT}.
 Implicit Types x y : A.
 
+Global Instance local_update_proper :
+  Proper ((≡) ==> (≡) ==> (≡) ==> iff) (@local_update A).
+Proof.
+  cut (Proper ((≡) ==> (≡) ==> (≡) ==> impl) (@local_update A)).
+  { intros Hproper; split; by apply Hproper. }
+  intros mz mz' Hmz x x' Hx y y' Hy [Hv Hup]; constructor; setoid_subst; auto.
+Qed.
 Global Instance cmra_updateP_proper :
   Proper ((≡) ==> pointwise_relation _ iff ==> iff) (@cmra_updateP A).
 Proof.
@@ -38,25 +45,35 @@ Proof.
 Qed.
 
 (** ** Local updates *)
-Global Instance local_update_proper (L : A → A) Lv :
-  LocalUpdate Lv L → Proper ((≡) ==> (≡)) L.
-Proof. intros; apply (ne_proper _). Qed.
-
-Lemma local_update (L : A → A) `{!LocalUpdate Lv L} x y :
-  Lv x → ✓ (x ⋅ y) → L (x ⋅ y) ≡ L x ⋅ y.
+Global Instance local_update_preorder mz : PreOrder (@local_update A mz).
 Proof.
-  by rewrite cmra_valid_validN equiv_dist=>?? n; apply (local_updateN L).
+  split.
+  - intros x; by split.
+  - intros x1 x2 x3 [??] [??]; split; eauto.
 Qed.
 
-Global Instance op_local_update x : LocalUpdate (λ _, True) (op x).
-Proof. split. apply _. by intros n y1 y2 _ _; rewrite assoc. Qed.
+Lemma exclusive_local_update `{!Exclusive x} y mz : ✓ y → x ~l~> y @ mz.
+Proof.
+  split; intros n.
+  - move=> /exclusiveN_opM ->. by apply cmra_valid_validN.
+  - intros mz' ? Hmz.
+    by rewrite (exclusiveN_opM n x mz) // (exclusiveN_opM n x mz') -?Hmz.
+Qed.
 
-Global Instance id_local_update : LocalUpdate (λ _, True) (@id A).
-Proof. split; auto with typeclass_instances. Qed.
+Lemma op_local_update x1 x2 y mz :
+  x1 ~l~> x2 @ Some (y ⋅? mz) → x1 ⋅ y ~l~> x2 ⋅ y @ mz.
+Proof.
+  intros [Hv1 H1]; split.
+  - intros n. rewrite !cmra_opM_assoc. move=> /Hv1 /=; auto.
+  - intros n mz'. rewrite !cmra_opM_assoc. move=> Hv /(H1 _ (Some _) Hv) /=; auto.
+Qed.
 
-Global Instance exclusive_local_update y :
-  LocalUpdate Exclusive (λ _, y) | 1000.
-Proof. split. apply _. by intros ?????%exclusiveN_l. Qed.
+Lemma alloc_local_update x y mz : ✓ (x ⋅ y ⋅? mz) → x ~l~> x ⋅ y @ mz.
+Proof.
+  split.
+  - intros n _. by apply cmra_valid_validN.
+  - intros n mz' _. by rewrite !(comm _ x) !cmra_opM_assoc=> ->.
+Qed.
 
 (** ** Frame preserving updates *)
 Lemma cmra_update_updateP x y : x ~~> y ↔ x ~~>: (y =).
@@ -137,19 +154,7 @@ Section total_updates.
 End total_updates.
 End cmra.
 
-(** ** CMRAs with a unit *)
-Section ucmra.
-  Context {A : ucmraT}.
-  Implicit Types x y : A.
-
-  Lemma ucmra_update_unit x : x ~~> ∅.
-  Proof.
-    apply cmra_total_update=> n z. rewrite left_id; apply cmra_validN_op_r.
-  Qed.
-  Lemma ucmra_update_unit_alt y : ∅ ~~> y ↔ ∀ x, x ~~> y.
-  Proof. split; [intros; trans ∅|]; auto using ucmra_update_unit. Qed.
-End ucmra.
-
+(** * Transport *)
 Section cmra_transport.
   Context {A B : cmraT} (H : A = B).
   Notation T := (cmra_transport H).
@@ -165,6 +170,17 @@ End cmra_transport.
 Section prod.
   Context {A B : cmraT}.
   Implicit Types x : A * B.
+
+  Lemma prod_local_update x y mz :
+    x.1 ~l~> y.1 @ fst <$> mz → x.2 ~l~> y.2 @ snd <$> mz →
+    x ~l~> y @ mz.
+  Proof.
+    intros [Hv1 H1] [Hv2 H2]; split.
+    - intros n [??]; destruct mz; split; auto.
+    - intros n mz' [??] [??].
+      specialize (H1 n (fst <$> mz')); specialize (H2 n (snd <$> mz')).
+      destruct mz, mz'; split; naive_solver.
+  Qed.
 
   Lemma prod_updateP P1 P2 (Q : A * B → Prop) x :
     x.1 ~~>: P1 → x.2 ~~>: P2 → (∀ a b, P1 a → P2 b → Q (a,b)) → x ~~>: Q.
@@ -182,16 +198,6 @@ Section prod.
     rewrite !cmra_update_updateP.
     destruct x, y; eauto using prod_updateP with subst.
   Qed.
-
-  Global Instance prod_local_update
-      (LA : A → A) `{!LocalUpdate LvA LA} (LB : B → B) `{!LocalUpdate LvB LB} :
-    LocalUpdate (λ x, LvA (x.1) ∧ LvB (x.2)) (prod_map LA LB).
-  Proof.
-    constructor.
-    - intros n x y [??]; constructor; simpl; by apply local_update_ne.
-    - intros n ?? [??] [??];
-        constructor; simpl in *; eapply local_updateN; eauto.
-  Qed.
 End prod.
 
 (** * Option *)
@@ -199,19 +205,13 @@ Section option.
   Context {A : cmraT}.
   Implicit Types x y : A.
 
-  Global Instance option_fmap_local_update (L : A → A) Lv :
-    LocalUpdate Lv L →
-    LocalUpdate (λ mx, if mx is Some x then Lv x else False) (fmap L).
+  Lemma option_local_update x y mmz :
+    x ~l~> y @ mjoin mmz →
+    Some x ~l~> Some y @ mmz.
   Proof.
-    split; first apply _.
-    intros n [x|] [z|]; constructor; by eauto using (local_updateN L).
-  Qed.
-  Global Instance option_const_local_update Lv y :
-    LocalUpdate Lv (λ _, y) →
-    LocalUpdate (λ mx, if mx is Some x then Lv x else False) (λ _, Some y).
-  Proof.
-    split; first apply _.
-    intros n [x|] [z|]; constructor; by eauto using (local_updateN (λ _, y)).
+    intros [Hv H]; split; first destruct mmz as [[?|]|]; auto.
+    intros n mmz'. specialize (H n (mjoin mmz')).
+    destruct mmz as [[]|], mmz' as [[]|]; inversion_clear 2; constructor; auto.
   Qed.
 
   Lemma option_updateP (P : A → Prop) (Q : option A → Prop) x :
@@ -226,7 +226,5 @@ Section option.
     x ~~>: P → Some x ~~>: from_option P False.
   Proof. eauto using option_updateP. Qed.
   Lemma option_update x y : x ~~> y → Some x ~~> Some y.
-  Proof.
-    rewrite !cmra_update_updateP; eauto using option_updateP with congruence.
-  Qed.
+  Proof. rewrite !cmra_update_updateP; eauto using option_updateP with subst. Qed.
 End option.

@@ -246,6 +246,9 @@ Section properties.
   Local Arguments op _ _ !_ !_ / : simpl nomatch.
   Local Arguments cmra_op _ !_ !_ / : simpl nomatch.
 
+  Lemma list_lookup_opM l mk i : (l ⋅? mk) !! i = l !! i ⋅ (mk ≫= (!! i)).
+  Proof. destruct mk; by rewrite /= ?list_lookup_op ?right_id_L. Qed.
+
   Lemma list_op_app l1 l2 l3 :
     length l2 ≤ length l1 → (l1 ++ l3) ⋅ l2 = (l1 ⋅ l2) ++ l3.
   Proof.
@@ -337,17 +340,25 @@ Section properties.
     rewrite !cmra_update_updateP => H; eauto using list_middle_updateP with subst.
   Qed.
 
-  (* Applying a local update at a position we own is a local update. *)
-  Global Instance list_alter_local_update `{LocalUpdate A Lv L} i :
-    LocalUpdate (λ L, ∃ x, L !! i = Some x ∧ Lv x) (alter L i).
+  Lemma list_middle_local_update l1 l2 x y ml :
+    x ~l~> y @ ml ≫= (!! length l1) →
+    l1 ++ x :: l2 ~l~> l1 ++ y :: l2 @ ml.
   Proof.
-    split; [apply _|]; intros n l1 l2 (x&Hi1&?) Hm; apply list_dist_lookup=> j.
-    destruct (decide (j = i)); subst; last first.
-    { by rewrite list_lookup_op !list_lookup_alter_ne // list_lookup_op. }
-    rewrite list_lookup_op !list_lookup_alter list_lookup_op Hi1.
-    destruct (l2 !! i) as [y|] eqn:Hi2; rewrite Hi2; constructor; auto.
-    eapply (local_updateN L), (list_lookup_validN_Some _ _ i); eauto.
-    by rewrite list_lookup_op Hi1 Hi2.
+    intros [Hxy Hxy']; split.
+    - intros n; rewrite !list_lookup_validN=> Hl i; move: (Hl i).
+      destruct (lt_eq_lt_dec i (length l1)) as [[?|?]|?]; subst.
+      + by rewrite !list_lookup_opM !lookup_app_l.
+      + rewrite !list_lookup_opM !list_lookup_middle // !Some_op_opM; apply (Hxy n).
+      + rewrite !(cons_middle _ l1 l2) !assoc.
+        rewrite !list_lookup_opM !lookup_app_r !app_length //=; lia.
+    - intros n mk; rewrite !list_lookup_validN !list_dist_lookup => Hl Hl' i.
+      move: (Hl i) (Hl' i).
+      destruct (lt_eq_lt_dec i (length l1)) as [[?|?]|?]; subst.
+      + by rewrite !list_lookup_opM !lookup_app_l.
+      + rewrite !list_lookup_opM !list_lookup_middle // !Some_op_opM !inj_iff.
+        apply (Hxy' n).
+      + rewrite !(cons_middle _ l1 l2) !assoc.
+        rewrite !list_lookup_opM !lookup_app_r !app_length //=; lia.
   Qed.
 End properties.
 

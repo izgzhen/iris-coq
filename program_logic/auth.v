@@ -53,8 +53,7 @@ Section auth.
   Implicit Types a b : A.
   Implicit Types γ : gname.
 
-  Lemma auth_own_op γ a b :
-    auth_own γ (a ⋅ b) ⊣⊢ (auth_own γ a ★ auth_own γ b).
+  Lemma auth_own_op γ a b : auth_own γ (a ⋅ b) ⊣⊢ auth_own γ a ★ auth_own γ b.
   Proof. by rewrite /auth_own -own_op auth_frag_op. Qed.
   Lemma auth_own_valid γ a : auth_own γ a ⊢ ✓ a.
   Proof. by rewrite /auth_own own_valid auth_validI. Qed.
@@ -87,11 +86,10 @@ Section auth.
 
   Lemma auth_fsa E N (Ψ : V → iPropG Λ Σ) γ a :
     fsaV → nclose N ⊆ E →
-    auth_ctx γ N φ ★ ▷ auth_own γ a ★ (∀ a',
-      ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
-      fsa (E ∖ nclose N) (λ x, ∃ L Lv (Hup : LocalUpdate Lv L),
-        ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
-        (auth_own γ (L a) -★ Ψ x)))
+    auth_ctx γ N φ ★ ▷ auth_own γ a ★ (∀ af,
+      ■ ✓ (a ⋅ af) ★ ▷ φ (a ⋅ af) -★
+      fsa (E ∖ nclose N) (λ x, ∃ b,
+        ■ (a ~l~> b @ Some af) ★ ▷ φ (b ⋅ af) ★ (auth_own γ b -★ Ψ x)))
      ⊢ fsa E Ψ.
   Proof.
     iIntros {??} "(#? & Hγf & HΨ)". rewrite /auth_ctx /auth_own.
@@ -99,29 +97,13 @@ Section auth.
     iTimeless "Hγ"; iTimeless "Hγf"; iCombine "Hγ" "Hγf" as "Hγ".
     iDestruct (own_valid _ with "#Hγ") as "Hvalid".
     iDestruct (auth_validI _ with "Hvalid") as "[Ha' %]"; simpl; iClear "Hvalid".
-    iDestruct "Ha'" as {b} "Ha'"; iDestruct "Ha'" as %Ha'.
+    iDestruct "Ha'" as {af} "Ha'"; iDestruct "Ha'" as %Ha'.
     rewrite ->(left_id _ _) in Ha'; setoid_subst.
     iApply pvs_fsa_fsa; iApply fsa_wand_r; iSplitL "HΨ Hφ".
     { iApply "HΨ"; by iSplit. }
-    iIntros {v} "HL". iDestruct "HL" as {L Lv ?} "(% & Hφ & HΨ)".
-    iPvs (own_update _ with "Hγ") as "[Hγ Hγf]".
-    { apply (auth_local_update_l L); tauto. }
+    iIntros {v} "Ha". iDestruct "Ha" as {b} "(% & Hφ & HΨ)".
+    iPvs (own_update _ with "Hγ") as "[Hγ Hγf]"; first eapply auth_update; eauto.
     iPvsIntro. iSplitL "Hφ Hγ"; last by iApply "HΨ".
-    iNext. iExists (L a ⋅ b). by iFrame.
-  Qed.
-
-  Lemma auth_fsa' L `{!LocalUpdate Lv L} E N (Ψ : V → iPropG Λ Σ) γ a :
-    fsaV → nclose N ⊆ E →
-    auth_ctx γ N φ ★ ▷ auth_own γ a ★ (∀ a',
-      ■ ✓ (a ⋅ a') ★ ▷ φ (a ⋅ a') -★
-      fsa (E ∖ nclose N) (λ x,
-        ■ (Lv a ∧ ✓ (L a ⋅ a')) ★ ▷ φ (L a ⋅ a') ★
-        (auth_own γ (L a) -★ Ψ x)))
-    ⊢ fsa E Ψ.
-  Proof.
-    iIntros {??} "(#Ha & Hγf & HΨ)"; iApply (auth_fsa E N Ψ γ a); auto.
-    iFrame "Ha Hγf". iIntros {a'} "H".
-    iApply fsa_wand_r; iSplitL; first by iApply "HΨ".
-    iIntros {v} "?"; by iExists L, Lv, _.
+    iNext. iExists (b ⋅ af). by iFrame.
   Qed.
 End auth.

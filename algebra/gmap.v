@@ -184,7 +184,10 @@ Section properties.
 Context `{Countable K} {A : cmraT}.
 Implicit Types m : gmap K A.
 Implicit Types i : K.
-Implicit Types a : A.
+Implicit Types x y : A.
+
+Lemma lookup_opM m1 mm2 i : (m1 ⋅? mm2) !! i = m1 !! i ⋅ (mm2 ≫= (!! i)).
+Proof. destruct mm2; by rewrite /= ?lookup_op ?right_id_L. Qed.
 
 Lemma lookup_validN_Some n m i x : ✓{n} m → m !! i ≡{n}≡ Some x → ✓{n} x.
 Proof. by move=> /(_ i) Hm Hi; move:Hm; rewrite Hi. Qed.
@@ -281,82 +284,108 @@ Proof. apply insert_updateP'. Qed.
 Lemma singleton_update i (x y : A) : x ~~> y → {[ i := x ]} ~~> {[ i := y ]}.
 Proof. apply insert_update. Qed.
 
-Section freshness.
-Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
-Lemma alloc_updateP_strong (Q : gmap K A → Prop) (I : gset K) m x :
-  ✓ x → (∀ i, m !! i = None → i ∉ I → Q (<[i:=x]>m)) → m ~~>: Q.
+Lemma delete_update m i : m ~~> delete i m.
 Proof.
-  intros ? HQ. apply cmra_total_updateP.
-  intros n mf Hm. set (i := fresh (I ∪ dom (gset K) (m ⋅ mf))).
-  assert (i ∉ I ∧ i ∉ dom (gset K) m ∧ i ∉ dom (gset K) mf) as [?[??]].
-  { rewrite -not_elem_of_union -dom_op -not_elem_of_union; apply is_fresh. }
-  exists (<[i:=x]>m); split.
-  { by apply HQ; last done; apply not_elem_of_dom. }
-  rewrite insert_singleton_opN; last by apply not_elem_of_dom.
-  rewrite -assoc -insert_singleton_opN;
-    last by apply not_elem_of_dom; rewrite dom_op not_elem_of_union.
-  by apply insert_validN; [apply cmra_valid_validN|].
+  apply cmra_total_update=> n mf Hm j; destruct (decide (i = j)); subst.
+  - move: (Hm j). rewrite !lookup_op lookup_delete left_id.
+    apply cmra_validN_op_r.
+  - move: (Hm j). by rewrite !lookup_op lookup_delete_ne.
 Qed.
-Lemma alloc_updateP (Q : gmap K A → Prop) m x :
-  ✓ x → (∀ i, m !! i = None → Q (<[i:=x]>m)) → m ~~>: Q.
-Proof. move=>??. eapply alloc_updateP_strong with (I:=∅); by eauto. Qed.
-Lemma alloc_updateP_strong' m x (I : gset K) :
-  ✓ x → m ~~>: λ m', ∃ i, i ∉ I ∧ m' = <[i:=x]>m ∧ m !! i = None.
-Proof. eauto using alloc_updateP_strong. Qed.
-Lemma alloc_updateP' m x :
-  ✓ x → m ~~>: λ m', ∃ i, m' = <[i:=x]>m ∧ m !! i = None.
-Proof. eauto using alloc_updateP. Qed.
 
-Lemma singleton_updateP_unit (P : A → Prop) (Q : gmap K A → Prop) u i :
-  ✓ u → LeftId (≡) u (⋅) →
-  u ~~>: P → (∀ y, P y → Q {[ i := y ]}) → ∅ ~~>: Q.
-Proof.
-  intros ?? Hx HQ. apply cmra_total_updateP=> n gf Hg.
-  destruct (Hx n (gf !! i)) as (y&?&Hy).
-  { move:(Hg i). rewrite !left_id.
-    case: (gf !! i)=>[x|]; rewrite /= ?left_id //.
-    intros; by apply cmra_valid_validN. }
-  exists {[ i := y ]}; split; first by auto.
-  intros i'; destruct (decide (i' = i)) as [->|].
-  - rewrite lookup_op lookup_singleton.
-    move:Hy; case: (gf !! i)=>[x|]; rewrite /= ?right_id //.
-  - move:(Hg i'). by rewrite !lookup_op lookup_singleton_ne // !left_id.
-Qed.
-Lemma singleton_updateP_unit' (P: A → Prop) u i :
-  ✓ u → LeftId (≡) u (⋅) →
-  u ~~>: P → ∅ ~~>: λ m, ∃ y, m = {[ i := y ]} ∧ P y.
-Proof. eauto using singleton_updateP_unit. Qed.
-Lemma singleton_update_unit u i (y : A) :
-  ✓ u → LeftId (≡) u (⋅) → u ~~> y → ∅ ~~> {[ i := y ]}.
-Proof.
-  rewrite !cmra_update_updateP; eauto using singleton_updateP_unit with subst.
-Qed.
+Section freshness.
+  Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
+  Lemma alloc_updateP_strong (Q : gmap K A → Prop) (I : gset K) m x :
+    ✓ x → (∀ i, m !! i = None → i ∉ I → Q (<[i:=x]>m)) → m ~~>: Q.
+  Proof.
+    intros ? HQ. apply cmra_total_updateP.
+    intros n mf Hm. set (i := fresh (I ∪ dom (gset K) (m ⋅ mf))).
+    assert (i ∉ I ∧ i ∉ dom (gset K) m ∧ i ∉ dom (gset K) mf) as [?[??]].
+    { rewrite -not_elem_of_union -dom_op -not_elem_of_union; apply is_fresh. }
+    exists (<[i:=x]>m); split.
+    { by apply HQ; last done; apply not_elem_of_dom. }
+    rewrite insert_singleton_opN; last by apply not_elem_of_dom.
+    rewrite -assoc -insert_singleton_opN;
+      last by apply not_elem_of_dom; rewrite dom_op not_elem_of_union.
+    by apply insert_validN; [apply cmra_valid_validN|].
+  Qed.
+  Lemma alloc_updateP (Q : gmap K A → Prop) m x :
+    ✓ x → (∀ i, m !! i = None → Q (<[i:=x]>m)) → m ~~>: Q.
+  Proof. move=>??. eapply alloc_updateP_strong with (I:=∅); by eauto. Qed.
+  Lemma alloc_updateP_strong' m x (I : gset K) :
+    ✓ x → m ~~>: λ m', ∃ i, i ∉ I ∧ m' = <[i:=x]>m ∧ m !! i = None.
+  Proof. eauto using alloc_updateP_strong. Qed.
+  Lemma alloc_updateP' m x :
+    ✓ x → m ~~>: λ m', ∃ i, m' = <[i:=x]>m ∧ m !! i = None.
+  Proof. eauto using alloc_updateP. Qed.
+
+  Lemma singleton_updateP_unit (P : A → Prop) (Q : gmap K A → Prop) u i :
+    ✓ u → LeftId (≡) u (⋅) →
+    u ~~>: P → (∀ y, P y → Q {[ i := y ]}) → ∅ ~~>: Q.
+  Proof.
+    intros ?? Hx HQ. apply cmra_total_updateP=> n gf Hg.
+    destruct (Hx n (gf !! i)) as (y&?&Hy).
+    { move:(Hg i). rewrite !left_id.
+      case: (gf !! i)=>[x|]; rewrite /= ?left_id //.
+      intros; by apply cmra_valid_validN. }
+    exists {[ i := y ]}; split; first by auto.
+    intros i'; destruct (decide (i' = i)) as [->|].
+    - rewrite lookup_op lookup_singleton.
+      move:Hy; case: (gf !! i)=>[x|]; rewrite /= ?right_id //.
+    - move:(Hg i'). by rewrite !lookup_op lookup_singleton_ne // !left_id.
+  Qed.
+  Lemma singleton_updateP_unit' (P: A → Prop) u i :
+    ✓ u → LeftId (≡) u (⋅) →
+    u ~~>: P → ∅ ~~>: λ m, ∃ y, m = {[ i := y ]} ∧ P y.
+  Proof. eauto using singleton_updateP_unit. Qed.
+  Lemma singleton_update_unit u i (y : A) :
+    ✓ u → LeftId (≡) u (⋅) → u ~~> y → ∅ ~~> {[ i := y ]}.
+  Proof.
+    rewrite !cmra_update_updateP; eauto using singleton_updateP_unit with subst.
+  Qed.
 End freshness.
 
-(* Allocation is a local update: Just use composition with a singleton map. *)
-
-Global Instance delete_local_update :
-  LocalUpdate (λ m, ∃ x, m !! i = Some x ∧ Exclusive x) (delete i).
+Lemma insert_local_update m i x y mf :
+  x ~l~> y @ mf ≫= (!! i) → <[i:=x]>m ~l~> <[i:=y]>m @ mf.
 Proof.
-  split; first apply _.
-  intros n m1 m2 (x&Hix&Hv) Hm j; destruct (decide (i = j)) as [<-|].
-  - rewrite lookup_delete !lookup_op lookup_delete.
-    case Hiy: (m2 !! i)=> [y|]; last constructor.
-    destruct (Hv y); apply cmra_validN_le with n; last omega.
-    move: (Hm i). by rewrite lookup_op Hix Hiy.
-  - by rewrite lookup_op !lookup_delete_ne // lookup_op.
+  intros [Hxy Hxy']; split.
+  - intros n Hm j. move: (Hm j). destruct (decide (i = j)); subst.
+    + rewrite !lookup_opM !lookup_insert !Some_op_opM. apply Hxy.
+    + by rewrite !lookup_opM !lookup_insert_ne.
+  - intros n mf' Hm Hm' j. move: (Hm j) (Hm' j).
+    destruct (decide (i = j)); subst.
+    + rewrite !lookup_opM !lookup_insert !Some_op_opM !inj_iff. apply Hxy'.
+    + by rewrite !lookup_opM !lookup_insert_ne.
 Qed.
 
-(* Applying a local update at a position we own is a local update. *)
-Global Instance alter_local_update `{!LocalUpdate Lv L} i :
-  LocalUpdate (λ m, ∃ x, m !! i = Some x ∧ Lv x) (alter L i).
+Lemma singleton_local_update i x y mf :
+  x ~l~> y @ mf ≫= (!! i) → {[ i := x ]} ~l~> {[ i := y ]} @ mf.
+Proof. apply insert_local_update. Qed.
+
+Lemma alloc_singleton_local_update i x mf :
+  mf ≫= (!! i) = None → ✓ x → ∅ ~l~> {[ i := x ]} @ mf.
 Proof.
-  split; first apply _.
-  intros n m1 m2 (x&Hix&?) Hm j; destruct (decide (i = j)) as [->|].
-  - rewrite lookup_alter !lookup_op lookup_alter Hix /=.
-    move: (Hm j); rewrite lookup_op Hix.
-    case: (m2 !! j)=>[y|] //=; constructor. by apply (local_updateN L).
-  - by rewrite lookup_op !lookup_alter_ne // lookup_op.
+  intros Hi. split.
+  - intros n Hm j. move: (Hm j). destruct (decide (i = j)); subst.
+    + intros _; rewrite !lookup_opM !lookup_insert !Some_op_opM Hi /=.
+      by apply cmra_valid_validN.
+    + by rewrite !lookup_opM !lookup_insert_ne.
+  - intros n mf' Hm Hm' j. move: (Hm j) (Hm' j).
+    destruct (decide (i = j)); subst.
+    + intros _. rewrite !lookup_opM !lookup_insert !Hi !lookup_empty !left_id_L.
+      by intros <-.
+    + by rewrite !lookup_opM !lookup_insert_ne.
+Qed.
+
+Lemma delete_local_update m i x `{!Exclusive x} mf :
+  m !! i = Some x → m ~l~> delete i m @ mf.
+Proof.
+  intros Hx; split; [intros n; apply delete_update|].
+  intros n mf' Hm Hm' j. move: (Hm j) (Hm' j).
+  destruct (decide (i = j)); subst.
+  + rewrite !lookup_opM !lookup_delete Hx=> ? Hj.
+    rewrite (exclusiveN_Some_l n x (mf ≫= lookup j)) //.
+    by rewrite (exclusiveN_Some_l n x (mf' ≫= lookup j)) -?Hj.
+  + by rewrite !lookup_opM !lookup_delete_ne.
 Qed.
 End properties.
 
