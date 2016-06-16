@@ -3,11 +3,11 @@ From iris.algebra Require Import upred.
 Local Arguments valid _ _ !_ /.
 Local Arguments validN _ _ _ !_ /.
 
-Record auth (A : Type) := Auth { authoritative : option (excl A); own : A }.
+Record auth (A : Type) := Auth { authoritative : option (excl A); auth_own : A }.
 Add Printing Constructor auth.
 Arguments Auth {_} _ _.
 Arguments authoritative {_} _.
-Arguments own {_} _.
+Arguments auth_own {_} _.
 Notation "◯ a" := (Auth None a) (at level 20).
 Notation "● a" := (Auth (Excl' a) ∅) (at level 20).
 
@@ -19,9 +19,9 @@ Implicit Types b : A.
 Implicit Types x y : auth A.
 
 Instance auth_equiv : Equiv (auth A) := λ x y,
-  authoritative x ≡ authoritative y ∧ own x ≡ own y.
+  authoritative x ≡ authoritative y ∧ auth_own x ≡ auth_own y.
 Instance auth_dist : Dist (auth A) := λ n x y,
-  authoritative x ≡{n}≡ authoritative y ∧ own x ≡{n}≡ own y.
+  authoritative x ≡{n}≡ authoritative y ∧ auth_own x ≡{n}≡ auth_own y.
 
 Global Instance Auth_ne : Proper (dist n ==> dist n ==> dist n) (@Auth A).
 Proof. by split. Qed.
@@ -31,13 +31,13 @@ Global Instance authoritative_ne: Proper (dist n ==> dist n) (@authoritative A).
 Proof. by destruct 1. Qed.
 Global Instance authoritative_proper : Proper ((≡) ==> (≡)) (@authoritative A).
 Proof. by destruct 1. Qed.
-Global Instance own_ne : Proper (dist n ==> dist n) (@own A).
+Global Instance own_ne : Proper (dist n ==> dist n) (@auth_own A).
 Proof. by destruct 1. Qed.
-Global Instance own_proper : Proper ((≡) ==> (≡)) (@own A).
+Global Instance own_proper : Proper ((≡) ==> (≡)) (@auth_own A).
 Proof. by destruct 1. Qed.
 
 Instance auth_compl : Compl (auth A) := λ c,
-  Auth (compl (chain_map authoritative c)) (compl (chain_map own c)).
+  Auth (compl (chain_map authoritative c)) (compl (chain_map auth_own c)).
 Definition auth_cofe_mixin : CofeMixin (auth A).
 Proof.
   split.
@@ -49,7 +49,7 @@ Proof.
     + intros ??? [??] [??]; split; etrans; eauto.
   - by intros ? [??] [??] [??]; split; apply dist_S.
   - intros n c; split. apply (conv_compl n (chain_map authoritative c)).
-    apply (conv_compl n (chain_map own c)).
+    apply (conv_compl n (chain_map auth_own c)).
 Qed.
 Canonical Structure authC := CofeT (auth A) auth_cofe_mixin.
 
@@ -72,38 +72,38 @@ Implicit Types x y : auth A.
 
 Instance auth_valid : Valid (auth A) := λ x,
   match authoritative x with
-  | Excl' a => (∀ n, own x ≼{n} a) ∧ ✓ a
-  | None => ✓ own x
+  | Excl' a => (∀ n, auth_own x ≼{n} a) ∧ ✓ a
+  | None => ✓ auth_own x
   | ExclBot' => False
   end.
 Global Arguments auth_valid !_ /.
 Instance auth_validN : ValidN (auth A) := λ n x,
   match authoritative x with
-  | Excl' a => own x ≼{n} a ∧ ✓{n} a
-  | None => ✓{n} own x
+  | Excl' a => auth_own x ≼{n} a ∧ ✓{n} a
+  | None => ✓{n} auth_own x
   | ExclBot' => False
   end.
 Global Arguments auth_validN _ !_ /.
 Instance auth_pcore : PCore (auth A) := λ x,
-  Some (Auth (core (authoritative x)) (core (own x))).
+  Some (Auth (core (authoritative x)) (core (auth_own x))).
 Instance auth_op : Op (auth A) := λ x y,
-  Auth (authoritative x ⋅ authoritative y) (own x ⋅ own y).
+  Auth (authoritative x ⋅ authoritative y) (auth_own x ⋅ auth_own y).
 
 Lemma auth_included (x y : auth A) :
-  x ≼ y ↔ authoritative x ≼ authoritative y ∧ own x ≼ own y.
+  x ≼ y ↔ authoritative x ≼ authoritative y ∧ auth_own x ≼ auth_own y.
 Proof.
   split; [intros [[z1 z2] Hz]; split; [exists z1|exists z2]; apply Hz|].
   intros [[z1 Hz1] [z2 Hz2]]; exists (Auth z1 z2); split; auto.
 Qed.
 Lemma authoritative_validN n (x : auth A) : ✓{n} x → ✓{n} authoritative x.
 Proof. by destruct x as [[[]|]]. Qed.
-Lemma own_validN n (x : auth A) : ✓{n} x → ✓{n} own x.
+Lemma auth_own_validN n (x : auth A) : ✓{n} x → ✓{n} auth_own x.
 Proof. destruct x as [[[]|]]; naive_solver eauto using cmra_validN_includedN. Qed.
 
 Lemma auth_valid_discrete `{CMRADiscrete A} x :
   ✓ x ↔ match authoritative x with
-        | Excl' a => own x ≼ a ∧ ✓ a
-        | None => ✓ own x
+        | Excl' a => auth_own x ≼ a ∧ ✓ a
+        | None => ✓ auth_own x
         | ExclBot' => False
         end.
 Proof.
@@ -135,8 +135,8 @@ Proof.
   - intros n x y1 y2 ? [??]; simpl in *.
     destruct (cmra_extend n (authoritative x) (authoritative y1)
       (authoritative y2)) as (ea&?&?&?); auto using authoritative_validN.
-    destruct (cmra_extend n (own x) (own y1) (own y2))
-      as (b&?&?&?); auto using own_validN.
+    destruct (cmra_extend n (auth_own x) (auth_own y1) (auth_own y2))
+      as (b&?&?&?); auto using auth_own_validN.
     by exists (Auth (ea.1) (b.1), Auth (ea.2) (b.2)).
 Qed.
 Canonical Structure authR := CMRAT (auth A) auth_cofe_mixin auth_cmra_mixin.
@@ -164,12 +164,12 @@ Canonical Structure authUR :=
 
 (** Internalized properties *)
 Lemma auth_equivI {M} (x y : auth A) :
-  x ≡ y ⊣⊢ (authoritative x ≡ authoritative y ∧ own x ≡ own y : uPred M).
+  x ≡ y ⊣⊢ (authoritative x ≡ authoritative y ∧ auth_own x ≡ auth_own y : uPred M).
 Proof. by uPred.unseal. Qed.
 Lemma auth_validI {M} (x : auth A) :
   ✓ x ⊣⊢ (match authoritative x with
-          | Excl' a => (∃ b, a ≡ own x ⋅ b) ∧ ✓ a
-          | None => ✓ own x
+          | Excl' a => (∃ b, a ≡ auth_own x ⋅ b) ∧ ✓ a
+          | None => ✓ auth_own x
           | ExclBot' => False
           end : uPred M).
 Proof. uPred.unseal. by destruct x as [[[]|]]. Qed.
@@ -196,7 +196,7 @@ Arguments authUR : clear implicits.
 
 (* Functor *)
 Definition auth_map {A B} (f : A → B) (x : auth A) : auth B :=
-  Auth (excl_map f <$> authoritative x) (f (own x)).
+  Auth (excl_map f <$> authoritative x) (f (auth_own x)).
 Lemma auth_map_id {A} (x : auth A) : auth_map id x = x.
 Proof. by destruct x as [[[]|]]. Qed.
 Lemma auth_map_compose {A B C} (f : A → B) (g : B → C) (x : auth A) :
