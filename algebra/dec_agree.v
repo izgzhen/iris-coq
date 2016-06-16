@@ -59,4 +59,5 @@ Lemma dec_agree_op_inv (x1 x2 : dec_agree A) : ✓ (x1 ⋅ x2) → x1 = x2.
 Proof. destruct x1, x2; by repeat (simplify_eq/= || case_match). Qed.
 End dec_agree.
 
+Arguments dec_agreeC : clear implicits.
 Arguments dec_agreeR _ {_}.
