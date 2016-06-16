@@ -315,8 +315,7 @@ Section product.
   Definition prod_cofe_mixin : CofeMixin (A * B).
   Proof.
     split.
-    - intros x y; unfold dist, prod_dist, equiv, prod_equiv, prod_relation.
-      rewrite !equiv_dist; naive_solver.
+    - intros x y; split; intro H; constructor; apply equiv_dist; apply H.
     - apply _.
     - by intros n [x1 y1] [x2 y2] [??]; split; apply dist_S.
     - intros n c; split. apply (conv_compl n (chain_map fst c)).

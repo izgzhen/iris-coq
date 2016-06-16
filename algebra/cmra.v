@@ -934,8 +934,12 @@ Section prod.
   Instance prod_pcore : PCore (A * B) := λ x,
     c1 ← pcore (x.1); c2 ← pcore (x.2); Some (c1, c2).
   Arguments prod_pcore !_ /.
-  Instance prod_valid : Valid (A * B) := λ x, ✓ x.1 ∧ ✓ x.2.
-  Instance prod_validN : ValidN (A * B) := λ n x, ✓{n} x.1 ∧ ✓{n} x.2.
+  Inductive prod_valid' (x : A * B) : Prop :=
+  | Prod_valid : ✓ x.1 → ✓ x.2 → prod_valid' x.
+  Instance prod_valid : Valid (A * B) := prod_valid'.
+  Inductive prod_validN' n (x : A * B) : Prop :=
+  | Prod_validN : ✓{n} x.1 → ✓{n} x.2 → prod_validN' n x.
+  Instance prod_validN : ValidN (A * B) := prod_validN'.
 
   Lemma prod_pcore_Some (x cx : A * B) :
     pcore x = Some cx ↔ pcore (x.1) = Some (cx.1) ∧ pcore (x.2) = Some (cx.2).
@@ -968,7 +972,7 @@ Section prod.
       destruct (cmra_pcore_ne n (x.1) (y.1) (cx.1)) as (z1&->&?); auto.
       destruct (cmra_pcore_ne n (x.2) (y.2) (cx.2)) as (z2&->&?); auto.
       exists (z1,z2); repeat constructor; auto.
-    - by intros n y1 y2 [Hy1 Hy2] [??]; split; rewrite /= -?Hy1 -?Hy2.
+    - by intros n y1 y2 [Hy1 Hy2] [??]; split; rewrite -?Hy1 -?Hy2.
     - intros x; split.
       + intros [??] n; split; by apply cmra_valid_validN.
       + intros Hxy; split; apply cmra_valid_validN=> n; apply Hxy.

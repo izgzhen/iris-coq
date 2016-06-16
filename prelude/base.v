@@ -431,8 +431,9 @@ Proof.
     [apply (inj f)|apply (inj g)]; congruence.
 Qed.
 
-Definition prod_relation {A B} (R1 : relation A) (R2 : relation B) :
-  relation (A * B) := λ x y, R1 (x.1) (y.1) ∧ R2 (x.2) (y.2).
+Inductive prod_relation {A B} (R1 : relation A) (R2 : relation B) (x y : A * B)
+  : Prop :=
+| Prod_rel : R1 (x.1) (y.1) → R2 (x.2) (y.2) → prod_relation R1 R2 x y.
 Section prod_relation.
   Context `{R1 : relation A, R2 : relation B}.
   Global Instance prod_relation_refl :

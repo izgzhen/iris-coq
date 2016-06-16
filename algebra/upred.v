@@ -1058,9 +1058,9 @@ Proof. intros a b [b' ->]. rewrite ownM_op. eauto. Qed.
 
 (* Products *)
 Lemma prod_equivI {A B : cofeT} (x y : A * B) : x ≡ y ⊣⊢ x.1 ≡ y.1 ∧ x.2 ≡ y.2.
-Proof. by unseal. Qed.
+Proof. by unseal; do 2 constructor; intros []; constructor. Qed.
 Lemma prod_validI {A B : cmraT} (x : A * B) : ✓ x ⊣⊢ ✓ x.1 ∧ ✓ x.2.
-Proof. by unseal. Qed.
+Proof. by unseal; do 2 constructor; intros []; constructor. Qed.
 
 (* Later *)
 Lemma later_equivI {A : cofeT} (x y : later A) :
