@@ -147,11 +147,11 @@ Proof.
     + destruct (m !! i) as [x|] eqn:Hx; rewrite !Hx /=; [|constructor].
       rewrite -Hx; apply (proj2_sig (f i)).
     + destruct (m !! i) as [x|] eqn:Hx; rewrite /=; [apply (proj2_sig (f i))|].
-      pose proof (Hm12' i) as Hm12''; rewrite Hx in Hm12''.
-      by symmetry; apply option_op_positive_dist_l with (m2 !! i).
+      move: (Hm12' i). rewrite Hx -!timeless_iff.
+      rewrite !(symmetry_iff _ None) !equiv_None op_None; tauto.
     + destruct (m !! i) as [x|] eqn:Hx; simpl; [apply (proj2_sig (f i))|].
-      pose proof (Hm12' i) as Hm12''; rewrite Hx in Hm12''.
-      by symmetry; apply option_op_positive_dist_r with (m1 !! i).
+      move: (Hm12' i). rewrite Hx -!timeless_iff.
+      rewrite !(symmetry_iff _ None) !equiv_None op_None; tauto.
 Qed.
 Canonical Structure gmapR :=
   CMRAT (gmap K A) gmap_cofe_mixin gmap_cmra_mixin.
