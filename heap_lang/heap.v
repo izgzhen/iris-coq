@@ -154,7 +154,7 @@ Section heap.
     iIntros {l} "[% Hheap]". iExists {[ l := (1%Qp, DecAgree v) ]}.
     rewrite -of_heap_insert -(insert_singleton_op h); last by apply of_heap_None.
     iFrame "Hheap". iSplit; first iPureIntro.
-    { by apply alloc_singleton_local_update; first apply of_heap_None. }
+    { by apply alloc_unit_singleton_local_update; first apply of_heap_None. }
     iIntros "Hheap". iApply "HΦ". by rewrite /heap_mapsto.
   Qed.
 

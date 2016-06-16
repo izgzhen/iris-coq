@@ -86,7 +86,7 @@ Implicit Types a : A.
 Lemma own_empty γ E : True ={E}=> own γ ∅.
 Proof.
   rewrite ownG_empty /own. apply pvs_ownG_update, iprod_singleton_update_empty.
-  apply (singleton_update_unit (cmra_transport inG_prf ∅)); last done.
+  apply (alloc_unit_singleton_update (cmra_transport inG_prf ∅)); last done.
   - apply cmra_transport_valid, ucmra_unit_valid.
   - intros x; destruct inG_prf. by rewrite left_id.
 Qed.

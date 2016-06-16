@@ -318,7 +318,7 @@ Section freshness.
     ✓ x → m ~~>: λ m', ∃ i, m' = <[i:=x]>m ∧ m !! i = None.
   Proof. eauto using alloc_updateP. Qed.
 
-  Lemma singleton_updateP_unit (P : A → Prop) (Q : gmap K A → Prop) u i :
+  Lemma alloc_unit_singleton_updateP (P : A → Prop) (Q : gmap K A → Prop) u i :
     ✓ u → LeftId (≡) u (⋅) →
     u ~~>: P → (∀ y, P y → Q {[ i := y ]}) → ∅ ~~>: Q.
   Proof.
@@ -333,14 +333,15 @@ Section freshness.
       move:Hy; case: (gf !! i)=>[x|]; rewrite /= ?right_id //.
     - move:(Hg i'). by rewrite !lookup_op lookup_singleton_ne // !left_id.
   Qed.
-  Lemma singleton_updateP_unit' (P: A → Prop) u i :
+  Lemma alloc_unit_singleton_updateP' (P: A → Prop) u i :
     ✓ u → LeftId (≡) u (⋅) →
     u ~~>: P → ∅ ~~>: λ m, ∃ y, m = {[ i := y ]} ∧ P y.
-  Proof. eauto using singleton_updateP_unit. Qed.
-  Lemma singleton_update_unit u i (y : A) :
+  Proof. eauto using alloc_unit_singleton_updateP. Qed.
+  Lemma alloc_unit_singleton_update u i (y : A) :
     ✓ u → LeftId (≡) u (⋅) → u ~~> y → ∅ ~~> {[ i := y ]}.
   Proof.
-    rewrite !cmra_update_updateP; eauto using singleton_updateP_unit with subst.
+    rewrite !cmra_update_updateP;
+      eauto using alloc_unit_singleton_updateP with subst.
   Qed.
 End freshness.
 
@@ -361,19 +362,21 @@ Lemma singleton_local_update i x y mf :
   x ~l~> y @ mf ≫= (!! i) → {[ i := x ]} ~l~> {[ i := y ]} @ mf.
 Proof. apply insert_local_update. Qed.
 
-Lemma alloc_singleton_local_update i x mf :
+Lemma alloc_singleton_local_update m i x mf :
+  (m ⋅? mf) !! i = None → ✓ x → m ~l~> <[i:=x]> m @ mf.
+Proof.
+  rewrite lookup_opM op_None=> -[Hi Hif] ?.
+  rewrite insert_singleton_op // comm. apply alloc_local_update.
+  intros n Hm j. move: (Hm j). destruct (decide (i = j)); subst.
+  - intros _; rewrite !lookup_opM lookup_op !lookup_singleton Hif Hi.
+    by apply cmra_valid_validN.
+  - by rewrite !lookup_opM lookup_op !lookup_singleton_ne // right_id.
+Qed.
+
+Lemma alloc_unit_singleton_local_update i x mf :
   mf ≫= (!! i) = None → ✓ x → ∅ ~l~> {[ i := x ]} @ mf.
 Proof.
-  intros Hi. split.
-  - intros n Hm j. move: (Hm j). destruct (decide (i = j)); subst.
-    + intros _; rewrite !lookup_opM !lookup_insert !Some_op_opM Hi /=.
-      by apply cmra_valid_validN.
-    + by rewrite !lookup_opM !lookup_insert_ne.
-  - intros n mf' Hm Hm' j. move: (Hm j) (Hm' j).
-    destruct (decide (i = j)); subst.
-    + intros _. rewrite !lookup_opM !lookup_insert !Hi !lookup_empty !left_id_L.
-      by intros <-.
-    + by rewrite !lookup_opM !lookup_insert_ne.
+  intros Hi; apply alloc_singleton_local_update. by rewrite lookup_opM Hi.
 Qed.
 
 Lemma delete_local_update m i x `{!Exclusive x} mf :
