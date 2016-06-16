@@ -34,7 +34,7 @@ Lemma worker_spec e γ l (Φ Ψ : X → iProp) :
   ⊢ WP wait #l ;; e {{ _, barrier_res γ Ψ }}.
 Proof.
   iIntros "[Hl #He]". wp_apply wait_spec; iFrame "Hl".
-  iIntros "Hγ"; iDestruct "Hγ" as {x} "[#Hγ Hx]".
+  iDestruct 1 as {x} "[#Hγ Hx]".
   wp_seq. iApply wp_wand_l. iSplitR; [|by iApply "He"].
   iIntros {v} "?"; iExists x; by iSplit.
 Qed.
@@ -45,7 +45,7 @@ Context {Ψ_join  : ∀ x, (Ψ1 x ★ Ψ2 x) ⊢ Ψ x}.
 
 Lemma P_res_split γ : barrier_res γ Φ ⊢ barrier_res γ Φ1 ★ barrier_res γ Φ2.
 Proof.
-  iIntros "Hγ"; iDestruct "Hγ" as {x} "[#Hγ Hx]".
+  iDestruct 1 as {x} "[#Hγ Hx]".
   iDestruct (Φ_split with "Hx") as "[H1 H2]". by iSplitL "H1"; iExists x; iSplit.
 Qed.
 

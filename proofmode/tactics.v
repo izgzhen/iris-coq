@@ -435,7 +435,7 @@ Local Tactic Notation "iExistDestruct" constr(H)
     [env_cbv; reflexivity || fail "iExistDestruct:" Hx "not fresh"
     |revert y; intros x].
 
-(** * Destruct tactic *)
+(** * Basic destruct tactic *)
 Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
   let rec go Hz pat :=
     lazymatch pat with
@@ -484,55 +484,6 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
     simple_intropattern(x8) "}" constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as { x2 x3 x4 x5 x6 x7 x8 } pat.
-
-Tactic Notation "iDestructHelp" open_constr(lem) "as" tactic(tac) :=
-  lazymatch type of lem with
-  | string => tac lem
-  | iTrm =>
-     lazymatch lem with
-     | @iTrm string ?H _ hnil ?pat =>
-        iSpecializePat H pat; last tac H
-     | _ => let H := iFresh in iPoseProof lem as H; last tac H; try apply _
-     end
-  | _ => let H := iFresh in iPoseProof lem as H; last tac H; try apply _
-  end.
-
-Tactic Notation "iDestruct" open_constr(H) "as" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1) "}"
-    constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) "}"
-    constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) simple_intropattern(x6) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) "}"
-    constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 x7 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
-    simple_intropattern(x8) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 x7 x8 } pat).
-
-Tactic Notation "iDestruct" open_constr(H) "as" "%" simple_intropattern(pat) :=
-  let Htmp := iFresh in iDestruct H as Htmp; last iPure Htmp as pat.
 
 (** * Always *)
 Tactic Notation "iAlways":=
@@ -675,6 +626,67 @@ Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
     simple_intropattern(x6) simple_intropattern(x7) simple_intropattern(x8)
     "}" constr(p) :=
   iIntros { x1 x2 x3 x4 x5 x6 x7 x8 }; iIntros p.
+
+(** * Destruct tactic *)
+Tactic Notation "iDestructHelp" open_constr(lem) "as" tactic(tac) :=
+  let intro_destruct n :=
+    let rec go n' :=
+      lazymatch n' with
+      | 0 => fail "iDestruct: cannot introduce" n "hypotheses"
+      | 1 => repeat iIntroForall; let H := iFresh in iIntro H; tac H
+      | S ?n' => repeat iIntroForall; let H := iFresh in iIntro H; go n'
+      end in intros; try iProof; go n in
+  lazymatch type of lem with
+  | nat => intro_destruct lem
+  | Z => (* to make it work in Z_scope. We should just be able to bind
+     tactic notation arguments to notation scopes. *)
+     let n := eval compute in (Z.to_nat lem) in intro_destruct n
+  | string => tac lem
+  | iTrm =>
+     lazymatch lem with
+     | @iTrm string ?H _ hnil ?pat =>
+        iSpecializePat H pat; last tac H
+     | _ => let H := iFresh in iPoseProof lem as H; last tac H; try apply _
+     end
+  | _ => let H := iFresh in iPoseProof lem as H; last tac H; try apply _
+  end.
+
+Tactic Notation "iDestruct" open_constr(H) "as" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1) "}"
+    constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) "}" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) "}" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) "}"
+    constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) "}" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) "}" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) "}"
+    constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 x7 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) "}" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 x7 x8 } pat).
+
+Tactic Notation "iDestruct" open_constr(H) "as" "%" simple_intropattern(pat) :=
+  let Htmp := iFresh in iDestruct H as Htmp; last iPure Htmp as pat.
 
 (* This is pretty ugly, but without Ltac support for manipulating lists of
 idents I do not know how to do this better. *)

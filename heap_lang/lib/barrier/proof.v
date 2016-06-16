@@ -171,7 +171,7 @@ Lemma recv_split E l P1 P2 :
   nclose N ⊆ E → recv l (P1 ★ P2) ={E}=> recv l P1 ★ recv l P2.
 Proof.
   rename P1 into R1; rename P2 into R2. rewrite {1}/recv /barrier_ctx.
-  iIntros {?} "Hr"; iDestruct "Hr" as {γ P Q i} "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
+  iIntros {?}. iDestruct 1 as {γ P Q i} "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
   iApply pvs_trans'.
   iSts γ as [p I]; iDestruct "Hγ" as "[Hl Hr]".
   iPvs (saved_prop_alloc_strong _ (R1: ∙%CF iProp) I) as {i1} "[% #Hi1]".

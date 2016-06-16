@@ -44,9 +44,7 @@ Global Instance is_lock_persistent l R : PersistentP (is_lock l R).
 Proof. apply _. Qed.
 
 Lemma locked_is_lock l R : locked l R ⊢ is_lock l R.
-Proof.
-  rewrite /is_lock. iIntros "Hl"; iDestruct "Hl" as {N γ} "(?&?&?&_)". eauto.
-Qed.
+Proof. rewrite /is_lock. iDestruct 1 as {N γ} "(?&?&?&_)"; eauto. Qed.
 
 Lemma newlock_spec N (R : iProp) Φ :
   heapN ⊥ N →

@@ -60,8 +60,7 @@ Lemma box_own_auth_agree γ b1 b2 :
   box_own_auth γ (● Excl' b1) ★ box_own_auth γ (◯ Excl' b2) ⊢ b1 = b2.
 Proof.
   rewrite /box_own_prop -own_op own_valid prod_validI /= and_elim_l.
-  iIntros "Hb".
-  by iDestruct "Hb" as % [[[] [=]%leibniz_equiv] ?]%auth_valid_discrete.
+  by iDestruct 1 as % [[[] [=]%leibniz_equiv] ?]%auth_valid_discrete.
 Qed.
 
 Lemma box_own_auth_update E γ b1 b2 b3 :
@@ -95,7 +94,7 @@ Lemma box_insert f P Q :
   ▷ box N f P ={N}=> ∃ γ, f !! γ = None ★
     slice N γ Q ★ ▷ box N (<[γ:=false]> f) (Q ★ P).
 Proof.
-  iIntros "H"; iDestruct "H" as {Φ} "[#HeqP Hf]".
+  iDestruct 1 as {Φ} "[#HeqP Hf]".
   iPvs (own_alloc_strong (● Excl' false ⋅ ◯ Excl' false,
     Some (to_agree (Next (iProp_unfold Q)))) _ (dom _ f))
     as {γ} "[Hdom Hγ]"; first done.
@@ -187,7 +186,7 @@ Lemma box_empty_all f P Q :
   map_Forall (λ _, (true =)) f →
   box N f P ={N}=> ▷ P ★ box N (const false <$> f) P.
 Proof.
-  iIntros {?} "H"; iDestruct "H" as {Φ} "[#HeqP Hf]".
+  iDestruct 1 as {Φ} "[#HeqP Hf]".
   iAssert ([★ map] γ↦b ∈ f, ▷ Φ γ ★ box_own_auth γ (◯ Excl' false) ★
     box_own_prop γ (Φ γ) ★ inv N (slice_inv γ (Φ γ)))%I with "|==>[Hf]" as "[HΦ ?]".
   { iApply (pvs_big_sepM _ _ f); iApply (big_sepM_impl _ _ f); iFrame "Hf".

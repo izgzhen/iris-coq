@@ -108,7 +108,7 @@ Section sts.
     iRevert "Hγ"; rewrite sts_op_auth_frag //; iIntros "Hγ".
     iApply pvs_fsa_fsa; iApply fsa_wand_r; iSplitL "HΨ Hφ".
     { iApply "HΨ"; by iSplit. }
-    iIntros {a} "H"; iDestruct "H" as {s' T'} "(% & Hφ & HΨ)".
+    iIntros {a}; iDestruct 1 as {s' T'} "(% & Hφ & HΨ)".
     iPvs (own_update with "Hγ") as "Hγ"; first eauto using sts_update_auth.
     iRevert "Hγ"; rewrite -sts_op_auth_frag_up; iIntros "[Hγ Hγf]".
     iPvsIntro; iSplitL "Hφ Hγ"; last by iApply "HΨ".

@@ -101,7 +101,7 @@ Section auth.
     rewrite ->(left_id _ _) in Ha'; setoid_subst.
     iApply pvs_fsa_fsa; iApply fsa_wand_r; iSplitL "HΨ Hφ".
     { iApply "HΨ"; by iSplit. }
-    iIntros {v} "Ha". iDestruct "Ha" as {b} "(% & Hφ & HΨ)".
+    iIntros {v}; iDestruct 1 as {b} "(% & Hφ & HΨ)".
     iPvs (own_update _ with "Hγ") as "[Hγ Hγf]"; first eapply auth_update; eauto.
     iPvsIntro. iSplitL "Hφ Hγ"; last by iApply "HΨ".
     iNext. iExists (b ⋅ af). by iFrame.

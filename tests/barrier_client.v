@@ -22,7 +22,7 @@ Section client.
 
   Lemma y_inv_split q l : y_inv q l ⊢ (y_inv (q/2) l ★ y_inv (q/2) l).
   Proof.
-    iIntros "Hl"; iDestruct "Hl" as {f} "[[Hl1 Hl2] #Hf]".
+    iDestruct 1 as {f} "[[Hl1 Hl2] #Hf]".
     iSplitL "Hl1"; iExists f; by iSplitL; try iAlways.
   Qed.
 
@@ -32,7 +32,7 @@ Section client.
   Proof.
     iIntros "[#Hh Hrecv]". wp_lam. wp_let.
     wp_apply wait_spec; iFrame "Hrecv".
-    iIntros "Hy"; iDestruct "Hy" as {f} "[Hy #Hf]".
+    iDestruct 1 as {f} "[Hy #Hf]".
     wp_seq. wp_load.
     iApply wp_wand_r; iSplitR; [iApply "Hf"|by iIntros {v} "_"].
   Qed.
