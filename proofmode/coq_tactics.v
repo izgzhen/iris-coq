@@ -895,8 +895,7 @@ Lemma tac_forall_intro {A} Δ (Φ : A → uPred M) : (∀ a, Δ ⊢ Φ a) → Δ
 Proof. apply forall_intro. Qed.
 
 Class ForallSpecialize {As} (xs : hlist As)
-    (P : uPred M) (Φ : himpl As (uPred M)) :=
-  forall_specialize : P ⊢ happly Φ xs.
+  (P : uPred M) (Φ : himpl As (uPred M)) := forall_specialize : P ⊢ Φ xs.
 Arguments forall_specialize {_} _ _ _ {_}.
 
 Global Instance forall_specialize_nil P : ForallSpecialize hnil P P | 100.
@@ -908,7 +907,7 @@ Proof. rewrite /ForallSpecialize /= => <-. by rewrite (forall_elim x). Qed.
 
 Lemma tac_forall_specialize {As} Δ Δ' i p P (Φ : himpl As (uPred M)) Q xs :
   envs_lookup i Δ = Some (p, P) → ForallSpecialize xs P Φ →
-  envs_simple_replace i p (Esnoc Enil i (happly Φ xs)) Δ = Some Δ' →
+  envs_simple_replace i p (Esnoc Enil i (Φ xs)) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros. rewrite envs_simple_replace_sound //; simpl.
