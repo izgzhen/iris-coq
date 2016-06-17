@@ -1,5 +1,5 @@
 From iris.program_logic Require Import ownership.
-From iris.program_logic Require Export namespaces lviewshifts.
+From iris.program_logic Require Export namespaces.
 From iris.proofmode Require Import pviewshifts.
 Import uPred.
 

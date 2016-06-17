@@ -45,6 +45,13 @@ Notation "P ={ E1 , E2 }=> Q" := (P ⊢ |={E1,E2}=> Q)
 Notation "P ={ E }=> Q" := (P ⊢ |={E}=> Q)
   (at level 99, E at level 50, Q at level 200, only parsing) : C_scope.
 
+Notation "P ={ E1 , E2 }=★ Q" := (P -★ |={E1,E2}=> Q)%I
+  (at level 99, E1,E2 at level 50, Q at level 200,
+   format "P  ={ E1 , E2 }=★  Q") : uPred_scope.
+Notation "P ={ E }=★ Q" := (P ={E,E}=★ Q)%I
+  (at level 99, E at level 50, Q at level 200,
+   format "P  ={ E }=★  Q") : uPred_scope.
+
 Section pvs.
 Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q : iProp Λ Σ.

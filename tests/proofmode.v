@@ -97,7 +97,7 @@ Section iris.
 
   Lemma demo_8 N E P Q R :
     nclose N ⊆ E →
-    (True -★ P -★ inv N Q -★ True -★ R) ⊢ P -★ ▷ Q -★ |={E}=> R.
+    (True -★ P -★ inv N Q -★ True -★ R) ⊢ P -★ ▷ Q ={E}=★ R.
   Proof.
     iIntros {?} "H HP HQ".
     iApply ("H" with "[#] HP |==>[HQ] |==>").

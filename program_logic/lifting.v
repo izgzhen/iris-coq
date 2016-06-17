@@ -23,7 +23,7 @@ Lemma wp_lift_step E1 E2
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
   (|={E1,E2}=> ▷ ownP σ1 ★ ▷ ∀ e2 σ2 ef,
-    (■ φ e2 σ2 ef ∧ ownP σ2) -★ |={E2,E1}=> WP e2 @ E1 {{ Φ }} ★ wp_fork ef)
+    (■ φ e2 σ2 ef ∧ ownP σ2) ={E2,E1}=★ WP e2 @ E1 {{ Φ }} ★ wp_fork ef)
   ⊢ WP e1 @ E1 {{ Φ }}.
 Proof.
   intros ? He Hsafe Hstep. rewrite pvs_eq wp_eq.
