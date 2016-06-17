@@ -2,7 +2,7 @@ From iris.algebra Require Export cmra.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 Local Arguments op _ _ _ !_ /.
-Local Arguments core _ _ !_ /.
+Local Arguments pcore _ _ !_ /.
 
 (* This is isomorphic to option, but has a very different RA structure. *)
 Inductive dec_agree (A : Type) : Type := 
@@ -26,27 +26,28 @@ Instance dec_agree_op : Op (dec_agree A) := λ x y,
   | DecAgree a, DecAgree b => if decide (a = b) then DecAgree a else DecAgreeBot
   | _, _ => DecAgreeBot
   end.
-Instance dec_agree_core : Core (dec_agree A) := id.
+Instance dec_agree_pcore : PCore (dec_agree A) := Some.
 
-Definition dec_agree_ra : RA (dec_agree A).
+Definition dec_agree_ra_mixin : RAMixin (dec_agree A).
 Proof.
   split.
   - apply _.
-  - apply _.
+  - intros x y cx ? [=<-]; eauto.
   - apply _.
   - intros [?|] [?|] [?|]; by repeat (simplify_eq/= || case_match).
   - intros [?|] [?|]; by repeat (simplify_eq/= || case_match).
+  - intros [?|] ? [=<-]; by repeat (simplify_eq/= || case_match).
   - intros [?|]; by repeat (simplify_eq/= || case_match).
-  - intros [?|]; by repeat (simplify_eq/= || case_match).
-  - by intros [?|] [?|] ?.
+  - intros [?|] [?|] ?? [=<-]; eauto.
   - by intros [?|] [?|] ?.
 Qed.
 
-Canonical Structure dec_agreeR : cmraT := discreteR dec_agree_ra.
+Canonical Structure dec_agreeR : cmraT :=
+  discreteR (dec_agree A) dec_agree_ra_mixin.
 
 (* Some properties of this CMRA *)
 Global Instance dec_agree_persistent (x : dec_agreeR) : Persistent x.
-Proof. done. Qed.
+Proof. by constructor. Qed.
 
 Lemma dec_agree_ne a b : a ≠ b → DecAgree a ⋅ DecAgree b = DecAgreeBot.
 Proof. intros. by rewrite /= decide_False. Qed.

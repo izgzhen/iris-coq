@@ -3,7 +3,7 @@ From iris.algebra Require Import cmra_big_op.
 
 (** * Simple solver for validity and inclusion by reflection *)
 Module ra_reflection. Section ra_reflection.
-  Context `{CMRAUnit A}.
+  Context  {A : ucmraT}.
 
   Inductive expr :=
     | EVar : nat → expr
@@ -11,7 +11,7 @@ Module ra_reflection. Section ra_reflection.
     | EOp : expr → expr → expr.
   Fixpoint eval (Σ : list A) (e : expr) : A :=
     match e with
-    | EVar n => from_option ∅ (Σ !! n)
+    | EVar n => from_option id ∅ (Σ !! n)
     | EEmpty => ∅
     | EOp e1 e2 => eval Σ e1 ⋅ eval Σ e2
     end.
@@ -22,10 +22,10 @@ Module ra_reflection. Section ra_reflection.
     | EOp e1 e2 => flatten e1 ++ flatten e2
     end.
   Lemma eval_flatten Σ e :
-    eval Σ e ≡ big_op ((λ n, from_option ∅ (Σ !! n)) <$> flatten e).
+    eval Σ e ≡ big_op ((λ n, from_option id ∅ (Σ !! n)) <$> flatten e).
   Proof.
-    by induction e as [| |e1 IH1 e2 IH2];
-      rewrite /= ?right_id ?fmap_app ?big_op_app ?IH1 ?IH2.
+    induction e as [| |e1 IH1 e2 IH2]; rewrite /= ?right_id //.
+    by rewrite fmap_app IH1 IH2 big_op_app.
   Qed.
   Lemma flatten_correct Σ e1 e2 :
     flatten e1 `contains` flatten e2 → eval Σ e1 ≼ eval Σ e2.

@@ -68,7 +68,7 @@ Lemma split_step p i i1 i2 I :
   i ∈ I → i1 ∉ I → i2 ∉ I → i1 ≠ i2 →
   sts.steps
     (State p I, {[ Change i ]})
-    (State p ({[i1]} ∪ ({[i2]} ∪ (I ∖ {[i]}))), {[ Change i1; Change i2 ]}).
+    (State p ({[i1; i2]} ∪ I ∖ {[i]}), {[ Change i1; Change i2 ]}).
 Proof.
   intros. apply rtc_once. constructor; first constructor.
   - destruct p; set_solver.

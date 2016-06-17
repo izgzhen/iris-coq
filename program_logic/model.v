@@ -7,22 +7,20 @@ from the category of COFEs to the category of CMRAs, which is instantiated
 with [iProp]. The [iProp] can be used to construct impredicate CMRAs, such as
 the stored propositions using the agreement CMRA. *)
 Structure iFunctor := IFunctor {
-  iFunctor_F :> rFunctor;
-  iFunctor_contractive : rFunctorContractive iFunctor_F;
-  iFunctor_empty (A : cofeT) : Empty (iFunctor_F A);
-  iFunctor_identity (A : cofeT) : CMRAUnit (iFunctor_F A);
+  iFunctor_F :> urFunctor;
+  iFunctor_contractive : urFunctorContractive iFunctor_F
 }.
-Arguments IFunctor _ {_ _ _}.
-Existing Instances iFunctor_contractive iFunctor_empty iFunctor_identity.
+Arguments IFunctor _ {_}.
+Existing Instances iFunctor_contractive.
 
 Module Type iProp_solution_sig.
 Parameter iPreProp : language → iFunctor → cofeT.
-Definition iGst (Λ : language) (Σ : iFunctor) : cmraT := Σ (iPreProp Λ Σ).
+Definition iGst (Λ : language) (Σ : iFunctor) : ucmraT := Σ (iPreProp Λ Σ).
 Definition iRes Λ Σ := res Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
-Definition iResR Λ Σ := resR Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
+Definition iResUR Λ Σ := resUR Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
 Definition iWld Λ Σ := gmap positive (agree (laterC (iPreProp Λ Σ))).
-Definition iPst Λ := excl (state Λ).
-Definition iProp (Λ : language) (Σ : iFunctor) : cofeT := uPredC (iResR Λ Σ).
+Definition iPst Λ := option (excl (state Λ)).
+Definition iProp (Λ : language) (Σ : iFunctor) : cofeT := uPredC (iResUR Λ Σ).
 
 Parameter iProp_unfold: ∀ {Λ Σ}, iProp Λ Σ -n> iPreProp Λ Σ.
 Parameter iProp_fold: ∀ {Λ Σ}, iPreProp Λ Σ -n> iProp Λ Σ.
@@ -35,16 +33,16 @@ End iProp_solution_sig.
 Module Export iProp_solution : iProp_solution_sig.
 Import cofe_solver.
 Definition iProp_result (Λ : language) (Σ : iFunctor) :
-  solution (uPredCF (resRF Λ (▶ ∙) Σ)) := solver.result _.
+  solution (uPredCF (resURF Λ (▶ ∙) Σ)) := solver.result _.
 
 Definition iPreProp (Λ : language) (Σ : iFunctor) : cofeT := iProp_result Λ Σ.
-Definition iGst (Λ : language) (Σ : iFunctor) : cmraT := Σ (iPreProp Λ Σ).
+Definition iGst (Λ : language) (Σ : iFunctor) : ucmraT := Σ (iPreProp Λ Σ).
 Definition iRes Λ Σ := res Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
-Definition iResR Λ Σ := resR Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
+Definition iResUR Λ Σ := resUR Λ (laterC (iPreProp Λ Σ)) (iGst Λ Σ).
 Definition iWld Λ Σ := gmap positive (agree (laterC (iPreProp Λ Σ))).
-Definition iPst Λ := excl (state Λ).
+Definition iPst Λ := option (excl (state Λ)).
 
-Definition iProp (Λ : language) (Σ : iFunctor) : cofeT := uPredC (iResR Λ Σ).
+Definition iProp (Λ : language) (Σ : iFunctor) : cofeT := uPredC (iResUR Λ Σ).
 Definition iProp_unfold {Λ Σ} : iProp Λ Σ -n> iPreProp Λ Σ :=
   solution_fold (iProp_result Λ Σ).
 Definition iProp_fold {Λ Σ} : iPreProp Λ Σ -n> iProp Λ Σ := solution_unfold _.
@@ -59,6 +57,5 @@ Bind Scope uPred_scope with iProp.
 
 Instance iProp_fold_inj n Λ Σ : Inj (dist n) (dist n) (@iProp_fold Λ Σ).
 Proof. by intros X Y H; rewrite -(iProp_unfold_fold X) H iProp_unfold_fold. Qed.
-Instance iProp_unfold_inj n Λ Σ :
-  Inj (dist n) (dist n) (@iProp_unfold Λ Σ).
+Instance iProp_unfold_inj n Λ Σ : Inj (dist n) (dist n) (@iProp_unfold Λ Σ).
 Proof. by intros X Y H; rewrite -(iProp_fold_unfold X) H iProp_fold_unfold. Qed.

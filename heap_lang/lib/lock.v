@@ -12,7 +12,7 @@ Global Opaque newlock acquire release.
 
 (** The CMRA we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
-Class lockG Σ := SpawnG { lock_tokG :> inG heap_lang Σ (exclR unitC) }.
+Class lockG Σ := LockG { lock_tokG :> inG heap_lang Σ (exclR unitC) }.
 Definition lockGF : gFunctorList := [GFunctor (constRF (exclR unitC))].
 Instance inGF_lockG `{H : inGFs heap_lang Σ lockGF} : lockG Σ.
 Proof. destruct H. split. apply: inGF_inG. Qed.
@@ -44,43 +44,39 @@ Global Instance is_lock_persistent l R : PersistentP (is_lock l R).
 Proof. apply _. Qed.
 
 Lemma locked_is_lock l R : locked l R ⊢ is_lock l R.
-Proof.
-  iIntros "Hl"; iDestruct "Hl" as {N γ} "(?&?&?&_)".
-  iExists N, γ; by repeat iSplit.
-Qed.
+Proof. rewrite /is_lock. iDestruct 1 as {N γ} "(?&?&?&_)"; eauto. Qed.
 
 Lemma newlock_spec N (R : iProp) Φ :
   heapN ⊥ N →
-  (heap_ctx heapN ★ R ★ (∀ l, is_lock l R -★ Φ #l))
-  ⊢ WP newlock #() {{ Φ }}.
+  heap_ctx heapN ★ R ★ (∀ l, is_lock l R -★ Φ #l) ⊢ WP newlock #() {{ Φ }}.
 Proof.
   iIntros {?} "(#Hh & HR & HΦ)". rewrite /newlock.
   wp_seq. iApply wp_pvs. wp_alloc l as "Hl".
   iPvs (own_alloc (Excl ())) as {γ} "Hγ"; first done.
-  iPvs (inv_alloc N _ (lock_inv γ l R) with "-[HΦ]") as "#?"; first done.
-  { iIntros ">". iExists false. by iFrame "Hl HR". }
-  iPvsIntro. iApply "HΦ". iExists N, γ. by repeat iSplit.
+  iPvs (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?"; first done.
+  { iIntros ">". iExists false. by iFrame. }
+  iPvsIntro. iApply "HΦ". iExists N, γ; eauto.
 Qed.
 
 Lemma acquire_spec l R (Φ : val → iProp) :
-  (is_lock l R ★ (locked l R -★ R -★ Φ #())) ⊢ WP acquire #l {{ Φ }}.
+  is_lock l R ★ (locked l R -★ R -★ Φ #()) ⊢ WP acquire #l {{ Φ }}.
 Proof.
   iIntros "[Hl HΦ]". iDestruct "Hl" as {N γ} "(%&#?&#?)".
   iLöb as "IH". wp_rec. wp_focus (CAS _ _ _)%E.
   iInv N as { [] } "[Hl HR]".
   - wp_cas_fail. iSplitL "Hl".
-    + iNext. iExists true. by iSplit.
+    + iNext. iExists true; eauto.
     + wp_if. by iApply "IH".
   - wp_cas_suc. iDestruct "HR" as "[Hγ HR]". iSplitL "Hl".
-    + iNext. iExists true. by iSplit.
-    + wp_if. iApply ("HΦ" with "-[HR] HR"). iExists N, γ. by repeat iSplit.
+    + iNext. iExists true; eauto.
+    + wp_if. iApply ("HΦ" with "[-HR] HR"). iExists N, γ; eauto.
 Qed.
 
 Lemma release_spec R l (Φ : val → iProp) :
-  (locked l R ★ R ★ Φ #()) ⊢ WP release #l {{ Φ }}.
+  locked l R ★ R ★ Φ #() ⊢ WP release #l {{ Φ }}.
 Proof.
   iIntros "(Hl&HR&HΦ)"; iDestruct "Hl" as {N γ} "(% & #? & #? & Hγ)".
   rewrite /release. wp_let. iInv N as {b} "[Hl _]".
-  wp_store. iFrame "HΦ". iNext. iExists false. by iFrame "Hl HR Hγ".
+  wp_store. iFrame "HΦ". iNext. iExists false. by iFrame.
 Qed.
 End proof.

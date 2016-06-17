@@ -16,10 +16,12 @@ Definition gid (Σ : gFunctors) := fin (projT1 Σ).
 
 (** Name of one instance of a particular CMRA in the ghost state. *)
 Definition gname := positive.
+Canonical Structure gnameC := leibnizC gname.
 
 Definition globalF (Σ : gFunctors) : iFunctor :=
-  IFunctor (iprodRF (λ i, gmapRF gname (projT2 Σ i))).
+  IFunctor (iprodURF (λ i, gmapURF gname (projT2 Σ i))).
 Notation iPropG Λ Σ := (iProp Λ (globalF Σ)).
+Notation iPrePropG Λ Σ := (iPreProp Λ (globalF Σ)).
 
 Class inG (Λ : language) (Σ : gFunctors) (A : cmraT) := InG {
   inG_id : gid Σ;
@@ -114,7 +116,7 @@ their first argument to avoid loops. For example, the instances [authGF_inGF]
 and [auth_identity] otherwise create a cycle that pops up arbitrarily. *)
 Hint Mode inGF + + - : typeclass_instances.
 
-Lemma inGF_inG `{inGF Λ Σ F} : inG Λ Σ (F (iPreProp Λ (globalF Σ))).
+Lemma inGF_inG `{inGF Λ Σ F} : inG Λ Σ (F (iPrePropG Λ Σ)).
 Proof. exists inGF_id. by rewrite -inGF_prf. Qed.
 Instance inGF_here {Λ Σ} (F: gFunctor) : inGF Λ (gFunctors.cons F Σ) F.
 Proof. by exists 0%fin. Qed.

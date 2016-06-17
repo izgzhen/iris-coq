@@ -71,7 +71,7 @@ Proof.
   - intros n c k; rewrite /= (conv_compl n (tower_chain c k)).
     apply (chain_cauchy c); lia.
 Qed.
-Definition T : cofeT := CofeT tower_cofe_mixin.
+Definition T : cofeT := CofeT tower tower_cofe_mixin.
 
 Fixpoint ff {k} (i : nat) : A k -n> A (i + k) :=
   match i with 0 => cid | S i => f (i + k) ◎ ff i end.

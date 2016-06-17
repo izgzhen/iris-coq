@@ -33,22 +33,19 @@ CoInductive wp_pre {Λ Σ} (E : coPset)
 Program Definition wp_def {Λ Σ} (E : coPset) (e : expr Λ)
   (Φ : val Λ → iProp Λ Σ) : iProp Λ Σ := {| uPred_holds := wp_pre E Φ e |}.
 Next Obligation.
-  intros Λ Σ E e Φ n r1 r2 Hwp Hr.
-  destruct Hwp as [|n r1 e2 ? Hgo]; constructor; rewrite -?Hr; auto.
-  intros rf k Ef σ1 ?; rewrite -(dist_le _ _ _ _ Hr); naive_solver.
-Qed.
-Next Obligation.
-  intros Λ Σ E e Φ n1 n2 r1 r2; revert Φ E e n2 r1 r2.
-  induction n1 as [n1 IH] using lt_wf_ind; intros Φ E e n2 r1 r1'.
-  destruct 1 as [|n1 r1 e1 ? Hgo].
-  - constructor; eauto using uPred_weaken.
-  - intros [rf' Hr] ??; constructor; [done|intros rf k Ef σ1 ???].
+  intros Λ Σ E e Φ n r1 r2; revert Φ E e r1 r2.
+  induction n as [n IH] using lt_wf_ind; intros Φ E e r1 r1'.
+  destruct 1 as [|n r1 e1 ? Hgo].
+  - constructor; eauto using uPred_mono.
+  - intros [rf' Hr]; constructor; [done|intros rf k Ef σ1 ???].
     destruct (Hgo (rf' ⋅ rf) k Ef σ1) as [Hsafe Hstep];
-      rewrite ?assoc -?Hr; auto; constructor; [done|].
+      rewrite ?assoc -?(dist_le _ _ _ _ Hr); auto; constructor; [done|].
     intros e2 σ2 ef ?; destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
-    exists r2, (r2' ⋅ rf'); split_and?; eauto 10 using (IH k), cmra_included_l.
+    exists r2, (r2' ⋅ rf'); split_and?; eauto 10 using (IH k), cmra_includedN_l.
     by rewrite -!assoc (assoc _ r2).
 Qed.
+Next Obligation. destruct 1; constructor; eauto using uPred_closed. Qed.
+
 (* Perform sealing. *)
 Definition wp_aux : { x | x = @wp_def }. by eexists. Qed.
 Definition wp := proj1_sig wp_aux.
@@ -123,8 +120,7 @@ Proof.
     exact: pvs_zero.
   - constructor; first done. intros ?????. exfalso. omega.
 Qed.
-Lemma wp_value_inv E Φ v n r :
-  wp_def E (of_val v) Φ n r → pvs E E (Φ v) n r.
+Lemma wp_value_inv E Φ v n r : wp_def E (of_val v) Φ n r → pvs E E (Φ v) n r.
 Proof.
   by inversion 1 as [|??? He]; [|rewrite ?to_of_val in He]; simplify_eq.
 Qed.
@@ -148,7 +144,7 @@ Proof.
   rewrite pvs_eq in Hvs. destruct (Hvs rf (S k) Ef σ1) as (r'&Hwp&?); auto.
   eapply wp_step_inv with (S k) r'; eauto.
 Qed.
-Lemma wp_pvs E e Φ : WP e @  E {{ v, |={E}=> Φ v }} ⊢ WP e @ E {{ Φ }}.
+Lemma wp_pvs E e Φ : WP e @ E {{ v, |={E}=> Φ v }} ⊢ WP e @ E {{ Φ }}.
 Proof.
   rewrite wp_eq. split=> n r; revert e r;
     induction n as [n IH] using lt_wf_ind=> e r Hr HΦ.
@@ -179,7 +175,7 @@ Proof.
   - by rewrite -assoc.
   - constructor; apply pvs_intro; auto.
 Qed.
-Lemma wp_frame_r E e Φ R : (WP e @ E {{ Φ }} ★ R) ⊢ WP e @ E {{ v, Φ v ★ R }}.
+Lemma wp_frame_r E e Φ R : WP e @ E {{ Φ }} ★ R ⊢ WP e @ E {{ v, Φ v ★ R }}.
 Proof.
   rewrite wp_eq. uPred.unseal; split; intros n r' Hvalid (r&rR&Hr&Hwp&?).
   revert Hvalid. rewrite Hr; clear Hr; revert e r Hwp.
@@ -194,11 +190,11 @@ Proof.
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
   exists (r2 ⋅ rR), r2'; split_and?; auto.
   - by rewrite -(assoc _ r2) (comm _ rR) !assoc -(assoc _ _ rR).
-  - apply IH; eauto using uPred_weaken.
+  - apply IH; eauto using uPred_closed.
 Qed.
 Lemma wp_frame_step_r E E1 E2 e Φ R :
   to_val e = None → E ⊥ E1 → E2 ⊆ E1 →
-    (WP e @ E {{ Φ }} ★ |={E1,E2}=> ▷ |={E2,E1}=> R)
+  WP e @ E {{ Φ }} ★ (|={E1,E2}=> ▷ |={E2,E1}=> R)
   ⊢ WP e @ E ∪ E1 {{ v, Φ v ★ R }}.
 Proof.
   rewrite wp_eq pvs_eq=> He ??.
@@ -257,17 +253,17 @@ Global Instance wp_mono' E e :
   Proper (pointwise_relation _ (⊢) ==> (⊢)) (@wp Λ Σ E e).
 Proof. by intros Φ Φ' ?; apply wp_mono. Qed.
 Lemma wp_strip_pvs E e P Φ :
-  P ⊢ WP e @ E {{ Φ }} → (|={E}=> P) ⊢ WP e @ E {{ Φ }}.
+  (P ⊢ WP e @ E {{ Φ }}) → (|={E}=> P) ⊢ WP e @ E {{ Φ }}.
 Proof. move=>->. by rewrite pvs_wp. Qed.
 Lemma wp_value E Φ e v : to_val e = Some v → Φ v ⊢ WP e @ E {{ Φ }}.
 Proof. intros; rewrite -(of_to_val e v) //; by apply wp_value'. Qed.
 Lemma wp_value_pvs E Φ e v :
   to_val e = Some v → (|={E}=> Φ v) ⊢ WP e @ E {{ Φ }}.
 Proof. intros. rewrite -wp_pvs. rewrite -wp_value //. Qed.
-Lemma wp_frame_l E e Φ R : (R ★ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ v, R ★ Φ v }}.
+Lemma wp_frame_l E e Φ R : R ★ WP e @ E {{ Φ }} ⊢ WP e @ E {{ v, R ★ Φ v }}.
 Proof. setoid_rewrite (comm _ R); apply wp_frame_r. Qed.
 Lemma wp_frame_step_r' E e Φ R :
-  to_val e = None → (WP e @ E {{ Φ }} ★ ▷ R) ⊢ WP e @ E {{ v, Φ v ★ R }}.
+  to_val e = None → WP e @ E {{ Φ }} ★ ▷ R ⊢ WP e @ E {{ v, Φ v ★ R }}.
 Proof.
   intros. rewrite {2}(_ : E = E ∪ ∅); last by set_solver.
   rewrite -(wp_frame_step_r E ∅ ∅); [|auto|set_solver..].
@@ -275,31 +271,31 @@ Proof.
 Qed.
 Lemma wp_frame_step_l E E1 E2 e Φ R :
   to_val e = None → E ⊥ E1 → E2 ⊆ E1 →
-  ((|={E1,E2}=> ▷ |={E2,E1}=> R) ★ WP e @ E {{ Φ }})
+  (|={E1,E2}=> ▷ |={E2,E1}=> R) ★ WP e @ E {{ Φ }}
   ⊢ WP e @ (E ∪ E1) {{ v, R ★ Φ v }}.
 Proof.
   rewrite [((|={E1,E2}=> _) ★ _)%I]comm; setoid_rewrite (comm _ R).
   apply wp_frame_step_r.
 Qed.
 Lemma wp_frame_step_l' E e Φ R :
-  to_val e = None → (▷ R ★ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ v, R ★ Φ v }}.
+  to_val e = None → ▷ R ★ WP e @ E {{ Φ }} ⊢ WP e @ E {{ v, R ★ Φ v }}.
 Proof.
   rewrite (comm _ (▷ R)%I); setoid_rewrite (comm _ R).
   apply wp_frame_step_r'.
 Qed.
 Lemma wp_always_l E e Φ R `{!PersistentP R} :
-  (R ∧ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ v, R ∧ Φ v }}.
+  R ∧ WP e @ E {{ Φ }} ⊢ WP e @ E {{ v, R ∧ Φ v }}.
 Proof. by setoid_rewrite (always_and_sep_l _ _); rewrite wp_frame_l. Qed.
 Lemma wp_always_r E e Φ R `{!PersistentP R} :
-  (WP e @ E {{ Φ }} ∧ R) ⊢ WP e @ E {{ v, Φ v ∧ R }}.
+  WP e @ E {{ Φ }} ∧ R ⊢ WP e @ E {{ v, Φ v ∧ R }}.
 Proof. by setoid_rewrite (always_and_sep_r _ _); rewrite wp_frame_r. Qed.
 Lemma wp_wand_l E e Φ Ψ :
-  ((∀ v, Φ v -★ Ψ v) ★ WP e @ E {{ Φ }}) ⊢ WP e @ E {{ Ψ }}.
+  (∀ v, Φ v -★ Ψ v) ★ WP e @ E {{ Φ }} ⊢ WP e @ E {{ Ψ }}.
 Proof.
   rewrite wp_frame_l. apply wp_mono=> v. by rewrite (forall_elim v) wand_elim_l.
 Qed.
 Lemma wp_wand_r E e Φ Ψ :
-  (WP e @ E {{ Φ }} ★ (∀ v, Φ v -★ Ψ v)) ⊢ WP e @ E {{ Ψ }}.
+  WP e @ E {{ Φ }} ★ (∀ v, Φ v -★ Ψ v) ⊢ WP e @ E {{ Ψ }}.
 Proof. by rewrite comm wp_wand_l. Qed.
 
 Lemma wp_mask_weaken E1 E2 e Φ :

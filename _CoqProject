@@ -36,7 +36,6 @@ prelude/list.v
 prelude/error.v
 prelude/functions.v
 prelude/hlist.v
-algebra/option.v
 algebra/cmra.v
 algebra/cmra_big_op.v
 algebra/cmra_tactics.v
@@ -55,8 +54,9 @@ algebra/upred.v
 algebra/upred_tactics.v
 algebra/upred_big_op.v
 algebra/frac.v
-algebra/one_shot.v
+algebra/csum.v
 algebra/list.v
+algebra/updates.v
 program_logic/model.v
 program_logic/adequacy.v
 program_logic/hoare_lifting.v
@@ -68,6 +68,7 @@ program_logic/ownership.v
 program_logic/weakestpre.v
 program_logic/weakestpre_fix.v
 program_logic/pviewshifts.v
+program_logic/lviewshifts.v
 program_logic/resources.v
 program_logic/hoare.v
 program_logic/language.v
@@ -77,10 +78,10 @@ program_logic/ectx_lifting.v
 program_logic/ghost_ownership.v
 program_logic/global_functor.v
 program_logic/saved_prop.v
-program_logic/saved_one_shot.v
 program_logic/auth.v
 program_logic/sts.v
 program_logic/namespaces.v
+program_logic/boxes.v
 heap_lang/lang.v
 heap_lang/tactics.v
 heap_lang/wp_tactics.v

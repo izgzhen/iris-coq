@@ -39,8 +39,7 @@ Class FinMap K M `{FMap M, ∀ A, Lookup K A (M A), ∀ A, Empty (M A), ∀ A,
   elem_of_map_to_list {A} (m : M A) i x :
     (i,x) ∈ map_to_list m ↔ m !! i = Some x;
   lookup_omap {A B} (f : A → option B) m i : omap f m !! i = m !! i ≫= f;
-  lookup_merge {A B C} (f : option A → option B → option C)
-      `{!PropHolds (f None None = None)} m1 m2 i :
+  lookup_merge {A B C} (f: option A → option B → option C) `{!DiagNone f} m1 m2 i :
     merge f m1 m2 !! i = f (m1 !! i) (m2 !! i)
 }.
 
@@ -150,8 +149,7 @@ Section setoid.
     intros ?? Hf; apply partial_alter_proper.
     by destruct 1; constructor; apply Hf.
   Qed.
-  Lemma merge_ext f g
-      `{!PropHolds (f None None = None), !PropHolds (g None None = None)} :
+  Lemma merge_ext f g `{!DiagNone f, !DiagNone g} :
     ((≡) ==> (≡) ==> (≡))%signature f g →
     ((≡) ==> (≡) ==> (≡))%signature (merge (M:=M) f) (merge g).
   Proof.
@@ -176,6 +174,11 @@ Section setoid.
   Lemma map_equiv_lookup_l (m1 m2 : M A) i x :
     m1 ≡ m2 → m1 !! i = Some x → ∃ y, m2 !! i = Some y ∧ x ≡ y.
   Proof. generalize (equiv_Some_inv_l (m1 !! i) (m2 !! i) x); naive_solver. Qed.
+  Global Instance map_fmap_proper `{Equiv B} (f : A → B) :
+    Proper ((≡) ==> (≡)) f → Proper ((≡) ==> (≡)) (fmap (M:=M) f).
+  Proof.
+    intros ? m m' ? k; rewrite !lookup_fmap. by apply option_fmap_proper.
+  Qed.
 End setoid.
 
 (** ** General properties *)
@@ -368,13 +371,8 @@ Qed.
 Lemma delete_insert {A} (m : M A) i x :
   m !! i = None → delete i (<[i:=x]>m) = m.
 Proof. apply delete_partial_alter. Qed.
-Lemma insert_delete {A} (m : M A) i x :
-  m !! i = Some x → <[i:=x]>(delete i m) = m.
-Proof.
-  intros Hmi. unfold delete, map_delete, insert, map_insert.
-  rewrite <-partial_alter_compose. unfold compose. rewrite <-Hmi.
-  by apply partial_alter_self_alt.
-Qed.
+Lemma insert_delete {A} (m : M A) i x : <[i:=x]>(delete i m) = <[i:=x]> m.
+Proof. symmetry; apply (partial_alter_compose (λ _, Some x)). Qed.
 Lemma delete_subseteq {A} (m : M A) i : delete i m ⊆ m.
 Proof.
   rewrite !map_subseteq_spec. intros j x. rewrite lookup_delete_Some. tauto.
@@ -475,8 +473,8 @@ Lemma insert_subset_inv {A} (m1 m2 : M A) i x :
   ∃ m2', m2 = <[i:=x]>m2' ∧ m1 ⊂ m2' ∧ m2' !! i = None.
 Proof.
   intros Hi Hm1m2. exists (delete i m2). split_and?.
-  - rewrite insert_delete. done. eapply lookup_weaken, strict_include; eauto.
-    by rewrite lookup_insert.
+  - rewrite insert_delete, insert_id. done.
+    eapply lookup_weaken, strict_include; eauto. by rewrite lookup_insert.
   - eauto using insert_delete_subset.
   - by rewrite lookup_delete.
 Qed.
@@ -654,6 +652,19 @@ Proof.
   intros. rewrite <-(map_of_to_list m1).
   auto using map_of_list_proper, NoDup_fst_map_to_list.
 Qed.
+
+Lemma map_of_list_nil {A} : map_of_list (@nil (K * A)) = ∅.
+Proof. done. Qed.
+Lemma map_of_list_cons {A} (l : list (K * A)) i x :
+  map_of_list ((i, x) :: l) = <[i:=x]>(map_of_list l).
+Proof. done. Qed.
+Lemma map_of_list_fmap {A B} (f : A → B) l :
+  map_of_list (prod_map id f <$> l) = f <$> map_of_list l.
+Proof.
+  induction l as [|[i x] l IH]; csimpl; rewrite ?fmap_empty; auto.
+  rewrite <-map_of_list_cons; simpl. by rewrite IH, <-fmap_insert.
+Qed.
+
 Lemma map_to_list_empty {A} : map_to_list ∅ = @nil (K * A).
 Proof.
   apply elem_of_nil_inv. intros [i x].
@@ -675,11 +686,16 @@ Proof.
   intros; apply NoDup_contains; auto using NoDup_map_to_list.
   intros [i x]. rewrite !elem_of_map_to_list; eauto using lookup_weaken.
 Qed.
-Lemma map_of_list_nil {A} : map_of_list (@nil (K * A)) = ∅.
-Proof. done. Qed.
-Lemma map_of_list_cons {A} (l : list (K * A)) i x :
-  map_of_list ((i, x) :: l) = <[i:=x]>(map_of_list l).
-Proof. done. Qed.
+Lemma map_to_list_fmap {A B} (f : A → B) m :
+  map_to_list (f <$> m) ≡ₚ prod_map id f <$> map_to_list m.
+Proof.
+  assert (NoDup ((prod_map id f <$> map_to_list m).*1)).
+  { erewrite <-list_fmap_compose, (list_fmap_ext _ fst) by done.
+    apply NoDup_fst_map_to_list. }
+  rewrite <-(map_of_to_list m) at 1.
+  by rewrite <-map_of_list_fmap, map_to_of_list.
+Qed.
+
 Lemma map_to_list_empty_inv_alt {A}  (m : M A) : map_to_list m ≡ₚ [] → m = ∅.
 Proof. rewrite <-map_to_list_empty. apply map_to_list_inj. Qed.
 Lemma map_to_list_empty_inv {A} (m : M A) : map_to_list m = [] → m = ∅.
@@ -694,6 +710,7 @@ Proof.
   rewrite Hperm, map_to_list_insert, map_to_of_list;
     auto using not_elem_of_map_of_list_1.
 Qed.
+
 Lemma map_choose {A} (m : M A) : m ≠ ∅ → ∃ i x, m !! i = Some x.
 Proof.
   intros Hemp. destruct (map_to_list m) as [|[i x] l] eqn:Hm.
@@ -825,8 +842,7 @@ End map_Forall.
 
 (** ** Properties of the [merge] operation *)
 Section merge.
-Context {A} (f : option A → option A → option A).
-Context `{!PropHolds (f None None = None)}.
+Context {A} (f : option A → option A → option A) `{!DiagNone f}.
 Global Instance: LeftId (=) None f → LeftId (=) ∅ (merge f).
 Proof.
   intros ??. apply map_eq. intros.
@@ -841,29 +857,25 @@ Lemma merge_comm m1 m2 :
   (∀ i, f (m1 !! i) (m2 !! i) = f (m2 !! i) (m1 !! i)) →
   merge f m1 m2 = merge f m2 m1.
 Proof. intros. apply map_eq. intros. by rewrite !(lookup_merge f). Qed.
-Global Instance: Comm (=) f → Comm (=) (merge f).
-Proof.
-  intros ???. apply merge_comm. intros. by apply (comm f).
-Qed.
+Global Instance merge_comm' : Comm (=) f → Comm (=) (merge f).
+Proof. intros ???. apply merge_comm. intros. by apply (comm f). Qed.
 Lemma merge_assoc m1 m2 m3 :
   (∀ i, f (m1 !! i) (f (m2 !! i) (m3 !! i)) =
         f (f (m1 !! i) (m2 !! i)) (m3 !! i)) →
   merge f m1 (merge f m2 m3) = merge f (merge f m1 m2) m3.
 Proof. intros. apply map_eq. intros. by rewrite !(lookup_merge f). Qed.
-Global Instance: Assoc (=) f → Assoc (=) (merge f).
-Proof.
-  intros ????. apply merge_assoc. intros. by apply (assoc_L f).
-Qed.
+Global Instance merge_assoc' : Assoc (=) f → Assoc (=) (merge f).
+Proof. intros ????. apply merge_assoc. intros. by apply (assoc_L f). Qed.
 Lemma merge_idemp m1 :
   (∀ i, f (m1 !! i) (m1 !! i) = m1 !! i) → merge f m1 m1 = m1.
 Proof. intros. apply map_eq. intros. by rewrite !(lookup_merge f). Qed.
-Global Instance: IdemP (=) f → IdemP (=) (merge f).
+Global Instance merge_idemp' : IdemP (=) f → IdemP (=) (merge f).
 Proof. intros ??. apply merge_idemp. intros. by apply (idemp f). Qed.
 End merge.
 
 Section more_merge.
-Context {A B C} (f : option A → option B → option C).
-Context `{!PropHolds (f None None = None)}.
+Context {A B C} (f : option A → option B → option C) `{!DiagNone f}.
+
 Lemma merge_Some m1 m2 m :
   (∀ i, m !! i = f (m1 !! i) (m2 !! i)) ↔ merge f m1 m2 = m.
 Proof.
@@ -983,7 +995,7 @@ Proof.
   split; [|naive_solver].
   intros [i[(x&y&?&?&?)|[(x&?&?&[])|(y&?&?&[])]]]; naive_solver.
 Qed.
-Global Instance: Symmetric (map_disjoint : relation (M A)).
+Global Instance map_disjoint_sym : Symmetric (map_disjoint : relation (M A)).
 Proof. intros A m1 m2. rewrite !map_disjoint_spec. naive_solver. Qed.
 Lemma map_disjoint_empty_l {A} (m : M A) : ∅ ⊥ₘ m.
 Proof. rewrite !map_disjoint_spec. intros i x y. by rewrite lookup_empty. Qed.

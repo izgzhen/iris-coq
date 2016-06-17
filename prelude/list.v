@@ -3393,7 +3393,7 @@ Definition eval {A} (E : env A) : rlist nat → list A :=
   fix go t :=
   match t with
   | rnil => []
-  | rnode i => from_option [] (E !! i)
+  | rnode i => from_option id [] (E !! i)
   | rapp t1 t2 => go t1 ++ go t2
   end.
 
@@ -3427,7 +3427,7 @@ End quote.
 Section eval.
   Context {A} (E : env A).
 
-  Lemma eval_alt t : eval E t = to_list t ≫= from_option [] ∘ (E !!).
+  Lemma eval_alt t : eval E t = to_list t ≫= from_option id [] ∘ (E !!).
   Proof.
     induction t; csimpl.
     - done.
@@ -3668,5 +3668,3 @@ Ltac solve_suffix_of := by intuition (repeat
   | |- suffix_of _ (_ ++ _) => apply suffix_of_app_r
   | H : suffix_of _ _ → False |- _ => destruct H
   end).
-Hint Extern 0 (PropHolds (suffix_of _ _)) =>
-  unfold PropHolds; solve_suffix_of : typeclass_instances.

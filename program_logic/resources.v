@@ -4,7 +4,7 @@ From iris.program_logic Require Export language.
 
 Record res (Λ : language) (A : cofeT) (M : cmraT) := Res {
   wld : gmapR positive (agreeR A);
-  pst : exclR (stateC Λ);
+  pst : optionR (exclR (stateC Λ));
   gst : M;
 }.
 Add Printing Constructor res.
@@ -18,7 +18,7 @@ Instance: Params (@pst) 3.
 Instance: Params (@gst) 3.
 
 Section res.
-Context {Λ : language} {A : cofeT} {M : cmraT}.
+Context {Λ : language} {A : cofeT} {M : ucmraT}.
 Implicit Types r : res Λ A M.
 
 Inductive res_equiv' (r1 r2 : res Λ A M) := Res_equiv :
@@ -66,16 +66,15 @@ Proof.
     + apply (conv_compl n (chain_map pst c)).
     + apply (conv_compl n (chain_map gst c)).
 Qed.
-Canonical Structure resC : cofeT := CofeT res_cofe_mixin.
+Canonical Structure resC : cofeT := CofeT (res Λ A M) res_cofe_mixin.
 Global Instance res_timeless r :
   Timeless (wld r) → Timeless (gst r) → Timeless r.
-Proof. by destruct 3; constructor; try apply: timeless. Qed.
+Proof. destruct 3; constructor; by apply (timeless _). Qed.
 
 Instance res_op : Op (res Λ A M) := λ r1 r2,
   Res (wld r1 ⋅ wld r2) (pst r1 ⋅ pst r2) (gst r1 ⋅ gst r2).
-Global Instance res_empty `{Empty M} : Empty (res Λ A M) := Res ∅ ∅ ∅.
-Instance res_core : Core (res Λ A M) := λ r,
-  Res (core (wld r)) (core (pst r)) (core (gst r)).
+Instance res_pcore : PCore (res Λ A M) := λ r,
+  Some $ Res (core (wld r)) (core (pst r)) (core (gst r)).
 Instance res_valid : Valid (res Λ A M) := λ r, ✓ wld r ∧ ✓ pst r ∧ ✓ gst r.
 Instance res_validN : ValidN (res Λ A M) := λ n r,
   ✓{n} wld r ∧ ✓{n} pst r ∧ ✓{n} gst r.
@@ -96,7 +95,8 @@ Proof.
 Qed.
 Definition res_cmra_mixin : CMRAMixin (res Λ A M).
 Proof.
-  split.
+  apply cmra_total_mixin.
+  - eauto.
   - by intros n x [???] ? [???]; constructor; cofe_subst.
   - by intros n [???] ? [???]; constructor; cofe_subst.
   - by intros n [???] ? [???] (?&?&?); split_and!; cofe_subst.
@@ -118,17 +118,22 @@ Proof.
       (cmra_extend n (gst r) (gst r1) (gst r2)) as ([m m']&?&?&?); auto.
     by exists (Res w σ m, Res w' σ' m').
 Qed.
-Canonical Structure resR : cmraT := CMRAT res_cofe_mixin res_cmra_mixin.
-Global Instance res_cmra_unit `{CMRAUnit M} : CMRAUnit resR.
+Canonical Structure resR := CMRAT (res Λ A M) res_cofe_mixin res_cmra_mixin.
+
+Instance res_empty : Empty (res Λ A M) := Res ∅ ∅ ∅.
+Definition res_ucmra_mixin : UCMRAMixin (res Λ A M).
 Proof.
   split.
-  - split_and!; apply cmra_unit_valid.
+  - split_and!; apply ucmra_unit_valid.
   - by split; rewrite /= left_id.
   - apply _.
+  - do 2 constructor; simpl; apply (persistent_core _).
 Qed.
+Canonical Structure resUR :=
+  UCMRAT (res Λ A M) res_cofe_mixin res_cmra_mixin res_ucmra_mixin.
 
 Definition update_pst (σ : state Λ) (r : res Λ A M) : res Λ A M :=
-  Res (wld r) (Excl σ) (gst r).
+  Res (wld r) (Excl' σ) (gst r).
 Definition update_gst (m : M) (r : res Λ A M) : res Λ A M :=
   Res (wld r) (pst r) m.
 
@@ -152,55 +157,55 @@ Lemma lookup_wld_op_r n r1 r2 i P :
   ✓{n} (r1⋅r2) → wld r2 !! i ≡{n}≡ Some P → (wld r1 ⋅ wld r2) !! i ≡{n}≡ Some P.
 Proof. rewrite (comm _ r1) (comm _ (wld r1)); apply lookup_wld_op_l. Qed.
 Global Instance Res_timeless eσ m : Timeless m → Timeless (@Res Λ A M ∅ eσ m).
-Proof. by intros ? ? [???]; constructor; apply: timeless. Qed.
+Proof. by intros ? ? [???]; constructor; apply (timeless _). Qed.
 Global Instance Res_persistent w m: Persistent m → Persistent (@Res Λ A M w ∅ m).
-Proof. constructor; apply (persistent _). Qed.
+Proof. do 2 constructor; apply (persistent_core _). Qed.
 
 (** Internalized properties *)
 Lemma res_equivI {M'} r1 r2 :
-  (r1 ≡ r2)
-  ⊣⊢ (wld r1 ≡ wld r2 ∧ pst r1 ≡ pst r2 ∧ gst r1 ≡ gst r2: uPred M').
+  r1 ≡ r2 ⊣⊢ (wld r1 ≡ wld r2 ∧ pst r1 ≡ pst r2 ∧ gst r1 ≡ gst r2 : uPred M').
 Proof.
   uPred.unseal. do 2 split. by destruct 1. by intros (?&?&?); by constructor.
 Qed.
-Lemma res_validI {M'} r : (✓ r) ⊣⊢ (✓ wld r ∧ ✓ pst r ∧ ✓ gst r : uPred M').
+Lemma res_validI {M'} r : ✓ r ⊣⊢ (✓ wld r ∧ ✓ pst r ∧ ✓ gst r : uPred M').
 Proof. by uPred.unseal. Qed.
 End res.
 
 Arguments resC : clear implicits.
 Arguments resR : clear implicits.
+Arguments resUR : clear implicits.
 
 (* Functor *)
 Definition res_map {Λ} {A A' : cofeT} {M M' : cmraT}
     (f : A → A') (g : M → M') (r : res Λ A M) : res Λ A' M' :=
   Res (agree_map f <$> wld r) (pst r) (g $ gst r).
-Instance res_map_ne {Λ} {A A': cofeT} {M M' : cmraT} (f : A → A') (g : M → M') :
+Instance res_map_ne {Λ} {A A': cofeT} {M M' : ucmraT} (f : A → A') (g : M → M'):
   (∀ n, Proper (dist n ==> dist n) f) → (∀ n, Proper (dist n ==> dist n) g) →
   ∀ n, Proper (dist n ==> dist n) (@res_map Λ _ _ _ _ f g).
 Proof. intros Hf n [] ? [???]; constructor; by cofe_subst. Qed.
-Lemma res_map_id {Λ A M} (r : res Λ A M) : res_map id id r ≡ r.
+Lemma res_map_id {Λ A} {M : ucmraT} (r : res Λ A M) : res_map id id r ≡ r.
 Proof.
   constructor; rewrite /res_map /=; f_equal.
-  - rewrite -{2}(map_fmap_id (wld r)). apply map_fmap_setoid_ext=> i y ? /=.
-    by rewrite -{2}(agree_map_id y).
+  rewrite -{2}(map_fmap_id (wld r)). apply map_fmap_setoid_ext=> i y ? /=.
+  by rewrite -{2}(agree_map_id y).
 Qed.
-Lemma res_map_compose {Λ} {A1 A2 A3 : cofeT} {M1 M2 M3 : cmraT}
+Lemma res_map_compose {Λ} {A1 A2 A3 : cofeT} {M1 M2 M3 : ucmraT}
    (f : A1 → A2) (f' : A2 → A3) (g : M1 → M2) (g' : M2 → M3) (r : res Λ A1 M1) :
   res_map (f' ∘ f) (g' ∘ g) r ≡ res_map f' g' (res_map f g r).
 Proof.
   constructor; rewrite /res_map /=; f_equal.
-  - rewrite -map_fmap_compose; apply map_fmap_setoid_ext=> i y _ /=.
-    by rewrite -agree_map_compose.
+  rewrite -map_fmap_compose; apply map_fmap_setoid_ext=> i y _ /=.
+  by rewrite -agree_map_compose.
 Qed.
-Lemma res_map_ext {Λ} {A A' : cofeT} {M M' : cmraT}
+Lemma res_map_ext {Λ} {A A' : cofeT} {M M' : ucmraT}
     (f f' : A → A') (g g' : M → M') (r : res Λ A M) :
   (∀ x, f x ≡ f' x) → (∀ m, g m ≡ g' m) → res_map f g r ≡ res_map f' g' r.
 Proof.
   intros Hf Hg; split; simpl; auto.
-  - by apply map_fmap_setoid_ext=>i x ?; apply agree_map_ext.
+  by apply map_fmap_setoid_ext=>i x ?; apply agree_map_ext.
 Qed.
 Instance res_map_cmra_monotone {Λ}
-    {A A' : cofeT} {M M': cmraT} (f: A → A') (g: M → M') :
+    {A A' : cofeT} {M M': ucmraT} (f: A → A') (g: M → M') :
   (∀ n, Proper (dist n ==> dist n) f) → CMRAMonotone g →
   CMRAMonotone (@res_map Λ _ _ _ _ f g).
 Proof.
@@ -209,40 +214,40 @@ Proof.
   - by intros r1 r2; rewrite !res_included;
       intros (?&?&?); split_and!; simpl; try apply: included_preserving.
 Qed.
-Definition resC_map {Λ} {A A' : cofeT} {M M' : cmraT}
+Definition resC_map {Λ} {A A' : cofeT} {M M' : ucmraT}
     (f : A -n> A') (g : M -n> M') : resC Λ A M -n> resC Λ A' M' :=
   CofeMor (res_map f g : resC Λ A M → resC Λ A' M').
 Instance resC_map_ne {Λ A A' M M'} n :
   Proper (dist n ==> dist n ==> dist n) (@resC_map Λ A A' M M').
 Proof.
   intros f g Hfg r; split; simpl; auto.
-  - by apply (gmapC_map_ne _ (agreeC_map f) (agreeC_map g)), agreeC_map_ne.
+  by apply (gmapC_map_ne _ (agreeC_map f) (agreeC_map g)), agreeC_map_ne.
 Qed.
 
-Program Definition resRF (Λ : language)
-    (F1 : cFunctor) (F2 : rFunctor) : rFunctor := {|
-  rFunctor_car A B := resR Λ (cFunctor_car F1 A B) (rFunctor_car F2 A B);
-  rFunctor_map A1 A2 B1 B2 fg :=resC_map (cFunctor_map F1 fg) (rFunctor_map F2 fg)
+Program Definition resURF (Λ : language)
+    (F1 : cFunctor) (F2 : urFunctor) : urFunctor := {|
+  urFunctor_car A B := resUR Λ (cFunctor_car F1 A B) (urFunctor_car F2 A B);
+  urFunctor_map A1 A2 B1 B2 fg :=resC_map (cFunctor_map F1 fg) (urFunctor_map F2 fg)
 |}.
 Next Obligation.
   intros Λ F1 F2 A1 A2 B1 B2 n f g Hfg; apply resC_map_ne.
   - by apply cFunctor_ne.
-  - by apply rFunctor_ne.
+  - by apply urFunctor_ne.
 Qed.
 Next Obligation.
   intros Λ F Σ A B x. rewrite /= -{2}(res_map_id x).
-  apply res_map_ext=>y. apply cFunctor_id. apply rFunctor_id.
+  apply res_map_ext=>y. apply cFunctor_id. apply urFunctor_id.
 Qed.
 Next Obligation.
   intros Λ F Σ A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -res_map_compose.
-  apply res_map_ext=>y. apply cFunctor_compose. apply rFunctor_compose.
+  apply res_map_ext=>y. apply cFunctor_compose. apply urFunctor_compose.
 Qed.
 
 Instance resRF_contractive Λ F1 F2 :
-  cFunctorContractive F1 → rFunctorContractive F2 →
-  rFunctorContractive (resRF Λ F1 F2).
+  cFunctorContractive F1 → urFunctorContractive F2 →
+  urFunctorContractive (resURF Λ F1 F2).
 Proof.
   intros ?? A1 A2 B1 B2 n f g Hfg; apply resC_map_ne.
   - by apply cFunctor_contractive.
-  - by apply rFunctor_contractive.
+  - by apply urFunctor_contractive.
 Qed.

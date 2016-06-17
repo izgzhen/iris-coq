@@ -3,11 +3,10 @@ Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etrans; [|eassumption].
 Local Hint Extern 10 (_ ≤ _) => omega.
 
-Record uPred (M : cmraT) : Type := IProp {
+Record uPred (M : ucmraT) : Type := IProp {
   uPred_holds :> nat → M → Prop;
-  uPred_ne n x1 x2 : uPred_holds n x1 → x1 ≡{n}≡ x2 → uPred_holds n x2;
-  uPred_weaken  n1 n2 x1 x2 :
-    uPred_holds n1 x1 → x1 ≼ x2 → n2 ≤ n1 → ✓{n2} x2 → uPred_holds n2 x2
+  uPred_mono n x1 x2 : uPred_holds n x1 → x1 ≼{n} x2 → uPred_holds n x2;
+  uPred_closed n1 n2 x : uPred_holds n1 x → n2 ≤ n1 → ✓{n2} x → uPred_holds n2 x
 }.
 Arguments uPred_holds {_} _ _ _ : simpl never.
 Add Printing Constructor uPred.
@@ -18,7 +17,7 @@ Bind Scope uPred_scope with uPred.
 Arguments uPred_holds {_} _%I _ _.
 
 Section cofe.
-  Context {M : cmraT}.
+  Context {M : ucmraT}.
 
   Inductive uPred_equiv' (P Q : uPred M) : Prop :=
     { uPred_in_equiv : ∀ n x, ✓{n} x → P n x ↔ Q n x }.
@@ -28,10 +27,10 @@ Section cofe.
   Instance uPred_dist : Dist (uPred M) := uPred_dist'.
   Program Instance uPred_compl : Compl (uPred M) := λ c,
     {| uPred_holds n x := c n n x |}.
-  Next Obligation. by intros c n x y ??; simpl in *; apply uPred_ne with x. Qed.
+  Next Obligation. naive_solver eauto using uPred_mono. Qed.
   Next Obligation.
-    intros c n1 n2 x1 x2 ????; simpl in *.
-    apply (chain_cauchy c n2 n1); eauto using uPred_weaken.
+    intros c n1 n2 x ???; simpl in *.
+    apply (chain_cauchy c n2 n1); eauto using uPred_closed.
   Qed.
   Definition uPred_cofe_mixin : CofeMixin (uPred M).
   Proof.
@@ -47,49 +46,43 @@ Section cofe.
     - intros n P Q HPQ; split=> i x ??; apply HPQ; auto.
     - intros n c; split=>i x ??; symmetry; apply (chain_cauchy c i n); auto.
   Qed.
-  Canonical Structure uPredC : cofeT := CofeT uPred_cofe_mixin.
+  Canonical Structure uPredC : cofeT := CofeT (uPred M) uPred_cofe_mixin.
 End cofe.
 Arguments uPredC : clear implicits.
 
 Instance uPred_ne' {M} (P : uPred M) n : Proper (dist n ==> iff) (P n).
-Proof. intros x1 x2 Hx; split; eauto using uPred_ne. Qed.
+Proof.
+  intros x1 x2 Hx; split=> ?; eapply uPred_mono; eauto; by rewrite Hx.
+Qed.
 Instance uPred_proper {M} (P : uPred M) n : Proper ((≡) ==> iff) (P n).
 Proof. by intros x1 x2 Hx; apply uPred_ne', equiv_dist. Qed.
 
-Lemma uPred_holds_ne {M} (P1 P2 : uPred M) n x :
-  P1 ≡{n}≡ P2 → ✓{n} x → P1 n x → P2 n x.
-Proof. intros HP ?; apply HP; auto. Qed.
-Lemma uPred_weaken' {M} (P : uPred M) n1 n2 x1 x2 :
-  x1 ≼ x2 → n2 ≤ n1 → ✓{n2} x2 → P n1 x1 → P n2 x2.
-Proof. eauto using uPred_weaken. Qed.
-
 (** functor *)
-Program Definition uPred_map {M1 M2 : cmraT} (f : M2 -n> M1)
+Program Definition uPred_map {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CMRAMonotone f} (P : uPred M1) :
   uPred M2 := {| uPred_holds n x := P n (f x) |}.
-Next Obligation. by intros M1 M2 f ? P y1 y2 n ? Hy; rewrite /= -Hy. Qed.
-Next Obligation.
-  naive_solver eauto using uPred_weaken, included_preserving, validN_preserving.
-Qed.
-Instance uPred_map_ne {M1 M2 : cmraT} (f : M2 -n> M1)
+Next Obligation. naive_solver eauto using uPred_mono, includedN_preserving. Qed.
+Next Obligation. naive_solver eauto using uPred_closed, validN_preserving. Qed.
+
+Instance uPred_map_ne {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CMRAMonotone f} n : Proper (dist n ==> dist n) (uPred_map f).
 Proof.
   intros x1 x2 Hx; split=> n' y ??.
   split; apply Hx; auto using validN_preserving.
 Qed.
-Lemma uPred_map_id {M : cmraT} (P : uPred M): uPred_map cid P ≡ P.
+Lemma uPred_map_id {M : ucmraT} (P : uPred M): uPred_map cid P ≡ P.
 Proof. by split=> n x ?. Qed.
-Lemma uPred_map_compose {M1 M2 M3 : cmraT} (f : M1 -n> M2) (g : M2 -n> M3)
+Lemma uPred_map_compose {M1 M2 M3 : ucmraT} (f : M1 -n> M2) (g : M2 -n> M3)
     `{!CMRAMonotone f, !CMRAMonotone g} (P : uPred M3):
   uPred_map (g ◎ f) P ≡ uPred_map f (uPred_map g P).
 Proof. by split=> n x Hx. Qed.
-Lemma uPred_map_ext {M1 M2 : cmraT} (f g : M1 -n> M2)
+Lemma uPred_map_ext {M1 M2 : ucmraT} (f g : M1 -n> M2)
       `{!CMRAMonotone f} `{!CMRAMonotone g}:
   (∀ x, f x ≡ g x) → ∀ x, uPred_map f x ≡ uPred_map g x.
 Proof. intros Hf P; split=> n x Hx /=; by rewrite /uPred_holds /= Hf. Qed.
-Definition uPredC_map {M1 M2 : cmraT} (f : M2 -n> M1) `{!CMRAMonotone f} :
+Definition uPredC_map {M1 M2 : ucmraT} (f : M2 -n> M1) `{!CMRAMonotone f} :
   uPredC M1 -n> uPredC M2 := CofeMor (uPred_map f : uPredC M1 → uPredC M2).
-Lemma uPredC_map_ne {M1 M2 : cmraT} (f g : M2 -n> M1)
+Lemma uPredC_map_ne {M1 M2 : ucmraT} (f g : M2 -n> M1)
     `{!CMRAMonotone f, !CMRAMonotone g} n :
   f ≡{n}≡ g → uPredC_map f ≡{n}≡ uPredC_map g.
 Proof.
@@ -97,28 +90,28 @@ Proof.
     rewrite /uPred_holds /= (dist_le _ _ _ _(Hfg y)); last lia.
 Qed.
 
-Program Definition uPredCF (F : rFunctor) : cFunctor := {|
-  cFunctor_car A B := uPredC (rFunctor_car F B A);
-  cFunctor_map A1 A2 B1 B2 fg := uPredC_map (rFunctor_map F (fg.2, fg.1))
+Program Definition uPredCF (F : urFunctor) : cFunctor := {|
+  cFunctor_car A B := uPredC (urFunctor_car F B A);
+  cFunctor_map A1 A2 B1 B2 fg := uPredC_map (urFunctor_map F (fg.2, fg.1))
 |}.
 Next Obligation.
   intros F A1 A2 B1 B2 n P Q HPQ.
-  apply uPredC_map_ne, rFunctor_ne; split; by apply HPQ.
+  apply uPredC_map_ne, urFunctor_ne; split; by apply HPQ.
 Qed.
 Next Obligation.
   intros F A B P; simpl. rewrite -{2}(uPred_map_id P).
-  apply uPred_map_ext=>y. by rewrite rFunctor_id.
+  apply uPred_map_ext=>y. by rewrite urFunctor_id.
 Qed.
 Next Obligation.
   intros F A1 A2 A3 B1 B2 B3 f g f' g' P; simpl. rewrite -uPred_map_compose.
-  apply uPred_map_ext=>y; apply rFunctor_compose.
+  apply uPred_map_ext=>y; apply urFunctor_compose.
 Qed.
 
 Instance uPredCF_contractive F :
-  rFunctorContractive F → cFunctorContractive (uPredCF F).
+  urFunctorContractive F → cFunctorContractive (uPredCF F).
 Proof.
   intros ? A1 A2 B1 B2 n P Q HPQ.
-  apply uPredC_map_ne, rFunctor_contractive=> i ?; split; by apply HPQ.
+  apply uPredC_map_ne, urFunctor_contractive=> i ?; split; by apply HPQ.
 Qed.
 
 (** logical entailement *)
@@ -126,6 +119,8 @@ Inductive uPred_entails {M} (P Q : uPred M) : Prop :=
   { uPred_in_entails : ∀ n x, ✓{n} x → P n x → Q n x }.
 Hint Extern 0 (uPred_entails _ _) => reflexivity.
 Instance uPred_entails_rewrite_relation M : RewriteRelation (@uPred_entails M).
+
+Hint Resolve uPred_mono uPred_closed : uPred_def.
 
 (** logical connectives *)
 Program Definition uPred_const_def {M} (φ : Prop) : uPred M :=
@@ -140,14 +135,14 @@ Instance uPred_inhabited M : Inhabited (uPred M) := populate (uPred_const True).
 
 Program Definition uPred_and_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := P n x ∧ Q n x |}.
-Solve Obligations with naive_solver eauto 2 using uPred_ne, uPred_weaken.
+Solve Obligations with naive_solver eauto 2 with uPred_def.
 Definition uPred_and_aux : { x | x = @uPred_and_def }. by eexists. Qed.
 Definition uPred_and {M} := proj1_sig uPred_and_aux M.
 Definition uPred_and_eq: @uPred_and = @uPred_and_def := proj2_sig uPred_and_aux.
 
 Program Definition uPred_or_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := P n x ∨ Q n x |}.
-Solve Obligations with naive_solver eauto 2 using uPred_ne, uPred_weaken.
+Solve Obligations with naive_solver eauto 2 with uPred_def.
 Definition uPred_or_aux : { x | x = @uPred_or_def }. by eexists. Qed.
 Definition uPred_or {M} := proj1_sig uPred_or_aux M.
 Definition uPred_or_eq: @uPred_or = @uPred_or_def := proj2_sig uPred_or_aux.
@@ -156,13 +151,11 @@ Program Definition uPred_impl_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ n' x',
        x ≼ x' → n' ≤ n → ✓{n'} x' → P n' x' → Q n' x' |}.
 Next Obligation.
-  intros M P Q n1 x1' x1 HPQ Hx1 n2 x2 ????.
-  destruct (cmra_included_dist_l n1 x1 x2 x1') as (x2'&?&Hx2); auto.
-  assert (x2' ≡{n2}≡ x2) as Hx2' by (by apply dist_le with n1).
-  assert (✓{n2} x2') by (by rewrite Hx2'); rewrite -Hx2'.
-  eauto using uPred_weaken, uPred_ne.
+  intros M P Q n1 x1 x1' HPQ [x2 Hx1'] n2 x3 [x4 Hx3] ?; simpl in *.
+  rewrite Hx3 (dist_le _ _ _ _ Hx1'); auto. intros ??.
+  eapply HPQ; auto. exists (x2 ⋅ x4); by rewrite assoc.
 Qed.
-Next Obligation. intros M P Q [|n] x1 x2; auto with lia. Qed.
+Next Obligation. intros M P Q [|n1] [|n2] x; auto with lia. Qed.
 Definition uPred_impl_aux : { x | x = @uPred_impl_def }. by eexists. Qed.
 Definition uPred_impl {M} := proj1_sig uPred_impl_aux M.
 Definition uPred_impl_eq :
@@ -170,7 +163,7 @@ Definition uPred_impl_eq :
 
 Program Definition uPred_forall_def {M A} (Ψ : A → uPred M) : uPred M :=
   {| uPred_holds n x := ∀ a, Ψ a n x |}.
-Solve Obligations with naive_solver eauto 2 using uPred_ne, uPred_weaken.
+Solve Obligations with naive_solver eauto 2 with uPred_def.
 Definition uPred_forall_aux : { x | x = @uPred_forall_def }. by eexists. Qed.
 Definition uPred_forall {M A} := proj1_sig uPred_forall_aux M A.
 Definition uPred_forall_eq :
@@ -178,7 +171,7 @@ Definition uPred_forall_eq :
 
 Program Definition uPred_exist_def {M A} (Ψ : A → uPred M) : uPred M :=
   {| uPred_holds n x := ∃ a, Ψ a n x |}.
-Solve Obligations with naive_solver eauto 2 using uPred_ne, uPred_weaken.
+Solve Obligations with naive_solver eauto 2 with uPred_def.
 Definition uPred_exist_aux : { x | x = @uPred_exist_def }. by eexists. Qed.
 Definition uPred_exist {M A} := proj1_sig uPred_exist_aux M A.
 Definition uPred_exist_eq: @uPred_exist = @uPred_exist_def := proj2_sig uPred_exist_aux.
@@ -193,16 +186,14 @@ Definition uPred_eq_eq: @uPred_eq = @uPred_eq_def := proj2_sig uPred_eq_aux.
 Program Definition uPred_sep_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∃ x1 x2, x ≡{n}≡ x1 ⋅ x2 ∧ P n x1 ∧ Q n x2 |}.
 Next Obligation.
-  by intros M P Q n x y (x1&x2&?&?&?) Hxy; exists x1, x2; rewrite -Hxy.
+  intros M P Q n x y (x1&x2&Hx&?&?) [z Hy].
+  exists x1, (x2 ⋅ z); split_and?; eauto using uPred_mono, cmra_includedN_l.
+  by rewrite Hy Hx assoc.
 Qed.
 Next Obligation.
-  intros M P Q n1 n2 x y (x1&x2&Hx&?&?) Hxy ??.
-  assert (∃ x2', y ≡{n2}≡ x1 ⋅ x2' ∧ x2 ≼ x2') as (x2'&Hy&?).
-  { destruct Hxy as [z Hy]; exists (x2 ⋅ z); split; eauto using cmra_included_l.
-    apply dist_le with n1; auto. by rewrite (assoc op) -Hx Hy. }
-  clear Hxy; cofe_subst y; exists x1, x2'; split_and?; [done| |].
-  - apply uPred_weaken with n1 x1; eauto using cmra_validN_op_l.
-  - apply uPred_weaken with n1 x2; eauto using cmra_validN_op_r.
+  intros M P Q n1 n2 x (x1&x2&Hx&?&?) ?; rewrite {1}(dist_le _ _ _ _ Hx) // =>?.
+  exists x1, x2; cofe_subst; split_and!;
+    eauto using dist_le, uPred_closed, cmra_validN_op_l, cmra_validN_op_r.
 Qed.
 Definition uPred_sep_aux : { x | x = @uPred_sep_def }. by eexists. Qed.
 Definition uPred_sep {M} := proj1_sig uPred_sep_aux M.
@@ -212,15 +203,11 @@ Program Definition uPred_wand_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ n' x',
        n' ≤ n → ✓{n'} (x ⋅ x') → P n' x' → Q n' (x ⋅ x') |}.
 Next Obligation.
-  intros M P Q n1 x1 x2 HPQ Hx n2 x3 ???; simpl in *.
-  rewrite -(dist_le _ _ _ _ Hx) //; apply HPQ; auto.
-  by rewrite (dist_le _ _ _ _ Hx).
+  intros M P Q n x1 x1' HPQ ? n3 x3 ???; simpl in *.
+  apply uPred_mono with (x1 ⋅ x3);
+    eauto using cmra_validN_includedN, cmra_preservingN_r, cmra_includedN_le.
 Qed.
-Next Obligation.
-  intros M P Q n1 n2 x1 x2 HPQ ??? n3 x3 ???; simpl in *.
-  apply uPred_weaken with n3 (x1 ⋅ x3);
-    eauto using cmra_validN_included, cmra_preserving_r.
-Qed.
+Next Obligation. naive_solver. Qed.
 Definition uPred_wand_aux : { x | x = @uPred_wand_def }. by eexists. Qed.
 Definition uPred_wand {M} := proj1_sig uPred_wand_aux M.
 Definition uPred_wand_eq :
@@ -228,11 +215,10 @@ Definition uPred_wand_eq :
 
 Program Definition uPred_always_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n (core x) |}.
-Next Obligation. by intros M P x1 x2 n ? Hx; rewrite /= -Hx. Qed.
 Next Obligation.
-  intros M P n1 n2 x1 x2 ????; eapply uPred_weaken with n1 (core x1);
-    eauto using cmra_core_preserving, cmra_core_validN.
+  intros M; naive_solver eauto using uPred_mono, @cmra_core_preservingN.
 Qed.
+Next Obligation. naive_solver eauto using uPred_closed, @cmra_core_validN. Qed.
 Definition uPred_always_aux : { x | x = @uPred_always_def }. by eexists. Qed.
 Definition uPred_always {M} := proj1_sig uPred_always_aux M.
 Definition uPred_always_eq :
@@ -240,28 +226,30 @@ Definition uPred_always_eq :
 
 Program Definition uPred_later_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := match n return _ with 0 => True | S n' => P n' x end |}.
-Next Obligation. intros M P [|n] ??; eauto using uPred_ne,(dist_le (A:=M)). Qed.
 Next Obligation.
-  intros M P [|n1] [|n2] x1 x2; eauto using uPred_weaken,cmra_validN_S; try lia.
+  intros M P [|n] x1 x2; eauto using uPred_mono, cmra_includedN_S.
+Qed.
+Next Obligation.
+  intros M P [|n1] [|n2] x; eauto using uPred_closed, cmra_validN_S with lia.
 Qed.
 Definition uPred_later_aux : { x | x = @uPred_later_def }. by eexists. Qed.
 Definition uPred_later {M} := proj1_sig uPred_later_aux M.
 Definition uPred_later_eq :
   @uPred_later = @uPred_later_def := proj2_sig uPred_later_aux.
 
-Program Definition uPred_ownM_def {M : cmraT} (a : M) : uPred M :=
+Program Definition uPred_ownM_def {M : ucmraT} (a : M) : uPred M :=
   {| uPred_holds n x := a ≼{n} x |}.
-Next Obligation. by intros M a n x1 x2 [a' ?] Hx; exists a'; rewrite -Hx. Qed.
 Next Obligation.
-  intros M a n1 n2 x1 x [a' Hx1] [x2 Hx] ??.
-  exists (a' ⋅ x2). by rewrite (assoc op) -(dist_le _ _ _ _ Hx1) // Hx.
+  intros M a n x1 x [a' Hx1] [x2 ->].
+  exists (a' ⋅ x2). by rewrite (assoc op) Hx1.
 Qed.
+Next Obligation. naive_solver eauto using cmra_includedN_le. Qed.
 Definition uPred_ownM_aux : { x | x = @uPred_ownM_def }. by eexists. Qed.
 Definition uPred_ownM {M} := proj1_sig uPred_ownM_aux M.
 Definition uPred_ownM_eq :
   @uPred_ownM = @uPred_ownM_def := proj2_sig uPred_ownM_aux.
 
-Program Definition uPred_valid_def {M A : cmraT} (a : A) : uPred M :=
+Program Definition uPred_valid_def {M : ucmraT} {A : cmraT} (a : A) : uPred M :=
   {| uPred_holds n x := ✓{n} a |}.
 Solve Obligations with naive_solver eauto 2 using cmra_validN_le.
 Definition uPred_valid_aux : { x | x = @uPred_valid_def }. by eexists. Qed.
@@ -269,9 +257,11 @@ Definition uPred_valid {M A} := proj1_sig uPred_valid_aux M A.
 Definition uPred_valid_eq :
   @uPred_valid = @uPred_valid_def := proj2_sig uPred_valid_aux.
 
-Notation "P ⊢ Q" := (uPred_entails P%I Q%I) (at level 70) : C_scope.
+Notation "P ⊢ Q" := (uPred_entails P%I Q%I)
+  (at level 99, Q at level 200, right associativity) : C_scope.
 Notation "(⊢)" := uPred_entails (only parsing) : C_scope.
-Notation "P ⊣⊢ Q" := (equiv (A:=uPred _) P%I Q%I) (at level 70) : C_scope.
+Notation "P ⊣⊢ Q" := (equiv (A:=uPred _) P%I Q%I)
+  (at level 95, no associativity) : C_scope.
 Notation "(⊣⊢)" := (equiv (A:=uPred _)) (only parsing) : C_scope.
 Notation "■ φ" := (uPred_const φ%C%type)
   (at level 20, right associativity) : uPred_scope.
@@ -321,10 +311,10 @@ Definition unseal :=
   (uPred_const_eq, uPred_and_eq, uPred_or_eq, uPred_impl_eq, uPred_forall_eq,
   uPred_exist_eq, uPred_eq_eq, uPred_sep_eq, uPred_wand_eq, uPred_always_eq,
   uPred_later_eq, uPred_ownM_eq, uPred_valid_eq).
-Ltac unseal := rewrite !unseal.
+Ltac unseal := rewrite !unseal /=.
 
 Section uPred_logic.
-Context {M : cmraT}.
+Context {M : ucmraT}.
 Implicit Types φ : Prop.
 Implicit Types P Q : uPred M.
 Implicit Types A : Type.
@@ -341,14 +331,14 @@ Proof.
 Qed.
 Global Instance: AntiSymm (⊣⊢) (@uPred_entails M).
 Proof. intros P Q HPQ HQP; split=> x n; by split; [apply HPQ|apply HQP]. Qed.
-Lemma equiv_spec P Q : P ⊣⊢ Q ↔ P ⊢ Q ∧ Q ⊢ P.
+Lemma equiv_spec P Q : (P ⊣⊢ Q) ↔ (P ⊢ Q) ∧ (Q ⊢ P).
 Proof.
   split; [|by intros [??]; apply (anti_symm (⊢))].
   intros HPQ; split; split=> x i; apply HPQ.
 Qed.
-Lemma equiv_entails P Q : P ⊣⊢ Q → P ⊢ Q.
+Lemma equiv_entails P Q : (P ⊣⊢ Q) → (P ⊢ Q).
 Proof. apply equiv_spec. Qed.
-Lemma equiv_entails_sym P Q : Q ⊣⊢ P → P ⊢ Q.
+Lemma equiv_entails_sym P Q : (Q ⊣⊢ P) → (P ⊢ Q).
 Proof. apply equiv_spec. Qed.
 Global Instance entails_proper :
   Proper ((⊣⊢) ==> (⊣⊢) ==> iff) ((⊢) : relation (uPred M)).
@@ -357,9 +347,9 @@ Proof.
   - by trans P1; [|trans Q1].
   - by trans P2; [|trans Q2].
 Qed.
-Lemma entails_equiv_l (P Q R : uPred M) : P ⊣⊢ Q → Q ⊢ R → P ⊢ R.
+Lemma entails_equiv_l (P Q R : uPred M) : (P ⊣⊢ Q) → (Q ⊢ R) → (P ⊢ R).
 Proof. by intros ->. Qed.
-Lemma entails_equiv_r (P Q R : uPred M) : P ⊢ Q → Q ⊣⊢ R → P ⊢ R.
+Lemma entails_equiv_r (P Q R : uPred M) : (P ⊢ Q) → (Q ⊣⊢ R) → (P ⊢ R).
 Proof. by intros ? <-. Qed.
 
 (** Non-expansiveness and setoid morphisms *)
@@ -445,7 +435,7 @@ Global Instance later_proper :
 Global Instance always_ne n : Proper (dist n ==> dist n) (@uPred_always M).
 Proof.
   intros P1 P2 HP.
-  unseal; split=> n' x; split; apply HP; eauto using cmra_core_validN.
+  unseal; split=> n' x; split; apply HP; eauto using @cmra_core_validN.
 Qed.
 Global Instance always_proper :
   Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_always M) := ne_proper _.
@@ -471,54 +461,53 @@ Global Instance iff_proper :
 (** Introduction and elimination rules *)
 Lemma const_intro φ P : φ → P ⊢ ■ φ.
 Proof. by intros ?; unseal; split. Qed.
-Lemma const_elim φ Q R : Q ⊢ ■ φ → (φ → Q ⊢ R) → Q ⊢ R.
+Lemma const_elim φ Q R : (Q ⊢ ■ φ) → (φ → Q ⊢ R) → Q ⊢ R.
 Proof.
   unseal; intros HQP HQR; split=> n x ??; apply HQR; first eapply HQP; eauto.
 Qed.
-Lemma and_elim_l P Q : (P ∧ Q) ⊢ P.
+Lemma and_elim_l P Q : P ∧ Q ⊢ P.
 Proof. by unseal; split=> n x ? [??]. Qed.
-Lemma and_elim_r P Q : (P ∧ Q) ⊢ Q.
+Lemma and_elim_r P Q : P ∧ Q ⊢ Q.
 Proof. by unseal; split=> n x ? [??]. Qed.
-Lemma and_intro P Q R : P ⊢ Q → P ⊢ R → P ⊢ (Q ∧ R).
+Lemma and_intro P Q R : (P ⊢ Q) → (P ⊢ R) → P ⊢ Q ∧ R.
 Proof. intros HQ HR; unseal; split=> n x ??; by split; [apply HQ|apply HR]. Qed.
-Lemma or_intro_l P Q : P ⊢ (P ∨ Q).
+Lemma or_intro_l P Q : P ⊢ P ∨ Q.
 Proof. unseal; split=> n x ??; left; auto. Qed.
-Lemma or_intro_r P Q : Q ⊢ (P ∨ Q).
+Lemma or_intro_r P Q : Q ⊢ P ∨ Q.
 Proof. unseal; split=> n x ??; right; auto. Qed.
-Lemma or_elim P Q R : P ⊢ R → Q ⊢ R → (P ∨ Q) ⊢ R.
+Lemma or_elim P Q R : (P ⊢ R) → (Q ⊢ R) → P ∨ Q ⊢ R.
 Proof. intros HP HQ; unseal; split=> n x ? [?|?]. by apply HP. by apply HQ. Qed.
-Lemma impl_intro_r P Q R : (P ∧ Q) ⊢ R → P ⊢ (Q → R).
+Lemma impl_intro_r P Q R : (P ∧ Q ⊢ R) → P ⊢ Q → R.
 Proof.
-  unseal; intros HQ; split=> n x ?? n' x' ????.
-  apply HQ; naive_solver eauto using uPred_weaken.
+  unseal; intros HQ; split=> n x ?? n' x' ????. apply HQ;
+    naive_solver eauto using uPred_mono, uPred_closed, cmra_included_includedN.
 Qed.
-Lemma impl_elim P Q R : P ⊢ (Q → R) → P ⊢ Q → P ⊢ R.
+Lemma impl_elim P Q R : (P ⊢ Q → R) → (P ⊢ Q) → P ⊢ R.
 Proof. by unseal; intros HP HP'; split=> n x ??; apply HP with n x, HP'. Qed.
-Lemma forall_intro {A} P (Ψ : A → uPred M): (∀ a, P ⊢ Ψ a) → P ⊢ (∀ a, Ψ a).
+Lemma forall_intro {A} P (Ψ : A → uPred M): (∀ a, P ⊢ Ψ a) → P ⊢ ∀ a, Ψ a.
 Proof. unseal; intros HPΨ; split=> n x ?? a; by apply HPΨ. Qed.
 Lemma forall_elim {A} {Ψ : A → uPred M} a : (∀ a, Ψ a) ⊢ Ψ a.
 Proof. unseal; split=> n x ? HP; apply HP. Qed.
-Lemma exist_intro {A} {Ψ : A → uPred M} a : Ψ a ⊢ (∃ a, Ψ a).
+Lemma exist_intro {A} {Ψ : A → uPred M} a : Ψ a ⊢ ∃ a, Ψ a.
 Proof. unseal; split=> n x ??; by exists a. Qed.
 Lemma exist_elim {A} (Φ : A → uPred M) Q : (∀ a, Φ a ⊢ Q) → (∃ a, Φ a) ⊢ Q.
 Proof. unseal; intros HΦΨ; split=> n x ? [a ?]; by apply HΦΨ with a. Qed.
-Lemma eq_refl {A : cofeT} (a : A) : True ⊢ (a ≡ a).
+Lemma eq_refl {A : cofeT} (a : A) : True ⊢ a ≡ a.
 Proof. unseal; by split=> n x ??; simpl. Qed.
 Lemma eq_rewrite {A : cofeT} a b (Ψ : A → uPred M) P
-  {HΨ : ∀ n, Proper (dist n ==> dist n) Ψ} : P ⊢ (a ≡ b) → P ⊢ Ψ a → P ⊢ Ψ b.
+  {HΨ : ∀ n, Proper (dist n ==> dist n) Ψ} : (P ⊢ a ≡ b) → (P ⊢ Ψ a) → P ⊢ Ψ b.
 Proof.
   unseal; intros Hab Ha; split=> n x ??. apply HΨ with n a; auto.
   - by symmetry; apply Hab with x.
   - by apply Ha.
 Qed.
-Lemma eq_equiv `{Empty M, !CMRAUnit M} {A : cofeT} (a b : A) :
-  True ⊢ (a ≡ b) → a ≡ b.
+Lemma eq_equiv {A : cofeT} (a b : A) : (True ⊢ a ≡ b) → a ≡ b.
 Proof.
   unseal=> Hab; apply equiv_dist; intros n; apply Hab with ∅; last done.
-  apply cmra_valid_validN, cmra_unit_valid.
+  apply cmra_valid_validN, ucmra_unit_valid.
 Qed.
 Lemma eq_rewrite_contractive {A : cofeT} a b (Ψ : A → uPred M) P
-  {HΨ : Contractive Ψ} : P ⊢ ▷ (a ≡ b) → P ⊢ Ψ a → P ⊢ Ψ b.
+  {HΨ : Contractive Ψ} : (P ⊢ ▷ (a ≡ b)) → (P ⊢ Ψ a) → P ⊢ Ψ b.
 Proof.
   unseal; intros Hab Ha; split=> n x ??. apply HΨ with n a; auto.
   - destruct n; intros m ?; first omega. apply (dist_le n); last omega.
@@ -531,74 +520,74 @@ Lemma False_elim P : False ⊢ P.
 Proof. by apply (const_elim False). Qed.
 Lemma True_intro P : P ⊢ True.
 Proof. by apply const_intro. Qed.
-Lemma and_elim_l' P Q R : P ⊢ R → (P ∧ Q) ⊢ R.
+Lemma and_elim_l' P Q R : (P ⊢ R) → P ∧ Q ⊢ R.
 Proof. by rewrite and_elim_l. Qed.
-Lemma and_elim_r' P Q R : Q ⊢ R → (P ∧ Q) ⊢ R.
+Lemma and_elim_r' P Q R : (Q ⊢ R) → P ∧ Q ⊢ R.
 Proof. by rewrite and_elim_r. Qed.
-Lemma or_intro_l' P Q R : P ⊢ Q → P ⊢ (Q ∨ R).
+Lemma or_intro_l' P Q R : (P ⊢ Q) → P ⊢ Q ∨ R.
 Proof. intros ->; apply or_intro_l. Qed.
-Lemma or_intro_r' P Q R : P ⊢ R → P ⊢ (Q ∨ R).
+Lemma or_intro_r' P Q R : (P ⊢ R) → P ⊢ Q ∨ R.
 Proof. intros ->; apply or_intro_r. Qed.
-Lemma exist_intro' {A} P (Ψ : A → uPred M) a : P ⊢ Ψ a → P ⊢ (∃ a, Ψ a).
+Lemma exist_intro' {A} P (Ψ : A → uPred M) a : (P ⊢ Ψ a) → P ⊢ ∃ a, Ψ a.
 Proof. intros ->; apply exist_intro. Qed.
-Lemma forall_elim' {A} P (Ψ : A → uPred M) : P ⊢ (∀ a, Ψ a) → (∀ a, P ⊢ Ψ a).
+Lemma forall_elim' {A} P (Ψ : A → uPred M) : (P ⊢ ∀ a, Ψ a) → ∀ a, P ⊢ Ψ a.
 Proof. move=> HP a. by rewrite HP forall_elim. Qed.
 
 Hint Resolve or_elim or_intro_l' or_intro_r'.
 Hint Resolve and_intro and_elim_l' and_elim_r'.
 Hint Immediate True_intro False_elim.
 
-Lemma impl_intro_l P Q R : (Q ∧ P) ⊢ R → P ⊢ (Q → R).
+Lemma impl_intro_l P Q R : (Q ∧ P ⊢ R) → P ⊢ Q → R.
 Proof. intros HR; apply impl_intro_r; rewrite -HR; auto. Qed.
-Lemma impl_elim_l P Q : ((P → Q) ∧ P) ⊢ Q.
+Lemma impl_elim_l P Q : (P → Q) ∧ P ⊢ Q.
 Proof. apply impl_elim with P; auto. Qed.
-Lemma impl_elim_r P Q : (P ∧ (P → Q)) ⊢ Q.
+Lemma impl_elim_r P Q : P ∧ (P → Q) ⊢ Q.
 Proof. apply impl_elim with P; auto. Qed.
-Lemma impl_elim_l' P Q R : P ⊢ (Q → R) → (P ∧ Q) ⊢ R.
+Lemma impl_elim_l' P Q R : (P ⊢ Q → R) → P ∧ Q ⊢ R.
 Proof. intros; apply impl_elim with Q; auto. Qed.
-Lemma impl_elim_r' P Q R : Q ⊢ (P → R) → (P ∧ Q) ⊢ R.
+Lemma impl_elim_r' P Q R : (Q ⊢ P → R) → P ∧ Q ⊢ R.
 Proof. intros; apply impl_elim with P; auto. Qed.
-Lemma impl_entails P Q : True ⊢ (P → Q) → P ⊢ Q.
+Lemma impl_entails P Q : (True ⊢ P → Q) → P ⊢ Q.
 Proof. intros HPQ; apply impl_elim with P; rewrite -?HPQ; auto. Qed.
-Lemma entails_impl P Q : (P ⊢ Q) → True ⊢ (P → Q).
+Lemma entails_impl P Q : (P ⊢ Q) → True ⊢ P → Q.
 Proof. auto using impl_intro_l. Qed.
 
-Lemma iff_refl Q P : Q ⊢ (P ↔ P).
+Lemma iff_refl Q P : Q ⊢ P ↔ P.
 Proof. rewrite /uPred_iff; apply and_intro; apply impl_intro_l; auto. Qed.
-Lemma iff_equiv P Q : True ⊢ (P ↔ Q) → P ⊣⊢ Q.
+Lemma iff_equiv P Q : (True ⊢ P ↔ Q) → (P ⊣⊢ Q).
 Proof.
   intros HPQ; apply (anti_symm (⊢));
     apply impl_entails; rewrite HPQ /uPred_iff; auto.
 Qed.
-Lemma equiv_iff P Q : P ⊣⊢ Q → True ⊢ (P ↔ Q).
+Lemma equiv_iff P Q : (P ⊣⊢ Q) → True ⊢ P ↔ Q.
 Proof. intros ->; apply iff_refl. Qed.
 
 Lemma const_mono φ1 φ2 : (φ1 → φ2) → ■ φ1 ⊢ ■ φ2.
 Proof. intros; apply const_elim with φ1; eauto using const_intro. Qed.
-Lemma and_mono P P' Q Q' : P ⊢ Q → P' ⊢ Q' → (P ∧ P') ⊢ (Q ∧ Q').
+Lemma and_mono P P' Q Q' : (P ⊢ Q) → (P' ⊢ Q') → P ∧ P' ⊢ Q ∧ Q'.
 Proof. auto. Qed.
-Lemma and_mono_l P P' Q : P ⊢ Q → (P ∧ P') ⊢ (Q ∧ P').
+Lemma and_mono_l P P' Q : (P ⊢ Q) → P ∧ P' ⊢ Q ∧ P'.
 Proof. by intros; apply and_mono. Qed.
-Lemma and_mono_r P P' Q' : P' ⊢ Q' → (P ∧ P') ⊢ (P ∧ Q').
+Lemma and_mono_r P P' Q' : (P' ⊢ Q') → P ∧ P' ⊢ P ∧ Q'.
 Proof. by apply and_mono. Qed.
-Lemma or_mono P P' Q Q' : P ⊢ Q → P' ⊢ Q' → (P ∨ P') ⊢ (Q ∨ Q').
+Lemma or_mono P P' Q Q' : (P ⊢ Q) → (P' ⊢ Q') → P ∨ P' ⊢ Q ∨ Q'.
 Proof. auto. Qed.
-Lemma or_mono_l P P' Q : P ⊢ Q → (P ∨ P') ⊢ (Q ∨ P').
+Lemma or_mono_l P P' Q : (P ⊢ Q) → P ∨ P' ⊢ Q ∨ P'.
 Proof. by intros; apply or_mono. Qed.
-Lemma or_mono_r P P' Q' : P' ⊢ Q' → (P ∨ P') ⊢ (P ∨ Q').
+Lemma or_mono_r P P' Q' : (P' ⊢ Q') → P ∨ P' ⊢ P ∨ Q'.
 Proof. by apply or_mono. Qed.
-Lemma impl_mono P P' Q Q' : Q ⊢ P → P' ⊢ Q' → (P → P') ⊢ (Q → Q').
+Lemma impl_mono P P' Q Q' : (Q ⊢ P) → (P' ⊢ Q') → (P → P') ⊢ Q → Q'.
 Proof.
   intros HP HQ'; apply impl_intro_l; rewrite -HQ'.
   apply impl_elim with P; eauto.
 Qed.
 Lemma forall_mono {A} (Φ Ψ : A → uPred M) :
-  (∀ a, Φ a ⊢ Ψ a) → (∀ a, Φ a) ⊢ (∀ a, Ψ a).
+  (∀ a, Φ a ⊢ Ψ a) → (∀ a, Φ a) ⊢ ∀ a, Ψ a.
 Proof.
   intros HP. apply forall_intro=> a; rewrite -(HP a); apply forall_elim.
 Qed.
 Lemma exist_mono {A} (Φ Ψ : A → uPred M) :
-  (∀ a, Φ a ⊢ Ψ a) → (∃ a, Φ a) ⊢ (∃ a, Ψ a).
+  (∀ a, Φ a ⊢ Ψ a) → (∃ a, Φ a) ⊢ ∃ a, Ψ a.
 Proof. intros HΦ. apply exist_elim=> a; rewrite (HΦ a); apply exist_intro. Qed.
 Global Instance const_mono' : Proper (impl ==> (⊢)) (@uPred_const M).
 Proof. intros φ1 φ2; apply const_mono. Qed.
@@ -657,21 +646,21 @@ Proof.
   - by apply impl_intro_l; rewrite left_id.
 Qed.
 
-Lemma or_and_l P Q R : (P ∨ Q ∧ R) ⊣⊢ ((P ∨ Q) ∧ (P ∨ R)).
+Lemma or_and_l P Q R : P ∨ Q ∧ R ⊣⊢ (P ∨ Q) ∧ (P ∨ R).
 Proof.
   apply (anti_symm (⊢)); first auto.
   do 2 (apply impl_elim_l', or_elim; apply impl_intro_l); auto.
 Qed.
-Lemma or_and_r P Q R : (P ∧ Q ∨ R) ⊣⊢ ((P ∨ R) ∧ (Q ∨ R)).
+Lemma or_and_r P Q R : P ∧ Q ∨ R ⊣⊢ (P ∨ R) ∧ (Q ∨ R).
 Proof. by rewrite -!(comm _ R) or_and_l. Qed.
-Lemma and_or_l P Q R : (P ∧ (Q ∨ R)) ⊣⊢ (P ∧ Q ∨ P ∧ R).
+Lemma and_or_l P Q R : P ∧ (Q ∨ R) ⊣⊢ P ∧ Q ∨ P ∧ R.
 Proof.
   apply (anti_symm (⊢)); last auto.
   apply impl_elim_r', or_elim; apply impl_intro_l; auto.
 Qed.
-Lemma and_or_r P Q R : ((P ∨ Q) ∧ R) ⊣⊢ (P ∧ R ∨ Q ∧ R).
+Lemma and_or_r P Q R : (P ∨ Q) ∧ R ⊣⊢ P ∧ R ∨ Q ∧ R.
 Proof. by rewrite -!(comm _ R) and_or_l. Qed.
-Lemma and_exist_l {A} P (Ψ : A → uPred M) : (P ∧ ∃ a, Ψ a) ⊣⊢ (∃ a, P ∧ Ψ a).
+Lemma and_exist_l {A} P (Ψ : A → uPred M) : P ∧ (∃ a, Ψ a) ⊣⊢ ∃ a, P ∧ Ψ a.
 Proof.
   apply (anti_symm (⊢)).
   - apply impl_elim_r'. apply exist_elim=>a. apply impl_intro_l.
@@ -679,33 +668,38 @@ Proof.
   - apply exist_elim=>a. apply and_intro; first by rewrite and_elim_l.
     by rewrite -(exist_intro a) and_elim_r.
 Qed.
-Lemma and_exist_r {A} P (Φ: A → uPred M) : ((∃ a, Φ a) ∧ P) ⊣⊢ (∃ a, Φ a ∧ P).
+Lemma and_exist_r {A} P (Φ: A → uPred M) : (∃ a, Φ a) ∧ P ⊣⊢ ∃ a, Φ a ∧ P.
 Proof.
   rewrite -(comm _ P) and_exist_l. apply exist_proper=>a. by rewrite comm.
 Qed.
 
-Lemma const_intro_l φ Q R : φ → (■ φ ∧ Q) ⊢ R → Q ⊢ R.
+Lemma const_intro_l φ Q R : φ → (■ φ ∧ Q ⊢ R) → Q ⊢ R.
 Proof. intros ? <-; auto using const_intro. Qed.
-Lemma const_intro_r φ Q R : φ → (Q ∧ ■ φ) ⊢ R → Q ⊢ R.
+Lemma const_intro_r φ Q R : φ → (Q ∧ ■ φ ⊢ R) → Q ⊢ R.
 Proof. intros ? <-; auto using const_intro. Qed.
-Lemma const_intro_impl φ Q R : φ → Q ⊢ (■ φ → R) → Q ⊢ R.
+Lemma const_intro_impl φ Q R : φ → (Q ⊢ ■ φ → R) → Q ⊢ R.
 Proof. intros ? ->. eauto using const_intro_l, impl_elim_r. Qed.
-Lemma const_elim_l φ Q R : (φ → Q ⊢ R) → (■ φ ∧ Q) ⊢ R.
+Lemma const_elim_l φ Q R : (φ → Q ⊢ R) → ■ φ ∧ Q ⊢ R.
 Proof. intros; apply const_elim with φ; eauto. Qed.
-Lemma const_elim_r φ Q R : (φ → Q ⊢ R) → (Q ∧ ■ φ) ⊢ R.
+Lemma const_elim_r φ Q R : (φ → Q ⊢ R) → Q ∧ ■ φ ⊢ R.
 Proof. intros; apply const_elim with φ; eauto. Qed.
-Lemma const_equiv (φ : Prop) : φ → (■ φ) ⊣⊢ True.
+Lemma const_equiv (φ : Prop) : φ → ■ φ ⊣⊢ True.
 Proof. intros; apply (anti_symm _); auto using const_intro. Qed.
-Lemma eq_refl' {A : cofeT} (a : A) P : P ⊢ (a ≡ a).
+
+Lemma eq_refl' {A : cofeT} (a : A) P : P ⊢ a ≡ a.
 Proof. rewrite (True_intro P). apply eq_refl. Qed.
 Hint Resolve eq_refl'.
-Lemma equiv_eq {A : cofeT} P (a b : A) : a ≡ b → P ⊢ (a ≡ b).
+Lemma equiv_eq {A : cofeT} P (a b : A) : a ≡ b → P ⊢ a ≡ b.
 Proof. by intros ->. Qed.
-Lemma eq_sym {A : cofeT} (a b : A) : (a ≡ b) ⊢ (b ≡ a).
+Lemma eq_sym {A : cofeT} (a b : A) : a ≡ b ⊢ b ≡ a.
 Proof. apply (eq_rewrite a b (λ b, b ≡ a)%I); auto. solve_proper. Qed.
+Lemma eq_iff P Q : P ≡ Q ⊢ P ↔ Q.
+Proof.
+  apply (eq_rewrite P Q (λ Q, P ↔ Q))%I; first solve_proper; auto using iff_refl.
+Qed.
 
 (* BI connectives *)
-Lemma sep_mono P P' Q Q' : P ⊢ Q → P' ⊢ Q' → (P ★ P') ⊢ (Q ★ Q').
+Lemma sep_mono P P' Q Q' : (P ⊢ Q) → (P' ⊢ Q') → P ★ P' ⊢ Q ★ Q'.
 Proof.
   intros HQ HQ'; unseal.
   split; intros n' x ? (x1&x2&?&?&?); exists x1,x2; cofe_subst x;
@@ -714,7 +708,7 @@ Qed.
 Global Instance True_sep : LeftId (⊣⊢) True%I (@uPred_sep M).
 Proof.
   intros P; unseal; split=> n x Hvalid; split.
-  - intros (x1&x2&?&_&?); cofe_subst; eauto using uPred_weaken, cmra_included_r.
+  - intros (x1&x2&?&_&?); cofe_subst; eauto using uPred_mono, cmra_includedN_r.
   - by intros ?; exists (core x), x; rewrite cmra_core_l.
 Qed. 
 Global Instance sep_comm : Comm (⊣⊢) (@uPred_sep M).
@@ -732,13 +726,13 @@ Proof.
     + by rewrite (assoc op) -Hy -Hx.
     + by exists y2, x2.
 Qed.
-Lemma wand_intro_r P Q R : (P ★ Q) ⊢ R → P ⊢ (Q -★ R).
+Lemma wand_intro_r P Q R : (P ★ Q ⊢ R) → P ⊢ Q -★ R.
 Proof.
   unseal=> HPQR; split=> n x ?? n' x' ???; apply HPQR; auto.
   exists x, x'; split_and?; auto.
-  eapply uPred_weaken with n x; eauto using cmra_validN_op_l.
+  eapply uPred_closed with n; eauto using cmra_validN_op_l.
 Qed.
-Lemma wand_elim_l' P Q R : P ⊢ (Q -★ R) → (P ★ Q) ⊢ R.
+Lemma wand_elim_l' P Q R : (P ⊢ Q -★ R) → P ★ Q ⊢ R.
 Proof.
   unseal =>HPQR. split; intros n x ? (?&?&?&?&?). cofe_subst.
   eapply HPQR; eauto using cmra_validN_op_l.
@@ -746,16 +740,16 @@ Qed.
 
 (* Derived BI Stuff *)
 Hint Resolve sep_mono.
-Lemma sep_mono_l P P' Q : P ⊢ Q → (P ★ P') ⊢ (Q ★ P').
+Lemma sep_mono_l P P' Q : (P ⊢ Q) → P ★ P' ⊢ Q ★ P'.
 Proof. by intros; apply sep_mono. Qed.
-Lemma sep_mono_r P P' Q' : P' ⊢ Q' → (P ★ P') ⊢ (P ★ Q').
+Lemma sep_mono_r P P' Q' : (P' ⊢ Q') → P ★ P' ⊢ P ★ Q'.
 Proof. by apply sep_mono. Qed.
 Global Instance sep_mono' : Proper ((⊢) ==> (⊢) ==> (⊢)) (@uPred_sep M).
 Proof. by intros P P' HP Q Q' HQ; apply sep_mono. Qed.
 Global Instance sep_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢) ==> flip (⊢)) (@uPred_sep M).
 Proof. by intros P P' HP Q Q' HQ; apply sep_mono. Qed.
-Lemma wand_mono P P' Q Q' : Q ⊢ P → P' ⊢ Q' → (P -★ P') ⊢ (Q -★ Q').
+Lemma wand_mono P P' Q Q' : (Q ⊢ P) → (P' ⊢ Q') → (P -★ P') ⊢ Q -★ Q'.
 Proof.
   intros HP HQ; apply wand_intro_r. rewrite HP -HQ. by apply wand_elim_l'.
 Qed.
@@ -764,42 +758,42 @@ Proof. by intros P P' HP Q Q' HQ; apply wand_mono. Qed.
 
 Global Instance sep_True : RightId (⊣⊢) True%I (@uPred_sep M).
 Proof. by intros P; rewrite comm left_id. Qed.
-Lemma sep_elim_l P Q : (P ★ Q) ⊢ P.
+Lemma sep_elim_l P Q : P ★ Q ⊢ P.
 Proof. by rewrite (True_intro Q) right_id. Qed.
-Lemma sep_elim_r P Q : (P ★ Q) ⊢ Q.
+Lemma sep_elim_r P Q : P ★ Q ⊢ Q.
 Proof. by rewrite (comm (★))%I; apply sep_elim_l. Qed.
-Lemma sep_elim_l' P Q R : P ⊢ R → (P ★ Q) ⊢ R.
+Lemma sep_elim_l' P Q R : (P ⊢ R) → P ★ Q ⊢ R.
 Proof. intros ->; apply sep_elim_l. Qed.
-Lemma sep_elim_r' P Q R : Q ⊢ R → (P ★ Q) ⊢ R.
+Lemma sep_elim_r' P Q R : (Q ⊢ R) → P ★ Q ⊢ R.
 Proof. intros ->; apply sep_elim_r. Qed.
 Hint Resolve sep_elim_l' sep_elim_r'.
-Lemma sep_intro_True_l P Q R : True ⊢ P → R ⊢ Q → R ⊢ (P ★ Q).
+Lemma sep_intro_True_l P Q R : (True ⊢ P) → (R ⊢ Q) → R ⊢ P ★ Q.
 Proof. by intros; rewrite -(left_id True%I uPred_sep R); apply sep_mono. Qed.
-Lemma sep_intro_True_r P Q R : R ⊢ P → True ⊢ Q → R ⊢ (P ★ Q).
+Lemma sep_intro_True_r P Q R : (R ⊢ P) → (True ⊢ Q) → R ⊢ P ★ Q.
 Proof. by intros; rewrite -(right_id True%I uPred_sep R); apply sep_mono. Qed.
-Lemma sep_elim_True_l P Q R : True ⊢ P → (P ★ R) ⊢ Q → R ⊢ Q.
+Lemma sep_elim_True_l P Q R : (True ⊢ P) → (P ★ R ⊢ Q) → R ⊢ Q.
 Proof. by intros HP; rewrite -HP left_id. Qed.
-Lemma sep_elim_True_r P Q R : True ⊢ P → (R ★ P) ⊢ Q → R ⊢ Q.
+Lemma sep_elim_True_r P Q R : (True ⊢ P) → (R ★ P ⊢ Q) → R ⊢ Q.
 Proof. by intros HP; rewrite -HP right_id. Qed.
-Lemma wand_intro_l P Q R : (Q ★ P) ⊢ R → P ⊢ (Q -★ R).
+Lemma wand_intro_l P Q R : (Q ★ P ⊢ R) → P ⊢ Q -★ R.
 Proof. rewrite comm; apply wand_intro_r. Qed.
-Lemma wand_elim_l P Q : ((P -★ Q) ★ P) ⊢ Q.
+Lemma wand_elim_l P Q : (P -★ Q) ★ P ⊢ Q.
 Proof. by apply wand_elim_l'. Qed.
-Lemma wand_elim_r P Q : (P ★ (P -★ Q)) ⊢ Q.
+Lemma wand_elim_r P Q : P ★ (P -★ Q) ⊢ Q.
 Proof. rewrite (comm _ P); apply wand_elim_l. Qed.
-Lemma wand_elim_r' P Q R : Q ⊢ (P -★ R) → (P ★ Q) ⊢ R.
+Lemma wand_elim_r' P Q R : (Q ⊢ P -★ R) → P ★ Q ⊢ R.
 Proof. intros ->; apply wand_elim_r. Qed.
-Lemma wand_apply_l P Q Q' R R' : P ⊢ (Q' -★ R') → R' ⊢ R → Q ⊢ Q' → (P ★ Q) ⊢ R.
+Lemma wand_apply_l P Q Q' R R' : (P ⊢ Q' -★ R') → (R' ⊢ R) → (Q ⊢ Q') → P ★ Q ⊢ R.
 Proof. intros -> -> <-; apply wand_elim_l. Qed.
-Lemma wand_apply_r P Q Q' R R' : P ⊢ (Q' -★ R') → R' ⊢ R → Q ⊢ Q' → (Q ★ P) ⊢ R.
+Lemma wand_apply_r P Q Q' R R' : (P ⊢ Q' -★ R') → (R' ⊢ R) → (Q ⊢ Q') → Q ★ P ⊢ R.
 Proof. intros -> -> <-; apply wand_elim_r. Qed.
-Lemma wand_apply_l' P Q Q' R : P ⊢ (Q' -★ R) → Q ⊢ Q' → (P ★ Q) ⊢ R.
+Lemma wand_apply_l' P Q Q' R : (P ⊢ Q' -★ R) → (Q ⊢ Q') → P ★ Q ⊢ R.
 Proof. intros -> <-; apply wand_elim_l. Qed.
-Lemma wand_apply_r' P Q Q' R : P ⊢ (Q' -★ R) → Q ⊢ Q' → (Q ★ P) ⊢ R.
+Lemma wand_apply_r' P Q Q' R : (P ⊢ Q' -★ R) → (Q ⊢ Q') → Q ★ P ⊢ R.
 Proof. intros -> <-; apply wand_elim_r. Qed.
-Lemma wand_frame_l P Q R : (Q -★ R) ⊢ (P ★ Q -★ P ★ R).
+Lemma wand_frame_l P Q R : (Q -★ R) ⊢ P ★ Q -★ P ★ R.
 Proof. apply wand_intro_l. rewrite -assoc. apply sep_mono_r, wand_elim_r. Qed.
-Lemma wand_frame_r P Q R : (Q -★ R) ⊢ (Q ★ P -★ R ★ P).
+Lemma wand_frame_r P Q R : (Q -★ R) ⊢ Q ★ P -★ R ★ P.
 Proof.
   apply wand_intro_l. rewrite ![(_ ★ P)%I]comm -assoc.
   apply sep_mono_r, wand_elim_r.
@@ -811,11 +805,11 @@ Proof.
   apply (anti_symm _); last by auto using wand_intro_l.
   eapply sep_elim_True_l; first reflexivity. by rewrite wand_elim_r.
 Qed.
-Lemma wand_entails P Q : True ⊢ (P -★ Q) → P ⊢ Q.
+Lemma wand_entails P Q : (True ⊢ P -★ Q) → P ⊢ Q.
 Proof.
   intros HPQ. eapply sep_elim_True_r; first exact: HPQ. by rewrite wand_elim_r.
 Qed.
-Lemma entails_wand P Q : (P ⊢ Q) → True ⊢ (P -★ Q).
+Lemma entails_wand P Q : (P ⊢ Q) → True ⊢ P -★ Q.
 Proof. auto using wand_intro_l. Qed.
 Lemma wand_curry P Q R : (P -★ Q -★ R) ⊣⊢ (P ★ Q -★ R).
 Proof.
@@ -826,11 +820,11 @@ Qed.
 
 Lemma sep_and P Q : (P ★ Q) ⊢ (P ∧ Q).
 Proof. auto. Qed.
-Lemma impl_wand P Q : (P → Q) ⊢ (P -★ Q).
+Lemma impl_wand P Q : (P → Q) ⊢ P -★ Q.
 Proof. apply wand_intro_r, impl_elim with P; auto. Qed.
-Lemma const_elim_sep_l φ Q R : (φ → Q ⊢ R) → (■ φ ★ Q) ⊢ R.
+Lemma const_elim_sep_l φ Q R : (φ → Q ⊢ R) → ■ φ ★ Q ⊢ R.
 Proof. intros; apply const_elim with φ; eauto. Qed.
-Lemma const_elim_sep_r φ Q R : (φ → Q ⊢ R) → (Q ★ ■ φ) ⊢ R.
+Lemma const_elim_sep_r φ Q R : (φ → Q ⊢ R) → Q ★ ■ φ ⊢ R.
 Proof. intros; apply const_elim with φ; eauto. Qed.
 
 Global Instance sep_False : LeftAbsorb (⊣⊢) False%I (@uPred_sep M).
@@ -838,49 +832,47 @@ Proof. intros P; apply (anti_symm _); auto. Qed.
 Global Instance False_sep : RightAbsorb (⊣⊢) False%I (@uPred_sep M).
 Proof. intros P; apply (anti_symm _); auto. Qed.
 
-Lemma sep_and_l P Q R : (P ★ (Q ∧ R)) ⊢ ((P ★ Q) ∧ (P ★ R)).
+Lemma sep_and_l P Q R : P ★ (Q ∧ R) ⊢ (P ★ Q) ∧ (P ★ R).
 Proof. auto. Qed.
-Lemma sep_and_r P Q R : ((P ∧ Q) ★ R) ⊢ ((P ★ R) ∧ (Q ★ R)).
+Lemma sep_and_r P Q R : (P ∧ Q) ★ R ⊢ (P ★ R) ∧ (Q ★ R).
 Proof. auto. Qed.
-Lemma sep_or_l P Q R : (P ★ (Q ∨ R)) ⊣⊢ ((P ★ Q) ∨ (P ★ R)).
+Lemma sep_or_l P Q R : P ★ (Q ∨ R) ⊣⊢ (P ★ Q) ∨ (P ★ R).
 Proof.
   apply (anti_symm (⊢)); last by eauto 8.
-  apply wand_elim_r', or_elim; apply wand_intro_l.
-  - by apply or_intro_l.
-  - by apply or_intro_r.
+  apply wand_elim_r', or_elim; apply wand_intro_l; auto.
 Qed.
-Lemma sep_or_r P Q R : ((P ∨ Q) ★ R) ⊣⊢ ((P ★ R) ∨ (Q ★ R)).
+Lemma sep_or_r P Q R : (P ∨ Q) ★ R ⊣⊢ (P ★ R) ∨ (Q ★ R).
 Proof. by rewrite -!(comm _ R) sep_or_l. Qed.
-Lemma sep_exist_l {A} P (Ψ : A → uPred M) : (P ★ ∃ a, Ψ a) ⊣⊢ (∃ a, P ★ Ψ a).
+Lemma sep_exist_l {A} P (Ψ : A → uPred M) : P ★ (∃ a, Ψ a) ⊣⊢ ∃ a, P ★ Ψ a.
 Proof.
   intros; apply (anti_symm (⊢)).
   - apply wand_elim_r', exist_elim=>a. apply wand_intro_l.
     by rewrite -(exist_intro a).
   - apply exist_elim=> a; apply sep_mono; auto using exist_intro.
 Qed.
-Lemma sep_exist_r {A} (Φ: A → uPred M) Q: ((∃ a, Φ a) ★ Q) ⊣⊢ (∃ a, Φ a ★ Q).
+Lemma sep_exist_r {A} (Φ: A → uPred M) Q: (∃ a, Φ a) ★ Q ⊣⊢ ∃ a, Φ a ★ Q.
 Proof. setoid_rewrite (comm _ _ Q); apply sep_exist_l. Qed.
-Lemma sep_forall_l {A} P (Ψ : A → uPred M) : (P ★ ∀ a, Ψ a) ⊢ (∀ a, P ★ Ψ a).
+Lemma sep_forall_l {A} P (Ψ : A → uPred M) : P ★ (∀ a, Ψ a) ⊢ ∀ a, P ★ Ψ a.
 Proof. by apply forall_intro=> a; rewrite forall_elim. Qed.
-Lemma sep_forall_r {A} (Φ : A → uPred M) Q : ((∀ a, Φ a) ★ Q) ⊢ (∀ a, Φ a ★ Q).
+Lemma sep_forall_r {A} (Φ : A → uPred M) Q : (∀ a, Φ a) ★ Q ⊢ ∀ a, Φ a ★ Q.
 Proof. by apply forall_intro=> a; rewrite forall_elim. Qed.
 
 (* Always *)
-Lemma always_const φ : (□ ■ φ) ⊣⊢ (■ φ).
+Lemma always_const φ : □ ■ φ ⊣⊢ ■ φ.
 Proof. by unseal. Qed.
 Lemma always_elim P : □ P ⊢ P.
 Proof.
-  unseal; split=> n x ? /=; eauto using uPred_weaken, cmra_included_core.
+  unseal; split=> n x ? /=.
+  eauto using uPred_mono, @cmra_included_core, cmra_included_includedN.
 Qed.
-Lemma always_intro' P Q : □ P ⊢ Q → □ P ⊢ □ Q.
+Lemma always_intro' P Q : (□ P ⊢ Q) → □ P ⊢ □ Q.
 Proof.
-  unseal=> HPQ.
-  split=> n x ??; apply HPQ; simpl; auto using cmra_core_validN.
+  unseal=> HPQ; split=> n x ??; apply HPQ; simpl; auto using @cmra_core_validN.
   by rewrite cmra_core_idemp.
 Qed.
-Lemma always_and P Q : (□ (P ∧ Q)) ⊣⊢ (□ P ∧ □ Q).
+Lemma always_and P Q : □ (P ∧ Q) ⊣⊢ □ P ∧ □ Q.
 Proof. by unseal. Qed.
-Lemma always_or P Q : (□ (P ∨ Q)) ⊣⊢ (□ P ∨ □ Q).
+Lemma always_or P Q : □ (P ∨ Q) ⊣⊢ □ P ∨ □ Q.
 Proof. by unseal. Qed.
 Lemma always_forall {A} (Ψ : A → uPred M) : (□ ∀ a, Ψ a) ⊣⊢ (∀ a, □ Ψ a).
 Proof. by unseal. Qed.
@@ -889,18 +881,18 @@ Proof. by unseal. Qed.
 Lemma always_and_sep_1 P Q : □ (P ∧ Q) ⊢ □ (P ★ Q).
 Proof.
   unseal; split=> n x ? [??].
-  exists (core x), (core x); rewrite cmra_core_core; auto.
+  exists (core x), (core x); rewrite -cmra_core_dup; auto.
 Qed.
-Lemma always_and_sep_l_1 P Q : (□ P ∧ Q) ⊢ (□ P ★ Q).
+Lemma always_and_sep_l_1 P Q : □ P ∧ Q ⊢ □ P ★ Q.
 Proof.
   unseal; split=> n x ? [??]; exists (core x), x; simpl in *.
   by rewrite cmra_core_l cmra_core_idemp.
 Qed.
-Lemma always_later P : (□ ▷ P) ⊣⊢ (▷ □ P).
+Lemma always_later P : □ ▷ P ⊣⊢ ▷ □ P.
 Proof. by unseal. Qed.
 
 (* Always derived *)
-Lemma always_mono P Q : P ⊢ Q → □ P ⊢ □ Q.
+Lemma always_mono P Q : (P ⊢ Q) → □ P ⊢ □ Q.
 Proof. intros. apply always_intro'. by rewrite always_elim. Qed.
 Hint Resolve always_mono.
 Global Instance always_mono' : Proper ((⊢) ==> (⊢)) (@uPred_always M).
@@ -908,39 +900,39 @@ Proof. intros P Q; apply always_mono. Qed.
 Global Instance always_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@uPred_always M).
 Proof. intros P Q; apply always_mono. Qed.
-Lemma always_impl P Q : □ (P → Q) ⊢ (□ P → □ Q).
+Lemma always_impl P Q : □ (P → Q) ⊢ □ P → □ Q.
 Proof.
   apply impl_intro_l; rewrite -always_and.
   apply always_mono, impl_elim with P; auto.
 Qed.
-Lemma always_eq {A:cofeT} (a b : A) : (□ (a ≡ b)) ⊣⊢ (a ≡ b).
+Lemma always_eq {A:cofeT} (a b : A) : □ (a ≡ b) ⊣⊢ a ≡ b.
 Proof.
   apply (anti_symm (⊢)); auto using always_elim.
   apply (eq_rewrite a b (λ b, □ (a ≡ b))%I); auto.
   { intros n; solve_proper. }
   rewrite -(eq_refl a) always_const; auto.
 Qed.
-Lemma always_and_sep P Q : (□ (P ∧ Q)) ⊣⊢ (□ (P ★ Q)).
+Lemma always_and_sep P Q : □ (P ∧ Q) ⊣⊢ □ (P ★ Q).
 Proof. apply (anti_symm (⊢)); auto using always_and_sep_1. Qed.
-Lemma always_and_sep_l' P Q : (□ P ∧ Q) ⊣⊢ (□ P ★ Q).
+Lemma always_and_sep_l' P Q : □ P ∧ Q ⊣⊢ □ P ★ Q.
 Proof. apply (anti_symm (⊢)); auto using always_and_sep_l_1. Qed.
-Lemma always_and_sep_r' P Q : (P ∧ □ Q) ⊣⊢ (P ★ □ Q).
+Lemma always_and_sep_r' P Q : P ∧ □ Q ⊣⊢ P ★ □ Q.
 Proof. by rewrite !(comm _ P) always_and_sep_l'. Qed.
-Lemma always_sep P Q : (□ (P ★ Q)) ⊣⊢ (□ P ★ □ Q).
+Lemma always_sep P Q : □ (P ★ Q) ⊣⊢ □ P ★ □ Q.
 Proof. by rewrite -always_and_sep -always_and_sep_l' always_and. Qed.
-Lemma always_wand P Q : □ (P -★ Q) ⊢ (□ P -★ □ Q).
+Lemma always_wand P Q : □ (P -★ Q) ⊢ □ P -★ □ Q.
 Proof. by apply wand_intro_r; rewrite -always_sep wand_elim_l. Qed.
-Lemma always_sep_dup' P : (□ P) ⊣⊢ (□ P ★ □ P).
+Lemma always_sep_dup' P : □ P ⊣⊢ □ P ★ □ P.
 Proof. by rewrite -always_sep -always_and_sep (idemp _). Qed.
-Lemma always_wand_impl P Q : (□ (P -★ Q)) ⊣⊢ (□ (P → Q)).
+Lemma always_wand_impl P Q : □ (P -★ Q) ⊣⊢ □ (P → Q).
 Proof.
   apply (anti_symm (⊢)); [|by rewrite -impl_wand].
   apply always_intro', impl_intro_r.
   by rewrite always_and_sep_l' always_elim wand_elim_l.
 Qed.
-Lemma always_entails_l' P Q : (P ⊢ □ Q) → P ⊢ (□ Q ★ P).
+Lemma always_entails_l' P Q : (P ⊢ □ Q) → P ⊢ □ Q ★ P.
 Proof. intros; rewrite -always_and_sep_l'; auto. Qed.
-Lemma always_entails_r' P Q : (P ⊢ □ Q) → P ⊢ (P ★ □ Q).
+Lemma always_entails_r' P Q : (P ⊢ □ Q) → P ⊢ P ★ □ Q.
 Proof. intros; rewrite -always_and_sep_r'; auto. Qed.
 
 Global Instance always_if_ne n p : Proper (dist n ==> dist n) (@uPred_always_if M p).
@@ -954,44 +946,43 @@ Lemma always_if_elim p P : □?p P ⊢ P.
 Proof. destruct p; simpl; auto using always_elim. Qed.
 Lemma always_elim_if p P : □ P ⊢ □?p P.
 Proof. destruct p; simpl; auto using always_elim. Qed.
-Lemma always_if_and p P Q : □?p (P ∧ Q) ⊣⊢ (□?p P ∧ □?p Q).
+Lemma always_if_and p P Q : □?p (P ∧ Q) ⊣⊢ □?p P ∧ □?p Q.
 Proof. destruct p; simpl; auto using always_and. Qed.
-Lemma always_if_or p P Q : □?p (P ∨ Q) ⊣⊢ (□?p P ∨ □?p Q).
+Lemma always_if_or p P Q : □?p (P ∨ Q) ⊣⊢ □?p P ∨ □?p Q.
 Proof. destruct p; simpl; auto using always_or. Qed.
-Lemma always_if_exist {A} p (Ψ : A → uPred M) : (□?p ∃ a, Ψ a) ⊣⊢ (∃ a, □?p Ψ a).
+Lemma always_if_exist {A} p (Ψ : A → uPred M) : (□?p ∃ a, Ψ a) ⊣⊢ ∃ a, □?p Ψ a.
 Proof. destruct p; simpl; auto using always_exist. Qed.
-Lemma always_if_sep p P Q : □?p (P ★ Q) ⊣⊢ (□?p P ★ □?p Q).
+Lemma always_if_sep p P Q : □?p (P ★ Q) ⊣⊢ □?p P ★ □?p Q.
 Proof. destruct p; simpl; auto using always_sep. Qed.
-Lemma always_if_later p P : (□?p ▷ P) ⊣⊢ (▷ □?p P).
+Lemma always_if_later p P : □?p ▷ P ⊣⊢ ▷ □?p P.
 Proof. destruct p; simpl; auto using always_later. Qed.
 
 (* Later *)
-Lemma later_mono P Q : P ⊢ Q → ▷ P ⊢ ▷ Q.
+Lemma later_mono P Q : (P ⊢ Q) → ▷ P ⊢ ▷ Q.
 Proof.
   unseal=> HP; split=>-[|n] x ??; [done|apply HP; eauto using cmra_validN_S].
 Qed.
 Lemma later_intro P : P ⊢ ▷ P.
 Proof.
   unseal; split=> -[|n] x ??; simpl in *; [done|].
-  apply uPred_weaken with (S n) x; eauto using cmra_validN_S.
+  apply uPred_closed with (S n); eauto using cmra_validN_S.
 Qed.
 Lemma löb P : (▷ P → P) ⊢ P.
 Proof.
   unseal; split=> n x ? HP; induction n as [|n IH]; [by apply HP|].
-  apply HP, IH, uPred_weaken with (S n) x; eauto using cmra_validN_S.
+  apply HP, IH, uPred_closed with (S n); eauto using cmra_validN_S.
 Qed.
-Lemma later_and P Q : (▷ (P ∧ Q)) ⊣⊢ (▷ P ∧ ▷ Q).
+Lemma later_and P Q : ▷ (P ∧ Q) ⊣⊢ ▷ P ∧ ▷ Q.
 Proof. unseal; split=> -[|n] x; by split. Qed.
-Lemma later_or P Q : (▷ (P ∨ Q)) ⊣⊢ (▷ P ∨ ▷ Q).
+Lemma later_or P Q : ▷ (P ∨ Q) ⊣⊢ ▷ P ∨ ▷ Q.
 Proof. unseal; split=> -[|n] x; simpl; tauto. Qed.
 Lemma later_forall {A} (Φ : A → uPred M) : (▷ ∀ a, Φ a) ⊣⊢ (∀ a, ▷ Φ a).
 Proof. unseal; by split=> -[|n] x. Qed.
 Lemma later_exist_1 {A} (Φ : A → uPred M) : (∃ a, ▷ Φ a) ⊢ (▷ ∃ a, Φ a).
 Proof. unseal; by split=> -[|[|n]] x. Qed.
-Lemma later_exist' `{Inhabited A} (Φ : A → uPred M) :
-  (▷ ∃ a, Φ a)%I ⊢ (∃ a, ▷ Φ a)%I.
+Lemma later_exist' `{Inhabited A} (Φ : A → uPred M) : (▷ ∃ a, Φ a) ⊢ ∃ a, ▷ Φ a.
 Proof. unseal; split=> -[|[|n]] x; done || by exists inhabitant. Qed.
-Lemma later_sep P Q : (▷ (P ★ Q)) ⊣⊢ (▷ P ★ ▷ Q).
+Lemma later_sep P Q : ▷ (P ★ Q) ⊣⊢ ▷ P ★ ▷ Q.
 Proof.
   unseal; split=> n x ?; split.
   - destruct n as [|n]; simpl.
@@ -1011,22 +1002,22 @@ Global Instance later_flip_mono' :
 Proof. intros P Q; apply later_mono. Qed.
 Lemma later_True : ▷ True ⊣⊢ True.
 Proof. apply (anti_symm (⊢)); auto using later_intro. Qed.
-Lemma later_impl P Q : ▷ (P → Q) ⊢ (▷ P → ▷ Q).
+Lemma later_impl P Q : ▷ (P → Q) ⊢ ▷ P → ▷ Q.
 Proof.
   apply impl_intro_l; rewrite -later_and.
   apply later_mono, impl_elim with P; auto.
 Qed.
 Lemma later_exist `{Inhabited A} (Φ : A → uPred M) :
-  (▷ ∃ a, Φ a) ⊣⊢ (∃ a, ▷ Φ a).
+  ▷ (∃ a, Φ a) ⊣⊢ (∃ a, ▷ Φ a).
 Proof. apply: anti_symm; eauto using later_exist', later_exist_1. Qed.
-Lemma later_wand P Q : ▷ (P -★ Q) ⊢ (▷ P -★ ▷ Q).
+Lemma later_wand P Q : ▷ (P -★ Q) ⊢ ▷ P -★ ▷ Q.
 Proof. apply wand_intro_r;rewrite -later_sep; apply later_mono,wand_elim_l. Qed.
-Lemma later_iff P Q : ▷ (P ↔ Q) ⊢ (▷ P ↔ ▷ Q).
+Lemma later_iff P Q : ▷ (P ↔ Q) ⊢ ▷ P ↔ ▷ Q.
 Proof. by rewrite /uPred_iff later_and !later_impl. Qed.
 
 (* Own *)
 Lemma ownM_op (a1 a2 : M) :
-  uPred_ownM (a1 ⋅ a2) ⊣⊢ (uPred_ownM a1 ★ uPred_ownM a2).
+  uPred_ownM (a1 ⋅ a2) ⊣⊢ uPred_ownM a1 ★ uPred_ownM a2.
 Proof.
   unseal; split=> n x ?; split.
   - intros [z ?]; exists a1, (a2 ⋅ z); split; [by rewrite (assoc op)|].
@@ -1035,17 +1026,14 @@ Proof.
     by rewrite (assoc op _ z1) -(comm op z1) (assoc op z1)
       -(assoc op _ a2) (comm op z1) -Hy1 -Hy2.
 Qed.
-Lemma always_ownM_core (a : M) : (□ uPred_ownM (core a)) ⊣⊢ uPred_ownM (core a).
+Lemma always_ownM (a : M) : Persistent a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
 Proof.
-  split=> n x; split; [by apply always_elim|unseal; intros [a' Hx]]; simpl.
-  rewrite -(cmra_core_idemp a) Hx.
-  apply cmra_core_preservingN, cmra_includedN_l.
+  split=> n x /=; split; [by apply always_elim|unseal; intros Hx]; simpl.
+  rewrite -(persistent_core a). by apply cmra_core_preservingN.
 Qed.
-Lemma always_ownM (a : M) : Persistent a → (□ uPred_ownM a) ⊣⊢ uPred_ownM a.
-Proof. intros. by rewrite -(persistent a) always_ownM_core. Qed.
 Lemma ownM_something : True ⊢ ∃ a, uPred_ownM a.
 Proof. unseal; split=> n x ??. by exists x; simpl. Qed.
-Lemma ownM_empty `{Empty M, !CMRAUnit M} : True ⊢ uPred_ownM ∅.
+Lemma ownM_empty : True ⊢ uPred_ownM ∅.
 Proof. unseal; split=> n x ??; by  exists x; rewrite left_id. Qed.
 
 (* Valid *)
@@ -1057,7 +1045,7 @@ Lemma valid_intro {A : cmraT} (a : A) : ✓ a → True ⊢ ✓ a.
 Proof. unseal=> ?; split=> n x ? _ /=; by apply cmra_valid_validN. Qed.
 Lemma valid_elim {A : cmraT} (a : A) : ¬ ✓{0} a → ✓ a ⊢ False.
 Proof. unseal=> Ha; split=> n x ??; apply Ha, cmra_validN_le with n; auto. Qed.
-Lemma always_valid {A : cmraT} (a : A) : (□ (✓ a)) ⊣⊢ (✓ a).
+Lemma always_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
 Proof. by unseal. Qed.
 Lemma valid_weaken {A : cmraT} (a b : A) : ✓ (a ⋅ b) ⊢ ✓ a.
 Proof. unseal; split=> n x _; apply cmra_validN_op_l. Qed.
@@ -1069,27 +1057,35 @@ Global Instance ownM_mono : Proper (flip (≼) ==> (⊢)) (@uPred_ownM M).
 Proof. intros a b [b' ->]. rewrite ownM_op. eauto. Qed.
 
 (* Products *)
-Lemma prod_equivI {A B : cofeT} (x y : A * B) :
-  (x ≡ y) ⊣⊢ (x.1 ≡ y.1 ∧ x.2 ≡ y.2).
+Lemma prod_equivI {A B : cofeT} (x y : A * B) : x ≡ y ⊣⊢ x.1 ≡ y.1 ∧ x.2 ≡ y.2.
 Proof. by unseal. Qed.
-Lemma prod_validI {A B : cmraT} (x : A * B) :
-  (✓ x) ⊣⊢ (✓ x.1 ∧ ✓ x.2).
+Lemma prod_validI {A B : cmraT} (x : A * B) : ✓ x ⊣⊢ ✓ x.1 ∧ ✓ x.2.
 Proof. by unseal. Qed.
 
 (* Later *)
 Lemma later_equivI {A : cofeT} (x y : later A) :
-  (x ≡ y) ⊣⊢ (▷ (later_car x ≡ later_car y)).
+  x ≡ y ⊣⊢ ▷ (later_car x ≡ later_car y).
 Proof. by unseal. Qed.
 
 (* Discrete *)
-Lemma discrete_valid {A : cmraT} `{!CMRADiscrete A} (a : A) :
-  (✓ a) ⊣⊢ (■ ✓ a).
+Lemma discrete_valid {A : cmraT} `{!CMRADiscrete A} (a : A) : ✓ a ⊣⊢ ■ ✓ a.
 Proof. unseal; split=> n x _. by rewrite /= -cmra_discrete_valid_iff. Qed.
-Lemma timeless_eq {A : cofeT} (a b : A) :
-  Timeless a → (a ≡ b) ⊣⊢ (■ (a ≡ b)).
+Lemma timeless_eq {A : cofeT} (a b : A) : Timeless a → a ≡ b ⊣⊢ ■ (a ≡ b).
 Proof.
   unseal=> ?. apply (anti_symm (⊢)); split=> n x ?; by apply (timeless_iff n).
 Qed.
+
+(* Option *)
+Lemma option_equivI {A : cofeT} (mx my : option A) :
+  mx ≡ my ⊣⊢ match mx, my with
+             | Some x, Some y => x ≡ y | None, None => True | _, _ => False
+             end.
+Proof.
+  uPred.unseal. do 2 split. by destruct 1. by destruct mx, my; try constructor.
+Qed.
+Lemma option_validI {A : cmraT} (mx : option A) :
+  ✓ mx ⊣⊢ match mx with Some x => ✓ x | None => True end.
+Proof. uPred.unseal. by destruct mx. Qed.
 
 (* Timeless *)
 Lemma timelessP_spec P : TimelessP P ↔ ∀ n x, ✓{n} x → P 0 x → P n x.
@@ -1099,7 +1095,7 @@ Proof.
     move: HP; rewrite /TimelessP; unseal=> /uPred_in_entails /(_ (S n) x).
     by destruct 1; auto using cmra_validN_S.
   - move=> HP; rewrite /TimelessP; unseal; split=> -[|n] x /=; auto; left.
-    apply HP, uPred_weaken with n x; eauto using cmra_validN_le.
+    apply HP, uPred_closed with n; eauto using cmra_validN_le.
 Qed.
 
 Global Instance const_timeless φ : TimelessP (■ φ : uPred M)%I.
@@ -1118,7 +1114,7 @@ Qed.
 Global Instance impl_timeless P Q : TimelessP Q → TimelessP (P → Q).
 Proof.
   rewrite !timelessP_spec; unseal=> HP [|n] x ? HPQ [|n'] x' ????; auto.
-  apply HP, HPQ, uPred_weaken with (S n') x'; eauto using cmra_validN_le.
+  apply HP, HPQ, uPred_closed with (S n'); eauto using cmra_validN_le.
 Qed.
 Global Instance sep_timeless P Q: TimelessP P → TimelessP Q → TimelessP (P ★ Q).
 Proof.
@@ -1130,7 +1126,7 @@ Qed.
 Global Instance wand_timeless P Q : TimelessP Q → TimelessP (P -★ Q).
 Proof.
   rewrite !timelessP_spec; unseal=> HP [|n] x ? HPQ [|n'] x' ???; auto.
-  apply HP, HPQ, uPred_weaken with (S n') x';
+  apply HP, HPQ, uPred_closed with (S n');
     eauto 3 using cmra_validN_le, cmra_validN_op_r.
 Qed.
 Global Instance forall_timeless {A} (Ψ : A → uPred M) :
@@ -1190,26 +1186,26 @@ Global Instance later_persistent P : PersistentP P → PersistentP (▷ P).
 Proof. by intros; rewrite /PersistentP always_later; apply later_mono. Qed.
 Global Instance ownM_persistent : Persistent a → PersistentP (@uPred_ownM M a).
 Proof. intros. by rewrite /PersistentP always_ownM. Qed.
-Global Instance default_persistent {A} P (Ψ : A → uPred M) (mx : option A) :
-  PersistentP P → (∀ x, PersistentP (Ψ x)) → PersistentP (default P mx Ψ).
+Global Instance from_option_persistent {A} P (Ψ : A → uPred M) (mx : option A) :
+  (∀ x, PersistentP (Ψ x)) → PersistentP P → PersistentP (from_option Ψ P mx).
 Proof. destruct mx; apply _. Qed.
 
 (* Derived lemmas for persistence *)
-Lemma always_always P `{!PersistentP P} : (□ P) ⊣⊢ P.
+Lemma always_always P `{!PersistentP P} : □ P ⊣⊢ P.
 Proof. apply (anti_symm (⊢)); auto using always_elim. Qed.
 Lemma always_if_always p P `{!PersistentP P} : □?p P ⊣⊢ P.
 Proof. destruct p; simpl; auto using always_always. Qed.
-Lemma always_intro P Q `{!PersistentP P} : P ⊢ Q → P ⊢ □ Q.
+Lemma always_intro P Q `{!PersistentP P} : (P ⊢ Q) → P ⊢ □ Q.
 Proof. rewrite -(always_always P); apply always_intro'. Qed.
-Lemma always_and_sep_l P Q `{!PersistentP P} : (P ∧ Q) ⊣⊢ (P ★ Q).
+Lemma always_and_sep_l P Q `{!PersistentP P} : P ∧ Q ⊣⊢ P ★ Q.
 Proof. by rewrite -(always_always P) always_and_sep_l'. Qed.
-Lemma always_and_sep_r P Q `{!PersistentP Q} : (P ∧ Q) ⊣⊢ (P ★ Q).
+Lemma always_and_sep_r P Q `{!PersistentP Q} : P ∧ Q ⊣⊢ P ★ Q.
 Proof. by rewrite -(always_always Q) always_and_sep_r'. Qed.
-Lemma always_sep_dup P `{!PersistentP P} : P ⊣⊢ (P ★ P).
+Lemma always_sep_dup P `{!PersistentP P} : P ⊣⊢ P ★ P.
 Proof. by rewrite -(always_always P) -always_sep_dup'. Qed.
-Lemma always_entails_l P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ (Q ★ P).
+Lemma always_entails_l P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ Q ★ P.
 Proof. by rewrite -(always_always Q); apply always_entails_l'. Qed.
-Lemma always_entails_r P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ (P ★ Q).
+Lemma always_entails_r P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ P ★ Q.
 Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
 End uPred_logic.
 

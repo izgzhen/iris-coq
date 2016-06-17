@@ -34,9 +34,8 @@ Proof.
     ef = None ∧ e' = Lit (LitLoc l) ∧ σ' = <[l:=v]>σ ∧ σ !! l = None).
   iApply (wp_lift_atomic_head_step (Alloc e) φ σ); try (by simpl; eauto);
     [by intros; subst φ; inv_head_step; eauto 8|].
-  iFrame "HP". iNext. iIntros {v2 σ2 ef} "[% HP]".
-  (* FIXME: I should not have to refer to "H0". *)
-  destruct H0 as (l & -> & [= <-]%of_to_val_flip & -> & ?); simpl.
+  iFrame "HP". iNext. iIntros {v2 σ2 ef} "[Hφ HP]".
+  iDestruct "Hφ" as %(l & -> & [= <-]%of_to_val_flip & -> & ?); simpl.
   iSplit; last done. iApply "HΦ"; by iSplit.
 Qed.
 

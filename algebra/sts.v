@@ -155,15 +155,6 @@ Proof. move=> ?? s [s' [? ?]]. eauto using closed_steps. Qed.
 End sts.
 
 Notation steps := (rtc step).
-End sts.
-
-Notation stsT := sts.stsT.
-Notation STS := sts.STS.
-
-(** * STSs form a disjoint RA *)
-(* This module should never be imported, uses the module [sts] below. *)
-Module sts_dra.
-Import sts.
 
 (* The type of bounds we can give to the state of an STS. This is the type
    that we equip with an RA structure. *)
@@ -172,22 +163,28 @@ Inductive car (sts : stsT) :=
   | frag : set (state sts) → set (token sts ) → car sts.
 Arguments auth {_} _ _.
 Arguments frag {_} _ _.
+End sts.
 
+Notation stsT := sts.stsT.
+Notation STS := sts.STS.
+
+(** * STSs form a disjoint RA *)
 Section sts_dra.
-Context {sts : stsT}.
+Context (sts : stsT).
+Import sts.
 Implicit Types S : states sts.
 Implicit Types T : tokens sts.
 
 Inductive sts_equiv : Equiv (car sts) :=
   | auth_equiv s T1 T2 : T1 ≡ T2 → auth s T1 ≡ auth s T2
   | frag_equiv S1 S2 T1 T2 : T1 ≡ T2 → S1 ≡ S2 → frag S1 T1 ≡ frag S2 T2.
-Global Existing Instance sts_equiv.
-Global Instance sts_valid : Valid (car sts) := λ x,
+Existing Instance sts_equiv.
+Instance sts_valid : Valid (car sts) := λ x,
   match x with
   | auth s T => tok s ⊥ T
   | frag S' T => closed S' T ∧ S' ≢ ∅
   end.
-Global Instance sts_core : Core (car sts) := λ x,
+Instance sts_core : Core (car sts) := λ x,
   match x with
   | frag S' _ => frag (up_set S' ∅ ) ∅
   | auth s _  => frag (up s ∅) ∅
@@ -197,8 +194,8 @@ Inductive sts_disjoint : Disjoint (car sts) :=
      S1 ∩ S2 ≢ ∅ → T1 ⊥ T2 → frag S1 T1 ⊥ frag S2 T2
   | auth_frag_disjoint s S T1 T2 : s ∈ S → T1 ⊥ T2 → auth s T1 ⊥ frag S T2
   | frag_auth_disjoint s S T1 T2 : s ∈ S → T1 ⊥ T2 → frag S T1 ⊥ auth s T2.
-Global Existing Instance sts_disjoint.
-Global Instance sts_op : Op (car sts) := λ x1 x2,
+Existing Instance sts_disjoint.
+Instance sts_op : Op (car sts) := λ x1 x2,
   match x1, x2 with
   | frag S1 T1, frag S2 T2 => frag (S1 ∩ S2) (T1 ∪ T2)
   | auth s T1, frag _ T2 => auth s (T1 ∪ T2)
@@ -212,14 +209,19 @@ Hint Extern 50 (_ ∈ _) => set_solver : sts.
 Hint Extern 50 (_ ⊆ _) => set_solver : sts.
 Hint Extern 50 (_ ⊥ _) => set_solver : sts.
 
-Global Instance sts_equivalence: Equivalence ((≡) : relation (car sts)).
+Global Instance auth_proper s : Proper ((≡) ==> (≡)) (@auth sts s).
+Proof. by constructor. Qed.
+Global Instance frag_proper : Proper ((≡) ==> (≡) ==> (≡)) (@frag sts).
+Proof. by constructor. Qed.
+
+Instance sts_equivalence: Equivalence ((≡) : relation (car sts)).
 Proof.
   split.
   - by intros []; constructor.
   - by destruct 1; constructor.
   - destruct 1; inversion_clear 1; constructor; etrans; eauto.
 Qed.
-Global Instance sts_dra : DRA (car sts).
+Lemma sts_dra_mixin : DRAMixin (car sts).
 Proof.
   split.
   - apply _.
@@ -254,19 +256,20 @@ Proof.
            unless (s ∈ up s T) by done; pose proof (elem_of_up s T)
         end; auto with sts.
 Qed.
-Canonical Structure R : cmraT := validityR (car sts).
-End sts_dra. End sts_dra.
+Canonical Structure stsDR : draT := DRAT (car sts) sts_dra_mixin.
+End sts_dra.
 
 (** * The STS Resource Algebra *)
 (** Finally, the general theory of STS that should be used by users *)
-Notation stsR := (@sts_dra.R).
+Notation stsC sts := (validityC (stsDR sts)).
+Notation stsR sts := (validityR (stsDR sts)).
 
 Section sts_definitions.
   Context {sts : stsT}.
   Definition sts_auth (s : sts.state sts) (T : sts.tokens sts) : stsR sts :=
-    to_validity (sts_dra.auth s T).
+    to_validity (sts.auth s T).
   Definition sts_frag (S : sts.states sts) (T : sts.tokens sts) : stsR sts :=
-    to_validity (sts_dra.frag S T).
+    to_validity (sts.frag S T).
   Definition sts_frag_up (s : sts.state sts) (T : sts.tokens sts) : stsR sts :=
     sts_frag (sts.up s T) T.
 End sts_definitions.
@@ -280,23 +283,15 @@ Context {sts : stsT}.
 Implicit Types s : state sts.
 Implicit Types S : states sts.
 Implicit Types T : tokens sts.
-
-Global Instance sts_cmra_discrete : CMRADiscrete (stsR sts).
-Proof. apply validity_cmra_discrete. Qed.
+Arguments dra_valid _ !_/.
 
 (** Setoids *)
 Global Instance sts_auth_proper s : Proper ((≡) ==> (≡)) (sts_auth s).
-Proof. (* this proof is horrible *)
-  intros T1 T2 HT. rewrite /sts_auth.
-  by eapply to_validity_proper; try apply _; constructor.
-Qed.
+Proof. solve_proper. Qed.
 Global Instance sts_frag_proper : Proper ((≡) ==> (≡) ==> (≡)) (@sts_frag sts).
-Proof.
-  intros S1 S2 ? T1 T2 HT; rewrite /sts_auth.
-  by eapply to_validity_proper; try apply _; constructor.
-Qed.
+Proof. solve_proper. Qed.
 Global Instance sts_frag_up_proper s : Proper ((≡) ==> (≡)) (sts_frag_up s).
-Proof. intros T1 T2 HT. by rewrite /sts_frag_up HT. Qed.
+Proof. solve_proper. Qed.
 
 (** Validity *)
 Lemma sts_auth_valid s T : ✓ sts_auth s T ↔ tok s ⊥ T.
@@ -334,11 +329,8 @@ Lemma sts_op_frag S1 S2 T1 T2 :
   T1 ⊥ T2 → sts.closed S1 T1 → sts.closed S2 T2 →
   sts_frag (S1 ∩ S2) (T1 ∪ T2) ≡ sts_frag S1 T1 ⋅ sts_frag S2 T2.
 Proof.
-  intros HT HS1 HS2. rewrite /sts_frag.
-  (* FIXME why does rewrite not work?? *)
-  etrans; last eapply to_validity_op; first done; [].
-  move=>/=[??]. split_and!; [auto; set_solver..|].
-  constructor; done.
+  intros HT HS1 HS2. rewrite /sts_frag -to_validity_op //.
+  move=>/=[??]. split_and!; [auto; set_solver..|by constructor].
 Qed.
 
 (** Frame preserving updates *)
@@ -367,9 +359,8 @@ Proof.
   rewrite <-HT. eapply up_subseteq; done.
 Qed.
 
-Lemma up_set_intersection S1 Sf Tf :
-  closed Sf Tf → 
-  S1 ∩ Sf ≡ S1 ∩ up_set (S1 ∩ Sf) Tf.
+Lemma sts_up_set_intersection S1 Sf Tf :
+  closed Sf Tf → S1 ∩ Sf ≡ S1 ∩ up_set (S1 ∩ Sf) Tf.
 Proof.
   intros Hclf. apply (anti_symm (⊆)).
   + move=>s [HS1 HSf]. split. by apply HS1. by apply subseteq_up_set.

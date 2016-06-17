@@ -18,7 +18,7 @@ Implicit Types m : iGst Λ Σ.
 Notation wptp n := (Forall3 (λ e Φ r, uPred_holds (wp ⊤ e Φ) n r)).
 Lemma wptp_le Φs es rs n n' :
   ✓{n'} (big_op rs) → wptp n es Φs rs → n' ≤ n → wptp n' es Φs rs.
-Proof. induction 2; constructor; eauto using uPred_weaken. Qed.
+Proof. induction 2; constructor; eauto using uPred_closed. Qed.
 Lemma nsteps_wptp Φs k n tσ1 tσ2 rs1 :
   nsteps step k tσ1 tσ2 →
   1 < n → wptp (k + n) (tσ1.1) Φs rs1 →
@@ -51,11 +51,12 @@ Proof.
     { rewrite /option_list right_id_L.
       apply Forall3_app, Forall3_cons; eauto using wptp_le.
       rewrite wp_eq.
-      apply uPred_weaken with (k + n) r2; eauto using cmra_included_l. }
+      apply uPred_closed with (k + n);
+        first apply uPred_mono with r2; eauto using cmra_includedN_l. }
     by rewrite -Permutation_middle /= big_op_app.
 Qed.
 Lemma wp_adequacy_steps P Φ k n e1 t2 σ1 σ2 r1 :
-  P ⊢ WP e1 {{ Φ }} →
+  (P ⊢ WP e1 {{ Φ }}) →
   nsteps step k ([e1],σ1) (t2,σ2) →
   1 < n → wsat (k + n) ⊤ σ1 r1 →
   P (k + n) r1 →
@@ -69,14 +70,14 @@ Qed.
 
 Lemma wp_adequacy_own Φ e1 t2 σ1 m σ2 :
   ✓ m →
-  (ownP σ1 ★ ownG m) ⊢ WP e1 {{ Φ }} →
+  (ownP σ1 ★ ownG m ⊢ WP e1 {{ Φ }}) →
   rtc step ([e1],σ1) (t2,σ2) →
   ∃ rs2 Φs', wptp 2 t2 (Φ :: Φs') rs2 ∧ wsat 2 ⊤ σ2 (big_op rs2).
 Proof.
   intros Hv ? [k ?]%rtc_nsteps.
-  eapply wp_adequacy_steps with (r1 := (Res ∅ (Excl σ1) m)); eauto; [|].
+  eapply wp_adequacy_steps with (r1 := (Res ∅ (Excl' σ1) m)); eauto; [|].
   { by rewrite Nat.add_comm; apply wsat_init, cmra_valid_validN. }
-  uPred.unseal; exists (Res ∅ (Excl σ1) ∅), (Res ∅ ∅ m); split_and?.
+  uPred.unseal; exists (Res ∅ (Excl' σ1) ∅), (Res ∅ ∅ m); split_and?.
   - by rewrite Res_op ?left_id ?right_id.
   - rewrite /ownP; uPred.unseal; rewrite /uPred_holds //=.
   - by apply ownG_spec.
@@ -84,7 +85,7 @@ Qed.
 
 Theorem wp_adequacy_result E φ e v t2 σ1 m σ2 :
   ✓ m →
-  (ownP σ1 ★ ownG m) ⊢ WP e @ E {{ v', ■ φ v' }} →
+  (ownP σ1 ★ ownG m ⊢ WP e @ E {{ v', ■ φ v' }}) →
   rtc step ([e], σ1) (of_val v :: t2, σ2) →
   φ v.
 Proof.
@@ -110,7 +111,7 @@ Qed.
 
 Lemma wp_adequacy_reducible E Φ e1 e2 t2 σ1 m σ2 :
   ✓ m →
-  (ownP σ1 ★ ownG m) ⊢ WP e1 @ E {{ Φ }} →
+  (ownP σ1 ★ ownG m ⊢ WP e1 @ E {{ Φ }}) →
   rtc step ([e1], σ1) (t2, σ2) →
   e2 ∈ t2 → (is_Some (to_val e2) ∨ reducible e2 σ2).
 Proof.
@@ -128,7 +129,7 @@ Qed.
 (* Connect this up to the threadpool-semantics. *)
 Theorem wp_adequacy_safe E Φ e1 t2 σ1 m σ2 :
   ✓ m →
-  (ownP σ1 ★ ownG m) ⊢ WP e1 @ E {{ Φ }} →
+  (ownP σ1 ★ ownG m ⊢ WP e1 @ E {{ Φ }}) →
   rtc step ([e1], σ1) (t2, σ2) →
   Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ t3 σ3, step (t2, σ2) (t3, σ3).
 Proof.

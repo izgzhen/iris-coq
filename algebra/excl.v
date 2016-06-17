@@ -5,11 +5,13 @@ Local Arguments valid _ _  !_ /.
 
 Inductive excl (A : Type) :=
   | Excl : A → excl A
-  | ExclUnit : excl A
   | ExclBot : excl A.
 Arguments Excl {_} _.
-Arguments ExclUnit {_}.
 Arguments ExclBot {_}.
+
+Notation Excl' x := (Some (Excl x)).
+Notation ExclBot' := (Some ExclBot).
+
 Instance maybe_Excl {A} : Maybe (@Excl A) := λ x,
   match x with Excl a => Some a | _ => None end.
 
@@ -21,12 +23,10 @@ Implicit Types x y : excl A.
 (* Cofe *)
 Inductive excl_equiv : Equiv (excl A) :=
   | Excl_equiv a b : a ≡ b → Excl a ≡ Excl b
-  | ExclUnit_equiv : ExclUnit ≡ ExclUnit
   | ExclBot_equiv : ExclBot ≡ ExclBot.
 Existing Instance excl_equiv.
 Inductive excl_dist : Dist (excl A) :=
   | Excl_dist a b n : a ≡{n}≡ b → Excl a ≡{n}≡ Excl b
-  | ExclUnit_dist n : ExclUnit ≡{n}≡ ExclUnit
   | ExclBot_dist n : ExclBot ≡{n}≡ ExclBot.
 Existing Instance excl_dist.
 
@@ -59,7 +59,7 @@ Proof.
     feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
     rewrite (conv_compl n (excl_chain c _)) /=. destruct (c n); naive_solver.
 Qed.
-Canonical Structure exclC : cofeT := CofeT excl_cofe_mixin.
+Canonical Structure exclC : cofeT := CofeT (excl A) excl_cofe_mixin.
 Global Instance excl_discrete : Discrete A → Discrete exclC.
 Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
 Global Instance excl_leibniz : LeibnizEquiv A → LeibnizEquiv (excl A).
@@ -67,86 +67,67 @@ Proof. by destruct 2; f_equal; apply leibniz_equiv. Qed.
 
 Global Instance Excl_timeless a : Timeless a → Timeless (Excl a).
 Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
-Global Instance ExclUnit_timeless : Timeless (@ExclUnit A).
-Proof. by inversion_clear 1; constructor. Qed.
 Global Instance ExclBot_timeless : Timeless (@ExclBot A).
 Proof. by inversion_clear 1; constructor. Qed.
 
 (* CMRA *)
 Instance excl_valid : Valid (excl A) := λ x,
-  match x with Excl _ | ExclUnit => True | ExclBot => False end.
+  match x with Excl _ => True | ExclBot => False end.
 Instance excl_validN : ValidN (excl A) := λ n x,
-  match x with Excl _ | ExclUnit => True | ExclBot => False end.
-Global Instance excl_empty : Empty (excl A) := ExclUnit.
-Instance excl_core : Core (excl A) := λ _, ∅.
-Instance excl_op : Op (excl A) := λ x y,
-  match x, y with
-  | Excl a, ExclUnit | ExclUnit, Excl a => Excl a
-  | ExclUnit, ExclUnit => ExclUnit
-  | _, _=> ExclBot
-  end.
+  match x with Excl _ => True | ExclBot => False end.
+Instance excl_pcore : PCore (excl A) := λ _, None.
+Instance excl_op : Op (excl A) := λ x y, ExclBot.
 
-Definition excl_cmra_mixin : CMRAMixin (excl A).
+Lemma excl_cmra_mixin : CMRAMixin (excl A).
 Proof.
-  split.
+  split; try discriminate.
   - by intros n []; destruct 1; constructor.
-  - constructor.
   - by destruct 1; intros ?.
   - intros x; split. done. by move=> /(_ 0).
-  - intros n [?| |]; simpl; auto with lia.
-  - by intros [?| |] [?| |] [?| |]; constructor.
-  - by intros [?| |] [?| |]; constructor.
-  - by intros [?| |]; constructor.
-  - constructor.
-  - by intros [?| |] [?| |]; exists ∅.
-  - by intros n [?| |] [?| |].
+  - intros n [?|]; simpl; auto with lia.
+  - by intros [?|] [?|] [?|]; constructor.
+  - by intros [?|] [?|]; constructor.
+  - by intros n [?|] [?|].
   - intros n x y1 y2 ? Hx.
     by exists match y1, y2 with
       | Excl a1, Excl a2 => (Excl a1, Excl a2)
       | ExclBot, _ => (ExclBot, y2) | _, ExclBot => (y1, ExclBot)
-      | ExclUnit, _ => (ExclUnit, x) | _, ExclUnit => (x, ExclUnit)
       end; destruct y1, y2; inversion_clear Hx; repeat constructor.
 Qed.
-Canonical Structure exclR : cmraT := CMRAT excl_cofe_mixin excl_cmra_mixin.
-Global Instance excl_cmra_unit : CMRAUnit exclR.
-Proof. split. done. by intros []. apply _. Qed.
+Canonical Structure exclR :=
+  CMRAT (excl A) excl_cofe_mixin excl_cmra_mixin.
+
 Global Instance excl_cmra_discrete : Discrete A → CMRADiscrete exclR.
 Proof. split. apply _. by intros []. Qed.
 
-Lemma excl_validN_inv_l n x a : ✓{n} (Excl a ⋅ x) → x = ∅.
-Proof. by destruct x. Qed.
-Lemma excl_validN_inv_r n x a : ✓{n} (x ⋅ Excl a) → x = ∅.
-Proof. by destruct x. Qed.
-Lemma Excl_includedN n a x : ✓{n} x → Excl a ≼{n} x ↔ x ≡{n}≡ Excl a.
-Proof.
-  intros Hvalid; split; [|by intros ->].
-  intros [z ?]; cofe_subst. by rewrite (excl_validN_inv_l n z a).
-Qed.
-
 (** Internalized properties *)
 Lemma excl_equivI {M} (x y : excl A) :
-  (x ≡ y) ⊣⊢ (match x, y with
-               | Excl a, Excl b => a ≡ b
-               | ExclUnit, ExclUnit | ExclBot, ExclBot => True
-               | _, _ => False
-               end : uPred M).
+  x ≡ y ⊣⊢ (match x, y with
+            | Excl a, Excl b => a ≡ b
+            | ExclBot, ExclBot => True
+            | _, _ => False
+            end : uPred M).
 Proof.
   uPred.unseal. do 2 split. by destruct 1. by destruct x, y; try constructor.
 Qed.
 Lemma excl_validI {M} (x : excl A) :
-  (✓ x) ⊣⊢ (if x is ExclBot then False else True : uPred M).
+  ✓ x ⊣⊢ (if x is ExclBot then False else True : uPred M).
 Proof. uPred.unseal. by destruct x. Qed.
 
-(** ** Local updates *)
-Global Instance excl_local_update y :
-  LocalUpdate (λ x, if x is Excl _ then ✓ y else False) (λ _, y).
-Proof. split. apply _. by destruct y; intros n [a| |] [b'| |]. Qed.
+(** Exclusive *)
+Global Instance excl_exclusive x : Exclusive x.
+Proof. by destruct x; intros n []. Qed.
 
-(** Updates *)
-Lemma excl_update a y : ✓ y → Excl a ~~> y.
-Proof. destruct y; by intros ?? [?| |]. Qed.
-Lemma excl_updateP (P : excl A → Prop) a y : ✓ y → P y → Excl a ~~>: P.
-Proof. intros ?? n z ?; exists y. by destruct y, z as [?| |]. Qed.
+(** Option excl *)
+Lemma excl_validN_inv_l n mx a : ✓{n} (Excl' a ⋅ mx) → mx = None.
+Proof. by destruct mx. Qed.
+Lemma excl_validN_inv_r n mx a : ✓{n} (mx ⋅ Excl' a) → mx = None.
+Proof. by destruct mx. Qed.
+Lemma Excl_includedN n a mx : ✓{n} mx → Excl' a ≼{n} mx ↔ mx ≡{n}≡ Excl' a.
+Proof.
+  intros Hvalid; split; [|by intros ->].
+  intros [z ?]; cofe_subst. by rewrite (excl_validN_inv_l n z a).
+Qed.
 End excl.
 
 Arguments exclC : clear implicits.
@@ -154,9 +135,7 @@ Arguments exclR : clear implicits.
 
 (* Functor *)
 Definition excl_map {A B} (f : A → B) (x : excl A) : excl B :=
-  match x with
-  | Excl a => Excl (f a) | ExclUnit => ExclUnit | ExclBot => ExclBot
-  end.
+  match x with Excl a => Excl (f a) | ExclBot => ExclBot end.
 Lemma excl_map_id {A} (x : excl A) : excl_map id x = x.
 Proof. by destruct x. Qed.
 Lemma excl_map_compose {A B C} (f : A → B) (g : B → C) (x : excl A) :
@@ -165,14 +144,14 @@ Proof. by destruct x. Qed.
 Lemma excl_map_ext {A B : cofeT} (f g : A → B) x :
   (∀ x, f x ≡ g x) → excl_map f x ≡ excl_map g x.
 Proof. by destruct x; constructor. Qed.
-Instance excl_map_cmra_ne {A B : cofeT} n :
+Instance excl_map_ne {A B : cofeT} n :
   Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@excl_map A B).
 Proof. by intros f f' Hf; destruct 1; constructor; apply Hf. Qed.
 Instance excl_map_cmra_monotone {A B : cofeT} (f : A → B) :
   (∀ n, Proper (dist n ==> dist n) f) → CMRAMonotone (excl_map f).
 Proof.
   split; try apply _.
-  - by intros n [a| |].
+  - by intros n [a|].
   - intros x y [z Hy]; exists (excl_map f z); apply equiv_dist=> n.
     move: Hy=> /equiv_dist /(_ n) ->; by destruct x, z.
 Qed.
@@ -182,7 +161,7 @@ Instance exclC_map_ne A B n : Proper (dist n ==> dist n) (@exclC_map A B).
 Proof. by intros f f' Hf []; constructor; apply Hf. Qed.
 
 Program Definition exclRF (F : cFunctor) : rFunctor := {|
-  rFunctor_car A B := exclR (cFunctor_car F A B);
+  rFunctor_car A B := (exclR (cFunctor_car F A B));
   rFunctor_map A1 A2 B1 B2 fg := exclC_map (cFunctor_map F fg)
 |}.
 Next Obligation.

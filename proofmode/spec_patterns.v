@@ -1,11 +1,12 @@
 From iris.prelude Require Export strings.
 
+Inductive spec_goal_kind := GoalStd | GoalPvs.
+
 Inductive spec_pat :=
-  | SAssert : bool → list string → spec_pat
-  | SPersistent : spec_pat
-  | SPure : spec_pat
-  | SAlways : spec_pat
-  | SName : string → spec_pat
+  | SGoal : spec_goal_kind → bool → list string → spec_pat
+  | SGoalPersistent : spec_pat
+  | SGoalPure : spec_pat
+  | SName : bool → string → spec_pat (* first arg = persistent *)
   | SForall : spec_pat.
 
 Module spec_pat.
@@ -16,8 +17,8 @@ Inductive token :=
   | TBracketR : token
   | TPersistent : token
   | TPure : token
-  | TAlways : token
-  | TForall : token.
+  | TForall : token
+  | TPvs : token.
 
 Fixpoint cons_name (kn : string) (k : list token) : list token :=
   match kn with "" => k | _ => TName (string_rev kn) :: k end.
@@ -30,37 +31,43 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String "]" s => tokenize_go s (TBracketR :: cons_name kn k) ""
   | String "#" s => tokenize_go s (TPersistent :: cons_name kn k) ""
   | String "%" s => tokenize_go s (TPure :: cons_name kn k) ""
-  | String "!" s => tokenize_go s (TAlways :: cons_name kn k) ""
   | String "*" s => tokenize_go s (TForall :: cons_name kn k) ""
+  | String "|" (String "=" (String "=" (String ">" s))) =>
+     tokenize_go s (TPvs :: cons_name kn k) ""
   | String a s => tokenize_go s k (String a kn)
   end.
 Definition tokenize (s : string) : list token := tokenize_go s [] "".
 
-Fixpoint parse_go (ts : list token) (g : option (bool * list string))
+Inductive state :=
+  | StTop : state
+  | StAssert : spec_goal_kind → bool → list string → state.
+
+Fixpoint parse_go (ts : list token) (s : state)
     (k : list spec_pat) : option (list spec_pat) :=
-  match g with
-  | None =>
+  match s with
+  | StTop =>
      match ts with
      | [] => Some (rev k)
-     | TName s :: ts => parse_go ts None (SName s :: k)
-     | TMinus :: TBracketL :: ts => parse_go ts (Some (true,[])) k
-     | TMinus :: ts => parse_go ts None (SAssert true [] :: k)
-     | TBracketL :: ts => parse_go ts (Some (false,[])) k
-     | TAlways :: ts => parse_go ts None (SAlways :: k)
-     | TPersistent :: ts => parse_go ts None (SPersistent :: k)
-     | TPure :: ts => parse_go ts None (SPure :: k)
-     | TForall :: ts => parse_go ts None (SForall :: k)
+     | TName s :: ts => parse_go ts StTop (SName false s :: k)
+     | TBracketL :: TPersistent :: TBracketR :: ts => parse_go ts StTop (SGoalPersistent :: k)
+     | TBracketL :: TPure :: TBracketR :: ts => parse_go ts StTop (SGoalPure :: k)
+     | TBracketL :: ts => parse_go ts (StAssert GoalStd false []) k
+     | TPvs :: TBracketL :: ts => parse_go ts (StAssert GoalPvs false []) k
+     | TPvs :: ts => parse_go ts StTop (SGoal GoalPvs true [] :: k)
+     | TPersistent :: TName s :: ts => parse_go ts StTop (SName true s :: k)
+     | TForall :: ts => parse_go ts StTop (SForall :: k)
      | _ => None
      end
-  | Some (b, ss) =>
+  | StAssert kind neg ss =>
      match ts with
-     | TName s :: ts => parse_go ts (Some (b,s :: ss)) k
-     | TBracketR :: ts => parse_go ts None (SAssert b (rev ss) :: k)
+     | TMinus :: ts => guard (¬neg ∧ ss = []); parse_go ts (StAssert kind true ss) k
+     | TName s :: ts => parse_go ts (StAssert kind neg (s :: ss)) k
+     | TBracketR :: ts => parse_go ts StTop (SGoal kind neg (rev ss) :: k)
      | _ => None
      end
   end.
 Definition parse (s : string) : option (list spec_pat) :=
-  parse_go (tokenize s) None [].
+  parse_go (tokenize s) StTop [].
 
 Ltac parse s :=
   lazymatch type of s with

@@ -10,9 +10,9 @@ Implicit Types P Q R : iProp Λ Σ.
 
 Lemma tac_inv_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E N i P Q Φ :
   FSASplit Q E fsa fsaV Φ →
-  fsaV → nclose N ⊆ E → of_envs Δ ⊢ inv N P →
+  fsaV → nclose N ⊆ E → (of_envs Δ ⊢ inv N P) →
   envs_app false (Esnoc Enil i (▷ P)) Δ = Some Δ' →
-  Δ' ⊢ fsa (E ∖ nclose N) (λ a, ▷ P ★ Φ a) → Δ ⊢ Q.
+  (Δ' ⊢ fsa (E ∖ nclose N) (λ a, ▷ P ★ Φ a)) → Δ ⊢ Q.
 Proof.
   intros ????? HΔ'. rewrite -(fsa_split Q) -(inv_fsa fsa _ _ P) //.
   rewrite // -always_and_sep_l. apply and_intro; first done.
@@ -21,9 +21,9 @@ Qed.
 
 Lemma tac_inv_fsa_timeless {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E N i P Q Φ :
   FSASplit Q E fsa fsaV Φ →
-  fsaV → nclose N ⊆ E → of_envs Δ ⊢ inv N P → TimelessP P →
+  fsaV → nclose N ⊆ E → (of_envs Δ ⊢ inv N P) → TimelessP P →
   envs_app false (Esnoc Enil i P) Δ = Some Δ' →
-  Δ' ⊢ fsa (E ∖ nclose N) (λ a, P ★ Φ a) → Δ ⊢ Q.
+  (Δ' ⊢ fsa (E ∖ nclose N) (λ a, P ★ Φ a)) → Δ ⊢ Q.
 Proof.
   intros ?????? HΔ'. rewrite -(fsa_split Q) -(inv_fsa fsa _ _ P) //.
   rewrite // -always_and_sep_l. apply and_intro, wand_intro_l; first done.

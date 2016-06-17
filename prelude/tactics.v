@@ -250,9 +250,13 @@ Ltac setoid_subst :=
   | H : @equiv ?A ?e _ ?x |- _ => symmetry in H; setoid_subst_aux (@equiv A e) x
   end.
 
-(** f_equiv works on goals of the form "f _ = f _", for any relation and any
-    number of arguments. It looks for an appropriate "Proper" instance, and
-    applies it. *)
+(** f_equiv works on goals of the form [f _ = f _], for any relation and any
+number of arguments. It looks for an appropriate [Proper] instance, and applies
+it. The tactic is somewhat limited, since it cannot be used to backtrack on
+the Proper instances that has been found. To that end, we try to ensure the
+trivial instance in which the resulting goals have an [eq]. More generally,
+when having [Proper (equiv ==> dist) f] and [Proper (dist ==> dist) f], it will
+favor the second. *)
 Ltac f_equiv :=
   match goal with
   | _ => reflexivity
@@ -263,10 +267,16 @@ Ltac f_equiv :=
   | |- ?R (match ?x with _ => _ end) (match ?x with _ => _ end) =>
     destruct x
   (* First assume that the arguments need the same relation as the result *)
-  | |- ?R (?f ?x) (?f _) =>
-    apply (_ : Proper (R ==> R) f)
-  | |- ?R (?f ?x ?y) (?f _ _) =>
-    apply (_ : Proper (R ==> R ==> R) f)
+  | |- ?R (?f ?x) (?f _) => apply (_ : Proper (R ==> R) f)
+  (* For the case in which R is polymorphic, or an operational type class,
+  like equiv. *)
+  | |- (?R _) (?f ?x) (?f _) => apply (_ : Proper (R _ ==> _) f)
+  | |- (?R _ _) (?f ?x) (?f _) => apply (_ : Proper (R _ _ ==> _) f)
+  | |- (?R _ _ _) (?f ?x) (?f _) => apply (_ : Proper (R _ _ _ ==> _) f)
+  | |- (?R _) (?f ?x ?y) (?f _ _) => apply (_ : Proper (R _ ==> R _ ==> _) f)
+  | |- (?R _ _) (?f ?x ?y) (?f _ _) => apply (_ : Proper (R _ _ ==> R _ _ ==> _) f)
+  | |- (?R _ _ _) (?f ?x ?y) (?f _ _) => apply (_ : Proper (R _ _ _ ==> R _ _ _ ==> _) f)
+  | |- (?R _ _ _ _) (?f ?x ?y) (?f _ _) => apply (_ : Proper (R _ _ _ _ ==> R _ _ _ _ ==> _) f)
   (* Next, try to infer the relation. Unfortunately, there is an instance
      of Proper for (eq ==> _), which will always be matched. *)
   (* TODO: Can we exclude that instance? *)
@@ -306,6 +316,7 @@ Ltac solve_proper :=
   repeat lazymatch goal with
   | |- Proper _ _ => intros ???
   | |- (_ ==> _)%signature _ _ => intros ???
+  | |- pointwise_relation _ _ _ _ => intros ?
   end;
   (* Unfold the head symbol, which is the one we are proving a new property about *)
   lazymatch goal with

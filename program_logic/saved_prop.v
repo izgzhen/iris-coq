@@ -3,7 +3,7 @@ From iris.program_logic Require Export ghost_ownership.
 Import uPred.
 
 Class savedPropG (Λ : language) (Σ : gFunctors) (F : cFunctor) :=
-  saved_prop_inG :> inG Λ Σ (agreeR (laterC (F (iPreProp Λ (globalF Σ))))).
+  saved_prop_inG :> inG Λ Σ (agreeR (laterC (F (iPrePropG Λ Σ)))).
 Definition savedPropGF (F : cFunctor) : gFunctor :=
   GFunctor (agreeRF (▶ F)).
 Instance inGF_savedPropG  `{inGF Λ Σ (savedPropGF F)} : savedPropG Λ Σ F.
@@ -23,15 +23,15 @@ Section saved_prop.
   Global Instance saved_prop_persistent γ x : PersistentP (saved_prop_own γ x).
   Proof. rewrite /saved_prop_own; apply _. Qed.
 
-  Lemma saved_prop_alloc_strong N x (G : gset gname) :
-    True ⊢ pvs N N (∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ x).
+  Lemma saved_prop_alloc_strong E x (G : gset gname) :
+    True ={E}=> ∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ x.
   Proof. by apply own_alloc_strong. Qed.
 
-  Lemma saved_prop_alloc N x : True ⊢ pvs N N (∃ γ, saved_prop_own γ x).
+  Lemma saved_prop_alloc E x : True ={E}=> ∃ γ, saved_prop_own γ x.
   Proof. by apply own_alloc. Qed.
 
   Lemma saved_prop_agree γ x y :
-    (saved_prop_own γ x ★ saved_prop_own γ y) ⊢ ▷(x ≡ y).
+    saved_prop_own γ x ★ saved_prop_own γ y ⊢ ▷ (x ≡ y).
   Proof.
     rewrite -own_op own_valid agree_validI agree_equivI later_equivI.
     set (G1 := cFunctor_map F (iProp_fold, iProp_unfold)).

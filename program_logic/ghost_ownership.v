@@ -14,25 +14,12 @@ Section global.
 Context `{i : inG Λ Σ A}.
 Implicit Types a : A.
 
-(** * Transport empty *)
-Instance inG_empty `{Empty A} :
-  Empty (projT2 Σ (inG_id i) (iPreProp Λ (globalF Σ))) :=
-  cmra_transport inG_prf ∅.
-Instance inG_empty_spec `{Empty A} :
-  CMRAUnit A → CMRAUnit (projT2 Σ (inG_id i) (iPreProp Λ (globalF Σ))).
-Proof.
-  split.
-  - apply cmra_transport_valid, cmra_unit_valid.
-  - intros x; rewrite /empty /inG_empty; destruct inG_prf. by rewrite left_id.
-  - apply _.
-Qed.
-
 (** * Properties of own *)
 Global Instance own_ne γ n : Proper (dist n ==> dist n) (own γ).
 Proof. solve_proper. Qed.
 Global Instance own_proper γ : Proper ((≡) ==> (⊣⊢)) (own γ) := ne_proper _.
 
-Lemma own_op γ a1 a2 : own γ (a1 ⋅ a2) ⊣⊢ (own γ a1 ★ own γ a2).
+Lemma own_op γ a1 a2 : own γ (a1 ⋅ a2) ⊣⊢ own γ a1 ★ own γ a2.
 Proof. by rewrite /own -ownG_op to_globalF_op. Qed.
 Global Instance own_mono γ : Proper (flip (≼) ==> (⊢)) (own γ).
 Proof. move=>a b [c ->]. rewrite own_op. eauto with I. Qed.
@@ -44,9 +31,9 @@ Proof.
   (* implicit arguments differ a bit *)
   by trans (✓ cmra_transport inG_prf a : iPropG Λ Σ)%I; last destruct inG_prf.
 Qed.
-Lemma own_valid_r γ a : own γ a ⊢ (own γ a ★ ✓ a).
+Lemma own_valid_r γ a : own γ a ⊢ own γ a ★ ✓ a.
 Proof. apply: uPred.always_entails_r. apply own_valid. Qed.
-Lemma own_valid_l γ a : own γ a ⊢ (✓ a ★ own γ a).
+Lemma own_valid_l γ a : own γ a ⊢ ✓ a ★ own γ a.
 Proof. by rewrite comm -own_valid_r. Qed.
 Global Instance own_timeless γ a : Timeless a → TimelessP (own γ a).
 Proof. rewrite /own; apply _. Qed.
@@ -56,25 +43,25 @@ Proof. rewrite /own; apply _. Qed.
 (* TODO: This also holds if we just have ✓ a at the current step-idx, as Iris
    assertion. However, the map_updateP_alloc does not suffice to show this. *)
 Lemma own_alloc_strong a E (G : gset gname) :
-  ✓ a → True ⊢ (|={E}=> ∃ γ, ■(γ ∉ G) ∧ own γ a).
+  ✓ a → True ={E}=> ∃ γ, ■(γ ∉ G) ∧ own γ a.
 Proof.
   intros Ha.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ γ, γ ∉ G ∧ m = to_globalF γ a) ∧ ownG m)%I).
   - rewrite ownG_empty.
     eapply pvs_ownG_updateP, (iprod_singleton_updateP_empty (inG_id i));
-      first (eapply updateP_alloc_strong', cmra_transport_valid, Ha);
+      first (eapply alloc_updateP_strong', cmra_transport_valid, Ha);
       naive_solver.
   - apply exist_elim=>m; apply const_elim_l=>-[γ [Hfresh ->]].
     by rewrite -(exist_intro γ) const_equiv // left_id.
 Qed.
-Lemma own_alloc a E : ✓ a → True ⊢ (|={E}=> ∃ γ, own γ a).
+Lemma own_alloc a E : ✓ a → True ={E}=> ∃ γ, own γ a.
 Proof.
   intros Ha. rewrite (own_alloc_strong a E ∅) //; [].
   apply pvs_mono, exist_mono=>?. eauto with I.
 Qed.
 
 Lemma own_updateP P γ a E :
-  a ~~>: P → own γ a ⊢ (|={E}=> ∃ a', ■ P a' ∧ own γ a').
+  a ~~>: P → own γ a ={E}=> ∃ a', ■ P a' ∧ own γ a'.
 Proof.
   intros Ha.
   rewrite -(pvs_mono _ _ (∃ m, ■ (∃ a', m = to_globalF γ a' ∧ P a') ∧ ownG m)%I).
@@ -85,18 +72,22 @@ Proof.
     rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
 Qed.
 
-Lemma own_update γ a a' E : a ~~> a' → own γ a ⊢ (|={E}=> own γ a').
+Lemma own_update γ a a' E : a ~~> a' → own γ a ={E}=> own γ a'.
 Proof.
   intros; rewrite (own_updateP (a' =)); last by apply cmra_update_updateP.
   by apply pvs_mono, exist_elim=> a''; apply const_elim_l=> ->.
 Qed.
-
-Lemma own_empty `{Empty A, !CMRAUnit A} γ E : True ⊢ (|={E}=> own γ ∅).
-Proof.
-  rewrite ownG_empty /own. apply pvs_ownG_update, cmra_update_updateP.
-  eapply iprod_singleton_updateP_empty;
-    first by eapply singleton_updateP_empty', cmra_transport_updateP',
-    cmra_update_updateP, cmra_update_unit.
-  naive_solver.
-Qed.
 End global.
+
+Section global_empty.
+Context `{i : inG Λ Σ (A:ucmraT)}.
+Implicit Types a : A.
+
+Lemma own_empty γ E : True ={E}=> own γ ∅.
+Proof.
+  rewrite ownG_empty /own. apply pvs_ownG_update, iprod_singleton_update_empty.
+  apply (singleton_update_unit (cmra_transport inG_prf ∅)); last done.
+  - apply cmra_transport_valid, ucmra_unit_valid.
+  - intros x; destruct inG_prf. by rewrite left_id.
+Qed.
+End global_empty.

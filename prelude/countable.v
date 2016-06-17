@@ -78,6 +78,16 @@ Proof.
 Qed.
 
 (** * Instances *)
+(** ** Injection *)
+Section injective_countable.
+  Context `{Countable A, ∀ x y : B, Decision (x = y)}.
+  Context (f : B → A) (g : A → option B) (fg : ∀ x, g (f x) = Some x).
+
+  Program Instance injective_countable : Countable B :=
+    {| encode y := encode (f y); decode p := x ← decode p; g x |}.
+  Next Obligation. intros y; simpl; rewrite decode_encode; eauto. Qed.
+End injective_countable.
+
 (** ** Option *)
 Program Instance option_countable `{Countable A} : Countable (option A) := {|
   encode o := match o with None => 1 | Some x => Pos.succ (encode x) end;

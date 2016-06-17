@@ -26,12 +26,12 @@ Global Instance frame_pvs E1 E2 R P mQ :
   Frame R (|={E1,E2}=> P) (Some (|={E1,E2}=> if mQ is Some Q then Q else True))%I.
 Proof. rewrite /Frame=><-. by rewrite pvs_frame_l. Qed.
 Global Instance to_wand_pvs E1 E2 R P Q :
-  ToWand R P Q → ToWand R (|={E1,E2}=> P) (|={E1,E2}=> Q).
+  ToWand R P Q → ToWand R (|={E1,E2}=> P) (|={E1,E2}=> Q) | 100.
 Proof. rewrite /ToWand=>->. apply wand_intro_l. by rewrite pvs_wand_r. Qed.
 
 Class FSASplit {A} (P : iProp Λ Σ) (E : coPset)
     (fsa : FSA Λ Σ A) (fsaV : Prop) (Φ : A → iProp Λ Σ) := {
-  fsa_split : fsa E Φ ⊢ P;
+  fsa_split : fsa E Φ ⊣⊢ P;
   fsa_split_is_fsa :> FrameShiftAssertion fsaV fsa;
 }.
 Global Arguments fsa_split {_} _ _ _ _ _ {_}.
@@ -42,7 +42,14 @@ Global Instance fsa_split_fsa {A} (fsa : FSA Λ Σ A) E Φ :
   FrameShiftAssertion fsaV fsa → FSASplit (fsa E Φ) E fsa fsaV Φ.
 Proof. done. Qed.
 
-Lemma tac_pvs_intro Δ E1 E2 Q : E1 = E2 → Δ ⊢ Q → Δ ⊢ |={E1,E2}=> Q.
+Global Instance to_assert_pvs {A} P Q E (fsa : FSA Λ Σ A) fsaV Φ :
+  FSASplit Q E fsa fsaV Φ → ToAssert P Q (|={E}=> P).
+Proof.
+  intros.
+  by rewrite /ToAssert pvs_frame_r wand_elim_r -(fsa_split Q) fsa_pvs_fsa.
+Qed.
+
+Lemma tac_pvs_intro Δ E1 E2 Q : E1 = E2 → (Δ ⊢ Q) → Δ ⊢ |={E1,E2}=> Q.
 Proof. intros -> ->. apply pvs_intro. Qed.
 
 Lemma tac_pvs_elim Δ Δ' E1 E2 E3 i p P' E1' E2' P Q :
@@ -50,7 +57,7 @@ Lemma tac_pvs_elim Δ Δ' E1 E2 E3 i p P' E1' E2' P Q :
   (E1' = E1 ∧ E2' = E2 ∧ E2 ⊆ E1 ∪ E3
   ∨ E2 = E2' ∪ E1 ∖ E1' ∧ E2' ⊥ E1 ∖ E1' ∧ E1' ⊆ E1 ∧ E2' ⊆ E1' ∪ E3) →
   envs_replace i p false (Esnoc Enil i P) Δ = Some Δ' →
-  Δ' ⊢ (|={E2,E3}=> Q) → Δ ⊢ |={E1,E3}=> Q.
+  (Δ' ={E2,E3}=> Q) → Δ ={E1,E3}=> Q.
 Proof.
   intros ? -> HE ? HQ. rewrite envs_replace_sound //; simpl.
   rewrite always_if_elim right_id pvs_frame_r wand_elim_r HQ.
@@ -62,7 +69,7 @@ Lemma tac_pvs_elim_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E i p P' P Q Φ :
   envs_lookup i Δ = Some (p, P') → P' = (|={E}=> P)%I →
   FSASplit Q E fsa fsaV Φ →
   envs_replace i p false (Esnoc Enil i P) Δ = Some Δ' →
-  Δ' ⊢ fsa E Φ → Δ ⊢ Q.
+  (Δ' ⊢ fsa E Φ) → Δ ⊢ Q.
 Proof.
   intros ? -> ??. rewrite -(fsa_split Q) -fsa_pvs_fsa.
   eapply tac_pvs_elim; set_solver.
@@ -71,7 +78,7 @@ Qed.
 Lemma tac_pvs_timeless Δ Δ' E1 E2 i p P Q :
   envs_lookup i Δ = Some (p, ▷ P)%I → TimelessP P →
   envs_simple_replace i p (Esnoc Enil i P) Δ = Some Δ' →
-  Δ' ⊢ (|={E1,E2}=> Q) → Δ ⊢ (|={E1,E2}=> Q).
+  (Δ' ={E1,E2}=> Q) → Δ ={E1,E2}=> Q.
 Proof.
   intros ??? HQ. rewrite envs_simple_replace_sound //; simpl.
   rewrite always_if_later (pvs_timeless E1 (□?_ P)%I) pvs_frame_r.
@@ -82,21 +89,10 @@ Lemma tac_pvs_timeless_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E i p P Q Φ :
   FSASplit Q E fsa fsaV Φ →
   envs_lookup i Δ = Some (p, ▷ P)%I → TimelessP P →
   envs_simple_replace i p (Esnoc Enil i P) Δ = Some Δ' →
-  Δ' ⊢ fsa E Φ → Δ ⊢ Q.
+  (Δ' ⊢ fsa E Φ) → Δ ⊢ Q.
 Proof.
   intros ????. rewrite -(fsa_split Q) -fsa_pvs_fsa.
   eauto using tac_pvs_timeless.
-Qed.
-
-Lemma tac_pvs_assert {A} (fsa : FSA Λ Σ A) fsaV Δ Δ1 Δ2 Δ2' E lr js j P Q Φ :
-  FSASplit Q E fsa fsaV Φ →
-  envs_split lr js Δ = Some (Δ1,Δ2) →
-  envs_app false (Esnoc Enil j P) Δ2 = Some Δ2' →
-  Δ1 ⊢ (|={E}=> P) → Δ2' ⊢ fsa E Φ → Δ ⊢ Q.
-Proof.
-  intros ??? HP HQ. rewrite -(fsa_split Q) -fsa_pvs_fsa -HQ envs_split_sound //.
-  rewrite HP envs_app_sound //; simpl.
-  by rewrite right_id pvs_frame_r wand_elim_r.
 Qed.
 End pvs.
 
@@ -185,19 +181,3 @@ Tactic Notation "iTimeless" constr(H) :=
 
 Tactic Notation "iTimeless" constr(H) "as" constr(Hs) :=
   iTimeless H; iDestruct H as Hs.
-
-Tactic Notation "iPvsAssert" constr(Q) "as" constr(pat) "with" constr(Hs) :=
-  let H := iFresh in
-  let Hs := spec_pat.parse_one Hs in
-  lazymatch Hs with
-  | SAssert ?lr ?Hs =>
-     eapply tac_pvs_assert with _ _ _ _ _ _ lr Hs H Q _;
-       [let P := match goal with |- FSASplit ?P _ _ _ _ => P end in
-        apply _ || fail "iPvsAssert: " P "not a pvs"
-       |env_cbv; reflexivity || fail "iPvsAssert:" Hs "not found"
-       |env_cbv; reflexivity|
-       |simpl; iDestruct H as pat]
-  | ?pat => fail "iPvsAssert: invalid pattern" pat
-  end.
-Tactic Notation "iPvsAssert" constr(Q) "as" constr(pat) :=
-  iPvsAssert Q as pat with "[]".

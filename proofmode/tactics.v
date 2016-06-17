@@ -22,11 +22,10 @@ Ltac env_cbv :=
 Ltac iFresh :=
   lazymatch goal with
   |- of_envs ?Δ ⊢ _ =>
-      match goal with
-      | _ => eval vm_compute in (fresh_string_of_set "~" (dom stringset Δ))
-      (* [vm_compute fails] if [Δ] contains evars, so fall-back to [cbv] *)
-      | _ => eval cbv in (fresh_string_of_set "~" (dom stringset Δ))
-      end
+     (* [vm_compute fails] if any of the hypotheses in [Δ] contain evars, so
+     first use [cbv] to compute the domain of [Δ] *)
+     let Hs := eval cbv in (envs_dom Δ) in
+     eval vm_compute in (fresh_string_of_set "~" (of_list Hs))
   | _ => constr:"~"
   end.
 
@@ -129,7 +128,7 @@ Notation "( H $! x1 .. xn 'with' pat )" :=
   (ITrm H (hcons x1 .. (hcons xn hnil) ..) pat) (at level 0, x1, xn at level 0).
 Notation "( H 'with' pat )" := (ITrm H hnil pat) (at level 0).
 
-Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
+Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
   match xs with
   | hnil => idtac
   | _ =>
@@ -139,7 +138,7 @@ Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
       |env_cbv; reflexivity|]
   end.
 
-Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
+Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
   let solve_to_wand H1 :=
     let P := match goal with |- ToWand ?P _ _ => P end in
     apply _ || fail "iSpecialize:" H1 ":" P "not an implication/wand" in
@@ -147,25 +146,7 @@ Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
     lazymatch pats with
     | [] => idtac
     | SForall :: ?pats => try (iSpecializeArgs H1 (hcons _ _)); go H1 pats
-    | SAlways :: ?pats => iPersistent H1; go H1 pats
-    | SAssert true [] :: SAlways :: ?pats =>
-       eapply tac_specialize_domain_persistent with _ _ H1 _ _ _ _ _;
-         [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
-         |solve_to_wand H1
-         |let Q := match goal with |- ToPersistentP ?Q _ => Q end in
-          apply _ || fail "iSpecialize:" Q "not persistent"
-         |env_cbv; reflexivity
-         | |go H1 pats]
-    | SName ?H2 :: SAlways :: ?pats =>
-       eapply tac_specialize_domain_persistent with _ _ H1 _ _ _ _ _;
-         [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
-         |solve_to_wand H1
-         |let Q := match goal with |- ToPersistentP ?Q _ => Q end in
-          apply _ || fail "iSpecialize:" Q "not persistent"
-         |env_cbv; reflexivity
-         |iExact H2 || fail "iSpecialize:" H2 "not found or wrong type"
-         |go H1 pats]
-    | SName ?H2 :: ?pats =>
+    | SName false ?H2 :: ?pats =>
        eapply tac_specialize with _ _ H2 _ H1 _ _ _ _; (* (j:=H1) (i:=H2) *)
          [env_cbv; reflexivity || fail "iSpecialize:" H2 "not found"
          |env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
@@ -173,26 +154,47 @@ Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
           let Q := match goal with |- ToWand ?P ?Q _ => Q end in
           apply _ || fail "iSpecialize: cannot instantiate" H1 ":" P "with" H2 ":" Q
          |env_cbv; reflexivity|go H1 pats]
-    | SPersistent :: ?pats =>
-       eapply tac_specialize_range_persistent with _ _ H1 _ _ _ _;
+    | SName true ?H2 :: ?pats =>
+       eapply tac_specialize_persistent with _ _ H1 _ _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
-         |let Q := match goal with |- PersistentP ?Q => Q end in
-          apply _ || fail "iSpecialize:" Q "not persistent"
-         |env_cbv; reflexivity| |go H1 pats]
-    | SPure :: ?pats =>
-       eapply tac_specialize_range_persistent with _ _ H1 _ _ _ _;
-         (* make custom tac_ lemma *)
+         |env_cbv; reflexivity
+         |iExact H2 || fail "iSpecialize:" H2 "not found or wrong type"
+         |let Q1 := match goal with |- PersistentP ?Q1 ∨ _ => Q1 end in
+          let Q2 := match goal with |- _ ∨ PersistentP ?Q2 => Q2 end in
+          first [left; apply _ | right; apply _]
+            || fail "iSpecialize:" Q1 "nor" Q2 "persistent"
+         |go H1 pats]
+    | SGoalPersistent :: ?pats =>
+       eapply tac_specialize_persistent with _ _ H1 _ _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
-         |let Q := match goal with |- PersistentP ?Q => Q end in
-          apply _ || fail "iSpecialize:" Q "not persistent"
-         |env_cbv; reflexivity|iPureIntro|go H1 pats]
-    | SAssert ?lr ?Hs :: ?pats =>
-       eapply tac_specialize_assert with _ _ _ H1 _ lr Hs _ _ _;
+         |env_cbv; reflexivity
+         |(*goal*)
+         |let Q1 := match goal with |- PersistentP ?Q1 ∨ _ => Q1 end in
+          let Q2 := match goal with |- _ ∨ PersistentP ?Q2 => Q2 end in
+          first [left; apply _ | right; apply _]
+            || fail "iSpecialize:" Q1 "nor" Q2 "persistent"
+         |go H1 pats]
+    | SGoalPure :: ?pats =>
+       eapply tac_specialize_pure with _ H1 _ _ _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
-         |env_cbv; reflexivity || fail "iSpecialize:" Hs "not found"|
+         |let Q := match goal with |- ToPure ?Q _ => Q end in
+          apply _ || fail "iSpecialize:" Q "not pure"
+         |env_cbv; reflexivity
+         |(*goal*)
+         |go H1 pats]
+    | SGoal ?k ?lr ?Hs :: ?pats =>
+       eapply tac_specialize_assert with _ _ _ H1 _ lr Hs _ _ _ _;
+         [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
+         |solve_to_wand H1
+         |match k with
+          | GoalStd => apply to_assert_fallthrough
+          | GoalPvs => apply _ || fail "iSpecialize: cannot generate pvs goal"
+          end
+         |env_cbv; reflexivity || fail "iSpecialize:" Hs "not found"
+         |(*goal*)
          |go H1 pats]
     end in let pats := spec_pat.parse pat in go H pats.
 
@@ -202,7 +204,7 @@ Tactic Notation "iSpecialize" open_constr(t) :=
   end.
 
 (** * Pose proof *)
-Tactic Notation "iPoseProofCore" open_constr(H1) "as" constr(H2) :=
+Local Tactic Notation "iPoseProofCore" open_constr(H1) "as" constr(H2) :=
   lazymatch type of H1 with
   | string =>
      eapply tac_pose_proof_hyp with _ _ H1 _ H2 _;
@@ -226,24 +228,25 @@ Tactic Notation "iPoseProof" open_constr(t) :=
   let H := iFresh in iPoseProof t as H.
 
 (** * Apply *)
-Tactic Notation "iApplyCore" constr(H) := first
-  [iExact H
-  |eapply tac_apply with _ H _ _ _;
-     [env_cbv; reflexivity || fail 1 "iApply:" H "not found"
-     |apply _ || fail 1 "iApply: cannot apply" H|]].
-
 Tactic Notation "iApply" open_constr(t) :=
+  let finish H := first
+    [iExact H
+    |eapply tac_apply with _ H _ _ _;
+       [env_cbv; reflexivity || fail 1 "iApply:" H "not found"
+       |let P := match goal with |- ToWand ?P _ _ => P end in
+        apply _ || fail 1 "iApply: cannot apply" H ":" P
+       |lazy beta (* reduce betas created by instantiation *)]] in
   let Htmp := iFresh in
   lazymatch t with
   | ITrm ?H ?xs ?pat =>
      iPoseProofCore H as Htmp; last (
        iSpecializeArgs Htmp xs;
        try (iSpecializeArgs Htmp (hcons _ _));
-       iSpecializePat Htmp pat; last iApplyCore Htmp)
+       iSpecializePat Htmp pat; last finish Htmp)
   | _ =>
      iPoseProofCore t as Htmp; last (
        try (iSpecializeArgs Htmp (hcons _ _));
-       iApplyCore Htmp)
+       finish Htmp)
   end; try apply _.
 
 (** * Revert *)
@@ -330,9 +333,13 @@ Local Tactic Notation "iOrDestruct" constr(H) "as" constr(H1) constr(H2) :=
 
 (** * Conjunction and separating conjunction *)
 Tactic Notation "iSplit" :=
-  eapply tac_and_split;
-    [let P := match goal with |- AndSplit ?P _ _ => P end in
-     apply _ || fail "iSplit:" P "not a conjunction"| |].
+  lazymatch goal with
+  | |- _ ⊢ _ =>
+    eapply tac_and_split;
+      [let P := match goal with |- AndSplit ?P _ _ => P end in
+       apply _ || fail "iSplit:" P "not a conjunction"| |]
+  | |- _ ⊣⊢ _ => apply (anti_symm (⊢))
+  end.
 
 Tactic Notation "iSplitL" constr(Hs) :=
   let Hs := words Hs in
@@ -369,6 +376,16 @@ Tactic Notation "iFrame" constr(Hs) :=
          |lazy iota beta; go Hs]
     end
   in let Hs := words Hs in go Hs.
+
+Tactic Notation "iFrame" :=
+  let rec go Hs :=
+    match Hs with
+    | [] => idtac
+    | ?H :: ?Hs => try iFrame H; go Hs
+    end in
+  match goal with
+  | |- of_envs ?Δ ⊢ _ => let Hs := eval cbv in (env_dom (env_spatial Δ)) in go Hs
+  end.
 
 Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
   eapply tac_combine with _ _ _ H1 _ _ H2 _ _ H _;
@@ -418,7 +435,7 @@ Local Tactic Notation "iExistDestruct" constr(H)
     [env_cbv; reflexivity || fail "iExistDestruct:" Hx "not fresh"
     |revert y; intros x].
 
-(** * Destruct tactic *)
+(** * Basic destruct tactic *)
 Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
   let rec go Hz pat :=
     lazymatch pat with
@@ -467,55 +484,6 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
     simple_intropattern(x8) "}" constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as { x2 x3 x4 x5 x6 x7 x8 } pat.
-
-Tactic Notation "iDestructHelp" open_constr(lem) "as" tactic(tac) :=
-  lazymatch type of lem with
-  | string => tac lem
-  | iTrm =>
-     lazymatch lem with
-     | @iTrm string ?H _ hnil ?pat =>
-        iSpecializePat H pat; last tac H
-     | _ => let H := iFresh in iPoseProof lem as H; last tac H; try apply _
-     end
-  | _ => let H := iFresh in iPoseProof lem as H; last tac H; try apply _
-  end.
-
-Tactic Notation "iDestruct" open_constr(H) "as" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1) "}"
-    constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) "}"
-    constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) simple_intropattern(x6) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) "}"
-    constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 x7 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
-    simple_intropattern(x8) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 x7 x8 } pat).
-
-Tactic Notation "iDestruct" open_constr(H) "as" "%" simple_intropattern(pat) :=
-  let Htmp := iFresh in iDestruct H as Htmp; last iPure Htmp as pat.
 
 (** * Always *)
 Tactic Notation "iAlways":=
@@ -659,12 +627,73 @@ Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
     "}" constr(p) :=
   iIntros { x1 x2 x3 x4 x5 x6 x7 x8 }; iIntros p.
 
+(** * Destruct tactic *)
+Tactic Notation "iDestructHelp" open_constr(lem) "as" tactic(tac) :=
+  let intro_destruct n :=
+    let rec go n' :=
+      lazymatch n' with
+      | 0 => fail "iDestruct: cannot introduce" n "hypotheses"
+      | 1 => repeat iIntroForall; let H := iFresh in iIntro H; tac H
+      | S ?n' => repeat iIntroForall; let H := iFresh in iIntro H; go n'
+      end in intros; try iProof; go n in
+  lazymatch type of lem with
+  | nat => intro_destruct lem
+  | Z => (* to make it work in Z_scope. We should just be able to bind
+     tactic notation arguments to notation scopes. *)
+     let n := eval compute in (Z.to_nat lem) in intro_destruct n
+  | string => tac lem
+  | iTrm =>
+     lazymatch lem with
+     | @iTrm string ?H _ hnil ?pat =>
+        iSpecializePat H pat; last tac H
+     | _ => let H := iFresh in iPoseProof lem as H; last tac H; try apply _
+     end
+  | _ => let H := iFresh in iPoseProof lem as H; last tac H; try apply _
+  end.
+
+Tactic Notation "iDestruct" open_constr(H) "as" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1) "}"
+    constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) "}" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) "}" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) "}"
+    constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) "}" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) "}" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) "}"
+    constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 x7 } pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) "}" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 x7 x8 } pat).
+
+Tactic Notation "iDestruct" open_constr(H) "as" "%" simple_intropattern(pat) :=
+  let Htmp := iFresh in iDestruct H as Htmp; last iPure Htmp as pat.
+
 (* This is pretty ugly, but without Ltac support for manipulating lists of
 idents I do not know how to do this better. *)
 Local Ltac iLöbHelp IH tac_before tac_after :=
   match goal with
   | |- of_envs ?Δ ⊢ _ =>
-     let Hs := constr:(reverse (env_dom_list (env_spatial Δ))) in
+     let Hs := constr:(reverse (env_dom (env_spatial Δ))) in
      iRevert ["★"]; tac_before;
      eapply tac_löb with _ IH;
        [reflexivity
@@ -700,24 +729,30 @@ Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
               ltac:(iIntros { x1 x2 x3 x4 x5 x6 x7 x8 }).
 
 (** * Assert *)
-Tactic Notation "iAssert" constr(Q) "as" constr(pat) "with" constr(Hs) :=
+Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as" constr(pat) :=
   let H := iFresh in
   let Hs := spec_pat.parse Hs in
   lazymatch Hs with
-  | [SAssert ?lr ?Hs] =>
-     eapply tac_assert with _ _ _ lr Hs H Q; (* (js:=Hs) (j:=H) (P:=Q) *)
-       [env_cbv; reflexivity || fail "iAssert:" Hs "not found"
-       |env_cbv; reflexivity|
-       |iDestructHyp H as pat]
-  | [SAssert true [] :: SAlways]  =>
+  | [SGoalPersistent] =>
      eapply tac_assert_persistent with _ H Q; (* (j:=H) (P:=Q) *)
-       [apply _ || fail "iAssert:" Q "not persistent"
+       [env_cbv; reflexivity
+       |(*goal*)
+       |apply _ || fail "iAssert:" Q "not persistent"
+       |iDestructHyp H as pat]
+  | [SGoal ?k ?lr ?Hs] =>
+     eapply tac_assert with _ _ _ lr Hs H Q _; (* (js:=Hs) (j:=H) (P:=Q) *)
+       [match k with
+        | GoalStd => apply to_assert_fallthrough
+        | GoalPvs => apply _ || fail "iAssert: cannot generate pvs goal"
+        end
+       |env_cbv; reflexivity || fail "iAssert:" Hs "not found"
        |env_cbv; reflexivity|
        |iDestructHyp H as pat]
   | ?pat => fail "iAssert: invalid pattern" pat
   end.
-Tactic Notation "iAssert" constr(Q) "as" constr(pat) :=
-  iAssert Q as pat with "[]".
+
+Tactic Notation "iAssert" open_constr(Q) "as" constr(pat) :=
+  iAssert Q with "[]" as pat.
 
 (** * Rewrite *)
 Local Ltac iRewriteFindPred :=
@@ -758,3 +793,20 @@ Tactic Notation "iRewrite" "-" open_constr(t) "in" constr(H) :=
 (* Make sure that by and done solve trivial things in proof mode *)
 Hint Extern 0 (of_envs _ ⊢ _) => by iPureIntro.
 Hint Extern 0 (of_envs _ ⊢ _) => iAssumption.
+Hint Extern 0 (of_envs _ ⊢ _) => progress iIntros.
+Hint Resolve uPred.eq_refl'. (* Maybe make an [iReflexivity] tactic *)
+
+(* We should be able to write [Hint Extern 1 (of_envs _ ⊢ (_ ★ _)%I) => ...],
+but then [eauto] mysteriously fails. See bug 4762 *)
+Hint Extern 1 (of_envs _ ⊢ _) =>
+  match goal with
+  | |- _ ⊢ (_ ∧ _)%I => iSplit
+  | |- _ ⊢ (_ ★ _)%I => iSplit
+  | |- _ ⊢ (▷ _)%I => iNext
+  | |- _ ⊢ (□ _)%I => iClear "*"; iAlways
+  | |- _ ⊢ (∃ _, _)%I => iExists _
+  end.
+Hint Extern 1 (of_envs _ ⊢ _) =>
+  match goal with |- _ ⊢ (_ ∨ _)%I => iLeft end.
+Hint Extern 1 (of_envs _ ⊢ _) =>
+  match goal with |- _ ⊢ (_ ∨ _)%I => iRight end.

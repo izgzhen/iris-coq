@@ -19,16 +19,15 @@ Proof. congruence. Qed.
 Instance Some_inj {A} : Inj (=) (=) (@Some A).
 Proof. congruence. Qed.
 
-(** The non dependent elimination principle on the option type. *)
-Definition default {A B} (y : B) (mx : option A) (f : A → B)  : B :=
+(** The [from_option] is the eliminator for option. *)
+Definition from_option {A B} (f : A → B) (y : B) (mx : option A) : B :=
   match mx with None => y | Some x => f x end.
-Instance: Params (@default) 2.
+Instance: Params (@from_option) 3.
+Arguments from_option {_ _} _ _ !_ /.
 
-(** The [from_option] function allows us to get the value out of the option
-type by specifying a default value. *)
-Definition from_option {A} (x : A) (mx : option A) : A :=
-  match mx with None => x | Some y => y end.
-Instance: Params (@from_option) 1.
+(* The eliminator again, but with the arguments in different order, which is
+sometimes more convenient. *)
+Notation default y mx f := (from_option f y mx) (only parsing).
 
 (** An alternative, but equivalent, definition of equality on the option
 data type. This theorem is useful to prove that two options are the same. *)
@@ -80,9 +79,9 @@ Lemma not_eq_None_Some {A} (mx : option A) : mx ≠ None ↔ is_Some mx.
 Proof. rewrite eq_None_not_Some; apply dec_stable; tauto. Qed.
 
 (** Lifting a relation point-wise to option *)
-Inductive option_Forall2 {A B} (P: A → B → Prop) : option A → option B → Prop :=
-  | Some_Forall2 x y : P x y → option_Forall2 P (Some x) (Some y)
-  | None_Forall2 : option_Forall2 P None None.
+Inductive option_Forall2 {A B} (R: A → B → Prop) : option A → option B → Prop :=
+  | Some_Forall2 x y : R x y → option_Forall2 R (Some x) (Some y)
+  | None_Forall2 : option_Forall2 R None None.
 Definition option_relation {A B} (R: A → B → Prop) (P: A → Prop) (Q: B → Prop)
     (mx : option A) (my : option B) : Prop :=
   match mx, my with
@@ -92,42 +91,57 @@ Definition option_relation {A B} (R: A → B → Prop) (P: A → Prop) (Q: B →
   | None, None => True
   end.
 
+Section Forall2.
+  Context {A} (R : relation A).
+
+  Global Instance option_Forall2_refl : Reflexive R → Reflexive (option_Forall2 R).
+  Proof. intros ? [?|]; by constructor. Qed.
+  Global Instance option_Forall2_sym : Symmetric R → Symmetric (option_Forall2 R).
+  Proof. destruct 2; by constructor. Qed.
+  Global Instance option_Forall2_trans : Transitive R → Transitive (option_Forall2 R).
+  Proof. destruct 2; inversion_clear 1; constructor; etrans; eauto. Qed.
+  Global Instance option_Forall2_equiv : Equivalence R → Equivalence (option_Forall2 R).
+  Proof. destruct 1; split; apply _. Qed.
+End Forall2.
+
 (** Setoids *)
+Instance option_equiv `{Equiv A} : Equiv (option A) := option_Forall2 (≡).
+
 Section setoids.
   Context `{Equiv A} `{!Equivalence ((≡) : relation A)}.
-
-  Global Instance option_equiv : Equiv (option A) := option_Forall2 (≡).
+  Implicit Types mx my : option A.
 
   Lemma equiv_option_Forall2 mx my : mx ≡ my ↔ option_Forall2 (≡) mx my.
-  Proof. split; destruct 1; constructor; auto. Qed.
+  Proof. done. Qed.
 
   Global Instance option_equivalence : Equivalence ((≡) : relation (option A)).
-  Proof.
-    split.
-    - by intros []; constructor.
-    - by destruct 1; constructor.
-    - destruct 1; inversion 1; constructor; etrans; eauto.
-  Qed.
+  Proof. apply _. Qed.
   Global Instance Some_proper : Proper ((≡) ==> (≡)) (@Some A).
   Proof. by constructor. Qed.
   Global Instance option_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (option A).
   Proof. intros x y; destruct 1; fold_leibniz; congruence. Qed.
 
-  Lemma equiv_None (mx : option A) : mx ≡ None ↔ mx = None.
+  Lemma equiv_None mx : mx ≡ None ↔ mx = None.
   Proof. split; [by inversion_clear 1|by intros ->]. Qed.
-  Lemma equiv_Some_inv_l (mx my : option A) x :
+  Lemma equiv_Some_inv_l mx my x :
     mx ≡ my → mx = Some x → ∃ y, my = Some y ∧ x ≡ y.
   Proof. destruct 1; naive_solver. Qed.
-  Lemma equiv_Some_inv_r (mx my : option A) y :
-    mx ≡ my → mx = Some y → ∃ x, mx = Some x ∧ x ≡ y.
+  Lemma equiv_Some_inv_r mx my y :
+    mx ≡ my → my = Some y → ∃ x, mx = Some x ∧ x ≡ y.
   Proof. destruct 1; naive_solver. Qed.
+  Lemma equiv_Some_inv_l' my x : Some x ≡ my → ∃ x', Some x' = my ∧ x ≡ x'.
+  Proof. intros ?%(equiv_Some_inv_l _ _ x); naive_solver. Qed.
+  Lemma equiv_Some_inv_r' mx y : mx ≡ Some y → ∃ y', mx = Some y' ∧ y ≡ y'.
+  Proof. intros ?%(equiv_Some_inv_r _ _ y); naive_solver. Qed.
 
   Global Instance is_Some_proper : Proper ((≡) ==> iff) (@is_Some A).
   Proof. inversion_clear 1; split; eauto. Qed.
-  Global Instance from_option_proper :
-    Proper ((≡) ==> (≡) ==> (≡)) (@from_option A).
-  Proof. by destruct 2. Qed.
+  Global Instance from_option_proper {B} (R : relation B) (f : A → B) :
+    Proper ((≡) ==> R) f → Proper (R ==> (≡) ==> R) (from_option f).
+  Proof. destruct 3; simpl; auto. Qed.
 End setoids.
+
+Typeclasses Opaque option_equiv.
 
 (** Equality on [option] is decidable. *)
 Instance option_eq_None_dec {A} (mx : option A) : Decision (mx = None) :=
@@ -193,6 +207,10 @@ Proof. destruct mx; naive_solver. Qed.
 Lemma bind_with_Some {A} (mx : option A) : mx ≫= Some = mx.
 Proof. by destruct mx. Qed.
 
+Instance option_fmap_proper `{Equiv A, Equiv B} (f : A → B) :
+  Proper ((≡) ==> (≡)) f → Proper ((≡) ==> (≡)) (fmap (M:=option) f).
+Proof. destruct 2; constructor; auto. Qed.
+
 (** ** Inverses of constructors *)
 (** We can do this in a fancy way using dependent types, but rewrite does
 not particularly like type level reductions. *)
@@ -242,23 +260,33 @@ Lemma option_union_Some {A} (mx my : option A) z :
   mx ∪ my = Some z → mx = Some z ∨ my = Some z.
 Proof. destruct mx, my; naive_solver. Qed.
 
-Section option_union_intersection_difference.
+Class DiagNone {A B C} (f : option A → option B → option C) :=
+  diag_none : f None None = None.
+
+Section union_intersection_difference.
   Context {A} (f : A → A → option A).
-  Global Instance: LeftId (=) None (union_with f).
+
+  Global Instance union_with_diag_none : DiagNone (union_with f).
+  Proof. reflexivity. Qed.
+  Global Instance intersection_with_diag_none : DiagNone (intersection_with f).
+  Proof. reflexivity. Qed.
+  Global Instance difference_with_diag_none : DiagNone (difference_with f).
+  Proof. reflexivity. Qed.
+  Global Instance union_with_left_id : LeftId (=) None (union_with f).
   Proof. by intros [?|]. Qed.
-  Global Instance: RightId (=) None (union_with f).
+  Global Instance union_with_right_id : RightId (=) None (union_with f).
   Proof. by intros [?|]. Qed.
-  Global Instance: Comm (=) f → Comm (=) (union_with f).
+  Global Instance union_with_comm : Comm (=) f → Comm (=) (union_with f).
   Proof. by intros ? [?|] [?|]; compute; rewrite 1?(comm f). Qed.
-  Global Instance: LeftAbsorb (=) None (intersection_with f).
+  Global Instance intersection_with_left_ab : LeftAbsorb (=) None (intersection_with f).
   Proof. by intros [?|]. Qed.
-  Global Instance: RightAbsorb (=) None (intersection_with f).
+  Global Instance intersection_with_right_ab : RightAbsorb (=) None (intersection_with f).
   Proof. by intros [?|]. Qed.
-  Global Instance: Comm (=) f → Comm (=) (intersection_with f).
+  Global Instance difference_with_comm : Comm (=) f → Comm (=) (intersection_with f).
   Proof. by intros ? [?|] [?|]; compute; rewrite 1?(comm f). Qed.
-  Global Instance: RightId (=) None (difference_with f).
+  Global Instance difference_with_right_id : RightId (=) None (difference_with f).
   Proof. by intros [?|]. Qed.
-End option_union_intersection_difference.
+End union_intersection_difference.
 
 (** * Tactics *)
 Tactic Notation "case_option_guard" "as" ident(Hx) :=
@@ -298,9 +326,7 @@ Tactic Notation "simpl_option" "by" tactic3(tac) :=
     let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
   | H : context [fmap (M:=option) (A:=?A) ?f ?mx] |- _ =>
     let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
-  | H : context [default (A:=?A) _ ?mx _] |- _ =>
-    let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
-  | H : context [from_option (A:=?A) _ ?mx] |- _ =>
+  | H : context [from_option (A:=?A) _ _ ?mx] |- _ =>
     let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
   | H : context [ match ?mx with _ => _ end ] |- _ =>
     match type of mx with
@@ -311,9 +337,7 @@ Tactic Notation "simpl_option" "by" tactic3(tac) :=
     let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx; clear Hx
   | |- context [fmap (M:=option) (A:=?A) ?f ?mx] =>
     let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx; clear Hx
-  | |- context [default (A:=?A) _ ?mx _] =>
-    let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx; clear Hx
-  | |- context [from_option (A:=?A) _ ?mx] =>
+  | |- context [from_option (A:=?A) _ _ ?mx] =>
     let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx; clear Hx
   | |- context [ match ?mx with _ => _ end ] =>
     match type of mx with

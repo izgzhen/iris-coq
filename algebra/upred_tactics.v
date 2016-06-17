@@ -1,9 +1,10 @@
+From iris.prelude Require Import gmap.
 From iris.algebra Require Export upred.
 From iris.algebra Require Export upred_big_op.
 Import uPred.
 
 Module uPred_reflection. Section uPred_reflection.
-  Context {M : cmraT}.
+  Context {M : ucmraT}.
 
   Inductive expr :=
     | ETrue : expr
@@ -12,7 +13,7 @@ Module uPred_reflection. Section uPred_reflection.
   Fixpoint eval (Σ : list (uPred M)) (e : expr) : uPred M :=
     match e with
     | ETrue => True
-    | EVar n => from_option True%I (Σ !! n)
+    | EVar n => from_option id True%I (Σ !! n)
     | ESep e1 e2 => eval Σ e1 ★ eval Σ e2
     end.
   Fixpoint flatten (e : expr) : list nat :=
@@ -22,8 +23,7 @@ Module uPred_reflection. Section uPred_reflection.
     | ESep e1 e2 => flatten e1 ++ flatten e2
     end.
 
-  Notation eval_list Σ l :=
-    (uPred_big_sep ((λ n, from_option True%I (Σ !! n)) <$> l)).
+  Notation eval_list Σ l := ([★] ((λ n, from_option id True%I (Σ !! n)) <$> l))%I.
   Lemma eval_flatten Σ e : eval Σ e ⊣⊢ eval_list Σ (flatten e).
   Proof.
     induction e as [| |e1 IH1 e2 IH2];
@@ -86,7 +86,7 @@ Module uPred_reflection. Section uPred_reflection.
   Qed.
   Lemma cancel_entails Σ e1 e2 e1' e2' ns :
     cancel ns e1 = Some e1' → cancel ns e2 = Some e2' →
-    eval Σ e1' ⊢ eval Σ e2' → eval Σ e1 ⊢ eval Σ e2.
+    (eval Σ e1' ⊢ eval Σ e2') → eval Σ e1 ⊢ eval Σ e2.
   Proof.
     intros ??. rewrite !eval_flatten.
     rewrite (flatten_cancel e1 e1' ns) // (flatten_cancel e2 e2' ns) //; csimpl.
@@ -211,7 +211,7 @@ Class StripLaterL {M} (P Q : uPred M) := strip_later_l : ▷ Q ⊢ P.
 Arguments strip_later_l {_} _ _ {_}.
 
 Section strip_later.
-Context {M : cmraT}.
+Context {M : ucmraT}.
 Implicit Types P Q : uPred M. 
 
 Global Instance strip_later_r_fallthrough P : StripLaterR P P | 1000.
@@ -227,6 +227,21 @@ Proof. intros ??; red. by rewrite later_or; apply or_mono. Qed.
 Global Instance strip_later_r_sep P1 P2 Q1 Q2 :
   StripLaterR P1 Q1 → StripLaterR P2 Q2 → StripLaterR (P1 ★ P2) (Q1 ★ Q2).
 Proof. intros ??; red. by rewrite later_sep; apply sep_mono. Qed.
+
+Global Instance strip_later_r_big_sepM `{Countable K} {A}
+    (Φ Ψ : K → A → uPred M) (m : gmap K A) :
+  (∀ x k, StripLaterR (Φ k x) (Ψ k x)) →
+  StripLaterR ([★ map] k ↦ x ∈ m, Φ k x) ([★ map] k ↦ x ∈ m, Ψ k x).
+Proof.
+  rewrite /StripLaterR=> ?. rewrite big_sepM_later; by apply big_sepM_mono.
+Qed.
+Global Instance strip_later_r_big_sepS `{Countable A}
+    (Φ Ψ : A → uPred M) (X : gset A) :
+  (∀ x, StripLaterR (Φ x) (Ψ x)) →
+  StripLaterR ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ x).
+Proof.
+  rewrite /StripLaterR=> ?. rewrite big_sepS_later; by apply big_sepS_mono.
+Qed.
 
 Global Instance strip_later_l_later P : StripLaterL (▷ P) P.
 Proof. done. Qed.

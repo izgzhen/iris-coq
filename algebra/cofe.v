@@ -58,16 +58,20 @@ Class Contractive `{Dist A, Dist B} (f : A → B) :=
   contractive n x y : (∀ i, i < n → x ≡{i}≡ y) → f x ≡{n}≡ f y.
 
 (** Bundeled version *)
-Structure cofeT := CofeT {
+Structure cofeT := CofeT' {
   cofe_car :> Type;
   cofe_equiv : Equiv cofe_car;
   cofe_dist : Dist cofe_car;
   cofe_compl : Compl cofe_car;
-  cofe_mixin : CofeMixin cofe_car
+  cofe_mixin : CofeMixin cofe_car;
+  _ : Type
 }.
-Arguments CofeT {_ _ _ _} _.
+Arguments CofeT' _ {_ _ _} _ _.
+Notation CofeT A m := (CofeT' A m A).
 Add Printing Constructor cofeT.
-Existing Instances cofe_equiv cofe_dist cofe_compl.
+Hint Extern 0 (Equiv _) => eapply (@cofe_equiv _) : typeclass_instances.
+Hint Extern 0 (Dist _) => eapply (@cofe_dist _) : typeclass_instances.
+Hint Extern 0 (Compl _) => eapply (@cofe_compl _) : typeclass_instances.
 Arguments cofe_car : simpl never.
 Arguments cofe_equiv : simpl never.
 Arguments cofe_dist : simpl never.
@@ -88,11 +92,13 @@ Section cofe_mixin.
   Proof. apply (mixin_conv_compl _ (cofe_mixin A)). Qed.
 End cofe_mixin.
 
+Hint Extern 1 (_ ≡{_}≡ _) => apply equiv_dist; assumption.
+
 (** Discrete COFEs and Timeless elements *)
 (* TODO: On paper, We called these "discrete elements". I think that makes
    more sense. *)
-Class Timeless {A : cofeT} (x : A) := timeless y : x ≡{0}≡ y → x ≡ y.
-Arguments timeless {_} _ {_} _ _.
+Class Timeless `{Equiv A, Dist A} (x : A) := timeless y : x ≡{0}≡ y → x ≡ y.
+Arguments timeless {_ _ _} _ {_} _ _.
 Class Discrete (A : cofeT) := discrete_timeless (x : A) :> Timeless x.
 
 (** General properties *)
@@ -151,8 +157,7 @@ Section cofe.
   Qed.
   Lemma timeless_iff n (x : A) `{!Timeless x} y : x ≡ y ↔ x ≡{n}≡ y.
   Proof.
-    split; intros; [by apply equiv_dist|].
-    apply (timeless _), dist_le with n; auto with lia.
+    split; intros; auto. apply (timeless _), dist_le with n; auto with lia.
   Qed.
 End cofe.
 
@@ -239,7 +244,7 @@ Section cofe_mor.
     - intros n c x; simpl.
       by rewrite (conv_compl n (fun_chain c x)) /=.
   Qed.
-  Canonical Structure cofe_mor : cofeT := CofeT cofe_mor_cofe_mixin.
+  Canonical Structure cofe_mor : cofeT := CofeT (cofeMor A B) cofe_mor_cofe_mixin.
 
   Global Instance cofe_mor_car_ne n :
     Proper (dist n ==> dist n ==> dist n) (@cofe_mor_car A B).
@@ -291,7 +296,7 @@ Section unit.
   Instance unit_compl : Compl unit := λ _, ().
   Definition unit_cofe_mixin : CofeMixin unit.
   Proof. by repeat split; try exists 0. Qed.
-  Canonical Structure unitC : cofeT := CofeT unit_cofe_mixin.
+  Canonical Structure unitC : cofeT := CofeT unit unit_cofe_mixin.
   Global Instance unit_discrete_cofe : Discrete unitC.
   Proof. done. Qed.
 End unit.
@@ -317,10 +322,10 @@ Section product.
     - intros n c; split. apply (conv_compl n (chain_map fst c)).
       apply (conv_compl n (chain_map snd c)).
   Qed.
-  Canonical Structure prodC : cofeT := CofeT prod_cofe_mixin.
-  Global Instance pair_timeless (x : A) (y : B) :
-    Timeless x → Timeless y → Timeless (x,y).
-  Proof. by intros ?? [x' y'] [??]; split; apply (timeless _). Qed.
+  Canonical Structure prodC : cofeT := CofeT (A * B) prod_cofe_mixin.
+  Global Instance prod_timeless (x : A * B) :
+    Timeless (x.1) → Timeless (x.2) → Timeless x.
+  Proof. by intros ???[??]; split; apply (timeless _). Qed.
   Global Instance prod_discrete_cofe : Discrete A → Discrete B → Discrete prodC.
   Proof. intros ?? [??]; apply _. Qed.
 End product.
@@ -340,7 +345,7 @@ Proof. intros f f' Hf g g' Hg [??]; split; [apply Hf|apply Hg]. Qed.
 
 (** Functors *)
 Structure cFunctor := CFunctor {
-  cFunctor_car : cofeT → cofeT -> cofeT;
+  cFunctor_car : cofeT → cofeT → cofeT;
   cFunctor_map {A1 A2 B1 B2} :
     ((A2 -n> A1) * (B1 -n> B2)) → cFunctor_car A1 B1 -n> cFunctor_car A2 B2;
   cFunctor_ne {A1 A2 B1 B2} n :
@@ -422,6 +427,89 @@ Proof.
   apply cofe_morC_map_ne; apply cFunctor_contractive=>i ?; split; by apply Hfg.
 Qed.
 
+(** Sum *)
+Section sum.
+  Context {A B : cofeT}.
+
+  Instance sum_dist : Dist (A + B) := λ n, sum_relation (dist n) (dist n).
+  Global Instance inl_ne : Proper (dist n ==> dist n) (@inl A B) := _.
+  Global Instance inr_ne : Proper (dist n ==> dist n) (@inr A B) := _.
+  Global Instance inl_ne_inj : Inj (dist n) (dist n) (@inl A B) := _.
+  Global Instance inr_ne_inj : Inj (dist n) (dist n) (@inr A B) := _.
+
+  Program Definition inl_chain (c : chain (A + B)) (a : A) : chain A :=
+    {| chain_car n := match c n return _ with inl a' => a' | _ => a end |}.
+  Next Obligation. intros c a n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
+  Program Definition inr_chain (c : chain (A + B)) (b : B) : chain B :=
+    {| chain_car n := match c n return _ with inr b' => b' | _ => b end |}.
+  Next Obligation. intros c b n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
+
+  Instance sum_compl : Compl (A + B) := λ c,
+    match c 0 with
+    | inl a => inl (compl (inl_chain c a))
+    | inr b => inr (compl (inr_chain c b))
+    end.
+
+  Definition sum_cofe_mixin : CofeMixin (A + B).
+  Proof.
+    split.
+    - intros x y; split=> Hx.
+      + destruct Hx=> n; constructor; by apply equiv_dist.
+      + destruct (Hx 0); constructor; apply equiv_dist=> n; by apply (inj _).
+    - apply _.
+    - destruct 1; constructor; by apply dist_S.
+    - intros n c; rewrite /compl /sum_compl.
+      feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
+      + rewrite (conv_compl n (inl_chain c _)) /=. destruct (c n); naive_solver.
+      + rewrite (conv_compl n (inr_chain c _)) /=. destruct (c n); naive_solver.
+  Qed.
+  Canonical Structure sumC : cofeT := CofeT (A + B) sum_cofe_mixin.
+
+  Global Instance inl_timeless (x : A) : Timeless x → Timeless (inl x).
+  Proof. inversion_clear 2; constructor; by apply (timeless _). Qed.
+  Global Instance inr_timeless (y : B) : Timeless y → Timeless (inr y).
+  Proof. inversion_clear 2; constructor; by apply (timeless _). Qed.
+  Global Instance sum_discrete_cofe : Discrete A → Discrete B → Discrete sumC.
+  Proof. intros ?? [?|?]; apply _. Qed.
+End sum.
+
+Arguments sumC : clear implicits.
+Typeclasses Opaque sum_dist.
+
+Instance sum_map_ne {A A' B B' : cofeT} n :
+  Proper ((dist n ==> dist n) ==> (dist n ==> dist n) ==>
+           dist n ==> dist n) (@sum_map A A' B B').
+Proof.
+  intros f f' Hf g g' Hg ??; destruct 1; constructor; [by apply Hf|by apply Hg].
+Qed.
+Definition sumC_map {A A' B B'} (f : A -n> A') (g : B -n> B') :
+  sumC A B -n> sumC A' B' := CofeMor (sum_map f g).
+Instance sumC_map_ne {A A' B B'} n :
+  Proper (dist n ==> dist n ==> dist n) (@sumC_map A A' B B').
+Proof. intros f f' Hf g g' Hg [?|?]; constructor; [apply Hf|apply Hg]. Qed.
+
+Program Definition sumCF (F1 F2 : cFunctor) : cFunctor := {|
+  cFunctor_car A B := sumC (cFunctor_car F1 A B) (cFunctor_car F2 A B);
+  cFunctor_map A1 A2 B1 B2 fg :=
+    sumC_map (cFunctor_map F1 fg) (cFunctor_map F2 fg)
+|}.
+Next Obligation.
+  intros ?? A1 A2 B1 B2 n ???; by apply sumC_map_ne; apply cFunctor_ne.
+Qed.
+Next Obligation. by intros F1 F2 A B [?|?]; rewrite /= !cFunctor_id. Qed.
+Next Obligation.
+  intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [?|?]; simpl;
+    by rewrite !cFunctor_compose.
+Qed.
+
+Instance sumCF_contractive F1 F2 :
+  cFunctorContractive F1 → cFunctorContractive F2 →
+  cFunctorContractive (sumCF F1 F2).
+Proof.
+  intros ?? A1 A2 B1 B2 n ???;
+    by apply sumC_map_ne; apply cFunctor_contractive.
+Qed.
+
 (** Discrete cofe *)
 Section discrete_cofe.
   Context `{Equiv A, @Equivalence A (≡)}.
@@ -436,18 +524,111 @@ Section discrete_cofe.
     - intros n c. rewrite /compl /discrete_compl /=;
       symmetry; apply (chain_cauchy c 0 n). omega.
   Qed.
-  Definition discreteC : cofeT := CofeT discrete_cofe_mixin.
-  Global Instance discrete_discrete_cofe : Discrete discreteC.
-  Proof. by intros x y. Qed.
 End discrete_cofe.
-Arguments discreteC _ {_ _}.
 
-Definition leibnizC (A : Type) : cofeT := @discreteC A equivL _.
-Instance leibnizC_leibniz : LeibnizEquiv (leibnizC A).
-Proof. by intros A x y. Qed.
+Notation discreteC A := (CofeT A discrete_cofe_mixin).
+Notation leibnizC A := (CofeT A (@discrete_cofe_mixin _ equivL _)).
+
+Instance discrete_discrete_cofe `{Equiv A, @Equivalence A (≡)} :
+  Discrete (discreteC A).
+Proof. by intros x y. Qed.
+Instance leibnizC_leibniz A : LeibnizEquiv (leibnizC A).
+Proof. by intros x y. Qed.
 
 Canonical Structure natC := leibnizC nat.
 Canonical Structure boolC := leibnizC bool.
+
+(* Option *)
+Section option.
+  Context {A : cofeT}.
+
+  Instance option_dist : Dist (option A) := λ n, option_Forall2 (dist n).
+  Lemma dist_option_Forall2 n mx my : mx ≡{n}≡ my ↔ option_Forall2 (dist n) mx my.
+  Proof. done. Qed.
+
+  Program Definition option_chain (c : chain (option A)) (x : A) : chain A :=
+    {| chain_car n := from_option id x (c n) |}.
+  Next Obligation. intros c x n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
+  Instance option_compl : Compl (option A) := λ c,
+    match c 0 with Some x => Some (compl (option_chain c x)) | None => None end.
+
+  Definition option_cofe_mixin : CofeMixin (option A).
+  Proof.
+    split.
+    - intros mx my; split; [by destruct 1; constructor; apply equiv_dist|].
+      intros Hxy; destruct (Hxy 0); constructor; apply equiv_dist.
+      by intros n; feed inversion (Hxy n).
+    - apply _.
+    - destruct 1; constructor; by apply dist_S.
+    - intros n c; rewrite /compl /option_compl.
+      feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
+      rewrite (conv_compl n (option_chain c _)) /=. destruct (c n); naive_solver.
+  Qed.
+  Canonical Structure optionC := CofeT (option A) option_cofe_mixin.
+  Global Instance option_discrete : Discrete A → Discrete optionC.
+  Proof. destruct 2; constructor; by apply (timeless _). Qed.
+
+  Global Instance Some_ne : Proper (dist n ==> dist n) (@Some A).
+  Proof. by constructor. Qed.
+  Global Instance is_Some_ne n : Proper (dist n ==> iff) (@is_Some A).
+  Proof. destruct 1; split; eauto. Qed.
+  Global Instance Some_dist_inj : Inj (dist n) (dist n) (@Some A).
+  Proof. by inversion_clear 1. Qed.
+  Global Instance from_option_ne {B} (R : relation B) (f : A → B) n :
+    Proper (dist n ==> R) f → Proper (R ==> dist n ==> R) (from_option f).
+  Proof. destruct 3; simpl; auto. Qed.
+
+  Global Instance None_timeless : Timeless (@None A).
+  Proof. inversion_clear 1; constructor. Qed.
+  Global Instance Some_timeless x : Timeless x → Timeless (Some x).
+  Proof. by intros ?; inversion_clear 1; constructor; apply timeless. Qed.
+
+  Lemma dist_None n mx : mx ≡{n}≡ None ↔ mx = None.
+  Proof. split; [by inversion_clear 1|by intros ->]. Qed.
+  Lemma dist_Some_inv_l n mx my x :
+    mx ≡{n}≡ my → mx = Some x → ∃ y, my = Some y ∧ x ≡{n}≡ y.
+  Proof. destruct 1; naive_solver. Qed.
+  Lemma dist_Some_inv_r n mx my y :
+    mx ≡{n}≡ my → my = Some y → ∃ x, mx = Some x ∧ x ≡{n}≡ y.
+  Proof. destruct 1; naive_solver. Qed.
+  Lemma dist_Some_inv_l' n my x : Some x ≡{n}≡ my → ∃ x', Some x' = my ∧ x ≡{n}≡ x'.
+  Proof. intros ?%(dist_Some_inv_l _ _ _ x); naive_solver. Qed.
+  Lemma dist_Some_inv_r' n mx y : mx ≡{n}≡ Some y → ∃ y', mx = Some y' ∧ y ≡{n}≡ y'.
+  Proof. intros ?%(dist_Some_inv_r _ _ _ y); naive_solver. Qed.
+End option.
+
+Typeclasses Opaque option_dist.
+Arguments optionC : clear implicits.
+
+Instance option_fmap_ne {A B : cofeT} n:
+  Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@fmap option _ A B).
+Proof. intros f f' Hf ?? []; constructor; auto. Qed.
+Definition optionC_map {A B} (f : A -n> B) : optionC A -n> optionC B :=
+  CofeMor (fmap f : optionC A → optionC B).
+Instance optionC_map_ne A B n : Proper (dist n ==> dist n) (@optionC_map A B).
+Proof. by intros f f' Hf []; constructor; apply Hf. Qed.
+
+Program Definition optionCF (F : cFunctor) : cFunctor := {|
+  cFunctor_car A B := optionC (cFunctor_car F A B);
+  cFunctor_map A1 A2 B1 B2 fg := optionC_map (cFunctor_map F fg)
+|}.
+Next Obligation.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, cFunctor_ne.
+Qed.
+Next Obligation.
+  intros F A B x. rewrite /= -{2}(option_fmap_id x).
+  apply option_fmap_setoid_ext=>y; apply cFunctor_id.
+Qed.
+Next Obligation.
+  intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -option_fmap_compose.
+  apply option_fmap_setoid_ext=>y; apply cFunctor_compose.
+Qed.
+
+Instance optionCF_contractive F :
+  cFunctorContractive F → cFunctorContractive (optionCF F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, cFunctor_contractive.
+Qed.
 
 (** Later *)
 Inductive later (A : Type) : Type := Next { later_car : A }.
@@ -478,7 +659,7 @@ Section later.
     - intros [|n] [x] [y] ?; [done|]; unfold dist, later_dist; by apply dist_S.
     - intros [|n] c; [done|by apply (conv_compl n (later_chain c))].
   Qed.
-  Canonical Structure laterC : cofeT := CofeT later_cofe_mixin.
+  Canonical Structure laterC : cofeT := CofeT (later A) later_cofe_mixin.
   Global Instance Next_contractive : Contractive (@Next A).
   Proof. intros [|n] x y Hxy; [done|]; apply Hxy; lia. Qed.
   Global Instance Later_inj n : Inj (dist n) (dist (S n)) (@Next A).
@@ -532,6 +713,7 @@ Qed.
 (** Notation for writing functors *)
 Notation "∙" := idCF : cFunctor_scope.
 Notation "F1 -n> F2" := (cofe_morCF F1%CF F2%CF) : cFunctor_scope.
-Notation "( F1 , F2 , .. , Fn )" := (prodCF .. (prodCF F1%CF F2%CF) .. Fn%CF) : cFunctor_scope.
+Notation "F1 * F2" := (prodCF F1%CF F2%CF) : cFunctor_scope.
+Notation "F1 + F2" := (sumCF F1%CF F2%CF) : cFunctor_scope.
 Notation "▶ F"  := (laterCF F%CF) (at level 20, right associativity) : cFunctor_scope.
 Coercion constCF : cofeT >-> cFunctor.

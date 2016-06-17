@@ -225,7 +225,7 @@ Fixpoint coPpick_raw (t : coPset_raw) : option positive :=
      | Some i => Some (i~0) | None => (~1) <$> coPpick_raw r
      end
   end.
-Definition coPpick (X : coPset) : positive := from_option 1 (coPpick_raw (`X)).
+Definition coPpick (X : coPset) : positive := from_option id 1 (coPpick_raw (`X)).
 
 Lemma coPpick_raw_elem_of t i : coPpick_raw t = Some i → e_of i t.
 Proof.

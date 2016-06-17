@@ -1,31 +1,32 @@
 From iris.algebra Require Export cmra list.
 From iris.prelude Require Import gmap.
 
-Fixpoint big_op {A : cmraT} `{Empty A} (xs : list A) : A :=
+Fixpoint big_op {A : ucmraT} (xs : list A) : A :=
   match xs with [] => ∅ | x :: xs => x ⋅ big_op xs end.
-Arguments big_op _ _ !_ /.
-Instance: Params (@big_op) 2.
-Definition big_opM `{Countable K} {A : cmraT} `{Empty A} (m : gmap K A) : A :=
+Arguments big_op _ !_ /.
+Instance: Params (@big_op) 1.
+Definition big_opM `{Countable K} {A : ucmraT} (m : gmap K A) : A :=
   big_op (snd <$> map_to_list m).
-Instance: Params (@big_opM) 5.
+Instance: Params (@big_opM) 4.
 
 (** * Properties about big ops *)
 Section big_op.
-Context `{CMRAUnit A}.
+Context {A : ucmraT}.
+Implicit Types xs : list A.
 
 (** * Big ops *)
 Lemma big_op_nil : big_op (@nil A) = ∅.
 Proof. done. Qed.
 Lemma big_op_cons x xs : big_op (x :: xs) = x ⋅ big_op xs.
 Proof. done. Qed.
-Global Instance big_op_permutation : Proper ((≡ₚ) ==> (≡)) big_op.
+Global Instance big_op_permutation : Proper ((≡ₚ) ==> (≡)) (@big_op A).
 Proof.
   induction 1 as [|x xs1 xs2 ? IH|x y xs|xs1 xs2 xs3]; simpl; auto.
   - by rewrite IH.
   - by rewrite !assoc (comm _ x).
   - by trans (big_op xs2).
 Qed.
-Global Instance big_op_ne n : Proper (dist n ==> dist n) big_op.
+Global Instance big_op_ne n : Proper (dist n ==> dist n) (@big_op A).
 Proof. by induction 1; simpl; repeat apply (_ : Proper (_ ==> _ ==> _) op). Qed.
 Global Instance big_op_proper : Proper ((≡) ==> (≡)) big_op := ne_proper _.
 Lemma big_op_app xs ys : big_op (xs ++ ys) ≡ big_op xs ⋅ big_op ys.
@@ -52,7 +53,8 @@ Proof. intros ?; by rewrite /big_opM map_to_list_insert. Qed.
 Lemma big_opM_delete m i x :
   m !! i = Some x → x ⋅ big_opM (delete i m) ≡ big_opM m.
 Proof.
-  intros. by rewrite -{2}(insert_delete m i x) // big_opM_insert ?lookup_delete.
+  intros. rewrite -{2}(insert_id m i x) // -insert_delete.
+  by rewrite big_opM_insert ?lookup_delete.
 Qed.
 Lemma big_opM_singleton i x : big_opM ({[i := x]} : gmap K A) ≡ x.
 Proof.
@@ -68,7 +70,7 @@ Proof.
   destruct (map_equiv_lookup_l (<[i:=x]> m1) m2 i x)
     as (y&?&Hxy); auto using lookup_insert.
   rewrite Hxy -big_opM_insert; last auto using lookup_delete.
-  by rewrite insert_delete.
+  by rewrite insert_delete insert_id.
 Qed.
 Lemma big_opM_lookup_valid n m i x : ✓{n} big_opM m → m !! i = Some x → ✓{n} x.
 Proof.

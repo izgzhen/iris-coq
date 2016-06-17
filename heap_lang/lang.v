@@ -1,4 +1,5 @@
 From iris.program_logic Require Export ectx_language ectxi_language.
+From iris.algebra Require Export cofe.
 From iris.prelude Require Export strings.
 From iris.prelude Require Import gmap.
 
@@ -508,6 +509,10 @@ Defined.
 
 Instance expr_inhabited X : Inhabited (expr X) := populate (Lit LitUnit).
 Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
+
+Canonical Structure stateC := leibnizC state.
+Canonical Structure valC := leibnizC val.
+Canonical Structure exprC X := leibnizC (expr X).
 End heap_lang.
 
 (** Language *)
