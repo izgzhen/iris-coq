@@ -68,11 +68,11 @@ Proof.
   - intros n mz'. rewrite !cmra_opM_assoc. move=> Hv /(H1 _ (Some _) Hv) /=; auto.
 Qed.
 
-Lemma alloc_local_update x y mz : ✓ (x ⋅ y ⋅? mz) → x ~l~> x ⋅ y @ mz.
+Lemma alloc_local_update x y mz :
+  (∀ n, ✓{n} (x ⋅? mz) → ✓{n} (x ⋅ y ⋅? mz)) → x ~l~> x ⋅ y @ mz.
 Proof.
-  split.
-  - intros n _. by apply cmra_valid_validN.
-  - intros n mz' _. by rewrite !(comm _ x) !cmra_opM_assoc=> ->.
+  split; first done.
+  intros n mz' _. by rewrite !(comm _ x) !cmra_opM_assoc=> ->.
 Qed.
 
 (** ** Frame preserving updates *)

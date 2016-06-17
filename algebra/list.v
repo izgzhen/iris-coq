@@ -360,6 +360,10 @@ Section properties.
       + rewrite !(cons_middle _ l1 l2) !assoc.
         rewrite !list_lookup_opM !lookup_app_r !app_length //=; lia.
   Qed.
+
+  Lemma list_singleton_local_update i x y ml :
+    x ~l~> y @ ml ≫= (!! i) → {[ i := x ]} ~l~> {[ i := y ]} @ ml.
+  Proof. intros; apply list_middle_local_update. by rewrite replicate_length. Qed.
 End properties.
 
 (** Functor *)

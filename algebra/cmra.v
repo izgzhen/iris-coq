@@ -1033,14 +1033,11 @@ Section option.
   (** Misc *)
   Global Instance Some_cmra_monotone : CMRAMonotone Some.
   Proof. split; [apply _|done|intros x y [z ->]; by exists (Some z)]. Qed.
+
+  Lemma op_None mx my : mx ⋅ my = None ↔ mx = None ∧ my = None.
+  Proof. destruct mx, my; naive_solver. Qed.
   Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my.
-  Proof.
-    destruct mx, my; rewrite /op /option_op /= -!not_eq_None_Some; naive_solver.
-  Qed.
-  Lemma option_op_positive_dist_l n mx my : mx ⋅ my ≡{n}≡ None → mx ≡{n}≡ None.
-  Proof. by destruct mx, my; inversion_clear 1. Qed.
-  Lemma option_op_positive_dist_r n mx my : mx ⋅ my ≡{n}≡ None → my ≡{n}≡ None.
-  Proof. by destruct mx, my; inversion_clear 1. Qed.
+  Proof. rewrite -!not_eq_None_Some op_None. destruct mx, my; naive_solver. Qed.
 
   Global Instance Some_persistent (x : A) : Persistent x → Persistent (Some x).
   Proof. by constructor. Qed.

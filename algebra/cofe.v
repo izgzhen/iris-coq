@@ -216,6 +216,10 @@ Arguments CofeMor {_ _} _ {_}.
 Add Printing Constructor cofeMor.
 Existing Instance cofe_mor_ne.
 
+Notation "'λne' x .. y , t" :=
+  (@CofeMor _ _ (λ x, .. (@CofeMor _ _ (λ y, t) _) ..) _)
+  (at level 200, x binder, y binder, right associativity).
+
 Section cofe_mor.
   Context {A B : cofeT}.
   Global Instance cofe_mor_proper (f : cofeMor A B) : Proper ((≡) ==> (≡)) f.
