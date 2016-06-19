@@ -28,13 +28,13 @@ Lemma wp_lift_step E1 E2
 Proof.
   intros ? He Hsafe Hstep. rewrite pvs_eq wp_eq.
   uPred.unseal; split=> n r ? Hvs; constructor; auto.
-  intros rf k Ef σ1' ???; destruct (Hvs rf (S k) Ef σ1')
+  intros k Ef σ1' rf ???; destruct (Hvs (S k) Ef σ1' rf)
     as (r'&(r1&r2&?&?&Hwp)&Hws); auto; clear Hvs; cofe_subst r'.
   destruct (wsat_update_pst k (E2 ∪ Ef) σ1 σ1' r1 (r2 ⋅ rf)) as [-> Hws'].
   { apply equiv_dist. rewrite -(ownP_spec k); auto. }
   { by rewrite assoc. }
   constructor; [done|intros e2 σ2 ef ?; specialize (Hws' σ2)].
-  destruct (λ H1 H2 H3, Hwp e2 σ2 ef k (update_pst σ2 r1) H1 H2 H3 rf k Ef σ2)
+  destruct (λ H1 H2 H3, Hwp e2 σ2 ef k (update_pst σ2 r1) H1 H2 H3 k Ef σ2 rf)
     as (r'&(r1'&r2'&?&?&?)&?); auto; cofe_subst r'.
   { split. by eapply Hstep. apply ownP_spec; auto. }
   { rewrite (comm _ r2) -assoc; eauto using wsat_le. }
@@ -49,7 +49,7 @@ Lemma wp_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) Φ e1 :
 Proof.
   intros He Hsafe Hstep; rewrite wp_eq; uPred.unseal.
   split=> n r ? Hwp; constructor; auto.
-  intros rf k Ef σ1 ???; split; [done|]. destruct n as [|n]; first lia.
+  intros k Ef σ1 rf ???; split; [done|]. destruct n as [|n]; first lia.
   intros e2 σ2 ef ?; destruct (Hstep σ1 e2 σ2 ef); auto; subst.
   destruct (Hwp e2 ef k r) as (r1&r2&Hr&?&?); auto.
   exists r1,r2; split_and?; try done.

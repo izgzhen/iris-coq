@@ -96,7 +96,7 @@ Proof.
   inversion Hwptp as [|?? r ?? rs Hwp _]; clear Hwptp; subst.
   move: Hwp. rewrite wp_eq. uPred.unseal=> /wp_value_inv Hwp.
   rewrite pvs_eq in Hwp.
-  destruct (Hwp (big_op rs) 2 ∅ σ2) as [r' []]; rewrite ?right_id_L; auto.
+  destruct (Hwp 2 ∅ σ2 (big_op rs)) as [r' []]; rewrite ?right_id_L; auto.
 Qed.
 
 Lemma ht_adequacy_result E φ e v t2 σ1 m σ2 :
