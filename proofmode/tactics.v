@@ -11,7 +11,6 @@ Declare Reduction env_cbv := cbv [
   bool_eq_dec bool_rec bool_rect bool_dec eqb andb (* bool *)
   assci_eq_dec ascii_to_digits Ascii.ascii_dec Ascii.ascii_rec Ascii.ascii_rect
   string_eq_dec string_rec string_rect (* strings *)
-  himpl happly
   env_persistent env_spatial envs_persistent
   envs_lookup envs_lookup_delete envs_delete envs_app
     envs_simple_replace envs_replace envs_split envs_clear_spatial].
@@ -135,7 +134,7 @@ Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
     eapply tac_forall_specialize with _ H _ _ _ xs; (* (i:=H) (a:=x) *)
       [env_cbv; reflexivity || fail 1 "iSpecialize:" H "not found"
       |apply _ || fail 1 "iSpecialize:" H "not a forall of the right arity or type"
-      |env_cbv; reflexivity|]
+      |cbn [himpl hcurry]; reflexivity|]
   end.
 
 Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=

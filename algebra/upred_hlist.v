@@ -25,7 +25,7 @@ Proof.
     + apply exist_elim=> x; rewrite IH; apply exist_elim=> xs.
       by rewrite -(exist_intro (hcons x xs)).
   - apply exist_elim=> xs; induction xs as [|A As x xs IH]; simpl; auto.
-    by rewrite -(exist_intro x).
+    by rewrite -(exist_intro x) IH.
 Qed.
 
 Lemma hforall_forall {As B} (f : himpl As B) (Φ : B → uPred M) :
@@ -33,7 +33,7 @@ Lemma hforall_forall {As B} (f : himpl As B) (Φ : B → uPred M) :
 Proof.
   apply (anti_symm _).
   - apply forall_intro=> xs; induction xs as [|A As x xs IH]; simpl; auto.
-    by rewrite (forall_elim x).
+    by rewrite (forall_elim x) IH.
   - induction As as [|A As IH]; simpl.
     + by rewrite (forall_elim hnil) .
     + apply forall_intro=> x; rewrite -IH; apply forall_intro=> xs.
