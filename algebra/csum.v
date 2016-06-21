@@ -8,8 +8,8 @@ Local Arguments cmra_validN _ _ !_ /.
 Local Arguments cmra_valid _  !_ /.
 
 Inductive csum (A B : Type) :=
-| Cinl : A -> csum A B
-| Cinr : B -> csum A B
+| Cinl : A → csum A B
+| Cinr : B → csum A B
 | CsumBot : csum A B.
 Arguments Cinl {_ _} _.
 Arguments Cinr {_ _} _.
@@ -22,13 +22,13 @@ Implicit Types b : B.
 
 (* Cofe *)
 Inductive csum_equiv : Equiv (csum A B) :=
-  | Cinl_equiv a a' : a ≡ a' -> Cinl a ≡ Cinl a'
-  | Cinlr_equiv b b' : b ≡ b' -> Cinr b ≡ Cinr b'
+  | Cinl_equiv a a' : a ≡ a' → Cinl a ≡ Cinl a'
+  | Cinlr_equiv b b' : b ≡ b' → Cinr b ≡ Cinr b'
   | CsumBot_equiv : CsumBot ≡ CsumBot.
 Existing Instance csum_equiv.
 Inductive csum_dist : Dist (csum A B) :=
-  | Cinl_dist n a a' : a ≡{n}≡ a' -> Cinl a ≡{n}≡ Cinl a'
-  | Cinlr_dist n b b' : b ≡{n}≡ b' -> Cinr b ≡{n}≡ Cinr b'
+  | Cinl_dist n a a' : a ≡{n}≡ a' → Cinl a ≡{n}≡ Cinl a'
+  | Cinlr_dist n b b' : b ≡{n}≡ b' → Cinr b ≡{n}≡ Cinr b'
   | CsumBot_dist n : CsumBot ≡{n}≡ CsumBot.
 Existing Instance csum_dist.
 
