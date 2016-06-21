@@ -9,6 +9,7 @@ buildjob:
   - 'cat build-log.txt  | egrep "[a-zA-Z0-9_/-]+ \(user: [0-9]" > build-time.txt'
   only:
   - master
+  - jh_simplified_resources
   artifacts:
     paths:
     - build-time.txt
