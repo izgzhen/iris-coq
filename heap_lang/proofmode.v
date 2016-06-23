@@ -148,7 +148,7 @@ Tactic Notation "wp_store" :=
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
        iAssumptionCore || fail "wp_store: cannot find" l "↦ ?"
       |env_cbv; reflexivity
-      |wp_finish; try wp_seq]
+      |wp_finish]
   | _ => fail "wp_store: not a 'wp'"
   end.
 
