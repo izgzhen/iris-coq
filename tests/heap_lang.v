@@ -27,7 +27,7 @@ Section LiftingTests.
      nclose N ⊆ E → heap_ctx N ⊢ WP heap_e @ E {{ v, v = #2 }}.
   Proof.
     iIntros {HN} "#?". rewrite /heap_e. iApply (wp_mask_weaken N); first done.
-    wp_alloc l. wp_let. wp_load. wp_op. wp_store. wp_seq. by wp_load.
+    wp_alloc l. wp_let. wp_load. wp_op. wp_store. by wp_load.
   Qed.
 
   Definition heap_e2  : expr [] :=
@@ -39,7 +39,7 @@ Section LiftingTests.
   Proof.
     iIntros {HN} "#?". rewrite /heap_e2. iApply (wp_mask_weaken N); first done.
     wp_alloc l. wp_let. wp_alloc l'. wp_let.
-    wp_load. wp_op. wp_store. wp_seq. wp_load. done.
+    wp_load. wp_op. wp_store. wp_load. done.
   Qed.
 
   Definition FindPred : val :=
