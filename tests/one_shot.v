@@ -71,15 +71,15 @@ Proof.
       + iSplit. iRight; iExists m; by iSplitL "Hl". eauto. }
     wp_let. iPvsIntro. iIntros "!". wp_seq.
     iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as {m} "[% Hγ']"; subst.
-    { wp_case. wp_seq. by iPvsIntro. }
-    wp_case. wp_let. wp_focus (! _)%E.
+    { wp_match. by iPvsIntro. }
+    wp_match. wp_focus (! _)%E.
     iInv> N as "[[Hl Hγ]|Hinv]"; last iDestruct "Hinv" as {m'} "[Hl Hγ]".
     { iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct (own_valid with "Hγ") as "%". }
     wp_load.
     iCombine "Hγ" "Hγ'" as "Hγ".
     iDestruct (own_valid with "#Hγ") as %[=->]%dec_agree_op_inv.
     iSplitL "Hl"; [iRight; by eauto|].
-    wp_case. wp_let. iApply wp_assert'. wp_op=>?; simplify_eq/=; eauto.
+    wp_match. iApply wp_assert'. wp_op=>?; simplify_eq/=; eauto.
 Qed.
 
 Lemma hoare_one_shot (Φ : val → iProp) :

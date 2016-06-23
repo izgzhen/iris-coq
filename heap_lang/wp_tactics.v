@@ -92,16 +92,16 @@ Tactic Notation "wp_if" :=
   | _ => fail "wp_if: not a 'wp'"
   end.
 
-Tactic Notation "wp_case" :=
+Tactic Notation "wp_match" :=
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
     | Case _ _ _ =>
       wp_bind K;
-      etrans; [|first[eapply wp_case_inl; wp_done|eapply wp_case_inr; wp_done]];
-      wp_finish
-    end) || fail "wp_case: cannot find 'Case' in" e
-  | _ => fail "wp_case: not a 'wp'"
+      etrans; [|first[eapply wp_match_inl; wp_done|eapply wp_match_inr; wp_done]];
+      simpl_subst; wp_finish
+    end) || fail "wp_match: cannot find 'Match' in" e
+  | _ => fail "wp_match: not a 'wp'"
   end.
 
 Tactic Notation "wp_focus" open_constr(efoc) :=
