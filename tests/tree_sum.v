@@ -40,13 +40,13 @@ Lemma sum_loop_wp `{!heapG Σ} heapN v t l (n : Z) (Φ : val → iPropG heap_lan
   ⊢ WP sum_loop v #l {{ Φ }}.
 Proof.
   iIntros "(#Hh & Hl & Ht & HΦ)".
-  iLöb {v t l n Φ} as "IH". wp_rec. wp_let.
+  iLöb {v t l n Φ} as "IH". wp_rec; wp_let.
   destruct t as [n'|tl tr]; simpl in *.
   - iDestruct "Ht" as "%"; subst.
-    wp_case. wp_let. wp_load. wp_op. wp_store.
+    wp_match. wp_load. wp_op. wp_store.
     by iApply ("HΦ" with "Hl").
   - iDestruct "Ht" as {ll lr vl vr} "(% & Hll & Htl & Hlr & Htr)"; subst.
-    wp_case. wp_let. wp_proj. wp_load.
+    wp_match. wp_proj. wp_load.
     wp_apply ("IH" with "Hl Htl"). iIntros "Hl Htl".
     wp_seq. wp_proj. wp_load.
     wp_apply ("IH" with "Hl Htr"). iIntros "Hl Htr".

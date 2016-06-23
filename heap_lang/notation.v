@@ -99,3 +99,17 @@ Notation "'let:' x := e1 'in' e2" := (LamV x%bind e2%E e1%E)
   (at level 102, x at level 1, e1, e2 at level 200) : val_scope.
 Notation "e1 ;; e2" := (LamV BAnon e2%E e1%E)
   (at level 100, e2 at level 200, format "e1  ;;  e2") : val_scope.
+
+(** Notations for option *)
+Notation NONE := (InjL #()).
+Notation SOME x := (InjR x).
+
+Notation NONEV := (InjLV #()).
+Notation SOMEV x := (InjRV x).
+
+Notation "'match:' e0 'with' 'NONE' => e1 | 'SOME' x => e2 'end'" :=
+  (Match e0 BAnon e1 x%bind e2)
+  (e0, e1, x, e2 at level 200) : expr_scope.
+Notation "'match:' e0 'with' 'SOME' x => e2 | 'NONE' => e1 |  'end'" :=
+  (Match e0 BAnon e1 x%bind e2)
+  (e0, e1, x, e2 at level 200, only parsing) : expr_scope.

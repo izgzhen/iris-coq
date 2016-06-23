@@ -77,11 +77,11 @@ Proof.
   iLöb as "IH". wp_rec. wp_focus (! _)%E. iInv N as {v} "[Hl Hinv]".
   wp_load. iDestruct "Hinv" as "[%|Hinv]"; subst.
   - iSplitL "Hl"; [iNext; iExists _; iFrame; eauto|].
-    wp_case. wp_seq. iApply ("IH" with "Hγ Hv").
-  - iDestruct "Hinv" as {v'} "[% [HΨ|Hγ']]"; subst.
+    wp_match. iApply ("IH" with "Hγ Hv").
+  - iDestruct "Hinv" as {v'} "[% [HΨ|Hγ']]"; simplify_eq/=.
     + iSplitL "Hl Hγ".
       { iNext. iExists _; iFrame; eauto. }
-      wp_case. wp_let. iPvsIntro. by iApply "Hv".
+      wp_match. by iApply "Hv".
     + iCombine "Hγ" "Hγ'" as "Hγ". iDestruct (own_valid with "Hγ") as %[].
 Qed.
 End proof.

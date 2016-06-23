@@ -45,7 +45,7 @@ Section client.
     iApply (wp_par heapN N (λ _, True%I) (λ _, True%I)); first done.
     iFrame "Hh". iSplitL "Hy Hs".
     - (* The original thread, the sender. *)
-      wp_store. wp_seq. iApply signal_spec; iFrame "Hs"; iSplit; [|done].
+      wp_store. iApply signal_spec; iFrame "Hs"; iSplit; [|done].
       iExists _; iSplitL; [done|]. iAlways; iIntros {n}. wp_let. by wp_op.
     - (* The two spawned threads, the waiters. *)
       iSplitL; [|by iIntros {_ _} "_ >"].
