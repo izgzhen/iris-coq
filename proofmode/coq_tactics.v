@@ -796,65 +796,77 @@ Proof.
 Qed.
 
 (** * Framing *)
-(** The [option] is to account for formulas that can be framed entirely, so
-we do not end up with [True]s everywhere. *)
-Class Frame (R P : uPred M) (mQ : option (uPred M)) :=
-  frame : R ★ from_option id True mQ ⊢ P.
+Class Frame (R P Q : uPred M) := frame : R ★ Q ⊢ P.
 Arguments frame : clear implicits.
 
-Global Instance frame_here R : Frame R R None.
+Global Instance frame_here R : Frame R R True.
 Proof. by rewrite /Frame right_id. Qed.
-Global Instance frame_sep_l R P1 P2 mQ :
-  Frame R P1 mQ →
-  Frame R (P1 ★ P2) (Some $ if mQ is Some Q then Q ★ P2 else P2)%I | 9.
-Proof. rewrite /Frame => <-. destruct mQ; simpl; solve_sep_entails. Qed.
-Global Instance frame_sep_r R P1 P2 mQ :
-  Frame R P2 mQ →
-  Frame R (P1 ★ P2) (Some $ if mQ is Some Q then P1 ★ Q else P1)%I | 10.
-Proof. rewrite /Frame => <-. destruct mQ; simpl; solve_sep_entails. Qed.
-Global Instance frame_and_l R P1 P2 mQ :
-  Frame R P1 mQ →
-  Frame R (P1 ∧ P2) (Some $ if mQ is Some Q then Q ∧ P2 else P2)%I | 9.
-Proof. rewrite /Frame => <-. destruct mQ; simpl; eauto 10 with I. Qed.
-Global Instance frame_and_r R P1 P2 mQ :
-  Frame R P2 mQ →
-  Frame R (P1 ∧ P2) (Some $ if mQ is Some Q then P1 ∧ Q else P1)%I | 10.
-Proof. rewrite /Frame => <-. destruct mQ; simpl; eauto 10 with I. Qed.
-Global Instance frame_or R P1 P2 mQ1 mQ2 :
-  Frame R P1 mQ1 → Frame R P2 mQ2 →
-  Frame R (P1 ∨ P2) (match mQ1, mQ2 with
-                     | Some Q1, Some Q2 => Some (Q1 ∨ Q2)%I | _, _ => None
-                     end).
+
+Class MakeSep (P Q PQ : uPred M) := make_sep : P ★ Q ⊣⊢ PQ.
+Global Instance make_sep_true_l P : MakeSep True P P.
+Proof. by rewrite /MakeSep left_id. Qed.
+Global Instance make_sep_true_r P : MakeSep P True P.
+Proof. by rewrite /MakeSep right_id. Qed.
+Global Instance make_sep_fallthrough P Q : MakeSep P Q (P ★ Q) | 100.
+Proof. done. Qed.
+Global Instance frame_sep_l R P1 P2 Q Q' :
+  Frame R P1 Q → MakeSep Q P2 Q' → Frame R (P1 ★ P2) Q' | 9.
+Proof. rewrite /Frame /MakeSep => <- <-. by rewrite assoc. Qed.
+Global Instance frame_sep_r R P1 P2 Q Q' :
+  Frame R P2 Q → MakeSep P1 Q Q' → Frame R (P1 ★ P2) Q' | 10.
+Proof. rewrite /Frame /MakeSep => <- <-. solve_sep_entails. Qed.
+
+Class MakeAnd (P Q PQ : uPred M) := make_and : P ∧ Q ⊣⊢ PQ.
+Global Instance make_and_true_l P : MakeAnd True P P.
+Proof. by rewrite /MakeAnd left_id. Qed.
+Global Instance make_and_true_r P : MakeAnd P True P.
+Proof. by rewrite /MakeAnd right_id. Qed.
+Global Instance make_and_fallthrough P Q : MakeSep P Q (P ★ Q) | 100.
+Proof. done. Qed.
+Global Instance frame_and_l R P1 P2 Q Q' :
+  Frame R P1 Q → MakeAnd Q P2 Q' → Frame R (P1 ∧ P2) Q' | 9.
+Proof. rewrite /Frame /MakeAnd => <- <-; eauto 10 with I. Qed.
+Global Instance frame_and_r R P1 P2 Q Q' :
+  Frame R P2 Q → MakeAnd P1 Q Q' → Frame R (P1 ∧ P2) Q' | 10.
+Proof. rewrite /Frame /MakeAnd => <- <-; eauto 10 with I. Qed.
+
+Class MakeOr (P Q PQ : uPred M) := make_or : P ∨ Q ⊣⊢ PQ.
+Global Instance make_or_true_l P : MakeOr True P True.
+Proof. by rewrite /MakeOr left_absorb. Qed.
+Global Instance make_or_true_r P : MakeOr P True True.
+Proof. by rewrite /MakeOr right_absorb. Qed.
+Global Instance make_or_fallthrough P Q : MakeOr P Q (P ∨ Q) | 100.
+Proof. done. Qed.
+Global Instance frame_or R P1 P2 Q1 Q2 Q :
+  Frame R P1 Q1 → Frame R P2 Q2 → MakeOr Q1 Q2 Q → Frame R (P1 ∨ P2) Q.
+Proof. rewrite /Frame /MakeOr => <- <- <-. by rewrite -sep_or_l. Qed.
+
+Class MakeLater (P lP : uPred M) := make_later : ▷ P ⊣⊢ lP.
+Global Instance make_later_true : MakeLater True True.
+Proof. by rewrite /MakeLater later_True. Qed.
+Global Instance make_later_fallthrough P : MakeLater P (▷ P) | 100.
+Proof. done. Qed.
+
+Global Instance frame_later R P Q Q' :
+  Frame R P Q → MakeLater Q Q' → Frame R (▷ P) Q'.
 Proof.
-  rewrite /Frame=> <- <-.
-  destruct mQ1 as [Q1|], mQ2 as [Q2|]; simpl; auto with I.
-  by rewrite -sep_or_l.
+  rewrite /Frame /MakeLater=><- <-. by rewrite later_sep -(later_intro R).
 Qed.
-Global Instance frame_later R P mQ :
-  Frame R P mQ → Frame R (▷ P) (if mQ is Some Q then Some (▷ Q) else None)%I.
-Proof.
-  rewrite /Frame=><-.
-  by destruct mQ; rewrite /= later_sep -(later_intro R) ?later_True.
-Qed.
-Global Instance frame_exist {A} R (Φ : A → uPred M) mΨ :
-  (∀ a, Frame R (Φ a) (mΨ a)) →
-  Frame R (∃ x, Φ x) (Some (∃ x, if mΨ x is Some Q then Q else True))%I.
+
+Global Instance frame_exist {A} R (Φ Ψ : A → uPred M) :
+  (∀ a, Frame R (Φ a) (Ψ a)) → Frame R (∃ x, Φ x) (∃ x, Ψ x).
 Proof. rewrite /Frame=> ?. by rewrite sep_exist_l; apply exist_mono. Qed.
-Global Instance frame_forall {A} R (Φ : A → uPred M) mΨ :
-  (∀ a, Frame R (Φ a) (mΨ a)) →
-  Frame R (∀ x, Φ x) (Some (∀ x, if mΨ x is Some Q then Q else True))%I.
+Global Instance frame_forall {A} R (Φ Ψ : A → uPred M) :
+  (∀ a, Frame R (Φ a) (Ψ a)) → Frame R (∀ x, Φ x) (∀ x, Ψ x).
 Proof. rewrite /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
 
-Lemma tac_frame Δ Δ' i p R P mQ :
-  envs_lookup_delete i Δ = Some (p, R, Δ') → Frame R P mQ →
-  (if mQ is Some Q then (if p then Δ else Δ') ⊢ Q else True) →
-  Δ ⊢ P.
+Lemma tac_frame Δ Δ' i p R P Q :
+  envs_lookup_delete i Δ = Some (p, R, Δ') → Frame R P Q →
+  ((if p then Δ else Δ') ⊢ Q) → Δ ⊢ P.
 Proof.
   intros [? ->]%envs_lookup_delete_Some ? HQ. destruct p.
-  - rewrite envs_lookup_persistent_sound // always_elim.
-    rewrite -(frame R P). destruct mQ as [Q|]; rewrite ?HQ /=; auto with I.
-  - rewrite envs_lookup_sound //; simpl.
-    rewrite -(frame R P). destruct mQ as [Q|]; rewrite ?HQ /=; auto with I.
+  - by rewrite envs_lookup_persistent_sound // always_elim -(frame R P) HQ.
+  - rewrite envs_lookup_sound //; simpl. by rewrite -(frame R P) HQ.
 Qed.
 
 (** * Disjunction *)
