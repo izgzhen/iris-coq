@@ -34,6 +34,11 @@ Tactic Notation "iTypeOf" constr(H) tactic(tac):=
   | Some (?p,?P) => tac p P
   end.
 
+Ltac iMatchGoal tac :=
+  match goal with
+  | |- context[ environments.Esnoc _ ?x ?P ] => tac x P
+  end.
+
 (** * Start a proof *)
 Tactic Notation "iProof" :=
   lazymatch goal with
@@ -788,6 +793,10 @@ Tactic Notation "iRewrite" open_constr(t) "in" constr(H) :=
   iRewriteCore false t in H.
 Tactic Notation "iRewrite" "-" open_constr(t) "in" constr(H) :=
   iRewriteCore true t in H.
+
+Ltac iSimplifyEq := repeat (
+  iMatchGoal ltac:(fun H P => match P with (_ = _)%I => iDestruct H as %? end)
+  || simplify_eq/=).
 
 (* Make sure that by and done solve trivial things in proof mode *)
 Hint Extern 0 (of_envs _ ⊢ _) => by iPureIntro.
