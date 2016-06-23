@@ -54,8 +54,8 @@ Proof.
     eapply pvs_ownG_updateP, (iprod_singleton_updateP_empty (inG_id i));
       first (eapply alloc_updateP_strong', cmra_transport_valid, Ha);
       naive_solver.
-  - apply exist_elim=>m; apply const_elim_l=>-[γ [Hfresh ->]].
-    by rewrite !own_eq /own_def -(exist_intro γ) const_equiv // left_id.
+  - apply exist_elim=>m; apply pure_elim_l=>-[γ [Hfresh ->]].
+    by rewrite !own_eq /own_def -(exist_intro γ) pure_equiv // left_id.
 Qed.
 Lemma own_alloc a E : ✓ a → True ={E}=> ∃ γ, own γ a.
 Proof.
@@ -70,14 +70,14 @@ Proof.
   - eapply pvs_ownG_updateP, iprod_singleton_updateP;
       first by (eapply singleton_updateP', cmra_transport_updateP', Ha).
     naive_solver.
-  - apply exist_elim=>m; apply const_elim_l=>-[a' [-> HP]].
-    rewrite -(exist_intro a'). by apply and_intro; [apply const_intro|].
+  - apply exist_elim=>m; apply pure_elim_l=>-[a' [-> HP]].
+    rewrite -(exist_intro a'). by apply and_intro; [apply pure_intro|].
 Qed.
 
 Lemma own_update γ a a' E : a ~~> a' → own γ a ={E}=> own γ a'.
 Proof.
   intros; rewrite (own_updateP (a' =)); last by apply cmra_update_updateP.
-  by apply pvs_mono, exist_elim=> a''; apply const_elim_l=> ->.
+  by apply pvs_mono, exist_elim=> a''; apply pure_elim_l=> ->.
 Qed.
 End global.
 

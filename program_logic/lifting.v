@@ -76,9 +76,9 @@ Proof.
   apply forall_intro=>e2'; apply forall_intro=>σ2'.
   apply forall_intro=>ef; apply wand_intro_l.
   rewrite always_and_sep_l -assoc -always_and_sep_l.
-  apply const_elim_l=>-[[v2 Hv] ?] /=.
+  apply pure_elim_l=>-[[v2 Hv] ?] /=.
   rewrite -pvs_intro.
-  rewrite (forall_elim v2) (forall_elim σ2') (forall_elim ef) const_equiv //.
+  rewrite (forall_elim v2) (forall_elim σ2') (forall_elim ef) pure_equiv //.
   rewrite left_id wand_elim_r -(wp_value _ _ e2' v2) //.
   by erewrite of_to_val.
 Qed.
@@ -96,7 +96,7 @@ Proof.
   apply forall_intro=>e2'; apply forall_intro=>σ2'; apply forall_intro=>ef'.
   apply wand_intro_l.
   rewrite always_and_sep_l -assoc -always_and_sep_l to_of_val.
-  apply const_elim_l=>-[-> [[->] ->]] /=. by rewrite wand_elim_r.
+  apply pure_elim_l=>-[-> [[->] ->]] /=. by rewrite wand_elim_r.
 Qed.
 
 Lemma wp_lift_pure_det_step {E Φ} e1 e2 ef :
@@ -108,6 +108,6 @@ Proof.
   intros.
   rewrite -(wp_lift_pure_step E (λ e2' ef', e2 = e2' ∧ ef = ef') _ e1) //=.
   apply later_mono, forall_intro=>e'; apply forall_intro=>ef'.
-  by apply impl_intro_l, const_elim_l=>-[-> ->].
+  by apply impl_intro_l, pure_elim_l=>-[-> ->].
 Qed.
 End lifting.

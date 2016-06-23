@@ -136,12 +136,12 @@ Section heap.
     l ↦{q1} v1 ★ l ↦{q2} v2 ⊣⊢ v1 = v2 ∧ l ↦{q1+q2} v1.
   Proof.
     destruct (decide (v1 = v2)) as [->|].
-    { by rewrite heap_mapsto_op_eq const_equiv // left_id. }
+    { by rewrite heap_mapsto_op_eq pure_equiv // left_id. }
     rewrite heap_mapsto_eq -auth_own_op op_singleton pair_op dec_agree_ne //.
-    apply (anti_symm (⊢)); last by apply const_elim_l.
+    apply (anti_symm (⊢)); last by apply pure_elim_l.
     rewrite auth_own_valid gmap_validI (forall_elim l) lookup_singleton.
     rewrite option_validI prod_validI frac_validI discrete_valid.
-    by apply const_elim_r.
+    by apply pure_elim_r.
   Qed.
 
   Lemma heap_mapsto_op_split l q v : l ↦{q} v ⊣⊢ (l ↦{q/2} v ★ l ↦{q/2} v).

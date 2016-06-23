@@ -224,7 +224,7 @@ Proof. auto using pvs_mask_frame'. Qed.
 Lemma pvs_ownG_update E m m' : m ~~> m' → ownG m ={E}=> ownG m'.
 Proof.
   intros; rewrite (pvs_ownG_updateP E _ (m' =)); last by apply cmra_update_updateP.
-  by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.const_elim_l=> ->.
+  by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.pure_elim_l=> ->.
 Qed.
 End pvs.
 

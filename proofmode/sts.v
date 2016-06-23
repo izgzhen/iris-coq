@@ -22,7 +22,7 @@ Proof.
   rewrite // -always_and_sep_l. apply and_intro; first done.
   rewrite envs_lookup_sound //; simpl; apply sep_mono_r.
   apply forall_intro=>s; apply wand_intro_l.
-  rewrite -assoc; apply const_elim_sep_l=> Hs.
+  rewrite -assoc; apply pure_elim_sep_l=> Hs.
   destruct (HΔ' s) as (Δ'&?&?); clear HΔ'; auto.
   rewrite envs_simple_replace_sound' //; simpl.
   by rewrite right_id wand_elim_r.

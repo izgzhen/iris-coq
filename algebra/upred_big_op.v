@@ -223,7 +223,7 @@ Section gmap.
     (□ [★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, □ Φ k x).
   Proof.
     rewrite /uPred_big_sepM.
-    induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?always_const //.
+    induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?always_pure //.
     by rewrite always_sep IH.
   Qed.
 
@@ -237,14 +237,14 @@ Section gmap.
   Proof.
     intros. apply (anti_symm _).
     { apply forall_intro=> k; apply forall_intro=> x.
-      apply impl_intro_l, const_elim_l=> ?; by apply big_sepM_lookup. }
+      apply impl_intro_l, pure_elim_l=> ?; by apply big_sepM_lookup. }
     rewrite /uPred_big_sepM. setoid_rewrite <-elem_of_map_to_list.
     induction (map_to_list m) as [|[i x] l IH]; csimpl; auto.
     rewrite -always_and_sep_l; apply and_intro.
-    - rewrite (forall_elim i) (forall_elim x) const_equiv; last by left.
+    - rewrite (forall_elim i) (forall_elim x) pure_equiv; last by left.
       by rewrite True_impl.
     - rewrite -IH. apply forall_mono=> k; apply forall_mono=> y.
-      apply impl_intro_l, const_elim_l=> ?. rewrite const_equiv; last by right.
+      apply impl_intro_l, pure_elim_l=> ?. rewrite pure_equiv; last by right.
       by rewrite True_impl.
   Qed.
 
@@ -253,7 +253,7 @@ Section gmap.
     ⊢ [★ map] k↦x ∈ m, Ψ k x.
   Proof.
     rewrite always_and_sep_l. do 2 setoid_rewrite always_forall.
-    setoid_rewrite always_impl; setoid_rewrite always_const.
+    setoid_rewrite always_impl; setoid_rewrite always_pure.
     rewrite -big_sepM_forall -big_sepM_sepM. apply big_sepM_mono; auto=> k x ?.
     by rewrite -always_wand_impl always_elim wand_elim_l.
   Qed.
@@ -345,7 +345,7 @@ Section gset.
   Lemma big_sepS_always Φ X : □ ([★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, □ Φ y).
   Proof.
     rewrite /uPred_big_sepS.
-    induction (elements X) as [|x l IH]; csimpl; first by rewrite ?always_const.
+    induction (elements X) as [|x l IH]; csimpl; first by rewrite ?always_pure.
     by rewrite always_sep IH.
   Qed.
 
@@ -358,13 +358,13 @@ Section gset.
   Proof.
     intros. apply (anti_symm _).
     { apply forall_intro=> x.
-      apply impl_intro_l, const_elim_l=> ?; by apply big_sepS_elem_of. }
+      apply impl_intro_l, pure_elim_l=> ?; by apply big_sepS_elem_of. }
     rewrite /uPred_big_sepS. setoid_rewrite <-elem_of_elements.
     induction (elements X) as [|x l IH]; csimpl; auto.
     rewrite -always_and_sep_l; apply and_intro.
-    - rewrite (forall_elim x) const_equiv; last by left. by rewrite True_impl.
+    - rewrite (forall_elim x) pure_equiv; last by left. by rewrite True_impl.
     - rewrite -IH. apply forall_mono=> y.
-      apply impl_intro_l, const_elim_l=> ?. rewrite const_equiv; last by right.
+      apply impl_intro_l, pure_elim_l=> ?. rewrite pure_equiv; last by right.
       by rewrite True_impl.
   Qed.
 
@@ -372,7 +372,7 @@ Section gset.
       □ (∀ x, ■ (x ∈ X) → Φ x → Ψ x) ∧ ([★ set] x ∈ X, Φ x) ⊢ [★ set] x ∈ X, Ψ x.
   Proof.
     rewrite always_and_sep_l always_forall.
-    setoid_rewrite always_impl; setoid_rewrite always_const.
+    setoid_rewrite always_impl; setoid_rewrite always_pure.
     rewrite -big_sepS_forall -big_sepS_sepS. apply big_sepS_mono; auto=> x ?.
     by rewrite -always_wand_impl always_elim wand_elim_l.
   Qed.
