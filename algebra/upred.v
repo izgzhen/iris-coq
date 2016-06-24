@@ -980,7 +980,7 @@ Lemma later_forall {A} (Φ : A → uPred M) : (▷ ∀ a, Φ a) ⊣⊢ (∀ a, �
 Proof. unseal; by split=> -[|n] x. Qed.
 Lemma later_exist_1 {A} (Φ : A → uPred M) : (∃ a, ▷ Φ a) ⊢ (▷ ∃ a, Φ a).
 Proof. unseal; by split=> -[|[|n]] x. Qed.
-Lemma later_exist' `{Inhabited A} (Φ : A → uPred M) : (▷ ∃ a, Φ a) ⊢ ∃ a, ▷ Φ a.
+Lemma later_exist_2 `{Inhabited A} (Φ : A → uPred M) : (▷ ∃ a, Φ a) ⊢ ∃ a, ▷ Φ a.
 Proof. unseal; split=> -[|[|n]] x; done || by exists inhabitant. Qed.
 Lemma later_sep P Q : ▷ (P ★ Q) ⊣⊢ ▷ P ★ ▷ Q.
 Proof.
@@ -1009,7 +1009,7 @@ Proof.
 Qed.
 Lemma later_exist `{Inhabited A} (Φ : A → uPred M) :
   ▷ (∃ a, Φ a) ⊣⊢ (∃ a, ▷ Φ a).
-Proof. apply: anti_symm; eauto using later_exist', later_exist_1. Qed.
+Proof. apply: anti_symm; eauto using later_exist_2, later_exist_1. Qed.
 Lemma later_wand P Q : ▷ (P -★ Q) ⊢ ▷ P -★ ▷ Q.
 Proof. apply wand_intro_r;rewrite -later_sep; apply later_mono,wand_elim_l. Qed.
 Lemma later_iff P Q : ▷ (P ↔ Q) ⊢ ▷ P ↔ ▷ Q.
