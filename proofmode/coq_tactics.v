@@ -667,6 +667,12 @@ Proof. intros. by rewrite /AndSplit always_and_sep_l. Qed.
 Global Instance and_split_sep_persistent_r P1 P2 :
   PersistentP P2 → AndSplit (P1 ★ P2) P1 P2.
 Proof. intros. by rewrite /AndSplit always_and_sep_r. Qed.
+Global Instance and_split_always P Q1 Q2 :
+  AndSplit P Q1 Q2 → AndSplit (□ P) (□ Q1) (□ Q2).
+Proof. rewrite /AndSplit=> <-. by rewrite always_and. Qed.
+Global Instance and_split_later P Q1 Q2 :
+  AndSplit P Q1 Q2 → AndSplit (▷ P) (▷ Q1) (▷ Q2).
+Proof. rewrite /AndSplit=> <-. by rewrite later_and. Qed.
 
 Lemma tac_and_split Δ P Q1 Q2 : AndSplit P Q1 Q2 → (Δ ⊢ Q1) → (Δ ⊢ Q2) → Δ ⊢ P.
 Proof. intros. rewrite -(and_split P). by apply and_intro. Qed.
@@ -677,6 +683,13 @@ Arguments sep_split : clear implicits.
 
 Global Instance sep_split_sep P1 P2 : SepSplit (P1 ★ P2) P1 P2 | 100.
 Proof. done. Qed.
+Global Instance sep_split_always P Q1 Q2 :
+  SepSplit P Q1 Q2 → SepSplit (□ P) (□ Q1) (□ Q2).
+Proof. rewrite /SepSplit=> <-. by rewrite always_sep. Qed.
+Global Instance sep_split_later P Q1 Q2 :
+  SepSplit P Q1 Q2 → SepSplit (▷ P) (▷ Q1) (▷ Q2).
+Proof. rewrite /SepSplit=> <-. by rewrite later_sep. Qed.
+
 Global Instance sep_split_ownM (a b : M) :
   SepSplit (uPred_ownM (a ⋅ b)) (uPred_ownM a) (uPred_ownM b) | 99.
 Proof. by rewrite /SepSplit ownM_op. Qed.
