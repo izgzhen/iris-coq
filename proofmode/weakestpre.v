@@ -11,7 +11,7 @@ Implicit Types Φ : val Λ → iProp Λ Σ.
 Global Instance frame_wp E e R Φ Ψ :
   (∀ v, Frame R (Φ v) (Ψ v)) → Frame R (WP e @ E {{ Φ }}) (WP e @ E {{ Ψ }}).
 Proof. rewrite /Frame=> HR. rewrite wp_frame_l. apply wp_mono, HR. Qed.
-Global Instance fsa_split_wp E e Φ :
-  FSASplit (WP e @ E {{ Φ }})%I E (wp_fsa e) (language.atomic e) Φ.
+Global Instance is_fsa_wp E e Φ :
+  IsFSA (WP e @ E {{ Φ }})%I E (wp_fsa e) (language.atomic e) Φ.
 Proof. split. done. apply _. Qed.
 End weakestpre.

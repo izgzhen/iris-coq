@@ -8,7 +8,7 @@ Context `{stsG Λ Σ sts} (φ : sts.state sts → iPropG Λ Σ).
 Implicit Types P Q : iPropG Λ Σ.
 
 Lemma tac_sts_fsa {A} (fsa : FSA Λ _ A) fsaV Δ E N i γ S T Q Φ :
-  FSASplit Q E fsa fsaV Φ →
+  IsFSA Q E fsa fsaV Φ →
   fsaV →
   envs_lookup i Δ = Some (false, sts_ownS γ S T) →
   (of_envs Δ ⊢ sts_ctx γ N φ) → nclose N ⊆ E →
@@ -18,7 +18,7 @@ Lemma tac_sts_fsa {A} (fsa : FSA Λ _ A) fsaV Δ E N i γ S T Q Φ :
       ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ★ (sts_own γ s' T' -★ Φ a)))) →
   Δ ⊢ Q.
 Proof.
-  intros ????? HΔ'. rewrite -(fsa_split Q) -(sts_fsaS φ fsa) //.
+  intros ????? HΔ'. rewrite (is_fsa Q) -(sts_fsaS φ fsa) //.
   rewrite // -always_and_sep_l. apply and_intro; first done.
   rewrite envs_lookup_sound //; simpl; apply sep_mono_r.
   apply forall_intro=>s; apply wand_intro_l.
@@ -36,7 +36,7 @@ Tactic Notation "iSts" constr(H) "as"
   | gname => eapply tac_sts_fsa with _ _ _ _ _ _ _ H _ _ _
   | _ => fail "iSts:" H "not a string or gname"
   end;
-    [let P := match goal with |- FSASplit ?P _ _ _ _ => P end in
+    [let P := match goal with |- IsFSA ?P _ _ _ _ => P end in
      apply _ || fail "iSts: cannot viewshift in goal" P
     |try fast_done (* atomic *)
     |iAssumptionCore || fail "iSts:" H "not found"

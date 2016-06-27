@@ -292,19 +292,19 @@ Proof.
 Qed.
 
 (** * Basic rules *)
-Class ToAssumption (p : bool) (P Q : uPred M) := to_assumption : □?p P ⊢ Q.
-Arguments to_assumption _ _ _ {_}.
-Global Instance to_assumption_exact p P : ToAssumption p P P.
-Proof. destruct p; by rewrite /ToAssumption /= ?always_elim. Qed.
-Global Instance to_assumption_always_l p P Q :
-  ToAssumption p P Q → ToAssumption p (□ P) Q.
-Proof. rewrite /ToAssumption=><-. by rewrite always_elim. Qed.
-Global Instance to_assumption_always_r P Q :
-  ToAssumption true P Q → ToAssumption true P (□ Q).
-Proof. rewrite /ToAssumption=><-. by rewrite always_always. Qed.
+Class FromAssumption (p : bool) (P Q : uPred M) := from_assumption : □?p P ⊢ Q.
+Arguments from_assumption _ _ _ {_}.
+Global Instance from_assumption_exact p P : FromAssumption p P P.
+Proof. destruct p; by rewrite /FromAssumption /= ?always_elim. Qed.
+Global Instance from_assumption_always_l p P Q :
+  FromAssumption p P Q → FromAssumption p (□ P) Q.
+Proof. rewrite /FromAssumption=><-. by rewrite always_elim. Qed.
+Global Instance from_assumption_always_r P Q :
+  FromAssumption true P Q → FromAssumption true P (□ Q).
+Proof. rewrite /FromAssumption=><-. by rewrite always_always. Qed.
 
 Lemma tac_assumption Δ i p P Q :
-  envs_lookup i Δ = Some (p,P) → ToAssumption p P Q → Δ ⊢ Q.
+  envs_lookup i Δ = Some (p,P) → FromAssumption p P Q → Δ ⊢ Q.
 Proof. intros. by rewrite envs_lookup_sound // sep_elim_l. Qed.
 
 Lemma tac_rename Δ Δ' i j p P Q :
@@ -327,96 +327,96 @@ Lemma tac_ex_falso Δ Q : (Δ ⊢ False) → Δ ⊢ Q.
 Proof. by rewrite -(False_elim Q). Qed.
 
 (** * Pure *)
-Class ToPure (P : uPred M) (φ : Prop) := to_pure : P ⊣⊢ ■ φ.
-Arguments to_pure : clear implicits.
-Global Instance to_pure_pure φ : ToPure (■ φ) φ.
+Class IsPure (P : uPred M) (φ : Prop) := is_pure : P ⊣⊢ ■ φ.
+Arguments is_pure : clear implicits.
+Global Instance is_pure_pure φ : IsPure (■ φ) φ.
 Proof. done. Qed.
-Global Instance to_pure_eq {A : cofeT} (a b : A) :
-  Timeless a → ToPure (a ≡ b) (a ≡ b).
+Global Instance is_pure_eq {A : cofeT} (a b : A) :
+  Timeless a → IsPure (a ≡ b) (a ≡ b).
 Proof. intros; red. by rewrite timeless_eq. Qed.
-Global Instance to_pure_valid `{CMRADiscrete A} (a : A) : ToPure (✓ a) (✓ a).
+Global Instance is_pure_valid `{CMRADiscrete A} (a : A) : IsPure (✓ a) (✓ a).
 Proof. intros; red. by rewrite discrete_valid. Qed.
 
-Lemma tac_pure_intro Δ Q (φ : Prop) : ToPure Q φ → φ → Δ ⊢ Q.
+Lemma tac_pure_intro Δ Q (φ : Prop) : IsPure Q φ → φ → Δ ⊢ Q.
 Proof. intros ->. apply pure_intro. Qed.
 
 Lemma tac_pure Δ Δ' i p P φ Q :
-  envs_lookup_delete i Δ = Some (p, P, Δ') → ToPure P φ →
+  envs_lookup_delete i Δ = Some (p, P, Δ') → IsPure P φ →
   (φ → Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ?? HQ. rewrite envs_lookup_delete_sound' //; simpl.
-  rewrite (to_pure P); by apply pure_elim_sep_l.
+  rewrite (is_pure P); by apply pure_elim_sep_l.
 Qed.
 
 Lemma tac_pure_revert Δ φ Q : (Δ ⊢ ■ φ → Q) → (φ → Δ ⊢ Q).
 Proof. intros HΔ ?. by rewrite HΔ pure_equiv // left_id. Qed.
 
 (** * Later *)
-Class StripLaterR (P Q : uPred M) := strip_later_r : P ⊢ ▷ Q.
-Arguments strip_later_r _ _ {_}.
-Class StripLaterL (P Q : uPred M) := strip_later_l : ▷ Q ⊢ P.
-Arguments strip_later_l _ _ {_}.
-Class StripLaterEnv (Γ1 Γ2 : env (uPred M)) :=
-  strip_later_env : env_Forall2 StripLaterR Γ1 Γ2.
-Class StripLaterEnvs (Δ1 Δ2 : envs M) := {
-  strip_later_persistent: StripLaterEnv (env_persistent Δ1) (env_persistent Δ2);
-  strip_later_spatial: StripLaterEnv (env_spatial Δ1) (env_spatial Δ2)
+Class IntoLater (P Q : uPred M) := into_later : P ⊢ ▷ Q.
+Arguments into_later _ _ {_}.
+Class FromLater (P Q : uPred M) := from_later : ▷ Q ⊢ P.
+Arguments from_later _ _ {_}.
+Class IntoLaterEnv (Γ1 Γ2 : env (uPred M)) :=
+  into_later_env : env_Forall2 IntoLater Γ1 Γ2.
+Class IntoLaterEnvs (Δ1 Δ2 : envs M) := {
+  into_later_persistent: IntoLaterEnv (env_persistent Δ1) (env_persistent Δ2);
+  into_later_spatial: IntoLaterEnv (env_spatial Δ1) (env_spatial Δ2)
 }.
 
-Global Instance strip_later_r_fallthrough P : StripLaterR P P | 1000.
+Global Instance into_later_fallthrough P : IntoLater P P | 1000.
 Proof. apply later_intro. Qed.
-Global Instance strip_later_r_later P : StripLaterR (▷ P) P.
+Global Instance into_later_later P : IntoLater (▷ P) P.
 Proof. done. Qed.
-Global Instance strip_later_r_and P1 P2 Q1 Q2 :
-  StripLaterR P1 Q1 → StripLaterR P2 Q2 → StripLaterR (P1 ∧ P2) (Q1 ∧ Q2).
+Global Instance into_later_and P1 P2 Q1 Q2 :
+  IntoLater P1 Q1 → IntoLater P2 Q2 → IntoLater (P1 ∧ P2) (Q1 ∧ Q2).
 Proof. intros ??; red. by rewrite later_and; apply and_mono. Qed.
-Global Instance strip_later_r_or P1 P2 Q1 Q2 :
-  StripLaterR P1 Q1 → StripLaterR P2 Q2 → StripLaterR (P1 ∨ P2) (Q1 ∨ Q2).
+Global Instance into_later_or P1 P2 Q1 Q2 :
+  IntoLater P1 Q1 → IntoLater P2 Q2 → IntoLater (P1 ∨ P2) (Q1 ∨ Q2).
 Proof. intros ??; red. by rewrite later_or; apply or_mono. Qed.
-Global Instance strip_later_r_sep P1 P2 Q1 Q2 :
-  StripLaterR P1 Q1 → StripLaterR P2 Q2 → StripLaterR (P1 ★ P2) (Q1 ★ Q2).
+Global Instance into_later_sep P1 P2 Q1 Q2 :
+  IntoLater P1 Q1 → IntoLater P2 Q2 → IntoLater (P1 ★ P2) (Q1 ★ Q2).
 Proof. intros ??; red. by rewrite later_sep; apply sep_mono. Qed.
 
-Global Instance strip_later_r_big_sepM `{Countable K} {A}
+Global Instance into_later_big_sepM `{Countable K} {A}
     (Φ Ψ : K → A → uPred M) (m : gmap K A) :
-  (∀ x k, StripLaterR (Φ k x) (Ψ k x)) →
-  StripLaterR ([★ map] k ↦ x ∈ m, Φ k x) ([★ map] k ↦ x ∈ m, Ψ k x).
+  (∀ x k, IntoLater (Φ k x) (Ψ k x)) →
+  IntoLater ([★ map] k ↦ x ∈ m, Φ k x) ([★ map] k ↦ x ∈ m, Ψ k x).
 Proof.
-  rewrite /StripLaterR=> ?. rewrite big_sepM_later; by apply big_sepM_mono.
+  rewrite /IntoLater=> ?. rewrite big_sepM_later; by apply big_sepM_mono.
 Qed.
-Global Instance strip_later_r_big_sepS `{Countable A}
+Global Instance into_later_big_sepS `{Countable A}
     (Φ Ψ : A → uPred M) (X : gset A) :
-  (∀ x, StripLaterR (Φ x) (Ψ x)) →
-  StripLaterR ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ x).
+  (∀ x, IntoLater (Φ x) (Ψ x)) →
+  IntoLater ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ x).
 Proof.
-  rewrite /StripLaterR=> ?. rewrite big_sepS_later; by apply big_sepS_mono.
+  rewrite /IntoLater=> ?. rewrite big_sepS_later; by apply big_sepS_mono.
 Qed.
 
-Global Instance strip_later_l_later P : StripLaterL (▷ P) P.
+Global Instance from_later_later P : FromLater (▷ P) P.
 Proof. done. Qed.
-Global Instance strip_later_l_and P1 P2 Q1 Q2 :
-  StripLaterL P1 Q1 → StripLaterL P2 Q2 → StripLaterL (P1 ∧ P2) (Q1 ∧ Q2).
+Global Instance from_later_and P1 P2 Q1 Q2 :
+  FromLater P1 Q1 → FromLater P2 Q2 → FromLater (P1 ∧ P2) (Q1 ∧ Q2).
 Proof. intros ??; red. by rewrite later_and; apply and_mono. Qed.
-Global Instance strip_later_l_or P1 P2 Q1 Q2 :
-  StripLaterL P1 Q1 → StripLaterL P2 Q2 → StripLaterL (P1 ∨ P2) (Q1 ∨ Q2).
+Global Instance from_later_or P1 P2 Q1 Q2 :
+  FromLater P1 Q1 → FromLater P2 Q2 → FromLater (P1 ∨ P2) (Q1 ∨ Q2).
 Proof. intros ??; red. by rewrite later_or; apply or_mono. Qed.
-Global Instance strip_later_l_sep P1 P2 Q1 Q2 :
-  StripLaterL P1 Q1 → StripLaterL P2 Q2 → StripLaterL (P1 ★ P2) (Q1 ★ Q2).
+Global Instance from_later_sep P1 P2 Q1 Q2 :
+  FromLater P1 Q1 → FromLater P2 Q2 → FromLater (P1 ★ P2) (Q1 ★ Q2).
 Proof. intros ??; red. by rewrite later_sep; apply sep_mono. Qed.
 
-Global Instance strip_later_env_nil : StripLaterEnv Enil Enil.
+Global Instance into_later_env_nil : IntoLaterEnv Enil Enil.
 Proof. constructor. Qed.
-Global Instance strip_later_env_snoc Γ1 Γ2 i P Q :
-  StripLaterEnv Γ1 Γ2 → StripLaterR P Q →
-  StripLaterEnv (Esnoc Γ1 i P) (Esnoc Γ2 i Q).
+Global Instance into_later_env_snoc Γ1 Γ2 i P Q :
+  IntoLaterEnv Γ1 Γ2 → IntoLater P Q →
+  IntoLaterEnv (Esnoc Γ1 i P) (Esnoc Γ2 i Q).
 Proof. by constructor. Qed.
 
-Global Instance strip_later_envs Γp1 Γp2 Γs1 Γs2 :
-  StripLaterEnv Γp1 Γp2 → StripLaterEnv Γs1 Γs2 →
-  StripLaterEnvs (Envs Γp1 Γs1) (Envs Γp2 Γs2).
+Global Instance into_later_envs Γp1 Γp2 Γs1 Γs2 :
+  IntoLaterEnv Γp1 Γp2 → IntoLaterEnv Γs1 Γs2 →
+  IntoLaterEnvs (Envs Γp1 Γs1) (Envs Γp2 Γs2).
 Proof. by split. Qed.
 
-Lemma strip_later_env_sound Δ1 Δ2 : StripLaterEnvs Δ1 Δ2 → Δ1 ⊢ ▷ Δ2.
+Lemma into_later_env_sound Δ1 Δ2 : IntoLaterEnvs Δ1 Δ2 → Δ1 ⊢ ▷ Δ2.
 Proof.
   intros [Hp Hs]; rewrite /of_envs /= !later_sep -always_later.
   repeat apply sep_mono; try apply always_mono.
@@ -427,8 +427,8 @@ Proof.
 Qed.
 
 Lemma tac_next Δ Δ' Q Q' :
-  StripLaterEnvs Δ Δ' → StripLaterL Q Q' → (Δ' ⊢ Q') → Δ ⊢ Q.
-Proof. intros ?? HQ. by rewrite -(strip_later_l Q) strip_later_env_sound HQ. Qed.
+  IntoLaterEnvs Δ Δ' → FromLater Q Q' → (Δ' ⊢ Q') → Δ ⊢ Q.
+Proof. intros ?? HQ. by rewrite -(from_later Q) into_later_env_sound HQ. Qed.
 
 Lemma tac_löb Δ Δ' i Q :
   envs_persistent Δ = true →
@@ -445,24 +445,24 @@ Qed.
 Lemma tac_always_intro Δ Q : envs_persistent Δ = true → (Δ ⊢ Q) → Δ ⊢ □ Q.
 Proof. intros. by apply: always_intro. Qed.
 
-Class ToPersistentP (P Q : uPred M) := to_persistentP : P ⊢ □ Q.
-Arguments to_persistentP : clear implicits.
-Global Instance to_persistentP_always_trans P Q :
-  ToPersistentP P Q → ToPersistentP (□ P) Q | 0.
-Proof. rewrite /ToPersistentP=> ->. by rewrite always_always. Qed.
-Global Instance to_persistentP_always P : ToPersistentP (□ P) P | 1.
+Class IntoPersistentP (P Q : uPred M) := into_persistentP : P ⊢ □ Q.
+Arguments into_persistentP : clear implicits.
+Global Instance into_persistentP_always_trans P Q :
+  IntoPersistentP P Q → IntoPersistentP (□ P) Q | 0.
+Proof. rewrite /IntoPersistentP=> ->. by rewrite always_always. Qed.
+Global Instance into_persistentP_always P : IntoPersistentP (□ P) P | 1.
 Proof. done. Qed.
-Global Instance to_persistentP_persistent P :
-  PersistentP P → ToPersistentP P P | 100.
+Global Instance into_persistentP_persistent P :
+  PersistentP P → IntoPersistentP P P | 100.
 Proof. done. Qed.
 
 Lemma tac_persistent Δ Δ' i p P P' Q :
-  envs_lookup i Δ = Some (p, P) → ToPersistentP P P' →
+  envs_lookup i Δ = Some (p, P) → IntoPersistentP P P' →
   envs_replace i p true (Esnoc Enil i P') Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ??? <-. rewrite envs_replace_sound //; simpl.
-  by rewrite right_id (to_persistentP P) always_if_always wand_elim_r.
+  by rewrite right_id (into_persistentP P) always_if_always wand_elim_r.
 Qed.
 
 (** * Implication and wand *)
@@ -475,16 +475,16 @@ Proof.
   by rewrite right_id always_wand_impl always_elim HQ.
 Qed.
 Lemma tac_impl_intro_persistent Δ Δ' i P P' Q :
-  ToPersistentP P P' →
+  IntoPersistentP P P' →
   envs_app true (Esnoc Enil i P') Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ P → Q.
 Proof.
   intros ?? HQ. rewrite envs_app_sound //; simpl. apply impl_intro_l.
-  by rewrite right_id {1}(to_persistentP P) always_and_sep_l wand_elim_r.
+  by rewrite right_id {1}(into_persistentP P) always_and_sep_l wand_elim_r.
 Qed.
-Lemma tac_impl_intro_pure Δ P φ Q : ToPure P φ → (φ → Δ ⊢ Q) → Δ ⊢ P → Q.
+Lemma tac_impl_intro_pure Δ P φ Q : IsPure P φ → (φ → Δ ⊢ Q) → Δ ⊢ P → Q.
 Proof.
-  intros. by apply impl_intro_l; rewrite (to_pure P); apply pure_elim_l.
+  intros. by apply impl_intro_l; rewrite (is_pure P); apply pure_elim_l.
 Qed.
 
 Lemma tac_wand_intro Δ Δ' i P Q :
@@ -493,37 +493,37 @@ Proof.
   intros ? HQ. rewrite envs_app_sound //; simpl. by rewrite right_id HQ.
 Qed.
 Lemma tac_wand_intro_persistent Δ Δ' i P P' Q :
-  ToPersistentP P P' →
+  IntoPersistentP P P' →
   envs_app true (Esnoc Enil i P') Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ P -★ Q.
 Proof.
   intros. rewrite envs_app_sound //; simpl.
   rewrite right_id. by apply wand_mono.
 Qed.
-Lemma tac_wand_intro_pure Δ P φ Q : ToPure P φ → (φ → Δ ⊢ Q) → Δ ⊢ P -★ Q.
+Lemma tac_wand_intro_pure Δ P φ Q : IsPure P φ → (φ → Δ ⊢ Q) → Δ ⊢ P -★ Q.
 Proof.
-  intros. by apply wand_intro_l; rewrite (to_pure P); apply pure_elim_sep_l.
+  intros. by apply wand_intro_l; rewrite (is_pure P); apply pure_elim_sep_l.
 Qed.
 
-Class ToWand (R P Q : uPred M) := to_wand : R ⊢ P -★ Q.
-Arguments to_wand : clear implicits.
-Global Instance to_wand_wand P Q : ToWand (P -★ Q) P Q.
+Class IntoWand (R P Q : uPred M) := into_wand : R ⊢ P -★ Q.
+Arguments into_wand : clear implicits.
+Global Instance into_wand_wand P Q : IntoWand (P -★ Q) P Q.
 Proof. done. Qed.
-Global Instance to_wand_impl P Q : ToWand (P → Q) P Q.
+Global Instance into_wand_impl P Q : IntoWand (P → Q) P Q.
 Proof. apply impl_wand. Qed.
-Global Instance to_wand_iff_l P Q : ToWand (P ↔ Q) P Q.
+Global Instance into_wand_iff_l P Q : IntoWand (P ↔ Q) P Q.
 Proof. by apply and_elim_l', impl_wand. Qed.
-Global Instance to_wand_iff_r P Q : ToWand (P ↔ Q) Q P.
+Global Instance into_wand_iff_r P Q : IntoWand (P ↔ Q) Q P.
 Proof. apply and_elim_r', impl_wand. Qed.
-Global Instance to_wand_always R P Q : ToWand R P Q → ToWand (□ R) P Q.
-+Proof. rewrite /ToWand=> ->. apply always_elim. Qed.
+Global Instance into_wand_always R P Q : IntoWand R P Q → IntoWand (□ R) P Q.
+Proof. rewrite /IntoWand=> ->. apply always_elim. Qed.
 
 (* This is pretty much [tac_specialize_assert] with [js:=[j]] and [tac_exact],
 but it is doing some work to keep the order of hypotheses preserved. *)
 Lemma tac_specialize Δ Δ' Δ'' i p j q P1 P2 R Q :
   envs_lookup_delete i Δ = Some (p, P1, Δ') →
   envs_lookup j (if p then Δ else Δ') = Some (q, R) →
-  ToWand R P1 P2 →
+  IntoWand R P1 P2 →
   match p with
   | true  => envs_simple_replace j q (Esnoc Enil j P2) Δ
   | false => envs_replace j q false (Esnoc Enil j P2) Δ'
@@ -533,22 +533,22 @@ Lemma tac_specialize Δ Δ' Δ'' i p j q P1 P2 R Q :
 Proof.
   intros [? ->]%envs_lookup_delete_Some ??? <-. destruct p.
   - rewrite envs_lookup_persistent_sound // envs_simple_replace_sound //; simpl.
-    rewrite assoc (to_wand R) (always_elim_if q) -always_if_sep wand_elim_r.
+    rewrite assoc (into_wand R) (always_elim_if q) -always_if_sep wand_elim_r.
     by rewrite right_id wand_elim_r.
   - rewrite envs_lookup_sound //; simpl.
     rewrite envs_lookup_sound // (envs_replace_sound' _ Δ'') //; simpl.
-    by rewrite right_id assoc (to_wand R) always_if_elim wand_elim_r wand_elim_r.
+    by rewrite right_id assoc (into_wand R) always_if_elim wand_elim_r wand_elim_r.
 Qed.
 
-Class ToAssert (P : uPred M) (Q : uPred M) (R : uPred M) :=
-  to_assert : R ★ (P -★ Q) ⊢ Q.
-Global Arguments to_assert _ _ _ {_}.
-Lemma to_assert_fallthrough P Q : ToAssert P Q P.
-Proof. by rewrite /ToAssert wand_elim_r. Qed.
+Class IntoAssert (P : uPred M) (Q : uPred M) (R : uPred M) :=
+  into_assert : R ★ (P -★ Q) ⊢ Q.
+Global Arguments into_assert _ _ _ {_}.
+Lemma into_assert_fallthrough P Q : IntoAssert P Q P.
+Proof. by rewrite /IntoAssert wand_elim_r. Qed.
 
 Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q lr js R P1 P2 P1' Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
-  ToWand R P1 P2 → ToAssert P1 Q P1' →
+  IntoWand R P1 P2 → IntoAssert P1 Q P1' →
   ('(Δ1,Δ2) ← envs_split lr js Δ';
     Δ2' ← envs_app false (Esnoc Enil j P2) Δ2;
     Some (Δ1,Δ2')) = Some (Δ1,Δ2') → (* does not preserve position of [j] *)
@@ -559,24 +559,24 @@ Proof.
     destruct (envs_app _ _ _) eqn:?; simplify_eq/=.
   rewrite envs_lookup_sound // envs_split_sound //.
   rewrite (envs_app_sound Δ2) //; simpl.
-  rewrite right_id (to_wand R) HP1 assoc -(comm _ P1') -assoc.
-  rewrite -(to_assert P1 Q); apply sep_mono_r, wand_intro_l.
+  rewrite right_id (into_wand R) HP1 assoc -(comm _ P1') -assoc.
+  rewrite -(into_assert P1 Q); apply sep_mono_r, wand_intro_l.
   by rewrite always_if_elim assoc !wand_elim_r.
 Qed.
 
 Lemma tac_specialize_pure Δ Δ' j q R P1 P2 φ Q :
   envs_lookup j Δ = Some (q, R) →
-  ToWand R P1 P2 → ToPure P1 φ →
+  IntoWand R P1 P2 → IsPure P1 φ →
   envs_simple_replace j q (Esnoc Enil j P2) Δ = Some Δ' →
   φ → (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros. rewrite envs_simple_replace_sound //; simpl.
-  by rewrite right_id (to_wand R) (to_pure P1) pure_equiv // wand_True wand_elim_r.
+  by rewrite right_id (into_wand R) (is_pure P1) pure_equiv // wand_True wand_elim_r.
 Qed.
 
 Lemma tac_specialize_persistent Δ Δ' Δ'' j q P1 P2 R Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
-  ToWand R P1 P2 →
+  IntoWand R P1 P2 →
   envs_simple_replace j q (Esnoc Enil j P2) Δ = Some Δ'' →
   (Δ' ⊢ P1) → (PersistentP P1 ∨ PersistentP P2) →
   (Δ'' ⊢ Q) → Δ ⊢ Q.
@@ -586,11 +586,11 @@ Proof.
     rewrite -(idemp uPred_and (envs_delete _ _ _)).
     rewrite {1}HP1 (persistentP P1) always_and_sep_l assoc.
     rewrite envs_simple_replace_sound' //; simpl.
-    rewrite right_id (to_wand R) (always_elim_if q) -always_if_sep wand_elim_l.
+    rewrite right_id (into_wand R) (always_elim_if q) -always_if_sep wand_elim_l.
     by rewrite wand_elim_r.
   - rewrite -(idemp uPred_and Δ) {1}envs_lookup_sound //; simpl; rewrite HP1.
     rewrite envs_simple_replace_sound //; simpl.
-    rewrite (sep_elim_r _ (_ -★ _)) right_id (to_wand R) always_if_elim.
+    rewrite (sep_elim_r _ (_ -★ _)) right_id (into_wand R) always_if_elim.
     by rewrite wand_elim_l always_and_sep_l -{1}(always_if_always q P2) wand_elim_r.
 Qed.
 
@@ -610,7 +610,7 @@ Proof.
 Qed.
 
 Lemma tac_assert Δ Δ1 Δ2 Δ2' lr js j P Q R :
-  ToAssert P Q R →
+  IntoAssert P Q R →
   envs_split lr js Δ = Some (Δ1,Δ2) →
   envs_app false (Esnoc Enil j P) Δ2 = Some Δ2' →
   (Δ1 ⊢ R) → (Δ2' ⊢ Q) → Δ ⊢ Q.
@@ -630,22 +630,24 @@ Proof.
 Qed.
 
 (** Whenever posing [lem : True ⊢ Q] as [H] we want it to appear as [H : Q] and
-not as [H : True -★ Q]. The class [ToPosedProof] is used to strip off the
+not as [H : True -★ Q]. The class [IntoPosedProof] is used to strip off the
 [True]. Note that [to_posed_proof_True] is declared using a [Hint Extern] to
 make sure it is not used while posing [lem : ?P ⊢ Q] with [?P] an evar. *)
-Class ToPosedProof (P1 P2 R : uPred M) := to_pose_proof : (P1 ⊢ P2) → True ⊢ R.
-Arguments to_pose_proof : clear implicits.
-Instance to_posed_proof_True P : ToPosedProof True P P.
-Proof. by rewrite /ToPosedProof. Qed.
-Global Instance to_posed_proof_wand P Q : ToPosedProof P Q (P -★ Q).
-Proof. rewrite /ToPosedProof. apply entails_wand. Qed.
+Class IntoPosedProof (P1 P2 R : uPred M) :=
+  into_pose_proof : (P1 ⊢ P2) → True ⊢ R.
+Arguments into_pose_proof : clear implicits.
+Instance to_posed_proof_True P : IntoPosedProof True P P.
+Proof. by rewrite /IntoPosedProof. Qed.
+Global Instance to_posed_proof_wand P Q : IntoPosedProof P Q (P -★ Q).
+Proof. rewrite /IntoPosedProof. apply entails_wand. Qed.
 
 Lemma tac_pose_proof Δ Δ' j P1 P2 R Q :
-  (P1 ⊢ P2) → ToPosedProof P1 P2 R → envs_app true (Esnoc Enil j R) Δ = Some Δ' →
+  (P1 ⊢ P2) → IntoPosedProof P1 P2 R →
+  envs_app true (Esnoc Enil j R) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros HP ?? <-. rewrite envs_app_sound //; simpl.
-  by rewrite right_id -(to_pose_proof P1 P2 R) // always_pure wand_True.
+  by rewrite right_id -(into_pose_proof P1 P2 R) // always_pure wand_True.
 Qed.
 
 Lemma tac_pose_proof_hyp Δ Δ' Δ'' i p j P Q :
@@ -661,11 +663,11 @@ Proof.
 Qed.
 
 Lemma tac_apply Δ Δ' i p R P1 P2 :
-  envs_lookup_delete i Δ = Some (p, R, Δ') → ToWand R P1 P2 →
+  envs_lookup_delete i Δ = Some (p, R, Δ') → IntoWand R P1 P2 →
   (Δ' ⊢ P1) → Δ ⊢ P2.
 Proof.
   intros ?? HP1. rewrite envs_lookup_delete_sound' //.
-  by rewrite (to_wand R) HP1 wand_elim_l.
+  by rewrite (into_wand R) HP1 wand_elim_l.
 Qed.
 
 (** * Rewriting *)
@@ -703,71 +705,71 @@ Proof.
 Qed.
 
 (** * Conjunction splitting *)
-Class AndSplit (P Q1 Q2 : uPred M) := and_split : Q1 ∧ Q2 ⊢ P.
-Arguments and_split : clear implicits.
+Class FromAnd (P Q1 Q2 : uPred M) := from_and : Q1 ∧ Q2 ⊢ P.
+Arguments from_and : clear implicits.
 
-Global Instance and_split_and P1 P2 : AndSplit (P1 ∧ P2) P1 P2.
+Global Instance from_and_and P1 P2 : FromAnd (P1 ∧ P2) P1 P2.
 Proof. done. Qed.
-Global Instance and_split_sep_persistent_l P1 P2 :
-  PersistentP P1 → AndSplit (P1 ★ P2) P1 P2.
-Proof. intros. by rewrite /AndSplit always_and_sep_l. Qed.
-Global Instance and_split_sep_persistent_r P1 P2 :
-  PersistentP P2 → AndSplit (P1 ★ P2) P1 P2.
-Proof. intros. by rewrite /AndSplit always_and_sep_r. Qed.
-Global Instance and_split_always P Q1 Q2 :
-  AndSplit P Q1 Q2 → AndSplit (□ P) (□ Q1) (□ Q2).
-Proof. rewrite /AndSplit=> <-. by rewrite always_and. Qed.
-Global Instance and_split_later P Q1 Q2 :
-  AndSplit P Q1 Q2 → AndSplit (▷ P) (▷ Q1) (▷ Q2).
-Proof. rewrite /AndSplit=> <-. by rewrite later_and. Qed.
+Global Instance from_and_sep_persistent_l P1 P2 :
+  PersistentP P1 → FromAnd (P1 ★ P2) P1 P2.
+Proof. intros. by rewrite /FromAnd always_and_sep_l. Qed.
+Global Instance from_and_sep_persistent_r P1 P2 :
+  PersistentP P2 → FromAnd (P1 ★ P2) P1 P2.
+Proof. intros. by rewrite /FromAnd always_and_sep_r. Qed.
+Global Instance from_and_always P Q1 Q2 :
+  FromAnd P Q1 Q2 → FromAnd (□ P) (□ Q1) (□ Q2).
+Proof. rewrite /FromAnd=> <-. by rewrite always_and. Qed.
+Global Instance from_and_later P Q1 Q2 :
+  FromAnd P Q1 Q2 → FromAnd (▷ P) (▷ Q1) (▷ Q2).
+Proof. rewrite /FromAnd=> <-. by rewrite later_and. Qed.
 
-Lemma tac_and_split Δ P Q1 Q2 : AndSplit P Q1 Q2 → (Δ ⊢ Q1) → (Δ ⊢ Q2) → Δ ⊢ P.
-Proof. intros. rewrite -(and_split P). by apply and_intro. Qed.
+Lemma tac_and_split Δ P Q1 Q2 : FromAnd P Q1 Q2 → (Δ ⊢ Q1) → (Δ ⊢ Q2) → Δ ⊢ P.
+Proof. intros. rewrite -(from_and P). by apply and_intro. Qed.
 
 (** * Separating conjunction splitting *)
-Class SepSplit (P Q1 Q2 : uPred M) := sep_split : Q1 ★ Q2 ⊢ P.
-Arguments sep_split : clear implicits.
+Class FromSep (P Q1 Q2 : uPred M) := from_sep : Q1 ★ Q2 ⊢ P.
+Arguments from_sep : clear implicits.
 
-Global Instance sep_split_sep P1 P2 : SepSplit (P1 ★ P2) P1 P2 | 100.
+Global Instance from_sep_sep P1 P2 : FromSep (P1 ★ P2) P1 P2 | 100.
 Proof. done. Qed.
-Global Instance sep_split_always P Q1 Q2 :
-  SepSplit P Q1 Q2 → SepSplit (□ P) (□ Q1) (□ Q2).
-Proof. rewrite /SepSplit=> <-. by rewrite always_sep. Qed.
-Global Instance sep_split_later P Q1 Q2 :
-  SepSplit P Q1 Q2 → SepSplit (▷ P) (▷ Q1) (▷ Q2).
-Proof. rewrite /SepSplit=> <-. by rewrite later_sep. Qed.
+Global Instance from_sep_always P Q1 Q2 :
+  FromSep P Q1 Q2 → FromSep (□ P) (□ Q1) (□ Q2).
+Proof. rewrite /FromSep=> <-. by rewrite always_sep. Qed.
+Global Instance from_sep_later P Q1 Q2 :
+  FromSep P Q1 Q2 → FromSep (▷ P) (▷ Q1) (▷ Q2).
+Proof. rewrite /FromSep=> <-. by rewrite later_sep. Qed.
 
-Global Instance sep_split_ownM (a b : M) :
-  SepSplit (uPred_ownM (a ⋅ b)) (uPred_ownM a) (uPred_ownM b) | 99.
-Proof. by rewrite /SepSplit ownM_op. Qed.
-Global Instance sep_split_big_sepM
+Global Instance from_sep_ownM (a b : M) :
+  FromSep (uPred_ownM (a ⋅ b)) (uPred_ownM a) (uPred_ownM b) | 99.
+Proof. by rewrite /FromSep ownM_op. Qed.
+Global Instance from_sep_big_sepM
     `{Countable K} {A} (Φ Ψ1 Ψ2 : K → A → uPred M) m :
-  (∀ k x, SepSplit (Φ k x) (Ψ1 k x) (Ψ2 k x)) →
-  SepSplit ([★ map] k ↦ x ∈ m, Φ k x)
+  (∀ k x, FromSep (Φ k x) (Ψ1 k x) (Ψ2 k x)) →
+  FromSep ([★ map] k ↦ x ∈ m, Φ k x)
     ([★ map] k ↦ x ∈ m, Ψ1 k x) ([★ map] k ↦ x ∈ m, Ψ2 k x).
 Proof.
-  rewrite /SepSplit=> ?. rewrite -big_sepM_sepM. by apply big_sepM_mono.
+  rewrite /FromSep=> ?. rewrite -big_sepM_sepM. by apply big_sepM_mono.
 Qed.
-Global Instance sep_split_big_sepS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) X :
-  (∀ x, SepSplit (Φ x) (Ψ1 x) (Ψ2 x)) →
-  SepSplit ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ1 x) ([★ set] x ∈ X, Ψ2 x).
+Global Instance from_sep_big_sepS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) X :
+  (∀ x, FromSep (Φ x) (Ψ1 x) (Ψ2 x)) →
+  FromSep ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ1 x) ([★ set] x ∈ X, Ψ2 x).
 Proof.
-  rewrite /SepSplit=> ?. rewrite -big_sepS_sepS. by apply big_sepS_mono.
+  rewrite /FromSep=> ?. rewrite -big_sepS_sepS. by apply big_sepS_mono.
 Qed.
 
 Lemma tac_sep_split Δ Δ1 Δ2 lr js P Q1 Q2 :
-  SepSplit P Q1 Q2 →
+  FromSep P Q1 Q2 →
   envs_split lr js Δ = Some (Δ1,Δ2) →
   (Δ1 ⊢ Q1) → (Δ2 ⊢ Q2) → Δ ⊢ P.
 Proof.
-  intros. rewrite envs_split_sound // -(sep_split P). by apply sep_mono.
+  intros. rewrite envs_split_sound // -(from_sep P). by apply sep_mono.
 Qed.
 
 (** * Combining *)
 Lemma tac_combine Δ1 Δ2 Δ3 Δ4 i1 p P1 i2 q P2 j P Q :
   envs_lookup_delete i1 Δ1 = Some (p,P1,Δ2) →
   envs_lookup_delete i2 (if p then Δ1 else Δ2) = Some (q,P2,Δ3) →
-  SepSplit P P1 P2 →
+  FromSep P P1 P2 →
   envs_app (p && q) (Esnoc Enil j P)
     (if q then (if p then Δ1 else Δ2) else Δ3) = Some Δ4 →
   (Δ4 ⊢ Q) → Δ1 ⊢ Q.
@@ -776,83 +778,81 @@ Proof.
   destruct p.
   - rewrite envs_lookup_persistent_sound //. destruct q.
     + rewrite envs_lookup_persistent_sound // envs_app_sound //; simpl.
-      by rewrite right_id assoc -always_sep (sep_split P) wand_elim_r.
+      by rewrite right_id assoc -always_sep (from_sep P) wand_elim_r.
     + rewrite envs_lookup_sound // envs_app_sound //; simpl.
-      by rewrite right_id assoc always_elim (sep_split P) wand_elim_r.
+      by rewrite right_id assoc always_elim (from_sep P) wand_elim_r.
   - rewrite envs_lookup_sound //; simpl. destruct q.
     + rewrite envs_lookup_persistent_sound // envs_app_sound //; simpl.
-      by rewrite right_id assoc always_elim (sep_split P) wand_elim_r.
+      by rewrite right_id assoc always_elim (from_sep P) wand_elim_r.
     + rewrite envs_lookup_sound // envs_app_sound //; simpl.
-      by rewrite right_id assoc (sep_split P) wand_elim_r.
+      by rewrite right_id assoc (from_sep P) wand_elim_r.
 Qed.
 
 (** * Conjunction/separating conjunction elimination *)
-Class SepDestruct (p : bool) (P Q1 Q2 : uPred M) :=
-  sep_destruct : □?p P ⊢ □?p (Q1 ★ Q2).
-Arguments sep_destruct : clear implicits.
-Class OpDestruct {A : cmraT} (a b1 b2 : A) :=
-  op_destruct : a ≡ b1 ⋅ b2.
-Arguments op_destruct {_} _ _ _ {_}.
+Class IntoSep (p: bool) (P Q1 Q2 : uPred M) := into_sep : □?p P ⊢ □?p (Q1 ★ Q2).
+Arguments into_sep : clear implicits.
+Class IntoOp {A : cmraT} (a b1 b2 : A) := into_op : a ≡ b1 ⋅ b2.
+Arguments into_op {_} _ _ _ {_}.
 
-Global Instance op_destruct_op {A : cmraT} (a b : A) : OpDestruct (a ⋅ b) a b.
-Proof. by rewrite /OpDestruct. Qed.
-Global Instance op_destruct_persistent {A : cmraT} (a : A) :
-  Persistent a → OpDestruct a a a.
+Global Instance into_op_op {A : cmraT} (a b : A) : IntoOp (a ⋅ b) a b.
+Proof. by rewrite /IntoOp. Qed.
+Global Instance into_op_persistent {A : cmraT} (a : A) :
+  Persistent a → IntoOp a a a.
 Proof. intros; apply (persistent_dup a). Qed.
-Global Instance op_destruct_pair {A B : cmraT} (a b1 b2 : A) (a' b1' b2' : B) :
-  OpDestruct a b1 b2 → OpDestruct a' b1' b2' →
-  OpDestruct (a,a') (b1,b1') (b2,b2').
+Global Instance into_op_pair {A B : cmraT} (a b1 b2 : A) (a' b1' b2' : B) :
+  IntoOp a b1 b2 → IntoOp a' b1' b2' →
+  IntoOp (a,a') (b1,b1') (b2,b2').
 Proof. by constructor. Qed.
-Global Instance op_destruct_Some {A : cmraT} (a : A) b1 b2 :
-  OpDestruct a b1 b2 → OpDestruct (Some a) (Some b1) (Some b2).
+Global Instance into_op_Some {A : cmraT} (a : A) b1 b2 :
+  IntoOp a b1 b2 → IntoOp (Some a) (Some b1) (Some b2).
 Proof. by constructor. Qed.
 
-Global Instance sep_destruct_sep p P Q : SepDestruct p (P ★ Q) P Q.
-Proof. rewrite /SepDestruct. by rewrite always_if_sep. Qed.
-Global Instance sep_destruct_ownM p (a b1 b2 : M) :
-  OpDestruct a b1 b2 →
-  SepDestruct p (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
+Global Instance into_sep_sep p P Q : IntoSep p (P ★ Q) P Q.
+Proof. rewrite /IntoSep. by rewrite always_if_sep. Qed.
+Global Instance into_sep_ownM p (a b1 b2 : M) :
+  IntoOp a b1 b2 →
+  IntoSep p (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
 Proof.
-  rewrite /OpDestruct /SepDestruct=> ->. by rewrite ownM_op always_if_sep.
+  rewrite /IntoOp /IntoSep=> ->. by rewrite ownM_op always_if_sep.
 Qed.
 
-Global Instance sep_destruct_and P Q : SepDestruct true (P ∧ Q) P Q.
-Proof. by rewrite /SepDestruct /= always_and_sep. Qed.
-Global Instance sep_destruct_and_persistent_l P Q :
-  PersistentP P → SepDestruct false (P ∧ Q) P Q.
-Proof. intros; by rewrite /SepDestruct /= always_and_sep_l. Qed.
-Global Instance sep_destruct_and_persistent_r P Q :
-  PersistentP Q → SepDestruct false (P ∧ Q) P Q.
-Proof. intros; by rewrite /SepDestruct /= always_and_sep_r. Qed.
+Global Instance into_sep_and P Q : IntoSep true (P ∧ Q) P Q.
+Proof. by rewrite /IntoSep /= always_and_sep. Qed.
+Global Instance into_sep_and_persistent_l P Q :
+  PersistentP P → IntoSep false (P ∧ Q) P Q.
+Proof. intros; by rewrite /IntoSep /= always_and_sep_l. Qed.
+Global Instance into_sep_and_persistent_r P Q :
+  PersistentP Q → IntoSep false (P ∧ Q) P Q.
+Proof. intros; by rewrite /IntoSep /= always_and_sep_r. Qed.
 
-Global Instance sep_destruct_later p P Q1 Q2 :
-  SepDestruct p P Q1 Q2 → SepDestruct p (▷ P) (▷ Q1) (▷ Q2).
-Proof. by rewrite /SepDestruct -later_sep !always_if_later=> ->. Qed.
+Global Instance into_sep_later p P Q1 Q2 :
+  IntoSep p P Q1 Q2 → IntoSep p (▷ P) (▷ Q1) (▷ Q2).
+Proof. by rewrite /IntoSep -later_sep !always_if_later=> ->. Qed.
 
-Global Instance sep_destruct_big_sepM
+Global Instance into_sep_big_sepM
     `{Countable K} {A} (Φ Ψ1 Ψ2 : K → A → uPred M) p m :
-  (∀ k x, SepDestruct p (Φ k x) (Ψ1 k x) (Ψ2 k x)) →
-  SepDestruct p ([★ map] k ↦ x ∈ m, Φ k x)
+  (∀ k x, IntoSep p (Φ k x) (Ψ1 k x) (Ψ2 k x)) →
+  IntoSep p ([★ map] k ↦ x ∈ m, Φ k x)
     ([★ map] k ↦ x ∈ m, Ψ1 k x) ([★ map] k ↦ x ∈ m, Ψ2 k x).
 Proof.
-  rewrite /SepDestruct=> ?. rewrite -big_sepM_sepM !big_sepM_always_if.
+  rewrite /IntoSep=> ?. rewrite -big_sepM_sepM !big_sepM_always_if.
   by apply big_sepM_mono.
 Qed.
-Global Instance sep_destruct_big_sepS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) p X :
-  (∀ x, SepDestruct p (Φ x) (Ψ1 x) (Ψ2 x)) →
-  SepDestruct p ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ1 x) ([★ set] x ∈ X, Ψ2 x).
+Global Instance into_sep_big_sepS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) p X :
+  (∀ x, IntoSep p (Φ x) (Ψ1 x) (Ψ2 x)) →
+  IntoSep p ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ1 x) ([★ set] x ∈ X, Ψ2 x).
 Proof.
-  rewrite /SepDestruct=> ?. rewrite -big_sepS_sepS !big_sepS_always_if.
+  rewrite /IntoSep=> ?. rewrite -big_sepS_sepS !big_sepS_always_if.
   by apply big_sepS_mono.
 Qed.
 
 Lemma tac_sep_destruct Δ Δ' i p j1 j2 P P1 P2 Q :
-  envs_lookup i Δ = Some (p, P) → SepDestruct p P P1 P2 →
+  envs_lookup i Δ = Some (p, P) → IntoSep p P P1 P2 →
   envs_simple_replace i p (Esnoc (Esnoc Enil j1 P1) j2 P2) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros. rewrite envs_simple_replace_sound //; simpl.
-  by rewrite (sep_destruct p P) right_id (comm uPred_sep P1) wand_elim_r.
+  by rewrite (into_sep p P) right_id (comm uPred_sep P1) wand_elim_r.
 Qed.
 
 (** * Framing *)
@@ -930,32 +930,32 @@ Proof.
 Qed.
 
 (** * Disjunction *)
-Class OrSplit (P Q1 Q2 : uPred M) := or_split : Q1 ∨ Q2 ⊢ P.
-Arguments or_split : clear implicits.
-Global Instance or_split_or P1 P2 : OrSplit (P1 ∨ P2) P1 P2.
+Class FromOr (P Q1 Q2 : uPred M) := from_or : Q1 ∨ Q2 ⊢ P.
+Arguments from_or : clear implicits.
+Global Instance from_or_or P1 P2 : FromOr (P1 ∨ P2) P1 P2.
 Proof. done. Qed.
 
-Lemma tac_or_l Δ P Q1 Q2 : OrSplit P Q1 Q2 → (Δ ⊢ Q1) → Δ ⊢ P.
-Proof. intros. rewrite -(or_split P). by apply or_intro_l'. Qed.
-Lemma tac_or_r Δ P Q1 Q2 : OrSplit P Q1 Q2 → (Δ ⊢ Q2) → Δ ⊢ P.
-Proof. intros. rewrite -(or_split P). by apply or_intro_r'. Qed.
+Lemma tac_or_l Δ P Q1 Q2 : FromOr P Q1 Q2 → (Δ ⊢ Q1) → Δ ⊢ P.
+Proof. intros. rewrite -(from_or P). by apply or_intro_l'. Qed.
+Lemma tac_or_r Δ P Q1 Q2 : FromOr P Q1 Q2 → (Δ ⊢ Q2) → Δ ⊢ P.
+Proof. intros. rewrite -(from_or P). by apply or_intro_r'. Qed.
 
-Class OrDestruct P Q1 Q2 := or_destruct : P ⊢ Q1 ∨ Q2.
-Arguments or_destruct : clear implicits.
-Global Instance or_destruct_or P Q : OrDestruct (P ∨ Q) P Q.
+Class IntoOr P Q1 Q2 := into_or : P ⊢ Q1 ∨ Q2.
+Arguments into_or : clear implicits.
+Global Instance into_or_or P Q : IntoOr (P ∨ Q) P Q.
 Proof. done. Qed.
-Global Instance or_destruct_later P Q1 Q2 :
-  OrDestruct P Q1 Q2 → OrDestruct (▷ P) (▷ Q1) (▷ Q2).
-Proof. rewrite /OrDestruct=>->. by rewrite later_or. Qed.
+Global Instance into_or_later P Q1 Q2 :
+  IntoOr P Q1 Q2 → IntoOr (▷ P) (▷ Q1) (▷ Q2).
+Proof. rewrite /IntoOr=>->. by rewrite later_or. Qed.
 
 Lemma tac_or_destruct Δ Δ1 Δ2 i p j1 j2 P P1 P2 Q :
-  envs_lookup i Δ = Some (p, P) → OrDestruct P P1 P2 →
+  envs_lookup i Δ = Some (p, P) → IntoOr P P1 P2 →
   envs_simple_replace i p (Esnoc Enil j1 P1) Δ = Some Δ1 →
   envs_simple_replace i p (Esnoc Enil j2 P2) Δ = Some Δ2 →
   (Δ1 ⊢ Q) → (Δ2 ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ???? HP1 HP2. rewrite envs_lookup_sound //.
-  rewrite (or_destruct P) always_if_or sep_or_r; apply or_elim.
+  rewrite (into_or P) always_if_or sep_or_r; apply or_elim.
   - rewrite (envs_simple_replace_sound' _ Δ1) //.
     by rewrite /= right_id wand_elim_r.
   - rewrite (envs_simple_replace_sound' _ Δ2) //.
@@ -991,41 +991,40 @@ Lemma tac_forall_revert {A} Δ (Φ : A → uPred M) :
 Proof. intros HΔ a. by rewrite HΔ (forall_elim a). Qed.
 
 (** * Existential *)
-Class ExistSplit {A} (P : uPred M) (Φ : A → uPred M) :=
-  exist_split : (∃ x, Φ x) ⊢ P.
-Arguments exist_split {_} _ _ {_}.
-Global Instance exist_split_exist {A} (Φ: A → uPred M): ExistSplit (∃ a, Φ a) Φ.
+Class FromExist {A} (P : uPred M) (Φ : A → uPred M) :=
+  from_exist : (∃ x, Φ x) ⊢ P.
+Arguments from_exist {_} _ _ {_}.
+Global Instance from_exist_exist {A} (Φ: A → uPred M): FromExist (∃ a, Φ a) Φ.
 Proof. done. Qed.
 
 Lemma tac_exist {A} Δ P (Φ : A → uPred M) :
-  ExistSplit P Φ → (∃ a, Δ ⊢ Φ a) → Δ ⊢ P.
-Proof. intros ? [a ?]. rewrite -(exist_split P). eauto using exist_intro'. Qed.
+  FromExist P Φ → (∃ a, Δ ⊢ Φ a) → Δ ⊢ P.
+Proof. intros ? [a ?]. rewrite -(from_exist P). eauto using exist_intro'. Qed.
 
-Class ExistDestruct {A} (P : uPred M) (Φ : A → uPred M) :=
-  exist_destruct : P ⊢ ∃ x, Φ x.
-Arguments exist_destruct {_} _ _ {_}.
-Global Instance exist_destruct_exist {A} (Φ : A → uPred M) :
-  ExistDestruct (∃ a, Φ a) Φ.
+Class IntoExist {A} (P : uPred M) (Φ : A → uPred M) :=
+  into_exist : P ⊢ ∃ x, Φ x.
+Arguments into_exist {_} _ _ {_}.
+Global Instance into_exist_exist {A} (Φ : A → uPred M) : IntoExist (∃ a, Φ a) Φ.
 Proof. done. Qed.
-Global Instance exist_destruct_later {A} P (Φ : A → uPred M) :
-  ExistDestruct P Φ → Inhabited A → ExistDestruct (▷ P) (λ a, ▷ (Φ a))%I.
-Proof. rewrite /ExistDestruct=> HP ?. by rewrite HP later_exist. Qed.
-Global Instance exist_destruct_always {A} P (Φ : A → uPred M) :
-  ExistDestruct P Φ → ExistDestruct (□ P) (λ a, □ (Φ a))%I.
-Proof. rewrite /ExistDestruct=> HP. by rewrite HP always_exist. Qed.
+Global Instance into_exist_later {A} P (Φ : A → uPred M) :
+  IntoExist P Φ → Inhabited A → IntoExist (▷ P) (λ a, ▷ (Φ a))%I.
+Proof. rewrite /IntoExist=> HP ?. by rewrite HP later_exist. Qed.
+Global Instance into_exist_always {A} P (Φ : A → uPred M) :
+  IntoExist P Φ → IntoExist (□ P) (λ a, □ (Φ a))%I.
+Proof. rewrite /IntoExist=> HP. by rewrite HP always_exist. Qed.
 
 Lemma tac_exist_destruct {A} Δ i p j P (Φ : A → uPred M) Q :
-  envs_lookup i Δ = Some (p, P) → ExistDestruct P Φ →
+  envs_lookup i Δ = Some (p, P) → IntoExist P Φ →
   (∀ a, ∃ Δ',
     envs_simple_replace i p (Esnoc Enil j (Φ a)) Δ = Some Δ' ∧ (Δ' ⊢ Q)) →
   Δ ⊢ Q.
 Proof.
   intros ?? HΦ. rewrite envs_lookup_sound //.
-  rewrite (exist_destruct P) always_if_exist sep_exist_r.
+  rewrite (into_exist P) always_if_exist sep_exist_r.
   apply exist_elim=> a; destruct (HΦ a) as (Δ'&?&?).
   rewrite envs_simple_replace_sound' //; simpl. by rewrite right_id wand_elim_r.
 Qed.
 End tactics.
 
-Hint Extern 0 (ToPosedProof True _ _) =>
+Hint Extern 0 (IntoPosedProof True _ _) =>
   class_apply @to_posed_proof_True : typeclass_instances.
