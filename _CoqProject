@@ -55,7 +55,6 @@ algebra/upred_tactics.v
 algebra/upred_big_op.v
 algebra/upred_hlist.v
 algebra/frac.v
-algebra/count.v
 algebra/csum.v
 algebra/list.v
 algebra/updates.v
