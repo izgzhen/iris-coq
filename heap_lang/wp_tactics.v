@@ -22,13 +22,15 @@ Ltac wp_value_head :=
       match goal with |- _ ⊢ wp _ _ _ => simpl | _ => fail end)
   end.
 
+Ltac wp_strip_later := idtac. (* a hook to be redefined later *)
+
 Ltac wp_seq_head :=
   lazymatch goal with
-  | |- _ ⊢ wp ?E (Seq _ _) ?Q => etrans; [|eapply wp_seq; wp_done]; strip_later
+  | |- _ ⊢ wp ?E (Seq _ _) ?Q => etrans; [|eapply wp_seq; wp_done]; wp_strip_later
   end.
 
 Ltac wp_finish := intros_revert ltac:(
-  rewrite /= ?to_of_val; try strip_later; try wp_value_head);
+  rewrite /= ?to_of_val; try wp_strip_later; try wp_value_head);
   repeat wp_seq_head.
 
 Tactic Notation "wp_value" :=

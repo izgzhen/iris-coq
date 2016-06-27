@@ -498,7 +498,7 @@ Tactic Notation "iAlways":=
 Tactic Notation "iNext":=
   eapply tac_next;
     [apply _
-    |let P := match goal with |- upred_tactics.StripLaterL ?P _ => P end in
+    |let P := match goal with |- StripLaterL ?P _ => P end in
      apply _ || fail "iNext:" P "does not contain laters"|].
 
 (** * Introduction tactic *)

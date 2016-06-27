@@ -3,7 +3,7 @@ From iris.proofmode Require Export weakestpre.
 From iris.heap_lang Require Export wp_tactics heap.
 Import uPred.
 
-Ltac strip_later ::= iNext.
+Ltac wp_strip_later ::= iNext.
 
 Section heap.
 Context {Σ : gFunctors} `{heapG Σ}.

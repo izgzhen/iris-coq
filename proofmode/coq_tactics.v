@@ -1,5 +1,5 @@
 From iris.algebra Require Export upred.
-From iris.algebra Require Import upred_big_op upred_tactics.
+From iris.algebra Require Import upred_big_op upred_tactics gmap.
 From iris.proofmode Require Export environments.
 From iris.prelude Require Import stringmap hlist.
 Import uPred.
@@ -352,8 +352,58 @@ Lemma tac_pure_revert Δ φ Q : (Δ ⊢ ■ φ → Q) → (φ → Δ ⊢ Q).
 Proof. intros HΔ ?. by rewrite HΔ pure_equiv // left_id. Qed.
 
 (** * Later *)
+Class StripLaterR (P Q : uPred M) := strip_later_r : P ⊢ ▷ Q.
+Arguments strip_later_r _ _ {_}.
+Class StripLaterL (P Q : uPred M) := strip_later_l : ▷ Q ⊢ P.
+Arguments strip_later_l _ _ {_}.
 Class StripLaterEnv (Γ1 Γ2 : env (uPred M)) :=
   strip_later_env : env_Forall2 StripLaterR Γ1 Γ2.
+Class StripLaterEnvs (Δ1 Δ2 : envs M) := {
+  strip_later_persistent: StripLaterEnv (env_persistent Δ1) (env_persistent Δ2);
+  strip_later_spatial: StripLaterEnv (env_spatial Δ1) (env_spatial Δ2)
+}.
+
+Global Instance strip_later_r_fallthrough P : StripLaterR P P | 1000.
+Proof. apply later_intro. Qed.
+Global Instance strip_later_r_later P : StripLaterR (▷ P) P.
+Proof. done. Qed.
+Global Instance strip_later_r_and P1 P2 Q1 Q2 :
+  StripLaterR P1 Q1 → StripLaterR P2 Q2 → StripLaterR (P1 ∧ P2) (Q1 ∧ Q2).
+Proof. intros ??; red. by rewrite later_and; apply and_mono. Qed.
+Global Instance strip_later_r_or P1 P2 Q1 Q2 :
+  StripLaterR P1 Q1 → StripLaterR P2 Q2 → StripLaterR (P1 ∨ P2) (Q1 ∨ Q2).
+Proof. intros ??; red. by rewrite later_or; apply or_mono. Qed.
+Global Instance strip_later_r_sep P1 P2 Q1 Q2 :
+  StripLaterR P1 Q1 → StripLaterR P2 Q2 → StripLaterR (P1 ★ P2) (Q1 ★ Q2).
+Proof. intros ??; red. by rewrite later_sep; apply sep_mono. Qed.
+
+Global Instance strip_later_r_big_sepM `{Countable K} {A}
+    (Φ Ψ : K → A → uPred M) (m : gmap K A) :
+  (∀ x k, StripLaterR (Φ k x) (Ψ k x)) →
+  StripLaterR ([★ map] k ↦ x ∈ m, Φ k x) ([★ map] k ↦ x ∈ m, Ψ k x).
+Proof.
+  rewrite /StripLaterR=> ?. rewrite big_sepM_later; by apply big_sepM_mono.
+Qed.
+Global Instance strip_later_r_big_sepS `{Countable A}
+    (Φ Ψ : A → uPred M) (X : gset A) :
+  (∀ x, StripLaterR (Φ x) (Ψ x)) →
+  StripLaterR ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ x).
+Proof.
+  rewrite /StripLaterR=> ?. rewrite big_sepS_later; by apply big_sepS_mono.
+Qed.
+
+Global Instance strip_later_l_later P : StripLaterL (▷ P) P.
+Proof. done. Qed.
+Global Instance strip_later_l_and P1 P2 Q1 Q2 :
+  StripLaterL P1 Q1 → StripLaterL P2 Q2 → StripLaterL (P1 ∧ P2) (Q1 ∧ Q2).
+Proof. intros ??; red. by rewrite later_and; apply and_mono. Qed.
+Global Instance strip_later_l_or P1 P2 Q1 Q2 :
+  StripLaterL P1 Q1 → StripLaterL P2 Q2 → StripLaterL (P1 ∨ P2) (Q1 ∨ Q2).
+Proof. intros ??; red. by rewrite later_or; apply or_mono. Qed.
+Global Instance strip_later_l_sep P1 P2 Q1 Q2 :
+  StripLaterL P1 Q1 → StripLaterL P2 Q2 → StripLaterL (P1 ★ P2) (Q1 ★ Q2).
+Proof. intros ??; red. by rewrite later_sep; apply sep_mono. Qed.
+
 Global Instance strip_later_env_nil : StripLaterEnv Enil Enil.
 Proof. constructor. Qed.
 Global Instance strip_later_env_snoc Γ1 Γ2 i P Q :
@@ -361,14 +411,11 @@ Global Instance strip_later_env_snoc Γ1 Γ2 i P Q :
   StripLaterEnv (Esnoc Γ1 i P) (Esnoc Γ2 i Q).
 Proof. by constructor. Qed.
 
-Class StripLaterEnvs (Δ1 Δ2 : envs M) := {
-  strip_later_persistent: StripLaterEnv (env_persistent Δ1) (env_persistent Δ2);
-  strip_later_spatial: StripLaterEnv (env_spatial Δ1) (env_spatial Δ2)
-}.
 Global Instance strip_later_envs Γp1 Γp2 Γs1 Γs2 :
   StripLaterEnv Γp1 Γp2 → StripLaterEnv Γs1 Γs2 →
   StripLaterEnvs (Envs Γp1 Γs1) (Envs Γp2 Γs2).
 Proof. by split. Qed.
+
 Lemma strip_later_env_sound Δ1 Δ2 : StripLaterEnvs Δ1 Δ2 → Δ1 ⊢ ▷ Δ2.
 Proof.
   intros [Hp Hs]; rewrite /of_envs /= !later_sep -always_later.
