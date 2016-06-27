@@ -34,7 +34,7 @@ Proof.
 Qed.
 
 (** A typeclass for whether a variable is bound in a given
-   context. Making this a typeclass means we can use tpeclass search
+   context. Making this a typeclass means we can use typeclass search
    to program solving these constraints, so this becomes extensible.
    Also, since typeclass search runs *after* unification, Coq has already
    inferred the X for us; if we were to go for embedded proof terms ot
