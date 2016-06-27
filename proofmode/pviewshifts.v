@@ -21,9 +21,8 @@ Global Instance exists_split_pvs {A} E1 E2 P (Φ : A → iProp Λ Σ) :
 Proof.
   rewrite /ExistSplit=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
 Qed.
-Global Instance frame_pvs E1 E2 R P mQ :
-  Frame R P mQ →
-  Frame R (|={E1,E2}=> P) (Some (|={E1,E2}=> if mQ is Some Q then Q else True))%I.
+Global Instance frame_pvs E1 E2 R P Q :
+  Frame R P Q → Frame R (|={E1,E2}=> P) (|={E1,E2}=> Q).
 Proof. rewrite /Frame=><-. by rewrite pvs_frame_l. Qed.
 Global Instance to_wand_pvs E1 E2 R P Q :
   ToWand R P Q → ToWand R (|={E1,E2}=> P) (|={E1,E2}=> Q) | 100.

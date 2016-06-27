@@ -260,12 +260,12 @@ favor the second. *)
 Ltac f_equiv :=
   match goal with
   | _ => reflexivity
-  (* We support matches on both sides, *if* they concern the same
-     variable.
-     TODO: We should support different variables, provided that we can
-     derive contradictions for the off-diagonal cases. *)
+  (* We support matches on both sides, *if* they concern the same variable, or
+     variables in some relation. *)
   | |- ?R (match ?x with _ => _ end) (match ?x with _ => _ end) =>
     destruct x
+  | H : ?R ?x ?y |- ?R2 (match ?x with _ => _ end) (match ?y with _ => _ end) =>
+     destruct H
   (* First assume that the arguments need the same relation as the result *)
   | |- ?R (?f ?x) (?f _) => apply (_ : Proper (R ==> R) f)
   (* For the case in which R is polymorphic, or an operational type class,
@@ -283,14 +283,11 @@ Ltac f_equiv :=
   (* TODO: If some of the arguments are the same, we could also
      query for "pointwise_relation"'s. But that leads to a combinatorial
      explosion about which arguments are and which are not the same. *)
-  | |- ?R (?f ?x) (?f _) =>
-    apply (_ : Proper (_ ==> R) f)
-  | |- ?R (?f ?x ?y) (?f _ _) =>
-    apply (_ : Proper (_ ==> _ ==> R) f)
+  | |- ?R (?f ?x) (?f _) => apply (_ : Proper (_ ==> R) f)
+  | |- ?R (?f ?x ?y) (?f _ _) => apply (_ : Proper (_ ==> _ ==> R) f)
    (* In case the function symbol differs, but the arguments are the same,
       maybe we have a pointwise_relation in our context. *)
-  | H : pointwise_relation _ ?R ?f ?g |- ?R (?f ?x) (?g ?x) =>
-     apply H
+  | H : pointwise_relation _ ?R ?f ?g |- ?R (?f ?x) (?g ?x) => apply H
   end.
 
 (** auto_proper solves goals of the form "f _ = f _", for any relation and any
@@ -317,7 +314,8 @@ Ltac solve_proper :=
   | |- Proper _ _ => intros ???
   | |- (_ ==> _)%signature _ _ => intros ???
   | |- pointwise_relation _ _ _ _ => intros ?
-  end;
+  | |- ?R ?f _ => try let f' := constr:(λ x, f x) in intros ?
+  end; simpl;
   (* Unfold the head symbol, which is the one we are proving a new property about *)
   lazymatch goal with
   | |- ?R (?f _ _ _ _ _ _ _ _) (?f _ _ _ _ _ _ _ _) => unfold f

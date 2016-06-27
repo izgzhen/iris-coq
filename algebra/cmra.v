@@ -8,6 +8,11 @@ Instance: Params (@op) 2.
 Infix "⋅" := op (at level 50, left associativity) : C_scope.
 Notation "(⋅)" := op (only parsing) : C_scope.
 
+(* The inclusion quantifies over [A], not [option A].  This means we do not get
+   reflexivity.  However, if we used [option A], the following would no longer
+   hold:
+     x ≼ y ↔ x.1 ≼ y.1 ∧ x.2 ≼ y.2
+*)
 Definition included `{Equiv A, Op A} (x y : A) := ∃ z, y ≡ x ⋅ z.
 Infix "≼" := included (at level 70) : C_scope.
 Notation "(≼)" := included (only parsing) : C_scope.

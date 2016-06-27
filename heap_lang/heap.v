@@ -24,8 +24,13 @@ Definition of_heap : heapUR → state := omap (maybe DecAgree ∘ snd).
 Section definitions.
   Context `{i : heapG Σ}.
 
-  Definition heap_mapsto (l : loc) (q : Qp) (v: val) : iPropG heap_lang Σ :=
+  Definition heap_mapsto_def (l : loc) (q : Qp) (v: val) : iPropG heap_lang Σ :=
     auth_own heap_name {[ l := (q, DecAgree v) ]}.
+  Definition heap_mapsto_aux : { x | x = @heap_mapsto_def }. by eexists. Qed.
+  Definition heap_mapsto := proj1_sig heap_mapsto_aux.
+  Definition heap_mapsto_eq : @heap_mapsto = @heap_mapsto_def :=
+    proj2_sig heap_mapsto_aux.
+
   Definition heap_inv (h : heapUR) : iPropG heap_lang Σ :=
     ownP (of_heap h).
   Definition heap_ctx (N : namespace) : iPropG heap_lang Σ :=
@@ -107,7 +112,7 @@ Section heap.
       apply (auth_alloc (ownP ∘ of_heap) N E); auto using to_heap_valid. }
     apply pvs_mono, exist_elim=> γ.
     rewrite -(exist_intro (HeapG _ _ γ)) /heap_ctx; apply and_mono_r.
-    rewrite /heap_mapsto /heap_name.
+    rewrite heap_mapsto_eq /heap_mapsto_def /heap_name.
     induction σ as [|l v σ Hl IH] using map_ind.
     { rewrite big_sepM_empty; apply True_intro. }
     rewrite to_heap_insert big_sepM_insert //.
@@ -120,21 +125,23 @@ Section heap.
 
   (** General properties of mapsto *)
   Global Instance heap_mapsto_timeless l q v : TimelessP (l ↦{q} v).
-  Proof. rewrite /heap_mapsto. apply _. Qed.
+  Proof. rewrite heap_mapsto_eq /heap_mapsto_def. apply _. Qed.
 
   Lemma heap_mapsto_op_eq l q1 q2 v : l ↦{q1} v ★ l ↦{q2} v ⊣⊢ l ↦{q1+q2} v.
-  Proof. by rewrite -auth_own_op op_singleton pair_op dec_agree_idemp. Qed.
+  Proof.
+    by rewrite heap_mapsto_eq -auth_own_op op_singleton pair_op dec_agree_idemp.
+  Qed.
 
   Lemma heap_mapsto_op l q1 q2 v1 v2 :
     l ↦{q1} v1 ★ l ↦{q2} v2 ⊣⊢ v1 = v2 ∧ l ↦{q1+q2} v1.
   Proof.
     destruct (decide (v1 = v2)) as [->|].
-    { by rewrite heap_mapsto_op_eq const_equiv // left_id. }
-    rewrite -auth_own_op op_singleton pair_op dec_agree_ne //.
-    apply (anti_symm (⊢)); last by apply const_elim_l.
+    { by rewrite heap_mapsto_op_eq pure_equiv // left_id. }
+    rewrite heap_mapsto_eq -auth_own_op op_singleton pair_op dec_agree_ne //.
+    apply (anti_symm (⊢)); last by apply pure_elim_l.
     rewrite auth_own_valid gmap_validI (forall_elim l) lookup_singleton.
     rewrite option_validI prod_validI frac_validI discrete_valid.
-    by apply const_elim_r.
+    by apply pure_elim_r.
   Qed.
 
   Lemma heap_mapsto_op_split l q v : l ↦{q} v ⊣⊢ (l ↦{q/2} v ★ l ↦{q/2} v).
@@ -155,7 +162,7 @@ Section heap.
     rewrite -of_heap_insert -(insert_singleton_op h); last by apply of_heap_None.
     iFrame "Hheap". iSplit; first iPureIntro.
     { by apply alloc_unit_singleton_local_update; first apply of_heap_None. }
-    iIntros "Hheap". iApply "HΦ". by rewrite /heap_mapsto.
+    iIntros "Hheap". iApply "HΦ". by rewrite heap_mapsto_eq /heap_mapsto_def.
   Qed.
 
   Lemma wp_load N E l q v Φ :
@@ -163,7 +170,8 @@ Section heap.
     heap_ctx N ★ ▷ l ↦{q} v ★ ▷ (l ↦{q} v -★ Φ v)
     ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
   Proof.
-    iIntros {?} "[#Hh [Hl HΦ]]". rewrite /heap_ctx /heap_mapsto.
+    iIntros {?} "[#Hh [Hl HΦ]]".
+    rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iApply (auth_fsa heap_inv (wp_fsa _)); simpl; eauto.
     iFrame "Hh Hl". iIntros {h} "[% Hl]". rewrite /heap_inv.
     iApply (wp_load_pst _ (<[l:=v]>(of_heap h)));first by rewrite lookup_insert.
@@ -177,7 +185,8 @@ Section heap.
     heap_ctx N ★ ▷ l ↦ v' ★ ▷ (l ↦ v -★ Φ (LitV LitUnit))
     ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
   Proof.
-    iIntros {??} "[#Hh [Hl HΦ]]". rewrite /heap_ctx /heap_mapsto.
+    iIntros {??} "[#Hh [Hl HΦ]]".
+    rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iApply (auth_fsa heap_inv (wp_fsa _)); simpl; eauto.
     iFrame "Hh Hl". iIntros {h} "[% Hl]". rewrite /heap_inv.
     iApply (wp_store_pst _ (<[l:=v']>(of_heap h))); rewrite ?lookup_insert //.
@@ -192,7 +201,8 @@ Section heap.
     heap_ctx N ★ ▷ l ↦{q} v' ★ ▷ (l ↦{q} v' -★ Φ (LitV (LitBool false)))
     ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
   Proof.
-    iIntros {????} "[#Hh [Hl HΦ]]". rewrite /heap_ctx /heap_mapsto.
+    iIntros {????} "[#Hh [Hl HΦ]]".
+    rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iApply (auth_fsa heap_inv (wp_fsa _)); simpl; eauto 10.
     iFrame "Hh Hl". iIntros {h} "[% Hl]". rewrite /heap_inv.
     iApply (wp_cas_fail_pst _ (<[l:=v']>(of_heap h))); rewrite ?lookup_insert //.
@@ -206,7 +216,8 @@ Section heap.
     heap_ctx N ★ ▷ l ↦ v1 ★ ▷ (l ↦ v2 -★ Φ (LitV (LitBool true)))
     ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
   Proof.
-    iIntros {???} "[#Hh [Hl HΦ]]". rewrite /heap_ctx /heap_mapsto.
+    iIntros {???} "[#Hh [Hl HΦ]]".
+    rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iApply (auth_fsa heap_inv (wp_fsa _)); simpl; eauto 10.
     iFrame "Hh Hl". iIntros {h} "[% Hl]". rewrite /heap_inv.
     iApply (wp_cas_suc_pst _ (<[l:=v1]>(of_heap h))); rewrite ?lookup_insert //.

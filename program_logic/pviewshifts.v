@@ -11,14 +11,14 @@ Local Hint Extern 10 (✓{_} _) =>
   end; solve_validN.
 
 Program Definition pvs_def {Λ Σ} (E1 E2 : coPset) (P : iProp Λ Σ) : iProp Λ Σ :=
-  {| uPred_holds n r1 := ∀ rf k Ef σ,
+  {| uPred_holds n r1 := ∀ k Ef σ rf,
        0 < k ≤ n → E1 ∪ E2 ⊥ Ef →
        wsat k (E1 ∪ Ef) σ (r1 ⋅ rf) →
        ∃ r2, P k r2 ∧ wsat k (E2 ∪ Ef) σ (r2 ⋅ rf) |}.
 Next Obligation.
-  intros Λ Σ E1 E2 P n r1 r2 HP [r3 Hr2] rf k Ef σ ??.
+  intros Λ Σ E1 E2 P n r1 r2 HP [r3 Hr2] k Ef σ rf ??.
   rewrite (dist_le _ _ _ _ Hr2); last lia. intros Hws.
-  destruct (HP (r3 ⋅ rf) k Ef σ) as (r'&?&Hws'); rewrite ?(assoc op); auto.
+  destruct (HP k Ef σ (r3 ⋅ rf)) as (r'&?&Hws'); rewrite ?(assoc op); auto.
   exists (r' ⋅ r3); rewrite -assoc; split; last done.
   apply uPred_mono with r'; eauto using cmra_includedN_l.
 Qed.
@@ -45,6 +45,13 @@ Notation "P ={ E1 , E2 }=> Q" := (P ⊢ |={E1,E2}=> Q)
 Notation "P ={ E }=> Q" := (P ⊢ |={E}=> Q)
   (at level 99, E at level 50, Q at level 200, only parsing) : C_scope.
 
+Notation "P ={ E1 , E2 }=★ Q" := (P -★ |={E1,E2}=> Q)%I
+  (at level 99, E1,E2 at level 50, Q at level 200,
+   format "P  ={ E1 , E2 }=★  Q") : uPred_scope.
+Notation "P ={ E }=★ Q" := (P ={E,E}=★ Q)%I
+  (at level 99, E at level 50, Q at level 200,
+   format "P  ={ E }=★  Q") : uPred_scope.
+
 Section pvs.
 Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q : iProp Λ Σ.
@@ -56,8 +63,8 @@ Proof. intros ?????. exfalso. omega. Qed.
 Global Instance pvs_ne E1 E2 n : Proper (dist n ==> dist n) (@pvs Λ Σ E1 E2).
 Proof.
   rewrite pvs_eq.
-  intros P Q HPQ; split=> n' r1 ??; simpl; split; intros HP rf k Ef σ ???;
-    destruct (HP rf k Ef σ) as (r2&?&?); auto;
+  intros P Q HPQ; split=> n' r1 ??; simpl; split; intros HP k Ef σ rf ???;
+    destruct (HP k Ef σ rf) as (r2&?&?); auto;
     exists r2; split_and?; auto; apply HPQ; eauto.
 Qed.
 Global Instance pvs_proper E1 E2 : Proper ((≡) ==> (≡)) (@pvs Λ Σ E1 E2).
@@ -65,46 +72,46 @@ Proof. apply ne_proper, _. Qed.
 
 Lemma pvs_intro E P : P ={E}=> P.
 Proof.
-  rewrite pvs_eq. split=> n r ? HP rf k Ef σ ???; exists r; split; last done.
+  rewrite pvs_eq. split=> n r ? HP k Ef σ rf ???; exists r; split; last done.
   apply uPred_closed with n; eauto.
 Qed.
 Lemma pvs_mono E1 E2 P Q : (P ⊢ Q) → (|={E1,E2}=> P) ={E1,E2}=> Q.
 Proof.
-  rewrite pvs_eq. intros HPQ; split=> n r ? HP rf k Ef σ ???.
-  destruct (HP rf k Ef σ) as (r2&?&?); eauto.
+  rewrite pvs_eq. intros HPQ; split=> n r ? HP k Ef σ rf ???.
+  destruct (HP k Ef σ rf) as (r2&?&?); eauto.
   exists r2; eauto using uPred_in_entails.
 Qed.
 Lemma pvs_timeless E P : TimelessP P → ▷ P ={E}=> P.
 Proof.
   rewrite pvs_eq uPred.timelessP_spec=> HP.
-  uPred.unseal; split=>-[|n] r ? HP' rf k Ef σ ???; first lia.
+  uPred.unseal; split=>-[|n] r ? HP' k Ef σ rf ???; first lia.
   exists r; split; last done.
   apply HP, uPred_closed with n; eauto using cmra_validN_le.
 Qed.
 Lemma pvs_trans E1 E2 E3 P :
   E2 ⊆ E1 ∪ E3 → (|={E1,E2}=> |={E2,E3}=> P) ={E1,E3}=> P.
 Proof.
-  rewrite pvs_eq. intros ?; split=> n r1 ? HP1 rf k Ef σ ???.
-  destruct (HP1 rf k Ef σ) as (r2&HP2&?); auto.
+  rewrite pvs_eq. intros ?; split=> n r1 ? HP1 k Ef σ rf ???.
+  destruct (HP1 k Ef σ rf) as (r2&HP2&?); auto.
 Qed.
 Lemma pvs_mask_frame E1 E2 Ef P :
   Ef ⊥ E1 ∪ E2 → (|={E1,E2}=> P) ={E1 ∪ Ef,E2 ∪ Ef}=> P.
 Proof.
-  rewrite pvs_eq. intros ?; split=> n r ? HP rf k Ef' σ ???.
-  destruct (HP rf k (Ef∪Ef') σ) as (r'&?&?); rewrite ?(assoc_L _); eauto.
+  rewrite pvs_eq. intros ?; split=> n r ? HP k Ef' σ rf ???.
+  destruct (HP k (Ef∪Ef') σ rf) as (r'&?&?); rewrite ?(assoc_L _); eauto.
   by exists r'; rewrite -(assoc_L _).
 Qed.
 Lemma pvs_frame_r E1 E2 P Q : (|={E1,E2}=> P) ★ Q ={E1,E2}=> P ★ Q.
 Proof.
-  rewrite pvs_eq. uPred.unseal; split; intros n r ? (r1&r2&Hr&HP&?) rf k Ef σ ???.
-  destruct (HP (r2 ⋅ rf) k Ef σ) as (r'&?&?); eauto.
+  rewrite pvs_eq. uPred.unseal; split; intros n r ? (r1&r2&Hr&HP&?) k Ef σ rf ???.
+  destruct (HP k Ef σ (r2 ⋅ rf)) as (r'&?&?); eauto.
   { by rewrite assoc -(dist_le _ _ _ _ Hr); last lia. }
   exists (r' ⋅ r2); split; last by rewrite -assoc.
   exists r', r2; split_and?; auto. apply uPred_closed with n; auto.
 Qed.
 Lemma pvs_openI i P : ownI i P ={{[i]},∅}=> ▷ P.
 Proof.
-  rewrite pvs_eq. uPred.unseal; split=> -[|n] r ? Hinv rf [|k] Ef σ ???; try lia.
+  rewrite pvs_eq. uPred.unseal; split=> -[|n] r ? Hinv [|k] Ef σ rf ???; try lia.
   apply ownI_spec in Hinv; last auto.
   destruct (wsat_open k Ef σ (r ⋅ rf) i P) as (rP&?&?); auto.
   { rewrite lookup_wld_op_l ?Hinv; eauto; apply dist_le with (S n); eauto. }
@@ -114,7 +121,7 @@ Qed.
 Lemma pvs_closeI i P : ownI i P ∧ ▷ P ={∅,{[i]}}=> True.
 Proof.
   rewrite pvs_eq.
-  uPred.unseal; split=> -[|n] r ? [? HP] rf [|k] Ef σ ? HE ?; try lia.
+  uPred.unseal; split=> -[|n] r ? [? HP] [|k] Ef σ rf ? HE ?; try lia.
   exists ∅; split; [done|].
   rewrite left_id; apply wsat_close with P r.
   - apply ownI_spec, uPred_closed with (S n); auto.
@@ -126,7 +133,7 @@ Lemma pvs_ownG_updateP E m (P : iGst Λ Σ → Prop) :
   m ~~>: P → ownG m ={E}=> ∃ m', ■ P m' ∧ ownG m'.
 Proof.
   rewrite pvs_eq. intros Hup.
-  uPred.unseal; split=> -[|n] r ? /ownG_spec Hinv rf [|k] Ef σ ???; try lia.
+  uPred.unseal; split=> -[|n] r ? /ownG_spec Hinv [|k] Ef σ rf ???; try lia.
   destruct (wsat_update_gst k (E ∪ Ef) σ r rf m P) as (m'&?&?); eauto.
   { apply cmra_includedN_le with (S n); auto. }
   by exists (update_gst m' r); split; [exists m'; split; [|apply ownG_spec]|].
@@ -134,7 +141,7 @@ Qed.
 Lemma pvs_allocI E P : ¬set_finite E → ▷ P ={E}=> ∃ i, ■ (i ∈ E) ∧ ownI i P.
 Proof.
   rewrite pvs_eq. intros ?; rewrite /ownI; uPred.unseal.
-  split=> -[|n] r ? HP rf [|k] Ef σ ???; try lia.
+  split=> -[|n] r ? HP [|k] Ef σ rf ???; try lia.
   destruct (wsat_alloc k E Ef σ rf P r) as (i&?&?&?); auto.
   { apply uPred_closed with n; eauto. }
   exists (Res {[ i := to_agree (Next (iProp_unfold P)) ]} ∅ ∅).
@@ -217,7 +224,7 @@ Proof. auto using pvs_mask_frame'. Qed.
 Lemma pvs_ownG_update E m m' : m ~~> m' → ownG m ={E}=> ownG m'.
 Proof.
   intros; rewrite (pvs_ownG_updateP E _ (m' =)); last by apply cmra_update_updateP.
-  by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.const_elim_l=> ->.
+  by apply pvs_mono, uPred.exist_elim=> m''; apply uPred.pure_elim_l=> ->.
 Qed.
 End pvs.
 

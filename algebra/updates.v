@@ -10,6 +10,10 @@ Notation "x ~l~> y @ mz" := (local_update mz x y) (at level 70).
 Instance: Params (@local_update) 1.
 
 (** * Frame preserving updates *)
+(* This quantifies over [option A] for the frame.  That is necessary to
+   make the following hold:
+     x ~~> P → Some c ~~> Some P
+*)
 Definition cmra_updateP {A : cmraT} (x : A) (P : A → Prop) := ∀ n mz,
   ✓{n} (x ⋅? mz) → ∃ y, P y ∧ ✓{n} (y ⋅? mz).
 Instance: Params (@cmra_updateP) 1.

@@ -18,7 +18,7 @@ Local Notation coPsetC := (leibnizC (coPset)).
 Program Definition wp_pre
     (wp : coPsetC -n> exprC Λ -n> (valC Λ -n> iProp) -n> iProp)
     (E : coPset) (e1 : expr Λ) (Φ : valC Λ -n> iProp) :  iProp :=
-  {| uPred_holds n r1 := ∀ rf k Ef σ1,
+  {| uPred_holds n r1 := ∀ k Ef σ1 rf,
        0 ≤ k < n → E ⊥ Ef →
        wsat (S k) (E ∪ Ef) σ1 (r1 ⋅ rf) →
        (∀ v, to_val e1 = Some v →
@@ -31,9 +31,9 @@ Program Definition wp_pre
              wp E e2 Φ k r2 ∧
              default True ef (λ ef, wp ⊤ ef (cconst True%I) k r2'))) |}.
 Next Obligation.
-  intros wp E e1 Φ n r1 r2 Hwp [r3 Hr2] rf k Ef σ1 ??.
+  intros wp E e1 Φ n r1 r2 Hwp [r3 Hr2] k Ef σ1 rf ??.
   rewrite (dist_le _ _ _ _ Hr2); last lia. intros Hws.
-  destruct (Hwp (r3 ⋅ rf) k Ef σ1) as [Hval Hstep]; rewrite ?assoc; auto.
+  destruct (Hwp k Ef σ1 (r3 ⋅ rf)) as [Hval Hstep]; rewrite ?assoc; auto.
   split.
   - intros v Hv. destruct (Hval v Hv) as [r4 [??]].
     exists (r4 ⋅ r3). rewrite -assoc. eauto using uPred_mono, cmra_includedN_l.
@@ -51,8 +51,8 @@ Lemma wp_pre_contractive' n E e Φ1 Φ2 r
   (∀ i : nat, i < n → wp1 ≡{i}≡ wp2) → Φ1 ≡{n}≡ Φ2 →
   wp_pre wp1 E e Φ1 n r → wp_pre wp2 E e Φ2 n r.
 Proof.
-  intros HI HΦ Hwp rf k Ef σ1 ???.
-  destruct (Hwp rf k Ef σ1) as [Hval Hstep]; auto.
+  intros HI HΦ Hwp k Ef σ1 rf ???.
+  destruct (Hwp k Ef σ1 rf) as [Hval Hstep]; auto.
   split.
   { intros v ?. destruct (Hval v) as (r2&?&?); auto.
     exists r2. split; [apply HΦ|]; auto. }
@@ -95,25 +95,25 @@ Proof.
   - induction n as [n IH] using lt_wf_ind=> r1 E e Φ ? Hwp.
     case EQ: (to_val e)=>[v|].
     + rewrite -(of_to_val _ _ EQ) {IH}. constructor. rewrite pvs_eq.
-      intros rf [|k] Ef σ ???; first omega.
+      intros [|k] Ef σ rf ???; first omega.
       apply wp_fix_unfold in Hwp; last done.
-      destruct (Hwp rf k Ef σ); auto.
-    + constructor; [done|]=> rf k Ef σ1 ???.
+      destruct (Hwp k Ef σ rf); auto.
+    + constructor; [done|]=> k Ef σ1 rf ???.
       apply wp_fix_unfold in Hwp; last done.
-      destruct (Hwp rf k Ef σ1) as [Hval [Hred Hpstep]]; auto.
+      destruct (Hwp k Ef σ1 rf) as [Hval [Hred Hpstep]]; auto.
       split; [done|]=> e2 σ2 ef ?.
       destruct (Hpstep e2 σ2 ef) as (r2&r2'&?&?&?); [done..|].
       exists r2, r2'; split_and?; auto.
       intros ? ->. change (weakestpre.wp_pre ⊤ (cconst True%I) e' k r2'); eauto.
   - induction n as [n IH] using lt_wf_ind=> r1 E e Φ ? Hwp.
-    apply wp_fix_unfold; [done|]=> rf k Ef σ1 ???. split.
+    apply wp_fix_unfold; [done|]=> k Ef σ1 rf ???. split.
     + intros v Hval.
       destruct Hwp as [??? Hpvs|]; rewrite ?to_of_val in Hval; simplify_eq/=.
       rewrite pvs_eq in Hpvs.
-      destruct (Hpvs rf (S k) Ef σ1) as (r2&?&?); eauto.
+      destruct (Hpvs (S k) Ef σ1 rf) as (r2&?&?); eauto.
     + intros Hval ?.
       destruct Hwp as [|???? Hwp]; rewrite ?to_of_val in Hval; simplify_eq/=.
-      edestruct (Hwp rf k Ef σ1) as [? Hpstep]; auto.
+      edestruct (Hwp k Ef σ1 rf) as [? Hpstep]; auto.
       split; [done|]=> e2 σ2 ef ?.
       destruct (Hpstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
       exists r2, r2'. destruct ef; simpl; auto.

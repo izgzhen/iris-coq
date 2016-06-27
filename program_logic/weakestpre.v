@@ -10,7 +10,7 @@ Local Hint Extern 10 (✓{_} _) =>
   end; solve_validN.
 
 Record wp_go {Λ Σ} (E : coPset) (Φ Φfork : expr Λ → nat → iRes Λ Σ → Prop)
-    (k : nat) (rf : iRes Λ Σ) (e1 : expr Λ) (σ1 : state Λ) := {
+    (k : nat) (σ1 : state Λ) (rf : iRes Λ Σ) (e1 : expr Λ) := {
   wf_safe : reducible e1 σ1;
   wp_step e2 σ2 ef :
     prim_step e1 σ1 e2 σ2 ef →
@@ -24,11 +24,11 @@ CoInductive wp_pre {Λ Σ} (E : coPset)
   | wp_pre_value n r v : (|={E}=> Φ v)%I n r → wp_pre E Φ (of_val v) n r
   | wp_pre_step n r1 e1 :
      to_val e1 = None →
-     (∀ rf k Ef σ1,
+     (∀ k Ef σ1 rf,
        0 < k < n → E ⊥ Ef →
        wsat (S k) (E ∪ Ef) σ1 (r1 ⋅ rf) →
        wp_go (E ∪ Ef) (wp_pre E Φ)
-                      (wp_pre ⊤ (λ _, True%I)) k rf e1 σ1) →
+                      (wp_pre ⊤ (λ _, True%I)) k σ1 rf e1) →
      wp_pre E Φ e1 n r1.
 Program Definition wp_def {Λ Σ} (E : coPset) (e : expr Λ)
   (Φ : val Λ → iProp Λ Σ) : iProp Λ Σ := {| uPred_holds := wp_pre E Φ e |}.
@@ -37,8 +37,8 @@ Next Obligation.
   induction n as [n IH] using lt_wf_ind; intros Φ E e r1 r1'.
   destruct 1 as [|n r1 e1 ? Hgo].
   - constructor; eauto using uPred_mono.
-  - intros [rf' Hr]; constructor; [done|intros rf k Ef σ1 ???].
-    destruct (Hgo (rf' ⋅ rf) k Ef σ1) as [Hsafe Hstep];
+  - intros [rf' Hr]; constructor; [done|intros k Ef σ1 rf ???].
+    destruct (Hgo k Ef σ1 (rf' ⋅ rf)) as [Hsafe Hstep];
       rewrite ?assoc -?(dist_le _ _ _ _ Hr); auto; constructor; [done|].
     intros e2 σ2 ef ?; destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
     exists r2, (r2' ⋅ rf'); split_and?; eauto 10 using (IH k), cmra_includedN_l.
@@ -85,8 +85,8 @@ Proof.
   induction n' as [n' IH] using lt_wf_ind=> e r.
   destruct 3 as [n' r v HpvsQ|n' r e1 ? Hgo].
   { constructor. by eapply pvs_ne, HpvsQ; eauto. }
-  constructor; [done|]=> rf k Ef σ1 ???.
-  destruct (Hgo rf k Ef σ1) as [Hsafe Hstep]; auto.
+  constructor; [done|]=> k Ef σ1 rf ???.
+  destruct (Hgo k Ef σ1 rf) as [Hsafe Hstep]; auto.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
   exists r2, r2'; split_and?; [|eapply IH|]; eauto.
@@ -104,10 +104,10 @@ Proof.
   revert e r; induction n as [n IH] using lt_wf_ind=> e r.
   destruct 2 as [n' r v HpvsQ|n' r e1 ? Hgo].
   { constructor; eapply pvs_mask_frame_mono, HpvsQ; eauto. }
-  constructor; [done|]=> rf k Ef σ1 ???.
+  constructor; [done|]=> k Ef σ1 rf ???.
   assert (E2 ∪ Ef = E1 ∪ (E2 ∖ E1 ∪ Ef)) as HE'.
   { by rewrite assoc_L -union_difference_L. }
-  destruct (Hgo rf k ((E2 ∖ E1) ∪ Ef) σ1) as [Hsafe Hstep]; rewrite -?HE'; auto.
+  destruct (Hgo k ((E2 ∖ E1) ∪ Ef) σ1 rf) as [Hsafe Hstep]; rewrite -?HE'; auto.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
   exists r2, r2'; split_and?; [rewrite HE'|eapply IH|]; eauto.
@@ -127,7 +127,7 @@ Qed.
 Lemma wp_step_inv E Ef Φ e k n σ r rf :
   to_val e = None → 0 < k < n → E ⊥ Ef →
   wp_def E e Φ n r → wsat (S k) (E ∪ Ef) σ (r ⋅ rf) →
-  wp_go (E ∪ Ef) (λ e, wp_def E e Φ) (λ e, wp_def ⊤ e (λ _, True%I)) k rf e σ.
+  wp_go (E ∪ Ef) (λ e, wp_def E e Φ) (λ e, wp_def ⊤ e (λ _, True%I)) k σ rf e.
 Proof.
   intros He; destruct 3; [by rewrite ?to_of_val in He|eauto].
 Qed.
@@ -140,8 +140,8 @@ Proof.
   destruct (to_val e) as [v|] eqn:He; [apply of_to_val in He; subst|].
   { constructor; eapply pvs_trans', pvs_mono, Hvs; eauto.
     split=> ???; apply wp_value_inv. }
-  constructor; [done|]=> rf k Ef σ1 ???.
-  rewrite pvs_eq in Hvs. destruct (Hvs rf (S k) Ef σ1) as (r'&Hwp&?); auto.
+  constructor; [done|]=> k Ef σ1 rf ???.
+  rewrite pvs_eq in Hvs. destruct (Hvs (S k) Ef σ1 rf) as (r'&Hwp&?); auto.
   eapply wp_step_inv with (S k) r'; eauto.
 Qed.
 Lemma wp_pvs E e Φ : WP e @ E {{ v, |={E}=> Φ v }} ⊢ WP e @ E {{ Φ }}.
@@ -150,7 +150,7 @@ Proof.
     induction n as [n IH] using lt_wf_ind=> e r Hr HΦ.
   destruct (to_val e) as [v|] eqn:He; [apply of_to_val in He; subst|].
   { constructor; apply pvs_trans', (wp_value_inv _ (pvs E E ∘ Φ)); auto. }
-  constructor; [done|]=> rf k Ef σ1 ???.
+  constructor; [done|]=> k Ef σ1 rf ???.
   destruct (wp_step_inv E Ef (pvs E E ∘ Φ) e k n σ1 r rf) as [? Hstep]; auto.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&Hwp'&?); auto.
@@ -161,8 +161,8 @@ Lemma wp_atomic E1 E2 e Φ :
   (|={E1,E2}=> WP e @ E2 {{ v, |={E2,E1}=> Φ v }}) ⊢ WP e @ E1 {{ Φ }}.
 Proof.
   rewrite wp_eq pvs_eq. intros ? He; split=> n r ? Hvs; constructor.
-  eauto using atomic_not_val. intros rf k Ef σ1 ???.
-  destruct (Hvs rf (S k) Ef σ1) as (r'&Hwp&?); auto.
+  eauto using atomic_not_val. intros k Ef σ1 rf ???.
+  destruct (Hvs (S k) Ef σ1 rf) as (r'&Hwp&?); auto.
   destruct (wp_step_inv E2 Ef (pvs_def E2 E1 ∘ Φ) e k (S k) σ1 r' rf)
     as [Hsafe Hstep]; auto using atomic_not_val; [].
   split; [done|]=> e2 σ2 ef ?.
@@ -170,7 +170,7 @@ Proof.
   destruct Hwp' as [k r2 v Hvs'|k r2 e2 Hgo];
     [|destruct (atomic_step e σ1 e2 σ2 ef); naive_solver].
   rewrite -pvs_eq in Hvs'. apply pvs_trans in Hvs';auto. rewrite pvs_eq in Hvs'.
-  destruct (Hvs' (r2' ⋅ rf) k Ef σ2) as (r3&[]); rewrite ?assoc; auto.
+  destruct (Hvs' k Ef σ2 (r2' ⋅ rf)) as (r3&[]); rewrite ?assoc; auto.
   exists r3, r2'; split_and?; last done.
   - by rewrite -assoc.
   - constructor; apply pvs_intro; auto.
@@ -183,8 +183,8 @@ Proof.
   destruct 1 as [|n r e ? Hgo]=>?.
   { constructor. rewrite -uPred_sep_eq; apply pvs_frame_r; auto.
     uPred.unseal; exists r, rR; eauto. }
-  constructor; [done|]=> rf k Ef σ1 ???.
-  destruct (Hgo (rR⋅rf) k Ef σ1) as [Hsafe Hstep]; auto.
+  constructor; [done|]=> k Ef σ1 rf ???.
+  destruct (Hgo k Ef σ1 (rR⋅rf)) as [Hsafe Hstep]; auto.
   { by rewrite assoc. }
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&?&?&?); auto.
@@ -199,27 +199,27 @@ Lemma wp_frame_step_r E E1 E2 e Φ R :
 Proof.
   rewrite wp_eq pvs_eq=> He ??.
   uPred.unseal; split; intros n r' Hvalid (r&rR&Hr&Hwp&HR); cofe_subst.
-  constructor; [done|]=>rf k Ef σ1 ?? Hws1.
+  constructor; [done|]=> k Ef σ1 rf ?? Hws1.
   destruct Hwp as [|n r e ? Hgo]; [by rewrite to_of_val in He|].
   (* "execute" HR *)
-  destruct (HR (r ⋅ rf) (S k) (E ∪ Ef) σ1) as (s&Hvs&Hws2); auto.
+  destruct (HR (S k) (E ∪ Ef) σ1 (r ⋅ rf)) as (s&Hvs&Hws2); auto.
   { eapply wsat_proper, Hws1; first by set_solver+.
     by rewrite assoc [rR ⋅ _]comm. }
   clear Hws1 HR.
   (* Take a step *)
-  destruct (Hgo (s⋅rf) k (E2 ∪ Ef) σ1) as [Hsafe Hstep]; auto.
+  destruct (Hgo k (E2 ∪ Ef) σ1 (s ⋅ rf)) as [Hsafe Hstep]; auto.
   { eapply wsat_proper, Hws2; first by set_solver+.
     by rewrite !assoc [s ⋅ _]comm. }
   clear Hgo.
   split; [done|intros e2 σ2 ef ?].
   destruct (Hstep e2 σ2 ef) as (r2&r2'&Hws3&?&?); auto. clear Hws2.
   (* Execute 2nd part of the view shift *)
-  destruct (Hvs (r2 ⋅ r2' ⋅ rf) k (E ∪ Ef) σ2) as (t&HR&Hws4); auto.
+  destruct (Hvs k (E ∪ Ef) σ2 (r2 ⋅ r2' ⋅ rf)) as (t&HR&Hws4); auto.
   { eapply wsat_proper, Hws3; first by set_solver+.
     by rewrite !assoc [_ ⋅ s]comm !assoc. }
   clear Hvs Hws3.
   (* Execute the rest of e *)
-  exists (r2 ⋅ t), r2'. split_and?; auto.
+  exists (r2 ⋅ t), r2'; split_and?; auto.
   - eapply wsat_proper, Hws4; first by set_solver+.
     by rewrite !assoc [_ ⋅ t]comm.
   - rewrite -uPred_sep_eq. move: wp_frame_r. rewrite wp_eq=>Hframe.
@@ -234,8 +234,8 @@ Proof.
     induction n as [n IH] using lt_wf_ind=> e r ?.
   destruct 1 as [|n r e ? Hgo].
   { rewrite -wp_eq. apply pvs_wp; rewrite ?wp_eq; done. }
-  constructor; auto using fill_not_val=> rf k Ef σ1 ???.
-  destruct (Hgo rf k Ef σ1) as [Hsafe Hstep]; auto.
+  constructor; auto using fill_not_val=> k Ef σ1 rf ???.
+  destruct (Hgo k Ef σ1 rf) as [Hsafe Hstep]; auto.
   split.
   { destruct Hsafe as (e2&σ2&ef&?).
     by exists (K e2), σ2, ef; apply fill_step. }

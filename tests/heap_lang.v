@@ -27,7 +27,19 @@ Section LiftingTests.
      nclose N ⊆ E → heap_ctx N ⊢ WP heap_e @ E {{ v, v = #2 }}.
   Proof.
     iIntros {HN} "#?". rewrite /heap_e. iApply (wp_mask_weaken N); first done.
-    wp_alloc l. wp_let. wp_load. wp_op. wp_store. wp_seq. by wp_load.
+    wp_alloc l. wp_let. wp_load. wp_op. wp_store. by wp_load.
+  Qed.
+
+  Definition heap_e2  : expr [] :=
+    let: "x" := ref #1 in
+    let: "y" := ref #1 in
+    '"x" <- !'"x" + #1 ;; !'"x".
+  Lemma heap_e2_spec E N :
+     nclose N ⊆ E → heap_ctx N ⊢ WP heap_e2 @ E {{ v, v = #2 }}.
+  Proof.
+    iIntros {HN} "#?". rewrite /heap_e2. iApply (wp_mask_weaken N); first done.
+    wp_alloc l. wp_let. wp_alloc l'. wp_let.
+    wp_load. wp_op. wp_store. wp_load. done.
   Qed.
 
   Definition FindPred : val :=

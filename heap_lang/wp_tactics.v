@@ -22,8 +22,14 @@ Ltac wp_value_head :=
       match goal with |- _ ⊢ wp _ _ _ => simpl | _ => fail end)
   end.
 
+Ltac wp_seq_head :=
+  lazymatch goal with
+  | |- _ ⊢ wp ?E (Seq _ _) ?Q => etrans; [|eapply wp_seq; wp_done]; strip_later
+  end.
+
 Ltac wp_finish := intros_revert ltac:(
-  rewrite /= ?to_of_val; try strip_later; try wp_value_head).
+  rewrite /= ?to_of_val; try strip_later; try wp_value_head);
+  repeat wp_seq_head.
 
 Tactic Notation "wp_value" :=
   lazymatch goal with
@@ -92,16 +98,16 @@ Tactic Notation "wp_if" :=
   | _ => fail "wp_if: not a 'wp'"
   end.
 
-Tactic Notation "wp_case" :=
+Tactic Notation "wp_match" :=
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with
     | Case _ _ _ =>
       wp_bind K;
-      etrans; [|first[eapply wp_case_inl; wp_done|eapply wp_case_inr; wp_done]];
-      wp_finish
-    end) || fail "wp_case: cannot find 'Case' in" e
-  | _ => fail "wp_case: not a 'wp'"
+      etrans; [|first[eapply wp_match_inl; wp_done|eapply wp_match_inr; wp_done]];
+      simpl_subst; wp_finish
+    end) || fail "wp_match: cannot find 'Match' in" e
+  | _ => fail "wp_match: not a 'wp'"
   end.
 
 Tactic Notation "wp_focus" open_constr(efoc) :=

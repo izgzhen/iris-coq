@@ -53,7 +53,9 @@ algebra/iprod.v
 algebra/upred.v
 algebra/upred_tactics.v
 algebra/upred_big_op.v
+algebra/upred_hlist.v
 algebra/frac.v
+algebra/count.v
 algebra/csum.v
 algebra/list.v
 algebra/updates.v
@@ -68,7 +70,6 @@ program_logic/ownership.v
 program_logic/weakestpre.v
 program_logic/weakestpre_fix.v
 program_logic/pviewshifts.v
-program_logic/lviewshifts.v
 program_logic/resources.v
 program_logic/hoare.v
 program_logic/language.v

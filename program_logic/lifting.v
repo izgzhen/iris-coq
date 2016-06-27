@@ -23,18 +23,18 @@ Lemma wp_lift_step E1 E2
   reducible e1 σ1 →
   (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
   (|={E1,E2}=> ▷ ownP σ1 ★ ▷ ∀ e2 σ2 ef,
-    (■ φ e2 σ2 ef ∧ ownP σ2) -★ |={E2,E1}=> WP e2 @ E1 {{ Φ }} ★ wp_fork ef)
+    (■ φ e2 σ2 ef ∧ ownP σ2) ={E2,E1}=★ WP e2 @ E1 {{ Φ }} ★ wp_fork ef)
   ⊢ WP e1 @ E1 {{ Φ }}.
 Proof.
   intros ? He Hsafe Hstep. rewrite pvs_eq wp_eq.
   uPred.unseal; split=> n r ? Hvs; constructor; auto.
-  intros rf k Ef σ1' ???; destruct (Hvs rf (S k) Ef σ1')
+  intros k Ef σ1' rf ???; destruct (Hvs (S k) Ef σ1' rf)
     as (r'&(r1&r2&?&?&Hwp)&Hws); auto; clear Hvs; cofe_subst r'.
   destruct (wsat_update_pst k (E2 ∪ Ef) σ1 σ1' r1 (r2 ⋅ rf)) as [-> Hws'].
   { apply equiv_dist. rewrite -(ownP_spec k); auto. }
   { by rewrite assoc. }
   constructor; [done|intros e2 σ2 ef ?; specialize (Hws' σ2)].
-  destruct (λ H1 H2 H3, Hwp e2 σ2 ef k (update_pst σ2 r1) H1 H2 H3 rf k Ef σ2)
+  destruct (λ H1 H2 H3, Hwp e2 σ2 ef k (update_pst σ2 r1) H1 H2 H3 k Ef σ2 rf)
     as (r'&(r1'&r2'&?&?&?)&?); auto; cofe_subst r'.
   { split. by eapply Hstep. apply ownP_spec; auto. }
   { rewrite (comm _ r2) -assoc; eauto using wsat_le. }
@@ -49,7 +49,7 @@ Lemma wp_lift_pure_step E (φ : expr Λ → option (expr Λ) → Prop) Φ e1 :
 Proof.
   intros He Hsafe Hstep; rewrite wp_eq; uPred.unseal.
   split=> n r ? Hwp; constructor; auto.
-  intros rf k Ef σ1 ???; split; [done|]. destruct n as [|n]; first lia.
+  intros k Ef σ1 rf ???; split; [done|]. destruct n as [|n]; first lia.
   intros e2 σ2 ef ?; destruct (Hstep σ1 e2 σ2 ef); auto; subst.
   destruct (Hwp e2 ef k r) as (r1&r2&Hr&?&?); auto.
   exists r1,r2; split_and?; try done.
@@ -76,9 +76,9 @@ Proof.
   apply forall_intro=>e2'; apply forall_intro=>σ2'.
   apply forall_intro=>ef; apply wand_intro_l.
   rewrite always_and_sep_l -assoc -always_and_sep_l.
-  apply const_elim_l=>-[[v2 Hv] ?] /=.
+  apply pure_elim_l=>-[[v2 Hv] ?] /=.
   rewrite -pvs_intro.
-  rewrite (forall_elim v2) (forall_elim σ2') (forall_elim ef) const_equiv //.
+  rewrite (forall_elim v2) (forall_elim σ2') (forall_elim ef) pure_equiv //.
   rewrite left_id wand_elim_r -(wp_value _ _ e2' v2) //.
   by erewrite of_to_val.
 Qed.
@@ -96,7 +96,7 @@ Proof.
   apply forall_intro=>e2'; apply forall_intro=>σ2'; apply forall_intro=>ef'.
   apply wand_intro_l.
   rewrite always_and_sep_l -assoc -always_and_sep_l to_of_val.
-  apply const_elim_l=>-[-> [[->] ->]] /=. by rewrite wand_elim_r.
+  apply pure_elim_l=>-[-> [[->] ->]] /=. by rewrite wand_elim_r.
 Qed.
 
 Lemma wp_lift_pure_det_step {E Φ} e1 e2 ef :
@@ -108,6 +108,6 @@ Proof.
   intros.
   rewrite -(wp_lift_pure_step E (λ e2' ef', e2 = e2' ∧ ef = ef') _ e1) //=.
   apply later_mono, forall_intro=>e'; apply forall_intro=>ef'.
-  by apply impl_intro_l, const_elim_l=>-[-> ->].
+  by apply impl_intro_l, pure_elim_l=>-[-> ->].
 Qed.
 End lifting.

@@ -8,10 +8,8 @@ Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q : iProp Λ Σ.
 Implicit Types Φ : val Λ → iProp Λ Σ.
 
-Global Instance frame_wp E e R Φ mΨ :
-  (∀ v, Frame R (Φ v) (mΨ v)) →
-  Frame R (WP e @ E {{ Φ }})
-          (Some (WP e @ E {{ v, if mΨ v is Some Q then Q else True }}))%I.
+Global Instance frame_wp E e R Φ Ψ :
+  (∀ v, Frame R (Φ v) (Ψ v)) → Frame R (WP e @ E {{ Φ }}) (WP e @ E {{ Ψ }}).
 Proof. rewrite /Frame=> HR. rewrite wp_frame_l. apply wp_mono, HR. Qed.
 Global Instance fsa_split_wp E e Φ :
   FSASplit (WP e @ E {{ Φ }})%I E (wp_fsa e) (language.atomic e) Φ.
