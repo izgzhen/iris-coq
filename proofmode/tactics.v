@@ -1,6 +1,6 @@
 From iris.proofmode Require Import coq_tactics intro_patterns spec_patterns.
 From iris.algebra Require Export upred.
-From iris.proofmode Require Export notation.
+From iris.proofmode Require Export notation classes.
 From iris.prelude Require Import stringmap hlist.
 
 Declare Reduction env_cbv := cbv [
