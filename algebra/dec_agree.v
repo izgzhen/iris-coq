@@ -18,7 +18,6 @@ Context {A : Type} `{∀ x y : A, Decision (x = y)}.
 
 Instance dec_agree_valid : Valid (dec_agree A) := λ x,
   if x is DecAgree _ then True else False.
-Instance dec_agree_equiv : Equiv (dec_agree A) := equivL.
 Canonical Structure dec_agreeC : cofeT := leibnizC (dec_agree A).
 
 Instance dec_agree_op : Op (dec_agree A) := λ x y,
