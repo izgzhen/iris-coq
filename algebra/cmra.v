@@ -698,8 +698,8 @@ End discrete.
 
 Notation discreteR A ra_mix :=
   (CMRAT A discrete_cofe_mixin (discrete_cmra_mixin ra_mix)).
-Notation discreteLeibnizR A ra_mix :=
-  (CMRAT A (@discrete_cofe_mixin _ equivL _) (discrete_cmra_mixin ra_mix)).
+Notation discreteUR A ra_mix ucmra_mix :=
+  (UCMRAT A discrete_cofe_mixin (discrete_cmra_mixin ra_mix) ucmra_mix).
 
 Global Instance discrete_cmra_discrete `{Equiv A, PCore A, Op A, Valid A,
   @Equivalence A (≡)} (ra_mix : RAMixin A) : CMRADiscrete (discreteR A ra_mix).
