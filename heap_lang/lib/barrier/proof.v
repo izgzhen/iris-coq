@@ -100,7 +100,7 @@ Lemma newbarrier_spec (P : iProp) (Φ : val → iProp) :
   ⊢ WP newbarrier #() {{ Φ }}.
 Proof.
   iIntros {HN} "[#? HΦ]".
-  rewrite /newbarrier. wp_seq. iApply wp_pvs. wp_alloc l as "Hl".
+  rewrite /newbarrier. wp_seq. wp_alloc l as "Hl".
   iApply "HΦ".
   iPvs (saved_prop_alloc (F:=idCF) _ P) as {γ} "#?".
   iPvs (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}) with "[-]")
@@ -127,7 +127,7 @@ Proof.
   rewrite /signal /send /barrier_ctx.
   iIntros "(Hs&HP&HΦ)"; iDestruct "Hs" as {γ} "[#(%&Hh&Hsts) Hγ]". wp_let.
   iSts γ as [p I]; iDestruct "Hγ" as "[Hl Hr]".
-  wp_store. destruct p; [|done].
+  wp_store. iPvsIntro. destruct p; [|done].
   iExists (State High I), (∅ : set token).
   iSplit; [iPureIntro; by eauto using signal_step|].
   iSplitR "HΦ"; [iNext|by auto].
@@ -143,7 +143,7 @@ Proof.
   iIntros "[Hr HΦ]"; iDestruct "Hr" as {γ P Q i} "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
   iLöb as "IH". wp_rec. wp_focus (! _)%E.
   iSts γ as [p I]; iDestruct "Hγ" as "[Hl Hr]".
-  wp_load. destruct p.
+  wp_load. iPvsIntro. destruct p.
   - (* a Low state. The comparison fails, and we recurse. *)
     iExists (State Low I), {[ Change i ]}; iSplit; [done|iSplitL "Hl Hr"].
     { iNext. rewrite {2}/barrier_inv /=. by iFrame. }

@@ -46,8 +46,8 @@ Lemma wp_match_inr E e0 v0 x1 e1 x2 e2 Φ :
 Proof. intros. by rewrite -wp_case_inr // -[X in _ ⊢ X]later_intro -wp_let. Qed.
 
 Lemma wp_le E (n1 n2 : Z) P Φ :
-  (n1 ≤ n2 → P ⊢ ▷ Φ (LitV (LitBool true))) →
-  (n2 < n1 → P ⊢ ▷ Φ (LitV (LitBool false))) →
+  (n1 ≤ n2 → P ⊢ ▷ |={E}=> Φ (LitV (LitBool true))) →
+  (n2 < n1 → P ⊢ ▷ |={E}=> Φ (LitV (LitBool false))) →
   P ⊢ WP BinOp LeOp (Lit (LitInt n1)) (Lit (LitInt n2)) @ E {{ Φ }}.
 Proof.
   intros. rewrite -wp_bin_op //; [].
@@ -55,8 +55,8 @@ Proof.
 Qed.
 
 Lemma wp_lt E (n1 n2 : Z) P Φ :
-  (n1 < n2 → P ⊢ ▷ Φ (LitV (LitBool true))) →
-  (n2 ≤ n1 → P ⊢ ▷ Φ (LitV (LitBool false))) →
+  (n1 < n2 → P ⊢ ▷ |={E}=> Φ (LitV (LitBool true))) →
+  (n2 ≤ n1 → P ⊢ ▷ |={E}=> Φ (LitV (LitBool false))) →
   P ⊢ WP BinOp LtOp (Lit (LitInt n1)) (Lit (LitInt n2)) @ E {{ Φ }}.
 Proof.
   intros. rewrite -wp_bin_op //; [].
@@ -64,8 +64,8 @@ Proof.
 Qed.
 
 Lemma wp_eq E (n1 n2 : Z) P Φ :
-  (n1 = n2 → P ⊢ ▷ Φ (LitV (LitBool true))) →
-  (n1 ≠ n2 → P ⊢ ▷ Φ (LitV (LitBool false))) →
+  (n1 = n2 → P ⊢ ▷ |={E}=> Φ (LitV (LitBool true))) →
+  (n1 ≠ n2 → P ⊢ ▷ |={E}=> Φ (LitV (LitBool false))) →
   P ⊢ WP BinOp EqOp (Lit (LitInt n1)) (Lit (LitInt n2)) @ E {{ Φ }}.
 Proof.
   intros. rewrite -wp_bin_op //; [].
