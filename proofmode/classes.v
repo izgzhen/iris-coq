@@ -17,15 +17,24 @@ Global Instance from_assumption_always_r P Q :
   FromAssumption true P Q → FromAssumption true P (□ Q).
 Proof. rewrite /FromAssumption=><-. by rewrite always_always. Qed.
 
-Class IsPure (P : uPred M) (φ : Prop) := is_pure : P ⊣⊢ ■ φ.
-Global Arguments is_pure : clear implicits.
-Global Instance is_pure_pure φ : IsPure (■ φ) φ.
+Class IntoPure (P : uPred M) (φ : Prop) := into_pure : P ⊢ ■ φ.
+Global Arguments into_pure : clear implicits.
+Global Instance into_pure_pure φ : IntoPure (■ φ) φ.
 Proof. done. Qed.
-Global Instance is_pure_eq {A : cofeT} (a b : A) :
-  Timeless a → IsPure (a ≡ b) (a ≡ b).
-Proof. intros; red. by rewrite timeless_eq. Qed.
-Global Instance is_pure_valid `{CMRADiscrete A} (a : A) : IsPure (✓ a) (✓ a).
-Proof. intros; red. by rewrite discrete_valid. Qed.
+Global Instance into_pure_eq {A : cofeT} (a b : A) :
+  Timeless a → IntoPure (a ≡ b) (a ≡ b).
+Proof. intros. by rewrite /IntoPure timeless_eq. Qed.
+Global Instance into_pure_valid `{CMRADiscrete A} (a : A) : IntoPure (✓ a) (✓ a).
+Proof. by rewrite /IntoPure discrete_valid. Qed.
+
+Class FromPure (P : uPred M) (φ : Prop) := from_pure : φ → True ⊢ P.
+Global Arguments from_pure : clear implicits.
+Global Instance from_pure_pure φ : FromPure (■ φ) φ.
+Proof. intros ?. by apply pure_intro. Qed.
+Global Instance from_pure_eq {A : cofeT} (a b : A) : FromPure (a ≡ b) (a ≡ b).
+Proof. intros ->. apply eq_refl. Qed.
+Global Instance from_pure_valid {A : cmraT} (a : A) : FromPure (✓ a) (✓ a).
+Proof. intros ?. by apply valid_intro. Qed.
 
 Class IntoPersistentP (P Q : uPred M) := into_persistentP : P ⊢ □ Q.
 Global Arguments into_persistentP : clear implicits.

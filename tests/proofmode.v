@@ -1,4 +1,4 @@
-From iris.proofmode Require Import tactics.
+From iris.proofmode Require Import tactics notation.
 From iris.proofmode Require Import pviewshifts invariants.
 
 Lemma demo_0 {M : ucmraT} (P Q : uPred M) :
@@ -103,6 +103,6 @@ Section iris.
     iApply ("H" with "[#] HP |==>[HQ] |==>").
     - done.
     - by iApply inv_alloc.
-    - by iPvsIntro.
+    - done.
   Qed.
 End iris.

@@ -71,7 +71,7 @@ Proof.
       + iSplit. iRight; iExists m; by iSplitL "Hl". eauto. }
     wp_let. iPvsIntro. iIntros "!". wp_seq.
     iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as {m} "[% Hγ']"; subst.
-    { wp_match. by iPvsIntro. }
+    { by wp_match. }
     wp_match. wp_focus (! _)%E.
     iInv> N as "[[Hl Hγ]|Hinv]"; last iDestruct "Hinv" as {m'} "[Hl Hγ]".
     { iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct (own_valid with "Hγ") as "%". }

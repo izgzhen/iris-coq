@@ -316,15 +316,15 @@ Lemma tac_ex_falso Δ Q : (Δ ⊢ False) → Δ ⊢ Q.
 Proof. by rewrite -(False_elim Q). Qed.
 
 (** * Pure *)
-Lemma tac_pure_intro Δ Q (φ : Prop) : IsPure Q φ → φ → Δ ⊢ Q.
-Proof. intros ->. apply pure_intro. Qed.
+Lemma tac_pure_intro Δ Q (φ : Prop) : FromPure Q φ → φ → Δ ⊢ Q.
+Proof. intros ??. rewrite -(from_pure Q) //. apply True_intro. Qed.
 
 Lemma tac_pure Δ Δ' i p P φ Q :
-  envs_lookup_delete i Δ = Some (p, P, Δ') → IsPure P φ →
+  envs_lookup_delete i Δ = Some (p, P, Δ') → IntoPure P φ →
   (φ → Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ?? HQ. rewrite envs_lookup_delete_sound' //; simpl.
-  rewrite (is_pure P); by apply pure_elim_sep_l.
+  rewrite (into_pure P); by apply pure_elim_sep_l.
 Qed.
 
 Lemma tac_pure_revert Δ φ Q : (Δ ⊢ ■ φ → Q) → (φ → Δ ⊢ Q).
@@ -405,9 +405,9 @@ Proof.
   intros ?? HQ. rewrite envs_app_sound //; simpl. apply impl_intro_l.
   by rewrite right_id {1}(into_persistentP P) always_and_sep_l wand_elim_r.
 Qed.
-Lemma tac_impl_intro_pure Δ P φ Q : IsPure P φ → (φ → Δ ⊢ Q) → Δ ⊢ P → Q.
+Lemma tac_impl_intro_pure Δ P φ Q : IntoPure P φ → (φ → Δ ⊢ Q) → Δ ⊢ P → Q.
 Proof.
-  intros. by apply impl_intro_l; rewrite (is_pure P); apply pure_elim_l.
+  intros. by apply impl_intro_l; rewrite (into_pure P); apply pure_elim_l.
 Qed.
 
 Lemma tac_wand_intro Δ Δ' i P Q :
@@ -423,9 +423,9 @@ Proof.
   intros. rewrite envs_app_sound //; simpl.
   rewrite right_id. by apply wand_mono.
 Qed.
-Lemma tac_wand_intro_pure Δ P φ Q : IsPure P φ → (φ → Δ ⊢ Q) → Δ ⊢ P -★ Q.
+Lemma tac_wand_intro_pure Δ P φ Q : IntoPure P φ → (φ → Δ ⊢ Q) → Δ ⊢ P -★ Q.
 Proof.
-  intros. by apply wand_intro_l; rewrite (is_pure P); apply pure_elim_sep_l.
+  intros. by apply wand_intro_l; rewrite (into_pure P); apply pure_elim_sep_l.
 Qed.
 
 (* This is pretty much [tac_specialize_assert] with [js:=[j]] and [tac_exact],
@@ -476,12 +476,12 @@ Qed.
 
 Lemma tac_specialize_pure Δ Δ' j q R P1 P2 φ Q :
   envs_lookup j Δ = Some (q, R) →
-  IntoWand R P1 P2 → IsPure P1 φ →
+  IntoWand R P1 P2 → FromPure P1 φ →
   envs_simple_replace j q (Esnoc Enil j P2) Δ = Some Δ' →
   φ → (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros. rewrite envs_simple_replace_sound //; simpl.
-  by rewrite right_id (into_wand R) (is_pure P1) pure_equiv // wand_True wand_elim_r.
+  by rewrite right_id (into_wand R) -(from_pure P1) // wand_True wand_elim_r.
 Qed.
 
 Lemma tac_specialize_persistent Δ Δ' Δ'' j q P1 P2 R Q :

@@ -112,13 +112,13 @@ Local Tactic Notation "iPersistent" constr(H) :=
 Local Tactic Notation "iPure" constr(H) "as" simple_intropattern(pat) :=
   eapply tac_pure with _ H _ _ _; (* (i:=H1) *)
     [env_cbv; reflexivity || fail "iPure:" H "not found"
-    |let P := match goal with |- IsPure ?P _ => P end in
+    |let P := match goal with |- IntoPure ?P _ => P end in
      apply _ || fail "iPure:" H ":" P "not pure"
     |intros pat].
 
 Tactic Notation "iPureIntro" :=
   eapply tac_pure_intro;
-    [let P := match goal with |- IsPure ?P _ => P end in
+    [let P := match goal with |- FromPure ?P _ => P end in
      apply _ || fail "iPureIntro:" P "not pure"|].
 
 (** * Specialize *)
@@ -184,7 +184,7 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
        eapply tac_specialize_pure with _ H1 _ _ _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
-         |let Q := match goal with |- IsPure ?Q _ => Q end in
+         |let Q := match goal with |- FromPure ?Q _ => Q end in
           apply _ || fail "iSpecialize:" Q "not pure"
          |env_cbv; reflexivity
          |(*goal*)
@@ -505,11 +505,11 @@ Tactic Notation "iNext":=
 Local Tactic Notation "iIntro" "{" simple_intropattern(x) "}" := first
   [ (* (∀ _, _) *) apply tac_forall_intro; intros x
   | (* (?P → _) *) eapply tac_impl_intro_pure;
-     [let P := match goal with |- IsPure ?P _ => P end in
+     [let P := match goal with |- IntoPure ?P _ => P end in
       apply _ || fail "iIntro:" P "not pure"
      |intros x]
   | (* (?P -★ _) *) eapply tac_wand_intro_pure;
-     [let P := match goal with |- IsPure ?P _ => P end in
+     [let P := match goal with |- IntoPure ?P _ => P end in
       apply _ || fail "iIntro:" P "not pure"
      |intros x]
   |intros x].
