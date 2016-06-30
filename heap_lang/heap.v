@@ -148,6 +148,7 @@ Section heap.
   Proof. by rewrite heap_mapsto_op_eq Qp_div_2. Qed.
 
   (** Weakest precondition *)
+  (* FIXME: try to reduce usage of wp_pvs. We're losing view shifts here. *)
   Lemma wp_alloc N E e v Φ :
     to_val e = Some v → nclose N ⊆ E →
     heap_ctx N ★ ▷ (∀ l, l ↦ v ={E}=★ Φ (LitV (LitLoc l))) ⊢ WP Alloc e @ E {{ Φ }}.
