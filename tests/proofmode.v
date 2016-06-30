@@ -103,6 +103,6 @@ Section iris.
     iApply ("H" with "[#] HP |==>[HQ] |==>").
     - done.
     - by iApply inv_alloc.
-    - by iPvsIntro.
+    - done.
   Qed.
 End iris.

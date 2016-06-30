@@ -22,7 +22,7 @@ Lemma tac_wp_alloc Δ Δ' N E j e v Φ :
   IntoLaterEnvs Δ Δ' →
   (∀ l, ∃ Δ'',
     envs_app false (Esnoc Enil j (l ↦ v)) Δ' = Some Δ'' ∧
-    (Δ'' ⊢ Φ (LitV (LitLoc l)))) →
+    (Δ'' ⊢ |={E}=> Φ (LitV (LitLoc l)))) →
   Δ ⊢ WP Alloc e @ E {{ Φ }}.
 Proof.
   intros ???? HΔ. rewrite -wp_alloc // -always_and_sep_l.
@@ -36,7 +36,7 @@ Lemma tac_wp_load Δ Δ' N E i l q v Φ :
   (Δ ⊢ heap_ctx N) → nclose N ⊆ E →
   IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I →
-  (Δ' ⊢ Φ v) →
+  (Δ' ⊢ |={E}=> Φ v) →
   Δ ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
 Proof.
   intros. rewrite -wp_load // -always_and_sep_l. apply and_intro; first done.
@@ -50,7 +50,8 @@ Lemma tac_wp_store Δ Δ' Δ'' N E i l v e v' Φ :
   IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v')) Δ' = Some Δ'' →
-  (Δ'' ⊢ Φ (LitV LitUnit)) → Δ ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
+  (Δ'' ⊢ |={E}=> Φ (LitV LitUnit)) →
+  Δ ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
 Proof.
   intros. rewrite -wp_store // -always_and_sep_l. apply and_intro; first done.
   rewrite into_later_env_sound -later_sep envs_simple_replace_sound //; simpl.
@@ -62,7 +63,7 @@ Lemma tac_wp_cas_fail Δ Δ' N E i l q v e1 v1 e2 v2 Φ :
   (Δ ⊢ heap_ctx N) → nclose N ⊆ E →
   IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I → v ≠ v1 →
-  (Δ' ⊢ Φ (LitV (LitBool false))) →
+  (Δ' ⊢ |={E}=> Φ (LitV (LitBool false))) →
   Δ ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -wp_cas_fail // -always_and_sep_l. apply and_intro; first done.
@@ -76,7 +77,8 @@ Lemma tac_wp_cas_suc Δ Δ' Δ'' N E i l v e1 v1 e2 v2 Φ :
   IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I → v = v1 →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v2)) Δ' = Some Δ'' →
-  (Δ'' ⊢ Φ (LitV (LitBool true))) → Δ ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
+  (Δ'' ⊢ |={E}=> Φ (LitV (LitBool true))) →
+  Δ ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
 Proof.
   intros; subst.
   rewrite -wp_cas_suc // -always_and_sep_l. apply and_intro; first done.

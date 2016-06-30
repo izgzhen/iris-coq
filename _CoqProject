@@ -116,3 +116,4 @@ proofmode/invariants.v
 proofmode/weakestpre.v
 proofmode/ghost_ownership.v
 proofmode/sts.v
+proofmode/classes.v

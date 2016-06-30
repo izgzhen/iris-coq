@@ -52,7 +52,7 @@ Proof.
   iPvsIntro. iApply "Hf"; iSplit.
   - iIntros {n} "!". wp_let.
     iInv> N as "[[Hl Hγ]|H]"; last iDestruct "H" as {m} "[Hl Hγ]".
-    + iApply wp_pvs. wp_cas_suc. iSplitL; [|by iLeft; iPvsIntro].
+    + iApply wp_pvs. wp_cas_suc. iSplitL; [|by iLeft].
       iPvs (own_update with "Hγ") as "Hγ".
       { by apply cmra_update_exclusive with (y:=Cinr (DecAgree n)). }
       iPvsIntro; iRight; iExists n; by iSplitL "Hl".
@@ -63,7 +63,7 @@ Proof.
     { iDestruct "Hγ" as "[[Hl Hγ]|Hl]"; last iDestruct "Hl" as {m} "[Hl Hγ]".
       + iExists (InjLV #0). iFrame. eauto.
       + iExists (InjRV #m). iFrame. eauto. }
-    iDestruct "Hv" as {v} "[Hl Hv]". wp_load.
+    iDestruct "Hv" as {v} "[Hl Hv]". wp_load; iPvsIntro.
     iAssert (one_shot_inv γ l ★ (v = InjLV #0 ∨ ∃ n : Z,
       v = InjRV #n ★ own γ (Cinr (DecAgree n))))%I with "[-]" as "[$ #Hv]".
     { iDestruct "Hv" as "[[% ?]|Hv]"; last iDestruct "Hv" as {m} "[% ?]"; subst.
@@ -71,11 +71,11 @@ Proof.
       + iSplit. iRight; iExists m; by iSplitL "Hl". eauto. }
     wp_let. iPvsIntro. iIntros "!". wp_seq.
     iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as {m} "[% Hγ']"; subst.
-    { wp_match. by iPvsIntro. }
+    { by wp_match. }
     wp_match. wp_focus (! _)%E.
     iInv> N as "[[Hl Hγ]|Hinv]"; last iDestruct "Hinv" as {m'} "[Hl Hγ]".
     { iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct (own_valid with "Hγ") as "%". }
-    wp_load.
+    wp_load; iPvsIntro.
     iCombine "Hγ" "Hγ'" as "Hγ".
     iDestruct (own_valid with "#Hγ") as %[=->]%dec_agree_op_inv.
     iSplitL "Hl"; [iRight; by eauto|].

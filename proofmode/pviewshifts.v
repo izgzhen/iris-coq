@@ -7,6 +7,8 @@ Section pvs.
 Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q : iProp Λ Σ.
 
+Global Instance from_pure_pvs E P φ : FromPure P φ → FromPure (|={E}=> P) φ.
+Proof. intros ??. by rewrite -pvs_intro (from_pure P). Qed.
 Global Instance from_assumption_pvs E p P Q :
   FromAssumption p P Q → FromAssumption p P (|={E}=> Q)%I.
 Proof. rewrite /FromAssumption=>->. apply pvs_intro. Qed.
@@ -179,3 +181,6 @@ Tactic Notation "iTimeless" constr(H) :=
 
 Tactic Notation "iTimeless" constr(H) "as" constr(Hs) :=
   iTimeless H; iDestruct H as Hs.
+
+Hint Extern 2 (of_envs _ ⊢ _) =>
+  match goal with |- _ ⊢ (|={_}=> _)%I => iPvsIntro end.
