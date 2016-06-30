@@ -1265,6 +1265,21 @@ Proof.
     take_app_alt by (rewrite ?app_length, ?take_length, ?Hk; lia).
 Qed.
 
+(** ** Properties of the [imap] function *)
+Lemma imap_cons {B} (f : nat → A → B) x l :
+  imap f (x :: l) = f 0 x :: imap (f ∘ S) l.
+Proof.
+  unfold imap. simpl. f_equal. generalize 0.
+  induction l; intros n; simpl; repeat (auto||f_equal).
+Qed.
+Lemma imap_ext {B} (f g : nat → A → B) l :
+  (∀ i x, f i x = g i x) →
+  imap f l = imap g l.
+Proof.
+  unfold imap. intro EQ. generalize 0.
+  induction l; simpl; intros n; f_equal; auto.
+Qed.
+
 (** ** Properties of the [mask] function *)
 Lemma mask_nil f βs : mask f βs (@nil A) = [].
 Proof. by destruct βs. Qed.
