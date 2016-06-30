@@ -13,7 +13,7 @@ Inductive intro_pat :=
   | INext : intro_pat
   | IForall : intro_pat
   | IAll : intro_pat
-  | IClear : list string → intro_pat.
+  | IClear : list (bool * string) → intro_pat. (* true = frame, false = clear *)
 
 Module intro_pat.
 Inductive token :=
@@ -71,8 +71,7 @@ Inductive stack_item :=
   | SList : stack_item
   | SConjList : stack_item
   | SBar : stack_item
-  | SAmp : stack_item
-  | SClear : stack_item.
+  | SAmp : stack_item.
 Notation stack := (list stack_item).
 
 Fixpoint close_list (k : stack)
@@ -108,13 +107,6 @@ Fixpoint close_conj_list (k : stack)
   | _ => None
   end.
 
-Fixpoint close_clear (k : stack) (ss : list string) : option stack :=
-  match k with
-  | SPat (IName s) :: k => close_clear k (s :: ss)
-  | SClear :: k => Some (SPat (IClear (reverse ss)) :: k)
-  | _ => None
-  end.
-
 Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   match ts with
   | [] => Some k
@@ -135,9 +127,18 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   | TNext :: ts => parse_go ts (SPat INext :: k)
   | TAll :: ts => parse_go ts (SPat IAll :: k)
   | TForall :: ts => parse_go ts (SPat IForall :: k)
-  | TClearL :: ts => parse_go ts (SClear :: k)
-  | TClearR :: ts => close_clear k [] ≫= parse_go ts
+  | TClearL :: ts => parse_clear ts [] k
+  | _ => None
+  end
+with parse_clear (ts : list token)
+    (ss : list (bool * string)) (k : stack) : option stack :=
+  match ts with
+  | TFrame :: TName s :: ts => parse_clear ts ((true,s) :: ss) k
+  | TName s :: ts => parse_clear ts ((false,s) :: ss) k
+  | TClearR :: ts => parse_go ts (SPat (IClear (reverse ss)) :: k)
+  | _ => None
   end.
+
 Definition parse (s : string) : option (list intro_pat) :=
   match k ← parse_go (tokenize s) [SList]; close_list k [] [] with
   | Some [SPat (IList [ps])] => Some ps
