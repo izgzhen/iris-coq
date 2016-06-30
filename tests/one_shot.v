@@ -52,7 +52,7 @@ Proof.
   iPvsIntro. iApply "Hf"; iSplit.
   - iIntros {n} "!". wp_let.
     iInv> N as "[[Hl Hγ]|H]"; last iDestruct "H" as {m} "[Hl Hγ]".
-    + iApply wp_pvs. wp_cas_suc. iSplitL; [|by iLeft; iPvsIntro].
+    + iApply wp_pvs. wp_cas_suc. iSplitL; [|by iLeft].
       iPvs (own_update with "Hγ") as "Hγ".
       { by apply cmra_update_exclusive with (y:=Cinr (DecAgree n)). }
       iPvsIntro; iRight; iExists n; by iSplitL "Hl".
@@ -79,7 +79,7 @@ Proof.
     iCombine "Hγ" "Hγ'" as "Hγ".
     iDestruct (own_valid with "#Hγ") as %[=->]%dec_agree_op_inv.
     iSplitL "Hl"; [iRight; by eauto|].
-    wp_match. iApply wp_assert'. wp_op=>?; iPvsIntro; simplify_eq/=; eauto.
+    wp_match. iApply wp_assert'. wp_op=>?; simplify_eq/=; eauto.
 Qed.
 
 Lemma hoare_one_shot (Φ : val → iProp) :

@@ -181,3 +181,6 @@ Tactic Notation "iTimeless" constr(H) :=
 
 Tactic Notation "iTimeless" constr(H) "as" constr(Hs) :=
   iTimeless H; iDestruct H as Hs.
+
+Hint Extern 2 (of_envs _ ⊢ _) =>
+  match goal with |- _ ⊢ (|={_}=> _)%I => iPvsIntro end.
