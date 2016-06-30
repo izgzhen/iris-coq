@@ -41,6 +41,6 @@ Tactic Notation "iSts" constr(H) "as"
     |try fast_done (* atomic *)
     |iAssumptionCore || fail "iSts:" H "not found"
     |iAssumption || fail "iSts: invariant not found"
-    |done || eauto with ndisj (* [eauto with ndisj] is slow *)
+    |solve_ndisj
     |intros s Hs; eexists; split; [env_cbv; reflexivity|simpl]].
 Tactic Notation "iSts" constr(H) "as" simple_intropattern(s) := iSts H as s ?.

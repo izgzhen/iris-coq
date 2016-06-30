@@ -67,3 +67,5 @@ Hint Resolve ndisj_subseteq_difference : ndisj.
 Hint Extern 0 (_ .@ _ ⊥ _ .@ _) => apply ndot_ne_disjoint; congruence : ndisj.
 Hint Resolve ndot_preserve_disjoint_l : ndisj.
 Hint Resolve ndot_preserve_disjoint_r : ndisj.
+
+Ltac solve_ndisj := eauto with ndisj.
