@@ -37,7 +37,7 @@ Section ndisjoint.
   Global Instance ndisjoint_comm : Comm iff ndisjoint.
   Proof. intros N1 N2. rewrite /disjoint /ndisjoint; naive_solver. Qed.
 
-  Lemma ndot_ne_disjoint N (x y : A) : x ≠ y → N .@ x ⊥ N .@ y.
+  Lemma ndot_ne_disjoint N x y : x ≠ y → N .@ x ⊥ N .@ y.
   Proof. intros Hxy. exists (N .@ x), (N .@ y); naive_solver. Qed.
 
   Lemma ndot_preserve_disjoint_l N1 N2 x : N1 ⊥ N2 → N1 .@ x ⊥ N2.
@@ -55,26 +55,17 @@ Section ndisjoint.
     rewrite !elem_coPset_suffixes; intros [q ->] [q' Hq]; destruct Hne.
     by rewrite !list_encode_app !assoc in Hq; apply list_encode_suffix_eq in Hq.
   Qed.
+
+  Lemma ndisj_subseteq_difference N1 N2 E :
+    N1 ⊥ N2 → nclose N1 ⊆ E → nclose N1 ⊆ E ∖ nclose N2.
+  Proof. intros ?%ndisj_disjoint. set_solver. Qed.
 End ndisjoint.
 
-(* This tactic solves goals about inclusion and disjointness
-   of masks (i.e., coPsets) with set_solver, taking
-   disjointness of namespaces into account. *)
-(* TODO: This tactic is by far now yet as powerful as it should be.
-   For example, given [N1 ⊥ N2], it should be able to solve
-   [nclose (ndot N1 x) ⊥ N2]. It should also solve
-   [ndot N x ⊥ ndot N y] if x ≠ y is in the context or
-   follows from [discriminate]. *)
-Ltac set_solver_ndisj :=
-  repeat match goal with
-  (* TODO: Restrict these to have type namespace *)
-  | [ H : ?N1 ⊥ ?N2 |-_ ] => apply ndisj_disjoint in H
-  end; set_solver.
-(* TODO: restrict this to match only if this is ⊆ of coPset *)
-Hint Extern 500 (_ ⊆ _) => set_solver_ndisj : ndisj.
 (* The hope is that registering these will suffice to solve most goals
-   of the form [N1 ⊥ N2].
-   TODO: Can this prove x ≠ y if discriminate can? *)
-Hint Resolve ndot_ne_disjoint : ndisj.
+of the form [N1 ⊥ N2] and those of the form [((N1 ⊆ E ∖ N2) ∖ ..) ∖ Nn]. *)
+Hint Resolve ndisj_subseteq_difference : ndisj.
+Hint Extern 0 (_ .@ _ ⊥ _ .@ _) => apply ndot_ne_disjoint; congruence : ndisj.
 Hint Resolve ndot_preserve_disjoint_l : ndisj.
 Hint Resolve ndot_preserve_disjoint_r : ndisj.
+
+Ltac solve_ndisj := eauto with ndisj.

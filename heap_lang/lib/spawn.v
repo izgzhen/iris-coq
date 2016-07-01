@@ -23,8 +23,7 @@ Class spawnG Σ := SpawnG {
 (** The functor we need. *)
 Definition spawnGF : gFunctorList := [GFunctor (constRF (exclR unitC))].
 (* Show and register that they match. *)
-Instance inGF_spawnG
-  `{H : inGFs heap_lang Σ spawnGF} : spawnG Σ.
+Instance inGF_spawnG `{H : inGFs heap_lang Σ spawnGF} : spawnG Σ.
 Proof. destruct H as (?&?). split. apply: inGF_inG. Qed.
 
 (** Now we come to the Iris part of the proof. *)
@@ -63,10 +62,10 @@ Proof.
   iPvs (inv_alloc N _ (spawn_inv γ l Ψ) with "[Hl]") as "#?"; first done.
   { iNext. iExists (InjLV #0). iFrame; eauto. }
   wp_apply wp_fork. iSplitR "Hf".
-  - wp_seq. iPvsIntro. iApply "HΦ"; rewrite /join_handle. eauto.
+  - iPvsIntro. wp_seq. iPvsIntro. iApply "HΦ"; rewrite /join_handle. eauto.
   - wp_focus (f _). iApply wp_wand_l; iFrame "Hf"; iIntros {v} "Hv".
     iInv N as {v'} "[Hl _]"; first wp_done.
-    wp_store. iSplit; [iNext|done].
+    wp_store. iPvsIntro; iSplit; [iNext|done].
     iExists (InjRV v); iFrame; eauto.
 Qed.
 
@@ -76,10 +75,10 @@ Proof.
   rewrite /join_handle; iIntros "[[% H] Hv]"; iDestruct "H" as {γ} "(#?&Hγ&#?)".
   iLöb as "IH". wp_rec. wp_focus (! _)%E. iInv N as {v} "[Hl Hinv]".
   wp_load. iDestruct "Hinv" as "[%|Hinv]"; subst.
-  - iSplitL "Hl"; [iNext; iExists _; iFrame; eauto|].
+  - iPvsIntro; iSplitL "Hl"; [iNext; iExists _; iFrame; eauto|].
     wp_match. iApply ("IH" with "Hγ Hv").
   - iDestruct "Hinv" as {v'} "[% [HΨ|Hγ']]"; simplify_eq/=.
-    + iSplitL "Hl Hγ".
+    + iPvsIntro; iSplitL "Hl Hγ".
       { iNext. iExists _; iFrame; eauto. }
       wp_match. by iApply "Hv".
     + iCombine "Hγ" "Hγ'" as "Hγ". iDestruct (own_valid with "Hγ") as %[].

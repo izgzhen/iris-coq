@@ -7,45 +7,46 @@ Section pvs.
 Context {Λ : language} {Σ : iFunctor}.
 Implicit Types P Q : iProp Λ Σ.
 
-Global Instance to_assumption_pvs E p P Q :
-  ToAssumption p P Q → ToAssumption p P (|={E}=> Q)%I.
-Proof. rewrite /ToAssumption=>->. apply pvs_intro. Qed.
-Global Instance sep_split_pvs E P Q1 Q2 :
-  SepSplit P Q1 Q2 → SepSplit (|={E}=> P) (|={E}=> Q1) (|={E}=> Q2).
-Proof. rewrite /SepSplit=><-. apply pvs_sep. Qed.
+Global Instance from_pure_pvs E P φ : FromPure P φ → FromPure (|={E}=> P) φ.
+Proof. intros ??. by rewrite -pvs_intro (from_pure P). Qed.
+Global Instance from_assumption_pvs E p P Q :
+  FromAssumption p P Q → FromAssumption p P (|={E}=> Q)%I.
+Proof. rewrite /FromAssumption=>->. apply pvs_intro. Qed.
+Global Instance from_sep_pvs E P Q1 Q2 :
+  FromSep P Q1 Q2 → FromSep (|={E}=> P) (|={E}=> Q1) (|={E}=> Q2).
+Proof. rewrite /FromSep=><-. apply pvs_sep. Qed.
 Global Instance or_split_pvs E1 E2 P Q1 Q2 :
-  OrSplit P Q1 Q2 → OrSplit (|={E1,E2}=> P) (|={E1,E2}=> Q1) (|={E1,E2}=> Q2).
-Proof. rewrite /OrSplit=><-. apply or_elim; apply pvs_mono; auto with I. Qed.
+  FromOr P Q1 Q2 → FromOr (|={E1,E2}=> P) (|={E1,E2}=> Q1) (|={E1,E2}=> Q2).
+Proof. rewrite /FromOr=><-. apply or_elim; apply pvs_mono; auto with I. Qed.
 Global Instance exists_split_pvs {A} E1 E2 P (Φ : A → iProp Λ Σ) :
-  ExistSplit P Φ → ExistSplit (|={E1,E2}=> P) (λ a, |={E1,E2}=> Φ a)%I.
+  FromExist P Φ → FromExist (|={E1,E2}=> P) (λ a, |={E1,E2}=> Φ a)%I.
 Proof.
-  rewrite /ExistSplit=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
+  rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
 Qed.
 Global Instance frame_pvs E1 E2 R P Q :
   Frame R P Q → Frame R (|={E1,E2}=> P) (|={E1,E2}=> Q).
 Proof. rewrite /Frame=><-. by rewrite pvs_frame_l. Qed.
-Global Instance to_wand_pvs E1 E2 R P Q :
-  ToWand R P Q → ToWand R (|={E1,E2}=> P) (|={E1,E2}=> Q) | 100.
-Proof. rewrite /ToWand=>->. apply wand_intro_l. by rewrite pvs_wand_r. Qed.
+Global Instance into_wand_pvs E1 E2 R P Q :
+  IntoWand R P Q → IntoWand R (|={E1,E2}=> P) (|={E1,E2}=> Q) | 100.
+Proof. rewrite /IntoWand=>->. apply wand_intro_l. by rewrite pvs_wand_r. Qed.
 
-Class FSASplit {A} (P : iProp Λ Σ) (E : coPset)
+Class IsFSA {A} (P : iProp Λ Σ) (E : coPset)
     (fsa : FSA Λ Σ A) (fsaV : Prop) (Φ : A → iProp Λ Σ) := {
-  fsa_split : fsa E Φ ⊣⊢ P;
-  fsa_split_is_fsa :> FrameShiftAssertion fsaV fsa;
+  is_fsa : P ⊣⊢ fsa E Φ;
+  is_fsa_is_fsa :> FrameShiftAssertion fsaV fsa;
 }.
-Global Arguments fsa_split {_} _ _ _ _ _ {_}.
-Global Instance fsa_split_pvs E P :
-  FSASplit (|={E}=> P)%I E pvs_fsa True (λ _, P).
+Global Arguments is_fsa {_} _ _ _ _ _ {_}.
+Global Instance is_fsa_pvs E P :
+  IsFSA (|={E}=> P)%I E pvs_fsa True (λ _, P).
 Proof. split. done. apply _. Qed.
-Global Instance fsa_split_fsa {A} (fsa : FSA Λ Σ A) E Φ :
-  FrameShiftAssertion fsaV fsa → FSASplit (fsa E Φ) E fsa fsaV Φ.
+Global Instance is_fsa_fsa {A} (fsa : FSA Λ Σ A) E Φ :
+  FrameShiftAssertion fsaV fsa → IsFSA (fsa E Φ) E fsa fsaV Φ.
 Proof. done. Qed.
 
 Global Instance to_assert_pvs {A} P Q E (fsa : FSA Λ Σ A) fsaV Φ :
-  FSASplit Q E fsa fsaV Φ → ToAssert P Q (|={E}=> P).
+  IsFSA Q E fsa fsaV Φ → IntoAssert P Q (|={E}=> P).
 Proof.
-  intros.
-  by rewrite /ToAssert pvs_frame_r wand_elim_r -(fsa_split Q) fsa_pvs_fsa.
+  intros. by rewrite /IntoAssert pvs_frame_r wand_elim_r (is_fsa Q) fsa_pvs_fsa.
 Qed.
 
 Lemma tac_pvs_intro Δ E1 E2 Q : E1 = E2 → (Δ ⊢ Q) → Δ ⊢ |={E1,E2}=> Q.
@@ -66,11 +67,11 @@ Qed.
 
 Lemma tac_pvs_elim_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E i p P' P Q Φ :
   envs_lookup i Δ = Some (p, P') → P' = (|={E}=> P)%I →
-  FSASplit Q E fsa fsaV Φ →
+  IsFSA Q E fsa fsaV Φ →
   envs_replace i p false (Esnoc Enil i P) Δ = Some Δ' →
   (Δ' ⊢ fsa E Φ) → Δ ⊢ Q.
 Proof.
-  intros ? -> ??. rewrite -(fsa_split Q) -fsa_pvs_fsa.
+  intros ? -> ??. rewrite (is_fsa Q) -fsa_pvs_fsa.
   eapply tac_pvs_elim; set_solver.
 Qed.
 
@@ -85,12 +86,12 @@ Proof.
 Qed.
 
 Lemma tac_pvs_timeless_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E i p P Q Φ :
-  FSASplit Q E fsa fsaV Φ →
+  IsFSA Q E fsa fsaV Φ →
   envs_lookup i Δ = Some (p, ▷ P)%I → TimelessP P →
   envs_simple_replace i p (Esnoc Enil i P) Δ = Some Δ' →
   (Δ' ⊢ fsa E Φ) → Δ ⊢ Q.
 Proof.
-  intros ????. rewrite -(fsa_split Q) -fsa_pvs_fsa.
+  intros ????. rewrite (is_fsa Q) -fsa_pvs_fsa.
   eauto using tac_pvs_timeless.
 Qed.
 End pvs.
@@ -114,7 +115,7 @@ Tactic Notation "iPvsCore" constr(H) :=
       [env_cbv; reflexivity || fail "iPvs:" H "not found"
       |let P := match goal with |- ?P = _ => P end in
        reflexivity || fail "iPvs:" H ":" P "not a pvs with the right mask"
-      |let P := match goal with |- FSASplit ?P _ _ _ _ => P end in
+      |let P := match goal with |- IsFSA ?P _ _ _ _ => P end in
        apply _ || fail "iPvs:" P "not a pvs"
       |env_cbv; reflexivity|simpl]
   end.
@@ -170,7 +171,7 @@ Tactic Notation "iTimeless" constr(H) :=
        |env_cbv; reflexivity|simpl]
   | |- _ =>
      eapply tac_pvs_timeless_fsa with _ _ _ _ H _ _ _;
-       [let P := match goal with |- FSASplit ?P _ _ _ _ => P end in
+       [let P := match goal with |- IsFSA ?P _ _ _ _ => P end in
         apply _ || fail "iTimeless: " P "not a pvs"
        |env_cbv; reflexivity || fail "iTimeless:" H "not found"
        |let P := match goal with |- TimelessP ?P => P end in
@@ -180,3 +181,6 @@ Tactic Notation "iTimeless" constr(H) :=
 
 Tactic Notation "iTimeless" constr(H) "as" constr(Hs) :=
   iTimeless H; iDestruct H as Hs.
+
+Hint Extern 2 (of_envs _ ⊢ _) =>
+  match goal with |- _ ⊢ (|={_}=> _)%I => iPvsIntro end.

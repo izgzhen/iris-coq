@@ -3,7 +3,7 @@ From iris.proofmode Require Export weakestpre.
 From iris.heap_lang Require Export wp_tactics heap.
 Import uPred.
 
-Ltac strip_later ::= iNext.
+Ltac wp_strip_later ::= iNext.
 
 Section heap.
 Context {Σ : gFunctors} `{heapG Σ}.
@@ -12,75 +12,77 @@ Implicit Types P Q : iPropG heap_lang Σ.
 Implicit Types Φ : val → iPropG heap_lang Σ.
 Implicit Types Δ : envs (iResUR heap_lang (globalF Σ)).
 
-Global Instance sep_destruct_mapsto l q v :
-  SepDestruct false (l ↦{q} v) (l ↦{q/2} v) (l ↦{q/2} v).
-Proof. by rewrite /SepDestruct heap_mapsto_op_split. Qed.
+Global Instance into_sep_mapsto l q v :
+  IntoSep false (l ↦{q} v) (l ↦{q/2} v) (l ↦{q/2} v).
+Proof. by rewrite /IntoSep heap_mapsto_op_split. Qed.
 
 Lemma tac_wp_alloc Δ Δ' N E j e v Φ :
   to_val e = Some v → 
   (Δ ⊢ heap_ctx N) → nclose N ⊆ E →
-  StripLaterEnvs Δ Δ' →
+  IntoLaterEnvs Δ Δ' →
   (∀ l, ∃ Δ'',
     envs_app false (Esnoc Enil j (l ↦ v)) Δ' = Some Δ'' ∧
-    (Δ'' ⊢ Φ (LitV (LitLoc l)))) →
+    (Δ'' ⊢ |={E}=> Φ (LitV (LitLoc l)))) →
   Δ ⊢ WP Alloc e @ E {{ Φ }}.
 Proof.
   intros ???? HΔ. rewrite -wp_alloc // -always_and_sep_l.
   apply and_intro; first done.
-  rewrite strip_later_env_sound; apply later_mono, forall_intro=> l.
+  rewrite into_later_env_sound; apply later_mono, forall_intro=> l.
   destruct (HΔ l) as (Δ''&?&HΔ'). rewrite envs_app_sound //; simpl.
   by rewrite right_id HΔ'.
 Qed.
 
 Lemma tac_wp_load Δ Δ' N E i l q v Φ :
   (Δ ⊢ heap_ctx N) → nclose N ⊆ E →
-  StripLaterEnvs Δ Δ' →
+  IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I →
-  (Δ' ⊢ Φ v) →
+  (Δ' ⊢ |={E}=> Φ v) →
   Δ ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
 Proof.
   intros. rewrite -wp_load // -always_and_sep_l. apply and_intro; first done.
-  rewrite strip_later_env_sound -later_sep envs_lookup_split //; simpl.
+  rewrite into_later_env_sound -later_sep envs_lookup_split //; simpl.
   by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
 Lemma tac_wp_store Δ Δ' Δ'' N E i l v e v' Φ :
   to_val e = Some v' →
   (Δ ⊢ heap_ctx N) → nclose N ⊆ E →
-  StripLaterEnvs Δ Δ' →
+  IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v')) Δ' = Some Δ'' →
-  (Δ'' ⊢ Φ (LitV LitUnit)) → Δ ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
+  (Δ'' ⊢ |={E}=> Φ (LitV LitUnit)) →
+  Δ ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
 Proof.
   intros. rewrite -wp_store // -always_and_sep_l. apply and_intro; first done.
-  rewrite strip_later_env_sound -later_sep envs_simple_replace_sound //; simpl.
+  rewrite into_later_env_sound -later_sep envs_simple_replace_sound //; simpl.
   rewrite right_id. by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
 Lemma tac_wp_cas_fail Δ Δ' N E i l q v e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
   (Δ ⊢ heap_ctx N) → nclose N ⊆ E →
-  StripLaterEnvs Δ Δ' →
+  IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I → v ≠ v1 →
-  (Δ' ⊢ Φ (LitV (LitBool false))) →
+  (Δ' ⊢ |={E}=> Φ (LitV (LitBool false))) →
   Δ ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -wp_cas_fail // -always_and_sep_l. apply and_intro; first done.
-  rewrite strip_later_env_sound -later_sep envs_lookup_split //; simpl.
+  rewrite into_later_env_sound -later_sep envs_lookup_split //; simpl.
   by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
 Lemma tac_wp_cas_suc Δ Δ' Δ'' N E i l v e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
   (Δ ⊢ heap_ctx N) → nclose N ⊆ E →
-  StripLaterEnvs Δ Δ' →
+  IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I → v = v1 →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v2)) Δ' = Some Δ'' →
-  (Δ'' ⊢ Φ (LitV (LitBool true))) → Δ ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
+  (Δ'' ⊢ |={E}=> Φ (LitV (LitBool true))) →
+  Δ ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
 Proof.
   intros; subst.
   rewrite -wp_cas_suc // -always_and_sep_l. apply and_intro; first done.
-  rewrite strip_later_env_sound -later_sep envs_simple_replace_sound //; simpl.
+  rewrite into_later_env_sound -later_sep envs_simple_replace_sound //; simpl.
   rewrite right_id. by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 End heap.
@@ -103,7 +105,7 @@ Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
       [let e' := match goal with |- to_val ?e' = _ => e' end in
        wp_done || fail "wp_alloc:" e' "not a value"
       |iAssumption || fail "wp_alloc: cannot find heap_ctx"
-      |done || eauto with ndisj
+      |solve_ndisj
       |apply _
       |first [intros l | fail 1 "wp_alloc:" l "not fresh"];
         eexists; split;
@@ -124,7 +126,7 @@ Tactic Notation "wp_load" :=
       |fail 1 "wp_load: cannot find 'Load' in" e];
     eapply tac_wp_load;
       [iAssumption || fail "wp_load: cannot find heap_ctx"
-      |done || eauto with ndisj
+      |solve_ndisj
       |apply _
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
        iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?"
@@ -143,7 +145,7 @@ Tactic Notation "wp_store" :=
       [let e' := match goal with |- to_val ?e' = _ => e' end in
        wp_done || fail "wp_store:" e' "not a value"
       |iAssumption || fail "wp_store: cannot find heap_ctx"
-      |done || eauto with ndisj
+      |solve_ndisj
       |apply _
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
        iAssumptionCore || fail "wp_store: cannot find" l "↦ ?"
@@ -165,7 +167,7 @@ Tactic Notation "wp_cas_fail" :=
       |let e' := match goal with |- to_val ?e' = _ => e' end in
        wp_done || fail "wp_cas_fail:" e' "not a value"
       |iAssumption || fail "wp_cas_fail: cannot find heap_ctx"
-      |done || eauto with ndisj
+      |solve_ndisj
       |apply _
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
        iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?"
@@ -187,7 +189,7 @@ Tactic Notation "wp_cas_suc" :=
       |let e' := match goal with |- to_val ?e' = _ => e' end in
        wp_done || fail "wp_cas_suc:" e' "not a value"
       |iAssumption || fail "wp_cas_suc: cannot find heap_ctx"
-      |done || eauto with ndisj
+      |solve_ndisj
       |apply _
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
        iAssumptionCore || fail "wp_cas_suc: cannot find" l "↦ ?"

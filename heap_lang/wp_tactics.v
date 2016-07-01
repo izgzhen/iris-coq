@@ -11,25 +11,34 @@ Ltac wp_bind K :=
 
 Ltac wp_done := rewrite /= ?to_of_val; fast_done.
 
-Ltac wp_value_head :=
-  match goal with
-  | |- _ ⊢ wp _ _ _ =>
-    etrans; [|eapply wp_value_pvs; wp_done]; lazy beta;
-    (* sometimes, we will have to do a final view shift, so only apply
-    pvs_intro if we obtain a consecutive wp *)
-    try (
-      etrans; [|apply pvs_intro];
-      match goal with |- _ ⊢ wp _ _ _ => simpl | _ => fail end)
+(* sometimes, we will have to do a final view shift, so only apply
+pvs_intro if we obtain a consecutive wp *)
+Ltac wp_strip_pvs :=
+  lazymatch goal with
+  | |- _ ⊢ |={?E}=> _ =>
+    etrans; [|apply pvs_intro];
+    match goal with |- _ ⊢ wp E _ _ => simpl | _ => fail end
   end.
+
+Ltac wp_value_head := etrans; [|eapply wp_value_pvs; wp_done]; lazy beta.
+
+Ltac wp_strip_later := idtac. (* a hook to be redefined later *)
 
 Ltac wp_seq_head :=
   lazymatch goal with
-  | |- _ ⊢ wp ?E (Seq _ _) ?Q => etrans; [|eapply wp_seq; wp_done]; strip_later
+  | |- _ ⊢ wp ?E (Seq _ _) ?Q =>
+    etrans; [|eapply wp_seq; wp_done]; wp_strip_later
   end.
 
 Ltac wp_finish := intros_revert ltac:(
-  rewrite /= ?to_of_val; try strip_later; try wp_value_head);
-  repeat wp_seq_head.
+  rewrite /= ?to_of_val;
+  try wp_strip_later;
+  repeat lazymatch goal with
+  | |- _ ⊢ wp ?E (Seq _ _) ?Q =>
+     etrans; [|eapply wp_seq; wp_done]; wp_strip_later
+  | |- _ ⊢ wp ?E _ ?Q => wp_value_head
+  | |- _ ⊢ |={_}=> _ => wp_strip_pvs
+  end).
 
 Tactic Notation "wp_value" :=
   lazymatch goal with
