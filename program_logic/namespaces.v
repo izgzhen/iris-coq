@@ -64,7 +64,7 @@ End ndisjoint.
 (* The hope is that registering these will suffice to solve most goals
 of the form [N1 ⊥ N2] and those of the form [((N1 ⊆ E ∖ N2) ∖ ..) ∖ Nn]. *)
 Hint Resolve ndisj_subseteq_difference : ndisj.
-Hint Extern 0 (_ .@ _ ⊥ _ .@ _) => apply ndot_ne_disjoint; congruence : ndisj.
+Hint Extern 0 (_ ⊥ _) => apply ndot_ne_disjoint; congruence : ndisj.
 Hint Resolve ndot_preserve_disjoint_l : ndisj.
 Hint Resolve ndot_preserve_disjoint_r : ndisj.
 
