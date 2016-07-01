@@ -148,8 +148,8 @@ Arguments agreeC : clear implicits.
 Arguments agreeR : clear implicits.
 
 Program Definition agree_map {A B} (f : A → B) (x : agree A) : agree B :=
-  {| agree_car n := f (x n); agree_is_valid := agree_is_valid x |}.
-Solve Obligations with auto using agree_valid_S.
+  {| agree_car n := f (x n); agree_is_valid := agree_is_valid x;
+     agree_valid_S := agree_valid_S _ x |}.
 Lemma agree_map_id {A} (x : agree A) : agree_map id x = x.
 Proof. by destruct x. Qed.
 Lemma agree_map_compose {A B C} (f : A → B) (g : B → C) (x : agree A) :
