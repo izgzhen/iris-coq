@@ -527,6 +527,12 @@ Proof.
   - by rewrite lookup_fmap, !lookup_insert.
   - by rewrite lookup_fmap, !lookup_insert_ne, lookup_fmap by done.
 Qed.
+Lemma fmap_delete {A B} (f: A → B) m i: f <$> delete i m = delete i (f <$> m).
+Proof.
+  apply map_eq; intros i'; destruct (decide (i' = i)) as [->|].
+  - by rewrite lookup_fmap, !lookup_delete.
+  - by rewrite lookup_fmap, !lookup_delete_ne, lookup_fmap by done.
+Qed.
 Lemma omap_insert {A B} (f : A → option B) m i x y :
   f x = Some y → omap f (<[i:=x]>m) = <[i:=y]>(omap f m).
 Proof.
