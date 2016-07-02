@@ -18,19 +18,16 @@ Implicit Types Φ : val Λ → iProp Λ Σ.
 
 Notation wp_fork ef := (default True ef (flip (wp ⊤) (λ _, True)))%I.
 
-Lemma wp_lift_step E1 E2
-    (φ : expr Λ → state Λ → option (expr Λ) → Prop) Φ e1 :
+Lemma wp_lift_step E1 E2 Φ e1 :
   E2 ⊆ E1 → to_val e1 = None →
-  (|={E1,E2}=> ∃ σ1,
-      ■ reducible e1 σ1 ∧
-      ■ (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) ∧
-      ▷ ownP σ1 ★ ▷ ∀ e2 σ2 ef,
-        (■ φ e2 σ2 ef ∧ ownP σ2) ={E2,E1}=★ WP e2 @ E1 {{ Φ }} ★ wp_fork ef)
+  (|={E1,E2}=> ∃ σ1, ■ reducible e1 σ1 ∧ ▷ ownP σ1 ★
+       ▷ ∀ e2 σ2 ef, (■ prim_step e1 σ1 e2 σ2 ef ∧ ownP σ2)
+                     ={E2,E1}=★ WP e2 @ E1 {{ Φ }} ★ wp_fork ef)
   ⊢ WP e1 @ E1 {{ Φ }}.
 Proof.
   intros ? He. rewrite pvs_eq wp_eq.
   uPred.unseal; split=> n r ? Hvs; constructor; auto. intros k Ef σ1' rf ???.
-  destruct (Hvs (S k) Ef σ1' rf) as (r'&(σ1&Hsafe&Hstep&r1&r2&?&?&Hwp)&Hws);
+  destruct (Hvs (S k) Ef σ1' rf) as (r'&(σ1&Hsafe&r1&r2&?&?&Hwp)&Hws);
     auto; clear Hvs; cofe_subst r'.
   destruct (wsat_update_pst k (E2 ∪ Ef) σ1 σ1' r1 (r2 ⋅ rf)) as [-> Hws'].
   { apply equiv_dist. rewrite -(ownP_spec k); auto. }
@@ -38,7 +35,7 @@ Proof.
   constructor; [done|intros e2 σ2 ef ?; specialize (Hws' σ2)].
   destruct (λ H1 H2 H3, Hwp e2 σ2 ef k (update_pst σ2 r1) H1 H2 H3 k Ef σ2 rf)
     as (r'&(r1'&r2'&?&?&?)&?); auto; cofe_subst r'.
-  { split. by eapply Hstep. apply ownP_spec; auto. }
+  { split. done. apply ownP_spec; auto. }
   { rewrite (comm _ r2) -assoc; eauto using wsat_le. }
   exists r1', r2'; split_and?; try done. by uPred.unseal; intros ? ->.
 Qed.
@@ -71,11 +68,10 @@ Lemma wp_lift_atomic_step {E Φ} e1
     ■ φ (of_val v2) σ2 ef ∧ ownP σ2 -★ (|={E}=> Φ v2) ★ wp_fork ef)
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  iIntros {???} "[Hσ1 Hwp]". iApply (wp_lift_step E E (λ e2 σ2 ef,
-    is_Some (to_val e2) ∧ φ e2 σ2 ef) _ e1); auto using atomic_not_val.
-  iApply pvs_intro. iExists σ1. repeat iSplit; eauto using atomic_step.
-  iFrame. iNext. iIntros {e2 σ2 ef} "[#He2 Hσ2]".
-  iDestruct "He2" as %[[v2 Hv%of_to_val]?]. subst e2.
+  iIntros {???} "[Hσ1 Hwp]". iApply (wp_lift_step E E _ e1); auto using atomic_not_val.
+  iPvsIntro. iExists σ1. repeat iSplit; eauto 10 using atomic_step.
+  iFrame. iNext. iIntros {e2 σ2 ef} "[% Hσ2]".
+  edestruct @atomic_step as [v2 Hv%of_to_val]; eauto. subst e2.
   iDestruct ("Hwp" $! v2 σ2 ef with "[Hσ2]") as "[HΦ ?]". by eauto.
   iFrame. iPvs "HΦ". iPvsIntro. iApply wp_value; auto using to_of_val.
 Qed.
