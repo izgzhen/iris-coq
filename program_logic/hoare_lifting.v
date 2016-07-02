@@ -19,23 +19,24 @@ Implicit Types P Q R : iProp Λ Σ.
 Implicit Types Ψ : val Λ → iProp Λ Σ.
 
 Lemma ht_lift_step E1 E2
-    (φ : expr Λ → state Λ → option (expr Λ) → Prop) P P' Φ1 Φ2 Ψ e1 σ1 :
+    (φ : expr Λ → state Λ → option (expr Λ) → Prop) P P' Φ1 Φ2 Ψ e1 :
   E2 ⊆ E1 → to_val e1 = None →
-  reducible e1 σ1 →
-  (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  (P ={E1,E2}=> ▷ ownP σ1 ★ ▷ P') ∧
+  (P ={E1,E2}=> ∃ σ1,
+      ■ reducible e1 σ1 ∧
+      ■ (∀ e2 σ2 ef, prim_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) ∧
+      ▷ ownP σ1 ★ ▷ P') ∧
    (∀ e2 σ2 ef, ■ φ e2 σ2 ef ★ ownP σ2 ★ P' ={E2,E1}=> Φ1 e2 σ2 ef ★ Φ2 e2 σ2 ef) ∧
    (∀ e2 σ2 ef, {{ Φ1 e2 σ2 ef }} e2 @ E1 {{ Ψ }}) ∧
    (∀ e2 σ2 ef, {{ Φ2 e2 σ2 ef }} ef ?@ ⊤ {{ _, True }})
   ⊢ {{ P }} e1 @ E1 {{ Ψ }}.
 Proof.
-  iIntros {?? Hsafe Hstep} "#(#Hvs&HΦ&He2&Hef) ! HP".
-  iApply (wp_lift_step E1 E2 φ _ e1 σ1); auto.
-  iPvs ("Hvs" with "HP") as "[Hσ HP]"; first set_solver.
-  iPvsIntro. iNext. iSplitL "Hσ"; [done|iIntros {e2 σ2 ef} "[#Hφ Hown]"].
+  iIntros {??} "#(#Hvs&HΦ&He2&Hef) ! HP".
+  iApply (wp_lift_step E1 E2 φ _ e1); auto.
+  iPvs ("Hvs" with "HP") as {σ1} "(%&%&Hσ&HP)"; first set_solver.
+  iPvsIntro. iExists σ1. repeat iSplit; eauto. iFrame.
+  iNext. iIntros {e2 σ2 ef} "[#Hφ Hown]".
   iSpecialize ("HΦ" $! e2 σ2 ef with "[-]"). by iFrame "Hφ HP Hown".
-  iPvs "HΦ" as "[H1 H2]"; first by set_solver.
-  iPvsIntro. iSplitL "H1".
+  iPvs "HΦ" as "[H1 H2]"; first by set_solver. iPvsIntro. iSplitL "H1".
   - by iApply "He2".
   - destruct ef as [e|]; last done. by iApply ("Hef" $! _ _ (Some e)).
 Qed.
@@ -51,11 +52,11 @@ Proof.
   iIntros {? Hsafe Hstep} "#Hef".
   set (φ' e σ ef := is_Some (to_val e) ∧ φ e σ ef).
   iApply (ht_lift_step E E φ'  _ P
-    (λ e2 σ2 ef, ownP σ2 ★ ■ (φ' e2 σ2 ef))%I
-    (λ e2 σ2 ef, ■ φ e2 σ2 ef ★ P)%I);
-    try by (rewrite /φ'; eauto using atomic_not_val, atomic_step).
+    (λ e2 σ2 ef, ownP σ2 ★ ■ (φ' e2 σ2 ef))%I (λ e2 σ2 ef, ■ φ e2 σ2 ef ★ P)%I);
+    try by (eauto using atomic_not_val).
   repeat iSplit.
-  - by iIntros "! ?".
+  - iIntros "![Hσ1 HP]". iExists σ1. iPvsIntro. unfold φ'.
+    repeat iSplit; eauto using atomic_step. by iFrame.
   - iIntros {e2 σ2 ef} "! (#Hφ&Hown&HP)"; iPvsIntro.
     iSplitL "Hown". by iSplit. iSplit. by iDestruct "Hφ" as %[_ ?]. done.
   - iIntros {e2 σ2 ef} "! [Hown #Hφ]"; iDestruct "Hφ" as %[[v2 <-%of_to_val] ?].

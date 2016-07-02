@@ -1,6 +1,7 @@
 (** Some derived lemmas for ectx-based languages *)
 From iris.program_logic Require Export ectx_language weakestpre lifting.
 From iris.program_logic Require Import ownership.
+From iris.proofmode Require Import weakestpre.
 
 Section wp.
 Context {expr val ectx state} {Λ : EctxLanguage expr val ectx state}.
@@ -18,14 +19,19 @@ Lemma wp_ectx_bind {E e} K Φ :
 Proof. apply: weakestpre.wp_bind. Qed.
 
 Lemma wp_lift_head_step E1 E2
-    (φ : expr → state → option expr → Prop) Φ e1 σ1 :
+    (φ : expr → state → option expr → Prop) Φ e1 :
   E2 ⊆ E1 → to_val e1 = None →
-  head_reducible e1 σ1 →
-  (∀ e2 σ2 ef, head_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  (|={E1,E2}=> ▷ ownP σ1 ★ ▷ ∀ e2 σ2 ef,
-    (■ φ e2 σ2 ef ∧ ownP σ2) ={E2,E1}=★ WP e2 @ E1 {{ Φ }} ★ wp_fork ef)
+  (|={E1,E2}=> ∃ σ1,
+      ■ head_reducible e1 σ1 ∧
+      ■ (∀ e2 σ2 ef, head_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) ∧
+      ▷ ownP σ1 ★ ▷ ∀ e2 σ2 ef,
+       (■ φ e2 σ2 ef ∧ ownP σ2) ={E2,E1}=★ WP e2 @ E1 {{ Φ }} ★ wp_fork ef)
   ⊢ WP e1 @ E1 {{ Φ }}.
-Proof. eauto using wp_lift_step. Qed.
+Proof.
+  iIntros {??} "H". iApply (wp_lift_step E1 E2 φ); try done.
+  iPvs "H" as {σ1} "(%&%&Hσ1&?)". set_solver. iPvsIntro. iExists σ1.
+  repeat iSplit; eauto. by iFrame.
+Qed.
 
 Lemma wp_lift_pure_head_step E (φ : expr → option expr → Prop) Φ e1 :
   to_val e1 = None →
