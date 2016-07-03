@@ -162,6 +162,9 @@ Qed.
 Canonical Structure authUR :=
   UCMRAT (auth A) auth_cofe_mixin auth_cmra_mixin auth_ucmra_mixin.
 
+Global Instance auth_frag_persistent a : Persistent a → Persistent (◯ a).
+Proof. do 2 constructor; simpl; auto. by apply persistent_core. Qed.
+
 (** Internalized properties *)
 Lemma auth_equivI {M} (x y : auth A) :
   x ≡ y ⊣⊢ (authoritative x ≡ authoritative y ∧ auth_own x ≡ auth_own y : uPred M).
