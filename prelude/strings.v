@@ -2,7 +2,12 @@
 (* This file is distributed under the terms of the BSD license. *)
 From Coq Require Import Ascii.
 From Coq Require Export String.
-From iris.prelude Require Export countable.
+From iris.prelude Require Export list.
+From iris.prelude Require Import countable.
+
+(* To avoid randomly ending up with String.length because this module is
+imported hereditarily somewhere. *)
+Notation length := List.length.
 
 (** * Fix scopes *)
 Open Scope string_scope.

@@ -55,6 +55,14 @@ Section auth.
 
   Lemma auth_own_op γ a b : auth_own γ (a ⋅ b) ⊣⊢ auth_own γ a ★ auth_own γ b.
   Proof. by rewrite /auth_own -own_op auth_frag_op. Qed.
+
+  Lemma auth_own_mono γ a b : a ≼ b → auth_own γ b ⊢ auth_own γ a.
+  Proof. intros [? ->]. by rewrite auth_own_op sep_elim_l. Qed.
+
+  Global Instance auth_own_persistent γ a :
+    Persistent a → PersistentP (auth_own γ a).
+  Proof. rewrite /auth_own. apply _. Qed.
+
   Lemma auth_own_valid γ a : auth_own γ a ⊢ ✓ a.
   Proof. by rewrite /auth_own own_valid auth_validI. Qed.
 

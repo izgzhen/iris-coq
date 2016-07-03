@@ -758,34 +758,69 @@ Section nat.
   Instance nat_validN : ValidN nat := λ n x, True.
   Instance nat_pcore : PCore nat := λ x, Some 0.
   Instance nat_op : Op nat := plus.
+  Definition nat_op_plus x y : x ⋅ y = x + y := eq_refl.
   Lemma nat_included (x y : nat) : x ≼ y ↔ x ≤ y.
   Proof.
     split.
     - intros [z ->]; unfold op, nat_op; lia.
     - exists (y - x). by apply le_plus_minus.
   Qed.
-  Lemma nat_cmra_mixin : CMRAMixin nat.
+  Lemma nat_ra_mixin : RAMixin nat.
   Proof.
-    apply discrete_cmra_mixin, ra_total_mixin; try by eauto.
+    apply ra_total_mixin; try by eauto.
     - solve_proper.
     - intros x y z. apply Nat.add_assoc.
     - intros x y. apply Nat.add_comm.
     - by exists 0.
   Qed.
-  Canonical Structure natR : cmraT :=
-    CMRAT nat (@discrete_cofe_mixin _ equivL _) nat_cmra_mixin.
+  Canonical Structure natR : cmraT := discreteR nat nat_ra_mixin.
 
   Instance nat_empty : Empty nat := 0.
   Lemma nat_ucmra_mixin : UCMRAMixin nat.
   Proof. split; apply _ || done. Qed.
   Canonical Structure natUR : ucmraT :=
-    UCMRAT nat (@discrete_cofe_mixin _ equivL _) nat_cmra_mixin nat_ucmra_mixin.
+    discreteUR nat nat_ra_mixin nat_ucmra_mixin.
 
   Global Instance nat_cmra_discrete : CMRADiscrete natR.
   Proof. constructor; apply _ || done. Qed.
-  Global Instance nat_persistent (x : ()) : Persistent x.
-  Proof. by constructor. Qed.
 End nat.
+
+Definition mnat := nat.
+
+Section mnat.
+  Instance mnat_valid : Valid mnat := λ x, True.
+  Instance mnat_validN : ValidN mnat := λ n x, True.
+  Instance mnat_pcore : PCore mnat := Some.
+  Instance mnat_op : Op mnat := Nat.max.
+  Definition mnat_op_max x y : x ⋅ y = x `max` y := eq_refl.
+  Lemma mnat_included (x y : mnat) : x ≼ y ↔ x ≤ y.
+  Proof.
+    split.
+    - intros [z ->]; unfold op, mnat_op; lia.
+    - exists y. by symmetry; apply Nat.max_r.
+  Qed.
+  Lemma mnat_ra_mixin : RAMixin mnat.
+  Proof.
+    apply ra_total_mixin; try by eauto.
+    - solve_proper.
+    - solve_proper.
+    - intros x y z. apply Nat.max_assoc.
+    - intros x y. apply Nat.max_comm.
+    - intros x. apply Max.max_idempotent.
+  Qed.
+  Canonical Structure mnatR : cmraT := discreteR mnat mnat_ra_mixin.
+
+  Instance mnat_empty : Empty mnat := 0.
+  Lemma mnat_ucmra_mixin : UCMRAMixin mnat.
+  Proof. split; apply _ || done. Qed.
+  Canonical Structure mnatUR : ucmraT :=
+    discreteUR mnat mnat_ra_mixin mnat_ucmra_mixin.
+
+  Global Instance mnat_cmra_discrete : CMRADiscrete mnatR.
+  Proof. constructor; apply _ || done. Qed.
+  Global Instance mnat_persistent (x : mnat) : Persistent x.
+  Proof. by constructor. Qed.
+End mnat.
 
 (** ** Product *)
 Section prod.

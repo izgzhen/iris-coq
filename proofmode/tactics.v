@@ -560,7 +560,13 @@ Tactic Notation "iIntros" constr(pat) :=
     | ISimpl :: ?pats => simpl; go pats
     | IAlways :: ?pats => iAlways; go pats
     | INext :: ?pats => iNext; go pats
-    | IClear ?Hs :: ?pats => iClear Hs; go pats
+    | IClear ?cpats :: ?pats =>
+       let rec clr cpats :=
+         match cpats with
+         | [] => go pats
+         | (false,?H) :: ?cpats => iClear H; clr cpats
+         | (true,?H) :: ?cpats => iFrame H; clr cpats
+         end in clr cpats
     | IPersistent (IName ?H) :: ?pats => iIntro #H; go pats
     | IName ?H :: ?pats => iIntro H; go pats
     | IPersistent IAnom :: ?pats => let H := iFresh in iIntro #H; go pats

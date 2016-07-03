@@ -52,11 +52,11 @@ Proof.
   iPvsIntro. iApply "Hf"; iSplit.
   - iIntros {n} "!". wp_let.
     iInv> N as "[[Hl Hγ]|H]"; last iDestruct "H" as {m} "[Hl Hγ]".
-    + iApply wp_pvs. wp_cas_suc. iSplitL; [|by iLeft].
+    + wp_cas_suc. iSplitL; [|by iLeft].
       iPvs (own_update with "Hγ") as "Hγ".
       { by apply cmra_update_exclusive with (y:=Cinr (DecAgree n)). }
       iPvsIntro; iRight; iExists n; by iSplitL "Hl".
-    + wp_cas_fail. iSplitL. iRight; iExists m; by iSplitL "Hl". by iRight.
+    + wp_cas_fail. rewrite /one_shot_inv; eauto 10.
   - iIntros "!". wp_seq. wp_focus (! _)%E. iInv> N as "Hγ".
     iAssert (∃ v, l ↦ v ★ ((v = InjLV #0 ★ own γ Pending) ∨
        ∃ n : Z, v = InjRV #n ★ own γ (Cinr (DecAgree n))))%I with "[-]" as "Hv".

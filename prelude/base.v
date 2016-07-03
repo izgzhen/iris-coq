@@ -7,6 +7,7 @@ structures. *)
 Global Generalizable All Variables.
 Global Set Automatic Coercions Import.
 Global Set Asymmetric Patterns.
+Global Unset Transparent Obligations.
 From Coq Require Export Morphisms RelationClasses List Bool Utf8 Program Setoid.
 Obligation Tactic := idtac.
 

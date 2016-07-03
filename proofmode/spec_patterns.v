@@ -42,32 +42,29 @@ Inductive state :=
   | StTop : state
   | StAssert : spec_goal_kind → bool → list string → state.
 
-Fixpoint parse_go (ts : list token) (s : state)
-    (k : list spec_pat) : option (list spec_pat) :=
-  match s with
-  | StTop =>
-     match ts with
-     | [] => Some (rev k)
-     | TName s :: ts => parse_go ts StTop (SName false s :: k)
-     | TBracketL :: TPersistent :: TBracketR :: ts => parse_go ts StTop (SGoalPersistent :: k)
-     | TBracketL :: TPure :: TBracketR :: ts => parse_go ts StTop (SGoalPure :: k)
-     | TBracketL :: ts => parse_go ts (StAssert GoalStd false []) k
-     | TPvs :: TBracketL :: ts => parse_go ts (StAssert GoalPvs false []) k
-     | TPvs :: ts => parse_go ts StTop (SGoal GoalPvs true [] :: k)
-     | TPersistent :: TName s :: ts => parse_go ts StTop (SName true s :: k)
-     | TForall :: ts => parse_go ts StTop (SForall :: k)
-     | _ => None
-     end
-  | StAssert kind neg ss =>
-     match ts with
-     | TMinus :: ts => guard (¬neg ∧ ss = []); parse_go ts (StAssert kind true ss) k
-     | TName s :: ts => parse_go ts (StAssert kind neg (s :: ss)) k
-     | TBracketR :: ts => parse_go ts StTop (SGoal kind neg (rev ss) :: k)
-     | _ => None
-     end
+Fixpoint parse_go (ts : list token) (k : list spec_pat) : option (list spec_pat) :=
+  match ts with
+  | [] => Some (rev k)
+  | TName s :: ts => parse_go ts (SName false s :: k)
+  | TBracketL :: TPersistent :: TBracketR :: ts => parse_go ts (SGoalPersistent :: k)
+  | TBracketL :: TPure :: TBracketR :: ts => parse_go ts (SGoalPure :: k)
+  | TBracketL :: ts => parse_goal ts GoalStd false [] k
+  | TPvs :: TBracketL :: ts => parse_goal ts GoalPvs false [] k
+  | TPvs :: ts => parse_go ts (SGoal GoalPvs true [] :: k)
+  | TPersistent :: TName s :: ts => parse_go ts (SName true s :: k)
+  | TForall :: ts => parse_go ts (SForall :: k)
+  | _ => None
+  end
+with parse_goal (ts : list token) (kind : spec_goal_kind)
+    (neg : bool) (ss : list string) (k : list spec_pat) : option (list spec_pat) :=
+  match ts with
+  | TMinus :: ts => guard (¬neg ∧ ss = []); parse_goal ts kind true ss k
+  | TName s :: ts => parse_goal ts kind neg (s :: ss) k
+  | TBracketR :: ts => parse_go ts (SGoal kind neg (reverse ss) :: k)
+  | _ => None
   end.
 Definition parse (s : string) : option (list spec_pat) :=
-  parse_go (tokenize s) StTop [].
+  parse_go (tokenize s) [].
 
 Ltac parse s :=
   lazymatch type of s with

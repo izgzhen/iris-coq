@@ -564,6 +564,8 @@ Proof. intros ->; apply iff_refl. Qed.
 
 Lemma pure_mono φ1 φ2 : (φ1 → φ2) → ■ φ1 ⊢ ■ φ2.
 Proof. intros; apply pure_elim with φ1; eauto using pure_intro. Qed.
+Lemma pure_iff φ1 φ2 : (φ1 ↔ φ2) → ■ φ1 ⊣⊢ ■ φ2.
+Proof. intros [??]; apply (anti_symm _); auto using pure_mono. Qed.
 Lemma and_mono P P' Q Q' : (P ⊢ Q) → (P' ⊢ Q') → P ∧ P' ⊢ Q ∧ Q'.
 Proof. auto. Qed.
 Lemma and_mono_l P P' Q : (P ⊢ Q) → P ∧ P' ⊢ Q ∧ P'.

@@ -105,7 +105,7 @@ Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
       [let e' := match goal with |- to_val ?e' = _ => e' end in
        wp_done || fail "wp_alloc:" e' "not a value"
       |iAssumption || fail "wp_alloc: cannot find heap_ctx"
-      |done || eauto with ndisj
+      |solve_ndisj
       |apply _
       |first [intros l | fail 1 "wp_alloc:" l "not fresh"];
         eexists; split;
@@ -126,7 +126,7 @@ Tactic Notation "wp_load" :=
       |fail 1 "wp_load: cannot find 'Load' in" e];
     eapply tac_wp_load;
       [iAssumption || fail "wp_load: cannot find heap_ctx"
-      |done || eauto with ndisj
+      |solve_ndisj
       |apply _
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
        iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?"
@@ -145,7 +145,7 @@ Tactic Notation "wp_store" :=
       [let e' := match goal with |- to_val ?e' = _ => e' end in
        wp_done || fail "wp_store:" e' "not a value"
       |iAssumption || fail "wp_store: cannot find heap_ctx"
-      |done || eauto with ndisj
+      |solve_ndisj
       |apply _
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
        iAssumptionCore || fail "wp_store: cannot find" l "↦ ?"
@@ -167,7 +167,7 @@ Tactic Notation "wp_cas_fail" :=
       |let e' := match goal with |- to_val ?e' = _ => e' end in
        wp_done || fail "wp_cas_fail:" e' "not a value"
       |iAssumption || fail "wp_cas_fail: cannot find heap_ctx"
-      |done || eauto with ndisj
+      |solve_ndisj
       |apply _
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
        iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?"
@@ -189,7 +189,7 @@ Tactic Notation "wp_cas_suc" :=
       |let e' := match goal with |- to_val ?e' = _ => e' end in
        wp_done || fail "wp_cas_suc:" e' "not a value"
       |iAssumption || fail "wp_cas_suc: cannot find heap_ctx"
-      |done || eauto with ndisj
+      |solve_ndisj
       |apply _
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
        iAssumptionCore || fail "wp_cas_suc: cannot find" l "↦ ?"

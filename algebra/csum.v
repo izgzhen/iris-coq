@@ -292,6 +292,32 @@ Proof. eauto using csum_updateP_l. Qed.
 Lemma csum_updateP'_r (P : B → Prop) b :
   b ~~>: P → Cinr b ~~>: λ m', ∃ b', m' = Cinr b' ∧ P b'.
 Proof. eauto using csum_updateP_r. Qed.
+Lemma csum_local_update_l (a1 a2 : A) af :
+  (∀ af', af = Cinl <$> af' → a1 ~l~> a2 @ af') → Cinl a1 ~l~> Cinl a2 @ af.
+Proof.
+  intros Ha. split; destruct af as [[af'| |]|]=>//=.
+  - by eapply (Ha (Some af')).
+  - by eapply (Ha None).
+  - destruct (Ha (Some af') (reflexivity _)) as [_ Ha'].
+    intros n [[mz|mz|]|] ?; inversion 1; subst; constructor.
+    by apply (Ha' n (Some mz)). by apply (Ha' n None).
+  - destruct (Ha None (reflexivity _)) as [_ Ha'].
+    intros n [[mz|mz|]|] ?; inversion 1; subst; constructor.
+    by apply (Ha' n (Some mz)). by apply (Ha' n None).
+Qed.
+Lemma csum_local_update_r (b1 b2 : B) bf :
+  (∀ bf', bf = Cinr <$> bf' → b1 ~l~> b2 @ bf') → Cinr b1 ~l~> Cinr b2 @ bf.
+Proof.
+  intros Hb. split; destruct bf as [[|bf'|]|]=>//=.
+  - by eapply (Hb (Some bf')).
+  - by eapply (Hb None).
+  - destruct (Hb (Some bf') (reflexivity _)) as [_ Hb'].
+    intros n [[mz|mz|]|] ?; inversion 1; subst; constructor.
+    by apply (Hb' n (Some mz)). by apply (Hb' n None).
+  - destruct (Hb None (reflexivity _)) as [_ Hb'].
+    intros n [[mz|mz|]|] ?; inversion 1; subst; constructor.
+    by apply (Hb' n (Some mz)). by apply (Hb' n None).
+Qed.
 End cmra.
 
 Arguments csumR : clear implicits.

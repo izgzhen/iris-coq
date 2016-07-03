@@ -28,7 +28,7 @@ Proof.
   iRevert {a b} "Ha Hb". iIntros {b a} "Hb {foo} Ha".
   iAssert (uPred_ownM (a ⋅ core a)) with "[Ha]" as "[Ha #Hac]".
   { by rewrite cmra_core_r. }
-  iFrame "Ha Hac".
+  iIntros "{$Hac $Ha}".
   iExists (S j + z1), z2.
   iNext.
   iApply ("H3" $! _ 0 with "H1 []").
