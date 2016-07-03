@@ -791,8 +791,8 @@ Section mnat.
   Instance mnat_valid : Valid mnat := λ x, True.
   Instance mnat_validN : ValidN mnat := λ n x, True.
   Instance mnat_pcore : PCore mnat := Some.
-  Instance mnat_op : Op mnat := max.
-  Definition mnat_op_max x y : x ⋅ y = max x y := eq_refl.
+  Instance mnat_op : Op mnat := Nat.max.
+  Definition mnat_op_max x y : x ⋅ y = x `max` y := eq_refl.
   Lemma mnat_included (x y : mnat) : x ≼ y ↔ x ≤ y.
   Proof.
     split.
