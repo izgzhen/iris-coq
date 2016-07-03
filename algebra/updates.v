@@ -241,11 +241,14 @@ Section option.
 End option.
 
 (** * Natural numbers  *)
-Lemma nat_local_update (x y : nat) mz :
-  x ~l~> y @ mz.
+Lemma nat_local_update (x y : nat) mz : x ~l~> y @ mz.
 Proof.
-  split. done.
-  unfold opM, op, dist, cofe_dist, cmra_cofeC, cmra_op, cmra_dist, natR, nat_op,
-         discrete_dist, equiv, equivL.
-  destruct mz as [z|]; intros n [z'|]; lia.
+  split; first done.
+  compute -[plus]; destruct mz as [z|]; intros n [z'|]; lia.
+Qed.
+
+Lemma mnat_local_update (x y : mnat) mz : x ≤ y → x ~l~> y @ mz.
+Proof.
+  split; first done.
+  compute -[max]; destruct mz as [z|]; intros n [z'|]; lia.
 Qed.
