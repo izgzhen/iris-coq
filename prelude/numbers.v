@@ -504,6 +504,8 @@ Infix "+" := Qp_plus : Qp_scope.
 Infix "-" := Qp_minus : Qp_scope.
 Infix "/" := Qp_div : Qp_scope.
 
+Instance Qp_inhabited : Inhabited Qp := populate 1%Qp.
+
 Lemma Qp_eq x y : x = y ↔ Qp_car x = Qp_car y.
 Proof.
   split; [by intros ->|].
