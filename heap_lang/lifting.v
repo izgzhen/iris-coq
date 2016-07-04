@@ -29,14 +29,10 @@ Lemma wp_alloc_pst E σ e v Φ :
   ⊢ WP Alloc e @ E {{ Φ }}.
 Proof.
   iIntros {?}  "[HP HΦ]".
-  (* TODO: This works around ssreflect bug #22. *)
-  set (φ (e' : expr []) σ' ef := ∃ l,
-    ef = None ∧ e' = Lit (LitLoc l) ∧ σ' = <[l:=v]>σ ∧ σ !! l = None).
-  iApply (wp_lift_atomic_head_step (Alloc e) φ σ); try (by simpl; eauto);
-    [by intros; subst φ; inv_head_step; eauto 8|].
-  iFrame "HP". iNext. iIntros {v2 σ2 ef} "[Hφ HP]".
-  iDestruct "Hφ" as %(l & -> & [= <-]%of_to_val_flip & -> & ?); simpl.
-  iSplit; last done. iApply "HΦ"; by iSplit.
+  iApply (wp_lift_atomic_head_step (Alloc e) σ); try (by simpl; eauto).
+  iFrame "HP". iNext. iIntros {v2 σ2 ef} "[% HP]". inv_head_step.
+  match goal with H: _ = of_val v2 |- _ => apply (inj of_val (LitV _)) in H end.
+  subst v2. iSplit; last done. iApply "HΦ"; by iSplit.
 Qed.
 
 Lemma wp_load_pst E σ l v Φ :

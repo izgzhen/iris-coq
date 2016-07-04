@@ -31,22 +31,27 @@ Proof.
   iApply "Hwp". by eauto.
 Qed.
 
-Lemma wp_lift_pure_head_step E (φ : expr → option expr → Prop) Φ e1 :
+Lemma wp_lift_pure_head_step E Φ e1 :
   to_val e1 = None →
   (∀ σ1, head_reducible e1 σ1) →
-  (∀ σ1 e2 σ2 ef, head_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →
-  (▷ ∀ e2 ef, ■ φ e2 ef → WP e2 @ E {{ Φ }} ★ wp_fork ef) ⊢ WP e1 @ E {{ Φ }}.
-Proof. eauto using wp_lift_pure_step. Qed.
+  (∀ σ1 e2 σ2 ef, head_step e1 σ1 e2 σ2 ef → σ1 = σ2) →
+  (▷ ∀ e2 ef σ, ■ head_step e1 σ e2 σ ef → WP e2 @ E {{ Φ }} ★ wp_fork ef)
+  ⊢ WP e1 @ E {{ Φ }}.
+Proof.
+  iIntros {???} "H". iApply wp_lift_pure_step; eauto. iNext.
+  iIntros {????}. iApply "H". eauto.
+Qed.
 
-Lemma wp_lift_atomic_head_step {E Φ} e1
-    (φ : expr → state → option expr → Prop) σ1 :
+Lemma wp_lift_atomic_head_step {E Φ} e1 σ1 :
   atomic e1 →
   head_reducible e1 σ1 →
-  (∀ e2 σ2 ef, head_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
   ▷ ownP σ1 ★ ▷ (∀ v2 σ2 ef,
-    ■ φ (of_val v2) σ2 ef ∧ ownP σ2 -★ (|={E}=> Φ v2) ★ wp_fork ef)
+  ■ head_step e1 σ1 (of_val v2) σ2 ef ∧ ownP σ2 -★ (|={E}=> Φ v2) ★ wp_fork ef)
   ⊢ WP e1 @ E {{ Φ }}.
-Proof. eauto using wp_lift_atomic_step. Qed.
+Proof.
+  iIntros {??} "[? H]". iApply wp_lift_atomic_step; eauto. iFrame. iNext.
+  iIntros {???} "[% ?]". iApply "H". eauto.
+Qed.
 
 Lemma wp_lift_atomic_det_head_step {E Φ e1} σ1 v2 σ2 ef :
   atomic e1 →
