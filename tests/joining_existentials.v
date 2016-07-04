@@ -77,8 +77,9 @@ Proof.
   wp_apply (newbarrier_spec heapN N (barrier_res γ Φ)); auto.
   iFrame "Hh". iIntros {l} "[Hr Hs]".
   set (workers_post (v : val) := (barrier_res γ Ψ1 ★ barrier_res γ Ψ2)%I).
-  wp_let. wp_apply (wp_par _ _ (λ _, True)%I workers_post); first done.
-  iFrame "Hh". iSplitL "HP Hs Hγ"; [|iSplitL "Hr"].
+  wp_let. wp_apply (wp_par _ _ (λ _, True)%I workers_post);
+    try iFrame "Hh"; first done.
+  iSplitL "HP Hs Hγ"; [|iSplitL "Hr"].
   - wp_focus eM. iApply wp_wand_l; iSplitR "HP"; [|by iApply "He"].
     iIntros {v} "HP"; iDestruct "HP" as {x} "HP". wp_let.
     iPvs (own_update _ _ (Cinr (to_agree _)) with "Hγ") as "Hx".
@@ -88,8 +89,8 @@ Proof.
   - iDestruct (recv_weaken with "[] Hr") as "Hr"; first by iApply P_res_split.
     iPvs (recv_split with "Hr") as "[H1 H2]"; first done.
     wp_apply (wp_par _ _ (λ _, barrier_res γ Ψ1)%I
-      (λ _, barrier_res γ Ψ2)%I); first done.
-    iSplit; [done|]; iSplitL "H1"; [|iSplitL "H2"].
+      (λ _, barrier_res γ Ψ2)%I); try iFrame "Hh"; first done.
+    iSplitL "H1"; [|iSplitL "H2"].
     + iApply worker_spec; auto.
     + iApply worker_spec; auto.
     + auto.

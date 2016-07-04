@@ -34,7 +34,7 @@ Section ndisjoint.
   Context `{Countable A}.
   Implicit Types x y : A.
 
-  Global Instance ndisjoint_comm : Comm iff ndisjoint.
+  Global Instance ndisjoint_symmetric : Symmetric ndisjoint.
   Proof. intros N1 N2. rewrite /disjoint /ndisjoint; naive_solver. Qed.
 
   Lemma ndot_ne_disjoint N x y : x ≠ y → N .@ x ⊥ N .@ y.
@@ -47,7 +47,7 @@ Section ndisjoint.
   Qed.
 
   Lemma ndot_preserve_disjoint_r N1 N2 x : N1 ⊥ N2 → N1 ⊥ N2 .@ x .
-  Proof. rewrite ![N1 ⊥ _]comm. apply ndot_preserve_disjoint_l. Qed.
+  Proof. intros. by apply symmetry, ndot_preserve_disjoint_l. Qed.
 
   Lemma ndisj_disjoint N1 N2 : N1 ⊥ N2 → nclose N1 ⊥ nclose N2.
   Proof.
