@@ -122,7 +122,7 @@ appear at the top level:
 - `>` : introduce a later (which strips laters from all hypotheses).
 - `{H1 ... Hn}` : clear `H1 ... Hn`.
 - `{$H1 ... $Hn}` : frame `H1 ... Hn` (this pattern can be mixed with the
-  previous pattern, e.g., `{$H1 H2 #H3}`).
+  previous pattern, e.g., `{$H1 H2 $H3}`).
 - `/=` : perform `simpl`.
 - `*` : introduce all universal quantifiers.
 - `**` : introduce all universal quantifiers, as well as all arrows and wands.
