@@ -34,7 +34,7 @@ Section ndisjoint.
   Context `{Countable A}.
   Implicit Types x y : A.
 
-  Global Instance ndisjoint_comm : Comm iff ndisjoint.
+  Global Instance ndisjoint_symmetric : Symmetric ndisjoint.
   Proof. intros N1 N2. rewrite /disjoint /ndisjoint; naive_solver. Qed.
 
   Lemma ndot_ne_disjoint N x y : x ≠ y → N .@ x ⊥ N .@ y.
@@ -47,7 +47,7 @@ Section ndisjoint.
   Qed.
 
   Lemma ndot_preserve_disjoint_r N1 N2 x : N1 ⊥ N2 → N1 ⊥ N2 .@ x .
-  Proof. rewrite ![N1 ⊥ _]comm. apply ndot_preserve_disjoint_l. Qed.
+  Proof. intros. by apply symmetry, ndot_preserve_disjoint_l. Qed.
 
   Lemma ndisj_disjoint N1 N2 : N1 ⊥ N2 → nclose N1 ⊥ nclose N2.
   Proof.
@@ -64,8 +64,8 @@ End ndisjoint.
 (* The hope is that registering these will suffice to solve most goals
 of the form [N1 ⊥ N2] and those of the form [((N1 ⊆ E ∖ N2) ∖ ..) ∖ Nn]. *)
 Hint Resolve ndisj_subseteq_difference : ndisj.
-Hint Extern 0 (_ .@ _ ⊥ _ .@ _) => apply ndot_ne_disjoint; congruence : ndisj.
+Hint Extern 0 (_ ⊥ _) => apply ndot_ne_disjoint; congruence : ndisj.
 Hint Resolve ndot_preserve_disjoint_l : ndisj.
 Hint Resolve ndot_preserve_disjoint_r : ndisj.
 
-Ltac solve_ndisj := eauto with ndisj.
+Ltac solve_ndisj := solve [eauto with ndisj].

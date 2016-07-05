@@ -112,10 +112,10 @@ Global Arguments from_and : clear implicits.
 Global Instance from_and_and P1 P2 : FromAnd (P1 ∧ P2) P1 P2.
 Proof. done. Qed.
 Global Instance from_and_sep_persistent_l P1 P2 :
-  PersistentP P1 → FromAnd (P1 ★ P2) P1 P2.
+  PersistentP P1 → FromAnd (P1 ★ P2) P1 P2 | 9.
 Proof. intros. by rewrite /FromAnd always_and_sep_l. Qed.
 Global Instance from_and_sep_persistent_r P1 P2 :
-  PersistentP P2 → FromAnd (P1 ★ P2) P1 P2.
+  PersistentP P2 → FromAnd (P1 ★ P2) P1 P2 | 10.
 Proof. intros. by rewrite /FromAnd always_and_sep_r. Qed.
 Global Instance from_and_always P Q1 Q2 :
   FromAnd P Q1 Q2 → FromAnd (□ P) (□ Q1) (□ Q2).

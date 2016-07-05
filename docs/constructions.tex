@@ -395,7 +395,7 @@ The construction follows the idea of STSs as described in CaReSL \cite{caresl}.
 We first lift the transition relation to $\STSS \times \wp(\STST)$ (implementing a \emph{law of token conservation}) and define a stepping relation for the \emph{frame} of a given token set:
 \begin{align*}
  (s, T) \stsstep (s', T') \eqdef{}& s \stsstep s' \land \STSL(s) \uplus T = \STSL(s') \uplus T' \\
- s \stsfstep{T} s' \eqdef{}& \Exists T_1, T_2. T_1 \disj \STSL(s) \cup T \l+and (s, T_1) \stsstep (s', T_2)
+ s \stsfstep{T} s' \eqdef{}& \Exists T_1, T_2. T_1 \disj \STSL(s) \cup T \land (s, T_1) \stsstep (s', T_2)
 \end{align*}
 
 We further define \emph{closed} sets of states (given a particular set of tokens) as well as the \emph{closure} of a set:

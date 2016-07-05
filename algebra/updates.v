@@ -239,3 +239,16 @@ Section option.
   Lemma option_update x y : x ~~> y → Some x ~~> Some y.
   Proof. rewrite !cmra_update_updateP; eauto using option_updateP with subst. Qed.
 End option.
+
+(** * Natural numbers  *)
+Lemma nat_local_update (x y : nat) mz : x ~l~> y @ mz.
+Proof.
+  split; first done.
+  compute -[plus]; destruct mz as [z|]; intros n [z'|]; lia.
+Qed.
+
+Lemma mnat_local_update (x y : mnat) mz : x ≤ y → x ~l~> y @ mz.
+Proof.
+  split; first done.
+  compute -[max]; destruct mz as [z|]; intros n [z'|]; lia.
+Qed.

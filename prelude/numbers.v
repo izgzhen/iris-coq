@@ -32,6 +32,8 @@ Notation "(<)" := lt (only parsing) : nat_scope.
 
 Infix "`div`" := Nat.div (at level 35) : nat_scope.
 Infix "`mod`" := Nat.modulo (at level 35) : nat_scope.
+Infix "`max`" := Nat.max (at level 35) : nat_scope.
+Infix "`min`" := Nat.min (at level 35) : nat_scope.
 
 Instance nat_eq_dec: ∀ x y : nat, Decision (x = y) := eq_nat_dec.
 Instance nat_le_dec: ∀ x y : nat, Decision (x ≤ y) := le_dec.
@@ -503,6 +505,8 @@ Notation "1" := Qp_one : Qp_scope.
 Infix "+" := Qp_plus : Qp_scope.
 Infix "-" := Qp_minus : Qp_scope.
 Infix "/" := Qp_div : Qp_scope.
+
+Instance Qp_inhabited : Inhabited Qp := populate 1%Qp.
 
 Lemma Qp_eq x y : x = y ↔ Qp_car x = Qp_car y.
 Proof.
