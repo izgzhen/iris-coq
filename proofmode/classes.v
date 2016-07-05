@@ -256,6 +256,13 @@ Global Instance frame_or R P1 P2 Q1 Q2 Q :
   Frame R P1 Q1 → Frame R P2 Q2 → MakeOr Q1 Q2 Q → Frame R (P1 ∨ P2) Q.
 Proof. rewrite /Frame /MakeOr => <- <- <-. by rewrite -sep_or_l. Qed.
 
+Global Instance frame_wand R P1 P2 Q2 :
+  Frame R P2 Q2 → Frame R (P1 -★ P2) (P1 -★ Q2).
+Proof.
+  rewrite /Frame=> ?. apply wand_intro_l.
+  by rewrite assoc (comm _ P1) -assoc wand_elim_r.
+Qed.
+
 Class MakeLater (P lP : uPred M) := make_later : ▷ P ⊣⊢ lP.
 Global Instance make_later_true : MakeLater True True.
 Proof. by rewrite /MakeLater later_True. Qed.
