@@ -56,6 +56,8 @@ Elimination of logical connectives
   quantifiers using Coq introduction patterns `x1 ... xn` and elimination of
   object level connectives using the proof mode introduction patterns
   `ipat1 ... ipatn`.
+- `iDestruct trm as %cpat : elimination of a pure hypothesis using the Coq
+   introduction pattern `cpat`.
 
 Separating logic specific tactics
 ---------------------------------
