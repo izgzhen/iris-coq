@@ -42,7 +42,7 @@ running:
     as described in <http://doi.acm.org/10.1145/2818638>.
 * The folder `proofmode` contains the Iris proof mode, which extends Coq with
   contexts for persistent and spatial Iris assertions. It also contains tactics
-  for interactive proofs in Iris.
+  for interactive proofs in Iris. Documentation can be found in `ProofMode.md`.
 * The folder `tests` contains modules we use to test our infrastructure.
   Users of the Iris Coq library should *not* depend on these modules; they may
   change or disappear without any notice.
