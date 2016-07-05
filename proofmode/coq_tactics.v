@@ -453,7 +453,7 @@ Qed.
 Class IntoAssert (P : uPred M) (Q : uPred M) (R : uPred M) :=
   into_assert : R ★ (P -★ Q) ⊢ Q.
 Global Arguments into_assert _ _ _ {_}.
-Lemma into_assert_fallthrough P Q : IntoAssert P Q P.
+Lemma into_assert_default P Q : IntoAssert P Q P.
 Proof. by rewrite /IntoAssert wand_elim_r. Qed.
 
 Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q lr js R P1 P2 P1' Q :
