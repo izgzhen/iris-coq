@@ -114,7 +114,7 @@ introduction patterns:
 - `# ipat` : move the hypothesis to the persistent context.
 - `%` : move the hypothesis to the pure Coq context (anonymously).
 - `[ipat ipat]` : (separating) conjunction elimination.
-- `|ipat|ipat]` : disjunction elimination.
+- `[ipat|ipat]` : disjunction elimination.
 - `[]` : false elimination.
 
 Apart from this, there are the following introduction patterns that can only
@@ -186,7 +186,7 @@ Many of the proof mode tactics (such as `iDestruct`, `iApply`, `iRewrite`) can
 take both hypotheses and lemmas, and allow one to instantiate universal
 quantifiers and implications/wands of these hypotheses/lemmas on the fly.
 
-The syntax for the arguments, called _proof mode terms_ of these tactics is:
+The syntax for the arguments, called _proof mode terms_, of these tactics is:
 
         (H $! t1 ... tn with "spat1 .. spatn")
 

@@ -467,35 +467,6 @@ Section collection.
   End dec.
 End collection.
 
-Section collection_ops.
-  Context `{CollectionOps A C}.
-
-  Lemma elem_of_intersection_with_list (f : A → A → option A) Xs Y x :
-    x ∈ intersection_with_list f Y Xs ↔ ∃ xs y,
-      Forall2 (∈) xs Xs ∧ y ∈ Y ∧ foldr (λ x, (≫= f x)) (Some y) xs = Some x.
-  Proof.
-    split.
-    - revert x. induction Xs; simpl; intros x HXs; [eexists [], x; intuition|].
-      rewrite elem_of_intersection_with in HXs; destruct HXs as (x1&x2&?&?&?).
-      destruct (IHXs x2) as (xs & y & hy & ? & ?); trivial.
-      eexists (x1 :: xs), y. intuition (simplify_option_eq; auto).
-    - intros (xs & y & Hxs & ? & Hx). revert x Hx.
-      induction Hxs; intros; simplify_option_eq; [done |].
-      rewrite elem_of_intersection_with. naive_solver.
-  Qed.
-
-  Lemma intersection_with_list_ind (P Q : A → Prop) f Xs Y :
-    (∀ y, y ∈ Y → P y) →
-    Forall (λ X, ∀ x, x ∈ X → Q x) Xs →
-    (∀ x y z, Q x → P y → f x y = Some z → P z) →
-    ∀ x, x ∈ intersection_with_list f Y Xs → P x.
-  Proof.
-    intros HY HXs Hf. induction Xs; simplify_option_eq; [done |].
-    intros x Hx. rewrite elem_of_intersection_with in Hx.
-    decompose_Forall. destruct Hx as (? & ? & ? & ? & ?). eauto.
-  Qed.
-End collection_ops.
-
 (** * Sets without duplicates up to an equivalence *)
 Section NoDup.
   Context `{SimpleCollection A B} (R : relation A) `{!Equivalence R}.

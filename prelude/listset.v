@@ -42,10 +42,6 @@ Instance listset_intersection: Intersection (listset A) := λ l k,
   let (l') := l in let (k') := k in Listset (list_intersection l' k').
 Instance listset_difference: Difference (listset A) := λ l k,
   let (l') := l in let (k') := k in Listset (list_difference l' k').
-Instance listset_intersection_with: IntersectionWith A (listset A) := λ f l k,
-  let (l') := l in let (k') := k in Listset (list_intersection_with f l' k').
-Instance listset_filter: Filter A (listset A) := λ P _ l,
-  let (l') := l in Listset (filter P l').
 
 Instance: Collection A (listset A).
 Proof.
@@ -62,13 +58,6 @@ Proof.
   - intros. apply elem_of_remove_dups.
   - intros. apply NoDup_remove_dups.
 Qed.
-Global Instance: CollectionOps A (listset A).
-Proof.
-  split.
-  - apply _.
-  - intros ? [?] [?]. apply elem_of_list_intersection_with.
-  - intros [?] ??. apply elem_of_list_filter.
-Qed.
 End listset.
 
 (** These instances are declared using [Hint Extern] to avoid too
@@ -83,14 +72,10 @@ Hint Extern 1 (Union (listset _)) =>
   eapply @listset_union : typeclass_instances.
 Hint Extern 1 (Intersection (listset _)) =>
   eapply @listset_intersection : typeclass_instances.
-Hint Extern 1 (IntersectionWith _ (listset _)) =>
-  eapply @listset_intersection_with : typeclass_instances.
 Hint Extern 1 (Difference (listset _)) =>
   eapply @listset_difference : typeclass_instances.
 Hint Extern 1 (Elements _ (listset _)) =>
   eapply @listset_elems : typeclass_instances.
-Hint Extern 1 (Filter _ (listset _)) =>
-  eapply @listset_filter : typeclass_instances.
 
 Instance listset_ret: MRet listset := λ A x, {[ x ]}.
 Instance listset_fmap: FMap listset := λ A B f l,
