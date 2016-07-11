@@ -393,6 +393,8 @@ Proof. now intros -> ?. Qed.
 Instance unit_equiv : Equiv unit := λ _ _, True.
 Instance unit_equivalence : Equivalence (@equiv unit _).
 Proof. repeat split. Qed.
+Instance unit_leibniz : LeibnizEquiv unit.
+Proof. intros [] []; reflexivity. Qed.
 Instance unit_inhabited: Inhabited unit := populate ().
 
 (** ** Products *)
