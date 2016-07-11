@@ -25,13 +25,13 @@ Ltac reshape_val e tac :=
   let rec go e :=
   match e with
   | of_val ?v => v
-  | wexpr' ?e => reshape_val e tac
+  | wexpr' ?e => go e
   | Rec ?f ?x ?e => constr:(RecV f x e)
   | Lit ?l => constr:(LitV l)
   | Pair ?e1 ?e2 =>
-    let v1 := reshape_val e1 in let v2 := reshape_val e2 in constr:(PairV v1 v2)
-  | InjL ?e => let v := reshape_val e in constr:(InjLV v)
-  | InjR ?e => let v := reshape_val e in constr:(InjRV v)
+    let v1 := go e1 in let v2 := go e2 in constr:(PairV v1 v2)
+  | InjL ?e => let v := go e in constr:(InjLV v)
+  | InjR ?e => let v := go e in constr:(InjRV v)
   end in let v := go e in first [tac v | fail 2].
 
 Ltac reshape_expr e tac :=
