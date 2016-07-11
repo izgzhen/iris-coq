@@ -908,13 +908,6 @@ Class Collection A C `{ElemOf A C, Empty C, Singleton A C,
   elem_of_intersection X Y (x : A) : x ∈ X ∩ Y ↔ x ∈ X ∧ x ∈ Y;
   elem_of_difference X Y (x : A) : x ∈ X ∖ Y ↔ x ∈ X ∧ x ∉ Y
 }.
-Class CollectionOps A C `{ElemOf A C, Empty C, Singleton A C, Union C,
-    Intersection C, Difference C, IntersectionWith A C, Filter A C} : Prop := {
-  collection_ops :>> Collection A C;
-  elem_of_intersection_with (f : A → A → option A) X Y (x : A) :
-    x ∈ intersection_with f X Y ↔ ∃ x1 x2, x1 ∈ X ∧ x2 ∈ Y ∧ f x1 x2 = Some x;
-  elem_of_filter X P `{∀ x, Decision (P x)} x : x ∈ filter P X ↔ P x ∧ x ∈ X
-}.
 
 (** We axiomative a finite collection as a collection whose elements can be
 enumerated as a list. These elements, given by the [elements] function, may be

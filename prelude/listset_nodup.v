@@ -29,12 +29,6 @@ Instance listset_nodup_intersection: Intersection C := λ l k,
 Instance listset_nodup_difference: Difference C := λ l k,
   let (l',Hl) := l in let (k',Hk) := k
   in ListsetNoDup _ (NoDup_list_difference _ k' Hl).
-Instance listset_nodup_intersection_with: IntersectionWith A C := λ f l k,
-  let (l',Hl) := l in let (k',Hk) := k
-  in ListsetNoDup
-    (remove_dups (list_intersection_with f l' k')) (NoDup_remove_dups _).
-Instance listset_nodup_filter: Filter A C := λ P _ l,
-  let (l',Hl) := l in ListsetNoDup _ (NoDup_filter P _ Hl).
 
 Instance: Collection A C.
 Proof.
@@ -49,15 +43,6 @@ Qed.
 Global Instance listset_nodup_elems: Elements A C := listset_nodup_car.
 Global Instance: FinCollection A C.
 Proof. split. apply _. done. by intros [??]. Qed.
-Global Instance: CollectionOps A C.
-Proof.
-  split.
-  - apply _.
-  - intros ? [??] [??] ?. unfold intersection_with, elem_of,
-      listset_nodup_intersection_with, listset_nodup_elem_of; simpl.
-    rewrite elem_of_remove_dups. by apply elem_of_list_intersection_with.
-  - intros [??] ???. apply elem_of_list_filter.
-Qed.
 End list_collection.
 
 Hint Extern 1 (ElemOf _ (listset_nodup _)) =>
@@ -74,5 +59,3 @@ Hint Extern 1 (Difference (listset_nodup _)) =>
   eapply @listset_nodup_difference : typeclass_instances.
 Hint Extern 1 (Elements _ (listset_nodup _)) =>
   eapply @listset_nodup_elems : typeclass_instances.
-Hint Extern 1 (Filter _ (listset_nodup _)) =>
-  eapply @listset_nodup_filter : typeclass_instances.
