@@ -58,6 +58,7 @@ Notation "e1 - e2" := (BinOp MinusOp e1%E e2%E)
 Notation "e1 ≤ e2" := (BinOp LeOp e1%E e2%E) (at level 70) : expr_scope.
 Notation "e1 < e2" := (BinOp LtOp e1%E e2%E) (at level 70) : expr_scope.
 Notation "e1 = e2" := (BinOp EqOp e1%E e2%E) (at level 70) : expr_scope.
+Notation "e1 ≠ e2" := (UnOp NegOp (BinOp EqOp e1%E e2%E)) (at level 70) : expr_scope.
 Notation "~ e" := (UnOp NegOp e%E) (at level 75, right associativity) : expr_scope.
 (* The unicode ← is already part of the notation "_ ← _; _" for bind. *)
 Notation "e1 <- e2" := (Store e1%E e2%E) (at level 80) : expr_scope.
