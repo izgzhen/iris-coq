@@ -13,12 +13,12 @@ Applying hypotheses and lemmas
 Context management
 ------------------
 
-- `iIntros {x1 ... xn} "ipat1 ... ipatn"` : introduce universal quantifiers
+- `iIntros (x1 ... xn) "ipat1 ... ipatn"` : introduce universal quantifiers
   using Coq introduction patterns `x1 ... xn` and implications/wands using proof
   mode introduction patterns `ipat1 ... ipatn`.
 - `iClear "H1 ... Hn"` : clear the hypothesis `H1 ... Hn`. The symbol `★` can
-   be used to clear entire spatial context.
-- `iRevert {x1 ... xn} "H1 ... Hn"` : revert the proof mode hypotheses
+  be used to clear entire spatial context.
+- `iRevert (x1 ... xn) "H1 ... Hn"` : revert the proof mode hypotheses
   `H1 ... Hn` into wands, as well as the Coq level hypotheses/variables
   `x1 ... xn` into universal quantifiers. The symbol `★` can be used to revert
   the entire spatial context.
@@ -52,12 +52,12 @@ Elimination of logical connectives
 ----------------------------------
 
 - `iExFalso` : Ex falso sequitur quod libet.
-- `iDestruct trm as {x1 ... xn} "spat1 ... spatn"` : elimination of existential
+- `iDestruct trm as (x1 ... xn) "spat1 ... spatn"` : elimination of existential
   quantifiers using Coq introduction patterns `x1 ... xn` and elimination of
   object level connectives using the proof mode introduction patterns
   `ipat1 ... ipatn`.
-- `iDestruct trm as %cpat : elimination of a pure hypothesis using the Coq
-   introduction pattern `cpat`.
+- `iDestruct trm as %cpat` : elimination of a pure hypothesis using the Coq
+  introduction pattern `cpat`.
 
 Separating logic specific tactics
 ---------------------------------
@@ -69,7 +69,7 @@ Separating logic specific tactics
 The later modality
 ------------------
 - `iNext` : introduce a later by stripping laters from all hypotheses.
-- `iLöb {x1 ... xn} as "IH"` : perform Löb induction by generalizing over the
+- `iLöb (x1 ... xn) as "IH"` : perform Löb induction by generalizing over the
   Coq level variables `x1 ... xn` and the entire spatial context.
 
 Rewriting
@@ -83,12 +83,12 @@ Iris
 
 - `iPvsIntro` : introduction of a primitive view shift. Generates a goal if
   the masks are not syntactically equal.
-- `iPvs trm as {x1 ... xn} "ipat"` : runs a primitive view shift `trm`.
-- `iInv N as {x1 ... xn} "ipat"` : open the invariant `N`.
-- `iInv> N as {x1 ... xn} "ipat"` : open the invariant `N` and establish that
+- `iPvs trm as (x1 ... xn) "ipat"` : runs a primitive view shift `trm`.
+- `iInv N as (x1 ... xn) "ipat"` : open the invariant `N`.
+- `iInv> N as (x1 ... xn) "ipat"` : open the invariant `N` and establish that
   it is timeless so no laters have to be added.
 - `iTimeless "H"` : strip a later of a timeless hypotheses `H` in case the
-   conclusion is a primitive view shifts or weakest precondition.
+  conclusion is a primitive view shifts or weakest precondition.
 
 Miscellaneous
 -------------
@@ -135,7 +135,7 @@ For example, given:
 
 You can write
 
-        iIntros {x} "% ! $ [[] | #[HQ HR]] /= >".
+        iIntros (x) "% ! $ [[] | #[HQ HR]] /= >".
 
 which results in:
 
@@ -162,8 +162,8 @@ so called specification patterns to express this splitting:
   all persistent hypotheses. The hypotheses `H1 ... Hn` will be consumed.
 - `[-H1 ... Hn]`  : negated form of the above pattern
 - `=>[H1 ... Hn]` : same as the above pattern, but can only be used if the goal
-   is a primitive view shift, in which case the view shift will be kept in the
-   goal of the premise too.
+  is a primitive view shift, in which case the view shift will be kept in the
+  goal of the premise too.
 - `[#]` : This pattern can be used when eliminating `P -★ Q` when either `P` or
   `Q` is persistent. In this case, all hypotheses are available in the goal for
   the premise as none will be consumed.
