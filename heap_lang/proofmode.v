@@ -17,7 +17,7 @@ Global Instance into_sep_mapsto l q v :
 Proof. by rewrite /IntoSep heap_mapsto_op_split. Qed.
 
 Lemma tac_wp_alloc Δ Δ' N E j e v Φ :
-  to_val e = Some v → 
+  to_val e = Some v →
   (Δ ⊢ heap_ctx N) → nclose N ⊆ E →
   IntoLaterEnvs Δ Δ' →
   (∀ l, ∃ Δ'',
@@ -129,7 +129,7 @@ Tactic Notation "wp_load" :=
       |solve_ndisj
       |apply _
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
-       iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?"
+       iAssumptionCore || fail "wp_load: cannot find" l "↦ ?"
       |wp_finish]
   | _ => fail "wp_load: not a 'wp'"
   end.
