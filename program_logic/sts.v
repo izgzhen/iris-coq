@@ -82,8 +82,8 @@ Section sts.
     nclose N ⊆ E →
     ▷ φ s ={E}=> ∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s).
   Proof.
-    iIntros {?} "Hφ". rewrite /sts_ctx /sts_own.
-    iPvs (own_alloc (sts_auth s (⊤ ∖ sts.tok s))) as {γ} "Hγ".
+    iIntros (?) "Hφ". rewrite /sts_ctx /sts_own.
+    iPvs (own_alloc (sts_auth s (⊤ ∖ sts.tok s))) as (γ) "Hγ".
     { apply sts_auth_valid; set_solver. }
     iExists γ; iRevert "Hγ"; rewrite -sts_op_auth_frag_up; iIntros "[Hγ $]".
     iPvs (inv_alloc N _ (sts_inv γ φ) with "[Hφ Hγ]") as "#?"; auto.
@@ -100,15 +100,15 @@ Section sts.
         ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ★ (sts_own γ s' T' -★ Ψ x)))
     ⊢ fsa E Ψ.
   Proof.
-    iIntros {??} "(#? & Hγf & HΨ)". rewrite /sts_ctx /sts_ownS /sts_inv /sts_own.
-    iInv N as {s} "[Hγ Hφ]"; iTimeless "Hγ".
+    iIntros (??) "(#? & Hγf & HΨ)". rewrite /sts_ctx /sts_ownS /sts_inv /sts_own.
+    iInv N as (s) "[Hγ Hφ]"; iTimeless "Hγ".
     iCombine "Hγ" "Hγf" as "Hγ"; iDestruct (own_valid with "#Hγ") as %Hvalid.
     assert (s ∈ S) by eauto using sts_auth_frag_valid_inv.
     assert (✓ sts_frag S T) as [??] by eauto using cmra_valid_op_r.
     iRevert "Hγ"; rewrite sts_op_auth_frag //; iIntros "Hγ".
     iApply pvs_fsa_fsa; iApply fsa_wand_r; iSplitL "HΨ Hφ".
     { iApply "HΨ"; by iSplit. }
-    iIntros {a}; iDestruct 1 as {s' T'} "(% & Hφ & HΨ)".
+    iIntros (a); iDestruct 1 as (s' T') "(% & Hφ & HΨ)".
     iPvs (own_update with "Hγ") as "Hγ"; first eauto using sts_update_auth.
     iRevert "Hγ"; rewrite -sts_op_auth_frag_up; iIntros "[Hγ Hγf]".
     iPvsIntro; iSplitL "Hφ Hγ"; last by iApply "HΨ".

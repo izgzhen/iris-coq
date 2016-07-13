@@ -46,19 +46,19 @@ Tactic Notation "iInvCore" constr(N) "as" constr(H) :=
 
 Tactic Notation "iInv" constr(N) "as" constr(pat) :=
   let H := iFresh in iInvCore N as H; last iDestruct H as pat.
-Tactic Notation "iInv" constr(N) "as" "{" simple_intropattern(x1) "}"
+Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
-  let H := iFresh in iInvCore N as H; last iDestruct H as {x1} pat.
-Tactic Notation "iInv" constr(N) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) "}" constr(pat) :=
-  let H := iFresh in iInvCore N as H; last iDestruct H as {x1 x2} pat.
-Tactic Notation "iInv" constr(N) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) "}" constr(pat) :=
-  let H := iFresh in iInvCore N as H; last iDestruct H as {x1 x2 x3} pat.
-Tactic Notation "iInv" constr(N) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) "}"
+  let H := iFresh in iInvCore N as H; last iDestruct H as (x1) pat.
+Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) ")" constr(pat) :=
+  let H := iFresh in iInvCore N as H; last iDestruct H as (x1 x2) pat.
+Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) ")" constr(pat) :=
+  let H := iFresh in iInvCore N as H; last iDestruct H as (x1 x2 x3) pat.
+Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) :=
-  let H := iFresh in iInvCore N as H; last iDestruct H as {x1 x2 x3 x4} pat.
+  let H := iFresh in iInvCore N as H; last iDestruct H as (x1 x2 x3 x4) pat.
 
 Tactic Notation "iInvCore>" constr(N) "as" constr(H) :=
   eapply tac_inv_fsa_timeless with _ _ _ _ N H _ _;
@@ -74,16 +74,16 @@ Tactic Notation "iInvCore>" constr(N) "as" constr(H) :=
 
 Tactic Notation "iInv>" constr(N) "as" constr(pat) :=
   let H := iFresh in iInvCore> N as H; last iDestruct H as pat.
-Tactic Notation "iInv>" constr(N) "as" "{" simple_intropattern(x1) "}"
+Tactic Notation "iInv>" constr(N) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
-  let H := iFresh in iInvCore> N as H; last iDestruct H as {x1} pat.
-Tactic Notation "iInv>" constr(N) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) "}" constr(pat) :=
-  let H := iFresh in iInvCore> N as H; last iDestruct H as {x1 x2} pat.
-Tactic Notation "iInv>" constr(N) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) "}" constr(pat) :=
-  let H := iFresh in iInvCore> N as H; last iDestruct H as {x1 x2 x3} pat.
-Tactic Notation "iInv>" constr(N) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) "}"
+  let H := iFresh in iInvCore> N as H; last iDestruct H as (x1) pat.
+Tactic Notation "iInv>" constr(N) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) ")" constr(pat) :=
+  let H := iFresh in iInvCore> N as H; last iDestruct H as (x1 x2) pat.
+Tactic Notation "iInv>" constr(N) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) ")" constr(pat) :=
+  let H := iFresh in iInvCore> N as H; last iDestruct H as (x1 x2 x3) pat.
+Tactic Notation "iInv>" constr(N) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) :=
-  let H := iFresh in iInvCore> N as H; last iDestruct H as {x1 x2 x3 x4} pat.
+  let H := iFresh in iInvCore> N as H; last iDestruct H as (x1 x2 x3 x4) pat.

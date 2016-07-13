@@ -81,7 +81,7 @@ Lemma ress_split i i1 i2 Q R1 R2 P I :
     (Q -★ R1 ★ R2) ★ ress P I
   ⊢ ress P ({[i1;i2]} ∪ I ∖ {[i]}).
 Proof.
-  iIntros {????} "(#HQ&#H1&#H2&HQR&H)"; iDestruct "H" as {Ψ} "[HPΨ HΨ]".
+  iIntros (????) "(#HQ&#H1&#H2&HQR&H)"; iDestruct "H" as (Ψ) "[HPΨ HΨ]".
   iDestruct (big_sepS_delete _ _ i with "HΨ") as "[#HΨi HΨ]"; first done.
   iExists (<[i1:=R1]> (<[i2:=R2]> Ψ)). iSplitL "HQR HPΨ".
   - iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by iSplit.
@@ -99,12 +99,12 @@ Lemma newbarrier_spec (P : iProp) (Φ : val → iProp) :
   heap_ctx heapN ★ (∀ l, recv l P ★ send l P -★ Φ #l)
   ⊢ WP newbarrier #() {{ Φ }}.
 Proof.
-  iIntros {HN} "[#? HΦ]".
+  iIntros (HN) "[#? HΦ]".
   rewrite /newbarrier. wp_seq. wp_alloc l as "Hl".
   iApply "HΦ".
-  iPvs (saved_prop_alloc (F:=idCF) _ P) as {γ} "#?".
+  iPvs (saved_prop_alloc (F:=idCF) _ P) as (γ) "#?".
   iPvs (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}) with "[-]")
-    as {γ'} "[#? Hγ']"; eauto.
+    as (γ') "[#? Hγ']"; eauto.
   { iNext. rewrite /barrier_inv /=. iFrame.
     iExists (const P). rewrite !big_sepS_singleton /=. eauto. }
   iAssert (barrier_ctx γ' l P)%I as "#?".
@@ -125,14 +125,14 @@ Lemma signal_spec l P (Φ : val → iProp) :
   send l P ★ P ★ Φ #() ⊢ WP signal #l {{ Φ }}.
 Proof.
   rewrite /signal /send /barrier_ctx.
-  iIntros "(Hs&HP&HΦ)"; iDestruct "Hs" as {γ} "[#(%&Hh&Hsts) Hγ]". wp_let.
+  iIntros "(Hs&HP&HΦ)"; iDestruct "Hs" as (γ) "[#(%&Hh&Hsts) Hγ]". wp_let.
   iSts γ as [p I]; iDestruct "Hγ" as "[Hl Hr]".
   wp_store. iPvsIntro. destruct p; [|done].
   iExists (State High I), (∅ : set token).
   iSplit; [iPureIntro; by eauto using signal_step|].
   iSplitR "HΦ"; [iNext|by auto].
   rewrite {2}/barrier_inv /ress /=; iFrame "Hl".
-  iDestruct "Hr" as {Ψ} "[Hr Hsp]"; iExists Ψ; iFrame "Hsp".
+  iDestruct "Hr" as (Ψ) "[Hr Hsp]"; iExists Ψ; iFrame "Hsp".
   iIntros "> _"; by iApply "Hr".
 Qed.
 
@@ -140,7 +140,7 @@ Lemma wait_spec l P (Φ : val → iProp) :
   recv l P ★ (P -★ Φ #()) ⊢ WP wait #l {{ Φ }}.
 Proof.
   rename P into R; rewrite /recv /barrier_ctx.
-  iIntros "[Hr HΦ]"; iDestruct "Hr" as {γ P Q i} "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
+  iIntros "[Hr HΦ]"; iDestruct "Hr" as (γ P Q i) "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
   iLöb as "IH". wp_rec. wp_focus (! _)%E.
   iSts γ as [p I]; iDestruct "Hγ" as "[Hl Hr]".
   wp_load. iPvsIntro. destruct p.
@@ -155,7 +155,7 @@ Proof.
     return to the client *)
     iExists (State High (I ∖ {[ i ]})), (∅ : set token).
     iSplit; [iPureIntro; by eauto using wait_step|].
-    iDestruct "Hr" as {Ψ} "[HΨ Hsp]".
+    iDestruct "Hr" as (Ψ) "[HΨ Hsp]".
     iDestruct (big_sepS_delete _ _ i with "Hsp") as "[#HΨi Hsp]"; first done.
     iAssert (▷ Ψ i ★ ▷ [★ set] j ∈ I ∖ {[i]}, Ψ j)%I with "[HΨ]" as "[HΨ HΨ']".
     { iNext. iApply (big_sepS_delete _ _ i); first done. by iApply "HΨ". }
@@ -171,12 +171,12 @@ Lemma recv_split E l P1 P2 :
   nclose N ⊆ E → recv l (P1 ★ P2) ={E}=> recv l P1 ★ recv l P2.
 Proof.
   rename P1 into R1; rename P2 into R2. rewrite {1}/recv /barrier_ctx.
-  iIntros {?}. iDestruct 1 as {γ P Q i} "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
+  iIntros (?). iDestruct 1 as (γ P Q i) "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
   iApply pvs_trans'.
   iSts γ as [p I]; iDestruct "Hγ" as "[Hl Hr]".
-  iPvs (saved_prop_alloc_strong _ (R1: ∙%CF iProp) I) as {i1} "[% #Hi1]".
+  iPvs (saved_prop_alloc_strong _ (R1: ∙%CF iProp) I) as (i1) "[% #Hi1]".
   iPvs (saved_prop_alloc_strong _ (R2: ∙%CF iProp) (I ∪ {[i1]}))
-    as {i2} "[Hi2' #Hi2]"; iDestruct "Hi2'" as %Hi2; iPvsIntro.
+    as (i2) "[Hi2' #Hi2]"; iDestruct "Hi2'" as %Hi2; iPvsIntro.
   rewrite ->not_elem_of_union, elem_of_singleton in Hi2; destruct Hi2.
   iExists (State p ({[i1; i2]} ∪ I ∖ {[i]})).
   iExists ({[Change i1; Change i2 ]}).
@@ -199,7 +199,7 @@ Qed.
 Lemma recv_weaken l P1 P2 : (P1 -★ P2) ⊢ recv l P1 -★ recv l P2.
 Proof.
   rewrite /recv.
-  iIntros "HP HP1"; iDestruct "HP1" as {γ P Q i} "(#Hctx&Hγ&Hi&HP1)".
+  iIntros "HP HP1"; iDestruct "HP1" as (γ P Q i) "(#Hctx&Hγ&Hi&HP1)".
   iExists γ, P, Q, i. iFrame "Hctx Hγ Hi".
   iIntros "> HQ". by iApply "HP"; iApply "HP1".
 Qed.

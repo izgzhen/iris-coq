@@ -153,13 +153,13 @@ Section heap.
     to_val e = Some v → nclose N ⊆ E →
     heap_ctx N ★ ▷ (∀ l, l ↦ v ={E}=★ Φ (LitV (LitLoc l))) ⊢ WP Alloc e @ E {{ Φ }}.
   Proof.
-    iIntros {??} "[#Hinv HΦ]". rewrite /heap_ctx.
+    iIntros (??) "[#Hinv HΦ]". rewrite /heap_ctx.
     iPvs (auth_empty heap_name) as "Hheap".
     iApply wp_pvs; iApply (auth_fsa heap_inv (wp_fsa _)); simpl; eauto.
-    iFrame "Hinv Hheap". iIntros {h}. rewrite left_id.
+    iFrame "Hinv Hheap". iIntros (h). rewrite left_id.
     iIntros "[% Hheap]". rewrite /heap_inv.
     iApply wp_alloc_pst; first done. iFrame "Hheap". iNext.
-    iIntros {l} "[% Hheap]"; iPvsIntro; iExists {[ l := (1%Qp, DecAgree v) ]}.
+    iIntros (l) "[% Hheap]"; iPvsIntro; iExists {[ l := (1%Qp, DecAgree v) ]}.
     rewrite -of_heap_insert -(insert_singleton_op h); last by apply of_heap_None.
     iFrame "Hheap". iSplitR; first iPureIntro.
     { by apply alloc_unit_singleton_local_update; first apply of_heap_None. }
@@ -171,10 +171,10 @@ Section heap.
     heap_ctx N ★ ▷ l ↦{q} v ★ ▷ (l ↦{q} v ={E}=★ Φ v)
     ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
   Proof.
-    iIntros {?} "[#Hh [Hl HΦ]]".
+    iIntros (?) "[#Hh [Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iApply wp_pvs; iApply (auth_fsa heap_inv (wp_fsa _)); simpl; eauto.
-    iFrame "Hh Hl". iIntros {h} "[% Hl]". rewrite /heap_inv.
+    iFrame "Hh Hl". iIntros (h) "[% Hl]". rewrite /heap_inv.
     iApply (wp_load_pst _ (<[l:=v]>(of_heap h)));first by rewrite lookup_insert.
     rewrite of_heap_singleton_op //. iFrame "Hl".
     iIntros "> Hown". iPvsIntro. iExists _; iSplit; first done.
@@ -186,10 +186,10 @@ Section heap.
     heap_ctx N ★ ▷ l ↦ v' ★ ▷ (l ↦ v ={E}=★ Φ (LitV LitUnit))
     ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
   Proof.
-    iIntros {??} "[#Hh [Hl HΦ]]".
+    iIntros (??) "[#Hh [Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iApply wp_pvs; iApply (auth_fsa heap_inv (wp_fsa _)); simpl; eauto.
-    iFrame "Hh Hl". iIntros {h} "[% Hl]". rewrite /heap_inv.
+    iFrame "Hh Hl". iIntros (h) "[% Hl]". rewrite /heap_inv.
     iApply (wp_store_pst _ (<[l:=v']>(of_heap h))); rewrite ?lookup_insert //.
     rewrite insert_insert !of_heap_singleton_op; eauto. iFrame "Hl".
     iIntros "> Hown". iPvsIntro. iExists {[l := (1%Qp, DecAgree v)]}; iSplit.
@@ -202,10 +202,10 @@ Section heap.
     heap_ctx N ★ ▷ l ↦{q} v' ★ ▷ (l ↦{q} v' ={E}=★ Φ (LitV (LitBool false)))
     ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
   Proof.
-    iIntros {????} "[#Hh [Hl HΦ]]".
+    iIntros (????) "[#Hh [Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iApply wp_pvs; iApply (auth_fsa heap_inv (wp_fsa _)); simpl; eauto 10.
-    iFrame "Hh Hl". iIntros {h} "[% Hl]". rewrite /heap_inv.
+    iFrame "Hh Hl". iIntros (h) "[% Hl]". rewrite /heap_inv.
     iApply (wp_cas_fail_pst _ (<[l:=v']>(of_heap h))); rewrite ?lookup_insert //.
     rewrite of_heap_singleton_op //. iFrame "Hl".
     iIntros "> Hown". iPvsIntro. iExists _; iSplit; first done.
@@ -217,10 +217,10 @@ Section heap.
     heap_ctx N ★ ▷ l ↦ v1 ★ ▷ (l ↦ v2 ={E}=★ Φ (LitV (LitBool true)))
     ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
   Proof.
-    iIntros {???} "[#Hh [Hl HΦ]]".
+    iIntros (???) "[#Hh [Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iApply wp_pvs; iApply (auth_fsa heap_inv (wp_fsa _)); simpl; eauto 10.
-    iFrame "Hh Hl". iIntros {h} "[% Hl]". rewrite /heap_inv.
+    iFrame "Hh Hl". iIntros (h) "[% Hl]". rewrite /heap_inv.
     iApply (wp_cas_suc_pst _ (<[l:=v1]>(of_heap h))); rewrite ?lookup_insert //.
     rewrite insert_insert !of_heap_singleton_op; eauto. iFrame "Hl".
     iIntros "> Hown". iPvsIntro. iExists {[l := (1%Qp, DecAgree v2)]}; iSplit.

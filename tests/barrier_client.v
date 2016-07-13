@@ -22,7 +22,7 @@ Section client.
 
   Lemma y_inv_split q l : y_inv q l ⊢ (y_inv (q/2) l ★ y_inv (q/2) l).
   Proof.
-    iDestruct 1 as {f} "[[Hl1 Hl2] #Hf]".
+    iDestruct 1 as (f) "[[Hl1 Hl2] #Hf]".
     iSplitL "Hl1"; iExists f; by iSplitL; try iAlways.
   Qed.
 
@@ -32,28 +32,28 @@ Section client.
   Proof.
     iIntros "[#Hh Hrecv]". wp_lam. wp_let.
     wp_apply wait_spec; iFrame "Hrecv".
-    iDestruct 1 as {f} "[Hy #Hf]".
+    iDestruct 1 as (f) "[Hy #Hf]".
     wp_seq. wp_load.
-    iApply wp_wand_r; iSplitR; [iApply "Hf"|by iIntros {v} "_"].
+    iApply wp_wand_r; iSplitR; [iApply "Hf"|by iIntros (v) "_"].
   Qed.
 
   Lemma client_safe : heapN ⊥ N → heap_ctx heapN ⊢ WP client {{ _, True }}.
   Proof.
-    iIntros {?} "#Hh"; rewrite /client. wp_alloc y as "Hy". wp_let.
+    iIntros (?) "#Hh"; rewrite /client. wp_alloc y as "Hy". wp_let.
     wp_apply (newbarrier_spec heapN N (y_inv 1 y)); first done.
-    iFrame "Hh". iIntros {l} "[Hr Hs]". wp_let.
+    iFrame "Hh". iIntros (l) "[Hr Hs]". wp_let.
     iApply (wp_par heapN N (λ _, True%I) (λ _, True%I)); first done.
     iFrame "Hh". iSplitL "Hy Hs".
     - (* The original thread, the sender. *)
       wp_store. iApply signal_spec; iFrame "Hs"; iSplit; [|done].
-      iExists _; iSplitL; [done|]. iAlways; iIntros {n}. wp_let. by wp_op.
+      iExists _; iSplitL; [done|]. iAlways; iIntros (n). wp_let. by wp_op.
     - (* The two spawned threads, the waiters. *)
-      iSplitL; [|by iIntros {_ _} "_ >"].
+      iSplitL; [|by iIntros (_ _) "_ >"].
       iDestruct (recv_weaken with "[] Hr") as "Hr".
       { iIntros "Hy". by iApply (y_inv_split with "Hy"). }
       iPvs (recv_split with "Hr") as "[H1 H2]"; first done.
       iApply (wp_par heapN N (λ _, True%I) (λ _, True%I)); eauto.
-      iFrame "Hh"; iSplitL "H1"; [|iSplitL "H2"; [|by iIntros {_ _} "_ >"]];
+      iFrame "Hh"; iSplitL "H1"; [|iSplitL "H2"; [|by iIntros (_ _) "_ >"]];
         iApply worker_safe; by iSplit.
 Qed.
 End client.
@@ -65,7 +65,7 @@ Section ClosedProofs.
   Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ v, True }}.
   Proof.
     iIntros "! Hσ".
-    iPvs (heap_alloc (nroot .@ "Barrier") with "Hσ") as {h} "[#Hh _]"; first done.
+    iPvs (heap_alloc (nroot .@ "Barrier") with "Hσ") as (h) "[#Hh _]"; first done.
     iApply (client_safe (nroot .@ "Barrier") (nroot .@ "Heap")); auto with ndisj.
   Qed.
 

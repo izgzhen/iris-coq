@@ -38,9 +38,9 @@ Lemma newcounter_spec N (R : iProp) Φ :
   heapN ⊥ N →
   heap_ctx heapN ★ (∀ l, counter l 0 -★ Φ #l) ⊢ WP newcounter #() {{ Φ }}.
 Proof.
-  iIntros {?} "[#Hh HΦ]". rewrite /newcounter. wp_seq. wp_alloc l as "Hl".
+  iIntros (?) "[#Hh HΦ]". rewrite /newcounter. wp_seq. wp_alloc l as "Hl".
   iPvs (auth_alloc (counter_inv l) N _ (O:mnat) with "[Hl]")
-    as {γ} "[#? Hγ]"; try by auto.
+    as (γ) "[#? Hγ]"; try by auto.
   iPvsIntro. iApply "HΦ". rewrite /counter; eauto 10.
 Qed.
 
@@ -48,13 +48,13 @@ Lemma inc_spec l j (Φ : val → iProp) :
   counter l j ★ (counter l (S j) -★ Φ #()) ⊢ WP inc #l {{ Φ }}.
 Proof.
   iIntros "[Hl HΦ]". iLöb as "IH". wp_rec.
-  iDestruct "Hl" as {N γ} "(% & #? & #Hγ & Hγf)".
+  iDestruct "Hl" as (N γ) "(% & #? & #Hγ & Hγf)".
   wp_focus (! _)%E; iApply (auth_fsa (counter_inv l) (wp_fsa _) _ N); auto.
-  iIntros "{$Hγ $Hγf}"; iIntros {j'} "[% Hl] /="; rewrite {2}/counter_inv.
+  iIntros "{$Hγ $Hγf}"; iIntros (j') "[% Hl] /="; rewrite {2}/counter_inv.
   wp_load; iPvsIntro; iExists j; iSplit; [done|iIntros "{$Hl} Hγf"].
   wp_let; wp_op.
   wp_focus (CAS _ _ _); iApply (auth_fsa (counter_inv l) (wp_fsa _) _ N); auto.
-  iIntros "{$Hγ $Hγf}"; iIntros {j''} "[% Hl] /="; rewrite {2}/counter_inv.
+  iIntros "{$Hγ $Hγf}"; iIntros (j'') "[% Hl] /="; rewrite {2}/counter_inv.
   destruct (decide (j `max` j'' = j `max` j')) as [Hj|Hj].
   - wp_cas_suc; first (by do 3 f_equal); iPvsIntro.
     iExists (1 + j `max` j')%nat; iSplit.
@@ -73,9 +73,9 @@ Lemma read_spec l j (Φ : val → iProp) :
   counter l j ★ (∀ i, ■ (j ≤ i)%nat → counter l i -★ Φ #i)
   ⊢ WP read #l {{ Φ }}.
 Proof.
-  iIntros "[Hc HΦ]". iDestruct "Hc" as {N γ} "(% & #? & #Hγ & Hγf)".
+  iIntros "[Hc HΦ]". iDestruct "Hc" as (N γ) "(% & #? & #Hγ & Hγf)".
   rewrite /read. wp_let. iApply (auth_fsa (counter_inv l) (wp_fsa _) _ N); auto.
-  iIntros "{$Hγ $Hγf}"; iIntros {j'} "[% Hl] /=".
+  iIntros "{$Hγ $Hγf}"; iIntros (j') "[% Hl] /=".
   wp_load; iPvsIntro; iExists (j `max` j'); iSplit.
   { iPureIntro; apply mnat_local_update; abstract lia. }
   rewrite !mnat_op_max -Nat.max_assoc Nat.max_idempotent; iIntros "{$Hl} Hγf".

@@ -42,7 +42,7 @@ Proof. by apply pvs_timeless. Qed.
 Lemma vs_transitive E1 E2 E3 P Q R :
   E2 ⊆ E1 ∪ E3 → (P ={E1,E2}=> Q) ∧ (Q ={E2,E3}=> R) ⊢ P ={E1,E3}=> R.
 Proof.
-  iIntros {?} "#[HvsP HvsQ] ! HP".
+  iIntros (?) "#[HvsP HvsQ] ! HP".
   iPvs ("HvsP" with "HP") as "HQ"; first done. by iApply "HvsQ".
 Qed.
 
@@ -63,7 +63,7 @@ Proof. iIntros "#Hvs ! [HP $]". by iApply "Hvs". Qed.
 Lemma vs_mask_frame E1 E2 Ef P Q :
   Ef ⊥ E1 ∪ E2 → (P ={E1,E2}=> Q) ⊢ P ={E1 ∪ Ef,E2 ∪ Ef}=> Q.
 Proof.
-  iIntros {?} "#Hvs ! HP". iApply pvs_mask_frame; auto. by iApply "Hvs".
+  iIntros (?) "#Hvs ! HP". iApply pvs_mask_frame; auto. by iApply "Hvs".
 Qed.
 
 Lemma vs_mask_frame' E Ef P Q : Ef ⊥ E → (P ={E}=> Q) ⊢ P ={E ∪ Ef}=> Q.
@@ -72,7 +72,7 @@ Proof. intros; apply vs_mask_frame; set_solver. Qed.
 Lemma vs_inv N E P Q R :
   nclose N ⊆ E → inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q) ⊢ P ={E}=> Q.
 Proof.
-  iIntros {?} "#[? Hvs] ! HP". iInv N as "HR". iApply "Hvs". by iSplitL "HR".
+  iIntros (?) "#[? Hvs] ! HP". iInv N as "HR". iApply "Hvs". by iSplitL "HR".
 Qed.
 
 Lemma vs_alloc N P : ▷ P ={N}=> inv N P.

@@ -28,9 +28,9 @@ Lemma wp_alloc_pst E σ e v Φ :
   ▷ ownP σ ★ ▷ (∀ l, σ !! l = None ∧ ownP (<[l:=v]>σ) ={E}=★ Φ (LitV (LitLoc l)))
   ⊢ WP Alloc e @ E {{ Φ }}.
 Proof.
-  iIntros {?}  "[HP HΦ]".
+  iIntros (?)  "[HP HΦ]".
   iApply (wp_lift_atomic_head_step (Alloc e) σ); try (by simpl; eauto).
-  iFrame "HP". iNext. iIntros {v2 σ2 ef} "[% HP]". inv_head_step.
+  iFrame "HP". iNext. iIntros (v2 σ2 ef) "[% HP]". inv_head_step.
   match goal with H: _ = of_val v2 |- _ => apply (inj of_val (LitV _)) in H end.
   subst v2. iSplit; last done. iApply "HΦ"; by iSplit.
 Qed.

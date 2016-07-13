@@ -94,10 +94,10 @@ Lemma box_insert f P Q :
   ▷ box N f P ={N}=> ∃ γ, f !! γ = None ★
     slice N γ Q ★ ▷ box N (<[γ:=false]> f) (Q ★ P).
 Proof.
-  iDestruct 1 as {Φ} "[#HeqP Hf]".
+  iDestruct 1 as (Φ) "[#HeqP Hf]".
   iPvs (own_alloc_strong (● Excl' false ⋅ ◯ Excl' false,
     Some (to_agree (Next (iProp_unfold Q)))) _ (dom _ f))
-    as {γ} "[Hdom Hγ]"; first done.
+    as (γ) "[Hdom Hγ]"; first done.
   rewrite pair_split. iDestruct "Hγ" as "[[Hγ Hγ'] #HγQ]".
   iDestruct "Hdom" as % ?%not_elem_of_dom.
   iPvs (inv_alloc N _ (slice_inv γ Q) with "[Hγ]") as "#Hinv"; first done.
@@ -114,9 +114,9 @@ Lemma box_delete f P Q γ :
   slice N γ Q ★ ▷ box N f P ={N}=> ∃ P',
     ▷ ▷ (P ≡ (Q ★ P')) ★ ▷ box N (delete γ f) P'.
 Proof.
-  iIntros {?} "[#Hinv H]"; iDestruct "H" as {Φ} "[#HeqP Hf]".
+  iIntros (?) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists ([★ map] γ'↦_ ∈ delete γ f, Φ γ')%I.
-  iInv N as {b} "(Hγ & #HγQ &_)"; iPvsIntro; iNext.
+  iInv N as (b) "(Hγ & #HγQ &_)"; iPvsIntro; iNext.
   iDestruct (big_sepM_delete _ f _ false with "Hf")
     as "[[Hγ' #[HγΦ ?]] ?]"; first done.
   iDestruct (box_own_agree γ Q (Φ γ) with "[#]") as "HeqQ"; first by eauto.
@@ -132,8 +132,8 @@ Lemma box_fill f γ P Q :
   f !! γ = Some false →
   slice N γ Q ★ ▷ Q ★ ▷ box N f P ={N}=> ▷ box N (<[γ:=true]> f) P.
 Proof.
-  iIntros {?} "(#Hinv & HQ & H)"; iDestruct "H" as {Φ} "[#HeqP Hf]".
-  iInv N as {b'} "(Hγ & #HγQ & _)"; iTimeless "Hγ".
+  iIntros (?) "(#Hinv & HQ & H)"; iDestruct "H" as (Φ) "[#HeqP Hf]".
+  iInv N as (b') "(Hγ & #HγQ & _)"; iTimeless "Hγ".
   iDestruct (big_sepM_later _ f with "Hf") as "Hf".
   iDestruct (big_sepM_delete _ f _ false with "Hf")
     as "[[Hγ' #[HγΦ Hinv']] ?]"; first done; iTimeless "Hγ'".
@@ -150,8 +150,8 @@ Lemma box_empty f P Q γ :
   f !! γ = Some true →
   slice N γ Q ★ ▷ box N f P ={N}=> ▷ Q ★ ▷ box N (<[γ:=false]> f) P.
 Proof.
-  iIntros {?} "[#Hinv H]"; iDestruct "H" as {Φ} "[#HeqP Hf]".
-  iInv N as {b} "(Hγ & #HγQ & HQ)"; iTimeless "Hγ".
+  iIntros (?) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
+  iInv N as (b) "(Hγ & #HγQ & HQ)"; iTimeless "Hγ".
   iDestruct (big_sepM_later _ f with "Hf") as "Hf".
   iDestruct (big_sepM_delete _ f with "Hf")
     as "[[Hγ' #[HγΦ Hinv']] ?]"; first done; iTimeless "Hγ'".
@@ -169,14 +169,14 @@ Qed.
 
 Lemma box_fill_all f P Q : box N f P ★ ▷ P ={N}=> box N (const true <$> f) P.
 Proof.
-  iIntros "[H HP]"; iDestruct "H" as {Φ} "[#HeqP Hf]".
+  iIntros "[H HP]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists Φ; iSplitR; first by rewrite big_sepM_fmap.
   rewrite eq_iff later_iff big_sepM_later; iDestruct ("HeqP" with "HP") as "HP".
   iCombine "Hf" "HP" as "Hf".
   rewrite big_sepM_fmap; iApply (pvs_big_sepM _ _ f).
   iApply (big_sepM_impl _ _ f); iFrame "Hf".
-  iAlways; iIntros {γ b' ?} "[(Hγ' & #$ & #$) HΦ]".
-  iInv N as {b} "[Hγ _]"; iTimeless "Hγ".
+  iAlways; iIntros (γ b' ?) "[(Hγ' & #$ & #$) HΦ]".
+  iInv N as (b) "[Hγ _]"; iTimeless "Hγ".
   iPvs (box_own_auth_update _ γ with "[Hγ Hγ']")
     as "[Hγ $]"; first by iFrame.
   iPvsIntro; iNext; iExists true. by iFrame.
@@ -186,13 +186,13 @@ Lemma box_empty_all f P Q :
   map_Forall (λ _, (true =)) f →
   box N f P ={N}=> ▷ P ★ box N (const false <$> f) P.
 Proof.
-  iDestruct 1 as {Φ} "[#HeqP Hf]".
+  iDestruct 1 as (Φ) "[#HeqP Hf]".
   iAssert ([★ map] γ↦b ∈ f, ▷ Φ γ ★ box_own_auth γ (◯ Excl' false) ★
     box_own_prop γ (Φ γ) ★ inv N (slice_inv γ (Φ γ)))%I with "|==>[Hf]" as "[HΦ ?]".
   { iApply (pvs_big_sepM _ _ f); iApply (big_sepM_impl _ _ f); iFrame "Hf".
-    iAlways; iIntros {γ b ?} "(Hγ' & #$ & #$)".
+    iAlways; iIntros (γ b ?) "(Hγ' & #$ & #$)".
     assert (true = b) as <- by eauto.
-    iInv N as {b} "(Hγ & _ & HΦ)"; iTimeless "Hγ".
+    iInv N as (b) "(Hγ & _ & HΦ)"; iTimeless "Hγ".
     iDestruct (box_own_auth_agree γ b true with "[#]")
       as "%"; subst; first by iFrame.
     iPvs (box_own_auth_update _ γ true true false with "[Hγ Hγ']")

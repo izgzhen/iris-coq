@@ -67,9 +67,9 @@ Lemma wp_lift_atomic_step {E Φ} e1 σ1 :
     ■ prim_step e1 σ1 (of_val v2) σ2 ef ∧ ownP σ2 -★ (|={E}=> Φ v2) ★ wp_fork ef)
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  iIntros {??} "[Hσ1 Hwp]". iApply (wp_lift_step E E _ e1); auto using atomic_not_val.
+  iIntros (??) "[Hσ1 Hwp]". iApply (wp_lift_step E E _ e1); auto using atomic_not_val.
   iPvsIntro. iExists σ1. repeat iSplit; eauto 10 using atomic_step.
-  iFrame. iNext. iIntros {e2 σ2 ef} "[% Hσ2]".
+  iFrame. iNext. iIntros (e2 σ2 ef) "[% Hσ2]".
   edestruct @atomic_step as [v2 Hv%of_to_val]; eauto. subst e2.
   iDestruct ("Hwp" $! v2 σ2 ef with "[Hσ2]") as "[HΦ ?]". by eauto.
   iFrame. iPvs "HΦ". iPvsIntro. iApply wp_value; auto using to_of_val.
@@ -82,8 +82,8 @@ Lemma wp_lift_atomic_det_step {E Φ e1} σ1 v2 σ2 ef :
                   σ2 = σ2' ∧ to_val e2' = Some v2 ∧ ef = ef') →
   ▷ ownP σ1 ★ ▷ (ownP σ2 -★ (|={E}=> Φ v2) ★ wp_fork ef) ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  iIntros {?? Hdet} "[Hσ1 Hσ2]". iApply (wp_lift_atomic_step _ σ1); try done.
-  iFrame. iNext. iIntros {v2' σ2' ef'} "[% Hσ2']".
+  iIntros (?? Hdet) "[Hσ1 Hσ2]". iApply (wp_lift_atomic_step _ σ1); try done.
+  iFrame. iNext. iIntros (v2' σ2' ef') "[% Hσ2']".
   edestruct Hdet as (->&->%of_to_val%(inj of_val)&->). done. by iApply "Hσ2".
 Qed.
 
@@ -93,7 +93,7 @@ Lemma wp_lift_pure_det_step {E Φ} e1 e2 ef :
   (∀ σ1 e2' σ2 ef', prim_step e1 σ1 e2' σ2 ef' → σ1 = σ2 ∧ e2 = e2' ∧ ef = ef')→
   ▷ (WP e2 @ E {{ Φ }} ★ wp_fork ef) ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  iIntros {?? Hpuredet} "?". iApply (wp_lift_pure_step E); try done.
-  by intros; eapply Hpuredet. iNext. by iIntros {e' ef' σ (_&->&->)%Hpuredet}.
+  iIntros (?? Hpuredet) "?". iApply (wp_lift_pure_step E); try done.
+  by intros; eapply Hpuredet. iNext. by iIntros (e' ef' σ (_&->&->)%Hpuredet).
 Qed.
 End lifting.
