@@ -7,15 +7,15 @@ Import uPred.
 Definition one_shot_example : val := λ: <>,
   let: "x" := ref (InjL #0) in (
   (* tryset *) (λ: "n",
-    CAS '"x" (InjL #0) (InjR '"n")),
+    CAS "x" (InjL #0) (InjR "n")),
   (* check  *) (λ: <>,
-    let: "y" := !'"x" in λ: <>,
-    match: '"y" with
+    let: "y" := !"x" in λ: <>,
+    match: "y" with
       InjL <> => #()
     | InjR "n" =>
-       match: !'"x" with
+       match: !"x" with
          InjL <> => Assert #false
-       | InjR "m" => Assert ('"n" = '"m")
+       | InjR "m" => Assert ("n" = "m")
        end
     end)).
 Global Opaque one_shot_example.

@@ -24,6 +24,8 @@ Coercion LitLoc : loc >-> base_lit.
 Coercion App : expr >-> Funclass.
 Coercion of_val : val >-> expr.
 
+Coercion Var : string >-> expr.
+
 Coercion BNamed : string >-> binder.
 Notation "<>" := BAnon : binder_scope.
 
@@ -31,9 +33,6 @@ Notation "<>" := BAnon : binder_scope.
 properly. *)
 Notation "# l" := (LitV l%Z%V) (at level 8, format "# l").
 Notation "# l" := (Lit l%Z%V) (at level 8, format "# l") : expr_scope.
-
-Notation "' x" := (Var x) (at level 8, format "' x") : expr_scope.
-Notation "^ e" := (wexpr' e) (at level 8, format "^ e") : expr_scope.
 
 (** Syntax inspired by Coq/Ocaml. Constructions with higher precedence come
     first. *)

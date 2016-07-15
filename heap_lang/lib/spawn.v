@@ -6,12 +6,12 @@ Import uPred.
 Definition spawn : val :=
   λ: "f",
     let: "c" := ref (InjL #0) in
-    Fork ('"c" <- InjR ('"f" #())) ;; '"c".
+    Fork ("c" <- InjR ("f" #())) ;; "c".
 Definition join : val :=
   rec: "join" "c" :=
-    match: !'"c" with
-      InjR "x" => '"x"
-    | InjL <>  => '"join" '"c"
+    match: !"c" with
+      InjR "x" => "x"
+    | InjL <>  => "join" "c"
     end.
 Global Opaque spawn join.
 

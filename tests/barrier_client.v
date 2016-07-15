@@ -5,12 +5,12 @@ From iris.heap_lang Require Import proofmode.
 Import uPred.
 
 Definition worker (n : Z) : val :=
-  λ: "b" "y", ^wait '"b" ;; !'"y" #n.
-Definition client : expr [] :=
+  λ: "b" "y", wait "b" ;; !"y" #n.
+Definition client : expr :=
   let: "y" := ref #0 in
-  let: "b" := ^newbarrier #() in
-  ('"y" <- (λ: "z", '"z" + #42) ;; ^signal '"b") ||
-    (^(worker 12) '"b" '"y" || ^(worker 17) '"b" '"y").
+  let: "b" := newbarrier #() in
+  ("y" <- (λ: "z", "z" + #42) ;; signal "b") ||
+    (worker 12 "b" "y" || worker 17 "b" "y").
 Global Opaque worker client.
 
 Section client.

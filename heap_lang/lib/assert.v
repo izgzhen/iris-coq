@@ -1,14 +1,13 @@
 From iris.heap_lang Require Export derived.
 From iris.heap_lang Require Import wp_tactics substitution notation.
 
-Definition Assert {X} (e : expr X) : expr X :=
+Definition Assert (e : expr) : expr :=
   if: e then #() else #0 #0. (* #0 #0 is unsafe *)
 
-Instance do_wexpr_assert {X Y} (H : X `included` Y) e er :
-  WExpr H e er → WExpr H (Assert e) (Assert er) := _.
-Instance do_wsubst_assert {X Y} x es (H : X `included` x :: Y) e er :
-  WSubst x es H e er → WSubst x es H (Assert e) (Assert er).
-Proof. intros; red. by rewrite /Assert /wsubst -/wsubst; f_equal/=. Qed.
+Instance closed_assert X e : Closed X e → Closed X (Assert e) := _.
+Instance do_subst_assert x es e er :
+  Subst x es e er → Subst x es (Assert e) (Assert er).
+Proof. intros; red. by rewrite /Assert /subst -/subst; f_equal/=. Qed.
 Typeclasses Opaque Assert.
 
 Lemma wp_assert {Σ} (Φ : val → iProp heap_lang Σ) :

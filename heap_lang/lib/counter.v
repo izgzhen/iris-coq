@@ -8,9 +8,9 @@ Import uPred.
 Definition newcounter : val := λ: <>, ref #0.
 Definition inc : val :=
   rec: "inc" "l" :=
-    let: "n" := !'"l" in
-    if: CAS '"l" '"n" (#1 + '"n") then #() else '"inc" '"l".
-Definition read : val := λ: "l", !'"l".
+    let: "n" := !"l" in
+    if: CAS "l" "n" (#1 + "n") then #() else "inc" "l".
+Definition read : val := λ: "l", !"l".
 Global Opaque newcounter inc get.
 
 (** The CMRA we need. *)

@@ -25,7 +25,6 @@ Ltac reshape_val e tac :=
   let rec go e :=
   match e with
   | of_val ?v => v
-  | wexpr' ?e => go e
   | Rec ?f ?x ?e => constr:(RecV f x e)
   | Lit ?l => constr:(LitV l)
   | Pair ?e1 ?e2 =>

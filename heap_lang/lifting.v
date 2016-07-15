@@ -10,7 +10,7 @@ Section lifting.
 Context {Σ : iFunctor}.
 Implicit Types P Q : iProp heap_lang Σ.
 Implicit Types Φ : val → iProp heap_lang Σ.
-Implicit Types ef : option (expr []).
+Implicit Types ef : option expr.
 
 (** Bind. This bundles some arguments that wp_ectx_bind leaves as indices. *)
 Lemma wp_bind {E e} K Φ :
@@ -84,9 +84,10 @@ Qed.
 Lemma wp_rec E f x erec e1 e2 v2 Φ :
   e1 = Rec f x erec →
   to_val e2 = Some v2 →
+  Closed (f :b: x :b: []) erec →
   ▷ WP subst' x e2 (subst' f e1 erec) @ E {{ Φ }} ⊢ WP App e1 e2 @ E {{ Φ }}.
 Proof.
-  intros -> ?. rewrite -(wp_lift_pure_det_head_step (App _ _)
+  intros -> ??. rewrite -(wp_lift_pure_det_head_step (App _ _)
     (subst' x e2 (subst' f (Rec f x erec) erec)) None) //= ?right_id;
     intros; inv_head_step; eauto.
 Qed.

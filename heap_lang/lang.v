@@ -19,7 +19,6 @@ Inductive bin_op : Set :=
 Inductive binder := BAnon | BNamed : string → binder.
 Delimit Scope binder_scope with bind.
 Bind Scope binder_scope with binder.
-
 Definition cons_binder (mx : binder) (X : list string) : list string :=
   match mx with BAnon => X | BNamed x => x :: X end.
 Infix ":b:" := cons_binder (at level 60, right associativity).
@@ -33,27 +32,7 @@ Proof.
   destruct mx; rewrite /= ?elem_of_cons; naive_solver.
 Qed.
 
-(** A typeclass for whether a variable is bound in a given
-   context. Making this a typeclass means we can use typeclass search
-   to program solving these constraints, so this becomes extensible.
-   Also, since typeclass search runs *after* unification, Coq has already
-   inferred the X for us; if we were to go for embedded proof terms ot
-   tactics, Coq would do things in the wrong order. *)
-Class VarBound (x : string) (X : list string) :=
-  var_bound : bool_decide (x ∈ X).
-(* There is no need to restrict this hint to terms without evars, [vm_compute]
-will fail in case evars are arround. *)
-Hint Extern 0 (VarBound _ _) => vm_compute; exact I : typeclass_instances. 
-
-Instance var_bound_proof_irrel x X : ProofIrrel (VarBound x X).
-Proof. rewrite /VarBound. apply _. Qed.
-Instance set_unfold_var_bound x X P :
-  SetUnfold (x ∈ X) P → SetUnfold (VarBound x X) P.
-Proof.
-  constructor. by rewrite /VarBound bool_decide_spec (set_unfold (x ∈ X) P).
-Qed.
-
-Inductive expr (X : list string) :=
+Inductive expr :=
   (* Base lambda calculus *)
       (* Var is the only place where the terms contain a proof. The fact that they
        contain a proof at all is suboptimal, since this means two seeminlgy
@@ -62,53 +41,75 @@ Inductive expr (X : list string) :=
        * We can make the [X] an index, so we can do non-dependent match.
        * In expr_weaken, we can push the proof all the way into Var, making
          sure that proofs never block computation. *)
-  | Var (x : string) `{VarBound x X}
-  | Rec (f x : binder) (e : expr (f :b: x :b: X))
-  | App (e1 e2 : expr X)
+  | Var (x : string)
+  | Rec (f x : binder) (e : expr)
+  | App (e1 e2 : expr)
   (* Base types and their operations *)
   | Lit (l : base_lit)
-  | UnOp (op : un_op) (e : expr X)
-  | BinOp (op : bin_op) (e1 e2 : expr X)
-  | If (e0 e1 e2 : expr X)
+  | UnOp (op : un_op) (e : expr)
+  | BinOp (op : bin_op) (e1 e2 : expr)
+  | If (e0 e1 e2 : expr)
   (* Products *)
-  | Pair (e1 e2 : expr X)
-  | Fst (e : expr X)
-  | Snd (e : expr X)
+  | Pair (e1 e2 : expr)
+  | Fst (e : expr)
+  | Snd (e : expr)
   (* Sums *)
-  | InjL (e : expr X)
-  | InjR (e : expr X)
-  | Case (e0 : expr X) (e1 : expr X) (e2 : expr X)
+  | InjL (e : expr)
+  | InjR (e : expr)
+  | Case (e0 : expr) (e1 : expr) (e2 : expr)
   (* Concurrency *)
-  | Fork (e : expr X)
+  | Fork (e : expr)
   (* Heap *)
-  | Alloc (e : expr X)
-  | Load (e : expr X)
-  | Store (e1 : expr X) (e2 : expr X)
-  | CAS (e0 : expr X) (e1 : expr X) (e2 : expr X).
+  | Alloc (e : expr)
+  | Load (e : expr)
+  | Store (e1 : expr) (e2 : expr)
+  | CAS (e0 : expr) (e1 : expr) (e2 : expr).
 
 Bind Scope expr_scope with expr.
 Delimit Scope expr_scope with E.
-Arguments Var {_} _ {_}.
-Arguments Rec {_} _ _ _%E.
-Arguments App {_} _%E _%E.
-Arguments Lit {_} _.
-Arguments UnOp {_} _ _%E.
-Arguments BinOp {_} _ _%E _%E.
-Arguments If {_} _%E _%E _%E.
-Arguments Pair {_} _%E _%E.
-Arguments Fst {_} _%E.
-Arguments Snd {_} _%E.
-Arguments InjL {_} _%E.
-Arguments InjR {_} _%E.
-Arguments Case {_} _%E _%E _%E.
-Arguments Fork {_} _%E.
-Arguments Alloc {_} _%E.
-Arguments Load {_} _%E.
-Arguments Store {_} _%E _%E.
-Arguments CAS {_} _%E _%E _%E.
+Arguments Rec _ _ _%E.
+Arguments App _%E _%E.
+Arguments Lit _.
+Arguments UnOp _ _%E.
+Arguments BinOp _ _%E _%E.
+Arguments If _%E _%E _%E.
+Arguments Pair _%E _%E.
+Arguments Fst _%E.
+Arguments Snd _%E.
+Arguments InjL _%E.
+Arguments InjR _%E.
+Arguments Case _%E _%E _%E.
+Arguments Fork _%E.
+Arguments Alloc _%E.
+Arguments Load _%E.
+Arguments Store _%E _%E.
+Arguments CAS _%E _%E _%E.
+
+Fixpoint is_closed (X : list string) (e : expr) : bool :=
+  match e with
+  | Var x => bool_decide (x ∈ X)
+  | Rec f x e => is_closed (f :b: x :b: X) e
+  | Lit _ => true
+  | UnOp _ e | Fst e | Snd e | InjL e | InjR e | Fork e | Alloc e | Load e =>
+     is_closed X e
+  | App e1 e2 | BinOp _ e1 e2 | Pair e1 e2 | Store e1 e2 =>
+     is_closed X e1 && is_closed X e2
+  | If e0 e1 e2 | Case e0 e1 e2 | CAS e0 e1 e2 =>
+     is_closed X e0 && is_closed X e1 && is_closed X e2
+  end.
+
+Section closed.
+  Set Typeclasses Unique Instances.
+  Class Closed (X : list string) (e : expr) := closed : is_closed X e.
+End closed.
+
+Instance closed_proof_irrel env e : ProofIrrel (Closed env e).
+Proof. rewrite /Closed. apply _. Qed.
+Instance closed_decision env e : Decision (Closed env e).
+Proof. rewrite /Closed. apply _. Qed.
 
 Inductive val :=
-  | RecV (f x : binder) (e : expr (f :b: x :b: []))
+  | RecV (f x : binder) (e : expr) `{!Closed (f :b: x :b: []) e}
   | LitV (l : base_lit)
   | PairV (v1 v2 : val)
   | InjLV (v : val)
@@ -120,18 +121,19 @@ Arguments PairV _%V _%V.
 Arguments InjLV _%V.
 Arguments InjRV _%V.
 
-Fixpoint of_val (v : val) : expr [] :=
+Fixpoint of_val (v : val) : expr :=
   match v with
-  | RecV f x e => Rec f x e
+  | RecV f x e _ => Rec f x e
   | LitV l => Lit l
   | PairV v1 v2 => Pair (of_val v1) (of_val v2)
   | InjLV v => InjL (of_val v)
   | InjRV v => InjR (of_val v)
   end.
 
-Fixpoint to_val (e : expr []) : option val :=
+Fixpoint to_val (e : expr) : option val :=
   match e with
-  | Rec f x e => Some (RecV f x e)
+  | Rec f x e =>
+     if decide (Closed (f :b: x :b: []) e) then Some (RecV f x e) else None
   | Lit l => Some (LitV l)
   | Pair e1 e2 => v1 ← to_val e1; v2 ← to_val e2; Some (PairV v1 v2)
   | InjL e => InjLV <$> to_val e
@@ -144,28 +146,28 @@ Definition state := gmap loc val.
 
 (** Evaluation contexts *)
 Inductive ectx_item :=
-  | AppLCtx (e2 : expr [])
+  | AppLCtx (e2 : expr)
   | AppRCtx (v1 : val)
   | UnOpCtx (op : un_op)
-  | BinOpLCtx (op : bin_op) (e2 : expr [])
+  | BinOpLCtx (op : bin_op) (e2 : expr)
   | BinOpRCtx (op : bin_op) (v1 : val)
-  | IfCtx (e1 e2 : expr [])
-  | PairLCtx (e2 : expr [])
+  | IfCtx (e1 e2 : expr)
+  | PairLCtx (e2 : expr)
   | PairRCtx (v1 : val)
   | FstCtx
   | SndCtx
   | InjLCtx
   | InjRCtx
-  | CaseCtx (e1 : expr []) (e2 : expr [])
+  | CaseCtx (e1 : expr) (e2 : expr)
   | AllocCtx
   | LoadCtx
-  | StoreLCtx (e2 : expr [])
+  | StoreLCtx (e2 : expr)
   | StoreRCtx (v1 : val)
-  | CasLCtx (e1 : expr [])  (e2 : expr [])
-  | CasMCtx (v0 : val) (e2 : expr [])
+  | CasLCtx (e1 : expr)  (e2 : expr)
+  | CasMCtx (v0 : val) (e2 : expr)
   | CasRCtx (v0 : val) (v1 : val).
 
-Definition fill_item (Ki : ectx_item) (e : expr []) : expr [] :=
+Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   match Ki with
   | AppLCtx e2 => App e e2
   | AppRCtx v1 => App (of_val v1) e
@@ -182,7 +184,7 @@ Definition fill_item (Ki : ectx_item) (e : expr []) : expr [] :=
   | CaseCtx e1 e2 => Case e e1 e2
   | AllocCtx => Alloc e
   | LoadCtx => Load e
-  | StoreLCtx e2 => Store e e2
+  | StoreLCtx e2 => Store e e2 
   | StoreRCtx v1 => Store (of_val v1) e
   | CasLCtx e1 e2 => CAS e e1 e2
   | CasMCtx v0 e2 => CAS (of_val v0) e e2
@@ -190,79 +192,30 @@ Definition fill_item (Ki : ectx_item) (e : expr []) : expr [] :=
   end.
 
 (** Substitution *)
-(** We have [subst' e BAnon v = e] to deal with anonymous binders *)
-Lemma wexpr_rec_prf {X Y} (H : X `included` Y) {f x} :
-  f :b: x :b: X `included` f :b: x :b: Y.
-Proof. set_solver. Qed.
-
-Program Fixpoint wexpr {X Y} (H : X `included` Y) (e : expr X) : expr Y :=
-  match e return expr Y with
-  | Var x _ => @Var _ x _
-  | Rec f x e => Rec f x (wexpr (wexpr_rec_prf H) e)
-  | App e1 e2 => App (wexpr H e1) (wexpr H e2)
-  | Lit l => Lit l
-  | UnOp op e => UnOp op (wexpr H e)
-  | BinOp op e1 e2 => BinOp op (wexpr H e1) (wexpr H e2)
-  | If e0 e1 e2 => If (wexpr H e0) (wexpr H e1) (wexpr H e2)
-  | Pair e1 e2 => Pair (wexpr H e1) (wexpr H e2)
-  | Fst e => Fst (wexpr H e)
-  | Snd e => Snd (wexpr H e)
-  | InjL e => InjL (wexpr H e)
-  | InjR e => InjR (wexpr H e)
-  | Case e0 e1 e2 => Case (wexpr H e0) (wexpr H e1) (wexpr H e2)
-  | Fork e => Fork (wexpr H e)
-  | Alloc e => Alloc (wexpr H e)
-  | Load  e => Load (wexpr H e)
-  | Store e1 e2 => Store (wexpr H e1) (wexpr H e2)
-  | CAS e0 e1 e2 => CAS (wexpr H e0) (wexpr H e1) (wexpr H e2)
-  end.
-Solve Obligations with set_solver.
-
-Definition wexpr' {X} (e : expr []) : expr X := wexpr (included_nil _) e.
-
-Definition of_val' {X} (v : val) : expr X := wexpr (included_nil _) (of_val v).
-
-Lemma wsubst_rec_true_prf {X Y x} (H : X `included` x :: Y) {f y}
-    (Hfy : BNamed x ≠ f ∧ BNamed x ≠ y) :
-  f :b: y :b: X `included` x :: f :b: y :b: Y.
-Proof. set_solver. Qed.
-Lemma wsubst_rec_false_prf {X Y x} (H : X `included` x :: Y) {f y}
-    (Hfy : ¬(BNamed x ≠ f ∧ BNamed x ≠ y)) :
-  f :b: y :b: X `included` f :b: y :b: Y.
-Proof. move: Hfy=>/not_and_l [/dec_stable|/dec_stable]; set_solver. Qed.
-
-Program Fixpoint wsubst {X Y} (x : string) (es : expr [])
-    (H : X `included` x :: Y) (e : expr X)  : expr Y :=
-  match e return expr Y with
-  | Var y _ => if decide (x = y) then wexpr' es else @Var _ y _
+Fixpoint subst (x : string) (es : expr) (e : expr)  : expr :=
+  match e with
+  | Var y => if decide (x = y) then es else Var y
   | Rec f y e =>
-     Rec f y $ match decide (BNamed x ≠ f ∧ BNamed x ≠ y) return _ with
-               | left Hfy => wsubst x es (wsubst_rec_true_prf H Hfy) e
-               | right Hfy => wexpr (wsubst_rec_false_prf H Hfy) e
-               end
-  | App e1 e2 => App (wsubst x es H e1) (wsubst x es H e2)
+     Rec f y $ if decide (BNamed x ≠ f ∧ BNamed x ≠ y) then subst x es e else e
+  | App e1 e2 => App (subst x es e1) (subst x es e2)
   | Lit l => Lit l
-  | UnOp op e => UnOp op (wsubst x es H e)
-  | BinOp op e1 e2 => BinOp op (wsubst x es H e1) (wsubst x es H e2)
-  | If e0 e1 e2 => If (wsubst x es H e0) (wsubst x es H e1) (wsubst x es H e2)
-  | Pair e1 e2 => Pair (wsubst x es H e1) (wsubst x es H e2)
-  | Fst e => Fst (wsubst x es H e)
-  | Snd e => Snd (wsubst x es H e)
-  | InjL e => InjL (wsubst x es H e)
-  | InjR e => InjR (wsubst x es H e)
-  | Case e0 e1 e2 =>
-     Case (wsubst x es H e0) (wsubst x es H e1) (wsubst x es H e2)
-  | Fork e => Fork (wsubst x es H e)
-  | Alloc e => Alloc (wsubst x es H e)
-  | Load e => Load (wsubst x es H e)
-  | Store e1 e2 => Store (wsubst x es H e1) (wsubst x es H e2)
-  | CAS e0 e1 e2 => CAS (wsubst x es H e0) (wsubst x es H e1) (wsubst x es H e2)
+  | UnOp op e => UnOp op (subst x es e)
+  | BinOp op e1 e2 => BinOp op (subst x es e1) (subst x es e2)
+  | If e0 e1 e2 => If (subst x es e0) (subst x es e1) (subst x es e2)
+  | Pair e1 e2 => Pair (subst x es e1) (subst x es e2)
+  | Fst e => Fst (subst x es e)
+  | Snd e => Snd (subst x es e)
+  | InjL e => InjL (subst x es e)
+  | InjR e => InjR (subst x es e)
+  | Case e0 e1 e2 => Case (subst x es e0) (subst x es e1) (subst x es e2)
+  | Fork e => Fork (subst x es e)
+  | Alloc e => Alloc (subst x es e)
+  | Load e => Load (subst x es e)
+  | Store e1 e2 => Store (subst x es e1) (subst x es e2)
+  | CAS e0 e1 e2 => CAS (subst x es e0) (subst x es e1) (subst x es e2)
   end.
-Solve Obligations with set_solver.
 
-Definition subst {X} (x : string) (es : expr []) (e : expr (x :: X)) : expr X :=
-  wsubst x es (λ z, id) e.
-Definition subst' {X} (mx : binder) (es : expr []) : expr (mx :b: X) → expr X :=
+Definition subst' (mx : binder) (es : expr) : expr → expr :=
   match mx with BNamed x => subst x es | BAnon => id end.
 
 (** The stepping relation *)
@@ -283,9 +236,10 @@ Definition bin_op_eval (op : bin_op) (l1 l2 : base_lit) : option base_lit :=
   | _, _, _ => None
   end.
 
-Inductive head_step : expr [] → state → expr [] → state → option (expr []) → Prop :=
+Inductive head_step : expr → state → expr → state → option (expr) → Prop :=
   | BetaS f x e1 e2 v2 e' σ :
      to_val e2 = Some v2 →
+     Closed (f :b: x :b: []) e1 →
      e' = subst' x (of_val v2) (subst' f (Rec f x e1) e1) →
      head_step (App (Rec f x e1) e2) σ e' σ None
   | UnOpS op l l' σ :
@@ -331,7 +285,7 @@ Inductive head_step : expr [] → state → expr [] → state → option (expr [
      head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) None.
 
 (** Atomic expressions *)
-Definition atomic (e: expr []) : bool :=
+Definition atomic (e: expr) : bool :=
   match e with
   | Alloc e => bool_decide (is_Some (to_val e))
   | Load e => bool_decide (is_Some (to_val e))
@@ -344,76 +298,34 @@ Definition atomic (e: expr []) : bool :=
   end.
 
 (** Substitution *)
-Lemma var_proof_irrel X x H1 H2 : @Var X x H1 = @Var X x H2.
-Proof. f_equal. by apply (proof_irrel _). Qed.
+Lemma is_closed_weaken X Y e : is_closed X e → X `included` Y → is_closed Y e.
+Proof. revert X Y; induction e; naive_solver (eauto; set_solver). Qed.
 
-Lemma wexpr_id X (H : X `included` X) e : wexpr H e = e.
-Proof. induction e; f_equal/=; auto. by apply (proof_irrel _). Qed.
-Lemma wexpr_proof_irrel X Y (H1 H2 : X `included` Y) e : wexpr H1 e = wexpr H2 e.
+Instance of_val_closed X v : Closed X (of_val v).
 Proof.
-  revert Y H1 H2; induction e; simpl; auto using var_proof_irrel with f_equal.
+  apply is_closed_weaken with []; last set_solver.
+  induction v; simpl; auto.
 Qed.
-Lemma wexpr_wexpr X Y Z (H1 : X `included` Y) (H2 : Y `included` Z) H3 e :
-  wexpr H2 (wexpr H1 e) = wexpr H3 e.
-Proof.
-  revert Y Z H1 H2 H3.
-  induction e; simpl; auto using var_proof_irrel with f_equal.
-Qed.
-Lemma wexpr_wexpr' X Y Z (H1 : X `included` Y) (H2 : Y `included` Z) e :
-  wexpr H2 (wexpr H1 e) = wexpr (transitivity H1 H2) e.
-Proof. apply wexpr_wexpr. Qed.
 
-Lemma wsubst_proof_irrel X Y x es (H1 H2 : X `included` x :: Y) e :
-  wsubst x es H1 e = wsubst x es H2 e.
+Lemma closed_subst X e x es : Closed X e → x ∉ X → subst x es e = e.
 Proof.
-  revert Y H1 H2; induction e; simpl; intros; repeat case_decide;
-    auto using var_proof_irrel, wexpr_proof_irrel with f_equal.
+  rewrite /Closed. revert X.
+  induction e; intros; simpl; try case_decide; f_equal/=; try naive_solver.
+ naive_solver (eauto; set_solver).
 Qed.
-Lemma wexpr_wsubst X Y Z x es (H1: X `included` x::Y) (H2: Y `included` Z) H3 e:
-  wexpr H2 (wsubst x es H1 e) = wsubst x es H3 e.
-Proof.
-  revert Y Z H1 H2 H3.
-  induction e; intros; repeat (case_decide || simplify_eq/=);
-    unfold wexpr'; auto using var_proof_irrel, wexpr_wexpr with f_equal.
-Qed.
-Lemma wsubst_wexpr X Y Z x es (H1: X `included` Y) (H2: Y `included` x::Z) H3 e:
-  wsubst x es H2 (wexpr H1 e) = wsubst x es H3 e.
-Proof.
-  revert Y Z H1 H2 H3.
-  induction e; intros; repeat (case_decide || simplify_eq/=);
-    auto using var_proof_irrel, wexpr_wexpr with f_equal.
-Qed.
-Lemma wsubst_wexpr' X Y Z x es (H1: X `included` Y) (H2: Y `included` x::Z) e:
-  wsubst x es H2 (wexpr H1 e) = wsubst x es (transitivity H1 H2) e.
-Proof. apply wsubst_wexpr. Qed.
 
-Lemma wsubst_closed X Y x es (H1 : X `included` x :: Y) H2 (e : expr X) :
-  x ∉ X → wsubst x es H1 e = wexpr H2 e.
-Proof.
-  revert Y H1 H2.
-  induction e; intros; repeat (case_decide || simplify_eq/=);
-    auto using var_proof_irrel, wexpr_proof_irrel with f_equal set_solver.
-  exfalso; set_solver.
-Qed.
-Lemma wsubst_closed_nil x es H (e : expr []) : wsubst x es H e = e.
-Proof.
-  rewrite -{2}(wexpr_id _ (reflexivity []) e).
-  apply wsubst_closed, not_elem_of_nil.
-Qed.
+Lemma closed_nil_subst e x es : Closed [] e → subst x es e = e.
+Proof. intros. apply closed_subst with []; set_solver. Qed.
 
 (** Basic properties about the language *)
 Lemma to_of_val v : to_val (of_val v) = Some v.
-Proof. by induction v; simplify_option_eq. Qed.
+Proof.
+  by induction v; simplify_option_eq; repeat f_equal; try apply (proof_irrel _).
+Qed.
 
 Lemma of_to_val e v : to_val e = Some v → of_val v = e.
 Proof.
-  revert e v. cut (∀ X (e : expr X) (H : X = ∅) v,
-    to_val (eq_rect _ expr e _ H) = Some v → of_val v = eq_rect _ expr e _ H).
-  { intros help e v. apply (help ∅ e eq_refl). }
-  intros X e; induction e; intros HX ??; simplify_option_eq;
-    repeat match goal with
-    | IH : ∀ _ : ∅ = ∅, _ |- _ => specialize (IH eq_refl); simpl in IH
-    end; auto with f_equal.
+  revert v; induction e; intros v ?; simplify_option_eq; auto with f_equal.
 Qed.
 
 Instance of_val_inj : Inj (=) (=) of_val.
@@ -426,8 +338,7 @@ Lemma fill_item_val Ki e :
   is_Some (to_val (fill_item Ki e)) → is_Some (to_val e).
 Proof. intros [v ?]. destruct Ki; simplify_option_eq; eauto. Qed.
 
-Lemma val_stuck e1 σ1 e2 σ2 ef :
-  head_step e1 σ1 e2 σ2 ef → to_val e1 = None.
+Lemma val_stuck e1 σ1 e2 σ2 ef : head_step e1 σ1 e2 σ2 ef → to_val e1 = None.
 Proof. destruct 1; naive_solver. Qed.
 
 Lemma atomic_not_val e : atomic e → to_val e = None.
@@ -436,7 +347,7 @@ Proof. by destruct e. Qed.
 Lemma atomic_fill_item Ki e : atomic (fill_item Ki e) → is_Some (to_val e).
 Proof.
   intros. destruct Ki; simplify_eq/=; destruct_and?;
-    repeat (case_match || contradiction); eauto.
+    repeat (simpl || case_match || contradiction); eauto.
 Qed.
 
 Lemma atomic_step e1 σ1 e2 σ2 ef :
@@ -448,7 +359,7 @@ Qed.
 
 Lemma head_ctx_step_val Ki e σ1 e2 σ2 ef :
   head_step (fill_item Ki e) σ1 e2 σ2 ef → is_Some (to_val e).
-Proof. destruct Ki; inversion_clear 1; simplify_option_eq; eauto. Qed.
+Proof. destruct Ki; inversion_clear 1; simplify_option_eq; by eauto. Qed.
 
 Lemma fill_item_no_val_inj Ki1 Ki2 e1 e2 :
   to_val e1 = None → to_val e2 = None →
@@ -465,6 +376,77 @@ Lemma alloc_fresh e v σ :
   to_val e = Some v → head_step (Alloc e) σ (Lit (LitLoc l)) (<[l:=v]>σ) None.
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset _)), is_fresh. Qed.
 
+(** Value type class *)
+Class Value (e : expr) (v : val) := is_value : to_val e = Some v.
+Instance of_val_value v : Value (of_val v) v.
+Proof. by rewrite /Value to_of_val. Qed.
+Instance rec_value f x e `{!Closed (f :b: x :b: []) e} :
+  Value (Rec f x e) (RecV f x e).
+Proof.
+  rewrite /Value /=; case_decide; last done.
+  do 2 f_equal. by apply (proof_irrel).
+Qed.
+Instance lit_value l : Value (Lit l) (LitV l).
+Proof. done. Qed.
+Instance pair_value e1 e2 v1 v2 :
+  Value e1 v1 → Value e2 v2 → Value (Pair e1 e2) (PairV v1 v2).
+Proof. by rewrite /Value /= => -> /= ->. Qed.
+Instance injl_value e v : Value e v → Value (InjL e) (InjLV v).
+Proof. by rewrite /Value /= => ->. Qed.
+Instance injr_value e v : Value e v → Value (InjR e) (InjRV v).
+Proof. by rewrite /Value /= => ->. Qed.
+
+Section closed_slow.
+  Notation C := Closed.
+
+  Global Instance closed_of_val X v : C X (of_val v).
+  Proof. apply of_val_closed. Qed.
+
+  Lemma closed_var X x : bool_decide (x ∈ X) → C X (Var x).
+  Proof. done. Qed.
+  Global Instance closed_lit X l : C X (Lit l).
+  Proof. done. Qed.
+  Global Instance closed_rec X f x e : C (f :b: x :b: X) e → C X (Rec f x e).
+  Proof. done. Qed.
+  Global Instance closed_unop X op e : C X e → C X (UnOp op e).
+  Proof. done. Qed.
+  Global Instance closed_fst X e : C X e → C X (Fst e).
+  Proof. done. Qed.
+  Global Instance closed_snd X e : C X e → C X (Snd e).
+  Proof. done. Qed.
+  Global Instance closed_injl X e : C X e → C X (InjL e).
+  Proof. done. Qed.
+  Global Instance closed_injr X e : C X e → C X (InjR e).
+  Proof. done. Qed.
+  Global Instance closed_fork X e : C X e → C X (Fork e).
+  Proof. done. Qed.
+  Global Instance closed_load X e : C X e → C X (Load e).
+  Proof. done. Qed.
+  Global Instance closed_alloc X e : C X e → C X (Alloc e).
+  Proof. done. Qed.
+  Global Instance closed_app X e1 e2 : C X e1 → C X e2 → C X (App e1 e2).
+  Proof. intros. by apply andb_True. Qed.
+  Global Instance closed_binop X op e1 e2 : C X e1 → C X e2 → C X (BinOp op e1 e2).
+  Proof. intros. by apply andb_True. Qed.
+  Global Instance closed_pair X e1 e2 : C X e1 → C X e2 → C X (Pair e1 e2).
+  Proof. intros. by apply andb_True. Qed.
+  Global Instance closed_store X e1 e2 : C X e1 → C X e2 → C X (Store e1 e2).
+  Proof. intros. by apply andb_True. Qed.
+  Global Instance closed_if X e0 e1 e2 : C X e0 → C X e1 → C X e2 → C X (If e0 e1 e2).
+  Proof. intros. by rewrite /C /= !andb_True. Qed.
+  Global Instance closed_case X e0 e1 e2 : C X e0 → C X e1 → C X e2 → C X (Case e0 e1 e2).
+  Proof. intros. by rewrite /C /= !andb_True. Qed.
+  Global Instance closed_cas X e0 e1 e2 : C X e0 → C X e1 → C X e2 → C X (CAS e0 e1 e2).
+  Proof. intros. by rewrite /C /= !andb_True. Qed.
+End closed_slow.
+
+Lemma closed_nil_closed X e : Closed [] e → Closed X e.
+Proof. intros. apply is_closed_weaken with []. done. set_solver. Qed.
+Hint Immediate closed_nil_closed : typeclass_instances.
+
+Hint Extern 1000 (Closed _ (Var _)) =>
+  apply closed_var; vm_compute; exact I : typeclass_instances.
+
 (** Equality and other typeclass stuff *)
 Instance base_lit_dec_eq (l1 l2 : base_lit) : Decision (l1 = l2).
 Proof. solve_decision. Defined.
@@ -472,53 +454,25 @@ Instance un_op_dec_eq (op1 op2 : un_op) : Decision (op1 = op2).
 Proof. solve_decision. Defined.
 Instance bin_op_dec_eq (op1 op2 : bin_op) : Decision (op1 = op2).
 Proof. solve_decision. Defined.
-
-Fixpoint expr_beq {X Y} (e : expr X) (e' : expr Y) : bool :=
-  match e, e' with
-  | Var x _, Var x' _ => bool_decide (x = x')
-  | Rec f x e, Rec f' x' e' =>
-     bool_decide (f = f') && bool_decide (x = x') && expr_beq e e'
-  | App e1 e2, App e1' e2' | Pair e1 e2, Pair e1' e2' |
-    Store e1 e2, Store e1' e2' => expr_beq e1 e1' && expr_beq e2 e2'
-  | Lit l, Lit l' => bool_decide (l = l')
-  | UnOp op e, UnOp op' e' => bool_decide (op = op') && expr_beq e e'
-  | BinOp op e1 e2, BinOp op' e1' e2' =>
-     bool_decide (op = op') && expr_beq e1 e1' && expr_beq e2 e2'
-  | If e0 e1 e2, If e0' e1' e2' | Case e0 e1 e2, Case e0' e1' e2' |
-    CAS e0 e1 e2, CAS e0' e1' e2' =>
-     expr_beq e0 e0' && expr_beq e1 e1' && expr_beq e2 e2'
-  | Fst e, Fst e' | Snd e, Snd e' | InjL e, InjL e' | InjR e, InjR e' |
-    Fork e, Fork e' | Alloc e, Alloc e' | Load e, Load e' => expr_beq e e'
-  | _, _ => false
-  end.
-Lemma expr_beq_correct {X} (e1 e2 : expr X) : expr_beq e1 e2 ↔ e1 = e2.
-Proof.
-  split.
-  * revert e2; induction e1; intros [] * ?; simpl in *;
-      destruct_and?; subst; repeat f_equal/=; auto; try apply proof_irrel.
-  * intros ->. induction e2; naive_solver.
-Qed.
-Instance expr_dec_eq {X} (e1 e2 : expr X) : Decision (e1 = e2).
-Proof.
- refine (cast_if (decide (expr_beq e1 e2))); by rewrite -expr_beq_correct.
-Defined.
+Instance expr_dec_eq (e1 e2 : expr) : Decision (e1 = e2).
+Proof. solve_decision. Defined.
 Instance val_dec_eq (v1 v2 : val) : Decision (v1 = v2).
 Proof.
  refine (cast_if (decide (of_val v1 = of_val v2))); abstract naive_solver.
 Defined.
 
-Instance expr_inhabited X : Inhabited (expr X) := populate (Lit LitUnit).
+Instance expr_inhabited : Inhabited (expr) := populate (Lit LitUnit).
 Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
 
 Canonical Structure stateC := leibnizC state.
 Canonical Structure valC := leibnizC val.
-Canonical Structure exprC X := leibnizC (expr X).
+Canonical Structure exprC := leibnizC expr.
 End heap_lang.
 
 (** Language *)
 Program Instance heap_ectxi_lang :
   EctxiLanguage
-    (heap_lang.expr []) heap_lang.val heap_lang.ectx_item heap_lang.state := {|
+    (heap_lang.expr) heap_lang.val heap_lang.ectx_item heap_lang.state := {|
   of_val := heap_lang.of_val; to_val := heap_lang.to_val;
   fill_item := heap_lang.fill_item;
   atomic := heap_lang.atomic; head_step := heap_lang.head_step;
@@ -528,7 +482,7 @@ Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,
   heap_lang.fill_item_val, heap_lang.atomic_fill_item,
   heap_lang.fill_item_no_val_inj, heap_lang.head_ctx_step_val.
 
-Canonical Structure heap_lang := ectx_lang (heap_lang.expr []).
+Canonical Structure heap_lang := ectx_lang (heap_lang.expr).
 
 (* Prefer heap_lang names over ectx_language names. *)
 Export heap_lang.
