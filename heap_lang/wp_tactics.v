@@ -10,7 +10,8 @@ Ltac wp_bind K :=
   end.
 
 (* TODO: Do something better here *)
-Ltac wp_done := fast_done || apply is_value || apply _ || (rewrite /= ?to_of_val; fast_done).
+Ltac wp_done :=
+  fast_done || apply into_value || apply _ || (rewrite /= ?to_of_val; fast_done).
 
 (* sometimes, we will have to do a final view shift, so only apply
 pvs_intro if we obtain a consecutive wp *)

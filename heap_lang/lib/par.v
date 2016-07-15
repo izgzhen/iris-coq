@@ -32,14 +32,14 @@ Proof.
   iSpecialize ("HΦ" with "* [-]"); first by iSplitL "H1". by wp_let.
 Qed.
 
-Lemma wp_par (Ψ1 Ψ2 : val → iProp) (e1 e2 : expr) `{!Closed [] e1, Closed [] e2}
-    (Φ : val → iProp) :
+Lemma wp_par (Ψ1 Ψ2 : val → iProp)
+    (e1 e2 : expr) `{!Closed [] e1, Closed [] e2} (Φ : val → iProp) :
   heapN ⊥ N →
   (heap_ctx heapN ★ WP e1 {{ Ψ1 }} ★ WP e2 {{ Ψ2 }} ★
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
   ⊢ WP e1 || e2 {{ Φ }}.
 Proof.
-  iIntros (?) "(#Hh&H1&H2&H)". iApply (par_spec Ψ1 Ψ2); auto. apply is_value.
+  iIntros (?) "(#Hh&H1&H2&H)". iApply (par_spec Ψ1 Ψ2); [done|apply into_value|].
   iFrame "Hh H". iSplitL "H1"; by wp_let.
 Qed.
 End proof.
