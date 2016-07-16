@@ -11,7 +11,7 @@ buildjob:
   only:
   - master
   - jh_simplified_resources
-  - rk/substitition
+  - rk/substitution
   artifacts:
     paths:
     - build-time.txt
