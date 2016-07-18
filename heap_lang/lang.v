@@ -34,13 +34,6 @@ Qed.
 
 Inductive expr :=
   (* Base lambda calculus *)
-      (* Var is the only place where the terms contain a proof. The fact that they
-       contain a proof at all is suboptimal, since this means two seeminlgy
-       convertible terms could differ in their proofs. However, this also has
-       some advantages:
-       * We can make the [X] an index, so we can do non-dependent match.
-       * In expr_weaken, we can push the proof all the way into Var, making
-         sure that proofs never block computation. *)
   | Var (x : string)
   | Rec (f x : binder) (e : expr)
   | App (e1 e2 : expr)
