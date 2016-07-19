@@ -88,7 +88,6 @@ heap_lang/wp_tactics.v
 heap_lang/lifting.v
 heap_lang/derived.v
 heap_lang/notation.v
-heap_lang/substitution.v
 heap_lang/heap.v
 heap_lang/lib/spawn.v
 heap_lang/lib/par.v

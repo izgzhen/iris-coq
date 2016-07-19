@@ -1,5 +1,5 @@
 From iris.algebra Require Export upred_tactics.
-From iris.heap_lang Require Export tactics derived substitution.
+From iris.heap_lang Require Export tactics derived.
 Import uPred.
 
 (** wp-specific helper tactics *)
@@ -11,7 +11,14 @@ Ltac wp_bind K :=
 
 (* TODO: Do something better here *)
 Ltac wp_done :=
-  fast_done || apply into_value || apply _ || (rewrite /= ?to_of_val; fast_done).
+  match goal with
+  | |- Closed _ _ => solve_closed
+  | |- to_val _ = Some _ => solve_to_val
+  | |- language.to_val _ = Some _ => solve_to_val
+  | |- Is_true (atomic _) => rewrite /= ?to_of_val; fast_done
+  | |- Is_true (language.atomic _) => rewrite /= ?to_of_val; fast_done
+  | _ => fast_done
+  end.
 
 (* sometimes, we will have to do a final view shift, so only apply
 pvs_intro if we obtain a consecutive wp *)

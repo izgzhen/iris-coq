@@ -345,93 +345,24 @@ Lemma alloc_fresh e v σ :
   to_val e = Some v → head_step (Alloc e) σ (Lit (LitLoc l)) (<[l:=v]>σ) None.
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset _)), is_fresh. Qed.
 
-(** Value type class *)
-Class IntoValue (e : expr) (v : val) := into_value : to_val e = Some v.
-Instance into_value_of_val v : IntoValue (of_val v) v.
-Proof. by rewrite /IntoValue to_of_val. Qed.
-Instance into_value_rec f x e `{!Closed (f :b: x :b: []) e} :
-  IntoValue (Rec f x e) (RecV f x e).
-Proof.
-  rewrite /IntoValue /=; case_decide; last done.
-  do 2 f_equal. by apply (proof_irrel).
-Qed.
-Instance into_value_lit l : IntoValue (Lit l) (LitV l).
-Proof. done. Qed.
-Instance into_value_pair e1 e2 v1 v2 :
-  IntoValue e1 v1 → IntoValue e2 v2 → IntoValue (Pair e1 e2) (PairV v1 v2).
-Proof. by rewrite /IntoValue /= => -> /= ->. Qed.
-Instance into_value_injl e v : IntoValue e v → IntoValue (InjL e) (InjLV v).
-Proof. by rewrite /IntoValue /= => ->. Qed.
-Instance into_value_injr e v : IntoValue e v → IntoValue (InjR e) (InjRV v).
-Proof. by rewrite /IntoValue /= => ->. Qed.
-
 (** Closed expressions *)
 Lemma is_closed_weaken X Y e : is_closed X e → X `included` Y → is_closed Y e.
 Proof. revert X Y; induction e; naive_solver (eauto; set_solver). Qed.
 
-Lemma closed_subst X e x es : Closed X e → x ∉ X → subst x es e = e.
+Lemma is_closed_weaken_nil X e : is_closed [] e → is_closed X e.
+Proof. intros. by apply is_closed_weaken with [], included_nil. Qed.
+
+Lemma is_closed_subst X e x es : is_closed X e → x ∉ X → subst x es e = e.
 Proof.
-  rewrite /Closed. revert X.
-  induction e=> X /=; rewrite ?bool_decide_spec ?andb_True=> ??;
+  revert X. induction e=> X /=; rewrite ?bool_decide_spec ?andb_True=> ??;
     repeat case_decide; simplify_eq/=; f_equal; intuition eauto with set_solver.
 Qed.
 
-Lemma closed_nil_subst e x es : Closed [] e → subst x es e = e.
-Proof. intros. apply closed_subst with []; set_solver. Qed.
+Lemma is_closed_nil_subst e x es : is_closed [] e → subst x es e = e.
+Proof. intros. apply is_closed_subst with []; set_solver. Qed.
 
-Lemma closed_nil_closed X e : Closed [] e → Closed X e.
-Proof. intros. by apply is_closed_weaken with [], included_nil. Qed.
-Hint Immediate closed_nil_closed : typeclass_instances.
-
-Instance closed_of_val X v : Closed X (of_val v).
-Proof.
-  apply is_closed_weaken with []; last set_solver.
-  induction v; simpl; auto.
-Qed.
-Instance closed_rec X f x e : Closed (f :b: x :b: X) e → Closed X (Rec f x e).
-Proof. done. Qed.
-Lemma closed_var X x : bool_decide (x ∈ X) → Closed X (Var x).
-Proof. done. Qed.
-Hint Extern 1000 (Closed _ (Var _)) =>
-  apply closed_var; vm_compute; exact I : typeclass_instances.
-
-Section closed.
-  Context (X : list string).
-  Notation C := (Closed X).
-
-  Global Instance closed_lit l : C (Lit l).
-  Proof. done. Qed.
-  Global Instance closed_unop op e : C e → C (UnOp op e).
-  Proof. done. Qed.
-  Global Instance closed_fst e : C e → C (Fst e).
-  Proof. done. Qed.
-  Global Instance closed_snd e : C e → C (Snd e).
-  Proof. done. Qed.
-  Global Instance closed_injl e : C e → C (InjL e).
-  Proof. done. Qed.
-  Global Instance closed_injr e : C e → C (InjR e).
-  Proof. done. Qed.
-  Global Instance closed_fork e : C e → C (Fork e).
-  Proof. done. Qed.
-  Global Instance closed_load e : C e → C (Load e).
-  Proof. done. Qed.
-  Global Instance closed_alloc e : C e → C (Alloc e).
-  Proof. done. Qed.
-  Global Instance closed_app e1 e2 : C e1 → C e2 → C (App e1 e2).
-  Proof. intros. by rewrite /Closed /= !andb_True. Qed.
-  Global Instance closed_binop op e1 e2 : C e1 → C e2 → C (BinOp op e1 e2).
-  Proof. intros. by rewrite /Closed /= !andb_True. Qed.
-  Global Instance closed_pair e1 e2 : C e1 → C e2 → C (Pair e1 e2).
-  Proof. intros. by rewrite /Closed /= !andb_True. Qed.
-  Global Instance closed_store e1 e2 : C e1 → C e2 → C (Store e1 e2).
-  Proof. intros. by rewrite /Closed /= !andb_True. Qed.
-  Global Instance closed_if e0 e1 e2 : C e0 → C e1 → C e2 → C (If e0 e1 e2).
-  Proof. intros. by rewrite /Closed /= !andb_True. Qed.
-  Global Instance closed_case e0 e1 e2 : C e0 → C e1 → C e2 → C (Case e0 e1 e2).
-  Proof. intros. by rewrite /Closed /= !andb_True. Qed.
-  Global Instance closed_cas e0 e1 e2 : C e0 → C e1 → C e2 → C (CAS e0 e1 e2).
-  Proof. intros. by rewrite /Closed /= !andb_True. Qed.
-End closed.
+Lemma is_closed_of_val X v : is_closed X (of_val v).
+Proof. apply is_closed_weaken_nil. induction v; simpl; auto. Qed.
 
 (** Equality and other typeclass stuff *)
 Instance base_lit_dec_eq (l1 l2 : base_lit) : Decision (l1 = l2).
