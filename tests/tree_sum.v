@@ -21,16 +21,15 @@ Fixpoint sum (t : tree) : Z :=
 
 Definition sum_loop : val :=
   rec: "sum_loop" "t" "l" :=
-    match: '"t" with
-      InjL "n" => '"l" <- '"n" + !'"l"
-    | InjR "tt" =>
-       '"sum_loop" !(Fst '"tt") '"l" ;; '"sum_loop" !(Snd '"tt") '"l"
+    match: "t" with
+      InjL "n" => "l" <- "n" + !"l"
+    | InjR "tt" => "sum_loop" !(Fst "tt") "l" ;; "sum_loop" !(Snd "tt") "l"
     end.
 
 Definition sum' : val := λ: "t",
   let: "l" := ref #0 in
-  ^sum_loop '"t" '"l";;
-  !'"l".
+  sum_loop "t" "l";;
+  !"l".
 
 Global Opaque sum_loop sum'.
 
@@ -40,12 +39,12 @@ Lemma sum_loop_wp `{!heapG Σ} heapN v t l (n : Z) (Φ : val → iPropG heap_lan
   ⊢ WP sum_loop v #l {{ Φ }}.
 Proof.
   iIntros "(#Hh & Hl & Ht & HΦ)".
-  iLöb {v t l n Φ} as "IH". wp_rec; wp_let.
+  iLöb (v t l n Φ) as "IH". wp_rec. wp_let.
   destruct t as [n'|tl tr]; simpl in *.
   - iDestruct "Ht" as "%"; subst.
     wp_match. wp_load. wp_op. wp_store.
     by iApply ("HΦ" with "Hl").
-  - iDestruct "Ht" as {ll lr vl vr} "(% & Hll & Htl & Hlr & Htr)"; subst.
+  - iDestruct "Ht" as (ll lr vl vr) "(% & Hll & Htl & Hlr & Htr)"; subst.
     wp_match. wp_proj. wp_load.
     wp_apply ("IH" with "Hl Htl"). iIntros "Hl Htl".
     wp_seq. wp_proj. wp_load.

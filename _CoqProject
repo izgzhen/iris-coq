@@ -106,6 +106,7 @@ tests/joining_existentials.v
 tests/proofmode.v
 tests/barrier_client.v
 tests/list_reverse.v
+tests/tree_sum.v
 proofmode/coq_tactics.v
 proofmode/pviewshifts.v
 proofmode/environments.v
