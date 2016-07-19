@@ -2,6 +2,10 @@ From iris.heap_lang Require Export lang.
 From iris.prelude Require Import fin_maps.
 Import heap_lang.
 
+(** We define an alternative representation of expressions in which the
+embedding of values and closed expressions is explicit. By reification of
+expressions into this type we can implementation substitution, closedness
+checking, atomic checking, and conversion into values, by computation. *)
 Module W.
 Inductive expr :=
   | Val (v : val)
@@ -110,6 +114,10 @@ Proof.
   induction e; naive_solver eauto using is_closed_of_val, is_closed_weaken_nil.
 Qed.
 
+(* We define [to_val (ClosedExpr _)] to be [None] since [ClosedExpr]
+constructors are only generated for closed expressions of which we know nothing
+about apart from being closed. Notice that the reverse implication of
+[to_val_Some] thus does not hold. *)
 Fixpoint to_val (e : expr) : option val :=
   match e with
   | Val v => Some v
