@@ -41,8 +41,8 @@ Section client.
     iIntros (?) "#Hh"; rewrite /client. wp_alloc y as "Hy". wp_let.
     wp_apply (newbarrier_spec N (y_inv 1 y)); first done.
     iFrame "Hh". iIntros (l) "[Hr Hs]". wp_let.
-    iApply (wp_par N (λ _, True%I) (λ _, True%I)); first done.
-    iFrame "Hh". iSplitL "Hy Hs".
+    iApply (wp_par (λ _, True%I) (λ _, True%I)). iFrame "Hh".
+    iSplitL "Hy Hs".
     - (* The original thread, the sender. *)
       wp_store. iApply signal_spec; iFrame "Hs"; iSplit; [|done].
       iExists _; iSplitL; [done|]. iAlways; iIntros (n). wp_let. by wp_op.
@@ -51,8 +51,8 @@ Section client.
       iDestruct (recv_weaken with "[] Hr") as "Hr".
       { iIntros "Hy". by iApply (y_inv_split with "Hy"). }
       iPvs (recv_split with "Hr") as "[H1 H2]"; first done.
-      iApply (wp_par N (λ _, True%I) (λ _, True%I)); eauto.
-      iFrame "Hh"; iSplitL "H1"; [|iSplitL "H2"; [|by iIntros (_ _) "_ >"]];
+      iApply (wp_par (λ _, True%I) (λ _, True%I)). iFrame "Hh".
+      iSplitL "H1"; [|iSplitL "H2"; [|by iIntros (_ _) "_ >"]];
         iApply worker_safe; by iSplit.
 Qed.
 End client.
