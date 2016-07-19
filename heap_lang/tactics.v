@@ -129,6 +129,9 @@ Proof.
   - do 2 f_equal. apply proof_irrel.
   - exfalso. unfold Closed in *; eauto using is_closed_correct.
 Qed.
+Lemma to_val_is_Some e :
+  is_Some (to_val e) → is_Some (heap_lang.to_val (to_expr e)).
+Proof. intros [v ?]; exists v; eauto using to_val_Some. Qed.
 
 Fixpoint subst (x : string) (es : expr) (e : expr)  : expr :=
   match e with
@@ -172,12 +175,16 @@ Hint Extern 0 (Closed _ _) => solve_closed : typeclass_instances.
 
 Ltac solve_to_val :=
   try match goal with
-  | |- language.to_val ?e = Some ?v => change (to_val e = Some v)
+  | |- context E [language.to_val ?e] =>
+     let X := context E [to_val e] in change X
   end;
   match goal with
   | |- to_val ?e = Some ?v =>
      let e' := W.of_expr e in change (to_val (W.to_expr e') = Some v);
      apply W.to_val_Some; simpl; reflexivity
+  | |- is_Some (to_val ?e) =>
+     let e' := W.of_expr e in change (is_Some (to_val (W.to_expr e')));
+     apply W.to_val_is_Some, (bool_decide_unpack _); vm_compute; exact I
   end.
 
 (** Substitution *)
