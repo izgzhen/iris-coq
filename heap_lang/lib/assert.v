@@ -1,22 +1,16 @@
-From iris.heap_lang Require Export derived.
-From iris.heap_lang Require Import wp_tactics substitution notation.
+From iris.proofmode Require Import tactics.
+From iris.heap_lang Require Import proofmode notation.
 
-Definition Assert (e : expr) : expr :=
-  if: e then #() else #0 #0. (* #0 #0 is unsafe *)
+Definition assert : val :=
+  λ: "v", if: "v" #() then #() else #0 #0. (* #0 #0 is unsafe *)
+(* just below ;; *)
+Notation "'assert:' e" := (assert (λ: <>, e))%E (at level 99) : expr_scope.
+Global Opaque assert.
 
-Instance closed_assert X e : Closed X e → Closed X (Assert e) := _.
-Instance do_subst_assert x es e er :
-  Subst x es e er → Subst x es (Assert e) (Assert er).
-Proof. intros; red. by rewrite /Assert /subst -/subst; f_equal/=. Qed.
-Typeclasses Opaque Assert.
-
-Lemma wp_assert {Σ} (Φ : val → iProp heap_lang Σ) :
-  ▷ Φ #() ⊢ WP Assert #true {{ Φ }}.
-Proof. by rewrite -wp_if_true -wp_value. Qed.
-
-Lemma wp_assert' {Σ} (Φ : val → iProp heap_lang Σ) e :
-  WP e {{ v, v = #true ∧ ▷ Φ #() }} ⊢ WP Assert e {{ Φ }}.
+Lemma wp_assert {Σ} (Φ : val → iProp heap_lang Σ) e `{!Closed [] e} :
+  WP e {{ v, v = #true ∧ ▷ Φ #() }} ⊢ WP assert: e {{ Φ }}.
 Proof.
-  rewrite /Assert. wp_focus e; apply wp_mono=>v.
-  apply uPred.pure_elim_l=>->. apply wp_assert.
+  iIntros "HΦ". rewrite /assert. wp_let. wp_seq.
+  iApply wp_wand_r; iFrame "HΦ"; iIntros (v) "[% ?]"; subst.
+  wp_if. done.
 Qed.

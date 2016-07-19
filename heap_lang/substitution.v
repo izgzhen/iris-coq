@@ -1,100 +1,134 @@
 From iris.heap_lang Require Export lang.
 Import heap_lang.
 
-(** The tactic [simpl_subst] performs substitutions in the goal. Its behavior
-can be tuned by declaring [Subst] instances. *)
-(** * Substitution *)
-Class Subst (x : string) (es : expr) (e : expr) (er : expr) :=
-  do_subst : subst x es e = er.
-Hint Mode Subst + + + - : typeclass_instances.
+Module W.
+Inductive expr :=
+  | ClosedExpr (e : heap_lang.expr) `{!Closed [] e}
+  (* Base lambda calculus *)
+  | Var (x : string)
+  | Rec (f x : binder) (e : expr)
+  | App (e1 e2 : expr)
+  (* Base types and their operations *)
+  | Lit (l : base_lit)
+  | UnOp (op : un_op) (e : expr)
+  | BinOp (op : bin_op) (e1 e2 : expr)
+  | If (e0 e1 e2 : expr)
+  (* Products *)
+  | Pair (e1 e2 : expr)
+  | Fst (e : expr)
+  | Snd (e : expr)
+  (* Sums *)
+  | InjL (e : expr)
+  | InjR (e : expr)
+  | Case (e0 : expr) (e1 : expr) (e2 : expr)
+  (* Concurrency *)
+  | Fork (e : expr)
+  (* Heap *)
+  | Alloc (e : expr)
+  | Load (e : expr)
+  | Store (e1 : expr) (e2 : expr)
+  | CAS (e0 : expr) (e1 : expr) (e2 : expr).
 
-(* Variables *)
-Lemma do_subst_var_eq x er : Subst x er (Var x) er.
-Proof. intros; red; simpl. by case_decide. Qed.
-Lemma do_subst_var_neq x y er : bool_decide (x ≠ y) → Subst x er (Var y) (Var y).
-Proof. rewrite bool_decide_spec. intros; red; simpl. by case_decide. Qed.
+Fixpoint subst (x : string) (es : expr) (e : expr)  : expr :=
+  match e with
+  | ClosedExpr e H => @ClosedExpr e H
+  | Var y => if decide (x = y) then es else Var y
+  | Rec f y e =>
+     Rec f y $ if decide (BNamed x ≠ f ∧ BNamed x ≠ y) then subst x es e else e
+  | App e1 e2 => App (subst x es e1) (subst x es e2)
+  | Lit l => Lit l
+  | UnOp op e => UnOp op (subst x es e)
+  | BinOp op e1 e2 => BinOp op (subst x es e1) (subst x es e2)
+  | If e0 e1 e2 => If (subst x es e0) (subst x es e1) (subst x es e2)
+  | Pair e1 e2 => Pair (subst x es e1) (subst x es e2)
+  | Fst e => Fst (subst x es e)
+  | Snd e => Snd (subst x es e)
+  | InjL e => InjL (subst x es e)
+  | InjR e => InjR (subst x es e)
+  | Case e0 e1 e2 => Case (subst x es e0) (subst x es e1) (subst x es e2)
+  | Fork e => Fork (subst x es e)
+  | Alloc e => Alloc (subst x es e)
+  | Load e => Load (subst x es e)
+  | Store e1 e2 => Store (subst x es e1) (subst x es e2)
+  | CAS e0 e1 e2 => CAS (subst x es e0) (subst x es e1) (subst x es e2)
+  end.
 
-Hint Extern 0 (Subst ?x ?v (Var ?y) _) =>
-  first [apply do_subst_var_eq
-        |apply do_subst_var_neq, I] : typeclass_instances.
+Fixpoint to_expr (e : expr) : heap_lang.expr :=
+  match e with
+  | ClosedExpr e _ => e
+  | Var x => heap_lang.Var x
+  | Rec f x e => heap_lang.Rec f x (to_expr e)
+  | App e1 e2 => heap_lang.App (to_expr e1) (to_expr e2)
+  | Lit l => heap_lang.Lit l
+  | UnOp op e => heap_lang.UnOp op (to_expr e)
+  | BinOp op e1 e2 => heap_lang.BinOp op (to_expr e1) (to_expr e2)
+  | If e0 e1 e2 => heap_lang.If (to_expr e0) (to_expr e1) (to_expr e2)
+  | Pair e1 e2 => heap_lang.Pair (to_expr e1) (to_expr e2)
+  | Fst e => heap_lang.Fst (to_expr e)
+  | Snd e => heap_lang.Snd (to_expr e)
+  | InjL e => heap_lang.InjL (to_expr e)
+  | InjR e => heap_lang.InjR (to_expr e)
+  | Case e0 e1 e2 => heap_lang.Case (to_expr e0) (to_expr e1) (to_expr e2)
+  | Fork e => heap_lang.Fork (to_expr e)
+  | Alloc e => heap_lang.Alloc (to_expr e)
+  | Load e => heap_lang.Load (to_expr e)
+  | Store e1 e2 => heap_lang.Store (to_expr e1) (to_expr e2)
+  | CAS e0 e1 e2 => heap_lang.CAS (to_expr e0) (to_expr e1) (to_expr e2)
+  end.
 
-(** Rec *)
-Lemma do_subst_rec_true {x es f y e er} :
-  bool_decide (BNamed x ≠ f ∧ BNamed x ≠ y) →
-  Subst x es e er → Subst x es (Rec f y e) (Rec f y er).
-Proof. rewrite bool_decide_spec. intros; red; f_equal/=; by case_decide. Qed.
-Lemma do_subst_rec_false {x es f y e} :
-  bool_decide (¬(BNamed x ≠ f ∧ BNamed x ≠ y)) →
-  Subst x es (Rec f y e) (Rec f y e).
-Proof. rewrite bool_decide_spec. intros; red; f_equal/=; by case_decide. Qed.
+Ltac of_expr e :=
+  lazymatch e with
+  | heap_lang.Var ?x => constr:(Var x)
+  | heap_lang.Rec ?f ?x ?e => let e := of_expr e in constr:(Rec f x e)
+  | heap_lang.App ?e1 ?e2 =>
+     let e1 := of_expr e1 in let e2 := of_expr e2 in constr:(App e1 e2)
+  | heap_lang.Lit ?l => constr:(Lit l)
+  | heap_lang.UnOp ?op ?e => let e := of_expr e in constr:(UnOp op e)
+  | heap_lang.BinOp ?op ?e1 ?e2 =>
+     let e1 := of_expr e1 in let e2 := of_expr e2 in constr:(BinOp op e1 e2)
+  | heap_lang.If ?e0 ?e1 ?e2 =>
+     let e0 := of_expr e0 in let e1 := of_expr e1 in let e2 := of_expr e2 in
+     constr:(If e0 e1 e2)
+  | heap_lang.Pair ?e1 ?e2 =>
+     let e1 := of_expr e1 in let e2 := of_expr e2 in constr:(Pair e1 e2)
+  | heap_lang.Fst ?e => let e := of_expr e in constr:(Fst e)
+  | heap_lang.Snd ?e => let e := of_expr e in constr:(Snd e)
+  | heap_lang.InjL ?e => let e := of_expr e in constr:(InjL e)
+  | heap_lang.InjR ?e => let e := of_expr e in constr:(InjR e)
+  | heap_lang.Case ?e0 ?e1 ?e2 =>
+     let e0 := of_expr e0 in let e1 := of_expr e1 in let e2 := of_expr e2 in
+     constr:(Case e0 e1 e2)
+  | heap_lang.Fork ?e => let e := of_expr e in constr:(Fork e)
+  | heap_lang.Alloc ?e => let e := of_expr e in constr:(Alloc e)
+  | heap_lang.Load ?e => let e := of_expr e in constr:(Load e)
+  | heap_lang.Store ?e1 ?e2 =>
+     let e1 := of_expr e1 in let e2 := of_expr e2 in constr:(Store e1 e2)
+  | heap_lang.CAS ?e0 ?e1 ?e2 =>
+     let e0 := of_expr e0 in let e1 := of_expr e1 in let e2 := of_expr e2 in
+     constr:(CAS e0 e1 e2)
+  | to_expr ?e => e
+  | of_val ?v => constr:(ClosedExpr (of_val v))
+  (* is_var e; constr:(Closed e) does not work *)
+  | _ => constr:(ltac:(is_var e; exact (ClosedExpr e)))
+  end.
 
-Local Ltac bool_decide_no_check := vm_cast_no_check I.
-Hint Extern 0 (Subst ?x ?v (Rec ?f ?y ?e) _) =>
-  match eval vm_compute in (bool_decide (BNamed x ≠ f ∧ BNamed x ≠ y)) with
-  | true => eapply (do_subst_rec_true ltac:(bool_decide_no_check))
-  | false => eapply (do_subst_rec_false ltac:(bool_decide_no_check))
-  end : typeclass_instances.
-
-Lemma do_subst_closed x es e : Closed [] e → Subst x es e e.
-Proof. apply closed_nil_subst. Qed.
-Hint Extern 10 (Subst ?x ?v ?e _) =>
-  is_var e; class_apply do_subst_closed : typeclass_instances.
-
-(* Values *)
-Instance do_subst_of_val x es v : Subst x es (of_val v) (of_val v) | 0.
-Proof. eapply closed_nil_subst, of_val_closed. Qed.
-
-(* Boring connectives *)
-Section subst.
-Context (x : string) (es : expr).
-Notation Sub := (Subst x es).
-
-(* Ground terms *)
-Global Instance do_subst_lit l : Sub (Lit l) (Lit l).
-Proof. done. Qed.
-Global Instance do_subst_app e1 e2 e1r e2r :
-  Sub e1 e1r → Sub e2 e2r → Sub (App e1 e2) (App e1r e2r).
-Proof. intros; red; f_equal/=; apply: do_subst. Qed.
-Global Instance do_subst_unop op e er : Sub e er → Sub (UnOp op e) (UnOp op er).
-Proof. by intros; red; f_equal/=. Qed.
-Global Instance do_subst_binop op e1 e2 e1r e2r :
-  Sub e1 e1r → Sub e2 e2r → Sub (BinOp op e1 e2) (BinOp op e1r e2r).
-Proof. by intros; red; f_equal/=. Qed.
-Global Instance do_subst_if e0 e1 e2 e0r e1r e2r :
-  Sub e0 e0r → Sub e1 e1r → Sub e2 e2r → Sub (If e0 e1 e2) (If e0r e1r e2r).
-Proof. by intros; red; f_equal/=. Qed.
-Global Instance do_subst_pair e1 e2 e1r e2r :
-  Sub e1 e1r → Sub e2 e2r → Sub (Pair e1 e2) (Pair e1r e2r).
-Proof. by intros ??; red; f_equal/=. Qed.
-Global Instance do_subst_fst e er : Sub e er → Sub (Fst e) (Fst er).
-Proof. by intros; red; f_equal/=. Qed.
-Global Instance do_subst_snd e er : Sub e er → Sub (Snd e) (Snd er).
-Proof. by intros; red; f_equal/=. Qed.
-Global Instance do_subst_injL e er : Sub e er → Sub (InjL e) (InjL er).
-Proof. by intros; red; f_equal/=. Qed.
-Global Instance do_subst_injR e er : Sub e er → Sub (InjR e) (InjR er).
-Proof. by intros; red; f_equal/=. Qed.
-Global Instance do_subst_case e0 e1 e2 e0r e1r e2r :
-  Sub e0 e0r → Sub e1 e1r → Sub e2 e2r → Sub (Case e0 e1 e2) (Case e0r e1r e2r).
-Proof. by intros; red; f_equal/=. Qed.
-Global Instance do_subst_fork e er : Sub e er → Sub (Fork e) (Fork er).
-Proof. by intros; red; f_equal/=. Qed.
-Global Instance do_subst_alloc e er : Sub e er → Sub (Alloc e) (Alloc er).
-Proof. by intros; red; f_equal/=. Qed.
-Global Instance do_subst_load e er : Sub e er → Sub (Load e) (Load er).
-Proof. by intros; red; f_equal/=. Qed.
-Global Instance do_subst_store e1 e2 e1r e2r :
-  Sub e1 e1r → Sub e2 e2r → Sub (Store e1 e2) (Store e1r e2r).
-Proof. by intros; red; f_equal/=. Qed.
-Global Instance do_subst_cas e0 e1 e2 e0r e1r e2r :
-  Sub e0 e0r → Sub e1 e1r → Sub e2 e2r → Sub (CAS e0 e1 e2) (CAS e0r e1r e2r).
-Proof. by intros; red; f_equal/=. Qed.
-End subst.
+Lemma to_expr_subst x er e :
+  to_expr (subst x er e) = heap_lang.subst x (to_expr er) (to_expr e).
+Proof.
+  induction e; simpl;
+    repeat case_decide; f_equal; auto using closed_nil_subst, eq_sym.
+Qed.
+End W.
 
 (** * The tactic *)
 Ltac simpl_subst :=
+  csimpl;
   repeat match goal with
-  | |- context [subst ?x ?es ?e] => progress rewrite (@do_subst x es e)
-  | |- _ => progress csimpl
-  end.
+  | |- context [subst ?x ?er ?e] =>
+      let er' := W.of_expr er in let e' := W.of_expr e in
+      change (subst x er e) with (subst x (W.to_expr er') (W.to_expr e'));
+      rewrite <-(W.to_expr_subst x); simpl (* ssr rewrite is slower *)
+  end;
+  unfold W.to_expr.
+Arguments W.to_expr : simpl never.
 Arguments subst : simpl never.

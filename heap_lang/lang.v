@@ -369,12 +369,6 @@ Proof. by rewrite /IntoValue /= => ->. Qed.
 Lemma is_closed_weaken X Y e : is_closed X e → X `included` Y → is_closed Y e.
 Proof. revert X Y; induction e; naive_solver (eauto; set_solver). Qed.
 
-Instance of_val_closed X v : Closed X (of_val v).
-Proof.
-  apply is_closed_weaken with []; last set_solver.
-  induction v; simpl; auto.
-Qed.
-
 Lemma closed_subst X e x es : Closed X e → x ∉ X → subst x es e = e.
 Proof.
   rewrite /Closed. revert X.
@@ -390,7 +384,10 @@ Proof. intros. by apply is_closed_weaken with [], included_nil. Qed.
 Hint Immediate closed_nil_closed : typeclass_instances.
 
 Instance closed_of_val X v : Closed X (of_val v).
-Proof. apply of_val_closed. Qed.
+Proof.
+  apply is_closed_weaken with []; last set_solver.
+  induction v; simpl; auto.
+Qed.
 Instance closed_rec X f x e : Closed (f :b: x :b: X) e → Closed X (Rec f x e).
 Proof. done. Qed.
 Lemma closed_var X x : bool_decide (x ∈ X) → Closed X (Var x).
