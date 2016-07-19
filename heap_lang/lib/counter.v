@@ -8,9 +8,9 @@ Import uPred.
 Definition newcounter : val := λ: <>, ref #0.
 Definition inc : val :=
   rec: "inc" "l" :=
-    let: "n" := !'"l" in
-    if: CAS '"l" '"n" (#1 + '"n") then #() else '"inc" '"l".
-Definition read : val := λ: "l", !'"l".
+    let: "n" := !"l" in
+    if: CAS "l" "n" (#1 + "n") then #() else "inc" "l".
+Definition read : val := λ: "l", !"l".
 Global Opaque newcounter inc get.
 
 (** The CMRA we need. *)
@@ -49,11 +49,12 @@ Lemma inc_spec l j (Φ : val → iProp) :
 Proof.
   iIntros "[Hl HΦ]". iLöb as "IH". wp_rec.
   iDestruct "Hl" as (N γ) "(% & #? & #Hγ & Hγf)".
-  wp_focus (! _)%E; iApply (auth_fsa (counter_inv l) (wp_fsa _) _ N); auto.
+  wp_focus (! _)%E.
+  iApply (auth_fsa (counter_inv l) (wp_fsa _) _ N); auto with fsaV.
   iIntros "{$Hγ $Hγf}"; iIntros (j') "[% Hl] /="; rewrite {2}/counter_inv.
   wp_load; iPvsIntro; iExists j; iSplit; [done|iIntros "{$Hl} Hγf"].
-  wp_let; wp_op.
-  wp_focus (CAS _ _ _); iApply (auth_fsa (counter_inv l) (wp_fsa _) _ N); auto.
+  wp_let; wp_op. wp_focus (CAS _ _ _).
+  iApply (auth_fsa (counter_inv l) (wp_fsa _) _ N); auto with fsaV.
   iIntros "{$Hγ $Hγf}"; iIntros (j'') "[% Hl] /="; rewrite {2}/counter_inv.
   destruct (decide (j `max` j'' = j `max` j')) as [Hj|Hj].
   - wp_cas_suc; first (by do 3 f_equal); iPvsIntro.
@@ -74,7 +75,8 @@ Lemma read_spec l j (Φ : val → iProp) :
   ⊢ WP read #l {{ Φ }}.
 Proof.
   iIntros "[Hc HΦ]". iDestruct "Hc" as (N γ) "(% & #? & #Hγ & Hγf)".
-  rewrite /read. wp_let. iApply (auth_fsa (counter_inv l) (wp_fsa _) _ N); auto.
+  rewrite /read. wp_let.
+  iApply (auth_fsa (counter_inv l) (wp_fsa _) _ N); auto with fsaV.
   iIntros "{$Hγ $Hγf}"; iIntros (j') "[% Hl] /=".
   wp_load; iPvsIntro; iExists (j `max` j'); iSplit.
   { iPureIntro; apply mnat_local_update; abstract lia. }

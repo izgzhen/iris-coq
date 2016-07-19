@@ -38,7 +38,7 @@ Tactic Notation "iSts" constr(H) "as"
   end;
     [let P := match goal with |- IsFSA ?P _ _ _ _ => P end in
      apply _ || fail "iSts: cannot viewshift in goal" P
-    |try fast_done (* atomic *)
+    |auto with fsaV
     |iAssumptionCore || fail "iSts:" H "not found"
     |iAssumption || fail "iSts: invariant not found"
     |solve_ndisj

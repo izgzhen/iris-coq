@@ -10,7 +10,7 @@ Section lifting.
 Context {Σ : iFunctor}.
 Implicit Types P Q : iProp heap_lang Σ.
 Implicit Types Φ : val → iProp heap_lang Σ.
-Implicit Types ef : option (expr []).
+Implicit Types ef : option expr.
 
 (** Bind. This bundles some arguments that wp_ectx_bind leaves as indices. *)
 Lemma wp_bind {E e} K Φ :
@@ -81,12 +81,13 @@ Proof.
   rewrite later_sep -(wp_value_pvs _ _ (Lit _)) //.
 Qed.
 
-Lemma wp_rec E f x erec e1 e2 v2 Φ :
+Lemma wp_rec E f x erec e1 e2 Φ :
   e1 = Rec f x erec →
-  to_val e2 = Some v2 →
+  is_Some (to_val e2) →
+  Closed (f :b: x :b: []) erec →
   ▷ WP subst' x e2 (subst' f e1 erec) @ E {{ Φ }} ⊢ WP App e1 e2 @ E {{ Φ }}.
 Proof.
-  intros -> ?. rewrite -(wp_lift_pure_det_head_step (App _ _)
+  intros -> [v2 ?] ?. rewrite -(wp_lift_pure_det_head_step (App _ _)
     (subst' x e2 (subst' f (Rec f x erec) erec)) None) //= ?right_id;
     intros; inv_head_step; eauto.
 Qed.
@@ -121,35 +122,35 @@ Proof.
     ?right_id //; intros; inv_head_step; eauto.
 Qed.
 
-Lemma wp_fst E e1 v1 e2 v2 Φ :
-  to_val e1 = Some v1 → to_val e2 = Some v2 →
+Lemma wp_fst E e1 v1 e2 Φ :
+  to_val e1 = Some v1 → is_Some (to_val e2) →
   ▷ (|={E}=> Φ v1) ⊢ WP Fst (Pair e1 e2) @ E {{ Φ }}.
 Proof.
-  intros. rewrite -(wp_lift_pure_det_head_step (Fst _) e1 None)
+  intros ? [v2 ?]. rewrite -(wp_lift_pure_det_head_step (Fst _) e1 None)
     ?right_id -?wp_value_pvs //; intros; inv_head_step; eauto.
 Qed.
 
-Lemma wp_snd E e1 v1 e2 v2 Φ :
-  to_val e1 = Some v1 → to_val e2 = Some v2 →
+Lemma wp_snd E e1 e2 v2 Φ :
+  is_Some (to_val e1) → to_val e2 = Some v2 →
   ▷ (|={E}=> Φ v2) ⊢ WP Snd (Pair e1 e2) @ E {{ Φ }}.
 Proof.
-  intros. rewrite -(wp_lift_pure_det_head_step (Snd _) e2 None)
+  intros [v1 ?] ?. rewrite -(wp_lift_pure_det_head_step (Snd _) e2 None)
     ?right_id -?wp_value_pvs //; intros; inv_head_step; eauto.
 Qed.
 
-Lemma wp_case_inl E e0 v0 e1 e2 Φ :
-  to_val e0 = Some v0 →
+Lemma wp_case_inl E e0 e1 e2 Φ :
+  is_Some (to_val e0) →
   ▷ WP App e1 e0 @ E {{ Φ }} ⊢ WP Case (InjL e0) e1 e2 @ E {{ Φ }}.
 Proof.
-  intros. rewrite -(wp_lift_pure_det_head_step (Case _ _ _)
+  intros [v0 ?]. rewrite -(wp_lift_pure_det_head_step (Case _ _ _)
     (App e1 e0) None) ?right_id //; intros; inv_head_step; eauto.
 Qed.
 
-Lemma wp_case_inr E e0 v0 e1 e2 Φ :
-  to_val e0 = Some v0 →
+Lemma wp_case_inr E e0 e1 e2 Φ :
+  is_Some (to_val e0) →
   ▷ WP App e2 e0 @ E {{ Φ }} ⊢ WP Case (InjR e0) e1 e2 @ E {{ Φ }}.
 Proof.
-  intros. rewrite -(wp_lift_pure_det_head_step (Case _ _ _)
+  intros [v0 ?]. rewrite -(wp_lift_pure_det_head_step (Case _ _ _)
     (App e2 e0) None) ?right_id //; intros; inv_head_step; eauto.
 Qed.
 End lifting.

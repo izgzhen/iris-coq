@@ -16,13 +16,13 @@ Fixpoint is_list (hd : val) (xs : list val) : iProp :=
 
 Definition rev : val :=
   rec: "rev" "hd" "acc" :=
-    match: '"hd" with
-      NONE => '"acc"
+    match: "hd" with
+      NONE => "acc"
     | SOME "l" =>
-       let: "tmp1" := Fst !'"l" in
-       let: "tmp2" := Snd !'"l" in
-       '"l" <- ('"tmp1", '"acc");;
-       '"rev" '"tmp2" '"hd"
+       let: "tmp1" := Fst !"l" in
+       let: "tmp2" := Snd !"l" in
+       "l" <- ("tmp1", "acc");;
+       "rev" "tmp2" "hd"
     end.
 Global Opaque rev.
 

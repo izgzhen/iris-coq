@@ -13,9 +13,9 @@ Definition oneShotGF (F : cFunctor) : gFunctor :=
 Instance inGF_oneShotG  `{inGF Λ Σ (oneShotGF F)} : oneShotG Λ Σ F.
 Proof. apply: inGF_inG. Qed.
 
-Definition client eM eW1 eW2 : expr [] :=
+Definition client eM eW1 eW2 : expr :=
   let: "b" := newbarrier #() in
-  (eM ;; ^signal '"b") || ((^wait '"b" ;; eW1) || (^wait '"b" ;; eW2)).
+  (eM ;; signal "b") || ((wait "b" ;; eW1) || (wait "b" ;; eW2)).
 Global Opaque client.
 
 Section proof.
@@ -29,7 +29,7 @@ Definition barrier_res γ (Φ : X → iProp) : iProp :=
   (∃ x, own γ (Cinr $ to_agree $
                Next (cFunctor_map G (iProp_fold, iProp_unfold) x)) ★ Φ x)%I.
 
-Lemma worker_spec e γ l (Φ Ψ : X → iProp) :
+Lemma worker_spec e γ l (Φ Ψ : X → iProp) `{!Closed [] e} :
   recv heapN N l (barrier_res γ Φ) ★ (∀ x, {{ Φ x }} e {{ _, Ψ x }})
   ⊢ WP wait #l ;; e {{ _, barrier_res γ Ψ }}.
 Proof.
@@ -64,15 +64,15 @@ Proof.
   iExists x; iFrame "Hγ". iApply Ψ_join; by iSplitL "Hx".
 Qed.
 
-Lemma client_spec_new (eM eW1 eW2 : expr []) (eM' eW1' eW2' : expr ("b" :b: [])) :
-  heapN ⊥ N → eM' = wexpr' eM → eW1' = wexpr' eW1 → eW2' = wexpr' eW2 →
+Lemma client_spec_new eM eW1 eW2 `{!Closed [] eM, !Closed [] eW1, !Closed [] eW2} :
+  heapN ⊥ N →
   heap_ctx heapN ★ P
   ★ {{ P }} eM {{ _, ∃ x, Φ x }}
   ★ (∀ x, {{ Φ1 x }} eW1 {{ _, Ψ1 x }})
   ★ (∀ x, {{ Φ2 x }} eW2 {{ _, Ψ2 x }})
-  ⊢ WP client eM' eW1' eW2' {{ _, ∃ γ, barrier_res γ Ψ }}.
+  ⊢ WP client eM eW1 eW2 {{ _, ∃ γ, barrier_res γ Ψ }}.
 Proof.
-  iIntros (HN -> -> ->) "/= (#Hh&HP&#He&#He1&#He2)"; rewrite /client.
+  iIntros (HN) "/= (#Hh&HP&#He&#He1&#He2)"; rewrite /client.
   iPvs (own_alloc (Cinl (Excl ()))) as (γ) "Hγ". done.
   wp_apply (newbarrier_spec heapN N (barrier_res γ Φ)); auto.
   iFrame "Hh". iIntros (l) "[Hr Hs]".

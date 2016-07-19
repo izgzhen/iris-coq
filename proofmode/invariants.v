@@ -38,7 +38,7 @@ Tactic Notation "iInvCore" constr(N) "as" constr(H) :=
   eapply tac_inv_fsa with _ _ _ _ N H _ _;
     [let P := match goal with |- IsFSA ?P _ _ _ _ => P end in
      apply _ || fail "iInv: cannot viewshift in goal" P
-    |try fast_done (* atomic *)
+    |trivial with fsaV
     |solve_ndisj
     |iAssumption || fail "iInv: invariant" N "not found"
     |env_cbv; reflexivity
@@ -64,7 +64,7 @@ Tactic Notation "iInvCore>" constr(N) "as" constr(H) :=
   eapply tac_inv_fsa_timeless with _ _ _ _ N H _ _;
     [let P := match goal with |- IsFSA ?P _ _ _ _ => P end in
      apply _ || fail "iInv: cannot viewshift in goal" P
-    |try fast_done (* atomic *)
+    |trivial with fsaV
     |solve_ndisj
     |iAssumption || fail "iOpenInv: invariant" N "not found"
     |let P := match goal with |- TimelessP ?P => P end in
