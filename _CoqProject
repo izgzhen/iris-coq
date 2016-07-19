@@ -106,6 +106,7 @@ tests/one_shot.v
 tests/joining_existentials.v
 tests/proofmode.v
 tests/barrier_client.v
+tests/list_reverse.v
 proofmode/coq_tactics.v
 proofmode/pviewshifts.v
 proofmode/environments.v
