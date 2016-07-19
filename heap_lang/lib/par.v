@@ -8,8 +8,7 @@ Definition par : val :=
     let: "v2" := Snd "fs" #() in
     let: "v1" := join "handle" in
     Pair "v1" "v2".
-Notation Par e1 e2 := (par (Pair (λ: <>, e1) (λ: <>, e2)))%E.
-Infix "||" := Par : expr_scope.
+Notation "e1 || e2" := (par (Pair (λ: <>, e1) (λ: <>, e2)))%E : expr_scope.
 Global Opaque par.
 
 Section proof.
