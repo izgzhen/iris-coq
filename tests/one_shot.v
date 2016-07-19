@@ -14,8 +14,8 @@ Definition one_shot_example : val := λ: <>,
       InjL <> => #()
     | InjR "n" =>
        match: !"x" with
-         InjL <> => Assert #false
-       | InjR "m" => Assert ("n" = "m")
+         InjL <> => assert: #false
+       | InjR "m" => assert: "n" = "m"
        end
     end)).
 Global Opaque one_shot_example.
@@ -79,7 +79,7 @@ Proof.
     iCombine "Hγ" "Hγ'" as "Hγ".
     iDestruct (own_valid with "#Hγ") as %[=->]%dec_agree_op_inv.
     iSplitL "Hl"; [iRight; by eauto|].
-    wp_match. iApply wp_assert'. wp_op=>?; simplify_eq/=; eauto.
+    wp_match. iApply wp_assert. wp_op=>?; simplify_eq/=; eauto.
 Qed.
 
 Lemma hoare_one_shot (Φ : val → iProp) :
