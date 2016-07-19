@@ -16,8 +16,6 @@ Ltac wp_done :=
   | |- is_Some (to_val _) => solve_to_val
   | |- to_val _ = Some _ => solve_to_val
   | |- language.to_val _ = Some _ => solve_to_val
-  | |- Is_true (atomic _) => rewrite /= ?to_of_val; fast_done
-  | |- Is_true (language.atomic _) => rewrite /= ?to_of_val; fast_done
   | _ => fast_done
   end.
 

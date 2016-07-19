@@ -6,7 +6,7 @@ Structure language := Language {
   state : Type;
   of_val : val → expr;
   to_val : expr → option val;
-  atomic : expr → bool;
+  atomic : expr → Prop;
   prim_step : expr → state → expr → state → option expr → Prop;
   to_of_val v : to_val (of_val v) = Some v;
   of_to_val e v : to_val e = Some v → of_val v = e;

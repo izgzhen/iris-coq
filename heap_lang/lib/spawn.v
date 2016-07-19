@@ -64,7 +64,7 @@ Proof.
   wp_apply wp_fork. iSplitR "Hf".
   - iPvsIntro. wp_seq. iPvsIntro. iApply "HΦ". rewrite /join_handle. eauto.
   - wp_focus (f _). iApply wp_wand_l. iFrame "Hf"; iIntros (v) "Hv".
-    iInv N as (v') "[Hl _]"; first wp_done.
+    iInv N as (v') "[Hl _]".
     wp_store. iPvsIntro. iSplit; [iNext|done].
     iExists (SOMEV v). iFrame. eauto.
 Qed.

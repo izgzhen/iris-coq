@@ -243,6 +243,9 @@ Class FrameShiftAssertion {Λ Σ A} (fsaV : Prop) (fsa : FSA Λ Σ A) := {
   fsa_frame_r E P Φ : (fsa E Φ ★ P) ⊢ fsa E (λ a, Φ a ★ P)
 }.
 
+(* Used to solve side-conditions related to [fsaV] *)
+Create HintDb fsaV.
+
 Section fsa.
 Context {Λ Σ A} (fsa : FSA Λ Σ A) `{!FrameShiftAssertion fsaV fsa}.
 Implicit Types Φ Ψ : A → iProp Λ Σ.

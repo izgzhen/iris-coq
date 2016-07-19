@@ -274,16 +274,16 @@ Inductive head_step : expr → state → expr → state → option (expr) → Pr
      head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) None.
 
 (** Atomic expressions *)
-Definition atomic (e: expr) : bool :=
+Definition atomic (e: expr) :=
   match e with
-  | Alloc e => bool_decide (is_Some (to_val e))
-  | Load e => bool_decide (is_Some (to_val e))
-  | Store e1 e2 => bool_decide (is_Some (to_val e1) ∧ is_Some (to_val e2))
+  | Alloc e => is_Some (to_val e)
+  | Load e => is_Some (to_val e)
+  | Store e1 e2 => is_Some (to_val e1) ∧ is_Some (to_val e2)
   | CAS e0 e1 e2 =>
-    bool_decide (is_Some (to_val e0) ∧ is_Some (to_val e1) ∧ is_Some (to_val e2))
+     is_Some (to_val e0) ∧ is_Some (to_val e1) ∧ is_Some (to_val e2)
   (* Make "skip" atomic *)
-  | App (Rec _ _ (Lit _)) (Lit _) => true
-  | _ => false
+  | App (Rec _ _ (Lit _)) (Lit _) => True
+  | _ => False
   end.
 
 (** Basic properties about the language *)

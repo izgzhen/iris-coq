@@ -163,6 +163,23 @@ Proof.
   induction e; simpl; repeat case_decide;
     f_equal; auto using is_closed_nil_subst, is_closed_of_val, eq_sym.
 Qed.
+
+Definition atomic (e : expr) :=
+  match e with
+  | Alloc e => bool_decide (is_Some (to_val e))
+  | Load e => bool_decide (is_Some (to_val e))
+  | Store e1 e2 => bool_decide (is_Some (to_val e1) ∧ is_Some (to_val e2))
+  | CAS e0 e1 e2 =>
+     bool_decide (is_Some (to_val e0) ∧ is_Some (to_val e1) ∧ is_Some (to_val e2))
+  (* Make "skip" atomic *)
+  | App (Rec _ _ (Lit _)) (Lit _) => true
+  | _ => false
+  end.
+Lemma atomic_correct e : atomic e → heap_lang.atomic (to_expr e).
+Proof.
+  destruct e; simpl; repeat (case_match; try done);
+    naive_solver eauto using to_val_is_Some.
+Qed.
 End W.
 
 Ltac solve_closed :=
@@ -186,6 +203,19 @@ Ltac solve_to_val :=
      let e' := W.of_expr e in change (is_Some (to_val (W.to_expr e')));
      apply W.to_val_is_Some, (bool_decide_unpack _); vm_compute; exact I
   end.
+
+Ltac solve_atomic :=
+  try match goal with
+  | |- context E [language.atomic ?e] =>
+     let X := context E [atomic e] in change X
+  end;
+  match goal with
+  | |- atomic ?e =>
+     let e' := W.of_expr e in change (atomic (W.to_expr e'));
+     apply W.atomic_correct; vm_compute; exact I
+  end.
+Hint Extern 0 (atomic _) => solve_atomic : fsaV.
+Hint Extern 0 (language.atomic _) => solve_atomic : fsaV.
 
 (** Substitution *)
 Ltac simpl_subst :=
