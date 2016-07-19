@@ -12,13 +12,12 @@ Notation "e1 || e2" := (par (Pair (λ: <>, e1) (λ: <>, e2)))%E : expr_scope.
 Global Opaque par.
 
 Section proof.
-Context {Σ : gFunctors} `{!heapG Σ, !spawnG Σ}.
-Context (heapN N : namespace).
+Context `{!heapG Σ, !spawnG Σ} (N : namespace).
 Local Notation iProp := (iPropG heap_lang Σ).
 
 Lemma par_spec (Ψ1 Ψ2 : val → iProp) e (f1 f2 : val) (Φ : val → iProp) :
   heapN ⊥ N → to_val e = Some (f1,f2)%V →
-  (heap_ctx heapN ★ WP f1 #() {{ Ψ1 }} ★ WP f2 #() {{ Ψ2 }} ★
+  (heap_ctx ★ WP f1 #() {{ Ψ1 }} ★ WP f2 #() {{ Ψ2 }} ★
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
   ⊢ WP par e {{ Φ }}.
 Proof.
@@ -34,7 +33,7 @@ Qed.
 Lemma wp_par (Ψ1 Ψ2 : val → iProp)
     (e1 e2 : expr) `{!Closed [] e1, Closed [] e2} (Φ : val → iProp) :
   heapN ⊥ N →
-  (heap_ctx heapN ★ WP e1 {{ Ψ1 }} ★ WP e2 {{ Ψ2 }} ★
+  (heap_ctx ★ WP e1 {{ Ψ1 }} ★ WP e2 {{ Ψ2 }} ★
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
   ⊢ WP e1 || e2 {{ Φ }}.
 Proof.

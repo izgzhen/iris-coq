@@ -4,7 +4,7 @@ From iris.program_logic Require Export hoare.
 From iris.heap_lang Require Import proofmode notation.
 
 Section list_reverse.
-Context `{!heapG Σ} (heapN : namespace).
+Context `{!heapG Σ}.
 Notation iProp := (iPropG heap_lang Σ).
 Implicit Types l : loc.
 
@@ -27,7 +27,7 @@ Definition rev : val :=
 Global Opaque rev.
 
 Lemma rev_acc_wp hd acc xs ys (Φ : val → iProp) :
-  heap_ctx heapN ★ is_list hd xs ★ is_list acc ys ★
+  heap_ctx ★ is_list hd xs ★ is_list acc ys ★
     (∀ w, is_list w (reverse xs ++ ys) -★ Φ w)
   ⊢ WP rev hd acc {{ Φ }}.
 Proof.
@@ -43,7 +43,7 @@ Proof.
 Qed.
 
 Lemma rev_wp hd xs (Φ : val → iProp) :
-  heap_ctx heapN ★ is_list hd xs ★ (∀ w, is_list w (reverse xs) -★ Φ w)
+  heap_ctx ★ is_list hd xs ★ (∀ w, is_list w (reverse xs) -★ Φ w)
   ⊢ WP rev hd (InjL #()) {{ Φ }}.
 Proof.
   iIntros "(#Hh & Hxs & HΦ)".

@@ -20,14 +20,13 @@ Instance inGF_counterG `{H : inGFs heap_lang Σ counterGF} : counterG Σ.
 Proof. destruct H; split; apply _. Qed.
 
 Section proof.
-Context {Σ : gFunctors} `{!heapG Σ, !counterG Σ}.
-Context (heapN : namespace).
+Context `{!heapG Σ, !counterG Σ}.
 Local Notation iProp := (iPropG heap_lang Σ).
 
 Definition counter_inv (l : loc) (n : mnat) : iProp := (l ↦ #n)%I.
 
 Definition counter (l : loc) (n : nat) : iProp :=
-  (∃ N γ, heapN ⊥ N ∧ heap_ctx heapN ∧
+  (∃ N γ, heapN ⊥ N ∧ heap_ctx ∧
           auth_ctx γ N (counter_inv l) ∧ auth_own γ (n:mnat))%I.
 
 (** The main proofs. *)
@@ -36,7 +35,7 @@ Proof. apply _. Qed.
 
 Lemma newcounter_spec N (R : iProp) Φ :
   heapN ⊥ N →
-  heap_ctx heapN ★ (∀ l, counter l 0 -★ Φ #l) ⊢ WP newcounter #() {{ Φ }}.
+  heap_ctx ★ (∀ l, counter l 0 -★ Φ #l) ⊢ WP newcounter #() {{ Φ }}.
 Proof.
   iIntros (?) "[#Hh HΦ]". rewrite /newcounter. wp_seq. wp_alloc l as "Hl".
   iPvs (auth_alloc (counter_inv l) N _ (O:mnat) with "[Hl]")

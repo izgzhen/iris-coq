@@ -18,18 +18,17 @@ Instance inGF_lockG `{H : inGFs heap_lang Σ lockGF} : lockG Σ.
 Proof. destruct H. split. apply: inGF_inG. Qed.
 
 Section proof.
-Context {Σ : gFunctors} `{!heapG Σ, !lockG Σ}.
-Context (heapN : namespace).
+Context `{!heapG Σ, !lockG Σ}.
 Local Notation iProp := (iPropG heap_lang Σ).
 
 Definition lock_inv (γ : gname) (l : loc) (R : iProp) : iProp :=
   (∃ b : bool, l ↦ #b ★ if b then True else own γ (Excl ()) ★ R)%I.
 
 Definition is_lock (l : loc) (R : iProp) : iProp :=
-  (∃ N γ, heapN ⊥ N ∧ heap_ctx heapN ∧ inv N (lock_inv γ l R))%I.
+  (∃ N γ, heapN ⊥ N ∧ heap_ctx ∧ inv N (lock_inv γ l R))%I.
 
 Definition locked (l : loc) (R : iProp) : iProp :=
-  (∃ N γ, heapN ⊥ N ∧ heap_ctx heapN ∧
+  (∃ N γ, heapN ⊥ N ∧ heap_ctx ∧
           inv N (lock_inv γ l R) ∧ own γ (Excl ()))%I.
 
 Global Instance lock_inv_ne n γ l : Proper (dist n ==> dist n) (lock_inv γ l).
@@ -48,7 +47,7 @@ Proof. rewrite /is_lock. iDestruct 1 as (N γ) "(?&?&?&_)"; eauto. Qed.
 
 Lemma newlock_spec N (R : iProp) Φ :
   heapN ⊥ N →
-  heap_ctx heapN ★ R ★ (∀ l, is_lock l R -★ Φ #l) ⊢ WP newlock #() {{ Φ }}.
+  heap_ctx ★ R ★ (∀ l, is_lock l R -★ Φ #l) ⊢ WP newlock #() {{ Φ }}.
 Proof.
   iIntros (?) "(#Hh & HR & HΦ)". rewrite /newlock.
   wp_seq. wp_alloc l as "Hl".

@@ -28,8 +28,7 @@ Proof. destruct H as (?&?). split. apply: inGF_inG. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.
-Context {Σ : gFunctors} `{!heapG Σ, !spawnG Σ}.
-Context (heapN N : namespace).
+Context `{!heapG Σ, !spawnG Σ} (N : namespace).
 Local Notation iProp := (iPropG heap_lang Σ).
 
 Definition spawn_inv (γ : gname) (l : loc) (Ψ : val → iProp) : iProp :=
@@ -37,7 +36,7 @@ Definition spawn_inv (γ : gname) (l : loc) (Ψ : val → iProp) : iProp :=
                    ∃ v, lv = SOMEV v ★ (Ψ v ∨ own γ (Excl ()))))%I.
 
 Definition join_handle (l : loc) (Ψ : val → iProp) : iProp :=
-  (heapN ⊥ N ★ ∃ γ, heap_ctx heapN ★ own γ (Excl ()) ★
+  (heapN ⊥ N ★ ∃ γ, heap_ctx ★ own γ (Excl ()) ★
                     inv N (spawn_inv γ l Ψ))%I.
 
 Typeclasses Opaque join_handle.
@@ -53,7 +52,7 @@ Proof. solve_proper. Qed.
 Lemma spawn_spec (Ψ : val → iProp) e (f : val) (Φ : val → iProp) :
   to_val e = Some f →
   heapN ⊥ N →
-  heap_ctx heapN ★ WP f #() {{ Ψ }} ★ (∀ l, join_handle l Ψ -★ Φ #l)
+  heap_ctx ★ WP f #() {{ Ψ }} ★ (∀ l, join_handle l Ψ -★ Φ #l)
   ⊢ WP spawn e {{ Φ }}.
 Proof.
   iIntros (<-%of_to_val ?) "(#Hh & Hf & HΦ)". rewrite /spawn.

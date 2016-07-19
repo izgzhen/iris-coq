@@ -21,8 +21,7 @@ Proof. destruct H as (?&?&?). split; apply _. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.
-Context {Σ : gFunctors} `{!heapG Σ, !barrierG Σ}.
-Context (heapN N : namespace).
+Context `{!heapG Σ, !barrierG Σ} (N : namespace).
 Implicit Types I : gset gname.
 Local Notation iProp := (iPropG heap_lang Σ).
 
@@ -42,7 +41,7 @@ Definition barrier_inv (l : loc) (P : iProp) (s : state) : iProp :=
   (l ↦ s ★ ress (state_to_prop s P) (state_I s))%I.
 
 Definition barrier_ctx (γ : gname) (l : loc) (P : iProp) : iProp :=
-  (■ (heapN ⊥ N) ★ heap_ctx heapN ★ sts_ctx γ N (barrier_inv l P))%I.
+  (■ (heapN ⊥ N) ★ heap_ctx ★ sts_ctx γ N (barrier_inv l P))%I.
 
 Definition send (l : loc) (P : iProp) : iProp :=
   (∃ γ, barrier_ctx γ l P ★ sts_ownS γ low_states {[ Send ]})%I.
@@ -96,8 +95,7 @@ Qed.
 (** Actual proofs *)
 Lemma newbarrier_spec (P : iProp) (Φ : val → iProp) :
   heapN ⊥ N →
-  heap_ctx heapN ★ (∀ l, recv l P ★ send l P -★ Φ #l)
-  ⊢ WP newbarrier #() {{ Φ }}.
+  heap_ctx ★ (∀ l, recv l P ★ send l P -★ Φ #l) ⊢ WP newbarrier #() {{ Φ }}.
 Proof.
   iIntros (HN) "[#? HΦ]".
   rewrite /newbarrier. wp_seq. wp_alloc l as "Hl".

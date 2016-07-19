@@ -8,6 +8,7 @@ Import uPred.
    a finmap as their state. Or maybe even beyond "as their state", i.e. arbitrary
    predicates over finmaps instead of just ownP. *)
 
+Definition heapN : namespace := nroot .@ "heap".
 Definition heapUR : ucmraT := gmapUR loc (prodR fracR (dec_agreeR val)).
 
 (** The CMRA we need. *)
@@ -22,7 +23,7 @@ Definition to_heap : state → heapUR := fmap (λ v, (1%Qp, DecAgree v)).
 Definition of_heap : heapUR → state := omap (maybe DecAgree ∘ snd).
 
 Section definitions.
-  Context `{i : heapG Σ}.
+  Context `{heapG Σ}.
 
   Definition heap_mapsto_def (l : loc) (q : Qp) (v: val) : iPropG heap_lang Σ :=
     auth_own heap_name {[ l := (q, DecAgree v) ]}.
@@ -33,12 +34,12 @@ Section definitions.
 
   Definition heap_inv (h : heapUR) : iPropG heap_lang Σ :=
     ownP (of_heap h).
-  Definition heap_ctx (N : namespace) : iPropG heap_lang Σ :=
-    auth_ctx heap_name N heap_inv.
+  Definition heap_ctx : iPropG heap_lang Σ :=
+    auth_ctx heap_name heapN heap_inv.
 
   Global Instance heap_inv_proper : Proper ((≡) ==> (⊣⊢)) heap_inv.
   Proof. solve_proper. Qed.
-  Global Instance heap_ctx_persistent N : PersistentP (heap_ctx N).
+  Global Instance heap_ctx_persistent : PersistentP heap_ctx.
   Proof. apply _. Qed.
 End definitions.
 
@@ -53,7 +54,6 @@ Notation "l ↦ v" := (heap_mapsto l 1 v) (at level 20) : uPred_scope.
 
 Section heap.
   Context {Σ : gFunctors}.
-  Implicit Types N : namespace.
   Implicit Types P Q : iPropG heap_lang Σ.
   Implicit Types Φ : val → iPropG heap_lang Σ.
   Implicit Types σ : state.
@@ -103,13 +103,13 @@ Section heap.
   Hint Resolve heap_store_valid.
 
   (** Allocation *)
-  Lemma heap_alloc N E σ :
-    authG heap_lang Σ heapUR → nclose N ⊆ E →
-    ownP σ ={E}=> ∃ _ : heapG Σ, heap_ctx N ∧ [★ map] l↦v ∈ σ, l ↦ v.
+  Lemma heap_alloc E σ :
+    authG heap_lang Σ heapUR → nclose heapN ⊆ E →
+    ownP σ ={E}=> ∃ _ : heapG Σ, heap_ctx ∧ [★ map] l↦v ∈ σ, l ↦ v.
   Proof.
     intros. rewrite -{1}(from_to_heap σ). etrans.
     { rewrite [ownP _]later_intro.
-      apply (auth_alloc (ownP ∘ of_heap) N E); auto using to_heap_valid. }
+      apply (auth_alloc (ownP ∘ of_heap) heapN E); auto using to_heap_valid. }
     apply pvs_mono, exist_elim=> γ.
     rewrite -(exist_intro (HeapG _ _ γ)) /heap_ctx; apply and_mono_r.
     rewrite heap_mapsto_eq /heap_mapsto_def /heap_name.
@@ -149,9 +149,9 @@ Section heap.
 
   (** Weakest precondition *)
   (* FIXME: try to reduce usage of wp_pvs. We're losing view shifts here. *)
-  Lemma wp_alloc N E e v Φ :
-    to_val e = Some v → nclose N ⊆ E →
-    heap_ctx N ★ ▷ (∀ l, l ↦ v ={E}=★ Φ (LitV (LitLoc l))) ⊢ WP Alloc e @ E {{ Φ }}.
+  Lemma wp_alloc E e v Φ :
+    to_val e = Some v → nclose heapN ⊆ E →
+    heap_ctx ★ ▷ (∀ l, l ↦ v ={E}=★ Φ (LitV (LitLoc l))) ⊢ WP Alloc e @ E {{ Φ }}.
   Proof.
     iIntros (??) "[#Hinv HΦ]". rewrite /heap_ctx.
     iPvs (auth_empty heap_name) as "Hheap".
@@ -166,9 +166,9 @@ Section heap.
     iIntros "Hheap". iApply "HΦ". by rewrite heap_mapsto_eq /heap_mapsto_def.
   Qed.
 
-  Lemma wp_load N E l q v Φ :
-    nclose N ⊆ E →
-    heap_ctx N ★ ▷ l ↦{q} v ★ ▷ (l ↦{q} v ={E}=★ Φ v)
+  Lemma wp_load E l q v Φ :
+    nclose heapN ⊆ E →
+    heap_ctx ★ ▷ l ↦{q} v ★ ▷ (l ↦{q} v ={E}=★ Φ v)
     ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
   Proof.
     iIntros (?) "[#Hh [Hl HΦ]]".
@@ -181,9 +181,9 @@ Section heap.
     rewrite of_heap_singleton_op //. by iFrame.
   Qed.
 
-  Lemma wp_store N E l v' e v Φ :
-    to_val e = Some v → nclose N ⊆ E →
-    heap_ctx N ★ ▷ l ↦ v' ★ ▷ (l ↦ v ={E}=★ Φ (LitV LitUnit))
+  Lemma wp_store E l v' e v Φ :
+    to_val e = Some v → nclose heapN ⊆ E →
+    heap_ctx ★ ▷ l ↦ v' ★ ▷ (l ↦ v ={E}=★ Φ (LitV LitUnit))
     ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
   Proof.
     iIntros (??) "[#Hh [Hl HΦ]]".
@@ -197,9 +197,9 @@ Section heap.
     rewrite of_heap_singleton_op //; eauto. by iFrame.
   Qed.
 
-  Lemma wp_cas_fail N E l q v' e1 v1 e2 v2 Φ :
-    to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 → nclose N ⊆ E →
-    heap_ctx N ★ ▷ l ↦{q} v' ★ ▷ (l ↦{q} v' ={E}=★ Φ (LitV (LitBool false)))
+  Lemma wp_cas_fail E l q v' e1 v1 e2 v2 Φ :
+    to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 → nclose heapN ⊆ E →
+    heap_ctx ★ ▷ l ↦{q} v' ★ ▷ (l ↦{q} v' ={E}=★ Φ (LitV (LitBool false)))
     ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
   Proof.
     iIntros (????) "[#Hh [Hl HΦ]]".
@@ -212,9 +212,9 @@ Section heap.
     rewrite of_heap_singleton_op //. by iFrame.
   Qed.
 
-  Lemma wp_cas_suc N E l e1 v1 e2 v2 Φ :
-    to_val e1 = Some v1 → to_val e2 = Some v2 → nclose N ⊆ E →
-    heap_ctx N ★ ▷ l ↦ v1 ★ ▷ (l ↦ v2 ={E}=★ Φ (LitV (LitBool true)))
+  Lemma wp_cas_suc E l e1 v1 e2 v2 Φ :
+    to_val e1 = Some v1 → to_val e2 = Some v2 → nclose heapN ⊆ E →
+    heap_ctx ★ ▷ l ↦ v1 ★ ▷ (l ↦ v2 ={E}=★ Φ (LitV (LitBool true)))
     ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
   Proof.
     iIntros (???) "[#Hh [Hl HΦ]]".

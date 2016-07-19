@@ -30,8 +30,7 @@ Proof. intros [? _]; apply: inGF_inG. Qed.
 Notation Pending := (Cinl (Excl ())).
 
 Section proof.
-Context {Σ : gFunctors} `{!heapG Σ, !one_shotG Σ}.
-Context (heapN N : namespace) (HN : heapN ⊥ N).
+Context `{!heapG Σ, !one_shotG Σ} (N : namespace) (HN : heapN ⊥ N).
 Local Notation iProp := (iPropG heap_lang Σ).
 
 Definition one_shot_inv (γ : gname) (l : loc) : iProp :=
@@ -39,7 +38,7 @@ Definition one_shot_inv (γ : gname) (l : loc) : iProp :=
   ∃ n : Z, l ↦ SOMEV #n ★ own γ (Cinr (DecAgree n)))%I.
 
 Lemma wp_one_shot (Φ : val → iProp) :
-  heap_ctx heapN ★ (∀ f1 f2 : val,
+  heap_ctx ★ (∀ f1 f2 : val,
     (∀ n : Z, □ WP f1 #n {{ w, w = #true ∨ w = #false }}) ★
     □ WP f2 #() {{ g, □ WP g #() {{ _, True }} }} -★ Φ (f1,f2)%V)
   ⊢ WP one_shot_example #() {{ Φ }}.
@@ -83,7 +82,7 @@ Proof.
 Qed.
 
 Lemma hoare_one_shot (Φ : val → iProp) :
-  heap_ctx heapN ⊢ {{ True }} one_shot_example #()
+  heap_ctx ⊢ {{ True }} one_shot_example #()
     {{ ff,
       (∀ n : Z, {{ True }} Fst ff #n {{ w, w = #true ∨ w = #false }}) ★
       {{ True }} Snd ff #() {{ g, {{ True }} g #() {{ _, True }} }}

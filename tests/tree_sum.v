@@ -33,8 +33,8 @@ Definition sum' : val := λ: "t",
 
 Global Opaque sum_loop sum'.
 
-Lemma sum_loop_wp `{!heapG Σ} heapN v t l (n : Z) (Φ : val → iPropG heap_lang Σ) :
-  heap_ctx heapN ★ l ↦ #n ★ is_tree v t
+Lemma sum_loop_wp `{!heapG Σ} v t l (n : Z) (Φ : val → iPropG heap_lang Σ) :
+  heap_ctx ★ l ↦ #n ★ is_tree v t
     ★ (l ↦ #(sum t + n) -★ is_tree v t -★ Φ #())
   ⊢ WP sum_loop v #l {{ Φ }}.
 Proof.
@@ -54,8 +54,8 @@ Proof.
     iExists ll, lr, vl, vr. by iFrame.
 Qed.
 
-Lemma sum_wp `{!heapG Σ} heapN v t Φ :
-  heap_ctx heapN ★ is_tree v t ★ (is_tree v t -★ Φ #(sum t))
+Lemma sum_wp `{!heapG Σ} v t Φ :
+  heap_ctx ★ is_tree v t ★ (is_tree v t -★ Φ #(sum t))
   ⊢ WP sum' v {{ Φ }}.
 Proof.
   iIntros "(#Hh & Ht & HΦ)". rewrite /sum'.

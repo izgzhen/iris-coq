@@ -14,7 +14,7 @@ Definition client : expr :=
 Global Opaque worker client.
 
 Section client.
-  Context {Σ : gFunctors} `{!heapG Σ, !barrierG Σ, !spawnG Σ} (heapN N : namespace).
+  Context {Σ : gFunctors} `{!heapG Σ, !barrierG Σ, !spawnG Σ} (N : namespace).
   Local Notation iProp := (iPropG heap_lang Σ).
 
   Definition y_inv (q : Qp) (l : loc) : iProp :=
@@ -27,8 +27,7 @@ Section client.
   Qed.
 
   Lemma worker_safe q (n : Z) (b y : loc) :
-    heap_ctx heapN ★ recv heapN N b (y_inv q y)
-    ⊢ WP worker n #b #y {{ _, True }}.
+    heap_ctx ★ recv N b (y_inv q y) ⊢ WP worker n #b #y {{ _, True }}.
   Proof.
     iIntros "[#Hh Hrecv]". wp_lam. wp_let.
     wp_apply wait_spec; iFrame "Hrecv".
@@ -37,12 +36,12 @@ Section client.
     iApply wp_wand_r; iSplitR; [iApply "Hf"|by iIntros (v) "_"].
   Qed.
 
-  Lemma client_safe : heapN ⊥ N → heap_ctx heapN ⊢ WP client {{ _, True }}.
+  Lemma client_safe : heapN ⊥ N → heap_ctx ⊢ WP client {{ _, True }}.
   Proof.
     iIntros (?) "#Hh"; rewrite /client. wp_alloc y as "Hy". wp_let.
-    wp_apply (newbarrier_spec heapN N (y_inv 1 y)); first done.
+    wp_apply (newbarrier_spec N (y_inv 1 y)); first done.
     iFrame "Hh". iIntros (l) "[Hr Hs]". wp_let.
-    iApply (wp_par heapN N (λ _, True%I) (λ _, True%I)); first done.
+    iApply (wp_par N (λ _, True%I) (λ _, True%I)); first done.
     iFrame "Hh". iSplitL "Hy Hs".
     - (* The original thread, the sender. *)
       wp_store. iApply signal_spec; iFrame "Hs"; iSplit; [|done].
@@ -52,7 +51,7 @@ Section client.
       iDestruct (recv_weaken with "[] Hr") as "Hr".
       { iIntros "Hy". by iApply (y_inv_split with "Hy"). }
       iPvs (recv_split with "Hr") as "[H1 H2]"; first done.
-      iApply (wp_par heapN N (λ _, True%I) (λ _, True%I)); eauto.
+      iApply (wp_par N (λ _, True%I) (λ _, True%I)); eauto.
       iFrame "Hh"; iSplitL "H1"; [|iSplitL "H2"; [|by iIntros (_ _) "_ >"]];
         iApply worker_safe; by iSplit.
 Qed.
@@ -65,8 +64,8 @@ Section ClosedProofs.
   Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ v, True }}.
   Proof.
     iIntros "! Hσ".
-    iPvs (heap_alloc (nroot .@ "Barrier") with "Hσ") as (h) "[#Hh _]"; first done.
-    iApply (client_safe (nroot .@ "Barrier") (nroot .@ "Heap")); auto with ndisj.
+    iPvs (heap_alloc with "Hσ") as (h) "[#Hh _]"; first done.
+    iApply (client_safe (nroot .@ "barrier")); auto with ndisj.
   Qed.
 
   Print Assumptions client_safe_closed.

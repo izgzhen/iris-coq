@@ -20,8 +20,8 @@ Global Opaque client.
 
 Section proof.
 Context (G : cFunctor).
-Context {Σ : gFunctors} `{!heapG Σ, !barrierG Σ, !spawnG Σ, !oneShotG heap_lang Σ G}.
-Context (heapN N : namespace).
+Context `{!heapG Σ, !barrierG Σ, !spawnG Σ, !oneShotG heap_lang Σ G}.
+Context (N : namespace).
 Local Notation iProp := (iPropG heap_lang Σ).
 Local Notation X := (G iProp).
 
@@ -30,7 +30,7 @@ Definition barrier_res γ (Φ : X → iProp) : iProp :=
                Next (cFunctor_map G (iProp_fold, iProp_unfold) x)) ★ Φ x)%I.
 
 Lemma worker_spec e γ l (Φ Ψ : X → iProp) `{!Closed [] e} :
-  recv heapN N l (barrier_res γ Φ) ★ (∀ x, {{ Φ x }} e {{ _, Ψ x }})
+  recv N l (barrier_res γ Φ) ★ (∀ x, {{ Φ x }} e {{ _, Ψ x }})
   ⊢ WP wait #l ;; e {{ _, barrier_res γ Ψ }}.
 Proof.
   iIntros "[Hl #He]". wp_apply wait_spec; iFrame "Hl".
@@ -66,7 +66,7 @@ Qed.
 
 Lemma client_spec_new eM eW1 eW2 `{!Closed [] eM, !Closed [] eW1, !Closed [] eW2} :
   heapN ⊥ N →
-  heap_ctx heapN ★ P
+  heap_ctx ★ P
   ★ {{ P }} eM {{ _, ∃ x, Φ x }}
   ★ (∀ x, {{ Φ1 x }} eW1 {{ _, Ψ1 x }})
   ★ (∀ x, {{ Φ2 x }} eW2 {{ _, Ψ2 x }})
@@ -74,10 +74,10 @@ Lemma client_spec_new eM eW1 eW2 `{!Closed [] eM, !Closed [] eW1, !Closed [] eW2
 Proof.
   iIntros (HN) "/= (#Hh&HP&#He&#He1&#He2)"; rewrite /client.
   iPvs (own_alloc (Cinl (Excl ()))) as (γ) "Hγ". done.
-  wp_apply (newbarrier_spec heapN N (barrier_res γ Φ)); auto.
+  wp_apply (newbarrier_spec N (barrier_res γ Φ)); auto.
   iFrame "Hh". iIntros (l) "[Hr Hs]".
   set (workers_post (v : val) := (barrier_res γ Ψ1 ★ barrier_res γ Ψ2)%I).
-  wp_let. wp_apply (wp_par _ _ (λ _, True)%I workers_post);
+  wp_let. wp_apply (wp_par _ (λ _, True)%I workers_post);
     try iFrame "Hh"; first done.
   iSplitL "HP Hs Hγ"; [|iSplitL "Hr"].
   - wp_focus eM. iApply wp_wand_l; iSplitR "HP"; [|by iApply "He"].
@@ -88,7 +88,7 @@ Proof.
     iExists x; auto.
   - iDestruct (recv_weaken with "[] Hr") as "Hr"; first by iApply P_res_split.
     iPvs (recv_split with "Hr") as "[H1 H2]"; first done.
-    wp_apply (wp_par _ _ (λ _, barrier_res γ Ψ1)%I
+    wp_apply (wp_par _ (λ _, barrier_res γ Ψ1)%I
       (λ _, barrier_res γ Ψ2)%I); try iFrame "Hh"; first done.
     iSplitL "H1"; [|iSplitL "H2"].
     + iApply worker_spec; auto.

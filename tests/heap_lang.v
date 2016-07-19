@@ -23,21 +23,21 @@ Section LiftingTests.
 
   Definition heap_e  : expr :=
     let: "x" := ref #1 in "x" <- !"x" + #1 ;; !"x".
-  Lemma heap_e_spec E N :
-     nclose N ⊆ E → heap_ctx N ⊢ WP heap_e @ E {{ v, v = #2 }}.
+  Lemma heap_e_spec E :
+     nclose heapN ⊆ E → heap_ctx ⊢ WP heap_e @ E {{ v, v = #2 }}.
   Proof.
-    iIntros (HN) "#?". rewrite /heap_e. iApply (wp_mask_weaken N); first done.
+    iIntros (HN) "#?". rewrite /heap_e.
     wp_alloc l. wp_let. wp_load. wp_op. wp_store. by wp_load.
   Qed.
 
-  Definition heap_e2  : expr :=
+  Definition heap_e2 : expr :=
     let: "x" := ref #1 in
     let: "y" := ref #1 in
     "x" <- !"x" + #1 ;; !"x".
-  Lemma heap_e2_spec E N :
-     nclose N ⊆ E → heap_ctx N ⊢ WP heap_e2 @ E {{ v, v = #2 }}.
+  Lemma heap_e2_spec E :
+     nclose heapN ⊆ E → heap_ctx ⊢ WP heap_e2 @ E {{ v, v = #2 }}.
   Proof.
-    iIntros (HN) "#?". rewrite /heap_e2. iApply (wp_mask_weaken N); first done.
+    iIntros (HN) "#?". rewrite /heap_e2.
     wp_alloc l. wp_let. wp_alloc l'. wp_let.
     wp_load. wp_op. wp_store. wp_load. done.
   Qed.
@@ -82,7 +82,7 @@ Section ClosedProofs.
   Lemma heap_e_closed σ : {{ ownP σ : iProp }} heap_e {{ v, v = #2 }}.
   Proof.
     iProof. iIntros "! Hσ".
-    iPvs (heap_alloc nroot with "Hσ") as (h) "[? _]"; first by rewrite nclose_nroot.
-    iApply heap_e_spec; last done; by rewrite nclose_nroot.
+    iPvs (heap_alloc with "Hσ") as (h) "[? _]"; first solve_ndisj.
+    by iApply heap_e_spec; first solve_ndisj.
   Qed.
 End ClosedProofs.
