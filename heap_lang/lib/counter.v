@@ -20,20 +20,20 @@ Instance inGF_counterG `{H : inGFs heap_lang Σ counterGF} : counterG Σ.
 Proof. destruct H; split; apply _. Qed.
 
 Section proof.
-Context `{!heapG Σ, !counterG Σ}.
+Context `{!heapG Σ, !counterG Σ} (N : namespace).
 Local Notation iProp := (iPropG heap_lang Σ).
 
 Definition counter_inv (l : loc) (n : mnat) : iProp := (l ↦ #n)%I.
 
 Definition counter (l : loc) (n : nat) : iProp :=
-  (∃ N γ, heapN ⊥ N ∧ heap_ctx ∧
-          auth_ctx γ N (counter_inv l) ∧ auth_own γ (n:mnat))%I.
+  (∃ γ, heapN ⊥ N ∧ heap_ctx ∧
+        auth_ctx γ N (counter_inv l) ∧ auth_own γ (n:mnat))%I.
 
 (** The main proofs. *)
 Global Instance counter_persistent l n : PersistentP (counter l n).
 Proof. apply _. Qed.
 
-Lemma newcounter_spec N (R : iProp) Φ :
+Lemma newcounter_spec (R : iProp) Φ :
   heapN ⊥ N →
   heap_ctx ★ (∀ l, counter l 0 -★ Φ #l) ⊢ WP newcounter #() {{ Φ }}.
 Proof.
@@ -47,7 +47,7 @@ Lemma inc_spec l j (Φ : val → iProp) :
   counter l j ★ (counter l (S j) -★ Φ #()) ⊢ WP inc #l {{ Φ }}.
 Proof.
   iIntros "[Hl HΦ]". iLöb as "IH". wp_rec.
-  iDestruct "Hl" as (N γ) "(% & #? & #Hγ & Hγf)".
+  iDestruct "Hl" as (γ) "(% & #? & #Hγ & Hγf)".
   wp_focus (! _)%E.
   iApply (auth_fsa (counter_inv l) (wp_fsa _) _ N); auto with fsaV.
   iIntros "{$Hγ $Hγf}"; iIntros (j') "[% Hl] /="; rewrite {2}/counter_inv.
@@ -62,7 +62,7 @@ Proof.
     rewrite {2}/counter_inv !mnat_op_max (Nat.max_l (S _)); last abstract lia.
     rewrite Nat2Z.inj_succ -Z.add_1_l.
     iIntros "{$Hl} Hγf". wp_if.
-    iPvsIntro; iApply "HΦ"; iExists N, γ; repeat iSplit; eauto.
+    iPvsIntro; iApply "HΦ"; iExists γ; repeat iSplit; eauto.
     iApply (auth_own_mono with "Hγf"). apply mnat_included. abstract lia.
   - wp_cas_fail; first (rewrite !mnat_op_max; by intros [= ?%Nat2Z.inj]).
     iPvsIntro. iExists j; iSplit; [done|iIntros "{$Hl} Hγf"].
@@ -73,7 +73,7 @@ Lemma read_spec l j (Φ : val → iProp) :
   counter l j ★ (∀ i, ■ (j ≤ i)%nat → counter l i -★ Φ #i)
   ⊢ WP read #l {{ Φ }}.
 Proof.
-  iIntros "[Hc HΦ]". iDestruct "Hc" as (N γ) "(% & #? & #Hγ & Hγf)".
+  iIntros "[Hc HΦ]". iDestruct "Hc" as (γ) "(% & #? & #Hγ & Hγf)".
   rewrite /read. wp_let.
   iApply (auth_fsa (counter_inv l) (wp_fsa _) _ N); auto with fsaV.
   iIntros "{$Hγ $Hγf}"; iIntros (j') "[% Hl] /=".
