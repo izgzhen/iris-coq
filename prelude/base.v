@@ -590,7 +590,7 @@ Notation "(∩ x )" := (λ y, intersection y x) (only parsing) : C_scope.
 
 Class Difference A := difference: A → A → A.
 Instance: Params (@difference) 2.
-Infix "∖" := difference (at level 40) : C_scope.
+Infix "∖" := difference (at level 40, left associativity) : C_scope.
 Notation "(∖)" := difference (only parsing) : C_scope.
 Notation "( x ∖)" := (difference x) (only parsing) : C_scope.
 Notation "(∖ x )" := (λ y, difference y x) (only parsing) : C_scope.
