@@ -7,8 +7,8 @@ Definition assert : val :=
 Notation "'assert:' e" := (assert (λ: <>, e))%E (at level 99) : expr_scope.
 Global Opaque assert.
 
-Lemma wp_assert {Σ} (Φ : val → iProp heap_lang Σ) e `{!Closed [] e} :
-  WP e {{ v, v = #true ∧ ▷ Φ #() }} ⊢ WP assert: e {{ Φ }}.
+Lemma wp_assert {Σ} E (Φ : val → iProp heap_lang Σ) e `{!Closed [] e} :
+  WP e @ E {{ v, v = #true ∧ ▷ Φ #() }} ⊢ WP assert: e @ E {{ Φ }}.
 Proof.
   iIntros "HΦ". rewrite /assert. wp_let. wp_seq.
   iApply wp_wand_r; iFrame "HΦ"; iIntros (v) "[% ?]"; subst.
