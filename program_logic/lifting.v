@@ -67,10 +67,10 @@ Lemma wp_lift_atomic_step {E Φ} e1 σ1 :
     ■ prim_step e1 σ1 (of_val v2) σ2 ef ∧ ownP σ2 -★ (|={E}=> Φ v2) ★ wp_fork ef)
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  iIntros (??) "[Hσ1 Hwp]". iApply (wp_lift_step E E _ e1); auto using atomic_not_val.
-  iPvsIntro. iExists σ1. repeat iSplit; eauto 10 using atomic_step.
+  iIntros (Hatom ?) "[Hσ1 Hwp]". iApply (wp_lift_step E E _ e1); eauto using reducible_not_val.
+  iPvsIntro. iExists σ1. repeat iSplit; eauto 10.
   iFrame. iNext. iIntros (e2 σ2 ef) "[% Hσ2]".
-  edestruct @atomic_step as [v2 Hv%of_to_val]; eauto. subst e2.
+  edestruct Hatom as [v2 Hv%of_to_val]; eauto. subst e2.
   iDestruct ("Hwp" $! v2 σ2 ef with "[Hσ2]") as "[HΦ ?]". by eauto.
   iFrame. iPvs "HΦ". iPvsIntro. iApply wp_value; auto using to_of_val.
 Qed.

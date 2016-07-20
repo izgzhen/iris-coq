@@ -160,20 +160,25 @@ Lemma wp_atomic E1 E2 e Φ :
   E2 ⊆ E1 → atomic e →
   (|={E1,E2}=> WP e @ E2 {{ v, |={E2,E1}=> Φ v }}) ⊢ WP e @ E1 {{ Φ }}.
 Proof.
-  rewrite wp_eq pvs_eq. intros ? He; split=> n r ? Hvs; constructor.
-  eauto using atomic_not_val. intros k Ef σ1 rf ???.
-  destruct (Hvs (S k) Ef σ1 rf) as (r'&Hwp&?); auto.
-  destruct (wp_step_inv E2 Ef (pvs_def E2 E1 ∘ Φ) e k (S k) σ1 r' rf)
-    as [Hsafe Hstep]; auto using atomic_not_val; [].
-  split; [done|]=> e2 σ2 ef ?.
-  destruct (Hstep e2 σ2 ef) as (r2&r2'&?&Hwp'&?); clear Hsafe Hstep; auto.
-  destruct Hwp' as [k r2 v Hvs'|k r2 e2 Hgo];
-    [|destruct (atomic_step e σ1 e2 σ2 ef); naive_solver].
-  rewrite -pvs_eq in Hvs'. apply pvs_trans in Hvs';auto. rewrite pvs_eq in Hvs'.
-  destruct (Hvs' k Ef σ2 (r2' ⋅ rf)) as (r3&[]); rewrite ?assoc; auto.
-  exists r3, r2'; split_and?; last done.
-  - by rewrite -assoc.
-  - constructor; apply pvs_intro; auto.
+  rewrite wp_eq pvs_eq. intros ? He; split=> n r ? Hvs.
+  destruct (to_val e) as [v|] eqn:Hvale.
+  - apply of_to_val in Hvale. subst e. eapply wp_pre_value. rewrite pvs_eq.
+    intros k Ef σ rf ???. destruct (Hvs k Ef σ rf) as (r'&Hwp&?); auto.
+    apply wp_value_inv in Hwp. rewrite pvs_eq in Hwp.
+    destruct (Hwp k Ef σ rf) as (r2'&HΦ&?); auto.
+  - apply wp_pre_step. done. intros k Ef σ1 rf ???.
+    destruct (Hvs (S k) Ef σ1 rf) as (r'&Hwp&?); auto.
+    destruct (wp_step_inv E2 Ef (pvs_def E2 E1 ∘ Φ) e k (S k) σ1 r' rf)
+      as [Hsafe Hstep]; auto; [].
+    split; [done|]=> e2 σ2 ef ?.
+    destruct (Hstep e2 σ2 ef) as (r2&r2'&?&Hwp'&?); clear Hsafe Hstep; auto.
+    destruct Hwp' as [k r2 v Hvs'|k r2 e2 Hgo];
+      [|destruct (He σ1 e2 σ2 ef); naive_solver].
+    rewrite -pvs_eq in Hvs'. apply pvs_trans in Hvs';auto. rewrite pvs_eq in Hvs'.
+    destruct (Hvs' k Ef σ2 (r2' ⋅ rf)) as (r3&[]); rewrite ?assoc; auto.
+    exists r3, r2'; split_and?; last done.
+    + by rewrite -assoc.
+    + constructor; apply pvs_intro; auto.
 Qed.
 Lemma wp_frame_r E e Φ R : WP e @ E {{ Φ }} ★ R ⊢ WP e @ E {{ v, Φ v ★ R }}.
 Proof.

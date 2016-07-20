@@ -273,19 +273,6 @@ Inductive head_step : expr → state → expr → state → option (expr) → Pr
      σ !! l = Some v1 →
      head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) None.
 
-(** Atomic expressions *)
-Definition atomic (e: expr) :=
-  match e with
-  | Alloc e => is_Some (to_val e)
-  | Load e => is_Some (to_val e)
-  | Store e1 e2 => is_Some (to_val e1) ∧ is_Some (to_val e2)
-  | CAS e0 e1 e2 =>
-     is_Some (to_val e0) ∧ is_Some (to_val e1) ∧ is_Some (to_val e2)
-  (* Make "skip" atomic *)
-  | App (Rec _ _ (Lit _)) (Lit _) => True
-  | _ => False
-  end.
-
 (** Basic properties about the language *)
 Lemma to_of_val v : to_val (of_val v) = Some v.
 Proof.
@@ -309,22 +296,6 @@ Proof. intros [v ?]. destruct Ki; simplify_option_eq; eauto. Qed.
 
 Lemma val_stuck e1 σ1 e2 σ2 ef : head_step e1 σ1 e2 σ2 ef → to_val e1 = None.
 Proof. destruct 1; naive_solver. Qed.
-
-Lemma atomic_not_val e : atomic e → to_val e = None.
-Proof. by destruct e. Qed.
-
-Lemma atomic_fill_item Ki e : atomic (fill_item Ki e) → is_Some (to_val e).
-Proof.
-  intros. destruct Ki; simplify_eq/=; destruct_and?;
-    repeat (simpl || case_match || contradiction); eauto.
-Qed.
-
-Lemma atomic_step e1 σ1 e2 σ2 ef :
-  atomic e1 → head_step e1 σ1 e2 σ2 ef → is_Some (to_val e2).
-Proof.
-  destruct 2; simpl; rewrite ?to_of_val; try by eauto. subst.
-  unfold subst'; repeat (case_match || contradiction || simplify_eq/=); eauto.
-Qed.
 
 Lemma head_ctx_step_val Ki e σ1 e2 σ2 ef :
   head_step (fill_item Ki e) σ1 e2 σ2 ef → is_Some (to_val e).
@@ -391,13 +362,11 @@ Program Instance heap_ectxi_lang :
   EctxiLanguage
     (heap_lang.expr) heap_lang.val heap_lang.ectx_item heap_lang.state := {|
   of_val := heap_lang.of_val; to_val := heap_lang.to_val;
-  fill_item := heap_lang.fill_item;
-  atomic := heap_lang.atomic; head_step := heap_lang.head_step;
+  fill_item := heap_lang.fill_item; head_step := heap_lang.head_step
 |}.
 Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,
-  heap_lang.val_stuck, heap_lang.atomic_not_val, heap_lang.atomic_step,
-  heap_lang.fill_item_val, heap_lang.atomic_fill_item,
-  heap_lang.fill_item_no_val_inj, heap_lang.head_ctx_step_val.
+  heap_lang.val_stuck, heap_lang.fill_item_val, heap_lang.fill_item_no_val_inj,
+  heap_lang.head_ctx_step_val.
 
 Canonical Structure heap_lang := ectx_lang (heap_lang.expr).
 

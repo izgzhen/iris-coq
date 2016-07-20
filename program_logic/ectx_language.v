@@ -11,7 +11,6 @@ Class EctxLanguage (expr val ectx state : Type) := {
   empty_ectx : ectx;
   comp_ectx : ectx → ectx → ectx;
   fill : ectx → expr → expr;
-  atomic : expr → Prop;
   head_step : expr → state → expr → state → option expr → Prop;
 
   to_of_val v : to_val (of_val v) = Some v;
@@ -34,16 +33,6 @@ Class EctxLanguage (expr val ectx state : Type) := {
     to_val e1 = None →
     head_step e1' σ1 e2 σ2 ef →
     exists K'', K' = comp_ectx K K'';
-
-  atomic_not_val e : atomic e → to_val e = None;
-  atomic_step e1 σ1 e2 σ2 ef :
-    atomic e1 →
-    head_step e1 σ1 e2 σ2 ef →
-    is_Some (to_val e2);
-  atomic_fill e K :
-    atomic (fill K e) →
-    to_val e = None →
-    K = empty_ectx;
 }.
 
 Arguments of_val {_ _ _ _ _} _.
@@ -51,7 +40,6 @@ Arguments to_val {_ _ _ _ _} _.
 Arguments empty_ectx {_ _ _ _ _}.
 Arguments comp_ectx {_ _ _ _ _} _ _.
 Arguments fill {_ _ _ _ _} _ _.
-Arguments atomic {_ _ _ _ _} _.
 Arguments head_step {_ _ _ _ _} _ _ _ _ _.
 
 Arguments to_of_val {_ _ _ _ _} _.
@@ -62,9 +50,6 @@ Arguments fill_comp {_ _ _ _ _} _ _ _.
 Arguments fill_not_val {_ _ _ _ _} _ _ _.
 Arguments ectx_positive {_ _ _ _ _} _ _ _.
 Arguments step_by_val {_ _ _ _ _} _ _ _ _ _ _ _ _ _ _ _.
-Arguments atomic_not_val {_ _ _ _ _} _ _.
-Arguments atomic_step {_ _ _ _ _} _ _ _ _ _ _ _.
-Arguments atomic_fill {_ _ _ _ _} _ _ _ _.
 
 (* From an ectx_language, we can construct a language. *)
 Section ectx_language.
@@ -73,6 +58,10 @@ Section ectx_language.
 
   Definition head_reducible (e : expr) (σ : state) :=
     ∃ e' σ' ef, head_step e σ e' σ' ef.
+
+  Definition atomic (e : expr) :=
+    (∀ σ e' σ' ef, head_step e σ e' σ' ef → is_Some (to_val e')) ∧
+    (∀ K e', e = fill K e' → to_val e' = None → K = empty_ectx).
 
   Inductive prim_step (e1 : expr) (σ1 : state)
       (e2 : expr) (σ2 : state) (ef : option expr) : Prop :=
@@ -83,6 +72,14 @@ Section ectx_language.
   Lemma val_prim_stuck e1 σ1 e2 σ2 ef :
     prim_step e1 σ1 e2 σ2 ef → to_val e1 = None.
   Proof. intros [??? -> -> ?]; eauto using fill_not_val, val_stuck. Qed.
+
+  Lemma atomic_step e1 σ1 e2 σ2 ef :
+    atomic e1 → head_step e1 σ1 e2 σ2 ef → is_Some (to_val e2).
+  Proof. destruct 1 as [? _]; eauto. Qed.
+
+  Lemma atomic_fill e K :
+    atomic (fill K e) → to_val e = None → K = empty_ectx.
+  Proof. destruct 1 as [_ ?]; eauto. Qed.
 
   Lemma atomic_prim_step e1 σ1 e2 σ2 ef :
     atomic e1 → prim_step e1 σ1 e2 σ2 ef → is_Some (to_val e2).
@@ -95,12 +92,9 @@ Section ectx_language.
   Canonical Structure ectx_lang : language := {|
     language.expr := expr; language.val := val; language.state := state;
     language.of_val := of_val; language.to_val := to_val;
-    language.atomic := atomic;
     language.prim_step := prim_step;
     language.to_of_val := to_of_val; language.of_to_val := of_to_val;
     language.val_stuck := val_prim_stuck;
-    language.atomic_not_val := atomic_not_val;
-    language.atomic_step := atomic_prim_step
   |}.
 
   (* Some lemmas about this language *)
@@ -110,6 +104,13 @@ Section ectx_language.
 
   Lemma head_prim_reducible e σ : head_reducible e σ → reducible e σ.
   Proof. intros (e'&σ'&ef&?). eexists e', σ', ef. by apply head_prim_step. Qed.
+
+  Lemma ectx_language_atomic e : atomic e → language.atomic e.
+  Proof.
+    intros Hatomic σ e' σ' ef [K e1' e2' -> -> Hstep].
+    assert (K = empty_ectx) as -> by eauto 10 using atomic_fill, val_stuck.
+    revert Hatomic; rewrite !fill_empty. intros. by eapply atomic_step.
+  Qed.
 
   Lemma head_reducible_prim_step e1 σ1 e2 σ2 ef :
     head_reducible e1 σ1 → prim_step e1 σ1 e2 σ2 ef →
