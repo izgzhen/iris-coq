@@ -2,6 +2,8 @@ From iris.heap_lang Require Export spawn.
 From iris.heap_lang Require Import proofmode notation.
 Import uPred.
 
+Definition parN : namespace := nroot .@ "par".
+
 Definition par : val :=
   λ: "fs",
     let: "handle" := spawn (Fst "fs") in
@@ -23,7 +25,7 @@ Lemma par_spec (Ψ1 Ψ2 : val → iProp) e (f1 f2 : val) (Φ : val → iProp) :
 Proof.
   iIntros (?) "(#Hh&Hf1&Hf2&HΦ)".
   rewrite /par. wp_value. iPvsIntro. wp_let. wp_proj.
-  wp_apply spawn_spec; try wp_done. iFrame "Hf1 Hh".
+  wp_apply (spawn_spec parN); try wp_done; try solve_ndisj; iFrame "Hf1 Hh".
   iIntros (l) "Hl". wp_let. wp_proj. wp_focus (f2 _).
   iApply wp_wand_l; iFrame "Hf2"; iIntros (v) "H2". wp_let.
   wp_apply join_spec; iFrame "Hl". iIntros (w) "H1".
