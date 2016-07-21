@@ -50,12 +50,19 @@ Section cofe.
 End cofe.
 Arguments uPredC : clear implicits.
 
-Instance uPred_ne' {M} (P : uPred M) n : Proper (dist n ==> iff) (P n).
+Instance uPred_ne {M} (P : uPred M) n : Proper (dist n ==> iff) (P n).
 Proof.
   intros x1 x2 Hx; split=> ?; eapply uPred_mono; eauto; by rewrite Hx.
 Qed.
 Instance uPred_proper {M} (P : uPred M) n : Proper ((≡) ==> iff) (P n).
-Proof. by intros x1 x2 Hx; apply uPred_ne', equiv_dist. Qed.
+Proof. by intros x1 x2 Hx; apply uPred_ne, equiv_dist. Qed.
+
+Lemma uPred_holds_ne {M} (P Q : uPred M) n1 n2 x :
+  P ≡{n2}≡ Q → n2 ≤ n1 → ✓{n2} x → Q n1 x → P n2 x.
+Proof.
+  intros [Hne] ???. eapply Hne; try done.
+  eapply uPred_closed; eauto using cmra_validN_le.
+Qed.
 
 (** functor *)
 Program Definition uPred_map {M1 M2 : ucmraT} (f : M2 -n> M1)
