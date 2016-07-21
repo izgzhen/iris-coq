@@ -51,17 +51,17 @@ Lemma wsat_le n n' E σ r : wsat n E σ r → n' ≤ n → wsat n' E σ r.
 Proof.
   destruct n as [|n], n' as [|n']; simpl; try by (auto with lia).
   intros [rs [Hval Hσ HE Hwld]] ?; exists rs; constructor; auto.
-  intros i P ? HiP; destruct (wld (r ⋅ big_opM rs) !! i) as [P'|] eqn:HP';
-    [apply (inj Some) in HiP|inversion_clear HiP].
+  intros i P ? (P'&HiP&HP')%dist_Some_inv_r'.
+  destruct (to_agree_uninj (S n) P') as [laterP' HlaterP'].
+  { apply (lookup_validN_Some _ (wld (r ⋅ big_opM rs)) i); rewrite ?HiP; auto. }
   assert (P' ≡{S n}≡ to_agree $ Next $ iProp_unfold $
-                       iProp_fold $ later_car $ P' (S n)) as HPiso.
-  { rewrite iProp_unfold_fold later_eta to_agree_car //.
-    apply (lookup_validN_Some _ (wld (r ⋅ big_opM rs)) i); rewrite ?HP'; auto. }
-  assert (P ≡{n'}≡ iProp_fold (later_car (P' (S n)))) as HPP'.
+                       iProp_fold $ later_car $ laterP') as HPiso.
+  { by rewrite iProp_unfold_fold later_eta HlaterP'. }
+  assert (P ≡{n'}≡ iProp_fold (later_car laterP')) as HPP'.
   { apply (inj iProp_unfold), (inj Next), (inj to_agree).
-    by rewrite -HiP -(dist_le _ _ _ _ HPiso). }
-  destruct (Hwld i (iProp_fold (later_car (P' (S n))))) as (r'&?&?); auto.
-  { by rewrite HP' -HPiso. }
+    by rewrite HP' -(dist_le _ _ _ _ HPiso). }
+  destruct (Hwld i (iProp_fold (later_car laterP'))) as (r'&?&?); auto.
+  { by rewrite HiP -HPiso. }
   assert (✓{S n} r') by (apply (big_opM_lookup_valid _ rs i); auto).
   exists r'; split; [done|]. apply HPP', uPred_closed with n; auto.
 Qed.

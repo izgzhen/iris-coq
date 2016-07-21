@@ -49,12 +49,12 @@ Proof.
   iApply (ht_lift_step E E _ (λ σ1', P ∧ σ1 = σ1')%I
            (λ e2 σ2 ef, ownP σ2 ★ ■ (is_Some (to_val e2) ∧ prim_step e1 σ1 e2 σ2 ef))%I
            (λ e2 σ2 ef, ■ prim_step e1 σ1 e2 σ2 ef ★ P)%I);
-    try by (eauto using atomic_not_val).
+    try by (eauto using reducible_not_val).
   repeat iSplit.
   - iIntros "![Hσ1 HP]". iExists σ1. iPvsIntro.
-    iSplit. by eauto using atomic_step. iFrame. by auto.
+    iSplit. by eauto. iFrame. by auto.
   - iIntros (? e2 σ2 ef) "! (%&Hown&HP&%)". iPvsIntro. subst.
-    iFrame. iSplit; iPureIntro; auto. split; eauto using atomic_step.
+    iFrame. iSplit; iPureIntro; auto. split; eauto.
   - iIntros (e2 σ2 ef) "! [Hown #Hφ]"; iDestruct "Hφ" as %[[v2 <-%of_to_val] ?].
     iApply wp_value'. iExists σ2, ef. by iSplit.
   - done.
