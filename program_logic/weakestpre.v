@@ -161,8 +161,8 @@ Lemma wp_atomic E1 E2 e Φ :
   (|={E1,E2}=> WP e @ E2 {{ v, |={E2,E1}=> Φ v }}) ⊢ WP e @ E1 {{ Φ }}.
 Proof.
   rewrite wp_eq pvs_eq. intros ? He; split=> n r ? Hvs.
-  destruct (to_val e) as [v|] eqn:Hvale.
-  - apply of_to_val in Hvale. subst e. eapply wp_pre_value. rewrite pvs_eq.
+  destruct (Some_dec (to_val e)) as [[v <-%of_to_val]|].
+  - eapply wp_pre_value. rewrite pvs_eq.
     intros k Ef σ rf ???. destruct (Hvs k Ef σ rf) as (r'&Hwp&?); auto.
     apply wp_value_inv in Hwp. rewrite pvs_eq in Hwp.
     destruct (Hwp k Ef σ rf) as (r2'&HΦ&?); auto.

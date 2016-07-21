@@ -183,14 +183,14 @@ Definition atomic (e : expr) :=
   | App (Rec _ _ (Lit _)) (Lit _) => true
   | _ => false
   end.
-Lemma atomic_correct e : atomic e → ectx_language.atomic (to_expr e).
+Lemma atomic_correct e : atomic e → language.atomic (to_expr e).
 Proof.
-  intros He. split.
+  intros He. apply ectx_language_atomic.
   - intros σ e' σ' ef.
     destruct e; simpl; try done; repeat (case_match; try done);
     inversion 1; rewrite ?to_of_val; eauto. subst.
     unfold subst'; repeat (case_match || contradiction || simplify_eq/=); eauto.
-  - intros K e' Hfill Hnotval. destruct K as [|Ki K]; [done|exfalso].
+  - intros [|Ki K] e' Hfill Hnotval; [done|exfalso].
     apply (fill_not_val K), eq_None_not_Some in Hnotval. apply Hnotval. simpl.
     revert He. destruct e; simpl; try done; repeat (case_match; try done);
     rewrite ?bool_decide_spec;
@@ -223,16 +223,12 @@ Ltac solve_to_val :=
   end.
 
 Ltac solve_atomic :=
-  try match goal with
-  | |- language.atomic ?e => apply ectx_language_atomic
-  end;
   match goal with
-  | |- ectx_language.atomic ?e =>
-     let e' := W.of_expr e in change (atomic (W.to_expr e'));
+  | |- language.atomic ?e =>
+     let e' := W.of_expr e in change (language.atomic (W.to_expr e'));
      apply W.atomic_correct; vm_compute; exact I
   end.
 Hint Extern 0 (language.atomic _) => solve_atomic : fsaV.
-Hint Extern 0 (ectx_language.atomic _) => solve_atomic : fsaV.
 
 (** Substitution *)
 Ltac simpl_subst :=

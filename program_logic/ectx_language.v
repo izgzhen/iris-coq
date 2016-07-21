@@ -59,10 +59,6 @@ Section ectx_language.
   Definition head_reducible (e : expr) (σ : state) :=
     ∃ e' σ' ef, head_step e σ e' σ' ef.
 
-  Definition atomic (e : expr) :=
-    (∀ σ e' σ' ef, head_step e σ e' σ' ef → is_Some (to_val e')) ∧
-    (∀ K e', e = fill K e' → to_val e' = None → K = empty_ectx).
-
   Inductive prim_step (e1 : expr) (σ1 : state)
       (e2 : expr) (σ2 : state) (ef : option expr) : Prop :=
     Ectx_step K e1' e2' :
@@ -72,22 +68,6 @@ Section ectx_language.
   Lemma val_prim_stuck e1 σ1 e2 σ2 ef :
     prim_step e1 σ1 e2 σ2 ef → to_val e1 = None.
   Proof. intros [??? -> -> ?]; eauto using fill_not_val, val_stuck. Qed.
-
-  Lemma atomic_step e1 σ1 e2 σ2 ef :
-    atomic e1 → head_step e1 σ1 e2 σ2 ef → is_Some (to_val e2).
-  Proof. destruct 1 as [? _]; eauto. Qed.
-
-  Lemma atomic_fill e K :
-    atomic (fill K e) → to_val e = None → K = empty_ectx.
-  Proof. destruct 1 as [_ ?]; eauto. Qed.
-
-  Lemma atomic_prim_step e1 σ1 e2 σ2 ef :
-    atomic e1 → prim_step e1 σ1 e2 σ2 ef → is_Some (to_val e2).
-  Proof.
-    intros Hatomic [K e1' e2' -> -> Hstep].
-    assert (K = empty_ectx) as -> by eauto 10 using atomic_fill, val_stuck.
-    revert Hatomic; rewrite !fill_empty. eauto using atomic_step.
-  Qed.
 
   Canonical Structure ectx_lang : language := {|
     language.expr := expr; language.val := val; language.state := state;
@@ -105,11 +85,14 @@ Section ectx_language.
   Lemma head_prim_reducible e σ : head_reducible e σ → reducible e σ.
   Proof. intros (e'&σ'&ef&?). eexists e', σ', ef. by apply head_prim_step. Qed.
 
-  Lemma ectx_language_atomic e : atomic e → language.atomic e.
+  Lemma ectx_language_atomic e :
+    (∀ σ e' σ' ef, head_step e σ e' σ' ef → is_Some (to_val e')) →
+    (∀ K e', e = fill K e' → to_val e' = None → K = empty_ectx) →
+    atomic e.
   Proof.
-    intros Hatomic σ e' σ' ef [K e1' e2' -> -> Hstep].
-    assert (K = empty_ectx) as -> by eauto 10 using atomic_fill, val_stuck.
-    revert Hatomic; rewrite !fill_empty. intros. by eapply atomic_step.
+    intros Hatomic_step Hatomic_fill σ e' σ' ef [K e1' e2' -> -> Hstep].
+    assert (K = empty_ectx) as -> by eauto 10 using val_stuck.
+    rewrite fill_empty. eapply Hatomic_step. by rewrite fill_empty.
   Qed.
 
   Lemma head_reducible_prim_step e1 σ1 e2 σ2 ef :

@@ -153,7 +153,7 @@ Section heap.
     to_val e = Some v → nclose heapN ⊆ E →
     heap_ctx ★ ▷ (∀ l, l ↦ v ={E}=★ Φ (LitV (LitLoc l))) ⊢ WP Alloc e @ E {{ Φ }}.
   Proof.
-    iIntros (?%of_to_val ?) "[#Hinv HΦ]". subst. rewrite /heap_ctx.
+    iIntros (<-%of_to_val ?) "[#Hinv HΦ]". rewrite /heap_ctx.
     iPvs (auth_empty heap_name) as "Hheap".
     iApply wp_pvs; iApply (auth_fsa heap_inv (wp_fsa _)); eauto with fsaV.
     iFrame "Hinv Hheap". iIntros (h). rewrite left_id.
@@ -186,7 +186,7 @@ Section heap.
     heap_ctx ★ ▷ l ↦ v' ★ ▷ (l ↦ v ={E}=★ Φ (LitV LitUnit))
     ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
   Proof.
-    iIntros (?%of_to_val ?) "[#Hh [Hl HΦ]]". subst.
+    iIntros (<-%of_to_val ?) "[#Hh [Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iApply wp_pvs; iApply (auth_fsa heap_inv (wp_fsa _)); eauto with fsaV.
     iFrame "Hh Hl". iIntros (h) "[% Hl]". rewrite /heap_inv.
@@ -202,7 +202,7 @@ Section heap.
     heap_ctx ★ ▷ l ↦{q} v' ★ ▷ (l ↦{q} v' ={E}=★ Φ (LitV (LitBool false)))
     ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
   Proof.
-    iIntros (?%of_to_val ?%of_to_val ??) "[#Hh [Hl HΦ]]". subst.
+    iIntros (<-%of_to_val <-%of_to_val ??) "[#Hh [Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iApply wp_pvs; iApply (auth_fsa heap_inv (wp_fsa _)); eauto with fsaV.
     iFrame "Hh Hl". iIntros (h) "[% Hl]". rewrite /heap_inv.
@@ -217,7 +217,7 @@ Section heap.
     heap_ctx ★ ▷ l ↦ v1 ★ ▷ (l ↦ v2 ={E}=★ Φ (LitV (LitBool true)))
     ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
   Proof.
-    iIntros (?%of_to_val ?%of_to_val ?) "[#Hh [Hl HΦ]]". subst.
+    iIntros (<-%of_to_val <-%of_to_val ?) "[#Hh [Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iApply wp_pvs; iApply (auth_fsa heap_inv (wp_fsa _)); eauto with fsaV.
     iFrame "Hh Hl". iIntros (h) "[% Hl]". rewrite /heap_inv.
