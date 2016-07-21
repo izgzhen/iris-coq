@@ -3,7 +3,7 @@ From iris.algebra Require Import upred.
 Local Hint Extern 10 (_ ≤ _) => omega.
 
 Record agree (A : Type) : Type := Agree {
-  agree_car :> nat → A;
+  agree_car : nat → A;
   agree_is_valid : nat → Prop;
   agree_valid_S n : agree_is_valid (S n) → agree_is_valid n
 }.
@@ -15,7 +15,7 @@ Section agree.
 Context {A : cofeT}.
 
 Instance agree_validN : ValidN (agree A) := λ n x,
-  agree_is_valid x n ∧ ∀ n', n' ≤ n → x n ≡{n'}≡ x n'.
+  agree_is_valid x n ∧ ∀ n', n' ≤ n → agree_car x n ≡{n'}≡ agree_car x n'.
 Instance agree_valid : Valid (agree A) := λ x, ∀ n, ✓{n} x.
 
 Lemma agree_valid_le n n' (x : agree A) :
@@ -24,12 +24,13 @@ Proof. induction 2; eauto using agree_valid_S. Qed.
 
 Instance agree_equiv : Equiv (agree A) := λ x y,
   (∀ n, agree_is_valid x n ↔ agree_is_valid y n) ∧
-  (∀ n, agree_is_valid x n → x n ≡{n}≡ y n).
+  (∀ n, agree_is_valid x n → agree_car x n ≡{n}≡ agree_car y n).
 Instance agree_dist : Dist (agree A) := λ n x y,
   (∀ n', n' ≤ n → agree_is_valid x n' ↔ agree_is_valid y n') ∧
-  (∀ n', n' ≤ n → agree_is_valid x n' → x n' ≡{n'}≡ y n').
+  (∀ n', n' ≤ n → agree_is_valid x n' → agree_car x n' ≡{n'}≡ agree_car y n').
 Program Instance agree_compl : Compl (agree A) := λ c,
-  {| agree_car n := c n n; agree_is_valid n := agree_is_valid (c n) n |}.
+  {| agree_car n := agree_car (c n) n;
+     agree_is_valid n := agree_is_valid (c n) n |}.
 Next Obligation.
   intros c n ?. apply (chain_cauchy c n (S n)), agree_valid_S; auto.
 Qed.
@@ -44,20 +45,15 @@ Proof.
     + by intros x y Hxy; split; intros; symmetry; apply Hxy; auto; apply Hxy.
     + intros x y z Hxy Hyz; split; intros n'; intros.
       * trans (agree_is_valid y n'). by apply Hxy. by apply Hyz.
-      * trans (y n'). by apply Hxy. by apply Hyz, Hxy.
+      * trans (agree_car y n'). by apply Hxy. by apply Hyz, Hxy.
   - intros n x y Hxy; split; intros; apply Hxy; auto.
   - intros n c; apply and_wlog_r; intros;
       symmetry; apply (chain_cauchy c); naive_solver.
 Qed.
 Canonical Structure agreeC := CofeT (agree A) agree_cofe_mixin.
 
-Lemma agree_car_ne n (x y : agree A) : ✓{n} x → x ≡{n}≡ y → x n ≡{n}≡ y n.
-Proof. by intros [??] Hxy; apply Hxy. Qed.
-Lemma agree_cauchy n (x : agree A) i : ✓{n} x → i ≤ n → x n ≡{i}≡ x i.
-Proof. by intros [? Hx]; apply Hx. Qed.
-
 Program Instance agree_op : Op (agree A) := λ x y,
-  {| agree_car := x;
+  {| agree_car := agree_car x;
      agree_is_valid n := agree_is_valid x n ∧ agree_is_valid y n ∧ x ≡{n}≡ y |}.
 Next Obligation. naive_solver eauto using agree_valid_S, dist_S. Qed.
 Instance agree_pcore : PCore (agree A) := Some.
@@ -127,13 +123,19 @@ Proof. by constructor. Qed.
 Program Definition to_agree (x : A) : agree A :=
   {| agree_car n := x; agree_is_valid n := True |}.
 Solve Obligations with done.
+
 Global Instance to_agree_ne n : Proper (dist n ==> dist n) to_agree.
 Proof. intros x1 x2 Hx; split; naive_solver eauto using @dist_le. Qed.
 Global Instance to_agree_proper : Proper ((≡) ==> (≡)) to_agree := ne_proper _.
+
 Global Instance to_agree_inj n : Inj (dist n) (dist n) (to_agree).
 Proof. by intros x y [_ Hxy]; apply Hxy. Qed.
-Lemma to_agree_car n (x : agree A) : ✓{n} x → to_agree (x n) ≡{n}≡ x.
-Proof. intros [??]; split; naive_solver eauto using agree_valid_le. Qed.
+
+Lemma to_agree_uninj n (x : agree A) : ✓{n} x → ∃ y : A, to_agree y ≡{n}≡ x.
+Proof.
+  intros [??]. exists (agree_car x n).
+  split; naive_solver eauto using agree_valid_le.
+Qed.
 
 (** Internalized properties *)
 Lemma agree_equivI {M} a b : to_agree a ≡ to_agree b ⊣⊢ (a ≡ b : uPred M).
@@ -148,7 +150,7 @@ Arguments agreeC : clear implicits.
 Arguments agreeR : clear implicits.
 
 Program Definition agree_map {A B} (f : A → B) (x : agree A) : agree B :=
-  {| agree_car n := f (x n); agree_is_valid := agree_is_valid x;
+  {| agree_car n := f (agree_car x n); agree_is_valid := agree_is_valid x;
      agree_valid_S := agree_valid_S _ x |}.
 Lemma agree_map_id {A} (x : agree A) : agree_map id x = x.
 Proof. by destruct x. Qed.
