@@ -34,16 +34,6 @@ Proof.
   f_equal. apply map_eq. intros i. apply option_eq. intros []. by apply E.
 Qed.
 
-Global Instance mapset_eq_dec `{∀ m1 m2 : M unit, Decision (m1 = m2)}
-  (X1 X2 : mapset M) : Decision (X1 = X2) | 1.
-Proof.
- refine
-  match X1, X2 with Mapset m1, Mapset m2 => cast_if (decide (m1 = m2)) end;
-  abstract congruence.
-Defined.
-Global Instance mapset_elem_of_dec x (X : mapset M) : Decision (x ∈ X) | 1.
-Proof. solve_decision. Defined.
-
 Instance: Collection K (mapset M).
 Proof.
   split; [split | | ].
@@ -76,6 +66,30 @@ Proof.
   - unfold elements, mapset_elems. intros [m]. simpl.
     apply NoDup_fst_map_to_list.
 Qed.
+
+Section deciders.
+  Context `{∀ m1 m2 : M unit, Decision (m1 = m2)}.
+  Global Instance mapset_eq_dec (X1 X2 : mapset M) : Decision (X1 = X2) | 1.
+  Proof.
+   refine
+    match X1, X2 with Mapset m1, Mapset m2 => cast_if (decide (m1 = m2)) end;
+    abstract congruence.
+  Defined.
+  Global Instance mapset_equiv_dec (X1 X2 : mapset M) : Decision (X1 ≡ X2) | 1.
+  Proof. refine (cast_if (decide (X1 = X2))); abstract (by fold_leibniz). Defined.
+  Global Instance mapset_elem_of_dec x (X : mapset M) : Decision (x ∈ X) | 1.
+  Proof. solve_decision. Defined.
+  Global Instance mapset_disjoint_dec (X1 X2 : mapset M) : Decision (X1 ⊥ X2).
+  Proof.
+   refine (cast_if (decide (X1 ∩ X2 = ∅)));
+    abstract (by rewrite disjoint_intersection_L).
+  Defined.
+  Global Instance mapset_subseteq_dec (X1 X2 : mapset M) : Decision (X1 ⊆ X2).
+  Proof.
+   refine (cast_if (decide (X1 ∪ X2 = X2)));
+    abstract (by rewrite subseteq_union_L).
+  Defined.
+End deciders.
 
 Definition mapset_map_with {A B} (f : bool → A → option B)
     (X : mapset M) : M A → M B :=
