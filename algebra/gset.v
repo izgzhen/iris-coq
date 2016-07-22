@@ -74,4 +74,13 @@ Section gset.
   Proof. eauto using updateP_alloc_strong. Qed.
   Lemma updateP_alloc' X : GSet X ~~>: λ Y, ∃ i, Y = GSet ({[ i ]} ∪ X) ∧ i ∉ X.
   Proof. eauto using updateP_alloc. Qed.
+
+  Lemma alloc_singleton_local_update X i Xf :
+    i ∉ X → i ∉ Xf → GSet X ~l~> GSet ({[i]} ∪ X) @ Some (GSet Xf).
+  Proof.
+    intros ??; apply local_update_total; split; simpl.
+    - rewrite !gset_disj_valid_op; set_solver.
+    - intros mZ ?%gset_disj_valid_op HXf.
+      rewrite -gset_disj_union -?assoc ?HXf ?cmra_opM_assoc; set_solver.
+  Qed.
 End gset.
