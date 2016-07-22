@@ -190,11 +190,6 @@ Proof.
   unfold subseteq, map_subseteq, map_relation. split; intros Hm i;
     specialize (Hm i); destruct (m1 !! i), (m2 !! i); naive_solver.
 Qed.
-Global Instance: EmptySpec (M A).
-Proof.
-  intros A m. rewrite !map_subseteq_spec.
-  intros i x. by rewrite lookup_empty.
-Qed.
 Global Instance: ∀ {A} (R : relation A), PreOrder R → PreOrder (map_included R).
 Proof.
   split; [intros m i; by destruct (m !! i); simpl|].

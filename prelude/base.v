@@ -250,6 +250,12 @@ Lemma and_wlog_r (P Q : Prop) : P → (P → Q) → (P ∧ Q).
 Proof. tauto. Qed.
 Lemma impl_transitive (P Q R : Prop) : (P → Q) → (Q → R) → (P → R).
 Proof. tauto. Qed.
+Lemma forall_proper {A} (P Q : A → Prop) :
+  (∀ x, P x ↔ Q x) → (∀ x, P x) ↔ (∀ x, Q x).
+Proof. firstorder. Qed.
+Lemma exist_proper {A} (P Q : A → Prop) :
+  (∀ x, P x ↔ Q x) → (∃ x, P x) ↔ (∃ x, Q x).
+Proof. firstorder. Qed.
 
 Instance: Comm (↔) (@eq A).
 Proof. red; intuition. Qed.
@@ -872,30 +878,7 @@ Notation "<[ k := a ]{ Γ }>" := (insertE Γ k a)
 Arguments insertE _ _ _ _ _ _ !_ _ !_ / : simpl nomatch.
 
 
-(** * Ordered structures *)
-(** We do not use a setoid equality in the following interfaces to avoid the
-need for proofs that the relations and operations are proper. Instead, we
-define setoid equality generically [λ X Y, X ⊆ Y ∧ Y ⊆ X]. *)
-Class EmptySpec A `{Empty A, SubsetEq A} : Prop := subseteq_empty X : ∅ ⊆ X.
-Class JoinSemiLattice A `{SubsetEq A, Union A} : Prop := {
-  join_semi_lattice_pre :>> PreOrder (⊆);
-  union_subseteq_l X Y : X ⊆ X ∪ Y;
-  union_subseteq_r X Y : Y ⊆ X ∪ Y;
-  union_least X Y Z : X ⊆ Z → Y ⊆ Z → X ∪ Y ⊆ Z
-}.
-Class MeetSemiLattice A `{SubsetEq A, Intersection A} : Prop := {
-  meet_semi_lattice_pre :>> PreOrder (⊆);
-  intersection_subseteq_l X Y : X ∩ Y ⊆ X;
-  intersection_subseteq_r X Y : X ∩ Y ⊆ Y;
-  intersection_greatest X Y Z : Z ⊆ X → Z ⊆ Y → Z ⊆ X ∩ Y
-}.
-Class Lattice A `{SubsetEq A, Union A, Intersection A} : Prop := {
-  lattice_join :>> JoinSemiLattice A;
-  lattice_meet :>> MeetSemiLattice A;
-  lattice_distr X Y Z : (X ∪ Y) ∩ (X ∪ Z) ⊆ X ∪ (Y ∩ Z)
-}.
-
-(** ** Axiomatization of collections *)
+(** * Axiomatization of collections *)
 (** The class [SimpleCollection A C] axiomatizes a collection of type [C] with
 elements of type [A]. *)
 Class SimpleCollection A C `{ElemOf A C,

@@ -63,8 +63,8 @@ Proof.
     intros [m1] [m2] ?. simpl. rewrite lookup_difference_Some.
     destruct (m2 !! x) as [[]|]; intuition congruence.
 Qed.
-Global Instance: PartialOrder (@subseteq (mapset M) _).
-Proof. split; try apply _. intros ????. apply mapset_eq. intuition. Qed.
+Global Instance: LeibnizEquiv (mapset M).
+Proof. intros ??. apply mapset_eq. Qed.
 Global Instance: FinCollection K (mapset M).
 Proof.
   split.

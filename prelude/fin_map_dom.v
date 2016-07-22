@@ -36,8 +36,7 @@ Proof.
 Qed.
 Lemma dom_empty {A} : dom D (@empty (M A) _) ≡ ∅.
 Proof.
-  split; intro; [|set_solver].
-  rewrite elem_of_dom, lookup_empty. by inversion 1.
+  intros x. rewrite elem_of_dom, lookup_empty, <-not_eq_None_Some. set_solver.
 Qed.
 Lemma dom_empty_inv {A} (m : M A) : dom D m ≡ ∅ → m = ∅.
 Proof.
