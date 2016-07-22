@@ -1,7 +1,7 @@
 -Q . iris
 prelude/option.v
 prelude/fin_map_dom.v
-prelude/bsets.v
+prelude/bset.v
 prelude/fin_maps.v
 prelude/vector.v
 prelude/pmap.v
@@ -28,9 +28,9 @@ prelude/finite.v
 prelude/numbers.v
 prelude/nmap.v
 prelude/zmap.v
-prelude/co_pset.v
+prelude/coPset.v
 prelude/lexico.v
-prelude/sets.v
+prelude/set.v
 prelude/decidable.v
 prelude/list.v
 prelude/error.v

@@ -1,4 +1,4 @@
-From iris.prelude Require Export countable co_pset.
+From iris.prelude Require Export countable coPset.
 From iris.algebra Require Export base.
 
 Definition namespace := list positive.

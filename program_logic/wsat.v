@@ -1,4 +1,4 @@
-From iris.prelude Require Export co_pset.
+From iris.prelude Require Export coPset.
 From iris.program_logic Require Export model.
 From iris.algebra Require Export cmra_big_op cmra_tactics.
 Local Hint Extern 10 (_ ≤ _) => omega.
