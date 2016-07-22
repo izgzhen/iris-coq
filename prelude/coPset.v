@@ -159,7 +159,6 @@ Instance coPset_difference : Difference coPset := λ X Y,
   let (t1,Ht1) := X in let (t2,Ht2) := Y in
   (t1 ∩ coPset_opp_raw t2) ↾ coPset_intersection_wf _ _ Ht1 (coPset_opp_wf _).
 
-Instance coPset_elem_of_dec (p : positive) (X : coPset) : Decision (p ∈ X) := _.
 Instance coPset_collection : Collection positive coPset.
 Proof.
   split; [split| |].
@@ -173,12 +172,28 @@ Proof.
     by rewrite elem_to_Pset_intersection,
       elem_to_Pset_opp, andb_True, negb_True.
 Qed.
+
 Instance coPset_leibniz : LeibnizEquiv coPset.
 Proof.
   intros X Y; rewrite elem_of_equiv; intros HXY.
   apply (sig_eq_pi _), coPset_eq; try apply proj2_sig.
   intros p; apply eq_bool_prop_intro, (HXY p).
 Qed.
+
+Instance coPset_elem_of_dec (p : positive) (X : coPset) : Decision (p ∈ X) := _.
+Instance coPset_equiv_dec (X Y : coPset) : Decision (X ≡ Y).
+Proof. refine (cast_if (decide (X = Y))); abstract (by fold_leibniz). Defined.
+Instance mapset_disjoint_dec (X Y : coPset) : Decision (X ⊥ Y).
+Proof.
+ refine (cast_if (decide (X ∩ Y = ∅)));
+  abstract (by rewrite disjoint_intersection_L).
+Defined.
+Instance mapset_subseteq_dec (X Y : coPset) : Decision (X ⊆ Y).
+Proof.
+ refine (cast_if (decide (X ∪ Y = Y))); abstract (by rewrite subseteq_union_L).
+Defined.
+
+(** * Top *)
 Lemma coPset_top_subseteq (X : coPset) : X ⊆ ⊤.
 Proof. done. Qed.
 Hint Resolve coPset_top_subseteq.
