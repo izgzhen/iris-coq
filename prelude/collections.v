@@ -807,6 +807,8 @@ Section fresh.
     apply IH. by rewrite E.
   Qed.
 
+  Lemma exist_fresh X : ∃ x, x ∉ X.
+  Proof. exists (fresh X). apply is_fresh. Qed.
   Lemma Forall_fresh_NoDup X xs : Forall_fresh X xs → NoDup xs.
   Proof. induction 1; by constructor. Qed.
   Lemma Forall_fresh_elem_of X xs x : Forall_fresh X xs → x ∈ xs → x ∉ X.
