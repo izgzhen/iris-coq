@@ -17,6 +17,14 @@ Implicit Types X Y : C.
 
 Lemma fin_collection_finite X : set_finite X.
 Proof. by exists (elements X); intros; rewrite elem_of_elements. Qed.
+
+Instance elem_of_dec_slow (x : A) (X : C) : Decision (x ∈ X) | 100.
+Proof.
+  refine (cast_if (decide_rel (∈) x (elements X)));
+    by rewrite <-(elem_of_elements _).
+Defined.
+
+(** * The [elements] operation *)
 Global Instance elements_proper: Proper ((≡) ==> (≡ₚ)) (elements (C:=C)).
 Proof.
   intros ?? E. apply NoDup_Permutation.
@@ -24,6 +32,7 @@ Proof.
   - apply NoDup_elements.
   - intros. by rewrite !elem_of_elements, E.
 Qed.
+
 Lemma elements_empty : elements (∅ : C) = [].
 Proof.
   apply elem_of_nil_inv; intros x.
@@ -49,8 +58,10 @@ Proof.
   intros x. rewrite !elem_of_elements; auto.
 Qed.
 
+(** * The [size] operation *)
 Global Instance collection_size_proper: Proper ((≡) ==> (=)) (@size C _).
 Proof. intros ?? E. apply Permutation_length. by rewrite E. Qed.
+
 Lemma size_empty : size (∅ : C) = 0.
 Proof. unfold size, collection_size. simpl. by rewrite elements_empty. Qed.
 Lemma size_empty_inv (X : C) : size X = 0 → X ≡ ∅.
@@ -62,14 +73,7 @@ Lemma size_empty_iff (X : C) : size X = 0 ↔ X ≡ ∅.
 Proof. split. apply size_empty_inv. by intros ->; rewrite size_empty. Qed.
 Lemma size_non_empty_iff (X : C) : size X ≠ 0 ↔ X ≢ ∅.
 Proof. by rewrite size_empty_iff. Qed.
-Lemma size_singleton (x : A) : size {[ x ]} = 1.
-Proof. unfold size, collection_size. simpl. by rewrite elements_singleton. Qed.
-Lemma size_singleton_inv X x y : size X = 1 → x ∈ X → y ∈ X → x = y.
-Proof.
-  unfold size, collection_size. simpl. rewrite <-!elem_of_elements.
-  generalize (elements X). intros [|? l]; intro; simplify_eq/=.
-  rewrite (nil_length_inv l), !elem_of_list_singleton by done; congruence.
-Qed.
+
 Lemma collection_choose_or_empty X : (∃ x, x ∈ X) ∨ X ≡ ∅.
 Proof.
   destruct (elements X) as [|x l] eqn:HX; [right|left].
@@ -85,6 +89,15 @@ Proof.
   intros Hsz. destruct (collection_choose_or_empty X) as [|HX]; [done|].
   contradict Hsz. rewrite HX, size_empty; lia.
 Qed.
+
+Lemma size_singleton (x : A) : size {[ x ]} = 1.
+Proof. unfold size, collection_size. simpl. by rewrite elements_singleton. Qed.
+Lemma size_singleton_inv X x y : size X = 1 → x ∈ X → y ∈ X → x = y.
+Proof.
+  unfold size, collection_size. simpl. rewrite <-!elem_of_elements.
+  generalize (elements X). intros [|? l]; intro; simplify_eq/=.
+  rewrite (nil_length_inv l), !elem_of_list_singleton by done; congruence.
+Qed.
 Lemma size_1_elem_of X : size X = 1 → ∃ x, X ≡ {[ x ]}.
 Proof.
   intros E. destruct (size_pos_elem_of X); auto with lia.
@@ -92,6 +105,7 @@ Proof.
   - rewrite elem_of_singleton. eauto using size_singleton_inv.
   - set_solver.
 Qed.
+
 Lemma size_union X Y : X ⊥ Y → size (X ∪ Y) = size X + size Y.
 Proof.
   intros. unfold size, collection_size. simpl. rewrite <-app_length.
@@ -101,18 +115,13 @@ Proof.
     intros x; rewrite !elem_of_elements; set_solver.
   - intros. by rewrite elem_of_app, !elem_of_elements, elem_of_union.
 Qed.
-
-Instance elem_of_dec_slow (x : A) (X : C) : Decision (x ∈ X) | 100.
-Proof.
-  refine (cast_if (decide_rel (∈) x (elements X)));
-    by rewrite <-(elem_of_elements _).
-Defined.
 Lemma size_union_alt X Y : size (X ∪ Y) = size X + size (Y ∖ X).
 Proof.
   rewrite <-size_union by set_solver.
   setoid_replace (Y ∖ X) with ((Y ∪ X) ∖ X) by set_solver.
   rewrite <-union_difference, (comm (∪)); set_solver.
 Qed.
+
 Lemma subseteq_size X Y : X ⊆ Y → size X ≤ size Y.
 Proof. intros. rewrite (union_difference X Y), size_union_alt by done. lia. Qed.
 Lemma subset_size X Y : X ⊂ Y → size X < size Y.
@@ -122,6 +131,8 @@ Proof.
   cut (size (Y ∖ X) ≠ 0); [lia |].
   by apply size_non_empty_iff, non_empty_difference.
 Qed.
+
+(** * Induction principles *)
 Lemma collection_wf : wf (strict (@subseteq C _)).
 Proof. apply (wf_projected (<) size); auto using subset_size, lt_wf. Qed.
 Lemma collection_ind (P : C → Prop) :
@@ -135,6 +146,8 @@ Proof.
     apply Hadd. set_solver. apply IH; set_solver.
   - by rewrite HX.
 Qed.
+
+(** * The [collection_fold] operation *)
 Lemma collection_fold_ind {B} (P : B → C → Prop) (f : A → B → B) (b : B) :
   Proper ((=) ==> (≡) ==> iff) P →
   P b ∅ → (∀ x X r, x ∉ X → P r X → P (f x r) ({[ x ]} ∪ X)) →
@@ -156,6 +169,8 @@ Lemma collection_fold_proper {B} (R : relation B) `{!Equivalence R}
     (Hf : ∀ a1 a2 b, R (f a1 (f a2 b)) (f a2 (f a1 b))) :
   Proper ((≡) ==> R) (collection_fold f b : C → B).
 Proof. intros ?? E. apply (foldr_permutation R f b); auto. by rewrite E. Qed.
+
+(** * Decision procedures *)
 Global Instance set_Forall_dec `(P : A → Prop)
   `{∀ x, Decision (P x)} X : Decision (set_Forall P X) | 100.
 Proof.
