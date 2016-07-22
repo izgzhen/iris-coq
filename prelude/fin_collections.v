@@ -101,24 +101,12 @@ Proof.
     intros x; rewrite !elem_of_elements; set_solver.
   - intros. by rewrite elem_of_app, !elem_of_elements, elem_of_union.
 Qed.
+
 Instance elem_of_dec_slow (x : A) (X : C) : Decision (x ∈ X) | 100.
 Proof.
   refine (cast_if (decide_rel (∈) x (elements X)));
     by rewrite <-(elem_of_elements _).
 Defined.
-Global Program Instance collection_subseteq_dec_slow (X Y : C) :
-    Decision (X ⊆ Y) | 100 :=
-  match decide_rel (=) (size (X ∖ Y)) 0 return _ with
-  | left _ => left _ | right _ => right _
-  end.
-Next Obligation.
-  intros X Y E1 x ?; apply dec_stable; intro. destruct (proj1(elem_of_empty x)).
-  apply (size_empty_inv _ E1). by rewrite elem_of_difference.
-Qed.
-Next Obligation.
-  intros X Y E1 E2; destruct E1. apply size_empty_iff, equiv_empty. intros x.
-  rewrite elem_of_difference. intros [E3 ?]. by apply E2 in E3.
-Qed.
 Lemma size_union_alt X Y : size (X ∪ Y) = size X + size (Y ∖ X).
 Proof.
   rewrite <-size_union by set_solver.

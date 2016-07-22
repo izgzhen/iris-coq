@@ -115,15 +115,6 @@ Section simple_collection.
     Lemma non_empty_singleton_L x : {[ x ]} ≠ ∅.
     Proof. unfold_leibniz. apply non_empty_singleton. Qed.
   End leibniz.
-
-  Section dec.
-    Context `{∀ X Y : C, Decision (X ⊆ Y)}.
-    Global Instance elem_of_dec_slow (x : A) (X : C) : Decision (x ∈ X) | 100.
-    Proof.
-      refine (cast_if (decide_rel (⊆) {[ x ]} X));
-        by rewrite elem_of_subseteq_singleton.
-    Defined.
-  End dec.
 End simple_collection.
 
 (** * Tactics *)
