@@ -458,54 +458,6 @@ Section collection.
   End dec.
 End collection.
 
-(** * Sets without duplicates up to an equivalence *)
-Section NoDup.
-  Context `{SimpleCollection A B} (R : relation A) `{!Equivalence R}.
-
-  Definition elem_of_upto (x : A) (X : B) := ∃ y, y ∈ X ∧ R x y.
-  Definition set_NoDup (X : B) := ∀ x y, x ∈ X → y ∈ X → R x y → x = y.
-
-  Global Instance: Proper ((≡) ==> iff) (elem_of_upto x).
-  Proof. intros ??? E. unfold elem_of_upto. by setoid_rewrite E. Qed.
-  Global Instance: Proper (R ==> (≡) ==> iff) elem_of_upto.
-  Proof.
-    intros ?? E1 ?? E2. split; intros [z [??]]; exists z.
-    - rewrite <-E1, <-E2; intuition.
-    - rewrite E1, E2; intuition.
-  Qed.
-  Global Instance: Proper ((≡) ==> iff) set_NoDup.
-  Proof. firstorder. Qed.
-
-  Lemma elem_of_upto_elem_of x X : x ∈ X → elem_of_upto x X.
-  Proof. unfold elem_of_upto. set_solver. Qed.
-  Lemma elem_of_upto_empty x : ¬elem_of_upto x ∅.
-  Proof. unfold elem_of_upto. set_solver. Qed.
-  Lemma elem_of_upto_singleton x y : elem_of_upto x {[ y ]} ↔ R x y.
-  Proof. unfold elem_of_upto. set_solver. Qed.
-
-  Lemma elem_of_upto_union X Y x :
-    elem_of_upto x (X ∪ Y) ↔ elem_of_upto x X ∨ elem_of_upto x Y.
-  Proof. unfold elem_of_upto. set_solver. Qed.
-  Lemma not_elem_of_upto x X : ¬elem_of_upto x X → ∀ y, y ∈ X → ¬R x y.
-  Proof. unfold elem_of_upto. set_solver. Qed.
-
-  Lemma set_NoDup_empty: set_NoDup ∅.
-  Proof. unfold set_NoDup. set_solver. Qed.
-  Lemma set_NoDup_add x X :
-    ¬elem_of_upto x X → set_NoDup X → set_NoDup ({[ x ]} ∪ X).
-  Proof. unfold set_NoDup, elem_of_upto. set_solver. Qed.
-  Lemma set_NoDup_inv_add x X :
-    x ∉ X → set_NoDup ({[ x ]} ∪ X) → ¬elem_of_upto x X.
-  Proof.
-    intros Hin Hnodup [y [??]].
-    rewrite (Hnodup x y) in Hin; set_solver.
-  Qed.
-  Lemma set_NoDup_inv_union_l X Y : set_NoDup (X ∪ Y) → set_NoDup X.
-  Proof. unfold set_NoDup. set_solver. Qed.
-  Lemma set_NoDup_inv_union_r X Y : set_NoDup (X ∪ Y) → set_NoDup Y.
-  Proof. unfold set_NoDup. set_solver. Qed.
-End NoDup.
-
 (** * Quantifiers *)
 Section quantifiers.
   Context `{SimpleCollection A B} (P : A → Prop).

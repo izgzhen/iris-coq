@@ -185,6 +185,4 @@ Proof.
     abstract (unfold set_Exists; setoid_rewrite <-elem_of_elements;
       by rewrite <-Exists_exists).
 Defined.
-Global Instance rel_elem_of_dec `{∀ x y, Decision (R x y)} x X :
-  Decision (elem_of_upto R x X) | 100 := decide (set_Exists (R x) X).
 End fin_collection.
