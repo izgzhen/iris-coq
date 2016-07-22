@@ -79,6 +79,19 @@ Proof.
   intros n mz' _. by rewrite !(comm _ x) !cmra_opM_assoc=> ->.
 Qed.
 
+(** ** Local updates for discrete CMRAs *)
+Lemma local_update_total `{CMRADiscrete A} x y mz :
+  x ~l~> y @ mz ↔
+    (✓ (x ⋅? mz) → ✓ (y ⋅? mz)) ∧
+    (∀ mz', ✓ (x ⋅? mz) → x ⋅? mz ≡ x ⋅? mz' → y ⋅? mz ≡ y ⋅? mz').
+Proof.
+  split.
+  - destruct 1. split; intros until 0;
+      rewrite !(cmra_discrete_valid_iff 0) ?(timeless_iff 0); auto.
+  - intros [??]; split; intros until 0;
+      rewrite -!cmra_discrete_valid_iff -?timeless_iff; auto.
+Qed.
+
 (** ** Frame preserving updates *)
 Lemma cmra_update_updateP x y : x ~~> y ↔ x ~~>: (y =).
 Proof. split=> Hup n z ?; eauto. destruct (Hup n z) as (?&<-&?); auto. Qed.
