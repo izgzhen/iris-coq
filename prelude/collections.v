@@ -3,7 +3,7 @@
 (** This file collects definitions and theorems on collections. Most
 importantly, it implements some tactics to automatically solve goals involving
 collections. *)
-From iris.prelude Require Export base tactics orders.
+From iris.prelude Require Export orders list.
 
 Instance collection_equiv `{ElemOf A C} : Equiv C := λ X Y,
   ∀ x, x ∈ X ↔ x ∈ Y.
@@ -811,8 +811,7 @@ Section fresh.
   Proof. induction 1; by constructor. Qed.
   Lemma Forall_fresh_elem_of X xs x : Forall_fresh X xs → x ∈ xs → x ∉ X.
   Proof.
-    intros HX; revert x; rewrite <-Forall_forall.
-    by induction HX; constructor.
+    intros HX; revert x; rewrite <-Forall_forall. by induction HX; constructor.
   Qed.
   Lemma Forall_fresh_alt X xs :
     Forall_fresh X xs ↔ NoDup xs ∧ ∀ x, x ∈ xs → x ∉ X.
