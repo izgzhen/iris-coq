@@ -13,11 +13,10 @@ wp on paper.  We show that the two versions are equivalent. *)
 Section def.
 Context {Λ : language} {Σ : iFunctor}.
 Local Notation iProp := (iProp Λ Σ).
-Local Notation coPsetC := (leibnizC (coPset)).
 
 Program Definition wp_pre
-    (wp : coPsetC -n> exprC Λ -n> (valC Λ -n> iProp) -n> iProp)
-    (E : coPset) (e1 : expr Λ) (Φ : valC Λ -n> iProp) :  iProp :=
+    (wp : coPset -c> expr Λ -c> (val Λ -c> iProp) -c> iProp) :
+    coPset -c> expr Λ -c> (val Λ -c> iProp) -c> iProp := λ E e1 Φ,
   {| uPred_holds n r1 := ∀ k Ef σ1 rf,
        0 ≤ k < n → E ⊥ Ef →
        wsat (S k) (E ∪ Ef) σ1 (r1 ⋅ rf) →
@@ -46,49 +45,32 @@ Next Obligation.
 Qed.
 Next Obligation. repeat intro; eauto. Qed.
 
-Lemma wp_pre_contractive' n E e Φ1 Φ2 r
-    (wp1 wp2 : coPsetC -n> exprC Λ -n> (valC Λ -n> iProp) -n> iProp) :
-  (∀ i : nat, i < n → wp1 ≡{i}≡ wp2) → Φ1 ≡{n}≡ Φ2 →
-  wp_pre wp1 E e Φ1 n r → wp_pre wp2 E e Φ2 n r.
+Local Instance pre_wp_contractive : Contractive wp_pre.
 Proof.
-  intros HI HΦ Hwp k Ef σ1 rf ???.
-  destruct (Hwp k Ef σ1 rf) as [Hval Hstep]; auto.
-  split.
-  { intros v ?. destruct (Hval v) as (r2&?&?); auto.
-    exists r2. split; [apply HΦ|]; auto. }
-  intros ??. destruct Hstep as [Hred Hpstep]; auto.
-  split; [done|]=> e2 σ2 ef ?.
-  destruct (Hpstep e2 σ2 ef) as (r2&r2'&?&?&?); [done..|].
-  exists r2, r2'; split_and?; auto.
-  - apply HI with k; auto.
-    assert (wp1 E e2 Φ2 ≡{n}≡ wp1 E e2 Φ1) as HwpΦ by (by rewrite HΦ).
-    apply HwpΦ; auto.
-  - destruct ef as [ef|]; simpl in *; last done.
-    apply HI with k; auto.
-Qed.
-Instance wp_pre_ne n wp E e : Proper (dist n ==> dist n) (wp_pre wp E e).
-Proof.
-  split; split;
-    eapply wp_pre_contractive'; eauto using dist_le, (symmetry (R:=dist _)).
+  assert (∀ n E e Φ r
+    (wp1 wp2 : coPset -c> expr Λ -c> (val Λ -c> iProp) -c> iProp),
+    (∀ i : nat, i < n → wp1 ≡{i}≡ wp2) →
+    wp_pre wp1 E e Φ n r → wp_pre wp2 E e Φ n r) as help.
+  { intros n E e Φ r wp1 wp2 HI Hwp k Ef σ1 rf ???.
+    destruct (Hwp k Ef σ1 rf) as [Hval Hstep]; auto.
+    split; first done.
+    intros ??. destruct Hstep as [Hred Hpstep]; auto.
+    split; [done|]=> e2 σ2 ef ?.
+    destruct (Hpstep e2 σ2 ef) as (r2&r2'&?&?&?); [done..|].
+    exists r2, r2'; split_and?; auto.
+    - apply HI with k; auto.
+    - destruct ef as [ef|]; simpl in *; last done.
+      apply HI with k; auto. }
+  split; split; eapply help; auto using (symmetry (R:=dist _)).
 Qed.
 
-Definition wp_preC
-    (wp : coPsetC -n> exprC Λ -n> (valC Λ -n> iProp) -n> iProp) :
-    coPsetC -n> exprC Λ -n> (valC Λ -n> iProp) -n> iProp :=
-  CofeMor (λ E : coPsetC, CofeMor (λ e : exprC Λ, CofeMor (wp_pre wp E e))).
+Definition wp_fix : coPset → expr Λ → (val Λ → iProp) → iProp := 
+  fixpoint wp_pre.
 
-Local Instance pre_wp_contractive : Contractive wp_preC.
-Proof.
-  split; split; eapply wp_pre_contractive'; auto using (symmetry (R:=dist _)).
-Qed.
+Lemma wp_fix_unfold E e Φ : wp_fix E e Φ ⊣⊢ wp_pre wp_fix E e Φ.
+Proof. apply (fixpoint_unfold wp_pre). Qed.
 
-Definition wp_fix : coPsetC -n> exprC Λ -n> (valC Λ -n> iProp) -n> iProp := 
-  fixpoint wp_preC.
-
-Lemma wp_fix_unfold E e Φ : wp_fix E e Φ ⊣⊢ wp_preC wp_fix E e Φ.
-Proof. by rewrite /wp_fix -fixpoint_unfold. Qed.
-
-Lemma wp_fix_correct E e (Φ : valC Λ -n> iProp) : wp_fix E e Φ ⊣⊢ wp E e Φ.
+Lemma wp_fix_correct E e (Φ : val Λ → iProp) : wp_fix E e Φ ⊣⊢ wp E e Φ.
 Proof.
   split=> n r Hr. rewrite wp_eq /wp_def {2}/uPred_holds.
   split; revert r E e Φ Hr.
