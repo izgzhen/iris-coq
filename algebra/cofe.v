@@ -207,6 +207,39 @@ Section fixpoint.
   Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint_ne. Qed.
 End fixpoint.
 
+(** Function space *)
+Definition cofe_fun (A : Type) (B : cofeT) := A → B.
+
+Section cofe_fun.
+  Context {A : Type} {B : cofeT}.
+  Instance cofe_fun_equiv : Equiv (cofe_fun A B) := λ f g, ∀ x, f x ≡ g x.
+  Instance cofe_fun_dist : Dist (cofe_fun A B) := λ n f g, ∀ x, f x ≡{n}≡ g x.
+  Program Definition cofe_fun_chain `(c : chain (cofe_fun A B))
+    (x : A) : chain B := {| chain_car n := c n x |}.
+  Next Obligation. intros c x n i ?. by apply (chain_cauchy c). Qed.
+  Program Instance cofe_fun_compl : Compl (cofe_fun A B) := λ c x,
+    compl (cofe_fun_chain c x).
+  Definition cofe_fun_cofe_mixin : CofeMixin (cofe_fun A B).
+  Proof.
+    split.
+    - intros f g; split; [intros Hfg n k; apply equiv_dist, Hfg|].
+      intros Hfg k; apply equiv_dist=> n; apply Hfg.
+    - intros n; split.
+      + by intros f x.
+      + by intros f g ? x.
+      + by intros f g h ?? x; trans (g x).
+    - by intros n f g ? x; apply dist_S.
+    - intros n c x. apply (conv_compl n (cofe_fun_chain c x)).
+  Qed.
+  Canonical Structure cofe_funC := CofeT (cofe_fun A B) cofe_fun_cofe_mixin.
+End cofe_fun.
+
+Arguments cofe_funC : clear implicits.
+Notation "A -c> B" :=
+  (cofe_funC A B) (at level 99, B at level 200, right associativity).
+Instance cofe_fun_inhabited {A} {B : cofeT} `{Inhabited B} :
+  Inhabited (A -c> B) := populate (λ _, inhabitant).
+
 (** Non-expansive function space *)
 Record cofe_mor (A B : cofeT) : Type := CofeMor {
   cofe_mor_car :> A → B;
