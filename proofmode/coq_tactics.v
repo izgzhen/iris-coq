@@ -382,7 +382,7 @@ Lemma tac_timeless Δ Δ' i p P Q :
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ???? HQ. rewrite envs_simple_replace_sound //; simpl.
-  rewrite always_if_later right_id. by apply timeless_elim.
+  by rewrite always_if_later right_id HQ timeless_elim.
 Qed.
 
 (** * Always *)

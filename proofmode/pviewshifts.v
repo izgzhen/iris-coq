@@ -32,8 +32,8 @@ Proof. rewrite /IntoWand=>->. apply wand_intro_l. by rewrite pvs_wand_r. Qed.
 
 Global Instance timeless_elim_pvs E1 E2 Q : TimelessElim (|={E1,E2}=> Q).
 Proof.
-  intros P ? R HR. rewrite (pvs_timeless E1 P) pvs_frame_r.
-  by rewrite wand_elim_r HR pvs_trans; last set_solver.
+  intros P ?. rewrite (pvs_timeless E1 P) pvs_frame_r.
+  by rewrite wand_elim_r pvs_trans; last set_solver.
 Qed.
 
 Class IsFSA {A} (P : iProp Λ Σ) (E : coPset)
@@ -57,7 +57,7 @@ Qed.
 Global Instance timeless_elim_fsa {A} Q E (fsa : FSA Λ Σ A) fsaV Φ :
   IsFSA Q E fsa fsaV Φ → TimelessElim Q.
 Proof.
-  intros ? P ? R. rewrite (is_fsa Q) -{2}fsa_pvs_fsa. intros <-.
+  intros ? P ?. rewrite (is_fsa Q) -{2}fsa_pvs_fsa.
   by rewrite (pvs_timeless _ P) pvs_frame_r wand_elim_r.
 Qed.
 

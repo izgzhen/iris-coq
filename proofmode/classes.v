@@ -314,5 +314,5 @@ Global Instance into_exist_always {A} P (Φ : A → uPred M) :
 Proof. rewrite /IntoExist=> HP. by rewrite HP always_exist. Qed.
 
 Class TimelessElim (Q : uPred M) :=
-  timeless_elim `{!TimelessP P} R : (R ⊢ Q) → ▷ P ★ (P -★ R) ⊢ Q.
+  timeless_elim `{!TimelessP P} : ▷ P ★ (P -★ Q) ⊢ Q.
 End classes.
