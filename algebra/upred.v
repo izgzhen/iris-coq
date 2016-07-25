@@ -68,7 +68,7 @@ Qed.
 Program Definition uPred_map {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CMRAMonotone f} (P : uPred M1) :
   uPred M2 := {| uPred_holds n x := P n (f x) |}.
-Next Obligation. naive_solver eauto using uPred_mono, includedN_preserving. Qed.
+Next Obligation. naive_solver eauto using uPred_mono, cmra_monotoneN. Qed.
 Next Obligation. naive_solver eauto using uPred_closed, validN_preserving. Qed.
 
 Instance uPred_map_ne {M1 M2 : ucmraT} (f : M2 -n> M1)
@@ -212,7 +212,7 @@ Program Definition uPred_wand_def {M} (P Q : uPred M) : uPred M :=
 Next Obligation.
   intros M P Q n x1 x1' HPQ ? n3 x3 ???; simpl in *.
   apply uPred_mono with (x1 ⋅ x3);
-    eauto using cmra_validN_includedN, cmra_preservingN_r, cmra_includedN_le.
+    eauto using cmra_validN_includedN, cmra_monoN_r, cmra_includedN_le.
 Qed.
 Next Obligation. naive_solver. Qed.
 Definition uPred_wand_aux : { x | x = @uPred_wand_def }. by eexists. Qed.
@@ -223,7 +223,7 @@ Definition uPred_wand_eq :
 Program Definition uPred_always_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n (core x) |}.
 Next Obligation.
-  intros M; naive_solver eauto using uPred_mono, @cmra_core_preservingN.
+  intros M; naive_solver eauto using uPred_mono, @cmra_core_monoN.
 Qed.
 Next Obligation. naive_solver eauto using uPred_closed, @cmra_core_validN. Qed.
 Definition uPred_always_aux : { x | x = @uPred_always_def }. by eexists. Qed.
@@ -1038,7 +1038,7 @@ Qed.
 Lemma always_ownM (a : M) : Persistent a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
 Proof.
   split=> n x /=; split; [by apply always_elim|unseal; intros Hx]; simpl.
-  rewrite -(persistent_core a). by apply cmra_core_preservingN.
+  rewrite -(persistent_core a). by apply cmra_core_monoN.
 Qed.
 Lemma ownM_something : True ⊢ ∃ a, uPred_ownM a.
 Proof. unseal; split=> n x ??. by exists x; simpl. Qed.

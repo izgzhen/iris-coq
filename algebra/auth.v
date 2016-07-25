@@ -127,7 +127,7 @@ Proof.
   - by split; simpl; rewrite ?cmra_core_l.
   - by split; simpl; rewrite ?cmra_core_idemp.
   - intros ??; rewrite! auth_included; intros [??].
-    by split; simpl; apply cmra_core_preserving.
+    by split; simpl; apply cmra_core_mono.
   - assert (∀ n (a b1 b2 : A), b1 ⋅ b2 ≼{n} a → b1 ≼{n} a).
     { intros n a b1 b2 <-; apply cmra_includedN_l. }
    intros n [[[a1|]|] b1] [[[a2|]|] b2];
@@ -222,9 +222,9 @@ Instance auth_map_cmra_monotone {A B : ucmraT} (f : A → B) :
 Proof.
   split; try apply _.
   - intros n [[[a|]|] b]; rewrite /= /cmra_validN /=; try
-      naive_solver eauto using includedN_preserving, validN_preserving.
+      naive_solver eauto using cmra_monotoneN, validN_preserving.
   - by intros [x a] [y b]; rewrite !auth_included /=;
-      intros [??]; split; simpl; apply: included_preserving.
+      intros [??]; split; simpl; apply: cmra_monotone.
 Qed.
 Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=
   CofeMor (auth_map f).
