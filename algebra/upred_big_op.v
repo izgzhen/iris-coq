@@ -123,13 +123,10 @@ Section gmap.
   Lemma big_sepM_proper Φ Ψ m :
     (∀ k x, m !! k = Some x → Φ k x ⊣⊢ Ψ k x) →
     ([★ map] k ↦ x ∈ m, Φ k x) ⊣⊢ ([★ map] k ↦ x ∈ m, Ψ k x).
-  Proof. (*
-    (* FIXME: Coq bug since 8.5pl1. Without the @ in [@lookup_weaken] it gives
-    File "./algebra/upred_big_op.v", line 114, characters 4-131:
-    Anomaly: Uncaught exception Univ.AlreadyDeclared. Please report. *)
-    intros [??] ?; apply (anti_symm (⊢)); apply big_sepM_mono;
-      eauto using equiv_entails, equiv_entails_sym, @lookup_weaken.
-  Qed. *) Admitted.
+  Proof.
+    intros ?; apply (anti_symm (⊢)); apply big_sepM_mono;
+      eauto using equiv_entails, equiv_entails_sym, lookup_weaken.
+  Qed.
 
   Global Instance big_sepM_ne m n :
     Proper (pointwise_relation _ (pointwise_relation _ (dist n)) ==> (dist n))
