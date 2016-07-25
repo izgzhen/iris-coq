@@ -61,7 +61,6 @@ The function space $(-) \nfn (-)$ is a locally non-expansive bifunctor.
 Note that the composition of non-expansive (bi)functors is non-expansive, and the composition of a non-expansive and a contractive (bi)functor is contractive.
 
 \subsection{RA}
-\newcommand\dummymelt\bot
 
 \begin{defn}
   A \emph{resource algebra} (RA) is a tuple \\
@@ -75,7 +74,7 @@ Note that the composition of non-expansive (bi)functors is non-expansive, and th
     \All \melt, \meltB.& \mcore\melt \in \monoid \land \melt \mincl \meltB \Ra \mcore\meltB \in \monoid \land \mcore\melt \mincl \mcore\meltB \tagH{ra-core-mono} \\
     \All \melt, \meltB.& (\melt \mtimes \meltB) \in \mval \Ra \melt \in \mval \tagH{ra-valid-op} \\
     \text{where}\qquad %\qquad\\
-    \maybe\monoid \eqdef{}& \monoid \uplus \set{\dummymelt} \qquad\qquad\qquad \melt^? \mtimes \dummymelt \eqdef \dummymelt \mtimes \melt^? \eqdef \melt^? \\
+    \maybe\monoid \eqdef{}& \monoid \uplus \set{\mnocore} \qquad\qquad\qquad \melt^? \mtimes \mnocore \eqdef \mnocore \mtimes \melt^? \eqdef \melt^? \\
     \melt \mincl \meltB \eqdef{}& \Exists \meltC \in \monoid. \meltB = \melt \mtimes \meltC \tagH{ra-incl}
   \end{align*}
 \end{defn}
@@ -90,7 +89,7 @@ This take on partiality is necessary when defining the structure of \emph{higher
 for an arbitrary number of units, via a function $\mcore{{-}}$ assigning to an element $\melt$ its \emph{(duplicable) core} $\mcore\melt$, as demanded by \ruleref{ra-core-id}.
   We further demand that $\mcore{{-}}$ is idempotent (\ruleref{ra-core-idem}) and monotone (\ruleref{ra-core-mono}) with respect to the \emph{extension order}, defined similarly to that for PCMs (\ruleref{ra-incl}).
 
-  Notice that the domain of the core is $\maybe\monoid$, a set that adds a dummy element $\dummymelt$ to $\monoid$.
+  Notice that the domain of the core is $\maybe\monoid$, a set that adds a dummy element $\mnocore$ to $\monoid$.
 %  (This corresponds to the option type.)
   Thus, the core can be \emph{partial}: not all elements need to have a unit.
   We use the metavariable $\maybe\melt$ to indicate elements of  $\maybe\monoid$.
@@ -108,7 +107,7 @@ Notice also that the core of an RA is a strict generalization of the unit that a
   We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
 \end{defn}
 The assertion $\melt \mupd \meltsB$ says that every element $\maybe{\melt_\f}$ compatible with $\melt$ (we also call such elements \emph{frames}), must also be compatible with some $\meltB \in \meltsB$.
-Notice that $\maybe{\melt_\f}$ could be $\dummymelt$, so the frame-preserving update can also be applied to elements that have \emph{no} frame.
+Notice that $\maybe{\melt_\f}$ could be $\mnocore$, so the frame-preserving update can also be applied to elements that have \emph{no} frame.
 Intuitively, this means that whatever assumptions the rest of the program is making about the state of $\gname$, if these assumptions are compatible with $\melt$, then updating to $\meltB$ will not invalidate any of these assumptions.
 Since Iris ensures that the global ghost state is valid, this means that we can soundly update the ghost state from $\melt$ to a non-deterministically picked $\meltB \in \meltsB$.
 
@@ -173,7 +172,7 @@ This operation is needed to prove that $\later$ commutes with separating conjunc
   \end{enumerate}
 \end{defn}
 
-\begin{lem}
+\begin{lem}\label{lem:cmra-unit-total-core}
   If $\monoid$ has a unit $\munit$, then the core $\mcore{{-}}$ is total, \ie $\All\melt. \mcore\melt \in \monoid$.
 \end{lem}
 

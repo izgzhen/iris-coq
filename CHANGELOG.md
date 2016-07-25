@@ -12,6 +12,8 @@ This version accompanies the final ICFP paper.
   carry a proof of closedness.  Substitution, closedness and value-ness proofs
   are performed by computation after reflecting into a term langauge that knows
   about values and closed expressions.
+* [program_logic/language] The language does not define its own "atomic"
+  predicate.  Instead, atomicity is defined as reducing in one step to a value.
 
 ## Iris 2.0-rc1
 

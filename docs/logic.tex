@@ -10,23 +10,16 @@ A \emph{language} $\Lang$ consists of a set \textdom{Expr} of \emph{expressions}
   A reduction $\expr_1, \state_1 \step \expr_2, \state_2, \expr_\f$ indicates that, when $\expr_1$ reduces to $\expr$, a \emph{new thread} $\expr_\f$ is forked off.
 \item All values are stuck:
 \[ \expr, \_ \step  \_, \_, \_ \Ra \toval(\expr) = \bot \]
-\item There is a predicate defining \emph{atomic} expressions satisfying
-\let\oldcr\cr
-\begin{mathpar}
-  {\All\expr. \atomic(\expr) \Ra \toval(\expr) = \bot} \and
-  {{
-    \begin{inbox}
-\All\expr_1, \state_1, \expr_2, \state_2, \expr_\f. \atomic(\expr_1) \land \expr_1, \state_1 \step \expr_2, \state_2, \expr_\f \Ra {}\\\qquad\qquad\qquad\quad~~ \Exists \val_2. \toval(\expr_2) = \val_2
-    \end{inbox}
-}}
-\end{mathpar}
-In other words, atomic expression \emph{reduce in one step to a value}.
-It does not matter whether they fork off an arbitrary expression.
 \end{itemize}
 
 \begin{defn}
   An expression $\expr$ and state $\state$ are \emph{reducible} (written $\red(\expr, \state)$) if
   \[ \Exists \expr_2, \state_2, \expr_\f. \expr,\state \step \expr_2,\state_2,\expr_\f \]
+\end{defn}
+
+\begin{defn}
+  An expression $\expr$ is said to be \emph{atomic} if it reduces in one step to a value:
+  \[ \All\state_1, \expr_2, \state_2, \expr_\f. \expr, \state_1 \step \expr_2, \state_2, \expr_\f \Ra \Exists \val_2. \toval(\expr_2) = \val_2 \]
 \end{defn}
 
 \begin{defn}[Context]
@@ -68,8 +61,8 @@ For any language $\Lang$, we define the corresponding thread-pool semantics.
 
 To instantiate Iris, you need to define the following parameters:
 \begin{itemize}
-\item A language $\Lang$
-\item A locally contractive bifunctor $\iFunc : \COFEs \to \CMRAs$ defining the ghost state, such that for all COFEs $A$, the CMRA $\iFunc(A)$ has a unit
+\item A language $\Lang$, and
+\item a locally contractive bifunctor $\iFunc : \COFEs \to \CMRAs$ defining the ghost state, such that for all COFEs $A$, the CMRA $\iFunc(A)$ has a unit. (By \lemref{lem:cmra-unit-total-core}, this means that the core of $\iFunc(A)$ is a total function.)
 \end{itemize}
 
 \noindent
@@ -141,7 +134,7 @@ Recursive predicates must be \emph{guarded}: in $\MU \var. \term$, the variable 
 Note that $\always$ and $\later$ bind more tightly than $*$, $\wand$, $\land$, $\lor$, and $\Ra$.
 We will write $\pvs[\term] \prop$ for $\pvs[\term][\term] \prop$.
 If we omit the mask, then it is $\top$ for weakest precondition $\wpre\expr{\Ret\var.\prop}$ and $\emptyset$ for primitive view shifts $\pvs \prop$.
-\ralf{$\top$ is not a term in the logic. Neither is any of the operations on masks that we use in the rules for weakestpre.}
+%FIXME $\top$ is not a term in the logic. Neither is any of the operations on masks that we use in the rules for weakestpre.
 
 Some propositions are \emph{timeless}, which intuitively means that step-indexing does not affect them.
 This is a \emph{meta-level} assertion about propositions, defined as follows:
