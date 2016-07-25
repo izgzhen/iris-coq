@@ -260,9 +260,10 @@ Section cofe_mor.
 End cofe_mor.
 
 Arguments cofe_mor : clear implicits.
-Infix "-n>" := cofe_mor (at level 45, right associativity).
-Instance cofe_more_inhabited {A B : cofeT} `{Inhabited B} :
-  Inhabited (A -n> B) := populate (CofeMor (λ _, inhabitant)).
+Notation "A -n> B" :=
+  (cofe_mor A B) (at level 99, B at level 200, right associativity).
+Instance cofe_mor_inhabited {A B : cofeT} `{Inhabited B} :
+  Inhabited (A -n> B) := populate (λne _, inhabitant).
 
 (** Identity and composition and constant function *)
 Definition cid {A} : A -n> A := CofeMor id.
