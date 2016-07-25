@@ -1,4 +1,4 @@
-From iris.algebra Require Export cmra.
+From iris.algebra Require Export cmra updates.
 Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etrans; [|eassumption].
 Local Hint Extern 10 (_ ≤ _) => omega.
@@ -264,6 +264,21 @@ Definition uPred_valid {M A} := proj1_sig uPred_valid_aux M A.
 Definition uPred_valid_eq :
   @uPred_valid = @uPred_valid_def := proj2_sig uPred_valid_aux.
 
+Program Definition uPred_rvs_def {M} (Q : uPred M) : uPred M :=
+  {| uPred_holds n x := ∀ k yf,
+      0 < k ≤ n → ✓{k} (x ⋅ yf) → ∃ x', ✓{k} (x' ⋅ yf) ∧ Q k x' |}.
+Next Obligation.
+  intros M Q n x1 x2 HQ [x3 Hx] k yf Hk.
+  rewrite (dist_le _ _ _ _ Hx); last lia. intros Hxy.
+  destruct (HQ k (x3 ⋅ yf)) as (x'&?&?); [auto|by rewrite assoc|].
+  exists (x' ⋅ x3); split; first by rewrite -assoc.
+  apply uPred_mono with x'; eauto using cmra_includedN_l.
+Qed.
+Next Obligation. naive_solver. Qed.
+Definition uPred_rvs_aux : { x | x = @uPred_rvs_def }. by eexists. Qed.
+Definition uPred_rvs {M} := proj1_sig uPred_rvs_aux M.
+Definition uPred_rvs_eq : @uPred_rvs = @uPred_rvs_def := proj2_sig uPred_rvs_aux.
+
 Notation "P ⊢ Q" := (uPred_entails P%I Q%I)
   (at level 99, Q at level 200, right associativity) : C_scope.
 Notation "(⊢)" := uPred_entails (only parsing) : C_scope.
@@ -295,6 +310,8 @@ Notation "▷ P" := (uPred_later P)
   (at level 20, right associativity) : uPred_scope.
 Infix "≡" := uPred_eq : uPred_scope.
 Notation "✓ x" := (uPred_valid x) (at level 20) : uPred_scope.
+Notation "|==r> Q" := (uPred_rvs Q)
+  (at level 99, Q at level 200, format "|==r>  Q") : uPred_scope.
 
 Definition uPred_iff {M} (P Q : uPred M) : uPred M := ((P → Q) ∧ (Q → P))%I.
 Instance: Params (@uPred_iff) 1.
@@ -317,7 +334,7 @@ Module uPred.
 Definition unseal :=
   (uPred_pure_eq, uPred_and_eq, uPred_or_eq, uPred_impl_eq, uPred_forall_eq,
   uPred_exist_eq, uPred_eq_eq, uPred_sep_eq, uPred_wand_eq, uPred_always_eq,
-  uPred_later_eq, uPred_ownM_eq, uPred_valid_eq).
+  uPred_later_eq, uPred_ownM_eq, uPred_valid_eq, uPred_rvs_eq).
 Ltac unseal := rewrite !unseal /=.
 
 Section uPred_logic.
@@ -333,8 +350,8 @@ Hint Immediate uPred_in_entails.
 Global Instance: PreOrder (@uPred_entails M).
 Proof.
   split.
-  * by intros P; split=> x i.
-  * by intros P Q Q' HP HQ; split=> x i ??; apply HQ, HP.
+  - by intros P; split=> x i.
+  - by intros P Q Q' HP HQ; split=> x i ??; apply HQ, HP.
 Qed.
 Global Instance: AntiSymm (⊣⊢) (@uPred_entails M).
 Proof. intros P Q HPQ HQP; split=> x n; by split; [apply HPQ|apply HQP]. Qed.
@@ -405,8 +422,8 @@ Global Instance eq_ne (A : cofeT) n :
   Proper (dist n ==> dist n ==> dist n) (@uPred_eq M A).
 Proof.
   intros x x' Hx y y' Hy; split=> n' z; unseal; split; intros; simpl in *.
-  * by rewrite -(dist_le _ _ _ _ Hx) -?(dist_le _ _ _ _ Hy); auto.
-  * by rewrite (dist_le _ _ _ _ Hx) ?(dist_le _ _ _ _ Hy); auto.
+  - by rewrite -(dist_le _ _ _ _ Hx) -?(dist_le _ _ _ _ Hy); auto.
+  - by rewrite (dist_le _ _ _ _ Hx) ?(dist_le _ _ _ _ Hy); auto.
 Qed.
 Global Instance eq_proper (A : cofeT) :
   Proper ((≡) ==> (≡) ==> (⊣⊢)) (@uPred_eq M A) := ne_proper_2 _.
@@ -460,6 +477,14 @@ Proof.
 Qed.
 Global Instance valid_proper {A : cmraT} :
   Proper ((≡) ==> (⊣⊢)) (@uPred_valid M A) := ne_proper _.
+Global Instance rvs_ne n : Proper (dist n ==> dist n) (@uPred_rvs M).
+Proof.
+  intros P Q HPQ.
+  unseal; split=> n' x; split; intros HP k yf ??;
+    destruct (HP k yf) as (x'&?&?); auto;
+    exists x'; split; auto; apply HPQ; eauto using cmra_validN_op_l.
+Qed.
+Global Instance rvs_proper : Proper ((≡) ==> (≡)) (@uPred_rvs M) := ne_proper _.
 Global Instance iff_ne n : Proper (dist n ==> dist n ==> dist n) (@uPred_iff M).
 Proof. unfold uPred_iff; solve_proper. Qed.
 Global Instance iff_proper :
@@ -1065,6 +1090,78 @@ Proof. by intros; rewrite ownM_valid valid_elim. Qed.
 Global Instance ownM_mono : Proper (flip (≼) ==> (⊢)) (@uPred_ownM M).
 Proof. intros a b [b' ->]. rewrite ownM_op. eauto. Qed.
 
+(* Equivalent definition of timeless in the model *)
+Lemma timelessP_spec P : TimelessP P ↔ ∀ n x, ✓{n} x → P 0 x → P n x.
+Proof.
+  split.
+  - intros HP n x ??; induction n as [|n]; auto.
+    move: HP; rewrite /TimelessP; unseal=> /uPred_in_entails /(_ (S n) x).
+    by destruct 1; auto using cmra_validN_S.
+  - move=> HP; rewrite /TimelessP; unseal; split=> -[|n] x /=; auto; left.
+    apply HP, uPred_closed with n; eauto using cmra_validN_le.
+Qed.
+
+(* Viewshifts *)
+Lemma rvs_intro P : P ⊢ |==r> P.
+Proof.
+  unseal. split=> n x ? HP k yf ?; exists x; split; first done.
+  apply uPred_closed with n; eauto using cmra_validN_op_l.
+Qed.
+Lemma rvs_mono P Q : (P ⊢ Q) → (|==r> P) ⊢ |==r> Q.
+Proof.
+  unseal. intros HPQ; split=> n x ? HP k yf ??.
+  destruct (HP k yf) as (x'&?&?); eauto.
+  exists x'; split; eauto using uPred_in_entails, cmra_validN_op_l.
+Qed.
+Lemma rvs_timeless P : TimelessP P → ▷ P ⊢ |==r> P.
+Proof.
+  unseal. rewrite timelessP_spec=> HP.
+  split=> -[|n] x ? HP' k yf ??; first lia.
+  exists x; split; first done.
+  apply HP, uPred_closed with n; eauto using cmra_validN_le.
+Qed.
+Lemma rvs_trans P : (|==r> |==r> P) ⊢ |==r> P.
+Proof. unseal; split; naive_solver. Qed.
+Lemma rvs_frame_r P R : (|==r> P) ★ R ⊢ |==r> P ★ R.
+Proof.
+  unseal; split; intros n x ? (x1&x2&Hx&HP&?) k yf ??.
+  destruct (HP k (x2 ⋅ yf)) as (x'&?&?); eauto.
+  { by rewrite assoc -(dist_le _ _ _ _ Hx); last lia. }
+  exists (x' ⋅ x2); split; first by rewrite -assoc.
+  exists x', x2; split_and?; auto.
+  apply uPred_closed with n; eauto 3 using cmra_validN_op_l, cmra_validN_op_r.
+Qed.
+Lemma rvs_ownM_updateP x (Φ : M → Prop) :
+  x ~~>: Φ → uPred_ownM x ⊢ |==r> ∃ y, ■ Φ y ∧ uPred_ownM y.
+Proof.
+  unseal=> Hup; split=> -[|n] x2 ? [x3 Hx] [|k] yf ??; try lia.
+  destruct (Hup (S k) (Some (x3 ⋅ yf))) as (y&?&?); simpl in *.
+  { rewrite /= assoc -(dist_le _ _ _ _ Hx); auto. }
+  exists (y ⋅ x3); split; first by rewrite -assoc.
+  exists y; eauto using cmra_includedN_l.
+Qed.
+
+(** * Derived rules *)
+Global Instance rvs_mono' : Proper ((⊢) ==> (⊢)) (@uPred_rvs M).
+Proof. intros P Q; apply rvs_mono. Qed.
+Global Instance rvs_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) (@uPred_rvs M).
+Proof. intros P Q; apply rvs_mono. Qed.
+Lemma rvs_strip_rvs P Q : (P ⊢ |==r> Q) → (|==r> P) ⊢ (|==r> Q).
+Proof. move=>->. by rewrite rvs_trans. Qed.
+Lemma rvs_frame_l R Q : (R ★ |==r> Q) ⊢ |==r> R ★ Q.
+Proof. rewrite !(comm _ R); apply rvs_frame_r. Qed.
+Lemma rvs_wand_l P Q : (P -★ Q) ★ (|==r> P) ⊢ |==r> Q.
+Proof. by rewrite rvs_frame_l wand_elim_l. Qed.
+Lemma rvs_wand_r P Q : (|==r> P) ★ (P -★ Q) ⊢ |==r> Q.
+Proof. by rewrite rvs_frame_r wand_elim_r. Qed.
+Lemma rvs_sep P Q : (|==r> P) ★ (|==r> Q) ⊢ |==r> P ★ Q.
+Proof. by rewrite rvs_frame_r rvs_frame_l rvs_trans. Qed.
+Lemma rvs_ownM_update x y : x ~~> y → uPred_ownM x ⊢ |==r> uPred_ownM y.
+Proof.
+  intros; rewrite (rvs_ownM_updateP _ (y =)); last by apply cmra_update_updateP.
+  by apply rvs_mono, exist_elim=> y'; apply pure_elim_l=> ->.
+Qed.
+
 (* Products *)
 Lemma prod_equivI {A B : cofeT} (x y : A * B) : x ≡ y ⊣⊢ x.1 ≡ y.1 ∧ x.2 ≡ y.2.
 Proof. by unseal. Qed.
@@ -1096,21 +1193,11 @@ Lemma option_validI {A : cmraT} (mx : option A) :
   ✓ mx ⊣⊢ match mx with Some x => ✓ x | None => True end.
 Proof. uPred.unseal. by destruct mx. Qed.
 
-(* Timeless *)
-Lemma timelessP_spec P : TimelessP P ↔ ∀ n x, ✓{n} x → P 0 x → P n x.
-Proof.
-  split.
-  - intros HP n x ??; induction n as [|n]; auto.
-    move: HP; rewrite /TimelessP; unseal=> /uPred_in_entails /(_ (S n) x).
-    by destruct 1; auto using cmra_validN_S.
-  - move=> HP; rewrite /TimelessP; unseal; split=> -[|n] x /=; auto; left.
-    apply HP, uPred_closed with n; eauto using cmra_validN_le.
-Qed.
-
+(* Timeless instances *)
 Global Instance pure_timeless φ : TimelessP (■ φ : uPred M)%I.
 Proof. by apply timelessP_spec; unseal => -[|n] x. Qed.
 Global Instance valid_timeless {A : cmraT} `{CMRADiscrete A} (a : A) :
-   TimelessP (✓ a : uPred M)%I.
+  TimelessP (✓ a : uPred M)%I.
 Proof.
   apply timelessP_spec; unseal=> n x /=. by rewrite -!cmra_discrete_valid_iff.
 Qed.
