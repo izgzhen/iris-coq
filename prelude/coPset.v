@@ -1,7 +1,16 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
-(** This files implements an efficient implementation of finite/cofinite sets
-of positive binary naturals [positive]. *)
+(** This files implements the type [coPset] of efficient finite/cofinite sets
+of positive binary naturals [positive]. These sets are:
+
+- Closed under union, intersection and set complement.
+- Closed under splitting of cofinite sets.
+
+Also, they enjoy various nice properties, such as decidable equality and set
+membership, as well as extensional equality (i.e. [X = Y ↔ ∀ x, x ∈ X ↔ x ∈ Y]).
+
+Since [positive]s are bitstrings, we encode [coPset]s as trees that correspond
+to the decision function that map bitstrings to bools. *)
 From iris.prelude Require Export collections.
 From iris.prelude Require Import pmap gmap mapset.
 Local Open Scope positive_scope.
@@ -228,9 +237,9 @@ Proof.
   refine (cast_if (decide (coPset_finite (`X)))); by rewrite coPset_finite_spec.
 Defined.
 
-(** * Pick element from infitinite sets *)
-(* just depth-first search: using this to pick elements results in very
-unbalanced trees. *)
+(** * Pick element from infinite sets *)
+(* Implemented using depth-first search, which results in very unbalanced
+trees. *)
 Fixpoint coPpick_raw (t : coPset_raw) : option positive :=
   match t with
   | coPLeaf true | coPNode true _ _ => Some 1
