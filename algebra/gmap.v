@@ -1,6 +1,6 @@
-From iris.algebra Require Export cmra updates.
+From iris.algebra Require Export cmra.
 From iris.prelude Require Export gmap.
-From iris.algebra Require Import upred.
+From iris.algebra Require Import upred updates local_updates.
 
 Section cofe.
 Context `{Countable K} {A : cofeT}.

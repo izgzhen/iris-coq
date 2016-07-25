@@ -1,5 +1,5 @@
 From iris.prelude Require Export coPset.
-From iris.algebra Require Export upred_big_op.
+From iris.algebra Require Export upred_big_op updates.
 From iris.program_logic Require Export model.
 From iris.program_logic Require Import ownership wsat.
 Local Hint Extern 10 (_ ≤ _) => omega.

@@ -1,6 +1,7 @@
 From iris.prelude Require Export coPset.
 From iris.program_logic Require Export model.
 From iris.algebra Require Export cmra_big_op cmra_tactics.
+From iris.algebra Require Import updates.
 Local Hint Extern 10 (_ ≤ _) => omega.
 Local Hint Extern 10 (✓{_} _) => solve_validN.
 Local Hint Extern 1 (✓{_} gst _) => apply gst_validN.

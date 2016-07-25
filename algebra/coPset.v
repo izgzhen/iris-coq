@@ -1,5 +1,5 @@
 From iris.algebra Require Export cmra.
-From iris.algebra Require Import updates.
+From iris.algebra Require Import updates local_updates.
 From iris.prelude Require Export collections coPset.
 
 (** This is pretty much the same as algebra/gset, but I was not able to

@@ -59,6 +59,7 @@ algebra/frac.v
 algebra/csum.v
 algebra/list.v
 algebra/updates.v
+algebra/local_updates.v
 algebra/gset.v
 algebra/coPset.v
 program_logic/model.v

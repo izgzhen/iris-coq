@@ -1,5 +1,5 @@
 From iris.algebra Require Export cmra.
-From iris.algebra Require Import updates.
+From iris.algebra Require Import updates local_updates.
 From iris.prelude Require Export collections gmap.
 
 Inductive gset_disj K `{Countable K} :=
