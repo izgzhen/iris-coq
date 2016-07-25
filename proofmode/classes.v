@@ -312,4 +312,7 @@ Proof. rewrite /IntoExist=> HP ?. by rewrite HP later_exist. Qed.
 Global Instance into_exist_always {A} P (Φ : A → uPred M) :
   IntoExist P Φ → IntoExist (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP always_exist. Qed.
+
+Class TimelessElim (Q : uPred M) :=
+  timeless_elim `{!TimelessP P} R : (R ⊢ Q) → ▷ P ★ (P -★ R) ⊢ Q.
 End classes.

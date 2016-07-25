@@ -501,6 +501,15 @@ Tactic Notation "iNext":=
     |let P := match goal with |- FromLater ?P _ => P end in
      apply _ || fail "iNext:" P "does not contain laters"|].
 
+Tactic Notation "iTimeless" constr(H) :=
+  eapply tac_timeless with _ H _ _;
+    [let Q := match goal with |- TimelessElim ?Q => Q end in
+     apply _ || fail "iTimeless: cannot eliminate later in goal" Q
+    |env_cbv; reflexivity || fail "iTimeless:" H "not found"
+    |let P := match goal with |- TimelessP ?P => P end in
+     apply _ || fail "iTimeless: " P "not timeless"
+    |env_cbv; reflexivity|].
+
 (** * Introduction tactic *)
 Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" := first
   [ (* (∀ _, _) *) apply tac_forall_intro; intros x

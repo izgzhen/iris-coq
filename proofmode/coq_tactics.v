@@ -375,6 +375,16 @@ Proof.
   by rewrite right_id always_and_sep_l' wand_elim_r HQ.
 Qed.
 
+Lemma tac_timeless Δ Δ' i p P Q :
+  TimelessElim Q →
+  envs_lookup i Δ = Some (p, ▷ P)%I → TimelessP P →
+  envs_simple_replace i p (Esnoc Enil i P) Δ = Some Δ' →
+  (Δ' ⊢ Q) → Δ ⊢ Q.
+Proof.
+  intros ???? HQ. rewrite envs_simple_replace_sound //; simpl.
+  rewrite always_if_later right_id. by apply timeless_elim.
+Qed.
+
 (** * Always *)
 Lemma tac_always_intro Δ Q : envs_persistent Δ = true → (Δ ⊢ Q) → Δ ⊢ □ Q.
 Proof. intros. by apply: always_intro. Qed.
