@@ -465,6 +465,8 @@ Class IntoAssert (P : uPred M) (Q : uPred M) (R : uPred M) :=
 Global Arguments into_assert _ _ _ {_}.
 Lemma into_assert_default P Q : IntoAssert P Q P.
 Proof. by rewrite /IntoAssert wand_elim_r. Qed.
+Global Instance to_assert_rvs P Q : IntoAssert P (|==r> Q) (|==r> P).
+Proof. by rewrite /IntoAssert rvs_frame_r wand_elim_r rvs_trans. Qed.
 
 Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q lr js R P1 P2 P1' Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
