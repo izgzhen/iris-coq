@@ -183,14 +183,18 @@ Lemma auth_both_op a b : Auth (Excl' a) b ≡ ● a ⋅ ◯ b.
 Proof. by rewrite /op /auth_op /= left_id. Qed.
 
 Lemma auth_update a af b :
-  a ~l~> b @ Some af →
-  ● (a ⋅ af) ⋅ ◯ a ~~> ● (b ⋅ af) ⋅ ◯ b.
+  a ~l~> b @ Some af → ● (a ⋅ af) ⋅ ◯ a ~~> ● (b ⋅ af) ⋅ ◯ b.
 Proof.
   intros [Hab Hab']; apply cmra_total_update.
   move=> n [[[?|]|] bf1] // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
   move: Ha; rewrite !left_id=> Hm; split; auto.
   exists bf2. rewrite -assoc.
   apply (Hab' _ (Some _)); auto. by rewrite /= assoc.
+Qed.
+Lemma auth_update_no_frame a b : a ~l~> b @ Some ∅ → ● a ⋅ ◯ a ~~> ● b ⋅ ◯ b.
+Proof.
+  intros. rewrite -{1}(right_id _ _ a) -{1}(right_id _ _ b).
+  by apply auth_update.
 Qed.
 End cmra.
 
