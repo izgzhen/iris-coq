@@ -106,3 +106,17 @@ Section iris.
     - done.
   Qed.
 End iris.
+
+Section classes.
+  Class C A := c : A.
+  Instance nat_C : C nat := 0.
+  Instance bool_C : C bool := true.
+
+  Lemma demo_9 {M : ucmraT} (P : uPred M)
+    (H : ∀ `{C A}, True ⊢ (c = c : uPred M)) : P ⊢ (c:nat) = c ∧ (c:bool) = c.
+  Proof.
+    iIntros "_".
+    iPoseProof (@H _) as "foo_bool". iPoseProof (@H _) as "foo_nat".
+    iSplit. iApply "foo_nat". iApply "foo_bool".
+  Qed.
+End classes.

@@ -208,6 +208,11 @@ Tactic Notation "iSpecialize" open_constr(t) :=
   end.
 
 (** * Pose proof *)
+(* We use [class_apply] in the below to delay type class inference, this is
+useful when difference [inG] instances are arround. See [tests/proofmode] for
+a simple but artificial example.
+
+Note that this only works when the posed lemma is prefixed with an [@]. *)
 Local Tactic Notation "iPoseProofCore" open_constr(H1) "as" constr(H2) :=
   lazymatch type of H1 with
   | string =>
@@ -216,9 +221,10 @@ Local Tactic Notation "iPoseProofCore" open_constr(H1) "as" constr(H2) :=
        |env_cbv; reflexivity || fail "iPoseProof:" H2 "not fresh"|]
   | _ =>
      eapply tac_pose_proof with _ H2 _ _ _; (* (j:=H) *)
-       [first [eapply H1|apply uPred.equiv_iff; eapply H1]
-       |apply _
-       |env_cbv; reflexivity || fail "iPoseProof:" H2 "not fresh"|]
+       [first [class_apply H1|class_apply uPred.equiv_iff; eapply H1]
+       |(* [apply _] invokes TC inference on shelved goals, why ...? *)
+        typeclasses eauto
+       |env_cbv; class_apply eq_refl || fail "iPoseProof:" H2 "not fresh"|]
   end.
 
 Tactic Notation "iPoseProof" open_constr(t) "as" constr(H) :=
