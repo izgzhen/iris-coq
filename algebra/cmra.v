@@ -48,7 +48,7 @@ Record CMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A} := {
   mixin_cmra_comm : Comm (≡) (⋅);
   mixin_cmra_pcore_l x cx : pcore x = Some cx → cx ⋅ x ≡ x;
   mixin_cmra_pcore_idemp x cx : pcore x = Some cx → pcore cx ≡ Some cx;
-  mixin_cmra_pcore_preserving x y cx :
+  mixin_cmra_pcore_mono x y cx :
     x ≼ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼ cy;
   mixin_cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
   mixin_cmra_extend n x y1 y2 :
@@ -113,9 +113,9 @@ Section cmra_mixin.
   Proof. apply (mixin_cmra_pcore_l _ (cmra_mixin A)). Qed.
   Lemma cmra_pcore_idemp x cx : pcore x = Some cx → pcore cx ≡ Some cx.
   Proof. apply (mixin_cmra_pcore_idemp _ (cmra_mixin A)). Qed.
-  Lemma cmra_pcore_preserving x y cx :
+  Lemma cmra_pcore_mono x y cx :
     x ≼ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼ cy.
-  Proof. apply (mixin_cmra_pcore_preserving _ (cmra_mixin A)). Qed.
+  Proof. apply (mixin_cmra_pcore_mono _ (cmra_mixin A)). Qed.
   Lemma cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x.
   Proof. apply (mixin_cmra_validN_op_l _ (cmra_mixin A)). Qed.
   Lemma cmra_extend n x y1 y2 :
@@ -217,10 +217,10 @@ Class CMRADiscrete (A : cmraT) := {
 Class CMRAMonotone {A B : cmraT} (f : A → B) := {
   cmra_monotone_ne n :> Proper (dist n ==> dist n) f;
   validN_preserving n x : ✓{n} x → ✓{n} f x;
-  included_preserving x y : x ≼ y → f x ≼ f y
+  cmra_monotone x y : x ≼ y → f x ≼ f y
 }.
 Arguments validN_preserving {_ _} _ {_} _ _ _.
-Arguments included_preserving {_ _} _ {_} _ _ _.
+Arguments cmra_monotone {_ _} _ {_} _ _ _.
 
 (** * Properties **)
 Section cmra.
@@ -364,18 +364,18 @@ Proof. rewrite (comm op); apply cmra_includedN_l. Qed.
 Lemma cmra_included_r x y : y ≼ x ⋅ y.
 Proof. rewrite (comm op); apply cmra_included_l. Qed.
 
-Lemma cmra_pcore_preserving' x y cx :
+Lemma cmra_pcore_mono' x y cx :
   x ≼ y → pcore x ≡ Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼ cy.
 Proof.
   intros ? (cx'&?&Hcx)%equiv_Some_inv_r'.
-  destruct (cmra_pcore_preserving x y cx') as (cy&->&?); auto.
+  destruct (cmra_pcore_mono x y cx') as (cy&->&?); auto.
   exists cy; by rewrite Hcx.
 Qed.
-Lemma cmra_pcore_preservingN' n x y cx :
+Lemma cmra_pcore_monoN' n x y cx :
   x ≼{n} y → pcore x ≡{n}≡ Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼{n} cy.
 Proof.
   intros [z Hy] (cx'&?&Hcx)%dist_Some_inv_r'.
-  destruct (cmra_pcore_preserving x (x ⋅ z) cx')
+  destruct (cmra_pcore_mono x (x ⋅ z) cx')
     as (cy&Hxy&?); auto using cmra_included_l.
   assert (pcore y ≡{n}≡ Some cy) as (cy'&?&Hcy')%dist_Some_inv_r'.
   { by rewrite Hy Hxy. }
@@ -384,14 +384,14 @@ Proof.
 Qed.
 Lemma cmra_included_pcore x cx : pcore x = Some cx → cx ≼ x.
 Proof. exists x. by rewrite cmra_pcore_l. Qed.
-Lemma cmra_preservingN_l n x y z : x ≼{n} y → z ⋅ x ≼{n} z ⋅ y.
+Lemma cmra_monoN_l n x y z : x ≼{n} y → z ⋅ x ≼{n} z ⋅ y.
 Proof. by intros [z1 Hz1]; exists z1; rewrite Hz1 (assoc op). Qed.
-Lemma cmra_preserving_l x y z : x ≼ y → z ⋅ x ≼ z ⋅ y.
+Lemma cmra_mono_l x y z : x ≼ y → z ⋅ x ≼ z ⋅ y.
 Proof. by intros [z1 Hz1]; exists z1; rewrite Hz1 (assoc op). Qed.
-Lemma cmra_preservingN_r n x y z : x ≼{n} y → x ⋅ z ≼{n} y ⋅ z.
-Proof. by intros; rewrite -!(comm _ z); apply cmra_preservingN_l. Qed.
-Lemma cmra_preserving_r x y z : x ≼ y → x ⋅ z ≼ y ⋅ z.
-Proof. by intros; rewrite -!(comm _ z); apply cmra_preserving_l. Qed.
+Lemma cmra_monoN_r n x y z : x ≼{n} y → x ⋅ z ≼{n} y ⋅ z.
+Proof. by intros; rewrite -!(comm _ z); apply cmra_monoN_l. Qed.
+Lemma cmra_mono_r x y z : x ≼ y → x ⋅ z ≼ y ⋅ z.
+Proof. by intros; rewrite -!(comm _ z); apply cmra_mono_l. Qed.
 
 Lemma cmra_included_dist_l n x1 x2 x1' :
   x1 ≼ x2 → x1' ≡{n}≡ x1 → ∃ x2', x1' ≼ x2' ∧ x2' ≡{n}≡ x2.
@@ -412,10 +412,10 @@ Section total_core.
   Proof.
     destruct (cmra_total x) as [cx Hcx]. by rewrite /core /= Hcx cmra_pcore_idemp.
   Qed.
-  Lemma cmra_core_preserving x y : x ≼ y → core x ≼ core y.
+  Lemma cmra_core_mono x y : x ≼ y → core x ≼ core y.
   Proof.
     intros; destruct (cmra_total x) as [cx Hcx].
-    destruct (cmra_pcore_preserving x y cx) as (cy&Hcy&?); auto.
+    destruct (cmra_pcore_mono x y cx) as (cy&Hcy&?); auto.
     by rewrite /core /= Hcx Hcy.
   Qed.
 
@@ -461,10 +461,10 @@ Section total_core.
   Proof.
     split; [|apply _]. by intros x; exists (core x); rewrite cmra_core_r.
   Qed.
-  Lemma cmra_core_preservingN n x y : x ≼{n} y → core x ≼{n} core y.
+  Lemma cmra_core_monoN n x y : x ≼{n} y → core x ≼{n} core y.
   Proof.
     intros [z ->].
-    apply cmra_included_includedN, cmra_core_preserving, cmra_included_l.
+    apply cmra_included_includedN, cmra_core_mono, cmra_included_l.
   Qed.
 End total_core.
 
@@ -519,7 +519,7 @@ Section ucmra.
 
   Global Instance cmra_unit_total : CMRATotal A.
   Proof.
-    intros x. destruct (cmra_pcore_preserving' ∅ x ∅) as (cx&->&?);
+    intros x. destruct (cmra_pcore_mono' ∅ x ∅) as (cx&->&?);
       eauto using ucmra_unit_least, (persistent ∅).
   Qed.
 End ucmra.
@@ -538,7 +538,7 @@ Section cmra_total.
   Context (op_comm : Comm (≡) (@op A _)).
   Context (core_l : ∀ x : A, core x ⋅ x ≡ x).
   Context (core_idemp : ∀ x : A, core (core x) ≡ core x).
-  Context (core_preserving : ∀ x y : A, x ≼ y → core x ≼ core y).
+  Context (core_mono : ∀ x y : A, x ≼ y → core x ≼ core y).
   Context (validN_op_l : ∀ n (x y : A), ✓{n} (x ⋅ y) → ✓{n} x).
   Context (extend : ∀ n (x y1 y2 : A),
     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
@@ -551,7 +551,7 @@ Section cmra_total.
     - intros x cx Hcx. move: (core_l x). by rewrite /core /= Hcx.
     - intros x cx Hcx. move: (core_idemp x). rewrite /core /= Hcx /=.
       case (total cx)=>[ccx ->]; by constructor.
-    - intros x y cx Hxy%core_preserving Hx. move: Hxy.
+    - intros x y cx Hxy%core_mono Hx. move: Hxy.
       rewrite /core /= Hx /=. case (total y)=> [cy ->]; eauto.
   Qed.
 End cmra_total.
@@ -565,16 +565,16 @@ Proof.
   split.
   - apply _. 
   - move=> n x Hx /=. by apply validN_preserving, validN_preserving.
-  - move=> x y Hxy /=. by apply included_preserving, included_preserving.
+  - move=> x y Hxy /=. by apply cmra_monotone, cmra_monotone.
 Qed.
 
 Section cmra_monotone.
   Context {A B : cmraT} (f : A → B) `{!CMRAMonotone f}.
   Global Instance cmra_monotone_proper : Proper ((≡) ==> (≡)) f := ne_proper _.
-  Lemma includedN_preserving n x y : x ≼{n} y → f x ≼{n} f y.
+  Lemma cmra_monotoneN n x y : x ≼{n} y → f x ≼{n} f y.
   Proof.
     intros [z ->].
-    apply cmra_included_includedN, (included_preserving f), cmra_included_l.
+    apply cmra_included_includedN, (cmra_monotone f), cmra_included_l.
   Qed.
   Lemma valid_preserving x : ✓ x → ✓ f x.
   Proof. rewrite !cmra_valid_validN; eauto using validN_preserving. Qed.
@@ -677,7 +677,7 @@ Record RAMixin A `{Equiv A, PCore A, Op A, Valid A} := {
   ra_comm : Comm (≡) (⋅);
   ra_pcore_l x cx : pcore x = Some cx → cx ⋅ x ≡ x;
   ra_pcore_idemp x cx : pcore x = Some cx → pcore cx ≡ Some cx;
-  ra_pcore_preserving x y cx :
+  ra_pcore_mono x y cx :
     x ≼ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼ cy;
   ra_valid_op_l x y : ✓ (x ⋅ y) → ✓ x
 }.
@@ -715,7 +715,7 @@ Section ra_total.
   Context (op_comm : Comm (≡) (@op A _)).
   Context (core_l : ∀ x : A, core x ⋅ x ≡ x).
   Context (core_idemp : ∀ x : A, core (core x) ≡ core x).
-  Context (core_preserving : ∀ x y : A, x ≼ y → core x ≼ core y).
+  Context (core_mono : ∀ x y : A, x ≼ y → core x ≼ core y).
   Context (valid_op_l : ∀ x y : A, ✓ (x ⋅ y) → ✓ x).
   Lemma ra_total_mixin : RAMixin A.
   Proof.
@@ -725,7 +725,7 @@ Section ra_total.
     - intros x cx Hcx. move: (core_l x). by rewrite /core /= Hcx.
     - intros x cx Hcx. move: (core_idemp x). rewrite /core /= Hcx /=.
       case (total cx)=>[ccx ->]; by constructor.
-    - intros x y cx Hxy%core_preserving Hx. move: Hxy.
+    - intros x y cx Hxy%core_mono Hx. move: Hxy.
       rewrite /core /= Hx /=. case (total y)=> [cy ->]; eauto.
   Qed.
 End ra_total.
@@ -878,8 +878,8 @@ Section prod.
     - intros x y; rewrite prod_pcore_Some prod_pcore_Some'.
       naive_solver eauto using cmra_pcore_idemp.
     - intros x y cx; rewrite prod_included prod_pcore_Some=> -[??] [??].
-      destruct (cmra_pcore_preserving (x.1) (y.1) (cx.1)) as (z1&?&?); auto.
-      destruct (cmra_pcore_preserving (x.2) (y.2) (cx.2)) as (z2&?&?); auto.
+      destruct (cmra_pcore_mono (x.1) (y.1) (cx.1)) as (z1&?&?); auto.
+      destruct (cmra_pcore_mono (x.2) (y.2) (cx.2)) as (z2&?&?); auto.
       exists (z1,z2). by rewrite prod_included prod_pcore_Some.
     - intros n x y [??]; split; simpl in *; eauto using cmra_validN_op_l.
     - intros n x y1 y2 [??] [??]; simpl in *.
@@ -942,7 +942,7 @@ Proof.
   split; first apply _.
   - by intros n x [??]; split; simpl; apply validN_preserving.
   - intros x y; rewrite !prod_included=> -[??] /=.
-    by split; apply included_preserving.
+    by split; apply cmra_monotone.
 Qed.
 
 Program Definition prodRF (F1 F2 : rFunctor) : rFunctor := {|
@@ -1043,7 +1043,7 @@ Section option.
     - intros mx my; setoid_rewrite option_included.
       intros [->|(x&y&->&->&[?|?])]; simpl; eauto.
       + destruct (pcore x) as [cx|] eqn:?; eauto.
-        destruct (cmra_pcore_preserving x y cx) as (?&?&?); eauto 10.
+        destruct (cmra_pcore_mono x y cx) as (?&?&?); eauto 10.
       + destruct (pcore x) as [cx|] eqn:?; eauto.
         destruct (cmra_pcore_proper x y cx) as (?&?&?); eauto 10.
     - intros n [x|] [y|]; rewrite /validN /option_validN /=;
@@ -1102,7 +1102,7 @@ Proof.
   split; first apply _.
   - intros n [x|] ?; rewrite /cmra_validN //=. by apply (validN_preserving f).
   - intros mx my; rewrite !option_included.
-    intros [->|(x&y&->&->&[?|Hxy])]; simpl; eauto 10 using @included_preserving.
+    intros [->|(x&y&->&->&[?|Hxy])]; simpl; eauto 10 using @cmra_monotone.
     right; exists (f x), (f y). by rewrite {4}Hxy; eauto.
 Qed.
 Program Definition optionURF (F : rFunctor) : urFunctor := {|

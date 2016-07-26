@@ -35,7 +35,7 @@
 \newcommand{\upclose}{\mathord{\uparrow}}
 \newcommand{\ALT}{\ |\ }
 
-\newcommand{\spac}{\,} % a space
+\newcommand{\spac}{\:} % a space
 
 \def\All #1.{\forall #1.\spac}%
 \def\Exists #1.{\exists #1.\spac}%
@@ -56,6 +56,8 @@
 \newcommand{\eqdef}{\triangleq}
 \newcommand{\bnfdef}{\vcentcolon\vcentcolon=}
 
+\newcommand{\maybe}[1]{#1^?}
+
 \newcommand*\setComp[2]{\left\{#1\spac\middle|\spac#2\right\}}
 \newcommand*\set[1]{\left\{#1\right\}}
 \newcommand*\record[1]{\left\{\spac#1\spac\right\}}
@@ -67,6 +69,7 @@
   \end{array}
 }
 
+\newcommand{\op}{\textrm{op}}
 \newcommand{\dom}{\mathrm{dom}}
 \newcommand{\cod}{\mathrm{cod}}
 \newcommand{\chain}{\mathrm{chain}}
@@ -112,8 +115,6 @@
 
 
 %% Some commonly used identifiers
-\newcommand{\op}{\textrm{op}}
-
 \newcommand{\SProp}{\textdom{SProp}}
 \newcommand{\UPred}{\textdom{UPred}}
 \newcommand{\mProp}{\textdom{Prop}} % meta-level prop
@@ -144,10 +145,9 @@
 
 \newcommand{\f}{\mathrm{f}} % for "frame"
 
-\newcommand{\mcar}[1]{|#1|}
-\newcommand{\mcarp}[1]{\mcar{#1}^{+}}
 \newcommand{\munit}{\varepsilon}
-\newcommand{\mcore}[1]{\llparenthesis#1\rrparenthesis}
+\newcommand{\mcore}[1]{{\mid}#1{\mid}} % using "|" here makes LaTeX diverge. WTF.
+\newcommand{\mnocore}\top
 \newcommand{\mtimes}{\mathbin{\cdot}}
 
 \newcommand{\mupd}{\rightsquigarrow}
@@ -328,6 +328,9 @@
 % STANDARD DERIVED CONSTRUCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\newcommand{\unittt}{()}
+\newcommand{\unit}{1}
+
 % Agreement
 \newcommand{\agm}{\ensuremath{\textmon{Ag}}}
 \newcommand{\aginj}{\textlog{ag}}
@@ -346,6 +349,11 @@
 
 \newcommand{\AuthInv}{\textsf{AuthInv}}
 \newcommand{\Auth}{\textsf{Auth}}
+
+% Sum
+\newcommand{\csumm}{\mathrel{+_{\!\bot}}}
+\newcommand{\cinl}{\textsf{inl}}
+\newcommand{\cinr}{\textsf{inr}}
 
 % One-Shot
 \newcommand{\oneshotm}{\ensuremath{\textmon{OneShot}}}

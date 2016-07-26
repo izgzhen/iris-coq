@@ -84,3 +84,6 @@ Section gset.
       rewrite -gset_disj_union -?assoc ?HXf ?cmra_opM_assoc; set_solver.
   Qed.
 End gset.
+
+Arguments gset_disjR _ {_ _}.
+Arguments gset_disjUR _ {_ _}.

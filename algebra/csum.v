@@ -202,10 +202,10 @@ Proof.
   - intros x y ? [->|[(a&a'&->&->&?)|(b&b'&->&->&?)]]%csum_included [=].
     + exists CsumBot. rewrite csum_included; eauto.
     + destruct (pcore a) as [ca|] eqn:?; simplify_option_eq.
-      destruct (cmra_pcore_preserving a a' ca) as (ca'&->&?); auto.
+      destruct (cmra_pcore_mono a a' ca) as (ca'&->&?); auto.
       exists (Cinl ca'). rewrite csum_included; eauto 10.
     + destruct (pcore b) as [cb|] eqn:?; simplify_option_eq.
-      destruct (cmra_pcore_preserving b b' cb) as (cb'&->&?); auto.
+      destruct (cmra_pcore_mono b b' cb) as (cb'&->&?); auto.
       exists (Cinr cb'). rewrite csum_included; eauto 10.
   - intros n [a1|b1|] [a2|b2|]; simpl; eauto using cmra_validN_op_l; done.
   - intros n [a|b|] y1 y2 Hx Hx'.
@@ -330,7 +330,7 @@ Proof.
   - intros n [a|b|]; simpl; auto using validN_preserving.
   - intros x y; rewrite !csum_included.
     intros [->|[(a&a'&->&->&?)|(b&b'&->&->&?)]]; simpl;
-    eauto 10 using included_preserving.
+    eauto 10 using cmra_monotone.
 Qed.
 
 Program Definition csumRF (Fa Fb : rFunctor) : rFunctor := {|

@@ -301,10 +301,6 @@ Global Arguments from_exist {_} _ _ {_}.
 Global Instance from_exist_exist {A} (Φ: A → uPred M): FromExist (∃ a, Φ a) Φ.
 Proof. done. Qed.
 
-Lemma tac_exist {A} Δ P (Φ : A → uPred M) :
-  FromExist P Φ → (∃ a, Δ ⊢ Φ a) → Δ ⊢ P.
-Proof. intros ? [a ?]. rewrite -(from_exist P). eauto using exist_intro'. Qed.
-
 Class IntoExist {A} (P : uPred M) (Φ : A → uPred M) :=
   into_exist : P ⊢ ∃ x, Φ x.
 Global Arguments into_exist {_} _ _ {_}.
@@ -316,4 +312,7 @@ Proof. rewrite /IntoExist=> HP ?. by rewrite HP later_exist. Qed.
 Global Instance into_exist_always {A} P (Φ : A → uPred M) :
   IntoExist P Φ → IntoExist (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP always_exist. Qed.
+
+Class TimelessElim (Q : uPred M) :=
+  timeless_elim `{!TimelessP P} : ▷ P ★ (P -★ Q) ⊢ Q.
 End classes.

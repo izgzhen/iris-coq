@@ -109,7 +109,7 @@ Proof.
   - by intros ?; constructor; rewrite /= cmra_core_l.
   - by intros ?; constructor; rewrite /= cmra_core_idemp.
   - intros r1 r2; rewrite !res_included.
-    by intros (?&?&?); split_and!; apply cmra_core_preserving.
+    by intros (?&?&?); split_and!; apply cmra_core_mono.
   - intros n r1 r2 (?&?&?);
       split_and!; simpl in *; eapply cmra_validN_op_l; eauto.
   - intros n r r1 r2 (?&?&?) [???]; simpl in *.
@@ -212,7 +212,7 @@ Proof.
   split; first apply _.
   - intros n r (?&?&?); split_and!; simpl; by try apply: validN_preserving.
   - by intros r1 r2; rewrite !res_included;
-      intros (?&?&?); split_and!; simpl; try apply: included_preserving.
+      intros (?&?&?); split_and!; simpl; try apply: cmra_monotone.
 Qed.
 Definition resC_map {Λ} {A A' : cofeT} {M M' : ucmraT}
     (f : A -n> A') (g : M -n> M') : resC Λ A M -n> resC Λ A' M' :=

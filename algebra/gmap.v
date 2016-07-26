@@ -134,7 +134,7 @@ Proof.
   - intros m i. by rewrite lookup_op lookup_core cmra_core_l.
   - intros m i. by rewrite !lookup_core cmra_core_idemp.
   - intros m1 m2; rewrite !lookup_included=> Hm i.
-    rewrite !lookup_core. by apply cmra_core_preserving.
+    rewrite !lookup_core. by apply cmra_core_mono.
   - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
   - intros n m m1 m2 Hm Hm12.
@@ -399,7 +399,7 @@ Proof.
   split; try apply _.
   - by intros n m ? i; rewrite lookup_fmap; apply (validN_preserving _).
   - intros m1 m2; rewrite !lookup_included=> Hm i.
-    by rewrite !lookup_fmap; apply: included_preserving.
+    by rewrite !lookup_fmap; apply: cmra_monotone.
 Qed.
 Definition gmapC_map `{Countable K} {A B} (f: A -n> B) :
   gmapC K A -n> gmapC K B := CofeMor (fmap f : gmapC K A → gmapC K B).

@@ -375,6 +375,16 @@ Proof.
   by rewrite right_id always_and_sep_l' wand_elim_r HQ.
 Qed.
 
+Lemma tac_timeless Δ Δ' i p P Q :
+  TimelessElim Q →
+  envs_lookup i Δ = Some (p, ▷ P)%I → TimelessP P →
+  envs_simple_replace i p (Esnoc Enil i P) Δ = Some Δ' →
+  (Δ' ⊢ Q) → Δ ⊢ Q.
+Proof.
+  intros ???? HQ. rewrite envs_simple_replace_sound //; simpl.
+  by rewrite always_if_later right_id HQ timeless_elim.
+Qed.
+
 (** * Always *)
 Lemma tac_always_intro Δ Q : envs_persistent Δ = true → (Δ ⊢ Q) → Δ ⊢ □ Q.
 Proof. intros. by apply: always_intro. Qed.
@@ -719,6 +729,10 @@ Lemma tac_forall_revert {A} Δ (Φ : A → uPred M) :
 Proof. intros HΔ a. by rewrite HΔ (forall_elim a). Qed.
 
 (** * Existential *)
+Lemma tac_exist {A} Δ P (Φ : A → uPred M) :
+  FromExist P Φ → (∃ a, Δ ⊢ Φ a) → Δ ⊢ P.
+Proof. intros ? [a ?]. rewrite -(from_exist P). eauto using exist_intro'. Qed.
+
 Lemma tac_exist_destruct {A} Δ i p j P (Φ : A → uPred M) Q :
   envs_lookup i Δ = Some (p, P) → IntoExist P Φ →
   (∀ a, ∃ Δ',
