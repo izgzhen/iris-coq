@@ -84,7 +84,7 @@ Proof.
   iSplitL "HP Hs Hγ"; [|iSplitL "Hr"].
   - wp_focus eM. iApply wp_wand_l; iSplitR "HP"; [|by iApply "He"].
     iIntros (v) "HP"; iDestruct "HP" as (x) "HP". wp_let.
-    iPvs (@own_update with "Hγ") as "Hx".
+    iPvs (own_update with "Hγ") as "Hx".
     { by apply (cmra_update_exclusive (Shot x)). }
     iApply signal_spec; iFrame "Hs"; iSplit; last done.
     iExists x; auto.

@@ -82,6 +82,12 @@ Proof.
 Qed.
 End global.
 
+Arguments own_valid {_ _ _} [_] _ _.
+Arguments own_valid_l {_ _ _} [_] _ _.
+Arguments own_valid_r {_ _ _} [_] _ _.
+Arguments own_updateP {_ _ _} [_] _ _ _ _ _.
+Arguments own_update {_ _ _} [_] _ _ _ _ _.
+
 Section global_empty.
 Context `{i : inG Λ Σ (A:ucmraT)}.
 Implicit Types a : A.
