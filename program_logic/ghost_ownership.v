@@ -18,13 +18,14 @@ Context `{i : inG Λ Σ A}.
 Implicit Types a : A.
 
 (** * Properties of own *)
-Global Instance own_ne γ n : Proper (dist n ==> dist n) (own γ).
+Global Instance own_ne γ n : Proper (dist n ==> dist n) (@own Λ Σ A _ γ).
 Proof. rewrite !own_eq. solve_proper. Qed.
-Global Instance own_proper γ : Proper ((≡) ==> (⊣⊢)) (own γ) := ne_proper _.
+Global Instance own_proper γ :
+  Proper ((≡) ==> (⊣⊢)) (@own Λ Σ A _ γ) := ne_proper _.
 
 Lemma own_op γ a1 a2 : own γ (a1 ⋅ a2) ⊣⊢ own γ a1 ★ own γ a2.
 Proof. by rewrite !own_eq /own_def -ownG_op to_globalF_op. Qed.
-Global Instance own_mono γ : Proper (flip (≼) ==> (⊢)) (own γ).
+Global Instance own_mono γ : Proper (flip (≼) ==> (⊢)) (@own Λ Σ A _ γ).
 Proof. move=>a b [c ->]. rewrite own_op. eauto with I. Qed.
 Lemma own_valid γ a : own γ a ⊢ ✓ a.
 Proof.
@@ -85,7 +86,7 @@ Section global_empty.
 Context `{i : inG Λ Σ (A:ucmraT)}.
 Implicit Types a : A.
 
-Lemma own_empty γ E : True ={E}=> own γ ∅.
+Lemma own_empty γ E : True ={E}=> own γ (∅:A).
 Proof.
   rewrite ownG_empty !own_eq /own_def.
   apply pvs_ownG_update, iprod_singleton_update_empty.

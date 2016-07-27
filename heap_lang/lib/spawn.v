@@ -80,7 +80,7 @@ Proof.
     + iPvsIntro; iSplitL "Hl Hγ".
       { iNext. iExists _; iFrame; eauto. }
       wp_match. by iApply "Hv".
-    + iCombine "Hγ" "Hγ'" as "Hγ". iDestruct (own_valid with "Hγ") as %[].
+    + iCombine "Hγ" "Hγ'" as "Hγ". iDestruct (@own_valid with "Hγ") as %[].
 Qed.
 End proof.
 

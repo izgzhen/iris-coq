@@ -102,14 +102,14 @@ Section sts.
   Proof.
     iIntros (??) "(#? & Hγf & HΨ)". rewrite /sts_ctx /sts_ownS /sts_inv /sts_own.
     iInv N as (s) "[Hγ Hφ]"; iTimeless "Hγ".
-    iCombine "Hγ" "Hγf" as "Hγ"; iDestruct (own_valid with "#Hγ") as %Hvalid.
+    iCombine "Hγ" "Hγf" as "Hγ"; iDestruct (@own_valid with "#Hγ") as %Hvalid.
     assert (s ∈ S) by eauto using sts_auth_frag_valid_inv.
     assert (✓ sts_frag S T) as [??] by eauto using cmra_valid_op_r.
     iRevert "Hγ"; rewrite sts_op_auth_frag //; iIntros "Hγ".
     iApply pvs_fsa_fsa; iApply fsa_wand_r; iSplitL "HΨ Hφ".
     { iApply "HΨ"; by iSplit. }
     iIntros (a); iDestruct 1 as (s' T') "(% & Hφ & HΨ)".
-    iPvs (own_update with "Hγ") as "Hγ"; first eauto using sts_update_auth.
+    iPvs (@own_update with "Hγ") as "Hγ"; first eauto using sts_update_auth.
     iRevert "Hγ"; rewrite -sts_op_auth_frag_up; iIntros "[Hγ Hγf]".
     iPvsIntro; iSplitL "Hφ Hγ"; last by iApply "HΨ".
     iNext; iExists s'; by iFrame.
