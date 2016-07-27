@@ -187,7 +187,7 @@ Section cmra.
     - intros l; rewrite list_equiv_lookup=> i.
       by rewrite !list_lookup_core cmra_core_idemp.
     - intros l1 l2; rewrite !list_lookup_included=> Hl i.
-      rewrite !list_lookup_core. by apply cmra_core_preserving.
+      rewrite !list_lookup_core. by apply cmra_core_mono.
     - intros n l1 l2. rewrite !list_lookup_validN.
       setoid_rewrite list_lookup_op. eauto using cmra_validN_op_l.
     - intros n l. induction l as [|x l IH]=> -[|y1 l1] [|y2 l2] Hl Hl';
@@ -374,7 +374,7 @@ Proof.
   - intros n l. rewrite !list_lookup_validN=> Hl i. rewrite list_lookup_fmap.
     by apply (validN_preserving (fmap f : option A → option B)).
   - intros l1 l2. rewrite !list_lookup_included=> Hl i. rewrite !list_lookup_fmap.
-    by apply (included_preserving (fmap f : option A → option B)).
+    by apply (cmra_monotone (fmap f : option A → option B)).
 Qed.
 
 Program Definition listURF (F : urFunctor) : urFunctor := {|

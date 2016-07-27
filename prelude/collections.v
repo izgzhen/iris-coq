@@ -645,6 +645,11 @@ Section collection.
       intros ? x; split; rewrite !elem_of_union, elem_of_difference; [|intuition].
       destruct (decide (x ∈ X)); intuition.
     Qed.
+    Lemma subseteq_disjoint_union X Y : X ⊆ Y ↔ ∃ Z, Y ≡ X ∪ Z ∧ X ⊥ Z.
+    Proof.
+      split; [|set_solver].
+      exists (Y ∖ X); split; [auto using union_difference|set_solver].
+    Qed.
     Lemma non_empty_difference X Y : X ⊂ Y → Y ∖ X ≢ ∅.
     Proof. intros [HXY1 HXY2] Hdiff. destruct HXY2. set_solver. Qed.
     Lemma empty_difference_subseteq X Y : X ∖ Y ≡ ∅ → X ⊆ Y.
@@ -657,6 +662,8 @@ Section collection.
     Proof. unfold_leibniz. apply non_empty_difference. Qed.
     Lemma empty_difference_subseteq_L X Y : X ∖ Y = ∅ → X ⊆ Y.
     Proof. unfold_leibniz. apply empty_difference_subseteq. Qed.
+    Lemma subseteq_disjoint_union_L X Y : X ⊆ Y ↔ ∃ Z, Y = X ∪ Z ∧ X ⊥ Z.
+    Proof. unfold_leibniz. apply subseteq_disjoint_union. Qed.
   End dec.
 End collection.
 

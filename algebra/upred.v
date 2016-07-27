@@ -68,7 +68,7 @@ Qed.
 Program Definition uPred_map {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CMRAMonotone f} (P : uPred M1) :
   uPred M2 := {| uPred_holds n x := P n (f x) |}.
-Next Obligation. naive_solver eauto using uPred_mono, includedN_preserving. Qed.
+Next Obligation. naive_solver eauto using uPred_mono, cmra_monotoneN. Qed.
 Next Obligation. naive_solver eauto using uPred_closed, validN_preserving. Qed.
 
 Instance uPred_map_ne {M1 M2 : ucmraT} (f : M2 -n> M1)
@@ -212,7 +212,7 @@ Program Definition uPred_wand_def {M} (P Q : uPred M) : uPred M :=
 Next Obligation.
   intros M P Q n x1 x1' HPQ ? n3 x3 ???; simpl in *.
   apply uPred_mono with (x1 ⋅ x3);
-    eauto using cmra_validN_includedN, cmra_preservingN_r, cmra_includedN_le.
+    eauto using cmra_validN_includedN, cmra_monoN_r, cmra_includedN_le.
 Qed.
 Next Obligation. naive_solver. Qed.
 Definition uPred_wand_aux : { x | x = @uPred_wand_def }. by eexists. Qed.
@@ -223,7 +223,7 @@ Definition uPred_wand_eq :
 Program Definition uPred_always_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n (core x) |}.
 Next Obligation.
-  intros M; naive_solver eauto using uPred_mono, @cmra_core_preservingN.
+  intros M; naive_solver eauto using uPred_mono, @cmra_core_monoN.
 Qed.
 Next Obligation. naive_solver eauto using uPred_closed, @cmra_core_validN. Qed.
 Definition uPred_always_aux : { x | x = @uPred_always_def }. by eexists. Qed.
@@ -323,6 +323,13 @@ Instance: Params (@uPred_always_if) 2.
 Arguments uPred_always_if _ !_ _/.
 Notation "□? p P" := (uPred_always_if p P)
   (at level 20, p at level 0, P at level 20, format "□? p  P").
+
+Definition uPred_laterN {M} (n : nat) (P : uPred M) : uPred M :=
+  Nat.iter n uPred_later P.
+Instance: Params (@uPred_laterN) 2.
+Notation "▷^ n P" := (uPred_laterN n P)
+  (at level 20, n at level 9, right associativity,
+   format "▷^ n  P") : uPred_scope.
 
 Class TimelessP {M} (P : uPred M) := timelessP : ▷ P ⊢ (P ∨ ▷ False).
 Arguments timelessP {_} _ {_}.
@@ -454,7 +461,7 @@ Proof.
   intros n P Q HPQ; unseal; split=> -[|n'] x ??; simpl; [done|].
   apply (HPQ n'); eauto using cmra_validN_S.
 Qed.
-Global Instance later_proper :
+Global Instance later_proper' :
   Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_later M) := ne_proper _.
 Global Instance always_ne n : Proper (dist n ==> dist n) (@uPred_always M).
 Proof.
@@ -485,10 +492,6 @@ Proof.
     exists x'; split; auto; apply HPQ; eauto using cmra_validN_op_l.
 Qed.
 Global Instance rvs_proper : Proper ((≡) ==> (≡)) (@uPred_rvs M) := ne_proper _.
-Global Instance iff_ne n : Proper (dist n ==> dist n ==> dist n) (@uPred_iff M).
-Proof. unfold uPred_iff; solve_proper. Qed.
-Global Instance iff_proper :
-  Proper ((⊣⊢) ==> (⊣⊢) ==> (⊣⊢)) (@uPred_iff M) := ne_proper_2 _.
 
 (** Introduction and elimination rules *)
 Lemma pure_intro φ P : φ → P ⊢ ■ φ.
@@ -548,6 +551,11 @@ Proof.
 Qed.
 
 (* Derived logical stuff *)
+Global Instance iff_ne n : Proper (dist n ==> dist n ==> dist n) (@uPred_iff M).
+Proof. unfold uPred_iff; solve_proper. Qed.
+Global Instance iff_proper :
+  Proper ((⊣⊢) ==> (⊣⊢) ==> (⊣⊢)) (@uPred_iff M) := ne_proper_2 _.
+
 Lemma False_elim P : False ⊢ P.
 Proof. by apply (pure_elim False). Qed.
 Lemma True_intro P : P ⊢ True.
@@ -968,7 +976,10 @@ Lemma always_entails_l' P Q : (P ⊢ □ Q) → P ⊢ □ Q ★ P.
 Proof. intros; rewrite -always_and_sep_l'; auto. Qed.
 Lemma always_entails_r' P Q : (P ⊢ □ Q) → P ⊢ P ★ □ Q.
 Proof. intros; rewrite -always_and_sep_r'; auto. Qed.
+Lemma always_laterN n P : □ ▷^n P ⊣⊢ ▷^n □ P.
+Proof. induction n as [|n IH]; simpl; auto. by rewrite always_later IH. Qed.
 
+(* Conditional always *)
 Global Instance always_if_ne n p : Proper (dist n ==> dist n) (@uPred_always_if M p).
 Proof. solve_proper. Qed.
 Global Instance always_if_proper p : Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_always_if M p).
@@ -1029,6 +1040,9 @@ Proof.
 Qed.
 
 (* Later derived *)
+Lemma later_proper P Q : (P ⊣⊢ Q) → ▷ P ⊣⊢ ▷ Q.
+Proof. by intros ->. Qed.
+Hint Resolve later_mono later_proper.
 Global Instance later_mono' : Proper ((⊢) ==> (⊢)) (@uPred_later M).
 Proof. intros P Q; apply later_mono. Qed.
 Global Instance later_flip_mono' :
@@ -1037,17 +1051,68 @@ Proof. intros P Q; apply later_mono. Qed.
 Lemma later_True : ▷ True ⊣⊢ True.
 Proof. apply (anti_symm (⊢)); auto using later_intro. Qed.
 Lemma later_impl P Q : ▷ (P → Q) ⊢ ▷ P → ▷ Q.
-Proof.
-  apply impl_intro_l; rewrite -later_and.
-  apply later_mono, impl_elim with P; auto.
-Qed.
+Proof. apply impl_intro_l; rewrite -later_and; eauto using impl_elim. Qed.
 Lemma later_exist `{Inhabited A} (Φ : A → uPred M) :
   ▷ (∃ a, Φ a) ⊣⊢ (∃ a, ▷ Φ a).
 Proof. apply: anti_symm; eauto using later_exist_2, later_exist_1. Qed.
 Lemma later_wand P Q : ▷ (P -★ Q) ⊢ ▷ P -★ ▷ Q.
-Proof. apply wand_intro_r;rewrite -later_sep; apply later_mono,wand_elim_l. Qed.
+Proof. apply wand_intro_r;rewrite -later_sep; eauto using wand_elim_l. Qed.
 Lemma later_iff P Q : ▷ (P ↔ Q) ⊢ ▷ P ↔ ▷ Q.
 Proof. by rewrite /uPred_iff later_and !later_impl. Qed.
+
+(* n-times later *)
+Global Instance laterN_ne n m : Proper (dist n ==> dist n) (@uPred_laterN M m).
+Proof. induction m; simpl. by intros ???. solve_proper. Qed.
+Global Instance laterN_proper m :
+  Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_laterN M m) := ne_proper _.
+
+Lemma later_laterN n P : ▷^(S n) P ⊣⊢ ▷ ▷^n P.
+Proof. done. Qed.
+Lemma laterN_later n P : ▷^(S n) P ⊣⊢ ▷^n ▷ P.
+Proof. induction n; simpl; auto. Qed.
+Lemma laterN_plus n1 n2 P : ▷^(n1 + n2) P ⊣⊢ ▷^n1 ▷^n2 P.
+Proof. induction n1; simpl; auto. Qed.
+Lemma laterN_le n1 n2 P : n1 ≤ n2 → ▷^n1 P ⊢ ▷^n2 P.
+Proof. induction 1; simpl; by rewrite -?later_intro. Qed.
+
+Lemma laterN_mono n P Q : (P ⊢ Q) → ▷^n P ⊢ ▷^n Q.
+Proof. induction n; simpl; auto. Qed.
+Lemma laterN_intro n P : P ⊢ ▷^n P.
+Proof. induction n as [|n IH]; simpl; by rewrite -?later_intro. Qed.
+Lemma laterN_and n P Q : ▷^n (P ∧ Q) ⊣⊢ ▷^n P ∧ ▷^n Q.
+Proof. induction n as [|n IH]; simpl; rewrite -?later_and; auto. Qed.
+Lemma laterN_or n P Q : ▷^n (P ∨ Q) ⊣⊢ ▷^n P ∨ ▷^n Q.
+Proof. induction n as [|n IH]; simpl; rewrite -?later_or; auto. Qed.
+Lemma laterN_forall {A} n (Φ : A → uPred M) : (▷^n ∀ a, Φ a) ⊣⊢ (∀ a, ▷^n Φ a).
+Proof. induction n as [|n IH]; simpl; rewrite -?later_forall; auto. Qed.
+Lemma laterN_exist_1 {A} n (Φ : A → uPred M) : (∃ a, ▷^n Φ a) ⊢ (▷^n ∃ a, Φ a).
+Proof. induction n as [|n IH]; simpl; rewrite ?later_exist_1; auto. Qed.
+Lemma laterN_exist_2 `{Inhabited A} n (Φ : A → uPred M) :
+  (▷^n ∃ a, Φ a) ⊢ ∃ a, ▷^n Φ a.
+Proof. induction n as [|n IH]; simpl; rewrite -?later_exist_2; auto. Qed.
+Lemma laterN_sep n P Q : ▷^n (P ★ Q) ⊣⊢ ▷^n P ★ ▷^n Q.
+Proof. induction n as [|n IH]; simpl; rewrite -?later_sep; auto. Qed.
+
+Global Instance laterN_mono' n : Proper ((⊢) ==> (⊢)) (@uPred_laterN M n).
+Proof. intros P Q; apply laterN_mono. Qed.
+Global Instance laterN_flip_mono' n :
+  Proper (flip (⊢) ==> flip (⊢)) (@uPred_laterN M n).
+Proof. intros P Q; apply laterN_mono. Qed.
+Lemma laterN_True n : ▷^n True ⊣⊢ True.
+Proof. apply (anti_symm (⊢)); auto using laterN_intro. Qed.
+Lemma laterN_impl n P Q : ▷^n (P → Q) ⊢ ▷^n P → ▷^n Q.
+Proof.
+  apply impl_intro_l; rewrite -laterN_and; eauto using impl_elim, laterN_mono.
+Qed.
+Lemma laterN_exist n `{Inhabited A} (Φ : A → uPred M) :
+  ▷^n (∃ a, Φ a) ⊣⊢ (∃ a, ▷^n Φ a).
+Proof. apply: anti_symm; eauto using laterN_exist_2, laterN_exist_1. Qed.
+Lemma laterN_wand n P Q : ▷^n (P -★ Q) ⊢ ▷^n P -★ ▷^n Q.
+Proof.
+  apply wand_intro_r; rewrite -laterN_sep; eauto using wand_elim_l,laterN_mono.
+Qed.
+Lemma laterN_iff n P Q : ▷^n (P ↔ Q) ⊢ ▷^n P ↔ ▷^n Q.
+Proof. by rewrite /uPred_iff laterN_and !laterN_impl. Qed.
 
 (* Own *)
 Lemma ownM_op (a1 a2 : M) :
@@ -1063,7 +1128,7 @@ Qed.
 Lemma always_ownM (a : M) : Persistent a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
 Proof.
   split=> n x /=; split; [by apply always_elim|unseal; intros Hx]; simpl.
-  rewrite -(persistent_core a). by apply cmra_core_preservingN.
+  rewrite -(persistent_core a). by apply cmra_core_monoN.
 Qed.
 Lemma ownM_something : True ⊢ ∃ a, uPred_ownM a.
 Proof. unseal; split=> n x ??. by exists x; simpl. Qed.
@@ -1280,6 +1345,8 @@ Global Instance valid_persistent {A : cmraT} (a : A) :
 Proof. by intros; rewrite /PersistentP always_valid. Qed.
 Global Instance later_persistent P : PersistentP P → PersistentP (▷ P).
 Proof. by intros; rewrite /PersistentP always_later; apply later_mono. Qed.
+Global Instance laterN_persistent n P : PersistentP P → PersistentP (▷^n P).
+Proof. induction n; apply _. Qed.
 Global Instance ownM_persistent : Persistent a → PersistentP (@uPred_ownM M a).
 Proof. intros. by rewrite /PersistentP always_ownM. Qed.
 Global Instance from_option_persistent {A} P (Ψ : A → uPred M) (mx : option A) :

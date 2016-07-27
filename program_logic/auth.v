@@ -103,14 +103,14 @@ Section auth.
     iIntros (??) "(#? & Hγf & HΨ)". rewrite /auth_ctx /auth_own.
     iInv N as (a') "[Hγ Hφ]".
     iTimeless "Hγ"; iTimeless "Hγf"; iCombine "Hγ" "Hγf" as "Hγ".
-    iDestruct (own_valid _ with "#Hγ") as "Hvalid".
+    iDestruct (own_valid with "#Hγ") as "Hvalid".
     iDestruct (auth_validI _ with "Hvalid") as "[Ha' %]"; simpl; iClear "Hvalid".
     iDestruct "Ha'" as (af) "Ha'"; iDestruct "Ha'" as %Ha'.
     rewrite ->(left_id _ _) in Ha'; setoid_subst.
     iApply pvs_fsa_fsa; iApply fsa_wand_r; iSplitL "HΨ Hφ".
     { iApply "HΨ"; by iSplit. }
     iIntros (v); iDestruct 1 as (b) "(% & Hφ & HΨ)".
-    iPvs (own_update _ with "Hγ") as "[Hγ Hγf]"; first eapply auth_update; eauto.
+    iPvs (own_update with "Hγ") as "[Hγ Hγf]"; first eapply auth_update; eauto.
     iPvsIntro. iSplitL "Hφ Hγ"; last by iApply "HΨ".
     iNext. iExists (b ⋅ af). by iFrame.
   Qed.

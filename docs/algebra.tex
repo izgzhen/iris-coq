@@ -64,57 +64,70 @@ Note that the composition of non-expansive (bi)functors is non-expansive, and th
 
 \begin{defn}
   A \emph{resource algebra} (RA) is a tuple \\
-  $(\monoid, \mval \subseteq \monoid, \mcore{-}:
-  \monoid \to \monoid, (\mtimes) : \monoid \times \monoid \to \monoid)$ satisfying
+  $(\monoid, \mval \subseteq \monoid, \mcore{{-}}:
+  \monoid \to \maybe\monoid, (\mtimes) : \monoid \times \monoid \to \monoid)$ satisfying:
   \begin{align*}
     \All \melt, \meltB, \meltC.& (\melt \mtimes \meltB) \mtimes \meltC = \melt \mtimes (\meltB \mtimes \meltC) \tagH{ra-assoc} \\
     \All \melt, \meltB.& \melt \mtimes \meltB = \meltB \mtimes \melt \tagH{ra-comm} \\
-    \All \melt.& \mcore\melt \mtimes \melt = \melt \tagH{ra-core-id} \\
-    \All \melt.& \mcore{\mcore\melt} = \mcore\melt \tagH{ra-core-idem} \\
-    \All \melt, \meltB.& \melt \mincl \meltB \Ra \mcore\melt \mincl \mcore\meltB \tagH{ra-core-mono} \\
+    \All \melt.& \mcore\melt \in \monoid \Ra \mcore\melt \mtimes \melt = \melt \tagH{ra-core-id} \\
+    \All \melt.& \mcore\melt \in \monoid \Ra \mcore{\mcore\melt} = \mcore\melt \tagH{ra-core-idem} \\
+    \All \melt, \meltB.& \mcore\melt \in \monoid \land \melt \mincl \meltB \Ra \mcore\meltB \in \monoid \land \mcore\melt \mincl \mcore\meltB \tagH{ra-core-mono} \\
     \All \melt, \meltB.& (\melt \mtimes \meltB) \in \mval \Ra \melt \in \mval \tagH{ra-valid-op} \\
     \text{where}\qquad %\qquad\\
-    \melt \mincl \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{ra-incl}
+    \maybe\monoid \eqdef{}& \monoid \uplus \set{\mnocore} \qquad\qquad\qquad \melt^? \mtimes \mnocore \eqdef \mnocore \mtimes \melt^? \eqdef \melt^? \\
+    \melt \mincl \meltB \eqdef{}& \Exists \meltC \in \monoid. \meltB = \melt \mtimes \meltC \tagH{ra-incl}
   \end{align*}
 \end{defn}
 \noindent
 RAs are closely related to \emph{Partial Commutative Monoids} (PCMs), with two key differences:
 \begin{enumerate}
-\item The composition operation on RAs is total (as opposed to the partial composition operation of a PCM), but there is a specific subset of \emph{valid} elements that is compatible with the operation (\ruleref{ra-valid-op}).
-\item Instead of a single unit that is an identity to every element, there is a function $\mcore{-}$ assigning to every element $\melt$ its \emph{(duplicable) core} $\mcore\melt$, as demanded by \ruleref{ra-core-id}. \\
-  We further demand that $\mcore{-}$ is idempotent (\ruleref{ra-core-idem}) and monotone (\ruleref{ra-core-mono}) with respect to the usual \emph{extension order}, which is defined similar to PCMs (\ruleref{ra-incl}).
+\item The composition operation on RAs is total (as opposed to the partial composition operation of a PCM), but there is a specific subset $\mval$ of \emph{valid} elements that is compatible with the composition operation (\ruleref{ra-valid-op}).
 
-  This idea of a core is closely related to the concept of \emph{multi-unit separation algebras}~\cite{Dockins+:aplas09}, with the key difference that the core is a \emph{function} defining a \emph{canonical} ``unit'' $\mcore\melt$ for every element~$\melt$.
+This take on partiality is necessary when defining the structure of \emph{higher-order} ghost state, CMRAs, in the next subsection.
+
+\item Instead of a single unit that is an identity to every element, we allow
+for an arbitrary number of units, via a function $\mcore{{-}}$ assigning to an element $\melt$ its \emph{(duplicable) core} $\mcore\melt$, as demanded by \ruleref{ra-core-id}.
+  We further demand that $\mcore{{-}}$ is idempotent (\ruleref{ra-core-idem}) and monotone (\ruleref{ra-core-mono}) with respect to the \emph{extension order}, defined similarly to that for PCMs (\ruleref{ra-incl}).
+
+  Notice that the domain of the core is $\maybe\monoid$, a set that adds a dummy element $\mnocore$ to $\monoid$.
+%  (This corresponds to the option type.)
+  Thus, the core can be \emph{partial}: not all elements need to have a unit.
+  We use the metavariable $\maybe\melt$ to indicate elements of  $\maybe\monoid$.
+  We also lift the composition $(\mtimes)$ to $\maybe\monoid$.
+  Partial cores help us to build interesting composite RAs from smaller primitives.
+
+Notice also that the core of an RA is a strict generalization of the unit that any PCM must provide, since $\mcore{{-}}$ can always be picked as a constant function.
 \end{enumerate}
 
 
 \begin{defn}
   It is possible to do a \emph{frame-preserving update} from $\melt \in \monoid$ to $\meltsB \subseteq \monoid$, written $\melt \mupd \meltsB$, if
-  \[ \All \melt_\f. \melt \mtimes \melt_\f \in \mval \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \melt_\f \in \mval \]
+  \[ \All \maybe{\melt_\f} \in \maybe\monoid. \melt \mtimes \maybe{\melt_\f} \in \mval \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \maybe{\melt_\f} \in \mval \]
 
   We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
 \end{defn}
-The assertion $\melt \mupd \meltsB$ says that every element $\melt_\f$ compatible with $\melt$ (we also call such elements \emph{frames}), must also be compatible with some $\meltB \in \meltsB$.
+The assertion $\melt \mupd \meltsB$ says that every element $\maybe{\melt_\f}$ compatible with $\melt$ (we also call such elements \emph{frames}), must also be compatible with some $\meltB \in \meltsB$.
+Notice that $\maybe{\melt_\f}$ could be $\mnocore$, so the frame-preserving update can also be applied to elements that have \emph{no} frame.
 Intuitively, this means that whatever assumptions the rest of the program is making about the state of $\gname$, if these assumptions are compatible with $\melt$, then updating to $\meltB$ will not invalidate any of these assumptions.
 Since Iris ensures that the global ghost state is valid, this means that we can soundly update the ghost state from $\melt$ to a non-deterministically picked $\meltB \in \meltsB$.
 
 \subsection{CMRA}
 
 \begin{defn}
-  A \emph{CMRA} is a tuple $(\monoid : \COFEs, (\mval_n \subseteq \monoid)_{n \in \mathbb{N}}, \mcore{-}: \monoid \nfn \monoid, (\mtimes) : \monoid \times \monoid \nfn \monoid)$ satisfying
+  A \emph{CMRA} is a tuple $(\monoid : \COFEs, (\mval_n \subseteq \monoid)_{n \in \mathbb{N}},\\ \mcore{{-}}: \monoid \nfn \maybe\monoid, (\mtimes) : \monoid \times \monoid \nfn \monoid)$ satisfying:
   \begin{align*}
     \All n, \melt, \meltB.& \melt \nequiv{n} \meltB \land \melt\in\mval_n \Ra \meltB\in\mval_n \tagH{cmra-valid-ne} \\
-    \All n, m.& n \geq m \Ra V_n \subseteq V_m \tagH{cmra-valid-mono} \\
+    \All n, m.& n \geq m \Ra \mval_n \subseteq \mval_m \tagH{cmra-valid-mono} \\
     \All \melt, \meltB, \meltC.& (\melt \mtimes \meltB) \mtimes \meltC = \melt \mtimes (\meltB \mtimes \meltC) \tagH{cmra-assoc} \\
     \All \melt, \meltB.& \melt \mtimes \meltB = \meltB \mtimes \melt \tagH{cmra-comm} \\
-    \All \melt.& \mcore\melt \mtimes \melt = \melt \tagH{cmra-core-id} \\
-    \All \melt.& \mcore{\mcore\melt} = \mcore\melt \tagH{cmra-core-idem} \\
-    \All \melt, \meltB.& \melt \mincl \meltB \Ra \mcore\melt \mincl \mcore\meltB \tagH{cmra-core-mono} \\
+    \All \melt.& \mcore\melt \in \monoid \Ra \mcore\melt \mtimes \melt = \melt \tagH{cmra-core-id} \\
+    \All \melt.& \mcore\melt \in \monoid \Ra \mcore{\mcore\melt} = \mcore\melt \tagH{cmra-core-idem} \\
+    \All \melt, \meltB.& \mcore\melt \in \monoid \land \melt \mincl \meltB \Ra \mcore\meltB \in \monoid \land \mcore\melt \mincl \mcore\meltB \tagH{cmra-core-mono} \\
     \All n, \melt, \meltB.& (\melt \mtimes \meltB) \in \mval_n \Ra \melt \in \mval_n \tagH{cmra-valid-op} \\
     \All n, \melt, \meltB_1, \meltB_2.& \omit\rlap{$\melt \in \mval_n \land \melt \nequiv{n} \meltB_1 \mtimes \meltB_2 \Ra {}$} \\
     &\Exists \meltC_1, \meltC_2. \melt = \meltC_1 \mtimes \meltC_2 \land \meltC_1 \nequiv{n} \meltB_1 \land \meltC_2 \nequiv{n} \meltB_2 \tagH{cmra-extend} \\
     \text{where}\qquad\qquad\\
-    \melt \mincl \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{cmra-incl}\\
+    \melt \mincl \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{cmra-incl} \\
     \melt \mincl[n] \meltB \eqdef{}& \Exists \meltC. \meltB \nequiv{n} \melt \mtimes \meltC \tagH{cmra-inclN}
   \end{align*}
 \end{defn}
@@ -143,12 +156,10 @@ The purpose of this axiom is to compute $\melt_1$, $\melt_2$ completing the foll
 \end{tikzpicture}\end{center}
 where the $n$-equivalence at the bottom is meant to apply to the pairs of elements, \ie we demand $\melt_1 \nequiv{n} \meltB_1$ and $\melt_2 \nequiv{n} \meltB_2$.
 In other words, extension carries the decomposition of $\meltB$ into $\meltB_1$ and $\meltB_2$ over the $n$-equivalence of $\melt$ and $\meltB$, and yields a corresponding decomposition of $\melt$ into $\melt_1$ and $\melt_2$.
-This operation is needed to prove that $\later$ commutes with existential quantification and separating conjunction:
+This operation is needed to prove that $\later$ commutes with separating conjunction:
 \begin{mathpar}
-  \axiom{\later(\Exists\var:\type. \prop) \Lra \Exists\var:\type. \later\prop}
-  \and\axiom{\later (\prop * \propB) \Lra \later\prop * \later\propB}
+  \axiom{\later (\prop * \propB) \Lra \later\prop * \later\propB}
 \end{mathpar}
-(This assumes that the type $\type$ is non-empty.)
 
 \begin{defn}
   An element $\munit$ of a CMRA $\monoid$ is called the \emph{unit} of $\monoid$ if it satisfies the following conditions:
@@ -157,12 +168,17 @@ This operation is needed to prove that $\later$ commutes with existential quanti
   \item $\munit$ is a left-identity of the operation: \\
     $\All \melt \in M. \munit \mtimes \melt = \melt$
   \item $\munit$ is a discrete COFE element
+  \item $\munit$ is its own core: \\ $\mcore\munit = \munit$
   \end{enumerate}
 \end{defn}
 
+\begin{lem}\label{lem:cmra-unit-total-core}
+  If $\monoid$ has a unit $\munit$, then the core $\mcore{{-}}$ is total, \ie $\All\melt. \mcore\melt \in \monoid$.
+\end{lem}
+
 \begin{defn}
   It is possible to do a \emph{frame-preserving update} from $\melt \in \monoid$ to $\meltsB \subseteq \monoid$, written $\melt \mupd \meltsB$, if
-  \[ \All n, \melt_\f. \melt \mtimes \melt_\f \in \mval_n \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \melt_\f \in \mval_n \]
+  \[ \All n, \maybe{\melt_\f}. \melt \mtimes \maybe{\melt_\f} \in \mval_n \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \maybe{\melt_\f} \in \mval_n \]
 
   We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
 \end{defn}
@@ -193,7 +209,7 @@ Furthermore, discrete CMRAs can be turned into RAs by ignoring their COFE struct
 \begin{defn}
   The category $\CMRAs$ consists of CMRAs as objects, and monotone functions as arrows.
 \end{defn}
-Note that $\CMRAs$ is a subcategory of $\COFEs$.
+Note that every object/arrow in $\CMRAs$ is also an object/arrow of $\COFEs$.
 The notion of a locally non-expansive (or contractive) bifunctor naturally generalizes to bifunctors between these categories.
 
 

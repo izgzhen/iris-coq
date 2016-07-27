@@ -15,11 +15,11 @@ Section box_defs.
 
   Definition slice_name := gname.
 
-  Definition box_own_auth (γ : slice_name)
-    (a : auth (option (excl bool))) : iProp := own γ (a, ∅).
+  Definition box_own_auth (γ : slice_name) (a : auth (option (excl bool)))
+    := own γ (a, (∅:option (agree (later (iPrePropG Λ Σ))))).
 
   Definition box_own_prop (γ : slice_name) (P : iProp) : iProp :=
-    own γ (∅:auth _, Some (to_agree (Next (iProp_unfold P)))).
+    own γ (∅:auth (option (excl bool)), Some (to_agree (Next (iProp_unfold P)))).
 
   Definition slice_inv (γ : slice_name) (P : iProp) : iProp :=
     (∃ b, box_own_auth γ (● Excl' b) ★ box_own_prop γ P ★ if b then P else True)%I.
@@ -70,8 +70,7 @@ Proof.
   rewrite /box_own_prop -!own_op own_valid_l prod_validI; iIntros "[[Hb _] Hγ]".
   iDestruct "Hb" as % [[[] [= ->]%leibniz_equiv] ?]%auth_valid_discrete.
   iApply (own_update with "Hγ"); apply prod_update; simpl; last reflexivity.
-  rewrite -{1}(right_id ∅ _ (Excl' b2)) -{1}(right_id ∅ _ (Excl' b3)).
-  by apply auth_update, option_local_update, exclusive_local_update.
+  by apply auth_update_no_frame, option_local_update, exclusive_local_update.
 Qed.
 
 Lemma box_own_agree γ Q1 Q2 :

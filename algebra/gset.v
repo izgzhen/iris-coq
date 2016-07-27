@@ -57,7 +57,7 @@ Section gset.
   Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
   Arguments op _ _ _ _ : simpl never.
 
-  Lemma updateP_alloc_strong (Q : gset_disj K → Prop) (I : gset K) X :
+  Lemma gset_alloc_updateP_strong (Q : gset_disj K → Prop) (I : gset K) X :
     (∀ i, i ∉ X → i ∉ I → Q (GSet ({[i]} ∪ X))) → GSet X ~~>: Q.
   Proof.
     intros HQ; apply cmra_discrete_updateP=> ? /gset_disj_valid_inv_l [Y [->?]].
@@ -66,16 +66,16 @@ Section gset.
     - apply HQ; set_solver by eauto.
     - apply gset_disj_valid_op. set_solver by eauto.
   Qed.
-  Lemma updateP_alloc (Q : gset_disj K → Prop) X :
+  Lemma gset_alloc_updateP (Q : gset_disj K → Prop) X :
     (∀ i, i ∉ X → Q (GSet ({[i]} ∪ X))) → GSet X ~~>: Q.
-  Proof. move=>??. eapply updateP_alloc_strong with (I:=∅); by eauto. Qed.
-  Lemma updateP_alloc_strong' (I : gset K) X :
+  Proof. move=>??. eapply gset_alloc_updateP_strong with (I:=∅); by eauto. Qed.
+  Lemma gset_alloc_updateP_strong' (I : gset K) X :
     GSet X ~~>: λ Y, ∃ i, Y = GSet ({[ i ]} ∪ X) ∧ i ∉ I ∧ i ∉ X.
-  Proof. eauto using updateP_alloc_strong. Qed.
-  Lemma updateP_alloc' X : GSet X ~~>: λ Y, ∃ i, Y = GSet ({[ i ]} ∪ X) ∧ i ∉ X.
-  Proof. eauto using updateP_alloc. Qed.
+  Proof. eauto using gset_alloc_updateP_strong. Qed.
+  Lemma gset_alloc_updateP' X : GSet X ~~>: λ Y, ∃ i, Y = GSet ({[ i ]} ∪ X) ∧ i ∉ X.
+  Proof. eauto using gset_alloc_updateP. Qed.
 
-  Lemma alloc_singleton_local_update X i Xf :
+  Lemma gset_alloc_local_update X i Xf :
     i ∉ X → i ∉ Xf → GSet X ~l~> GSet ({[i]} ∪ X) @ Some (GSet Xf).
   Proof.
     intros ??; apply local_update_total; split; simpl.
