@@ -51,7 +51,7 @@ Proof.
   - iIntros (n) "!". wp_let.
     iInv> N as "[[Hl Hγ]|H]"; last iDestruct "H" as (m) "[Hl Hγ]".
     + wp_cas_suc. iSplitL; [|by iLeft].
-      iPvs (@own_update with "Hγ") as "Hγ".
+      iPvs (own_update with "Hγ") as "Hγ".
       { by apply cmra_update_exclusive with (y:=Shot n). }
       iPvsIntro; iRight; iExists n; by iSplitL "Hl".
     + wp_cas_fail. rewrite /one_shot_inv; eauto 10.
@@ -72,10 +72,10 @@ Proof.
     { by wp_match. }
     wp_match. wp_focus (! _)%E.
     iInv> N as "[[Hl Hγ]|Hinv]"; last iDestruct "Hinv" as (m') "[Hl Hγ]".
-    { iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct (@own_valid with "Hγ") as %?. }
+    { iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct (own_valid with "Hγ") as %?. }
     wp_load; iPvsIntro.
     iCombine "Hγ" "Hγ'" as "Hγ".
-    iDestruct (@own_valid with "#Hγ") as %[=->]%dec_agree_op_inv.
+    iDestruct (own_valid with "#Hγ") as %[=->]%dec_agree_op_inv.
     iSplitL "Hl"; [iRight; by eauto|].
     wp_match. iApply wp_assert. wp_op=>?; simplify_eq/=; eauto.
 Qed.

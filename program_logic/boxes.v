@@ -69,7 +69,7 @@ Lemma box_own_auth_update E γ b1 b2 b3 :
 Proof.
   rewrite /box_own_prop -!own_op own_valid_l prod_validI; iIntros "[[Hb _] Hγ]".
   iDestruct "Hb" as % [[[] [= ->]%leibniz_equiv] ?]%auth_valid_discrete.
-  iApply (@own_update with "Hγ"); apply prod_update; simpl; last reflexivity.
+  iApply (own_update with "Hγ"); apply prod_update; simpl; last reflexivity.
   by apply auth_update_no_frame, option_local_update, exclusive_local_update.
 Qed.
 
