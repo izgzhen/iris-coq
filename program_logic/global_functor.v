@@ -28,7 +28,6 @@ Class inG (Λ : language) (Σ : gFunctors) (A : cmraT) := InG {
   inG_prf : A = projT2 Σ inG_id (iPreProp Λ (globalF Σ))
 }.
 Arguments inG_id {_ _ _} _.
-Hint Mode inG - - + : typeclass_instances.
 
 Definition to_globalF `{i : inG Λ Σ A} (γ : gname) (a : A) : iGst Λ (globalF Σ) :=
   iprod_singleton (inG_id i) {[ γ := cmra_transport inG_prf a ]}.

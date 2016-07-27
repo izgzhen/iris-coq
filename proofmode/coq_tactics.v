@@ -549,25 +549,13 @@ Proof.
   by rewrite right_id {1}(persistentP P) always_and_sep_l wand_elim_r.
 Qed.
 
-(** Whenever posing [lem : True ⊢ Q] as [H] we want it to appear as [H : Q] and
-not as [H : True -★ Q]. The class [IntoPosedProof] is used to strip off the
-[True]. Note that [to_posed_proof_True] is declared using a [Hint Extern] to
-make sure it is not used while posing [lem : ?P ⊢ Q] with [?P] an evar. *)
-Class IntoPosedProof (P1 P2 R : uPred M) :=
-  into_pose_proof : (P1 ⊢ P2) → True ⊢ R.
-Arguments into_pose_proof : clear implicits.
-Instance to_posed_proof_True P : IntoPosedProof True P P.
-Proof. by rewrite /IntoPosedProof. Qed.
-Global Instance to_posed_proof_wand P Q : IntoPosedProof P Q (P -★ Q).
-Proof. rewrite /IntoPosedProof. apply entails_wand. Qed.
-
-Lemma tac_pose_proof Δ Δ' j P1 P2 R Q :
-  (P1 ⊢ P2) → IntoPosedProof P1 P2 R →
-  envs_app true (Esnoc Enil j R) Δ = Some Δ' →
+Lemma tac_pose_proof Δ Δ' j P Q :
+  (True ⊢ P) →
+  envs_app true (Esnoc Enil j P) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
-  intros HP ?? <-. rewrite envs_app_sound //; simpl.
-  by rewrite right_id -(into_pose_proof P1 P2 R) // always_pure wand_True.
+  intros HP ? <-. rewrite envs_app_sound //; simpl.
+  by rewrite right_id -HP always_pure wand_True.
 Qed.
 
 Lemma tac_pose_proof_hyp Δ Δ' Δ'' i p j P Q :
@@ -745,6 +733,3 @@ Proof.
   rewrite envs_simple_replace_sound' //; simpl. by rewrite right_id wand_elim_r.
 Qed.
 End tactics.
-
-Hint Extern 0 (IntoPosedProof True _ _) =>
-  class_apply @to_posed_proof_True : typeclass_instances.

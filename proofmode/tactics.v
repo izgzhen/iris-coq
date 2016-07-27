@@ -208,31 +208,62 @@ Tactic Notation "iSpecialize" open_constr(t) :=
   end.
 
 (** * Pose proof *)
-Local Tactic Notation "iPoseProofCore" open_constr(H1) "as" constr(H2) :=
-  lazymatch type of H1 with
-  | string =>
-     eapply tac_pose_proof_hyp with _ _ H1 _ H2 _;
-       [env_cbv; reflexivity || fail "iPoseProof:" H1 "not found"
-       |env_cbv; reflexivity || fail "iPoseProof:" H2 "not fresh"|]
-  | _ =>
-     eapply tac_pose_proof with _ H2 _ _ _; (* (j:=H) *)
-       [first [eapply H1|apply uPred.equiv_iff; eapply H1]
-       |apply _
-       |env_cbv; reflexivity || fail "iPoseProof:" H2 "not fresh"|]
+(* The tactic [iIntoEntails] tactic solves a goal [True ⊢ Q]. The arguments [t]
+is a Coq term whose type is of the following shape:
+
+- [∀ (x_1 : A_1) .. (x_n : A_n), True ⊢ Q]
+- [∀ (x_1 : A_1) .. (x_n : A_n), P1 ⊢ P2], in which case [Q] becomes [P1 -★ P2]
+- [∀ (x_1 : A_1) .. (x_n : A_n), P1 ⊣⊢ P2], in which case [Q] becomes [P1 ↔ P2]
+
+The tactic instantiates each dependent argument [x_i] with an evar and generates
+a goal [P] for non-dependent arguments [x_i : P]. *)
+Tactic Notation "iIntoEntails" open_constr(t) :=
+  let rec go t :=
+    lazymatch type of t with
+    | True ⊢ _ => apply t
+    | _ ⊢ _ => apply (uPred.entails_wand _ _ t)
+    | _ ⊣⊢ _ => apply (uPred.equiv_iff _ _ t)
+    | ?P → ?Q => let H := fresh in assert P as H; [|go uconstr:(t H)]
+    | ∀ _ : ?T, _ =>
+       (* Put [T] inside an [id] to avoid TC inference from being invoked. *)
+       (* This is a workarround for Coq bug #4969. *)
+       let e := fresh in evar (e:id T);
+       let e' := eval unfold e in e in clear e; go (t e')
+    end
+  in go t.
+
+Tactic Notation "iPoseProofCore" open_constr(lem) "as" tactic(tac) :=
+  let pose_trm t tac :=
+    let Htmp := iFresh in
+    lazymatch type of t with
+    | string =>
+       eapply tac_pose_proof_hyp with _ _ t _ Htmp _;
+         [env_cbv; reflexivity || fail "iPoseProof:" t "not found"
+         |env_cbv; reflexivity || fail "iPoseProof:" Htmp "not fresh"
+         |tac Htmp]
+    | _ =>
+       eapply tac_pose_proof with _ Htmp _; (* (j:=H) *)
+         [iIntoEntails t
+         |env_cbv; reflexivity || fail "iPoseProof:" Htmp "not fresh"
+         |tac Htmp]
+    end;
+    try (apply _) (* solve TC constraints. It is essential that this happens
+    after the continuation [tac] has been called. *)
+  in lazymatch lem with
+  | ITrm ?t ?xs ?pat =>
+     pose_trm t ltac:(fun Htmp =>
+       iSpecializeArgs Htmp xs; iSpecializePat Htmp pat; last (tac Htmp))
+  | _ => pose_trm lem tac
   end.
 
-Tactic Notation "iPoseProof" open_constr(t) "as" constr(H) :=
-  lazymatch t with
-  | ITrm ?H1 ?xs ?pat =>
-     iPoseProofCore H1 as H; last (iSpecializeArgs H xs; iSpecializePat H pat)
-  | _ => iPoseProofCore t as H
-  end.
+Tactic Notation "iPoseProof" open_constr(lem) "as" constr(H) :=
+  iPoseProofCore lem as (fun Htmp => iRename Htmp into H).
 
-Tactic Notation "iPoseProof" open_constr(t) :=
-  let H := iFresh in iPoseProof t as H.
+Tactic Notation "iPoseProof" open_constr(lem) :=
+  iPoseProofCore lem as (fun _ => idtac).
 
 (** * Apply *)
-Tactic Notation "iApply" open_constr(t) :=
+Tactic Notation "iApply" open_constr(lem) :=
   let finish H := first
     [iExact H
     |eapply tac_apply with _ H _ _ _;
@@ -240,18 +271,17 @@ Tactic Notation "iApply" open_constr(t) :=
        |let P := match goal with |- IntoWand ?P _ _ => P end in
         apply _ || fail 1 "iApply: cannot apply" H ":" P
        |lazy beta (* reduce betas created by instantiation *)]] in
-  let Htmp := iFresh in
-  lazymatch t with
-  | ITrm ?H ?xs ?pat =>
-     iPoseProofCore H as Htmp; last (
+  lazymatch lem with
+  | ITrm ?t ?xs ?pat =>
+     iPoseProofCore t as (fun Htmp =>
        iSpecializeArgs Htmp xs;
        try (iSpecializeArgs Htmp (hcons _ _));
        iSpecializePat Htmp pat; last finish Htmp)
   | _ =>
-     iPoseProofCore t as Htmp; last (
+     iPoseProofCore lem as (fun Htmp =>
        try (iSpecializeArgs Htmp (hcons _ _));
        finish Htmp)
-  end; try apply _.
+  end.
 
 (** * Revert *)
 Local Tactic Notation "iForallRevert" ident(x) :=
@@ -647,7 +677,7 @@ Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
   iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 ); iIntros p.
 
 (** * Destruct tactic *)
-Tactic Notation "iDestructHelp" open_constr(lem) "as" tactic(tac) :=
+Tactic Notation "iDestructCore" open_constr(lem) "as" tactic(tac) :=
   let intro_destruct n :=
     let rec go n' :=
       lazymatch n' with
@@ -663,49 +693,48 @@ Tactic Notation "iDestructHelp" open_constr(lem) "as" tactic(tac) :=
   | string => tac lem
   | iTrm =>
      lazymatch lem with
-     | @iTrm string ?H _ hnil ?pat =>
-        iSpecializePat H pat; last tac H
-     | _ => let H := iFresh in iPoseProof lem as H; last tac H; try apply _
+     | @iTrm string ?H _ hnil ?pat => iSpecializePat H pat; last (tac H)
+     | _ => iPoseProofCore lem as tac
      end
-  | _ => let H := iFresh in iPoseProof lem as H; last tac H; try apply _
+  | _ => iPoseProofCore lem as tac
   end.
 
-Tactic Notation "iDestruct" open_constr(H) "as" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1) ")"
+Tactic Notation "iDestruct" open_constr(lem) "as" constr(pat) :=
+  iDestructCore lem as (fun H => iDestructHyp H as pat).
+Tactic Notation "iDestruct" open_constr(lem) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as ( x1 ) pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as (fun H => iDestructHyp H as ( x1 ) pat).
+Tactic Notation "iDestruct" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) ")" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 ) pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as (fun H => iDestructHyp H as ( x1 x2 ) pat).
+Tactic Notation "iDestruct" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) ")" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 x3 ) pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as (fun H => iDestructHyp H as ( x1 x2 x3 ) pat).
+Tactic Notation "iDestruct" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 x3 x4 ) pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as (fun H => iDestructHyp H as ( x1 x2 x3 x4 ) pat).
+Tactic Notation "iDestruct" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) ")" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 ) pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 ) pat).
+Tactic Notation "iDestruct" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) ")" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 x6 ) pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 x6 ) pat).
+Tactic Notation "iDestruct" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) ")"
     constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 ) pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 ) pat).
+Tactic Notation "iDestruct" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
     simple_intropattern(x8) ")" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 x8 ) pat).
+  iDestructCore lem as (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 x8 ) pat).
 
-Tactic Notation "iDestruct" open_constr(H) "as" "%" simple_intropattern(pat) :=
-  let Htmp := iFresh in iDestruct H as Htmp; last iPure Htmp as pat.
+Tactic Notation "iDestruct" open_constr(lem) "as" "%" simple_intropattern(pat) :=
+  iDestructCore lem as (fun H => iPure H as pat).
 
 (* This is pretty ugly, but without Ltac support for manipulating lists of
 idents I do not know how to do this better. *)
@@ -781,33 +810,33 @@ Local Ltac iRewriteFindPred :=
      match goal with |- (∀ y, @?Ψ y ⊣⊢ _) => unify Φ Ψ; reflexivity end
   end.
 
-Local Tactic Notation "iRewriteCore" constr(lr) open_constr(t) :=
-  let Heq := iFresh in iPoseProof t as Heq; last (
-  eapply (tac_rewrite _ Heq _ _ lr);
-    [env_cbv; reflexivity || fail "iRewrite:" Heq "not found"
-    |let P := match goal with |- ?P ⊢ _ => P end in
-     reflexivity || fail "iRewrite:" Heq ":" P "not an equality"
-    |iRewriteFindPred
-    |intros ??? ->; reflexivity|lazy beta; iClear Heq]).
+Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) :=
+  iPoseProofCore lem as (fun Heq =>
+    eapply (tac_rewrite _ Heq _ _ lr);
+      [env_cbv; reflexivity || fail "iRewrite:" Heq "not found"
+      |let P := match goal with |- ?P ⊢ _ => P end in
+       reflexivity || fail "iRewrite:" Heq ":" P "not an equality"
+      |iRewriteFindPred
+      |intros ??? ->; reflexivity|lazy beta; iClear Heq]).
 
-Tactic Notation "iRewrite" open_constr(t) := iRewriteCore false t.
-Tactic Notation "iRewrite" "-" open_constr(t) := iRewriteCore true t.
+Tactic Notation "iRewrite" open_constr(lem) := iRewriteCore false lem.
+Tactic Notation "iRewrite" "-" open_constr(lem) := iRewriteCore true lem.
 
-Local Tactic Notation "iRewriteCore" constr(lr) open_constr(t) "in" constr(H) :=
-  let Heq := iFresh in iPoseProof t as Heq; last (
-  eapply (tac_rewrite_in _ Heq _ _ H _ _ lr);
-    [env_cbv; reflexivity || fail "iRewrite:" Heq "not found"
-    |env_cbv; reflexivity || fail "iRewrite:" H "not found"
-    |let P := match goal with |- ?P ⊢ _ => P end in
-     reflexivity || fail "iRewrite:" Heq ":" P "not an equality"
-    |iRewriteFindPred
-    |intros ??? ->; reflexivity
-    |env_cbv; reflexivity|lazy beta; iClear Heq]).
+Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) "in" constr(H) :=
+  iPoseProofCore lem as (fun Heq =>
+    eapply (tac_rewrite_in _ Heq _ _ H _ _ lr);
+      [env_cbv; reflexivity || fail "iRewrite:" Heq "not found"
+      |env_cbv; reflexivity || fail "iRewrite:" H "not found"
+      |let P := match goal with |- ?P ⊢ _ => P end in
+       reflexivity || fail "iRewrite:" Heq ":" P "not an equality"
+      |iRewriteFindPred
+      |intros ??? ->; reflexivity
+      |env_cbv; reflexivity|lazy beta; iClear Heq]).
 
-Tactic Notation "iRewrite" open_constr(t) "in" constr(H) :=
-  iRewriteCore false t in H.
-Tactic Notation "iRewrite" "-" open_constr(t) "in" constr(H) :=
-  iRewriteCore true t in H.
+Tactic Notation "iRewrite" open_constr(lem) "in" constr(H) :=
+  iRewriteCore false lem in H.
+Tactic Notation "iRewrite" "-" open_constr(lem) "in" constr(H) :=
+  iRewriteCore true lem in H.
 
 Ltac iSimplifyEq := repeat (
   iMatchGoal ltac:(fun H P => match P with (_ = _)%I => iDestruct H as %? end)

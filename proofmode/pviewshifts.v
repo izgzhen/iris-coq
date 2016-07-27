@@ -112,45 +112,45 @@ Tactic Notation "iPvsCore" constr(H) :=
       |env_cbv; reflexivity|simpl]
   end.
 
-Tactic Notation "iPvs" open_constr(H) :=
-  iDestructHelp H as (fun H => iPvsCore H; last iDestruct H as "?").
-Tactic Notation "iPvs" open_constr(H) "as" constr(pat) :=
-  iDestructHelp H as (fun H => iPvsCore H; last iDestruct H as pat).
-Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1) ")"
+Tactic Notation "iPvs" open_constr(lem) :=
+  iDestructCore lem as (fun H => iPvsCore H; last iDestruct H as "?").
+Tactic Notation "iPvs" open_constr(lem) "as" constr(pat) :=
+  iDestructCore lem as (fun H => iPvsCore H; last iDestruct H as pat).
+Tactic Notation "iPvs" open_constr(lem) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
-  iDestructHelp H as (fun H => iPvsCore H; last iDestruct H as ( x1 ) pat).
-Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as (fun H => iPvsCore H; last iDestruct H as ( x1 ) pat).
+Tactic Notation "iPvs" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) ")" constr(pat) :=
-  iDestructHelp H as (fun H => iPvsCore H; last iDestruct H as ( x1 x2 ) pat).
-Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as (fun H => iPvsCore H; last iDestruct H as ( x1 x2 ) pat).
+Tactic Notation "iPvs" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) ")" constr(pat) :=
-  iDestructHelp H as (fun H => iPvsCore H; last iDestruct H as ( x1 x2 x3 ) pat).
-Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as (fun H => iPvsCore H; last iDestruct H as ( x1 x2 x3 ) pat).
+Tactic Notation "iPvs" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) :=
-  iDestructHelp H as (fun H =>
+  iDestructCore lem as (fun H =>
     iPvsCore H; last iDestruct H as ( x1 x2 x3 x4 ) pat).
-Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
+Tactic Notation "iPvs" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) ")" constr(pat) :=
-  iDestructHelp H as (fun H =>
+  iDestructCore lem as (fun H =>
     iPvsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 ) pat).
-Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
+Tactic Notation "iPvs" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) ")" constr(pat) :=
-  iDestructHelp H as (fun H =>
+  iDestructCore lem as (fun H =>
     iPvsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 ) pat).
-Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
+Tactic Notation "iPvs" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) ")"
     constr(pat) :=
-  iDestructHelp H as (fun H =>
+  iDestructCore lem as (fun H =>
     iPvsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 x7 ) pat).
-Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
+Tactic Notation "iPvs" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
     simple_intropattern(x8) ")" constr(pat) :=
-  iDestructHelp H as (fun H =>
+  iDestructCore lem as (fun H =>
     iPvsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 x7 x8 ) pat).
 
 Hint Extern 2 (of_envs _ ⊢ _) =>
