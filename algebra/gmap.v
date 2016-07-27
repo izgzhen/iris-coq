@@ -47,7 +47,7 @@ Proof.
   by destruct (decide (k = k')); simplify_map_eq; rewrite (Hm k').
 Qed.
 Global Instance insert_ne i n :
-  Proper (dist n ==> dist n ==> dist n) (insert (M:=gmap K A) i).
+  Proper (dist n ==> dist n ==> dist n) (insert (M:=gmap K) i).
 Proof.
   intros x y ? m m' ? j; destruct (decide (i = j)); simplify_map_eq;
     [by constructor|by apply lookup_ne].
@@ -56,7 +56,7 @@ Global Instance singleton_ne i n :
   Proper (dist n ==> dist n) (singletonM i : A → gmap K A).
 Proof. by intros ???; apply insert_ne. Qed.
 Global Instance delete_ne i n :
-  Proper (dist n ==> dist n) (delete (M:=gmap K A) i).
+  Proper (dist n ==> dist n) (delete (M:=gmap K) i).
 Proof.
   intros m m' ? j; destruct (decide (i = j)); simplify_map_eq;
     [by constructor|by apply lookup_ne].
@@ -183,10 +183,12 @@ Arguments gmapUR _ {_ _} _.
 Section properties.
 Context `{Countable K} {A : cmraT}.
 Implicit Types m : gmap K A.
+Implicit Types mm : option (gmap K A).
 Implicit Types i : K.
 Implicit Types x y : A.
 
-Lemma lookup_opM m1 mm2 i : (m1 ⋅? mm2) !! i = m1 !! i ⋅ (mm2 ≫= (!! i)).
+Lemma lookup_opM m1 mm2 i :
+  (m1 ⋅? mm2) !! i = m1 !! i ⋅ (mm2 ≫= (!! i) : option A).
 Proof. destruct mm2; by rewrite /= ?lookup_op ?right_id_L. Qed.
 
 Lemma lookup_validN_Some n m i x : ✓{n} m → m !! i ≡{n}≡ Some x → ✓{n} x.
@@ -343,7 +345,8 @@ Section freshness.
 End freshness.
 
 Lemma insert_local_update m i x y mf :
-  x ~l~> y @ mf ≫= (!! i) → <[i:=x]>m ~l~> <[i:=y]>m @ mf.
+  x ~l~> y @ mf ≫= (!! i) →
+  (<[i:=x]>m : gmap K A) ~l~> <[i:=y]>m @ mf.
 Proof.
   intros [Hxy Hxy']; split.
   - intros n Hm j. move: (Hm j). destruct (decide (i = j)); subst.
@@ -356,7 +359,8 @@ Proof.
 Qed.
 
 Lemma singleton_local_update i x y mf :
-  x ~l~> y @ mf ≫= (!! i) → {[ i := x ]} ~l~> {[ i := y ]} @ mf.
+  x ~l~> y @ mf ≫= (!! i) →
+  ({[ i := x ]} : gmap K A) ~l~> {[ i := y ]} @ mf.
 Proof. apply insert_local_update. Qed.
 
 Lemma alloc_singleton_local_update m i x mf :
@@ -371,7 +375,8 @@ Proof.
 Qed.
 
 Lemma alloc_unit_singleton_local_update i x mf :
-  mf ≫= (!! i) = None → ✓ x → ∅ ~l~> {[ i := x ]} @ mf.
+  mf ≫= (!! i) = None → ✓ x →
+  (∅:gmap K A) ~l~> {[ i := x ]} @ mf.
 Proof.
   intros Hi; apply alloc_singleton_local_update. by rewrite lookup_opM Hi.
 Qed.

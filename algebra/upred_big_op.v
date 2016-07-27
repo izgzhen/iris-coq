@@ -109,7 +109,9 @@ Proof. induction 1; simpl; auto with I. Qed.
 Section gmap.
   Context `{Countable K} {A : Type}.
   Implicit Types m : gmap K A.
+  Implicit Types i : K.
   Implicit Types Φ Ψ : K → A → uPred M.
+  Implicit Types P : uPred M.
 
   Lemma big_sepM_mono Φ Ψ m1 m2 :
     m2 ⊆ m1 → (∀ k x, m2 !! k = Some x → Φ k x ⊢ Ψ k x) →
@@ -187,16 +189,17 @@ Section gmap.
 
   Lemma big_sepM_fn_insert {B} (Ψ : K → A → B → uPred M) (f : K → B) m i x b :
     m !! i = None →
-       ([★ map] k↦y ∈ <[i:=x]> m, Ψ k y (<[i:=b]> f k))
+       ([★ map] k↦y ∈ <[i:=x]> m, Ψ k y (fn_insert i b f k))
     ⊣⊢ (Ψ i x b ★ [★ map] k↦y ∈ m, Ψ k y (f k)).
   Proof.
     intros. rewrite big_sepM_insert // fn_lookup_insert.
     apply sep_proper, big_sepM_proper; auto=> k y ?.
     by rewrite fn_lookup_insert_ne; last set_solver.
   Qed.
+
   Lemma big_sepM_fn_insert' (Φ : K → uPred M) m i x P :
     m !! i = None →
-    ([★ map] k↦y ∈ <[i:=x]> m, <[i:=P]> Φ k) ⊣⊢ (P ★ [★ map] k↦y ∈ m, Φ k).
+    ([★ map] k↦y ∈ <[i:=x]> m, (fn_insert i P Φ k)) ⊣⊢ (P ★ [★ map] k↦y ∈ m, Φ k).
   Proof. apply (big_sepM_fn_insert (λ _ _, id)). Qed.
 
   Lemma big_sepM_sepM Φ Ψ m :
@@ -300,15 +303,17 @@ Section gset.
   Proof. intros. by rewrite /uPred_big_sepS elements_union_singleton. Qed.
   Lemma big_sepS_fn_insert {B} (Ψ : A → B → uPred M) f X x b :
     x ∉ X →
-       ([★ set] y ∈ {[ x ]} ∪ X, Ψ y (<[x:=b]> f y))
+       ([★ set] y ∈ {[ x ]} ∪ X, Ψ y (fn_insert x b f y))
     ⊣⊢ (Ψ x b ★ [★ set] y ∈ X, Ψ y (f y)).
   Proof.
     intros. rewrite big_sepS_insert // fn_lookup_insert.
     apply sep_proper, big_sepS_proper; auto=> y ??.
     by rewrite fn_lookup_insert_ne; last set_solver.
   Qed.
+
   Lemma big_sepS_fn_insert' Φ X x P :
-    x ∉ X → ([★ set] y ∈ {[ x ]} ∪ X, <[x:=P]> Φ y) ⊣⊢ (P ★ [★ set] y ∈ X, Φ y).
+    x ∉ X →
+    ([★ set] y ∈ {[ x ]} ∪ X, fn_insert x P Φ y) ⊣⊢ (P ★ [★ set] y ∈ X, Φ y).
   Proof. apply (big_sepS_fn_insert (λ y, id)). Qed.
 
   Lemma big_sepS_delete Φ X x :

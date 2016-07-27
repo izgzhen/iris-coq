@@ -11,6 +11,7 @@ Context {Σ : iFunctor}.
 Implicit Types P Q : iProp heap_lang Σ.
 Implicit Types Φ : val → iProp heap_lang Σ.
 Implicit Types ef : option expr.
+Implicit Types l : loc.
 
 (** Bind. This bundles some arguments that wp_ectx_bind leaves as indices. *)
 Lemma wp_bind {E e} K Φ :
@@ -92,19 +93,19 @@ Proof.
     intros; inv_head_step; eauto.
 Qed.
 
-Lemma wp_un_op E op l l' Φ :
-  un_op_eval op l = Some l' →
-  ▷ (|={E}=> Φ (LitV l')) ⊢ WP UnOp op (Lit l) @ E {{ Φ }}.
+Lemma wp_un_op E op li li' Φ :
+  un_op_eval op li = Some li' →
+  ▷ (|={E}=> Φ (LitV li')) ⊢ WP UnOp op (Lit li) @ E {{ Φ }}.
 Proof.
-  intros. rewrite -(wp_lift_pure_det_head_step (UnOp op _) (Lit l') None)
+  intros. rewrite -(wp_lift_pure_det_head_step (UnOp op _) (Lit li') None)
     ?right_id -?wp_value_pvs //; intros; inv_head_step; eauto.
 Qed.
 
-Lemma wp_bin_op E op l1 l2 l' Φ :
-  bin_op_eval op l1 l2 = Some l' →
-  ▷ (|={E}=> Φ (LitV l')) ⊢ WP BinOp op (Lit l1) (Lit l2) @ E {{ Φ }}.
+Lemma wp_bin_op E op li1 li2 li' Φ :
+  bin_op_eval op li1 li2 = Some li' →
+  ▷ (|={E}=> Φ (LitV li')) ⊢ WP BinOp op (Lit li1) (Lit li2) @ E {{ Φ }}.
 Proof.
-  intros Heval. rewrite -(wp_lift_pure_det_head_step (BinOp op _ _) (Lit l') None)
+  intros Heval. rewrite -(wp_lift_pure_det_head_step (BinOp op _ _) (Lit li') None)
     ?right_id -?wp_value_pvs //; intros; inv_head_step; eauto.
 Qed.
 

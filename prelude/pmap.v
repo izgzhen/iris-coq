@@ -52,9 +52,9 @@ Local Hint Resolve PNode_wf.
 
 (** Operations *)
 Instance Pempty_raw {A} : Empty (Pmap_raw A) := PLeaf.
-Instance Plookup_raw {A} : Lookup positive A (Pmap_raw A) :=
-  fix go (i : positive) (t : Pmap_raw A) {struct t} : option A :=
-  let _ : Lookup _ _ _ := @go in
+Instance Plookup_raw : Lookup positive Pmap_raw :=
+  fix go A (i : positive) (t : Pmap_raw A) {struct t} : option A :=
+  let _ : Lookup _ _ := @go in
   match t with
   | PLeaf => None
   | PNode o l r => match i with 1 => o | i~0 => l !! i | i~1 => r !! i end
@@ -273,12 +273,12 @@ Instance Pmap_eq_dec `{∀ x y : A, Decision (x = y)}
   | right H => right (H ∘ proj1 (Pmap_eq m1 m2))
   end.
 Instance Pempty {A} : Empty (Pmap A) := PMap ∅ I.
-Instance Plookup {A} : Lookup positive A (Pmap A) := λ i m, pmap_car m !! i.
-Instance Ppartial_alter {A} : PartialAlter positive A (Pmap A) := λ f i m,
+Instance Plookup : Lookup positive Pmap := λ A i m, pmap_car m !! i.
+Instance Ppartial_alter : PartialAlter positive Pmap := λ A f i m,
   let (t,Ht) := m in PMap (partial_alter f i t) (Ppartial_alter_wf f i _ Ht).
 Instance Pfmap : FMap Pmap := λ A B f m,
   let (t,Ht) := m in PMap (f <$> t) (Pfmap_wf f _ Ht).
-Instance Pto_list {A} : FinMapToList positive A (Pmap A) := λ m,
+Instance Pto_list : FinMapToList positive Pmap := λ A m,
   let (t,Ht) := m in Pto_list_raw 1 t [].
 Instance Pomap : OMap Pmap := λ A B f m,
   let (t,Ht) := m in PMap (omap f t) (Pomap_wf f _ Ht).
@@ -305,7 +305,7 @@ Qed.
 (** * Finite sets *)
 (** We construct sets of [positives]s satisfying extensional equality. *)
 Notation Pset := (mapset Pmap).
-Instance Pmap_dom {A} : Dom (Pmap A) Pset := mapset_dom.
+Instance Pmap_dom : Dom Pmap Pset := mapset_dom.
 Instance: FinMapDom positive Pmap Pset := mapset_dom_spec.
 
 (** * Fresh numbers *)
