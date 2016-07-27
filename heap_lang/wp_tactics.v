@@ -82,7 +82,7 @@ Tactic Notation "wp_seq" := wp_let.
 Tactic Notation "wp_op" :=
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval hnf in e' with
+    lazymatch eval hnf in e' with
     | BinOp LtOp _ _ => wp_bind K; apply wp_lt; wp_finish
     | BinOp LeOp _ _ => wp_bind K; apply wp_le; wp_finish
     | BinOp EqOp _ _ => wp_bind K; apply wp_eq; wp_finish
