@@ -53,7 +53,7 @@ Global Instance ht_mono' E :
 Proof. solve_proper. Qed.
 
 Lemma ht_alt E P Φ e : (P ⊢ WP e @ E {{ Φ }}) → {{ P }} e @ E {{ Φ }}.
-Proof. iIntros {Hwp} "! HP". by iApply Hwp. Qed.
+Proof. iIntros (Hwp) "! HP". by iApply Hwp. Qed.
 
 Lemma ht_val E v : {{ True : iProp Λ Σ }} of_val v @ E {{ v', v = v' }}.
 Proof. iIntros "! _". by iApply wp_value'. Qed.
@@ -64,7 +64,7 @@ Lemma ht_vs E P P' Φ Φ' e :
 Proof.
   iIntros "(#Hvs&#Hwp&#HΦ) ! HP". iPvs ("Hvs" with "HP") as "HP".
   iApply wp_pvs; iApply wp_wand_r; iSplitL; [by iApply "Hwp"|].
-  iIntros {v} "Hv". by iApply "HΦ".
+  iIntros (v) "Hv". by iApply "HΦ".
 Qed.
 
 Lemma ht_atomic E1 E2 P P' Φ Φ' e :
@@ -72,10 +72,10 @@ Lemma ht_atomic E1 E2 P P' Φ Φ' e :
   (P ={E1,E2}=> P') ∧ {{ P' }} e @ E2 {{ Φ' }} ∧ (∀ v, Φ' v ={E2,E1}=> Φ v)
   ⊢ {{ P }} e @ E1 {{ Φ }}.
 Proof.
-  iIntros {??} "(#Hvs&#Hwp&#HΦ) ! HP". iApply (wp_atomic _ E2); auto.
+  iIntros (??) "(#Hvs&#Hwp&#HΦ) ! HP". iApply (wp_atomic _ E2); auto.
   iPvs ("Hvs" with "HP") as "HP"; first set_solver. iPvsIntro.
   iApply wp_wand_r; iSplitL; [by iApply "Hwp"|].
-  iIntros {v} "Hv". by iApply "HΦ".
+  iIntros (v) "Hv". by iApply "HΦ".
 Qed.
 
 Lemma ht_bind `{LanguageCtx Λ K} E P Φ Φ' e :
@@ -84,13 +84,13 @@ Lemma ht_bind `{LanguageCtx Λ K} E P Φ Φ' e :
 Proof.
   iIntros "(#Hwpe&#HwpK) ! HP". iApply wp_bind.
   iApply wp_wand_r; iSplitL; [by iApply "Hwpe"|].
-  iIntros {v} "Hv". by iApply "HwpK".
+  iIntros (v) "Hv". by iApply "HwpK".
 Qed.
 
 Lemma ht_mask_weaken E1 E2 P Φ e :
   E1 ⊆ E2 → {{ P }} e @ E1 {{ Φ }} ⊢ {{ P }} e @ E2 {{ Φ }}.
 Proof.
-  iIntros {?} "#Hwp ! HP". iApply (wp_mask_frame_mono E1 E2); try done.
+  iIntros (?) "#Hwp ! HP". iApply (wp_mask_frame_mono E1 E2); try done.
   by iApply "Hwp".
 Qed.
 
@@ -107,7 +107,7 @@ Lemma ht_frame_step_l E E1 E2 P R1 R2 R3 e Φ :
   (R1 ={E1,E2}=> ▷ R2) ∧ (R2 ={E2,E1}=> R3) ∧ {{ P }} e @ E {{ Φ }}
   ⊢ {{ R1 ★ P }} e @ E ∪ E1 {{ λ v, R3 ★ Φ v }}.
 Proof.
-  iIntros {???} "[#Hvs1 [#Hvs2 #Hwp]] ! [HR HP]".
+  iIntros (???) "[#Hvs1 [#Hvs2 #Hwp]] ! [HR HP]".
   iApply (wp_frame_step_l E E1 E2); try done.
   iSplitL "HR"; [|by iApply "Hwp"].
   iPvs ("Hvs1" with "HR"); first by set_solver.
@@ -119,7 +119,7 @@ Lemma ht_frame_step_r E E1 E2 P R1 R2 R3 e Φ :
   (R1 ={E1,E2}=> ▷ R2) ∧ (R2 ={E2,E1}=> R3) ∧ {{ P }} e @ E {{ Φ }}
   ⊢ {{ P ★ R1 }} e @ (E ∪ E1) {{ λ v, Φ v ★ R3 }}.
 Proof.
-  iIntros {???} "[#Hvs1 [#Hvs2 #Hwp]]".
+  iIntros (???) "[#Hvs1 [#Hvs2 #Hwp]]".
   setoid_rewrite (comm _ _ R3); rewrite (comm _ _ R1).
   iApply (ht_frame_step_l _ _ E2); by repeat iSplit.
 Qed.
@@ -128,7 +128,7 @@ Lemma ht_frame_step_l' E P R e Φ :
   to_val e = None →
   {{ P }} e @ E {{ Φ }} ⊢ {{ ▷ R ★ P }} e @ E {{ v, R ★ Φ v }}.
 Proof.
-  iIntros {?} "#Hwp ! [HR HP]".
+  iIntros (?) "#Hwp ! [HR HP]".
   iApply wp_frame_step_l'; try done. iFrame "HR". by iApply "Hwp".
 Qed.
 
@@ -136,7 +136,7 @@ Lemma ht_frame_step_r' E P Φ R e :
   to_val e = None →
   {{ P }} e @ E {{ Φ }} ⊢ {{ P ★ ▷ R }} e @ E {{ v, Φ v ★ R }}.
 Proof.
-  iIntros {?} "#Hwp ! [HP HR]".
+  iIntros (?) "#Hwp ! [HP HR]".
   iApply wp_frame_step_r'; try done. iFrame "HR". by iApply "Hwp".
 Qed.
 
@@ -145,6 +145,6 @@ Lemma ht_inv N E P Φ R e :
   inv N R ★ {{ ▷ R ★ P }} e @ E ∖ nclose N {{ v, ▷ R ★ Φ v }}
   ⊢ {{ P }} e @ E {{ Φ }}.
 Proof.
-  iIntros {??} "[#? #Hwp] ! HP". iInv N as "HR". iApply "Hwp". by iSplitL "HR".
+  iIntros (??) "[#? #Hwp] ! HP". iInv N as "HR". iApply "Hwp". by iSplitL "HR".
 Qed.
 End hoare.

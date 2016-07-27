@@ -1,5 +1,5 @@
-From iris.prelude Require Export co_pset.
-From iris.algebra Require Export upred_big_op.
+From iris.prelude Require Export coPset.
+From iris.algebra Require Export upred_big_op updates.
 From iris.program_logic Require Export model.
 From iris.program_logic Require Import ownership wsat.
 Local Hint Extern 10 (_ ≤ _) => omega.
@@ -242,6 +242,9 @@ Class FrameShiftAssertion {Λ Σ A} (fsaV : Prop) (fsa : FSA Λ Σ A) := {
     fsaV → E2 ⊆ E1 → (|={E1,E2}=> fsa E2 (λ a, |={E2,E1}=> Φ a)) ⊢ fsa E1 Φ;
   fsa_frame_r E P Φ : (fsa E Φ ★ P) ⊢ fsa E (λ a, Φ a ★ P)
 }.
+
+(* Used to solve side-conditions related to [fsaV] *)
+Create HintDb fsaV.
 
 Section fsa.
 Context {Λ Σ A} (fsa : FSA Λ Σ A) `{!FrameShiftAssertion fsaV fsa}.

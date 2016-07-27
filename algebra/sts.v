@@ -1,4 +1,4 @@
-From iris.prelude Require Export sets.
+From iris.prelude Require Export set.
 From iris.algebra Require Export cmra.
 From iris.algebra Require Import dra.
 Local Arguments valid _ _ !_ /.
@@ -58,7 +58,7 @@ Proof.
     eauto with sts; set_solver.
 Qed.
 Global Instance framestep_proper : Proper ((≡) ==> (=) ==> (=) ==> iff) frame_step.
-Proof. by intros ?? [??] ??????; split; apply framestep_mono. Qed.
+Proof. move=> ?? /collection_equiv_spec [??]; split; by apply framestep_mono. Qed.
 Instance closed_proper' : Proper ((≡) ==> (≡) ==> impl) closed.
 Proof. destruct 3; constructor; intros until 0; setoid_subst; eauto. Qed.
 Global Instance closed_proper : Proper ((≡) ==> (≡) ==> iff) closed.
@@ -70,14 +70,19 @@ Proof.
   eapply elem_of_mkSet, rtc_l; [eapply Frame_step with T1 T2|]; eauto with sts.
 Qed.
 Global Instance up_proper : Proper ((=) ==> (≡) ==> (≡)) up.
-Proof. by intros ??? ?? [??]; split; apply up_preserving. Qed.
+Proof.
+  by move=> ??? ?? /collection_equiv_spec [??]; split; apply up_preserving.
+Qed.
 Global Instance up_set_preserving : Proper ((⊆) ==> flip (⊆) ==> (⊆)) up_set.
 Proof.
   intros S1 S2 HS T1 T2 HT. rewrite /up_set.
   f_equiv; last done. move =>s1 s2 Hs. simpl in HT. by apply up_preserving.
 Qed.
 Global Instance up_set_proper : Proper ((≡) ==> (≡) ==> (≡)) up_set.
-Proof. by intros S1 S2 [??] T1 T2 [??]; split; apply up_set_preserving. Qed.
+Proof.
+  move=> S1 S2 /collection_equiv_spec [??] T1 T2 /collection_equiv_spec [??];
+    split; by apply up_set_preserving.
+Qed.
 
 (** ** Properties of closure under frame steps *)
 Lemma closed_steps S T s1 s2 :
@@ -144,8 +149,8 @@ Lemma up_non_empty s T : up s T ≢ ∅.
 Proof. eapply non_empty_inhabited, elem_of_up. Qed.
 Lemma up_closed S T : closed S T → up_set S T ≡ S.
 Proof.
-  intros; split; auto using subseteq_up_set; intros s.
-  unfold up_set; rewrite elem_of_bind; intros (s'&Hstep&?).
+  intros ?; apply collection_equiv_spec; split; auto using subseteq_up_set.
+  intros s; unfold up_set; rewrite elem_of_bind; intros (s'&Hstep&?).
   induction Hstep; eauto using closed_step.
 Qed.
 Lemma up_subseteq s T S : closed S T → s ∈ S → sts.up s T ⊆ S.
@@ -363,8 +368,8 @@ Lemma sts_up_set_intersection S1 Sf Tf :
   closed Sf Tf → S1 ∩ Sf ≡ S1 ∩ up_set (S1 ∩ Sf) Tf.
 Proof.
   intros Hclf. apply (anti_symm (⊆)).
-  + move=>s [HS1 HSf]. split. by apply HS1. by apply subseteq_up_set.
-  + move=>s [HS1 [s' [/elem_of_mkSet Hsup Hs']]]. split; first done.
+  - move=>s [HS1 HSf]. split. by apply HS1. by apply subseteq_up_set.
+  - move=>s [HS1 [s' [/elem_of_mkSet Hsup Hs']]]. split; first done.
     eapply closed_steps, Hsup; first done. set_solver +Hs'.
 Qed.
 

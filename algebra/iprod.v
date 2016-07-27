@@ -114,7 +114,7 @@ Section iprod_cmra.
     - by intros f x; rewrite iprod_lookup_op iprod_lookup_core cmra_core_l.
     - by intros f x; rewrite iprod_lookup_core cmra_core_idemp.
     - intros f1 f2; rewrite !iprod_included_spec=> Hf x.
-      by rewrite iprod_lookup_core; apply cmra_core_preserving, Hf.
+      by rewrite iprod_lookup_core; apply cmra_core_mono, Hf.
     - intros n f1 f2 Hf x; apply cmra_validN_op_l with (f2 x), Hf.
     - intros n f f1 f2 Hf Hf12.
       set (g x := cmra_extend n (f x) (f1 x) (f2 x) (Hf x) (Hf12 x)).
@@ -282,7 +282,7 @@ Proof.
   split; first apply _.
   - intros n g Hg x; rewrite /iprod_map; apply (validN_preserving (f _)), Hg.
   - intros g1 g2; rewrite !iprod_included_spec=> Hf x.
-    rewrite /iprod_map; apply (included_preserving _), Hf.
+    rewrite /iprod_map; apply (cmra_monotone _), Hf.
 Qed.
 
 Definition iprodC_map `{Finite A} {B1 B2 : A → cofeT}

@@ -1,6 +1,7 @@
 (** Some derived lemmas for ectx-based languages *)
 From iris.program_logic Require Export ectx_language weakestpre lifting.
 From iris.program_logic Require Import ownership.
+From iris.proofmode Require Import weakestpre.
 
 Section wp.
 Context {expr val ectx state} {Λ : EctxLanguage expr val ectx state}.
@@ -17,32 +18,40 @@ Lemma wp_ectx_bind {E e} K Φ :
   WP e @ E {{ v, WP fill K (of_val v) @ E {{ Φ }} }} ⊢ WP fill K e @ E {{ Φ }}.
 Proof. apply: weakestpre.wp_bind. Qed.
 
-Lemma wp_lift_head_step E1 E2
-    (φ : expr → state → option expr → Prop) Φ e1 σ1 :
+Lemma wp_lift_head_step E1 E2 Φ e1 :
   E2 ⊆ E1 → to_val e1 = None →
-  head_reducible e1 σ1 →
-  (∀ e2 σ2 ef, head_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
-  (|={E1,E2}=> ▷ ownP σ1 ★ ▷ ∀ e2 σ2 ef,
-    (■ φ e2 σ2 ef ∧ ownP σ2) ={E2,E1}=★ WP e2 @ E1 {{ Φ }} ★ wp_fork ef)
+  (|={E1,E2}=> ∃ σ1, ■ head_reducible e1 σ1 ∧
+       ▷ ownP σ1 ★ ▷ ∀ e2 σ2 ef, (■ head_step e1 σ1 e2 σ2 ef ∧ ownP σ2)
+                                 ={E2,E1}=★ WP e2 @ E1 {{ Φ }} ★ wp_fork ef)
   ⊢ WP e1 @ E1 {{ Φ }}.
-Proof. eauto using wp_lift_step. Qed.
+Proof.
+  iIntros (??) "H". iApply (wp_lift_step E1 E2); try done.
+  iPvs "H" as (σ1) "(%&Hσ1&Hwp)". set_solver. iPvsIntro. iExists σ1.
+  iSplit; first by eauto. iFrame. iNext. iIntros (e2 σ2 ef) "[% ?]".
+  iApply "Hwp". by eauto.
+Qed.
 
-Lemma wp_lift_pure_head_step E (φ : expr → option expr → Prop) Φ e1 :
+Lemma wp_lift_pure_head_step E Φ e1 :
   to_val e1 = None →
   (∀ σ1, head_reducible e1 σ1) →
-  (∀ σ1 e2 σ2 ef, head_step e1 σ1 e2 σ2 ef → σ1 = σ2 ∧ φ e2 ef) →
-  (▷ ∀ e2 ef, ■ φ e2 ef → WP e2 @ E {{ Φ }} ★ wp_fork ef) ⊢ WP e1 @ E {{ Φ }}.
-Proof. eauto using wp_lift_pure_step. Qed.
+  (∀ σ1 e2 σ2 ef, head_step e1 σ1 e2 σ2 ef → σ1 = σ2) →
+  (▷ ∀ e2 ef σ, ■ head_step e1 σ e2 σ ef → WP e2 @ E {{ Φ }} ★ wp_fork ef)
+  ⊢ WP e1 @ E {{ Φ }}.
+Proof.
+  iIntros (???) "H". iApply wp_lift_pure_step; eauto. iNext.
+  iIntros (????). iApply "H". eauto.
+Qed.
 
-Lemma wp_lift_atomic_head_step {E Φ} e1
-    (φ : expr → state → option expr → Prop) σ1 :
+Lemma wp_lift_atomic_head_step {E Φ} e1 σ1 :
   atomic e1 →
   head_reducible e1 σ1 →
-  (∀ e2 σ2 ef, head_step e1 σ1 e2 σ2 ef → φ e2 σ2 ef) →
   ▷ ownP σ1 ★ ▷ (∀ v2 σ2 ef,
-    ■ φ (of_val v2) σ2 ef ∧ ownP σ2 -★ (|={E}=> Φ v2) ★ wp_fork ef)
+  ■ head_step e1 σ1 (of_val v2) σ2 ef ∧ ownP σ2 -★ (|={E}=> Φ v2) ★ wp_fork ef)
   ⊢ WP e1 @ E {{ Φ }}.
-Proof. eauto using wp_lift_atomic_step. Qed.
+Proof.
+  iIntros (??) "[? H]". iApply wp_lift_atomic_step; eauto. iFrame. iNext.
+  iIntros (???) "[% ?]". iApply "H". eauto.
+Qed.
 
 Lemma wp_lift_atomic_det_head_step {E Φ e1} σ1 v2 σ2 ef :
   atomic e1 →

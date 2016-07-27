@@ -70,8 +70,8 @@ Section auth.
     ✓ a → nclose N ⊆ E →
     ▷ φ a ={E}=> ∃ γ, ■(γ ∉ G) ∧ auth_ctx γ N φ ∧ auth_own γ a.
   Proof.
-    iIntros {??} "Hφ". rewrite /auth_own /auth_ctx.
-    iPvs (own_alloc_strong (Auth (Excl' a) a) _ G) as {γ} "[% Hγ]"; first done.
+    iIntros (??) "Hφ". rewrite /auth_own /auth_ctx.
+    iPvs (own_alloc_strong (Auth (Excl' a) a) _ G) as (γ) "[% Hγ]"; first done.
     iRevert "Hγ"; rewrite auth_both_op; iIntros "[Hγ Hγ']".
     iPvs (inv_alloc N _ (auth_inv γ φ) with "[-Hγ']"); first done.
     { iNext. iExists a. by iFrame. }
@@ -82,8 +82,8 @@ Section auth.
     ✓ a → nclose N ⊆ E →
     ▷ φ a ={E}=> ∃ γ, auth_ctx γ N φ ∧ auth_own γ a.
   Proof.
-    iIntros {??} "Hφ".
-    iPvs (auth_alloc_strong N E a ∅ with "Hφ") as {γ} "[_ ?]"; [done..|].
+    iIntros (??) "Hφ".
+    iPvs (auth_alloc_strong N E a ∅ with "Hφ") as (γ) "[_ ?]"; [done..|].
     by iExists γ.
   Qed.
 
@@ -100,17 +100,17 @@ Section auth.
         ■ (a ~l~> b @ Some af) ★ ▷ φ (b ⋅ af) ★ (auth_own γ b -★ Ψ x)))
      ⊢ fsa E Ψ.
   Proof.
-    iIntros {??} "(#? & Hγf & HΨ)". rewrite /auth_ctx /auth_own.
-    iInv N as {a'} "[Hγ Hφ]".
+    iIntros (??) "(#? & Hγf & HΨ)". rewrite /auth_ctx /auth_own.
+    iInv N as (a') "[Hγ Hφ]".
     iTimeless "Hγ"; iTimeless "Hγf"; iCombine "Hγ" "Hγf" as "Hγ".
-    iDestruct (own_valid _ with "#Hγ") as "Hvalid".
+    iDestruct (@own_valid with "#Hγ") as "Hvalid".
     iDestruct (auth_validI _ with "Hvalid") as "[Ha' %]"; simpl; iClear "Hvalid".
-    iDestruct "Ha'" as {af} "Ha'"; iDestruct "Ha'" as %Ha'.
+    iDestruct "Ha'" as (af) "Ha'"; iDestruct "Ha'" as %Ha'.
     rewrite ->(left_id _ _) in Ha'; setoid_subst.
     iApply pvs_fsa_fsa; iApply fsa_wand_r; iSplitL "HΨ Hφ".
     { iApply "HΨ"; by iSplit. }
-    iIntros {v}; iDestruct 1 as {b} "(% & Hφ & HΨ)".
-    iPvs (own_update _ with "Hγ") as "[Hγ Hγf]"; first eapply auth_update; eauto.
+    iIntros (v); iDestruct 1 as (b) "(% & Hφ & HΨ)".
+    iPvs (@own_update with "Hγ") as "[Hγ Hγf]"; first eapply auth_update; eauto.
     iPvsIntro. iSplitL "Hφ Hγ"; last by iApply "HΨ".
     iNext. iExists (b ⋅ af). by iFrame.
   Qed.

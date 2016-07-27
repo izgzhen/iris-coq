@@ -1,6 +1,6 @@
-From iris.algebra Require Export cmra updates.
+From iris.algebra Require Export cmra.
 From iris.prelude Require Export gmap.
-From iris.algebra Require Import upred.
+From iris.algebra Require Import upred updates local_updates.
 
 Section cofe.
 Context `{Countable K} {A : cofeT}.
@@ -134,7 +134,7 @@ Proof.
   - intros m i. by rewrite lookup_op lookup_core cmra_core_l.
   - intros m i. by rewrite !lookup_core cmra_core_idemp.
   - intros m1 m2; rewrite !lookup_included=> Hm i.
-    rewrite !lookup_core. by apply cmra_core_preserving.
+    rewrite !lookup_core. by apply cmra_core_mono.
   - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
   - intros n m m1 m2 Hm Hm12.
@@ -205,15 +205,12 @@ Qed.
 Lemma singleton_valid i x : ✓ ({[ i := x ]} : gmap K A) ↔ ✓ x.
 Proof. rewrite !cmra_valid_validN. by setoid_rewrite singleton_validN. Qed.
 
-Lemma insert_singleton_opN n m i x :
-  m !! i = None → <[i:=x]> m ≡{n}≡ {[ i := x ]} ⋅ m.
+Lemma insert_singleton_op m i x : m !! i = None → <[i:=x]> m = {[ i := x ]} ⋅ m.
 Proof.
-  intros Hi j; destruct (decide (i = j)) as [->|].
-  - by rewrite lookup_op lookup_insert lookup_singleton Hi right_id.
-  - by rewrite lookup_op lookup_insert_ne // lookup_singleton_ne // left_id.
+  intros Hi; apply map_eq=> j; destruct (decide (i = j)) as [->|].
+  - by rewrite lookup_op lookup_insert lookup_singleton Hi right_id_L.
+  - by rewrite lookup_op lookup_insert_ne // lookup_singleton_ne // left_id_L.
 Qed.
-Lemma insert_singleton_op m i x : m !! i = None → <[i:=x]> m ≡ {[ i := x ]} ⋅ m.
-Proof. rewrite !equiv_dist; naive_solver eauto using insert_singleton_opN. Qed.
 
 Lemma core_singleton (i : K) (x : A) cx :
   pcore x = Some cx → core ({[ i := x ]} : gmap K A) = {[ i := cx ]}.
@@ -252,9 +249,9 @@ Proof.
       * by rewrite Hi lookup_op lookup_singleton lookup_delete.
       * by rewrite lookup_op lookup_singleton_ne // lookup_delete_ne // left_id.
 Qed.
-Lemma dom_op m1 m2 : dom (gset K) (m1 ⋅ m2) ≡ dom _ m1 ∪ dom _ m2.
+Lemma dom_op m1 m2 : dom (gset K) (m1 ⋅ m2) = dom _ m1 ∪ dom _ m2.
 Proof.
-  apply elem_of_equiv; intros i; rewrite elem_of_union !elem_of_dom.
+  apply elem_of_equiv_L=> i; rewrite elem_of_union !elem_of_dom.
   unfold is_Some; setoid_rewrite lookup_op.
   destruct (m1 !! i), (m2 !! i); naive_solver.
 Qed.
@@ -303,8 +300,8 @@ Section freshness.
     { rewrite -not_elem_of_union -dom_op -not_elem_of_union; apply is_fresh. }
     exists (<[i:=x]>m); split.
     { by apply HQ; last done; apply not_elem_of_dom. }
-    rewrite insert_singleton_opN; last by apply not_elem_of_dom.
-    rewrite -assoc -insert_singleton_opN;
+    rewrite insert_singleton_op; last by apply not_elem_of_dom.
+    rewrite -assoc -insert_singleton_op;
       last by apply not_elem_of_dom; rewrite dom_op not_elem_of_union.
     by apply insert_validN; [apply cmra_valid_validN|].
   Qed.
@@ -402,7 +399,7 @@ Proof.
   split; try apply _.
   - by intros n m ? i; rewrite lookup_fmap; apply (validN_preserving _).
   - intros m1 m2; rewrite !lookup_included=> Hm i.
-    by rewrite !lookup_fmap; apply: included_preserving.
+    by rewrite !lookup_fmap; apply: cmra_monotone.
 Qed.
 Definition gmapC_map `{Countable K} {A B} (f: A -n> B) :
   gmapC K A -n> gmapC K B := CofeMor (fmap f : gmapC K A → gmapC K B).

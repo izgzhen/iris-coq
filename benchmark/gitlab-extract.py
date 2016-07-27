@@ -61,9 +61,8 @@ for commit in parse_log.parse_git_commits(args.commits):
         # no build
         continue
     build = first(sorted(builds.json(), key = lambda b: -int(b['id'])))
-    assert build is not None
-    if build['status'] == 'failed':
-        # build failed
+    if build is None or build['status'] == 'failed':
+        # build failed (or missing...??)
         continue
     if build['status'] == 'running':
         # build still running, don't fetch this or any later commit

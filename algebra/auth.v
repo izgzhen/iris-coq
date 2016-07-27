@@ -1,5 +1,5 @@
-From iris.algebra Require Export excl updates.
-From iris.algebra Require Import upred.
+From iris.algebra Require Export excl local_updates.
+From iris.algebra Require Import upred updates.
 Local Arguments valid _ _ !_ /.
 Local Arguments validN _ _ _ !_ /.
 
@@ -127,7 +127,7 @@ Proof.
   - by split; simpl; rewrite ?cmra_core_l.
   - by split; simpl; rewrite ?cmra_core_idemp.
   - intros ??; rewrite! auth_included; intros [??].
-    by split; simpl; apply cmra_core_preserving.
+    by split; simpl; apply cmra_core_mono.
   - assert (∀ n (a b1 b2 : A), b1 ⋅ b2 ≼{n} a → b1 ≼{n} a).
     { intros n a b1 b2 <-; apply cmra_includedN_l. }
    intros n [[[a1|]|] b1] [[[a2|]|] b2];
@@ -183,14 +183,18 @@ Lemma auth_both_op a b : Auth (Excl' a) b ≡ ● a ⋅ ◯ b.
 Proof. by rewrite /op /auth_op /= left_id. Qed.
 
 Lemma auth_update a af b :
-  a ~l~> b @ Some af →
-  ● (a ⋅ af) ⋅ ◯ a ~~> ● (b ⋅ af) ⋅ ◯ b.
+  a ~l~> b @ Some af → ● (a ⋅ af) ⋅ ◯ a ~~> ● (b ⋅ af) ⋅ ◯ b.
 Proof.
   intros [Hab Hab']; apply cmra_total_update.
   move=> n [[[?|]|] bf1] // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
   move: Ha; rewrite !left_id=> Hm; split; auto.
   exists bf2. rewrite -assoc.
   apply (Hab' _ (Some _)); auto. by rewrite /= assoc.
+Qed.
+Lemma auth_update_no_frame a b : a ~l~> b @ Some ∅ → ● a ⋅ ◯ a ~~> ● b ⋅ ◯ b.
+Proof.
+  intros. rewrite -{1}(right_id _ _ a) -{1}(right_id _ _ b).
+  by apply auth_update.
 Qed.
 End cmra.
 
@@ -222,9 +226,9 @@ Instance auth_map_cmra_monotone {A B : ucmraT} (f : A → B) :
 Proof.
   split; try apply _.
   - intros n [[[a|]|] b]; rewrite /= /cmra_validN /=; try
-      naive_solver eauto using includedN_preserving, validN_preserving.
+      naive_solver eauto using cmra_monotoneN, validN_preserving.
   - by intros [x a] [y b]; rewrite !auth_included /=;
-      intros [??]; split; simpl; apply: included_preserving.
+      intros [??]; split; simpl; apply: cmra_monotone.
 Qed.
 Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=
   CofeMor (auth_map f).

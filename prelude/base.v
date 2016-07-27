@@ -250,6 +250,12 @@ Lemma and_wlog_r (P Q : Prop) : P → (P → Q) → (P ∧ Q).
 Proof. tauto. Qed.
 Lemma impl_transitive (P Q R : Prop) : (P → Q) → (Q → R) → (P → R).
 Proof. tauto. Qed.
+Lemma forall_proper {A} (P Q : A → Prop) :
+  (∀ x, P x ↔ Q x) → (∀ x, P x) ↔ (∀ x, Q x).
+Proof. firstorder. Qed.
+Lemma exist_proper {A} (P Q : A → Prop) :
+  (∀ x, P x ↔ Q x) → (∃ x, P x) ↔ (∃ x, Q x).
+Proof. firstorder. Qed.
 
 Instance: Comm (↔) (@eq A).
 Proof. red; intuition. Qed.
@@ -393,6 +399,8 @@ Proof. now intros -> ?. Qed.
 Instance unit_equiv : Equiv unit := λ _ _, True.
 Instance unit_equivalence : Equivalence (@equiv unit _).
 Proof. repeat split. Qed.
+Instance unit_leibniz : LeibnizEquiv unit.
+Proof. intros [] []; reflexivity. Qed.
 Instance unit_inhabited: Inhabited unit := populate ().
 
 (** ** Products *)
@@ -588,7 +596,7 @@ Notation "(∩ x )" := (λ y, intersection y x) (only parsing) : C_scope.
 
 Class Difference A := difference: A → A → A.
 Instance: Params (@difference) 2.
-Infix "∖" := difference (at level 40) : C_scope.
+Infix "∖" := difference (at level 40, left associativity) : C_scope.
 Notation "(∖)" := difference (only parsing) : C_scope.
 Notation "( x ∖)" := (difference x) (only parsing) : C_scope.
 Notation "(∖ x )" := (λ y, difference y x) (only parsing) : C_scope.
@@ -870,30 +878,7 @@ Notation "<[ k := a ]{ Γ }>" := (insertE Γ k a)
 Arguments insertE _ _ _ _ _ _ !_ _ !_ / : simpl nomatch.
 
 
-(** * Ordered structures *)
-(** We do not use a setoid equality in the following interfaces to avoid the
-need for proofs that the relations and operations are proper. Instead, we
-define setoid equality generically [λ X Y, X ⊆ Y ∧ Y ⊆ X]. *)
-Class EmptySpec A `{Empty A, SubsetEq A} : Prop := subseteq_empty X : ∅ ⊆ X.
-Class JoinSemiLattice A `{SubsetEq A, Union A} : Prop := {
-  join_semi_lattice_pre :>> PreOrder (⊆);
-  union_subseteq_l X Y : X ⊆ X ∪ Y;
-  union_subseteq_r X Y : Y ⊆ X ∪ Y;
-  union_least X Y Z : X ⊆ Z → Y ⊆ Z → X ∪ Y ⊆ Z
-}.
-Class MeetSemiLattice A `{SubsetEq A, Intersection A} : Prop := {
-  meet_semi_lattice_pre :>> PreOrder (⊆);
-  intersection_subseteq_l X Y : X ∩ Y ⊆ X;
-  intersection_subseteq_r X Y : X ∩ Y ⊆ Y;
-  intersection_greatest X Y Z : Z ⊆ X → Z ⊆ Y → Z ⊆ X ∩ Y
-}.
-Class Lattice A `{SubsetEq A, Union A, Intersection A} : Prop := {
-  lattice_join :>> JoinSemiLattice A;
-  lattice_meet :>> MeetSemiLattice A;
-  lattice_distr X Y Z : (X ∪ Y) ∩ (X ∪ Z) ⊆ X ∪ (Y ∩ Z)
-}.
-
-(** ** Axiomatization of collections *)
+(** * Axiomatization of collections *)
 (** The class [SimpleCollection A C] axiomatizes a collection of type [C] with
 elements of type [A]. *)
 Class SimpleCollection A C `{ElemOf A C,
@@ -907,13 +892,6 @@ Class Collection A C `{ElemOf A C, Empty C, Singleton A C,
   collection_simple :>> SimpleCollection A C;
   elem_of_intersection X Y (x : A) : x ∈ X ∩ Y ↔ x ∈ X ∧ x ∈ Y;
   elem_of_difference X Y (x : A) : x ∈ X ∖ Y ↔ x ∈ X ∧ x ∉ Y
-}.
-Class CollectionOps A C `{ElemOf A C, Empty C, Singleton A C, Union C,
-    Intersection C, Difference C, IntersectionWith A C, Filter A C} : Prop := {
-  collection_ops :>> Collection A C;
-  elem_of_intersection_with (f : A → A → option A) X Y (x : A) :
-    x ∈ intersection_with f X Y ↔ ∃ x1 x2, x1 ∈ X ∧ x2 ∈ Y ∧ f x1 x2 = Some x;
-  elem_of_filter X P `{∀ x, Decision (P x)} x : x ∈ filter P X ↔ P x ∧ x ∈ X
 }.
 
 (** We axiomative a finite collection as a collection whose elements can be

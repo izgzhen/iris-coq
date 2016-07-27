@@ -52,7 +52,7 @@ Global Arguments into_later _ _ {_}.
 Class FromLater (P Q : uPred M) := from_later : ▷ Q ⊢ P.
 Global Arguments from_later _ _ {_}.
 
-Global Instance into_later_fallthrough P : IntoLater P P | 1000.
+Global Instance into_later_default P : IntoLater P P | 1000.
 Proof. apply later_intro. Qed.
 Global Instance into_later_later P : IntoLater (▷ P) P.
 Proof. done. Qed.
@@ -222,7 +222,7 @@ Global Instance make_sep_true_l P : MakeSep True P P.
 Proof. by rewrite /MakeSep left_id. Qed.
 Global Instance make_sep_true_r P : MakeSep P True P.
 Proof. by rewrite /MakeSep right_id. Qed.
-Global Instance make_sep_fallthrough P Q : MakeSep P Q (P ★ Q) | 100.
+Global Instance make_sep_default P Q : MakeSep P Q (P ★ Q) | 100.
 Proof. done. Qed.
 Global Instance frame_sep_l R P1 P2 Q Q' :
   Frame R P1 Q → MakeSep Q P2 Q' → Frame R (P1 ★ P2) Q' | 9.
@@ -236,7 +236,7 @@ Global Instance make_and_true_l P : MakeAnd True P P.
 Proof. by rewrite /MakeAnd left_id. Qed.
 Global Instance make_and_true_r P : MakeAnd P True P.
 Proof. by rewrite /MakeAnd right_id. Qed.
-Global Instance make_and_fallthrough P Q : MakeSep P Q (P ★ Q) | 100.
+Global Instance make_and_default P Q : MakeSep P Q (P ★ Q) | 100.
 Proof. done. Qed.
 Global Instance frame_and_l R P1 P2 Q Q' :
   Frame R P1 Q → MakeAnd Q P2 Q' → Frame R (P1 ∧ P2) Q' | 9.
@@ -250,16 +250,23 @@ Global Instance make_or_true_l P : MakeOr True P True.
 Proof. by rewrite /MakeOr left_absorb. Qed.
 Global Instance make_or_true_r P : MakeOr P True True.
 Proof. by rewrite /MakeOr right_absorb. Qed.
-Global Instance make_or_fallthrough P Q : MakeOr P Q (P ∨ Q) | 100.
+Global Instance make_or_default P Q : MakeOr P Q (P ∨ Q) | 100.
 Proof. done. Qed.
 Global Instance frame_or R P1 P2 Q1 Q2 Q :
   Frame R P1 Q1 → Frame R P2 Q2 → MakeOr Q1 Q2 Q → Frame R (P1 ∨ P2) Q.
 Proof. rewrite /Frame /MakeOr => <- <- <-. by rewrite -sep_or_l. Qed.
 
+Global Instance frame_wand R P1 P2 Q2 :
+  Frame R P2 Q2 → Frame R (P1 -★ P2) (P1 -★ Q2).
+Proof.
+  rewrite /Frame=> ?. apply wand_intro_l.
+  by rewrite assoc (comm _ P1) -assoc wand_elim_r.
+Qed.
+
 Class MakeLater (P lP : uPred M) := make_later : ▷ P ⊣⊢ lP.
 Global Instance make_later_true : MakeLater True True.
 Proof. by rewrite /MakeLater later_True. Qed.
-Global Instance make_later_fallthrough P : MakeLater P (▷ P) | 100.
+Global Instance make_later_default P : MakeLater P (▷ P) | 100.
 Proof. done. Qed.
 
 Global Instance frame_later R P Q Q' :
@@ -294,10 +301,6 @@ Global Arguments from_exist {_} _ _ {_}.
 Global Instance from_exist_exist {A} (Φ: A → uPred M): FromExist (∃ a, Φ a) Φ.
 Proof. done. Qed.
 
-Lemma tac_exist {A} Δ P (Φ : A → uPred M) :
-  FromExist P Φ → (∃ a, Δ ⊢ Φ a) → Δ ⊢ P.
-Proof. intros ? [a ?]. rewrite -(from_exist P). eauto using exist_intro'. Qed.
-
 Class IntoExist {A} (P : uPred M) (Φ : A → uPred M) :=
   into_exist : P ⊢ ∃ x, Φ x.
 Global Arguments into_exist {_} _ _ {_}.
@@ -309,4 +312,7 @@ Proof. rewrite /IntoExist=> HP ?. by rewrite HP later_exist. Qed.
 Global Instance into_exist_always {A} P (Φ : A → uPred M) :
   IntoExist P Φ → IntoExist (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP always_exist. Qed.
+
+Class TimelessElim (Q : uPred M) :=
+  timeless_elim `{!TimelessP P} : ▷ P ★ (P -★ Q) ⊢ Q.
 End classes.

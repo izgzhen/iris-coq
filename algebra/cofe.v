@@ -208,12 +208,45 @@ Section fixpoint.
 End fixpoint.
 
 (** Function space *)
-Record cofeMor (A B : cofeT) : Type := CofeMor {
+Definition cofe_fun (A : Type) (B : cofeT) := A → B.
+
+Section cofe_fun.
+  Context {A : Type} {B : cofeT}.
+  Instance cofe_fun_equiv : Equiv (cofe_fun A B) := λ f g, ∀ x, f x ≡ g x.
+  Instance cofe_fun_dist : Dist (cofe_fun A B) := λ n f g, ∀ x, f x ≡{n}≡ g x.
+  Program Definition cofe_fun_chain `(c : chain (cofe_fun A B))
+    (x : A) : chain B := {| chain_car n := c n x |}.
+  Next Obligation. intros c x n i ?. by apply (chain_cauchy c). Qed.
+  Program Instance cofe_fun_compl : Compl (cofe_fun A B) := λ c x,
+    compl (cofe_fun_chain c x).
+  Definition cofe_fun_cofe_mixin : CofeMixin (cofe_fun A B).
+  Proof.
+    split.
+    - intros f g; split; [intros Hfg n k; apply equiv_dist, Hfg|].
+      intros Hfg k; apply equiv_dist=> n; apply Hfg.
+    - intros n; split.
+      + by intros f x.
+      + by intros f g ? x.
+      + by intros f g h ?? x; trans (g x).
+    - by intros n f g ? x; apply dist_S.
+    - intros n c x. apply (conv_compl n (cofe_fun_chain c x)).
+  Qed.
+  Canonical Structure cofe_funC := CofeT (cofe_fun A B) cofe_fun_cofe_mixin.
+End cofe_fun.
+
+Arguments cofe_funC : clear implicits.
+Notation "A -c> B" :=
+  (cofe_funC A B) (at level 99, B at level 200, right associativity).
+Instance cofe_fun_inhabited {A} {B : cofeT} `{Inhabited B} :
+  Inhabited (A -c> B) := populate (λ _, inhabitant).
+
+(** Non-expansive function space *)
+Record cofe_mor (A B : cofeT) : Type := CofeMor {
   cofe_mor_car :> A → B;
   cofe_mor_ne n : Proper (dist n ==> dist n) cofe_mor_car
 }.
 Arguments CofeMor {_ _} _ {_}.
-Add Printing Constructor cofeMor.
+Add Printing Constructor cofe_mor.
 Existing Instance cofe_mor_ne.
 
 Notation "'λne' x .. y , t" :=
@@ -222,20 +255,20 @@ Notation "'λne' x .. y , t" :=
 
 Section cofe_mor.
   Context {A B : cofeT}.
-  Global Instance cofe_mor_proper (f : cofeMor A B) : Proper ((≡) ==> (≡)) f.
+  Global Instance cofe_mor_proper (f : cofe_mor A B) : Proper ((≡) ==> (≡)) f.
   Proof. apply ne_proper, cofe_mor_ne. Qed.
-  Instance cofe_mor_equiv : Equiv (cofeMor A B) := λ f g, ∀ x, f x ≡ g x.
-  Instance cofe_mor_dist : Dist (cofeMor A B) := λ n f g, ∀ x, f x ≡{n}≡ g x.
-  Program Definition fun_chain `(c : chain (cofeMor A B)) (x : A) : chain B :=
-    {| chain_car n := c n x |}.
+  Instance cofe_mor_equiv : Equiv (cofe_mor A B) := λ f g, ∀ x, f x ≡ g x.
+  Instance cofe_mor_dist : Dist (cofe_mor A B) := λ n f g, ∀ x, f x ≡{n}≡ g x.
+  Program Definition cofe_mor_chain `(c : chain (cofe_mor A B))
+    (x : A) : chain B := {| chain_car n := c n x |}.
   Next Obligation. intros c x n i ?. by apply (chain_cauchy c). Qed.
-  Program Instance cofe_mor_compl : Compl (cofeMor A B) := λ c,
-    {| cofe_mor_car x := compl (fun_chain c x) |}.
+  Program Instance cofe_mor_compl : Compl (cofe_mor A B) := λ c,
+    {| cofe_mor_car x := compl (cofe_mor_chain c x) |}.
   Next Obligation.
-    intros c n x y Hx. by rewrite (conv_compl n (fun_chain c x))
-      (conv_compl n (fun_chain c y)) /= Hx.
+    intros c n x y Hx. by rewrite (conv_compl n (cofe_mor_chain c x))
+      (conv_compl n (cofe_mor_chain c y)) /= Hx.
   Qed.
-  Definition cofe_mor_cofe_mixin : CofeMixin (cofeMor A B).
+  Definition cofe_mor_cofe_mixin : CofeMixin (cofe_mor A B).
   Proof.
     split.
     - intros f g; split; [intros Hfg n k; apply equiv_dist, Hfg|].
@@ -246,23 +279,24 @@ Section cofe_mor.
       + by intros f g h ?? x; trans (g x).
     - by intros n f g ? x; apply dist_S.
     - intros n c x; simpl.
-      by rewrite (conv_compl n (fun_chain c x)) /=.
+      by rewrite (conv_compl n (cofe_mor_chain c x)) /=.
   Qed.
-  Canonical Structure cofe_mor : cofeT := CofeT (cofeMor A B) cofe_mor_cofe_mixin.
+  Canonical Structure cofe_morC := CofeT (cofe_mor A B) cofe_mor_cofe_mixin.
 
   Global Instance cofe_mor_car_ne n :
     Proper (dist n ==> dist n ==> dist n) (@cofe_mor_car A B).
   Proof. intros f g Hfg x y Hx; rewrite Hx; apply Hfg. Qed.
   Global Instance cofe_mor_car_proper :
     Proper ((≡) ==> (≡) ==> (≡)) (@cofe_mor_car A B) := ne_proper_2 _.
-  Lemma cofe_mor_ext (f g : cofeMor A B) : f ≡ g ↔ ∀ x, f x ≡ g x.
+  Lemma cofe_mor_ext (f g : cofe_mor A B) : f ≡ g ↔ ∀ x, f x ≡ g x.
   Proof. done. Qed.
 End cofe_mor.
 
-Arguments cofe_mor : clear implicits.
-Infix "-n>" := cofe_mor (at level 45, right associativity).
-Instance cofe_more_inhabited {A B : cofeT} `{Inhabited B} :
-  Inhabited (A -n> B) := populate (CofeMor (λ _, inhabitant)).
+Arguments cofe_morC : clear implicits.
+Notation "A -n> B" :=
+  (cofe_morC A B) (at level 99, B at level 200, right associativity).
+Instance cofe_mor_inhabited {A B : cofeT} `{Inhabited B} :
+  Inhabited (A -n> B) := populate (λne _, inhabitant).
 
 (** Identity and composition and constant function *)
 Definition cid {A} : A -n> A := CofeMor id.
@@ -406,7 +440,7 @@ Proof.
 Qed.
 
 Program Definition cofe_morCF (F1 F2 : cFunctor) : cFunctor := {|
-  cFunctor_car A B := cofe_mor (cFunctor_car F1 B A) (cFunctor_car F2 A B);
+  cFunctor_car A B := cFunctor_car F1 B A -n> cFunctor_car F2 A B;
   cFunctor_map A1 A2 B1 B2 fg :=
     cofe_morC_map (cFunctor_map F1 (fg.2, fg.1)) (cFunctor_map F2 fg)
 |}.

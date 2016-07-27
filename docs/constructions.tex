@@ -59,6 +59,35 @@ Frame-preserving updates on the $M_i$ lift to the product:
   {f[i \mapsto \melt] \mupd \setComp{ f[i \mapsto \meltB]}{\meltB \in \meltsB}}
 \end{mathpar}
 
+\subsection{Sum}
+\label{sec:summ}
+
+The \emph{sum CMRA} $\monoid_1 \csumm \monoid_2$ for any CMRAs $\monoid_1$ and $\monoid_2$ is defined as:
+\begin{align*}
+  \monoid_1 \csumm \monoid_2 \eqdef{}& \cinl(\melt_1:\monoid_1) \mid \cinr(\melt_2:\monoid_2) \mid \bot \\
+  \mval_n \eqdef{}& \setComp{\cinl(\melt_1)\!}{\!\melt_1 \in \mval'_n}
+    \cup \setComp{\cinr(\melt_2)\!}{\!\melt_2 \in \mval''_n}  \\
+  \cinl(\melt_1) \mtimes \cinl(\meltB_1) \eqdef{}& \cinl(\melt_1 \mtimes \meltB_1)  \\
+%  \munit \mtimes \ospending \eqdef{}& \ospending \mtimes \munit \eqdef \ospending \\
+%  \munit \mtimes \osshot(\melt) \eqdef{}& \osshot(\melt) \mtimes \munit \eqdef \osshot(\melt) \\
+  \mcore{\cinl(\melt_1)} \eqdef{}& \begin{cases}\mnocore & \text{if $\mcore{\melt_1} = \mnocore$} \\ \cinl({\mcore{\melt_1}}) & \text{otherwise} \end{cases}
+\end{align*}
+The composition and core for $\cinr$ are defined symmetrically.
+The remaining cases of the composition and core are all $\bot$.
+Above, $\mval'$ refers to the validity of $\monoid_1$, and $\mval''$ to the validity of $\monoid_2$.
+
+We obtain the following frame-preserving updates, as well as their symmetric counterparts:
+\begin{mathpar}
+  \inferH{sum-update}
+  {\melt \mupd_{M_1} \meltsB}
+  {\cinl(\melt) \mupd \setComp{ \cinl(\meltB)}{\meltB \in \meltsB}}
+
+  \inferH{sum-swap}
+  {\All \melt_\f, n. \melt \mtimes \melt_\f \notin \mval'_n \and \meltB \in \mval''}
+  {\cinl(\melt) \mupd \cinr(\meltB)}
+\end{mathpar}
+Crucially, the second rule allows us to \emph{swap} the ``side'' of the sum that the CMRA is on if $\mval$ has \emph{no possible frame}.
+
 \subsection{Finite partial function}
 \label{sec:fpfnm}
 
@@ -118,59 +147,17 @@ There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can 
   \axiomH{ag-agree}{\aginj(x) \mtimes \aginj(y) \in \mval_n \Ra x \nequiv{n} y}
 \end{mathpar}
 
-\subsection{One-shot}
-
-The purpose of the one-shot CMRA is to lazily initialize the state of a ghost location.
-Given some CMRA $\monoid$, we define $\oneshotm(\monoid)$ as follows:
-\begin{align*}
-  \oneshotm(\monoid) \eqdef{}& \ospending + \osshot(\monoid) + \munit + \bot \\
-  \mval_n \eqdef{}& \set{\ospending, \munit} \cup \setComp{\osshot(\melt)}{\melt \in \mval_n}
-\\%\end{align*}
-%\begin{align*}
-  \osshot(\melt) \mtimes \osshot(\meltB) \eqdef{}& \osshot(\melt \mtimes \meltB) \\
-  \munit \mtimes \ospending \eqdef{}& \ospending \mtimes \munit \eqdef \ospending \\
-  \munit \mtimes \osshot(\melt) \eqdef{}& \osshot(\melt) \mtimes \munit \eqdef \osshot(\melt)
-\end{align*}%
-Notice that $\oneshotm(\monoid)$ is a disjoint sum with the four constructors (injections) $\ospending$, $\osshot$, $\munit$ and $\bot$.
-The remaining cases of composition go to $\bot$.
-\begin{align*}
-  \mcore{\ospending} \eqdef{}& \munit & \mcore{\osshot(\melt)} \eqdef{}& \mcore\melt \\
-  \mcore{\munit} \eqdef{}& \munit &  \mcore{\bot} \eqdef{}& \bot
-\end{align*}
-The step-indexed equivalence is inductively defined as follows:
-\begin{mathpar}
-  \axiom{\ospending \nequiv{n} \ospending}
-
-  \infer{\melt \nequiv{n} \meltB}{\osshot(\melt) \nequiv{n} \osshot(\meltB)}
-
-  \axiom{\munit \nequiv{n} \munit}
-
-  \axiom{\bot \nequiv{n} \bot}
-\end{mathpar}
-$\oneshotm(-)$ is a locally non-expansive functor from $\CMRAs$ to $\CMRAs$.
-
-We obtain the following frame-preserving updates:
-\begin{mathpar}
-  \inferH{oneshot-shoot}
-  {\melt \in \mval}
-  {\ospending \mupd \osshot(\melt)}
-
-  \inferH{oneshot-update}
-  {\melt \mupd \meltsB}
-  {\osshot(\melt) \mupd \setComp{\osshot(\meltB)}{\meltB \in \meltsB}}
-\end{mathpar}
 
 \subsection{Exclusive CMRA}
 
 Given a cofe $\cofe$, we define a CMRA $\exm(\cofe)$ such that at most one $x \in \cofe$ can be owned:
 \begin{align*}
-  \exm(\cofe) \eqdef{}& \exinj(\cofe) + \munit + \bot \\
-  \mval_n \eqdef{}& \setComp{\melt\in\exm(\cofe)}{\melt \neq \bot} \\
-  \munit \mtimes \exinj(x) \eqdef{}& \exinj(x) \mtimes \munit \eqdef \exinj(x)
+  \exm(\cofe) \eqdef{}& \exinj(\cofe) + \bot \\
+  \mval_n \eqdef{}& \setComp{\melt\in\exm(\cofe)}{\melt \neq \bot}
 \end{align*}
-The remaining cases of composition go to $\bot$.
+All cases of composition go to $\bot$.
 \begin{align*}
-  \mcore{\exinj(x)} \eqdef{}& \munit & \mcore{\munit} \eqdef{}& \munit &
+  \mcore{\exinj(x)} \eqdef{}& \mnocore &
   \mcore{\bot} \eqdef{}& \bot
 \end{align*}
 The step-indexed equivalence is inductively defined as follows:

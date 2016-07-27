@@ -20,7 +20,7 @@ Record DRAMixin A `{Equiv A, Core A, Disjoint A, Op A, Valid A} := {
   mixin_dra_core_disjoint_l x : ✓ x → core x ⊥ x;
   mixin_dra_core_l x : ✓ x → core x ⋅ x ≡ x;
   mixin_dra_core_idemp x : ✓ x → core (core x) ≡ core x;
-  mixin_dra_core_preserving x y : 
+  mixin_dra_core_mono x y : 
     ∃ z, ✓ x → ✓ y → x ⊥ y → core (x ⋅ y) ≡ core x ⋅ z ∧ ✓ z ∧ core x ⊥ z
 }.
 Structure draT := DRAT {
@@ -78,9 +78,9 @@ Section dra_mixin.
   Proof. apply (mixin_dra_core_l _ (dra_mixin A)). Qed.
   Lemma dra_core_idemp x : ✓ x → core (core x) ≡ core x.
   Proof. apply (mixin_dra_core_idemp _ (dra_mixin A)). Qed.
-  Lemma dra_core_preserving x y : 
+  Lemma dra_core_mono x y : 
     ∃ z, ✓ x → ✓ y → x ⊥ y → core (x ⋅ y) ≡ core x ⋅ z ∧ ✓ z ∧ core x ⊥ z.
-  Proof. apply (mixin_dra_core_preserving _ (dra_mixin A)). Qed.
+  Proof. apply (mixin_dra_core_mono _ (dra_mixin A)). Qed.
 End dra_mixin.
 
 Record validity (A : draT) := Validity {
@@ -166,7 +166,7 @@ Proof.
       naive_solver eauto using dra_core_l, dra_core_disjoint_l.
   - intros [x px ?]; split; naive_solver eauto using dra_core_idemp.
   - intros [x px ?] [y py ?] [[z pz ?] [? Hy]]; simpl in *.
-    destruct (dra_core_preserving x z) as (z'&Hz').
+    destruct (dra_core_mono x z) as (z'&Hz').
     unshelve eexists (Validity z' (px ∧ py ∧ pz) _); [|split; simpl].
     { intros (?&?&?); apply Hz'; tauto. }
     + tauto.

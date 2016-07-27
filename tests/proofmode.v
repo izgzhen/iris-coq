@@ -20,12 +20,12 @@ Lemma demo_1 (M : ucmraT) (P1 P2 P3 : nat → uPred M) :
     ▷ (∀ n m : nat, P1 n → □ ((True ∧ P2 n) → □ (n = n ↔ P3 n))) -★
     ▷ (x = 0) ∨ ∃ x z, ▷ P3 (x + z) ★ uPred_ownM b ★ uPred_ownM (core b)).
 Proof.
-  iIntros {i [|j] a b ?} "! [Ha Hb] H1 #H2 H3"; setoid_subst.
+  iIntros (i [|j] a b ?) "! [Ha Hb] H1 #H2 H3"; setoid_subst.
   { iLeft. by iNext. }
   iRight.
-  iDestruct "H1" as {z1 z2 c} "(H1&_&#Hc)".
+  iDestruct "H1" as (z1 z2 c) "(H1&_&#Hc)".
   iPoseProof "Hc" as "foo".
-  iRevert {a b} "Ha Hb". iIntros {b a} "Hb {foo} Ha".
+  iRevert (a b) "Ha Hb". iIntros (b a) "Hb {foo} Ha".
   iAssert (uPred_ownM (a ⋅ core a)) with "[Ha]" as "[Ha #Hac]".
   { by rewrite cmra_core_r. }
   iIntros "{$Hac $Ha}".
@@ -61,7 +61,7 @@ Definition foo {M} (P : uPred M) := (P → P)%I.
 Definition bar {M} : uPred M := (∀ P, foo P)%I.
 
 Lemma demo_4 (M : ucmraT) : True ⊢ @bar M.
-Proof. iIntros. iIntros {P} "HP". done. Qed.
+Proof. iIntros. iIntros (P) "HP". done. Qed.
 
 Lemma demo_5 (M : ucmraT) (x y : M) (P : uPred M) :
   (∀ z, P → z ≡ y) ⊢ (P -★ (x,x) ≡ (y,x)).
@@ -76,7 +76,7 @@ Lemma demo_6 (M : ucmraT) (P Q : uPred M) :
   True ⊢ ∀ x y z : nat,
     x = plus 0 x → y = 0 → z = 0 → P → □ Q → foo (x ≡ x).
 Proof.
-  iIntros {a} "*".
+  iIntros (a) "*".
   iIntros "#Hfoo **".
   by iIntros "# _".
 Qed.
@@ -90,7 +90,7 @@ Section iris.
     E1 ⊆ E2 → E ⊆ E1 →
     (|={E1,E}=> ▷ P) ={E2,E ∪ E2 ∖ E1}=> ▷ P.
   Proof.
-    iIntros {? ?} "Hpvs".
+    iIntros (? ?) "Hpvs".
     iPvs "Hpvs"; first set_solver.
     done.
   Qed.
@@ -99,7 +99,7 @@ Section iris.
     nclose N ⊆ E →
     (True -★ P -★ inv N Q -★ True -★ R) ⊢ P -★ ▷ Q ={E}=★ R.
   Proof.
-    iIntros {?} "H HP HQ".
+    iIntros (?) "H HP HQ".
     iApply ("H" with "[#] HP |==>[HQ] |==>").
     - done.
     - by iApply inv_alloc.

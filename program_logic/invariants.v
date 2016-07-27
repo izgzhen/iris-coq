@@ -33,7 +33,7 @@ Proof. by rewrite always_always. Qed.
 Lemma inv_alloc N E P : nclose N ⊆ E → ▷ P ={E}=> inv N P.
 Proof.
   intros. rewrite -(pvs_mask_weaken N) //.
-  by rewrite inv_eq /inv (pvs_allocI N); last apply coPset_suffixes_infinite.
+  by rewrite inv_eq /inv (pvs_allocI N); last apply nclose_infinite.
 Qed.
 
 (** Fairly explicit form of opening invariants *)
@@ -42,7 +42,7 @@ Lemma inv_open E N P :
   inv N P ⊢ ∃ E', ■ (E ∖ nclose N ⊆ E' ⊆ E) ★
                     |={E,E'}=> ▷ P ★ (▷ P ={E',E}=★ True).
 Proof.
-  rewrite inv_eq /inv. iDestruct 1 as {i} "[% #Hi]".
+  rewrite inv_eq /inv. iDestruct 1 as (i) "[% #Hi]".
   iExists (E ∖ {[ i ]}). iSplit. { iPureIntro. set_solver. }
   iPvs (pvs_openI' with "Hi") as "HP"; [set_solver..|].
   iPvsIntro. iSplitL "HP"; first done. iIntros "HP".
@@ -56,13 +56,13 @@ Lemma inv_fsa {A} (fsa : FSA Λ Σ A) `{!FrameShiftAssertion fsaV fsa} E N P Ψ 
   fsaV → nclose N ⊆ E →
   inv N P ★ (▷ P -★ fsa (E ∖ nclose N) (λ a, ▷ P ★ Ψ a)) ⊢ fsa E Ψ.
 Proof.
-  iIntros {??} "[Hinv HΨ]".
-  iDestruct (inv_open E N P with "Hinv") as {E'} "[% Hvs]"; first done.
+  iIntros (??) "[Hinv HΨ]".
+  iDestruct (inv_open E N P with "Hinv") as (E') "[% Hvs]"; first done.
   iApply (fsa_open_close E E'); auto; first set_solver.
   iPvs "Hvs" as "[HP Hvs]"; first set_solver.
   (* TODO: How do I do sth. like [iSpecialize "HΨ HP"]? *)
   iPvsIntro. iApply (fsa_mask_weaken _ (E ∖ N)); first set_solver.
   iApply fsa_wand_r. iSplitR "Hvs"; first by iApply "HΨ"; simpl.
-  iIntros {v} "[HP HΨ]". by iPvs ("Hvs" with "HP"); first set_solver.
+  iIntros (v) "[HP HΨ]". by iPvs ("Hvs" with "HP"); first set_solver.
 Qed.
 End inv.

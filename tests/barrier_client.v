@@ -5,16 +5,16 @@ From iris.heap_lang Require Import proofmode.
 Import uPred.
 
 Definition worker (n : Z) : val :=
-  λ: "b" "y", ^wait '"b" ;; !'"y" #n.
-Definition client : expr [] :=
+  λ: "b" "y", wait "b" ;; !"y" #n.
+Definition client : expr :=
   let: "y" := ref #0 in
-  let: "b" := ^newbarrier #() in
-  ('"y" <- (λ: "z", '"z" + #42) ;; ^signal '"b") ||
-    (^(worker 12) '"b" '"y" || ^(worker 17) '"b" '"y").
+  let: "b" := newbarrier #() in
+  ("y" <- (λ: "z", "z" + #42) ;; signal "b") ||
+    (worker 12 "b" "y" || worker 17 "b" "y").
 Global Opaque worker client.
 
 Section client.
-  Context {Σ : gFunctors} `{!heapG Σ, !barrierG Σ, !spawnG Σ} (heapN N : namespace).
+  Context {Σ : gFunctors} `{!heapG Σ, !barrierG Σ, !spawnG Σ} (N : namespace).
   Local Notation iProp := (iPropG heap_lang Σ).
 
   Definition y_inv (q : Qp) (l : loc) : iProp :=
@@ -22,38 +22,37 @@ Section client.
 
   Lemma y_inv_split q l : y_inv q l ⊢ (y_inv (q/2) l ★ y_inv (q/2) l).
   Proof.
-    iDestruct 1 as {f} "[[Hl1 Hl2] #Hf]".
+    iDestruct 1 as (f) "[[Hl1 Hl2] #Hf]".
     iSplitL "Hl1"; iExists f; by iSplitL; try iAlways.
   Qed.
 
   Lemma worker_safe q (n : Z) (b y : loc) :
-    heap_ctx heapN ★ recv heapN N b (y_inv q y)
-    ⊢ WP worker n #b #y {{ _, True }}.
+    heap_ctx ★ recv N b (y_inv q y) ⊢ WP worker n #b #y {{ _, True }}.
   Proof.
     iIntros "[#Hh Hrecv]". wp_lam. wp_let.
     wp_apply wait_spec; iFrame "Hrecv".
-    iDestruct 1 as {f} "[Hy #Hf]".
+    iDestruct 1 as (f) "[Hy #Hf]".
     wp_seq. wp_load.
-    iApply wp_wand_r; iSplitR; [iApply "Hf"|by iIntros {v} "_"].
+    iApply wp_wand_r; iSplitR; [iApply "Hf"|by iIntros (v) "_"].
   Qed.
 
-  Lemma client_safe : heapN ⊥ N → heap_ctx heapN ⊢ WP client {{ _, True }}.
+  Lemma client_safe : heapN ⊥ N → heap_ctx ⊢ WP client {{ _, True }}.
   Proof.
-    iIntros {?} "#Hh"; rewrite /client. wp_alloc y as "Hy". wp_let.
-    wp_apply (newbarrier_spec heapN N (y_inv 1 y)); first done.
-    iFrame "Hh". iIntros {l} "[Hr Hs]". wp_let.
-    iApply (wp_par heapN N (λ _, True%I) (λ _, True%I)); first done.
-    iFrame "Hh". iSplitL "Hy Hs".
+    iIntros (?) "#Hh"; rewrite /client. wp_alloc y as "Hy". wp_let.
+    wp_apply (newbarrier_spec N (y_inv 1 y)); first done.
+    iFrame "Hh". iIntros (l) "[Hr Hs]". wp_let.
+    iApply (wp_par (λ _, True%I) (λ _, True%I)). iFrame "Hh".
+    iSplitL "Hy Hs".
     - (* The original thread, the sender. *)
       wp_store. iApply signal_spec; iFrame "Hs"; iSplit; [|done].
-      iExists _; iSplitL; [done|]. iAlways; iIntros {n}. wp_let. by wp_op.
+      iExists _; iSplitL; [done|]. iAlways; iIntros (n). wp_let. by wp_op.
     - (* The two spawned threads, the waiters. *)
-      iSplitL; [|by iIntros {_ _} "_ >"].
+      iSplitL; [|by iIntros (_ _) "_ >"].
       iDestruct (recv_weaken with "[] Hr") as "Hr".
       { iIntros "Hy". by iApply (y_inv_split with "Hy"). }
       iPvs (recv_split with "Hr") as "[H1 H2]"; first done.
-      iApply (wp_par heapN N (λ _, True%I) (λ _, True%I)); eauto.
-      iFrame "Hh"; iSplitL "H1"; [|iSplitL "H2"; [|by iIntros {_ _} "_ >"]];
+      iApply (wp_par (λ _, True%I) (λ _, True%I)). iFrame "Hh".
+      iSplitL "H1"; [|iSplitL "H2"; [|by iIntros (_ _) "_ >"]];
         iApply worker_safe; by iSplit.
 Qed.
 End client.
@@ -65,8 +64,8 @@ Section ClosedProofs.
   Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ v, True }}.
   Proof.
     iIntros "! Hσ".
-    iPvs (heap_alloc (nroot .@ "Barrier") with "Hσ") as {h} "[#Hh _]"; first done.
-    iApply (client_safe (nroot .@ "Barrier") (nroot .@ "Heap")); auto with ndisj.
+    iPvs (heap_alloc with "Hσ") as (h) "[#Hh _]"; first done.
+    iApply (client_safe (nroot .@ "barrier")); auto with ndisj.
   Qed.
 
   Print Assumptions client_safe_closed.

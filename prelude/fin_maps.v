@@ -5,7 +5,7 @@ finite maps and collects some theory on it. Most importantly, it proves useful
 induction principles for finite maps and implements the tactic
 [simplify_map_eq] to simplify goals involving finite maps. *)
 From Coq Require Import Permutation.
-From iris.prelude Require Export relations vector orders.
+From iris.prelude Require Export relations orders vector.
 
 (** * Axiomatization of finite maps *)
 (** We require Leibniz equality to be extensional on finite maps. This of
@@ -189,11 +189,6 @@ Lemma map_subseteq_spec {A} (m1 m2 : M A) :
 Proof.
   unfold subseteq, map_subseteq, map_relation. split; intros Hm i;
     specialize (Hm i); destruct (m1 !! i), (m2 !! i); naive_solver.
-Qed.
-Global Instance: EmptySpec (M A).
-Proof.
-  intros A m. rewrite !map_subseteq_spec.
-  intros i x. by rewrite lookup_empty.
 Qed.
 Global Instance: ∀ {A} (R : relation A), PreOrder R → PreOrder (map_included R).
 Proof.

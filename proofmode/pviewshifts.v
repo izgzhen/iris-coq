@@ -30,6 +30,12 @@ Global Instance into_wand_pvs E1 E2 R P Q :
   IntoWand R P Q → IntoWand R (|={E1,E2}=> P) (|={E1,E2}=> Q) | 100.
 Proof. rewrite /IntoWand=>->. apply wand_intro_l. by rewrite pvs_wand_r. Qed.
 
+Global Instance timeless_elim_pvs E1 E2 Q : TimelessElim (|={E1,E2}=> Q).
+Proof.
+  intros P ?. rewrite (pvs_timeless E1 P) pvs_frame_r.
+  by rewrite wand_elim_r pvs_trans; last set_solver.
+Qed.
+
 Class IsFSA {A} (P : iProp Λ Σ) (E : coPset)
     (fsa : FSA Λ Σ A) (fsaV : Prop) (Φ : A → iProp Λ Σ) := {
   is_fsa : P ⊣⊢ fsa E Φ;
@@ -47,6 +53,12 @@ Global Instance to_assert_pvs {A} P Q E (fsa : FSA Λ Σ A) fsaV Φ :
   IsFSA Q E fsa fsaV Φ → IntoAssert P Q (|={E}=> P).
 Proof.
   intros. by rewrite /IntoAssert pvs_frame_r wand_elim_r (is_fsa Q) fsa_pvs_fsa.
+Qed.
+Global Instance timeless_elim_fsa {A} Q E (fsa : FSA Λ Σ A) fsaV Φ :
+  IsFSA Q E fsa fsaV Φ → TimelessElim Q.
+Proof.
+  intros ? P ?. rewrite (is_fsa Q) -{2}fsa_pvs_fsa.
+  by rewrite (pvs_timeless _ P) pvs_frame_r wand_elim_r.
 Qed.
 
 Lemma tac_pvs_intro Δ E1 E2 Q : E1 = E2 → (Δ ⊢ Q) → Δ ⊢ |={E1,E2}=> Q.
@@ -73,26 +85,6 @@ Lemma tac_pvs_elim_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E i p P' P Q Φ :
 Proof.
   intros ? -> ??. rewrite (is_fsa Q) -fsa_pvs_fsa.
   eapply tac_pvs_elim; set_solver.
-Qed.
-
-Lemma tac_pvs_timeless Δ Δ' E1 E2 i p P Q :
-  envs_lookup i Δ = Some (p, ▷ P)%I → TimelessP P →
-  envs_simple_replace i p (Esnoc Enil i P) Δ = Some Δ' →
-  (Δ' ={E1,E2}=> Q) → Δ ={E1,E2}=> Q.
-Proof.
-  intros ??? HQ. rewrite envs_simple_replace_sound //; simpl.
-  rewrite always_if_later (pvs_timeless E1 (□?_ P)%I) pvs_frame_r.
-  by rewrite right_id wand_elim_r HQ pvs_trans; last set_solver.
-Qed.
-
-Lemma tac_pvs_timeless_fsa {A} (fsa : FSA Λ Σ A) fsaV Δ Δ' E i p P Q Φ :
-  IsFSA Q E fsa fsaV Φ →
-  envs_lookup i Δ = Some (p, ▷ P)%I → TimelessP P →
-  envs_simple_replace i p (Esnoc Enil i P) Δ = Some Δ' →
-  (Δ' ⊢ fsa E Φ) → Δ ⊢ Q.
-Proof.
-  intros ????. rewrite (is_fsa Q) -fsa_pvs_fsa.
-  eauto using tac_pvs_timeless.
 Qed.
 End pvs.
 
@@ -124,63 +116,42 @@ Tactic Notation "iPvs" open_constr(H) :=
   iDestructHelp H as (fun H => iPvsCore H; last iDestruct H as "?").
 Tactic Notation "iPvs" open_constr(H) "as" constr(pat) :=
   iDestructHelp H as (fun H => iPvsCore H; last iDestruct H as pat).
-Tactic Notation "iPvs" open_constr(H) "as" "{" simple_intropattern(x1) "}"
+Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
-  iDestructHelp H as (fun H => iPvsCore H; last iDestruct H as { x1 } pat).
-Tactic Notation "iPvs" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iPvsCore H; last iDestruct H as { x1 x2 } pat).
-Tactic Notation "iPvs" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iPvsCore H; last iDestruct H as { x1 x2 x3 } pat).
-Tactic Notation "iPvs" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) "}"
-    constr(pat) :=
-  iDestructHelp H as (fun H =>
-    iPvsCore H; last iDestruct H as { x1 x2 x3 x4 } pat).
-Tactic Notation "iPvs" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) "}" constr(pat) :=
-  iDestructHelp H as (fun H =>
-    iPvsCore H; last iDestruct H as { x1 x2 x3 x4 x5 } pat).
-Tactic Notation "iPvs" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) simple_intropattern(x6) "}" constr(pat) :=
-  iDestructHelp H as (fun H =>
-    iPvsCore H; last iDestruct H as { x1 x2 x3 x4 x5 x6 } pat).
-Tactic Notation "iPvs" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) "}"
+  iDestructHelp H as (fun H => iPvsCore H; last iDestruct H as ( x1 ) pat).
+Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) ")" constr(pat) :=
+  iDestructHelp H as (fun H => iPvsCore H; last iDestruct H as ( x1 x2 ) pat).
+Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) ")" constr(pat) :=
+  iDestructHelp H as (fun H => iPvsCore H; last iDestruct H as ( x1 x2 x3 ) pat).
+Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) :=
   iDestructHelp H as (fun H =>
-    iPvsCore H; last iDestruct H as { x1 x2 x3 x4 x5 x6 x7 } pat).
-Tactic Notation "iPvs" open_constr(H) "as" "{" simple_intropattern(x1)
+    iPvsCore H; last iDestruct H as ( x1 x2 x3 x4 ) pat).
+Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) ")" constr(pat) :=
+  iDestructHelp H as (fun H =>
+    iPvsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 ) pat).
+Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) ")" constr(pat) :=
+  iDestructHelp H as (fun H =>
+    iPvsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 ) pat).
+Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) ")"
+    constr(pat) :=
+  iDestructHelp H as (fun H =>
+    iPvsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 x7 ) pat).
+Tactic Notation "iPvs" open_constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
-    simple_intropattern(x8) "}" constr(pat) :=
+    simple_intropattern(x8) ")" constr(pat) :=
   iDestructHelp H as (fun H =>
-    iPvsCore H; last iDestruct H as { x1 x2 x3 x4 x5 x6 x7 x8 } pat).
-
-Tactic Notation "iTimeless" constr(H) :=
-  match goal with
-  | |- _ ⊢ |={_,_}=> _ =>
-     eapply tac_pvs_timeless with _ H _ _;
-       [env_cbv; reflexivity || fail "iTimeless:" H "not found"
-       |let P := match goal with |- TimelessP ?P => P end in
-        apply _ || fail "iTimeless: " P "not timeless"
-       |env_cbv; reflexivity|simpl]
-  | |- _ =>
-     eapply tac_pvs_timeless_fsa with _ _ _ _ H _ _ _;
-       [let P := match goal with |- IsFSA ?P _ _ _ _ => P end in
-        apply _ || fail "iTimeless: " P "not a pvs"
-       |env_cbv; reflexivity || fail "iTimeless:" H "not found"
-       |let P := match goal with |- TimelessP ?P => P end in
-        apply _ || fail "iTimeless: " P "not timeless"
-       |env_cbv; reflexivity|simpl]
-  end.
-
-Tactic Notation "iTimeless" constr(H) "as" constr(Hs) :=
-  iTimeless H; iDestruct H as Hs.
+    iPvsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 x7 x8 ) pat).
 
 Hint Extern 2 (of_envs _ ⊢ _) =>
   match goal with |- _ ⊢ (|={_}=> _)%I => iPvsIntro end.

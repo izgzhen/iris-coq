@@ -6,8 +6,7 @@ Import uPred.
 Ltac wp_strip_later ::= iNext.
 
 Section heap.
-Context {Σ : gFunctors} `{heapG Σ}.
-Implicit Types N : namespace.
+Context `{heapG Σ}.
 Implicit Types P Q : iPropG heap_lang Σ.
 Implicit Types Φ : val → iPropG heap_lang Σ.
 Implicit Types Δ : envs (iResUR heap_lang (globalF Σ)).
@@ -16,9 +15,9 @@ Global Instance into_sep_mapsto l q v :
   IntoSep false (l ↦{q} v) (l ↦{q/2} v) (l ↦{q/2} v).
 Proof. by rewrite /IntoSep heap_mapsto_op_split. Qed.
 
-Lemma tac_wp_alloc Δ Δ' N E j e v Φ :
-  to_val e = Some v → 
-  (Δ ⊢ heap_ctx N) → nclose N ⊆ E →
+Lemma tac_wp_alloc Δ Δ' E j e v Φ :
+  to_val e = Some v →
+  (Δ ⊢ heap_ctx) → nclose heapN ⊆ E →
   IntoLaterEnvs Δ Δ' →
   (∀ l, ∃ Δ'',
     envs_app false (Esnoc Enil j (l ↦ v)) Δ' = Some Δ'' ∧
@@ -32,8 +31,8 @@ Proof.
   by rewrite right_id HΔ'.
 Qed.
 
-Lemma tac_wp_load Δ Δ' N E i l q v Φ :
-  (Δ ⊢ heap_ctx N) → nclose N ⊆ E →
+Lemma tac_wp_load Δ Δ' E i l q v Φ :
+  (Δ ⊢ heap_ctx) → nclose heapN ⊆ E →
   IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I →
   (Δ' ⊢ |={E}=> Φ v) →
@@ -44,9 +43,9 @@ Proof.
   by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
-Lemma tac_wp_store Δ Δ' Δ'' N E i l v e v' Φ :
+Lemma tac_wp_store Δ Δ' Δ'' E i l v e v' Φ :
   to_val e = Some v' →
-  (Δ ⊢ heap_ctx N) → nclose N ⊆ E →
+  (Δ ⊢ heap_ctx) → nclose heapN ⊆ E →
   IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v')) Δ' = Some Δ'' →
@@ -58,9 +57,9 @@ Proof.
   rewrite right_id. by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
-Lemma tac_wp_cas_fail Δ Δ' N E i l q v e1 v1 e2 v2 Φ :
+Lemma tac_wp_cas_fail Δ Δ' E i l q v e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
-  (Δ ⊢ heap_ctx N) → nclose N ⊆ E →
+  (Δ ⊢ heap_ctx) → nclose heapN ⊆ E →
   IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I → v ≠ v1 →
   (Δ' ⊢ |={E}=> Φ (LitV (LitBool false))) →
@@ -71,9 +70,9 @@ Proof.
   by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
-Lemma tac_wp_cas_suc Δ Δ' Δ'' N E i l v e1 v1 e2 v2 Φ :
+Lemma tac_wp_cas_suc Δ Δ' Δ'' E i l v e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
-  (Δ ⊢ heap_ctx N) → nclose N ⊆ E →
+  (Δ ⊢ heap_ctx) → nclose heapN ⊆ E →
   IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I → v = v1 →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v2)) Δ' = Some Δ'' →
@@ -101,11 +100,11 @@ Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
       [reshape_expr e ltac:(fun K e' =>
          match eval hnf in e' with Alloc _ => wp_bind K end)
       |fail 1 "wp_alloc: cannot find 'Alloc' in" e];
-    eapply tac_wp_alloc with _ _ H _;
+    eapply tac_wp_alloc with _ H _;
       [let e' := match goal with |- to_val ?e' = _ => e' end in
        wp_done || fail "wp_alloc:" e' "not a value"
       |iAssumption || fail "wp_alloc: cannot find heap_ctx"
-      |solve_ndisj
+      |solve_ndisj || fail "wp_alloc: cannot open heap invariant"
       |apply _
       |first [intros l | fail 1 "wp_alloc:" l "not fresh"];
         eexists; split;
@@ -126,10 +125,10 @@ Tactic Notation "wp_load" :=
       |fail 1 "wp_load: cannot find 'Load' in" e];
     eapply tac_wp_load;
       [iAssumption || fail "wp_load: cannot find heap_ctx"
-      |solve_ndisj
+      |solve_ndisj || fail "wp_load: cannot open heap invariant"
       |apply _
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
-       iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?"
+       iAssumptionCore || fail "wp_load: cannot find" l "↦ ?"
       |wp_finish]
   | _ => fail "wp_load: not a 'wp'"
   end.
@@ -145,7 +144,7 @@ Tactic Notation "wp_store" :=
       [let e' := match goal with |- to_val ?e' = _ => e' end in
        wp_done || fail "wp_store:" e' "not a value"
       |iAssumption || fail "wp_store: cannot find heap_ctx"
-      |solve_ndisj
+      |solve_ndisj || fail "wp_store: cannot open heap invariant"
       |apply _
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
        iAssumptionCore || fail "wp_store: cannot find" l "↦ ?"
@@ -167,7 +166,7 @@ Tactic Notation "wp_cas_fail" :=
       |let e' := match goal with |- to_val ?e' = _ => e' end in
        wp_done || fail "wp_cas_fail:" e' "not a value"
       |iAssumption || fail "wp_cas_fail: cannot find heap_ctx"
-      |solve_ndisj
+      |solve_ndisj || fail "wp_cas_fail: cannot open heap invariant"
       |apply _
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
        iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?"
@@ -189,7 +188,7 @@ Tactic Notation "wp_cas_suc" :=
       |let e' := match goal with |- to_val ?e' = _ => e' end in
        wp_done || fail "wp_cas_suc:" e' "not a value"
       |iAssumption || fail "wp_cas_suc: cannot find heap_ctx"
-      |solve_ndisj
+      |solve_ndisj || fail "wp_cas_suc: cannot open heap invariant"
       |apply _
       |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
        iAssumptionCore || fail "wp_cas_suc: cannot find" l "↦ ?"

@@ -28,6 +28,7 @@ Class inG (Λ : language) (Σ : gFunctors) (A : cmraT) := InG {
   inG_prf : A = projT2 Σ inG_id (iPreProp Λ (globalF Σ))
 }.
 Arguments inG_id {_ _ _} _.
+Hint Mode inG - - + : typeclass_instances.
 
 Definition to_globalF `{i : inG Λ Σ A} (γ : gname) (a : A) : iGst Λ (globalF Σ) :=
   iprod_singleton (inG_id i) {[ γ := cmra_transport inG_prf a ]}.
@@ -39,17 +40,18 @@ Section to_globalF.
 Context `{i : inG Λ Σ A}.
 Implicit Types a : A.
 
-Global Instance to_globalF_ne γ n : Proper (dist n ==> dist n) (to_globalF γ).
+Global Instance to_globalF_ne γ n :
+  Proper (dist n ==> dist n) (@to_globalF Λ Σ A _ γ).
 Proof. by intros a a' Ha; apply iprod_singleton_ne; rewrite Ha. Qed.
 Lemma to_globalF_op γ a1 a2 :
   to_globalF γ (a1 ⋅ a2) ≡ to_globalF γ a1 ⋅ to_globalF γ a2.
 Proof.
   by rewrite /to_globalF iprod_op_singleton op_singleton cmra_transport_op.
 Qed.
-Global Instance to_globalF_timeless γ m: Timeless m → Timeless (to_globalF γ m).
+Global Instance to_globalF_timeless γ a : Timeless a → Timeless (to_globalF γ a).
 Proof. rewrite /to_globalF; apply _. Qed.
-Global Instance to_globalF_persistent γ m :
-  Persistent m → Persistent (to_globalF γ m).
+Global Instance to_globalF_persistent γ a :
+  Persistent a → Persistent (to_globalF γ a).
 Proof. rewrite /to_globalF; apply _. Qed.
 End to_globalF.
 

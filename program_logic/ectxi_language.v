@@ -9,7 +9,6 @@ Class EctxiLanguage (expr val ectx_item state : Type) := {
   of_val : val → expr;
   to_val : expr → option val;
   fill_item : ectx_item → expr → expr;
-  atomic : expr → bool;
   head_step : expr → state → expr → state → option expr → Prop;
 
   to_of_val v : to_val (of_val v) = Some v;
@@ -24,20 +23,11 @@ Class EctxiLanguage (expr val ectx_item state : Type) := {
 
   head_ctx_step_val Ki e σ1 e2 σ2 ef :
     head_step (fill_item Ki e) σ1 e2 σ2 ef → is_Some (to_val e);
-
-  atomic_not_val e : atomic e → to_val e = None;
-  atomic_step e1 σ1 e2 σ2 ef :
-    atomic e1 →
-    head_step e1 σ1 e2 σ2 ef →
-    is_Some (to_val e2);
-  atomic_fill_item e Ki :
-    atomic (fill_item Ki e) → is_Some (to_val e)
 }.
 
 Arguments of_val {_ _ _ _ _} _.
 Arguments to_val {_ _ _ _ _} _.
 Arguments fill_item {_ _ _ _ _} _ _.
-Arguments atomic {_ _ _ _ _} _.
 Arguments head_step {_ _ _ _ _} _ _ _ _ _.
 
 Arguments to_of_val {_ _ _ _ _} _.
@@ -47,9 +37,6 @@ Arguments fill_item_val {_ _ _ _ _} _ _ _.
 Arguments fill_item_no_val_inj {_ _ _ _ _} _ _ _ _ _ _ _.
 Arguments head_ctx_step_val {_ _ _ _ _} _ _ _ _ _ _ _.
 Arguments step_by_val {_ _ _ _ _} _ _ _ _ _ _ _ _ _ _ _.
-Arguments atomic_not_val {_ _ _ _ _} _ _.
-Arguments atomic_step {_ _ _ _ _} _ _ _ _ _ _ _.
-Arguments atomic_fill_item {_ _ _ _ _} _ _ _.
 
 Section ectxi_language.
   Context {expr val ectx_item state}
@@ -70,12 +57,6 @@ Section ectxi_language.
   Lemma fill_not_val K e : to_val e = None → to_val (fill K e) = None.
   Proof. rewrite !eq_None_not_Some. eauto using fill_val. Qed.
 
-  Lemma atomic_fill K e : atomic (fill K e) → to_val e = None → K = [].
-  Proof.
-    destruct K as [|Ki K]; [done|].
-    rewrite eq_None_not_Some=> /= ? []; eauto using atomic_fill_item, fill_val.
-  Qed.
-
   (* When something does a step, and another decomposition of the same expression
   has a non-val [e] in the hole, then [K] is a left sub-context of [K'] - in
   other words, [e] also contains the reducible expression *)
@@ -95,10 +76,9 @@ Section ectxi_language.
   Global Program Instance : EctxLanguage expr val ectx state :=
     (* For some reason, Coq always rejects the record syntax claiming I
        fixed fields of different records, even when I did not. *)
-    Build_EctxLanguage expr val ectx state of_val to_val [] (++) fill atomic head_step _ _ _ _ _ _ _ _ _ _ _ _.
+    Build_EctxLanguage expr val ectx state of_val to_val [] (++) fill head_step _ _ _ _ _ _ _ _ _.
   Solve Obligations with eauto using to_of_val, of_to_val, val_stuck,
-    atomic_not_val, atomic_step, fill_not_val, atomic_fill,
-    step_by_val, fold_right_app, app_eq_nil.
+    fill_not_val, step_by_val, fold_right_app, app_eq_nil.
 
   Global Instance ectxi_lang_ctx_item Ki :
     LanguageCtx (ectx_lang expr) (fill_item Ki).

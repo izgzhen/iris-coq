@@ -120,15 +120,12 @@ Section gmap.
     - apply big_sep_mono', Forall2_fmap, Forall_Forall2.
       apply Forall_forall=> -[i x] ? /=. by apply HΦ, elem_of_map_to_list.
   Qed.
-  Lemma big_sepM_proper Φ Ψ m1 m2 :
-    m1 ≡ m2 → (∀ k x, m1 !! k = Some x → m2 !! k = Some x → Φ k x ⊣⊢ Ψ k x) →
-    ([★ map] k ↦ x ∈ m1, Φ k x) ⊣⊢ ([★ map] k ↦ x ∈ m2, Ψ k x).
+  Lemma big_sepM_proper Φ Ψ m :
+    (∀ k x, m !! k = Some x → Φ k x ⊣⊢ Ψ k x) →
+    ([★ map] k ↦ x ∈ m, Φ k x) ⊣⊢ ([★ map] k ↦ x ∈ m, Ψ k x).
   Proof.
-    (* FIXME: Coq bug since 8.5pl1. Without the @ in [@lookup_weaken] it gives
-    File "./algebra/upred_big_op.v", line 114, characters 4-131:
-    Anomaly: Uncaught exception Univ.AlreadyDeclared. Please report. *)
-    intros [??] ?; apply (anti_symm (⊢)); apply big_sepM_mono;
-      eauto using equiv_entails, equiv_entails_sym, @lookup_weaken.
+    intros ?; apply (anti_symm (⊢)); apply big_sepM_mono;
+      eauto using equiv_entails, equiv_entails_sym, lookup_weaken.
   Qed.
 
   Global Instance big_sepM_ne m n :
@@ -194,7 +191,7 @@ Section gmap.
     ⊣⊢ (Ψ i x b ★ [★ map] k↦y ∈ m, Ψ k y (f k)).
   Proof.
     intros. rewrite big_sepM_insert // fn_lookup_insert.
-    apply sep_proper, big_sepM_proper; auto=> k y ??.
+    apply sep_proper, big_sepM_proper; auto=> k y ?.
     by rewrite fn_lookup_insert_ne; last set_solver.
   Qed.
   Lemma big_sepM_fn_insert' (Φ : K → uPred M) m i x P :
@@ -278,8 +275,8 @@ Section gset.
     X ≡ Y → (∀ x, x ∈ X → x ∈ Y → Φ x ⊣⊢ Ψ x) →
     ([★ set] x ∈ X, Φ x) ⊣⊢ ([★ set] x ∈ Y, Ψ x).
   Proof.
-    intros [??] ?; apply (anti_symm (⊢)); apply big_sepS_mono;
-      eauto using equiv_entails, equiv_entails_sym.
+    move=> /collection_equiv_spec [??] ?; apply (anti_symm (⊢));
+      apply big_sepS_mono; eauto using equiv_entails, equiv_entails_sym.
   Qed.
 
   Lemma big_sepS_ne X n :

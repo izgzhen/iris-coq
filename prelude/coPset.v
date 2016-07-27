@@ -1,7 +1,16 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
-(** This files implements an efficient implementation of finite/cofinite sets
-of positive binary naturals [positive]. *)
+(** This files implements the type [coPset] of efficient finite/cofinite sets
+of positive binary naturals [positive]. These sets are:
+
+- Closed under union, intersection and set complement.
+- Closed under splitting of cofinite sets.
+
+Also, they enjoy various nice properties, such as decidable equality and set
+membership, as well as extensional equality (i.e. [X = Y ↔ ∀ x, x ∈ X ↔ x ∈ Y]).
+
+Since [positive]s are bitstrings, we encode [coPset]s as trees that correspond
+to the decision function that map bitstrings to bools. *)
 From iris.prelude Require Export collections.
 From iris.prelude Require Import pmap gmap mapset.
 Local Open Scope positive_scope.
@@ -159,7 +168,6 @@ Instance coPset_difference : Difference coPset := λ X Y,
   let (t1,Ht1) := X in let (t2,Ht2) := Y in
   (t1 ∩ coPset_opp_raw t2) ↾ coPset_intersection_wf _ _ Ht1 (coPset_opp_wf _).
 
-Instance coPset_elem_of_dec (p : positive) (X : coPset) : Decision (p ∈ X) := _.
 Instance coPset_collection : Collection positive coPset.
 Proof.
   split; [split| |].
@@ -173,12 +181,28 @@ Proof.
     by rewrite elem_to_Pset_intersection,
       elem_to_Pset_opp, andb_True, negb_True.
 Qed.
+
 Instance coPset_leibniz : LeibnizEquiv coPset.
 Proof.
   intros X Y; rewrite elem_of_equiv; intros HXY.
   apply (sig_eq_pi _), coPset_eq; try apply proj2_sig.
   intros p; apply eq_bool_prop_intro, (HXY p).
 Qed.
+
+Instance coPset_elem_of_dec (p : positive) (X : coPset) : Decision (p ∈ X) := _.
+Instance coPset_equiv_dec (X Y : coPset) : Decision (X ≡ Y).
+Proof. refine (cast_if (decide (X = Y))); abstract (by fold_leibniz). Defined.
+Instance mapset_disjoint_dec (X Y : coPset) : Decision (X ⊥ Y).
+Proof.
+ refine (cast_if (decide (X ∩ Y = ∅)));
+  abstract (by rewrite disjoint_intersection_L).
+Defined.
+Instance mapset_subseteq_dec (X Y : coPset) : Decision (X ⊆ Y).
+Proof.
+ refine (cast_if (decide (X ∪ Y = Y))); abstract (by rewrite subseteq_union_L).
+Defined.
+
+(** * Top *)
 Lemma coPset_top_subseteq (X : coPset) : X ⊆ ⊤.
 Proof. done. Qed.
 Hint Resolve coPset_top_subseteq.
@@ -213,9 +237,9 @@ Proof.
   refine (cast_if (decide (coPset_finite (`X)))); by rewrite coPset_finite_spec.
 Defined.
 
-(** * Pick element from infitinite sets *)
-(* just depth-first search: using this to pick elements results in very
-unbalanced trees. *)
+(** * Pick element from infinite sets *)
+(* Implemented using depth-first search, which results in very unbalanced
+trees. *)
 Fixpoint coPpick_raw (t : coPset_raw) : option positive :=
   match t with
   | coPLeaf true | coPNode true _ _ => Some 1

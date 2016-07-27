@@ -1,7 +1,7 @@
 -Q . iris
 prelude/option.v
 prelude/fin_map_dom.v
-prelude/bsets.v
+prelude/bset.v
 prelude/fin_maps.v
 prelude/vector.v
 prelude/pmap.v
@@ -28,14 +28,15 @@ prelude/finite.v
 prelude/numbers.v
 prelude/nmap.v
 prelude/zmap.v
-prelude/co_pset.v
+prelude/coPset.v
 prelude/lexico.v
-prelude/sets.v
+prelude/set.v
 prelude/decidable.v
 prelude/list.v
 prelude/error.v
 prelude/functions.v
 prelude/hlist.v
+prelude/sorting.v
 algebra/cmra.v
 algebra/cmra_big_op.v
 algebra/cmra_tactics.v
@@ -58,9 +59,11 @@ algebra/frac.v
 algebra/csum.v
 algebra/list.v
 algebra/updates.v
+algebra/local_updates.v
+algebra/gset.v
+algebra/coPset.v
 program_logic/model.v
 program_logic/adequacy.v
-program_logic/hoare_lifting.v
 program_logic/lifting.v
 program_logic/invariants.v
 program_logic/viewshifts.v
@@ -88,7 +91,6 @@ heap_lang/wp_tactics.v
 heap_lang/lifting.v
 heap_lang/derived.v
 heap_lang/notation.v
-heap_lang/substitution.v
 heap_lang/heap.v
 heap_lang/lib/spawn.v
 heap_lang/lib/par.v
@@ -106,6 +108,8 @@ tests/one_shot.v
 tests/joining_existentials.v
 tests/proofmode.v
 tests/barrier_client.v
+tests/list_reverse.v
+tests/tree_sum.v
 proofmode/coq_tactics.v
 proofmode/pviewshifts.v
 proofmode/environments.v

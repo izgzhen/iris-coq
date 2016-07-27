@@ -194,7 +194,7 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
          |match k with
-          | GoalStd => apply into_assert_fallthrough
+          | GoalStd => apply into_assert_default
           | GoalPvs => apply _ || fail "iSpecialize: cannot generate pvs goal"
           end
          |env_cbv; reflexivity || fail "iSpecialize:" Hs "not found"
@@ -274,48 +274,48 @@ Tactic Notation "iRevert" constr(Hs) :=
     end in
   let Hs := words Hs in go Hs.
 
-Tactic Notation "iRevert" "{" ident(x1) "}" :=
+Tactic Notation "iRevert" "(" ident(x1) ")" :=
   iForallRevert x1.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) "}" :=
-  iForallRevert x2; iRevert { x1 }.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) ident(x3) "}" :=
-  iForallRevert x3; iRevert { x1 x2 }.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) ident(x3) ident(x4) "}" :=
-  iForallRevert x4; iRevert { x1 x2 x3 }.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) "}" :=
-  iForallRevert x5; iRevert { x1 x2 x3 x4 }.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) "}" :=
-  iForallRevert x6; iRevert { x1 x2 x3 x4 x5 }.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) ident(x7) "}" :=
-  iForallRevert x7; iRevert { x1 x2 x3 x4 x5 x6 }.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) ident(x7) ident(x8) "}" :=
-  iForallRevert x8; iRevert { x1 x2 x3 x4 x5 x6 x7 }.
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ")" :=
+  iForallRevert x2; iRevert ( x1 ).
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ident(x3) ")" :=
+  iForallRevert x3; iRevert ( x1 x2 ).
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ident(x3) ident(x4) ")" :=
+  iForallRevert x4; iRevert ( x1 x2 x3 ).
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ")" :=
+  iForallRevert x5; iRevert ( x1 x2 x3 x4 ).
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ")" :=
+  iForallRevert x6; iRevert ( x1 x2 x3 x4 x5 ).
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ident(x7) ")" :=
+  iForallRevert x7; iRevert ( x1 x2 x3 x4 x5 x6 ).
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ident(x7) ident(x8) ")" :=
+  iForallRevert x8; iRevert ( x1 x2 x3 x4 x5 x6 x7 ).
 
-Tactic Notation "iRevert" "{" ident(x1) "}" constr(Hs) :=
-  iRevert Hs; iRevert { x1 }.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) "}" constr(Hs) :=
-  iRevert Hs; iRevert { x1 x2 }.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) ident(x3) "}" constr(Hs) :=
-  iRevert Hs; iRevert { x1 x2 x3 }.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) ident(x3) ident(x4) "}"
+Tactic Notation "iRevert" "(" ident(x1) ")" constr(Hs) :=
+  iRevert Hs; iRevert ( x1 ).
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ")" constr(Hs) :=
+  iRevert Hs; iRevert ( x1 x2 ).
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ident(x3) ")" constr(Hs) :=
+  iRevert Hs; iRevert ( x1 x2 x3 ).
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ident(x3) ident(x4) ")"
     constr(Hs) :=
-  iRevert Hs; iRevert { x1 x2 x3 x4 }.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) "}" constr(Hs) :=
-  iRevert Hs; iRevert { x1 x2 x3 x4 x5 }.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) "}" constr(Hs) :=
-  iRevert Hs; iRevert { x1 x2 x3 x4 x5 x6 }.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) ident(x7) "}" constr(Hs) :=
-  iRevert Hs; iRevert { x1 x2 x3 x4 x5 x6 x7 }.
-Tactic Notation "iRevert" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) ident(x7) ident(x8) "}" constr(Hs) :=
-  iRevert Hs; iRevert { x1 x2 x3 x4 x5 x6 x7 x8 }.
+  iRevert Hs; iRevert ( x1 x2 x3 x4 ).
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ")" constr(Hs) :=
+  iRevert Hs; iRevert ( x1 x2 x3 x4 x5 ).
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ")" constr(Hs) :=
+  iRevert Hs; iRevert ( x1 x2 x3 x4 x5 x6 ).
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ident(x7) ")" constr(Hs) :=
+  iRevert Hs; iRevert ( x1 x2 x3 x4 x5 x6 x7 ).
+Tactic Notation "iRevert" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ident(x7) ident(x8) ")" constr(Hs) :=
+  iRevert Hs; iRevert ( x1 x2 x3 x4 x5 x6 x7 x8 ).
 
 (** * Disjunction *)
 Tactic Notation "iLeft" :=
@@ -457,37 +457,37 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
     end
   in let pat := intro_pat.parse_one pat in go H pat.
 
-Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1) "}"
+Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as @ pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) "}" constr(pat) :=
-  iExistDestruct H as x1 H; iDestructHyp H as { x2 } pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) "}" constr(pat) :=
-  iExistDestruct H as x1 H; iDestructHyp H as { x2 x3 } pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) "}"
+Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) ")" constr(pat) :=
+  iExistDestruct H as x1 H; iDestructHyp H as ( x2 ) pat.
+Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) ")" constr(pat) :=
+  iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 ) pat.
+Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) :=
-  iExistDestruct H as x1 H; iDestructHyp H as { x2 x3 x4 } pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
+  iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 x4 ) pat.
+Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) "}" constr(pat) :=
-  iExistDestruct H as x1 H; iDestructHyp H as { x2 x3 x4 x5 } pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x5) ")" constr(pat) :=
+  iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 x4 x5 ) pat.
+Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) simple_intropattern(x6) "}" constr(pat) :=
-  iExistDestruct H as x1 H; iDestructHyp H as { x2 x3 x4 x5 x6 } pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x5) simple_intropattern(x6) ")" constr(pat) :=
+  iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 x4 x5 x6 ) pat.
+Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) "}"
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) ")"
     constr(pat) :=
-  iExistDestruct H as x1 H; iDestructHyp H as { x2 x3 x4 x5 x6 x7 } pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "{" simple_intropattern(x1)
+  iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 x4 x5 x6 x7 ) pat.
+Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
-    simple_intropattern(x8) "}" constr(pat) :=
-  iExistDestruct H as x1 H; iDestructHyp H as { x2 x3 x4 x5 x6 x7 x8 } pat.
+    simple_intropattern(x8) ")" constr(pat) :=
+  iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 x4 x5 x6 x7 x8 ) pat.
 
 (** * Always *)
 Tactic Notation "iAlways":=
@@ -501,8 +501,17 @@ Tactic Notation "iNext":=
     |let P := match goal with |- FromLater ?P _ => P end in
      apply _ || fail "iNext:" P "does not contain laters"|].
 
+Tactic Notation "iTimeless" constr(H) :=
+  eapply tac_timeless with _ H _ _;
+    [let Q := match goal with |- TimelessElim ?Q => Q end in
+     apply _ || fail "iTimeless: cannot eliminate later in goal" Q
+    |env_cbv; reflexivity || fail "iTimeless:" H "not found"
+    |let P := match goal with |- TimelessP ?P => P end in
+     apply _ || fail "iTimeless: " P "not timeless"
+    |env_cbv; reflexivity|].
+
 (** * Introduction tactic *)
-Local Tactic Notation "iIntro" "{" simple_intropattern(x) "}" := first
+Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" := first
   [ (* (∀ _, _) *) apply tac_forall_intro; intros x
   | (* (?P → _) *) eapply tac_impl_intro_pure;
      [let P := match goal with |- IntoPure ?P _ => P end in
@@ -542,13 +551,13 @@ Local Tactic Notation "iIntroForall" :=
   lazymatch goal with
   | |- ∀ _, ?P => fail
   | |- ∀ _, _ => intro
-  | |- _ ⊢ (∀ x : _, _) => iIntro {x}
+  | |- _ ⊢ (∀ x : _, _) => iIntro (x)
   end.
 Local Tactic Notation "iIntro" :=
   lazymatch goal with
   | |- _ → ?P => intro
-  | |- _ ⊢ (_ -★ _) => iIntro {?} || let H := iFresh in iIntro #H || iIntro H
-  | |- _ ⊢ (_ → _) => iIntro {?} || let H := iFresh in iIntro #H || iIntro H
+  | |- _ ⊢ (_ -★ _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
+  | |- _ ⊢ (_ → _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
   end.
 
 Tactic Notation "iIntros" constr(pat) :=
@@ -571,7 +580,7 @@ Tactic Notation "iIntros" constr(pat) :=
     | IName ?H :: ?pats => iIntro H; go pats
     | IPersistent IAnom :: ?pats => let H := iFresh in iIntro #H; go pats
     | IAnom :: ?pats => let H := iFresh in iIntro H; go pats
-    | IAnomPure :: ?pats => iIntro {?}; go pats
+    | IAnomPure :: ?pats => iIntro (?); go pats
     | IPersistent ?pat :: ?pats =>
        let H := iFresh in iIntro #H; iDestructHyp H as pat; go pats
     | ?pat :: ?pats =>
@@ -581,61 +590,61 @@ Tactic Notation "iIntros" constr(pat) :=
   in let pats := intro_pat.parse pat in try iProof; go pats.
 Tactic Notation "iIntros" := iIntros "**".
 
-Tactic Notation "iIntros" "{" simple_intropattern(x1) "}" :=
-  try iProof; iIntro { x1 }.
-Tactic Notation "iIntros" "{" simple_intropattern(x1)
-    simple_intropattern(x2) "}" :=
-  iIntros { x1 }; iIntro { x2 }.
-Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
-    simple_intropattern(x3) "}" :=
-  iIntros { x1 x2 }; iIntro { x3 }.
-Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
-    simple_intropattern(x3) simple_intropattern(x4) "}" :=
-  iIntros { x1 x2 x3 }; iIntro { x4 }.
-Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
-    simple_intropattern(x3) simple_intropattern(x4) simple_intropattern(x5) "}" :=
-  iIntros { x1 x2 x3 x4 }; iIntro { x5 }.
-Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
+Tactic Notation "iIntros" "(" simple_intropattern(x1) ")" :=
+  try iProof; iIntro ( x1 ).
+Tactic Notation "iIntros" "(" simple_intropattern(x1)
+    simple_intropattern(x2) ")" :=
+  iIntros ( x1 ); iIntro ( x2 ).
+Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
+    simple_intropattern(x3) ")" :=
+  iIntros ( x1 x2 ); iIntro ( x3 ).
+Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
+    simple_intropattern(x3) simple_intropattern(x4) ")" :=
+  iIntros ( x1 x2 x3 ); iIntro ( x4 ).
+Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
+    simple_intropattern(x3) simple_intropattern(x4) simple_intropattern(x5) ")" :=
+  iIntros ( x1 x2 x3 x4 ); iIntro ( x5 ).
+Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
     simple_intropattern(x3) simple_intropattern(x4) simple_intropattern(x5)
-    simple_intropattern(x6) "}" :=
-  iIntros { x1 x2 x3 x4 x5 }; iIntro { x6 }.
-Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
+    simple_intropattern(x6) ")" :=
+  iIntros ( x1 x2 x3 x4 x5 ); iIntro ( x6 ).
+Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
     simple_intropattern(x3) simple_intropattern(x4) simple_intropattern(x5)
-    simple_intropattern(x6) simple_intropattern(x7) "}" :=
-  iIntros { x1 x2 x3 x4 x5 x6 }; iIntro { x7 }.
-Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
+    simple_intropattern(x6) simple_intropattern(x7) ")" :=
+  iIntros ( x1 x2 x3 x4 x5 x6 ); iIntro ( x7 ).
+Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
     simple_intropattern(x3) simple_intropattern(x4) simple_intropattern(x5)
-    simple_intropattern(x6) simple_intropattern(x7) simple_intropattern(x8) "}" :=
-  iIntros { x1 x2 x3 x4 x5 x6 x7 }; iIntro { x8 }.
+    simple_intropattern(x6) simple_intropattern(x7) simple_intropattern(x8) ")" :=
+  iIntros ( x1 x2 x3 x4 x5 x6 x7 ); iIntro ( x8 ).
 
-Tactic Notation "iIntros" "{" simple_intropattern(x1) "}" constr(p) :=
-  iIntros { x1 }; iIntros p.
-Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
-    "}" constr(p) :=
-  iIntros { x1 x2 }; iIntros p.
-Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
-    simple_intropattern(x3) "}" constr(p) :=
-  iIntros { x1 x2 x3 }; iIntros p.
-Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
-    simple_intropattern(x3) simple_intropattern(x4) "}" constr(p) :=
-  iIntros { x1 x2 x3 x4 }; iIntros p.
-Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
+Tactic Notation "iIntros" "(" simple_intropattern(x1) ")" constr(p) :=
+  iIntros ( x1 ); iIntros p.
+Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
+    ")" constr(p) :=
+  iIntros ( x1 x2 ); iIntros p.
+Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
+    simple_intropattern(x3) ")" constr(p) :=
+  iIntros ( x1 x2 x3 ); iIntros p.
+Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
+    simple_intropattern(x3) simple_intropattern(x4) ")" constr(p) :=
+  iIntros ( x1 x2 x3 x4 ); iIntros p.
+Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
     simple_intropattern(x3) simple_intropattern(x4) simple_intropattern(x5)
-    "}" constr(p) :=
-  iIntros { x1 x2 x3 x4 x5 }; iIntros p.
-Tactic Notation "iIntros" "{"simple_intropattern(x1) simple_intropattern(x2)
+    ")" constr(p) :=
+  iIntros ( x1 x2 x3 x4 x5 ); iIntros p.
+Tactic Notation "iIntros" "("simple_intropattern(x1) simple_intropattern(x2)
     simple_intropattern(x3) simple_intropattern(x4) simple_intropattern(x5)
-    simple_intropattern(x6) "}" constr(p) :=
-  iIntros { x1 x2 x3 x4 x5 x6 }; iIntros p.
-Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
+    simple_intropattern(x6) ")" constr(p) :=
+  iIntros ( x1 x2 x3 x4 x5 x6 ); iIntros p.
+Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
     simple_intropattern(x3) simple_intropattern(x4) simple_intropattern(x5)
-    simple_intropattern(x6) simple_intropattern(x7) "}" constr(p) :=
-  iIntros { x1 x2 x3 x4 x5 x6 x7 }; iIntros p.
-Tactic Notation "iIntros" "{" simple_intropattern(x1) simple_intropattern(x2)
+    simple_intropattern(x6) simple_intropattern(x7) ")" constr(p) :=
+  iIntros ( x1 x2 x3 x4 x5 x6 x7 ); iIntros p.
+Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
     simple_intropattern(x3) simple_intropattern(x4) simple_intropattern(x5)
     simple_intropattern(x6) simple_intropattern(x7) simple_intropattern(x8)
-    "}" constr(p) :=
-  iIntros { x1 x2 x3 x4 x5 x6 x7 x8 }; iIntros p.
+    ")" constr(p) :=
+  iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 ); iIntros p.
 
 (** * Destruct tactic *)
 Tactic Notation "iDestructHelp" open_constr(lem) "as" tactic(tac) :=
@@ -663,37 +672,37 @@ Tactic Notation "iDestructHelp" open_constr(lem) "as" tactic(tac) :=
 
 Tactic Notation "iDestruct" open_constr(H) "as" constr(pat) :=
   iDestructHelp H as (fun H => iDestructHyp H as pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1) "}"
+Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) "}"
+  iDestructHelp H as (fun H => iDestructHyp H as ( x1 ) pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) ")" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 ) pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) ")" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 x3 ) pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 x3 x4 ) pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x5) ")" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 ) pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) simple_intropattern(x6) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+    simple_intropattern(x5) simple_intropattern(x6) ")" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 x6 ) pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
-    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) "}"
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) ")"
     constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 x7 } pat).
-Tactic Notation "iDestruct" open_constr(H) "as" "{" simple_intropattern(x1)
+  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 ) pat).
+Tactic Notation "iDestruct" open_constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
-    simple_intropattern(x8) "}" constr(pat) :=
-  iDestructHelp H as (fun H => iDestructHyp H as { x1 x2 x3 x4 x5 x6 x7 x8 } pat).
+    simple_intropattern(x8) ")" constr(pat) :=
+  iDestructHelp H as (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 x8 ) pat).
 
 Tactic Notation "iDestruct" open_constr(H) "as" "%" simple_intropattern(pat) :=
   let Htmp := iFresh in iDestruct H as Htmp; last iPure Htmp as pat.
@@ -712,31 +721,31 @@ Local Ltac iLöbHelp IH tac_before tac_after :=
   end.
 
 Tactic Notation "iLöb" "as" constr (IH) := iLöbHelp IH idtac idtac.
-Tactic Notation "iLöb" "{" ident(x1) "}" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert { x1 }) ltac:(iIntros { x1 }).
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) "}" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert { x1 x2 }) ltac:(iIntros { x1 x2 }).
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) "}" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert { x1 x2 x3 }) ltac:(iIntros { x1 x2 x3 }).
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4) "}" "as"
+Tactic Notation "iLöb" "(" ident(x1) ")" "as" constr (IH) :=
+  iLöbHelp IH ltac:(iRevert ( x1 )) ltac:(iIntros ( x1 )).
+Tactic Notation "iLöb" "(" ident(x1) ident(x2) ")" "as" constr (IH) :=
+  iLöbHelp IH ltac:(iRevert ( x1 x2 )) ltac:(iIntros ( x1 x2 )).
+Tactic Notation "iLöb" "(" ident(x1) ident(x2) ident(x3) ")" "as" constr (IH) :=
+  iLöbHelp IH ltac:(iRevert ( x1 x2 x3 )) ltac:(iIntros ( x1 x2 x3 )).
+Tactic Notation "iLöb" "(" ident(x1) ident(x2) ident(x3) ident(x4) ")" "as"
     constr (IH):=
-  iLöbHelp IH ltac:(iRevert { x1 x2 x3 x4 }) ltac:(iIntros { x1 x2 x3 x4 }).
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) "}" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert { x1 x2 x3 x4 x5 })
-              ltac:(iIntros { x1 x2 x3 x4 x5 }).
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) "}" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert { x1 x2 x3 x4 x5 x6 })
-              ltac:(iIntros { x1 x2 x3 x4 x5 x6 }).
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) ident(x7) "}" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert { x1 x2 x3 x4 x5 x6 x7 })
-              ltac:(iIntros { x1 x2 x3 x4 x5 x6 x7 }).
-Tactic Notation "iLöb" "{" ident(x1) ident(x2) ident(x3) ident(x4)
-    ident(x5) ident(x6) ident(x7) ident(x8) "}" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert { x1 x2 x3 x4 x5 x6 x7 x8 })
-              ltac:(iIntros { x1 x2 x3 x4 x5 x6 x7 x8 }).
+  iLöbHelp IH ltac:(iRevert ( x1 x2 x3 x4 )) ltac:(iIntros ( x1 x2 x3 x4 )).
+Tactic Notation "iLöb" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ")" "as" constr (IH) :=
+  iLöbHelp IH ltac:(iRevert ( x1 x2 x3 x4 x5 ))
+              ltac:(iIntros ( x1 x2 x3 x4 x5 )).
+Tactic Notation "iLöb" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ")" "as" constr (IH) :=
+  iLöbHelp IH ltac:(iRevert ( x1 x2 x3 x4 x5 x6 ))
+              ltac:(iIntros ( x1 x2 x3 x4 x5 x6 )).
+Tactic Notation "iLöb" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ident(x7) ")" "as" constr (IH) :=
+  iLöbHelp IH ltac:(iRevert ( x1 x2 x3 x4 x5 x6 x7 ))
+              ltac:(iIntros ( x1 x2 x3 x4 x5 x6 x7 )).
+Tactic Notation "iLöb" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ident(x7) ident(x8) ")" "as" constr (IH) :=
+  iLöbHelp IH ltac:(iRevert ( x1 x2 x3 x4 x5 x6 x7 x8 ))
+              ltac:(iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 )).
 
 (** * Assert *)
 Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as" constr(pat) :=
@@ -752,7 +761,7 @@ Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as" constr(pat) :=
   | [SGoal ?k ?lr ?Hs] =>
      eapply tac_assert with _ _ _ lr Hs H Q _; (* (js:=Hs) (j:=H) (P:=Q) *)
        [match k with
-        | GoalStd => apply into_assert_fallthrough
+        | GoalStd => apply into_assert_default
         | GoalPvs => apply _ || fail "iAssert: cannot generate pvs goal"
         end
        |env_cbv; reflexivity || fail "iAssert:" Hs "not found"
