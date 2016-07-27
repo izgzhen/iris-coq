@@ -23,17 +23,17 @@ Proof.
   end; abstract congruence.
 Defined.
 Instance Zempty {A} : Empty (Zmap A) := ZMap None ∅ ∅.
-Instance Zlookup : Lookup Z Zmap := λ A i t,
+Instance Zlookup {A} : Lookup Z A (Zmap A) := λ i t,
   match i with
   | Z0 => Zmap_0 t | Zpos p => Zmap_pos t !! p | Zneg p => Zmap_neg t !! p
   end.
-Instance Zpartial_alter : PartialAlter Z Zmap := λ A f i t,
+Instance Zpartial_alter {A} : PartialAlter Z A (Zmap A) := λ f i t,
   match i, t with
   | Z0, ZMap o t t' => ZMap (f o) t t'
   | Zpos p, ZMap o t t' => ZMap o (partial_alter f p t) t'
   | Zneg p, ZMap o t t' => ZMap o t (partial_alter f p t')
   end.
-Instance Zto_list : FinMapToList Z Zmap := λ A t,
+Instance Zto_list {A} : FinMapToList Z A (Zmap A) := λ t,
   match t with
   | ZMap o t t' => default [] o (λ x, [(0,x)]) ++
      (prod_map Zpos id <$> map_to_list t) ++
@@ -93,5 +93,5 @@ Qed.
 (** * Finite sets *)
 (** We construct sets of [Z]s satisfying extensional equality. *)
 Notation Zset := (mapset Zmap).
-Instance Zmap_dom : Dom Zmap Zset := mapset_dom.
+Instance Zmap_dom {A} : Dom (Zmap A) Zset := mapset_dom.
 Instance: FinMapDom Z Zmap Zset := mapset_dom_spec.

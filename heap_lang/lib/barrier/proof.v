@@ -82,7 +82,7 @@ Lemma ress_split i i1 i2 Q R1 R2 P I :
 Proof.
   iIntros (????) "(#HQ&#H1&#H2&HQR&H)"; iDestruct "H" as (Ψ) "[HPΨ HΨ]".
   iDestruct (big_sepS_delete _ _ i with "HΨ") as "[#HΨi HΨ]"; first done.
-  iExists (fn_insert i1 R1 (fn_insert i2 R2 Ψ)). iSplitL "HQR HPΨ".
+  iExists (<[i1:=R1]> (<[i2:=R2]> Ψ)). iSplitL "HQR HPΨ".
   - iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by iSplit.
     iNext. iRewrite "Heq" in "HQR". iIntros "HP". iSpecialize ("HPΨ" with "HP").
     iDestruct (big_sepS_delete _ _ i with "HPΨ") as "[HΨ HPΨ]"; first done.

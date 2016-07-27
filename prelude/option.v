@@ -239,16 +239,16 @@ Instance maybe_Some {A} : Maybe (@Some A) := id.
 Arguments maybe_Some _ !_ /.
 
 (** * Union, intersection and difference *)
-Instance option_union_with : UnionWith option := λ A f mx my,
+Instance option_union_with {A} : UnionWith A (option A) := λ f mx my,
   match mx, my with
   | Some x, Some y => f x y
   | Some x, None => Some x
   | None, Some y => Some y
   | None, None => None
   end.
-Instance option_intersection_with : IntersectionWith option := λ A f mx my,
-  match mx, my with Some x, Some y => f x y | _, _ => None end.
-Instance option_difference_with : DifferenceWith option := λ A f mx my,
+Instance option_intersection_with {A} : IntersectionWith A (option A) :=
+  λ f mx my, match mx, my with Some x, Some y => f x y | _, _ => None end.
+Instance option_difference_with {A} : DifferenceWith A (option A) := λ f mx my,
   match mx, my with
   | Some x, Some y => f x y
   | Some x, None => Some x

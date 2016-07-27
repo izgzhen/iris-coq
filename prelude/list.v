@@ -57,15 +57,15 @@ Existing Instance list_equiv.
 
 (** The operation [l !! i] gives the [i]th element of the list [l], or [None]
 in case [i] is out of bounds. *)
-Instance list_lookup : Lookup nat list :=
-  fix go A i l {struct l} : option A := let _ : Lookup _ _ := @go in
+Instance list_lookup {A} : Lookup nat A (list A) :=
+  fix go i l {struct l} : option A := let _ : Lookup _ _ _ := @go in
   match l with
   | [] => None | x :: l => match i with 0 => Some x | S i => l !! i end
   end.
 
 (** The operation [alter f i l] applies the function [f] to the [i]th element
 of [l]. In case [i] is out of bounds, the list is returned unchanged. *)
-Instance list_alter : Alter nat list := λ A f,
+Instance list_alter {A} : Alter nat A (list A) := λ f,
   fix go i l {struct l} :=
   match l with
   | [] => []
@@ -74,8 +74,8 @@ Instance list_alter : Alter nat list := λ A f,
 
 (** The operation [<[i:=x]> l] overwrites the element at position [i] with the
 value [x]. In case [i] is out of bounds, the list is returned unchanged. *)
-Instance list_insert : Insert nat list :=
-  fix go A i y l {struct l} := let _ : Insert _ _ := @go in
+Instance list_insert {A} : Insert nat A (list A) :=
+  fix go i y l {struct l} := let _ : Insert _ _ _ := @go in
   match l with
   | [] => []
   | x :: l => match i with 0 => y :: l | S i => x :: <[i:=y]>l end
@@ -90,11 +90,11 @@ Instance: Params (@list_inserts) 1.
 (** The operation [delete i l] removes the [i]th element of [l] and moves
 all consecutive elements one position ahead. In case [i] is out of bounds,
 the list is returned unchanged. *)
-Instance list_delete : Delete nat list :=
-  fix go A (i : nat) (l : list A) {struct l} : list A :=
+Instance list_delete {A} : Delete nat (list A) :=
+  fix go (i : nat) (l : list A) {struct l} : list A :=
   match l with
   | [] => []
-  | x :: l => match i with 0 => l | S i => x :: @delete _ _ go _ i l end
+  | x :: l => match i with 0 => l | S i => x :: @delete _ _ go i l end
   end.
 
 (** The function [option_list o] converts an element [Some x] into the
@@ -2733,13 +2733,13 @@ Section setoid.
   Global Instance drop_proper n : Proper ((≡) ==> (≡)) (@drop A n).
   Proof. induction n; destruct 1; simpl; try constructor; auto. Qed.
   Global Instance list_lookup_proper i :
-    Proper ((≡) ==> (≡)) (lookup (M:=list) i).
+    Proper ((≡) ==> (≡)) (lookup (M:=list A) i).
   Proof. induction i; destruct 1; simpl; f_equiv; auto. Qed.
   Global Instance list_alter_proper f i :
-    Proper ((≡) ==> (≡)) f → Proper ((≡) ==> (≡)) (alter (M:=list) f i).
+    Proper ((≡) ==> (≡)) f → Proper ((≡) ==> (≡)) (alter (M:=list A) f i).
   Proof. intros. induction i; destruct 1; constructor; eauto. Qed.
   Global Instance list_insert_proper i :
-    Proper ((≡) ==> (≡) ==> (≡)) (insert (M:=list) i).
+    Proper ((≡) ==> (≡) ==> (≡)) (insert (M:=list A) i).
   Proof. intros ???; induction i; destruct 1; constructor; eauto. Qed.
   Global Instance list_inserts_proper i :
     Proper ((≡) ==> (≡) ==> (≡)) (@list_inserts A i).
@@ -2748,7 +2748,7 @@ Section setoid.
     induction Hk; intros ????; simpl; try f_equiv; naive_solver.
   Qed.
   Global Instance list_delete_proper i :
-    Proper ((≡) ==> (≡)) (delete (M:=list) i).
+    Proper ((≡) ==> (≡)) (delete (M:=list A) i).
   Proof. induction i; destruct 1; try constructor; eauto. Qed.
   Global Instance option_list_proper : Proper ((≡) ==> (≡)) (@option_list A).
   Proof. destruct 1; by constructor. Qed.

@@ -22,17 +22,17 @@ Proof.
 Defined.
 Instance Nempty {A} : Empty (Nmap A) := NMap None ∅.
 Global Opaque Nempty.
-Instance Nlookup : Lookup N Nmap := λ A i t,
+Instance Nlookup {A} : Lookup N A (Nmap A) := λ i t,
   match i with
   | N0 => Nmap_0 t
   | Npos p => Nmap_pos t !! p
   end.
-Instance Npartial_alter : PartialAlter N Nmap := λ A f i t,
+Instance Npartial_alter {A} : PartialAlter N A (Nmap A) := λ f i t,
   match i, t with
   | N0, NMap o t => NMap (f o) t
   | Npos p, NMap o t => NMap o (partial_alter f p t)
   end.
-Instance Nto_list : FinMapToList N Nmap := λ A t,
+Instance Nto_list {A} : FinMapToList N A (Nmap A) := λ t,
   match t with
   | NMap o t =>
      default [] o (λ x, [(0,x)]) ++ (prod_map Npos id <$> map_to_list t)
@@ -82,7 +82,7 @@ Qed.
 (** * Finite sets *)
 (** We construct sets of [N]s satisfying extensional equality. *)
 Notation Nset := (mapset Nmap).
-Instance Nmap_dom : Dom Nmap Nset := mapset_dom.
+Instance Nmap_dom {A} : Dom (Nmap A) Nset := mapset_dom.
 Instance: FinMapDom N Nmap Nset := mapset_dom_spec.
 
 (** * Fresh numbers *)

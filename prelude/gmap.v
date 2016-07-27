@@ -30,7 +30,7 @@ Proof.
 Defined.
 
 (** * Operations on the data structure *)
-Instance gmap_lookup `{Countable K} : Lookup K (gmap K) := λ A i m,
+Instance gmap_lookup `{Countable K} {A} : Lookup K A (gmap K A) := λ i m,
   let (m,_) := m in m !! encode i.
 Instance gmap_empty `{Countable K} {A} : Empty (gmap K A) := GMap ∅ I.
 Lemma gmap_partial_alter_wf `{Countable K} {A} (f : option A → option A) m i :
@@ -40,7 +40,8 @@ Proof.
   - rewrite decode_encode; eauto.
   - rewrite lookup_partial_alter_ne by done. by apply Hm.
 Qed.
-Instance gmap_partial_alter `{Countable K} : PartialAlter K (gmap K) := λ A f i m,
+Instance gmap_partial_alter `{Countable K} {A} :
+    PartialAlter K A (gmap K A) := λ f i m,
   let (m,Hm) := m in GMap (partial_alter f (encode i) m)
     (bool_decide_pack _ (gmap_partial_alter_wf f m i
     (bool_decide_unpack _ Hm))).
@@ -69,7 +70,7 @@ Instance gmap_merge `{Countable K} : Merge (gmap K) := λ A B C f m1 m2,
   let f' o1 o2 := match o1, o2 with None, None => None | _, _ => f o1 o2 end in
   GMap (merge f' m1 m2) (bool_decide_pack _ (gmap_merge_wf f _ _
     (bool_decide_unpack _ Hm1) (bool_decide_unpack _ Hm2))).
-Instance gmap_to_list `{Countable K} : FinMapToList K (gmap K) := λ A m,
+Instance gmap_to_list `{Countable K} {A} : FinMapToList K A (gmap K A) := λ m,
   let (m,_) := m in omap (λ ix : positive * A,
     let (i,x) := ix in (,x) <$> decode i) (map_to_list m).
 
@@ -113,7 +114,7 @@ Qed.
 
 (** * Finite sets *)
 Notation gset K := (mapset (gmap K)).
-Instance gset_dom `{Countable K} : Dom (gmap K) (gset K) := mapset_dom.
+Instance gset_dom `{Countable K} {A} : Dom (gmap K A) (gset K) := mapset_dom.
 Instance gset_dom_spec `{Countable K} :
   FinMapDom K (gmap K) (gset K) := mapset_dom_spec.
 

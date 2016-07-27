@@ -5,9 +5,10 @@ maps. We provide such an axiomatization, instead of implementing the domain
 function in a generic way, to allow more efficient implementations. *)
 From iris.prelude Require Export collections fin_maps.
 
-Class FinMapDom K M D `{FMap M, Lookup K M, ∀ A, Empty (M A), PartialAlter K M,
-    OMap M, Merge M, FinMapToList K M, ∀ i j : K, Decision (i = j),
-    Dom M D, ElemOf K D, Empty D, Singleton K D,
+Class FinMapDom K M D `{FMap M,
+    ∀ A, Lookup K A (M A), ∀ A, Empty (M A), ∀ A, PartialAlter K A (M A),
+    OMap M, Merge M, ∀ A, FinMapToList K A (M A), ∀ i j : K, Decision (i = j),
+    ∀ A, Dom (M A) D, ElemOf K D, Empty D, Singleton K D,
     Union D, Intersection D, Difference D} := {
   finmap_dom_map :>> FinMap K M;
   finmap_dom_collection :>> Collection K D;

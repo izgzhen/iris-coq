@@ -44,7 +44,7 @@ Global Instance natmap_eq_dec `{∀ x y : A, Decision (x = y)}
   end.
 
 Instance natmap_empty {A} : Empty (natmap A) := NatMap [] I.
-Instance natmap_lookup : Lookup nat natmap := λ A i m,
+Instance natmap_lookup {A} : Lookup nat A (natmap A) := λ i m,
   let (l,_) := m in mjoin (l !! i).
 
 Fixpoint natmap_singleton_raw {A} (i : nat) (x : A) : natmap_raw A :=
@@ -92,7 +92,7 @@ Proof.
   revert i. induction l; [intro | intros [|?]]; simpl; repeat case_match;
     eauto using natmap_singleton_wf, natmap_cons_canon_wf, natmap_wf_inv.
 Qed.
-Instance natmap_alter : PartialAlter nat natmap := λ A f i m,
+Instance natmap_alter {A} : PartialAlter nat A (natmap A) := λ f i m,
   let (l,Hl) := m in NatMap _ (natmap_alter_wf f i l Hl).
 Lemma natmap_lookup_alter_raw {A} (f : option A → option A) i l :
   mjoin (natmap_alter_raw f i l !! i) = f (mjoin (l !! i)).
@@ -188,7 +188,7 @@ Proof.
   revert i. induction l as [|[?|] ? IH]; simpl; try constructor; auto.
   rewrite natmap_elem_of_to_list_raw_aux. intros (?&?&?). lia.
 Qed.
-Instance natmap_to_list : FinMapToList nat natmap := λ A m,
+Instance natmap_to_list {A} : FinMapToList nat A (natmap A) := λ m,
   let (l,_) := m in natmap_to_list_raw 0 l.
 
 Definition natmap_map_raw {A B} (f : A → B) : natmap_raw A → natmap_raw B :=
@@ -256,7 +256,7 @@ Qed.
 
 (** Finally, we can construct sets of [nat]s satisfying extensional equality. *)
 Notation natset := (mapset natmap).
-Instance natmap_dom : Dom natmap natset := mapset_dom.
+Instance natmap_dom {A} : Dom (natmap A) natset := mapset_dom.
 Instance: FinMapDom nat natmap natset := mapset_dom_spec.
 
 (* Fixpoint avoids this definition from being unfolded *)

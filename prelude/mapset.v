@@ -118,7 +118,7 @@ Proof.
   - destruct (Is_true_reflect (f a)); naive_solver.
   - naive_solver.
 Qed.
-Instance mapset_dom : Dom M (mapset M) := λ A, mapset_dom_with (λ _, true).
+Instance mapset_dom {A} : Dom (M A) (mapset M) := mapset_dom_with (λ _, true).
 Instance mapset_dom_spec: FinMapDom K M (mapset M).
 Proof.
   split; try apply _. intros. unfold dom, mapset_dom, is_Some.

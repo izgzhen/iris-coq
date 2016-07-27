@@ -150,7 +150,7 @@ Lemma lookup_wld_op_l n r1 r2 i P :
   ✓{n} (r1⋅r2) → wld r1 !! i ≡{n}≡ Some P → (wld r1 ⋅ wld r2) !! i ≡{n}≡ Some P.
 Proof.
   move=>/wld_validN /(_ i) Hval Hi1P; move: Hi1P Hval; rewrite lookup_op.
-  case Hi : (wld r2 !! i)=> [P'|]; rewrite ?right_id // =>-> ?.
+  destruct (wld r2 !! i) as [P'|] eqn:Hi; rewrite !Hi ?right_id // =>-> ?.
   by constructor; rewrite (agree_op_inv _ P P') // agree_idemp.
 Qed.
 Lemma lookup_wld_op_r n r1 r2 i P :

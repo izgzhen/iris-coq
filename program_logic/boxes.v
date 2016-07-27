@@ -102,7 +102,7 @@ Proof.
   iPvs (inv_alloc N _ (slice_inv γ Q) with "[Hγ]") as "#Hinv"; first done.
   { iNext. iExists false; eauto. }
   iPvsIntro; iExists γ; repeat iSplit; auto.
-  iNext. iExists (fn_insert γ Q Φ); iSplit.
+  iNext. iExists (<[γ:=Q]> Φ); iSplit.
   - iNext. iRewrite "HeqP". by rewrite big_sepM_fn_insert'.
   - rewrite (big_sepM_fn_insert (λ _ _ P',  _ ★ _ _ P' ★ _ _ (_ _ P')))%I //.
     iFrame; eauto.

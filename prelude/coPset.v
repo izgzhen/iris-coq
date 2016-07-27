@@ -326,13 +326,13 @@ Proof.
 Qed.
 
 (** * Domain of finite maps *)
-Instance Pmap_dom_coPset : Dom Pmap coPset := λ A m, of_Pset (dom _ m).
+Instance Pmap_dom_coPset {A} : Dom (Pmap A) coPset := λ m, of_Pset (dom _ m).
 Instance Pmap_dom_coPset_spec: FinMapDom positive Pmap coPset.
 Proof.
   split; try apply _; intros A m i; unfold dom, Pmap_dom_coPset.
   by rewrite elem_of_of_Pset, elem_of_dom.
 Qed.
-Instance gmap_dom_coPset : Dom (gmap positive) coPset := λ A m,
+Instance gmap_dom_coPset {A} : Dom (gmap positive A) coPset := λ m,
   of_gset (dom _ m).
 Instance gmap_dom_coPset_spec: FinMapDom positive (gmap positive) coPset.
 Proof.

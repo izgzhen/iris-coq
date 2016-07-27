@@ -785,7 +785,7 @@ Notation "'guard' P 'as' H ; o" := (mguard P (λ H, o))
 (** In this section we define operational type classes for the operations
 on maps. In the file [fin_maps] we will axiomatize finite maps.
 The function look up [m !! k] should yield the element at key [k] in [m]. *)
-Class Lookup (K : Type) (M : Type → Type) := lookup : ∀ {A}, K → M A → option A.
+Class Lookup (K A M : Type) := lookup: K → M → option A.
 Instance: Params (@lookup) 4.
 Notation "m !! i" := (lookup i m) (at level 20) : C_scope.
 Notation "(!!)" := lookup (only parsing) : C_scope.
@@ -794,14 +794,13 @@ Notation "(!! i )" := (lookup i) (only parsing) : C_scope.
 Arguments lookup _ _ _ _ !_ !_ / : simpl nomatch.
 
 (** The singleton map *)
-Class SingletonM (K : Type) (M : Type → Type) :=
-  singletonM : ∀ {A}, K → A → M A.
+Class SingletonM K A M := singletonM: K → A → M.
 Instance: Params (@singletonM) 5.
 Notation "{[ k := a ]}" := (singletonM k a) (at level 1) : C_scope.
 
 (** The function insert [<[k:=a]>m] should update the element at key [k] with
 value [a] in [m]. *)
-Class Insert (K : Type) (M : Type → Type) := insert : ∀ {A}, K → A → M A → M A.
+Class Insert (K A M : Type) := insert: K → A → M → M.
 Instance: Params (@insert) 5.
 Notation "<[ k := a ]>" := (insert k a)
   (at level 5, right associativity, format "<[ k := a ]>") : C_scope.
@@ -810,14 +809,13 @@ Arguments insert _ _ _ _ !_ _ !_ / : simpl nomatch.
 (** The function delete [delete k m] should delete the value at key [k] in
 [m]. If the key [k] is not a member of [m], the original map should be
 returned. *)
-Class Delete (K : Type) (M : Type → Type) := delete : ∀ {A}, K → M A → M A.
-Instance: Params (@delete) 5.
-Arguments delete _ _ _ _ !_ !_ / : simpl nomatch.
+Class Delete (K M : Type) := delete: K → M → M.
+Instance: Params (@delete) 4.
+Arguments delete _ _ _ !_ !_ / : simpl nomatch.
 
 (** The function [alter f k m] should update the value at key [k] using the
 function [f], which is called with the original value. *)
-Class Alter (K : Type) (M : Type → Type) :=
-  alter : ∀ {A}, (A → A) → K → M A → M A.
+Class Alter (K A M : Type) := alter: (A → A) → K → M → M.
 Instance: Params (@alter) 5.
 Arguments alter {_ _ _ _} _ !_ !_ / : simpl nomatch.
 
@@ -825,16 +823,16 @@ Arguments alter {_ _ _ _} _ !_ !_ / : simpl nomatch.
 function [f], which is called with the original value at key [k] or [None]
 if [k] is not a member of [m]. The value at [k] should be deleted if [f] 
 yields [None]. *)
-Class PartialAlter (K : Type) (M : Type → Type) :=
-  partial_alter : ∀ {A}, (option A → option A) → K → M A → M A.
+Class PartialAlter (K A M : Type) :=
+  partial_alter: (option A → option A) → K → M → M.
 Instance: Params (@partial_alter) 4.
 Arguments partial_alter _ _ _ _ _ !_ !_ / : simpl nomatch.
 
 (** The function [dom C m] should yield the domain of [m]. That is a finite
 collection of type [C] that contains the keys that are a member of [m]. *)
-Class Dom (M : Type → Type) (C : Type) := dom : ∀ {A}, M A → C.
-Instance: Params (@dom) 4.
-Arguments dom {_} _ {_ _} !_ / : simpl nomatch, clear implicits.
+Class Dom (M C : Type) := dom: M → C.
+Instance: Params (@dom) 3.
+Arguments dom {_} _ {_} !_ / : simpl nomatch, clear implicits.
 
 (** The function [merge f m1 m2] should merge the maps [m1] and [m2] by
 constructing a new map whose value at key [k] is [f (m1 !! k) (m2 !! k)].*)
@@ -846,26 +844,38 @@ Arguments merge _ _ _ _ _ _ !_ !_ / : simpl nomatch.
 (** The function [union_with f m1 m2] is supposed to yield the union of [m1]
 and [m2] using the function [f] to combine values of members that are in
 both [m1] and [m2]. *)
-Class UnionWith (M : Type → Type) :=
-  union_with : ∀ {A}, (A → A → option A) → M A → M A → M A.
+Class UnionWith (A M : Type) :=
+  union_with: (A → A → option A) → M → M → M.
 Instance: Params (@union_with) 3.
 Arguments union_with {_ _ _} _ !_ !_ / : simpl nomatch.
 
 (** Similarly for intersection and difference. *)
-Class IntersectionWith (M : Type → Type) :=
-  intersection_with : ∀ {A}, (A → A → option A) → M A → M A → M A.
+Class IntersectionWith (A M : Type) :=
+  intersection_with: (A → A → option A) → M → M → M.
 Instance: Params (@intersection_with) 3.
 Arguments intersection_with {_ _ _} _ !_ !_ / : simpl nomatch.
 
-Class DifferenceWith (M : Type → Type) :=
-  difference_with : ∀ {A}, (A → A → option A) → M A → M A → M A.
+Class DifferenceWith (A M : Type) :=
+  difference_with: (A → A → option A) → M → M → M.
 Instance: Params (@difference_with) 3.
 Arguments difference_with {_ _ _} _ !_ !_ / : simpl nomatch.
 
-Definition intersection_with_list `{IntersectionWith M} {A}
-    (f : A → A → option A) : M A → list (M A) → M A :=
-  fold_right (intersection_with f).
+Definition intersection_with_list `{IntersectionWith A M}
+  (f : A → A → option A) : M → list M → M := fold_right (intersection_with f).
 Arguments intersection_with_list _ _ _ _ _ !_ /.
+
+Class LookupE (E K A M : Type) := lookupE: E → K → M → option A.
+Instance: Params (@lookupE) 6.
+Notation "m !!{ Γ } i" := (lookupE Γ i m)
+  (at level 20, format "m  !!{ Γ }  i") : C_scope.
+Notation "(!!{ Γ } )" := (lookupE Γ) (only parsing, Γ at level 1) : C_scope.
+Arguments lookupE _ _ _ _ _ _ !_ !_ / : simpl nomatch.
+
+Class InsertE (E K A M : Type) := insertE: E → K → A → M → M.
+Instance: Params (@insertE) 6.
+Notation "<[ k := a ]{ Γ }>" := (insertE Γ k a)
+  (at level 5, right associativity, format "<[ k := a ]{ Γ }>") : C_scope.
+Arguments insertE _ _ _ _ _ _ !_ _ !_ / : simpl nomatch.
 
 
 (** * Axiomatization of collections *)

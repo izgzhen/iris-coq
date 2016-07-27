@@ -23,11 +23,11 @@ prove well founded recursion on finite maps. *)
 which enables us to give a generic implementation of [union_with],
 [intersection_with], and [difference_with]. *)
 
-Class FinMapToList (K : Type) (M : Type → Type) :=
-  map_to_list : ∀ {A}, M A → list (K * A).
+Class FinMapToList K A M := map_to_list: M → list (K * A).
 
-Class FinMap K M `{FMap M, Lookup K M, ∀ A, Empty (M A), PartialAlter K M,
-    OMap M, Merge M, FinMapToList K M, ∀ i j : K, Decision (i = j)} := {
+Class FinMap K M `{FMap M, ∀ A, Lookup K A (M A), ∀ A, Empty (M A), ∀ A,
+    PartialAlter K A (M A), OMap M, Merge M, ∀ A, FinMapToList K A (M A),
+    ∀ i j : K, Decision (i = j)} := {
   map_eq {A} (m1 m2 : M A) : (∀ i, m1 !! i = m2 !! i) → m1 = m2;
   lookup_empty {A} i : (∅ : M A) !! i = None;
   lookup_partial_alter {A} f (m : M A) i :
@@ -48,47 +48,47 @@ Class FinMap K M `{FMap M, Lookup K M, ∀ A, Empty (M A), PartialAlter K M,
 finite map implementations. These generic implementations do not cause a
 significant performance loss to make including them in the finite map interface
 worthwhile. *)
-Instance map_insert `{PartialAlter K M} : Insert K M :=
-  λ A i x, partial_alter (λ _, Some x) i.
-Instance map_alter `{PartialAlter K M} : Alter K M :=
-  λ A f, partial_alter (fmap f).
-Instance map_delete `{PartialAlter K M} : Delete K M :=
-  λ A, partial_alter (λ _, None).
-Instance map_singleton `{PartialAlter K M, ∀ A, Empty (M A)} : SingletonM K M :=
-  λ A i x, <[i:=x]> ∅.
+Instance map_insert `{PartialAlter K A M} : Insert K A M :=
+  λ i x, partial_alter (λ _, Some x) i.
+Instance map_alter `{PartialAlter K A M} : Alter K A M :=
+  λ f, partial_alter (fmap f).
+Instance map_delete `{PartialAlter K A M} : Delete K M :=
+  partial_alter (λ _, None).
+Instance map_singleton `{PartialAlter K A M, Empty M} :
+  SingletonM K A M := λ i x, <[i:=x]> ∅.
 
-Definition map_of_list `{Insert K M, Empty (M A)} : list (K * A) → M A :=
+Definition map_of_list `{Insert K A M, Empty M} : list (K * A) → M :=
   fold_right (λ p, <[p.1:=p.2]>) ∅.
-Definition map_of_collection `{Elements K C, Insert K M, Empty (M A)}
-    (f : K → option A) (X : C) : M A :=
+Definition map_of_collection `{Elements K C, Insert K A M, Empty M}
+    (f : K → option A) (X : C) : M :=
   map_of_list (omap (λ i, (i,) <$> f i) (elements X)).
 
-Instance map_union_with `{Merge M} : UnionWith M :=
-  λ A f, merge (union_with f).
-Instance map_intersection_with `{Merge M} : IntersectionWith M :=
-  λ A f, merge (intersection_with f).
-Instance map_difference_with `{Merge M} : DifferenceWith M :=
-  λ A f, merge (difference_with f).
+Instance map_union_with `{Merge M} {A} : UnionWith A (M A) :=
+  λ f, merge (union_with f).
+Instance map_intersection_with `{Merge M} {A} : IntersectionWith A (M A) :=
+  λ f, merge (intersection_with f).
+Instance map_difference_with `{Merge M} {A} : DifferenceWith A (M A) :=
+  λ f, merge (difference_with f).
 
-Instance map_equiv `{Lookup K M, Equiv A} : Equiv (M A) | 18 :=
+Instance map_equiv `{∀ A, Lookup K A (M A), Equiv A} : Equiv (M A) | 18 :=
   λ m1 m2, ∀ i, m1 !! i ≡ m2 !! i.
 
 (** The relation [intersection_forall R] on finite maps describes that the
 relation [R] holds for each pair in the intersection. *)
-Definition map_Forall `{Lookup K M} {A} (P : K → A → Prop) : M A → Prop :=
+Definition map_Forall `{Lookup K A M} (P : K → A → Prop) : M → Prop :=
   λ m, ∀ i x, m !! i = Some x → P i x.
-Definition map_relation `{Lookup K M} {A B} (R : A → B → Prop)
+Definition map_relation `{∀ A, Lookup K A (M A)} {A B} (R : A → B → Prop)
     (P : A → Prop) (Q : B → Prop) (m1 : M A) (m2 : M B) : Prop := ∀ i,
   option_relation R P Q (m1 !! i) (m2 !! i).
-Definition map_included `{Lookup K M} {A}
+Definition map_included `{∀ A, Lookup K A (M A)} {A}
   (R : relation A) : relation (M A) := map_relation R (λ _, False) (λ _, True).
-Definition map_disjoint `{Lookup K M} {A} : relation (M A) :=
+Definition map_disjoint `{∀ A, Lookup K A (M A)} {A} : relation (M A) :=
   map_relation (λ _ _, False) (λ _, True) (λ _, True).
 Infix "⊥ₘ" := map_disjoint (at level 70) : C_scope.
 Hint Extern 0 (_ ⊥ₘ _) => symmetry; eassumption.
 Notation "( m ⊥ₘ.)" := (map_disjoint m) (only parsing) : C_scope.
 Notation "(.⊥ₘ m )" := (λ m2, m2 ⊥ₘ m) (only parsing) : C_scope.
-Instance map_subseteq `{Lookup K M} {A} : SubsetEq (M A) :=
+Instance map_subseteq `{∀ A, Lookup K A (M A)} {A} : SubsetEq (M A) :=
   map_included (=).
 
 (** The union of two finite maps only has a meaningful definition for maps
@@ -106,8 +106,8 @@ Instance map_difference `{Merge M} {A} : Difference (M A) :=
 
 (** A stronger variant of map that allows the mapped function to use the index
 of the elements. Implemented by conversion to lists, so not very efficient. *)
-Definition map_imap `{Insert K M, ∀ A, Empty (M A),
-    FinMapToList K M} {A B} (f : K → A → option B) (m : M A) : M B :=
+Definition map_imap `{∀ A, Insert K A (M A), ∀ A, Empty (M A),
+    ∀ A, FinMapToList K A (M A)} {A B} (f : K → A → option B) (m : M A) : M B :=
   map_of_list (omap (λ ix, (fst ix,) <$> curry f ix) (map_to_list m)).
 
 (** * Theorems *)
@@ -124,25 +124,27 @@ Section setoid.
     - by intros m1 m2 ? i.
     - by intros m1 m2 m3 ?? i; trans (m2 !! i).
   Qed.
-  Global Instance lookup_proper (i: K) : Proper ((≡) ==> (≡)) (lookup (M:=M) i).
+  Global Instance lookup_proper (i : K) :
+    Proper ((≡) ==> (≡)) (lookup (M:=M A) i).
   Proof. by intros m1 m2 Hm. Qed.
   Global Instance partial_alter_proper :
-    Proper (((≡) ==> (≡)) ==> (=) ==> (≡) ==> (≡)) (partial_alter (M:=M)).
+    Proper (((≡) ==> (≡)) ==> (=) ==> (≡) ==> (≡)) (partial_alter (M:=M A)).
   Proof.
     by intros f1 f2 Hf i ? <- m1 m2 Hm j; destruct (decide (i = j)) as [->|];
       rewrite ?lookup_partial_alter, ?lookup_partial_alter_ne by done;
       try apply Hf; apply lookup_proper.
   Qed.
   Global Instance insert_proper (i : K) :
-    Proper ((≡) ==> (≡) ==> (≡)) (insert (M:=M) i).
+    Proper ((≡) ==> (≡) ==> (≡)) (insert (M:=M A) i).
   Proof. by intros ???; apply partial_alter_proper; [constructor|]. Qed.
-  Global Instance singleton_proper (i : K) :
-    Proper ((≡) ==> (≡)) (singletonM (M:=M) i).
+  Global Instance singleton_proper k :
+    Proper ((≡) ==> (≡)) (singletonM k : A → M A).
   Proof. by intros ???; apply insert_proper. Qed.
-  Global Instance delete_proper (i: K) : Proper ((≡) ==> (≡)) (delete (M:=M) i).
+  Global Instance delete_proper (i : K) :
+    Proper ((≡) ==> (≡)) (delete (M:=M A) i).
   Proof. by apply partial_alter_proper; [constructor|]. Qed.
   Global Instance alter_proper :
-    Proper (((≡) ==> (≡)) ==> (=) ==> (≡) ==> (≡)) (alter (M:=M)).
+    Proper (((≡) ==> (≡)) ==> (=) ==> (≡) ==> (≡)) (alter (A:=A) (M:=M A)).
   Proof.
     intros ?? Hf; apply partial_alter_proper.
     by destruct 1; constructor; apply Hf.
@@ -154,7 +156,7 @@ Section setoid.
     by intros Hf ?? Hm1 ?? Hm2 i; rewrite !lookup_merge by done; apply Hf.
   Qed.
   Global Instance union_with_proper :
-    Proper (((≡) ==> (≡) ==> (≡)) ==> (≡) ==> (≡) ==>(≡)) (union_with (M:=M)).
+    Proper (((≡) ==> (≡) ==> (≡)) ==> (≡) ==> (≡) ==>(≡)) (union_with (M:=M A)).
   Proof.
     intros ?? Hf ?? Hm1 ?? Hm2 i; apply (merge_ext _ _); auto.
     by do 2 destruct 1; first [apply Hf | constructor].
