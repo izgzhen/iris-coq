@@ -1209,6 +1209,11 @@ Proof.
   exists (y ⋅ x3); split; first by rewrite -assoc.
   exists y; eauto using cmra_includedN_l.
 Qed.
+Lemma rvs_later_pure φ : (|=r=> ▷ ■ φ) ⊢ ▷ ■ φ.
+Proof.
+  unseal; split=> -[|n] x ? Hvs; simpl in *; first done.
+  by destruct (Hvs (S n) (core x)) as (x'&?&?); [omega|by rewrite cmra_core_r|].
+Qed.
 
 (** * Derived rules *)
 Global Instance rvs_mono' : Proper ((⊢) ==> (⊢)) (@uPred_rvs M).
