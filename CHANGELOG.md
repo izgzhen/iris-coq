@@ -14,7 +14,7 @@ This version accompanies the final ICFP paper.
   about values and closed expressions.
 * [program_logic/language] The language does not define its own "atomic"
   predicate.  Instead, atomicity is defined as reducing in one step to a value.
-* [# program_logic/lifting] Lifting lemmas no longer round-trip through a
+* [program_logic/lifting] Lifting lemmas no longer round-trip through a
   user-chosen predicate to define the configurations we can reduce to; they
   directly relate to the operational semantics.  This is equivalent and
   much simpler to read.

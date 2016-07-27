@@ -221,9 +221,9 @@ We can derive some specialized forms of the lifting axioms for the operational s
 \begin{mathparpagebreakable}
   \infer[wp-lift-atomic-step]
   {\atomic(\expr_1) \and
-   \red(\expr_1, \state_1) \and
-   \All \expr_2, \state_2, \expr_\f. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \pred(\expr_2,\state_2,\expr_\f)}
-  {\later\ownPhys{\state_1} * \later\All \val_2, \state_2, \expr_\f. \pred(\ofval(\val), \state_2, \expr_\f) \land \ownPhys{\state_2} \wand \prop[\val_2/\var] * \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
+   \red(\expr_1, \state_1)}
+  { {\begin{inbox}~~\later\ownPhys{\state_1} * \later\All \val_2, \state_2, \expr_\f. (\expr_1,\state_1 \step \ofval(\val),\state_2,\expr_\f)  \land \ownPhys{\state_2} \wand \prop[\val_2/\var] * \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} {}\\ \proves  \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}
+  \end{inbox}} }
 
   \infer[wp-lift-atomic-det-step]
   {\atomic(\expr_1) \and
@@ -236,44 +236,6 @@ We can derive some specialized forms of the lifting axioms for the operational s
    \All \state_1. \red(\expr_1, \state_1) \and
    \All \state_1, \expr_2', \state_2, \expr_\f'. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \state_1 = \state_2 \land \expr_2 = \expr_2' \land \expr_\f = \expr_\f'}
   {\later ( \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \wpre{\expr_\f}[\top]{\Ret\any.\TRUE}) \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
-\end{mathparpagebreakable}
-
-Furthermore, we derive some forms that directly involve view shifts and Hoare triples.
-\begin{mathparpagebreakable}
-  \infer[ht-lift-step]
-  {\mask_2 \subseteq \mask_1 \and
-   \toval(\expr_1) = \bot \and
-   \red(\expr_1, \state_1) \and
-   \All \expr_2, \state_2, \expr_\f. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \pred(\expr_2,\state_2,\expr_\f) \\\\
-   \prop \vs[\mask_1][\mask_2] \later\ownPhys{\state_1} * \later\prop' \and
-   \All \expr_2, \state_2, \expr_\f. \pred(\expr_2, \state_2, \expr_\f) * \ownPhys{\state_2} * \prop' \vs[\mask_2][\mask_1] \propB_1 * \propB_2 \\\\
-   \All \expr_2, \state_2, \expr_\f. \hoare{\propB_1}{\expr_2}{\Ret\val.\propC}[\mask_1] \and
-   \All \expr_2, \state_2, \expr_\f. \hoare{\propB_2}{\expr_\f}{\Ret\any. \TRUE}[\top]}
-  { \hoare\prop{\expr_1}{\Ret\val.\propC}[\mask_1] }
-
-  \infer[ht-lift-atomic-step]
-  {\atomic(\expr_1) \and
-   \red(\expr_1, \state_1) \and
-   \All \expr_2, \state_2, \expr_\f. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \pred(\expr_2,\state_2,\expr_\f) \\\\
-   \prop \vs[\mask_1][\mask_2] \later\ownPhys{\state_1} * \later\prop' \and
-   \All \expr_2, \state_2, \expr_\f. \hoare{\pred(\expr_2,\state_2,\expr_\f) * \prop}{\expr_\f}{\Ret\any. \TRUE}[\top]}
-  { \hoare{\later\ownPhys{\state_1} * \later\prop}{\expr_1}{\Ret\val.\Exists \state_2, \expr_\f. \ownPhys{\state_2} * \pred(\ofval(\expr_2),\state_2,\expr_\f)}[\mask_1] }
-
-  \infer[ht-lift-pure-step]
-  {\toval(\expr_1) = \bot \and
-   \All\state_1. \red(\expr_1, \state_1) \and
-   \All \state_1, \expr_2, \state_2, \expr_\f. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \state_1 = \state_2 \land \pred(\expr_2,\expr_\f) \\\\
-   \All \expr_2, \expr_\f. \hoare{\pred(\expr_2,\expr_\f) * \prop}{\expr_2}{\Ret\val.\propB}[\mask_1] \and
-   \All \expr_2, \expr_\f. \hoare{\pred(\expr_2,\expr_\f) * \prop'}{\expr_\f}{\Ret\any. \TRUE}[\top]}
-  { \hoare{\later(\prop*\prop')}{\expr_1}{\Ret\val.\propB}[\mask_1] }
-
-  \infer[ht-lift-pure-det-step]
-  {\toval(\expr_1) = \bot \and
-   \All\state_1. \red(\expr_1, \state_1) \and
-   \All \state_1, \expr_2', \state_2, \expr_\f'. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \state_1 = \state_2 \land \expr_2 = \expr_2' \land \expr_\f = \expr_\f' \\\\
-   \hoare{\prop}{\expr_2}{\Ret\val.\propB}[\mask_1] \and
-   \hoare{\prop'}{\expr_\f}{\Ret\any. \TRUE}[\top]}
-  { \hoare{\later(\prop*\prop')}{\expr_1}{\Ret\val.\propB}[\mask_1] }
 \end{mathparpagebreakable}
 
 \subsection{Global functor and ghost ownership}
