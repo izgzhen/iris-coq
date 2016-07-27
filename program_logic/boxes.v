@@ -70,8 +70,7 @@ Proof.
   rewrite /box_own_prop -!own_op own_valid_l prod_validI; iIntros "[[Hb _] Hγ]".
   iDestruct "Hb" as % [[[] [= ->]%leibniz_equiv] ?]%auth_valid_discrete.
   iApply (@own_update with "Hγ"); apply prod_update; simpl; last reflexivity.
-  rewrite -{1}(right_id ∅ _ (Excl' b2)) -{1}(right_id ∅ _ (Excl' b3)).
-  by apply auth_update, option_local_update, exclusive_local_update.
+  by apply auth_update_no_frame, option_local_update, exclusive_local_update.
 Qed.
 
 Lemma box_own_agree γ Q1 Q2 :
