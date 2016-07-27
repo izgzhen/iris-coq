@@ -17,7 +17,7 @@ Global Instance from_assumption_always_r P Q :
   FromAssumption true P Q → FromAssumption true P (□ Q).
 Proof. rewrite /FromAssumption=><-. by rewrite always_always. Qed.
 Global Instance from_assumption_rvs p P Q :
-  FromAssumption p P Q → FromAssumption p P (|==r> Q)%I.
+  FromAssumption p P Q → FromAssumption p P (|=r=> Q)%I.
 Proof. rewrite /FromAssumption=>->. apply rvs_intro. Qed.
 
 Class IntoPure (P : uPred M) (φ : Prop) := into_pure : P ⊢ ■ φ.
@@ -38,7 +38,7 @@ Global Instance from_pure_eq {A : cofeT} (a b : A) : FromPure (a ≡ b) (a ≡ b
 Proof. intros ->. apply eq_refl. Qed.
 Global Instance from_pure_valid {A : cmraT} (a : A) : FromPure (✓ a) (✓ a).
 Proof. intros ?. by apply valid_intro. Qed.
-Global Instance from_pure_rvs P φ : FromPure P φ → FromPure (|==r> P) φ.
+Global Instance from_pure_rvs P φ : FromPure P φ → FromPure (|=r=> P) φ.
 Proof. intros ??. by rewrite -rvs_intro (from_pure P). Qed.
 
 Class IntoPersistentP (P Q : uPred M) := into_persistentP : P ⊢ □ Q.
@@ -111,7 +111,7 @@ Proof. apply and_elim_r', impl_wand. Qed.
 Global Instance into_wand_always R P Q : IntoWand R P Q → IntoWand (□ R) P Q.
 Proof. rewrite /IntoWand=> ->. apply always_elim. Qed.
 Global Instance into_wand_rvs R P Q :
-  IntoWand R P Q → IntoWand R (|==r> P) (|==r> Q) | 100.
+  IntoWand R P Q → IntoWand R (|=r=> P) (|=r=> Q) | 100.
 Proof. rewrite /IntoWand=>->. apply wand_intro_l. by rewrite rvs_wand_r. Qed.
 
 Class FromAnd (P Q1 Q2 : uPred M) := from_and : Q1 ∧ Q2 ⊢ P.
@@ -144,7 +144,7 @@ Global Instance from_sep_later P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (▷ P) (▷ Q1) (▷ Q2).
 Proof. rewrite /FromSep=> <-. by rewrite later_sep. Qed.
 Global Instance from_sep_rvs P Q1 Q2 :
-  FromSep P Q1 Q2 → FromSep (|==r> P) (|==r> Q1) (|==r> Q2).
+  FromSep P Q1 Q2 → FromSep (|=r=> P) (|=r=> Q1) (|=r=> Q2).
 Proof. rewrite /FromSep=><-. apply rvs_sep. Qed.
 
 Global Instance from_sep_ownM (a b : M) :
@@ -293,7 +293,7 @@ Global Instance frame_forall {A} R (Φ Ψ : A → uPred M) :
   (∀ a, Frame R (Φ a) (Ψ a)) → Frame R (∀ x, Φ x) (∀ x, Ψ x).
 Proof. rewrite /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
 
-Global Instance frame_rvs R P Q : Frame R P Q → Frame R (|==r> P) (|==r> Q).
+Global Instance frame_rvs R P Q : Frame R P Q → Frame R (|=r=> P) (|=r=> Q).
 Proof. rewrite /Frame=><-. by rewrite rvs_frame_l. Qed.
 
 Class FromOr (P Q1 Q2 : uPred M) := from_or : Q1 ∨ Q2 ⊢ P.
@@ -301,7 +301,7 @@ Global Arguments from_or : clear implicits.
 Global Instance from_or_or P1 P2 : FromOr (P1 ∨ P2) P1 P2.
 Proof. done. Qed.
 Global Instance from_or_rvs P Q1 Q2 :
-  FromOr P Q1 Q2 → FromOr (|==r> P) (|==r> Q1) (|==r> Q2).
+  FromOr P Q1 Q2 → FromOr (|=r=> P) (|=r=> Q1) (|=r=> Q2).
 Proof. rewrite /FromOr=><-. apply or_elim; apply rvs_mono; auto with I. Qed.
 
 Class IntoOr P Q1 Q2 := into_or : P ⊢ Q1 ∨ Q2.
@@ -318,7 +318,7 @@ Global Arguments from_exist {_} _ _ {_}.
 Global Instance from_exist_exist {A} (Φ: A → uPred M): FromExist (∃ a, Φ a) Φ.
 Proof. done. Qed.
 Global Instance from_exist_rvs {A} P (Φ : A → uPred M) :
-  FromExist P Φ → FromExist (|==r> P) (λ a, |==r> Φ a)%I.
+  FromExist P Φ → FromExist (|=r=> P) (λ a, |=r=> Φ a)%I.
 Proof.
   rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
 Qed.
@@ -337,7 +337,7 @@ Proof. rewrite /IntoExist=> HP. by rewrite HP always_exist. Qed.
 
 Class TimelessElim (Q : uPred M) :=
   timeless_elim `{!TimelessP P} : ▷ P ★ (P -★ Q) ⊢ Q.
-Global Instance timeless_elim_rvs Q : TimelessElim (|==r> Q).
+Global Instance timeless_elim_rvs Q : TimelessElim (|=r=> Q).
 Proof.
   intros P ?. by rewrite (rvs_timeless P) rvs_frame_r wand_elim_r rvs_trans.
 Qed.

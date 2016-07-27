@@ -310,8 +310,12 @@ Notation "▷ P" := (uPred_later P)
   (at level 20, right associativity) : uPred_scope.
 Infix "≡" := uPred_eq : uPred_scope.
 Notation "✓ x" := (uPred_valid x) (at level 20) : uPred_scope.
-Notation "|==r> Q" := (uPred_rvs Q)
-  (at level 99, Q at level 200, format "|==r>  Q") : uPred_scope.
+Notation "|=r=> Q" := (uPred_rvs Q)
+  (at level 99, Q at level 200, format "|=r=>  Q") : uPred_scope.
+Notation "P =r=> Q" := (P ⊢ |=r=> Q)
+  (at level 99, Q at level 200, only parsing) : C_scope.
+Notation "P =r=★ Q" := (P -★ |=r=> Q)%I
+  (at level 99, Q at level 200, format "P  =r=★  Q") : uPred_scope.
 
 Definition uPred_iff {M} (P Q : uPred M) : uPred M := ((P → Q) ∧ (Q → P))%I.
 Instance: Params (@uPred_iff) 1.
@@ -1167,27 +1171,27 @@ Proof.
 Qed.
 
 (* Viewshifts *)
-Lemma rvs_intro P : P ⊢ |==r> P.
+Lemma rvs_intro P : P =r=> P.
 Proof.
   unseal. split=> n x ? HP k yf ?; exists x; split; first done.
   apply uPred_closed with n; eauto using cmra_validN_op_l.
 Qed.
-Lemma rvs_mono P Q : (P ⊢ Q) → (|==r> P) ⊢ |==r> Q.
+Lemma rvs_mono P Q : (P ⊢ Q) → (|=r=> P) =r=> Q.
 Proof.
   unseal. intros HPQ; split=> n x ? HP k yf ??.
   destruct (HP k yf) as (x'&?&?); eauto.
   exists x'; split; eauto using uPred_in_entails, cmra_validN_op_l.
 Qed.
-Lemma rvs_timeless P : TimelessP P → ▷ P ⊢ |==r> P.
+Lemma rvs_timeless P : TimelessP P → ▷ P =r=> P.
 Proof.
   unseal. rewrite timelessP_spec=> HP.
   split=> -[|n] x ? HP' k yf ??; first lia.
   exists x; split; first done.
   apply HP, uPred_closed with n; eauto using cmra_validN_le.
 Qed.
-Lemma rvs_trans P : (|==r> |==r> P) ⊢ |==r> P.
+Lemma rvs_trans P : (|=r=> |=r=> P) =r=> P.
 Proof. unseal; split; naive_solver. Qed.
-Lemma rvs_frame_r P R : (|==r> P) ★ R ⊢ |==r> P ★ R.
+Lemma rvs_frame_r P R : (|=r=> P) ★ R =r=> P ★ R.
 Proof.
   unseal; split; intros n x ? (x1&x2&Hx&HP&?) k yf ??.
   destruct (HP k (x2 ⋅ yf)) as (x'&?&?); eauto.
@@ -1197,7 +1201,7 @@ Proof.
   apply uPred_closed with n; eauto 3 using cmra_validN_op_l, cmra_validN_op_r.
 Qed.
 Lemma rvs_ownM_updateP x (Φ : M → Prop) :
-  x ~~>: Φ → uPred_ownM x ⊢ |==r> ∃ y, ■ Φ y ∧ uPred_ownM y.
+  x ~~>: Φ → uPred_ownM x =r=> ∃ y, ■ Φ y ∧ uPred_ownM y.
 Proof.
   unseal=> Hup; split=> -[|n] x2 ? [x3 Hx] [|k] yf ??; try lia.
   destruct (Hup (S k) (Some (x3 ⋅ yf))) as (y&?&?); simpl in *.
@@ -1211,17 +1215,15 @@ Global Instance rvs_mono' : Proper ((⊢) ==> (⊢)) (@uPred_rvs M).
 Proof. intros P Q; apply rvs_mono. Qed.
 Global Instance rvs_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) (@uPred_rvs M).
 Proof. intros P Q; apply rvs_mono. Qed.
-Lemma rvs_strip_rvs P Q : (P ⊢ |==r> Q) → (|==r> P) ⊢ (|==r> Q).
-Proof. move=>->. by rewrite rvs_trans. Qed.
-Lemma rvs_frame_l R Q : (R ★ |==r> Q) ⊢ |==r> R ★ Q.
+Lemma rvs_frame_l R Q : (R ★ |=r=> Q) =r=> R ★ Q.
 Proof. rewrite !(comm _ R); apply rvs_frame_r. Qed.
-Lemma rvs_wand_l P Q : (P -★ Q) ★ (|==r> P) ⊢ |==r> Q.
+Lemma rvs_wand_l P Q : (P -★ Q) ★ (|=r=> P) =r=> Q.
 Proof. by rewrite rvs_frame_l wand_elim_l. Qed.
-Lemma rvs_wand_r P Q : (|==r> P) ★ (P -★ Q) ⊢ |==r> Q.
+Lemma rvs_wand_r P Q : (|=r=> P) ★ (P -★ Q) =r=> Q.
 Proof. by rewrite rvs_frame_r wand_elim_r. Qed.
-Lemma rvs_sep P Q : (|==r> P) ★ (|==r> Q) ⊢ |==r> P ★ Q.
+Lemma rvs_sep P Q : (|=r=> P) ★ (|=r=> Q) =r=> P ★ Q.
 Proof. by rewrite rvs_frame_r rvs_frame_l rvs_trans. Qed.
-Lemma rvs_ownM_update x y : x ~~> y → uPred_ownM x ⊢ |==r> uPred_ownM y.
+Lemma rvs_ownM_update x y : x ~~> y → uPred_ownM x ⊢ |=r=> uPred_ownM y.
 Proof.
   intros; rewrite (rvs_ownM_updateP _ (y =)); last by apply cmra_update_updateP.
   by apply rvs_mono, exist_elim=> y'; apply pure_elim_l=> ->.
