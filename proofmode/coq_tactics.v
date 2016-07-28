@@ -1,5 +1,5 @@
 From iris.algebra Require Export upred.
-From iris.algebra Require Import upred_big_op upred_tactics gmap.
+From iris.algebra Require Import upred_big_op upred_tactics.
 From iris.proofmode Require Export environments classes.
 From iris.prelude Require Import stringmap hlist.
 Import uPred.
