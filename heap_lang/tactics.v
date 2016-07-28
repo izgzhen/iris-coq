@@ -179,6 +179,7 @@ Definition atomic (e : expr) :=
   | Store e1 e2 => bool_decide (is_Some (to_val e1) ∧ is_Some (to_val e2))
   | CAS e0 e1 e2 =>
      bool_decide (is_Some (to_val e0) ∧ is_Some (to_val e1) ∧ is_Some (to_val e2))
+  | Fork _ => true
   (* Make "skip" atomic *)
   | App (Rec _ _ (Lit _)) (Lit _) => true
   | _ => false
