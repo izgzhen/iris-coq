@@ -68,12 +68,26 @@ Section gset.
   Qed.
   Lemma gset_alloc_updateP (Q : gset_disj K → Prop) X :
     (∀ i, i ∉ X → Q (GSet ({[i]} ∪ X))) → GSet X ~~>: Q.
-  Proof. move=>??. eapply gset_alloc_updateP_strong with (I:=∅); by eauto. Qed.
+  Proof. intro. eapply gset_alloc_updateP_strong with (I:=∅); eauto. Qed.
   Lemma gset_alloc_updateP_strong' (I : gset K) X :
     GSet X ~~>: λ Y, ∃ i, Y = GSet ({[ i ]} ∪ X) ∧ i ∉ I ∧ i ∉ X.
   Proof. eauto using gset_alloc_updateP_strong. Qed.
   Lemma gset_alloc_updateP' X : GSet X ~~>: λ Y, ∃ i, Y = GSet ({[ i ]} ∪ X) ∧ i ∉ X.
   Proof. eauto using gset_alloc_updateP. Qed.
+
+  Lemma gset_alloc_empty_updateP_strong (Q : gset_disj K → Prop) (I : gset K) :
+    (∀ i, i ∉ I → Q (GSet {[i]})) → GSet ∅ ~~>: Q.
+  Proof.
+    intros. apply (gset_alloc_updateP_strong _ I)=> i. rewrite right_id_L. auto.
+  Qed.
+  Lemma gset_alloc_empty_updateP (Q : gset_disj K → Prop) :
+    (∀ i, Q (GSet {[i]})) → GSet ∅ ~~>: Q.
+  Proof. intro. eapply gset_alloc_empty_updateP_strong with (I:=∅); eauto. Qed.
+  Lemma gset_alloc_empty_updateP_strong' (I : gset K) :
+    GSet ∅ ~~>: λ Y, ∃ i, Y = GSet {[ i ]} ∧ i ∉ I.
+  Proof. eauto using gset_alloc_empty_updateP_strong. Qed.
+  Lemma gset_alloc_empty_updateP' : GSet ∅ ~~>: λ Y, ∃ i, Y = GSet {[ i ]}.
+  Proof. eauto using gset_alloc_empty_updateP. Qed.
 
   Lemma gset_alloc_local_update X i Xf :
     i ∉ X → i ∉ Xf → GSet X ~l~> GSet ({[i]} ∪ X) @ Some (GSet Xf).
@@ -82,6 +96,12 @@ Section gset.
     - rewrite !gset_disj_valid_op; set_solver.
     - intros mZ ?%gset_disj_valid_op HXf.
       rewrite -gset_disj_union -?assoc ?HXf ?cmra_opM_assoc; set_solver.
+  Qed.
+  Lemma gset_alloc_empty_local_update i Xf :
+    i ∉ Xf → GSet ∅ ~l~> GSet {[i]} @ Some (GSet Xf).
+  Proof.
+    intros. rewrite -(right_id_L _ _ {[i]}).
+    apply gset_alloc_local_update; set_solver.
   Qed.
 End gset.
 
