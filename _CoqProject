@@ -122,3 +122,4 @@ proofmode/weakestpre.v
 proofmode/ghost_ownership.v
 proofmode/sts.v
 proofmode/classes.v
+proofmode/class_instances.v

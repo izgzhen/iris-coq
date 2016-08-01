@@ -43,7 +43,7 @@ Lemma inv_open E N P :
                     |={E,E'}=> ▷ P ★ (▷ P ={E',E}=★ True).
 Proof.
   rewrite inv_eq /inv. iDestruct 1 as (i) "[% #Hi]".
-  iExists (E ∖ {[ i ]}). iSplit. { iPureIntro. set_solver. }
+  iExists (E ∖ {[ i ]}). iSplit; first (iPureIntro; set_solver).
   iPvs (pvs_openI' with "Hi") as "HP"; [set_solver..|].
   iPvsIntro. iSplitL "HP"; first done. iIntros "HP".
   iPvs (pvs_closeI' _ _ P with "[HP]"); [set_solver|iSplit; done|set_solver|].

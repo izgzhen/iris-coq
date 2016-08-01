@@ -191,9 +191,15 @@ Proof.
   exists bf2. rewrite -assoc.
   apply (Hab' _ (Some _)); auto. by rewrite /= assoc.
 Qed.
+
 Lemma auth_update_no_frame a b : a ~l~> b @ Some ∅ → ● a ⋅ ◯ a ~~> ● b ⋅ ◯ b.
 Proof.
   intros. rewrite -{1}(right_id _ _ a) -{1}(right_id _ _ b).
+  by apply auth_update.
+Qed.
+Lemma auth_update_no_frag af b : ∅ ~l~> b @ Some af → ● af ~~> ● (b ⋅ af) ⋅ ◯ b.
+Proof.
+  intros. rewrite -{1}(left_id _ _ af) -{1}(right_id _ _ (● _)).
   by apply auth_update.
 Qed.
 End cmra.

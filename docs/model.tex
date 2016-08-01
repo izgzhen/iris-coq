@@ -52,9 +52,11 @@ For every definition, we have to show all the side-conditions: The maps have to 
 The first complicated task in building a model of full Iris is defining the semantic model of $\Prop$.
 We start by defining the functor that assembles the CMRAs we need to the global resource CMRA:
 \begin{align*}
-  \textdom{ResF}(\cofe^\op, \cofe) \eqdef{}& \record{\wld: \mathbb{N} \fpfn \agm(\latert \cofe), \pres: \exm(\textdom{State}), \ghostRes: \iFunc(\cofe^\op, \cofe)}
+  \textdom{ResF}(\cofe^\op, \cofe) \eqdef{}& \record{\wld: \mathbb{N} \fpfn \agm(\latert \cofe), \pres: \maybe{\exm(\textdom{State})}, \ghostRes: \iFunc(\cofe^\op, \cofe)}
 \end{align*}
-Remember that $\iFunc$ is the user-chosen bifunctor from $\COFEs$ to $\CMRAs$.
+Above, $\maybe\monoid$ is the monoid obtained by adding a unit to $\monoid$.
+(It's not a coincidence that we used the same notation for the range of the core; it's the same type either way: $\monoid + 1$.)
+Remember that $\iFunc$ is the user-chosen bifunctor from $\COFEs$ to $\CMRAs$ (see~\Sref{sec:logic}).
 $\textdom{ResF}(\cofe^\op, \cofe)$ is a CMRA by lifting the individual CMRAs pointwise.
 Furthermore, if $F$ is locally contractive, then so is $\textdom{ResF}$.
 
