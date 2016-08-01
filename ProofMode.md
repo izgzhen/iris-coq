@@ -6,8 +6,8 @@ Applying hypotheses and lemmas
 
 - `iExact "H"`  : finish the goal if the conclusion matches the hypothesis `H`
 - `iAssumption` : finish the goal if the conclusion matches any hypothesis
-- `iApply trm` : match the conclusion of the current goal against the
-   conclusion of `trm` and generates goals for the premises of `trm`. See
+- `iApply pm_trm` : match the conclusion of the current goal against the
+   conclusion of `pm_trm` and generates goals for the premises of `pm_trm`. See
    proof mode terms below.
 
 Context management
@@ -23,9 +23,10 @@ Context management
   `x1 ... xn` into universal quantifiers. The symbol `★` can be used to revert
   the entire spatial context.
 - `iRename "H1" into "H2"` : rename the hypothesis `H1` into `H2`.
-- `iSpecialize trm` : instantiate universal quantifiers and eliminate
-  implications/wands of a hypothesis `trm`. See proof mode terms below.
-- `iPoseProof trm as "H"` : put `trm` into the context as a new hypothesis `H`.
+- `iSpecialize pm_trm` : instantiate universal quantifiers and eliminate
+  implications/wands of a hypothesis `pm_trm`. See proof mode terms below.
+- `iPoseProof pm_trm as "H"` : put `pm_trm` into the context as a new hypothesis
+  `H`.
 - `iAssert P with "spat" as "ipat"` : create a new goal with conclusion `P` and
   put `P` in the context of the original goal. The specialization pattern
   `spat` specifies which hypotheses will be consumed by proving `P` and the
@@ -52,11 +53,11 @@ Elimination of logical connectives
 ----------------------------------
 
 - `iExFalso` : Ex falso sequitur quod libet.
-- `iDestruct trm as (x1 ... xn) "spat1 ... spatn"` : elimination of existential
-  quantifiers using Coq introduction patterns `x1 ... xn` and elimination of
-  object level connectives using the proof mode introduction patterns
-  `ipat1 ... ipatn`.
-- `iDestruct trm as %cpat` : elimination of a pure hypothesis using the Coq
+- `iDestruct pm_trm as (x1 ... xn) "spat1 ... spatn"` : elimination of
+  existential quantifiers using Coq introduction patterns `x1 ... xn` and
+  elimination of object level connectives using the proof mode introduction
+  patterns `ipat1 ... ipatn`.
+- `iDestruct pm_trm as %cpat` : elimination of a pure hypothesis using the Coq
   introduction pattern `cpat`.
 
 Separating logic specific tactics
@@ -75,15 +76,15 @@ The later modality
 Rewriting
 ---------
 
-- `iRewrite trm` : rewrite an equality in the conclusion.
-- `iRewrite trm in "H"` : rewrite an equality in the hypothesis `H`.
+- `iRewrite pm_trm` : rewrite an equality in the conclusion.
+- `iRewrite pm_trm in "H"` : rewrite an equality in the hypothesis `H`.
 
 Iris
 ----
 
 - `iPvsIntro` : introduction of a primitive view shift. Generates a goal if
   the masks are not syntactically equal.
-- `iPvs trm as (x1 ... xn) "ipat"` : runs a primitive view shift `trm`.
+- `iPvs pm_trm as (x1 ... xn) "ipat"` : runs a primitive view shift `pm_trm`.
 - `iInv N as (x1 ... xn) "ipat"` : open the invariant `N`.
 - `iInv> N as (x1 ... xn) "ipat"` : open the invariant `N` and establish that
   it is timeless so no laters have to be added.
@@ -186,7 +187,7 @@ Many of the proof mode tactics (such as `iDestruct`, `iApply`, `iRewrite`) can
 take both hypotheses and lemmas, and allow one to instantiate universal
 quantifiers and implications/wands of these hypotheses/lemmas on the fly.
 
-The syntax for the arguments, called _proof mode terms_, of these tactics is:
+The syntax for the arguments of these tactics, called _proof mode terms_, is:
 
         (H $! t1 ... tn with "spat1 .. spatn")
 
