@@ -7,7 +7,7 @@ Applying hypotheses and lemmas
 - `iExact "H"`  : finish the goal if the conclusion matches the hypothesis `H`
 - `iAssumption` : finish the goal if the conclusion matches any hypothesis
 - `iApply trm` : match the conclusion of the current goal against the
-   conclusion of `tetrmrm` and generates goals for the premises of `trm`. See
+   conclusion of `trm` and generates goals for the premises of `trm`. See
    proof mode terms below.
 
 Context management
