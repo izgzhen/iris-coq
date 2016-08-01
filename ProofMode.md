@@ -1,6 +1,13 @@
 Tactic overview
 ===============
 
+Many of the tactics below apply to more goals than described in this document
+since the behavior of these tactics can be tuned via instances of the type
+classes in the file `proofmode/classes`. Most notable, many of the tactics can
+be applied when the to be introduced or to be eliminated connective appears
+under a later, a primitive view shift, or in the conclusion of a weakest
+precondition connective.
+
 Applying hypotheses and lemmas
 ------------------------------
 
