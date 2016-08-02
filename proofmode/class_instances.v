@@ -219,7 +219,7 @@ Global Instance make_and_true_l P : MakeAnd True P P.
 Proof. by rewrite /MakeAnd left_id. Qed.
 Global Instance make_and_true_r P : MakeAnd P True P.
 Proof. by rewrite /MakeAnd right_id. Qed.
-Global Instance make_and_default P Q : MakeSep P Q (P ★ Q) | 100.
+Global Instance make_and_default P Q : MakeAnd P Q (P ∧ Q) | 100.
 Proof. done. Qed.
 Global Instance frame_and_l R P1 P2 Q Q' :
   Frame R P1 Q → MakeAnd Q P2 Q' → Frame R (P1 ∧ P2) Q' | 9.
