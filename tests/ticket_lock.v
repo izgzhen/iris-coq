@@ -2,7 +2,6 @@ From iris.program_logic Require Export global_functor auth.
 From iris.proofmode Require Import invariants ghost_ownership.
 From iris.heap_lang Require Import proofmode notation.
 From iris.algebra Require Import gset.
-From iris.prelude Require Import set.
 Import uPred.
 
 Definition wait_loop: val :=
@@ -25,18 +24,18 @@ Definition release : val :=
     let: "oldl" := !"l" in
     if: CAS "l" "oldl" (Fst "oldl" + #1, Snd "oldl")
       then #()
-    else "release" "l".
+      else "release" "l".
 
 Global Opaque newlock acquire release wait_loop.
 
-(** The CMRA we need. *)
+(** The CMRAs we need. *)
 Class tlockG Σ := TlockG {
    tlock_G :> authG heap_lang Σ (gset_disjUR nat);
    tlock_exclG  :> inG heap_lang Σ (exclR unitC)
 }.
 
-Definition tlockGF : gFunctorList := [ authGF (gset_disjUR nat)
-                                     ; GFunctor (constRF (exclR unitC))].
+Definition tlockGF : gFunctorList :=
+  [authGF (gset_disjUR nat); GFunctor (constRF (exclR unitC))].
 Instance inGF_tlockG `{H : inGFs heap_lang Σ tlockGF} : tlockG Σ.
 Proof. destruct H as (? & ? & ?). split. apply _. apply: inGF_inG. Qed.
 
@@ -44,70 +43,24 @@ Section proof.
 Context `{!heapG Σ, !tlockG Σ} (N : namespace).
 Local Notation iProp := (iPropG heap_lang Σ).
 
-Section natstuff.
-Open Scope nat_scope.
-Fixpoint natset (s len: nat) : gset nat :=
-  match len with
-  | O => ∅
-  | S len' => natset s len' ∪ {[ s + len' ]}
-  end.
-
-Lemma natset_range: ∀ (len s x: nat), x ∈ natset s len -> x < (s + len).
-Proof.
-  intros len.
-  elim len.
-  + intros. simpl in H. set_solver.
-  + intros. simpl in H0. apply elem_of_union in H0.
-    destruct H0.
-    - apply H in H0.
-      omega.
-    - assert (x = s + n).
-      set_solver.
-      omega.
-Qed.
-
-Lemma natset_not_in: ∀ x, x ∉ natset 0 x.
-Proof.
-  intros x H.
-  apply natset_range in H.
-  omega.
-Qed.
-
-Lemma natset_incr: ∀ x, {[x]} ∪ natset 0 x = natset 0 (x + 1).
-Proof.
-  intros.
-  rewrite Nat.add_1_r.
-  simpl.
-  set_solver.
-Qed.
-
-Lemma natset_disj: ∀ x, {[x]} ⊥ natset 0 x.
-Proof.
-  intros.
-  assert (x ∉ natset 0 x).
-  apply natset_not_in.
-  set_solver.
-Qed.
-
-End natstuff.
-
-Definition tickets_inv (n: nat) (gs: gset_disjUR nat) :iProp :=
-  (∃ gs', GSet gs' = gs ∧ gs' = natset 0 n)%I.
+Definition tickets_inv (n: nat) (gs: gset_disjUR nat) : iProp :=
+  (gs = GSet (seq_set 0 n))%I.
 
 Definition lock_inv (γ1 γ2: gname) (l : loc) (R : iProp) : iProp :=
-  (∃ (o n: nat), l ↦ (#o, #n) ★
+  (∃ o n: nat, l ↦ (#o, #n) ★
                auth_inv γ1 (tickets_inv n) ★
-               ((own γ2 (Excl ()) ★  R) ∨
-                auth_own γ1 (GSet {[ o ]})))%I.
+               ((own γ2 (Excl ()) ★  R) ∨ auth_own γ1 (GSet {[ o ]})))%I.
 
 Definition is_lock (l: loc) (R: iProp) : iProp :=
   (∃ γ1 γ2, heapN ⊥ N ∧ heap_ctx ∧ inv N (lock_inv γ1 γ2 l R))%I.
 
 Definition issued (l : loc) (x: nat) (R : iProp) : iProp :=
-  (∃ γ1 γ2, heapN ⊥ N ∧ heap_ctx ∧ inv N (lock_inv γ1 γ2 l R) ∧ auth_own γ1 (GSet {[ x ]}))%I.
+  (∃ γ1 γ2, heapN ⊥ N ∧ heap_ctx ∧ inv N (lock_inv γ1 γ2 l R) ∧
+            auth_own γ1 (GSet {[ x ]}))%I.
 
 Definition locked (l : loc) (R : iProp) : iProp :=
-  (∃ γ1 γ2, heapN ⊥ N ∧ heap_ctx ∧ inv N (lock_inv γ1 γ2 l R) ∧ own γ2 (Excl ()))%I.
+  (∃ γ1 γ2, heapN ⊥ N ∧ heap_ctx ∧ inv N (lock_inv γ1 γ2 l R) ∧
+            own γ2 (Excl ()))%I.
 
 Global Instance lock_inv_ne n γ1 γ2 l : Proper (dist n ==> dist n) (lock_inv γ1 γ2 l).
 Proof. solve_proper. Qed.
@@ -134,13 +87,9 @@ Proof.
     iSplitL "Hγ1".
     { rewrite /auth_inv.
       iExists (GSet ∅).
-      iFrame.
-      rewrite /tickets_inv.
-      iExists ∅; by iSplit.
-    }
+      by iFrame. }
     iLeft.
-    by iFrame.
-  }
+    by iFrame. }
   iPvsIntro.
   iApply "HΦ".
   iExists γ1, γ2.
@@ -162,18 +111,16 @@ Proof.
         iExists o, n.
         iFrame.
         by iRight.
-      * wp_proj. wp_let. wp_op=>Ho; last by contradiction Ho. clear Ho.
+      * wp_proj. wp_let. wp_op=>[_|[]] //.
         wp_if. iPvsIntro.
         iApply ("HΦ" with "[-HR] HR"). iExists γ1, γ2; eauto.
     + iExFalso. iCombine "Ht" "Haown" as "Haown".
-      iDestruct (auth_own_valid with "Haown") as "%".
-      apply gset_disj_valid_op in H0.
+      iDestruct (auth_own_valid with "Haown") as % ?%gset_disj_valid_op.
       set_solver.
   - iSplitL "Hl Ha".
     + iNext. iExists o, n. by iFrame.
-    + wp_proj. wp_let. wp_op=>?.
-      * subst. contradiction Hneq. omega.
-      * wp_if. by iApply ("IH" with "Ht").
+    + wp_proj. wp_let. wp_op=>?; first omega.
+      wp_if. by iApply ("IH" with "Ht").
 Qed.
 
 Lemma acquire_spec l R (Φ : val → iProp) :
@@ -185,46 +132,29 @@ Proof.
   wp_load. iPvsIntro.
   iSplitL "Hl Ha".
   - iNext. iExists o, n. by iFrame.
-  - wp_let.
+  - wp_let. wp_proj. wp_proj. wp_op.
     wp_focus (CAS _ _ _).
-    wp_proj. wp_proj.
-    wp_op.
-    iInv N as (o' n') "[Hl [Hainv Haown]]". 
-    destruct (decide ((#o', #n')%V = (#o, #n)%V)) as [Heq | Hneq].
+    iInv N as (o' n') "[Hl [Hainv Haown]]".
+    destruct (decide ((#o', #n') = (#o, #n)))%V
+      as [[= ->%Nat2Z.inj ->%Nat2Z.inj] | Hneq].
     + wp_cas_suc.
-      inversion Heq; subst.
-      iDestruct "Hainv" as (s) "[Ho Ht]".
-      iDestruct (own_valid with "#Ho") as "Hvalid".
-      iDestruct (auth_validI _ with "Hvalid") as "[_ %]"; simpl; iClear "Hvalid".
-      destruct s as [s|]; last by contradiction.
-      iDestruct "Ht" as (gs) "[% %]".
-      inversion H3. subst. subst. clear H3.
+      iDestruct "Hainv" as (s) "[Ho %]"; subst.
       iPvs (own_update with "Ho") as "Ho".
-      { eapply auth_update_no_frag, gset_alloc_empty_local_update.
-        eapply natset_not_in. }
+      { eapply auth_update_no_frag, (gset_alloc_empty_local_update n).
+        rewrite elem_of_seq_set; omega. }
       iDestruct "Ho" as "[Hofull Hofrag]".
       iSplitL "Hl Haown Hofull".
-      * replace (GSet {[n']} ⋅ GSet (natset 0 n')) with (GSet (natset 0 (n' + 1))).
-        { iPvsIntro. iNext.
-          iExists o', (n' + 1)%nat.
-          rewrite Nat2Z.inj_add.
-          iFrame. iExists (GSet (natset 0 (n' + 1))).
-          iFrame. iExists (natset 0 (n' + 1)).
-          by auto.
-        }
-        { rewrite gset_disj_union.
-          replace (natset 0 (n' + 1)) with ({[n']} ∪ natset 0 n').
-          - auto.
-          - apply natset_incr.
-          - apply natset_disj.
-        }
+      * rewrite gset_disj_union; last by apply (seq_set_S_disjoint 0).
+        rewrite -(seq_set_S_union_L 0).
+        iPvsIntro. iNext.
+        iExists o, (S n)%nat.
+        rewrite Nat2Z.inj_succ -Z.add_1_r.
+        iFrame. iExists (GSet (seq_set 0 (S n))).
+        by iFrame.
       * iPvsIntro. wp_if. wp_proj.
         iApply wait_loop_spec.
         iSplitR "HΦ"; last by done.
-        iExists γ1, γ2.
-        (* FIXME: iFrame should be able to make progress here. *)
-        repeat (iSplit; first by auto).
-        by rewrite /auth_own.
+        rewrite /issued /auth_own; eauto 10.
     + wp_cas_fail.
       iPvsIntro.
       iSplitL "Hl Hainv Haown".
@@ -244,15 +174,14 @@ Proof.
   - wp_let. wp_focus (CAS _ _ _ ).
     wp_proj. wp_op. wp_proj.
     iInv N as (o' n') "[Hl Hr]".
-    destruct (decide ((#o', #n')%V = (#o, #n)%V)) as [Heq | Hneq].
-    + inversion Heq; subst.
-      wp_cas_suc.
+    destruct (decide ((#o', #n') = (#o, #n)))%V
+      as [[= ->%Nat2Z.inj ->%Nat2Z.inj] | Hneq].
+    + wp_cas_suc.
       iDestruct "Hr" as "[Hainv [[Ho _] | Hown]]".
       * iExFalso. iCombine "Hγ" "Ho" as "Ho".
-        iDestruct (own_valid with "#Ho") as "Hvalid".
-        by iDestruct (excl_validI _ with "Hvalid") as "%".
+        iDestruct (own_valid with "#Ho") as %[].
       * iSplitL "Hl HR Hγ Hainv".
-        { iPvsIntro. iNext. iExists (o' + 1)%nat, n'%nat.
+        { iPvsIntro. iNext. iExists (o + 1)%nat, n%nat.
           iFrame. rewrite Nat2Z.inj_add.
           iFrame. iLeft; by iFrame. }
         { iPvsIntro. by wp_if. }
@@ -265,4 +194,3 @@ Qed.
 End proof.
 
 Typeclasses Opaque is_lock issued locked.
-
