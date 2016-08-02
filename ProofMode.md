@@ -70,7 +70,9 @@ Elimination of logical connectives
 Separating logic specific tactics
 ---------------------------------
 
-- `iFrame "H0 ... Hn"` : cancel the hypotheses `H0 ... Hn` in the goal. 
+- `iFrame "H0 ... Hn"` : cancel the hypotheses `H0 ... Hn` in the goal. When
+  `iFrame` is called without arguments, it attempts to frame all spatial
+  hypotheses.
 - `iCombine "H1" "H2" as "H"` : turns `H1 : P1` and `H2 : P2` into
   `H : P1 ★ P2`.
 
