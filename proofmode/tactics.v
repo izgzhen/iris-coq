@@ -399,29 +399,6 @@ Local Tactic Notation "iSepDestruct" constr(H) "as" constr(H1) constr(H2) :=
      apply _ || fail "iSepDestruct:" H ":" P "not separating destructable"
     |env_cbv; reflexivity || fail "iSepDestruct:" H1 "or" H2 " not fresh"|].
 
-Tactic Notation "iFrame" constr(Hs) :=
-  let rec go Hs :=
-    match Hs with
-    | [] => idtac
-    | ?H :: ?Hs =>
-       eapply tac_frame with _ H _ _ _;
-         [env_cbv; reflexivity || fail "iFrame:" H "not found"
-         |let R := match goal with |- Frame ?R _ _ => R end in
-          apply _ || fail "iFrame: cannot frame" R
-         |lazy iota beta; go Hs]
-    end
-  in let Hs := words Hs in go Hs.
-
-Tactic Notation "iFrame" :=
-  let rec go Hs :=
-    match Hs with
-    | [] => idtac
-    | ?H :: ?Hs => try iFrame H; go Hs
-    end in
-  match goal with
-  | |- of_envs ?Δ ⊢ _ => let Hs := eval cbv in (env_dom (env_spatial Δ)) in go Hs
-  end.
-
 Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
   eapply tac_combine with _ _ _ H1 _ _ H2 _ _ H _;
     [env_cbv; reflexivity || fail "iCombine:" H1 "not found"
@@ -430,6 +407,42 @@ Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
      let P2 := match goal with |- FromSep _ _ ?P2 => P2 end in
      apply _ || fail "iCombine: cannot combine" H1 ":" P1 "and" H2 ":" P2
     |env_cbv; reflexivity || fail "iCombine:" H "not fresh"|].
+
+(** Framing *)
+Local Ltac iFrameHyp H :=
+  eapply tac_frame with _ H _ _ _;
+    [env_cbv; reflexivity || fail "iFrame:" H "not found"
+    |let R := match goal with |- Frame ?R _ _ => R end in
+     apply _ || fail "iFrame: cannot frame" R
+    |lazy iota beta].
+
+Local Ltac iFramePersistent :=
+  let rec go Hs :=
+    match Hs with [] => idtac | ?H :: ?Hs => repeat iFrameHyp H; go Hs end in
+  match goal with
+  | |- of_envs ?Δ ⊢ _ =>
+     let Hs := eval cbv in (env_dom (env_persistent Δ)) in go Hs
+  end.
+
+Local Ltac iFrameSpatial :=
+  let rec go Hs :=
+    match Hs with [] => idtac | ?H :: ?Hs => try iFrameHyp H; go Hs end in
+  match goal with
+  | |- of_envs ?Δ ⊢ _ =>
+     let Hs := eval cbv in (env_dom (env_spatial Δ)) in go Hs
+  end.
+
+Tactic Notation "iFrame" constr(Hs) :=
+  let rec go Hs :=
+    match Hs with
+    | [] => idtac
+    | "#" :: ?Hs => iFramePersistent; go Hs
+    | "★" :: ?Hs => iFrameSpatial; go Hs
+    | ?H :: ?Hs => iFrameHyp H; go Hs
+    end
+  in let Hs := words Hs in go Hs.
+
+Tactic Notation "iFrame" := iFrameSpatial.
 
 (** * Existential *)
 Tactic Notation "iExists" uconstr(x1) :=
