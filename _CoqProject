@@ -96,6 +96,7 @@ heap_lang/lib/spawn.v
 heap_lang/lib/par.v
 heap_lang/lib/assert.v
 heap_lang/lib/lock.v
+heap_lang/lib/ticket_lock.v
 heap_lang/lib/counter.v
 heap_lang/lib/barrier/barrier.v
 heap_lang/lib/barrier/specification.v
@@ -110,7 +111,6 @@ tests/proofmode.v
 tests/barrier_client.v
 tests/list_reverse.v
 tests/tree_sum.v
-tests/ticket_lock.v
 proofmode/coq_tactics.v
 proofmode/pviewshifts.v
 proofmode/environments.v
