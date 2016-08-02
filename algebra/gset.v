@@ -54,8 +54,9 @@ Section gset.
   Canonical Structure gset_disjUR :=
     discreteUR (gset_disj K) gset_disj_ra_mixin gset_disj_ucmra_mixin.
 
-  Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
   Arguments op _ _ _ _ : simpl never.
+  Section fpu.
+  Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
 
   Lemma gset_alloc_updateP_strong P (Q : gset_disj K → Prop) X :
     (∀ Y, X ⊆ Y → ∃ j, j ∉ Y ∧ P j) →
@@ -97,6 +98,8 @@ Section gset.
   Proof. eauto using gset_alloc_empty_updateP_strong. Qed.
   Lemma gset_alloc_empty_updateP' : GSet ∅ ~~>: λ Y, ∃ i, Y = GSet {[ i ]}.
   Proof. eauto using gset_alloc_empty_updateP. Qed.
+
+  End fpu.
 
   Lemma gset_alloc_local_update X i Xf :
     i ∉ X → i ∉ Xf → GSet X ~l~> GSet ({[i]} ∪ X) @ Some (GSet Xf).

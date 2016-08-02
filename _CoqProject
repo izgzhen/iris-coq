@@ -110,6 +110,7 @@ tests/proofmode.v
 tests/barrier_client.v
 tests/list_reverse.v
 tests/tree_sum.v
+tests/ticket_lock.v
 proofmode/coq_tactics.v
 proofmode/pviewshifts.v
 proofmode/environments.v
