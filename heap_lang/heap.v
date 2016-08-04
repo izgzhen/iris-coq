@@ -144,8 +144,17 @@ Section heap.
     by apply pure_elim_r.
   Qed.
 
-  Lemma heap_mapsto_op_split l q v : l ↦{q} v ⊣⊢ (l ↦{q/2} v ★ l ↦{q/2} v).
-  Proof. by rewrite heap_mapsto_op_eq Qp_div_2. Qed.
+  Lemma heap_mapsto_op_1 l q1 q2 v1 v2 :
+    l ↦{q1} v1 ★ l ↦{q2} v2 ⊢ v1 = v2 ∧ l ↦{q1+q2} v1.
+  Proof. by rewrite heap_mapsto_op. Qed.
+
+  Lemma heap_mapsto_op_half l q v1 v2 :
+    l ↦{q/2} v1 ★ l ↦{q/2} v2 ⊣⊢ v1 = v2 ∧ l ↦{q} v1.
+  Proof. by rewrite heap_mapsto_op Qp_div_2. Qed.
+
+  Lemma heap_mapsto_op_half_1 l q v1 v2 :
+    l ↦{q/2} v1 ★ l ↦{q/2} v2 ⊢ v1 = v2 ∧ l ↦{q} v1.
+  Proof. by rewrite heap_mapsto_op_half. Qed.
 
   (** Weakest precondition *)
   (* FIXME: try to reduce usage of wp_pvs. We're losing view shifts here. *)

@@ -241,6 +241,28 @@ Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=
 Lemma authC_map_ne A B n : Proper (dist n ==> dist n) (@authC_map A B).
 Proof. intros f f' Hf [[[a|]|] b]; repeat constructor; apply Hf. Qed.
 
+Program Definition authRF (F : urFunctor) : rFunctor := {|
+  rFunctor_car A B := authR (urFunctor_car F A B);
+  rFunctor_map A1 A2 B1 B2 fg := authC_map (urFunctor_map F fg)
+|}.
+Next Obligation.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply authC_map_ne, urFunctor_ne.
+Qed.
+Next Obligation.
+  intros F A B x. rewrite /= -{2}(auth_map_id x).
+  apply auth_map_ext=>y; apply urFunctor_id.
+Qed.
+Next Obligation.
+  intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -auth_map_compose.
+  apply auth_map_ext=>y; apply urFunctor_compose.
+Qed.
+
+Instance authRF_contractive F :
+  urFunctorContractive F → rFunctorContractive (authRF F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply authC_map_ne, urFunctor_contractive.
+Qed.
+
 Program Definition authURF (F : urFunctor) : urFunctor := {|
   urFunctor_car A B := authUR (urFunctor_car F A B);
   urFunctor_map A1 A2 B1 B2 fg := authC_map (urFunctor_map F fg)

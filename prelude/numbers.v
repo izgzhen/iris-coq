@@ -82,7 +82,7 @@ Proof. intros. destruct (Nat_mul_split_l n x2 x1 y2 y1); auto with lia. Qed.
 Notation lcm := Nat.lcm.
 Notation divide := Nat.divide.
 Notation "( x | y )" := (divide x y) : nat_scope.
-Instance divide_dec x y : Decision (x | y).
+Instance Nat_divide_dec x y : Decision (x | y).
 Proof.
   refine (cast_if (decide (lcm x y = y))); by rewrite Nat.divide_lcm_iff.
 Defined.
@@ -93,6 +93,11 @@ Qed.
 Hint Extern 0 (_ | _) => reflexivity.
 Lemma Nat_divide_ne_0 x y : (x | y) → y ≠ 0 → x ≠ 0.
 Proof. intros Hxy Hy ->. by apply Hy, Nat.divide_0_l. Qed.
+
+Lemma Nat_iter_S {A} n (f: A → A) x : Nat.iter (S n) f x = f (Nat.iter n f x).
+Proof. done. Qed.
+Lemma Nat_iter_S_r {A} n (f: A → A) x : Nat.iter (S n) f x = Nat.iter n f (f x).
+Proof. induction n; f_equal/=; auto. Qed.
 
 (** * Notations and properties of [positive] *)
 Open Scope positive_scope.
@@ -226,16 +231,19 @@ Infix "`rem`" := Z.rem (at level 35) : Z_scope.
 Infix "≪" := Z.shiftl (at level 35) : Z_scope.
 Infix "≫" := Z.shiftr (at level 35) : Z_scope.
 
-Instance: Inj (=) (=) Zpos.
+Instance Zpos_inj : Inj (=) (=) Zpos.
 Proof. by injection 1. Qed.
-Instance: Inj (=) (=) Zneg.
+Instance Zneg_inj : Inj (=) (=) Zneg.
 Proof. by injection 1. Qed.
+
+Instance Z_of_nat_inj : Inj (=) (=) Z.of_nat.
+Proof. intros n1 n2. apply Nat2Z.inj. Qed.
 
 Instance Z_eq_dec: ∀ x y : Z, Decision (x = y) := Z.eq_dec.
 Instance Z_le_dec: ∀ x y : Z, Decision (x ≤ y) := Z_le_dec.
 Instance Z_lt_dec: ∀ x y : Z, Decision (x < y) := Z_lt_dec.
 Instance Z_inhabited: Inhabited Z := populate 1.
-Instance: PartialOrder (≤).
+Instance Z_le_order : PartialOrder (≤).
 Proof.
   repeat split; red. apply Z.le_refl. apply Z.le_trans. apply Z.le_antisymm.
 Qed.

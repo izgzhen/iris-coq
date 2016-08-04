@@ -12,6 +12,10 @@ Proof. intros ??. by rewrite -pvs_intro (from_pure P). Qed.
 Global Instance from_assumption_pvs E p P Q :
   FromAssumption p P Q → FromAssumption p P (|={E}=> Q)%I.
 Proof. rewrite /FromAssumption=>->. apply pvs_intro. Qed.
+Global Instance into_wand_pvs E1 E2 R P Q :
+  IntoWand R P Q → IntoWand R (|={E1,E2}=> P) (|={E1,E2}=> Q) | 100.
+Proof. rewrite /IntoWand=>->. apply wand_intro_l. by rewrite pvs_wand_r. Qed.
+
 Global Instance from_sep_pvs E P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (|={E}=> P) (|={E}=> Q1) (|={E}=> Q2).
 Proof. rewrite /FromSep=><-. apply pvs_sep. Qed.
@@ -26,9 +30,6 @@ Qed.
 Global Instance frame_pvs E1 E2 R P Q :
   Frame R P Q → Frame R (|={E1,E2}=> P) (|={E1,E2}=> Q).
 Proof. rewrite /Frame=><-. by rewrite pvs_frame_l. Qed.
-Global Instance into_wand_pvs E1 E2 R P Q :
-  IntoWand R P Q → IntoWand R (|={E1,E2}=> P) (|={E1,E2}=> Q) | 100.
-Proof. rewrite /IntoWand=>->. apply wand_intro_l. by rewrite pvs_wand_r. Qed.
 
 Global Instance timeless_elim_pvs E1 E2 Q : TimelessElim (|={E1,E2}=> Q).
 Proof.

@@ -92,10 +92,12 @@ Global Instance from_later_sep P1 P2 Q1 Q2 :
 Proof. intros ??; red. by rewrite later_sep; apply sep_mono. Qed.
 
 (* IntoWand *)
-Global Instance into_wand_wand P Q : IntoWand (P -★ Q) P Q.
-Proof. done. Qed.
-Global Instance into_wand_impl P Q : IntoWand (P → Q) P Q.
-Proof. apply impl_wand. Qed.
+Global Instance into_wand_wand P Q Q' :
+  FromAssumption false Q Q' → IntoWand (P -★ Q) P Q'.
+Proof. by rewrite /FromAssumption /IntoWand /= => ->. Qed.
+Global Instance into_wand_impl P Q Q' :
+  FromAssumption false Q Q' → IntoWand (P → Q) P Q'.
+Proof. rewrite /FromAssumption /IntoWand /= => ->. by rewrite impl_wand. Qed.
 Global Instance into_wand_iff_l P Q : IntoWand (P ↔ Q) P Q.
 Proof. by apply and_elim_l', impl_wand. Qed.
 Global Instance into_wand_iff_r P Q : IntoWand (P ↔ Q) Q P.
@@ -230,7 +232,7 @@ Global Instance make_and_true_l P : MakeAnd True P P.
 Proof. by rewrite /MakeAnd left_id. Qed.
 Global Instance make_and_true_r P : MakeAnd P True P.
 Proof. by rewrite /MakeAnd right_id. Qed.
-Global Instance make_and_default P Q : MakeSep P Q (P ★ Q) | 100.
+Global Instance make_and_default P Q : MakeAnd P Q (P ∧ Q) | 100.
 Proof. done. Qed.
 Global Instance frame_and_l R P1 P2 Q Q' :
   Frame R P1 Q → MakeAnd Q P2 Q' → Frame R (P1 ∧ P2) Q' | 9.

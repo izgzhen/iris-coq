@@ -85,6 +85,7 @@ program_logic/auth.v
 program_logic/sts.v
 program_logic/namespaces.v
 program_logic/boxes.v
+program_logic/counter_examples.v
 heap_lang/lang.v
 heap_lang/tactics.v
 heap_lang/wp_tactics.v
@@ -96,6 +97,7 @@ heap_lang/lib/spawn.v
 heap_lang/lib/par.v
 heap_lang/lib/assert.v
 heap_lang/lib/lock.v
+heap_lang/lib/ticket_lock.v
 heap_lang/lib/counter.v
 heap_lang/lib/barrier/barrier.v
 heap_lang/lib/barrier/specification.v

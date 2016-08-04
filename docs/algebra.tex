@@ -15,7 +15,7 @@ This definition varies slightly from the original one in~\cite{catlogic}.
     \All n. (\nequiv{n}) ~& \text{is an equivalence relation} \tagH{cofe-equiv} \\
     \All n, m.& n \geq m \Ra (\nequiv{n}) \subseteq (\nequiv{m}) \tagH{cofe-mono} \\
     \All x, y.& x = y \Lra (\All n. x \nequiv{n} y) \tagH{cofe-limit} \\
-    \All n, c.& \lim(c) \nequiv{n} c(n+1) \tagH{cofe-compl}
+    \All n, c.& \lim(c) \nequiv{n} c(n) \tagH{cofe-compl}
   \end{align*}
 \end{defn}
 
@@ -35,7 +35,7 @@ In order to solve the recursive domain equation in \Sref{sec:model} it is also e
   A function $f : \cofe \to \cofeB$ between two COFEs is \emph{non-expansive} (written $f : \cofe \nfn \cofeB$) if
   \[\All n, x \in \cofe, y \in \cofe. x \nequiv{n} y \Ra f(x) \nequiv{n} f(y) \]
   It is \emph{contractive} if
-  \[ \All n, x \in \cofe, y \in \cofe. (\All m < n. x \nequiv{m} y) \Ra f(x) \nequiv{n} f(x) \]
+  \[ \All n, x \in \cofe, y \in \cofe. (\All m < n. x \nequiv{m} y) \Ra f(x) \nequiv{n} f(y) \]
 \end{defn}
 Intuitively, applying a non-expansive function to some data will not suddenly introduce differences between seemingly equal data.
 Elements that cannot be distinguished by programs within $n$ steps remain indistinguishable after applying $f$.
@@ -211,7 +211,7 @@ Furthermore, discrete CMRAs can be turned into RAs by ignoring their COFE struct
 \end{defn}
 Note that every object/arrow in $\CMRAs$ is also an object/arrow of $\COFEs$.
 The notion of a locally non-expansive (or contractive) bifunctor naturally generalizes to bifunctors between these categories.
-\ralf{Discuss how we probably have a commuting square of functors between Set, RA, CMRA, COFE.}
+%TODO: Discuss how we probably have a commuting square of functors between Set, RA, CMRA, COFE.
 
 %%% Local Variables: 
 %%% mode: latex
