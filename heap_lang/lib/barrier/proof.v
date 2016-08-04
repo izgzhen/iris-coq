@@ -99,7 +99,7 @@ Lemma newbarrier_spec (P : iProp) (Φ : val → iProp) :
 Proof.
   iIntros (HN) "[#? HΦ]".
   rewrite /newbarrier. wp_seq. wp_alloc l as "Hl".
-  iApply "HΦ".
+  iApply ("HΦ" with "|==>[-]").
   iPvs (saved_prop_alloc (F:=idCF) _ P) as (γ) "#?".
   iPvs (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}) with "[-]")
     as (γ') "[#? Hγ']"; eauto.
