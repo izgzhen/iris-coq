@@ -231,16 +231,19 @@ Infix "`rem`" := Z.rem (at level 35) : Z_scope.
 Infix "≪" := Z.shiftl (at level 35) : Z_scope.
 Infix "≫" := Z.shiftr (at level 35) : Z_scope.
 
-Instance: Inj (=) (=) Zpos.
+Instance Zpos_inj : Inj (=) (=) Zpos.
 Proof. by injection 1. Qed.
-Instance: Inj (=) (=) Zneg.
+Instance Zneg_inj : Inj (=) (=) Zneg.
 Proof. by injection 1. Qed.
+
+Instance Z_of_nat_inj : Inj (=) (=) Z.of_nat.
+Proof. intros n1 n2. apply Nat2Z.inj. Qed.
 
 Instance Z_eq_dec: ∀ x y : Z, Decision (x = y) := Z.eq_dec.
 Instance Z_le_dec: ∀ x y : Z, Decision (x ≤ y) := Z_le_dec.
 Instance Z_lt_dec: ∀ x y : Z, Decision (x < y) := Z_lt_dec.
 Instance Z_inhabited: Inhabited Z := populate 1.
-Instance: PartialOrder (≤).
+Instance Z_le_order : PartialOrder (≤).
 Proof.
   repeat split; red. apply Z.le_refl. apply Z.le_trans. apply Z.le_antisymm.
 Qed.
