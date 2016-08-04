@@ -13,7 +13,7 @@ Implicit Types Δ : envs (iResUR heap_lang (globalF Σ)).
 
 Global Instance into_sep_mapsto l q v :
   IntoSep false (l ↦{q} v) (l ↦{q/2} v) (l ↦{q/2} v).
-Proof. by rewrite /IntoSep heap_mapsto_op_split. Qed.
+Proof. by rewrite /IntoSep heap_mapsto_op_eq Qp_div_2. Qed.
 
 Lemma tac_wp_alloc Δ Δ' E j e v Φ :
   to_val e = Some v →

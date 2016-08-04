@@ -128,9 +128,9 @@ Record iTrm {X As} :=
 Arguments ITrm {_ _} _ _ _.
 
 Notation "( H $! x1 .. xn )" :=
-  (ITrm H (hcons x1 .. (hcons xn hnil) ..) "") (at level 0, x1, xn at level 0).
+  (ITrm H (hcons x1 .. (hcons xn hnil) ..) "") (at level 0, x1, xn at level 9).
 Notation "( H $! x1 .. xn 'with' pat )" :=
-  (ITrm H (hcons x1 .. (hcons xn hnil) ..) pat) (at level 0, x1, xn at level 0).
+  (ITrm H (hcons x1 .. (hcons xn hnil) ..) pat) (at level 0, x1, xn at level 9).
 Notation "( H 'with' pat )" := (ITrm H hnil pat) (at level 0).
 
 Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
@@ -224,7 +224,7 @@ Tactic Notation "iIntoEntails" open_constr(t) :=
     | True ⊢ _ => apply t
     | _ ⊢ _ => apply (uPred.entails_wand _ _ t)
     | _ ⊣⊢ _ => apply (uPred.equiv_iff _ _ t)
-    | ?P → ?Q => let H := fresh in assert P as H; [|go uconstr:(t H)]
+    | ?P → ?Q => let H := fresh in assert P as H; [|go uconstr:(t H); clear H]
     | ∀ _ : ?T, _ =>
        (* Put [T] inside an [id] to avoid TC inference from being invoked. *)
        (* This is a workarround for Coq bug #4969. *)
