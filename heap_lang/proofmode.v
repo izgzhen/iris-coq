@@ -7,9 +7,9 @@ Ltac wp_strip_later ::= iNext.
 
 Section heap.
 Context `{heapG Σ}.
-Implicit Types P Q : iPropG heap_lang Σ.
-Implicit Types Φ : val → iPropG heap_lang Σ.
-Implicit Types Δ : envs (iResUR heap_lang (globalF Σ)).
+Implicit Types P Q : iProp Σ.
+Implicit Types Φ : val → iProp Σ.
+Implicit Types Δ : envs (iResUR Σ).
 
 Global Instance into_sep_mapsto l q v :
   IntoSep false (l ↦{q} v) (l ↦{q/2} v) (l ↦{q/2} v).

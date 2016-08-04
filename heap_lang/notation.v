@@ -1,7 +1,7 @@
 From iris.heap_lang Require Export derived.
 Export heap_lang.
 
-Arguments wp {_ _} _ _%E _.
+Arguments wp {_ _ _} _ _%E _.
 
 Notation "'WP' e @ E {{ Φ } }" := (wp E e%E Φ)
   (at level 20, e, Φ at level 200,

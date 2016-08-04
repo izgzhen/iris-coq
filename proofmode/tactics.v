@@ -547,11 +547,11 @@ Tactic Notation "iNext":=
 
 Tactic Notation "iTimeless" constr(H) :=
   eapply tac_timeless with _ H _ _;
-    [let Q := match goal with |- TimelessElim ?Q => Q end in
-     apply _ || fail "iTimeless: cannot eliminate later in goal" Q
+    [let Q := match goal with |- IsNowTrue ?Q => Q end in
+     apply _ || fail "iTimeless: cannot remove later of timeless hypothesis in goal" Q
     |env_cbv; reflexivity || fail "iTimeless:" H "not found"
     |let P := match goal with |- TimelessP ?P => P end in
-     apply _ || fail "iTimeless: " P "not timeless"
+     apply _ || fail "iTimeless:" P "not timeless"
     |env_cbv; reflexivity|].
 
 (** * Introduction tactic *)
@@ -856,6 +856,61 @@ Ltac iSimplifyEq := repeat (
   iMatchGoal ltac:(fun H P => match P with (_ = _)%I => iDestruct H as %? end)
   || simplify_eq/=).
 
+(** * View shifts *)
+Tactic Notation "iVsIntro" :=
+  eapply tac_vs_intro;
+    [let P := match goal with |- FromVs ?P _ => P end in
+     apply _ || fail "iVsIntro:" P "not a viewshift"|].
+
+Tactic Notation "iVsCore" constr(H) :=
+  eapply tac_vs_elim with _ H _ _ _ _;
+    [env_cbv; reflexivity || fail "iVs:" H "not found"
+    |let P := match goal with |- ElimVs ?P _ _ _ => P end in
+     let Q := match goal with |- ElimVs _ _ _ ?Q => Q end in
+     apply _ || fail "iVs: cannot eliminate" H ":" P "in" Q
+    |env_cbv; reflexivity|].
+
+Tactic Notation "iVs" open_constr(lem) :=
+  iDestructCore lem as (fun H => iVsCore H; last iDestruct H as "?").
+Tactic Notation "iVs" open_constr(lem) "as" constr(pat) :=
+  iDestructCore lem as (fun H => iVsCore H; last iDestruct H as pat).
+Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1) ")"
+    constr(pat) :=
+  iDestructCore lem as (fun H => iVsCore H; last iDestruct H as ( x1 ) pat).
+Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) ")" constr(pat) :=
+  iDestructCore lem as (fun H => iVsCore H; last iDestruct H as ( x1 x2 ) pat).
+Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) ")" constr(pat) :=
+  iDestructCore lem as (fun H => iVsCore H; last iDestruct H as ( x1 x2 x3 ) pat).
+Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
+    constr(pat) :=
+  iDestructCore lem as (fun H =>
+    iVsCore H; last iDestruct H as ( x1 x2 x3 x4 ) pat).
+Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) ")" constr(pat) :=
+  iDestructCore lem as (fun H =>
+    iVsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 ) pat).
+Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) ")" constr(pat) :=
+  iDestructCore lem as (fun H =>
+    iVsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 ) pat).
+Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) ")"
+    constr(pat) :=
+  iDestructCore lem as (fun H =>
+    iVsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 x7 ) pat).
+Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) ")" constr(pat) :=
+  iDestructCore lem as (fun H =>
+    iVsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 x7 x8 ) pat).
+
 (* Make sure that by and done solve trivial things in proof mode *)
 Hint Extern 0 (of_envs _ ⊢ _) => by iPureIntro.
 Hint Extern 0 (of_envs _ ⊢ _) => iAssumption.
@@ -866,11 +921,12 @@ Hint Resolve uPred.eq_refl'. (* Maybe make an [iReflexivity] tactic *)
 but then [eauto] mysteriously fails. See bug 4762 *)
 Hint Extern 1 (of_envs _ ⊢ _) =>
   match goal with
-  | |- _ ⊢ (_ ∧ _)%I => iSplit
-  | |- _ ⊢ (_ ★ _)%I => iSplit
-  | |- _ ⊢ (▷ _)%I => iNext
-  | |- _ ⊢ (□ _)%I => iClear "*"; iAlways
-  | |- _ ⊢ (∃ _, _)%I => iExists _
+  | |- _ ⊢ _ ∧ _ => iSplit
+  | |- _ ⊢ _ ★ _ => iSplit
+  | |- _ ⊢ ▷ _ => iNext
+  | |- _ ⊢ □ _ => iClear "*"; iAlways
+  | |- _ ⊢ ∃ _, _ => iExists _
+  | |- _ ⊢ |=r=> _ => iVsIntro
   end.
 Hint Extern 1 (of_envs _ ⊢ _) =>
   match goal with |- _ ⊢ (_ ∨ _)%I => iLeft end.

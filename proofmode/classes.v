@@ -55,7 +55,13 @@ Class IntoExist {A} (P : uPred M) (Φ : A → uPred M) :=
   into_exist : P ⊢ ∃ x, Φ x.
 Global Arguments into_exist {_} _ _ {_}.
 
-Class TimelessElim (Q : uPred M) :=
-  timeless_elim `{!TimelessP P} : ▷ P ★ (P -★ Q) ⊢ Q.
-Global Arguments timeless_elim _ {_} _ {_}.
+Class IsNowTrue (Q : uPred M) := is_now_True : ◇ Q ⊢ Q.
+Global Arguments is_now_True : clear implicits.
+
+Class FromVs (P Q : uPred M) := from_vs : (|=r=> Q) ⊢ P.
+Global Arguments from_vs : clear implicits.
+
+Class ElimVs (P P' : uPred M) (Q Q' : uPred M) :=
+  elim_vs : P ★ (P' -★ Q') ⊢ Q.
+Arguments elim_vs _ _ _ _ {_}.
 End classes.

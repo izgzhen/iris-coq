@@ -7,9 +7,9 @@ Import uPred.
 Local Hint Extern 0 (head_reducible _ _) => do_head_step eauto 2.
 
 Section lifting.
-Context {Σ : iFunctor}.
-Implicit Types P Q : iProp heap_lang Σ.
-Implicit Types Φ : val → iProp heap_lang Σ.
+Context `{irisG heap_lang Σ}.
+Implicit Types P Q : iProp Σ.
+Implicit Types Φ : val → iProp Σ.
 Implicit Types ef : option expr.
 
 (** Bind. This bundles some arguments that wp_ectx_bind leaves as indices. *)
@@ -28,7 +28,7 @@ Lemma wp_alloc_pst E σ v Φ :
   ⊢ WP Alloc (of_val v) @ E {{ Φ }}.
 Proof.
   iIntros "[HP HΦ]".
-  iApply (wp_lift_atomic_head_step (Alloc (of_val v)) σ); eauto with fsaV.
+  iApply (wp_lift_atomic_head_step (Alloc (of_val v)) σ); eauto.
   iFrame "HP". iNext. iIntros (v2 σ2 ef) "[% HP]". inv_head_step.
   match goal with H: _ = of_val v2 |- _ => apply (inj of_val (LitV _)) in H end.
   subst v2. iSplit; last done. iApply "HΦ"; by iSplit.

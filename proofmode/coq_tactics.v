@@ -376,13 +376,14 @@ Proof.
 Qed.
 
 Lemma tac_timeless Δ Δ' i p P Q :
-  TimelessElim Q →
+  IsNowTrue Q →
   envs_lookup i Δ = Some (p, ▷ P)%I → TimelessP P →
   envs_simple_replace i p (Esnoc Enil i P) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ???? HQ. rewrite envs_simple_replace_sound //; simpl.
-  by rewrite always_if_later right_id HQ timeless_elim.
+  rewrite always_if_later right_id HQ -{2}(is_now_True Q).
+  by rewrite (timelessP (□?p P)) now_True_frame_r wand_elim_r.
 Qed.
 
 (** * Always *)
@@ -733,5 +734,19 @@ Proof.
   rewrite (into_exist P) always_if_exist sep_exist_r.
   apply exist_elim=> a; destruct (HΦ a) as (Δ'&?&?).
   rewrite envs_simple_replace_sound' //; simpl. by rewrite right_id wand_elim_r.
+Qed.
+
+(** * Viewshifts *)
+Lemma tac_vs_intro Δ P Q : FromVs P Q → (Δ ⊢ Q) → Δ ⊢ P.
+Proof. rewrite /FromVs. intros <- ->. apply rvs_intro. Qed.
+
+Lemma tac_vs_elim Δ Δ' i p P' P Q Q' :
+  envs_lookup i Δ = Some (p, P) →
+  ElimVs P P' Q Q' →
+  envs_replace i p false (Esnoc Enil i P') Δ = Some Δ' →
+  (Δ' ⊢ Q') → Δ ⊢ Q.
+Proof.
+  intros ??? HΔ. rewrite envs_replace_sound //; simpl.
+  rewrite right_id HΔ always_if_elim. by apply elim_vs.
 Qed.
 End tactics.

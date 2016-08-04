@@ -1,42 +1,42 @@
-From iris.algebra Require Export agree.
 From iris.program_logic Require Export ghost_ownership.
+From iris.algebra Require Import agree.
+From iris.prelude Require Import gmap.
 Import uPred.
 
-Class savedPropG (Λ : language) (Σ : gFunctors) (F : cFunctor) :=
-  saved_prop_inG :> inG Λ Σ (agreeR (laterC (F (iPrePropG Λ Σ)))).
+Class savedPropG (Σ : gFunctors) (F : cFunctor) :=
+  saved_prop_inG :> inG Σ (agreeR (laterC (F (iPreProp Σ)))).
 Definition savedPropGF (F : cFunctor) : gFunctor :=
   GFunctor (agreeRF (▶ F)).
-Instance inGF_savedPropG  `{inGF Λ Σ (savedPropGF F)} : savedPropG Λ Σ F.
+Instance inGF_savedPropG  `{inGF Σ (savedPropGF F)} : savedPropG Σ F.
 Proof. apply: inGF_inG. Qed.
 
-Definition saved_prop_own `{savedPropG Λ Σ F}
-    (γ : gname) (x : F (iPropG Λ Σ)) : iPropG Λ Σ :=
+Definition saved_prop_own `{savedPropG Σ F}
+    (γ : gname) (x : F (iProp Σ)) : iProp Σ :=
   own γ (to_agree $ Next (cFunctor_map F (iProp_fold, iProp_unfold) x)).
 Typeclasses Opaque saved_prop_own.
-Instance: Params (@saved_prop_own) 4.
+Instance: Params (@saved_prop_own) 3.
 
 Section saved_prop.
-  Context `{savedPropG Λ Σ F}.
-  Implicit Types x y : F (iPropG Λ Σ).
+  Context `{savedPropG Σ F}.
+  Implicit Types x y : F (iProp Σ).
   Implicit Types γ : gname.
 
   Global Instance saved_prop_persistent γ x : PersistentP (saved_prop_own γ x).
   Proof. rewrite /saved_prop_own; apply _. Qed.
 
-  Lemma saved_prop_alloc_strong E x (G : gset gname) :
-    True ={E}=> ∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ x.
+  Lemma saved_prop_alloc_strong x (G : gset gname) :
+    True =r=> ∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ x.
   Proof. by apply own_alloc_strong. Qed.
 
-  Lemma saved_prop_alloc E x : True ={E}=> ∃ γ, saved_prop_own γ x.
+  Lemma saved_prop_alloc x : True =r=> ∃ γ, saved_prop_own γ x.
   Proof. by apply own_alloc. Qed.
 
   Lemma saved_prop_agree γ x y :
     saved_prop_own γ x ★ saved_prop_own γ y ⊢ ▷ (x ≡ y).
   Proof.
-    rewrite -own_op own_valid agree_validI agree_equivI later_equivI.
+    rewrite -own_op own_valid agree_validI agree_equivI later_equivI /=.
     set (G1 := cFunctor_map F (iProp_fold, iProp_unfold)).
-    set (G2 := cFunctor_map F (@iProp_unfold Λ (globalF Σ),
-                               @iProp_fold Λ (globalF Σ))).
+    set (G2 := cFunctor_map F (@iProp_unfold Σ, @iProp_fold Σ)).
     assert (∀ z, G2 (G1 z) ≡ z) as help.
     { intros z. rewrite /G1 /G2 -cFunctor_compose -{2}[z]cFunctor_id.
       apply (ne_proper (cFunctor_map F)); split=>?; apply iProp_fold_unfold. }

@@ -82,20 +82,11 @@ Proof.
 Qed.
 
 Section iris.
-  Context {Λ : language} {Σ : iFunctor}.
+  Context `{irisG Λ Σ}.
   Implicit Types E : coPset.
-  Implicit Types P Q : iProp Λ Σ.
+  Implicit Types P Q : iProp Σ.
 
-  Lemma demo_7 E1 E2 E P :
-    E1 ⊆ E2 → E ⊆ E1 →
-    (|={E1,E}=> ▷ P) ={E2,E ∪ E2 ∖ E1}=> ▷ P.
-  Proof.
-    iIntros (? ?) "Hpvs".
-    iPvs "Hpvs"; first set_solver.
-    done.
-  Qed.
-
-  Lemma demo_8 N E P Q R :
+  Lemma demo_7 N E P Q R :
     nclose N ⊆ E →
     (True -★ P -★ inv N Q -★ True -★ R) ⊢ P -★ ▷ Q ={E}=★ R.
   Proof.

@@ -5,13 +5,11 @@ From iris.heap_lang Require Import proofmode.
 Import uPred.
 
 Section spec.
-Context {Σ : gFunctors} `{!heapG Σ} `{!barrierG Σ}. 
-
-Local Notation iProp := (iPropG heap_lang Σ).
+Context `{!heapG Σ} `{!barrierG Σ}.
 
 Lemma barrier_spec (N : namespace) :
   heapN ⊥ N →
-  ∃ recv send : loc → iProp -n> iProp,
+  ∃ recv send : loc → iProp Σ -n> iProp Σ,
     (∀ P, heap_ctx ⊢ {{ True }} newbarrier #()
                      {{ v, ∃ l : loc, v = #l ★ recv l P ★ send l P }}) ∧
     (∀ l P, {{ send l P ★ P }} signal #l {{ _, True }}) ∧

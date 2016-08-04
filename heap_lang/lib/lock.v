@@ -1,7 +1,7 @@
-From iris.program_logic Require Export global_functor.
-From iris.proofmode Require Import invariants ghost_ownership.
+From iris.heap_lang Require Export lang.
+From iris.proofmode Require Import invariants tactics.
 From iris.heap_lang Require Import proofmode notation.
-Import uPred.
+From iris.algebra Require Import excl.
 
 Definition newlock : val := λ: <>, ref #false.
 Definition acquire : val :=
@@ -12,22 +12,21 @@ Global Opaque newlock acquire release.
 
 (** The CMRA we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
-Class lockG Σ := LockG { lock_tokG :> inG heap_lang Σ (exclR unitC) }.
+Class lockG Σ := LockG { lock_tokG :> inG Σ (exclR unitC) }.
 Definition lockGF : gFunctorList := [GFunctor (constRF (exclR unitC))].
-Instance inGF_lockG `{H : inGFs heap_lang Σ lockGF} : lockG Σ.
+Instance inGF_lockG `{H : inGFs Σ lockGF} : lockG Σ.
 Proof. destruct H. split. apply: inGF_inG. Qed.
 
 Section proof.
 Context `{!heapG Σ, !lockG Σ} (N : namespace).
-Local Notation iProp := (iPropG heap_lang Σ).
 
-Definition lock_inv (γ : gname) (l : loc) (R : iProp) : iProp :=
+Definition lock_inv (γ : gname) (l : loc) (R : iProp Σ) : iProp Σ :=
   (∃ b : bool, l ↦ #b ★ if b then True else own γ (Excl ()) ★ R)%I.
 
-Definition is_lock (l : loc) (R : iProp) : iProp :=
+Definition is_lock (l : loc) (R : iProp Σ) : iProp Σ :=
   (∃ γ, heapN ⊥ N ∧ heap_ctx ∧ inv N (lock_inv γ l R))%I.
 
-Definition locked (l : loc) (R : iProp) : iProp :=
+Definition locked (l : loc) (R : iProp Σ) : iProp Σ :=
   (∃ γ, heapN ⊥ N ∧ heap_ctx ∧
         inv N (lock_inv γ l R) ∧ own γ (Excl ()))%I.
 
@@ -45,37 +44,36 @@ Proof. apply _. Qed.
 Lemma locked_is_lock l R : locked l R ⊢ is_lock l R.
 Proof. rewrite /is_lock. iDestruct 1 as (γ) "(?&?&?&_)"; eauto. Qed.
 
-Lemma newlock_spec (R : iProp) Φ :
+Lemma newlock_spec (R : iProp Σ) Φ :
   heapN ⊥ N →
   heap_ctx ★ R ★ (∀ l, is_lock l R -★ Φ #l) ⊢ WP newlock #() {{ Φ }}.
 Proof.
   iIntros (?) "(#Hh & HR & HΦ)". rewrite /newlock.
   wp_seq. wp_alloc l as "Hl".
-  iPvs (own_alloc (Excl ())) as (γ) "Hγ"; first done.
-  iPvs (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?"; first done.
+  iVs (own_alloc (Excl ())) as (γ) "Hγ"; first done.
+  iVs (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
   { iIntros ">". iExists false. by iFrame. }
-  iPvsIntro. iApply "HΦ". iExists γ; eauto.
+  iVsIntro. iApply "HΦ". iExists γ; eauto.
 Qed.
 
-Lemma acquire_spec l R (Φ : val → iProp) :
+Lemma acquire_spec l R (Φ : val → iProp Σ) :
   is_lock l R ★ (locked l R -★ R -★ Φ #()) ⊢ WP acquire #l {{ Φ }}.
 Proof.
   iIntros "[Hl HΦ]". iDestruct "Hl" as (γ) "(%&#?&#?)".
   iLöb as "IH". wp_rec. wp_focus (CAS _ _ _)%E.
-  iInv N as ([]) "[Hl HR]".
-  - wp_cas_fail. iPvsIntro; iSplitL "Hl".
-    + iNext. iExists true; eauto.
-    + wp_if. by iApply "IH".
-  - wp_cas_suc. iPvsIntro. iDestruct "HR" as "[Hγ HR]". iSplitL "Hl".
-    + iNext. iExists true; eauto.
-    + wp_if. iApply ("HΦ" with "[-HR] HR"). iExists γ; eauto.
+  iInv N as ([]) "[Hl HR]" "Hclose".
+  - wp_cas_fail. iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
+    iVsIntro. wp_if. by iApply "IH".
+  - wp_cas_suc. iDestruct "HR" as "[Hγ HR]".
+    iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
+    iVsIntro. wp_if. iApply ("HΦ" with "[-HR] HR"). iExists γ; eauto.
 Qed.
 
-Lemma release_spec R l (Φ : val → iProp) :
+Lemma release_spec R l (Φ : val → iProp Σ) :
   locked l R ★ R ★ Φ #() ⊢ WP release #l {{ Φ }}.
 Proof.
   iIntros "(Hl&HR&HΦ)"; iDestruct "Hl" as (γ) "(% & #? & #? & Hγ)".
-  rewrite /release. wp_let. iInv N as (b) "[Hl _]".
-  wp_store. iPvsIntro. iFrame "HΦ". iNext. iExists false. by iFrame.
+  rewrite /release. wp_let. iInv N as (b) "[Hl _]" "Hclose".
+  wp_store. iFrame "HΦ". iApply "Hclose". iNext. iExists false. by iFrame.
 Qed.
 End proof.

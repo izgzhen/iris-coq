@@ -1,58 +1,36 @@
-From iris.algebra Require Export iprod.
 From iris.program_logic Require Export model.
+From iris.algebra Require Import iprod gmap.
 
-(** The "default" iFunctor is constructed as the dependent product of
-    a bunch of gFunctor. *)
-Structure gFunctor := GFunctor {
-  gFunctor_F :> rFunctor;
-  gFunctor_contractive : rFunctorContractive gFunctor_F;
-}.
-Arguments GFunctor _ {_}.
-Existing Instance gFunctor_contractive.
-
-(** The global CMRA: Indexed product over a gid i to (gname --fin--> Σ i) *)
-Definition gFunctors := { n : nat & fin n → gFunctor }.
-Definition gid (Σ : gFunctors) := fin (projT1 Σ).
-
-(** Name of one instance of a particular CMRA in the ghost state. *)
-Definition gname := positive.
-Canonical Structure gnameC := leibnizC gname.
-
-Definition globalF (Σ : gFunctors) : iFunctor :=
-  IFunctor (iprodURF (λ i, gmapURF gname (projT2 Σ i))).
-Notation iPropG Λ Σ := (iProp Λ (globalF Σ)).
-Notation iPrePropG Λ Σ := (iPreProp Λ (globalF Σ)).
-
-Class inG (Λ : language) (Σ : gFunctors) (A : cmraT) := InG {
+Class inG (Σ : gFunctors) (A : cmraT) := InG {
   inG_id : gid Σ;
-  inG_prf : A = projT2 Σ inG_id (iPreProp Λ (globalF Σ))
+  inG_prf : A = projT2 Σ inG_id (iPreProp Σ)
 }.
-Arguments inG_id {_ _ _} _.
+Arguments inG_id {_ _} _.
 
-Definition to_globalF `{i : inG Λ Σ A} (γ : gname) (a : A) : iGst Λ (globalF Σ) :=
+Definition to_iRes `{i : inG Σ A} (γ : gname) (a : A) : iResUR Σ :=
   iprod_singleton (inG_id i) {[ γ := cmra_transport inG_prf a ]}.
-Instance: Params (@to_globalF) 5.
-Typeclasses Opaque to_globalF.
+Instance: Params (@to_iRes) 4.
+Typeclasses Opaque to_iRes.
 
-(** * Properties of to_globalC *)
-Section to_globalF.
-Context `{i : inG Λ Σ A}.
+(** * Properties of [to_iRes] *)
+Section to_iRes.
+Context `{inG Σ A}.
 Implicit Types a : A.
 
-Global Instance to_globalF_ne γ n :
-  Proper (dist n ==> dist n) (@to_globalF Λ Σ A _ γ).
+Global Instance to_iRes_ne γ n :
+  Proper (dist n ==> dist n) (@to_iRes Σ A _ γ).
 Proof. by intros a a' Ha; apply iprod_singleton_ne; rewrite Ha. Qed.
-Lemma to_globalF_op γ a1 a2 :
-  to_globalF γ (a1 ⋅ a2) ≡ to_globalF γ a1 ⋅ to_globalF γ a2.
+Lemma to_iRes_op γ a1 a2 :
+  to_iRes γ (a1 ⋅ a2) ≡ to_iRes γ a1 ⋅ to_iRes γ a2.
 Proof.
-  by rewrite /to_globalF iprod_op_singleton op_singleton cmra_transport_op.
+  by rewrite /to_iRes iprod_op_singleton op_singleton cmra_transport_op.
 Qed.
-Global Instance to_globalF_timeless γ a : Timeless a → Timeless (to_globalF γ a).
-Proof. rewrite /to_globalF; apply _. Qed.
-Global Instance to_globalF_persistent γ a :
-  Persistent a → Persistent (to_globalF γ a).
-Proof. rewrite /to_globalF; apply _. Qed.
-End to_globalF.
+Global Instance to_iRes_timeless γ a : Timeless a → Timeless (to_iRes γ a).
+Proof. rewrite /to_iRes; apply _. Qed.
+Global Instance to_iRes_persistent γ a :
+  Persistent a → Persistent (to_iRes γ a).
+Proof. rewrite /to_iRes; apply _. Qed.
+End to_iRes.
 
 (** When instantiating the logic, we want to just plug together the
     requirements exported by the modules we use. To this end, we construct
@@ -106,7 +84,7 @@ Notation "#[ Fs1 ; Fs2 ; .. ; Fsn ]" :=
 (** We need another typeclass to identify the *functor* in the Σ. Basing inG on
    the functor breaks badly because Coq is unable to infer the correct
    typeclasses, it does not unfold the functor. *)
-Class inGF (Λ : language) (Σ : gFunctors) (F : gFunctor) := InGF {
+Class inGF (Σ : gFunctors) (F : gFunctor) := InGF {
   inGF_id : gid Σ;
   inGF_prf : F = projT2 Σ inGF_id;
 }.
@@ -115,25 +93,25 @@ is only triggered if the first two arguments of inGF do not contain evars. Since
 instance search for [inGF] is restrained, instances should always have [inGF] as
 their first argument to avoid loops. For example, the instances [authGF_inGF]
 and [auth_identity] otherwise create a cycle that pops up arbitrarily. *)
-Hint Mode inGF + + - : typeclass_instances.
+Hint Mode inGF + - : typeclass_instances.
 
-Lemma inGF_inG `{inGF Λ Σ F} : inG Λ Σ (F (iPrePropG Λ Σ)).
-Proof. exists inGF_id. by rewrite -inGF_prf. Qed.
-Instance inGF_here {Λ Σ} (F: gFunctor) : inGF Λ (gFunctors.cons F Σ) F.
+Lemma inGF_inG {Σ F} : inGF Σ F → inG Σ (F (iPreProp Σ)).
+Proof. intros. exists inGF_id. by rewrite -inGF_prf. Qed.
+Instance inGF_here {Σ} (F: gFunctor) : inGF (gFunctors.cons F Σ) F.
 Proof. by exists 0%fin. Qed.
-Instance inGF_further {Λ Σ} (F F': gFunctor) :
-  inGF Λ Σ F → inGF Λ (gFunctors.cons F' Σ) F.
+Instance inGF_further {Σ} (F F': gFunctor) :
+  inGF Σ F → inGF (gFunctors.cons F' Σ) F.
 Proof. intros [i ?]. by exists (FS i). Qed.
 
 (** For modules that need more than one functor, we offer a typeclass
     [inGFs] to demand a list of rFunctor to be available. We do
     *not* register any instances that go from there to [inGF], to
     avoid cycles. *)
-Class inGFs (Λ : language) (Σ : gFunctors) (Fs : gFunctorList) :=
-  InGFs : (gFunctorList.fold_right (λ F T, inGF Λ Σ F * T) () Fs)%type.
+Class inGFs (Σ : gFunctors) (Fs : gFunctorList) :=
+  InGFs : (gFunctorList.fold_right (λ F T, inGF Σ F * T) () Fs)%type.
 
-Instance inGFs_nil {Λ Σ} : inGFs Λ Σ [].
+Instance inGFs_nil {Σ} : inGFs Σ [].
 Proof. exact tt. Qed.
-Instance inGFs_cons {Λ Σ} F Fs :
-  inGF Λ Σ F → inGFs Λ Σ Fs → inGFs Λ Σ (gFunctorList.cons F Fs).
+Instance inGFs_cons {Σ} F Fs :
+  inGF Σ F → inGFs Σ Fs → inGFs Σ (gFunctorList.cons F Fs).
 Proof. by split. Qed.

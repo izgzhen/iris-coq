@@ -25,7 +25,11 @@ Ltac wp_strip_pvs :=
   lazymatch goal with
   | |- _ ⊢ |={?E}=> _ =>
     etrans; [|apply pvs_intro];
-    match goal with |- _ ⊢ wp E _ _ => simpl | _ => fail end
+    match goal with
+    | |- _ ⊢ wp E _ _ => simpl
+    | |- _ ⊢ |={E,_}=> _ => simpl
+    | _ => fail
+    end
   end.
 
 Ltac wp_value_head := etrans; [|eapply wp_value_pvs; wp_done]; lazy beta.
@@ -45,7 +49,7 @@ Ltac wp_finish := intros_revert ltac:(
   | |- _ ⊢ wp ?E (Seq _ _) ?Q =>
      etrans; [|eapply wp_seq; wp_done]; wp_strip_later
   | |- _ ⊢ wp ?E _ ?Q => wp_value_head
-  | |- _ ⊢ |={_}=> _ => wp_strip_pvs
+  | |- _ ⊢ |={_,_}=> _ => wp_strip_pvs
   end).
 
 Tactic Notation "wp_value" :=

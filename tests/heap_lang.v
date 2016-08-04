@@ -1,25 +1,23 @@
 (** This file is essentially a bunch of testcases. *)
 From iris.program_logic Require Import ownership hoare auth.
 From iris.heap_lang Require Import proofmode notation.
-Import uPred.
 
 Section LangTests.
-  Definition add : expr := (#21 + #21)%E.
+  Definition add : expr := #21 + #21.
   Goal ∀ σ, head_step add σ (#42) σ None.
   Proof. intros; do_head_step done. Qed.
-  Definition rec_app : expr := ((rec: "f" "x" := "f" "x") #0)%E.
+  Definition rec_app : expr := (rec: "f" "x" := "f" "x") #0.
   Goal ∀ σ, head_step rec_app σ rec_app σ None.
   Proof. intros. rewrite /rec_app. do_head_step done. Qed.
-  Definition lam : expr := (λ: "x", "x" + #21)%E.
+  Definition lam : expr := λ: "x", "x" + #21.
   Goal ∀ σ, head_step (lam #21)%E σ add σ None.
   Proof. intros. rewrite /lam. do_head_step done. Qed.
 End LangTests.
 
 Section LiftingTests.
   Context `{heapG Σ}.
-  Local Notation iProp := (iPropG heap_lang Σ).
-  Implicit Types P Q : iPropG heap_lang Σ.
-  Implicit Types Φ : val → iPropG heap_lang Σ.
+  Implicit Types P Q : iProp Σ.
+  Implicit Types Φ : val → iProp Σ.
 
   Definition heap_e  : expr :=
     let: "x" := ref #1 in "x" <- !"x" + #1 ;; !"x".
@@ -71,18 +69,19 @@ Section LiftingTests.
   Qed.
 
   Lemma Pred_user E :
-    (True : iProp) ⊢ WP let: "x" := Pred #42 in Pred "x" @ E {{ v, v = #40 }}.
+    True ⊢ WP let: "x" := Pred #42 in Pred "x" @ E {{ v, v = #40 }}.
   Proof. iIntros "". wp_apply Pred_spec. wp_let. by wp_apply Pred_spec. Qed.
 End LiftingTests.
 
+(*
 Section ClosedProofs.
-  Definition Σ : gFunctors := #[ heapGF ].
-  Notation iProp := (iPropG heap_lang Σ).
+  Definition Σ : gFunctors := #[ irisPreGF; heapGF ].
 
-  Lemma heap_e_closed σ : {{ ownP σ : iProp }} heap_e {{ v, v = #2 }}.
+  Lemma heap_e_closed σ : {{ ownP σ : iProp Σ }} heap_e {{ v, v = #2 }}.
   Proof.
     iProof. iIntros "! Hσ".
-    iPvs (heap_alloc with "Hσ") as (h) "[? _]"; first solve_ndisj.
+    iVs (heap_alloc with "Hσ") as (h) "[? _]"; first solve_ndisj.
     by iApply heap_e_spec; first solve_ndisj.
   Qed.
 End ClosedProofs.
+*)

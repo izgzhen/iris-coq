@@ -66,13 +66,9 @@ program_logic/model.v
 program_logic/adequacy.v
 program_logic/lifting.v
 program_logic/invariants.v
-program_logic/viewshifts.v
-program_logic/wsat.v
 program_logic/ownership.v
 program_logic/weakestpre.v
-program_logic/weakestpre_fix.v
 program_logic/pviewshifts.v
-program_logic/resources.v
 program_logic/hoare.v
 program_logic/language.v
 program_logic/ectx_language.v
@@ -86,6 +82,7 @@ program_logic/sts.v
 program_logic/namespaces.v
 program_logic/boxes.v
 program_logic/counter_examples.v
+program_logic/iris.v
 heap_lang/lang.v
 heap_lang/tactics.v
 heap_lang/wp_tactics.v
@@ -105,7 +102,6 @@ heap_lang/lib/barrier/protocol.v
 heap_lang/lib/barrier/proof.v
 heap_lang/proofmode.v
 tests/heap_lang.v
-tests/program_logic.v
 tests/one_shot.v
 tests/joining_existentials.v
 tests/proofmode.v
@@ -122,6 +118,5 @@ proofmode/notation.v
 proofmode/invariants.v
 proofmode/weakestpre.v
 proofmode/ghost_ownership.v
-proofmode/sts.v
 proofmode/classes.v
 proofmode/class_instances.v

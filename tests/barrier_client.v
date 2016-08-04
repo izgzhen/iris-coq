@@ -14,10 +14,9 @@ Definition client : expr :=
 Global Opaque worker client.
 
 Section client.
-  Context {Σ : gFunctors} `{!heapG Σ, !barrierG Σ, !spawnG Σ} (N : namespace).
-  Local Notation iProp := (iPropG heap_lang Σ).
+  Context `{!heapG Σ, !barrierG Σ, !spawnG Σ} (N : namespace).
 
-  Definition y_inv (q : Qp) (l : loc) : iProp :=
+  Definition y_inv (q : Qp) (l : loc) : iProp Σ :=
     (∃ f : val, l ↦{q} f ★ □ ∀ n : Z, WP f #n {{ v, v = #(n + 42) }})%I.
 
   Lemma y_inv_split q l : y_inv q l ⊢ (y_inv (q/2) l ★ y_inv (q/2) l).
@@ -50,13 +49,14 @@ Section client.
       iSplitL; [|by iIntros (_ _) "_ >"].
       iDestruct (recv_weaken with "[] Hr") as "Hr".
       { iIntros "Hy". by iApply (y_inv_split with "Hy"). }
-      iPvs (recv_split with "Hr") as "[H1 H2]"; first done.
+      iVs (recv_split with "Hr") as "[H1 H2]"; first done.
       iApply (wp_par (λ _, True%I) (λ _, True%I)). iFrame "Hh".
       iSplitL "H1"; [|iSplitL "H2"; [|by iIntros (_ _) "_ >"]];
         iApply worker_safe; by iSplit.
 Qed.
 End client.
 
+(*
 Section ClosedProofs.
   Definition Σ : gFunctors := #[ heapGF ; barrierGF ; spawnGF ].
   Notation iProp := (iPropG heap_lang Σ).
@@ -64,9 +64,10 @@ Section ClosedProofs.
   Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ v, True }}.
   Proof.
     iIntros "! Hσ".
-    iPvs (heap_alloc with "Hσ") as (h) "[#Hh _]"; first done.
+    iVs (heap_alloc with "Hσ") as (h) "[#Hh _]"; first done.
     iApply (client_safe (nroot .@ "barrier")); auto with ndisj.
   Qed.
 
   Print Assumptions client_safe_closed.
 End ClosedProofs.
+*)

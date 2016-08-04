@@ -3,7 +3,7 @@ From iris.proofmode Require Export tactics.
 From iris.program_logic Require Export ghost_ownership.
 
 Section ghost.
-Context `{inG Λ Σ A}.
+Context `{inG Σ A}.
 Implicit Types a b : A.
 
 Global Instance into_sep_own p γ a b1 b2 :
