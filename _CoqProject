@@ -85,6 +85,7 @@ program_logic/auth.v
 program_logic/sts.v
 program_logic/namespaces.v
 program_logic/boxes.v
+program_logic/counter_examples.v
 heap_lang/lang.v
 heap_lang/tactics.v
 heap_lang/wp_tactics.v

@@ -345,11 +345,18 @@ Proof.
 Qed.
 Global Instance: AntiSymm (⊣⊢) (@uPred_entails M).
 Proof. intros P Q HPQ HQP; split=> x n; by split; [apply HPQ|apply HQP]. Qed.
+
+Lemma sound : ¬ (True ⊢ False).
+Proof.
+  unseal. intros [H]. apply (H 0 ∅); last done. apply ucmra_unit_validN.
+Qed.
+
 Lemma equiv_spec P Q : (P ⊣⊢ Q) ↔ (P ⊢ Q) ∧ (Q ⊢ P).
 Proof.
   split; [|by intros [??]; apply (anti_symm (⊢))].
   intros HPQ; split; split=> x i; apply HPQ.
 Qed.
+
 Lemma equiv_entails P Q : (P ⊣⊢ Q) → (P ⊢ Q).
 Proof. apply equiv_spec. Qed.
 Lemma equiv_entails_sym P Q : (Q ⊣⊢ P) → (P ⊢ Q).
