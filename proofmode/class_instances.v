@@ -269,6 +269,21 @@ Proof.
   rewrite /Frame /MakeLater=><- <-. by rewrite later_sep -(later_intro R).
 Qed.
 
+Class MakeNowTrue (P Q : uPred M) := make_now_True : ◇ P ⊣⊢ Q.
+Global Instance make_now_True_true : MakeNowTrue True True.
+Proof.
+  rewrite /MakeNowTrue /uPred_now_True. apply (anti_symm _); auto with I.
+Qed.
+Global Instance make_now_True_default P : MakeNowTrue P (◇ P) | 100.
+Proof. done. Qed.
+
+Global Instance frame_now_true R P Q Q' :
+  Frame R P Q → MakeNowTrue Q Q' → Frame R (◇ P) Q'.
+Proof.
+  rewrite /Frame /MakeNowTrue=><- <-.
+  by rewrite now_True_sep -(now_True_intro R).
+Qed.
+
 Global Instance frame_exist {A} R (Φ Ψ : A → uPred M) :
   (∀ a, Frame R (Φ a) (Ψ a)) → Frame R (∃ x, Φ x) (∃ x, Ψ x).
 Proof. rewrite /Frame=> ?. by rewrite sep_exist_l; apply exist_mono. Qed.
