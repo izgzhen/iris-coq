@@ -128,9 +128,9 @@ Record iTrm {X As} :=
 Arguments ITrm {_ _} _ _ _.
 
 Notation "( H $! x1 .. xn )" :=
-  (ITrm H (hcons x1 .. (hcons xn hnil) ..) "") (at level 0, x1, xn at level 0).
+  (ITrm H (hcons x1 .. (hcons xn hnil) ..) "") (at level 0, x1, xn at level 9).
 Notation "( H $! x1 .. xn 'with' pat )" :=
-  (ITrm H (hcons x1 .. (hcons xn hnil) ..) pat) (at level 0, x1, xn at level 0).
+  (ITrm H (hcons x1 .. (hcons xn hnil) ..) pat) (at level 0, x1, xn at level 9).
 Notation "( H 'with' pat )" := (ITrm H hnil pat) (at level 0).
 
 Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
