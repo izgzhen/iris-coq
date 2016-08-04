@@ -20,8 +20,8 @@ Section savedprop.
 
   (* Self-contradicting assertions are inconsistent *)
   Lemma no_self_contradiction P `{!PersistentP P} : □ (P ↔ ¬ P) ⊢ False.
-  Proof. (* FIXME: Cannot destruct the <-> as two implications. iApply with <-> also does not work. *)
-    rewrite /uPred_iff. iIntros "#[H1 H2]".
+  Proof.
+    iIntros "#[H1 H2]".
     iAssert P as "#HP".
     { iApply "H2". iIntros "! #HP". by iApply ("H1" with "[#]"). }
     by iApply ("H1" with "[#]").
@@ -31,7 +31,7 @@ Section savedprop.
   Definition A (i : sprop) : iProp := ∃ P, saved i P ★ □ P.
   Lemma saved_is_A i P `{!PersistentP P} : saved i P ⊢ □ (A i ↔ P).
   Proof.
-    rewrite /uPred_iff. iIntros "#HS !". iSplit.
+    iIntros "#HS !". iSplit.
     - iDestruct 1 as (Q) "[#HSQ HQ]".
       iApply (sprop_agree i P Q with "[]"); eauto.
     - iIntros "#HP". iExists P. by iSplit.
