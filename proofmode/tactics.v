@@ -224,7 +224,7 @@ Tactic Notation "iIntoEntails" open_constr(t) :=
     | True ⊢ _ => apply t
     | _ ⊢ _ => apply (uPred.entails_wand _ _ t)
     | _ ⊣⊢ _ => apply (uPred.equiv_iff _ _ t)
-    | ?P → ?Q => let H := fresh in assert P as H; [|go uconstr:(t H)]
+    | ?P → ?Q => let H := fresh in assert P as H; [|go uconstr:(t H); clear H]
     | ∀ _ : ?T, _ =>
        (* Put [T] inside an [id] to avoid TC inference from being invoked. *)
        (* This is a workarround for Coq bug #4969. *)
