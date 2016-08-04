@@ -46,17 +46,16 @@ Proof.
   iVs (inv_alloc N _ (one_shot_inv γ l) with "[Hl Hγ]") as "#HN".
   { iNext. iLeft. by iSplitL "Hl". }
   iVsIntro. iApply "Hf"; iSplit.
-  - iIntros (n) "!". wp_let.
-    iInv N as "H" "Hclose"; iTimeless "H".
-    iDestruct "H" as "[[Hl Hγ]|H]"; last iDestruct "H" as (m) "[Hl Hγ]".
+  - iIntros (n) "!#". wp_let.
+    iInv N as ">[[Hl Hγ]|H]" "Hclose"; last iDestruct "H" as (m) "[Hl Hγ]".
     + wp_cas_suc. iVs (own_update with "Hγ") as "Hγ".
       { by apply cmra_update_exclusive with (y:=Shot n). }
       iVs ("Hclose" with "[-]"); last eauto.
       iNext; iRight; iExists n; by iFrame.
     + wp_cas_fail. iVs ("Hclose" with "[-]"); last eauto.
       rewrite /one_shot_inv; eauto 10.
-  - iIntros "!". wp_seq. wp_focus (! _)%E.
-    iInv N as "Hγ" "Hclose"; iTimeless "Hγ".
+  - iIntros "!#". wp_seq. wp_focus (! _)%E.
+    iInv N as ">Hγ" "Hclose".
     iAssert (∃ v, l ↦ v ★ ((v = NONEV ★ own γ Pending) ∨
        ∃ n : Z, v = SOMEV #n ★ own γ (Shot n)))%I with "[Hγ]" as "Hv".
     { iDestruct "Hγ" as "[[Hl Hγ]|Hl]"; last iDestruct "Hl" as (m) "[Hl Hγ]".
@@ -69,12 +68,11 @@ Proof.
       + iSplit. iLeft; by iSplitL "Hl". eauto.
       + iSplit. iRight; iExists m; by iSplitL "Hl". eauto. }
     iVs ("Hclose" with "[Hinv]") as "_"; eauto; iVsIntro.
-    wp_let. iVsIntro. iIntros "!". wp_seq.
+    wp_let. iVsIntro. iIntros "!#". wp_seq.
     iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as (m) "[% Hγ']"; subst.
     { by wp_match. }
     wp_match. wp_focus (! _)%E.
-    iInv N as "H" "Hclose"; iTimeless "H".
-    iDestruct "H" as "[[Hl Hγ]|H]"; last iDestruct "H" as (m') "[Hl Hγ]".
+    iInv N as ">[[Hl Hγ]|H]" "Hclose"; last iDestruct "H" as (m') "[Hl Hγ]".
     { iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct (own_valid with "Hγ") as %?. }
     wp_load.
     iCombine "Hγ" "Hγ'" as "Hγ".
@@ -91,10 +89,10 @@ Lemma ht_one_shot (Φ : val → iProp Σ) :
       {{ True }} Snd ff #() {{ g, {{ True }} g #() {{ _, True }} }}
     }}.
 Proof.
-  iIntros "#? ! _". iApply wp_one_shot. iSplit; first done.
+  iIntros "#? !# _". iApply wp_one_shot. iSplit; first done.
   iIntros (f1 f2) "[#Hf1 #Hf2]"; iSplit.
-  - iIntros (n) "! _". wp_proj. iApply "Hf1".
-  - iIntros "! _". wp_proj.
-    iApply wp_wand_l; iFrame "Hf2". by iIntros (v) "#? ! _".
+  - iIntros (n) "!# _". wp_proj. iApply "Hf1".
+  - iIntros "!# _". wp_proj.
+    iApply wp_wand_l; iFrame "Hf2". by iIntros (v) "#? !# _".
 Qed.
 End proof.

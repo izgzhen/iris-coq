@@ -21,7 +21,7 @@ Section savedprop.
   Proof.
     iIntros "#[H1 H2]".
     iAssert P as "#HP".
-    { iApply "H2". iIntros "! #HP". by iApply ("H1" with "[#]"). }
+    { iApply "H2". iIntros "!# #HP". by iApply ("H1" with "[#]"). }
     by iApply ("H1" with "[#]").
   Qed.
 
@@ -29,7 +29,7 @@ Section savedprop.
   Definition A (i : sprop) : iProp := ∃ P, saved i P ★ □ P.
   Lemma saved_is_A i P `{!PersistentP P} : saved i P ⊢ □ (A i ↔ P).
   Proof.
-    iIntros "#HS !". iSplit.
+    iIntros "#HS !#". iSplit.
     - iDestruct 1 as (Q) "[#HSQ HQ]".
       iApply (sprop_agree i P Q with "[]"); eauto.
     - iIntros "#HP". iExists P. by iSplit.
@@ -39,7 +39,7 @@ Section savedprop.
      implies that assertion with name [i] is equivalent to its own negation. *)
   Definition Q i := saved i (¬ A i).
   Lemma Q_self_contradiction i : Q i ⊢ □ (A i ↔ ¬ A i).
-  Proof. iIntros "#HQ !". by iApply (saved_is_A i (¬A i)). Qed.
+  Proof. iIntros "#HQ !#". by iApply (saved_is_A i (¬A i)). Qed.
 
   (* We can obtain such a [Q i]. *)
   Lemma make_Q : True =r=> ∃ i, Q i.

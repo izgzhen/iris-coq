@@ -93,14 +93,14 @@ Rewriting
 Iris
 ----
 
-- `iPvsIntro` : introduction of a primitive view shift. Generates a goal if
-  the masks are not syntactically equal.
-- `iPvs pm_trm as (x1 ... xn) "ipat"` : runs a primitive view shift `pm_trm`.
+- `iVsIntro` : introduction of a raw or primitive view shift.
+- `iVs pm_trm as (x1 ... xn) "ipat"` : run a raw or primitive view shift
+  `pm_trm` (if the goal permits, i.e. it is a raw or primitive view shift, or
+   a weakest precondition).
 - `iInv N as (x1 ... xn) "ipat"` : open the invariant `N`.
-- `iInv> N as (x1 ... xn) "ipat"` : open the invariant `N` and establish that
-  it is timeless so no laters have to be added.
-- `iTimeless "H"` : strip a later of a timeless hypotheses `H` in case the
-  conclusion is a primitive view shifts or weakest precondition.
+- `iTimeless "H"` : strip a later of a timeless hypothesis `H` (if the goal
+   permits, i.e. it is a later, True now, raw or primitive view shift, or a
+   weakest precondition).
 
 Miscellaneous
 -------------
@@ -123,20 +123,24 @@ introduction patterns:
 - `?` : create an anonymous hypothesis.
 - `_` : remove the hypothesis.
 - `$` : frame the hypothesis in the goal.
-- `# ipat` : move the hypothesis to the persistent context.
-- `%` : move the hypothesis to the pure Coq context (anonymously).
 - `[ipat ipat]` : (separating) conjunction elimination.
 - `[ipat|ipat]` : disjunction elimination.
 - `[]` : false elimination.
+- `%` : move the hypothesis to the pure Coq context (anonymously).
+- `# ipat` : move the hypothesis to the persistent context.
+- `> ipat` : remove a later of a timeless hypothesis (if the goal permits).
+- `==> ipat` : run a view shift (if the goal permits).
 
 Apart from this, there are the following introduction patterns that can only
 appear at the top level:
 
-- `!` : introduce a box (provided that the spatial context is empty).
-- `>` : introduce a later (which strips laters from all hypotheses).
 - `{H1 ... Hn}` : clear `H1 ... Hn`.
 - `{$H1 ... $Hn}` : frame `H1 ... Hn` (this pattern can be mixed with the
   previous pattern, e.g., `{$H1 H2 $H3}`).
+- `!%` : introduce a pure goal (and leave the proof mode).
+- `!#` : introduce an always modality (given that the spatial context is empty).
+- `!>` : introduce a later (which strips laters from all hypotheses).
+- `!==>` : introduce a view shift.
 - `/=` : perform `simpl`.
 - `*` : introduce all universal quantifiers.
 - `**` : introduce all universal quantifiers, as well as all arrows and wands.
@@ -147,7 +151,7 @@ For example, given:
 
 You can write
 
-        iIntros (x) "% ! $ [[] | #[HQ HR]] /= >".
+        iIntros (x) "% !# $ [[] | #[HQ HR]] /= !>".
 
 which results in:
 
@@ -173,7 +177,7 @@ so called specification patterns to express this splitting:
 - `[H1 ... Hn]` : generate a goal with the spatial hypotheses `H1 ... Hn` and
   all persistent hypotheses. The hypotheses `H1 ... Hn` will be consumed.
 - `[-H1 ... Hn]`  : negated form of the above pattern
-- `=>[H1 ... Hn]` : same as the above pattern, but can only be used if the goal
+- `==>[H1 ... Hn]` : same as the above pattern, but can only be used if the goal
   is a primitive view shift, in which case the view shift will be kept in the
   goal of the premise too.
 - `[#]` : This pattern can be used when eliminating `P -★ Q` when either `P` or

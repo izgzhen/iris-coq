@@ -124,7 +124,7 @@ Proof.
   iVsIntro. iNext. iIntros (e2 σ2 ef Hstep).
   destruct (Hatomic _ _ _ _ Hstep) as [v <-%of_to_val].
   iVs ("H" $! _ σ2 ef with "[#]") as "($ & H & $)"; auto.
-  iVs (wp_value_inv with "H") as "H". iVs "H". by iApply wp_value'.
+  iVs (wp_value_inv with "H") as "==> H". by iApply wp_value'.
 Qed.
 
 Lemma wp_strong_mono E1 E2 e Φ Ψ :
@@ -133,7 +133,7 @@ Proof.
   iIntros (?) "[HΦ H]". iLöb (e) as "IH". rewrite !wp_unfold /wp_pre.
   iDestruct "H" as "[Hv|[% H]]"; [iLeft|iRight].
   { iDestruct "Hv" as (v) "[% Hv]". iExists v; iSplit; first done.
-    iApply (pvs_mask_mono E1 _); first done. by iApply ("HΦ" with "|==>[-]"). }
+    iApply (pvs_mask_mono E1 _); first done. by iApply ("HΦ" with "==>[-]"). }
   iSplit; [done|]; iIntros (σ1) "Hσ".
   iApply (pvs_trans _ E1); iApply pvs_intro'; auto. iIntros "Hclose".
   iVs ("H" $! σ1 with "Hσ") as "[$ H]".

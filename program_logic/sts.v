@@ -97,7 +97,7 @@ Section sts.
       ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ={E∖N,E}=★ sts_own γ s' T'.
   Proof.
     iIntros (?) "[#? Hγf]". rewrite /sts_ctx /sts_ownS /sts_inv /sts_own.
-    iInv N as (s) "[Hγ Hφ]" "Hclose". iTimeless "Hγ".
+    iInv N as (s) "[>Hγ Hφ]" "Hclose".
     iCombine "Hγ" "Hγf" as "Hγ"; iDestruct (own_valid with "#Hγ") as %Hvalid.
     assert (s ∈ S) by eauto using sts_auth_frag_valid_inv.
     assert (✓ sts_frag S T) as [??] by eauto using cmra_valid_op_r.

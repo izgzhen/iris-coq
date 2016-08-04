@@ -51,13 +51,13 @@ Proof.
   rewrite {1 5}(union_difference_L {[ i ]} (nclose N)) // ownE_op; last set_solver.
   iIntros "(Hw & [HE $] & $)"; iVsIntro; iRight.
   iDestruct (ownI_open i P with "[Hw HE]") as "($ & $ & HD)"; first by iFrame.
-  iIntros "HP [Hw $]"; iVsIntro; iRight. iApply ownI_close; by iFrame.
+  iIntros "HP [Hw $] !==>"; iRight. iApply ownI_close; by iFrame.
 Qed.
 
 Lemma inv_open_timeless E N P `{!TimelessP P} :
   nclose N ⊆ E → inv N P ={E,E∖N}=> P ★ (P ={E∖N,E}=★ True).
 Proof.
-  iIntros (?) "Hinv". iVs (inv_open with "Hinv") as "[HP Hclose]"; auto.
-  iTimeless "HP"; iVsIntro; iIntros "{$HP} HP". iApply "Hclose"; auto.
+  iIntros (?) "Hinv". iVs (inv_open with "Hinv") as "[>HP Hclose]"; auto.
+  iIntros "!==> {$HP} HP". iApply "Hclose"; auto.
 Qed.
 End inv.

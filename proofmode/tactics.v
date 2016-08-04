@@ -483,20 +483,57 @@ Local Tactic Notation "iExistDestruct" constr(H)
     [env_cbv; reflexivity || fail "iExistDestruct:" Hx "not fresh"
     |revert y; intros x].
 
+(** * Always *)
+Tactic Notation "iAlways":=
+  apply tac_always_intro;
+    [reflexivity || fail "iAlways: spatial context non-empty"|].
+
+(** * Later *)
+Tactic Notation "iNext":=
+  eapply tac_next;
+    [apply _
+    |let P := match goal with |- FromLater ?P _ => P end in
+     apply _ || fail "iNext:" P "does not contain laters"|].
+
+Tactic Notation "iTimeless" constr(H) :=
+  eapply tac_timeless with _ H _ _;
+    [let Q := match goal with |- IsNowTrue ?Q => Q end in
+     apply _ || fail "iTimeless: cannot remove later of timeless hypothesis in goal" Q
+    |env_cbv; reflexivity || fail "iTimeless:" H "not found"
+    |let P := match goal with |- TimelessP ?P => P end in
+     apply _ || fail "iTimeless:" P "not timeless"
+    |env_cbv; reflexivity|].
+
+(** * View shifts *)
+Tactic Notation "iVsIntro" :=
+  eapply tac_vs_intro;
+    [let P := match goal with |- FromVs ?P _ => P end in
+     apply _ || fail "iVsIntro:" P "not a viewshift"|].
+
+Tactic Notation "iVsCore" constr(H) :=
+  eapply tac_vs_elim with _ H _ _ _ _;
+    [env_cbv; reflexivity || fail "iVs:" H "not found"
+    |let P := match goal with |- ElimVs ?P _ _ _ => P end in
+     let Q := match goal with |- ElimVs _ _ _ ?Q => Q end in
+     apply _ || fail "iVs: cannot eliminate" H ":" P "in" Q
+    |env_cbv; reflexivity|].
+
 (** * Basic destruct tactic *)
 Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
   let rec go Hz pat :=
     lazymatch pat with
     | IAnom => idtac
-    | IAnomPure => iPure Hz as ?
     | IDrop => iClear Hz
     | IFrame => iFrame Hz
     | IName ?y => iRename Hz into y
-    | IPersistent ?pat => iPersistent Hz; go Hz pat
     | IList [[]] => iExFalso; iExact Hz
     | IList [[?pat1; ?pat2]] =>
        let Hy := iFresh in iSepDestruct Hz as Hz Hy; go Hz pat1; go Hy pat2
     | IList [[?pat1];[?pat2]] => iOrDestruct Hz as Hz Hz; [go Hz pat1|go Hz pat2]
+    | IPureElim => iPure Hz as ?
+    | IAlwaysElim ?pat => iPersistent Hz; go Hz pat
+    | ILaterElim ?pat => iTimeless Hz; go Hz pat
+    | IVsElim ?pat => iVsCore Hz; go Hz pat
     | _ => fail "iDestruct:" pat "invalid"
     end
   in let pat := intro_pat.parse_one pat in go H pat.
@@ -532,27 +569,6 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
     simple_intropattern(x8) ")" constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 x4 x5 x6 x7 x8 ) pat.
-
-(** * Always *)
-Tactic Notation "iAlways":=
-  apply tac_always_intro;
-    [reflexivity || fail "iAlways: spatial context non-empty"|].
-
-(** * Later *)
-Tactic Notation "iNext":=
-  eapply tac_next;
-    [apply _
-    |let P := match goal with |- FromLater ?P _ => P end in
-     apply _ || fail "iNext:" P "does not contain laters"|].
-
-Tactic Notation "iTimeless" constr(H) :=
-  eapply tac_timeless with _ H _ _;
-    [let Q := match goal with |- IsNowTrue ?Q => Q end in
-     apply _ || fail "iTimeless: cannot remove later of timeless hypothesis in goal" Q
-    |env_cbv; reflexivity || fail "iTimeless:" H "not found"
-    |let P := match goal with |- TimelessP ?P => P end in
-     apply _ || fail "iTimeless:" P "not timeless"
-    |env_cbv; reflexivity|].
 
 (** * Introduction tactic *)
 Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" := first
@@ -608,11 +624,18 @@ Tactic Notation "iIntros" constr(pat) :=
   let rec go pats :=
     lazymatch pats with
     | [] => idtac
+    | IPureElim :: ?pats => iIntro (?); go pats
+    | IAlwaysElim IAnom :: ?pats => let H := iFresh in iIntro #H; go pats
+    | IAnom :: ?pats => let H := iFresh in iIntro H; go pats
+    | IAlwaysElim (IName ?H) :: ?pats => iIntro #H; go pats
+    | IName ?H :: ?pats => iIntro H; go pats
+    | IPureIntro :: ?pats => iPureIntro; go pats
+    | IAlwaysIntro :: ?pats => iAlways; go pats
+    | ILaterIntro :: ?pats => iNext; go pats
+    | IVsIntro :: ?pats => iVsIntro; go pats
+    | ISimpl :: ?pats => simpl; go pats
     | IForall :: ?pats => repeat iIntroForall; go pats
     | IAll :: ?pats => repeat (iIntroForall || iIntro); go pats
-    | ISimpl :: ?pats => simpl; go pats
-    | IAlways :: ?pats => iAlways; go pats
-    | INext :: ?pats => iNext; go pats
     | IClear ?cpats :: ?pats =>
        let rec clr cpats :=
          match cpats with
@@ -620,19 +643,13 @@ Tactic Notation "iIntros" constr(pat) :=
          | (false,?H) :: ?cpats => iClear H; clr cpats
          | (true,?H) :: ?cpats => iFrame H; clr cpats
          end in clr cpats
-    | IPersistent (IName ?H) :: ?pats => iIntro #H; go pats
-    | IName ?H :: ?pats => iIntro H; go pats
-    | IPersistent IAnom :: ?pats => let H := iFresh in iIntro #H; go pats
-    | IAnom :: ?pats => let H := iFresh in iIntro H; go pats
-    | IAnomPure :: ?pats => iIntro (?); go pats
-    | IPersistent ?pat :: ?pats =>
+    | IAlwaysElim ?pat :: ?pats =>
        let H := iFresh in iIntro #H; iDestructHyp H as pat; go pats
     | ?pat :: ?pats =>
        let H := iFresh in iIntro H; iDestructHyp H as pat; go pats
-    | _ => fail "iIntro: failed with" pats
     end
   in let pats := intro_pat.parse pat in try iProof; go pats.
-Tactic Notation "iIntros" := iIntros "**".
+Tactic Notation "iIntros" := iIntros [IAll].
 
 Tactic Notation "iIntros" "(" simple_intropattern(x1) ")" :=
   try iProof; iIntro ( x1 ).

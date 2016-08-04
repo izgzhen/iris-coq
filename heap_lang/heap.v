@@ -164,7 +164,7 @@ Section heap.
     iVs (auth_open with "[Hh]") as (h) "[Hv [Hh Hclose]]"; eauto.
     rewrite left_id /heap_inv. iDestruct "Hv" as %?.
     iApply wp_alloc_pst. iFrame "Hh". iNext.
-    iIntros (l) "[% Hh]"; iVsIntro.
+    iIntros (l) "[% Hh] !==>".
     iVs ("Hclose" $! {[ l := (1%Qp, DecAgree v) ]} with "[Hh]").
     { rewrite -of_heap_insert -(insert_singleton_op h); last by apply of_heap_None.
       iFrame "Hh". iPureIntro.
@@ -183,7 +183,7 @@ Section heap.
     rewrite /heap_inv.
     iApply (wp_load_pst _ (<[l:=v]>(of_heap h)));first by rewrite lookup_insert.
     rewrite of_heap_singleton_op //. iFrame "Hl".
-    iIntros "> Hown". iVsIntro. iVs ("Hclose" with "* [Hown]").
+    iIntros "!> Hown !==>". iVs ("Hclose" with "* [Hown]").
     { iSplit; first done. rewrite of_heap_singleton_op //. by iFrame. }
     by iApply "HΦ".
   Qed.
@@ -199,7 +199,7 @@ Section heap.
     rewrite /heap_inv.
     iApply (wp_store_pst _ (<[l:=v']>(of_heap h))); rewrite ?lookup_insert //.
     rewrite insert_insert !of_heap_singleton_op; eauto. iFrame "Hl".
-    iIntros "> Hl". iVsIntro.
+    iIntros "!> Hl !==>".
     iVs ("Hclose" $! {[l := (1%Qp, DecAgree v)]} with "[Hl]").
     { iSplit.
       - iPureIntro; by apply singleton_local_update, exclusive_local_update.
@@ -218,7 +218,7 @@ Section heap.
     rewrite /heap_inv.
     iApply (wp_cas_fail_pst _ (<[l:=v']>(of_heap h))); rewrite ?lookup_insert //.
     rewrite of_heap_singleton_op //. iFrame "Hl".
-    iIntros "> Hown". iVsIntro. iVs ("Hclose" with "* [Hown]").
+    iIntros "!> Hown !==>". iVs ("Hclose" with "* [Hown]").
     { iSplit; first done. rewrite of_heap_singleton_op //. by iFrame. }
     by iApply "HΦ".
   Qed.
@@ -234,7 +234,7 @@ Section heap.
     rewrite /heap_inv.
     iApply (wp_cas_suc_pst _ (<[l:=v1]>(of_heap h))); rewrite ?lookup_insert //.
     rewrite insert_insert !of_heap_singleton_op; eauto. iFrame "Hl".
-    iIntros "> Hl". iVsIntro.
+    iIntros "!> Hl !==>".
     iVs ("Hclose" $! {[l := (1%Qp, DecAgree v2)]} with "[Hl]").
     { iSplit.
       - iPureIntro; by apply singleton_local_update, exclusive_local_update.

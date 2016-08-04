@@ -96,7 +96,7 @@ Lemma newbarrier_spec (P : iProp Σ) (Φ : val → iProp Σ) :
 Proof.
   iIntros (HN) "[#? HΦ]".
   rewrite /newbarrier. wp_seq. wp_alloc l as "Hl".
-  iApply ("HΦ" with "|==>[-]").
+  iApply ("HΦ" with "==>[-]").
   iVs (saved_prop_alloc (F:=idCF) P) as (γ) "#?".
   iVs (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}) with "[-]")
     as (γ') "[#? Hγ']"; eauto.
@@ -105,7 +105,7 @@ Proof.
   iAssert (barrier_ctx γ' l P)%I as "#?".
   { rewrite /barrier_ctx. by repeat iSplit. }
   iAssert (sts_ownS γ' (i_states γ) {[Change γ]}
-    ★ sts_ownS γ' low_states {[Send]})%I with "|==>[-]" as "[Hr Hs]".
+    ★ sts_ownS γ' low_states {[Send]})%I with "==>[-]" as "[Hr Hs]".
   { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
     - set_solver.
     - iApply (sts_own_weaken with "Hγ'");
@@ -128,7 +128,7 @@ Proof.
   iSplit; [iPureIntro; by eauto using signal_step|].
   iNext. rewrite {2}/barrier_inv /ress /=; iFrame "Hl".
   iDestruct "Hr" as (Ψ) "[Hr Hsp]"; iExists Ψ; iFrame "Hsp".
-  iIntros "> _"; by iApply "Hr".
+  iIntros "!> _"; by iApply "Hr".
 Qed.
 
 Lemma wait_spec l P (Φ : val → iProp Σ) :
@@ -142,7 +142,7 @@ Proof.
   wp_load. destruct p.
   - iVs ("Hclose" $! (State Low I) {[ Change i ]} with "[Hl Hr]") as "Hγ".
     { iSplit; first done. iNext. rewrite {2}/barrier_inv /=. by iFrame. }
-    iAssert (sts_ownS γ (i_states i) {[Change i]})%I with "|==>[Hγ]" as "Hγ".
+    iAssert (sts_ownS γ (i_states i) {[Change i]})%I with "==>[Hγ]" as "Hγ".
     { iApply (sts_own_weaken with "Hγ"); eauto using i_states_closed. }
     iVsIntro. wp_op=> ?; simplify_eq; wp_if.
     iApply ("IH" with "Hγ [HQR] HΦ"). auto.
@@ -177,7 +177,7 @@ Proof.
     iNext. rewrite {2}/barrier_inv /=. iFrame "Hl".
     iApply (ress_split _ _ _ Q R1 R2); eauto. iFrame; auto. }
   iAssert (sts_ownS γ (i_states i1) {[Change i1]}
-    ★ sts_ownS γ (i_states i2) {[Change i2]})%I with "|==>[-]" as "[Hγ1 Hγ2]".
+    ★ sts_ownS γ (i_states i2) {[Change i2]})%I with "==>[-]" as "[Hγ1 Hγ2]".
   { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
     - abstract set_solver.
     - iApply (sts_own_weaken with "Hγ");
@@ -193,7 +193,7 @@ Proof.
   rewrite /recv.
   iIntros "HP HP1"; iDestruct "HP1" as (γ P Q i) "(#Hctx&Hγ&Hi&HP1)".
   iExists γ, P, Q, i. iFrame "Hctx Hγ Hi".
-  iIntros "> HQ". by iApply "HP"; iApply "HP1".
+  iIntros "!> HQ". by iApply "HP"; iApply "HP1".
 Qed.
 
 Lemma recv_mono l P1 P2 : (P1 ⊢ P2) → recv l P1 ⊢ recv l P2.

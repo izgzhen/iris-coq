@@ -3,14 +3,18 @@ From iris.prelude Require Export strings.
 Inductive intro_pat :=
   | IName : string → intro_pat
   | IAnom : intro_pat
-  | IAnomPure : intro_pat
   | IDrop : intro_pat
   | IFrame : intro_pat
-  | IPersistent : intro_pat → intro_pat
   | IList : list (list intro_pat) → intro_pat
+  | IPureElim : intro_pat
+  | IAlwaysElim : intro_pat → intro_pat
+  | ILaterElim : intro_pat → intro_pat
+  | IVsElim : intro_pat → intro_pat
+  | IPureIntro : intro_pat
+  | IAlwaysIntro : intro_pat
+  | ILaterIntro : intro_pat
+  | IVsIntro : intro_pat
   | ISimpl : intro_pat
-  | IAlways : intro_pat
-  | INext : intro_pat
   | IForall : intro_pat
   | IAll : intro_pat
   | IClear : list (bool * string) → intro_pat. (* true = frame, false = clear *)
@@ -19,23 +23,27 @@ Module intro_pat.
 Inductive token :=
   | TName : string → token
   | TAnom : token
-  | TAnomPure : token
   | TDrop : token
   | TFrame : token
-  | TPersistent : token
   | TBar : token
   | TBracketL : token
   | TBracketR : token
   | TAmp : token
   | TParenL : token
   | TParenR : token
+  | TPureElim : token
+  | TAlwaysElim : token
+  | TLaterElim : token
+  | TVsElim : token
+  | TPureIntro : token
+  | TAlwaysIntro : token
+  | TLaterIntro : token
+  | TVsIntro : token
   | TSimpl : token
-  | TAlways : token
-  | TNext : token
-  | TClearL : token
-  | TClearR : token
   | TForall : token
-  | TAll : token.
+  | TAll : token
+  | TClearL : token
+  | TClearR : token.
 
 Fixpoint cons_name (kn : string) (k : list token) : list token :=
   match kn with "" => k | _ => TName (string_rev kn) :: k end.
@@ -44,18 +52,24 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | "" => rev (cons_name kn k)
   | String " " s => tokenize_go s (cons_name kn k) ""
   | String "?" s => tokenize_go s (TAnom :: cons_name kn k) ""
-  | String "%" s => tokenize_go s (TAnomPure :: cons_name kn k) ""
   | String "_" s => tokenize_go s (TDrop :: cons_name kn k) ""
   | String "$" s => tokenize_go s (TFrame :: cons_name kn k) ""
-  | String "#" s => tokenize_go s (TPersistent :: cons_name kn k) ""
   | String "[" s => tokenize_go s (TBracketL :: cons_name kn k) ""
   | String "]" s => tokenize_go s (TBracketR :: cons_name kn k) ""
   | String "|" s => tokenize_go s (TBar :: cons_name kn k) ""
   | String "(" s => tokenize_go s (TParenL :: cons_name kn k) ""
   | String ")" s => tokenize_go s (TParenR :: cons_name kn k) ""
   | String "&" s => tokenize_go s (TAmp :: cons_name kn k) ""
-  | String "!" s => tokenize_go s (TAlways :: cons_name kn k) ""
-  | String ">" s => tokenize_go s (TNext :: cons_name kn k) ""
+  | String "%" s => tokenize_go s (TPureElim :: cons_name kn k) ""
+  | String "#" s => tokenize_go s (TAlwaysElim :: cons_name kn k) ""
+  | String ">" s => tokenize_go s (TLaterElim :: cons_name kn k) ""
+  | String "=" (String "=" (String ">" s)) =>
+     tokenize_go s (TVsElim :: cons_name kn k) ""
+  | String "!" (String "%" s) => tokenize_go s (TPureIntro :: cons_name kn k) ""
+  | String "!" (String "#" s) => tokenize_go s (TAlwaysIntro :: cons_name kn k) ""
+  | String "!" (String ">" s) => tokenize_go s (TLaterIntro :: cons_name kn k) ""
+  | String "!" (String "=" (String "=" (String ">" s))) =>
+     tokenize_go s (TVsIntro :: cons_name kn k) ""
   | String "{" s => tokenize_go s (TClearL :: cons_name kn k) ""
   | String "}" s => tokenize_go s (TClearR :: cons_name kn k) ""
   | String "/" (String "=" s) => tokenize_go s (TSimpl :: cons_name kn k) ""
@@ -67,11 +81,13 @@ Definition tokenize (s : string) : list token := tokenize_go s [] "".
 
 Inductive stack_item :=
   | SPat : intro_pat → stack_item
-  | SPersistent : stack_item
   | SList : stack_item
   | SConjList : stack_item
   | SBar : stack_item
-  | SAmp : stack_item.
+  | SAmp : stack_item
+  | SAlwaysElim : stack_item
+  | SLaterElim : stack_item
+  | SVsElim : stack_item.
 Notation stack := (list stack_item).
 
 Fixpoint close_list (k : stack)
@@ -79,8 +95,11 @@ Fixpoint close_list (k : stack)
   match k with
   | SList :: k => Some (SPat (IList (ps :: pss)) :: k)
   | SPat pat :: k => close_list k (pat :: ps) pss
-  | SPersistent :: k =>
-     '(p,ps) ← maybe2 (::) ps; close_list k (IPersistent p :: ps) pss
+  | SAlwaysElim :: k =>
+     '(p,ps) ← maybe2 (::) ps; close_list k (IAlwaysElim p :: ps) pss
+  | SLaterElim :: k =>
+     '(p,ps) ← maybe2 (::) ps; close_list k (ILaterElim p :: ps) pss
+  | SVsElim :: k => '(p,ps) ← maybe2 (::) ps; close_list k (IVsElim p :: ps) pss
   | SBar :: k => close_list k [] (ps :: pss)
   | _ => None
   end.
@@ -102,7 +121,9 @@ Fixpoint close_conj_list (k : stack)
           end;
      Some (SPat (big_conj ps) :: k)
   | SPat pat :: k => guard (cur = None); close_conj_list k (Some pat) ps
-  | SPersistent :: k => p ← cur; close_conj_list k (Some (IPersistent p)) ps
+  | SAlwaysElim :: k => p ← cur; close_conj_list k (Some (IAlwaysElim p)) ps
+  | SLaterElim :: k => p ← cur; close_conj_list k (Some (ILaterElim p)) ps
+  | SVsElim :: k => p ← cur; close_conj_list k (Some (IVsElim p)) ps
   | SAmp :: k => p ← cur; close_conj_list k None (p :: ps)
   | _ => None
   end.
@@ -112,19 +133,23 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   | [] => Some k
   | TName s :: ts => parse_go ts (SPat (IName s) :: k)
   | TAnom :: ts => parse_go ts (SPat IAnom :: k)
-  | TAnomPure :: ts => parse_go ts (SPat IAnomPure :: k)
   | TDrop :: ts => parse_go ts (SPat IDrop :: k)
   | TFrame :: ts => parse_go ts (SPat IFrame :: k)
-  | TPersistent :: ts => parse_go ts (SPersistent :: k)
   | TBracketL :: ts => parse_go ts (SList :: k)
   | TBar :: ts => parse_go ts (SBar :: k)
   | TBracketR :: ts => close_list k [] [] ≫= parse_go ts
   | TParenL :: ts => parse_go ts (SConjList :: k)
   | TAmp :: ts => parse_go ts (SAmp :: k)
   | TParenR :: ts => close_conj_list k None [] ≫= parse_go ts
+  | TPureElim :: ts => parse_go ts (SPat IPureElim :: k)
+  | TAlwaysElim :: ts => parse_go ts (SAlwaysElim :: k)
+  | TLaterElim :: ts => parse_go ts (SLaterElim :: k)
+  | TVsElim :: ts => parse_go ts (SVsElim :: k)
+  | TPureIntro :: ts => parse_go ts (SPat IPureIntro :: k)
+  | TAlwaysIntro :: ts => parse_go ts (SPat IAlwaysIntro :: k)
+  | TLaterIntro :: ts => parse_go ts (SPat ILaterIntro :: k)
+  | TVsIntro :: ts => parse_go ts (SPat IVsIntro :: k)
   | TSimpl :: ts => parse_go ts (SPat ISimpl :: k)
-  | TAlways :: ts => parse_go ts (SPat IAlways :: k)
-  | TNext :: ts => parse_go ts (SPat INext :: k)
   | TAll :: ts => parse_go ts (SPat IAll :: k)
   | TForall :: ts => parse_go ts (SPat IForall :: k)
   | TClearL :: ts => parse_clear ts [] k

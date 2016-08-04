@@ -20,7 +20,7 @@ Lemma demo_1 (M : ucmraT) (P1 P2 P3 : nat → uPred M) :
     ▷ (∀ n m : nat, P1 n → □ ((True ∧ P2 n) → □ (n = n ↔ P3 n))) -★
     ▷ (x = 0) ∨ ∃ x z, ▷ P3 (x + z) ★ uPred_ownM b ★ uPred_ownM (core b)).
 Proof.
-  iIntros (i [|j] a b ?) "! [Ha Hb] H1 #H2 H3"; setoid_subst.
+  iIntros (i [|j] a b ?) "!# [Ha Hb] H1 #H2 H3"; setoid_subst.
   { iLeft. by iNext. }
   iRight.
   iDestruct "H1" as (z1 z2 c) "(H1&_&#Hc)".
@@ -91,7 +91,7 @@ Section iris.
     (True -★ P -★ inv N Q -★ True -★ R) ⊢ P -★ ▷ Q ={E}=★ R.
   Proof.
     iIntros (?) "H HP HQ".
-    iApply ("H" with "[#] HP |==>[HQ] |==>").
+    iApply ("H" with "[#] HP ==>[HQ] ==>").
     - done.
     - by iApply inv_alloc.
     - done.

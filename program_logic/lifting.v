@@ -18,7 +18,7 @@ Lemma wp_lift_step E Φ e1 :
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (?) "H". rewrite wp_unfold /wp_pre; iRight; iSplit; auto.
-  iIntros (σ1) "Hσ". iVs "H" as (σ1') "(% & Hσf & H)". iTimeless "Hσf".
+  iIntros (σ1) "Hσ". iVs "H" as (σ1') "(% & >Hσf & H)".
   iDestruct (ownP_agree σ1 σ1' with "[#]") as %<-; first by iFrame.
   iVsIntro; iSplit; [done|]; iNext; iIntros (e2 σ2 ef Hstep).
   iVs (ownP_update σ1 σ2 with "[-H]") as "[$ ?]"; first by iFrame.

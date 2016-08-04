@@ -43,9 +43,8 @@ Proof. apply ne_proper, _. Qed.
 Lemma pvs_intro' E1 E2 P : E2 ⊆ E1 → ((|={E2,E1}=> True) -★ P) ={E1,E2}=> P.
 Proof.
   intros (E1''&->&?)%subseteq_disjoint_union_L.
-  rewrite pvs_eq /pvs_def ownE_op //; iIntros "H ($ & $ & HE)".
-  iVsIntro. iApply now_True_intro. iApply "H".
-  iIntros "[$ $]". iVsIntro; iRight; eauto.
+  rewrite pvs_eq /pvs_def ownE_op //; iIntros "H ($ & $ & HE) !==>".
+  iApply now_True_intro. iApply "H". iIntros "[$ $] !==>". iRight; eauto.
 Qed.
 Lemma now_True_pvs E1 E2 P : ◇ (|={E1,E2}=> P) ={E1,E2}=> P.
 Proof.

@@ -52,7 +52,7 @@ Proof.
   wp_seq. wp_alloc l as "Hl".
   iVs (own_alloc (Excl ())) as (γ) "Hγ"; first done.
   iVs (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
-  { iIntros ">". iExists false. by iFrame. }
+  { iIntros "!>". iExists false. by iFrame. }
   iVsIntro. iApply "HΦ". iExists γ; eauto.
 Qed.
 
