@@ -9,11 +9,12 @@ Section savedprop.
   Notation iProp := (uPred M).
   Notation "¬ P" := (□(P → False))%I : uPred_scope.
 
-  (* Saved Propositions. *)
-  Context (sprop : Type) (saved : sprop → iProp → iProp).
+  (* Saved Propositions and view shifts. *)
+  Context (sprop : Type) (saved : sprop → iProp → iProp) (pvs : iProp → iProp).
+  Hypothesis pvs_mono : forall P Q, (P ⊢ Q) → pvs P ⊢ pvs Q.
   Hypothesis sprop_persistent : forall i P, PersistentP (saved i P).
   Hypothesis sprop_alloc_dep :
-    forall (P : sprop → iProp), True ⊢ ∃ i, saved i (P i).
+    forall (P : sprop → iProp), True ⊢ pvs (∃ i, saved i (P i)).
   Hypothesis sprop_agree :
     forall i P Q, saved i P ∧ saved i Q ⊢ P ↔ Q.
 
@@ -50,16 +51,17 @@ Section savedprop.
 
   (* We can obtain such a [Q i]. *)
   Lemma make_Q :
-    True ⊢ ∃ i, Q i.
+    True ⊢ pvs (∃ i, Q i).
   Proof.
     apply sprop_alloc_dep.
   Qed.
 
   (* Put together all the pieces to derive a contradiction. *)
-  Lemma contradiction : False.
+  (* TODO: Have a lemma in upred.v that says that we cannot view shift to False. *)
+  Lemma contradiction : True ⊢ pvs False.
   Proof.
-    apply (@uPred.sound M). iIntros "".
-    iPoseProof make_Q as "HQ". iDestruct "HQ" as (i) "HQ".
+    rewrite make_Q. apply pvs_mono.
+    iIntros "HQ". iDestruct "HQ" as (i) "HQ".
     iApply (@no_self_contradiction (A i) _).
     by iApply Q_self_contradiction.
   Qed.

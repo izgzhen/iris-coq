@@ -346,10 +346,18 @@ Qed.
 Global Instance: AntiSymm (⊣⊢) (@uPred_entails M).
 Proof. intros P Q HPQ HQP; split=> x n; by split; [apply HPQ|apply HQP]. Qed.
 
-Lemma sound : ¬ (True ⊢ False).
+Lemma soundness_later n : ¬ (True ⊢ ▷^n False).
 Proof.
-  unseal. intros [H]. apply (H 0 ∅); last done. apply ucmra_unit_validN.
+  unseal. intros [H].
+  assert ((▷^n @uPred_pure_def M False) n ∅)%I as Hn.
+  (* So Coq still has no nice way to say "make this precondition of that lemma a goal"?!? *)
+  { apply H; by auto using ucmra_unit_validN. }
+  clear H. induction n.
+  - done.
+  - move: Hn. simpl. unseal. done.
 Qed.
+Theorem soundness : ¬ (True ⊢ False).
+Proof. exact (soundness_later 0). Qed.
 
 Lemma equiv_spec P Q : (P ⊣⊢ Q) ↔ (P ⊢ Q) ∧ (Q ⊢ P).
 Proof.
