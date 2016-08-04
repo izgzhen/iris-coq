@@ -372,25 +372,11 @@ Qed.
 Global Instance: AntiSymm (⊣⊢) (@uPred_entails M).
 Proof. intros P Q HPQ HQP; split=> x n; by split; [apply HPQ|apply HQP]. Qed.
 
-Lemma soundness_later n : ¬ (True ⊢ ▷^n False).
-Proof.
-  unseal. intros [H].
-  assert ((▷^n @uPred_pure_def M False) n ∅)%I as Hn.
-  (* So Coq still has no nice way to say "make this precondition of that lemma a goal"?!? *)
-  { apply H; by auto using ucmra_unit_validN. }
-  clear H. induction n.
-  - done.
-  - move: Hn. simpl. unseal. done.
-Qed.
-Theorem soundness : ¬ (True ⊢ False).
-Proof. exact (soundness_later 0). Qed.
-
 Lemma equiv_spec P Q : (P ⊣⊢ Q) ↔ (P ⊢ Q) ∧ (Q ⊢ P).
 Proof.
   split; [|by intros [??]; apply (anti_symm (⊢))].
   intros HPQ; split; split=> x i; apply HPQ.
 Qed.
-
 Lemma equiv_entails P Q : (P ⊣⊢ Q) → (P ⊢ Q).
 Proof. apply equiv_spec. Qed.
 Lemma equiv_entails_sym P Q : (Q ⊣⊢ P) → (P ⊢ Q).
@@ -1418,6 +1404,26 @@ Lemma always_entails_l P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ Q ★ P.
 Proof. by rewrite -(always_always Q); apply always_entails_l'. Qed.
 Lemma always_entails_r P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ P ★ Q.
 Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
+
+(* Soundness results *)
+Lemma adequacy φ n : (True ⊢ Nat.iter n (λ P, |=r=> ▷ P) (■ φ)) → φ.
+Proof.
+  cut (∀ x, ✓{n} x → Nat.iter n (λ P, |=r=> ▷ P)%I (■ φ)%I n x → φ).
+  { intros help H. eapply (help ∅); eauto using ucmra_unit_validN.
+    eapply H; try unseal; eauto using ucmra_unit_validN. }
+  unseal. induction n as [|n IH]=> x Hx Hvs; auto.
+  destruct (Hvs (S n) ∅) as (x'&?&?); rewrite ?right_id; auto.
+  eapply IH with x'; eauto using cmra_validN_S, cmra_validN_op_l.
+Qed.
+
+Lemma soundness_laterN n : ¬(True ⊢ ▷^n False).
+Proof.
+  intros H. apply (adequacy False n). rewrite H {H}.
+  induction n as [|n IH]; rewrite /= ?IH; auto using rvs_intro.
+Qed.
+
+Theorem soundness : ¬ (True ⊢ False).
+Proof. exact (soundness_laterN 0). Qed.
 End uPred_logic.
 
 (* Hint DB for the logic *)
