@@ -135,7 +135,7 @@ Recursive predicates must be \emph{guarded}: in $\MU \var. \term$, the variable 
 Note that $\always$ and $\later$ bind more tightly than $*$, $\wand$, $\land$, $\lor$, and $\Ra$.
 We will write $\pvs[\term] \prop$ for $\pvs[\term][\term] \prop$.
 If we omit the mask, then it is $\top$ for weakest precondition $\wpre\expr{\Ret\var.\prop}$ and $\emptyset$ for primitive view shifts $\pvs \prop$.
-\ralf{$\top$ is not a term in the logic. Neither is any of the operations on masks that we use in the rules for weakestpre.}
+%FIXME $\top$ is not a term in the logic. Neither is any of the operations on masks that we use in the rules for weakestpre.
 
 Some propositions are \emph{timeless}, which intuitively means that step-indexing does not affect them.
 This is a \emph{meta-level} assertion about propositions, defined as follows:
