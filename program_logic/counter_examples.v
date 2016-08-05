@@ -86,16 +86,41 @@ Section inv.
   (* We have invariants *)
   Context (name : Type) (inv : name → iProp → iProp).
   Hypothesis inv_persistent : forall i P, PersistentP (inv i P).
-  Hypothesis inv_alloc_dep :
-    forall (P : name → iProp), (∀ i, P i) ⊢ pvs1 (∃ i, inv i (P i)).
+  Hypothesis inv_alloc :
+    forall (P : iProp), P ⊢ pvs1 (∃ i, inv i P).
   Hypothesis inv_open :
     forall i P Q R, (P ★ Q ⊢ pvs0 (P ★ R)) → (inv i P ★ Q ⊢ pvs1 R).
 
-  (* We have tokens for a little "two-state STS" *)
-  Context (start finished : iProp).
-  Hypothesis start_finish : start ⊢ pvs0 finished.
-  Hypothesis finish_no_start : finished ★ start ⊢ False.
-  Hypothesis finish_persistent : PersistentP finished.
+  (* We have tokens for a little "three-state STS": [fresh] -> [start n] ->
+     [finish n].  The [auth_*] tokens are in the invariant and assert an exact
+     state. [fresh] also asserts the exact state; it is owned by threads (i.e.,
+     there's a token needed to transition to [start].)  [started] and [finished]
+     are *lower bounds*. We don't need "auth_finish" because the state will
+     never change again, so [finished] is just as good. *)
+  Context (auth_fresh fresh : iProp).
+  Context (auth_start started finished : name → iProp).
+  Hypothesis fresh_start :
+    forall n, auth_fresh ★ fresh ⊢ pvs0 (auth_start n ★ started n).
+  Hypotheses start_finish :
+    forall n, auth_start n ⊢ pvs0 (finished n).
+
+  Hypothesis fresh_not_start : forall n, auth_start n ★ fresh ⊢ False.
+  Hypothesis fresh_not_finished : forall n, finished n ★ fresh ⊢ False.
+  Hypothesis started_not_fresh : forall n, auth_fresh ★ started n ⊢ False.
+  Hypothesis finished_not_start : forall n m, auth_start n ★ finished m ⊢ False.
+
+  Hypothesis started_start_agree : forall n m, auth_start n ★ started m ⊢ n = m.
+  Hypothesis started_finished_agree :
+    forall n m, finished n ★ started m ⊢ n = m.
+  Hypothesis finished_agree :
+    forall n m, finished n ★ finished m ⊢ n = m.
+
+  Hypothesis started_persistent : forall n, PersistentP (started n).
+  Hypothesis finished_persistent : forall n, PersistentP (finished n).
+
+  (* We have that we cannot view shift from the initial state to false
+     (because the initial state is actually achievable). *)
+  Hypothesis soundness : ¬ (auth_fresh ★ fresh ⊢ pvs1 False).
 
   (** Some general lemmas and proof mode compatibility. *)
   Lemma inv_open' i P R:
@@ -156,32 +181,68 @@ Section inv.
     rewrite /ElimVs. rewrite pvs0_pvs1. apply elim_pvs1_pvs1.
   Qed.
 
-  (** Now to the actual counterexample. *)
-  Definition saved (i : name) (P : iProp) : iProp :=
-    inv i (start ∨ □P ★ finished).
-
-  Lemma saved_alloc (P : name → iProp) :
-    start ⊢ pvs1 (∃ i, saved i (P i)).
+  Global Instance exists_split_pvs0 {A} P (Φ : A → iProp) :
+    FromExist P Φ → FromExist (pvs0 P) (λ a, pvs0 (Φ a)).
   Proof.
-    iIntros "HS". iApply inv_alloc_dep. iIntros (?). by iLeft.
+    rewrite /FromExist=>HP. apply uPred.exist_elim=> a.
+    apply pvs0_mono. by rewrite -HP -(uPred.exist_intro a).
   Qed.
 
-  Lemma saved_agree i P Q :
+  Global Instance exists_split_pvs1 {A} P (Φ : A → iProp) :
+    FromExist P Φ → FromExist (pvs1 P) (λ a, pvs1 (Φ a)).
+  Proof.
+    rewrite /FromExist=>HP. apply uPred.exist_elim=> a.
+    apply pvs1_mono. by rewrite -HP -(uPred.exist_intro a).
+  Qed.
+
+  (** Now to the actual counterexample. *)
+  Definition saved (i : name) (P : iProp) : iProp :=
+    ∃ F : name → iProp, P = F i ★ started i ★
+      inv i (auth_fresh ∨ ∃ j, auth_start j ∨ (finished j ★ □F j)).
+
+  Lemma saved_alloc (P : name → iProp) :
+    auth_fresh ★ fresh ⊢ pvs1 (∃ i, saved i (P i)).
+  Proof.
+    iIntros "[Haf Hf]". iVs (inv_alloc (auth_fresh ∨ ∃ j, auth_start j ∨ (finished j ★ □P j)) with "[Haf]") as (i) "#Hi".
+    { iLeft. done. }
+    iExists i. iApply inv_open'. iSplit; first done. iIntros "[Haf|Has]"; last first.
+    { iExFalso. iDestruct "Has" as (j) "[Has | [Haf _]]".
+      - iApply fresh_not_start. iSplitL "Has"; done.
+      - iApply fresh_not_finished. iSplitL "Haf"; done. }
+    iVs ((fresh_start i) with "[Hf Haf]") as "[Has #Hs]"; first by iFrame.
+    iApply pvs0_intro. iSplitL.
+    - iRight. iExists i. iLeft. done.
+    - iApply pvs1_intro. iExists P. iSplit; first done. by iFrame "#".
+  Qed.
+
+  Lemma saved_cast i P Q :
     saved i P ★ saved i Q ★ □P ⊢ pvs1 (□Q).
   Proof.
-    iIntros "(#HsP & #HsQ & #HP)". iApply (inv_open' i). iSplit; first iExact "HsP".
-    iIntros "HiP". iAssert (pvs0 (□P  ★ finished)) with "[HiP]" as "Hf".
-    { iDestruct "HiP" as "[Hs | [_ Hf]]".
-      - iApply pvs0_frame_l. iSplit; first done. by iApply start_finish.
-      - iApply pvs0_intro. iSplit; done. }
-    iVs "Hf" as "[_ #Hf]". iApply pvs0_intro. iSplitL.
-    { iRight. eauto. }
-    iApply (inv_open' i). iSplit; first iExact "HsQ".
-    iIntros "[Hs | [#HQ _]]".
-    { iExFalso. iApply finish_no_start. eauto. }
+    iIntros "(#HsP & #HsQ & #HP)". iDestruct "HsP" as (FP) "(% & HsP & HiP)".
+    iApply (inv_open' i). iSplit; first done.
+    iIntros "[HaP|HaP]".
+    { iExFalso. iApply started_not_fresh. iSplit; done. }
+    (* Can I state a view-shift and immediately run it? *)
+    iAssert (pvs0 (finished i)) with "[HaP]" as "Hf".
+    { iDestruct "HaP" as (j) "[Hs | [Hf _]]".
+      - iApply start_finish. (* FIXME: iPoseProof as "%" calls the assertion "%" instead of moving to the Coq context. *)
+        iPoseProof (started_start_agree with "[#]") as "H"; first by iSplit.
+        iDestruct "H" as %<-. done.
+      - iApply pvs0_intro. iPoseProof (started_finished_agree with "[#]") as "H"; first by iSplit.
+        iDestruct "H" as %<-. done. }
+    iVs "Hf" as "#Hf". iApply pvs0_intro. iSplitL.
+    { iRight. iExists i. iRight. subst. eauto. }
+    iDestruct "HsQ" as (FQ) "(% & HsQ & HiQ)".
+    iApply (inv_open' i). iSplit; first iExact "HiQ".
+    iIntros "[HaQ | HaQ]".
+    { iExFalso. iApply started_not_fresh. iSplit; done. }
+    iDestruct "HaQ" as (j) "[HaS | #[Hf' HQ]]".
+    { iExFalso. iApply finished_not_start. eauto. }
     iApply pvs0_intro. iSplitL.
-    { iRight. eauto. }
-    iApply pvs1_intro. done.
+    { iRight. iExists j. eauto. }
+    iPoseProof (finished_agree with "[#]") as "H".
+    { iFrame "Hf Hf'". done. }
+    iDestruct "H" as %<-. iApply pvs1_intro. subst Q. done.
   Qed.
 
 (*
