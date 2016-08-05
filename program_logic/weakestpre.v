@@ -89,6 +89,21 @@ Proof.
   by iDestruct "H" as (v') "[% ?]"; simplify_eq.
 Qed.
 
+Lemma wp_strong_mono E1 E2 e Φ Ψ :
+  E1 ⊆ E2 → (∀ v, Φ v ={E2}=★ Ψ v) ★ WP e @ E1 {{ Φ }} ⊢ WP e @ E2 {{ Ψ }}.
+Proof.
+  iIntros (?) "[HΦ H]". iLöb (e) as "IH". rewrite !wp_unfold /wp_pre.
+  iDestruct "H" as "[Hv|[% H]]"; [iLeft|iRight].
+  { iDestruct "Hv" as (v) "[% Hv]". iExists v; iSplit; first done.
+    iApply ("HΦ" with "==>[-]"). by iApply (pvs_mask_mono E1 _). }
+  iSplit; [done|]; iIntros (σ1) "Hσ".
+  iApply (pvs_trans _ E1); iApply pvs_intro'; auto. iIntros "Hclose".
+  iVs ("H" $! σ1 with "Hσ") as "[$ H]".
+  iVsIntro. iNext. iIntros (e2 σ2 ef Hstep).
+  iVs ("H" $! _ σ2 ef with "[#]") as "($ & H & $)"; auto.
+  iVs "Hclose" as "_". by iApply ("IH" with "HΦ").
+Qed.
+
 Lemma pvs_wp E e Φ : (|={E}=> WP e @ E {{ Φ }}) ⊢ WP e @ E {{ Φ }}.
 Proof.
   rewrite wp_unfold /wp_pre. iIntros "H". destruct (to_val e) as [v|] eqn:?.
@@ -99,16 +114,7 @@ Proof.
   iDestruct "H" as (v') "[% ?]"; simplify_eq.
 Qed.
 Lemma wp_pvs E e Φ : WP e @ E {{ v, |={E}=> Φ v }} ⊢ WP e @ E {{ Φ }}.
-Proof.
-  iIntros "H". iLöb (E e Φ) as "IH". rewrite !wp_unfold /wp_pre.
-  iDestruct "H" as "[Hv|[% H]]"; [iLeft|iRight].
-  { iDestruct "Hv" as (v) "[% Hv]". iExists v; iSplit; first done.
-    by iVs "Hv". }
-  iSplit; [done|]; iIntros (σ1) "Hσ1".
-  iVs ("H" $! _ with "Hσ1") as "[$ H]".
-  iVsIntro; iNext; iIntros (e2 σ2 ef Hstep).
-  iVs ("H" $! e2 σ2 ef with "[%]") as "($ & ? & $)"; eauto. by iApply "IH".
-Qed.
+Proof. iIntros "H". iApply (wp_strong_mono E); try iFrame; auto. Qed.
 
 Lemma wp_atomic E1 E2 e Φ :
   atomic e →
@@ -127,20 +133,6 @@ Proof.
   iVs (wp_value_inv with "H") as "==> H". by iApply wp_value'.
 Qed.
 
-Lemma wp_strong_mono E1 E2 e Φ Ψ :
-  E1 ⊆ E2 → (∀ v, Φ v -★ Ψ v) ★ WP e @ E1 {{ Φ }} ⊢ WP e @ E2 {{ Ψ }}.
-Proof.
-  iIntros (?) "[HΦ H]". iLöb (e) as "IH". rewrite !wp_unfold /wp_pre.
-  iDestruct "H" as "[Hv|[% H]]"; [iLeft|iRight].
-  { iDestruct "Hv" as (v) "[% Hv]". iExists v; iSplit; first done.
-    iApply (pvs_mask_mono E1 _); first done. by iApply ("HΦ" with "==>[-]"). }
-  iSplit; [done|]; iIntros (σ1) "Hσ".
-  iApply (pvs_trans _ E1); iApply pvs_intro'; auto. iIntros "Hclose".
-  iVs ("H" $! σ1 with "Hσ") as "[$ H]".
-  iVsIntro. iNext. iIntros (e2 σ2 ef Hstep).
-  iVs ("H" $! _ σ2 ef with "[#]") as "($ & H & $)"; auto.
-  iVs "Hclose" as "_". by iApply ("IH" with "HΦ").
-Qed.
 Lemma wp_frame_step_l E1 E2 e Φ R :
   to_val e = None → E2 ⊆ E1 →
   (|={E1,E2}=> ▷ |={E2,E1}=> R) ★ WP e @ E2 {{ Φ }} ⊢ WP e @ E1 {{ v, R ★ Φ v }}.
@@ -175,7 +167,7 @@ Qed.
 Lemma wp_mono E e Φ Ψ : (∀ v, Φ v ⊢ Ψ v) → WP e @ E {{ Φ }} ⊢ WP e @ E {{ Ψ }}.
 Proof.
   iIntros (HΦ) "H"; iApply (wp_strong_mono E E); auto.
-  iFrame. iIntros (v). iApply HΦ.
+  iFrame. iIntros (v) "?". by iApply HΦ.
 Qed.
 Lemma wp_mask_mono E1 E2 e Φ : E1 ⊆ E2 → WP e @ E1 {{ Φ }} ⊢ WP e @ E2 {{ Φ }}.
 Proof. iIntros (?) "H"; iApply (wp_strong_mono E1 E2); auto. iFrame; eauto. Qed.
@@ -212,7 +204,10 @@ Proof. iIntros (?) "[??]". iApply (wp_frame_step_r E E); try iFrame; eauto. Qed.
 
 Lemma wp_wand_l E e Φ Ψ :
   (∀ v, Φ v -★ Ψ v) ★ WP e @ E {{ Φ }} ⊢ WP e @ E {{ Ψ }}.
-Proof. by apply wp_strong_mono. Qed.
+Proof.
+  iIntros "[H Hwp]". iApply (wp_strong_mono E); auto.
+  iFrame "Hwp". iIntros (?) "?". by iApply "H".
+Qed.
 Lemma wp_wand_r E e Φ Ψ :
   WP e @ E {{ Φ }} ★ (∀ v, Φ v -★ Ψ v) ⊢ WP e @ E {{ Ψ }}.
 Proof. by rewrite comm wp_wand_l. Qed.
