@@ -64,7 +64,7 @@ Module gFunctors.
   Definition nil : gFunctors := existT 0 (fin_0_inv _).
 
   Definition cons (F : gFunctor) (Σ : gFunctors) : gFunctors :=
-   existT (S (projT1 Σ)) (fin_S_inv _ F (projT2 Σ)).
+    existT (S (projT1 Σ)) (fin_S_inv _ F (projT2 Σ)).
 
   Fixpoint app (Fs : gFunctorList) (Σ : gFunctors) : gFunctors :=
     match Fs with

@@ -18,8 +18,6 @@ Class heapG Σ := HeapG {
   heap_name : gname
 }.
 (** The Functor we need. *)
-Definition heapGF : gFunctor := authGF heapUR.
-
 Definition to_heap : state → heapUR := fmap (λ v, (1%Qp, DecAgree v)).
 Definition of_heap : heapUR → state := omap (maybe DecAgree ∘ snd).
 
@@ -100,24 +98,6 @@ Section heap.
     - by rewrite !lookup_op !lookup_singleton_ne.
   Qed.
   Hint Resolve heap_store_valid.
-
-  (** Allocation *)
-  Lemma heap_alloc `{irisG heap_lang Σ, authG Σ heapUR} E σ :
-    ownP σ ={E}=> ∃ _ : heapG Σ, heap_ctx ∧ [★ map] l↦v ∈ σ, l ↦ v.
-  Proof.
-    intros. rewrite -{1}(from_to_heap σ). etrans.
-    { rewrite [ownP _]later_intro.
-      apply (auth_alloc (ownP ∘ of_heap) heapN E); auto using to_heap_valid. }
-    apply pvs_mono, exist_elim=> γ.
-    rewrite -(exist_intro (HeapG _ _ _ γ)) /heap_ctx; apply and_mono_r.
-    rewrite heap_mapsto_eq /heap_mapsto_def /heap_name.
-    induction σ as [|l v σ Hl IH] using map_ind.
-    { rewrite big_sepM_empty; apply True_intro. }
-    rewrite to_heap_insert big_sepM_insert //.
-    rewrite (insert_singleton_op (to_heap σ));
-      last by rewrite lookup_fmap Hl; auto.
-    by rewrite auth_own_op IH.
-  Qed.
 
   Context `{heapG Σ}.
 

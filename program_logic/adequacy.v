@@ -4,6 +4,29 @@ From iris.program_logic Require Import ownership.
 From iris.proofmode Require Import tactics weakestpre.
 Import uPred.
 
+Record adequate {Λ} (e1 : expr Λ) (σ1 : state Λ) (φ : val Λ → Prop) := {
+  adequate_result t2 σ2 v2 :
+   rtc step ([e1], σ1) (of_val v2 :: t2, σ2) → φ v2;
+  adequate_safe t2 σ2 e2 :
+   rtc step ([e1], σ1) (t2, σ2) →
+   e2 ∈ t2 → (is_Some (to_val e2) ∨ reducible e2 σ2)
+}.
+
+Theorem adequate_tp_safe {Λ} (e1 : expr Λ) t2 σ1 σ2 φ :
+  adequate e1 σ1 φ →
+  rtc step ([e1], σ1) (t2, σ2) →
+  Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ t3 σ3, step (t2, σ2) (t3, σ3).
+Proof.
+  intros Had ?.
+  destruct (decide (Forall (λ e, is_Some (to_val e)) t2)) as [|Ht2]; [by left|].
+  apply (not_Forall_Exists _), Exists_exists in Ht2; destruct Ht2 as (e2&?&He2).
+  destruct (adequate_safe e1 σ1 φ Had t2 σ2 e2) as [?|(e3&σ3&ef&?)];
+    rewrite ?eq_None_not_Some; auto.
+  { exfalso. eauto. }
+  destruct (elem_of_list_split t2 e2) as (t2'&t2''&->); auto.
+  right; exists (t2' ++ e3 :: t2'' ++ option_list ef), σ3; econstructor; eauto.
+Qed.
+
 Section adequacy.
 Context `{irisG Λ Σ}.
 Implicit Types e : expr Λ.
@@ -102,41 +125,19 @@ Proof.
 Qed.
 End adequacy.
 
-Theorem adequacy_result `{irisPreG Λ Σ} e v2 t2 σ1 σ2 φ :
-  (∀ `{irisG Λ Σ}, ownP σ1 ⊢ WP e {{ v, ■ φ v }}) →
-  rtc step ([e], σ1) (of_val v2 :: t2, σ2) →
-  φ v2.
+Theorem wp_adequacy Σ `{irisPreG Λ Σ} e σ φ :
+  (∀ `{irisG Λ Σ}, ownP σ ⊢ WP e {{ v, ■ φ v }}) →
+  adequate e σ φ.
 Proof.
-  intros Hwp [n ?]%rtc_nsteps.
-  eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
-  rewrite Nat_iter_S. iVs (iris_alloc σ1) as (?) "(?&?&?&Hσ)".
-  iVsIntro. iNext. iApply wptp_result; eauto.
-  iFrame. iSplitL. by iApply Hwp. done.
-Qed.
-
-Lemma wp_adequacy_reducible `{irisPreG Λ Σ} e1 e2 t2 σ1 σ2 Φ :
-  (∀ `{irisG Λ Σ}, ownP σ1 ⊢ WP e1 {{ Φ }}) →
-  rtc step ([e1], σ1) (t2, σ2) →
-  e2 ∈ t2 → (is_Some (to_val e2) ∨ reducible e2 σ2).
-Proof.
-  intros Hwp [n ?]%rtc_nsteps ?.
-  eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
-  rewrite Nat_iter_S. iVs (iris_alloc σ1) as (?) "(Hw & HE & Hσ & Hσf)".
-  iVsIntro. iNext. iApply wptp_safe; eauto.
-  iFrame "Hw HE Hσ". iSplitL. by iApply Hwp. done.
-Qed.
-
-Theorem wp_adequacy_safe `{irisPreG Λ Σ} e1 t2 σ1 σ2 Φ :
-  (∀ `{irisG Λ Σ}, ownP σ1 ⊢ WP e1 {{ Φ }}) →
-  rtc step ([e1], σ1) (t2, σ2) →
-  Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ t3 σ3, step (t2, σ2) (t3, σ3).
-Proof.
-  intros.
-  destruct (decide (Forall (λ e, is_Some (to_val e)) t2)) as [|Ht2]; [by left|].
-  apply (not_Forall_Exists _), Exists_exists in Ht2; destruct Ht2 as (e2&?&He2).
-  destruct (wp_adequacy_reducible e1 e2 t2 σ1 σ2 Φ) as [?|(e3&σ3&ef&?)];
-    rewrite ?eq_None_not_Some; auto.
-  { exfalso. eauto. }
-  destruct (elem_of_list_split t2 e2) as (t2'&t2''&->); auto.
-  right; exists (t2' ++ e3 :: t2'' ++ option_list ef), σ3; econstructor; eauto.
+  intros Hwp; split.
+  - intros t2 σ2 v2 [n ?]%rtc_nsteps.
+    eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
+    rewrite Nat_iter_S. iVs (iris_alloc σ) as (?) "(?&?&?&Hσ)".
+    iVsIntro. iNext. iApply wptp_result; eauto.
+    iFrame. iSplitL; auto. by iApply Hwp.
+  - intros t2 σ2 e2 [n ?]%rtc_nsteps ?.
+    eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
+    rewrite Nat_iter_S. iVs (iris_alloc σ) as (?) "(Hw & HE & Hσ & Hσf)".
+    iVsIntro. iNext. iApply wptp_safe; eauto.
+    iFrame "Hw HE Hσ". iSplitL; auto. by iApply Hwp.
 Qed.

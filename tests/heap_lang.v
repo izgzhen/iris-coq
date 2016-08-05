@@ -1,7 +1,8 @@
 (** This file is essentially a bunch of testcases. *)
-From iris.program_logic Require Export weakestpre.
+From iris.program_logic Require Export weakestpre hoare.
 From iris.heap_lang Require Export lang.
-From iris.program_logic Require Import ownership hoare.
+From iris.heap_lang Require Import adequacy.
+From iris.program_logic Require Import ownership.
 From iris.heap_lang Require Import proofmode notation.
 
 Section LangTests.
@@ -75,15 +76,5 @@ Section LiftingTests.
   Proof. iIntros "". wp_apply Pred_spec. wp_let. by wp_apply Pred_spec. Qed.
 End LiftingTests.
 
-(*
-Section ClosedProofs.
-  Definition Σ : gFunctors := #[ irisPreGF; heapGF ].
-
-  Lemma heap_e_closed σ : {{ ownP σ : iProp Σ }} heap_e {{ v, v = #2 }}.
-  Proof.
-    iProof. iIntros "! Hσ".
-    iVs (heap_alloc with "Hσ") as (h) "[? _]"; first solve_ndisj.
-    by iApply heap_e_spec; first solve_ndisj.
-  Qed.
-End ClosedProofs.
-*)
+Lemma heap_e_adequate σ : adequate heap_e σ (λ v, v = #2).
+Proof. eapply (heap_adequacy #[ heapGF ])=> ?. by apply heap_e_spec. Qed.

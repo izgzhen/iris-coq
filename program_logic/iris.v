@@ -17,13 +17,13 @@ Class irisG (Λ : language) (Σ : gFunctors) : Set := IrisG {
   disabled_name : gname;
 }.
 
-Definition irisPreGF (Λ : language) : gFunctorList :=
+Definition irisGF (Λ : language) : gFunctorList :=
   [GFunctor (constRF (authUR (optionUR (exclR (stateC Λ)))));
    GFunctor (authRF (gmapURF positive (agreeRF (laterCF idCF))));
    GFunctor (constRF coPset_disjUR);
    GFunctor (constRF (gset_disjUR positive))].
 
-Instance inGF_barrierG `{H : inGFs Σ (irisPreGF Λ)} : irisPreG Λ Σ.
+Instance inGF_barrierG `{H : inGFs Σ (irisGF Λ)} : irisPreG Λ Σ.
 Proof.
   by destruct H as (?%inGF_inG & ?%inGF_inG & ?%inGF_inG & ?%inGF_inG & _).
 Qed.
