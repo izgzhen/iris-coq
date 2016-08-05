@@ -114,8 +114,8 @@ Module inv. Section inv.
   Hypothesis finished_agree :
     forall n m, finished n ★ finished m ⊢ n = m.
 
-  Hypothesis started_persistent : forall n, PersistentP (started n).
-  Hypothesis finished_persistent : forall n, PersistentP (finished n).
+  Hypothesis started_dup : forall n, started n ⊢ started n ★ started n.
+  Hypothesis finished_dup : forall n, finished n ⊢ finished n ★ finished n.
 
   (* We have that we cannot view shift from the initial state to false
      (because the initial state is actually achievable). *)
@@ -191,60 +191,110 @@ Module inv. Section inv.
     apply pvs1_mono. by rewrite -HP -(uPred.exist_intro a).
   Qed.
 
+  (* "Weak box" -- a weak form of □ for non-persistent assertions. *)
+  Definition wbox P : iProp :=
+    ∃ Q, Q ★ □(Q → P) ★ □(Q → Q ★ Q).
+
+  Lemma wbox_dup P :
+    wbox P ⊢ wbox P ★ wbox P.
+  Proof.
+    iIntros "H". iDestruct "H" as (Q) "(HQ & #HP & #Hdup)".
+    iDestruct ("Hdup" with "HQ") as "[HQ HQ']".
+    iSplitL "HQ"; iExists Q; iSplit; eauto.
+  Qed.
+
+  Lemma wbox_out P :
+    wbox P ⊢ P.
+  Proof.
+    iIntros "H". iDestruct "H" as (Q) "(HQ & #HP & _)".
+    iApply "HP". done.
+  Qed.
+
   (** Now to the actual counterexample. We start with a weird for of saved propositions. *)
   Definition saved (i : name) (P : iProp) : iProp :=
     ∃ F : name → iProp, P = F i ★ started i ★
-      inv i (auth_fresh ∨ ∃ j, auth_start j ∨ (finished j ★ □F j)).
+      inv i (auth_fresh ∨ ∃ j, auth_start j ∨ (finished j ★ wbox (F j))).
+
+  Lemma saved_dup i P :
+    saved i P ⊢ saved i P ★ saved i P.
+  Proof.
+    iIntros "H". iDestruct "H" as (F) "(#? & Hs & #?)".
+    iDestruct (started_dup with "Hs") as "[Hs Hs']". iSplitL "Hs".
+    - iExists F. eauto.
+    - iExists F. eauto.
+  Qed.
 
   Lemma saved_alloc (P : name → iProp) :
     auth_fresh ★ fresh ⊢ pvs1 (∃ i, saved i (P i)).
   Proof.
-    iIntros "[Haf Hf]". iVs (inv_alloc (auth_fresh ∨ ∃ j, auth_start j ∨ (finished j ★ □P j)) with "[Haf]") as (i) "#Hi".
+    iIntros "[Haf Hf]". iVs (inv_alloc (auth_fresh ∨ ∃ j, auth_start j ∨ (finished j ★ wbox (P j))) with "[Haf]") as (i) "#Hi".
     { iLeft. done. }
     iExists i. iApply inv_open'. iSplit; first done. iIntros "[Haf|Has]"; last first.
     { iExFalso. iDestruct "Has" as (j) "[Has | [Haf _]]".
       - iApply fresh_not_start. iSplitL "Has"; done.
       - iApply fresh_not_finished. iSplitL "Haf"; done. }
-    iVs ((fresh_start i) with "[Hf Haf]") as "[Has #Hs]"; first by iFrame.
-    iApply pvs0_intro. iSplitL.
+    iVs ((fresh_start i) with "[Hf Haf]") as "[Has Hs]"; first by iFrame.
+    iDestruct (started_dup with "Hs") as "[Hs Hs']".
+    iApply pvs0_intro. iSplitR "Hs'".
     - iRight. iExists i. iLeft. done.
-    - iApply pvs1_intro. iExists P. iSplit; first done. by iFrame "#".
+    - iApply pvs1_intro. iExists P. iSplit; first done. by iFrame.
   Qed.
 
   Lemma saved_cast i P Q :
-    saved i P ★ saved i Q ★ □P ⊢ pvs1 (□Q).
+    saved i P ★ saved i Q ★ wbox P ⊢ pvs1 (wbox Q).
   Proof.
-    iIntros "(#HsP & #HsQ & #HP)". iDestruct "HsP" as (FP) "(% & HsP & HiP)".
+    iIntros "(HsP & HsQ & HP)". iDestruct "HsP" as (FP) "(% & HsP & #HiP)".
     iApply (inv_open' i). iSplit; first done.
     iIntros "[HaP|HaP]".
-    { iExFalso. iApply started_not_fresh. iSplit; done. }
+    { iExFalso. iApply started_not_fresh. iSplitL "HaP"; done. }
     (* Can I state a view-shift and immediately run it? *)
-    iAssert (pvs0 (finished i)) with "[HaP]" as "Hf".
+    iAssert (pvs0 (finished i)) with "[HaP HsP]" as "Hf".
     { iDestruct "HaP" as (j) "[Hs | [Hf _]]".
-      - iApply start_finish. (* FIXME: iPoseProof as "%" calls the assertion "%" instead of moving to the Coq context. *)
-        iPoseProof (started_start_agree with "[#]") as "H"; first by iSplit.
-        iDestruct "H" as %<-. done.
-      - iApply pvs0_intro. iPoseProof (started_finished_agree with "[#]") as "H"; first by iSplit.
-        iDestruct "H" as %<-. done. }
-    iVs "Hf" as "#Hf". iApply pvs0_intro. iSplitL.
-    { iRight. iExists i. iRight. subst. eauto. }
+      - iApply start_finish.
+        iDestruct (started_start_agree with "[#]") as "%"; first by iSplitL "Hs".
+        subst j. done.
+      - iApply pvs0_intro.
+        iDestruct (started_finished_agree with "[#]") as "%"; first by iSplitL "Hf".
+        subst j. done. }
+    iVs "Hf" as "Hf". iApply pvs0_intro.
+    iDestruct (finished_dup with "Hf") as "[Hf Hf']". iSplitL "Hf' HP".
+    { iRight. iExists i. iRight. subst. iSplitL "Hf'"; done. }
     iDestruct "HsQ" as (FQ) "(% & HsQ & HiQ)".
     iApply (inv_open' i). iSplit; first iExact "HiQ".
     iIntros "[HaQ | HaQ]".
-    { iExFalso. iApply started_not_fresh. iSplit; done. }
-    iDestruct "HaQ" as (j) "[HaS | #[Hf' HQ]]".
-    { iExFalso. iApply finished_not_start. eauto. }
-    iApply pvs0_intro. iSplitL.
-    { iRight. iExists j. eauto. }
+    { iExFalso. iApply started_not_fresh. iSplitL "HaQ"; done. }
+    iDestruct "HaQ" as (j) "[HaS | [Hf' HQ]]".
+    { iExFalso. iApply finished_not_start. iSplitL "HaS"; done. }
+    iApply pvs0_intro.
+    iDestruct (finished_dup with "Hf'") as "[Hf' Hf'']".
+    iDestruct (wbox_dup with "HQ") as "[HQ HQ']".
+    iSplitL "Hf'' HQ'".
+    { iRight. iExists j. iRight. by iSplitR "HQ'". }
     iPoseProof (finished_agree with "[#]") as "H".
     { iFrame "Hf Hf'". done. }
     iDestruct "H" as %<-. iApply pvs1_intro. subst Q. done.
   Qed.
 
   (** And now we tie a bad knot. *)
-  Notation "¬ P" := (□ (P → pvs1 False))%I : uPred_scope.
+  Notation "¬ P" := (wbox (P -★ pvs1 False))%I : uPred_scope.
   Definition A i : iProp := ∃ P, ¬P ★ saved i P.
-  Instance : forall i, PersistentP (A i) := _.
+  Lemma A_dup i :
+    A i ⊢ A i ★ A i.
+  Proof.
+    iIntros "HA". iDestruct "HA" as (P) "[HNP HsP]".
+    iDestruct (wbox_dup with "HNP") as "[HNP HNP']".
+    iDestruct (saved_dup with "HsP") as "[HsP HsP']".
+    iSplitL "HNP HsP"; iExists P.
+    - by iSplitL "HNP".
+    - by iSplitL "HNP'".
+  Qed.
+  Lemma A_wbox i :
+    A i ⊢ wbox (A i).
+  Proof.
+    iIntros "H". iExists (A i). iSplitL "H"; first done.
+    iSplit; first by iIntros "!# ?". iIntros "!# HA".
+    by iApply A_dup.
+  Qed.
 
   Lemma A_alloc :
     auth_fresh ★ fresh ⊢ pvs1 (∃ i, saved i (A i)).
@@ -253,28 +303,33 @@ Module inv. Section inv.
   Lemma alloc_NA i :
     saved i (A i) ⊢ (¬A i).
   Proof.
-    iIntros "#Hi !# #HAi". iPoseProof "HAi" as "HAi'".
+    iIntros "Hi". iExists (saved i (A i)). iSplitL "Hi"; first done.
+    iSplit; last by (iIntros "!# ?"; iApply saved_dup).
+    iIntros "!# Hi HAi".
+    iDestruct (A_dup with "HAi") as "[HAi HAi']".
     iDestruct "HAi'" as (P) "[HNP Hi']".
-    iVs ((saved_cast i) with "[]") as "HP".
-    { iSplit; first iExact "Hi". iSplit; first iExact "Hi'". done. }
-    iDestruct "HP" as "#HP". by iApply "HNP".
+    iVs ((saved_cast i) with "[Hi Hi' HAi]") as "HP".
+    { iSplitL "Hi"; first done. iSplitL "Hi'"; first done. by iApply A_wbox. }
+    iPoseProof (wbox_out with "HNP") as "HNP".
+    iApply "HNP". iApply wbox_out. done.
   Qed.
 
   Lemma alloc_A i :
     saved i (A i) ⊢ A i.
   Proof.
-    iIntros "#Hi". iPoseProof (alloc_NA with "[]") as "HNA"; first done.
-    (* Patterns in iPoseProof don't seem to work; adding a "#" here also does the wrong thing.
-       Or maybe iPoseProof is the wrong tactic -- but then which is the right one? *)
-    iDestruct "HNA" as "#HNA". iExists (A i).
-    iSplit; done.
+    iIntros "Hi". iDestruct (saved_dup with "Hi") as "[Hi Hi']".
+    iPoseProof (alloc_NA with "Hi") as "HNA".
+    iExists (A i). iSplitL "HNA"; done.
   Qed.
 
   Lemma contradiction : False.
   Proof.
     apply soundness. iIntros "H".
-    iVs (A_alloc with "H") as "H". iDestruct "H" as (i) "#H".
-    iPoseProof (alloc_NA with "H") as "HN". iApply "HN". (* FIXME: "iApply alloc_NA" does not work. *)
+    iVs (A_alloc with "H") as "H". iDestruct "H" as (i) "H".
+    iDestruct (saved_dup with "H") as "[H H']".
+    iPoseProof (alloc_NA with "H") as "HN".
+    iPoseProof (wbox_out with "HN") as "HN".
+    iApply "HN".
     iApply alloc_A. done.
   Qed.
 
