@@ -272,10 +272,8 @@ Proof.
 Qed.
 
 Class MakeNowTrue (P Q : uPred M) := make_now_True : ◇ P ⊣⊢ Q.
-Global Instance make_now_True_true : MakeNowTrue True True.
-Proof.
-  rewrite /MakeNowTrue /uPred_now_True. apply (anti_symm _); auto with I.
-Qed.
+Global Instance make_now_True_True : MakeNowTrue True True.
+Proof. by rewrite /MakeNowTrue now_True_True. Qed.
 Global Instance make_now_True_default P : MakeNowTrue P (◇ P) | 100.
 Proof. done. Qed.
 

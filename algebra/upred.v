@@ -1141,6 +1141,9 @@ Lemma now_True_mono P Q : (P ⊢ Q) → ◇ P ⊢ ◇ Q.
 Proof. by intros ->. Qed.
 Lemma now_True_idemp P : ◇ ◇ P ⊢ ◇ P.
 Proof. rewrite /uPred_now_True; auto. Qed.
+
+Lemma now_True_True : ◇ True ⊣⊢ True.
+Proof. rewrite /uPred_now_True. apply (anti_symm _); auto. Qed.
 Lemma now_True_or P Q : ◇ (P ∨ Q) ⊣⊢ ◇ P ∨ ◇ Q.
 Proof. rewrite /uPred_now_True. apply (anti_symm _); auto. Qed.
 Lemma now_True_and P Q : ◇ (P ∧ Q) ⊣⊢ ◇ P ∧ ◇ Q.
@@ -1160,6 +1163,8 @@ Lemma now_True_later P : ◇ ▷ P ⊢ ▷ P.
 Proof. by rewrite /uPred_now_True -later_or False_or. Qed.
 Lemma now_True_always P : ◇ □ P ⊣⊢ □ ◇ P.
 Proof. by rewrite /uPred_now_True always_or always_later always_pure. Qed.
+Lemma now_True_always_if p P : ◇ □?p P ⊣⊢ □?p ◇ P.
+Proof. destruct p; simpl; auto using now_True_always. Qed.
 Lemma now_True_frame_l P Q : P ★ ◇ Q ⊢ ◇ (P ★ Q).
 Proof. by rewrite {1}(now_True_intro P) now_True_sep. Qed.
 Lemma now_True_frame_r P Q : ◇ P ★ Q ⊢ ◇ (P ★ Q).
@@ -1237,6 +1242,11 @@ Proof.
   { rewrite /= assoc -(dist_le _ _ _ _ Hx); auto. }
   exists (y ⋅ x3); split; first by rewrite -assoc.
   exists y; eauto using cmra_includedN_l.
+Qed.
+Lemma now_True_rvs P : ◇ (|=r=> ◇ P) ⊢ (|=r=> ◇ P).
+Proof.
+  rewrite /uPred_now_True. apply or_elim; auto using rvs_mono.
+  by rewrite -rvs_intro -or_intro_l.
 Qed.
 
 (** * Derived rules *)
