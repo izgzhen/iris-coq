@@ -101,7 +101,7 @@ Lemma wait_loop_spec l x R (Φ : val → iProp Σ) :
   issued l x R ★ (∀ l, locked l R -★ R -★ Φ #()) ⊢ WP wait_loop #x #l {{ Φ }}.
 Proof.
   iIntros "[Hl HΦ]". iDestruct "Hl" as (γ1 γ2) "(% & #? & #? & Ht)".
-  iLöb as "IH". wp_rec. wp_let. wp_focus (! _)%E.
+  iLöb as "IH". wp_rec. wp_let. wp_bind (! _)%E.
   iInv N as (o n) "[Hl Ha]" "Hclose".
   wp_load. destruct (decide (x = o)) as [->|Hneq].
   - iDestruct "Ha" as "[Hainv [[Ho HR] | Haown]]".
@@ -123,12 +123,12 @@ Lemma acquire_spec l R (Φ : val → iProp Σ) :
   is_lock l R ★ (∀ l, locked l R -★ R -★ Φ #()) ⊢ WP acquire #l {{ Φ }}.
 Proof.
   iIntros "[Hl HΦ]". iDestruct "Hl" as (γ1 γ2) "(% & #? & #?)".
-  iLöb as "IH". wp_rec. wp_focus (! _)%E.
+  iLöb as "IH". wp_rec. wp_bind (! _)%E.
   iInv N as (o n) "[Hl Ha]" "Hclose".
   wp_load. iVs ("Hclose" with "[Hl Ha]").
   { iNext. iExists o, n. by iFrame. }
   iVsIntro. wp_let. wp_proj. wp_proj. wp_op.
-  wp_focus (CAS _ _ _).
+  wp_bind (CAS _ _ _).
   iInv N as (o' n') "[Hl [Hainv Haown]]" "Hclose".
   destruct (decide ((#o', #n') = (#o, #n)))%V
     as [[= ->%Nat2Z.inj ->%Nat2Z.inj] | Hneq].
@@ -158,11 +158,11 @@ Lemma release_spec R l (Φ : val → iProp Σ):
   locked l R ★ R ★ Φ #() ⊢ WP release #l {{ Φ }}.
 Proof.
   iIntros "(Hl & HR & HΦ)"; iDestruct "Hl" as (γ1 γ2) "(% & #? & #? & Hγ)".
-  iLöb as "IH". wp_rec. wp_focus (! _)%E.
+  iLöb as "IH". wp_rec. wp_bind (! _)%E.
   iInv N as (o n) "[Hl Hr]" "Hclose".
   wp_load. iVs ("Hclose" with "[Hl Hr]").
   { iNext. iExists o, n. by iFrame. }
-  iVsIntro. wp_let. wp_focus (CAS _ _ _ ).
+  iVsIntro. wp_let. wp_bind (CAS _ _ _ ).
   wp_proj. wp_op. wp_proj.
   iInv N as (o' n') "[Hl Hr]" "Hclose".
   destruct (decide ((#o', #n') = (#o, #n)))%V

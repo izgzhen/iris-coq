@@ -81,7 +81,7 @@ Proof.
   set (workers_post (v : val) := (barrier_res γ Ψ1 ★ barrier_res γ Ψ2)%I).
   wp_let. wp_apply (wp_par  (λ _, True)%I workers_post); iFrame "Hh".
   iSplitL "HP Hs Hγ"; [|iSplitL "Hr"].
-  - wp_focus eM. iApply wp_wand_l; iSplitR "HP"; [|by iApply "He"].
+  - wp_bind eM. iApply wp_wand_l; iSplitR "HP"; [|by iApply "He"].
     iIntros (v) "HP"; iDestruct "HP" as (x) "HP". wp_let.
     iVs (own_update with "Hγ") as "Hx".
     { by apply (cmra_update_exclusive (Shot x)). }

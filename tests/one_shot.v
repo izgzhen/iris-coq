@@ -55,7 +55,7 @@ Proof.
       iNext; iRight; iExists n; by iFrame.
     + wp_cas_fail. iVs ("Hclose" with "[-]"); last eauto.
       rewrite /one_shot_inv; eauto 10.
-  - iIntros "!#". wp_seq. wp_focus (! _)%E.
+  - iIntros "!#". wp_seq. wp_bind (! _)%E.
     iInv N as ">Hγ" "Hclose".
     iAssert (∃ v, l ↦ v ★ ((v = NONEV ★ own γ Pending) ∨
        ∃ n : Z, v = SOMEV #n ★ own γ (Shot n)))%I with "[Hγ]" as "Hv".
@@ -72,7 +72,7 @@ Proof.
     wp_let. iVsIntro. iIntros "!#". wp_seq.
     iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as (m) "[% Hγ']"; subst.
     { by wp_match. }
-    wp_match. wp_focus (! _)%E.
+    wp_match. wp_bind (! _)%E.
     iInv N as ">[[Hl Hγ]|H]" "Hclose"; last iDestruct "H" as (m') "[Hl Hγ]".
     { iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct (own_valid with "Hγ") as %?. }
     wp_load.

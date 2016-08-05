@@ -61,7 +61,7 @@ Lemma acquire_spec l R (Φ : val → iProp Σ) :
   is_lock l R ★ (locked l R -★ R -★ Φ #()) ⊢ WP acquire #l {{ Φ }}.
 Proof.
   iIntros "[Hl HΦ]". iDestruct "Hl" as (γ) "(%&#?&#?)".
-  iLöb as "IH". wp_rec. wp_focus (CAS _ _ _)%E.
+  iLöb as "IH". wp_rec. wp_bind (CAS _ _ _)%E.
   iInv N as ([]) "[Hl HR]" "Hclose".
   - wp_cas_fail. iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
     iVsIntro. wp_if. by iApply "IH".

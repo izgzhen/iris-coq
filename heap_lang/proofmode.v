@@ -89,7 +89,7 @@ End heap.
 Tactic Notation "wp_apply" open_constr(lem) :=
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    wp_bind K; iApply lem; try iNext)
+    wp_bind_core K; iApply lem; try iNext)
   | _ => fail "wp_apply: not a 'wp'"
   end.
 
@@ -98,7 +98,7 @@ Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with Alloc _ => wp_bind K end)
+         match eval hnf in e' with Alloc _ => wp_bind_core K end)
       |fail 1 "wp_alloc: cannot find 'Alloc' in" e];
     eapply tac_wp_alloc with _ H _;
       [let e' := match goal with |- to_val ?e' = _ => e' end in
@@ -121,7 +121,7 @@ Tactic Notation "wp_load" :=
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with Load _ => wp_bind K end)
+         match eval hnf in e' with Load _ => wp_bind_core K end)
       |fail 1 "wp_load: cannot find 'Load' in" e];
     eapply tac_wp_load;
       [iAssumption || fail "wp_load: cannot find heap_ctx"
@@ -138,7 +138,7 @@ Tactic Notation "wp_store" :=
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with Store _ _ => wp_bind K end)
+         match eval hnf in e' with Store _ _ => wp_bind_core K end)
       |fail 1 "wp_store: cannot find 'Store' in" e];
     eapply tac_wp_store;
       [let e' := match goal with |- to_val ?e' = _ => e' end in
@@ -158,7 +158,7 @@ Tactic Notation "wp_cas_fail" :=
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with CAS _ _ _ => wp_bind K end)
+         match eval hnf in e' with CAS _ _ _ => wp_bind_core K end)
       |fail 1 "wp_cas_fail: cannot find 'CAS' in" e];
     eapply tac_wp_cas_fail;
       [let e' := match goal with |- to_val ?e' = _ => e' end in
@@ -180,7 +180,7 @@ Tactic Notation "wp_cas_suc" :=
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with CAS _ _ _ => wp_bind K end)
+         match eval hnf in e' with CAS _ _ _ => wp_bind_core K end)
       |fail 1 "wp_cas_suc: cannot find 'CAS' in" e];
     eapply tac_wp_cas_suc;
       [let e' := match goal with |- to_val ?e' = _ => e' end in

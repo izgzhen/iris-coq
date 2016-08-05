@@ -138,7 +138,7 @@ Lemma wait_spec l P (Φ : val → iProp Σ) :
 Proof.
   rename P into R; rewrite /recv /barrier_ctx.
   iIntros "[Hr HΦ]"; iDestruct "Hr" as (γ P Q i) "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
-  iLöb as "IH". wp_rec. wp_focus (! _)%E.
+  iLöb as "IH". wp_rec. wp_bind (! _)%E.
   iVs (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
     as ([p I]) "(% & [Hl Hr] & Hclose)"; eauto.
   wp_load. destruct p.

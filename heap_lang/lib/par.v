@@ -25,7 +25,7 @@ Proof.
   iIntros (?) "(#Hh&Hf1&Hf2&HΦ)".
   rewrite /par. wp_value. iVsIntro. wp_let. wp_proj.
   wp_apply (spawn_spec parN); try wp_done; try solve_ndisj; iFrame "Hf1 Hh".
-  iIntros (l) "Hl". wp_let. wp_proj. wp_focus (f2 _).
+  iIntros (l) "Hl". wp_let. wp_proj. wp_bind (f2 _).
   iApply wp_wand_l; iFrame "Hf2"; iIntros (v) "H2". wp_let.
   wp_apply join_spec; iFrame "Hl". iIntros (w) "H1".
   iSpecialize ("HΦ" with "* [-]"); first by iSplitL "H1". by wp_let.

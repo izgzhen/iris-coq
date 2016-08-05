@@ -46,11 +46,11 @@ Lemma inc_spec l j (Φ : val → iProp Σ) :
 Proof.
   iIntros "[Hl HΦ]". iLöb as "IH". wp_rec.
   iDestruct "Hl" as (γ) "(% & #? & #Hγ & Hγf)".
-  wp_focus (! _)%E.
+  wp_bind (! _)%E.
   iVs (auth_open (counter_inv l) with "[Hγf]") as (j') "(% & Hl & Hclose)"; auto.
   rewrite {2}/counter_inv.
   wp_load. iVs ("Hclose" $! j with "[Hl]") as "Hγf"; eauto.
-  iVsIntro. wp_let; wp_op. wp_focus (CAS _ _ _).
+  iVsIntro. wp_let; wp_op. wp_bind (CAS _ _ _).
   iVs (auth_open (counter_inv l) with "[Hγf]") as (j'') "(% & Hl & Hclose)"; auto.
   rewrite {2}/counter_inv.
   destruct (decide (j `max` j'' = j `max` j')) as [Hj|Hj].
