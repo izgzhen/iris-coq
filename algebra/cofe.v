@@ -208,6 +208,8 @@ Section fixpoint.
 End fixpoint.
 
 (** Function space *)
+(* We make [cofe_fun] a definition so that we can register it as a canonical
+structure. *)
 Definition cofe_fun (A : Type) (B : cofeT) := A → B.
 
 Section cofe_fun.
