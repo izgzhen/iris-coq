@@ -874,19 +874,6 @@ Ltac iSimplifyEq := repeat (
   || simplify_eq/=).
 
 (** * View shifts *)
-Tactic Notation "iVsIntro" :=
-  eapply tac_vs_intro;
-    [let P := match goal with |- FromVs ?P _ => P end in
-     apply _ || fail "iVsIntro:" P "not a viewshift"|].
-
-Tactic Notation "iVsCore" constr(H) :=
-  eapply tac_vs_elim with _ H _ _ _ _;
-    [env_cbv; reflexivity || fail "iVs:" H "not found"
-    |let P := match goal with |- ElimVs ?P _ _ _ => P end in
-     let Q := match goal with |- ElimVs _ _ _ ?Q => Q end in
-     apply _ || fail "iVs: cannot eliminate" H ":" P "in" Q
-    |env_cbv; reflexivity|].
-
 Tactic Notation "iVs" open_constr(lem) :=
   iDestructCore lem as (fun H => iVsCore H; last iDestruct H as "?").
 Tactic Notation "iVs" open_constr(lem) "as" constr(pat) :=
