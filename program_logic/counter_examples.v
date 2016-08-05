@@ -68,27 +68,21 @@ Module inv. Section inv.
 
   (** Assumptions *)
   (* We have view shifts (two classes: empty/full mask) *)
-  Context (pvs0 pvs1 : iProp → iProp).
+  Inductive mask := M0 | M1.
+  Context (pvs : mask → iProp → iProp).
 
-  Hypothesis pvs0_intro : ∀ P, P ⊢ pvs0 P.
-
-  Hypothesis pvs0_mono : ∀ P Q, (P ⊢ Q) → pvs0 P ⊢ pvs0 Q.
-  Hypothesis pvs0_pvs0 : ∀ P, pvs0 (pvs0 P) ⊢ pvs0 P.
-  Hypothesis pvs0_frame_l : ∀ P Q, P ★ pvs0 Q ⊢ pvs0 (P ★ Q).
-
-  Hypothesis pvs1_mono : ∀ P Q, (P ⊢ Q) → pvs1 P ⊢ pvs1 Q.
-  Hypothesis pvs1_pvs1 : ∀ P, pvs1 (pvs1 P) ⊢ pvs1 P.
-  Hypothesis pvs1_frame_l : ∀ P Q, P ★ pvs1 Q ⊢ pvs1 (P ★ Q).
-
-  Hypothesis pvs0_pvs1 : ∀ P, pvs0 P ⊢ pvs1 P.
+  Hypothesis pvs_intro : ∀ E P, P ⊢ pvs E P.
+  Hypothesis pvs_mono : ∀ E P Q, (P ⊢ Q) → pvs E P ⊢ pvs E Q.
+  Hypothesis pvs_pvs : ∀ E P, pvs E (pvs E P) ⊢ pvs E P.
+  Hypothesis pvs_frame_l : ∀ E P Q, P ★ pvs E Q ⊢ pvs E (P ★ Q).
+  Hypothesis pvs_mask_mono : ∀ P, pvs M0 P ⊢ pvs M1 P.
 
   (* We have invariants *)
   Context (name : Type) (inv : name → iProp → iProp).
   Hypothesis inv_persistent : ∀ i P, PersistentP (inv i P).
-  Hypothesis inv_alloc :
-    ∀ (P : iProp), P ⊢ pvs1 (∃ i, inv i P).
+  Hypothesis inv_alloc : ∀ P, P ⊢ pvs M1 (∃ i, inv i P).
   Hypothesis inv_open :
-    ∀ i P Q R, (P ★ Q ⊢ pvs0 (P ★ R)) → (inv i P ★ Q ⊢ pvs1 R).
+    ∀ i P Q R, (P ★ Q ⊢ pvs M0 (P ★ R)) → (inv i P ★ Q ⊢ pvs M1 R).
 
   (* We have tokens for a little "two-state STS": [start] -> [finish].
      state. [start] also asserts the exact state; it is only ever owned by the
@@ -96,146 +90,104 @@ Module inv. Section inv.
   Context (gname : Type).
   Context (start finished : gname → iProp).
 
-  Hypothesis sts_alloc : True ⊢ pvs0 (∃ γ, start γ).
-  Hypotheses start_finish : ∀ γ, start γ ⊢ pvs0 (finished γ).
+  Hypothesis sts_alloc : True ⊢ pvs M0 (∃ γ, start γ).
+  Hypotheses start_finish : ∀ γ, start γ ⊢ pvs M0 (finished γ).
 
   Hypothesis finished_not_start : ∀ γ, start γ ★ finished γ ⊢ False.
 
   Hypothesis finished_dup : ∀ γ, finished γ ⊢ finished γ ★ finished γ.
 
   (* We assume that we cannot view shift to false. *)
-  Hypothesis soundness : ¬ (True ⊢ pvs1 False).
+  Hypothesis soundness : ¬ (True ⊢ pvs M1 False).
 
   (** Some general lemmas and proof mode compatibility. *)
-  Lemma inv_open' i P R:
-    inv i P ★ (P -★ pvs0 (P ★ pvs1 R)) ⊢ pvs1 R.
+  Lemma inv_open' i P R : inv i P ★ (P -★ pvs M0 (P ★ pvs M1 R)) ⊢ pvs M1 R.
   Proof.
-    iIntros "(#HiP & HP)". iApply pvs1_pvs1. iApply inv_open; last first.
+    iIntros "(#HiP & HP)". iApply pvs_pvs. iApply inv_open; last first.
     { iSplit; first done. iExact "HP". }
     iIntros "(HP & HPw)". by iApply "HPw".
   Qed.
 
-  Lemma pvs1_intro P : P ⊢ pvs1 P.
-  Proof. rewrite -pvs0_pvs1. apply pvs0_intro. Qed.
-
-  Instance pvs0_mono' : Proper ((⊢) ==> (⊢)) pvs0.
-  Proof. intros ?**. by apply pvs0_mono. Qed.
-  Instance pvs0_proper : Proper ((⊣⊢) ==> (⊣⊢)) pvs0.
+  Instance pvs_mono' E : Proper ((⊢) ==> (⊢)) (pvs E).
+  Proof. intros P Q ?. by apply pvs_mono. Qed.
+  Instance pvs_proper E : Proper ((⊣⊢) ==> (⊣⊢)) (pvs E).
   Proof.
-    intros P Q Heq.
-    apply (anti_symm (⊢)); apply pvs0_mono; by rewrite ?Heq -?Heq.
-  Qed.
-  Instance pvs1_mono' : Proper ((⊢) ==> (⊢)) pvs1.
-  Proof. intros ?**. by apply pvs1_mono. Qed.
-  Instance pvs1_proper : Proper ((⊣⊢) ==> (⊣⊢)) pvs1.
-  Proof.
-    intros P Q Heq.
-    apply (anti_symm (⊢)); apply pvs1_mono; by rewrite ?Heq -?Heq.
+    intros P Q; rewrite !uPred.equiv_spec=> -[??]; split; by apply pvs_mono.
   Qed.
 
-  Lemma pvs0_frame_r P Q : (pvs0 P ★ Q) ⊢ pvs0 (P ★ Q).
+  Lemma pvs_frame_r E P Q : (pvs E P ★ Q) ⊢ pvs E (P ★ Q).
+  Proof. by rewrite comm pvs_frame_l comm. Qed.
+
+  Global Instance elim_pvs_pvs E P Q : ElimVs (pvs E P) P (pvs E Q) (pvs E Q).
+  Proof. by rewrite /ElimVs pvs_frame_r uPred.wand_elim_r pvs_pvs. Qed.
+
+  Global Instance elim_pvs0_pvs1 P Q : ElimVs (pvs M0 P) P (pvs M1 Q) (pvs M1 Q).
   Proof.
-    intros. rewrite comm pvs0_frame_l. apply pvs0_mono. by rewrite comm.
-  Qed.
-  Lemma pvs1_frame_r P Q : (pvs1 P ★ Q) ⊢ pvs1 (P ★ Q).
-  Proof.
-    intros. rewrite comm pvs1_frame_l. apply pvs1_mono. by rewrite comm.
+    by rewrite /ElimVs pvs_frame_r uPred.wand_elim_r pvs_mask_mono pvs_pvs.
   Qed.
 
-  Global Instance elim_pvs0_pvs0 P Q :
-    ElimVs (pvs0 P) P (pvs0 Q) (pvs0 Q).
-  Proof.
-    rewrite /ElimVs. etrans; last eapply pvs0_pvs0.
-    rewrite pvs0_frame_r. apply pvs0_mono. by rewrite uPred.wand_elim_r.
-  Qed.
-
-  Global Instance elim_pvs1_pvs1 P Q :
-    ElimVs (pvs1 P) P (pvs1 Q) (pvs1 Q).
-  Proof.
-    rewrite /ElimVs. etrans; last eapply pvs1_pvs1.
-    rewrite pvs1_frame_r. apply pvs1_mono. by rewrite uPred.wand_elim_r.
-  Qed.
-
-  Global Instance elim_pvs0_pvs1 P Q :
-    ElimVs (pvs0 P) P (pvs1 Q) (pvs1 Q).
-  Proof.
-    rewrite /ElimVs. rewrite pvs0_pvs1. apply elim_pvs1_pvs1.
-  Qed.
-
-  Global Instance exists_split_pvs0 {A} P (Φ : A → iProp) :
-    FromExist P Φ → FromExist (pvs0 P) (λ a, pvs0 (Φ a)).
+  Global Instance exists_split_pvs0 {A} E P (Φ : A → iProp) :
+    FromExist P Φ → FromExist (pvs E P) (λ a, pvs E (Φ a)).
   Proof.
     rewrite /FromExist=>HP. apply uPred.exist_elim=> a.
-    apply pvs0_mono. by rewrite -HP -(uPred.exist_intro a).
-  Qed.
-
-  Global Instance exists_split_pvs1 {A} P (Φ : A → iProp) :
-    FromExist P Φ → FromExist (pvs1 P) (λ a, pvs1 (Φ a)).
-  Proof.
-    rewrite /FromExist=>HP. apply uPred.exist_elim=> a.
-    apply pvs1_mono. by rewrite -HP -(uPred.exist_intro a).
+    apply pvs_mono. by rewrite -HP -(uPred.exist_intro a).
   Qed.
 
   (** Now to the actual counterexample. We start with a weird for of saved propositions. *)
   Definition saved (γ : gname) (P : iProp) : iProp :=
-    ∃ i, inv i (start γ ∨ (finished γ ★ □P)).
-  Global Instance : ∀ γ P, PersistentP (saved γ P) := _.
+    ∃ i, inv i (start γ ∨ (finished γ ★ □ P)).
+  Global Instance saved_persistent γ P : PersistentP (saved γ P) := _.
 
-  Lemma saved_alloc (P : gname → iProp) :
-    True ⊢ pvs1 (∃ γ, saved γ (P γ)).
+  Lemma saved_alloc (P : gname → iProp) : True ⊢ pvs M1 (∃ γ, saved γ (P γ)).
   Proof.
     iIntros "". iVs (sts_alloc) as (γ) "Hs".
     iVs (inv_alloc (start γ ∨ (finished γ ★ □ (P γ))) with "[Hs]") as (i) "#Hi".
-    { iLeft. done. }
-    iApply pvs1_intro. iExists γ, i. done.
+    { auto. }
+    iApply pvs_intro. by iExists γ, i.
   Qed.
 
-  Lemma saved_cast γ P Q :
-    saved γ P ★ saved γ Q ★ □ P ⊢ pvs1 (□ Q).
+  Lemma saved_cast γ P Q : saved γ P ★ saved γ Q ★ □ P ⊢ pvs M1 (□ Q).
   Proof.
     iIntros "(#HsP & #HsQ & #HP)". iDestruct "HsP" as (i) "HiP".
     iApply (inv_open' i). iSplit; first done.
     (* Can I state a view-shift and immediately run it? *)
-    iIntros "HaP". iAssert (pvs0 (finished γ)) with "[HaP]" as "Hf".
+    iIntros "HaP". iAssert (pvs M0 (finished γ)) with "[HaP]" as "Hf".
     { iDestruct "HaP" as "[Hs | [Hf _]]".
       - by iApply start_finish.
-      - by iApply pvs0_intro. }
+      - by iApply pvs_intro. }
     iVs "Hf" as "Hf". iDestruct (finished_dup with "Hf") as "[Hf Hf']".
-    iApply pvs0_intro. iSplitL "Hf'"; first by eauto.
+    iApply pvs_intro. iSplitL "Hf'"; first by eauto.
     (* Step 2: Open the Q-invariant. *)
     iClear "HiP". clear i. iDestruct "HsQ" as (i) "HiQ".
     iApply (inv_open' i). iSplit; first done.
     iIntros "[HaQ | [_ #HQ]]".
-    { iExFalso. iApply finished_not_start. iSplitL "HaQ"; done. }
-    iApply pvs0_intro. iSplitL "Hf".
-    { iRight. by iSplitL "Hf". }
-    by iApply pvs1_intro.
+    { iExFalso. iApply finished_not_start. by iFrame. }
+    iApply pvs_intro. iSplitL "Hf".
+    { iRight. by iFrame. }
+    by iApply pvs_intro.
   Qed.
 
   (** And now we tie a bad knot. *)
-  Notation "¬ P" := (□ (P -★ pvs1 False))%I : uPred_scope.
+  Notation "¬ P" := (□ (P -★ pvs M1 False))%I : uPred_scope.
   Definition A i : iProp := ∃ P, ¬P ★ saved i P.
-  Global Instance : ∀ i, PersistentP (A i) := _.
+  Global Instance A_persistent i : PersistentP (A i) := _.
 
-  Lemma A_alloc :
-    True ⊢ pvs1 (∃ i, saved i (A i)).
+  Lemma A_alloc : True ⊢ pvs M1 (∃ i, saved i (A i)).
   Proof. by apply saved_alloc. Qed.
 
-  Lemma alloc_NA i :
-    saved i (A i) ⊢ ¬A i.
+  Lemma alloc_NA i : saved i (A i) ⊢ ¬A i.
   Proof.
     iIntros "#Hi !# #HA". iPoseProof "HA" as "HA'".
     iDestruct "HA'" as (P) "#[HNP Hi']".
-    iVs ((saved_cast i) with "[]") as "HP".
-    { iSplit; first iExact "Hi". iSplit; first iExact "Hi'". done. }
+    iVs (saved_cast i with "[]") as "HP".
+    { iSplit; first iExact "Hi". by iFrame "#". }
     by iApply "HNP".
   Qed.
 
-  Lemma alloc_A i :
-    saved i (A i) ⊢ A i.
+  Lemma alloc_A i : saved i (A i) ⊢ A i.
   Proof.
     iIntros "#Hi". iPoseProof (alloc_NA with "Hi") as "HNA".
-    iExists (A i). iSplit; done.
+    iExists (A i). by iFrame "#".
   Qed.
 
   Lemma contradiction : False.
@@ -243,8 +195,6 @@ Module inv. Section inv.
     apply soundness. iIntros "".
     iVs A_alloc as (i) "#H".
     iPoseProof (alloc_NA with "H") as "HN".
-    iApply "HN".
-    iApply alloc_A. done.
+    iApply "HN". iApply alloc_A. done.
   Qed.
-
 End inv. End inv.
