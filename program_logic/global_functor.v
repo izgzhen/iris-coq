@@ -37,28 +37,31 @@ End to_iRes.
     the "gFunctors" from a "list gFunctor", and have some typeclass magic
     to infer the inG. *)
 Module gFunctorList.
-  Inductive gFunctorList :=
-    | nil  : gFunctorList
-    | cons : gFunctor → gFunctorList → gFunctorList.
-  Coercion singleton (F : gFunctor) : gFunctorList := cons F nil.
+  Inductive T :=
+    | nil  : T
+    | cons : gFunctor → T → T.
+  Coercion singleton (F : gFunctor) : T := cons F nil.
 
-  Fixpoint fold_right {A} (f : gFunctor → A → A) (a : A) (Fs : gFunctorList) : A :=
+  Fixpoint app (Fs1 Fs2 : T) : T :=
+    match Fs1 with nil => Fs2 | cons F Fs1 => cons F (app Fs1 Fs2) end.
+
+  Fixpoint fold_right {A} (f : gFunctor → A → A) (a : A) (Fs : T) : A :=
     match Fs with
     | nil => a
     | cons F Fs => f F (fold_right f a Fs)
     end.
 End gFunctorList.
-Notation gFunctorList := gFunctorList.gFunctorList.
+Notation gFunctorList := gFunctorList.T.
 
 Delimit Scope gFunctor_scope with gFunctor.
 Bind Scope gFunctor_scope with gFunctorList.
 Arguments gFunctorList.cons _ _%gFunctor.
 
 Notation "[ ]" := gFunctorList.nil (format "[ ]") : gFunctor_scope.
-Notation "[ F ]" := (gFunctorList.cons F gFunctorList.nil) : gFunctor_scope.
+Notation "[ F ]" := (gFunctorList.app F gFunctorList.nil) : gFunctor_scope.
 Notation "[ F1 ; F2 ; .. ; Fn ]" :=
-  (gFunctorList.cons F1 (gFunctorList.cons F2 ..
-    (gFunctorList.cons Fn gFunctorList.nil) ..)) : gFunctor_scope.
+  (gFunctorList.app F1 (gFunctorList.app F2 ..
+    (gFunctorList.app Fn gFunctorList.nil) ..)) : gFunctor_scope.
 
 Module gFunctors.
   Definition nil : gFunctors := existT 0 (fin_0_inv _).
