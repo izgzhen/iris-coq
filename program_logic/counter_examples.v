@@ -3,7 +3,7 @@ From iris.proofmode Require Import tactics.
 
 (** This proves that we need the ▷ in a "Saved Proposition" construction with
 name-dependend allocation. *)
-Section savedprop.
+Module savedprop. Section savedprop.
   Context (M : ucmraT).
   Notation iProp := (uPred M).
   Notation "¬ P" := (□ (P → False))%I : uPred_scope.
@@ -57,14 +57,13 @@ Section savedprop.
     apply (@uPred.adequacy M False 1); simpl.
     rewrite -uPred.later_intro. apply rvs_false.
   Qed.
-End savedprop.
+End savedprop. End savedprop.
 
 (** This proves that we need the ▷ when opening invariants. *)
 (** We fork in [uPred M] for any M, but the proof would work in any BI. *)
-Section inv.
+Module inv. Section inv.
   Context (M : ucmraT).
   Notation iProp := (uPred M).
-  Notation "¬ P" := (□ (P → False))%I : uPred_scope.
   Implicit Types P : iProp.
 
   (** Assumptions *)
@@ -161,7 +160,6 @@ Section inv.
   Global Instance elim_pvs0_pvs0 P Q :
     ElimVs (pvs0 P) P (pvs0 Q) (pvs0 Q).
   Proof.
-    rename Q0 into Q.
     rewrite /ElimVs. etrans; last eapply pvs0_pvs0.
     rewrite pvs0_frame_r. apply pvs0_mono. by rewrite uPred.wand_elim_r.
   Qed.
@@ -169,7 +167,6 @@ Section inv.
   Global Instance elim_pvs1_pvs1 P Q :
     ElimVs (pvs1 P) P (pvs1 Q) (pvs1 Q).
   Proof.
-    rename Q0 into Q.
     rewrite /ElimVs. etrans; last eapply pvs1_pvs1.
     rewrite pvs1_frame_r. apply pvs1_mono. by rewrite uPred.wand_elim_r.
   Qed.
@@ -177,7 +174,6 @@ Section inv.
   Global Instance elim_pvs0_pvs1 P Q :
     ElimVs (pvs0 P) P (pvs1 Q) (pvs1 Q).
   Proof.
-    rename Q0 into Q.
     rewrite /ElimVs. rewrite pvs0_pvs1. apply elim_pvs1_pvs1.
   Qed.
 
@@ -195,7 +191,7 @@ Section inv.
     apply pvs1_mono. by rewrite -HP -(uPred.exist_intro a).
   Qed.
 
-  (** Now to the actual counterexample. *)
+  (** Now to the actual counterexample. We start with a weird for of saved propositions. *)
   Definition saved (i : name) (P : iProp) : iProp :=
     ∃ F : name → iProp, P = F i ★ started i ★
       inv i (auth_fresh ∨ ∃ j, auth_start j ∨ (finished j ★ □F j)).
@@ -245,39 +241,41 @@ Section inv.
     iDestruct "H" as %<-. iApply pvs1_intro. subst Q. done.
   Qed.
 
-(*
-Now, define:
+  (** And now we tie a bad knot. *)
+  Notation "¬ P" := (□ (P → pvs1 False))%I : uPred_scope.
+  Definition A i : iProp := ∃ P, ¬P ★ saved i P.
+  Instance : forall i, PersistentP (A i) := _.
 
-N(P) :=  box(P ==> False)
-A[i] :=  Exists P. N(P) * i |-> P
+  Lemma A_alloc :
+    auth_fresh ★ fresh ⊢ pvs1 (∃ i, saved i (A i)).
+  Proof. by apply saved_alloc. Qed.
 
-Notice that A[i] => box(A[i]).
+  Lemma alloc_NA i :
+    saved i (A i) ⊢ (¬A i).
+  Proof.
+    iIntros "#Hi !# #HAi". iPoseProof "HAi" as "HAi'".
+    iDestruct "HAi'" as (P) "[HNP Hi']".
+    iVs ((saved_cast i) with "[]") as "HP".
+    { iSplit; first iExact "Hi". iSplit; first iExact "Hi'". done. }
+    iDestruct "HP" as "#HP". by iApply "HNP".
+  Qed.
 
-OK, now we are going to prove that True ==> False.
+  Lemma alloc_A i :
+    saved i (A i) ⊢ A i.
+  Proof.
+    iIntros "#Hi". iPoseProof (alloc_NA with "[]") as "HNA"; first done.
+    (* Patterns in iPoseProof don't seem to work; adding a "#" here also does the wrong thing.
+       Or maybe iPoseProof is the wrong tactic -- but then which is the right one? *)
+    iDestruct "HNA" as "#HNA". iExists (A i).
+    iSplit; done.
+  Qed.
 
-First we allocate some k s.t. k |-> A[k], which we know we can do
-because of the axiom for |->.
+  Lemma contradiction : False.
+  Proof.
+    apply soundness. iIntros "H".
+    iVs (A_alloc with "H") as "H". iDestruct "H" as (i) "#H".
+    iPoseProof (alloc_NA with "H") as "HN". iApply "HN". (* FIXME: "iApply alloc_NA" does not work. *)
+    iApply alloc_A. done.
+  Qed.
 
-Claim 2: N(A[k]).
-
-Proof:
-- Suppose A[k].  So, box(A[k]).  So, A[k] * A[k].
-- So there is some P s.t. A[k] * N(P) * k |-> P.
-- Since k |-> A(k), by Claim 1 we can view shift to P * N(P).
-- Hence, we can view shift to False.
-QED.
-
-Notice that in Iris proper all we could get on the third line of the
-above proof is later(P) * N(P), which would not be enough to derive
-the claim.
-
-Claim 3: A[k].
-
-Proof:
-- By Claim 2, we have N(A(k)) * k |-> A[k].
-- Thus, picking P := A[k], we have Exists P. N(P) * k |-> P, i.e. we have A[k].
-QED.
-
-Claim 2 and Claim 3 together view shift to False.
-*)
-End inv.
+End inv. End inv.
