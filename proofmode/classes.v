@@ -55,6 +55,9 @@ Class IntoExist {A} (P : uPred M) (Φ : A → uPred M) :=
   into_exist : P ⊢ ∃ x, Φ x.
 Global Arguments into_exist {_} _ _ {_}.
 
+Class IntoNowTrue (P Q : uPred M) := into_now_True : P ⊢ ◇ Q.
+Global Arguments into_now_True : clear implicits.
+
 Class IsNowTrue (Q : uPred M) := is_now_True : ◇ Q ⊢ Q.
 Global Arguments is_now_True : clear implicits.
 

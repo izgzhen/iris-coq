@@ -375,15 +375,15 @@ Proof.
   by rewrite right_id always_and_sep_l' wand_elim_r HQ.
 Qed.
 
-Lemma tac_timeless Δ Δ' i p P Q :
+Lemma tac_timeless Δ Δ' i p P P' Q :
   IsNowTrue Q →
-  envs_lookup i Δ = Some (p, ▷ P)%I → TimelessP P →
-  envs_simple_replace i p (Esnoc Enil i P) Δ = Some Δ' →
+  envs_lookup i Δ = Some (p, P) → IntoNowTrue P P' →
+  envs_simple_replace i p (Esnoc Enil i P') Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ???? HQ. rewrite envs_simple_replace_sound //; simpl.
-  rewrite always_if_later right_id HQ -{2}(is_now_True Q).
-  by rewrite (timelessP (□?p P)) now_True_frame_r wand_elim_r.
+  rewrite right_id HQ -{2}(is_now_True Q).
+  by rewrite (into_now_True P) -now_True_always_if now_True_frame_r wand_elim_r.
 Qed.
 
 (** * Always *)

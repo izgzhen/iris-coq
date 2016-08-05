@@ -496,11 +496,11 @@ Tactic Notation "iNext":=
      apply _ || fail "iNext:" P "does not contain laters"|].
 
 Tactic Notation "iTimeless" constr(H) :=
-  eapply tac_timeless with _ H _ _;
+  eapply tac_timeless with _ H _ _ _;
     [let Q := match goal with |- IsNowTrue ?Q => Q end in
      apply _ || fail "iTimeless: cannot remove later of timeless hypothesis in goal" Q
     |env_cbv; reflexivity || fail "iTimeless:" H "not found"
-    |let P := match goal with |- TimelessP ?P => P end in
+    |let P := match goal with |- IntoNowTrue ?P _ => P end in
      apply _ || fail "iTimeless:" P "not timeless"
     |env_cbv; reflexivity|].
 

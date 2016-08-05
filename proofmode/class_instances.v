@@ -327,11 +327,21 @@ Global Instance into_exist_always {A} P (Φ : A → uPred M) :
   IntoExist P Φ → IntoExist (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP always_exist. Qed.
 
-(* IsTrueNow *)
+(* IntoNowTrue *)
+Global Instance into_now_True_now_True P : IntoNowTrue (◇ P) P.
+Proof. done. Qed.
+Global Instance into_now_True_timeless P : TimelessP P → IntoNowTrue (▷ P) P.
+Proof. done. Qed.
+
+(* IsNowTrue *)
 Global Instance is_now_True_now_True P : IsNowTrue (◇ P).
 Proof. by rewrite /IsNowTrue now_True_idemp. Qed.
 Global Instance is_now_True_later P : IsNowTrue (▷ P).
 Proof. by rewrite /IsNowTrue now_True_later. Qed.
+Global Instance is_now_True_rvs P : IsNowTrue P → IsNowTrue (|=r=> P).
+Proof.
+  rewrite /IsNowTrue=> HP. by rewrite -{2}HP -now_True_rvs -(now_True_intro P).
+Qed.
 
 (* FromViewShift *)
 Global Instance from_vs_rvs P : FromVs (|=r=> P) P.
