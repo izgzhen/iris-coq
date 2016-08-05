@@ -508,14 +508,15 @@ Tactic Notation "iTimeless" constr(H) :=
 Tactic Notation "iVsIntro" :=
   eapply tac_vs_intro;
     [let P := match goal with |- FromVs ?P _ => P end in
-     apply _ || fail "iVsIntro:" P "not a viewshift"|].
+     apply _ || fail "iVsIntro:" P "not a view shift"|].
 
 Tactic Notation "iVsCore" constr(H) :=
   eapply tac_vs_elim with _ H _ _ _ _;
     [env_cbv; reflexivity || fail "iVs:" H "not found"
     |let P := match goal with |- ElimVs ?P _ _ _ => P end in
-     let Q := match goal with |- ElimVs _ _ _ ?Q => Q end in
-     apply _ || fail "iVs: cannot eliminate" H ":" P "in" Q
+     let Q := match goal with |- ElimVs _ _ ?Q _ => Q end in
+     apply _ || fail "iVs: cannot run" H ":" P "in" Q
+                     "because the goal or hypothesis is not a view shift"
     |env_cbv; reflexivity|].
 
 (** * Basic destruct tactic *)
