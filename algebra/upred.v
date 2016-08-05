@@ -339,6 +339,7 @@ Definition uPred_now_True {M} (P : uPred M) : uPred M := ▷ False ∨ P.
 Notation "◇ P" := (uPred_now_True P)
   (at level 20, right associativity) : uPred_scope.
 Instance: Params (@uPred_now_True) 1.
+Typeclasses Opaque uPred_now_True.
 
 Class TimelessP {M} (P : uPred M) := timelessP : ▷ P ⊢ ◇ P.
 Arguments timelessP {_} _ {_}.

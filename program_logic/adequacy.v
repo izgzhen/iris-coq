@@ -52,11 +52,10 @@ Proof.
   rewrite {1}wp_unfold /wp_pre. iIntros (Hstep) "[(Hw & HE & Hσ) [H|[_ H]]]".
   { iDestruct "H" as (v) "[% _]". apply val_stuck in Hstep; simplify_eq. }
   rewrite pvs_eq /pvs_def.
-  iVs ("H" $! σ1 with "Hσ [Hw HE]") as "[H|(Hw & HE & _ & H)]"; first by iFrame.
-  { iVsIntro; iNext. by iExFalso. }
+  iVs ("H" $! σ1 with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
   iVsIntro; iNext.
-  by iVs ("H" $! e2 σ2 ef with "[%] [Hw HE]") as "[?|($ & $ & $ & $)]";
-    [done|by iFrame|rewrite /uPred_now_True; eauto|].
+  iVs ("H" $! e2 σ2 ef with "[%] [Hw HE]")
+    as ">($ & $ & $ & $)"; try iFrame; eauto.
 Qed.
 
 Lemma wptp_step e1 t1 t2 σ1 σ2 Φ :
@@ -84,8 +83,7 @@ Proof.
   { inversion_clear 1; iIntros "?"; eauto 10. }
   iIntros (Hsteps) "H". inversion_clear Hsteps as [|?? [t1' σ1']].
   iVs (wptp_step with "H") as (e1' t1'') "[% H]"; first eauto; simplify_eq.
-  iVsIntro; iNext; iVs "H" as "[?|?]"; first (iVsIntro; iNext; by iExFalso).
-  by iApply IH.
+  iVsIntro; iNext; iVs "H" as ">?". by iApply IH.
 Qed.
 
 Instance rvs_iter_mono n : Proper ((⊢) ==> (⊢)) (Nat.iter n (λ P, |=r=> ▷ P)%I).
@@ -99,8 +97,7 @@ Proof.
   intros. rewrite wptp_steps // (Nat_iter_S_r (S n)); apply rvs_iter_mono.
   iDestruct 1 as (e2 t2') "(% & (Hw & HE & _) & H & _)"; simplify_eq.
   iDestruct (wp_value_inv with "H") as "H". rewrite pvs_eq /pvs_def.
-  iVs ("H" with "[Hw HE]") as "[?|(_ & _ & $)]"; [by iFrame| |done].
-  iVsIntro; iNext; by iExFalso.
+  iVs ("H" with "[Hw HE]") as ">(_ & _ & $)"; iFrame; auto.
 Qed.
 
 Lemma wp_safe e σ Φ :
@@ -108,8 +105,8 @@ Lemma wp_safe e σ Φ :
 Proof.
   rewrite wp_unfold /wp_pre. iIntros "[(Hw&HE&Hσ) [H|[_ H]]]".
   { iDestruct "H" as (v) "[% _]"; eauto 10. }
-  rewrite pvs_eq. iVs ("H" with "* Hσ [-]") as "[H|(?&?&%&?)]"; first by iFrame.
-  iVsIntro; iNext; by iExFalso. eauto 10.
+  rewrite pvs_eq. iVs ("H" with "* Hσ [-]") as ">(?&?&%&?)"; first by iFrame.
+  eauto 10.
 Qed.
 
 Lemma wptp_safe n e1 e2 t1 t2 σ1 σ2 Φ :

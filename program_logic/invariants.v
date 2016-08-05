@@ -49,9 +49,9 @@ Proof.
   iDestruct "Hi" as % ?%elem_of_subseteq_singleton.
   rewrite {1 4}(union_difference_L (nclose N) E) // ownE_op; last set_solver.
   rewrite {1 5}(union_difference_L {[ i ]} (nclose N)) // ownE_op; last set_solver.
-  iIntros "(Hw & [HE $] & $)"; iVsIntro; iRight.
+  iIntros "(Hw & [HE $] & $)"; iVsIntro; iApply now_True_intro.
   iDestruct (ownI_open i P with "[Hw HE]") as "($ & $ & HD)"; first by iFrame.
-  iIntros "HP [Hw $] !==>"; iRight. iApply ownI_close; by iFrame.
+  iIntros "HP [Hw $] !==>"; iApply now_True_intro. iApply ownI_close; by iFrame.
 Qed.
 
 Lemma inv_open_timeless E N P `{!TimelessP P} :
