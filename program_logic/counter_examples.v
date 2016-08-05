@@ -103,8 +103,7 @@ Module inv. Section inv.
 
   Hypothesis finished_dup : forall γ, finished γ ⊢ finished γ ★ finished γ.
 
-  (* We have that we cannot view shift from the initial state to false
-     (because the initial state is actually achievable). *)
+  (* We assume that we cannot view shift to false. *)
   Hypothesis soundness : ¬ (True ⊢ pvs1 False).
 
   (** Some general lemmas and proof mode compatibility. *)
