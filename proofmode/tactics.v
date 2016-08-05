@@ -381,13 +381,15 @@ Tactic Notation "iSplitL" constr(Hs) :=
   eapply tac_sep_split with _ _ false Hs _ _; (* (js:=Hs) *)
     [let P := match goal with |- FromSep ?P _ _ => P end in
      apply _ || fail "iSplitL:" P "not a separating conjunction"
-    |env_cbv; reflexivity || fail "iSplitL: hypotheses" Hs "not found"| |].
+    |env_cbv; reflexivity || fail "iSplitL: hypotheses" Hs
+                                  "not found in the spatial context"| |].
 Tactic Notation "iSplitR" constr(Hs) :=
   let Hs := words Hs in
   eapply tac_sep_split with _ _ true Hs _ _; (* (js:=Hs) *)
     [let P := match goal with |- FromSep ?P _ _ => P end in
      apply _ || fail "iSplitR:" P "not a separating conjunction"
-    |env_cbv; reflexivity || fail "iSplitR: hypotheses" Hs "not found"| |].
+    |env_cbv; reflexivity || fail "iSplitR: hypotheses" Hs
+                                  "not found in the spatial context"| |].
 
 Tactic Notation "iSplitL" := iSplitR "".
 Tactic Notation "iSplitR" := iSplitL "".
