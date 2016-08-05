@@ -1,5 +1,5 @@
-From iris.algebra Require Export sts upred_tactics.
-From iris.program_logic Require Export invariants.
+From iris.program_logic Require Export pviewshifts.
+From iris.algebra Require Export sts.
 From iris.proofmode Require Import invariants.
 Import uPred.
 

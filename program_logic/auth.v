@@ -1,7 +1,7 @@
-From iris.algebra Require Export auth upred_tactics.
+From iris.program_logic Require Export pviewshifts.
+From iris.algebra Require Export auth.
 From iris.algebra Require Import gmap.
-From iris.program_logic Require Export invariants ghost_ownership.
-From iris.proofmode Require Import invariants ghost_ownership.
+From iris.proofmode Require Import invariants.
 Import uPred.
 
 (* The CMRA we need. *)

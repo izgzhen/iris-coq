@@ -1,5 +1,7 @@
 (** This file is essentially a bunch of testcases. *)
-From iris.program_logic Require Import ownership hoare auth.
+From iris.program_logic Require Export weakestpre.
+From iris.heap_lang Require Export lang.
+From iris.program_logic Require Import ownership hoare.
 From iris.heap_lang Require Import proofmode notation.
 
 Section LangTests.

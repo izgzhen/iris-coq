@@ -1,5 +1,5 @@
-From iris.algebra Require Import gmap agree upred_big_op.
-From iris.program_logic Require Import auth saved_prop.
+From iris.program_logic Require Export pviewshifts.
+From iris.algebra Require Import auth gmap agree upred_big_op.
 From iris.proofmode Require Import tactics invariants.
 Import uPred.
 

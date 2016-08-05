@@ -1,7 +1,8 @@
+From iris.program_logic Require Export weakestpre hoare.
+From iris.heap_lang Require Export lang.
 From iris.algebra Require Import excl dec_agree csum.
-From iris.program_logic Require Import hoare.
 From iris.heap_lang Require Import assert proofmode notation.
-From iris.proofmode Require Import invariants ghost_ownership.
+From iris.proofmode Require Import invariants.
 
 Definition one_shot_example : val := λ: <>,
   let: "x" := ref NONE in (

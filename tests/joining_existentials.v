@@ -1,5 +1,6 @@
+From iris.program_logic Require Export weakestpre hoare.
+From iris.heap_lang Require Export lang.
 From iris.algebra Require Import excl agree csum.
-From iris.program_logic Require Import hoare.
 From iris.heap_lang.lib.barrier Require Import proof specification.
 From iris.heap_lang Require Import notation par proofmode.
 From iris.proofmode Require Import invariants.
@@ -54,7 +55,7 @@ Lemma Q_res_join γ : barrier_res γ Ψ1 ★ barrier_res γ Ψ2 ⊢ ▷ barrier_
 Proof.
   iIntros "[Hγ Hγ']";
   iDestruct "Hγ" as (x) "[#Hγ Hx]"; iDestruct "Hγ'" as (x') "[#Hγ' Hx']".
-  iAssert (▷ (x ≡ x'))%I as "Hxx" .
+  iAssert (▷ (x ≡ x'))%I as "Hxx".
   { iCombine "Hγ" "Hγ'" as "Hγ2". iClear "Hγ Hγ'".
     rewrite own_valid csum_validI /= agree_validI agree_equivI uPred.later_equivI /=.
     rewrite -{2}[x]cFunctor_id -{2}[x']cFunctor_id.

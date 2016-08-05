@@ -1,8 +1,9 @@
+From iris.program_logic Require Export weakestpre.
+From iris.heap_lang Require Export lang.
 From iris.heap_lang.lib.barrier Require Import proof.
 From iris.heap_lang Require Import par.
 From iris.program_logic Require Import auth sts saved_prop hoare ownership.
 From iris.heap_lang Require Import proofmode.
-Import uPred.
 
 Definition worker (n : Z) : val :=
   λ: "b" "y", wait "b" ;; !"y" #n.

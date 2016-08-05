@@ -1,5 +1,7 @@
-From iris.program_logic Require Export global_functor auth.
-From iris.proofmode Require Import invariants ghost_ownership.
+From iris.program_logic Require Export weakestpre.
+From iris.heap_lang Require Export lang.
+From iris.program_logic Require Import auth.
+From iris.proofmode Require Import invariants.
 From iris.heap_lang Require Import proofmode notation.
 From iris.algebra Require Import gset.
 Import uPred.
