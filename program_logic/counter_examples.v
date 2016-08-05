@@ -70,25 +70,25 @@ Module inv. Section inv.
   (* We have view shifts (two classes: empty/full mask) *)
   Context (pvs0 pvs1 : iProp → iProp).
 
-  Hypothesis pvs0_intro : forall P, P ⊢ pvs0 P.
+  Hypothesis pvs0_intro : ∀ P, P ⊢ pvs0 P.
 
-  Hypothesis pvs0_mono : forall P Q, (P ⊢ Q) → pvs0 P ⊢ pvs0 Q.
-  Hypothesis pvs0_pvs0 : forall P, pvs0 (pvs0 P) ⊢ pvs0 P.
-  Hypothesis pvs0_frame_l : forall P Q, P ★ pvs0 Q ⊢ pvs0 (P ★ Q).
+  Hypothesis pvs0_mono : ∀ P Q, (P ⊢ Q) → pvs0 P ⊢ pvs0 Q.
+  Hypothesis pvs0_pvs0 : ∀ P, pvs0 (pvs0 P) ⊢ pvs0 P.
+  Hypothesis pvs0_frame_l : ∀ P Q, P ★ pvs0 Q ⊢ pvs0 (P ★ Q).
 
-  Hypothesis pvs1_mono : forall P Q, (P ⊢ Q) → pvs1 P ⊢ pvs1 Q.
-  Hypothesis pvs1_pvs1 : forall P, pvs1 (pvs1 P) ⊢ pvs1 P.
-  Hypothesis pvs1_frame_l : forall P Q, P ★ pvs1 Q ⊢ pvs1 (P ★ Q).
+  Hypothesis pvs1_mono : ∀ P Q, (P ⊢ Q) → pvs1 P ⊢ pvs1 Q.
+  Hypothesis pvs1_pvs1 : ∀ P, pvs1 (pvs1 P) ⊢ pvs1 P.
+  Hypothesis pvs1_frame_l : ∀ P Q, P ★ pvs1 Q ⊢ pvs1 (P ★ Q).
 
-  Hypothesis pvs0_pvs1 : forall P, pvs0 P ⊢ pvs1 P.
+  Hypothesis pvs0_pvs1 : ∀ P, pvs0 P ⊢ pvs1 P.
 
   (* We have invariants *)
   Context (name : Type) (inv : name → iProp → iProp).
-  Hypothesis inv_persistent : forall i P, PersistentP (inv i P).
+  Hypothesis inv_persistent : ∀ i P, PersistentP (inv i P).
   Hypothesis inv_alloc :
-    forall (P : iProp), P ⊢ pvs1 (∃ i, inv i P).
+    ∀ (P : iProp), P ⊢ pvs1 (∃ i, inv i P).
   Hypothesis inv_open :
-    forall i P Q R, (P ★ Q ⊢ pvs0 (P ★ R)) → (inv i P ★ Q ⊢ pvs1 R).
+    ∀ i P Q R, (P ★ Q ⊢ pvs0 (P ★ R)) → (inv i P ★ Q ⊢ pvs1 R).
 
   (* We have tokens for a little "two-state STS": [start] -> [finish].
      state. [start] also asserts the exact state; it is only ever owned by the
@@ -97,11 +97,11 @@ Module inv. Section inv.
   Context (start finished : gname → iProp).
 
   Hypothesis sts_alloc : True ⊢ pvs0 (∃ γ, start γ).
-  Hypotheses start_finish : forall γ, start γ ⊢ pvs0 (finished γ).
+  Hypotheses start_finish : ∀ γ, start γ ⊢ pvs0 (finished γ).
 
-  Hypothesis finished_not_start : forall γ, start γ ★ finished γ ⊢ False.
+  Hypothesis finished_not_start : ∀ γ, start γ ★ finished γ ⊢ False.
 
-  Hypothesis finished_dup : forall γ, finished γ ⊢ finished γ ★ finished γ.
+  Hypothesis finished_dup : ∀ γ, finished γ ⊢ finished γ ★ finished γ.
 
   (* We assume that we cannot view shift to false. *)
   Hypothesis soundness : ¬ (True ⊢ pvs1 False).
@@ -133,11 +133,11 @@ Module inv. Section inv.
     apply (anti_symm (⊢)); apply pvs1_mono; by rewrite ?Heq -?Heq.
   Qed.
 
-  Lemma pvs0_frame_r : forall P Q, (pvs0 P ★ Q) ⊢ pvs0 (P ★ Q).
+  Lemma pvs0_frame_r P Q : (pvs0 P ★ Q) ⊢ pvs0 (P ★ Q).
   Proof.
     intros. rewrite comm pvs0_frame_l. apply pvs0_mono. by rewrite comm.
   Qed.
-  Lemma pvs1_frame_r : forall P Q, (pvs1 P ★ Q) ⊢ pvs1 (P ★ Q).
+  Lemma pvs1_frame_r P Q : (pvs1 P ★ Q) ⊢ pvs1 (P ★ Q).
   Proof.
     intros. rewrite comm pvs1_frame_l. apply pvs1_mono. by rewrite comm.
   Qed.
@@ -179,7 +179,7 @@ Module inv. Section inv.
   (** Now to the actual counterexample. We start with a weird for of saved propositions. *)
   Definition saved (γ : gname) (P : iProp) : iProp :=
     ∃ i, inv i (start γ ∨ (finished γ ★ □P)).
-  Global Instance : forall γ P, PersistentP (saved γ P) := _.
+  Global Instance : ∀ γ P, PersistentP (saved γ P) := _.
 
   Lemma saved_alloc (P : gname → iProp) :
     True ⊢ pvs1 (∃ γ, saved γ (P γ)).
@@ -215,14 +215,14 @@ Module inv. Section inv.
   (** And now we tie a bad knot. *)
   Notation "¬ P" := (□ (P -★ pvs1 False))%I : uPred_scope.
   Definition A i : iProp := ∃ P, ¬P ★ saved i P.
-  Global Instance : forall i, PersistentP (A i) := _.
+  Global Instance : ∀ i, PersistentP (A i) := _.
 
   Lemma A_alloc :
     True ⊢ pvs1 (∃ i, saved i (A i)).
   Proof. by apply saved_alloc. Qed.
 
   Lemma alloc_NA i :
-    saved i (A i) ⊢ (¬A i).
+    saved i (A i) ⊢ ¬A i.
   Proof.
     iIntros "#Hi !# #HA". iPoseProof "HA" as "HA'".
     iDestruct "HA'" as (P) "#[HNP Hi']".
