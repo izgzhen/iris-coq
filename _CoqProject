@@ -70,6 +70,7 @@ program_logic/ownership.v
 program_logic/weakestpre.v
 program_logic/pviewshifts.v
 program_logic/hoare.v
+program_logic/viewshifts.v
 program_logic/language.v
 program_logic/ectx_language.v
 program_logic/ectxi_language.v

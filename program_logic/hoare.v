@@ -1,4 +1,4 @@
-From iris.program_logic Require Export weakestpre. (* viewshifts *)
+From iris.program_logic Require Export weakestpre viewshifts.
 From iris.proofmode Require Import weakestpre.
 
 Definition ht `{irisG Λ Σ} (E : coPset) (P : iProp Σ)
@@ -59,7 +59,7 @@ Lemma ht_val E v : {{ True }} of_val v @ E {{ v', v = v' }}.
 Proof. iIntros "!# _". by iApply wp_value'. Qed.
 
 Lemma ht_vs E P P' Φ Φ' e :
-  □ (P ={E}=★ P') ∧ {{ P' }} e @ E {{ Φ' }} ∧ □ (∀ v, Φ' v ={E}=★ Φ v)
+  (P ={E}=> P') ∧ {{ P' }} e @ E {{ Φ' }} ∧ (∀ v, Φ' v ={E}=> Φ v)
   ⊢ {{ P }} e @ E {{ Φ }}.
 Proof.
   iIntros "(#Hvs & #Hwp & #HΦ) !# HP". iVs ("Hvs" with "HP") as "HP".
@@ -69,7 +69,7 @@ Qed.
 
 Lemma ht_atomic E1 E2 P P' Φ Φ' e :
   atomic e →
-  □ (P ={E1,E2}=★ P') ∧ {{ P' }} e @ E2 {{ Φ' }} ∧ □ (∀ v, Φ' v ={E2,E1}=★ Φ v)
+  (P ={E1,E2}=> P') ∧ {{ P' }} e @ E2 {{ Φ' }} ∧ (∀ v, Φ' v ={E2,E1}=> Φ v)
   ⊢ {{ P }} e @ E1 {{ Φ }}.
 Proof.
   iIntros (?) "(#Hvs & #Hwp & #HΦ) !# HP". iApply (wp_atomic _ E2); auto.
@@ -104,7 +104,7 @@ Proof. iIntros "#Hwp !# [HP $]". by iApply "Hwp". Qed.
 
 Lemma ht_frame_step_l E1 E2 P R1 R2 e Φ :
   to_val e = None → E2 ⊆ E1 →
-  □ (R1 ={E1,E2}=★ ▷ |={E2,E1}=> R2) ∧ {{ P }} e @ E2 {{ Φ }}
+  (R1 ={E1,E2}=> ▷ |={E2,E1}=> R2) ∧ {{ P }} e @ E2 {{ Φ }}
   ⊢ {{ R1 ★ P }} e @ E1 {{ λ v, R2 ★ Φ v }}.
 Proof.
   iIntros (??) "[#Hvs #Hwp] !# [HR HP]".
@@ -114,7 +114,7 @@ Qed.
 
 Lemma ht_frame_step_r E1 E2 P R1 R2 e Φ :
   to_val e = None → E2 ⊆ E1 →
-  □ (R1 ={E1,E2}=★ ▷ |={E2,E1}=> R2) ∧ {{ P }} e @ E2 {{ Φ }}
+  (R1 ={E1,E2}=> ▷ |={E2,E1}=> R2) ∧ {{ P }} e @ E2 {{ Φ }}
   ⊢ {{ P ★ R1 }} e @ E1 {{ λ v, Φ v ★ R2 }}.
 Proof.
   iIntros (??) "[#Hvs #Hwp] !# [HP HR]".
