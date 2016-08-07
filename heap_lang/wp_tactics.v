@@ -1,4 +1,3 @@
-From iris.algebra Require Export upred_tactics.
 From iris.heap_lang Require Export tactics derived.
 Import uPred.
 

@@ -1,5 +1,5 @@
 From iris.proofmode Require Export classes.
-From iris.algebra Require Import upred_big_op gmap upred_tactics.
+From iris.algebra Require Import upred_big_op gmap.
 Import uPred.
 
 Section classes.
@@ -225,7 +225,7 @@ Global Instance frame_sep_l R P1 P2 Q Q' :
 Proof. rewrite /Frame /MakeSep => <- <-. by rewrite assoc. Qed.
 Global Instance frame_sep_r R P1 P2 Q Q' :
   Frame R P2 Q → MakeSep P1 Q Q' → Frame R (P1 ★ P2) Q' | 10.
-Proof. rewrite /Frame /MakeSep => <- <-. solve_sep_entails. Qed.
+Proof. rewrite /Frame /MakeSep => <- <-. by rewrite assoc (comm _ R) assoc. Qed.
 
 Class MakeAnd (P Q PQ : uPred M) := make_and : P ∧ Q ⊣⊢ PQ.
 Global Instance make_and_true_l P : MakeAnd True P P.
