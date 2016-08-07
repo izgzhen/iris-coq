@@ -340,7 +340,8 @@ Global Instance is_now_True_later P : IsNowTrue (▷ P).
 Proof. by rewrite /IsNowTrue now_True_later. Qed.
 Global Instance is_now_True_rvs P : IsNowTrue P → IsNowTrue (|=r=> P).
 Proof.
-  rewrite /IsNowTrue=> HP. by rewrite -{2}HP -now_True_rvs -(now_True_intro P).
+  rewrite /IsNowTrue=> HP.
+  by rewrite -{2}HP -(now_True_idemp P) -now_True_rvs -(now_True_intro P).
 Qed.
 
 (* FromViewShift *)

@@ -1244,7 +1244,7 @@ Proof.
   exists (y ⋅ x3); split; first by rewrite -assoc.
   exists y; eauto using cmra_includedN_l.
 Qed.
-Lemma now_True_rvs P : ◇ (|=r=> ◇ P) ⊢ (|=r=> ◇ P).
+Lemma now_True_rvs P : ◇ (|=r=> P) ⊢ (|=r=> ◇ P).
 Proof.
   rewrite /uPred_now_True. apply or_elim; auto using rvs_mono.
   by rewrite -rvs_intro -or_intro_l.
