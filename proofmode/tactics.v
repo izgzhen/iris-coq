@@ -107,14 +107,14 @@ Local Tactic Notation "iPersistent" constr(H) :=
   eapply tac_persistent with _ H _ _ _; (* (i:=H) *)
     [env_cbv; reflexivity || fail "iPersistent:" H "not found"
     |let Q := match goal with |- IntoPersistentP ?Q _ => Q end in
-     apply _ || fail "iPersistent:" H ":" Q "not persistent"
+     apply _ || fail "iPersistent:" Q "not persistent"
     |env_cbv; reflexivity|].
 
 Local Tactic Notation "iPure" constr(H) "as" simple_intropattern(pat) :=
   eapply tac_pure with _ H _ _ _; (* (i:=H1) *)
     [env_cbv; reflexivity || fail "iPure:" H "not found"
     |let P := match goal with |- IntoPure ?P _ => P end in
-     apply _ || fail "iPure:" H ":" P "not pure"
+     apply _ || fail "iPure:" P "not pure"
     |intros pat].
 
 Tactic Notation "iPureIntro" :=
@@ -139,14 +139,15 @@ Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
   | _ =>
     eapply tac_forall_specialize with _ H _ _ _ xs; (* (i:=H) (a:=x) *)
       [env_cbv; reflexivity || fail 1 "iSpecialize:" H "not found"
-      |apply _ || fail 1 "iSpecialize:" H "not a forall of the right arity or type"
+      |let P := match goal with |- ForallSpecialize _ ?P _ => P end in
+       apply _ || fail 1 "iSpecialize:" P "not a forall of the right arity or type"
       |cbn [himpl hcurry]; reflexivity|]
   end.
 
 Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
   let solve_to_wand H1 :=
     let P := match goal with |- IntoWand ?P _ _ => P end in
-    apply _ || fail "iSpecialize:" H1 ":" P "not an implication/wand" in
+    apply _ || fail "iSpecialize:" P "not an implication/wand" in
   let rec go H1 pats :=
     lazymatch pats with
     | [] => idtac
@@ -157,7 +158,7 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
          |env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |let P := match goal with |- IntoWand ?P ?Q _ => P end in
           let Q := match goal with |- IntoWand ?P ?Q _ => Q end in
-          apply _ || fail "iSpecialize: cannot instantiate" H1 ":" P "with" H2 ":" Q
+          apply _ || fail "iSpecialize: cannot instantiate" P "with" Q
          |env_cbv; reflexivity|go H1 pats]
     | SName true ?H2 :: ?pats =>
        eapply tac_specialize_persistent with _ _ H1 _ _ _ _;
@@ -270,7 +271,7 @@ Tactic Notation "iApply" open_constr(lem) :=
     |eapply tac_apply with _ H _ _ _;
        [env_cbv; reflexivity || fail 1 "iApply:" H "not found"
        |let P := match goal with |- IntoWand ?P _ _ => P end in
-        apply _ || fail 1 "iApply: cannot apply" H ":" P
+        apply _ || fail 1 "iApply: cannot apply" P
        |lazy beta (* reduce betas created by instantiation *)]] in
   lazymatch lem with
   | ITrm ?t ?xs ?pat =>
@@ -362,7 +363,7 @@ Local Tactic Notation "iOrDestruct" constr(H) "as" constr(H1) constr(H2) :=
   eapply tac_or_destruct with _ _ H _ H1 H2 _ _ _; (* (i:=H) (j1:=H1) (j2:=H2) *)
     [env_cbv; reflexivity || fail "iOrDestruct:" H "not found"
     |let P := match goal with |- IntoOr ?P _ _ => P end in
-     apply _ || fail "iOrDestruct:" H ":" P "not a disjunction"
+     apply _ || fail "iOrDestruct:" P "not a disjunction"
     |env_cbv; reflexivity || fail "iOrDestruct:" H1 "not fresh"
     |env_cbv; reflexivity || fail "iOrDestruct:" H2 "not fresh"| |].
 
@@ -398,7 +399,7 @@ Local Tactic Notation "iSepDestruct" constr(H) "as" constr(H1) constr(H2) :=
   eapply tac_sep_destruct with _ H _ H1 H2 _ _ _; (* (i:=H) (j1:=H1) (j2:=H2) *)
     [env_cbv; reflexivity || fail "iSepDestruct:" H "not found"
     |let P := match goal with |- IntoSep _ ?P _ _ => P end in
-     apply _ || fail "iSepDestruct:" H ":" P "not separating destructable"
+     apply _ || fail "iSepDestruct:" P "not separating destructable"
     |env_cbv; reflexivity || fail "iSepDestruct:" H1 "or" H2 " not fresh"|].
 
 Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
@@ -407,7 +408,7 @@ Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
     |env_cbv; reflexivity || fail "iCombine:" H2 "not found"
     |let P1 := match goal with |- FromSep _ ?P1 _ => P1 end in
      let P2 := match goal with |- FromSep _ _ ?P2 => P2 end in
-     apply _ || fail "iCombine: cannot combine" H1 ":" P1 "and" H2 ":" P2
+     apply _ || fail "iCombine: cannot combine" P1 "and" P2
     |env_cbv; reflexivity || fail "iCombine:" H "not fresh"|].
 
 (** Framing *)
@@ -479,7 +480,7 @@ Local Tactic Notation "iExistDestruct" constr(H)
   eapply tac_exist_destruct with H _ Hx _ _; (* (i:=H) (j:=Hx) *)
     [env_cbv; reflexivity || fail "iExistDestruct:" H "not found"
     |let P := match goal with |- IntoExist ?P _ => P end in
-     apply _ || fail "iExistDestruct:" H ":" P "not an existential"|];
+     apply _ || fail "iExistDestruct:" P "not an existential"|];
   let y := fresh in
   intros y; eexists; split;
     [env_cbv; reflexivity || fail "iExistDestruct:" Hx "not fresh"
@@ -517,7 +518,7 @@ Tactic Notation "iVsCore" constr(H) :=
     [env_cbv; reflexivity || fail "iVs:" H "not found"
     |let P := match goal with |- ElimVs ?P _ _ _ => P end in
      let Q := match goal with |- ElimVs _ _ ?Q _ => Q end in
-     apply _ || fail "iVs: cannot run" H ":" P "in" Q
+     apply _ || fail "iVs: cannot run" P "in" Q
                      "because the goal or hypothesis is not a view shift"
     |env_cbv; reflexivity|].
 
@@ -849,7 +850,7 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) :=
     eapply (tac_rewrite _ Heq _ _ lr);
       [env_cbv; reflexivity || fail "iRewrite:" Heq "not found"
       |let P := match goal with |- ?P ⊢ _ => P end in
-       reflexivity || fail "iRewrite:" Heq ":" P "not an equality"
+       reflexivity || fail "iRewrite:" P "not an equality"
       |iRewriteFindPred
       |intros ??? ->; reflexivity|lazy beta; iClear Heq]).
 
@@ -862,7 +863,7 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) "in" constr(H) 
       [env_cbv; reflexivity || fail "iRewrite:" Heq "not found"
       |env_cbv; reflexivity || fail "iRewrite:" H "not found"
       |let P := match goal with |- ?P ⊢ _ => P end in
-       reflexivity || fail "iRewrite:" Heq ":" P "not an equality"
+       reflexivity || fail "iRewrite:" P "not an equality"
       |iRewriteFindPred
       |intros ??? ->; reflexivity
       |env_cbv; reflexivity|lazy beta; iClear Heq]).
