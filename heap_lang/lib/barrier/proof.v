@@ -14,10 +14,10 @@ Class barrierG Σ := BarrierG {
   barrier_savedPropG :> savedPropG Σ idCF;
 }.
 (** The Functors we need. *)
-Definition barrierGF : gFunctorList := [stsGF sts; savedPropGF idCF].
+Definition barrierΣ : gFunctors := #[stsΣ sts; savedPropΣ idCF].
 (* Show and register that they match. *)
-Instance inGF_barrierG `{H : inGFs Σ barrierGF} : barrierG Σ.
-Proof. destruct H as (?&?&?). split; apply _. Qed.
+Instance subG_barrierΣ {Σ} : subG barrierΣ Σ → barrierG Σ.
+Proof. intros [? [? _]%subG_inv]%subG_inv. split; apply _. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.

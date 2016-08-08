@@ -14,9 +14,10 @@ Global Opaque newcounter inc get.
 
 (** The CMRA we need. *)
 Class counterG Σ := CounterG { counter_tokG :> authG Σ mnatUR }.
-Definition counterGF : gFunctorList := [authGF mnatUR].
-Instance inGF_counterG `{H : inGFs Σ counterGF} : counterG Σ.
-Proof. destruct H; split; apply _. Qed.
+
+Definition counterΣ : gFunctors := #[authΣ mnatUR].
+Instance subG_counterΣ {Σ} : subG counterΣ Σ → counterG Σ.
+Proof. intros [? _]%subG_inv. split; apply _. Qed.
 
 Section proof.
 Context `{!heapG Σ, !counterG Σ} (N : namespace).

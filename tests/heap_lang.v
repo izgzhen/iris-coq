@@ -77,4 +77,4 @@ Section LiftingTests.
 End LiftingTests.
 
 Lemma heap_e_adequate σ : adequate heap_e σ (λ v, v = #2).
-Proof. eapply (heap_adequacy #[ heapGF ])=> ?. by apply heap_e_spec. Qed.
+Proof. eapply (heap_adequacy heapΣ)=> ?. by apply heap_e_spec. Qed.

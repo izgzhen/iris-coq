@@ -13,10 +13,10 @@ Definition Shot {Σ} {F : cFunctor} (x : F (iProp Σ)) : one_shotR Σ F :=
 
 Class oneShotG (Σ : gFunctors) (F : cFunctor) :=
   one_shot_inG :> inG Σ (one_shotR Σ F).
-Definition oneShotGF (F : cFunctor) : gFunctor :=
-  GFunctor (csumRF (exclRF unitC) (agreeRF (▶ F))).
-Instance inGF_oneShotG  `{inGF Σ (oneShotGF F)} : oneShotG Σ F.
-Proof. apply: inGF_inG. Qed.
+Definition oneShotΣ (F : cFunctor) : gFunctors :=
+  #[ GFunctor (csumRF (exclRF unitC) (agreeRF (▶ F))) ].
+Instance subG_oneShotΣ {Σ F} : subG (oneShotΣ F) Σ → oneShotG Σ F.
+Proof. apply subG_inG. Qed.
 
 Definition client eM eW1 eW2 : expr :=
   let: "b" := newbarrier #() in

@@ -59,7 +59,7 @@ End client.
 
 Lemma client_adequate σ : adequate client σ (λ _, True).
 Proof.
-  apply (heap_adequacy #[ heapGF ; barrierGF ; spawnGF ])=> ?.
+  apply (heap_adequacy #[ heapΣ ; barrierΣ ; spawnΣ ])=> ?.
   apply (client_safe (nroot .@ "barrier")); auto with ndisj.
 Qed.
 
