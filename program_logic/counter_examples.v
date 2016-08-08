@@ -156,12 +156,11 @@ Module inv. Section inv.
   Proof.
     iIntros "(#HsP & #HsQ & #HP)". iDestruct "HsP" as (i) "HiP".
     iApply (inv_open' i). iSplit; first done.
-    (* TODO: How can I state a view-shift and immediately run it? *)
-    iIntros "HaP". iAssert (pvs M0 (finished γ)) with "[HaP]" as "Hf".
+    iIntros "HaP". iAssert (pvs M0 (finished γ)) with "[HaP]" as "==> Hf".
     { iDestruct "HaP" as "[Hs | [Hf _]]".
       - by iApply start_finish.
       - by iApply pvs_intro. }
-    iVs "Hf" as "Hf". iDestruct (finished_dup with "Hf") as "[Hf Hf']".
+    iDestruct (finished_dup with "Hf") as "[Hf Hf']".
     iApply pvs_intro. iSplitL "Hf'"; first by eauto.
     (* Step 2: Open the Q-invariant. *)
     iClear "HiP". clear i. iDestruct "HsQ" as (i) "HiQ".
