@@ -94,7 +94,7 @@ Lemma wptp_result n e1 t1 v2 t2 σ1 σ2 φ :
   world σ1 ★ WP e1 {{ v, ■ φ v }} ★ wptp t1 ⊢
   Nat.iter (S (S n)) (λ P, |=r=> ▷ P) (■ φ v2).
 Proof.
-  intros. rewrite wptp_steps // (Nat_iter_S_r (S n)); apply: rvs_iter_mono.
+  intros. rewrite wptp_steps // (Nat_iter_S_r (S n)); []. apply: rvs_iter_mono.
   iDestruct 1 as (e2 t2') "(% & (Hw & HE & _) & H & _)"; simplify_eq.
   iDestruct (wp_value_inv with "H") as "H". rewrite pvs_eq /pvs_def.
   iVs ("H" with "[Hw HE]") as ">(_ & _ & $)"; iFrame; auto.
