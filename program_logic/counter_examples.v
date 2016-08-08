@@ -156,7 +156,7 @@ Module inv. Section inv.
   Proof.
     iIntros "(#HsP & #HsQ & #HP)". iDestruct "HsP" as (i) "HiP".
     iApply (inv_open' i). iSplit; first done.
-    (* Can I state a view-shift and immediately run it? *)
+    (* TODO: How can I state a view-shift and immediately run it? *)
     iIntros "HaP". iAssert (pvs M0 (finished γ)) with "[HaP]" as "Hf".
     { iDestruct "HaP" as "[Hs | [Hf _]]".
       - by iApply start_finish.
