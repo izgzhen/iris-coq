@@ -504,8 +504,6 @@ Section ucmra.
   Context {A : ucmraT}.
   Implicit Types x y z : A.
 
-  Global Instance ucmra_unit_inhabited : Inhabited A := populate ∅.
-
   Lemma ucmra_unit_validN n : ✓{n} (∅:A).
   Proof. apply cmra_valid_validN, ucmra_unit_valid. Qed.
   Lemma ucmra_unit_leastN n x : ∅ ≼{n} x.
