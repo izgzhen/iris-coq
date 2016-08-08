@@ -81,13 +81,16 @@ End cofe.
 Arguments listC : clear implicits.
 
 (** Functor *)
+Lemma list_fmap_ext_ne {A} {B : cofeT} (f g : A → B) (l : list A) n :
+  (∀ x, f x ≡{n}≡ g x) → f <$> l ≡{n}≡ g <$> l.
+Proof. intros Hf. by apply Forall2_fmap, Forall_Forall2, Forall_true. Qed.
 Instance list_fmap_ne {A B : cofeT} (f : A → B) n:
   Proper (dist n ==> dist n) f → Proper (dist n ==> dist n) (fmap (M:=list) f).
-Proof. intros Hf l k ?; by eapply Forall2_fmap, Forall2_impl; eauto. Qed. 
+Proof. intros Hf l k ?; by eapply Forall2_fmap, Forall2_impl; eauto. Qed.
 Definition listC_map {A B} (f : A -n> B) : listC A -n> listC B :=
   CofeMor (fmap f : listC A → listC B).
 Instance listC_map_ne A B n : Proper (dist n ==> dist n) (@listC_map A B).
-Proof. intros f f' ? l; by apply Forall2_fmap, Forall_Forall2, Forall_true. Qed.
+Proof. intros f g ? l. by apply list_fmap_ext_ne. Qed.
 
 Program Definition listCF (F : cFunctor) : cFunctor := {|
   cFunctor_car A B := listC (cFunctor_car F A B);

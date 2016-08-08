@@ -1,5 +1,6 @@
 From iris.program_logic Require Export pviewshifts.
 From iris.program_logic Require Import ownership.
+From iris.algebra Require Import upred_big_op.
 From iris.prelude Require Export coPset.
 From iris.proofmode Require Import tactics pviewshifts.
 Import uPred.
@@ -12,18 +13,18 @@ Definition wp_pre `{irisG Λ Σ}
   (* step case *)
   (to_val e1 = None ∧ ∀ σ1,
      ownP_auth σ1 ={E,∅}=★ ■ reducible e1 σ1 ★
-     ▷ ∀ e2 σ2 ef, ■ prim_step e1 σ1 e2 σ2 ef ={∅,E}=★
+     ▷ ∀ e2 σ2 efs, ■ prim_step e1 σ1 e2 σ2 efs ={∅,E}=★
        ownP_auth σ2 ★ wp E e2 Φ ★
-       from_option (flip (wp ⊤) (λ _, True)) True ef))%I.
+       [★] (flip (wp ⊤) (λ _, True) <$> efs)))%I.
 
 Local Instance wp_pre_contractive `{irisG Λ Σ} : Contractive wp_pre.
 Proof.
   rewrite /wp_pre=> n wp wp' Hwp E e1 Φ.
   apply or_ne, and_ne, forall_ne; auto=> σ1; apply wand_ne; auto.
   apply pvs_ne, sep_ne, later_contractive; auto=> i ?.
-  apply forall_ne=> e2; apply forall_ne=> σ2; apply forall_ne=> ef.
+  apply forall_ne=> e2; apply forall_ne=> σ2; apply forall_ne=> efs.
   apply wand_ne, pvs_ne, sep_ne, sep_ne; auto; first by apply Hwp.
-  destruct ef; first apply Hwp; auto.
+  eapply big_sep_ne, list_fmap_ext_ne=> ef. by apply Hwp.
 Qed.
 
 Definition wp_def `{irisG Λ Σ} :
@@ -49,7 +50,7 @@ Notation "'WP' e {{ v , Q } }" := (wp ⊤ e (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'WP'  e  {{  v ,  Q  } }") : uPred_scope.
 
-Notation wp_fork ef := (from_option (flip (wp ⊤) (λ _, True)) True ef)%I.
+Notation wp_fork efs := ([★] (flip (wp ⊤) (λ _, True) <$> efs))%I.
 
 Section wp.
 Context `{irisG Λ Σ}.
@@ -99,8 +100,8 @@ Proof.
   iSplit; [done|]; iIntros (σ1) "Hσ".
   iApply (pvs_trans _ E1); iApply pvs_intro'; auto. iIntros "Hclose".
   iVs ("H" $! σ1 with "Hσ") as "[$ H]".
-  iVsIntro. iNext. iIntros (e2 σ2 ef Hstep).
-  iVs ("H" $! _ σ2 ef with "[#]") as "($ & H & $)"; auto.
+  iVsIntro. iNext. iIntros (e2 σ2 efs Hstep).
+  iVs ("H" $! _ σ2 efs with "[#]") as "($ & H & $)"; auto.
   iVs "Hclose" as "_". by iApply ("IH" with "HΦ").
 Qed.
 
@@ -127,9 +128,9 @@ Proof.
   iIntros (σ1) "Hσ". iVs "H" as "[H|[_ H]]".
   { iDestruct "H" as (v') "[% ?]"; simplify_eq. }
   iVs ("H" $! σ1 with "Hσ") as "[$ H]".
-  iVsIntro. iNext. iIntros (e2 σ2 ef Hstep).
+  iVsIntro. iNext. iIntros (e2 σ2 efs Hstep).
   destruct (Hatomic _ _ _ _ Hstep) as [v <-%of_to_val].
-  iVs ("H" $! _ σ2 ef with "[#]") as "($ & H & $)"; auto.
+  iVs ("H" $! _ σ2 efs with "[#]") as "($ & H & $)"; auto.
   iVs (wp_value_inv with "H") as "==> H". by iApply wp_value'.
 Qed.
 
@@ -141,8 +142,8 @@ Proof.
   { iDestruct "Hv" as (v) "[% Hv]"; simplify_eq. }
   iRight; iSplit; [done|]. iIntros (σ1) "Hσ".
   iVs "HR". iVs ("H" $! _ with "Hσ") as "[$ H]".
-  iVsIntro; iNext; iIntros (e2 σ2 ef Hstep).
-  iVs ("H" $! e2 σ2 ef with "[%]") as "($ & H & $)"; auto.
+  iVsIntro; iNext; iIntros (e2 σ2 efs Hstep).
+  iVs ("H" $! e2 σ2 efs with "[%]") as "($ & H & $)"; auto.
   iVs "HR". iVsIntro. iApply (wp_strong_mono E2 _ _ Φ); try iFrame; eauto.
 Qed.
 
@@ -157,9 +158,9 @@ Proof.
   iIntros (σ1) "Hσ". iVs ("H" $! _ with "Hσ") as "[% H]".
   iVsIntro; iSplit.
   { iPureIntro. unfold reducible in *. naive_solver eauto using fill_step. }
-  iNext; iIntros (e2 σ2 ef Hstep).
-  destruct (fill_step_inv e σ1 e2 σ2 ef) as (e2'&->&?); auto.
-  iVs ("H" $! e2' σ2 ef with "[%]") as "($ & H & $)"; auto.
+  iNext; iIntros (e2 σ2 efs Hstep).
+  destruct (fill_step_inv e σ1 e2 σ2 efs) as (e2'&->&?); auto.
+  iVs ("H" $! e2' σ2 efs with "[%]") as "($ & H & $)"; auto.
   by iApply "IH".
 Qed.
 

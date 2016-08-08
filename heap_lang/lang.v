@@ -225,53 +225,53 @@ Definition bin_op_eval (op : bin_op) (l1 l2 : base_lit) : option base_lit :=
   | _, _, _ => None
   end.
 
-Inductive head_step : expr → state → expr → state → option (expr) → Prop :=
+Inductive head_step : expr → state → expr → state → list (expr) → Prop :=
   | BetaS f x e1 e2 v2 e' σ :
      to_val e2 = Some v2 →
      Closed (f :b: x :b: []) e1 →
      e' = subst' x (of_val v2) (subst' f (Rec f x e1) e1) →
-     head_step (App (Rec f x e1) e2) σ e' σ None
+     head_step (App (Rec f x e1) e2) σ e' σ []
   | UnOpS op l l' σ :
      un_op_eval op l = Some l' → 
-     head_step (UnOp op (Lit l)) σ (Lit l') σ None
+     head_step (UnOp op (Lit l)) σ (Lit l') σ []
   | BinOpS op l1 l2 l' σ :
      bin_op_eval op l1 l2 = Some l' → 
-     head_step (BinOp op (Lit l1) (Lit l2)) σ (Lit l') σ None
+     head_step (BinOp op (Lit l1) (Lit l2)) σ (Lit l') σ []
   | IfTrueS e1 e2 σ :
-     head_step (If (Lit $ LitBool true) e1 e2) σ e1 σ None
+     head_step (If (Lit $ LitBool true) e1 e2) σ e1 σ []
   | IfFalseS e1 e2 σ :
-     head_step (If (Lit $ LitBool false) e1 e2) σ e2 σ None
+     head_step (If (Lit $ LitBool false) e1 e2) σ e2 σ []
   | FstS e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     head_step (Fst (Pair e1 e2)) σ e1 σ None
+     head_step (Fst (Pair e1 e2)) σ e1 σ []
   | SndS e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     head_step (Snd (Pair e1 e2)) σ e2 σ None
+     head_step (Snd (Pair e1 e2)) σ e2 σ []
   | CaseLS e0 v0 e1 e2 σ :
      to_val e0 = Some v0 →
-     head_step (Case (InjL e0) e1 e2) σ (App e1 e0) σ None
+     head_step (Case (InjL e0) e1 e2) σ (App e1 e0) σ []
   | CaseRS e0 v0 e1 e2 σ :
      to_val e0 = Some v0 →
-     head_step (Case (InjR e0) e1 e2) σ (App e2 e0) σ None
+     head_step (Case (InjR e0) e1 e2) σ (App e2 e0) σ []
   | ForkS e σ:
-     head_step (Fork e) σ (Lit LitUnit) σ (Some e)
+     head_step (Fork e) σ (Lit LitUnit) σ [e]
   | AllocS e v σ l :
      to_val e = Some v → σ !! l = None →
-     head_step (Alloc e) σ (Lit $ LitLoc l) (<[l:=v]>σ) None
+     head_step (Alloc e) σ (Lit $ LitLoc l) (<[l:=v]>σ) []
   | LoadS l v σ :
      σ !! l = Some v →
-     head_step (Load (Lit $ LitLoc l)) σ (of_val v) σ None
+     head_step (Load (Lit $ LitLoc l)) σ (of_val v) σ []
   | StoreS l e v σ :
      to_val e = Some v → is_Some (σ !! l) →
-     head_step (Store (Lit $ LitLoc l) e) σ (Lit LitUnit) (<[l:=v]>σ) None
+     head_step (Store (Lit $ LitLoc l) e) σ (Lit LitUnit) (<[l:=v]>σ) []
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some vl → vl ≠ v1 →
-     head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool false) σ None
+     head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool false) σ []
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some v1 →
-     head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) None.
+     head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) [].
 
 (** Basic properties about the language *)
 Lemma to_of_val v : to_val (of_val v) = Some v.
@@ -294,11 +294,11 @@ Lemma fill_item_val Ki e :
   is_Some (to_val (fill_item Ki e)) → is_Some (to_val e).
 Proof. intros [v ?]. destruct Ki; simplify_option_eq; eauto. Qed.
 
-Lemma val_stuck e1 σ1 e2 σ2 ef : head_step e1 σ1 e2 σ2 ef → to_val e1 = None.
+Lemma val_stuck e1 σ1 e2 σ2 efs : head_step e1 σ1 e2 σ2 efs → to_val e1 = None.
 Proof. destruct 1; naive_solver. Qed.
 
-Lemma head_ctx_step_val Ki e σ1 e2 σ2 ef :
-  head_step (fill_item Ki e) σ1 e2 σ2 ef → is_Some (to_val e).
+Lemma head_ctx_step_val Ki e σ1 e2 σ2 efs :
+  head_step (fill_item Ki e) σ1 e2 σ2 efs → is_Some (to_val e).
 Proof. destruct Ki; inversion_clear 1; simplify_option_eq; by eauto. Qed.
 
 Lemma fill_item_no_val_inj Ki1 Ki2 e1 e2 :
@@ -313,7 +313,7 @@ Qed.
 
 Lemma alloc_fresh e v σ :
   let l := fresh (dom _ σ) in
-  to_val e = Some v → head_step (Alloc e) σ (Lit (LitLoc l)) (<[l:=v]>σ) None.
+  to_val e = Some v → head_step (Alloc e) σ (Lit (LitLoc l)) (<[l:=v]>σ) [].
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset _)), is_fresh. Qed.
 
 (** Closed expressions *)
