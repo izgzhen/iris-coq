@@ -7,13 +7,13 @@ Import uPred.
 (* The CMRA we need. *)
 Class authG Σ (A : ucmraT) := AuthG {
   auth_inG :> inG Σ (authR A);
-  auth_timeless :> CMRADiscrete A;
+  auth_discrete :> CMRADiscrete A;
 }.
-(* The Functor we need. *)
-Definition authGF (A : ucmraT) : gFunctor := GFunctor (constRF (authR A)).
-(* Show and register that they match. *)
-Instance authGF_inGF `{inGF Σ (authGF A), CMRADiscrete A} : authG Σ A.
-Proof. split; try apply _. apply: inGF_inG. Qed.
+
+(* The global functor we need and register that they match. *)
+Definition authΣ (A : ucmraT) : gFunctors := #[ GFunctor (constRF (authR A)) ].
+Instance subG_authΣ Σ A : subG (authΣ A) Σ → CMRADiscrete A → authG Σ A.
+Proof. intros ?%subG_inG ?. by split. Qed.
 
 Section definitions.
   Context `{irisG Λ Σ, authG Σ A} (γ : gname).

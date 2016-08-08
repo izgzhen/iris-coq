@@ -4,7 +4,7 @@ From iris.program_logic Require Import auth ownership.
 From iris.heap_lang Require Import proofmode notation.
 From iris.proofmode Require Import tactics weakestpre.
 
-Definition heapGF : gFunctorList := [authGF heapUR; irisGF heap_lang].
+Definition heapΣ : gFunctors := #[authΣ heapUR; irisΣ heap_lang].
 
 Definition heap_adequacy Σ `{irisPreG heap_lang Σ, authG Σ heapUR} e σ φ :
   (∀ `{heapG Σ}, heap_ctx ⊢ WP e {{ v, ■ φ v }}) →

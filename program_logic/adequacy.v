@@ -20,11 +20,11 @@ Proof.
   intros Had ?.
   destruct (decide (Forall (λ e, is_Some (to_val e)) t2)) as [|Ht2]; [by left|].
   apply (not_Forall_Exists _), Exists_exists in Ht2; destruct Ht2 as (e2&?&He2).
-  destruct (adequate_safe e1 σ1 φ Had t2 σ2 e2) as [?|(e3&σ3&ef&?)];
+  destruct (adequate_safe e1 σ1 φ Had t2 σ2 e2) as [?|(e3&σ3&efs&?)];
     rewrite ?eq_None_not_Some; auto.
   { exfalso. eauto. }
   destruct (elem_of_list_split t2 e2) as (t2'&t2''&->); auto.
-  right; exists (t2' ++ e3 :: t2'' ++ option_list ef), σ3; econstructor; eauto.
+  right; exists (t2' ++ e3 :: t2'' ++ efs), σ3; econstructor; eauto.
 Qed.
 
 Section adequacy.
@@ -42,19 +42,17 @@ Lemma wptp_cons e t : wptp (e :: t) ⊣⊢ WP e {{ _, True }} ★ wptp t.
 Proof. done. Qed.
 Lemma wptp_app t1 t2 : wptp (t1 ++ t2) ⊣⊢ wptp t1 ★ wptp t2.
 Proof. by rewrite /wptp fmap_app big_sep_app. Qed.
-Lemma wptp_fork ef : wptp (option_list ef) ⊣⊢ wp_fork ef.
-Proof. destruct ef; by rewrite /wptp /= ?right_id. Qed.
 
-Lemma wp_step e1 σ1 e2 σ2 ef Φ :
-  prim_step e1 σ1 e2 σ2 ef →
-  world σ1 ★ WP e1 {{ Φ }} =r=> ▷ |=r=> ◇ (world σ2 ★ WP e2 {{ Φ }} ★ wp_fork ef).
+Lemma wp_step e1 σ1 e2 σ2 efs Φ :
+  prim_step e1 σ1 e2 σ2 efs →
+  world σ1 ★ WP e1 {{ Φ }} =r=> ▷ |=r=> ◇ (world σ2 ★ WP e2 {{ Φ }} ★ wp_fork efs).
 Proof.
   rewrite {1}wp_unfold /wp_pre. iIntros (Hstep) "[(Hw & HE & Hσ) [H|[_ H]]]".
   { iDestruct "H" as (v) "[% _]". apply val_stuck in Hstep; simplify_eq. }
   rewrite pvs_eq /pvs_def.
   iVs ("H" $! σ1 with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
   iVsIntro; iNext.
-  iVs ("H" $! e2 σ2 ef with "[%] [Hw HE]")
+  iVs ("H" $! e2 σ2 efs with "[%] [Hw HE]")
     as ">($ & $ & $ & $)"; try iFrame; eauto.
 Qed.
 
@@ -64,11 +62,11 @@ Lemma wptp_step e1 t1 t2 σ1 σ2 Φ :
   =r=> ∃ e2 t2', t2 = e2 :: t2' ★ ▷ |=r=> ◇ (world σ2 ★ WP e2 {{ Φ }} ★ wptp t2').
 Proof.
   iIntros (Hstep) "(HW & He & Ht)".
-  destruct Hstep as [e1' σ1' e2' σ2' ef [|? t1'] t2' ?? Hstep]; simplify_eq/=.
-  - iExists e2', (t2' ++ option_list ef); iSplitR; first eauto.
-    rewrite wptp_app wptp_fork. iFrame "Ht". iApply wp_step; try iFrame; eauto.
-  - iExists e, (t1' ++ e2' :: t2' ++ option_list ef); iSplitR; first eauto.
-    rewrite !wptp_app !wptp_cons wptp_app wptp_fork.
+  destruct Hstep as [e1' σ1' e2' σ2' efs [|? t1'] t2' ?? Hstep]; simplify_eq/=.
+  - iExists e2', (t2' ++ efs); iSplitR; first eauto.
+    rewrite wptp_app. iFrame "Ht". iApply wp_step; try iFrame; eauto.
+  - iExists e, (t1' ++ e2' :: t2' ++ efs); iSplitR; first eauto.
+    rewrite !wptp_app !wptp_cons wptp_app.
     iDestruct "Ht" as "($ & He' & $)"; iFrame "He".
     iApply wp_step; try iFrame; eauto.
 Qed.
@@ -94,7 +92,8 @@ Lemma wptp_result n e1 t1 v2 t2 σ1 σ2 φ :
   world σ1 ★ WP e1 {{ v, ■ φ v }} ★ wptp t1 ⊢
   Nat.iter (S (S n)) (λ P, |=r=> ▷ P) (■ φ v2).
 Proof.
-  intros. rewrite wptp_steps // (Nat_iter_S_r (S n)); []. apply: rvs_iter_mono.
+  intros. rewrite wptp_steps //.
+  rewrite (Nat_iter_S_r (S n)). apply rvs_iter_mono.
   iDestruct 1 as (e2 t2') "(% & (Hw & HE & _) & H & _)"; simplify_eq.
   iDestruct (wp_value_inv with "H") as "H". rewrite pvs_eq /pvs_def.
   iVs ("H" with "[Hw HE]") as ">(_ & _ & $)"; iFrame; auto.
@@ -114,7 +113,7 @@ Lemma wptp_safe n e1 e2 t1 t2 σ1 σ2 Φ :
   world σ1 ★ WP e1 {{ Φ }} ★ wptp t1 ⊢
   Nat.iter (S (S n)) (λ P, |=r=> ▷ P) (■ (is_Some (to_val e2) ∨ reducible e2 σ2)).
 Proof.
-  intros ? He2. rewrite wptp_steps // (Nat_iter_S_r (S n)); apply: rvs_iter_mono.
+  intros ? He2. rewrite wptp_steps //; rewrite (Nat_iter_S_r (S n)). apply rvs_iter_mono.
   iDestruct 1 as (e2' t2') "(% & Hw & H & Htp)"; simplify_eq.
   apply elem_of_cons in He2 as [<-|?]; first (iApply wp_safe; by iFrame "Hw H").
   iApply wp_safe. iFrame "Hw".

@@ -36,10 +36,10 @@ Class tlockG Σ := TlockG {
    tlock_exclG  :> inG Σ (exclR unitC)
 }.
 
-Definition tlockGF : gFunctorList :=
-  [authGF (gset_disjUR nat); GFunctor (constRF (exclR unitC))].
-Instance inGF_tlockG `{H : inGFs Σ tlockGF} : tlockG Σ.
-Proof. destruct H as (? & ? & ?). split. apply _. apply: inGF_inG. Qed.
+Definition tlockΣ : gFunctors :=
+  #[authΣ (gset_disjUR nat); GFunctor (constRF (exclR unitC))].
+Instance subG_tlockΣ {Σ} : subG tlockΣ Σ → tlockG Σ.
+Proof. intros [? [?%subG_inG _]%subG_inv]%subG_inv. split; apply _. Qed.
 
 Section proof.
 Context `{!heapG Σ, !tlockG Σ} (N : namespace).

@@ -8,13 +8,12 @@ Class stsG Σ (sts : stsT) := StsG {
   sts_inG :> inG Σ (stsR sts);
   sts_inhabited :> Inhabited (sts.state sts);
 }.
-Coercion sts_inG : stsG >-> inG.
-(** The Functor we need. *)
-Definition stsGF (sts : stsT) : gFunctor := GFunctor (constRF (stsR sts)).
-(* Show and register that they match. *)
-Instance inGF_stsG sts `{inGF Λ (stsGF sts)}
-  `{Inhabited (sts.state sts)} : stsG Λ sts.
-Proof. split; try apply _. apply: inGF_inG. Qed.
+
+(* The global functor we need and register that they match. *)
+Definition stsΣ (sts : stsT) : gFunctors := #[ GFunctor (constRF (stsR sts)) ].
+Instance subG_stsΣ Σ sts :
+  subG (stsΣ sts) Σ → Inhabited (sts.state sts) → stsG Σ sts.
+Proof. intros ?%subG_inG ?. by split. Qed.
 
 Section definitions.
   Context `{irisG Λ Σ, stsG Σ sts} (γ : gname).

@@ -19,11 +19,11 @@ Global Opaque spawn join.
 (** The CMRA we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
 Class spawnG Σ := SpawnG { spawn_tokG :> inG Σ (exclR unitC) }.
-(** The functor we need. *)
-Definition spawnGF : gFunctorList := [GFunctor (constRF (exclR unitC))].
-(* Show and register that they match. *)
-Instance inGF_spawnG `{H : inGFs Σ spawnGF} : spawnG Σ.
-Proof. destruct H as (?&?). split. apply: inGF_inG. Qed.
+
+(** The functor we need and register that they match. *)
+Definition spawnΣ : gFunctors := #[GFunctor (constRF (exclR unitC))].
+Instance subG_spawnΣ {Σ} : subG spawnΣ Σ → spawnG Σ.
+Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.

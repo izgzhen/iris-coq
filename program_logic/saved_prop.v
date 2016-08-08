@@ -5,10 +5,11 @@ Import uPred.
 
 Class savedPropG (Σ : gFunctors) (F : cFunctor) :=
   saved_prop_inG :> inG Σ (agreeR (laterC (F (iPreProp Σ)))).
-Definition savedPropGF (F : cFunctor) : gFunctor :=
-  GFunctor (agreeRF (▶ F)).
-Instance inGF_savedPropG  `{inGF Σ (savedPropGF F)} : savedPropG Σ F.
-Proof. apply: inGF_inG. Qed.
+
+Definition savedPropΣ (F : cFunctor) : gFunctors :=
+  #[ GFunctor (agreeRF (▶ F)) ].
+Instance subG_savedPropΣ  {Σ F} : subG (savedPropΣ F) Σ → savedPropG Σ F.
+Proof. apply subG_inG. Qed.
 
 Definition saved_prop_own `{savedPropG Σ F}
     (γ : gname) (x : F (iProp Σ)) : iProp Σ :=

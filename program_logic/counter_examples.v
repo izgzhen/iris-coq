@@ -2,7 +2,7 @@ From iris.algebra Require Import upred.
 From iris.proofmode Require Import tactics.
 
 (** This proves that we need the ▷ in a "Saved Proposition" construction with
-name-dependend allocation. *)
+name-dependent allocation. *)
 Module savedprop. Section savedprop.
   Context (M : ucmraT).
   Notation iProp := (uPred M).
@@ -87,6 +87,12 @@ Module inv. Section inv.
   (* We have tokens for a little "two-state STS": [start] -> [finish].
      state. [start] also asserts the exact state; it is only ever owned by the
      invariant.  [finished] is duplicable. *)
+  (* Posssible implementations of these axioms:
+     * Using the STS monoid of a two-state STS, where [start] is the
+       authoritative saying the state is exactly [start], and [finish]
+       is the "we are at least in state [finish]" typically owned by threads.
+     * Ex () +_⊥ ()
+  *)
   Context (gname : Type).
   Context (start finished : gname → iProp).
 
@@ -133,7 +139,7 @@ Module inv. Section inv.
     apply pvs_mono. by rewrite -HP -(uPred.exist_intro a).
   Qed.
 
-  (** Now to the actual counterexample. We start with a weird for of saved propositions. *)
+  (** Now to the actual counterexample. We start with a weird form of saved propositions. *)
   Definition saved (γ : gname) (P : iProp) : iProp :=
     ∃ i, inv i (start γ ∨ (finished γ ★ □ P)).
   Global Instance saved_persistent γ P : PersistentP (saved γ P) := _.
@@ -150,12 +156,11 @@ Module inv. Section inv.
   Proof.
     iIntros "(#HsP & #HsQ & #HP)". iDestruct "HsP" as (i) "HiP".
     iApply (inv_open' i). iSplit; first done.
-    (* Can I state a view-shift and immediately run it? *)
-    iIntros "HaP". iAssert (pvs M0 (finished γ)) with "[HaP]" as "Hf".
+    iIntros "HaP". iAssert (pvs M0 (finished γ)) with "[HaP]" as "==> Hf".
     { iDestruct "HaP" as "[Hs | [Hf _]]".
       - by iApply start_finish.
       - by iApply pvs_intro. }
-    iVs "Hf" as "Hf". iDestruct (finished_dup with "Hf") as "[Hf Hf']".
+    iDestruct (finished_dup with "Hf") as "[Hf Hf']".
     iApply pvs_intro. iSplitL "Hf'"; first by eauto.
     (* Step 2: Open the Q-invariant. *)
     iClear "HiP". clear i. iDestruct "HsQ" as (i) "HiQ".

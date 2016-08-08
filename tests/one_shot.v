@@ -24,10 +24,10 @@ Definition one_shotR := csumR (exclR unitC) (dec_agreeR Z).
 Definition Pending : one_shotR := (Cinl (Excl ()) : one_shotR).
 Definition Shot (n : Z) : one_shotR := (Cinr (DecAgree n) : one_shotR).
 
-Class one_shotG Σ := one_shot_inG :> inG Σ one_shotR.
-Definition one_shotGF : gFunctorList := [GFunctor (constRF one_shotR)].
-Instance inGF_one_shotG Σ : inGFs Σ one_shotGF → one_shotG Σ.
-Proof. intros [? _]; apply: inGF_inG. Qed.
+Class one_shotG Σ := { one_shot_inG :> inG Σ one_shotR }.
+Definition one_shotΣ : gFunctors := #[GFunctor (constRF one_shotR)].
+Instance subG_one_shotΣ {Σ} : subG one_shotΣ Σ → one_shotG Σ.
+Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
 
 Section proof.
 Context `{!heapG Σ, !one_shotG Σ} (N : namespace) (HN : heapN ⊥ N).

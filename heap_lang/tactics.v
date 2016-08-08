@@ -312,7 +312,7 @@ Tactic Notation "do_head_step" tactic3(tac) :=
   try match goal with |- head_reducible _ _ => eexists _, _, _ end;
   simpl;
   match goal with
-  | |- head_step ?e1 ?σ1 ?e2 ?σ2 ?ef =>
+  | |- head_step ?e1 ?σ1 ?e2 ?σ2 ?efs =>
      first [apply alloc_fresh|econstructor];
        (* solve [to_val] side-conditions *)
        first [rewrite ?to_of_val; reflexivity|simpl_subst; tac; fast_done]

@@ -69,17 +69,43 @@ Ltac inv_fin i :=
     revert dependent i; match goal with |- ∀ i, @?P i => apply (fin_S_inv P) end
   end.
 
-Instance: Inj (=) (=) (@FS n).
+Instance FS_inj: Inj (=) (=) (@FS n).
 Proof. intros n i j. apply Fin.FS_inj. Qed.
-Instance: Inj (=) (=) (@fin_to_nat n).
+Instance fin_to_nat_inj : Inj (=) (=) (@fin_to_nat n).
 Proof.
   intros n i. induction i; intros j; inv_fin j; intros; f_equal/=; auto with lia.
 Qed.
+
 Lemma fin_to_nat_lt {n} (i : fin n) : fin_to_nat i < n.
 Proof. induction i; simpl; lia. Qed.
 Lemma fin_to_of_nat n m (H : n < m) : fin_to_nat (Fin.of_nat_lt H) = n.
 Proof.
   revert m H. induction n; intros [|?]; simpl; auto; intros; exfalso; lia.
+Qed.
+
+Fixpoint fin_plus_inv {n1 n2} : ∀ (P : fin (n1 + n2) → Type)
+    (H1 : ∀ i1 : fin n1, P (Fin.L n2 i1))
+    (H2 : ∀ i2, P (Fin.R n1 i2)) (i : fin (n1 + n2)), P i :=
+  match n1 with
+  | 0 => λ P H1 H2 i, H2 i
+  | S n => λ P H1 H2, fin_S_inv P (H1 0%fin) (fin_plus_inv _ (λ i, H1 (FS i)) H2)
+  end.
+
+Lemma fin_plus_inv_L {n1 n2} (P : fin (n1 + n2) → Type)
+    (H1: ∀ i1 : fin n1, P (Fin.L _ i1)) (H2: ∀ i2, P (Fin.R _ i2)) (i: fin n1) :
+  fin_plus_inv P H1 H2 (Fin.L n2 i) = H1 i.
+Proof.
+  revert P H1 H2 i.
+  induction n1 as [|n1 IH]; intros P H1 H2 i; inv_fin i; simpl; auto.
+  intros i. apply (IH (λ i, P (FS i))).
+Qed.
+
+Lemma fin_plus_inv_R {n1 n2} (P : fin (n1 + n2) → Type)
+    (H1: ∀ i1 : fin n1, P (Fin.L _ i1)) (H2: ∀ i2, P (Fin.R _ i2)) (i: fin n2) :
+  fin_plus_inv P H1 H2 (Fin.R n1 i) = H2 i.
+Proof.
+  revert P H1 H2 i; induction n1 as [|n1 IH]; intros P H1 H2 i; simpl; auto.
+  apply (IH (λ i, P (FS i))).
 Qed.
 
 (** * Vectors *)

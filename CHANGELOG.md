@@ -1,7 +1,14 @@
 In this changelog, we document "large-ish" changes to Iris that affect even the
 way the logic is used on paper.  We also mention some significant changes in the
 Coq development, but not every API-breaking change is listed.  Changes marked
-[#] still need to be ported to the Iris Documentation LaTeX file.
+[#] still need to be ported to the Iris Documentation LaTeX file(s).
+
+## Iris 3.0
+
+* [#] View shifts are radically simplified to just internalize frame-preserving
+  updates.  Weakestpre is defined inside the logic, and invariants and view
+  shifts with masks are also coded up inside Iris.
+* [#] The language can now fork off multiple threads at once.
 
 ## Iris 2.0
 

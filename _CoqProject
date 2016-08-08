@@ -76,7 +76,6 @@ program_logic/ectx_language.v
 program_logic/ectxi_language.v
 program_logic/ectx_lifting.v
 program_logic/ghost_ownership.v
-program_logic/global_functor.v
 program_logic/saved_prop.v
 program_logic/auth.v
 program_logic/sts.v
@@ -110,6 +109,7 @@ tests/proofmode.v
 tests/barrier_client.v
 tests/list_reverse.v
 tests/tree_sum.v
+tests/counter.v
 proofmode/coq_tactics.v
 proofmode/pviewshifts.v
 proofmode/environments.v
