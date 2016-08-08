@@ -14,49 +14,38 @@ Module savedprop. Section savedprop.
   Hypothesis sprop_persistent : ∀ i P, PersistentP (saved i P).
   Hypothesis sprop_alloc_dep :
     ∀ (P : sprop → iProp), True =r=> (∃ i, saved i (P i)).
-  Hypothesis sprop_agree : ∀ i P Q, saved i P ∧ saved i Q ⊢ P ↔ Q.
+  Hypothesis sprop_agree : ∀ i P Q, saved i P ∧ saved i Q ⊢ □ (P ↔ Q).
 
-  (* Self-contradicting assertions are inconsistent *)
-  Lemma no_self_contradiction P `{!PersistentP P} : □ (P ↔ ¬ P) ⊢ False.
+  (** A bad recursive reference: "Assertion with name [i] does not hold" *)
+  Definition A (i : sprop) : iProp := ∃ P, ¬ P ★ saved i P.
+
+  Lemma A_alloc : True =r=> ∃ i, saved i (A i).
+  Proof. by apply sprop_alloc_dep. Qed.
+
+  Lemma saved_NA i : saved i (A i) ⊢ ¬ A i.
   Proof.
-    iIntros "#[H1 H2]".
-    iAssert P as "#HP".
-    { iApply "H2". iIntros "!# #HP". by iApply ("H1" with "[#]"). }
-    by iApply ("H1" with "[#]").
+    iIntros "#Hs !# #HA". iPoseProof "HA" as "HA'".
+    iDestruct "HA'" as (P) "[#HNP HsP]". iApply "HNP".
+    iDestruct (sprop_agree i P (A i) with "[]") as "#[_ HP]".
+    { eauto. }
+    iApply "HP". done.
   Qed.
 
-  (* "Assertion with name [i]" is equivalent to any assertion P s.t. [saved i P] *)
-  Definition A (i : sprop) : iProp := ∃ P, saved i P ★ □ P.
-  Lemma saved_is_A i P `{!PersistentP P} : saved i P ⊢ □ (A i ↔ P).
+  Lemma saved_A i : saved i (A i) ⊢ A i.
   Proof.
-    iIntros "#HS !#". iSplit.
-    - iDestruct 1 as (Q) "[#HSQ HQ]".
-      iApply (sprop_agree i P Q with "[]"); eauto.
-    - iIntros "#HP". iExists P. by iSplit.
-  Qed.
-
-  (* Define [Q i] to be "negated assertion with name [i]". Show that this
-     implies that assertion with name [i] is equivalent to its own negation. *)
-  Definition Q i := saved i (¬ A i).
-  Lemma Q_self_contradiction i : Q i ⊢ □ (A i ↔ ¬ A i).
-  Proof. iIntros "#HQ !#". by iApply (saved_is_A i (¬A i)). Qed.
-
-  (* We can obtain such a [Q i]. *)
-  Lemma make_Q : True =r=> ∃ i, Q i.
-  Proof. apply sprop_alloc_dep. Qed.
-
-  (* Put together all the pieces to derive a contradiction. *)
-  Lemma rvs_false : (True : uPred M) =r=> False.
-  Proof.
-    rewrite make_Q. apply uPred.rvs_mono. iDestruct 1 as (i) "HQ".
-    iApply (no_self_contradiction (A i)). by iApply Q_self_contradiction.
+    iIntros "#Hs". iExists (A i). iFrame "#".
+    by iApply saved_NA.
   Qed.
 
   Lemma contradiction : False.
   Proof.
     apply (@uPred.adequacy M False 1); simpl.
-    rewrite -uPred.later_intro. apply rvs_false.
+    iIntros "". iVs A_alloc as (i) "#H".
+    iPoseProof (saved_NA with "H") as "HN".
+    iVsIntro. iNext.
+    iApply "HN". iApply saved_A. done.
   Qed.
+
 End savedprop. End savedprop.
 
 (** This proves that we need the ▷ when opening invariants. *)
@@ -180,26 +169,26 @@ Module inv. Section inv.
   Lemma A_alloc : True ⊢ pvs M1 (∃ i, saved i (A i)).
   Proof. by apply saved_alloc. Qed.
 
-  Lemma alloc_NA i : saved i (A i) ⊢ ¬A i.
+  Lemma saved_NA i : saved i (A i) ⊢ ¬A i.
   Proof.
     iIntros "#Hi !# #HA". iPoseProof "HA" as "HA'".
     iDestruct "HA'" as (P) "#[HNP Hi']".
-    iVs (saved_cast i with "[]") as "HP".
-    { iSplit; first iExact "Hi". by iFrame "#". }
+    iVs (saved_cast i (A i) P with "[]") as "HP".
+    { eauto. }
     by iApply "HNP".
   Qed.
 
-  Lemma alloc_A i : saved i (A i) ⊢ A i.
+  Lemma saved_A i : saved i (A i) ⊢ A i.
   Proof.
-    iIntros "#Hi". iPoseProof (alloc_NA with "Hi") as "HNA".
-    iExists (A i). by iFrame "#".
+    iIntros "#Hi". iExists (A i). iFrame "#".
+    by iApply saved_NA.
   Qed.
 
   Lemma contradiction : False.
   Proof.
     apply soundness. iIntros "".
     iVs A_alloc as (i) "#H".
-    iPoseProof (alloc_NA with "H") as "HN".
-    iApply "HN". iApply alloc_A. done.
+    iPoseProof (saved_NA with "H") as "HN".
+    iApply "HN". iApply saved_A. done.
   Qed.
 End inv. End inv.
