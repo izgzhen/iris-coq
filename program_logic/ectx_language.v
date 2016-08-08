@@ -11,11 +11,11 @@ Class EctxLanguage (expr val ectx state : Type) := {
   empty_ectx : ectx;
   comp_ectx : ectx → ectx → ectx;
   fill : ectx → expr → expr;
-  head_step : expr → state → expr → state → option expr → Prop;
+  head_step : expr → state → expr → state → list expr → Prop;
 
   to_of_val v : to_val (of_val v) = Some v;
   of_to_val e v : to_val e = Some v → of_val v = e;
-  val_stuck e1 σ1 e2 σ2 ef : head_step e1 σ1 e2 σ2 ef → to_val e1 = None;
+  val_stuck e1 σ1 e2 σ2 efs : head_step e1 σ1 e2 σ2 efs → to_val e1 = None;
 
   fill_empty e : fill empty_ectx e = e;
   fill_comp K1 K2 e : fill K1 (fill K2 e) = fill (comp_ectx K1 K2) e;
@@ -28,10 +28,10 @@ Class EctxLanguage (expr val ectx state : Type) := {
   ectx_positive K1 K2 :
     comp_ectx K1 K2 = empty_ectx → K1 = empty_ectx ∧ K2 = empty_ectx;
 
-  step_by_val K K' e1 e1' σ1 e2 σ2 ef :
+  step_by_val K K' e1 e1' σ1 e2 σ2 efs :
     fill K e1 = fill K' e1' →
     to_val e1 = None →
-    head_step e1' σ1 e2 σ2 ef →
+    head_step e1' σ1 e2 σ2 efs →
     exists K'', K' = comp_ectx K K'';
 }.
 
@@ -57,16 +57,16 @@ Section ectx_language.
   Implicit Types (e : expr) (K : ectx).
 
   Definition head_reducible (e : expr) (σ : state) :=
-    ∃ e' σ' ef, head_step e σ e' σ' ef.
+    ∃ e' σ' efs, head_step e σ e' σ' efs.
 
   Inductive prim_step (e1 : expr) (σ1 : state)
-      (e2 : expr) (σ2 : state) (ef : option expr) : Prop :=
+      (e2 : expr) (σ2 : state) (efs : list expr) : Prop :=
     Ectx_step K e1' e2' :
       e1 = fill K e1' → e2 = fill K e2' →
-      head_step e1' σ1 e2' σ2 ef → prim_step e1 σ1 e2 σ2 ef.
+      head_step e1' σ1 e2' σ2 efs → prim_step e1 σ1 e2 σ2 efs.
 
-  Lemma val_prim_stuck e1 σ1 e2 σ2 ef :
-    prim_step e1 σ1 e2 σ2 ef → to_val e1 = None.
+  Lemma val_prim_stuck e1 σ1 e2 σ2 efs :
+    prim_step e1 σ1 e2 σ2 efs → to_val e1 = None.
   Proof. intros [??? -> -> ?]; eauto using fill_not_val, val_stuck. Qed.
 
   Canonical Structure ectx_lang : language := {|
@@ -78,29 +78,29 @@ Section ectx_language.
   |}.
 
   (* Some lemmas about this language *)
-  Lemma head_prim_step e1 σ1 e2 σ2 ef :
-    head_step e1 σ1 e2 σ2 ef → prim_step e1 σ1 e2 σ2 ef.
+  Lemma head_prim_step e1 σ1 e2 σ2 efs :
+    head_step e1 σ1 e2 σ2 efs → prim_step e1 σ1 e2 σ2 efs.
   Proof. apply Ectx_step with empty_ectx; by rewrite ?fill_empty. Qed.
 
   Lemma head_prim_reducible e σ : head_reducible e σ → reducible e σ.
-  Proof. intros (e'&σ'&ef&?). eexists e', σ', ef. by apply head_prim_step. Qed.
+  Proof. intros (e'&σ'&efs&?). eexists e', σ', efs. by apply head_prim_step. Qed.
 
   Lemma ectx_language_atomic e :
-    (∀ σ e' σ' ef, head_step e σ e' σ' ef → is_Some (to_val e')) →
+    (∀ σ e' σ' efs, head_step e σ e' σ' efs → is_Some (to_val e')) →
     (∀ K e', e = fill K e' → to_val e' = None → K = empty_ectx) →
     atomic e.
   Proof.
-    intros Hatomic_step Hatomic_fill σ e' σ' ef [K e1' e2' -> -> Hstep].
+    intros Hatomic_step Hatomic_fill σ e' σ' efs [K e1' e2' -> -> Hstep].
     assert (K = empty_ectx) as -> by eauto 10 using val_stuck.
     rewrite fill_empty. eapply Hatomic_step. by rewrite fill_empty.
   Qed.
 
-  Lemma head_reducible_prim_step e1 σ1 e2 σ2 ef :
-    head_reducible e1 σ1 → prim_step e1 σ1 e2 σ2 ef →
-    head_step e1 σ1 e2 σ2 ef.
+  Lemma head_reducible_prim_step e1 σ1 e2 σ2 efs :
+    head_reducible e1 σ1 → prim_step e1 σ1 e2 σ2 efs →
+    head_step e1 σ1 e2 σ2 efs.
   Proof.
-    intros (e2''&σ2''&ef''&?) [K e1' e2' -> -> Hstep].
-    destruct (step_by_val K empty_ectx e1' (fill K e1') σ1 e2'' σ2'' ef'')
+    intros (e2''&σ2''&efs''&?) [K e1' e2' -> -> Hstep].
+    destruct (step_by_val K empty_ectx e1' (fill K e1') σ1 e2'' σ2'' efs'')
       as [K' [-> _]%symmetry%ectx_positive];
       eauto using fill_empty, fill_not_val, val_stuck.
     by rewrite !fill_empty.
@@ -114,7 +114,7 @@ Section ectx_language.
     - intros ????? [K' e1' e2' Heq1 Heq2 Hstep].
       by exists (comp_ectx K K') e1' e2'; rewrite ?Heq1 ?Heq2 ?fill_comp.
     - intros e1 σ1 e2 σ2 ? Hnval [K'' e1'' e2'' Heq1 -> Hstep].
-      destruct (step_by_val K K'' e1 e1'' σ1 e2'' σ2 ef) as [K' ->]; eauto.
+      destruct (step_by_val K K'' e1 e1'' σ1 e2'' σ2 efs) as [K' ->]; eauto.
       rewrite -fill_comp in Heq1; apply (inj (fill _)) in Heq1.
       exists (fill K' e2''); rewrite -fill_comp; split; auto.
       econstructor; eauto.
