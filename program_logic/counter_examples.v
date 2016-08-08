@@ -2,7 +2,7 @@ From iris.algebra Require Import upred.
 From iris.proofmode Require Import tactics.
 
 (** This proves that we need the ▷ in a "Saved Proposition" construction with
-name-dependend allocation. *)
+name-dependent allocation. *)
 Module savedprop. Section savedprop.
   Context (M : ucmraT).
   Notation iProp := (uPred M).
@@ -139,7 +139,7 @@ Module inv. Section inv.
     apply pvs_mono. by rewrite -HP -(uPred.exist_intro a).
   Qed.
 
-  (** Now to the actual counterexample. We start with a weird for of saved propositions. *)
+  (** Now to the actual counterexample. We start with a weird form of saved propositions. *)
   Definition saved (γ : gname) (P : iProp) : iProp :=
     ∃ i, inv i (start γ ∨ (finished γ ★ □ P)).
   Global Instance saved_persistent γ P : PersistentP (saved γ P) := _.
