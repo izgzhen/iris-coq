@@ -4,7 +4,7 @@ Import uPred.
 
 (** The class [inG Σ A] expresses that the CMRA [A] is in the list of functors
 [Σ]. This class is similar to the [subG] class, but written down in terms of
-individual CMRAs instead of lists of CMRA functors. This additional class is
+individual CMRAs instead of (lists of) CMRA *functors*. This additional class is
 needed because Coq is otherwise unable to solve type class constraints due to
 higher-order unification problems. *)
 Class inG (Σ : gFunctors) (A : cmraT) :=

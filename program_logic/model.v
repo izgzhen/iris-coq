@@ -101,7 +101,7 @@ Proof.
   move=> H i; move: H=> /(_ i) [j ?].
   exists (Fin.L _ j). by rewrite /= fin_plus_inv_L.
 Qed.
-Instance inGF_app_r Σ Σ1 Σ2 : subG Σ Σ2 → subG Σ (gFunctors.app Σ1 Σ2).
+Instance subG_app_r Σ Σ1 Σ2 : subG Σ Σ2 → subG Σ (gFunctors.app Σ1 Σ2).
 Proof.
   move=> H i; move: H=> /(_ i) [j ?].
   exists (Fin.R _ j). by rewrite /= fin_plus_inv_R.
