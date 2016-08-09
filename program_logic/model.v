@@ -5,7 +5,7 @@ From iris.algebra Require cofe_solver.
 (** In this file we construct the type [iProp] of propositions of the Iris
 logic. This is done by solving the following recursive domain equation:
 
-  iProp ≈ uPred { i : gid  &  gname -fin-> (Σ i) iProp }
+  iProp ≈ uPred (∀ i : gid, gname -fin-> (Σ i) iProp)
 
 where:
 
@@ -44,7 +44,7 @@ Coercion gFunctors_lookup : gFunctors >-> Funclass.
 
 Definition gname := positive.
 
-(** The resources functor [iResF Σ A := { i : gid & gname -fin-> (Σ i) A }]. *)
+(** The resources functor [iResF Σ A := ∀ i : gid, gname -fin-> (Σ i) A]. *)
 Definition iResF (Σ : gFunctors) : urFunctor :=
   iprodURF (λ i, gmapURF gname (Σ i)).
 
