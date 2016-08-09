@@ -106,17 +106,17 @@ Proof. by assert (k = j) by lia; subst; rewrite !coerce_id. Qed.
 Lemma coerce_f {k j} (H : S k = S j) (x : A k) :
   coerce H (f k x) = f j (coerce (Nat.succ_inj _ _ H) x).
 Proof. by assert (k = j) by lia; subst; rewrite !coerce_id. Qed.
-Lemma gg_gg {k i i1 i2 j} (H1 : k = i + j) (H2 : k = i2 + (i1 + j)) (x : A k) :
+Lemma gg_gg {k i i1 i2 j} : ∀ (H1: k = i + j) (H2: k = i2 + (i1 + j)) (x: A k),
   gg i (coerce H1 x) = gg i1 (gg i2 (coerce H2 x)).
 Proof.
-  assert (i = i2 + i1) by lia; move:H1=>H1; simplify_eq/=. revert j x H1.
+  intros ? -> x. assert (i = i2 + i1) as -> by lia. revert j x H1.
   induction i2 as [|i2 IH]; intros j X H1; simplify_eq/=;
     [by rewrite coerce_id|by rewrite g_coerce IH].
 Qed.
-Lemma ff_ff {k i i1 i2 j} (H1 : i + k = j) (H2 : i1 + (i2 + k) = j) (x : A k) :
+Lemma ff_ff {k i i1 i2 j} : ∀ (H1: i + k = j) (H2: i1 + (i2 + k) = j) (x: A k),
   coerce H1 (ff i x) = coerce H2 (ff i1 (ff i2 x)).
 Proof.
-  assert (i = i1 + i2) by lia; move:H1=>H1; simplify_eq/=.
+  intros ? <- x. assert (i = i1 + i2) as -> by lia.
   induction i1 as [|i1 IH]; simplify_eq/=;
     [by rewrite coerce_id|by rewrite coerce_f IH].
 Qed.

@@ -349,7 +349,7 @@ Proof.
  refine (cast_if (decide (of_val v1 = of_val v2))); abstract naive_solver.
 Defined.
 
-Instance expr_inhabited : Inhabited (expr) := populate (Lit LitUnit).
+Instance expr_inhabited : Inhabited expr := populate (Lit LitUnit).
 Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
 
 Canonical Structure stateC := leibnizC state.

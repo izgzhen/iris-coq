@@ -567,6 +567,8 @@ intersection [(∩)], and difference [(∖)], the singleton [{[_]}], the subset
 Class Empty A := empty: A.
 Notation "∅" := empty : C_scope.
 
+Instance empty_inhabited `(Empty A) : Inhabited A := populate ∅.
+
 Class Top A := top : A.
 Notation "⊤" := top : C_scope.
 

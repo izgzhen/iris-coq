@@ -30,7 +30,7 @@ Proof. by rewrite /ElimVs pvs_frame_r wand_elim_r pvs_wp. Qed.
 (* lower precedence, if possible, it should always pick elim_vs_pvs_wp *)
 Global Instance elim_vs_pvs_wp_atomic E1 E2 e P Φ :
   atomic e →
-  ElimVs (|={E1,E2}=> P) P 
+  ElimVs (|={E1,E2}=> P) P
          (WP e @ E1 {{ Φ }}) (WP e @ E2 {{ v, |={E2,E1}=> Φ v }})%I | 100.
 Proof. intros. by rewrite /ElimVs pvs_frame_r wand_elim_r wp_atomic. Qed.
 End weakestpre.
