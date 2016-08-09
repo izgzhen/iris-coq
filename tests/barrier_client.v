@@ -57,10 +57,16 @@ Section client.
 Qed.
 End client.
 
+Section ClosedProofs.
+
+Definition Σ : gFunctors := #[ heapΣ ; barrierΣ ; spawnΣ ].
+
 Lemma client_adequate σ : adequate client σ (λ _, True).
 Proof.
-  apply (heap_adequacy #[ heapΣ ; barrierΣ ; spawnΣ ])=> ?.
+  apply (heap_adequacy Σ)=> ?.
   apply (client_safe (nroot .@ "barrier")); auto with ndisj.
 Qed.
 
 Print Assumptions client_adequate.
+
+End ClosedProofs.
