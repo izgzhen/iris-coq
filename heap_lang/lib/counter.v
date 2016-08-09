@@ -14,8 +14,8 @@ Global Opaque newcounter inc get.
 
 (** The CMRA we need. *)
 Class counterG Σ := CounterG { counter_tokG :> authG Σ mnatUR }.
-
 Definition counterΣ : gFunctors := #[authΣ mnatUR].
+
 Instance subG_counterΣ {Σ} : subG counterΣ Σ → counterG Σ.
 Proof. intros [? _]%subG_inv. split; apply _. Qed.
 

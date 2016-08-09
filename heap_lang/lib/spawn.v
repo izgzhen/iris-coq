@@ -16,12 +16,11 @@ Definition join : val :=
     end.
 Global Opaque spawn join.
 
-(** The CMRA we need. *)
+(** The CMRA & functor we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
 Class spawnG Σ := SpawnG { spawn_tokG :> inG Σ (exclR unitC) }.
-
-(** The functor we need and register that they match. *)
 Definition spawnΣ : gFunctors := #[GFunctor (constRF (exclR unitC))].
+
 Instance subG_spawnΣ {Σ} : subG spawnΣ Σ → spawnG Σ.
 Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
 

@@ -7,15 +7,14 @@ From iris.program_logic Require Import saved_prop sts.
 From iris.heap_lang Require Import proofmode.
 From iris.heap_lang.lib.barrier Require Import protocol.
 
-(** The CMRAs we need. *)
+(** The CMRAs/functors we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
 Class barrierG Σ := BarrierG {
   barrier_stsG :> stsG Σ sts;
   barrier_savedPropG :> savedPropG Σ idCF;
 }.
-(** The Functors we need. *)
 Definition barrierΣ : gFunctors := #[stsΣ sts; savedPropΣ idCF].
-(* Show and register that they match. *)
+
 Instance subG_barrierΣ {Σ} : subG barrierΣ Σ → barrierG Σ.
 Proof. intros [? [? _]%subG_inv]%subG_inv. split; apply _. Qed.
 

@@ -14,8 +14,8 @@ Global Opaque newlock acquire release.
 (** The CMRA we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
 Class lockG Σ := LockG { lock_tokG :> inG Σ (exclR unitC) }.
-
 Definition lockΣ : gFunctors := #[GFunctor (constRF (exclR unitC))].
+
 Instance subG_lockΣ {Σ} : subG lockΣ Σ → lockG Σ.
 Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
 

@@ -35,9 +35,9 @@ Class tlockG Σ := TlockG {
    tlock_G :> authG Σ (gset_disjUR nat);
    tlock_exclG  :> inG Σ (exclR unitC)
 }.
-
 Definition tlockΣ : gFunctors :=
   #[authΣ (gset_disjUR nat); GFunctor (constRF (exclR unitC))].
+
 Instance subG_tlockΣ {Σ} : subG tlockΣ Σ → tlockG Σ.
 Proof. intros [? [?%subG_inG _]%subG_inv]%subG_inv. split; apply _. Qed.
 
