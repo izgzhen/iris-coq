@@ -5,9 +5,9 @@ Import uPred.
 
 Class savedPropG (Σ : gFunctors) (F : cFunctor) :=
   saved_prop_inG :> inG Σ (agreeR (laterC (F (iPreProp Σ)))).
-
 Definition savedPropΣ (F : cFunctor) : gFunctors :=
   #[ GFunctor (agreeRF (▶ F)) ].
+
 Instance subG_savedPropΣ  {Σ F} : subG (savedPropΣ F) Σ → savedPropG Σ F.
 Proof. apply subG_inG. Qed.
 
