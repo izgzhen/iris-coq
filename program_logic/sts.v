@@ -46,7 +46,7 @@ Section definitions.
   Proof. apply _. Qed.
 End definitions.
 
-Typeclasses Opaque sts_own sts_ownS sts_ctx.
+Typeclasses Opaque sts_own sts_ownS sts_inv sts_ctx.
 Instance: Params (@sts_inv) 5.
 Instance: Params (@sts_ownS) 5.
 Instance: Params (@sts_own) 6.
@@ -85,17 +85,16 @@ Section sts.
     { apply sts_auth_valid; set_solver. }
     iExists γ; iRevert "Hγ"; rewrite -sts_op_auth_frag_up; iIntros "[Hγ $]".
     iVs (inv_alloc N _ (sts_inv γ φ) with "[Hφ Hγ]") as "#?"; auto.
-    iNext. iExists s. by iFrame.
+    rewrite /sts_inv. iNext. iExists s. by iFrame.
   Qed.
 
-  Lemma sts_openS E N γ S T :
-    nclose N ⊆ E →
-    sts_ctx γ N φ ★ sts_ownS γ S T ={E,E∖N}=> ∃ s,
+  Lemma sts_accS E γ S T :
+    ▷ sts_inv γ φ ★ sts_ownS γ S T ={E}=> ∃ s,
       ■ (s ∈ S) ★ ▷ φ s ★ ∀ s' T',
-      ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ={E∖N,E}=★ sts_own γ s' T'.
+      ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ={E}=★ ▷ sts_inv γ φ ★ sts_own γ s' T'.
   Proof.
-    iIntros (?) "[#? Hγf]". rewrite /sts_ctx /sts_ownS /sts_inv /sts_own.
-    iInv N as (s) "[>Hγ Hφ]" "Hclose".
+    iIntros "[Hinv Hγf]". rewrite /sts_ownS /sts_inv /sts_own.
+    iDestruct "Hinv" as (s) "[>Hγ Hφ]".
     iCombine "Hγ" "Hγf" as "Hγ"; iDestruct (own_valid with "#Hγ") as %Hvalid.
     assert (s ∈ S) by eauto using sts_auth_frag_valid_inv.
     assert (✓ sts_frag S T) as [??] by eauto using cmra_valid_op_r.
@@ -104,13 +103,38 @@ Section sts.
     iIntros (s' T') "[% Hφ]".
     iVs (own_update with "Hγ") as "Hγ"; first eauto using sts_update_auth.
     iRevert "Hγ"; rewrite -sts_op_auth_frag_up; iIntros "[Hγ $]".
-    iApply "Hclose". iNext; iExists s'; by iFrame.
+    iVsIntro. iNext. iExists s'; by iFrame.
+  Qed.
+
+  Lemma sts_acc E γ s0 T :
+    ▷ sts_inv γ φ ★ sts_own γ s0 T ={E}=> ∃ s,
+      ■ sts.frame_steps T s0 s ★ ▷ φ s ★ ∀ s' T',
+      ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ={E}=★ ▷ sts_inv γ φ ★ sts_own γ s' T'.
+  Proof. by apply sts_accS. Qed.
+    
+  Lemma sts_openS E N γ S T :
+    nclose N ⊆ E →
+    sts_ctx γ N φ ★ sts_ownS γ S T ={E,E∖N}=> ∃ s,
+      ■ (s ∈ S) ★ ▷ φ s ★ ∀ s' T',
+      ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ={E∖N,E}=★ sts_own γ s' T'.
+  Proof.
+    iIntros (?) "[#? Hγf]". rewrite /sts_ctx. iInv N as "Hinv" "Hclose".
+    (* The following is essentially a very trivial composition of the accessors
+       [sts_acc] and [inv_open] -- but since we don't have any good support
+       for that currently, this gets more tedious than it should, with us having
+       to unpack and repack various proofs.
+       TODO: Make this mostly automatic, by supporting "opening accessors
+       around accessors". *)
+    iVs (sts_accS with "[Hinv Hγf]") as (s) "(?&?& HclSts)"; first by iFrame.
+    iVsIntro. iExists s. iFrame. iIntros (s' T') "H".
+    iVs ("HclSts" $! s' T' with "H") as "(Hinv & ?)". iFrame.
+    iVs ("Hclose" with "Hinv"). done.
   Qed.
 
   Lemma sts_open E N γ s0 T :
     nclose N ⊆ E →
     sts_ctx γ N φ ★ sts_own γ s0 T ={E,E∖N}=> ∃ s,
-      ■ (s ∈ sts.up s0 T) ★ ▷ φ s ★ ∀ s' T',
+      ■ (sts.frame_steps T s0 s) ★ ▷ φ s ★ ∀ s' T',
       ■ (sts.steps (s, T) (s', T')) ★ ▷ φ s' ={E∖N,E}=★ sts_own γ s' T'.
   Proof. by apply sts_openS. Qed.
 End sts.

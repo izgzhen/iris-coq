@@ -32,6 +32,7 @@ Notation steps := (rtc step).
 Inductive frame_step (T : tokens sts) (s1 s2 : state sts) : Prop :=
   | Frame_step T1 T2 :
      T1 ⊥ tok s1 ∪ T → step (s1,T1) (s2,T2) → frame_step T s1 s2.
+Notation frame_steps T := (rtc (frame_step T)).
 
 (** ** Closure under frame steps *)
 Record closed (S : states sts) (T : tokens sts) : Prop := Closed {
@@ -39,7 +40,7 @@ Record closed (S : states sts) (T : tokens sts) : Prop := Closed {
   closed_step s1 s2 : s1 ∈ S → frame_step T s1 s2 → s2 ∈ S
 }.
 Definition up (s : state sts) (T : tokens sts) : states sts :=
-  {[ s' | rtc (frame_step T) s s' ]}.
+  {[ s' | frame_steps T s s' ]}.
 Definition up_set (S : states sts) (T : tokens sts) : states sts :=
   S ≫= λ s, up s T.
 
@@ -86,7 +87,7 @@ Qed.
 
 (** ** Properties of closure under frame steps *)
 Lemma closed_steps S T s1 s2 :
-  closed S T → s1 ∈ S → rtc (frame_step T) s1 s2 → s2 ∈ S.
+  closed S T → s1 ∈ S → frame_steps T s1 s2 → s2 ∈ S.
 Proof. induction 3; eauto using closed_step. Qed.
 Lemma closed_op T1 T2 S1 S2 :
   closed S1 T1 → closed S2 T2 → closed (S1 ∩ S2) (T1 ∪ T2).
@@ -160,6 +161,7 @@ Proof. move=> ?? s [s' [? ?]]. eauto using closed_steps. Qed.
 End sts.
 
 Notation steps := (rtc step).
+Notation frame_steps T := (rtc (frame_step T)).
 
 (* The type of bounds we can give to the state of an STS. This is the type
    that we equip with an RA structure. *)
