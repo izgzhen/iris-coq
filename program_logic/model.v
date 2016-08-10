@@ -71,9 +71,9 @@ Notation "#[ Σ1 ; .. ; Σn ]" :=
 (** * Subfunctors *)
 (** In order to make proofs in the Iris logic modular, they are not done with
 respect to some concrete list of functors [Σ], but are instead parametrized by
-an arbitrary list of functors [Σ] that contains atleast certain functors. For
-example, the lock library is parametrized by a functor [Σ] that should have:
-the functors corresponding to: the heap and the exclusive monoid to manage to
+an arbitrary list of functors [Σ] that contains at least certain functors. For
+example, the lock library is parameterized by a functor [Σ] that should have
+the functors corresponding to the heap and the exclusive monoid to manage to
 lock invariant.
 
 The contraints to can be expressed using the type class [subG Σ1 Σ2], which
@@ -109,7 +109,7 @@ Qed.
 
 
 (** * Solution of the recursive domain equation *)
-(** We first declare a module type and then an instance of it so as to seall of
+(** We first declare a module type and then an instance of it so as to seal all of
 the construction, this way we are sure we do not use any properties of the
 construction, and also avoid Coq from blindly unfolding it. *)
 Module Type iProp_solution_sig.
