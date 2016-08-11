@@ -1,6 +1,5 @@
 From Coq.QArith Require Import Qcanon.
 From iris.algebra Require Export cmra.
-From iris.algebra Require Import upred.
 
 Notation frac := Qp (only parsing).
 
@@ -19,12 +18,6 @@ Proof.
 Qed.
 Canonical Structure fracR := discreteR frac frac_ra_mixin.
 End frac.
-
-(** Internalized properties *)
-Lemma frac_equivI {M} (x y : frac) : x ≡ y ⊣⊢ (x = y : uPred M).
-Proof. by uPred.unseal. Qed.
-Lemma frac_validI {M} (x : frac) : ✓ x ⊣⊢ (■ (x ≤ 1)%Qc : uPred M).
-Proof. by uPred.unseal. Qed.
 
 (** Exclusive *)
 Global Instance frac_full_exclusive : Exclusive 1%Qp.
