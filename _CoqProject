@@ -64,6 +64,7 @@ base_logic/big_op.v
 base_logic/hlist.v
 base_logic/iprop.v
 base_logic/ownership.v
+base_logic/adequacy.v
 program_logic/adequacy.v
 program_logic/lifting.v
 program_logic/invariants.v

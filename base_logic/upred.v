@@ -1349,20 +1349,6 @@ Lemma always_entails_l P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ Q ★ P.
 Proof. by rewrite -(always_always Q); apply always_entails_l'. Qed.
 Lemma always_entails_r P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ P ★ Q.
 Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
-
-(* Soundness results *)
-Lemma adequacy φ n : (True ⊢ Nat.iter n (λ P, |=r=> ▷ P) (■ φ)) → φ.
-Proof.
-  cut (∀ x, ✓{n} x → Nat.iter n (λ P, |=r=> ▷ P)%I (■ φ)%I n x → φ).
-  { intros help H. eapply (help ∅); eauto using ucmra_unit_validN.
-    eapply H; try unseal; eauto using ucmra_unit_validN. }
-  unseal. induction n as [|n IH]=> x Hx Hvs; auto.
-  destruct (Hvs (S n) ∅) as (x'&?&?); rewrite ?right_id; auto.
-  eapply IH with x'; eauto using cmra_validN_S, cmra_validN_op_l.
-Qed.
-
-Theorem soundness : ¬ (True ⊢ False).
-Proof. exact (adequacy False 0). Qed.
 End uPred_logic.
 
 (* Hint DB for the logic *)
