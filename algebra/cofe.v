@@ -675,8 +675,6 @@ Inductive later (A : Type) : Type := Next { later_car : A }.
 Add Printing Constructor later.
 Arguments Next {_} _.
 Arguments later_car {_} _.
-Lemma later_eta {A} (x : later A) : Next (later_car x) = x.
-Proof. by destruct x. Qed.
 
 Section later.
   Context {A : cofeT}.
