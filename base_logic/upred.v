@@ -328,11 +328,11 @@ Arguments uPred_always_if _ !_ _/.
 Notation "□? p P" := (uPred_always_if p P)
   (at level 20, p at level 0, P at level 20, format "□? p  P").
 
-Definition uPred_now_True {M} (P : uPred M) : uPred M := ▷ False ∨ P.
-Notation "◇ P" := (uPred_now_True P)
+Definition uPred_except_now {M} (P : uPred M) : uPred M := ▷ False ∨ P.
+Notation "◇ P" := (uPred_except_now P)
   (at level 20, right associativity) : uPred_scope.
-Instance: Params (@uPred_now_True) 1.
-Typeclasses Opaque uPred_now_True.
+Instance: Params (@uPred_except_now) 1.
+Typeclasses Opaque uPred_except_now.
 
 Class TimelessP {M} (P : uPred M) := timelessP : ▷ P ⊢ ◇ P.
 Arguments timelessP {_} _ {_}.
@@ -1063,50 +1063,50 @@ Lemma later_iff P Q : ▷ (P ↔ Q) ⊢ ▷ P ↔ ▷ Q.
 Proof. by rewrite /uPred_iff later_and !later_impl. Qed.
 
 (* True now *)
-Global Instance now_True_ne n : Proper (dist n ==> dist n) (@uPred_now_True M).
+Global Instance except_now_ne n : Proper (dist n ==> dist n) (@uPred_except_now M).
 Proof. solve_proper. Qed.
-Global Instance now_True_proper : Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_now_True M).
+Global Instance except_now_proper : Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_except_now M).
 Proof. solve_proper. Qed.
-Global Instance now_True_mono' : Proper ((⊢) ==> (⊢)) (@uPred_now_True M).
+Global Instance except_now_mono' : Proper ((⊢) ==> (⊢)) (@uPred_except_now M).
 Proof. solve_proper. Qed.
-Global Instance now_True_flip_mono' :
-  Proper (flip (⊢) ==> flip (⊢)) (@uPred_now_True M).
+Global Instance except_now_flip_mono' :
+  Proper (flip (⊢) ==> flip (⊢)) (@uPred_except_now M).
 Proof. solve_proper. Qed.
 
-Lemma now_True_intro P : P ⊢ ◇ P.
-Proof. rewrite /uPred_now_True; auto. Qed.
-Lemma now_True_mono P Q : (P ⊢ Q) → ◇ P ⊢ ◇ Q.
+Lemma except_now_intro P : P ⊢ ◇ P.
+Proof. rewrite /uPred_except_now; auto. Qed.
+Lemma except_now_mono P Q : (P ⊢ Q) → ◇ P ⊢ ◇ Q.
 Proof. by intros ->. Qed.
-Lemma now_True_idemp P : ◇ ◇ P ⊢ ◇ P.
-Proof. rewrite /uPred_now_True; auto. Qed.
+Lemma except_now_idemp P : ◇ ◇ P ⊢ ◇ P.
+Proof. rewrite /uPred_except_now; auto. Qed.
 
-Lemma now_True_True : ◇ True ⊣⊢ True.
-Proof. rewrite /uPred_now_True. apply (anti_symm _); auto. Qed.
-Lemma now_True_or P Q : ◇ (P ∨ Q) ⊣⊢ ◇ P ∨ ◇ Q.
-Proof. rewrite /uPred_now_True. apply (anti_symm _); auto. Qed.
-Lemma now_True_and P Q : ◇ (P ∧ Q) ⊣⊢ ◇ P ∧ ◇ Q.
-Proof. by rewrite /uPred_now_True or_and_l. Qed.
-Lemma now_True_sep P Q : ◇ (P ★ Q) ⊣⊢ ◇ P ★ ◇ Q.
+Lemma except_except_now : ◇ True ⊣⊢ True.
+Proof. rewrite /uPred_except_now. apply (anti_symm _); auto. Qed.
+Lemma except_now_or P Q : ◇ (P ∨ Q) ⊣⊢ ◇ P ∨ ◇ Q.
+Proof. rewrite /uPred_except_now. apply (anti_symm _); auto. Qed.
+Lemma except_now_and P Q : ◇ (P ∧ Q) ⊣⊢ ◇ P ∧ ◇ Q.
+Proof. by rewrite /uPred_except_now or_and_l. Qed.
+Lemma except_now_sep P Q : ◇ (P ★ Q) ⊣⊢ ◇ P ★ ◇ Q.
 Proof.
-  rewrite /uPred_now_True. apply (anti_symm _).
+  rewrite /uPred_except_now. apply (anti_symm _).
   - apply or_elim; last by auto.
     by rewrite -!or_intro_l -always_pure -always_later -always_sep_dup'.
   - rewrite sep_or_r sep_elim_l sep_or_l; auto.
 Qed.
-Lemma now_True_forall {A} (Φ : A → uPred M) : ◇ (∀ a, Φ a) ⊢ ∀ a, ◇ Φ a.
+Lemma except_now_forall {A} (Φ : A → uPred M) : ◇ (∀ a, Φ a) ⊢ ∀ a, ◇ Φ a.
 Proof. apply forall_intro=> a. by rewrite (forall_elim a). Qed.
-Lemma now_True_exist {A} (Φ : A → uPred M) : (∃ a, ◇ Φ a) ⊢ ◇ ∃ a, Φ a.
+Lemma except_now_exist {A} (Φ : A → uPred M) : (∃ a, ◇ Φ a) ⊢ ◇ ∃ a, Φ a.
 Proof. apply exist_elim=> a. by rewrite (exist_intro a). Qed.
-Lemma now_True_later P : ◇ ▷ P ⊢ ▷ P.
-Proof. by rewrite /uPred_now_True -later_or False_or. Qed.
-Lemma now_True_always P : ◇ □ P ⊣⊢ □ ◇ P.
-Proof. by rewrite /uPred_now_True always_or always_later always_pure. Qed.
-Lemma now_True_always_if p P : ◇ □?p P ⊣⊢ □?p ◇ P.
-Proof. destruct p; simpl; auto using now_True_always. Qed.
-Lemma now_True_frame_l P Q : P ★ ◇ Q ⊢ ◇ (P ★ Q).
-Proof. by rewrite {1}(now_True_intro P) now_True_sep. Qed.
-Lemma now_True_frame_r P Q : ◇ P ★ Q ⊢ ◇ (P ★ Q).
-Proof. by rewrite {1}(now_True_intro Q) now_True_sep. Qed.
+Lemma except_now_later P : ◇ ▷ P ⊢ ▷ P.
+Proof. by rewrite /uPred_except_now -later_or False_or. Qed.
+Lemma except_now_always P : ◇ □ P ⊣⊢ □ ◇ P.
+Proof. by rewrite /uPred_except_now always_or always_later always_pure. Qed.
+Lemma except_now_always_if p P : ◇ □?p P ⊣⊢ □?p ◇ P.
+Proof. destruct p; simpl; auto using except_now_always. Qed.
+Lemma except_now_frame_l P Q : P ★ ◇ Q ⊢ ◇ (P ★ Q).
+Proof. by rewrite {1}(except_now_intro P) except_now_sep. Qed.
+Lemma except_now_frame_r P Q : ◇ P ★ Q ⊢ ◇ (P ★ Q).
+Proof. by rewrite {1}(except_now_intro Q) except_now_sep. Qed.
 
 (* Own *)
 Lemma ownM_op (a1 a2 : M) :
@@ -1181,9 +1181,9 @@ Proof.
   exists (y ⋅ x3); split; first by rewrite -assoc.
   exists y; eauto using cmra_includedN_l.
 Qed.
-Lemma now_True_rvs P : ◇ (|=r=> P) ⊢ (|=r=> ◇ P).
+Lemma except_now_rvs P : ◇ (|=r=> P) ⊢ (|=r=> ◇ P).
 Proof.
-  rewrite /uPred_now_True. apply or_elim; auto using rvs_mono.
+  rewrite /uPred_except_now. apply or_elim; auto using rvs_mono.
   by rewrite -rvs_intro -or_intro_l.
 Qed.
 
@@ -1242,10 +1242,10 @@ Lemma timelessP_spec P : TimelessP P ↔ ∀ n x, ✓{n} x → P 0 x → P n x.
 Proof.
   split.
   - intros HP n x ??; induction n as [|n]; auto.
-    move: HP; rewrite /TimelessP /uPred_now_True /=.
+    move: HP; rewrite /TimelessP /uPred_except_now /=.
     unseal=> /uPred_in_entails /(_ (S n) x) /=.
     by destruct 1; auto using cmra_validN_S.
-  - move=> HP; rewrite /TimelessP /uPred_now_True /=.
+  - move=> HP; rewrite /TimelessP /uPred_except_now /=.
     unseal; split=> -[|n] x /=; auto.
     right. apply HP, uPred_closed with n; eauto using cmra_validN_le.
 Qed.
@@ -1259,16 +1259,16 @@ Proof.
   apply timelessP_spec; unseal=> n x /=. by rewrite -!cmra_discrete_valid_iff.
 Qed.
 Global Instance and_timeless P Q: TimelessP P → TimelessP Q → TimelessP (P ∧ Q).
-Proof. intros; rewrite /TimelessP now_True_and later_and; auto. Qed.
+Proof. intros; rewrite /TimelessP except_now_and later_and; auto. Qed.
 Global Instance or_timeless P Q : TimelessP P → TimelessP Q → TimelessP (P ∨ Q).
-Proof. intros; rewrite /TimelessP now_True_or later_or; auto. Qed.
+Proof. intros; rewrite /TimelessP except_now_or later_or; auto. Qed.
 Global Instance impl_timeless P Q : TimelessP Q → TimelessP (P → Q).
 Proof.
   rewrite !timelessP_spec; unseal=> HP [|n] x ? HPQ [|n'] x' ????; auto.
   apply HP, HPQ, uPred_closed with (S n'); eauto using cmra_validN_le.
 Qed.
 Global Instance sep_timeless P Q: TimelessP P → TimelessP Q → TimelessP (P ★ Q).
-Proof. intros; rewrite /TimelessP now_True_sep later_sep; auto. Qed.
+Proof. intros; rewrite /TimelessP except_now_sep later_sep; auto. Qed.
 Global Instance wand_timeless P Q : TimelessP Q → TimelessP (P -★ Q).
 Proof.
   rewrite !timelessP_spec; unseal=> HP [|n] x ? HPQ [|n'] x' ???; auto.
@@ -1285,7 +1285,7 @@ Proof.
     [|intros [a ?]; exists a; apply HΨ].
 Qed.
 Global Instance always_timeless P : TimelessP P → TimelessP (□ P).
-Proof. intros; rewrite /TimelessP now_True_always -always_later; auto. Qed.
+Proof. intros; rewrite /TimelessP except_now_always -always_later; auto. Qed.
 Global Instance always_if_timeless p P : TimelessP P → TimelessP (□?p P).
 Proof. destruct p; apply _. Qed.
 Global Instance eq_timeless {A : cofeT} (a b : A) :

@@ -39,7 +39,7 @@ Proof.
     eapply nclose_infinite, (difference_finite_inv _ _), Hfin.
     apply of_gset_finite.
   - by iFrame.
-  - iVsIntro. iApply now_True_intro; eauto.
+  - iVsIntro. iApply except_now_intro; eauto.
 Qed.
 
 Lemma inv_open E N P :
@@ -49,9 +49,9 @@ Proof.
   iDestruct "Hi" as % ?%elem_of_subseteq_singleton.
   rewrite {1 4}(union_difference_L (nclose N) E) // ownE_op; last set_solver.
   rewrite {1 5}(union_difference_L {[ i ]} (nclose N)) // ownE_op; last set_solver.
-  iIntros "(Hw & [HE $] & $)"; iVsIntro; iApply now_True_intro.
+  iIntros "(Hw & [HE $] & $)"; iVsIntro; iApply except_now_intro.
   iDestruct (ownI_open i P with "[Hw HE]") as "($ & $ & HD)"; first by iFrame.
-  iIntros "HP [Hw $] !==>"; iApply now_True_intro. iApply ownI_close; by iFrame.
+  iIntros "HP [Hw $] !==>"; iApply except_now_intro. iApply ownI_close; by iFrame.
 Qed.
 
 Lemma inv_open_timeless E N P `{!TimelessP P} :

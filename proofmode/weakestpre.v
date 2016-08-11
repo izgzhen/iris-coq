@@ -16,8 +16,8 @@ Global Instance to_assert_wp E e P Φ :
   IntoAssert P (WP e @ E {{ Ψ }}) (|={E}=> P).
 Proof. intros. by rewrite /IntoAssert pvs_frame_r wand_elim_r pvs_wp. Qed.
 
-Global Instance is_now_True_wp E e Φ : IsNowTrue (WP e @ E {{ Φ }}).
-Proof. by rewrite /IsNowTrue -{2}pvs_wp -now_True_pvs -pvs_intro. Qed.
+Global Instance is_except_now_wp E e Φ : IsNowTrue (WP e @ E {{ Φ }}).
+Proof. by rewrite /IsNowTrue -{2}pvs_wp -except_now_pvs -pvs_intro. Qed.
 
 Global Instance elim_vs_rvs_wp E e P Φ :
   ElimVs (|=r=> P) P (WP e @ E {{ Φ }}) (WP e @ E {{ Φ }}).
