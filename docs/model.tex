@@ -26,7 +26,7 @@ We introduce an additional logical connective $\ownM\melt$, which will later be 
 	\Sem{\vctx \proves \prop \Ra \propB : \Prop}_\gamma &\eqdef
 	\Lam \melt. \setComp{n}{\begin{aligned}
             \All m, \meltB.& m \leq n \land \melt \mincl \meltB \land \meltB \in \mval_m \Ra {} \\
-            & m \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\melt) \Ra {}\\& m \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\melt)\end{aligned}}\\
+            & m \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB) \Ra {}\\& m \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\meltB)\end{aligned}}\\
 	\Sem{\vctx \proves \All x : \type. \prop : \Prop}_\gamma &\eqdef
 	\Lam \melt. \setComp{n}{ \All v \in \Sem{\type}. n \in \Sem{\vctx, x : \type \proves \prop : \Prop}_{\gamma[x \mapsto v]}(\melt) } \\
 	\Sem{\vctx \proves \Exists x : \type. \prop : \Prop}_\gamma &\eqdef
@@ -58,7 +58,7 @@ Above, $\maybe\monoid$ is the monoid obtained by adding a unit to $\monoid$.
 (It's not a coincidence that we used the same notation for the range of the core; it's the same type either way: $\monoid + 1$.)
 Remember that $\iFunc$ is the user-chosen bifunctor from $\COFEs$ to $\CMRAs$ (see~\Sref{sec:logic}).
 $\textdom{ResF}(\cofe^\op, \cofe)$ is a CMRA by lifting the individual CMRAs pointwise.
-Furthermore, if $F$ is locally contractive, then so is $\textdom{ResF}$.
+Furthermore, since $\Sigma$ is locally contractive, so is $\textdom{ResF}$.
 
 Now we can write down the recursive domain equation:
 \[ \iPreProp \cong \UPred(\textdom{ResF}(\iPreProp, \iPreProp)) \]
@@ -187,10 +187,10 @@ $\rho(x)\in\Sem{\vctx(x)}$.
 \paragraph{Logical entailment.}
 We can now define \emph{semantic} logical entailment.
 
-\typedsection{Interpretation of entailment}{\Sem{\vctx \mid \pfctx \proves \prop} : 2}
+\typedsection{Interpretation of entailment}{\Sem{\vctx \mid \pfctx \proves \prop} : \mProp}
 
 \[
-\Sem{\vctx \mid \pfctx \proves \propB} \eqdef
+\Sem{\vctx \mid \pfctx \proves \prop} \eqdef
 \begin{aligned}[t]
 \MoveEqLeft
 \forall n \in \mathbb{N}.\;
