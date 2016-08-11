@@ -118,7 +118,7 @@ Section heap.
     rewrite heap_mapsto_eq -auth_own_op op_singleton pair_op dec_agree_ne //.
     apply (anti_symm (⊢)); last by apply pure_elim_l.
     rewrite auth_own_valid gmap_validI (forall_elim l) lookup_singleton.
-    rewrite option_validI prod_validI frac_validI discrete_valid.
+    rewrite option_validI prod_validI !discrete_valid /=.
     by apply pure_elim_r.
   Qed.
 
