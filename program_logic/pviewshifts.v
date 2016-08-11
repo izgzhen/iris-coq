@@ -52,10 +52,10 @@ Lemma except_now_pvs E1 E2 P : ◇ (|={E1,E2}=> P) ={E1,E2}=> P.
 Proof.
   rewrite pvs_eq. iIntros "H [Hw HE]". iTimeless "H". iApply "H"; by iFrame.
 Qed.
-Lemma rvs_pvs E P : (|=r=> P) ={E}=> P.
+Lemma shift_pvs E P : (|=r=> P) ={E}=> P.
 Proof.
-  rewrite pvs_eq /pvs_def. iIntros "H [$ $]"; iVs "H".
-  iVsIntro. by iApply except_now_intro.
+  rewrite pvs_eq /pvs_def. iIntros "H [$ $]"; iShift "H".
+  iShiftIntro. by iApply except_now_intro.
 Qed.
 Lemma pvs_mono E1 E2 P Q : (P ⊢ Q) → (|={E1,E2}=> P) ={E1,E2}=> Q.
 Proof.
@@ -65,15 +65,15 @@ Qed.
 Lemma pvs_trans E1 E2 E3 P : (|={E1,E2}=> |={E2,E3}=> P) ={E1,E3}=> P.
 Proof.
   rewrite pvs_eq /pvs_def. iIntros "HP HwE".
-  iVs ("HP" with "HwE") as ">(Hw & HE & HP)". iApply "HP"; by iFrame.
+  iShift ("HP" with "HwE") as ">(Hw & HE & HP)". iApply "HP"; by iFrame.
 Qed.
 Lemma pvs_mask_frame_r' E1 E2 Ef P :
   E1 ⊥ Ef → (|={E1,E2}=> E2 ⊥ Ef → P) ={E1 ∪ Ef,E2 ∪ Ef}=> P.
 Proof.
   intros. rewrite pvs_eq /pvs_def ownE_op //. iIntros "Hvs (Hw & HE1 &HEf)".
-  iVs ("Hvs" with "[Hw HE1]") as ">($ & HE2 & HP)"; first by iFrame.
+  iShift ("Hvs" with "[Hw HE1]") as ">($ & HE2 & HP)"; first by iFrame.
   iDestruct (ownE_op' with "[HE2 HEf]") as "[? $]"; first by iFrame.
-  iVsIntro; iApply except_now_intro. by iApply "HP".
+  iShiftIntro; iApply except_now_intro. by iApply "HP".
 Qed.
 Lemma pvs_frame_r E1 E2 P Q : (|={E1,E2}=> P) ★ Q ={E1,E2}=> P ★ Q.
 Proof. rewrite pvs_eq /pvs_def. by iIntros "[HwP $]". Qed.
@@ -86,7 +86,7 @@ Global Instance pvs_flip_mono' E1 E2 :
 Proof. intros P Q; apply pvs_mono. Qed.
 
 Lemma pvs_intro E P : P ={E}=> P.
-Proof. iIntros "HP". by iApply rvs_pvs. Qed.
+Proof. iIntros "HP". by iApply shift_pvs. Qed.
 Lemma pvs_except_now E1 E2 P : (|={E1,E2}=> ◇ P) ={E1,E2}=> P.
 Proof. by rewrite {1}(pvs_intro E2 P) except_now_pvs pvs_trans. Qed.
 

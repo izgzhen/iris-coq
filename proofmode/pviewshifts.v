@@ -12,7 +12,7 @@ Proof. intros ??. by rewrite -pvs_intro (from_pure P). Qed.
 
 Global Instance from_assumption_pvs E p P Q :
   FromAssumption p P (|=r=> Q) → FromAssumption p P (|={E}=> Q)%I.
-Proof. rewrite /FromAssumption=>->. apply rvs_pvs. Qed.
+Proof. rewrite /FromAssumption=>->. apply shift_pvs. Qed.
 
 Global Instance into_wand_pvs E1 E2 R P Q :
   IntoWand R P Q → IntoWand R (|={E1,E2}=> P) (|={E1,E2}=> Q) | 100.
@@ -43,16 +43,16 @@ Proof. intros. by rewrite /IntoAssert pvs_frame_r wand_elim_r pvs_trans. Qed.
 Global Instance is_except_now_pvs E1 E2 P : IsNowTrue (|={E1,E2}=> P).
 Proof. by rewrite /IsNowTrue except_now_pvs. Qed.
 
-Global Instance from_vs_pvs E P : FromVs (|={E}=> P) P.
-Proof. by rewrite /FromVs -rvs_pvs. Qed.
+Global Instance from_shift_pvs E P : FromShift (|={E}=> P) P.
+Proof. by rewrite /FromShift -shift_pvs. Qed.
 
-Global Instance elim_vs_rvs_pvs E1 E2 P Q :
-  ElimVs (|=r=> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q).
-Proof. by rewrite /ElimVs (rvs_pvs E1) pvs_frame_r wand_elim_r pvs_trans. Qed.
-Global Instance elim_vs_pvs_pvs E1 E2 E3 P Q :
-  ElimVs (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
-Proof. by rewrite /ElimVs pvs_frame_r wand_elim_r pvs_trans. Qed.
+Global Instance elim_shift_shift_pvs E1 E2 P Q :
+  ElimShift (|=r=> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q).
+Proof. by rewrite /ElimShift (shift_pvs E1) pvs_frame_r wand_elim_r pvs_trans. Qed.
+Global Instance elim_shift_pvs_pvs E1 E2 E3 P Q :
+  ElimShift (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
+Proof. by rewrite /ElimShift pvs_frame_r wand_elim_r pvs_trans. Qed.
 End pvs.
 
 Hint Extern 2 (of_envs _ ⊢ _) =>
-  match goal with |- _ ⊢ |={_}=> _ => iVsIntro end.
+  match goal with |- _ ⊢ |={_}=> _ => iShiftIntro end.

@@ -37,9 +37,9 @@ Lemma newcounter_spec (R : iProp Σ) Φ :
   heap_ctx ★ (∀ l, counter l 0 -★ Φ #l) ⊢ WP newcounter #() {{ Φ }}.
 Proof.
   iIntros (?) "[#Hh HΦ]". rewrite /newcounter. wp_seq. wp_alloc l as "Hl".
-  iVs (auth_alloc (counter_inv l) N _ (O:mnat) with "[Hl]")
+  iShift (auth_alloc (counter_inv l) N _ (O:mnat) with "[Hl]")
     as (γ) "[#? Hγ]"; try by auto.
-  iVsIntro. iApply "HΦ". rewrite /counter; eauto 10.
+  iShiftIntro. iApply "HΦ". rewrite /counter; eauto 10.
 Qed.
 
 Lemma inc_spec l j (Φ : val → iProp Σ) :
@@ -48,25 +48,25 @@ Proof.
   iIntros "[Hl HΦ]". iLöb as "IH". wp_rec.
   iDestruct "Hl" as (γ) "(% & #? & #Hγ & Hγf)".
   wp_bind (! _)%E.
-  iVs (auth_open (counter_inv l) with "[Hγf]") as (j') "(% & Hl & Hclose)"; auto.
+  iShift (auth_open (counter_inv l) with "[Hγf]") as (j') "(% & Hl & Hclose)"; auto.
   rewrite {2}/counter_inv.
-  wp_load. iVs ("Hclose" $! j with "[Hl]") as "Hγf"; eauto.
-  iVsIntro. wp_let; wp_op. wp_bind (CAS _ _ _).
-  iVs (auth_open (counter_inv l) with "[Hγf]") as (j'') "(% & Hl & Hclose)"; auto.
+  wp_load. iShift ("Hclose" $! j with "[Hl]") as "Hγf"; eauto.
+  iShiftIntro. wp_let; wp_op. wp_bind (CAS _ _ _).
+  iShift (auth_open (counter_inv l) with "[Hγf]") as (j'') "(% & Hl & Hclose)"; auto.
   rewrite {2}/counter_inv.
   destruct (decide (j `max` j'' = j `max` j')) as [Hj|Hj].
   - wp_cas_suc; first (by do 3 f_equal).
-    iVs ("Hclose" $! (1 + j `max` j')%nat with "[Hl]") as "Hγf".
+    iShift ("Hclose" $! (1 + j `max` j')%nat with "[Hl]") as "Hγf".
     { iSplit; [iPureIntro|iNext].
       { apply mnat_local_update. abstract lia. }
       rewrite {2}/counter_inv !mnat_op_max (Nat.max_l (S _)); last abstract lia.
       by rewrite Nat2Z.inj_succ -Z.add_1_l. }
-    iVsIntro. wp_if.
-    iVsIntro; iApply "HΦ"; iExists γ; repeat iSplit; eauto.
+    iShiftIntro. wp_if.
+    iShiftIntro; iApply "HΦ"; iExists γ; repeat iSplit; eauto.
     iApply (auth_own_mono with "Hγf"). apply mnat_included. abstract lia.
   - wp_cas_fail; first (rewrite !mnat_op_max; by intros [= ?%Nat2Z.inj]).
-    iVs ("Hclose" $! j with "[Hl]") as "Hγf"; eauto.
-    iVsIntro. wp_if. iApply ("IH" with "[Hγf] HΦ"). rewrite {3}/counter; eauto 10.
+    iShift ("Hclose" $! j with "[Hl]") as "Hγf"; eauto.
+    iShiftIntro. wp_if. iApply ("IH" with "[Hγf] HΦ"). rewrite {3}/counter; eauto 10.
 Qed.
 
 Lemma read_spec l j (Φ : val → iProp Σ) :
@@ -75,13 +75,13 @@ Lemma read_spec l j (Φ : val → iProp Σ) :
 Proof.
   iIntros "[Hc HΦ]". iDestruct "Hc" as (γ) "(% & #? & #Hγ & Hγf)".
   rewrite /read. wp_let.
-  iVs (auth_open (counter_inv l) with "[Hγf]") as (j') "(% & Hl & Hclose)"; auto.
+  iShift (auth_open (counter_inv l) with "[Hγf]") as (j') "(% & Hl & Hclose)"; auto.
   wp_load.
-  iVs ("Hclose" $! (j `max` j') with "[Hl]") as "Hγf".
+  iShift ("Hclose" $! (j `max` j') with "[Hl]") as "Hγf".
   { iSplit; [iPureIntro|iNext].
     { apply mnat_local_update; abstract lia. }
     by rewrite !mnat_op_max -Nat.max_assoc Nat.max_idempotent. }
-  iVsIntro. rewrite !mnat_op_max.
+  iShiftIntro. rewrite !mnat_op_max.
   iApply ("HΦ" with "[%]"); first abstract lia. rewrite /counter; eauto 10.
 Qed.
 End proof.

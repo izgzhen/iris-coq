@@ -49,7 +49,7 @@ Section client.
       iSplitL; [|by iIntros (_ _) "_ !>"].
       iDestruct (recv_weaken with "[] Hr") as "Hr".
       { iIntros "Hy". by iApply (y_inv_split with "Hy"). }
-      iVs (recv_split with "Hr") as "[H1 H2]"; first done.
+      iShift (recv_split with "Hr") as "[H1 H2]"; first done.
       iApply (wp_par (λ _, True%I) (λ _, True%I)). iFrame "Hh".
       iSplitL "H1"; [|iSplitL "H2"; [|by iIntros (_ _) "_ !>"]];
         iApply worker_safe; by iSplit.

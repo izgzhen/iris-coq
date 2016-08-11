@@ -51,9 +51,9 @@ Proof.
   rewrite {1}wp_unfold /wp_pre. iIntros (Hstep) "[(Hw & HE & Hσ) [H|[_ H]]]".
   { iDestruct "H" as (v) "[% _]". apply val_stuck in Hstep; simplify_eq. }
   rewrite pvs_eq /pvs_def.
-  iVs ("H" $! σ1 with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
-  iVsIntro; iNext.
-  iVs ("H" $! e2 σ2 efs with "[%] [Hw HE]")
+  iShift ("H" $! σ1 with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
+  iShiftIntro; iNext.
+  iShift ("H" $! e2 σ2 efs with "[%] [Hw HE]")
     as ">($ & $ & $ & $)"; try iFrame; eauto.
 Qed.
 
@@ -81,11 +81,11 @@ Proof.
   revert e1 t1 t2 σ1 σ2; simpl; induction n as [|n IH]=> e1 t1 t2 σ1 σ2 /=.
   { inversion_clear 1; iIntros "?"; eauto 10. }
   iIntros (Hsteps) "H". inversion_clear Hsteps as [|?? [t1' σ1']].
-  iVs (wptp_step with "H") as (e1' t1'') "[% H]"; first eauto; simplify_eq.
-  iVsIntro; iNext; iVs "H" as ">?". by iApply IH.
+  iShift (wptp_step with "H") as (e1' t1'') "[% H]"; first eauto; simplify_eq.
+  iShiftIntro; iNext; iShift "H" as ">?". by iApply IH.
 Qed.
 
-Instance rvs_iter_mono n : Proper ((⊢) ==> (⊢)) (Nat.iter n (λ P, |=r=> ▷ P)%I).
+Instance shift_iter_mono n : Proper ((⊢) ==> (⊢)) (Nat.iter n (λ P, |=r=> ▷ P)%I).
 Proof. intros P Q HP. induction n; simpl; do 2?f_equiv; auto. Qed.
 
 Lemma wptp_result n e1 t1 v2 t2 σ1 σ2 φ :
@@ -94,10 +94,10 @@ Lemma wptp_result n e1 t1 v2 t2 σ1 σ2 φ :
   Nat.iter (S (S n)) (λ P, |=r=> ▷ P) (■ φ v2).
 Proof.
   intros. rewrite wptp_steps //.
-  rewrite (Nat_iter_S_r (S n)). apply rvs_iter_mono.
+  rewrite (Nat_iter_S_r (S n)). apply shift_iter_mono.
   iDestruct 1 as (e2 t2') "(% & (Hw & HE & _) & H & _)"; simplify_eq.
   iDestruct (wp_value_inv with "H") as "H". rewrite pvs_eq /pvs_def.
-  iVs ("H" with "[Hw HE]") as ">(_ & _ & $)"; iFrame; auto.
+  iShift ("H" with "[Hw HE]") as ">(_ & _ & $)"; iFrame; auto.
 Qed.
 
 Lemma wp_safe e σ Φ :
@@ -105,7 +105,7 @@ Lemma wp_safe e σ Φ :
 Proof.
   rewrite wp_unfold /wp_pre. iIntros "[(Hw&HE&Hσ) [H|[_ H]]]".
   { iDestruct "H" as (v) "[% _]"; eauto 10. }
-  rewrite pvs_eq. iVs ("H" with "* Hσ [-]") as ">(?&?&%&?)"; first by iFrame.
+  rewrite pvs_eq. iShift ("H" with "* Hσ [-]") as ">(?&?&%&?)"; first by iFrame.
   eauto 10.
 Qed.
 
@@ -114,7 +114,7 @@ Lemma wptp_safe n e1 e2 t1 t2 σ1 σ2 Φ :
   world σ1 ★ WP e1 {{ Φ }} ★ wptp t1 ⊢
   Nat.iter (S (S n)) (λ P, |=r=> ▷ P) (■ (is_Some (to_val e2) ∨ reducible e2 σ2)).
 Proof.
-  intros ? He2. rewrite wptp_steps //; rewrite (Nat_iter_S_r (S n)). apply rvs_iter_mono.
+  intros ? He2. rewrite wptp_steps //; rewrite (Nat_iter_S_r (S n)). apply shift_iter_mono.
   iDestruct 1 as (e2' t2') "(% & Hw & H & Htp)"; simplify_eq.
   apply elem_of_cons in He2 as [<-|?]; first (iApply wp_safe; by iFrame "Hw H").
   iApply wp_safe. iFrame "Hw".
@@ -129,12 +129,12 @@ Proof.
   intros Hwp; split.
   - intros t2 σ2 v2 [n ?]%rtc_nsteps.
     eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
-    rewrite Nat_iter_S. iVs (iris_alloc σ) as (?) "(?&?&?&Hσ)".
-    iVsIntro. iNext. iApply wptp_result; eauto.
+    rewrite Nat_iter_S. iShift (iris_alloc σ) as (?) "(?&?&?&Hσ)".
+    iShiftIntro. iNext. iApply wptp_result; eauto.
     iFrame. iSplitL; auto. by iApply Hwp.
   - intros t2 σ2 e2 [n ?]%rtc_nsteps ?.
     eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
-    rewrite Nat_iter_S. iVs (iris_alloc σ) as (?) "(Hw & HE & Hσ & Hσf)".
-    iVsIntro. iNext. iApply wptp_safe; eauto.
+    rewrite Nat_iter_S. iShift (iris_alloc σ) as (?) "(Hw & HE & Hσ & Hσf)".
+    iShiftIntro. iNext. iApply wptp_safe; eauto.
     iFrame "Hw HE Hσ". iSplitL; auto. by iApply Hwp.
 Qed.

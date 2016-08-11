@@ -264,7 +264,7 @@ Definition uPred_valid {M A} := proj1_sig uPred_valid_aux M A.
 Definition uPred_valid_eq :
   @uPred_valid = @uPred_valid_def := proj2_sig uPred_valid_aux.
 
-Program Definition uPred_rvs_def {M} (Q : uPred M) : uPred M :=
+Program Definition uPred_shift_def {M} (Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ k yf,
       k ≤ n → ✓{k} (x ⋅ yf) → ∃ x', ✓{k} (x' ⋅ yf) ∧ Q k x' |}.
 Next Obligation.
@@ -275,9 +275,10 @@ Next Obligation.
   apply uPred_mono with x'; eauto using cmra_includedN_l.
 Qed.
 Next Obligation. naive_solver. Qed.
-Definition uPred_rvs_aux : { x | x = @uPred_rvs_def }. by eexists. Qed.
-Definition uPred_rvs {M} := proj1_sig uPred_rvs_aux M.
-Definition uPred_rvs_eq : @uPred_rvs = @uPred_rvs_def := proj2_sig uPred_rvs_aux.
+Definition uPred_shift_aux : { x | x = @uPred_shift_def }. by eexists. Qed.
+Definition uPred_shift {M} := proj1_sig uPred_shift_aux M.
+Definition uPred_shift_eq :
+  @uPred_shift = @uPred_shift_def := proj2_sig uPred_shift_aux.
 
 Notation "P ⊢ Q" := (uPred_entails P%I Q%I)
   (at level 99, Q at level 200, right associativity) : C_scope.
@@ -310,7 +311,7 @@ Notation "▷ P" := (uPred_later P)
   (at level 20, right associativity) : uPred_scope.
 Infix "≡" := uPred_eq : uPred_scope.
 Notation "✓ x" := (uPred_valid x) (at level 20) : uPred_scope.
-Notation "|=r=> Q" := (uPred_rvs Q)
+Notation "|=r=> Q" := (uPred_shift Q)
   (at level 99, Q at level 200, format "|=r=>  Q") : uPred_scope.
 Notation "P =r=> Q" := (P ⊢ |=r=> Q)
   (at level 99, Q at level 200, only parsing) : C_scope.
@@ -344,7 +345,7 @@ Module uPred.
 Definition unseal :=
   (uPred_pure_eq, uPred_and_eq, uPred_or_eq, uPred_impl_eq, uPred_forall_eq,
   uPred_exist_eq, uPred_eq_eq, uPred_sep_eq, uPred_wand_eq, uPred_always_eq,
-  uPred_later_eq, uPred_ownM_eq, uPred_valid_eq, uPred_rvs_eq).
+  uPred_later_eq, uPred_ownM_eq, uPred_valid_eq, uPred_shift_eq).
 Ltac unseal := rewrite !unseal /=.
 
 Section uPred_logic.
@@ -488,14 +489,14 @@ Proof.
 Qed.
 Global Instance valid_proper {A : cmraT} :
   Proper ((≡) ==> (⊣⊢)) (@uPred_valid M A) := ne_proper _.
-Global Instance rvs_ne n : Proper (dist n ==> dist n) (@uPred_rvs M).
+Global Instance shift_ne n : Proper (dist n ==> dist n) (@uPred_shift M).
 Proof.
   intros P Q HPQ.
   unseal; split=> n' x; split; intros HP k yf ??;
     destruct (HP k yf) as (x'&?&?); auto;
     exists x'; split; auto; apply HPQ; eauto using cmra_validN_op_l.
 Qed.
-Global Instance rvs_proper : Proper ((≡) ==> (≡)) (@uPred_rvs M) := ne_proper _.
+Global Instance shift_proper : Proper ((≡) ==> (≡)) (@uPred_shift M) := ne_proper _.
 
 (** Introduction and elimination rules *)
 Lemma pure_intro φ P : φ → P ⊢ ■ φ.
@@ -1150,20 +1151,20 @@ Global Instance ownM_mono : Proper (flip (≼) ==> (⊢)) (@uPred_ownM M).
 Proof. intros a b [b' ->]. rewrite ownM_op. eauto. Qed.
 
 (* Viewshifts *)
-Lemma rvs_intro P : P =r=> P.
+Lemma shift_intro P : P =r=> P.
 Proof.
   unseal. split=> n x ? HP k yf ?; exists x; split; first done.
   apply uPred_closed with n; eauto using cmra_validN_op_l.
 Qed.
-Lemma rvs_mono P Q : (P ⊢ Q) → (|=r=> P) =r=> Q.
+Lemma shift_mono P Q : (P ⊢ Q) → (|=r=> P) =r=> Q.
 Proof.
   unseal. intros HPQ; split=> n x ? HP k yf ??.
   destruct (HP k yf) as (x'&?&?); eauto.
   exists x'; split; eauto using uPred_in_entails, cmra_validN_op_l.
 Qed.
-Lemma rvs_trans P : (|=r=> |=r=> P) =r=> P.
+Lemma shift_trans P : (|=r=> |=r=> P) =r=> P.
 Proof. unseal; split; naive_solver. Qed.
-Lemma rvs_frame_r P R : (|=r=> P) ★ R =r=> P ★ R.
+Lemma shift_frame_r P R : (|=r=> P) ★ R =r=> P ★ R.
 Proof.
   unseal; split; intros n x ? (x1&x2&Hx&HP&?) k yf ??.
   destruct (HP k (x2 ⋅ yf)) as (x'&?&?); eauto.
@@ -1172,7 +1173,7 @@ Proof.
   exists x', x2; split_and?; auto.
   apply uPred_closed with n; eauto 3 using cmra_validN_op_l, cmra_validN_op_r.
 Qed.
-Lemma rvs_ownM_updateP x (Φ : M → Prop) :
+Lemma shift_ownM_updateP x (Φ : M → Prop) :
   x ~~>: Φ → uPred_ownM x =r=> ∃ y, ■ Φ y ∧ uPred_ownM y.
 Proof.
   unseal=> Hup; split=> n x2 ? [x3 Hx] k yf ??.
@@ -1181,29 +1182,29 @@ Proof.
   exists (y ⋅ x3); split; first by rewrite -assoc.
   exists y; eauto using cmra_includedN_l.
 Qed.
-Lemma except_now_rvs P : ◇ (|=r=> P) ⊢ (|=r=> ◇ P).
-Proof.
-  rewrite /uPred_except_now. apply or_elim; auto using rvs_mono.
-  by rewrite -rvs_intro -or_intro_l.
-Qed.
 
 (** * Derived rules *)
-Global Instance rvs_mono' : Proper ((⊢) ==> (⊢)) (@uPred_rvs M).
-Proof. intros P Q; apply rvs_mono. Qed.
-Global Instance rvs_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) (@uPred_rvs M).
-Proof. intros P Q; apply rvs_mono. Qed.
-Lemma rvs_frame_l R Q : (R ★ |=r=> Q) =r=> R ★ Q.
-Proof. rewrite !(comm _ R); apply rvs_frame_r. Qed.
-Lemma rvs_wand_l P Q : (P -★ Q) ★ (|=r=> P) =r=> Q.
-Proof. by rewrite rvs_frame_l wand_elim_l. Qed.
-Lemma rvs_wand_r P Q : (|=r=> P) ★ (P -★ Q) =r=> Q.
-Proof. by rewrite rvs_frame_r wand_elim_r. Qed.
-Lemma rvs_sep P Q : (|=r=> P) ★ (|=r=> Q) =r=> P ★ Q.
-Proof. by rewrite rvs_frame_r rvs_frame_l rvs_trans. Qed.
-Lemma rvs_ownM_update x y : x ~~> y → uPred_ownM x ⊢ |=r=> uPred_ownM y.
+Global Instance shift_mono' : Proper ((⊢) ==> (⊢)) (@uPred_shift M).
+Proof. intros P Q; apply shift_mono. Qed.
+Global Instance shift_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) (@uPred_shift M).
+Proof. intros P Q; apply shift_mono. Qed.
+Lemma shift_frame_l R Q : (R ★ |=r=> Q) =r=> R ★ Q.
+Proof. rewrite !(comm _ R); apply shift_frame_r. Qed.
+Lemma shift_wand_l P Q : (P -★ Q) ★ (|=r=> P) =r=> Q.
+Proof. by rewrite shift_frame_l wand_elim_l. Qed.
+Lemma shift_wand_r P Q : (|=r=> P) ★ (P -★ Q) =r=> Q.
+Proof. by rewrite shift_frame_r wand_elim_r. Qed.
+Lemma shift_sep P Q : (|=r=> P) ★ (|=r=> Q) =r=> P ★ Q.
+Proof. by rewrite shift_frame_r shift_frame_l shift_trans. Qed.
+Lemma shift_ownM_update x y : x ~~> y → uPred_ownM x ⊢ |=r=> uPred_ownM y.
 Proof.
-  intros; rewrite (rvs_ownM_updateP _ (y =)); last by apply cmra_update_updateP.
-  by apply rvs_mono, exist_elim=> y'; apply pure_elim_l=> ->.
+  intros; rewrite (shift_ownM_updateP _ (y =)); last by apply cmra_update_updateP.
+  by apply shift_mono, exist_elim=> y'; apply pure_elim_l=> ->.
+Qed.
+Lemma except_now_shift P : ◇ (|=r=> P) ⊢ (|=r=> ◇ P).
+Proof.
+  rewrite /uPred_except_now. apply or_elim; auto using shift_mono.
+  by rewrite -shift_intro -or_intro_l.
 Qed.
 
 (* Products *)

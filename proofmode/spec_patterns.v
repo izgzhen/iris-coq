@@ -1,6 +1,6 @@
 From iris.prelude Require Export strings.
 
-Inductive spec_goal_kind := GoalStd | GoalVs.
+Inductive spec_goal_kind := GoalStd | GoalShift.
 
 Inductive spec_pat :=
   | SGoal : spec_goal_kind → bool → list string → spec_pat
@@ -18,7 +18,7 @@ Inductive token :=
   | TPersistent : token
   | TPure : token
   | TForall : token
-  | TVs : token.
+  | TShift : token.
 
 Fixpoint cons_name (kn : string) (k : list token) : list token :=
   match kn with "" => k | _ => TName (string_rev kn) :: k end.
@@ -32,7 +32,8 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String "#" s => tokenize_go s (TPersistent :: cons_name kn k) ""
   | String "%" s => tokenize_go s (TPure :: cons_name kn k) ""
   | String "*" s => tokenize_go s (TForall :: cons_name kn k) ""
-  | String "=" (String "=" (String ">" s)) => tokenize_go s (TVs :: cons_name kn k) ""
+  | String "=" (String "=" (String ">" s)) =>
+     tokenize_go s (TShift :: cons_name kn k) ""
   | String a s => tokenize_go s k (String a kn)
   end.
 Definition tokenize (s : string) : list token := tokenize_go s [] "".
@@ -48,8 +49,8 @@ Fixpoint parse_go (ts : list token) (k : list spec_pat) : option (list spec_pat)
   | TBracketL :: TPersistent :: TBracketR :: ts => parse_go ts (SGoalPersistent :: k)
   | TBracketL :: TPure :: TBracketR :: ts => parse_go ts (SGoalPure :: k)
   | TBracketL :: ts => parse_goal ts GoalStd false [] k
-  | TVs :: TBracketL :: ts => parse_goal ts GoalVs false [] k
-  | TVs :: ts => parse_go ts (SGoal GoalVs true [] :: k)
+  | TShift :: TBracketL :: ts => parse_goal ts GoalShift false [] k
+  | TShift :: ts => parse_go ts (SGoal GoalShift true [] :: k)
   | TPersistent :: TName s :: ts => parse_go ts (SName true s :: k)
   | TForall :: ts => parse_go ts (SForall :: k)
   | _ => None

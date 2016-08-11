@@ -61,10 +61,10 @@ Global Arguments into_except_now : clear implicits.
 Class IsNowTrue (Q : uPred M) := is_except_now : ◇ Q ⊢ Q.
 Global Arguments is_except_now : clear implicits.
 
-Class FromVs (P Q : uPred M) := from_vs : (|=r=> Q) ⊢ P.
-Global Arguments from_vs : clear implicits.
+Class FromShift (P Q : uPred M) := from_shift : (|=r=> Q) ⊢ P.
+Global Arguments from_shift : clear implicits.
 
-Class ElimVs (P P' : uPred M) (Q Q' : uPred M) :=
-  elim_vs : P ★ (P' -★ Q') ⊢ Q.
-Arguments elim_vs _ _ _ _ {_}.
+Class ElimShift (P P' : uPred M) (Q Q' : uPred M) :=
+  elim_shift : P ★ (P' -★ Q') ⊢ Q.
+Arguments elim_shift _ _ _ _ {_}.
 End classes.

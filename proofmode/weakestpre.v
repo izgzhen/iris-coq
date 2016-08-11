@@ -19,18 +19,18 @@ Proof. intros. by rewrite /IntoAssert pvs_frame_r wand_elim_r pvs_wp. Qed.
 Global Instance is_except_now_wp E e Φ : IsNowTrue (WP e @ E {{ Φ }}).
 Proof. by rewrite /IsNowTrue -{2}pvs_wp -except_now_pvs -pvs_intro. Qed.
 
-Global Instance elim_vs_rvs_wp E e P Φ :
-  ElimVs (|=r=> P) P (WP e @ E {{ Φ }}) (WP e @ E {{ Φ }}).
-Proof. by rewrite /ElimVs (rvs_pvs E) pvs_frame_r wand_elim_r pvs_wp. Qed.
+Global Instance elim_shift_shift_wp E e P Φ :
+  ElimShift (|=r=> P) P (WP e @ E {{ Φ }}) (WP e @ E {{ Φ }}).
+Proof. by rewrite /ElimShift (shift_pvs E) pvs_frame_r wand_elim_r pvs_wp. Qed.
 
-Global Instance elim_vs_pvs_wp E e P Φ :
-  ElimVs (|={E}=> P) P (WP e @ E {{ Φ }}) (WP e @ E {{ Φ }}).
-Proof. by rewrite /ElimVs pvs_frame_r wand_elim_r pvs_wp. Qed.
+Global Instance elim_shift_pvs_wp E e P Φ :
+  ElimShift (|={E}=> P) P (WP e @ E {{ Φ }}) (WP e @ E {{ Φ }}).
+Proof. by rewrite /ElimShift pvs_frame_r wand_elim_r pvs_wp. Qed.
 
-(* lower precedence, if possible, it should always pick elim_vs_pvs_wp *)
-Global Instance elim_vs_pvs_wp_atomic E1 E2 e P Φ :
+(* lower precedence, if possible, it should always pick elim_shift_pvs_wp *)
+Global Instance elim_shift_pvs_wp_atomic E1 E2 e P Φ :
   atomic e →
-  ElimVs (|={E1,E2}=> P) P
+  ElimShift (|={E1,E2}=> P) P
          (WP e @ E1 {{ Φ }}) (WP e @ E2 {{ v, |={E2,E1}=> Φ v }})%I | 100.
-Proof. intros. by rewrite /ElimVs pvs_frame_r wand_elim_r wp_atomic. Qed.
+Proof. intros. by rewrite /ElimShift pvs_frame_r wand_elim_r wp_atomic. Qed.
 End weakestpre.

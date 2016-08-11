@@ -80,9 +80,9 @@ Lemma newlock_spec (R : iProp Σ) Φ :
 Proof.
   iIntros "(#Hh & HR & HΦ)". rewrite /newlock.
   wp_seq. wp_alloc lo as "Hlo". wp_alloc ln as "Hln".
-  iVs (own_alloc (Excl ())) as (γ2) "Hγ2"; first done.
-  iVs (own_alloc_strong (Auth (Excl' ∅) ∅) {[ γ2 ]}) as (γ1) "[% Hγ1]"; first done.
-  iVs (inv_alloc N _ (lock_inv γ1 γ2 lo ln R) with "[-HΦ]").
+  iShift (own_alloc (Excl ())) as (γ2) "Hγ2"; first done.
+  iShift (own_alloc_strong (Auth (Excl' ∅) ∅) {[ γ2 ]}) as (γ1) "[% Hγ1]"; first done.
+  iShift (inv_alloc N _ (lock_inv γ1 γ2 lo ln R) with "[-HΦ]").
   { iNext. rewrite /lock_inv.
     iExists 0%nat, 0%nat.
     iFrame.
@@ -92,7 +92,7 @@ Proof.
       by iFrame. }
     iLeft.
     by iFrame. }
-  iVsIntro.
+  iShiftIntro.
   iApply "HΦ".
   iExists γ1, γ2, lo, ln.
   iSplit; by auto.
@@ -106,17 +106,17 @@ Proof.
   iInv N as (o n) "[Hlo [Hln Ha]]" "Hclose".
   wp_load. destruct (decide (x = o)) as [->|Hneq].
   - iDestruct "Ha" as "[Hainv [[Ho HR] | Haown]]".
-    + iVs ("Hclose" with "[Hlo Hln Hainv Ht]").
+    + iShift ("Hclose" with "[Hlo Hln Hainv Ht]").
       { iNext. iExists o, n. iFrame. eauto. }
-      iVsIntro. wp_let. wp_op=>[_|[]] //.
-      wp_if. iVsIntro.
+      iShiftIntro. wp_let. wp_op=>[_|[]] //.
+      wp_if. iShiftIntro.
       iApply ("HΦ" with "[-HR] HR"). iExists γ1, γ2, lo, ln; eauto.
     + iExFalso. iCombine "Ht" "Haown" as "Haown".
       iDestruct (auth_own_valid with "Haown") as % ?%gset_disj_valid_op.
       set_solver.
-  - iVs ("Hclose" with "[Hlo Hln Ha]").
+  - iShift ("Hclose" with "[Hlo Hln Ha]").
     { iNext. iExists o, n. by iFrame. }
-    iVsIntro. wp_let. wp_op=>?; first omega.
+    iShiftIntro. wp_let. wp_op=>?; first omega.
     wp_if. by iApply ("IH" with "Ht").
 Qed.
 
@@ -126,33 +126,33 @@ Proof.
   iIntros "[Hl HΦ]". iDestruct "Hl" as (γ1 γ2 lo ln) "(#? & % & #?)".
   iLöb as "IH". wp_rec. wp_bind (! _)%E. subst. wp_proj.
   iInv N as (o n) "[Hlo [Hln Ha]]" "Hclose".
-  wp_load. iVs ("Hclose" with "[Hlo Hln Ha]").
+  wp_load. iShift ("Hclose" with "[Hlo Hln Ha]").
   { iNext. iExists o, n. by iFrame. }
-  iVsIntro. wp_let. wp_proj. wp_op.
+  iShiftIntro. wp_let. wp_proj. wp_op.
   wp_bind (CAS _ _ _).
   iInv N as (o' n') "[Hlo' [Hln' [Hainv Haown]]]" "Hclose".
   destruct (decide (#n' = #n))%V
     as [[= ->%Nat2Z.inj] | Hneq].
   - wp_cas_suc.
     iDestruct "Hainv" as (s) "[Ho %]"; subst.
-    iVs (own_update with "Ho") as "Ho".
+    iShift (own_update with "Ho") as "Ho".
     { eapply auth_update_no_frag, (gset_alloc_empty_local_update n).
       rewrite elem_of_seq_set; omega. }
     iDestruct "Ho" as "[Hofull Hofrag]".
-    iVs ("Hclose" with "[Hlo' Hln' Haown Hofull]").
+    iShift ("Hclose" with "[Hlo' Hln' Haown Hofull]").
     { rewrite gset_disj_union; last by apply (seq_set_S_disjoint 0).
       rewrite -(seq_set_S_union_L 0).
       iNext. iExists o', (S n)%nat.
       rewrite Nat2Z.inj_succ -Z.add_1_r.
       iFrame. iExists (GSet (seq_set 0 (S n))). by iFrame. }
-    iVsIntro. wp_if.
+    iShiftIntro. wp_if.
     iApply (wait_loop_spec (#lo, #ln)).
     iSplitR "HΦ"; last by done.
     rewrite /issued /auth_own; eauto 10.
   - wp_cas_fail.
-    iVs ("Hclose" with "[Hlo' Hln' Hainv Haown]").
+    iShift ("Hclose" with "[Hlo' Hln' Hainv Haown]").
     { iNext. iExists o', n'. by iFrame. }
-    iVsIntro. wp_if. by iApply "IH".
+    iShiftIntro. wp_if. by iApply "IH".
 Qed.
 
 Lemma release_spec R l (Φ : val → iProp Σ):
@@ -161,9 +161,9 @@ Proof.
   iIntros "(Hl & HR & HΦ)"; iDestruct "Hl" as (γ1 γ2 lo ln) "(#? & % & #? & Hγ)".
   iLöb as "IH". wp_rec. subst. wp_proj. wp_bind (! _)%E.
   iInv N as (o n) "[Hlo [Hln Hr]]" "Hclose".
-  wp_load. iVs ("Hclose" with "[Hlo Hln Hr]").
+  wp_load. iShift ("Hclose" with "[Hlo Hln Hr]").
   { iNext. iExists o, n. by iFrame. }
-  iVsIntro. wp_let. wp_bind (CAS _ _ _ ).
+  iShiftIntro. wp_let. wp_bind (CAS _ _ _ ).
   wp_proj. wp_op.
   iInv N as (o' n') "[Hlo' [Hln' Hr]]" "Hclose".
   destruct (decide (#o' = #o))%V
@@ -172,14 +172,14 @@ Proof.
     iDestruct "Hr" as "[Hainv [[Ho _] | Hown]]".
     + iExFalso. iCombine "Hγ" "Ho" as "Ho".
       iDestruct (own_valid with "#Ho") as %[].
-    + iVs ("Hclose" with "[Hlo' Hln' HR Hγ Hainv]").
+    + iShift ("Hclose" with "[Hlo' Hln' HR Hγ Hainv]").
       { iNext. iExists (o + 1)%nat, n'%nat.
         iFrame. rewrite Nat2Z.inj_add.
         iFrame. iLeft; by iFrame. }
-      iVsIntro. by wp_if.
-  - wp_cas_fail. iVs ("Hclose" with "[Hlo' Hln' Hr]").
+      iShiftIntro. by wp_if.
+  - wp_cas_fail. iShift ("Hclose" with "[Hlo' Hln' Hr]").
     { iNext. iExists o', n'. by iFrame. }
-    iVsIntro. wp_if. by iApply ("IH" with "Hγ HR").
+    iShiftIntro. wp_if. by iApply ("IH" with "Hγ HR").
 Qed.
 End proof.
 

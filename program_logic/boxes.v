@@ -93,14 +93,14 @@ Lemma box_insert f P Q :
     slice N γ Q ★ ▷ box N (<[γ:=false]> f) (Q ★ P).
 Proof.
   iDestruct 1 as (Φ) "[#HeqP Hf]".
-  iVs (own_alloc_strong (● Excl' false ⋅ ◯ Excl' false,
+  iShift (own_alloc_strong (● Excl' false ⋅ ◯ Excl' false,
     Some (to_agree (Next (iProp_unfold Q)))) (dom _ f))
     as (γ) "[Hdom Hγ]"; first done.
   rewrite pair_split. iDestruct "Hγ" as "[[Hγ Hγ'] #HγQ]".
   iDestruct "Hdom" as % ?%not_elem_of_dom.
-  iVs (inv_alloc N _ (slice_inv γ Q) with "[Hγ]") as "#Hinv".
+  iShift (inv_alloc N _ (slice_inv γ Q) with "[Hγ]") as "#Hinv".
   { iNext. iExists false; eauto. }
-  iVsIntro; iExists γ; repeat iSplit; auto.
+  iShiftIntro; iExists γ; repeat iSplit; auto.
   iNext. iExists (<[γ:=Q]> Φ); iSplit.
   - iNext. iRewrite "HeqP". by rewrite big_sepM_fn_insert'.
   - rewrite (big_sepM_fn_insert (λ _ _ P',  _ ★ _ _ P' ★ _ _ (_ _ P')))%I //.
@@ -115,7 +115,7 @@ Proof.
   iIntros (?) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists ([★ map] γ'↦_ ∈ delete γ f, Φ γ')%I.
   iInv N as (b) "(Hγ & #HγQ &_)" "Hclose".
-  iApply pvs_trans_frame; iFrame "Hclose"; iVsIntro; iNext.
+  iApply pvs_trans_frame; iFrame "Hclose"; iShiftIntro; iNext.
   iDestruct (big_sepM_delete _ f _ false with "Hf")
     as "[[Hγ' #[HγΦ ?]] ?]"; first done.
   iDestruct (box_own_agree γ Q (Φ γ) with "[#]") as "HeqQ"; first by eauto.
@@ -136,10 +136,10 @@ Proof.
   iDestruct (big_sepM_later _ f with "Hf") as "Hf".
   iDestruct (big_sepM_delete _ f _ false with "Hf")
     as "[[>Hγ' #[HγΦ Hinv']] ?]"; first done.
-  iVs (box_own_auth_update γ b' false true with "[Hγ Hγ']")
+  iShift (box_own_auth_update γ b' false true with "[Hγ Hγ']")
     as "[Hγ Hγ']"; first by iFrame.
-  iVs ("Hclose" with "[Hγ HQ]"); first (iNext; iExists true; by iFrame).
-  iVsIntro; iNext; iExists Φ; iSplit.
+  iShift ("Hclose" with "[Hγ HQ]"); first (iNext; iExists true; by iFrame).
+  iShiftIntro; iNext; iExists Φ; iSplit.
   - by rewrite big_sepM_insert_override.
   - rewrite -insert_delete big_sepM_insert ?lookup_delete //.
     iFrame; eauto.
@@ -157,9 +157,9 @@ Proof.
   iDestruct (box_own_auth_agree γ b true with "[#]")
     as %?; subst; first by iFrame.
   iFrame "HQ".
-  iVs (box_own_auth_update γ with "[Hγ Hγ']") as "[Hγ Hγ']"; first by iFrame.
-  iVs ("Hclose" with "[Hγ]"); first (iNext; iExists false; by repeat iSplit).
-  iVsIntro; iNext; iExists Φ; iSplit.
+  iShift (box_own_auth_update γ with "[Hγ Hγ']") as "[Hγ Hγ']"; first by iFrame.
+  iShift ("Hclose" with "[Hγ]"); first (iNext; iExists false; by repeat iSplit).
+  iShiftIntro; iNext; iExists Φ; iSplit.
   - by rewrite big_sepM_insert_override.
   - rewrite -insert_delete big_sepM_insert ?lookup_delete //.
     iFrame; eauto.
@@ -175,7 +175,7 @@ Proof.
   iApply (big_sepM_impl _ _ f); iFrame "Hf".
   iAlways; iIntros (γ b' ?) "[(Hγ' & #$ & #$) HΦ]".
   iInv N as (b) "[>Hγ _]" "Hclose".
-  iVs (box_own_auth_update γ with "[Hγ Hγ']") as "[Hγ $]"; first by iFrame.
+  iShift (box_own_auth_update γ with "[Hγ Hγ']") as "[Hγ $]"; first by iFrame.
   iApply "Hclose". iNext; iExists true. by iFrame.
 Qed.
 
@@ -192,11 +192,11 @@ Proof.
     iInv N as (b) "(>Hγ & _ & HΦ)" "Hclose".
     iDestruct (box_own_auth_agree γ b true with "[#]")
       as "%"; subst; first by iFrame.
-    iVs (box_own_auth_update γ true true false with "[Hγ Hγ']")
+    iShift (box_own_auth_update γ true true false with "[Hγ Hγ']")
       as "[Hγ $]"; first by iFrame.
-    iVs ("Hclose" with "[Hγ]"); first (iNext; iExists false; iFrame; eauto).
+    iShift ("Hclose" with "[Hγ]"); first (iNext; iExists false; iFrame; eauto).
     by iApply "HΦ". }
-  iVsIntro; iSplitL "HΦ".
+  iShiftIntro; iSplitL "HΦ".
   - rewrite eq_iff later_iff big_sepM_later. by iApply "HeqP".
   - iExists Φ; iSplit; by rewrite big_sepM_fmap.
 Qed.

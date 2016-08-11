@@ -40,9 +40,9 @@ Module savedprop. Section savedprop.
   Lemma contradiction : False.
   Proof.
     apply (@adequacy M False 1); simpl.
-    iIntros "". iVs A_alloc as (i) "#H".
+    iIntros "". iShift A_alloc as (i) "#H".
     iPoseProof (saved_NA with "H") as "HN".
-    iVsIntro. iNext.
+    iShiftIntro. iNext.
     iApply "HN". iApply saved_A. done.
   Qed.
 
@@ -113,12 +113,12 @@ Module inv. Section inv.
   Lemma pvs_frame_r E P Q : (pvs E P ★ Q) ⊢ pvs E (P ★ Q).
   Proof. by rewrite comm pvs_frame_l comm. Qed.
 
-  Global Instance elim_pvs_pvs E P Q : ElimVs (pvs E P) P (pvs E Q) (pvs E Q).
-  Proof. by rewrite /ElimVs pvs_frame_r uPred.wand_elim_r pvs_pvs. Qed.
+  Global Instance elim_pvs_pvs E P Q : ElimShift (pvs E P) P (pvs E Q) (pvs E Q).
+  Proof. by rewrite /ElimShift pvs_frame_r uPred.wand_elim_r pvs_pvs. Qed.
 
-  Global Instance elim_pvs0_pvs1 P Q : ElimVs (pvs M0 P) P (pvs M1 Q) (pvs M1 Q).
+  Global Instance elim_pvs0_pvs1 P Q : ElimShift (pvs M0 P) P (pvs M1 Q) (pvs M1 Q).
   Proof.
-    by rewrite /ElimVs pvs_frame_r uPred.wand_elim_r pvs_mask_mono pvs_pvs.
+    by rewrite /ElimShift pvs_frame_r uPred.wand_elim_r pvs_mask_mono pvs_pvs.
   Qed.
 
   Global Instance exists_split_pvs0 {A} E P (Φ : A → iProp) :
@@ -135,8 +135,8 @@ Module inv. Section inv.
 
   Lemma saved_alloc (P : gname → iProp) : True ⊢ pvs M1 (∃ γ, saved γ (P γ)).
   Proof.
-    iIntros "". iVs (sts_alloc) as (γ) "Hs".
-    iVs (inv_alloc (start γ ∨ (finished γ ★ □ (P γ))) with "[Hs]") as (i) "#Hi".
+    iIntros "". iShift (sts_alloc) as (γ) "Hs".
+    iShift (inv_alloc (start γ ∨ (finished γ ★ □ (P γ))) with "[Hs]") as (i) "#Hi".
     { auto. }
     iApply pvs_intro. by iExists γ, i.
   Qed.
@@ -173,7 +173,7 @@ Module inv. Section inv.
   Proof.
     iIntros "#Hi !# #HA". iPoseProof "HA" as "HA'".
     iDestruct "HA'" as (P) "#[HNP Hi']".
-    iVs (saved_cast i (A i) P with "[]") as "HP".
+    iShift (saved_cast i (A i) P with "[]") as "HP".
     { eauto. }
     by iApply "HNP".
   Qed.
@@ -187,7 +187,7 @@ Module inv. Section inv.
   Lemma contradiction : False.
   Proof.
     apply soundness. iIntros "".
-    iVs A_alloc as (i) "#H".
+    iShift A_alloc as (i) "#H".
     iPoseProof (saved_NA with "H") as "HN".
     iApply "HN". iApply saved_A. done.
   Qed.

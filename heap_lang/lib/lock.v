@@ -52,10 +52,10 @@ Lemma newlock_spec (R : iProp Σ) Φ :
 Proof.
   iIntros (?) "(#Hh & HR & HΦ)". rewrite /newlock.
   wp_seq. wp_alloc l as "Hl".
-  iVs (own_alloc (Excl ())) as (γ) "Hγ"; first done.
-  iVs (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
+  iShift (own_alloc (Excl ())) as (γ) "Hγ"; first done.
+  iShift (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
   { iIntros "!>". iExists false. by iFrame. }
-  iVsIntro. iApply "HΦ". iExists γ; eauto.
+  iShiftIntro. iApply "HΦ". iExists γ; eauto.
 Qed.
 
 Lemma acquire_spec l R (Φ : val → iProp Σ) :
@@ -64,11 +64,11 @@ Proof.
   iIntros "[Hl HΦ]". iDestruct "Hl" as (γ) "(%&#?&#?)".
   iLöb as "IH". wp_rec. wp_bind (CAS _ _ _)%E.
   iInv N as ([]) "[Hl HR]" "Hclose".
-  - wp_cas_fail. iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
-    iVsIntro. wp_if. by iApply "IH".
+  - wp_cas_fail. iShift ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
+    iShiftIntro. wp_if. by iApply "IH".
   - wp_cas_suc. iDestruct "HR" as "[Hγ HR]".
-    iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
-    iVsIntro. wp_if. iApply ("HΦ" with "[-HR] HR"). iExists γ; eauto.
+    iShift ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
+    iShiftIntro. wp_if. iApply ("HΦ" with "[-HR] HR"). iExists γ; eauto.
 Qed.
 
 Lemma release_spec R l (Φ : val → iProp Σ) :

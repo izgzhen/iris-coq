@@ -230,7 +230,7 @@ Ltac solve_atomic :=
      apply W.atomic_correct; vm_compute; exact I
   end.
 Hint Extern 10 (language.atomic _) => solve_atomic.
-(* For the side-condition of elim_vs_pvs_wp_atomic *)
+(* For the side-condition of elim_shift_pvs_wp_atomic *)
 Hint Extern 10 (language.atomic _) => solve_atomic : typeclass_instances.
 
 (** Substitution *)

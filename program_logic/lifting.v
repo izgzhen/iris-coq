@@ -18,10 +18,10 @@ Lemma wp_lift_step E Φ e1 :
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (?) "H". rewrite wp_unfold /wp_pre; iRight; iSplit; auto.
-  iIntros (σ1) "Hσ". iVs "H" as (σ1') "(% & >Hσf & H)".
+  iIntros (σ1) "Hσ". iShift "H" as (σ1') "(% & >Hσf & H)".
   iDestruct (ownP_agree σ1 σ1' with "[#]") as %<-; first by iFrame.
-  iVsIntro; iSplit; [done|]; iNext; iIntros (e2 σ2 efs Hstep).
-  iVs (ownP_update σ1 σ2 with "[-H]") as "[$ ?]"; first by iFrame.
+  iShiftIntro; iSplit; [done|]; iNext; iIntros (e2 σ2 efs Hstep).
+  iShift (ownP_update σ1 σ2 with "[-H]") as "[$ ?]"; first by iFrame.
   iApply "H"; eauto.
 Qed.
 
@@ -36,7 +36,7 @@ Proof.
   iIntros (σ1) "Hσ". iApply pvs_intro'; [set_solver|iIntros "Hclose"].
   iSplit; [done|]; iNext; iIntros (e2 σ2 efs ?).
   destruct (Hstep σ1 e2 σ2 efs); auto; subst.
-  iVs "Hclose"; iVsIntro. iFrame "Hσ". iApply "H"; auto.
+  iShift "Hclose"; iShiftIntro. iFrame "Hσ". iApply "H"; auto.
 Qed.
 
 (** Derived lifting lemmas. *)
@@ -54,7 +54,7 @@ Proof.
   iNext; iIntros (e2 σ2 efs) "[% Hσ]".
   edestruct (Hatomic σ1 e2 σ2 efs) as [v2 <-%of_to_val]; eauto.
   iDestruct ("H" $! v2 σ2 efs with "[Hσ]") as "[HΦ $]"; first by eauto.
-  iVs "Hclose". iVs "HΦ". iApply wp_value; auto using to_of_val.
+  iShift "Hclose". iShift "HΦ". iApply wp_value; auto using to_of_val.
 Qed.
 
 Lemma wp_lift_atomic_det_step {E Φ e1} σ1 v2 σ2 efs :

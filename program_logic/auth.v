@@ -73,18 +73,18 @@ Section auth.
     ✓ a → ▷ φ a ={E}=> ∃ γ, ■ (γ ∉ G) ∧ auth_ctx γ N φ ∧ auth_own γ a.
   Proof.
     iIntros (?) "Hφ". rewrite /auth_own /auth_ctx.
-    iVs (own_alloc_strong (Auth (Excl' a) a) G) as (γ) "[% Hγ]"; first done.
+    iShift (own_alloc_strong (Auth (Excl' a) a) G) as (γ) "[% Hγ]"; first done.
     iRevert "Hγ"; rewrite auth_both_op; iIntros "[Hγ Hγ']".
-    iVs (inv_alloc N _ (auth_inv γ φ) with "[-Hγ']").
+    iShift (inv_alloc N _ (auth_inv γ φ) with "[-Hγ']").
     { iNext. iExists a. by iFrame. }
-    iVsIntro; iExists γ. iSplit; first by iPureIntro. by iFrame.
+    iShiftIntro; iExists γ. iSplit; first by iPureIntro. by iFrame.
   Qed.
 
   Lemma auth_alloc N E a :
     ✓ a → ▷ φ a ={E}=> ∃ γ, auth_ctx γ N φ ∧ auth_own γ a.
   Proof.
     iIntros (?) "Hφ".
-    iVs (auth_alloc_strong N E a ∅ with "Hφ") as (γ) "[_ ?]"; eauto.
+    iShift (auth_alloc_strong N E a ∅ with "Hφ") as (γ) "[_ ?]"; eauto.
   Qed.
 
   Lemma auth_empty γ : True =r=> auth_own γ ∅.
@@ -100,10 +100,10 @@ Section auth.
     iInv N as (a') "[>Hγ Hφ]" "Hclose". iCombine "Hγ" "Hγf" as "Hγ".
     iDestruct (own_valid with "#Hγ") as % [[af Ha'] ?]%auth_valid_discrete.
     simpl in Ha'; rewrite ->(left_id _ _) in Ha'; setoid_subst.
-    iVsIntro. iExists af; iFrame "Hφ"; iSplit; first done.
+    iShiftIntro. iExists af; iFrame "Hφ"; iSplit; first done.
     iIntros (b) "[% Hφ]".
-    iVs (own_update with "Hγ") as "[Hγ Hγf]"; first eapply auth_update; eauto.
-    iVs ("Hclose" with "[Hφ Hγ]") as "_"; auto.
+    iShift (own_update with "Hγ") as "[Hγ Hγf]"; first eapply auth_update; eauto.
+    iShift ("Hclose" with "[Hφ Hγ]") as "_"; auto.
     iNext. iExists (b ⋅ af). by iFrame.
   Qed.
 End auth.

@@ -466,8 +466,8 @@ Class IntoAssert (P : uPred M) (Q : uPred M) (R : uPred M) :=
 Global Arguments into_assert _ _ _ {_}.
 Lemma into_assert_default P Q : IntoAssert P Q P.
 Proof. by rewrite /IntoAssert wand_elim_r. Qed.
-Global Instance to_assert_rvs P Q : IntoAssert P (|=r=> Q) (|=r=> P).
-Proof. by rewrite /IntoAssert rvs_frame_r wand_elim_r rvs_trans. Qed.
+Global Instance to_assert_shift P Q : IntoAssert P (|=r=> Q) (|=r=> P).
+Proof. by rewrite /IntoAssert shift_frame_r wand_elim_r shift_trans. Qed.
 
 Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q lr js R P1 P2 P1' Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
@@ -736,17 +736,17 @@ Proof.
   rewrite envs_simple_replace_sound' //; simpl. by rewrite right_id wand_elim_r.
 Qed.
 
-(** * Viewshifts *)
-Lemma tac_vs_intro Δ P Q : FromVs P Q → (Δ ⊢ Q) → Δ ⊢ P.
-Proof. rewrite /FromVs. intros <- ->. apply rvs_intro. Qed.
+(** * (View)shifts *)
+Lemma tac_shift_intro Δ P Q : FromShift P Q → (Δ ⊢ Q) → Δ ⊢ P.
+Proof. rewrite /FromShift. intros <- ->. apply shift_intro. Qed.
 
-Lemma tac_vs_elim Δ Δ' i p P' P Q Q' :
+Lemma tac_shift_elim Δ Δ' i p P' P Q Q' :
   envs_lookup i Δ = Some (p, P) →
-  ElimVs P P' Q Q' →
+  ElimShift P P' Q Q' →
   envs_replace i p false (Esnoc Enil i P') Δ = Some Δ' →
   (Δ' ⊢ Q') → Δ ⊢ Q.
 Proof.
   intros ??? HΔ. rewrite envs_replace_sound //; simpl.
-  rewrite right_id HΔ always_if_elim. by apply elim_vs.
+  rewrite right_id HΔ always_if_elim. by apply elim_shift.
 Qed.
 End tactics.

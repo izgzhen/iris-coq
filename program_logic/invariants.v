@@ -32,14 +32,14 @@ Proof. rewrite inv_eq /inv; apply _. Qed.
 Lemma inv_alloc N E P : ▷ P ={E}=> inv N P.
 Proof.
   rewrite inv_eq /inv_def pvs_eq /pvs_def. iIntros "HP [Hw $]".
-  iVs (ownI_alloc (∈ nclose N) P with "[HP Hw]") as (i) "(% & $ & ?)"; auto.
+  iShift (ownI_alloc (∈ nclose N) P with "[HP Hw]") as (i) "(% & $ & ?)"; auto.
   - intros Ef. exists (coPpick (nclose N ∖ coPset.of_gset Ef)).
     rewrite -coPset.elem_of_of_gset comm -elem_of_difference.
     apply coPpick_elem_of=> Hfin.
     eapply nclose_infinite, (difference_finite_inv _ _), Hfin.
     apply of_gset_finite.
   - by iFrame.
-  - iVsIntro. iApply except_now_intro; eauto.
+  - iShiftIntro. iApply except_now_intro; eauto.
 Qed.
 
 Lemma inv_open E N P :
@@ -49,7 +49,7 @@ Proof.
   iDestruct "Hi" as % ?%elem_of_subseteq_singleton.
   rewrite {1 4}(union_difference_L (nclose N) E) // ownE_op; last set_solver.
   rewrite {1 5}(union_difference_L {[ i ]} (nclose N)) // ownE_op; last set_solver.
-  iIntros "(Hw & [HE $] & $)"; iVsIntro; iApply except_now_intro.
+  iIntros "(Hw & [HE $] & $)"; iShiftIntro; iApply except_now_intro.
   iDestruct (ownI_open i P with "[Hw HE]") as "($ & $ & HD)"; first by iFrame.
   iIntros "HP [Hw $] !==>"; iApply except_now_intro. iApply ownI_close; by iFrame.
 Qed.
@@ -57,7 +57,7 @@ Qed.
 Lemma inv_open_timeless E N P `{!TimelessP P} :
   nclose N ⊆ E → inv N P ={E,E∖N}=> P ★ (P ={E∖N,E}=★ True).
 Proof.
-  iIntros (?) "Hinv". iVs (inv_open with "Hinv") as "[>HP Hclose]"; auto.
+  iIntros (?) "Hinv". iShift (inv_open with "Hinv") as "[>HP Hclose]"; auto.
   iIntros "!==> {$HP} HP". iApply "Hclose"; auto.
 Qed.
 End inv.

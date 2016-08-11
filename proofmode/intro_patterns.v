@@ -9,11 +9,11 @@ Inductive intro_pat :=
   | IPureElim : intro_pat
   | IAlwaysElim : intro_pat → intro_pat
   | ILaterElim : intro_pat → intro_pat
-  | IVsElim : intro_pat → intro_pat
+  | IShiftElim : intro_pat → intro_pat
   | IPureIntro : intro_pat
   | IAlwaysIntro : intro_pat
   | ILaterIntro : intro_pat
-  | IVsIntro : intro_pat
+  | IShiftIntro : intro_pat
   | ISimpl : intro_pat
   | IForall : intro_pat
   | IAll : intro_pat
@@ -34,11 +34,11 @@ Inductive token :=
   | TPureElim : token
   | TAlwaysElim : token
   | TLaterElim : token
-  | TVsElim : token
+  | TShiftElim : token
   | TPureIntro : token
   | TAlwaysIntro : token
   | TLaterIntro : token
-  | TVsIntro : token
+  | TShiftIntro : token
   | TSimpl : token
   | TForall : token
   | TAll : token
@@ -64,12 +64,12 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String "#" s => tokenize_go s (TAlwaysElim :: cons_name kn k) ""
   | String ">" s => tokenize_go s (TLaterElim :: cons_name kn k) ""
   | String "=" (String "=" (String ">" s)) =>
-     tokenize_go s (TVsElim :: cons_name kn k) ""
+     tokenize_go s (TShiftElim :: cons_name kn k) ""
   | String "!" (String "%" s) => tokenize_go s (TPureIntro :: cons_name kn k) ""
   | String "!" (String "#" s) => tokenize_go s (TAlwaysIntro :: cons_name kn k) ""
   | String "!" (String ">" s) => tokenize_go s (TLaterIntro :: cons_name kn k) ""
   | String "!" (String "=" (String "=" (String ">" s))) =>
-     tokenize_go s (TVsIntro :: cons_name kn k) ""
+     tokenize_go s (TShiftIntro :: cons_name kn k) ""
   | String "{" s => tokenize_go s (TClearL :: cons_name kn k) ""
   | String "}" s => tokenize_go s (TClearR :: cons_name kn k) ""
   | String "/" (String "=" s) => tokenize_go s (TSimpl :: cons_name kn k) ""
@@ -87,7 +87,7 @@ Inductive stack_item :=
   | SAmp : stack_item
   | SAlwaysElim : stack_item
   | SLaterElim : stack_item
-  | SVsElim : stack_item.
+  | SShiftElim : stack_item.
 Notation stack := (list stack_item).
 
 Fixpoint close_list (k : stack)
@@ -99,7 +99,8 @@ Fixpoint close_list (k : stack)
      '(p,ps) ← maybe2 (::) ps; close_list k (IAlwaysElim p :: ps) pss
   | SLaterElim :: k =>
      '(p,ps) ← maybe2 (::) ps; close_list k (ILaterElim p :: ps) pss
-  | SVsElim :: k => '(p,ps) ← maybe2 (::) ps; close_list k (IVsElim p :: ps) pss
+  | SShiftElim :: k =>
+     '(p,ps) ← maybe2 (::) ps; close_list k (IShiftElim p :: ps) pss
   | SBar :: k => close_list k [] (ps :: pss)
   | _ => None
   end.
@@ -123,7 +124,7 @@ Fixpoint close_conj_list (k : stack)
   | SPat pat :: k => guard (cur = None); close_conj_list k (Some pat) ps
   | SAlwaysElim :: k => p ← cur; close_conj_list k (Some (IAlwaysElim p)) ps
   | SLaterElim :: k => p ← cur; close_conj_list k (Some (ILaterElim p)) ps
-  | SVsElim :: k => p ← cur; close_conj_list k (Some (IVsElim p)) ps
+  | SShiftElim :: k => p ← cur; close_conj_list k (Some (IShiftElim p)) ps
   | SAmp :: k => p ← cur; close_conj_list k None (p :: ps)
   | _ => None
   end.
@@ -144,11 +145,11 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   | TPureElim :: ts => parse_go ts (SPat IPureElim :: k)
   | TAlwaysElim :: ts => parse_go ts (SAlwaysElim :: k)
   | TLaterElim :: ts => parse_go ts (SLaterElim :: k)
-  | TVsElim :: ts => parse_go ts (SVsElim :: k)
+  | TShiftElim :: ts => parse_go ts (SShiftElim :: k)
   | TPureIntro :: ts => parse_go ts (SPat IPureIntro :: k)
   | TAlwaysIntro :: ts => parse_go ts (SPat IAlwaysIntro :: k)
   | TLaterIntro :: ts => parse_go ts (SPat ILaterIntro :: k)
-  | TVsIntro :: ts => parse_go ts (SPat IVsIntro :: k)
+  | TShiftIntro :: ts => parse_go ts (SPat IShiftIntro :: k)
   | TSimpl :: ts => parse_go ts (SPat ISimpl :: k)
   | TAll :: ts => parse_go ts (SPat IAll :: k)
   | TForall :: ts => parse_go ts (SPat IForall :: k)

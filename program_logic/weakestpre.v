@@ -99,19 +99,19 @@ Proof.
     iApply ("HΦ" with "==>[-]"). by iApply (pvs_mask_mono E1 _). }
   iSplit; [done|]; iIntros (σ1) "Hσ".
   iApply (pvs_trans _ E1); iApply pvs_intro'; auto. iIntros "Hclose".
-  iVs ("H" $! σ1 with "Hσ") as "[$ H]".
-  iVsIntro. iNext. iIntros (e2 σ2 efs Hstep).
-  iVs ("H" $! _ σ2 efs with "[#]") as "($ & H & $)"; auto.
-  iVs "Hclose" as "_". by iApply ("IH" with "HΦ").
+  iShift ("H" $! σ1 with "Hσ") as "[$ H]".
+  iShiftIntro. iNext. iIntros (e2 σ2 efs Hstep).
+  iShift ("H" $! _ σ2 efs with "[#]") as "($ & H & $)"; auto.
+  iShift "Hclose" as "_". by iApply ("IH" with "HΦ").
 Qed.
 
 Lemma pvs_wp E e Φ : (|={E}=> WP e @ E {{ Φ }}) ⊢ WP e @ E {{ Φ }}.
 Proof.
   rewrite wp_unfold /wp_pre. iIntros "H". destruct (to_val e) as [v|] eqn:?.
   { iLeft. iExists v; iSplit; first done.
-    by iVs "H" as "[H|[% ?]]"; [iDestruct "H" as (v') "[% ?]"|]; simplify_eq. }
+    by iShift "H" as "[H|[% ?]]"; [iDestruct "H" as (v') "[% ?]"|]; simplify_eq. }
   iRight; iSplit; [done|]; iIntros (σ1) "Hσ1".
-  iVs "H" as "[H|[% H]]"; last by iApply "H".
+  iShift "H" as "[H|[% H]]"; last by iApply "H".
   iDestruct "H" as (v') "[% ?]"; simplify_eq.
 Qed.
 Lemma wp_pvs E e Φ : WP e @ E {{ v, |={E}=> Φ v }} ⊢ WP e @ E {{ Φ }}.
@@ -123,15 +123,15 @@ Lemma wp_atomic E1 E2 e Φ :
 Proof.
   iIntros (Hatomic) "H". destruct (to_val e) as [v|] eqn:He.
   { apply of_to_val in He as <-. iApply wp_pvs. iApply wp_value'.
-    iVs "H". by iVs (wp_value_inv with "H"). }
+    iShift "H". by iShift (wp_value_inv with "H"). }
   setoid_rewrite wp_unfold; rewrite /wp_pre. iRight; iSplit; auto.
-  iIntros (σ1) "Hσ". iVs "H" as "[H|[_ H]]".
+  iIntros (σ1) "Hσ". iShift "H" as "[H|[_ H]]".
   { iDestruct "H" as (v') "[% ?]"; simplify_eq. }
-  iVs ("H" $! σ1 with "Hσ") as "[$ H]".
-  iVsIntro. iNext. iIntros (e2 σ2 efs Hstep).
+  iShift ("H" $! σ1 with "Hσ") as "[$ H]".
+  iShiftIntro. iNext. iIntros (e2 σ2 efs Hstep).
   destruct (Hatomic _ _ _ _ Hstep) as [v <-%of_to_val].
-  iVs ("H" $! _ σ2 efs with "[#]") as "($ & H & $)"; auto.
-  iVs (wp_value_inv with "H") as "==> H". by iApply wp_value'.
+  iShift ("H" $! _ σ2 efs with "[#]") as "($ & H & $)"; auto.
+  iShift (wp_value_inv with "H") as "==> H". by iApply wp_value'.
 Qed.
 
 Lemma wp_frame_step_l E1 E2 e Φ R :
@@ -141,10 +141,10 @@ Proof.
   rewrite !wp_unfold /wp_pre. iIntros (??) "[HR [Hv|[_ H]]]".
   { iDestruct "Hv" as (v) "[% Hv]"; simplify_eq. }
   iRight; iSplit; [done|]. iIntros (σ1) "Hσ".
-  iVs "HR". iVs ("H" $! _ with "Hσ") as "[$ H]".
-  iVsIntro; iNext; iIntros (e2 σ2 efs Hstep).
-  iVs ("H" $! e2 σ2 efs with "[%]") as "($ & H & $)"; auto.
-  iVs "HR". iVsIntro. iApply (wp_strong_mono E2 _ _ Φ); try iFrame; eauto.
+  iShift "HR". iShift ("H" $! _ with "Hσ") as "[$ H]".
+  iShiftIntro; iNext; iIntros (e2 σ2 efs Hstep).
+  iShift ("H" $! e2 σ2 efs with "[%]") as "($ & H & $)"; auto.
+  iShift "HR". iShiftIntro. iApply (wp_strong_mono E2 _ _ Φ); try iFrame; eauto.
 Qed.
 
 Lemma wp_bind `{LanguageCtx Λ K} E e Φ :
@@ -155,12 +155,12 @@ Proof.
   { iDestruct "Hv" as (v) "[Hev Hv]"; iDestruct "Hev" as % <-%of_to_val.
     by iApply pvs_wp. }
   rewrite wp_unfold /wp_pre. iRight; iSplit; eauto using fill_not_val.
-  iIntros (σ1) "Hσ". iVs ("H" $! _ with "Hσ") as "[% H]".
-  iVsIntro; iSplit.
+  iIntros (σ1) "Hσ". iShift ("H" $! _ with "Hσ") as "[% H]".
+  iShiftIntro; iSplit.
   { iPureIntro. unfold reducible in *. naive_solver eauto using fill_step. }
   iNext; iIntros (e2 σ2 efs Hstep).
   destruct (fill_step_inv e σ1 e2 σ2 efs) as (e2'&->&?); auto.
-  iVs ("H" $! e2' σ2 efs with "[%]") as "($ & H & $)"; auto.
+  iShift ("H" $! e2' σ2 efs with "[%]") as "($ & H & $)"; auto.
   by iApply "IH".
 Qed.
 

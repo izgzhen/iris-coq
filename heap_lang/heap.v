@@ -140,12 +140,12 @@ Section heap.
     heap_ctx ★ ▷ (∀ l, l ↦ v ={E}=★ Φ (LitV (LitLoc l))) ⊢ WP Alloc e @ E {{ Φ }}.
   Proof.
     iIntros (<-%of_to_val ?) "[#Hinv HΦ]". rewrite /heap_ctx.
-    iVs (auth_empty heap_name) as "Hh".
-    iVs (auth_open with "[Hh]") as (h) "[Hv [Hh Hclose]]"; eauto.
+    iShift (auth_empty heap_name) as "Hh".
+    iShift (auth_open with "[Hh]") as (h) "[Hv [Hh Hclose]]"; eauto.
     rewrite left_id /heap_inv. iDestruct "Hv" as %?.
     iApply wp_alloc_pst. iFrame "Hh". iNext.
     iIntros (l) "[% Hh] !==>".
-    iVs ("Hclose" $! {[ l := (1%Qp, DecAgree v) ]} with "[Hh]").
+    iShift ("Hclose" $! {[ l := (1%Qp, DecAgree v) ]} with "[Hh]").
     { rewrite -of_heap_insert -(insert_singleton_op h); last by apply of_heap_None.
       iFrame "Hh". iPureIntro.
       by apply alloc_unit_singleton_local_update; first apply of_heap_None. }
@@ -159,11 +159,11 @@ Section heap.
   Proof.
     iIntros (?) "[#Hinv [Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
-    iVs (auth_open with "[Hl]") as (h) "[% [Hl Hclose]]"; eauto.
+    iShift (auth_open with "[Hl]") as (h) "[% [Hl Hclose]]"; eauto.
     rewrite /heap_inv.
     iApply (wp_load_pst _ (<[l:=v]>(of_heap h)));first by rewrite lookup_insert.
     rewrite of_heap_singleton_op //. iFrame "Hl".
-    iIntros "!> Hown !==>". iVs ("Hclose" with "* [Hown]").
+    iIntros "!> Hown !==>". iShift ("Hclose" with "* [Hown]").
     { iSplit; first done. rewrite of_heap_singleton_op //. by iFrame. }
     by iApply "HΦ".
   Qed.
@@ -175,12 +175,12 @@ Section heap.
   Proof.
     iIntros (<-%of_to_val ?) "[#Hinv [Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
-    iVs (auth_open with "[Hl]") as (h) "[% [Hl Hclose]]"; eauto.
+    iShift (auth_open with "[Hl]") as (h) "[% [Hl Hclose]]"; eauto.
     rewrite /heap_inv.
     iApply (wp_store_pst _ (<[l:=v']>(of_heap h))); rewrite ?lookup_insert //.
     rewrite insert_insert !of_heap_singleton_op; eauto. iFrame "Hl".
     iIntros "!> Hl !==>".
-    iVs ("Hclose" $! {[l := (1%Qp, DecAgree v)]} with "[Hl]").
+    iShift ("Hclose" $! {[l := (1%Qp, DecAgree v)]} with "[Hl]").
     { iSplit.
       - iPureIntro; by apply singleton_local_update, exclusive_local_update.
       - rewrite of_heap_singleton_op //; eauto. }
@@ -194,11 +194,11 @@ Section heap.
   Proof.
     iIntros (<-%of_to_val <-%of_to_val ??) "[#Hh [Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
-    iVs (auth_open with "[Hl]") as (h) "[% [Hl Hclose]]"; eauto.
+    iShift (auth_open with "[Hl]") as (h) "[% [Hl Hclose]]"; eauto.
     rewrite /heap_inv.
     iApply (wp_cas_fail_pst _ (<[l:=v']>(of_heap h))); rewrite ?lookup_insert //.
     rewrite of_heap_singleton_op //. iFrame "Hl".
-    iIntros "!> Hown !==>". iVs ("Hclose" with "* [Hown]").
+    iIntros "!> Hown !==>". iShift ("Hclose" with "* [Hown]").
     { iSplit; first done. rewrite of_heap_singleton_op //. by iFrame. }
     by iApply "HΦ".
   Qed.
@@ -210,12 +210,12 @@ Section heap.
   Proof.
     iIntros (<-%of_to_val <-%of_to_val ?) "[#Hh [Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
-    iVs (auth_open with "[Hl]") as (h) "[% [Hl Hclose]]"; eauto.
+    iShift (auth_open with "[Hl]") as (h) "[% [Hl Hclose]]"; eauto.
     rewrite /heap_inv.
     iApply (wp_cas_suc_pst _ (<[l:=v1]>(of_heap h))); rewrite ?lookup_insert //.
     rewrite insert_insert !of_heap_singleton_op; eauto. iFrame "Hl".
     iIntros "!> Hl !==>".
-    iVs ("Hclose" $! {[l := (1%Qp, DecAgree v2)]} with "[Hl]").
+    iShift ("Hclose" $! {[l := (1%Qp, DecAgree v2)]} with "[Hl]").
     { iSplit.
       - iPureIntro; by apply singleton_local_update, exclusive_local_update.
       - rewrite of_heap_singleton_op //; eauto. }

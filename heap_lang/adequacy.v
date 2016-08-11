@@ -10,7 +10,7 @@ Definition heap_adequacy Σ `{irisPreG heap_lang Σ, authG Σ heapUR} e σ φ :
   adequate e σ φ.
 Proof.
   intros Hwp; eapply (wp_adequacy Σ); iIntros (?) "Hσ".
-  iVs (auth_alloc (ownP ∘ of_heap) heapN _ (to_heap σ) with "[Hσ]") as (γ) "[??]".
+  iShift (auth_alloc (ownP ∘ of_heap) heapN _ (to_heap σ) with "[Hσ]") as (γ) "[??]".
   - auto using to_heap_valid.
   - rewrite /= (from_to_heap σ); auto.
   - iApply (Hwp (HeapG _ _ _ γ)). by rewrite /heap_ctx.

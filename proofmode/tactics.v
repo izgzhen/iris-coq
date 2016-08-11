@@ -197,7 +197,8 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
          |solve_to_wand H1
          |match k with
           | GoalStd => apply into_assert_default
-          | GoalVs => apply _ || fail "iSpecialize: cannot generate view shifted goal"
+          | GoalShift =>
+             apply _ || fail "iSpecialize: cannot generate (view) shifted goal"
           end
          |env_cbv; reflexivity || fail "iSpecialize:" Hs "not found"
          |(*goal*)
@@ -508,18 +509,18 @@ Tactic Notation "iTimeless" constr(H) :=
     |env_cbv; reflexivity|].
 
 (** * View shifts *)
-Tactic Notation "iVsIntro" :=
-  eapply tac_vs_intro;
-    [let P := match goal with |- FromVs ?P _ => P end in
-     apply _ || fail "iVsIntro:" P "not a view shift"|].
+Tactic Notation "iShiftIntro" :=
+  eapply tac_shift_intro;
+    [let P := match goal with |- FromShift ?P _ => P end in
+     apply _ || fail "iShiftIntro:" P "not a (view) shift"|].
 
-Tactic Notation "iVsCore" constr(H) :=
-  eapply tac_vs_elim with _ H _ _ _ _;
-    [env_cbv; reflexivity || fail "iVs:" H "not found"
-    |let P := match goal with |- ElimVs ?P _ _ _ => P end in
-     let Q := match goal with |- ElimVs _ _ ?Q _ => Q end in
-     apply _ || fail "iVs: cannot run" P "in" Q
-                     "because the goal or hypothesis is not a view shift"
+Tactic Notation "iShiftCore" constr(H) :=
+  eapply tac_shift_elim with _ H _ _ _ _;
+    [env_cbv; reflexivity || fail "iShift:" H "not found"
+    |let P := match goal with |- ElimShift ?P _ _ _ => P end in
+     let Q := match goal with |- ElimShift _ _ ?Q _ => Q end in
+     apply _ || fail "iShift: cannot run" P "in" Q
+                     "because the goal or hypothesis is not a (view) shift"
     |env_cbv; reflexivity|].
 
 (** * Basic destruct tactic *)
@@ -537,7 +538,7 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
     | IPureElim => iPure Hz as ?
     | IAlwaysElim ?pat => iPersistent Hz; go Hz pat
     | ILaterElim ?pat => iTimeless Hz; go Hz pat
-    | IVsElim ?pat => iVsCore Hz; go Hz pat
+    | IShiftElim ?pat => iShiftCore Hz; go Hz pat
     | _ => fail "iDestruct:" pat "invalid"
     end
   in let pat := intro_pat.parse_one pat in go H pat.
@@ -636,7 +637,7 @@ Tactic Notation "iIntros" constr(pat) :=
     | IPureIntro :: ?pats => iPureIntro; go pats
     | IAlwaysIntro :: ?pats => iAlways; go pats
     | ILaterIntro :: ?pats => iNext; go pats
-    | IVsIntro :: ?pats => iVsIntro; go pats
+    | IShiftIntro :: ?pats => iShiftIntro; go pats
     | ISimpl :: ?pats => simpl; go pats
     | IForall :: ?pats => repeat iIntroForall; go pats
     | IAll :: ?pats => repeat (iIntroForall || iIntro); go pats
@@ -826,7 +827,8 @@ Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as" constr(pat) :=
      eapply tac_assert with _ _ _ lr Hs H Q _; (* (js:=Hs) (j:=H) (P:=Q) *)
        [match k with
         | GoalStd => apply into_assert_default
-        | GoalVs => apply _ || fail "iAssert: cannot generate view shifted goal"
+        | GoalShift =>
+           apply _ || fail "iAssert: cannot generate (view) shifted goal"
         end
        |env_cbv; reflexivity || fail "iAssert:" Hs "not found"
        |env_cbv; reflexivity|
@@ -878,46 +880,46 @@ Ltac iSimplifyEq := repeat (
   || simplify_eq/=).
 
 (** * View shifts *)
-Tactic Notation "iVs" open_constr(lem) :=
-  iDestructCore lem as (fun H => iVsCore H; last iDestruct H as "?").
-Tactic Notation "iVs" open_constr(lem) "as" constr(pat) :=
-  iDestructCore lem as (fun H => iVsCore H; last iDestruct H as pat).
-Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1) ")"
+Tactic Notation "iShift" open_constr(lem) :=
+  iDestructCore lem as (fun H => iShiftCore H; last iDestruct H as "?").
+Tactic Notation "iShift" open_constr(lem) "as" constr(pat) :=
+  iDestructCore lem as (fun H => iShiftCore H; last iDestruct H as pat).
+Tactic Notation "iShift" open_constr(lem) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
-  iDestructCore lem as (fun H => iVsCore H; last iDestruct H as ( x1 ) pat).
-Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as (fun H => iShiftCore H; last iDestruct H as ( x1 ) pat).
+Tactic Notation "iShift" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) ")" constr(pat) :=
-  iDestructCore lem as (fun H => iVsCore H; last iDestruct H as ( x1 x2 ) pat).
-Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as (fun H => iShiftCore H; last iDestruct H as ( x1 x2 ) pat).
+Tactic Notation "iShift" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) ")" constr(pat) :=
-  iDestructCore lem as (fun H => iVsCore H; last iDestruct H as ( x1 x2 x3 ) pat).
-Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as (fun H => iShiftCore H; last iDestruct H as ( x1 x2 x3 ) pat).
+Tactic Notation "iShift" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) :=
   iDestructCore lem as (fun H =>
-    iVsCore H; last iDestruct H as ( x1 x2 x3 x4 ) pat).
-Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+    iShiftCore H; last iDestruct H as ( x1 x2 x3 x4 ) pat).
+Tactic Notation "iShift" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) ")" constr(pat) :=
   iDestructCore lem as (fun H =>
-    iVsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 ) pat).
-Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+    iShiftCore H; last iDestruct H as ( x1 x2 x3 x4 x5 ) pat).
+Tactic Notation "iShift" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) ")" constr(pat) :=
   iDestructCore lem as (fun H =>
-    iVsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 ) pat).
-Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+    iShiftCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 ) pat).
+Tactic Notation "iShift" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) ")"
     constr(pat) :=
   iDestructCore lem as (fun H =>
-    iVsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 x7 ) pat).
-Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
+    iShiftCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 x7 ) pat).
+Tactic Notation "iShift" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
     simple_intropattern(x8) ")" constr(pat) :=
   iDestructCore lem as (fun H =>
-    iVsCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 x7 x8 ) pat).
+    iShiftCore H; last iDestruct H as ( x1 x2 x3 x4 x5 x6 x7 x8 ) pat).
 
 (* Make sure that by and done solve trivial things in proof mode *)
 Hint Extern 0 (of_envs _ ⊢ _) => by iPureIntro.
@@ -934,7 +936,7 @@ Hint Extern 1 (of_envs _ ⊢ _) =>
   | |- _ ⊢ ▷ _ => iNext
   | |- _ ⊢ □ _ => iClear "*"; iAlways
   | |- _ ⊢ ∃ _, _ => iExists _
-  | |- _ ⊢ |=r=> _ => iVsIntro
+  | |- _ ⊢ |=r=> _ => iShiftIntro
   end.
 Hint Extern 1 (of_envs _ ⊢ _) =>
   match goal with |- _ ⊢ (_ ∨ _)%I => iLeft end.

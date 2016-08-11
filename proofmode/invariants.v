@@ -6,7 +6,7 @@ Tactic Notation "iInvCore" constr(N) "as" tactic(tac) constr(Hclose) :=
   let Htmp := iFresh in
   let patback := intro_pat.parse_one Hclose in
   let pat := constr:(IList [[IName Htmp; patback]]) in
-  iVs (inv_open _ N with "[#]") as pat;
+  iShift (inv_open _ N with "[#]") as pat;
     [idtac|iAssumption || fail "iInv: invariant" N "not found"|idtac];
     [solve_ndisj|tac Htmp].
 
