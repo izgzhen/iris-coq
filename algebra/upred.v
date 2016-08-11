@@ -1025,8 +1025,6 @@ Lemma later_or P Q : ▷ (P ∨ Q) ⊣⊢ ▷ P ∨ ▷ Q.
 Proof. unseal; split=> -[|n] x; simpl; tauto. Qed.
 Lemma later_forall {A} (Φ : A → uPred M) : (▷ ∀ a, Φ a) ⊣⊢ (∀ a, ▷ Φ a).
 Proof. unseal; by split=> -[|n] x. Qed.
-Lemma later_exist_1 {A} (Φ : A → uPred M) : (∃ a, ▷ Φ a) ⊢ (▷ ∃ a, Φ a).
-Proof. unseal; by split=> -[|[|n]] x. Qed.
 Lemma later_exist_2 `{Inhabited A} (Φ : A → uPred M) : (▷ ∃ a, Φ a) ⊢ ∃ a, ▷ Φ a.
 Proof. unseal; split=> -[|[|n]] x; done || by exists inhabitant. Qed.
 Lemma later_sep P Q : ▷ (P ★ Q) ⊣⊢ ▷ P ★ ▷ Q.
@@ -1054,11 +1052,13 @@ Lemma later_True : ▷ True ⊣⊢ True.
 Proof. apply (anti_symm (⊢)); auto using later_intro. Qed.
 Lemma later_impl P Q : ▷ (P → Q) ⊢ ▷ P → ▷ Q.
 Proof. apply impl_intro_l; rewrite -later_and; eauto using impl_elim. Qed.
+Lemma later_exist_1 {A} (Φ : A → uPred M) : (∃ a, ▷ Φ a) ⊢ (▷ ∃ a, Φ a).
+Proof. apply exist_elim; eauto using exist_intro. Qed.
 Lemma later_exist `{Inhabited A} (Φ : A → uPred M) :
   ▷ (∃ a, Φ a) ⊣⊢ (∃ a, ▷ Φ a).
 Proof. apply: anti_symm; eauto using later_exist_2, later_exist_1. Qed.
 Lemma later_wand P Q : ▷ (P -★ Q) ⊢ ▷ P -★ ▷ Q.
-Proof. apply wand_intro_r;rewrite -later_sep; eauto using wand_elim_l. Qed.
+Proof. apply wand_intro_r; rewrite -later_sep; eauto using wand_elim_l. Qed.
 Lemma later_iff P Q : ▷ (P ↔ Q) ⊢ ▷ P ↔ ▷ Q.
 Proof. by rewrite /uPred_iff later_and !later_impl. Qed.
 
