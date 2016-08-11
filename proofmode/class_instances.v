@@ -1,5 +1,6 @@
 From iris.proofmode Require Export classes.
-From iris.algebra Require Import upred_big_op gmap.
+From iris.base_logic Require Import big_op.
+From iris.algebra Require Import gmap.
 Import uPred.
 
 Section classes.
@@ -22,9 +23,12 @@ Proof. rewrite /FromAssumption=>->. apply rvs_intro. Qed.
 (* IntoPure *)
 Global Instance into_pure_pure φ : @IntoPure M (■ φ) φ.
 Proof. done. Qed.
-Global Instance into_pure_eq {A : cofeT} (a b : A) :
-  Timeless a → @IntoPure M (a ≡ b) (a ≡ b).
+Global Instance into_pure_equiv {A : cofeT} (a b : A) :
+  Timeless a → @IntoPure M (a ≡ b) (a ≡ b) | 2.
 Proof. intros. by rewrite /IntoPure timeless_eq. Qed.
+Global Instance into_pure_eq {A : cofeT} (a b : A) :
+  Discrete A → LeibnizEquiv A → @IntoPure M (a ≡ b) (a = b) | 1.
+Proof. intros. by rewrite /IntoPure timeless_eq leibniz_equiv_iff. Qed.
 Global Instance into_pure_valid `{CMRADiscrete A} (a : A) : @IntoPure M (✓ a) (✓ a).
 Proof. by rewrite /IntoPure discrete_valid. Qed.
 

@@ -1,7 +1,7 @@
 From iris.heap_lang Require Export lifting.
-From iris.algebra Require Import upred_big_op gmap frac dec_agree.
-From iris.program_logic Require Export invariants ghost_ownership.
-From iris.program_logic Require Import ownership auth.
+From iris.algebra Require Import gmap frac dec_agree.
+From iris.program_logic Require Export invariants.
+From iris.program_logic Require Import wsat auth.
 From iris.proofmode Require Import weakestpre.
 Import uPred.
 (* TODO: The entire construction could be generalized to arbitrary languages that have

@@ -1,6 +1,7 @@
-From iris.program_logic Require Export ghost_ownership language.
+From iris.base_logic Require Export ownership.
+From iris.program_logic Require Export language.
 From iris.prelude Require Export coPset.
-From iris.algebra Require Import gmap auth agree gset coPset upred_big_op.
+From iris.algebra Require Import gmap auth agree gset coPset.
 
 Class irisPreG (Λ : language) (Σ : gFunctors) : Set := IrisPreG {
   state_inG :> inG Σ (authUR (optionUR (exclR (stateC Λ))));

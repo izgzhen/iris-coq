@@ -1,4 +1,4 @@
-From iris.algebra Require Import upred.
+From iris.base_logic Require Import upred.
 From iris.proofmode Require Import tactics.
 
 (** This proves that we need the ▷ in a "Saved Proposition" construction with

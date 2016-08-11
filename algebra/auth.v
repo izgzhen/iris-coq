@@ -1,5 +1,6 @@
 From iris.algebra Require Export excl local_updates.
-From iris.algebra Require Import upred updates.
+From iris.algebra Require Import updates.
+From iris.base_logic Require Import upred.
 Local Arguments valid _ _ !_ /.
 Local Arguments validN _ _ _ !_ /.
 

@@ -1,5 +1,5 @@
 From iris.algebra Require Export cmra updates.
-From iris.algebra Require Import upred.
+From iris.base_logic Require Import upred.
 From iris.prelude Require Import finite.
 
 (** * Indexed product *)

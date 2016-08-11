@@ -1,6 +1,6 @@
 From iris.program_logic Require Export weakestpre.
-From iris.program_logic Require Import ownership.
-From iris.proofmode Require Import pviewshifts.
+From iris.program_logic Require Import wsat.
+From iris.proofmode Require Import tactics pviewshifts.
 
 Section lifting.
 Context `{irisG Λ Σ}.

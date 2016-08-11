@@ -1,6 +1,7 @@
 From iris.algebra Require Export cmra.
 From iris.prelude Require Export list.
-From iris.algebra Require Import upred updates local_updates.
+From iris.algebra Require Import updates local_updates.
+From iris.base_logic Require Import upred.
 
 Section cofe.
 Context {A : cofeT}.

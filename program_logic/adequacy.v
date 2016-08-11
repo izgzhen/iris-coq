@@ -1,6 +1,7 @@
 From iris.program_logic Require Export weakestpre.
-From iris.algebra Require Import gmap auth agree gset coPset upred_big_op.
-From iris.program_logic Require Import ownership.
+From iris.algebra Require Import gmap auth agree gset coPset.
+From iris.base_logic Require Import big_op.
+From iris.program_logic Require Import wsat.
 From iris.proofmode Require Import tactics weakestpre.
 Import uPred.
 

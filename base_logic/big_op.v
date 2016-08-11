@@ -1,4 +1,5 @@
-From iris.algebra Require Export upred list.
+From iris.base_logic Require Export upred.
+From iris.algebra Require Export list.
 From iris.prelude Require Import gmap fin_collections functions.
 Import uPred.
 

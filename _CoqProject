@@ -51,10 +51,6 @@ algebra/agree.v
 algebra/dec_agree.v
 algebra/excl.v
 algebra/iprod.v
-algebra/upred.v
-algebra/upred_tactics.v
-algebra/upred_big_op.v
-algebra/upred_hlist.v
 algebra/frac.v
 algebra/csum.v
 algebra/list.v
@@ -62,11 +58,16 @@ algebra/updates.v
 algebra/local_updates.v
 algebra/gset.v
 algebra/coPset.v
-program_logic/model.v
+base_logic/upred.v
+base_logic/tactics.v
+base_logic/big_op.v
+base_logic/hlist.v
+base_logic/iprop.v
+base_logic/ownership.v
 program_logic/adequacy.v
 program_logic/lifting.v
 program_logic/invariants.v
-program_logic/ownership.v
+program_logic/wsat.v
 program_logic/weakestpre.v
 program_logic/pviewshifts.v
 program_logic/hoare.v
@@ -75,7 +76,6 @@ program_logic/language.v
 program_logic/ectx_language.v
 program_logic/ectxi_language.v
 program_logic/ectx_lifting.v
-program_logic/ghost_ownership.v
 program_logic/saved_prop.v
 program_logic/auth.v
 program_logic/sts.v
@@ -119,6 +119,6 @@ proofmode/tactics.v
 proofmode/notation.v
 proofmode/invariants.v
 proofmode/weakestpre.v
-proofmode/ghost_ownership.v
+proofmode/ownership.v
 proofmode/classes.v
 proofmode/class_instances.v

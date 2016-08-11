@@ -1,8 +1,8 @@
 From iris.program_logic Require Export pviewshifts.
 From iris.program_logic Require Export namespaces.
-From iris.program_logic Require Import ownership.
+From iris.program_logic Require Import wsat.
 From iris.algebra Require Import gmap.
-From iris.proofmode Require Import pviewshifts.
+From iris.proofmode Require Import tactics pviewshifts.
 Import uPred.
 
 (** Derived forms and lemmas about them. *)
@@ -39,7 +39,7 @@ Proof.
     eapply nclose_infinite, (difference_finite_inv _ _), Hfin.
     apply of_gset_finite.
   - by iFrame.
-  - rewrite /uPred_now_True; eauto.
+  - iVsIntro. iApply now_True_intro; eauto.
 Qed.
 
 Lemma inv_open E N P :

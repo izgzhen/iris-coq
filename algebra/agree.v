@@ -1,5 +1,5 @@
 From iris.algebra Require Export cmra.
-From iris.algebra Require Import upred.
+From iris.base_logic Require Import upred.
 Local Hint Extern 10 (_ ≤ _) => omega.
 
 Record agree (A : Type) : Type := Agree {

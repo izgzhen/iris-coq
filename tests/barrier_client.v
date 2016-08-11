@@ -2,7 +2,6 @@ From iris.program_logic Require Export weakestpre.
 From iris.heap_lang Require Export lang.
 From iris.heap_lang.lib.barrier Require Import proof.
 From iris.heap_lang Require Import par.
-From iris.program_logic Require Import auth sts saved_prop hoare ownership.
 From iris.heap_lang Require Import adequacy proofmode.
 
 Definition worker (n : Z) : val :=
@@ -58,15 +57,13 @@ Qed.
 End client.
 
 Section ClosedProofs.
+  Let Σ : gFunctors := #[ heapΣ ; barrierΣ ; spawnΣ ].
 
-Definition Σ : gFunctors := #[ heapΣ ; barrierΣ ; spawnΣ ].
+  Lemma client_adequate σ : adequate client σ (λ _, True).
+  Proof.
+    apply (heap_adequacy Σ)=> ?.
+    apply (client_safe (nroot .@ "barrier")); auto with ndisj.
+  Qed.
 
-Lemma client_adequate σ : adequate client σ (λ _, True).
-Proof.
-  apply (heap_adequacy Σ)=> ?.
-  apply (client_safe (nroot .@ "barrier")); auto with ndisj.
-Qed.
-
-Print Assumptions client_adequate.
-
+  Print Assumptions client_adequate.
 End ClosedProofs.

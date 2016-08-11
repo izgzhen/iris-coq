@@ -111,7 +111,7 @@ Section sts.
       ■ sts.frame_steps T s0 s ★ ▷ φ s ★ ∀ s' T',
       ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ={E}=★ ▷ sts_inv γ φ ★ sts_own γ s' T'.
   Proof. by apply sts_accS. Qed.
-    
+
   Lemma sts_openS E N γ S T :
     nclose N ⊆ E →
     sts_ctx γ N φ ★ sts_ownS γ S T ={E,E∖N}=> ∃ s,
@@ -127,8 +127,7 @@ Section sts.
        around accessors". *)
     iVs (sts_accS with "[Hinv Hγf]") as (s) "(?&?& HclSts)"; first by iFrame.
     iVsIntro. iExists s. iFrame. iIntros (s' T') "H".
-    iVs ("HclSts" $! s' T' with "H") as "(Hinv & ?)". iFrame.
-    iVs ("Hclose" with "Hinv"). done.
+    iVs ("HclSts" $! s' T' with "H") as "[Hinv $]". by iApply "Hclose".
   Qed.
 
   Lemma sts_open E N γ s0 T :

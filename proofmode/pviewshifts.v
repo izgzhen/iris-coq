@@ -1,5 +1,5 @@
 From iris.proofmode Require Import coq_tactics.
-From iris.proofmode Require Export tactics ghost_ownership.
+From iris.proofmode Require Export tactics ownership.
 From iris.program_logic Require Export pviewshifts.
 Import uPred.
 

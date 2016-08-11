@@ -1,6 +1,6 @@
 From iris.prelude Require Import gmap.
-From iris.algebra Require Export upred.
-From iris.algebra Require Export upred_big_op.
+From iris.base_logic Require Export upred.
+From iris.base_logic Require Export big_op.
 Import uPred.
 
 Module uPred_reflection. Section uPred_reflection.

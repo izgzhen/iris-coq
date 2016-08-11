@@ -1,4 +1,4 @@
-From iris.program_logic Require Export model.
+From iris.base_logic Require Export iprop.
 From iris.algebra Require Import iprod gmap.
 Import uPred.
 

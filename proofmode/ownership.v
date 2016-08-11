@@ -1,6 +1,5 @@
-From iris.proofmode Require Import coq_tactics.
-From iris.proofmode Require Export tactics.
-From iris.program_logic Require Export ghost_ownership.
+From iris.proofmode Require Export classes.
+From iris.base_logic Require Export ownership.
 
 Section ghost.
 Context `{inG Σ A}.

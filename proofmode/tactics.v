@@ -1,5 +1,5 @@
 From iris.proofmode Require Import coq_tactics intro_patterns spec_patterns.
-From iris.algebra Require Export upred.
+From iris.base_logic Require Export upred.
 From iris.proofmode Require Export classes notation.
 From iris.proofmode Require Import class_instances.
 From iris.prelude Require Import stringmap hlist.
