@@ -1213,8 +1213,7 @@ Lemma prod_validI {A B : cmraT} (x : A * B) : ✓ x ⊣⊢ ✓ x.1 ∧ ✓ x.2.
 Proof. by unseal. Qed.
 
 (* Later *)
-Lemma later_equivI {A : cofeT} (x y : later A) :
-  x ≡ y ⊣⊢ ▷ (later_car x ≡ later_car y).
+Lemma later_equivI {A : cofeT} (x y : A) : Next x ≡ Next y ⊣⊢ ▷ (x ≡ y).
 Proof. by unseal. Qed.
 
 (* Discrete *)

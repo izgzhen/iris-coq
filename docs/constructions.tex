@@ -91,7 +91,7 @@ Crucially, the second rule allows us to \emph{swap} the ``side'' of the sum that
 \subsection{Finite partial function}
 \label{sec:fpfnm}
 
-Given some countable $K$ and some CMRA $\monoid$, the set of finite partial functions $K \fpfn \monoid$ is equipped with a COFE and CMRA structure by lifting everything pointwise.
+Given some infinite countable $K$ and some CMRA $\monoid$, the set of finite partial functions $K \fpfn \monoid$ is equipped with a COFE and CMRA structure by lifting everything pointwise.
 
 We obtain the following frame-preserving updates:
 \begin{mathpar}
@@ -149,7 +149,7 @@ There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can 
 
 \subsection{Exclusive CMRA}
 
-Given a cofe $\cofe$, we define a CMRA $\exm(\cofe)$ such that at most one $x \in \cofe$ can be owned:
+Given a COFE $\cofe$, we define a CMRA $\exm(\cofe)$ such that at most one $x \in \cofe$ can be owned:
 \begin{align*}
   \exm(\cofe) \eqdef{}& \exinj(\cofe) + \bot \\
   \mval_n \eqdef{}& \setComp{\melt\in\exm(\cofe)}{\melt \neq \bot}
@@ -375,7 +375,7 @@ We obtain the following frame-preserving update:
 \subsection{STS with tokens}
 \label{sec:stsmon}
 
-Given a state-transition system~(STS, \ie a directed graph) $(\STSS, {\stsstep} \subseteq \STSS \times \STSS)$, a set of tokens $\STST$, and a labeling $\STSL: \STSS \ra \wp(\STST)$ of \emph{protocol-owned} tokens for each state, we construct a monoid modeling an authoritative current state and permitting transitions given a \emph{bound} on the current state and a set of \emph{locally-owned} tokens.
+Given a state-transition system~(STS, \ie a directed graph) $(\STSS, {\stsstep} \subseteq \STSS \times \STSS)$, a set of tokens $\STST$, and a labeling $\STSL: \STSS \ra \wp(\STST)$ of \emph{protocol-owned} tokens for each state, we construct an RA modeling an authoritative current state and permitting transitions given a \emph{bound} on the current state and a set of \emph{locally-owned} tokens.
 
 The construction follows the idea of STSs as described in CaReSL \cite{caresl}.
 We first lift the transition relation to $\STSS \times \wp(\STST)$ (implementing a \emph{law of token conservation}) and define a stepping relation for the \emph{frame} of a given token set:
