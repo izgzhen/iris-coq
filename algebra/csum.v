@@ -209,15 +209,13 @@ Proof.
       exists (Cinr cb'). rewrite csum_included; eauto 10.
   - intros n [a1|b1|] [a2|b2|]; simpl; eauto using cmra_validN_op_l; done.
   - intros n [a|b|] y1 y2 Hx Hx'.
-    + destruct y1 as [a1|b1|], y2 as [a2|b2|]; try (exfalso; by inversion_clear Hx').
-      apply (inj Cinl) in Hx'.
-      destruct (cmra_extend n a a1 a2) as ([z1 z2]&?&?&?); auto.
-      exists (Cinl z1, Cinl z2). by repeat constructor.
-    + destruct y1 as [a1|b1|], y2 as [a2|b2|]; try (exfalso; by inversion_clear Hx').
-      apply (inj Cinr) in Hx'.
-      destruct (cmra_extend n b b1 b2) as ([z1 z2]&?&?&?); auto.
-      exists (Cinr z1, Cinr z2). by repeat constructor.
-    + by exists (CsumBot, CsumBot); destruct y1, y2; inversion_clear Hx'.
+    + destruct y1 as [a1|b1|], y2 as [a2|b2|]; inversion_clear Hx'.
+      destruct (cmra_extend n a a1 a2) as (z1&z2&?&?&?); auto.
+      exists (Cinl z1), (Cinl z2). by repeat constructor.
+    + destruct y1 as [a1|b1|], y2 as [a2|b2|]; inversion_clear Hx'.
+      destruct (cmra_extend n b b1 b2) as (z1&z2&?&?&?); auto.
+      exists (Cinr z1), (Cinr z2). by repeat constructor.
+    + by exists CsumBot, CsumBot; destruct y1, y2; inversion_clear Hx'.
 Qed.
 Canonical Structure csumR :=
   CMRAT (csum A B) csum_cofe_mixin csum_cmra_mixin.

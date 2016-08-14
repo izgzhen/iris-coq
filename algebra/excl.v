@@ -88,11 +88,7 @@ Proof.
   - by intros [?|] [?|] [?|]; constructor.
   - by intros [?|] [?|]; constructor.
   - by intros n [?|] [?|].
-  - intros n x y1 y2 ? Hx.
-    by exists match y1, y2 with
-      | Excl a1, Excl a2 => (Excl a1, Excl a2)
-      | ExclBot, _ => (ExclBot, y2) | _, ExclBot => (y1, ExclBot)
-      end; destruct y1, y2; inversion_clear Hx; repeat constructor.
+  - intros n x [?|] [?|] ?; inversion_clear 1; eauto.
 Qed.
 Canonical Structure exclR :=
   CMRAT (excl A) excl_cofe_mixin excl_cmra_mixin.

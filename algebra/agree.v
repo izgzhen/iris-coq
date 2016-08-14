@@ -108,7 +108,7 @@ Proof.
     symmetry; apply dist_le with n; try apply Hx; auto.
   - intros x. apply agree_idemp.
   - by intros n x y [(?&?&?) ?].
-  - intros n x y1 y2 Hval Hx; exists (x,x); simpl; split.
+  - intros n x y1 y2 Hval Hx; exists x, x; simpl; split.
     + by rewrite agree_idemp.
     + by move: Hval; rewrite Hx; move=> /agree_op_inv->; rewrite agree_idemp.
 Qed.
