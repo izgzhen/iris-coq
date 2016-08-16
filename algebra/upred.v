@@ -1035,7 +1035,7 @@ Proof.
   - destruct n as [|n]; simpl.
     { by exists x, (core x); rewrite cmra_core_r. }
     intros (x1&x2&Hx&?&?); destruct (cmra_extend n x x1 x2)
-      as ([y1 y2]&Hx'&Hy1&Hy2); eauto using cmra_validN_S; simpl in *.
+      as (y1&y2&Hx'&Hy1&Hy2); eauto using cmra_validN_S; simpl in *.
     exists y1, y2; split; [by rewrite Hx'|by rewrite Hy1 Hy2].
   - destruct n as [|n]; simpl; [done|intros (x1&x2&Hx&?&?)].
     exists x1, x2; eauto using dist_S.
@@ -1213,8 +1213,7 @@ Lemma prod_validI {A B : cmraT} (x : A * B) : ✓ x ⊣⊢ ✓ x.1 ∧ ✓ x.2.
 Proof. by unseal. Qed.
 
 (* Later *)
-Lemma later_equivI {A : cofeT} (x y : later A) :
-  x ≡ y ⊣⊢ ▷ (later_car x ≡ later_car y).
+Lemma later_equivI {A : cofeT} (x y : A) : Next x ≡ Next y ⊣⊢ ▷ (x ≡ y).
 Proof. by unseal. Qed.
 
 (* Discrete *)

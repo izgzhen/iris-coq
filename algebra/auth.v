@@ -134,10 +134,10 @@ Proof.
      naive_solver eauto using cmra_validN_op_l, cmra_validN_includedN.
   - intros n x y1 y2 ? [??]; simpl in *.
     destruct (cmra_extend n (authoritative x) (authoritative y1)
-      (authoritative y2)) as (ea&?&?&?); auto using authoritative_validN.
+      (authoritative y2)) as (ea1&ea2&?&?&?); auto using authoritative_validN.
     destruct (cmra_extend n (auth_own x) (auth_own y1) (auth_own y2))
-      as (b&?&?&?); auto using auth_own_validN.
-    by exists (Auth (ea.1) (b.1), Auth (ea.2) (b.2)).
+      as (b1&b2&?&?&?); auto using auth_own_validN.
+    by exists (Auth ea1 b1), (Auth ea2 b2).
 Qed.
 Canonical Structure authR := CMRAT (auth A) auth_cofe_mixin auth_cmra_mixin.
 

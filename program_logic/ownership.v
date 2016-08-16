@@ -126,7 +126,7 @@ Proof.
     iRewrite "HI" in "HvI". rewrite uPred.option_validI agree_validI.
     iRewrite -"HvI" in "HI". by rewrite agree_idemp. }
   rewrite /invariant_unfold.
-  by rewrite agree_equivI uPred.later_equivI /= iProp_unfold_equivI.
+  by rewrite agree_equivI uPred.later_equivI iProp_unfold_equivI.
 Qed.
 
 Lemma ownI_open i P : wsat ★ ownI i P ★ ownE {[i]} ⊢ wsat ★ ▷ P ★ ownD {[i]}.

@@ -53,7 +53,7 @@ Record CMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A} := {
   mixin_cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
   mixin_cmra_extend n x y1 y2 :
     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
-    { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ≡{n}≡ y1 ∧ z.2 ≡{n}≡ y2 }
+    ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2
 }.
 
 (** Bundeled version *)
@@ -120,7 +120,7 @@ Section cmra_mixin.
   Proof. apply (mixin_cmra_validN_op_l _ (cmra_mixin A)). Qed.
   Lemma cmra_extend n x y1 y2 :
     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
-    { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ≡{n}≡ y1 ∧ z.2 ≡{n}≡ y2 }.
+    ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2.
   Proof. apply (mixin_cmra_extend _ (cmra_mixin A)). Qed.
 End cmra_mixin.
 
@@ -472,7 +472,7 @@ End total_core.
 Lemma cmra_timeless_included_l x y : Timeless x → ✓{0} y → x ≼{0} y → x ≼ y.
 Proof.
   intros ?? [x' ?].
-  destruct (cmra_extend 0 y x x') as ([z z']&Hy&Hz&Hz'); auto; simpl in *.
+  destruct (cmra_extend 0 y x x') as (z&z'&Hy&Hz&Hz'); auto; simpl in *.
   by exists z'; rewrite Hy (timeless x z).
 Qed.
 Lemma cmra_timeless_included_r n x y : Timeless y → x ≼{0} y → x ≼{n} y.
@@ -481,7 +481,7 @@ Lemma cmra_op_timeless x1 x2 :
   ✓ (x1 ⋅ x2) → Timeless x1 → Timeless x2 → Timeless (x1 ⋅ x2).
 Proof.
   intros ??? z Hz.
-  destruct (cmra_extend 0 z x1 x2) as ([y1 y2]&Hz'&?&?); auto; simpl in *.
+  destruct (cmra_extend 0 z x1 x2) as (y1&y2&Hz'&?&?); auto; simpl in *.
   { rewrite -?Hz. by apply cmra_valid_validN. }
   by rewrite Hz' (timeless x1 y1) // (timeless x2 y2).
 Qed.
@@ -540,7 +540,7 @@ Section cmra_total.
   Context (validN_op_l : ∀ n (x y : A), ✓{n} (x ⋅ y) → ✓{n} x).
   Context (extend : ∀ n (x y1 y2 : A),
     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
-    { z | x ≡ z.1 ⋅ z.2 ∧ z.1 ≡{n}≡ y1 ∧ z.2 ≡{n}≡ y2 }).
+    ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2).
   Lemma cmra_total_mixin : CMRAMixin A.
   Proof.
     split; auto.
@@ -690,7 +690,7 @@ Section discrete.
   Proof.
     destruct ra_mix; split; try done.
     - intros x; split; first done. by move=> /(_ 0).
-    - intros n x y1 y2 ??; by exists (y1,y2).
+    - intros n x y1 y2 ??; by exists y1, y2.
   Qed.
 End discrete.
 
@@ -881,9 +881,9 @@ Section prod.
       exists (z1,z2). by rewrite prod_included prod_pcore_Some.
     - intros n x y [??]; split; simpl in *; eauto using cmra_validN_op_l.
     - intros n x y1 y2 [??] [??]; simpl in *.
-      destruct (cmra_extend n (x.1) (y1.1) (y2.1)) as (z1&?&?&?); auto.
-      destruct (cmra_extend n (x.2) (y1.2) (y2.2)) as (z2&?&?&?); auto.
-      by exists ((z1.1,z2.1),(z1.2,z2.2)).
+      destruct (cmra_extend n (x.1) (y1.1) (y2.1)) as (z11&z12&?&?&?); auto.
+      destruct (cmra_extend n (x.2) (y1.2) (y2.2)) as (z21&z22&?&?&?); auto.
+      by exists (z11,z21), (z12,z22).
   Qed.
   Canonical Structure prodR :=
     CMRAT (A * B) prod_cofe_mixin prod_cmra_mixin.
@@ -1048,13 +1048,12 @@ Section option.
         eauto using cmra_validN_op_l.
     - intros n mx my1 my2.
       destruct mx as [x|], my1 as [y1|], my2 as [y2|]; intros Hx Hx';
-        try (by exfalso; inversion Hx'; auto).
-      + destruct (cmra_extend n x y1 y2) as ([z1 z2]&?&?&?); auto.
-        { by inversion_clear Hx'. }
-        by exists (Some z1, Some z2); repeat constructor.
-      + by exists (Some x,None); inversion Hx'; repeat constructor.
-      + by exists (None,Some x); inversion Hx'; repeat constructor.
-      + exists (None,None); repeat constructor.
+        inversion_clear Hx'; auto.
+      + destruct (cmra_extend n x y1 y2) as (z1&z2&?&?&?); auto.
+        by exists (Some z1), (Some z2); repeat constructor.
+      + by exists (Some x), None; repeat constructor.
+      + by exists None, (Some x); repeat constructor.
+      + exists None, None; repeat constructor.
   Qed.
   Canonical Structure optionR :=
     CMRAT (option A) option_cofe_mixin option_cmra_mixin.
