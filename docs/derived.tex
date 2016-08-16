@@ -273,7 +273,7 @@ From~\ruleref{pvs-update}, \ruleref{vs-update} and the frame-preserving updates 
 
 \subsection{Invariant identifier namespaces}
 
-Let $\namesp \ni \textlog{InvNamesp} \eqdef \textlog{list}(\textlog{InvName})$ be the type of \emph{namespaces} for invariant names.
+Let $\namesp \in \textlog{InvNamesp} \eqdef \textlog{list}(\textlog{InvName})$ be the type of \emph{namespaces} for invariant names.
 Notice that there is an injection $\textlog{namesp\_inj}: \textlog{InvNamesp} \ra \textlog{InvName}$.
 Whenever needed (in particular, for masks at view shifts and Hoare triples), we coerce $\namesp$ to its suffix-closure: \[\namecl\namesp \eqdef \setComp{\iname}{\Exists \namesp'. \iname = \textlog{namesp\_inj}(\namesp' \dplus \namesp)}\]
 We use the notation $\namesp.\iname$ for the namespace $[\iname] \dplus \namesp$.
