@@ -32,7 +32,8 @@ Lemma pretty_N_go_step x s :
   = pretty_N_go (x `div` 10) (String (pretty_N_char (x `mod` 10)) s).
 Proof.
   unfold pretty_N_go; intros; destruct (wf_guard 32 N.lt_wf_0 x).
-  unfold pretty_N_go_help; fold pretty_N_go_help.
+  destruct wf_guard. (* this makes coqchk happy. *)
+  unfold pretty_N_go_help at 1; fold pretty_N_go_help.
   by destruct (decide (0 < x)%N); auto using pretty_N_go_help_irrel.
 Qed.
 Instance pretty_N : Pretty N := λ x, pretty_N_go x ""%string.
