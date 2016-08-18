@@ -80,7 +80,7 @@ Section proofs.
     iIntros (??) "#Htlinv Htoks".
     iDestruct "Htlinv" as (i) "[% #Hinv]".
     rewrite {1 4}(union_difference_L (nclose N) E) //.
-    rewrite {1 5}(union_difference_L {[i]} (nclose N)) ?tl_tokens_union; try set_solver.    
+    rewrite {1 5}(union_difference_L {[i]} (nclose N)) ?tl_tokens_union; try set_solver.
     iDestruct "Htoks" as "[[Htoki Htoks0] Htoks1]". iFrame "Htoks0 Htoks1".
     iInv tlN as "[[HP >Hdis]|>Htoki2]" "Hclose".
     - iVs ("Hclose" with "[Htoki]") as "_". auto. iFrame.
