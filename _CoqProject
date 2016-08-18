@@ -83,6 +83,7 @@ program_logic/namespaces.v
 program_logic/boxes.v
 program_logic/counter_examples.v
 program_logic/iris.v
+program_logic/thread_local.v
 heap_lang/lang.v
 heap_lang/tactics.v
 heap_lang/wp_tactics.v
