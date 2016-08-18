@@ -386,7 +386,7 @@ We first lift the transition relation to $\STSS \times \wp(\STST)$ (implementing
 
 We further define \emph{closed} sets of states (given a particular set of tokens) as well as the \emph{closure} of a set:
 \begin{align*}
-\STSclsd(S, T) \eqdef{}& \All s \in S. \STSL(s) \disj T \land \All s'. s \stsfstep{T} s' \Ra s' \in S \\
+\STSclsd(S, T) \eqdef{}& \All s \in S. \STSL(s) \disj T \land \left(\All s'. s \stsfstep{T} s' \Ra s' \in S\right) \\
 \upclose(S, T) \eqdef{}& \setComp{ s' \in \STSS}{\Exists s \in S. s \stsftrans{T} s' }
 \end{align*}
 
