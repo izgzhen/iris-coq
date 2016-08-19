@@ -407,6 +407,13 @@ Tactic Notation "feed" "destruct" constr(H) :=
 Tactic Notation "feed" "destruct" constr(H) "as" simple_intropattern(IP) :=
   feed (fun p => let H':=fresh in pose proof p as H'; destruct H' as IP) H.
 
+(** The block definitions are taken from [Coq.Program.Equality] and can be used
+by tactics to separate their goal from hypotheses they generalize over. *)
+Definition block {A : Type} (a : A) := a.
+
+Ltac block_goal := match goal with [ |- ?T ] => change (block T) end.
+Ltac unblock_goal := unfold block in *.
+
 
 (** The following tactic can be used to add support for patterns to tactic notation:
 It will search for the first subterm of the goal matching [pat], and then call [tac]

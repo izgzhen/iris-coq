@@ -8,7 +8,9 @@ Global Generalizable All Variables.
 Global Set Automatic Coercions Import.
 Global Set Asymmetric Patterns.
 Global Unset Transparent Obligations.
-From Coq Require Export Morphisms RelationClasses List Bool Utf8 Program Setoid.
+From Coq Require Export Morphisms RelationClasses List Bool Utf8 Setoid.
+Export ListNotations.
+From Coq.Program Require Export Basics Syntax.
 Obligation Tactic := idtac.
 
 (** Throughout this development we use [C_scope] for all general purpose
