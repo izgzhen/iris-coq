@@ -107,7 +107,7 @@ $\textdom{wp}$ is defined as the fixed-point of a contractive function.
 \begin{align*}
   \textdom{pre-wp}(\textdom{wp})(\mask, \expr, \pred) &\eqdef \Lam\rs. \setComp{n}{\begin{aligned}
         \All &\rs_\f, m, \mask_\f, \state. 0 \leq m < n \land \mask \disj \mask_\f \land m+1 \in \wsat\state{\mask \cup \mask_\f}{\rs \mtimes \rs_\f} \Ra {}\\
-        &(\All\val. \toval(\expr) = \val \Ra \Exists \rsB. m+1 \in \pred(\rsB) \land m+1 \in \wsat\state{\mask \cup \mask_\f}{\rsB \mtimes \rs_\f}) \land {}\\
+        &(\All\val. \toval(\expr) = \val \Ra \Exists \rsB. m+1 \in \pred(\val)(\rsB) \land m+1 \in \wsat\state{\mask \cup \mask_\f}{\rsB \mtimes \rs_\f}) \land {}\\
         &(\toval(\expr) = \bot \land 0 < m \Ra \red(\expr, \state) \land \All \expr_2, \state_2, \expr_\f. \expr,\state \step \expr_2,\state_2,\expr_\f \Ra {}\\
         &\qquad \Exists \rsB_1, \rsB_2. m \in \wsat\state{\mask \cup \mask_\f}{\rsB_1 \mtimes \rsB_2 \mtimes \rs_\f} \land  m \in \textdom{wp}(\mask, \expr_2, \pred)(\rsB_1) \land {}&\\
         &\qquad\qquad (\expr_\f = \bot \lor m \in \textdom{wp}(\top, \expr_\f, \Lam\any.\Lam\any.\mathbb{N})(\rsB_2))
