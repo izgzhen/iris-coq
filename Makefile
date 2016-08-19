@@ -1,6 +1,6 @@
 # Makefile originally taken from coq-club
 
-%: Makefile.coq
+%: Makefile.coq phony
 	+make -f Makefile.coq $@
 
 all: Makefile.coq
@@ -17,4 +17,6 @@ _CoqProject: ;
 
 Makefile: ;
 
-.PHONY: all clean
+phony: ;
+
+.PHONY: all clean phony
