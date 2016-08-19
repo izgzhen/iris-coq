@@ -37,6 +37,9 @@ Proof.
   by destruct (decide (0 < x)%N); auto using pretty_N_go_help_irrel.
 Qed.
 Instance pretty_N : Pretty N := λ x, pretty_N_go x ""%string.
+Lemma pretty_N_unfold x :
+  pretty x = pretty_N_go x "".
+Proof. done. Qed.
 Instance pretty_N_inj : Inj (@eq N) (=) pretty.
 Proof.
   assert (∀ x y, x < 10 → y < 10 →
@@ -44,7 +47,9 @@ Proof.
   { compute; intros. by repeat (discriminate || case_match). }
   cut (∀ x y s s', pretty_N_go x s = pretty_N_go y s' →
     String.length s = String.length s' → x = y ∧ s = s').
-  { intros help x y ?. eapply help; eauto. }
+  { intros help x y Hp.
+    eapply (help x y "" ""); [by rewrite <-!pretty_N_unfold|].
+    eauto. }
   assert (∀ x s, ¬String.length (pretty_N_go x s) < String.length s) as help.
   { setoid_rewrite <-Nat.le_ngt.
     intros x; induction (N.lt_wf_0 x) as [x _ IH]; intros s.
