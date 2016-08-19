@@ -59,7 +59,7 @@ End client.
 
 Section ClosedProofs.
 
-Definition Σ : gFunctors := #[ heapΣ ; barrierΣ ; spawnΣ ].
+Let Σ : gFunctors := #[ heapΣ ; barrierΣ ; spawnΣ ].
 
 Lemma client_adequate σ : adequate client σ (λ _, True).
 Proof.
@@ -67,6 +67,6 @@ Proof.
   apply (client_safe (nroot .@ "barrier")); auto with ndisj.
 Qed.
 
-Print Assumptions client_adequate.
-
 End ClosedProofs.
+
+Print Assumptions client_adequate.
