@@ -210,7 +210,6 @@ Section cmra.
     split.
     - constructor.
     - by intros l.
-    - by inversion_clear 1.
     - by constructor.
   Qed.
   Canonical Structure listUR :=

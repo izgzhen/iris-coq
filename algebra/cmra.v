@@ -153,7 +153,6 @@ Arguments core' _ _ _ /.
 Record UCMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, Empty A} := {
   mixin_ucmra_unit_valid : ✓ ∅;
   mixin_ucmra_unit_left_id : LeftId (≡) ∅ (⋅);
-  mixin_ucmra_unit_timeless : Timeless ∅;
   mixin_ucmra_pcore_unit : pcore ∅ ≡ Some ∅
 }.
 
@@ -201,8 +200,6 @@ Section ucmra_mixin.
   Proof. apply (mixin_ucmra_unit_valid _ (ucmra_mixin A)). Qed.
   Global Instance ucmra_unit_left_id : LeftId (≡) ∅ (@op A _).
   Proof. apply (mixin_ucmra_unit_left_id _ (ucmra_mixin A)). Qed.
-  Global Instance ucmra_unit_timeless : Timeless (∅ : A).
-  Proof. apply (mixin_ucmra_unit_timeless _ (ucmra_mixin A)). Qed.
   Lemma ucmra_pcore_unit : pcore (∅:A) ≡ Some ∅.
   Proof. apply (mixin_ucmra_pcore_unit _ (ucmra_mixin A)). Qed.
 End ucmra_mixin.
@@ -922,7 +919,6 @@ Section prod_unit.
     split.
     - split; apply ucmra_unit_valid.
     - by split; rewrite /=left_id.
-    - by intros ? [??]; split; apply (timeless _).
     - rewrite prod_pcore_Some'; split; apply (persistent _).
   Qed.
   Canonical Structure prodUR :=
@@ -1063,7 +1059,7 @@ Section option.
 
   Instance option_empty : Empty (option A) := None.
   Lemma option_ucmra_mixin : UCMRAMixin optionR.
-  Proof. split. done. by intros []. by inversion_clear 1. done. Qed.
+  Proof. split. done. by intros []. done. Qed.
   Canonical Structure optionUR :=
     UCMRAT (option A) option_cofe_mixin option_cmra_mixin option_ucmra_mixin.
 

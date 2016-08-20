@@ -62,7 +62,7 @@ Proof.
     [by constructor|by apply lookup_ne].
 Qed.
 
-Instance gmap_empty_timeless : Timeless (∅ : gmap K A).
+Global Instance gmap_empty_timeless : Timeless (∅ : gmap K A).
 Proof.
   intros m Hm i; specialize (Hm i); rewrite lookup_empty in Hm |- *.
   inversion_clear Hm; constructor.
@@ -173,7 +173,6 @@ Proof.
   split.
   - by intros i; rewrite lookup_empty.
   - by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
-  - apply gmap_empty_timeless.
   - constructor=> i. by rewrite lookup_omap lookup_empty.
 Qed.
 Canonical Structure gmapUR :=

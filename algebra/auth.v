@@ -156,7 +156,6 @@ Proof.
   split; simpl.
   - apply (@ucmra_unit_valid A).
   - by intros x; constructor; rewrite /= left_id.
-  - apply _.
   - do 2 constructor; simpl; apply (persistent_core _).
 Qed.
 Canonical Structure authUR :=
