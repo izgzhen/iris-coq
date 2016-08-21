@@ -39,7 +39,7 @@ In order to solve the recursive domain equation in \Sref{sec:model} it is also e
 \end{defn}
 Intuitively, applying a non-expansive function to some data will not suddenly introduce differences between seemingly equal data.
 Elements that cannot be distinguished by programs within $n$ steps remain indistinguishable after applying $f$.
-The reason that contractive functions are interesting is that for every contractive $f : \cofe \to \cofe$ with $\cofe$ inhabited, there exists a fixed-point $\fix(f)$ such that $\fix(f) = f(\fix(f))$.
+The reason that contractive functions are interesting is that for every contractive $f : \cofe \to \cofe$ with $\cofe$ inhabited, there exists a \emph{unique}\footnote{Uniqueness is not proven in Coq.} fixed-point $\fix(f)$ such that $\fix(f) = f(\fix(f))$.
 
 \begin{defn}
   The category $\COFEs$ consists of COFEs as objects, and non-expansive functions as arrows.
@@ -59,6 +59,7 @@ Note that $\COFEs$ is cartesian closed. In particular:
 \end{defn}
 The function space $(-) \nfn (-)$ is a locally non-expansive bifunctor.
 Note that the composition of non-expansive (bi)functors is non-expansive, and the composition of a non-expansive and a contractive (bi)functor is contractive.
+The reason contractive (bi)functors are interesting is that by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}, they have a unique\footnote{Uniqueness is not proven in Coq.} fixed-point.
 
 \subsection{RA}
 
