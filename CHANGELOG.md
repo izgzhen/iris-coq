@@ -9,6 +9,8 @@ Coq development, but not every API-breaking change is listed.  Changes marked
   updates.  Weakestpre is defined inside the logic, and invariants and view
   shifts with masks are also coded up inside Iris.  Adequacy of weakestpre
   is proven in the logic.
+* [#] With invariants and the physical state being handled in the logic, there
+  is no longer any reason to demand the CMRA unit to be discrete.
 * [#] The language can now fork off multiple threads at once.
 
 ## Iris 2.0
