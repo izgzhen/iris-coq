@@ -188,12 +188,23 @@ Definition fixpoint_eq : @fixpoint = @fixpoint_def := proj2_sig fixpoint_aux.
 
 Section fixpoint.
   Context {A : cofeT} `{Inhabited A} (f : A → A) `{!Contractive f}.
+
   Lemma fixpoint_unfold : fixpoint f ≡ f (fixpoint f).
   Proof.
     apply equiv_dist=>n.
     rewrite fixpoint_eq /fixpoint_def (conv_compl n (fixpoint_chain f)) //.
     induction n as [|n IH]; simpl; eauto using contractive_0, contractive_S.
   Qed.
+
+  Lemma fixpoint_unique (x : A) : x ≡ f x → x ≡ fixpoint f.
+  Proof.
+    rewrite !equiv_dist=> Hx n.
+    rewrite fixpoint_eq /fixpoint_def (conv_compl n (fixpoint_chain f)) //=.
+    induction n as [|n IH]; simpl in *.
+    - rewrite Hx; eauto using contractive_0.
+    - rewrite Hx. apply (contractive_S _), IH.
+  Qed.
+
   Lemma fixpoint_ne (g : A → A) `{!Contractive g} n :
     (∀ z, f z ≡{n}≡ g z) → fixpoint f ≡{n}≡ fixpoint g.
   Proof.
