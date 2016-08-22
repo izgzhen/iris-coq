@@ -1,14 +1,13 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
 (** This file collects facts on proof irrelevant types/propositions. *)
-From Coq Require Import Eqdep_dec.
 From iris.prelude Require Export base.
 
 Hint Extern 200 (ProofIrrel _) => progress (lazy beta) : typeclass_instances.
 
-Instance: ProofIrrel True.
+Instance True_pi: ProofIrrel True.
 Proof. intros [] []; reflexivity. Qed.
-Instance: ProofIrrel False.
+Instance False_pi: ProofIrrel False.
 Proof. intros []. Qed.
 Instance and_pi (A B : Prop) :
   ProofIrrel A → ProofIrrel B → ProofIrrel (A ∧ B).
@@ -16,11 +15,18 @@ Proof. intros ?? [??] [??]. f_equal; trivial. Qed.
 Instance prod_pi (A B : Type) :
   ProofIrrel A → ProofIrrel B → ProofIrrel (A * B).
 Proof. intros ?? [??] [??]. f_equal; trivial. Qed.
-Instance eq_pi {A} `{∀ x y : A, Decision (x = y)} (x y : A) :
+Instance eq_pi {A} (x : A) `{∀ z, Decision (x = z)} (y : A) :
   ProofIrrel (x = y).
 Proof.
-  intros ??. apply eq_proofs_unicity.
-  intros x' y'. destruct (decide (x' = y')); tauto.
+  set (f z (H : x = z) :=
+    match decide (x = z) return x = z with
+    | left H => H | right H' => False_rect _ (H' H)
+    end).
+  assert (∀ z (H : x = z),
+    eq_trans (eq_sym (f x (eq_refl x))) (f z H) = H) as help.
+  { intros ? []. destruct (f x eq_refl); tauto. }
+  intros p q. rewrite <-(help _ p), <-(help _ q).
+  unfold f at 2 4. destruct (decide _). reflexivity. exfalso; tauto.
 Qed.
 Instance Is_true_pi (b : bool) : ProofIrrel (Is_true b).
 Proof. destruct b; simpl; apply _. Qed.
