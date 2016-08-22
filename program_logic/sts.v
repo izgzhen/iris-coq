@@ -127,8 +127,7 @@ Section sts.
        around accessors". *)
     iVs (sts_accS with "[Hinv Hγf]") as (s) "(?&?& HclSts)"; first by iFrame.
     iVsIntro. iExists s. iFrame. iIntros (s' T') "H".
-    iVs ("HclSts" $! s' T' with "H") as "(Hinv & ?)". iFrame.
-    iVs ("Hclose" with "Hinv"). done.
+    iVs ("HclSts" $! s' T' with "H") as "(Hinv & ?)". by iVs ("Hclose" with "Hinv").
   Qed.
 
   Lemma sts_open E N γ s0 T :
