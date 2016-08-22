@@ -198,11 +198,9 @@ Section fixpoint.
 
   Lemma fixpoint_unique (x : A) : x ≡ f x → x ≡ fixpoint f.
   Proof.
-    rewrite !equiv_dist=> Hx n.
-    rewrite fixpoint_eq /fixpoint_def (conv_compl n (fixpoint_chain f)) //=.
-    induction n as [|n IH]; simpl in *.
-    - rewrite Hx; eauto using contractive_0.
-    - rewrite Hx. apply (contractive_S _), IH.
+    rewrite !equiv_dist=> Hx n. induction n as [|n IH]; simpl in *.
+    - rewrite Hx fixpoint_unfold; eauto using contractive_0.
+    - rewrite Hx fixpoint_unfold. apply (contractive_S _), IH.
   Qed.
 
   Lemma fixpoint_ne (g : A → A) `{!Contractive g} n :
