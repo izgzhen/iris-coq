@@ -21,6 +21,7 @@ prelude/listset.v
 prelude/streams.v
 prelude/gmap.v
 prelude/base.v
+prelude/psatz_axiomfree.v
 prelude/tactics.v
 prelude/prelude.v
 prelude/listset_nodup.v
