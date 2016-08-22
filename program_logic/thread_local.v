@@ -5,7 +5,7 @@ Import uPred.
 Definition thread_id := gname.
 
 Class thread_localG Σ :=
-  tl_inG :> inG Σ (prodUR coPset_disjUR (gset_disjUR positive)).
+  tl_inG :> inG Σ (prodR coPset_disjR (gset_disjR positive)).
 
 Definition tlN : namespace := nroot .@ "tl".
 
@@ -47,7 +47,7 @@ Section proofs.
     ▷ P ={E}=> tl_inv tid N P.
   Proof.
     iIntros "HP".
-    iVs (own_empty tid) as "Hempty".
+    iVs (own_empty (A:=prodUR coPset_disjUR (gset_disjUR positive)) tid) as "Hempty".
     iVs (own_updateP with "Hempty") as ([m1 m2]) "[Hm Hown]".
     { apply prod_updateP'. apply cmra_updateP_id, (reflexivity (R:=eq)).
       apply (gset_alloc_empty_updateP_strong' (λ i, i ∈ nclose N)).

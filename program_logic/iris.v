@@ -3,10 +3,10 @@ From iris.prelude Require Export coPset.
 From iris.algebra Require Import gmap auth agree gset coPset upred_big_op.
 
 Class irisPreG (Λ : language) (Σ : gFunctors) : Set := IrisPreG {
-  state_inG :> inG Σ (authUR (optionUR (exclR (stateC Λ))));
-  invariant_inG :> inG Σ (authUR (gmapUR positive (agreeR (laterC (iPreProp Σ)))));
-  enabled_inG :> inG Σ coPset_disjUR;
-  disabled_inG :> inG Σ (gset_disjUR positive);
+  state_inG :> inG Σ (authR (optionUR (exclR (stateC Λ))));
+  invariant_inG :> inG Σ (authR (gmapUR positive (agreeR (laterC (iPreProp Σ)))));
+  enabled_inG :> inG Σ coPset_disjR;
+  disabled_inG :> inG Σ (gset_disjR positive);
 }.
 
 Class irisG (Λ : language) (Σ : gFunctors) : Set := IrisG {
