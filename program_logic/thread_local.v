@@ -26,15 +26,14 @@ Instance: Params (@tl_inv) 4.
 Section proofs.
   Context `{irisG Λ Σ, thread_localG Σ}.
 
-  Lemma tid_alloc :
-    True =r=> ∃ tid, tl_tokens tid ⊤.
+  Lemma tid_alloc : True =r=> ∃ tid, tl_tokens tid ⊤.
   Proof. by apply own_alloc. Qed.
 
   Lemma tl_tokens_disj tid E1 E2 :
     tl_tokens tid E1 ★ tl_tokens tid E2 ⊢ ■ (E1 ⊥ E2).
   Proof.
     rewrite /tl_tokens -own_op own_valid -coPset_disj_valid_op discrete_valid.
-    by iIntros ([? _])"!%".
+    by iIntros ([? _]).
   Qed.
 
   Lemma tl_tokens_union tid E1 E2 :
@@ -43,8 +42,7 @@ Section proofs.
     intros ?. by rewrite /tl_tokens -own_op pair_op left_id coPset_disj_union.
   Qed.
 
-  Lemma tl_inv_alloc tid E N P :
-    ▷ P ={E}=> tl_inv tid N P.
+  Lemma tl_inv_alloc tid E N P : ▷ P ={E}=> tl_inv tid N P.
   Proof.
     iIntros "HP".
     iVs (own_empty (A:=prodUR coPset_disjUR (gset_disjUR positive)) tid) as "Hempty".
@@ -70,17 +68,16 @@ Section proofs.
     iDestruct "Htlinv" as (i) "[% #Hinv]".
     rewrite {1 4}(union_difference_L (nclose N) E) //.
     rewrite {1 5}(union_difference_L {[i]} (nclose N)) ?tl_tokens_union; try set_solver.
-    iDestruct "Htoks" as "[[Htoki Htoks0] Htoks1]". iFrame "Htoks0 Htoks1".
-    iInv tlN as "[[HP >Hdis]|>Htoki2]" "Hclose".
-    - iVs ("Hclose" with "[Htoki]") as "_". auto. iFrame.
-      iIntros "!==>[HP ?]". iFrame.
+    iDestruct "Htoks" as "[[Htoki $] $]".
+    iInv tlN as "[[$ >Hdis]|>Htoki2]" "Hclose".
+    - iVs ("Hclose" with "[Htoki]") as "_"; first auto.
+      iIntros "!==>[HP $]".
       iInv tlN as "[[_ >Hdis2]|>Hitok]" "Hclose".
       + iCombine "Hdis" "Hdis2" as "Hdis".
-        iDestruct (own_valid with "Hdis") as %[_ Hval]. revert Hval.
-        rewrite gset_disj_valid_op. set_solver.
+        iDestruct (own_valid with "Hdis") as %[_ Hval].
+        revert Hval. rewrite gset_disj_valid_op. set_solver.
       + iFrame. iApply "Hclose". iNext. iLeft. by iFrame.
     - iDestruct (tl_tokens_disj tid {[i]} {[i]} with "[-]") as %?. by iFrame.
       set_solver.
   Qed.
-
 End proofs.
