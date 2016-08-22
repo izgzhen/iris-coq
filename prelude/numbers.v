@@ -3,7 +3,7 @@
 (** This file collects some trivial facts on the Coq types [nat] and [N] for
 natural numbers, and the type [Z] for integers. It also declares some useful
 notations. *)
-From Coq Require Export Eqdep PArith NArith ZArith NPeano.
+From Coq Require Export EqdepFacts PArith NArith ZArith NPeano.
 From Coq Require Import QArith Qcanon.
 From iris.prelude Require Export base decidable option.
 Open Scope nat_scope.
