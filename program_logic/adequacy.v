@@ -87,6 +87,13 @@ Qed.
 Instance rvs_iter_mono n : Proper ((⊢) ==> (⊢)) (Nat.iter n (λ P, |=r=> ▷ P)%I).
 Proof. intros P Q HP. induction n; simpl; do 2?f_equiv; auto. Qed.
 
+Lemma rvs_iter_frame_l n R Q :
+  R ★ Nat.iter n (λ P, |=r=> ▷ P) Q ⊢ Nat.iter n (λ P, |=r=> ▷ P) (R ★ Q).
+Proof.
+  induction n as [|n IH]; simpl; [done|].
+  by rewrite rvs_frame_l {1}(later_intro R) -later_sep IH.
+Qed.
+
 Lemma wptp_result n e1 t1 v2 t2 σ1 σ2 φ :
   nsteps step n (e1 :: t1, σ1) (of_val v2 :: t2, σ2) →
   world σ1 ★ WP e1 {{ v, ■ φ v }} ★ wptp t1 ⊢
@@ -119,6 +126,23 @@ Proof.
   iApply wp_safe. iFrame "Hw".
   iApply (big_sep_elem_of with "Htp"); apply elem_of_list_fmap; eauto.
 Qed.
+
+Lemma wptp_invariance n e1 e2 t1 t2 σ1 σ2 I φ :
+  PersistentP I →
+  nsteps step n (e1 :: t1, σ1) (t2, σ2) →
+  (I ={⊤,∅}=> ∃ σ', ownP σ' ∧ ■ φ σ') →
+  I ★ world σ1 ★ WP e1 {{ _, True }} ★ wptp t1 ⊢
+  Nat.iter (S (S n)) (λ P, |=r=> ▷ P) (■ φ σ2).
+Proof.
+  intros ?? HI. rewrite wptp_steps //.
+  rewrite (Nat_iter_S_r (S n)) rvs_iter_frame_l. apply rvs_iter_mono.
+  iIntros "[HI H]".
+  iDestruct "H" as (e2' t2') "(% & (Hw&HE&Hσ) & _)"; subst.
+  rewrite pvs_eq in HI;
+    iVs (HI with "HI [Hw HE]") as "> (_ & _ & H)"; first by iFrame.
+  iDestruct "H" as (σ2') "[Hσf %]".
+  iDestruct (ownP_agree σ2 σ2' with "[#]") as %<-. by iFrame. eauto.
+Qed.
 End adequacy.
 
 Theorem wp_adequacy Σ `{irisPreG Λ Σ} e σ φ :
@@ -136,4 +160,19 @@ Proof.
     rewrite Nat_iter_S. iVs (iris_alloc σ) as (?) "(Hw & HE & Hσ & Hσf)".
     iVsIntro. iNext. iApply wptp_safe; eauto.
     iFrame "Hw HE Hσ". iSplitL; auto. by iApply Hwp.
+Qed.
+
+Theorem wp_invariance Σ `{irisPreG Λ Σ} (I : iProp Σ) e φ σ1 t2 σ2 :
+  PersistentP I →
+  (∀ `{irisG Λ Σ}, ownP σ1 ={⊤}=> I ★ WP e {{ _, True }}) →
+  (∀ `{irisG Λ Σ}, I ={⊤,∅}=> ∃ σ', ownP σ' ∧ ■ φ σ') →
+  rtc step ([e], σ1) (t2, σ2) →
+  φ σ2.
+Proof.
+  intros ? Hwp HI [n ?]%rtc_nsteps.
+  eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
+  rewrite Nat_iter_S. iVs (iris_alloc σ1) as (?) "(Hw & HE & ? & Hσ)".
+  rewrite pvs_eq in Hwp.
+  iVs (Hwp _ with "Hσ [Hw HE]") as ">(? & ? & ? & ?)"; first by iFrame.
+  iVsIntro. iNext. iApply wptp_invariance; eauto. by iFrame.
 Qed.
