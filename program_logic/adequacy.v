@@ -127,11 +127,11 @@ Proof.
   iApply (big_sep_elem_of with "Htp"); apply elem_of_list_fmap; eauto.
 Qed.
 
-Lemma wptp_invariance n e1 e2 t1 t2 σ1 σ2 I φ :
+Lemma wptp_invariance n e1 e2 t1 t2 σ1 σ2 I φ Φ :
   PersistentP I →
   nsteps step n (e1 :: t1, σ1) (t2, σ2) →
   (I ={⊤,∅}=> ∃ σ', ownP σ' ∧ ■ φ σ') →
-  I ★ world σ1 ★ WP e1 {{ _, True }} ★ wptp t1 ⊢
+  I ★ world σ1 ★ WP e1 {{ Φ }} ★ wptp t1 ⊢
   Nat.iter (S (S n)) (λ P, |=r=> ▷ P) (■ φ σ2).
 Proof.
   intros ?? HI. rewrite wptp_steps //.
@@ -162,9 +162,9 @@ Proof.
     iFrame "Hw HE Hσ". iSplitL; auto. by iApply Hwp.
 Qed.
 
-Theorem wp_invariance Σ `{irisPreG Λ Σ} (I : iProp Σ) e φ σ1 t2 σ2 :
+Theorem wp_invariance Σ `{irisPreG Λ Σ} e σ1 t2 σ2 I φ Φ :
   PersistentP I →
-  (∀ `{irisG Λ Σ}, ownP σ1 ={⊤}=> I ★ WP e {{ _, True }}) →
+  (∀ `{irisG Λ Σ}, ownP σ1 ={⊤}=> I ★ WP e {{ Φ }}) →
   (∀ `{irisG Λ Σ}, I ={⊤,∅}=> ∃ σ', ownP σ' ∧ ■ φ σ') →
   rtc step ([e], σ1) (t2, σ2) →
   φ σ2.
