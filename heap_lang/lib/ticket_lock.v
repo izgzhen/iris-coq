@@ -116,8 +116,8 @@ Proof.
       set_solver.
   - iVs ("Hclose" with "[Hlo Hln Ha]").
     { iNext. iExists o, n. by iFrame. }
-    iVsIntro. wp_let. wp_op=>?; first omega.
-    wp_if. by iApply ("IH" with "Ht").
+    iVsIntro. wp_let. wp_op=>[[/Nat2Z.inj //]|?].
+    wp_if. iApply ("IH" with "Ht"). by iExact "HΦ".
 Qed.
 
 Lemma acquire_spec l R (Φ : val → iProp Σ) :
@@ -131,8 +131,7 @@ Proof.
   iVsIntro. wp_let. wp_proj. wp_op.
   wp_bind (CAS _ _ _).
   iInv N as (o' n') "[Hlo' [Hln' [Hainv Haown]]]" "Hclose".
-  destruct (decide (#n' = #n))%V
-    as [[= ->%Nat2Z.inj] | Hneq].
+  destruct (decide (#n' = #n))%V as [[= ->%Nat2Z.inj] | Hneq].
   - wp_cas_suc.
     iDestruct "Hainv" as (s) "[Ho %]"; subst.
     iVs (own_update with "Ho") as "Ho".
@@ -166,8 +165,7 @@ Proof.
   iVsIntro. wp_let. wp_bind (CAS _ _ _ ).
   wp_proj. wp_op.
   iInv N as (o' n') "[Hlo' [Hln' Hr]]" "Hclose".
-  destruct (decide (#o' = #o))%V
-    as [[= ->%Nat2Z.inj ] | Hneq].
+  destruct (decide (#o' = #o))%V as [[= ->%Nat2Z.inj ] | Hneq].
   - wp_cas_suc.
     iDestruct "Hr" as "[Hainv [[Ho _] | Hown]]".
     + iExFalso. iCombine "Hγ" "Ho" as "Ho".

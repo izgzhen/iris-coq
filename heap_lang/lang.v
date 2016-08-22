@@ -133,6 +133,40 @@ Fixpoint to_val (e : expr) : option val :=
 (** The state: heaps of vals. *)
 Definition state := gmap loc val.
 
+(** Equality and other typeclass stuff *)
+Lemma to_of_val v : to_val (of_val v) = Some v.
+Proof.
+  by induction v; simplify_option_eq; repeat f_equal; try apply (proof_irrel _).
+Qed.
+
+Lemma of_to_val e v : to_val e = Some v → of_val v = e.
+Proof.
+  revert v; induction e; intros v ?; simplify_option_eq; auto with f_equal.
+Qed.
+
+Instance of_val_inj : Inj (=) (=) of_val.
+Proof. by intros ?? Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
+
+Instance base_lit_dec_eq (l1 l2 : base_lit) : Decision (l1 = l2).
+Proof. solve_decision. Defined.
+Instance un_op_dec_eq (op1 op2 : un_op) : Decision (op1 = op2).
+Proof. solve_decision. Defined.
+Instance bin_op_dec_eq (op1 op2 : bin_op) : Decision (op1 = op2).
+Proof. solve_decision. Defined.
+Instance expr_dec_eq (e1 e2 : expr) : Decision (e1 = e2).
+Proof. solve_decision. Defined.
+Instance val_dec_eq (v1 v2 : val) : Decision (v1 = v2).
+Proof.
+ refine (cast_if (decide (of_val v1 = of_val v2))); abstract naive_solver.
+Defined.
+
+Instance expr_inhabited : Inhabited expr := populate (Lit LitUnit).
+Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
+
+Canonical Structure stateC := leibnizC state.
+Canonical Structure valC := leibnizC val.
+Canonical Structure exprC := leibnizC expr.
+
 (** Evaluation contexts *)
 Inductive ectx_item :=
   | AppLCtx (e2 : expr)
@@ -208,20 +242,20 @@ Definition subst' (mx : binder) (es : expr) : expr → expr :=
   match mx with BNamed x => subst x es | BAnon => id end.
 
 (** The stepping relation *)
-Definition un_op_eval (op : un_op) (l : base_lit) : option base_lit :=
-  match op, l with
-  | NegOp, LitBool b => Some (LitBool (negb b))
-  | MinusUnOp, LitInt n => Some (LitInt (- n))
+Definition un_op_eval (op : un_op) (v : val) : option val :=
+  match op, v with
+  | NegOp, LitV (LitBool b) => Some $ LitV $ LitBool (negb b)
+  | MinusUnOp, LitV (LitInt n) => Some $ LitV $ LitInt (- n)
   | _, _ => None
   end.
 
-Definition bin_op_eval (op : bin_op) (l1 l2 : base_lit) : option base_lit :=
-  match op, l1, l2 with
-  | PlusOp, LitInt n1, LitInt n2 => Some $ LitInt (n1 + n2)
-  | MinusOp, LitInt n1, LitInt n2 => Some $ LitInt (n1 - n2)
-  | LeOp, LitInt n1, LitInt n2 => Some $ LitBool $ bool_decide (n1 ≤ n2)
-  | LtOp, LitInt n1, LitInt n2 => Some $ LitBool $ bool_decide (n1 < n2)
-  | EqOp, LitInt n1, LitInt n2 => Some $ LitBool $ bool_decide (n1 = n2)
+Definition bin_op_eval (op : bin_op) (v1 v2 : val) : option val :=
+  match op, v1, v2 with
+  | PlusOp, LitV (LitInt n1), LitV (LitInt n2) => Some $ LitV $ LitInt (n1 + n2)
+  | MinusOp, LitV (LitInt n1), LitV (LitInt n2) => Some $ LitV $ LitInt (n1 - n2)
+  | LeOp, LitV (LitInt n1), LitV (LitInt n2) => Some $ LitV $ LitBool $ bool_decide (n1 ≤ n2)
+  | LtOp, LitV (LitInt n1), LitV (LitInt n2) => Some $ LitV $ LitBool $ bool_decide (n1 < n2)
+  | EqOp, v1, v2 => Some $ LitV $ LitBool $ bool_decide (v1 = v2)
   | _, _, _ => None
   end.
 
@@ -231,12 +265,14 @@ Inductive head_step : expr → state → expr → state → list (expr) → Prop
      Closed (f :b: x :b: []) e1 →
      e' = subst' x (of_val v2) (subst' f (Rec f x e1) e1) →
      head_step (App (Rec f x e1) e2) σ e' σ []
-  | UnOpS op l l' σ :
-     un_op_eval op l = Some l' → 
-     head_step (UnOp op (Lit l)) σ (Lit l') σ []
-  | BinOpS op l1 l2 l' σ :
-     bin_op_eval op l1 l2 = Some l' → 
-     head_step (BinOp op (Lit l1) (Lit l2)) σ (Lit l') σ []
+  | UnOpS op e v v' σ :
+     to_val e = Some v →
+     un_op_eval op v = Some v' → 
+     head_step (UnOp op e) σ (of_val v') σ []
+  | BinOpS op e1 e2 v1 v2 v' σ :
+     to_val e1 = Some v1 → to_val e2 = Some v2 →
+     bin_op_eval op v1 v2 = Some v' → 
+     head_step (BinOp op e1 e2) σ (of_val v') σ []
   | IfTrueS e1 e2 σ :
      head_step (If (Lit $ LitBool true) e1 e2) σ e1 σ []
   | IfFalseS e1 e2 σ :
@@ -274,19 +310,6 @@ Inductive head_step : expr → state → expr → state → list (expr) → Prop
      head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) [].
 
 (** Basic properties about the language *)
-Lemma to_of_val v : to_val (of_val v) = Some v.
-Proof.
-  by induction v; simplify_option_eq; repeat f_equal; try apply (proof_irrel _).
-Qed.
-
-Lemma of_to_val e v : to_val e = Some v → of_val v = e.
-Proof.
-  revert v; induction e; intros v ?; simplify_option_eq; auto with f_equal.
-Qed.
-
-Instance of_val_inj : Inj (=) (=) of_val.
-Proof. by intros ?? Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
-
 Instance fill_item_inj Ki : Inj (=) (=) (fill_item Ki).
 Proof. destruct Ki; intros ???; simplify_eq/=; auto with f_equal. Qed.
 
@@ -334,27 +357,6 @@ Proof. intros. apply is_closed_subst with []; set_solver. Qed.
 
 Lemma is_closed_of_val X v : is_closed X (of_val v).
 Proof. apply is_closed_weaken_nil. induction v; simpl; auto. Qed.
-
-(** Equality and other typeclass stuff *)
-Instance base_lit_dec_eq (l1 l2 : base_lit) : Decision (l1 = l2).
-Proof. solve_decision. Defined.
-Instance un_op_dec_eq (op1 op2 : un_op) : Decision (op1 = op2).
-Proof. solve_decision. Defined.
-Instance bin_op_dec_eq (op1 op2 : bin_op) : Decision (op1 = op2).
-Proof. solve_decision. Defined.
-Instance expr_dec_eq (e1 e2 : expr) : Decision (e1 = e2).
-Proof. solve_decision. Defined.
-Instance val_dec_eq (v1 v2 : val) : Decision (v1 = v2).
-Proof.
- refine (cast_if (decide (of_val v1 = of_val v2))); abstract naive_solver.
-Defined.
-
-Instance expr_inhabited : Inhabited expr := populate (Lit LitUnit).
-Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
-
-Canonical Structure stateC := leibnizC state.
-Canonical Structure valC := leibnizC val.
-Canonical Structure exprC := leibnizC expr.
 End heap_lang.
 
 (** Language *)

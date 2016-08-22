@@ -92,20 +92,22 @@ Proof.
     intros; inv_head_step; eauto.
 Qed.
 
-Lemma wp_un_op E op l l' Φ :
-  un_op_eval op l = Some l' →
-  ▷ (|={E}=> Φ (LitV l')) ⊢ WP UnOp op (Lit l) @ E {{ Φ }}.
+Lemma wp_un_op E op e v v' Φ :
+  to_val e = Some v →
+  un_op_eval op v = Some v' →
+  ▷ (|={E}=> Φ v') ⊢ WP UnOp op e @ E {{ Φ }}.
 Proof.
-  intros. rewrite -(wp_lift_pure_det_head_step (UnOp op _) (Lit l') [])
-    ?right_id -?wp_value_pvs //; intros; inv_head_step; eauto.
+  intros. rewrite -(wp_lift_pure_det_head_step (UnOp op _) (of_val v') [])
+    ?right_id -?wp_value_pvs' //; intros; inv_head_step; eauto.
 Qed.
 
-Lemma wp_bin_op E op l1 l2 l' Φ :
-  bin_op_eval op l1 l2 = Some l' →
-  ▷ (|={E}=> Φ (LitV l')) ⊢ WP BinOp op (Lit l1) (Lit l2) @ E {{ Φ }}.
+Lemma wp_bin_op E op e1 e2 v1 v2 v' Φ :
+  to_val e1 = Some v1 → to_val e2 = Some v2 →
+  bin_op_eval op v1 v2 = Some v' →
+  ▷ (|={E}=> Φ v') ⊢ WP BinOp op e1 e2 @ E {{ Φ }}.
 Proof.
-  intros Heval. rewrite -(wp_lift_pure_det_head_step (BinOp op _ _) (Lit l') [])
-    ?right_id -?wp_value_pvs //; intros; inv_head_step; eauto.
+  intros. rewrite -(wp_lift_pure_det_head_step (BinOp op _ _) (of_val v') [])
+    ?right_id -?wp_value_pvs' //; intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_if_true E e1 e2 Φ :
