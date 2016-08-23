@@ -40,8 +40,8 @@ We introduce an additional logical connective $\ownM\melt$, which will later be 
 	\Lam \melt. \setComp{n}{\begin{aligned}
             \All m, \meltB.& m \leq n \land  \melt\mtimes\meltB \in \mval_m \Ra {} \\
             & m \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB) \Ra {}\\& m \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\melt\mtimes\meltB)\end{aligned}} \\
-        \Sem{\vctx \proves \ownM{\melt} : \Prop}_\gamma &\eqdef \Lam\meltB. \setComp{n}{\melt \mincl[n] \meltB}  \\
-        \Sem{\vctx \proves \mval(\melt) : \Prop}_\gamma &\eqdef \Lam\any. \setComp{n}{\melt \in \mval_n} \\
+        \Sem{\vctx \proves \ownM{\melt} : \Prop}_\gamma &\eqdef \Lam\meltB. \setComp{n}{\Sem{\vctx \proves \melt : \textlog{M}} \mincl[n] \meltB}  \\
+        \Sem{\vctx \proves \mval(\melt) : \Prop}_\gamma &\eqdef \Lam\any. \setComp{n}{\Sem{\vctx \proves \melt : \type} \in \mval_n} \\
 \end{align*}
 
 For every definition, we have to show all the side-conditions: The maps have to be non-expansive and monotone.

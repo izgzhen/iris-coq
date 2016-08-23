@@ -270,7 +270,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 	\infer{\vctx \proves \wtt{\melt}{\textlog{M}}}
 		{\vctx \proves \wtt{\ownGGhost{\melt}}{\Prop}}
 \and
-	\infer{\vctx \proves \wtt{\melt}{\textlog{M}}}
+	\infer{\vctx \proves \wtt{\melt}{\type} \and \text{$\type$ is a CMRA}}
 		{\vctx \proves \wtt{\mval(\melt)}{\Prop}}
 \and
 	\infer{\vctx \proves \wtt{\state}{\textlog{State}}}
@@ -464,7 +464,7 @@ A type $\type$ being \emph{inhabited} means that $ \proves \wtt{\term}{\type}$ i
 {\timeless{\ownGGhost\melt}}
 
 \infer
-{\text{$\melt$ is a discrete COFE element}}
+{\text{$\melt$ is an element of a discrete CMRA}}
 {\timeless{\mval(\melt)}}
 
 \infer{}
