@@ -128,13 +128,12 @@ Proof.
 Qed.
 
 Lemma wptp_invariance n e1 e2 t1 t2 σ1 σ2 I φ Φ :
-  PersistentP I →
   nsteps step n (e1 :: t1, σ1) (t2, σ2) →
   (I ={⊤,∅}=> ∃ σ', ownP σ' ∧ ■ φ σ') →
   I ★ world σ1 ★ WP e1 {{ Φ }} ★ wptp t1 ⊢
   Nat.iter (S (S n)) (λ P, |=r=> ▷ P) (■ φ σ2).
 Proof.
-  intros ?? HI. rewrite wptp_steps //.
+  intros ? HI. rewrite wptp_steps //.
   rewrite (Nat_iter_S_r (S n)) rvs_iter_frame_l. apply rvs_iter_mono.
   iIntros "[HI H]".
   iDestruct "H" as (e2' t2') "(% & (Hw&HE&Hσ) & _)"; subst.
@@ -163,13 +162,12 @@ Proof.
 Qed.
 
 Theorem wp_invariance Σ `{irisPreG Λ Σ} e σ1 t2 σ2 I φ Φ :
-  PersistentP I →
   (∀ `{irisG Λ Σ}, ownP σ1 ={⊤}=> I ★ WP e {{ Φ }}) →
   (∀ `{irisG Λ Σ}, I ={⊤,∅}=> ∃ σ', ownP σ' ∧ ■ φ σ') →
   rtc step ([e], σ1) (t2, σ2) →
   φ σ2.
 Proof.
-  intros ? Hwp HI [n ?]%rtc_nsteps.
+  intros Hwp HI [n ?]%rtc_nsteps.
   eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
   rewrite Nat_iter_S. iVs (iris_alloc σ1) as (?) "(Hw & HE & ? & Hσ)".
   rewrite pvs_eq in Hwp.
