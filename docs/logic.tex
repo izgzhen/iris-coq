@@ -498,8 +498,8 @@ A type $\type$ being \emph{inhabited} means that $ \proves \wtt{\term}{\type}$ i
   {\always{\prop} \proves \prop}
 \and
 \begin{array}[c]{rMcMl}
-  \always{(\prop * \propB)} &\proves& \always{(\prop \land \propB)} \\
-  \always{\prop} * \propB &\proves& \always{\prop} \land \propB \\
+  \always{(\prop \land \propB)} &\proves& \always{(\prop * \propB)} \\
+  \always{\prop} \land \propB &\proves& \always{\prop} * \propB \\
   \always{\later\prop} &\provesIff& \later\always{\prop} \\
 \end{array}
 \and
