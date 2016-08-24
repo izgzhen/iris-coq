@@ -171,16 +171,14 @@ Proof. by constructor. Qed.
 
 (* IntoSep *)
 Global Instance into_sep_sep p P Q : IntoSep p (P ★ Q) P Q.
-Proof. rewrite /IntoSep. by rewrite always_if_sep. Qed.
+Proof. by apply mk_into_sep_sep. Qed.
 Global Instance into_sep_ownM p (a b1 b2 : M) :
   IntoOp a b1 b2 →
   IntoSep p (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
-Proof.
-  rewrite /IntoOp /IntoSep=> ->. by rewrite ownM_op always_if_sep.
-Qed.
+Proof. intros. apply mk_into_sep_sep. by rewrite (into_op a) ownM_op. Qed.
 
 Global Instance into_sep_and P Q : IntoSep true (P ∧ Q) P Q.
-Proof. by rewrite /IntoSep /= always_and_sep. Qed.
+Proof. done. Qed.
 Global Instance into_sep_and_persistent_l P Q :
   PersistentP P → IntoSep false (P ∧ Q) P Q.
 Proof. intros; by rewrite /IntoSep /= always_and_sep_l. Qed.
@@ -190,7 +188,7 @@ Proof. intros; by rewrite /IntoSep /= always_and_sep_r. Qed.
 
 Global Instance into_sep_later p P Q1 Q2 :
   IntoSep p P Q1 Q2 → IntoSep p (▷ P) (▷ Q1) (▷ Q2).
-Proof. by rewrite /IntoSep -later_sep !always_if_later=> ->. Qed.
+Proof. rewrite /IntoSep=>->. destruct p; by rewrite ?later_and ?later_sep. Qed.
 
 Global Instance into_sep_big_sepM
     `{Countable K} {A} (Φ Ψ1 Ψ2 : K → A → uPred M) p m :
@@ -198,15 +196,21 @@ Global Instance into_sep_big_sepM
   IntoSep p ([★ map] k ↦ x ∈ m, Φ k x)
     ([★ map] k ↦ x ∈ m, Ψ1 k x) ([★ map] k ↦ x ∈ m, Ψ2 k x).
 Proof.
-  rewrite /IntoSep=> ?. rewrite -big_sepM_sepM !big_sepM_always_if.
-  by apply big_sepM_mono.
+  rewrite /IntoSep=> HΦ. destruct p.
+  - apply and_intro; apply big_sepM_mono; auto.
+    + intros k x ?. by rewrite HΦ and_elim_l.
+    + intros k x ?. by rewrite HΦ and_elim_r.
+  - rewrite -big_sepM_sepM. apply big_sepM_mono; auto.
 Qed.
 Global Instance into_sep_big_sepS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) p X :
   (∀ x, IntoSep p (Φ x) (Ψ1 x) (Ψ2 x)) →
   IntoSep p ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ1 x) ([★ set] x ∈ X, Ψ2 x).
 Proof.
-  rewrite /IntoSep=> ?. rewrite -big_sepS_sepS !big_sepS_always_if.
-  by apply big_sepS_mono.
+  rewrite /IntoSep=> HΦ. destruct p.
+  - apply and_intro; apply big_sepS_mono; auto.
+    + intros x ?. by rewrite HΦ and_elim_l.
+    + intros x ?. by rewrite HΦ and_elim_r.
+  - rewrite -big_sepS_sepS. apply big_sepS_mono; auto.
 Qed.
 
 (* Frame *)

@@ -657,8 +657,8 @@ Lemma tac_sep_destruct Δ Δ' i p j1 j2 P P1 P2 Q :
   envs_simple_replace i p (Esnoc (Esnoc Enil j1 P1) j2 P2) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
-  intros. rewrite envs_simple_replace_sound //; simpl.
-  by rewrite (into_sep p P) right_id (comm uPred_sep P1) wand_elim_r.
+  intros. rewrite envs_simple_replace_sound //; simpl. rewrite (into_sep p P).
+  by destruct p; rewrite /= ?right_id (comm _ P1) ?always_and_sep wand_elim_r.
 Qed.
 
 (** * Framing *)
