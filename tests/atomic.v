@@ -1,15 +1,14 @@
-From iris.program_logic Require Export hoare weakestpre.
-From iris.program_logic Require Export pviewshifts.
-From iris.program_logic Require Import ownership.
+From iris.program_logic Require Export hoare weakestpre pviewshifts ownership.
 From iris.algebra Require Import upred_big_op.
 From iris.prelude Require Export coPset.
 From iris.proofmode Require Import tactics pviewshifts weakestpre.
 Import uPred.
 
 Section atomic.
-  Context `{irisG Λ Σ}.
-  (* <x, α> e @ E_i, E_o <v, β x v> *)
-  Definition atomic_triple {A: Type}
+  Context `{irisG Λ Σ} {A: Type}.
+
+  (* logically atomic triple: <x, α> e @ E_i, E_o <v, β x v> *)
+  Definition atomic_triple
              (α: A → iProp Σ)
              (β: A → val _ → iProp Σ)
              (Ei Eo: coPset)
@@ -20,14 +19,32 @@ Section atomic.
                                  (∀ v, β x v ={Ei, Eo}=★ Q x v))
             ) -★ {{ P }} e @ ⊤ {{ v, (∃ x: A, Q x v) }})%I.
 
-  Arguments atomic_triple {_} _ _ _ _ _.
+  (* Weakest-pre version of the above one. Also weaker in some sense *)
+  Definition atomic_triple_wp
+             (α: A → iProp Σ)
+             (β: A → val _ → iProp Σ)
+             (Ei Eo: coPset)
+             (e: expr _) : iProp Σ :=
+    (∀ P Q, (P ={Eo, Ei}=> ∃ x,
+                              α x ★
+                              ((α x ={Ei, Eo}=★ P) ∧
+                               (∀ v, β x v ={Ei, Eo}=★ Q x v))
+            ) -★ P -★ WP e @ ⊤ {{ v, (∃ x, Q x v) }})%I.
+
+  Lemma atomic_triple_weaken α β Ei Eo e:
+    atomic_triple α β Ei Eo e ⊢ atomic_triple_wp α β Ei Eo e.
+  Proof.
+    iIntros "H". iIntros (P Q) "Hvs Hp".
+    by iApply ("H" $! P Q with "Hvs").
+  Qed.
+
+  Arguments atomic_triple {_} _ _ _ _.
 End atomic.
 
-From iris.heap_lang Require Export lang.
-From iris.proofmode Require Import invariants tactics.
-From iris.heap_lang Require Import proofmode notation.
+From iris.heap_lang Require Export lang proofmode notation.
+From iris.proofmode Require Import invariants.
 
-Section demo.
+Section incr.
   Context `{!heapG Σ} (N : namespace).
 
   Definition incr: val :=
@@ -74,7 +91,7 @@ Section demo.
       iVs ("Hvs'" with "[Hl]") as "HP"; first by iFrame.
       iVsIntro. wp_if. by iApply "IH".
   Qed.
-End demo.
+End incr.
 
 From iris.heap_lang.lib Require Import par.
 
