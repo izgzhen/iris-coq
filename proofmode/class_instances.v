@@ -169,44 +169,44 @@ Global Instance into_op_Some {A : cmraT} (a : A) b1 b2 :
   IntoOp a b1 b2 → IntoOp (Some a) (Some b1) (Some b2).
 Proof. by constructor. Qed.
 
-(* IntoSep *)
-Global Instance into_sep_sep p P Q : IntoSep p (P ★ Q) P Q.
-Proof. by apply mk_into_sep_sep. Qed.
-Global Instance into_sep_ownM p (a b1 b2 : M) :
+(* IntoAnd *)
+Global Instance into_and_sep p P Q : IntoAnd p (P ★ Q) P Q.
+Proof. by apply mk_into_and_sep. Qed.
+Global Instance into_and_ownM p (a b1 b2 : M) :
   IntoOp a b1 b2 →
-  IntoSep p (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
-Proof. intros. apply mk_into_sep_sep. by rewrite (into_op a) ownM_op. Qed.
+  IntoAnd p (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
+Proof. intros. apply mk_into_and_sep. by rewrite (into_op a) ownM_op. Qed.
 
-Global Instance into_sep_and P Q : IntoSep true (P ∧ Q) P Q.
+Global Instance into_and_and P Q : IntoAnd true (P ∧ Q) P Q.
 Proof. done. Qed.
-Global Instance into_sep_and_persistent_l P Q :
-  PersistentP P → IntoSep false (P ∧ Q) P Q.
-Proof. intros; by rewrite /IntoSep /= always_and_sep_l. Qed.
-Global Instance into_sep_and_persistent_r P Q :
-  PersistentP Q → IntoSep false (P ∧ Q) P Q.
-Proof. intros; by rewrite /IntoSep /= always_and_sep_r. Qed.
+Global Instance into_and_and_persistent_l P Q :
+  PersistentP P → IntoAnd false (P ∧ Q) P Q.
+Proof. intros; by rewrite /IntoAnd /= always_and_sep_l. Qed.
+Global Instance into_and_and_persistent_r P Q :
+  PersistentP Q → IntoAnd false (P ∧ Q) P Q.
+Proof. intros; by rewrite /IntoAnd /= always_and_sep_r. Qed.
 
-Global Instance into_sep_later p P Q1 Q2 :
-  IntoSep p P Q1 Q2 → IntoSep p (▷ P) (▷ Q1) (▷ Q2).
-Proof. rewrite /IntoSep=>->. destruct p; by rewrite ?later_and ?later_sep. Qed.
+Global Instance into_and_later p P Q1 Q2 :
+  IntoAnd p P Q1 Q2 → IntoAnd p (▷ P) (▷ Q1) (▷ Q2).
+Proof. rewrite /IntoAnd=>->. destruct p; by rewrite ?later_and ?later_sep. Qed.
 
-Global Instance into_sep_big_sepM
+Global Instance into_and_big_sepM
     `{Countable K} {A} (Φ Ψ1 Ψ2 : K → A → uPred M) p m :
-  (∀ k x, IntoSep p (Φ k x) (Ψ1 k x) (Ψ2 k x)) →
-  IntoSep p ([★ map] k ↦ x ∈ m, Φ k x)
+  (∀ k x, IntoAnd p (Φ k x) (Ψ1 k x) (Ψ2 k x)) →
+  IntoAnd p ([★ map] k ↦ x ∈ m, Φ k x)
     ([★ map] k ↦ x ∈ m, Ψ1 k x) ([★ map] k ↦ x ∈ m, Ψ2 k x).
 Proof.
-  rewrite /IntoSep=> HΦ. destruct p.
+  rewrite /IntoAnd=> HΦ. destruct p.
   - apply and_intro; apply big_sepM_mono; auto.
     + intros k x ?. by rewrite HΦ and_elim_l.
     + intros k x ?. by rewrite HΦ and_elim_r.
   - rewrite -big_sepM_sepM. apply big_sepM_mono; auto.
 Qed.
-Global Instance into_sep_big_sepS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) p X :
-  (∀ x, IntoSep p (Φ x) (Ψ1 x) (Ψ2 x)) →
-  IntoSep p ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ1 x) ([★ set] x ∈ X, Ψ2 x).
+Global Instance into_and_big_sepS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) p X :
+  (∀ x, IntoAnd p (Φ x) (Ψ1 x) (Ψ2 x)) →
+  IntoAnd p ([★ set] x ∈ X, Φ x) ([★ set] x ∈ X, Ψ1 x) ([★ set] x ∈ X, Ψ2 x).
 Proof.
-  rewrite /IntoSep=> HΦ. destruct p.
+  rewrite /IntoAnd=> HΦ. destruct p.
   - apply and_intro; apply big_sepS_mono; auto.
     + intros x ?. by rewrite HΦ and_elim_l.
     + intros x ?. by rewrite HΦ and_elim_r.

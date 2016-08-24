@@ -363,7 +363,7 @@ Local Tactic Notation "iOrDestruct" constr(H) "as" constr(H1) constr(H2) :=
   eapply tac_or_destruct with _ _ H _ H1 H2 _ _ _; (* (i:=H) (j1:=H1) (j2:=H2) *)
     [env_cbv; reflexivity || fail "iOrDestruct:" H "not found"
     |let P := match goal with |- IntoOr ?P _ _ => P end in
-     apply _ || fail "iOrDestruct:" P "not a disjunction"
+     apply _ || fail "iOrDestruct: cannot destruct" P
     |env_cbv; reflexivity || fail "iOrDestruct:" H1 "not fresh"
     |env_cbv; reflexivity || fail "iOrDestruct:" H2 "not fresh"| |].
 
@@ -395,12 +395,19 @@ Tactic Notation "iSplitR" constr(Hs) :=
 Tactic Notation "iSplitL" := iSplitR "".
 Tactic Notation "iSplitR" := iSplitL "".
 
-Local Tactic Notation "iSepDestruct" constr(H) "as" constr(H1) constr(H2) :=
-  eapply tac_sep_destruct with _ H _ H1 H2 _ _ _; (* (i:=H) (j1:=H1) (j2:=H2) *)
-    [env_cbv; reflexivity || fail "iSepDestruct:" H "not found"
-    |let P := match goal with |- IntoSep _ ?P _ _ => P end in
-     apply _ || fail "iSepDestruct:" P "not separating destructable"
-    |env_cbv; reflexivity || fail "iSepDestruct:" H1 "or" H2 " not fresh"|].
+Local Tactic Notation "iAndDestruct" constr(H) "as" constr(H1) constr(H2) :=
+  eapply tac_and_destruct with _ H _ H1 H2 _ _ _; (* (i:=H) (j1:=H1) (j2:=H2) *)
+    [env_cbv; reflexivity || fail "iAndDestruct:" H "not found"
+    |let P := match goal with |- IntoAnd _ ?P _ _ => P end in
+     apply _ || fail "iAndDestruct: cannot destruct" P
+    |env_cbv; reflexivity || fail "iAndDestruct:" H1 "or" H2 " not fresh"|].
+
+Local Tactic Notation "iAndDestructChoice" constr(H) "as" constr(lr) constr(H') :=
+  eapply tac_and_destruct_choice with _ H _ lr H' _ _ _;
+    [env_cbv; reflexivity || fail "iAndDestruct:" H "not found"
+    |let P := match goal with |- IntoAnd _ ?P _ _ => P end in
+     apply _ || fail "iAndDestruct: cannot destruct" P
+    |env_cbv; reflexivity || fail "iAndDestruct:" H' " not fresh"|].
 
 Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
   eapply tac_combine with _ _ _ H1 _ _ H2 _ _ H _;
@@ -480,7 +487,7 @@ Local Tactic Notation "iExistDestruct" constr(H)
   eapply tac_exist_destruct with H _ Hx _ _; (* (i:=H) (j:=Hx) *)
     [env_cbv; reflexivity || fail "iExistDestruct:" H "not found"
     |let P := match goal with |- IntoExist ?P _ => P end in
-     apply _ || fail "iExistDestruct:" P "not an existential"|];
+     apply _ || fail "iExistDestruct: cannot destruct" P|];
   let y := fresh in
   intros y; eexists; split;
     [env_cbv; reflexivity || fail "iExistDestruct:" Hx "not fresh"
@@ -501,7 +508,7 @@ Tactic Notation "iNext":=
 Tactic Notation "iTimeless" constr(H) :=
   eapply tac_timeless with _ H _ _ _;
     [let Q := match goal with |- IsNowTrue ?Q => Q end in
-     apply _ || fail "iTimeless: cannot remove later of timeless hypothesis in goal" Q
+     apply _ || fail "iTimeless: cannot remove later when goal is" Q
     |env_cbv; reflexivity || fail "iTimeless:" H "not found"
     |let P := match goal with |- IntoNowTrue ?P _ => P end in
      apply _ || fail "iTimeless:" P "not timeless"
@@ -531,8 +538,10 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
     | IFrame => iFrame Hz
     | IName ?y => iRename Hz into y
     | IList [[]] => iExFalso; iExact Hz
+    | IList [[?pat1; IDrop]] => iAndDestructChoice Hz as true Hz; go Hz pat1
+    | IList [[IDrop; ?pat2]] => iAndDestructChoice Hz as false Hz; go Hz pat2
     | IList [[?pat1; ?pat2]] =>
-       let Hy := iFresh in iSepDestruct Hz as Hz Hy; go Hz pat1; go Hy pat2
+       let Hy := iFresh in iAndDestruct Hz as Hz Hy; go Hz pat1; go Hy pat2
     | IList [[?pat1];[?pat2]] => iOrDestruct Hz as Hz Hz; [go Hz pat1|go Hz pat2]
     | IPureElim => iPure Hz as ?
     | IAlwaysElim ?pat => iPersistent Hz; go Hz pat

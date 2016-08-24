@@ -81,12 +81,15 @@ Proof.
   by iIntros "# _".
 Qed.
 
+Lemma demo_7 (M : ucmraT) (P Q1 Q2 : uPred M) : P ★ (Q1 ∧ Q2) ⊢ P ★ Q1.
+Proof. iIntros "[H1 [H2 _]]". by iFrame. Qed.
+
 Section iris.
   Context `{irisG Λ Σ}.
   Implicit Types E : coPset.
   Implicit Types P Q : iProp Σ.
 
-  Lemma demo_7 N E P Q R :
+  Lemma demo_8 N E P Q R :
     nclose N ⊆ E →
     (True -★ P -★ inv N Q -★ True -★ R) ⊢ P -★ ▷ Q ={E}=★ R.
   Proof.

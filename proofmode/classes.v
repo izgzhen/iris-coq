@@ -32,12 +32,12 @@ Global Arguments from_and : clear implicits.
 Class FromSep (P Q1 Q2 : uPred M) := from_sep : Q1 ★ Q2 ⊢ P.
 Global Arguments from_sep : clear implicits.
 
-Class IntoSep (p : bool) (P Q1 Q2 : uPred M) :=
-  into_sep : P ⊢ if p then Q1 ∧ Q2 else Q1 ★ Q2.
-Global Arguments into_sep : clear implicits.
+Class IntoAnd (p : bool) (P Q1 Q2 : uPred M) :=
+  into_and : P ⊢ if p then Q1 ∧ Q2 else Q1 ★ Q2.
+Global Arguments into_and : clear implicits.
 
-Lemma mk_into_sep_sep p P Q1 Q2 : (P ⊢ Q1 ★ Q2) → IntoSep p P Q1 Q2.
-Proof. rewrite /IntoSep=>->. destruct p; auto using sep_and. Qed.
+Lemma mk_into_and_sep p P Q1 Q2 : (P ⊢ Q1 ★ Q2) → IntoAnd p P Q1 Q2.
+Proof. rewrite /IntoAnd=>->. destruct p; auto using sep_and. Qed.
 
 Class IntoOp {A : cmraT} (a b1 b2 : A) := into_op : a ≡ b1 ⋅ b2.
 Global Arguments into_op {_} _ _ _ {_}.

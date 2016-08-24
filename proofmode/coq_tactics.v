@@ -652,13 +652,27 @@ Proof.
 Qed.
 
 (** * Conjunction/separating conjunction elimination *)
-Lemma tac_sep_destruct Δ Δ' i p j1 j2 P P1 P2 Q :
-  envs_lookup i Δ = Some (p, P) → IntoSep p P P1 P2 →
+Lemma tac_and_destruct Δ Δ' i p j1 j2 P P1 P2 Q :
+  envs_lookup i Δ = Some (p, P) → IntoAnd p P P1 P2 →
   envs_simple_replace i p (Esnoc (Esnoc Enil j1 P1) j2 P2) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
-  intros. rewrite envs_simple_replace_sound //; simpl. rewrite (into_sep p P).
+  intros. rewrite envs_simple_replace_sound //; simpl. rewrite (into_and p P).
   by destruct p; rewrite /= ?right_id (comm _ P1) ?always_and_sep wand_elim_r.
+Qed.
+
+(* Using this tactic, one can destruct a (non-separating) conjunction in the
+spatial context as long as one of the conjuncts is thrown away. It corresponds
+to the principle of "external choice" in linear logic. *)
+Lemma tac_and_destruct_choice Δ Δ' i p (lr : bool) j P P1 P2 Q :
+  envs_lookup i Δ = Some (p, P) → IntoAnd true P P1 P2 →
+  envs_simple_replace i p (Esnoc Enil j (if lr then P1 else P2)) Δ = Some Δ' →
+  (Δ' ⊢ Q) → Δ ⊢ Q.
+Proof.
+  intros. rewrite envs_simple_replace_sound //; simpl.
+  rewrite right_id (into_and true P). destruct lr.
+  - by rewrite and_elim_l wand_elim_r.
+  - by rewrite and_elim_r wand_elim_r.
 Qed.
 
 (** * Framing *)
