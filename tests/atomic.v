@@ -75,3 +75,69 @@ Section demo.
       iVsIntro. wp_if. by iApply "IH".
   Qed.
 End demo.
+
+From iris.heap_lang.lib Require Import par.
+
+Section user.
+  Context `{!heapG Σ, !spawnG Σ} (N : namespace).
+
+  Definition incr_2 : val :=
+    λ: "x",
+       let: "l" := ref "x" in
+       incr "l" || incr "l";;
+       !"l".
+
+  (* prove that incr is safe w.r.t. data race. TODO: prove a stronger post-condition *)
+  Lemma incr_2_safe:
+    ∀ (x: Z), heapN ⊥ N -> heap_ctx ⊢ WP incr_2 #x {{ _, True }}.
+  Proof.
+    iIntros (x HN) "#Hh".
+    rewrite /incr_2.
+    wp_let.
+    wp_alloc l as "Hl".
+    iVs (inv_alloc N _ (∃x':Z, l ↦ #x')%I with "[Hl]") as "#?".
+    { iNext. by iExists x. }
+    wp_let.
+    wp_bind (_ || _)%E.
+    iApply (wp_par (λ _, True%I) (λ _, True%I)).
+    iFrame "Hh".
+    (* prove worker triple *)
+    iDestruct (incr_atomic_spec N l with "Hh") as "Hincr"=>//.
+    rewrite /incr_triple /atomic_triple.
+    iSpecialize ("Hincr" $! True%I (fun _ _ => True%I) with "[]").
+    - iIntros "!# _".
+      (* open the invariant *)
+      iInv N as "Hl" "Hclose".
+      iTimeless "Hl". iDestruct "Hl" as (x') "Hl'".
+      (* mask magic *)
+      iApply pvs_intro'.
+      { apply ndisj_subseteq_difference; auto. }
+      iIntros "Hvs".
+      iExists x'.
+      iFrame "Hl'".
+      iSplit.
+      + (* provide a way to rollback *)
+        iIntros "Hl'".
+        iApply pvs_trans.
+        (* close invariant *)
+        iApply "Hclose".
+        (* do view shifts *)
+        iVs "Hvs". iVsIntro. iNext. by iExists x'.
+      + (* provide a way to commit *)
+        iIntros (v) "[Heq Hl']".
+        iApply pvs_trans.
+        (* close the invariant *)
+        iApply "Hclose".
+        (* do view shifts *)
+        iVs "Hvs". iVsIntro. iNext. by iExists (x' + 1).
+    - iDestruct "Hincr" as "#HIncr".
+      iSplitL; [|iSplitL]; try (iApply wp_wand_r;iSplitL; [by iApply "HIncr"|auto]).
+      iIntros (v1 v2) "_ !>".
+      wp_seq.
+      iInv N as "Hinv" "Hclose".
+      iTimeless "Hinv". iDestruct "Hinv" as (x') "Hl".
+      wp_load.
+      iApply "Hclose".
+      iNext. by iExists x'.
+  Qed.
+End user.
