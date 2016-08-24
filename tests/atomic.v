@@ -61,19 +61,16 @@ Section demo.
     wp_load.
     iVs ("Hvs'" with "Hl") as "HP".
     iVsIntro. wp_let. wp_bind (CAS _ _ _). wp_op.
-    (* iVs ("Hvs" with "HP") as (x) "[Hl Hvs']". (* FIXME: Can't apply, bug? *) *)
-    iApply (wp_atomic ⊤ heapN _); first by solve_atomic.
     iVs ("Hvs" with "HP") as (x') "[Hl Hvs']".
     destruct (decide (x = x')).
     - subst.
       iDestruct "Hvs'" as "[_ Hvs']".
       iSpecialize ("Hvs'" $! #x').
-      iVsIntro.
       wp_cas_suc.
       iVs ("Hvs'" with "[Hl]") as "HQ"; first by iFrame.
       iVsIntro. wp_if. iVsIntro. by iExists x'.
     - iDestruct "Hvs'" as "[Hvs' _]".
-      iVsIntro. wp_cas_fail.
+      wp_cas_fail.
       iVs ("Hvs'" with "[Hl]") as "HP"; first by iFrame.
       iVsIntro. wp_if. by iApply "IH".
   Qed.
