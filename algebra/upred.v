@@ -1181,11 +1181,6 @@ Proof.
   exists (y ⋅ x3); split; first by rewrite -assoc.
   exists y; eauto using cmra_includedN_l.
 Qed.
-Lemma now_True_rvs P : ◇ (|=r=> P) ⊢ (|=r=> ◇ P).
-Proof.
-  rewrite /uPred_now_True. apply or_elim; auto using rvs_mono.
-  by rewrite -rvs_intro -or_intro_l.
-Qed.
 
 (** * Derived rules *)
 Global Instance rvs_mono' : Proper ((⊢) ==> (⊢)) (@uPred_rvs M).
@@ -1204,6 +1199,11 @@ Lemma rvs_ownM_update x y : x ~~> y → uPred_ownM x ⊢ |=r=> uPred_ownM y.
 Proof.
   intros; rewrite (rvs_ownM_updateP _ (y =)); last by apply cmra_update_updateP.
   by apply rvs_mono, exist_elim=> y'; apply pure_elim_l=> ->.
+Qed.
+Lemma now_True_rvs P : ◇ (|=r=> P) ⊢ (|=r=> ◇ P).
+Proof.
+  rewrite /uPred_now_True. apply or_elim; auto using rvs_mono.
+  by rewrite -rvs_intro -or_intro_l.
 Qed.
 
 (* Products *)
