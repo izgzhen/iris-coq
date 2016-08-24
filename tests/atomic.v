@@ -95,8 +95,7 @@ Section user.
     rewrite /incr_2.
     wp_let.
     wp_alloc l as "Hl".
-    iVs (inv_alloc N _ (∃x':Z, l ↦ #x')%I with "[Hl]") as "#?".
-    { iNext. by iExists x. }
+    iVs (inv_alloc N _ (∃x':Z, l ↦ #x')%I with "[Hl]") as "#?"; first eauto.
     wp_let.
     wp_bind (_ || _)%E.
     iApply (wp_par (λ _, True%I) (λ _, True%I)).
@@ -104,11 +103,10 @@ Section user.
     (* prove worker triple *)
     iDestruct (incr_atomic_spec N l with "Hh") as "Hincr"=>//.
     rewrite /incr_triple /atomic_triple.
-    iSpecialize ("Hincr" $! True%I (fun _ _ => True%I) with "[]").
+    iSpecialize ("Hincr"  $! True%I (fun _ _ => True%I) with "[]").
     - iIntros "!# _".
       (* open the invariant *)
-      iInv N as "Hl" "Hclose".
-      iTimeless "Hl". iDestruct "Hl" as (x') "Hl'".
+      iInv N as (x') ">Hl'" "Hclose".
       (* mask magic *)
       iApply pvs_intro'.
       { apply ndisj_subseteq_difference; auto. }
@@ -118,26 +116,16 @@ Section user.
       iSplit.
       + (* provide a way to rollback *)
         iIntros "Hl'".
-        iApply pvs_trans.
-        (* close invariant *)
-        iApply "Hclose".
-        (* do view shifts *)
-        iVs "Hvs". iVsIntro. iNext. by iExists x'.
+        iVs "Hvs". iVs ("Hclose" with "[Hl']"); eauto.
       + (* provide a way to commit *)
         iIntros (v) "[Heq Hl']".
-        iApply pvs_trans.
-        (* close the invariant *)
-        iApply "Hclose".
-        (* do view shifts *)
-        iVs "Hvs". iVsIntro. iNext. by iExists (x' + 1).
+        iVs "Hvs". iVs ("Hclose" with "[Hl']"); eauto.
     - iDestruct "Hincr" as "#HIncr".
       iSplitL; [|iSplitL]; try (iApply wp_wand_r;iSplitL; [by iApply "HIncr"|auto]).
       iIntros (v1 v2) "_ !>".
       wp_seq.
-      iInv N as "Hinv" "Hclose".
-      iTimeless "Hinv". iDestruct "Hinv" as (x') "Hl".
+      iInv N as (x') ">Hl" "Hclose".
       wp_load.
-      iApply "Hclose".
-      iNext. by iExists x'.
+      iApply "Hclose". eauto.
   Qed.
 End user.
