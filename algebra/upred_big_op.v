@@ -29,6 +29,7 @@ Definition uPred_big_sepM {M} `{Countable K} {A}
     (m : gmap K A) (Φ : K → A → uPred M) : uPred M :=
   [★] (curry Φ <$> map_to_list m).
 Instance: Params (@uPred_big_sepM) 6.
+Typeclasses Opaque uPred_big_sepM.
 Notation "'[★' 'map' ] k ↦ x ∈ m , P" := (uPred_big_sepM m (λ k x, P))
   (at level 200, m at level 10, k, x at level 1, right associativity,
    format "[★  map ]  k ↦ x  ∈  m ,  P") : uPred_scope.
@@ -36,6 +37,7 @@ Notation "'[★' 'map' ] k ↦ x ∈ m , P" := (uPred_big_sepM m (λ k x, P))
 Definition uPred_big_sepS {M} `{Countable A}
   (X : gset A) (Φ : A → uPred M) : uPred M := [★] (Φ <$> elements X).
 Instance: Params (@uPred_big_sepS) 5.
+Typeclasses Opaque uPred_big_sepS.
 Notation "'[★' 'set' ] x ∈ X , P" := (uPred_big_sepS X (λ x, P))
   (at level 200, X at level 10, x at level 1, right associativity,
    format "[★  set ]  x  ∈  X ,  P") : uPred_scope.
