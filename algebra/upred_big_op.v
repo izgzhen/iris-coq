@@ -25,7 +25,6 @@ Instance: Params (@uPred_big_sep) 1.
 Notation "'[★]' Ps" := (uPred_big_sep Ps) (at level 20) : uPred_scope.
 
 (** * Other big ops *)
-(** We use a type class to obtain overloaded notations *)
 Definition uPred_big_sepM {M} `{Countable K} {A}
     (m : gmap K A) (Φ : K → A → uPred M) : uPred M :=
   [★] (curry Φ <$> map_to_list m).
