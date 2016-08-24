@@ -40,10 +40,14 @@ Notation "'[★' 'set' ] x ∈ X , P" := (uPred_big_sepS X (λ x, P))
   (at level 200, X at level 10, x at level 1, right associativity,
    format "[★  set ]  x  ∈  X ,  P") : uPred_scope.
 
-(** * Persistence of lists of uPreds *)
+(** * Persistence and timelessness of lists of uPreds *)
 Class PersistentL {M} (Ps : list (uPred M)) :=
   persistentL : Forall PersistentP Ps.
 Arguments persistentL {_} _ {_}.
+
+Class TimelessL {M} (Ps : list (uPred M)) :=
+  timelessL : Forall TimelessP Ps.
+Arguments timelessL {_} _ {_}.
 
 (** * Properties *)
 Section big_op.
@@ -103,6 +107,54 @@ Lemma big_and_elem_of Ps P : P ∈ Ps → [∧] Ps ⊢ P.
 Proof. induction 1; simpl; auto with I. Qed.
 Lemma big_sep_elem_of Ps P : P ∈ Ps → [★] Ps ⊢ P.
 Proof. induction 1; simpl; auto with I. Qed.
+
+(** ** Persistence *)
+Global Instance big_and_persistent Ps : PersistentL Ps → PersistentP ([∧] Ps).
+Proof. induction 1; apply _. Qed.
+Global Instance big_sep_persistent Ps : PersistentL Ps → PersistentP ([★] Ps).
+Proof. induction 1; apply _. Qed.
+
+Global Instance nil_persistent : PersistentL (@nil (uPred M)).
+Proof. constructor. Qed.
+Global Instance cons_persistent P Ps :
+  PersistentP P → PersistentL Ps → PersistentL (P :: Ps).
+Proof. by constructor. Qed.
+Global Instance app_persistent Ps Ps' :
+  PersistentL Ps → PersistentL Ps' → PersistentL (Ps ++ Ps').
+Proof. apply Forall_app_2. Qed.
+
+Global Instance fmap_persistent {A} (f : A → uPred M) xs :
+  (∀ x, PersistentP (f x)) → PersistentL (f <$> xs).
+Proof. unfold PersistentL=> ?; induction xs; constructor; auto. Qed.
+Global Instance zip_with_persistent {A B} (f : A → B → uPred M) xs ys :
+  (∀ x y, PersistentP (f x y)) → PersistentL (zip_with f xs ys).
+Proof.
+  unfold PersistentL=> ?; revert ys; induction xs=> -[|??]; constructor; auto.
+Qed.
+
+(** ** Timelessness *)
+Global Instance big_and_timeless Ps : TimelessL Ps → TimelessP ([∧] Ps).
+Proof. induction 1; apply _. Qed.
+Global Instance big_sep_timeless Ps : TimelessL Ps → TimelessP ([★] Ps).
+Proof. induction 1; apply _. Qed.
+
+Global Instance nil_timeless : TimelessL (@nil (uPred M)).
+Proof. constructor. Qed.
+Global Instance cons_timeless P Ps :
+  TimelessP P → TimelessL Ps → TimelessL (P :: Ps).
+Proof. by constructor. Qed.
+Global Instance app_timeless Ps Ps' :
+  TimelessL Ps → TimelessL Ps' → TimelessL (Ps ++ Ps').
+Proof. apply Forall_app_2. Qed.
+
+Global Instance fmap_timeless {A} (f : A → uPred M) xs :
+  (∀ x, TimelessP (f x)) → TimelessL (f <$> xs).
+Proof. unfold TimelessL=> ?; induction xs; constructor; auto. Qed.
+Global Instance zip_with_timeless {A B} (f : A → B → uPred M) xs ys :
+  (∀ x y, TimelessP (f x y)) → TimelessL (zip_with f xs ys).
+Proof.
+  unfold TimelessL=> ?; revert ys; induction xs=> -[|??]; constructor; auto.
+Qed.
 
 (** ** Big ops over finite maps *)
 Section gmap.
@@ -253,6 +305,14 @@ Section gmap.
     rewrite -big_sepM_forall -big_sepM_sepM. apply big_sepM_mono; auto=> k x ?.
     by rewrite -always_wand_impl always_elim wand_elim_l.
   Qed.
+
+  Global Instance big_sepM_persistent Φ m :
+    (∀ k x, PersistentP (Φ k x)) → PersistentP ([★ map] k↦x ∈ m, Φ k x).
+  Proof. intros. apply big_sep_persistent, fmap_persistent=>-[??] /=; auto. Qed.
+
+  Global Instance big_sepM_timeless Φ m :
+    (∀ k x, TimelessP (Φ k x)) → TimelessP ([★ map] k↦x ∈ m, Φ k x).
+  Proof. intro. apply big_sep_timeless, fmap_timeless=> -[??] /=; auto. Qed.
 End gmap.
 
 (** ** Big ops over finite sets *)
@@ -372,25 +432,13 @@ Section gset.
     rewrite -big_sepS_forall -big_sepS_sepS. apply big_sepS_mono; auto=> x ?.
     by rewrite -always_wand_impl always_elim wand_elim_l.
   Qed.
+
+  Global Instance big_sepS_persistent Φ X :
+    (∀ x, PersistentP (Φ x)) → PersistentP ([★ set] x ∈ X, Φ x).
+  Proof. rewrite /uPred_big_sepS. apply _. Qed.
+
+  Global Instance big_sepS_timeless Φ X :
+    (∀ x, TimelessP (Φ x)) → TimelessP ([★ set] x ∈ X, Φ x).
+  Proof. rewrite /uPred_big_sepS. apply _. Qed.
 End gset.
-
-(** ** Persistence *)
-Global Instance big_and_persistent Ps : PersistentL Ps → PersistentP ([∧] Ps).
-Proof. induction 1; apply _. Qed.
-Global Instance big_sep_persistent Ps : PersistentL Ps → PersistentP ([★] Ps).
-Proof. induction 1; apply _. Qed.
-
-Global Instance nil_persistent : PersistentL (@nil (uPred M)).
-Proof. constructor. Qed.
-Global Instance cons_persistent P Ps :
-  PersistentP P → PersistentL Ps → PersistentL (P :: Ps).
-Proof. by constructor. Qed.
-Global Instance app_persistent Ps Ps' :
-  PersistentL Ps → PersistentL Ps' → PersistentL (Ps ++ Ps').
-Proof. apply Forall_app_2. Qed.
-Global Instance zip_with_persistent {A B} (f : A → B → uPred M) xs ys :
-  (∀ x y, PersistentP (f x y)) → PersistentL (zip_with f xs ys).
-Proof.
-  unfold PersistentL=> ?; revert ys; induction xs=> -[|??]; constructor; auto.
-Qed.
 End big_op.
