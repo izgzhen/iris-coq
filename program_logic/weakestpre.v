@@ -33,20 +33,20 @@ Definition wp_aux : { x | x = @wp_def }. by eexists. Qed.
 Definition wp := proj1_sig wp_aux.
 Definition wp_eq : @wp = @wp_def := proj2_sig wp_aux.
 
-Arguments wp {_ _ _} _ _ _.
+Arguments wp {_ _ _} _ _%E _.
 Instance: Params (@wp) 5.
 
-Notation "'WP' e @ E {{ Φ } }" := (wp E e Φ)
+Notation "'WP' e @ E {{ Φ } }" := (wp E e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'WP'  e  @  E  {{  Φ  } }") : uPred_scope.
-Notation "'WP' e {{ Φ } }" := (wp ⊤ e Φ)
+Notation "'WP' e {{ Φ } }" := (wp ⊤ e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'WP'  e  {{  Φ  } }") : uPred_scope.
 
-Notation "'WP' e @ E {{ v , Q } }" := (wp E e (λ v, Q))
+Notation "'WP' e @ E {{ v , Q } }" := (wp E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'WP'  e  @  E  {{  v ,  Q  } }") : uPred_scope.
-Notation "'WP' e {{ v , Q } }" := (wp ⊤ e (λ v, Q))
+Notation "'WP' e {{ v , Q } }" := (wp ⊤ e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'WP'  e  {{  v ,  Q  } }") : uPred_scope.
 

@@ -59,24 +59,6 @@ Inductive expr :=
   | CAS (e0 : expr) (e1 : expr) (e2 : expr).
 
 Bind Scope expr_scope with expr.
-Delimit Scope expr_scope with E.
-Arguments Rec _ _ _%E.
-Arguments App _%E _%E.
-Arguments Lit _.
-Arguments UnOp _ _%E.
-Arguments BinOp _ _%E _%E.
-Arguments If _%E _%E _%E.
-Arguments Pair _%E _%E.
-Arguments Fst _%E.
-Arguments Snd _%E.
-Arguments InjL _%E.
-Arguments InjR _%E.
-Arguments Case _%E _%E _%E.
-Arguments Fork _%E.
-Arguments Alloc _%E.
-Arguments Load _%E.
-Arguments Store _%E _%E.
-Arguments CAS _%E _%E _%E.
 
 Fixpoint is_closed (X : list string) (e : expr) : bool :=
   match e with
@@ -105,10 +87,6 @@ Inductive val :=
   | InjRV (v : val).
 
 Bind Scope val_scope with val.
-Delimit Scope val_scope with V.
-Arguments PairV _%V _%V.
-Arguments InjLV _%V.
-Arguments InjRV _%V.
 
 Fixpoint of_val (v : val) : expr :=
   match v with
