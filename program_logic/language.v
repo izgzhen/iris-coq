@@ -11,6 +11,10 @@ Structure language := Language {
   of_to_val e v : to_val e = Some v → of_val v = e;
   val_stuck e σ e' σ' efs : prim_step e σ e' σ' efs → to_val e = None
 }.
+Delimit Scope expr_scope with E.
+Delimit Scope val_scope with V.
+Bind Scope expr_scope with expr.
+Bind Scope expr_scope with val.
 Arguments of_val {_} _.
 Arguments to_val {_} _.
 Arguments prim_step {_} _ _ _ _ _.
