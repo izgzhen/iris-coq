@@ -2,44 +2,52 @@ From iris.algebra Require Export gmap gset coPset.
 From iris.proofmode Require Import invariants tactics.
 Import uPred.
 
+Definition tlN : namespace := nroot .@ "tl".
 Definition thread_id := gname.
 
 Class thread_localG Σ :=
   tl_inG :> inG Σ (prodR coPset_disjR (gset_disjR positive)).
 
-Definition tlN : namespace := nroot .@ "tl".
-
 Section defs.
   Context `{irisG Λ Σ, thread_localG Σ}.
 
-  Definition tl_tokens (tid : thread_id) (E : coPset) : iProp Σ :=
+  Definition tl_own (tid : thread_id) (E : coPset) : iProp Σ :=
     own tid (CoPset E, ∅).
 
   Definition tl_inv (tid : thread_id) (N : namespace) (P : iProp Σ) : iProp Σ :=
     (∃ i, ■ (i ∈ nclose N) ∧
-          inv tlN (P ★ own tid (∅, GSet {[i]}) ∨ tl_tokens tid {[i]}))%I.
+          inv tlN (P ★ own tid (∅, GSet {[i]}) ∨ tl_own tid {[i]}))%I.
 End defs.
 
-Instance: Params (@tl_tokens) 2.
 Instance: Params (@tl_inv) 4.
+Typeclasses Opaque tl_own tl_inv.
 
 Section proofs.
   Context `{irisG Λ Σ, thread_localG Σ}.
 
-  Lemma tid_alloc : True =r=> ∃ tid, tl_tokens tid ⊤.
+  Global Instance tl_own_timeless tid E : TimelessP (tl_own tid E).
+  Proof. rewrite /tl_own; apply _. Qed.
+
+  Global Instance tl_inv_ne tid N n : Proper (dist n ==> dist n) (tl_inv tid N).
+  Proof. rewrite /tl_inv. solve_proper. Qed.
+  Global Instance tl_inv_proper tid N : Proper ((≡) ==> (≡)) (tl_inv tid N).
+  Proof. apply (ne_proper _). Qed.
+
+  Global Instance tl_inv_persistent tid N P : PersistentP (tl_inv tid N P).
+  Proof. rewrite /tl_inv; apply _. Qed.
+
+  Lemma tl_alloc : True =r=> ∃ tid, tl_own tid ⊤.
   Proof. by apply own_alloc. Qed.
 
-  Lemma tl_tokens_disj tid E1 E2 :
-    tl_tokens tid E1 ★ tl_tokens tid E2 ⊢ ■ (E1 ⊥ E2).
+  Lemma tl_own_disjoint tid E1 E2 : tl_own tid E1 ★ tl_own tid E2 ⊢ ■ (E1 ⊥ E2).
   Proof.
-    rewrite /tl_tokens -own_op own_valid -coPset_disj_valid_op discrete_valid.
-    by iIntros ([? _]).
+    rewrite /tl_own -own_op own_valid -coPset_disj_valid_op. by iIntros ([? _]).
   Qed.
 
-  Lemma tl_tokens_union tid E1 E2 :
-    E1 ⊥ E2 → tl_tokens tid (E1 ∪ E2) ⊣⊢ tl_tokens tid E1 ★ tl_tokens tid E2.
+  Lemma tl_own_union tid E1 E2 :
+    E1 ⊥ E2 → tl_own tid (E1 ∪ E2) ⊣⊢ tl_own tid E1 ★ tl_own tid E2.
   Proof.
-    intros ?. by rewrite /tl_tokens -own_op pair_op left_id coPset_disj_union.
+    intros ?. by rewrite /tl_own -own_op pair_op left_id coPset_disj_union.
   Qed.
 
   Lemma tl_inv_alloc tid E N P : ▷ P ={E}=> tl_inv tid N P.
@@ -55,19 +63,20 @@ Section proofs.
       eapply nclose_infinite, (difference_finite_inv _ _), Hfin.
       apply of_gset_finite. }
     simpl. iDestruct "Hm" as %(<- & i & -> & ?).
-    iVs (inv_alloc tlN with "[-]"). 2:iVsIntro; iExists i; eauto.
+    rewrite /tl_inv.
+    iVs (inv_alloc tlN with "[-]"); last (iVsIntro; iExists i; eauto).
     iNext. iLeft. by iFrame.
   Qed.
 
   Lemma tl_inv_open tid tlE E N P :
     nclose tlN ⊆ tlE → nclose N ⊆ E →
-    tl_inv tid N P ⊢ tl_tokens tid E ={tlE}=★ ▷ P ★ tl_tokens tid (E ∖ N) ★
-                       (▷ P ★ tl_tokens tid (E ∖ N) ={tlE}=★ tl_tokens tid E).
+    tl_inv tid N P ⊢ tl_own tid E ={tlE}=★ ▷ P ★ tl_own tid (E ∖ N) ★
+                       (▷ P ★ tl_own tid (E ∖ N) ={tlE}=★ tl_own tid E).
   Proof.
-    iIntros (??) "#Htlinv Htoks".
-    iDestruct "Htlinv" as (i) "[% #Hinv]".
+    rewrite /tl_inv. iIntros (??) "#Htlinv Htoks".
+    iDestruct "Htlinv" as (i) "[% Hinv]".
     rewrite {1 4}(union_difference_L (nclose N) E) //.
-    rewrite {1 5}(union_difference_L {[i]} (nclose N)) ?tl_tokens_union; try set_solver.
+    rewrite {1 5}(union_difference_L {[i]} (nclose N)) ?tl_own_union; [|set_solver..].
     iDestruct "Htoks" as "[[Htoki $] $]".
     iInv tlN as "[[$ >Hdis]|>Htoki2]" "Hclose".
     - iVs ("Hclose" with "[Htoki]") as "_"; first auto.
@@ -77,7 +86,7 @@ Section proofs.
         iDestruct (own_valid with "Hdis") as %[_ Hval].
         revert Hval. rewrite gset_disj_valid_op. set_solver.
       + iFrame. iApply "Hclose". iNext. iLeft. by iFrame.
-    - iDestruct (tl_tokens_disj tid {[i]} {[i]} with "[-]") as %?. by iFrame.
+    - iDestruct (tl_own_disjoint tid {[i]} {[i]} with "[-]") as %?; first by iFrame.
       set_solver.
   Qed.
 End proofs.
