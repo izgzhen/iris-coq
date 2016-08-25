@@ -53,7 +53,6 @@ Lemma spawn_spec (Ψ : val → iProp Σ) e (f : val) (Φ : val → iProp Σ) :
   ⊢ WP spawn e {{ Φ }}.
 Proof.
   iIntros (<-%of_to_val ?) "(#Hh & Hf & HΦ)". rewrite /spawn /=.
-  (* TODO: Coq is printing %V here.  *)
   wp_let. wp_alloc l as "Hl". wp_let.
   iVs (own_alloc (Excl ())) as (γ) "Hγ"; first done.
   iVs (inv_alloc N _ (spawn_inv γ l Ψ) with "[Hl]") as "#?".
