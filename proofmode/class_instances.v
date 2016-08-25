@@ -275,17 +275,17 @@ Proof.
   rewrite /Frame /MakeLater=><- <-. by rewrite later_sep -(later_intro R).
 Qed.
 
-Class MakeNowTrue (P Q : uPred M) := make_now_True : ◇ P ⊣⊢ Q.
-Global Instance make_now_True_True : MakeNowTrue True True.
-Proof. by rewrite /MakeNowTrue now_True_True. Qed.
-Global Instance make_now_True_default P : MakeNowTrue P (◇ P) | 100.
+Class MakeExceptLast (P Q : uPred M) := make_except_last : ◇ P ⊣⊢ Q.
+Global Instance make_except_last_True : MakeExceptLast True True.
+Proof. by rewrite /MakeExceptLast except_last_True. Qed.
+Global Instance make_except_last_default P : MakeExceptLast P (◇ P) | 100.
 Proof. done. Qed.
 
-Global Instance frame_now_true R P Q Q' :
-  Frame R P Q → MakeNowTrue Q Q' → Frame R (◇ P) Q'.
+Global Instance frame_except_last R P Q Q' :
+  Frame R P Q → MakeExceptLast Q Q' → Frame R (◇ P) Q'.
 Proof.
-  rewrite /Frame /MakeNowTrue=><- <-.
-  by rewrite now_True_sep -(now_True_intro R).
+  rewrite /Frame /MakeExceptLast=><- <-.
+  by rewrite except_last_sep -(except_last_intro R).
 Qed.
 
 Global Instance frame_exist {A} R (Φ Ψ : A → uPred M) :
@@ -331,21 +331,21 @@ Global Instance into_exist_always {A} P (Φ : A → uPred M) :
   IntoExist P Φ → IntoExist (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP always_exist. Qed.
 
-(* IntoNowTrue *)
-Global Instance into_now_True_now_True P : IntoNowTrue (◇ P) P.
+(* IntoExceptLast *)
+Global Instance into_except_last_except_last P : IntoExceptLast (◇ P) P.
 Proof. done. Qed.
-Global Instance into_now_True_timeless P : TimelessP P → IntoNowTrue (▷ P) P.
+Global Instance into_except_last_timeless P : TimelessP P → IntoExceptLast (▷ P) P.
 Proof. done. Qed.
 
-(* IsNowTrue *)
-Global Instance is_now_True_now_True P : IsNowTrue (◇ P).
-Proof. by rewrite /IsNowTrue now_True_idemp. Qed.
-Global Instance is_now_True_later P : IsNowTrue (▷ P).
-Proof. by rewrite /IsNowTrue now_True_later. Qed.
-Global Instance is_now_True_rvs P : IsNowTrue P → IsNowTrue (|=r=> P).
+(* IsExceptLast *)
+Global Instance is_except_last_except_last P : IsExceptLast (◇ P).
+Proof. by rewrite /IsExceptLast except_last_idemp. Qed.
+Global Instance is_except_last_later P : IsExceptLast (▷ P).
+Proof. by rewrite /IsExceptLast except_last_later. Qed.
+Global Instance is_except_last_rvs P : IsExceptLast P → IsExceptLast (|=r=> P).
 Proof.
-  rewrite /IsNowTrue=> HP.
-  by rewrite -{2}HP -(now_True_idemp P) -now_True_rvs -(now_True_intro P).
+  rewrite /IsExceptLast=> HP.
+  by rewrite -{2}HP -(except_last_idemp P) -except_last_rvs -(except_last_intro P).
 Qed.
 
 (* FromViewShift *)

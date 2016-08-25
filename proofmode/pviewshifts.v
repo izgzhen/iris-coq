@@ -40,8 +40,8 @@ Global Instance to_assert_pvs E1 E2 P Q :
   IntoAssert P (|={E1,E2}=> Q) (|={E1}=> P).
 Proof. intros. by rewrite /IntoAssert pvs_frame_r wand_elim_r pvs_trans. Qed.
 
-Global Instance is_now_True_pvs E1 E2 P : IsNowTrue (|={E1,E2}=> P).
-Proof. by rewrite /IsNowTrue now_True_pvs. Qed.
+Global Instance is_except_last_pvs E1 E2 P : IsExceptLast (|={E1,E2}=> P).
+Proof. by rewrite /IsExceptLast except_last_pvs. Qed.
 
 Global Instance from_vs_pvs E P : FromVs (|={E}=> P) P.
 Proof. by rewrite /FromVs -rvs_pvs. Qed.
