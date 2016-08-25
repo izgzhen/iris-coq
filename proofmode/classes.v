@@ -62,7 +62,7 @@ Global Arguments into_exist {_} _ _ {_}.
 Class IntoExceptLast (P Q : uPred M) := into_except_last : P ⊢ ◇ Q.
 Global Arguments into_except_last : clear implicits.
 
-Class IsExpectLast (Q : uPred M) := is_except_last : ◇ Q ⊢ Q.
+Class IsExceptLast (Q : uPred M) := is_except_last : ◇ Q ⊢ Q.
 Global Arguments is_except_last : clear implicits.
 
 Class FromVs (P Q : uPred M) := from_vs : (|=r=> Q) ⊢ P.
