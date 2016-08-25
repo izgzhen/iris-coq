@@ -221,10 +221,12 @@ The tactic instantiates each dependent argument [x_i] with an evar and generates
 a goal [P] for non-dependent arguments [x_i : P]. *)
 Tactic Notation "iIntoEntails" open_constr(t) :=
   let rec go t :=
-    lazymatch type of t with
+    let tT := type of t in
+    lazymatch eval hnf in tT with
     | True ⊢ _ => apply t
     | _ ⊢ _ => apply (uPred.entails_wand _ _ t)
-    | _ ⊣⊢ _ => apply (uPred.equiv_iff _ _ t)
+    (* need to use the unfolded version of [⊣⊢] due to the hnf *)
+    | uPred_equiv' _ _ => apply (uPred.equiv_iff _ _ t)
     | ?P → ?Q => let H := fresh in assert P as H; [|go uconstr:(t H); clear H]
     | ∀ _ : ?T, _ =>
        (* Put [T] inside an [id] to avoid TC inference from being invoked. *)
