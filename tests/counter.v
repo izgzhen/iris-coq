@@ -94,7 +94,7 @@ Lemma newcounter_spec N :
   heapN ⊥ N →
   heap_ctx ⊢ {{ True }} newcounter #() {{ v, ∃ l, v = #l ∧ C l 0 }}.
 Proof.
-  iIntros (?) "#Hh !# _ /=". rewrite /newcounter. wp_seq. wp_alloc l as "Hl".
+  iIntros (?) "#Hh !# _ /=". rewrite /newcounter /=. wp_seq. wp_alloc l as "Hl".
   iVs (own_alloc (Auth 0)) as (γ) "Hγ"; first done.
   rewrite (auth_frag_op 0 0) //; iDestruct "Hγ" as "[Hγ Hγf]".
   iVs (inv_alloc N _ (I γ l) with "[Hl Hγ]") as "#?".
@@ -128,7 +128,7 @@ Lemma read_spec l n :
   {{ C l n }} read #l {{ v, ∃ m : nat, ■ (v = #m ∧ n ≤ m) ∧ C l m }}.
 Proof.
   iIntros "!# Hl /=". iDestruct "Hl" as (N γ) "(% & #Hh & #Hinv & Hγf)".
-  rewrite /read. wp_let. iInv N as (c) "[Hl Hγ]" "Hclose". wp_load.
+  rewrite /read /=. wp_let. iInv N as (c) "[Hl Hγ]" "Hclose". wp_load.
   iDestruct (own_valid γ (Frag n ⋅ Auth c) with "[#]") as % ?%auth_frag_valid.
   { iApply own_op. by iFrame. }
   rewrite (auth_frag_op c c); last lia; iDestruct "Hγ" as "[Hγ Hγf']".

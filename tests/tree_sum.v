@@ -60,7 +60,7 @@ Lemma sum_wp `{!heapG Σ} v t Φ :
   heap_ctx ★ is_tree v t ★ (is_tree v t -★ Φ #(sum t))
   ⊢ WP sum' v {{ Φ }}.
 Proof.
-  iIntros "(#Hh & Ht & HΦ)". rewrite /sum'.
+  iIntros "(#Hh & Ht & HΦ)". rewrite /sum' /=.
   wp_let. wp_alloc l as "Hl". wp_let.
   wp_apply sum_loop_wp; iFrame "Hh Ht Hl".
   rewrite Z.add_0_r.
