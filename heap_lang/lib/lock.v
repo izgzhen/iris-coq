@@ -50,7 +50,7 @@ Lemma newlock_spec (R : iProp Σ) Φ :
   heapN ⊥ N →
   heap_ctx ★ R ★ (∀ l, is_lock l R -★ Φ #l) ⊢ WP newlock #() {{ Φ }}.
 Proof.
-  iIntros (?) "(#Hh & HR & HΦ)". rewrite /newlock.
+  iIntros (?) "(#Hh & HR & HΦ)". rewrite /newlock /=.
   wp_seq. wp_alloc l as "Hl".
   iVs (own_alloc (Excl ())) as (γ) "Hγ"; first done.
   iVs (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
@@ -75,7 +75,7 @@ Lemma release_spec R l (Φ : val → iProp Σ) :
   locked l R ★ R ★ Φ #() ⊢ WP release #l {{ Φ }}.
 Proof.
   iIntros "(Hl&HR&HΦ)"; iDestruct "Hl" as (γ) "(% & #? & #? & Hγ)".
-  rewrite /release. wp_let. iInv N as (b) "[Hl _]" "Hclose".
+  rewrite /release /=. wp_let. iInv N as (b) "[Hl _]" "Hclose".
   wp_store. iFrame "HΦ". iApply "Hclose". iNext. iExists false. by iFrame.
 Qed.
 End proof.

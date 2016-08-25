@@ -78,7 +78,7 @@ Proof. apply _. Qed.
 Lemma newlock_spec (R : iProp Σ) Φ :
   heap_ctx ★ R ★ (∀ l, is_lock l R -★ Φ l) ⊢ WP newlock #() {{ Φ }}.
 Proof.
-  iIntros "(#Hh & HR & HΦ)". rewrite /newlock.
+  iIntros "(#Hh & HR & HΦ)". rewrite /newlock /=.
   wp_seq. wp_alloc lo as "Hlo". wp_alloc ln as "Hln".
   iVs (own_alloc (Excl ())) as (γ2) "Hγ2"; first done.
   iVs (own_alloc_strong (Auth (Excl' ∅) ∅) {[ γ2 ]}) as (γ1) "[% Hγ1]"; first done.

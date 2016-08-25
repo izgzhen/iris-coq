@@ -52,13 +52,13 @@ Lemma spawn_spec (Ψ : val → iProp Σ) e (f : val) (Φ : val → iProp Σ) :
   heap_ctx ★ WP f #() {{ Ψ }} ★ (∀ l, join_handle l Ψ -★ Φ #l)
   ⊢ WP spawn e {{ Φ }}.
 Proof.
-  iIntros (<-%of_to_val ?) "(#Hh & Hf & HΦ)". rewrite /spawn.
+  iIntros (<-%of_to_val ?) "(#Hh & Hf & HΦ)". rewrite /spawn /=.
   (* TODO: Coq is printing %V here.  *)
   wp_let. wp_alloc l as "Hl". wp_let.
   iVs (own_alloc (Excl ())) as (γ) "Hγ"; first done.
   iVs (inv_alloc N _ (spawn_inv γ l Ψ) with "[Hl]") as "#?".
   { iNext. iExists NONEV. iFrame; eauto. }
-  wp_apply wp_fork. iSplitR "Hf".
+  wp_apply wp_fork; simpl. iSplitR "Hf".
   - iVsIntro. wp_seq. iVsIntro. iApply "HΦ". rewrite /join_handle. eauto.
   - wp_bind (f _). iApply wp_wand_l. iFrame "Hf"; iIntros (v) "Hv".
     iInv N as (v') "[Hl _]" "Hclose".
