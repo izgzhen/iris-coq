@@ -35,7 +35,7 @@ Lemma worker_spec e γ l (Φ Ψ : X → iProp Σ) `{!Closed [] e} :
   recv N l (barrier_res γ Φ) ★ (∀ x, {{ Φ x }} e {{ _, Ψ x }})
   ⊢ WP wait #l ;; e {{ _, barrier_res γ Ψ }}.
 Proof.
-  iIntros "[Hl #He]". wp_apply wait_spec; iFrame "Hl".
+  iIntros "[Hl #He]". wp_apply wait_spec; simpl; iFrame "Hl".
   iDestruct 1 as (x) "[#Hγ Hx]".
   wp_seq. iApply wp_wand_l. iSplitR; [|by iApply "He"].
   iIntros (v) "?"; iExists x; by iSplit.

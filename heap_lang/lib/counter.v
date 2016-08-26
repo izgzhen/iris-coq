@@ -36,7 +36,7 @@ Lemma newcounter_spec (R : iProp Σ) Φ :
   heapN ⊥ N →
   heap_ctx ★ (∀ l, counter l 0 -★ Φ #l) ⊢ WP newcounter #() {{ Φ }}.
 Proof.
-  iIntros (?) "[#Hh HΦ]". rewrite /newcounter. wp_seq. wp_alloc l as "Hl".
+  iIntros (?) "[#Hh HΦ]". rewrite /newcounter /=. wp_seq. wp_alloc l as "Hl".
   iVs (auth_alloc (counter_inv l) N _ (O:mnat) with "[Hl]")
     as (γ) "[#? Hγ]"; try by auto.
   iVsIntro. iApply "HΦ". rewrite /counter; eauto 10.
@@ -74,7 +74,7 @@ Lemma read_spec l j (Φ : val → iProp Σ) :
   ⊢ WP read #l {{ Φ }}.
 Proof.
   iIntros "[Hc HΦ]". iDestruct "Hc" as (γ) "(% & #? & #Hγ & Hγf)".
-  rewrite /read. wp_let.
+  rewrite /read /=. wp_let.
   iVs (auth_open (counter_inv l) with "[Hγf]") as (j') "(% & Hl & Hclose)"; auto.
   wp_load.
   iVs ("Hclose" $! (j `max` j') with "[Hl]") as "Hγf".
