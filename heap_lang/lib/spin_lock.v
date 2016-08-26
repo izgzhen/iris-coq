@@ -21,71 +21,65 @@ Instance subG_lockΣ {Σ} : subG lockΣ Σ → lockG Σ.
 Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
 
 Section proof.
-Context `{!heapG Σ, !lockG Σ} (N : namespace).
+  Context `{!heapG Σ, !lockG Σ} (N : namespace).
 
-Definition lock_inv (γ : gname) (l : loc) (R : iProp Σ) : iProp Σ :=
-  (∃ b : bool, l ↦ #b ★ if b then True else own γ (Excl ()) ★ R)%I.
+  Definition lock_inv (γ : gname) (l : loc) (R : iProp Σ) : iProp Σ :=
+    (∃ b : bool, l ↦ #b ★ if b then True else own γ (Excl ()) ★ R)%I.
 
-Definition is_lock (γ: gname) (lk : val) (R : iProp Σ) : iProp Σ :=
-  (∃ (l: loc), heapN ⊥ N ∧ heap_ctx ∧ lk = #l ∧ inv N (lock_inv γ l R))%I.
+  Definition is_lock (γ : gname) (lk : val) (R : iProp Σ) : iProp Σ :=
+    (∃ l: loc, heapN ⊥ N ∧ heap_ctx ∧ lk = #l ∧ inv N (lock_inv γ l R))%I.
 
-Definition locked (γ: gname): iProp Σ := own γ (Excl ())%I.
+  Definition locked (γ : gname): iProp Σ := own γ (Excl ()).
 
-Lemma locked_exclusive (γ: gname): (locked γ ★ locked γ ⊢ False)%I.
-Proof.
-  iIntros "[Hl Hl']". iCombine "Hl" "Hl'" as "Hl". by iDestruct (own_valid with "Hl") as %[].
-Qed.
+  Lemma locked_exclusive (γ : gname) : locked γ ★ locked γ ⊢ False.
+  Proof. rewrite /locked -own_op own_valid. by iIntros (?). Qed.
 
-Global Instance lock_inv_ne n γ l : Proper (dist n ==> dist n) (lock_inv γ l).
-Proof. solve_proper. Qed.
-Global Instance is_lock_ne n l : Proper (dist n ==> dist n) (is_lock γ l).
-Proof. solve_proper. Qed.
-(* Global Instance locked_ne n γ : Proper (dist n ==> dist n) (locked γ). *)
-(* Proof. solve_proper. Qed. *)
+  Global Instance lock_inv_ne n γ l : Proper (dist n ==> dist n) (lock_inv γ l).
+  Proof. solve_proper. Qed.
+  Global Instance is_lock_ne n l : Proper (dist n ==> dist n) (is_lock γ l).
+  Proof. solve_proper. Qed.
 
-(** The main proofs. *)
-Global Instance is_lock_persistent γ l R : PersistentP (is_lock γ l R).
-Proof. apply _. Qed.
+  (** The main proofs. *)
+  Global Instance is_lock_persistent γ l R : PersistentP (is_lock γ l R).
+  Proof. apply _. Qed.
+  Global Instance locked_timeless γ : TimelessP (locked γ).
+  Proof. apply _. Qed.
 
-(* Lemma locked_is_lock lk R : locked lk R ⊢ is_lock lk R. *)
-(* Proof. rewrite /is_lock. iDestruct 1 as (γ l) "(?&?&?&?&_)". iExists γ, l. auto. Qed. *)
+  Lemma newlock_spec (R : iProp Σ) Φ :
+    heapN ⊥ N →
+    heap_ctx ★ R ★ (∀ lk γ, is_lock γ lk R -★ Φ lk) ⊢ WP newlock #() {{ Φ }}.
+  Proof.
+    iIntros (?) "(#Hh & HR & HΦ)". rewrite /newlock /=.
+    wp_seq. wp_alloc l as "Hl".
+    iVs (own_alloc (Excl ())) as (γ) "Hγ"; first done.
+    iVs (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
+    { iIntros "!>". iExists false. by iFrame. }
+    iVsIntro. iApply "HΦ". iExists l. eauto.
+  Qed.
 
-Global Instance locked_timeless γ : TimelessP (locked γ).
-Proof. apply _. Qed.
+  Lemma acquire_spec γ lk R (Φ : val → iProp Σ) :
+    is_lock γ lk R ★ (locked γ -★ R -★ Φ #()) ⊢ WP acquire lk {{ Φ }}.
+  Proof.
+    iIntros "[Hl HΦ]". iDestruct "Hl" as (l) "(% & #? & % & #?)". subst.
+    iLöb as "IH". wp_rec. wp_bind (CAS _ _ _)%E.
+    iInv N as ([]) "[Hl HR]" "Hclose".
+    - wp_cas_fail. iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
+      iVsIntro. wp_if. by iApply "IH".
+    - wp_cas_suc. iDestruct "HR" as "[Hγ HR]".
+      iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
+      iVsIntro. wp_if. iApply ("HΦ" with "[-HR] HR"). by iFrame.
+  Qed.
 
-Lemma newlock_spec (R : iProp Σ) Φ :
-  heapN ⊥ N →
-  heap_ctx ★ R ★ (∀ lk γ, is_lock γ lk R -★ Φ lk) ⊢ WP newlock #() {{ Φ }}.
-Proof.
-  iIntros (?) "(#Hh & HR & HΦ)". rewrite /newlock.
-  wp_seq. wp_alloc l as "Hl".
-  iVs (own_alloc (Excl ())) as (γ) "Hγ"; first done.
-  iVs (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
-  { iIntros "!>". iExists false. by iFrame. }
-  iVsIntro. iApply "HΦ". iExists l. eauto.
-Qed.
-
-Lemma acquire_spec γ lk R (Φ : val → iProp Σ) :
-  is_lock γ lk R ★ (locked γ -★ R -★ Φ #()) ⊢ WP acquire lk {{ Φ }}.
-Proof.
-  iIntros "[Hl HΦ]". iDestruct "Hl" as (l) "(% & #? & % & #?)". subst.
-  iLöb as "IH". wp_rec. wp_bind (CAS _ _ _)%E.
-  iInv N as ([]) "[Hl HR]" "Hclose".
-  - wp_cas_fail. iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
-    iVsIntro. wp_if. by iApply "IH".
-  - wp_cas_suc. iDestruct "HR" as "[Hγ HR]".
-    iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
-    iVsIntro. wp_if. iApply ("HΦ" with "[-HR] HR"). by iFrame.
-Qed.
-
-Lemma release_spec γ lk R (Φ : val → iProp Σ) :
-  is_lock γ lk R ★ locked γ ★ R ★ Φ #() ⊢ WP release lk {{ Φ }}.
-Proof.
-  iIntros "(Hlock & Hlocked & HR & HΦ)". iDestruct "Hlock" as (l) "(% & #? & % & #?)". subst.
-  rewrite /release. wp_let. iInv N as (b) "[Hl _]" "Hclose".
-  wp_store. iFrame "HΦ". iApply "Hclose". iNext. iExists false. by iFrame.
-Qed.
+  Lemma release_spec γ lk R (Φ : val → iProp Σ) :
+    is_lock γ lk R ★ locked γ ★ R ★ Φ #() ⊢ WP release lk {{ Φ }}.
+  Proof.
+    iIntros "(Hlock & Hlocked & HR & HΦ)".
+    iDestruct "Hlock" as (l) "(% & #? & % & #?)". subst.
+    rewrite /release /=. wp_let. iInv N as (b) "[Hl _]" "Hclose".
+    wp_store. iFrame "HΦ". iApply "Hclose". iNext. iExists false. by iFrame.
+  Qed.
 End proof.
 
-Definition spin_lock `{!heapG Σ, !lockG Σ} :=
-  Lock _ _ newlock acquire release gname is_lock locked _ _ _ locked_exclusive newlock_spec acquire_spec release_spec.
+Definition spin_lock `{!heapG Σ, !lockG Σ} : lock Σ :=
+  {| lock.locked_exclusive := locked_exclusive; lock.newlock_spec := newlock_spec;
+     lock.acquire_spec := acquire_spec; lock.release_spec := release_spec |}.
