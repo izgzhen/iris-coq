@@ -63,6 +63,7 @@ algebra/updates.v
 algebra/local_updates.v
 algebra/gset.v
 algebra/coPset.v
+algebra/double_negation.v
 program_logic/model.v
 program_logic/adequacy.v
 program_logic/lifting.v
