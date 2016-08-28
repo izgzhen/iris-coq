@@ -36,16 +36,11 @@ Implicit Types Φs : list (val Λ → iProp Σ).
 
 Notation world σ := (wsat ★ ownE ⊤ ★ ownP_auth σ)%I.
 
-Definition wptp (t : list (expr Λ)) := ([★] (flip (wp ⊤) (λ _, True) <$> t))%I.
-
-Lemma wptp_cons e t : wptp (e :: t) ⊣⊢ WP e {{ _, True }} ★ wptp t.
-Proof. done. Qed.
-Lemma wptp_app t1 t2 : wptp (t1 ++ t2) ⊣⊢ wptp t1 ★ wptp t2.
-Proof. by rewrite /wptp fmap_app big_sep_app. Qed.
+Notation wptp t := ([★ list] ef ∈ t, WP ef {{ _, True }})%I.
 
 Lemma wp_step e1 σ1 e2 σ2 efs Φ :
   prim_step e1 σ1 e2 σ2 efs →
-  world σ1 ★ WP e1 {{ Φ }} =r=> ▷ |=r=> ◇ (world σ2 ★ WP e2 {{ Φ }} ★ wp_fork efs).
+  world σ1 ★ WP e1 {{ Φ }} =r=> ▷ |=r=> ◇ (world σ2 ★ WP e2 {{ Φ }} ★ wptp efs).
 Proof.
   rewrite {1}wp_unfold /wp_pre. iIntros (Hstep) "[(Hw & HE & Hσ) [H|[_ H]]]".
   { iDestruct "H" as (v) "[% _]". apply val_stuck in Hstep; simplify_eq. }
@@ -64,9 +59,9 @@ Proof.
   iIntros (Hstep) "(HW & He & Ht)".
   destruct Hstep as [e1' σ1' e2' σ2' efs [|? t1'] t2' ?? Hstep]; simplify_eq/=.
   - iExists e2', (t2' ++ efs); iSplitR; first eauto.
-    rewrite wptp_app. iFrame "Ht". iApply wp_step; try iFrame; eauto.
+    rewrite big_sepL_app. iFrame "Ht". iApply wp_step; try iFrame; eauto.
   - iExists e, (t1' ++ e2' :: t2' ++ efs); iSplitR; first eauto.
-    rewrite !wptp_app !wptp_cons wptp_app.
+    rewrite !big_sepL_app !big_sepL_cons big_sepL_app.
     iDestruct "Ht" as "($ & He' & $)"; iFrame "He".
     iApply wp_step; try iFrame; eauto.
 Qed.
@@ -123,8 +118,7 @@ Proof.
   intros ? He2. rewrite wptp_steps //; rewrite (Nat_iter_S_r (S n)). apply rvs_iter_mono.
   iDestruct 1 as (e2' t2') "(% & Hw & H & Htp)"; simplify_eq.
   apply elem_of_cons in He2 as [<-|?]; first (iApply wp_safe; by iFrame "Hw H").
-  iApply wp_safe. iFrame "Hw".
-  iApply (big_sep_elem_of with "Htp"); apply elem_of_list_fmap; eauto.
+  iApply wp_safe. iFrame "Hw". by iApply (big_sepL_elem_of with "Htp").
 Qed.
 
 Lemma wptp_invariance n e1 e2 t1 t2 σ1 σ2 I φ Φ :
@@ -153,12 +147,12 @@ Proof.
     eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
     rewrite Nat_iter_S. iVs (iris_alloc σ) as (?) "(?&?&?&Hσ)".
     iVsIntro. iNext. iApply wptp_result; eauto.
-    iFrame. iSplitL; auto. by iApply Hwp.
+    iFrame. iSplitL. by iApply Hwp. by iApply big_sepL_nil.
   - intros t2 σ2 e2 [n ?]%rtc_nsteps ?.
     eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
     rewrite Nat_iter_S. iVs (iris_alloc σ) as (?) "(Hw & HE & Hσ & Hσf)".
     iVsIntro. iNext. iApply wptp_safe; eauto.
-    iFrame "Hw HE Hσ". iSplitL; auto. by iApply Hwp.
+    iFrame "Hw HE Hσ". iSplitL. by iApply Hwp. by iApply big_sepL_nil.
 Qed.
 
 Theorem wp_invariance Σ `{irisPreG Λ Σ} e σ1 t2 σ2 I φ Φ :
@@ -172,5 +166,5 @@ Proof.
   rewrite Nat_iter_S. iVs (iris_alloc σ1) as (?) "(Hw & HE & ? & Hσ)".
   rewrite pvs_eq in Hwp.
   iVs (Hwp _ with "Hσ [Hw HE]") as ">(? & ? & ? & ?)"; first by iFrame.
-  iVsIntro. iNext. iApply wptp_invariance; eauto. by iFrame.
+  iVsIntro. iNext. iApply wptp_invariance; eauto. iFrame. by iApply big_sepL_nil.
 Qed.

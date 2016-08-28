@@ -15,7 +15,7 @@ Definition wp_pre `{irisG Λ Σ}
      ownP_auth σ1 ={E,∅}=★ ■ reducible e1 σ1 ★
      ▷ ∀ e2 σ2 efs, ■ prim_step e1 σ1 e2 σ2 efs ={∅,E}=★
        ownP_auth σ2 ★ wp E e2 Φ ★
-       [★] (flip (wp ⊤) (λ _, True) <$> efs)))%I.
+       [★ list] ef ∈ efs, wp ⊤ ef (λ _, True)))%I.
 
 Local Instance wp_pre_contractive `{irisG Λ Σ} : Contractive wp_pre.
 Proof.
@@ -24,7 +24,7 @@ Proof.
   apply pvs_ne, sep_ne, later_contractive; auto=> i ?.
   apply forall_ne=> e2; apply forall_ne=> σ2; apply forall_ne=> efs.
   apply wand_ne, pvs_ne, sep_ne, sep_ne; auto; first by apply Hwp.
-  eapply big_sep_ne, list_fmap_ext_ne=> ef. by apply Hwp.
+  apply big_sepL_ne=> ? ef. by apply Hwp.
 Qed.
 
 Definition wp_def `{irisG Λ Σ} :
@@ -49,8 +49,6 @@ Notation "'WP' e @ E {{ v , Q } }" := (wp E e%E (λ v, Q))
 Notation "'WP' e {{ v , Q } }" := (wp ⊤ e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'WP'  e  {{  v ,  Q  } }") : uPred_scope.
-
-Notation wp_fork efs := ([★] (flip (wp ⊤) (λ _, True) <$> efs))%I.
 
 Section wp.
 Context `{irisG Λ Σ}.
