@@ -85,7 +85,7 @@ Proof.
     iIntros (v) "HP"; iDestruct "HP" as (x) "HP". wp_let.
     iMod (own_update with "Hγ") as "Hx".
     { by apply (cmra_update_exclusive (Shot x)). }
-    iApply signal_spec; iFrame "Hs"; iSplit; last done.
+    iApply signal_spec; iFrame "Hs"; iSplitR ""; last auto.
     iExists x; auto.
   - iDestruct (recv_weaken with "[] Hr") as "Hr"; first by iApply P_res_split.
     iMod (recv_split with "Hr") as "[H1 H2]"; first done.
