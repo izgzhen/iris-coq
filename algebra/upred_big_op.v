@@ -244,6 +244,12 @@ Section list.
     by rewrite sep_elim_r sep_elim_l.
   Qed.
 
+  Lemma big_sepL_elem_of (Φ : A → uPred M) l x :
+    x ∈ l → ([★ list] y ∈ l, Φ y) ⊢ Φ x.
+  Proof.
+    intros [i ?]%elem_of_list_lookup; eauto using (big_sepL_lookup (λ _, Φ)).
+  Qed.
+
   Lemma big_sepL_fmap {B} (f : A → B) (Φ : nat → B → uPred M) l :
     ([★ list] k↦y ∈ f <$> l, Φ k y) ⊣⊢ ([★ list] k↦y ∈ l, Φ k (f y)).
   Proof. by rewrite /uPred_big_sepL imap_fmap. Qed.
@@ -302,12 +308,18 @@ Section list.
     by rewrite -always_wand_impl always_elim wand_elim_l.
   Qed.
 
-  Global Instance big_sepL_persistent Φ m :
-    (∀ k x, PersistentP (Φ k x)) → PersistentP ([★ list] k↦x ∈ m, Φ k x).
+  Global Instance big_sepL_nil_persistent Φ :
+    PersistentP ([★ list] k↦x ∈ [], Φ k x).
+  Proof. rewrite /uPred_big_sepL. apply _. Qed.
+  Global Instance big_sepL_persistent Φ l :
+    (∀ k x, PersistentP (Φ k x)) → PersistentP ([★ list] k↦x ∈ l, Φ k x).
   Proof. rewrite /uPred_big_sepL. apply _. Qed.
 
-  Global Instance big_sepL_timeless Φ m :
-    (∀ k x, TimelessP (Φ k x)) → TimelessP ([★ list] k↦x ∈ m, Φ k x).
+  Global Instance big_sepL_nil_timeless Φ :
+    TimelessP ([★ list] k↦x ∈ [], Φ k x).
+  Proof. rewrite /uPred_big_sepL. apply _. Qed.
+  Global Instance big_sepL_timeless Φ l :
+    (∀ k x, TimelessP (Φ k x)) → TimelessP ([★ list] k↦x ∈ l, Φ k x).
   Proof. rewrite /uPred_big_sepL. apply _. Qed.
 End list.
 
@@ -462,10 +474,16 @@ Section gmap.
     by rewrite -always_wand_impl always_elim wand_elim_l.
   Qed.
 
+  Global Instance big_sepM_empty_persistent Φ :
+    PersistentP ([★ map] k↦x ∈ ∅, Φ k x).
+  Proof. rewrite /uPred_big_sepM map_to_list_empty. apply _. Qed.
   Global Instance big_sepM_persistent Φ m :
     (∀ k x, PersistentP (Φ k x)) → PersistentP ([★ map] k↦x ∈ m, Φ k x).
   Proof. intros. apply big_sep_persistent, fmap_persistent=>-[??] /=; auto. Qed.
 
+  Global Instance big_sepM_nil_timeless Φ :
+    TimelessP ([★ map] k↦x ∈ ∅, Φ k x).
+  Proof. rewrite /uPred_big_sepM map_to_list_empty. apply _. Qed.
   Global Instance big_sepM_timeless Φ m :
     (∀ k x, TimelessP (Φ k x)) → TimelessP ([★ map] k↦x ∈ m, Φ k x).
   Proof. intro. apply big_sep_timeless, fmap_timeless=> -[??] /=; auto. Qed.
@@ -590,10 +608,14 @@ Section gset.
     by rewrite -always_wand_impl always_elim wand_elim_l.
   Qed.
 
+  Global Instance big_sepS_empty_persistent Φ : PersistentP ([★ set] x ∈ ∅, Φ x).
+  Proof. rewrite /uPred_big_sepS elements_empty. apply _. Qed.
   Global Instance big_sepS_persistent Φ X :
     (∀ x, PersistentP (Φ x)) → PersistentP ([★ set] x ∈ X, Φ x).
   Proof. rewrite /uPred_big_sepS. apply _. Qed.
 
+  Global Instance big_sepS_nil_timeless Φ : TimelessP ([★ set] x ∈ ∅, Φ x).
+  Proof. rewrite /uPred_big_sepS elements_empty. apply _. Qed.
   Global Instance big_sepS_timeless Φ X :
     (∀ x, TimelessP (Φ x)) → TimelessP ([★ set] x ∈ X, Φ x).
   Proof. rewrite /uPred_big_sepS. apply _. Qed.
