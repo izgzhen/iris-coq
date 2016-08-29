@@ -8,7 +8,8 @@ Tactic Notation "iInvCore" constr(N) "as" tactic(tac) constr(Hclose) :=
   let pat := constr:(IList [[IName Htmp; patback]]) in
   iVs (inv_open _ N with "[#]") as pat;
     [idtac|iAssumption || fail "iInv: invariant" N "not found"|idtac];
-    [solve_ndisj|tac Htmp].
+    [solve_ndisj || match goal with |- ?P => fail "iInv: cannot solve" P end
+    |tac Htmp].
 
 Tactic Notation "iInv" constr(N) "as" constr(pat) constr(Hclose) :=
    iInvCore N as (fun H => iDestruct H as pat) Hclose.
