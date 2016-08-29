@@ -50,6 +50,19 @@ Notation "'WP' e {{ v , Q } }" := (wp ⊤ e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'WP'  e  {{  v ,  Q  } }") : uPred_scope.
 
+Notation wp_fork efs := ([★] (flip (wp ⊤) (λ _, True) <$> efs))%I.
+
+Notation "'{{{' pre } } } e {{{ x .. y ; pat , post } } }" :=
+  (∀ (ψ : _ → iProp _),
+      (pre ★ (∀ x, .. (∀ y, post -★ ψ (pat)%V) .. )%I) ⊢ WP e {{ ψ }})
+    (at level 20, x closed binder, y closed binder,
+     format "{{{  pre  } } }  e  {{{ x .. y ;  pat ,  post } } }") : C_scope.
+Notation "'{{{' pre } } } e {{{ ; pat , post } } }" :=
+  (∀ (ψ : _ → iProp _),
+      (pre ★ (post -★ ψ (pat)%V)%I) ⊢ WP e {{ ψ }})
+    (at level 20,
+     format "{{{  pre  } } }  e  {{{ ; pat ,  post } } }") : C_scope.
+
 Section wp.
 Context `{irisG Λ Σ}.
 Implicit Types P : iProp Σ.
