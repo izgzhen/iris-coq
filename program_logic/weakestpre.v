@@ -51,12 +51,12 @@ Notation "'WP' e {{ v , Q } }" := (wp ⊤ e%E (λ v, Q))
    format "'WP'  e  {{  v ,  Q  } }") : uPred_scope.
 
 Notation "'{{{' pre } } } e {{{ x .. y ; pat , post } } }" :=
-  (∀ (ψ : _ → iProp _),
+  (∀ (ψ : _ → uPred _),
       (pre ★ (∀ x, .. (∀ y, post -★ ψ (pat)%V) .. )%I) ⊢ WP e {{ ψ }})
     (at level 20, x closed binder, y closed binder,
      format "{{{  pre  } } }  e  {{{ x .. y ;  pat ,  post } } }") : C_scope.
 Notation "'{{{' pre } } } e {{{ ; pat , post } } }" :=
-  (∀ (ψ : _ → iProp _),
+  (∀ (ψ : _ → uPred _),
       (pre ★ (post -★ ψ (pat)%V)%I) ⊢ WP e {{ ψ }})
     (at level 20,
      format "{{{  pre  } } }  e  {{{ ; pat ,  post } } }") : C_scope.
