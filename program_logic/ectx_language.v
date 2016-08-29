@@ -65,6 +65,10 @@ Section ectx_language.
       e1 = fill K e1' → e2 = fill K e2' →
       head_step e1' σ1 e2' σ2 efs → prim_step e1 σ1 e2 σ2 efs.
 
+  Lemma Ectx_step' K e1 σ1 e2 σ2 efs :
+    head_step e1 σ1 e2 σ2 efs → prim_step (fill K e1) σ1 (fill K e2) σ2 efs.
+  Proof. econstructor; eauto. Qed.
+
   Lemma val_prim_stuck e1 σ1 e2 σ2 efs :
     prim_step e1 σ1 e2 σ2 efs → to_val e1 = None.
   Proof. intros [??? -> -> ?]; eauto using fill_not_val, val_stuck. Qed.

@@ -46,6 +46,9 @@ Section ectxi_language.
 
   Definition fill (K : ectx) (e : expr) : expr := fold_right fill_item e K.
 
+  Lemma fill_app (K1 K2 : ectx) e : fill (K1 ++ K2) e = fill K1 (fill K2 e).
+  Proof. apply fold_right_app. Qed.
+
   Instance fill_inj K : Inj (=) (=) (fill K).
   Proof. red; induction K as [|Ki K IH]; naive_solver. Qed.
 
@@ -78,7 +81,7 @@ Section ectxi_language.
        fixed fields of different records, even when I did not. *)
     Build_EctxLanguage expr val ectx state of_val to_val [] (++) fill head_step _ _ _ _ _ _ _ _ _.
   Solve Obligations with eauto using to_of_val, of_to_val, val_stuck,
-    fill_not_val, step_by_val, fold_right_app, app_eq_nil.
+    fill_not_val, fill_app, step_by_val, fold_right_app, app_eq_nil.
 
   Global Instance ectxi_lang_ctx_item Ki :
     LanguageCtx (ectx_lang expr) (fill_item Ki).
