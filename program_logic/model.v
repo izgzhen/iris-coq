@@ -116,7 +116,7 @@ Module Type iProp_solution_sig.
   Parameter iPreProp : gFunctors → cofeT.
   Definition iResUR (Σ : gFunctors) : ucmraT :=
     iprodUR (λ i, gmapUR gname (Σ i (iPreProp Σ))).
-  Definition iProp (Σ : gFunctors) : cofeT := uPredC (iResUR Σ).
+  Notation iProp Σ := (uPredC (iResUR Σ)).
 
   Parameter iProp_unfold: ∀ {Σ}, iProp Σ -n> iPreProp Σ.
   Parameter iProp_fold: ∀ {Σ}, iPreProp Σ -n> iProp Σ.
@@ -134,7 +134,7 @@ Module Export iProp_solution : iProp_solution_sig.
   Definition iPreProp (Σ : gFunctors) : cofeT := iProp_result Σ.
   Definition iResUR (Σ : gFunctors) : ucmraT :=
     iprodUR (λ i, gmapUR gname (Σ i (iPreProp Σ))).
-  Definition iProp (Σ : gFunctors) : cofeT := uPredC (iResUR Σ).
+  Notation iProp Σ := (uPredC (iResUR Σ)).
 
   Definition iProp_unfold {Σ} : iProp Σ -n> iPreProp Σ :=
     solution_fold (iProp_result Σ).
@@ -144,8 +144,6 @@ Module Export iProp_solution : iProp_solution_sig.
   Lemma iProp_unfold_fold {Σ} (P : iPreProp Σ) : iProp_unfold (iProp_fold P) ≡ P.
   Proof. apply solution_fold_unfold. Qed.
 End iProp_solution.
-
-Bind Scope uPred_scope with iProp.
 
 
 (** * Properties of the solution to the recursive domain equation *)
