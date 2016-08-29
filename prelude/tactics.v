@@ -3,7 +3,7 @@
 (** This file collects general purpose tactics that are used throughout
 the development. *)
 From Coq Require Import Omega.
-From iris.prelude Require Export psatz_axiomfree.
+From Coq Require Export Lia.
 From iris.prelude Require Export decidable.
 
 Lemma f_equal_dep {A B} (f g : ∀ x : A, B x) x : f = g → f x = g x.
