@@ -1025,8 +1025,9 @@ Lemma later_or P Q : ▷ (P ∨ Q) ⊣⊢ ▷ P ∨ ▷ Q.
 Proof. unseal; split=> -[|n] x; simpl; tauto. Qed.
 Lemma later_forall {A} (Φ : A → uPred M) : (▷ ∀ a, Φ a) ⊣⊢ (∀ a, ▷ Φ a).
 Proof. unseal; by split=> -[|n] x. Qed.
-Lemma later_exist_2 `{Inhabited A} (Φ : A → uPred M) : (▷ ∃ a, Φ a) ⊢ ∃ a, ▷ Φ a.
-Proof. unseal; split=> -[|[|n]] x; done || by exists inhabitant. Qed.
+Lemma later_exist_false {A} (Φ : A → uPred M) :
+  (▷ ∃ a, Φ a) ⊢ ▷ False ∨ (∃ a, ▷ Φ a).
+Proof. unseal; split=> -[|[|n]] x /=; eauto. Qed.
 Lemma later_sep P Q : ▷ (P ★ Q) ⊣⊢ ▷ P ★ ▷ Q.
 Proof.
   unseal; split=> n x ?; split.
@@ -1052,11 +1053,13 @@ Lemma later_True : ▷ True ⊣⊢ True.
 Proof. apply (anti_symm (⊢)); auto using later_intro. Qed.
 Lemma later_impl P Q : ▷ (P → Q) ⊢ ▷ P → ▷ Q.
 Proof. apply impl_intro_l; rewrite -later_and; eauto using impl_elim. Qed.
-Lemma later_exist_1 {A} (Φ : A → uPred M) : (∃ a, ▷ Φ a) ⊢ (▷ ∃ a, Φ a).
-Proof. apply exist_elim; eauto using exist_intro. Qed.
 Lemma later_exist `{Inhabited A} (Φ : A → uPred M) :
   ▷ (∃ a, Φ a) ⊣⊢ (∃ a, ▷ Φ a).
-Proof. apply: anti_symm; eauto using later_exist_2, later_exist_1. Qed.
+Proof.
+  apply: anti_symm; [|apply exist_elim; eauto using exist_intro].
+  rewrite later_exist_false. apply or_elim; last done.
+  rewrite -(exist_intro inhabitant); auto.
+Qed.
 Lemma later_wand P Q : ▷ (P -★ Q) ⊢ ▷ P -★ ▷ Q.
 Proof. apply wand_intro_r; rewrite -later_sep; eauto using wand_elim_l. Qed.
 Lemma later_iff P Q : ▷ (P ↔ Q) ⊢ ▷ P ↔ ▷ Q.
@@ -1280,8 +1283,9 @@ Proof. by setoid_rewrite timelessP_spec; unseal=> HΨ n x ?? a; apply HΨ. Qed.
 Global Instance exist_timeless {A} (Ψ : A → uPred M) :
   (∀ x, TimelessP (Ψ x)) → TimelessP (∃ x, Ψ x).
 Proof.
-  by setoid_rewrite timelessP_spec; unseal=> HΨ [|n] x ?;
-    [|intros [a ?]; exists a; apply HΨ].
+  rewrite /TimelessP=> ?. rewrite later_exist_false. apply or_elim.
+  - rewrite /uPred_except_last; auto.
+  - apply exist_elim=> x. rewrite -(exist_intro x); auto.
 Qed.
 Global Instance always_timeless P : TimelessP P → TimelessP (□ P).
 Proof. intros; rewrite /TimelessP except_last_always -always_later; auto. Qed.
