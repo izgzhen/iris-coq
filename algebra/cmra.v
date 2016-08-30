@@ -472,8 +472,8 @@ Proof.
   destruct (cmra_extend 0 y x x') as (z&z'&Hy&Hz&Hz'); auto; simpl in *.
   by exists z'; rewrite Hy (timeless x z).
 Qed.
-Lemma cmra_timeless_included_r n x y : Timeless y → x ≼{0} y → x ≼{n} y.
-Proof. intros ? [x' ?]. exists x'. by apply equiv_dist, (timeless y). Qed.
+Lemma cmra_timeless_included_r x y : Timeless y → x ≼{0} y → x ≼ y.
+Proof. intros ? [x' ?]. exists x'. by apply (timeless y). Qed.
 Lemma cmra_op_timeless x1 x2 :
   ✓ (x1 ⋅ x2) → Timeless x1 → Timeless x2 → Timeless (x1 ⋅ x2).
 Proof.
