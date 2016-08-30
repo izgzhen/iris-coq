@@ -1014,6 +1014,8 @@ Proof.
   unseal; split=> n x ? HP; induction n as [|n IH]; [by apply HP|].
   apply HP, IH, uPred_closed with (S n); eauto using cmra_validN_S.
 Qed.
+Lemma later_pure φ : ▷ ■ φ ⊢ ▷ False ∨ ■ φ.
+Proof. unseal; split=> -[|n] x ?? /=; auto. Qed.
 Lemma later_and P Q : ▷ (P ∧ Q) ⊣⊢ ▷ P ∧ ▷ Q.
 Proof. unseal; split=> -[|n] x; by split. Qed.
 Lemma later_or P Q : ▷ (P ∨ Q) ⊣⊢ ▷ P ∨ ▷ Q.
@@ -1033,6 +1035,12 @@ Proof.
     exists y1, y2; split; [by rewrite Hx'|by rewrite Hy1 Hy2].
   - destruct n as [|n]; simpl; [done|intros (x1&x2&Hx&?&?)].
     exists x1, x2; eauto using dist_S.
+Qed.
+Lemma later_false_excluded_middle P : ▷ P ⊢ ▷ False ∨ (▷ False → P).
+Proof.
+  unseal; split=> -[|n] x ? /= HP; [by left|right].
+  intros [|n'] x' ????; [|done].
+  eauto using uPred_closed, uPred_mono, cmra_included_includedN.
 Qed.
 
 (* Later derived *)
@@ -1130,6 +1138,12 @@ Proof.
 Qed.
 Lemma ownM_empty : True ⊢ uPred_ownM ∅.
 Proof. unseal; split=> n x ??; by  exists x; rewrite left_id. Qed.
+Lemma later_ownM a : Timeless a → ▷ uPred_ownM a ⊢ ▷ False ∨ uPred_ownM a.
+Proof.
+  unseal=> Ha; split=> -[|n] x ?? /=; [by left|right].
+  apply cmra_included_includedN, cmra_timeless_included_l,
+    cmra_includedN_le with n; eauto using cmra_validN_le.
+Qed.
 
 (* Valid *)
 Lemma ownM_valid (a : M) : uPred_ownM a ⊢ ✓ a.
@@ -1238,47 +1252,44 @@ Lemma option_validI {A : cmraT} (mx : option A) :
   ✓ mx ⊣⊢ match mx with Some x => ✓ x | None => True end.
 Proof. uPred.unseal. by destruct mx. Qed.
 
-(* Equivalent definition of timeless in the model *)
-Lemma timelessP_spec P : TimelessP P ↔ ∀ n x, ✓{n} x → P 0 x → P n x.
-Proof.
-  split.
-  - intros HP n x ??; induction n as [|n]; auto.
-    move: HP; rewrite /TimelessP /uPred_except_last /=.
-    unseal=> /uPred_in_entails /(_ (S n) x) /=.
-    by destruct 1; auto using cmra_validN_S.
-  - move=> HP; rewrite /TimelessP /uPred_except_last /=.
-    unseal; split=> -[|n] x /=; auto.
-    right. apply HP, uPred_closed with n; eauto using cmra_validN_le.
-Qed.
-
 (* Timeless instances *)
 Global Instance pure_timeless φ : TimelessP (■ φ : uPred M)%I.
-Proof. by apply timelessP_spec; unseal => -[|n] x. Qed.
+Proof. by rewrite /TimelessP later_pure. Qed.
 Global Instance valid_timeless {A : cmraT} `{CMRADiscrete A} (a : A) :
   TimelessP (✓ a : uPred M)%I.
-Proof.
-  apply timelessP_spec; unseal=> n x /=. by rewrite -!cmra_discrete_valid_iff.
-Qed.
+Proof. rewrite /TimelessP !discrete_valid. apply (timelessP _). Qed.
 Global Instance and_timeless P Q: TimelessP P → TimelessP Q → TimelessP (P ∧ Q).
 Proof. intros; rewrite /TimelessP except_last_and later_and; auto. Qed.
 Global Instance or_timeless P Q : TimelessP P → TimelessP Q → TimelessP (P ∨ Q).
 Proof. intros; rewrite /TimelessP except_last_or later_or; auto. Qed.
 Global Instance impl_timeless P Q : TimelessP Q → TimelessP (P → Q).
 Proof.
-  rewrite !timelessP_spec; unseal=> HP [|n] x ? HPQ [|n'] x' ????; auto.
-  apply HP, HPQ, uPred_closed with (S n'); eauto using cmra_validN_le.
+  rewrite /TimelessP=> HQ. rewrite later_false_excluded_middle.
+  apply or_mono, impl_intro_l; first done.
+  rewrite -{2}(löb Q); apply impl_intro_l.
+  rewrite HQ /uPred_except_last !and_or_r. apply or_elim; last auto.
+  by rewrite assoc (comm _ _ P) -assoc !impl_elim_r.
 Qed.
 Global Instance sep_timeless P Q: TimelessP P → TimelessP Q → TimelessP (P ★ Q).
 Proof. intros; rewrite /TimelessP except_last_sep later_sep; auto. Qed.
 Global Instance wand_timeless P Q : TimelessP Q → TimelessP (P -★ Q).
 Proof.
-  rewrite !timelessP_spec; unseal=> HP [|n] x ? HPQ [|n'] x' ???; auto.
-  apply HP, HPQ, uPred_closed with (S n');
-    eauto 3 using cmra_validN_le, cmra_validN_op_r.
+  rewrite /TimelessP=> HQ. rewrite later_false_excluded_middle.
+  apply or_mono, wand_intro_l; first done.
+  rewrite -{2}(löb Q); apply impl_intro_l.
+  rewrite HQ /uPred_except_last !and_or_r. apply or_elim; last auto.
+  rewrite -(always_pure) -always_later always_and_sep_l'.
+  by rewrite assoc (comm _ _ P) -assoc -always_and_sep_l' impl_elim_r wand_elim_r.
 Qed.
 Global Instance forall_timeless {A} (Ψ : A → uPred M) :
   (∀ x, TimelessP (Ψ x)) → TimelessP (∀ x, Ψ x).
-Proof. by setoid_rewrite timelessP_spec; unseal=> HΨ n x ?? a; apply HΨ. Qed.
+Proof.
+  rewrite /TimelessP=> HQ. rewrite later_false_excluded_middle.
+  apply or_mono; first done. apply forall_intro=> x.
+  rewrite -(löb (Ψ x)); apply impl_intro_l.
+  rewrite HQ /uPred_except_last !and_or_r. apply or_elim; last auto.
+  by rewrite impl_elim_r (forall_elim x).
+Qed.
 Global Instance exist_timeless {A} (Ψ : A → uPred M) :
   (∀ x, TimelessP (Ψ x)) → TimelessP (∃ x, Ψ x).
 Proof.
@@ -1292,14 +1303,9 @@ Global Instance always_if_timeless p P : TimelessP P → TimelessP (□?p P).
 Proof. destruct p; apply _. Qed.
 Global Instance eq_timeless {A : cofeT} (a b : A) :
   Timeless a → TimelessP (a ≡ b : uPred M)%I.
-Proof.
-  intro; apply timelessP_spec; unseal=> n x ??; by apply equiv_dist, timeless.
-Qed.
+Proof. intros. rewrite /TimelessP !timeless_eq. apply (timelessP _). Qed.
 Global Instance ownM_timeless (a : M) : Timeless a → TimelessP (uPred_ownM a).
-Proof.
-  intro; apply timelessP_spec; unseal=> n x ??; apply cmra_included_includedN,
-    cmra_timeless_included_l; eauto using cmra_validN_le.
-Qed.
+Proof. apply later_ownM. Qed.
 
 (* Persistence *)
 Global Instance pure_persistent φ : PersistentP (■ φ : uPred M)%I.
