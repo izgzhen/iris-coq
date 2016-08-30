@@ -1128,8 +1128,6 @@ Proof.
   split=> n x /=; split; [by apply always_elim|unseal; intros Hx]; simpl.
   rewrite -(persistent_core a). by apply cmra_core_monoN.
 Qed.
-Lemma ownM_something : True ⊢ ∃ a, uPred_ownM a.
-Proof. unseal; split=> n x ??. by exists x; simpl. Qed.
 Lemma ownM_empty : True ⊢ uPred_ownM ∅.
 Proof. unseal; split=> n x ??; by  exists x; rewrite left_id. Qed.
 
