@@ -138,7 +138,8 @@ Proof.
   - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
   - intros n m. induction m as [|i x m Hi IH] using map_ind=> m1 m2 Hmv Hm.
-    { exists ∅, ∅; split_and!=> -i; symmetry; symmetry in Hm; move: Hm=> /(_ i);
+    { exists ∅. exists ∅. (* FIXME: exists ∅, ∅. results in a TC loop in Coq 8.6 *)
+      split_and!=> -i; symmetry; symmetry in Hm; move: Hm=> /(_ i);
         rewrite !lookup_op !lookup_empty ?dist_None op_None; intuition. }
     destruct (IH (delete i m1) (delete i m2)) as (m1'&m2'&Hm'&Hm1'&Hm2').
     { intros j; move: Hmv=> /(_ j). destruct (decide (i = j)) as [->|].
@@ -342,8 +343,8 @@ Section freshness.
     ✓ u → LeftId (≡) u (⋅) →
     u ~~>: P → ∅ ~~>: λ m, ∃ y, m = {[ i := y ]} ∧ P y.
   Proof. eauto using alloc_unit_singleton_updateP. Qed.
-  Lemma alloc_unit_singleton_update u i (y : A) :
-    ✓ u → LeftId (≡) u (⋅) → u ~~> y → ∅ ~~> {[ i := y ]}.
+  Lemma alloc_unit_singleton_update (u : A) i (y : A) :
+    ✓ u → LeftId (≡) u (⋅) → u ~~> y → (∅:gmap K A) ~~> {[ i := y ]}.
   Proof.
     rewrite !cmra_update_updateP;
       eauto using alloc_unit_singleton_updateP with subst.
@@ -379,7 +380,7 @@ Proof.
 Qed.
 
 Lemma alloc_unit_singleton_local_update i x mf :
-  mf ≫= (!! i) = None → ✓ x → ∅ ~l~> {[ i := x ]} @ mf.
+  mf ≫= (!! i) = None → ✓ x → (∅:gmap K A) ~l~> {[ i := x ]} @ mf.
 Proof.
   intros Hi; apply alloc_singleton_local_update. by rewrite lookup_opM Hi.
 Qed.

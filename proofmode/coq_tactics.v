@@ -135,7 +135,7 @@ Proof. intros. rewrite envs_lookup_sound //. by rewrite always_if_elim. Qed.
 Lemma envs_lookup_persistent_sound Δ i P :
   envs_lookup i Δ = Some (true,P) → Δ ⊢ □ P ★ Δ.
 Proof.
-  intros. apply: always_entails_l. by rewrite envs_lookup_sound // sep_elim_l.
+  intros. apply (always_entails_l _ _). by rewrite envs_lookup_sound // sep_elim_l.
 Qed.
 
 Lemma envs_lookup_split Δ i p P :
@@ -277,8 +277,8 @@ Proof.
 Qed.
 Global Instance of_envs_proper : Proper (envs_Forall2 (⊣⊢) ==> (⊣⊢)) (@of_envs M).
 Proof.
-  intros Δ1 Δ2 ?; apply (anti_symm (⊢)); apply of_envs_mono;
-    eapply envs_Forall2_impl; [| |symmetry|]; eauto using equiv_entails.
+  intros Δ1 Δ2 HΔ; apply (anti_symm (⊢)); apply of_envs_mono;
+    eapply (envs_Forall2_impl (⊣⊢)); [| |symmetry|]; eauto using equiv_entails.
 Qed.
 Global Instance Envs_mono (R : relation (uPred M)) :
   Proper (env_Forall2 R ==> env_Forall2 R ==> envs_Forall2 R) (@Envs M).
@@ -388,7 +388,7 @@ Qed.
 
 (** * Always *)
 Lemma tac_always_intro Δ Q : envs_persistent Δ = true → (Δ ⊢ Q) → Δ ⊢ □ Q.
-Proof. intros. by apply: always_intro. Qed.
+Proof. intros. by apply (always_intro _ _). Qed.
 
 Lemma tac_persistent Δ Δ' i p P P' Q :
   envs_lookup i Δ = Some (p, P) → IntoPersistentP P P' →

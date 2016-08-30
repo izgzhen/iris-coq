@@ -321,7 +321,7 @@ Proof. by apply cmra_pcore_dup' with x. Qed.
 
 (** ** Exclusive elements *)
 Lemma exclusiveN_l n x `{!Exclusive x} y : ✓{n} (x ⋅ y) → False.
-Proof. intros ?%cmra_validN_le%exclusive0_l; auto with arith. Qed.
+Proof. intros. eapply (exclusive0_l x y), cmra_validN_le; eauto with lia. Qed.
 Lemma exclusiveN_r n x `{!Exclusive x} y : ✓{n} (y ⋅ x) → False.
 Proof. rewrite comm. by apply exclusiveN_l. Qed.
 Lemma exclusive_l x `{!Exclusive x} y : ✓ (x ⋅ y) → False.
@@ -329,7 +329,7 @@ Proof. by move /cmra_valid_validN /(_ 0) /exclusive0_l. Qed.
 Lemma exclusive_r x `{!Exclusive x} y : ✓ (y ⋅ x) → False.
 Proof. rewrite comm. by apply exclusive_l. Qed.
 Lemma exclusiveN_opM n x `{!Exclusive x} my : ✓{n} (x ⋅? my) → my = None.
-Proof. destruct my. move=> /(exclusiveN_l _ x) []. done. Qed.
+Proof. destruct my as [y|]. move=> /(exclusiveN_l _ x) []. done. Qed.
 
 (** ** Order *)
 Lemma cmra_included_includedN n x y : x ≼ y → x ≼{n} y.

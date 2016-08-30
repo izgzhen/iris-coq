@@ -167,10 +167,10 @@ Proof.
   - intros [x px ?]; split; naive_solver eauto using dra_core_idemp.
   - intros [x px ?] [y py ?] [[z pz ?] [? Hy]]; simpl in *.
     destruct (dra_core_mono x z) as (z'&Hz').
-    unshelve eexists (Validity z' (px ∧ py ∧ pz) _); [|split; simpl].
+    unshelve eexists (Validity z' (px ∧ py ∧ pz) _).
     { intros (?&?&?); apply Hz'; tauto. }
-    + tauto.
-    + intros. rewrite Hy //. tauto.
+    split; simpl; first tauto.
+    intros. rewrite Hy //. tauto.
   - by intros [x px ?] [y py ?] (?&?&?).
 Qed.
 Canonical Structure validityR : cmraT :=

@@ -33,6 +33,7 @@ Context `{irisG heap_lang Σ}.
 Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val → iProp Σ.
 Implicit Types efs : list expr.
+Implicit Types σ : state.
 
 (** Bind. This bundles some arguments that wp_ectx_bind leaves as indices. *)
 Lemma wp_bind {E e} K Φ :

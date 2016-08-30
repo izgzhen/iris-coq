@@ -26,7 +26,7 @@ Ltac iFresh :=
      first use [cbv] to compute the domain of [Δ] *)
      let Hs := eval cbv in (envs_dom Δ) in
      eval vm_compute in (fresh_string_of_set "~" (of_list Hs))
-  | _ => constr:"~"
+  | _ => constr:("~")
   end.
 
 Tactic Notation "iTypeOf" constr(H) tactic(tac):=
