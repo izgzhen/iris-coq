@@ -1009,11 +1009,6 @@ Lemma later_mono P Q : (P ⊢ Q) → ▷ P ⊢ ▷ Q.
 Proof.
   unseal=> HP; split=>-[|n] x ??; [done|apply HP; eauto using cmra_validN_S].
 Qed.
-Lemma later_intro P : P ⊢ ▷ P.
-Proof.
-  unseal; split=> -[|n] x ??; simpl in *; [done|].
-  apply uPred_closed with (S n); eauto using cmra_validN_S.
-Qed.
 Lemma löb P : (▷ P → P) ⊢ P.
 Proof.
   unseal; split=> n x ? HP; induction n as [|n IH]; [by apply HP|].
@@ -1049,6 +1044,12 @@ Proof. intros P Q; apply later_mono. Qed.
 Global Instance later_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@uPred_later M).
 Proof. intros P Q; apply later_mono. Qed.
+
+Lemma later_intro P : P ⊢ ▷ P.
+Proof.
+  rewrite -(and_elim_l (▷ P) P) -(löb (▷ P ∧ P)) later_and.
+  apply impl_intro_l; auto.
+Qed.
 Lemma later_True : ▷ True ⊣⊢ True.
 Proof. apply (anti_symm (⊢)); auto using later_intro. Qed.
 Lemma later_impl P Q : ▷ (P → Q) ⊢ ▷ P → ▷ Q.
