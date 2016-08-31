@@ -563,11 +563,6 @@ Proof.
 Qed.
 
 (* Derived logical stuff *)
-Global Instance iff_ne n : Proper (dist n ==> dist n ==> dist n) (@uPred_iff M).
-Proof. unfold uPred_iff; solve_proper. Qed.
-Global Instance iff_proper :
-  Proper ((⊣⊢) ==> (⊣⊢) ==> (⊣⊢)) (@uPred_iff M) := ne_proper_2 _.
-
 Lemma False_elim P : False ⊢ P.
 Proof. by apply (pure_elim False). Qed.
 Lemma True_intro P : P ⊢ True.
@@ -605,16 +600,6 @@ Lemma impl_entails P Q : (True ⊢ P → Q) → P ⊢ Q.
 Proof. intros HPQ; apply impl_elim with P; rewrite -?HPQ; auto. Qed.
 Lemma entails_impl P Q : (P ⊢ Q) → True ⊢ P → Q.
 Proof. auto using impl_intro_l. Qed.
-
-Lemma iff_refl Q P : Q ⊢ P ↔ P.
-Proof. rewrite /uPred_iff; apply and_intro; apply impl_intro_l; auto. Qed.
-Lemma iff_equiv P Q : (True ⊢ P ↔ Q) → (P ⊣⊢ Q).
-Proof.
-  intros HPQ; apply (anti_symm (⊢));
-    apply impl_entails; rewrite HPQ /uPred_iff; auto.
-Qed.
-Lemma equiv_iff P Q : (P ⊣⊢ Q) → True ⊢ P ↔ Q.
-Proof. intros ->; apply iff_refl. Qed.
 
 Lemma and_mono P P' Q Q' : (P ⊢ Q) → (P' ⊢ Q') → P ∧ P' ⊢ Q ∧ Q'.
 Proof. auto. Qed.
@@ -783,10 +768,6 @@ Lemma equiv_eq {A : cofeT} P (a b : A) : a ≡ b → P ⊢ a ≡ b.
 Proof. by intros ->. Qed.
 Lemma eq_sym {A : cofeT} (a b : A) : a ≡ b ⊢ b ≡ a.
 Proof. apply (eq_rewrite a b (λ b, b ≡ a)%I); auto. solve_proper. Qed.
-Lemma eq_iff P Q : P ≡ Q ⊢ P ↔ Q.
-Proof.
-  apply (eq_rewrite P Q (λ Q, P ↔ Q))%I; first solve_proper; auto using iff_refl.
-Qed.
 
 Lemma pure_alt φ : ■ φ ⊣⊢ ∃ _ : φ, True.
 Proof.
@@ -803,6 +784,25 @@ Lemma or_alt P Q : P ∨ Q ⊣⊢ ∃ b : bool, if b then P else Q.
 Proof.
   apply (anti_symm _); last apply exist_elim=> -[]; auto.
   apply or_elim. by rewrite -(exist_intro true). by rewrite -(exist_intro false).
+Qed.
+
+Global Instance iff_ne n : Proper (dist n ==> dist n ==> dist n) (@uPred_iff M).
+Proof. unfold uPred_iff; solve_proper. Qed.
+Global Instance iff_proper :
+  Proper ((⊣⊢) ==> (⊣⊢) ==> (⊣⊢)) (@uPred_iff M) := ne_proper_2 _.
+
+Lemma iff_refl Q P : Q ⊢ P ↔ P.
+Proof. rewrite /uPred_iff; apply and_intro; apply impl_intro_l; auto. Qed.
+Lemma iff_equiv P Q : (True ⊢ P ↔ Q) → (P ⊣⊢ Q).
+Proof.
+  intros HPQ; apply (anti_symm (⊢));
+    apply impl_entails; rewrite HPQ /uPred_iff; auto.
+Qed.
+Lemma equiv_iff P Q : (P ⊣⊢ Q) → True ⊢ P ↔ Q.
+Proof. intros ->; apply iff_refl. Qed.
+Lemma eq_iff P Q : P ≡ Q ⊢ P ↔ Q.
+Proof.
+  apply (eq_rewrite P Q (λ Q, P ↔ Q))%I; first solve_proper; auto using iff_refl.
 Qed.
 
 (* BI connectives *)
