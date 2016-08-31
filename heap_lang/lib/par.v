@@ -15,25 +15,24 @@ Global Opaque par.
 
 Section proof.
 Context `{!heapG Σ, !spawnG Σ}.
-Local Notation iProp := (iPropG heap_lang Σ).
 
-Lemma par_spec (Ψ1 Ψ2 : val → iProp) e (f1 f2 : val) (Φ : val → iProp) :
+Lemma par_spec (Ψ1 Ψ2 : val → iProp Σ) e (f1 f2 : val) (Φ : val → iProp Σ) :
   to_val e = Some (f1,f2)%V →
   (heap_ctx ★ WP f1 #() {{ Ψ1 }} ★ WP f2 #() {{ Ψ2 }} ★
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
   ⊢ WP par e {{ Φ }}.
 Proof.
   iIntros (?) "(#Hh&Hf1&Hf2&HΦ)".
-  rewrite /par. wp_value. iPvsIntro. wp_let. wp_proj.
+  rewrite /par. wp_value. iVsIntro. wp_let. wp_proj.
   wp_apply (spawn_spec parN); try wp_done; try solve_ndisj; iFrame "Hf1 Hh".
-  iIntros (l) "Hl". wp_let. wp_proj. wp_focus (f2 _).
+  iIntros (l) "Hl". wp_let. wp_proj. wp_bind (f2 _).
   iApply wp_wand_l; iFrame "Hf2"; iIntros (v) "H2". wp_let.
   wp_apply join_spec; iFrame "Hl". iIntros (w) "H1".
   iSpecialize ("HΦ" with "* [-]"); first by iSplitL "H1". by wp_let.
 Qed.
 
-Lemma wp_par (Ψ1 Ψ2 : val → iProp)
-    (e1 e2 : expr) `{!Closed [] e1, Closed [] e2} (Φ : val → iProp) :
+Lemma wp_par (Ψ1 Ψ2 : val → iProp Σ)
+    (e1 e2 : expr) `{!Closed [] e1, Closed [] e2} (Φ : val → iProp Σ) :
   (heap_ctx ★ WP e1 {{ Ψ1 }} ★ WP e2 {{ Ψ2 }} ★
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
   ⊢ WP e1 || e2 {{ Φ }}.

@@ -315,9 +315,22 @@ Proof.
   apply coPset_finite_spec; destruct X as [[t ?]]; apply of_Pset_raw_finite.
 Qed.
 
-(** * Conversion from gsets of positives *)
+(** * Conversion to and from gsets of positives *)
+Lemma to_gset_wf (m : Pmap ()) : gmap_wf (K:=positive) m.
+Proof. done. Qed.
+Definition to_gset (X : coPset) : gset positive :=
+  let 'Mapset m := to_Pset X in
+  Mapset (GMap m (bool_decide_pack _ (to_gset_wf m))).
+
 Definition of_gset (X : gset positive) : coPset :=
   let 'Mapset (GMap (PMap t Ht) _) := X in of_Pset_raw t ↾ of_Pset_wf _ Ht.
+
+Lemma elem_of_to_gset X i : set_finite X → i ∈ to_gset X ↔ i ∈ X.
+Proof.
+  intros ?. rewrite <-elem_of_to_Pset by done.
+  unfold to_gset. by destruct (to_Pset X).
+Qed.
+
 Lemma elem_of_of_gset X i : i ∈ of_gset X ↔ i ∈ X.
 Proof. destruct X as [[[t ?]]]; apply elem_of_of_Pset_raw. Qed.
 Lemma of_gset_finite X : set_finite (of_gset X).

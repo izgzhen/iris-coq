@@ -6,11 +6,11 @@ buildjob:
   script:
   - coqc -v
   - 'time make -j8 TIMED=y 2>&1 | tee build-log.txt'
-  - 'grep Axiom build-log.txt && exit 1'
+  - 'fgrep Axiom build-log.txt && exit 1'
   - 'cat build-log.txt  | egrep "[a-zA-Z0-9_/-]+ \(user: [0-9]" | tee build-time.txt'
+  - make validate
   only:
   - master
-  - jh_simplified_resources
   artifacts:
     paths:
     - build-time.txt

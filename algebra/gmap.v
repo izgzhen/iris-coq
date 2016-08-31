@@ -62,7 +62,7 @@ Proof.
     [by constructor|by apply lookup_ne].
 Qed.
 
-Instance gmap_empty_timeless : Timeless (∅ : gmap K A).
+Global Instance gmap_empty_timeless : Timeless (∅ : gmap K A).
 Proof.
   intros m Hm i; specialize (Hm i); rewrite lookup_empty in Hm |- *.
   inversion_clear Hm; constructor.
@@ -137,21 +137,31 @@ Proof.
     rewrite !lookup_core. by apply cmra_core_mono.
   - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
-  - intros n m m1 m2 Hm Hm12.
-    assert (∀ i, m !! i ≡{n}≡ m1 !! i ⋅ m2 !! i) as Hm12'
-      by (by intros i; rewrite -lookup_op).
-    set (f i := cmra_extend n (m !! i) (m1 !! i) (m2 !! i) (Hm i) (Hm12' i)).
-    set (f_proj i := proj1_sig (f i)).
-    exists (map_imap (λ i _, (f_proj i).1) m, map_imap (λ i _, (f_proj i).2) m);
-      repeat split; intros i; rewrite /= ?lookup_op !lookup_imap.
-    + destruct (m !! i) as [x|] eqn:Hx; rewrite !Hx /=; [|constructor].
-      rewrite -Hx; apply (proj2_sig (f i)).
-    + destruct (m !! i) as [x|] eqn:Hx; rewrite /=; [apply (proj2_sig (f i))|].
-      move: (Hm12' i). rewrite Hx -!timeless_iff.
-      rewrite !(symmetry_iff _ None) !equiv_None op_None; tauto.
-    + destruct (m !! i) as [x|] eqn:Hx; simpl; [apply (proj2_sig (f i))|].
-      move: (Hm12' i). rewrite Hx -!timeless_iff.
-      rewrite !(symmetry_iff _ None) !equiv_None op_None; tauto.
+  - intros n m. induction m as [|i x m Hi IH] using map_ind=> m1 m2 Hmv Hm.
+    { exists ∅. exists ∅. (* FIXME: exists ∅, ∅. results in a TC loop in Coq 8.6 *)
+      split_and!=> -i; symmetry; symmetry in Hm; move: Hm=> /(_ i);
+        rewrite !lookup_op !lookup_empty ?dist_None op_None; intuition. }
+    destruct (IH (delete i m1) (delete i m2)) as (m1'&m2'&Hm'&Hm1'&Hm2').
+    { intros j; move: Hmv=> /(_ j). destruct (decide (i = j)) as [->|].
+      + intros _. by rewrite Hi.
+      + by rewrite lookup_insert_ne. }
+    { intros j; move: Hm=> /(_ j); destruct (decide (i = j)) as [->|].
+      + intros _. by rewrite lookup_op !lookup_delete Hi.
+      + by rewrite !lookup_op lookup_insert_ne // !lookup_delete_ne. }
+    destruct (cmra_extend n (Some x) (m1 !! i) (m2 !! i)) as (y1&y2&?&?&?).
+    { move: Hmv=> /(_ i). by rewrite lookup_insert. } 
+    { move: Hm=> /(_ i). by rewrite lookup_insert lookup_op. }
+    exists (partial_alter (λ _, y1) i m1'), (partial_alter (λ _, y2) i m2').
+    split_and!.
+    + intros j. destruct (decide (i = j)) as [->|].
+      * by rewrite lookup_insert lookup_op !lookup_partial_alter.
+      * by rewrite lookup_insert_ne // Hm' !lookup_op !lookup_partial_alter_ne.
+    + intros j. destruct (decide (i = j)) as [->|].
+      * by rewrite lookup_partial_alter.
+      * by rewrite lookup_partial_alter_ne // Hm1' lookup_delete_ne.
+    + intros j. destruct (decide (i = j)) as [->|].
+      * by rewrite lookup_partial_alter.
+      * by rewrite lookup_partial_alter_ne // Hm2' lookup_delete_ne.
 Qed.
 Canonical Structure gmapR :=
   CMRAT (gmap K A) gmap_cofe_mixin gmap_cmra_mixin.
@@ -164,7 +174,6 @@ Proof.
   split.
   - by intros i; rewrite lookup_empty.
   - by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
-  - apply gmap_empty_timeless.
   - constructor=> i. by rewrite lookup_omap lookup_empty.
 Qed.
 Canonical Structure gmapUR :=
@@ -334,8 +343,8 @@ Section freshness.
     ✓ u → LeftId (≡) u (⋅) →
     u ~~>: P → ∅ ~~>: λ m, ∃ y, m = {[ i := y ]} ∧ P y.
   Proof. eauto using alloc_unit_singleton_updateP. Qed.
-  Lemma alloc_unit_singleton_update u i (y : A) :
-    ✓ u → LeftId (≡) u (⋅) → u ~~> y → ∅ ~~> {[ i := y ]}.
+  Lemma alloc_unit_singleton_update (u : A) i (y : A) :
+    ✓ u → LeftId (≡) u (⋅) → u ~~> y → (∅:gmap K A) ~~> {[ i := y ]}.
   Proof.
     rewrite !cmra_update_updateP;
       eauto using alloc_unit_singleton_updateP with subst.
@@ -371,7 +380,7 @@ Proof.
 Qed.
 
 Lemma alloc_unit_singleton_local_update i x mf :
-  mf ≫= (!! i) = None → ✓ x → ∅ ~l~> {[ i := x ]} @ mf.
+  mf ≫= (!! i) = None → ✓ x → (∅:gmap K A) ~l~> {[ i := x ]} @ mf.
 Proof.
   intros Hi; apply alloc_singleton_local_update. by rewrite lookup_opM Hi.
 Qed.

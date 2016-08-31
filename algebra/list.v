@@ -81,13 +81,16 @@ End cofe.
 Arguments listC : clear implicits.
 
 (** Functor *)
+Lemma list_fmap_ext_ne {A} {B : cofeT} (f g : A → B) (l : list A) n :
+  (∀ x, f x ≡{n}≡ g x) → f <$> l ≡{n}≡ g <$> l.
+Proof. intros Hf. by apply Forall2_fmap, Forall_Forall2, Forall_true. Qed.
 Instance list_fmap_ne {A B : cofeT} (f : A → B) n:
   Proper (dist n ==> dist n) f → Proper (dist n ==> dist n) (fmap (M:=list) f).
-Proof. intros Hf l k ?; by eapply Forall2_fmap, Forall2_impl; eauto. Qed. 
+Proof. intros Hf l k ?; by eapply Forall2_fmap, Forall2_impl; eauto. Qed.
 Definition listC_map {A B} (f : A -n> B) : listC A -n> listC B :=
   CofeMor (fmap f : listC A → listC B).
 Instance listC_map_ne A B n : Proper (dist n ==> dist n) (@listC_map A B).
-Proof. intros f f' ? l; by apply Forall2_fmap, Forall_Forall2, Forall_true. Qed.
+Proof. intros f g ? l. by apply list_fmap_ext_ne. Qed.
 
 Program Definition listCF (F : cFunctor) : cFunctor := {|
   cFunctor_car A B := listC (cFunctor_car F A B);
@@ -190,15 +193,14 @@ Section cmra.
       rewrite !list_lookup_core. by apply cmra_core_mono.
     - intros n l1 l2. rewrite !list_lookup_validN.
       setoid_rewrite list_lookup_op. eauto using cmra_validN_op_l.
-    - intros n l. induction l as [|x l IH]=> -[|y1 l1] [|y2 l2] Hl Hl';
-        try (by exfalso; inversion_clear Hl').
-      + by exists ([], []).
-      + by exists ([], x :: l).
-      + by exists (x :: l, []).
-      + destruct (IH l1 l2) as ([l1' l2']&?&?&?),
-          (cmra_extend n x y1 y2) as ([y1' y2']&?&?&?);
-          [inversion_clear Hl; inversion_clear Hl'; auto ..|]; simplify_eq/=.
-        exists (y1' :: l1', y2' :: l2'); repeat constructor; auto.
+    - intros n l.
+      induction l as [|x l IH]=> -[|y1 l1] [|y2 l2] Hl; inversion_clear 1.
+      + by exists [], [].
+      + exists [], (x :: l); by repeat constructor.
+      + exists (x :: l), []; by repeat constructor.
+      + inversion_clear Hl. destruct (IH l1 l2) as (l1'&l2'&?&?&?),
+          (cmra_extend n x y1 y2) as (y1'&y2'&?&?&?); simplify_eq/=; auto.
+        exists (y1' :: l1'), (y2' :: l2'); repeat constructor; auto.
   Qed.
   Canonical Structure listR := CMRAT (list A) list_cofe_mixin list_cmra_mixin.
 
@@ -208,7 +210,6 @@ Section cmra.
     split.
     - constructor.
     - by intros l.
-    - by inversion_clear 1.
     - by constructor.
   Qed.
   Canonical Structure listUR :=

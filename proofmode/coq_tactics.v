@@ -1,5 +1,5 @@
 From iris.algebra Require Export upred.
-From iris.algebra Require Import upred_big_op upred_tactics gmap.
+From iris.algebra Require Import upred_big_op upred_tactics.
 From iris.proofmode Require Export environments classes.
 From iris.prelude Require Import stringmap hlist.
 Import uPred.
@@ -135,7 +135,7 @@ Proof. intros. rewrite envs_lookup_sound //. by rewrite always_if_elim. Qed.
 Lemma envs_lookup_persistent_sound Δ i P :
   envs_lookup i Δ = Some (true,P) → Δ ⊢ □ P ★ Δ.
 Proof.
-  intros. apply: always_entails_l. by rewrite envs_lookup_sound // sep_elim_l.
+  intros. apply (always_entails_l _ _). by rewrite envs_lookup_sound // sep_elim_l.
 Qed.
 
 Lemma envs_lookup_split Δ i p P :
@@ -277,8 +277,8 @@ Proof.
 Qed.
 Global Instance of_envs_proper : Proper (envs_Forall2 (⊣⊢) ==> (⊣⊢)) (@of_envs M).
 Proof.
-  intros Δ1 Δ2 ?; apply (anti_symm (⊢)); apply of_envs_mono;
-    eapply envs_Forall2_impl; [| |symmetry|]; eauto using equiv_entails.
+  intros Δ1 Δ2 HΔ; apply (anti_symm (⊢)); apply of_envs_mono;
+    eapply (envs_Forall2_impl (⊣⊢)); [| |symmetry|]; eauto using equiv_entails.
 Qed.
 Global Instance Envs_mono (R : relation (uPred M)) :
   Proper (env_Forall2 R ==> env_Forall2 R ==> envs_Forall2 R) (@Envs M).
@@ -375,19 +375,20 @@ Proof.
   by rewrite right_id always_and_sep_l' wand_elim_r HQ.
 Qed.
 
-Lemma tac_timeless Δ Δ' i p P Q :
-  TimelessElim Q →
-  envs_lookup i Δ = Some (p, ▷ P)%I → TimelessP P →
-  envs_simple_replace i p (Esnoc Enil i P) Δ = Some Δ' →
+Lemma tac_timeless Δ Δ' i p P P' Q :
+  IsExceptLast Q →
+  envs_lookup i Δ = Some (p, P) → IntoExceptLast P P' →
+  envs_simple_replace i p (Esnoc Enil i P') Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ???? HQ. rewrite envs_simple_replace_sound //; simpl.
-  by rewrite always_if_later right_id HQ timeless_elim.
+  rewrite right_id HQ -{2}(is_except_last Q).
+  by rewrite (into_except_last P) -except_last_always_if except_last_frame_r wand_elim_r.
 Qed.
 
 (** * Always *)
 Lemma tac_always_intro Δ Q : envs_persistent Δ = true → (Δ ⊢ Q) → Δ ⊢ □ Q.
-Proof. intros. by apply: always_intro. Qed.
+Proof. intros. by apply (always_intro _ _). Qed.
 
 Lemma tac_persistent Δ Δ' i p P P' Q :
   envs_lookup i Δ = Some (p, P) → IntoPersistentP P P' →
@@ -465,6 +466,8 @@ Class IntoAssert (P : uPred M) (Q : uPred M) (R : uPred M) :=
 Global Arguments into_assert _ _ _ {_}.
 Lemma into_assert_default P Q : IntoAssert P Q P.
 Proof. by rewrite /IntoAssert wand_elim_r. Qed.
+Global Instance to_assert_rvs P Q : IntoAssert P (|=r=> Q) (|=r=> P).
+Proof. by rewrite /IntoAssert rvs_frame_r wand_elim_r rvs_trans. Qed.
 
 Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q lr js R P1 P2 P1' Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
@@ -549,25 +552,13 @@ Proof.
   by rewrite right_id {1}(persistentP P) always_and_sep_l wand_elim_r.
 Qed.
 
-(** Whenever posing [lem : True ⊢ Q] as [H] we want it to appear as [H : Q] and
-not as [H : True -★ Q]. The class [IntoPosedProof] is used to strip off the
-[True]. Note that [to_posed_proof_True] is declared using a [Hint Extern] to
-make sure it is not used while posing [lem : ?P ⊢ Q] with [?P] an evar. *)
-Class IntoPosedProof (P1 P2 R : uPred M) :=
-  into_pose_proof : (P1 ⊢ P2) → True ⊢ R.
-Arguments into_pose_proof : clear implicits.
-Instance to_posed_proof_True P : IntoPosedProof True P P.
-Proof. by rewrite /IntoPosedProof. Qed.
-Global Instance to_posed_proof_wand P Q : IntoPosedProof P Q (P -★ Q).
-Proof. rewrite /IntoPosedProof. apply entails_wand. Qed.
-
-Lemma tac_pose_proof Δ Δ' j P1 P2 R Q :
-  (P1 ⊢ P2) → IntoPosedProof P1 P2 R →
-  envs_app true (Esnoc Enil j R) Δ = Some Δ' →
+Lemma tac_pose_proof Δ Δ' j P Q :
+  (True ⊢ P) →
+  envs_app true (Esnoc Enil j P) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
-  intros HP ?? <-. rewrite envs_app_sound //; simpl.
-  by rewrite right_id -(into_pose_proof P1 P2 R) // always_pure wand_True.
+  intros HP ? <-. rewrite envs_app_sound //; simpl.
+  by rewrite right_id -HP always_pure wand_True.
 Qed.
 
 Lemma tac_pose_proof_hyp Δ Δ' Δ'' i p j P Q :
@@ -661,13 +652,27 @@ Proof.
 Qed.
 
 (** * Conjunction/separating conjunction elimination *)
-Lemma tac_sep_destruct Δ Δ' i p j1 j2 P P1 P2 Q :
-  envs_lookup i Δ = Some (p, P) → IntoSep p P P1 P2 →
+Lemma tac_and_destruct Δ Δ' i p j1 j2 P P1 P2 Q :
+  envs_lookup i Δ = Some (p, P) → IntoAnd p P P1 P2 →
   envs_simple_replace i p (Esnoc (Esnoc Enil j1 P1) j2 P2) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
+  intros. rewrite envs_simple_replace_sound //; simpl. rewrite (into_and p P).
+  by destruct p; rewrite /= ?right_id (comm _ P1) ?always_and_sep wand_elim_r.
+Qed.
+
+(* Using this tactic, one can destruct a (non-separating) conjunction in the
+spatial context as long as one of the conjuncts is thrown away. It corresponds
+to the principle of "external choice" in linear logic. *)
+Lemma tac_and_destruct_choice Δ Δ' i p (lr : bool) j P P1 P2 Q :
+  envs_lookup i Δ = Some (p, P) → IntoAnd true P P1 P2 →
+  envs_simple_replace i p (Esnoc Enil j (if lr then P1 else P2)) Δ = Some Δ' →
+  (Δ' ⊢ Q) → Δ ⊢ Q.
+Proof.
   intros. rewrite envs_simple_replace_sound //; simpl.
-  by rewrite (into_sep p P) right_id (comm uPred_sep P1) wand_elim_r.
+  rewrite right_id (into_and true P). destruct lr.
+  - by rewrite and_elim_l wand_elim_r.
+  - by rewrite and_elim_r wand_elim_r.
 Qed.
 
 (** * Framing *)
@@ -744,7 +749,18 @@ Proof.
   apply exist_elim=> a; destruct (HΦ a) as (Δ'&?&?).
   rewrite envs_simple_replace_sound' //; simpl. by rewrite right_id wand_elim_r.
 Qed.
-End tactics.
 
-Hint Extern 0 (IntoPosedProof True _ _) =>
-  class_apply @to_posed_proof_True : typeclass_instances.
+(** * Viewshifts *)
+Lemma tac_vs_intro Δ P Q : FromVs P Q → (Δ ⊢ Q) → Δ ⊢ P.
+Proof. rewrite /FromVs. intros <- ->. apply rvs_intro. Qed.
+
+Lemma tac_vs_elim Δ Δ' i p P' P Q Q' :
+  envs_lookup i Δ = Some (p, P) →
+  ElimVs P P' Q Q' →
+  envs_replace i p false (Esnoc Enil i P') Δ = Some Δ' →
+  (Δ' ⊢ Q') → Δ ⊢ Q.
+Proof.
+  intros ??? HΔ. rewrite envs_replace_sound //; simpl.
+  rewrite right_id HΔ always_if_elim. by apply elim_vs.
+Qed.
+End tactics.

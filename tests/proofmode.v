@@ -20,7 +20,7 @@ Lemma demo_1 (M : ucmraT) (P1 P2 P3 : nat → uPred M) :
     ▷ (∀ n m : nat, P1 n → □ ((True ∧ P2 n) → □ (n = n ↔ P3 n))) -★
     ▷ (x = 0) ∨ ∃ x z, ▷ P3 (x + z) ★ uPred_ownM b ★ uPred_ownM (core b)).
 Proof.
-  iIntros (i [|j] a b ?) "! [Ha Hb] H1 #H2 H3"; setoid_subst.
+  iIntros (i [|j] a b ?) "!# [Ha Hb] H1 #H2 H3"; setoid_subst.
   { iLeft. by iNext. }
   iRight.
   iDestruct "H1" as (z1 z2 c) "(H1&_&#Hc)".
@@ -81,26 +81,20 @@ Proof.
   by iIntros "# _".
 Qed.
 
-Section iris.
-  Context {Λ : language} {Σ : iFunctor}.
-  Implicit Types E : coPset.
-  Implicit Types P Q : iProp Λ Σ.
+Lemma demo_7 (M : ucmraT) (P Q1 Q2 : uPred M) : P ★ (Q1 ∧ Q2) ⊢ P ★ Q1.
+Proof. iIntros "[H1 [H2 _]]". by iFrame. Qed.
 
-  Lemma demo_7 E1 E2 E P :
-    E1 ⊆ E2 → E ⊆ E1 →
-    (|={E1,E}=> ▷ P) ={E2,E ∪ E2 ∖ E1}=> ▷ P.
-  Proof.
-    iIntros (? ?) "Hpvs".
-    iPvs "Hpvs"; first set_solver.
-    done.
-  Qed.
+Section iris.
+  Context `{irisG Λ Σ}.
+  Implicit Types E : coPset.
+  Implicit Types P Q : iProp Σ.
 
   Lemma demo_8 N E P Q R :
     nclose N ⊆ E →
     (True -★ P -★ inv N Q -★ True -★ R) ⊢ P -★ ▷ Q ={E}=★ R.
   Proof.
     iIntros (?) "H HP HQ".
-    iApply ("H" with "[#] HP |==>[HQ] |==>").
+    iApply ("H" with "[#] HP ==>[HQ] ==>").
     - done.
     - by iApply inv_alloc.
     - done.

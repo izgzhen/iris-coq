@@ -117,9 +117,12 @@ Section iprod_cmra.
       by rewrite iprod_lookup_core; apply cmra_core_mono, Hf.
     - intros n f1 f2 Hf x; apply cmra_validN_op_l with (f2 x), Hf.
     - intros n f f1 f2 Hf Hf12.
-      set (g x := cmra_extend n (f x) (f1 x) (f2 x) (Hf x) (Hf12 x)).
-      exists ((λ x, (proj1_sig (g x)).1), (λ x, (proj1_sig (g x)).2)).
-      split_and?; intros x; apply (proj2_sig (g x)).
+      destruct (finite_choice (λ x (yy : B x * B x),
+        f x ≡ yy.1 ⋅ yy.2 ∧ yy.1 ≡{n}≡ f1 x ∧ yy.2 ≡{n}≡ f2 x)) as [gg Hgg].
+      { intros x. specialize (Hf12 x).
+        destruct (cmra_extend n (f x) (f1 x) (f2 x)) as (y1&y2&?&?&?); eauto.
+        exists (y1,y2); eauto. }
+      exists (λ x, gg x.1), (λ x, gg x.2). split_and!=> -?; naive_solver.
   Qed.
   Canonical Structure iprodR :=
     CMRAT (iprod B) iprod_cofe_mixin iprod_cmra_mixin.
@@ -132,11 +135,14 @@ Section iprod_cmra.
     split.
     - intros x; apply ucmra_unit_valid.
     - by intros f x; rewrite iprod_lookup_op left_id.
-    - intros f Hf x. by apply: timeless.
     - constructor=> x. apply persistent_core, _.
   Qed.
   Canonical Structure iprodUR :=
     UCMRAT (iprod B) iprod_cofe_mixin iprod_cmra_mixin iprod_ucmra_mixin.
+
+  Global Instance iprod_empty_timeless :
+    (∀ i, Timeless (∅ : B i)) → Timeless (∅ : iprod B).
+  Proof. intros ? f Hf x. by apply: timeless. Qed.
 
   (** Internalized properties *)
   Lemma iprod_equivI {M} g1 g2 : g1 ≡ g2 ⊣⊢ (∀ i, g1 i ≡ g2 i : uPred M).
@@ -193,7 +199,8 @@ Section iprod_singleton.
   Proof. intros; by rewrite /iprod_singleton iprod_lookup_insert_ne. Qed.
 
   Global Instance iprod_singleton_timeless x (y : B x) :
-    Timeless y → Timeless (iprod_singleton x y) := _.
+    (∀ i, Timeless (∅ : B i)) →  Timeless y → Timeless (iprod_singleton x y).
+  Proof. apply _. Qed.
 
   Lemma iprod_singleton_validN n x (y : B x) : ✓{n} iprod_singleton x y ↔ ✓{n} y.
   Proof.

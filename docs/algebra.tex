@@ -15,7 +15,7 @@ This definition varies slightly from the original one in~\cite{catlogic}.
     \All n. (\nequiv{n}) ~& \text{is an equivalence relation} \tagH{cofe-equiv} \\
     \All n, m.& n \geq m \Ra (\nequiv{n}) \subseteq (\nequiv{m}) \tagH{cofe-mono} \\
     \All x, y.& x = y \Lra (\All n. x \nequiv{n} y) \tagH{cofe-limit} \\
-    \All n, c.& \lim(c) \nequiv{n} c(n+1) \tagH{cofe-compl}
+    \All n, c.& \lim(c) \nequiv{n} c(n) \tagH{cofe-compl}
   \end{align*}
 \end{defn}
 
@@ -35,17 +35,17 @@ In order to solve the recursive domain equation in \Sref{sec:model} it is also e
   A function $f : \cofe \to \cofeB$ between two COFEs is \emph{non-expansive} (written $f : \cofe \nfn \cofeB$) if
   \[\All n, x \in \cofe, y \in \cofe. x \nequiv{n} y \Ra f(x) \nequiv{n} f(y) \]
   It is \emph{contractive} if
-  \[ \All n, x \in \cofe, y \in \cofe. (\All m < n. x \nequiv{m} y) \Ra f(x) \nequiv{n} f(x) \]
+  \[ \All n, x \in \cofe, y \in \cofe. (\All m < n. x \nequiv{m} y) \Ra f(x) \nequiv{n} f(y) \]
 \end{defn}
 Intuitively, applying a non-expansive function to some data will not suddenly introduce differences between seemingly equal data.
 Elements that cannot be distinguished by programs within $n$ steps remain indistinguishable after applying $f$.
-The reason that contractive functions are interesting is that for every contractive $f : \cofe \to \cofe$ with $\cofe$ inhabited, there exists a fixed-point $\fix(f)$ such that $\fix(f) = f(\fix(f))$.
+The reason that contractive functions are interesting is that for every contractive $f : \cofe \to \cofe$ with $\cofe$ inhabited, there exists a \emph{unique} fixed-point $\fix(f)$ such that $\fix(f) = f(\fix(f))$.
 
 \begin{defn}
   The category $\COFEs$ consists of COFEs as objects, and non-expansive functions as arrows.
 \end{defn}
 
-Note that $\COFEs$ is cartesian closed:
+Note that $\COFEs$ is cartesian closed. In particular:
 \begin{defn}
   Given two COFEs $\cofe$ and $\cofeB$, the set of non-expansive functions $\set{f : \cofe \nfn \cofeB}$ is itself a COFE with
   \begin{align*}
@@ -59,6 +59,7 @@ Note that $\COFEs$ is cartesian closed:
 \end{defn}
 The function space $(-) \nfn (-)$ is a locally non-expansive bifunctor.
 Note that the composition of non-expansive (bi)functors is non-expansive, and the composition of a non-expansive and a contractive (bi)functor is contractive.
+The reason contractive (bi)functors are interesting is that by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}, they have a unique\footnote{Uniqueness is not proven in Coq.} fixed-point.
 
 \subsection{RA}
 
@@ -211,7 +212,7 @@ Furthermore, discrete CMRAs can be turned into RAs by ignoring their COFE struct
 \end{defn}
 Note that every object/arrow in $\CMRAs$ is also an object/arrow of $\COFEs$.
 The notion of a locally non-expansive (or contractive) bifunctor naturally generalizes to bifunctors between these categories.
-
+%TODO: Discuss how we probably have a commuting square of functors between Set, RA, CMRA, COFE.
 
 %%% Local Variables: 
 %%% mode: latex

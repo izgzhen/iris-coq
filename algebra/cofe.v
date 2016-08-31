@@ -188,12 +188,21 @@ Definition fixpoint_eq : @fixpoint = @fixpoint_def := proj2_sig fixpoint_aux.
 
 Section fixpoint.
   Context {A : cofeT} `{Inhabited A} (f : A → A) `{!Contractive f}.
+
   Lemma fixpoint_unfold : fixpoint f ≡ f (fixpoint f).
   Proof.
     apply equiv_dist=>n.
     rewrite fixpoint_eq /fixpoint_def (conv_compl n (fixpoint_chain f)) //.
     induction n as [|n IH]; simpl; eauto using contractive_0, contractive_S.
   Qed.
+
+  Lemma fixpoint_unique (x : A) : x ≡ f x → x ≡ fixpoint f.
+  Proof.
+    rewrite !equiv_dist=> Hx n. induction n as [|n IH]; simpl in *.
+    - rewrite Hx fixpoint_unfold; eauto using contractive_0.
+    - rewrite Hx fixpoint_unfold. apply (contractive_S _), IH.
+  Qed.
+
   Lemma fixpoint_ne (g : A → A) `{!Contractive g} n :
     (∀ z, f z ≡{n}≡ g z) → fixpoint f ≡{n}≡ fixpoint g.
   Proof.
@@ -208,6 +217,8 @@ Section fixpoint.
 End fixpoint.
 
 (** Function space *)
+(* We make [cofe_fun] a definition so that we can register it as a canonical
+structure. *)
 Definition cofe_fun (A : Type) (B : cofeT) := A → B.
 
 Section cofe_fun.
@@ -673,8 +684,6 @@ Inductive later (A : Type) : Type := Next { later_car : A }.
 Add Printing Constructor later.
 Arguments Next {_} _.
 Arguments later_car {_} _.
-Lemma later_eta {A} (x : later A) : Next (later_car x) = x.
-Proof. by destruct x. Qed.
 
 Section later.
   Context {A : cofeT}.

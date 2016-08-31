@@ -1,8 +1,9 @@
+From iris.program_logic Require Export weakestpre.
+From iris.heap_lang Require Export lang.
 From iris.heap_lang.lib.barrier Require Import proof.
 From iris.heap_lang Require Import par.
 From iris.program_logic Require Import auth sts saved_prop hoare ownership.
-From iris.heap_lang Require Import proofmode.
-Import uPred.
+From iris.heap_lang Require Import adequacy proofmode.
 
 Definition worker (n : Z) : val :=
   λ: "b" "y", wait "b" ;; !"y" #n.
@@ -14,10 +15,9 @@ Definition client : expr :=
 Global Opaque worker client.
 
 Section client.
-  Context {Σ : gFunctors} `{!heapG Σ, !barrierG Σ, !spawnG Σ} (N : namespace).
-  Local Notation iProp := (iPropG heap_lang Σ).
+  Context `{!heapG Σ, !barrierG Σ, !spawnG Σ} (N : namespace).
 
-  Definition y_inv (q : Qp) (l : loc) : iProp :=
+  Definition y_inv (q : Qp) (l : loc) : iProp Σ :=
     (∃ f : val, l ↦{q} f ★ □ ∀ n : Z, WP f #n {{ v, v = #(n + 42) }})%I.
 
   Lemma y_inv_split q l : y_inv q l ⊢ (y_inv (q/2) l ★ y_inv (q/2) l).
@@ -47,26 +47,26 @@ Section client.
       wp_store. iApply signal_spec; iFrame "Hs"; iSplit; [|done].
       iExists _; iSplitL; [done|]. iAlways; iIntros (n). wp_let. by wp_op.
     - (* The two spawned threads, the waiters. *)
-      iSplitL; [|by iIntros (_ _) "_ >"].
+      iSplitL; [|by iIntros (_ _) "_ !>"].
       iDestruct (recv_weaken with "[] Hr") as "Hr".
       { iIntros "Hy". by iApply (y_inv_split with "Hy"). }
-      iPvs (recv_split with "Hr") as "[H1 H2]"; first done.
+      iVs (recv_split with "Hr") as "[H1 H2]"; first done.
       iApply (wp_par (λ _, True%I) (λ _, True%I)). iFrame "Hh".
-      iSplitL "H1"; [|iSplitL "H2"; [|by iIntros (_ _) "_ >"]];
+      iSplitL "H1"; [|iSplitL "H2"; [|by iIntros (_ _) "_ !>"]];
         iApply worker_safe; by iSplit.
 Qed.
 End client.
 
 Section ClosedProofs.
-  Definition Σ : gFunctors := #[ heapGF ; barrierGF ; spawnGF ].
-  Notation iProp := (iPropG heap_lang Σ).
 
-  Lemma client_safe_closed σ : {{ ownP σ : iProp }} client {{ v, True }}.
-  Proof.
-    iIntros "! Hσ".
-    iPvs (heap_alloc with "Hσ") as (h) "[#Hh _]"; first done.
-    iApply (client_safe (nroot .@ "barrier")); auto with ndisj.
-  Qed.
+Let Σ : gFunctors := #[ heapΣ ; barrierΣ ; spawnΣ ].
 
-  Print Assumptions client_safe_closed.
+Lemma client_adequate σ : adequate client σ (λ _, True).
+Proof.
+  apply (heap_adequacy Σ)=> ?.
+  apply (client_safe (nroot .@ "barrier")); auto with ndisj.
+Qed.
+
 End ClosedProofs.
+
+Print Assumptions client_adequate.

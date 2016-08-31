@@ -1,49 +1,47 @@
-From iris.algebra Require Import upred_big_op.
-From iris.program_logic Require Import auth saved_prop.
-From iris.proofmode Require Import tactics invariants ghost_ownership.
+From iris.program_logic Require Export pviewshifts.
+From iris.algebra Require Import auth gmap agree upred_big_op.
+From iris.proofmode Require Import tactics invariants.
 Import uPred.
 
 (** The CMRAs we need. *)
-Class boxG Λ Σ :=
-  boxG_inG :> inG Λ Σ (prodR
+Class boxG Σ :=
+  boxG_inG :> inG Σ (prodR
     (authR (optionUR (exclR boolC)))
-    (optionR (agreeR (laterC (iPrePropG Λ Σ))))).
+    (optionR (agreeR (laterC (iPreProp Σ))))).
 
 Section box_defs.
-  Context `{boxG Λ Σ} (N : namespace).
-  Notation iProp := (iPropG Λ Σ).
+  Context `{irisG Λ Σ, boxG Σ} (N : namespace).
 
   Definition slice_name := gname.
 
   Definition box_own_auth (γ : slice_name) (a : auth (option (excl bool)))
-    := own γ (a, (∅:option (agree (later (iPrePropG Λ Σ))))).
+    := own γ (a, (∅:option (agree (later (iPreProp Σ))))).
 
-  Definition box_own_prop (γ : slice_name) (P : iProp) : iProp :=
+  Definition box_own_prop (γ : slice_name) (P : iProp Σ) : iProp Σ :=
     own γ (∅:auth (option (excl bool)), Some (to_agree (Next (iProp_unfold P)))).
 
-  Definition slice_inv (γ : slice_name) (P : iProp) : iProp :=
+  Definition slice_inv (γ : slice_name) (P : iProp Σ) : iProp Σ :=
     (∃ b, box_own_auth γ (● Excl' b) ★ box_own_prop γ P ★ if b then P else True)%I.
 
-  Definition slice (γ : slice_name) (P : iProp) : iProp :=
+  Definition slice (γ : slice_name) (P : iProp Σ) : iProp Σ :=
     inv N (slice_inv γ P).
 
-  Definition box (f : gmap slice_name bool) (P : iProp) : iProp :=
-    (∃ Φ : slice_name → iProp,
+  Definition box (f : gmap slice_name bool) (P : iProp Σ) : iProp Σ :=
+    (∃ Φ : slice_name → iProp Σ,
       ▷ (P ≡ [★ map] γ ↦ b ∈ f, Φ γ) ★
       [★ map] γ ↦ b ∈ f, box_own_auth γ (◯ Excl' b) ★ box_own_prop γ (Φ γ) ★
                          inv N (slice_inv γ (Φ γ)))%I.
 End box_defs.
 
-Instance: Params (@box_own_auth) 4.
-Instance: Params (@box_own_prop) 4.
-Instance: Params (@slice_inv) 4.
-Instance: Params (@slice) 5.
-Instance: Params (@box) 5.
+Instance: Params (@box_own_auth) 5.
+Instance: Params (@box_own_prop) 5.
+Instance: Params (@slice_inv) 5.
+Instance: Params (@slice) 6.
+Instance: Params (@box) 6.
 
 Section box.
-Context `{boxG Λ Σ} (N : namespace).
-Notation iProp := (iPropG Λ Σ).
-Implicit Types P Q : iProp.
+Context `{irisG Λ Σ, boxG Σ} (N : namespace).
+Implicit Types P Q : iProp Σ.
 
 Global Instance box_own_prop_ne n γ : Proper (dist n ==> dist n) (box_own_prop γ).
 Proof. solve_proper. Qed.
@@ -63,13 +61,13 @@ Proof.
   by iDestruct 1 as % [[[] [=]%leibniz_equiv] ?]%auth_valid_discrete.
 Qed.
 
-Lemma box_own_auth_update E γ b1 b2 b3 :
+Lemma box_own_auth_update γ b1 b2 b3 :
   box_own_auth γ (● Excl' b1) ★ box_own_auth γ (◯ Excl' b2)
-  ={E}=> box_own_auth γ (● Excl' b3) ★ box_own_auth γ (◯ Excl' b3).
+  =r=> box_own_auth γ (● Excl' b3) ★ box_own_auth γ (◯ Excl' b3).
 Proof.
   rewrite /box_own_prop -!own_op own_valid_l prod_validI; iIntros "[[Hb _] Hγ]".
   iDestruct "Hb" as % [[[] [= ->]%leibniz_equiv] ?]%auth_valid_discrete.
-  iApply (@own_update with "Hγ"); apply prod_update; simpl; last reflexivity.
+  iApply (own_update with "Hγ"); apply prod_update; simpl; last reflexivity.
   by apply auth_update_no_frame, option_local_update, exclusive_local_update.
 Qed.
 
@@ -78,7 +76,7 @@ Lemma box_own_agree γ Q1 Q2 :
 Proof.
   rewrite /box_own_prop -own_op own_valid prod_validI /= and_elim_r.
   rewrite option_validI /= agree_validI agree_equivI later_equivI /=.
-  iIntros "#HQ >". rewrite -{2}(iProp_fold_unfold Q1).
+  iIntros "#HQ !>". rewrite -{2}(iProp_fold_unfold Q1).
   iRewrite "HQ". by rewrite iProp_fold_unfold.
 Qed.
 
@@ -94,14 +92,14 @@ Lemma box_insert f P Q :
     slice N γ Q ★ ▷ box N (<[γ:=false]> f) (Q ★ P).
 Proof.
   iDestruct 1 as (Φ) "[#HeqP Hf]".
-  iPvs (own_alloc_strong (● Excl' false ⋅ ◯ Excl' false,
-    Some (to_agree (Next (iProp_unfold Q)))) _ (dom _ f))
+  iVs (own_alloc_strong (● Excl' false ⋅ ◯ Excl' false,
+    Some (to_agree (Next (iProp_unfold Q)))) (dom _ f))
     as (γ) "[Hdom Hγ]"; first done.
   rewrite pair_split. iDestruct "Hγ" as "[[Hγ Hγ'] #HγQ]".
   iDestruct "Hdom" as % ?%not_elem_of_dom.
-  iPvs (inv_alloc N _ (slice_inv γ Q) with "[Hγ]") as "#Hinv"; first done.
+  iVs (inv_alloc N _ (slice_inv γ Q) with "[Hγ]") as "#Hinv".
   { iNext. iExists false; eauto. }
-  iPvsIntro; iExists γ; repeat iSplit; auto.
+  iVsIntro; iExists γ; repeat iSplit; auto.
   iNext. iExists (<[γ:=Q]> Φ); iSplit.
   - iNext. iRewrite "HeqP". by rewrite big_sepM_fn_insert'.
   - rewrite (big_sepM_fn_insert (λ _ _ P',  _ ★ _ _ P' ★ _ _ (_ _ P')))%I //.
@@ -115,7 +113,8 @@ Lemma box_delete f P Q γ :
 Proof.
   iIntros (?) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists ([★ map] γ'↦_ ∈ delete γ f, Φ γ')%I.
-  iInv N as (b) "(Hγ & #HγQ &_)"; iPvsIntro; iNext.
+  iInv N as (b) "(Hγ & #HγQ &_)" "Hclose".
+  iApply pvs_trans_frame; iFrame "Hclose"; iVsIntro; iNext.
   iDestruct (big_sepM_delete _ f _ false with "Hf")
     as "[[Hγ' #[HγΦ ?]] ?]"; first done.
   iDestruct (box_own_agree γ Q (Φ γ) with "[#]") as "HeqQ"; first by eauto.
@@ -132,14 +131,14 @@ Lemma box_fill f γ P Q :
   slice N γ Q ★ ▷ Q ★ ▷ box N f P ={N}=> ▷ box N (<[γ:=true]> f) P.
 Proof.
   iIntros (?) "(#Hinv & HQ & H)"; iDestruct "H" as (Φ) "[#HeqP Hf]".
-  iInv N as (b') "(Hγ & #HγQ & _)"; iTimeless "Hγ".
+  iInv N as (b') "(>Hγ & #HγQ & _)" "Hclose".
   iDestruct (big_sepM_later _ f with "Hf") as "Hf".
   iDestruct (big_sepM_delete _ f _ false with "Hf")
-    as "[[Hγ' #[HγΦ Hinv']] ?]"; first done; iTimeless "Hγ'".
-  iPvs (box_own_auth_update _ γ b' false true with "[Hγ Hγ']")
+    as "[[>Hγ' #[HγΦ Hinv']] ?]"; first done.
+  iVs (box_own_auth_update γ b' false true with "[Hγ Hγ']")
     as "[Hγ Hγ']"; first by iFrame.
-  iPvsIntro; iNext; iSplitL "Hγ HQ"; first (iExists true; by iFrame "Hγ HQ").
-  iExists Φ; iSplit.
+  iVs ("Hclose" with "[Hγ HQ]"); first (iNext; iExists true; by iFrame).
+  iVsIntro; iNext; iExists Φ; iSplit.
   - by rewrite big_sepM_insert_override.
   - rewrite -insert_delete big_sepM_insert ?lookup_delete //.
     iFrame; eauto.
@@ -150,17 +149,16 @@ Lemma box_empty f P Q γ :
   slice N γ Q ★ ▷ box N f P ={N}=> ▷ Q ★ ▷ box N (<[γ:=false]> f) P.
 Proof.
   iIntros (?) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
-  iInv N as (b) "(Hγ & #HγQ & HQ)"; iTimeless "Hγ".
+  iInv N as (b) "(>Hγ & #HγQ & HQ)" "Hclose".
   iDestruct (big_sepM_later _ f with "Hf") as "Hf".
   iDestruct (big_sepM_delete _ f with "Hf")
-    as "[[Hγ' #[HγΦ Hinv']] ?]"; first done; iTimeless "Hγ'".
+    as "[[>Hγ' #[HγΦ Hinv']] ?]"; first done.
   iDestruct (box_own_auth_agree γ b true with "[#]")
-    as "%"; subst; first by iFrame.
+    as %?; subst; first by iFrame.
   iFrame "HQ".
-  iPvs (box_own_auth_update _ γ with "[Hγ Hγ']")
-    as "[Hγ Hγ']"; first by iFrame.
-  iPvsIntro; iNext; iSplitL "Hγ"; first (iExists false; by repeat iSplit).
-  iExists Φ; iSplit.
+  iVs (box_own_auth_update γ with "[Hγ Hγ']") as "[Hγ Hγ']"; first by iFrame.
+  iVs ("Hclose" with "[Hγ]"); first (iNext; iExists false; by repeat iSplit).
+  iVsIntro; iNext; iExists Φ; iSplit.
   - by rewrite big_sepM_insert_override.
   - rewrite -insert_delete big_sepM_insert ?lookup_delete //.
     iFrame; eauto.
@@ -175,10 +173,9 @@ Proof.
   rewrite big_sepM_fmap; iApply (pvs_big_sepM _ _ f).
   iApply (big_sepM_impl _ _ f); iFrame "Hf".
   iAlways; iIntros (γ b' ?) "[(Hγ' & #$ & #$) HΦ]".
-  iInv N as (b) "[Hγ _]"; iTimeless "Hγ".
-  iPvs (box_own_auth_update _ γ with "[Hγ Hγ']")
-    as "[Hγ $]"; first by iFrame.
-  iPvsIntro; iNext; iExists true. by iFrame.
+  iInv N as (b) "[>Hγ _]" "Hclose".
+  iVs (box_own_auth_update γ with "[Hγ Hγ']") as "[Hγ $]"; first by iFrame.
+  iApply "Hclose". iNext; iExists true. by iFrame.
 Qed.
 
 Lemma box_empty_all f P Q :
@@ -187,17 +184,18 @@ Lemma box_empty_all f P Q :
 Proof.
   iDestruct 1 as (Φ) "[#HeqP Hf]".
   iAssert ([★ map] γ↦b ∈ f, ▷ Φ γ ★ box_own_auth γ (◯ Excl' false) ★
-    box_own_prop γ (Φ γ) ★ inv N (slice_inv γ (Φ γ)))%I with "|==>[Hf]" as "[HΦ ?]".
+    box_own_prop γ (Φ γ) ★ inv N (slice_inv γ (Φ γ)))%I with "==>[Hf]" as "[HΦ ?]".
   { iApply (pvs_big_sepM _ _ f); iApply (big_sepM_impl _ _ f); iFrame "Hf".
     iAlways; iIntros (γ b ?) "(Hγ' & #$ & #$)".
     assert (true = b) as <- by eauto.
-    iInv N as (b) "(Hγ & _ & HΦ)"; iTimeless "Hγ".
+    iInv N as (b) "(>Hγ & _ & HΦ)" "Hclose".
     iDestruct (box_own_auth_agree γ b true with "[#]")
       as "%"; subst; first by iFrame.
-    iPvs (box_own_auth_update _ γ true true false with "[Hγ Hγ']")
+    iVs (box_own_auth_update γ true true false with "[Hγ Hγ']")
       as "[Hγ $]"; first by iFrame.
-    iPvsIntro; iNext. iFrame "HΦ". iExists false. iFrame; eauto. }
-  iPvsIntro; iSplitL "HΦ".
+    iVs ("Hclose" with "[Hγ]"); first (iNext; iExists false; iFrame; eauto).
+    by iApply "HΦ". }
+  iVsIntro; iSplitL "HΦ".
   - rewrite eq_iff later_iff big_sepM_later. by iApply "HeqP".
   - iExists Φ; iSplit; by rewrite big_sepM_fmap.
 Qed.

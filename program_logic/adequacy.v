@@ -1,155 +1,170 @@
-From iris.program_logic Require Export hoare.
-From iris.program_logic Require Import wsat ownership.
-Local Hint Extern 10 (_ ≤ _) => omega.
-Local Hint Extern 100 (_ ⊥ _) => set_solver.
-Local Hint Extern 10 (✓{_} _) =>
-  repeat match goal with
-  | H : wsat _ _ _ _ |- _ => apply wsat_valid in H; last omega
-  end; solve_validN.
+From iris.program_logic Require Export weakestpre.
+From iris.algebra Require Import gmap auth agree gset coPset upred_big_op.
+From iris.program_logic Require Import ownership.
+From iris.proofmode Require Import tactics weakestpre.
+Import uPred.
 
-Section adequacy.
-Context {Λ : language} {Σ : iFunctor}.
-Implicit Types e : expr Λ.
-Implicit Types P Q : iProp Λ Σ.
-Implicit Types Φ : val Λ → iProp Λ Σ.
-Implicit Types Φs : list (val Λ → iProp Λ Σ).
-Implicit Types m : iGst Λ Σ.
+Record adequate {Λ} (e1 : expr Λ) (σ1 : state Λ) (φ : val Λ → Prop) := {
+  adequate_result t2 σ2 v2 :
+   rtc step ([e1], σ1) (of_val v2 :: t2, σ2) → φ v2;
+  adequate_safe t2 σ2 e2 :
+   rtc step ([e1], σ1) (t2, σ2) →
+   e2 ∈ t2 → (is_Some (to_val e2) ∨ reducible e2 σ2)
+}.
 
-Notation wptp n := (Forall3 (λ e Φ r, uPred_holds (wp ⊤ e Φ) n r)).
-Lemma wptp_le Φs es rs n n' :
-  ✓{n'} (big_op rs) → wptp n es Φs rs → n' ≤ n → wptp n' es Φs rs.
-Proof. induction 2; constructor; eauto using uPred_closed. Qed.
-Lemma nsteps_wptp Φs k n tσ1 tσ2 rs1 :
-  nsteps step k tσ1 tσ2 →
-  1 < n → wptp (k + n) (tσ1.1) Φs rs1 →
-  wsat (k + n) ⊤ (tσ1.2) (big_op rs1) →
-  ∃ rs2 Φs', wptp n (tσ2.1) (Φs ++ Φs') rs2 ∧ wsat n ⊤ (tσ2.2) (big_op rs2).
-Proof.
-  intros Hsteps Hn; revert Φs rs1.
-  induction Hsteps as [|k ?? tσ3 [e1 σ1 e2 σ2 ef t1 t2 ?? Hstep] Hsteps IH];
-    simplify_eq/=; intros Φs rs.
-  { by intros; exists rs, []; rewrite right_id_L. }
-  intros (Φs1&?&rs1&?&->&->&?&
-    (Φ&Φs2&r&rs2&->&->&Hwp&?)%Forall3_cons_inv_l)%Forall3_app_inv_l ?.
-  rewrite wp_eq in Hwp.
-  destruct (wp_step_inv ⊤ ∅ Φ e1 (k + n) (S (k + n)) σ1 r
-    (big_op (rs1 ++ rs2))) as [_ Hwpstep]; eauto using val_stuck.
-  { by rewrite right_id_L -big_op_cons Permutation_middle. }
-  destruct (Hwpstep e2 σ2 ef) as (r2&r2'&Hwsat&?&?); auto; clear Hwpstep.
-  revert Hwsat; rewrite big_op_app right_id_L=>Hwsat.
-  destruct ef as [e'|].
-  - destruct (IH (Φs1 ++ Φ :: Φs2 ++ [λ _, True%I])
-      (rs1 ++ r2 :: rs2 ++ [r2'])) as (rs'&Φs'&?&?).
-    { apply Forall3_app, Forall3_cons,
-        Forall3_app, Forall3_cons, Forall3_nil; eauto using wptp_le; [|];
-      rewrite wp_eq; eauto. }
-    { by rewrite -Permutation_middle /= (assoc (++))
-        (comm (++)) /= assoc big_op_app. }
-    exists rs', ([λ _, True%I] ++ Φs'); split; auto.
-    by rewrite (assoc _ _ _ Φs') -(assoc _ Φs1).
-  - apply (IH (Φs1 ++ Φ :: Φs2) (rs1 ++ r2 ⋅ r2' :: rs2)).
-    { rewrite /option_list right_id_L.
-      apply Forall3_app, Forall3_cons; eauto using wptp_le.
-      rewrite wp_eq.
-      apply uPred_closed with (k + n);
-        first apply uPred_mono with r2; eauto using cmra_includedN_l. }
-    by rewrite -Permutation_middle /= big_op_app.
-Qed.
-Lemma wp_adequacy_steps P Φ k n e1 t2 σ1 σ2 r1 :
-  (P ⊢ WP e1 {{ Φ }}) →
-  nsteps step k ([e1],σ1) (t2,σ2) →
-  1 < n → wsat (k + n) ⊤ σ1 r1 →
-  P (k + n) r1 →
-  ∃ rs2 Φs', wptp n t2 (Φ :: Φs') rs2 ∧ wsat n ⊤ σ2 (big_op rs2).
-Proof.
-  intros Hht ????; apply (nsteps_wptp [Φ] k n ([e1],σ1) (t2,σ2) [r1]);
-    rewrite /big_op ?right_id; auto.
-  constructor; last constructor.
-  apply Hht; by eauto using cmra_included_core.
-Qed.
-
-Lemma wp_adequacy_own Φ e1 t2 σ1 m σ2 :
-  ✓ m →
-  (ownP σ1 ★ ownG m ⊢ WP e1 {{ Φ }}) →
-  rtc step ([e1],σ1) (t2,σ2) →
-  ∃ rs2 Φs', wptp 2 t2 (Φ :: Φs') rs2 ∧ wsat 2 ⊤ σ2 (big_op rs2).
-Proof.
-  intros Hv ? [k ?]%rtc_nsteps.
-  eapply wp_adequacy_steps with (r1 := (Res ∅ (Excl' σ1) m)); eauto; [|].
-  { by rewrite Nat.add_comm; apply wsat_init, cmra_valid_validN. }
-  uPred.unseal; exists (Res ∅ (Excl' σ1) ∅), (Res ∅ ∅ m); split_and?.
-  - by rewrite Res_op ?left_id ?right_id.
-  - rewrite /ownP; uPred.unseal; rewrite /uPred_holds //=.
-  - by apply ownG_spec.
-Qed.
-
-Theorem wp_adequacy_result E φ e v t2 σ1 m σ2 :
-  ✓ m →
-  (ownP σ1 ★ ownG m ⊢ WP e @ E {{ v', ■ φ v' }}) →
-  rtc step ([e], σ1) (of_val v :: t2, σ2) →
-  φ v.
-Proof.
-  intros Hv ? Hs.
-  destruct (wp_adequacy_own (λ v', ■ φ v')%I e (of_val v :: t2) σ1 m σ2)
-             as (rs2&Qs&Hwptp&?); auto.
-  { by rewrite -(wp_mask_weaken E ⊤). }
-  inversion Hwptp as [|?? r ?? rs Hwp _]; clear Hwptp; subst.
-  move: Hwp. rewrite wp_eq. uPred.unseal=> /wp_value_inv Hwp.
-  rewrite pvs_eq in Hwp.
-  destruct (Hwp 2 ∅ σ2 (big_op rs)) as [r' []]; rewrite ?right_id_L; auto.
-Qed.
-
-Lemma ht_adequacy_result E φ e v t2 σ1 m σ2 :
-  ✓ m →
-  {{ ownP σ1 ★ ownG m }} e @ E {{ v', ■ φ v' }} →
-  rtc step ([e], σ1) (of_val v :: t2, σ2) →
-  φ v.
-Proof.
-  intros ? Hht. eapply wp_adequacy_result with (E:=E); first done.
-  move:Hht. by rewrite /ht uPred.always_elim=>/uPred.impl_entails.
-Qed.
-
-Lemma wp_adequacy_reducible E Φ e1 e2 t2 σ1 m σ2 :
-  ✓ m →
-  (ownP σ1 ★ ownG m ⊢ WP e1 @ E {{ Φ }}) →
-  rtc step ([e1], σ1) (t2, σ2) →
-  e2 ∈ t2 → (is_Some (to_val e2) ∨ reducible e2 σ2).
-Proof.
-  intros Hv ? Hs [i ?]%elem_of_list_lookup.
-  destruct (wp_adequacy_own Φ e1 t2 σ1 m σ2) as (rs2&Φs&?&?); auto.
-  { by rewrite -(wp_mask_weaken E ⊤). }
-  destruct (Forall3_lookup_l (λ e Φ r, wp ⊤ e Φ 2 r) t2
-    (Φ :: Φs) rs2 i e2) as (Φ'&r2&?&?&Hwp); auto.
-  case He:(to_val e2)=>[v2|]; first by eauto. right.
-  destruct (wp_step_inv ⊤ ∅ Φ' e2 1 2 σ2 r2 (big_op (delete i rs2)));
-    rewrite ?right_id_L ?big_op_delete; auto.
-  by rewrite -wp_eq.
-Qed.
-
-(* Connect this up to the threadpool-semantics. *)
-Theorem wp_adequacy_safe E Φ e1 t2 σ1 m σ2 :
-  ✓ m →
-  (ownP σ1 ★ ownG m ⊢ WP e1 @ E {{ Φ }}) →
+Theorem adequate_tp_safe {Λ} (e1 : expr Λ) t2 σ1 σ2 φ :
+  adequate e1 σ1 φ →
   rtc step ([e1], σ1) (t2, σ2) →
   Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ t3 σ3, step (t2, σ2) (t3, σ3).
 Proof.
-  intros.
+  intros Had ?.
   destruct (decide (Forall (λ e, is_Some (to_val e)) t2)) as [|Ht2]; [by left|].
   apply (not_Forall_Exists _), Exists_exists in Ht2; destruct Ht2 as (e2&?&He2).
-  destruct (wp_adequacy_reducible E Φ e1 e2 t2 σ1 m σ2) as [?|(e3&σ3&ef&?)];
+  destruct (adequate_safe e1 σ1 φ Had t2 σ2 e2) as [?|(e3&σ3&efs&?)];
     rewrite ?eq_None_not_Some; auto.
   { exfalso. eauto. }
   destruct (elem_of_list_split t2 e2) as (t2'&t2''&->); auto.
-  right; exists (t2' ++ e3 :: t2'' ++ option_list ef), σ3; econstructor; eauto.
+  right; exists (t2' ++ e3 :: t2'' ++ efs), σ3; econstructor; eauto.
 Qed.
 
-Lemma ht_adequacy_safe E Φ e1 t2 σ1 m σ2 :
-  ✓ m →
-  {{ ownP σ1 ★ ownG m }} e1 @ E {{ Φ }} →
-  rtc step ([e1], σ1) (t2, σ2) →
-  Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ t3 σ3, step (t2, σ2) (t3, σ3).
+Section adequacy.
+Context `{irisG Λ Σ}.
+Implicit Types e : expr Λ.
+Implicit Types P Q : iProp Σ.
+Implicit Types Φ : val Λ → iProp Σ.
+Implicit Types Φs : list (val Λ → iProp Σ).
+
+Notation world σ := (wsat ★ ownE ⊤ ★ ownP_auth σ)%I.
+
+Notation wptp t := ([★ list] ef ∈ t, WP ef {{ _, True }})%I.
+
+Lemma wp_step e1 σ1 e2 σ2 efs Φ :
+  prim_step e1 σ1 e2 σ2 efs →
+  world σ1 ★ WP e1 {{ Φ }} =r=> ▷ |=r=> ◇ (world σ2 ★ WP e2 {{ Φ }} ★ wptp efs).
 Proof.
-  intros ? Hht. eapply wp_adequacy_safe with (E:=E) (Φ:=Φ); first done.
-  move:Hht. by rewrite /ht uPred.always_elim=>/uPred.impl_entails.
+  rewrite {1}wp_unfold /wp_pre. iIntros (Hstep) "[(Hw & HE & Hσ) [H|[_ H]]]".
+  { iDestruct "H" as (v) "[% _]". apply val_stuck in Hstep; simplify_eq. }
+  rewrite pvs_eq /pvs_def.
+  iVs ("H" $! σ1 with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
+  iVsIntro; iNext.
+  iVs ("H" $! e2 σ2 efs with "[%] [Hw HE]")
+    as ">($ & $ & $ & $)"; try iFrame; eauto.
+Qed.
+
+Lemma wptp_step e1 t1 t2 σ1 σ2 Φ :
+  step (e1 :: t1,σ1) (t2, σ2) →
+  world σ1 ★ WP e1 {{ Φ }} ★ wptp t1
+  =r=> ∃ e2 t2', t2 = e2 :: t2' ★ ▷ |=r=> ◇ (world σ2 ★ WP e2 {{ Φ }} ★ wptp t2').
+Proof.
+  iIntros (Hstep) "(HW & He & Ht)".
+  destruct Hstep as [e1' σ1' e2' σ2' efs [|? t1'] t2' ?? Hstep]; simplify_eq/=.
+  - iExists e2', (t2' ++ efs); iSplitR; first eauto.
+    rewrite big_sepL_app. iFrame "Ht". iApply wp_step; try iFrame; eauto.
+  - iExists e, (t1' ++ e2' :: t2' ++ efs); iSplitR; first eauto.
+    rewrite !big_sepL_app !big_sepL_cons big_sepL_app.
+    iDestruct "Ht" as "($ & He' & $)"; iFrame "He".
+    iApply wp_step; try iFrame; eauto.
+Qed.
+
+Lemma wptp_steps n e1 t1 t2 σ1 σ2 Φ :
+  nsteps step n (e1 :: t1, σ1) (t2, σ2) →
+  world σ1 ★ WP e1 {{ Φ }} ★ wptp t1 ⊢
+  Nat.iter (S n) (λ P, |=r=> ▷ P) (∃ e2 t2',
+    t2 = e2 :: t2' ★ world σ2 ★ WP e2 {{ Φ }} ★ wptp t2').
+Proof.
+  revert e1 t1 t2 σ1 σ2; simpl; induction n as [|n IH]=> e1 t1 t2 σ1 σ2 /=.
+  { inversion_clear 1; iIntros "?"; eauto 10. }
+  iIntros (Hsteps) "H". inversion_clear Hsteps as [|?? [t1' σ1']].
+  iVs (wptp_step with "H") as (e1' t1'') "[% H]"; first eauto; simplify_eq.
+  iVsIntro; iNext; iVs "H" as ">?". by iApply IH.
+Qed.
+
+Instance rvs_iter_mono n : Proper ((⊢) ==> (⊢)) (Nat.iter n (λ P, |=r=> ▷ P)%I).
+Proof. intros P Q HP. induction n; simpl; do 2?f_equiv; auto. Qed.
+
+Lemma rvs_iter_frame_l n R Q :
+  R ★ Nat.iter n (λ P, |=r=> ▷ P) Q ⊢ Nat.iter n (λ P, |=r=> ▷ P) (R ★ Q).
+Proof.
+  induction n as [|n IH]; simpl; [done|].
+  by rewrite rvs_frame_l {1}(later_intro R) -later_sep IH.
+Qed.
+
+Lemma wptp_result n e1 t1 v2 t2 σ1 σ2 φ :
+  nsteps step n (e1 :: t1, σ1) (of_val v2 :: t2, σ2) →
+  world σ1 ★ WP e1 {{ v, ■ φ v }} ★ wptp t1 ⊢
+  Nat.iter (S (S n)) (λ P, |=r=> ▷ P) (■ φ v2).
+Proof.
+  intros. rewrite wptp_steps //.
+  rewrite (Nat_iter_S_r (S n)). apply rvs_iter_mono.
+  iDestruct 1 as (e2 t2') "(% & (Hw & HE & _) & H & _)"; simplify_eq.
+  iDestruct (wp_value_inv with "H") as "H". rewrite pvs_eq /pvs_def.
+  iVs ("H" with "[Hw HE]") as ">(_ & _ & $)"; iFrame; auto.
+Qed.
+
+Lemma wp_safe e σ Φ :
+  world σ ★ WP e {{ Φ }} =r=> ▷ ■ (is_Some (to_val e) ∨ reducible e σ).
+Proof.
+  rewrite wp_unfold /wp_pre. iIntros "[(Hw&HE&Hσ) [H|[_ H]]]".
+  { iDestruct "H" as (v) "[% _]"; eauto 10. }
+  rewrite pvs_eq. iVs ("H" with "* Hσ [-]") as ">(?&?&%&?)"; first by iFrame.
+  eauto 10.
+Qed.
+
+Lemma wptp_safe n e1 e2 t1 t2 σ1 σ2 Φ :
+  nsteps step n (e1 :: t1, σ1) (t2, σ2) → e2 ∈ t2 →
+  world σ1 ★ WP e1 {{ Φ }} ★ wptp t1 ⊢
+  Nat.iter (S (S n)) (λ P, |=r=> ▷ P) (■ (is_Some (to_val e2) ∨ reducible e2 σ2)).
+Proof.
+  intros ? He2. rewrite wptp_steps //; rewrite (Nat_iter_S_r (S n)). apply rvs_iter_mono.
+  iDestruct 1 as (e2' t2') "(% & Hw & H & Htp)"; simplify_eq.
+  apply elem_of_cons in He2 as [<-|?]; first (iApply wp_safe; by iFrame "Hw H").
+  iApply wp_safe. iFrame "Hw". by iApply (big_sepL_elem_of with "Htp").
+Qed.
+
+Lemma wptp_invariance n e1 e2 t1 t2 σ1 σ2 I φ Φ :
+  nsteps step n (e1 :: t1, σ1) (t2, σ2) →
+  (I ={⊤,∅}=> ∃ σ', ownP σ' ∧ ■ φ σ') →
+  I ★ world σ1 ★ WP e1 {{ Φ }} ★ wptp t1 ⊢
+  Nat.iter (S (S n)) (λ P, |=r=> ▷ P) (■ φ σ2).
+Proof.
+  intros ? HI. rewrite wptp_steps //.
+  rewrite (Nat_iter_S_r (S n)) rvs_iter_frame_l. apply rvs_iter_mono.
+  iIntros "[HI H]".
+  iDestruct "H" as (e2' t2') "(% & (Hw&HE&Hσ) & _)"; subst.
+  rewrite pvs_eq in HI;
+    iVs (HI with "HI [Hw HE]") as "> (_ & _ & H)"; first by iFrame.
+  iDestruct "H" as (σ2') "[Hσf %]".
+  iDestruct (ownP_agree σ2 σ2' with "[#]") as %<-. by iFrame. eauto.
 Qed.
 End adequacy.
+
+Theorem wp_adequacy Σ `{irisPreG Λ Σ} e σ φ :
+  (∀ `{irisG Λ Σ}, ownP σ ⊢ WP e {{ v, ■ φ v }}) →
+  adequate e σ φ.
+Proof.
+  intros Hwp; split.
+  - intros t2 σ2 v2 [n ?]%rtc_nsteps.
+    eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
+    rewrite Nat_iter_S. iVs (iris_alloc σ) as (?) "(?&?&?&Hσ)".
+    iVsIntro. iNext. iApply wptp_result; eauto.
+    iFrame. iSplitL. by iApply Hwp. by iApply big_sepL_nil.
+  - intros t2 σ2 e2 [n ?]%rtc_nsteps ?.
+    eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
+    rewrite Nat_iter_S. iVs (iris_alloc σ) as (?) "(Hw & HE & Hσ & Hσf)".
+    iVsIntro. iNext. iApply wptp_safe; eauto.
+    iFrame "Hw HE Hσ". iSplitL. by iApply Hwp. by iApply big_sepL_nil.
+Qed.
+
+Theorem wp_invariance Σ `{irisPreG Λ Σ} e σ1 t2 σ2 I φ Φ :
+  (∀ `{irisG Λ Σ}, ownP σ1 ={⊤}=> I ★ WP e {{ Φ }}) →
+  (∀ `{irisG Λ Σ}, I ={⊤,∅}=> ∃ σ', ownP σ' ∧ ■ φ σ') →
+  rtc step ([e], σ1) (t2, σ2) →
+  φ σ2.
+Proof.
+  intros Hwp HI [n ?]%rtc_nsteps.
+  eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
+  rewrite Nat_iter_S. iVs (iris_alloc σ1) as (?) "(Hw & HE & ? & Hσ)".
+  rewrite pvs_eq in Hwp.
+  iVs (Hwp _ with "Hσ [Hw HE]") as ">(? & ? & ? & ?)"; first by iFrame.
+  iVsIntro. iNext. iApply wptp_invariance; eauto. iFrame. by iApply big_sepL_nil.
+Qed.

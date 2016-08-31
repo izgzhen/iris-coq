@@ -12,9 +12,9 @@ Notation Skip := (Seq (Lit LitUnit) (Lit LitUnit)).
 Notation Match e0 x1 e1 x2 e2 := (Case e0 (Lam x1 e1) (Lam x2 e2)).
 
 Section derived.
-Context {Σ : iFunctor}.
-Implicit Types P Q : iProp heap_lang Σ.
-Implicit Types Φ : val → iProp heap_lang Σ.
+Context `{irisG heap_lang Σ}.
+Implicit Types P Q : iProp Σ.
+Implicit Types Φ : val → iProp Σ.
 
 (** Proof rules for the sugar *)
 Lemma wp_lam E x ef e Φ :
@@ -63,12 +63,13 @@ Proof.
   destruct (bool_decide_reflect (n1 < n2)); by eauto with omega.
 Qed.
 
-Lemma wp_eq E (n1 n2 : Z) P Φ :
-  (n1 = n2 → P ⊢ ▷ |={E}=> Φ (LitV (LitBool true))) →
-  (n1 ≠ n2 → P ⊢ ▷ |={E}=> Φ (LitV (LitBool false))) →
-  P ⊢ WP BinOp EqOp (Lit (LitInt n1)) (Lit (LitInt n2)) @ E {{ Φ }}.
+Lemma wp_eq E e1 e2 v1 v2 P Φ :
+  to_val e1 = Some v1 → to_val e2 = Some v2 →
+  (v1 = v2 → P ⊢ ▷ |={E}=> Φ (LitV (LitBool true))) →
+  (v1 ≠ v2 → P ⊢ ▷ |={E}=> Φ (LitV (LitBool false))) →
+  P ⊢ WP BinOp EqOp e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -wp_bin_op //; [].
-  destruct (bool_decide_reflect (n1 = n2)); by eauto with omega.
+  destruct (bool_decide_reflect (v1 = v2)); by eauto.
 Qed.
 End derived.

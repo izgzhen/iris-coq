@@ -390,7 +390,7 @@ Section simple_collection.
     split.
     - induction Xs; simpl; intros HXs; [by apply elem_of_empty in HXs|].
       setoid_rewrite elem_of_cons. apply elem_of_union in HXs. naive_solver.
-    - intros [X []]. induction 1; simpl; [by apply elem_of_union_l |].
+    - intros [X [Hx]]. induction Hx; simpl; [by apply elem_of_union_l |].
       intros. apply elem_of_union_r; auto.
   Qed.
 
@@ -948,3 +948,38 @@ Section more_finite.
     intros x ?; destruct (decide (x ∈ Y)); rewrite elem_of_app; set_solver.
   Qed.
 End more_finite.
+
+(** Sets of sequences of natural numbers *)
+(* The set [seq_seq start len] of natural numbers contains the sequence
+[start, start + 1, ..., start + (len-1)]. *)
+Fixpoint seq_set `{Singleton nat C, Union C, Empty C} (start len : nat) : C :=
+  match len with
+  | O => ∅
+  | S len' => {[ start ]} ∪ seq_set (S start) len'
+  end.
+
+Section seq_set.
+  Context `{SimpleCollection nat C}.
+  Implicit Types start len x : nat.
+
+  Lemma elem_of_seq_set start len x :
+    x ∈ seq_set start len ↔ start ≤ x < start + len.
+  Proof.
+    revert start. induction len as [|len IH]; intros start; simpl.
+    - rewrite elem_of_empty. omega.
+    - rewrite elem_of_union, elem_of_singleton, IH. omega.
+  Qed.
+
+  Lemma seq_set_S_disjoint start len : {[ start + len ]} ⊥ seq_set start len.
+  Proof. intros x. rewrite elem_of_singleton, elem_of_seq_set. omega. Qed.
+
+  Lemma seq_set_S_union start len :
+    seq_set start (C:=C) (S len) ≡ {[ start + len ]} ∪ seq_set start len.
+  Proof.
+    intros x. rewrite elem_of_union, elem_of_singleton, !elem_of_seq_set. omega.
+  Qed.
+
+  Lemma seq_set_S_union_L `{!LeibnizEquiv C} start len :
+    seq_set start (S len) = {[ start + len ]} ∪ seq_set start len.
+  Proof. unfold_leibniz. apply seq_set_S_union. Qed.
+End seq_set.

@@ -5,13 +5,11 @@ From iris.heap_lang Require Import proofmode.
 Import uPred.
 
 Section spec.
-Context {Σ : gFunctors} `{!heapG Σ} `{!barrierG Σ}. 
-
-Local Notation iProp := (iPropG heap_lang Σ).
+Context `{!heapG Σ} `{!barrierG Σ}.
 
 Lemma barrier_spec (N : namespace) :
   heapN ⊥ N →
-  ∃ recv send : loc → iProp -n> iProp,
+  ∃ recv send : loc → iProp Σ -n> iProp Σ,
     (∀ P, heap_ctx ⊢ {{ True }} newbarrier #()
                      {{ v, ∃ l : loc, v = #l ★ recv l P ★ send l P }}) ∧
     (∀ l P, {{ send l P ★ P }} signal #l {{ _, True }}) ∧
@@ -22,9 +20,9 @@ Proof.
   intros HN.
   exists (λ l, CofeMor (recv N l)), (λ l, CofeMor (send N l)).
   split_and?; simpl.
-  - iIntros (P) "#? ! _". iApply (newbarrier_spec _ P); eauto.
-  - iIntros (l P) "! [Hl HP]". by iApply signal_spec; iFrame "Hl HP".
-  - iIntros (l P) "! Hl". iApply wait_spec; iFrame "Hl"; eauto.
+  - iIntros (P) "#? !# _". iApply (newbarrier_spec _ P); eauto.
+  - iIntros (l P) "!# [Hl HP]". by iApply signal_spec; iFrame "Hl HP".
+  - iIntros (l P) "!# Hl". iApply wait_spec; iFrame "Hl"; eauto.
   - intros; by apply recv_split.
   - apply recv_weaken.
 Qed.

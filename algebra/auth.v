@@ -134,10 +134,10 @@ Proof.
      naive_solver eauto using cmra_validN_op_l, cmra_validN_includedN.
   - intros n x y1 y2 ? [??]; simpl in *.
     destruct (cmra_extend n (authoritative x) (authoritative y1)
-      (authoritative y2)) as (ea&?&?&?); auto using authoritative_validN.
+      (authoritative y2)) as (ea1&ea2&?&?&?); auto using authoritative_validN.
     destruct (cmra_extend n (auth_own x) (auth_own y1) (auth_own y2))
-      as (b&?&?&?); auto using auth_own_validN.
-    by exists (Auth (ea.1) (b.1), Auth (ea.2) (b.2)).
+      as (b1&b2&?&?&?); auto using auth_own_validN.
+    by exists (Auth ea1 b1), (Auth ea2 b2).
 Qed.
 Canonical Structure authR := CMRAT (auth A) auth_cofe_mixin auth_cmra_mixin.
 
@@ -156,7 +156,6 @@ Proof.
   split; simpl.
   - apply (@ucmra_unit_valid A).
   - by intros x; constructor; rewrite /= left_id.
-  - apply _.
   - do 2 constructor; simpl; apply (persistent_core _).
 Qed.
 Canonical Structure authUR :=
@@ -191,9 +190,15 @@ Proof.
   exists bf2. rewrite -assoc.
   apply (Hab' _ (Some _)); auto. by rewrite /= assoc.
 Qed.
+
 Lemma auth_update_no_frame a b : a ~l~> b @ Some ∅ → ● a ⋅ ◯ a ~~> ● b ⋅ ◯ b.
 Proof.
   intros. rewrite -{1}(right_id _ _ a) -{1}(right_id _ _ b).
+  by apply auth_update.
+Qed.
+Lemma auth_update_no_frag af b : ∅ ~l~> b @ Some af → ● af ~~> ● (b ⋅ af) ⋅ ◯ b.
+Proof.
+  intros. rewrite -{1}(left_id _ _ af) -{1}(right_id _ _ (● _)).
   by apply auth_update.
 Qed.
 End cmra.
@@ -234,6 +239,28 @@ Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=
   CofeMor (auth_map f).
 Lemma authC_map_ne A B n : Proper (dist n ==> dist n) (@authC_map A B).
 Proof. intros f f' Hf [[[a|]|] b]; repeat constructor; apply Hf. Qed.
+
+Program Definition authRF (F : urFunctor) : rFunctor := {|
+  rFunctor_car A B := authR (urFunctor_car F A B);
+  rFunctor_map A1 A2 B1 B2 fg := authC_map (urFunctor_map F fg)
+|}.
+Next Obligation.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply authC_map_ne, urFunctor_ne.
+Qed.
+Next Obligation.
+  intros F A B x. rewrite /= -{2}(auth_map_id x).
+  apply auth_map_ext=>y; apply urFunctor_id.
+Qed.
+Next Obligation.
+  intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -auth_map_compose.
+  apply auth_map_ext=>y; apply urFunctor_compose.
+Qed.
+
+Instance authRF_contractive F :
+  urFunctorContractive F → rFunctorContractive (authRF F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply authC_map_ne, urFunctor_contractive.
+Qed.
 
 Program Definition authURF (F : urFunctor) : urFunctor := {|
   urFunctor_car A B := authUR (urFunctor_car F A B);

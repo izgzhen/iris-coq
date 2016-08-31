@@ -3,7 +3,7 @@
 
 \subsection{Next (type-level later)}
 
-Given a COFE $\cofe$, we define $\latert\cofe$ as follows:
+Given a COFE $\cofe$, we define $\latert\cofe$ as follows (using a datatype-like notation to define the type):
 \begin{align*}
   \latert\cofe \eqdef{}& \latertinj(x:\cofe) \\
   \latertinj(x) \nequiv{n} \latertinj(y) \eqdef{}& n = 0 \lor x \nequiv{n-1} y
@@ -62,7 +62,7 @@ Frame-preserving updates on the $M_i$ lift to the product:
 \subsection{Sum}
 \label{sec:summ}
 
-The \emph{sum CMRA} $\monoid_1 \csumm \monoid_2$ for any CMRAs $\monoid_1$ and $\monoid_2$ is defined as:
+The \emph{sum CMRA} $\monoid_1 \csumm \monoid_2$ for any CMRAs $\monoid_1$ and $\monoid_2$ is defined as (again, we use a datatype-like notation):
 \begin{align*}
   \monoid_1 \csumm \monoid_2 \eqdef{}& \cinl(\melt_1:\monoid_1) \mid \cinr(\melt_2:\monoid_2) \mid \bot \\
   \mval_n \eqdef{}& \setComp{\cinl(\melt_1)\!}{\!\melt_1 \in \mval'_n}
@@ -91,7 +91,7 @@ Crucially, the second rule allows us to \emph{swap} the ``side'' of the sum that
 \subsection{Finite partial function}
 \label{sec:fpfnm}
 
-Given some countable $K$ and some CMRA $\monoid$, the set of finite partial functions $K \fpfn \monoid$ is equipped with a COFE and CMRA structure by lifting everything pointwise.
+Given some infinite countable $K$ and some CMRA $\monoid$, the set of finite partial functions $K \fpfn \monoid$ is equipped with a COFE and CMRA structure by lifting everything pointwise.
 
 We obtain the following frame-preserving updates:
 \begin{mathpar}
@@ -104,36 +104,35 @@ We obtain the following frame-preserving updates:
   {\emptyset \mupd \setComp{[\gname \mapsto \melt]}{\gname \in K}}
 
   \inferH{fpfn-update}
-  {\melt \mupd \meltsB}
+  {\melt \mupd_\monoid \meltsB}
   {f[i \mapsto \melt] \mupd \setComp{ f[i \mapsto \meltB]}{\meltB \in \meltsB}}
 \end{mathpar}
-Remember that $\mval$ is the set of elements of a CMRA that are valid at \emph{all} step-indices.
+Above, $\mval$ refers to the validity of $\monoid$.
 
 $K \fpfn (-)$ is a locally non-expansive functor from $\CMRAs$ to $\CMRAs$.
 
 \subsection{Agreement}
 
 Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
-\newcommand{\aginjc}{\mathrm{c}} % the "c" field of an agreement element
-\newcommand{\aginjV}{\mathrm{V}} % the "V" field of an agreement element
 \begin{align*}
-  \agm(\cofe) \eqdef{}& \record{\aginjc : \mathbb{N} \to \cofe , \aginjV : \SProp} \\
-  & \text{quotiented by} \\
-  \melt \equiv \meltB \eqdef{}& \melt.\aginjV = \meltB.\aginjV \land \All n. n \in \melt.\aginjV \Ra \melt.\aginjc(n) \nequiv{n} \meltB.\aginjc(n) \\
-  \melt \nequiv{n} \meltB \eqdef{}& (\All m \leq n. m \in \melt.\aginjV \Lra m \in \meltB.\aginjV) \land (\All m \leq n. m \in \melt.\aginjV \Ra \melt.\aginjc(m) \nequiv{m} \meltB.\aginjc(m)) \\
-  \mval_n \eqdef{}& \setComp{\melt \in \agm(\cofe)}{ n \in \melt.\aginjV \land \All m \leq n. \melt.\aginjc(n) \nequiv{m} \melt.\aginjc(m) } \\
+  \agm(\cofe) \eqdef{}& \set{(c, V) \in (\mathbb{N} \to \cofe) \times \SProp}/\ {\sim} \\[-0.2em]
+  \textnormal{where }& \melt \sim \meltB \eqdef{} \melt.V = \meltB.V \land 
+    \All n. n \in \melt.V \Ra \melt.c(n) \nequiv{n} \meltB.c(n)  \\
+%    \All n \in {\melt.V}.\, \melt.x \nequiv{n} \meltB.x \\
+  \melt \nequiv{n} \meltB \eqdef{}& (\All m \leq n. m \in \melt.V \Lra m \in \meltB.V) \land (\All m \leq n. m \in \melt.V \Ra \melt.c(m) \nequiv{m} \meltB.c(m)) \\
+  \mval_n \eqdef{}& \setComp{\melt \in \agm(\cofe)}{ n \in \melt.V \land \All m \leq n. \melt.c(n) \nequiv{m} \melt.c(m) } \\
   \mcore\melt \eqdef{}& \melt \\
-  \melt \mtimes \meltB \eqdef{}& (\melt.\aginjc, \setComp{n}{n \in \melt.\aginjV \land n \in \meltB.\aginjV \land \melt \nequiv{n} \meltB })
+  \melt \mtimes \meltB \eqdef{}& \left(\melt.c, \setComp{n}{n \in \melt.V \land n \in \meltB.V \land \melt \nequiv{n} \meltB }\right)
 \end{align*}
-Note that the carrier $\agm(\cofe)$ is a \emph{record} consisting of the two fields $\aginjc$ and $\aginjV$.
+%Note that the carrier $\agm(\cofe)$ is a \emph{record} consisting of the two fields $c$ and $V$.
 
 $\agm(-)$ is a locally non-expansive functor from $\COFEs$ to $\CMRAs$.
 
-You can think of the $\aginjc$ as a \emph{chain} of elements of $\cofe$ that has to converge only for $n \in \aginjV$ steps.
+You can think of the $c$ as a \emph{chain} of elements of $\cofe$ that has to converge only for $n \in V$ steps.
 The reason we store a chain, rather than a single element, is that $\agm(\cofe)$ needs to be a COFE itself, so we need to be able to give a limit for every chain of $\agm(\cofe)$.
-However, given such a chain, we cannot constructively define its limit: Clearly, the $\aginjV$ of the limit is the limit of the $\aginjV$ of the chain.
+However, given such a chain, we cannot constructively define its limit: Clearly, the $V$ of the limit is the limit of the $V$ of the chain.
 But what to pick for the actual data, for the element of $\cofe$?
-Only if $\aginjV = \mathbb{N}$ we have a chain of $\cofe$ that we can take a limit of; if the $\aginjV$ is smaller, the chain ``cancels'', \ie stops converging as we reach indices $n \notin \aginjV$.
+Only if $V = \mathbb{N}$ we have a chain of $\cofe$ that we can take a limit of; if the $V$ is smaller, the chain ``cancels'', \ie stops converging as we reach indices $n \notin V$.
 To mitigate this, we apply the usual construction to close a set; we go from elements of $\cofe$ to chains of $\cofe$.
 
 We define an injection $\aginj$ into $\agm(\cofe)$ as follows:
@@ -150,7 +149,7 @@ There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can 
 
 \subsection{Exclusive CMRA}
 
-Given a cofe $\cofe$, we define a CMRA $\exm(\cofe)$ such that at most one $x \in \cofe$ can be owned:
+Given a COFE $\cofe$, we define a CMRA $\exm(\cofe)$ such that at most one $x \in \cofe$ can be owned:
 \begin{align*}
   \exm(\cofe) \eqdef{}& \exinj(\cofe) + \bot \\
   \mval_n \eqdef{}& \setComp{\melt\in\exm(\cofe)}{\melt \neq \bot}
@@ -160,11 +159,11 @@ All cases of composition go to $\bot$.
   \mcore{\exinj(x)} \eqdef{}& \mnocore &
   \mcore{\bot} \eqdef{}& \bot
 \end{align*}
+Remember that $\mnocore$ is the ``dummy'' element in $\maybe\monoid$ indicating (in this case) that $\exinj(x)$ has no core.
+
 The step-indexed equivalence is inductively defined as follows:
 \begin{mathpar}
   \infer{x \nequiv{n} y}{\exinj(x) \nequiv{n} \exinj(y)}
-
-  \axiom{\munit \nequiv{n} \munit}
 
   \axiom{\bot \nequiv{n} \bot}
 \end{mathpar}
@@ -376,7 +375,7 @@ We obtain the following frame-preserving update:
 \subsection{STS with tokens}
 \label{sec:stsmon}
 
-Given a state-transition system~(STS, \ie a directed graph) $(\STSS, {\stsstep} \subseteq \STSS \times \STSS)$, a set of tokens $\STST$, and a labeling $\STSL: \STSS \ra \wp(\STST)$ of \emph{protocol-owned} tokens for each state, we construct a monoid modeling an authoritative current state and permitting transitions given a \emph{bound} on the current state and a set of \emph{locally-owned} tokens.
+Given a state-transition system~(STS, \ie a directed graph) $(\STSS, {\stsstep} \subseteq \STSS \times \STSS)$, a set of tokens $\STST$, and a labeling $\STSL: \STSS \ra \wp(\STST)$ of \emph{protocol-owned} tokens for each state, we construct an RA modeling an authoritative current state and permitting transitions given a \emph{bound} on the current state and a set of \emph{locally-owned} tokens.
 
 The construction follows the idea of STSs as described in CaReSL \cite{caresl}.
 We first lift the transition relation to $\STSS \times \wp(\STST)$ (implementing a \emph{law of token conservation}) and define a stepping relation for the \emph{frame} of a given token set:
@@ -387,7 +386,7 @@ We first lift the transition relation to $\STSS \times \wp(\STST)$ (implementing
 
 We further define \emph{closed} sets of states (given a particular set of tokens) as well as the \emph{closure} of a set:
 \begin{align*}
-\STSclsd(S, T) \eqdef{}& \All s \in S. \STSL(s) \disj T \land \All s'. s \stsfstep{T} s' \Ra s' \in S \\
+\STSclsd(S, T) \eqdef{}& \All s \in S. \STSL(s) \disj T \land \left(\All s'. s \stsfstep{T} s' \Ra s' \in S\right) \\
 \upclose(S, T) \eqdef{}& \setComp{ s' \in \STSS}{\Exists s \in S. s \stsftrans{T} s' }
 \end{align*}
 

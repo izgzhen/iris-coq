@@ -7,13 +7,13 @@ Ltac wp_strip_later ::= iNext.
 
 Section heap.
 Context `{heapG Σ}.
-Implicit Types P Q : iPropG heap_lang Σ.
-Implicit Types Φ : val → iPropG heap_lang Σ.
-Implicit Types Δ : envs (iResUR heap_lang (globalF Σ)).
+Implicit Types P Q : iProp Σ.
+Implicit Types Φ : val → iProp Σ.
+Implicit Types Δ : envs (iResUR Σ).
 
-Global Instance into_sep_mapsto l q v :
-  IntoSep false (l ↦{q} v) (l ↦{q/2} v) (l ↦{q/2} v).
-Proof. by rewrite /IntoSep heap_mapsto_op_split. Qed.
+Global Instance into_and_mapsto l q v :
+  IntoAnd false (l ↦{q} v) (l ↦{q/2} v) (l ↦{q/2} v).
+Proof. by rewrite /IntoAnd heap_mapsto_op_eq Qp_div_2. Qed.
 
 Lemma tac_wp_alloc Δ Δ' E j e v Φ :
   to_val e = Some v →
@@ -89,7 +89,7 @@ End heap.
 Tactic Notation "wp_apply" open_constr(lem) :=
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    wp_bind K; iApply lem; try iNext)
+    wp_bind_core K; iApply lem; try iNext)
   | _ => fail "wp_apply: not a 'wp'"
   end.
 
@@ -98,7 +98,7 @@ Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with Alloc _ => wp_bind K end)
+         match eval hnf in e' with Alloc _ => wp_bind_core K end)
       |fail 1 "wp_alloc: cannot find 'Alloc' in" e];
     eapply tac_wp_alloc with _ H _;
       [let e' := match goal with |- to_val ?e' = _ => e' end in
@@ -121,7 +121,7 @@ Tactic Notation "wp_load" :=
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with Load _ => wp_bind K end)
+         match eval hnf in e' with Load _ => wp_bind_core K end)
       |fail 1 "wp_load: cannot find 'Load' in" e];
     eapply tac_wp_load;
       [iAssumption || fail "wp_load: cannot find heap_ctx"
@@ -138,7 +138,7 @@ Tactic Notation "wp_store" :=
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with Store _ _ => wp_bind K end)
+         match eval hnf in e' with Store _ _ => wp_bind_core K end)
       |fail 1 "wp_store: cannot find 'Store' in" e];
     eapply tac_wp_store;
       [let e' := match goal with |- to_val ?e' = _ => e' end in
@@ -158,7 +158,7 @@ Tactic Notation "wp_cas_fail" :=
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with CAS _ _ _ => wp_bind K end)
+         match eval hnf in e' with CAS _ _ _ => wp_bind_core K end)
       |fail 1 "wp_cas_fail: cannot find 'CAS' in" e];
     eapply tac_wp_cas_fail;
       [let e' := match goal with |- to_val ?e' = _ => e' end in
@@ -180,7 +180,7 @@ Tactic Notation "wp_cas_suc" :=
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with CAS _ _ _ => wp_bind K end)
+         match eval hnf in e' with CAS _ _ _ => wp_bind_core K end)
       |fail 1 "wp_cas_suc: cannot find 'CAS' in" e];
     eapply tac_wp_cas_suc;
       [let e' := match goal with |- to_val ?e' = _ => e' end in

@@ -1,81 +1,38 @@
-From iris.program_logic Require Export global_functor.
-From iris.proofmode Require Import invariants ghost_ownership.
-From iris.heap_lang Require Import proofmode notation.
-Import uPred.
+From iris.heap_lang Require Import heap notation.
 
-Definition newlock : val := λ: <>, ref #false.
-Definition acquire : val :=
-  rec: "acquire" "l" :=
-    if: CAS "l" #false #true then #() else "acquire" "l".
-Definition release : val := λ: "l", "l" <- #false.
-Global Opaque newlock acquire release.
+Structure lock Σ `{!heapG Σ} := Lock {
+  (* -- operations -- *)
+  newlock : val;
+  acquire : val;
+  release : val;
+  (* -- predicates -- *)
+  (* name is used to associate locked with is_lock *)
+  name : Type;
+  is_lock (N: namespace) (γ: name) (lock: val) (R: iProp Σ) : iProp Σ;
+  locked (γ: name) : iProp Σ;
+  (* -- general properties -- *)
+  is_lock_ne N γ lk n: Proper (dist n ==> dist n) (is_lock N γ lk);
+  is_lock_persistent N γ lk R : PersistentP (is_lock N γ lk R);
+  locked_timeless γ : TimelessP (locked γ);
+  locked_exclusive γ : locked γ ★ locked γ ⊢ False;
+  (* -- operation specs -- *)
+  newlock_spec N (R : iProp Σ) Φ :
+    heapN ⊥ N →
+    heap_ctx ★ R ★ (∀ l γ, is_lock N γ l R -★ Φ l) ⊢ WP newlock #() {{ Φ }};
+  acquire_spec N γ lk R (Φ : val → iProp Σ) :
+    is_lock N γ lk R ★ (locked γ -★ R -★ Φ #()) ⊢ WP acquire lk {{ Φ }};
+  release_spec N γ lk R (Φ : val → iProp Σ) :
+    is_lock N γ lk R ★ locked γ ★ R ★ Φ #() ⊢ WP release lk {{ Φ }}
+}.
 
-(** The CMRA we need. *)
-(* Not bundling heapG, as it may be shared with other users. *)
-Class lockG Σ := LockG { lock_tokG :> inG heap_lang Σ (exclR unitC) }.
-Definition lockGF : gFunctorList := [GFunctor (constRF (exclR unitC))].
-Instance inGF_lockG `{H : inGFs heap_lang Σ lockGF} : lockG Σ.
-Proof. destruct H. split. apply: inGF_inG. Qed.
+Arguments newlock {_ _} _.
+Arguments acquire {_ _} _.
+Arguments release {_ _} _.
+Arguments is_lock {_ _} _ _ _ _ _.
+Arguments locked {_ _} _ _.
 
-Section proof.
-Context `{!heapG Σ, !lockG Σ} (N : namespace).
-Local Notation iProp := (iPropG heap_lang Σ).
+Existing Instances is_lock_ne is_lock_persistent locked_timeless.
 
-Definition lock_inv (γ : gname) (l : loc) (R : iProp) : iProp :=
-  (∃ b : bool, l ↦ #b ★ if b then True else own γ (Excl ()) ★ R)%I.
+Instance is_lock_proper Σ `{!heapG Σ} (L: lock Σ) N lk R:
+  Proper ((≡) ==> (≡)) (is_lock L N lk R) := ne_proper _.
 
-Definition is_lock (l : loc) (R : iProp) : iProp :=
-  (∃ γ, heapN ⊥ N ∧ heap_ctx ∧ inv N (lock_inv γ l R))%I.
-
-Definition locked (l : loc) (R : iProp) : iProp :=
-  (∃ γ, heapN ⊥ N ∧ heap_ctx ∧
-        inv N (lock_inv γ l R) ∧ own γ (Excl ()))%I.
-
-Global Instance lock_inv_ne n γ l : Proper (dist n ==> dist n) (lock_inv γ l).
-Proof. solve_proper. Qed.
-Global Instance is_lock_ne n l : Proper (dist n ==> dist n) (is_lock l).
-Proof. solve_proper. Qed.
-Global Instance locked_ne n l : Proper (dist n ==> dist n) (locked l).
-Proof. solve_proper. Qed.
-
-(** The main proofs. *)
-Global Instance is_lock_persistent l R : PersistentP (is_lock l R).
-Proof. apply _. Qed.
-
-Lemma locked_is_lock l R : locked l R ⊢ is_lock l R.
-Proof. rewrite /is_lock. iDestruct 1 as (γ) "(?&?&?&_)"; eauto. Qed.
-
-Lemma newlock_spec (R : iProp) Φ :
-  heapN ⊥ N →
-  heap_ctx ★ R ★ (∀ l, is_lock l R -★ Φ #l) ⊢ WP newlock #() {{ Φ }}.
-Proof.
-  iIntros (?) "(#Hh & HR & HΦ)". rewrite /newlock.
-  wp_seq. wp_alloc l as "Hl".
-  iPvs (own_alloc (Excl ())) as (γ) "Hγ"; first done.
-  iPvs (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?"; first done.
-  { iIntros ">". iExists false. by iFrame. }
-  iPvsIntro. iApply "HΦ". iExists γ; eauto.
-Qed.
-
-Lemma acquire_spec l R (Φ : val → iProp) :
-  is_lock l R ★ (locked l R -★ R -★ Φ #()) ⊢ WP acquire #l {{ Φ }}.
-Proof.
-  iIntros "[Hl HΦ]". iDestruct "Hl" as (γ) "(%&#?&#?)".
-  iLöb as "IH". wp_rec. wp_focus (CAS _ _ _)%E.
-  iInv N as ([]) "[Hl HR]".
-  - wp_cas_fail. iPvsIntro; iSplitL "Hl".
-    + iNext. iExists true; eauto.
-    + wp_if. by iApply "IH".
-  - wp_cas_suc. iPvsIntro. iDestruct "HR" as "[Hγ HR]". iSplitL "Hl".
-    + iNext. iExists true; eauto.
-    + wp_if. iApply ("HΦ" with "[-HR] HR"). iExists γ; eauto.
-Qed.
-
-Lemma release_spec R l (Φ : val → iProp) :
-  locked l R ★ R ★ Φ #() ⊢ WP release #l {{ Φ }}.
-Proof.
-  iIntros "(Hl&HR&HΦ)"; iDestruct "Hl" as (γ) "(% & #? & #? & Hγ)".
-  rewrite /release. wp_let. iInv N as (b) "[Hl _]".
-  wp_store. iPvsIntro. iFrame "HΦ". iNext. iExists false. by iFrame.
-Qed.
-End proof.

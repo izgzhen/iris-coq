@@ -33,6 +33,7 @@ Defined.
 Instance gmap_lookup `{Countable K} {A} : Lookup K A (gmap K A) := λ i m,
   let (m,_) := m in m !! encode i.
 Instance gmap_empty `{Countable K} {A} : Empty (gmap K A) := GMap ∅ I.
+Global Opaque gmap_empty.
 Lemma gmap_partial_alter_wf `{Countable K} {A} (f : option A → option A) m i :
   gmap_wf m → gmap_wf (partial_alter f (encode i) m).
 Proof.

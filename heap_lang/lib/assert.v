@@ -1,3 +1,5 @@
+From iris.program_logic Require Export weakestpre.
+From iris.heap_lang Require Export lang.
 From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation.
 
@@ -7,7 +9,7 @@ Definition assert : val :=
 Notation "'assert:' e" := (assert (λ: <>, e))%E (at level 99) : expr_scope.
 Global Opaque assert.
 
-Lemma wp_assert {Σ} E (Φ : val → iProp heap_lang Σ) e `{!Closed [] e} :
+Lemma wp_assert `{heapG Σ} E (Φ : val → iProp Σ) e `{!Closed [] e} :
   WP e @ E {{ v, v = #true ∧ ▷ Φ #() }} ⊢ WP assert: e @ E {{ Φ }}.
 Proof.
   iIntros "HΦ". rewrite /assert. wp_let. wp_seq.

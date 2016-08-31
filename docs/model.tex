@@ -26,7 +26,7 @@ We introduce an additional logical connective $\ownM\melt$, which will later be 
 	\Sem{\vctx \proves \prop \Ra \propB : \Prop}_\gamma &\eqdef
 	\Lam \melt. \setComp{n}{\begin{aligned}
             \All m, \meltB.& m \leq n \land \melt \mincl \meltB \land \meltB \in \mval_m \Ra {} \\
-            & m \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\melt) \Ra {}\\& m \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\melt)\end{aligned}}\\
+            & m \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB) \Ra {}\\& m \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\meltB)\end{aligned}}\\
 	\Sem{\vctx \proves \All x : \type. \prop : \Prop}_\gamma &\eqdef
 	\Lam \melt. \setComp{n}{ \All v \in \Sem{\type}. n \in \Sem{\vctx, x : \type \proves \prop : \Prop}_{\gamma[x \mapsto v]}(\melt) } \\
 	\Sem{\vctx \proves \Exists x : \type. \prop : \Prop}_\gamma &\eqdef
@@ -40,8 +40,8 @@ We introduce an additional logical connective $\ownM\melt$, which will later be 
 	\Lam \melt. \setComp{n}{\begin{aligned}
             \All m, \meltB.& m \leq n \land  \melt\mtimes\meltB \in \mval_m \Ra {} \\
             & m \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB) \Ra {}\\& m \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\melt\mtimes\meltB)\end{aligned}} \\
-        \Sem{\vctx \proves \ownM{\melt} : \Prop}_\gamma &\eqdef \Lam\meltB. \setComp{n}{\melt \mincl[n] \meltB}  \\
-        \Sem{\vctx \proves \mval(\melt) : \Prop}_\gamma &\eqdef \Lam\any. \setComp{n}{\melt \in \mval_n} \\
+        \Sem{\vctx \proves \ownM{\melt} : \Prop}_\gamma &\eqdef \Lam\meltB. \setComp{n}{\Sem{\vctx \proves \melt : \textlog{M}} \mincl[n] \meltB}  \\
+        \Sem{\vctx \proves \mval(\melt) : \Prop}_\gamma &\eqdef \Lam\any. \setComp{n}{\Sem{\vctx \proves \melt : \type} \in \mval_n} \\
 \end{align*}
 
 For every definition, we have to show all the side-conditions: The maps have to be non-expansive and monotone.
@@ -52,15 +52,18 @@ For every definition, we have to show all the side-conditions: The maps have to 
 The first complicated task in building a model of full Iris is defining the semantic model of $\Prop$.
 We start by defining the functor that assembles the CMRAs we need to the global resource CMRA:
 \begin{align*}
-  \textdom{ResF}(\cofe^\op, \cofe) \eqdef{}& \record{\wld: \mathbb{N} \fpfn \agm(\latert \cofe), \pres: \exm(\textdom{State}), \ghostRes: \iFunc(\cofe^\op, \cofe)}
+  \textdom{ResF}(\cofe^\op, \cofe) \eqdef{}& \record{\wld: \mathbb{N} \fpfn \agm(\latert \cofe), \pres: \maybe{\exm(\textdom{State})}, \ghostRes: \iFunc(\cofe^\op, \cofe)}
 \end{align*}
-Remember that $\iFunc$ is the user-chosen bifunctor from $\COFEs$ to $\CMRAs$.
+Above, $\maybe\monoid$ is the monoid obtained by adding a unit to $\monoid$.
+(It's not a coincidence that we used the same notation for the range of the core; it's the same type either way: $\monoid + 1$.)
+Remember that $\iFunc$ is the user-chosen bifunctor from $\COFEs$ to $\CMRAs$ (see~\Sref{sec:logic}).
 $\textdom{ResF}(\cofe^\op, \cofe)$ is a CMRA by lifting the individual CMRAs pointwise.
-Furthermore, if $F$ is locally contractive, then so is $\textdom{ResF}$.
+Furthermore, since $\Sigma$ is locally contractive, so is $\textdom{ResF}$.
 
 Now we can write down the recursive domain equation:
 \[ \iPreProp \cong \UPred(\textdom{ResF}(\iPreProp, \iPreProp)) \]
-$\iPreProp$ is a COFE, which exists by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}.
+$\iPreProp$ is a COFE defined as the fixed-point of a locally contractive bifunctor.
+This fixed-point exists and is unique by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}.
 We do not need to consider how the object is constructed. 
 We only need the isomorphism, given by
 \begin{align*}
@@ -105,9 +108,9 @@ $\textdom{wp}$ is defined as the fixed-point of a contractive function.
 \begin{align*}
   \textdom{pre-wp}(\textdom{wp})(\mask, \expr, \pred) &\eqdef \Lam\rs. \setComp{n}{\begin{aligned}
         \All &\rs_\f, m, \mask_\f, \state. 0 \leq m < n \land \mask \disj \mask_\f \land m+1 \in \wsat\state{\mask \cup \mask_\f}{\rs \mtimes \rs_\f} \Ra {}\\
-        &(\All\val. \toval(\expr) = \val \Ra \Exists \rsB. m+1 \in \pred(\rsB) \land m+1 \in \wsat\state{\mask \cup \mask_\f}{\rsB \mtimes \rs_\f}) \land {}\\
+        &(\All\val. \toval(\expr) = \val \Ra \Exists \rsB. m+1 \in \pred(\val)(\rsB) \land m+1 \in \wsat\state{\mask \cup \mask_\f}{\rsB \mtimes \rs_\f}) \land {}\\
         &(\toval(\expr) = \bot \land 0 < m \Ra \red(\expr, \state) \land \All \expr_2, \state_2, \expr_\f. \expr,\state \step \expr_2,\state_2,\expr_\f \Ra {}\\
-        &\qquad \Exists \rsB_1, \rsB_2. m \in \wsat\state{\mask \cup \mask_\f}{\rsB \mtimes \rs_\f} \land  m \in \textdom{wp}(\mask, \expr_2, \pred)(\rsB_1) \land {}&\\
+        &\qquad \Exists \rsB_1, \rsB_2. m \in \wsat\state{\mask \cup \mask_\f}{\rsB_1 \mtimes \rsB_2 \mtimes \rs_\f} \land  m \in \textdom{wp}(\mask, \expr_2, \pred)(\rsB_1) \land {}&\\
         &\qquad\qquad (\expr_\f = \bot \lor m \in \textdom{wp}(\top, \expr_\f, \Lam\any.\Lam\any.\mathbb{N})(\rsB_2))
     \end{aligned}} \\
   \textdom{wp}_\mask(\expr, \pred) &\eqdef \mathit{fix}(\textdom{pre-wp})(\mask, \expr, \pred)
@@ -150,7 +153,7 @@ The remaining domains are interpreted as follows:
 \Sem{\type \to \type'} &\eqdef& \Sem{\type} \nfn \Sem{\type} \\
 \end{array}
 \]
-For the remaining base types $\type$ defined by the signature $\Sig$, we pick an object $X_\type$ in $\cal U$ and define
+For the remaining base types $\type$ defined by the signature $\Sig$, we pick an object $X_\type$ in $\COFEs$ and define
 \[
 \Sem{\type} \eqdef X_\type
 \]
@@ -185,10 +188,10 @@ $\rho(x)\in\Sem{\vctx(x)}$.
 \paragraph{Logical entailment.}
 We can now define \emph{semantic} logical entailment.
 
-\typedsection{Interpretation of entailment}{\Sem{\vctx \mid \pfctx \proves \prop} : 2}
+\typedsection{Interpretation of entailment}{\Sem{\vctx \mid \pfctx \proves \prop} : \mProp}
 
 \[
-\Sem{\vctx \mid \pfctx \proves \propB} \eqdef
+\Sem{\vctx \mid \pfctx \proves \prop} \eqdef
 \begin{aligned}[t]
 \MoveEqLeft
 \forall n \in \mathbb{N}.\;

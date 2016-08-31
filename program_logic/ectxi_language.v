@@ -9,11 +9,11 @@ Class EctxiLanguage (expr val ectx_item state : Type) := {
   of_val : val → expr;
   to_val : expr → option val;
   fill_item : ectx_item → expr → expr;
-  head_step : expr → state → expr → state → option expr → Prop;
+  head_step : expr → state → expr → state → list expr → Prop;
 
   to_of_val v : to_val (of_val v) = Some v;
   of_to_val e v : to_val e = Some v → of_val v = e;
-  val_stuck e1 σ1 e2 σ2 ef : head_step e1 σ1 e2 σ2 ef → to_val e1 = None;
+  val_stuck e1 σ1 e2 σ2 efs : head_step e1 σ1 e2 σ2 efs → to_val e1 = None;
 
   fill_item_inj Ki :> Inj (=) (=) (fill_item Ki);
   fill_item_val Ki e : is_Some (to_val (fill_item Ki e)) → is_Some (to_val e);
@@ -21,8 +21,8 @@ Class EctxiLanguage (expr val ectx_item state : Type) := {
     to_val e1 = None → to_val e2 = None →
     fill_item Ki1 e1 = fill_item Ki2 e2 → Ki1 = Ki2;
 
-  head_ctx_step_val Ki e σ1 e2 σ2 ef :
-    head_step (fill_item Ki e) σ1 e2 σ2 ef → is_Some (to_val e);
+  head_ctx_step_val Ki e σ1 e2 σ2 efs :
+    head_step (fill_item Ki e) σ1 e2 σ2 efs → is_Some (to_val e);
 }.
 
 Arguments of_val {_ _ _ _ _} _.
@@ -46,6 +46,9 @@ Section ectxi_language.
 
   Definition fill (K : ectx) (e : expr) : expr := fold_right fill_item e K.
 
+  Lemma fill_app (K1 K2 : ectx) e : fill (K1 ++ K2) e = fill K1 (fill K2 e).
+  Proof. apply fold_right_app. Qed.
+
   Instance fill_inj K : Inj (=) (=) (fill K).
   Proof. red; induction K as [|Ki K IH]; naive_solver. Qed.
 
@@ -60,8 +63,8 @@ Section ectxi_language.
   (* When something does a step, and another decomposition of the same expression
   has a non-val [e] in the hole, then [K] is a left sub-context of [K'] - in
   other words, [e] also contains the reducible expression *)
-  Lemma step_by_val K K' e1 e1' σ1 e2 σ2 ef :
-    fill K e1 = fill K' e1' → to_val e1 = None → head_step e1' σ1 e2 σ2 ef →
+  Lemma step_by_val K K' e1 e1' σ1 e2 σ2 efs :
+    fill K e1 = fill K' e1' → to_val e1 = None → head_step e1' σ1 e2 σ2 efs →
     exists K'', K' = K ++ K''. (* K `prefix_of` K' *)
   Proof.
     intros Hfill Hred Hnval; revert K' Hfill.
@@ -78,7 +81,7 @@ Section ectxi_language.
        fixed fields of different records, even when I did not. *)
     Build_EctxLanguage expr val ectx state of_val to_val [] (++) fill head_step _ _ _ _ _ _ _ _ _.
   Solve Obligations with eauto using to_of_val, of_to_val, val_stuck,
-    fill_not_val, step_by_val, fold_right_app, app_eq_nil.
+    fill_not_val, fill_app, step_by_val, fold_right_app, app_eq_nil.
 
   Global Instance ectxi_lang_ctx_item Ki :
     LanguageCtx (ectx_lang expr) (fill_item Ki).

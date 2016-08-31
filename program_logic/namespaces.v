@@ -2,6 +2,10 @@ From iris.prelude Require Export countable coPset.
 From iris.algebra Require Export base.
 
 Definition namespace := list positive.
+Instance namespace_dec (N1 N2 : namespace) : Decision (N1 = N2) := _.
+Instance namespace_countable : Countable namespace := _.
+Typeclasses Opaque namespace.
+
 Definition nroot : namespace := nil.
 
 Definition ndot_def `{Countable A} (N : namespace) (x : A) : namespace :=
