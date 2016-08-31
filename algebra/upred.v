@@ -921,26 +921,23 @@ Lemma sep_forall_r {A} (Φ : A → uPred M) Q : (∀ a, Φ a) ★ Q ⊢ ∀ a, �
 Proof. by apply forall_intro=> a; rewrite forall_elim. Qed.
 
 (* Always *)
-Lemma always_pure φ : □ ■ φ ⊣⊢ ■ φ.
-Proof. by unseal. Qed.
+Lemma always_mono P Q : (P ⊢ Q) → □ P ⊢ □ Q.
+Proof. intros HP; unseal; split=> n x ? /=. by apply HP, cmra_core_validN. Qed.
 Lemma always_elim P : □ P ⊢ P.
 Proof.
   unseal; split=> n x ? /=.
   eauto using uPred_mono, @cmra_included_core, cmra_included_includedN.
 Qed.
-Lemma always_intro' P Q : (□ P ⊢ Q) → □ P ⊢ □ Q.
-Proof.
-  unseal=> HPQ; split=> n x ??; apply HPQ; simpl; auto using @cmra_core_validN.
-  by rewrite cmra_core_idemp.
-Qed.
-Lemma always_and P Q : □ (P ∧ Q) ⊣⊢ □ P ∧ □ Q.
+Lemma always_idemp P : □ P ⊢ □ □ P.
+Proof. unseal; split=> n x ?? /=. by rewrite cmra_core_idemp. Qed.
+
+Lemma always_pure_2 φ : ■ φ ⊢ □ ■ φ.
 Proof. by unseal. Qed.
-Lemma always_or P Q : □ (P ∨ Q) ⊣⊢ □ P ∨ □ Q.
+Lemma always_forall_2 {A} (Ψ : A → uPred M) : (∀ a, □ Ψ a) ⊢ (□ ∀ a, Ψ a).
 Proof. by unseal. Qed.
-Lemma always_forall {A} (Ψ : A → uPred M) : (□ ∀ a, Ψ a) ⊣⊢ (∀ a, □ Ψ a).
+Lemma always_exist_1 {A} (Ψ : A → uPred M) : (□ ∃ a, Ψ a) ⊢ (∃ a, □ Ψ a).
 Proof. by unseal. Qed.
-Lemma always_exist {A} (Ψ : A → uPred M) : (□ ∃ a, Ψ a) ⊣⊢ (∃ a, □ Ψ a).
-Proof. by unseal. Qed.
+
 Lemma always_and_sep_1 P Q : □ (P ∧ Q) ⊢ □ (P ★ Q).
 Proof.
   unseal; split=> n x ? [??].
@@ -951,18 +948,37 @@ Proof.
   unseal; split=> n x ? [??]; exists (core x), x; simpl in *.
   by rewrite cmra_core_l cmra_core_idemp.
 Qed.
+
 Lemma always_later P : □ ▷ P ⊣⊢ ▷ □ P.
 Proof. by unseal. Qed.
 
 (* Always derived *)
-Lemma always_mono P Q : (P ⊢ Q) → □ P ⊢ □ Q.
-Proof. intros. apply always_intro'. by rewrite always_elim. Qed.
-Hint Resolve always_mono.
+Hint Resolve always_mono always_elim.
 Global Instance always_mono' : Proper ((⊢) ==> (⊢)) (@uPred_always M).
 Proof. intros P Q; apply always_mono. Qed.
 Global Instance always_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@uPred_always M).
 Proof. intros P Q; apply always_mono. Qed.
+
+Lemma always_intro' P Q : (□ P ⊢ Q) → □ P ⊢ □ Q.
+Proof. intros <-. apply always_idemp. Qed.
+
+Lemma always_pure φ : □ ■ φ ⊣⊢ ■ φ.
+Proof. apply (anti_symm _); auto using always_pure_2. Qed.
+Lemma always_forall {A} (Ψ : A → uPred M) : (□ ∀ a, Ψ a) ⊣⊢ (∀ a, □ Ψ a).
+Proof.
+  apply (anti_symm _); auto using always_forall_2.
+  apply forall_intro=> x. by rewrite (forall_elim x).
+Qed.
+Lemma always_exist {A} (Ψ : A → uPred M) : (□ ∃ a, Ψ a) ⊣⊢ (∃ a, □ Ψ a).
+Proof.
+  apply (anti_symm _); auto using always_exist_1.
+  apply exist_elim=> x. by rewrite (exist_intro x).
+Qed.
+Lemma always_and P Q : □ (P ∧ Q) ⊣⊢ □ P ∧ □ Q.
+Proof. rewrite !and_alt always_forall. by apply forall_proper=> -[]. Qed.
+Lemma always_or P Q : □ (P ∨ Q) ⊣⊢ □ P ∨ □ Q.
+Proof. rewrite !or_alt always_exist. by apply exist_proper=> -[]. Qed.
 Lemma always_impl P Q : □ (P → Q) ⊢ □ P → □ Q.
 Proof.
   apply impl_intro_l; rewrite -always_and.
@@ -975,6 +991,7 @@ Proof.
   { intros n; solve_proper. }
   rewrite -(eq_refl a) always_pure; auto.
 Qed.
+
 Lemma always_and_sep P Q : □ (P ∧ Q) ⊣⊢ □ (P ★ Q).
 Proof. apply (anti_symm (⊢)); auto using always_and_sep_1. Qed.
 Lemma always_and_sep_l' P Q : □ P ∧ Q ⊣⊢ □ P ★ Q.
@@ -983,10 +1000,11 @@ Lemma always_and_sep_r' P Q : P ∧ □ Q ⊣⊢ P ★ □ Q.
 Proof. by rewrite !(comm _ P) always_and_sep_l'. Qed.
 Lemma always_sep P Q : □ (P ★ Q) ⊣⊢ □ P ★ □ Q.
 Proof. by rewrite -always_and_sep -always_and_sep_l' always_and. Qed.
-Lemma always_wand P Q : □ (P -★ Q) ⊢ □ P -★ □ Q.
-Proof. by apply wand_intro_r; rewrite -always_sep wand_elim_l. Qed.
 Lemma always_sep_dup' P : □ P ⊣⊢ □ P ★ □ P.
 Proof. by rewrite -always_sep -always_and_sep (idemp _). Qed.
+
+Lemma always_wand P Q : □ (P -★ Q) ⊢ □ P -★ □ Q.
+Proof. by apply wand_intro_r; rewrite -always_sep wand_elim_l. Qed.
 Lemma always_wand_impl P Q : □ (P -★ Q) ⊣⊢ □ (P → Q).
 Proof.
   apply (anti_symm (⊢)); [|by rewrite -impl_wand].
