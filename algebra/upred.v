@@ -731,6 +731,12 @@ Lemma pure_elim_r φ Q R : (φ → Q ⊢ R) → Q ∧ ■ φ ⊢ R.
 Proof. intros; apply pure_elim with φ; eauto. Qed.
 Lemma pure_equiv (φ : Prop) : φ → ■ φ ⊣⊢ True.
 Proof. intros; apply (anti_symm _); auto using pure_intro. Qed.
+Lemma pure_alt φ : ■ φ ⊣⊢ ∃ _ : φ, True.
+Proof.
+  apply (anti_symm _).
+  - eapply pure_elim; eauto=> H. rewrite -(exist_intro H); auto.
+  - by apply exist_elim, pure_intro.
+Qed.
 
 Lemma eq_refl' {A : cofeT} (a : A) P : P ⊢ a ≡ a.
 Proof. rewrite (True_intro P). apply eq_refl. Qed.
@@ -1014,8 +1020,6 @@ Proof.
   unseal; split=> n x ? HP; induction n as [|n IH]; [by apply HP|].
   apply HP, IH, uPred_closed with (S n); eauto using cmra_validN_S.
 Qed.
-Lemma later_pure φ : ▷ ■ φ ⊢ ▷ False ∨ ■ φ.
-Proof. unseal; split=> -[|n] x ?? /=; auto. Qed.
 Lemma later_and P Q : ▷ (P ∧ Q) ⊣⊢ ▷ P ∧ ▷ Q.
 Proof. unseal; split=> -[|n] x; by split. Qed.
 Lemma later_or P Q : ▷ (P ∨ Q) ⊣⊢ ▷ P ∨ ▷ Q.
@@ -1254,7 +1258,9 @@ Proof. uPred.unseal. by destruct mx. Qed.
 
 (* Timeless instances *)
 Global Instance pure_timeless φ : TimelessP (■ φ : uPred M)%I.
-Proof. by rewrite /TimelessP later_pure. Qed.
+Proof.
+  rewrite /TimelessP pure_alt later_exist_false. by setoid_rewrite later_True.
+Qed.
 Global Instance valid_timeless {A : cmraT} `{CMRADiscrete A} (a : A) :
   TimelessP (✓ a : uPred M)%I.
 Proof. rewrite /TimelessP !discrete_valid. apply (timelessP _). Qed.
