@@ -27,7 +27,7 @@ Notation "P =n=★ Q" := (P -★ |=n=> Q)%I
   (2) If our meta-logic is classical, then |=n=> and |=r=> are equivalent
 *)
 
-Section rvs_nn.
+Section rvs_nnvs.
 Context {M : ucmraT}.
 Implicit Types φ : Prop.
 Implicit Types P Q : uPred M.
@@ -58,8 +58,214 @@ Proof.
     eapply (uPred_closed _ _ (S n)); eauto using cmra_validN_S.
 Qed.
 
-(* First we prove that rvs implies nn *)
-Lemma rvs_nn P: (|=r=> P) ⊢ |=n=> P.
+(* It is easy to show that most of the basic properties of rvs that
+   are used throughout Iris hold for nnvs. 
+
+   In fact, the first three properties that follow hold for any
+   modality of the form (- -★ Q) -★ Q for arbitrary Q. The situation
+   here is slightly different, because nnvs is of the form 
+   ∀ n, (- -★ (Q n)) -★ (Q n), but the proofs carry over straightforwardly.
+
+ *)
+
+Lemma nnvs_intro P : P =n=> P.
+Proof. apply forall_intro=>?. apply wand_intro_l, wand_elim_l. Qed.
+Lemma nnvs_mono P Q : (P ⊢ Q) → (|=n=> P) =n=> Q.
+Proof.
+  intros HPQ. apply forall_intro=>n.
+  apply wand_intro_l.  rewrite -{1}HPQ.
+  rewrite /uPred_nnvs (forall_elim n).
+  apply wand_elim_r.
+Qed.
+Lemma nnvs_frame_r P R : (|=n=> P) ★ R =n=> P ★ R.
+Proof.
+  apply forall_intro=>n. apply wand_intro_r.
+  rewrite (comm _ P) -wand_curry.
+  rewrite /uPred_nnvs (forall_elim n).
+  by rewrite -assoc wand_elim_r wand_elim_l.
+Qed.
+Lemma nnvs_ownM_updateP x (Φ : M → Prop) :
+  x ~~>: Φ → uPred_ownM x =n=> ∃ y, ■ Φ y ∧ uPred_ownM y.
+Proof. 
+  intros Hrvs. split. rewrite /uPred_nnvs. repeat uPred.unseal. 
+  intros n y ? Hown a.
+  red; rewrite //= => n' yf ??.
+  inversion Hown as (x'&Hequiv).
+  edestruct (Hrvs n' (Some (x' ⋅ yf))) as (y'&?&?); eauto.
+  { by rewrite //= assoc -(dist_le _ _ _ _ Hequiv). }
+  case (decide (a ≤ n')).
+  - intros Hle Hwand.
+    exfalso. eapply laterN_big; last (uPred.unseal; eapply (Hwand n' (y' ⋅ x'))); eauto.
+    * rewrite comm -assoc. done. 
+    * rewrite comm -assoc. done. 
+    * eexists. split; eapply uPred_mono; red; rewrite //=; eauto.
+  - intros; assert (n' < a). omega.
+    move: laterN_small. uPred.unseal.
+    naive_solver.
+Qed.
+
+(* However, the transitivity property seems to be much harder to
+   prove. This is surprising, because transitivity does hold for 
+   modalities of the form (- -★ Q) -★ Q. What goes wrong when we quantify
+   now over n? 
+ *)
+
+Remark nnvs_trans P: (|=n=> |=n=> P) ⊢ (|=n=> P).
+Proof.
+  rewrite /uPred_nnvs.
+  apply forall_intro=>a. apply wand_intro_l.
+  rewrite (forall_elim a).
+  rewrite (nnvs_intro (P -★ _)).
+  rewrite /uPred_nnvs.
+  (* Oops -- the exponents of the later modality don't match up! *)
+Abort.
+
+(* Instead, we will need to prove this in the model. We start by showing that 
+   nnvs is the limit of a the following sequence:
+
+   (- -★ False) - ★ False,
+   (- -★ ▷ False) - ★ ▷ False ∧ (- -★ False) - ★ False,
+   (- -★ ▷^2 False) - ★ ▷^2 False ∧ (- -★ ▷ False) - ★ ▷ False ∧ (- -★ False) - ★ False,
+   ...
+
+   Then, it is easy enough to show that each of the uPreds in this sequence
+   is transitive. It turns out that this implies that nnvs is transitive. *)
+   
+
+(* The definition of the sequence above: *)
+Fixpoint uPred_nnvs_k {M} k (P: uPred M) : uPred M :=
+  ((P -★ ▷^k False) -★ ▷^k False) ∧
+  match k with 
+    O => True
+  | S k' => uPred_nnvs_k k' P
+  end.
+
+Notation "|=n=>_ k Q" := (uPred_nnvs_k k Q)
+  (at level 99, k at level 9, Q at level 200, format "|=n=>_ k  Q") : uPred_scope.
+
+
+(* One direction of the limiting process is easy -- nnvs implies nnvs_k for each k *)
+Lemma nnvs_trunc1 k P: (|=n=> P) ⊢ |=n=>_k P.
+Proof.
+  induction k. 
+  - rewrite /uPred_nnvs_k /uPred_nnvs. 
+    rewrite (forall_elim 0) //= right_id //.
+  - simpl. apply and_intro; auto.
+    rewrite /uPred_nnvs. 
+    rewrite (forall_elim (S k)) //=.
+Qed.
+
+Lemma nnvs_k_elim n k P: n ≤ k → ((|=n=>_k P) ★ (P -★ (▷^n False)) ⊢  (▷^n False))%I.
+Proof.
+  induction k.
+  - inversion 1; subst; rewrite //= ?right_id. apply wand_elim_l.
+  - inversion 1; subst; rewrite //= ?right_id.
+    * rewrite and_elim_l. apply wand_elim_l.
+    * rewrite and_elim_r IHk //.
+Qed.
+
+Lemma nnvs_k_unfold k P:
+  (|=n=>_(S k) P) ⊣⊢ ((P -★ (▷^(S k) False)) -★ (▷^(S k) False)) ∧ (|=n=>_k P).
+Proof. done.  Qed.
+Lemma nnvs_k_unfold' k P n x:
+  (|=n=>_(S k) P)%I n x ↔ (((P -★ (▷^(S k) False)) -★ (▷^(S k) False)) ∧ (|=n=>_k P))%I n x.
+Proof. done.  Qed.
+
+Lemma nnvs_k_weaken k P: (|=n=>_(S k) P) ⊢ |=n=>_k P.
+Proof. by rewrite nnvs_k_unfold and_elim_r. Qed.
+
+(* Now we are ready to show nnvs is the limit -- ie, for each k, it is within distance k
+   of the kth term of the sequence *)
+Lemma nnvs_nnvs_k_dist k P: (|=n=> P)%I ≡{k}≡ (|=n=>_k P)%I.
+  split; intros n' x Hle Hx. split.
+  - by apply (nnvs_trunc1 k).
+  - revert n' x Hle Hx; induction k; intros n' x Hle Hx;
+      rewrite ?nnvs_k_unfold' /uPred_nnvs.
+    * rewrite //=. unseal.
+      inversion Hle; subst.
+      intros (HnnP&_) n k' x' ?? HPF.
+      case (decide (k' < n)).
+      ** move: laterN_small; uPred.unseal; naive_solver.
+      ** intros. exfalso. eapply HnnP; eauto.
+         assert (n ≤ k'). omega.
+         intros n'' x'' ???.
+         specialize (HPF n'' x''). exfalso.
+         eapply laterN_big; last (unseal; eauto).
+         eauto. omega.
+    * inversion Hle; subst.
+      ** unseal. intros (HnnP&HnnP_IH) n k' x' ?? HPF.
+         case (decide (k' < n)).
+         *** move: laterN_small; uPred.unseal; naive_solver.
+         *** intros. exfalso. assert (n ≤ k'). omega.
+             assert (n = S k ∨ n < S k) as [->|] by omega.
+             **** eapply laterN_big; eauto; unseal. eapply HnnP; eauto.
+             **** move:nnvs_k_elim. unseal. intros Hnnvsk. 
+                  eapply laterN_big; eauto. unseal.
+                  eapply (Hnnvsk n k); first omega; eauto.
+                  exists x, x'. split_and!; eauto. eapply uPred_closed; eauto.
+                  eapply cmra_validN_op_l; eauto.
+      ** intros HP. eapply IHk; auto.
+         move:HP. unseal. intros (?&?); naive_solver.
+Qed.
+
+(* nnvs_k has a number of structural properties, including transitivity *)
+Lemma nnvs_k_intro k P: P ⊢ (|=n=>_k P).
+Proof.
+  induction k; rewrite //= ?right_id.
+  - apply wand_intro_l. apply wand_elim_l.
+  - apply and_intro; auto. 
+    apply wand_intro_l. apply wand_elim_l.
+Qed.
+
+Lemma nnvs_k_mono k P Q: (P ⊢ Q) → (|=n=>_k P) ⊢ (|=n=>_k Q).
+Proof.
+  induction k; rewrite //= ?right_id=>HPQ. 
+  - do 2 (apply wand_mono; auto).
+  - apply and_mono; auto; do 2 (apply wand_mono; auto).
+Qed.
+Instance nnvs_k_mono' k: Proper ((⊢) ==> (⊢)) (@uPred_nnvs_k M k).
+Proof. by intros P P' HP; apply nnvs_k_mono. Qed.
+
+Instance nnvs_k_ne k n : Proper (dist n ==> dist n) (@uPred_nnvs_k M k).
+Proof. induction k; rewrite //= ?right_id=>P P' HP; by rewrite HP. Qed.
+Lemma nnvs_k_proper k P Q: (P ⊣⊢ Q) → (|=n=>_k P) ⊣⊢ (|=n=>_k Q).
+Proof. intros HP; apply (anti_symm (⊢)); eapply nnvs_k_mono; by rewrite HP. Qed.
+Instance nnvs_k_proper' k: Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_nnvs_k M k).
+Proof. by intros P P' HP; apply nnvs_k_proper. Qed.
+
+Lemma nnvs_k_trans k P: (|=n=>_k |=n=>_k P) ⊢ (|=n=>_k P).
+Proof.
+  revert P.
+  induction k; intros P.
+  - rewrite //= ?right_id. apply wand_intro_l. 
+    rewrite {1}(nnvs_k_intro 0 (P -★ False)%I) //= ?right_id. apply wand_elim_r. 
+  - rewrite {2}(nnvs_k_unfold k P).
+    apply and_intro.
+    * rewrite (nnvs_k_unfold k P). rewrite and_elim_l.
+      rewrite nnvs_k_unfold. rewrite and_elim_l.
+      apply wand_intro_l. 
+      rewrite {1}(nnvs_k_intro (S k) (P -★ ▷^(S k) (False)%I)).
+      rewrite nnvs_k_unfold and_elim_l. apply wand_elim_r.
+    * do 2 rewrite nnvs_k_weaken //.
+Qed.
+
+Lemma nnvs_trans P : (|=n=> |=n=> P) =n=> P.
+Proof.
+  split=> n x ? Hnn.
+  eapply nnvs_nnvs_k_dist in Hnn; eauto.
+  eapply (nnvs_k_ne (n) n ((|=n=>_(n) P)%I)) in Hnn; eauto;
+    [| symmetry; eapply nnvs_nnvs_k_dist].
+  eapply nnvs_nnvs_k_dist; eauto.
+  by apply nnvs_k_trans.
+Qed.
+
+
+(* Now that we have shown nnvs has all of the desired properties of
+   rvs, we go further and show it is in fact equivalent to rvs! The
+   direction from rvs to nnvs is similar to the proof of
+   nnvs_ownM_updateP *)
+
+Lemma rvs_nnvs P: (|=r=> P) ⊢ |=n=> P.
 Proof.
   split. rewrite /uPred_nnvs. repeat uPred.unseal. intros n x ? Hrvs a.
   red; rewrite //= => n' yf ??.
@@ -74,50 +280,15 @@ Proof.
     naive_solver.
 Qed.
 
-Lemma nn_intro P : P =n=> P.
-Proof. apply forall_intro=>?. apply wand_intro_l, wand_elim_l. Qed.
-Lemma nn_mono P Q : (P ⊢ Q) → (|=n=> P) =n=> Q.
-Proof.
-  intros HPQ. apply forall_intro=>n.
-  apply wand_intro_l.  rewrite -{1}HPQ.
-  rewrite /uPred_nnvs (forall_elim n).
-  apply wand_elim_r.
-Qed.
-(* Question: is there a clean direct proof of this? *)
-(*
-Lemma nn_trans P : (|=n=> |=n=> P) =n=> P.
-Proof.
-  apply forall_intro=>n. apply wand_intro_l.
-  rewrite /uPred_nnvs.
-  rewrite {1}(nn_intro (P -★ ▷^ n False)).
-  rewrite /uPred_nnvs. rewrite comm (forall_elim n).
-  apply wand_elim_r. Qed.
-*)
-Lemma nn_frame_r P R : (|=n=> P) ★ R =n=> P ★ R.
-Proof.
-  apply forall_intro=>n. apply wand_intro_r.
-  rewrite (comm _ P) -wand_curry.
-  rewrite /uPred_nnvs (forall_elim n).
-  by rewrite -assoc wand_elim_r wand_elim_l.
-Qed.
-Lemma nn_ownM_updateP x (Φ : M → Prop) :
-  x ~~>: Φ → uPred_ownM x =n=> ∃ y, ■ Φ y ∧ uPred_ownM y.
-Proof. intros. rewrite -rvs_nn. by apply rvs_ownM_updateP. Qed.
-Lemma except_last_nn P : ◇ (|=n=> P) ⊢ (|=n=> ◇ P).
-Proof.
-  rewrite /uPred_except_last. apply or_elim.
-  - by rewrite -nn_intro -or_intro_l.
-  - by apply nn_mono, or_intro_r. 
-Qed.
-
-(* Now we show, nn implies rvs, for which we need a classical axiom: *)
-Require Coq.Logic.Classical_Pred_Type.
-Lemma nn_rvs P:  (|=n=> P) ⊢ (|=r=> P).
+(* However, the other direction seems to need a classical axiom: *)
+Section classical.
+Context (not_all_not_ex: ∀ (P : M → Prop), ¬ (∀ n : M, ¬ P n) → ∃ n : M, P n).
+Lemma nnvs_rvs P:  (|=n=> P) ⊢ (|=r=> P).
 Proof.
   rewrite /uPred_nnvs.
   split. uPred.unseal; red; rewrite //=.
   intros n x ? Hforall k yf Hle ?.
-  apply Classical_Pred_Type.not_all_not_ex.
+  apply not_all_not_ex.
   intros Hfal.
   specialize (Hforall k k).
   eapply laterN_big; last (uPred.unseal; red; rewrite //=; eapply Hforall);
@@ -128,6 +299,7 @@ Proof.
   - assert (n' < k). omega.
     move: laterN_small. uPred.unseal. naive_solver.
 Qed.
+End classical.
 
 (* Questions:
    1) Can one prove an adequacy theorem for the |=n=> modality without axioms?
@@ -135,7 +307,11 @@ Qed.
 
       Lemma adequacy' φ n : (True ⊢ Nat.iter n (λ P, |=n=> ▷ P) (■ φ)) → ¬¬ φ.
 
+      One idea may be to prove a limited adequacy theorem for each
+      nnvs_k and use the limiting argument we did for transitivity.
+
    3) Do the basic properties of the |=r=> modality (rvs_intro, rvs_mono, rvs_trans, rvs_frame_r,
-      rvs_ownM_updateP, and adequacy) characterize |=r=>?
+      rvs_ownM_updateP, and adequacy) uniquely characterize |=r=>?
  *)
-End rvs_nn.
+
+End rvs_nnvs.
