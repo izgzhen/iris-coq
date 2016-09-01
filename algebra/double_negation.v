@@ -259,7 +259,6 @@ Proof.
   by apply nnvs_k_trans.
 Qed.
 
-
 (* Now that we have shown nnvs has all of the desired properties of
    rvs, we go further and show it is in fact equivalent to rvs! The
    direction from rvs to nnvs is similar to the proof of
@@ -301,16 +300,38 @@ Proof.
 Qed.
 End classical.
 
+(* We might wonder whether we can prove an adequacy lemma for nnvs. We could combine
+   the adequacy lemma for rvs with the previous result to get adquacy for nnvs, but 
+   this would rely on the classical axiom we needed to prove the equivalence! Can
+   we establish adequacy without axioms? Unfortunately not, because adequacy for 
+   nnvs would imply double negation elimination, which is classical: *)
+
+Lemma nnvs_dne φ: True ⊢ (|=n=> (■(¬¬ φ → φ)): uPred M)%I.
+Proof.
+  rewrite /uPred_nnvs. apply forall_intro=>n.
+  apply wand_intro_l. rewrite ?right_id. 
+  assert (∀ φ, ¬¬¬¬φ → ¬¬φ) by naive_solver.
+  assert (Hdne: ¬¬ (¬¬φ → φ)) by naive_solver.
+  split. unseal. intros n' ?? Hvs.
+  case (decide (n' < n)).
+  - intros. move: laterN_small. unseal. naive_solver.
+  - intros. assert (n ≤ n'). omega. 
+    exfalso. specialize (Hvs n' ∅).
+    eapply Hdne. intros Hfal.
+    eapply laterN_big; eauto. 
+    unseal. rewrite right_id in Hvs *; naive_solver.
+Qed.
+
+
 (* Questions:
-   1) Can one prove an adequacy theorem for the |=n=> modality without axioms?
-   2) If not, can we prove a weakened form of adequacy, such as :
+   1) Can we prove a weakened form of adequacy for nnvs directly, such as :
 
       Lemma adequacy' φ n : (True ⊢ Nat.iter n (λ P, |=n=> ▷ P) (■ φ)) → ¬¬ φ.
 
       One idea may be to prove a limited adequacy theorem for each
       nnvs_k and use the limiting argument we did for transitivity.
 
-   3) Do the basic properties of the |=r=> modality (rvs_intro, rvs_mono, rvs_trans, rvs_frame_r,
+   2) Do the basic properties of the |=r=> modality (rvs_intro, rvs_mono, rvs_trans, rvs_frame_r,
       rvs_ownM_updateP, and adequacy) uniquely characterize |=r=>?
  *)
 
