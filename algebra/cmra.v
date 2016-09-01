@@ -1084,6 +1084,9 @@ Section option.
   Lemma exclusiveN_Some_r n x `{!Exclusive x} my :
     ✓{n} (my ⋅ Some x) → my = None.
   Proof. rewrite comm. by apply exclusiveN_Some_l. Qed.
+
+  Lemma is_Some_included mx my : mx ≼ my → is_Some mx → is_Some my.
+  Proof. rewrite -!not_eq_None_Some option_included. naive_solver. Qed.
 End option.
 
 Arguments optionR : clear implicits.
