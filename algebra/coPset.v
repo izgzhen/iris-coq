@@ -27,6 +27,13 @@ Section coPset.
     repeat (simpl || case_decide);
     first [apply (f_equal CoPset)|done|exfalso]; set_solver by eauto.
 
+  Lemma coPset_included X Y : CoPset X ≼ CoPset Y ↔ X ⊆ Y.
+  Proof.
+    split.
+    - move=> [[Z|]]; simpl; try case_decide; set_solver.
+    - intros (Z&->&?)%subseteq_disjoint_union_L.
+      exists (CoPset Z). coPset_disj_solve.
+  Qed.
   Lemma coPset_disj_valid_inv_l X Y :
     ✓ (CoPset X ⋅ Y) → ∃ Y', Y = CoPset Y' ∧ X ⊥ Y'.
   Proof. destruct Y; repeat (simpl || case_decide); by eauto. Qed.
