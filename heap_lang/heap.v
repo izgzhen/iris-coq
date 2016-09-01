@@ -142,7 +142,7 @@ Section heap.
     iIntros (<-%of_to_val ?) "[#Hinv HΦ]". rewrite /heap_ctx.
     iVs (auth_empty heap_name) as "Hh".
     iVs (auth_open with "[Hh]") as (h) "[Hv [Hh Hclose]]"; eauto.
-    rewrite left_id /heap_inv. iDestruct "Hv" as %?.
+    rewrite left_id_L /heap_inv. iDestruct "Hv" as %?.
     iApply wp_alloc_pst. iFrame "Hh". iNext.
     iIntros (l) "[% Hh] !==>".
     iVs ("Hclose" $! {[ l := (1%Qp, DecAgree v) ]} with "[Hh]").

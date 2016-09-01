@@ -520,6 +520,64 @@ Section ucmra.
 End ucmra.
 Hint Immediate cmra_unit_total.
 
+
+(** * Properties about CMRAs with Leibniz equality *)
+Section cmra_leibniz.
+  Context {A : cmraT} `{!LeibnizEquiv A}.
+  Implicit Types x y : A.
+
+  Global Instance cmra_assoc_L : Assoc (=) (@op A _).
+  Proof. intros x y z. unfold_leibniz. by rewrite assoc. Qed.
+  Global Instance cmra_comm_L : Comm (=) (@op A _).
+  Proof. intros x y. unfold_leibniz. by rewrite comm. Qed.
+
+  Lemma cmra_pcore_l_L x cx : pcore x = Some cx → cx ⋅ x = x.
+  Proof. unfold_leibniz. apply cmra_pcore_l'. Qed.
+  Lemma cmra_pcore_idemp_L x cx : pcore x = Some cx → pcore cx = Some cx.
+  Proof. unfold_leibniz. apply cmra_pcore_idemp'. Qed.
+
+  Lemma cmra_opM_assoc_L x y mz : (x ⋅ y) ⋅? mz = x ⋅ (y ⋅? mz).
+  Proof. unfold_leibniz. apply cmra_opM_assoc. Qed.
+
+  (** ** Core *)
+  Lemma cmra_pcore_r_L x cx : pcore x = Some cx → x ⋅ cx = x.
+  Proof. unfold_leibniz. apply cmra_pcore_r'. Qed.
+  Lemma cmra_pcore_dup_L x cx : pcore x = Some cx → cx = cx ⋅ cx.
+  Proof. unfold_leibniz. apply cmra_pcore_dup'. Qed.
+
+  (** ** Persistent elements *)
+  Lemma persistent_dup_L x `{!Persistent x} : x ≡ x ⋅ x.
+  Proof. unfold_leibniz. by apply persistent_dup. Qed.
+
+  (** ** Total core *)
+  Section total_core.
+    Context `{CMRATotal A}.
+
+    Lemma cmra_core_r_L x : x ⋅ core x = x.
+    Proof. unfold_leibniz. apply cmra_core_r. Qed.
+    Lemma cmra_core_l_L x : core x ⋅ x = x.
+    Proof. unfold_leibniz. apply cmra_core_l. Qed.
+    Lemma cmra_core_idemp_L x : core (core x) = core x.
+    Proof. unfold_leibniz. apply cmra_core_idemp. Qed.
+    Lemma cmra_core_dup_L x : core x = core x ⋅ core x.
+    Proof. unfold_leibniz. apply cmra_core_dup. Qed.
+    Lemma persistent_total_L x : Persistent x ↔ core x = x.
+    Proof. unfold_leibniz. apply persistent_total. Qed.
+    Lemma persistent_core_L x `{!Persistent x} : core x = x.
+    Proof. by apply persistent_total_L. Qed.
+  End total_core.
+End cmra_leibniz.
+
+Section ucmra_leibniz.
+  Context {A : ucmraT} `{!LeibnizEquiv A}.
+  Implicit Types x y z : A.
+
+  Global Instance ucmra_unit_left_id_L : LeftId (=) ∅ (@op A _).
+  Proof. intros x. unfold_leibniz. by rewrite left_id. Qed.
+  Global Instance ucmra_unit_right_id_L : RightId (=) ∅ (@op A _).
+  Proof. intros x. unfold_leibniz. by rewrite right_id. Qed.
+End ucmra_leibniz.
+
 (** * Constructing a CMRA with total core *)
 Section cmra_total.
   Context A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A}.
