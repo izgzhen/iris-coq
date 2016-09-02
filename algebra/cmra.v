@@ -1063,7 +1063,7 @@ Section option.
   Proof. by destruct my. Qed.
 
   Lemma option_included (mx my : option A) :
-    mx ≼ my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ (x ≼ y ∨ x ≡ y).
+    mx ≼ my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ (x ≡ y ∨ x ≼ y).
   Proof.
     split.
     - intros [mz Hmz].
@@ -1071,10 +1071,10 @@ Section option.
       destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
       destruct mz as [z|]; inversion_clear Hmz; split_and?; auto;
         setoid_subst; eauto using cmra_included_l.
-    - intros [->|(x&y&->&->&[[z Hz]|Hz])].
+    - intros [->|(x&y&->&->&[Hz|[z Hz]])].
       + exists my. by destruct my.
-      + exists (Some z); by constructor.
       + exists None; by constructor.
+      + exists (Some z); by constructor.
   Qed.
 
   Lemma option_cmra_mixin : CMRAMixin (option A).
@@ -1095,9 +1095,9 @@ Section option.
     - intros mx my; setoid_rewrite option_included.
       intros [->|(x&y&->&->&[?|?])]; simpl; eauto.
       + destruct (pcore x) as [cx|] eqn:?; eauto.
-        destruct (cmra_pcore_mono x y cx) as (?&?&?); eauto 10.
-      + destruct (pcore x) as [cx|] eqn:?; eauto.
         destruct (cmra_pcore_proper x y cx) as (?&?&?); eauto 10.
+      + destruct (pcore x) as [cx|] eqn:?; eauto.
+        destruct (cmra_pcore_mono x y cx) as (?&?&?); eauto 10.
     - intros n [x|] [y|]; rewrite /validN /option_validN /=;
         eauto using cmra_validN_op_l.
     - intros n mx my1 my2.
@@ -1143,6 +1143,10 @@ Section option.
     ✓{n} (my ⋅ Some x) → my = None.
   Proof. rewrite comm. by apply exclusiveN_Some_l. Qed.
 
+  Lemma Some_included x y : Some x ≼ Some y ↔ x ≡ y ∨ x ≼ y.
+  Proof. rewrite option_included; naive_solver. Qed.
+  Lemma Some_included' `{CMRATotal A} x y : Some x ≼ Some y ↔ x ≡ y ∨ x ≼ y.
+  Proof. rewrite Some_included; naive_solver. Qed.
   Lemma is_Some_included mx my : mx ≼ my → is_Some mx → is_Some my.
   Proof. rewrite -!not_eq_None_Some option_included. naive_solver. Qed.
 End option.
@@ -1156,8 +1160,8 @@ Proof.
   split; first apply _.
   - intros n [x|] ?; rewrite /cmra_validN //=. by apply (validN_preserving f).
   - intros mx my; rewrite !option_included.
-    intros [->|(x&y&->&->&[?|Hxy])]; simpl; eauto 10 using @cmra_monotone.
-    right; exists (f x), (f y). by rewrite {4}Hxy; eauto.
+    intros [->|(x&y&->&->&[Hxy|?])]; simpl; eauto 10 using @cmra_monotone.
+    right; exists (f x), (f y). by rewrite {3}Hxy; eauto.
 Qed.
 Program Definition optionURF (F : rFunctor) : urFunctor := {|
   urFunctor_car A B := optionUR (rFunctor_car F A B);
