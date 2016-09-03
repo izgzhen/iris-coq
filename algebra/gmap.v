@@ -258,12 +258,6 @@ Proof.
       * by rewrite Hi lookup_op lookup_singleton lookup_delete.
       * by rewrite lookup_op lookup_singleton_ne // lookup_delete_ne // left_id.
 Qed.
-Lemma dom_op m1 m2 : dom (gset K) (m1 ⋅ m2) = dom _ m1 ∪ dom _ m2.
-Proof.
-  apply elem_of_equiv_L=> i; rewrite elem_of_union !elem_of_dom.
-  unfold is_Some; setoid_rewrite lookup_op.
-  destruct (m1 !! i), (m2 !! i); naive_solver.
-Qed.
 
 Lemma insert_updateP (P : A → Prop) (Q : gmap K A → Prop) m i x :
   x ~~>: P → (∀ y, P y → Q (<[i:=y]>m)) → <[i:=x]>m ~~>: Q.
@@ -296,6 +290,17 @@ Proof.
   - move: (Hm j). rewrite !lookup_op lookup_delete left_id.
     apply cmra_validN_op_r.
   - move: (Hm j). by rewrite !lookup_op lookup_delete_ne.
+Qed.
+
+Lemma dom_op m1 m2 : dom (gset K) (m1 ⋅ m2) = dom _ m1 ∪ dom _ m2.
+Proof.
+  apply elem_of_equiv_L=> i; rewrite elem_of_union !elem_of_dom.
+  unfold is_Some; setoid_rewrite lookup_op.
+  destruct (m1 !! i), (m2 !! i); naive_solver.
+Qed.
+Lemma dom_included m1 m2 : m1 ≼ m2 → dom (gset K) m1 ⊆ dom _ m2.
+Proof.
+  rewrite lookup_included=>? i; rewrite !elem_of_dom. by apply is_Some_included.
 Qed.
 
 Section freshness.

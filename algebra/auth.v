@@ -3,7 +3,7 @@ From iris.algebra Require Import upred updates.
 Local Arguments valid _ _ !_ /.
 Local Arguments validN _ _ _ !_ /.
 
-Record auth (A : Type) := Auth { authoritative : option (excl A); auth_own : A }.
+Record auth (A : Type) := Auth { authoritative : excl' A; auth_own : A }.
 Add Printing Constructor auth.
 Arguments Auth {_} _ _.
 Arguments authoritative {_} _.
@@ -14,7 +14,7 @@ Notation "● a" := (Auth (Excl' a) ∅) (at level 20).
 (* COFE *)
 Section cofe.
 Context {A : cofeT}.
-Implicit Types a : option (excl A).
+Implicit Types a : excl' A.
 Implicit Types b : A.
 Implicit Types x y : auth A.
 

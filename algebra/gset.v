@@ -28,6 +28,13 @@ Section gset.
     repeat (simpl || case_decide);
     first [apply (f_equal GSet)|done|exfalso]; set_solver by eauto.
 
+  Lemma coPset_included X Y : GSet X ≼ GSet Y ↔ X ⊆ Y.
+  Proof.
+    split.
+    - move=> [[Z|]]; simpl; try case_decide; set_solver.
+    - intros (Z&->&?)%subseteq_disjoint_union_L.
+      exists (GSet Z). gset_disj_solve.
+  Qed.
   Lemma gset_disj_valid_inv_l X Y : ✓ (GSet X ⋅ Y) → ∃ Y', Y = GSet Y' ∧ X ⊥ Y'.
   Proof. destruct Y; repeat (simpl || case_decide); by eauto. Qed.
   Lemma gset_disj_union X Y : X ⊥ Y → GSet X ⋅ GSet Y = GSet (X ∪ Y).
