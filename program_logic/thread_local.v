@@ -83,8 +83,8 @@ Section proofs.
       iIntros "!==>[HP $]".
       iInv tlN as "[[_ >Hdis2]|>Hitok]" "Hclose".
       + iCombine "Hdis" "Hdis2" as "Hdis".
-        iDestruct (own_valid with "Hdis") as %[_ Hval].
-        revert Hval. rewrite gset_disj_valid_op. set_solver.
+        iDestruct (own_valid with "Hdis") as %[_ Hval%gset_disj_valid_op].
+        set_solver.
       + iFrame. iApply "Hclose". iNext. iLeft. by iFrame.
     - iDestruct (tl_own_disjoint tid {[i]} {[i]} with "[-]") as %?; first by iFrame.
       set_solver.
