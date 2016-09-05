@@ -134,7 +134,7 @@ Qed.
 
 Lemma wp_frame_step_l E1 E2 e Φ R :
   to_val e = None → E2 ⊆ E1 →
-  (|={E1,E2}=> ▷ |={E2,E1}=> R) ★ WP e @ E2 {{ Φ }} ⊢ WP e @ E1 {{ v, R ★ Φ v }}.
+  (|={E1,E2}▷=> R) ★ WP e @ E2 {{ Φ }} ⊢ WP e @ E1 {{ v, R ★ Φ v }}.
 Proof.
   rewrite !wp_unfold /wp_pre. iIntros (??) "[HR [Hv|[_ H]]]".
   { iDestruct "Hv" as (v) "[% Hv]"; simplify_eq. }
@@ -189,7 +189,7 @@ Proof. iIntros "[??]". iApply (wp_strong_mono E E _ Φ); try iFrame; eauto. Qed.
 
 Lemma wp_frame_step_r E1 E2 e Φ R :
   to_val e = None → E2 ⊆ E1 →
-  WP e @ E2 {{ Φ }} ★ (|={E1,E2}=> ▷ |={E2,E1}=> R) ⊢ WP e @ E1 {{ v, Φ v ★ R }}.
+  WP e @ E2 {{ Φ }} ★ (|={E1,E2}▷=> R) ⊢ WP e @ E1 {{ v, Φ v ★ R }}.
 Proof.
   rewrite [(WP _ @ _ {{ _ }} ★ _)%I]comm; setoid_rewrite (comm _ _ R).
   apply wp_frame_step_l.
