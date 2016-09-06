@@ -141,7 +141,7 @@ Section proof.
     - wp_cas_suc.
       iDestruct "Hainv" as (s) "[Ho %]"; subst.
       iVs (own_update with "Ho") as "Ho".
-      { eapply auth_update_no_frag, (gset_alloc_empty_local_update n).
+      { eapply auth_update_no_frag, (gset_disj_alloc_empty_local_update n).
         rewrite elem_of_seq_set; omega. }
       iDestruct "Ho" as "[Hofull Hofrag]".
       iVs ("Hclose" with "[Hlo' Hln' Haown Hofull]").

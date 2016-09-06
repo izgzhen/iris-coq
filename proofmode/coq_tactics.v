@@ -88,7 +88,7 @@ Definition envs_split {M}
   | true => Some (Envs Γp Γs2, Envs Γp Γs1)
   end.
 
-Definition envs_persistent {M} (Δ : envs M) :=
+Definition env_spatial_is_nil {M} (Δ : envs M) :=
   if env_spatial Δ is Enil then true else false.
 
 Definition envs_clear_spatial {M} (Δ : envs M) : envs M :=
@@ -247,9 +247,10 @@ Proof.
   by rewrite IH wand_curry (comm uPred_sep).
 Qed.
 
-Lemma envs_persistent_persistent Δ : envs_persistent Δ = true → PersistentP Δ.
+Lemma env_spatial_is_nil_persistent Δ :
+  env_spatial_is_nil Δ = true → PersistentP Δ.
 Proof. intros; destruct Δ as [? []]; simplify_eq/=; apply _. Qed.
-Hint Immediate envs_persistent_persistent : typeclass_instances.
+Hint Immediate env_spatial_is_nil_persistent : typeclass_instances.
 
 Global Instance envs_Forall2_refl (R : relation (uPred M)) :
   Reflexive R → Reflexive (envs_Forall2 R).
@@ -365,7 +366,7 @@ Lemma tac_next Δ Δ' Q Q' :
 Proof. intros ?? HQ. by rewrite -(from_later Q) into_later_env_sound HQ. Qed.
 
 Lemma tac_löb Δ Δ' i Q :
-  envs_persistent Δ = true →
+  env_spatial_is_nil Δ = true →
   envs_app true (Esnoc Enil i (▷ Q)%I) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
@@ -387,7 +388,7 @@ Proof.
 Qed.
 
 (** * Always *)
-Lemma tac_always_intro Δ Q : envs_persistent Δ = true → (Δ ⊢ Q) → Δ ⊢ □ Q.
+Lemma tac_always_intro Δ Q : env_spatial_is_nil Δ = true → (Δ ⊢ Q) → Δ ⊢ □ Q.
 Proof. intros. by apply (always_intro _ _). Qed.
 
 Lemma tac_persistent Δ Δ' i p P P' Q :
@@ -401,7 +402,7 @@ Qed.
 
 (** * Implication and wand *)
 Lemma tac_impl_intro Δ Δ' i P Q :
-  envs_persistent Δ = true →
+  env_spatial_is_nil Δ = true →
   envs_app false (Esnoc Enil i P) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ P → Q.
 Proof.
