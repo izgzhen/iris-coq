@@ -7,23 +7,23 @@ From iris.heap_lang.lib Require Export lock.
 Import uPred.
 
 Definition wait_loop: val :=
-  rec: "wait_loop" "x" "lock" :=
-    let: "o" := !(Fst "lock") in
+  rec: "wait_loop" "x" "lk" :=
+    let: "o" := !(Fst "lk") in
     if: "x" = "o"
       then #() (* my turn *)
-      else "wait_loop" "x" "lock".
+      else "wait_loop" "x" "lk".
 
 Definition newlock : val := λ: <>, ((* owner *) ref #0, (* next *) ref #0).
 
 Definition acquire : val :=
-  rec: "acquire" "lock" :=
-    let: "n" := !(Snd "lock") in
-    if: CAS (Snd "lock") "n" ("n" + #1)
-      then wait_loop "n" "lock"
-      else "acquire" "lock".
+  rec: "acquire" "lk" :=
+    let: "n" := !(Snd "lk") in
+    if: CAS (Snd "lk") "n" ("n" + #1)
+      then wait_loop "n" "lk"
+      else "acquire" "lk".
 
-Definition release : val := λ: "lock",
-  (Fst "lock") <- !(Fst "lock") + #1.
+Definition release : val := λ: "lk",
+  (Fst "lk") <- !(Fst "lk") + #1.
 
 Global Opaque newlock acquire release wait_loop.
 
@@ -58,14 +58,14 @@ Section proof.
 
   Definition locked (γ : gname) : iProp Σ := (∃ o, own γ (◯ (Excl' o, ∅)))%I.
 
-  Global Instance lock_inv_ne n γs lo ln :
-    Proper (dist n ==> dist n) (lock_inv γs lo ln).
+  Global Instance lock_inv_ne n γ lo ln :
+    Proper (dist n ==> dist n) (lock_inv γ lo ln).
   Proof. solve_proper. Qed.
-  Global Instance is_lock_ne γs n l : Proper (dist n ==> dist n) (is_lock γs l).
+  Global Instance is_lock_ne γ n lk : Proper (dist n ==> dist n) (is_lock γ lk).
   Proof. solve_proper. Qed.
-  Global Instance is_lock_persistent γs l R : PersistentP (is_lock γs l R).
+  Global Instance is_lock_persistent γ lk R : PersistentP (is_lock γ lk R).
   Proof. apply _. Qed.
-  Global Instance locked_timeless γs : TimelessP (locked γs).
+  Global Instance locked_timeless γ : TimelessP (locked γ).
   Proof. apply _. Qed.
 
   Lemma locked_exclusive (γ : gname) : (locked γ ★ locked γ ⊢ False)%I.
@@ -88,8 +88,8 @@ Section proof.
     iVsIntro. iApply ("HΦ" $! (#lo, #ln)%V γ). iExists lo, ln. eauto.
   Qed.
 
-  Lemma wait_loop_spec γ l x R (Φ : val → iProp Σ) :
-    issued γ l x R ★ (locked γ -★ R -★ Φ #()) ⊢ WP wait_loop #x l {{ Φ }}.
+  Lemma wait_loop_spec γ lk x R (Φ : val → iProp Σ) :
+    issued γ lk x R ★ (locked γ -★ R -★ Φ #()) ⊢ WP wait_loop #x lk {{ Φ }}.
   Proof.
     iIntros "[Hl HΦ]". iDestruct "Hl" as (lo ln) "(% & #? & % & #? & Ht)".
     iLöb as "IH". wp_rec. subst. wp_let. wp_proj. wp_bind (! _)%E.
@@ -110,8 +110,8 @@ Section proof.
       wp_if. iApply ("IH" with "Ht"). by iExact "HΦ".
   Qed.
 
-  Lemma acquire_spec γ l R (Φ : val → iProp Σ) :
-    is_lock γ l R ★ (locked γ -★ R -★ Φ #()) ⊢ WP acquire l {{ Φ }}.
+  Lemma acquire_spec γ lk R (Φ : val → iProp Σ) :
+    is_lock γ lk R ★ (locked γ -★ R -★ Φ #()) ⊢ WP acquire lk {{ Φ }}.
   Proof.
     iIntros "[Hl HΦ]". iDestruct "Hl" as (lo ln) "(% & #? & % & #?)".
     iLöb as "IH". wp_rec. wp_bind (! _)%E. subst. wp_proj.
@@ -142,8 +142,8 @@ Section proof.
       iVsIntro. wp_if. by iApply "IH".
   Qed.
 
-  Lemma release_spec γ l R (Φ : val → iProp Σ):
-    is_lock γ l R ★ locked γ ★ R ★ Φ #() ⊢ WP release l {{ Φ }}.
+  Lemma release_spec γ lk R (Φ : val → iProp Σ):
+    is_lock γ lk R ★ locked γ ★ R ★ Φ #() ⊢ WP release lk {{ Φ }}.
   Proof.
     iIntros "(Hl & Hγ & HR & HΦ)".
     iDestruct "Hl" as (lo ln) "(% & #? & % & #?)"; subst.
