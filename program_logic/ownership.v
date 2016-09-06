@@ -156,7 +156,7 @@ Proof.
   iIntros (Hfresh) "[Hw HP]". iDestruct "Hw" as (I) "[? HI]".
   iVs (own_empty (A:=gset_disjUR positive) disabled_name) as "HE".
   iVs (own_updateP with "HE") as "HE".
-  { apply (gset_alloc_empty_updateP_strong' (λ i, I !! i = None ∧ φ i)).
+  { apply (gset_disj_alloc_empty_updateP_strong' (λ i, I !! i = None ∧ φ i)).
     intros E. destruct (Hfresh (E ∪ dom _ I))
       as (i & [? HIi%not_elem_of_dom]%not_elem_of_union & ?); eauto. }
   iDestruct "HE" as (X) "[Hi HE]"; iDestruct "Hi" as %(i & -> & HIi & ?).

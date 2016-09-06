@@ -56,7 +56,7 @@ Section proofs.
     iVs (own_empty (A:=prodUR coPset_disjUR (gset_disjUR positive)) tid) as "Hempty".
     iVs (own_updateP with "Hempty") as ([m1 m2]) "[Hm Hown]".
     { apply prod_updateP'. apply cmra_updateP_id, (reflexivity (R:=eq)).
-      apply (gset_alloc_empty_updateP_strong' (λ i, i ∈ nclose N)).
+      apply (gset_disj_alloc_empty_updateP_strong' (λ i, i ∈ nclose N)).
       intros Ef. exists (coPpick (nclose N ∖ coPset.of_gset Ef)).
       rewrite -coPset.elem_of_of_gset comm -elem_of_difference.
       apply coPpick_elem_of=> Hfin.
