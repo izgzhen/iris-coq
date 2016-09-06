@@ -984,6 +984,10 @@ Section prod_unit.
 
   Lemma pair_split (x : A) (y : B) : (x, y) ≡ (x, ∅) ⋅ (∅, y).
   Proof. by rewrite pair_op left_id right_id. Qed.
+
+  Lemma pair_split_L `{!LeibnizEquiv A, !LeibnizEquiv B} (x : A) (y : B) :
+    (x, y) = (x, ∅) ⋅ (∅, y).
+  Proof. unfold_leibniz. apply pair_split. Qed.
 End prod_unit.
 
 Arguments prodUR : clear implicits.
