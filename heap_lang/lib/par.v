@@ -9,7 +9,7 @@ Definition par : val :=
     let: "handle" := spawn (Fst "fs") in
     let: "v2" := Snd "fs" #() in
     let: "v1" := join "handle" in
-    Pair "v1" "v2".
+    ("v1", "v2").
 Notation "e1 || e2" := (par (Pair (λ: <>, e1) (λ: <>, e2)))%E : expr_scope.
 Global Opaque par.
 
