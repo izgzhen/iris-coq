@@ -322,17 +322,59 @@ Proof.
     unseal. rewrite right_id in Hvs *; naive_solver.
 Qed.
 
+(* Nevertheless, we can prove a weaker form of adequacy (which is equvialent to adequacy
+   under classical axioms) directly without passing through the proofs for rvs: *)
+Lemma adequacy_helper1 P n k x:
+  ✓{S n + k} x → ¬¬ (Nat.iter (S n) (λ P, |=n=> ▷ P)%I P (S n + k) x) 
+            → ¬¬ (∃ x', ✓{n + k} (x') ∧ Nat.iter n (λ P, |=n=> ▷ P)%I P (n + k) (x')).
+Proof.
+  revert k P x. induction n.
+  - rewrite /uPred_nnvs. unseal=> k P x Hx Hf1 Hf2.
+    eapply Hf1. intros Hf3.
+    eapply (laterN_big (S k) (S k)); eauto.
+    specialize (Hf3 (S k) (S k) ∅). rewrite right_id in Hf3 *. unseal.
+    intros Hf3. eapply Hf3; eauto.
+    intros ??? Hx'. rewrite left_id in Hx' *=> Hx'.
+    unseal. 
+    assert (n' < S k ∨ n' = S k) as [|] by omega.
+    * intros. move:(laterN_small n' (S k) x' False). rewrite //=. unseal. intros Hsmall. 
+      eapply Hsmall; eauto.
+    * subst. intros. exfalso. eapply Hf2. exists x'. split; eauto using cmra_validN_S.
+  - intros k P x Hx. rewrite ?Nat_iter_S_r. 
+    replace (S (S n) + k) with (S n + (S k)) by omega.
+    replace (S n + k) with (n + (S k)) by omega.
+    intros. eapply IHn. replace (S n + S k) with (S (S n) + k) by omega. eauto.
+    rewrite ?Nat_iter_S_r. eauto.
+Qed.
 
-(* Questions:
-   1) Can we prove a weakened form of adequacy for nnvs directly, such as :
+Lemma adequacy_helper2 P n k x:
+  ✓{S n + k} x → ¬¬ (Nat.iter (S n) (λ P, |=n=> ▷ P)%I P (S n + k) x) 
+            → ¬¬ (∃ x', ✓{k} (x') ∧ Nat.iter 0 (λ P, |=n=> ▷ P)%I P k (x')).
+Proof.
+  revert x. induction n.
+  - specialize (adequacy_helper1 P 0). rewrite //=. naive_solver.
+  - intros ?? Hfal%adequacy_helper1; eauto using cmra_validN_S.
+    intros Hfal'. eapply Hfal. intros (x''&?&?).
+    eapply IHn; eauto.
+Qed.
 
-      Lemma adequacy' φ n : (True ⊢ Nat.iter n (λ P, |=n=> ▷ P) (■ φ)) → ¬¬ φ.
+Lemma adequacy φ n : (True ⊢ Nat.iter n (λ P, |=n=> ▷ P) (■ φ)) → ¬¬ φ.
+Proof.
+  cut (∀ x, ✓{S n} x → Nat.iter n (λ P, |=n=> ▷ P)%I (■ φ)%I (S n) x → ¬¬φ).
+  { intros help H. eapply (help ∅); eauto using ucmra_unit_validN.
+    eapply H; try unseal; eauto using ucmra_unit_validN. red; rewrite //=. }
+  destruct n.
+  - rewrite //=; unseal; auto.
+  - intros ??? Hfal.
+    eapply (adequacy_helper2 _ n 1); (replace (S n + 1) with (S (S n)) by omega); eauto.
+    unseal. intros (x'&?&Hphi). simpl in *.
+    eapply Hfal. auto.
+Qed.
 
-      One idea may be to prove a limited adequacy theorem for each
-      nnvs_k and use the limiting argument we did for transitivity.
+(* Open question:
 
-   2) Do the basic properties of the |=r=> modality (rvs_intro, rvs_mono, rvs_trans, rvs_frame_r,
+   Do the basic properties of the |=r=> modality (rvs_intro, rvs_mono, rvs_trans, rvs_frame_r,
       rvs_ownM_updateP, and adequacy) uniquely characterize |=r=>?
- *)
+*)
 
 End rvs_nnvs.
