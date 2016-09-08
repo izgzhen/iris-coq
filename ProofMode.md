@@ -40,8 +40,10 @@ Context management
   `H`.
 - `iAssert P with "spat" as "ipat"` : create a new goal with conclusion `P` and
   put `P` in the context of the original goal. The specialization pattern
-  `spat` specifies which hypotheses will be consumed by proving `P` and the
+  `spat` specifies which hypotheses will be consumed by proving `P`. The
   introduction pattern `ipat` specifies how to eliminate `P`.
+- `iAssert P with "spat" as %cpat` : assert `P` and eliminate it using the Coq
+  introduction pattern `cpat`.
 
 Introduction of logical connectives
 -----------------------------------

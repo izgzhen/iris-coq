@@ -833,7 +833,7 @@ Tactic Notation "iLöb" "(" ident(x1) ident(x2) ident(x3) ident(x4)
               ltac:(iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 )).
 
 (** * Assert *)
-Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as" constr(pat) :=
+Tactic Notation "iAssertCore" open_constr(Q) "with" constr(Hs) "as" tactic(tac) :=
   let H := iFresh in
   let Hs := spec_pat.parse Hs in
   lazymatch Hs with
@@ -842,7 +842,7 @@ Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as" constr(pat) :=
        [env_cbv; reflexivity
        |(*goal*)
        |apply _ || fail "iAssert:" Q "not persistent"
-       |iDestructHyp H as pat]
+       |tac H]
   | [SGoal ?k ?lr ?Hs] =>
      eapply tac_assert with _ _ _ lr Hs H Q _; (* (js:=Hs) (j:=H) (P:=Q) *)
        [match k with
@@ -851,12 +851,20 @@ Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as" constr(pat) :=
         end
        |env_cbv; reflexivity || fail "iAssert:" Hs "not found"
        |env_cbv; reflexivity|
-       |iDestructHyp H as pat]
+       |tac H]
   | ?pat => fail "iAssert: invalid pattern" pat
   end.
 
+Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as" constr(pat) :=
+  iAssertCore Q with Hs as (fun H => iDestructHyp H as pat).
 Tactic Notation "iAssert" open_constr(Q) "as" constr(pat) :=
   iAssert Q with "[]" as pat.
+
+Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs)
+    "as" "%" simple_intropattern(pat) :=
+  iAssertCore Q with Hs as (fun H => iPure H as pat).
+Tactic Notation "iAssert" open_constr(Q) "as" "%" simple_intropattern(pat) :=
+  iAssert Q with "[]" as %pat.
 
 (** * Rewrite *)
 Local Ltac iRewriteFindPred :=
