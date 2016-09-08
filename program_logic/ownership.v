@@ -89,7 +89,7 @@ Proof. rewrite /ownE -own_op own_valid. by iIntros (?%coPset_disj_valid_op). Qed
 Lemma ownE_op' E1 E2 : E1 ⊥ E2 ∧ ownE (E1 ∪ E2) ⊣⊢ ownE E1 ★ ownE E2.
 Proof.
   iSplit; [iIntros "[% ?]"; by iApply ownE_op|].
-  iIntros "HE". iDestruct (ownE_disjoint with "#HE") as %?.
+  iIntros "HE". iDestruct (ownE_disjoint with "HE") as %?.
   iSplit; first done. iApply ownE_op; by try iFrame.
 Qed.
 Lemma ownE_singleton_twice i : ownE {[i]} ★ ownE {[i]} ⊢ False.
@@ -104,7 +104,7 @@ Proof. rewrite /ownD -own_op own_valid. by iIntros (?%gset_disj_valid_op). Qed.
 Lemma ownD_op' E1 E2 : E1 ⊥ E2 ∧ ownD (E1 ∪ E2) ⊣⊢ ownD E1 ★ ownD E2.
 Proof.
   iSplit; [iIntros "[% ?]"; by iApply ownD_op|].
-  iIntros "HE". iDestruct (ownD_disjoint with "#HE") as %?.
+  iIntros "HE". iDestruct (ownD_disjoint with "HE") as %?.
   iSplit; first done. iApply ownD_op; by try iFrame.
 Qed.
 Lemma ownD_singleton_twice i : ownD {[i]} ★ ownD {[i]} ⊢ False.
@@ -132,19 +132,19 @@ Qed.
 Lemma ownI_open i P : wsat ★ ownI i P ★ ownE {[i]} ⊢ wsat ★ ▷ P ★ ownD {[i]}.
 Proof.
   rewrite /ownI. iIntros "(Hw & Hi & HiE)". iDestruct "Hw" as (I) "[? HI]".
-  iDestruct (invariant_lookup I i P with "[#]") as (Q) "[% #HPQ]"; [by iFrame|].
+  iDestruct (invariant_lookup I i P with "[-]") as (Q) "[% #HPQ]"; [by iFrame|].
   iDestruct (big_sepM_delete _ _ i with "HI") as "[[[HQ $]|?] HI]"; eauto.
   - iSplitR "HQ"; last by iNext; iRewrite -"HPQ".
     iExists I. iFrame "Hw". iApply (big_sepM_delete _ _ i); eauto.
     iFrame "HI"; eauto.
-  - iDestruct (ownE_singleton_twice with "[#]") as %[]. by iFrame.
+  - iDestruct (ownE_singleton_twice with "[-]") as %[]. by iFrame.
 Qed.
 Lemma ownI_close i P : wsat ★ ownI i P ★ ▷ P ★ ownD {[i]} ⊢ wsat ★ ownE {[i]}.
 Proof.
   rewrite /ownI. iIntros "(Hw & Hi & HP & HiD)". iDestruct "Hw" as (I) "[? HI]".
-  iDestruct (invariant_lookup with "[#]") as (Q) "[% #HPQ]"; first by iFrame.
+  iDestruct (invariant_lookup with "[-]") as (Q) "[% #HPQ]"; first by iFrame.
   iDestruct (big_sepM_delete _ _ i with "HI") as "[[[HQ ?]|$] HI]"; eauto.
-  - iDestruct (ownD_singleton_twice with "[#]") as %[]. by iFrame.
+  - iDestruct (ownD_singleton_twice with "[-]") as %[]. by iFrame.
   - iExists I. iFrame "Hw". iApply (big_sepM_delete _ _ i); eauto.
     iFrame "HI". iLeft. iFrame "HiD". by iNext; iRewrite "HPQ".
 Qed.

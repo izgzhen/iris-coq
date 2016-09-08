@@ -95,6 +95,6 @@ Proof.
     + iApply worker_spec; auto.
     + iApply worker_spec; auto.
     + auto.
-  - iIntros (_ v) "[_ H]"; iPoseProof (Q_res_join with "H"). auto.
+  - iIntros (_ v) "[_ H]". iDestruct (Q_res_join with "H") as "?". auto.
 Qed.
 End proof.

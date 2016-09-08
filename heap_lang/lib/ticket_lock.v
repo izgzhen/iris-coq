@@ -166,7 +166,7 @@ Section proof.
         as %[[[[?|] ?] [=]%leibniz_equiv_iff] ?]%auth_valid_discrete. }
     iDestruct "Haown" as "[[Hγo' _]|?]".
     { iCombine "Hγo" "Hγo'" as "Hγo".
-      iDestruct (own_valid with "#Hγo") as %[[] ?]. }
+      iDestruct (own_valid with "Hγo") as %[[] ?]. }
     iCombine "Hauth" "Hγo" as "Hauth".
     iVs (own_update with "Hauth") as "Hauth".
     { rewrite pair_split_L. apply: (auth_update _ _ (Excl' (S o), _)). (* FIXME: apply is slow *)

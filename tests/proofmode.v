@@ -68,7 +68,7 @@ Lemma demo_5 (M : ucmraT) (x y : M) (P : uPred M) :
 Proof.
   iIntros "H1 H2".
   iRewrite (uPred.eq_sym x x with "[#]"); first done.
-  iRewrite -("H1" $! _ with "[#]"); first done.
+  iRewrite -("H1" $! _ with "[-]"); first done.
   done.
 Qed.
 

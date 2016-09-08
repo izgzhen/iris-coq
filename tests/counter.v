@@ -113,7 +113,7 @@ Proof.
   wp_bind (CAS _ _ _). iInv N as (c') ">[Hl Hγ]" "Hclose".
   destruct (decide (c' = c)) as [->|].
   - iCombine "Hγ" "Hγf" as "Hγ".
-    iDestruct (own_valid with "#Hγ") as %?%auth_frag_valid; rewrite -auth_frag_op //.
+    iDestruct (own_valid with "Hγ") as %?%auth_frag_valid; rewrite -auth_frag_op //.
     iVs (own_update with "Hγ") as "Hγ"; first apply M_update.
     rewrite (auth_frag_op (S n) (S c)); last lia; iDestruct "Hγ" as "[Hγ Hγf]".
     wp_cas_suc. iVs ("Hclose" with "[Hl Hγ]").
@@ -129,7 +129,7 @@ Lemma read_spec l n :
 Proof.
   iIntros "!# Hl /=". iDestruct "Hl" as (N γ) "(% & #Hh & #Hinv & Hγf)".
   rewrite /read /=. wp_let. iInv N as (c) "[Hl Hγ]" "Hclose". wp_load.
-  iDestruct (own_valid γ (Frag n ⋅ Auth c) with "[#]") as % ?%auth_frag_valid.
+  iDestruct (own_valid γ (Frag n ⋅ Auth c) with "[-]") as % ?%auth_frag_valid.
   { iApply own_op. by iFrame. }
   rewrite (auth_frag_op c c); last lia; iDestruct "Hγ" as "[Hγ Hγf']".
   iVs ("Hclose" with "[Hl Hγ]"); [iNext; iExists c; by iFrame|].
