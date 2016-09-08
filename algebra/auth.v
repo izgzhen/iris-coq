@@ -95,9 +95,10 @@ Proof.
   split; [intros [[z1 z2] Hz]; split; [exists z1|exists z2]; apply Hz|].
   intros [[z1 Hz1] [z2 Hz2]]; exists (Auth z1 z2); split; auto.
 Qed.
-Lemma authoritative_validN n (x : auth A) : ✓{n} x → ✓{n} authoritative x.
+
+Lemma authoritative_validN n x : ✓{n} x → ✓{n} authoritative x.
 Proof. by destruct x as [[[]|]]. Qed.
-Lemma auth_own_validN n (x : auth A) : ✓{n} x → ✓{n} auth_own x.
+Lemma auth_own_validN n x : ✓{n} x → ✓{n} auth_own x.
 Proof. destruct x as [[[]|]]; naive_solver eauto using cmra_validN_includedN. Qed.
 
 Lemma auth_valid_discrete `{CMRADiscrete A} x :
@@ -109,6 +110,14 @@ Lemma auth_valid_discrete `{CMRADiscrete A} x :
 Proof.
   destruct x as [[[?|]|] ?]; simpl; try done.
   setoid_rewrite <-cmra_discrete_included_iff; naive_solver eauto using 0.
+Qed.
+
+Lemma authoritative_valid  x : ✓ x → ✓ authoritative x.
+Proof. by destruct x as [[[]|]]. Qed.
+Lemma auth_own_valid `{CMRADiscrete A} x : ✓ x → ✓ auth_own x.
+Proof.
+  rewrite auth_valid_discrete.
+  destruct x as [[[]|]]; naive_solver eauto using cmra_valid_included.
 Qed.
 
 Lemma auth_cmra_mixin : CMRAMixin (auth A).
