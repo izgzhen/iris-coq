@@ -13,7 +13,7 @@ Definition pvs_eq : @pvs = @pvs_def := proj2_sig pvs_aux.
 Arguments pvs {_ _ _} _ _ _%I.
 Instance: Params (@pvs) 5.
 
-Notation "|={ E1 , E2 }=> Q" := (pvs E1 E2 Q%I)
+Notation "|={ E1 , E2 }=> Q" := (pvs E1 E2 Q)
   (at level 99, E1, E2 at level 50, Q at level 200,
    format "|={ E1 , E2 }=>  Q") : uPred_scope.
 Notation "P ={ E1 , E2 }=★ Q" := (P -★ |={E1,E2}=> Q)%I
@@ -22,7 +22,7 @@ Notation "P ={ E1 , E2 }=★ Q" := (P -★ |={E1,E2}=> Q)%I
 Notation "P ={ E1 , E2 }=> Q" := (P ⊢ |={E1,E2}=> Q)
   (at level 99, E1, E2 at level 50, Q at level 200, only parsing) : C_scope.
 
-Notation "|={ E }=> Q" := (pvs E E Q%I)
+Notation "|={ E }=> Q" := (pvs E E Q)
   (at level 99, E at level 50, Q at level 200,
    format "|={ E }=>  Q") : uPred_scope.
 Notation "P ={ E }=★ Q" := (P -★ |={E}=> Q)%I
@@ -31,7 +31,7 @@ Notation "P ={ E }=★ Q" := (P -★ |={E}=> Q)%I
 Notation "P ={ E }=> Q" := (P ⊢ |={E}=> Q)
   (at level 99, E at level 50, Q at level 200, only parsing) : C_scope.
 
-Notation "|={ E1 , E2 }▷=> Q" := (|={E1%I,E2%I}=> ▷ |={E2,E1}=> Q)%I
+Notation "|={ E1 , E2 }▷=> Q" := (|={E1,E2}=> (▷ |={E2,E1}=> Q))%I
   (at level 99, E1, E2 at level 50, Q at level 200,
    format "|={ E1 , E2 }▷=>  Q") : uPred_scope.
 Notation "|={ E }▷=> Q" := (|={E,E}▷=> Q)%I

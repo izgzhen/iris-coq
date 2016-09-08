@@ -4,15 +4,16 @@ From iris.proofmode Require Import pviewshifts invariants.
 Definition vs `{irisG Λ Σ} (E1 E2 : coPset) (P Q : iProp Σ) : iProp Σ :=
   (□ (P → |={E1,E2}=> Q))%I.
 Arguments vs {_ _ _} _ _ _%I _%I.
+
 Instance: Params (@vs) 5.
-Notation "P ={ E1 , E2 }=> Q" := (vs E1 E2 P%I Q%I)
+Notation "P ={ E1 , E2 }=> Q" := (vs E1 E2 P Q)
   (at level 99, E1,E2 at level 50, Q at level 200,
    format "P  ={ E1 , E2 }=>  Q") : uPred_scope.
 Notation "P ={ E }=> Q" := (P ={E,E}=> Q)%I
   (at level 99, E at level 50, Q at level 200,
    format "P  ={ E }=>  Q") : uPred_scope.
 
-Notation "P ={ E1 , E2 }▷=> Q" := (P ={E1%I,E2%I}=> ▷ |={E2,E1}=> Q)%I
+Notation "P ={ E1 , E2 }▷=> Q" := (P ={E1,E2}=> ▷ |={E2,E1}=> Q)%I
   (at level 99, E1, E2 at level 50, Q at level 200,
    format "P ={ E1 , E2 }▷=>  Q") : uPred_scope.
 Notation "P ={ E }▷=> Q" := (P ={E,E}▷=> Q)%I
