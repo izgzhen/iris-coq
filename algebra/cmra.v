@@ -342,6 +342,8 @@ Global Instance cmra_included_trans: Transitive (@included A _ _).
 Proof.
   intros x y z [z1 Hy] [z2 Hz]; exists (z1 ⋅ z2). by rewrite assoc -Hy -Hz.
 Qed.
+Lemma cmra_valid_included x y : ✓ y → x ≼ y → ✓ x.
+Proof. intros Hyv [z ?]; setoid_subst; eauto using cmra_valid_op_l. Qed.
 Lemma cmra_validN_includedN n x y : ✓{n} y → x ≼{n} y → ✓{n} x.
 Proof. intros Hyv [z ?]; cofe_subst y; eauto using cmra_validN_op_l. Qed.
 Lemma cmra_validN_included n x y : ✓{n} y → x ≼ y → ✓{n} x.
