@@ -948,6 +948,9 @@ Tactic Notation "iVs" open_constr(lem) "as" "(" simple_intropattern(x1)
   iDestructCore lem as false (fun H =>
     iVsCore H; last iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 x8 ) pat).
 
+Tactic Notation "iVs" open_constr(lem) "as" "%" simple_intropattern(pat) :=
+  iDestructCore lem as false (fun H => iVsCore H; iPure H as pat).
+
 (* Make sure that by and done solve trivial things in proof mode *)
 Hint Extern 0 (of_envs _ ⊢ _) => by iPureIntro.
 Hint Extern 0 (of_envs _ ⊢ _) => iAssumption.
