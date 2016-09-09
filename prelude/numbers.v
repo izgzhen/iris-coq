@@ -551,22 +551,18 @@ Proof.
   change 2%positive with (2 * 1)%positive. by rewrite Qp_div_S, Qp_div_1.
 Qed.
 
-Lemma Qp_lower_bound q1 q2:
-  ∃ q q1' q2', (q1 = q + q1' ∧ q2 = q + q2')%Qp.
+Lemma Qp_lower_bound q1 q2 : ∃ q q1' q2', (q1 = q + q1' ∧ q2 = q + q2')%Qp.
 Proof.
-  assert (Hdiff : ∀ a b:Qp, (a ≤ b)%Qc →
-                            ∃ c, (b - a / 2)%Qp = Some c ∧ (a/2 + c)%Qp = b).
-  { intros a b Hab. unfold Qp_minus. destruct decide as [|[]].
-    - eexists. split. done. apply Qp_eq. simpl. ring.
-    - eapply Qclt_le_trans; [|by apply Qcplus_le_mono_r, Hab].
-      change (0 < a - a/2)%Qc.
-      replace (a - a / 2)%Qc with (a * (1 - 1/2))%Qc by ring.
-      replace 0%Qc with (0 * (1-1/2))%Qc by ring. by apply Qcmult_lt_compat_r. }
-  destruct (Qc_le_dec q1 q2) as [LE|LE%Qclt_nge%Qclt_le_weak].
-  - destruct (Hdiff _ _ LE) as [q2' [EQ <-]].
-    exists (q1 / 2)%Qp, (q1 / 2)%Qp, q2'.
-    split; apply Qp_eq. by rewrite Qp_div_2. ring.
-  - destruct (Hdiff _ _ LE) as [q1' [EQ <-]].
-    exists (q2 / 2)%Qp, q1', (q2 / 2)%Qp.
-    split; apply Qp_eq. ring. by rewrite Qp_div_2.
+  revert q1 q2. cut (∀ q1 q2 : Qp, (q1 ≤ q2)%Qc →
+    ∃ q q1' q2', (q1 = q + q1' ∧ q2 = q + q2')%Qp).
+  { intros help q1 q2.
+    destruct (Qc_le_dec q1 q2) as [LE|LE%Qclt_nge%Qclt_le_weak]; [by eauto|].
+    destruct (help q2 q1) as (q&q1'&q2'&?&?); eauto. }
+  intros q1 q2 Hq. exists (q1 / 2)%Qp, (q1 / 2)%Qp.
+  assert (0 < q2 - q1 / 2)%Qc as Hq2'.
+  { eapply Qclt_le_trans; [|by apply Qcplus_le_mono_r, Hq].
+    replace (q1 - q1 / 2)%Qc with (q1 * (1 - 1/2))%Qc by ring.
+    replace 0%Qc with (0 * (1-1/2))%Qc by ring. by apply Qcmult_lt_compat_r. }
+  exists (mk_Qp (q2 - q1 / 2%Z) Hq2'). split; [by rewrite Qp_div_2|].
+  apply Qp_eq; simpl. ring.
 Qed.
