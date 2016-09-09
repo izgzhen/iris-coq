@@ -550,3 +550,23 @@ Lemma Qp_div_2 x : (x / 2 + x / 2 = x)%Qp.
 Proof.
   change 2%positive with (2 * 1)%positive. by rewrite Qp_div_S, Qp_div_1.
 Qed.
+
+Lemma Qp_lower_bound q1 q2:
+  ∃ q q1' q2', (q1 = q + q1' ∧ q2 = q + q2')%Qp.
+Proof.
+  assert (Hdiff : ∀ a b:Qp, (a ≤ b)%Qc →
+                            ∃ c, (b - a / 2)%Qp = Some c ∧ (a/2 + c)%Qp = b).
+  { intros a b Hab. unfold Qp_minus. destruct decide as [|[]].
+    - eexists. split. done. apply Qp_eq. simpl. ring.
+    - eapply Qclt_le_trans; [|by apply Qcplus_le_mono_r, Hab].
+      change (0 < a - a/2)%Qc.
+      replace (a - a / 2)%Qc with (a * (1 - 1/2))%Qc by ring.
+      replace 0%Qc with (0 * (1-1/2))%Qc by ring. by apply Qcmult_lt_compat_r. }
+  destruct (Qc_le_dec q1 q2) as [LE|LE%Qclt_nge%Qclt_le_weak].
+  - destruct (Hdiff _ _ LE) as [q2' [EQ <-]].
+    exists (q1 / 2)%Qp, (q1 / 2)%Qp, q2'.
+    split; apply Qp_eq. by rewrite Qp_div_2. ring.
+  - destruct (Hdiff _ _ LE) as [q1' [EQ <-]].
+    exists (q2 / 2)%Qp, q1', (q2 / 2)%Qp.
+    split; apply Qp_eq. ring. by rewrite Qp_div_2.
+Qed.
