@@ -134,7 +134,7 @@ Proof.
   rewrite pvs_eq in HI;
     iVs (HI with "HI [Hw HE]") as "> (_ & _ & H)"; first by iFrame.
   iDestruct "H" as (σ2') "[Hσf %]".
-  iDestruct (ownP_agree σ2 σ2' with "[#]") as %<-. by iFrame. eauto.
+  iDestruct (ownP_agree σ2 σ2' with "[-]") as %<-. by iFrame. eauto.
 Qed.
 End adequacy.
 

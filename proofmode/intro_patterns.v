@@ -19,6 +19,15 @@ Inductive intro_pat :=
   | IAll : intro_pat
   | IClear : list (bool * string) → intro_pat. (* true = frame, false = clear *)
 
+Fixpoint intro_pat_persistent (p : intro_pat) :=
+  match p with
+  | IPureElim => true
+  | IAlwaysElim _ => true
+  | ILaterElim p => intro_pat_persistent p
+  | IList pps => forallb (forallb intro_pat_persistent) pps
+  | _ => false
+  end.
+
 Module intro_pat.
 Inductive token :=
   | TName : string → token

@@ -6,7 +6,7 @@ Inductive spec_pat :=
   | SGoal : spec_goal_kind → bool → list string → spec_pat
   | SGoalPersistent : spec_pat
   | SGoalPure : spec_pat
-  | SName : bool → string → spec_pat (* first arg = persistent *)
+  | SName : string → spec_pat
   | SForall : spec_pat.
 
 Module spec_pat.
@@ -44,13 +44,12 @@ Inductive state :=
 Fixpoint parse_go (ts : list token) (k : list spec_pat) : option (list spec_pat) :=
   match ts with
   | [] => Some (rev k)
-  | TName s :: ts => parse_go ts (SName false s :: k)
+  | TName s :: ts => parse_go ts (SName s :: k)
   | TBracketL :: TPersistent :: TBracketR :: ts => parse_go ts (SGoalPersistent :: k)
   | TBracketL :: TPure :: TBracketR :: ts => parse_go ts (SGoalPure :: k)
   | TBracketL :: ts => parse_goal ts GoalStd false [] k
   | TVs :: TBracketL :: ts => parse_goal ts GoalVs false [] k
   | TVs :: ts => parse_go ts (SGoal GoalVs true [] :: k)
-  | TPersistent :: TName s :: ts => parse_go ts (SName true s :: k)
   | TForall :: ts => parse_go ts (SForall :: k)
   | _ => None
   end

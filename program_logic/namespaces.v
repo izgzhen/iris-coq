@@ -43,41 +43,27 @@ Proof. apply nclose_subseteq with x, encode_nclose. Qed.
 Lemma nclose_infinite N : ¬set_finite (nclose N).
 Proof. rewrite nclose_eq. apply coPset_suffixes_infinite. Qed.
 
-Instance ndisjoint : Disjoint namespace := λ N1 N2,
-  ∃ N1' N2', N1' `suffix_of` N1 ∧ N2' `suffix_of` N2 ∧
-             length N1' = length N2' ∧ N1' ≠ N2'.
-Typeclasses Opaque ndisjoint.
+Instance ndisjoint : Disjoint namespace := λ N1 N2, nclose N1 ⊥ nclose N2.
 
 Section ndisjoint.
   Context `{Countable A}.
   Implicit Types x y : A.
 
-  Global Instance ndisjoint_symmetric : Symmetric ndisjoint.
-  Proof. intros N1 N2. rewrite /disjoint /ndisjoint; naive_solver. Qed.
-
   Lemma ndot_ne_disjoint N x y : x ≠ y → N .@ x ⊥ N .@ y.
-  Proof. intros. exists (N .@ x), (N .@ y); rewrite ndot_eq; naive_solver. Qed.
-
-  Lemma ndot_preserve_disjoint_l N1 N2 x : N1 ⊥ N2 → N1 .@ x ⊥ N2.
   Proof.
-    intros (N1' & N2' & Hpr1 & Hpr2 & Hl & Hne). exists N1', N2'.
-    split_and?; try done; []. rewrite ndot_eq. by apply suffix_of_cons_r.
+    intros Hxy a. rewrite !nclose_eq !elem_coPset_suffixes !ndot_eq.
+    intros [qx ->] [qy]. by intros [= ?%encode_inj]%list_encode_suffix_eq.
   Qed.
 
-  Lemma ndot_preserve_disjoint_r N1 N2 x : N1 ⊥ N2 → N1 ⊥ N2 .@ x .
+  Lemma ndot_preserve_disjoint_l N E x : nclose N ⊥ E → nclose (N .@ x) ⊥ E.
+  Proof. intros. pose proof (nclose_subseteq N x). set_solver. Qed.
+
+  Lemma ndot_preserve_disjoint_r N E x : E ⊥ nclose N → E ⊥ nclose (N .@ x).
   Proof. intros. by apply symmetry, ndot_preserve_disjoint_l. Qed.
 
-  Lemma ndisj_disjoint N1 N2 : N1 ⊥ N2 → nclose N1 ⊥ nclose N2.
-  Proof.
-    intros (N1' & N2' & [N1'' ->] & [N2'' ->] & Hl & Hne) p.
-    rewrite nclose_eq /nclose.
-    rewrite !elem_coPset_suffixes; intros [q ->] [q' Hq]; destruct Hne.
-    by rewrite !list_encode_app !assoc in Hq; apply list_encode_suffix_eq in Hq.
-  Qed.
-
-  Lemma ndisj_subseteq_difference N1 N2 E :
-    N1 ⊥ N2 → nclose N1 ⊆ E → nclose N1 ⊆ E ∖ nclose N2.
-  Proof. intros ?%ndisj_disjoint. set_solver. Qed.
+  Lemma ndisj_subseteq_difference N E F :
+    E ⊥ nclose N → E ⊆ F → E ⊆ F ∖ nclose N.
+  Proof. set_solver. Qed.
 End ndisjoint.
 
 (* The hope is that registering these will suffice to solve most goals

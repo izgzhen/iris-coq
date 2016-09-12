@@ -32,12 +32,18 @@ Context management
 - `iRename "H1" into "H2"` : rename the hypothesis `H1` into `H2`.
 - `iSpecialize pm_trm` : instantiate universal quantifiers and eliminate
   implications/wands of a hypothesis `pm_trm`. See proof mode terms below.
+- `iSpecialize pm_trm as #` : instantiate universal quantifiers and eliminate
+  implications/wands of a hypothesis whose conclusion is persistent. In this
+  case, all hypotheses can be used for proving the premises, as well as for
+  the resulting goal.
 - `iPoseProof pm_trm as "H"` : put `pm_trm` into the context as a new hypothesis
   `H`.
 - `iAssert P with "spat" as "ipat"` : create a new goal with conclusion `P` and
   put `P` in the context of the original goal. The specialization pattern
-  `spat` specifies which hypotheses will be consumed by proving `P` and the
+  `spat` specifies which hypotheses will be consumed by proving `P`. The
   introduction pattern `ipat` specifies how to eliminate `P`.
+- `iAssert P with "spat" as %cpat` : assert `P` and eliminate it using the Coq
+  introduction pattern `cpat`.
 
 Introduction of logical connectives
 -----------------------------------
@@ -60,12 +66,17 @@ Elimination of logical connectives
 ----------------------------------
 
 - `iExFalso` : Ex falso sequitur quod libet.
-- `iDestruct pm_trm as (x1 ... xn) "spat1 ... spatn"` : elimination of
-  existential quantifiers using Coq introduction patterns `x1 ... xn` and
-  elimination of object level connectives using the proof mode introduction
-  patterns `ipat1 ... ipatn`.
+- `iDestruct pm_trm as (x1 ... xn) "ipat"` : elimination of existential
+  quantifiers using Coq introduction patterns `x1 ... xn` and elimination of
+  object level connectives using the proof mode introduction pattern `ipat`.
+  In case all branches of `ipat` start with an `#` (moving the hypothesis to the
+  persistent context) or `%` (moving the hypothesis to the pure Coq context),
+  one can use all hypotheses for proving the premises of `pm_trm`, as well as
+  for proving the resulting goal.
 - `iDestruct pm_trm as %cpat` : elimination of a pure hypothesis using the Coq
-  introduction pattern `cpat`.
+  introduction pattern `cpat`. When using this tactic, all hypotheses can be
+  used for proving the premises of `pm_trm`, as well as for proving the
+  resulting goal.
 
 Separating logic specific tactics
 ---------------------------------
@@ -180,9 +191,9 @@ so called specification patterns to express this splitting:
 - `==>[H1 ... Hn]` : same as the above pattern, but can only be used if the goal
   is a primitive view shift, in which case the view shift will be kept in the
   goal of the premise too.
-- `[#]` : This pattern can be used when eliminating `P -★ Q` when either `P` or
-  `Q` is persistent. In this case, all hypotheses are available in the goal for
-  the premise as none will be consumed.
+- `[#]` : This pattern can be used when eliminating `P -★ Q` with `P`
+  persistent. Using this pattern, all hypotheses are available in the goal for
+  `P`, as well the remaining goal.
 - `[%]` : This pattern can be used when eliminating `P -★ Q` when `P` is pure.
   It will generate a Coq goal for `P` and does not consume any hypotheses.
 - `*` : instantiate all top-level universal quantifiers with meta variables.

@@ -488,7 +488,7 @@ Proof.
   by rewrite always_if_elim assoc !wand_elim_r.
 Qed.
 
-Lemma tac_specialize_pure Δ Δ' j q R P1 P2 φ Q :
+Lemma tac_specialize_assert_pure Δ Δ' j q R P1 P2 φ Q :
   envs_lookup j Δ = Some (q, R) →
   IntoWand R P1 P2 → FromPure P1 φ →
   envs_simple_replace j q (Esnoc Enil j P2) Δ = Some Δ' →
@@ -498,24 +498,31 @@ Proof.
   by rewrite right_id (into_wand R) -(from_pure P1) // wand_True wand_elim_r.
 Qed.
 
-Lemma tac_specialize_persistent Δ Δ' Δ'' j q P1 P2 R Q :
+Lemma tac_specialize_assert_persistent Δ Δ' Δ'' j q P1 P2 R Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
-  IntoWand R P1 P2 →
+  IntoWand R P1 P2 → PersistentP P1 →
   envs_simple_replace j q (Esnoc Enil j P2) Δ = Some Δ'' →
-  (Δ' ⊢ P1) → (PersistentP P1 ∨ PersistentP P2) →
-  (Δ'' ⊢ Q) → Δ ⊢ Q.
+  (Δ' ⊢ P1) → (Δ'' ⊢ Q) → Δ ⊢ Q.
 Proof.
-  intros [? ->]%envs_lookup_delete_Some ?? HP1 [?|?] <-.
-  - rewrite envs_lookup_sound //.
-    rewrite -(idemp uPred_and (envs_delete _ _ _)).
-    rewrite {1}HP1 (persistentP P1) always_and_sep_l assoc.
-    rewrite envs_simple_replace_sound' //; simpl.
-    rewrite right_id (into_wand R) (always_elim_if q) -always_if_sep wand_elim_l.
-    by rewrite wand_elim_r.
-  - rewrite -(idemp uPred_and Δ) {1}envs_lookup_sound //; simpl; rewrite HP1.
-    rewrite envs_simple_replace_sound //; simpl.
-    rewrite (sep_elim_r _ (_ -★ _)) right_id (into_wand R) always_if_elim.
-    by rewrite wand_elim_l always_and_sep_l -{1}(always_if_always q P2) wand_elim_r.
+  intros [? ->]%envs_lookup_delete_Some ??? HP1 <-.
+  rewrite envs_lookup_sound //.
+  rewrite -(idemp uPred_and (envs_delete _ _ _)).
+  rewrite {1}HP1 (persistentP P1) always_and_sep_l assoc.
+  rewrite envs_simple_replace_sound' //; simpl.
+  rewrite right_id (into_wand R) (always_elim_if q) -always_if_sep wand_elim_l.
+  by rewrite wand_elim_r.
+Qed.
+
+Lemma tac_specialize_persistent_helper Δ Δ' j q P R Q :
+  envs_lookup j Δ = Some (q,P) →
+  (Δ ⊢ R) → PersistentP R →
+  envs_replace j q true (Esnoc Enil j R) Δ = Some Δ' →
+  (Δ' ⊢ Q) → Δ ⊢ Q.
+Proof.
+  intros ? HR ?? <-.
+  rewrite -(idemp uPred_and Δ) {1}HR always_and_sep_l.
+  rewrite envs_replace_sound //; simpl.
+  by rewrite right_id assoc (sep_elim_l R) always_always wand_elim_r.
 Qed.
 
 Lemma tac_revert Δ Δ' i p P Q :

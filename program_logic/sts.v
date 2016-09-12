@@ -95,7 +95,7 @@ Section sts.
   Proof.
     iIntros "[Hinv Hγf]". rewrite /sts_ownS /sts_inv /sts_own.
     iDestruct "Hinv" as (s) "[>Hγ Hφ]".
-    iCombine "Hγ" "Hγf" as "Hγ"; iDestruct (own_valid with "#Hγ") as %Hvalid.
+    iCombine "Hγ" "Hγf" as "Hγ"; iDestruct (own_valid with "Hγ") as %Hvalid.
     assert (s ∈ S) by eauto using sts_auth_frag_valid_inv.
     assert (✓ sts_frag S T) as [??] by eauto using cmra_valid_op_r.
     rewrite sts_op_auth_frag //.

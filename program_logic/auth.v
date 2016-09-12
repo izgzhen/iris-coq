@@ -98,7 +98,7 @@ Section auth.
   Proof.
     iIntros (?) "(#? & >Hγf)". rewrite /auth_ctx /auth_own.
     iInv N as (a') "[>Hγ Hφ]" "Hclose". iCombine "Hγ" "Hγf" as "Hγ".
-    iDestruct (own_valid with "#Hγ") as % [[af Ha'] ?]%auth_valid_discrete.
+    iDestruct (own_valid with "Hγ") as % [[af Ha'] ?]%auth_valid_discrete.
     simpl in Ha'; rewrite ->(left_id _ _) in Ha'; setoid_subst.
     iVsIntro. iExists af; iFrame "Hφ"; iSplit; first done.
     iIntros (b) "[% Hφ]".

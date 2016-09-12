@@ -28,7 +28,7 @@ Definition ress (P : iProp Σ) (I : gset gname) : iProp Σ :=
     ▷ (P -★ [★ set] i ∈ I, Ψ i) ★ [★ set] i ∈ I, saved_prop_own i (Ψ i))%I.
 
 Coercion state_to_val (s : state) : val :=
-  match s with State Low _ => #0 | State High _ => #1 end.
+  match s with State Low _ => #false | State High _ => #true end.
 Arguments state_to_val !_ / : simpl nomatch.
 
 Definition state_to_prop (s : state) (P : iProp Σ) : iProp Σ :=
@@ -145,7 +145,7 @@ Proof.
     { iSplit; first done. iNext. rewrite {2}/barrier_inv /=. by iFrame. }
     iAssert (sts_ownS γ (i_states i) {[Change i]})%I with "==>[Hγ]" as "Hγ".
     { iApply (sts_own_weaken with "Hγ"); eauto using i_states_closed. }
-    iVsIntro. wp_op=> ?; simplify_eq; wp_if.
+    iVsIntro. wp_if.
     iApply ("IH" with "Hγ [HQR] HΦ"). auto.
   - (* a High state: the comparison succeeds, and we perform a transition and
     return to the client *)
@@ -157,7 +157,7 @@ Proof.
     { iSplit; [iPureIntro; by eauto using wait_step|].
       iNext. rewrite {2}/barrier_inv /=; iFrame "Hl". iExists Ψ; iFrame. auto. }
     iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by auto.
-    iVsIntro. wp_op=> ?; simplify_eq/=; wp_if.
+    iVsIntro. wp_if.
     iVsIntro. iApply "HΦ". iApply "HQR". by iRewrite "Heq".
 Qed.
 

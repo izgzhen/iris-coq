@@ -118,8 +118,7 @@ Proof.
   iDestruct (big_sepM_delete _ f _ false with "Hf")
     as "[[Hγ' #[HγΦ ?]] ?]"; first done.
   iDestruct (box_own_agree γ Q (Φ γ) with "[#]") as "HeqQ"; first by eauto.
-  iDestruct (box_own_auth_agree γ b false with "[#]")
-    as "%"; subst; first by iFrame.
+  iDestruct (box_own_auth_agree γ b false with "[-]") as %->; first by iFrame.
   iSplitL "Hγ"; last iSplit.
   - iExists false; eauto.
   - iNext. iRewrite "HeqP". iRewrite "HeqQ". by rewrite -big_sepM_delete.
@@ -153,8 +152,7 @@ Proof.
   iDestruct (big_sepM_later _ f with "Hf") as "Hf".
   iDestruct (big_sepM_delete _ f with "Hf")
     as "[[>Hγ' #[HγΦ Hinv']] ?]"; first done.
-  iDestruct (box_own_auth_agree γ b true with "[#]")
-    as %?; subst; first by iFrame.
+  iDestruct (box_own_auth_agree γ b true with "[-]") as %->; first by iFrame.
   iFrame "HQ".
   iVs (box_own_auth_update γ with "[Hγ Hγ']") as "[Hγ Hγ']"; first by iFrame.
   iVs ("Hclose" with "[Hγ]"); first (iNext; iExists false; by repeat iSplit).
@@ -189,8 +187,7 @@ Proof.
     iAlways; iIntros (γ b ?) "(Hγ' & #$ & #$)".
     assert (true = b) as <- by eauto.
     iInv N as (b) "(>Hγ & _ & HΦ)" "Hclose".
-    iDestruct (box_own_auth_agree γ b true with "[#]")
-      as "%"; subst; first by iFrame.
+    iDestruct (box_own_auth_agree γ b true with "[-]") as %->; first by iFrame.
     iVs (box_own_auth_update γ true true false with "[Hγ Hγ']")
       as "[Hγ $]"; first by iFrame.
     iVs ("Hclose" with "[Hγ]"); first (iNext; iExists false; iFrame; eauto).

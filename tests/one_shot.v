@@ -77,7 +77,7 @@ Proof.
     { iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct (own_valid with "Hγ") as %?. }
     wp_load.
     iCombine "Hγ" "Hγ'" as "Hγ".
-    iDestruct (own_valid with "#Hγ") as %[=->]%dec_agree_op_inv.
+    iDestruct (own_valid with "Hγ") as %[=->]%dec_agree_op_inv.
     iVs ("Hclose" with "[Hl]") as "_".
     { iNext; iRight; by eauto. }
     iVsIntro. wp_match. iApply wp_assert. wp_op=>?; simplify_eq/=; eauto.
