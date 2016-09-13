@@ -684,6 +684,15 @@ Proof.
   - by apply impl_intro_l; rewrite left_id.
 Qed.
 
+Lemma exists_impl_forall {A} P (Ψ : A → uPred M) :
+  ((∃ x : A, Ψ x) → P) ⊣⊢ ∀ x : A, Ψ x → P.
+Proof.
+  apply equiv_spec; split.
+  - apply forall_intro=>x. by rewrite -exist_intro.
+  - apply impl_intro_r, impl_elim_r', exist_elim=>x.
+    apply impl_intro_r. by rewrite (forall_elim x) impl_elim_r.
+Qed.
+
 Lemma or_and_l P Q R : P ∨ Q ∧ R ⊣⊢ (P ∨ Q) ∧ (P ∨ R).
 Proof.
   apply (anti_symm (⊢)); first auto.
@@ -817,7 +826,7 @@ Proof.
   intros P; unseal; split=> n x Hvalid; split.
   - intros (x1&x2&?&_&?); cofe_subst; eauto using uPred_mono, cmra_includedN_r.
   - by intros ?; exists (core x), x; rewrite cmra_core_l.
-Qed. 
+Qed.
 Global Instance sep_comm : Comm (⊣⊢) (@uPred_sep M).
 Proof.
   by intros P Q; unseal; split=> n x ?; split;
