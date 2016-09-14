@@ -54,7 +54,7 @@ Section gset.
     intros mZ _. rewrite !gset_opM=> HX. by rewrite (comm_L _ X) -!assoc_L HX.
   Qed.
 
-  Global Instance gmap_persistent X : Persistent X.
+  Global Instance gset_persistent X : Persistent X.
   Proof. by apply persistent_total; rewrite gset_core_self. Qed.
 
 End gset.
