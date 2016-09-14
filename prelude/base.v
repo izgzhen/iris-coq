@@ -374,6 +374,8 @@ Notation zip := (zip_with pair).
 Coercion Is_true : bool >-> Sortclass.
 Hint Unfold Is_true.
 Hint Immediate Is_true_eq_left.
+Existing Class Is_true.
+Instance true_Is_true : Is_true true := I.
 Hint Resolve orb_prop_intro andb_prop_intro.
 Notation "(&&)" := andb (only parsing).
 Notation "(||)" := orb (only parsing).

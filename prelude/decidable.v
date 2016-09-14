@@ -146,7 +146,7 @@ Proof. apply dsig_eq; reflexivity. Qed.
 Instance True_dec: Decision True := left I.
 Instance False_dec: Decision False := right (False_rect False).
 Instance Is_true_dec b : Decision (Is_true b).
-Proof. destruct b; apply _. Defined.
+Proof. destruct b; simpl; apply _. Defined.
 
 Section prop_dec.
   Context `(P_dec : Decision P) `(Q_dec : Decision Q).
