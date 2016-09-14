@@ -1,6 +1,6 @@
 From iris.algebra Require Export cmra.
 From iris.algebra Require Import updates local_updates.
-From iris.prelude Require Export collections gmap.
+From iris.prelude Require Export collections gmap mapset.
 
 (* The union CMRA *)
 Section gset.
@@ -11,11 +11,11 @@ Section gset.
 
   Instance gset_valid : Valid (gset K) := λ _, True.
   Instance gset_op : Op (gset K) := union.
-  Instance gset_pcore : PCore (gset K) := λ _, Some ∅.
+  Instance gset_pcore : PCore (gset K) := λ X, Some X.
 
   Lemma gset_op_union X Y : X ⋅ Y = X ∪ Y.
   Proof. done. Qed.
-  Lemma gset_core_empty X : core X = ∅.
+  Lemma gset_core_self X : core X = X.
   Proof. done. Qed.
   Lemma gset_included X Y : X ≼ Y ↔ X ⊆ Y.
   Proof.
@@ -32,8 +32,7 @@ Section gset.
     - solve_proper.
     - intros X1 X2 X3. by rewrite !gset_op_union assoc_L.
     - intros X1 X2. by rewrite !gset_op_union comm_L.
-    - intros X. by rewrite gset_op_union gset_core_empty left_id_L.
-    - intros X1 X2 _. by rewrite gset_included !gset_core_empty.
+    - intros X. by rewrite gset_op_union gset_core_self union_idemp_L.
   Qed.
   Canonical Structure gsetR := discreteR (gset K) gset_ra_mixin.
 
@@ -54,7 +53,14 @@ Section gset.
     intros; apply local_update_total; split; [done|]; simpl.
     intros mZ _. rewrite !gset_opM=> HX. by rewrite (comm_L _ X) -!assoc_L HX.
   Qed.
+
+  Global Instance gmap_persistent X : Persistent X.
+  Proof. by apply persistent_total; rewrite gset_core_self. Qed.
+
 End gset.
+
+Arguments gsetR _ {_ _}.
+Arguments gsetUR _ {_ _}.
 
 (* The disjoint union CMRA *)
 Inductive gset_disj K `{Countable K} :=
