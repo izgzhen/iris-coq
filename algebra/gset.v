@@ -32,7 +32,7 @@ Section gset.
     - solve_proper.
     - intros X1 X2 X3. by rewrite !gset_op_union assoc_L.
     - intros X1 X2. by rewrite !gset_op_union comm_L.
-    - intros X. by rewrite gset_op_union gset_core_self union_idemp_L.
+    - intros X. by rewrite gset_core_self idemp_L.
   Qed.
   Canonical Structure gsetR := discreteR (gset K) gset_ra_mixin.
 
