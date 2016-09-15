@@ -320,6 +320,9 @@ Global Instance from_exist_rvs {A} P (Φ : A → uPred M) :
 Proof.
   rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
 Qed.
+Global Instance from_exist_later {A} P (Φ : A → uPred M) :
+  FromExist P Φ → FromExist (▷ P) (λ a, ▷ (Φ a))%I.
+Proof. rewrite /FromExist=> <-. apply exist_elim=>x. apply later_mono, exist_intro. Qed.
 
 (* IntoExist *)
 Global Instance into_exist_exist {A} (Φ : A → uPred M) : IntoExist (∃ a, Φ a) Φ.
