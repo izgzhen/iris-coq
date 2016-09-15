@@ -270,9 +270,9 @@ Global Instance make_later_default P : MakeLater P (▷ P) | 100.
 Proof. done. Qed.
 
 Global Instance frame_later R R' P Q Q' :
-  Frame R P Q → MakeLater Q Q' → IntoLater R' R → Frame R' (▷ P) Q'.
+  IntoLater R' R → Frame R P Q → MakeLater Q Q' → Frame R' (▷ P) Q'.
 Proof.
-  rewrite /Frame /MakeLater /IntoLater=><- <- ->. by rewrite later_sep.
+  rewrite /Frame /MakeLater /IntoLater=>-> <- <-. by rewrite later_sep.
 Qed.
 
 Class MakeExceptLast (P Q : uPred M) := make_except_last : ◇ P ⊣⊢ Q.
