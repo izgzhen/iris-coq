@@ -1472,6 +1472,7 @@ Qed.
 
 Theorem soundness : ¬ (True ⊢ False).
 Proof. exact (adequacy False 0). Qed.
+
 End uPred_logic.
 
 (* Hint DB for the logic *)
