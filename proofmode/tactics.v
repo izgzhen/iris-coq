@@ -19,15 +19,17 @@ Ltac env_cbv :=
   match goal with |- ?u => let v := eval env_cbv in u in change v end.
 
 (** * Misc *)
-Ltac iFresh :=
+(* Tactic Notation tactics cannot return terms *)
+Ltac iFresh' H :=
   lazymatch goal with
   |- of_envs ?Δ ⊢ _ =>
      (* [vm_compute fails] if any of the hypotheses in [Δ] contain evars, so
      first use [cbv] to compute the domain of [Δ] *)
      let Hs := eval cbv in (envs_dom Δ) in
-     eval vm_compute in (fresh_string_of_set "~" (of_list Hs))
-  | _ => constr:("~")
+     eval vm_compute in (fresh_string_of_set H (of_list Hs))
+  | _ => H
   end.
+Ltac iFresh := iFresh' "~".
 
 Tactic Notation "iTypeOf" constr(H) tactic(tac):=
   let Δ := match goal with |- of_envs ?Δ ⊢ _ => Δ end in
@@ -785,7 +787,7 @@ Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
 Tactic Notation "iRevertIntros" "with" tactic(tac) :=
   match goal with
   | |- of_envs ?Δ ⊢ _ =>
-     let Hs := constr:(reverse (env_dom (env_spatial Δ))) in
+     let Hs := eval cbv in (reverse (env_dom (env_spatial Δ))) in
      iRevert ["★"]; tac; iIntros Hs
   end.
 Tactic Notation "iRevertIntros" "(" ident(x1) ")" "with" tactic(tac):=
