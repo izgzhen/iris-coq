@@ -11,7 +11,7 @@ Global Arguments from_assumption _ _ _ {_}.
 Class IntoPure (P : uPred M) (φ : Prop) := into_pure : P ⊢ ■ φ.
 Global Arguments into_pure : clear implicits.
 
-Class FromPure (P : uPred M) (φ : Prop) := from_pure : φ → True ⊢ P.
+Class FromPure (P : uPred M) (φ : Prop) := from_pure : ■ φ ⊢ P.
 Global Arguments from_pure : clear implicits.
 
 Class IntoPersistentP (P Q : uPred M) := into_persistentP : P ⊢ □ Q.

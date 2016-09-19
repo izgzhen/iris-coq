@@ -30,13 +30,16 @@ Proof. by rewrite /IntoPure discrete_valid. Qed.
 
 (* FromPure *)
 Global Instance from_pure_pure φ : @FromPure M (■ φ) φ.
-Proof. intros ?. by apply pure_intro. Qed.
+Proof. done. Qed.
 Global Instance from_pure_eq {A : cofeT} (a b : A) : @FromPure M (a ≡ b) (a ≡ b).
-Proof. intros ->. apply eq_refl. Qed.
+Proof. rewrite /FromPure. eapply pure_elim; [done|]=> ->. apply eq_refl'. Qed.
 Global Instance from_pure_valid {A : cmraT} (a : A) : @FromPure M (✓ a) (✓ a).
-Proof. intros ?. by apply valid_intro. Qed.
+Proof.
+  rewrite /FromPure. eapply pure_elim; [done|]=> ?.
+  rewrite -valid_intro //. auto with I.
+Qed.
 Global Instance from_pure_rvs P φ : FromPure P φ → FromPure (|=r=> P) φ.
-Proof. intros ??. by rewrite -rvs_intro (from_pure P). Qed.
+Proof. rewrite /FromPure=> ->. apply rvs_intro. Qed.
 
 (* IntoPersistentP *)
 Global Instance into_persistentP_always_trans P Q :

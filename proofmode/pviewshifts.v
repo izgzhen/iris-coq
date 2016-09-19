@@ -8,7 +8,7 @@ Context `{irisG Λ Σ}.
 Implicit Types P Q : iProp Σ.
 
 Global Instance from_pure_pvs E P φ : FromPure P φ → FromPure (|={E}=> P) φ.
-Proof. intros ??. by rewrite -pvs_intro (from_pure P). Qed.
+Proof. rewrite /FromPure. intros <-. apply pvs_intro. Qed.
 
 Global Instance from_assumption_pvs E p P Q :
   FromAssumption p P (|=r=> Q) → FromAssumption p P (|={E}=> Q)%I.

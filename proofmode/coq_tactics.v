@@ -318,7 +318,7 @@ Proof. by rewrite -(False_elim Q). Qed.
 
 (** * Pure *)
 Lemma tac_pure_intro Δ Q (φ : Prop) : FromPure Q φ → φ → Δ ⊢ Q.
-Proof. intros ??. rewrite -(from_pure Q) //. apply True_intro. Qed.
+Proof. intros ??. rewrite -(from_pure Q). by apply pure_intro. Qed.
 
 Lemma tac_pure Δ Δ' i p P φ Q :
   envs_lookup_delete i Δ = Some (p, P, Δ') → IntoPure P φ →
@@ -495,7 +495,8 @@ Lemma tac_specialize_assert_pure Δ Δ' j q R P1 P2 φ Q :
   φ → (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros. rewrite envs_simple_replace_sound //; simpl.
-  by rewrite right_id (into_wand R) -(from_pure P1) // wand_True wand_elim_r.
+  rewrite right_id (into_wand R) -(from_pure P1) pure_equiv //.
+  by rewrite wand_True wand_elim_r.
 Qed.
 
 Lemma tac_specialize_assert_persistent Δ Δ' Δ'' j q P1 P2 R Q :
