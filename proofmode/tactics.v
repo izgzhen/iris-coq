@@ -782,6 +782,38 @@ Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
     ")" constr(p) :=
   iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 ); iIntros p.
 
+Tactic Notation "iRevertIntros" "with" tactic(tac) :=
+  match goal with
+  | |- of_envs ?Δ ⊢ _ =>
+     let Hs := constr:(reverse (env_dom (env_spatial Δ))) in
+     iRevert ["★"]; tac; iIntros Hs
+  end.
+Tactic Notation "iRevertIntros" "(" ident(x1) ")" "with" tactic(tac):=
+  iRevertIntros with (iRevert (x1); tac; iIntros (x1)).
+Tactic Notation "iRevertIntros" "(" ident(x1) ident(x2) ")" "with" tactic(tac):=
+  iRevertIntros with (iRevert (x1 x2); tac; iIntros (x1 x2)).
+Tactic Notation "iRevertIntros" "(" ident(x1) ident(x2) ident(x3) ")"
+    "with" tactic(tac):=
+  iRevertIntros with (iRevert (x1 x2 x3); tac; iIntros (x1 x2 x3)).
+Tactic Notation "iRevertIntros" "(" ident(x1) ident(x2) ident(x3) ident(x4) ")"
+    "with" tactic(tac):=
+  iRevertIntros with (iRevert (x1 x2 x3 x4); tac; iIntros (x1 x2 x3 x4)).
+Tactic Notation "iRevertIntros" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ")" "with" tactic(tac):=
+  iRevertIntros with (iRevert (x1 x2 x3 x4 x5); tac; iIntros (x1 x2 x3 x4 x5)).
+Tactic Notation "iRevertIntros" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ")" "with" tactic(tac):=
+  iRevertIntros with (iRevert (x1 x2 x3 x4 x5 x6);
+    tac; iIntros (x1 x2 x3 x4 x5 x6)).
+Tactic Notation "iRevertIntros" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ident(x7) ")" "with" tactic(tac):=
+  iRevertIntros with (iRevert (x1 x2 x3 x4 x5 x6 x7);
+    tac; iIntros (x1 x2 x3 x4 x5 x6 x7)).
+Tactic Notation "iRevertIntros" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ident(x7) ident(x8) ")" "with" tactic(tac):=
+  iRevertIntros with (iRevert (x1 x2 x3 x4 x5 x6 x7 x8);
+    tac; iIntros (x1 x2 x3 x4 x5 x6 x7 x8)).
+
 (** * Destruct tactic *)
 Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
   let intro_destruct n :=
@@ -843,45 +875,35 @@ Tactic Notation "iDestruct" open_constr(lem) "as" "(" simple_intropattern(x1)
 Tactic Notation "iDestruct" open_constr(lem) "as" "%" simple_intropattern(pat) :=
   iDestructCore lem as true (fun H => iPure H as pat).
 
-(* This is pretty ugly, but without Ltac support for manipulating lists of
-idents I do not know how to do this better. *)
-Local Ltac iLöbHelp IH tac_before tac_after :=
-  match goal with
-  | |- of_envs ?Δ ⊢ _ =>
-     let Hs := constr:(reverse (env_dom (env_spatial Δ))) in
-     iRevert ["★"]; tac_before;
-     eapply tac_löb with _ IH;
-       [reflexivity
-       |env_cbv; reflexivity || fail "iLöb:" IH "not fresh"|];
-    tac_after; iIntros Hs
-  end.
+Tactic Notation "iLöbCore" "as" constr (IH) :=
+  eapply tac_löb with _ IH;
+    [reflexivity
+    |env_cbv; reflexivity || fail "iLöb:" IH "not fresh"|].
 
-Tactic Notation "iLöb" "as" constr (IH) := iLöbHelp IH idtac idtac.
+(** * Löb induction *)
+Tactic Notation "iLöb" "as" constr (IH) :=
+  iRevertIntros with (iLöbCore as IH).
 Tactic Notation "iLöb" "(" ident(x1) ")" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert ( x1 )) ltac:(iIntros ( x1 )).
+  iRevertIntros(x1) with (iLöbCore as IH).
 Tactic Notation "iLöb" "(" ident(x1) ident(x2) ")" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert ( x1 x2 )) ltac:(iIntros ( x1 x2 )).
+  iRevertIntros(x1 x2) with (iLöbCore as IH).
 Tactic Notation "iLöb" "(" ident(x1) ident(x2) ident(x3) ")" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert ( x1 x2 x3 )) ltac:(iIntros ( x1 x2 x3 )).
+  iRevertIntros(x1 x2 x3) with (iLöbCore as IH).
 Tactic Notation "iLöb" "(" ident(x1) ident(x2) ident(x3) ident(x4) ")" "as"
     constr (IH):=
-  iLöbHelp IH ltac:(iRevert ( x1 x2 x3 x4 )) ltac:(iIntros ( x1 x2 x3 x4 )).
+  iRevertIntros(x1 x2 x3 x4) with (iLöbCore as IH).
 Tactic Notation "iLöb" "(" ident(x1) ident(x2) ident(x3) ident(x4)
     ident(x5) ")" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert ( x1 x2 x3 x4 x5 ))
-              ltac:(iIntros ( x1 x2 x3 x4 x5 )).
+  iRevertIntros(x1 x2 x3 x4 x5) with (iLöbCore as IH).
 Tactic Notation "iLöb" "(" ident(x1) ident(x2) ident(x3) ident(x4)
     ident(x5) ident(x6) ")" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert ( x1 x2 x3 x4 x5 x6 ))
-              ltac:(iIntros ( x1 x2 x3 x4 x5 x6 )).
+  iRevertIntros(x1 x2 x3 x4 x5 x6) with (iLöbCore as IH).
 Tactic Notation "iLöb" "(" ident(x1) ident(x2) ident(x3) ident(x4)
     ident(x5) ident(x6) ident(x7) ")" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert ( x1 x2 x3 x4 x5 x6 x7 ))
-              ltac:(iIntros ( x1 x2 x3 x4 x5 x6 x7 )).
+  iRevertIntros(x1 x2 x3 x4 x5 x6 x7) with (iLöbCore as IH).
 Tactic Notation "iLöb" "(" ident(x1) ident(x2) ident(x3) ident(x4)
     ident(x5) ident(x6) ident(x7) ident(x8) ")" "as" constr (IH) :=
-  iLöbHelp IH ltac:(iRevert ( x1 x2 x3 x4 x5 x6 x7 x8 ))
-              ltac:(iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 )).
+  iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) with (iLöbCore as IH).
 
 (** * Assert *)
 Tactic Notation "iAssertCore" open_constr(Q) "with" constr(Hs) "as" tactic(tac) :=
