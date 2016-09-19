@@ -541,6 +541,16 @@ Proof.
   intros HΔ. by rewrite envs_clear_spatial_sound HΔ env_fold_wand wand_elim_l.
 Qed.
 
+Lemma tac_revert_ih Δ P Q :
+  env_spatial_is_nil Δ = true →
+  (of_envs Δ ⊢ P) →
+  (of_envs Δ ⊢ □ P → Q) →
+  (of_envs Δ ⊢ Q).
+Proof.
+  intros ? HP HPQ.
+  by rewrite -(idemp uPred_and Δ) {1}(persistentP Δ) {1}HP HPQ impl_elim_r.
+Qed.
+
 Lemma tac_assert Δ Δ1 Δ2 Δ2' lr js j P Q R :
   IntoAssert P Q R →
   envs_split lr js Δ = Some (Δ1,Δ2) →

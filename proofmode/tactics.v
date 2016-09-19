@@ -877,12 +877,31 @@ Tactic Notation "iDestruct" open_constr(lem) "as" "(" simple_intropattern(x1)
 Tactic Notation "iDestruct" open_constr(lem) "as" "%" simple_intropattern(pat) :=
   iDestructCore lem as true (fun H => iPure H as pat).
 
+(** * Induction *)
+Tactic Notation "iInductionCore" constr(x)
+    "as" simple_intropattern(pat) constr(IH) :=
+  let rec fix_ihs :=
+    lazymatch goal with
+    | H : coq_tactics.of_envs _ ⊢ _ |- _ =>
+       eapply tac_revert_ih;
+         [env_cbv; reflexivity
+         |apply H|];
+       clear H; fix_ihs;
+       let IH' := iFresh' IH in iIntros [IAlwaysElim (IName IH')]
+    | _ => idtac
+    end in
+  induction x as pat; fix_ihs.
+
+Tactic Notation "iInduction" constr(x)
+    "as" simple_intropattern(pat) constr(IH) :=
+  iRevertIntros with (iInductionCore x as pat IH).
+
+(** * Löb Induction *)
 Tactic Notation "iLöbCore" "as" constr (IH) :=
   eapply tac_löb with _ IH;
     [reflexivity
     |env_cbv; reflexivity || fail "iLöb:" IH "not fresh"|].
 
-(** * Löb induction *)
 Tactic Notation "iLöb" "as" constr (IH) :=
   iRevertIntros with (iLöbCore as IH).
 Tactic Notation "iLöb" "(" ident(x1) ")" "as" constr (IH) :=
