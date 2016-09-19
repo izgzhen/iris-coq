@@ -685,6 +685,10 @@ Proof.
 Qed.
 
 (** * Framing *)
+Lemma tac_frame_pure Δ (φ : Prop) P Q :
+  φ → Frame (■ φ) P Q → (Δ ⊢ Q) → Δ ⊢ P.
+Proof. intros ?? ->. by rewrite -(frame (■ φ) P) pure_equiv // left_id. Qed.
+
 Lemma tac_frame Δ Δ' i p R P Q :
   envs_lookup_delete i Δ = Some (p, R, Δ') → Frame R P Q →
   ((if p then Δ else Δ') ⊢ Q) → Δ ⊢ P.

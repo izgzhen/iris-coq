@@ -100,3 +100,7 @@ Section iris.
     - done.
   Qed.
 End iris.
+
+Lemma demo_9 (M : ucmraT) (x y z : M) :
+  ✓ x → ■ (y ≡ z) ⊢ (✓ x ∧ ✓ x ∧ y ≡ z : uPred M).
+Proof. iIntros (Hv) "Hxy". by iFrame (Hv Hv) "Hxy". Qed.

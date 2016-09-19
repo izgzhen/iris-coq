@@ -81,11 +81,16 @@ Elimination of logical connectives
 Separating logic specific tactics
 ---------------------------------
 
-- `iFrame "H0 ... Hn"` : cancel the hypotheses `H0 ... Hn` in the goal. The
-  symbol `★` can be used to frame as much of the spatial context as possible,
-  and the symbol `#` can be used to repeatedly frame as much of the persistent
-  context as possible. When without arguments, it attempts to frame all spatial
-  hypotheses.
+- `iFrame (t1 .. tn) "H0 ... Hn"` : cancel the Coq terms (or Coq hypotheses)
+  `t1 ... tn` and Iris hypotheses `H0 ... Hn` in the goal. Apart from
+  hypotheses, the following symbols can be used:
+
+  + `%` : repeatedly frame hypotheses from the Coq context.
+  + `#` : repeatedly frame hypotheses from the persistent context.
+  + `★` : frame as much of the spatial context as possible.
+
+  Notice that framing spatial hypotheses makes them disappear, but framing Coq
+  or persistent hypotheses does not make them disappear.
 - `iCombine "H1" "H2" as "H"` : turns `H1 : P1` and `H2 : P2` into
   `H : P1 ★ P2`.
 

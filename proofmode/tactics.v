@@ -430,6 +430,11 @@ Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
     |env_cbv; reflexivity || fail "iCombine:" H "not fresh"|].
 
 (** Framing *)
+Local Ltac iFramePure t :=
+  let φ := type of t in
+  eapply (tac_frame_pure _ _ _ _ t);
+    [apply _ || fail "iFrame: cannot frame" φ|].
+
 Local Ltac iFrameHyp H :=
   eapply tac_frame with _ H _ _ _;
     [env_cbv; reflexivity || fail "iFrame:" H "not found"
@@ -437,7 +442,10 @@ Local Ltac iFrameHyp H :=
      apply _ || fail "iFrame: cannot frame" R
     |lazy iota beta].
 
-Local Ltac iFramePersistent :=
+Local Ltac iFrameAnyPure :=
+  repeat match goal with H : _ |- _ => iFramePure H end.
+
+Local Ltac iFrameAnyPersistent :=
   let rec go Hs :=
     match Hs with [] => idtac | ?H :: ?Hs => repeat iFrameHyp H; go Hs end in
   match goal with
@@ -445,7 +453,7 @@ Local Ltac iFramePersistent :=
      let Hs := eval cbv in (env_dom (env_persistent Δ)) in go Hs
   end.
 
-Local Ltac iFrameSpatial :=
+Local Ltac iFrameAnySpatial :=
   let rec go Hs :=
     match Hs with [] => idtac | ?H :: ?Hs => try iFrameHyp H; go Hs end in
   match goal with
@@ -453,17 +461,60 @@ Local Ltac iFrameSpatial :=
      let Hs := eval cbv in (env_dom (env_spatial Δ)) in go Hs
   end.
 
+Tactic Notation "iFrame" := iFrameAnySpatial.
+
+Tactic Notation "iFrame" "(" constr(t1) ")" :=
+  iFramePure t1.
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) ")" :=
+  iFramePure t1; iFrame ( t2 ).
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) ")" :=
+  iFramePure t1; iFrame ( t2 t3 ).
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4) ")" :=
+  iFramePure t1; iFrame ( t2 t3 t4 ).
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
+    constr(t5) ")" :=
+  iFramePure t1; iFrame ( t2 t3 t4 t5 ).
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
+    constr(t5) constr(t6) ")" :=
+  iFramePure t1; iFrame ( t2 t3 t4 t5 t6 ).
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
+    constr(t5) constr(t6) constr(t7) ")" :=
+  iFramePure t1; iFrame ( t2 t3 t4 t5 t6 t7 ).
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
+    constr(t5) constr(t6) constr(t7) constr(t8)")" :=
+  iFramePure t1; iFrame ( t2 t3 t4 t5 t6 t7 t8 ).
+
 Tactic Notation "iFrame" constr(Hs) :=
   let rec go Hs :=
     match Hs with
     | [] => idtac
-    | "#" :: ?Hs => iFramePersistent; go Hs
-    | "★" :: ?Hs => iFrameSpatial; go Hs
+    | "%" :: ?Hs => iFrameAnyPure; go Hs
+    | "#" :: ?Hs => iFrameAnyPersistent; go Hs
+    | "★" :: ?Hs => iFrameAnySpatial; go Hs
     | ?H :: ?Hs => iFrameHyp H; go Hs
     end
   in let Hs := words Hs in go Hs.
-
-Tactic Notation "iFrame" := iFrameSpatial.
+Tactic Notation "iFrame" "(" constr(t1) ")" constr(Hs) :=
+  iFramePure t1; iFrame Hs.
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) ")" constr(Hs) :=
+  iFramePure t1; iFrame ( t2 ) Hs.
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) ")" constr(Hs) :=
+  iFramePure t1; iFrame ( t2 t3 ) Hs.
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4) ")"
+    constr(Hs) :=
+  iFramePure t1; iFrame ( t2 t3 t4 ) Hs.
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
+    constr(t5) ")" constr(Hs) :=
+  iFramePure t1; iFrame ( t2 t3 t4 t5 ) Hs.
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
+    constr(t5) constr(t6) ")" constr(Hs) :=
+  iFramePure t1; iFrame ( t2 t3 t4 t5 t6 ) Hs.
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
+    constr(t5) constr(t6) constr(t7) ")" constr(Hs) :=
+  iFramePure t1; iFrame ( t2 t3 t4 t5 t6 t7 ) Hs.
+Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
+    constr(t5) constr(t6) constr(t7) constr(t8)")" constr(Hs) :=
+  iFramePure t1; iFrame ( t2 t3 t4 t5 t6 t7 t8 ) Hs.
 
 (** * Existential *)
 Tactic Notation "iExists" uconstr(x1) :=

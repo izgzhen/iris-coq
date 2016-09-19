@@ -219,6 +219,8 @@ Qed.
 (* Frame *)
 Global Instance frame_here R : Frame R R True.
 Proof. by rewrite /Frame right_id. Qed.
+Global Instance frame_here_pure φ Q : FromPure Q φ → Frame (■ φ) Q True.
+Proof. rewrite /FromPure /Frame=> ->. by rewrite right_id. Qed.
 
 Class MakeSep (P Q PQ : uPred M) := make_sep : P ★ Q ⊣⊢ PQ.
 Global Instance make_sep_true_l P : MakeSep True P P.
