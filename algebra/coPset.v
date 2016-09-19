@@ -12,11 +12,11 @@ Section coPset.
 
   Instance coPset_valid : Valid coPset := λ _, True.
   Instance coPset_op : Op coPset := union.
-  Instance coPset_pcore : PCore coPset := λ _, Some ∅.
+  Instance coPset_pcore : PCore coPset := Some.
 
   Lemma coPset_op_union X Y : X ⋅ Y = X ∪ Y.
   Proof. done. Qed.
-  Lemma coPset_core_empty X : core X = ∅.
+  Lemma coPset_core_self X : core X = X.
   Proof. done. Qed.
   Lemma coPset_included X Y : X ≼ Y ↔ X ⊆ Y.
   Proof.
@@ -33,8 +33,7 @@ Section coPset.
     - solve_proper.
     - intros X1 X2 X3. by rewrite !coPset_op_union assoc_L.
     - intros X1 X2. by rewrite !coPset_op_union comm_L.
-    - intros X. by rewrite coPset_op_union coPset_core_empty left_id_L.
-    - intros X1 X2 _. by rewrite coPset_included !coPset_core_empty.
+    - intros X. by rewrite coPset_core_self idemp_L.
   Qed.
   Canonical Structure coPsetR := discreteR coPset coPset_ra_mixin.
 
