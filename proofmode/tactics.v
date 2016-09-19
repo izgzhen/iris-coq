@@ -522,7 +522,7 @@ Tactic Notation "iTimeless" constr(H) :=
      apply _ || fail "iTimeless: cannot remove later when goal is" Q
     |env_cbv; reflexivity || fail "iTimeless:" H "not found"
     |let P := match goal with |- IntoExceptLast ?P _ => P end in
-     apply _ || fail "iTimeless:" P "not timeless"
+     apply _ || fail "iTimeless: cannot turn" P "into ◇"
     |env_cbv; reflexivity|].
 
 (** * View shifts *)
