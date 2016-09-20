@@ -50,8 +50,11 @@ Global Instance own_proper γ :
 
 Lemma own_op γ a1 a2 : own γ (a1 ⋅ a2) ⊣⊢ own γ a1 ★ own γ a2.
 Proof. by rewrite !own_eq /own_def -ownM_op iRes_singleton_op. Qed.
-Global Instance own_mono γ : Proper (flip (≼) ==> (⊢)) (@own Σ A _ γ).
-Proof. move=>a b [c ->]. rewrite own_op. eauto with I. Qed.
+Lemma own_mono γ a1 a2 : a2 ≼ a1 → own γ a1 ⊢ own γ a2.
+Proof. move=> [c ->]. rewrite own_op. eauto with I. Qed.
+
+Global Instance own_mono' γ : Proper (flip (≼) ==> (⊢)) (@own Σ A _ γ).
+Proof. intros a1 a2. apply own_mono. Qed.
 
 Lemma own_valid γ a : own γ a ⊢ ✓ a.
 Proof.
