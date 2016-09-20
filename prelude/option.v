@@ -118,6 +118,8 @@ Section setoids.
   Proof. apply _. Qed.
   Global Instance Some_proper : Proper ((≡) ==> (≡)) (@Some A).
   Proof. by constructor. Qed.
+  Global Instance Some_equiv_inj : Inj (≡) (≡) (@Some A).
+  Proof. by inversion_clear 1. Qed.
   Global Instance option_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (option A).
   Proof. intros x y; destruct 1; fold_leibniz; congruence. Qed.
 
