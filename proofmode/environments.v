@@ -48,6 +48,7 @@ Fixpoint env_app {A} (Γapp : env A) (Γ : env A) : option (env A) :=
      Γ' ← env_app Γapp Γ; 
      match Γ' !! i with None => Some (Esnoc Γ' i x) | Some _ => None end
   end.
+
 Fixpoint env_replace {A} (i: string) (Γi: env A) (Γ: env A) : option (env A) :=
   match Γ with
   | Enil => None
@@ -58,11 +59,13 @@ Fixpoint env_replace {A} (i: string) (Γi: env A) (Γ: env A) : option (env A) :
      | Some _ => None
      end
   end.
+
 Fixpoint env_delete {A} (i : string) (Γ : env A) : env A :=
   match Γ with
   | Enil => Enil
   | Esnoc Γ j x => if decide (i = j) then Γ else Esnoc (env_delete i Γ) j x
   end.
+
 Fixpoint env_lookup_delete {A} (i : string) (Γ : env A) : option (A * env A) :=
   match Γ with
   | Enil => None
@@ -70,14 +73,6 @@ Fixpoint env_lookup_delete {A} (i : string) (Γ : env A) : option (A * env A) :=
      if decide (i = j) then Some (x,Γ)
      else '(y,Γ') ← env_lookup_delete i Γ; Some (y, Esnoc Γ' j x)
   end.
-Fixpoint env_split_go {A} (js : list string)
-    (Γ1 Γ2 : env A) : option (env A * env A) :=
-  match js with
-  | [] => Some (Γ1, Γ2)
-  | j::js => '(x,Γ2) ← env_lookup_delete j Γ2; env_split_go js (Esnoc Γ1 j x) Γ2
-  end.
-Definition env_split {A} (js : list string)
-  (Γ : env A) : option (env A * env A) := env_split_go js Enil Γ.
 
 Inductive env_Forall2 {A B} (P : A → B → Prop) : env A → env B → Prop :=
   | env_Forall2_nil : env_Forall2 P Enil Enil
@@ -97,6 +92,12 @@ Lemma env_lookup_perm Γ i x : Γ !! i = Some x → Γ ≡ₚ x :: env_delete i 
 Proof.
   induction Γ; intros; simplify; rewrite 1?Permutation_swap; f_equiv; eauto.
 Qed.
+
+Lemma env_lookup_snoc Γ i P : env_lookup i (Esnoc Γ i P) = Some P.
+Proof. induction Γ; simplify; auto. Qed.
+Lemma env_lookup_snoc_ne Γ i j P :
+  i ≠ j → env_lookup i (Esnoc Γ j P) = env_lookup i Γ.
+Proof. induction Γ=> ?; simplify; auto. Qed.
 
 Lemma env_app_perm Γ Γapp Γ' :
   env_app Γapp Γ = Some Γ' → env_to_list Γ' ≡ₚ Γapp ++ Γ.
@@ -144,62 +145,16 @@ Proof. induction Γ; intros; simplify; eauto. Qed.
 Lemma env_lookup_delete_Some Γ Γ' i x :
   env_lookup_delete i Γ = Some (x,Γ') ↔ Γ !! i = Some x ∧ Γ' = env_delete i Γ.
 Proof. rewrite env_lookup_delete_correct; simplify; naive_solver. Qed.
-Lemma env_delete_fresh_eq Γ j : env_wf Γ → env_delete j Γ !! j = None.
+
+Lemma env_lookup_env_delete Γ j : env_wf Γ → env_delete j Γ !! j = None.
 Proof. induction 1; intros; simplify; eauto. Qed.
+Lemma env_lookup_env_delete_ne Γ i j : i ≠ j → env_delete j Γ !! i = Γ !! i.
+Proof. induction Γ; intros; simplify; eauto. Qed.
 Lemma env_delete_fresh Γ i j : Γ !! i = None → env_delete j Γ !! i = None.
 Proof. induction Γ; intros; simplify; eauto. Qed.
+
 Lemma env_delete_wf Γ j : env_wf Γ → env_wf (env_delete j Γ).
 Proof. induction 1; simplify; eauto using env_delete_fresh. Qed.
-
-Lemma env_split_fresh Γ1 Γ2 Γ1' Γ2' js i :
-  env_split_go js Γ1 Γ2 = Some (Γ1',Γ2') →
-  Γ1 !! i = None → Γ2 !! i = None → Γ1' !! i = None ∧ Γ2' !! i = None.
-Proof.
-  revert Γ1 Γ2.
-  induction js as [|j js IH]=> Γ1 Γ2 ???; simplify_eq/=; eauto.
-  destruct (env_lookup_delete j Γ2) as [[x Γ2'']|] eqn:Hdelete; simplify_eq/=.
-  apply env_lookup_delete_Some in Hdelete as [? ->].
-  eapply IH; eauto; simplify; eauto using env_delete_fresh.
-Qed.
-Lemma env_split_go_wf Γ1 Γ2 Γ1' Γ2' js :
-  env_split_go js Γ1 Γ2 = Some (Γ1',Γ2') →
-  (∀ i, Γ1 !! i = None ∨ Γ2 !! i = None) →
-  env_wf Γ1 → env_wf Γ2 → env_wf Γ1' ∧ env_wf Γ2'.
-Proof.
-  revert Γ1 Γ2.
-  induction js as [|j js IH]=> Γ1 Γ2 ? Hdisjoint ??; simplify_eq/=; auto.
-  destruct (env_lookup_delete j Γ2) as [[x Γ2'']|] eqn:Hdelete; simplify_eq/=.
-  apply env_lookup_delete_Some in Hdelete as [? ->].
-  eapply IH; eauto using env_delete_wf.
-  - intros i; simplify; eauto using env_delete_fresh_eq.
-    destruct (Hdisjoint i); eauto using env_delete_fresh.  
-  - constructor; auto.
-    destruct (Hdisjoint j) as [?|[]%eq_None_not_Some]; eauto.
-Qed.
-Lemma env_split_go_perm Γ1 Γ2 Γ1' Γ2' js :
-  env_split_go js Γ1 Γ2 = Some (Γ1',Γ2') → Γ1 ++ Γ2 ≡ₚ Γ1' ++ Γ2'.
-Proof.
-  revert Γ1 Γ2. induction js as [|j js IH]=> Γ1 Γ2 ?; simplify_eq/=; auto.
-  destruct (env_lookup_delete j Γ2) as [[x Γ2'']|] eqn:Hdelete; simplify_eq/=.
-  apply env_lookup_delete_Some in Hdelete as [? ->].
-  by rewrite -(IH (Esnoc _ _ _) (env_delete _ _)) //=
-    Permutation_middle -env_lookup_perm.
-Qed.
-
-Lemma env_split_fresh_1 Γ Γ1 Γ2 js i :
-  env_split js Γ = Some (Γ1,Γ2) → Γ !! i = None → Γ1 !! i = None.
-Proof. intros. by apply (env_split_fresh Enil Γ Γ1 Γ2 js). Qed.
-Lemma env_split_fresh_2 Γ Γ1 Γ2 js i :
-  env_split js Γ = Some (Γ1,Γ2) → Γ !! i = None → Γ2 !! i = None.
-Proof. intros. by apply (env_split_fresh Enil Γ Γ1 Γ2 js). Qed.
-Lemma env_split_wf_1 Γ Γ1 Γ2 js :
-  env_split js Γ = Some (Γ1,Γ2) → env_wf Γ → env_wf Γ1.
-Proof. intros. apply (env_split_go_wf Enil Γ Γ1 Γ2 js); eauto. Qed.
-Lemma env_split_wf_2 Γ Γ1 Γ2 js :
-  env_split js Γ = Some (Γ1,Γ2) → env_wf Γ → env_wf Γ2.
-Proof. intros. apply (env_split_go_wf Enil Γ Γ1 Γ2 js); eauto. Qed.
-Lemma env_split_perm Γ Γ1 Γ2 js : env_split js Γ = Some (Γ1,Γ2) → Γ ≡ₚ Γ1 ++ Γ2.
-Proof. apply env_split_go_perm. Qed.
 
 Global Instance env_Forall2_refl (P : relation A) :
   Reflexive P → Reflexive (env_Forall2 P).

@@ -56,6 +56,11 @@ Definition envs_lookup_delete {M} (i : string)
   | None => '(P,Γs') ← env_lookup_delete i Γs; Some (false, P, Envs Γp Γs')
   end.
 
+Definition envs_snoc {M} (Δ : envs M)
+    (p : bool) (j : string) (P : uPred M) : envs M :=
+  let (Γp,Γs) := Δ in
+  if p then Envs (Esnoc Γp j P) Γs else Envs Γp (Esnoc Γs j P).
+
 Definition envs_app {M} (p : bool)
     (Γ : env (uPred M)) (Δ : envs M) : option (envs M) :=
   let (Γp,Γs) := Δ in
@@ -77,22 +82,28 @@ Definition envs_replace {M} (i : string) (p q : bool) (Γ : env (uPred M))
   if eqb p q then envs_simple_replace i p Γ Δ
   else envs_app q Γ (envs_delete i p Δ).
 
-(* if [lr = false] then [result = (hyps named js, remaining hyps)],
-   if [lr = true] then [result = (remaining hyps, hyps named js)] *)
-Definition envs_split {M}
-    (lr : bool) (js : list string) (Δ : envs M) : option (envs M * envs M) :=
-  let (Γp,Γs) := Δ in
-  '(Γs1,Γs2) ← env_split js Γs;
-  match lr with
-  | false  => Some (Envs Γp Γs1, Envs Γp Γs2)
-  | true => Some (Envs Γp Γs2, Envs Γp Γs1)
-  end.
-
 Definition env_spatial_is_nil {M} (Δ : envs M) :=
   if env_spatial Δ is Enil then true else false.
 
 Definition envs_clear_spatial {M} (Δ : envs M) : envs M :=
   Envs (env_persistent Δ) Enil.
+
+Fixpoint envs_split_go {M}
+    (js : list string) (Δ1 Δ2 : envs M) : option (envs M * envs M) :=
+  match js with
+  | [] => Some (Δ1, Δ2)
+  | j :: js =>
+     '(p,P,Δ1') ← envs_lookup_delete j Δ1;
+     if p then envs_split_go js Δ1 Δ2 else
+     envs_split_go js Δ1' (envs_snoc Δ2 false j P)
+  end.
+(* if [lr = true] then [result = (remaining hyps, hyps named js)] and
+   if [lr = false] then [result = (hyps named js, remaining hyps)] *)
+Definition envs_split {M} (lr : bool)
+    (js : list string) (Δ : envs M) : option (envs M * envs M) :=
+  '(Δ1,Δ2) ← envs_split_go js Δ (envs_clear_spatial Δ);
+  if lr then Some (Δ1,Δ2) else Some (Δ2,Δ1).
+
 
 (* Coq versions of the tactics *)
 Section tactics.
@@ -158,6 +169,35 @@ Lemma envs_lookup_delete_sound' Δ Δ' i p P :
   envs_lookup_delete i Δ = Some (p,P,Δ') → Δ ⊢ P ★ Δ'.
 Proof. intros [? ->]%envs_lookup_delete_Some. by apply envs_lookup_sound'. Qed.
 
+Lemma envs_lookup_snoc Δ i p P :
+  envs_lookup i Δ = None → envs_lookup i (envs_snoc Δ p i P) = Some (p, P).
+Proof.
+  rewrite /envs_lookup /envs_snoc=> ?.
+  destruct Δ as [Γp Γs], p, (Γp !! i); simplify_eq; by rewrite env_lookup_snoc.
+Qed.
+Lemma envs_lookup_snoc_ne Δ i j p P :
+  i ≠ j → envs_lookup i (envs_snoc Δ p j P) = envs_lookup i Δ.
+Proof.
+  rewrite /envs_lookup /envs_snoc=> ?.
+  destruct Δ as [Γp Γs], p; simplify_eq; by rewrite env_lookup_snoc_ne.
+Qed.
+
+Lemma envs_snoc_sound Δ p i P :
+  envs_lookup i Δ = None → Δ ⊢ □?p P -★ envs_snoc Δ p i P.
+Proof.
+  rewrite /envs_lookup /envs_snoc /of_envs=> ?; apply pure_elim_sep_l=> Hwf.
+  destruct Δ as [Γp Γs], (Γp !! i) eqn:?, (Γs !! i) eqn:?; simplify_eq/=.
+  apply wand_intro_l; destruct p; simpl.
+  - apply sep_intro_True_l; [apply pure_intro|].
+    + destruct Hwf; constructor; simpl; eauto using Esnoc_wf.
+      intros j; case_decide; naive_solver.
+    + by rewrite always_and_sep always_sep assoc.
+  - apply sep_intro_True_l; [apply pure_intro|].
+    + destruct Hwf; constructor; simpl; eauto using Esnoc_wf.
+      intros j; case_decide; naive_solver.
+    + solve_sep_entails.
+Qed.
+
 Lemma envs_app_sound Δ Δ' p Γ : envs_app p Γ Δ = Some Δ' → Δ ⊢ □?p [★] Γ -★ Δ'.
 Proof.
   rewrite /of_envs /envs_app=> ?; apply pure_elim_sep_l=> Hwf.
@@ -222,16 +262,13 @@ Lemma envs_replace_sound Δ Δ' i p q P Γ :
   Δ ⊢ □?p P ★ (□?q [★] Γ -★ Δ').
 Proof. intros. by rewrite envs_lookup_sound// envs_replace_sound'//. Qed.
 
-Lemma envs_split_sound Δ lr js Δ1 Δ2 :
-  envs_split lr js Δ = Some (Δ1,Δ2) → Δ ⊢ Δ1 ★ Δ2.
+Lemma envs_lookup_envs_clear_spatial Δ j :
+  envs_lookup j (envs_clear_spatial Δ)
+  = '(p,P) ← envs_lookup j Δ; if p then Some (p,P) else None.
 Proof.
-  rewrite /envs_split /of_envs=> ?; apply pure_elim_sep_l=> Hwf.
-  destruct Δ as [Γp Γs], (env_split js _) as [[Γs1 Γs2]|] eqn:?; simplify_eq/=.
-  rewrite (env_split_perm Γs) // big_sep_app {1}always_sep_dup'.
-  destruct lr; simplify_eq/=; cancel [□ [∧] Γp; □ [∧] Γp; [★] Γs1; [★] Γs2]%I;
-    destruct Hwf; apply sep_intro_True_l; apply pure_intro; constructor;
-      naive_solver eauto using env_split_wf_1, env_split_wf_2,
-      env_split_fresh_1, env_split_fresh_2.
+  rewrite /envs_lookup /envs_clear_spatial.
+  destruct Δ as [Γp Γs]; simpl; destruct (Γp !! j) eqn:?; simplify_eq/=; auto.
+  by destruct (Γs !! j).
 Qed.
 
 Lemma envs_clear_spatial_sound Δ : Δ ⊢ envs_clear_spatial Δ ★ [★] env_spatial Δ.
@@ -251,6 +288,52 @@ Lemma env_spatial_is_nil_persistent Δ :
   env_spatial_is_nil Δ = true → PersistentP Δ.
 Proof. intros; destruct Δ as [? []]; simplify_eq/=; apply _. Qed.
 Hint Immediate env_spatial_is_nil_persistent : typeclass_instances.
+
+Lemma envs_lookup_envs_delete Δ i p P :
+  envs_wf Δ →
+  envs_lookup i Δ = Some (p,P) → envs_lookup i (envs_delete i p Δ) = None.
+Proof.
+  rewrite /envs_lookup /envs_delete=> -[?? Hdisj] Hlookup.
+  destruct Δ as [Γp Γs], p; simplify_eq/=.
+  - rewrite env_lookup_env_delete //. revert Hlookup.
+    destruct (Hdisj i) as [->| ->]; [|done]. by destruct (Γs !! _).
+  - rewrite env_lookup_env_delete //. by destruct (Γp !! _).
+Qed.
+Lemma envs_lookup_envs_delete_ne Δ i j p :
+  i ≠ j → envs_lookup i (envs_delete j p Δ) = envs_lookup i Δ.
+Proof.
+  rewrite /envs_lookup /envs_delete=> ?. destruct Δ as [Γp Γs],p; simplify_eq/=.
+  - by rewrite env_lookup_env_delete_ne.
+  - destruct (Γp !! i); simplify_eq/=; by rewrite ?env_lookup_env_delete_ne.
+Qed.
+
+Lemma envs_split_go_sound js Δ1 Δ2 Δ1' Δ2' :
+  (∀ j P, envs_lookup j Δ1 = Some (false, P) → envs_lookup j Δ2 = None) →
+  envs_split_go js Δ1 Δ2 = Some (Δ1',Δ2') → Δ1 ★ Δ2 ⊢ Δ1' ★ Δ2'.
+Proof.
+  revert Δ1 Δ2 Δ1' Δ2'.
+  induction js as [|j js IH]=> Δ1 Δ2 Δ1' Δ2' Hlookup HΔ; simplify_eq/=; [done|].
+  apply pure_elim with (envs_wf Δ1); [unfold of_envs; solve_sep_entails|]=> Hwf.
+  destruct (envs_lookup_delete j Δ1)
+    as [[[[] P] Δ1'']|] eqn:Hdel; simplify_eq; auto.
+  apply envs_lookup_delete_Some in Hdel as [??]; subst.
+  rewrite envs_lookup_sound //; rewrite /= (comm _ P) -assoc.
+  rewrite -(IH _ _ _ _ _ HΔ); last first.
+  { intros j' P'; destruct (decide (j = j')) as [->|].
+    - by rewrite (envs_lookup_envs_delete _ _ _ P).
+    - rewrite envs_lookup_envs_delete_ne // envs_lookup_snoc_ne //. eauto. }
+  rewrite (envs_snoc_sound Δ2 false j P) /= ?wand_elim_r; eauto.
+Qed.
+Lemma envs_split_sound Δ lr js Δ1 Δ2 :
+  envs_split lr js Δ = Some (Δ1,Δ2) → Δ ⊢ Δ1 ★ Δ2.
+Proof.
+  rewrite /envs_split=> ?. rewrite -(idemp uPred_and Δ).
+  rewrite {2}envs_clear_spatial_sound sep_elim_l always_and_sep_r.
+  destruct (envs_split_go _ _) as [[Δ1' Δ2']|] eqn:HΔ; [|done].
+  apply envs_split_go_sound in HΔ as ->; last first.
+  { intros j P. by rewrite envs_lookup_envs_clear_spatial=> ->. }
+  destruct lr; simplify_eq; solve_sep_entails.
+Qed.
 
 Global Instance envs_Forall2_refl (R : relation (uPred M)) :
   Reflexive R → Reflexive (envs_Forall2 R).

@@ -5,16 +5,16 @@ From iris.proofmode Require Import class_instances.
 From iris.prelude Require Import stringmap hlist.
 
 Declare Reduction env_cbv := cbv [
-  env_lookup env_fold env_lookup_delete env_delete env_app
-    env_replace env_split_go env_split
+  env_lookup env_fold env_lookup_delete env_delete env_app env_replace
   decide (* operational classes *)
   sumbool_rec sumbool_rect (* sumbool *)
   bool_eq_dec bool_rec bool_rect bool_dec eqb andb (* bool *)
   assci_eq_dec ascii_to_digits Ascii.ascii_dec Ascii.ascii_rec Ascii.ascii_rect
   string_eq_dec string_rec string_rect (* strings *)
   env_persistent env_spatial env_spatial_is_nil
-  envs_lookup envs_lookup_delete envs_delete envs_app
-    envs_simple_replace envs_replace envs_split envs_clear_spatial].
+  envs_lookup envs_lookup_delete envs_delete envs_snoc envs_app
+    envs_simple_replace envs_replace envs_split envs_clear_spatial
+    envs_split_go envs_split].
 Ltac env_cbv :=
   match goal with |- ?u => let v := eval env_cbv in u in change v end.
 
@@ -396,14 +396,14 @@ Tactic Notation "iSplitL" constr(Hs) :=
     [let P := match goal with |- FromSep ?P _ _ => P end in
      apply _ || fail "iSplitL:" P "not a separating conjunction"
     |env_cbv; reflexivity || fail "iSplitL: hypotheses" Hs
-                                  "not found in the spatial context"| |].
+                                  "not found in the context"| |].
 Tactic Notation "iSplitR" constr(Hs) :=
   let Hs := words Hs in
   eapply tac_sep_split with _ _ true Hs _ _; (* (js:=Hs) *)
     [let P := match goal with |- FromSep ?P _ _ => P end in
      apply _ || fail "iSplitR:" P "not a separating conjunction"
     |env_cbv; reflexivity || fail "iSplitR: hypotheses" Hs
-                                  "not found in the spatial context"| |].
+                                  "not found in the context"| |].
 
 Tactic Notation "iSplitL" := iSplitR "".
 Tactic Notation "iSplitR" := iSplitL "".

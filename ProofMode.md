@@ -58,7 +58,8 @@ Introduction of logical connectives
   one of the operands is persistent.
 - `iSplitL "H1 ... Hn"` : introduction of a separating conjunction. The
   hypotheses `H1 ... Hn` are used for the left conjunct, and the remaining ones
-  for the right conjunct.
+  for the right conjunct. Persistent hypotheses are ignored, since these do not
+  need to be split.
 - `iSplitR "H0 ... Hn"` : symmetric version of the above.
 - `iExist t1, .., tn` : introduction of an existential quantifier.
 
