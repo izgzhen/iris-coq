@@ -398,6 +398,7 @@ Section properties.
     rewrite !cmra_update_updateP=> ?; eauto using list_middle_updateP with subst.
   Qed.
 
+(* FIXME
   Lemma list_middle_local_update l1 l2 x y ml :
     x ~l~> y @ ml ≫= (!! length l1) →
     l1 ++ x :: l2 ~l~> l1 ++ y :: l2 @ ml.
@@ -421,6 +422,7 @@ Section properties.
   Lemma list_singleton_local_update i x y ml :
     x ~l~> y @ ml ≫= (!! i) → {[ i := x ]} ~l~> {[ i := y ]} @ ml.
   Proof. intros; apply list_middle_local_update. by rewrite replicate_length. Qed.
+*)
 End properties.
 
 (** Functor *)

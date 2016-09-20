@@ -1,18 +1,28 @@
 From iris.program_logic Require Export weakestpre adequacy.
 From iris.heap_lang Require Export heap.
-From iris.program_logic Require Import auth ownership.
+From iris.algebra Require Import auth.
+From iris.program_logic Require Import ownership.
 From iris.heap_lang Require Import proofmode notation.
 From iris.proofmode Require Import tactics.
 
-Definition heapΣ : gFunctors := #[authΣ heapUR; irisΣ heap_lang].
+Class heapPreG Σ := HeapPreG {
+  heap_preG_iris :> irisPreG heap_lang Σ;
+  heap_preG_heap :> inG Σ (authR heapUR)
+}.
 
-Definition heap_adequacy Σ `{irisPreG heap_lang Σ, authG Σ heapUR} e σ φ :
+Definition heapΣ : gFunctors :=
+  #[irisΣ heap_lang; GFunctor (constRF (authR heapUR))].
+Instance subG_heapPreG {Σ} : subG heapΣ Σ → heapPreG Σ.
+Proof. intros [? ?%subG_inG]%subG_inv. split; apply _. Qed.
+
+Definition heap_adequacy Σ `{heapPreG Σ} e σ φ :
   (∀ `{heapG Σ}, heap_ctx ⊢ WP e {{ v, ■ φ v }}) →
   adequate e σ φ.
 Proof.
   intros Hwp; eapply (wp_adequacy Σ); iIntros (?) "Hσ".
-  iVs (auth_alloc (ownP ∘ of_heap) heapN _ (to_heap σ) with "[Hσ]") as (γ) "[??]".
-  - auto using to_heap_valid.
-  - rewrite /= (from_to_heap σ); auto.
-  - iApply (Hwp (HeapG _ _ _ γ)). by rewrite /heap_ctx.
+  iVs (own_alloc (● to_heap σ)) as (γ) "Hh".
+  { apply (auth_auth_valid (to_heap _)), to_heap_valid. }
+  set (Hheap := HeapG _ _ _ γ).
+  iVs (inv_alloc heapN _ heap_inv with "[-]"); [iNext; iExists σ; by iFrame|].
+  iApply (Hwp _). by rewrite /heap_ctx.
 Qed.

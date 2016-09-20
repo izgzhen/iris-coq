@@ -65,10 +65,8 @@ Lemma box_own_auth_update γ b1 b2 b3 :
   box_own_auth γ (● Excl' b1) ★ box_own_auth γ (◯ Excl' b2)
   =r=> box_own_auth γ (● Excl' b3) ★ box_own_auth γ (◯ Excl' b3).
 Proof.
-  rewrite /box_own_prop -!own_op own_valid_l prod_validI; iIntros "[[Hb _] Hγ]".
-  iDestruct "Hb" as % [[[] [= ->]%leibniz_equiv] ?]%auth_valid_discrete.
-  iApply (own_update with "Hγ"); apply prod_update; simpl; last reflexivity.
-  by apply auth_update_no_frame, option_local_update, exclusive_local_update.
+  rewrite /box_own_auth -!own_op. apply own_update, prod_update; last done.
+  by apply auth_update, option_local_update, exclusive_local_update.
 Qed.
 
 Lemma box_own_agree γ Q1 Q2 :

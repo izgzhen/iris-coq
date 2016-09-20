@@ -378,50 +378,63 @@ Section freshness.
   Qed.
 End freshness.
 
-Lemma insert_local_update m i x y mf :
-  x ~l~> y @ mf ≫= (!! i) → <[i:=x]>m ~l~> <[i:=y]>m @ mf.
+Lemma alloc_local_update m1 m2 i x :
+  m1 !! i = None → ✓ x → (m1,m2) ~l~> (<[i:=x]>m1, <[i:=x]>m2).
 Proof.
-  intros [Hxy Hxy']; split.
-  - intros n Hm j. move: (Hm j). destruct (decide (i = j)); subst.
-    + rewrite !lookup_opM !lookup_insert !Some_op_opM. apply Hxy.
-    + by rewrite !lookup_opM !lookup_insert_ne.
-  - intros n mf' Hm Hm' j. move: (Hm j) (Hm' j).
-    destruct (decide (i = j)); subst.
-    + rewrite !lookup_opM !lookup_insert !Some_op_opM !inj_iff. apply Hxy'.
-    + by rewrite !lookup_opM !lookup_insert_ne.
+  rewrite cmra_valid_validN=> Hi ?.
+  apply local_update_unital=> n mf Hmv Hm; simpl in *.
+  split; auto using insert_validN.
+  intros j; destruct (decide (i = j)) as [->|].
+  - move: (Hm j); rewrite Hi symmetry_iff dist_None lookup_op op_None=>-[_ Hj].
+    by rewrite lookup_op !lookup_insert Hj.
+  - rewrite Hm lookup_insert_ne // !lookup_op lookup_insert_ne //.
 Qed.
 
-Lemma singleton_local_update i x y mf :
-  x ~l~> y @ mf ≫= (!! i) → {[ i := x ]} ~l~> {[ i := y ]} @ mf.
-Proof. apply insert_local_update. Qed.
+Lemma alloc_singleton_local_update m i x :
+  m !! i = None → ✓ x → (m,∅) ~l~> (<[i:=x]>m, {[ i:=x ]}).
+Proof. apply alloc_local_update. Qed.
 
-Lemma alloc_singleton_local_update m i x mf :
-  (m ⋅? mf) !! i = None → ✓ x → m ~l~> <[i:=x]> m @ mf.
+Lemma insert_local_update m1 m2 i x y x' y' :
+  m1 !! i = Some x → m2 !! i = Some y →
+  (x, y) ~l~> (x', y') →
+  (m1, m2) ~l~> (<[i:=x']>m1, <[i:=y']>m2).
 Proof.
-  rewrite lookup_opM op_None=> -[Hi Hif] ?.
-  rewrite insert_singleton_op // comm. apply alloc_local_update.
-  intros n Hm j. move: (Hm j). destruct (decide (i = j)); subst.
-  - intros _; rewrite !lookup_opM lookup_op !lookup_singleton Hif Hi.
-    by apply cmra_valid_validN.
-  - by rewrite !lookup_opM lookup_op !lookup_singleton_ne // right_id.
+  intros Hi1 Hi2 Hup; apply local_update_unital=> n mf Hmv Hm; simpl in *.
+  destruct (Hup n (mf !! i)) as [? Hx']; simpl in *.
+  { move: (Hmv i). by rewrite Hi1. }
+  { move: (Hm i). by rewrite lookup_op Hi1 Hi2 Some_op_opM (inj_iff Some). }
+  split; auto using insert_validN.
+  rewrite Hm Hx'=> j; destruct (decide (i = j)) as [->|].
+  - by rewrite lookup_insert lookup_op lookup_insert Some_op_opM.
+  - by rewrite lookup_insert_ne // !lookup_op lookup_insert_ne.
 Qed.
 
-Lemma alloc_unit_singleton_local_update i x mf :
-  mf ≫= (!! i) = None → ✓ x → (∅:gmap K A) ~l~> {[ i := x ]} @ mf.
+Lemma singleton_local_update m i x y x' y' :
+  m !! i = Some x →
+  (x, y) ~l~> (x', y') →
+  (m, {[ i := y ]}) ~l~> (<[i:=x']>m, {[ i := y' ]}).
 Proof.
-  intros Hi; apply alloc_singleton_local_update. by rewrite lookup_opM Hi.
+  intros. rewrite /singletonM /map_singleton -(insert_insert ∅ i y' y).
+  eapply insert_local_update; eauto using lookup_insert.
 Qed.
 
-Lemma delete_local_update m i x `{!Exclusive x} mf :
-  m !! i = Some x → m ~l~> delete i m @ mf.
+Lemma delete_local_update m1 m2 i x `{!Exclusive x} :
+  m2 !! i = Some x → (m1, m2) ~l~> (delete i m1, delete i m2).
 Proof.
-  intros Hx; split; [intros n; apply delete_update|].
-  intros n mf' Hm Hm' j. move: (Hm j) (Hm' j).
-  destruct (decide (i = j)); subst.
-  + rewrite !lookup_opM !lookup_delete Hx=> ? Hj.
-    rewrite (exclusiveN_Some_l n x (mf ≫= lookup j)) //.
-    by rewrite (exclusiveN_Some_l n x (mf' ≫= lookup j)) -?Hj.
-  + by rewrite !lookup_opM !lookup_delete_ne.
+  intros Hi. apply local_update_unital=> n mf Hmv Hm; simpl in *.
+  split; auto using delete_validN.
+  rewrite Hm=> j; destruct (decide (i = j)) as [<-|].
+  - rewrite lookup_op !lookup_delete left_id symmetry_iff dist_None.
+    apply eq_None_not_Some=> -[y Hi'].
+    move: (Hmv i). rewrite Hm lookup_op Hi Hi' -Some_op. by apply exclusiveN_l.
+  - by rewrite lookup_op !lookup_delete_ne // lookup_op. 
+Qed.
+
+Lemma delete_singleton_local_update m i x `{!Exclusive x} :
+  (m, {[ i := x ]}) ~l~> (delete i m, ∅).
+Proof.
+  rewrite -(delete_singleton i x).
+  eapply delete_local_update; eauto using lookup_singleton.
 Qed.
 End properties.
 

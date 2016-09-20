@@ -78,7 +78,6 @@ program_logic/ectxi_language.v
 program_logic/ectx_lifting.v
 program_logic/ghost_ownership.v
 program_logic/saved_prop.v
-program_logic/auth.v
 program_logic/sts.v
 program_logic/namespaces.v
 program_logic/boxes.v

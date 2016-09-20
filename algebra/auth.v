@@ -200,26 +200,20 @@ Proof. by rewrite /op /auth_op /= left_id. Qed.
 Lemma auth_auth_valid a : ✓ a → ✓ (● a).
 Proof. intros; split; simpl; auto using ucmra_unit_leastN. Qed.
 
-Lemma auth_update a af b :
-  a ~l~> b @ Some af → ● (a ⋅ af) ⋅ ◯ a ~~> ● (b ⋅ af) ⋅ ◯ b.
+Lemma auth_update a b a' b' :
+  (a,b) ~l~> (a',b') → ● a ⋅ ◯ b ~~> ● a' ⋅ ◯ b'.
 Proof.
-  intros [Hab Hab']; apply cmra_total_update.
-  move=> n [[[?|]|] bf1] // =>-[[bf2 Ha] ?]; do 2 red; simpl in *.
-  move: Ha; rewrite !left_id=> Hm; split; auto.
-  exists bf2. rewrite -assoc.
-  apply (Hab' _ (Some _)); auto. by rewrite /= assoc.
+  intros Hup; apply cmra_total_update.
+  move=> n [[[?|]|] bf1] // [[bf2 Ha] ?]; do 2 red; simpl in *.
+  move: Ha; rewrite !left_id -assoc=> Ha.
+  destruct (Hup n (Some (bf1 ⋅ bf2))); auto.
+  split; last done. exists bf2. by rewrite -assoc.
 Qed.
 
-Lemma auth_update_no_frame a b : a ~l~> b @ Some ∅ → ● a ⋅ ◯ a ~~> ● b ⋅ ◯ b.
-Proof.
-  intros. rewrite -{1}(right_id _ _ a) -{1}(right_id _ _ b).
-  by apply auth_update.
-Qed.
-Lemma auth_update_no_frag af b : ∅ ~l~> b @ Some af → ● af ~~> ● (b ⋅ af) ⋅ ◯ b.
-Proof.
-  intros. rewrite -{1}(left_id _ _ af) -{1}(right_id _ _ (● _)).
-  by apply auth_update.
-Qed.
+Lemma auth_update_alloc a a' b' : (a,∅) ~l~> (a',b') → ● a ~~> ● a' ⋅ ◯ b'.
+Proof. intros. rewrite -(right_id _ _ (● a)). by apply auth_update. Qed.
+Lemma auth_update_dealloc a b a' : (a,b) ~l~> (a',∅) → ● a ⋅ ◯ b ~~> ● a'.
+Proof. intros. rewrite -(right_id _ _ (● a')). by apply auth_update. Qed.
 End cmra.
 
 Arguments authR : clear implicits.
