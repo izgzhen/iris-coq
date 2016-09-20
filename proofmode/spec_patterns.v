@@ -1,9 +1,13 @@
 From iris.prelude Require Export strings.
 
-Inductive spec_goal_kind := GoalStd | GoalVs.
+Record spec_goal := SpecGoal {
+  spec_goal_vs : bool;
+  spec_goal_negate : bool;
+  spec_goal_hyps : list string
+}.
 
 Inductive spec_pat :=
-  | SGoal : spec_goal_kind → bool → list string → spec_pat
+  | SGoal : spec_goal → spec_pat
   | SGoalPersistent : spec_pat
   | SGoalPure : spec_pat
   | SName : string → spec_pat
@@ -39,7 +43,7 @@ Definition tokenize (s : string) : list token := tokenize_go s [] "".
 
 Inductive state :=
   | StTop : state
-  | StAssert : spec_goal_kind → bool → list string → state.
+  | StAssert : spec_goal → state.
 
 Fixpoint parse_go (ts : list token) (k : list spec_pat) : option (list spec_pat) :=
   match ts with
@@ -47,18 +51,24 @@ Fixpoint parse_go (ts : list token) (k : list spec_pat) : option (list spec_pat)
   | TName s :: ts => parse_go ts (SName s :: k)
   | TBracketL :: TPersistent :: TBracketR :: ts => parse_go ts (SGoalPersistent :: k)
   | TBracketL :: TPure :: TBracketR :: ts => parse_go ts (SGoalPure :: k)
-  | TBracketL :: ts => parse_goal ts GoalStd false [] k
-  | TVs :: TBracketL :: ts => parse_goal ts GoalVs false [] k
-  | TVs :: ts => parse_go ts (SGoal GoalVs true [] :: k)
+  | TBracketL :: ts => parse_goal ts (SpecGoal false false []) k
+  | TVs :: TBracketL :: ts => parse_goal ts (SpecGoal true false []) k
+  | TVs :: ts => parse_go ts (SGoal (SpecGoal true true []) :: k)
   | TForall :: ts => parse_go ts (SForall :: k)
   | _ => None
   end
-with parse_goal (ts : list token) (kind : spec_goal_kind)
-    (neg : bool) (ss : list string) (k : list spec_pat) : option (list spec_pat) :=
+with parse_goal (ts : list token) (g : spec_goal)
+    (k : list spec_pat) : option (list spec_pat) :=
   match ts with
-  | TMinus :: ts => guard (¬neg ∧ ss = []); parse_goal ts kind true ss k
-  | TName s :: ts => parse_goal ts kind neg (s :: ss) k
-  | TBracketR :: ts => parse_go ts (SGoal kind neg (reverse ss) :: k)
+  | TMinus :: ts =>
+     guard (¬spec_goal_negate g ∧ spec_goal_hyps g = []);
+     parse_goal ts (SpecGoal (spec_goal_vs g) true (spec_goal_hyps g)) k
+  | TName s :: ts =>
+     parse_goal ts (SpecGoal (spec_goal_vs g) (spec_goal_negate g)
+                             (s :: spec_goal_hyps g)) k
+  | TBracketR :: ts =>
+     parse_go ts (SGoal (SpecGoal (spec_goal_vs g) (spec_goal_negate g)
+                                  (reverse (spec_goal_hyps g))) :: k)
   | _ => None
   end.
 Definition parse (s : string) : option (list spec_pat) :=

@@ -180,13 +180,13 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
          |env_cbv; reflexivity
          |(*goal*)
          |go H1 pats]
-    | SGoal ?k ?lr ?Hs :: ?pats =>
+    | SGoal (SpecGoal ?vs ?lr ?Hs) :: ?pats =>
        eapply tac_specialize_assert with _ _ _ H1 _ lr Hs _ _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
-         |match k with
-          | GoalStd => apply into_assert_default
-          | GoalVs => apply _ || fail "iSpecialize: cannot generate view shifted goal"
+         |match vs with
+          | false => apply into_assert_default
+          | true => apply _ || fail "iSpecialize: cannot generate view shifted goal"
           end
          |env_cbv; reflexivity || fail "iSpecialize:" Hs "not found"
          |(*goal*)
@@ -937,11 +937,11 @@ Tactic Notation "iAssertCore" open_constr(Q) "with" constr(Hs) "as" tactic(tac) 
        |(*goal*)
        |apply _ || fail "iAssert:" Q "not persistent"
        |tac H]
-  | [SGoal ?k ?lr ?Hs] =>
+  | [SGoal (SpecGoal ?vs ?lr ?Hs)] =>
      eapply tac_assert with _ _ _ lr Hs H Q _; (* (js:=Hs) (j:=H) (P:=Q) *)
-       [match k with
-        | GoalStd => apply into_assert_default
-        | GoalVs => apply _ || fail "iAssert: cannot generate view shifted goal"
+       [match vs with
+        | false => apply into_assert_default
+        | true => apply _ || fail "iAssert: cannot generate view shifted goal"
         end
        |env_cbv; reflexivity || fail "iAssert:" Hs "not found"
        |env_cbv; reflexivity|
