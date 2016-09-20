@@ -100,6 +100,13 @@ The later modality
 - `iLöb (x1 ... xn) as "IH"` : perform Löb induction by generalizing over the
   Coq level variables `x1 ... xn` and the entire spatial context.
 
+Induction
+---------
+- `iInduction x as cpat "IH"` : perform induction on the Coq term `x`. The Coq
+  introduction pattern is used to name the introduced variables. The induction
+  hypotheses are inserted into the persistent context and given fresh names
+  prefixed `IH`.
+
 Rewriting
 ---------
 
