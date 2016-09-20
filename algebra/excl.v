@@ -120,11 +120,11 @@ Lemma excl_validN_inv_l n mx a : ✓{n} (Excl' a ⋅ mx) → mx = None.
 Proof. by destruct mx. Qed.
 Lemma excl_validN_inv_r n mx a : ✓{n} (mx ⋅ Excl' a) → mx = None.
 Proof. by destruct mx. Qed.
-Lemma Excl_includedN n a mx : ✓{n} mx → Excl' a ≼{n} mx ↔ mx ≡{n}≡ Excl' a.
-Proof.
-  intros Hvalid; split; [|by intros ->].
-  intros [z ?]; cofe_subst. by rewrite (excl_validN_inv_l n z a).
-Qed.
+
+Lemma Excl_includedN n a b  : Excl' a ≼{n} Excl' b → a ≡{n}≡ b.
+Proof. by intros [[c|] Hb%(inj Some)]; inversion_clear Hb. Qed.
+Lemma Excl_included a b : Excl' a ≼ Excl' b → a ≡ b.
+Proof. by intros [[c|] Hb%(inj Some)]; inversion_clear Hb. Qed.
 End excl.
 
 Arguments exclC : clear implicits.
