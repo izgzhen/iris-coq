@@ -132,17 +132,17 @@ Qed.
 Lemma ownI_open i P : wsat ★ ownI i P ★ ownE {[i]} ⊢ wsat ★ ▷ P ★ ownD {[i]}.
 Proof.
   rewrite /ownI. iIntros "(Hw & Hi & HiE)". iDestruct "Hw" as (I) "[? HI]".
-  iDestruct (invariant_lookup I i P with "[-]") as (Q) "[% #HPQ]"; [by iFrame|].
-  iDestruct (big_sepM_delete _ _ i with "HI") as "[[[HQ $]|?] HI]"; eauto.
+  iDestruct (invariant_lookup I i P with "[$Hw $Hi]") as (Q) "[% #HPQ]".
+  iDestruct (big_sepM_delete _ _ i with "HI") as "[[[HQ $]|HiE'] HI]"; eauto.
   - iSplitR "HQ"; last by iNext; iRewrite -"HPQ".
     iExists I. iFrame "Hw". iApply (big_sepM_delete _ _ i); eauto.
     iFrame "HI"; eauto.
-  - iDestruct (ownE_singleton_twice with "[-]") as %[]. by iFrame.
+  - iDestruct (ownE_singleton_twice with "[$HiE $HiE']") as %[].
 Qed.
 Lemma ownI_close i P : wsat ★ ownI i P ★ ▷ P ★ ownD {[i]} ⊢ wsat ★ ownE {[i]}.
 Proof.
   rewrite /ownI. iIntros "(Hw & Hi & HP & HiD)". iDestruct "Hw" as (I) "[? HI]".
-  iDestruct (invariant_lookup with "[-]") as (Q) "[% #HPQ]"; first by iFrame.
+  iDestruct (invariant_lookup with "[$Hw $Hi]") as (Q) "[% #HPQ]".
   iDestruct (big_sepM_delete _ _ i with "HI") as "[[[HQ ?]|$] HI]"; eauto.
   - iDestruct (ownD_singleton_twice with "[-]") as %[]. by iFrame.
   - iExists I. iFrame "Hw". iApply (big_sepM_delete _ _ i); eauto.

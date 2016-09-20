@@ -201,9 +201,12 @@ so called specification patterns to express this splitting:
 
 - `H` : use the hypothesis `H` (it should match the premise exactly). If `H` is
   spatial, it will be consumed.
-- `[H1 ... Hn]` : generate a goal with the spatial hypotheses `H1 ... Hn` and
-  all persistent hypotheses. The hypotheses `H1 ... Hn` will be consumed.
-- `[-H1 ... Hn]`  : negated form of the above pattern
+- `[H1 ... Hn]` : generate a goal with the (spatial) hypotheses `H1 ... Hn` and
+  all persistent hypotheses. The spatial hypotheses among `H1 ... Hn` will be
+  consumed. Hypotheses may be prefixed with a `$`, which results in them being
+  framed in the generated goal.
+- `[-H1 ... Hn]`  : negated form of the above pattern. This pattern does not
+  accept hypotheses prefixed with a `$`.
 - `==>[H1 ... Hn]` : same as the above pattern, but can only be used if the goal
   is a primitive view shift, in which case the view shift will be kept in the
   goal of the premise too.
