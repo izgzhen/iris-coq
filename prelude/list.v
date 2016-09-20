@@ -303,9 +303,8 @@ Inductive Forall3 {A B C} (P : A → B → C → Prop) :
   | Forall3_cons x y z l k k' :
      P x y z → Forall3 P l k k' → Forall3 P (x :: l) (y :: k) (z :: k').
 
-(** Set operations Decisionon lists *)
-Definition included {A} (l1 l2 : list A) := ∀ x, x ∈ l1 → x ∈ l2.
-Infix "`included`" := included (at level 70) : C_scope.
+(** Set operations on lists *)
+Instance list_subseteq {A} : SubsetEq (list A) := λ l1 l2, ∀ x, x ∈ l1 → x ∈ l2.
 
 Section list_set.
   Context `{dec : EqDecision A}.
@@ -2046,9 +2045,9 @@ Section contains_dec.
 End contains_dec.
 
 (** ** Properties of [included] *)
-Global Instance included_preorder : PreOrder (@included A).
+Global Instance list_subseteq_po : PreOrder (@subseteq (list A) _).
 Proof. split; firstorder. Qed.
-Lemma included_nil l : [] `included` l.
+Lemma list_subseteq_nil l : [] ⊆ l.
 Proof. intros x. by rewrite elem_of_nil. Qed.
 
 (** ** Properties of the [Forall] and [Exists] predicate *)

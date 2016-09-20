@@ -1225,14 +1225,14 @@ Qed.
 Lemma map_union_cancel_l {A} (m1 m2 m3 : M A) :
   m1 ⊥ₘ m3 → m2 ⊥ₘ m3 → m3 ∪ m1 = m3 ∪ m2 → m1 = m2.
 Proof.
-  intros. apply (anti_symm (⊆));
-    apply map_union_reflecting_l with m3; auto using (reflexive_eq (R:=(⊆))).
+  intros. apply (anti_symm (⊆)); apply map_union_reflecting_l with m3;
+    auto using (reflexive_eq (R:=@subseteq (M A) _)).
 Qed.
 Lemma map_union_cancel_r {A} (m1 m2 m3 : M A) :
   m1 ⊥ₘ m3 → m2 ⊥ₘ m3 → m1 ∪ m3 = m2 ∪ m3 → m1 = m2.
 Proof.
-  intros. apply (anti_symm (⊆));
-    apply map_union_reflecting_r with m3; auto using (reflexive_eq (R:=(⊆))).
+  intros. apply (anti_symm (⊆)); apply map_union_reflecting_r with m3;
+    auto using (reflexive_eq (R:=@subseteq (M A) _)).
 Qed.
 Lemma map_disjoint_union_l {A} (m1 m2 m3 : M A) :
   m1 ∪ m2 ⊥ₘ m3 ↔ m1 ⊥ₘ m3 ∧ m2 ⊥ₘ m3.

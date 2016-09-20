@@ -318,11 +318,11 @@ Lemma alloc_fresh e v σ :
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset _)), is_fresh. Qed.
 
 (** Closed expressions *)
-Lemma is_closed_weaken X Y e : is_closed X e → X `included` Y → is_closed Y e.
+Lemma is_closed_weaken X Y e : is_closed X e → X ⊆ Y → is_closed Y e.
 Proof. revert X Y; induction e; naive_solver (eauto; set_solver). Qed.
 
 Lemma is_closed_weaken_nil X e : is_closed [] e → is_closed X e.
-Proof. intros. by apply is_closed_weaken with [], included_nil. Qed.
+Proof. intros. by apply is_closed_weaken with [], list_subseteq_nil. Qed.
 
 Lemma is_closed_subst X e x es : is_closed X e → x ∉ X → subst x es e = e.
 Proof.
