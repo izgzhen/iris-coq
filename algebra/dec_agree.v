@@ -15,6 +15,8 @@ Instance maybe_DecAgree {A} : Maybe (@DecAgree A) := λ x,
 
 Section dec_agree.
 Context `{EqDecision A}.
+Implicit Types a b : A.
+Implicit Types x y : dec_agree A.
 
 Instance dec_agree_valid : Valid (dec_agree A) := λ x,
   if x is DecAgree _ then True else False.
@@ -56,6 +58,9 @@ Proof. destruct x; by rewrite /= ?decide_True. Qed.
 
 Lemma dec_agree_op_inv (x1 x2 : dec_agree A) : ✓ (x1 ⋅ x2) → x1 = x2.
 Proof. destruct x1, x2; by repeat (simplify_eq/= || case_match). Qed.
+
+Lemma DecAgree_included a b : DecAgree a ≼ DecAgree b → a = b.
+Proof. intros [[c|] [=]%leibniz_equiv_iff]. by simplify_option_eq. Qed.
 End dec_agree.
 
 Arguments dec_agreeC : clear implicits.
