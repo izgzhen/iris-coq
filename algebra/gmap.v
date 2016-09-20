@@ -264,6 +264,23 @@ Proof.
       * by rewrite Hi lookup_op lookup_singleton lookup_delete.
       * by rewrite lookup_op lookup_singleton_ne // lookup_delete_ne // left_id.
 Qed.
+(* We do not have [x ≼ y ↔ ∀ n, x ≼{n} y], so we cannot use the previous lemma *)
+Lemma singleton_included m i x :
+  {[ i := x ]} ≼ m ↔ ∃ y, m !! i ≡ Some y ∧ (x ≼ y ∨ x ≡ y).
+Proof.
+  split.
+  - move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton.
+    case (m' !! i)=> [y|]=> Hm.
+    + exists (x ⋅ y); eauto using cmra_included_l.
+    + exists x; eauto.
+  - intros (y&Hi&[[z ?]| ->]).
+    + exists (<[i:=z]>m)=> j; destruct (decide (i = j)) as [->|].
+      * rewrite Hi lookup_op lookup_singleton lookup_insert. by constructor.
+      * by rewrite lookup_op lookup_singleton_ne // lookup_insert_ne // left_id.
+    + exists (delete i m)=> j; destruct (decide (i = j)) as [->|].
+      * by rewrite Hi lookup_op lookup_singleton lookup_delete.
+      * by rewrite lookup_op lookup_singleton_ne // lookup_delete_ne // left_id.
+Qed.
 
 Lemma insert_updateP (P : A → Prop) (Q : gmap K A → Prop) m i x :
   x ~~>: P → (∀ y, P y → Q (<[i:=y]>m)) → <[i:=x]>m ~~>: Q.
