@@ -32,7 +32,7 @@ Section proof.
   Definition locked (γ : gname): iProp Σ := own γ (Excl ()).
 
   Lemma locked_exclusive (γ : gname) : locked γ ★ locked γ ⊢ False.
-  Proof. rewrite /locked -own_op own_valid. by iIntros (?). Qed.
+  Proof. rewrite /locked own_valid_2. by iIntros (?). Qed.
 
   Global Instance lock_inv_ne n γ l : Proper (dist n ==> dist n) (lock_inv γ l).
   Proof. solve_proper. Qed.

@@ -52,6 +52,7 @@ Lemma own_op γ a1 a2 : own γ (a1 ⋅ a2) ⊣⊢ own γ a1 ★ own γ a2.
 Proof. by rewrite !own_eq /own_def -ownM_op iRes_singleton_op. Qed.
 Global Instance own_mono γ : Proper (flip (≼) ==> (⊢)) (@own Σ A _ γ).
 Proof. move=>a b [c ->]. rewrite own_op. eauto with I. Qed.
+
 Lemma own_valid γ a : own γ a ⊢ ✓ a.
 Proof.
   rewrite !own_eq /own_def ownM_valid /iRes_singleton.
@@ -60,10 +61,16 @@ Proof.
   (* implicit arguments differ a bit *)
   by trans (✓ cmra_transport inG_prf a : iProp Σ)%I; last destruct inG_prf.
 Qed.
+Lemma own_valid_2 γ a1 a2 : own γ a1 ★ own γ a2 ⊢ ✓ (a1 ⋅ a2).
+Proof. by rewrite -own_op own_valid. Qed.
+Lemma own_valid_3 γ a1 a2 a3 : own γ a1 ★ own γ a2 ★ own γ a3 ⊢ ✓ (a1 ⋅ a2 ⋅ a3).
+Proof. by rewrite -!own_op assoc own_valid. Qed.
+
 Lemma own_valid_r γ a : own γ a ⊢ own γ a ★ ✓ a.
 Proof. apply: uPred.always_entails_r. apply own_valid. Qed.
 Lemma own_valid_l γ a : own γ a ⊢ ✓ a ★ own γ a.
 Proof. by rewrite comm -own_valid_r. Qed.
+
 Global Instance own_timeless γ a : Timeless a → TimelessP (own γ a).
 Proof. rewrite !own_eq /own_def; apply _. Qed.
 Global Instance own_core_persistent γ a : Persistent a → PersistentP (own γ a).
@@ -107,13 +114,23 @@ Proof.
   intros; rewrite (own_updateP (a' =)); last by apply cmra_update_updateP.
   by apply rvs_mono, exist_elim=> a''; apply pure_elim_l=> ->.
 Qed.
+Lemma own_update_2 γ a1 a2 a' :
+  a1 ⋅ a2 ~~> a' → own γ a1 ★ own γ a2 =r=> own γ a'.
+Proof. intros. rewrite -own_op. by apply own_update. Qed.
+Lemma own_update_3 γ a1 a2 a3 a' :
+  a1 ⋅ a2 ⋅ a3 ~~> a' → own γ a1 ★ own γ a2 ★ own γ a3 =r=> own γ a'.
+Proof. intros. rewrite -!own_op assoc. by apply own_update. Qed.
 End global.
 
 Arguments own_valid {_ _} [_] _ _.
+Arguments own_valid_2 {_ _} [_] _ _ _.
+Arguments own_valid_3 {_ _} [_] _ _ _ _.
 Arguments own_valid_l {_ _} [_] _ _.
 Arguments own_valid_r {_ _} [_] _ _.
 Arguments own_updateP {_ _} [_] _ _ _ _.
 Arguments own_update {_ _} [_] _ _ _ _.
+Arguments own_update_2 {_ _} [_] _ _ _ _ _.
+Arguments own_update_3 {_ _} [_] _ _ _ _ _ _.
 
 Lemma own_empty `{inG Σ (A:ucmraT)} γ : True =r=> own γ ∅.
 Proof.

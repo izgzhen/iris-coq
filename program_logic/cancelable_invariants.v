@@ -39,7 +39,7 @@ Section proofs.
   Proof. by rewrite cinv_own_op Qp_div_2. Qed.
 
   Lemma cinv_own_valid γ q1 q2 : cinv_own γ q1 ★ cinv_own γ q2 ⊢ ✓ (q1 + q2)%Qp.
-  Proof. rewrite /cinv_own -own_op own_valid. by iIntros "% !%". Qed.
+  Proof. rewrite /cinv_own own_valid_2. by iIntros "% !%". Qed.
 
   Lemma cinv_own_1_l γ q : cinv_own γ 1 ★ cinv_own γ q ⊢ False.
   Proof. rewrite cinv_own_valid. by iIntros (?%(exclusive_l 1%Qp)). Qed.

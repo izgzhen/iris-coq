@@ -57,7 +57,7 @@ Proof. apply _. Qed.
 Lemma box_own_auth_agree γ b1 b2 :
   box_own_auth γ (● Excl' b1) ★ box_own_auth γ (◯ Excl' b2) ⊢ b1 = b2.
 Proof.
-  rewrite /box_own_prop -own_op own_valid prod_validI /= and_elim_l.
+  rewrite /box_own_prop own_valid_2 prod_validI /= and_elim_l.
   by iDestruct 1 as % [[[] [=]%leibniz_equiv] ?]%auth_valid_discrete.
 Qed.
 
@@ -74,7 +74,7 @@ Qed.
 Lemma box_own_agree γ Q1 Q2 :
   (box_own_prop γ Q1 ★ box_own_prop γ Q2) ⊢ ▷ (Q1 ≡ Q2).
 Proof.
-  rewrite /box_own_prop -own_op own_valid prod_validI /= and_elim_r.
+  rewrite /box_own_prop own_valid_2 prod_validI /= and_elim_r.
   rewrite option_validI /= agree_validI agree_equivI later_equivI /=.
   iIntros "#HQ !>". rewrite -{2}(iProp_fold_unfold Q1).
   iRewrite "HQ". by rewrite iProp_fold_unfold.
