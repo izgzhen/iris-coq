@@ -92,6 +92,9 @@ Separating logic specific tactics
 
   Notice that framing spatial hypotheses makes them disappear, but framing Coq
   or persistent hypotheses does not make them disappear.
+
+  This tactic finishes the goal in case everything in the conclusion has been
+  framed.
 - `iCombine "H1" "H2" as "H"` : turns `H1 : P1` and `H2 : P2` into
   `H : P1 ★ P2`.
 

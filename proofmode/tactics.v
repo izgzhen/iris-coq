@@ -432,17 +432,24 @@ Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
     |env_cbv; reflexivity || fail "iCombine:" H "not fresh"|].
 
 (** Framing *)
+Local Ltac iFrameFinish :=
+  lazy iota beta;
+  try match goal with
+  | |- _ ⊢ True => exact (uPred.pure_intro _ _ I)
+  end.
+
 Local Ltac iFramePure t :=
   let φ := type of t in
   eapply (tac_frame_pure _ _ _ _ t);
-    [apply _ || fail "iFrame: cannot frame" φ|].
+    [apply _ || fail "iFrame: cannot frame" φ
+    |iFrameFinish].
 
 Local Ltac iFrameHyp H :=
   eapply tac_frame with _ H _ _ _;
     [env_cbv; reflexivity || fail "iFrame:" H "not found"
     |let R := match goal with |- Frame ?R _ _ => R end in
      apply _ || fail "iFrame: cannot frame" R
-    |lazy iota beta].
+    |iFrameFinish].
 
 Local Ltac iFrameAnyPure :=
   repeat match goal with H : _ |- _ => iFramePure H end.
