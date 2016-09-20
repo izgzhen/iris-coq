@@ -202,6 +202,7 @@ Lemma lookup_validN_Some n m i x : ✓{n} m → m !! i ≡{n}≡ Some x → ✓{
 Proof. by move=> /(_ i) Hm Hi; move:Hm; rewrite Hi. Qed.
 Lemma lookup_valid_Some m i x : ✓ m → m !! i ≡ Some x → ✓ x.
 Proof. move=> Hm Hi. move:(Hm i). by rewrite Hi. Qed.
+
 Lemma insert_validN n m i x : ✓{n} x → ✓{n} m → ✓{n} <[i:=x]>m.
 Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_eq. Qed.
 Lemma insert_valid m i x : ✓ x → ✓ m → ✓ <[i:=x]>m.
@@ -213,6 +214,11 @@ Proof.
 Qed.
 Lemma singleton_valid i x : ✓ ({[ i := x ]} : gmap K A) ↔ ✓ x.
 Proof. rewrite !cmra_valid_validN. by setoid_rewrite singleton_validN. Qed.
+
+Lemma delete_validN n m i : ✓{n} m → ✓{n} (delete i m).
+Proof. intros Hm j; destruct (decide (i = j)); by simplify_map_eq. Qed.
+Lemma delete_valid m i : ✓ m → ✓ (delete i m).
+Proof. intros Hm j; destruct (decide (i = j)); by simplify_map_eq. Qed.
 
 Lemma insert_singleton_op m i x : m !! i = None → <[i:=x]> m = {[ i := x ]} ⋅ m.
 Proof.
