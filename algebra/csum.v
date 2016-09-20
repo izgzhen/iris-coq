@@ -15,6 +15,11 @@ Arguments Cinl {_ _} _.
 Arguments Cinr {_ _} _.
 Arguments CsumBot {_ _}.
 
+Instance maybe_Cinl {A B} : Maybe (@Cinl A B) := λ x,
+  match x with Cinl a => Some a | _ => None end.
+Instance maybe_Cinr {A B} : Maybe (@Cinr A B) := λ x,
+  match x with Cinr b => Some b | _ => None end.
+
 Section cofe.
 Context {A B : cofeT}.
 Implicit Types a : A.
