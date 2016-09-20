@@ -111,6 +111,8 @@ Proof.
   destruct x as [[[?|]|] ?]; simpl; try done.
   setoid_rewrite <-cmra_discrete_included_iff; naive_solver eauto using 0.
 Qed.
+Lemma auth_valid_discrete_2 `{CMRADiscrete A} a b : ✓ (● a ⋅ ◯ b) ↔ b ≼ a ∧ ✓ a.
+Proof. by rewrite auth_valid_discrete /= left_id. Qed.
 
 Lemma authoritative_valid  x : ✓ x → ✓ authoritative x.
 Proof. by destruct x as [[[]|]]. Qed.
@@ -189,6 +191,10 @@ Lemma auth_frag_op a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.
 Lemma auth_both_op a b : Auth (Excl' a) b ≡ ● a ⋅ ◯ b.
 Proof. by rewrite /op /auth_op /= left_id. Qed.
+Lemma auth_frag_mono a b : a ≼ b → ◯ a ≼ ◯ b.
+Proof. intros [c ->]. rewrite auth_frag_op. apply cmra_included_l. Qed.
+Lemma auth_auth_valid a : ✓ a → ✓ (● a).
+Proof. intros; split; simpl; auto using ucmra_unit_leastN. Qed.
 
 Lemma auth_update a af b :
   a ~l~> b @ Some af → ● (a ⋅ af) ⋅ ◯ a ~~> ● (b ⋅ af) ⋅ ◯ b.
