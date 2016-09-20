@@ -48,10 +48,9 @@ Section orders.
     - intros [? HYX]. split. done. by intros <-.
     - intros [? HXY]. split. done. by contradict HXY; apply (anti_symm R).
   Qed.
-  Lemma po_eq_dec `{!PartialOrder R, ∀ X Y, Decision (X ⊆ Y)} (X Y : A) :
-    Decision (X = Y).
+  Lemma po_eq_dec `{!PartialOrder R, ∀ X Y, Decision (X ⊆ Y)} : EqDecision A.
   Proof.
-    refine (cast_if_and (decide (X ⊆ Y)) (decide (Y ⊆ X)));
+    refine (λ X Y, cast_if_and (decide (X ⊆ Y)) (decide (Y ⊆ X)));
      abstract (rewrite anti_symm_iff; tauto).
   Defined.
   Lemma total_not `{!Total R} X Y : X ⊈ Y → Y ⊆ X.

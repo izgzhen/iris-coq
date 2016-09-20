@@ -13,7 +13,7 @@ Arguments listset_nodup_car {_} _.
 Arguments listset_nodup_prf {_} _.
 
 Section list_collection.
-Context {A : Type} `{∀ x y : A, Decision (x = y)}.
+Context `{EqDecision A}.
 Notation C := (listset_nodup A).
 
 Instance listset_nodup_elem_of: ElemOf A C := λ x l, x ∈ listset_nodup_car l.

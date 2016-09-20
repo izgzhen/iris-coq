@@ -7,7 +7,7 @@ From iris.prelude Require Export collections fin_maps.
 
 Class FinMapDom K M D `{FMap M,
     ∀ A, Lookup K A (M A), ∀ A, Empty (M A), ∀ A, PartialAlter K A (M A),
-    OMap M, Merge M, ∀ A, FinMapToList K A (M A), ∀ i j : K, Decision (i = j),
+    OMap M, Merge M, ∀ A, FinMapToList K A (M A), EqDecision K,
     ∀ A, Dom (M A) D, ElemOf K D, Empty D, Singleton K D,
     Union D, Intersection D, Difference D} := {
   finmap_dom_map :>> FinMap K M;

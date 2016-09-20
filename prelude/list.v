@@ -245,7 +245,8 @@ Hint Extern 0 (_ `prefix_of` _) => reflexivity.
 Hint Extern 0 (_ `suffix_of` _) => reflexivity.
 
 Section prefix_suffix_ops.
-  Context `{∀ x y : A, Decision (x = y)}.
+  Context `{EqDecision A}.
+
   Definition max_prefix_of : list A → list A → list A * list A * list A :=
     fix go l1 l2 :=
     match l1, l2 with
@@ -284,7 +285,7 @@ Infix "`contains`" := contains (at level 70) : C_scope.
 Hint Extern 0 (_ `contains` _) => reflexivity.
 
 Section contains_dec_help.
-  Context {A} {dec : ∀ x y : A, Decision (x = y)}.
+  Context `{EqDecision A}.
   Fixpoint list_remove (x : A) (l : list A) : option (list A) :=
     match l with
     | [] => None
@@ -302,14 +303,13 @@ Inductive Forall3 {A B C} (P : A → B → C → Prop) :
   | Forall3_cons x y z l k k' :
      P x y z → Forall3 P l k k' → Forall3 P (x :: l) (y :: k) (z :: k').
 
-(** Set operations on lists *)
+(** Set operations Decisionon lists *)
 Definition included {A} (l1 l2 : list A) := ∀ x, x ∈ l1 → x ∈ l2.
 Infix "`included`" := included (at level 70) : C_scope.
 
 Section list_set.
-  Context {A} {dec : ∀ x y : A, Decision (x = y)}.
-  Global Instance elem_of_list_dec {dec : ∀ x y : A, Decision (x = y)}
-    (x : A) : ∀ l, Decision (x ∈ l).
+  Context `{dec : EqDecision A}.
+  Global Instance elem_of_list_dec (x : A) : ∀ l, Decision (x ∈ l).
   Proof.
    refine (
     fix go l :=
@@ -415,8 +415,8 @@ Proof.
   - discriminate (H 0).
   - f_equal; [by injection (H 0)|]. apply (IH _ $ λ i, H (S i)).
 Qed.
-Global Instance list_eq_dec {dec : ∀ x y, Decision (x = y)} : ∀ l k,
-  Decision (l = k) := list_eq_dec dec.
+Global Instance list_eq_dec {dec : EqDecision A} : EqDecision (list A) :=
+  list_eq_dec dec.
 Global Instance list_eq_nil_dec l : Decision (l = []).
 Proof. by refine match l with [] => left _ | _ => right _ end. Defined.
 Lemma list_singleton_reflect l :
@@ -695,7 +695,7 @@ Proof.
 Qed.
 
 Section no_dup_dec.
-  Context `{!∀ x y, Decision (x = y)}.
+  Context `{!EqDecision A}.
   Global Instance NoDup_dec: ∀ l, Decision (NoDup l) :=
     fix NoDup_dec l :=
     match l return Decision (NoDup l) with
@@ -724,7 +724,7 @@ End no_dup_dec.
 
 (** ** Set operations on lists *)
 Section list_set.
-  Context {dec : ∀ x y, Decision (x = y)}.
+  Context `{!EqDecision A}.
   Lemma elem_of_list_difference l k x : x ∈ list_difference l k ↔ x ∈ l ∧ x ∉ k.
   Proof.
     split; induction l; simpl; try case_decide;
@@ -1443,7 +1443,7 @@ Proof.
   - intros ?. by eexists [].
   - intros ???[k1->] [k2->]. exists (k2 ++ k1). by rewrite (assoc_L (++)).
 Qed.
-Global Instance prefix_of_dec `{∀ x y, Decision (x = y)} : ∀ l1 l2,
+Global Instance prefix_of_dec `{!EqDecision A} : ∀ l1 l2,
     Decision (l1 `prefix_of` l2) := fix go l1 l2 :=
   match l1, l2 return { l1 `prefix_of` l2 } + { ¬l1 `prefix_of` l2 } with
   | [], _ => left (prefix_of_nil _)
@@ -1460,7 +1460,7 @@ Global Instance prefix_of_dec `{∀ x y, Decision (x = y)} : ∀ l1 l2,
   end.
 
 Section prefix_ops.
-  Context `{∀ x y, Decision (x = y)}.
+  Context `{!EqDecision A}.
   Lemma max_prefix_of_fst l1 l2 :
     l1 = (max_prefix_of l1 l2).2 ++ (max_prefix_of l1 l2).1.1.
   Proof.
@@ -1577,7 +1577,7 @@ Lemma suffix_of_length l1 l2 : l1 `suffix_of` l2 → length l1 ≤ length l2.
 Proof. intros [? ->]. rewrite app_length. lia. Qed.
 Lemma suffix_of_cons_not x l : ¬x :: l `suffix_of` l.
 Proof. intros [??]. discriminate_list. Qed.
-Global Instance suffix_of_dec `{∀ x y, Decision (x = y)} l1 l2 :
+Global Instance suffix_of_dec `{!EqDecision A} l1 l2 :
   Decision (l1 `suffix_of` l2).
 Proof.
   refine (cast_if (decide_rel prefix_of (reverse l1) (reverse l2)));
@@ -1585,7 +1585,7 @@ Proof.
 Defined.
 
 Section max_suffix_of.
-  Context `{∀ x y, Decision (x = y)}.
+  Context `{!EqDecision A}.
 
   Lemma max_suffix_of_fst l1 l2 :
     l1 = (max_suffix_of l1 l2).1.1 ++ (max_suffix_of l1 l2).2.
@@ -1987,7 +1987,7 @@ Proof.
 Qed.
 
 Section contains_dec.
-  Context `{∀ x y, Decision (x = y)}.
+  Context `{!EqDecision A}.
 
   Lemma list_remove_Permutation l1 l2 k1 x :
     l1 ≡ₚ l2 → list_remove x l1 = Some k1 →
@@ -2215,16 +2215,16 @@ Section Forall_Exists.
   Lemma Forall_not_Exists l : Forall (not ∘ P) l → ¬Exists P l.
   Proof. induction 1; inversion_clear 1; contradiction. Qed.
 
-  Lemma Forall_list_difference `{∀ x y : A, Decision (x = y)} l k :
+  Lemma Forall_list_difference `{!EqDecision A} l k :
     Forall P l → Forall P (list_difference l k).
   Proof.
     rewrite !Forall_forall.
     intros ? x; rewrite elem_of_list_difference; naive_solver.
   Qed.
-  Lemma Forall_list_union `{∀ x y : A, Decision (x = y)} l k :
+  Lemma Forall_list_union `{!EqDecision A} l k :
     Forall P l → Forall P k → Forall P (list_union l k).
   Proof. intros. apply Forall_app; auto using Forall_list_difference. Qed.
-  Lemma Forall_list_intersection `{∀ x y : A, Decision (x = y)} l k :
+  Lemma Forall_list_intersection `{!EqDecision A} l k :
     Forall P l → Forall P (list_intersection l k).
   Proof.
     rewrite !Forall_forall.

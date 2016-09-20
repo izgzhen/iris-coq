@@ -2,7 +2,7 @@
 (* This file is distributed under the terms of the BSD license. *)
 From iris.prelude Require Export countable vector.
 
-Class Finite A `{∀ x y : A, Decision (x = y)} := {
+Class Finite A `{EqDecision A} := {
   enum : list A;
   NoDup_enum : NoDup enum;
   elem_of_enum x : x ∈ enum
@@ -189,7 +189,7 @@ End forall_exists.
 
 (** Instances *)
 Section enc_finite.
-  Context `{∀ x y : A, Decision (x = y)}.
+  Context `{EqDecision A}.
   Context (to_nat : A → nat) (of_nat : nat → A) (c : nat).
   Context (of_to_nat : ∀ x, of_nat (to_nat x) = x).
   Context (to_nat_c : ∀ x, to_nat x < c).
@@ -212,7 +212,7 @@ Section enc_finite.
 End enc_finite.
 
 Section bijective_finite.
-  Context `{Finite A, ∀ x y : B, Decision (x = y)} (f : A → B) (g : B → A).
+  Context `{Finite A, EqDecision B} (f : A → B) (g : B → A).
   Context `{!Inj (=) (=) f, !Cancel (=) f g}.
 
   Program Instance bijective_finite: Finite B := {| enum := f <$> enum A |}.

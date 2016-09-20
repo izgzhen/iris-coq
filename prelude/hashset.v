@@ -15,7 +15,7 @@ Arguments Hashset {_ _} _ _.
 Arguments hashset_car {_ _} _.
 
 Section hashset.
-Context `{∀ x y : A, Decision (x = y)} (hash : A → Z).
+Context `{EqDecision A} (hash : A → Z).
 
 Instance hashset_elem_of: ElemOf A (hashset hash) := λ x m, ∃ l,
   hashset_car m !! hash x = Some l ∧ x ∈ l.
@@ -137,7 +137,7 @@ Hint Extern 1 (Elements _ (hashset _)) =>
   eapply @hashset_elems : typeclass_instances.
 
 Section remove_duplicates.
-Context `{∀ x y : A, Decision (x = y)} (hash : A → Z).
+Context `{EqDecision A} (hash : A → Z).
 
 Definition remove_dups_fast (l : list A) : list A :=
   match l with

@@ -14,7 +14,7 @@ Instance maybe_DecAgree {A} : Maybe (@DecAgree A) := λ x,
   match x with DecAgree a => Some a | _ => None end.
 
 Section dec_agree.
-Context {A : Type} `{∀ x y : A, Decision (x = y)}.
+Context `{EqDecision A}.
 
 Instance dec_agree_valid : Valid (dec_agree A) := λ x,
   if x is DecAgree _ then True else False.

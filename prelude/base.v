@@ -100,6 +100,7 @@ on a type [A] we write [`{∀ x y : A, Decision (x = y)}] and use it by writing
 [decide (x = y)]. *)
 Class Decision (P : Prop) := decide : {P} + {¬P}.
 Arguments decide _ {_}.
+Notation EqDecision A := (∀ x y : A, Decision (x = y)).
 
 (** ** Inhabited types *)
 (** This type class collects types that are inhabited. *)
@@ -918,9 +919,8 @@ Inductive NoDup {A} : list A → Prop :=
 
 (** Decidability of equality of the carrier set is admissible, but we add it
 anyway so as to avoid cycles in type class search. *)
-Class FinCollection A C `{ElemOf A C, Empty C, Singleton A C,
-    Union C, Intersection C, Difference C,
-    Elements A C, ∀ x y : A, Decision (x = y)} : Prop := {
+Class FinCollection A C `{ElemOf A C, Empty C, Singleton A C, Union C,
+    Intersection C, Difference C, Elements A C, EqDecision A} : Prop := {
   fin_collection :>> Collection A C;
   elem_of_elements X x : x ∈ elements X ↔ x ∈ X;
   NoDup_elements X : NoDup (elements X)

@@ -1,7 +1,7 @@
 From iris.prelude Require Export base tactics.
 
 Section definitions.
-  Context {A T : Type} `{∀ a b : A, Decision (a = b)}.
+  Context {A T : Type} `{EqDecision A}.
   Global Instance fn_insert : Insert A T (A → T) :=
     λ a t f b, if decide (a = b) then t else f b.
   Global Instance fn_alter : Alter A T (A → T) :=
@@ -12,7 +12,7 @@ End definitions.
    of equality of functions. *)
 
 Section functions.
-  Context {A T : Type} `{∀ a b : A, Decision (a = b)}.
+  Context {A T : Type} `{!EqDecision A}.
 
   Lemma fn_lookup_insert (f : A → T) a t : <[a:=t]>f a = t.
   Proof. unfold insert, fn_insert. by destruct (decide (a = a)). Qed.

@@ -37,7 +37,7 @@ Proof.
   abstract (by rewrite listset_empty_alt).
 Defined.
 
-Context `{∀ x y : A, Decision (x = y)}.
+Context `{!EqDecision A}.
 
 Instance listset_intersection: Intersection (listset A) := λ l k,
   let (l') := l in let (k') := k in Listset (list_intersection l' k').

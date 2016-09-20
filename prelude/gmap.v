@@ -22,10 +22,9 @@ Proof.
   split; [by intros ->|intros]. destruct m1, m2; simplify_eq/=.
   f_equal; apply proof_irrel.
 Qed.
-Instance gmap_eq_eq `{Countable K} `{∀ x y : A, Decision (x = y)}
-  (m1 m2 : gmap K A) : Decision (m1 = m2).
+Instance gmap_eq_eq `{Countable K, EqDecision A} : EqDecision (gmap K A).
 Proof.
- refine (cast_if (decide (gmap_car m1 = gmap_car m2)));
+ refine (λ m1 m2, cast_if (decide (gmap_car m1 = gmap_car m2)));
   abstract (by rewrite gmap_eq).
 Defined.
 

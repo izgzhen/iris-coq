@@ -16,10 +16,10 @@ Infix "+:+" := String.append (at level 60, right associativity) : C_scope.
 Arguments String.append _ _ : simpl never.
 
 (** * Decision of equality *)
-Instance assci_eq_dec : ∀ a1 a2, Decision (a1 = a2) := ascii_dec.
-Instance string_eq_dec (s1 s2 : string) : Decision (s1 = s2).
+Instance assci_eq_dec : EqDecision ascii := ascii_dec.
+Instance string_eq_dec : EqDecision string.
 Proof. solve_decision. Defined.
-Instance: Inj (=) (=) (String.append s1).
+Instance string_app_inj : Inj (=) (=) (String.append s1).
 Proof. intros s1 ???. induction s1; simplify_eq/=; f_equal/=; auto. Qed.
 
 (* Reverse *)

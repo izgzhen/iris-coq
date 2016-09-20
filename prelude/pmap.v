@@ -26,8 +26,7 @@ Inductive Pmap_raw (A : Type) : Type :=
 Arguments PLeaf {_}.
 Arguments PNode {_} _ _ _.
 
-Instance Pmap_raw_eq_dec `{∀ x y : A, Decision (x = y)} (x y : Pmap_raw A) :
-  Decision (x = y).
+Instance Pmap_raw_eq_dec `{EqDecision A} : EqDecision (Pmap_raw A).
 Proof. solve_decision. Defined.
 
 Fixpoint Pmap_wf {A} (t : Pmap_raw A) : bool :=
@@ -266,8 +265,7 @@ Proof.
   split; [by intros ->|intros]; destruct m1 as [t1 ?], m2 as [t2 ?].
   simplify_eq/=; f_equal; apply proof_irrel.
 Qed.
-Instance Pmap_eq_dec `{∀ x y : A, Decision (x = y)}
-    (m1 m2 : Pmap A) : Decision (m1 = m2) :=
+Instance Pmap_eq_dec `{EqDecision A} : EqDecision (Pmap A) := λ m1 m2,
   match Pmap_raw_eq_dec (pmap_car m1) (pmap_car m2) with
   | left H => left (proj2 (Pmap_eq m1 m2) H)
   | right H => right (H ∘ proj1 (Pmap_eq m1 m2))

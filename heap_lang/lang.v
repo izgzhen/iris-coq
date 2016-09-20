@@ -22,7 +22,7 @@ Bind Scope binder_scope with binder.
 Definition cons_binder (mx : binder) (X : list string) : list string :=
   match mx with BAnon => X | BNamed x => x :: X end.
 Infix ":b:" := cons_binder (at level 60, right associativity).
-Instance binder_dec_eq (x1 x2 : binder) : Decision (x1 = x2).
+Instance binder_eq_dec_eq : EqDecision binder.
 Proof. solve_decision. Defined.
 
 Instance set_unfold_cons_binder x mx X P :
@@ -125,17 +125,17 @@ Qed.
 Instance of_val_inj : Inj (=) (=) of_val.
 Proof. by intros ?? Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
 
-Instance base_lit_dec_eq (l1 l2 : base_lit) : Decision (l1 = l2).
+Instance base_lit_eq_dec : EqDecision base_lit.
 Proof. solve_decision. Defined.
-Instance un_op_dec_eq (op1 op2 : un_op) : Decision (op1 = op2).
+Instance un_op_eq_dec : EqDecision un_op.
 Proof. solve_decision. Defined.
-Instance bin_op_dec_eq (op1 op2 : bin_op) : Decision (op1 = op2).
+Instance bin_op_eq_dec : EqDecision bin_op.
 Proof. solve_decision. Defined.
-Instance expr_dec_eq (e1 e2 : expr) : Decision (e1 = e2).
+Instance expr_eq_dec : EqDecision expr.
 Proof. solve_decision. Defined.
-Instance val_dec_eq (v1 v2 : val) : Decision (v1 = v2).
+Instance val_eq_dec : EqDecision val.
 Proof.
- refine (cast_if (decide (of_val v1 = of_val v2))); abstract naive_solver.
+ refine (λ v v', cast_if (decide (of_val v = of_val v'))); abstract naive_solver.
 Defined.
 
 Instance expr_inhabited : Inhabited expr := populate (Lit LitUnit).

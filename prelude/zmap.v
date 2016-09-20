@@ -13,14 +13,13 @@ Arguments Zmap_pos {_} _.
 Arguments Zmap_neg {_} _.
 Arguments ZMap {_} _ _ _.
 
-Instance Zmap_eq_dec `{∀ x y : A, Decision (x = y)} (t1 t2 : Zmap A) :
-  Decision (t1 = t2).
+Instance Zmap_eq_dec `{EqDecision A} : EqDecision (Zmap A).
 Proof.
- refine
+ refine (λ t1 t2,
   match t1, t2 with
   | ZMap x t1 t1', ZMap y t2 t2' =>
      cast_if_and3 (decide (x = y)) (decide (t1 = t2)) (decide (t1' = t2'))
-  end; abstract congruence.
+  end); abstract congruence.
 Defined.
 Instance Zempty {A} : Empty (Zmap A) := ZMap None ∅ ∅.
 Instance Zlookup {A} : Lookup Z A (Zmap A) := λ i t,

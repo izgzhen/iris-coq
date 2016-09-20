@@ -8,8 +8,8 @@ Arguments mkBSet {_} _.
 Arguments bset_car {_} _ _.
 Instance bset_top {A} : Top (bset A) := mkBSet (λ _, true).
 Instance bset_empty {A} : Empty (bset A) := mkBSet (λ _, false).
-Instance bset_singleton {A} `{∀ x y : A, Decision (x = y)} :
-  Singleton A (bset A) := λ x, mkBSet (λ y, bool_decide (y = x)).
+Instance bset_singleton `{EqDecision A} : Singleton A (bset A) := λ x,
+  mkBSet (λ y, bool_decide (y = x)).
 Instance bset_elem_of {A} : ElemOf A (bset A) := λ x X, bset_car X x.
 Instance bset_union {A} : Union (bset A) := λ X1 X2,
   mkBSet (λ x, bset_car X1 x || bset_car X2 x).
@@ -17,8 +17,7 @@ Instance bset_intersection {A} : Intersection (bset A) := λ X1 X2,
   mkBSet (λ x, bset_car X1 x && bset_car X2 x).
 Instance bset_difference {A} : Difference (bset A) := λ X1 X2,
   mkBSet (λ x, bset_car X1 x && negb (bset_car X2 x)).
-Instance bset_collection {A} `{∀ x y : A, Decision (x = y)} :
-  Collection A (bset A).
+Instance bset_collection `{EqDecision A} : Collection A (bset A).
 Proof.
   split; [split| |].
   - by intros x ?.

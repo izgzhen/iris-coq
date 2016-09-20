@@ -39,7 +39,7 @@ Section iprod_cofe.
   Canonical Structure iprodC : cofeT := CofeT (iprod B) iprod_cofe_mixin.
 
   (** Properties of iprod_insert. *)
-  Context `{∀ x x' : A, Decision (x = x')}.
+  Context `{EqDecision A}.
 
   Global Instance iprod_insert_ne n x :
     Proper (dist n ==> dist n ==> dist n) (iprod_insert x).

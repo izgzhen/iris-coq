@@ -35,7 +35,7 @@ Coercion fin_to_nat : fin >-> nat.
 Notation fin_of_nat := Fin.of_nat_lt.
 Notation fin_rect2 := Fin.rect2.
 
-Instance fin_dec {n} : ∀ i j : fin n, Decision (i = j).
+Instance fin_dec {n} : EqDecision (fin n).
 Proof.
  refine (fin_rect2
   (λ n (i j : fin n), { i = j } + { i ≠ j })
@@ -163,8 +163,7 @@ Proof.
   - apply IH. intros i. apply (Hi (FS i)).
 Qed.
 
-Instance vec_dec {A} {dec : ∀ x y : A, Decision (x = y)} {n} :
-  ∀ v w : vec A n, Decision (v = w).
+Instance vec_dec {A} {dec : EqDecision A} {n} : EqDecision (vec A n).
 Proof.
  refine (vec_rect2
   (λ n (v w : vec A n), { v = w } + { v ≠ w })

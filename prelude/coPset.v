@@ -19,7 +19,7 @@ Local Open Scope positive_scope.
 Inductive coPset_raw :=
   | coPLeaf : bool → coPset_raw
   | coPNode : bool → coPset_raw → coPset_raw → coPset_raw.
-Instance coPset_raw_eq_dec (t1 t2 : coPset_raw) : Decision (t1 = t2).
+Instance coPset_raw_eq_dec : EqDecision coPset_raw.
 Proof. solve_decision. Defined.
 
 Fixpoint coPset_wf (t : coPset_raw) : bool :=

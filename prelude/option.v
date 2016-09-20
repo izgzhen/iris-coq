@@ -148,14 +148,13 @@ Instance option_eq_None_dec {A} (mx : option A) : Decision (mx = None) :=
   match mx with Some _ => right (Some_ne_None _) | None => left eq_refl end.
 Instance option_None_eq_dec {A} (mx : option A) : Decision (None = mx) :=
   match mx with Some _ => right (None_ne_Some _) | None => left eq_refl end.
-Instance option_eq_dec {A} {dec : ∀ x y : A, Decision (x = y)}
-  (mx my : option A) : Decision (mx = my).
+Instance option_eq_dec `{dec : EqDecision A} : EqDecision (option A).
 Proof.
- refine
+ refine (λ mx my,
   match mx, my with
   | Some x, Some y => cast_if (decide (x = y))
   | None, None => left _ | _, _ => right _
-  end; clear dec; abstract congruence.
+  end); clear dec; abstract congruence.
 Defined.
 
 (** * Monadic operations *)

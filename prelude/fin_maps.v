@@ -27,7 +27,7 @@ Class FinMapToList K A M := map_to_list: M → list (K * A).
 
 Class FinMap K M `{FMap M, ∀ A, Lookup K A (M A), ∀ A, Empty (M A), ∀ A,
     PartialAlter K A (M A), OMap M, Merge M, ∀ A, FinMapToList K A (M A),
-    ∀ i j : K, Decision (i = j)} := {
+    EqDecision K} := {
   map_eq {A} (m1 m2 : M A) : (∀ i, m1 !! i = m2 !! i) → m1 = m2;
   lookup_empty {A} i : (∅ : M A) !! i = None;
   lookup_partial_alter {A} f (m : M A) i :

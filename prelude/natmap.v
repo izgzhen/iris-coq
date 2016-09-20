@@ -36,8 +36,7 @@ Proof.
   split; [by intros ->|intros]; destruct m1 as [t1 ?], m2 as [t2 ?].
   simplify_eq/=; f_equal; apply proof_irrel.
 Qed.
-Global Instance natmap_eq_dec `{∀ x y : A, Decision (x = y)}
-    (m1 m2 : natmap A) : Decision (m1 = m2) :=
+Global Instance natmap_eq_dec `{EqDecision A} : EqDecision (natmap A) := λ m1 m2,
   match decide (natmap_car m1 = natmap_car m2) with
   | left H => left (proj2 (natmap_eq m1 m2) H)
   | right H => right (H ∘ proj1 (natmap_eq m1 m2))

@@ -12,13 +12,12 @@ Arguments Nmap_0 {_} _.
 Arguments Nmap_pos {_} _.
 Arguments NMap {_} _ _.
 
-Instance Nmap_eq_dec `{∀ x y : A, Decision (x = y)} (t1 t2 : Nmap A) :
-  Decision (t1 = t2).
+Instance Nmap_eq_dec `{EqDecision A} : EqDecision (Nmap A).
 Proof.
- refine
+ refine (λ t1 t2,
   match t1, t2 with
   | NMap x t1, NMap y t2 => cast_if_and (decide (x = y)) (decide (t1 = t2))
-  end; abstract congruence.
+  end); abstract congruence.
 Defined.
 Instance Nempty {A} : Empty (Nmap A) := NMap None ∅.
 Global Opaque Nempty.

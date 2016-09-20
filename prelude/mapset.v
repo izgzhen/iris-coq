@@ -68,11 +68,11 @@ Proof.
 Qed.
 
 Section deciders.
-  Context `{∀ m1 m2 : M unit, Decision (m1 = m2)}.
-  Global Instance mapset_eq_dec (X1 X2 : mapset M) : Decision (X1 = X2) | 1.
+  Context `{EqDecision (M unit)}.
+  Global Instance mapset_eq_dec : EqDecision (mapset M) | 1.
   Proof.
-   refine
-    match X1, X2 with Mapset m1, Mapset m2 => cast_if (decide (m1 = m2)) end;
+   refine (λ X1 X2,
+    match X1, X2 with Mapset m1, Mapset m2 => cast_if (decide (m1 = m2)) end);
     abstract congruence.
   Defined.
   Global Instance mapset_equiv_dec (X1 X2 : mapset M) : Decision (X1 ≡ X2) | 1.

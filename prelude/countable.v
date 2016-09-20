@@ -3,7 +3,7 @@
 From iris.prelude Require Export list.
 Local Open Scope positive.
 
-Class Countable A `{∀ x y : A, Decision (x = y)} := {
+Class Countable A `{EqDecision A} := {
   encode : A → positive;
   decode : positive → option A;
   decode_encode x : decode (encode x) = Some x
@@ -70,7 +70,7 @@ Section choice.
   Definition choice (HA : ∃ x, P x) : { x | P x } := _↾choose_correct HA.
 End choice.
 
-Lemma surj_cancel `{Countable A} `{∀ x y : B, Decision (x = y)}
+Lemma surj_cancel `{Countable A} `{EqDecision B}
   (f : A → B) `{!Surj (=) f} : { g : B → A & Cancel (=) f g }.
 Proof.
   exists (λ y, choose (λ x, f x = y) (surj f y)).
@@ -80,7 +80,7 @@ Qed.
 (** * Instances *)
 (** ** Injection *)
 Section injective_countable.
-  Context `{Countable A, ∀ x y : B, Decision (x = y)}.
+  Context `{Countable A, EqDecision B}.
   Context (f : B → A) (g : A → option B) (fg : ∀ x, g (f x) = Some x).
 
   Program Instance injective_countable : Countable B :=

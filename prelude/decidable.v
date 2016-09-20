@@ -164,15 +164,13 @@ Instance iff_dec `(P_dec : Decision P) `(Q_dec : Decision Q) :
   Decision (P ↔ Q) := and_dec _ _.
 
 (** Instances of [Decision] for common data types. *)
-Instance bool_eq_dec (x y : bool) : Decision (x = y).
+Instance bool_eq_dec : EqDecision bool.
 Proof. solve_decision. Defined.
-Instance unit_eq_dec (x y : unit) : Decision (x = y).
+Instance unit_eq_dec : EqDecision unit.
 Proof. solve_decision. Defined.
-Instance prod_eq_dec `(A_dec : ∀ x y : A, Decision (x = y))
-  `(B_dec : ∀ x y : B, Decision (x = y)) (x y : A * B) : Decision (x = y).
+Instance prod_eq_dec `{EqDecision A, EqDecision B} : EqDecision (A * B).
 Proof. solve_decision. Defined.
-Instance sum_eq_dec `(A_dec : ∀ x y : A, Decision (x = y))
-  `(B_dec : ∀ x y : B, Decision (x = y)) (x y : A + B) : Decision (x = y).
+Instance sum_eq_dec `{EqDecision A, EqDecision B} : EqDecision (A + B).
 Proof. solve_decision. Defined.
 
 Instance curry_dec `(P_dec : ∀ (x : A) (y : B), Decision (P x y)) p :
@@ -181,9 +179,11 @@ Instance curry_dec `(P_dec : ∀ (x : A) (y : B), Decision (P x y)) p :
   | (x,y) => P_dec x y
   end.
 
-Instance sig_eq_dec `(P : A → Prop) `{∀ x, ProofIrrel (P x)}
-  `{∀ x y : A, Decision (x = y)} (x y : sig P) : Decision (x = y).
-Proof. refine (cast_if (decide (`x = `y))); rewrite sig_eq_pi; trivial. Defined.
+Instance sig_eq_dec `(P : A → Prop) `{∀ x, ProofIrrel (P x), EqDecision A} :
+  EqDecision (sig P).
+Proof.
+ refine (λ x y, cast_if (decide (`x = `y))); rewrite sig_eq_pi; trivial.
+Defined.
 
 (** Some laws for decidable propositions *)
 Lemma not_and_l {P Q : Prop} `{Decision P} : ¬(P ∧ Q) ↔ ¬P ∨ ¬Q.

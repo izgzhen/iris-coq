@@ -9,7 +9,7 @@ From iris.prelude Require Export base decidable option.
 Open Scope nat_scope.
 
 Coercion Z.of_nat : nat >-> Z.
-Instance comparison_eq_dec (c1 c2 : comparison) : Decision (c1 = c2).
+Instance comparison_eq_dec : EqDecision comparison.
 Proof. solve_decision. Defined.
 
 (** * Notations and properties of [nat] *)
@@ -35,13 +35,13 @@ Infix "`mod`" := Nat.modulo (at level 35) : nat_scope.
 Infix "`max`" := Nat.max (at level 35) : nat_scope.
 Infix "`min`" := Nat.min (at level 35) : nat_scope.
 
-Instance nat_eq_dec: ∀ x y : nat, Decision (x = y) := eq_nat_dec.
+Instance nat_eq_dec: EqDecision nat := eq_nat_dec.
 Instance nat_le_dec: ∀ x y : nat, Decision (x ≤ y) := le_dec.
 Instance nat_lt_dec: ∀ x y : nat, Decision (x < y) := lt_dec.
 Instance nat_inhabited: Inhabited nat := populate 0%nat.
-Instance: Inj (=) (=) S.
+Instance S_inj: Inj (=) (=) S.
 Proof. by injection 1. Qed.
-Instance: PartialOrder (≤).
+Instance nat_le_po: PartialOrder (≤).
 Proof. repeat split; repeat intro; auto with lia. Qed.
 
 Instance nat_le_pi: ∀ x y : nat, ProofIrrel (x ≤ y).
@@ -116,7 +116,7 @@ Notation "(~1)" := xI (only parsing) : positive_scope.
 Arguments Pos.of_nat : simpl never.
 Arguments Pmult : simpl never.
 
-Instance positive_eq_dec: ∀ x y : positive, Decision (x = y) := Pos.eq_dec.
+Instance positive_eq_dec: EqDecision positive := Pos.eq_dec.
 Instance positive_inhabited: Inhabited positive := populate 1.
 
 Instance maybe_xO : Maybe xO := λ p, match p with p~0 => Some p | _ => None end.
@@ -198,7 +198,7 @@ Arguments N.add _ _ : simpl never.
 Instance: Inj (=) (=) Npos.
 Proof. by injection 1. Qed.
 
-Instance N_eq_dec: ∀ x y : N, Decision (x = y) := N.eq_dec.
+Instance N_eq_dec: EqDecision N := N.eq_dec.
 Program Instance N_le_dec (x y : N) : Decision (x ≤ y)%N :=
   match Ncompare x y with Gt => right _ | _ => left _ end.
 Solve Obligations with naive_solver.
@@ -206,7 +206,7 @@ Program Instance N_lt_dec (x y : N) : Decision (x < y)%N :=
   match Ncompare x y with Lt => left _ | _ => right _ end.
 Solve Obligations with naive_solver.
 Instance N_inhabited: Inhabited N := populate 1%N.
-Instance: PartialOrder (≤)%N.
+Instance N_le_po: PartialOrder (≤)%N.
 Proof.
   repeat split; red. apply N.le_refl. apply N.le_trans. apply N.le_antisymm.
 Qed.
@@ -239,11 +239,11 @@ Proof. by injection 1. Qed.
 Instance Z_of_nat_inj : Inj (=) (=) Z.of_nat.
 Proof. intros n1 n2. apply Nat2Z.inj. Qed.
 
-Instance Z_eq_dec: ∀ x y : Z, Decision (x = y) := Z.eq_dec.
+Instance Z_eq_dec: EqDecision Z := Z.eq_dec.
 Instance Z_le_dec: ∀ x y : Z, Decision (x ≤ y) := Z_le_dec.
 Instance Z_lt_dec: ∀ x y : Z, Decision (x < y) := Z_lt_dec.
 Instance Z_inhabited: Inhabited Z := populate 1.
-Instance Z_le_order : PartialOrder (≤).
+Instance Z_le_po : PartialOrder (≤).
 Proof.
   repeat split; red. apply Z.le_refl. apply Z.le_trans. apply Z.le_antisymm.
 Qed.
@@ -345,7 +345,7 @@ Notation "(<)" := Qclt (only parsing) : Qc_scope.
 Hint Extern 1 (_ ≤ _) => reflexivity || discriminate.
 Arguments Qred _ : simpl never.
 
-Instance Qc_eq_dec: ∀ x y : Qc, Decision (x = y) := Qc_eq_dec.
+Instance Qc_eq_dec: EqDecision Qc := Qc_eq_dec.
 Program Instance Qc_le_dec (x y : Qc) : Decision (x ≤ y) :=
   if Qclt_le_dec y x then right _ else left _.
 Next Obligation. intros x y; apply Qclt_not_le. Qed.
