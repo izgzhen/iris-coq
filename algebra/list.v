@@ -132,6 +132,15 @@ Section cmra.
   Instance list_valid : Valid (list A) := Forall (λ x, ✓ x).
   Instance list_validN : ValidN (list A) := λ n, Forall (λ x, ✓{n} x).
 
+  Lemma cons_valid l x : ✓ (x :: l) ↔ ✓ x ∧ ✓ l.
+  Proof. apply Forall_cons. Qed.
+  Lemma cons_validN n l x : ✓{n} (x :: l) ↔ ✓{n} x ∧ ✓{n} l.
+  Proof. apply Forall_cons. Qed.
+  Lemma app_valid l1 l2 : ✓ (l1 ++ l2) ↔ ✓ l1 ∧ ✓ l2.
+  Proof. apply Forall_app. Qed.
+  Lemma app_validN n l1 l2 : ✓{n} (l1 ++ l2) ↔ ✓{n} l1 ∧ ✓{n} l2.
+  Proof. apply Forall_app. Qed.
+
   Lemma list_lookup_valid l : ✓ l ↔ ∀ i, ✓ (l !! i).
   Proof.
     rewrite {1}/valid /list_valid Forall_lookup; split.
@@ -246,16 +255,25 @@ Section properties.
   Implicit Types x y z : A.
   Local Arguments op _ _ !_ !_ / : simpl nomatch.
   Local Arguments cmra_op _ !_ !_ / : simpl nomatch.
+  Local Arguments ucmra_op _ !_ !_ / : simpl nomatch.
 
   Lemma list_lookup_opM l mk i : (l ⋅? mk) !! i = l !! i ⋅ (mk ≫= (!! i)).
   Proof. destruct mk; by rewrite /= ?list_lookup_op ?right_id_L. Qed.
 
+  Global Instance list_op_nil_l : LeftId (=) (@nil A) op.
+  Proof. done. Qed.
+  Global Instance list_op_nil_r : RightId (=) (@nil A) op.
+  Proof. by intros []. Qed.
+
   Lemma list_op_app l1 l2 l3 :
-    length l2 ≤ length l1 → (l1 ++ l3) ⋅ l2 = (l1 ⋅ l2) ++ l3.
+    (l1 ++ l3) ⋅ l2 = (l1 ⋅ take (length l1) l2) ++ (l3 ⋅ drop (length l1) l2).
   Proof.
     revert l2 l3.
-    induction l1 as [|x1 l1]=> -[|x2 l2] [|x3 l3] ?; f_equal/=; auto with lia.
+    induction l1 as [|x1 l1]=> -[|x2 l2] [|x3 l3]; f_equal/=; auto.
   Qed.
+  Lemma list_op_app_le l1 l2 l3 :
+    length l2 ≤ length l1 → (l1 ++ l3) ⋅ l2 = (l1 ⋅ l2) ++ l3.
+  Proof. intros ?. by rewrite list_op_app take_ge // drop_ge // right_id_L. Qed.
 
   Lemma list_lookup_validN_Some n l i x : ✓{n} l → l !! i ≡{n}≡ Some x → ✓{n} x.
   Proof. move=> /list_lookup_validN /(_ i)=> Hl Hi; move: Hl. by rewrite Hi. Qed.
