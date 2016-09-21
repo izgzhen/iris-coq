@@ -338,25 +338,64 @@ Section properties.
   Proof. by rewrite !persistent_total list_core_singletonM=> ->. Qed.
 
   (* Update *)
+  Lemma list_singleton_updateP (P : A → Prop) (Q : list A → Prop) x :
+    x ~~>: P → (∀ y, P y → Q [y]) → [x] ~~>: Q.
+  Proof.
+    rewrite !cmra_total_updateP=> Hup HQ n lf /list_lookup_validN Hv.
+    destruct (Hup n (from_option id ∅ (lf !! 0))) as (y&?&Hv').
+    { move: (Hv 0). by destruct lf; rewrite /= ?right_id. }
+    exists [y]; split; first by auto.
+    apply list_lookup_validN=> i.
+    move: (Hv i) Hv'. by destruct i, lf; rewrite /= ?right_id.
+  Qed.
+  Lemma list_singleton_updateP' (P : A → Prop) x :
+    x ~~>: P → [x] ~~>: λ k, ∃ y, k = [y] ∧ P y.
+  Proof. eauto using list_singleton_updateP. Qed.
+  Lemma list_singleton_update x y : x ~~> y → [x] ~~> [y].
+  Proof.
+    rewrite !cmra_update_updateP; eauto using list_singleton_updateP with subst.
+  Qed.
+
+  Lemma app_updateP (P1 P2 Q : list A → Prop) l1 l2 :
+    l1 ~~>: P1 → l2 ~~>: P2 →
+    (∀ k1 k2, P1 k1 → P2 k2 → length l1 = length k1 ∧ Q (k1 ++ k2)) →
+    l1 ++ l2 ~~>: Q.
+  Proof.
+    rewrite !cmra_total_updateP=> Hup1 Hup2 HQ n lf.
+    rewrite list_op_app app_validN=> -[??].
+    destruct (Hup1 n (take (length l1) lf)) as (k1&?&?); auto.
+    destruct (Hup2 n (drop (length l1) lf)) as (k2&?&?); auto.
+    exists (k1 ++ k2). rewrite list_op_app app_validN.
+    by destruct (HQ k1 k2) as [<- ?].
+  Qed.
+  Lemma app_update l1 l2 k1 k2 :
+    length l1 = length k1 →
+    l1 ~~> k1 → l2 ~~> k2 → l1 ++ l2 ~~> k1 ++ k2.
+  Proof. rewrite !cmra_update_updateP; eauto using app_updateP with subst. Qed.
+
+  Lemma cons_updateP (P1 : A → Prop) (P2 Q : list A → Prop) x l :
+    x ~~>: P1 → l ~~>: P2 → (∀ y k, P1 y → P2 k → Q (y :: k)) → x :: l ~~>: Q.
+  Proof.
+    intros. eapply (app_updateP _ _ _ [x]);
+      naive_solver eauto using list_singleton_updateP'.
+  Qed.
+  Lemma cons_updateP' (P1 : A → Prop) (P2 : list A → Prop) x l :
+    x ~~>: P1 → l ~~>: P2 → x :: l ~~>: λ k, ∃ y k', k = y :: k' ∧ P1 y ∧ P2 k'.
+  Proof. eauto 10 using cons_updateP. Qed.
+  Lemma cons_update x y l k : x ~~> y → l ~~> k → x :: l ~~> y :: k.
+  Proof. rewrite !cmra_update_updateP; eauto using cons_updateP with subst. Qed.
+
   Lemma list_middle_updateP (P : A → Prop) (Q : list A → Prop) l1 x l2 :
     x ~~>: P → (∀ y, P y → Q (l1 ++ y :: l2)) → l1 ++ x :: l2 ~~>: Q.
   Proof.
-    intros Hx%option_updateP' HP.
-    apply cmra_total_updateP=> n mf; rewrite list_lookup_validN=> Hm.
-    destruct (Hx n (Some (mf !! length l1))) as ([y|]&H1&H2); simpl in *; try done.
-    { move: (Hm (length l1)). by rewrite list_lookup_op list_lookup_middle. }
-    exists (l1 ++ y :: l2); split; auto.
-    apply list_lookup_validN=> i.
-    destruct (lt_eq_lt_dec i (length l1)) as [[?|?]|?]; subst.
-    - move: (Hm i); by rewrite !list_lookup_op !lookup_app_l.
-    - by rewrite list_lookup_op list_lookup_middle.
-    - move: (Hm i). rewrite !(cons_middle _ l1 l2) !assoc.
-      rewrite !list_lookup_op !lookup_app_r !app_length //=; lia.
+    intros. eapply app_updateP.
+    - by apply cmra_update_updateP.
+    - by eapply cons_updateP', cmra_update_updateP.
+    - naive_solver.
   Qed.
-
   Lemma list_middle_update l1 l2 x y : x ~~> y → l1 ++ x :: l2 ~~> l1 ++ y :: l2.
   Proof.
-    rewrite !cmra_update_updateP => H; eauto using list_middle_updateP with subst.
+    rewrite !cmra_update_updateP=> ?; eauto using list_middle_updateP with subst.
   Qed.
 
   Lemma list_middle_local_update l1 l2 x y ml :
@@ -379,7 +418,6 @@ Section properties.
       + rewrite !(cons_middle _ l1 l2) !assoc.
         rewrite !list_lookup_opM !lookup_app_r !app_length //=; lia.
   Qed.
-
   Lemma list_singleton_local_update i x y ml :
     x ~l~> y @ ml ≫= (!! i) → {[ i := x ]} ~l~> {[ i := y ]} @ ml.
   Proof. intros; apply list_middle_local_update. by rewrite replicate_length. Qed.
