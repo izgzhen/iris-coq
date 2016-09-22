@@ -244,7 +244,7 @@ Global Instance cmra_pcore_proper' : Proper ((≡) ==> (≡)) (@pcore A _).
 Proof. apply (ne_proper _). Qed.
 Global Instance cmra_op_ne' n : Proper (dist n ==> dist n ==> dist n) (@op A _).
 Proof. intros x1 x2 Hx y1 y2 Hy. by rewrite Hy (comm _ x1) Hx (comm _ y2). Qed.
-Global Instance ra_op_proper' : Proper ((≡) ==> (≡) ==> (≡)) (@op A _).
+Global Instance cmra_op_proper' : Proper ((≡) ==> (≡) ==> (≡)) (@op A _).
 Proof. apply (ne_proper_2 _). Qed.
 Global Instance cmra_validN_ne' : Proper (dist n ==> iff) (@validN A _ n) | 1.
 Proof. by split; apply cmra_validN_ne. Qed.
