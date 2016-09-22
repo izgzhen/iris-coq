@@ -383,6 +383,7 @@ Proof.
 Qed.
 Lemma cmra_included_pcore x cx : pcore x = Some cx → cx ≼ x.
 Proof. exists x. by rewrite cmra_pcore_l. Qed.
+
 Lemma cmra_monoN_l n x y z : x ≼{n} y → z ⋅ x ≼{n} z ⋅ y.
 Proof. by intros [z1 Hz1]; exists z1; rewrite Hz1 (assoc op). Qed.
 Lemma cmra_mono_l x y z : x ≼ y → z ⋅ x ≼ z ⋅ y.
@@ -391,6 +392,10 @@ Lemma cmra_monoN_r n x y z : x ≼{n} y → x ⋅ z ≼{n} y ⋅ z.
 Proof. by intros; rewrite -!(comm _ z); apply cmra_monoN_l. Qed.
 Lemma cmra_mono_r x y z : x ≼ y → x ⋅ z ≼ y ⋅ z.
 Proof. by intros; rewrite -!(comm _ z); apply cmra_mono_l. Qed.
+Lemma cmra_monoN n x1 x2 y1 y2 : x1 ≼{n} y1 → x2 ≼{n} y2 → x1 ⋅ x2 ≼{n} y1 ⋅ y2.
+Proof. intros; etrans; eauto using cmra_monoN_l, cmra_monoN_r. Qed.
+Lemma cmra_mono x1 x2 y1 y2 : x1 ≼ y1 → x2 ≼ y2 → x1 ⋅ x2 ≼ y1 ⋅ y2.
+Proof. intros; etrans; eauto using cmra_mono_l, cmra_mono_r. Qed.
 
 Lemma cmra_included_dist_l n x1 x2 x1' :
   x1 ≼ x2 → x1' ≡{n}≡ x1 → ∃ x2', x1' ≼ x2' ∧ x2' ≡{n}≡ x2.
