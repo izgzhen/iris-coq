@@ -475,6 +475,10 @@ Proof.
 Qed.
 Lemma insert_empty {A} i (x : A) : <[i:=x]>∅ = {[i := x]}.
 Proof. done. Qed.
+Lemma insert_non_empty {A} (m : M A) i x : <[i:=x]>m ≠ ∅.
+Proof.
+  intros Hi%(f_equal (!! i)). by rewrite lookup_insert, lookup_empty in Hi.
+Qed.
 
 (** ** Properties of the singleton maps *)
 Lemma lookup_singleton_Some {A} i j (x y : A) :
@@ -510,6 +514,8 @@ Proof.
   intros. apply map_eq; intros i'. by destruct (decide (i = i')) as [->|?];
     rewrite ?lookup_alter, ?lookup_singleton_ne, ?lookup_alter_ne by done.
 Qed.
+Lemma singleton_non_empty {A} i (x : A) : {[i:=x]} ≠ ∅.
+Proof. apply insert_non_empty. Qed.
 
 (** ** Properties of the map operations *)
 Lemma fmap_empty {A B} (f : A → B) : f <$> ∅ = ∅.
