@@ -707,6 +707,11 @@ Lemma map_to_list_empty_inv_alt {A}  (m : M A) : map_to_list m ≡ₚ [] → m =
 Proof. rewrite <-map_to_list_empty. apply map_to_list_inj. Qed.
 Lemma map_to_list_empty_inv {A} (m : M A) : map_to_list m = [] → m = ∅.
 Proof. intros Hm. apply map_to_list_empty_inv_alt. by rewrite Hm. Qed.
+Lemma map_to_list_empty' {A} (m : M A) : map_to_list m = [] ↔ m = ∅.
+Proof.
+  split. apply map_to_list_empty_inv. intros ->. apply map_to_list_empty.
+Qed.
+
 Lemma map_to_list_insert_inv {A} (m : M A) l i x :
   map_to_list m ≡ₚ (i,x) :: l → m = <[i:=x]>(map_of_list l).
 Proof.
