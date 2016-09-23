@@ -1257,6 +1257,8 @@ Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_ownM a ⊢ False.
 Proof. by intros; rewrite ownM_valid valid_elim. Qed.
 Global Instance ownM_mono : Proper (flip (≼) ==> (⊢)) (@uPred_ownM M).
 Proof. intros a b [b' ->]. rewrite ownM_op. eauto. Qed.
+Lemma ownM_empty' : uPred_ownM ∅ ⊣⊢ True.
+Proof. apply (anti_symm _); auto using ownM_empty. Qed.
 
 (* Viewshifts *)
 Lemma rvs_intro P : P =r=> P.
