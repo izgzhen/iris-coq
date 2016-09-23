@@ -38,6 +38,17 @@ Proof.
   apply elem_of_nil_inv; intros x.
   rewrite elem_of_elements, elem_of_empty; tauto.
 Qed.
+Lemma elements_empty_inv X : elements X = [] → X ≡ ∅.
+Proof.
+  intros HX; apply elem_of_equiv_empty; intros x.
+  rewrite <-elem_of_elements, HX, elem_of_nil. tauto.
+Qed.
+Lemma elements_empty' X : elements X = [] ↔ X ≡ ∅.
+Proof.
+  split; intros HX; [by apply elements_empty_inv|].
+  by rewrite <-Permutation_nil, HX, elements_empty.
+Qed.
+
 Lemma elements_union_singleton (X : C) x :
   x ∉ X → elements ({[ x ]} ∪ X) ≡ₚ x :: elements X.
 Proof.
