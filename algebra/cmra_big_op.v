@@ -185,7 +185,6 @@ Section list.
   Qed.
 End list.
 
-
 (** ** Big ops over finite maps *)
 Section gmap.
   Context `{Countable K} {A : Type}.
@@ -371,3 +370,64 @@ Section gset.
   Qed.
 End gset.
 End big_op.
+
+Lemma big_opL_commute {M1 M2 : ucmraT} {A} (h : M1 → M2)
+    `{!Proper ((≡) ==> (≡)) h} (f : nat → A → M1) l :
+  h ∅ ≡ ∅ →
+  (∀ x y, h (x ⋅ y) ≡ h x ⋅ h y) →
+  h ([⋅ list] k↦x ∈ l, f k x) ≡ ([⋅ list] k↦x ∈ l, h (f k x)).
+Proof.
+  intros ??. revert f. induction l as [|x l IH]=> f.
+  - by rewrite !big_opL_nil.
+  - by rewrite !big_opL_cons -IH.
+Qed.
+Lemma big_opL_commute1 {M1 M2 : ucmraT} {A} (h : M1 → M2)
+    `{!Proper ((≡) ==> (≡)) h} (f : nat → A → M1) l :
+  (∀ x y, h (x ⋅ y) ≡ h x ⋅ h y) →
+  l ≠ [] →
+  h ([⋅ list] k↦x ∈ l, f k x) ≡ ([⋅ list] k↦x ∈ l, h (f k x)).
+Proof.
+  intros ??. revert f. induction l as [|x [|x' l'] IH]=> f //.
+  - by rewrite !big_opL_singleton.
+  - by rewrite !(big_opL_cons _ x) -IH.
+Qed.
+
+Lemma big_opM_commute {M1 M2 : ucmraT} `{Countable K} {A} (h : M1 → M2)
+    `{!Proper ((≡) ==> (≡)) h} (f : K → A → M1) m :
+  h ∅ ≡ ∅ →
+  (∀ x y, h (x ⋅ y) ≡ h x ⋅ h y) →
+  h ([⋅ map] k↦x ∈ m, f k x) ≡ ([⋅ map] k↦x ∈ m, h (f k x)).
+Proof.
+  intros. rewrite /big_opM.
+  induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite -?IH; auto.
+Qed.
+Lemma big_opM_commute1 {M1 M2 : ucmraT} `{Countable K} {A} (h : M1 → M2)
+    `{!Proper ((≡) ==> (≡)) h} (f : K → A → M1) m :
+  (∀ x y, h (x ⋅ y) ≡ h x ⋅ h y) →
+  m ≠ ∅ →
+  h ([⋅ map] k↦x ∈ m, f k x) ≡ ([⋅ map] k↦x ∈ m, h (f k x)).
+Proof.
+  rewrite -map_to_list_empty' /big_opM=> ??.
+  induction (map_to_list m) as [|[i x] [|i' x'] IH];
+    csimpl in *; rewrite ?right_id -?IH //.
+Qed.
+
+Lemma big_opS_commute {M1 M2 : ucmraT} `{Countable A} (h : M1 → M2)
+    `{!Proper ((≡) ==> (≡)) h} (f : A → M1) X :
+  h ∅ ≡ ∅ →
+  (∀ x y, h (x ⋅ y) ≡ h x ⋅ h y) →
+  h ([⋅ set] x ∈ X, f x) ≡ ([⋅ set] x ∈ X, h (f x)).
+Proof.
+  intros. rewrite /big_opS.
+  induction (elements X) as [|x l IH]; csimpl; rewrite -?IH; auto.
+Qed.
+Lemma big_opS_commute1 {M1 M2 : ucmraT} `{Countable A} (h : M1 → M2)
+    `{!Proper ((≡) ==> (≡)) h} (f : A → M1) X :
+  (∀ x y, h (x ⋅ y) ≡ h x ⋅ h y) →
+  X ≢ ∅ →
+  h ([⋅ set] x ∈ X, f x) ≡ ([⋅ set] x ∈ X, h (f x)).
+Proof.
+  rewrite -elements_empty' /big_opS=> ??.
+  induction (elements X) as [|x [|x' l] IH];
+    csimpl in *; rewrite ?right_id -?IH //.
+Qed.

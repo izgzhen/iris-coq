@@ -1,4 +1,4 @@
-From iris.algebra Require Export upred list.
+From iris.algebra Require Export upred list cmra_big_op.
 From iris.prelude Require Import gmap fin_collections functions.
 Import uPred.
 
@@ -267,21 +267,41 @@ Section list.
     by rewrite -!assoc (assoc _ (Ψ _ _)) [(Ψ _ _ ★ _)%I]comm -!assoc.
   Qed.
 
+  Lemma big_sepL_commute (Ψ: uPred M → uPred M) `{!Proper ((≡) ==> (≡)) Ψ} Φ l :
+    Ψ True ⊣⊢ True →
+    (∀ P Q, Ψ (P ★ Q) ⊣⊢ Ψ P ★ Ψ Q) →
+    Ψ ([★ list] k↦x ∈ l, Φ k x) ⊣⊢ ([★ list] k↦x ∈ l, Ψ (Φ k x)).
+  Proof.
+    intros ??. revert Φ. induction l as [|x l IH]=> Φ //.
+    by rewrite !big_sepL_cons -IH.
+  Qed.
+  Lemma big_sepL_op_commute {B : ucmraT}
+      (Ψ: B → uPred M) `{!Proper ((≡) ==> (≡)) Ψ} (f : nat → A → B) l :
+    Ψ ∅ ⊣⊢ True →
+    (∀ x y, Ψ (x ⋅ y) ⊣⊢ Ψ x ★ Ψ y) →
+    Ψ ([⋅ list] k↦x ∈ l, f k x) ⊣⊢ ([★ list] k↦x ∈ l, Ψ (f k x)).
+  Proof.
+    intros ??. revert f. induction l as [|x l IH]=> f //.
+    by rewrite big_sepL_cons big_opL_cons -IH.
+  Qed.
+  Lemma big_sepL_op_commute1 {B : ucmraT}
+      (Ψ: B → uPred M) `{!Proper ((≡) ==> (≡)) Ψ} (f : nat → A → B) l :
+    (∀ x y, Ψ (x ⋅ y) ⊣⊢ Ψ x ★ Ψ y) →
+    l ≠ [] →
+    Ψ ([⋅ list] k↦x ∈ l, f k x) ⊣⊢ ([★ list] k↦x ∈ l, Ψ (f k x)).
+  Proof.
+    intros ??. revert f. induction l as [|x [|x' l'] IH]=> f //.
+    { by rewrite big_sepL_singleton big_opL_singleton. }
+    by rewrite big_sepL_cons big_opL_cons -IH.
+  Qed.
+
   Lemma big_sepL_later Φ l :
     ▷ ([★ list] k↦x ∈ l, Φ k x) ⊣⊢ ([★ list] k↦x ∈ l, ▷ Φ k x).
-  Proof.
-    revert Φ. induction l as [|x l IH]=> Φ.
-    { by rewrite !big_sepL_nil later_True. }
-    by rewrite !big_sepL_cons later_sep IH.
-  Qed.
+  Proof. apply (big_sepL_commute _); auto using later_True, later_sep. Qed.
 
   Lemma big_sepL_always Φ l :
     (□ [★ list] k↦x ∈ l, Φ k x) ⊣⊢ ([★ list] k↦x ∈ l, □ Φ k x).
-  Proof.
-    revert Φ. induction l as [|x l IH]=> Φ.
-    { by rewrite !big_sepL_nil always_pure. }
-    by rewrite !big_sepL_cons always_sep IH.
-  Qed.
+  Proof. apply (big_sepL_commute _); auto using always_pure, always_sep. Qed.
 
   Lemma big_sepL_always_if p Φ l :
     □?p ([★ list] k↦x ∈ l, Φ k x) ⊣⊢ ([★ list] k↦x ∈ l, □?p Φ k x).
@@ -430,21 +450,41 @@ Section gmap.
     by rewrite IH -!assoc (assoc _ (Ψ _ _)) [(Ψ _ _ ★ _)%I]comm -!assoc.
   Qed.
 
+  Lemma big_sepM_commute (Ψ: uPred M → uPred M) `{!Proper ((≡) ==> (≡)) Ψ} Φ m :
+    Ψ True ⊣⊢ True →
+    (∀ P Q, Ψ (P ★ Q) ⊣⊢ Ψ P ★ Ψ Q) →
+    Ψ ([★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, Ψ (Φ k x)).
+  Proof.
+    intros ??. rewrite /uPred_big_sepM.
+    induction (map_to_list m) as [|[i x] l IH]; rewrite //= -?IH; auto.
+  Qed.
+  Lemma big_sepM_op_commute {B : ucmraT}
+      (Ψ: B → uPred M) `{!Proper ((≡) ==> (≡)) Ψ} (f : K → A → B) m :
+    Ψ ∅ ⊣⊢ True →
+    (∀ x y, Ψ (x ⋅ y) ⊣⊢ Ψ x ★ Ψ y) →
+    Ψ ([⋅ map] k↦x ∈ m, f k x) ⊣⊢ ([★ map] k↦x ∈ m, Ψ (f k x)).
+  Proof.
+    intros ??. rewrite /big_opM /uPred_big_sepM.
+    induction (map_to_list m) as [|[i x] l IH]; rewrite //= -?IH; auto.
+  Qed.
+  Lemma big_sepM_op_commute1 {B : ucmraT}
+      (Ψ: B → uPred M) `{!Proper ((≡) ==> (≡)) Ψ} (f : K → A → B) m :
+    (∀ x y, Ψ (x ⋅ y) ⊣⊢ Ψ x ★ Ψ y) →
+    m ≠ ∅ →
+    Ψ ([⋅ map] k↦x ∈ m, f k x) ⊣⊢ ([★ map] k↦x ∈ m, Ψ (f k x)).
+  Proof.
+    rewrite -map_to_list_empty'. intros ??. rewrite /big_opM /uPred_big_sepM.
+    induction (map_to_list m) as [|[i x] [|i' x'] IH];
+      csimpl in *; rewrite ?right_id -?IH //.
+  Qed.
+
   Lemma big_sepM_later Φ m :
     ▷ ([★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, ▷ Φ k x).
-  Proof.
-    rewrite /uPred_big_sepM.
-    induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?later_True //.
-    by rewrite later_sep IH.
-  Qed.
+  Proof. apply (big_sepM_commute _); auto using later_True, later_sep. Qed.
 
   Lemma big_sepM_always Φ m :
     (□ [★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, □ Φ k x).
-  Proof.
-    rewrite /uPred_big_sepM.
-    induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?always_pure //.
-    by rewrite always_sep IH.
-  Qed.
+  Proof. apply (big_sepM_commute _); auto using always_pure, always_sep. Qed.
 
   Lemma big_sepM_always_if p Φ m :
     □?p ([★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, □?p Φ k x).
@@ -569,19 +609,39 @@ Section gset.
     by rewrite IH -!assoc (assoc _ (Ψ _)) [(Ψ _ ★ _)%I]comm -!assoc.
   Qed.
 
-  Lemma big_sepS_later Φ X : ▷ ([★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, ▷ Φ y).
+  Lemma big_sepS_commute (Ψ: uPred M → uPred M) `{!Proper ((≡) ==> (≡)) Ψ} Φ X :
+    Ψ True ⊣⊢ True →
+    (∀ P Q, Ψ (P ★ Q) ⊣⊢ Ψ P ★ Ψ Q) →
+    Ψ ([★ set] x ∈ X, Φ x) ⊣⊢ ([★ set] x ∈ X, Ψ (Φ x)).
   Proof.
-    rewrite /uPred_big_sepS.
-    induction (elements X) as [|x l IH]; csimpl; first by rewrite ?later_True.
-    by rewrite later_sep IH.
+    intros ??. rewrite /uPred_big_sepS.
+    induction (elements X) as [|x l IH]; rewrite //= -?IH; auto.
+  Qed.
+  Lemma big_sepS_op_commute {B : ucmraT}
+      (Ψ: B → uPred M) `{!Proper ((≡) ==> (≡)) Ψ} (f : A → B) X :
+    Ψ ∅ ⊣⊢ True →
+    (∀ x y, Ψ (x ⋅ y) ⊣⊢ Ψ x ★ Ψ y) →
+    Ψ ([⋅ set] x ∈ X, f x) ⊣⊢ ([★ set] x ∈ X, Ψ (f x)).
+  Proof.
+    intros ??. rewrite /big_opS /uPred_big_sepS.
+    induction (elements X) as [|x l IH]; rewrite //= -?IH; auto.
+  Qed.
+  Lemma big_sepS_op_commute1 {B : ucmraT}
+      (Ψ: B → uPred M) `{!Proper ((≡) ==> (≡)) Ψ} (f : A → B) X :
+    (∀ x y, Ψ (x ⋅ y) ⊣⊢ Ψ x ★ Ψ y) →
+    X ≢ ∅ →
+    Ψ ([⋅ set] x ∈ X, f x) ⊣⊢ ([★ set] x ∈ X, Ψ (f x)).
+  Proof.
+    rewrite -elements_empty'. intros ??. rewrite /big_opS /uPred_big_sepS.
+    induction (elements X) as [|x [|x' l] IH];
+      csimpl in *; rewrite ?right_id -?IH //.
   Qed.
 
+  Lemma big_sepS_later Φ X : ▷ ([★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, ▷ Φ y).
+  Proof. apply (big_sepS_commute _); auto using later_True, later_sep. Qed.
+
   Lemma big_sepS_always Φ X : □ ([★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, □ Φ y).
-  Proof.
-    rewrite /uPred_big_sepS.
-    induction (elements X) as [|x l IH]; csimpl; first by rewrite ?always_pure.
-    by rewrite always_sep IH.
-  Qed.
+  Proof. apply (big_sepS_commute _); auto using always_pure, always_sep. Qed.
 
   Lemma big_sepS_always_if q Φ X :
     □?q ([★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, □?q Φ y).
