@@ -19,7 +19,7 @@ Record envs_wf {M} (Δ : envs M) := {
 }.
 
 Coercion of_envs {M} (Δ : envs M) : uPred M :=
-  (■ envs_wf Δ ★ □ [∧] env_persistent Δ ★ [★] env_spatial Δ)%I.
+  (■ envs_wf Δ ★ □ [★] env_persistent Δ ★ [★] env_spatial Δ)%I.
 Instance: Params (@of_envs) 1.
 
 Record envs_Forall2 {M} (R : relation (uPred M)) (Δ1 Δ2 : envs M) : Prop := {
@@ -110,7 +110,7 @@ Implicit Types Δ : envs M.
 Implicit Types P Q : uPred M.
 
 Lemma of_envs_def Δ :
-  of_envs Δ = (■ envs_wf Δ ★ □ [∧] env_persistent Δ ★ [★] env_spatial Δ)%I.
+  of_envs Δ = (■ envs_wf Δ ★ □ [★] env_persistent Δ ★ [★] env_spatial Δ)%I.
 Proof. done. Qed.
 
 Lemma envs_lookup_delete_Some Δ Δ' i p P :
@@ -127,13 +127,13 @@ Lemma envs_lookup_sound Δ i p P :
 Proof.
   rewrite /envs_lookup /envs_delete /of_envs=>?; apply pure_elim_sep_l=> Hwf.
   destruct Δ as [Γp Γs], (Γp !! i) eqn:?; simplify_eq/=.
-  - rewrite (env_lookup_perm Γp) //= always_and_sep always_sep.
-    ecancel [□ [∧] _; □ P; [★] _]%I; apply pure_intro.
+  - rewrite (env_lookup_perm Γp) //= always_sep.
+    ecancel [□ [★] _; □ P; [★] Γs]%I; apply pure_intro.
     destruct Hwf; constructor;
       naive_solver eauto using env_delete_wf, env_delete_fresh.
   - destruct (Γs !! i) eqn:?; simplify_eq/=.
     rewrite (env_lookup_perm Γs) //=.
-    ecancel [□ [∧] _; P; [★] _]%I; apply pure_intro.
+    ecancel [□ [★] _; P; [★] (env_delete _ _)]%I; apply pure_intro.
     destruct Hwf; constructor;
       naive_solver eauto using env_delete_wf, env_delete_fresh.
 Qed.
@@ -151,7 +151,7 @@ Lemma envs_lookup_split Δ i p P :
 Proof.
   rewrite /envs_lookup /of_envs=>?; apply pure_elim_sep_l=> Hwf.
   destruct Δ as [Γp Γs], (Γp !! i) eqn:?; simplify_eq/=.
-  - rewrite (env_lookup_perm Γp) //= always_and_sep always_sep.
+  - rewrite (env_lookup_perm Γp) //= always_sep.
     rewrite pure_equiv // left_id.
     cancel [□ P]%I. apply wand_intro_l. solve_sep_entails.
   - destruct (Γs !! i) eqn:?; simplify_eq/=.
@@ -188,7 +188,7 @@ Proof.
   - apply sep_intro_True_l; [apply pure_intro|].
     + destruct Hwf; constructor; simpl; eauto using Esnoc_wf.
       intros j; case_decide; naive_solver.
-    + by rewrite always_and_sep always_sep assoc.
+    + by rewrite always_sep assoc.
   - apply sep_intro_True_l; [apply pure_intro|].
     + destruct Hwf; constructor; simpl; eauto using Esnoc_wf.
       intros j; case_decide; naive_solver.
@@ -206,8 +206,7 @@ Proof.
       intros j. apply (env_app_disjoint _ _ _ j) in Happ.
       naive_solver eauto using env_app_fresh.
     + rewrite (env_app_perm _ _ Γp') //.
-      rewrite big_and_app always_and_sep always_sep (big_sep_and Γ).
-      solve_sep_entails.
+      rewrite big_sep_app always_sep. solve_sep_entails.
   - destruct (env_app Γ Γp) eqn:Happ,
       (env_app Γ Γs) as [Γs'|] eqn:?; simplify_eq/=.
     apply wand_intro_l, sep_intro_True_l; [apply pure_intro|].
@@ -230,8 +229,7 @@ Proof.
       intros j. apply (env_app_disjoint _ _ _ j) in Happ.
       destruct (decide (i = j)); try naive_solver eauto using env_replace_fresh.
     + rewrite (env_replace_perm _ _ Γp') //.
-      rewrite big_and_app always_and_sep always_sep (big_sep_and Γ).
-      solve_sep_entails.
+      rewrite big_sep_app always_sep. solve_sep_entails.
   - destruct (env_app Γ Γp) eqn:Happ,
       (env_replace i Γ Γs) as [Γs'|] eqn:?; simplify_eq/=.
     apply wand_intro_l, sep_intro_True_l; [apply pure_intro|].
@@ -428,7 +426,7 @@ Proof.
   repeat apply sep_mono; try apply always_mono.
   - rewrite -later_intro; apply pure_mono; destruct 1; constructor;
       naive_solver eauto using env_Forall2_wf, env_Forall2_fresh.
-  - induction Hp; rewrite /= ?later_and; auto using and_mono, later_intro.
+  - induction Hp; rewrite /= ?later_sep; auto using sep_mono, later_intro.
   - induction Hs; rewrite /= ?later_sep; auto using sep_mono, later_intro.
 Qed.
 

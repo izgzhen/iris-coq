@@ -4,7 +4,7 @@ Import uPred.
 
 (** We define the following big operators:
 
-- The operators [ [★] Ps ] and [ [∧] Ps ] fold [★] and [∧] over the list [Ps].
+- The operator [ [★] Ps ] folds [★] over the list [Ps].
   This operator is not a quantifier, so it binds strongly.
 - The operator [ [★ list] k ↦ x ∈ l, P ] asserts that [P] holds separately for
   each element [x] at position [x] in the list [l]. This operator is a
@@ -18,10 +18,6 @@ Import uPred.
 
 (** * Big ops over lists *)
 (* These are the basic building blocks for other big ops *)
-Fixpoint uPred_big_and {M} (Ps : list (uPred M)) : uPred M :=
-  match Ps with [] => True | P :: Ps => P ∧ uPred_big_and Ps end%I.
-Instance: Params (@uPred_big_and) 1.
-Notation "'[∧]' Ps" := (uPred_big_and Ps) (at level 20) : uPred_scope.
 Fixpoint uPred_big_sep {M} (Ps : list (uPred M)) : uPred M :=
   match Ps with [] => True | P :: Ps => P ★ uPred_big_sep Ps end%I.
 Instance: Params (@uPred_big_sep) 1.
@@ -75,28 +71,13 @@ Implicit Types Ps Qs : list (uPred M).
 Implicit Types A : Type.
 
 (** ** Generic big ops over lists of upreds *)
-Global Instance big_and_proper : Proper ((≡) ==> (⊣⊢)) (@uPred_big_and M).
-Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 Global Instance big_sep_proper : Proper ((≡) ==> (⊣⊢)) (@uPred_big_sep M).
 Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
-
-Global Instance big_and_ne n : Proper (dist n ==> dist n) (@uPred_big_and M).
-Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 Global Instance big_sep_ne n : Proper (dist n ==> dist n) (@uPred_big_sep M).
-Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
-
-Global Instance big_and_mono' : Proper (Forall2 (⊢) ==> (⊢)) (@uPred_big_and M).
 Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 Global Instance big_sep_mono' : Proper (Forall2 (⊢) ==> (⊢)) (@uPred_big_sep M).
 Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 
-Global Instance big_and_perm : Proper ((≡ₚ) ==> (⊣⊢)) (@uPred_big_and M).
-Proof.
-  induction 1 as [|P Ps Qs ? IH|P Q Ps|]; simpl; auto.
-  - by rewrite IH.
-  - by rewrite !assoc (comm _ P).
-  - etrans; eauto.
-Qed.
 Global Instance big_sep_perm : Proper ((≡ₚ) ==> (⊣⊢)) (@uPred_big_sep M).
 Proof.
   induction 1 as [|P Ps Qs ? IH|P Q Ps|]; simpl; auto.
@@ -105,31 +86,17 @@ Proof.
   - etrans; eauto.
 Qed.
 
-Lemma big_and_app Ps Qs : [∧] (Ps ++ Qs) ⊣⊢ [∧] Ps ∧ [∧] Qs.
-Proof. induction Ps as [|?? IH]; by rewrite /= ?left_id -?assoc ?IH. Qed.
 Lemma big_sep_app Ps Qs : [★] (Ps ++ Qs) ⊣⊢ [★] Ps ★ [★] Qs.
 Proof. by induction Ps as [|?? IH]; rewrite /= ?left_id -?assoc ?IH. Qed.
 
-Lemma big_and_contains Ps Qs : Qs `contains` Ps → [∧] Ps ⊢ [∧] Qs.
-Proof.
-  intros [Ps' ->]%contains_Permutation. by rewrite big_and_app and_elim_l.
-Qed.
 Lemma big_sep_contains Ps Qs : Qs `contains` Ps → [★] Ps ⊢ [★] Qs.
 Proof.
   intros [Ps' ->]%contains_Permutation. by rewrite big_sep_app sep_elim_l.
 Qed.
-
-Lemma big_sep_and Ps : [★] Ps ⊢ [∧] Ps.
-Proof. by induction Ps as [|P Ps IH]; simpl; auto with I. Qed.
-
-Lemma big_and_elem_of Ps P : P ∈ Ps → [∧] Ps ⊢ P.
-Proof. induction 1; simpl; auto with I. Qed.
 Lemma big_sep_elem_of Ps P : P ∈ Ps → [★] Ps ⊢ P.
 Proof. induction 1; simpl; auto with I. Qed.
 
 (** ** Persistence *)
-Global Instance big_and_persistent Ps : PersistentL Ps → PersistentP ([∧] Ps).
-Proof. induction 1; apply _. Qed.
 Global Instance big_sep_persistent Ps : PersistentL Ps → PersistentP ([★] Ps).
 Proof. induction 1; apply _. Qed.
 
@@ -157,8 +124,6 @@ Proof.
 Qed.
 
 (** ** Timelessness *)
-Global Instance big_and_timeless Ps : TimelessL Ps → TimelessP ([∧] Ps).
-Proof. induction 1; apply _. Qed.
 Global Instance big_sep_timeless Ps : TimelessL Ps → TimelessP ([★] Ps).
 Proof. induction 1; apply _. Qed.
 
