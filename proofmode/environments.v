@@ -10,18 +10,21 @@ Arguments Esnoc {_} _ _%string _.
 Instance: Params (@Enil) 1.
 Instance: Params (@Esnoc) 1.
 
-Local Notation "x ← y ; z" := (match y with Some x => z | None => None end).
-Local Notation "' ( x1 , x2 ) ← y ; z" :=
-  (match y with Some (x1,x2) => z | None => None end).
-Local Notation "' ( x1 , x2 , x3 ) ← y ; z" :=
-  (match y with Some (x1,x2,x3) => z | None => None end).
-
 Fixpoint env_lookup {A} (i : string) (Γ : env A) : option A :=
   match Γ with
   | Enil => None
   | Esnoc Γ j x => if decide (i = j) then Some x else env_lookup i Γ
   end.
-Local Notation "Γ !! j" := (env_lookup j Γ).
+
+Module env_notations.
+  Notation "x ← y ; z" := (match y with Some x => z | None => None end).
+  Notation "' ( x1 , x2 ) ← y ; z" :=
+    (match y with Some (x1,x2) => z | None => None end).
+  Notation "' ( x1 , x2 , x3 ) ← y ; z" :=
+    (match y with Some (x1,x2,x3) => z | None => None end).
+  Notation "Γ !! j" := (env_lookup j Γ).
+End env_notations.
+Import env_notations.
 
 Inductive env_wf {A} : env A → Prop :=
   | Enil_wf : env_wf Enil

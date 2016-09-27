@@ -3,13 +3,7 @@ From iris.algebra Require Import upred_big_op upred_tactics.
 From iris.proofmode Require Export environments classes.
 From iris.prelude Require Import stringmap hlist.
 Import uPred.
-
-Local Notation "Γ !! j" := (env_lookup j Γ).
-Local Notation "x ← y ; z" := (match y with Some x => z | None => None end).
-Local Notation "' ( x1 , x2 ) ← y ; z" :=
-  (match y with Some (x1,x2) => z | None => None end).
-Local Notation "' ( x1 , x2 , x3 ) ← y ; z" :=
-  (match y with Some (x1,x2,x3) => z | None => None end).
+Import env_notations.
 
 Record envs (M : ucmraT) :=
   Envs { env_persistent : env (uPred M); env_spatial : env (uPred M) }.
