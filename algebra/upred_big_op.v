@@ -47,6 +47,9 @@ Typeclasses Opaque uPred_big_sepM.
 Notation "'[★' 'map' ] k ↦ x ∈ m , P" := (uPred_big_sepM m (λ k x, P))
   (at level 200, m at level 10, k, x at level 1, right associativity,
    format "[★  map ]  k ↦ x  ∈  m ,  P") : uPred_scope.
+Notation "'[★' 'map' ] x ∈ m , P" := (uPred_big_sepM m (λ _ x, P))
+  (at level 200, m at level 10, x at level 1, right associativity,
+   format "[★  map ]  x  ∈  m ,  P") : uPred_scope.
 
 Definition uPred_big_sepS {M} `{Countable A}
   (X : gset A) (Φ : A → uPred M) : uPred M := [★] (Φ <$> elements X).

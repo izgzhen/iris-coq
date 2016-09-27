@@ -44,6 +44,9 @@ Typeclasses Opaque big_opM.
 Notation "'[⋅' 'map' ] k ↦ x ∈ m , P" := (big_opM m (λ k x, P))
   (at level 200, m at level 10, k, x at level 1, right associativity,
    format "[⋅  map ]  k ↦ x  ∈  m ,  P") : C_scope.
+Notation "'[⋅' 'map' ] x ∈ m , P" := (big_opM m (λ _ x, P))
+  (at level 200, m at level 10, x at level 1, right associativity,
+   format "[⋅  map ]  x  ∈  m ,  P") : C_scope.
 
 Definition big_opS {M : ucmraT} `{Countable A}
   (X : gset A) (f : A → M) : M := [⋅] (f <$> elements X).
