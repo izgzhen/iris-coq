@@ -25,7 +25,8 @@ Proof. done. Qed.
 Global Instance into_pure_eq {A : cofeT} (a b : A) :
   Timeless a → @IntoPure M (a ≡ b) (a ≡ b).
 Proof. intros. by rewrite /IntoPure timeless_eq. Qed.
-Global Instance into_pure_valid `{CMRADiscrete A} (a : A) : @IntoPure M (✓ a) (✓ a).
+Global Instance into_pure_cmra_valid `{CMRADiscrete A} (a : A) :
+  @IntoPure M (✓ a) (✓ a).
 Proof. by rewrite /IntoPure discrete_valid. Qed.
 
 (* FromPure *)
@@ -33,10 +34,11 @@ Global Instance from_pure_pure φ : @FromPure M (■ φ) φ.
 Proof. done. Qed.
 Global Instance from_pure_eq {A : cofeT} (a b : A) : @FromPure M (a ≡ b) (a ≡ b).
 Proof. rewrite /FromPure. eapply pure_elim; [done|]=> ->. apply eq_refl'. Qed.
-Global Instance from_pure_valid {A : cmraT} (a : A) : @FromPure M (✓ a) (✓ a).
+Global Instance from_pure_cmra_valid {A : cmraT} (a : A) :
+  @FromPure M (✓ a) (✓ a).
 Proof.
   rewrite /FromPure. eapply pure_elim; [done|]=> ?.
-  rewrite -valid_intro //. auto with I.
+  rewrite -cmra_valid_intro //. auto with I.
 Qed.
 Global Instance from_pure_rvs P φ : FromPure P φ → FromPure (|=r=> P) φ.
 Proof. rewrite /FromPure=> ->. apply rvs_intro. Qed.
@@ -318,7 +320,7 @@ Global Instance into_or_later P Q1 Q2 :
 Proof. rewrite /IntoOr=>->. by rewrite later_or. Qed.
 
 (* FromExist *)
-Global Instance from_exist_exist {A} (Φ: A → uPred M): FromExist (∃ a, Φ a) Φ.
+Global Instance from_exist_exist {A} (Φ : A → uPred M): FromExist (∃ a, Φ a) Φ.
 Proof. done. Qed.
 Global Instance from_exist_rvs {A} P (Φ : A → uPred M) :
   FromExist P Φ → FromExist (|=r=> P) (λ a, |=r=> Φ a)%I.

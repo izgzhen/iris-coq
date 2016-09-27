@@ -256,13 +256,13 @@ Definition uPred_ownM {M} := proj1_sig uPred_ownM_aux M.
 Definition uPred_ownM_eq :
   @uPred_ownM = @uPred_ownM_def := proj2_sig uPred_ownM_aux.
 
-Program Definition uPred_valid_def {M : ucmraT} {A : cmraT} (a : A) : uPred M :=
+Program Definition uPred_cmra_valid_def {M} {A : cmraT} (a : A) : uPred M :=
   {| uPred_holds n x := ✓{n} a |}.
 Solve Obligations with naive_solver eauto 2 using cmra_validN_le.
-Definition uPred_valid_aux : { x | x = @uPred_valid_def }. by eexists. Qed.
-Definition uPred_valid {M A} := proj1_sig uPred_valid_aux M A.
-Definition uPred_valid_eq :
-  @uPred_valid = @uPred_valid_def := proj2_sig uPred_valid_aux.
+Definition uPred_cmra_valid_aux : { x | x = @uPred_cmra_valid_def }. by eexists. Qed.
+Definition uPred_cmra_valid {M A} := proj1_sig uPred_cmra_valid_aux M A.
+Definition uPred_cmra_valid_eq :
+  @uPred_cmra_valid = @uPred_cmra_valid_def := proj2_sig uPred_cmra_valid_aux.
 
 Program Definition uPred_rvs_def {M} (Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ k yf,
@@ -309,7 +309,7 @@ Notation "□ P" := (uPred_always P)
 Notation "▷ P" := (uPred_later P)
   (at level 20, right associativity) : uPred_scope.
 Infix "≡" := uPred_eq : uPred_scope.
-Notation "✓ x" := (uPred_valid x) (at level 20) : uPred_scope.
+Notation "✓ x" := (uPred_cmra_valid x) (at level 20) : uPred_scope.
 Notation "|=r=> Q" := (uPred_rvs Q)
   (at level 99, Q at level 200, format "|=r=>  Q") : uPred_scope.
 Notation "P =r=> Q" := (P ⊢ |=r=> Q)
@@ -344,7 +344,7 @@ Module uPred.
 Definition unseal :=
   (uPred_pure_eq, uPred_and_eq, uPred_or_eq, uPred_impl_eq, uPred_forall_eq,
   uPred_exist_eq, uPred_eq_eq, uPred_sep_eq, uPred_wand_eq, uPred_always_eq,
-  uPred_later_eq, uPred_ownM_eq, uPred_valid_eq, uPred_rvs_eq).
+  uPred_later_eq, uPred_ownM_eq, uPred_cmra_valid_eq, uPred_rvs_eq).
 Ltac unseal := rewrite !unseal /=.
 
 Section uPred_logic.
@@ -480,14 +480,14 @@ Proof.
   unseal; split=> n' x ? /=. by rewrite (dist_le _ _ _ _ Ha); last lia.
 Qed.
 Global Instance ownM_proper: Proper ((≡) ==> (⊣⊢)) (@uPred_ownM M) := ne_proper _.
-Global Instance valid_ne {A : cmraT} n :
-Proper (dist n ==> dist n) (@uPred_valid M A).
+Global Instance cmra_valid_ne {A : cmraT} n :
+Proper (dist n ==> dist n) (@uPred_cmra_valid M A).
 Proof.
   intros a b Ha; unseal; split=> n' x ? /=.
   by rewrite (dist_le _ _ _ _ Ha); last lia.
 Qed.
-Global Instance valid_proper {A : cmraT} :
-  Proper ((≡) ==> (⊣⊢)) (@uPred_valid M A) := ne_proper _.
+Global Instance cmra_valid_proper {A : cmraT} :
+  Proper ((≡) ==> (⊣⊢)) (@uPred_cmra_valid M A) := ne_proper _.
 Global Instance rvs_ne n : Proper (dist n ==> dist n) (@uPred_rvs M).
 Proof.
   intros P Q HPQ.
@@ -1243,18 +1243,18 @@ Lemma ownM_valid (a : M) : uPred_ownM a ⊢ ✓ a.
 Proof.
   unseal; split=> n x Hv [a' ?]; cofe_subst; eauto using cmra_validN_op_l.
 Qed.
-Lemma valid_intro {A : cmraT} (a : A) : ✓ a → True ⊢ ✓ a.
+Lemma cmra_valid_intro {A : cmraT} (a : A) : ✓ a → True ⊢ ✓ a.
 Proof. unseal=> ?; split=> n x ? _ /=; by apply cmra_valid_validN. Qed.
-Lemma valid_elim {A : cmraT} (a : A) : ¬ ✓{0} a → ✓ a ⊢ False.
+Lemma cmra_valid_elim {A : cmraT} (a : A) : ¬ ✓{0} a → ✓ a ⊢ False.
 Proof. unseal=> Ha; split=> n x ??; apply Ha, cmra_validN_le with n; auto. Qed.
-Lemma always_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
+Lemma always_cmra_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
 Proof. by unseal. Qed.
-Lemma valid_weaken {A : cmraT} (a b : A) : ✓ (a ⋅ b) ⊢ ✓ a.
+Lemma cmra_valid_weaken {A : cmraT} (a b : A) : ✓ (a ⋅ b) ⊢ ✓ a.
 Proof. unseal; split=> n x _; apply cmra_validN_op_l. Qed.
 
 (* Own and valid derived *)
 Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_ownM a ⊢ False.
-Proof. by intros; rewrite ownM_valid valid_elim. Qed.
+Proof. by intros; rewrite ownM_valid cmra_valid_elim. Qed.
 Global Instance ownM_mono : Proper (flip (≼) ==> (⊢)) (@uPred_ownM M).
 Proof. intros a b [b' ->]. rewrite ownM_op. eauto. Qed.
 Lemma ownM_empty' : uPred_ownM ∅ ⊣⊢ True.
@@ -1432,9 +1432,9 @@ Proof. by intros; rewrite /PersistentP always_exist; apply exist_mono. Qed.
 Global Instance eq_persistent {A : cofeT} (a b : A) :
   PersistentP (a ≡ b : uPred M)%I.
 Proof. by intros; rewrite /PersistentP always_eq. Qed.
-Global Instance valid_persistent {A : cmraT} (a : A) :
+Global Instance cmra_valid_persistent {A : cmraT} (a : A) :
   PersistentP (✓ a : uPred M)%I.
-Proof. by intros; rewrite /PersistentP always_valid. Qed.
+Proof. by intros; rewrite /PersistentP always_cmra_valid. Qed.
 Global Instance later_persistent P : PersistentP P → PersistentP (▷ P).
 Proof. by intros; rewrite /PersistentP always_later; apply later_mono. Qed.
 Global Instance ownM_persistent : Persistent a → PersistentP (@uPred_ownM M a).
@@ -1491,13 +1491,13 @@ End uPred.
 Section cmra.
   Context {M : ucmraT}.
 
-  Instance uPred_valid' : Valid (uPred M) := λ P, ∀ n x, ✓{n} x → P n x.
-  Instance uPred_validN' : ValidN (uPred M) := λ n P,
+  Instance uPred_valid : Valid (uPred M) := λ P, ∀ n x, ✓{n} x → P n x.
+  Instance uPred_validN : ValidN (uPred M) := λ n P,
     ∀ n' x, n' ≤ n → ✓{n'} x → P n' x.
   Instance uPred_op : Op (uPred M) := uPred_sep.
   Instance uPred_pcore : PCore (uPred M) := λ _, Some True%I.
 
-  Instance uPred_validN_ne n : Proper (dist n ==> iff) (uPred_validN' n).
+  Instance uPred_validN_ne n : Proper (dist n ==> iff) (uPred_validN n).
   Proof. intros P Q HPQ; split=> H n' x ??; by apply HPQ, H. Qed.
 
   Lemma uPred_validN_alt n (P : uPred M) : ✓{n} P → P ≡{n}≡ True%I.
