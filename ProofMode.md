@@ -23,8 +23,9 @@ Context management
 - `iIntros (x1 ... xn) "ipat1 ... ipatn"` : introduce universal quantifiers
   using Coq introduction patterns `x1 ... xn` and implications/wands using proof
   mode introduction patterns `ipat1 ... ipatn`.
-- `iClear "H1 ... Hn"` : clear the hypothesis `H1 ... Hn`. The symbol `★` can
-  be used to clear entire spatial context.
+- `iClear (x1 ... xn) "H1 ... Hn"` : clear the hypothesis `H1 ... Hn` as well as
+  the Coq level hypotheses/variables `x1 ... xn`. The symbol `★` can be used to
+  clear entire spatial context.
 - `iRevert (x1 ... xn) "H1 ... Hn"` : revert the proof mode hypotheses
   `H1 ... Hn` into wands, as well as the Coq level hypotheses/variables
   `x1 ... xn` into universal quantifiers. The symbol `★` can be used to revert

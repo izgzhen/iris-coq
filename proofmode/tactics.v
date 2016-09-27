@@ -66,6 +66,8 @@ Tactic Notation "iClear" constr(Hs) :=
          [env_cbv; reflexivity || fail "iClear:" H "not found"|go Hs]
     end in
   let Hs := words Hs in go Hs.
+Tactic Notation "iClear" "(" ident_list(xs) ")" constr(Hs) :=
+  iClear Hs; clear xs.
 
 (** * Assumptions *)
 Tactic Notation "iExact" constr(H) :=
