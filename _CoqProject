@@ -120,6 +120,7 @@ proofmode/pviewshifts.v
 proofmode/environments.v
 proofmode/intro_patterns.v
 proofmode/spec_patterns.v
+proofmode/sel_patterns.v
 proofmode/tactics.v
 proofmode/notation.v
 proofmode/invariants.v

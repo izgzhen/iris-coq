@@ -82,6 +82,9 @@ Definition env_spatial_is_nil {M} (Δ : envs M) :=
 Definition envs_clear_spatial {M} (Δ : envs M) : envs M :=
   Envs (env_persistent Δ) Enil.
 
+Definition envs_clear_persistent {M} (Δ : envs M) : envs M :=
+  Envs Enil (env_spatial Δ).
+
 Fixpoint envs_split_go {M}
     (js : list string) (Δ1 Δ2 : envs M) : option (envs M * envs M) :=
   match js with
@@ -272,12 +275,6 @@ Proof.
   destruct Hwf; constructor; simpl; auto using Enil_wf.
 Qed.
 
-Lemma env_fold_wand Γ Q : env_fold uPred_wand Q Γ ⊣⊢ ([★] Γ -★ Q).
-Proof.
-  revert Q; induction Γ as [|Γ IH i P]=> Q /=; [by rewrite wand_True|].
-  by rewrite IH wand_curry (comm uPred_sep).
-Qed.
-
 Lemma env_spatial_is_nil_persistent Δ :
   env_spatial_is_nil Δ = true → PersistentP Δ.
 Proof. intros; destruct Δ as [? []]; simplify_eq/=; apply _. Qed.
@@ -385,9 +382,6 @@ Qed.
 Lemma tac_clear Δ Δ' i p P Q :
   envs_lookup_delete i Δ = Some (p,P,Δ') → (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof. intros. by rewrite envs_lookup_delete_sound // sep_elim_r. Qed.
-Lemma tac_clear_spatial Δ Δ' Q :
-  envs_clear_spatial Δ = Δ' → (Δ' ⊢ Q) → Δ ⊢ Q.
-Proof. intros <- ?. by rewrite envs_clear_spatial_sound // sep_elim_l. Qed.
 
 (** * False *)
 Lemma tac_ex_falso Δ Q : (Δ ⊢ False) → Δ ⊢ Q.
@@ -610,12 +604,6 @@ Proof.
   intros ? HQ. rewrite envs_lookup_delete_sound //; simpl. destruct p.
   - by rewrite HQ -always_and_sep_l impl_elim_r.
   - by rewrite HQ wand_elim_r.
-Qed.
-
-Lemma tac_revert_spatial Δ Q :
-  (envs_clear_spatial Δ ⊢ env_fold uPred_wand Q (env_spatial Δ)) → Δ ⊢ Q.
-Proof.
-  intros HΔ. by rewrite envs_clear_spatial_sound HΔ env_fold_wand wand_elim_l.
 Qed.
 
 Lemma tac_revert_ih Δ P Q :

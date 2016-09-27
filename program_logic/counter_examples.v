@@ -152,7 +152,7 @@ Module inv. Section inv.
     iDestruct (finished_dup with "Hf") as "[Hf Hf']".
     iApply pvs_intro. iSplitL "Hf'"; first by eauto.
     (* Step 2: Open the Q-invariant. *)
-    iClear "HiP". clear i. iDestruct "HsQ" as (i) "HiQ".
+    iClear (i) "HiP ". iDestruct "HsQ" as (i) "HiQ".
     iApply (inv_open' i). iSplit; first done.
     iIntros "[HaQ | [_ #HQ]]".
     { iExFalso. iApply finished_not_start. by iFrame. }

@@ -14,8 +14,8 @@ Applying hypotheses and lemmas
 - `iExact "H"`  : finish the goal if the conclusion matches the hypothesis `H`
 - `iAssumption` : finish the goal if the conclusion matches any hypothesis
 - `iApply pm_trm` : match the conclusion of the current goal against the
-   conclusion of `pm_trm` and generates goals for the premises of `pm_trm`. See
-   proof mode terms below.
+  conclusion of `pm_trm` and generates goals for the premises of `pm_trm`. See
+  proof mode terms below.
 
 Context management
 ------------------
@@ -23,13 +23,12 @@ Context management
 - `iIntros (x1 ... xn) "ipat1 ... ipatn"` : introduce universal quantifiers
   using Coq introduction patterns `x1 ... xn` and implications/wands using proof
   mode introduction patterns `ipat1 ... ipatn`.
-- `iClear (x1 ... xn) "H1 ... Hn"` : clear the hypothesis `H1 ... Hn` as well as
-  the Coq level hypotheses/variables `x1 ... xn`. The symbol `★` can be used to
-  clear entire spatial context.
-- `iRevert (x1 ... xn) "H1 ... Hn"` : revert the proof mode hypotheses
-  `H1 ... Hn` into wands, as well as the Coq level hypotheses/variables
-  `x1 ... xn` into universal quantifiers. The symbol `★` can be used to revert
-  the entire spatial context.
+- `iClear (x1 ... xn) "selpat"` : clear the hypotheses given by the selection
+  pattern `selpat` and the Coq level hypotheses/variables `x1 ... xn`.
+- `iRevert (x1 ... xn) "selpat"` : revert the hypotheses given by the selection
+  pattern `selpat` into wands, and the Coq level hypotheses/variables
+  `x1 ... xn` into universal quantifiers. Persistent hypotheses are wrapped into
+  the always modality.
 - `iRename "H1" into "H2"` : rename the hypothesis `H1` into `H2`.
 - `iSpecialize pm_trm` : instantiate universal quantifiers and eliminate
   implications/wands of a hypothesis `pm_trm`. See proof mode terms below.
@@ -83,9 +82,9 @@ Elimination of logical connectives
 Separating logic specific tactics
 ---------------------------------
 
-- `iFrame (t1 .. tn) "H0 ... Hn"` : cancel the Coq terms (or Coq hypotheses)
-  `t1 ... tn` and Iris hypotheses `H0 ... Hn` in the goal. Apart from
-  hypotheses, the following symbols can be used:
+- `iFrame (t1 .. tn) "selpat"` : cancel the Coq terms (or Coq hypotheses)
+  `t1 ... tn` and Iris hypotheses given by `selpat` in the goal. The constructs
+  of the selection pattern have the following meaning:
 
   + `%` : repeatedly frame hypotheses from the Coq context.
   + `#` : repeatedly frame hypotheses from the persistent context.
@@ -102,16 +101,19 @@ Separating logic specific tactics
 The later modality
 ------------------
 - `iNext` : introduce a later by stripping laters from all hypotheses.
-- `iLöb as "IH" forall (x1 ... xn)` : perform Löb induction while generalizing
-  over the Coq level variables `x1 ... xn` and the entire spatial context.
+- `iLöb as "IH" forall (x1 ... xn)` : perform Löb induction by generating a
+  hypothesis `IH : ▷ goal`. The tactic generalizes over the Coq level variables
+  `x1 ... xn`, the hypotheses given by the selection pattern `selpat`, and the
+  spatial context.
 
 Induction
 ---------
-- `iInduction x as cpat "IH" forall (x1 ... xn)` : perform induction on the Coq
-  term `x`. The Coq introduction pattern is used to name the introduced
+- `iInduction x as cpat "IH" forall (x1 ... xn) "selpat"` : perform induction on
+  the Coq term `x`. The Coq introduction pattern is used to name the introduced
   variables. The induction hypotheses are inserted into the persistent context
   and given fresh names prefixed `IH`. The tactic generalizes over the Coq level
-  variables `x1 ... xn` and the entire spatial context.
+  variables `x1 ... xn`, the hypotheses given by the selection pattern `selpat`,
+  and the spatial context.
 
 Rewriting
 ---------
@@ -125,11 +127,11 @@ Iris
 - `iVsIntro` : introduction of a raw or primitive view shift.
 - `iVs pm_trm as (x1 ... xn) "ipat"` : run a raw or primitive view shift
   `pm_trm` (if the goal permits, i.e. it is a raw or primitive view shift, or
-   a weakest precondition).
+  a weakest precondition).
 - `iInv N as (x1 ... xn) "ipat"` : open the invariant `N`.
 - `iTimeless "H"` : strip a later of a timeless hypothesis `H` (if the goal
-   permits, i.e. it is a later, True now, raw or primitive view shift, or a
-   weakest precondition).
+  permits, i.e. it is a later, True now, raw or primitive view shift, or a
+  weakest precondition).
 
 Miscellaneous
 -------------
@@ -141,14 +143,26 @@ Miscellaneous
   existential quantifiers, implications and wand, always and later modalities,
   primitive view shifts, and pure connectives.
 
+Selection patterns
+==================
+
+Selection patterns are used to select hypotheses in the tactics `iRevert`,
+`iClear`, `iFrame`, `iLöb` and `iInduction`. The proof mode supports the
+following _selection patterns_:
+
+- `H` : select the hypothesis named `H`.
+- `%` : select the entire pure/Coq context.
+- `#` : select the entire persistent context.
+- `★` : select the entire spatial context.
+
 Introduction patterns
 =====================
 
 Introduction patterns are used to perform introductions and eliminations of
 multiple connectives on the fly. The proof mode supports the following
-introduction patterns:
+_introduction patterns_:
 
-- `H` : create a hypothesis named H.
+- `H` : create a hypothesis named `H`.
 - `?` : create an anonymous hypothesis.
 - `_` : remove the hypothesis.
 - `$` : frame the hypothesis in the goal.
@@ -197,9 +211,9 @@ Specialization patterns
 =======================
 
 Since we are reasoning in a spatial logic, when eliminating a lemma or
-hypotheses of type ``P_0 -★ ... -★ P_n -★ R`` one has to specify how the
+hypothesis of type ``P_0 -★ ... -★ P_n -★ R``, one has to specify how the
 hypotheses are split between the premises. The proof mode supports the following
-so called specification patterns to express this splitting:
+_specification patterns_ to express splitting of hypotheses:
 
 - `H` : use the hypothesis `H` (it should match the premise exactly). If `H` is
   spatial, it will be consumed.

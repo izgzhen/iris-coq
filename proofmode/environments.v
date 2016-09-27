@@ -38,12 +38,6 @@ Instance: Params (@env_to_list) 1.
 Fixpoint env_dom {A} (Γ : env A) : list string :=
   match Γ with Enil => [] | Esnoc Γ i _ => i :: env_dom Γ end.
 
-Fixpoint env_fold {A B} (f : B → A → A) (x : A) (Γ : env B) : A :=
-  match Γ with
-  | Enil => x
-  | Esnoc Γ _ y => env_fold f (f y x) Γ
-  end.
-
 Fixpoint env_app {A} (Γapp : env A) (Γ : env A) : option (env A) :=
   match Γapp with
   | Enil => Some Γ
