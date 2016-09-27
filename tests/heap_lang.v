@@ -44,7 +44,7 @@ Section LiftingTests.
     n1 < n2 →
     Φ #(n2 - 1) ⊢ WP FindPred #n2 #n1 @ E {{ Φ }}.
   Proof.
-    iIntros (Hn) "HΦ". iLöb (n1 Hn) as "IH".
+    iIntros (Hn) "HΦ". iLöb as "IH" forall (n1 Hn).
     wp_rec. wp_let. wp_op. wp_let. wp_op=> ?; wp_if.
     - iApply ("IH" with "[%] HΦ"). omega.
     - iApply pvs_intro. by assert (n1 = n2 - 1) as -> by omega.

@@ -41,7 +41,7 @@ Lemma sum_loop_wp `{!heapG Σ} v t l (n : Z) (Φ : val → iProp Σ) :
   ⊢ WP sum_loop v #l {{ Φ }}.
 Proof.
   iIntros "(#Hh & Hl & Ht & HΦ)".
-  iLöb (v t l n Φ) as "IH". wp_rec. wp_let.
+  iLöb as "IH" forall (v t l n Φ). wp_rec. wp_let.
   destruct t as [n'|tl tr]; simpl in *.
   - iDestruct "Ht" as "%"; subst.
     wp_match. wp_load. wp_op. wp_store.

@@ -91,7 +91,7 @@ Qed.
 Lemma wp_strong_mono E1 E2 e Φ Ψ :
   E1 ⊆ E2 → (∀ v, Φ v ={E2}=★ Ψ v) ★ WP e @ E1 {{ Φ }} ⊢ WP e @ E2 {{ Ψ }}.
 Proof.
-  iIntros (?) "[HΦ H]". iLöb (e) as "IH". rewrite !wp_unfold /wp_pre.
+  iIntros (?) "[HΦ H]". iLöb as "IH" forall (e). rewrite !wp_unfold /wp_pre.
   iDestruct "H" as "[Hv|[% H]]"; [iLeft|iRight].
   { iDestruct "Hv" as (v) "[% Hv]". iExists v; iSplit; first done.
     iApply ("HΦ" with "==>[-]"). by iApply (pvs_mask_mono E1 _). }
@@ -148,7 +148,7 @@ Qed.
 Lemma wp_bind `{LanguageCtx Λ K} E e Φ :
   WP e @ E {{ v, WP K (of_val v) @ E {{ Φ }} }} ⊢ WP K e @ E {{ Φ }}.
 Proof.
-  iIntros "H". iLöb (E e Φ) as "IH". rewrite wp_unfold /wp_pre.
+  iIntros "H". iLöb as "IH" forall (E e Φ). rewrite wp_unfold /wp_pre.
   iDestruct "H" as "[Hv|[% H]]".
   { iDestruct "Hv" as (v) "[Hev Hv]"; iDestruct "Hev" as % <-%of_to_val.
     by iApply pvs_wp. }

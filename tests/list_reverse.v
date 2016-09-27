@@ -32,7 +32,7 @@ Lemma rev_acc_wp hd acc xs ys (Φ : val → iProp Σ) :
   ⊢ WP rev hd acc {{ Φ }}.
 Proof.
   iIntros "(#Hh & Hxs & Hys & HΦ)".
-  iLöb (hd acc xs ys Φ) as "IH". wp_rec. wp_let.
+  iLöb as "IH" forall (hd acc xs ys Φ). wp_rec. wp_let.
   destruct xs as [|x xs]; iSimplifyEq.
   - wp_match. by iApply "HΦ".
   - iDestruct "Hxs" as (l hd') "(% & Hx & Hxs)"; iSimplifyEq.
