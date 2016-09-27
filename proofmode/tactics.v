@@ -58,7 +58,7 @@ Tactic Notation "iRename" constr(H1) "into" constr(H2) :=
 
 Tactic Notation "iClear" constr(Hs) :=
   let rec go Hs :=
-    match Hs with
+    lazymatch Hs with
     | [] => idtac
     | "★" :: ?Hs => eapply tac_clear_spatial; [env_cbv; reflexivity|go Hs]
     | ?H :: ?Hs =>
