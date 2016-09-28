@@ -427,3 +427,30 @@ Proof.
   - by rewrite !big_opS_insert // !big_opS_empty !right_id.
   - by rewrite !big_opS_insert // cmra_homomorphism -IH //.
 Qed.
+
+Lemma big_opL_commute_L {M1 M2 : ucmraT} `{!LeibnizEquiv M2} {A}
+    (h : M1 → M2) `{!UCMRAHomomorphism h} (f : nat → A → M1) l :
+  h ([⋅ list] k↦x ∈ l, f k x) = ([⋅ list] k↦x ∈ l, h (f k x)).
+Proof. unfold_leibniz. by apply big_opL_commute. Qed.
+Lemma big_opL_commute1_L {M1 M2 : ucmraT} `{!LeibnizEquiv M2} {A}
+    (h : M1 → M2) `{!CMRAHomomorphism h} (f : nat → A → M1) l :
+  l ≠ [] → h ([⋅ list] k↦x ∈ l, f k x) = ([⋅ list] k↦x ∈ l, h (f k x)).
+Proof. unfold_leibniz. by apply big_opL_commute1. Qed.
+
+Lemma big_opM_commute_L {M1 M2 : ucmraT} `{!LeibnizEquiv M2, Countable K} {A}
+    (h : M1 → M2) `{!UCMRAHomomorphism h} (f : K → A → M1) m :
+  h ([⋅ map] k↦x ∈ m, f k x) = ([⋅ map] k↦x ∈ m, h (f k x)).
+Proof. unfold_leibniz. by apply big_opM_commute. Qed.
+Lemma big_opM_commute1_L {M1 M2 : ucmraT} `{!LeibnizEquiv M2, Countable K} {A}
+    (h : M1 → M2) `{!CMRAHomomorphism h} (f : K → A → M1) m :
+  m ≠ ∅ → h ([⋅ map] k↦x ∈ m, f k x) = ([⋅ map] k↦x ∈ m, h (f k x)).
+Proof. unfold_leibniz. by apply big_opM_commute1. Qed.
+
+Lemma big_opS_commute_L {M1 M2 : ucmraT} `{!LeibnizEquiv M2, Countable A}
+    (h : M1 → M2) `{!UCMRAHomomorphism h} (f : A → M1) X :
+  h ([⋅ set] x ∈ X, f x) = ([⋅ set] x ∈ X, h (f x)).
+Proof. unfold_leibniz. by apply big_opS_commute. Qed.
+Lemma big_opS_commute1_L {M1 M2 : ucmraT} `{!LeibnizEquiv M2, Countable A}
+    (h : M1 → M2) `{!CMRAHomomorphism h} (f : A → M1) X :
+  X ≠ ∅ → h ([⋅ set] x ∈ X, f x) = ([⋅ set] x ∈ X, h (f x)).
+Proof. intros. rewrite <-leibniz_equiv_iff. by apply big_opS_commute1. Qed.
