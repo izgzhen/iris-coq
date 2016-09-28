@@ -238,6 +238,9 @@ Qed.
 Lemma op_singleton (i : K) (x y : A) :
   {[ i := x ]} ⋅ {[ i := y ]} = ({[ i := x ⋅ y ]} : gmap K A).
 Proof. by apply (merge_singleton _ _ _ x y). Qed.
+Global Instance singleton_cmra_homomorphism :
+  CMRAHomomorphism (singletonM i : A → gmap K A).
+Proof. split. apply _. intros. by rewrite op_singleton. Qed.
 
 Global Instance gmap_persistent m : (∀ x : A, Persistent x) → Persistent m.
 Proof.
@@ -434,7 +437,7 @@ Instance gmap_fmap_cmra_monotone `{Countable K} {A B : cmraT} (f : A → B)
   `{!CMRAMonotone f} : CMRAMonotone (fmap f : gmap K A → gmap K B).
 Proof.
   split; try apply _.
-  - by intros n m ? i; rewrite lookup_fmap; apply (validN_preserving _).
+  - by intros n m ? i; rewrite lookup_fmap; apply (cmra_monotone_validN _).
   - intros m1 m2; rewrite !lookup_included=> Hm i.
     by rewrite !lookup_fmap; apply: cmra_monotone.
 Qed.

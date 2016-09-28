@@ -429,7 +429,7 @@ Instance list_fmap_cmra_monotone {A B : ucmraT} (f : A → B)
 Proof.
   split; try apply _.
   - intros n l. rewrite !list_lookup_validN=> Hl i. rewrite list_lookup_fmap.
-    by apply (validN_preserving (fmap f : option A → option B)).
+    by apply (cmra_monotone_validN (fmap f : option A → option B)).
   - intros l1 l2. rewrite !list_lookup_included=> Hl i. rewrite !list_lookup_fmap.
     by apply (cmra_monotone (fmap f : option A → option B)).
 Qed.

@@ -213,11 +213,25 @@ Class CMRADiscrete (A : cmraT) := {
 (** * Morphisms *)
 Class CMRAMonotone {A B : cmraT} (f : A → B) := {
   cmra_monotone_ne n :> Proper (dist n ==> dist n) f;
-  validN_preserving n x : ✓{n} x → ✓{n} f x;
+  cmra_monotone_validN n x : ✓{n} x → ✓{n} f x;
   cmra_monotone x y : x ≼ y → f x ≼ f y
 }.
-Arguments validN_preserving {_ _} _ {_} _ _ _.
+Arguments cmra_monotone_validN {_ _} _ {_} _ _ _.
 Arguments cmra_monotone {_ _} _ {_} _ _ _.
+
+(* Not all intended homomorphisms preserve validity, in particular it does not
+hold for the [ownM] and [own] connectives. *)
+Class CMRAHomomorphism {A B : cmraT} (f : A → B) := {
+  cmra_homomorphism_ne n :> Proper (dist n ==> dist n) f;
+  cmra_homomorphism x y : f (x ⋅ y) ≡ f x ⋅ f y
+}.
+Arguments cmra_homomorphism {_ _} _ _ _ _.
+
+Class UCMRAHomomorphism {A B : ucmraT} (f : A → B) := {
+  ucmra_homomorphism :> CMRAHomomorphism f;
+  ucmra_homomorphism_unit : f ∅ ≡ ∅
+}.
+Arguments ucmra_homomorphism_unit {_ _} _ _.
 
 (** * Properties **)
 Section cmra.
@@ -631,7 +645,7 @@ Instance cmra_monotone_compose {A B C : cmraT} (f : A → B) (g : B → C) :
 Proof.
   split.
   - apply _. 
-  - move=> n x Hx /=. by apply validN_preserving, validN_preserving.
+  - move=> n x Hx /=. by apply cmra_monotone_validN, cmra_monotone_validN.
   - move=> x y Hxy /=. by apply cmra_monotone, cmra_monotone.
 Qed.
 
@@ -643,9 +657,29 @@ Section cmra_monotone.
     intros [z ->].
     apply cmra_included_includedN, (cmra_monotone f), cmra_included_l.
   Qed.
-  Lemma valid_preserving x : ✓ x → ✓ f x.
-  Proof. rewrite !cmra_valid_validN; eauto using validN_preserving. Qed.
+  Lemma cmra_monotone_valid x : ✓ x → ✓ f x.
+  Proof. rewrite !cmra_valid_validN; eauto using cmra_monotone_validN. Qed.
 End cmra_monotone.
+
+Instance cmra_homomorphism_id {A : cmraT} : CMRAHomomorphism (@id A).
+Proof. repeat split; by try apply _. Qed.
+Instance cmra_homomorphism_compose {A B C : cmraT} (f : A → B) (g : B → C) :
+  CMRAHomomorphism f → CMRAHomomorphism g → CMRAHomomorphism (g ∘ f).
+Proof.
+  split.
+  - apply _. 
+  - move=> x y /=. rewrite -(cmra_homomorphism g).
+    by apply (ne_proper _), cmra_homomorphism.
+Qed.
+
+Instance cmra_homomorphism_proper {A B : cmraT} (f : A → B) :
+  CMRAHomomorphism f → Proper ((≡) ==> (≡)) f := λ _, ne_proper _.
+
+Instance ucmra_homomorphism_id {A : ucmraT} : UCMRAHomomorphism (@id A).
+Proof. repeat split; by try apply _. Qed.
+Instance ucmra_homomorphism_compose {A B C : ucmraT} (f : A → B) (g : B → C) :
+  UCMRAHomomorphism f → UCMRAHomomorphism g → UCMRAHomomorphism (g ∘ f).
+Proof. split. apply _. by rewrite /= !ucmra_homomorphism_unit. Qed.
 
 (** Functors *)
 Structure rFunctor := RFunctor {
@@ -1010,7 +1044,7 @@ Instance prod_map_cmra_monotone {A A' B B' : cmraT} (f : A → A') (g : B → B'
   CMRAMonotone f → CMRAMonotone g → CMRAMonotone (prod_map f g).
 Proof.
   split; first apply _.
-  - by intros n x [??]; split; simpl; apply validN_preserving.
+  - by intros n x [??]; split; simpl; apply cmra_monotone_validN.
   - intros x y; rewrite !prod_included=> -[??] /=.
     by split; apply cmra_monotone.
 Qed.
@@ -1142,6 +1176,8 @@ Section option.
   (** Misc *)
   Global Instance Some_cmra_monotone : CMRAMonotone Some.
   Proof. split; [apply _|done|intros x y [z ->]; by exists (Some z)]. Qed.
+  Global Instance Some_cmra_homomorphism : CMRAHomomorphism Some.
+  Proof. split. apply _. done. Qed.
 
   Lemma op_None mx my : mx ⋅ my = None ↔ mx = None ∧ my = None.
   Proof. destruct mx, my; naive_solver. Qed.
@@ -1176,7 +1212,7 @@ Instance option_fmap_cmra_monotone {A B : cmraT} (f: A → B) `{!CMRAMonotone f}
   CMRAMonotone (fmap f : option A → option B).
 Proof.
   split; first apply _.
-  - intros n [x|] ?; rewrite /cmra_validN //=. by apply (validN_preserving f).
+  - intros n [x|] ?; rewrite /cmra_validN //=. by apply (cmra_monotone_validN f).
   - intros mx my; rewrite !option_included.
     intros [->|(x&y&->&->&[Hxy|?])]; simpl; eauto 10 using @cmra_monotone.
     right; exists (f x), (f y). by rewrite {3}Hxy; eauto.

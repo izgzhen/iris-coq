@@ -376,62 +376,54 @@ End gset.
 End big_op.
 
 Lemma big_opL_commute {M1 M2 : ucmraT} {A} (h : M1 → M2)
-    `{!Proper ((≡) ==> (≡)) h} (f : nat → A → M1) l :
-  h ∅ ≡ ∅ →
-  (∀ x y, h (x ⋅ y) ≡ h x ⋅ h y) →
+    `{!UCMRAHomomorphism h} (f : nat → A → M1) l :
   h ([⋅ list] k↦x ∈ l, f k x) ≡ ([⋅ list] k↦x ∈ l, h (f k x)).
 Proof.
-  intros ??. revert f. induction l as [|x l IH]=> f.
-  - by rewrite !big_opL_nil.
-  - by rewrite !big_opL_cons -IH.
+  revert f. induction l as [|x l IH]=> f.
+  - by rewrite !big_opL_nil ucmra_homomorphism_unit.
+  - by rewrite !big_opL_cons cmra_homomorphism -IH.
 Qed.
 Lemma big_opL_commute1 {M1 M2 : ucmraT} {A} (h : M1 → M2)
-    `{!Proper ((≡) ==> (≡)) h} (f : nat → A → M1) l :
-  (∀ x y, h (x ⋅ y) ≡ h x ⋅ h y) →
-  l ≠ [] →
-  h ([⋅ list] k↦x ∈ l, f k x) ≡ ([⋅ list] k↦x ∈ l, h (f k x)).
+    `{!CMRAHomomorphism h} (f : nat → A → M1) l :
+  l ≠ [] → h ([⋅ list] k↦x ∈ l, f k x) ≡ ([⋅ list] k↦x ∈ l, h (f k x)).
 Proof.
-  intros ??. revert f. induction l as [|x [|x' l'] IH]=> f //.
+  intros ?. revert f. induction l as [|x [|x' l'] IH]=> f //.
   - by rewrite !big_opL_singleton.
-  - by rewrite !(big_opL_cons _ x) -IH.
+  - by rewrite !(big_opL_cons _ x) cmra_homomorphism -IH.
 Qed.
 
 Lemma big_opM_commute {M1 M2 : ucmraT} `{Countable K} {A} (h : M1 → M2)
-    `{!Proper ((≡) ==> (≡)) h} (f : K → A → M1) m :
-  h ∅ ≡ ∅ →
-  (∀ x y, h (x ⋅ y) ≡ h x ⋅ h y) →
+    `{!UCMRAHomomorphism h} (f : K → A → M1) m :
   h ([⋅ map] k↦x ∈ m, f k x) ≡ ([⋅ map] k↦x ∈ m, h (f k x)).
 Proof.
-  intros. rewrite /big_opM.
-  induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite -?IH; auto.
+  intros. induction m as [|i x m ? IH] using map_ind.
+  - by rewrite !big_opM_empty ucmra_homomorphism_unit.
+  - by rewrite !big_opM_insert // cmra_homomorphism -IH.
 Qed.
 Lemma big_opM_commute1 {M1 M2 : ucmraT} `{Countable K} {A} (h : M1 → M2)
-    `{!Proper ((≡) ==> (≡)) h} (f : K → A → M1) m :
-  (∀ x y, h (x ⋅ y) ≡ h x ⋅ h y) →
-  m ≠ ∅ →
-  h ([⋅ map] k↦x ∈ m, f k x) ≡ ([⋅ map] k↦x ∈ m, h (f k x)).
+    `{!CMRAHomomorphism h} (f : K → A → M1) m :
+  m ≠ ∅ → h ([⋅ map] k↦x ∈ m, f k x) ≡ ([⋅ map] k↦x ∈ m, h (f k x)).
 Proof.
-  rewrite -map_to_list_empty' /big_opM=> ??.
-  induction (map_to_list m) as [|[i x] [|i' x'] IH];
-    csimpl in *; rewrite ?right_id -?IH //.
+  intros. induction m as [|i x m ? IH] using map_ind; [done|].
+  destruct (decide (m = ∅)) as [->|].
+  - by rewrite !big_opM_insert // !big_opM_empty !right_id.
+  - by rewrite !big_opM_insert // cmra_homomorphism -IH //.
 Qed.
 
-Lemma big_opS_commute {M1 M2 : ucmraT} `{Countable A} (h : M1 → M2)
-    `{!Proper ((≡) ==> (≡)) h} (f : A → M1) X :
-  h ∅ ≡ ∅ →
-  (∀ x y, h (x ⋅ y) ≡ h x ⋅ h y) →
+Lemma big_opS_commute {M1 M2 : ucmraT} `{Countable A}
+    (h : M1 → M2) `{!UCMRAHomomorphism h} (f : A → M1) X :
   h ([⋅ set] x ∈ X, f x) ≡ ([⋅ set] x ∈ X, h (f x)).
 Proof.
-  intros. rewrite /big_opS.
-  induction (elements X) as [|x l IH]; csimpl; rewrite -?IH; auto.
+  intros. induction X as [|x X ? IH] using collection_ind_L.
+  - by rewrite !big_opS_empty ucmra_homomorphism_unit.
+  - by rewrite !big_opS_insert // cmra_homomorphism -IH.
 Qed.
-Lemma big_opS_commute1 {M1 M2 : ucmraT} `{Countable A} (h : M1 → M2)
-    `{!Proper ((≡) ==> (≡)) h} (f : A → M1) X :
-  (∀ x y, h (x ⋅ y) ≡ h x ⋅ h y) →
-  X ≢ ∅ →
-  h ([⋅ set] x ∈ X, f x) ≡ ([⋅ set] x ∈ X, h (f x)).
+Lemma big_opS_commute1 {M1 M2 : ucmraT} `{Countable A}
+    (h : M1 → M2) `{!CMRAHomomorphism h} (f : A → M1) X :
+  X ≠ ∅ → h ([⋅ set] x ∈ X, f x) ≡ ([⋅ set] x ∈ X, h (f x)).
 Proof.
-  rewrite -elements_empty' /big_opS=> ??.
-  induction (elements X) as [|x [|x' l] IH];
-    csimpl in *; rewrite ?right_id -?IH //.
+  intros. induction X as [|x X ? IH] using collection_ind_L; [done|].
+  destruct (decide (X = ∅)) as [->|].
+  - by rewrite !big_opS_insert // !big_opS_empty !right_id.
+  - by rewrite !big_opS_insert // cmra_homomorphism -IH //.
 Qed.

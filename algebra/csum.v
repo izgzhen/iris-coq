@@ -242,6 +242,11 @@ Proof. by move=> H[]? =>[/H||]. Qed.
 Global Instance Cinr_exclusive b : Exclusive b → Exclusive (Cinr b).
 Proof. by move=> H[]? =>[|/H|]. Qed.
 
+Global Instance Cinl_cmra_homomorphism : CMRAHomomorphism Cinl.
+Proof. split. apply _. done. Qed.
+Global Instance Cinr_cmra_homomorphism : CMRAHomomorphism Cinr.
+Proof. split. apply _. done. Qed.
+
 (** Internalized properties *)
 Lemma csum_equivI {M} (x y : csum A B) :
   x ≡ y ⊣⊢ (match x, y with
@@ -330,7 +335,7 @@ Instance csum_map_cmra_monotone {A A' B B' : cmraT} (f : A → A') (g : B → B'
   CMRAMonotone f → CMRAMonotone g → CMRAMonotone (csum_map f g).
 Proof.
   split; try apply _.
-  - intros n [a|b|]; simpl; auto using validN_preserving.
+  - intros n [a|b|]; simpl; auto using cmra_monotone_validN.
   - intros x y; rewrite !csum_included.
     intros [->|[(a&a'&->&->&?)|(b&b'&->&->&?)]]; simpl;
     eauto 10 using cmra_monotone.

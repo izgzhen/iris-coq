@@ -155,15 +155,15 @@ Section list.
 
   Lemma big_sepL_later Φ l :
     ▷ ([★ list] k↦x ∈ l, Φ k x) ⊣⊢ ([★ list] k↦x ∈ l, ▷ Φ k x).
-  Proof. apply (big_opL_commute _). apply later_True. apply later_sep. Qed.
+  Proof. apply (big_opL_commute _). Qed.
 
   Lemma big_sepL_always Φ l :
     (□ [★ list] k↦x ∈ l, Φ k x) ⊣⊢ ([★ list] k↦x ∈ l, □ Φ k x).
-  Proof. apply (big_opL_commute _). apply always_pure. apply always_sep. Qed.
+  Proof. apply (big_opL_commute _). Qed.
 
   Lemma big_sepL_always_if p Φ l :
     □?p ([★ list] k↦x ∈ l, Φ k x) ⊣⊢ ([★ list] k↦x ∈ l, □?p Φ k x).
-  Proof. destruct p; simpl; auto using big_sepL_always. Qed.
+  Proof. apply (big_opL_commute _). Qed.
 
   Lemma big_sepL_forall Φ l :
     (∀ k x, PersistentP (Φ k x)) →
@@ -277,15 +277,15 @@ Section gmap.
 
   Lemma big_sepM_later Φ m :
     ▷ ([★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, ▷ Φ k x).
-  Proof. apply (big_opM_commute _). apply later_True. apply later_sep. Qed.
+  Proof. apply (big_opM_commute _). Qed.
 
   Lemma big_sepM_always Φ m :
     (□ [★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, □ Φ k x).
-  Proof. apply (big_opM_commute _). apply always_pure. apply always_sep. Qed.
+  Proof. apply (big_opM_commute _). Qed.
 
   Lemma big_sepM_always_if p Φ m :
     □?p ([★ map] k↦x ∈ m, Φ k x) ⊣⊢ ([★ map] k↦x ∈ m, □?p Φ k x).
-  Proof. destruct p; simpl; auto using big_sepM_always. Qed.
+  Proof. apply (big_opM_commute _). Qed.
 
   Lemma big_sepM_forall Φ m :
     (∀ k x, PersistentP (Φ k x)) →
@@ -386,14 +386,14 @@ Section gset.
   Proof. apply: big_opS_opS. Qed.
 
   Lemma big_sepS_later Φ X : ▷ ([★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, ▷ Φ y).
-  Proof. apply (big_opS_commute _). apply later_True. apply later_sep. Qed.
+  Proof. apply (big_opS_commute _). Qed.
 
   Lemma big_sepS_always Φ X : □ ([★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, □ Φ y).
-  Proof. apply (big_opS_commute _). apply always_pure. apply always_sep. Qed.
+  Proof. apply (big_opS_commute _). Qed.
 
   Lemma big_sepS_always_if q Φ X :
     □?q ([★ set] y ∈ X, Φ y) ⊣⊢ ([★ set] y ∈ X, □?q Φ y).
-  Proof. destruct q; simpl; auto using big_sepS_always. Qed.
+  Proof. apply (big_opS_commute _). Qed.
 
   Lemma big_sepS_forall Φ X :
     (∀ x, PersistentP (Φ x)) → ([★ set] x ∈ X, Φ x) ⊣⊢ (∀ x, ■ (x ∈ X) → Φ x).
@@ -410,7 +410,7 @@ Section gset.
   Qed.
 
   Lemma big_sepS_impl Φ Ψ X :
-      □ (∀ x, ■ (x ∈ X) → Φ x → Ψ x) ∧ ([★ set] x ∈ X, Φ x) ⊢ [★ set] x ∈ X, Ψ x.
+    □ (∀ x, ■ (x ∈ X) → Φ x → Ψ x) ∧ ([★ set] x ∈ X, Φ x) ⊢ [★ set] x ∈ X, Ψ x.
   Proof.
     rewrite always_and_sep_l always_forall.
     setoid_rewrite always_impl; setoid_rewrite always_pure.

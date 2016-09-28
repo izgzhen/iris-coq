@@ -189,10 +189,13 @@ Proof. uPred.unseal. by destruct x as [[[]|]]. Qed.
 
 Lemma auth_frag_op a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.
-Lemma auth_both_op a b : Auth (Excl' a) b ≡ ● a ⋅ ◯ b.
-Proof. by rewrite /op /auth_op /= left_id. Qed.
 Lemma auth_frag_mono a b : a ≼ b → ◯ a ≼ ◯ b.
 Proof. intros [c ->]. rewrite auth_frag_op. apply cmra_included_l. Qed.
+Global Instance auth_frag_cmra_homomorphism : CMRAHomomorphism (Auth None).
+Proof. done. Qed.
+
+Lemma auth_both_op a b : Auth (Excl' a) b ≡ ● a ⋅ ◯ b.
+Proof. by rewrite /op /auth_op /= left_id. Qed.
 Lemma auth_auth_valid a : ✓ a → ✓ (● a).
 Proof. intros; split; simpl; auto using ucmra_unit_leastN. Qed.
 
@@ -246,7 +249,7 @@ Instance auth_map_cmra_monotone {A B : ucmraT} (f : A → B) :
 Proof.
   split; try apply _.
   - intros n [[[a|]|] b]; rewrite /= /cmra_validN /=; try
-      naive_solver eauto using cmra_monotoneN, validN_preserving.
+      naive_solver eauto using cmra_monotoneN, cmra_monotone_validN.
   - by intros [x a] [y b]; rewrite !auth_included /=;
       intros [??]; split; simpl; apply: cmra_monotone.
 Qed.

@@ -287,7 +287,7 @@ Instance iprod_map_cmra_monotone
   (∀ x, CMRAMonotone (f x)) → CMRAMonotone (iprod_map f).
 Proof.
   split; first apply _.
-  - intros n g Hg x; rewrite /iprod_map; apply (validN_preserving (f _)), Hg.
+  - intros n g Hg x; rewrite /iprod_map; apply (cmra_monotone_validN (f _)), Hg.
   - intros g1 g2; rewrite !iprod_included_spec=> Hf x.
     rewrite /iprod_map; apply (cmra_monotone _), Hf.
 Qed.

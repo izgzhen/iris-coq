@@ -69,13 +69,13 @@ Program Definition uPred_map {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CMRAMonotone f} (P : uPred M1) :
   uPred M2 := {| uPred_holds n x := P n (f x) |}.
 Next Obligation. naive_solver eauto using uPred_mono, cmra_monotoneN. Qed.
-Next Obligation. naive_solver eauto using uPred_closed, validN_preserving. Qed.
+Next Obligation. naive_solver eauto using uPred_closed, cmra_monotone_validN. Qed.
 
 Instance uPred_map_ne {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CMRAMonotone f} n : Proper (dist n ==> dist n) (uPred_map f).
 Proof.
   intros x1 x2 Hx; split=> n' y ??.
-  split; apply Hx; auto using validN_preserving.
+  split; apply Hx; auto using cmra_monotone_validN.
 Qed.
 Lemma uPred_map_id {M : ucmraT} (P : uPred M): uPred_map cid P ≡ P.
 Proof. by split=> n x ?. Qed.
@@ -1477,7 +1477,6 @@ Qed.
 
 Theorem soundness : ¬ (True ⊢ False).
 Proof. exact (adequacy False 0). Qed.
-
 End uPred_logic.
 
 (* Hint DB for the logic *)
@@ -1489,6 +1488,8 @@ Hint Resolve sep_elim_l' sep_elim_r' sep_mono : I.
 Hint Immediate True_intro False_elim : I.
 Hint Immediate iff_refl eq_refl' : I.
 End uPred.
+
+Import uPred.
 
 (* CMRA structure on uPred *)
 Section cmra.
@@ -1505,19 +1506,19 @@ Section cmra.
 
   Lemma uPred_validN_alt n (P : uPred M) : ✓{n} P → P ≡{n}≡ True%I.
   Proof.
-    uPred.unseal=> HP; split=> n' x ??; split; [done|].
+    unseal=> HP; split=> n' x ??; split; [done|].
     intros _. by apply HP.
   Qed.
 
   Lemma uPred_cmra_validN_op_l n P Q : ✓{n} (P ★ Q)%I → ✓{n} P.
   Proof.
-    uPred.unseal. intros HPQ n' x ??.
+    unseal. intros HPQ n' x ??.
     destruct (HPQ n' x) as (x1&x2&->&?&?); auto.
     eapply uPred_mono with x1; eauto using cmra_includedN_l.
   Qed.
 
   Lemma uPred_included P Q : P ≼ Q → Q ⊢ P.
-  Proof. intros [P' ->]. apply uPred.sep_elim_l. Qed.
+  Proof. intros [P' ->]. apply sep_elim_l. Qed.
 
   Definition uPred_cmra_mixin : CMRAMixin (uPred M).
   Proof.
@@ -1551,6 +1552,19 @@ Section cmra.
 
   Canonical Structure uPredUR :=
     UCMRAT (uPred M) uPred_cofe_mixin uPred_cmra_mixin uPred_ucmra_mixin.
+
+  Global Instance uPred_always_homomorphism : UCMRAHomomorphism uPred_always.
+  Proof. split; [split|]. apply _. apply always_sep. apply always_pure. Qed.
+  Global Instance uPred_always_if_homomorphism b :
+    UCMRAHomomorphism (uPred_always_if b).
+  Proof. split; [split|]. apply _. apply always_if_sep. apply always_if_pure. Qed.
+  Global Instance uPred_later_homomorphism : UCMRAHomomorphism uPred_later.
+  Proof. split; [split|]. apply _. apply later_sep. apply later_True. Qed.
+  Global Instance uPred_except_last_homomorphism :
+    CMRAHomomorphism uPred_except_last.
+  Proof. split. apply _. apply except_last_sep. Qed.
+  Global Instance uPred_ownM_homomorphism : UCMRAHomomorphism uPred_ownM.
+  Proof. split; [split|]. apply _. apply ownM_op. apply ownM_empty'. Qed.
 End cmra.
 
 Arguments uPredR : clear implicits.
