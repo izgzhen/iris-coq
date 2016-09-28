@@ -1081,6 +1081,9 @@ Lemma always_if_elim p P : □?p P ⊢ P.
 Proof. destruct p; simpl; auto using always_elim. Qed.
 Lemma always_elim_if p P : □ P ⊢ □?p P.
 Proof. destruct p; simpl; auto using always_elim. Qed.
+
+Lemma always_if_pure p φ : □?p ■ φ ⊣⊢ ■ φ.
+Proof. destruct p; simpl; auto using always_pure. Qed.
 Lemma always_if_and p P Q : □?p (P ∧ Q) ⊣⊢ □?p P ∧ □?p Q.
 Proof. destruct p; simpl; auto using always_and. Qed.
 Lemma always_if_or p P Q : □?p (P ∨ Q) ⊣⊢ □?p P ∨ □?p Q.
