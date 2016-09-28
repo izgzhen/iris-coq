@@ -397,6 +397,13 @@ Proof. intros; etrans; eauto using cmra_monoN_l, cmra_monoN_r. Qed.
 Lemma cmra_mono x1 x2 y1 y2 : x1 ≼ y1 → x2 ≼ y2 → x1 ⋅ x2 ≼ y1 ⋅ y2.
 Proof. intros; etrans; eauto using cmra_mono_l, cmra_mono_r. Qed.
 
+Global Instance cmra_monoN' n :
+  Proper (includedN n ==> includedN n ==> includedN n) (@op A _).
+Proof. intros x1 x2 Hx y1 y2 Hy. by apply cmra_monoN. Qed.
+Global Instance cmra_mono' :
+  Proper (included ==> included ==> included) (@op A _).
+Proof. intros x1 x2 Hx y1 y2 Hy. by apply cmra_mono. Qed.
+
 Lemma cmra_included_dist_l n x1 x2 x1' :
   x1 ≼ x2 → x1' ≡{n}≡ x1 → ∃ x2', x1' ≼ x2' ∧ x2' ≡{n}≡ x2.
 Proof.
