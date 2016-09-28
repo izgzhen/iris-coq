@@ -62,8 +62,13 @@ Context {M : ucmraT}.
 Implicit Types xs : list M.
 
 (** * Big ops *)
+Lemma big_op_Forall2 R :
+  Reflexive R → Proper (R ==> R ==> R) (@op M _) →
+  Proper (Forall2 R ==> R) (@big_op M).
+Proof. rewrite /Proper /respectful. induction 3; eauto. Qed.
+
 Global Instance big_op_ne n : Proper (dist n ==> dist n) (@big_op M).
-Proof. by induction 1; simpl; repeat apply (_ : Proper (_ ==> _ ==> _) op). Qed.
+Proof. apply big_op_Forall2; apply _. Qed.
 Global Instance big_op_proper : Proper ((≡) ==> (≡)) (@big_op M) := ne_proper _.
 
 Lemma big_op_nil : [⋅] (@nil M) = ∅.
@@ -108,54 +113,48 @@ Section list.
   Implicit Types l : list A.
   Implicit Types f g : nat → A → M.
 
-  Lemma big_opL_mono f g l :
-    (∀ k y, l !! k = Some y → f k y ≼ g k y) →
-    ([⋅ list] k ↦ y ∈ l, f k y) ≼ [⋅ list] k ↦ y ∈ l, g k y.
-  Proof.
-    intros Hf. apply big_op_mono.
-    revert f g Hf. induction l as [|x l IH]=> f g Hf; first constructor.
-    rewrite !imap_cons; constructor; eauto.
-  Qed.
-  Lemma big_opL_proper f g l :
-    (∀ k y, l !! k = Some y → f k y ≡ g k y) →
-    ([⋅ list] k ↦ y ∈ l, f k y) ≡ ([⋅ list] k ↦ y ∈ l, g k y).
-  Proof.
-    intros Hf; apply big_op_proper.
-    revert f g Hf. induction l as [|x l IH]=> f g Hf; first constructor.
-    rewrite !imap_cons; constructor; eauto.
-  Qed.
-
-  Global Instance big_opL_ne l n :
-    Proper (pointwise_relation _ (pointwise_relation _ (dist n)) ==> (dist n))
-           (big_opL (M:=M) l).
-  Proof.
-    intros f g Hf. apply big_op_ne.
-    revert f g Hf. induction l as [|x l IH]=> f g Hf; first constructor.
-    rewrite !imap_cons; constructor. by apply Hf. apply IH=> n'; apply Hf.
-  Qed.
-  Global Instance big_opL_proper' l :
-    Proper (pointwise_relation _ (pointwise_relation _ (≡)) ==> (≡))
-           (big_opL (M:=M) l).
-  Proof. intros f1 f2 Hf. by apply big_opL_proper; intros; last apply Hf. Qed.
-  Global Instance big_opL_mono' l :
-    Proper (pointwise_relation _ (pointwise_relation _ (≼)) ==> (≼))
-           (big_opL (M:=M) l).
-  Proof. intros f1 f2 Hf. by apply big_opL_mono; intros; last apply Hf. Qed.
-
   Lemma big_opL_nil f : ([⋅ list] k↦y ∈ nil, f k y) = ∅.
   Proof. done. Qed.
-
   Lemma big_opL_cons f x l :
     ([⋅ list] k↦y ∈ x :: l, f k y) = f 0 x ⋅ [⋅ list] k↦y ∈ l, f (S k) y.
   Proof. by rewrite /big_opL imap_cons. Qed.
-
   Lemma big_opL_singleton f x : ([⋅ list] k↦y ∈ [x], f k y) ≡ f 0 x.
   Proof. by rewrite big_opL_cons big_opL_nil right_id. Qed.
-
   Lemma big_opL_app f l1 l2 :
     ([⋅ list] k↦y ∈ l1 ++ l2, f k y)
     ≡ ([⋅ list] k↦y ∈ l1, f k y) ⋅ ([⋅ list] k↦y ∈ l2, f (length l1 + k) y).
   Proof. by rewrite /big_opL imap_app big_op_app. Qed.
+
+  Lemma big_opL_forall R f g l :
+    Reflexive R → Proper (R ==> R ==> R) (@op M _) →
+    (∀ k y, l !! k = Some y → R (f k y) (g k y)) →
+    R ([⋅ list] k ↦ y ∈ l, f k y) ([⋅ list] k ↦ y ∈ l, g k y).
+  Proof.
+    intros ? Hop. revert f g. induction l as [|x l IH]=> f g Hf; [done|].
+    rewrite !big_opL_cons. apply Hop; eauto.
+  Qed.
+
+  Lemma big_opL_mono f g l :
+    (∀ k y, l !! k = Some y → f k y ≼ g k y) →
+    ([⋅ list] k ↦ y ∈ l, f k y) ≼ [⋅ list] k ↦ y ∈ l, g k y.
+  Proof. apply big_opL_forall; apply _. Qed.
+  Lemma big_opL_proper f g l :
+    (∀ k y, l !! k = Some y → f k y ≡ g k y) →
+    ([⋅ list] k ↦ y ∈ l, f k y) ≡ ([⋅ list] k ↦ y ∈ l, g k y).
+  Proof. apply big_opL_forall; apply _. Qed.
+
+  Global Instance big_opL_ne l n :
+    Proper (pointwise_relation _ (pointwise_relation _ (dist n)) ==> (dist n))
+           (big_opL (M:=M) l).
+  Proof. intros f g Hf. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opL_proper' l :
+    Proper (pointwise_relation _ (pointwise_relation _ (≡)) ==> (≡))
+           (big_opL (M:=M) l).
+  Proof. intros f g Hf. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opL_mono' l :
+    Proper (pointwise_relation _ (pointwise_relation _ (≼)) ==> (≼))
+           (big_opL (M:=M) l).
+  Proof. intros f g Hf. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_opL_lookup f l i x :
     l !! i = Some x → f i x ≼ [⋅ list] k↦y ∈ l, f k y.
@@ -191,38 +190,40 @@ Section gmap.
   Implicit Types m : gmap K A.
   Implicit Types f g : K → A → M.
 
+  Lemma big_opM_forall R f g m :
+    Reflexive R → Proper (R ==> R ==> R) (@op M _) →
+    (∀ k x, m !! k = Some x → R (f k x) (g k x)) →
+    R ([⋅ map] k ↦ x ∈ m, f k x) ([⋅ map] k ↦ x ∈ m, g k x).
+  Proof.
+    intros ?? Hf. apply (big_op_Forall2 R _ _), Forall2_fmap, Forall_Forall2.
+    apply Forall_forall=> -[i x] ? /=. by apply Hf, elem_of_map_to_list.
+  Qed.
+
   Lemma big_opM_mono f g m1 m2 :
     m1 ⊆ m2 → (∀ k x, m2 !! k = Some x → f k x ≼ g k x) →
     ([⋅ map] k ↦ x ∈ m1, f k x) ≼ [⋅ map] k ↦ x ∈ m2, g k x.
   Proof.
-    intros HX Hf. trans ([⋅ map] k↦x ∈ m2, f k x).
+    intros Hm Hf. trans ([⋅ map] k↦x ∈ m2, f k x).
     - by apply big_op_contains, fmap_contains, map_to_list_contains.
-    - apply big_op_mono, Forall2_fmap, Forall_Forall2.
-      apply Forall_forall=> -[i x] ? /=. by apply Hf, elem_of_map_to_list.
+    - apply big_opM_forall; apply _ || auto.
   Qed.
   Lemma big_opM_proper f g m :
     (∀ k x, m !! k = Some x → f k x ≡ g k x) →
     ([⋅ map] k ↦ x ∈ m, f k x) ≡ ([⋅ map] k ↦ x ∈ m, g k x).
-  Proof.
-    intros Hf. apply big_op_proper, equiv_Forall2, Forall2_fmap, Forall_Forall2.
-    apply Forall_forall=> -[i x] ? /=. by apply Hf, elem_of_map_to_list.
-  Qed.
+  Proof. apply big_opM_forall; apply _. Qed.
 
   Global Instance big_opM_ne m n :
     Proper (pointwise_relation _ (pointwise_relation _ (dist n)) ==> (dist n))
            (big_opM (M:=M) m).
-  Proof.
-    intros f1 f2 Hf. apply big_op_ne, Forall2_fmap.
-    apply Forall_Forall2, Forall_true=> -[i x]; apply Hf.
-  Qed.
+  Proof. intros f g Hf. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
   Global Instance big_opM_proper' m :
     Proper (pointwise_relation _ (pointwise_relation _ (≡)) ==> (≡))
            (big_opM (M:=M) m).
-  Proof. intros f1 f2 Hf. by apply big_opM_proper; intros; last apply Hf. Qed.
+  Proof. intros f g Hf. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
   Global Instance big_opM_mono' m :
     Proper (pointwise_relation _ (pointwise_relation _ (≼)) ==> (≼))
            (big_opM (M:=M) m).
-  Proof. intros f1 f2 Hf. by apply big_opM_mono; intros; last apply Hf. Qed.
+  Proof. intros f g Hf. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_opM_empty f : ([⋅ map] k↦x ∈ ∅, f k x) = ∅.
   Proof. by rewrite /big_opM map_to_list_empty. Qed.
@@ -296,14 +297,22 @@ Section gset.
   Implicit Types X : gset A.
   Implicit Types f : A → M.
 
+  Lemma big_opS_forall R f g X :
+    Reflexive R → Proper (R ==> R ==> R) (@op M _) →
+    (∀ x, x ∈ X → R (f x) (g x)) →
+    R ([⋅ set] x ∈ X, f x) ([⋅ set] x ∈ X, g x).
+  Proof.
+    intros ?? Hf. apply (big_op_Forall2 R _ _), Forall2_fmap, Forall_Forall2.
+    apply Forall_forall=> x ? /=. by apply Hf, elem_of_elements.
+  Qed.
+
   Lemma big_opS_mono f g X Y :
     X ⊆ Y → (∀ x, x ∈ Y → f x ≼ g x) →
     ([⋅ set] x ∈ X, f x) ≼ [⋅ set] x ∈ Y, g x.
   Proof.
     intros HX Hf. trans ([⋅ set] x ∈ Y, f x).
     - by apply big_op_contains, fmap_contains, elements_contains.
-    - apply big_op_mono, Forall2_fmap, Forall_Forall2.
-      apply Forall_forall=> x ? /=. by apply Hf, elem_of_elements.
+    - apply big_opS_forall; apply _ || auto.
   Qed.
   Lemma big_opS_proper f g X Y :
     X ≡ Y → (∀ x, x ∈ X → x ∈ Y → f x ≡ g x) →
@@ -311,23 +320,18 @@ Section gset.
   Proof.
     intros HX Hf. trans ([⋅ set] x ∈ Y, f x).
     - apply big_op_permutation. by rewrite HX.
-    - apply big_op_proper, equiv_Forall2, Forall2_fmap, Forall_Forall2.
-      apply Forall_forall=> x ? /=.
-      apply Hf; first rewrite HX; by apply elem_of_elements.
+    - apply big_opS_forall; try apply _ || set_solver.
   Qed.
 
   Lemma big_opS_ne X n :
     Proper (pointwise_relation _ (dist n) ==> dist n) (big_opS (M:=M) X).
-  Proof.
-    intros f1 f2 Hf. apply big_op_ne, Forall2_fmap.
-    apply Forall_Forall2, Forall_true=> x; apply Hf.
-  Qed.
+  Proof. intros f g Hf. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
   Lemma big_opS_proper' X :
     Proper (pointwise_relation _ (≡) ==> (≡)) (big_opS (M:=M) X).
-  Proof. intros f1 f2 Hf. apply big_opS_proper; naive_solver. Qed.
+  Proof. intros f g Hf. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
   Lemma big_opS_mono' X :
     Proper (pointwise_relation _ (≼) ==> (≼)) (big_opS (M:=M) X).
-  Proof. intros f1 f2 Hf. apply big_opS_mono; naive_solver. Qed.
+  Proof. intros f g Hf. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_opS_empty f : ([⋅ set] x ∈ ∅, f x) = ∅.
   Proof. by rewrite /big_opS elements_empty. Qed.

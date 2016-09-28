@@ -426,8 +426,8 @@ Proof.
   repeat apply sep_mono; try apply always_mono.
   - rewrite -later_intro; apply pure_mono; destruct 1; constructor;
       naive_solver eauto using env_Forall2_wf, env_Forall2_fresh.
-  - induction Hp; rewrite /= ?later_sep; auto using sep_mono, later_intro.
-  - induction Hs; rewrite /= ?later_sep; auto using sep_mono, later_intro.
+  - induction Hp; rewrite /= ?later_sep. apply later_intro. by apply sep_mono.
+  - induction Hs; rewrite /= ?later_sep. apply later_intro. by apply sep_mono.
 Qed.
 
 Lemma tac_next Δ Δ' Q Q' :

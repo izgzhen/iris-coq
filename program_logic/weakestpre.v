@@ -24,7 +24,7 @@ Proof.
   apply pvs_ne, sep_ne, later_contractive; auto=> i ?.
   apply forall_ne=> e2; apply forall_ne=> σ2; apply forall_ne=> efs.
   apply wand_ne, pvs_ne, sep_ne, sep_ne; auto; first by apply Hwp.
-  apply big_sepL_ne=> ? ef. by apply Hwp.
+  apply big_opL_ne=> ? ef. by apply Hwp.
 Qed.
 
 Definition wp_def `{irisG Λ Σ} :

@@ -126,15 +126,13 @@ Proof. by rewrite pvs_frame_r pvs_frame_l pvs_trans. Qed.
 Lemma pvs_big_sepM `{Countable K} {A} E (Φ : K → A → iProp Σ) (m : gmap K A) :
   ([★ map] k↦x ∈ m, |={E}=> Φ k x) ={E}=> [★ map] k↦x ∈ m, Φ k x.
 Proof.
-  rewrite /uPred_big_sepM.
-  induction (map_to_list m) as [|[i x] l IH]; csimpl; auto using pvs_intro.
-  by rewrite IH pvs_sep.
+  apply (big_opM_forall (λ P Q, P ={E}=> Q)); auto using pvs_intro.
+  intros P1 P2 HP Q1 Q2 HQ. by rewrite HP HQ -pvs_sep.
 Qed.
 Lemma pvs_big_sepS `{Countable A} E (Φ : A → iProp Σ) X :
   ([★ set] x ∈ X, |={E}=> Φ x) ={E}=> [★ set] x ∈ X, Φ x.
 Proof.
-  rewrite /uPred_big_sepS.
-  induction (elements X) as [|x l IH]; csimpl; csimpl; auto using pvs_intro.
-  by rewrite IH pvs_sep.
+  apply (big_opS_forall (λ P Q, P ={E}=> Q)); auto using pvs_intro.
+  intros P1 P2 HP Q1 Q2 HQ. by rewrite HP HQ -pvs_sep.
 Qed.
 End pvs.
