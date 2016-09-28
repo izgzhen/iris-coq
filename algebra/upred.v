@@ -1513,6 +1513,9 @@ Section cmra.
     eapply uPred_mono with x1; eauto using cmra_includedN_l.
   Qed.
 
+  Lemma uPred_included P Q : P ≼ Q → Q ⊢ P.
+  Proof. intros [P' ->]. apply uPred.sep_elim_l. Qed.
+
   Definition uPred_cmra_mixin : CMRAMixin (uPred M).
   Proof.
     apply cmra_total_mixin; try apply _ || by eauto.
