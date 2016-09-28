@@ -157,6 +157,9 @@ Proof.
     apply Hadd. set_solver. apply IH; set_solver.
   - by rewrite HX.
 Qed.
+Lemma collection_ind_L `{!LeibnizEquiv C} (P : C → Prop) :
+  P ∅ → (∀ x X, x ∉ X → P X → P ({[ x ]} ∪ X)) → ∀ X, P X.
+Proof. apply collection_ind. by intros ?? ->%leibniz_equiv_iff. Qed.
 
 (** * The [collection_fold] operation *)
 Lemma collection_fold_ind {B} (P : B → C → Prop) (f : A → B → B) (b : B) :
