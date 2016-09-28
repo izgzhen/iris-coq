@@ -730,6 +730,12 @@ Proof.
   exists i, x. rewrite <-elem_of_map_to_list, Hm. by left.
 Qed.
 
+Global Instance map_eq_dec_empty {A} (m : M A) : Decision (m = ∅) | 20.
+Proof.
+  refine (cast_if (decide (elements m = [])));
+    [apply _|by rewrite <-?map_to_list_empty' ..].
+Defined.
+
 (** Properties of the imap function *)
 Lemma lookup_imap {A B} (f : K → A → option B) m i :
   map_imap f m !! i = m !! i ≫= f i.
