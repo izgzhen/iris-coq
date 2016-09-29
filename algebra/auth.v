@@ -191,7 +191,7 @@ Lemma auth_frag_op a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
 Proof. done. Qed.
 Lemma auth_frag_mono a b : a ≼ b → ◯ a ≼ ◯ b.
 Proof. intros [c ->]. rewrite auth_frag_op. apply cmra_included_l. Qed.
-Global Instance auth_frag_cmra_homomorphism : CMRAHomomorphism (Auth None).
+Global Instance auth_frag_cmra_homomorphism : UCMRAHomomorphism (Auth None).
 Proof. done. Qed.
 
 Lemma auth_both_op a b : Auth (Excl' a) b ≡ ● a ⋅ ◯ b.
