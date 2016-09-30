@@ -160,6 +160,13 @@ Section list.
            (big_opL (M:=M) l).
   Proof. intros f g Hf. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
 
+  Lemma big_opL_consZ_l (f : Z → A → M) x l :
+    ([⋅ list] k↦y ∈ x :: l, f k y) = f 0 x ⋅ [⋅ list] k↦y ∈ l, f (1 + k)%Z y.
+  Proof. rewrite big_opL_cons. auto using big_opL_ext with f_equal lia. Qed.
+  Lemma big_opL_consZ_r (f : Z → A → M) x l :
+    ([⋅ list] k↦y ∈ x :: l, f k y) = f 0 x ⋅ [⋅ list] k↦y ∈ l, f (k + 1)%Z y.
+  Proof. rewrite big_opL_cons. auto using big_opL_ext with f_equal lia. Qed.
+
   Lemma big_opL_lookup f l i x :
     l !! i = Some x → f i x ≼ [⋅ list] k↦y ∈ l, f k y.
   Proof.
