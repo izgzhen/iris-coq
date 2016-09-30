@@ -125,7 +125,6 @@ Section list.
     (∀ k y, l !! k = Some y → Φ k y ⊢ Ψ k y) →
     ([★ list] k ↦ y ∈ l, Φ k y) ⊢ [★ list] k ↦ y ∈ l, Ψ k y.
   Proof. apply big_opL_forall; apply _. Qed.
-
   Lemma big_sepL_proper Φ Ψ l :
     (∀ k y, l !! k = Some y → Φ k y ⊣⊢ Ψ k y) →
     ([★ list] k ↦ y ∈ l, Φ k y) ⊣⊢ ([★ list] k ↦ y ∈ l, Ψ k y).
@@ -219,7 +218,6 @@ Section gmap.
       by apply fmap_contains, map_to_list_contains.
     - apply big_opM_forall; apply _ || auto.
   Qed.
-
   Lemma big_sepM_proper Φ Ψ m :
     (∀ k x, m !! k = Some x → Φ k x ⊣⊢ Ψ k x) →
     ([★ map] k ↦ x ∈ m, Φ k x) ⊣⊢ ([★ map] k ↦ x ∈ m, Ψ k x).
@@ -344,15 +342,14 @@ Section gset.
       by apply fmap_contains, elements_contains.
     - apply big_opS_forall; apply _ || auto.
   Qed.
+  Lemma big_sepS_proper Φ Ψ X :
+    (∀ x, x ∈ X → Φ x ⊣⊢ Ψ x) →
+    ([★ set] x ∈ X, Φ x) ⊣⊢ ([★ set] x ∈ X, Ψ x).
+  Proof. apply: big_opS_proper. Qed.
 
-  Lemma big_sepS_mono' X :
+  Global Instance big_sepS_mono' X :
      Proper (pointwise_relation _ (⊢) ==> (⊢)) (big_opS (M:=uPredUR M) X).
   Proof. intros f g Hf. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
-
-  Lemma big_sepS_proper Φ Ψ X Y :
-    X ≡ Y → (∀ x, x ∈ X → x ∈ Y → Φ x ⊣⊢ Ψ x) →
-    ([★ set] x ∈ X, Φ x) ⊣⊢ ([★ set] x ∈ Y, Ψ x).
-  Proof. apply: big_opS_proper. Qed.
 
   Lemma big_sepS_empty Φ : ([★ set] x ∈ ∅, Φ x) ⊣⊢ True.
   Proof. by rewrite big_opS_empty. Qed.

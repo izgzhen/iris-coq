@@ -138,6 +138,10 @@ Section list.
     (∀ k y, l !! k = Some y → f k y ≼ g k y) →
     ([⋅ list] k ↦ y ∈ l, f k y) ≼ [⋅ list] k ↦ y ∈ l, g k y.
   Proof. apply big_opL_forall; apply _. Qed.
+  Lemma big_opL_ext f g l :
+    (∀ k y, l !! k = Some y → f k y = g k y) →
+    ([⋅ list] k ↦ y ∈ l, f k y) = [⋅ list] k ↦ y ∈ l, g k y.
+  Proof. apply big_opL_forall; apply _. Qed.
   Lemma big_opL_proper f g l :
     (∀ k y, l !! k = Some y → f k y ≡ g k y) →
     ([⋅ list] k ↦ y ∈ l, f k y) ≡ ([⋅ list] k ↦ y ∈ l, g k y).
@@ -207,6 +211,10 @@ Section gmap.
     - by apply big_op_contains, fmap_contains, map_to_list_contains.
     - apply big_opM_forall; apply _ || auto.
   Qed.
+  Lemma big_opM_ext f g m :
+    (∀ k x, m !! k = Some x → f k x = g k x) →
+    ([⋅ map] k ↦ x ∈ m, f k x) = ([⋅ map] k ↦ x ∈ m, g k x).
+  Proof. apply big_opM_forall; apply _. Qed.
   Lemma big_opM_proper f g m :
     (∀ k x, m !! k = Some x → f k x ≡ g k x) →
     ([⋅ map] k ↦ x ∈ m, f k x) ≡ ([⋅ map] k ↦ x ∈ m, g k x).
@@ -314,14 +322,14 @@ Section gset.
     - by apply big_op_contains, fmap_contains, elements_contains.
     - apply big_opS_forall; apply _ || auto.
   Qed.
-  Lemma big_opS_proper f g X Y :
-    X ≡ Y → (∀ x, x ∈ X → x ∈ Y → f x ≡ g x) →
-    ([⋅ set] x ∈ X, f x) ≡ ([⋅ set] x ∈ Y, g x).
-  Proof.
-    intros HX Hf. trans ([⋅ set] x ∈ Y, f x).
-    - apply big_op_permutation. by rewrite HX.
-    - apply big_opS_forall; try apply _ || set_solver.
-  Qed.
+  Lemma big_opS_ext f g X :
+    (∀ x, x ∈ X → f x = g x) →
+    ([⋅ set] x ∈ X, f x) = ([⋅ set] x ∈ X, g x).
+  Proof. apply big_opS_forall; apply _. Qed.
+  Lemma big_opS_proper f g X :
+    (∀ x, x ∈ X → f x ≡ g x) →
+    ([⋅ set] x ∈ X, f x) ≡ ([⋅ set] x ∈ X, g x).
+  Proof. apply big_opS_forall; apply _. Qed.
 
   Lemma big_opS_ne X n :
     Proper (pointwise_relation _ (dist n) ==> dist n) (big_opS (M:=M) X).
@@ -345,7 +353,7 @@ Section gset.
     ≡ (f x b ⋅ [⋅ set] y ∈ X, f y (h y)).
   Proof.
     intros. rewrite big_opS_insert // fn_lookup_insert.
-    apply cmra_op_proper', big_opS_proper; auto=> y ??.
+    apply cmra_op_proper', big_opS_proper; auto=> y ?.
     by rewrite fn_lookup_insert_ne; last set_solver.
   Qed.
   Lemma big_opS_fn_insert' f X x P :
