@@ -195,6 +195,10 @@ Implicit Types m : gmap K A.
 Implicit Types i : K.
 Implicit Types x y : A.
 
+Global Instance lookup_cmra_homomorphism :
+  UCMRAHomomorphism (lookup i : gmap K A → option A).
+Proof. split. split. apply _. intros m1 m2; by rewrite lookup_op. done. Qed.
+
 Lemma lookup_opM m1 mm2 i : (m1 ⋅? mm2) !! i = m1 !! i ⋅ (mm2 ≫= (!! i)).
 Proof. destruct mm2; by rewrite /= ?lookup_op ?right_id_L. Qed.
 
