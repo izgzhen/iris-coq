@@ -10,6 +10,17 @@ Instance frac_valid : Valid frac := λ x, (x ≤ 1)%Qc.
 Instance frac_pcore : PCore frac := λ _, None.
 Instance frac_op : Op frac := λ x y, (x + y)%Qp.
 
+Lemma frac_included (x y : frac) : x ≼ y ↔ (x < y)%Qc.
+Proof.
+  split.
+  - intros [z ->%leibniz_equiv]; simpl.
+    rewrite -{1}(Qcplus_0_r x). apply Qcplus_lt_mono_l, Qp_prf.
+  - intros Hlt%Qclt_minus_iff. exists (mk_Qp (y - x) Hlt). apply Qp_eq; simpl.
+    by rewrite (Qcplus_comm y) Qcplus_assoc Qcplus_opp_r Qcplus_0_l.
+Qed.
+Corollary frac_included_weak (x y : frac) : x ≼ y → (x ≤ y)%Qc.
+Proof. intros ?%frac_included. auto using Qclt_le_weak. Qed.
+
 Definition frac_ra_mixin : RAMixin frac.
 Proof.
   split; try apply _; try done.
