@@ -344,6 +344,10 @@ Lemma exclusive_r x `{!Exclusive x} y : ✓ (y ⋅ x) → False.
 Proof. rewrite comm. by apply exclusive_l. Qed.
 Lemma exclusiveN_opM n x `{!Exclusive x} my : ✓{n} (x ⋅? my) → my = None.
 Proof. destruct my as [y|]. move=> /(exclusiveN_l _ x) []. done. Qed.
+Lemma exclusive_includedN n x `{!Exclusive x} y : x ≼{n} y → ✓{n} y → False.
+Proof. intros [? ->]. by apply exclusiveN_l. Qed.
+Lemma exclusive_included x `{!Exclusive x} y : x ≼ y → ✓ y → False.
+Proof. intros [? ->]. by apply exclusive_l. Qed.
 
 (** ** Order *)
 Lemma cmra_included_includedN n x y : x ≼ y → x ≼{n} y.
