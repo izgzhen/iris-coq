@@ -174,6 +174,23 @@ Section gset_disj.
     Proof. eauto using gset_disj_alloc_empty_updateP. Qed.
   End fresh_updates.
 
+  Lemma gset_disj_dealloc_local_update X Y Xf :
+    GSet X ~l~> GSet (X ∖ Y) @ Some (GSet Xf).
+  Proof.
+    apply local_update_total; split; simpl.
+    { rewrite !gset_disj_valid_op; set_solver. }
+    intros mZ ?%gset_disj_valid_op. rewrite gset_disj_union //.
+    destruct mZ as [[Z|]|]; simpl; try done.
+    - rewrite {1}/op {1}/cmra_op /=. destruct (decide _); simpl; try done.
+      intros [=]. do 2 f_equal. by apply union_cancel_l_L with X.
+    - intros [=]. assert (Xf = ∅) as -> by set_solver. by rewrite right_id.
+  Qed.
+  Lemma gset_disj_dealloc_empty_local_update X Xf :
+    GSet X ~l~> GSet ∅ @ Some (GSet Xf).
+  Proof.
+    rewrite -(difference_diag_L X). apply gset_disj_dealloc_local_update.
+  Qed.
+
   Lemma gset_disj_alloc_local_update X i Xf :
     i ∉ X → i ∉ Xf → GSet X ~l~> GSet ({[i]} ∪ X) @ Some (GSet Xf).
   Proof.
