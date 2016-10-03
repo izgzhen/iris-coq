@@ -42,12 +42,21 @@ Proof. congruence. Qed.
 Definition is_Some {A} (mx : option A) := ∃ x, mx = Some x.
 Instance: Params (@is_Some) 1.
 
+Lemma is_Some_alt {A} (mx : option A) :
+  is_Some mx ↔ match mx with Some _ => True | None => False end.
+Proof. unfold is_Some. destruct mx; naive_solver. Qed.
+
 Lemma mk_is_Some {A} (mx : option A) x : mx = Some x → is_Some mx.
 Proof. intros; red; subst; eauto. Qed.
 Hint Resolve mk_is_Some.
 Lemma is_Some_None {A} : ¬is_Some (@None A).
 Proof. by destruct 1. Qed.
 Hint Resolve is_Some_None.
+
+Lemma eq_None_not_Some {A} (mx : option A) : mx = None ↔ ¬is_Some mx.
+Proof. rewrite is_Some_alt; destruct mx; naive_solver. Qed.
+Lemma not_eq_None_Some {A} (mx : option A) : mx ≠ None ↔ is_Some mx.
+Proof. rewrite is_Some_alt; destruct mx; naive_solver. Qed.
 
 Instance is_Some_pi {A} (mx : option A) : ProofIrrel (is_Some mx).
 Proof.
@@ -59,6 +68,7 @@ Proof.
   assert (∀ mx H, f mx (g mx H) = H) as f_g by (by intros ? [??]; subst).
   intros p1 p2. rewrite <-(f_g _ p1), <-(f_g _ p2). by destruct mx, p1.
 Qed.
+
 Instance is_Some_dec {A} (mx : option A) : Decision (is_Some mx) :=
   match mx with
   | Some x => left (ex_intro _ x eq_refl)
@@ -67,16 +77,12 @@ Instance is_Some_dec {A} (mx : option A) : Decision (is_Some mx) :=
 
 Definition is_Some_proj {A} {mx : option A} : is_Some mx → A :=
   match mx with Some x => λ _, x | None => False_rect _ ∘ is_Some_None end.
+
 Definition Some_dec {A} (mx : option A) : { x | mx = Some x } + { mx = None } :=
   match mx return { x | mx = Some x } + { mx = None } with
   | Some x => inleft (x ↾ eq_refl _)
   | None => inright eq_refl
   end.
-
-Lemma eq_None_not_Some {A} (mx : option A) : mx = None ↔ ¬is_Some mx.
-Proof. destruct mx; unfold is_Some; naive_solver. Qed.
-Lemma not_eq_None_Some {A} (mx : option A) : mx ≠ None ↔ is_Some mx.
-Proof. rewrite eq_None_not_Some; apply dec_stable; tauto. Qed.
 
 (** Lifting a relation point-wise to option *)
 Inductive option_Forall2 {A B} (R: A → B → Prop) : option A → option B → Prop :=
