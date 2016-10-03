@@ -1201,6 +1201,11 @@ Section option.
     ✓{n} (my ⋅ Some x) → my = None.
   Proof. rewrite comm. by apply exclusiveN_Some_l. Qed.
 
+  Lemma exclusive_Some_l x `{!Exclusive x} my : ✓ (Some x ⋅ my) → my = None.
+  Proof. destruct my. move=> /(exclusive_l x) []. done. Qed.
+  Lemma exclusive_Some_r x `{!Exclusive x} my : ✓ (my ⋅ Some x) → my = None.
+  Proof. rewrite comm. by apply exclusive_Some_l. Qed.
+
   Lemma Some_included x y : Some x ≼ Some y ↔ x ≡ y ∨ x ≼ y.
   Proof. rewrite option_included; naive_solver. Qed.
   Lemma Some_included' `{CMRATotal A} x y : Some x ≼ Some y ↔ x ≡ y ∨ x ≼ y.
