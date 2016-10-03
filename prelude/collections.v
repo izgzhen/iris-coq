@@ -339,6 +339,11 @@ Section simple_collection.
   Lemma empty_union X Y : X ∪ Y ≡ ∅ ↔ X ≡ ∅ ∧ Y ≡ ∅.
   Proof. set_solver. Qed.
 
+  Lemma union_cancel_l X Y Z : Z ⊥ X → Z ⊥ Y → Z ∪ X ≡ Z ∪ Y → X ≡ Y.
+  Proof. set_solver. Qed.
+  Lemma union_cancel_r X Y Z : X ⊥ Z → Y ⊥ Z → X ∪ Z ≡ Y ∪ Z → X ≡ Y.
+  Proof. set_solver. Qed.
+
   (** Empty *)
   Lemma elem_of_equiv_empty X : X ≡ ∅ ↔ ∀ x, x ∉ X.
   Proof. set_solver. Qed.
@@ -454,6 +459,11 @@ Section simple_collection.
 
     Lemma empty_union_L X Y : X ∪ Y = ∅ ↔ X = ∅ ∧ Y = ∅.
     Proof. unfold_leibniz. apply empty_union. Qed.
+
+    Lemma union_cancel_l_L X Y Z : Z ⊥ X → Z ⊥ Y → Z ∪ X = Z ∪ Y → X = Y.
+    Proof. unfold_leibniz. apply union_cancel_l. Qed.
+    Lemma union_cancel_r_L X Y Z : X ⊥ Z → Y ⊥ Z → X ∪ Z = Y ∪ Z → X = Y.
+    Proof. unfold_leibniz. apply union_cancel_r. Qed.
 
     (** Empty *)
     Lemma elem_of_equiv_empty_L X : X = ∅ ↔ ∀ x, x ∉ X.
