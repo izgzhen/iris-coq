@@ -567,9 +567,12 @@ Proof.
   apply Qp_eq; simpl. ring.
 Qed.
 
-Lemma Qp_ge_1 (q: Qp): ¬ ((1 + q)%Qp ≤ 1%Qp)%Qc.
+Lemma Qp_not_plus_q_ge_1 (q: Qp): ¬ ((1 + q)%Qp ≤ 1%Qp)%Qc.
 Proof.
   intros Hle.
   apply (Qcplus_le_mono_l q 0 1) in Hle.
-  apply Qcle_ngt in Hle. by destruct q.
+  apply Qcle_ngt in Hle. apply Hle, Qp_prf.
 Qed.
+
+Lemma Qp_ge_0 (q: Qp): (0 ≤ q)%Qc.
+Proof. apply Qclt_le_weak, Qp_prf. Qed.
