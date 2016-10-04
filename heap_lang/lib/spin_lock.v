@@ -6,11 +6,11 @@ From iris.algebra Require Import excl.
 From iris.heap_lang.lib Require Import lock.
 
 Definition newlock : val := λ: <>, ref #false.
+Definition try_acquire : val := λ: "l", CAS "l" #false #true.
 Definition acquire : val :=
-  rec: "acquire" "l" :=
-    if: CAS "l" #false #true then #() else "acquire" "l".
+  rec: "acquire" "l" := if: try_acquire "l" then #() else "acquire" "l".
 Definition release : val := λ: "l", "l" <- #false.
-Global Opaque newlock acquire release.
+Global Opaque newlock try_acquire acquire release.
 
 (** The CMRA we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
@@ -57,17 +57,26 @@ Section proof.
     iVsIntro. iApply "HΦ". iExists l. eauto.
   Qed.
 
+  Lemma try_acquire_spec γ lk R (Φ: val → iProp Σ) :
+    is_lock γ lk R ★ ((locked γ -★ R -★ Φ #true) ∧ Φ #false)
+    ⊢ WP try_acquire lk {{ Φ }}.
+  Proof.
+    iIntros "[#Hl HΦ]". iDestruct "Hl" as (l) "(% & #? & % & #?)". subst.
+    wp_rec. iInv N as ([]) "[Hl HR]" "Hclose".
+    - wp_cas_fail. iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
+      iVsIntro. iDestruct "HΦ" as "[_ HΦ]". iApply "HΦ".
+    - wp_cas_suc. iDestruct "HR" as "[Hγ HR]".
+      iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
+      iVsIntro. iDestruct "HΦ" as "[HΦ _]". rewrite /locked. by iApply ("HΦ" with "Hγ HR").
+  Qed.
+
   Lemma acquire_spec γ lk R (Φ : val → iProp Σ) :
     is_lock γ lk R ★ (locked γ -★ R -★ Φ #()) ⊢ WP acquire lk {{ Φ }}.
   Proof.
-    iIntros "[Hl HΦ]". iDestruct "Hl" as (l) "(% & #? & % & #?)". subst.
-    iLöb as "IH". wp_rec. wp_bind (CAS _ _ _)%E.
-    iInv N as ([]) "[Hl HR]" "Hclose".
-    - wp_cas_fail. iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
-      iVsIntro. wp_if. by iApply "IH".
-    - wp_cas_suc. iDestruct "HR" as "[Hγ HR]".
-      iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
-      iVsIntro. wp_if. iApply ("HΦ" with "[-HR] HR"). by iFrame.
+    iIntros "[#Hl HΦ]". iLöb as "IH". wp_rec. wp_bind (try_acquire _).
+    iApply try_acquire_spec. iFrame "#". iSplit.
+    - iIntros "Hlked HR". wp_if. iVsIntro. iApply ("HΦ" with "Hlked HR").
+    - wp_if. iApply ("IH" with "HΦ").
   Qed.
 
   Lemma release_spec γ lk R (Φ : val → iProp Σ) :
