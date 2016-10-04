@@ -299,78 +299,80 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
   {\prop \proves \propB \wand \propC}
 \end{mathpar}
 
-\paragraph{Laws for ghosts and physical resources.}
+\paragraph{Laws for the always modality.}
 \begin{mathpar}
-\begin{array}{rMcMl}
-\ownGGhost{\melt} * \ownGGhost{\meltB} &\provesIff&  \ownGGhost{\melt \mtimes \meltB} \\
-\ownGGhost{\melt} &\proves& \mval(\melt) \\
-\TRUE &\proves&  \ownGGhost{\munit}
+\infer[$\always$-mono]
+  {\prop \proves \propB}
+  {\always{\prop} \proves \always{\propB}}
+\and
+\begin{array}[c]{rMcMl}
+  \always{\prop} &\proves& \prop \\
+  \always{(\prop \land \propB)} &\proves& \always{(\prop * \propB)} \\
+  \always{\prop} \land \propB &\proves& \always{\prop} * \propB
 \end{array}
 \and
-\and
-\begin{array}{c}
-\ownPhys{\state} * \ownPhys{\state'} \proves \FALSE
+\begin{array}[c]{rMcMl}
+  \always{\prop} &\proves& \always\always\prop \\
+  \All x. \always{\prop} &\proves& \always{\All x. \prop} \\
+  \always{\Exists x. \prop} &\proves& \Exists x. \always{\prop}
 \end{array}
 \end{mathpar}
+
 
 \paragraph{Laws for the later modality.}
 \begin{mathpar}
 \infer[$\later$-mono]
-  {\pfctx \proves \prop}
-  {\pfctx \proves \later{\prop}}
+  {\prop \proves \propB}
+  {\later\prop \proves \later{\propB}}
 \and
 \infer[L{\"o}b]
   {}
   {(\later\prop\Ra\prop) \proves \prop}
 \and
-\infer[$\later$-$\exists$]
-  {\text{$\type$ is inhabited}}
-  {\later{\Exists x:\type.\prop} \proves \Exists x:\type. \later\prop}
-\\\\
 \begin{array}[c]{rMcMl}
-  \later{(\prop \wedge \propB)} &\provesIff& \later{\prop} \wedge \later{\propB}  \\
-  \later{(\prop \vee \propB)} &\provesIff& \later{\prop} \vee \later{\propB} \\
+  \All x. \later\prop &\proves& \later{\All x.\prop} \\
+  \later\Exists x. \prop &\proves& \later\FALSE \lor {\Exists x.\later\prop}  \\
+  \later\prop &\proves& \later\FALSE \lor (\later\FALSE \Ra \prop) \\
 \end{array}
 \and
 \begin{array}[c]{rMcMl}
-  \later{\All x.\prop} &\provesIff& \All x. \later\prop \\
-  \Exists x. \later\prop &\proves& \later{\Exists x.\prop}  \\
-  \later{(\prop * \propB)} &\provesIff& \later\prop * \later\propB
-\end{array}
-\end{mathpar}
-A type $\type$ being \emph{inhabited} means that $ \proves \wtt{\term}{\type}$ is derivable for some $\term$.
-
-\paragraph{Laws for the always modality.}
-\begin{mathpar}
-\infer[$\always$I]
-  {\always{\pfctx} \proves \prop}
-  {\always{\pfctx} \proves \always{\prop}}
-\and
-\infer[$\always$E]{}
-  {\always{\prop} \proves \prop}
-\and
-\begin{array}[c]{rMcMl}
-  \always{(\prop \land \propB)} &\proves& \always{(\prop * \propB)} \\
-  \always{\prop} \land \propB &\proves& \always{\prop} * \propB \\
+  \later{(\prop * \propB)} &\provesIff& \later\prop * \later\propB \\
   \always{\later\prop} &\provesIff& \later\always{\prop} \\
 \end{array}
-\and
-\begin{array}[c]{rMcMl}
-  \always{(\prop \land \propB)} &\provesIff& \always{\prop} \land \always{\propB} \\
-  \always{(\prop \lor \propB)} &\provesIff& \always{\prop} \lor \always{\propB} \\
-  \always{\All x. \prop} &\provesIff& \All x. \always{\prop} \\
-  \always{\Exists x. \prop} &\provesIff& \Exists x. \always{\prop} \\
+\end{mathpar}
+
+
+\paragraph{Laws for ghosts and validity.}
+\begin{mathpar}
+\begin{array}{rMcMl}
+\ownGGhost{\melt} * \ownGGhost{\meltB} &\provesIff&  \ownGGhost{\melt \mtimes \meltB} \\
+\ownGGhost\melt &\proves& \always{\ownGGhost{\mcore\melt}} \\
+\TRUE &\proves&  \ownGGhost{\munit} \\
+\later\ownGGhost\melt &\proves& \Exists\meltB. \ownGGhost\meltB \land \later(\melt = \meltB)
 \end{array}
 \and
-{ \term =_\type \term' \proves \always \term =_\type \term'}
+\infer[valid-intro]
+{\melt \in \mval}
+{\TRUE \vdash \mval(\melt)}
 \and
-{ \ownGGhost{\mcore\melt} \proves \always \ownGGhost{\mcore\melt}}
+\infer[valid-elim]
+{\melt \notin \mval_0}
+{\mval(\melt) \proves \FALSE}
 \and
-{ \mval(\melt) \proves \always \mval(\melt)}
+\begin{array}{rMcMl}
+\ownGGhost{\melt} &\proves& \mval(\melt) \\
+\mval(\melt \mtimes \meltB) &\proves& \mval(\melt) \\
+\mval(\melt) &\proves& \always\mval(\melt)
+\end{array}
 \end{mathpar}
+
 
 \paragraph{Laws for the update modality.}
 \begin{mathpar}
+\infer[upd-mono]
+{\prop \proves \propB}
+{\upd\prop \proves \upd\propB}
+
 \infer[upd-intro]
 {}{\prop \proves \upd \prop}
 
@@ -388,7 +390,11 @@ A type $\type$ being \emph{inhabited} means that $ \proves \wtt{\term}{\type}$ i
 
 \subsection{Soundness}
 
-The soundness statement of the logic 
+The soundness statement of the logic reads as follows: For any $n$, we have
+\begin{align*}
+  \lnot(\TRUE \vdash (\upd\later)^n \FALSE)
+\end{align*}
+where $(\upd\later)^n$ is short for $\upd\later$ being nested $n$ times.
 
 
 %%% Local Variables:

@@ -1002,9 +1002,6 @@ Proof.
   by rewrite cmra_core_l cmra_core_idemp.
 Qed.
 
-Lemma always_later P : □ ▷ P ⊣⊢ ▷ □ P.
-Proof. by unseal. Qed.
-
 (* Always derived *)
 Hint Resolve always_mono always_elim.
 Global Instance always_mono' : Proper ((⊢) ==> (⊢)) (@uPred_always M).
@@ -1069,32 +1066,6 @@ Proof. intros; rewrite -always_and_sep_l'; auto. Qed.
 Lemma always_entails_r' P Q : (P ⊢ □ Q) → P ⊢ P ★ □ Q.
 Proof. intros; rewrite -always_and_sep_r'; auto. Qed.
 
-(* Conditional always *)
-Global Instance always_if_ne n p : Proper (dist n ==> dist n) (@uPred_always_if M p).
-Proof. solve_proper. Qed.
-Global Instance always_if_proper p : Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_always_if M p).
-Proof. solve_proper. Qed.
-Global Instance always_if_mono p : Proper ((⊢) ==> (⊢)) (@uPred_always_if M p).
-Proof. solve_proper. Qed.
-
-Lemma always_if_elim p P : □?p P ⊢ P.
-Proof. destruct p; simpl; auto using always_elim. Qed.
-Lemma always_elim_if p P : □ P ⊢ □?p P.
-Proof. destruct p; simpl; auto using always_elim. Qed.
-
-Lemma always_if_pure p φ : □?p ■ φ ⊣⊢ ■ φ.
-Proof. destruct p; simpl; auto using always_pure. Qed.
-Lemma always_if_and p P Q : □?p (P ∧ Q) ⊣⊢ □?p P ∧ □?p Q.
-Proof. destruct p; simpl; auto using always_and. Qed.
-Lemma always_if_or p P Q : □?p (P ∨ Q) ⊣⊢ □?p P ∨ □?p Q.
-Proof. destruct p; simpl; auto using always_or. Qed.
-Lemma always_if_exist {A} p (Ψ : A → uPred M) : (□?p ∃ a, Ψ a) ⊣⊢ ∃ a, □?p Ψ a.
-Proof. destruct p; simpl; auto using always_exist. Qed.
-Lemma always_if_sep p P Q : □?p (P ★ Q) ⊣⊢ □?p P ★ □?p Q.
-Proof. destruct p; simpl; auto using always_sep. Qed.
-Lemma always_if_later p P : □?p ▷ P ⊣⊢ ▷ □?p P.
-Proof. destruct p; simpl; auto using always_later. Qed.
-
 (* Later *)
 Lemma later_mono P Q : (P ⊢ Q) → ▷ P ⊢ ▷ Q.
 Proof.
@@ -1127,6 +1098,10 @@ Proof.
   intros [|n'] x' ????; [|done].
   eauto using uPred_closed, uPred_mono, cmra_included_includedN.
 Qed.
+
+Lemma always_later P : □ ▷ P ⊣⊢ ▷ □ P.
+Proof. by unseal. Qed.
+
 
 (* Later derived *)
 Lemma later_proper P Q : (P ⊣⊢ Q) → ▷ P ⊣⊢ ▷ Q.
@@ -1168,6 +1143,34 @@ Lemma later_wand P Q : ▷ (P -★ Q) ⊢ ▷ P -★ ▷ Q.
 Proof. apply wand_intro_r; rewrite -later_sep; eauto using wand_elim_l. Qed.
 Lemma later_iff P Q : ▷ (P ↔ Q) ⊢ ▷ P ↔ ▷ Q.
 Proof. by rewrite /uPred_iff later_and !later_impl. Qed.
+
+
+(* Conditional always *)
+Global Instance always_if_ne n p : Proper (dist n ==> dist n) (@uPred_always_if M p).
+Proof. solve_proper. Qed.
+Global Instance always_if_proper p : Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_always_if M p).
+Proof. solve_proper. Qed.
+Global Instance always_if_mono p : Proper ((⊢) ==> (⊢)) (@uPred_always_if M p).
+Proof. solve_proper. Qed.
+
+Lemma always_if_elim p P : □?p P ⊢ P.
+Proof. destruct p; simpl; auto using always_elim. Qed.
+Lemma always_elim_if p P : □ P ⊢ □?p P.
+Proof. destruct p; simpl; auto using always_elim. Qed.
+
+Lemma always_if_pure p φ : □?p ■ φ ⊣⊢ ■ φ.
+Proof. destruct p; simpl; auto using always_pure. Qed.
+Lemma always_if_and p P Q : □?p (P ∧ Q) ⊣⊢ □?p P ∧ □?p Q.
+Proof. destruct p; simpl; auto using always_and. Qed.
+Lemma always_if_or p P Q : □?p (P ∨ Q) ⊣⊢ □?p P ∨ □?p Q.
+Proof. destruct p; simpl; auto using always_or. Qed.
+Lemma always_if_exist {A} p (Ψ : A → uPred M) : (□?p ∃ a, Ψ a) ⊣⊢ ∃ a, □?p Ψ a.
+Proof. destruct p; simpl; auto using always_exist. Qed.
+Lemma always_if_sep p P Q : □?p (P ★ Q) ⊣⊢ □?p P ★ □?p Q.
+Proof. destruct p; simpl; auto using always_sep. Qed.
+Lemma always_if_later p P : □?p ▷ P ⊣⊢ ▷ □?p P.
+Proof. destruct p; simpl; auto using always_later. Qed.
+
 
 (* True now *)
 Global Instance except_last_ne n : Proper (dist n ==> dist n) (@uPred_except_last M).
@@ -1226,10 +1229,9 @@ Proof.
     by rewrite (assoc op _ z1) -(comm op z1) (assoc op z1)
       -(assoc op _ a2) (comm op z1) -Hy1 -Hy2.
 Qed.
-Lemma always_ownM (a : M) : Persistent a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
+Lemma always_ownM_core (a : M) : uPred_ownM a ⊢ □ uPred_ownM (core a).
 Proof.
-  split=> n x /=; split; [by apply always_elim|unseal; intros Hx]; simpl.
-  rewrite -(persistent_core a). by apply cmra_core_monoN.
+  split=> n x /=; unseal; intros Hx. simpl. by apply cmra_core_monoN.
 Qed.
 Lemma ownM_empty : True ⊢ uPred_ownM ∅.
 Proof. unseal; split=> n x ??; by  exists x; rewrite left_id. Qed.
@@ -1250,18 +1252,27 @@ Lemma cmra_valid_intro {A : cmraT} (a : A) : ✓ a → True ⊢ ✓ a.
 Proof. unseal=> ?; split=> n x ? _ /=; by apply cmra_valid_validN. Qed.
 Lemma cmra_valid_elim {A : cmraT} (a : A) : ¬ ✓{0} a → ✓ a ⊢ False.
 Proof. unseal=> Ha; split=> n x ??; apply Ha, cmra_validN_le with n; auto. Qed.
-Lemma always_cmra_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
+Lemma always_cmra_valid_1 {A : cmraT} (a : A) : ✓ a ⊢ □ ✓ a.
 Proof. by unseal. Qed.
 Lemma cmra_valid_weaken {A : cmraT} (a b : A) : ✓ (a ⋅ b) ⊢ ✓ a.
 Proof. unseal; split=> n x _; apply cmra_validN_op_l. Qed.
 
 (* Own and valid derived *)
+Lemma always_ownM (a : M) : Persistent a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
+Proof.
+  intros; apply (anti_symm _); first by apply:always_elim.
+  by rewrite {1}always_ownM_core persistent_core.
+Qed.
 Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_ownM a ⊢ False.
 Proof. by intros; rewrite ownM_valid cmra_valid_elim. Qed.
 Global Instance ownM_mono : Proper (flip (≼) ==> (⊢)) (@uPred_ownM M).
 Proof. intros a b [b' ->]. rewrite ownM_op. eauto. Qed.
 Lemma ownM_empty' : uPred_ownM ∅ ⊣⊢ True.
 Proof. apply (anti_symm _); auto using ownM_empty. Qed.
+Lemma always_cmra_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
+  intros; apply (anti_symm _); first by apply:always_elim.
+  apply:always_cmra_valid_1.
+Qed.
 
 (* Viewshifts *)
 Lemma rvs_intro P : P =r=> P.
