@@ -3,16 +3,31 @@
 
 The semantics closely follows the ideas laid out in~\cite{catlogic}.
 
-\subsection{Generic model of base logic}
-\label{sec:upred-logic}
+\paragraph{Semantic domains.}
 
-The base logic including equality, later, always, and a notion of ownership is defined on $\UPred(\monoid)$ for any CMRA $\monoid$.
+The semantic  domains are interpreted as follows:
+\[
+\begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
+\Sem{\textlog{\Prop}} &\eqdef& \UPred(\monoid)  \\
+\Sem{\textlog{M}} &\eqdef& \monoid
+\end{array}
+\qquad\qquad
+\begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
+\Sem{1} &\eqdef& \Delta \{ () \} \\
+\Sem{\type \times \type'} &\eqdef& \Sem{\type} \times \Sem{\type} \\
+\Sem{\type \to \type'} &\eqdef& \Sem{\type} \nfn \Sem{\type} \\
+\end{array}
+\]
+For the remaining base types $\type$ defined by the signature $\Sig$, we pick an object $X_\type$ in $\COFEs$ and define
+\[
+\Sem{\type} \eqdef X_\type
+\]
+For each function symbol $\sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \SigFn$, we pick a function $\Sem{\sigfn} : \Sem{\type_1} \times \dots \times \Sem{\type_n} \nfn \Sem{\type_{n+1}}$.
 
-\typedsection{Interpretation of base assertions}{\Sem{\vctx \proves \term : \Prop} : \Sem{\vctx} \nfn \UPred(\monoid)}
+\judgment[Interpretation of assertions.]{\Sem{\vctx \proves \term : \Prop} : \Sem{\vctx} \nfn \UPred(\monoid)}
+
 Remember that $\UPred(\monoid)$ is isomorphic to $\monoid \monra \SProp$.
 We are thus going to define the assertions as mapping CMRA elements to sets of step-indices.
-
-We introduce an additional logical connective $\ownM\melt$, which will later be used to encode all of $\knowInv\iname\prop$, $\ownGGhost\melt$ and $\ownPhys\state$.
 
 \begin{align*}
 	\Sem{\vctx \proves t =_\type u : \Prop}_\gamma &\eqdef
@@ -32,134 +47,27 @@ We introduce an additional logical connective $\ownM\melt$, which will later be 
 	\Sem{\vctx \proves \Exists x : \type. \prop : \Prop}_\gamma &\eqdef
         \Lam \melt. \setComp{n}{ \Exists v \in \Sem{\type}. n \in \Sem{\vctx, x : \type \proves \prop : \Prop}_{\gamma[x \mapsto v]}(\melt) } \\
   ~\\
-	\Sem{\vctx \proves \always{\prop} : \Prop}_\gamma &\eqdef \Lam\melt. \Sem{\vctx \proves \prop : \Prop}_\gamma(\mcore\melt) \\
-	\Sem{\vctx \proves \later{\prop} : \Prop}_\gamma &\eqdef \Lam\melt. \setComp{n}{n = 0 \lor n-1 \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\melt)}\\
 	\Sem{\vctx \proves \prop * \propB : \Prop}_\gamma &\eqdef \Lam\melt. \setComp{n}{\begin{aligned}\Exists \meltB_1, \meltB_2. &\melt \nequiv{n} \meltB_1 \mtimes \meltB_2 \land {}\\& n \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB_1) \land n \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\meltB_2)\end{aligned}}
 \\
 	\Sem{\vctx \proves \prop \wand \propB : \Prop}_\gamma &\eqdef
 	\Lam \melt. \setComp{n}{\begin{aligned}
             \All m, \meltB.& m \leq n \land  \melt\mtimes\meltB \in \mval_m \Ra {} \\
             & m \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB) \Ra {}\\& m \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\melt\mtimes\meltB)\end{aligned}} \\
-        \Sem{\vctx \proves \ownM{\melt} : \Prop}_\gamma &\eqdef \Lam\meltB. \setComp{n}{\Sem{\vctx \proves \melt : \textlog{M}} \mincl[n] \meltB}  \\
-        \Sem{\vctx \proves \mval(\melt) : \Prop}_\gamma &\eqdef \Lam\any. \setComp{n}{\Sem{\vctx \proves \melt : \type} \in \mval_n} \\
+	\Sem{\vctx \proves \always{\prop} : \Prop}_\gamma &\eqdef \Lam\melt. \Sem{\vctx \proves \prop : \Prop}_\gamma(\mcore\melt) \\
+	\Sem{\vctx \proves \later{\prop} : \Prop}_\gamma &\eqdef \Lam\melt. \setComp{n}{n = 0 \lor n-1 \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\melt)}\\
+        \Sem{\vctx \proves \ownM{\melt} : \Prop}_\gamma &\eqdef \Lam\meltB. \setComp{n}{\Sem{\vctx \proves \melt : \textlog{M}}_\gamma \mincl[n] \meltB}  \\
+        \Sem{\vctx \proves \mval(\melt) : \Prop}_\gamma &\eqdef \Lam\any. \setComp{n}{\Sem{\vctx \proves \melt : \type}_\gamma \in \mval_n} \\
+        \Sem{\vctx \proves \upd\prop : \Prop}_\gamma &\eqdef \Lam\melt. \setComp{n}{\begin{aligned}
+            \All m, \melt'. & m \leq n \land (\melt \mtimes \melt') \in \mval_m \Ra {}\\& \Exists \meltB. (\meltB \mtimes \melt') \in \mval_k \land m \in \Sem{\vctx \proves \prop :\Prop}_\gamma(\melt')
+          \end{aligned}
+}
 \end{align*}
 
 For every definition, we have to show all the side-conditions: The maps have to be non-expansive and monotone.
 
-\subsection{Iris model}
-
-\paragraph{Semantic domain of assertions.}
-The first complicated task in building a model of full Iris is defining the semantic model of $\Prop$.
-We start by defining the functor that assembles the CMRAs we need to the global resource CMRA:
-\begin{align*}
-  \textdom{ResF}(\cofe^\op, \cofe) \eqdef{}& \record{\wld: \mathbb{N} \fpfn \agm(\latert \cofe), \pres: \maybe{\exm(\textdom{State})}, \ghostRes: \iFunc(\cofe^\op, \cofe)}
-\end{align*}
-Above, $\maybe\monoid$ is the monoid obtained by adding a unit to $\monoid$.
-(It's not a coincidence that we used the same notation for the range of the core; it's the same type either way: $\monoid + 1$.)
-Remember that $\iFunc$ is the user-chosen bifunctor from $\COFEs$ to $\CMRAs$ (see~\Sref{sec:logic}).
-$\textdom{ResF}(\cofe^\op, \cofe)$ is a CMRA by lifting the individual CMRAs pointwise.
-Furthermore, since $\Sigma$ is locally contractive, so is $\textdom{ResF}$.
-
-Now we can write down the recursive domain equation:
-\[ \iPreProp \cong \UPred(\textdom{ResF}(\iPreProp, \iPreProp)) \]
-$\iPreProp$ is a COFE defined as the fixed-point of a locally contractive bifunctor.
-This fixed-point exists and is unique by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}.
-We do not need to consider how the object is constructed. 
-We only need the isomorphism, given by
-\begin{align*}
-  \Res &\eqdef \textdom{ResF}(\iPreProp, \iPreProp) \\
-  \iProp &\eqdef \UPred(\Res) \\
-	\wIso &: \iProp \nfn \iPreProp \\
-	\wIso^{-1} &: \iPreProp \nfn \iProp
-\end{align*}
-
-We then pick $\iProp$ as the interpretation of $\Prop$:
-\[ \Sem{\Prop} \eqdef \iProp \]
 
 
-\paragraph{Interpretation of assertions.}
-$\iProp$ is a $\UPred$, and hence the definitions from \Sref{sec:upred-logic} apply.
-We only have to define the interpretation of the missing connectives, the most interesting bits being primitive view shifts and weakest preconditions.
-
-\typedsection{World satisfaction}{\wsat{-}{-}{-} : 
-	\Delta\textdom{State} \times
-	\Delta\pset{\mathbb{N}} \times
-	\textdom{Res} \nfn \SProp }
-\begin{align*}
-  \wsatpre(n, \mask, \state, \rss, \rs) & \eqdef \begin{inbox}[t]
-    \rs \in \mval_{n+1} \land \rs.\pres = \exinj(\sigma) \land 
-    \dom(\rss) \subseteq \mask \cap \dom( \rs.\wld) \land {}\\
-    \All\iname \in \mask, \prop \in \iProp. (\rs.\wld)(\iname) \nequiv{n+1} \aginj(\latertinj(\wIso(\prop))) \Ra n \in \prop(\rss(\iname))
-  \end{inbox}\\
-	\wsat{\state}{\mask}{\rs} &\eqdef \set{0}\cup\setComp{n+1}{\Exists \rss : \mathbb{N} \fpfn \textdom{Res}. \wsatpre(n, \mask, \state, \rss, \rs \mtimes \prod_\iname \rss(\iname))}
-\end{align*}
-
-\typedsection{Primitive view-shift}{\mathit{pvs}_{-}^{-}(-) : \Delta(\pset{\mathbb{N}}) \times \Delta(\pset{\mathbb{N}}) \times \iProp \nfn \iProp}
-\begin{align*}
-	\mathit{pvs}_{\mask_1}^{\mask_2}(\prop) &= \Lam \rs. \setComp{n}{\begin{aligned}
-            \All \rs_\f, k, \mask_\f, \state.& 0 < k \leq n \land (\mask_1 \cup \mask_2) \disj \mask_\f \land k \in \wsat\state{\mask_1 \cup \mask_\f}{\rs \mtimes \rs_\f} \Ra {}\\&
-            \Exists \rsB. k \in \prop(\rsB) \land k \in \wsat\state{\mask_2 \cup \mask_\f}{\rsB \mtimes \rs_\f}
-          \end{aligned}}
-\end{align*}
-
-\typedsection{Weakest precondition}{\mathit{wp}_{-}(-, -) : \Delta(\pset{\mathbb{N}}) \times \Delta(\textdom{Exp}) \times (\Delta(\textdom{Val}) \nfn \iProp) \nfn \iProp}
-
-$\textdom{wp}$ is defined as the fixed-point of a contractive function.
-\begin{align*}
-  \textdom{pre-wp}(\textdom{wp})(\mask, \expr, \pred) &\eqdef \Lam\rs. \setComp{n}{\begin{aligned}
-        \All &\rs_\f, m, \mask_\f, \state. 0 \leq m < n \land \mask \disj \mask_\f \land m+1 \in \wsat\state{\mask \cup \mask_\f}{\rs \mtimes \rs_\f} \Ra {}\\
-        &(\All\val. \toval(\expr) = \val \Ra \Exists \rsB. m+1 \in \pred(\val)(\rsB) \land m+1 \in \wsat\state{\mask \cup \mask_\f}{\rsB \mtimes \rs_\f}) \land {}\\
-        &(\toval(\expr) = \bot \land 0 < m \Ra \red(\expr, \state) \land \All \expr_2, \state_2, \expr_\f. \expr,\state \step \expr_2,\state_2,\expr_\f \Ra {}\\
-        &\qquad \Exists \rsB_1, \rsB_2. m \in \wsat\state{\mask \cup \mask_\f}{\rsB_1 \mtimes \rsB_2 \mtimes \rs_\f} \land  m \in \textdom{wp}(\mask, \expr_2, \pred)(\rsB_1) \land {}&\\
-        &\qquad\qquad (\expr_\f = \bot \lor m \in \textdom{wp}(\top, \expr_\f, \Lam\any.\Lam\any.\mathbb{N})(\rsB_2))
-    \end{aligned}} \\
-  \textdom{wp}_\mask(\expr, \pred) &\eqdef \mathit{fix}(\textdom{pre-wp})(\mask, \expr, \pred)
-\end{align*}
-
-
-\typedsection{Interpretation of program logic assertions}{\Sem{\vctx \proves \term : \Prop} : \Sem{\vctx} \nfn \iProp}
-
-$\knowInv\iname\prop$, $\ownGGhost\melt$ and $\ownPhys\state$ are just syntactic sugar for forms of $\ownM{-}$.
-\begin{align*}
-	\knowInv{\iname}{\prop} &\eqdef \ownM{[\iname \mapsto \aginj(\latertinj(\wIso(\prop)))], \munit, \munit} \\
-	\ownGGhost{\melt} &\eqdef \ownM{\munit, \munit, \melt} \\
-	\ownPhys{\state} &\eqdef \ownM{\munit, \exinj(\state), \munit} \\
-~\\
-	\Sem{\vctx \proves \pvs[\mask_1][\mask_2] \prop : \Prop}_\gamma &\eqdef
-	\textdom{pvs}^{\Sem{\vctx \proves \mask_2 : \textlog{InvMask}}_\gamma}_{\Sem{\vctx \proves \mask_1 : \textlog{InvMask}}_\gamma}(\Sem{\vctx \proves \prop : \Prop}_\gamma) \\
-	\Sem{\vctx \proves \wpre{\expr}[\mask]{\Ret\var.\prop} : \Prop}_\gamma &\eqdef
-	\textdom{wp}_{\Sem{\vctx \proves \mask : \textlog{InvMask}}_\gamma}(\Sem{\vctx \proves \expr : \textlog{Expr}}_\gamma, \Lam\val. \Sem{\vctx \proves \prop : \Prop}_{\gamma[\var\mapsto\val]})
-\end{align*}
-
-\paragraph{Remaining semantic domains, and interpretation of non-assertion terms.}
-
-The remaining domains are interpreted as follows:
-\[
-\begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
-\Sem{\textlog{InvName}} &\eqdef& \Delta \mathbb{N}  \\
-\Sem{\textlog{InvMask}} &\eqdef& \Delta \pset{\mathbb{N}} \\
-\Sem{\textlog{M}} &\eqdef& F(\iProp)
-\end{array}
-\qquad\qquad
-\begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
-\Sem{\textlog{Val}} &\eqdef& \Delta \textdom{Val} \\
-\Sem{\textlog{Expr}} &\eqdef& \Delta \textdom{Expr} \\
-\Sem{\textlog{State}} &\eqdef& \Delta \textdom{State} \\
-\end{array}
-\qquad\qquad
-\begin{array}[t]{@{}l@{\ }c@{\ }l@{}}
-\Sem{1} &\eqdef& \Delta \{ () \} \\
-\Sem{\type \times \type'} &\eqdef& \Sem{\type} \times \Sem{\type} \\
-\Sem{\type \to \type'} &\eqdef& \Sem{\type} \nfn \Sem{\type} \\
-\end{array}
-\]
-For the remaining base types $\type$ defined by the signature $\Sig$, we pick an object $X_\type$ in $\COFEs$ and define
-\[
-\Sem{\type} \eqdef X_\type
-\]
-For each function symbol $\sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \SigFn$, we pick a function $\Sem{\sigfn} : \Sem{\type_1} \times \dots \times \Sem{\type_n} \nfn \Sem{\type_{n+1}}$.
-
-\typedsection{Interpretation of non-propositional terms}{\Sem{\vctx \proves \term : \type} : \Sem{\vctx} \nfn \Sem{\type}}
+\judgment[Interpretation of non-propositional terms]{\Sem{\vctx \proves \term : \type} : \Sem{\vctx} \nfn \Sem{\type}}
 \begin{align*}
 	\Sem{\vctx \proves x : \type}_\gamma &\eqdef \gamma(x) \\
 	\Sem{\vctx \proves \sigfn(\term_1, \dots, \term_n) : \type_{n+1}}_\gamma &\eqdef \Sem{\sigfn}(\Sem{\vctx \proves \term_1 : \type_1}_\gamma, \dots, \Sem{\vctx \proves \term_n : \type_n}_\gamma) \\
@@ -174,7 +82,6 @@ For each function symbol $\sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \
 	\Sem{\vctx \proves (\term_1, \term_2) : \type_1 \times \type_2}_\gamma &\eqdef (\Sem{\vctx \proves \term_1 : \type_1}_\gamma, \Sem{\vctx \proves \term_2 : \type_2}_\gamma) \\
 	\Sem{\vctx \proves \pi_i(\term) : \type_i}_\gamma &\eqdef \pi_i(\Sem{\vctx \proves \term : \type_1 \times \type_2}_\gamma) \\
   ~\\
-	\Sem{\vctx \proves \munit : \textlog{M}}_\gamma &\eqdef \munit \\
 	\Sem{\vctx \proves \mcore\melt : \textlog{M}}_\gamma &\eqdef \mcore{\Sem{\vctx \proves \melt : \textlog{M}}_\gamma} \\
 	\Sem{\vctx \proves \melt \mtimes \meltB : \textlog{M}}_\gamma &\eqdef
 	\Sem{\vctx \proves \melt : \textlog{M}}_\gamma \mtimes \Sem{\vctx \proves \meltB : \textlog{M}}_\gamma

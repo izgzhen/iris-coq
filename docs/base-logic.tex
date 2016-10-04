@@ -60,7 +60,7 @@ Below, $\melt$ ranges over $\monoid$ and $i$ ranges over $\set{1,2}$.
     \Exists \var:\type. \prop \mid
     \All \var:\type. \prop \mid
 \\&
-    \ownGGhost{\term} \mid \mval(\term) \mid
+    \ownM{\term} \mid \mval(\term) \mid
     \always\prop \mid
     {\later\prop} \mid
     \upd \prop\mid
@@ -167,7 +167,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 		{\vctx \proves \wtt{\All x:\type. \prop}{\Prop}}
 \and
 	\infer{\vctx \proves \wtt{\melt}{\textlog{M}}}
-		{\vctx \proves \wtt{\ownGGhost{\melt}}{\Prop}}
+		{\vctx \proves \wtt{\ownM{\melt}}{\Prop}}
 \and
 	\infer{\vctx \proves \wtt{\melt}{\type} \and \text{$\type$ is a CMRA}}
 		{\vctx \proves \wtt{\mval(\melt)}{\Prop}}
@@ -345,10 +345,10 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 \paragraph{Laws for ghosts and validity.}
 \begin{mathpar}
 \begin{array}{rMcMl}
-\ownGGhost{\melt} * \ownGGhost{\meltB} &\provesIff&  \ownGGhost{\melt \mtimes \meltB} \\
-\ownGGhost\melt &\proves& \always{\ownGGhost{\mcore\melt}} \\
-\TRUE &\proves&  \ownGGhost{\munit} \\
-\later\ownGGhost\melt &\proves& \Exists\meltB. \ownGGhost\meltB \land \later(\melt = \meltB)
+\ownM{\melt} * \ownM{\meltB} &\provesIff&  \ownM{\melt \mtimes \meltB} \\
+\ownM\melt &\proves& \always{\ownM{\mcore\melt}} \\
+\TRUE &\proves&  \ownM{\munit} \\
+\later\ownM\melt &\proves& \Exists\meltB. \ownM\meltB \land \later(\melt = \meltB)
 \end{array}
 \and
 \infer[valid-intro]
@@ -360,7 +360,7 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 {\mval(\melt) \proves \FALSE}
 \and
 \begin{array}{rMcMl}
-\ownGGhost{\melt} &\proves& \mval(\melt) \\
+\ownM{\melt} &\proves& \mval(\melt) \\
 \mval(\melt \mtimes \meltB) &\proves& \mval(\melt) \\
 \mval(\melt) &\proves& \always\mval(\melt)
 \end{array}
@@ -385,7 +385,7 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 
 \inferH{upd-update}
 {\melt \mupd \meltsB}
-{\ownGGhost\melt \proves \upd \Exists\meltB\in\meltsB. \ownGGhost\meltB}
+{\ownM\melt \proves \upd \Exists\meltB\in\meltsB. \ownM\meltB}
 \end{mathpar}
 
 \subsection{Soundness}
