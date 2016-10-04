@@ -249,6 +249,9 @@
   {\vsGen[#1]{\Lleftarrow\!\!\!\Rrightarrow}[#2]}
 \NewDocumentCommand \pvs {O{} O{}} {\mathord{\vsGen[#1]{{\mid\kern-0.4ex\Rrightarrow\kern-0.25ex}}[#2]\kern0.2ex}}
 
+% for now, the update modality looks like a pvs without masks.
+\NewDocumentCommand \upd {} {\mathord{\mid\kern-0.4ex\Rrightarrow\kern-0.25ex}}
+
 
 %% Hoare Triples
 \newcommand*{\hoaresizebox}[1]{%

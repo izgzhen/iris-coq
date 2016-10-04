@@ -1,0 +1,397 @@
+\section{Base Logic}
+\label{sec:base-logic}
+
+The base logic is parameterized by an arbitrary CMRA $\monoid$ having a unit.
+This defines the structure of resources that can be owned.
+
+As usual for higher-order logics, you can furthermore pick a \emph{signature} $\Sig = (\SigType, \SigFn, \SigAx)$ to add more types, symbols and axioms to the language.
+You have to make sure that $\SigType$ includes the base types:
+\[
+	\SigType \supseteq \{ \textlog{M}, \Prop \}
+\]
+Elements of $\SigType$ are ranged over by $\sigtype$.
+
+Each function symbol in $\SigFn$ has an associated \emph{arity} comprising a natural number $n$ and an ordered list of $n+1$ types $\type$ (the grammar of $\type$ is defined below, and depends only on $\SigType$).
+We write
+\[
+	\sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \SigFn
+\]
+to express that $\sigfn$ is a function symbol with the indicated arity.
+
+Furthermore, $\SigAx$ is a set of \emph{axioms}, that is, terms $\term$ of type $\Prop$.
+Again, the grammar of terms and their typing rules are defined below, and depends only on $\SigType$ and $\SigFn$, not on $\SigAx$.
+Elements of $\SigAx$ are ranged over by $\sigax$.
+
+\subsection{Grammar}\label{sec:grammar}
+
+\paragraph{Syntax.}
+Iris syntax is built up from a signature $\Sig$ and a countably infinite set $\textdom{Var}$ of variables (ranged over by metavariables $x$, $y$, $z$).
+Below, $\melt$ ranges over $\monoid$ and $i$ ranges over $\set{1,2}$.
+
+\begin{align*}
+  \type \bnfdef{}&
+      \sigtype \mid
+      1 \mid
+      \type \times \type \mid
+      \type \to \type
+\\[0.4em]
+  \term, \prop, \pred \bnfdef{}&
+      \var \mid
+      \sigfn(\term_1, \dots, \term_n) \mid
+      () \mid
+      (\term, \term) \mid
+      \pi_i\; \term \mid
+      \Lam \var:\type.\term \mid
+      \term(\term)  \mid
+      \melt \mid
+      \mcore\term \mid
+      \term \mtimes \term \mid
+\\&
+    \FALSE \mid
+    \TRUE \mid
+    \term =_\type \term \mid
+    \prop \Ra \prop \mid
+    \prop \land \prop \mid
+    \prop \lor \prop \mid
+    \prop * \prop \mid
+    \prop \wand \prop \mid
+\\&
+    \MU \var:\type. \term  \mid
+    \Exists \var:\type. \prop \mid
+    \All \var:\type. \prop \mid
+\\&
+    \ownGGhost{\term} \mid \mval(\term) \mid
+    \always\prop \mid
+    {\later\prop} \mid
+    \upd \prop\mid
+\end{align*}
+Recursive predicates must be \emph{guarded}: in $\MU \var. \term$, the variable $\var$ can only appear under the later $\later$ modality.
+
+Note that the modalities $\upd$, $\always$ and $\later$ bind more tightly than $*$, $\wand$, $\land$, $\lor$, and $\Ra$.
+
+
+\paragraph{Variable conventions.}
+We assume that, if a term occurs multiple times in a rule, its free variables are exactly those binders which are available at every occurrence.
+
+
+\subsection{Types}\label{sec:types}
+
+Iris terms are simply-typed.
+The judgment $\vctx \proves \wtt{\term}{\type}$ expresses that, in variable context $\vctx$, the term $\term$ has type $\type$.
+
+A variable context, $\vctx = x_1:\type_1, \dots, x_n:\type_n$, declares a list of variables and their types.
+In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $\vctx$.
+
+\judgment[Well-typed terms]{\vctx \proves_\Sig \wtt{\term}{\type}}
+\begin{mathparpagebreakable}
+%%% variables and function symbols
+	\axiom{x : \type \proves \wtt{x}{\type}}
+\and
+	\infer{\vctx \proves \wtt{\term}{\type}}
+		{\vctx, x:\type' \proves \wtt{\term}{\type}}
+\and
+	\infer{\vctx, x:\type', y:\type' \proves \wtt{\term}{\type}}
+		{\vctx, x:\type' \proves \wtt{\term[x/y]}{\type}}
+\and
+	\infer{\vctx_1, x:\type', y:\type'', \vctx_2 \proves \wtt{\term}{\type}}
+		{\vctx_1, x:\type'', y:\type', \vctx_2 \proves \wtt{\term[y/x,x/y]}{\type}}
+\and
+	\infer{
+		\vctx \proves \wtt{\term_1}{\type_1} \and
+		\cdots \and
+		\vctx \proves \wtt{\term_n}{\type_n} \and
+		\sigfn : \type_1, \dots, \type_n \to \type_{n+1} \in \SigFn
+	}{
+		\vctx \proves \wtt {\sigfn(\term_1, \dots, \term_n)} {\type_{n+1}}
+	}
+%%% products
+\and
+	\axiom{\vctx \proves \wtt{()}{1}}
+\and
+	\infer{\vctx \proves \wtt{\term}{\type_1} \and \vctx \proves \wtt{\termB}{\type_2}}
+		{\vctx \proves \wtt{(\term,\termB)}{\type_1 \times \type_2}}
+\and
+	\infer{\vctx \proves \wtt{\term}{\type_1 \times \type_2} \and i \in \{1, 2\}}
+		{\vctx \proves \wtt{\pi_i\,\term}{\type_i}}
+%%% functions
+\and
+	\infer{\vctx, x:\type \proves \wtt{\term}{\type'}}
+		{\vctx \proves \wtt{\Lam x. \term}{\type \to \type'}}
+\and
+	\infer
+	{\vctx \proves \wtt{\term}{\type \to \type'} \and \wtt{\termB}{\type}}
+	{\vctx \proves \wtt{\term(\termB)}{\type'}}
+%%% monoids
+\and
+        \infer{}{\vctx \proves \wtt\munit{\textlog{M}}}
+\and
+	\infer{\vctx \proves \wtt\melt{\textlog{M}}}{\vctx \proves \wtt{\mcore\melt}{\textlog{M}}}
+\and
+	\infer{\vctx \proves \wtt{\melt}{\textlog{M}} \and \vctx \proves \wtt{\meltB}{\textlog{M}}}
+		{\vctx \proves \wtt{\melt \mtimes \meltB}{\textlog{M}}}
+%%% props and predicates
+\\
+	\axiom{\vctx \proves \wtt{\FALSE}{\Prop}}
+\and
+	\axiom{\vctx \proves \wtt{\TRUE}{\Prop}}
+\and
+	\infer{\vctx \proves \wtt{\term}{\type} \and \vctx \proves \wtt{\termB}{\type}}
+		{\vctx \proves \wtt{\term =_\type \termB}{\Prop}}
+\and
+	\infer{\vctx \proves \wtt{\prop}{\Prop} \and \vctx \proves \wtt{\propB}{\Prop}}
+		{\vctx \proves \wtt{\prop \Ra \propB}{\Prop}}
+\and
+	\infer{\vctx \proves \wtt{\prop}{\Prop} \and \vctx \proves \wtt{\propB}{\Prop}}
+		{\vctx \proves \wtt{\prop \land \propB}{\Prop}}
+\and
+	\infer{\vctx \proves \wtt{\prop}{\Prop} \and \vctx \proves \wtt{\propB}{\Prop}}
+		{\vctx \proves \wtt{\prop \lor \propB}{\Prop}}
+\and
+	\infer{\vctx \proves \wtt{\prop}{\Prop} \and \vctx \proves \wtt{\propB}{\Prop}}
+		{\vctx \proves \wtt{\prop * \propB}{\Prop}}
+\and
+	\infer{\vctx \proves \wtt{\prop}{\Prop} \and \vctx \proves \wtt{\propB}{\Prop}}
+		{\vctx \proves \wtt{\prop \wand \propB}{\Prop}}
+\and
+	\infer{
+		\vctx, \var:\type \proves \wtt{\term}{\type} \and
+		\text{$\var$ is guarded in $\term$}
+	}{
+		\vctx \proves \wtt{\MU \var:\type. \term}{\type}
+	}
+\and
+	\infer{\vctx, x:\type \proves \wtt{\prop}{\Prop}}
+		{\vctx \proves \wtt{\Exists x:\type. \prop}{\Prop}}
+\and
+	\infer{\vctx, x:\type \proves \wtt{\prop}{\Prop}}
+		{\vctx \proves \wtt{\All x:\type. \prop}{\Prop}}
+\and
+	\infer{\vctx \proves \wtt{\melt}{\textlog{M}}}
+		{\vctx \proves \wtt{\ownGGhost{\melt}}{\Prop}}
+\and
+	\infer{\vctx \proves \wtt{\melt}{\type} \and \text{$\type$ is a CMRA}}
+		{\vctx \proves \wtt{\mval(\melt)}{\Prop}}
+\and
+	\infer{\vctx \proves \wtt{\prop}{\Prop}}
+		{\vctx \proves \wtt{\always\prop}{\Prop}}
+\and
+	\infer{\vctx \proves \wtt{\prop}{\Prop}}
+		{\vctx \proves \wtt{\later\prop}{\Prop}}
+\and
+	\infer{
+		\vctx \proves \wtt{\prop}{\Prop}
+	}{
+		\vctx \proves \wtt{\upd \prop}{\Prop}
+	}
+\end{mathparpagebreakable}
+
+\subsection{Proof rules}
+\label{sec:proof-rules}
+
+The judgment $\vctx \mid \pfctx \proves \prop$ says that with free variables $\vctx$, proposition $\prop$ holds whenever all assumptions $\pfctx$ hold.
+We implicitly assume that an arbitrary variable context, $\vctx$, is added to every constituent of the rules.
+Furthermore, an arbitrary \emph{boxed} assertion context $\always\pfctx$ may be added to every constituent.
+Axioms $\vctx \mid \prop \provesIff \propB$ indicate that both $\vctx \mid \prop \proves \propB$ and $\vctx \mid \propB \proves \prop$ can be derived.
+
+\judgment{\vctx \mid \pfctx \proves \prop}
+\paragraph{Laws of intuitionistic higher-order logic with equality.}
+This is entirely standard.
+\begin{mathparpagebreakable}
+\infer[Asm]
+  {\prop \in \pfctx}
+  {\pfctx \proves \prop}
+\and
+\infer[Eq]
+  {\pfctx \proves \prop \\ \pfctx \proves \term =_\type \term'}
+  {\pfctx \proves \prop[\term'/\term]}
+\and
+\infer[Refl]
+  {}
+  {\pfctx \proves \term =_\type \term}
+\and
+\infer[$\bot$E]
+  {\pfctx \proves \FALSE}
+  {\pfctx \proves \prop}
+\and
+\infer[$\top$I]
+  {}
+  {\pfctx \proves \TRUE}
+\and
+\infer[$\wedge$I]
+  {\pfctx \proves \prop \\ \pfctx \proves \propB}
+  {\pfctx \proves \prop \wedge \propB}
+\and
+\infer[$\wedge$EL]
+  {\pfctx \proves \prop \wedge \propB}
+  {\pfctx \proves \prop}
+\and
+\infer[$\wedge$ER]
+  {\pfctx \proves \prop \wedge \propB}
+  {\pfctx \proves \propB}
+\and
+\infer[$\vee$IL]
+  {\pfctx \proves \prop }
+  {\pfctx \proves \prop \vee \propB}
+\and
+\infer[$\vee$IR]
+  {\pfctx \proves \propB}
+  {\pfctx \proves \prop \vee \propB}
+\and
+\infer[$\vee$E]
+  {\pfctx \proves \prop \vee \propB \\
+   \pfctx, \prop \proves \propC \\
+   \pfctx, \propB \proves \propC}
+  {\pfctx \proves \propC}
+\and
+\infer[$\Ra$I]
+  {\pfctx, \prop \proves \propB}
+  {\pfctx \proves \prop \Ra \propB}
+\and
+\infer[$\Ra$E]
+  {\pfctx \proves \prop \Ra \propB \\ \pfctx \proves \prop}
+  {\pfctx \proves \propB}
+\and
+\infer[$\forall$I]
+  { \vctx,\var : \type\mid\pfctx \proves \prop}
+  {\vctx\mid\pfctx \proves \forall \var: \type.\; \prop}
+\and
+\infer[$\forall$E]
+  {\vctx\mid\pfctx \proves \forall \var :\type.\; \prop \\
+   \vctx \proves \wtt\term\type}
+  {\vctx\mid\pfctx \proves \prop[\term/\var]}
+\and
+\infer[$\exists$I]
+  {\vctx\mid\pfctx \proves \prop[\term/\var] \\
+   \vctx \proves \wtt\term\type}
+  {\vctx\mid\pfctx \proves \exists \var: \type. \prop}
+\and
+\infer[$\exists$E]
+  {\vctx\mid\pfctx \proves \exists \var: \type.\; \prop \\
+   \vctx,\var : \type\mid\pfctx , \prop \proves \propB}
+  {\vctx\mid\pfctx \proves \propB}
+% \and
+% \infer[$\lambda$]
+%   {}
+%   {\pfctx \proves (\Lam\var: \type. \prop)(\term) =_{\type\to\type'} \prop[\term/\var]}
+% \and
+% \infer[$\mu$]
+%   {}
+%   {\pfctx \proves \mu\var: \type. \prop =_{\type} \prop[\mu\var: \type. \prop/\var]}
+\end{mathparpagebreakable}
+Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda$ and $\mu$.
+
+
+\paragraph{Laws of (affine) bunched implications.}
+\begin{mathpar}
+\begin{array}{rMcMl}
+  \TRUE * \prop &\provesIff& \prop \\
+  \prop * \propB &\provesIff& \propB * \prop \\
+  (\prop * \propB) * \propC &\provesIff& \prop * (\propB * \propC)
+\end{array}
+\and
+\infer[$*$-mono]
+  {\prop_1 \proves \propB_1 \and
+   \prop_2 \proves \propB_2}
+  {\prop_1 * \prop_2 \proves \propB_1 * \propB_2}
+\and
+\inferB[$\wand$I-E]
+  {\prop * \propB \proves \propC}
+  {\prop \proves \propB \wand \propC}
+\end{mathpar}
+
+\paragraph{Laws for ghosts and physical resources.}
+\begin{mathpar}
+\begin{array}{rMcMl}
+\ownGGhost{\melt} * \ownGGhost{\meltB} &\provesIff&  \ownGGhost{\melt \mtimes \meltB} \\
+\ownGGhost{\melt} &\proves& \mval(\melt) \\
+\TRUE &\proves&  \ownGGhost{\munit}
+\end{array}
+\and
+\and
+\begin{array}{c}
+\ownPhys{\state} * \ownPhys{\state'} \proves \FALSE
+\end{array}
+\end{mathpar}
+
+\paragraph{Laws for the later modality.}
+\begin{mathpar}
+\infer[$\later$-mono]
+  {\pfctx \proves \prop}
+  {\pfctx \proves \later{\prop}}
+\and
+\infer[L{\"o}b]
+  {}
+  {(\later\prop\Ra\prop) \proves \prop}
+\and
+\infer[$\later$-$\exists$]
+  {\text{$\type$ is inhabited}}
+  {\later{\Exists x:\type.\prop} \proves \Exists x:\type. \later\prop}
+\\\\
+\begin{array}[c]{rMcMl}
+  \later{(\prop \wedge \propB)} &\provesIff& \later{\prop} \wedge \later{\propB}  \\
+  \later{(\prop \vee \propB)} &\provesIff& \later{\prop} \vee \later{\propB} \\
+\end{array}
+\and
+\begin{array}[c]{rMcMl}
+  \later{\All x.\prop} &\provesIff& \All x. \later\prop \\
+  \Exists x. \later\prop &\proves& \later{\Exists x.\prop}  \\
+  \later{(\prop * \propB)} &\provesIff& \later\prop * \later\propB
+\end{array}
+\end{mathpar}
+A type $\type$ being \emph{inhabited} means that $ \proves \wtt{\term}{\type}$ is derivable for some $\term$.
+
+\paragraph{Laws for the always modality.}
+\begin{mathpar}
+\infer[$\always$I]
+  {\always{\pfctx} \proves \prop}
+  {\always{\pfctx} \proves \always{\prop}}
+\and
+\infer[$\always$E]{}
+  {\always{\prop} \proves \prop}
+\and
+\begin{array}[c]{rMcMl}
+  \always{(\prop \land \propB)} &\proves& \always{(\prop * \propB)} \\
+  \always{\prop} \land \propB &\proves& \always{\prop} * \propB \\
+  \always{\later\prop} &\provesIff& \later\always{\prop} \\
+\end{array}
+\and
+\begin{array}[c]{rMcMl}
+  \always{(\prop \land \propB)} &\provesIff& \always{\prop} \land \always{\propB} \\
+  \always{(\prop \lor \propB)} &\provesIff& \always{\prop} \lor \always{\propB} \\
+  \always{\All x. \prop} &\provesIff& \All x. \always{\prop} \\
+  \always{\Exists x. \prop} &\provesIff& \Exists x. \always{\prop} \\
+\end{array}
+\and
+{ \term =_\type \term' \proves \always \term =_\type \term'}
+\and
+{ \ownGGhost{\mcore\melt} \proves \always \ownGGhost{\mcore\melt}}
+\and
+{ \mval(\melt) \proves \always \mval(\melt)}
+\end{mathpar}
+
+\paragraph{Laws for the update modality.}
+\begin{mathpar}
+\infer[upd-intro]
+{}{\prop \proves \upd \prop}
+
+\infer[upd-trans]
+{}
+{\upd \upd \prop \proves \upd \prop}
+
+\infer[upd-frame]
+{}{\propB * \upd\prop \proves \upd (\propB * \prop)}
+
+\inferH{upd-update}
+{\melt \mupd \meltsB}
+{\ownGGhost\melt \proves \upd \Exists\meltB\in\meltsB. \ownGGhost\meltB}
+\end{mathpar}
+
+\subsection{Soundness}
+
+The soundness statement of the logic 
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "iris"
+%%% End:
