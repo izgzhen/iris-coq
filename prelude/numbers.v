@@ -566,3 +566,10 @@ Proof.
   exists (mk_Qp (q2 - q1 / 2%Z) Hq2'). split; [by rewrite Qp_div_2|].
   apply Qp_eq; simpl. ring.
 Qed.
+
+Lemma Qp_ge_1 (q: Qp): ¬ ((1 + q)%Qp ≤ 1%Qp)%Qc.
+Proof.
+  intros Hle.
+  apply (Qcplus_le_mono_l q 0 1) in Hle.
+  apply Qcle_ngt in Hle. by destruct q.
+Qed.

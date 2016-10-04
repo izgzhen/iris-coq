@@ -35,3 +35,6 @@ Global Instance frac_full_exclusive : Exclusive 1%Qp.
 Proof.
   move=> y /Qcle_not_lt [] /=. by rewrite -{1}(Qcplus_0_r 1) -Qcplus_lt_mono_l.
 Qed.
+
+Lemma invalid_plus_q: ∀ (q: Qp), ¬ ✓ (1 + q)%Qp.
+Proof. intros q H. by apply (Qp_ge_1 q). Qed.
