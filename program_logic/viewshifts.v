@@ -1,5 +1,5 @@
-From iris.program_logic Require Export pviewshifts.
-From iris.proofmode Require Import pviewshifts invariants.
+From iris.program_logic Require Export invariants.
+From iris.proofmode Require Import tactics.
 
 Definition vs `{irisG Λ Σ} (E1 E2 : coPset) (P Q : iProp Σ) : iProp Σ :=
   (□ (P → |={E1,E2}=> Q))%I.

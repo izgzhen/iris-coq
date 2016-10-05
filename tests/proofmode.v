@@ -1,5 +1,5 @@
 From iris.proofmode Require Import tactics.
-From iris.proofmode Require Import pviewshifts invariants.
+From iris.program_logic Require Import invariants.
 
 Lemma demo_0 {M : ucmraT} (P Q : uPred M) :
   □ (P ∨ Q) ⊢ (∀ x, x = 0 ∨ x = 1) → (Q ∨ P).

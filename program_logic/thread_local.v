@@ -1,5 +1,6 @@
+From iris.program_logic Require Export invariants.
 From iris.algebra Require Export gmap gset coPset.
-From iris.proofmode Require Import invariants tactics.
+From iris.proofmode Require Import tactics.
 Import uPred.
 
 Definition tlN : namespace := nroot .@ "tl".

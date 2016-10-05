@@ -2,7 +2,7 @@ From iris.program_logic Require Export weakestpre.
 From iris.program_logic Require Import ownership ectx_lifting. (* for ownP *)
 From iris.heap_lang Require Export lang.
 From iris.heap_lang Require Import tactics.
-From iris.proofmode Require Import weakestpre.
+From iris.proofmode Require Import tactics.
 From iris.prelude Require Import fin_maps.
 Import uPred.
 

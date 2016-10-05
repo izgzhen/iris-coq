@@ -5,7 +5,7 @@ under max can be found in `heap_lang/lib/counter.v`. *)
 From iris.program_logic Require Export weakestpre.
 From iris.heap_lang Require Export lang.
 From iris.program_logic Require Export hoare.
-From iris.proofmode Require Import invariants tactics.
+From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation.
 Import uPred.
 
