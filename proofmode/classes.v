@@ -73,5 +73,8 @@ Global Arguments from_vs : clear implicits.
 
 Class ElimVs (P P' : uPred M) (Q Q' : uPred M) :=
   elim_vs : P ★ (P' -★ Q') ⊢ Q.
-Arguments elim_vs _ _ _ _ {_}.
+Global Arguments elim_vs _ _ _ _ {_}.
+
+Lemma elim_vs_dummy P Q : ElimVs P P Q Q.
+Proof. by rewrite /ElimVs wand_elim_r. Qed.
 End classes.

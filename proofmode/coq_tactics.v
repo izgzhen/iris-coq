@@ -531,17 +531,9 @@ Proof.
     by rewrite right_id assoc (into_wand R) always_if_elim wand_elim_r wand_elim_r.
 Qed.
 
-Class IntoAssert (P : uPred M) (Q : uPred M) (R : uPred M) :=
-  into_assert : R ★ (P -★ Q) ⊢ Q.
-Global Arguments into_assert _ _ _ {_}.
-Lemma into_assert_default P Q : IntoAssert P Q P.
-Proof. by rewrite /IntoAssert wand_elim_r. Qed.
-Global Instance to_assert_rvs P Q : IntoAssert P (|=r=> Q) (|=r=> P).
-Proof. by rewrite /IntoAssert rvs_frame_r wand_elim_r rvs_trans. Qed.
-
 Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q lr js R P1 P2 P1' Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
-  IntoWand R P1 P2 → IntoAssert P1 Q P1' →
+  IntoWand R P1 P2 → ElimVs P1' P1 Q Q →
   ('(Δ1,Δ2) ← envs_split lr js Δ';
     Δ2' ← envs_app false (Esnoc Enil j P2) Δ2;
     Some (Δ1,Δ2')) = Some (Δ1,Δ2') → (* does not preserve position of [j] *)
@@ -553,7 +545,7 @@ Proof.
   rewrite envs_lookup_sound // envs_split_sound //.
   rewrite (envs_app_sound Δ2) //; simpl.
   rewrite right_id (into_wand R) HP1 assoc -(comm _ P1') -assoc.
-  rewrite -(into_assert P1 Q); apply sep_mono_r, wand_intro_l.
+  rewrite -(elim_vs P1' P1 Q Q). apply sep_mono_r, wand_intro_l.
   by rewrite always_if_elim assoc !wand_elim_r.
 Qed.
 
@@ -614,11 +606,11 @@ Proof.
   by rewrite -(idemp uPred_and Δ) {1}(persistentP Δ) {1}HP HPQ impl_elim_r.
 Qed.
 
-Lemma tac_assert Δ Δ1 Δ2 Δ2' lr js j P Q R :
-  IntoAssert P Q R →
+Lemma tac_assert Δ Δ1 Δ2 Δ2' lr js j P P' Q :
+  ElimVs P' P Q Q →
   envs_split lr js Δ = Some (Δ1,Δ2) →
   envs_app false (Esnoc Enil j P) Δ2 = Some Δ2' →
-  (Δ1 ⊢ R) → (Δ2' ⊢ Q) → Δ ⊢ Q.
+  (Δ1 ⊢ P') → (Δ2' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ??? HP HQ. rewrite envs_split_sound //.
   rewrite (envs_app_sound Δ2) //; simpl.

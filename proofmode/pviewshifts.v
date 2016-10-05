@@ -36,10 +36,6 @@ Global Instance frame_pvs E1 E2 R P Q :
   Frame R P Q → Frame R (|={E1,E2}=> P) (|={E1,E2}=> Q).
 Proof. rewrite /Frame=><-. by rewrite pvs_frame_l. Qed.
 
-Global Instance to_assert_pvs E1 E2 P Q :
-  IntoAssert P (|={E1,E2}=> Q) (|={E1}=> P).
-Proof. intros. by rewrite /IntoAssert pvs_frame_r wand_elim_r pvs_trans. Qed.
-
 Global Instance is_except_last_pvs E1 E2 P : IsExceptLast (|={E1,E2}=> P).
 Proof. by rewrite /IsExceptLast except_last_pvs. Qed.
 
@@ -47,10 +43,10 @@ Global Instance from_vs_pvs E P : FromVs (|={E}=> P) P.
 Proof. by rewrite /FromVs -rvs_pvs. Qed.
 
 Global Instance elim_vs_rvs_pvs E1 E2 P Q :
-  ElimVs (|=r=> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q).
+  ElimVs (|=r=> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q) | 2.
 Proof. by rewrite /ElimVs (rvs_pvs E1) pvs_frame_r wand_elim_r pvs_trans. Qed.
 Global Instance elim_vs_pvs_pvs E1 E2 E3 P Q :
-  ElimVs (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
+  ElimVs (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q) | 1.
 Proof. by rewrite /ElimVs pvs_frame_r wand_elim_r pvs_trans. Qed.
 End pvs.
 
