@@ -39,6 +39,9 @@ Global Arguments into_and : clear implicits.
 Lemma mk_into_and_sep p P Q1 Q2 : (P ⊢ Q1 ★ Q2) → IntoAnd p P Q1 Q2.
 Proof. rewrite /IntoAnd=>->. destruct p; auto using sep_and. Qed.
 
+Class FromOp {A : cmraT} (a b1 b2 : A) := from_op : b1 ⋅ b2 ≡ a.
+Global Arguments from_op {_} _ _ _ {_}.
+
 Class IntoOp {A : cmraT} (a b1 b2 : A) := into_op : a ≡ b1 ⋅ b2.
 Global Arguments into_op {_} _ _ _ {_}.
 
