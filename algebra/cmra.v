@@ -1208,8 +1208,8 @@ Section option.
 
   Lemma Some_included x y : Some x ≼ Some y ↔ x ≡ y ∨ x ≼ y.
   Proof. rewrite option_included; naive_solver. Qed.
-  Lemma Some_included' `{CMRATotal A} x y : Some x ≼ Some y ↔ x ≡ y ∨ x ≼ y.
-  Proof. rewrite Some_included; naive_solver. Qed.
+  Lemma Some_included' `{CMRATotal A} x y : Some x ≼ Some y ↔ x ≼ y.
+  Proof. rewrite Some_included. split. by intros [->|?]. eauto. Qed.
   Lemma is_Some_included mx my : mx ≼ my → is_Some mx → is_Some my.
   Proof. rewrite -!not_eq_None_Some option_included. naive_solver. Qed.
 End option.
