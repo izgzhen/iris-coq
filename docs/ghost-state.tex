@@ -1,0 +1,43 @@
+\section{Modular Dynamic Higher-Order Resources}
+\label{sec:hogs}
+
+The logic described in \Sref{sec:base-logic} works over an arbitrary CMRA $\monoid$ defining the structure of the resources.
+It turns out that we can generalize this further and permit picking CMRAs ``$\iFunc(\Prop)$'' that depend on the structure of assertions themselves.
+Of course, $\Prop$ is just the syntactic type of assertions; for this to make sense we have to look at the semantics.
+
+To instantiate the logic, you pick a family of locally contractive bifunctors $(\iFunc_i : \COFEs \to \CMRAs)_{i \in \mathcal{I}}$.
+
+From this, we construct the bifunctor defining the overall resources as follows:
+\begin{align*}
+  \textdom{ResF}(\cofe^\op, \cofe) \eqdef{}& \prod_{i \in \mathcal I} \mathbb{N} \fpfn \iFunc_i(\cofe^\op, \cofe)
+\end{align*}
+$\textdom{ResF}(\cofe^\op, \cofe)$ is a CMRA by lifting the individual CMRAs pointwise, and it has a unit (using the empty finite partial functions).
+Furthermore, since the $\iFunc_i$ are locally contractive, so is $\textdom{ResF}$.
+
+Now we can write down the recursive domain equation:
+\[ \iPreProp \cong \UPred(\textdom{ResF}(\iPreProp, \iPreProp)) \]
+$\iPreProp$ is a COFE defined as the fixed-point of a locally contractive bifunctor.
+This fixed-point exists and is unique by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}.
+We do not need to consider how the object is constructed. 
+We only need the isomorphism, given by
+\begin{align*}
+  \Res &\eqdef \textdom{ResF}(\iPreProp, \iPreProp) \\
+  \iProp &\eqdef \UPred(\Res) \\
+	\wIso &: \iProp \nfn \iPreProp \\
+	\wIso^{-1} &: \iPreProp \nfn \iProp
+\end{align*}
+
+Notice that $\iProp$ is the semantic model of assertions for  the logic described in \Sref{sec:base-logic} with $\Res$:
+\[ \Sem{\Prop} \eqdef \iProp = \UPred(\Res) \]
+We thus obtain all the rules of \Sref{sec:base-logic}, and furthermore, we can use the maps $\wIso$ and $\wIso^{-1}$ \emph{in the logic} to convert between logical assertions and the domain $\iPreProp$ which is used in the construction of $\Res$ -- so from elements of $\iPreProp$, we can construct elements of $\Sem{\textlog M}$, which are the elements that can be owned in our logic.
+
+\ralf{TODO: Describe the pattern of only assuming some elements of the index family to indicate a particular functor.}
+\ralf{TODO: Show the rules for ownership in this world.}
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "iris"
+%%% End:

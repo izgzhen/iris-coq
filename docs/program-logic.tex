@@ -1,4 +1,5 @@
 \section{Language}
+\label{sec:language}
 
 A \emph{language} $\Lang$ consists of a set \textdom{Expr} of \emph{expressions} (metavariable $\expr$), a set \textdom{Val} of \emph{values} (metavariable $\val$), and a set \textdom{State} of \emph{states} (metvariable $\state$) such that
 \begin{itemize}
@@ -58,6 +59,7 @@ For any language $\Lang$, we define the corresponding thread-pool semantics.
 
 \clearpage
 \section{Program Logic}
+\label{sec:program-logic}
 
 \ralf{TODO: Right now, this is a dump of all the things that moved out of the base...}
 
@@ -243,32 +245,7 @@ Notice that this is stronger than saying that the thread pool can reduce; we act
 \subsection{Iris model}
 
 \paragraph{Semantic domain of assertions.}
-The first complicated task in building a model of full Iris is defining the semantic model of $\Prop$.
-We start by defining the functor that assembles the CMRAs we need to the global resource CMRA:
-\begin{align*}
-  \textdom{ResF}(\cofe^\op, \cofe) \eqdef{}& \record{\wld: \mathbb{N} \fpfn \agm(\latert \cofe), \pres: \maybe{\exm(\textdom{State})}, \ghostRes: \iFunc(\cofe^\op, \cofe)}
-\end{align*}
-Above, $\maybe\monoid$ is the monoid obtained by adding a unit to $\monoid$.
-(It's not a coincidence that we used the same notation for the range of the core; it's the same type either way: $\monoid + 1$.)
-Remember that $\iFunc$ is the user-chosen bifunctor from $\COFEs$ to $\CMRAs$ (see~\Sref{sec:logic}).
-$\textdom{ResF}(\cofe^\op, \cofe)$ is a CMRA by lifting the individual CMRAs pointwise.
-Furthermore, since $\Sigma$ is locally contractive, so is $\textdom{ResF}$.
 
-Now we can write down the recursive domain equation:
-\[ \iPreProp \cong \UPred(\textdom{ResF}(\iPreProp, \iPreProp)) \]
-$\iPreProp$ is a COFE defined as the fixed-point of a locally contractive bifunctor.
-This fixed-point exists and is unique by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}.
-We do not need to consider how the object is constructed. 
-We only need the isomorphism, given by
-\begin{align*}
-  \Res &\eqdef \textdom{ResF}(\iPreProp, \iPreProp) \\
-  \iProp &\eqdef \UPred(\Res) \\
-	\wIso &: \iProp \nfn \iPreProp \\
-	\wIso^{-1} &: \iPreProp \nfn \iProp
-\end{align*}
-
-We then pick $\iProp$ as the interpretation of $\Prop$:
-\[ \Sem{\Prop} \eqdef \iProp \]
 
 
 \paragraph{Interpretation of assertions.}
