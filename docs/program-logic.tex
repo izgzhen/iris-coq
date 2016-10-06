@@ -113,13 +113,13 @@ Finally, we can define the core piece of the program logic, the assertion that r
 We assume that everything making up the definition of the language, \ie values, expressions, states, the conversion functions, reduction relation and all their properties, are suitably reflected into the logic (\ie they are part of the signature $\Sig$).
 
 \begin{align*}
-  \textdom{pre-wp}(\textdom{wp})(\mask, \expr, \pred) \eqdef{}&
-    (\Exists\val. \toval(\expr) = \val \land \pvs[\mask] \prop) \lor {}\\
-        &\Bigl(\toval(\expr) = \bot \land \All \state. \ownGhost{\gname_{\textmon{State}}}{\authfull \state} \vsW[\mask][\emptyset] {}\\
+  \textdom{wp} \eqdef{}& \MU \textdom{wp}. \Lam \mask, \expr, \pred. \\
+        & (\Exists\val. \toval(\expr) = \val \land \pvs[\mask] \prop) \lor {}\\
+        & \Bigl(\toval(\expr) = \bot \land \All \state. \ownGhost{\gname_{\textmon{State}}}{\authfull \state} \vsW[\mask][\emptyset] {}\\
         &\qquad \red(\expr, \state) * \later\All \expr', \state', \bar\expr. (\expr, \state \step \expr', \state', \bar\expr) \vsW[\emptyset][\mask] {}\\
         &\qquad\qquad \ownGhost{\gname_{\textmon{State}}}{\authfull \state'} * \textdom{wp}(\mask, \expr', \pred) * \Sep_{\expr'' \in \bar\expr} \textdom{wp}(\top, \expr'', \Lam \any. \TRUE)\Bigr) \\
 %  (* value case *)
-  \wpre\expr[\mask]{\Ret\val. \prop} \eqdef{}& (\MU \textdom{wp}. \textdom{pre-wp}(\textdom{wp}))(\mask, \expr, \Lam\val.\prop)
+  \wpre\expr[\mask]{\Ret\val. \prop} \eqdef{}& \textdom{wp}(\mask, \expr, \Lam\val.\prop)
 \end{align*}
 If we leave away the mask, we assume it to default to $\top$.
 
