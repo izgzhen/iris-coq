@@ -31,20 +31,18 @@ Instance dec_agree_pcore : PCore (dec_agree A) := Some.
 
 Definition dec_agree_ra_mixin : RAMixin (dec_agree A).
 Proof.
-  split.
-  - apply _.
-  - intros x y cx ? [=<-]; eauto.
-  - apply _.
+  apply ra_total_mixin; apply _ || eauto.
   - intros [?|] [?|] [?|]; by repeat (simplify_eq/= || case_match).
   - intros [?|] [?|]; by repeat (simplify_eq/= || case_match).
-  - intros [?|] ? [=<-]; by repeat (simplify_eq/= || case_match).
   - intros [?|]; by repeat (simplify_eq/= || case_match).
-  - intros [?|] [?|] ?? [=<-]; eauto.
   - by intros [?|] [?|] ?.
 Qed.
 
 Canonical Structure dec_agreeR : cmraT :=
   discreteR (dec_agree A) dec_agree_ra_mixin.
+
+Global Instance dec_agree_total : CMRATotal dec_agreeR.
+Proof. intros x. by exists x. Qed.
 
 (* Some properties of this CMRA *)
 Global Instance dec_agree_persistent (x : dec_agreeR) : Persistent x.
@@ -59,8 +57,10 @@ Proof. destruct x; by rewrite /= ?decide_True. Qed.
 Lemma dec_agree_op_inv (x1 x2 : dec_agree A) : ✓ (x1 ⋅ x2) → x1 = x2.
 Proof. destruct x1, x2; by repeat (simplify_eq/= || case_match). Qed.
 
-Lemma DecAgree_included a b : DecAgree a ≼ DecAgree b → a = b.
-Proof. intros [[c|] [=]%leibniz_equiv_iff]. by simplify_option_eq. Qed.
+Lemma DecAgree_included a b : DecAgree a ≼ DecAgree b ↔ a = b.
+Proof.
+  split. intros [[c|] [=]%leibniz_equiv]. by simplify_option_eq. by intros ->.
+Qed.
 End dec_agree.
 
 Arguments dec_agreeC : clear implicits.
