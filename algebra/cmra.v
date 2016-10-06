@@ -1208,14 +1208,33 @@ Section option.
 
   Lemma Some_included x y : Some x ≼ Some y ↔ x ≡ y ∨ x ≼ y.
   Proof. rewrite option_included; naive_solver. Qed.
-  Lemma Some_included' `{CMRATotal A} x y : Some x ≼ Some y ↔ x ≼ y.
+  Lemma Some_included_2 x y : x ≼ y → Some x ≼ Some y.
+  Proof. rewrite Some_included; eauto. Qed.
+  Lemma Some_included_total `{CMRATotal A} x y : Some x ≼ Some y ↔ x ≼ y.
   Proof. rewrite Some_included. split. by intros [->|?]. eauto. Qed.
+  Lemma Some_included_exclusive x `{!Exclusive x} y :
+    Some x ≼ Some y → ✓ y → x ≡ y.
+  Proof. move=> /Some_included [//|/exclusive_included]; tauto. Qed.
+
   Lemma is_Some_included mx my : mx ≼ my → is_Some mx → is_Some my.
   Proof. rewrite -!not_eq_None_Some option_included. naive_solver. Qed.
 End option.
 
 Arguments optionR : clear implicits.
 Arguments optionUR : clear implicits.
+
+Section option_prod.
+  Context {A B : cmraT}.
+  Lemma Some_pair_included  (x1 x2 : A) (y1 y2 : B) :
+    Some (x1,y1) ≼ Some (x2,y2) → Some x1 ≼ Some x2 ∧ Some y1 ≼ Some y2.
+  Proof. rewrite !Some_included. intros [[??]|[??]%prod_included]; eauto. Qed.
+  Lemma Some_pair_included_total_1 `{CMRATotal A} (x1 x2 : A) (y1 y2 : B) :
+    Some (x1,y1) ≼ Some (x2,y2) → x1 ≼ x2 ∧ Some y1 ≼ Some y2.
+  Proof. intros ?%Some_pair_included. by rewrite -(Some_included_total x1). Qed.
+  Lemma Some_pair_included_total_2 `{CMRATotal B} (x1 x2 : A) (y1 y2 : B) :
+    Some (x1,y1) ≼ Some (x2,y2) → Some x1 ≼ Some x2 ∧ y1 ≼ y2.
+  Proof. intros ?%Some_pair_included. by rewrite -(Some_included_total y1). Qed.
+End option_prod.
 
 Instance option_fmap_cmra_monotone {A B : cmraT} (f: A → B) `{!CMRAMonotone f} :
   CMRAMonotone (fmap f : option A → option B).
