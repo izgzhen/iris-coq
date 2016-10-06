@@ -1492,7 +1492,10 @@ Proof.
   eapply IH with x'; eauto using cmra_validN_S, cmra_validN_op_l.
 Qed.
 
-Theorem soundness : ¬ (True ⊢ False).
+Corollary soundnessN n : ¬ (True ⊢ Nat.iter n (λ P, |=r=> ▷ P) False).
+Proof. exact (adequacy False n). Qed.
+
+Corollary soundness : ¬ (True ⊢ False).
 Proof. exact (adequacy False 0). Qed.
 End uPred_logic.
 
