@@ -188,87 +188,90 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 \subsection{Proof rules}
 \label{sec:proof-rules}
 
-The judgment $\vctx \mid \pfctx \proves \prop$ says that with free variables $\vctx$, proposition $\prop$ holds whenever all assumptions $\pfctx$ hold.
-We implicitly assume that an arbitrary variable context, $\vctx$, is added to every constituent of the rules.
-Furthermore, an arbitrary \emph{boxed} assertion context $\always\pfctx$ may be added to every constituent.
-Axioms $\vctx \mid \prop \provesIff \propB$ indicate that both $\vctx \mid \prop \proves \propB$ and $\vctx \mid \propB \proves \prop$ can be derived.
+The judgment $\vctx \mid \prop \proves \propB$ says that with free variables $\vctx$, proposition $\propB$ holds whenever assumption $\prop$ holds.
+Most of the rules will entirely omit the variable contexts $\vctx$.
+In this case, we assume the same arbitrary context is used for every constituent of the rules.
+%Furthermore, an arbitrary \emph{boxed} assertion context $\always\pfctx$ may be added to every constituent.
+Axioms $\vctx \mid \prop \provesIff \propB$ indicate that both $\vctx \mid \prop \proves \propB$ and $\vctx \mid \propB \proves \prop$ are proof rules of the logic.
 
-\judgment{\vctx \mid \pfctx \proves \prop}
+\judgment{\vctx \mid \prop \proves \propB}
 \paragraph{Laws of intuitionistic higher-order logic with equality.}
 This is entirely standard.
 \begin{mathparpagebreakable}
 \infer[Asm]
-  {\prop \in \pfctx}
-  {\pfctx \proves \prop}
+  {}
+  {\prop \proves \prop}
+\and
+\infer[Subst]
+  {\prop \proves \propB \and \propB \proves \propC}
+  {\prop \proves \propC}
 \and
 \infer[Eq]
-  {\pfctx \proves \prop \\ \pfctx \proves \term =_\type \term'}
-  {\pfctx \proves \prop[\term'/\term]}
+  {\prop \proves \propB \\ \prop \proves \term =_\type \term'}
+  {\prop \proves \propB[\term'/\term]}
 \and
 \infer[Refl]
   {}
-  {\pfctx \proves \term =_\type \term}
+  {\prop \proves \term =_\type \term}
 \and
 \infer[$\bot$E]
-  {\pfctx \proves \FALSE}
-  {\pfctx \proves \prop}
+  {}
+  {\FALSE \proves \prop}
 \and
 \infer[$\top$I]
   {}
-  {\pfctx \proves \TRUE}
+  {\prop \proves \TRUE}
 \and
 \infer[$\wedge$I]
-  {\pfctx \proves \prop \\ \pfctx \proves \propB}
-  {\pfctx \proves \prop \wedge \propB}
+  {\prop \proves \propB \\ \prop \proves \propC}
+  {\prop \proves \propB \land \propC}
 \and
 \infer[$\wedge$EL]
-  {\pfctx \proves \prop \wedge \propB}
-  {\pfctx \proves \prop}
+  {\prop \proves \propB \land \propC}
+  {\prop \proves \propB}
 \and
 \infer[$\wedge$ER]
-  {\pfctx \proves \prop \wedge \propB}
-  {\pfctx \proves \propB}
+  {\prop \proves \propB \land \propC}
+  {\prop \proves \propC}
 \and
 \infer[$\vee$IL]
-  {\pfctx \proves \prop }
-  {\pfctx \proves \prop \vee \propB}
+  {\prop \proves \propB }
+  {\prop \proves \propB \lor \propC}
 \and
 \infer[$\vee$IR]
-  {\pfctx \proves \propB}
-  {\pfctx \proves \prop \vee \propB}
+  {\prop \proves \propC}
+  {\prop \proves \propB \lor \propC}
 \and
 \infer[$\vee$E]
-  {\pfctx \proves \prop \vee \propB \\
-   \pfctx, \prop \proves \propC \\
-   \pfctx, \propB \proves \propC}
-  {\pfctx \proves \propC}
+  {\prop \proves \propC \\
+   \propB \proves \propC}
+  {\prop \lor \propB \proves \propC}
 \and
 \infer[$\Ra$I]
-  {\pfctx, \prop \proves \propB}
-  {\pfctx \proves \prop \Ra \propB}
+  {\prop \land \propB \proves \propC}
+  {\prop \proves \propB \Ra \propC}
 \and
 \infer[$\Ra$E]
-  {\pfctx \proves \prop \Ra \propB \\ \pfctx \proves \prop}
-  {\pfctx \proves \propB}
+  {\prop \proves \propB \Ra \propC \\ \prop \proves \propB}
+  {\prop \proves \propC}
 \and
 \infer[$\forall$I]
-  { \vctx,\var : \type\mid\pfctx \proves \prop}
-  {\vctx\mid\pfctx \proves \forall \var: \type.\; \prop}
+  { \vctx,\var : \type\mid\prop \proves \propB}
+  {\vctx\mid\prop \proves \All \var: \type. \propB}
 \and
 \infer[$\forall$E]
-  {\vctx\mid\pfctx \proves \forall \var :\type.\; \prop \\
+  {\vctx\mid\prop \proves \All \var :\type. \propB \\
    \vctx \proves \wtt\term\type}
-  {\vctx\mid\pfctx \proves \prop[\term/\var]}
+  {\vctx\mid\prop \proves \propB[\term/\var]}
 \and
 \infer[$\exists$I]
-  {\vctx\mid\pfctx \proves \prop[\term/\var] \\
+  {\vctx\mid\prop \proves \propB[\term/\var] \\
    \vctx \proves \wtt\term\type}
-  {\vctx\mid\pfctx \proves \exists \var: \type. \prop}
+  {\vctx\mid\prop \proves \exists \var: \type. \propB}
 \and
 \infer[$\exists$E]
-  {\vctx\mid\pfctx \proves \exists \var: \type.\; \prop \\
-   \vctx,\var : \type\mid\pfctx , \prop \proves \propB}
-  {\vctx\mid\pfctx \proves \propB}
+  {\vctx,\var : \type\mid\prop \proves \propB}
+  {\vctx\mid\Exists \var: \type. \prop \proves \propB}
 % \and
 % \infer[$\lambda$]
 %   {}
