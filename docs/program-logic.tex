@@ -94,12 +94,16 @@ The following assertion states that an invariant with name $\iname$ exists and m
 \paragraph{View Shifts.}
 Next, we define \emph{view updates}, which are essentially the same as the resource updates of the base logic ($\Sref{sec:base-logic}$), except that they also have access to world satisfaction and can enable and disable invariants:
 \[ \pvs[\mask_1][\mask_2] \prop \eqdef W * \ownGhost{\gname_{\textmon{En}}}{\mask_1} \wand W * \ownGhost{\gname_{\textmon{En}}}{\mask_2} * \prop \]
+Here, $\mask_1$ and $\mask_2$ are the \emph{masks} of the view update, defining which invariants have to be (at least!) available before and after the update.
+We will write $\top$ for the largest possible mask, $\mathbb N$.
 
 We further define the notions of \emph{view shifts} and \emph{linear view shifts}:
 \begin{align*}
   \prop \vs[\mask_1][\mask_2] \propB \eqdef{}& \always(\prop \Ra \pvs[\mask_1][\mask_2] \propB) \\
   \prop \vsW[\mask_1][\mask_2] \propB \eqdef{}& \prop \wand \pvs[\mask_1][\mask_2] \propB
 \end{align*}
+
+We will write $\pvs[\mask] \prop$ for $\pvs[\mask][\mask]\prop$, and similar for the view shifts.
 
 \ralf{Show some proof rules.}
 
@@ -113,10 +117,11 @@ We assume that everything making up the definition of the language, \ie values, 
     (\Exists\val. \toval(\expr) = \val \land \pvs[\mask] \prop) \lor {}\\
         &\Bigl(\toval(\expr) = \bot \land \All \state. \ownGhost{\gname_{\textmon{State}}}{\authfull \state} \vsW[\mask][\emptyset] {}\\
         &\qquad \red(\expr, \state) * \later\All \expr', \state', \bar\expr. (\expr, \state \step \expr', \state', \bar\expr) \vsW[\emptyset][\mask] {}\\
-        &\qquad\qquad \ownGhost{\gname_{\textmon{State}}}{\authfull \state'} * \textdom{wp}(\mask, \expr', \pred) * \Sep_{\expr'' \in \bar\expr} \textdom{wp}(\mathbb N, \expr'', \Lam \any. \TRUE)\Bigr) \\
+        &\qquad\qquad \ownGhost{\gname_{\textmon{State}}}{\authfull \state'} * \textdom{wp}(\mask, \expr', \pred) * \Sep_{\expr'' \in \bar\expr} \textdom{wp}(\top, \expr'', \Lam \any. \TRUE)\Bigr) \\
 %  (* value case *)
   \wpre\expr[\mask]{\Ret\val. \prop} \eqdef{}& (\MU \textdom{wp}. \textdom{pre-wp}(\textdom{wp}))(\mask, \expr, \Lam\val.\prop)
 \end{align*}
+If we leave away the mask, we assume it to default to $\top$.
 
 This ties the authoritative part of \textmon{State} to the actual physical state of the reduction witnessed by the weakest precondition.
 The fragment will then be available to the user of the logic, as their way of talking about the physical state:
