@@ -46,8 +46,9 @@ We collect here some important and frequently used derived proof rules.
   An assertion $\prop$ is \emph{persistent} if $\prop \proves \always\prop$.
 \end{defn}
 
+\ralf{Needs update.}
 Of course, $\always\prop$ is persistent for any $\prop$.
-Furthermore, by the proof rules given in \Sref{sec:proof-rules}, $t = t'$ as well as $\ownGGhost{\mcore\melt}$, $\mval(\melt)$ and $\knowInv\iname\prop$ are persistent.
+Furthermore, by the proof rules given in \Sref{sec:proof-rules}, $t = t'$ as well as $\ownGhost\gname{\mcore\melt}$, $\mval(\melt)$ and $\knowInv\iname\prop$ are persistent.
 Persistence is preserved by conjunction, disjunction, separating conjunction as well as universal and existential quantification.
 
 In our proofs, we will implicitly add and remove $\always$ from persistent assertions as necessary, and generally treat them like normal, non-linear assumptions.
@@ -98,7 +99,7 @@ The following rules can be derived for view shifts.
 \begin{mathparpagebreakable}
 \inferH{vs-update}
   {\melt \mupd \meltsB}
-  {\ownGGhost{\melt} \vs \exists \meltB \in \meltsB.\; \ownGGhost{\meltB}}
+  {\ownGhost\gname{\melt} \vs \exists \meltB \in \meltsB.\; \ownGhost\gname{\meltB}}
 \and
 \inferH{vs-trans}
   {\prop \vs[\mask_1][\mask_2] \propB \and \propB \vs[\mask_2][\mask_3] \propC \and \mask_2 \subseteq \mask_1 \cup \mask_3}
@@ -240,10 +241,11 @@ We can derive some specialized forms of the lifting axioms for the operational s
 
 \subsection{Global functor and ghost ownership}
 
+\ralf{Should be entirely redundant.}
 Hereinafter we assume the global CMRA functor (served up as a parameter to Iris) is obtained from a family of functors $(\iFunc_i)_{i \in I}$ for some finite $I$ by picking
 \[ \iFunc(\cofe) \eqdef \prod_{i \in I} \textlog{GhName} \fpfn \iFunc_i(\cofe) \]
 We don't care so much about what concretely $\textlog{GhName}$ is, as long as it is countable and infinite.
-With $M_i \eqdef \iFunc_i(\iProp)$, we write $\ownGhost{\gname}{\melt : M_i}$ (or just $\ownGhost{\gname}{\melt}$ if $M_i$ is clear from the context) for $\ownGGhost{[i \mapsto [\gname \mapsto \melt]]}$.
+With $M_i \eqdef \iFunc_i(\iProp)$, we write $\ownGhost{\gname}{\melt : M_i}$ (or just $\ownGhost{\gname}{\melt}$ if $M_i$ is clear from the context) for $\ownM{[i \mapsto [\gname \mapsto \melt]]}$.
 In other words, $\ownGhost{\gname}{\melt : M_i}$ asserts that in the current state of monoid $M_i$, the ``ghost location'' $\gname$ is allocated and we own piece $\melt$.
 
 From~\ruleref{pvs-update}, \ruleref{vs-update} and the frame-preserving updates in~\Sref{sec:prodm} and~\Sref{sec:fpfnm}, we have the following derived rules.

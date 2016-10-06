@@ -1,3 +1,5 @@
+\let\bar\overline
+
 \section{Language}
 \label{sec:language}
 
@@ -6,21 +8,21 @@ A \emph{language} $\Lang$ consists of a set \textdom{Expr} of \emph{expressions}
 \item There exist functions $\ofval : \textdom{Val} \to \textdom{Expr}$ and $\toval : \textdom{Expr} \pfn \textdom{val}$ (notice the latter is partial), such that
 \begin{mathpar} {\All \expr, \val. \toval(\expr) = \val \Ra \ofval(\val) = \expr} \and {\All\val. \toval(\ofval(\val)) = \val} 
 \end{mathpar}
-\item There exists a \emph{primitive reduction relation} \[(-,- \step -,-,-) \subseteq \textdom{Expr} \times \textdom{State} \times \textdom{Expr} \times \textdom{State} \times (\textdom{Expr} \uplus \set{\bot})\]
-  We will write $\expr_1, \state_1 \step \expr_2, \state_2$ for $\expr_1, \state_1 \step \expr_2, \state_2, \bot$. \\
-  A reduction $\expr_1, \state_1 \step \expr_2, \state_2, \expr_\f$ indicates that, when $\expr_1$ reduces to $\expr_2$, a \emph{new thread} $\expr_\f$ is forked off.
+\item There exists a \emph{primitive reduction relation} \[(-,- \step -,-,-) \subseteq \textdom{Expr} \times \textdom{State} \times \textdom{Expr} \times \textdom{State} \times (\cup_n \textdom{Expr}^n)\]
+  A reduction $\expr_1, \state_1 \step \expr_2, \state_2, \overline\expr$ indicates that, when $\expr_1$ reduces to $\expr_2$, the new threads in the list $\overline\expr$ is forked off.
+  We will write $\expr_1, \state_1 \step \expr_2, \state_2$ for $\expr_1, \state_1 \step \expr_2, \state_2, ()$, \ie when no threads are forked off. \\
 \item All values are stuck:
 \[ \expr, \_ \step  \_, \_, \_ \Ra \toval(\expr) = \bot \]
 \end{itemize}
 
 \begin{defn}
   An expression $\expr$ and state $\state$ are \emph{reducible} (written $\red(\expr, \state)$) if
-  \[ \Exists \expr_2, \state_2, \expr_\f. \expr,\state \step \expr_2,\state_2,\expr_\f \]
+  \[ \Exists \expr_2, \state_2, \bar\expr. \expr,\state \step \expr_2,\state_2,\bar\expr \]
 \end{defn}
 
 \begin{defn}
   An expression $\expr$ is said to be \emph{atomic} if it reduces in one step to a value:
-  \[ \All\state_1, \expr_2, \state_2, \expr_\f. \expr, \state_1 \step \expr_2, \state_2, \expr_\f \Ra \Exists \val_2. \toval(\expr_2) = \val_2 \]
+  \[ \All\state_1, \expr_2, \state_2, \bar\expr. \expr, \state_1 \step \expr_2, \state_2, \bar\expr \Ra \Exists \val_2. \toval(\expr_2) = \val_2 \]
 \end{defn}
 
 \begin{defn}[Context]
@@ -29,9 +31,9 @@ A \emph{language} $\Lang$ consists of a set \textdom{Expr} of \emph{expressions}
   \item $\lctx$ does not turn non-values into values:\\
     $\All\expr. \toval(\expr) = \bot \Ra \toval(\lctx(\expr)) = \bot $
   \item One can perform reductions below $\lctx$:\\
-    $\All \expr_1, \state_1, \expr_2, \state_2, \expr_\f. \expr_1, \state_1 \step \expr_2,\state_2,\expr_\f \Ra \lctx(\expr_1), \state_1 \step \lctx(\expr_2),\state_2,\expr_\f $
+    $\All \expr_1, \state_1, \expr_2, \state_2, \bar\expr. \expr_1, \state_1 \step \expr_2,\state_2,\bar\expr \Ra \lctx(\expr_1), \state_1 \step \lctx(\expr_2),\state_2,\bar\expr $
   \item Reductions stay below $\lctx$ until there is a value in the hole:\\
-    $\All \expr_1', \state_1, \expr_2, \state_2, \expr_\f. \toval(\expr_1') = \bot \land \lctx(\expr_1'), \state_1 \step \expr_2,\state_2,\expr_\f \Ra \Exists\expr_2'. \expr_2 = \lctx(\expr_2') \land \expr_1', \state_1 \step \expr_2',\state_2,\expr_\f $
+    $\All \expr_1', \state_1, \expr_2, \state_2, \bar\expr. \toval(\expr_1') = \bot \land \lctx(\expr_1'), \state_1 \step \expr_2,\state_2,\bar\expr \Ra \Exists\expr_2'. \expr_2 = \lctx(\expr_2') \land \expr_1', \state_1 \step \expr_2',\state_2,\bar\expr $
   \end{enumerate}
 \end{defn}
 
@@ -48,13 +50,9 @@ For any language $\Lang$, we define the corresponding thread-pool semantics.
   \cfg{\tpool'}{\state'}}
 \begin{mathpar}
 \infer
-  {\expr_1, \state_1 \step \expr_2, \state_2, \expr_\f \and \expr_\f \neq \bot}
+  {\expr_1, \state_1 \step \expr_2, \state_2, \bar\expr}
   {\cfg{\tpool \dplus [\expr_1] \dplus \tpool'}{\state_1} \step
-     \cfg{\tpool \dplus [\expr_2] \dplus \tpool' \dplus [\expr_\f]}{\state_2}}
-\and\infer
-  {\expr_1, \state_1 \step \expr_2, \state_2}
-  {\cfg{\tpool \dplus [\expr_1] \dplus \tpool'}{\state_1} \step
-     \cfg{\tpool \dplus [\expr_2] \dplus \tpool'}{\state_2}}
+     \cfg{\tpool \dplus [\expr_2] \dplus \tpool' \dplus \bar\expr}{\state_2}}
 \end{mathpar}
 
 \clearpage
@@ -62,6 +60,7 @@ For any language $\Lang$, we define the corresponding thread-pool semantics.
 \label{sec:program-logic}
 
 This section describes how to build a program logic for an arbitrary language (\cf \Sref{sec:language}) on top of the logic described in \Sref{sec:hogs}.
+So in the following, we assume that some language $\Lang$ was fixed.
 
 \subsection{World Satisfaction, Invariants, View Shifts}
 
@@ -82,24 +81,56 @@ Finally, $\textmon{State}$ is used to provide the program with a view of the phy
 Furthermore, we assume that instances named $\gname_{\textmon{State}}$, $\gname_{\textmon{Inv}}$, $\gname_{\textmon{En}}$ and $\gname_{\textmon{Dis}}$ of these CMRAs have been created.
 (We will discuss later how this assumption is discharged.)
 
+\paragraph{World Satisfaction.}
 We can now define the assertion $W$ (\emph{world satisfaction}) which ensures that the enabled invariants are actually maintained:
 \begin{align*}
-  W \eqdef{}& \Exists I : \mathbb N \fpfn \Prop. \ownGhost{\gname_{\textmon{Inv}}}{\authfull \aginj(\latertinj(\wIso(I)))}
-%
-%(∃ I : gmap positive (iProp Σ),
-%    own invariant_name (● (invariant_unfold <$> I : gmap _ _)) ★
-%    [★ map] i ↦ Q ∈ I, ▷ Q ★ ownD {[i]} ∨ ownE {[i]})
+  W \eqdef{}& \Exists I : \mathbb N \fpfn \Prop. \ownGhost{\gname_{\textmon{Inv}}}{\authfull \aginj(\latertinj(\wIso(I)))} * \Sep_{\iname \in \dom(I)} \left( \later I(\iname) * \ownGhost{\gname_{\textmon{Dis}}}{\set{\iname}} \lor \ownGhost{\gname_{\textmon{En}}}{\set{\iname}} \right)
 \end{align*}
 
+\paragraph{Invariants.}
+The following assertion states that an invariant with name $\iname$ exists and maintains assertion $\prop$:
+\[ \knowInv\iname\prop \eqdef \ownGhost{\gname_{\textmon{Inv}}}{\authfrag \aginj(\latertinj(\wIso(\prop)))} \]
+
+\paragraph{View Shifts.}
+Next, we define \emph{view updates}, which are essentially the same as the resource updates of the base logic ($\Sref{sec:base-logic}$), except that they also have access to world satisfaction and can enable and disable invariants:
+\[ \pvs[\mask_1][\mask_2] \prop \eqdef W * \ownGhost{\gname_{\textmon{En}}}{\mask_1} \wand W * \ownGhost{\gname_{\textmon{En}}}{\mask_2} * \prop \]
+
+We further define the notions of \emph{view shifts} and \emph{linear view shifts}:
+\begin{align*}
+  \prop \vs[\mask_1][\mask_2] \propB \eqdef{}& \always(\prop \Ra \pvs[\mask_1][\mask_2] \propB) \\
+  \prop \vsW[\mask_1][\mask_2] \propB \eqdef{}& \prop \wand \pvs[\mask_1][\mask_2] \propB
+\end{align*}
+
+\ralf{Show some proof rules.}
+
+\subsection{Hoare Triples}
+
+Finally, we can define the core piece of the program logic, the assertion that reasons about program behavior: Weakest precondition, from which Hoare triples will be derived.
+We assume that everything making up the definition of the language, \ie values, expressions, states, the conversion functions, reduction relation and all their properties, are suitably reflected into the logic (\ie they are part of the signature $\Sig$).
+
+\begin{align*}
+  \textdom{pre-wp}(\textdom{wp})(\mask, \expr, \pred) \eqdef{}&
+    (\Exists\val. \toval(\expr) = \val \land \pvs[\mask] \prop) \lor {}\\
+        &\Bigl(\toval(\expr) = \bot \land \All \state. \ownGhost{\gname_{\textmon{State}}}{\authfull \state} \vsW[\mask][\emptyset] {}\\
+        &\qquad \red(\expr, \state) * \later\All \expr', \state', \bar\expr. (\expr, \state \step \expr', \state', \bar\expr) \vsW[\emptyset][\mask] {}\\
+        &\qquad\qquad \ownGhost{\gname_{\textmon{State}}}{\authfull \state'} * \textdom{wp}(\mask, \expr', \pred) * \Sep_{\expr'' \in \bar\expr} \textdom{wp}(\mathbb N, \expr'', \Lam \any. \TRUE)\Bigr) \\
+%  (* value case *)
+  \wpre\expr[\mask]{\Ret\val. \prop} \eqdef{}& (\MU \textdom{wp}. \textdom{pre-wp}(\textdom{wp}))(\mask, \expr, \Lam\val.\prop)
+\end{align*}
+
+This ties the authoritative part of \textmon{State} to the actual physical state of the reduction witnessed by the weakest precondition.
+The fragment will then be available to the user of the logic, as their way of talking about the physical state:
+\[ \ownPhys\state \eqdef \ownGhost{\gname_{\textmon{State}}}{\authfrag \state} \]
+
+It turns out that weakest precondition is actually quite convenient to work with, in particular when perfoming these proofs on paper.
+Still, for a more traditional presentation, we can easily derive the notion of a Hoare triple:
+\[
+\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \wpre{\expr}[\mask]{\lambda\Ret\val.\propB})}
+\]
 
 \subsection{Lost stuff}
 \ralf{TODO: Right now, this is a dump of all the things that moved out of the base...}
 
-To instantiate Iris, you need to define the following parameters:
-\begin{itemize}
-\item A language $\Lang$, and
-\item a locally contractive bifunctor $\iFunc : \COFEs \to \CMRAs$ defining the ghost state, such that for all COFEs $\cofe$, the CMRA $\iFunc(A)$ has a unit. (By \lemref{lem:cmra-unit-total-core}, this means that the core of $\iFunc(\cofe)$ is a total function.)
-\end{itemize}
 
 We will write $\pvs[\term] \prop$ for $\pvs[\term][\term] \prop$.
 If we omit the mask, then it is $\top$ for weakest precondition $\wpre\expr{\Ret\var.\prop}$ and $\emptyset$ for primitive view shifts $\pvs \prop$.
@@ -138,7 +169,7 @@ We introduce additional metavariables ranging over terms and generally let the c
 
 \infer
 {\text{$\melt$ is a discrete COFE element}}
-{\timeless{\ownGGhost\melt}}
+{\timeless{\ownM\melt}}
 
 \infer
 {\text{$\melt$ is an element of a discrete CMRA}}
@@ -198,7 +229,7 @@ We introduce additional metavariables ranging over terms and generally let the c
 
 \inferH{pvs-update}
 {\melt \mupd \meltsB}
-{\ownGGhost\melt \proves \pvs[\mask] \Exists\meltB\in\meltsB. \ownGGhost\meltB}
+{\ownM\melt \proves \pvs[\mask] \Exists\meltB\in\meltsB. \ownM\meltB}
 \end{mathpar}
 
 \paragraph{Laws of weakest preconditions.}
@@ -256,7 +287,7 @@ The adequacy statement concerning functional correctness reads as follows:
 \begin{align*}
  &\All \mask, \expr, \val, \pred, \state, \melt, \state', \tpool'.
  \\&(\All n. \melt \in \mval_n) \Ra
- \\&( \ownPhys\state * \ownGGhost\melt \proves \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
+ \\&( \ownPhys\state * \ownM\melt \proves \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
  \\&\cfg{\state}{[\expr]} \step^\ast
      \cfg{\state'}{[\val] \dplus \tpool'} \Ra
      \\&\pred(\val)
@@ -267,7 +298,7 @@ Furthermore, the following adequacy statement shows that our weakest preconditio
 \begin{align*}
  &\All \mask, \expr, \state, \melt, \state', \tpool'.
  \\&(\All n. \melt \in \mval_n) \Ra
- \\&( \ownPhys\state * \ownGGhost\melt \proves \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
+ \\&( \ownPhys\state * \ownM\melt \proves \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
  \\&\cfg{\state}{[\expr]} \step^\ast
      \cfg{\state'}{\tpool'} \Ra
      \\&\All\expr'\in\tpool'. \toval(\expr') \neq \bot \lor \red(\expr', \state')
@@ -319,20 +350,6 @@ $\textdom{wp}$ is defined as the fixed-point of a contractive function.
   \textdom{wp}_\mask(\expr, \pred) &\eqdef \mathit{fix}(\textdom{pre-wp})(\mask, \expr, \pred)
 \end{align*}
 
-
-\typedsection{Interpretation of program logic assertions}{\Sem{\vctx \proves \term : \Prop} : \Sem{\vctx} \nfn \iProp}
-
-$\knowInv\iname\prop$, $\ownGGhost\melt$ and $\ownPhys\state$ are just syntactic sugar for forms of $\ownM{-}$.
-\begin{align*}
-	\knowInv{\iname}{\prop} &\eqdef \ownM{[\iname \mapsto \aginj(\latertinj(\wIso(\prop)))], \munit, \munit} \\
-	\ownGGhost{\melt} &\eqdef \ownM{\munit, \munit, \melt} \\
-	\ownPhys{\state} &\eqdef \ownM{\munit, \exinj(\state), \munit} \\
-~\\
-	\Sem{\vctx \proves \pvs[\mask_1][\mask_2] \prop : \Prop}_\gamma &\eqdef
-	\textdom{pvs}^{\Sem{\vctx \proves \mask_2 : \textlog{InvMask}}_\gamma}_{\Sem{\vctx \proves \mask_1 : \textlog{InvMask}}_\gamma}(\Sem{\vctx \proves \prop : \Prop}_\gamma) \\
-	\Sem{\vctx \proves \wpre{\expr}[\mask]{\Ret\var.\prop} : \Prop}_\gamma &\eqdef
-	\textdom{wp}_{\Sem{\vctx \proves \mask : \textlog{InvMask}}_\gamma}(\Sem{\vctx \proves \expr : \textlog{Expr}}_\gamma, \Lam\val. \Sem{\vctx \proves \prop : \Prop}_{\gamma[\var\mapsto\val]})
-\end{align*}
 
 
 %%% Local Variables:
