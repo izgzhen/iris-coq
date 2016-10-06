@@ -61,6 +61,38 @@ For any language $\Lang$, we define the corresponding thread-pool semantics.
 \section{Program Logic}
 \label{sec:program-logic}
 
+This section describes how to build a program logic for an arbitrary language (\cf \Sref{sec:language}) on top of the logic described in \Sref{sec:hogs}.
+
+\subsection{World Satisfaction, Invariants, View Shifts}
+
+To introduce invariants into our logic, we will define weakest precondition to explicitly thread through the proof that all the invariants are maintained throughout program execution.
+However, in order to be able to access invariants, we will also have to provide a way to \emph{temporarily disable} (or ``open'') them.
+To this end, we use tokens that manage which invariants are currently enabled.
+
+We assume to have the following four CMRAs available:
+\begin{align*}
+  \textmon{State} \eqdef{}& \authm(\exm(\textdom{State})) \\
+  \textmon{Inv} \eqdef{}& \authm(\mathbb N \fpfn \agm(\latert \iPreProp)) \\
+  \textmon{En} \eqdef{}& \pset{\mathbb N} \\
+  \textmon{Dis} \eqdef{}& \finpset{\mathbb N}
+\end{align*}
+The last two are the tokens used for managing invariants, $\textmon{Inv}$ is the monoid used to manage the invariants themselves.
+Finally, $\textmon{State}$ is used to provide the program with a view of the physical state of the machine.
+
+Furthermore, we assume that instances named $\gname_{\textmon{State}}$, $\gname_{\textmon{Inv}}$, $\gname_{\textmon{En}}$ and $\gname_{\textmon{Dis}}$ of these CMRAs have been created.
+(We will discuss later how this assumption is discharged.)
+
+We can now define the assertion $W$ (\emph{world satisfaction}) which ensures that the enabled invariants are actually maintained:
+\begin{align*}
+  W \eqdef{}& \Exists I : \mathbb N \fpfn \Prop. \ownGhost{\gname_{\textmon{Inv}}}{\authfull \aginj(\latertinj(\wIso(I)))}
+%
+%(∃ I : gmap positive (iProp Σ),
+%    own invariant_name (● (invariant_unfold <$> I : gmap _ _)) ★
+%    [★ map] i ↦ Q ∈ I, ▷ Q ★ ownD {[i]} ∨ ownE {[i]})
+\end{align*}
+
+
+\subsection{Lost stuff}
 \ralf{TODO: Right now, this is a dump of all the things that moved out of the base...}
 
 To instantiate Iris, you need to define the following parameters:
