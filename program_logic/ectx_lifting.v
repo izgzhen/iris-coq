@@ -1,7 +1,7 @@
 (** Some derived lemmas for ectx-based languages *)
 From iris.program_logic Require Export ectx_language weakestpre lifting.
 From iris.program_logic Require Import ownership.
-From iris.proofmode Require Import weakestpre.
+From iris.proofmode Require Import tactics.
 
 Section wp.
 Context {expr val ectx state} {Λ : EctxLanguage expr val ectx state}.

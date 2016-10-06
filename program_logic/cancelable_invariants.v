@@ -1,6 +1,6 @@
 From iris.program_logic Require Export invariants.
 From iris.algebra Require Export frac.
-From iris.proofmode Require Import invariants tactics.
+From iris.proofmode Require Import tactics.
 Import uPred.
 
 Class cinvG Σ := cinv_inG :> inG Σ fracR.

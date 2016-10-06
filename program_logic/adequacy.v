@@ -1,7 +1,7 @@
 From iris.program_logic Require Export weakestpre.
 From iris.algebra Require Import gmap auth agree gset coPset upred_big_op.
 From iris.program_logic Require Import ownership.
-From iris.proofmode Require Import tactics weakestpre.
+From iris.proofmode Require Import tactics.
 Import uPred.
 
 Record adequate {Λ} (e1 : expr Λ) (σ1 : state Λ) (φ : val Λ → Prop) := {

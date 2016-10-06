@@ -1,7 +1,7 @@
 From iris.program_logic Require Export hoare weakestpre pviewshifts ownership.
 From iris.algebra Require Import upred_big_op.
 From iris.prelude Require Export coPset.
-From iris.proofmode Require Import tactics pviewshifts weakestpre.
+From iris.proofmode Require Import tactics.
 Import uPred.
 
 Section atomic.
@@ -42,7 +42,6 @@ Section atomic.
 End atomic.
 
 From iris.heap_lang Require Export lang proofmode notation.
-From iris.proofmode Require Import invariants.
 
 Section incr.
   Context `{!heapG Σ} (N : namespace).

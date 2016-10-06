@@ -2,7 +2,7 @@ From iris.program_logic Require Export weakestpre adequacy.
 From iris.heap_lang Require Export heap.
 From iris.program_logic Require Import auth ownership.
 From iris.heap_lang Require Import proofmode notation.
-From iris.proofmode Require Import tactics weakestpre.
+From iris.proofmode Require Import tactics.
 
 Definition heapΣ : gFunctors := #[authΣ heapUR; irisΣ heap_lang].
 

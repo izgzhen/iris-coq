@@ -1,5 +1,6 @@
 From iris.program_logic Require Export model.
 From iris.algebra Require Import iprod gmap.
+From iris.proofmode Require Import classes.
 Import uPred.
 
 (** The class [inG Σ A] expresses that the CMRA [A] is in the list of functors
@@ -145,3 +146,16 @@ Proof.
   - apply cmra_transport_valid, ucmra_unit_valid.
   - intros x; destruct inG_prf. by rewrite left_id.
 Qed.
+
+(** Proofmode class instances *)
+Section proofmode_classes.
+  Context `{inG Σ A}.
+  Implicit Types a b : A.
+
+  Global Instance into_and_own p γ a b1 b2 :
+    IntoOp a b1 b2 → IntoAnd p (own γ a) (own γ b1) (own γ b2).
+  Proof. intros. apply mk_into_and_sep. by rewrite (into_op a) own_op. Qed.
+  Global Instance from_sep_own γ a b1 b2 :
+    FromOp a b1 b2 → FromSep (own γ a) (own γ b1) (own γ b2).
+  Proof. intros. by rewrite /FromSep -own_op from_op. Qed.
+End proofmode_classes.

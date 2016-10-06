@@ -450,6 +450,36 @@ Proof.
     by apply prodC_map_ne; apply cFunctor_contractive.
 Qed.
 
+Instance compose_ne {A} {B B' : cofeT} (f : B -n> B') n :
+  Proper (dist n ==> dist n) (compose f : (A -c> B) → A -c> B').
+Proof. intros g g' Hf x; simpl. by rewrite (Hf x). Qed.
+
+Definition cofe_funC_map {A B B'} (f : B -n> B') : (A -c> B) -n> (A -c> B') :=
+  @CofeMor (_ -c> _) (_ -c> _) (compose f) _.
+Instance cofe_funC_map_ne {A B B'} n :
+  Proper (dist n ==> dist n) (@cofe_funC_map A B B').
+Proof. intros f f' Hf g x. apply Hf. Qed.
+
+Program Definition cofe_funCF (T : Type) (F : cFunctor) : cFunctor := {|
+  cFunctor_car A B := cofe_funC T (cFunctor_car F A B);
+  cFunctor_map A1 A2 B1 B2 fg := cofe_funC_map (cFunctor_map F fg)
+|}.
+Next Obligation.
+  intros ?? A1 A2 B1 B2 n ???; by apply cofe_funC_map_ne; apply cFunctor_ne.
+Qed.
+Next Obligation. intros F1 F2 A B ??. by rewrite /= /compose /= !cFunctor_id. Qed.
+Next Obligation.
+  intros T F A1 A2 A3 B1 B2 B3 f g f' g' ??; simpl.
+  by rewrite !cFunctor_compose.
+Qed.
+
+Instance cofe_funCF_contractive (T : Type) (F : cFunctor) :
+  cFunctorContractive F → cFunctorContractive (cofe_funCF T F).
+Proof.
+  intros ?? A1 A2 B1 B2 n ???;
+    by apply cofe_funC_map_ne; apply cFunctor_contractive.
+Qed.
+
 Program Definition cofe_morCF (F1 F2 : cFunctor) : cFunctor := {|
   cFunctor_car A B := cFunctor_car F1 B A -n> cFunctor_car F2 A B;
   cFunctor_map A1 A2 B1 B2 fg :=
@@ -759,6 +789,7 @@ Qed.
 
 (** Notation for writing functors *)
 Notation "∙" := idCF : cFunctor_scope.
+Notation "T -c> F" := (cofe_funCF T%type F%CF) : cFunctor_scope.
 Notation "F1 -n> F2" := (cofe_morCF F1%CF F2%CF) : cFunctor_scope.
 Notation "F1 * F2" := (prodCF F1%CF F2%CF) : cFunctor_scope.
 Notation "F1 + F2" := (sumCF F1%CF F2%CF) : cFunctor_scope.

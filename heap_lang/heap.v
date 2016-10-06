@@ -2,7 +2,7 @@ From iris.heap_lang Require Export lifting.
 From iris.algebra Require Import upred_big_op gmap frac dec_agree.
 From iris.program_logic Require Export invariants ghost_ownership.
 From iris.program_logic Require Import ownership auth.
-From iris.proofmode Require Import weakestpre.
+From iris.proofmode Require Import tactics.
 Import uPred.
 (* TODO: The entire construction could be generalized to arbitrary languages that have
    a finmap as their state. Or maybe even beyond "as their state", i.e. arbitrary

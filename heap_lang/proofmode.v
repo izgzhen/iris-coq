@@ -1,5 +1,6 @@
+From iris.program_logic Require Export weakestpre.
 From iris.proofmode Require Import coq_tactics.
-From iris.proofmode Require Export weakestpre.
+From iris.proofmode Require Export tactics.
 From iris.heap_lang Require Export wp_tactics heap.
 Import uPred.
 

@@ -1,5 +1,6 @@
 From iris.algebra Require Export excl local_updates.
 From iris.algebra Require Import upred updates.
+From iris.proofmode Require Import class_instances.
 Local Arguments valid _ _ !_ /.
 Local Arguments validN _ _ _ !_ /.
 
@@ -223,6 +224,14 @@ End cmra.
 
 Arguments authR : clear implicits.
 Arguments authUR : clear implicits.
+
+(* Proof mode class instances *)
+Instance from_op_auth_frag {A : ucmraT} (a b1 b2 : A) :
+  FromOp a b1 b2 → FromOp (◯ a) (◯ b1) (◯ b2).
+Proof. done. Qed.
+Instance into_op_auth_frag {A : ucmraT} (a b1 b2 : A) :
+  IntoOp a b1 b2 → IntoOp (◯ a) (◯ b1) (◯ b2).
+Proof. done. Qed.
 
 (* Functor *)
 Definition auth_map {A B} (f : A → B) (x : auth A) : auth B :=

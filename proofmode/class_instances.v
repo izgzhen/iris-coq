@@ -132,6 +132,10 @@ Proof. rewrite /FromAnd=> <-. by rewrite later_and. Qed.
 (* FromSep *)
 Global Instance from_sep_sep P1 P2 : FromSep (P1 ★ P2) P1 P2 | 100.
 Proof. done. Qed.
+Global Instance from_sep_ownM (a b1 b2 : M) :
+  FromOp a b1 b2 →
+  FromSep (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
+Proof. intros. by rewrite /FromSep -ownM_op from_op. Qed.
 Global Instance from_sep_always P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (□ P) (□ Q1) (□ Q2).
 Proof. rewrite /FromSep=> <-. by rewrite always_sep. Qed.
@@ -142,9 +146,6 @@ Global Instance from_sep_rvs P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (|=r=> P) (|=r=> Q1) (|=r=> Q2).
 Proof. rewrite /FromSep=><-. apply rvs_sep. Qed.
 
-Global Instance from_sep_ownM (a b : M) :
-  FromSep (uPred_ownM (a ⋅ b)) (uPred_ownM a) (uPred_ownM b) | 99.
-Proof. by rewrite /FromSep ownM_op. Qed.
 Global Instance from_sep_big_sepM
     `{Countable K} {A} (Φ Ψ1 Ψ2 : K → A → uPred M) m :
   (∀ k x, FromSep (Φ k x) (Ψ1 k x) (Ψ2 k x)) →
@@ -159,6 +160,20 @@ Global Instance from_sep_big_sepS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) X 
 Proof.
   rewrite /FromSep=> ?. rewrite -big_sepS_sepS. by apply big_sepS_mono.
 Qed.
+
+(* FromOp *)
+Global Instance from_op_op {A : cmraT} (a b : A) : FromOp (a ⋅ b) a b.
+Proof. by rewrite /FromOp. Qed.
+Global Instance from_op_persistent {A : cmraT} (a : A) :
+  Persistent a → FromOp a a a.
+Proof. intros. by rewrite /FromOp -(persistent_dup a). Qed.
+Global Instance from_op_pair {A B : cmraT} (a b1 b2 : A) (a' b1' b2' : B) :
+  FromOp a b1 b2 → FromOp a' b1' b2' →
+  FromOp (a,a') (b1,b1') (b2,b2').
+Proof. by constructor. Qed.
+Global Instance from_op_Some {A : cmraT} (a : A) b1 b2 :
+  FromOp a b1 b2 → FromOp (Some a) (Some b1) (Some b2).
+Proof. by constructor. Qed.
 
 (* IntoOp *)
 Global Instance into_op_op {A : cmraT} (a b : A) : IntoOp (a ⋅ b) a b.

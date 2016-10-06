@@ -1361,6 +1361,12 @@ Lemma option_validI {A : cmraT} (mx : option A) :
   ✓ mx ⊣⊢ match mx with Some x => ✓ x | None => True end.
 Proof. uPred.unseal. by destruct mx. Qed.
 
+(* Functions *)
+Lemma cofe_funC_equivI {A B} (f g : A -c> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
+Proof. by uPred.unseal. Qed.
+Lemma cofe_moreC_equivI {A B : cofeT} (f g : A -n> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
+Proof. by uPred.unseal. Qed.
+
 (* Timeless instances *)
 Global Instance pure_timeless φ : TimelessP (■ φ : uPred M)%I.
 Proof.
