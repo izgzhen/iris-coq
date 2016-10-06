@@ -98,20 +98,22 @@ We can now define \emph{semantic} logical entailment.
 \typedsection{Interpretation of entailment}{\Sem{\vctx \mid \pfctx \proves \prop} : \mProp}
 
 \[
-\Sem{\vctx \mid \pfctx \proves \prop} \eqdef
+\Sem{\vctx \mid \prop \proves \propB} \eqdef
 \begin{aligned}[t]
 \MoveEqLeft
 \forall n \in \mathbb{N}.\;
 \forall \rs \in \textdom{Res}.\; 
 \forall \gamma \in \Sem{\vctx},\;
 \\&
-\bigl(\All \propB \in \pfctx. n \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\rs)\bigr)
-\Ra n \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\rs)
+n \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\rs)
+\Ra n \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\rs)
 \end{aligned}
 \]
 
-The soundness statement of the logic reads
-\[ \vctx \mid \pfctx \proves \prop \Ra \Sem{\vctx \mid \pfctx \proves \prop} \]
+The following theorem connects syntactic and semantic entailment:
+\[ \vctx \mid \prop \proves \propB \Ra \Sem{\vctx \mid \prop \proves \propB} \]
+
+It now becomes trivial to show soundness of the logic.
 
 %%% Local Variables:
 %%% mode: latex
