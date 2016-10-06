@@ -256,37 +256,29 @@ Global Instance gmap_singleton_persistent i (x : A) :
 Proof. intros. by apply persistent_total, core_singleton'. Qed.
 
 Lemma singleton_includedN n m i x :
-  {[ i := x ]} ≼{n} m ↔ ∃ y, m !! i ≡{n}≡ Some y ∧ (x ≼{n} y ∨ x ≡{n}≡ y).
+  {[ i := x ]} ≼{n} m ↔ ∃ y, m !! i ≡{n}≡ Some y ∧ Some x ≼{n} Some y.
 Proof.
   split.
-  - move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton.
-    case (m' !! i)=> [y|]=> Hm.
-    + exists (x ⋅ y); eauto using cmra_includedN_l.
-    + exists x; eauto.
-  - intros (y&Hi&[[z ?]| ->]).
-    + exists (<[i:=z]>m)=> j; destruct (decide (i = j)) as [->|].
-      * rewrite Hi lookup_op lookup_singleton lookup_insert. by constructor.
-      * by rewrite lookup_op lookup_singleton_ne // lookup_insert_ne // left_id.
-    + exists (delete i m)=> j; destruct (decide (i = j)) as [->|].
-      * by rewrite Hi lookup_op lookup_singleton lookup_delete.
-      * by rewrite lookup_op lookup_singleton_ne // lookup_delete_ne // left_id.
+  - move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton=> Hi.
+    exists (x ⋅? m' !! i). rewrite -Some_op_opM.
+    split. done. apply cmra_includedN_l.
+  - intros (y&Hi&[mz Hy]). exists (partial_alter (λ _, mz) i m).
+    intros j; destruct (decide (i = j)) as [->|].
+    + by rewrite lookup_op lookup_singleton lookup_partial_alter Hi.
+    + by rewrite lookup_op lookup_singleton_ne// lookup_partial_alter_ne// left_id.
 Qed.
 (* We do not have [x ≼ y ↔ ∀ n, x ≼{n} y], so we cannot use the previous lemma *)
 Lemma singleton_included m i x :
-  {[ i := x ]} ≼ m ↔ ∃ y, m !! i ≡ Some y ∧ (x ≼ y ∨ x ≡ y).
+  {[ i := x ]} ≼ m ↔ ∃ y, m !! i ≡ Some y ∧ Some x ≼ Some y.
 Proof.
   split.
   - move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton.
-    case (m' !! i)=> [y|]=> Hm.
-    + exists (x ⋅ y); eauto using cmra_included_l.
-    + exists x; eauto.
-  - intros (y&Hi&[[z ?]| ->]).
-    + exists (<[i:=z]>m)=> j; destruct (decide (i = j)) as [->|].
-      * rewrite Hi lookup_op lookup_singleton lookup_insert. by constructor.
-      * by rewrite lookup_op lookup_singleton_ne // lookup_insert_ne // left_id.
-    + exists (delete i m)=> j; destruct (decide (i = j)) as [->|].
-      * by rewrite Hi lookup_op lookup_singleton lookup_delete.
-      * by rewrite lookup_op lookup_singleton_ne // lookup_delete_ne // left_id.
+    exists (x ⋅? m' !! i). rewrite -Some_op_opM.
+    split. done. apply cmra_included_l.
+  - intros (y&Hi&[mz Hy]). exists (partial_alter (λ _, mz) i m).
+    intros j; destruct (decide (i = j)) as [->|].
+    + by rewrite lookup_op lookup_singleton lookup_partial_alter Hi.
+    + by rewrite lookup_op lookup_singleton_ne// lookup_partial_alter_ne// left_id.
 Qed.
 
 Lemma insert_updateP (P : A → Prop) (Q : gmap K A → Prop) m i x :
