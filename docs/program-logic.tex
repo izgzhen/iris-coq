@@ -84,12 +84,12 @@ Furthermore, we assume that instances named $\gname_{\textmon{State}}$, $\gname_
 \paragraph{World Satisfaction.}
 We can now define the assertion $W$ (\emph{world satisfaction}) which ensures that the enabled invariants are actually maintained:
 \begin{align*}
-  W \eqdef{}& \Exists I : \mathbb N \fpfn \Prop. \ownGhost{\gname_{\textmon{Inv}}}{\authfull \aginj(\latertinj(\wIso(I)))} * \Sep_{\iname \in \dom(I)} \left( \later I(\iname) * \ownGhost{\gname_{\textmon{Dis}}}{\set{\iname}} \lor \ownGhost{\gname_{\textmon{En}}}{\set{\iname}} \right)
+  W \eqdef{}& \Exists I : \mathbb N \fpfn \Prop. \ownGhost{\gname_{\textmon{Inv}}}{\setComp{\iname \mapsto \authfull \aginj(\latertinj(\wIso(I(\iname))))}{\iname \in \dom(I)}} * \Sep_{\iname \in \dom(I)} \left( \later I(\iname) * \ownGhost{\gname_{\textmon{Dis}}}{\set{\iname}} \lor \ownGhost{\gname_{\textmon{En}}}{\set{\iname}} \right)
 \end{align*}
 
 \paragraph{Invariants.}
 The following assertion states that an invariant with name $\iname$ exists and maintains assertion $\prop$:
-\[ \knowInv\iname\prop \eqdef \ownGhost{\gname_{\textmon{Inv}}}{\authfrag \aginj(\latertinj(\wIso(\prop)))} \]
+\[ \knowInv\iname\prop \eqdef \ownGhost{\gname_{\textmon{Inv}}}{\set{\iname \mapsto \authfrag \aginj(\latertinj(\wIso(\prop)))}} \]
 
 \paragraph{View Shifts.}
 Next, we define \emph{view updates}, which are essentially the same as the resource updates of the base logic ($\Sref{sec:base-logic}$), except that they also have access to world satisfaction and can enable and disable invariants:
