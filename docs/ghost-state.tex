@@ -1,11 +1,17 @@
-\section{Modular Dynamic Higher-Order Resources}
+\section{Composeable Dynamic Higher-Order Resources}
 \label{sec:hogs}
 
 The logic described in \Sref{sec:base-logic} works over an arbitrary CMRA $\monoid$ defining the structure of the resources.
 It turns out that we can generalize this further and permit picking CMRAs ``$\iFunc(\Prop)$'' that depend on the structure of assertions themselves.
 Of course, $\Prop$ is just the syntactic type of assertions; for this to make sense we have to look at the semantics.
 
-To instantiate the logic, you pick a family of locally contractive bifunctors $(\iFunc_i : \COFEs \to \CMRAs)_{i \in \mathcal{I}}$.
+Furthermore, there is a composeability problem with the given logic: if we have one proof performed with CMRA $\monoid_1$, and another proof carried out with a \emph{different} CMRA $\monoid_2$, then the two proofs are actually carried out in two entirely separate logics and hence cannot be combined.
+
+The purpose of this section is to describe how we solve these two issues.
+
+\subsection{Multiple CMRAs and Higher-Order Resources}
+
+To instantiate the logic, you pick a \emph{family} of locally contractive bifunctors $(\iFunc_i : \COFEs \to \CMRAs)_{i \in \mathcal{I}}$.
 
 From this, we construct the bifunctor defining the overall resources as follows:
 \begin{align*}
@@ -29,7 +35,7 @@ We only need the isomorphism, given by
 
 Notice that $\iProp$ is the semantic model of assertions for  the logic described in \Sref{sec:base-logic} with $\Res$:
 \[ \Sem{\Prop} \eqdef \iProp = \UPred(\Res) \]
-We thus obtain all the rules of \Sref{sec:base-logic}, and furthermore, we can use the maps $\wIso$ and $\wIso^{-1}$ \emph{in the logic} to convert between logical assertions and the domain $\iPreProp$ which is used in the construction of $\Res$ -- so from elements of $\iPreProp$, we can construct elements of $\Sem{\textlog M}$, which are the elements that can be owned in our logic.
+We thus obtain all the rules of \Sref{sec:base-logic}, and furthermore, we can use the maps $\wIso$ and $\wIso^{-1}$ \emph{in the logic} to convert between logical assertions $\Sem\Prop$ and the domain $\iPreProp$ which is used in the construction of $\Res$ -- so from elements of $\iPreProp$, we can construct elements of $\Sem{\textlog M}$, which are the elements that can be owned in our logic.
 
 \ralf{TODO: Describe the pattern of only assuming some elements of the index family to indicate a particular functor.}
 \ralf{TODO: Show the rules for ownership in this world.}
