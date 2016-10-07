@@ -1492,11 +1492,11 @@ Proof.
   eapply IH with x'; eauto using cmra_validN_S, cmra_validN_op_l.
 Qed.
 
-Corollary consistencyModal n : ¬ (True ⊢ Nat.iter n (λ P, |=r=> ▷ P) False).
+Corollary consistency_modal n : ¬ (True ⊢ Nat.iter n (λ P, |=r=> ▷ P) False).
 Proof. exact (adequacy False n). Qed.
 
 Corollary consistency : ¬ (True ⊢ False).
-Proof. exact (consistencyModal 0). Qed.
+Proof. exact (consistency_modal 0). Qed.
 End uPred_logic.
 
 (* Hint DB for the logic *)
