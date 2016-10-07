@@ -208,8 +208,8 @@ This is entirely standard.
   {\prop \proves \propC}
 \and
 \infer[Eq]
-  {\prop \proves \propB \\ \prop \proves \term =_\type \term'}
-  {\prop \proves \propB[\term'/\term]}
+  {\vctx,\var:\type \proves \wtt\propB\Prop \\ \vctx\mid\prop \proves \propB[\term/\var] \\ \vctx\mid\prop \proves \term =_\type \term'}
+  {\vctx\mid\prop \proves \propB[\term'/\var]}
 \and
 \infer[Refl]
   {}
@@ -264,7 +264,7 @@ This is entirely standard.
   {\vctx\mid\prop \proves \All \var :\type. \propB \\
    \vctx \proves \wtt\term\type}
   {\vctx\mid\prop \proves \propB[\term/\var]}
-\and
+\\
 \infer[$\exists$I]
   {\vctx\mid\prop \proves \propB[\term/\var] \\
    \vctx \proves \wtt\term\type}
