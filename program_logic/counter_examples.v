@@ -93,7 +93,7 @@ Module inv. Section inv.
   Hypothesis finished_dup : ∀ γ, finished γ ⊢ finished γ ★ finished γ.
 
   (* We assume that we cannot view shift to false. *)
-  Hypothesis soundness : ¬ (True ⊢ pvs M1 False).
+  Hypothesis consistency : ¬ (True ⊢ pvs M1 False).
 
   (** Some general lemmas and proof mode compatibility. *)
   Lemma inv_open' i P R : inv i P ★ (P -★ pvs M0 (P ★ pvs M1 R)) ⊢ pvs M1 R.
@@ -186,7 +186,7 @@ Module inv. Section inv.
 
   Lemma contradiction : False.
   Proof.
-    apply soundness. iIntros "".
+    apply consistency. iIntros "".
     iVs A_alloc as (i) "#H".
     iPoseProof (saved_NA with "H") as "HN".
     iApply "HN". iApply saved_A. done.

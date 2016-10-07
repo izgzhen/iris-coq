@@ -1481,7 +1481,7 @@ Proof. by rewrite -(always_always Q); apply always_entails_l'. Qed.
 Lemma always_entails_r P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ P ★ Q.
 Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
 
-(* Soundness results *)
+(** Consistency and adequancy statements *)
 Lemma adequacy φ n : (True ⊢ Nat.iter n (λ P, |=r=> ▷ P) (■ φ)) → φ.
 Proof.
   cut (∀ x, ✓{n} x → Nat.iter n (λ P, |=r=> ▷ P)%I (■ φ)%I n x → φ).
@@ -1492,11 +1492,11 @@ Proof.
   eapply IH with x'; eauto using cmra_validN_S, cmra_validN_op_l.
 Qed.
 
-Corollary soundnessN n : ¬ (True ⊢ Nat.iter n (λ P, |=r=> ▷ P) False).
+Corollary consistencyModal n : ¬ (True ⊢ Nat.iter n (λ P, |=r=> ▷ P) False).
 Proof. exact (adequacy False n). Qed.
 
-Corollary soundness : ¬ (True ⊢ False).
-Proof. exact (adequacy False 0). Qed.
+Corollary consistency : ¬ (True ⊢ False).
+Proof. exact (consistencyModal 0). Qed.
 End uPred_logic.
 
 (* Hint DB for the logic *)

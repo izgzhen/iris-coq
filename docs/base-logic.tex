@@ -393,13 +393,17 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 {\ownM\melt \proves \upd \Exists\meltB\in\meltsB. \ownM\meltB}
 \end{mathpar}
 
-\subsection{Soundness}
+\subsection{Consistency}
 
-The soundness statement of the logic reads as follows: For any $n$, we have
+The consistency statement of the logic reads as follows: For any $n$, we have
 \begin{align*}
-  \lnot(\TRUE \vdash (\upd\later)^n \FALSE)
+  \lnot(\TRUE \proves (\upd\later)^n\spac\FALSE)
 \end{align*}
 where $(\upd\later)^n$ is short for $\upd\later$ being nested $n$ times.
+
+The reason we want a stronger consistency than the usual $\lnot(\TRUE \proves \FALSE)$ is our modalities: it should be impossible to derive a contradiction below the modalities.
+For $\always$, this follows from the elimination rule, but the other two modalities do not have an elimination rule.
+Hence we declare that it is impossible to derive a contradiction below any combination of these two modalities.
 
 
 %%% Local Variables:
