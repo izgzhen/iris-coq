@@ -130,7 +130,7 @@ The fragment will then be available to the user of the logic, as their way of ta
 It turns out that weakest precondition is actually quite convenient to work with, in particular when perfoming these proofs on paper.
 Still, for a more traditional presentation, we can easily derive the notion of a Hoare triple:
 \[
-\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \wpre{\expr}[\mask]{\lambda\Ret\val.\propB})}
+\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \wpre{\expr}[\mask]{\Ret\val.\propB})}
 \]
 
 \subsection{Lost stuff}
