@@ -5,13 +5,16 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 
 ## Iris 3.0
 
-* [#] View shifts are radically simplified to just internalize frame-preserving
+* View shifts are radically simplified to just internalize frame-preserving
   updates.  Weakestpre is defined inside the logic, and invariants and view
   shifts with masks are also coded up inside Iris.  Adequacy of weakestpre
   is proven in the logic.
-* [#] With invariants and the physical state being handled in the logic, there
+* With invariants and the physical state being handled in the logic, there
   is no longer any reason to demand the CMRA unit to be discrete.
-* [#] The language can now fork off multiple threads at once.
+* The language can now fork off multiple threads at once.
+* [#] Local Updates (for the authoritative monoid) are now a 4-way relation
+  with syntax-directed lemmas proving them.  [program_logic/auth] is gone,
+  it doesn't actually simplify anything any more.
 
 ## Iris 2.0
 
