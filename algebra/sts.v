@@ -376,6 +376,11 @@ Proof.
     eapply closed_steps, Hsup; first done. set_solver +Hs'.
 Qed.
 
+Global Instance sts_frag_peristent S : Persistent (sts_frag S ∅).
+Proof.
+  constructor; split=> //= [[??]]. by rewrite /dra.dra_core /= sts.up_closed.
+Qed.
+
 (** Inclusion *)
 (* This is surprisingly different from to_validity_included. I am not sure
    whether this is because to_validity_included is non-canonical, or this
