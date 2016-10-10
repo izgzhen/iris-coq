@@ -300,31 +300,22 @@ Proof. eauto using csum_updateP_l. Qed.
 Lemma csum_updateP'_r (P : B → Prop) b :
   b ~~>: P → Cinr b ~~>: λ m', ∃ b', m' = Cinr b' ∧ P b'.
 Proof. eauto using csum_updateP_r. Qed.
-Lemma csum_local_update_l (a1 a2 : A) af :
-  (∀ af', af = Cinl <$> af' → a1 ~l~> a2 @ af') → Cinl a1 ~l~> Cinl a2 @ af.
+
+Lemma csum_local_update_l (a1 a2 a1' a2' : A) :
+  (a1,a2) ~l~> (a1',a2') → (Cinl a1,Cinl a2) ~l~> (Cinl a1',Cinl a2').
 Proof.
-  intros Ha. split; destruct af as [[af'| |]|]=>//=.
-  - by eapply (Ha (Some af')).
-  - by eapply (Ha None).
-  - destruct (Ha (Some af') (reflexivity _)) as [_ Ha'].
-    intros n [[mz|mz|]|] ?; inversion 1; subst; constructor.
-    by apply (Ha' n (Some mz)). by apply (Ha' n None).
-  - destruct (Ha None (reflexivity _)) as [_ Ha'].
-    intros n [[mz|mz|]|] ?; inversion 1; subst; constructor.
-    by apply (Ha' n (Some mz)). by apply (Ha' n None).
+  intros Hup n mf ? Ha1; simpl in *.
+  destruct (Hup n (mf ≫= maybe Cinl)); auto.
+  { by destruct mf as [[]|]; inversion_clear Ha1. }
+  split. done. by destruct mf as [[]|]; inversion_clear Ha1; constructor.
 Qed.
-Lemma csum_local_update_r (b1 b2 : B) bf :
-  (∀ bf', bf = Cinr <$> bf' → b1 ~l~> b2 @ bf') → Cinr b1 ~l~> Cinr b2 @ bf.
+Lemma csum_local_update_r (b1 b2 b1' b2' : B) :
+  (b1,b2) ~l~> (b1',b2') → (Cinr b1,Cinr b2) ~l~> (Cinr b1',Cinr b2').
 Proof.
-  intros Hb. split; destruct bf as [[|bf'|]|]=>//=.
-  - by eapply (Hb (Some bf')).
-  - by eapply (Hb None).
-  - destruct (Hb (Some bf') (reflexivity _)) as [_ Hb'].
-    intros n [[mz|mz|]|] ?; inversion 1; subst; constructor.
-    by apply (Hb' n (Some mz)). by apply (Hb' n None).
-  - destruct (Hb None (reflexivity _)) as [_ Hb'].
-    intros n [[mz|mz|]|] ?; inversion 1; subst; constructor.
-    by apply (Hb' n (Some mz)). by apply (Hb' n None).
+  intros Hup n mf ? Ha1; simpl in *.
+  destruct (Hup n (mf ≫= maybe Cinr)); auto.
+  { by destruct mf as [[]|]; inversion_clear Ha1. }
+  split. done. by destruct mf as [[]|]; inversion_clear Ha1; constructor.
 Qed.
 End cmra.
 

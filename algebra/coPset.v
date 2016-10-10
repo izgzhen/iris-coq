@@ -48,11 +48,11 @@ Section coPset.
   Lemma coPset_update X Y : X ~~> Y.
   Proof. done. Qed.
 
-  Lemma coPset_local_update X Y mXf : X ⊆ Y → X ~l~> Y @ mXf.
+  Lemma coPset_local_update X Y X' : X ⊆ X' → (X,Y) ~l~> (X',X').
   Proof.
     intros (Z&->&?)%subseteq_disjoint_union_L.
-    intros; apply local_update_total; split; [done|]; simpl.
-    intros mZ _. rewrite !coPset_opM=> HX. by rewrite (comm_L _ X) -!assoc_L HX.
+    rewrite local_update_unital_discrete=> Z' _ /leibniz_equiv_iff->.
+    split. done. rewrite coPset_op_union. set_solver.
   Qed.
 End coPset.
 

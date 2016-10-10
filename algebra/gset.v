@@ -47,16 +47,15 @@ Section gset.
   Lemma gset_update X Y : X ~~> Y.
   Proof. done. Qed.
 
-  Lemma gset_local_update X Y mXf : X ⊆ Y → X ~l~> Y @ mXf.
+  Lemma gset_local_update X Y X' : X ⊆ X' → (X,Y) ~l~> (X',X').
   Proof.
     intros (Z&->&?)%subseteq_disjoint_union_L.
-    intros; apply local_update_total; split; [done|]; simpl.
-    intros mZ _. rewrite !gset_opM=> HX. by rewrite (comm_L _ X) -!assoc_L HX.
+    rewrite local_update_unital_discrete=> Z' _ /leibniz_equiv_iff->.
+    split. done. rewrite gset_op_union. set_solver.
   Qed.
 
   Global Instance gset_persistent X : Persistent X.
   Proof. by apply persistent_total; rewrite gset_core_self. Qed.
-
 End gset.
 
 Arguments gsetR _ {_ _}.
@@ -72,6 +71,8 @@ Arguments GSetBot {_ _ _}.
 Section gset_disj.
   Context `{Countable K}.
   Arguments op _ _ !_ !_ /.
+  Arguments cmra_op _ !_ !_ /.
+  Arguments ucmra_op _ !_ !_ /.
 
   Canonical Structure gset_disjC := leibnizC (gset_disj K).
 
@@ -174,35 +175,45 @@ Section gset_disj.
     Proof. eauto using gset_disj_alloc_empty_updateP. Qed.
   End fresh_updates.
 
-  Lemma gset_disj_dealloc_local_update X Y Xf :
-    GSet X ~l~> GSet (X ∖ Y) @ Some (GSet Xf).
+  Lemma gset_disj_dealloc_local_update X Y :
+    (GSet X, GSet Y) ~l~> (GSet (X ∖ Y), ∅).
   Proof.
-    apply local_update_total; split; simpl.
-    { rewrite !gset_disj_valid_op; set_solver. }
-    intros mZ ?%gset_disj_valid_op. rewrite gset_disj_union //.
-    destruct mZ as [[Z|]|]; simpl; try done.
-    - rewrite {1}/op {1}/cmra_op /=. destruct (decide _); simpl; try done.
-      intros [=]. do 2 f_equal. by apply union_cancel_l_L with X.
-    - intros [=]. assert (Xf = ∅) as -> by set_solver. by rewrite right_id.
+    apply local_update_total_valid=> _ _ /gset_disj_included HYX.
+    rewrite local_update_unital_discrete=> -[Xf|] _ /leibniz_equiv_iff //=.
+    rewrite {1}/op /=. destruct (decide _) as [HXf|]; [intros[= ->]|done].
+    by rewrite difference_union_distr_l_L
+      difference_diag_L !left_id_L difference_disjoint_L.
   Qed.
-  Lemma gset_disj_dealloc_empty_local_update X Xf :
-    GSet X ~l~> GSet ∅ @ Some (GSet Xf).
+  Lemma gset_disj_dealloc_empty_local_update X Z :
+    (GSet Z ⋅ GSet X, GSet Z) ~l~> (GSet X,∅).
   Proof.
-    rewrite -(difference_diag_L X). apply gset_disj_dealloc_local_update.
+    apply local_update_total_valid=> /gset_disj_valid_op HZX _ _.
+    assert (X = (Z ∪ X) ∖ Z) as HX by set_solver.
+    rewrite gset_disj_union // {2}HX. apply gset_disj_dealloc_local_update.
+  Qed.
+  Lemma gset_disj_dealloc_op_local_update X Y Z :
+    (GSet Z ⋅ GSet X, GSet Z ⋅ GSet Y) ~l~> (GSet X,GSet Y).
+  Proof.
+    rewrite -{2}(left_id ∅ _ (GSet Y)).
+    apply op_local_update_frame, gset_disj_dealloc_empty_local_update.
   Qed.
 
-  Lemma gset_disj_alloc_local_update X i Xf :
-    i ∉ X → i ∉ Xf → GSet X ~l~> GSet ({[i]} ∪ X) @ Some (GSet Xf).
+  Lemma gset_disj_alloc_op_local_update X Y Z :
+    Z ⊥ X → (GSet X,GSet Y) ~l~> (GSet Z ⋅ GSet X, GSet Z ⋅ GSet Y).
   Proof.
-    intros ??; apply local_update_total; split; simpl.
-    - rewrite !gset_disj_valid_op; set_solver.
-    - intros mZ ?%gset_disj_valid_op HXf.
-      rewrite -gset_disj_union -?assoc ?HXf ?cmra_opM_assoc; set_solver.
+    intros. apply op_local_update_discrete. by rewrite gset_disj_valid_op.
   Qed.
-  Lemma gset_disj_alloc_empty_local_update i Xf :
-    i ∉ Xf → GSet ∅ ~l~> GSet {[i]} @ Some (GSet Xf).
+  Lemma gset_disj_alloc_local_update X Y Z :
+    Z ⊥ X → (GSet X,GSet Y) ~l~> (GSet (Z ∪ X), GSet (Z ∪ Y)).
   Proof.
-    intros. rewrite -(right_id_L _ _ {[i]}).
+    intros. apply local_update_total_valid=> _ _ /gset_disj_included ?.
+    rewrite -!gset_disj_union //; last set_solver.
+    auto using gset_disj_alloc_op_local_update.
+  Qed.
+  Lemma gset_disj_alloc_empty_local_update X Z :
+    Z ⊥ X → (GSet X, GSet ∅) ~l~> (GSet (Z ∪ X), GSet Z).
+  Proof.
+    intros. rewrite -{2}(right_id_L _ union Z).
     apply gset_disj_alloc_local_update; set_solver.
   Qed.
 End gset_disj.

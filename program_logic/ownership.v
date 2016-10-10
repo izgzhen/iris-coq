@@ -67,8 +67,8 @@ Proof.
 Qed.
 Lemma ownP_update σ1 σ2 : ownP_auth σ1 ★ ownP σ1 =r=> ownP_auth σ2 ★ ownP σ2.
 Proof.
-  rewrite /ownP -!own_op. by apply own_update, auth_update_no_frame,
-    option_local_update, exclusive_local_update.
+  rewrite /ownP -!own_op.
+  by apply own_update, auth_update, option_local_update, exclusive_local_update.
 Qed.
 
 (* Invariants *)
@@ -161,8 +161,8 @@ Proof.
       as (i & [? HIi%not_elem_of_dom]%not_elem_of_union & ?); eauto. }
   iDestruct "HE" as (X) "[Hi HE]"; iDestruct "Hi" as %(i & -> & HIi & ?).
   iVs (own_update with "Hw") as "[Hw HiP]".
-  { apply (auth_update_no_frag _ {[ i := invariant_unfold P ]}).
-    apply alloc_unit_singleton_local_update; last done.
+  { eapply auth_update_alloc,
+     (alloc_singleton_local_update _ i (invariant_unfold P)); last done.
     by rewrite /= lookup_fmap HIi. }
   iVsIntro; iExists i;  iSplit; [done|]. rewrite /ownI; iFrame "HiP".
   iExists (<[i:=P]>I); iSplitL "Hw".

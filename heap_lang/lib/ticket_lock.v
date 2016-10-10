@@ -101,8 +101,7 @@ Section proof.
         iVsIntro. wp_let. wp_op=>[_|[]] //.
         wp_if. iVsIntro.
         iApply ("HΦ" with "[-HR] HR"). rewrite /locked; eauto.
-      + iExFalso. iCombine "Ht" "Haown" as "Haown".
-        iDestruct (own_valid with "Haown") as % [_ ?%gset_disj_valid_op].
+      + iDestruct (own_valid_2 with "[$Ht $Haown]") as % [_ ?%gset_disj_valid_op].
         set_solver.
     - iVs ("Hclose" with "[Hlo Hln Ha]").
       { iNext. iExists o, n. by iFrame. }
@@ -123,12 +122,10 @@ Section proof.
     iInv N as (o' n') "(>Hlo' & >Hln' & >Hauth & Haown)" "Hclose".
     destruct (decide (#n' = #n))%V as [[= ->%Nat2Z.inj] | Hneq].
     - wp_cas_suc.
-      iVs (own_update with "Hauth") as "Hauth".
-      { eapply (auth_update_no_frag _ (∅, _)), prod_local_update,
-          (gset_disj_alloc_empty_local_update n); [done|].
-        rewrite elem_of_seq_set. omega. }
-      rewrite pair_op left_id_L. iDestruct "Hauth" as "[Hauth Hofull]".
-      rewrite gset_disj_union; last by apply (seq_set_S_disjoint 0).
+      iVs (own_update with "Hauth") as "[Hauth Hofull]".
+      { eapply auth_update_alloc, prod_local_update_2.
+        eapply (gset_disj_alloc_empty_local_update _ {[ n ]}).
+        apply (seq_set_S_disjoint 0). }
       rewrite -(seq_set_S_union_L 0).
       iVs ("Hclose" with "[Hlo' Hln' Haown Hauth]") as "_".
       { iNext. iExists o', (S n).
@@ -137,7 +134,7 @@ Section proof.
       iApply (wait_loop_spec γ (#lo, #ln)).
       iFrame "HΦ". rewrite /issued; eauto 10.
     - wp_cas_fail.
-      iVs ("Hclose" with "[Hlo' Hln' Hauth Haown]").
+      iVs ("Hclose" with "[Hlo' Hln' Hauth Haown]") as "_".
       { iNext. iExists o', n'. by iFrame. }
       iVsIntro. wp_if. by iApply "IH".
   Qed.
@@ -151,28 +148,20 @@ Section proof.
     rewrite /release. wp_let. wp_proj. wp_proj. wp_bind (! _)%E.
     iInv N as (o' n) "(>Hlo & >Hln & >Hauth & Haown)" "Hclose".
     wp_load.
-    iAssert (o' = o)%I with "[#]" as "%"; subst.
-    { iCombine "Hγo" "Hauth" as "Hγo".
-      by iDestruct (own_valid with "Hγo") (* FIXME: this is horrible *)
-        as %[[[[?|] ?] [=]%leibniz_equiv_iff] ?]%auth_valid_discrete. }
+    iDestruct (own_valid_2 with "[$Hauth $Hγo]") as
+      %[[<-%Excl_included%leibniz_equiv _]%prod_included _]%auth_valid_discrete_2.
     iVs ("Hclose" with "[Hlo Hln Hauth Haown]") as "_".
     { iNext. iExists o, n. by iFrame. }
     iVsIntro. wp_op.
     iInv N as (o' n') "(>Hlo & >Hln & >Hauth & Haown)" "Hclose".
     wp_store.
-    iAssert (o' = o)%I with "[#]" as "%"; subst.
-    { iCombine "Hγo" "Hauth" as "Hγo".
-      by iDestruct (own_valid with "Hγo")
-        as %[[[[?|] ?] [=]%leibniz_equiv_iff] ?]%auth_valid_discrete. }
+    iDestruct (own_valid_2 with "[$Hauth $Hγo]") as
+      %[[<-%Excl_included%leibniz_equiv _]%prod_included _]%auth_valid_discrete_2.
     iDestruct "Haown" as "[[Hγo' _]|?]".
-    { iCombine "Hγo" "Hγo'" as "Hγo".
-      iDestruct (own_valid with "Hγo") as %[[] ?]. }
-    iCombine "Hauth" "Hγo" as "Hauth".
-    iVs (own_update with "Hauth") as "Hauth".
-    { rewrite pair_split_L. apply: (auth_update _ _ (Excl' (S o), _)). (* FIXME: apply is slow *)
-      apply prod_local_update, reflexivity; simpl.
-      by apply option_local_update, exclusive_local_update. }
-    rewrite -pair_split_L. iDestruct "Hauth" as "[Hauth Hγo]".
+    { iDestruct (own_valid_2 with "[$Hγo $Hγo']") as %[[] ?]. }
+    iVs (own_update_2 with "[$Hauth $Hγo]") as "[Hauth Hγo]".
+    { apply auth_update, prod_local_update_1.
+      by apply option_local_update, (exclusive_local_update _ (Excl (S o))). }
     iVs ("Hclose" with "[Hlo Hln Hauth Haown Hγo HR]") as "_"; last auto.
     iNext. iExists (S o), n'.
     rewrite Nat2Z.inj_succ -Z.add_1_r. iFrame. iLeft. by iFrame.
