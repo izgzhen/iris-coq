@@ -44,6 +44,10 @@ Section definitions.
   Proof. solve_proper. Qed.
   Global Instance sts_ctx_persistent N φ : PersistentP (sts_ctx N φ).
   Proof. apply _. Qed.
+  Global Instance sts_own_peristent s : PersistentP (sts_own s ∅).
+  Proof. apply _. Qed.
+  Global Instance sts_ownS_peristent S : PersistentP (sts_ownS S ∅).
+  Proof. apply _. Qed.
 End definitions.
 
 Typeclasses Opaque sts_own sts_ownS sts_inv sts_ctx.
