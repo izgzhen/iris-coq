@@ -47,32 +47,37 @@ Proof. rewrite pvs_eq. solve_proper. Qed.
 Global Instance pvs_proper E1 E2 : Proper ((≡) ==> (≡)) (@pvs Λ Σ _ E1 E2).
 Proof. apply ne_proper, _. Qed.
 
-Lemma pvs_intro' E1 E2 P : E2 ⊆ E1 → ((|={E2,E1}=> True) -★ P) ={E1,E2}=> P.
+Lemma pvs_intro_mask E1 E2 P : E2 ⊆ E1 → P ⊢ |={E1,E2}=> |={E2,E1}=> P.
 Proof.
   intros (E1''&->&?)%subseteq_disjoint_union_L.
-  rewrite pvs_eq /pvs_def ownE_op //; iIntros "H ($ & $ & HE) !==>".
-  iApply except_last_intro. iApply "H".
-  iIntros "[$ $] !==>". by iApply except_last_intro.
+  rewrite pvs_eq /pvs_def ownE_op //. iIntros "H ($ & $ & HE) !==>".
+  iApply except_last_intro. iIntros "[$ $] !==>" . iApply except_last_intro.
+  by iFrame.
 Qed.
+
 Lemma except_last_pvs E1 E2 P : ◇ (|={E1,E2}=> P) ={E1,E2}=> P.
 Proof.
   rewrite pvs_eq. iIntros "H [Hw HE]". iTimeless "H". iApply "H"; by iFrame.
 Qed.
+
 Lemma rvs_pvs E P : (|=r=> P) ={E}=> P.
 Proof.
   rewrite pvs_eq /pvs_def. iIntros "H [$ $]"; iVs "H".
   iVsIntro. by iApply except_last_intro.
 Qed.
+
 Lemma pvs_mono E1 E2 P Q : (P ⊢ Q) → (|={E1,E2}=> P) ={E1,E2}=> Q.
 Proof.
   rewrite pvs_eq /pvs_def. iIntros (HPQ) "HP HwE".
   rewrite -HPQ. by iApply "HP".
 Qed.
+
 Lemma pvs_trans E1 E2 E3 P : (|={E1,E2}=> |={E2,E3}=> P) ={E1,E3}=> P.
 Proof.
   rewrite pvs_eq /pvs_def. iIntros "HP HwE".
   iVs ("HP" with "HwE") as ">(Hw & HE & HP)". iApply "HP"; by iFrame.
 Qed.
+
 Lemma pvs_mask_frame_r' E1 E2 Ef P :
   E1 ⊥ Ef → (|={E1,E2}=> E2 ⊥ Ef → P) ={E1 ∪ Ef,E2 ∪ Ef}=> P.
 Proof.
@@ -81,6 +86,7 @@ Proof.
   iDestruct (ownE_op' with "[HE2 HEf]") as "[? $]"; first by iFrame.
   iVsIntro; iApply except_last_intro. by iApply "HP".
 Qed.
+
 Lemma pvs_frame_r E1 E2 P Q : (|={E1,E2}=> P) ★ Q ={E1,E2}=> P ★ Q.
 Proof. rewrite pvs_eq /pvs_def. by iIntros "[HwP $]". Qed.
 
@@ -102,6 +108,11 @@ Lemma pvs_wand_l E1 E2 P Q : (P -★ Q) ★ (|={E1,E2}=> P) ={E1,E2}=> Q.
 Proof. by rewrite pvs_frame_l wand_elim_l. Qed.
 Lemma pvs_wand_r E1 E2 P Q : (|={E1,E2}=> P) ★ (P -★ Q) ={E1,E2}=> Q.
 Proof. by rewrite pvs_frame_r wand_elim_r. Qed.
+
+Lemma pvs_intro' E1 E2 P : E2 ⊆ E1 → ((|={E2,E1}=> True) -★ P) ={E1,E2}=> P.
+Proof.
+  iIntros (?) "Hw". iApply pvs_wand_l. iFrame. by iApply pvs_intro_mask.
+Qed.
 
 Lemma pvs_trans_frame E1 E2 E3 P Q :
   ((Q ={E2,E3}=★ True) ★ |={E1,E2}=> (Q ★ P)) ={E1,E3}=> P.

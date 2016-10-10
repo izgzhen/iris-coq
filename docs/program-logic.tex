@@ -106,40 +106,37 @@ View updates satisfy the following basic proof rules:
 
 \infer[vup-intro-mask]
 {\mask_2 \subseteq \mask_1}
-{(\pvs[\mask_2][\mask_1]\TRUE) \wand \prop \proves \pvs[\mask_1][\mask_2] \prop}
+{\prop \proves \pvs[\mask_1][\mask_2]\pvs[\mask_2][\mask_1] \prop}
 
 \infer[vup-trans]
 {}
 {\pvs[\mask_1][\mask_2] \pvs[\mask_2][\mask_3] \prop \proves \pvs[\mask_1][\mask_3] \prop}
 
+\infer[vup-upd]
+{}{\upd\prop \proves \pvs[\mask] \prop}
+
 \infer[vup-frame]
-{}{\propB * \pvs[\mask_1][\mask_2]\prop \proves \pvs[\mask_1][\mask_2] \propB * \prop}
+{}{\propB * \pvs[\mask_1][\mask_2]\prop \proves \pvs[\mask_1 \uplus \mask_\f][\mask_2 \uplus \mask_\f] \propB * \prop}
 
 \inferH{vup-update}
 {\melt \mupd \meltsB}
 {\ownM\melt \proves \pvs[\mask] \Exists\meltB\in\meltsB. \ownM\meltB}
 
-\infer[vup-upd]
-{}{\upd\prop \proves \pvs[\mask] \prop}
-
 \infer[vup-timeless]
 {\timeless\prop}
 {\later\prop \proves \pvs[\mask] \prop}
-
-\infer[vup-mask-frame]
-{}{\pvs[\mask_1][\mask_2] \prop \proves \pvs[\mask_1 \uplus \mask_\f][\mask_2 \uplus \mask_\f] \prop}
-
-\inferH{vup-allocI}
-{\text{$\mask$ is infinite}}
-{\later\prop \proves \pvs[\mask] \Exists \iname \in \mask. \knowInv\iname\prop}
-
-\inferH{vup-openI}
-{}{\knowInv\iname\prop \proves \pvs[\set\iname][\emptyset] \later\prop}
-
-\inferH{vup-closeI}
-{}{\knowInv\iname\prop \land \later\prop \proves \pvs[\emptyset][\set\iname] \TRUE}
-
+%
+% \inferH{vup-allocI}
+% {\text{$\mask$ is infinite}}
+% {\later\prop \proves \pvs[\mask] \Exists \iname \in \mask. \knowInv\iname\prop}
+%gov
+% \inferH{vup-openI}
+% {}{\knowInv\iname\prop \proves \pvs[\set\iname][\emptyset] \later\prop}
+%
+% \inferH{vup-closeI}
+% {}{\knowInv\iname\prop \land \later\prop \proves \pvs[\emptyset][\set\iname] \TRUE}
 \end{mathpar}
+(There are no rules related to invariants here. Those rules will be discussed later, in \Sref{sec:invariants}.)
 
 We further define the notions of \emph{view shifts} and \emph{linear view shifts}:
 \begin{align*}
@@ -172,17 +169,17 @@ Still, just to give an idea of what view shifts ``are'', here are some proof rul
 \inferH{vs-timeless}
   {\timeless{\prop}}
   {\later \prop \vs \prop}
-\and
-\inferH{vs-allocI}
-  {\infinite(\mask)}
-  {\later{\prop} \vs[\mask] \exists \iname\in\mask.\; \knowInv{\iname}{\prop}}
-\and
-\axiomH{vs-openI}
-  {\knowInv{\iname}{\prop} \proves \TRUE \vs[\{ \iname \} ][\emptyset] \later \prop}
-\and
-\axiomH{vs-closeI}
-  {\knowInv{\iname}{\prop} \proves \later \prop \vs[\emptyset][\{ \iname \} ] \TRUE }
 
+% \inferH{vs-allocI}
+%   {\infinite(\mask)}
+%   {\later{\prop} \vs[\mask] \exists \iname\in\mask.\; \knowInv{\iname}{\prop}}
+% \and
+% \axiomH{vs-openI}
+%   {\knowInv{\iname}{\prop} \proves \TRUE \vs[\{ \iname \} ][\emptyset] \later \prop}
+% \and
+% \axiomH{vs-closeI}
+%   {\knowInv{\iname}{\prop} \proves \later \prop \vs[\emptyset][\{ \iname \} ] \TRUE }
+%
 \inferHB{vs-disj}
   {\prop \vs[\mask_1][\mask_2] \propC \and \propB \vs[\mask_1][\mask_2] \propC}
   {\prop \lor \propB \vs[\mask_1][\mask_2] \propC}
@@ -281,6 +278,9 @@ Still, for a more traditional presentation, we can easily derive the notion of a
 \[
 \hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \wpre{\expr}[\mask]{\Ret\val.\propB})}
 \]
+
+\subsection{Invariant Namespaces}
+\label{sec:invariants}
 
 \subsection{Lost stuff}
 \ralf{TODO: Right now, this is a dump of all the things that moved out of the base...}
