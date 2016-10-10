@@ -294,23 +294,32 @@ We can derive some specialized forms of the lifting axioms for the operational s
 
 \paragraph{Adequacy of weakest precondition.}
 
-The adequacy statement concerning functional correctness reads as follows:
+The purpose of the adequacy statement is to show that our notion of weakest preconditions is \emph{realistic} in the sense that it actually has anything to do with the actual behavior of the program.
+There are two properties we are looking for: First of all, the postcondition should reflect actual properties of the values the program can terminate with.
+Second, a proof of a weakest precondition with any postcondition should imply that the program is \emph{safe}, \ie that it does not get stuck.
+
+To express the adequacy statement for functional correctness, we assume we are given some set $V \in \textdom{Val}$ of legal return values.
+Furthermore, we assume that the signature $\Sig$ adds a predicate $\pred$ to the logic which reflects $V$ into the logic:
+\[\begin{array}{rMcMl}
+  \Sem\pred &:& \Sem{\textdom{Val}\,} \nfn \Sem\Prop \\
+  \Sem\pred &\eqdef& \Lam \val. \Lam \any. \setComp{n}{v \in V}
+\end{array}\]
+The signature can of course state arbitrary additional properties of $\pred$, as long as they are proven sound.
+
+The adequacy statement now reads as follows:
 \begin{align*}
- &\All \mask, \expr, \val, \pred, \state, \melt, \state', \tpool'.
- \\&(\All n. \melt \in \mval_n) \Ra
- \\&( \ownPhys\state * \ownM\melt \proves \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
+ &\All \mask, \expr, \val, \pred, \state, \state', \tpool'.
+ \\&( \ownPhys\state \proves \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
  \\&\cfg{\state}{[\expr]} \step^\ast
      \cfg{\state'}{[\val] \dplus \tpool'} \Ra
-     \\&\pred(\val)
+     \\&\val \in V
 \end{align*}
-where $\pred$ is a \emph{meta-level} predicate over values, \ie it can mention neither resources nor invariants.
-\ralf{TODO: We can't just embed meta-level predicates like this. After all, this is a deep embedding.}
 
-Furthermore, the following adequacy statement shows that our weakest preconditions imply that the execution never gets \emph{stuck}: Every expression in the thread pool either is a value, or can reduce further.
+The adequacy statement for safety says that our weakest preconditions imply that every expression in the thread pool either is a value, or can reduce further.
 \begin{align*}
- &\All \mask, \expr, \state, \melt, \state', \tpool'.
+ &\All \mask, \expr, \state, \state', \tpool'.
  \\&(\All n. \melt \in \mval_n) \Ra
- \\&( \ownPhys\state * \ownM\melt \proves \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
+ \\&( \ownPhys\state \proves \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
  \\&\cfg{\state}{[\expr]} \step^\ast
      \cfg{\state'}{\tpool'} \Ra
      \\&\All\expr'\in\tpool'. \toval(\expr') \neq \bot \lor \red(\expr', \state')
