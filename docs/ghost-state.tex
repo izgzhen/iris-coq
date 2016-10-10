@@ -1,5 +1,141 @@
-\section{Composeable Dynamic Higher-Order Resources}
-\label{sec:hogs}
+\section{Extensions of the Base Logic}
+
+In this section we discuss some additional constructions that we will within and on top of the base logic.
+These are not ``extensions'' in the sense that they change the proof power of the logic, they just form useful derived principles.
+
+\subsection{Derived rules about base connectives}
+We collect here some important and frequently used derived proof rules.
+\begin{mathparpagebreakable}
+  \infer{}
+  {\prop \Ra \propB \proves \prop \wand \propB}
+
+  \infer{}
+  {\prop * \Exists\var.\propB \provesIff \Exists\var. \prop * \propB}
+
+  \infer{}
+  {\prop * \All\var.\propB \proves \All\var. \prop * \propB}
+
+  \infer{}
+  {\always(\prop*\propB) \provesIff \always\prop * \always\propB}
+
+  \infer{}
+  {\always(\prop \Ra \propB) \proves \always\prop \Ra \always\propB}
+
+  \infer{}
+  {\always(\prop \wand \propB) \proves \always\prop \wand \always\propB}
+
+  \infer{}
+  {\always(\prop \wand \propB) \provesIff \always(\prop \Ra \propB)}
+
+  \infer{}
+  {\later(\prop \Ra \propB) \proves \later\prop \Ra \later\propB}
+
+  \infer{}
+  {\later(\prop \wand \propB) \proves \later\prop \wand \later\propB}
+
+  \infer{}
+  {\prop \proves \later\prop}
+\end{mathparpagebreakable}
+
+\subsection{Persistent assertions}
+We call an assertion $\prop$ \emph{persistent} if $\prop \proves \always\prop$.
+These are assertions that ``don't own anything'', so we can (and will) treat them like ``normal'' intuitionistic assertions.
+
+Of course, $\always\prop$ is persistent for any $\prop$.
+Furthermore, by the proof rules given in \Sref{sec:proof-rules}, $\TRUE$, $\FALSE$, $t = t'$ as well as $\ownGhost\gname{\mcore\melt}$ and $\mval(\melt)$ are persistent.
+Persistence is preserved by conjunction, disjunction, separating conjunction as well as universal and existential quantification and $\later$.
+
+
+
+\subsection{Timeless assertions and except-0}
+
+One of the troubles of working in a step-indexed logic is the ``later'' modality $\later$.
+It turns out that we can somewhat mitigate this trouble by working below the following \emph{except-0} modality:
+\[ \diamond \prop \eqdef \later\FALSE \lor \Prop \]
+
+This modality is useful because there is a class of assertions which we call \emph{timeless} assertions, for which we have
+\[ \timeless{\prop} \eqdef \later\prop \proves \diamond\prop  \]
+In other words, when working below the except-0 modality, we can \emph{strip away} the later from timeless assertions.
+
+The following ruels can be derived about except-0:
+\begin{mathpar}
+  \inferH{ex0-mono}
+  {\prop \proves \propB}
+  {\diamond\prop \proves \diamond\propB}
+
+  \axiomH{ex0-intro}
+  {\prop \proves \diamond\prop}
+
+  \axiomH{ex0-idem}
+  {\diamond\diamond\prop \proves \diamond\prop}
+
+\begin{array}[c]{rMcMl}
+  \diamond{(\prop * \propB)} &\provesIff& \diamond\prop * \diamond\propB \\
+  \diamond{(\prop \land \propB)} &\provesIff& \diamond\prop \land \diamond\propB \\
+  \diamond{(\prop \lor \propB)} &\provesIff& \diamond\prop \lor \diamond\propB
+\end{array}
+
+\begin{array}[c]{rMcMl}
+  \diamond{\All x. \prop} &\provesIff& \All x. \diamond{\prop}   \\
+  \diamond{\Exists x. \prop} &\provesIff& \Exists x. \diamond{\prop} \\
+  \diamond\always{\prop} &\provesIff& \always\diamond{\prop} \\
+  \diamond\later\prop &\proves& \later{\prop}
+\end{array}
+\end{mathpar}
+
+The following rules identify the class of timeless assertions:
+\begin{mathparpagebreakable}
+\infer
+{\vctx \proves \timeless{\prop} \and \vctx \proves \timeless{\propB}}
+{\vctx \proves \timeless{\prop \land \propB}}
+
+\infer
+{\vctx \proves \timeless{\prop} \and \vctx \proves \timeless{\propB}}
+{\vctx \proves \timeless{\prop \lor \propB}}
+
+\infer
+{\vctx \proves \timeless{\prop} \and \vctx \proves \timeless{\propB}}
+{\vctx \proves \timeless{\prop * \propB}}
+
+\infer
+{\vctx \proves \timeless{\prop}}
+{\vctx \proves \timeless{\always\prop}}
+
+\infer
+{\vctx \proves \timeless{\propB}}
+{\vctx \proves \timeless{\prop \Ra \propB}}
+
+\infer
+{\vctx \proves \timeless{\propB}}
+{\vctx \proves \timeless{\prop \wand \propB}}
+
+\infer
+{\vctx,\var:\type \proves \timeless{\prop}}
+{\vctx \proves \timeless{\All\var:\type.\prop}}
+
+\infer
+{\vctx,\var:\type \proves \timeless{\prop}}
+{\vctx \proves \timeless{\Exists\var:\type.\prop}}
+
+\axiom{\timeless{\TRUE}}
+
+\axiom{\timeless{\FALSE}}
+
+\infer
+{\text{$\term$ or $\term'$ is a discrete COFE element}}
+{\timeless{\term =_\type \term'}}
+
+\infer
+{\text{$\melt$ is a discrete COFE element}}
+{\timeless{\ownM\melt}}
+
+\infer
+{\text{$\melt$ is an element of a discrete CMRA}}
+{\timeless{\mval(\melt)}}
+\end{mathparpagebreakable}
+
+\subsection{DC logic: Dynamic Composeable Resources}
+\label{sec:dc-logic}
 
 The base logic described in \Sref{sec:base-logic} works over an arbitrary CMRA $\monoid$ defining the structure of the resources.
 It turns out that we can generalize this further and permit picking CMRAs ``$\iFunc(\Prop)$'' that depend on the structure of assertions themselves.
@@ -15,7 +151,7 @@ The purpose of this section is to describe how we solve these issues.
 
 \paragraph{Picking the resources.}
 The key ingredient that we will employ on top of the base logic is to give some more fixed structure to the resources.
-To instantiate the composeable, dynamic logic, the user picks a family of locally contractive bifunctors $(\iFunc_i : \COFEs \to \CMRAs)_{i \in \mathcal{I}}$.
+To instantiate the DC logic (base logic with dynamic composeable resources), the user picks a family of locally contractive bifunctors $(\iFunc_i : \COFEs \to \CMRAs)_{i \in \mathcal{I}}$.
 (This is in contrast to the base logic, where the user picks a single, fixed CMRA that has a unit.)
 
 From this, we construct the bifunctor defining the overall resources as follows:
@@ -84,9 +220,12 @@ We can show the following properties for this form of ownership:
   \axiomH{res-valid}
     {\ownGhost\gname{\melt : M_i} \Ra \mval_{M_i}(\melt)}
 
+  \inferH{res-timeless}
+    {\text{$\melt$ is a discrete COFE element}}
+    {\timeless{\ownGhost\gname{\melt : M_i}}}
 \end{mathparpagebreakable}
 
-Below, we will always work in the context of this dynamic, composeable logic.
+Below, we will always work within (an instance of) the DC logic.
 Whenever a CMRA is used in a proof, we implicitly assume it to be available in the global family of functors.
 We will typically leave the $M_i$ implicit when asserting ghost ownership, as the type of $\melt$ will be clear from the context.
 

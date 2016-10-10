@@ -309,9 +309,11 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
   {\prop \proves \propB}
   {\always{\prop} \proves \always{\propB}}
 \and
+\infer[$\always$-E]{}
+{\always\prop \proves \prop}
+\and
 \begin{array}[c]{rMcMl}
   \TRUE &\proves& \always{\TRUE} \\
-  \always{\prop} &\proves& \prop \\
   \always{(\prop \land \propB)} &\proves& \always{(\prop * \propB)} \\
   \always{\prop} \land \propB &\proves& \always{\prop} * \propB
 \end{array}

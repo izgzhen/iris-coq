@@ -242,10 +242,10 @@
       \tensor*[^{#1}]{#2}{^{#3}}
     }%
   }}%
-\NewDocumentCommand \vs {O{} O{}} {\vsGen[#1]{\Rrightarrow}[#2]}
-\NewDocumentCommand \vsL {O{} O{}} {\vsGen[#1]{\Lleftarrow}[#2]}
+\NewDocumentCommand \vs {O{} O{}} {\kern-0.5ex\vsGen[#1]{\Rrightarrow}[#2]}
+\NewDocumentCommand \vsL {O{} O{}} {\\kern-0.5exvsGen[#1]{\Lleftarrow}[#2]}
 \NewDocumentCommand \vsE {O{} O{}} %
-  {\vsGen[#1]{\Lleftarrow\!\!\!\Rrightarrow}[#2]}
+  {\kern-0.5ex\vsGen[#1]{\Lleftarrow\!\!\!\Rrightarrow}[#2]}
 \NewDocumentCommand \pvs {O{} O{}} {\mathord{\vsGen[#1]{{\mid\kern-0.4ex\Rrightarrow\kern-0.25ex}}[#2]\kern0.2ex}}
 
 \newcommand\vsWand{\kern0.1ex\tikz[baseline=(base),line width=0.375pt]{%

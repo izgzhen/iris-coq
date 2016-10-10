@@ -59,7 +59,7 @@ For any language $\Lang$, we define the corresponding thread-pool semantics.
 \section{Program Logic}
 \label{sec:program-logic}
 
-This section describes how to build a program logic for an arbitrary language (\cf \Sref{sec:language}) on top of the logic described in \Sref{sec:hogs}.
+This section describes how to build a program logic for an arbitrary language (\cf \Sref{sec:language}) on top of the logic described in \Sref{sec:dc-logic}.
 So in the following, we assume that some language $\Lang$ was fixed.
 
 \subsection{World Satisfaction, Invariants, View Shifts}
@@ -91,25 +91,120 @@ We can now define the assertion $W$ (\emph{world satisfaction}) which ensures th
 The following assertion states that an invariant with name $\iname$ exists and maintains assertion $\prop$:
 \[ \knowInv\iname\prop \eqdef \ownGhost{\gname_{\textmon{Inv}}}{\set{\iname \mapsto \authfrag \aginj(\latertinj(\wIso(\prop)))}} \]
 
-\paragraph{View Shifts.}
+\paragraph{View Updates and View Shifts.}
 Next, we define \emph{view updates}, which are essentially the same as the resource updates of the base logic ($\Sref{sec:base-logic}$), except that they also have access to world satisfaction and can enable and disable invariants:
-\[ \pvs[\mask_1][\mask_2] \prop \eqdef W * \ownGhost{\gname_{\textmon{En}}}{\mask_1} \wand W * \ownGhost{\gname_{\textmon{En}}}{\mask_2} * \prop \]
+\[ \pvs[\mask_1][\mask_2] \prop \eqdef W * \ownGhost{\gname_{\textmon{En}}}{\mask_1} \wand \upd\diamond (W * \ownGhost{\gname_{\textmon{En}}}{\mask_2} * \prop) \]
 Here, $\mask_1$ and $\mask_2$ are the \emph{masks} of the view update, defining which invariants have to be (at least!) available before and after the update.
-We will write $\top$ for the largest possible mask, $\mathbb N$.
+We use $\top$ as symbol for the largest possible mask, $\mathbb N$.
+We will write $\pvs[\mask] \prop$ for $\pvs[\mask][\mask]\prop$.
+%
+View updates satisfy the following basic proof rules:
+\begin{mathpar}
+\infer[vup-mono]
+{\prop \proves \propB}
+{\pvs[\mask_1][\mask_2] \prop \proves \pvs[\mask_1][\mask_2] \propB}
+
+\infer[vup-intro-mask]
+{\mask_2 \subseteq \mask_1}
+{(\pvs[\mask_2][\mask_1]\TRUE) \wand \prop \proves \pvs[\mask_1][\mask_2] \prop}
+
+\infer[vup-trans]
+{}
+{\pvs[\mask_1][\mask_2] \pvs[\mask_2][\mask_3] \prop \proves \pvs[\mask_1][\mask_3] \prop}
+
+\infer[vup-frame]
+{}{\propB * \pvs[\mask_1][\mask_2]\prop \proves \pvs[\mask_1][\mask_2] \propB * \prop}
+
+\inferH{vup-update}
+{\melt \mupd \meltsB}
+{\ownM\melt \proves \pvs[\mask] \Exists\meltB\in\meltsB. \ownM\meltB}
+
+\infer[vup-upd]
+{}{\upd\prop \proves \pvs[\mask] \prop}
+
+\infer[vup-timeless]
+{\timeless\prop}
+{\later\prop \proves \pvs[\mask] \prop}
+
+\infer[vup-mask-frame]
+{}{\pvs[\mask_1][\mask_2] \prop \proves \pvs[\mask_1 \uplus \mask_\f][\mask_2 \uplus \mask_\f] \prop}
+
+\inferH{vup-allocI}
+{\text{$\mask$ is infinite}}
+{\later\prop \proves \pvs[\mask] \Exists \iname \in \mask. \knowInv\iname\prop}
+
+\inferH{vup-openI}
+{}{\knowInv\iname\prop \proves \pvs[\set\iname][\emptyset] \later\prop}
+
+\inferH{vup-closeI}
+{}{\knowInv\iname\prop \land \later\prop \proves \pvs[\emptyset][\set\iname] \TRUE}
+
+\end{mathpar}
 
 We further define the notions of \emph{view shifts} and \emph{linear view shifts}:
 \begin{align*}
   \prop \vs[\mask_1][\mask_2] \propB \eqdef{}& \always(\prop \Ra \pvs[\mask_1][\mask_2] \propB) \\
   \prop \vsW[\mask_1][\mask_2] \propB \eqdef{}& \prop \wand \pvs[\mask_1][\mask_2] \propB
 \end{align*}
+These two are useful when writing down specifications, but for reasoning, it is typically easier to just work directly with view updates.
+Still, just to give an idea of what view shifts ``are'', here are some proof rules for them:
+\begin{mathparpagebreakable}
+\inferH{vs-update}
+  {\melt \mupd \meltsB}
+  {\ownGhost\gname{\melt} \vs \exists \meltB \in \meltsB.\; \ownGhost\gname{\meltB}}
+\and
+\inferH{vs-trans}
+  {\prop \vs[\mask_1][\mask_2] \propB \and \propB \vs[\mask_2][\mask_3] \propC}
+  {\prop \vs[\mask_1][\mask_3] \propC}
+\and
+\inferH{vs-imp}
+  {\always{(\prop \Ra \propB)}}
+  {\prop \vs[\emptyset] \propB}
+\and
+\inferH{vs-mask-frame}
+  {\prop \vs[\mask_1][\mask_2] \propB}
+  {\prop \vs[\mask_1 \uplus \mask'][\mask_2 \uplus \mask'] \propB}
+\and
+\inferH{vs-frame}
+  {\prop \vs[\mask_1][\mask_2] \propB}
+  {\prop * \propC \vs[\mask_1][\mask_2] \propB * \propC}
+\and
+\inferH{vs-timeless}
+  {\timeless{\prop}}
+  {\later \prop \vs \prop}
+\and
+\inferH{vs-allocI}
+  {\infinite(\mask)}
+  {\later{\prop} \vs[\mask] \exists \iname\in\mask.\; \knowInv{\iname}{\prop}}
+\and
+\axiomH{vs-openI}
+  {\knowInv{\iname}{\prop} \proves \TRUE \vs[\{ \iname \} ][\emptyset] \later \prop}
+\and
+\axiomH{vs-closeI}
+  {\knowInv{\iname}{\prop} \proves \later \prop \vs[\emptyset][\{ \iname \} ] \TRUE }
 
-We will write $\pvs[\mask] \prop$ for $\pvs[\mask][\mask]\prop$, and similar for the view shifts.
+\inferHB{vs-disj}
+  {\prop \vs[\mask_1][\mask_2] \propC \and \propB \vs[\mask_1][\mask_2] \propC}
+  {\prop \lor \propB \vs[\mask_1][\mask_2] \propC}
+\and
+\inferHB{vs-exist}
+  {\All \var. (\prop \vs[\mask_1][\mask_2] \propB)}
+  {(\Exists \var. \prop) \vs[\mask_1][\mask_2] \propB}
+\and
+\inferHB{vs-always}
+  {\always\propB \proves \prop \vs[\mask_1][\mask_2] \propC}
+  {\prop \land \always{\propB} \vs[\mask_1][\mask_2] \propC}
+ \and
+\inferH{vs-false}
+  {}
+  {\FALSE \vs[\mask_1][\mask_2] \prop }
+\end{mathparpagebreakable}
 
-\ralf{Show some proof rules.}
-
-\subsection{Hoare Triples}
+\subsection{Weakest Precondition}
 
 Finally, we can define the core piece of the program logic, the assertion that reasons about program behavior: Weakest precondition, from which Hoare triples will be derived.
+
+\paragraph{Defining weakest precondition.}
 We assume that everything making up the definition of the language, \ie values, expressions, states, the conversion functions, reduction relation and all their properties, are suitably reflected into the logic (\ie they are part of the signature $\Sig$).
 
 \begin{align*}
@@ -127,7 +222,61 @@ This ties the authoritative part of \textmon{State} to the actual physical state
 The fragment will then be available to the user of the logic, as their way of talking about the physical state:
 \[ \ownPhys\state \eqdef \ownGhost{\gname_{\textmon{State}}}{\authfrag \state} \]
 
-It turns out that weakest precondition is actually quite convenient to work with, in particular when perfoming these proofs on paper.
+\paragraph{Laws of weakest precondition.}
+The following rules can all be derived inside the DC logic:
+\begin{mathpar}
+\infer[wp-value]
+{}{\prop[\val/\var] \proves \wpre{\val}[\mask]{\Ret\var.\prop}}
+
+\infer[wp-mono]
+{\mask_1 \subseteq \mask_2 \and \vctx,\var:\textlog{val}\mid\prop \proves \propB}
+{\vctx\mid\wpre\expr[\mask_1]{\Ret\var.\prop} \proves \wpre\expr[\mask_2]{\Ret\var.\propB}}
+
+\infer[pvs-wp]
+{}{\pvs[\mask] \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
+
+\infer[wp-pvs]
+{}{\wpre\expr[\mask]{\Ret\var.\pvs[\mask] \prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
+
+\infer[wp-atomic]
+{\physatomic{\expr}}
+{\pvs[\mask_1][\mask_2] \wpre\expr[\mask_2]{\Ret\var. \pvs[\mask_2][\mask_1]\prop}
+ \proves \wpre\expr[\mask_1]{\Ret\var.\prop}}
+
+\infer[wp-frame]
+{}{\propB * \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\propB*\prop}}
+
+\infer[wp-frame-step]
+{\toval(\expr) = \bot \and \mask_2 \subseteq \mask_1}
+{\wpre\expr[\mask_2]{\Ret\var.\prop} * \pvs[\mask_1][\mask_2]\later\pvs[\mask_2][\mask_1]\propB \proves \wpre\expr[\mask_1]{\Ret\var.\propB*\prop}}
+
+\infer[wp-bind]
+{\text{$\lctx$ is a context}}
+{\wpre\expr[\mask]{\Ret\var. \wpre{\lctx(\ofval(\var))}[\mask]{\Ret\varB.\prop}} \proves \wpre{\lctx(\expr)}[\mask]{\Ret\varB.\prop}}
+\end{mathpar}
+
+We will also want rules that connect weakest preconditions to the operational semantics of the language.
+In order to cover the most general case, those rules end up being more complicated:
+\begin{mathpar}
+  \infer[wp-lift-step]
+  {\toval(\expr_1) = \bot}
+  { {\begin{inbox} % for some crazy reason, LaTeX is actually sensitive to the space between the "{ {" here and the "} }" below...
+        ~~\pvs[\mask][\emptyset] \Exists \state_1. \red(\expr_1,\state_1) * \later\ownPhys{\state_1} * {}\\\qquad~~ \later\All \expr_2, \state_2, \bar\expr. \Bigl( (\expr_1, \state_1 \step \expr_2, \state_2, \bar\expr) * \ownPhys{\state_2} \Bigr) \wand \pvs[\emptyset][\mask] \Bigl(\wpre{\expr_2}[\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \bar\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE}\Bigr)  {}\\\proves \wpre{\expr_1}[\mask]{\Ret\var.\prop}
+      \end{inbox}} }
+\\\\
+  \infer[wp-lift-pure-step]
+  {\toval(\expr_1) = \bot \and
+   \All \state_1. \red(\expr_1, \state_1) \and
+   \All \state_1, \expr_2, \state_2, \bar\expr. \expr_1,\state_1 \step \expr_2,\state_2,\bar\expr \Ra \state_1 = \state_2 }
+  {\later\All \state, \expr_2, \bar\expr. (\expr_1,\state \step \expr_2, \state,\bar\expr)  \Ra \wpre{\expr_2}[\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \bar\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \proves \wpre{\expr_1}[\mask]{\Ret\var.\prop}}
+\end{mathpar}
+
+
+\paragraph{Adequacy of weakest precondition.}
+~\ralf{TODO.}
+
+\paragraph{Hoare triples.}
+It turns out that weakest precondition is actually quite convenient to work with, in particular when perfoming these proofs in Coq.
 Still, for a more traditional presentation, we can easily derive the notion of a Hoare triple:
 \[
 \hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \wpre{\expr}[\mask]{\Ret\val.\propB})}
@@ -137,156 +286,10 @@ Still, for a more traditional presentation, we can easily derive the notion of a
 \ralf{TODO: Right now, this is a dump of all the things that moved out of the base...}
 
 
-We will write $\pvs[\term] \prop$ for $\pvs[\term][\term] \prop$.
-If we omit the mask, then it is $\top$ for weakest precondition $\wpre\expr{\Ret\var.\prop}$ and $\emptyset$ for primitive view shifts $\pvs \prop$.
-%FIXME $\top$ is not a term in the logic. Neither is any of the operations on masks that we use in the rules for weakestpre.
-
-Some propositions are \emph{timeless}, which intuitively means that step-indexing does not affect them.
-This is a \emph{meta-level} assertion about propositions, defined as follows:
-
-\[ \vctx \proves \timeless{\prop} \eqdef \vctx\mid\later\prop \proves \prop \lor \later\FALSE \]
-
-\paragraph{Metavariable conventions.}
-We introduce additional metavariables ranging over terms and generally let the choice of metavariable indicate the term's type:
-\[
-\begin{array}{r|l}
- \text{metavariable} & \text{type} \\\hline
-  \term, \termB & \text{arbitrary} \\
-  \val, \valB & \textlog{Val} \\
-  \expr & \textlog{Expr} \\
-  \state & \textlog{State} \\
-\end{array}
-\qquad\qquad
-\begin{array}{r|l}
- \text{metavariable} & \text{type} \\\hline
-  \iname & \textlog{InvName} \\
-  \mask & \textlog{InvMask} \\
-  \melt, \meltB & \textlog{M} \\
-  \prop, \propB, \propC & \Prop \\
-  \pred, \predB, \predC & \type\to\Prop \text{ (when $\type$ is clear from context)} \\
-\end{array}
-\]
-
-\begin{mathpar}
-\infer
-{\text{$\term$ or $\term'$ is a discrete COFE element}}
-{\timeless{\term =_\type \term'}}
-
-\infer
-{\text{$\melt$ is a discrete COFE element}}
-{\timeless{\ownM\melt}}
-
-\infer
-{\text{$\melt$ is an element of a discrete CMRA}}
-{\timeless{\mval(\melt)}}
-
-\infer{}
-{\timeless{\ownPhys\state}}
-
-\infer
-{\vctx \proves \timeless{\propB}}
-{\vctx \proves \timeless{\prop \Ra \propB}}
-
-\infer
-{\vctx \proves \timeless{\propB}}
-{\vctx \proves \timeless{\prop \wand \propB}}
-
-\infer
-{\vctx,\var:\type \proves \timeless{\prop}}
-{\vctx \proves \timeless{\All\var:\type.\prop}}
-
-\infer
-{\vctx,\var:\type \proves \timeless{\prop}}
-{\vctx \proves \timeless{\Exists\var:\type.\prop}}
-\end{mathpar}
-
-\begin{mathpar}
-\infer[pvs-intro]
-{}{\prop \proves \pvs[\mask] \prop}
-
-\infer[pvs-mono]
-{\prop \proves \propB}
-{\pvs[\mask_1][\mask_2] \prop \proves \pvs[\mask_1][\mask_2] \propB}
-
-\infer[pvs-timeless]
-{\timeless\prop}
-{\later\prop \proves \pvs[\mask] \prop}
-
-\infer[pvs-trans]
-{\mask_2 \subseteq \mask_1 \cup \mask_3}
-{\pvs[\mask_1][\mask_2] \pvs[\mask_2][\mask_3] \prop \proves \pvs[\mask_1][\mask_3] \prop}
-
-\infer[pvs-mask-frame]
-{}{\pvs[\mask_1][\mask_2] \prop \proves \pvs[\mask_1 \uplus \mask_\f][\mask_2 \uplus \mask_\f] \prop}
-
-\infer[pvs-frame]
-{}{\propB * \pvs[\mask_1][\mask_2]\prop \proves \pvs[\mask_1][\mask_2] \propB * \prop}
-
-\inferH{pvs-allocI}
-{\text{$\mask$ is infinite}}
-{\later\prop \proves \pvs[\mask] \Exists \iname \in \mask. \knowInv\iname\prop}
-
-\inferH{pvs-openI}
-{}{\knowInv\iname\prop \proves \pvs[\set\iname][\emptyset] \later\prop}
-
-\inferH{pvs-closeI}
-{}{\knowInv\iname\prop \land \later\prop \proves \pvs[\emptyset][\set\iname] \TRUE}
-
-\inferH{pvs-update}
-{\melt \mupd \meltsB}
-{\ownM\melt \proves \pvs[\mask] \Exists\meltB\in\meltsB. \ownM\meltB}
-\end{mathpar}
 
 \paragraph{Laws of weakest preconditions.}
-\begin{mathpar}
-\infer[wp-value]
-{}{\prop[\val/\var] \proves \wpre{\val}[\mask]{\Ret\var.\prop}}
-
-\infer[wp-mono]
-{\mask_1 \subseteq \mask_2 \and \var:\textlog{val}\mid\prop \proves \propB}
-{\wpre\expr[\mask_1]{\Ret\var.\prop} \proves \wpre\expr[\mask_2]{\Ret\var.\propB}}
-
-\infer[pvs-wp]
-{}{\pvs[\mask] \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
-
-\infer[wp-pvs]
-{}{\wpre\expr[\mask]{\Ret\var.\pvs[\mask] \prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
-
-\infer[wp-atomic]
-{\mask_2 \subseteq \mask_1 \and \physatomic{\expr}}
-{\pvs[\mask_1][\mask_2] \wpre\expr[\mask_2]{\Ret\var. \pvs[\mask_2][\mask_1]\prop}
- \proves \wpre\expr[\mask_1]{\Ret\var.\prop}}
-
-\infer[wp-frame]
-{}{\propB * \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\propB*\prop}}
-
-\infer[wp-frame-step]
-{\toval(\expr) = \bot \and \mask_2 \subseteq \mask_1}
-{\wpre\expr[\mask]{\Ret\var.\prop} * \pvs[\mask_1][\mask_2]\later\pvs[\mask_2][\mask_1]\propB \proves \wpre\expr[\mask \uplus \mask_1]{\Ret\var.\propB*\prop}}
-
-\infer[wp-bind]
-{\text{$\lctx$ is a context}}
-{\wpre\expr[\mask]{\Ret\var. \wpre{\lctx(\ofval(\var))}[\mask]{\Ret\varB.\prop}} \proves \wpre{\lctx(\expr)}[\mask]{\Ret\varB.\prop}}
-\end{mathpar}
 
 \paragraph{Lifting of operational semantics.}~
-\begin{mathpar}
-  \infer[wp-lift-step]
-  {\mask_2 \subseteq \mask_1 \and
-   \toval(\expr_1) = \bot}
-  { {\begin{inbox} % for some crazy reason, LaTeX is actually sensitive to the space between the "{ {" here and the "} }" below...
-        ~~\pvs[\mask_1][\mask_2] \Exists \state_1. \red(\expr_1,\state_1) \land \later\ownPhys{\state_1} * {}\\\qquad\qquad\qquad \later\All \expr_2, \state_2, \expr_\f. \left( (\expr_1, \state_1 \step \expr_2, \state_2, \expr_\f) \land \ownPhys{\state_2} \right) \wand \pvs[\mask_2][\mask_1] \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \wpre{\expr_\f}[\top]{\Ret\any.\TRUE}  {}\\\proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}
-      \end{inbox}} }
-\\\\
-  \infer[wp-lift-pure-step]
-  {\toval(\expr_1) = \bot \and
-   \All \state_1. \red(\expr_1, \state_1) \and
-   \All \state_1, \expr_2, \state_2, \expr_\f. \expr_1,\state_1 \step \expr_2,\state_2,\expr_\f \Ra \state_1 = \state_2 }
-  {\later\All \state, \expr_2, \expr_\f. (\expr_1,\state \step \expr_2, \state,\expr_\f)  \Ra \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
-\end{mathpar}
-Notice that primitive view shifts cover everything to their right, \ie $\pvs \prop * \propB \eqdef \pvs (\prop * \propB)$.
-
-Here we define $\wpre{\expr_\f}[\mask]{\Ret\var.\prop} \eqdef \TRUE$ if $\expr_\f = \bot$ (remember that our stepping relation can, but does not have to, define a forked-off expression).
 
 The adequacy statement concerning functional correctness reads as follows:
 \begin{align*}
