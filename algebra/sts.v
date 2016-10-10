@@ -122,6 +122,8 @@ Lemma elem_of_up s T : s ∈ up s T.
 Proof. constructor. Qed.
 Lemma subseteq_up_set S T : S ⊆ up_set S T.
 Proof. intros s ?; apply elem_of_bind; eauto using elem_of_up. Qed.
+Lemma elem_of_up_set S T s : s ∈ S → s ∈ up_set S T.
+Proof. apply subseteq_up_set. Qed.
 Lemma up_up_set s T : up s T ≡ up_set {[ s ]} T.
 Proof. by rewrite /up_set collection_bind_singleton. Qed.
 Lemma closed_up_set S T : (∀ s, s ∈ S → tok s ⊥ T) → closed (up_set S T) T.
@@ -143,12 +145,6 @@ Lemma closed_up_set_empty S : closed (up_set S ∅) ∅.
 Proof. eauto using closed_up_set with sts. Qed.
 Lemma closed_up_empty s : closed (up s ∅) ∅.
 Proof. eauto using closed_up with sts. Qed.
-Lemma up_set_empty S T : up_set S T ≡ ∅ → S ≡ ∅.
-Proof. move:(subseteq_up_set S T). set_solver. Qed.
-Lemma up_set_non_empty S T : S ≢ ∅ → up_set S T ≢ ∅.
-Proof. by move=>? /up_set_empty. Qed.
-Lemma up_non_empty s T : up s T ≢ ∅.
-Proof. eapply non_empty_inhabited, elem_of_up. Qed.
 Lemma up_closed S T : closed S T → up_set S T ≡ S.
 Proof.
   intros ?; apply collection_equiv_spec; split; auto using subseteq_up_set.
@@ -190,7 +186,7 @@ Existing Instance sts_equiv.
 Instance sts_valid : Valid (car sts) := λ x,
   match x with
   | auth s T => tok s ⊥ T
-  | frag S' T => closed S' T ∧ S' ≢ ∅
+  | frag S' T => closed S' T ∧ ∃ s, s ∈ S'
   end.
 Instance sts_core : Core (car sts) := λ x,
   match x with
@@ -199,7 +195,7 @@ Instance sts_core : Core (car sts) := λ x,
   end.
 Inductive sts_disjoint : Disjoint (car sts) :=
   | frag_frag_disjoint S1 S2 T1 T2 :
-     S1 ∩ S2 ≢ ∅ → T1 ⊥ T2 → frag S1 T1 ⊥ frag S2 T2
+     (∃ s, s ∈ S1 ∩ S2) → T1 ⊥ T2 → frag S1 T1 ⊥ frag S2 T2
   | auth_frag_disjoint s S T1 T2 : s ∈ S → T1 ⊥ T2 → auth s T1 ⊥ frag S T2
   | frag_auth_disjoint s S T1 T2 : s ∈ S → T1 ⊥ T2 → frag S T1 ⊥ auth s T2.
 Existing Instance sts_disjoint.
@@ -212,7 +208,7 @@ Instance sts_op : Op (car sts) := λ x1 x2,
   end.
 
 Hint Extern 50 (equiv (A:=set _) _ _) => set_solver : sts.
-Hint Extern 50 (¬equiv (A:=set _) _ _) => set_solver : sts.
+Hint Extern 50 (∃ s : state sts, _) => set_solver : sts.
 Hint Extern 50 (_ ∈ _) => set_solver : sts.
 Hint Extern 50 (_ ⊆ _) => set_solver : sts.
 Hint Extern 50 (_ ⊥ _) => set_solver : sts.
@@ -236,27 +232,26 @@ Proof.
   - by do 2 destruct 1; constructor; setoid_subst.
   - by destruct 1; constructor; setoid_subst.
   - by destruct 1; simpl; intros ?; setoid_subst.
-  - by intros ? [|]; destruct 1; inversion_clear 1; constructor; setoid_subst.
+  - by intros ? [|]; destruct 1; inversion_clear 1; econstructor; setoid_subst.
   - destruct 3; simpl in *; destruct_and?; eauto using closed_op;
       match goal with H : closed _ _ |- _ => destruct H end; set_solver.
-  - intros []; simpl; intros; destruct_and?; split;
-      eauto using closed_up, up_non_empty, closed_up_set, up_set_empty with sts.
+  - intros []; naive_solver eauto using closed_up, closed_up_set,
+      elem_of_up, elem_of_up_set with sts.
   - intros [] [] []; constructor; rewrite ?assoc; auto with sts.
   - destruct 4; inversion_clear 1; constructor; auto with sts.
   - destruct 4; inversion_clear 1; constructor; auto with sts.
   - destruct 1; constructor; auto with sts.
   - destruct 3; constructor; auto with sts.
-  - intros [|S T]; constructor; auto using elem_of_up with sts.
-  - intros [|S T]; constructor; auto with sts.
+  - intros []; constructor; eauto with sts.
+  - intros []; constructor; auto with sts.
   - intros [s T|S T]; constructor; auto with sts.
     + rewrite (up_closed (up _ _)); auto using closed_up with sts.
     + rewrite (up_closed (up_set _ _)); eauto using closed_up_set with sts.
   - intros x y. exists (core (x ⋅ y))=> ?? Hxy; split_and?.
     + destruct Hxy; constructor; unfold up_set; set_solver.
-    + destruct Hxy; simpl; split_and?;
-        auto using closed_up_set_empty, closed_up_empty, up_non_empty; [].
-      apply up_set_non_empty. set_solver.
-    + destruct Hxy; constructor;
+    + destruct Hxy; simpl;
+        eauto using closed_up_set_empty, closed_up_empty with sts.
+    + destruct Hxy; econstructor;
         repeat match goal with
         | |- context [ up_set ?S ?T ] =>
            unless (S ⊆ up_set S T) by done; pose proof (subseteq_up_set S T)
@@ -304,10 +299,10 @@ Proof. solve_proper. Qed.
 (** Validity *)
 Lemma sts_auth_valid s T : ✓ sts_auth s T ↔ tok s ⊥ T.
 Proof. done. Qed.
-Lemma sts_frag_valid S T : ✓ sts_frag S T ↔ closed S T ∧ S ≢ ∅.
+Lemma sts_frag_valid S T : ✓ sts_frag S T ↔ closed S T ∧ ∃ s, s ∈ S.
 Proof. done. Qed.
 Lemma sts_frag_up_valid s T : tok s ⊥ T → ✓ sts_frag_up s T.
-Proof. intros. by apply sts_frag_valid; auto using closed_up, up_non_empty. Qed.
+Proof. intros. apply sts_frag_valid; split. by apply closed_up. set_solver. Qed.
 
 Lemma sts_auth_frag_valid_inv s S T1 T2 :
   ✓ (sts_auth s T1 ⋅ sts_frag S T2) → s ∈ S.
@@ -329,7 +324,7 @@ Proof.
   - intros; split_and?.
     + set_solver+.
     + by apply closed_up.
-    + apply up_non_empty.
+    + exists s. set_solver.
     + constructor; last set_solver. apply elem_of_up.
 Qed.
 
@@ -338,7 +333,7 @@ Lemma sts_op_frag S1 S2 T1 T2 :
   sts_frag (S1 ∩ S2) (T1 ∪ T2) ≡ sts_frag S1 T1 ⋅ sts_frag S2 T2.
 Proof.
   intros HT HS1 HS2. rewrite /sts_frag -to_validity_op //.
-  move=>/=[??]. split_and!; [auto; set_solver..|by constructor].
+  move=>/=[?[? ?]]. split_and!; [set_solver..|constructor; set_solver].
 Qed.
 
 (** Frame preserving updates *)
@@ -356,8 +351,8 @@ Lemma sts_update_frag S1 S2 T1 T2 :
 Proof.
   rewrite /sts_frag=> ? HS HT. apply validity_update.
   inversion 3 as [|? S ? Tf|]; simplify_eq/=.
-  - split_and!; first done; first set_solver. constructor; set_solver.
-  - split_and!; first done; first set_solver. constructor; set_solver.
+  - split_and!. done. set_solver. constructor; set_solver.
+  - split_and!. done. set_solver. constructor; set_solver.
 Qed.
 
 Lemma sts_update_frag_up s1 S2 T1 T2 :
