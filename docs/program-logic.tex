@@ -63,6 +63,7 @@ This section describes how to build a program logic for an arbitrary language (\
 So in the following, we assume that some language $\Lang$ was fixed.
 
 \subsection{World Satisfaction, Invariants, View Shifts}
+\label{sec:invariants}
 
 To introduce invariants into our logic, we will define weakest precondition to explicitly thread through the proof that all the invariants are maintained throughout program execution.
 However, in order to be able to access invariants, we will also have to provide a way to \emph{temporarily disable} (or ``open'') them.
@@ -84,12 +85,12 @@ Furthermore, we assume that instances named $\gname_{\textmon{State}}$, $\gname_
 \paragraph{World Satisfaction.}
 We can now define the assertion $W$ (\emph{world satisfaction}) which ensures that the enabled invariants are actually maintained:
 \begin{align*}
-  W \eqdef{}& \Exists I : \mathbb N \fpfn \Prop. \ownGhost{\gname_{\textmon{Inv}}}{\setComp{\iname \mapsto \authfull \aginj(\latertinj(\wIso(I(\iname))))}{\iname \in \dom(I)}} * \Sep_{\iname \in \dom(I)} \left( \later I(\iname) * \ownGhost{\gname_{\textmon{Dis}}}{\set{\iname}} \lor \ownGhost{\gname_{\textmon{En}}}{\set{\iname}} \right)
+  W \eqdef{}& \Exists I : \mathbb N \fpfn \Prop. \ownGhost{\gname_{\textmon{Inv}}}{\authfull \setComp{\iname \mapsto \aginj(\latertinj(\wIso(I(\iname))))}{\iname \in \dom(I)}} * \Sep_{\iname \in \dom(I)} \left( \later I(\iname) * \ownGhost{\gname_{\textmon{Dis}}}{\set{\iname}} \lor \ownGhost{\gname_{\textmon{En}}}{\set{\iname}} \right)
 \end{align*}
 
 \paragraph{Invariants.}
 The following assertion states that an invariant with name $\iname$ exists and maintains assertion $\prop$:
-\[ \knowInv\iname\prop \eqdef \ownGhost{\gname_{\textmon{Inv}}}{\set{\iname \mapsto \authfrag \aginj(\latertinj(\wIso(\prop)))}} \]
+\[ \knowInv\iname\prop \eqdef \ownGhost{\gname_{\textmon{Inv}}}{\authfrag\set{\iname \mapsto  \aginj(\latertinj(\wIso(\prop)))}} \]
 
 \paragraph{View Updates and View Shifts.}
 Next, we define \emph{view updates}, which are essentially the same as the resource updates of the base logic ($\Sref{sec:base-logic}$), except that they also have access to world satisfaction and can enable and disable invariants:
@@ -268,28 +269,30 @@ In order to cover the most general case, those rules end up being more complicat
   {\later\All \state, \expr_2, \bar\expr. (\expr_1,\state \step \expr_2, \state,\bar\expr)  \Ra \wpre{\expr_2}[\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \bar\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \proves \wpre{\expr_1}[\mask]{\Ret\var.\prop}}
 \end{mathpar}
 
+We can further derive some slightly simpler rules for special cases:
+We can derive some specialized forms of the lifting axioms for the operational semantics.
+\begin{mathparpagebreakable}
+  \infer[wp-lift-atomic-step]
+  {\atomic(\expr_1) \and
+   \red(\expr_1, \state_1)}
+  { {\begin{inbox}~~\later\ownPhys{\state_1} * \later\All \val_2, \state_2, \bar\expr. (\expr_1,\state_1 \step \ofval(\val),\state_2,\bar\expr)  * \ownPhys{\state_2} \wand \prop[\val_2/\var] * \Sep_{\expr_\f \in \bar\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} {}\\ \proves  \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}
+  \end{inbox}} }
+
+  \infer[wp-lift-atomic-det-step]
+  {\atomic(\expr_1) \and
+   \red(\expr_1, \state_1) \and
+   \All \expr'_2, \state'_2, \bar\expr'. \expr_1,\state_1 \step \expr'_2,\state'_2,\bar\expr' \Ra \state_2 = \state_2' \land \toval(\expr_2') = \val_2 \land \bar\expr = \bar\expr'}
+  {\later\ownPhys{\state_1} * \later \Bigl(\ownPhys{\state_2} \wand \prop[\val_2/\var] * \Sep_{\expr_\f \in \bar\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \Bigr) \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
+
+  \infer[wp-lift-pure-det-step]
+  {\toval(\expr_1) = \bot \and
+   \All \state_1. \red(\expr_1, \state_1) \\
+   \All \state_1, \expr_2', \state'_2, \bar\expr'. \expr_1,\state_1 \step \expr'_2,\state'_2,\bar\expr' \Ra \state_1 = \state'_2 \land \expr_2 = \expr_2' \land \bar\expr = \bar\expr'}
+  {\later \Bigl( \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \Sep_{\expr_\f \in \bar\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \Bigr) \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
+\end{mathparpagebreakable}
+
 
 \paragraph{Adequacy of weakest precondition.}
-~\ralf{TODO.}
-
-\paragraph{Hoare triples.}
-It turns out that weakest precondition is actually quite convenient to work with, in particular when perfoming these proofs in Coq.
-Still, for a more traditional presentation, we can easily derive the notion of a Hoare triple:
-\[
-\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \wpre{\expr}[\mask]{\Ret\val.\propB})}
-\]
-
-\subsection{Invariant Namespaces}
-\label{sec:invariants}
-
-\subsection{Lost stuff}
-\ralf{TODO: Right now, this is a dump of all the things that moved out of the base...}
-
-
-
-\paragraph{Laws of weakest preconditions.}
-
-\paragraph{Lifting of operational semantics.}~
 
 The adequacy statement concerning functional correctness reads as follows:
 \begin{align*}
@@ -301,6 +304,7 @@ The adequacy statement concerning functional correctness reads as follows:
      \\&\pred(\val)
 \end{align*}
 where $\pred$ is a \emph{meta-level} predicate over values, \ie it can mention neither resources nor invariants.
+\ralf{TODO: We can't just embed meta-level predicates like this. After all, this is a deep embedding.}
 
 Furthermore, the following adequacy statement shows that our weakest preconditions imply that the execution never gets \emph{stuck}: Every expression in the thread pool either is a value, or can reduce further.
 \begin{align*}
@@ -313,51 +317,124 @@ Furthermore, the following adequacy statement shows that our weakest preconditio
 \end{align*}
 Notice that this is stronger than saying that the thread pool can reduce; we actually assert that \emph{every} non-finished thread can take a step.
 
-\subsection{Iris model}
+\paragraph{Hoare triples.}
+It turns out that weakest precondition is actually quite convenient to work with, in particular when perfoming these proofs in Coq.
+Still, for a more traditional presentation, we can easily derive the notion of a Hoare triple:
+\[
+\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \wpre{\expr}[\mask]{\Ret\val.\propB})}
+\]
 
-\paragraph{Semantic domain of assertions.}
+We only give some of the proof rules for Hoare triples here, since we usually do all our reasoning directly with weakest preconditions and use Hoare triples only to write specifications.
+\begin{mathparpagebreakable}
+\inferH{Ht-ret}
+  {}
+  {\hoare{\TRUE}{\valB}{\Ret\val. \val = \valB}[\mask]}
+\and
+\inferH{Ht-bind}
+  {\text{$\lctx$ is a context} \and \hoare{\prop}{\expr}{\Ret\val. \propB}[\mask] \\
+   \All \val. \hoare{\propB}{\lctx(\val)}{\Ret\valB.\propC}[\mask]}
+  {\hoare{\prop}{\lctx(\expr)}{\Ret\valB.\propC}[\mask]}
+\and
+\inferH{Ht-csq}
+  {\prop \vs \prop' \\
+    \hoare{\prop'}{\expr}{\Ret\val.\propB'}[\mask] \\   
+   \All \val. \propB' \vs \propB}
+  {\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask]}
+\and
+% \inferH{Ht-mask-weaken}
+%   {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask]}
+%   {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask \uplus \mask']}
+% \\\\
+\inferH{Ht-frame}
+  {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask]}
+  {\hoare{\prop * \propC}{\expr}{\Ret\val. \propB * \propC}[\mask]}
+\and
+% \inferH{Ht-frame-step}
+%   {\hoare{\prop}{\expr}{\Ret\val. \propB}[\mask] \and \toval(\expr) = \bot \and \mask_2 \subseteq \mask_2 \\\\ \propC_1 \vs[\mask_1][\mask_2] \later\propC_2 \and \propC_2 \vs[\mask_2][\mask_1] \propC_3}
+%   {\hoare{\prop * \propC_1}{\expr}{\Ret\val. \propB * \propC_3}[\mask \uplus \mask_1]}
+% \and
+\inferH{Ht-atomic}
+  {\prop \vs[\mask \uplus \mask'][\mask] \prop' \\
+    \hoare{\prop'}{\expr}{\Ret\val.\propB'}[\mask] \\   
+   \All\val. \propB' \vs[\mask][\mask \uplus \mask'] \propB \\
+   \physatomic{\expr}
+  }
+  {\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask \uplus \mask']}
+\and
+\inferH{Ht-false}
+  {}
+  {\hoare{\FALSE}{\expr}{\Ret \val. \prop}[\mask]}
+\and
+\inferHB{Ht-disj}
+  {\hoare{\prop}{\expr}{\Ret\val.\propC}[\mask] \and \hoare{\propB}{\expr}{\Ret\val.\propC}[\mask]}
+  {\hoare{\prop \lor \propB}{\expr}{\Ret\val.\propC}[\mask]}
+\and
+\inferHB{Ht-exist}
+  {\All \var. \hoare{\prop}{\expr}{\Ret\val.\propB}[\mask]}
+  {\hoare{\Exists \var. \prop}{\expr}{\Ret\val.\propB}[\mask]}
+\and
+\inferHB{Ht-box}
+  {\always\propB \proves \hoare{\prop}{\expr}{\Ret\val.\propC}[\mask]}
+  {\hoare{\prop \land \always{\propB}}{\expr}{\Ret\val.\propC}[\mask]}
+% \and
+% \inferH{Ht-inv}
+%   {\hoare{\later\propC*\prop}{\expr}{\Ret\val.\later\propC*\propB}[\mask] \and
+%    \physatomic{\expr}
+%   }
+%   {\knowInv\iname\propC \proves \hoare{\prop}{\expr}{\Ret\val.\propB}[\mask \uplus \set\iname]}
+% \and
+% \inferH{Ht-inv-timeless}
+%   {\hoare{\propC*\prop}{\expr}{\Ret\val.\propC*\propB}[\mask] \and
+%    \physatomic{\expr} \and \timeless\propC
+%   }
+%   {\knowInv\iname\propC \proves \hoare{\prop}{\expr}{\Ret\val.\propB}[\mask \uplus \set\iname]}
+\end{mathparpagebreakable}
 
+\subsection{Invariant Namespaces}
+\label{sec:namespaces}
 
+In \Sref{sec:invariants}, we defined an assertion $\knowInv\iname\prop$ expressing knowledge (\ie the assertion is persistent) that $\prop$ is maintained as invariant with name $\iname$.
+The concrete name $\iname$ is picked when the invariant is allocated, so it cannot possibly be statically known -- it will always be a variable that's threaded through everything.
+However, we hardly care about the actual, concrete name.
+All we need to know is that this name is \emph{different} from the names of other invariants that we want to open at the same time.
+Keeping track of the $n^2$ mutual inequalities that arise with $n$ invariants quickly gets in the way of the actual proof.
 
-\paragraph{Interpretation of assertions.}
-$\iProp$ is a $\UPred$, and hence the definitions from \Sref{sec:upred-logic} apply.
-We only have to define the interpretation of the missing connectives, the most interesting bits being primitive view shifts and weakest preconditions.
+To solve this issue, instead of remembering the exact name picked for an invariant, we will keep track of the \emph{namespace} the invariant was allocated in.
+Namesapces are sets of invariants, following a tree-like structure:
+Think of the name of an invariant as a sequence of identifiers, much like a fully qualified Java class name.
+A \emph{namespace} $\namesp$ then is like a Java package: it is a sequence of identifiers that we think of as \emph{containing} all invariant names that begin with this sequence. For example, \texttt{org.mpi-sws.iris} is a namespace containing the invariant name \texttt{org.mpi-sws.iris.heap}.
 
-\typedsection{World satisfaction}{\wsat{-}{-}{-} : 
-	\Delta\textdom{State} \times
-	\Delta\pset{\mathbb{N}} \times
-	\textdom{Res} \nfn \SProp }
-\begin{align*}
-  \wsatpre(n, \mask, \state, \rss, \rs) & \eqdef \begin{inbox}[t]
-    \rs \in \mval_{n+1} \land \rs.\pres = \exinj(\sigma) \land 
-    \dom(\rss) \subseteq \mask \cap \dom( \rs.\wld) \land {}\\
-    \All\iname \in \mask, \prop \in \iProp. (\rs.\wld)(\iname) \nequiv{n+1} \aginj(\latertinj(\wIso(\prop))) \Ra n \in \prop(\rss(\iname))
-  \end{inbox}\\
-	\wsat{\state}{\mask}{\rs} &\eqdef \set{0}\cup\setComp{n+1}{\Exists \rss : \mathbb{N} \fpfn \textdom{Res}. \wsatpre(n, \mask, \state, \rss, \rs \mtimes \prod_\iname \rss(\iname))}
-\end{align*}
+The crux is that all namespaces contain infinitely many invariants, and hence we can \emph{freely pick} the namespace an invariant is allocated in -- no further, unpredictable choice has to be made.
+Furthermore, we will often know that namespaces are \emph{disjoint} just by looking at them.
+The namespaces $\namesp.\texttt{iris}$ and $\namesp.\texttt{gps}$ are disjoint no matter the choice of $\namesp$.
+As a result, there is often no need to track disjointness of namespaces, we just have to pick the namespaces that we allocate our invariants in accordingly.
 
-\typedsection{Primitive view-shift}{\mathit{pvs}_{-}^{-}(-) : \Delta(\pset{\mathbb{N}}) \times \Delta(\pset{\mathbb{N}}) \times \iProp \nfn \iProp}
-\begin{align*}
-	\mathit{pvs}_{\mask_1}^{\mask_2}(\prop) &= \Lam \rs. \setComp{n}{\begin{aligned}
-            \All \rs_\f, k, \mask_\f, \state.& 0 < k \leq n \land (\mask_1 \cup \mask_2) \disj \mask_\f \land k \in \wsat\state{\mask_1 \cup \mask_\f}{\rs \mtimes \rs_\f} \Ra {}\\&
-            \Exists \rsB. k \in \prop(\rsB) \land k \in \wsat\state{\mask_2 \cup \mask_\f}{\rsB \mtimes \rs_\f}
-          \end{aligned}}
-\end{align*}
+Formally speaking, let $\namesp \in \textlog{InvNamesp} \eqdef \textlog{list}(\mathbb N)$ be the type of \emph{invariant namespaces}.
+We use the notation $\namesp.\iname$ for the namespace $[\iname] \dplus \namesp$.
+(In other words, the list is ``backwards''. This is because cons-ing to the list, like the dot does above, is easier to deal with in Coq than appending at the end.)
 
-\typedsection{Weakest precondition}{\mathit{wp}_{-}(-, -) : \Delta(\pset{\mathbb{N}}) \times \Delta(\textdom{Exp}) \times (\Delta(\textdom{Val}) \nfn \iProp) \nfn \iProp}
+The elements of a namespaces are \emph{structured invariant names} (think: Java fully qualified class name).
+They, too, are lists of $\mathbb N$, the same type as namespaces.
+In order to connect this up to the definitions of \Sref{sec:invariants}, we need a way to map structued invariant names to $\mathbb N$, the type of ``plain'' invariant names.
+Any injective mapping $\textlog{namesp\_inj}$ will do; and such a mapping has to exist because $\textlog{list}(\mathbb N)$ is countable.
+Whenever needed, we (usually implicitly) coerce $\namesp$ to its encoded suffix-closure, \ie to the set of encoded structured invariant names contained in the namespace: \[\namecl\namesp \eqdef \setComp{\iname}{\Exists \namesp'. \iname = \textlog{namesp\_inj}(\namesp' \dplus \namesp)}\]
 
-$\textdom{wp}$ is defined as the fixed-point of a contractive function.
-\begin{align*}
-  \textdom{pre-wp}(\textdom{wp})(\mask, \expr, \pred) &\eqdef \Lam\rs. \setComp{n}{\begin{aligned}
-        \All &\rs_\f, m, \mask_\f, \state. 0 \leq m < n \land \mask \disj \mask_\f \land m+1 \in \wsat\state{\mask \cup \mask_\f}{\rs \mtimes \rs_\f} \Ra {}\\
-        &(\All\val. \toval(\expr) = \val \Ra \Exists \rsB. m+1 \in \pred(\val)(\rsB) \land m+1 \in \wsat\state{\mask \cup \mask_\f}{\rsB \mtimes \rs_\f}) \land {}\\
-        &(\toval(\expr) = \bot \land 0 < m \Ra \red(\expr, \state) \land \All \expr_2, \state_2, \expr_\f. \expr,\state \step \expr_2,\state_2,\expr_\f \Ra {}\\
-        &\qquad \Exists \rsB_1, \rsB_2. m \in \wsat\state{\mask \cup \mask_\f}{\rsB_1 \mtimes \rsB_2 \mtimes \rs_\f} \land  m \in \textdom{wp}(\mask, \expr_2, \pred)(\rsB_1) \land {}&\\
-        &\qquad\qquad (\expr_\f = \bot \lor m \in \textdom{wp}(\top, \expr_\f, \Lam\any.\Lam\any.\mathbb{N})(\rsB_2))
-    \end{aligned}} \\
-  \textdom{wp}_\mask(\expr, \pred) &\eqdef \mathit{fix}(\textdom{pre-wp})(\mask, \expr, \pred)
-\end{align*}
+We will overload the notation for invariant assertions for using namespaces instead of names:
+\[ \knowInv\namesp\prop \eqdef \Exists \iname \in \namecl\namesp. \knowInv\iname{\prop} \]
+We can now derive the following rules (this involves unfolding the definition of view updates):
+\begin{mathpar}
+  \axiomH{inv-persist}{\knowInv\namesp\prop \proves \always\knowInv\namesp\prop}
 
+  \axiomH{inv-alloc}{\later\prop \proves \pvs[\namesp] \knowInv\namesp\prop}
+
+  \inferH{inv-open}
+  {\namesp \subseteq \mask}
+  {\knowInv\namesp\prop \vs[\mask][\mask\setminus\namesp] \later\prop * (\later\prop \vsW[\mask\setminus\namesp][\mask] \TRUE)}
+
+  \inferH{inv-open-timeless}
+  {\namesp \subseteq \mask \and \timeless\prop}
+  {\knowInv\namesp\prop \vs[\mask][\mask\setminus\namesp] \prop * (\prop \vsW[\mask\setminus\namesp][\mask] \TRUE)}
+\end{mathpar}
 
 
 %%% Local Variables:

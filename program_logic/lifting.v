@@ -45,7 +45,7 @@ Qed.
 Lemma wp_lift_atomic_step {E Φ} e1 σ1 :
   atomic e1 →
   reducible e1 σ1 →
-  ▷ ownP σ1 ★ ▷ (∀ v2 σ2 efs, ■ prim_step e1 σ1 (of_val v2) σ2 efs ∧ ownP σ2 -★
+  (▷ ownP σ1 ★ ▷ ∀ v2 σ2 efs, ■ prim_step e1 σ1 (of_val v2) σ2 efs ★ ownP σ2 -★
     (|={E}=> Φ v2) ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
