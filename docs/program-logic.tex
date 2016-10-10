@@ -436,6 +436,27 @@ We can now derive the following rules (this involves unfolding the definition of
   {\knowInv\namesp\prop \vs[\mask][\mask\setminus\namesp] \prop * (\prop \vsW[\mask\setminus\namesp][\mask] \TRUE)}
 \end{mathpar}
 
+\subsection{Accessors}
+
+The two rules \ruleref{inv-open} and \ruleref{inv-open-timeless} above may look a little surprising, in the sense that it is not clear on first sight how they would be applied.
+The rules are the first \emph{accessors} that show up in this document.
+Accessors are assertions of the form
+\[ \prop \vs[\mask_1][\mask_2] \Exists\var. \propB * (\All\varB. \propB' \vsW[\mask_2][\mask_1] \propC) \]
+
+One way to think about such assertions is as follows:
+Given some accessor, if during our verification we have the assertion $\prop$ and the mask $\mask_1$ available, we can use the accessor to \emph{access} $\propB$ and obtain the witness $\var$.
+We call this \emph{opening} the accessor, and it changes the mask to $\mask_2$.
+Additionally, opening the accessor provides us with $\All\varB. \propB' \vsW[\mask_2][\mask_1] \propC$, a \emph{linear view shift} (\ie a view shift that can only be used once).
+This linear view shift tells us that in order to \emph{close} the accessor again and go back to mask $\mask_1$, we have to pick some $\varB$ and establish the corresponding $\propB'$.
+After closing, we will obtain $\propC$.
+
+Using \ruleref{vs-trans} and \ruleref{Ht-atomic} (or the correspond proof rules for view updates and weakest preconditions), we can show that it is possible to open an accessor around any view shift and any \emph{atomic} expression.
+Furthermore, in the special case that $\mask_1 = \mask_2$, the accessor can be opened around \emph{any} expression.
+For this reason, we also call such accessors \emph{non-atomic}.
+
+The reasons accessors are useful is that they let us talk about ``opening X'' (\eg ``opening invariants'') without having to care what X is opened around.
+Furthermore, as we construct more sophisticated and more interesting things that can be opened (\eg invariants that can be ``cancelled'', or STSs), accessors become a useful interface that allows us to mix and match different abstractions in arbitrary ways.
+\ralf{This would be much more convincing if we had forward references here to sections describing canellable invariants and STSs.}
 
 %%% Local Variables:
 %%% mode: latex
