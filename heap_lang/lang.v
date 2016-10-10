@@ -164,7 +164,7 @@ Inductive ectx_item :=
   | LoadCtx
   | StoreLCtx (e2 : expr)
   | StoreRCtx (v1 : val)
-  | CasLCtx (e1 : expr)  (e2 : expr)
+  | CasLCtx (e1 : expr) (e2 : expr)
   | CasMCtx (v0 : val) (e2 : expr)
   | CasRCtx (v0 : val) (v1 : val).
 
