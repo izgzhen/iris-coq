@@ -58,7 +58,7 @@ We are thus going to define the assertions as mapping CMRA elements to sets of s
         \Sem{\vctx \proves \ownM{\melt} : \Prop}_\gamma &\eqdef \Lam\meltB. \setComp{n}{\Sem{\vctx \proves \melt : \textlog{M}}_\gamma \mincl[n] \meltB}  \\
         \Sem{\vctx \proves \mval(\melt) : \Prop}_\gamma &\eqdef \Lam\any. \setComp{n}{\Sem{\vctx \proves \melt : \type}_\gamma \in \mval_n} \\
         \Sem{\vctx \proves \upd\prop : \Prop}_\gamma &\eqdef \Lam\melt. \setComp{n}{\begin{aligned}
-            \All m, \melt'. & m \leq n \land (\melt \mtimes \melt') \in \mval_m \Ra {}\\& \Exists \meltB. (\meltB \mtimes \melt') \in \mval_k \land m \in \Sem{\vctx \proves \prop :\Prop}_\gamma(\melt')
+            \All m, \melt'. & m \leq n \land (\melt \mtimes \melt') \in \mval_m \Ra {}\\& \Exists \meltB. (\meltB \mtimes \melt') \in \mval_m \land m \in \Sem{\vctx \proves \prop :\Prop}_\gamma(\meltB)
           \end{aligned}
 }
 \end{align*}
