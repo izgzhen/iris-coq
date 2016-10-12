@@ -1,7 +1,7 @@
 From iris.heap_lang Require Export lifting.
 From iris.algebra Require Import auth gmap frac dec_agree.
 From iris.program_logic Require Export invariants ghost_ownership.
-From iris.program_logic Require Import ownership.
+From iris.program_logic Require Import ownership auth.
 From iris.proofmode Require Import tactics.
 Import uPred.
 (* TODO: The entire construction could be generalized to arbitrary languages that have
@@ -14,28 +14,26 @@ Definition heapUR : ucmraT := gmapUR loc (prodR fracR (dec_agreeR val)).
 (** The CMRA we need. *)
 Class heapG Σ := HeapG {
   heapG_iris_inG :> irisG heap_lang Σ;
-  heap_inG :> inG Σ (authR heapUR);
+  heap_inG :> authG Σ heapUR;
   heap_name : gname
 }.
-(** The Functor we need. *)
+
 Definition to_heap : state → heapUR := fmap (λ v, (1%Qp, DecAgree v)).
 
 Section definitions.
   Context `{heapG Σ}.
 
   Definition heap_mapsto_def (l : loc) (q : Qp) (v: val) : iProp Σ :=
-    own heap_name (◯ {[ l := (q, DecAgree v) ]}).
+    auth_own heap_name ({[ l := (q, DecAgree v) ]}).
   Definition heap_mapsto_aux : { x | x = @heap_mapsto_def }. by eexists. Qed.
   Definition heap_mapsto := proj1_sig heap_mapsto_aux.
   Definition heap_mapsto_eq : @heap_mapsto = @heap_mapsto_def :=
     proj2_sig heap_mapsto_aux.
 
-  Definition heap_inv : iProp Σ := (∃ σ, ownP σ ★ own heap_name (● to_heap σ))%I.
-  Definition heap_ctx : iProp Σ := inv heapN heap_inv.
+  Definition heap_ctx : iProp Σ := auth_ctx heap_name heapN to_heap ownP.
 End definitions.
 
 Typeclasses Opaque heap_ctx heap_mapsto.
-Instance: Params (@heap_inv) 2.
 
 Notation "l ↦{ q } v" := (heap_mapsto l q v)
   (at level 20, q at level 50, format "l  ↦{ q }  v") : uPred_scope.
@@ -79,8 +77,7 @@ Section heap.
 
   Lemma heap_mapsto_op_eq l q1 q2 v : l ↦{q1} v ★ l ↦{q2} v ⊣⊢ l ↦{q1+q2} v.
   Proof.
-    by rewrite heap_mapsto_eq
-      -own_op -auth_frag_op op_singleton pair_op dec_agree_idemp.
+    by rewrite heap_mapsto_eq -auth_own_op op_singleton pair_op dec_agree_idemp.
   Qed.
 
   Lemma heap_mapsto_op l q1 q2 v1 v2 :
@@ -89,8 +86,8 @@ Section heap.
     destruct (decide (v1 = v2)) as [->|].
     { by rewrite heap_mapsto_op_eq pure_equiv // left_id. }
     apply (anti_symm (⊢)); last by apply pure_elim_l.
-    rewrite heap_mapsto_eq -own_op -auth_frag_op own_valid discrete_valid.
-    eapply pure_elim; [done|]=> /auth_own_valid /=.
+    rewrite heap_mapsto_eq -auth_own_op auth_own_valid discrete_valid.
+    eapply pure_elim; [done|] =>  /=.
     rewrite op_singleton pair_op dec_agree_ne // singleton_valid. by intros [].
   Qed.
 
@@ -112,14 +109,13 @@ Section heap.
     heap_ctx ★ ▷ (∀ l, l ↦ v ={E}=★ Φ (LitV (LitLoc l))) ⊢ WP Alloc e @ E {{ Φ }}.
   Proof.
     iIntros (<-%of_to_val ?) "[#Hinv HΦ]". rewrite /heap_ctx.
-    iInv heapN as (σ) ">[Hσ Hh] " "Hclose".
+    iVs auth_empty as "Ha".
+    (* TODO: Why do I have to give to_heap here? *)
+    iVs (auth_open to_heap with "[Ha]") as (σ) "(%&Hσ&Hcl)"; [done|by iFrame|].
     iApply wp_alloc_pst. iFrame "Hσ". iNext. iIntros (l) "[% Hσ] !==>".
-    iVs (own_update with "Hh") as "[Hh H]".
-    { apply auth_update_alloc,
-        (alloc_singleton_local_update _ l (1%Qp,DecAgree v));
-        by auto using lookup_to_heap_None. }
-    iVs ("Hclose" with "[Hσ Hh]") as "_".
-    { iNext. iExists (<[l:=v]> σ). rewrite to_heap_insert. by iFrame. }
+    iVs ("Hcl" $! _ _ with "[Hσ]") as "Ha".
+    { iFrame. iPureIntro. rewrite to_heap_insert.
+      eapply alloc_singleton_local_update; by auto using lookup_to_heap_None. }
     iApply "HΦ". by rewrite heap_mapsto_eq /heap_mapsto_def.
   Qed.
 
@@ -130,11 +126,10 @@ Section heap.
   Proof.
     iIntros (?) "[#Hinv [>Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
-    iInv heapN as (σ) ">[Hσ Hh] " "Hclose".
-    iDestruct (own_valid_2 with "[$Hh $Hl]") as %[??]%auth_valid_discrete_2.
+    iVs (auth_open to_heap with "[Hl]") as (σ) "(%&Hσ&Hcl)"; [done|by iFrame|].
     iApply (wp_load_pst _ σ); first eauto using heap_singleton_included.
-    iIntros "{$Hσ} !> Hσ !==>". iVs ("Hclose" with "[Hσ Hh]") as "_".
-    { iNext. iExists σ. by iFrame. }
+    iIntros "{$Hσ} !> Hσ !==>". iVs ("Hcl" $! _ _ with "[Hσ]") as "Ha".
+    { iFrame. iPureIntro. done. }
     by iApply "HΦ".
   Qed.
 
@@ -145,16 +140,12 @@ Section heap.
   Proof.
     iIntros (<-%of_to_val ?) "[#Hinv [>Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
-    iInv heapN as (σ) ">[Hσ Hh] " "Hclose".
-    iDestruct (own_valid_2 with "[$Hh $Hl]") as %[??]%auth_valid_discrete_2.
+    iVs (auth_open to_heap with "[Hl]") as (σ) "(%&Hσ&Hcl)"; [done|by iFrame|].
     iApply (wp_store_pst _ σ); first eauto using heap_singleton_included.
-    iIntros "{$Hσ} !> Hσ !==>".
-    iVs (own_update_2 with "[$Hh $Hl]") as "[Hh Hl]".
-    { eapply auth_update, singleton_local_update,
-        (exclusive_local_update _ (1%Qp, DecAgree v)); last done.
+    iIntros "{$Hσ} !> Hσ !==>". iVs ("Hcl" $! _ _ with "[Hσ]") as "Ha".
+    { iFrame. iPureIntro. rewrite to_heap_insert.
+      eapply singleton_local_update, exclusive_local_update; last done.
       by eapply heap_singleton_included'. }
-    iVs ("Hclose" with "[Hσ Hh]") as "_".
-    { iNext. iExists (<[l:=v]>σ). rewrite to_heap_insert. iFrame. }
     by iApply "HΦ".
   Qed.
 
@@ -165,11 +156,10 @@ Section heap.
   Proof.
     iIntros (<-%of_to_val <-%of_to_val ??) "[#Hinv [>Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
-    iInv heapN as (σ) ">[Hσ Hh] " "Hclose".
-    iDestruct (own_valid_2 with "[$Hh $Hl]") as %[??]%auth_valid_discrete_2.
+    iVs (auth_open to_heap with "[Hl]") as (σ) "(%&Hσ&Hcl)"; [done|by iFrame|].
     iApply (wp_cas_fail_pst _ σ); [eauto using heap_singleton_included|done|].
-    iIntros "{$Hσ} !> Hσ !==>". iVs ("Hclose" with "[Hσ Hh]") as "_".
-    { iNext. iExists σ. by iFrame. }
+    iIntros "{$Hσ} !> Hσ !==>". iVs ("Hcl" $! _ _ with "[Hσ]") as "Ha".
+    { iFrame. iPureIntro. done. }
     by iApply "HΦ".
   Qed.
 
@@ -180,16 +170,12 @@ Section heap.
   Proof.
     iIntros (<-%of_to_val <-%of_to_val ?) "[#Hinv [>Hl HΦ]]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
-    iInv heapN as (σ) ">[Hσ Hh] " "Hclose".
-    iDestruct (own_valid_2 with "[$Hh $Hl]") as %[??]%auth_valid_discrete_2.
+    iVs (auth_open to_heap with "[Hl]") as (σ) "(%&Hσ&Hcl)"; [done|by iFrame|].
     iApply (wp_cas_suc_pst _ σ); first eauto using heap_singleton_included.
-    iIntros "{$Hσ} !> Hσ !==>".
-    iVs (own_update_2 with "[$Hh $Hl]") as "[Hh Hl]".
-    { eapply auth_update, singleton_local_update,
-        (exclusive_local_update _ (1%Qp, DecAgree v2)); last done.
+    iIntros "{$Hσ} !> Hσ !==>". iVs ("Hcl" $! _ _ with "[Hσ]") as "Ha".
+    { iFrame. iPureIntro. rewrite to_heap_insert.
+      eapply singleton_local_update, exclusive_local_update; last done.
       by eapply heap_singleton_included'. }
-    iVs ("Hclose" with "[Hσ Hh]") as "_".
-    { iNext. iExists (<[l:=v2]>σ). rewrite to_heap_insert. iFrame. }
     by iApply "HΦ".
   Qed.
 End heap.
