@@ -15,8 +15,8 @@ Instance subG_authΣ Σ A : subG (authΣ A) Σ → CMRADiscrete A → authG Σ A
 Proof. intros ?%subG_inG ?. by split. Qed.
 
 Section definitions.
-  Context `{irisG Λ Σ, authG Σ A} (γ : gname).
-  Context {T : Type}.
+  Context `{irisG Λ Σ, authG Σ A} {T : Type} (γ : gname).
+
   Definition auth_own (a : A) : iProp Σ :=
     own γ (◯ a).
   Definition auth_inv (f : T → A) (φ : T → iProp Σ) : iProp Σ :=
@@ -30,23 +30,33 @@ Section definitions.
   Proof. solve_proper. Qed.
   Global Instance auth_own_timeless a : TimelessP (auth_own a).
   Proof. apply _. Qed.
-  Global Instance auth_inv_ne: 
-    Proper (pointwise_relation T (≡) ==>
-            pointwise_relation T (≡) ==> (≡)) (auth_inv).
+  Global Instance auth_own_persistent a : Persistent a → PersistentP (auth_own a).
+  Proof. apply _. Qed.
+
+  Global Instance auth_inv_ne n :
+    Proper (pointwise_relation T (dist n) ==>
+            pointwise_relation T (dist n) ==> dist n) auth_inv.
   Proof. solve_proper. Qed.
-  Global Instance auth_ctx_ne N :
+  Global Instance auth_inv_proper :
     Proper (pointwise_relation T (≡) ==>
-            pointwise_relation T (≡) ==> (≡)) (auth_ctx N).
+            pointwise_relation T (⊣⊢) ==> (⊣⊢)) auth_inv.
+  Proof. solve_proper. Qed.
+  Global Instance auth_ctx_ne N n :
+    Proper (pointwise_relation T (dist n) ==>
+            pointwise_relation T (dist n) ==> dist n) (auth_ctx N).
+  Proof. solve_proper. Qed.
+  Global Instance auth_ctx_proper N :
+    Proper (pointwise_relation T (≡) ==>
+            pointwise_relation T (⊣⊢) ==> (⊣⊢)) (auth_ctx N).
   Proof. solve_proper. Qed.
   Global Instance auth_ctx_persistent N f φ : PersistentP (auth_ctx N f φ).
   Proof. apply _. Qed.
 End definitions.
 
 Typeclasses Opaque auth_own auth_inv auth_ctx.
-(* TODO: Not sure what to put here. *)
-Instance: Params (@auth_inv) 5.
 Instance: Params (@auth_own) 4.
-Instance: Params (@auth_ctx) 7.
+Instance: Params (@auth_inv) 5.
+Instance: Params (@auth_ctx) 8.
 
 Section auth.
   Context `{irisG Λ Σ, authG Σ A}.
@@ -61,19 +71,24 @@ Section auth.
   Lemma auth_own_op γ a b : auth_own γ (a ⋅ b) ⊣⊢ auth_own γ a ★ auth_own γ b.
   Proof. by rewrite /auth_own -own_op auth_frag_op. Qed.
 
-  Global Instance from_sep_own_authM γ a b :
-    FromSep (auth_own γ (a ⋅ b)) (auth_own γ a) (auth_own γ b) | 90.
-  Proof. by rewrite /FromSep auth_own_op. Qed.
+  Global Instance from_sep_auth_own γ a b1 b2 :
+    FromOp a b1 b2 →
+    FromSep (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 90.
+  Proof. rewrite /FromOp /FromSep=> <-. by rewrite auth_own_op. Qed.
+  Global Instance into_and_auth_own p γ a b1 b2 :
+    IntoOp a b1 b2 →
+    IntoAnd p (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 90.
+  Proof. intros. apply mk_into_and_sep. by rewrite (into_op a) auth_own_op. Qed.
 
   Lemma auth_own_mono γ a b : a ≼ b → auth_own γ b ⊢ auth_own γ a.
   Proof. intros [? ->]. by rewrite auth_own_op sep_elim_l. Qed.
-
-  Global Instance auth_own_persistent γ a :
-    Persistent a → PersistentP (auth_own γ a).
-  Proof. rewrite /auth_own. apply _. Qed.
-
   Lemma auth_own_valid γ a : auth_own γ a ⊢ ✓ a.
   Proof. by rewrite /auth_own own_valid auth_validI. Qed.
+
+  Global Instance auth_own_cmra_homomorphism : CMRAHomomorphism (auth_own γ).
+  Proof. split. apply _. apply auth_own_op. Qed.
+  Global Instance own_mono' γ : Proper (flip (≼) ==> (⊢)) (auth_own γ).
+  Proof. intros a1 a2. apply auth_own_mono. Qed.
 
   Lemma auth_alloc_strong N E t (G : gset gname) :
     ✓ (f t) → ▷ φ t ={E}=> ∃ γ, ■ (γ ∉ G) ∧ auth_ctx γ N f φ ∧ auth_own γ (f t).
@@ -81,9 +96,9 @@ Section auth.
     iIntros (?) "Hφ". rewrite /auth_own /auth_ctx.
     iVs (own_alloc_strong (Auth (Excl' (f t)) (f t)) G) as (γ) "[% Hγ]"; first done.
     iRevert "Hγ"; rewrite auth_both_op; iIntros "[Hγ Hγ']".
-    iVs (inv_alloc N _ (auth_inv γ f φ) with "[-Hγ']").
+    iVs (inv_alloc N _ (auth_inv γ f φ) with "[-Hγ']") as "#?".
     { iNext. rewrite /auth_inv. iExists t. by iFrame. }
-    iVsIntro; iExists γ. iSplit; first by iPureIntro. by iFrame.
+    eauto.
   Qed.
 
   Lemma auth_alloc N E t :
@@ -102,12 +117,12 @@ Section auth.
       ■ ((f t, a) ~l~> (f u, b)) ★ ▷ φ u ={E}=★ ▷ auth_inv γ f φ ★ auth_own γ b.
   Proof.
     iIntros "(Hinv & Hγf)". rewrite /auth_inv /auth_own.
-    iDestruct "Hinv" as (t) "[>Hγa Hφ]". iVsIntro.
-    iExists t. iCombine "Hγa" "Hγf" as "Hγ".
-    iDestruct (own_valid with "Hγ") as % [? ?]%auth_valid_discrete_2.
+    iDestruct "Hinv" as (t) "[>Hγa Hφ]".
+    iVsIntro. iExists t.
+    iDestruct (own_valid_2 with "[$Hγa $Hγf]") as % [? ?]%auth_valid_discrete_2.
     iSplit; first done. iFrame. iIntros (u b) "[% Hφ]".
-    iVs (own_update with "Hγ") as "[Hγa Hγf]".
-    { eapply auth_update. eassumption. }
+    iVs (own_update_2 with "[$Hγa $Hγf]") as "[Hγa Hγf]".
+    { eapply auth_update; eassumption. }
     iVsIntro. iFrame. iExists u. iFrame.
   Qed.
 
@@ -124,8 +139,10 @@ Section auth.
        to unpack and repack various proofs.
        TODO: Make this mostly automatic, by supporting "opening accessors
        around accessors". *)
-    iVs (auth_acc with "[Hinv Hγf]") as (t) "(?&?&HclAuth)"; first by iFrame.
+    iVs (auth_acc with "[$Hinv $Hγf]") as (t) "(?&?&HclAuth)".
     iVsIntro. iExists t. iFrame. iIntros (u b) "H".
     iVs ("HclAuth" $! u b with "H") as "(Hinv & ?)". by iVs ("Hclose" with "Hinv").
   Qed.
 End auth.
+
+Arguments auth_open {_ _ _ _} [_] {_} [_] _ _ _ _ _ _ _.
