@@ -2,7 +2,7 @@
 From iris.program_logic Require Export weakestpre hoare.
 From iris.heap_lang Require Export lang.
 From iris.heap_lang Require Import adequacy.
-From iris.program_logic Require Import ownership.
+From iris.program_logic Require Import wsat.
 From iris.heap_lang Require Import proofmode notation.
 
 Section LiftingTests.

@@ -1,5 +1,5 @@
 From iris.program_logic Require Export weakestpre.
-From iris.program_logic Require Import ownership.
+From iris.program_logic Require Import wsat.
 From iris.algebra Require Export upred_big_op.
 From iris.proofmode Require Import tactics.
 

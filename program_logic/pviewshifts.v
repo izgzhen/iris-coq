@@ -1,5 +1,5 @@
 From iris.program_logic Require Export iris.
-From iris.program_logic Require Import ownership.
+From iris.program_logic Require Import wsat.
 From iris.algebra Require Import upred_big_op gmap.
 From iris.proofmode Require Import tactics classes.
 Import uPred.

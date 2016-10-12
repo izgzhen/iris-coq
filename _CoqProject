@@ -67,7 +67,7 @@ program_logic/model.v
 program_logic/adequacy.v
 program_logic/lifting.v
 program_logic/invariants.v
-program_logic/ownership.v
+program_logic/wsat.v
 program_logic/weakestpre.v
 program_logic/pviewshifts.v
 program_logic/hoare.v

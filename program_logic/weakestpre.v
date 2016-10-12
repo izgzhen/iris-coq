@@ -1,5 +1,5 @@
 From iris.program_logic Require Export pviewshifts.
-From iris.program_logic Require Import ownership.
+From iris.program_logic Require Import wsat.
 From iris.algebra Require Import upred_big_op.
 From iris.prelude Require Export coPset.
 From iris.proofmode Require Import tactics classes.
