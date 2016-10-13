@@ -125,18 +125,15 @@ Section user.
       (* open the invariant *)
       iInv N as (x') ">Hl'" "Hclose".
       (* mask magic *)
-      iApply pvs_intro'.
+      iVs (pvs_intro_mask' _ heapN) as "Hclose'".
       { apply ndisj_subseteq_difference; auto. }
-      iIntros "Hvs".
-      iExists x'.
-      iFrame "Hl'".
-      iSplit.
+      iVsIntro. iExists x'. iFrame "Hl'". iSplit.
       + (* provide a way to rollback *)
         iIntros "Hl'".
-        iVs "Hvs". iVs ("Hclose" with "[Hl']"); eauto.
+        iVs "Hclose'". iVs ("Hclose" with "[Hl']"); eauto.
       + (* provide a way to commit *)
         iIntros (v) "[Heq Hl']".
-        iVs "Hvs". iVs ("Hclose" with "[Hl']"); eauto.
+        iVs "Hclose'". iVs ("Hclose" with "[Hl']"); eauto.
     - iDestruct "Hincr" as "#HIncr".
       iSplitL; [|iSplitL]; try (iApply wp_wand_r;iSplitL; [by iApply "HIncr"|auto]).
       iIntros (v1 v2) "_ !>".

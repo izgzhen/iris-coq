@@ -99,6 +99,8 @@ Proof. intros P Q; apply pvs_mono. Qed.
 
 Lemma pvs_intro E P : P ={E}=> P.
 Proof. iIntros "HP". by iApply rvs_pvs. Qed.
+Lemma pvs_intro_mask' E1 E2 : E2 ⊆ E1 → True ⊢ |={E1,E2}=> |={E2,E1}=> True.
+Proof. exact: pvs_intro_mask. Qed.
 Lemma pvs_except_last E1 E2 P : (|={E1,E2}=> ◇ P) ={E1,E2}=> P.
 Proof. by rewrite {1}(pvs_intro E2 P) except_last_pvs pvs_trans. Qed.
 
@@ -108,11 +110,6 @@ Lemma pvs_wand_l E1 E2 P Q : (P -★ Q) ★ (|={E1,E2}=> P) ={E1,E2}=> Q.
 Proof. by rewrite pvs_frame_l wand_elim_l. Qed.
 Lemma pvs_wand_r E1 E2 P Q : (|={E1,E2}=> P) ★ (P -★ Q) ={E1,E2}=> Q.
 Proof. by rewrite pvs_frame_r wand_elim_r. Qed.
-
-Lemma pvs_intro' E1 E2 P : E2 ⊆ E1 → ((|={E2,E1}=> True) -★ P) ={E1,E2}=> P.
-Proof.
-  iIntros (?) "Hw". iApply pvs_wand_l. iFrame. by iApply pvs_intro_mask.
-Qed.
 
 Lemma pvs_trans_frame E1 E2 E3 P Q :
   ((Q ={E2,E3}=★ True) ★ |={E1,E2}=> (Q ★ P)) ={E1,E3}=> P.

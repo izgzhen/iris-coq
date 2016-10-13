@@ -35,8 +35,8 @@ Lemma wp_lift_pure_step E Φ e1 :
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (He Hsafe Hstep) "H". rewrite wp_unfold /wp_pre; iRight; iSplit; auto.
-  iIntros (σ1) "Hσ". iApply pvs_intro'; [set_solver|iIntros "Hclose"].
-  iSplit; [done|]; iNext; iIntros (e2 σ2 efs ?).
+  iIntros (σ1) "Hσ". iVs (pvs_intro_mask' E ∅) as "Hclose"; first set_solver.
+  iVsIntro. iSplit; [done|]; iNext; iIntros (e2 σ2 efs ?).
   destruct (Hstep σ1 e2 σ2 efs); auto; subst.
   iVs "Hclose"; iVsIntro. iFrame "Hσ". iApply "H"; auto.
 Qed.
@@ -51,7 +51,7 @@ Lemma wp_lift_atomic_step {E Φ} e1 σ1 :
 Proof.
   iIntros (Hatomic ?) "[Hσ H]".
   iApply (wp_lift_step E _ e1); eauto using reducible_not_val.
-  iApply pvs_intro'; [set_solver|iIntros "Hclose"].
+  iVs (pvs_intro_mask' E ∅) as "Hclose"; first set_solver. iVsIntro.
   iExists σ1. iFrame "Hσ"; iSplit; eauto.
   iNext; iIntros (e2 σ2 efs) "[% Hσ]".
   edestruct (Hatomic σ1 e2 σ2 efs) as [v2 <-%of_to_val]; eauto.

@@ -96,7 +96,7 @@ Proof.
   { iDestruct "Hv" as (v) "[% Hv]". iExists v; iSplit; first done.
     iApply ("HΦ" with "==>[-]"). by iApply (pvs_mask_mono E1 _). }
   iSplit; [done|]; iIntros (σ1) "Hσ".
-  iApply (pvs_trans _ E1); iApply pvs_intro'; auto. iIntros "Hclose".
+  iVs (pvs_intro_mask' E2 E1) as "Hclose"; first done.
   iVs ("H" $! σ1 with "Hσ") as "[$ H]".
   iVsIntro. iNext. iIntros (e2 σ2 efs Hstep).
   iVs ("H" $! _ σ2 efs with "[#]") as "($ & H & $)"; auto.
