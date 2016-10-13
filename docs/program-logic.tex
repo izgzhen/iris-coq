@@ -96,7 +96,7 @@ The following assertion states that an invariant with name $\iname$ exists and m
 Next, we define \emph{view updates}, which are essentially the same as the resource updates of the base logic ($\Sref{sec:base-logic}$), except that they also have access to world satisfaction and can enable and disable invariants:
 \[ \pvs[\mask_1][\mask_2] \prop \eqdef W * \ownGhost{\gname_{\textmon{En}}}{\mask_1} \wand \upd\diamond (W * \ownGhost{\gname_{\textmon{En}}}{\mask_2} * \prop) \]
 Here, $\mask_1$ and $\mask_2$ are the \emph{masks} of the view update, defining which invariants have to be (at least!) available before and after the update.
-We use $\top$ as symbol for the largest possible mask, $\mathbb N$.
+We use $\top$ as symbol for the largest possible mask, $\mathbb N$, and $\bot$ for the smallest possible mask $\emptyset$.
 We will write $\pvs[\mask] \prop$ for $\pvs[\mask][\mask]\prop$.
 %
 View updates satisfy the following basic proof rules:
