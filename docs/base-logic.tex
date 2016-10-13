@@ -349,7 +349,7 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 \end{mathpar}
 
 
-\paragraph{Laws for ghosts and validity.}
+\paragraph{Laws for resources and validity.}
 \begin{mathpar}
 \begin{array}{rMcMl}
 \ownM{\melt} * \ownM{\meltB} &\provesIff&  \ownM{\melt \mtimes \meltB} \\
@@ -357,14 +357,14 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 \TRUE &\proves&  \ownM{\munit} \\
 \later\ownM\melt &\proves& \Exists\meltB. \ownM\meltB \land \later(\melt = \meltB)
 \end{array}
-\and
-\infer[valid-intro]
-{\melt \in \mval}
-{\TRUE \vdash \mval(\melt)}
-\and
-\infer[valid-elim]
-{\melt \notin \mval_0}
-{\mval(\melt) \proves \FALSE}
+% \and
+% \infer[valid-intro]
+% {\melt \in \mval}
+% {\TRUE \vdash \mval(\melt)}
+% \and
+% \infer[valid-elim]
+% {\melt \notin \mval_0}
+% {\mval(\melt) \proves \FALSE}
 \and
 \begin{array}{rMcMl}
 \ownM{\melt} &\proves& \mval(\melt) \\
@@ -394,6 +394,8 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 {\melt \mupd \meltsB}
 {\ownM\melt \proves \upd \Exists\meltB\in\meltsB. \ownM\meltB}
 \end{mathpar}
+The premise in \ruleref{upd-update} is a \emph{meta-level} side-condition that has to be proven about $a$ and $B$.
+\ralf{Trouble is, we don't actually have $\in$ inside the logic...}
 
 \subsection{Consistency}
 
