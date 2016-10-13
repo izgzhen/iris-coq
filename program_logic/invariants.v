@@ -1,6 +1,6 @@
 From iris.program_logic Require Export pviewshifts.
 From iris.program_logic Require Export namespaces.
-From iris.program_logic Require Import ownership.
+From iris.program_logic Require Import wsat.
 From iris.algebra Require Import gmap.
 From iris.proofmode Require Import tactics coq_tactics intro_patterns.
 Import uPred.

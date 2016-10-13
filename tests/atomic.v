@@ -1,4 +1,4 @@
-From iris.program_logic Require Export hoare weakestpre pviewshifts ownership.
+From iris.program_logic Require Export hoare weakestpre pviewshifts.
 From iris.algebra Require Import upred_big_op.
 From iris.prelude Require Export coPset.
 From iris.proofmode Require Import tactics.
@@ -41,7 +41,9 @@ Section atomic.
   Arguments atomic_triple {_} _ _ _ _.
 End atomic.
 
+(* TODO: Importing in the middle of the file is bad practice. *)
 From iris.heap_lang Require Export lang proofmode notation.
+From iris.heap_lang.lib Require Import par.
 
 Section incr.
   Context `{!heapG Σ} (N : namespace).
@@ -92,7 +94,6 @@ Section incr.
   Qed.
 End incr.
 
-From iris.heap_lang.lib Require Import par.
 
 Section user.
   Context `{!heapG Σ, !spawnG Σ} (N : namespace).
@@ -124,18 +125,15 @@ Section user.
       (* open the invariant *)
       iInv N as (x') ">Hl'" "Hclose".
       (* mask magic *)
-      iApply pvs_intro'.
+      iVs (pvs_intro_mask' _ heapN) as "Hclose'".
       { apply ndisj_subseteq_difference; auto. }
-      iIntros "Hvs".
-      iExists x'.
-      iFrame "Hl'".
-      iSplit.
+      iVsIntro. iExists x'. iFrame "Hl'". iSplit.
       + (* provide a way to rollback *)
         iIntros "Hl'".
-        iVs "Hvs". iVs ("Hclose" with "[Hl']"); eauto.
+        iVs "Hclose'". iVs ("Hclose" with "[Hl']"); eauto.
       + (* provide a way to commit *)
         iIntros (v) "[Heq Hl']".
-        iVs "Hvs". iVs ("Hclose" with "[Hl']"); eauto.
+        iVs "Hclose'". iVs ("Hclose" with "[Hl']"); eauto.
     - iDestruct "Hincr" as "#HIncr".
       iSplitL; [|iSplitL]; try (iApply wp_wand_r;iSplitL; [by iApply "HIncr"|auto]).
       iIntros (v1 v2) "_ !>".

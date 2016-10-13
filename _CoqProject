@@ -67,7 +67,7 @@ program_logic/model.v
 program_logic/adequacy.v
 program_logic/lifting.v
 program_logic/invariants.v
-program_logic/ownership.v
+program_logic/wsat.v
 program_logic/weakestpre.v
 program_logic/pviewshifts.v
 program_logic/hoare.v
@@ -78,6 +78,7 @@ program_logic/ectxi_language.v
 program_logic/ectx_lifting.v
 program_logic/ghost_ownership.v
 program_logic/saved_prop.v
+program_logic/auth.v
 program_logic/sts.v
 program_logic/namespaces.v
 program_logic/boxes.v
