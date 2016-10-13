@@ -409,7 +409,7 @@ All we need to know is that this name is \emph{different} from the names of othe
 Keeping track of the $n^2$ mutual inequalities that arise with $n$ invariants quickly gets in the way of the actual proof.
 
 To solve this issue, instead of remembering the exact name picked for an invariant, we will keep track of the \emph{namespace} the invariant was allocated in.
-Namesapces are sets of invariants, following a tree-like structure:
+Namespaces are sets of invariants, following a tree-like structure:
 Think of the name of an invariant as a sequence of identifiers, much like a fully qualified Java class name.
 A \emph{namespace} $\namesp$ then is like a Java package: it is a sequence of identifiers that we think of as \emph{containing} all invariant names that begin with this sequence. For example, \texttt{org.mpi-sws.iris} is a namespace containing the invariant name \texttt{org.mpi-sws.iris.heap}.
 
@@ -434,7 +434,7 @@ We can now derive the following rules (this involves unfolding the definition of
 \begin{mathpar}
   \axiomH{inv-persist}{\knowInv\namesp\prop \proves \always\knowInv\namesp\prop}
 
-  \axiomH{inv-alloc}{\later\prop \proves \pvs[\bot] \knowInv\namesp\prop}
+  \axiomH{inv-alloc}{\later\prop \proves \pvs[\emptyset] \knowInv\namesp\prop}
 
   \inferH{inv-open}
   {\namesp \subseteq \mask}
