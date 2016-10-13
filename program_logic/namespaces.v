@@ -52,7 +52,8 @@ Section ndisjoint.
   Lemma ndot_ne_disjoint N x y : x ≠ y → N .@ x ⊥ N .@ y.
   Proof.
     intros Hxy a. rewrite !nclose_eq !elem_coPset_suffixes !ndot_eq.
-    intros [qx ->] [qy]. by intros [= ?%encode_inj]%list_encode_suffix_eq.
+    intros [qx ->] [qy Hqy].
+    revert Hqy. by intros [= ?%encode_inj]%list_encode_suffix_eq.
   Qed.
 
   Lemma ndot_preserve_disjoint_l N E x : nclose N ⊥ E → nclose (N .@ x) ⊥ E.
