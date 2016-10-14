@@ -376,18 +376,18 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 
 \paragraph{Laws for the resource update modality.}
 \begin{mathpar}
-\infer[upd-mono]
+\inferH{upd-mono}
 {\prop \proves \propB}
 {\upd\prop \proves \upd\propB}
 
-\infer[upd-intro]
+\inferH{upd-intro}
 {}{\prop \proves \upd \prop}
 
-\infer[upd-trans]
+\inferH{upd-trans}
 {}
 {\upd \upd \prop \proves \upd \prop}
 
-\infer[upd-frame]
+\inferH{upd-frame}
 {}{\propB * \upd\prop \proves \upd (\propB * \prop)}
 
 \inferH{upd-update}
