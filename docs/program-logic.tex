@@ -230,10 +230,10 @@ The following rules can all be derived inside the DC logic:
 {\mask_1 \subseteq \mask_2 \and \vctx,\var:\textlog{val}\mid\prop \proves \propB}
 {\vctx\mid\wpre\expr[\mask_1]{\Ret\var.\prop} \proves \wpre\expr[\mask_2]{\Ret\var.\propB}}
 
-\infer[pvs-wp]
+\infer[vup-wp]
 {}{\pvs[\mask] \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
 
-\infer[wp-pvs]
+\infer[wp-vup]
 {}{\wpre\expr[\mask]{\Ret\var.\pvs[\mask] \prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
 
 \infer[wp-atomic]

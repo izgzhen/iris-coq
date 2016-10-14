@@ -87,6 +87,7 @@ Section proof.
     rewrite /release /=. wp_let. iInv N as (b) "[Hl _]" "Hclose".
     wp_store. iFrame "HΦ". iApply "Hclose". iNext. iExists false. by iFrame.
   Qed.
+
 End proof.
 
 Definition spin_lock `{!heapG Σ, !lockG Σ} : lock Σ :=
