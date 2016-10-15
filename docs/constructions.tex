@@ -253,7 +253,8 @@ We obtain the following frame-preserving update:
 % \end{proof}
 
 
-\subsection{Authoritative}\label{sec:auth}
+\subsection{Authoritative}
+\label{sec:auth-cmra}
 
 Given a CMRA $M$, we construct a monoid $\authm(M)$ modeling someone owning an \emph{authoritative} element $x$ of $M$, and others potentially owning fragments $\melt \le_M x$ of $x$.
 We assume that $M$ has a unit $\munit$, and hence its core is total.
@@ -286,7 +287,7 @@ We then obtain
 \end{mathpar}
 
 \subsection{STS with tokens}
-\label{sec:stsmon}
+\label{sec:sts-cmra}
 
 Given a state-transition system~(STS, \ie a directed graph) $(\STSS, {\stsstep} \subseteq \STSS \times \STSS)$, a set of tokens $\STST$, and a labeling $\STSL: \STSS \ra \wp(\STST)$ of \emph{protocol-owned} tokens for each state, we construct an RA modeling an authoritative current state and permitting transitions given a \emph{bound} on the current state and a set of \emph{locally-owned} tokens.
 
