@@ -256,7 +256,7 @@ We obtain the following frame-preserving update:
 \subsection{Authoritative}
 \label{sec:auth-cmra}
 
-Given a CMRA $M$, we construct a monoid $\authm(M)$ modeling someone owning an \emph{authoritative} element $x$ of $M$, and others potentially owning fragments $\melt \le_M x$ of $x$.
+Given a CMRA $M$, we construct $\authm(M)$ modeling someone owning an \emph{authoritative} element $\melt$ of $M$, and others potentially owning fragments $\meltB \mincl \melt$ of $\melt$.
 We assume that $M$ has a unit $\munit$, and hence its core is total.
 (If $M$ is an exclusive monoid, the construction is very similar to a half-ownership monoid with two asymmetric halves.)
 \begin{align*}
