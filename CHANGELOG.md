@@ -13,8 +13,7 @@ Coq development, but not every API-breaking change is listed.  Changes marked
   is no longer any reason to demand the CMRA unit to be discrete.
 * The language can now fork off multiple threads at once.
 * [#] Local Updates (for the authoritative monoid) are now a 4-way relation
-  with syntax-directed lemmas proving them.  [program_logic/auth] is gone,
-  it doesn't actually simplify anything any more.
+  with syntax-directed lemmas proving them.
 
 ## Iris 2.0
 
