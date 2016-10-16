@@ -61,8 +61,8 @@ Lemma wp_load_pst E σ l v Φ :
   σ !! l = Some v →
   ▷ ownP σ ★ ▷ (ownP σ ={E}=★ Φ v) ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
 Proof.
-  intros. rewrite -(wp_lift_atomic_det_head_step' σ v σ); eauto 10.
-  intros; inv_head_step; eauto 10.
+  intros. rewrite -(wp_lift_atomic_det_head_step' σ v σ); eauto.
+  intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_store_pst E σ l v v' Φ :
@@ -89,7 +89,7 @@ Lemma wp_cas_suc_pst E σ l v1 v2 Φ :
   ⊢ WP CAS (Lit (LitLoc l)) (of_val v1) (of_val v2) @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_head_step' σ (LitV $ LitBool true)
-    (<[l:=v2]>σ)); eauto 10.
+    (<[l:=v2]>σ)); eauto.
   intros; inv_head_step; eauto.
 Qed.
 

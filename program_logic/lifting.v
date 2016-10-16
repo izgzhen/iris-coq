@@ -12,29 +12,32 @@ Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
 
 Lemma wp_lift_step E Φ e1 :
-  to_val e1 = None →
   (|={E,∅}=> ∃ σ1, ■ reducible e1 σ1 ★ ▷ ownP σ1 ★
     ▷ ∀ e2 σ2 efs, ■ prim_step e1 σ1 e2 σ2 efs ★ ownP σ2
           ={∅,E}=★ WP e2 @ E {{ Φ }} ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  iIntros (?) "H". rewrite wp_unfold /wp_pre; iRight; iSplit; auto.
-  iIntros (σ1) "Hσ". iVs "H" as (σ1') "(% & >Hσf & H)".
-  iDestruct (ownP_agree σ1 σ1' with "[-]") as %<-; first by iFrame.
-  iVsIntro; iSplit; [done|]; iNext; iIntros (e2 σ2 efs Hstep).
-  iVs (ownP_update σ1 σ2 with "[-H]") as "[$ ?]"; first by iFrame.
-  iApply "H"; eauto.
+  iIntros "H". rewrite wp_unfold /wp_pre.
+  destruct (to_val e1) as [v|] eqn:EQe1.
+  - iLeft. iExists v. iSplit. done. iVs "H" as (σ1) "[% _]".
+    by erewrite reducible_not_val in EQe1.
+  - iRight; iSplit; eauto.
+    iIntros (σ1) "Hσ". iVs "H" as (σ1') "(% & >Hσf & H)".
+    iDestruct (ownP_agree σ1 σ1' with "[-]") as %<-; first by iFrame.
+    iVsIntro; iSplit; [done|]; iNext; iIntros (e2 σ2 efs Hstep).
+    iVs (ownP_update σ1 σ2 with "[-H]") as "[$ ?]"; first by iFrame.
+    iApply "H"; eauto.
 Qed.
 
-Lemma wp_lift_pure_step E Φ e1 :
-  to_val e1 = None →
+Lemma wp_lift_pure_step `{Inhabited (state Λ)} E Φ e1 :
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 efs, prim_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
   (▷ ∀ e2 efs σ, ■ prim_step e1 σ e2 σ efs →
     WP e2 @ E {{ Φ }} ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  iIntros (He Hsafe Hstep) "H". rewrite wp_unfold /wp_pre; iRight; iSplit; auto.
+  iIntros (Hsafe Hstep) "H". rewrite wp_unfold /wp_pre; iRight; iSplit; auto.
+  { iPureIntro. eapply reducible_not_val, (Hsafe inhabitant). }
   iIntros (σ1) "Hσ". iApply pvs_intro'; [set_solver|iIntros "Hclose"].
   iSplit; [done|]; iNext; iIntros (e2 σ2 efs ?).
   destruct (Hstep σ1 e2 σ2 efs); auto; subst.
@@ -49,8 +52,7 @@ Lemma wp_lift_atomic_step {E Φ} e1 σ1 :
     (|={E}=> Φ v2) ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  iIntros (Hatomic ?) "[Hσ H]".
-  iApply (wp_lift_step E _ e1); eauto using reducible_not_val.
+  iIntros (Hatomic ?) "[Hσ H]". iApply (wp_lift_step E _ e1).
   iApply pvs_intro'; [set_solver|iIntros "Hclose"].
   iExists σ1. iFrame "Hσ"; iSplit; eauto.
   iNext; iIntros (e2 σ2 efs) "[% Hσ]".
@@ -73,14 +75,13 @@ Proof.
   edestruct Hdet as (->&->%of_to_val%(inj of_val)&->). done. by iApply "Hσ2".
 Qed.
 
-Lemma wp_lift_pure_det_step {E Φ} e1 e2 efs :
-  to_val e1 = None →
+Lemma wp_lift_pure_det_step `{Inhabited (state Λ)} {E Φ} e1 e2 efs :
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2' σ2 efs', prim_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
   ▷ (WP e2 @ E {{ Φ }} ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  iIntros (?? Hpuredet) "?". iApply (wp_lift_pure_step E); try done.
+  iIntros (? Hpuredet) "?". iApply (wp_lift_pure_step E); try done.
   by intros; eapply Hpuredet. iNext. by iIntros (e' efs' σ (_&->&->)%Hpuredet).
 Qed.
 End lifting.
