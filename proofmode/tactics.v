@@ -834,7 +834,7 @@ Tactic Notation "iRevertIntros" constr(Hs) "with" tactic(tac) :=
     | ESelName ?p ?H :: ?Hs =>
        iRevert H; go Hs;
        let H' :=
-         match p with true => constr:[IAlwaysElim (IName H)] | false => H end in
+         match p with true => constr:([IAlwaysElim (IName H)]) | false => H end in
        iIntros H'
     end in
   iElaborateSelPat Hs go.

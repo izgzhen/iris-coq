@@ -1,4 +1,3 @@
-% !TEX root = ./appendix.tex
 \section{COFE constructions}
 
 \subsection{Next (type-level later)}
@@ -254,126 +253,41 @@ We obtain the following frame-preserving update:
 % \end{proof}
 
 
-% %\subsection{Disposable monoid}
-% %
-% %Given a monoid $M$, we construct a monoid where, having full ownership of an element $\melt$ of $M$, one can throw it away, transitioning to a dead element.
-% %Let \dispm{M} be the monoid with carrier $\mcarp{M} \uplus \{ \disposed \}$ and multiplication
-% %% The previous unit must remain the unit of the new monoid, as is is always duplicable and hence we could not transition to \disposed if it were not composable with \disposed
-% %\begin{align*}
-% %  \melt \mtimes \meltB &\eqdef \melt \mtimes_M \meltB & \IF \melt \sep[M] \meltB \\
-% %  \disposed \mtimes \disposed &\eqdef \disposed \\
-% %  \munit_M \mtimes \disposed &\eqdef \disposed \mtimes \munit_M \eqdef \disposed
-% %\end{align*}
-% %The unit is the same as in $M$.
-% %
-% %The frame-preserving updates are
-% %\begin{mathpar}
-% % \inferH{DispUpd}
-% %   {a \in \mcarp{M} \setminus \{\munit_M\} \and a \mupd_M B}
-% %   {a \mupd B}
-% % \and
-% % \inferH{Dispose}
-% %  {a \in \mcarp{M} \setminus \{\munit_M\} \and \All b \in \mcarp{M}. a \sep b \Ra b = \munit_M}
-% %  {a \mupd \disposed}
-% %\end{mathpar}
-% %
-% %\begin{proof}[Proof of \ruleref{DispUpd}]
-% %Assume a frame $f$. If $f = \disposed$, then $a = \munit_M$, which is a contradiction.
-% %Thus $f \in \mcarp{M}$ and we can use $a \mupd_M B$.
-% %\end{proof}
-% %
-% %\begin{proof}[Proof of \ruleref{Dispose}]
-% %The second premiss says that $a$ has no non-trivial frame in $M$. To show the update, assume a frame $f$ in $\dispm{M}$. Like above, we get $f \in \mcarp{M}$, and thus $f = \munit_M$. But $\disposed \sep \munit_M$ is trivial, so we are done.
-% %\end{proof}
+\subsection{Authoritative}
+\label{sec:auth-cmra}
 
-% \subsection{Authoritative monoid}\label{sec:auth}
+Given a CMRA $M$, we construct $\authm(M)$ modeling someone owning an \emph{authoritative} element $\melt$ of $M$, and others potentially owning fragments $\meltB \mincl \melt$ of $\melt$.
+We assume that $M$ has a unit $\munit$, and hence its core is total.
+(If $M$ is an exclusive monoid, the construction is very similar to a half-ownership monoid with two asymmetric halves.)
+\begin{align*}
+\authm(M) \eqdef{}& \maybe{\exm(M)} \times M \\
+\mval_n \eqdef{}& \setComp{ (x, \meltB) \in \authm(M) }{ \meltB \in \mval_n \land (x = \mnocore \lor \Exists \melt. x = \exinj(\melt) \land \meltB \mincl_n \melt) } \\
+  (x_1, \meltB_1) \mtimes (x_2, \meltB_2) \eqdef{}& (x_1 \mtimes x_2, \meltB_2 \mtimes \meltB_2) \\
+  \mcore{(x, \meltB)} \eqdef{}& (\mnocore, \mcore\meltB) \\
+  (x_1, \meltB_1) \nequiv{n} (x_2, \meltB_2) \eqdef{}& x_1 \nequiv{n} x_2 \land \meltB_1 \nequiv{n} \meltB_2
+\end{align*}
+Note that $(\mnocore, \munit)$ is the unit and asserts no ownership whatsoever, but $(\exinj(\munit), \munit)$ asserts that the authoritative element is $\munit$.
 
-% Given a monoid $M$, we construct a monoid modeling someone owning an \emph{authoritative} element $x$ of $M$, and others potentially owning fragments $\melt \le_M x$ of $x$.
-% (If $M$ is an exclusive monoid, the construction is very similar to a half-ownership monoid with two asymmetric halves.)
-% Let $\auth{M}$ be the monoid with carrier
-% \[
-% 	\setComp{ (x, \melt) }{ x \in \mcarp{\exm{\mcarp{M}}} \land \melt \in \mcarp{M} \land (x = \munit_{\exm{\mcarp{M}}} \lor \melt \leq_M x) }
-% \]
-% and multiplication
-% \[
-% (x, \melt) \mtimes (y, \meltB) \eqdef
-%      (x \mtimes y, \melt \mtimes \meltB) \quad \mbox{if } x \sep y \land \melt \sep \meltB \land (x \mtimes y = \munit_{\exm{\mcarp{M}}} \lor \melt \mtimes \meltB \leq_M x \mtimes y)
-% \]
-% Note that $(\munit_{\exm{\mcarp{M}}}, \munit_M)$ is the unit and asserts no ownership whatsoever, but $(\munit_{M}, \munit_M)$ asserts that the authoritative element is $\munit_M$.
+Let $\melt, \meltB \in M$.
+We write $\authfull \melt$ for full ownership $(\exinj(\melt), \munit)$ and $\authfrag \meltB$ for fragmental ownership $(\mnocore, \meltB)$ and $\authfull \melt , \authfrag \meltB$ for combined ownership $(\exinj(\melt), \meltB)$.
 
-% Let $x, \melt \in \mcarp M$.
-% We write $\authfull x$ for full ownership $(x, \munit_M):\auth{M}$ and $\authfrag \melt$ for fragmental ownership $(\munit_{\exm{\mcarp{M}}}, \melt)$ and $\authfull x , \authfrag \melt$ for combined ownership $(x, \melt)$.
-% If $x$ or $a$ is $\mzero_{M}$, then the sugar denotes $\mzero_{\auth{M}}$.
+The frame-preserving update involves the notion of a \emph{local update}:
+\newcommand\lupd{\stackrel{\mathrm l}{\mupd}}
+\begin{defn}
+  It is possible to do a \emph{local update} from $\melt_1$ and $\meltB_1$ to $\melt_2$ and $\meltB_2$, written $(\melt_1, \meltB_1) \lupd (\melt_2, \meltB_2)$, if
+  \[ \All n, \maybe{\melt_\f}. x_1 \in \mval_n \land \melt_1 \nequiv{n} \meltB_1 \mtimes \maybe{\melt_\f} \Ra \melt_2 \in \mval_n \land \melt_2 \nequiv{n} \meltB_2 \mtimes \maybe{\melt_\f} \]
+\end{defn}
+In other words, the idea is that for every possible frame $\maybe{\melt_\f}$ completing $\meltB_1$ to $\melt_1$, the same frame also completes $\meltB_2$ to $\melt_2$.
 
-% \ralf{This needs syncing with the Coq development.}
-% The frame-preserving update involves a rather unwieldy side-condition:
-% \begin{mathpar}
-% 	\inferH{AuthUpd}{
-% 		\All\melt_\f\in\mcar{\monoid}. \melt\sep\meltB \land \melt\mtimes\melt_\f \le \meltB\mtimes\melt_\f \Ra \melt'\mtimes\melt_\f \le \melt'\mtimes\meltB \and
-% 		\melt' \sep \meltB
-% 	}{
-% 		\authfull \melt \mtimes \meltB, \authfrag \melt \mupd \authfull \melt' \mtimes \meltB, \authfrag \melt'
-% 	}
-% \end{mathpar}
-% We therefore derive two special cases.
-
-% \paragraph{Local frame-preserving updates.}
-
-% \newcommand\authupd{f}%
-% Following~\cite{scsl}, we say that $\authupd: \mcar{M} \ra \mcar{M}$ is \emph{local} if
-% \[
-% 	\All a, b \in \mcar{M}. a \sep b \land \authupd(a) \neq \mzero \Ra \authupd(a \mtimes b) = \authupd(a) \mtimes b
-% \]
-% Then,
-% \begin{mathpar}
-% 	\inferH{AuthUpdLocal}
-% 	{\text{$\authupd$ local} \and \authupd(\melt)\sep\meltB}
-% 	{\authfull \melt \mtimes \meltB, \authfrag \melt \mupd \authfull \authupd(\melt) \mtimes \meltB, \authfrag \authupd(\melt)}
-% \end{mathpar}
-
-% \paragraph{Frame-preserving updates on cancellative monoids.}
-
-% Frame-preserving updates are also possible if we assume $M$ cancellative:
-% \begin{mathpar}
-%  \inferH{AuthUpdCancel}
-%   {\text{$M$ cancellative} \and \melt'\sep\meltB}
-%   {\authfull \melt \mtimes \meltB, \authfrag \melt \mupd \authfull \melt' \mtimes \meltB, \authfrag \melt'}
-% \end{mathpar}
-
-% \subsection{Fractional heap monoid}
-% \label{sec:fheapm}
-
-% By combining the fractional, finite partial function, and authoritative monoids, we construct two flavors of heaps with fractional permissions and mention their important frame-preserving updates.
-% Hereinafter, we assume the set $\textdom{Val}$ of values is countable.
-
-% Given a set $Y$, define $\FHeap(Y) \eqdef \textdom{Val} \fpfn \fracm(Y)$ representing a fractional heap with codomain $Y$.
-% From \S\S\ref{sec:fracm} and~\ref{sec:fpfunm} we obtain the following frame-preserving updates as well as the fact that $\FHeap(Y)$ is cancellative.
-% \begin{mathpar}
-% 	\axiomH{FHeapUpd}{h[x \mapsto (1, y)] \mupd h[x \mapsto (1, y')]} \and
-% 	\axiomH{FHeapAlloc}{h \mupd \{\, h[x \mapsto (1, y)] \mid x \in \textdom{Val} \,\}}
-% \end{mathpar}
-% We will write $qh$ with $h : \textsort{Val} \fpfn Y$ for the function in $\FHeap(Y)$ mapping every $x \in \dom(h)$ to $(q, h(x))$, and everything else to $\munit$.
-
-% Define $\AFHeap(Y) \eqdef \auth{\FHeap(Y)}$ representing an authoritative fractional heap with codomain $Y$.
-% We easily obtain the following frame-preserving updates.
-% \begin{mathpar}
-% 	\axiomH{AFHeapUpd}{
-% 		(\authfull h[x \mapsto (1, y)], \authfrag [x \mapsto (1, y)]) \mupd (\authfull h[x \mapsto (1, y')], \authfrag [x \mapsto (1, y')])
-% 	}
-% 	\and
-% 	\inferH{AFHeapAdd}{
-% 		x \notin \dom(h)
-% 	}{
-% 		\authfull h \mupd (\authfull h[x \mapsto (q, y)], \authfrag [x \mapsto (q, y)])
-% 	}
-% 	\and
-% 	\axiomH{AFHeapRemove}{
-% 		(\authfull h[x \mapsto (q, y)], \authfrag [x \mapsto (q, y)]) \mupd \authfull h
-% 	}
-% \end{mathpar}
+We then obtain
+\begin{mathpar}
+  \inferH{auth-update}
+  {(\melt_1, \meltB_1) \lupd (\melt_2, \meltB_2)}
+  {\authfull \melt_1 , \authfrag \meltB_1 \mupd \authfull \melt_2 , \authfrag \meltB_2}
+\end{mathpar}
 
 \subsection{STS with tokens}
-\label{sec:stsmon}
+\label{sec:sts-cmra}
 
 Given a state-transition system~(STS, \ie a directed graph) $(\STSS, {\stsstep} \subseteq \STSS \times \STSS)$, a set of tokens $\STST$, and a labeling $\STSL: \STSS \ra \wp(\STST)$ of \emph{protocol-owned} tokens for each state, we construct an RA modeling an authoritative current state and permitting transitions given a \emph{bound} on the current state and a set of \emph{locally-owned} tokens.
 

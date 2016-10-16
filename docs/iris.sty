@@ -28,6 +28,8 @@
 %% MATH SYMBOLS & NOTATION & IDENTIFIERS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\newcommand{\nat}{\mathbb{N}}
+
 \DeclareMathOperator*{\Sep}{\scalerel*{\ast}{\sum}}
 \newcommand*{\disj}[1][]{\mathrel{\#_{#1}}}
 \newcommand\pord{\sqsubseteq}
@@ -35,7 +37,7 @@
 \newcommand{\upclose}{\mathord{\uparrow}}
 \newcommand{\ALT}{\ |\ }
 
-\newcommand{\spac}{\:} % a space
+\newcommand{\spac}{\,} % a space
 
 \def\All #1.{\forall #1.\spac}%
 \def\Exists #1.{\exists #1.\spac}%
@@ -80,6 +82,12 @@
 
 \newcommand{\Func}{F} % functor
 
+\newcommand{\subst}[3]{{#1}[{#3} / {#2}]}
+
+\newcommand{\mapinsert}[3]{#3[#1:=#2]}
+
+\newcommand{\nil}{\epsilon}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MODEL-SPECIFIC SYMBOLS & NOTATION & IDENTIFIERS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -122,6 +130,10 @@
 \newcommand{\iPreProp}{\textdom{iPreProp}}
 \newcommand{\Wld}{\textdom{Wld}}
 \newcommand{\Res}{\textdom{Res}}
+\newcommand{\State}{\textdom{State}}
+\newcommand{\Val}{\textdom{Val}}
+\newcommand{\Loc}{\textdom{Loc}}
+\newcommand{\Expr}{\textdom{Expr}}
 
 \newcommand{\cofe}{T}
 \newcommand{\cofeB}{U}
@@ -169,6 +181,7 @@
 \newcommand{\sigax}{A}
 
 \newcommand{\type}{\tau}
+\newcommand{\typeB}{\sigma}
 
 \newcommand{\var}{x}
 \newcommand{\varB}{y}
@@ -184,9 +197,13 @@
 \newcommand{\propB}{Q}
 \newcommand{\propC}{R}
 
-\newcommand{\pred}{\varphi}
-\newcommand{\predB}{\psi}
-\newcommand{\predC}{\zeta}
+% pure propositions
+\newcommand{\pprop}{\phi}
+\newcommand{\ppropB}{\psi}
+
+\newcommand{\pred}{\varPhi}
+\newcommand{\predB}{\Psi}
+\newcommand{\predC}{\Zeta}
 
 \newcommand{\gname}{\gamma}
 \newcommand{\iname}{\iota}
@@ -202,18 +219,19 @@
 \newcommand{\proves}{\vdash}
 \newcommand{\provesIff}{\mathrel{\dashv\vdash}}
 
-\newcommand{\wand}{\;{{\mbox{---}}\!\!{*}}\;}
+\newcommand{\wand}{\mathrel{-\!\!*}}
 
 % oh my... I have to wrap the "-" in a \mathrm, otherwise all hell breaks lose...
-\newcommand{\fmapsto}[1][\mathrm{-}]{\xmapsto{#1}}
+\newcommand{\fmapsto}[1][]{\xmapsto{#1}}
 \newcommand{\gmapsto}{\hookrightarrow}%
 \newcommand{\fgmapsto}[1][\mathrm{-}]{\xhookrightarrow{#1}}%
 
 \NewDocumentCommand\wpre{m O{} m}%
-  {\textlog{wp}_{#2}\spac#1\spac{\{#3\}}}
+  {\textlog{wp}_{#2}\spac#1\spac{\left\{#3\right\}}}
 
-\newcommand{\later}{\mathord{\triangleright}}
-\newcommand{\always}{\Box{}}
+\newcommand{\later}{\mathop{\triangleright}}
+\newcommand{\always}{\mathop{\Box}}
+\newcommand{\pure}{\mathop{\blacksquare}}
 
 %% Invariants and Ghost ownership
 % PDS: Was 0pt inner, 2pt outer.
@@ -222,7 +240,7 @@
 \NewDocumentCommand \boxedassert {O{} m o}{%
 	\tikz[baseline=(m.base)]{
 		%	  \node[rectangle, draw,inner sep=0.8pt,anchor=base,#1] (m) {${#2}\mathstrut$};
-		\node[rectangle,inner sep=0.8pt,outer sep=0.2pt,anchor=base] (m) {${#2}\mathstrut$};
+		\node[rectangle,inner sep=0.8pt,outer sep=0.2pt,anchor=base] (m) {${\,#2\,}\mathstrut$};
 		\draw[#1,boxedassert_border] ($(m.south west) + (0,0.65pt)$) rectangle ($(m.north east) + (0, 0.7pt)$);
 	}\IfNoValueF{#3}{^{\,#3}}%
 }
@@ -256,7 +274,7 @@
 \NewDocumentCommand \vsW {O{} O{}} {\vsGen[#1]{\vsWand}[#2]}
 
 % for now, the update modality looks like a pvs without masks.
-\NewDocumentCommand \upd {} {\mathord{\mid\kern-0.4ex\Rrightarrow\kern-0.25ex}}
+\NewDocumentCommand \upd {} {\mathop{\mid\kern-0.4ex\Rrightarrow\kern-0.25ex}}
 
 
 %% Hoare Triples
@@ -269,12 +287,8 @@
   \setbox1=\hoarescalebox{#1}{\copy0}%
   \setbox2=\hoarescalebox{#2}{\copy0}%
   \copy1{#3}\copy2%
-  \;{#4}\;%
+  \; #4 \;%
   \copy1{#5}\copy2}
-\NewDocumentCommand \hoare {m m m O{}}{
-	\triple\{\}{#1}{#2}{#3}%
-	_{#4}%
-}
 
 \newcommand{\bracket}[4][]{%
   \setbox0=\hbox{$\mathsurround=0pt{#1}{#4}\mathstrut$}%
@@ -284,6 +298,11 @@
 % \curlybracket[other] x
 \newcommand{\curlybracket}[2][]{\bracket[{#1}]\{\}{#2}}
 \newcommand{\anglebracket}[2][]{\bracket[{#1}]\langle\rangle{#2}}
+
+\NewDocumentCommand \hoare {m m m O{}}{
+	\curlybracket{#1}\spac #2 \spac \curlybracket{#3}_{#4}%
+}
+
 % \hoareV[t] pre c post [mask]
 \NewDocumentCommand \hoareV {O{c} m m m O{}}{
 		{\begin{aligned}[#1]
@@ -321,7 +340,10 @@
 \newcommand{\valB}{w}
 \newcommand{\state}{\sigma}
 \newcommand{\step}{\ra}
+\newcommand{\hstep}{\ra_{\mathsf{h}}}
+\newcommand{\tpstep}{\ra_{\mathsf{tp}}}
 \newcommand{\lctx}{K}
+\newcommand{\Lctx}{\textdom{Ctx}}
 
 \newcommand{\toval}{\mathrm{expr\any to\any val}}
 \newcommand{\ofval}{\mathrm{val\any to\any expr}}
@@ -332,6 +354,8 @@
 \newcommand{\tpool}{T}
 
 \newcommand{\cfg}[2]{{#1};{#2}}
+
+\def\fill#1[#2]{#1 {[}\, #2\,{]} }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % STANDARD DERIVED CONSTRUCTIONS
@@ -383,12 +407,11 @@
 \newcommand{\stsfstep}[1]{\xrightarrow{#1}}
 \newcommand{\stsftrans}[1]{\stsfstep{#1}^{*}}
 
-
 \tikzstyle{sts} = [->,every node/.style={rectangle, rounded corners, draw, minimum size=1.2cm, align=center}]
 \tikzstyle{sts_arrows} = [arrows={->[scale=1.5]},every node/.style={font=\sffamily\small}]
 
 %% Stored Propositions
 \newcommand{\mapstoprop}{\mathrel{\kern-0.5ex\tikz[baseline=(m)]{\node at (0,0) (m){}; \draw[line cap=round] (0,0.16) -- (0,-0.004);}\kern-1.5ex\Ra}}
 
-
 \endinput
+

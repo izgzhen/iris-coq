@@ -289,8 +289,8 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 \begin{mathpar}
 \begin{array}{rMcMl}
   \TRUE * \prop &\provesIff& \prop \\
-  \prop * \propB &\provesIff& \propB * \prop \\
-  (\prop * \propB) * \propC &\provesIff& \prop * (\propB * \propC)
+  \prop * \propB &\proves& \propB * \prop \\
+  (\prop * \propB) * \propC &\proves& \prop * (\propB * \propC)
 \end{array}
 \and
 \infer[$*$-mono]
@@ -339,17 +339,17 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 \begin{array}[c]{rMcMl}
   \All x. \later\prop &\proves& \later{\All x.\prop} \\
   \later\Exists x. \prop &\proves& \later\FALSE \lor {\Exists x.\later\prop}  \\
-  \later\prop &\proves& \later\FALSE \lor (\later\FALSE \Ra \prop) \\
+  \later\prop &\proves& \later\FALSE \lor (\later\FALSE \Ra \prop)
 \end{array}
 \and
 \begin{array}[c]{rMcMl}
   \later{(\prop * \propB)} &\provesIff& \later\prop * \later\propB \\
-  \always{\later\prop} &\provesIff& \later\always{\prop} \\
+  \always{\later\prop} &\provesIff& \later\always{\prop}
 \end{array}
 \end{mathpar}
 
 
-\paragraph{Laws for ghosts and validity.}
+\paragraph{Laws for resources and validity.}
 \begin{mathpar}
 \begin{array}{rMcMl}
 \ownM{\melt} * \ownM{\meltB} &\provesIff&  \ownM{\melt \mtimes \meltB} \\
@@ -357,14 +357,14 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 \TRUE &\proves&  \ownM{\munit} \\
 \later\ownM\melt &\proves& \Exists\meltB. \ownM\meltB \land \later(\melt = \meltB)
 \end{array}
-\and
-\infer[valid-intro]
-{\melt \in \mval}
-{\TRUE \vdash \mval(\melt)}
-\and
-\infer[valid-elim]
-{\melt \notin \mval_0}
-{\mval(\melt) \proves \FALSE}
+% \and
+% \infer[valid-intro]
+% {\melt \in \mval}
+% {\TRUE \vdash \mval(\melt)}
+% \and
+% \infer[valid-elim]
+% {\melt \notin \mval_0}
+% {\mval(\melt) \proves \FALSE}
 \and
 \begin{array}{rMcMl}
 \ownM{\melt} &\proves& \mval(\melt) \\
@@ -376,24 +376,26 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 
 \paragraph{Laws for the resource update modality.}
 \begin{mathpar}
-\infer[upd-mono]
+\inferH{upd-mono}
 {\prop \proves \propB}
 {\upd\prop \proves \upd\propB}
 
-\infer[upd-intro]
+\inferH{upd-intro}
 {}{\prop \proves \upd \prop}
 
-\infer[upd-trans]
+\inferH{upd-trans}
 {}
 {\upd \upd \prop \proves \upd \prop}
 
-\infer[upd-frame]
+\inferH{upd-frame}
 {}{\propB * \upd\prop \proves \upd (\propB * \prop)}
 
 \inferH{upd-update}
 {\melt \mupd \meltsB}
 {\ownM\melt \proves \upd \Exists\meltB\in\meltsB. \ownM\meltB}
 \end{mathpar}
+The premise in \ruleref{upd-update} is a \emph{meta-level} side-condition that has to be proven about $a$ and $B$.
+\ralf{Trouble is, we don't actually have $\in$ inside the logic...}
 
 \subsection{Consistency}
 

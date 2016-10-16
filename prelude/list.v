@@ -2234,7 +2234,12 @@ Section Forall_Exists.
   Lemma not_Forall_Exists l : ¬Forall P l → Exists (not ∘ P) l.
   Proof. intro. destruct (Forall_Exists_dec dec l); intuition. Qed.
   Lemma not_Exists_Forall l : ¬Exists P l → Forall (not ∘ P) l.
-  Proof. by destruct (Forall_Exists_dec (λ x, swap_if (decide (P x))) l). Qed.
+  Proof.
+    (* TODO: Coq 8.6 needs type annotation here, Coq 8.5 did not.
+       Should we report this? *)
+    by destruct (@Forall_Exists_dec (not ∘ P) _
+        (λ x : A, swap_if (decide (P x))) l).
+  Qed.
   Global Instance Forall_dec l : Decision (Forall P l) :=
     match Forall_Exists_dec dec l with
     | left H => left H

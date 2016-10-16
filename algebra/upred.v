@@ -821,26 +821,25 @@ Proof.
   split; intros n' x ? (x1&x2&?&?&?); exists x1,x2; cofe_subst x;
     eauto 7 using cmra_validN_op_l, cmra_validN_op_r, uPred_in_entails.
 Qed.
-Global Instance True_sep : LeftId (⊣⊢) True%I (@uPred_sep M).
+Lemma True_sep_1 P : P ⊢ True ★ P.
 Proof.
-  intros P; unseal; split=> n x Hvalid; split.
-  - intros (x1&x2&?&_&?); cofe_subst; eauto using uPred_mono, cmra_includedN_r.
-  - by intros ?; exists (core x), x; rewrite cmra_core_l.
+  unseal; split; intros n x ??. exists (core x), x. by rewrite cmra_core_l.
 Qed.
-Global Instance sep_comm : Comm (⊣⊢) (@uPred_sep M).
+Lemma True_sep_2 P : True ★ P ⊢ P.
 Proof.
-  by intros P Q; unseal; split=> n x ?; split;
-    intros (x1&x2&?&?&?); exists x2, x1; rewrite (comm op).
+  unseal; split; intros n x ? (x1&x2&?&_&?); cofe_subst;
+    eauto using uPred_mono, cmra_includedN_r.
 Qed.
-Global Instance sep_assoc : Assoc (⊣⊢) (@uPred_sep M).
+Lemma sep_comm' P Q : P ★ Q ⊢ Q ★ P.
 Proof.
-  intros P Q R; unseal; split=> n x ?; split.
-  - intros (x1&x2&Hx&?&y1&y2&Hy&?&?); exists (x1 ⋅ y1), y2; split_and?; auto.
-    + by rewrite -(assoc op) -Hy -Hx.
-    + by exists x1, y1.
-  - intros (x1&x2&Hx&(y1&y2&Hy&?&?)&?); exists y1, (y2 ⋅ x2); split_and?; auto.
-    + by rewrite (assoc op) -Hy -Hx.
-    + by exists y2, x2.
+  unseal; split; intros n x ? (x1&x2&?&?&?); exists x2, x1; by rewrite (comm op).
+Qed.
+Lemma sep_assoc' P Q R : (P ★ Q) ★ R ⊢ P ★ (Q ★ R).
+Proof.
+  unseal; split; intros n x ? (x1&x2&Hx&(y1&y2&Hy&?&?)&?).
+  exists y1, (y2 ⋅ x2); split_and?; auto.
+  + by rewrite (assoc op) -Hy -Hx.
+  + by exists y2, x2.
 Qed.
 Lemma wand_intro_r P Q R : (P ★ Q ⊢ R) → P ⊢ Q -★ R.
 Proof.
@@ -872,6 +871,15 @@ Qed.
 Global Instance wand_mono' : Proper (flip (⊢) ==> (⊢) ==> (⊢)) (@uPred_wand M).
 Proof. by intros P P' HP Q Q' HQ; apply wand_mono. Qed.
 
+Global Instance sep_comm : Comm (⊣⊢) (@uPred_sep M).
+Proof. intros P Q; apply (anti_symm _); auto using sep_comm'. Qed.
+Global Instance sep_assoc : Assoc (⊣⊢) (@uPred_sep M).
+Proof.
+  intros P Q R; apply (anti_symm _); auto using sep_assoc'.
+  by rewrite !(comm _ P) !(comm _ _ R) sep_assoc'.
+Qed.
+Global Instance True_sep : LeftId (⊣⊢) True%I (@uPred_sep M).
+Proof. intros P; apply (anti_symm _); auto using True_sep_1, True_sep_2. Qed.
 Global Instance sep_True : RightId (⊣⊢) True%I (@uPred_sep M).
 Proof. by intros P; rewrite comm left_id. Qed.
 Lemma sep_elim_l P Q : P ★ Q ⊢ P.

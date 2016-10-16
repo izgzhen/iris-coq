@@ -96,7 +96,7 @@ The following assertion states that an invariant with name $\iname$ exists and m
 Next, we define \emph{view updates}, which are essentially the same as the resource updates of the base logic ($\Sref{sec:base-logic}$), except that they also have access to world satisfaction and can enable and disable invariants:
 \[ \pvs[\mask_1][\mask_2] \prop \eqdef W * \ownGhost{\gname_{\textmon{En}}}{\mask_1} \wand \upd\diamond (W * \ownGhost{\gname_{\textmon{En}}}{\mask_2} * \prop) \]
 Here, $\mask_1$ and $\mask_2$ are the \emph{masks} of the view update, defining which invariants have to be (at least!) available before and after the update.
-We use $\top$ as symbol for the largest possible mask, $\mathbb N$.
+We use $\top$ as symbol for the largest possible mask, $\mathbb N$, and $\bot$ for the smallest possible mask $\emptyset$.
 We will write $\pvs[\mask] \prop$ for $\pvs[\mask][\mask]\prop$.
 %
 View updates satisfy the following basic proof rules:
@@ -230,10 +230,10 @@ The following rules can all be derived inside the DC logic:
 {\mask_1 \subseteq \mask_2 \and \vctx,\var:\textlog{val}\mid\prop \proves \propB}
 {\vctx\mid\wpre\expr[\mask_1]{\Ret\var.\prop} \proves \wpre\expr[\mask_2]{\Ret\var.\propB}}
 
-\infer[pvs-wp]
+\infer[vup-wp]
 {}{\pvs[\mask] \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
 
-\infer[wp-pvs]
+\infer[wp-vup]
 {}{\wpre\expr[\mask]{\Ret\var.\pvs[\mask] \prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
 
 \infer[wp-atomic]
@@ -409,7 +409,7 @@ All we need to know is that this name is \emph{different} from the names of othe
 Keeping track of the $n^2$ mutual inequalities that arise with $n$ invariants quickly gets in the way of the actual proof.
 
 To solve this issue, instead of remembering the exact name picked for an invariant, we will keep track of the \emph{namespace} the invariant was allocated in.
-Namesapces are sets of invariants, following a tree-like structure:
+Namespaces are sets of invariants, following a tree-like structure:
 Think of the name of an invariant as a sequence of identifiers, much like a fully qualified Java class name.
 A \emph{namespace} $\namesp$ then is like a Java package: it is a sequence of identifiers that we think of as \emph{containing} all invariant names that begin with this sequence. For example, \texttt{org.mpi-sws.iris} is a namespace containing the invariant name \texttt{org.mpi-sws.iris.heap}.
 
@@ -434,7 +434,7 @@ We can now derive the following rules (this involves unfolding the definition of
 \begin{mathpar}
   \axiomH{inv-persist}{\knowInv\namesp\prop \proves \always\knowInv\namesp\prop}
 
-  \axiomH{inv-alloc}{\later\prop \proves \pvs[\bot] \knowInv\namesp\prop}
+  \axiomH{inv-alloc}{\later\prop \proves \pvs[\emptyset] \knowInv\namesp\prop}
 
   \inferH{inv-open}
   {\namesp \subseteq \mask}
