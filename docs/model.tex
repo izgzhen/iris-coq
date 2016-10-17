@@ -42,10 +42,10 @@ We are thus going to define the assertions as mapping CMRA elements to sets of s
 	\Lam \melt. \setComp{n}{\begin{aligned}
             \All m, \meltB.& m \leq n \land \melt \mincl \meltB \land \meltB \in \mval_m \Ra {} \\
             & m \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB) \Ra {}\\& m \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\meltB)\end{aligned}}\\
-	\Sem{\vctx \proves \All x : \type. \prop : \Prop}_\gamma &\eqdef
-	\Lam \melt. \setComp{n}{ \All v \in \Sem{\type}. n \in \Sem{\vctx, x : \type \proves \prop : \Prop}_{\gamma[x \mapsto v]}(\melt) } \\
-	\Sem{\vctx \proves \Exists x : \type. \prop : \Prop}_\gamma &\eqdef
-        \Lam \melt. \setComp{n}{ \Exists v \in \Sem{\type}. n \in \Sem{\vctx, x : \type \proves \prop : \Prop}_{\gamma[x \mapsto v]}(\melt) } \\
+	\Sem{\vctx \proves \All \var : \type. \prop : \Prop}_\gamma &\eqdef
+	\Lam \melt. \setComp{n}{ \All v \in \Sem{\type}. n \in \Sem{\vctx, \var : \type \proves \prop : \Prop}_{\mapinsert \var v \gamma}(\melt) } \\
+	\Sem{\vctx \proves \Exists \var : \type. \prop : \Prop}_\gamma &\eqdef
+        \Lam \melt. \setComp{n}{ \Exists v \in \Sem{\type}. n \in \Sem{\vctx, \var : \type \proves \prop : \Prop}_{\mapinsert \var v \gamma}(\melt) } \\
   ~\\
 	\Sem{\vctx \proves \prop * \propB : \Prop}_\gamma &\eqdef \Lam\melt. \setComp{n}{\begin{aligned}\Exists \meltB_1, \meltB_2. &\melt \nequiv{n} \meltB_1 \mtimes \meltB_2 \land {}\\& n \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB_1) \land n \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\meltB_2)\end{aligned}}
 \\
@@ -72,11 +72,11 @@ For every definition, we have to show all the side-conditions: The maps have to 
 	\Sem{\vctx \proves x : \type}_\gamma &\eqdef \gamma(x) \\
 	\Sem{\vctx \proves \sigfn(\term_1, \dots, \term_n) : \type_{n+1}}_\gamma &\eqdef \Sem{\sigfn}(\Sem{\vctx \proves \term_1 : \type_1}_\gamma, \dots, \Sem{\vctx \proves \term_n : \type_n}_\gamma) \\
 	\Sem{\vctx \proves \Lam \var:\type. \term : \type \to \type'}_\gamma &\eqdef
-	\Lam \termB : \Sem{\type}. \Sem{\vctx, \var : \type \proves \term : \type}_{\gamma[\var \mapsto \termB]} \\
+	\Lam \termB : \Sem{\type}. \Sem{\vctx, \var : \type \proves \term : \type}_{\mapinsert \var \termB \gamma]} \\
 	\Sem{\vctx \proves \term(\termB) : \type'}_\gamma &\eqdef
 	\Sem{\vctx \proves \term : \type \to \type'}_\gamma(\Sem{\vctx \proves \termB : \type}_\gamma) \\
 	\Sem{\vctx \proves \MU \var:\type. \term : \type}_\gamma &\eqdef
-	\mathit{fix}(\Lam \termB : \Sem{\type}. \Sem{\vctx, x : \type \proves \term : \type}_{\gamma[x \mapsto \termB]}) \\
+	\mathit{fix}(\Lam \termB : \Sem{\type}. \Sem{\vctx, x : \type \proves \term : \type}_{\mapinsert \var \termB \gamma}) \\
   ~\\
 	\Sem{\vctx \proves () : 1}_\gamma &\eqdef () \\
 	\Sem{\vctx \proves (\term_1, \term_2) : \type_1 \times \type_2}_\gamma &\eqdef (\Sem{\vctx \proves \term_1 : \type_1}_\gamma, \Sem{\vctx \proves \term_2 : \type_2}_\gamma) \\

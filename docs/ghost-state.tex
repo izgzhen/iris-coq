@@ -197,7 +197,7 @@ This is best demonstrated by giving some proof rules.
 
 So let us first define the notion of ghost ownership that we use in this logic.
 Assuming that the family of functors contains the functor $\Sigma_i$ at index $i$, and furthermore assuming that $\monoid_i = \Sigma_i(\iPreProp, \iPreProp)$, given some $\melt \in \monoid_i$ we define:
-\[ \ownGhost\gname{\melt:\monoid_i} \eqdef \ownM{(\ldots, \emptyset, i:\set{\gname \mapsto \melt}, \emptyset, \ldots)} \]
+\[ \ownGhost\gname{\melt:\monoid_i} \eqdef \ownM{(\ldots, \emptyset, i:\mapsingleton \gname \melt, \emptyset, \ldots)} \]
 This is ownership of the pair (element of the product over all the functors) that has the empty finite partial function in all components \emph{except for} the component corresponding to index $i$, where we own the element $\melt$ at index $\gname$ in the finite partial function.
 
 We can show the following properties for this form of ownership:

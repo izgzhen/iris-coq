@@ -55,7 +55,7 @@ Frame-preserving updates on the $M_i$ lift to the product:
 \begin{mathpar}
   \inferH{prod-update}
   {\melt \mupd_{M_i} \meltsB}
-  {f[i \mapsto \melt] \mupd \setComp{ f[i \mapsto \meltB]}{\meltB \in \meltsB}}
+  {\mapinsert i \melt f \mupd \setComp{ \mapinsert i \meltB f}{\meltB \in \meltsB}}
 \end{mathpar}
 
 \subsection{Sum}
@@ -96,15 +96,15 @@ We obtain the following frame-preserving updates:
 \begin{mathpar}
   \inferH{fpfn-alloc-strong}
   {\text{$G$ infinite} \and \melt \in \mval}
-  {\emptyset \mupd \setComp{[\gname \mapsto \melt]}{\gname \in G}}
+  {\emptyset \mupd \setComp{\mapsingleton \gname \melt}{\gname \in G}}
 
   \inferH{fpfn-alloc}
   {\melt \in \mval}
-  {\emptyset \mupd \setComp{[\gname \mapsto \melt]}{\gname \in K}}
+  {\emptyset \mupd \setComp{\mapsingleton \gname \melt}{\gname \in K}}
 
   \inferH{fpfn-update}
   {\melt \mupd_\monoid \meltsB}
-  {f[i \mapsto \melt] \mupd \setComp{ f[i \mapsto \meltB]}{\meltB \in \meltsB}}
+  {\mapinsert i \melt f] \mupd \setComp{ \mapinsert i \meltB f}{\meltB \in \meltsB}}
 \end{mathpar}
 Above, $\mval$ refers to the validity of $\monoid$.
 
