@@ -14,7 +14,7 @@ To this end, we use tokens that manage which invariants are currently enabled.
 
 We assume to have the following four CMRAs available:
 \begin{align*}
-  \textmon{State} \eqdef{}& \authm(\exm(\textdom{State})) \\
+  \textmon{State} \eqdef{}& \authm(\exm(\State)) \\
   \textmon{Inv} \eqdef{}& \authm(\mathbb N \fpfn \agm(\latert \iPreProp)) \\
   \textmon{En} \eqdef{}& \pset{\mathbb N} \\
   \textmon{Dis} \eqdef{}& \finpset{\mathbb N}
@@ -249,10 +249,10 @@ The purpose of the adequacy statement is to show that our notion of weakest prec
 There are two properties we are looking for: First of all, the postcondition should reflect actual properties of the values the program can terminate with.
 Second, a proof of a weakest precondition with any postcondition should imply that the program is \emph{safe}, \ie that it does not get stuck.
 
-To express the adequacy statement for functional correctness, we assume we are given some set $V \in \textdom{Val}$ of legal return values.
+To express the adequacy statement for functional correctness, we assume we are given some set $V \subseteq \Val$ of legal return values.
 Furthermore, we assume that the signature $\Sig$ adds a predicate $\pred$ to the logic which reflects $V$ into the logic:
 \[\begin{array}{rMcMl}
-  \Sem\pred &:& \Sem{\textdom{Val}\,} \nfn \Sem\Prop \\
+  \Sem\pred &:& \Sem{\Val\,} \nfn \Sem\Prop \\
   \Sem\pred &\eqdef& \Lam \val. \Lam \any. \setComp{n}{v \in V}
 \end{array}\]
 The signature can of course state arbitrary additional properties of $\pred$, as long as they are proven sound.

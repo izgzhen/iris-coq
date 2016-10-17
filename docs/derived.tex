@@ -141,7 +141,7 @@
 % We write $x \fgmapsto v$ for $\exists q.\; x \fgmapsto[q] v$ and $x \gmapsto v$ for $x \fgmapsto[1] v$.
 % Note that $x \fgmapsto v$ is duplicable but cannot be boxed (as it depends on resources); \ie we have $x \fgmapsto v \Lra x \fgmapsto v * x \fgmapsto v$ but not $x \fgmapsto v \Ra \always x \fgmapsto v$.
 
-% To implement this interface, allocate an instance $\gname_G$ of $\FHeap(\textdom{Val})$ and define
+% To implement this interface, allocate an instance $\gname_G$ of $\FHeap(\Val)$ and define
 % \[
 % 	x \fgmapsto[q] v \eqdef
 % 	  \begin{cases}
