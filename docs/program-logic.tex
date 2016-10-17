@@ -160,8 +160,8 @@ We assume that everything making up the definition of the language, \ie values, 
   \textdom{wp} \eqdef{}& \MU \textdom{wp}. \Lam \mask, \expr, \pred. \\
         & (\Exists\val. \toval(\expr) = \val \land \pvs[\mask] \prop) \lor {}\\
         & \Bigl(\toval(\expr) = \bot \land \All \state. \ownGhost{\gname_{\textmon{State}}}{\authfull \state} \vsW[\mask][\emptyset] {}\\
-        &\qquad \red(\expr, \state) * \later\All \expr', \state', \bar\expr. (\expr, \state \step \expr', \state', \bar\expr) \vsW[\emptyset][\mask] {}\\
-        &\qquad\qquad \ownGhost{\gname_{\textmon{State}}}{\authfull \state'} * \textdom{wp}(\mask, \expr', \pred) * \Sep_{\expr'' \in \bar\expr} \textdom{wp}(\top, \expr'', \Lam \any. \TRUE)\Bigr) \\
+        &\qquad \red(\expr, \state) * \later\All \expr', \state', \vec\expr. (\expr, \state \step \expr', \state', \vec\expr) \vsW[\emptyset][\mask] {}\\
+        &\qquad\qquad \ownGhost{\gname_{\textmon{State}}}{\authfull \state'} * \textdom{wp}(\mask, \expr', \pred) * \Sep_{\expr'' \in \vec\expr} \textdom{wp}(\top, \expr'', \Lam \any. \TRUE)\Bigr) \\
 %  (* value case *)
   \wpre\expr[\mask]{\Ret\val. \prop} \eqdef{}& \textdom{wp}(\mask, \expr, \Lam\val.\prop)
 \end{align*}
@@ -210,14 +210,14 @@ In order to cover the most general case, those rules end up being more complicat
   \infer[wp-lift-step]
   {\toval(\expr_1) = \bot}
   { {\begin{inbox} % for some crazy reason, LaTeX is actually sensitive to the space between the "{ {" here and the "} }" below...
-        ~~\pvs[\mask][\emptyset] \Exists \state_1. \red(\expr_1,\state_1) * \later\ownPhys{\state_1} * {}\\\qquad~~ \later\All \expr_2, \state_2, \bar\expr. \Bigl( (\expr_1, \state_1 \step \expr_2, \state_2, \bar\expr) * \ownPhys{\state_2} \Bigr) \wand \pvs[\emptyset][\mask] \Bigl(\wpre{\expr_2}[\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \bar\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE}\Bigr)  {}\\\proves \wpre{\expr_1}[\mask]{\Ret\var.\prop}
+        ~~\pvs[\mask][\emptyset] \Exists \state_1. \red(\expr_1,\state_1) * \later\ownPhys{\state_1} * {}\\\qquad~~ \later\All \expr_2, \state_2, \vec\expr. \Bigl( (\expr_1, \state_1 \step \expr_2, \state_2, \vec\expr) * \ownPhys{\state_2} \Bigr) \wand \pvs[\emptyset][\mask] \Bigl(\wpre{\expr_2}[\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE}\Bigr)  {}\\\proves \wpre{\expr_1}[\mask]{\Ret\var.\prop}
       \end{inbox}} }
 \\\\
   \infer[wp-lift-pure-step]
   {\toval(\expr_1) = \bot \and
    \All \state_1. \red(\expr_1, \state_1) \and
-   \All \state_1, \expr_2, \state_2, \bar\expr. \expr_1,\state_1 \step \expr_2,\state_2,\bar\expr \Ra \state_1 = \state_2 }
-  {\later\All \state, \expr_2, \bar\expr. (\expr_1,\state \step \expr_2, \state,\bar\expr)  \Ra \wpre{\expr_2}[\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \bar\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \proves \wpre{\expr_1}[\mask]{\Ret\var.\prop}}
+   \All \state_1, \expr_2, \state_2, \vec\expr. \expr_1,\state_1 \step \expr_2,\state_2,\vec\expr \Ra \state_1 = \state_2 }
+  {\later\All \state, \expr_2, \vec\expr. (\expr_1,\state \step \expr_2, \state,\vec\expr)  \Ra \wpre{\expr_2}[\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \proves \wpre{\expr_1}[\mask]{\Ret\var.\prop}}
 \end{mathpar}
 
 We can further derive some slightly simpler rules for special cases:
@@ -226,20 +226,20 @@ We can derive some specialized forms of the lifting axioms for the operational s
   \infer[wp-lift-atomic-step]
   {\atomic(\expr_1) \and
    \red(\expr_1, \state_1)}
-  { {\begin{inbox}~~\later\ownPhys{\state_1} * \later\All \val_2, \state_2, \bar\expr. (\expr_1,\state_1 \step \ofval(\val),\state_2,\bar\expr)  * \ownPhys{\state_2} \wand \prop[\val_2/\var] * \Sep_{\expr_\f \in \bar\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} {}\\ \proves  \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}
+  { {\begin{inbox}~~\later\ownPhys{\state_1} * \later\All \val_2, \state_2, \vec\expr. (\expr_1,\state_1 \step \ofval(\val),\state_2,\vec\expr)  * \ownPhys{\state_2} \wand \prop[\val_2/\var] * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} {}\\ \proves  \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}
   \end{inbox}} }
 
   \infer[wp-lift-atomic-det-step]
   {\atomic(\expr_1) \and
    \red(\expr_1, \state_1) \and
-   \All \expr'_2, \state'_2, \bar\expr'. \expr_1,\state_1 \step \expr'_2,\state'_2,\bar\expr' \Ra \state_2 = \state_2' \land \toval(\expr_2') = \val_2 \land \bar\expr = \bar\expr'}
-  {\later\ownPhys{\state_1} * \later \Bigl(\ownPhys{\state_2} \wand \prop[\val_2/\var] * \Sep_{\expr_\f \in \bar\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \Bigr) \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
+   \All \expr'_2, \state'_2, \vec\expr'. \expr_1,\state_1 \step \expr'_2,\state'_2,\vec\expr' \Ra \state_2 = \state_2' \land \toval(\expr_2') = \val_2 \land \vec\expr = \vec\expr'}
+  {\later\ownPhys{\state_1} * \later \Bigl(\ownPhys{\state_2} \wand \prop[\val_2/\var] * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \Bigr) \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
 
   \infer[wp-lift-pure-det-step]
   {\toval(\expr_1) = \bot \and
    \All \state_1. \red(\expr_1, \state_1) \\
-   \All \state_1, \expr_2', \state'_2, \bar\expr'. \expr_1,\state_1 \step \expr'_2,\state'_2,\bar\expr' \Ra \state_1 = \state'_2 \land \expr_2 = \expr_2' \land \bar\expr = \bar\expr'}
-  {\later \Bigl( \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \Sep_{\expr_\f \in \bar\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \Bigr) \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
+   \All \state_1, \expr_2', \state'_2, \vec\expr'. \expr_1,\state_1 \step \expr'_2,\state'_2,\vec\expr' \Ra \state_1 = \state'_2 \land \expr_2 = \expr_2' \land \vec\expr = \vec\expr'}
+  {\later \Bigl( \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \Bigr) \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
 \end{mathparpagebreakable}
 
 
@@ -369,14 +369,14 @@ Furthermore, we will often know that namespaces are \emph{disjoint} just by look
 The namespaces $\namesp.\texttt{iris}$ and $\namesp.\texttt{gps}$ are disjoint no matter the choice of $\namesp$.
 As a result, there is often no need to track disjointness of namespaces, we just have to pick the namespaces that we allocate our invariants in accordingly.
 
-Formally speaking, let $\namesp \in \textlog{InvNamesp} \eqdef \textlog{list}(\mathbb N)$ be the type of \emph{invariant namespaces}.
+Formally speaking, let $\namesp \in \textlog{InvNamesp} \eqdef \List(\mathbb N)$ be the type of \emph{invariant namespaces}.
 We use the notation $\namesp.\iname$ for the namespace $[\iname] \dplus \namesp$.
 (In other words, the list is ``backwards''. This is because cons-ing to the list, like the dot does above, is easier to deal with in Coq than appending at the end.)
 
 The elements of a namespaces are \emph{structured invariant names} (think: Java fully qualified class name).
 They, too, are lists of $\mathbb N$, the same type as namespaces.
 In order to connect this up to the definitions of \Sref{sec:invariants}, we need a way to map structued invariant names to $\mathbb N$, the type of ``plain'' invariant names.
-Any injective mapping $\textlog{namesp\_inj}$ will do; and such a mapping has to exist because $\textlog{list}(\mathbb N)$ is countable.
+Any injective mapping $\textlog{namesp\_inj}$ will do; and such a mapping has to exist because $\List(\mathbb N)$ is countable.
 Whenever needed, we (usually implicitly) coerce $\namesp$ to its encoded suffix-closure, \ie to the set of encoded structured invariant names contained in the namespace: \[\namecl\namesp \eqdef \setComp{\iname}{\Exists \namesp'. \iname = \textlog{namesp\_inj}(\namesp' \dplus \namesp)}\]
 
 We will overload the notation for invariant assertions for using namespaces instead of names:
