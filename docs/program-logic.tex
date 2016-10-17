@@ -14,7 +14,7 @@ To this end, we use tokens that manage which invariants are currently enabled.
 
 We assume to have the following four CMRAs available:
 \begin{align*}
-  \textmon{State} \eqdef{}& \authm(\exm(\State)) \\
+  \textmon{State} \eqdef{}& \authm(\maybe{\exm(\State)}) \\
   \textmon{Inv} \eqdef{}& \authm(\nat \fpfn \agm(\latert \iPreProp)) \\
   \textmon{En} \eqdef{}& \pset{\nat} \\
   \textmon{Dis} \eqdef{}& \finpset{\nat}
