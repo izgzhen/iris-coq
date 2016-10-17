@@ -1,0 +1,57 @@
+\let\bar\overline
+
+\section{Language}
+\label{sec:language}
+
+A \emph{language} $\Lang$ consists of a set \textdom{Expr} of \emph{expressions} (metavariable $\expr$), a set \textdom{Val} of \emph{values} (metavariable $\val$), and a set \textdom{State} of \emph{states} (metvariable $\state$) such that
+\begin{itemize}
+\item There exist functions $\ofval : \textdom{Val} \to \textdom{Expr}$ and $\toval : \textdom{Expr} \pfn \textdom{val}$ (notice the latter is partial), such that
+\begin{mathpar} {\All \expr, \val. \toval(\expr) = \val \Ra \ofval(\val) = \expr} \and {\All\val. \toval(\ofval(\val)) = \val} 
+\end{mathpar}
+\item There exists a \emph{primitive reduction relation} \[(-,- \step -,-,-) \subseteq \textdom{Expr} \times \textdom{State} \times \textdom{Expr} \times \textdom{State} \times (\cup_n \textdom{Expr}^n)\]
+  A reduction $\expr_1, \state_1 \step \expr_2, \state_2, \overline\expr$ indicates that, when $\expr_1$ reduces to $\expr_2$, the new threads in the list $\overline\expr$ is forked off.
+  We will write $\expr_1, \state_1 \step \expr_2, \state_2$ for $\expr_1, \state_1 \step \expr_2, \state_2, ()$, \ie when no threads are forked off. \\
+\item All values are stuck:
+\[ \expr, \_ \step  \_, \_, \_ \Ra \toval(\expr) = \bot \]
+\end{itemize}
+
+\begin{defn}
+  An expression $\expr$ and state $\state$ are \emph{reducible} (written $\red(\expr, \state)$) if
+  \[ \Exists \expr_2, \state_2, \bar\expr. \expr,\state \step \expr_2,\state_2,\bar\expr \]
+\end{defn}
+
+\begin{defn}
+  An expression $\expr$ is said to be \emph{atomic} if it reduces in one step to a value:
+  \[ \All\state_1, \expr_2, \state_2, \bar\expr. \expr, \state_1 \step \expr_2, \state_2, \bar\expr \Ra \Exists \val_2. \toval(\expr_2) = \val_2 \]
+\end{defn}
+
+\begin{defn}[Context]
+  A function $\lctx : \textdom{Expr} \to \textdom{Expr}$ is a \emph{context} if the following conditions are satisfied:
+  \begin{enumerate}[itemsep=0pt]
+  \item $\lctx$ does not turn non-values into values:\\
+    $\All\expr. \toval(\expr) = \bot \Ra \toval(\lctx(\expr)) = \bot $
+  \item One can perform reductions below $\lctx$:\\
+    $\All \expr_1, \state_1, \expr_2, \state_2, \bar\expr. \expr_1, \state_1 \step \expr_2,\state_2,\bar\expr \Ra \lctx(\expr_1), \state_1 \step \lctx(\expr_2),\state_2,\bar\expr $
+  \item Reductions stay below $\lctx$ until there is a value in the hole:\\
+    $\All \expr_1', \state_1, \expr_2, \state_2, \bar\expr. \toval(\expr_1') = \bot \land \lctx(\expr_1'), \state_1 \step \expr_2,\state_2,\bar\expr \Ra \Exists\expr_2'. \expr_2 = \lctx(\expr_2') \land \expr_1', \state_1 \step \expr_2',\state_2,\bar\expr $
+  \end{enumerate}
+\end{defn}
+
+\subsection{Concurrent language}
+
+For any language $\Lang$, we define the corresponding thread-pool semantics.
+
+\paragraph{Machine syntax}
+\[
+	\tpool \in \textdom{ThreadPool} \eqdef \bigcup_n \textdom{Expr}^n
+\]
+
+\judgment[Machine reduction]{\cfg{\tpool}{\state} \step
+  \cfg{\tpool'}{\state'}}
+\begin{mathpar}
+\infer
+  {\expr_1, \state_1 \step \expr_2, \state_2, \bar\expr}
+  {\cfg{\tpool \dplus [\expr_1] \dplus \tpool'}{\state_1} \step
+     \cfg{\tpool \dplus [\expr_2] \dplus \tpool' \dplus \bar\expr}{\state_2}}
+\end{mathpar}
+
