@@ -6,11 +6,11 @@ The model of Iris lives in the category of \emph{Complete Ordered Families of Eq
 This definition varies slightly from the original one in~\cite{catlogic}.
 
 \begin{defn}[Chain]
-  Given some set $\cofe$ and an indexed family $({\nequiv{n}} \subseteq \cofe \times \cofe)_{n \in \mathbb{N}}$ of equivalence relations, a \emph{chain} is a function $c : \mathbb{N} \to \cofe$ such that $\All n, m. n \leq m \Ra c (m) \nequiv{n} c (n)$.
+  Given some set $\cofe$ and an indexed family $({\nequiv{n}} \subseteq \cofe \times \cofe)_{n \in \nat}$ of equivalence relations, a \emph{chain} is a function $c : \nat \to \cofe$ such that $\All n, m. n \leq m \Ra c (m) \nequiv{n} c (n)$.
 \end{defn}
 
 \begin{defn}
-  A \emph{complete ordered family of equivalences} (COFE) is a tuple $(\cofe, ({\nequiv{n}} \subseteq \cofe \times \cofe)_{n \in \mathbb{N}}, \lim : \chain(\cofe) \to \cofe)$ satisfying
+  A \emph{complete ordered family of equivalences} (COFE) is a tuple $(\cofe, ({\nequiv{n}} \subseteq \cofe \times \cofe)_{n \in \nat}, \lim : \chain(\cofe) \to \cofe)$ satisfying
   \begin{align*}
     \All n. (\nequiv{n}) ~& \text{is an equivalence relation} \tagH{cofe-equiv} \\
     \All n, m.& n \geq m \Ra (\nequiv{n}) \subseteq (\nequiv{m}) \tagH{cofe-mono} \\
@@ -115,7 +115,7 @@ Since Iris ensures that the global ghost state is valid, this means that we can 
 \subsection{CMRA}
 
 \begin{defn}
-  A \emph{CMRA} is a tuple $(\monoid : \COFEs, (\mval_n \subseteq \monoid)_{n \in \mathbb{N}},\\ \mcore{{-}}: \monoid \nfn \maybe\monoid, (\mtimes) : \monoid \times \monoid \nfn \monoid)$ satisfying:
+  A \emph{CMRA} is a tuple $(\monoid : \COFEs, (\mval_n \subseteq \monoid)_{n \in \nat},\\ \mcore{{-}}: \monoid \nfn \maybe\monoid, (\mtimes) : \monoid \times \monoid \nfn \monoid)$ satisfying:
   \begin{align*}
     \All n, \melt, \meltB.& \melt \nequiv{n} \meltB \land \melt\in\mval_n \Ra \meltB\in\mval_n \tagH{cmra-valid-ne} \\
     \All n, m.& n \geq m \Ra \mval_n \subseteq \mval_m \tagH{cmra-valid-mono} \\
@@ -136,7 +136,7 @@ Since Iris ensures that the global ghost state is valid, this means that we can 
 This is a natural generalization of RAs over COFEs.
 All operations have to be non-expansive, and the validity predicate $\mval$ can now also depend on the step-index.
 We define the plain $\mval$ as the ``limit'' of the $\mval_n$:
-\[ \mval \eqdef \bigcap_{n \in \mathbb{N}} \mval_n \]
+\[ \mval \eqdef \bigcap_{n \in \nat} \mval_n \]
 
 \paragraph{The extension axiom (\ruleref{cmra-extend}).}
 Notice that the existential quantification in this axiom is \emph{constructive}, \ie it is a sigma type in Coq.

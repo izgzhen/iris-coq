@@ -33,7 +33,7 @@ We are thus going to define the assertions as mapping CMRA elements to sets of s
 	\Sem{\vctx \proves t =_\type u : \Prop}_\gamma &\eqdef
 	\Lam \any. \setComp{n}{\Sem{\vctx \proves t : \type}_\gamma \nequiv{n} \Sem{\vctx \proves u : \type}_\gamma} \\
 	\Sem{\vctx \proves \FALSE : \Prop}_\gamma &\eqdef \Lam \any. \emptyset \\
-	\Sem{\vctx \proves \TRUE : \Prop}_\gamma &\eqdef \Lam \any. \mathbb{N} \\
+	\Sem{\vctx \proves \TRUE : \Prop}_\gamma &\eqdef \Lam \any. \nat \\
 	\Sem{\vctx \proves \prop \land \propB : \Prop}_\gamma &\eqdef
 	\Lam \melt. \Sem{\vctx \proves \prop : \Prop}_\gamma(\melt) \cap \Sem{\vctx \proves \propB : \Prop}_\gamma(\melt) \\
 	\Sem{\vctx \proves \prop \lor \propB : \Prop}_\gamma &\eqdef
@@ -101,7 +101,7 @@ We can now define \emph{semantic} logical entailment.
 \Sem{\vctx \mid \prop \proves \propB} \eqdef
 \begin{aligned}[t]
 \MoveEqLeft
-\forall n \in \mathbb{N}.\;
+\forall n \in \nat.\;
 \forall \rs \in \textdom{Res}.\; 
 \forall \gamma \in \Sem{\vctx},\;
 \\&

@@ -16,7 +16,7 @@ $\latert(-)$ is a locally \emph{contractive} functor from $\COFEs$ to $\COFEs$.
 
 Given a CMRA $\monoid$, we define the COFE $\UPred(\monoid)$ of \emph{uniform predicates} over $\monoid$ as follows:
 \begin{align*}
-  \UPred(\monoid) \eqdef{} \setComp{\pred: \mathbb{N} \times \monoid \to \mProp}{
+  \UPred(\monoid) \eqdef{} \setComp{\pred: \nat \times \monoid \to \mProp}{
   \begin{inbox}[c]
     (\All n, x, y. \pred(n, x) \land x \nequiv{n} y \Ra \pred(n, y)) \land {}\\
     (\All n, m, x, y. \pred(n, x) \land x \mincl y \land m \leq n \land y \in \mval_m \Ra \pred(m, y))
@@ -29,8 +29,8 @@ $\UPred(-)$ is a locally non-expansive functor from $\CMRAs$ to $\COFEs$.
 One way to understand this definition is to re-write it a little.
 We start by defining the COFE of \emph{step-indexed propositions}: For every step-index, the proposition either holds or does not hold.
 \begin{align*}
-  \SProp \eqdef{}& \psetdown{\mathbb{N}} \\
-    \eqdef{}& \setComp{X \in \pset{\mathbb{N}}}{ \All n, m. n \geq m \Ra n \in X \Ra m \in X } \\
+  \SProp \eqdef{}& \psetdown{\nat} \\
+    \eqdef{}& \setComp{X \in \pset{\nat}}{ \All n, m. n \geq m \Ra n \in X \Ra m \in X } \\
   X \nequiv{n} Y \eqdef{}& \All m \leq n. m \in X \Lra m \in Y
 \end{align*}
 Notice that this notion of $\SProp$ is already hidden in the validity predicate $\mval_n$ of a CMRA:
@@ -114,7 +114,7 @@ $K \fpfn (-)$ is a locally non-expansive functor from $\CMRAs$ to $\CMRAs$.
 
 Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
 \begin{align*}
-  \agm(\cofe) \eqdef{}& \set{(c, V) \in (\mathbb{N} \to \cofe) \times \SProp}/\ {\sim} \\[-0.2em]
+  \agm(\cofe) \eqdef{}& \set{(c, V) \in (\nat \to \cofe) \times \SProp}/\ {\sim} \\[-0.2em]
   \textnormal{where }& \melt \sim \meltB \eqdef{} \melt.V = \meltB.V \land 
     \All n. n \in \melt.V \Ra \melt.c(n) \nequiv{n} \meltB.c(n)  \\
 %    \All n \in {\melt.V}.\, \melt.x \nequiv{n} \meltB.x \\
@@ -131,11 +131,11 @@ You can think of the $c$ as a \emph{chain} of elements of $\cofe$ that has to co
 The reason we store a chain, rather than a single element, is that $\agm(\cofe)$ needs to be a COFE itself, so we need to be able to give a limit for every chain of $\agm(\cofe)$.
 However, given such a chain, we cannot constructively define its limit: Clearly, the $V$ of the limit is the limit of the $V$ of the chain.
 But what to pick for the actual data, for the element of $\cofe$?
-Only if $V = \mathbb{N}$ we have a chain of $\cofe$ that we can take a limit of; if the $V$ is smaller, the chain ``cancels'', \ie stops converging as we reach indices $n \notin V$.
+Only if $V = \nat$ we have a chain of $\cofe$ that we can take a limit of; if the $V$ is smaller, the chain ``cancels'', \ie stops converging as we reach indices $n \notin V$.
 To mitigate this, we apply the usual construction to close a set; we go from elements of $\cofe$ to chains of $\cofe$.
 
 We define an injection $\aginj$ into $\agm(\cofe)$ as follows:
-\[ \aginj(x) \eqdef \record{\mathrm c \eqdef \Lam \any. x, \mathrm V \eqdef \mathbb{N}} \]
+\[ \aginj(x) \eqdef \record{\mathrm c \eqdef \Lam \any. x, \mathrm V \eqdef \nat} \]
 There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can show the following:
 \begin{mathpar}
   \axiomH{ag-val}{\aginj(x) \in \mval_n}

@@ -15,9 +15,9 @@ To this end, we use tokens that manage which invariants are currently enabled.
 We assume to have the following four CMRAs available:
 \begin{align*}
   \textmon{State} \eqdef{}& \authm(\exm(\State)) \\
-  \textmon{Inv} \eqdef{}& \authm(\mathbb N \fpfn \agm(\latert \iPreProp)) \\
-  \textmon{En} \eqdef{}& \pset{\mathbb N} \\
-  \textmon{Dis} \eqdef{}& \finpset{\mathbb N}
+  \textmon{Inv} \eqdef{}& \authm(\nat \fpfn \agm(\latert \iPreProp)) \\
+  \textmon{En} \eqdef{}& \pset{\nat} \\
+  \textmon{Dis} \eqdef{}& \finpset{\nat}
 \end{align*}
 The last two are the tokens used for managing invariants, $\textmon{Inv}$ is the monoid used to manage the invariants themselves.
 Finally, $\textmon{State}$ is used to provide the program with a view of the physical state of the machine.
@@ -28,7 +28,7 @@ Furthermore, we assume that instances named $\gname_{\textmon{State}}$, $\gname_
 \paragraph{World Satisfaction.}
 We can now define the assertion $W$ (\emph{world satisfaction}) which ensures that the enabled invariants are actually maintained:
 \begin{align*}
-  W \eqdef{}& \Exists I : \mathbb N \fpfn \Prop.
+  W \eqdef{}& \Exists I : \nat \fpfn \Prop.
   \begin{array}{@{} l}
     \ownGhost{\gname_{\textmon{Inv}}}{\authfull
       \mapsingletonComp {\iname}
@@ -47,7 +47,7 @@ The following assertion states that an invariant with name $\iname$ exists and m
 Next, we define \emph{view updates}, which are essentially the same as the resource updates of the base logic ($\Sref{sec:base-logic}$), except that they also have access to world satisfaction and can enable and disable invariants:
 \[ \pvs[\mask_1][\mask_2] \prop \eqdef W * \ownGhost{\gname_{\textmon{En}}}{\mask_1} \wand \upd\diamond (W * \ownGhost{\gname_{\textmon{En}}}{\mask_2} * \prop) \]
 Here, $\mask_1$ and $\mask_2$ are the \emph{masks} of the view update, defining which invariants have to be (at least!) available before and after the update.
-We use $\top$ as symbol for the largest possible mask, $\mathbb N$, and $\bot$ for the smallest possible mask $\emptyset$.
+We use $\top$ as symbol for the largest possible mask, $\nat$, and $\bot$ for the smallest possible mask $\emptyset$.
 We will write $\pvs[\mask] \prop$ for $\pvs[\mask][\mask]\prop$.
 %
 View updates satisfy the following basic proof rules:
@@ -369,14 +369,14 @@ Furthermore, we will often know that namespaces are \emph{disjoint} just by look
 The namespaces $\namesp.\texttt{iris}$ and $\namesp.\texttt{gps}$ are disjoint no matter the choice of $\namesp$.
 As a result, there is often no need to track disjointness of namespaces, we just have to pick the namespaces that we allocate our invariants in accordingly.
 
-Formally speaking, let $\namesp \in \textlog{InvNamesp} \eqdef \List(\mathbb N)$ be the type of \emph{invariant namespaces}.
+Formally speaking, let $\namesp \in \textlog{InvNamesp} \eqdef \List(\nat)$ be the type of \emph{invariant namespaces}.
 We use the notation $\namesp.\iname$ for the namespace $[\iname] \dplus \namesp$.
 (In other words, the list is ``backwards''. This is because cons-ing to the list, like the dot does above, is easier to deal with in Coq than appending at the end.)
 
 The elements of a namespaces are \emph{structured invariant names} (think: Java fully qualified class name).
-They, too, are lists of $\mathbb N$, the same type as namespaces.
-In order to connect this up to the definitions of \Sref{sec:invariants}, we need a way to map structued invariant names to $\mathbb N$, the type of ``plain'' invariant names.
-Any injective mapping $\textlog{namesp\_inj}$ will do; and such a mapping has to exist because $\List(\mathbb N)$ is countable.
+They, too, are lists of $\nat$, the same type as namespaces.
+In order to connect this up to the definitions of \Sref{sec:invariants}, we need a way to map structued invariant names to $\nat$, the type of ``plain'' invariant names.
+Any injective mapping $\textlog{namesp\_inj}$ will do; and such a mapping has to exist because $\List(\nat)$ is countable.
 Whenever needed, we (usually implicitly) coerce $\namesp$ to its encoded suffix-closure, \ie to the set of encoded structured invariant names contained in the namespace: \[\namecl\namesp \eqdef \setComp{\iname}{\Exists \namesp'. \iname = \textlog{namesp\_inj}(\namesp' \dplus \namesp)}\]
 
 We will overload the notation for invariant assertions for using namespaces instead of names:
