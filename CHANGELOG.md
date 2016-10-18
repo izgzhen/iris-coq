@@ -5,7 +5,7 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 
 ## Iris 3.0
 
-# Lifting lemmas do no longer take as hypothesis the fact the the
+* [#] Lifting lemmas do no longer take as hypothesis the fact the the
   considered expression is not a value. This is deduced from the fact that
   it is reducible.
 * View shifts are radically simplified to just internalize frame-preserving
