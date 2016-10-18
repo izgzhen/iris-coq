@@ -271,13 +271,9 @@
 \NewDocumentCommand \vsL {O{} O{}} {\kern-0.5ex\vsGen[#1]{\Lleftarrow}[#2]}
 \NewDocumentCommand \vsE {O{} O{}} %
   {\kern-0.5ex\vsGen[#1]{\Lleftarrow\!\!\!\Rrightarrow}[#2]}
-\NewDocumentCommand \pvs {O{} O{}} {\mathord{\vsGen[#1]{{\mid\kern-0.4ex\Rrightarrow\kern-0.25ex}}[#2]\kern0.2ex}}
+\NewDocumentCommand \pvs {O{} O{}} {\mathord{\vsGen[#1]{{\mid\kern-0.5ex\Rrightarrow\kern-0.25ex}}[#2]\kern0.2ex}}
 
-\newcommand\vsWand{\kern0.1ex\tikz[baseline=(base),line width=0.375pt]{%
-	\draw (0, 0) -- (0.4, 0); \draw (0, -0.075) -- (0.28, -0.075); \draw (0, 0.075) -- (0.28, 0.075);
-	\node at (0.4, -0.235) (ast) {$\smash{\scaleto{\ast}{1.2em}}$};
-	\node at (0.4, -0.095) (base) {};
-}{\vphantom{\Rrightarrow}}\kern-1.2ex}
+\newcommand\vsWand{{\displaystyle\equiv\kern-1.6ex-\kern-1.5ex\smash{\scalerel*{\vphantom-\ast}{\sum}}\kern-0.2ex}}
 \NewDocumentCommand \vsW {O{} O{}} {\vsGen[#1]{\vsWand}[#2]}
 
 % for now, the update modality looks like a pvs without masks.
