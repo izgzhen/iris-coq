@@ -68,17 +68,19 @@ Frame-preserving updates on the $M_i$ lift to the product:
 
 The \emph{sum CMRA} $\monoid_1 \csumm \monoid_2$ for any CMRAs $\monoid_1$ and $\monoid_2$ is defined as (again, we use a datatype-like notation):
 \begin{align*}
-  \monoid_1 \csumm \monoid_2 \eqdef{}& \cinl(\melt_1:\monoid_1) \mid \cinr(\melt_2:\monoid_2) \mid \bot \\
-  \mval_n \eqdef{}& \setComp{\cinl(\melt_1)\!}{\!\melt_1 \in \mval'_n}
-    \cup \setComp{\cinr(\melt_2)\!}{\!\melt_2 \in \mval''_n}  \\
+  \monoid_1 \csumm \monoid_2 \eqdef{}& \cinl(\melt_1:\monoid_1) \mid \cinr(\melt_2:\monoid_2) \mid \mundef \\
+  \mval_n \eqdef{}& \setComp{\cinl(\melt_1)}{\melt_1 \in \mval'_n}
+    \cup \setComp{\cinr(\melt_2)}{\melt_2 \in \mval''_n}  \\
   \cinl(\melt_1) \mtimes \cinl(\meltB_1) \eqdef{}& \cinl(\melt_1 \mtimes \meltB_1)  \\
 %  \munit \mtimes \ospending \eqdef{}& \ospending \mtimes \munit \eqdef \ospending \\
 %  \munit \mtimes \osshot(\melt) \eqdef{}& \osshot(\melt) \mtimes \munit \eqdef \osshot(\melt) \\
   \mcore{\cinl(\melt_1)} \eqdef{}& \begin{cases}\mnocore & \text{if $\mcore{\melt_1} = \mnocore$} \\ \cinl({\mcore{\melt_1}}) & \text{otherwise} \end{cases}
 \end{align*}
 The composition and core for $\cinr$ are defined symmetrically.
-The remaining cases of the composition and core are all $\bot$.
+The remaining cases of the composition and core are all $\mundef$.
 Above, $\mval'$ refers to the validity of $\monoid_1$, and $\mval''$ to the validity of $\monoid_2$.
+
+Notice that we added the artificial ``invalid'' (or ``undefined'') element $\mundef$ to this CMRA just in order to make certain compositions of elements (in this case, $\cinl$ and $\cinr$) invalid.
 
 The step-indexed equivalence is inductively defined as follows:
 \begin{mathpar}
@@ -86,7 +88,7 @@ The step-indexed equivalence is inductively defined as follows:
 
   \infer{x \nequiv{n} y}{\cinr(x) \nequiv{n} \cinr(y)}
 
-  \axiom{\bot \nequiv{n} \bot}
+  \axiom{\mundef \nequiv{n} \mundef}
 \end{mathpar}
 
 
@@ -110,7 +112,7 @@ We can easily extend this to a full CMRA by defining a suitable core, namely
   \mcore{\mnocore} \eqdef{}& \mnocore & \\
   \mcore{\maybe\melt} \eqdef{}& \mcore\melt & \text{If $\maybe\melt \neq \mnocore$}
 \end{align*}
-Notice that this core is total, as the result always lies in $\maybe\monoid$ (rather than in $\maybe{\maybe\monoid}$).
+Notice that this core is total, as the result always lies in $\maybe\monoid$ (rather than in $\maybe{\mathord{\maybe\monoid}}$).
 
 \subsection{Finite partial function}
 \label{sec:fpfnm}
@@ -175,13 +177,13 @@ There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can 
 
 Given a COFE $\cofe$, we define a CMRA $\exm(\cofe)$ such that at most one $x \in \cofe$ can be owned:
 \begin{align*}
-  \exm(\cofe) \eqdef{}& \exinj(\cofe) + \bot \\
-  \mval_n \eqdef{}& \setComp{\melt\in\exm(\cofe)}{\melt \neq \bot}
+  \exm(\cofe) \eqdef{}& \exinj(\cofe) \mid \mundef \\
+  \mval_n \eqdef{}& \setComp{\melt\in\exm(\cofe)}{\melt \neq \mundef}
 \end{align*}
-All cases of composition go to $\bot$.
+All cases of composition go to $\mundef$.
 \begin{align*}
   \mcore{\exinj(x)} \eqdef{}& \mnocore &
-  \mcore{\bot} \eqdef{}& \bot
+  \mcore{\mundef} \eqdef{}& \mundef
 \end{align*}
 Remember that $\mnocore$ is the ``dummy'' element in $\maybe\monoid$ indicating (in this case) that $\exinj(x)$ has no core.
 
@@ -189,7 +191,7 @@ The step-indexed equivalence is inductively defined as follows:
 \begin{mathpar}
   \infer{x \nequiv{n} y}{\exinj(x) \nequiv{n} \exinj(y)}
 
-  \axiom{\bot \nequiv{n} \bot}
+  \axiom{\mundef \nequiv{n} \mundef}
 \end{mathpar}
 $\exm(-)$ is a locally non-expansive functor from $\COFEs$ to $\CMRAs$.
 
@@ -331,13 +333,14 @@ We further define \emph{closed} sets of states (given a particular set of tokens
 
 The STS RA is defined as follows
 \begin{align*}
-  \monoid \eqdef{}& \setComp{\STSauth((s, T) \in \STSS \times \wp(\STST))}{\STSL(s) \disj T} +{}\\& \setComp{\STSfrag((S, T) \in \wp(\STSS) \times \wp(\STST))}{\STSclsd(S, T) \land S \neq \emptyset} + \bot \\
+  \monoid \eqdef{}& \STSauth(s:\STSS, T:\wp(\STST) \mid \STSL(s) \disj T) \mid{}\\& \STSfrag(S: \wp(\STSS), T: \wp(\STST) \mid \STSclsd(S, T) \land S \neq \emptyset) \mid \mundef \\
+  \mval \eqdef{}& \setComp{\melt\in\monoid}{\melt \neq \mundef} \\
   \STSfrag(S_1, T_1) \mtimes \STSfrag(S_2, T_2) \eqdef{}& \STSfrag(S_1 \cap S_2, T_1 \cup T_2) \qquad\qquad\qquad \text{if $T_1 \disj T_2$ and $S_1 \cap S_2 \neq \emptyset$} \\
   \STSfrag(S, T) \mtimes \STSauth(s, T') \eqdef{}& \STSauth(s, T') \mtimes \STSfrag(S, T) \eqdef \STSauth(s, T \cup T') \qquad \text{if $T \disj T'$ and $s \in S$} \\
   \mcore{\STSfrag(S, T)} \eqdef{}& \STSfrag(\upclose(S, \emptyset), \emptyset) \\
   \mcore{\STSauth(s, T)} \eqdef{}& \STSfrag(\upclose(\set{s}, \emptyset), \emptyset)
 \end{align*}
-The remaining cases are all $\bot$.
+The remaining cases are all $\mundef$.
 
 We will need the following frame-preserving update:
 \begin{mathpar}
