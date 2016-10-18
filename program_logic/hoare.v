@@ -3,7 +3,7 @@ From iris.proofmode Require Import tactics.
 
 Definition ht `{irisG Λ Σ} (E : coPset) (P : iProp Σ)
     (e : expr Λ) (Φ : val Λ → iProp Σ) : iProp Σ :=
-  (□ (P → WP e @ E {{ Φ }}))%I.
+  (□ (P -★ WP e @ E {{ Φ }}))%I.
 Instance: Params (@ht) 4.
 
 Notation "{{ P } } e @ E {{ Φ } }" := (ht E P e%E Φ)
@@ -47,7 +47,7 @@ Global Instance ht_proper E :
 Proof. solve_proper. Qed.
 Lemma ht_mono E P P' Φ Φ' e :
   (P ⊢ P') → (∀ v, Φ' v ⊢ Φ v) → {{ P' }} e @ E {{ Φ' }} ⊢ {{ P }} e @ E {{ Φ }}.
-Proof. by intros; apply always_mono, impl_mono, wp_mono. Qed.
+Proof. by intros; apply always_mono, wand_mono, wp_mono. Qed.
 Global Instance ht_mono' E :
   Proper (flip (⊢) ==> eq ==> pointwise_relation _ (⊢) ==> (⊢)) (ht E).
 Proof. solve_proper. Qed.

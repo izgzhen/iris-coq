@@ -2,7 +2,7 @@ From iris.program_logic Require Export invariants.
 From iris.proofmode Require Import tactics.
 
 Definition vs `{irisG Λ Σ} (E1 E2 : coPset) (P Q : iProp Σ) : iProp Σ :=
-  (□ (P → |={E1,E2}=> Q))%I.
+  (□ (P -★ |={E1,E2}=> Q))%I.
 Arguments vs {_ _ _} _ _ _%I _%I.
 
 Instance: Params (@vs) 5.
