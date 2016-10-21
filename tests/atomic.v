@@ -1,4 +1,4 @@
-From iris.program_logic Require Export hoare weakestpre pviewshifts.
+From iris.program_logic Require Export hoare weakestpre.
 From iris.algebra Require Import upred_big_op.
 From iris.prelude Require Export coPset.
 From iris.proofmode Require Import tactics.
@@ -75,22 +75,22 @@ Section incr.
     iIntros "!# HP".
     wp_rec.
     wp_bind (! _)%E.
-    iVs ("Hvs" with "HP") as (x) "[Hl [Hvs' _]]".
+    iUpd ("Hvs" with "HP") as (x) "[Hl [Hvs' _]]".
     wp_load.
-    iVs ("Hvs'" with "Hl") as "HP".
-    iVsIntro. wp_let. wp_bind (CAS _ _ _). wp_op.
-    iVs ("Hvs" with "HP") as (x') "[Hl Hvs']".
+    iUpd ("Hvs'" with "Hl") as "HP".
+    iUpdIntro. wp_let. wp_bind (CAS _ _ _). wp_op.
+    iUpd ("Hvs" with "HP") as (x') "[Hl Hvs']".
     destruct (decide (x = x')).
     - subst.
       iDestruct "Hvs'" as "[_ Hvs']".
       iSpecialize ("Hvs'" $! #x').
       wp_cas_suc.
-      iVs ("Hvs'" with "[Hl]") as "HQ"; first by iFrame.
-      iVsIntro. wp_if. iVsIntro. by iExists x'.
+      iUpd ("Hvs'" with "[Hl]") as "HQ"; first by iFrame.
+      iUpdIntro. wp_if. iUpdIntro. by iExists x'.
     - iDestruct "Hvs'" as "[Hvs' _]".
       wp_cas_fail.
-      iVs ("Hvs'" with "[Hl]") as "HP"; first by iFrame.
-      iVsIntro. wp_if. by iApply "IH".
+      iUpd ("Hvs'" with "[Hl]") as "HP"; first by iFrame.
+      iUpdIntro. wp_if. by iApply "IH".
   Qed.
 End incr.
 
@@ -112,7 +112,7 @@ Section user.
     rewrite /incr_2.
     wp_let.
     wp_alloc l as "Hl".
-    iVs (inv_alloc N _ (∃x':Z, l ↦ #x')%I with "[Hl]") as "#?"; first eauto.
+    iUpd (inv_alloc N _ (∃x':Z, l ↦ #x')%I with "[Hl]") as "#?"; first eauto.
     wp_let.
     wp_bind (_ || _)%E.
     iApply (wp_par (λ _, True%I) (λ _, True%I)).
@@ -125,15 +125,15 @@ Section user.
       (* open the invariant *)
       iInv N as (x') ">Hl'" "Hclose".
       (* mask magic *)
-      iVs (pvs_intro_mask' _ heapN) as "Hclose'".
+      iUpd (fupd_intro_mask' _ heapN) as "Hclose'".
       { apply ndisj_subseteq_difference; auto. }
-      iVsIntro. iExists x'. iFrame "Hl'". iSplit.
+      iUpdIntro. iExists x'. iFrame "Hl'". iSplit.
       + (* provide a way to rollback *)
         iIntros "Hl'".
-        iVs "Hclose'". iVs ("Hclose" with "[Hl']"); eauto.
+        iUpd "Hclose'". iUpd ("Hclose" with "[Hl']"); eauto.
       + (* provide a way to commit *)
         iIntros (v) "[Heq Hl']".
-        iVs "Hclose'". iVs ("Hclose" with "[Hl']"); eauto.
+        iUpd "Hclose'". iUpd ("Hclose" with "[Hl']"); eauto.
     - iDestruct "Hincr" as "#HIncr".
       iSplitL; [|iSplitL]; try (iApply wp_wand_r;iSplitL; [by iApply "HIncr"|auto]).
       iIntros (v1 v2) "_ !>".

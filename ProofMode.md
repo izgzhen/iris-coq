@@ -5,8 +5,8 @@ Many of the tactics below apply to more goals than described in this document
 since the behavior of these tactics can be tuned via instances of the type
 classes in the file [proofmode/classes](proofmode/classes.v). Most notable, many
 of the tactics can be applied when the to be introduced or to be eliminated
-connective appears under a later, a primitive view shift, or in the conclusion
-of a weakest precondition connective.
+connective appears under a later, an update modality, or in the conclusion of a
+weakest precondition.
 
 Applying hypotheses and lemmas
 ------------------------------
@@ -124,14 +124,13 @@ Rewriting
 Iris
 ----
 
-- `iVsIntro` : introduction of a raw or primitive view shift.
-- `iVs pm_trm as (x1 ... xn) "ipat"` : run a raw or primitive view shift
-  `pm_trm` (if the goal permits, i.e. it is a raw or primitive view shift, or
-  a weakest precondition).
+- `iUpdIntro` : introduction of an update modality.
+- `iUpd pm_trm as (x1 ... xn) "ipat"` : run an update modality `pm_trm` (if the
+  goal permits, i.e. it can be expanded to an update modality.
 - `iInv N as (x1 ... xn) "ipat"` : open the invariant `N`.
 - `iTimeless "H"` : strip a later of a timeless hypothesis `H` (if the goal
-  permits, i.e. it is a later, True now, raw or primitive view shift, or a
-  weakest precondition).
+  permits, i.e. it is a later, True now, update modality, or a weakest
+  precondition).
 
 Miscellaneous
 -------------
@@ -140,8 +139,8 @@ Miscellaneous
   introduces pure connectives.
 - The proof mode adds hints to the core `eauto` database so that `eauto`
   automatically introduces: conjunctions and disjunctions, universal and
-  existential quantifiers, implications and wand, always and later modalities,
-  primitive view shifts, and pure connectives.
+  existential quantifiers, implications and wand, always, later and update
+  modalities, and pure connectives.
 
 Selection patterns
 ==================
@@ -172,7 +171,7 @@ _introduction patterns_:
 - `%` : move the hypothesis to the pure Coq context (anonymously).
 - `# ipat` : move the hypothesis to the persistent context.
 - `> ipat` : remove a later of a timeless hypothesis (if the goal permits).
-- `==> ipat` : run a view shift (if the goal permits).
+- `==> ipat` : run an update modality (if the goal permits).
 
 Apart from this, there are the following introduction patterns that can only
 appear at the top level:
@@ -183,7 +182,7 @@ appear at the top level:
 - `!%` : introduce a pure goal (and leave the proof mode).
 - `!#` : introduce an always modality (given that the spatial context is empty).
 - `!>` : introduce a later (which strips laters from all hypotheses).
-- `!==>` : introduce a view shift.
+- `!==>` : introduce an update modality
 - `/=` : perform `simpl`.
 - `*` : introduce all universal quantifiers.
 - `**` : introduce all universal quantifiers, as well as all arrows and wands.
@@ -224,7 +223,7 @@ _specification patterns_ to express splitting of hypotheses:
 - `[-H1 ... Hn]`  : negated form of the above pattern. This pattern does not
   accept hypotheses prefixed with a `$`.
 - `==>[H1 ... Hn]` : same as the above pattern, but can only be used if the goal
-  is a primitive view shift, in which case the view shift will be kept in the
+  is an update modality, in which case the update modality will be kept in the
   goal of the premise too.
 - `[#]` : This pattern can be used when eliminating `P -★ Q` with `P`
   persistent. Using this pattern, all hypotheses are available in the goal for

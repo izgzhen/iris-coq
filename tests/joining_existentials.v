@@ -75,7 +75,7 @@ Lemma client_spec_new eM eW1 eW2 `{!Closed [] eM, !Closed [] eW1, !Closed [] eW2
   ⊢ WP client eM eW1 eW2 {{ _, ∃ γ, barrier_res γ Ψ }}.
 Proof.
   iIntros (HN) "/= (#Hh&HP&#He&#He1&#He2)"; rewrite /client.
-  iVs (own_alloc (Pending : one_shotR Σ F)) as (γ) "Hγ"; first done.
+  iUpd (own_alloc (Pending : one_shotR Σ F)) as (γ) "Hγ"; first done.
   wp_apply (newbarrier_spec N (barrier_res γ Φ)); auto.
   iFrame "Hh". iIntros (l) "[Hr Hs]".
   set (workers_post (v : val) := (barrier_res γ Ψ1 ★ barrier_res γ Ψ2)%I).
@@ -83,12 +83,12 @@ Proof.
   iSplitL "HP Hs Hγ"; [|iSplitL "Hr"].
   - wp_bind eM. iApply wp_wand_l; iSplitR "HP"; [|by iApply "He"].
     iIntros (v) "HP"; iDestruct "HP" as (x) "HP". wp_let.
-    iVs (own_update with "Hγ") as "Hx".
+    iUpd (own_update with "Hγ") as "Hx".
     { by apply (cmra_update_exclusive (Shot x)). }
     iApply signal_spec; iFrame "Hs"; iSplit; last done.
     iExists x; auto.
   - iDestruct (recv_weaken with "[] Hr") as "Hr"; first by iApply P_res_split.
-    iVs (recv_split with "Hr") as "[H1 H2]"; first done.
+    iUpd (recv_split with "Hr") as "[H1 H2]"; first done.
     wp_apply (wp_par (λ _, barrier_res γ Ψ1)%I
                      (λ _, barrier_res γ Ψ2)%I); iFrame "Hh".
     iSplitL "H1"; [|iSplitL "H2"].

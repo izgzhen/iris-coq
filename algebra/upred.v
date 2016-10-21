@@ -264,7 +264,7 @@ Definition uPred_cmra_valid {M A} := proj1_sig uPred_cmra_valid_aux M A.
 Definition uPred_cmra_valid_eq :
   @uPred_cmra_valid = @uPred_cmra_valid_def := proj2_sig uPred_cmra_valid_aux.
 
-Program Definition uPred_rvs_def {M} (Q : uPred M) : uPred M :=
+Program Definition uPred_bupd_def {M} (Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ k yf,
       k ≤ n → ✓{k} (x ⋅ yf) → ∃ x', ✓{k} (x' ⋅ yf) ∧ Q k x' |}.
 Next Obligation.
@@ -275,9 +275,9 @@ Next Obligation.
   apply uPred_mono with x'; eauto using cmra_includedN_l.
 Qed.
 Next Obligation. naive_solver. Qed.
-Definition uPred_rvs_aux : { x | x = @uPred_rvs_def }. by eexists. Qed.
-Definition uPred_rvs {M} := proj1_sig uPred_rvs_aux M.
-Definition uPred_rvs_eq : @uPred_rvs = @uPred_rvs_def := proj2_sig uPred_rvs_aux.
+Definition uPred_bupd_aux : { x | x = @uPred_bupd_def }. by eexists. Qed.
+Definition uPred_bupd {M} := proj1_sig uPred_bupd_aux M.
+Definition uPred_bupd_eq : @uPred_bupd = @uPred_bupd_def := proj2_sig uPred_bupd_aux.
 
 Notation "P ⊢ Q" := (uPred_entails P%I Q%I)
   (at level 99, Q at level 200, right associativity) : C_scope.
@@ -310,7 +310,7 @@ Notation "▷ P" := (uPred_later P)
   (at level 20, right associativity) : uPred_scope.
 Infix "≡" := uPred_eq : uPred_scope.
 Notation "✓ x" := (uPred_cmra_valid x) (at level 20) : uPred_scope.
-Notation "|=r=> Q" := (uPred_rvs Q)
+Notation "|=r=> Q" := (uPred_bupd Q)
   (at level 99, Q at level 200, format "|=r=>  Q") : uPred_scope.
 Notation "P =r=> Q" := (P ⊢ |=r=> Q)
   (at level 99, Q at level 200, only parsing) : C_scope.
@@ -344,7 +344,7 @@ Module uPred.
 Definition unseal :=
   (uPred_pure_eq, uPred_and_eq, uPred_or_eq, uPred_impl_eq, uPred_forall_eq,
   uPred_exist_eq, uPred_eq_eq, uPred_sep_eq, uPred_wand_eq, uPred_always_eq,
-  uPred_later_eq, uPred_ownM_eq, uPred_cmra_valid_eq, uPred_rvs_eq).
+  uPred_later_eq, uPred_ownM_eq, uPred_cmra_valid_eq, uPred_bupd_eq).
 Ltac unseal := rewrite !unseal /=.
 
 Section uPred_logic.
@@ -488,14 +488,14 @@ Proof.
 Qed.
 Global Instance cmra_valid_proper {A : cmraT} :
   Proper ((≡) ==> (⊣⊢)) (@uPred_cmra_valid M A) := ne_proper _.
-Global Instance rvs_ne n : Proper (dist n ==> dist n) (@uPred_rvs M).
+Global Instance bupd_ne n : Proper (dist n ==> dist n) (@uPred_bupd M).
 Proof.
   intros P Q HPQ.
   unseal; split=> n' x; split; intros HP k yf ??;
     destruct (HP k yf) as (x'&?&?); auto;
     exists x'; split; auto; apply HPQ; eauto using cmra_validN_op_l.
 Qed.
-Global Instance rvs_proper : Proper ((≡) ==> (≡)) (@uPred_rvs M) := ne_proper _.
+Global Instance bupd_proper : Proper ((≡) ==> (≡)) (@uPred_bupd M) := ne_proper _.
 
 (** Introduction and elimination rules *)
 Lemma pure_intro φ P : φ → P ⊢ ■ φ.
@@ -1282,21 +1282,21 @@ Lemma always_cmra_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
   apply:always_cmra_valid_1.
 Qed.
 
-(* Viewshifts *)
-Lemma rvs_intro P : P =r=> P.
+(* Basic update modality *)
+Lemma bupd_intro P : P =r=> P.
 Proof.
   unseal. split=> n x ? HP k yf ?; exists x; split; first done.
   apply uPred_closed with n; eauto using cmra_validN_op_l.
 Qed.
-Lemma rvs_mono P Q : (P ⊢ Q) → (|=r=> P) =r=> Q.
+Lemma bupd_mono P Q : (P ⊢ Q) → (|=r=> P) =r=> Q.
 Proof.
   unseal. intros HPQ; split=> n x ? HP k yf ??.
   destruct (HP k yf) as (x'&?&?); eauto.
   exists x'; split; eauto using uPred_in_entails, cmra_validN_op_l.
 Qed.
-Lemma rvs_trans P : (|=r=> |=r=> P) =r=> P.
+Lemma bupd_trans P : (|=r=> |=r=> P) =r=> P.
 Proof. unseal; split; naive_solver. Qed.
-Lemma rvs_frame_r P R : (|=r=> P) ★ R =r=> P ★ R.
+Lemma bupd_frame_r P R : (|=r=> P) ★ R =r=> P ★ R.
 Proof.
   unseal; split; intros n x ? (x1&x2&Hx&HP&?) k yf ??.
   destruct (HP k (x2 ⋅ yf)) as (x'&?&?); eauto.
@@ -1305,7 +1305,7 @@ Proof.
   exists x', x2; split_and?; auto.
   apply uPred_closed with n; eauto 3 using cmra_validN_op_l, cmra_validN_op_r.
 Qed.
-Lemma rvs_ownM_updateP x (Φ : M → Prop) :
+Lemma bupd_ownM_updateP x (Φ : M → Prop) :
   x ~~>: Φ → uPred_ownM x =r=> ∃ y, ■ Φ y ∧ uPred_ownM y.
 Proof.
   unseal=> Hup; split=> n x2 ? [x3 Hx] k yf ??.
@@ -1316,27 +1316,27 @@ Proof.
 Qed.
 
 (** * Derived rules *)
-Global Instance rvs_mono' : Proper ((⊢) ==> (⊢)) (@uPred_rvs M).
-Proof. intros P Q; apply rvs_mono. Qed.
-Global Instance rvs_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) (@uPred_rvs M).
-Proof. intros P Q; apply rvs_mono. Qed.
-Lemma rvs_frame_l R Q : (R ★ |=r=> Q) =r=> R ★ Q.
-Proof. rewrite !(comm _ R); apply rvs_frame_r. Qed.
-Lemma rvs_wand_l P Q : (P -★ Q) ★ (|=r=> P) =r=> Q.
-Proof. by rewrite rvs_frame_l wand_elim_l. Qed.
-Lemma rvs_wand_r P Q : (|=r=> P) ★ (P -★ Q) =r=> Q.
-Proof. by rewrite rvs_frame_r wand_elim_r. Qed.
-Lemma rvs_sep P Q : (|=r=> P) ★ (|=r=> Q) =r=> P ★ Q.
-Proof. by rewrite rvs_frame_r rvs_frame_l rvs_trans. Qed.
-Lemma rvs_ownM_update x y : x ~~> y → uPred_ownM x ⊢ |=r=> uPred_ownM y.
+Global Instance bupd_mono' : Proper ((⊢) ==> (⊢)) (@uPred_bupd M).
+Proof. intros P Q; apply bupd_mono. Qed.
+Global Instance bupd_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) (@uPred_bupd M).
+Proof. intros P Q; apply bupd_mono. Qed.
+Lemma bupd_frame_l R Q : (R ★ |=r=> Q) =r=> R ★ Q.
+Proof. rewrite !(comm _ R); apply bupd_frame_r. Qed.
+Lemma bupd_wand_l P Q : (P -★ Q) ★ (|=r=> P) =r=> Q.
+Proof. by rewrite bupd_frame_l wand_elim_l. Qed.
+Lemma bupd_wand_r P Q : (|=r=> P) ★ (P -★ Q) =r=> Q.
+Proof. by rewrite bupd_frame_r wand_elim_r. Qed.
+Lemma bupd_sep P Q : (|=r=> P) ★ (|=r=> Q) =r=> P ★ Q.
+Proof. by rewrite bupd_frame_r bupd_frame_l bupd_trans. Qed.
+Lemma bupd_ownM_update x y : x ~~> y → uPred_ownM x ⊢ |=r=> uPred_ownM y.
 Proof.
-  intros; rewrite (rvs_ownM_updateP _ (y =)); last by apply cmra_update_updateP.
-  by apply rvs_mono, exist_elim=> y'; apply pure_elim_l=> ->.
+  intros; rewrite (bupd_ownM_updateP _ (y =)); last by apply cmra_update_updateP.
+  by apply bupd_mono, exist_elim=> y'; apply pure_elim_l=> ->.
 Qed.
-Lemma except_last_rvs P : ◇ (|=r=> P) ⊢ (|=r=> ◇ P).
+Lemma except_last_bupd P : ◇ (|=r=> P) ⊢ (|=r=> ◇ P).
 Proof.
-  rewrite /uPred_except_last. apply or_elim; auto using rvs_mono.
-  by rewrite -rvs_intro -or_intro_l.
+  rewrite /uPred_except_last. apply or_elim; auto using bupd_mono.
+  by rewrite -bupd_intro -or_intro_l.
 Qed.
 
 (* Products *)
@@ -1495,8 +1495,8 @@ Proof.
   cut (∀ x, ✓{n} x → Nat.iter n (λ P, |=r=> ▷ P)%I (■ φ)%I n x → φ).
   { intros help H. eapply (help ∅); eauto using ucmra_unit_validN.
     eapply H; try unseal; eauto using ucmra_unit_validN. }
-  unseal. induction n as [|n IH]=> x Hx Hvs; auto.
-  destruct (Hvs (S n) ∅) as (x'&?&?); rewrite ?right_id; auto.
+  unseal. induction n as [|n IH]=> x Hx Hupd; auto.
+  destruct (Hupd (S n) ∅) as (x'&?&?); rewrite ?right_id; auto.
   eapply IH with x'; eauto using cmra_validN_S, cmra_validN_op_l.
 Qed.
 

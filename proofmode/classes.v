@@ -68,13 +68,13 @@ Global Arguments into_except_last : clear implicits.
 Class IsExceptLast (Q : uPred M) := is_except_last : ◇ Q ⊢ Q.
 Global Arguments is_except_last : clear implicits.
 
-Class FromVs (P Q : uPred M) := from_vs : (|=r=> Q) ⊢ P.
-Global Arguments from_vs : clear implicits.
+Class FromUpd (P Q : uPred M) := from_upd : (|=r=> Q) ⊢ P.
+Global Arguments from_upd : clear implicits.
 
-Class ElimVs (P P' : uPred M) (Q Q' : uPred M) :=
-  elim_vs : P ★ (P' -★ Q') ⊢ Q.
-Global Arguments elim_vs _ _ _ _ {_}.
+Class ElimUpd (P P' : uPred M) (Q Q' : uPred M) :=
+  elim_upd : P ★ (P' -★ Q') ⊢ Q.
+Global Arguments elim_upd _ _ _ _ {_}.
 
-Lemma elim_vs_dummy P Q : ElimVs P P Q Q.
-Proof. by rewrite /ElimVs wand_elim_r. Qed.
+Lemma elim_upd_dummy P Q : ElimUpd P P Q Q.
+Proof. by rewrite /ElimUpd wand_elim_r. Qed.
 End classes.

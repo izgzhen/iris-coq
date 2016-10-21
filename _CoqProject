@@ -69,7 +69,7 @@ program_logic/lifting.v
 program_logic/invariants.v
 program_logic/wsat.v
 program_logic/weakestpre.v
-program_logic/pviewshifts.v
+program_logic/fancy_updates.v
 program_logic/hoare.v
 program_logic/viewshifts.v
 program_logic/language.v

@@ -1,7 +1,7 @@
 From iris.prelude Require Export strings.
 
 Record spec_goal := SpecGoal {
-  spec_goal_vs : bool;
+  spec_goal_update : bool;
   spec_goal_negate : bool;
   spec_goal_frame : list string;
   spec_goal_hyps : list string
@@ -23,7 +23,7 @@ Inductive token :=
   | TPersistent : token
   | TPure : token
   | TForall : token
-  | TVs : token
+  | TUpd : token
   | TFrame : token.
 
 Fixpoint cons_name (kn : string) (k : list token) : list token :=
@@ -38,7 +38,7 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String "#" s => tokenize_go s (TPersistent :: cons_name kn k) ""
   | String "%" s => tokenize_go s (TPure :: cons_name kn k) ""
   | String "*" s => tokenize_go s (TForall :: cons_name kn k) ""
-  | String "=" (String "=" (String ">" s)) => tokenize_go s (TVs :: cons_name kn k) ""
+  | String "=" (String "=" (String ">" s)) => tokenize_go s (TUpd :: cons_name kn k) ""
   | String "$" s => tokenize_go s (TFrame :: cons_name kn k) ""
   | String a s => tokenize_go s k (String a kn)
   end.
@@ -55,8 +55,8 @@ Fixpoint parse_go (ts : list token) (k : list spec_pat) : option (list spec_pat)
   | TBracketL :: TPersistent :: TBracketR :: ts => parse_go ts (SGoalPersistent :: k)
   | TBracketL :: TPure :: TBracketR :: ts => parse_go ts (SGoalPure :: k)
   | TBracketL :: ts => parse_goal ts (SpecGoal false false [] []) k
-  | TVs :: TBracketL :: ts => parse_goal ts (SpecGoal true false [] []) k
-  | TVs :: ts => parse_go ts (SGoal (SpecGoal true true [] []) :: k)
+  | TUpd :: TBracketL :: ts => parse_goal ts (SpecGoal true false [] []) k
+  | TUpd :: ts => parse_go ts (SGoal (SpecGoal true true [] []) :: k)
   | TForall :: ts => parse_go ts (SForall :: k)
   | _ => None
   end
@@ -65,17 +65,17 @@ with parse_goal (ts : list token) (g : spec_goal)
   match ts with
   | TMinus :: ts =>
      guard (¬spec_goal_negate g ∧ spec_goal_frame g = [] ∧ spec_goal_hyps g = []);
-     parse_goal ts (SpecGoal (spec_goal_vs g) true
+     parse_goal ts (SpecGoal (spec_goal_update g) true
        (spec_goal_frame g) (spec_goal_hyps g)) k
   | TName s :: ts =>
-     parse_goal ts (SpecGoal (spec_goal_vs g) (spec_goal_negate g)
+     parse_goal ts (SpecGoal (spec_goal_update g) (spec_goal_negate g)
        (spec_goal_frame g) (s :: spec_goal_hyps g)) k
   | TFrame :: TName s :: ts =>
     guard (¬spec_goal_negate g);
-     parse_goal ts (SpecGoal (spec_goal_vs g) (spec_goal_negate g)
+     parse_goal ts (SpecGoal (spec_goal_update g) (spec_goal_negate g)
        (s :: spec_goal_frame g) (spec_goal_hyps g)) k
   | TBracketR :: ts =>
-     parse_go ts (SGoal (SpecGoal (spec_goal_vs g) (spec_goal_negate g)
+     parse_go ts (SGoal (SpecGoal (spec_goal_update g) (spec_goal_negate g)
        (reverse (spec_goal_frame g)) (reverse (spec_goal_hyps g))) :: k)
   | _ => None
   end.

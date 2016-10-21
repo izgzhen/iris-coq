@@ -9,7 +9,7 @@ Module savedprop. Section savedprop.
   Notation "¬ P" := (□ (P → False))%I : uPred_scope.
   Implicit Types P : iProp.
 
-  (* Saved Propositions and view shifts. *)
+  (** Saved Propositions and the update modality *)
   Context (sprop : Type) (saved : sprop → iProp → iProp).
   Hypothesis sprop_persistent : ∀ i P, PersistentP (saved i P).
   Hypothesis sprop_alloc_dep :
@@ -40,9 +40,9 @@ Module savedprop. Section savedprop.
   Lemma contradiction : False.
   Proof.
     apply (@uPred.adequacy M False 1); simpl.
-    iIntros "". iVs A_alloc as (i) "#H".
+    iIntros "". iUpd A_alloc as (i) "#H".
     iPoseProof (saved_NA with "H") as "HN".
-    iVsIntro. iNext.
+    iUpdIntro. iNext.
     iApply "HN". iApply saved_A. done.
   Qed.
 
@@ -56,22 +56,22 @@ Module inv. Section inv.
   Implicit Types P : iProp.
 
   (** Assumptions *)
-  (* We have view shifts (two classes: empty/full mask) *)
+  (** We have the update modality (two classes: empty/full mask) *)
   Inductive mask := M0 | M1.
-  Context (pvs : mask → iProp → iProp).
+  Context (fupd : mask → iProp → iProp).
 
-  Hypothesis pvs_intro : ∀ E P, P ⊢ pvs E P.
-  Hypothesis pvs_mono : ∀ E P Q, (P ⊢ Q) → pvs E P ⊢ pvs E Q.
-  Hypothesis pvs_pvs : ∀ E P, pvs E (pvs E P) ⊢ pvs E P.
-  Hypothesis pvs_frame_l : ∀ E P Q, P ★ pvs E Q ⊢ pvs E (P ★ Q).
-  Hypothesis pvs_mask_mono : ∀ P, pvs M0 P ⊢ pvs M1 P.
+  Hypothesis fupd_intro : ∀ E P, P ⊢ fupd E P.
+  Hypothesis fupd_mono : ∀ E P Q, (P ⊢ Q) → fupd E P ⊢ fupd E Q.
+  Hypothesis fupd_fupd : ∀ E P, fupd E (fupd E P) ⊢ fupd E P.
+  Hypothesis fupd_frame_l : ∀ E P Q, P ★ fupd E Q ⊢ fupd E (P ★ Q).
+  Hypothesis fupd_mask_mono : ∀ P, fupd M0 P ⊢ fupd M1 P.
 
-  (* We have invariants *)
+  (** We have invariants *)
   Context (name : Type) (inv : name → iProp → iProp).
   Hypothesis inv_persistent : ∀ i P, PersistentP (inv i P).
-  Hypothesis inv_alloc : ∀ P, P ⊢ pvs M1 (∃ i, inv i P).
+  Hypothesis inv_alloc : ∀ P, P ⊢ fupd M1 (∃ i, inv i P).
   Hypothesis inv_open :
-    ∀ i P Q R, (P ★ Q ⊢ pvs M0 (P ★ R)) → (inv i P ★ Q ⊢ pvs M1 R).
+    ∀ i P Q R, (P ★ Q ⊢ fupd M0 (P ★ R)) → (inv i P ★ Q ⊢ fupd M1 R).
 
   (* We have tokens for a little "two-state STS": [start] -> [finish].
      state. [start] also asserts the exact state; it is only ever owned by the
@@ -85,47 +85,47 @@ Module inv. Section inv.
   Context (gname : Type).
   Context (start finished : gname → iProp).
 
-  Hypothesis sts_alloc : True ⊢ pvs M0 (∃ γ, start γ).
-  Hypotheses start_finish : ∀ γ, start γ ⊢ pvs M0 (finished γ).
+  Hypothesis sts_alloc : True ⊢ fupd M0 (∃ γ, start γ).
+  Hypotheses start_finish : ∀ γ, start γ ⊢ fupd M0 (finished γ).
 
   Hypothesis finished_not_start : ∀ γ, start γ ★ finished γ ⊢ False.
 
   Hypothesis finished_dup : ∀ γ, finished γ ⊢ finished γ ★ finished γ.
 
-  (* We assume that we cannot view shift to false. *)
-  Hypothesis consistency : ¬ (True ⊢ pvs M1 False).
+  (** We assume that we cannot update to false. *)
+  Hypothesis consistency : ¬ (True ⊢ fupd M1 False).
 
   (** Some general lemmas and proof mode compatibility. *)
-  Lemma inv_open' i P R : inv i P ★ (P -★ pvs M0 (P ★ pvs M1 R)) ⊢ pvs M1 R.
+  Lemma inv_open' i P R : inv i P ★ (P -★ fupd M0 (P ★ fupd M1 R)) ⊢ fupd M1 R.
   Proof.
-    iIntros "(#HiP & HP)". iApply pvs_pvs. iApply inv_open; last first.
+    iIntros "(#HiP & HP)". iApply fupd_fupd. iApply inv_open; last first.
     { iSplit; first done. iExact "HP". }
     iIntros "(HP & HPw)". by iApply "HPw".
   Qed.
 
-  Instance pvs_mono' E : Proper ((⊢) ==> (⊢)) (pvs E).
-  Proof. intros P Q ?. by apply pvs_mono. Qed.
-  Instance pvs_proper E : Proper ((⊣⊢) ==> (⊣⊢)) (pvs E).
+  Instance fupd_mono' E : Proper ((⊢) ==> (⊢)) (fupd E).
+  Proof. intros P Q ?. by apply fupd_mono. Qed.
+  Instance fupd_proper E : Proper ((⊣⊢) ==> (⊣⊢)) (fupd E).
   Proof.
-    intros P Q; rewrite !uPred.equiv_spec=> -[??]; split; by apply pvs_mono.
+    intros P Q; rewrite !uPred.equiv_spec=> -[??]; split; by apply fupd_mono.
   Qed.
 
-  Lemma pvs_frame_r E P Q : (pvs E P ★ Q) ⊢ pvs E (P ★ Q).
-  Proof. by rewrite comm pvs_frame_l comm. Qed.
+  Lemma fupd_frame_r E P Q : (fupd E P ★ Q) ⊢ fupd E (P ★ Q).
+  Proof. by rewrite comm fupd_frame_l comm. Qed.
 
-  Global Instance elim_pvs_pvs E P Q : ElimVs (pvs E P) P (pvs E Q) (pvs E Q).
-  Proof. by rewrite /ElimVs pvs_frame_r uPred.wand_elim_r pvs_pvs. Qed.
+  Global Instance elim_fupd_fupd E P Q : ElimUpd (fupd E P) P (fupd E Q) (fupd E Q).
+  Proof. by rewrite /ElimUpd fupd_frame_r uPred.wand_elim_r fupd_fupd. Qed.
 
-  Global Instance elim_pvs0_pvs1 P Q : ElimVs (pvs M0 P) P (pvs M1 Q) (pvs M1 Q).
+  Global Instance elim_fupd0_fupd1 P Q : ElimUpd (fupd M0 P) P (fupd M1 Q) (fupd M1 Q).
   Proof.
-    by rewrite /ElimVs pvs_frame_r uPred.wand_elim_r pvs_mask_mono pvs_pvs.
+    by rewrite /ElimUpd fupd_frame_r uPred.wand_elim_r fupd_mask_mono fupd_fupd.
   Qed.
 
-  Global Instance exists_split_pvs0 {A} E P (Φ : A → iProp) :
-    FromExist P Φ → FromExist (pvs E P) (λ a, pvs E (Φ a)).
+  Global Instance exists_split_fupd0 {A} E P (Φ : A → iProp) :
+    FromExist P Φ → FromExist (fupd E P) (λ a, fupd E (Φ a)).
   Proof.
     rewrite /FromExist=>HP. apply uPred.exist_elim=> a.
-    apply pvs_mono. by rewrite -HP -(uPred.exist_intro a).
+    apply fupd_mono. by rewrite -HP -(uPred.exist_intro a).
   Qed.
 
   (** Now to the actual counterexample. We start with a weird form of saved propositions. *)
@@ -133,47 +133,47 @@ Module inv. Section inv.
     ∃ i, inv i (start γ ∨ (finished γ ★ □ P)).
   Global Instance saved_persistent γ P : PersistentP (saved γ P) := _.
 
-  Lemma saved_alloc (P : gname → iProp) : True ⊢ pvs M1 (∃ γ, saved γ (P γ)).
+  Lemma saved_alloc (P : gname → iProp) : True ⊢ fupd M1 (∃ γ, saved γ (P γ)).
   Proof.
-    iIntros "". iVs (sts_alloc) as (γ) "Hs".
-    iVs (inv_alloc (start γ ∨ (finished γ ★ □ (P γ))) with "[Hs]") as (i) "#Hi".
+    iIntros "". iUpd (sts_alloc) as (γ) "Hs".
+    iUpd (inv_alloc (start γ ∨ (finished γ ★ □ (P γ))) with "[Hs]") as (i) "#Hi".
     { auto. }
-    iApply pvs_intro. by iExists γ, i.
+    iApply fupd_intro. by iExists γ, i.
   Qed.
 
-  Lemma saved_cast γ P Q : saved γ P ★ saved γ Q ★ □ P ⊢ pvs M1 (□ Q).
+  Lemma saved_cast γ P Q : saved γ P ★ saved γ Q ★ □ P ⊢ fupd M1 (□ Q).
   Proof.
     iIntros "(#HsP & #HsQ & #HP)". iDestruct "HsP" as (i) "HiP".
     iApply (inv_open' i). iSplit; first done.
-    iIntros "HaP". iAssert (pvs M0 (finished γ)) with "[HaP]" as "==> Hf".
+    iIntros "HaP". iAssert (fupd M0 (finished γ)) with "[HaP]" as "==> Hf".
     { iDestruct "HaP" as "[Hs | [Hf _]]".
       - by iApply start_finish.
-      - by iApply pvs_intro. }
+      - by iApply fupd_intro. }
     iDestruct (finished_dup with "Hf") as "[Hf Hf']".
-    iApply pvs_intro. iSplitL "Hf'"; first by eauto.
+    iApply fupd_intro. iSplitL "Hf'"; first by eauto.
     (* Step 2: Open the Q-invariant. *)
     iClear (i) "HiP ". iDestruct "HsQ" as (i) "HiQ".
     iApply (inv_open' i). iSplit; first done.
     iIntros "[HaQ | [_ #HQ]]".
     { iExFalso. iApply finished_not_start. by iFrame. }
-    iApply pvs_intro. iSplitL "Hf".
+    iApply fupd_intro. iSplitL "Hf".
     { iRight. by iFrame. }
-    by iApply pvs_intro.
+    by iApply fupd_intro.
   Qed.
 
   (** And now we tie a bad knot. *)
-  Notation "¬ P" := (□ (P -★ pvs M1 False))%I : uPred_scope.
+  Notation "¬ P" := (□ (P -★ fupd M1 False))%I : uPred_scope.
   Definition A i : iProp := ∃ P, ¬P ★ saved i P.
   Global Instance A_persistent i : PersistentP (A i) := _.
 
-  Lemma A_alloc : True ⊢ pvs M1 (∃ i, saved i (A i)).
+  Lemma A_alloc : True ⊢ fupd M1 (∃ i, saved i (A i)).
   Proof. by apply saved_alloc. Qed.
 
   Lemma saved_NA i : saved i (A i) ⊢ ¬A i.
   Proof.
     iIntros "#Hi !# #HA". iPoseProof "HA" as "HA'".
     iDestruct "HA'" as (P) "#[HNP Hi']".
-    iVs (saved_cast i (A i) P with "[]") as "HP".
+    iUpd (saved_cast i (A i) P with "[]") as "HP".
     { eauto. }
     by iApply "HNP".
   Qed.
@@ -187,7 +187,7 @@ Module inv. Section inv.
   Lemma contradiction : False.
   Proof.
     apply consistency. iIntros "".
-    iVs A_alloc as (i) "#H".
+    iUpd A_alloc as (i) "#H".
     iPoseProof (saved_NA with "H") as "HN".
     iApply "HN". iApply saved_A. done.
   Qed.

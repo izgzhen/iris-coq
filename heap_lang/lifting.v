@@ -98,7 +98,7 @@ Lemma wp_fork E e Φ :
   ▷ (|={E}=> Φ (LitV LitUnit)) ★ ▷ WP e {{ _, True }} ⊢ WP Fork e @ E {{ Φ }}.
 Proof.
   rewrite -(wp_lift_pure_det_head_step (Fork e) (Lit LitUnit) [e]) //=; eauto.
-  - by rewrite later_sep -(wp_value_pvs _ _ (Lit _)) // big_sepL_singleton.
+  - by rewrite later_sep -(wp_value_fupd _ _ (Lit _)) // big_sepL_singleton.
   - intros; inv_head_step; eauto.
 Qed.
 
@@ -119,7 +119,7 @@ Lemma wp_un_op E op e v v' Φ :
   ▷ (|={E}=> Φ v') ⊢ WP UnOp op e @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_head_step' (UnOp op _) (of_val v'))
-    -?wp_value_pvs'; eauto.
+    -?wp_value_fupd'; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -129,7 +129,7 @@ Lemma wp_bin_op E op e1 e2 v1 v2 v' Φ :
   ▷ (|={E}=> Φ v') ⊢ WP BinOp op e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_head_step' (BinOp op _ _) (of_val v'))
-    -?wp_value_pvs'; eauto.
+    -?wp_value_fupd'; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -152,7 +152,7 @@ Lemma wp_fst E e1 v1 e2 Φ :
   ▷ (|={E}=> Φ v1) ⊢ WP Fst (Pair e1 e2) @ E {{ Φ }}.
 Proof.
   intros ? [v2 ?].
-  rewrite -(wp_lift_pure_det_head_step' (Fst _) e1) -?wp_value_pvs; eauto.
+  rewrite -(wp_lift_pure_det_head_step' (Fst _) e1) -?wp_value_fupd; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -161,7 +161,7 @@ Lemma wp_snd E e1 e2 v2 Φ :
   ▷ (|={E}=> Φ v2) ⊢ WP Snd (Pair e1 e2) @ E {{ Φ }}.
 Proof.
   intros [v1 ?] ?.
-  rewrite -(wp_lift_pure_det_head_step' (Snd _) e2) -?wp_value_pvs; eauto.
+  rewrite -(wp_lift_pure_det_head_step' (Snd _) e2) -?wp_value_fupd; eauto.
   intros; inv_head_step; eauto.
 Qed.
 

@@ -94,9 +94,9 @@ Section auth.
     ✓ (f t) → ▷ φ t ={E}=> ∃ γ, ■ (γ ∉ G) ∧ auth_ctx γ N f φ ∧ auth_own γ (f t).
   Proof.
     iIntros (?) "Hφ". rewrite /auth_own /auth_ctx.
-    iVs (own_alloc_strong (Auth (Excl' (f t)) (f t)) G) as (γ) "[% Hγ]"; first done.
+    iUpd (own_alloc_strong (Auth (Excl' (f t)) (f t)) G) as (γ) "[% Hγ]"; first done.
     iRevert "Hγ"; rewrite auth_both_op; iIntros "[Hγ Hγ']".
-    iVs (inv_alloc N _ (auth_inv γ f φ) with "[-Hγ']") as "#?".
+    iUpd (inv_alloc N _ (auth_inv γ f φ) with "[-Hγ']") as "#?".
     { iNext. rewrite /auth_inv. iExists t. by iFrame. }
     eauto.
   Qed.
@@ -105,7 +105,7 @@ Section auth.
     ✓ (f t) → ▷ φ t ={E}=> ∃ γ, auth_ctx γ N f φ ∧ auth_own γ (f t).
   Proof.
     iIntros (?) "Hφ".
-    iVs (auth_alloc_strong N E t ∅ with "Hφ") as (γ) "[_ ?]"; eauto.
+    iUpd (auth_alloc_strong N E t ∅ with "Hφ") as (γ) "[_ ?]"; eauto.
   Qed.
 
   Lemma auth_empty γ : True =r=> auth_own γ ∅.
@@ -118,12 +118,12 @@ Section auth.
   Proof.
     iIntros "(Hinv & Hγf)". rewrite /auth_inv /auth_own.
     iDestruct "Hinv" as (t) "[>Hγa Hφ]".
-    iVsIntro. iExists t.
+    iUpdIntro. iExists t.
     iDestruct (own_valid_2 with "[$Hγa $Hγf]") as % [? ?]%auth_valid_discrete_2.
     iSplit; first done. iFrame. iIntros (u b) "[% Hφ]".
-    iVs (own_update_2 with "[$Hγa $Hγf]") as "[Hγa Hγf]".
+    iUpd (own_update_2 with "[$Hγa $Hγf]") as "[Hγa Hγf]".
     { eapply auth_update; eassumption. }
-    iVsIntro. iFrame. iExists u. iFrame.
+    iUpdIntro. iFrame. iExists u. iFrame.
   Qed.
 
   Lemma auth_open E N γ a :
@@ -139,9 +139,9 @@ Section auth.
        to unpack and repack various proofs.
        TODO: Make this mostly automatic, by supporting "opening accessors
        around accessors". *)
-    iVs (auth_acc with "[$Hinv $Hγf]") as (t) "(?&?&HclAuth)".
-    iVsIntro. iExists t. iFrame. iIntros (u b) "H".
-    iVs ("HclAuth" $! u b with "H") as "(Hinv & ?)". by iVs ("Hclose" with "Hinv").
+    iUpd (auth_acc with "[$Hinv $Hγf]") as (t) "(?&?&HclAuth)".
+    iUpdIntro. iExists t. iFrame. iIntros (u b) "H".
+    iUpd ("HclAuth" $! u b with "H") as "(Hinv & ?)". by iUpd ("Hclose" with "Hinv").
   Qed.
 End auth.
 

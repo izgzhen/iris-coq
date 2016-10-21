@@ -23,7 +23,7 @@ Lemma par_spec (Ψ1 Ψ2 : val → iProp Σ) e (f1 f2 : val) (Φ : val → iProp 
   ⊢ WP par e {{ Φ }}.
 Proof.
   iIntros (?) "(#Hh&Hf1&Hf2&HΦ)".
-  rewrite /par. wp_value. iVsIntro. wp_let. wp_proj.
+  rewrite /par. wp_value. iUpdIntro. wp_let. wp_proj.
   wp_apply (spawn_spec parN); try wp_done; try solve_ndisj; iFrame "Hf1 Hh".
   iIntros (l) "Hl". wp_let. wp_proj. wp_bind (f2 _).
   iApply wp_wand_l; iFrame "Hf2"; iIntros (v) "H2". wp_let.

@@ -89,9 +89,9 @@ Lemma own_alloc_strong a (G : gset gname) :
   ✓ a → True =r=> ∃ γ, ■ (γ ∉ G) ∧ own γ a.
 Proof.
   intros Ha.
-  rewrite -(rvs_mono (∃ m, ■ (∃ γ, γ ∉ G ∧ m = iRes_singleton γ a) ∧ uPred_ownM m)%I).
+  rewrite -(bupd_mono (∃ m, ■ (∃ γ, γ ∉ G ∧ m = iRes_singleton γ a) ∧ uPred_ownM m)%I).
   - rewrite ownM_empty.
-    eapply rvs_ownM_updateP, (iprod_singleton_updateP_empty (inG_id i));
+    eapply bupd_ownM_updateP, (iprod_singleton_updateP_empty (inG_id i));
       first (eapply alloc_updateP_strong', cmra_transport_valid, Ha);
       naive_solver.
   - apply exist_elim=>m; apply pure_elim_l=>-[γ [Hfresh ->]].
@@ -100,15 +100,15 @@ Qed.
 Lemma own_alloc a : ✓ a → True =r=> ∃ γ, own γ a.
 Proof.
   intros Ha. rewrite (own_alloc_strong a ∅) //; [].
-  apply rvs_mono, exist_mono=>?. eauto with I.
+  apply bupd_mono, exist_mono=>?. eauto with I.
 Qed.
 
 (** ** Frame preserving updates *)
 Lemma own_updateP P γ a : a ~~>: P → own γ a =r=> ∃ a', ■ P a' ∧ own γ a'.
 Proof.
   intros Ha. rewrite !own_eq.
-  rewrite -(rvs_mono (∃ m, ■ (∃ a', m = iRes_singleton γ a' ∧ P a') ∧ uPred_ownM m)%I).
-  - eapply rvs_ownM_updateP, iprod_singleton_updateP;
+  rewrite -(bupd_mono (∃ m, ■ (∃ a', m = iRes_singleton γ a' ∧ P a') ∧ uPred_ownM m)%I).
+  - eapply bupd_ownM_updateP, iprod_singleton_updateP;
       first by (eapply singleton_updateP', cmra_transport_updateP', Ha).
     naive_solver.
   - apply exist_elim=>m; apply pure_elim_l=>-[a' [-> HP]].
@@ -118,7 +118,7 @@ Qed.
 Lemma own_update γ a a' : a ~~> a' → own γ a =r=> own γ a'.
 Proof.
   intros; rewrite (own_updateP (a' =)); last by apply cmra_update_updateP.
-  by apply rvs_mono, exist_elim=> a''; apply pure_elim_l=> ->.
+  by apply bupd_mono, exist_elim=> a''; apply pure_elim_l=> ->.
 Qed.
 Lemma own_update_2 γ a1 a2 a' :
   a1 ⋅ a2 ~~> a' → own γ a1 ★ own γ a2 =r=> own γ a'.
@@ -141,7 +141,7 @@ Arguments own_update_3 {_ _} [_] _ _ _ _ _ _.
 Lemma own_empty `{inG Σ (A:ucmraT)} γ : True =r=> own γ ∅.
 Proof.
   rewrite ownM_empty !own_eq /own_def.
-  apply rvs_ownM_update, iprod_singleton_update_empty.
+  apply bupd_ownM_update, iprod_singleton_update_empty.
   apply (alloc_unit_singleton_update (cmra_transport inG_prf ∅)); last done.
   - apply cmra_transport_valid, ucmra_unit_valid.
   - intros x; destruct inG_prf. by rewrite left_id.

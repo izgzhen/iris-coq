@@ -47,7 +47,7 @@ Lemma vs_transitive E1 E2 E3 P Q R :
   (P ={E1,E2}=> Q) ∧ (Q ={E2,E3}=> R) ⊢ P ={E1,E3}=> R.
 Proof.
   iIntros "#[HvsP HvsQ] !# HP".
-  iVs ("HvsP" with "HP") as "HQ". by iApply "HvsQ".
+  iUpd ("HvsP" with "HP") as "HQ". by iApply "HvsQ".
 Qed.
 
 Lemma vs_reflexive E P : P ={E}=> P.
@@ -65,14 +65,14 @@ Proof. iIntros "#Hvs !# [HP $]". by iApply "Hvs". Qed.
 Lemma vs_mask_frame_r E1 E2 Ef P Q :
   E1 ⊥ Ef → (P ={E1,E2}=> Q) ⊢ P ={E1 ∪ Ef,E2 ∪ Ef}=> Q.
 Proof.
-  iIntros (?) "#Hvs !# HP". iApply pvs_mask_frame_r; auto. by iApply "Hvs".
+  iIntros (?) "#Hvs !# HP". iApply fupd_mask_frame_r; auto. by iApply "Hvs".
 Qed.
 
 Lemma vs_inv N E P Q R :
   nclose N ⊆ E → inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q) ⊢ P ={E}=> Q.
 Proof.
   iIntros (?) "#[? Hvs] !# HP". iInv N as "HR" "Hclose".
-  iVs ("Hvs" with "[HR HP]") as "[? $]"; first by iFrame.
+  iUpd ("Hvs" with "[HR HP]") as "[? $]"; first by iFrame.
   by iApply "Hclose".
 Qed.
 

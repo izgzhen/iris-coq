@@ -15,9 +15,9 @@ Proof. rewrite /FromAssumption=><-. by rewrite always_elim. Qed.
 Global Instance from_assumption_always_r P Q :
   FromAssumption true P Q → FromAssumption true P (□ Q).
 Proof. rewrite /FromAssumption=><-. by rewrite always_always. Qed.
-Global Instance from_assumption_rvs p P Q :
+Global Instance from_assumption_bupd p P Q :
   FromAssumption p P Q → FromAssumption p P (|=r=> Q)%I.
-Proof. rewrite /FromAssumption=>->. apply rvs_intro. Qed.
+Proof. rewrite /FromAssumption=>->. apply bupd_intro. Qed.
 
 (* IntoPure *)
 Global Instance into_pure_pure φ : @IntoPure M (■ φ) φ.
@@ -40,8 +40,8 @@ Proof.
   rewrite /FromPure. eapply pure_elim; [done|]=> ?.
   rewrite -cmra_valid_intro //. auto with I.
 Qed.
-Global Instance from_pure_rvs P φ : FromPure P φ → FromPure (|=r=> P) φ.
-Proof. rewrite /FromPure=> ->. apply rvs_intro. Qed.
+Global Instance from_pure_bupd P φ : FromPure P φ → FromPure (|=r=> P) φ.
+Proof. rewrite /FromPure=> ->. apply bupd_intro. Qed.
 
 (* IntoPersistentP *)
 Global Instance into_persistentP_always_trans P Q :
@@ -109,9 +109,9 @@ Global Instance into_wand_iff_r P Q : IntoWand (P ↔ Q) Q P.
 Proof. apply and_elim_r', impl_wand. Qed.
 Global Instance into_wand_always R P Q : IntoWand R P Q → IntoWand (□ R) P Q.
 Proof. rewrite /IntoWand=> ->. apply always_elim. Qed.
-Global Instance into_wand_rvs R P Q :
+Global Instance into_wand_bupd R P Q :
   IntoWand R P Q → IntoWand R (|=r=> P) (|=r=> Q) | 100.
-Proof. rewrite /IntoWand=>->. apply wand_intro_l. by rewrite rvs_wand_r. Qed.
+Proof. rewrite /IntoWand=>->. apply wand_intro_l. by rewrite bupd_wand_r. Qed.
 
 (* FromAnd *)
 Global Instance from_and_and P1 P2 : FromAnd (P1 ∧ P2) P1 P2.
@@ -142,9 +142,9 @@ Proof. rewrite /FromSep=> <-. by rewrite always_sep. Qed.
 Global Instance from_sep_later P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (▷ P) (▷ Q1) (▷ Q2).
 Proof. rewrite /FromSep=> <-. by rewrite later_sep. Qed.
-Global Instance from_sep_rvs P Q1 Q2 :
+Global Instance from_sep_bupd P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (|=r=> P) (|=r=> Q1) (|=r=> Q2).
-Proof. rewrite /FromSep=><-. apply rvs_sep. Qed.
+Proof. rewrite /FromSep=><-. apply bupd_sep. Qed.
 
 Global Instance from_sep_big_sepM
     `{Countable K} {A} (Φ Ψ1 Ψ2 : K → A → uPred M) m :
@@ -317,15 +317,15 @@ Global Instance frame_forall {A} R (Φ Ψ : A → uPred M) :
   (∀ a, Frame R (Φ a) (Ψ a)) → Frame R (∀ x, Φ x) (∀ x, Ψ x).
 Proof. rewrite /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
 
-Global Instance frame_rvs R P Q : Frame R P Q → Frame R (|=r=> P) (|=r=> Q).
-Proof. rewrite /Frame=><-. by rewrite rvs_frame_l. Qed.
+Global Instance frame_bupd R P Q : Frame R P Q → Frame R (|=r=> P) (|=r=> Q).
+Proof. rewrite /Frame=><-. by rewrite bupd_frame_l. Qed.
 
 (* FromOr *)
 Global Instance from_or_or P1 P2 : FromOr (P1 ∨ P2) P1 P2.
 Proof. done. Qed.
-Global Instance from_or_rvs P Q1 Q2 :
+Global Instance from_or_bupd P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (|=r=> P) (|=r=> Q1) (|=r=> Q2).
-Proof. rewrite /FromOr=><-. apply or_elim; apply rvs_mono; auto with I. Qed.
+Proof. rewrite /FromOr=><-. apply or_elim; apply bupd_mono; auto with I. Qed.
 
 (* IntoOr *)
 Global Instance into_or_or P Q : IntoOr (P ∨ Q) P Q.
@@ -337,7 +337,7 @@ Proof. rewrite /IntoOr=>->. by rewrite later_or. Qed.
 (* FromExist *)
 Global Instance from_exist_exist {A} (Φ : A → uPred M): FromExist (∃ a, Φ a) Φ.
 Proof. done. Qed.
-Global Instance from_exist_rvs {A} P (Φ : A → uPred M) :
+Global Instance from_exist_bupd {A} P (Φ : A → uPred M) :
   FromExist P Φ → FromExist (|=r=> P) (λ a, |=r=> Φ a)%I.
 Proof.
   rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
@@ -367,17 +367,17 @@ Global Instance is_except_last_except_last P : IsExceptLast (◇ P).
 Proof. by rewrite /IsExceptLast except_last_idemp. Qed.
 Global Instance is_except_last_later P : IsExceptLast (▷ P).
 Proof. by rewrite /IsExceptLast except_last_later. Qed.
-Global Instance is_except_last_rvs P : IsExceptLast P → IsExceptLast (|=r=> P).
+Global Instance is_except_last_bupd P : IsExceptLast P → IsExceptLast (|=r=> P).
 Proof.
   rewrite /IsExceptLast=> HP.
-  by rewrite -{2}HP -(except_last_idemp P) -except_last_rvs -(except_last_intro P).
+  by rewrite -{2}HP -(except_last_idemp P) -except_last_bupd -(except_last_intro P).
 Qed.
 
-(* FromViewShift *)
-Global Instance from_vs_rvs P : FromVs (|=r=> P) P.
+(* FromUpd *)
+Global Instance from_upd_bupd P : FromUpd (|=r=> P) P.
 Proof. done. Qed.
 
-(* ElimViewShift *)
-Global Instance elim_vs_rvs_rvs P Q : ElimVs (|=r=> P) P (|=r=> Q) (|=r=> Q).
-Proof. by rewrite /ElimVs rvs_frame_r wand_elim_r rvs_trans. Qed.
+(* ElimVs *)
+Global Instance elim_upd_bupd_bupd P Q : ElimUpd (|=r=> P) P (|=r=> Q) (|=r=> Q).
+Proof. by rewrite /ElimUpd bupd_frame_r wand_elim_r bupd_trans. Qed.
 End classes.

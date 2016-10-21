@@ -51,10 +51,10 @@ Section proof.
   Proof.
     iIntros (?) "(#Hh & HR & HΦ)". rewrite /newlock /=.
     wp_seq. wp_alloc l as "Hl".
-    iVs (own_alloc (Excl ())) as (γ) "Hγ"; first done.
-    iVs (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
+    iUpd (own_alloc (Excl ())) as (γ) "Hγ"; first done.
+    iUpd (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
     { iIntros "!>". iExists false. by iFrame. }
-    iVsIntro. iApply "HΦ". iExists l. eauto.
+    iUpdIntro. iApply "HΦ". iExists l. eauto.
   Qed.
 
   Lemma try_acquire_spec γ lk R (Φ: val → iProp Σ) :
@@ -63,11 +63,11 @@ Section proof.
   Proof.
     iIntros "[#Hl HΦ]". iDestruct "Hl" as (l) "(% & #? & % & #?)". subst.
     wp_rec. iInv N as ([]) "[Hl HR]" "Hclose".
-    - wp_cas_fail. iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
-      iVsIntro. iDestruct "HΦ" as "[_ HΦ]". iApply "HΦ".
+    - wp_cas_fail. iUpd ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
+      iUpdIntro. iDestruct "HΦ" as "[_ HΦ]". iApply "HΦ".
     - wp_cas_suc. iDestruct "HR" as "[Hγ HR]".
-      iVs ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
-      iVsIntro. iDestruct "HΦ" as "[HΦ _]". rewrite /locked. by iApply ("HΦ" with "Hγ HR").
+      iUpd ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
+      iUpdIntro. iDestruct "HΦ" as "[HΦ _]". rewrite /locked. by iApply ("HΦ" with "Hγ HR").
   Qed.
 
   Lemma acquire_spec γ lk R (Φ : val → iProp Σ) :
@@ -75,7 +75,7 @@ Section proof.
   Proof.
     iIntros "[#Hl HΦ]". iLöb as "IH". wp_rec. wp_bind (try_acquire _).
     iApply try_acquire_spec. iFrame "#". iSplit.
-    - iIntros "Hlked HR". wp_if. iVsIntro. iApply ("HΦ" with "Hlked HR").
+    - iIntros "Hlked HR". wp_if. iUpdIntro. iApply ("HΦ" with "Hlked HR").
     - wp_if. iApply ("IH" with "HΦ").
   Qed.
 

@@ -45,11 +45,11 @@ Lemma iris_alloc `{irisPreG Λ Σ} σ :
   True =r=> ∃ _ : irisG Λ Σ, wsat ★ ownE ⊤ ★ ownP_auth σ ★ ownP σ.
 Proof.
   iIntros.
-  iVs (own_alloc (● (Excl' σ) ⋅ ◯ (Excl' σ))) as (γσ) "[Hσ Hσ']"; first done.
-  iVs (own_alloc (● (∅ : gmap _ _))) as (γI) "HI"; first done.
-  iVs (own_alloc (CoPset ⊤)) as (γE) "HE"; first done.
-  iVs (own_alloc (GSet ∅)) as (γD) "HD"; first done.
-  iVsIntro; iExists (IrisG _ _ _ γσ γI γE γD).
+  iUpd (own_alloc (● (Excl' σ) ⋅ ◯ (Excl' σ))) as (γσ) "[Hσ Hσ']"; first done.
+  iUpd (own_alloc (● (∅ : gmap _ _))) as (γI) "HI"; first done.
+  iUpd (own_alloc (CoPset ⊤)) as (γE) "HE"; first done.
+  iUpd (own_alloc (GSet ∅)) as (γD) "HD"; first done.
+  iUpdIntro; iExists (IrisG _ _ _ γσ γI γE γD).
   rewrite /wsat /ownE /ownP_auth /ownP; iFrame.
   iExists ∅. rewrite fmap_empty big_sepM_empty. by iFrame.
 Qed.
@@ -154,17 +154,17 @@ Lemma ownI_alloc φ P :
   wsat ★ ▷ P =r=> ∃ i, ■ (φ i) ★ wsat ★ ownI i P.
 Proof.
   iIntros (Hfresh) "[Hw HP]". iDestruct "Hw" as (I) "[? HI]".
-  iVs (own_empty (A:=gset_disjUR positive) disabled_name) as "HE".
-  iVs (own_updateP with "HE") as "HE".
+  iUpd (own_empty (A:=gset_disjUR positive) disabled_name) as "HE".
+  iUpd (own_updateP with "HE") as "HE".
   { apply (gset_disj_alloc_empty_updateP_strong' (λ i, I !! i = None ∧ φ i)).
     intros E. destruct (Hfresh (E ∪ dom _ I))
       as (i & [? HIi%not_elem_of_dom]%not_elem_of_union & ?); eauto. }
   iDestruct "HE" as (X) "[Hi HE]"; iDestruct "Hi" as %(i & -> & HIi & ?).
-  iVs (own_update with "Hw") as "[Hw HiP]".
+  iUpd (own_update with "Hw") as "[Hw HiP]".
   { eapply auth_update_alloc,
      (alloc_singleton_local_update _ i (invariant_unfold P)); last done.
     by rewrite /= lookup_fmap HIi. }
-  iVsIntro; iExists i;  iSplit; [done|]. rewrite /ownI; iFrame "HiP".
+  iUpdIntro; iExists i;  iSplit; [done|]. rewrite /ownI; iFrame "HiP".
   iExists (<[i:=P]>I); iSplitL "Hw".
   { by rewrite fmap_insert insert_singleton_op ?lookup_fmap ?HIi. }
   iApply (big_sepM_insert _ I); first done.
