@@ -612,10 +612,10 @@ Tactic Notation "iNext":=
 
 Tactic Notation "iTimeless" constr(H) :=
   eapply tac_timeless with _ H _ _ _;
-    [let Q := match goal with |- IsExceptLast ?Q => Q end in
+    [let Q := match goal with |- IsExcept0 ?Q => Q end in
      apply _ || fail "iTimeless: cannot remove later when goal is" Q
     |env_cbv; reflexivity || fail "iTimeless:" H "not found"
-    |let P := match goal with |- IntoExceptLast ?P _ => P end in
+    |let P := match goal with |- IntoExcept0 ?P _ => P end in
      apply _ || fail "iTimeless: cannot turn" P "into ◇"
     |env_cbv; reflexivity|].
 

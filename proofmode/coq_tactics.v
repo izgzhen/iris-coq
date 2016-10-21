@@ -446,14 +446,14 @@ Proof.
 Qed.
 
 Lemma tac_timeless Δ Δ' i p P P' Q :
-  IsExceptLast Q →
-  envs_lookup i Δ = Some (p, P) → IntoExceptLast P P' →
+  IsExcept0 Q →
+  envs_lookup i Δ = Some (p, P) → IntoExcept0 P P' →
   envs_simple_replace i p (Esnoc Enil i P') Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ???? HQ. rewrite envs_simple_replace_sound //; simpl.
-  rewrite right_id HQ -{2}(is_except_last Q).
-  by rewrite (into_except_last P) -except_last_always_if except_last_frame_r wand_elim_r.
+  rewrite right_id HQ -{2}(is_except_0 Q).
+  by rewrite (into_except_0 P) -except_0_always_if except_0_frame_r wand_elim_r.
 Qed.
 
 (** * Always *)

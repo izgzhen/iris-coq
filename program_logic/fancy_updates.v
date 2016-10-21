@@ -52,11 +52,11 @@ Lemma fupd_intro_mask E1 E2 P : E2 ⊆ E1 → P ⊢ |={E1,E2}=> |={E2,E1}=> P.
 Proof.
   intros (E1''&->&?)%subseteq_disjoint_union_L.
   rewrite fupd_eq /fupd_def ownE_op //. iIntros "H ($ & $ & HE) !==>".
-  iApply except_last_intro. iIntros "[$ $] !==>" . iApply except_last_intro.
+  iApply except_0_intro. iIntros "[$ $] !==>" . iApply except_0_intro.
   by iFrame.
 Qed.
 
-Lemma except_last_fupd E1 E2 P : ◇ (|={E1,E2}=> P) ={E1,E2}=★ P.
+Lemma except_0_fupd E1 E2 P : ◇ (|={E1,E2}=> P) ={E1,E2}=★ P.
 Proof.
   rewrite fupd_eq. iIntros "H [Hw HE]". iTimeless "H". iApply "H"; by iFrame.
 Qed.
@@ -64,7 +64,7 @@ Qed.
 Lemma bupd_fupd E P : (|==> P) ={E}=★ P.
 Proof.
   rewrite fupd_eq /fupd_def. iIntros "H [$ $]"; iUpd "H".
-  iUpdIntro. by iApply except_last_intro.
+  iUpdIntro. by iApply except_0_intro.
 Qed.
 
 Lemma fupd_mono E1 E2 P Q : (P ⊢ Q) → (|={E1,E2}=> P) ={E1,E2}=★ Q.
@@ -85,7 +85,7 @@ Proof.
   intros. rewrite fupd_eq /fupd_def ownE_op //. iIntros "Hvs (Hw & HE1 &HEf)".
   iUpd ("Hvs" with "[Hw HE1]") as ">($ & HE2 & HP)"; first by iFrame.
   iDestruct (ownE_op' with "[HE2 HEf]") as "[? $]"; first by iFrame.
-  iUpdIntro; iApply except_last_intro. by iApply "HP".
+  iUpdIntro; iApply except_0_intro. by iApply "HP".
 Qed.
 
 Lemma fupd_frame_r E1 E2 P Q : (|={E1,E2}=> P) ★ Q ={E1,E2}=★ P ★ Q.
@@ -102,8 +102,8 @@ Lemma fupd_intro E P : P ={E}=★ P.
 Proof. iIntros "HP". by iApply bupd_fupd. Qed.
 Lemma fupd_intro_mask' E1 E2 : E2 ⊆ E1 → True ⊢ |={E1,E2}=> |={E2,E1}=> True.
 Proof. exact: fupd_intro_mask. Qed.
-Lemma fupd_except_last E1 E2 P : (|={E1,E2}=> ◇ P) ={E1,E2}=★ P.
-Proof. by rewrite {1}(fupd_intro E2 P) except_last_fupd fupd_trans. Qed.
+Lemma fupd_except_0 E1 E2 P : (|={E1,E2}=> ◇ P) ={E1,E2}=★ P.
+Proof. by rewrite {1}(fupd_intro E2 P) except_0_fupd fupd_trans. Qed.
 
 Lemma fupd_frame_l E1 E2 P Q : (P ★ |={E1,E2}=> Q) ={E1,E2}=★ P ★ Q.
 Proof. rewrite !(comm _ P); apply fupd_frame_r. Qed.
@@ -180,8 +180,8 @@ Section proofmode_classes.
     Frame R P Q → Frame R (|={E1,E2}=> P) (|={E1,E2}=> Q).
   Proof. rewrite /Frame=><-. by rewrite fupd_frame_l. Qed.
 
-  Global Instance is_except_last_fupd E1 E2 P : IsExceptLast (|={E1,E2}=> P).
-  Proof. by rewrite /IsExceptLast except_last_fupd. Qed.
+  Global Instance is_except_0_fupd E1 E2 P : IsExcept0 (|={E1,E2}=> P).
+  Proof. by rewrite /IsExcept0 except_0_fupd. Qed.
 
   Global Instance from_upd_fupd E P : FromUpd (|={E}=> P) P.
   Proof. by rewrite /FromUpd -bupd_fupd. Qed.

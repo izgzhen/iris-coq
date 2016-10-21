@@ -298,17 +298,17 @@ Proof.
   rewrite /Frame /MakeLater /IntoLater=>-> <- <-. by rewrite later_sep.
 Qed.
 
-Class MakeExceptLast (P Q : uPred M) := make_except_last : ◇ P ⊣⊢ Q.
-Global Instance make_except_last_True : MakeExceptLast True True.
-Proof. by rewrite /MakeExceptLast except_last_True. Qed.
-Global Instance make_except_last_default P : MakeExceptLast P (◇ P) | 100.
+Class MakeExcept0 (P Q : uPred M) := make_except_0 : ◇ P ⊣⊢ Q.
+Global Instance make_except_0_True : MakeExcept0 True True.
+Proof. by rewrite /MakeExcept0 except_0_True. Qed.
+Global Instance make_except_0_default P : MakeExcept0 P (◇ P) | 100.
 Proof. done. Qed.
 
-Global Instance frame_except_last R P Q Q' :
-  Frame R P Q → MakeExceptLast Q Q' → Frame R (◇ P) Q'.
+Global Instance frame_except_0 R P Q Q' :
+  Frame R P Q → MakeExcept0 Q Q' → Frame R (◇ P) Q'.
 Proof.
-  rewrite /Frame /MakeExceptLast=><- <-.
-  by rewrite except_last_sep -(except_last_intro R).
+  rewrite /Frame /MakeExcept0=><- <-.
+  by rewrite except_0_sep -(except_0_intro R).
 Qed.
 
 Global Instance frame_exist {A} R (Φ Ψ : A → uPred M) :
@@ -357,21 +357,21 @@ Global Instance into_exist_always {A} P (Φ : A → uPred M) :
   IntoExist P Φ → IntoExist (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP always_exist. Qed.
 
-(* IntoExceptLast *)
-Global Instance into_except_last_except_last P : IntoExceptLast (◇ P) P.
+(* IntoExcept0 *)
+Global Instance into_except_0_except_0 P : IntoExcept0 (◇ P) P.
 Proof. done. Qed.
-Global Instance into_except_last_timeless P : TimelessP P → IntoExceptLast (▷ P) P.
+Global Instance into_except_0_timeless P : TimelessP P → IntoExcept0 (▷ P) P.
 Proof. done. Qed.
 
-(* IsExceptLast *)
-Global Instance is_except_last_except_last P : IsExceptLast (◇ P).
-Proof. by rewrite /IsExceptLast except_last_idemp. Qed.
-Global Instance is_except_last_later P : IsExceptLast (▷ P).
-Proof. by rewrite /IsExceptLast except_last_later. Qed.
-Global Instance is_except_last_bupd P : IsExceptLast P → IsExceptLast (|==> P).
+(* IsExcept0 *)
+Global Instance is_except_0_except_0 P : IsExcept0 (◇ P).
+Proof. by rewrite /IsExcept0 except_0_idemp. Qed.
+Global Instance is_except_0_later P : IsExcept0 (▷ P).
+Proof. by rewrite /IsExcept0 except_0_later. Qed.
+Global Instance is_except_0_bupd P : IsExcept0 P → IsExcept0 (|==> P).
 Proof.
-  rewrite /IsExceptLast=> HP.
-  by rewrite -{2}HP -(except_last_idemp P) -except_last_bupd -(except_last_intro P).
+  rewrite /IsExcept0=> HP.
+  by rewrite -{2}HP -(except_0_idemp P) -except_0_bupd -(except_0_intro P).
 Qed.
 
 (* FromUpd *)

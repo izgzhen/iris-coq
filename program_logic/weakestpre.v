@@ -222,8 +222,8 @@ Section proofmode_classes.
     (∀ v, Frame R (Φ v) (Ψ v)) → Frame R (WP e @ E {{ Φ }}) (WP e @ E {{ Ψ }}).
   Proof. rewrite /Frame=> HR. rewrite wp_frame_l. apply wp_mono, HR. Qed.
 
-  Global Instance is_except_last_wp E e Φ : IsExceptLast (WP e @ E {{ Φ }}).
-  Proof. by rewrite /IsExceptLast -{2}fupd_wp -except_last_fupd -fupd_intro. Qed.
+  Global Instance is_except_0_wp E e Φ : IsExcept0 (WP e @ E {{ Φ }}).
+  Proof. by rewrite /IsExcept0 -{2}fupd_wp -except_0_fupd -fupd_intro. Qed.
 
   Global Instance elim_upd_bupd_wp E e P Φ :
     ElimUpd (|==> P) P (WP e @ E {{ Φ }}) (WP e @ E {{ Φ }}).

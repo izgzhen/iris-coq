@@ -62,11 +62,11 @@ Class IntoExist {A} (P : uPred M) (Φ : A → uPred M) :=
   into_exist : P ⊢ ∃ x, Φ x.
 Global Arguments into_exist {_} _ _ {_}.
 
-Class IntoExceptLast (P Q : uPred M) := into_except_last : P ⊢ ◇ Q.
-Global Arguments into_except_last : clear implicits.
+Class IntoExcept0 (P Q : uPred M) := into_except_0 : P ⊢ ◇ Q.
+Global Arguments into_except_0 : clear implicits.
 
-Class IsExceptLast (Q : uPred M) := is_except_last : ◇ Q ⊢ Q.
-Global Arguments is_except_last : clear implicits.
+Class IsExcept0 (Q : uPred M) := is_except_0 : ◇ Q ⊢ Q.
+Global Arguments is_except_0 : clear implicits.
 
 Class FromUpd (P Q : uPred M) := from_upd : (|==> Q) ⊢ P.
 Global Arguments from_upd : clear implicits.
