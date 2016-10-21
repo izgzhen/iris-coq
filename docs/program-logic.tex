@@ -5,7 +5,7 @@
 This section describes how to build a program logic for an arbitrary language (\cf \Sref{sec:language}) on top of the logic described in \Sref{sec:dc-logic}.
 So in the following, we assume that some language $\Lang$ was fixed.
 
-\subsection{World Satisfaction, Invariants, View Shifts}
+\subsection{World Satisfaction, Invariants, Fancy Updates}
 \label{sec:invariants}
 
 To introduce invariants into our logic, we will define weakest precondition to explicitly thread through the proof that all the invariants are maintained throughout program execution.
@@ -43,59 +43,59 @@ The following assertion states that an invariant with name $\iname$ exists and m
 \[ \knowInv\iname\prop \eqdef \ownGhost{\gname_{\textmon{Inv}}}
   {\authfrag \mapsingleton \iname {\aginj(\latertinj(\wIso(\prop)))}} \]
 
-\paragraph{View Updates and View Shifts.}
-Next, we define \emph{view updates}, which are essentially the same as the resource updates of the base logic ($\Sref{sec:base-logic}$), except that they also have access to world satisfaction and can enable and disable invariants:
+\paragraph{Fancy Updates and View Shifts.}
+Next, we define \emph{fancy updates}, which are essentially the same as the basic updates of the base logic ($\Sref{sec:base-logic}$), except that they also have access to world satisfaction and can enable and disable invariants:
 \[ \pvs[\mask_1][\mask_2] \prop \eqdef W * \ownGhost{\gname_{\textmon{En}}}{\mask_1} \wand \upd\diamond (W * \ownGhost{\gname_{\textmon{En}}}{\mask_2} * \prop) \]
 Here, $\mask_1$ and $\mask_2$ are the \emph{masks} of the view update, defining which invariants have to be (at least!) available before and after the update.
 We use $\top$ as symbol for the largest possible mask, $\nat$, and $\bot$ for the smallest possible mask $\emptyset$.
 We will write $\pvs[\mask] \prop$ for $\pvs[\mask][\mask]\prop$.
 %
-View updates satisfy the following basic proof rules:
+Fancy updates satisfy the following basic proof rules:
 \begin{mathpar}
-\infer[vup-mono]
+\infer[fup-mono]
 {\prop \proves \propB}
 {\pvs[\mask_1][\mask_2] \prop \proves \pvs[\mask_1][\mask_2] \propB}
 
-\infer[vup-intro-mask]
+\infer[fup-intro-mask]
 {\mask_2 \subseteq \mask_1}
 {\prop \proves \pvs[\mask_1][\mask_2]\pvs[\mask_2][\mask_1] \prop}
 
-\infer[vup-trans]
+\infer[fup-trans]
 {}
 {\pvs[\mask_1][\mask_2] \pvs[\mask_2][\mask_3] \prop \proves \pvs[\mask_1][\mask_3] \prop}
 
-\infer[vup-upd]
+\infer[fup-upd]
 {}{\upd\prop \proves \pvs[\mask] \prop}
 
-\infer[vup-frame]
+\infer[fup-frame]
 {}{\propB * \pvs[\mask_1][\mask_2]\prop \proves \pvs[\mask_1 \uplus \mask_\f][\mask_2 \uplus \mask_\f] \propB * \prop}
 
-\inferH{vup-update}
+\inferH{fup-update}
 {\melt \mupd \meltsB}
 {\ownM\melt \proves \pvs[\mask] \Exists\meltB\in\meltsB. \ownM\meltB}
 
-\infer[vup-timeless]
+\infer[fup-timeless]
 {\timeless\prop}
 {\later\prop \proves \pvs[\mask] \prop}
 %
-% \inferH{vup-allocI}
+% \inferH{fup-allocI}
 % {\text{$\mask$ is infinite}}
 % {\later\prop \proves \pvs[\mask] \Exists \iname \in \mask. \knowInv\iname\prop}
 %gov
-% \inferH{vup-openI}
+% \inferH{fup-openI}
 % {}{\knowInv\iname\prop \proves \pvs[\set\iname][\emptyset] \later\prop}
 %
-% \inferH{vup-closeI}
+% \inferH{fup-closeI}
 % {}{\knowInv\iname\prop \land \later\prop \proves \pvs[\emptyset][\set\iname] \TRUE}
 \end{mathpar}
 (There are no rules related to invariants here. Those rules will be discussed later, in \Sref{sec:invariants}.)
 
-We further define the notions of \emph{view shifts} and \emph{linear view shifts}:
+We can further define the notions of \emph{view shifts} and \emph{linear view shifts}:
 \begin{align*}
   \prop \vsW[\mask_1][\mask_2] \propB \eqdef{}& \prop \wand \pvs[\mask_1][\mask_2] \propB \\
   \prop \vs[\mask_1][\mask_2] \propB \eqdef{}& \always(\prop \wand \pvs[\mask_1][\mask_2] \propB)
 \end{align*}
-These two are useful when writing down specifications, but for reasoning, it is typically easier to just work directly with view updates.
+These two are useful when writing down specifications and for comparing with previous versions of Iris, but for reasoning, it is typically easier to just work directly with fancy updates.
 Still, just to give an idea of what view shifts ``are'', here are some proof rules for them:
 \begin{mathparpagebreakable}
 \inferH{vs-update}
@@ -181,10 +181,10 @@ The following rules can all be derived inside the DC logic:
 {\mask_1 \subseteq \mask_2 \and \vctx,\var:\textlog{val}\mid\prop \proves \propB}
 {\vctx\mid\wpre\expr[\mask_1]{\Ret\var.\prop} \proves \wpre\expr[\mask_2]{\Ret\var.\propB}}
 
-\infer[vup-wp]
+\infer[fup-wp]
 {}{\pvs[\mask] \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
 
-\infer[wp-vup]
+\infer[wp-fup]
 {}{\wpre\expr[\mask]{\Ret\var.\pvs[\mask] \prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
 
 \infer[wp-atomic]
@@ -379,7 +379,7 @@ Whenever needed, we (usually implicitly) coerce $\namesp$ to its encoded suffix-
 
 We will overload the notation for invariant assertions for using namespaces instead of names:
 \[ \knowInv\namesp\prop \eqdef \Exists \iname \in \namecl\namesp. \knowInv\iname{\prop} \]
-We can now derive the following rules (this involves unfolding the definition of view updates):
+We can now derive the following rules (this involves unfolding the definition of fancy updates):
 \begin{mathpar}
   \axiomH{inv-persist}{\knowInv\namesp\prop \proves \always\knowInv\namesp\prop}
 
@@ -408,7 +408,7 @@ Additionally, opening the accessor provides us with $\All\varB. \propB' \vsW[\ma
 This linear view shift tells us that in order to \emph{close} the accessor again and go back to mask $\mask_1$, we have to pick some $\varB$ and establish the corresponding $\propB'$.
 After closing, we will obtain $\propC$.
 
-Using \ruleref{vs-trans} and \ruleref{Ht-atomic} (or the correspond proof rules for view updates and weakest preconditions), we can show that it is possible to open an accessor around any view shift and any \emph{atomic} expression.
+Using \ruleref{vs-trans} and \ruleref{Ht-atomic} (or the corresponding proof rules for fancy updates and weakest preconditions), we can show that it is possible to open an accessor around any view shift and any \emph{atomic} expression.
 Furthermore, in the special case that $\mask_1 = \mask_2$, the accessor can be opened around \emph{any} expression.
 For this reason, we also call such accessors \emph{non-atomic}.
 
