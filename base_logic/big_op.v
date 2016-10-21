@@ -1,7 +1,89 @@
-From iris.algebra Require Export upred list cmra_big_op.
+From iris.algebra Require Export list cmra_big_op.
+From iris.base_logic Require Export base_logic.
 From iris.prelude Require Import gmap fin_collections functions.
 Import uPred.
 
+(* We make use of the bigops on CMRAs, so we first define a (somewhat ad-hoc)
+CMRA structure on uPred. *)
+Section cmra.
+  Context {M : ucmraT}.
+
+  Instance uPred_valid : Valid (uPred M) := λ P, ∀ n x, ✓{n} x → P n x.
+  Instance uPred_validN : ValidN (uPred M) := λ n P,
+    ∀ n' x, n' ≤ n → ✓{n'} x → P n' x.
+  Instance uPred_op : Op (uPred M) := uPred_sep.
+  Instance uPred_pcore : PCore (uPred M) := λ _, Some True%I.
+
+  Instance uPred_validN_ne n : Proper (dist n ==> iff) (uPred_validN n).
+  Proof. intros P Q HPQ; split=> H n' x ??; by apply HPQ, H. Qed.
+
+  Lemma uPred_validN_alt n (P : uPred M) : ✓{n} P → P ≡{n}≡ True%I.
+  Proof.
+    unseal=> HP; split=> n' x ??; split; [done|].
+    intros _. by apply HP.
+  Qed.
+
+  Lemma uPred_cmra_validN_op_l n P Q : ✓{n} (P ★ Q)%I → ✓{n} P.
+  Proof.
+    unseal. intros HPQ n' x ??.
+    destruct (HPQ n' x) as (x1&x2&->&?&?); auto.
+    eapply uPred_mono with x1; eauto using cmra_includedN_l.
+  Qed.
+
+  Lemma uPred_included P Q : P ≼ Q → Q ⊢ P.
+  Proof. intros [P' ->]. apply sep_elim_l. Qed.
+
+  Definition uPred_cmra_mixin : CMRAMixin (uPred M).
+  Proof.
+    apply cmra_total_mixin; try apply _ || by eauto.
+    - intros n P Q ??. by cofe_subst.
+    - intros P; split.
+      + intros HP n n' x ?. apply HP.
+      + intros HP n x. by apply (HP n).
+    - intros n P HP n' x ?. apply HP; auto.
+    - intros P. by rewrite left_id.
+    - intros P Q _. exists True%I. by rewrite left_id.
+    - intros n P Q. apply uPred_cmra_validN_op_l.
+    - intros n P Q1 Q2 HP HPQ. exists True%I, P; split_and!.
+      + by rewrite left_id.
+      + move: HP; by rewrite HPQ=> /uPred_cmra_validN_op_l /uPred_validN_alt.
+      + move: HP; rewrite HPQ=> /uPred_cmra_validN_op_l /uPred_validN_alt=> ->.
+        by rewrite left_id.
+  Qed.
+
+  Canonical Structure uPredR :=
+    CMRAT (uPred M) uPred_cofe_mixin uPred_cmra_mixin.
+
+  Instance uPred_empty : Empty (uPred M) := True%I.
+
+  Definition uPred_ucmra_mixin : UCMRAMixin (uPred M).
+  Proof.
+    split; last done.
+    - by rewrite /empty /uPred_empty uPred_pure_eq.
+    - intros P. by rewrite left_id.
+  Qed.
+
+  Canonical Structure uPredUR :=
+    UCMRAT (uPred M) uPred_cofe_mixin uPred_cmra_mixin uPred_ucmra_mixin.
+
+  Global Instance uPred_always_homomorphism : UCMRAHomomorphism uPred_always.
+  Proof. split; [split|]. apply _. apply always_sep. apply always_pure. Qed.
+  Global Instance uPred_always_if_homomorphism b :
+    UCMRAHomomorphism (uPred_always_if b).
+  Proof. split; [split|]. apply _. apply always_if_sep. apply always_if_pure. Qed.
+  Global Instance uPred_later_homomorphism : UCMRAHomomorphism uPred_later.
+  Proof. split; [split|]. apply _. apply later_sep. apply later_True. Qed.
+  Global Instance uPred_except_0_homomorphism :
+    CMRAHomomorphism uPred_except_0.
+  Proof. split. apply _. apply except_0_sep. Qed.
+  Global Instance uPred_ownM_homomorphism : UCMRAHomomorphism uPred_ownM.
+  Proof. split; [split|]. apply _. apply ownM_op. apply ownM_empty'. Qed.
+End cmra.
+
+Arguments uPredR : clear implicits.
+Arguments uPredUR : clear implicits.
+
+(* Notations *)
 Notation "'[★]' Ps" := (big_op (M:=uPredUR _) Ps) (at level 20) : uPred_scope.
 
 Notation "'[★' 'list' ] k ↦ x ∈ l , P" := (big_opL (M:=uPredUR _) l (λ k x, P))

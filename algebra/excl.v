@@ -1,5 +1,5 @@
 From iris.algebra Require Export cmra.
-From iris.algebra Require Import upred.
+From iris.base_logic Require Import base_logic.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 

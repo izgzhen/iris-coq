@@ -1,5 +1,6 @@
 From iris.proofmode Require Export classes.
-From iris.algebra Require Import upred_big_op gmap.
+From iris.algebra Require Import gmap.
+From iris.base_logic Require Import big_op.
 Import uPred.
 
 Section classes.

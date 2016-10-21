@@ -1,6 +1,6 @@
 From iris.program_logic Require Export fancy_updates.
 From iris.program_logic Require Import wsat.
-From iris.algebra Require Import upred_big_op.
+From iris.base_logic Require Import big_op.
 From iris.prelude Require Export coPset.
 From iris.proofmode Require Import tactics classes.
 Import uPred.

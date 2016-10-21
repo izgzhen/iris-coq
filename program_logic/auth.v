@@ -1,6 +1,7 @@
 From iris.program_logic Require Export invariants.
 From iris.algebra Require Export auth.
 From iris.algebra Require Import gmap.
+From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics.
 Import uPred.
 

@@ -1,4 +1,4 @@
-From iris.algebra Require Export upred.
+From iris.base_logic Require Export base_logic.
 From iris.algebra Require Import iprod gmap.
 From iris.algebra Require cofe_solver.
 

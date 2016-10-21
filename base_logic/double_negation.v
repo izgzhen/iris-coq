@@ -1,4 +1,4 @@
-From iris.algebra Require Import upred.
+From iris.base_logic Require Import base_logic.
 Import upred.
 
 (* In this file we show that the bupd can be thought of a kind of

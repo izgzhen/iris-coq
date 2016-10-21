@@ -1,4 +1,4 @@
-From iris.algebra Require Import upred.
+From iris.base_logic Require Import base_logic soundness.
 From iris.proofmode Require Import tactics.
 
 (** This proves that we need the ▷ in a "Saved Proposition" construction with
@@ -39,7 +39,7 @@ Module savedprop. Section savedprop.
 
   Lemma contradiction : False.
   Proof.
-    apply (@uPred.adequacy M False 1); simpl.
+    apply (@soundness M False 1); simpl.
     iIntros "". iUpd A_alloc as (i) "#H".
     iPoseProof (saved_NA with "H") as "HN".
     iUpdIntro. iNext.

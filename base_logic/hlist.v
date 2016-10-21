@@ -1,5 +1,5 @@
 From iris.prelude Require Export hlist.
-From iris.algebra Require Export upred.
+From iris.base_logic Require Export base_logic.
 Import uPred.
 
 Fixpoint uPred_hexist {M As} : himpl As (uPred M) → uPred M :=

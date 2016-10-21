@@ -1,5 +1,6 @@
 From iris.program_logic Require Export weakestpre.
-From iris.algebra Require Import gmap auth agree gset coPset upred_big_op.
+From iris.algebra Require Import gmap auth agree gset coPset.
+From iris.base_logic Require Import big_op soundness.
 From iris.program_logic Require Import wsat.
 From iris.proofmode Require Import tactics.
 Import uPred.
@@ -144,12 +145,12 @@ Theorem wp_adequacy Σ `{irisPreG Λ Σ} e σ φ :
 Proof.
   intros Hwp; split.
   - intros t2 σ2 v2 [n ?]%rtc_nsteps.
-    eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
+    eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
     rewrite Nat_iter_S. iUpd (iris_alloc σ) as (?) "(?&?&?&Hσ)".
     iUpdIntro. iNext. iApply wptp_result; eauto.
     iFrame. iSplitL. by iApply Hwp. by iApply big_sepL_nil.
   - intros t2 σ2 e2 [n ?]%rtc_nsteps ?.
-    eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
+    eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
     rewrite Nat_iter_S. iUpd (iris_alloc σ) as (?) "(Hw & HE & Hσ & Hσf)".
     iUpdIntro. iNext. iApply wptp_safe; eauto.
     iFrame "Hw HE Hσ". iSplitL. by iApply Hwp. by iApply big_sepL_nil.
@@ -162,7 +163,7 @@ Theorem wp_invariance Σ `{irisPreG Λ Σ} e σ1 t2 σ2 I φ Φ :
   φ σ2.
 Proof.
   intros Hwp HI [n ?]%rtc_nsteps.
-  eapply (adequacy (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
+  eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
   rewrite Nat_iter_S. iUpd (iris_alloc σ1) as (?) "(Hw & HE & ? & Hσ)".
   rewrite fupd_eq in Hwp.
   iUpd (Hwp _ with "Hσ [Hw HE]") as ">(? & ? & ? & ?)"; first by iFrame.

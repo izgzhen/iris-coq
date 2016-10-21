@@ -51,10 +51,6 @@ algebra/agree.v
 algebra/dec_agree.v
 algebra/excl.v
 algebra/iprod.v
-algebra/upred.v
-algebra/upred_tactics.v
-algebra/upred_big_op.v
-algebra/upred_hlist.v
 algebra/frac.v
 algebra/csum.v
 algebra/list.v
@@ -62,7 +58,15 @@ algebra/updates.v
 algebra/local_updates.v
 algebra/gset.v
 algebra/coPset.v
-algebra/double_negation.v
+base_logic/upred.v
+base_logic/primitive.v
+base_logic/derived.v
+base_logic/base_logic.v
+base_logic/tactics.v
+base_logic/big_op.v
+base_logic/hlist.v
+base_logic/soundness.v
+base_logic/double_negation.v
 program_logic/model.v
 program_logic/adequacy.v
 program_logic/lifting.v

@@ -1,5 +1,6 @@
 From iris.program_logic Require Export iris.
-From iris.algebra Require Import gmap auth agree gset coPset upred_big_op.
+From iris.algebra Require Import gmap auth agree gset coPset.
+From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics.
 
 Definition invariant_unfold {Σ} (P : iProp Σ) : agree (later (iPreProp Σ)) :=

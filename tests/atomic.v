@@ -1,5 +1,5 @@
 From iris.program_logic Require Export hoare weakestpre.
-From iris.algebra Require Import upred_big_op.
+From iris.base_logic Require Import big_op.
 From iris.prelude Require Export coPset.
 From iris.proofmode Require Import tactics.
 Import uPred.

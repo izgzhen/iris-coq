@@ -1,4 +1,4 @@
-From iris.algebra Require Export upred.
+From iris.base_logic Require Export base_logic.
 Import uPred.
 
 Section classes.

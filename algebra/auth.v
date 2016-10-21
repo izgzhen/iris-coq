@@ -1,5 +1,5 @@
 From iris.algebra Require Export excl local_updates.
-From iris.algebra Require Import upred updates.
+From iris.base_logic Require Import base_logic.
 From iris.proofmode Require Import class_instances.
 Local Arguments valid _ _ !_ /.
 Local Arguments validN _ _ _ !_ /.
