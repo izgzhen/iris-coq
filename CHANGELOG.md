@@ -1,9 +1,11 @@
 In this changelog, we document "large-ish" changes to Iris that affect even the
 way the logic is used on paper.  We also mention some significant changes in the
 Coq development, but not every API-breaking change is listed.  Changes marked
-[#] still need to be ported to the Iris Documentation LaTeX file(s).
+`[#]` still need to be ported to the Iris Documentation LaTeX file(s).
 
-## Iris 3.0
+## Iris 3.0~rc1
+
+This version matches the ESOP submission.
 
 * View shifts are radically simplified to just internalize frame-preserving
   updates.  Weakestpre is defined inside the logic, and invariants and view
