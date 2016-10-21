@@ -23,8 +23,8 @@ Notation "P =n=★ Q" := (P -★ |=n=> Q)%I
   (at level 99, Q at level 200, format "P  =n=★  Q") : uPred_scope.
 
 (* Our goal is to prove that:
-  (1) |=n=> has (nearly) all the properties of the |=r=> modality that are used in Iris
-  (2) If our meta-logic is classical, then |=n=> and |=r=> are equivalent
+  (1) |=n=> has (nearly) all the properties of the |==> modality that are used in Iris
+  (2) If our meta-logic is classical, then |=n=> and |==> are equivalent
 *)
 
 Section bupd_nnupd.
@@ -264,7 +264,7 @@ Qed.
    direction from bupd to nnupd is similar to the proof of
    nnupd_ownM_updateP *)
 
-Lemma bupd_nnupd P: (|=r=> P) ⊢ |=n=> P.
+Lemma bupd_nnupd P: (|==> P) ⊢ |=n=> P.
 Proof.
   split. rewrite /uPred_nnupd. repeat uPred.unseal. intros n x ? Hbupd a.
   red; rewrite //= => n' yf ??.
@@ -282,7 +282,7 @@ Qed.
 (* However, the other direction seems to need a classical axiom: *)
 Section classical.
 Context (not_all_not_ex: ∀ (P : M → Prop), ¬ (∀ n : M, ¬ P n) → ∃ n : M, P n).
-Lemma nnupd_bupd P:  (|=n=> P) ⊢ (|=r=> P).
+Lemma nnupd_bupd P:  (|=n=> P) ⊢ (|==> P).
 Proof.
   rewrite /uPred_nnupd.
   split. uPred.unseal; red; rewrite //=.
@@ -373,8 +373,8 @@ Qed.
 
 (* Open question:
 
-   Do the basic properties of the |=r=> modality (bupd_intro, bupd_mono, rvs_trans, rvs_frame_r,
-      bupd_ownM_updateP, and adequacy) uniquely characterize |=r=>?
+   Do the basic properties of the |==> modality (bupd_intro, bupd_mono, rvs_trans, rvs_frame_r,
+      bupd_ownM_updateP, and adequacy) uniquely characterize |==>?
 *)
 
 End bupd_nnupd.

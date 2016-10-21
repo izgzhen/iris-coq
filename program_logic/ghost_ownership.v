@@ -86,7 +86,7 @@ Proof. rewrite !own_eq /own_def; apply _. Qed.
 (* TODO: This also holds if we just have ✓ a at the current step-idx, as Iris
    assertion. However, the map_updateP_alloc does not suffice to show this. *)
 Lemma own_alloc_strong a (G : gset gname) :
-  ✓ a → True =r=> ∃ γ, ■ (γ ∉ G) ∧ own γ a.
+  ✓ a → True ==★ ∃ γ, ■ (γ ∉ G) ∧ own γ a.
 Proof.
   intros Ha.
   rewrite -(bupd_mono (∃ m, ■ (∃ γ, γ ∉ G ∧ m = iRes_singleton γ a) ∧ uPred_ownM m)%I).
@@ -97,14 +97,14 @@ Proof.
   - apply exist_elim=>m; apply pure_elim_l=>-[γ [Hfresh ->]].
     by rewrite !own_eq /own_def -(exist_intro γ) pure_equiv // left_id.
 Qed.
-Lemma own_alloc a : ✓ a → True =r=> ∃ γ, own γ a.
+Lemma own_alloc a : ✓ a → True ==★ ∃ γ, own γ a.
 Proof.
   intros Ha. rewrite (own_alloc_strong a ∅) //; [].
   apply bupd_mono, exist_mono=>?. eauto with I.
 Qed.
 
 (** ** Frame preserving updates *)
-Lemma own_updateP P γ a : a ~~>: P → own γ a =r=> ∃ a', ■ P a' ∧ own γ a'.
+Lemma own_updateP P γ a : a ~~>: P → own γ a ==★ ∃ a', ■ P a' ∧ own γ a'.
 Proof.
   intros Ha. rewrite !own_eq.
   rewrite -(bupd_mono (∃ m, ■ (∃ a', m = iRes_singleton γ a' ∧ P a') ∧ uPred_ownM m)%I).
@@ -115,16 +115,16 @@ Proof.
     rewrite -(exist_intro a'). by apply and_intro; [apply pure_intro|].
 Qed.
 
-Lemma own_update γ a a' : a ~~> a' → own γ a =r=> own γ a'.
+Lemma own_update γ a a' : a ~~> a' → own γ a ==★ own γ a'.
 Proof.
   intros; rewrite (own_updateP (a' =)); last by apply cmra_update_updateP.
   by apply bupd_mono, exist_elim=> a''; apply pure_elim_l=> ->.
 Qed.
 Lemma own_update_2 γ a1 a2 a' :
-  a1 ⋅ a2 ~~> a' → own γ a1 ★ own γ a2 =r=> own γ a'.
+  a1 ⋅ a2 ~~> a' → own γ a1 ★ own γ a2 ==★ own γ a'.
 Proof. intros. rewrite -own_op. by apply own_update. Qed.
 Lemma own_update_3 γ a1 a2 a3 a' :
-  a1 ⋅ a2 ⋅ a3 ~~> a' → own γ a1 ★ own γ a2 ★ own γ a3 =r=> own γ a'.
+  a1 ⋅ a2 ⋅ a3 ~~> a' → own γ a1 ★ own γ a2 ★ own γ a3 ==★ own γ a'.
 Proof. intros. rewrite -!own_op assoc. by apply own_update. Qed.
 End global.
 
@@ -138,7 +138,7 @@ Arguments own_update {_ _} [_] _ _ _ _.
 Arguments own_update_2 {_ _} [_] _ _ _ _ _.
 Arguments own_update_3 {_ _} [_] _ _ _ _ _ _.
 
-Lemma own_empty `{inG Σ (A:ucmraT)} γ : True =r=> own γ ∅.
+Lemma own_empty `{inG Σ (A:ucmraT)} γ : True ==★ own γ ∅.
 Proof.
   rewrite ownM_empty !own_eq /own_def.
   apply bupd_ownM_update, iprod_singleton_update_empty.

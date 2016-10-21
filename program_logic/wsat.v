@@ -42,7 +42,7 @@ Implicit Types P : iProp Σ.
 
 (* Allocation *)
 Lemma iris_alloc `{irisPreG Λ Σ} σ :
-  True =r=> ∃ _ : irisG Λ Σ, wsat ★ ownE ⊤ ★ ownP_auth σ ★ ownP σ.
+  True ==★ ∃ _ : irisG Λ Σ, wsat ★ ownE ⊤ ★ ownP_auth σ ★ ownP σ.
 Proof.
   iIntros.
   iUpd (own_alloc (● (Excl' σ) ⋅ ◯ (Excl' σ))) as (γσ) "[Hσ Hσ']"; first done.
@@ -65,7 +65,7 @@ Proof.
   rewrite /ownP /ownP_auth own_valid_2 -auth_both_op.
   by iIntros ([[[] [=]%leibniz_equiv] _]%auth_valid_discrete).
 Qed.
-Lemma ownP_update σ1 σ2 : ownP_auth σ1 ★ ownP σ1 =r=> ownP_auth σ2 ★ ownP σ2.
+Lemma ownP_update σ1 σ2 : ownP_auth σ1 ★ ownP σ1 ==★ ownP_auth σ2 ★ ownP σ2.
 Proof.
   rewrite /ownP -!own_op.
   by apply own_update, auth_update, option_local_update, exclusive_local_update.
@@ -80,7 +80,7 @@ Qed.
 Global Instance ownI_persistent i P : PersistentP (ownI i P).
 Proof. rewrite /ownI. apply _. Qed.
 
-Lemma ownE_empty : True =r=> ownE ∅.
+Lemma ownE_empty : True ==★ ownE ∅.
 Proof. by rewrite (own_empty (A:=coPset_disjUR) enabled_name). Qed.
 Lemma ownE_op E1 E2 : E1 ⊥ E2 → ownE (E1 ∪ E2) ⊣⊢ ownE E1 ★ ownE E2.
 Proof. intros. by rewrite /ownE -own_op coPset_disj_union. Qed.
@@ -95,7 +95,7 @@ Qed.
 Lemma ownE_singleton_twice i : ownE {[i]} ★ ownE {[i]} ⊢ False.
 Proof. rewrite ownE_disjoint. iIntros (?); set_solver. Qed.
 
-Lemma ownD_empty : True =r=> ownD ∅.
+Lemma ownD_empty : True ==★ ownD ∅.
 Proof. by rewrite (own_empty (A:=gset_disjUR _) disabled_name). Qed.
 Lemma ownD_op E1 E2 : E1 ⊥ E2 → ownD (E1 ∪ E2) ⊣⊢ ownD E1 ★ ownD E2.
 Proof. intros. by rewrite /ownD -own_op gset_disj_union. Qed.
@@ -151,7 +151,7 @@ Qed.
 
 Lemma ownI_alloc φ P :
   (∀ E : gset positive, ∃ i, i ∉ E ∧ φ i) →
-  wsat ★ ▷ P =r=> ∃ i, ■ (φ i) ★ wsat ★ ownI i P.
+  wsat ★ ▷ P ==★ ∃ i, ■ (φ i) ★ wsat ★ ownI i P.
 Proof.
   iIntros (Hfresh) "[Hw HP]". iDestruct "Hw" as (I) "[? HI]".
   iUpd (own_empty (A:=gset_disjUR positive) disabled_name) as "HE".

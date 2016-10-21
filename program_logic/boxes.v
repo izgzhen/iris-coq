@@ -63,7 +63,7 @@ Qed.
 
 Lemma box_own_auth_update γ b1 b2 b3 :
   box_own_auth γ (● Excl' b1) ★ box_own_auth γ (◯ Excl' b2)
-  =r=> box_own_auth γ (● Excl' b3) ★ box_own_auth γ (◯ Excl' b3).
+  ==★ box_own_auth γ (● Excl' b3) ★ box_own_auth γ (◯ Excl' b3).
 Proof.
   rewrite /box_own_auth -!own_op. apply own_update, prod_update; last done.
   by apply auth_update, option_local_update, exclusive_local_update.
@@ -86,7 +86,7 @@ Proof.
 Qed.
 
 Lemma box_insert f P Q :
-  ▷ box N f P ={N}=> ∃ γ, f !! γ = None ★
+  ▷ box N f P ={N}=★ ∃ γ, f !! γ = None ★
     slice N γ Q ★ ▷ box N (<[γ:=false]> f) (Q ★ P).
 Proof.
   iDestruct 1 as (Φ) "[#HeqP Hf]".
@@ -106,7 +106,7 @@ Qed.
 
 Lemma box_delete f P Q γ :
   f !! γ = Some false →
-  slice N γ Q ★ ▷ box N f P ={N}=> ∃ P',
+  slice N γ Q ★ ▷ box N f P ={N}=★ ∃ P',
     ▷ ▷ (P ≡ (Q ★ P')) ★ ▷ box N (delete γ f) P'.
 Proof.
   iIntros (?) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
@@ -125,7 +125,7 @@ Qed.
 
 Lemma box_fill f γ P Q :
   f !! γ = Some false →
-  slice N γ Q ★ ▷ Q ★ ▷ box N f P ={N}=> ▷ box N (<[γ:=true]> f) P.
+  slice N γ Q ★ ▷ Q ★ ▷ box N f P ={N}=★ ▷ box N (<[γ:=true]> f) P.
 Proof.
   iIntros (?) "(#Hinv & HQ & H)"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iInv N as (b') "(>Hγ & #HγQ & _)" "Hclose".
@@ -143,7 +143,7 @@ Qed.
 
 Lemma box_empty f P Q γ :
   f !! γ = Some true →
-  slice N γ Q ★ ▷ box N f P ={N}=> ▷ Q ★ ▷ box N (<[γ:=false]> f) P.
+  slice N γ Q ★ ▷ box N f P ={N}=★ ▷ Q ★ ▷ box N (<[γ:=false]> f) P.
 Proof.
   iIntros (?) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iInv N as (b) "(>Hγ & #HγQ & HQ)" "Hclose".
@@ -160,7 +160,7 @@ Proof.
     iFrame; eauto.
 Qed.
 
-Lemma box_fill_all f P Q : box N f P ★ ▷ P ={N}=> box N (const true <$> f) P.
+Lemma box_fill_all f P Q : box N f P ★ ▷ P ={N}=★ box N (const true <$> f) P.
 Proof.
   iIntros "[H HP]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists Φ; iSplitR; first by rewrite big_sepM_fmap.
@@ -176,7 +176,7 @@ Qed.
 
 Lemma box_empty_all f P Q :
   map_Forall (λ _, (true =)) f →
-  box N f P ={N}=> ▷ P ★ box N (const false <$> f) P.
+  box N f P ={N}=★ ▷ P ★ box N (const false <$> f) P.
 Proof.
   iDestruct 1 as (Φ) "[#HeqP Hf]".
   iAssert ([★ map] γ↦b ∈ f, ▷ Φ γ ★ box_own_auth γ (◯ Excl' false) ★

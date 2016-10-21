@@ -91,7 +91,7 @@ Section auth.
   Proof. intros a1 a2. apply auth_own_mono. Qed.
 
   Lemma auth_alloc_strong N E t (G : gset gname) :
-    ✓ (f t) → ▷ φ t ={E}=> ∃ γ, ■ (γ ∉ G) ∧ auth_ctx γ N f φ ∧ auth_own γ (f t).
+    ✓ (f t) → ▷ φ t ={E}=★ ∃ γ, ■ (γ ∉ G) ∧ auth_ctx γ N f φ ∧ auth_own γ (f t).
   Proof.
     iIntros (?) "Hφ". rewrite /auth_own /auth_ctx.
     iUpd (own_alloc_strong (Auth (Excl' (f t)) (f t)) G) as (γ) "[% Hγ]"; first done.
@@ -102,17 +102,17 @@ Section auth.
   Qed.
 
   Lemma auth_alloc N E t :
-    ✓ (f t) → ▷ φ t ={E}=> ∃ γ, auth_ctx γ N f φ ∧ auth_own γ (f t).
+    ✓ (f t) → ▷ φ t ={E}=★ ∃ γ, auth_ctx γ N f φ ∧ auth_own γ (f t).
   Proof.
     iIntros (?) "Hφ".
     iUpd (auth_alloc_strong N E t ∅ with "Hφ") as (γ) "[_ ?]"; eauto.
   Qed.
 
-  Lemma auth_empty γ : True =r=> auth_own γ ∅.
+  Lemma auth_empty γ : True ==★ auth_own γ ∅.
   Proof. by rewrite /auth_own -own_empty. Qed.
 
   Lemma auth_acc E γ a :
-    ▷ auth_inv γ f φ ★ auth_own γ a ={E}=> ∃ t,
+    ▷ auth_inv γ f φ ★ auth_own γ a ={E}=★ ∃ t,
       ■ (a ≼ f t) ★ ▷ φ t ★ ∀ u b,
       ■ ((f t, a) ~l~> (f u, b)) ★ ▷ φ u ={E}=★ ▷ auth_inv γ f φ ★ auth_own γ b.
   Proof.
@@ -128,7 +128,7 @@ Section auth.
 
   Lemma auth_open E N γ a :
     nclose N ⊆ E →
-    auth_ctx γ N f φ ★ auth_own γ a ={E,E∖N}=> ∃ t,
+    auth_ctx γ N f φ ★ auth_own γ a ={E,E∖N}=★ ∃ t,
       ■ (a ≼ f t) ★ ▷ φ t ★ ∀ u b,
       ■ ((f t, a) ~l~> (f u, b)) ★ ▷ φ u ={E∖N,E}=★ auth_own γ b.
   Proof.

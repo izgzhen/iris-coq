@@ -44,7 +44,7 @@ Section proofs.
   Lemma cinv_own_1_l γ q : cinv_own γ 1 ★ cinv_own γ q ⊢ False.
   Proof. rewrite cinv_own_valid. by iIntros (?%(exclusive_l 1%Qp)). Qed.
 
-  Lemma cinv_alloc E N P : ▷ P ={E}=> ∃ γ, cinv N γ P ★ cinv_own γ 1.
+  Lemma cinv_alloc E N P : ▷ P ={E}=★ ∃ γ, cinv N γ P ★ cinv_own γ 1.
   Proof.
     rewrite /cinv /cinv_own. iIntros "HP".
     iUpd (own_alloc 1%Qp) as (γ) "H1"; first done.

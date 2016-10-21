@@ -13,13 +13,13 @@ Module savedprop. Section savedprop.
   Context (sprop : Type) (saved : sprop → iProp → iProp).
   Hypothesis sprop_persistent : ∀ i P, PersistentP (saved i P).
   Hypothesis sprop_alloc_dep :
-    ∀ (P : sprop → iProp), True =r=> (∃ i, saved i (P i)).
+    ∀ (P : sprop → iProp), True ==★ (∃ i, saved i (P i)).
   Hypothesis sprop_agree : ∀ i P Q, saved i P ∧ saved i Q ⊢ □ (P ↔ Q).
 
   (** A bad recursive reference: "Assertion with name [i] does not hold" *)
   Definition A (i : sprop) : iProp := ∃ P, ¬ P ★ saved i P.
 
-  Lemma A_alloc : True =r=> ∃ i, saved i (A i).
+  Lemma A_alloc : True ==★ ∃ i, saved i (A i).
   Proof. by apply sprop_alloc_dep. Qed.
 
   Lemma saved_NA i : saved i (A i) ⊢ ¬ A i.

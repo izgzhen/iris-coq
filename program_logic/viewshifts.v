@@ -13,6 +13,13 @@ Notation "P ={ E }=> Q" := (P ={E,E}=> Q)%I
   (at level 99, E at level 50, Q at level 200,
    format "P  ={ E }=>  Q") : uPred_scope.
 
+Notation "P ={ E1 , E2 }=> Q" := (True ⊢ P ={E1,E2}=> Q)%I
+  (at level 99, E1,E2 at level 50, Q at level 200,
+   format "P  ={ E1 , E2 }=>  Q") : C_scope.
+Notation "P ={ E }=> Q" := (True ⊢ P ={E}=> Q)%I
+  (at level 99, E at level 50, Q at level 200,
+   format "P  ={ E }=>  Q") : C_scope.
+
 Notation "P ={ E1 , E2 }▷=> Q" := (P ={E1,E2}=> ▷ |={E2,E1}=> Q)%I
   (at level 99, E1, E2 at level 50, Q at level 200,
    format "P ={ E1 , E2 }▷=>  Q") : uPred_scope.
@@ -39,9 +46,9 @@ Global Instance vs_mono' E1 E2 : Proper (flip (⊢) ==> (⊢) ==> (⊢)) (vs E1 
 Proof. solve_proper. Qed.
 
 Lemma vs_false_elim E1 E2 P : False ={E1,E2}=> P.
-Proof. iIntros "[]". Qed.
+Proof. iIntros "!# []". Qed.
 Lemma vs_timeless E P : TimelessP P → ▷ P ={E}=> P.
-Proof. by iIntros (?) "> ?". Qed.
+Proof. by iIntros (?) "!# > ?". Qed.
 
 Lemma vs_transitive E1 E2 E3 P Q R :
   (P ={E1,E2}=> Q) ∧ (Q ={E2,E3}=> R) ⊢ P ={E1,E3}=> R.
@@ -51,7 +58,7 @@ Proof.
 Qed.
 
 Lemma vs_reflexive E P : P ={E}=> P.
-Proof. by iIntros "HP". Qed.
+Proof. by iIntros "!# HP". Qed.
 
 Lemma vs_impl E P Q : □ (P → Q) ⊢ P ={E}=> Q.
 Proof. iIntros "#HPQ !# HP". by iApply "HPQ". Qed.
@@ -77,5 +84,5 @@ Proof.
 Qed.
 
 Lemma vs_alloc N P : ▷ P ={N}=> inv N P.
-Proof. iIntros "HP". by iApply inv_alloc. Qed.
+Proof. iIntros "!# HP". by iApply inv_alloc. Qed.
 End vs.

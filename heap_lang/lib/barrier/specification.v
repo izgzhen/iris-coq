@@ -23,7 +23,7 @@ Proof.
   - iIntros (P) "#? !# _". iApply (newbarrier_spec _ P); eauto.
   - iIntros (l P) "!# [Hl HP]". by iApply signal_spec; iFrame "Hl HP".
   - iIntros (l P) "!# Hl". iApply wait_spec; iFrame "Hl"; eauto.
-  - intros; by apply recv_split.
+  - iIntros (l P Q) "!#". by iApply recv_split.
   - apply recv_weaken.
 Qed.
 End spec.

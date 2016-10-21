@@ -68,7 +68,7 @@ Global Arguments into_except_last : clear implicits.
 Class IsExceptLast (Q : uPred M) := is_except_last : ◇ Q ⊢ Q.
 Global Arguments is_except_last : clear implicits.
 
-Class FromUpd (P Q : uPred M) := from_upd : (|=r=> Q) ⊢ P.
+Class FromUpd (P Q : uPred M) := from_upd : (|==> Q) ⊢ P.
 Global Arguments from_upd : clear implicits.
 
 Class ElimUpd (P P' : uPred M) (Q Q' : uPred M) :=

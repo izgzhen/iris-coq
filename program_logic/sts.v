@@ -68,12 +68,12 @@ Section sts.
      sts_frag_included. *)
   Lemma sts_ownS_weaken γ S1 S2 T1 T2 :
     T2 ⊆ T1 → S1 ⊆ S2 → sts.closed S2 T2 →
-    sts_ownS γ S1 T1 =r=> sts_ownS γ S2 T2.
+    sts_ownS γ S1 T1 ==★ sts_ownS γ S2 T2.
   Proof. intros ???. by apply own_update, sts_update_frag. Qed.
 
   Lemma sts_own_weaken γ s S T1 T2 :
     T2 ⊆ T1 → s ∈ S → sts.closed S T2 →
-    sts_own γ s T1 =r=> sts_ownS γ S T2.
+    sts_own γ s T1 ==★ sts_ownS γ S T2.
   Proof. intros ???. by apply own_update, sts_update_frag_up. Qed.
 
   Lemma sts_ownS_op γ S1 S2 T1 T2 :
@@ -82,7 +82,7 @@ Section sts.
   Proof. intros. by rewrite /sts_ownS -own_op sts_op_frag. Qed.
 
   Lemma sts_alloc E N s :
-    ▷ φ s ={E}=> ∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s).
+    ▷ φ s ={E}=★ ∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s).
   Proof.
     iIntros "Hφ". rewrite /sts_ctx /sts_own.
     iUpd (own_alloc (sts_auth s (⊤ ∖ sts.tok s))) as (γ) "Hγ".
@@ -93,7 +93,7 @@ Section sts.
   Qed.
 
   Lemma sts_accS E γ S T :
-    ▷ sts_inv γ φ ★ sts_ownS γ S T ={E}=> ∃ s,
+    ▷ sts_inv γ φ ★ sts_ownS γ S T ={E}=★ ∃ s,
       ■ (s ∈ S) ★ ▷ φ s ★ ∀ s' T',
       ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ={E}=★ ▷ sts_inv γ φ ★ sts_own γ s' T'.
   Proof.
@@ -111,14 +111,14 @@ Section sts.
   Qed.
 
   Lemma sts_acc E γ s0 T :
-    ▷ sts_inv γ φ ★ sts_own γ s0 T ={E}=> ∃ s,
+    ▷ sts_inv γ φ ★ sts_own γ s0 T ={E}=★ ∃ s,
       ■ sts.frame_steps T s0 s ★ ▷ φ s ★ ∀ s' T',
       ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ={E}=★ ▷ sts_inv γ φ ★ sts_own γ s' T'.
   Proof. by apply sts_accS. Qed.
     
   Lemma sts_openS E N γ S T :
     nclose N ⊆ E →
-    sts_ctx γ N φ ★ sts_ownS γ S T ={E,E∖N}=> ∃ s,
+    sts_ctx γ N φ ★ sts_ownS γ S T ={E,E∖N}=★ ∃ s,
       ■ (s ∈ S) ★ ▷ φ s ★ ∀ s' T',
       ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ={E∖N,E}=★ sts_own γ s' T'.
   Proof.
@@ -136,7 +136,7 @@ Section sts.
 
   Lemma sts_open E N γ s0 T :
     nclose N ⊆ E →
-    sts_ctx γ N φ ★ sts_own γ s0 T ={E,E∖N}=> ∃ s,
+    sts_ctx γ N φ ★ sts_own γ s0 T ={E,E∖N}=★ ∃ s,
       ■ (sts.frame_steps T s0 s) ★ ▷ φ s ★ ∀ s' T',
       ■ (sts.steps (s, T) (s', T')) ★ ▷ φ s' ={E∖N,E}=★ sts_own γ s' T'.
   Proof. by apply sts_openS. Qed.

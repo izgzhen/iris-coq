@@ -37,7 +37,7 @@ Section proofs.
   Global Instance tl_inv_persistent tid N P : PersistentP (tl_inv tid N P).
   Proof. rewrite /tl_inv; apply _. Qed.
 
-  Lemma tl_alloc : True =r=> ∃ tid, tl_own tid ⊤.
+  Lemma tl_alloc : True ==★ ∃ tid, tl_own tid ⊤.
   Proof. by apply own_alloc. Qed.
 
   Lemma tl_own_disjoint tid E1 E2 : tl_own tid E1 ★ tl_own tid E2 ⊢ ■ (E1 ⊥ E2).
@@ -51,7 +51,7 @@ Section proofs.
     intros ?. by rewrite /tl_own -own_op pair_op left_id coPset_disj_union.
   Qed.
 
-  Lemma tl_inv_alloc tid E N P : ▷ P ={E}=> tl_inv tid N P.
+  Lemma tl_inv_alloc tid E N P : ▷ P ={E}=★ tl_inv tid N P.
   Proof.
     iIntros "HP".
     iUpd (own_empty (A:=prodUR coPset_disjUR (gset_disjUR positive)) tid) as "Hempty".

@@ -1223,7 +1223,7 @@ Hint Extern 1 (of_envs _ ⊢ _) =>
   | |- _ ⊢ ▷ _ => iNext
   | |- _ ⊢ □ _ => iClear "*"; iAlways
   | |- _ ⊢ ∃ _, _ => iExists _
-  | |- _ ⊢ |=r=> _ => iUpdIntro
+  | |- _ ⊢ |==> _ => iUpdIntro
   end.
 Hint Extern 1 (of_envs _ ⊢ _) =>
   match goal with |- _ ⊢ (_ ∨ _)%I => iLeft end.

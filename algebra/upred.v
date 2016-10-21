@@ -310,12 +310,12 @@ Notation "▷ P" := (uPred_later P)
   (at level 20, right associativity) : uPred_scope.
 Infix "≡" := uPred_eq : uPred_scope.
 Notation "✓ x" := (uPred_cmra_valid x) (at level 20) : uPred_scope.
-Notation "|=r=> Q" := (uPred_bupd Q)
-  (at level 99, Q at level 200, format "|=r=>  Q") : uPred_scope.
-Notation "P =r=> Q" := (P ⊢ |=r=> Q)
+Notation "|==> Q" := (uPred_bupd Q)
+  (at level 99, Q at level 200, format "|==>  Q") : uPred_scope.
+Notation "P ==★ Q" := (P ⊢ |==> Q)
   (at level 99, Q at level 200, only parsing) : C_scope.
-Notation "P =r=★ Q" := (P -★ |=r=> Q)%I
-  (at level 99, Q at level 200, format "P  =r=★  Q") : uPred_scope.
+Notation "P ==★ Q" := (P -★ |==> Q)%I
+  (at level 99, Q at level 200, format "P  ==★  Q") : uPred_scope.
 
 Definition uPred_iff {M} (P Q : uPred M) : uPred M := ((P → Q) ∧ (Q → P))%I.
 Instance: Params (@uPred_iff) 1.
@@ -1283,20 +1283,20 @@ Lemma always_cmra_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
 Qed.
 
 (* Basic update modality *)
-Lemma bupd_intro P : P =r=> P.
+Lemma bupd_intro P : P ==★ P.
 Proof.
   unseal. split=> n x ? HP k yf ?; exists x; split; first done.
   apply uPred_closed with n; eauto using cmra_validN_op_l.
 Qed.
-Lemma bupd_mono P Q : (P ⊢ Q) → (|=r=> P) =r=> Q.
+Lemma bupd_mono P Q : (P ⊢ Q) → (|==> P) ==★ Q.
 Proof.
   unseal. intros HPQ; split=> n x ? HP k yf ??.
   destruct (HP k yf) as (x'&?&?); eauto.
   exists x'; split; eauto using uPred_in_entails, cmra_validN_op_l.
 Qed.
-Lemma bupd_trans P : (|=r=> |=r=> P) =r=> P.
+Lemma bupd_trans P : (|==> |==> P) ==★ P.
 Proof. unseal; split; naive_solver. Qed.
-Lemma bupd_frame_r P R : (|=r=> P) ★ R =r=> P ★ R.
+Lemma bupd_frame_r P R : (|==> P) ★ R ==★ P ★ R.
 Proof.
   unseal; split; intros n x ? (x1&x2&Hx&HP&?) k yf ??.
   destruct (HP k (x2 ⋅ yf)) as (x'&?&?); eauto.
@@ -1306,7 +1306,7 @@ Proof.
   apply uPred_closed with n; eauto 3 using cmra_validN_op_l, cmra_validN_op_r.
 Qed.
 Lemma bupd_ownM_updateP x (Φ : M → Prop) :
-  x ~~>: Φ → uPred_ownM x =r=> ∃ y, ■ Φ y ∧ uPred_ownM y.
+  x ~~>: Φ → uPred_ownM x ==★ ∃ y, ■ Φ y ∧ uPred_ownM y.
 Proof.
   unseal=> Hup; split=> n x2 ? [x3 Hx] k yf ??.
   destruct (Hup k (Some (x3 ⋅ yf))) as (y&?&?); simpl in *.
@@ -1320,20 +1320,20 @@ Global Instance bupd_mono' : Proper ((⊢) ==> (⊢)) (@uPred_bupd M).
 Proof. intros P Q; apply bupd_mono. Qed.
 Global Instance bupd_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) (@uPred_bupd M).
 Proof. intros P Q; apply bupd_mono. Qed.
-Lemma bupd_frame_l R Q : (R ★ |=r=> Q) =r=> R ★ Q.
+Lemma bupd_frame_l R Q : (R ★ |==> Q) ==★ R ★ Q.
 Proof. rewrite !(comm _ R); apply bupd_frame_r. Qed.
-Lemma bupd_wand_l P Q : (P -★ Q) ★ (|=r=> P) =r=> Q.
+Lemma bupd_wand_l P Q : (P -★ Q) ★ (|==> P) ==★ Q.
 Proof. by rewrite bupd_frame_l wand_elim_l. Qed.
-Lemma bupd_wand_r P Q : (|=r=> P) ★ (P -★ Q) =r=> Q.
+Lemma bupd_wand_r P Q : (|==> P) ★ (P -★ Q) ==★ Q.
 Proof. by rewrite bupd_frame_r wand_elim_r. Qed.
-Lemma bupd_sep P Q : (|=r=> P) ★ (|=r=> Q) =r=> P ★ Q.
+Lemma bupd_sep P Q : (|==> P) ★ (|==> Q) ==★ P ★ Q.
 Proof. by rewrite bupd_frame_r bupd_frame_l bupd_trans. Qed.
-Lemma bupd_ownM_update x y : x ~~> y → uPred_ownM x ⊢ |=r=> uPred_ownM y.
+Lemma bupd_ownM_update x y : x ~~> y → uPred_ownM x ⊢ |==> uPred_ownM y.
 Proof.
   intros; rewrite (bupd_ownM_updateP _ (y =)); last by apply cmra_update_updateP.
   by apply bupd_mono, exist_elim=> y'; apply pure_elim_l=> ->.
 Qed.
-Lemma except_last_bupd P : ◇ (|=r=> P) ⊢ (|=r=> ◇ P).
+Lemma except_last_bupd P : ◇ (|==> P) ⊢ (|==> ◇ P).
 Proof.
   rewrite /uPred_except_last. apply or_elim; auto using bupd_mono.
   by rewrite -bupd_intro -or_intro_l.
@@ -1490,9 +1490,9 @@ Lemma always_entails_r P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ P ★ Q.
 Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
 
 (** Consistency and adequancy statements *)
-Lemma adequacy φ n : (True ⊢ Nat.iter n (λ P, |=r=> ▷ P) (■ φ)) → φ.
+Lemma adequacy φ n : (True ⊢ Nat.iter n (λ P, |==> ▷ P) (■ φ)) → φ.
 Proof.
-  cut (∀ x, ✓{n} x → Nat.iter n (λ P, |=r=> ▷ P)%I (■ φ)%I n x → φ).
+  cut (∀ x, ✓{n} x → Nat.iter n (λ P, |==> ▷ P)%I (■ φ)%I n x → φ).
   { intros help H. eapply (help ∅); eauto using ucmra_unit_validN.
     eapply H; try unseal; eauto using ucmra_unit_validN. }
   unseal. induction n as [|n IH]=> x Hx Hupd; auto.
@@ -1500,7 +1500,7 @@ Proof.
   eapply IH with x'; eauto using cmra_validN_S, cmra_validN_op_l.
 Qed.
 
-Corollary consistency_modal n : ¬ (True ⊢ Nat.iter n (λ P, |=r=> ▷ P) False).
+Corollary consistency_modal n : ¬ (True ⊢ Nat.iter n (λ P, |==> ▷ P) False).
 Proof. exact (adequacy False n). Qed.
 
 Corollary consistency : ¬ (True ⊢ False).

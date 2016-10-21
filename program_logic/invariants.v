@@ -29,7 +29,7 @@ Qed.
 Global Instance inv_persistent N P : PersistentP (inv N P).
 Proof. rewrite inv_eq /inv; apply _. Qed.
 
-Lemma inv_alloc N E P : ▷ P ={E}=> inv N P.
+Lemma inv_alloc N E P : ▷ P ={E}=★ inv N P.
 Proof.
   rewrite inv_eq /inv_def fupd_eq /fupd_def. iIntros "HP [Hw $]".
   iUpd (ownI_alloc (∈ nclose N) P with "[HP Hw]") as (i) "(% & $ & ?)"; auto.
@@ -43,7 +43,7 @@ Proof.
 Qed.
 
 Lemma inv_open E N P :
-  nclose N ⊆ E → inv N P ={E,E∖N}=> ▷ P ★ (▷ P ={E∖N,E}=★ True).
+  nclose N ⊆ E → inv N P ={E,E∖N}=★ ▷ P ★ (▷ P ={E∖N,E}=★ True).
 Proof.
   rewrite inv_eq /inv_def fupd_eq /fupd_def; iDestruct 1 as (i) "[Hi #HiP]".
   iDestruct "Hi" as % ?%elem_of_subseteq_singleton.
@@ -55,7 +55,7 @@ Proof.
 Qed.
 
 Lemma inv_open_timeless E N P `{!TimelessP P} :
-  nclose N ⊆ E → inv N P ={E,E∖N}=> P ★ (P ={E∖N,E}=★ True).
+  nclose N ⊆ E → inv N P ={E,E∖N}=★ P ★ (P ={E∖N,E}=★ True).
 Proof.
   iIntros (?) "Hinv". iUpd (inv_open with "Hinv") as "[>HP Hclose]"; auto.
   iIntros "!==> {$HP} HP". iApply "Hclose"; auto.

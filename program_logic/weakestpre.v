@@ -82,7 +82,7 @@ Proof.
   iIntros "HΦ". rewrite wp_unfold /wp_pre.
   iLeft; iExists v; rewrite to_of_val; auto.
 Qed.
-Lemma wp_value_inv E Φ v : WP of_val v @ E {{ Φ }} ={E}=> Φ v.
+Lemma wp_value_inv E Φ v : WP of_val v @ E {{ Φ }} ={E}=★ Φ v.
 Proof.
   rewrite wp_unfold /wp_pre to_of_val. iIntros "[H|[% _]]"; [|done].
   by iDestruct "H" as (v') "[% ?]"; simplify_eq.
@@ -226,7 +226,7 @@ Section proofmode_classes.
   Proof. by rewrite /IsExceptLast -{2}fupd_wp -except_last_fupd -fupd_intro. Qed.
 
   Global Instance elim_upd_bupd_wp E e P Φ :
-    ElimUpd (|=r=> P) P (WP e @ E {{ Φ }}) (WP e @ E {{ Φ }}).
+    ElimUpd (|==> P) P (WP e @ E {{ Φ }}) (WP e @ E {{ Φ }}).
   Proof. by rewrite /ElimUpd (bupd_fupd E) fupd_frame_r wand_elim_r fupd_wp. Qed.
 
   Global Instance elim_upd_fupd_wp E e P Φ :
