@@ -92,8 +92,8 @@ View updates satisfy the following basic proof rules:
 
 We further define the notions of \emph{view shifts} and \emph{linear view shifts}:
 \begin{align*}
-  \prop \vs[\mask_1][\mask_2] \propB \eqdef{}& \always(\prop \Ra \pvs[\mask_1][\mask_2] \propB) \\
-  \prop \vsW[\mask_1][\mask_2] \propB \eqdef{}& \prop \wand \pvs[\mask_1][\mask_2] \propB
+  \prop \vsW[\mask_1][\mask_2] \propB \eqdef{}& \prop \wand \pvs[\mask_1][\mask_2] \propB \\
+  \prop \vs[\mask_1][\mask_2] \propB \eqdef{}& \always(\prop \wand \pvs[\mask_1][\mask_2] \propB)
 \end{align*}
 These two are useful when writing down specifications, but for reasoning, it is typically easier to just work directly with view updates.
 Still, just to give an idea of what view shifts ``are'', here are some proof rules for them:
@@ -208,14 +208,13 @@ We will also want rules that connect weakest preconditions to the operational se
 In order to cover the most general case, those rules end up being more complicated:
 \begin{mathpar}
   \infer[wp-lift-step]
-  {\toval(\expr_1) = \bot}
+  {}
   { {\begin{inbox} % for some crazy reason, LaTeX is actually sensitive to the space between the "{ {" here and the "} }" below...
         ~~\pvs[\mask][\emptyset] \Exists \state_1. \red(\expr_1,\state_1) * \later\ownPhys{\state_1} * {}\\\qquad~~ \later\All \expr_2, \state_2, \vec\expr. \Bigl( (\expr_1, \state_1 \step \expr_2, \state_2, \vec\expr) * \ownPhys{\state_2} \Bigr) \wand \pvs[\emptyset][\mask] \Bigl(\wpre{\expr_2}[\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE}\Bigr)  {}\\\proves \wpre{\expr_1}[\mask]{\Ret\var.\prop}
       \end{inbox}} }
 \\\\
   \infer[wp-lift-pure-step]
-  {\toval(\expr_1) = \bot \and
-   \All \state_1. \red(\expr_1, \state_1) \and
+  {\All \state_1. \red(\expr_1, \state_1) \and
    \All \state_1, \expr_2, \state_2, \vec\expr. \expr_1,\state_1 \step \expr_2,\state_2,\vec\expr \Ra \state_1 = \state_2 }
   {\later\All \state, \expr_2, \vec\expr. (\expr_1,\state \step \expr_2, \state,\vec\expr)  \Ra \wpre{\expr_2}[\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \proves \wpre{\expr_1}[\mask]{\Ret\var.\prop}}
 \end{mathpar}
@@ -236,8 +235,7 @@ We can derive some specialized forms of the lifting axioms for the operational s
   {\later\ownPhys{\state_1} * \later \Bigl(\ownPhys{\state_2} \wand \prop[\val_2/\var] * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \Bigr) \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
 
   \infer[wp-lift-pure-det-step]
-  {\toval(\expr_1) = \bot \and
-   \All \state_1. \red(\expr_1, \state_1) \\
+  {\All \state_1. \red(\expr_1, \state_1) \\
    \All \state_1, \expr_2', \state'_2, \vec\expr'. \expr_1,\state_1 \step \expr'_2,\state'_2,\vec\expr' \Ra \state_1 = \state'_2 \land \expr_2 = \expr_2' \land \vec\expr = \vec\expr'}
   {\later \Bigl( \wpre{\expr_2}[\mask_1]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE} \Bigr) \proves \wpre{\expr_1}[\mask_1]{\Ret\var.\prop}}
 \end{mathparpagebreakable}
@@ -281,7 +279,7 @@ Notice that this is stronger than saying that the thread pool can reduce; we act
 It turns out that weakest precondition is actually quite convenient to work with, in particular when perfoming these proofs in Coq.
 Still, for a more traditional presentation, we can easily derive the notion of a Hoare triple:
 \[
-\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \Ra \wpre{\expr}[\mask]{\Ret\val.\propB})}
+\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \wand \wpre{\expr}[\mask]{\Ret\val.\propB})}
 \]
 
 We only give some of the proof rules for Hoare triples here, since we usually do all our reasoning directly with weakest preconditions and use Hoare triples only to write specifications.
