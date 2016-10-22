@@ -31,7 +31,7 @@ Typeclasses Opaque own.
 
 (** * Properties about ghost ownership *)
 Section global.
-Context `{i : inG Σ A}.
+Context `{inG Σ A}.
 Implicit Types a : A.
 
 (** ** Properties of [iRes_singleton] *)
@@ -63,7 +63,7 @@ Proof. intros a1 a2. apply own_mono. Qed.
 Lemma own_valid γ a : own γ a ⊢ ✓ a.
 Proof.
   rewrite !own_eq /own_def ownM_valid /iRes_singleton.
-  rewrite iprod_validI (forall_elim (inG_id i)) iprod_lookup_singleton.
+  rewrite iprod_validI (forall_elim (inG_id _)) iprod_lookup_singleton.
   rewrite gmap_validI (forall_elim γ) lookup_singleton option_validI.
   (* implicit arguments differ a bit *)
   by trans (✓ cmra_transport inG_prf a : iProp Σ)%I; last destruct inG_prf.
@@ -92,7 +92,7 @@ Proof.
   intros Ha.
   rewrite -(bupd_mono (∃ m, ■ (∃ γ, γ ∉ G ∧ m = iRes_singleton γ a) ∧ uPred_ownM m)%I).
   - rewrite ownM_empty.
-    eapply bupd_ownM_updateP, (iprod_singleton_updateP_empty (inG_id i));
+    eapply bupd_ownM_updateP, (iprod_singleton_updateP_empty (inG_id _));
       first (eapply alloc_updateP_strong', cmra_transport_valid, Ha);
       naive_solver.
   - apply exist_elim=>m; apply pure_elim_l=>-[γ [Hfresh ->]].
