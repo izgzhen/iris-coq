@@ -2,8 +2,105 @@
 \section{Program Logic}
 \label{sec:program-logic}
 
-This section describes how to build a program logic for an arbitrary language (\cf \Sref{sec:language}) on top of the logic described in \Sref{sec:dc-logic}.
+This section describes how to build a program logic for an arbitrary language (\cf \Sref{sec:language}) on top of the base logic.
 So in the following, we assume that some language $\Lang$ was fixed.
+
+\subsection{Dynamic Composeable Resources}
+\label{sec:composeable-resources}
+
+The base logic described in \Sref{sec:base-logic} works over an arbitrary CMRA $\monoid$ defining the structure of the resources.
+It turns out that we can generalize this further and permit picking CMRAs ``$\iFunc(\Prop)$'' that depend on the structure of assertions themselves.
+Of course, $\Prop$ is just the syntactic type of assertions; for this to make sense we have to look at the semantics.
+
+Furthermore, there is a composeability problem with the given logic: if we have one proof performed with CMRA $\monoid_1$, and another proof carried out with a \emph{different} CMRA $\monoid_2$, then the two proofs are actually carried out in two \emph{entirely separate logics} and hence cannot be combined.
+
+Finally, in many cases just having a single ``instance'' of a CMRA available for reasoning is not enough.
+For example, when reasoning about a dynamically allocated data structure, every time a new instance of that data structure is created, we will want a fresh resource governing the state of this particular instance.
+While it would be possible to handle this problem whenever it comes up, it turns out to be useful to provide a general solution.
+
+The purpose of this section is to describe how we solve these issues.
+
+\paragraph{Picking the resources.}
+The key ingredient that we will employ on top of the base logic is to give some more fixed structure to the resources.
+To instantiate the program logic, the user picks a family of locally contractive bifunctors $(\iFunc_i : \COFEs \to \CMRAs)_{i \in \mathcal{I}}$.
+(This is in contrast to the base logic, where the user picks a single, fixed CMRA that has a unit.)
+
+From this, we construct the bifunctor defining the overall resources as follows:
+\begin{align*}
+  \textdom{ResF}(\cofe^\op, \cofe) \eqdef{}& \prod_{i \in \mathcal I} \nat \fpfn \iFunc_i(\cofe^\op, \cofe)
+\end{align*}
+We will motivate both the use of a product and the finite partial function below.
+$\textdom{ResF}(\cofe^\op, \cofe)$ is a CMRA by lifting the individual CMRAs pointwise, and it has a unit (using the empty finite partial functions).
+Furthermore, since the $\iFunc_i$ are locally contractive, so is $\textdom{ResF}$.
+
+Now we can write down the recursive domain equation:
+\[ \iPreProp \cong \UPred(\textdom{ResF}(\iPreProp, \iPreProp)) \]
+$\iPreProp$ is a COFE defined as the fixed-point of a locally contractive bifunctor.
+This fixed-point exists and is unique\footnote{We have not proven uniqueness in Coq.} by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}.
+We do not need to consider how the object is constructed. 
+We only need the isomorphism, given by
+\begin{align*}
+  \Res &\eqdef \textdom{ResF}(\iPreProp, \iPreProp) \\
+  \iProp &\eqdef \UPred(\Res) \\
+	\wIso &: \iProp \nfn \iPreProp \\
+	\wIso^{-1} &: \iPreProp \nfn \iProp
+\end{align*}
+
+Notice that $\iProp$ is the semantic model of assertions for the base logic described in \Sref{sec:base-logic} with $\Res$:
+\[ \Sem{\Prop} \eqdef \iProp = \UPred(\Res) \]
+Effectively, we just defined a way to instantiate the base logic with $\Res$ as the CMRA of resources, while providing a way for $\Res$ to depend on $\iPreProp$, which is isomorphic to $\Sem\Prop$.
+
+We thus obtain all the rules of \Sref{sec:base-logic}, and furthermore, we can use the maps $\wIso$ and $\wIso^{-1}$ \emph{in the logic} to convert between logical assertions $\Sem\Prop$ and the domain $\iPreProp$ which is used in the construction of $\Res$ -- so from elements of $\iPreProp$, we can construct elements of $\Sem{\textlog M}$, which are the elements that can be owned in our logic.
+
+\paragraph{Proof composeability.}
+To make our proofs composeable, we \emph{generalize} our proofs over the family of functors.
+This is possible because we made $\Res$ a \emph{product} of all the CMRAs picked by the user, and because we can actually work with that product ``pointwise''.
+So instead of picking a \emph{concrete} family, proofs will assume to be given an \emph{arbitrary} family of functors, plus a proof that this family \emph{contains the functors they need}.
+Composing two proofs is then merely a matter of conjoining the assumptions they make about the functors.
+Since the logic is entirely parametric in the choice of functors, there is no trouble reasoning without full knowledge of the family of functors.
+
+Only when the top-level proof is completed we will ``close'' the proof by picking a concrete family that contains exactly those functors the proof needs.
+
+\paragraph{Dynamic resources.}
+Finally, the use of finite partial functions lets us have as many instances of any CMRA as we could wish for:
+Because there can only ever be finitely many instances already allocated, it is always possible to create a fresh instance with any desired (valid) starting state.
+This is best demonstrated by giving some proof rules.
+
+So let us first define the notion of ghost ownership that we use in this logic.
+Assuming that the family of functors contains the functor $\Sigma_i$ at index $i$, and furthermore assuming that $\monoid_i = \Sigma_i(\iPreProp, \iPreProp)$, given some $\melt \in \monoid_i$ we define:
+\[ \ownGhost\gname{\melt:\monoid_i} \eqdef \ownM{(\ldots, \emptyset, i:\mapsingleton \gname \melt, \emptyset, \ldots)} \]
+This is ownership of the pair (element of the product over all the functors) that has the empty finite partial function in all components \emph{except for} the component corresponding to index $i$, where we own the element $\melt$ at index $\gname$ in the finite partial function.
+
+We can show the following properties for this form of ownership:
+\begin{mathparpagebreakable}
+  \inferH{res-alloc}{\text{$G$ infinite} \and \melt \in \mval_{M_i}}
+  {  \TRUE \proves \upd \Exists\gname\in G. \ownGhost\gname{\melt : M_i}
+  }
+  \and
+  \inferH{res-update}
+    {\melt \mupd_{M_i} B}
+    {\ownGhost\gname{\melt : M_i} \proves \upd \Exists \meltB\in B. \ownGhost\gname{\meltB : M_i}}
+
+  \inferH{res-empty}
+  {\text{$\munit$ is a unit of $M_i$}}
+  {\TRUE \proves \upd \ownGhost\gname\munit}
+  
+  \axiomH{res-op}
+    {\ownGhost\gname{\melt : M_i} * \ownGhost\gname{\meltB : M_i} \provesIff \ownGhost\gname{\melt\mtimes\meltB : M_i}}
+
+  \axiomH{res-valid}
+    {\ownGhost\gname{\melt : M_i} \Ra \mval_{M_i}(\melt)}
+
+  \inferH{res-timeless}
+    {\text{$\melt$ is a discrete COFE element}}
+    {\timeless{\ownGhost\gname{\melt : M_i}}}
+\end{mathparpagebreakable}
+
+Below, we will always work within (an instance of) the logic as described here.
+Whenever a CMRA is used in a proof, we implicitly assume it to be available in the global family of functors.
+We will typically leave the $M_i$ implicit when asserting ghost ownership, as the type of $\melt$ will be clear from the context.
+
+
 
 \subsection{World Satisfaction, Invariants, Fancy Updates}
 \label{sec:invariants}
@@ -172,7 +269,7 @@ The fragment will then be available to the user of the logic, as their way of ta
 \[ \ownPhys\state \eqdef \ownGhost{\gname_{\textmon{State}}}{\authfrag \state} \]
 
 \paragraph{Laws of weakest precondition.}
-The following rules can all be derived inside the DC logic:
+The following rules can all be derived:
 \begin{mathpar}
 \infer[wp-value]
 {}{\prop[\val/\var] \proves \wpre{\val}[\mask]{\Ret\var.\prop}}
