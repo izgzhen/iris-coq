@@ -98,8 +98,19 @@ Separating logic specific tactics
 - `iCombine "H1" "H2" as "H"` : turns `H1 : P1` and `H2 : P2` into
   `H : P1 ★ P2`.
 
+Modalities
+----------
+
+- `iModIntro` : introduction of a modality that is an instance of the
+  `IntoModal` type class. Instances include: later, except 0, basic update and
+  fancy update.
+- `iMod pm_trm as (x1 ... xn) "ipat"` : eliminate a modality `pm_trm` that is
+  an instance of the `ElimModal` type class. Instances include: later, except 0,
+  basic update and fancy update.
+
 The later modality
 ------------------
+
 - `iNext` : introduce a later by stripping laters from all hypotheses.
 - `iLöb as "IH" forall (x1 ... xn)` : perform Löb induction by generating a
   hypothesis `IH : ▷ goal`. The tactic generalizes over the Coq level variables
@@ -108,6 +119,7 @@ The later modality
 
 Induction
 ---------
+
 - `iInduction x as cpat "IH" forall (x1 ... xn) "selpat"` : perform induction on
   the Coq term `x`. The Coq introduction pattern is used to name the introduced
   variables. The induction hypotheses are inserted into the persistent context
@@ -124,13 +136,8 @@ Rewriting
 Iris
 ----
 
-- `iUpdIntro` : introduction of an update modality.
-- `iUpd pm_trm as (x1 ... xn) "ipat"` : run an update modality `pm_trm` (if the
-  goal permits, i.e. it can be expanded to an update modality.
-- `iInv N as (x1 ... xn) "ipat"` : open the invariant `N`.
-- `iTimeless "H"` : strip a later of a timeless hypothesis `H` (if the goal
-  permits, i.e. it is a later, True now, update modality, or a weakest
-  precondition).
+- `iInv N as (x1 ... xn) "ipat" "Hclose"` : open the invariant `N`, the update
+  for closing the invariant is put in a hypothesis named `Hclose`.
 
 Miscellaneous
 -------------
@@ -170,8 +177,7 @@ _introduction patterns_:
 - `[]` : false elimination.
 - `%` : move the hypothesis to the pure Coq context (anonymously).
 - `# ipat` : move the hypothesis to the persistent context.
-- `> ipat` : remove a later of a timeless hypothesis (if the goal permits).
-- `==> ipat` : run an update modality (if the goal permits).
+- `> ipat` : eliminate a modality (if the goal permits).
 
 Apart from this, there are the following introduction patterns that can only
 appear at the top level:
@@ -181,8 +187,7 @@ appear at the top level:
   previous pattern, e.g., `{$H1 H2 $H3}`).
 - `!%` : introduce a pure goal (and leave the proof mode).
 - `!#` : introduce an always modality (given that the spatial context is empty).
-- `!>` : introduce a later (which strips laters from all hypotheses).
-- `!==>` : introduce an update modality
+- `!>` : introduce a modality.
 - `/=` : perform `simpl`.
 - `*` : introduce all universal quantifiers.
 - `**` : introduce all universal quantifiers, as well as all arrows and wands.
@@ -222,9 +227,9 @@ _specification patterns_ to express splitting of hypotheses:
   framed in the generated goal.
 - `[-H1 ... Hn]`  : negated form of the above pattern. This pattern does not
   accept hypotheses prefixed with a `$`.
-- `==>[H1 ... Hn]` : same as the above pattern, but can only be used if the goal
-  is an update modality, in which case the update modality will be kept in the
-  goal of the premise too.
+- `>[H1 ... Hn]` : same as the above pattern, but can only be used if the goal
+  is a modality, in which case the modality will be kept in the generated goal
+  for the premise will be wrapped into the modality.
 - `[#]` : This pattern can be used when eliminating `P -★ Q` with `P`
   persistent. Using this pattern, all hypotheses are available in the goal for
   `P`, as well the remaining goal.

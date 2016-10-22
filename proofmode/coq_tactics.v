@@ -445,17 +445,6 @@ Proof.
   by rewrite right_id always_and_sep_l' wand_elim_r HQ.
 Qed.
 
-Lemma tac_timeless Δ Δ' i p P P' Q :
-  IsExcept0 Q →
-  envs_lookup i Δ = Some (p, P) → IntoExcept0 P P' →
-  envs_simple_replace i p (Esnoc Enil i P') Δ = Some Δ' →
-  (Δ' ⊢ Q) → Δ ⊢ Q.
-Proof.
-  intros ???? HQ. rewrite envs_simple_replace_sound //; simpl.
-  rewrite right_id HQ -{2}(is_except_0 Q).
-  by rewrite (into_except_0 P) -except_0_always_if except_0_frame_r wand_elim_r.
-Qed.
-
 (** * Always *)
 Lemma tac_always_intro Δ Q : env_spatial_is_nil Δ = true → (Δ ⊢ Q) → Δ ⊢ □ Q.
 Proof. intros. by apply (always_intro _ _). Qed.
@@ -533,7 +522,7 @@ Qed.
 
 Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q lr js R P1 P2 P1' Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
-  IntoWand R P1 P2 → ElimUpd P1' P1 Q Q →
+  IntoWand R P1 P2 → ElimModal P1' P1 Q Q →
   ('(Δ1,Δ2) ← envs_split lr js Δ';
     Δ2' ← envs_app false (Esnoc Enil j P2) Δ2;
     Some (Δ1,Δ2')) = Some (Δ1,Δ2') → (* does not preserve position of [j] *)
@@ -545,7 +534,7 @@ Proof.
   rewrite envs_lookup_sound // envs_split_sound //.
   rewrite (envs_app_sound Δ2) //; simpl.
   rewrite right_id (into_wand R) HP1 assoc -(comm _ P1') -assoc.
-  rewrite -(elim_upd P1' P1 Q Q). apply sep_mono_r, wand_intro_l.
+  rewrite -(elim_modal P1' P1 Q Q). apply sep_mono_r, wand_intro_l.
   by rewrite always_if_elim assoc !wand_elim_r.
 Qed.
 
@@ -607,7 +596,7 @@ Proof.
 Qed.
 
 Lemma tac_assert Δ Δ1 Δ2 Δ2' lr js j P P' Q :
-  ElimUpd P' P Q Q →
+  ElimModal P' P Q Q →
   envs_split lr js Δ = Some (Δ1,Δ2) →
   envs_app false (Esnoc Enil j P) Δ2 = Some Δ2' →
   (Δ1 ⊢ P') → (Δ2' ⊢ Q) → Δ ⊢ Q.
@@ -828,17 +817,17 @@ Proof.
   rewrite envs_simple_replace_sound' //; simpl. by rewrite right_id wand_elim_r.
 Qed.
 
-(** * Update modality *)
-Lemma tac_upd_intro Δ P Q : FromUpd P Q → (Δ ⊢ Q) → Δ ⊢ P.
-Proof. rewrite /FromUpd. intros <- ->. apply bupd_intro. Qed.
+(** * Modalities *)
+Lemma tac_modal_intro Δ P Q : IntoModal Q P → (Δ ⊢ Q) → Δ ⊢ P.
+Proof. rewrite /IntoModal. by intros <- ->. Qed.
 
-Lemma tac_upd_elim Δ Δ' i p P' P Q Q' :
+Lemma tac_modal_elim Δ Δ' i p P' P Q Q' :
   envs_lookup i Δ = Some (p, P) →
-  ElimUpd P P' Q Q' →
+  ElimModal P P' Q Q' →
   envs_replace i p false (Esnoc Enil i P') Δ = Some Δ' →
   (Δ' ⊢ Q') → Δ ⊢ Q.
 Proof.
   intros ??? HΔ. rewrite envs_replace_sound //; simpl.
-  rewrite right_id HΔ always_if_elim. by apply elim_upd.
+  rewrite right_id HΔ always_if_elim. by apply elim_modal.
 Qed.
 End tactics.

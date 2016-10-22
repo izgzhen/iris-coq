@@ -47,8 +47,8 @@ Section proofs.
   Lemma cinv_alloc E N P : ▷ P ={E}=★ ∃ γ, cinv N γ P ★ cinv_own γ 1.
   Proof.
     rewrite /cinv /cinv_own. iIntros "HP".
-    iUpd (own_alloc 1%Qp) as (γ) "H1"; first done.
-    iUpd (inv_alloc N _ (P ∨ own γ 1%Qp)%I with "[HP]"); eauto.
+    iMod (own_alloc 1%Qp) as (γ) "H1"; first done.
+    iMod (inv_alloc N _ (P ∨ own γ 1%Qp)%I with "[HP]"); eauto.
   Qed.
 
   Lemma cinv_cancel E N γ P :
@@ -65,7 +65,7 @@ Section proofs.
   Proof.
     rewrite /cinv. iIntros (?) "#Hinv Hγ".
     iInv N as "[$|>Hγ']" "Hclose".
-    - iIntros "!==> {$Hγ} HP". iApply "Hclose"; eauto.
+    - iIntros "!> {$Hγ} HP". iApply "Hclose"; eauto.
     - iDestruct (cinv_own_1_l with "[Hγ Hγ']") as %[]. by iFrame.
   Qed.
 End proofs.

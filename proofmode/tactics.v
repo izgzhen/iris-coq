@@ -307,13 +307,13 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
          |env_cbv; reflexivity
          |(*goal*)
          |go H1 pats]
-    | SGoal (SpecGoal ?vs ?lr ?Hs_frame ?Hs) :: ?pats =>
+    | SGoal (SpecGoal ?m ?lr ?Hs_frame ?Hs) :: ?pats =>
        eapply tac_specialize_assert with _ _ _ H1 _ lr (Hs_frame ++ Hs) _ _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
-         |match vs with
-          | false => apply elim_upd_dummy
-          | true => apply _ || fail "iSpecialize: goal not an update modality"
+         |match m with
+          | false => apply elim_modal_dummy
+          | true => apply _ || fail "iSpecialize: goal not a modality"
           end
          |env_cbv; reflexivity || fail "iSpecialize:" Hs "not found"
          |iFrame Hs_frame (*goal*)
@@ -610,28 +610,18 @@ Tactic Notation "iNext":=
     |let P := match goal with |- FromLater ?P _ => P end in
      apply _ || fail "iNext:" P "does not contain laters"|].
 
-Tactic Notation "iTimeless" constr(H) :=
-  eapply tac_timeless with _ H _ _ _;
-    [let Q := match goal with |- IsExcept0 ?Q => Q end in
-     apply _ || fail "iTimeless: cannot remove later when goal is" Q
-    |env_cbv; reflexivity || fail "iTimeless:" H "not found"
-    |let P := match goal with |- IntoExcept0 ?P _ => P end in
-     apply _ || fail "iTimeless: cannot turn" P "into ◇"
-    |env_cbv; reflexivity|].
-
 (** * Update modality *)
-Tactic Notation "iUpdIntro" :=
-  eapply tac_upd_intro;
-    [let P := match goal with |- FromUpd ?P _ => P end in
-     apply _ || fail "iUpdIntro:" P "not an update modality"|].
+Tactic Notation "iModIntro" :=
+  eapply tac_modal_intro;
+    [let P := match goal with |- IntoModal _ ?P => P end in
+     apply _ || fail "iModIntro:" P "not a modality"|].
 
-Tactic Notation "iUpdCore" constr(H) :=
-  eapply tac_upd_elim with _ H _ _ _ _;
-    [env_cbv; reflexivity || fail "iUpd:" H "not found"
-    |let P := match goal with |- ElimUpd ?P _ _ _ => P end in
-     let Q := match goal with |- ElimUpd _ _ ?Q _ => Q end in
-     apply _ || fail "iUpd: cannot run" P "in" Q
-                     "because the goal or hypothesis is not an update modality"
+Tactic Notation "iModCore" constr(H) :=
+  eapply tac_modal_elim with _ H _ _ _ _;
+    [env_cbv; reflexivity || fail "iMod:" H "not found"
+    |let P := match goal with |- ElimModal ?P _ _ _ => P end in
+     let Q := match goal with |- ElimModal _ _ ?Q _ => Q end in
+     apply _ || fail "iMod: cannot eliminate modality " P "in" Q
     |env_cbv; reflexivity|].
 
 (** * Basic destruct tactic *)
@@ -650,8 +640,7 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
     | IList [[?pat1];[?pat2]] => iOrDestruct Hz as Hz Hz; [go Hz pat1|go Hz pat2]
     | IPureElim => iPure Hz as ?
     | IAlwaysElim ?pat => iPersistent Hz; go Hz pat
-    | ILaterElim ?pat => iTimeless Hz; go Hz pat
-    | IUpdElim ?pat => iUpdCore Hz; go Hz pat
+    | IModalElim ?pat => iModCore Hz; go Hz pat
     | _ => fail "iDestruct:" pat "invalid"
     end
   in let pat := intro_pat.parse_one pat in go H pat.
@@ -749,8 +738,7 @@ Tactic Notation "iIntros" constr(pat) :=
     | IName ?H :: ?pats => iIntro H; go pats
     | IPureIntro :: ?pats => iPureIntro; go pats
     | IAlwaysIntro :: ?pats => iAlways; go pats
-    | ILaterIntro :: ?pats => iNext; go pats
-    | IUpdIntro :: ?pats => iUpdIntro; go pats
+    | IModalIntro :: ?pats => iModIntro; go pats
     | ISimpl :: ?pats => simpl; go pats
     | IForall :: ?pats => repeat iIntroForall; go pats
     | IAll :: ?pats => repeat (iIntroForall || iIntro); go pats
@@ -1096,11 +1084,11 @@ Tactic Notation "iAssertCore" open_constr(Q) "with" constr(Hs) "as" tactic(tac) 
        |(*goal*)
        |apply _ || fail "iAssert:" Q "not persistent"
        |tac H]
-  | [SGoal (SpecGoal ?vs ?lr ?Hs_frame ?Hs)] =>
+  | [SGoal (SpecGoal ?m ?lr ?Hs_frame ?Hs)] =>
      eapply tac_assert with _ _ _ lr (Hs_frame ++ Hs) H Q _;
-       [match vs with
-        | false => apply elim_upd_dummy
-        | true => apply _ || fail "iAssert: goal not an update modality"
+       [match m with
+        | false => apply elim_modal_dummy
+        | true => apply _ || fail "iAssert: goal not a modality"
         end
        |env_cbv; reflexivity || fail "iAssert:" Hs "not found"
        |env_cbv; reflexivity
@@ -1164,49 +1152,49 @@ Ltac iSimplifyEq := repeat (
   || simplify_eq/=).
 
 (** * Update modality *)
-Tactic Notation "iUpd" open_constr(lem) :=
-  iDestructCore lem as false (fun H => iUpdCore H).
-Tactic Notation "iUpd" open_constr(lem) "as" constr(pat) :=
-  iDestructCore lem as false (fun H => iUpdCore H; last iDestructHyp H as pat).
-Tactic Notation "iUpd" open_constr(lem) "as" "(" simple_intropattern(x1) ")"
+Tactic Notation "iMod" open_constr(lem) :=
+  iDestructCore lem as false (fun H => iModCore H).
+Tactic Notation "iMod" open_constr(lem) "as" constr(pat) :=
+  iDestructCore lem as false (fun H => iModCore H; last iDestructHyp H as pat).
+Tactic Notation "iMod" open_constr(lem) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
-  iDestructCore lem as false (fun H => iUpdCore H; last iDestructHyp H as ( x1 ) pat).
-Tactic Notation "iUpd" open_constr(lem) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as false (fun H => iModCore H; last iDestructHyp H as ( x1 ) pat).
+Tactic Notation "iMod" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) ")" constr(pat) :=
-  iDestructCore lem as false (fun H => iUpdCore H; last iDestructHyp H as ( x1 x2 ) pat).
-Tactic Notation "iUpd" open_constr(lem) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as false (fun H => iModCore H; last iDestructHyp H as ( x1 x2 ) pat).
+Tactic Notation "iMod" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) ")" constr(pat) :=
-  iDestructCore lem as false (fun H => iUpdCore H; last iDestructHyp H as ( x1 x2 x3 ) pat).
-Tactic Notation "iUpd" open_constr(lem) "as" "(" simple_intropattern(x1)
+  iDestructCore lem as false (fun H => iModCore H; last iDestructHyp H as ( x1 x2 x3 ) pat).
+Tactic Notation "iMod" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) :=
   iDestructCore lem as false (fun H =>
-    iUpdCore H; last iDestructHyp H as ( x1 x2 x3 x4 ) pat).
-Tactic Notation "iUpd" open_constr(lem) "as" "(" simple_intropattern(x1)
+    iModCore H; last iDestructHyp H as ( x1 x2 x3 x4 ) pat).
+Tactic Notation "iMod" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) ")" constr(pat) :=
   iDestructCore lem as false (fun H =>
-    iUpdCore H; last iDestructHyp H as ( x1 x2 x3 x4 x5 ) pat).
-Tactic Notation "iUpd" open_constr(lem) "as" "(" simple_intropattern(x1)
+    iModCore H; last iDestructHyp H as ( x1 x2 x3 x4 x5 ) pat).
+Tactic Notation "iMod" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) ")" constr(pat) :=
   iDestructCore lem as false (fun H =>
-    iUpdCore H; last iDestructHyp H as ( x1 x2 x3 x4 x5 x6 ) pat).
-Tactic Notation "iUpd" open_constr(lem) "as" "(" simple_intropattern(x1)
+    iModCore H; last iDestructHyp H as ( x1 x2 x3 x4 x5 x6 ) pat).
+Tactic Notation "iMod" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) ")"
     constr(pat) :=
   iDestructCore lem as false (fun H =>
-    iUpdCore H; last iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 ) pat).
-Tactic Notation "iUpd" open_constr(lem) "as" "(" simple_intropattern(x1)
+    iModCore H; last iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 ) pat).
+Tactic Notation "iMod" open_constr(lem) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
     simple_intropattern(x8) ")" constr(pat) :=
   iDestructCore lem as false (fun H =>
-    iUpdCore H; last iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 x8 ) pat).
+    iModCore H; last iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 x8 ) pat).
 
-Tactic Notation "iUpd" open_constr(lem) "as" "%" simple_intropattern(pat) :=
-  iDestructCore lem as false (fun H => iUpdCore H; iPure H as pat).
+Tactic Notation "iMod" open_constr(lem) "as" "%" simple_intropattern(pat) :=
+  iDestructCore lem as false (fun H => iModCore H; iPure H as pat).
 
 (* Make sure that by and done solve trivial things in proof mode *)
 Hint Extern 0 (of_envs _ ⊢ _) => by iPureIntro.
@@ -1223,7 +1211,7 @@ Hint Extern 1 (of_envs _ ⊢ _) =>
   | |- _ ⊢ ▷ _ => iNext
   | |- _ ⊢ □ _ => iClear "*"; iAlways
   | |- _ ⊢ ∃ _, _ => iExists _
-  | |- _ ⊢ |==> _ => iUpdIntro
+  | |- _ ⊢ |==> _ => iModIntro
   end.
 Hint Extern 1 (of_envs _ ⊢ _) =>
   match goal with |- _ ⊢ (_ ∨ _)%I => iLeft end.

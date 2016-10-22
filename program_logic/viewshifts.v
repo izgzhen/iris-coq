@@ -54,7 +54,7 @@ Lemma vs_transitive E1 E2 E3 P Q R :
   (P ={E1,E2}=> Q) ∧ (Q ={E2,E3}=> R) ⊢ P ={E1,E3}=> R.
 Proof.
   iIntros "#[HvsP HvsQ] !# HP".
-  iUpd ("HvsP" with "HP") as "HQ". by iApply "HvsQ".
+  iMod ("HvsP" with "HP") as "HQ". by iApply "HvsQ".
 Qed.
 
 Lemma vs_reflexive E P : P ={E}=> P.
@@ -79,7 +79,7 @@ Lemma vs_inv N E P Q R :
   nclose N ⊆ E → inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q) ⊢ P ={E}=> Q.
 Proof.
   iIntros (?) "#[? Hvs] !# HP". iInv N as "HR" "Hclose".
-  iUpd ("Hvs" with "[HR HP]") as "[? $]"; first by iFrame.
+  iMod ("Hvs" with "[HR HP]") as "[? $]"; first by iFrame.
   by iApply "Hclose".
 Qed.
 

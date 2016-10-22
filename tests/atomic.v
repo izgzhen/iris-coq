@@ -75,22 +75,22 @@ Section incr.
     iIntros "!# HP".
     wp_rec.
     wp_bind (! _)%E.
-    iUpd ("Hvs" with "HP") as (x) "[Hl [Hvs' _]]".
+    iMod ("Hvs" with "HP") as (x) "[Hl [Hvs' _]]".
     wp_load.
-    iUpd ("Hvs'" with "Hl") as "HP".
-    iUpdIntro. wp_let. wp_bind (CAS _ _ _). wp_op.
-    iUpd ("Hvs" with "HP") as (x') "[Hl Hvs']".
+    iMod ("Hvs'" with "Hl") as "HP".
+    iModIntro. wp_let. wp_bind (CAS _ _ _). wp_op.
+    iMod ("Hvs" with "HP") as (x') "[Hl Hvs']".
     destruct (decide (x = x')).
     - subst.
       iDestruct "Hvs'" as "[_ Hvs']".
       iSpecialize ("Hvs'" $! #x').
       wp_cas_suc.
-      iUpd ("Hvs'" with "[Hl]") as "HQ"; first by iFrame.
-      iUpdIntro. wp_if. iUpdIntro. by iExists x'.
+      iMod ("Hvs'" with "[Hl]") as "HQ"; first by iFrame.
+      iModIntro. wp_if. iModIntro. by iExists x'.
     - iDestruct "Hvs'" as "[Hvs' _]".
       wp_cas_fail.
-      iUpd ("Hvs'" with "[Hl]") as "HP"; first by iFrame.
-      iUpdIntro. wp_if. by iApply "IH".
+      iMod ("Hvs'" with "[Hl]") as "HP"; first by iFrame.
+      iModIntro. wp_if. by iApply "IH".
   Qed.
 End incr.
 
@@ -112,7 +112,7 @@ Section user.
     rewrite /incr_2.
     wp_let.
     wp_alloc l as "Hl".
-    iUpd (inv_alloc N _ (∃x':Z, l ↦ #x')%I with "[Hl]") as "#?"; first eauto.
+    iMod (inv_alloc N _ (∃x':Z, l ↦ #x')%I with "[Hl]") as "#?"; first eauto.
     wp_let.
     wp_bind (_ || _)%E.
     iApply (wp_par (λ _, True%I) (λ _, True%I)).
@@ -125,15 +125,15 @@ Section user.
       (* open the invariant *)
       iInv N as (x') ">Hl'" "Hclose".
       (* mask magic *)
-      iUpd (fupd_intro_mask' _ heapN) as "Hclose'".
+      iMod (fupd_intro_mask' _ heapN) as "Hclose'".
       { apply ndisj_subseteq_difference; auto. }
-      iUpdIntro. iExists x'. iFrame "Hl'". iSplit.
+      iModIntro. iExists x'. iFrame "Hl'". iSplit.
       + (* provide a way to rollback *)
         iIntros "Hl'".
-        iUpd "Hclose'". iUpd ("Hclose" with "[Hl']"); eauto.
+        iMod "Hclose'". iMod ("Hclose" with "[Hl']"); eauto.
       + (* provide a way to commit *)
         iIntros (v) "[Heq Hl']".
-        iUpd "Hclose'". iUpd ("Hclose" with "[Hl']"); eauto.
+        iMod "Hclose'". iMod ("Hclose" with "[Hl']"); eauto.
     - iDestruct "Hincr" as "#HIncr".
       iSplitL; [|iSplitL]; try (iApply wp_wand_r;iSplitL; [by iApply "HIncr"|auto]).
       iIntros (v1 v2) "_ !>".

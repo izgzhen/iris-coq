@@ -23,7 +23,7 @@ Lemma wp_lift_head_step E Φ e1 :
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros "H". iApply (wp_lift_step E); try done.
-  iUpd "H" as (σ1) "(%&Hσ1&Hwp)". iUpdIntro. iExists σ1.
+  iMod "H" as (σ1) "(%&Hσ1&Hwp)". iModIntro. iExists σ1.
   iSplit; first by eauto. iFrame. iNext. iIntros (e2 σ2 efs) "[% ?]".
   iApply "Hwp". by eauto.
 Qed.

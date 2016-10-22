@@ -95,11 +95,11 @@ Lemma newcounter_spec N :
   heap_ctx ⊢ {{ True }} newcounter #() {{ v, ∃ l, v = #l ∧ C l 0 }}.
 Proof.
   iIntros (?) "#Hh !# _ /=". rewrite /newcounter /=. wp_seq. wp_alloc l as "Hl".
-  iUpd (own_alloc (Auth 0)) as (γ) "Hγ"; first done.
+  iMod (own_alloc (Auth 0)) as (γ) "Hγ"; first done.
   rewrite (auth_frag_op 0 0) //; iDestruct "Hγ" as "[Hγ Hγf]".
-  iUpd (inv_alloc N _ (I γ l) with "[Hl Hγ]") as "#?".
+  iMod (inv_alloc N _ (I γ l) with "[Hl Hγ]") as "#?".
   { iIntros "!>". iExists 0%nat. by iFrame. }
-  iUpdIntro. rewrite /C; eauto 10.
+  iModIntro. rewrite /C; eauto 10.
 Qed.
 
 Lemma inc_spec l n :
@@ -108,20 +108,20 @@ Proof.
   iIntros "!# Hl /=". iLöb as "IH". wp_rec.
   iDestruct "Hl" as (N γ) "(% & #Hh & #Hinv & Hγf)".
   wp_bind (! _)%E; iInv N as (c) "[Hl Hγ]" "Hclose".
-  wp_load. iUpd ("Hclose" with "[Hl Hγ]"); [iNext; iExists c; by iFrame|].
-  iUpdIntro. wp_let. wp_op.
+  wp_load. iMod ("Hclose" with "[Hl Hγ]"); [iNext; iExists c; by iFrame|].
+  iModIntro. wp_let. wp_op.
   wp_bind (CAS _ _ _). iInv N as (c') ">[Hl Hγ]" "Hclose".
   destruct (decide (c' = c)) as [->|].
   - iCombine "Hγ" "Hγf" as "Hγ".
     iDestruct (own_valid with "Hγ") as %?%auth_frag_valid; rewrite -auth_frag_op //.
-    iUpd (own_update with "Hγ") as "Hγ"; first apply M_update.
+    iMod (own_update with "Hγ") as "Hγ"; first apply M_update.
     rewrite (auth_frag_op (S n) (S c)); last lia; iDestruct "Hγ" as "[Hγ Hγf]".
-    wp_cas_suc. iUpd ("Hclose" with "[Hl Hγ]").
+    wp_cas_suc. iMod ("Hclose" with "[Hl Hγ]").
     { iNext. iExists (S c). rewrite Nat2Z.inj_succ Z.add_1_l. by iFrame. }
-    iUpdIntro. wp_if. iUpdIntro; rewrite {3}/C; eauto 10.
+    iModIntro. wp_if. iModIntro; rewrite {3}/C; eauto 10.
   - wp_cas_fail; first (intros [=]; abstract omega).
-    iUpd ("Hclose" with "[Hl Hγ]"); [iNext; iExists c'; by iFrame|].
-    iUpdIntro. wp_if. iApply ("IH" with "[Hγf]"). rewrite {3}/C; eauto 10.
+    iMod ("Hclose" with "[Hl Hγ]"); [iNext; iExists c'; by iFrame|].
+    iModIntro. wp_if. iApply ("IH" with "[Hγf]"). rewrite {3}/C; eauto 10.
 Qed.
 
 Lemma read_spec l n :
@@ -132,7 +132,7 @@ Proof.
   iDestruct (own_valid γ (Frag n ⋅ Auth c) with "[-]") as % ?%auth_frag_valid.
   { iApply own_op. by iFrame. }
   rewrite (auth_frag_op c c); last lia; iDestruct "Hγ" as "[Hγ Hγf']".
-  iUpd ("Hclose" with "[Hl Hγ]"); [iNext; iExists c; by iFrame|].
-  iUpdIntro; rewrite /C; eauto 10 with omega.
+  iMod ("Hclose" with "[Hl Hγ]"); [iNext; iExists c; by iFrame|].
+  iModIntro; rewrite /C; eauto 10 with omega.
 Qed.
 End proof.

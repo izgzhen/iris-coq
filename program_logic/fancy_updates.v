@@ -51,20 +51,20 @@ Proof. apply ne_proper, _. Qed.
 Lemma fupd_intro_mask E1 E2 P : E2 ⊆ E1 → P ⊢ |={E1,E2}=> |={E2,E1}=> P.
 Proof.
   intros (E1''&->&?)%subseteq_disjoint_union_L.
-  rewrite fupd_eq /fupd_def ownE_op //. iIntros "H ($ & $ & HE) !==>".
-  iApply except_0_intro. iIntros "[$ $] !==>" . iApply except_0_intro.
+  rewrite fupd_eq /fupd_def ownE_op //. iIntros "H ($ & $ & HE) !>".
+  iApply except_0_intro. iIntros "[$ $] !>" . iApply except_0_intro.
   by iFrame.
 Qed.
 
 Lemma except_0_fupd E1 E2 P : ◇ (|={E1,E2}=> P) ={E1,E2}=★ P.
 Proof.
-  rewrite fupd_eq. iIntros "H [Hw HE]". iTimeless "H". iApply "H"; by iFrame.
+  rewrite fupd_eq. iIntros "H [Hw HE]". iMod "H". iApply "H"; by iFrame.
 Qed.
 
 Lemma bupd_fupd E P : (|==> P) ={E}=★ P.
 Proof.
-  rewrite fupd_eq /fupd_def. iIntros "H [$ $]"; iUpd "H".
-  iUpdIntro. by iApply except_0_intro.
+  rewrite fupd_eq /fupd_def. iIntros "H [$ $]"; iMod "H".
+  iModIntro. by iApply except_0_intro.
 Qed.
 
 Lemma fupd_mono E1 E2 P Q : (P ⊢ Q) → (|={E1,E2}=> P) ={E1,E2}=★ Q.
@@ -76,16 +76,16 @@ Qed.
 Lemma fupd_trans E1 E2 E3 P : (|={E1,E2}=> |={E2,E3}=> P) ={E1,E3}=★ P.
 Proof.
   rewrite fupd_eq /fupd_def. iIntros "HP HwE".
-  iUpd ("HP" with "HwE") as ">(Hw & HE & HP)". iApply "HP"; by iFrame.
+  iMod ("HP" with "HwE") as ">(Hw & HE & HP)". iApply "HP"; by iFrame.
 Qed.
 
 Lemma fupd_mask_frame_r' E1 E2 Ef P :
   E1 ⊥ Ef → (|={E1,E2}=> E2 ⊥ Ef → P) ={E1 ∪ Ef,E2 ∪ Ef}=★ P.
 Proof.
   intros. rewrite fupd_eq /fupd_def ownE_op //. iIntros "Hvs (Hw & HE1 &HEf)".
-  iUpd ("Hvs" with "[Hw HE1]") as ">($ & HE2 & HP)"; first by iFrame.
+  iMod ("Hvs" with "[Hw HE1]") as ">($ & HE2 & HP)"; first by iFrame.
   iDestruct (ownE_op' with "[HE2 HEf]") as "[? $]"; first by iFrame.
-  iUpdIntro; iApply except_0_intro. by iApply "HP".
+  iModIntro; iApply except_0_intro. by iApply "HP".
 Qed.
 
 Lemma fupd_frame_r E1 E2 P Q : (|={E1,E2}=> P) ★ Q ={E1,E2}=★ P ★ Q.
@@ -183,16 +183,18 @@ Section proofmode_classes.
   Global Instance is_except_0_fupd E1 E2 P : IsExcept0 (|={E1,E2}=> P).
   Proof. by rewrite /IsExcept0 except_0_fupd. Qed.
 
-  Global Instance from_upd_fupd E P : FromUpd (|={E}=> P) P.
-  Proof. by rewrite /FromUpd -bupd_fupd. Qed.
+  Global Instance into_modal_fupd E P : IntoModal P (|={E}=> P).
+  Proof. rewrite /IntoModal. apply fupd_intro. Qed.
 
-  Global Instance elim_upd_bupd_fupd E1 E2 P Q :
-    ElimUpd (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q).
-  Proof. by rewrite /ElimUpd (bupd_fupd E1) fupd_frame_r wand_elim_r fupd_trans. Qed.
-  Global Instance elim_upd_fupd_fupd E1 E2 E3 P Q :
-    ElimUpd (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
-  Proof. by rewrite /ElimUpd fupd_frame_r wand_elim_r fupd_trans. Qed.
+  Global Instance elim_modal_bupd_fupd E1 E2 P Q :
+    ElimModal (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q).
+  Proof.
+    by rewrite /ElimModal (bupd_fupd E1) fupd_frame_r wand_elim_r fupd_trans.
+ Qed.
+  Global Instance elim_modal_fupd_fupd E1 E2 E3 P Q :
+    ElimModal (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
+  Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 End proofmode_classes.
 
 Hint Extern 2 (coq_tactics.of_envs _ ⊢ _) =>
-  match goal with |- _ ⊢ |={_}=> _ => iUpdIntro end.
+  match goal with |- _ ⊢ |={_}=> _ => iModIntro end.

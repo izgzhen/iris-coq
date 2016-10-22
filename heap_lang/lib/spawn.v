@@ -54,11 +54,11 @@ Lemma spawn_spec (Ψ : val → iProp Σ) e (f : val) (Φ : val → iProp Σ) :
 Proof.
   iIntros (<-%of_to_val ?) "(#Hh & Hf & HΦ)". rewrite /spawn /=.
   wp_let. wp_alloc l as "Hl". wp_let.
-  iUpd (own_alloc (Excl ())) as (γ) "Hγ"; first done.
-  iUpd (inv_alloc N _ (spawn_inv γ l Ψ) with "[Hl]") as "#?".
+  iMod (own_alloc (Excl ())) as (γ) "Hγ"; first done.
+  iMod (inv_alloc N _ (spawn_inv γ l Ψ) with "[Hl]") as "#?".
   { iNext. iExists NONEV. iFrame; eauto. }
   wp_apply wp_fork; simpl. iSplitR "Hf".
-  - iUpdIntro. wp_seq. iUpdIntro. iApply "HΦ". rewrite /join_handle. eauto.
+  - iModIntro. wp_seq. iModIntro. iApply "HΦ". rewrite /join_handle. eauto.
   - wp_bind (f _). iApply wp_wand_l. iFrame "Hf"; iIntros (v) "Hv".
     iInv N as (v') "[Hl _]" "Hclose".
     wp_store. iApply "Hclose". iNext. iExists (SOMEV v). iFrame. eauto.
@@ -70,11 +70,11 @@ Proof.
   rewrite /join_handle; iIntros "[[% H] Hv]". iDestruct "H" as (γ) "(#?&Hγ&#?)".
   iLöb as "IH". wp_rec. wp_bind (! _)%E. iInv N as (v) "[Hl Hinv]" "Hclose".
   wp_load. iDestruct "Hinv" as "[%|Hinv]"; subst.
-  - iUpd ("Hclose" with "[Hl]"); [iNext; iExists _; iFrame; eauto|].
-    iUpdIntro. wp_match. iApply ("IH" with "Hγ Hv").
+  - iMod ("Hclose" with "[Hl]"); [iNext; iExists _; iFrame; eauto|].
+    iModIntro. wp_match. iApply ("IH" with "Hγ Hv").
   - iDestruct "Hinv" as (v') "[% [HΨ|Hγ']]"; simplify_eq/=.
-    + iUpd ("Hclose" with "[Hl Hγ]"); [iNext; iExists _; iFrame; eauto|].
-      iUpdIntro. wp_match. by iApply "Hv".
+    + iMod ("Hclose" with "[Hl Hγ]"); [iNext; iExists _; iFrame; eauto|].
+      iModIntro. wp_match. by iApply "Hv".
     + iCombine "Hγ" "Hγ'" as "Hγ". iDestruct (own_valid with "Hγ") as %[].
 Qed.
 End proof.

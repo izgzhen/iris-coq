@@ -357,13 +357,30 @@ Global Instance into_exist_always {A} P (Φ : A → uPred M) :
   IntoExist P Φ → IntoExist (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP always_exist. Qed.
 
-(* IntoExcept0 *)
-Global Instance into_except_0_except_0 P : IntoExcept0 (◇ P) P.
-Proof. done. Qed.
-Global Instance into_except_0_timeless P : TimelessP P → IntoExcept0 (▷ P) P.
-Proof. done. Qed.
+(* IntoModal *)
+Global Instance into_modal_later P : IntoModal P (▷ P).
+Proof. apply later_intro. Qed.
+Global Instance into_modal_bupd P : IntoModal P (|==> P).
+Proof. apply bupd_intro. Qed.
+Global Instance into_modal_except_0 P : IntoModal P (◇ P).
+Proof. apply except_0_intro. Qed.
 
-(* IsExcept0 *)
+(* ElimModal *)
+Global Instance elim_modal_bupd P Q : ElimModal (|==> P) P (|==> Q) (|==> Q).
+Proof. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_trans. Qed.
+
+Global Instance elim_modal_except_0 P Q : IsExcept0 Q → ElimModal (◇ P) P Q Q.
+Proof.
+  intros. rewrite /ElimModal (except_0_intro (_ -★ _)).
+  by rewrite -except_0_sep wand_elim_r.
+Qed.
+Global Instance elim_modal_timeless_bupd P Q :
+  TimelessP P → IsExcept0 Q → ElimModal (▷ P) P Q Q.
+Proof.
+  intros. rewrite /ElimModal (except_0_intro (_ -★ _)) (timelessP P).
+  by rewrite -except_0_sep wand_elim_r.
+Qed.
+
 Global Instance is_except_0_except_0 P : IsExcept0 (◇ P).
 Proof. by rewrite /IsExcept0 except_0_idemp. Qed.
 Global Instance is_except_0_later P : IsExcept0 (▷ P).
@@ -373,12 +390,4 @@ Proof.
   rewrite /IsExcept0=> HP.
   by rewrite -{2}HP -(except_0_idemp P) -except_0_bupd -(except_0_intro P).
 Qed.
-
-(* FromUpd *)
-Global Instance from_upd_bupd P : FromUpd (|==> P) P.
-Proof. done. Qed.
-
-(* ElimVs *)
-Global Instance elim_upd_bupd_bupd P Q : ElimUpd (|==> P) P (|==> Q) (|==> Q).
-Proof. by rewrite /ElimUpd bupd_frame_r wand_elim_r bupd_trans. Qed.
 End classes.

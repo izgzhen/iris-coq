@@ -80,12 +80,12 @@ Section proof.
   Proof.
     iIntros (HN) "(#Hh & HR & HΦ)". rewrite /newlock /=.
     wp_seq. wp_alloc lo as "Hlo". wp_alloc ln as "Hln".
-    iUpd (own_alloc (● (Excl' 0%nat, ∅) ⋅ ◯ (Excl' 0%nat, ∅))) as (γ) "[Hγ Hγ']".
+    iMod (own_alloc (● (Excl' 0%nat, ∅) ⋅ ◯ (Excl' 0%nat, ∅))) as (γ) "[Hγ Hγ']".
     { by rewrite -auth_both_op. }
-    iUpd (inv_alloc _ _ (lock_inv γ lo ln R) with "[-HΦ]").
+    iMod (inv_alloc _ _ (lock_inv γ lo ln R) with "[-HΦ]").
     { iNext. rewrite /lock_inv.
       iExists 0%nat, 0%nat. iFrame. iLeft. by iFrame. }
-    iUpdIntro. iApply ("HΦ" $! (#lo, #ln)%V γ). iExists lo, ln. eauto.
+    iModIntro. iApply ("HΦ" $! (#lo, #ln)%V γ). iExists lo, ln. eauto.
   Qed.
 
   Lemma wait_loop_spec γ lk x R (Φ : val → iProp Σ) :
@@ -96,16 +96,16 @@ Section proof.
     iInv N as (o n) "(Hlo & Hln & Ha)" "Hclose".
     wp_load. destruct (decide (x = o)) as [->|Hneq].
     - iDestruct "Ha" as "[Hainv [[Ho HR] | Haown]]".
-      + iUpd ("Hclose" with "[Hlo Hln Hainv Ht]") as "_".
+      + iMod ("Hclose" with "[Hlo Hln Hainv Ht]") as "_".
         { iNext. iExists o, n. iFrame. eauto. }
-        iUpdIntro. wp_let. wp_op=>[_|[]] //.
-        wp_if. iUpdIntro.
+        iModIntro. wp_let. wp_op=>[_|[]] //.
+        wp_if. iModIntro.
         iApply ("HΦ" with "[-HR] HR"). rewrite /locked; eauto.
       + iDestruct (own_valid_2 with "[$Ht $Haown]") as % [_ ?%gset_disj_valid_op].
         set_solver.
-    - iUpd ("Hclose" with "[Hlo Hln Ha]").
+    - iMod ("Hclose" with "[Hlo Hln Ha]").
       { iNext. iExists o, n. by iFrame. }
-      iUpdIntro. wp_let. wp_op=>[[/Nat2Z.inj //]|?].
+      iModIntro. wp_let. wp_op=>[[/Nat2Z.inj //]|?].
       wp_if. iApply ("IH" with "Ht"). by iExact "HΦ".
   Qed.
 
@@ -115,28 +115,28 @@ Section proof.
     iIntros "[Hl HΦ]". iDestruct "Hl" as (lo ln) "(% & #? & % & #?)".
     iLöb as "IH". wp_rec. wp_bind (! _)%E. subst. wp_proj.
     iInv N as (o n) "[Hlo [Hln Ha]]" "Hclose".
-    wp_load. iUpd ("Hclose" with "[Hlo Hln Ha]") as "_".
+    wp_load. iMod ("Hclose" with "[Hlo Hln Ha]") as "_".
     { iNext. iExists o, n. by iFrame. }
-    iUpdIntro. wp_let. wp_proj. wp_op.
+    iModIntro. wp_let. wp_proj. wp_op.
     wp_bind (CAS _ _ _).
     iInv N as (o' n') "(>Hlo' & >Hln' & >Hauth & Haown)" "Hclose".
     destruct (decide (#n' = #n))%V as [[= ->%Nat2Z.inj] | Hneq].
     - wp_cas_suc.
-      iUpd (own_update with "Hauth") as "[Hauth Hofull]".
+      iMod (own_update with "Hauth") as "[Hauth Hofull]".
       { eapply auth_update_alloc, prod_local_update_2.
         eapply (gset_disj_alloc_empty_local_update _ {[ n ]}).
         apply (seq_set_S_disjoint 0). }
       rewrite -(seq_set_S_union_L 0).
-      iUpd ("Hclose" with "[Hlo' Hln' Haown Hauth]") as "_".
+      iMod ("Hclose" with "[Hlo' Hln' Haown Hauth]") as "_".
       { iNext. iExists o', (S n).
         rewrite Nat2Z.inj_succ -Z.add_1_r. by iFrame. }
-      iUpdIntro. wp_if.
+      iModIntro. wp_if.
       iApply (wait_loop_spec γ (#lo, #ln)).
       iFrame "HΦ". rewrite /issued; eauto 10.
     - wp_cas_fail.
-      iUpd ("Hclose" with "[Hlo' Hln' Hauth Haown]") as "_".
+      iMod ("Hclose" with "[Hlo' Hln' Hauth Haown]") as "_".
       { iNext. iExists o', n'. by iFrame. }
-      iUpdIntro. wp_if. by iApply "IH".
+      iModIntro. wp_if. by iApply "IH".
   Qed.
 
   Lemma release_spec γ lk R (Φ : val → iProp Σ):
@@ -150,19 +150,19 @@ Section proof.
     wp_load.
     iDestruct (own_valid_2 with "[$Hauth $Hγo]") as
       %[[<-%Excl_included%leibniz_equiv _]%prod_included _]%auth_valid_discrete_2.
-    iUpd ("Hclose" with "[Hlo Hln Hauth Haown]") as "_".
+    iMod ("Hclose" with "[Hlo Hln Hauth Haown]") as "_".
     { iNext. iExists o, n. by iFrame. }
-    iUpdIntro. wp_op.
+    iModIntro. wp_op.
     iInv N as (o' n') "(>Hlo & >Hln & >Hauth & Haown)" "Hclose".
     wp_store.
     iDestruct (own_valid_2 with "[$Hauth $Hγo]") as
       %[[<-%Excl_included%leibniz_equiv _]%prod_included _]%auth_valid_discrete_2.
     iDestruct "Haown" as "[[Hγo' _]|?]".
     { iDestruct (own_valid_2 with "[$Hγo $Hγo']") as %[[] ?]. }
-    iUpd (own_update_2 with "[$Hauth $Hγo]") as "[Hauth Hγo]".
+    iMod (own_update_2 with "[$Hauth $Hγo]") as "[Hauth Hγo]".
     { apply auth_update, prod_local_update_1.
       by apply option_local_update, (exclusive_local_update _ (Excl (S o))). }
-    iUpd ("Hclose" with "[Hlo Hln Hauth Haown Hγo HR]") as "_"; last auto.
+    iMod ("Hclose" with "[Hlo Hln Hauth Haown Hγo HR]") as "_"; last auto.
     iNext. iExists (S o), n'.
     rewrite Nat2Z.inj_succ -Z.add_1_r. iFrame. iLeft. by iFrame.
   Qed.

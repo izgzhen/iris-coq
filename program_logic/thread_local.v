@@ -54,8 +54,8 @@ Section proofs.
   Lemma tl_inv_alloc tid E N P : ▷ P ={E}=★ tl_inv tid N P.
   Proof.
     iIntros "HP".
-    iUpd (own_empty (A:=prodUR coPset_disjUR (gset_disjUR positive)) tid) as "Hempty".
-    iUpd (own_updateP with "Hempty") as ([m1 m2]) "[Hm Hown]".
+    iMod (own_empty (A:=prodUR coPset_disjUR (gset_disjUR positive)) tid) as "Hempty".
+    iMod (own_updateP with "Hempty") as ([m1 m2]) "[Hm Hown]".
     { apply prod_updateP'. apply cmra_updateP_id, (reflexivity (R:=eq)).
       apply (gset_disj_alloc_empty_updateP_strong' (λ i, i ∈ nclose N)).
       intros Ef. exists (coPpick (nclose N ∖ coPset.of_gset Ef)).
@@ -65,7 +65,7 @@ Section proofs.
       apply of_gset_finite. }
     simpl. iDestruct "Hm" as %(<- & i & -> & ?).
     rewrite /tl_inv.
-    iUpd (inv_alloc tlN with "[-]"); last (iUpdIntro; iExists i; eauto).
+    iMod (inv_alloc tlN with "[-]"); last (iModIntro; iExists i; eauto).
     iNext. iLeft. by iFrame.
   Qed.
 
@@ -80,8 +80,8 @@ Section proofs.
     rewrite {1 5}(union_difference_L {[i]} (nclose N)) ?tl_own_union; [|set_solver..].
     iDestruct "Htoks" as "[[Htoki $] $]".
     iInv tlN as "[[$ >Hdis]|>Htoki2]" "Hclose".
-    - iUpd ("Hclose" with "[Htoki]") as "_"; first auto.
-      iIntros "!==>[HP $]".
+    - iMod ("Hclose" with "[Htoki]") as "_"; first auto.
+      iIntros "!> [HP $]".
       iInv tlN as "[[_ >Hdis2]|>Hitok]" "Hclose".
       + iCombine "Hdis" "Hdis2" as "Hdis".
         iDestruct (own_valid with "Hdis") as %[_ Hval%gset_disj_valid_op].

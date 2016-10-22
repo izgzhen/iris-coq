@@ -85,10 +85,10 @@ Section sts.
     ▷ φ s ={E}=★ ∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s).
   Proof.
     iIntros "Hφ". rewrite /sts_ctx /sts_own.
-    iUpd (own_alloc (sts_auth s (⊤ ∖ sts.tok s))) as (γ) "Hγ".
+    iMod (own_alloc (sts_auth s (⊤ ∖ sts.tok s))) as (γ) "Hγ".
     { apply sts_auth_valid; set_solver. }
     iExists γ; iRevert "Hγ"; rewrite -sts_op_auth_frag_up; iIntros "[Hγ $]".
-    iUpd (inv_alloc N _ (sts_inv γ φ) with "[Hφ Hγ]") as "#?"; auto.
+    iMod (inv_alloc N _ (sts_inv γ φ) with "[Hφ Hγ]") as "#?"; auto.
     rewrite /sts_inv. iNext. iExists s. by iFrame.
   Qed.
 
@@ -103,11 +103,11 @@ Section sts.
     assert (s ∈ S) by eauto using sts_auth_frag_valid_inv.
     assert (✓ sts_frag S T) as [??] by eauto using cmra_valid_op_r.
     rewrite sts_op_auth_frag //.
-    iUpdIntro; iExists s; iSplit; [done|]; iFrame "Hφ".
+    iModIntro; iExists s; iSplit; [done|]; iFrame "Hφ".
     iIntros (s' T') "[% Hφ]".
-    iUpd (own_update with "Hγ") as "Hγ"; first eauto using sts_update_auth.
+    iMod (own_update with "Hγ") as "Hγ"; first eauto using sts_update_auth.
     iRevert "Hγ"; rewrite -sts_op_auth_frag_up; iIntros "[Hγ $]".
-    iUpdIntro. iNext. iExists s'; by iFrame.
+    iModIntro. iNext. iExists s'; by iFrame.
   Qed.
 
   Lemma sts_acc E γ s0 T :
@@ -129,9 +129,9 @@ Section sts.
        to unpack and repack various proofs.
        TODO: Make this mostly automatic, by supporting "opening accessors
        around accessors". *)
-    iUpd (sts_accS with "[Hinv Hγf]") as (s) "(?&?& HclSts)"; first by iFrame.
-    iUpdIntro. iExists s. iFrame. iIntros (s' T') "H".
-    iUpd ("HclSts" $! s' T' with "H") as "(Hinv & ?)". by iUpd ("Hclose" with "Hinv").
+    iMod (sts_accS with "[Hinv Hγf]") as (s) "(?&?& HclSts)"; first by iFrame.
+    iModIntro. iExists s. iFrame. iIntros (s' T') "H".
+    iMod ("HclSts" $! s' T' with "H") as "(Hinv & ?)". by iMod ("Hclose" with "Hinv").
   Qed.
 
   Lemma sts_open E N γ s0 T :

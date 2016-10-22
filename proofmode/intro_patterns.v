@@ -8,12 +8,10 @@ Inductive intro_pat :=
   | IList : list (list intro_pat) → intro_pat
   | IPureElim : intro_pat
   | IAlwaysElim : intro_pat → intro_pat
-  | ILaterElim : intro_pat → intro_pat
-  | IUpdElim : intro_pat → intro_pat
+  | IModalElim : intro_pat → intro_pat
   | IPureIntro : intro_pat
   | IAlwaysIntro : intro_pat
-  | ILaterIntro : intro_pat
-  | IUpdIntro : intro_pat
+  | IModalIntro : intro_pat
   | ISimpl : intro_pat
   | IForall : intro_pat
   | IAll : intro_pat
@@ -23,7 +21,6 @@ Fixpoint intro_pat_persistent (p : intro_pat) :=
   match p with
   | IPureElim => true
   | IAlwaysElim _ => true
-  | ILaterElim p => intro_pat_persistent p
   | IList pps => forallb (forallb intro_pat_persistent) pps
   | _ => false
   end.
@@ -42,12 +39,10 @@ Inductive token :=
   | TParenR : token
   | TPureElim : token
   | TAlwaysElim : token
-  | TLaterElim : token
-  | TUpdElim : token
+  | TModalElim : token
   | TPureIntro : token
   | TAlwaysIntro : token
-  | TLaterIntro : token
-  | TUpdIntro : token
+  | TModalIntro : token
   | TSimpl : token
   | TForall : token
   | TAll : token
@@ -71,14 +66,10 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String "&" s => tokenize_go s (TAmp :: cons_name kn k) ""
   | String "%" s => tokenize_go s (TPureElim :: cons_name kn k) ""
   | String "#" s => tokenize_go s (TAlwaysElim :: cons_name kn k) ""
-  | String ">" s => tokenize_go s (TLaterElim :: cons_name kn k) ""
-  | String "=" (String "=" (String ">" s)) =>
-     tokenize_go s (TUpdElim :: cons_name kn k) ""
+  | String ">" s => tokenize_go s (TModalElim :: cons_name kn k) ""
   | String "!" (String "%" s) => tokenize_go s (TPureIntro :: cons_name kn k) ""
   | String "!" (String "#" s) => tokenize_go s (TAlwaysIntro :: cons_name kn k) ""
-  | String "!" (String ">" s) => tokenize_go s (TLaterIntro :: cons_name kn k) ""
-  | String "!" (String "=" (String "=" (String ">" s))) =>
-     tokenize_go s (TUpdIntro :: cons_name kn k) ""
+  | String "!" (String ">" s) => tokenize_go s (TModalIntro :: cons_name kn k) ""
   | String "{" s => tokenize_go s (TClearL :: cons_name kn k) ""
   | String "}" s => tokenize_go s (TClearR :: cons_name kn k) ""
   | String "/" (String "=" s) => tokenize_go s (TSimpl :: cons_name kn k) ""
@@ -95,8 +86,7 @@ Inductive stack_item :=
   | SBar : stack_item
   | SAmp : stack_item
   | SAlwaysElim : stack_item
-  | SLaterElim : stack_item
-  | SUpdElim : stack_item.
+  | SModalElim : stack_item.
 Notation stack := (list stack_item).
 
 Fixpoint close_list (k : stack)
@@ -106,10 +96,8 @@ Fixpoint close_list (k : stack)
   | SPat pat :: k => close_list k (pat :: ps) pss
   | SAlwaysElim :: k =>
      '(p,ps) ← maybe2 (::) ps; close_list k (IAlwaysElim p :: ps) pss
-  | SLaterElim :: k =>
-     '(p,ps) ← maybe2 (::) ps; close_list k (ILaterElim p :: ps) pss
-  | SUpdElim :: k =>
-     '(p,ps) ← maybe2 (::) ps; close_list k (IUpdElim p :: ps) pss
+  | SModalElim :: k =>
+     '(p,ps) ← maybe2 (::) ps; close_list k (IModalElim p :: ps) pss
   | SBar :: k => close_list k [] (ps :: pss)
   | _ => None
   end.
@@ -132,8 +120,7 @@ Fixpoint close_conj_list (k : stack)
      Some (SPat (big_conj ps) :: k)
   | SPat pat :: k => guard (cur = None); close_conj_list k (Some pat) ps
   | SAlwaysElim :: k => p ← cur; close_conj_list k (Some (IAlwaysElim p)) ps
-  | SLaterElim :: k => p ← cur; close_conj_list k (Some (ILaterElim p)) ps
-  | SUpdElim :: k => p ← cur; close_conj_list k (Some (IUpdElim p)) ps
+  | SModalElim :: k => p ← cur; close_conj_list k (Some (IModalElim p)) ps
   | SAmp :: k => p ← cur; close_conj_list k None (p :: ps)
   | _ => None
   end.
@@ -153,12 +140,10 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   | TParenR :: ts => close_conj_list k None [] ≫= parse_go ts
   | TPureElim :: ts => parse_go ts (SPat IPureElim :: k)
   | TAlwaysElim :: ts => parse_go ts (SAlwaysElim :: k)
-  | TLaterElim :: ts => parse_go ts (SLaterElim :: k)
-  | TUpdElim :: ts => parse_go ts (SUpdElim :: k)
+  | TModalElim :: ts => parse_go ts (SModalElim :: k)
   | TPureIntro :: ts => parse_go ts (SPat IPureIntro :: k)
   | TAlwaysIntro :: ts => parse_go ts (SPat IAlwaysIntro :: k)
-  | TLaterIntro :: ts => parse_go ts (SPat ILaterIntro :: k)
-  | TUpdIntro :: ts => parse_go ts (SPat IUpdIntro :: k)
+  | TModalIntro :: ts => parse_go ts (SPat IModalIntro :: k)
   | TSimpl :: ts => parse_go ts (SPat ISimpl :: k)
   | TAll :: ts => parse_go ts (SPat IAll :: k)
   | TForall :: ts => parse_go ts (SPat IForall :: k)

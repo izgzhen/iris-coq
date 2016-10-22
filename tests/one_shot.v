@@ -43,17 +43,17 @@ Lemma wp_one_shot (Φ : val → iProp Σ) :
 Proof.
   iIntros "[#? Hf] /=".
   rewrite /one_shot_example /=. wp_seq. wp_alloc l as "Hl". wp_let.
-  iUpd (own_alloc Pending) as (γ) "Hγ"; first done.
-  iUpd (inv_alloc N _ (one_shot_inv γ l) with "[Hl Hγ]") as "#HN".
+  iMod (own_alloc Pending) as (γ) "Hγ"; first done.
+  iMod (inv_alloc N _ (one_shot_inv γ l) with "[Hl Hγ]") as "#HN".
   { iNext. iLeft. by iSplitL "Hl". }
-  iUpdIntro. iApply "Hf"; iSplit.
+  iModIntro. iApply "Hf"; iSplit.
   - iIntros (n) "!#". wp_let.
     iInv N as ">[[Hl Hγ]|H]" "Hclose"; last iDestruct "H" as (m) "[Hl Hγ]".
-    + wp_cas_suc. iUpd (own_update with "Hγ") as "Hγ".
+    + wp_cas_suc. iMod (own_update with "Hγ") as "Hγ".
       { by apply cmra_update_exclusive with (y:=Shot n). }
-      iUpd ("Hclose" with "[-]"); last eauto.
+      iMod ("Hclose" with "[-]"); last eauto.
       iNext; iRight; iExists n; by iFrame.
-    + wp_cas_fail. iUpd ("Hclose" with "[-]"); last eauto.
+    + wp_cas_fail. iMod ("Hclose" with "[-]"); last eauto.
       rewrite /one_shot_inv; eauto 10.
   - iIntros "!#". wp_seq. wp_bind (! _)%E.
     iInv N as ">Hγ" "Hclose".
@@ -68,8 +68,8 @@ Proof.
     { iDestruct "Hv" as "[[% ?]|Hv]"; last iDestruct "Hv" as (m) "[% ?]"; subst.
       + iSplit. iLeft; by iSplitL "Hl". eauto.
       + iSplit. iRight; iExists m; by iSplitL "Hl". eauto. }
-    iUpd ("Hclose" with "[Hinv]") as "_"; eauto; iUpdIntro.
-    wp_let. iUpdIntro. iIntros "!#". wp_seq.
+    iMod ("Hclose" with "[Hinv]") as "_"; eauto; iModIntro.
+    wp_let. iModIntro. iIntros "!#". wp_seq.
     iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as (m) "[% Hγ']"; subst.
     { by wp_match. }
     wp_match. wp_bind (! _)%E.
@@ -78,9 +78,9 @@ Proof.
     wp_load.
     iCombine "Hγ" "Hγ'" as "Hγ".
     iDestruct (own_valid with "Hγ") as %[=->]%dec_agree_op_inv.
-    iUpd ("Hclose" with "[Hl]") as "_".
+    iMod ("Hclose" with "[Hl]") as "_".
     { iNext; iRight; by eauto. }
-    iUpdIntro. wp_match. iApply wp_assert. wp_op=>?; simplify_eq/=; eauto.
+    iModIntro. wp_match. iApply wp_assert. wp_op=>?; simplify_eq/=; eauto.
 Qed.
 
 Lemma ht_one_shot (Φ : val → iProp Σ) :

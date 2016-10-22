@@ -46,9 +46,9 @@ Proof.
   rewrite {1}wp_unfold /wp_pre. iIntros (Hstep) "[(Hw & HE & Hσ) [H|[_ H]]]".
   { iDestruct "H" as (v) "[% _]". apply val_stuck in Hstep; simplify_eq. }
   rewrite fupd_eq /fupd_def.
-  iUpd ("H" $! σ1 with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
-  iUpdIntro; iNext.
-  iUpd ("H" $! e2 σ2 efs with "[%] [Hw HE]")
+  iMod ("H" $! σ1 with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
+  iModIntro; iNext.
+  iMod ("H" $! e2 σ2 efs with "[%] [Hw HE]")
     as ">($ & $ & $ & $)"; try iFrame; eauto.
 Qed.
 
@@ -76,8 +76,8 @@ Proof.
   revert e1 t1 t2 σ1 σ2; simpl; induction n as [|n IH]=> e1 t1 t2 σ1 σ2 /=.
   { inversion_clear 1; iIntros "?"; eauto 10. }
   iIntros (Hsteps) "H". inversion_clear Hsteps as [|?? [t1' σ1']].
-  iUpd (wptp_step with "H") as (e1' t1'') "[% H]"; first eauto; simplify_eq.
-  iUpdIntro; iNext; iUpd "H" as ">?". by iApply IH.
+  iMod (wptp_step with "H") as (e1' t1'') "[% H]"; first eauto; simplify_eq.
+  iModIntro; iNext; iMod "H" as ">?". by iApply IH.
 Qed.
 
 Instance bupd_iter_mono n : Proper ((⊢) ==> (⊢)) (Nat.iter n (λ P, |==> ▷ P)%I).
@@ -99,7 +99,7 @@ Proof.
   rewrite (Nat_iter_S_r (S n)). apply bupd_iter_mono.
   iDestruct 1 as (e2 t2') "(% & (Hw & HE & _) & H & _)"; simplify_eq.
   iDestruct (wp_value_inv with "H") as "H". rewrite fupd_eq /fupd_def.
-  iUpd ("H" with "[Hw HE]") as ">(_ & _ & $)"; iFrame; auto.
+  iMod ("H" with "[Hw HE]") as ">(_ & _ & $)"; iFrame; auto.
 Qed.
 
 Lemma wp_safe e σ Φ :
@@ -107,7 +107,7 @@ Lemma wp_safe e σ Φ :
 Proof.
   rewrite wp_unfold /wp_pre. iIntros "[(Hw&HE&Hσ) [H|[_ H]]]".
   { iDestruct "H" as (v) "[% _]"; eauto 10. }
-  rewrite fupd_eq. iUpd ("H" with "* Hσ [-]") as ">(?&?&%&?)"; first by iFrame.
+  rewrite fupd_eq. iMod ("H" with "* Hσ [-]") as ">(?&?&%&?)"; first by iFrame.
   eauto 10.
 Qed.
 
@@ -133,7 +133,7 @@ Proof.
   iIntros "[HI H]".
   iDestruct "H" as (e2' t2') "(% & (Hw&HE&Hσ) & _)"; subst.
   rewrite fupd_eq in HI;
-    iUpd (HI with "HI [Hw HE]") as "> (_ & _ & H)"; first by iFrame.
+    iMod (HI with "HI [Hw HE]") as "> (_ & _ & H)"; first by iFrame.
   iDestruct "H" as (σ2') "[Hσf %]".
   iDestruct (ownP_agree σ2 σ2' with "[-]") as %<-. by iFrame. eauto.
 Qed.
@@ -146,13 +146,13 @@ Proof.
   intros Hwp; split.
   - intros t2 σ2 v2 [n ?]%rtc_nsteps.
     eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
-    rewrite Nat_iter_S. iUpd (iris_alloc σ) as (?) "(?&?&?&Hσ)".
-    iUpdIntro. iNext. iApply wptp_result; eauto.
+    rewrite Nat_iter_S. iMod (iris_alloc σ) as (?) "(?&?&?&Hσ)".
+    iModIntro. iNext. iApply wptp_result; eauto.
     iFrame. iSplitL. by iApply Hwp. by iApply big_sepL_nil.
   - intros t2 σ2 e2 [n ?]%rtc_nsteps ?.
     eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
-    rewrite Nat_iter_S. iUpd (iris_alloc σ) as (?) "(Hw & HE & Hσ & Hσf)".
-    iUpdIntro. iNext. iApply wptp_safe; eauto.
+    rewrite Nat_iter_S. iMod (iris_alloc σ) as (?) "(Hw & HE & Hσ & Hσf)".
+    iModIntro. iNext. iApply wptp_safe; eauto.
     iFrame "Hw HE Hσ". iSplitL. by iApply Hwp. by iApply big_sepL_nil.
 Qed.
 
@@ -164,8 +164,8 @@ Theorem wp_invariance Σ `{irisPreG Λ Σ} e σ1 t2 σ2 I φ Φ :
 Proof.
   intros Hwp HI [n ?]%rtc_nsteps.
   eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
-  rewrite Nat_iter_S. iUpd (iris_alloc σ1) as (?) "(Hw & HE & ? & Hσ)".
+  rewrite Nat_iter_S. iMod (iris_alloc σ1) as (?) "(Hw & HE & ? & Hσ)".
   rewrite fupd_eq in Hwp.
-  iUpd (Hwp _ with "Hσ [Hw HE]") as ">(? & ? & ? & ?)"; first by iFrame.
-  iUpdIntro. iNext. iApply wptp_invariance; eauto. iFrame. by iApply big_sepL_nil.
+  iMod (Hwp _ with "Hσ [Hw HE]") as ">(? & ? & ? & ?)"; first by iFrame.
+  iModIntro. iNext. iApply wptp_invariance; eauto. iFrame. by iApply big_sepL_nil.
 Qed.

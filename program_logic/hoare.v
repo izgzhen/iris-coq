@@ -62,7 +62,7 @@ Lemma ht_vs E P P' Φ Φ' e :
   (P ={E}=> P') ∧ {{ P' }} e @ E {{ Φ' }} ∧ (∀ v, Φ' v ={E}=> Φ v)
   ⊢ {{ P }} e @ E {{ Φ }}.
 Proof.
-  iIntros "(#Hvs & #Hwp & #HΦ) !# HP". iUpd ("Hvs" with "HP") as "HP".
+  iIntros "(#Hvs & #Hwp & #HΦ) !# HP". iMod ("Hvs" with "HP") as "HP".
   iApply wp_fupd; iApply wp_wand_r; iSplitL; [by iApply "Hwp"|].
   iIntros (v) "Hv". by iApply "HΦ".
 Qed.
@@ -73,7 +73,7 @@ Lemma ht_atomic E1 E2 P P' Φ Φ' e :
   ⊢ {{ P }} e @ E1 {{ Φ }}.
 Proof.
   iIntros (?) "(#Hvs & #Hwp & #HΦ) !# HP". iApply (wp_atomic _ E2); auto.
-  iUpd ("Hvs" with "HP") as "HP". iUpdIntro.
+  iMod ("Hvs" with "HP") as "HP". iModIntro.
   iApply wp_wand_r; iSplitL; [by iApply "Hwp"|].
   iIntros (v) "Hv". by iApply "HΦ".
 Qed.

@@ -20,7 +20,7 @@ Definition heap_adequacy Σ `{heapPreG Σ} e σ φ :
   adequate e σ φ.
 Proof.
   intros Hwp; eapply (wp_adequacy Σ); iIntros (?) "Hσ".
-  iUpd (auth_alloc to_heap _ heapN _ σ with "[Hσ]") as (γ) "[Hh _]";[|by iNext|].
+  iMod (auth_alloc to_heap _ heapN _ σ with "[Hσ]") as (γ) "[Hh _]";[|by iNext|].
   { exact: to_heap_valid. }
   set (Hheap := HeapG _ _ _ γ).
   iApply (Hwp _). by rewrite /heap_ctx.

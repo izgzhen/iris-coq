@@ -19,13 +19,13 @@ Lemma wp_lift_step E Φ e1 :
 Proof.
   iIntros "H". rewrite wp_unfold /wp_pre.
   destruct (to_val e1) as [v|] eqn:EQe1.
-  - iLeft. iExists v. iSplit. done. iUpd "H" as (σ1) "[% _]".
+  - iLeft. iExists v. iSplit. done. iMod "H" as (σ1) "[% _]".
     by erewrite reducible_not_val in EQe1.
   - iRight; iSplit; eauto.
-    iIntros (σ1) "Hσ". iUpd "H" as (σ1') "(% & >Hσf & H)".
+    iIntros (σ1) "Hσ". iMod "H" as (σ1') "(% & >Hσf & H)".
     iDestruct (ownP_agree σ1 σ1' with "[-]") as %<-; first by iFrame.
-    iUpdIntro; iSplit; [done|]; iNext; iIntros (e2 σ2 efs Hstep).
-    iUpd (ownP_update σ1 σ2 with "[-H]") as "[$ ?]"; first by iFrame.
+    iModIntro; iSplit; [done|]; iNext; iIntros (e2 σ2 efs Hstep).
+    iMod (ownP_update σ1 σ2 with "[-H]") as "[$ ?]"; first by iFrame.
     iApply "H"; eauto.
 Qed.
 
@@ -38,10 +38,10 @@ Lemma wp_lift_pure_step `{Inhabited (state Λ)} E Φ e1 :
 Proof.
   iIntros (Hsafe Hstep) "H". rewrite wp_unfold /wp_pre; iRight; iSplit; auto.
   { iPureIntro. eapply reducible_not_val, (Hsafe inhabitant). }
-  iIntros (σ1) "Hσ". iUpd (fupd_intro_mask' E ∅) as "Hclose"; first set_solver.
-  iUpdIntro. iSplit; [done|]; iNext; iIntros (e2 σ2 efs ?).
+  iIntros (σ1) "Hσ". iMod (fupd_intro_mask' E ∅) as "Hclose"; first set_solver.
+  iModIntro. iSplit; [done|]; iNext; iIntros (e2 σ2 efs ?).
   destruct (Hstep σ1 e2 σ2 efs); auto; subst.
-  iUpd "Hclose"; iUpdIntro. iFrame "Hσ". iApply "H"; auto.
+  iMod "Hclose"; iModIntro. iFrame "Hσ". iApply "H"; auto.
 Qed.
 
 (** Derived lifting lemmas. *)
@@ -53,12 +53,12 @@ Lemma wp_lift_atomic_step {E Φ} e1 σ1 :
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (Hatomic ?) "[Hσ H]". iApply (wp_lift_step E _ e1).
-  iUpd (fupd_intro_mask' E ∅) as "Hclose"; first set_solver. iUpdIntro.
+  iMod (fupd_intro_mask' E ∅) as "Hclose"; first set_solver. iModIntro.
   iExists σ1. iFrame "Hσ"; iSplit; eauto.
   iNext; iIntros (e2 σ2 efs) "[% Hσ]".
   edestruct (Hatomic σ1 e2 σ2 efs) as [v2 <-%of_to_val]; eauto.
   iDestruct ("H" $! v2 σ2 efs with "[Hσ]") as "[HΦ $]"; first by eauto.
-  iUpd "Hclose". iUpd "HΦ". iApply wp_value; auto using to_of_val.
+  iMod "Hclose". iMod "HΦ". iApply wp_value; auto using to_of_val.
 Qed.
 
 Lemma wp_lift_atomic_det_step {E Φ e1} σ1 v2 σ2 efs :

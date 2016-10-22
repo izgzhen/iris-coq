@@ -62,19 +62,16 @@ Class IntoExist {A} (P : uPred M) (Φ : A → uPred M) :=
   into_exist : P ⊢ ∃ x, Φ x.
 Global Arguments into_exist {_} _ _ {_}.
 
-Class IntoExcept0 (P Q : uPred M) := into_except_0 : P ⊢ ◇ Q.
-Global Arguments into_except_0 : clear implicits.
+Class IntoModal (P Q : uPred M) := into_modal : P ⊢ Q.
+Global Arguments into_modal : clear implicits.
+
+Class ElimModal (P P' : uPred M) (Q Q' : uPred M) :=
+  elim_modal : P ★ (P' -★ Q') ⊢ Q.
+Global Arguments elim_modal _ _ _ _ {_}.
+
+Lemma elim_modal_dummy P Q : ElimModal P P Q Q.
+Proof. by rewrite /ElimModal wand_elim_r. Qed.
 
 Class IsExcept0 (Q : uPred M) := is_except_0 : ◇ Q ⊢ Q.
 Global Arguments is_except_0 : clear implicits.
-
-Class FromUpd (P Q : uPred M) := from_upd : (|==> Q) ⊢ P.
-Global Arguments from_upd : clear implicits.
-
-Class ElimUpd (P P' : uPred M) (Q Q' : uPred M) :=
-  elim_upd : P ★ (P' -★ Q') ⊢ Q.
-Global Arguments elim_upd _ _ _ _ {_}.
-
-Lemma elim_upd_dummy P Q : ElimUpd P P Q Q.
-Proof. by rewrite /ElimUpd wand_elim_r. Qed.
 End classes.

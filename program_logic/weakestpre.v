@@ -94,22 +94,22 @@ Proof.
   iIntros (?) "[HΦ H]". iLöb as "IH" forall (e). rewrite !wp_unfold /wp_pre.
   iDestruct "H" as "[Hv|[% H]]"; [iLeft|iRight].
   { iDestruct "Hv" as (v) "[% Hv]". iExists v; iSplit; first done.
-    iApply ("HΦ" with "==>[-]"). by iApply (fupd_mask_mono E1 _). }
+    iApply ("HΦ" with ">[-]"). by iApply (fupd_mask_mono E1 _). }
   iSplit; [done|]; iIntros (σ1) "Hσ".
-  iUpd (fupd_intro_mask' E2 E1) as "Hclose"; first done.
-  iUpd ("H" $! σ1 with "Hσ") as "[$ H]".
-  iUpdIntro. iNext. iIntros (e2 σ2 efs Hstep).
-  iUpd ("H" $! _ σ2 efs with "[#]") as "($ & H & $)"; auto.
-  iUpd "Hclose" as "_". by iApply ("IH" with "HΦ").
+  iMod (fupd_intro_mask' E2 E1) as "Hclose"; first done.
+  iMod ("H" $! σ1 with "Hσ") as "[$ H]".
+  iModIntro. iNext. iIntros (e2 σ2 efs Hstep).
+  iMod ("H" $! _ σ2 efs with "[#]") as "($ & H & $)"; auto.
+  iMod "Hclose" as "_". by iApply ("IH" with "HΦ").
 Qed.
 
 Lemma fupd_wp E e Φ : (|={E}=> WP e @ E {{ Φ }}) ⊢ WP e @ E {{ Φ }}.
 Proof.
   rewrite wp_unfold /wp_pre. iIntros "H". destruct (to_val e) as [v|] eqn:?.
   { iLeft. iExists v; iSplit; first done.
-    by iUpd "H" as "[H|[% ?]]"; [iDestruct "H" as (v') "[% ?]"|]; simplify_eq. }
+    by iMod "H" as "[H|[% ?]]"; [iDestruct "H" as (v') "[% ?]"|]; simplify_eq. }
   iRight; iSplit; [done|]; iIntros (σ1) "Hσ1".
-  iUpd "H" as "[H|[% H]]"; last by iApply "H".
+  iMod "H" as "[H|[% H]]"; last by iApply "H".
   iDestruct "H" as (v') "[% ?]"; simplify_eq.
 Qed.
 Lemma wp_fupd E e Φ : WP e @ E {{ v, |={E}=> Φ v }} ⊢ WP e @ E {{ Φ }}.
@@ -121,15 +121,15 @@ Lemma wp_atomic E1 E2 e Φ :
 Proof.
   iIntros (Hatomic) "H". destruct (to_val e) as [v|] eqn:He.
   { apply of_to_val in He as <-. iApply wp_fupd. iApply wp_value'.
-    iUpd "H". by iUpd (wp_value_inv with "H"). }
+    iMod "H". by iMod (wp_value_inv with "H"). }
   setoid_rewrite wp_unfold; rewrite /wp_pre. iRight; iSplit; auto.
-  iIntros (σ1) "Hσ". iUpd "H" as "[H|[_ H]]".
+  iIntros (σ1) "Hσ". iMod "H" as "[H|[_ H]]".
   { iDestruct "H" as (v') "[% ?]"; simplify_eq. }
-  iUpd ("H" $! σ1 with "Hσ") as "[$ H]".
-  iUpdIntro. iNext. iIntros (e2 σ2 efs Hstep).
+  iMod ("H" $! σ1 with "Hσ") as "[$ H]".
+  iModIntro. iNext. iIntros (e2 σ2 efs Hstep).
   destruct (Hatomic _ _ _ _ Hstep) as [v <-%of_to_val].
-  iUpd ("H" $! _ σ2 efs with "[#]") as "($ & H & $)"; auto.
-  iUpd (wp_value_inv with "H") as "==> H". by iApply wp_value'.
+  iMod ("H" $! _ σ2 efs with "[#]") as "($ & H & $)"; auto.
+  iMod (wp_value_inv with "H") as ">H". by iApply wp_value'.
 Qed.
 
 Lemma wp_frame_step_l E1 E2 e Φ R :
@@ -139,10 +139,10 @@ Proof.
   rewrite !wp_unfold /wp_pre. iIntros (??) "[HR [Hv|[_ H]]]".
   { iDestruct "Hv" as (v) "[% Hv]"; simplify_eq. }
   iRight; iSplit; [done|]. iIntros (σ1) "Hσ".
-  iUpd "HR". iUpd ("H" $! _ with "Hσ") as "[$ H]".
-  iUpdIntro; iNext; iIntros (e2 σ2 efs Hstep).
-  iUpd ("H" $! e2 σ2 efs with "[%]") as "($ & H & $)"; auto.
-  iUpd "HR". iUpdIntro. iApply (wp_strong_mono E2 _ _ Φ); try iFrame; eauto.
+  iMod "HR". iMod ("H" $! _ with "Hσ") as "[$ H]".
+  iModIntro; iNext; iIntros (e2 σ2 efs Hstep).
+  iMod ("H" $! e2 σ2 efs with "[%]") as "($ & H & $)"; auto.
+  iMod "HR". iModIntro. iApply (wp_strong_mono E2 _ _ Φ); try iFrame; eauto.
 Qed.
 
 Lemma wp_bind K `{!LanguageCtx Λ K} E e Φ :
@@ -153,12 +153,12 @@ Proof.
   { iDestruct "Hv" as (v) "[Hev Hv]"; iDestruct "Hev" as % <-%of_to_val.
     by iApply fupd_wp. }
   rewrite wp_unfold /wp_pre. iRight; iSplit; eauto using fill_not_val.
-  iIntros (σ1) "Hσ". iUpd ("H" $! _ with "Hσ") as "[% H]".
-  iUpdIntro; iSplit.
+  iIntros (σ1) "Hσ". iMod ("H" $! _ with "Hσ") as "[% H]".
+  iModIntro; iSplit.
   { iPureIntro. unfold reducible in *. naive_solver eauto using fill_step. }
   iNext; iIntros (e2 σ2 efs Hstep).
   destruct (fill_step_inv e σ1 e2 σ2 efs) as (e2'&->&?); auto.
-  iUpd ("H" $! e2' σ2 efs with "[%]") as "($ & H & $)"; auto.
+  iMod ("H" $! e2' σ2 efs with "[%]") as "($ & H & $)"; auto.
   by iApply "IH".
 Qed.
 
@@ -225,18 +225,18 @@ Section proofmode_classes.
   Global Instance is_except_0_wp E e Φ : IsExcept0 (WP e @ E {{ Φ }}).
   Proof. by rewrite /IsExcept0 -{2}fupd_wp -except_0_fupd -fupd_intro. Qed.
 
-  Global Instance elim_upd_bupd_wp E e P Φ :
-    ElimUpd (|==> P) P (WP e @ E {{ Φ }}) (WP e @ E {{ Φ }}).
-  Proof. by rewrite /ElimUpd (bupd_fupd E) fupd_frame_r wand_elim_r fupd_wp. Qed.
+  Global Instance elim_modal_bupd_wp E e P Φ :
+    ElimModal (|==> P) P (WP e @ E {{ Φ }}) (WP e @ E {{ Φ }}).
+  Proof. by rewrite /ElimModal (bupd_fupd E) fupd_frame_r wand_elim_r fupd_wp. Qed.
 
-  Global Instance elim_upd_fupd_wp E e P Φ :
-    ElimUpd (|={E}=> P) P (WP e @ E {{ Φ }}) (WP e @ E {{ Φ }}).
-  Proof. by rewrite /ElimUpd fupd_frame_r wand_elim_r fupd_wp. Qed.
+  Global Instance elim_modal_fupd_wp E e P Φ :
+    ElimModal (|={E}=> P) P (WP e @ E {{ Φ }}) (WP e @ E {{ Φ }}).
+  Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_wp. Qed.
 
   (* lower precedence, if possible, it should always pick elim_upd_fupd_wp *)
-  Global Instance elim_upd_fupd_wp_atomic E1 E2 e P Φ :
+  Global Instance elim_modal_fupd_wp_atomic E1 E2 e P Φ :
     atomic e →
-    ElimUpd (|={E1,E2}=> P) P
+    ElimModal (|={E1,E2}=> P) P
             (WP e @ E1 {{ Φ }}) (WP e @ E2 {{ v, |={E2,E1}=> Φ v }})%I | 100.
-  Proof. intros. by rewrite /ElimUpd fupd_frame_r wand_elim_r wp_atomic. Qed.
+  Proof. intros. by rewrite /ElimModal fupd_frame_r wand_elim_r wp_atomic. Qed.
 End proofmode_classes.

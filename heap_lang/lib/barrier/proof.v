@@ -97,22 +97,22 @@ Lemma newbarrier_spec (P : iProp Σ) (Φ : val → iProp Σ) :
 Proof.
   iIntros (HN) "[#? HΦ]".
   rewrite /newbarrier /=. wp_seq. wp_alloc l as "Hl".
-  iApply ("HΦ" with "==>[-]").
-  iUpd (saved_prop_alloc (F:=idCF) P) as (γ) "#?".
-  iUpd (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}) with "[-]")
+  iApply ("HΦ" with ">[-]").
+  iMod (saved_prop_alloc (F:=idCF) P) as (γ) "#?".
+  iMod (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}) with "[-]")
     as (γ') "[#? Hγ']"; eauto.
   { iNext. rewrite /barrier_inv /=. iFrame.
     iExists (const P). rewrite !big_sepS_singleton /=. eauto. }
   iAssert (barrier_ctx γ' l P)%I as "#?".
   { rewrite /barrier_ctx. by repeat iSplit. }
   iAssert (sts_ownS γ' (i_states γ) {[Change γ]}
-    ★ sts_ownS γ' low_states {[Send]})%I with "==>[-]" as "[Hr Hs]".
+    ★ sts_ownS γ' low_states {[Send]})%I with ">[-]" as "[Hr Hs]".
   { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
     - set_solver.
     - iApply (sts_own_weaken with "Hγ'");
         auto using sts.closed_op, i_states_closed, low_states_closed;
         abstract set_solver. }
-  iUpdIntro. rewrite /recv /send. iSplitL "Hr".
+  iModIntro. rewrite /recv /send. iSplitL "Hr".
   - iExists γ', P, P, γ. iFrame. auto.
   - auto.
 Qed.
@@ -122,14 +122,14 @@ Lemma signal_spec l P (Φ : val → iProp Σ) :
 Proof.
   rewrite /signal /send /barrier_ctx /=.
   iIntros "(Hs&HP&HΦ)"; iDestruct "Hs" as (γ) "[#(%&Hh&Hsts) Hγ]". wp_let.
-  iUpd (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
+  iMod (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
     as ([p I]) "(% & [Hl Hr] & Hclose)"; eauto.
   destruct p; [|done]. wp_store. iFrame "HΦ".
-  iUpd ("Hclose" $! (State High I) (∅ : set token) with "[-]"); last done.
+  iMod ("Hclose" $! (State High I) (∅ : set token) with "[-]"); last done.
   iSplit; [iPureIntro; by eauto using signal_step|].
   iNext. rewrite {2}/barrier_inv /ress /=; iFrame "Hl".
   iDestruct "Hr" as (Ψ) "[Hr Hsp]"; iExists Ψ; iFrame "Hsp".
-  iIntros "!> _"; by iApply "Hr".
+  iNext. iIntros "_"; by iApply "Hr".
 Qed.
 
 Lemma wait_spec l P (Φ : val → iProp Σ) :
@@ -138,14 +138,14 @@ Proof.
   rename P into R; rewrite /recv /barrier_ctx.
   iIntros "[Hr HΦ]"; iDestruct "Hr" as (γ P Q i) "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
   iLöb as "IH". wp_rec. wp_bind (! _)%E.
-  iUpd (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
+  iMod (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
     as ([p I]) "(% & [Hl Hr] & Hclose)"; eauto.
   wp_load. destruct p.
-  - iUpd ("Hclose" $! (State Low I) {[ Change i ]} with "[Hl Hr]") as "Hγ".
+  - iMod ("Hclose" $! (State Low I) {[ Change i ]} with "[Hl Hr]") as "Hγ".
     { iSplit; first done. iNext. rewrite {2}/barrier_inv /=. by iFrame. }
-    iAssert (sts_ownS γ (i_states i) {[Change i]})%I with "==>[Hγ]" as "Hγ".
+    iAssert (sts_ownS γ (i_states i) {[Change i]})%I with ">[Hγ]" as "Hγ".
     { iApply (sts_own_weaken with "Hγ"); eauto using i_states_closed. }
-    iUpdIntro. wp_if.
+    iModIntro. wp_if.
     iApply ("IH" with "Hγ [HQR] HΦ"). auto.
   - (* a High state: the comparison succeeds, and we perform a transition and
     return to the client *)
@@ -153,12 +153,12 @@ Proof.
     iDestruct (big_sepS_delete _ _ i with "Hsp") as "[#HΨi Hsp]"; first done.
     iAssert (▷ Ψ i ★ ▷ [★ set] j ∈ I ∖ {[i]}, Ψ j)%I with "[HΨ]" as "[HΨ HΨ']".
     { iNext. iApply (big_sepS_delete _ _ i); first done. by iApply "HΨ". }
-    iUpd ("Hclose" $! (State High (I ∖ {[ i ]})) (∅ : set token) with "[HΨ' Hl Hsp]").
+    iMod ("Hclose" $! (State High (I ∖ {[ i ]})) (∅ : set token) with "[HΨ' Hl Hsp]").
     { iSplit; [iPureIntro; by eauto using wait_step|].
       iNext. rewrite {2}/barrier_inv /=; iFrame "Hl". iExists Ψ; iFrame. auto. }
     iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by auto.
-    iUpdIntro. wp_if.
-    iUpdIntro. iApply "HΦ". iApply "HQR". by iRewrite "Heq".
+    iModIntro. wp_if.
+    iModIntro. iApply "HΦ". iApply "HQR". by iRewrite "Heq".
 Qed.
 
 Lemma recv_split E l P1 P2 :
@@ -166,25 +166,25 @@ Lemma recv_split E l P1 P2 :
 Proof.
   rename P1 into R1; rename P2 into R2. rewrite {1}/recv /barrier_ctx.
   iIntros (?). iDestruct 1 as (γ P Q i) "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
-  iUpd (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
+  iMod (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
     as ([p I]) "(% & [Hl Hr] & Hclose)"; eauto.
-  iUpd (saved_prop_alloc_strong (R1: ∙%CF (iProp Σ)) I) as (i1) "[% #Hi1]".
-  iUpd (saved_prop_alloc_strong (R2: ∙%CF (iProp Σ)) (I ∪ {[i1]}))
+  iMod (saved_prop_alloc_strong (R1: ∙%CF (iProp Σ)) I) as (i1) "[% #Hi1]".
+  iMod (saved_prop_alloc_strong (R2: ∙%CF (iProp Σ)) (I ∪ {[i1]}))
     as (i2) "[Hi2' #Hi2]"; iDestruct "Hi2'" as %Hi2.
   rewrite ->not_elem_of_union, elem_of_singleton in Hi2; destruct Hi2.
-  iUpd ("Hclose" $! (State p ({[i1; i2]} ∪ I ∖ {[i]}))
+  iMod ("Hclose" $! (State p ({[i1; i2]} ∪ I ∖ {[i]}))
                    {[Change i1; Change i2 ]} with "[-]") as "Hγ".
   { iSplit; first by eauto using split_step.
     iNext. rewrite {2}/barrier_inv /=. iFrame "Hl".
     iApply (ress_split _ _ _ Q R1 R2); eauto. iFrame; auto. }
   iAssert (sts_ownS γ (i_states i1) {[Change i1]}
-    ★ sts_ownS γ (i_states i2) {[Change i2]})%I with "==>[-]" as "[Hγ1 Hγ2]".
+    ★ sts_ownS γ (i_states i2) {[Change i2]})%I with ">[-]" as "[Hγ1 Hγ2]".
   { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
     - abstract set_solver.
     - iApply (sts_own_weaken with "Hγ");
         eauto using sts.closed_op, i_states_closed.
       abstract set_solver. }
-  iUpdIntro; iSplitL "Hγ1"; rewrite /recv /barrier_ctx.
+  iModIntro; iSplitL "Hγ1"; rewrite /recv /barrier_ctx.
   - iExists γ, P, R1, i1. iFrame; auto.
   - iExists γ, P, R2, i2. iFrame; auto.
 Qed.
@@ -194,7 +194,7 @@ Proof.
   rewrite /recv.
   iIntros "HP HP1"; iDestruct "HP1" as (γ P Q i) "(#Hctx&Hγ&Hi&HP1)".
   iExists γ, P, Q, i. iFrame "Hctx Hγ Hi".
-  iIntros "!> HQ". by iApply "HP"; iApply "HP1".
+  iNext. iIntros "HQ". by iApply "HP"; iApply "HP1".
 Qed.
 
 Lemma recv_mono l P1 P2 : (P1 ⊢ P2) → recv l P1 ⊢ recv l P2.

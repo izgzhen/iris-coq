@@ -40,9 +40,9 @@ Module savedprop. Section savedprop.
   Lemma contradiction : False.
   Proof.
     apply (@soundness M False 1); simpl.
-    iIntros "". iUpd A_alloc as (i) "#H".
+    iIntros "". iMod A_alloc as (i) "#H".
     iPoseProof (saved_NA with "H") as "HN".
-    iUpdIntro. iNext.
+    iModIntro. iNext.
     iApply "HN". iApply saved_A. done.
   Qed.
 
@@ -113,12 +113,12 @@ Module inv. Section inv.
   Lemma fupd_frame_r E P Q : (fupd E P ★ Q) ⊢ fupd E (P ★ Q).
   Proof. by rewrite comm fupd_frame_l comm. Qed.
 
-  Global Instance elim_fupd_fupd E P Q : ElimUpd (fupd E P) P (fupd E Q) (fupd E Q).
-  Proof. by rewrite /ElimUpd fupd_frame_r uPred.wand_elim_r fupd_fupd. Qed.
+  Global Instance elim_fupd_fupd E P Q : ElimModal (fupd E P) P (fupd E Q) (fupd E Q).
+  Proof. by rewrite /ElimModal fupd_frame_r uPred.wand_elim_r fupd_fupd. Qed.
 
-  Global Instance elim_fupd0_fupd1 P Q : ElimUpd (fupd M0 P) P (fupd M1 Q) (fupd M1 Q).
+  Global Instance elim_fupd0_fupd1 P Q : ElimModal (fupd M0 P) P (fupd M1 Q) (fupd M1 Q).
   Proof.
-    by rewrite /ElimUpd fupd_frame_r uPred.wand_elim_r fupd_mask_mono fupd_fupd.
+    by rewrite /ElimModal fupd_frame_r uPred.wand_elim_r fupd_mask_mono fupd_fupd.
   Qed.
 
   Global Instance exists_split_fupd0 {A} E P (Φ : A → iProp) :
@@ -135,8 +135,8 @@ Module inv. Section inv.
 
   Lemma saved_alloc (P : gname → iProp) : True ⊢ fupd M1 (∃ γ, saved γ (P γ)).
   Proof.
-    iIntros "". iUpd (sts_alloc) as (γ) "Hs".
-    iUpd (inv_alloc (start γ ∨ (finished γ ★ □ (P γ))) with "[Hs]") as (i) "#Hi".
+    iIntros "". iMod (sts_alloc) as (γ) "Hs".
+    iMod (inv_alloc (start γ ∨ (finished γ ★ □ (P γ))) with "[Hs]") as (i) "#Hi".
     { auto. }
     iApply fupd_intro. by iExists γ, i.
   Qed.
@@ -145,7 +145,7 @@ Module inv. Section inv.
   Proof.
     iIntros "(#HsP & #HsQ & #HP)". iDestruct "HsP" as (i) "HiP".
     iApply (inv_open' i). iSplit; first done.
-    iIntros "HaP". iAssert (fupd M0 (finished γ)) with "[HaP]" as "==> Hf".
+    iIntros "HaP". iAssert (fupd M0 (finished γ)) with "[HaP]" as "> Hf".
     { iDestruct "HaP" as "[Hs | [Hf _]]".
       - by iApply start_finish.
       - by iApply fupd_intro. }
@@ -173,7 +173,7 @@ Module inv. Section inv.
   Proof.
     iIntros "#Hi !# #HA". iPoseProof "HA" as "HA'".
     iDestruct "HA'" as (P) "#[HNP Hi']".
-    iUpd (saved_cast i (A i) P with "[]") as "HP".
+    iMod (saved_cast i (A i) P with "[]") as "HP".
     { eauto. }
     by iApply "HNP".
   Qed.
@@ -187,7 +187,7 @@ Module inv. Section inv.
   Lemma contradiction : False.
   Proof.
     apply consistency. iIntros "".
-    iUpd A_alloc as (i) "#H".
+    iMod A_alloc as (i) "#H".
     iPoseProof (saved_NA with "H") as "HN".
     iApply "HN". iApply saved_A. done.
   Qed.
