@@ -67,7 +67,7 @@ base_logic/big_op.v
 base_logic/hlist.v
 base_logic/soundness.v
 base_logic/double_negation.v
-program_logic/model.v
+program_logic/iprop.v
 program_logic/adequacy.v
 program_logic/lifting.v
 program_logic/invariants.v
@@ -80,7 +80,7 @@ program_logic/language.v
 program_logic/ectx_language.v
 program_logic/ectxi_language.v
 program_logic/ectx_lifting.v
-program_logic/ghost_ownership.v
+program_logic/own.v
 program_logic/saved_prop.v
 program_logic/auth.v
 program_logic/sts.v

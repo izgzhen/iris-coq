@@ -1,4 +1,4 @@
-From iris.program_logic Require Export ghost_ownership.
+From iris.program_logic Require Export own.
 From iris.algebra Require Import agree.
 From iris.prelude Require Import gmap.
 Import uPred.

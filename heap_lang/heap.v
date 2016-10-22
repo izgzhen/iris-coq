@@ -1,6 +1,6 @@
 From iris.heap_lang Require Export lifting.
 From iris.algebra Require Import auth gmap frac dec_agree.
-From iris.program_logic Require Export invariants ghost_ownership.
+From iris.program_logic Require Export invariants.
 From iris.program_logic Require Import wsat auth.
 From iris.proofmode Require Import tactics.
 Import uPred.
