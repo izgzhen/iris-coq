@@ -45,8 +45,9 @@ We are thus going to define the assertions as mapping CMRA elements to sets of s
 	\Sem{\vctx \proves \All \var : \type. \prop : \Prop}_\gamma &\eqdef
 	\Lam \melt. \setComp{n}{ \All v \in \Sem{\type}. n \in \Sem{\vctx, \var : \type \proves \prop : \Prop}_{\mapinsert \var v \gamma}(\melt) } \\
 	\Sem{\vctx \proves \Exists \var : \type. \prop : \Prop}_\gamma &\eqdef
-        \Lam \melt. \setComp{n}{ \Exists v \in \Sem{\type}. n \in \Sem{\vctx, \var : \type \proves \prop : \Prop}_{\mapinsert \var v \gamma}(\melt) } \\
-  ~\\
+        \Lam \melt. \setComp{n}{ \Exists v \in \Sem{\type}. n \in \Sem{\vctx, \var : \type \proves \prop : \Prop}_{\mapinsert \var v \gamma}(\melt) }
+\end{align*}
+\begin{align*}
 	\Sem{\vctx \proves \prop * \propB : \Prop}_\gamma &\eqdef \Lam\melt. \setComp{n}{\begin{aligned}\Exists \meltB_1, \meltB_2. &\melt \nequiv{n} \meltB_1 \mtimes \meltB_2 \land {}\\& n \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB_1) \land n \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\meltB_2)\end{aligned}}
 \\
 	\Sem{\vctx \proves \prop \wand \propB : \Prop}_\gamma &\eqdef
