@@ -16,13 +16,13 @@ Structure lock Σ `{!heapG Σ} := Lock {
   locked_timeless γ : TimelessP (locked γ);
   locked_exclusive γ : locked γ ★ locked γ ⊢ False;
   (* -- operation specs -- *)
-  newlock_spec N (R : iProp Σ) Φ :
+  newlock_spec N (R : iProp Σ) :
     heapN ⊥ N →
-    heap_ctx ★ R ★ (∀ l γ, is_lock N γ l R -★ Φ l) ⊢ WP newlock #() {{ Φ }};
-  acquire_spec N γ lk R (Φ : val → iProp Σ) :
-    is_lock N γ lk R ★ (locked γ -★ R -★ Φ #()) ⊢ WP acquire lk {{ Φ }};
-  release_spec N γ lk R (Φ : val → iProp Σ) :
-    is_lock N γ lk R ★ locked γ ★ R ★ Φ #() ⊢ WP release lk {{ Φ }}
+    {{{ heap_ctx ★ R }}} newlock #() {{{ lk γ; lk, is_lock N γ lk R }}};
+  acquire_spec N γ lk R :
+    {{{ is_lock N γ lk R }}} acquire lk {{{; #(), locked γ ★ R }}};
+  release_spec N γ lk R :
+    {{{ is_lock N γ lk R ★ locked γ ★ R }}} release lk {{{; #(), True }}}
 }.
 
 Arguments newlock {_ _} _.

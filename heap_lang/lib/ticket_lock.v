@@ -74,11 +74,11 @@ Section proof.
     iCombine "H1" "H2" as "H". iDestruct (own_valid with "H") as %[[] _].
   Qed.
 
-  Lemma newlock_spec (R : iProp Σ) Φ :
+  Lemma newlock_spec (R : iProp Σ) :
     heapN ⊥ N →
-    heap_ctx ★ R ★ (∀ lk γ, is_lock γ lk R -★ Φ lk) ⊢ WP newlock #() {{ Φ }}.
+    {{{ heap_ctx ★ R }}} newlock #() {{{ lk γ; lk, is_lock γ lk R }}}.
   Proof.
-    iIntros (HN) "(#Hh & HR & HΦ)". rewrite /newlock /=.
+    iIntros (HN Φ) "((#Hh & HR) & HΦ)". rewrite /newlock /=.
     wp_seq. wp_alloc lo as "Hlo". wp_alloc ln as "Hln".
     iMod (own_alloc (● (Excl' 0%nat, ∅) ⋅ ◯ (Excl' 0%nat, ∅))) as (γ) "[Hγ Hγ']".
     { by rewrite -auth_both_op. }
@@ -89,7 +89,7 @@ Section proof.
   Qed.
 
   Lemma wait_loop_spec γ lk x R (Φ : val → iProp Σ) :
-    issued γ lk x R ★ (locked γ -★ R -★ Φ #()) ⊢ WP wait_loop #x lk {{ Φ }}.
+    issued γ lk x R ★ (locked γ ★ R -★ Φ #()) ⊢ WP wait_loop #x lk {{ Φ }}.
   Proof.
     iIntros "[Hl HΦ]". iDestruct "Hl" as (lo ln) "(% & #? & % & #? & Ht)".
     iLöb as "IH". wp_rec. subst. wp_let. wp_proj. wp_bind (! _)%E.
@@ -100,7 +100,7 @@ Section proof.
         { iNext. iExists o, n. iFrame. eauto. }
         iModIntro. wp_let. wp_op=>[_|[]] //.
         wp_if. iModIntro.
-        iApply ("HΦ" with "[-HR] HR"). rewrite /locked; eauto.
+        iApply ("HΦ" with "[-]"). rewrite /locked. iFrame. eauto.
       + iDestruct (own_valid_2 with "[$Ht $Haown]") as % [_ ?%gset_disj_valid_op].
         set_solver.
     - iMod ("Hclose" with "[Hlo Hln Ha]").
@@ -109,10 +109,10 @@ Section proof.
       wp_if. iApply ("IH" with "Ht"). by iExact "HΦ".
   Qed.
 
-  Lemma acquire_spec γ lk R (Φ : val → iProp Σ) :
-    is_lock γ lk R ★ (locked γ -★ R -★ Φ #()) ⊢ WP acquire lk {{ Φ }}.
+  Lemma acquire_spec γ lk R :
+    {{{ is_lock γ lk R }}} acquire lk {{{; #(), locked γ ★ R }}}.
   Proof.
-    iIntros "[Hl HΦ]". iDestruct "Hl" as (lo ln) "(% & #? & % & #?)".
+    iIntros (ϕ) "[Hl HΦ]". iDestruct "Hl" as (lo ln) "(% & #? & % & #?)".
     iLöb as "IH". wp_rec. wp_bind (! _)%E. subst. wp_proj.
     iInv N as (o n) "[Hlo [Hln Ha]]" "Hclose".
     wp_load. iMod ("Hclose" with "[Hlo Hln Ha]") as "_".
@@ -139,10 +139,10 @@ Section proof.
       iModIntro. wp_if. by iApply "IH".
   Qed.
 
-  Lemma release_spec γ lk R (Φ : val → iProp Σ):
-    is_lock γ lk R ★ locked γ ★ R ★ Φ #() ⊢ WP release lk {{ Φ }}.
+  Lemma release_spec γ lk R :
+    {{{ is_lock γ lk R ★ locked γ ★ R }}} release lk {{{; #(), True }}}.
   Proof.
-    iIntros "(Hl & Hγ & HR & HΦ)".
+    iIntros (Φ) "((Hl & Hγ & HR) & HΦ)".
     iDestruct "Hl" as (lo ln) "(% & #? & % & #?)"; subst.
     iDestruct "Hγ" as (o) "Hγo".
     rewrite /release. wp_let. wp_proj. wp_proj. wp_bind (! _)%E.
@@ -162,7 +162,7 @@ Section proof.
     iMod (own_update_2 with "[$Hauth $Hγo]") as "[Hauth Hγo]".
     { apply auth_update, prod_local_update_1.
       by apply option_local_update, (exclusive_local_update _ (Excl (S o))). }
-    iMod ("Hclose" with "[Hlo Hln Hauth Haown Hγo HR]") as "_"; last auto.
+    iMod ("Hclose" with "[Hlo Hln Hauth Haown Hγo HR]") as "_"; last by iApply "HΦ".
     iNext. iExists (S o), n'.
     rewrite Nat2Z.inj_succ -Z.add_1_r. iFrame. iLeft. by iFrame.
   Qed.

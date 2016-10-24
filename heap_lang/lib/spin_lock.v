@@ -45,11 +45,11 @@ Section proof.
   Global Instance locked_timeless γ : TimelessP (locked γ).
   Proof. apply _. Qed.
 
-  Lemma newlock_spec (R : iProp Σ) Φ :
+  Lemma newlock_spec (R : iProp Σ):
     heapN ⊥ N →
-    heap_ctx ★ R ★ (∀ lk γ, is_lock γ lk R -★ Φ lk) ⊢ WP newlock #() {{ Φ }}.
+    {{{ heap_ctx ★ R }}} newlock #() {{{ lk γ; lk, is_lock γ lk R }}}.
   Proof.
-    iIntros (?) "(#Hh & HR & HΦ)". rewrite /newlock /=.
+    iIntros (? Φ) "[[#Hh HR] HΦ]". rewrite /newlock /=.
     wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (Excl ())) as (γ) "Hγ"; first done.
     iMod (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
@@ -70,22 +70,22 @@ Section proof.
       iModIntro. iDestruct "HΦ" as "[HΦ _]". rewrite /locked. by iApply ("HΦ" with "Hγ HR").
   Qed.
 
-  Lemma acquire_spec γ lk R (Φ : val → iProp Σ) :
-    is_lock γ lk R ★ (locked γ -★ R -★ Φ #()) ⊢ WP acquire lk {{ Φ }}.
+  Lemma acquire_spec γ lk R :
+    {{{ is_lock γ lk R }}} acquire lk {{{; #(), locked γ ★ R }}}.
   Proof.
-    iIntros "[#Hl HΦ]". iLöb as "IH". wp_rec. wp_bind (try_acquire _).
+    iIntros (Φ) "[#Hl HΦ]". iLöb as "IH". wp_rec. wp_bind (try_acquire _).
     iApply try_acquire_spec. iFrame "#". iSplit.
-    - iIntros "Hlked HR". wp_if. iModIntro. iApply ("HΦ" with "Hlked HR").
+    - iIntros "Hlked HR". wp_if. iModIntro. iApply "HΦ"; iFrame.
     - wp_if. iApply ("IH" with "HΦ").
   Qed.
 
-  Lemma release_spec γ lk R (Φ : val → iProp Σ) :
-    is_lock γ lk R ★ locked γ ★ R ★ Φ #() ⊢ WP release lk {{ Φ }}.
+  Lemma release_spec γ lk R :
+    {{{ is_lock γ lk R ★ locked γ ★ R }}} release lk {{{; #(), True }}}.
   Proof.
-    iIntros "(Hlock & Hlocked & HR & HΦ)".
+    iIntros (Φ) "((Hlock & Hlocked & HR) & HΦ)".
     iDestruct "Hlock" as (l) "(% & #? & % & #?)". subst.
     rewrite /release /=. wp_let. iInv N as (b) "[Hl _]" "Hclose".
-    wp_store. iFrame "HΦ". iApply "Hclose". iNext. iExists false. by iFrame.
+    wp_store. iApply "HΦ". iApply "Hclose". iNext. iExists false. by iFrame.
   Qed.
 
 End proof.
