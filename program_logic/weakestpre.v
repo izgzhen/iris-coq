@@ -145,7 +145,7 @@ Proof.
   iVs "HR". iVsIntro. iApply (wp_strong_mono E2 _ _ Φ); try iFrame; eauto.
 Qed.
 
-Lemma wp_bind `{LanguageCtx Λ K} E e Φ :
+Lemma wp_bind K `{!LanguageCtx Λ K} E e Φ :
   WP e @ E {{ v, WP K (of_val v) @ E {{ Φ }} }} ⊢ WP K e @ E {{ Φ }}.
 Proof.
   iIntros "H". iLöb as "IH" forall (E e Φ). rewrite wp_unfold /wp_pre.
