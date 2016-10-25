@@ -366,6 +366,18 @@ Global Instance into_modal_except_0 P : IntoModal P (◇ P).
 Proof. apply except_0_intro. Qed.
 
 (* ElimModal *)
+Global Instance elim_modal_wand P P' Q Q' R :
+  ElimModal P P' Q Q' → ElimModal P P' (R -★ Q) (R -★ Q').
+Proof.
+  rewrite /ElimModal=> H. apply wand_intro_r.
+  by rewrite wand_curry -assoc (comm _ P') -wand_curry wand_elim_l.
+Qed.
+Global Instance forall_modal_wand {A} P P' (Φ Ψ : A → uPred M) :
+  (∀ x, ElimModal P P' (Φ x) (Ψ x)) → ElimModal P P' (∀ x, Φ x) (∀ x, Ψ x).
+Proof.
+  rewrite /ElimModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
+Qed.
+
 Global Instance elim_modal_bupd P Q : ElimModal (|==> P) P (|==> Q) (|==> Q).
 Proof. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_trans. Qed.
 

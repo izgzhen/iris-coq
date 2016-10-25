@@ -49,8 +49,8 @@ Proof.
   iDestruct "Hi" as % ?%elem_of_subseteq_singleton.
   rewrite {1 4}(union_difference_L (nclose N) E) // ownE_op; last set_solver.
   rewrite {1 5}(union_difference_L {[ i ]} (nclose N)) // ownE_op; last set_solver.
-  iIntros "(Hw & [HE $] & $)"; iModIntro; iApply except_0_intro.
-  iDestruct (ownI_open i P with "[Hw HE]") as "($ & $ & HD)"; first by iFrame.
+  iIntros "(Hw & [HE $] & $) !> !>".
+  iDestruct (ownI_open i P with "[$Hw $HE $HiP]") as "($ & $ & HD)".
   iIntros "HP [Hw $] !> !>". iApply ownI_close; by iFrame.
 Qed.
 

@@ -51,21 +51,15 @@ Proof. apply ne_proper, _. Qed.
 Lemma fupd_intro_mask E1 E2 P : E2 ⊆ E1 → P ⊢ |={E1,E2}=> |={E2,E1}=> P.
 Proof.
   intros (E1''&->&?)%subseteq_disjoint_union_L.
-  rewrite fupd_eq /fupd_def ownE_op //. iIntros "H ($ & $ & HE) !>".
-  iApply except_0_intro. iIntros "[$ $] !>" . iApply except_0_intro.
-  by iFrame.
+  rewrite fupd_eq /fupd_def ownE_op //.
+  by iIntros "$ ($ & $ & HE) !> !> [$ $] !> !>" .
 Qed.
 
 Lemma except_0_fupd E1 E2 P : ◇ (|={E1,E2}=> P) ={E1,E2}=★ P.
-Proof.
-  rewrite fupd_eq. iIntros "H [Hw HE]". iMod "H". iApply "H"; by iFrame.
-Qed.
+Proof. rewrite fupd_eq. iIntros ">H [Hw HE]". iApply "H"; by iFrame. Qed.
 
 Lemma bupd_fupd E P : (|==> P) ={E}=★ P.
-Proof.
-  rewrite fupd_eq /fupd_def. iIntros "H [$ $]"; iMod "H".
-  iModIntro. by iApply except_0_intro.
-Qed.
+Proof. rewrite fupd_eq /fupd_def. by iIntros ">? [$ $] !> !>". Qed.
 
 Lemma fupd_mono E1 E2 P Q : (P ⊢ Q) → (|={E1,E2}=> P) ={E1,E2}=★ Q.
 Proof.
@@ -85,7 +79,7 @@ Proof.
   intros. rewrite fupd_eq /fupd_def ownE_op //. iIntros "Hvs (Hw & HE1 &HEf)".
   iMod ("Hvs" with "[Hw HE1]") as ">($ & HE2 & HP)"; first by iFrame.
   iDestruct (ownE_op' with "[HE2 HEf]") as "[? $]"; first by iFrame.
-  iModIntro; iApply except_0_intro. by iApply "HP".
+  iIntros "!> !>". by iApply "HP".
 Qed.
 
 Lemma fupd_frame_r E1 E2 P Q : (|={E1,E2}=> P) ★ Q ={E1,E2}=★ P ★ Q.
