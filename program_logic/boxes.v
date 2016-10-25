@@ -165,7 +165,8 @@ Lemma box_fill_all f P Q : box N f P ★ ▷ P ={N}=★ box N (const true <$> f)
 Proof.
   iIntros "[H HP]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists Φ; iSplitR; first by rewrite big_sepM_fmap.
-  rewrite eq_iff later_iff big_sepM_later; iDestruct ("HeqP" with "HP") as "HP".
+  rewrite internal_eq_iff later_iff big_sepM_later.
+  iDestruct ("HeqP" with "HP") as "HP".
   iCombine "Hf" "HP" as "Hf".
   rewrite big_sepM_fmap; iApply (fupd_big_sepM _ _ f).
   iApply (big_sepM_impl _ _ f); iFrame "Hf".
@@ -192,7 +193,7 @@ Proof.
     iMod ("Hclose" with "[Hγ]"); first (iNext; iExists false; iFrame; eauto).
     by iApply "HΦ". }
   iModIntro; iSplitL "HΦ".
-  - rewrite eq_iff later_iff big_sepM_later. by iApply "HeqP".
+  - rewrite internal_eq_iff later_iff big_sepM_later. by iApply "HeqP".
   - iExists Φ; iSplit; by rewrite big_sepM_fmap.
 Qed.
 End box.

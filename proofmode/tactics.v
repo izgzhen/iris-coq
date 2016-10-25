@@ -1200,7 +1200,7 @@ Tactic Notation "iMod" open_constr(lem) "as" "%" simple_intropattern(pat) :=
 Hint Extern 0 (of_envs _ ⊢ _) => by iPureIntro.
 Hint Extern 0 (of_envs _ ⊢ _) => iAssumption.
 Hint Extern 0 (of_envs _ ⊢ _) => progress iIntros.
-Hint Resolve uPred.eq_refl'. (* Maybe make an [iReflexivity] tactic *)
+Hint Resolve uPred.internal_eq_refl'. (* Maybe make an [iReflexivity] tactic *)
 
 (* We should be able to write [Hint Extern 1 (of_envs _ ⊢ (_ ★ _)%I) => ...],
 but then [eauto] mysteriously fails. See bug 4762 *)

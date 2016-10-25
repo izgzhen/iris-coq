@@ -151,6 +151,6 @@ Lemma iProp_unfold_equivI {Σ} (P Q : iProp Σ) :
   iProp_unfold P ≡ iProp_unfold Q ⊢ (P ≡ Q : iProp Σ).
 Proof.
   rewrite -{2}(iProp_fold_unfold P) -{2}(iProp_fold_unfold Q).
-  eapply (uPred.eq_rewrite _ _ (λ z,
+  eapply (uPred.internal_eq_rewrite _ _ (λ z,
     iProp_fold (iProp_unfold P) ≡ iProp_fold z))%I; auto with I; solve_proper.
 Qed.

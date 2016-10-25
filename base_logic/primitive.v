@@ -58,12 +58,13 @@ Definition uPred_exist_aux : { x | x = @uPred_exist_def }. by eexists. Qed.
 Definition uPred_exist {M A} := proj1_sig uPred_exist_aux M A.
 Definition uPred_exist_eq: @uPred_exist = @uPred_exist_def := proj2_sig uPred_exist_aux.
 
-Program Definition uPred_eq_def {M} {A : cofeT} (a1 a2 : A) : uPred M :=
+Program Definition uPred_internal_eq_def {M} {A : cofeT} (a1 a2 : A) : uPred M :=
   {| uPred_holds n x := a1 ≡{n}≡ a2 |}.
 Solve Obligations with naive_solver eauto 2 using (dist_le (A:=A)).
-Definition uPred_eq_aux : { x | x = @uPred_eq_def }. by eexists. Qed.
-Definition uPred_eq {M A} := proj1_sig uPred_eq_aux M A.
-Definition uPred_eq_eq: @uPred_eq = @uPred_eq_def := proj2_sig uPred_eq_aux.
+Definition uPred_internal_eq_aux : { x | x = @uPred_internal_eq_def }. by eexists. Qed.
+Definition uPred_internal_eq {M A} := proj1_sig uPred_internal_eq_aux M A.
+Definition uPred_internal_eq_eq:
+  @uPred_internal_eq = @uPred_internal_eq_def := proj2_sig uPred_internal_eq_aux.
 
 Program Definition uPred_sep_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∃ x1 x2, x ≡{n}≡ x1 ⋅ x2 ∧ P n x1 ∧ Q n x2 |}.
@@ -177,7 +178,7 @@ Notation "□ P" := (uPred_always P)
   (at level 20, right associativity) : uPred_scope.
 Notation "▷ P" := (uPred_later P)
   (at level 20, right associativity) : uPred_scope.
-Infix "≡" := uPred_eq : uPred_scope.
+Infix "≡" := uPred_internal_eq : uPred_scope.
 Notation "✓ x" := (uPred_cmra_valid x) (at level 20) : uPred_scope.
 Notation "|==> Q" := (uPred_bupd Q)
   (at level 99, Q at level 200, format "|==>  Q") : uPred_scope.
@@ -189,7 +190,7 @@ Notation "P ==★ Q" := (P -★ |==> Q)%I
 Module uPred_primitive.
 Definition unseal :=
   (uPred_pure_eq, uPred_and_eq, uPred_or_eq, uPred_impl_eq, uPred_forall_eq,
-  uPred_exist_eq, uPred_eq_eq, uPred_sep_eq, uPred_wand_eq, uPred_always_eq,
+  uPred_exist_eq, uPred_internal_eq_eq, uPred_sep_eq, uPred_wand_eq, uPred_always_eq,
   uPred_later_eq, uPred_ownM_eq, uPred_cmra_valid_eq, uPred_bupd_eq).
 Ltac unseal := rewrite !unseal /=.
 
@@ -245,15 +246,15 @@ Proof.
 Qed.
 Global Instance wand_proper :
   Proper ((⊣⊢) ==> (⊣⊢) ==> (⊣⊢)) (@uPred_wand M) := ne_proper_2 _.
-Global Instance eq_ne (A : cofeT) n :
-  Proper (dist n ==> dist n ==> dist n) (@uPred_eq M A).
+Global Instance internal_eq_ne (A : cofeT) n :
+  Proper (dist n ==> dist n ==> dist n) (@uPred_internal_eq M A).
 Proof.
   intros x x' Hx y y' Hy; split=> n' z; unseal; split; intros; simpl in *.
   - by rewrite -(dist_le _ _ _ _ Hx) -?(dist_le _ _ _ _ Hy); auto.
   - by rewrite (dist_le _ _ _ _ Hx) ?(dist_le _ _ _ _ Hy); auto.
 Qed.
-Global Instance eq_proper (A : cofeT) :
-  Proper ((≡) ==> (≡) ==> (⊣⊢)) (@uPred_eq M A) := ne_proper_2 _.
+Global Instance internal_eq_proper (A : cofeT) :
+  Proper ((≡) ==> (≡) ==> (⊣⊢)) (@uPred_internal_eq M A) := ne_proper_2 _.
 Global Instance forall_ne A n :
   Proper (pointwise_relation _ (dist n) ==> dist n) (@uPred_forall M A).
 Proof.
@@ -355,21 +356,16 @@ Proof. unseal; split=> n x ??; by exists a. Qed.
 Lemma exist_elim {A} (Φ : A → uPred M) Q : (∀ a, Φ a ⊢ Q) → (∃ a, Φ a) ⊢ Q.
 Proof. unseal; intros HΦΨ; split=> n x ? [a ?]; by apply HΦΨ with a. Qed.
 
-Lemma eq_refl {A : cofeT} (a : A) : True ⊢ a ≡ a.
+Lemma internal_eq_refl {A : cofeT} (a : A) : True ⊢ a ≡ a.
 Proof. unseal; by split=> n x ??; simpl. Qed.
-Lemma eq_rewrite {A : cofeT} a b (Ψ : A → uPred M) P
+Lemma internal_eq_rewrite {A : cofeT} a b (Ψ : A → uPred M) P
   {HΨ : ∀ n, Proper (dist n ==> dist n) Ψ} : (P ⊢ a ≡ b) → (P ⊢ Ψ a) → P ⊢ Ψ b.
 Proof.
   unseal; intros Hab Ha; split=> n x ??. apply HΨ with n a; auto.
   - by symmetry; apply Hab with x.
   - by apply Ha.
 Qed.
-Lemma eq_equiv {A : cofeT} (a b : A) : (True ⊢ a ≡ b) → a ≡ b.
-Proof.
-  unseal=> Hab; apply equiv_dist; intros n; apply Hab with ∅; last done.
-  apply cmra_valid_validN, ucmra_unit_valid.
-Qed.
-Lemma eq_rewrite_contractive {A : cofeT} a b (Ψ : A → uPred M) P
+Lemma internal_eq_rewrite_contractive {A : cofeT} a b (Ψ : A → uPred M) P
   {HΨ : Contractive Ψ} : (P ⊢ ▷ (a ≡ b)) → (P ⊢ Ψ a) → P ⊢ Ψ b.
 Proof.
   unseal; intros Hab Ha; split=> n x ??. apply HΨ with n a; auto.

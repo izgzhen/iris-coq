@@ -33,8 +33,11 @@ Proof. by rewrite /IntoPure discrete_valid. Qed.
 (* FromPure *)
 Global Instance from_pure_pure φ : @FromPure M (■ φ) φ.
 Proof. done. Qed.
-Global Instance from_pure_eq {A : cofeT} (a b : A) : @FromPure M (a ≡ b) (a ≡ b).
-Proof. rewrite /FromPure. eapply pure_elim; [done|]=> ->. apply eq_refl'. Qed.
+Global Instance from_pure_internal_eq {A : cofeT} (a b : A) :
+  @FromPure M (a ≡ b) (a ≡ b).
+Proof.
+  rewrite /FromPure. eapply pure_elim; [done|]=> ->. apply internal_eq_refl'.
+Qed.
 Global Instance from_pure_cmra_valid {A : cmraT} (a : A) :
   @FromPure M (✓ a) (✓ a).
 Proof.

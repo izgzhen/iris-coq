@@ -241,13 +241,13 @@ Proof.
   - apply exist_elim=> x. eauto using pure_mono.
 Qed.
 
-Lemma eq_refl' {A : cofeT} (a : A) P : P ⊢ a ≡ a.
-Proof. rewrite (True_intro P). apply eq_refl. Qed.
-Hint Resolve eq_refl'.
-Lemma equiv_eq {A : cofeT} P (a b : A) : a ≡ b → P ⊢ a ≡ b.
+Lemma internal_eq_refl' {A : cofeT} (a : A) P : P ⊢ a ≡ a.
+Proof. rewrite (True_intro P). apply internal_eq_refl. Qed.
+Hint Resolve internal_eq_refl'.
+Lemma equiv_internal_eq {A : cofeT} P (a b : A) : a ≡ b → P ⊢ a ≡ b.
 Proof. by intros ->. Qed.
-Lemma eq_sym {A : cofeT} (a b : A) : a ≡ b ⊢ b ≡ a.
-Proof. apply (eq_rewrite a b (λ b, b ≡ a)%I); auto. solve_proper. Qed.
+Lemma internal_eq_sym {A : cofeT} (a b : A) : a ≡ b ⊢ b ≡ a.
+Proof. apply (internal_eq_rewrite a b (λ b, b ≡ a)%I); auto. solve_proper. Qed.
 
 Lemma pure_alt φ : ■ φ ⊣⊢ ∃ _ : φ, True.
 Proof.
@@ -280,9 +280,10 @@ Proof.
 Qed.
 Lemma equiv_iff P Q : (P ⊣⊢ Q) → True ⊢ P ↔ Q.
 Proof. intros ->; apply iff_refl. Qed.
-Lemma eq_iff P Q : P ≡ Q ⊢ P ↔ Q.
+Lemma internal_eq_iff P Q : P ≡ Q ⊢ P ↔ Q.
 Proof.
-  apply (eq_rewrite P Q (λ Q, P ↔ Q))%I; first solve_proper; auto using iff_refl.
+  apply (internal_eq_rewrite P Q (λ Q, P ↔ Q))%I;
+    first solve_proper; auto using iff_refl.
 Qed.
 
 (* Derived BI Stuff *)
@@ -445,12 +446,12 @@ Proof.
   apply impl_intro_l; rewrite -always_and.
   apply always_mono, impl_elim with P; auto.
 Qed.
-Lemma always_eq {A:cofeT} (a b : A) : □ (a ≡ b) ⊣⊢ a ≡ b.
+Lemma always_internal_eq {A:cofeT} (a b : A) : □ (a ≡ b) ⊣⊢ a ≡ b.
 Proof.
   apply (anti_symm (⊢)); auto using always_elim.
-  apply (eq_rewrite a b (λ b, □ (a ≡ b))%I); auto.
+  apply (internal_eq_rewrite a b (λ b, □ (a ≡ b))%I); auto.
   { intros n; solve_proper. }
-  rewrite -(eq_refl a) always_pure; auto.
+  rewrite -(internal_eq_refl a) always_pure; auto.
 Qed.
 
 Lemma always_and_sep P Q : □ (P ∧ Q) ⊣⊢ □ (P ★ Q).
@@ -692,8 +693,8 @@ Global Instance ownM_timeless (a : M) : Timeless a → TimelessP (uPred_ownM a).
 Proof.
   intros ?. rewrite /TimelessP later_ownM. apply exist_elim=> b.
   rewrite (timelessP (a≡b)) (except_0_intro (uPred_ownM b)) -except_0_and.
-  apply except_0_mono. rewrite eq_sym.
-  apply (eq_rewrite b a (uPred_ownM)); first apply _; auto.
+  apply except_0_mono. rewrite internal_eq_sym.
+  apply (internal_eq_rewrite b a (uPred_ownM)); first apply _; auto.
 Qed.
 
 (* Persistence *)
@@ -716,9 +717,9 @@ Proof. by intros; rewrite /PersistentP always_forall; apply forall_mono. Qed.
 Global Instance exist_persistent {A} (Ψ : A → uPred M) :
   (∀ x, PersistentP (Ψ x)) → PersistentP (∃ x, Ψ x).
 Proof. by intros; rewrite /PersistentP always_exist; apply exist_mono. Qed.
-Global Instance eq_persistent {A : cofeT} (a b : A) :
+Global Instance internal_eq_persistent {A : cofeT} (a b : A) :
   PersistentP (a ≡ b : uPred M)%I.
-Proof. by intros; rewrite /PersistentP always_eq. Qed.
+Proof. by intros; rewrite /PersistentP always_internal_eq. Qed.
 Global Instance cmra_valid_persistent {A : cmraT} (a : A) :
   PersistentP (✓ a : uPred M)%I.
 Proof. by intros; rewrite /PersistentP always_cmra_valid. Qed.

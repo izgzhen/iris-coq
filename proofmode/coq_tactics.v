@@ -653,9 +653,9 @@ Lemma tac_rewrite Δ i p Pxy (lr : bool) Q :
     (∀ n, Proper (dist n ==> dist n) Φ) →
     (Δ ⊢ Φ (if lr then x else y)) → Δ ⊢ Q.
 Proof.
-  intros ? A x y ? HPxy -> ?; apply eq_rewrite; auto.
+  intros ? A x y ? HPxy -> ?; apply internal_eq_rewrite; auto.
   rewrite {1}envs_lookup_sound' //; rewrite sep_elim_l HPxy.
-  destruct lr; auto using eq_sym.
+  destruct lr; auto using internal_eq_sym.
 Qed.
 
 Lemma tac_rewrite_in Δ i p Pxy j q P (lr : bool) Q :
@@ -673,8 +673,10 @@ Proof.
   rewrite sep_elim_l HPxy always_and_sep_r.
   rewrite (envs_simple_replace_sound _ _ j) //; simpl.
   rewrite HP right_id -assoc; apply wand_elim_r'. destruct lr.
-  - apply (eq_rewrite x y (λ y, □?q Φ y -★ Δ')%I); eauto with I. solve_proper.
-  - apply (eq_rewrite y x (λ y, □?q Φ y -★ Δ')%I); eauto using eq_sym with I.
+  - apply (internal_eq_rewrite x y (λ y, □?q Φ y -★ Δ')%I);
+      eauto with I. solve_proper.
+  - apply (internal_eq_rewrite y x (λ y, □?q Φ y -★ Δ')%I);
+      eauto using internal_eq_sym with I.
     solve_proper.
 Qed.
 

@@ -14,4 +14,4 @@ Hint Resolve and_intro and_elim_l' and_elim_r' : I.
 Hint Resolve always_mono : I.
 Hint Resolve sep_elim_l' sep_elim_r' sep_mono : I.
 Hint Immediate True_intro False_elim : I.
-Hint Immediate iff_refl eq_refl' : I.
+Hint Immediate iff_refl internal_eq_refl' : I.

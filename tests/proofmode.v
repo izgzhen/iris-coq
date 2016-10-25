@@ -67,7 +67,7 @@ Lemma demo_5 (M : ucmraT) (x y : M) (P : uPred M) :
   (∀ z, P → z ≡ y) ⊢ (P -★ (x,x) ≡ (y,x)).
 Proof.
   iIntros "H1 H2".
-  iRewrite (uPred.eq_sym x x with "[#]"); first done.
+  iRewrite (uPred.internal_eq_sym x x with "[#]"); first done.
   iRewrite -("H1" $! _ with "[-]"); first done.
   done.
 Qed.
