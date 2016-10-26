@@ -268,10 +268,10 @@
       \tensor*[^{#1}]{#2}{^{#3}}
     }%
   }}%
-\NewDocumentCommand \vs {O{} O{}} {\kern-0.5ex\vsGen[#1]{\Rrightarrow}[#2]}
-\NewDocumentCommand \vsL {O{} O{}} {\kern-0.5ex\vsGen[#1]{\Lleftarrow}[#2]}
+\NewDocumentCommand \vs {O{} O{}} {\vsGen[#1]{\Rrightarrow}[#2]}
+\NewDocumentCommand \vsL {O{} O{}} {\vsGen[#1]{\Lleftarrow}[#2]}
 \NewDocumentCommand \vsE {O{} O{}} %
-  {\kern-0.5ex\vsGen[#1]{\Lleftarrow\!\!\!\Rrightarrow}[#2]}
+  {\vsGen[#1]{\Lleftarrow\!\!\!\Rrightarrow}[#2]}
 \NewDocumentCommand \pvs {O{} O{}} {\mathord{\vsGen[#1]{{\mid\kern-0.5ex\Rrightarrow\kern-0.25ex}}[#2]\kern0.2ex}}
 
 \newcommand\vsWand{{\displaystyle\equiv\kern-1.6ex-\kern-1.5ex\smash{\scalerel*{\vphantom-\ast}{\sum}}\kern-0.2ex}}
