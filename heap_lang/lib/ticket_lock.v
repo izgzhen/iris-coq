@@ -136,7 +136,7 @@ Section proof.
     - wp_cas_fail.
       iMod ("Hclose" with "[Hlo' Hln' Hauth Haown]") as "_".
       { iNext. iExists o', n'. by iFrame. }
-      iModIntro. wp_if. by iApply "IH".
+      iModIntro. wp_if. by iApply "IH"; auto.
   Qed.
 
   Lemma release_spec γ lk R :

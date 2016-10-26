@@ -65,7 +65,7 @@ Section mono_proof.
       by apply mnat_included, le_n_S.
     - wp_cas_fail; first (by intros [= ?%Nat2Z.inj]).
       iMod ("Hclose" with "[Hl Hγ]") as "_"; [iNext; iExists c'; by iFrame|].
-      iModIntro. wp_if. iApply ("IH" with "[Hγf] HΦ").
+      iModIntro. wp_if. iApply ("IH" with "[Hγf] [HΦ]"); last by auto.
       rewrite {3}/mcounter; eauto 10.
   Qed.
 
@@ -140,7 +140,7 @@ Section contrib_spec.
       iModIntro. wp_if. by iApply "HΦ".
     - wp_cas_fail; first (by intros [= ?%Nat2Z.inj]).
       iMod ("Hclose" with "[Hl Hγ]") as "_"; [iNext; iExists c'; by iFrame|].
-      iModIntro. wp_if. by iApply ("IH" with "[Hγf] HΦ").
+      iModIntro. wp_if. by iApply ("IH" with "[Hγf] [HΦ]"); auto.
   Qed.
 
   Lemma read_contrib_spec γ l q n :

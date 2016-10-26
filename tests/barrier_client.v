@@ -30,7 +30,7 @@ Section client.
   Proof.
     iIntros "[#Hh Hrecv]". wp_lam. wp_let.
     wp_apply wait_spec; iFrame "Hrecv".
-    iDestruct 1 as (f) "[Hy #Hf]".
+    iNext. iDestruct 1 as (f) "[Hy #Hf]".
     wp_seq. wp_load.
     iApply wp_wand_r; iSplitR; [iApply "Hf"|by iIntros (v) "_"].
   Qed.
@@ -39,7 +39,7 @@ Section client.
   Proof.
     iIntros (?) "#Hh"; rewrite /client. wp_alloc y as "Hy". wp_let.
     wp_apply (newbarrier_spec N (y_inv 1 y)); first done.
-    iFrame "Hh". iIntros (l) "[Hr Hs]". wp_let.
+    iFrame "Hh". iNext. iIntros (l) "[Hr Hs]". wp_let.
     iApply (wp_par (λ _, True%I) (λ _, True%I)). iFrame "Hh".
     iSplitL "Hy Hs".
     - (* The original thread, the sender. *)

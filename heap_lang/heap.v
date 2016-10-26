@@ -104,11 +104,11 @@ Section heap.
   Proof. by rewrite heap_mapsto_op_half. Qed.
 
   (** Weakest precondition *)
-  Lemma wp_alloc E e v Φ :
+  Lemma wp_alloc E e v :
     to_val e = Some v → nclose heapN ⊆ E →
-    heap_ctx ★ ▷ (∀ l, l ↦ v ={E}=★ Φ (LitV (LitLoc l))) ⊢ WP Alloc e @ E {{ Φ }}.
+    {{{ heap_ctx }}} Alloc e @ E {{{ l; LitV (LitLoc l), l ↦ v }}}.
   Proof.
-    iIntros (<-%of_to_val ?) "[#Hinv HΦ]". rewrite /heap_ctx.
+    iIntros (<-%of_to_val ? Φ) "[#Hinv HΦ]". rewrite /heap_ctx.
     iMod (auth_empty heap_name) as "Ha".
     iMod (auth_open with "[$Hinv $Ha]") as (σ) "(%&Hσ&Hcl)"; first done.
     iApply wp_alloc_pst. iFrame "Hσ". iNext. iIntros (l) "[% Hσ] !>".
@@ -118,12 +118,12 @@ Section heap.
     iApply "HΦ". by rewrite heap_mapsto_eq /heap_mapsto_def.
   Qed.
 
-  Lemma wp_load E l q v Φ :
+  Lemma wp_load E l q v :
     nclose heapN ⊆ E →
-    heap_ctx ★ ▷ l ↦{q} v ★ ▷ (l ↦{q} v ={E}=★ Φ v)
-    ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
+    {{{ heap_ctx ★ ▷ l ↦{q} v }}} Load (Lit (LitLoc l)) @ E
+    {{{; v, l ↦{q} v }}}.
   Proof.
-    iIntros (?) "[#Hinv [>Hl HΦ]]".
+    iIntros (? Φ) "[[#Hinv >Hl] HΦ]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iMod (auth_open with "[$Hinv $Hl]") as (σ) "(%&Hσ&Hcl)"; first done.
     iApply (wp_load_pst _ σ); first eauto using heap_singleton_included.
@@ -131,12 +131,12 @@ Section heap.
     iMod ("Hcl" with "* [Hσ]") as "Ha"; first eauto. by iApply "HΦ".
   Qed.
 
-  Lemma wp_store E l v' e v Φ :
+  Lemma wp_store E l v' e v :
     to_val e = Some v → nclose heapN ⊆ E →
-    heap_ctx ★ ▷ l ↦ v' ★ ▷ (l ↦ v ={E}=★ Φ (LitV LitUnit))
-    ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
+    {{{ heap_ctx ★ ▷ l ↦ v' }}} Store (Lit (LitLoc l)) e @ E
+    {{{; LitV LitUnit, l ↦ v }}}.
   Proof.
-    iIntros (<-%of_to_val ?) "[#Hinv [>Hl HΦ]]".
+    iIntros (<-%of_to_val ? Φ) "[[#Hinv >Hl] HΦ]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iMod (auth_open with "[$Hinv $Hl]") as (σ) "(%&Hσ&Hcl)"; first done.
     iApply (wp_store_pst _ σ); first eauto using heap_singleton_included.
@@ -147,12 +147,12 @@ Section heap.
     by iApply "HΦ".
   Qed.
 
-  Lemma wp_cas_fail E l q v' e1 v1 e2 v2 Φ :
+  Lemma wp_cas_fail E l q v' e1 v1 e2 v2 :
     to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 → nclose heapN ⊆ E →
-    heap_ctx ★ ▷ l ↦{q} v' ★ ▷ (l ↦{q} v' ={E}=★ Φ (LitV (LitBool false)))
-    ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
+    {{{ heap_ctx ★ ▷ l ↦{q} v' }}} CAS (Lit (LitLoc l)) e1 e2 @ E
+    {{{; LitV (LitBool false), l ↦{q} v' }}}.
   Proof.
-    iIntros (<-%of_to_val <-%of_to_val ??) "[#Hinv [>Hl HΦ]]".
+    iIntros (<-%of_to_val <-%of_to_val ?? Φ) "[[#Hinv >Hl] HΦ]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iMod (auth_open with "[$Hinv $Hl]") as (σ) "(%&Hσ&Hcl)"; first done.
     iApply (wp_cas_fail_pst _ σ); [eauto using heap_singleton_included|done|].
@@ -160,12 +160,12 @@ Section heap.
     iMod ("Hcl" with "* [Hσ]") as "Ha"; first eauto. by iApply "HΦ".
   Qed.
 
-  Lemma wp_cas_suc E l e1 v1 e2 v2 Φ :
+  Lemma wp_cas_suc E l e1 v1 e2 v2 :
     to_val e1 = Some v1 → to_val e2 = Some v2 → nclose heapN ⊆ E →
-    heap_ctx ★ ▷ l ↦ v1 ★ ▷ (l ↦ v2 ={E}=★ Φ (LitV (LitBool true)))
-    ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
+    {{{ heap_ctx ★ ▷ l ↦ v1 }}} CAS (Lit (LitLoc l)) e1 e2 @ E
+    {{{; LitV (LitBool true), l ↦ v2 }}}.
   Proof.
-    iIntros (<-%of_to_val <-%of_to_val ?) "[#Hinv [>Hl HΦ]]".
+    iIntros (<-%of_to_val <-%of_to_val ? Φ) "[[#Hinv >Hl] HΦ]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iMod (auth_open with "[$Hinv $Hl]") as (σ) "(%&Hσ&Hcl)"; first done.
     iApply (wp_cas_suc_pst _ σ); first eauto using heap_singleton_included.

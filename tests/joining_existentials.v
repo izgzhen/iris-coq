@@ -36,7 +36,7 @@ Lemma worker_spec e γ l (Φ Ψ : X → iProp Σ) `{!Closed [] e} :
   ⊢ WP wait #l ;; e {{ _, barrier_res γ Ψ }}.
 Proof.
   iIntros "[Hl #He]". wp_apply wait_spec; simpl; iFrame "Hl".
-  iDestruct 1 as (x) "[#Hγ Hx]".
+  iNext. iDestruct 1 as (x) "[#Hγ Hx]".
   wp_seq. iApply wp_wand_l. iSplitR; [|by iApply "He"].
   iIntros (v) "?"; iExists x; by iSplit.
 Qed.
@@ -77,7 +77,7 @@ Proof.
   iIntros (HN) "/= (#Hh&HP&#He&#He1&#He2)"; rewrite /client.
   iMod (own_alloc (Pending : one_shotR Σ F)) as (γ) "Hγ"; first done.
   wp_apply (newbarrier_spec N (barrier_res γ Φ)); auto.
-  iFrame "Hh". iIntros (l) "[Hr Hs]".
+  iFrame "Hh". iNext. iIntros (l) "[Hr Hs]".
   set (workers_post (v : val) := (barrier_res γ Ψ1 ★ barrier_res γ Ψ2)%I).
   wp_let. wp_apply (wp_par  (λ _, True)%I workers_post); iFrame "Hh".
   iSplitL "HP Hs Hγ"; [|iSplitL "Hr"].

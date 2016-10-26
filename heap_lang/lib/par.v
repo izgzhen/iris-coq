@@ -19,15 +19,15 @@ Context `{!heapG Σ, !spawnG Σ}.
 Lemma par_spec (Ψ1 Ψ2 : val → iProp Σ) e (f1 f2 : val) (Φ : val → iProp Σ) :
   to_val e = Some (f1,f2)%V →
   (heap_ctx ★ WP f1 #() {{ Ψ1 }} ★ WP f2 #() {{ Ψ2 }} ★
-   ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
+   ▷ ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
   ⊢ WP par e {{ Φ }}.
 Proof.
   iIntros (?) "(#Hh&Hf1&Hf2&HΦ)".
   rewrite /par. wp_value. iModIntro. wp_let. wp_proj.
   wp_apply (spawn_spec parN); try wp_done; try solve_ndisj; iFrame "Hf1 Hh".
-  iIntros (l) "Hl". wp_let. wp_proj. wp_bind (f2 _).
+  iNext. iIntros (l) "Hl". wp_let. wp_proj. wp_bind (f2 _).
   iApply wp_wand_l; iFrame "Hf2"; iIntros (v) "H2". wp_let.
-  wp_apply join_spec; iFrame "Hl". iIntros (w) "H1".
+  wp_apply join_spec; iFrame "Hl". iNext. iIntros (w) "H1".
   iSpecialize ("HΦ" with "* [-]"); first by iSplitL "H1". by wp_let.
 Qed.
 

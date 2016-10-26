@@ -147,7 +147,7 @@ Proof.
     iAssert (sts_ownS γ (i_states i) {[Change i]})%I with ">[Hγ]" as "Hγ".
     { iApply (sts_own_weaken with "Hγ"); eauto using i_states_closed. }
     iModIntro. wp_if.
-    iApply ("IH" with "Hγ [HQR] HΦ"). auto.
+    iApply ("IH" with "Hγ [HQR] [HΦ]"); auto.
   - (* a High state: the comparison succeeds, and we perform a transition and
     return to the client *)
     iDestruct "Hr" as (Ψ) "[HΨ Hsp]".

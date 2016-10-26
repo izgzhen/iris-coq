@@ -70,7 +70,7 @@ Proof.
   iLöb as "IH". wp_rec. wp_bind (! _)%E. iInv N as (v) "[Hl Hinv]" "Hclose".
   wp_load. iDestruct "Hinv" as "[%|Hinv]"; subst.
   - iMod ("Hclose" with "[Hl]"); [iNext; iExists _; iFrame; eauto|].
-    iModIntro. wp_match. iApply ("IH" with "Hγ Hv").
+    iModIntro. wp_match. iApply ("IH" with "Hγ [Hv]"). auto.
   - iDestruct "Hinv" as (v') "[% [HΨ|Hγ']]"; simplify_eq/=.
     + iMod ("Hclose" with "[Hl Hγ]"); [iNext; iExists _; iFrame; eauto|].
       iModIntro. wp_match. by iApply "Hv".

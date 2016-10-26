@@ -76,7 +76,7 @@ Section proof.
     iIntros (Φ) "[#Hl HΦ]". iLöb as "IH". wp_rec. wp_bind (try_acquire _).
     iApply try_acquire_spec. iFrame "#". iSplit.
     - iIntros "Hlked HR". wp_if. iModIntro. iApply "HΦ"; iFrame.
-    - wp_if. iApply ("IH" with "HΦ").
+    - wp_if. iApply ("IH" with "[HΦ]"). auto.
   Qed.
 
   Lemma release_spec γ lk R :

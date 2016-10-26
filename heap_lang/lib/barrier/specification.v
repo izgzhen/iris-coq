@@ -20,7 +20,8 @@ Proof.
   intros HN.
   exists (λ l, CofeMor (recv N l)), (λ l, CofeMor (send N l)).
   split_and?; simpl.
-  - iIntros (P) "#? !# _". iApply (newbarrier_spec _ P); eauto.
+  - iIntros (P) "#? !# _". iApply (newbarrier_spec _ P); first done.
+    iSplit; first done. iNext. eauto.
   - iIntros (l P) "!# [Hl HP]". iApply signal_spec; iFrame "Hl HP"; by eauto.
   - iIntros (l P) "!# Hl". iApply wait_spec; iFrame "Hl"; eauto.
   - iIntros (l P Q) "!#". by iApply recv_split.
