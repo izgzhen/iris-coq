@@ -35,9 +35,15 @@ Notation "P ={ E }=★ Q" := (P ⊢ |={E}=> Q)
 Notation "|={ E1 , E2 }▷=> Q" := (|={E1,E2}=> (▷ |={E2,E1}=> Q))%I
   (at level 99, E1, E2 at level 50, Q at level 200,
    format "|={ E1 , E2 }▷=>  Q") : uPred_scope.
+Notation "P ={ E1 , E2 }▷=★ Q" := (P -★ |={ E1 , E2 }▷=> Q)%I
+  (at level 99, E1, E2 at level 50, Q at level 200,
+   format "P  ={ E1 , E2 }▷=★  Q") : uPred_scope.
 Notation "|={ E }▷=> Q" := (|={E,E}▷=> Q)%I
   (at level 99, E at level 50, Q at level 200,
    format "|={ E }▷=>  Q") : uPred_scope.
+Notation "P ={ E }▷=★ Q" := (P ={E,E}▷=★ Q)%I
+  (at level 99, E at level 50, Q at level 200,
+   format "P  ={ E }▷=★  Q") : uPred_scope.
 
 Section fupd.
 Context `{irisG Λ Σ}.
