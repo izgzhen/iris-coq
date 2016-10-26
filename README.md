@@ -32,9 +32,13 @@ running:
   Robbert Krebbers <http://robbertkrebbers.nl/thesis.html>.
 * The folder [algebra](algebra) contains the COFE and CMRA constructions as well
   as the solver for recursive domain equations.
-* The folder [program_logic](program_logic) builds the semantic domain of Iris,
-  defines and verifies primitive view shifts and weakest preconditions, and
-  builds some language-independent derived constructions (e.g., STSs).
+* The folder [base_logic](base_logic) defines the Iris base logic and the
+  primitive connectives.  It also contains derived constructions that are
+  entirely independent of the choice of resources.
+* The folder [program_logic](program_logic) specializes the base logic to build
+  Iris, the program logic.  Most crucially, this includes world satisfaction
+  and weakest preconditions.  Furthermore, some language-independent derived
+  constructions (e.g., STSs) are defined in this folder.
 * The folder [heap_lang](heap_lang) defines the ML-like concurrent heap language
   * The subfolder [lib](heap_lang/lib) contains a few derived constructions
     within this language, e.g., parallel composition.
@@ -51,4 +55,5 @@ running:
 ## Documentation
 
 A LaTeX version of the core logic definitions and some derived forms is
-available in [docs/iris.tex](docs/iris.tex).
+available in [docs/iris.tex](docs/iris.tex).  A compiled PDF version of this
+document is [http://plv.mpi-sws.org/iris/appendix-3.0.pdf](available online).
