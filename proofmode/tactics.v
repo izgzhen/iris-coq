@@ -678,17 +678,16 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
   iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 x4 x5 x6 x7 x8 ) pat.
 
 (** * Introduction tactic *)
-Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" := first
-  [ (* (∀ _, _) *) apply tac_forall_intro; intros x
-  | (* (?P → _) *) eapply tac_impl_intro_pure;
-     [let P := match goal with |- IntoPure ?P _ => P end in
-      apply _ || fail "iIntro:" P "not pure"
-     |intros x]
-  | (* (?P -★ _) *) eapply tac_wand_intro_pure;
-     [let P := match goal with |- IntoPure ?P _ => P end in
-      apply _ || fail "iIntro:" P "not pure"
-     |intros x]
-  |intros x].
+Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" :=
+  try first
+    [(* (∀ _, _) *) apply tac_forall_intro
+    |(* (?P → _) *) eapply tac_impl_intro_pure;
+      [let P := match goal with |- IntoPure ?P _ => P end in
+       apply _ || fail "iIntro:" P "not pure"|]
+    |(* (?P -★ _) *) eapply tac_wand_intro_pure;
+      [let P := match goal with |- IntoPure ?P _ => P end in
+       apply _ || fail "iIntro:" P "not pure"|]];
+  intros x.
 
 Local Tactic Notation "iIntro" constr(H) := first
   [ (* (?Q → _) *)
