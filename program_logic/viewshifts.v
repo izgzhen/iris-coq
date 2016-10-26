@@ -20,13 +20,6 @@ Notation "P ={ E }=> Q" := (True ⊢ P ={E}=> Q)%I
   (at level 99, E at level 50, Q at level 200,
    format "P  ={ E }=>  Q") : C_scope.
 
-Notation "P ={ E1 , E2 }▷=> Q" := (P ={E1,E2}=> ▷ |={E2,E1}=> Q)%I
-  (at level 99, E1, E2 at level 50, Q at level 200,
-   format "P ={ E1 , E2 }▷=>  Q") : uPred_scope.
-Notation "P ={ E }▷=> Q" := (P ={E,E}▷=> Q)%I
-  (at level 99, E at level 50, Q at level 200,
-   format "P ={ E }▷=>  Q") : uPred_scope.
-
 Section vs.
 Context `{irisG Λ Σ}.
 Implicit Types P Q R : iProp Σ.
