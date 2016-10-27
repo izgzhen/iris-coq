@@ -91,11 +91,11 @@ Proof.
 Qed.
 
 (** Actual proofs *)
-Lemma newbarrier_spec (P : iProp Σ) (Φ : val → iProp Σ) :
+Lemma newbarrier_spec (P : iProp Σ) :
   heapN ⊥ N →
-  heap_ctx ★ (∀ l, recv l P ★ send l P -★ Φ #l) ⊢ WP newbarrier #() {{ Φ }}.
+  {{{ heap_ctx }}} newbarrier #() {{{ l; #l, recv l P ★ send l P }}}.
 Proof.
-  iIntros (HN) "[#? HΦ]".
+  iIntros (HN Φ) "[#? HΦ]".
   rewrite /newbarrier /=. wp_seq. wp_alloc l as "Hl".
   iApply ("HΦ" with ">[-]").
   iMod (saved_prop_alloc (F:=idCF) P) as (γ) "#?".
@@ -117,14 +117,15 @@ Proof.
   - auto.
 Qed.
 
-Lemma signal_spec l P (Φ : val → iProp Σ) :
-  send l P ★ P ★ Φ #() ⊢ WP signal #l {{ Φ }}.
+Lemma signal_spec l P :
+  {{{ send l P ★ P }}} signal #l {{{; #(), True }}}.
 Proof.
   rewrite /signal /send /barrier_ctx /=.
-  iIntros "(Hs&HP&HΦ)"; iDestruct "Hs" as (γ) "[#(%&Hh&Hsts) Hγ]". wp_let.
+  iIntros (Φ) "((Hs&HP)&HΦ)"; iDestruct "Hs" as (γ) "[#(%&Hh&Hsts) Hγ]". wp_let.
   iMod (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
     as ([p I]) "(% & [Hl Hr] & Hclose)"; eauto.
-  destruct p; [|done]. wp_store. iFrame "HΦ".
+  destruct p; [|done]. wp_store.
+  iSpecialize ("HΦ" with "[#]") => //. iFrame "HΦ".
   iMod ("Hclose" $! (State High I) (∅ : set token) with "[-]"); last done.
   iSplit; [iPureIntro; by eauto using signal_step|].
   iNext. rewrite {2}/barrier_inv /ress /=; iFrame "Hl".
@@ -132,11 +133,11 @@ Proof.
   iNext. iIntros "_"; by iApply "Hr".
 Qed.
 
-Lemma wait_spec l P (Φ : val → iProp Σ) :
-  recv l P ★ (P -★ Φ #()) ⊢ WP wait #l {{ Φ }}.
+Lemma wait_spec l P:
+  {{{ recv l P }}} wait #l {{{ ; #(), P }}}.
 Proof.
   rename P into R; rewrite /recv /barrier_ctx.
-  iIntros "[Hr HΦ]"; iDestruct "Hr" as (γ P Q i) "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
+  iIntros (Φ) "[Hr HΦ]"; iDestruct "Hr" as (γ P Q i) "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
   iLöb as "IH". wp_rec. wp_bind (! _)%E.
   iMod (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
     as ([p I]) "(% & [Hl Hr] & Hclose)"; eauto.
@@ -146,7 +147,7 @@ Proof.
     iAssert (sts_ownS γ (i_states i) {[Change i]})%I with ">[Hγ]" as "Hγ".
     { iApply (sts_own_weaken with "Hγ"); eauto using i_states_closed. }
     iModIntro. wp_if.
-    iApply ("IH" with "Hγ [HQR] HΦ"). auto.
+    iApply ("IH" with "Hγ [HQR] [HΦ]"); auto.
   - (* a High state: the comparison succeeds, and we perform a transition and
     return to the client *)
     iDestruct "Hr" as (Ψ) "[HΨ Hsp]".
