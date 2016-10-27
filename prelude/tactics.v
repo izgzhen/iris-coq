@@ -292,9 +292,9 @@ Ltac f_equiv :=
   end.
 
 (** auto_proper solves goals of the form "f _ = f _", for any relation and any
-    number of arguments, by repeatedly apply f_equiv and handling trivial cases.
+    number of arguments, by repeatedly applying f_equiv and handling trivial cases.
     If it cannot solve an equality, it will leave that to the user. *)
-Ltac auto_proper :=
+Ltac auto_equiv :=
   (* Deal with "pointwise_relation" *)
   repeat lazymatch goal with
   | |- pointwise_relation _ _ _ _ => intros ?
@@ -302,10 +302,10 @@ Ltac auto_proper :=
   (* Normalize away equalities. *)
   simplify_eq;
   (* repeatedly apply congruence lemmas and use the equalities in the hypotheses. *)
-  try (f_equiv; fast_done || auto_proper).
+  try (f_equiv; fast_done || auto_equiv).
 
 (** solve_proper solves goals of the form "Proper (R1 ==> R2)", for any
-    number of relations. All the actual work is done by f_equiv;
+    number of relations. All the actual work is done by auto_equiv;
     solve_proper just introduces the assumptions and unfolds the first
     head symbol. *)
 Ltac solve_proper :=
@@ -328,7 +328,7 @@ Ltac solve_proper :=
   | |- ?R (?f _ _) (?f _ _) => unfold f
   | |- ?R (?f _) (?f _) => unfold f
   end;
-  solve [ auto_proper ].
+  solve [ auto_equiv ].
 
 (** The tactic [intros_revert tac] introduces all foralls/arrows, performs tac,
 and then reverts them. *)
