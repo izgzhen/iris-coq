@@ -1,4 +1,5 @@
-From iris.program_logic Require Export own language.
+From iris.base_logic Require Export lib.own.
+From iris.program_logic Require Export language.
 From iris.prelude Require Export coPset.
 From iris.algebra Require Import gmap auth agree gset coPset.
 

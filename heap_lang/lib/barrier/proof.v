@@ -2,8 +2,8 @@ From iris.program_logic Require Export weakestpre.
 From iris.heap_lang Require Export lang.
 From iris.heap_lang.lib.barrier Require Export barrier.
 From iris.prelude Require Import functions.
-From iris.base_logic Require Import big_op.
-From iris.program_logic Require Import saved_prop sts.
+From iris.base_logic Require Import big_op lib.saved_prop.
+From iris.program_logic Require Import sts.
 From iris.heap_lang Require Import proofmode.
 From iris.heap_lang.lib.barrier Require Import protocol.
 
