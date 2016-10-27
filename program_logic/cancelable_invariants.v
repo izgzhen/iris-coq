@@ -6,7 +6,7 @@ Import uPred.
 Class cinvG Σ := cinv_inG :> inG Σ fracR.
 
 Section defs.
-  Context `{irisG Λ Σ, cinvG Σ}.
+  Context `{invG Σ, cinvG Σ}.
 
   Definition cinv_own (γ : gname) (p : frac) : iProp Σ := own γ p.
 
@@ -14,11 +14,11 @@ Section defs.
     inv N (P ∨ cinv_own γ 1%Qp)%I.
 End defs.
 
-Instance: Params (@cinv) 6.
+Instance: Params (@cinv) 5.
 Typeclasses Opaque cinv_own cinv.
 
 Section proofs.
-  Context `{irisG Λ Σ, cinvG Σ}.
+  Context `{invG Σ, cinvG Σ}.
 
   Global Instance cinv_own_timeless γ p : TimelessP (cinv_own γ p).
   Proof. rewrite /cinv_own; apply _. Qed.

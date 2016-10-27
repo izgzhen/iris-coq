@@ -10,7 +10,7 @@ Class thread_localG Σ :=
   tl_inG :> inG Σ (prodR coPset_disjR (gset_disjR positive)).
 
 Section defs.
-  Context `{irisG Λ Σ, thread_localG Σ}.
+  Context `{invG Σ, thread_localG Σ}.
 
   Definition tl_own (tid : thread_id) (E : coPset) : iProp Σ :=
     own tid (CoPset E, ∅).
@@ -20,11 +20,11 @@ Section defs.
           inv tlN (P ★ own tid (∅, GSet {[i]}) ∨ tl_own tid {[i]}))%I.
 End defs.
 
-Instance: Params (@tl_inv) 4.
+Instance: Params (@tl_inv) 3.
 Typeclasses Opaque tl_own tl_inv.
 
 Section proofs.
-  Context `{irisG Λ Σ, thread_localG Σ}.
+  Context `{invG Σ, thread_localG Σ}.
 
   Global Instance tl_own_timeless tid E : TimelessP (tl_own tid E).
   Proof. rewrite /tl_own; apply _. Qed.

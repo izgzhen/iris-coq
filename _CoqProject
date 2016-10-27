@@ -87,7 +87,6 @@ program_logic/sts.v
 program_logic/namespaces.v
 program_logic/boxes.v
 program_logic/counter_examples.v
-program_logic/iris.v
 program_logic/thread_local.v
 program_logic/cancelable_invariants.v
 heap_lang/lang.v

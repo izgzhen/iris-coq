@@ -1,18 +1,20 @@
-From iris.program_logic Require Export iris.
+From iris.base_logic.lib Require Export own.
+From iris.prelude Require Export coPset.
 From iris.program_logic Require Import wsat.
 From iris.algebra Require Import gmap.
 From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics classes.
+Export invG.
 Import uPred.
 
-Program Definition fupd_def `{irisG Λ Σ}
+Program Definition fupd_def `{invG Σ}
     (E1 E2 : coPset) (P : iProp Σ) : iProp Σ :=
   (wsat ★ ownE E1 ==★ ◇ (wsat ★ ownE E2 ★ P))%I.
 Definition fupd_aux : { x | x = @fupd_def }. by eexists. Qed.
 Definition fupd := proj1_sig fupd_aux.
 Definition fupd_eq : @fupd = @fupd_def := proj2_sig fupd_aux.
-Arguments fupd {_ _ _} _ _ _%I.
-Instance: Params (@fupd) 5.
+Arguments fupd {_ _} _ _ _%I.
+Instance: Params (@fupd) 4.
 
 Notation "|={ E1 , E2 }=> Q" := (fupd E1 E2 Q)
   (at level 99, E1, E2 at level 50, Q at level 200,
@@ -46,12 +48,12 @@ Notation "P ={ E }▷=★ Q" := (P ={E,E}▷=★ Q)%I
    format "P  ={ E }▷=★  Q") : uPred_scope.
 
 Section fupd.
-Context `{irisG Λ Σ}.
+Context `{invG Σ}.
 Implicit Types P Q : iProp Σ.
 
-Global Instance fupd_ne E1 E2 n : Proper (dist n ==> dist n) (@fupd Λ Σ _ E1 E2).
+Global Instance fupd_ne E1 E2 n : Proper (dist n ==> dist n) (@fupd Σ _ E1 E2).
 Proof. rewrite fupd_eq. solve_proper. Qed.
-Global Instance fupd_proper E1 E2 : Proper ((≡) ==> (≡)) (@fupd Λ Σ _ E1 E2).
+Global Instance fupd_proper E1 E2 : Proper ((≡) ==> (≡)) (@fupd Σ _ E1 E2).
 Proof. apply ne_proper, _. Qed.
 
 Lemma fupd_intro_mask E1 E2 P : E2 ⊆ E1 → P ⊢ |={E1,E2}=> |={E2,E1}=> P.
@@ -92,10 +94,10 @@ Lemma fupd_frame_r E1 E2 P Q : (|={E1,E2}=> P) ★ Q ={E1,E2}=★ P ★ Q.
 Proof. rewrite fupd_eq /fupd_def. by iIntros "[HwP $]". Qed.
 
 (** * Derived rules *)
-Global Instance fupd_mono' E1 E2 : Proper ((⊢) ==> (⊢)) (@fupd Λ Σ _ E1 E2).
+Global Instance fupd_mono' E1 E2 : Proper ((⊢) ==> (⊢)) (@fupd Σ _ E1 E2).
 Proof. intros P Q; apply fupd_mono. Qed.
 Global Instance fupd_flip_mono' E1 E2 :
-  Proper (flip (⊢) ==> flip (⊢)) (@fupd Λ Σ _ E1 E2).
+  Proper (flip (⊢) ==> flip (⊢)) (@fupd Σ _ E1 E2).
 Proof. intros P Q; apply fupd_mono. Qed.
 
 Lemma fupd_intro E P : P ={E}=★ P.
@@ -148,7 +150,7 @@ End fupd.
 
 (** Proofmode class instances *)
 Section proofmode_classes.
-  Context `{irisG Λ Σ}.
+  Context `{invG Σ}.
   Implicit Types P Q : iProp Σ.
 
   Global Instance from_pure_fupd E P φ : FromPure P φ → FromPure (|={E}=> P) φ.

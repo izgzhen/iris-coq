@@ -85,7 +85,7 @@ Lemma demo_7 (M : ucmraT) (P Q1 Q2 : uPred M) : P ★ (Q1 ∧ Q2) ⊢ P ★ Q1.
 Proof. iIntros "[H1 [H2 _]]". by iFrame. Qed.
 
 Section iris.
-  Context `{irisG Λ Σ}.
+  Context `{invG Σ}.
   Implicit Types E : coPset.
   Implicit Types P Q : iProp Σ.
 

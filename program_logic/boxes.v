@@ -11,7 +11,7 @@ Class boxG Σ :=
     (optionR (agreeR (laterC (iPreProp Σ))))).
 
 Section box_defs.
-  Context `{irisG Λ Σ, boxG Σ} (N : namespace).
+  Context `{invG Σ, boxG Σ} (N : namespace).
 
   Definition slice_name := gname.
 
@@ -34,14 +34,13 @@ Section box_defs.
                          inv N (slice_inv γ (Φ γ)))%I.
 End box_defs.
 
-Instance: Params (@box_own_auth) 5.
-Instance: Params (@box_own_prop) 5.
-Instance: Params (@slice_inv) 5.
-Instance: Params (@slice) 6.
-Instance: Params (@box) 6.
+Instance: Params (@box_own_prop) 3.
+Instance: Params (@slice_inv) 3.
+Instance: Params (@slice) 5.
+Instance: Params (@box) 5.
 
 Section box.
-Context `{irisG Λ Σ, boxG Σ} (N : namespace).
+Context `{invG Σ, boxG Σ} (N : namespace).
 Implicit Types P Q : iProp Σ.
 
 Global Instance box_own_prop_ne n γ : Proper (dist n ==> dist n) (box_own_prop γ).

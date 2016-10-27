@@ -16,7 +16,7 @@ Instance subG_authΣ Σ A : subG (authΣ A) Σ → CMRADiscrete A → authG Σ A
 Proof. intros ?%subG_inG ?. by split. Qed.
 
 Section definitions.
-  Context `{irisG Λ Σ, authG Σ A} {T : Type} (γ : gname).
+  Context `{invG Σ, authG Σ A} {T : Type} (γ : gname).
 
   Definition auth_own (a : A) : iProp Σ :=
     own γ (◯ a).
@@ -57,10 +57,10 @@ End definitions.
 Typeclasses Opaque auth_own auth_inv auth_ctx.
 Instance: Params (@auth_own) 4.
 Instance: Params (@auth_inv) 5.
-Instance: Params (@auth_ctx) 8.
+Instance: Params (@auth_ctx) 7.
 
 Section auth.
-  Context `{irisG Λ Σ, authG Σ A}.
+  Context `{invG Σ, authG Σ A}.
   Context {T : Type} `{!Inhabited T}.
   Context (f : T → A) (φ : T → iProp Σ).
   Implicit Types N : namespace.
@@ -146,4 +146,4 @@ Section auth.
   Qed.
 End auth.
 
-Arguments auth_open {_ _ _ _} [_] {_} [_] _ _ _ _ _ _ _.
+Arguments auth_open {_ _ _} [_] {_} [_] _ _ _ _ _ _ _.

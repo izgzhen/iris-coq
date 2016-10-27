@@ -15,7 +15,7 @@ Instance subG_stsΣ Σ sts :
 Proof. intros ?%subG_inG ?. by split. Qed.
 
 Section definitions.
-  Context `{irisG Λ Σ, stsG Σ sts} (γ : gname).
+  Context `{invG Σ, stsG Σ sts} (γ : gname).
 
   Definition sts_ownS (S : sts.states sts) (T : sts.tokens sts) : iProp Σ :=
     own γ (sts_frag S T).
@@ -51,13 +51,13 @@ Section definitions.
 End definitions.
 
 Typeclasses Opaque sts_own sts_ownS sts_inv sts_ctx.
-Instance: Params (@sts_inv) 5.
-Instance: Params (@sts_ownS) 5.
-Instance: Params (@sts_own) 6.
+Instance: Params (@sts_inv) 4.
+Instance: Params (@sts_ownS) 4.
+Instance: Params (@sts_own) 5.
 Instance: Params (@sts_ctx) 6.
 
 Section sts.
-  Context `{irisG Λ Σ, stsG Σ sts} (φ : sts.state sts → iProp Σ).
+  Context `{invG Σ, stsG Σ sts} (φ : sts.state sts → iProp Σ).
   Implicit Types N : namespace.
   Implicit Types P Q R : iProp Σ.
   Implicit Types γ : gname.
@@ -115,7 +115,7 @@ Section sts.
       ■ sts.frame_steps T s0 s ★ ▷ φ s ★ ∀ s' T',
       ■ sts.steps (s, T) (s', T') ★ ▷ φ s' ={E}=★ ▷ sts_inv γ φ ★ sts_own γ s' T'.
   Proof. by apply sts_accS. Qed.
-    
+
   Lemma sts_openS E N γ S T :
     nclose N ⊆ E →
     sts_ctx γ N φ ★ sts_ownS γ S T ={E,E∖N}=★ ∃ s,

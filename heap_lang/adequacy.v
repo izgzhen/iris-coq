@@ -11,7 +11,7 @@ Class heapPreG Σ := HeapPreG {
 }.
 
 Definition heapΣ : gFunctors :=
-  #[irisΣ heap_lang; authΣ heapUR].
+  #[irisΣ state; authΣ heapUR].
 Instance subG_heapPreG {Σ} : subG heapΣ Σ → heapPreG Σ.
 Proof. intros [? ?]%subG_inv. split; apply _. Qed.
 

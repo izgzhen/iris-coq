@@ -5,6 +5,62 @@ From iris.program_logic Require Import wsat.
 From iris.proofmode Require Import tactics.
 Import uPred.
 
+(* Global functor setup *)
+Definition invΣ : gFunctors :=
+  #[GFunctor (authRF (gmapURF positive (agreeRF (laterCF idCF))));
+    GFunctor (constRF coPset_disjUR);
+    GFunctor (constRF (gset_disjUR positive))].
+
+Class invPreG (Σ : gFunctors) : Set := WsatPreG {
+  inv_inPreG :> inG Σ (authR (gmapUR positive (agreeR (laterC (iPreProp Σ)))));
+  enabled_inPreG :> inG Σ coPset_disjR;
+  disabled_inPreG :> inG Σ (gset_disjR positive);
+}.
+
+Instance subG_invΣ {Σ} : subG invΣ Σ → invPreG Σ.
+Proof.
+  intros [?%subG_inG [?%subG_inG ?%subG_inG]%subG_inv]%subG_inv; by constructor.
+Qed.
+
+
+Definition irisΣ (Λstate : Type) : gFunctors :=
+  #[invΣ;
+    GFunctor (constRF (authUR (optionUR (exclR (leibnizC Λstate)))))].
+
+Class irisPreG' (Λstate : Type) (Σ : gFunctors) : Set := IrisPreG {
+  inv_inG :> invPreG Σ;
+  state_inG :> inG Σ (authR (optionUR (exclR (leibnizC Λstate))))
+}.
+Notation irisPreG Λ Σ := (irisPreG' (state Λ) Σ).
+
+Instance subG_irisΣ {Λstate Σ} : subG (irisΣ Λstate) Σ → irisPreG' Λstate Σ.
+Proof. intros [??%subG_inG]%subG_inv; constructor; apply _. Qed.
+
+
+(* Allocation *)
+Lemma wsat_alloc `{invPreG Σ} : True ==★ ∃ _ : invG Σ, wsat ★ ownE ⊤.
+Proof.
+  iIntros.
+  iMod (own_alloc (● (∅ : gmap _ _))) as (γI) "HI"; first done.
+  iMod (own_alloc (CoPset ⊤)) as (γE) "HE"; first done.
+  iMod (own_alloc (GSet ∅)) as (γD) "HD"; first done.
+  iModIntro; iExists (WsatG _ _ _ _ γI γE γD).
+  rewrite /wsat /ownE; iFrame.
+  iExists ∅. rewrite fmap_empty big_sepM_empty. by iFrame.
+Qed.
+
+Lemma iris_alloc `{irisPreG' Λstate Σ} σ :
+  True ==★ ∃ _ : irisG' Λstate Σ, wsat ★ ownE ⊤ ★ ownP_auth σ ★ ownP σ.
+Proof.
+  iIntros.
+  iMod wsat_alloc as (?) "[Hws HE]".
+  iMod (own_alloc (● (Excl' (σ:leibnizC Λstate)) ⋅ ◯ (Excl' σ)))
+    as (γσ) "[Hσ Hσ']"; first done.
+  iModIntro; iExists (IrisG _ _ _ _ γσ). rewrite /ownP_auth /ownP; iFrame.
+Qed.
+
+
+(* Program logic adequacy *)
 Record adequate {Λ} (e1 : expr Λ) (σ1 : state Λ) (φ : val Λ → Prop) := {
   adequate_result t2 σ2 v2 :
    rtc step ([e1], σ1) (of_val v2 :: t2, σ2) → φ v2;
