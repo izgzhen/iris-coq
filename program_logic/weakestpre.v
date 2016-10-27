@@ -51,26 +51,24 @@ Notation "'WP' e {{ v , Q } }" := (wp ⊤ e%E (λ v, Q))
    format "'WP'  e  {{  v ,  Q  } }") : uPred_scope.
 
 (* Texan triples *)
-Notation "'{{{' pre } } } e {{{ x .. y ; pat , post } } }" :=
-  (∀ (ψ : _ → uPred _),
-      (pre ★ ▷ (∀ x, .. (∀ y, post -★ ψ (pat)%V) .. )%I) ⊢ WP e {{ ψ }})
+Notation "'{{{' P } } } e {{{ x .. y ; pat , Q } } }" :=
+  (∀ Φ : _ → uPred _,
+      P ★ ▷ (∀ x, .. (∀ y, Q -★ Φ pat%V) .. ) ⊢ WP e {{ Φ }})
     (at level 20, x closed binder, y closed binder,
-     format "{{{  pre  } } }  e  {{{ x .. y ;  pat ,  post } } }") : C_scope.
-Notation "'{{{' pre } } } e @ E {{{ x .. y ; pat , post } } }" :=
-  (∀ (ψ : _ → uPred _),
-      (pre ★ ▷ (∀ x, .. (∀ y, post -★ ψ (pat)%V) .. )%I) ⊢ WP e @ E {{ ψ }})
+     format "{{{  P  } } }  e  {{{ x .. y ;  pat ,  Q } } }") : C_scope.
+Notation "'{{{' P } } } e @ E {{{ x .. y ; pat , Q } } }" :=
+  (∀ Φ : _ → uPred _,
+      P ★ ▷ (∀ x, .. (∀ y, Q -★ Φ pat%V) .. ) ⊢ WP e @ E {{ Φ }})
     (at level 20, x closed binder, y closed binder,
-     format "{{{  pre  } } }  e  @  E  {{{ x .. y ;  pat ,  post } } }") : C_scope.
-Notation "'{{{' pre } } } e {{{ ; pat , post } } }" :=
-  (∀ (ψ : _ → uPred _),
-      (pre ★ ▷ (post -★ ψ (pat)%V)%I) ⊢ WP e {{ ψ }})
+     format "{{{  P  } } }  e  @  E  {{{ x .. y ;  pat ,  Q } } }") : C_scope.
+Notation "'{{{' P } } } e {{{ ; pat , Q } } }" :=
+  (∀ Φ : _ → uPred _, P ★ ▷ (Q -★ Φ pat%V) ⊢ WP e {{ Φ }})
     (at level 20,
-     format "{{{  pre  } } }  e  {{{ ; pat ,  post } } }") : C_scope.
-Notation "'{{{' pre } } } e @ E {{{ ; pat , post } } }" :=
-  (∀ (ψ : _ → uPred _),
-      (pre ★ ▷ (post -★ ψ (pat)%V)%I) ⊢ WP e @ E {{ ψ }})
+     format "{{{  P  } } }  e  {{{ ; pat ,  Q } } }") : C_scope.
+Notation "'{{{' P } } } e @ E {{{ ; pat , Q } } }" :=
+  (∀ Φ : _ → uPred _, P ★ ▷ (Q -★ Φ pat%V) ⊢ WP e @ E {{ Φ }})
     (at level 20,
-     format "{{{  pre  } } }  e  @  E  {{{ ; pat ,  post } } }") : C_scope.
+     format "{{{  P  } } }  e  @  E  {{{ ; pat ,  Q } } }") : C_scope.
 
 Section wp.
 Context `{irisG Λ Σ}.
