@@ -308,7 +308,8 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
          |(*goal*)
          |go H1 pats]
     | SGoal (SpecGoal ?m ?lr ?Hs_frame ?Hs) :: ?pats =>
-       eapply tac_specialize_assert with _ _ _ H1 _ lr (Hs_frame ++ Hs) _ _ _ _;
+       let Hs' := eval cbv in (Hs_frame ++ Hs) in
+       eapply tac_specialize_assert with _ _ _ H1 _ lr Hs' _ _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
          |match m with
@@ -1084,7 +1085,8 @@ Tactic Notation "iAssertCore" open_constr(Q) "with" constr(Hs) "as" tactic(tac) 
        |apply _ || fail "iAssert:" Q "not persistent"
        |tac H]
   | [SGoal (SpecGoal ?m ?lr ?Hs_frame ?Hs)] =>
-     eapply tac_assert with _ _ _ lr (Hs_frame ++ Hs) H Q _;
+     let Hs' := eval compute in (Hs_frame ++ Hs) in
+     eapply tac_assert with _ _ _ lr Hs' H Q _;
        [match m with
         | false => apply elim_modal_dummy
         | true => apply _ || fail "iAssert: goal not a modality"
