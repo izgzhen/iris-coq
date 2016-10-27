@@ -71,7 +71,6 @@ with parse_goal (ts : list token) (g : spec_goal)
      parse_goal ts (SpecGoal (spec_goal_modal g) (spec_goal_negate g)
        (spec_goal_frame g) (s :: spec_goal_hyps g)) k
   | TFrame :: TName s :: ts =>
-    guard (¬spec_goal_negate g);
      parse_goal ts (SpecGoal (spec_goal_modal g) (spec_goal_negate g)
        (s :: spec_goal_frame g) (spec_goal_hyps g)) k
   | TBracketR :: ts =>

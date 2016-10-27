@@ -58,7 +58,7 @@ Proof.
   { iNext. iExists NONEV. iFrame; eauto. }
   wp_apply wp_fork; simpl. iSplitR "Hf".
   - iModIntro. wp_seq. iModIntro. iApply "HΦ". rewrite /join_handle. eauto.
-  - wp_bind (f _). iApply wp_wand_l. iFrame "Hf"; iIntros (v) "Hv".
+  - wp_bind (f _). iApply (wp_wand_r with "[ $Hf]"); iIntros (v) "Hv".
     iInv N as (v') "[Hl _]" "Hclose".
     wp_store. iApply "Hclose". iNext. iExists (SOMEV v). iFrame. eauto.
 Qed.

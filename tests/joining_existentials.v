@@ -35,8 +35,8 @@ Lemma worker_spec e γ l (Φ Ψ : X → iProp Σ) `{!Closed [] e} :
   recv N l (barrier_res γ Φ) ★ (∀ x, {{ Φ x }} e {{ _, Ψ x }})
   ⊢ WP wait #l ;; e {{ _, barrier_res γ Ψ }}.
 Proof.
-  iIntros "[Hl #He]". wp_apply wait_spec; simpl; iFrame "Hl".
-  iNext. iDestruct 1 as (x) "[#Hγ Hx]".
+  iIntros "[Hl #He]". wp_apply (wait_spec with "[- $Hl]"); simpl.
+  iDestruct 1 as (x) "[#Hγ Hx]".
   wp_seq. iApply wp_wand_l. iSplitR; [|by iApply "He"].
   iIntros (v) "?"; iExists x; by iSplit.
 Qed.
@@ -76,21 +76,21 @@ Lemma client_spec_new eM eW1 eW2 `{!Closed [] eM, !Closed [] eW1, !Closed [] eW2
 Proof.
   iIntros (HN) "/= (#Hh&HP&#He&#He1&#He2)"; rewrite /client.
   iMod (own_alloc (Pending : one_shotR Σ F)) as (γ) "Hγ"; first done.
-  wp_apply (newbarrier_spec N (barrier_res γ Φ)); auto.
-  iFrame "Hh". iNext. iIntros (l) "[Hr Hs]".
+  wp_apply (newbarrier_spec N (barrier_res γ Φ) with "[- $Hh]"); auto.
+  iIntros (l) "[Hr Hs]".
   set (workers_post (v : val) := (barrier_res γ Ψ1 ★ barrier_res γ Ψ2)%I).
-  wp_let. wp_apply (wp_par  (λ _, True)%I workers_post); iFrame "Hh".
+  wp_let. wp_apply (wp_par  (λ _, True)%I workers_post with "[- $Hh]").
   iSplitL "HP Hs Hγ"; [|iSplitL "Hr"].
   - wp_bind eM. iApply wp_wand_l; iSplitR "HP"; [|by iApply "He"].
     iIntros (v) "HP"; iDestruct "HP" as (x) "HP". wp_let.
     iMod (own_update with "Hγ") as "Hx".
     { by apply (cmra_update_exclusive (Shot x)). }
-    iApply signal_spec; iFrame "Hs"; iSplitR ""; last auto.
+    iApply (signal_spec with "[- $Hs]"). iSplitR ""; last auto.
     iExists x; auto.
   - iDestruct (recv_weaken with "[] Hr") as "Hr"; first by iApply P_res_split.
     iMod (recv_split with "Hr") as "[H1 H2]"; first done.
     wp_apply (wp_par (λ _, barrier_res γ Ψ1)%I
-                     (λ _, barrier_res γ Ψ2)%I); iFrame "Hh".
+                     (λ _, barrier_res γ Ψ2)%I with "[-$Hh]").
     iSplitL "H1"; [|iSplitL "H2"].
     + iApply worker_spec; auto.
     + iApply worker_spec; auto.

@@ -47,7 +47,7 @@ Lemma rev_wp hd xs (Φ : val → iProp Σ) :
   ⊢ WP rev hd (InjL #()) {{ Φ }}.
 Proof.
   iIntros "(#Hh & Hxs & HΦ)".
-  iApply (rev_acc_wp hd NONEV xs []); iFrame "Hh Hxs".
+  iApply (rev_acc_wp hd NONEV xs [] with "[- $Hh $Hxs]").
   iSplit; first done. iIntros (w). rewrite right_id_L. iApply "HΦ".
 Qed.
 End list_reverse.
