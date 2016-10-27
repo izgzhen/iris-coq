@@ -62,7 +62,7 @@ Lemma sum_wp `{!heapG Σ} v t Φ :
 Proof.
   iIntros "(#Hh & Ht & HΦ)". rewrite /sum' /=.
   wp_let. wp_alloc l as "Hl". wp_let.
-  wp_apply sum_loop_wp; iFrame "Hh Ht Hl".
+  wp_apply (sum_loop_wp with "[- $Hh $Ht $Hl]").
   rewrite Z.add_0_r.
   iIntros "Hl Ht". wp_seq. wp_load. by iApply "HΦ".
 Qed.

@@ -13,6 +13,5 @@ Lemma wp_assert `{heapG Σ} E (Φ : val → iProp Σ) e `{!Closed [] e} :
   WP e @ E {{ v, v = #true ∧ ▷ Φ #() }} ⊢ WP assert: e @ E {{ Φ }}.
 Proof.
   iIntros "HΦ". rewrite /assert. wp_let. wp_seq.
-  iApply wp_wand_r; iFrame "HΦ"; iIntros (v) "[% ?]"; subst.
-  wp_if. done.
+  iApply (wp_wand_r with "[- $HΦ]"). iIntros (v) "[% ?]"; subst. by wp_if.
 Qed.

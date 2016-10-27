@@ -29,28 +29,26 @@ Section client.
     heap_ctx ★ recv N b (y_inv q y) ⊢ WP worker n #b #y {{ _, True }}.
   Proof.
     iIntros "[#Hh Hrecv]". wp_lam. wp_let.
-    wp_apply wait_spec; iFrame "Hrecv".
-    iNext. iDestruct 1 as (f) "[Hy #Hf]".
+    wp_apply (wait_spec with "[- $Hrecv]"). iDestruct 1 as (f) "[Hy #Hf]".
     wp_seq. wp_load.
-    iApply wp_wand_r; iSplitR; [iApply "Hf"|by iIntros (v) "_"].
+    iApply wp_wand_r. iSplitR; [iApply "Hf"|by iIntros (v) "_"].
   Qed.
 
   Lemma client_safe : heapN ⊥ N → heap_ctx ⊢ WP client {{ _, True }}.
   Proof.
     iIntros (?) "#Hh"; rewrite /client. wp_alloc y as "Hy". wp_let.
-    wp_apply (newbarrier_spec N (y_inv 1 y)); first done.
-    iFrame "Hh". iNext. iIntros (l) "[Hr Hs]". wp_let.
-    iApply (wp_par (λ _, True%I) (λ _, True%I)). iFrame "Hh".
-    iSplitL "Hy Hs".
+    wp_apply (newbarrier_spec N (y_inv 1 y) with "[- $Hh]"); first done.
+    iIntros (l) "[Hr Hs]". wp_let.
+    iApply (wp_par (λ _, True%I) (λ _, True%I) with "[-$Hh]"). iSplitL "Hy Hs".
     - (* The original thread, the sender. *)
-      wp_store. iApply signal_spec; iFrame "Hs"; iSplitL "Hy"; [|by eauto].
+      wp_store. iApply (signal_spec with "[- $Hs]"). iSplitL "Hy"; [|by eauto].
       iExists _; iSplitL; [done|]. iAlways; iIntros (n). wp_let. by wp_op.
     - (* The two spawned threads, the waiters. *)
       iSplitL; [|by iIntros (_ _) "_ !>"].
       iDestruct (recv_weaken with "[] Hr") as "Hr".
       { iIntros "Hy". by iApply (y_inv_split with "Hy"). }
       iMod (recv_split with "Hr") as "[H1 H2]"; first done.
-      iApply (wp_par (λ _, True%I) (λ _, True%I)). iFrame "Hh".
+      iApply (wp_par (λ _, True%I) (λ _, True%I) with "[- $Hh]").
       iSplitL "H1"; [|iSplitL "H2"; [|by iIntros (_ _) "_ !>"]];
         iApply worker_safe; by iSplit.
 Qed.

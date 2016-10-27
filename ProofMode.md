@@ -225,8 +225,7 @@ _specification patterns_ to express splitting of hypotheses:
   all persistent hypotheses. The spatial hypotheses among `H1 ... Hn` will be
   consumed. Hypotheses may be prefixed with a `$`, which results in them being
   framed in the generated goal.
-- `[-H1 ... Hn]`  : negated form of the above pattern. This pattern does not
-  accept hypotheses prefixed with a `$`.
+- `[-H1 ... Hn]`  : negated form of the above pattern.
 - `>[H1 ... Hn]` : same as the above pattern, but can only be used if the goal
   is a modality, in which case the modality will be kept in the generated goal
   for the premise will be wrapped into the modality.

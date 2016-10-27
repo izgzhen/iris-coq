@@ -73,8 +73,8 @@ Section proof.
   Lemma acquire_spec γ lk R :
     {{{ is_lock γ lk R }}} acquire lk {{{; #(), locked γ ★ R }}}.
   Proof.
-    iIntros (Φ) "[#Hl HΦ]". iLöb as "IH". wp_rec. wp_bind (try_acquire _).
-    iApply try_acquire_spec. iFrame "#". iSplit.
+    iIntros (Φ) "[#Hl HΦ]". iLöb as "IH". wp_rec.
+    wp_apply (try_acquire_spec with "[- $Hl]"). iSplit.
     - iIntros "Hlked HR". wp_if. iModIntro. iApply "HΦ"; iFrame.
     - wp_if. iApply ("IH" with "[HΦ]"). auto.
   Qed.
@@ -87,7 +87,6 @@ Section proof.
     rewrite /release /=. wp_let. iInv N as (b) "[Hl _]" "Hclose".
     wp_store. iApply "HΦ". iApply "Hclose". iNext. iExists false. by iFrame.
   Qed.
-
 End proof.
 
 Definition spin_lock `{!heapG Σ, !lockG Σ} : lock Σ :=

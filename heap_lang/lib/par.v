@@ -24,10 +24,10 @@ Lemma par_spec (Ψ1 Ψ2 : val → iProp Σ) e (f1 f2 : val) (Φ : val → iProp 
 Proof.
   iIntros (?) "(#Hh&Hf1&Hf2&HΦ)".
   rewrite /par. wp_value. iModIntro. wp_let. wp_proj.
-  wp_apply (spawn_spec parN); try wp_done; try solve_ndisj; iFrame "Hf1 Hh".
-  iNext. iIntros (l) "Hl". wp_let. wp_proj. wp_bind (f2 _).
-  iApply wp_wand_l; iFrame "Hf2"; iIntros (v) "H2". wp_let.
-  wp_apply join_spec; iFrame "Hl". iNext. iIntros (w) "H1".
+  wp_apply (spawn_spec parN with "[- $Hh $Hf1]"); try wp_done; try solve_ndisj.
+  iIntros (l) "Hl". wp_let. wp_proj. wp_bind (f2 _).
+  iApply (wp_wand_r with "[- $Hf2]"); iIntros (v) "H2". wp_let.
+  wp_apply (join_spec with "[- $Hl]"). iIntros (w) "H1".
   iSpecialize ("HΦ" with "* [-]"); first by iSplitL "H1". by wp_let.
 Qed.
 
@@ -37,7 +37,7 @@ Lemma wp_par (Ψ1 Ψ2 : val → iProp Σ)
    ∀ v1 v2, Ψ1 v1 ★ Ψ2 v2 -★ ▷ Φ (v1,v2)%V)
   ⊢ WP e1 || e2 {{ Φ }}.
 Proof.
-  iIntros "(#Hh&H1&H2&H)". iApply (par_spec Ψ1 Ψ2); try wp_done.
-  iFrame "Hh H". iSplitL "H1"; by wp_let.
+  iIntros "(#Hh&H1&H2&H)". iApply (par_spec Ψ1 Ψ2 with "[- $Hh $H]"); try wp_done.
+  iSplitL "H1"; by wp_let.
 Qed.
 End proof.
