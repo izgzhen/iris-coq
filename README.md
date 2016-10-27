@@ -29,7 +29,7 @@ running:
 ## Structure
 
 * The folder [prelude](prelude) contains an extended "Standard Library" by
-  Robbert Krebbers <http://robbertkrebbers.nl/thesis.html>.
+  [Robbert Krebbers](http://robbertkrebbers.nl/thesis.html).
 * The folder [algebra](algebra) contains the COFE and CMRA constructions as well
   as the solver for recursive domain equations.
 * The folder [base_logic](base_logic) defines the Iris base logic and the
@@ -56,4 +56,4 @@ running:
 
 A LaTeX version of the core logic definitions and some derived forms is
 available in [docs/iris.tex](docs/iris.tex).  A compiled PDF version of this
-document is [http://plv.mpi-sws.org/iris/appendix-3.0.pdf](available online).
+document is [available online](http://plv.mpi-sws.org/iris/appendix-3.0.pdf).
