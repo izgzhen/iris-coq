@@ -171,9 +171,11 @@ Notation "(★)" := uPred_sep (only parsing) : uPred_scope.
 Notation "P -★ Q" := (uPred_wand P Q)
   (at level 99, Q at level 200, right associativity) : uPred_scope.
 Notation "∀ x .. y , P" :=
-  (uPred_forall (λ x, .. (uPred_forall (λ y, P)) ..)%I) : uPred_scope.
+  (uPred_forall (λ x, .. (uPred_forall (λ y, P)) ..)%I)
+  (at level 200, x binder, y binder, right associativity) : uPred_scope.
 Notation "∃ x .. y , P" :=
-  (uPred_exist (λ x, .. (uPred_exist (λ y, P)) ..)%I) : uPred_scope.
+  (uPred_exist (λ x, .. (uPred_exist (λ y, P)) ..)%I)
+  (at level 200, x binder, y binder, right associativity) : uPred_scope.
 Notation "□ P" := (uPred_always P)
   (at level 20, right associativity) : uPred_scope.
 Notation "▷ P" := (uPred_later P)
