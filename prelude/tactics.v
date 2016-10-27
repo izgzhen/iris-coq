@@ -253,10 +253,11 @@ Ltac setoid_subst :=
 (** f_equiv works on goals of the form [f _ = f _], for any relation and any
 number of arguments. It looks for an appropriate [Proper] instance, and applies
 it. The tactic is somewhat limited, since it cannot be used to backtrack on
-the Proper instances that has been found. To that end, we try to ensure the
+the Proper instances that has been found. To that end, we try to avoid the
 trivial instance in which the resulting goals have an [eq]. More generally,
+we try to "maintain" the relation of the current goal. For example,
 when having [Proper (equiv ==> dist) f] and [Proper (dist ==> dist) f], it will
-favor the second. *)
+favor the second because the relation (dist) stays the same. *)
 Ltac f_equiv :=
   match goal with
   | _ => reflexivity
