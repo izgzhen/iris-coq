@@ -584,7 +584,7 @@ Proof. unseal. by destruct mx. Qed.
 (* Functions *)
 Lemma cofe_funC_equivI {A B} (f g : A -c> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
 Proof. by unseal. Qed.
-Lemma cofe_moreC_equivI {A B : cofeT} (f g : A -n> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
+Lemma cofe_morC_equivI {A B : cofeT} (f g : A -n> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
 Proof. by unseal. Qed.
 End primitive.
 End uPred_primitive.
