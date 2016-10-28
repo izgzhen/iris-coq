@@ -1,79 +1,50 @@
-From iris.program_logic Require Export iris.
+From iris.base_logic.lib Require Export own.
+From iris.prelude Require Export coPset.
 From iris.algebra Require Import gmap auth agree gset coPset.
 From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics.
 
+Module invG.
+  Class invG (Σ : gFunctors) : Set := WsatG {
+    inv_inG :> inG Σ (authR (gmapUR positive (agreeR (laterC (iPreProp Σ)))));
+    enabled_inG :> inG Σ coPset_disjR;
+    disabled_inG :> inG Σ (gset_disjR positive);
+    invariant_name : gname;
+    enabled_name : gname;
+    disabled_name : gname;
+  }.
+End invG.
+Import invG.
+
 Definition invariant_unfold {Σ} (P : iProp Σ) : agree (later (iPreProp Σ)) :=
   to_agree (Next (iProp_unfold P)).
-Definition ownI `{irisG Λ Σ} (i : positive) (P : iProp Σ) : iProp Σ :=
+Definition ownI `{invG Σ} (i : positive) (P : iProp Σ) : iProp Σ :=
   own invariant_name (◯ {[ i := invariant_unfold P ]}).
-Arguments ownI {_ _ _} _ _%I.
+Arguments ownI {_ _} _ _%I.
 Typeclasses Opaque ownI.
-Instance: Params (@ownI) 4.
+Instance: Params (@ownI) 3.
 
-Definition ownP `{irisG Λ Σ} (σ : state Λ) : iProp Σ :=
-  own state_name (◯ (Excl' σ)).
-Typeclasses Opaque ownP.
-Instance: Params (@ownP) 4.
-
-Definition ownP_auth `{irisG Λ Σ} (σ : state Λ) : iProp Σ :=
-  own state_name (● (Excl' σ)).
-Typeclasses Opaque ownP_auth.
-Instance: Params (@ownP_auth) 4.
-
-Definition ownE `{irisG Λ Σ} (E : coPset) : iProp Σ :=
+Definition ownE `{invG Σ} (E : coPset) : iProp Σ :=
   own enabled_name (CoPset E).
 Typeclasses Opaque ownE.
-Instance: Params (@ownE) 4.
+Instance: Params (@ownE) 3.
 
-Definition ownD `{irisG Λ Σ} (E : gset positive) : iProp Σ :=
+Definition ownD `{invG Σ} (E : gset positive) : iProp Σ :=
   own disabled_name (GSet E).
 Typeclasses Opaque ownD.
-Instance: Params (@ownD) 4.
+Instance: Params (@ownD) 3.
 
-Definition wsat `{irisG Λ Σ} : iProp Σ :=
+Definition wsat `{invG Σ} : iProp Σ :=
   (∃ I : gmap positive (iProp Σ),
     own invariant_name (● (invariant_unfold <$> I : gmap _ _)) ★
     [★ map] i ↦ Q ∈ I, ▷ Q ★ ownD {[i]} ∨ ownE {[i]})%I.
 
-Section ownership.
-Context `{irisG Λ Σ}.
-Implicit Types σ : state Λ.
+Section wsat.
+Context `{invG Σ}.
 Implicit Types P : iProp Σ.
 
-(* Allocation *)
-Lemma iris_alloc `{irisPreG Λ Σ} σ :
-  True ==★ ∃ _ : irisG Λ Σ, wsat ★ ownE ⊤ ★ ownP_auth σ ★ ownP σ.
-Proof.
-  iIntros.
-  iMod (own_alloc (● (Excl' σ) ⋅ ◯ (Excl' σ))) as (γσ) "[Hσ Hσ']"; first done.
-  iMod (own_alloc (● (∅ : gmap _ _))) as (γI) "HI"; first done.
-  iMod (own_alloc (CoPset ⊤)) as (γE) "HE"; first done.
-  iMod (own_alloc (GSet ∅)) as (γD) "HD"; first done.
-  iModIntro; iExists (IrisG _ _ _ γσ γI γE γD).
-  rewrite /wsat /ownE /ownP_auth /ownP; iFrame.
-  iExists ∅. rewrite fmap_empty big_sepM_empty. by iFrame.
-Qed.
-
-(* Physical state *)
-Lemma ownP_twice σ1 σ2 : ownP σ1 ★ ownP σ2 ⊢ False.
-Proof. rewrite /ownP own_valid_2. by iIntros (?). Qed.
-Global Instance ownP_timeless σ : TimelessP (@ownP Λ Σ _ σ).
-Proof. rewrite /ownP; apply _. Qed.
-
-Lemma ownP_agree σ1 σ2 : ownP_auth σ1 ★ ownP σ2 ⊢ σ1 = σ2.
-Proof.
-  rewrite /ownP /ownP_auth own_valid_2 -auth_both_op.
-  by iIntros ([[[] [=]%leibniz_equiv] _]%auth_valid_discrete).
-Qed.
-Lemma ownP_update σ1 σ2 : ownP_auth σ1 ★ ownP σ1 ==★ ownP_auth σ2 ★ ownP σ2.
-Proof.
-  rewrite /ownP -!own_op.
-  by apply own_update, auth_update, option_local_update, exclusive_local_update.
-Qed.
-
 (* Invariants *)
-Global Instance ownI_contractive i : Contractive (@ownI Λ Σ _ i).
+Global Instance ownI_contractive i : Contractive (@ownI Σ _ i).
 Proof.
   intros n P Q HPQ. rewrite /ownI /invariant_unfold. do 4 f_equiv.
   apply Next_contractive=> j ?; by rewrite (HPQ j).
@@ -111,7 +82,7 @@ Qed.
 Lemma ownD_singleton_twice i : ownD {[i]} ★ ownD {[i]} ⊢ False.
 Proof. rewrite ownD_disjoint. iIntros (?); set_solver. Qed.
 
-Lemma invariant_lookup `{irisG Λ Σ} (I : gmap positive (iProp Σ)) i P :
+Lemma invariant_lookup (I : gmap positive (iProp Σ)) i P :
   own invariant_name (● (invariant_unfold <$> I : gmap _ _)) ★
   own invariant_name (◯ {[i := invariant_unfold P]}) ⊢
   ∃ Q, I !! i = Some Q ★ ▷ (Q ≡ P).
@@ -171,4 +142,4 @@ Proof.
   iApply (big_sepM_insert _ I); first done.
   iFrame "HI". iLeft. by rewrite /ownD; iFrame.
 Qed.
-End ownership.
+End wsat.

@@ -1,25 +1,23 @@
-From iris.program_logic Require Export fancy_updates.
-From iris.program_logic Require Export namespaces.
-From iris.program_logic Require Import wsat.
+From iris.base_logic.lib Require Export fancy_updates namespaces.
+From iris.base_logic.lib Require Import wsat.
 From iris.algebra Require Import gmap.
 From iris.proofmode Require Import tactics coq_tactics intro_patterns.
 Import uPred.
 
 (** Derived forms and lemmas about them. *)
-Definition inv_def `{irisG Λ Σ} (N : namespace) (P : iProp Σ) : iProp Σ :=
+Definition inv_def `{invG Σ} (N : namespace) (P : iProp Σ) : iProp Σ :=
   (∃ i, ■ (i ∈ nclose N) ∧ ownI i P)%I.
 Definition inv_aux : { x | x = @inv_def }. by eexists. Qed.
-Definition inv {Λ Σ i} := proj1_sig inv_aux Λ Σ i.
+Definition inv {Σ i} := proj1_sig inv_aux Σ i.
 Definition inv_eq : @inv = @inv_def := proj2_sig inv_aux.
-Instance: Params (@inv) 4.
+Instance: Params (@inv) 3.
 Typeclasses Opaque inv.
 
 Section inv.
-Context `{irisG Λ Σ}.
+Context `{invG Σ}.
 Implicit Types i : positive.
 Implicit Types N : namespace.
 Implicit Types P Q R : iProp Σ.
-Implicit Types Φ : val Λ → iProp Σ.
 
 Global Instance inv_contractive N : Contractive (inv N).
 Proof.

@@ -1,7 +1,7 @@
 From iris.program_logic Require Export weakestpre adequacy.
 From iris.heap_lang Require Export heap.
 From iris.algebra Require Import auth.
-From iris.program_logic Require Import wsat auth.
+From iris.base_logic.lib Require Import wsat auth.
 From iris.heap_lang Require Import proofmode notation.
 From iris.proofmode Require Import tactics.
 
@@ -11,7 +11,7 @@ Class heapPreG Σ := HeapPreG {
 }.
 
 Definition heapΣ : gFunctors :=
-  #[irisΣ heap_lang; authΣ heapUR].
+  #[irisΣ state; authΣ heapUR].
 Instance subG_heapPreG {Σ} : subG heapΣ Σ → heapPreG Σ.
 Proof. intros [? ?]%subG_inv. split; apply _. Qed.
 

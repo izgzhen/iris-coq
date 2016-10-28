@@ -1,7 +1,7 @@
 From iris.heap_lang Require Export lifting.
 From iris.algebra Require Import auth gmap frac dec_agree.
-From iris.program_logic Require Export invariants.
-From iris.program_logic Require Import wsat auth.
+From iris.base_logic.lib Require Export invariants.
+From iris.base_logic.lib Require Import wsat auth.
 From iris.proofmode Require Import tactics.
 Import uPred.
 (* TODO: The entire construction could be generalized to arbitrary languages that have
