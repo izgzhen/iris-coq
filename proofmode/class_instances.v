@@ -381,6 +381,9 @@ Proof.
   rewrite /ElimModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
 Qed.
 
+Global Instance elim_modal_always P Q : ElimModal (□ P) P Q Q.
+Proof. intros. by rewrite /ElimModal always_elim wand_elim_r. Qed.
+
 Global Instance elim_modal_bupd P Q : ElimModal (|==> P) P (|==> Q) (|==> Q).
 Proof. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_trans. Qed.
 
