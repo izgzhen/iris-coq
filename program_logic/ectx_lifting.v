@@ -1,6 +1,5 @@
 (** Some derived lemmas for ectx-based languages *)
 From iris.program_logic Require Export ectx_language weakestpre lifting.
-From iris.program_logic Require Import wsat.
 From iris.proofmode Require Import tactics.
 
 Section wp.

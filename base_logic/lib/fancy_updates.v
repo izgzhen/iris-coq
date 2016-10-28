@@ -1,6 +1,6 @@
 From iris.base_logic.lib Require Export own.
 From iris.prelude Require Export coPset.
-From iris.program_logic Require Import wsat.
+From iris.base_logic.lib Require Import wsat.
 From iris.algebra Require Import gmap.
 From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics classes.

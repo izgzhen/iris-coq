@@ -1,4 +1,5 @@
-From iris.program_logic Require Export fancy_updates language.
+From iris.base_logic.lib Require Export fancy_updates.
+From iris.program_logic Require Export language.
 From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics classes.
 From iris.algebra Require Import auth.

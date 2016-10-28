@@ -1,4 +1,4 @@
-From iris.program_logic Require Export invariants.
+From iris.base_logic.lib Require Export invariants.
 From iris.algebra Require Import auth gmap agree.
 From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics.

@@ -1,4 +1,5 @@
-From iris.program_logic Require Export weakestpre viewshifts.
+From iris.program_logic Require Export weakestpre.
+From iris.base_logic.lib Require Export viewshifts.
 From iris.proofmode Require Import tactics.
 
 Definition ht `{irisG Λ Σ} (E : coPset) (P : iProp Σ)

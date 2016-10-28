@@ -1,5 +1,5 @@
 From iris.program_logic Require Export weakestpre.
-From iris.program_logic Require Import wsat ectx_lifting. (* for ownP *)
+From iris.program_logic Require Import ectx_lifting.
 From iris.heap_lang Require Export lang.
 From iris.heap_lang Require Import tactics.
 From iris.proofmode Require Import tactics.
