@@ -94,7 +94,7 @@ Lemma newbarrier_spec (P : iProp Σ) :
   heapN ⊥ N →
   {{{ heap_ctx }}} newbarrier #() {{{ l; #l, recv l P ★ send l P }}}.
 Proof.
-  iIntros (HN Φ) "[#? HΦ]".
+  iIntros (HN Φ) "#? HΦ".
   rewrite -wp_fupd /newbarrier /=. wp_seq. wp_alloc l as "Hl".
   iApply ("HΦ" with ">[-]").
   iMod (saved_prop_alloc (F:=idCF) P) as (γ) "#?".
@@ -120,7 +120,7 @@ Lemma signal_spec l P :
   {{{ send l P ★ P }}} signal #l {{{; #(), True }}}.
 Proof.
   rewrite /signal /send /barrier_ctx /=.
-  iIntros (Φ) "((Hs&HP)&HΦ)"; iDestruct "Hs" as (γ) "[#(%&Hh&Hsts) Hγ]". wp_let.
+  iIntros (Φ) "(Hs&HP) HΦ"; iDestruct "Hs" as (γ) "[#(%&Hh&Hsts) Hγ]". wp_let.
   iMod (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
     as ([p I]) "(% & [Hl Hr] & Hclose)"; eauto.
   destruct p; [|done]. wp_store.
@@ -136,7 +136,7 @@ Lemma wait_spec l P:
   {{{ recv l P }}} wait #l {{{ ; #(), P }}}.
 Proof.
   rename P into R; rewrite /recv /barrier_ctx.
-  iIntros (Φ) "[Hr HΦ]"; iDestruct "Hr" as (γ P Q i) "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
+  iIntros (Φ) "Hr HΦ"; iDestruct "Hr" as (γ P Q i) "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".
   iLöb as "IH". wp_rec. wp_bind (! _)%E.
   iMod (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
     as ([p I]) "(% & [Hl Hr] & Hclose)"; eauto.

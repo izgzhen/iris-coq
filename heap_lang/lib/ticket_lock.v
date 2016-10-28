@@ -78,7 +78,7 @@ Section proof.
     heapN ⊥ N →
     {{{ heap_ctx ★ R }}} newlock #() {{{ lk γ; lk, is_lock γ lk R }}}.
   Proof.
-    iIntros (HN Φ) "((#Hh & HR) & HΦ)". rewrite -wp_fupd /newlock /=.
+    iIntros (HN Φ) "(#Hh & HR) HΦ". rewrite -wp_fupd /newlock /=.
     wp_seq. wp_alloc lo as "Hlo". wp_alloc ln as "Hln".
     iMod (own_alloc (● (Excl' 0%nat, ∅) ⋅ ◯ (Excl' 0%nat, ∅))) as (γ) "[Hγ Hγ']".
     { by rewrite -auth_both_op. }
@@ -91,7 +91,7 @@ Section proof.
   Lemma wait_loop_spec γ lk x R :
     {{{ issued γ lk x R }}} wait_loop #x lk {{{; #(), locked γ ★ R }}}.
   Proof.
-    iIntros (Φ) "[Hl HΦ]". iDestruct "Hl" as (lo ln) "(% & #? & % & #? & Ht)".
+    iIntros (Φ) "Hl HΦ". iDestruct "Hl" as (lo ln) "(% & #? & % & #? & Ht)".
     iLöb as "IH". wp_rec. subst. wp_let. wp_proj. wp_bind (! _)%E.
     iInv N as (o n) "(Hlo & Hln & Ha)" "Hclose".
     wp_load. destruct (decide (x = o)) as [->|Hneq].
@@ -112,7 +112,7 @@ Section proof.
   Lemma acquire_spec γ lk R :
     {{{ is_lock γ lk R }}} acquire lk {{{; #(), locked γ ★ R }}}.
   Proof.
-    iIntros (ϕ) "[Hl HΦ]". iDestruct "Hl" as (lo ln) "(% & #? & % & #?)".
+    iIntros (ϕ) "Hl HΦ". iDestruct "Hl" as (lo ln) "(% & #? & % & #?)".
     iLöb as "IH". wp_rec. wp_bind (! _)%E. subst. wp_proj.
     iInv N as (o n) "[Hlo [Hln Ha]]" "Hclose".
     wp_load. iMod ("Hclose" with "[Hlo Hln Ha]") as "_".
@@ -131,8 +131,9 @@ Section proof.
       { iNext. iExists o', (S n).
         rewrite Nat2Z.inj_succ -Z.add_1_r. by iFrame. }
       iModIntro. wp_if.
-      iApply (wait_loop_spec γ (#lo, #ln)).
-      iFrame "HΦ". rewrite /issued; eauto 10.
+      iApply (wait_loop_spec γ (#lo, #ln) with "[-HΦ]").
+      + rewrite /issued; eauto 10.
+      + by iNext. 
     - wp_cas_fail.
       iMod ("Hclose" with "[Hlo' Hln' Hauth Haown]") as "_".
       { iNext. iExists o', n'. by iFrame. }
@@ -142,7 +143,7 @@ Section proof.
   Lemma release_spec γ lk R :
     {{{ is_lock γ lk R ★ locked γ ★ R }}} release lk {{{; #(), True }}}.
   Proof.
-    iIntros (Φ) "((Hl & Hγ & HR) & HΦ)".
+    iIntros (Φ) "(Hl & Hγ & HR) HΦ".
     iDestruct "Hl" as (lo ln) "(% & #? & % & #?)"; subst.
     iDestruct "Hγ" as (o) "Hγo".
     rewrite /release. wp_let. wp_proj. wp_proj. wp_bind (! _)%E.

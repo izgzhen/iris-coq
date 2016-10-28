@@ -50,7 +50,7 @@ Lemma wp_alloc_pst E σ v :
   {{{ ▷ ownP σ }}} Alloc (of_val v) @ E
   {{{ l; LitV (LitLoc l), σ !! l = None ∧ ownP (<[l:=v]>σ) }}}.
 Proof.
-  iIntros (Φ) "[HP HΦ]".
+  iIntros (Φ) "HP HΦ".
   iApply (wp_lift_atomic_head_step (Alloc (of_val v)) σ); eauto.
   iFrame "HP". iNext. iIntros (v2 σ2 ef) "[% HP]". inv_head_step.
   match goal with H: _ = of_val v2 |- _ => apply (inj of_val (LitV _)) in H end.
@@ -61,7 +61,7 @@ Lemma wp_load_pst E σ l v :
   σ !! l = Some v →
   {{{ ▷ ownP σ }}} Load (Lit (LitLoc l)) @ E {{{; v, ownP σ }}}.
 Proof.
-  intros ? Φ. rewrite -(wp_lift_atomic_det_head_step' σ v σ); eauto.
+  intros ? Φ. apply (wp_lift_atomic_det_head_step' σ v σ); eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -70,7 +70,7 @@ Lemma wp_store_pst E σ l v v' :
   {{{ ▷ ownP σ }}} Store (Lit (LitLoc l)) (of_val v) @ E
   {{{; LitV LitUnit, ownP (<[l:=v]>σ) }}}.
 Proof.
-  intros. rewrite-(wp_lift_atomic_det_head_step' σ (LitV LitUnit) (<[l:=v]>σ)); eauto.
+  intros. apply (wp_lift_atomic_det_head_step' σ (LitV LitUnit) (<[l:=v]>σ)); eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -79,7 +79,7 @@ Lemma wp_cas_fail_pst E σ l v1 v2 v' :
   {{{ ▷ ownP σ }}} CAS (Lit (LitLoc l)) (of_val v1) (of_val v2) @ E
   {{{; LitV $ LitBool false, ownP σ }}}.
 Proof.
-  intros. rewrite -(wp_lift_atomic_det_head_step' σ (LitV $ LitBool false) σ); eauto.
+  intros. apply (wp_lift_atomic_det_head_step' σ (LitV $ LitBool false) σ); eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -88,7 +88,7 @@ Lemma wp_cas_suc_pst E σ l v1 v2 :
   {{{ ▷ ownP σ }}} CAS (Lit (LitLoc l)) (of_val v1) (of_val v2) @ E
   {{{; LitV $ LitBool true, ownP (<[l:=v2]>σ) }}}.
 Proof.
-  intros. rewrite -(wp_lift_atomic_det_head_step' σ (LitV $ LitBool true)
+  intros. apply (wp_lift_atomic_det_head_step' σ (LitV $ LitBool true)
     (<[l:=v2]>σ)); eauto.
   intros; inv_head_step; eauto.
 Qed.

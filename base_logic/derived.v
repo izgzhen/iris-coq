@@ -352,14 +352,8 @@ Lemma wand_elim_r P Q : P ★ (P -★ Q) ⊢ Q.
 Proof. rewrite (comm _ P); apply wand_elim_l. Qed.
 Lemma wand_elim_r' P Q R : (Q ⊢ P -★ R) → P ★ Q ⊢ R.
 Proof. intros ->; apply wand_elim_r. Qed.
-Lemma wand_apply_l P Q Q' R R' : (P ⊢ Q' -★ R') → (R' ⊢ R) → (Q ⊢ Q') → P ★ Q ⊢ R.
-Proof. intros -> -> <-; apply wand_elim_l. Qed.
-Lemma wand_apply_r P Q Q' R R' : (P ⊢ Q' -★ R') → (R' ⊢ R) → (Q ⊢ Q') → Q ★ P ⊢ R.
-Proof. intros -> -> <-; apply wand_elim_r. Qed.
-Lemma wand_apply_l' P Q Q' R : (P ⊢ Q' -★ R) → (Q ⊢ Q') → P ★ Q ⊢ R.
-Proof. intros -> <-; apply wand_elim_l. Qed.
-Lemma wand_apply_r' P Q Q' R : (P ⊢ Q' -★ R) → (Q ⊢ Q') → Q ★ P ⊢ R.
-Proof. intros -> <-; apply wand_elim_r. Qed.
+Lemma wand_apply P Q R S : (P ⊢ Q -★ R) → (S ⊢ P ★ Q) → S ⊢ R.
+Proof. intros HR%wand_elim_l' HQ. by rewrite HQ. Qed.
 Lemma wand_frame_l P Q R : (Q -★ R) ⊢ P ★ Q -★ P ★ R.
 Proof. apply wand_intro_l. rewrite -assoc. apply sep_mono_r, wand_elim_r. Qed.
 Lemma wand_frame_r P Q R : (Q -★ R) ⊢ Q ★ P -★ R ★ P.
