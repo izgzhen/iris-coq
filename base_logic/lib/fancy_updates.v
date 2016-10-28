@@ -34,19 +34,6 @@ Notation "P ={ E }=★ Q" := (P -★ |={E}=> Q)%I
 Notation "P ={ E }=★ Q" := (P ⊢ |={E}=> Q)
   (at level 99, E at level 50, Q at level 200, only parsing) : C_scope.
 
-Notation "|={ E1 , E2 }▷=> Q" := (|={E1,E2}=> (▷ |={E2,E1}=> Q))%I
-  (at level 99, E1, E2 at level 50, Q at level 200,
-   format "|={ E1 , E2 }▷=>  Q") : uPred_scope.
-Notation "P ={ E1 , E2 }▷=★ Q" := (P -★ |={ E1 , E2 }▷=> Q)%I
-  (at level 99, E1, E2 at level 50, Q at level 200,
-   format "P  ={ E1 , E2 }▷=★  Q") : uPred_scope.
-Notation "|={ E }▷=> Q" := (|={E,E}▷=> Q)%I
-  (at level 99, E at level 50, Q at level 200,
-   format "|={ E }▷=>  Q") : uPred_scope.
-Notation "P ={ E }▷=★ Q" := (P ={E,E}▷=★ Q)%I
-  (at level 99, E at level 50, Q at level 200,
-   format "P  ={ E }▷=★  Q") : uPred_scope.
-
 Section fupd.
 Context `{invG Σ}.
 Implicit Types P Q : iProp Σ.
@@ -200,3 +187,41 @@ End proofmode_classes.
 
 Hint Extern 2 (coq_tactics.of_envs _ ⊢ _) =>
   match goal with |- _ ⊢ |={_}=> _ => iModIntro end.
+
+(** Fancy updates that take a step. *)
+
+Notation "|={ E1 , E2 }▷=> Q" := (|={E1,E2}=> (▷ |={E2,E1}=> Q))%I
+  (at level 99, E1, E2 at level 50, Q at level 200,
+   format "|={ E1 , E2 }▷=>  Q") : uPred_scope.
+Notation "P ={ E1 , E2 }▷=★ Q" := (P -★ |={ E1 , E2 }▷=> Q)%I
+  (at level 99, E1, E2 at level 50, Q at level 200,
+   format "P  ={ E1 , E2 }▷=★  Q") : uPred_scope.
+Notation "|={ E }▷=> Q" := (|={E,E}▷=> Q)%I
+  (at level 99, E at level 50, Q at level 200,
+   format "|={ E }▷=>  Q") : uPred_scope.
+Notation "P ={ E }▷=★ Q" := (P ={E,E}▷=★ Q)%I
+  (at level 99, E at level 50, Q at level 200,
+   format "P  ={ E }▷=★  Q") : uPred_scope.
+
+Section step_fupd.
+Context `{invG Σ}.
+
+Lemma step_fupd_mask_frame_r E1 E2 Ef P :
+  E1 ⊥ Ef → E2 ⊥ Ef → (|={E1,E2}▷=> P) ⊢ |={E1 ∪ Ef,E2 ∪ Ef}▷=> P.
+Proof.
+  iIntros (??) "HP". iApply fupd_mask_frame_r. done. iMod "HP". iModIntro.
+  iNext. by iApply fupd_mask_frame_r.
+Qed.
+
+Lemma step_fupd_mask_mono E1 E2 F1 F2 P :
+  F1 ⊆ F2 → E1 ⊆ E2 → (|={E1,F2}▷=> P) ⊢ |={E2,F1}▷=> P.
+Proof.
+  iIntros (??) "HP".
+  iAssert (|={E2,E1}▷=> True)%I as "HE".
+  { iApply fupd_mono. apply later_intro. by iApply fupd_intro_mask. }
+  iAssert (|={F2,F1}▷=> True)%I as "HF".
+  { iApply fupd_mono. apply later_intro. by iApply fupd_intro_mask. }
+  iMod "HE". iMod "HP". iMod "HF". iModIntro. iNext. iMod "HF". iMod "HP". by iMod "HE".
+Qed.
+
+End step_fupd.
