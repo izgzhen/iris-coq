@@ -1,5 +1,5 @@
 From iris.algebra Require Export sts.
-From iris.program_logic Require Import own.
+From iris.base_logic Require Import lib.own.
 From iris.prelude Require Export gmap.
 
 (** The STS describing the main barrier protocol. Every state has an index-set

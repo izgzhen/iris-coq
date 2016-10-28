@@ -1,6 +1,6 @@
-From iris.program_logic Require Export iprop.
 From iris.algebra Require Import iprod gmap.
 From iris.base_logic Require Import big_op.
+From iris.base_logic Require Export iprop.
 From iris.proofmode Require Import classes.
 Import uPred.
 
