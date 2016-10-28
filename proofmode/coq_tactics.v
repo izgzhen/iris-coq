@@ -578,11 +578,10 @@ Qed.
 
 Lemma tac_revert Δ Δ' i p P Q :
   envs_lookup_delete i Δ = Some (p,P,Δ') →
-  (Δ' ⊢ if p then □ P → Q else P -★ Q) → Δ ⊢ Q.
+  (Δ' ⊢ (if p then □ P else P) -★ Q) → Δ ⊢ Q.
 Proof.
-  intros ? HQ. rewrite envs_lookup_delete_sound //; simpl. destruct p.
-  - by rewrite HQ -always_and_sep_l impl_elim_r.
-  - by rewrite HQ wand_elim_r.
+  intros ? HQ. rewrite envs_lookup_delete_sound //; simpl.
+  by rewrite HQ /uPred_always_if wand_elim_r.
 Qed.
 
 Lemma tac_revert_ih Δ P Q :
