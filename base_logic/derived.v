@@ -113,11 +113,20 @@ Proof. by intros P P' HP Q Q' HQ; apply or_mono. Qed.
 Global Instance impl_mono' :
   Proper (flip (⊢) ==> (⊢) ==> (⊢)) (@uPred_impl M).
 Proof. by intros P P' HP Q Q' HQ; apply impl_mono. Qed.
+Global Instance impl_flip_mono' :
+  Proper ((⊢) ==> flip (⊢) ==> flip (⊢)) (@uPred_impl M).
+Proof. by intros P P' HP Q Q' HQ; apply impl_mono. Qed.
 Global Instance forall_mono' A :
   Proper (pointwise_relation _ (⊢) ==> (⊢)) (@uPred_forall M A).
 Proof. intros P1 P2; apply forall_mono. Qed.
+Global Instance forall_flip_mono' A :
+  Proper (pointwise_relation _ (flip (⊢)) ==> flip (⊢)) (@uPred_forall M A).
+Proof. intros P1 P2; apply forall_mono. Qed.
 Global Instance exist_mono' A :
-  Proper (pointwise_relation _ (⊢) ==> (⊢)) (@uPred_exist M A).
+  Proper (pointwise_relation _ (flip (⊢)) ==> flip (⊢)) (@uPred_exist M A).
+Proof. intros P1 P2; apply exist_mono. Qed.
+Global Instance exist_flip_mono' A :
+  Proper (pointwise_relation _ (flip (⊢)) ==> flip (⊢)) (@uPred_exist M A).
 Proof. intros P1 P2; apply exist_mono. Qed.
 
 Global Instance and_idem : IdemP (⊣⊢) (@uPred_and M).
@@ -302,6 +311,9 @@ Proof.
   intros HP HQ; apply wand_intro_r. rewrite HP -HQ. by apply wand_elim_l'.
 Qed.
 Global Instance wand_mono' : Proper (flip (⊢) ==> (⊢) ==> (⊢)) (@uPred_wand M).
+Proof. by intros P P' HP Q Q' HQ; apply wand_mono. Qed.
+Global Instance wand_flip_mono' :
+  Proper ((⊢) ==> flip (⊢) ==> flip (⊢)) (@uPred_wand M).
 Proof. by intros P P' HP Q Q' HQ; apply wand_mono. Qed.
 
 Global Instance sep_comm : Comm (⊣⊢) (@uPred_sep M).
