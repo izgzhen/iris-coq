@@ -49,7 +49,7 @@ Section proof.
     heapN ⊥ N →
     {{{ heap_ctx ★ R }}} newlock #() {{{ lk γ; lk, is_lock γ lk R }}}.
   Proof.
-    iIntros (? Φ) "[[#Hh HR] HΦ]". rewrite /newlock /=.
+    iIntros (? Φ) "[[#Hh HR] HΦ]". rewrite -wp_fupd /newlock /=.
     wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (Excl ())) as (γ) "Hγ"; first done.
     iMod (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
@@ -75,7 +75,7 @@ Section proof.
   Proof.
     iIntros (Φ) "[#Hl HΦ]". iLöb as "IH". wp_rec.
     wp_apply (try_acquire_spec with "[- $Hl]"). iIntros ([]).
-    - iIntros "[Hlked HR]". wp_if. iModIntro. iApply "HΦ"; iFrame.
+    - iIntros "[Hlked HR]". wp_if. iApply "HΦ"; iFrame.
     - iIntros "_". wp_if. iApply ("IH" with "[HΦ]"). auto.
   Qed.
 

@@ -127,7 +127,7 @@ Section heap.
     iIntros (<-%of_to_val ? Φ) "[#Hinv HΦ]". rewrite /heap_ctx.
     iMod (auth_empty heap_name) as "Ha".
     iMod (auth_open with "[$Hinv $Ha]") as (σ) "(%&Hσ&Hcl)"; first done.
-    iApply wp_alloc_pst. iFrame "Hσ". iNext. iIntros (l) "[% Hσ] !>".
+    iApply wp_alloc_pst. iFrame "Hσ". iNext. iIntros (l) "[% Hσ]".
     iMod ("Hcl" with "* [Hσ]") as "Ha".
     { iFrame. iPureIntro. rewrite to_heap_insert.
       eapply alloc_singleton_local_update; by auto using lookup_to_heap_None. }
@@ -143,7 +143,7 @@ Section heap.
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iMod (auth_open with "[$Hinv $Hl]") as (σ) "(%&Hσ&Hcl)"; first done.
     iApply (wp_load_pst _ σ); first eauto using heap_singleton_included.
-    iIntros "{$Hσ}"; iNext; iIntros "Hσ !>".
+    iIntros "{$Hσ}"; iNext; iIntros "Hσ".
     iMod ("Hcl" with "* [Hσ]") as "Ha"; first eauto. by iApply "HΦ".
   Qed.
 
@@ -156,7 +156,7 @@ Section heap.
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iMod (auth_open with "[$Hinv $Hl]") as (σ) "(%&Hσ&Hcl)"; first done.
     iApply (wp_store_pst _ σ); first eauto using heap_singleton_included.
-    iIntros "{$Hσ}"; iNext; iIntros "Hσ !>". iMod ("Hcl" with "* [Hσ]") as "Ha".
+    iIntros "{$Hσ}"; iNext; iIntros "Hσ". iMod ("Hcl" with "* [Hσ]") as "Ha".
     { iFrame. iPureIntro. rewrite to_heap_insert.
       eapply singleton_local_update, exclusive_local_update; last done.
       by eapply heap_singleton_included'. }
@@ -172,7 +172,7 @@ Section heap.
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iMod (auth_open with "[$Hinv $Hl]") as (σ) "(%&Hσ&Hcl)"; first done.
     iApply (wp_cas_fail_pst _ σ); [eauto using heap_singleton_included|done|].
-    iIntros "{$Hσ}"; iNext; iIntros "Hσ !>".
+    iIntros "{$Hσ}"; iNext; iIntros "Hσ".
     iMod ("Hcl" with "* [Hσ]") as "Ha"; first eauto. by iApply "HΦ".
   Qed.
 
@@ -184,8 +184,8 @@ Section heap.
     iIntros (<-%of_to_val <-%of_to_val ? Φ) "[[#Hinv >Hl] HΦ]".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
     iMod (auth_open with "[$Hinv $Hl]") as (σ) "(%&Hσ&Hcl)"; first done.
-    iApply (wp_cas_suc_pst _ σ); first eauto using heap_singleton_included.
-    iIntros "{$Hσ}"; iNext; iIntros "Hσ !>". iMod ("Hcl" with "* [Hσ]") as "Ha".
+    iApply (wp_cas_suc_pst _ σ); first by eauto using heap_singleton_included.
+    iIntros "{$Hσ}". iNext. iIntros "Hσ". iMod ("Hcl" with "* [Hσ]") as "Ha".
     { iFrame. iPureIntro. rewrite to_heap_insert.
       eapply singleton_local_update, exclusive_local_update; last done.
       by eapply heap_singleton_included'. }

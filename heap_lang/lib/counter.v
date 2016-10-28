@@ -37,7 +37,7 @@ Section mono_proof.
     heapN ⊥ N →
     {{{ heap_ctx }}} newcounter #() {{{ l; #l, mcounter l 0 }}}.
   Proof.
-    iIntros (? Φ) "[#Hh HΦ]". rewrite /newcounter /=. wp_seq. wp_alloc l as "Hl".
+    iIntros (? Φ) "[#Hh HΦ]". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (● (O:mnat) ⋅ ◯ (O:mnat))) as (γ) "[Hγ Hγ']"; first done.
     iMod (inv_alloc N _ (mcounter_inv γ l) with "[Hl Hγ]").
     { iNext. iExists 0%nat. by iFrame. }
@@ -114,7 +114,7 @@ Section contrib_spec.
     {{{ heap_ctx }}} newcounter #()
     {{{ γ l; #l, ccounter_ctx γ l ★ ccounter γ 1 0 }}}.
   Proof.
-    iIntros (? Φ) "[#Hh HΦ]". rewrite /newcounter /=. wp_seq. wp_alloc l as "Hl".
+    iIntros (? Φ) "[#Hh HΦ]". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (● (Some (1%Qp, O%nat)) ⋅ ◯ (Some (1%Qp, 0%nat))))
       as (γ) "[Hγ Hγ']"; first done.
     iMod (inv_alloc N _ (ccounter_inv γ l) with "[Hl Hγ]").

@@ -95,7 +95,7 @@ Lemma newbarrier_spec (P : iProp Σ) :
   {{{ heap_ctx }}} newbarrier #() {{{ l; #l, recv l P ★ send l P }}}.
 Proof.
   iIntros (HN Φ) "[#? HΦ]".
-  rewrite /newbarrier /=. wp_seq. wp_alloc l as "Hl".
+  rewrite -wp_fupd /newbarrier /=. wp_seq. wp_alloc l as "Hl".
   iApply ("HΦ" with ">[-]").
   iMod (saved_prop_alloc (F:=idCF) P) as (γ) "#?".
   iMod (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}) with "[-]")
@@ -158,7 +158,7 @@ Proof.
       iNext. rewrite {2}/barrier_inv /=; iFrame "Hl". iExists Ψ; iFrame. auto. }
     iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by auto.
     iModIntro. wp_if.
-    iModIntro. iApply "HΦ". iApply "HQR". by iRewrite "Heq".
+    iApply "HΦ". iApply "HQR". by iRewrite "Heq".
 Qed.
 
 Lemma recv_split E l P1 P2 :

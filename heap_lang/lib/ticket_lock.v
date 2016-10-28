@@ -78,7 +78,7 @@ Section proof.
     heapN ⊥ N →
     {{{ heap_ctx ★ R }}} newlock #() {{{ lk γ; lk, is_lock γ lk R }}}.
   Proof.
-    iIntros (HN Φ) "((#Hh & HR) & HΦ)". rewrite /newlock /=.
+    iIntros (HN Φ) "((#Hh & HR) & HΦ)". rewrite -wp_fupd /newlock /=.
     wp_seq. wp_alloc lo as "Hlo". wp_alloc ln as "Hln".
     iMod (own_alloc (● (Excl' 0%nat, ∅) ⋅ ◯ (Excl' 0%nat, ∅))) as (γ) "[Hγ Hγ']".
     { by rewrite -auth_both_op. }
@@ -99,7 +99,7 @@ Section proof.
       + iMod ("Hclose" with "[Hlo Hln Hainv Ht]") as "_".
         { iNext. iExists o, n. iFrame. eauto. }
         iModIntro. wp_let. wp_op=>[_|[]] //.
-        wp_if. iModIntro.
+        wp_if. 
         iApply ("HΦ" with "[-]"). rewrite /locked. iFrame. eauto.
       + iDestruct (own_valid_2 with "[$Ht $Haown]") as % [_ ?%gset_disj_valid_op].
         set_solver.

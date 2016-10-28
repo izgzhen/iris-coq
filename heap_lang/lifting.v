@@ -46,47 +46,47 @@ Lemma wp_bind_ctxi {E e} Ki Φ :
 Proof. exact: weakestpre.wp_bind. Qed.
 
 (** Base axioms for core primitives of the language: Stateful reductions. *)
-Lemma wp_alloc_pst E σ v Φ :
-  ▷ ownP σ ★ ▷ (∀ l, σ !! l = None ∧ ownP (<[l:=v]>σ) ={E}=★ Φ (LitV (LitLoc l)))
-  ⊢ WP Alloc (of_val v) @ E {{ Φ }}.
+Lemma wp_alloc_pst E σ v :
+  {{{ ▷ ownP σ }}} Alloc (of_val v) @ E
+  {{{ l; LitV (LitLoc l), σ !! l = None ∧ ownP (<[l:=v]>σ) }}}.
 Proof.
-  iIntros "[HP HΦ]".
+  iIntros (Φ) "[HP HΦ]".
   iApply (wp_lift_atomic_head_step (Alloc (of_val v)) σ); eauto.
   iFrame "HP". iNext. iIntros (v2 σ2 ef) "[% HP]". inv_head_step.
   match goal with H: _ = of_val v2 |- _ => apply (inj of_val (LitV _)) in H end.
   subst v2. iSplit. iApply "HΦ"; by iSplit. by iApply big_sepL_nil.
 Qed.
 
-Lemma wp_load_pst E σ l v Φ :
+Lemma wp_load_pst E σ l v :
   σ !! l = Some v →
-  ▷ ownP σ ★ ▷ (ownP σ ={E}=★ Φ v) ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
+  {{{ ▷ ownP σ }}} Load (Lit (LitLoc l)) @ E {{{; v, ownP σ }}}.
 Proof.
-  intros. rewrite -(wp_lift_atomic_det_head_step' σ v σ); eauto.
+  intros ? Φ. rewrite -(wp_lift_atomic_det_head_step' σ v σ); eauto.
   intros; inv_head_step; eauto.
 Qed.
 
-Lemma wp_store_pst E σ l v v' Φ :
+Lemma wp_store_pst E σ l v v' :
   σ !! l = Some v' →
-  ▷ ownP σ ★ ▷ (ownP (<[l:=v]>σ) ={E}=★ Φ (LitV LitUnit))
-  ⊢ WP Store (Lit (LitLoc l)) (of_val v) @ E {{ Φ }}.
+  {{{ ▷ ownP σ }}} Store (Lit (LitLoc l)) (of_val v) @ E
+  {{{; LitV LitUnit, ownP (<[l:=v]>σ) }}}.
 Proof.
   intros. rewrite-(wp_lift_atomic_det_head_step' σ (LitV LitUnit) (<[l:=v]>σ)); eauto.
   intros; inv_head_step; eauto.
 Qed.
 
-Lemma wp_cas_fail_pst E σ l v1 v2 v' Φ :
+Lemma wp_cas_fail_pst E σ l v1 v2 v' :
   σ !! l = Some v' → v' ≠ v1 →
-  ▷ ownP σ ★ ▷ (ownP σ ={E}=★ Φ (LitV $ LitBool false))
-  ⊢ WP CAS (Lit (LitLoc l)) (of_val v1) (of_val v2) @ E {{ Φ }}.
+  {{{ ▷ ownP σ }}} CAS (Lit (LitLoc l)) (of_val v1) (of_val v2) @ E
+  {{{; LitV $ LitBool false, ownP σ }}}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_head_step' σ (LitV $ LitBool false) σ); eauto.
   intros; inv_head_step; eauto.
 Qed.
 
-Lemma wp_cas_suc_pst E σ l v1 v2 Φ :
+Lemma wp_cas_suc_pst E σ l v1 v2 :
   σ !! l = Some v1 →
-  ▷ ownP σ ★ ▷ (ownP (<[l:=v2]>σ) ={E}=★ Φ (LitV $ LitBool true))
-  ⊢ WP CAS (Lit (LitLoc l)) (of_val v1) (of_val v2) @ E {{ Φ }}.
+  {{{ ▷ ownP σ }}} CAS (Lit (LitLoc l)) (of_val v1) (of_val v2) @ E
+  {{{; LitV $ LitBool true, ownP (<[l:=v2]>σ) }}}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_head_step' σ (LitV $ LitBool true)
     (<[l:=v2]>σ)); eauto.
@@ -95,10 +95,10 @@ Qed.
 
 (** Base axioms for core primitives of the language: Stateless reductions *)
 Lemma wp_fork E e Φ :
-  ▷ (|={E}=> Φ (LitV LitUnit)) ★ ▷ WP e {{ _, True }} ⊢ WP Fork e @ E {{ Φ }}.
+  ▷ Φ (LitV LitUnit) ★ ▷ WP e {{ _, True }} ⊢ WP Fork e @ E {{ Φ }}.
 Proof.
   rewrite -(wp_lift_pure_det_head_step (Fork e) (Lit LitUnit) [e]) //=; eauto.
-  - by rewrite later_sep -(wp_value_fupd _ _ (Lit _)) // big_sepL_singleton.
+  - by rewrite later_sep -(wp_value _ _ (Lit _)) // big_sepL_singleton.
   - intros; inv_head_step; eauto.
 Qed.
 
@@ -116,20 +116,20 @@ Qed.
 Lemma wp_un_op E op e v v' Φ :
   to_val e = Some v →
   un_op_eval op v = Some v' →
-  ▷ (|={E}=> Φ v') ⊢ WP UnOp op e @ E {{ Φ }}.
+  ▷ Φ v' ⊢ WP UnOp op e @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_head_step' (UnOp op _) (of_val v'))
-    -?wp_value_fupd'; eauto.
+    -?wp_value'; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_bin_op E op e1 e2 v1 v2 v' Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
   bin_op_eval op v1 v2 = Some v' →
-  ▷ (|={E}=> Φ v') ⊢ WP BinOp op e1 e2 @ E {{ Φ }}.
+  ▷ (Φ v') ⊢ WP BinOp op e1 e2 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_head_step' (BinOp op _ _) (of_val v'))
-    -?wp_value_fupd'; eauto.
+    -?wp_value'; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -149,19 +149,19 @@ Qed.
 
 Lemma wp_fst E e1 v1 e2 Φ :
   to_val e1 = Some v1 → is_Some (to_val e2) →
-  ▷ (|={E}=> Φ v1) ⊢ WP Fst (Pair e1 e2) @ E {{ Φ }}.
+  ▷ Φ v1 ⊢ WP Fst (Pair e1 e2) @ E {{ Φ }}.
 Proof.
   intros ? [v2 ?].
-  rewrite -(wp_lift_pure_det_head_step' (Fst _) e1) -?wp_value_fupd; eauto.
+  rewrite -(wp_lift_pure_det_head_step' (Fst _) e1) -?wp_value; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_snd E e1 e2 v2 Φ :
   is_Some (to_val e1) → to_val e2 = Some v2 →
-  ▷ (|={E}=> Φ v2) ⊢ WP Snd (Pair e1 e2) @ E {{ Φ }}.
+  ▷ Φ v2 ⊢ WP Snd (Pair e1 e2) @ E {{ Φ }}.
 Proof.
   intros [v1 ?] ?.
-  rewrite -(wp_lift_pure_det_head_step' (Snd _) e2) -?wp_value_fupd; eauto.
+  rewrite -(wp_lift_pure_det_head_step' (Snd _) e2) -?wp_value; eauto.
   intros; inv_head_step; eauto.
 Qed.
 

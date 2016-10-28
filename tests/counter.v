@@ -95,7 +95,7 @@ Lemma newcounter_spec N :
   heapN ⊥ N →
   heap_ctx ⊢ {{ True }} newcounter #() {{ v, ∃ l, v = #l ∧ C l 0 }}.
 Proof.
-  iIntros (?) "#Hh !# _ /=". rewrite /newcounter /=. wp_seq. wp_alloc l as "Hl".
+  iIntros (?) "#Hh !# _ /=". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
   iMod (own_alloc (Auth 0)) as (γ) "Hγ"; first done.
   rewrite (auth_frag_op 0 0) //; iDestruct "Hγ" as "[Hγ Hγf]".
   iMod (inv_alloc N _ (I γ l) with "[Hl Hγ]") as "#?".
@@ -119,7 +119,7 @@ Proof.
     rewrite (auth_frag_op (S n) (S c)); last lia; iDestruct "Hγ" as "[Hγ Hγf]".
     wp_cas_suc. iMod ("Hclose" with "[Hl Hγ]").
     { iNext. iExists (S c). rewrite Nat2Z.inj_succ Z.add_1_l. by iFrame. }
-    iModIntro. wp_if. iModIntro; rewrite {3}/C; eauto 10.
+    iModIntro. wp_if. rewrite {3}/C; eauto 10.
   - wp_cas_fail; first (intros [=]; abstract omega).
     iMod ("Hclose" with "[Hl Hγ]"); [iNext; iExists c'; by iFrame|].
     iModIntro. wp_if. iApply ("IH" with "[Hγf]"). rewrite {3}/C; eauto 10.
