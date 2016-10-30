@@ -3,14 +3,15 @@ way the logic is used on paper.  We also mention some significant changes in the
 Coq development, but not every API-breaking change is listed.  Changes marked
 `[#]` still need to be ported to the Iris Documentation LaTeX file(s).
 
-## Iris 3.0~rc1
-
-This version matches the ESOP submission.
+## Iris 3.0 (unfinished)
 
 * View shifts are radically simplified to just internalize frame-preserving
   updates.  Weakestpre is defined inside the logic, and invariants and view
   shifts with masks are also coded up inside Iris.  Adequacy of weakestpre
   is proven in the logic.
+* Renaming and moving things around: uPred and the rest of the base logic are
+  in [base_logic], while [program_logic] is for everything involving the
+  general Iris notion of a language.
 * With invariants and the physical state being handled in the logic, there
   is no longer any reason to demand the CMRA unit to be discrete.
 * The language can now fork off multiple threads at once.
