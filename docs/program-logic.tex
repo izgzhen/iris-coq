@@ -130,7 +130,7 @@ We can now define the assertion $W$ (\emph{world satisfaction}) which ensures th
   W \eqdef{}& \Exists I : \mathcal I \fpfn \Prop.
   \begin{array}[t]{@{} l}
     \ownGhost{\gname_{\textmon{Inv}}}{\authfull
-      \mapsingletonComp {\iname}
+      \mapComp {\iname}
         {\aginj(\latertinj(\wIso(I(\iname))))}
         {\iname \in \dom(I)}} * \\
     \Sep_{\iname \in \dom(I)} \left( \later I(\iname) * \ownGhost{\gname_{\textmon{Dis}}}{\set{\iname}} \lor \ownGhost{\gname_{\textmon{En}}}{\set{\iname}} \right)

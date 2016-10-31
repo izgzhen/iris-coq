@@ -78,15 +78,19 @@
 \newcommand{\pset}[1]{\wp(#1)} % Powerset
 \newcommand{\psetdown}[1]{\wp^\downarrow(#1)}
 \newcommand{\finpset}[1]{\wp^\mathrm{fin}(#1)}
+\newcommand{\pmultiset}[1]{\wp^{+}(#1)}
+\newcommand{\finpmultiset}[1]{\wp^{\mathrm{fin},+}(#1)}
 
 \newcommand{\Func}{F} % functor
 
 \newcommand{\subst}[3]{{#1}[{#3} / {#2}]}
 
-\newcommand{\mapinsert}[3]{#3[#1\mathop{\vcentcolon=}#2]}
-\newcommand{\mapsingleton}[2]{[#1\mathop{\vcentcolon=}#2]}
-\newcommand{\mapsingletonComp}[3]
-  {\left[ #1 \mathop{\vcentcolon=} #2 \spac\middle|\spac #3 \right]}
+\newcommand{\mapinsert}[3]{#3\left[#1\mathop{\la}#2\right]}
+\newcommand{\mapsingleton}[2]{\mapinsert{#1}{#2}{}}
+\newcommand{\mapinsertComp}[4]
+  {\mapinsert{#1}{#2 \spac\middle|\spac #3}{#4}}
+\newcommand{\mapComp}[3]
+  {\mapinsertComp{#1}{#2}{#3}{}}
 
 \newcommand{\nil}{\epsilon}
 
