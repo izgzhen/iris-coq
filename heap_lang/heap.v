@@ -39,6 +39,10 @@ Notation "l ↦{ q } v" := (heap_mapsto l q v)
   (at level 20, q at level 50, format "l  ↦{ q }  v") : uPred_scope.
 Notation "l ↦ v" := (heap_mapsto l 1 v) (at level 20) : uPred_scope.
 
+Notation "l ↦{ q } -" := (∃ v, l ↦{q} v)%I
+  (at level 20, q at level 50, format "l  ↦{ q }  -") : uPred_scope.
+Notation "l ↦ -" := (l ↦{1} -)%I (at level 20) : uPred_scope.
+
 Section heap.
   Context {Σ : gFunctors}.
   Implicit Types P Q : iProp Σ.
@@ -102,6 +106,18 @@ Section heap.
   Lemma heap_mapsto_op_half_1 l q v1 v2 :
     l ↦{q/2} v1 ★ l ↦{q/2} v2 ⊢ v1 = v2 ∧ l ↦{q} v1.
   Proof. by rewrite heap_mapsto_op_half. Qed.
+
+  Lemma heap_ex_mapsto_op l q1 q2 : l ↦{q1} - ★ l ↦{q2} - ⊣⊢ l ↦{q1+q2} -.
+  Proof.
+    iSplit.
+    - iIntros "[H1 H2]". iDestruct "H1" as (v1) "H1". iDestruct "H2" as (v2) "H2".
+      iDestruct (heap_mapsto_op_1 with "[$H1 $H2]") as "[% ?]"; subst; eauto.
+    - iDestruct 1 as (v) "H". rewrite -heap_mapsto_op_eq.
+      iDestruct "H" as "[H1 H2]"; iSplitL "H1"; eauto.
+  Qed.
+
+  Lemma heap_ex_mapsto_op_half l q : l ↦{q/2} - ★ l ↦{q/2} - ⊣⊢ l ↦{q} -.
+  Proof. by rewrite heap_ex_mapsto_op Qp_div_2. Qed.
 
   (** Weakest precondition *)
   Lemma wp_alloc E e v :
