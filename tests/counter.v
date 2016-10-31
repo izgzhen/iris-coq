@@ -1,6 +1,7 @@
 (* This file contains a formalization of the monotone counter, but with an
 explicit contruction of the monoid, as we have also done in the proof mode
-paper. A version that uses the authoritative monoid and natural number monoid
+paper. This should simplify explaining and understanding what is happening.
+A version that uses the authoritative monoid and natural number monoid
 under max can be found in `heap_lang/lib/counter.v`. *)
 From iris.program_logic Require Export weakestpre.
 From iris.heap_lang Require Export lang.
