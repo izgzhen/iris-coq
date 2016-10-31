@@ -27,7 +27,8 @@ To instantiate the program logic, the user picks a family of locally contractive
 
 From this, we construct the bifunctor defining the overall resources as follows:
 \begin{align*}
-  \textdom{ResF}(\cofe^\op, \cofe) \eqdef{}& \prod_{i \in \mathcal I} \nat \fpfn \iFunc_i(\cofe^\op, \cofe)
+  \mathcal G \eqdef{}& \nat \\
+  \textdom{ResF}(\cofe^\op, \cofe) \eqdef{}& \prod_{i \in \mathcal I} \mathcal G \fpfn \iFunc_i(\cofe^\op, \cofe)
 \end{align*}
 We will motivate both the use of a product and the finite partial function below.
 $\textdom{ResF}(\cofe^\op, \cofe)$ is a CMRA by lifting the individual CMRAs pointwise, and it has a unit (using the empty finite partial functions).
@@ -111,10 +112,11 @@ To this end, we use tokens that manage which invariants are currently enabled.
 
 We assume to have the following four CMRAs available:
 \begin{align*}
-  \textmon{State} \eqdef{}& \authm(\maybe{\exm(\State)}) \\
-  \textmon{Inv} \eqdef{}& \authm(\nat \fpfn \agm(\latert \iPreProp)) \\
-  \textmon{En} \eqdef{}& \pset{\nat} \\
-  \textmon{Dis} \eqdef{}& \finpset{\nat}
+  \mathcal I \eqdef{}& \nat \\
+  \textmon{Inv} \eqdef{}& \authm(\mathcal I \fpfn \agm(\latert \iPreProp)) \\
+  \textmon{En} \eqdef{}& \pset{\mathcal I} \\
+  \textmon{Dis} \eqdef{}& \finpset{\mathcal I} \\
+  \textmon{State} \eqdef{}& \authm(\maybe{\exm(\State)})
 \end{align*}
 The last two are the tokens used for managing invariants, $\textmon{Inv}$ is the monoid used to manage the invariants themselves.
 Finally, $\textmon{State}$ is used to provide the program with a view of the physical state of the machine.
@@ -125,8 +127,8 @@ Furthermore, we assume that instances named $\gname_{\textmon{State}}$, $\gname_
 \paragraph{World Satisfaction.}
 We can now define the assertion $W$ (\emph{world satisfaction}) which ensures that the enabled invariants are actually maintained:
 \begin{align*}
-  W \eqdef{}& \Exists I : \nat \fpfn \Prop.
-  \begin{array}{@{} l}
+  W \eqdef{}& \Exists I : \mathcal I \fpfn \Prop.
+  \begin{array}[t]{@{} l}
     \ownGhost{\gname_{\textmon{Inv}}}{\authfull
       \mapsingletonComp {\iname}
         {\aginj(\latertinj(\wIso(I(\iname))))}
@@ -148,7 +150,7 @@ We use $\top$ as symbol for the largest possible mask, $\nat$, and $\bot$ for th
 We will write $\pvs[\mask] \prop$ for $\pvs[\mask][\mask]\prop$.
 %
 Fancy updates satisfy the following basic proof rules:
-\begin{mathpar}
+\begin{mathparpagebreakable}
 \infer[fup-mono]
 {\prop \proves \propB}
 {\pvs[\mask_1][\mask_2] \prop \proves \pvs[\mask_1][\mask_2] \propB}
@@ -184,7 +186,7 @@ Fancy updates satisfy the following basic proof rules:
 %
 % \inferH{fup-closeI}
 % {}{\knowInv\iname\prop \land \later\prop \proves \pvs[\emptyset][\set\iname] \TRUE}
-\end{mathpar}
+\end{mathparpagebreakable}
 (There are no rules related to invariants here. Those rules will be discussed later, in \Sref{sec:invariants}.)
 
 We can further define the notions of \emph{view shifts} and \emph{linear view shifts}:
@@ -470,8 +472,8 @@ We use the notation $\namesp.\iname$ for the namespace $[\iname] \dplus \namesp$
 
 The elements of a namespaces are \emph{structured invariant names} (think: Java fully qualified class name).
 They, too, are lists of $\nat$, the same type as namespaces.
-In order to connect this up to the definitions of \Sref{sec:invariants}, we need a way to map structued invariant names to $\nat$, the type of ``plain'' invariant names.
-Any injective mapping $\textlog{namesp\_inj}$ will do; and such a mapping has to exist because $\List(\nat)$ is countable.
+In order to connect this up to the definitions of \Sref{sec:invariants}, we need a way to map structued invariant names to $\mathcal I$, the type of ``plain'' invariant names.
+Any injective mapping $\textlog{namesp\_inj}$ will do; and such a mapping has to exist because $\List(\nat)$ is countable and $\mathcal I$ is infinite.
 Whenever needed, we (usually implicitly) coerce $\namesp$ to its encoded suffix-closure, \ie to the set of encoded structured invariant names contained in the namespace: \[\namecl\namesp \eqdef \setComp{\iname}{\Exists \namesp'. \iname = \textlog{namesp\_inj}(\namesp' \dplus \namesp)}\]
 
 We will overload the notation for invariant assertions for using namespaces instead of names:
