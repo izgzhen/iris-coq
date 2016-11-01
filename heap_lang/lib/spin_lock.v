@@ -57,26 +57,26 @@ Section proof.
     iModIntro. iApply "HΦ". iExists l. eauto.
   Qed.
 
-  Lemma try_acquire_spec γ lk R (Φ: val → iProp Σ) :
-    is_lock γ lk R ★ ((locked γ -★ R -★ Φ #true) ∧ Φ #false)
-    ⊢ WP try_acquire lk {{ Φ }}.
+  Lemma try_acquire_spec γ lk R :
+    {{{ is_lock γ lk R }}} try_acquire lk
+    {{{b; #b, if b is true then locked γ ★ R else True }}}.
   Proof.
-    iIntros "[#Hl HΦ]". iDestruct "Hl" as (l) "(% & #? & % & #?)". subst.
+    iIntros (Φ) "[#Hl HΦ]". iDestruct "Hl" as (l) "(% & #? & % & #?)". subst.
     wp_rec. iInv N as ([]) "[Hl HR]" "Hclose".
     - wp_cas_fail. iMod ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
-      iModIntro. iDestruct "HΦ" as "[_ HΦ]". iApply "HΦ".
+      iModIntro. iApply ("HΦ" $! false). done.
     - wp_cas_suc. iDestruct "HR" as "[Hγ HR]".
       iMod ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
-      iModIntro. iDestruct "HΦ" as "[HΦ _]". rewrite /locked. by iApply ("HΦ" with "Hγ HR").
+      iModIntro. rewrite /locked. by iApply ("HΦ" $! true with "[$Hγ $HR]").
   Qed.
 
   Lemma acquire_spec γ lk R :
     {{{ is_lock γ lk R }}} acquire lk {{{; #(), locked γ ★ R }}}.
   Proof.
     iIntros (Φ) "[#Hl HΦ]". iLöb as "IH". wp_rec.
-    wp_apply (try_acquire_spec with "[- $Hl]"). iSplit.
-    - iIntros "Hlked HR". wp_if. iModIntro. iApply "HΦ"; iFrame.
-    - wp_if. iApply ("IH" with "[HΦ]"). auto.
+    wp_apply (try_acquire_spec with "[- $Hl]"). iIntros ([]).
+    - iIntros "[Hlked HR]". wp_if. iModIntro. iApply "HΦ"; iFrame.
+    - iIntros "_". wp_if. iApply ("IH" with "[HΦ]"). auto.
   Qed.
 
   Lemma release_spec γ lk R :

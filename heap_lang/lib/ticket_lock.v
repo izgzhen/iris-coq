@@ -88,10 +88,10 @@ Section proof.
     iModIntro. iApply ("HΦ" $! (#lo, #ln)%V γ). iExists lo, ln. eauto.
   Qed.
 
-  Lemma wait_loop_spec γ lk x R (Φ : val → iProp Σ) :
-    issued γ lk x R ★ (locked γ ★ R -★ Φ #()) ⊢ WP wait_loop #x lk {{ Φ }}.
+  Lemma wait_loop_spec γ lk x R :
+    {{{ issued γ lk x R }}} wait_loop #x lk {{{; #(), locked γ ★ R }}}.
   Proof.
-    iIntros "[Hl HΦ]". iDestruct "Hl" as (lo ln) "(% & #? & % & #? & Ht)".
+    iIntros (Φ) "[Hl HΦ]". iDestruct "Hl" as (lo ln) "(% & #? & % & #? & Ht)".
     iLöb as "IH". wp_rec. subst. wp_let. wp_proj. wp_bind (! _)%E.
     iInv N as (o n) "(Hlo & Hln & Ha)" "Hclose".
     wp_load. destruct (decide (x = o)) as [->|Hneq].
@@ -106,7 +106,7 @@ Section proof.
     - iMod ("Hclose" with "[Hlo Hln Ha]").
       { iNext. iExists o, n. by iFrame. }
       iModIntro. wp_let. wp_op=>[[/Nat2Z.inj //]|?].
-      wp_if. iApply ("IH" with "Ht"). by iExact "HΦ".
+      wp_if. iApply ("IH" with "Ht"). iNext. by iExact "HΦ".
   Qed.
 
   Lemma acquire_spec γ lk R :
