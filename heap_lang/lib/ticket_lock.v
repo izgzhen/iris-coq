@@ -76,7 +76,7 @@ Section proof.
 
   Lemma newlock_spec (R : iProp Σ) :
     heapN ⊥ N →
-    {{{ heap_ctx ★ R }}} newlock #() {{{ lk γ; lk, is_lock γ lk R }}}.
+    {{{ heap_ctx ★ R }}} newlock #() {{{ lk γ, RET lk; is_lock γ lk R }}}.
   Proof.
     iIntros (HN Φ) "(#Hh & HR) HΦ". rewrite -wp_fupd /newlock /=.
     wp_seq. wp_alloc lo as "Hlo". wp_alloc ln as "Hln".
@@ -89,7 +89,7 @@ Section proof.
   Qed.
 
   Lemma wait_loop_spec γ lk x R :
-    {{{ issued γ lk x R }}} wait_loop #x lk {{{; #(), locked γ ★ R }}}.
+    {{{ issued γ lk x R }}} wait_loop #x lk {{{ RET #(); locked γ ★ R }}}.
   Proof.
     iIntros (Φ) "Hl HΦ". iDestruct "Hl" as (lo ln) "(% & #? & % & #? & Ht)".
     iLöb as "IH". wp_rec. subst. wp_let. wp_proj. wp_bind (! _)%E.
@@ -110,7 +110,7 @@ Section proof.
   Qed.
 
   Lemma acquire_spec γ lk R :
-    {{{ is_lock γ lk R }}} acquire lk {{{; #(), locked γ ★ R }}}.
+    {{{ is_lock γ lk R }}} acquire lk {{{ RET #(); locked γ ★ R }}}.
   Proof.
     iIntros (ϕ) "Hl HΦ". iDestruct "Hl" as (lo ln) "(% & #? & % & #?)".
     iLöb as "IH". wp_rec. wp_bind (! _)%E. subst. wp_proj.
@@ -141,7 +141,7 @@ Section proof.
   Qed.
 
   Lemma release_spec γ lk R :
-    {{{ is_lock γ lk R ★ locked γ ★ R }}} release lk {{{; #(), True }}}.
+    {{{ is_lock γ lk R ★ locked γ ★ R }}} release lk {{{ RET #(); True }}}.
   Proof.
     iIntros (Φ) "(Hl & Hγ & HR) HΦ".
     iDestruct "Hl" as (lo ln) "(% & #? & % & #?)"; subst.

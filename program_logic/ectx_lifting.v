@@ -65,7 +65,7 @@ Lemma wp_lift_atomic_det_head_step' {E e1} σ1 v2 σ2 :
   head_reducible e1 σ1 →
   (∀ e2' σ2' efs', head_step e1 σ1 e2' σ2' efs' →
     σ2 = σ2' ∧ to_val e2' = Some v2 ∧ [] = efs') →
-  {{{ ▷ ownP σ1 }}} e1 @ E {{{; v2, ownP σ2 }}}.
+  {{{ ▷ ownP σ1 }}} e1 @ E {{{ RET v2; ownP σ2 }}}.
 Proof.
   intros. rewrite -(wp_lift_atomic_det_head_step σ1 v2 σ2 []); [|done..].
   rewrite big_sepL_nil right_id. by apply uPred.wand_intro_r.

@@ -92,7 +92,7 @@ Qed.
 (** Actual proofs *)
 Lemma newbarrier_spec (P : iProp Σ) :
   heapN ⊥ N →
-  {{{ heap_ctx }}} newbarrier #() {{{ l; #l, recv l P ★ send l P }}}.
+  {{{ heap_ctx }}} newbarrier #() {{{ l, RET #l; recv l P ★ send l P }}}.
 Proof.
   iIntros (HN Φ) "#? HΦ".
   rewrite -wp_fupd /newbarrier /=. wp_seq. wp_alloc l as "Hl".
@@ -117,7 +117,7 @@ Proof.
 Qed.
 
 Lemma signal_spec l P :
-  {{{ send l P ★ P }}} signal #l {{{; #(), True }}}.
+  {{{ send l P ★ P }}} signal #l {{{ RET #(); True }}}.
 Proof.
   rewrite /signal /send /barrier_ctx /=.
   iIntros (Φ) "(Hs&HP) HΦ"; iDestruct "Hs" as (γ) "[#(%&Hh&Hsts) Hγ]". wp_let.
@@ -133,7 +133,7 @@ Proof.
 Qed.
 
 Lemma wait_spec l P:
-  {{{ recv l P }}} wait #l {{{ ; #(), P }}}.
+  {{{ recv l P }}} wait #l {{{ RET #(); P }}}.
 Proof.
   rename P into R; rewrite /recv /barrier_ctx.
   iIntros (Φ) "Hr HΦ"; iDestruct "Hr" as (γ P Q i) "(#(%&Hh&Hsts)&Hγ&#HQ&HQR)".

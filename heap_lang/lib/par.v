@@ -16,6 +16,10 @@ Global Opaque par.
 Section proof.
 Context `{!heapG Σ, !spawnG Σ}.
 
+(* Notice that this allows us to strip a later *after* the two Ψ have been
+   brought together.  That is strictly stronger than first stripping a later
+   and then merging them, as demonstrated by [tests/joining_existentials.v].
+   This is why these are not Texan triples. *)
 Lemma par_spec (Ψ1 Ψ2 : val → iProp Σ) e (f1 f2 : val) (Φ : val → iProp Σ) :
   to_val e = Some (f1,f2)%V →
   (heap_ctx ★ WP f1 #() {{ Ψ1 }} ★ WP f2 #() {{ Ψ2 }} ★

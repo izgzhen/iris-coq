@@ -122,7 +122,7 @@ Section heap.
   (** Weakest precondition *)
   Lemma wp_alloc E e v :
     to_val e = Some v → nclose heapN ⊆ E →
-    {{{ heap_ctx }}} Alloc e @ E {{{ l; LitV (LitLoc l), l ↦ v }}}.
+    {{{ heap_ctx }}} Alloc e @ E {{{ l, RET LitV (LitLoc l); l ↦ v }}}.
   Proof.
     iIntros (<-%of_to_val ? Φ) "#Hinv HΦ". rewrite /heap_ctx.
     iMod (auth_empty heap_name) as "Ha".
@@ -137,7 +137,7 @@ Section heap.
   Lemma wp_load E l q v :
     nclose heapN ⊆ E →
     {{{ heap_ctx ★ ▷ l ↦{q} v }}} Load (Lit (LitLoc l)) @ E
-    {{{; v, l ↦{q} v }}}.
+    {{{ RET v; l ↦{q} v }}}.
   Proof.
     iIntros (? Φ) "[#Hinv >Hl] HΦ".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
@@ -150,7 +150,7 @@ Section heap.
   Lemma wp_store E l v' e v :
     to_val e = Some v → nclose heapN ⊆ E →
     {{{ heap_ctx ★ ▷ l ↦ v' }}} Store (Lit (LitLoc l)) e @ E
-    {{{; LitV LitUnit, l ↦ v }}}.
+    {{{ RET LitV LitUnit; l ↦ v }}}.
   Proof.
     iIntros (<-%of_to_val ? Φ) "[#Hinv >Hl] HΦ".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
@@ -166,7 +166,7 @@ Section heap.
   Lemma wp_cas_fail E l q v' e1 v1 e2 v2 :
     to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 → nclose heapN ⊆ E →
     {{{ heap_ctx ★ ▷ l ↦{q} v' }}} CAS (Lit (LitLoc l)) e1 e2 @ E
-    {{{; LitV (LitBool false), l ↦{q} v' }}}.
+    {{{ RET LitV (LitBool false); l ↦{q} v' }}}.
   Proof.
     iIntros (<-%of_to_val <-%of_to_val ?? Φ) "[#Hinv >Hl] HΦ".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.
@@ -179,7 +179,7 @@ Section heap.
   Lemma wp_cas_suc E l e1 v1 e2 v2 :
     to_val e1 = Some v1 → to_val e2 = Some v2 → nclose heapN ⊆ E →
     {{{ heap_ctx ★ ▷ l ↦ v1 }}} CAS (Lit (LitLoc l)) e1 e2 @ E
-    {{{; LitV (LitBool true), l ↦ v2 }}}.
+    {{{ RET LitV (LitBool true); l ↦ v2 }}}.
   Proof.
     iIntros (<-%of_to_val <-%of_to_val ? Φ) "[#Hinv >Hl] HΦ".
     rewrite /heap_ctx heap_mapsto_eq /heap_mapsto_def.

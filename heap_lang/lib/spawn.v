@@ -49,7 +49,7 @@ Proof. solve_proper. Qed.
 Lemma spawn_spec (Ψ : val → iProp Σ) e (f : val) :
   to_val e = Some f →
   heapN ⊥ N →
-  {{{ heap_ctx ★ WP f #() {{ Ψ }} }}} spawn e {{{ l; #l, join_handle l Ψ }}}.
+  {{{ heap_ctx ★ WP f #() {{ Ψ }} }}} spawn e {{{ l, RET #l; join_handle l Ψ }}}.
 Proof.
   iIntros (<-%of_to_val ? Φ) "(#Hh & Hf) HΦ". rewrite /spawn /=.
   wp_let. wp_alloc l as "Hl". wp_let.
@@ -64,7 +64,7 @@ Proof.
 Qed.
 
 Lemma join_spec (Ψ : val → iProp Σ) l :
-  {{{ join_handle l Ψ }}} join #l {{{ v; v, Ψ v }}}.
+  {{{ join_handle l Ψ }}} join #l {{{ v, RET v; Ψ v }}}.
 Proof.
   rewrite /join_handle; iIntros (Φ) "[% H] HΦ". iDestruct "H" as (γ) "(#?&Hγ&#?)".
   iLöb as "IH". wp_rec. wp_bind (! _)%E. iInv N as (v) "[Hl Hinv]" "Hclose".
