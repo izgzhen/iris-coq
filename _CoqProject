@@ -109,7 +109,6 @@ heap_lang/lib/barrier/protocol.v
 heap_lang/lib/barrier/proof.v
 heap_lang/proofmode.v
 heap_lang/adequacy.v
-tests/atomic.v
 tests/heap_lang.v
 tests/one_shot.v
 tests/joining_existentials.v
