@@ -787,6 +787,9 @@ Global Instance forall_specialize_cons A As x xs Φ (Ψ : A → himpl As (uPred 
   (∀ x, ForallSpecialize xs (Φ x) (Ψ x)) →
   ForallSpecialize (hcons x xs) (∀ x : A, Φ x) Ψ.
 Proof. rewrite /ForallSpecialize /= => <-. by rewrite (forall_elim x). Qed.
+Global Instance forall_specialize_always As xs P (Ψ : himpl As (uPred M)) :
+  ForallSpecialize xs P Ψ → ForallSpecialize xs (□ P) Ψ | 101.
+Proof. rewrite /ForallSpecialize=> ->. by rewrite always_elim. Qed.
 
 Lemma tac_forall_specialize {As} Δ Δ' i p P (Φ : himpl As (uPred M)) Q xs :
   envs_lookup i Δ = Some (p, P) → ForallSpecialize xs P Φ →
