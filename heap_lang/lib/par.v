@@ -16,6 +16,10 @@ Global Opaque par.
 Section proof.
 Context `{!heapG Σ, !spawnG Σ}.
 
+(* Notice that this allows us to strip a later *after* the two Ψ have been
+   brought together.  That is strictly stronger than first stripping a later
+   and then merging them, as demonstrated by [tests/joining_existentials.v].
+   This is why these are not Texan triples. *)
 Lemma par_spec (Ψ1 Ψ2 : val → iProp Σ) e (f1 f2 : val) (Φ : val → iProp Σ) :
   to_val e = Some (f1,f2)%V →
   (heap_ctx ★ WP f1 #() {{ Ψ1 }} ★ WP f2 #() {{ Ψ2 }} ★
@@ -23,11 +27,11 @@ Lemma par_spec (Ψ1 Ψ2 : val → iProp Σ) e (f1 f2 : val) (Φ : val → iProp 
   ⊢ WP par e {{ Φ }}.
 Proof.
   iIntros (?) "(#Hh&Hf1&Hf2&HΦ)".
-  rewrite /par. wp_value. iModIntro. wp_let. wp_proj.
-  wp_apply (spawn_spec parN with "[- $Hh $Hf1]"); try wp_done; try solve_ndisj.
+  rewrite /par. wp_value. wp_let. wp_proj.
+  wp_apply (spawn_spec parN with "[$Hh $Hf1]"); try wp_done; try solve_ndisj.
   iIntros (l) "Hl". wp_let. wp_proj. wp_bind (f2 _).
   iApply (wp_wand_r with "[- $Hf2]"); iIntros (v) "H2". wp_let.
-  wp_apply (join_spec with "[- $Hl]"). iIntros (w) "H1".
+  wp_apply (join_spec with "[$Hl]"). iIntros (w) "H1".
   iSpecialize ("HΦ" with "* [-]"); first by iSplitL "H1". by wp_let.
 Qed.
 

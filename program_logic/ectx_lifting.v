@@ -43,7 +43,7 @@ Lemma wp_lift_atomic_head_step {E Φ} e1 σ1 :
   head_reducible e1 σ1 →
   ▷ ownP σ1 ★ ▷ (∀ v2 σ2 efs,
   ■ head_step e1 σ1 (of_val v2) σ2 efs ∧ ownP σ2 -★
-    (|={E}=> Φ v2) ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
+    Φ v2 ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (??) "[? H]". iApply wp_lift_atomic_step; eauto. iFrame. iNext.
@@ -56,19 +56,19 @@ Lemma wp_lift_atomic_det_head_step {E Φ e1} σ1 v2 σ2 efs :
   (∀ e2' σ2' efs', head_step e1 σ1 e2' σ2' efs' →
     σ2 = σ2' ∧ to_val e2' = Some v2 ∧ efs = efs') →
   ▷ ownP σ1 ★ ▷ (ownP σ2 -★
-    (|={E}=> Φ v2) ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
+    Φ v2 ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof. eauto using wp_lift_atomic_det_step. Qed.
 
-Lemma wp_lift_atomic_det_head_step' {E Φ e1} σ1 v2 σ2 :
+Lemma wp_lift_atomic_det_head_step' {E e1} σ1 v2 σ2 :
   atomic e1 →
   head_reducible e1 σ1 →
   (∀ e2' σ2' efs', head_step e1 σ1 e2' σ2' efs' →
     σ2 = σ2' ∧ to_val e2' = Some v2 ∧ [] = efs') →
-  ▷ ownP σ1 ★ ▷ (ownP σ2 ={E}=★ Φ v2) ⊢ WP e1 @ E {{ Φ }}.
+  {{{ ▷ ownP σ1 }}} e1 @ E {{{ RET v2; ownP σ2 }}}.
 Proof.
-  intros. rewrite -(wp_lift_atomic_det_head_step σ1 v2 σ2 [])
-    ?big_sepL_nil ?right_id; eauto.
+  intros. rewrite -(wp_lift_atomic_det_head_step σ1 v2 σ2 []); [|done..].
+  rewrite big_sepL_nil right_id. by apply uPred.wand_intro_r.
 Qed.
 
 Lemma wp_lift_pure_det_head_step {E Φ} e1 e2 efs :

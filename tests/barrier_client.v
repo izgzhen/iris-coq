@@ -37,11 +37,12 @@ Section client.
   Lemma client_safe : heapN ⊥ N → heap_ctx ⊢ WP client {{ _, True }}.
   Proof.
     iIntros (?) "#Hh"; rewrite /client. wp_alloc y as "Hy". wp_let.
-    wp_apply (newbarrier_spec N (y_inv 1 y) with "[- $Hh]"); first done.
+    wp_apply (newbarrier_spec N (y_inv 1 y) with "Hh"); first done.
     iIntros (l) "[Hr Hs]". wp_let.
     iApply (wp_par (λ _, True%I) (λ _, True%I) with "[-$Hh]"). iSplitL "Hy Hs".
     - (* The original thread, the sender. *)
-      wp_store. iApply (signal_spec with "[- $Hs]"). iSplitL "Hy"; [|by eauto].
+      wp_store. iApply (signal_spec with "[-]"); last by iNext; auto.
+      iSplitR "Hy"; first by eauto.
       iExists _; iSplitL; [done|]. iAlways; iIntros (n). wp_let. by wp_op.
     - (* The two spawned threads, the waiters. *)
       iSplitL; [|by iIntros (_ _) "_ !>"].

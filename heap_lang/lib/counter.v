@@ -35,9 +35,9 @@ Section mono_proof.
 
   Lemma newcounter_mono_spec (R : iProp Σ) :
     heapN ⊥ N →
-    {{{ heap_ctx }}} newcounter #() {{{ l; #l, mcounter l 0 }}}.
+    {{{ heap_ctx }}} newcounter #() {{{ l, RET #l; mcounter l 0 }}}.
   Proof.
-    iIntros (? Φ) "[#Hh HΦ]". rewrite /newcounter /=. wp_seq. wp_alloc l as "Hl".
+    iIntros (? Φ) "#Hh HΦ". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (● (O:mnat) ⋅ ◯ (O:mnat))) as (γ) "[Hγ Hγ']"; first done.
     iMod (inv_alloc N _ (mcounter_inv γ l) with "[Hl Hγ]").
     { iNext. iExists 0%nat. by iFrame. }
@@ -45,9 +45,9 @@ Section mono_proof.
   Qed.
 
   Lemma inc_mono_spec l n :
-    {{{ mcounter l n }}} inc #l {{{; #(), mcounter l (S n) }}}.
+    {{{ mcounter l n }}} inc #l {{{ RET #(); mcounter l (S n) }}}.
   Proof.
-    iIntros (Φ) "[Hl HΦ]". iLöb as "IH". wp_rec.
+    iIntros (Φ) "Hl HΦ". iLöb as "IH". wp_rec.
     iDestruct "Hl" as (γ) "(% & #? & #Hinv & Hγf)".
     wp_bind (! _)%E. iInv N as (c) ">[Hγ Hl]" "Hclose".
     wp_load. iMod ("Hclose" with "[Hl Hγ]") as "_"; [iNext; iExists c; by iFrame|].
@@ -70,9 +70,9 @@ Section mono_proof.
   Qed.
 
   Lemma read_mono_spec l j :
-    {{{ mcounter l j }}} read #l {{{ i; #i, ■ (j ≤ i)%nat ∧ mcounter l i }}}.
+    {{{ mcounter l j }}} read #l {{{ i, RET #i; ■ (j ≤ i)%nat ∧ mcounter l i }}}.
   Proof.
-    iIntros (ϕ) "[Hc HΦ]". iDestruct "Hc" as (γ) "(% & #? & #Hinv & Hγf)".
+    iIntros (ϕ) "Hc HΦ". iDestruct "Hc" as (γ) "(% & #? & #Hinv & Hγf)".
     rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
     iDestruct (own_valid_2 with "[$Hγ $Hγf]")
       as %[?%mnat_included _]%auth_valid_discrete_2.
@@ -112,9 +112,9 @@ Section contrib_spec.
   Lemma newcounter_contrib_spec (R : iProp Σ) :
     heapN ⊥ N →
     {{{ heap_ctx }}} newcounter #()
-    {{{ γ l; #l, ccounter_ctx γ l ★ ccounter γ 1 0 }}}.
+    {{{ γ l, RET #l; ccounter_ctx γ l ★ ccounter γ 1 0 }}}.
   Proof.
-    iIntros (? Φ) "[#Hh HΦ]". rewrite /newcounter /=. wp_seq. wp_alloc l as "Hl".
+    iIntros (? Φ) "#Hh HΦ". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (● (Some (1%Qp, O%nat)) ⋅ ◯ (Some (1%Qp, 0%nat))))
       as (γ) "[Hγ Hγ']"; first done.
     iMod (inv_alloc N _ (ccounter_inv γ l) with "[Hl Hγ]").
@@ -124,9 +124,9 @@ Section contrib_spec.
 
   Lemma inc_contrib_spec γ l q n :
     {{{ ccounter_ctx γ l ★ ccounter γ q n }}} inc #l
-    {{{; #(), ccounter γ q (S n) }}}.
+    {{{ RET #(); ccounter γ q (S n) }}}.
   Proof.
-    iIntros (Φ) "((#(%&?&?) & Hγf) & HΦ)". iLöb as "IH". wp_rec.
+    iIntros (Φ) "(#(%&?&?) & Hγf) HΦ". iLöb as "IH". wp_rec.
     wp_bind (! _)%E. iInv N as (c) ">[Hγ Hl]" "Hclose".
     wp_load. iMod ("Hclose" with "[Hl Hγ]") as "_"; [iNext; iExists c; by iFrame|].
     iModIntro. wp_let. wp_op.
@@ -145,9 +145,9 @@ Section contrib_spec.
 
   Lemma read_contrib_spec γ l q n :
     {{{ ccounter_ctx γ l ★ ccounter γ q n }}} read #l
-    {{{ c; #c, ■ (n ≤ c)%nat ∧ ccounter γ q n }}}.
+    {{{ c, RET #c; ■ (n ≤ c)%nat ∧ ccounter γ q n }}}.
   Proof.
-    iIntros (Φ) "((#(%&?&?) & Hγf) & HΦ)".
+    iIntros (Φ) "(#(%&?&?) & Hγf) HΦ".
     rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
     iDestruct (own_valid_2 with "[$Hγ $Hγf]")
       as %[[? ?%nat_included]%Some_pair_included_total_2 _]%auth_valid_discrete_2.
@@ -157,9 +157,9 @@ Section contrib_spec.
 
   Lemma read_contrib_spec_1 γ l n :
     {{{ ccounter_ctx γ l ★ ccounter γ 1 n }}} read #l
-    {{{ n; #n, ccounter γ 1 n }}}.
+    {{{ n, RET #n; ccounter γ 1 n }}}.
   Proof.
-    iIntros (Φ) "((#(%&?&?) & Hγf) & HΦ)".
+    iIntros (Φ) "(#(%&?&?) & Hγf) HΦ".
     rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
     iDestruct (own_valid_2 with "[$Hγ $Hγf]") as %[Hn _]%auth_valid_discrete_2.
     apply (Some_included_exclusive _) in Hn as [= ->]%leibniz_equiv; last done.

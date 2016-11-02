@@ -47,9 +47,9 @@ Section proof.
 
   Lemma newlock_spec (R : iProp Σ):
     heapN ⊥ N →
-    {{{ heap_ctx ★ R }}} newlock #() {{{ lk γ; lk, is_lock γ lk R }}}.
+    {{{ heap_ctx ★ R }}} newlock #() {{{ lk γ, RET lk; is_lock γ lk R }}}.
   Proof.
-    iIntros (? Φ) "[[#Hh HR] HΦ]". rewrite /newlock /=.
+    iIntros (? Φ) "[#Hh HR] HΦ". rewrite -wp_fupd /newlock /=.
     wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (Excl ())) as (γ) "Hγ"; first done.
     iMod (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
@@ -59,9 +59,9 @@ Section proof.
 
   Lemma try_acquire_spec γ lk R :
     {{{ is_lock γ lk R }}} try_acquire lk
-    {{{b; #b, if b is true then locked γ ★ R else True }}}.
+    {{{ b, RET #b; if b is true then locked γ ★ R else True }}}.
   Proof.
-    iIntros (Φ) "[#Hl HΦ]". iDestruct "Hl" as (l) "(% & #? & % & #?)". subst.
+    iIntros (Φ) "#Hl HΦ". iDestruct "Hl" as (l) "(% & #? & % & #?)". subst.
     wp_rec. iInv N as ([]) "[Hl HR]" "Hclose".
     - wp_cas_fail. iMod ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
       iModIntro. iApply ("HΦ" $! false). done.
@@ -71,18 +71,18 @@ Section proof.
   Qed.
 
   Lemma acquire_spec γ lk R :
-    {{{ is_lock γ lk R }}} acquire lk {{{; #(), locked γ ★ R }}}.
+    {{{ is_lock γ lk R }}} acquire lk {{{ RET #(); locked γ ★ R }}}.
   Proof.
-    iIntros (Φ) "[#Hl HΦ]". iLöb as "IH". wp_rec.
-    wp_apply (try_acquire_spec with "[- $Hl]"). iIntros ([]).
-    - iIntros "[Hlked HR]". wp_if. iModIntro. iApply "HΦ"; iFrame.
+    iIntros (Φ) "#Hl HΦ". iLöb as "IH". wp_rec.
+    wp_apply (try_acquire_spec with "Hl"). iIntros ([]).
+    - iIntros "[Hlked HR]". wp_if. iApply "HΦ"; iFrame.
     - iIntros "_". wp_if. iApply ("IH" with "[HΦ]"). auto.
   Qed.
 
   Lemma release_spec γ lk R :
-    {{{ is_lock γ lk R ★ locked γ ★ R }}} release lk {{{; #(), True }}}.
+    {{{ is_lock γ lk R ★ locked γ ★ R }}} release lk {{{ RET #(); True }}}.
   Proof.
-    iIntros (Φ) "((Hlock & Hlocked & HR) & HΦ)".
+    iIntros (Φ) "(Hlock & Hlocked & HR) HΦ".
     iDestruct "Hlock" as (l) "(% & #? & % & #?)". subst.
     rewrite /release /=. wp_let. iInv N as (b) "[Hl _]" "Hclose".
     wp_store. iApply "HΦ". iApply "Hclose". iNext. iExists false. by iFrame.

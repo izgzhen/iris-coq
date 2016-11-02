@@ -76,7 +76,7 @@ Lemma client_spec_new eM eW1 eW2 `{!Closed [] eM, !Closed [] eW1, !Closed [] eW2
 Proof.
   iIntros (HN) "/= (#Hh&HP&#He&#He1&#He2)"; rewrite /client.
   iMod (own_alloc (Pending : one_shotR Σ F)) as (γ) "Hγ"; first done.
-  wp_apply (newbarrier_spec N (barrier_res γ Φ) with "[- $Hh]"); auto.
+  wp_apply (newbarrier_spec N (barrier_res γ Φ) with "Hh"); auto.
   iIntros (l) "[Hr Hs]".
   set (workers_post (v : val) := (barrier_res γ Ψ1 ★ barrier_res γ Ψ2)%I).
   wp_let. wp_apply (wp_par  (λ _, True)%I workers_post with "[- $Hh]").
@@ -85,7 +85,7 @@ Proof.
     iIntros (v) "HP"; iDestruct "HP" as (x) "HP". wp_let.
     iMod (own_update with "Hγ") as "Hx".
     { by apply (cmra_update_exclusive (Shot x)). }
-    iApply (signal_spec with "[- $Hs]"). iSplitR ""; last auto.
+    iApply (signal_spec with "[- $Hs]"); last auto.
     iExists x; auto.
   - iDestruct (recv_weaken with "[] Hr") as "Hr"; first by iApply P_res_split.
     iMod (recv_split with "Hr") as "[H1 H2]"; first done.

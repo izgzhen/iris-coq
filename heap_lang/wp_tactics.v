@@ -18,20 +18,7 @@ Ltac wp_done :=
   | _ => fast_done
   end.
 
-(* sometimes, we want to keep the update modality, so only apply [fupd_intro]
-if we obtain a consecutive wp *)
-Ltac wp_strip_fupd :=
-  lazymatch goal with
-  | |- _ ⊢ |={?E}=> _ =>
-    etrans; [|apply fupd_intro];
-    match goal with
-    | |- _ ⊢ wp E _ _ => simpl
-    | |- _ ⊢ |={E,_}=> _ => simpl
-    | _ => fail
-    end
-  end.
-
-Ltac wp_value_head := etrans; [|eapply wp_value_fupd; wp_done]; lazy beta.
+Ltac wp_value_head := etrans; [|eapply wp_value; wp_done]; lazy beta.
 
 Ltac wp_strip_later := idtac. (* a hook to be redefined later *)
 
@@ -48,7 +35,6 @@ Ltac wp_finish := intros_revert ltac:(
   | |- _ ⊢ wp ?E (Seq _ _) ?Q =>
      etrans; [|eapply wp_seq; wp_done]; wp_strip_later
   | |- _ ⊢ wp ?E _ ?Q => wp_value_head
-  | |- _ ⊢ |={_,_}=> _ => wp_strip_fupd
   end).
 
 Tactic Notation "wp_value" :=

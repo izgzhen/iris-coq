@@ -42,7 +42,7 @@ Lemma wp_one_shot (Φ : val → iProp Σ) :
   ⊢ WP one_shot_example #() {{ Φ }}.
 Proof.
   iIntros "[#? Hf] /=".
-  rewrite /one_shot_example /=. wp_seq. wp_alloc l as "Hl". wp_let.
+  rewrite -wp_fupd /one_shot_example /=. wp_seq. wp_alloc l as "Hl". wp_let.
   iMod (own_alloc Pending) as (γ) "Hγ"; first done.
   iMod (inv_alloc N _ (one_shot_inv γ l) with "[Hl Hγ]") as "#HN".
   { iNext. iLeft. by iSplitL "Hl". }
@@ -69,7 +69,7 @@ Proof.
       + iSplit. iLeft; by iSplitL "Hl". eauto.
       + iSplit. iRight; iExists m; by iSplitL "Hl". eauto. }
     iMod ("Hclose" with "[Hinv]") as "_"; eauto; iModIntro.
-    wp_let. iModIntro. iIntros "!#". wp_seq.
+    wp_let. iIntros "!#". wp_seq.
     iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as (m) "[% Hγ']"; subst.
     { by wp_match. }
     wp_match. wp_bind (! _)%E.
