@@ -5,12 +5,12 @@ From iris.algebra Require Import frac auth.
 From iris.heap_lang Require Import proofmode notation.
 
 Definition newcounter : val := λ: <>, ref #0.
-Definition inc : val :=
-  rec: "inc" "l" :=
+Definition incr : val :=
+  rec: "incr" "l" :=
     let: "n" := !"l" in
-    if: CAS "l" "n" (#1 + "n") then #() else "inc" "l".
+    if: CAS "l" "n" (#1 + "n") then #() else "incr" "l".
 Definition read : val := λ: "l", !"l".
-Global Opaque newcounter inc get.
+Global Opaque newcounter incr get.
 
 (** Monotone counter *)
 Class mcounterG Σ := MCounterG { mcounter_inG :> inG Σ (authR mnatUR) }.
@@ -44,8 +44,8 @@ Section mono_proof.
     iModIntro. iApply "HΦ". rewrite /mcounter; eauto 10.
   Qed.
 
-  Lemma inc_mono_spec l n :
-    {{{ mcounter l n }}} inc #l {{{ RET #(); mcounter l (S n) }}}.
+  Lemma incr_mono_spec l n :
+    {{{ mcounter l n }}} incr #l {{{ RET #(); mcounter l (S n) }}}.
   Proof.
     iIntros (Φ) "Hl HΦ". iLöb as "IH". wp_rec.
     iDestruct "Hl" as (γ) "(% & #? & #Hinv & Hγf)".
@@ -122,8 +122,8 @@ Section contrib_spec.
     iModIntro. iApply "HΦ". rewrite /ccounter_ctx /ccounter; eauto 10.
   Qed.
 
-  Lemma inc_contrib_spec γ l q n :
-    {{{ ccounter_ctx γ l ∗ ccounter γ q n }}} inc #l
+  Lemma incr_contrib_spec γ l q n :
+    {{{ ccounter_ctx γ l ∗ ccounter γ q n }}} incr #l
     {{{ RET #(); ccounter γ q (S n) }}}.
   Proof.
     iIntros (Φ) "(#(%&?&?) & Hγf) HΦ". iLöb as "IH". wp_rec.

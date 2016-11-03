@@ -11,12 +11,12 @@ From iris.heap_lang Require Import proofmode notation.
 Import uPred.
 
 Definition newcounter : val := λ: <>, ref #0.
-Definition inc : val :=
-  rec: "inc" "l" :=
+Definition incr : val :=
+  rec: "incr" "l" :=
     let: "n" := !"l" in
-    if: CAS "l" "n" (#1 + "n") then #() else "inc" "l".
+    if: CAS "l" "n" (#1 + "n") then #() else "incr" "l".
 Definition read : val := λ: "l", !"l".
-Global Opaque newcounter inc read.
+Global Opaque newcounter incr read.
 
 (** The CMRA we need. *)
 Inductive M := Auth : nat → M | Frag : nat → M | Bot.
@@ -103,8 +103,8 @@ Proof.
   iModIntro. rewrite /C; eauto 10.
 Qed.
 
-Lemma inc_spec l n :
-  {{ C l n }} inc #l {{ v, v = #() ∧ C l (S n) }}.
+Lemma incr_spec l n :
+  {{ C l n }} incr #l {{ v, v = #() ∧ C l (S n) }}.
 Proof.
   iIntros "!# Hl /=". iLöb as "IH". wp_rec.
   iDestruct "Hl" as (N γ) "(% & #Hh & #Hinv & Hγf)".
