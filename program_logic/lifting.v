@@ -11,9 +11,9 @@ Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
 
 Lemma wp_lift_step E Φ e1 :
-  (|={E,∅}=> ∃ σ1, ■ reducible e1 σ1 ★ ▷ ownP σ1 ★
-    ▷ ∀ e2 σ2 efs, ■ prim_step e1 σ1 e2 σ2 efs ★ ownP σ2
-          ={∅,E}=★ WP e2 @ E {{ Φ }} ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
+  (|={E,∅}=> ∃ σ1, ■ reducible e1 σ1 ∗ ▷ ownP σ1 ∗
+    ▷ ∀ e2 σ2 efs, ■ prim_step e1 σ1 e2 σ2 efs ∗ ownP σ2
+          ={∅,E}=∗ WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros "H". rewrite wp_unfold /wp_pre.
@@ -32,7 +32,7 @@ Lemma wp_lift_pure_step `{Inhabited (state Λ)} E Φ e1 :
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 efs, prim_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
   (▷ ∀ e2 efs σ, ■ prim_step e1 σ e2 σ efs →
-    WP e2 @ E {{ Φ }} ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
+    WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (Hsafe Hstep) "H". rewrite wp_unfold /wp_pre; iRight; iSplit; auto.
@@ -47,8 +47,8 @@ Qed.
 Lemma wp_lift_atomic_step {E Φ} e1 σ1 :
   atomic e1 →
   reducible e1 σ1 →
-  (▷ ownP σ1 ★ ▷ ∀ v2 σ2 efs, ■ prim_step e1 σ1 (of_val v2) σ2 efs ★ ownP σ2 -★
-    Φ v2 ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
+  (▷ ownP σ1 ∗ ▷ ∀ v2 σ2 efs, ■ prim_step e1 σ1 (of_val v2) σ2 efs ∗ ownP σ2 -∗
+    Φ v2 ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (Hatomic ?) "[Hσ H]". iApply (wp_lift_step E _ e1).
@@ -65,8 +65,8 @@ Lemma wp_lift_atomic_det_step {E Φ e1} σ1 v2 σ2 efs :
   reducible e1 σ1 →
   (∀ e2' σ2' efs', prim_step e1 σ1 e2' σ2' efs' →
                    σ2 = σ2' ∧ to_val e2' = Some v2 ∧ efs = efs') →
-  ▷ ownP σ1 ★ ▷ (ownP σ2 -★
-    Φ v2 ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
+  ▷ ownP σ1 ∗ ▷ (ownP σ2 -∗
+    Φ v2 ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (?? Hdet) "[Hσ1 Hσ2]". iApply (wp_lift_atomic_step _ σ1); try done.
@@ -77,7 +77,7 @@ Qed.
 Lemma wp_lift_pure_det_step `{Inhabited (state Λ)} {E Φ} e1 e2 efs :
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2' σ2 efs', prim_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
-  ▷ (WP e2 @ E {{ Φ }} ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
+  ▷ (WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (? Hpuredet) "?". iApply (wp_lift_pure_step E); try done.

@@ -12,7 +12,7 @@ Fixpoint is_tree `{!heapG Σ} (v : val) (t : tree) : iProp Σ :=
   | leaf n => v = InjLV #n
   | node tl tr =>
      ∃ (ll lr : loc) (vl vr : val),
-       v = InjRV (#ll,#lr) ★ ll ↦ vl ★ is_tree vl tl ★ lr ↦ vr ★ is_tree vr tr
+       v = InjRV (#ll,#lr) ∗ ll ↦ vl ∗ is_tree vl tl ∗ lr ↦ vr ∗ is_tree vr tr
   end%I.
 
 Fixpoint sum (t : tree) : Z :=
@@ -36,8 +36,8 @@ Definition sum' : val := λ: "t",
 Global Opaque sum_loop sum'.
 
 Lemma sum_loop_wp `{!heapG Σ} v t l (n : Z) (Φ : val → iProp Σ) :
-  heap_ctx ★ l ↦ #n ★ is_tree v t
-    ★ (l ↦ #(sum t + n) -★ is_tree v t -★ Φ #())
+  heap_ctx ∗ l ↦ #n ∗ is_tree v t
+    ∗ (l ↦ #(sum t + n) -∗ is_tree v t -∗ Φ #())
   ⊢ WP sum_loop v #l {{ Φ }}.
 Proof.
   iIntros "(#Hh & Hl & Ht & HΦ)".
@@ -57,7 +57,7 @@ Proof.
 Qed.
 
 Lemma sum_wp `{!heapG Σ} v t Φ :
-  heap_ctx ★ is_tree v t ★ (is_tree v t -★ Φ #(sum t))
+  heap_ctx ∗ is_tree v t ∗ (is_tree v t -∗ Φ #(sum t))
   ⊢ WP sum' v {{ Φ }}.
 Proof.
   iIntros "(#Hh & Ht & HΦ)". rewrite /sum' /=.

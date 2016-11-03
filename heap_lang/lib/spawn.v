@@ -29,11 +29,11 @@ Section proof.
 Context `{!heapG Σ, !spawnG Σ} (N : namespace).
 
 Definition spawn_inv (γ : gname) (l : loc) (Ψ : val → iProp Σ) : iProp Σ :=
-  (∃ lv, l ↦ lv ★ (lv = NONEV ∨
-                   ∃ v, lv = SOMEV v ★ (Ψ v ∨ own γ (Excl ()))))%I.
+  (∃ lv, l ↦ lv ∗ (lv = NONEV ∨
+                   ∃ v, lv = SOMEV v ∗ (Ψ v ∨ own γ (Excl ()))))%I.
 
 Definition join_handle (l : loc) (Ψ : val → iProp Σ) : iProp Σ :=
-  (heapN ⊥ N ★ ∃ γ, heap_ctx ★ own γ (Excl ()) ★
+  (heapN ⊥ N ∗ ∃ γ, heap_ctx ∗ own γ (Excl ()) ∗
                     inv N (spawn_inv γ l Ψ))%I.
 
 Typeclasses Opaque join_handle.
@@ -49,7 +49,7 @@ Proof. solve_proper. Qed.
 Lemma spawn_spec (Ψ : val → iProp Σ) e (f : val) :
   to_val e = Some f →
   heapN ⊥ N →
-  {{{ heap_ctx ★ WP f #() {{ Ψ }} }}} spawn e {{{ l, RET #l; join_handle l Ψ }}}.
+  {{{ heap_ctx ∗ WP f #() {{ Ψ }} }}} spawn e {{{ l, RET #l; join_handle l Ψ }}}.
 Proof.
   iIntros (<-%of_to_val ? Φ) "(#Hh & Hf) HΦ". rewrite /spawn /=.
   wp_let. wp_alloc l as "Hl". wp_let.

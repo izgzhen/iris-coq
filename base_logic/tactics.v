@@ -13,7 +13,7 @@ Module uPred_reflection. Section uPred_reflection.
     match e with
     | ETrue => True
     | EVar n => from_option id True%I (Σ !! n)
-    | ESep e1 e2 => eval Σ e1 ★ eval Σ e2
+    | ESep e1 e2 => eval Σ e1 ∗ eval Σ e2
     end.
   Fixpoint flatten (e : expr) : list nat :=
     match e with
@@ -22,7 +22,7 @@ Module uPred_reflection. Section uPred_reflection.
     | ESep e1 e2 => flatten e1 ++ flatten e2
     end.
 
-  Notation eval_list Σ l := ([★] ((λ n, from_option id True%I (Σ !! n)) <$> l))%I.
+  Notation eval_list Σ l := ([∗] ((λ n, from_option id True%I (Σ !! n)) <$> l))%I.
   Lemma eval_flatten Σ e : eval Σ e ⊣⊢ eval_list Σ (flatten e).
   Proof.
     induction e as [| |e1 IH1 e2 IH2];
@@ -106,13 +106,13 @@ Module uPred_reflection. Section uPred_reflection.
   Qed.
 
   Lemma split_l Σ e ns e' :
-    cancel ns e = Some e' → eval Σ e ⊣⊢ (eval Σ (to_expr ns) ★ eval Σ e').
+    cancel ns e = Some e' → eval Σ e ⊣⊢ (eval Σ (to_expr ns) ∗ eval Σ e').
   Proof.
     intros He%flatten_cancel.
     by rewrite eval_flatten He fmap_app big_sep_app eval_to_expr eval_flatten.
   Qed.
   Lemma split_r Σ e ns e' :
-    cancel ns e = Some e' → eval Σ e ⊣⊢ (eval Σ e' ★ eval Σ (to_expr ns)).
+    cancel ns e = Some e' → eval Σ e ⊣⊢ (eval Σ e' ∗ eval Σ (to_expr ns)).
   Proof. intros. rewrite /= comm. by apply split_l. Qed.
 
   Class Quote (Σ1 Σ2 : list (uPred M)) (P : uPred M) (e : expr) := {}.
@@ -120,7 +120,7 @@ Module uPred_reflection. Section uPred_reflection.
   Global Instance quote_var Σ1 Σ2 P i:
     rlist.QuoteLookup Σ1 Σ2 P i → Quote Σ1 Σ2 P (EVar i) | 1000.
   Global Instance quote_sep Σ1 Σ2 Σ3 P1 P2 e1 e2 :
-    Quote Σ1 Σ2 P1 e1 → Quote Σ2 Σ3 P2 e2 → Quote Σ1 Σ3 (P1 ★ P2) (ESep e1 e2).
+    Quote Σ1 Σ2 P1 e1 → Quote Σ2 Σ3 P2 e2 → Quote Σ1 Σ3 (P1 ∗ P2) (ESep e1 e2).
 
   Class QuoteArgs (Σ: list (uPred M)) (Ps: list (uPred M)) (ns: list nat) := {}.
   Global Instance quote_args_nil Σ : QuoteArgs Σ nil nil.
@@ -195,7 +195,7 @@ Tactic Notation "to_back" open_constr(Ps) :=
       first (apply uPred_reflection.split_r with (ns:=ns'); cbv; reflexivity);
       simpl).
 
-(** [sep_split] is used to introduce a (★).
+(** [sep_split] is used to introduce a (∗).
     Use [sep_split left: [P1, P2, ...]] to define which assertions will be
     taken to the left; the rest will be available on the right.
     [sep_split right: [P1, P2, ...]] works the other way around. *)

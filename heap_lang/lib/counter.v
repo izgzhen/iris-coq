@@ -23,7 +23,7 @@ Section mono_proof.
   Context `{!heapG Σ, !mcounterG Σ} (N : namespace).
 
   Definition mcounter_inv (γ : gname) (l : loc) : iProp Σ :=
-    (∃ n, own γ (● (n : mnat)) ★ l ↦ #n)%I.
+    (∃ n, own γ (● (n : mnat)) ∗ l ↦ #n)%I.
 
   Definition mcounter (l : loc) (n : nat) : iProp Σ :=
     (∃ γ, heapN ⊥ N ∧ heap_ctx ∧
@@ -96,7 +96,7 @@ Section contrib_spec.
   Context `{!heapG Σ, !ccounterG Σ} (N : namespace).
 
   Definition ccounter_inv (γ : gname) (l : loc) : iProp Σ :=
-    (∃ n, own γ (● Some (1%Qp, n)) ★ l ↦ #n)%I.
+    (∃ n, own γ (● Some (1%Qp, n)) ∗ l ↦ #n)%I.
 
   Definition ccounter_ctx (γ : gname) (l : loc) : iProp Σ :=
     (heapN ⊥ N ∧ heap_ctx ∧ inv N (ccounter_inv γ l))%I.
@@ -106,13 +106,13 @@ Section contrib_spec.
 
   (** The main proofs. *)
   Lemma ccounter_op γ q1 q2 n1 n2 :
-    ccounter γ (q1 + q2) (n1 + n2) ⊣⊢ ccounter γ q1 n1★ ccounter γ q2 n2.
+    ccounter γ (q1 + q2) (n1 + n2) ⊣⊢ ccounter γ q1 n1∗ ccounter γ q2 n2.
   Proof. by rewrite /ccounter -own_op -auth_frag_op. Qed.
 
   Lemma newcounter_contrib_spec (R : iProp Σ) :
     heapN ⊥ N →
     {{{ heap_ctx }}} newcounter #()
-    {{{ γ l, RET #l; ccounter_ctx γ l ★ ccounter γ 1 0 }}}.
+    {{{ γ l, RET #l; ccounter_ctx γ l ∗ ccounter γ 1 0 }}}.
   Proof.
     iIntros (? Φ) "#Hh HΦ". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (● (Some (1%Qp, O%nat)) ⋅ ◯ (Some (1%Qp, 0%nat))))
@@ -123,7 +123,7 @@ Section contrib_spec.
   Qed.
 
   Lemma inc_contrib_spec γ l q n :
-    {{{ ccounter_ctx γ l ★ ccounter γ q n }}} inc #l
+    {{{ ccounter_ctx γ l ∗ ccounter γ q n }}} inc #l
     {{{ RET #(); ccounter γ q (S n) }}}.
   Proof.
     iIntros (Φ) "(#(%&?&?) & Hγf) HΦ". iLöb as "IH". wp_rec.
@@ -144,7 +144,7 @@ Section contrib_spec.
   Qed.
 
   Lemma read_contrib_spec γ l q n :
-    {{{ ccounter_ctx γ l ★ ccounter γ q n }}} read #l
+    {{{ ccounter_ctx γ l ∗ ccounter γ q n }}} read #l
     {{{ c, RET #c; ■ (n ≤ c)%nat ∧ ccounter γ q n }}}.
   Proof.
     iIntros (Φ) "(#(%&?&?) & Hγf) HΦ".
@@ -156,7 +156,7 @@ Section contrib_spec.
   Qed.
 
   Lemma read_contrib_spec_1 γ l n :
-    {{{ ccounter_ctx γ l ★ ccounter γ 1 n }}} read #l
+    {{{ ccounter_ctx γ l ∗ ccounter γ 1 n }}} read #l
     {{{ n, RET #n; ccounter γ 1 n }}}.
   Proof.
     iIntros (Φ) "(#(%&?&?) & Hγf) HΦ".

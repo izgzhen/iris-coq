@@ -23,7 +23,7 @@ Fixpoint parse_go (s : string) (k : list sel_pat) (kn : string) : list sel_pat :
   | String " " s => parse_go s (cons_name kn k) ""
   | String "%" s => parse_go s (SelPure :: cons_name kn k) ""
   | String "#" s => parse_go s (SelPersistent :: cons_name kn k) ""
-  | String (Ascii.Ascii false true false false false true true true) (* unicode ★ *)
+  | String (Ascii.Ascii false true false false false true true true) (* unicode ∗ *)
       (String (Ascii.Ascii false false false true true false false true)
       (String (Ascii.Ascii true false true false false false false true) s)) =>
      parse_go s (SelSpatial :: cons_name kn k) ""

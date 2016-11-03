@@ -79,13 +79,13 @@ Section heap.
   Global Instance heap_mapsto_timeless l q v : TimelessP (l ↦{q} v).
   Proof. rewrite heap_mapsto_eq /heap_mapsto_def. apply _. Qed.
 
-  Lemma heap_mapsto_op_eq l q1 q2 v : l ↦{q1} v ★ l ↦{q2} v ⊣⊢ l ↦{q1+q2} v.
+  Lemma heap_mapsto_op_eq l q1 q2 v : l ↦{q1} v ∗ l ↦{q2} v ⊣⊢ l ↦{q1+q2} v.
   Proof.
     by rewrite heap_mapsto_eq -auth_own_op op_singleton pair_op dec_agree_idemp.
   Qed.
 
   Lemma heap_mapsto_op l q1 q2 v1 v2 :
-    l ↦{q1} v1 ★ l ↦{q2} v2 ⊣⊢ v1 = v2 ∧ l ↦{q1+q2} v1.
+    l ↦{q1} v1 ∗ l ↦{q2} v2 ⊣⊢ v1 = v2 ∧ l ↦{q1+q2} v1.
   Proof.
     destruct (decide (v1 = v2)) as [->|].
     { by rewrite heap_mapsto_op_eq pure_equiv // left_id. }
@@ -96,18 +96,18 @@ Section heap.
   Qed.
 
   Lemma heap_mapsto_op_1 l q1 q2 v1 v2 :
-    l ↦{q1} v1 ★ l ↦{q2} v2 ⊢ v1 = v2 ∧ l ↦{q1+q2} v1.
+    l ↦{q1} v1 ∗ l ↦{q2} v2 ⊢ v1 = v2 ∧ l ↦{q1+q2} v1.
   Proof. by rewrite heap_mapsto_op. Qed.
 
   Lemma heap_mapsto_op_half l q v1 v2 :
-    l ↦{q/2} v1 ★ l ↦{q/2} v2 ⊣⊢ v1 = v2 ∧ l ↦{q} v1.
+    l ↦{q/2} v1 ∗ l ↦{q/2} v2 ⊣⊢ v1 = v2 ∧ l ↦{q} v1.
   Proof. by rewrite heap_mapsto_op Qp_div_2. Qed.
 
   Lemma heap_mapsto_op_half_1 l q v1 v2 :
-    l ↦{q/2} v1 ★ l ↦{q/2} v2 ⊢ v1 = v2 ∧ l ↦{q} v1.
+    l ↦{q/2} v1 ∗ l ↦{q/2} v2 ⊢ v1 = v2 ∧ l ↦{q} v1.
   Proof. by rewrite heap_mapsto_op_half. Qed.
 
-  Lemma heap_ex_mapsto_op l q1 q2 : l ↦{q1} - ★ l ↦{q2} - ⊣⊢ l ↦{q1+q2} -.
+  Lemma heap_ex_mapsto_op l q1 q2 : l ↦{q1} - ∗ l ↦{q2} - ⊣⊢ l ↦{q1+q2} -.
   Proof.
     iSplit.
     - iIntros "[H1 H2]". iDestruct "H1" as (v1) "H1". iDestruct "H2" as (v2) "H2".
@@ -116,7 +116,7 @@ Section heap.
       iDestruct "H" as "[H1 H2]"; iSplitL "H1"; eauto.
   Qed.
 
-  Lemma heap_ex_mapsto_op_half l q : l ↦{q/2} - ★ l ↦{q/2} - ⊣⊢ l ↦{q} -.
+  Lemma heap_ex_mapsto_op_half l q : l ↦{q/2} - ∗ l ↦{q/2} - ⊣⊢ l ↦{q} -.
   Proof. by rewrite heap_ex_mapsto_op Qp_div_2. Qed.
 
   (** Weakest precondition *)
@@ -136,7 +136,7 @@ Section heap.
 
   Lemma wp_load E l q v :
     nclose heapN ⊆ E →
-    {{{ heap_ctx ★ ▷ l ↦{q} v }}} Load (Lit (LitLoc l)) @ E
+    {{{ heap_ctx ∗ ▷ l ↦{q} v }}} Load (Lit (LitLoc l)) @ E
     {{{ RET v; l ↦{q} v }}}.
   Proof.
     iIntros (? Φ) "[#Hinv >Hl] HΦ".
@@ -149,7 +149,7 @@ Section heap.
 
   Lemma wp_store E l v' e v :
     to_val e = Some v → nclose heapN ⊆ E →
-    {{{ heap_ctx ★ ▷ l ↦ v' }}} Store (Lit (LitLoc l)) e @ E
+    {{{ heap_ctx ∗ ▷ l ↦ v' }}} Store (Lit (LitLoc l)) e @ E
     {{{ RET LitV LitUnit; l ↦ v }}}.
   Proof.
     iIntros (<-%of_to_val ? Φ) "[#Hinv >Hl] HΦ".
@@ -165,7 +165,7 @@ Section heap.
 
   Lemma wp_cas_fail E l q v' e1 v1 e2 v2 :
     to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 → nclose heapN ⊆ E →
-    {{{ heap_ctx ★ ▷ l ↦{q} v' }}} CAS (Lit (LitLoc l)) e1 e2 @ E
+    {{{ heap_ctx ∗ ▷ l ↦{q} v' }}} CAS (Lit (LitLoc l)) e1 e2 @ E
     {{{ RET LitV (LitBool false); l ↦{q} v' }}}.
   Proof.
     iIntros (<-%of_to_val <-%of_to_val ?? Φ) "[#Hinv >Hl] HΦ".
@@ -178,7 +178,7 @@ Section heap.
 
   Lemma wp_cas_suc E l e1 v1 e2 v2 :
     to_val e1 = Some v1 → to_val e2 = Some v2 → nclose heapN ⊆ E →
-    {{{ heap_ctx ★ ▷ l ↦ v1 }}} CAS (Lit (LitLoc l)) e1 e2 @ E
+    {{{ heap_ctx ∗ ▷ l ↦ v1 }}} CAS (Lit (LitLoc l)) e1 e2 @ E
     {{{ RET LitV (LitBool true); l ↦ v2 }}}.
   Proof.
     iIntros (<-%of_to_val <-%of_to_val ? Φ) "[#Hinv >Hl] HΦ".

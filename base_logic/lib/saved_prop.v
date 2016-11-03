@@ -26,14 +26,14 @@ Section saved_prop.
   Proof. rewrite /saved_prop_own; apply _. Qed.
 
   Lemma saved_prop_alloc_strong x (G : gset gname) :
-    True ==★ ∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ x.
+    True ==∗ ∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ x.
   Proof. by apply own_alloc_strong. Qed.
 
-  Lemma saved_prop_alloc x : True ==★ ∃ γ, saved_prop_own γ x.
+  Lemma saved_prop_alloc x : True ==∗ ∃ γ, saved_prop_own γ x.
   Proof. by apply own_alloc. Qed.
 
   Lemma saved_prop_agree γ x y :
-    saved_prop_own γ x ★ saved_prop_own γ y ⊢ ▷ (x ≡ y).
+    saved_prop_own γ x ∗ saved_prop_own γ y ⊢ ▷ (x ≡ y).
   Proof.
     rewrite own_valid_2 agree_validI agree_equivI later_equivI.
     set (G1 := cFunctor_map F (iProp_fold, iProp_unfold)).

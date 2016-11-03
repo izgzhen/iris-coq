@@ -2,7 +2,7 @@ From iris.base_logic.lib Require Export invariants.
 From iris.proofmode Require Import tactics.
 
 Definition vs `{invG Σ} (E1 E2 : coPset) (P Q : iProp Σ) : iProp Σ :=
-  (□ (P -★ |={E1,E2}=> Q))%I.
+  (□ (P -∗ |={E1,E2}=> Q))%I.
 Arguments vs {_ _} _ _ _%I _%I.
 
 Instance: Params (@vs) 4.
@@ -56,10 +56,10 @@ Proof. by iIntros "!# HP". Qed.
 Lemma vs_impl E P Q : □ (P → Q) ⊢ P ={E}=> Q.
 Proof. iIntros "#HPQ !# HP". by iApply "HPQ". Qed.
 
-Lemma vs_frame_l E1 E2 P Q R : (P ={E1,E2}=> Q) ⊢ R ★ P ={E1,E2}=> R ★ Q.
+Lemma vs_frame_l E1 E2 P Q R : (P ={E1,E2}=> Q) ⊢ R ∗ P ={E1,E2}=> R ∗ Q.
 Proof. iIntros "#Hvs !# [$ HP]". by iApply "Hvs". Qed.
 
-Lemma vs_frame_r E1 E2 P Q R : (P ={E1,E2}=> Q) ⊢ P ★ R ={E1,E2}=> Q ★ R.
+Lemma vs_frame_r E1 E2 P Q R : (P ={E1,E2}=> Q) ⊢ P ∗ R ={E1,E2}=> Q ∗ R.
 Proof. iIntros "#Hvs !# [HP $]". by iApply "Hvs". Qed.
 
 Lemma vs_mask_frame_r E1 E2 Ef P Q :
@@ -69,7 +69,7 @@ Proof.
 Qed.
 
 Lemma vs_inv N E P Q R :
-  nclose N ⊆ E → inv N R ★ (▷ R ★ P ={E ∖ nclose N}=> ▷ R ★ Q) ⊢ P ={E}=> Q.
+  nclose N ⊆ E → inv N R ∗ (▷ R ∗ P ={E ∖ nclose N}=> ▷ R ∗ Q) ⊢ P ={E}=> Q.
 Proof.
   iIntros (?) "#[? Hvs] !# HP". iInv N as "HR" "Hclose".
   iMod ("Hvs" with "[HR HP]") as "[? $]"; first by iFrame.

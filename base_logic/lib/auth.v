@@ -21,7 +21,7 @@ Section definitions.
   Definition auth_own (a : A) : iProp Σ :=
     own γ (◯ a).
   Definition auth_inv (f : T → A) (φ : T → iProp Σ) : iProp Σ :=
-    (∃ t, own γ (● f t) ★ φ t)%I.
+    (∃ t, own γ (● f t) ∗ φ t)%I.
   Definition auth_ctx (N : namespace) (f : T → A) (φ : T → iProp Σ) : iProp Σ :=
     inv N (auth_inv f φ).
 
@@ -69,7 +69,7 @@ Section auth.
   Implicit Types t u : T.
   Implicit Types γ : gname.
 
-  Lemma auth_own_op γ a b : auth_own γ (a ⋅ b) ⊣⊢ auth_own γ a ★ auth_own γ b.
+  Lemma auth_own_op γ a b : auth_own γ (a ⋅ b) ⊣⊢ auth_own γ a ∗ auth_own γ b.
   Proof. by rewrite /auth_own -own_op auth_frag_op. Qed.
 
   Global Instance from_sep_auth_own γ a b1 b2 :
@@ -92,7 +92,7 @@ Section auth.
   Proof. intros a1 a2. apply auth_own_mono. Qed.
 
   Lemma auth_alloc_strong N E t (G : gset gname) :
-    ✓ (f t) → ▷ φ t ={E}=★ ∃ γ, ■ (γ ∉ G) ∧ auth_ctx γ N f φ ∧ auth_own γ (f t).
+    ✓ (f t) → ▷ φ t ={E}=∗ ∃ γ, ■ (γ ∉ G) ∧ auth_ctx γ N f φ ∧ auth_own γ (f t).
   Proof.
     iIntros (?) "Hφ". rewrite /auth_own /auth_ctx.
     iMod (own_alloc_strong (Auth (Excl' (f t)) (f t)) G) as (γ) "[% Hγ]"; first done.
@@ -103,19 +103,19 @@ Section auth.
   Qed.
 
   Lemma auth_alloc N E t :
-    ✓ (f t) → ▷ φ t ={E}=★ ∃ γ, auth_ctx γ N f φ ∧ auth_own γ (f t).
+    ✓ (f t) → ▷ φ t ={E}=∗ ∃ γ, auth_ctx γ N f φ ∧ auth_own γ (f t).
   Proof.
     iIntros (?) "Hφ".
     iMod (auth_alloc_strong N E t ∅ with "Hφ") as (γ) "[_ ?]"; eauto.
   Qed.
 
-  Lemma auth_empty γ : True ==★ auth_own γ ∅.
+  Lemma auth_empty γ : True ==∗ auth_own γ ∅.
   Proof. by rewrite /auth_own -own_empty. Qed.
 
   Lemma auth_acc E γ a :
-    ▷ auth_inv γ f φ ★ auth_own γ a ={E}=★ ∃ t,
-      ■ (a ≼ f t) ★ ▷ φ t ★ ∀ u b,
-      ■ ((f t, a) ~l~> (f u, b)) ★ ▷ φ u ={E}=★ ▷ auth_inv γ f φ ★ auth_own γ b.
+    ▷ auth_inv γ f φ ∗ auth_own γ a ={E}=∗ ∃ t,
+      ■ (a ≼ f t) ∗ ▷ φ t ∗ ∀ u b,
+      ■ ((f t, a) ~l~> (f u, b)) ∗ ▷ φ u ={E}=∗ ▷ auth_inv γ f φ ∗ auth_own γ b.
   Proof.
     iIntros "(Hinv & Hγf)". rewrite /auth_inv /auth_own.
     iDestruct "Hinv" as (t) "[>Hγa Hφ]".
@@ -129,9 +129,9 @@ Section auth.
 
   Lemma auth_open E N γ a :
     nclose N ⊆ E →
-    auth_ctx γ N f φ ★ auth_own γ a ={E,E∖N}=★ ∃ t,
-      ■ (a ≼ f t) ★ ▷ φ t ★ ∀ u b,
-      ■ ((f t, a) ~l~> (f u, b)) ★ ▷ φ u ={E∖N,E}=★ auth_own γ b.
+    auth_ctx γ N f φ ∗ auth_own γ a ={E,E∖N}=∗ ∃ t,
+      ■ (a ≼ f t) ∗ ▷ φ t ∗ ∀ u b,
+      ■ ((f t, a) ~l~> (f u, b)) ∗ ▷ φ u ={E∖N,E}=∗ auth_own γ b.
   Proof.
     iIntros (?) "[#? Hγf]". rewrite /auth_ctx. iInv N as "Hinv" "Hclose".
     (* The following is essentially a very trivial composition of the accessors

@@ -32,19 +32,19 @@ Section proofs.
   Proof. rewrite /cinv; apply _. Qed.
 
   Lemma cinv_own_op γ q1 q2 :
-    cinv_own γ q1 ★ cinv_own γ q2 ⊣⊢ cinv_own γ (q1 + q2).
+    cinv_own γ q1 ∗ cinv_own γ q2 ⊣⊢ cinv_own γ (q1 + q2).
   Proof. by rewrite /cinv_own own_op. Qed.
 
-  Lemma cinv_own_half γ q : cinv_own γ (q/2) ★ cinv_own γ (q/2) ⊣⊢ cinv_own γ q.
+  Lemma cinv_own_half γ q : cinv_own γ (q/2) ∗ cinv_own γ (q/2) ⊣⊢ cinv_own γ q.
   Proof. by rewrite cinv_own_op Qp_div_2. Qed.
 
-  Lemma cinv_own_valid γ q1 q2 : cinv_own γ q1 ★ cinv_own γ q2 ⊢ ✓ (q1 + q2)%Qp.
+  Lemma cinv_own_valid γ q1 q2 : cinv_own γ q1 ∗ cinv_own γ q2 ⊢ ✓ (q1 + q2)%Qp.
   Proof. rewrite /cinv_own own_valid_2. by iIntros "% !%". Qed.
 
-  Lemma cinv_own_1_l γ q : cinv_own γ 1 ★ cinv_own γ q ⊢ False.
+  Lemma cinv_own_1_l γ q : cinv_own γ 1 ∗ cinv_own γ q ⊢ False.
   Proof. rewrite cinv_own_valid. by iIntros (?%(exclusive_l 1%Qp)). Qed.
 
-  Lemma cinv_alloc E N P : ▷ P ={E}=★ ∃ γ, cinv N γ P ★ cinv_own γ 1.
+  Lemma cinv_alloc E N P : ▷ P ={E}=∗ ∃ γ, cinv N γ P ∗ cinv_own γ 1.
   Proof.
     rewrite /cinv /cinv_own. iIntros "HP".
     iMod (own_alloc 1%Qp) as (γ) "H1"; first done.
@@ -52,7 +52,7 @@ Section proofs.
   Qed.
 
   Lemma cinv_cancel E N γ P :
-    nclose N ⊆ E → cinv N γ P ⊢ cinv_own γ 1 ={E}=★ ▷ P.
+    nclose N ⊆ E → cinv N γ P ⊢ cinv_own γ 1 ={E}=∗ ▷ P.
   Proof.
     rewrite /cinv. iIntros (?) "#Hinv Hγ".
     iInv N as "[$|>Hγ']" "Hclose"; first iApply "Hclose"; eauto.
@@ -61,7 +61,7 @@ Section proofs.
 
   Lemma cinv_open E N γ p P :
     nclose N ⊆ E →
-    cinv N γ P ⊢ cinv_own γ p ={E,E∖N}=★ ▷ P ★ cinv_own γ p ★ (▷ P ={E∖N,E}=★ True).
+    cinv N γ P ⊢ cinv_own γ p ={E,E∖N}=∗ ▷ P ∗ cinv_own γ p ∗ (▷ P ={E∖N,E}=∗ True).
   Proof.
     rewrite /cinv. iIntros (?) "#Hinv Hγ".
     iInv N as "[$|>Hγ']" "Hclose".
