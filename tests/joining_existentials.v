@@ -29,10 +29,10 @@ Context (N : namespace).
 Local Notation X := (F (iProp Σ)).
 
 Definition barrier_res γ (Φ : X → iProp Σ) : iProp Σ :=
-  (∃ x, own γ (Shot x) ★ Φ x)%I.
+  (∃ x, own γ (Shot x) ∗ Φ x)%I.
 
 Lemma worker_spec e γ l (Φ Ψ : X → iProp Σ) `{!Closed [] e} :
-  recv N l (barrier_res γ Φ) ★ (∀ x, {{ Φ x }} e {{ _, Ψ x }})
+  recv N l (barrier_res γ Φ) ∗ (∀ x, {{ Φ x }} e {{ _, Ψ x }})
   ⊢ WP wait #l ;; e {{ _, barrier_res γ Ψ }}.
 Proof.
   iIntros "[Hl #He]". wp_apply (wait_spec with "[- $Hl]"); simpl.
@@ -42,16 +42,16 @@ Proof.
 Qed.
 
 Context (P : iProp Σ) (Φ Φ1 Φ2 Ψ Ψ1 Ψ2 : X -n> iProp Σ).
-Context {Φ_split : ∀ x, Φ x ⊢ (Φ1 x ★ Φ2 x)}.
-Context {Ψ_join  : ∀ x, (Ψ1 x ★ Ψ2 x) ⊢ Ψ x}.
+Context {Φ_split : ∀ x, Φ x ⊢ (Φ1 x ∗ Φ2 x)}.
+Context {Ψ_join  : ∀ x, (Ψ1 x ∗ Ψ2 x) ⊢ Ψ x}.
 
-Lemma P_res_split γ : barrier_res γ Φ ⊢ barrier_res γ Φ1 ★ barrier_res γ Φ2.
+Lemma P_res_split γ : barrier_res γ Φ ⊢ barrier_res γ Φ1 ∗ barrier_res γ Φ2.
 Proof.
   iDestruct 1 as (x) "[#Hγ Hx]".
   iDestruct (Φ_split with "Hx") as "[H1 H2]". by iSplitL "H1"; iExists x; iSplit.
 Qed.
 
-Lemma Q_res_join γ : barrier_res γ Ψ1 ★ barrier_res γ Ψ2 ⊢ ▷ barrier_res γ Ψ.
+Lemma Q_res_join γ : barrier_res γ Ψ1 ∗ barrier_res γ Ψ2 ⊢ ▷ barrier_res γ Ψ.
 Proof.
   iIntros "[Hγ Hγ']";
   iDestruct "Hγ" as (x) "[#Hγ Hx]"; iDestruct "Hγ'" as (x') "[#Hγ' Hx']".
@@ -68,17 +68,17 @@ Qed.
 
 Lemma client_spec_new eM eW1 eW2 `{!Closed [] eM, !Closed [] eW1, !Closed [] eW2} :
   heapN ⊥ N →
-  heap_ctx ★ P
-  ★ {{ P }} eM {{ _, ∃ x, Φ x }}
-  ★ (∀ x, {{ Φ1 x }} eW1 {{ _, Ψ1 x }})
-  ★ (∀ x, {{ Φ2 x }} eW2 {{ _, Ψ2 x }})
+  heap_ctx ∗ P
+  ∗ {{ P }} eM {{ _, ∃ x, Φ x }}
+  ∗ (∀ x, {{ Φ1 x }} eW1 {{ _, Ψ1 x }})
+  ∗ (∀ x, {{ Φ2 x }} eW2 {{ _, Ψ2 x }})
   ⊢ WP client eM eW1 eW2 {{ _, ∃ γ, barrier_res γ Ψ }}.
 Proof.
   iIntros (HN) "/= (#Hh&HP&#He&#He1&#He2)"; rewrite /client.
   iMod (own_alloc (Pending : one_shotR Σ F)) as (γ) "Hγ"; first done.
   wp_apply (newbarrier_spec N (barrier_res γ Φ) with "Hh"); auto.
   iIntros (l) "[Hr Hs]".
-  set (workers_post (v : val) := (barrier_res γ Ψ1 ★ barrier_res γ Ψ2)%I).
+  set (workers_post (v : val) := (barrier_res γ Ψ1 ∗ barrier_res γ Ψ2)%I).
   wp_let. wp_apply (wp_par  (λ _, True)%I workers_post with "[- $Hh]").
   iSplitL "HP Hs Hγ"; [|iSplitL "Hr"].
   - wp_bind eM. iApply wp_wand_l; iSplitR "HP"; [|by iApply "He"].

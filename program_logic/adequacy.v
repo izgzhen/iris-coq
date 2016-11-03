@@ -38,7 +38,7 @@ Proof. intros [??%subG_inG]%subG_inv; constructor; apply _. Qed.
 
 
 (* Allocation *)
-Lemma wsat_alloc `{invPreG Σ} : True ==★ ∃ _ : invG Σ, wsat ★ ownE ⊤.
+Lemma wsat_alloc `{invPreG Σ} : True ==∗ ∃ _ : invG Σ, wsat ∗ ownE ⊤.
 Proof.
   iIntros.
   iMod (own_alloc (● (∅ : gmap _ _))) as (γI) "HI"; first done.
@@ -50,7 +50,7 @@ Proof.
 Qed.
 
 Lemma iris_alloc `{irisPreG' Λstate Σ} σ :
-  True ==★ ∃ _ : irisG' Λstate Σ, wsat ★ ownE ⊤ ★ ownP_auth σ ★ ownP σ.
+  True ==∗ ∃ _ : irisG' Λstate Σ, wsat ∗ ownE ⊤ ∗ ownP_auth σ ∗ ownP σ.
 Proof.
   iIntros.
   iMod wsat_alloc as (?) "[Hws HE]".
@@ -91,13 +91,13 @@ Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
 Implicit Types Φs : list (val Λ → iProp Σ).
 
-Notation world σ := (wsat ★ ownE ⊤ ★ ownP_auth σ)%I.
+Notation world σ := (wsat ∗ ownE ⊤ ∗ ownP_auth σ)%I.
 
-Notation wptp t := ([★ list] ef ∈ t, WP ef {{ _, True }})%I.
+Notation wptp t := ([∗ list] ef ∈ t, WP ef {{ _, True }})%I.
 
 Lemma wp_step e1 σ1 e2 σ2 efs Φ :
   prim_step e1 σ1 e2 σ2 efs →
-  world σ1 ★ WP e1 {{ Φ }} ==★ ▷ |==> ◇ (world σ2 ★ WP e2 {{ Φ }} ★ wptp efs).
+  world σ1 ∗ WP e1 {{ Φ }} ==∗ ▷ |==> ◇ (world σ2 ∗ WP e2 {{ Φ }} ∗ wptp efs).
 Proof.
   rewrite {1}wp_unfold /wp_pre. iIntros (Hstep) "[(Hw & HE & Hσ) [H|[_ H]]]".
   { iDestruct "H" as (v) "[% _]". apply val_stuck in Hstep; simplify_eq. }
@@ -110,8 +110,8 @@ Qed.
 
 Lemma wptp_step e1 t1 t2 σ1 σ2 Φ :
   step (e1 :: t1,σ1) (t2, σ2) →
-  world σ1 ★ WP e1 {{ Φ }} ★ wptp t1
-  ==★ ∃ e2 t2', t2 = e2 :: t2' ★ ▷ |==> ◇ (world σ2 ★ WP e2 {{ Φ }} ★ wptp t2').
+  world σ1 ∗ WP e1 {{ Φ }} ∗ wptp t1
+  ==∗ ∃ e2 t2', t2 = e2 :: t2' ∗ ▷ |==> ◇ (world σ2 ∗ WP e2 {{ Φ }} ∗ wptp t2').
 Proof.
   iIntros (Hstep) "(HW & He & Ht)".
   destruct Hstep as [e1' σ1' e2' σ2' efs [|? t1'] t2' ?? Hstep]; simplify_eq/=.
@@ -125,9 +125,9 @@ Qed.
 
 Lemma wptp_steps n e1 t1 t2 σ1 σ2 Φ :
   nsteps step n (e1 :: t1, σ1) (t2, σ2) →
-  world σ1 ★ WP e1 {{ Φ }} ★ wptp t1 ⊢
+  world σ1 ∗ WP e1 {{ Φ }} ∗ wptp t1 ⊢
   Nat.iter (S n) (λ P, |==> ▷ P) (∃ e2 t2',
-    t2 = e2 :: t2' ★ world σ2 ★ WP e2 {{ Φ }} ★ wptp t2').
+    t2 = e2 :: t2' ∗ world σ2 ∗ WP e2 {{ Φ }} ∗ wptp t2').
 Proof.
   revert e1 t1 t2 σ1 σ2; simpl; induction n as [|n IH]=> e1 t1 t2 σ1 σ2 /=.
   { inversion_clear 1; iIntros "?"; eauto 10. }
@@ -140,7 +140,7 @@ Instance bupd_iter_mono n : Proper ((⊢) ==> (⊢)) (Nat.iter n (λ P, |==> ▷
 Proof. intros P Q HP. induction n; simpl; do 2?f_equiv; auto. Qed.
 
 Lemma bupd_iter_frame_l n R Q :
-  R ★ Nat.iter n (λ P, |==> ▷ P) Q ⊢ Nat.iter n (λ P, |==> ▷ P) (R ★ Q).
+  R ∗ Nat.iter n (λ P, |==> ▷ P) Q ⊢ Nat.iter n (λ P, |==> ▷ P) (R ∗ Q).
 Proof.
   induction n as [|n IH]; simpl; [done|].
   by rewrite bupd_frame_l {1}(later_intro R) -later_sep IH.
@@ -148,7 +148,7 @@ Qed.
 
 Lemma wptp_result n e1 t1 v2 t2 σ1 σ2 φ :
   nsteps step n (e1 :: t1, σ1) (of_val v2 :: t2, σ2) →
-  world σ1 ★ WP e1 {{ v, ■ φ v }} ★ wptp t1 ⊢
+  world σ1 ∗ WP e1 {{ v, ■ φ v }} ∗ wptp t1 ⊢
   Nat.iter (S (S n)) (λ P, |==> ▷ P) (■ φ v2).
 Proof.
   intros. rewrite wptp_steps //.
@@ -159,7 +159,7 @@ Proof.
 Qed.
 
 Lemma wp_safe e σ Φ :
-  world σ ★ WP e {{ Φ }} ==★ ▷ ■ (is_Some (to_val e) ∨ reducible e σ).
+  world σ ∗ WP e {{ Φ }} ==∗ ▷ ■ (is_Some (to_val e) ∨ reducible e σ).
 Proof.
   rewrite wp_unfold /wp_pre. iIntros "[(Hw&HE&Hσ) [H|[_ H]]]".
   { iDestruct "H" as (v) "[% _]"; eauto 10. }
@@ -169,7 +169,7 @@ Qed.
 
 Lemma wptp_safe n e1 e2 t1 t2 σ1 σ2 Φ :
   nsteps step n (e1 :: t1, σ1) (t2, σ2) → e2 ∈ t2 →
-  world σ1 ★ WP e1 {{ Φ }} ★ wptp t1 ⊢
+  world σ1 ∗ WP e1 {{ Φ }} ∗ wptp t1 ⊢
   Nat.iter (S (S n)) (λ P, |==> ▷ P) (■ (is_Some (to_val e2) ∨ reducible e2 σ2)).
 Proof.
   intros ? He2. rewrite wptp_steps //; rewrite (Nat_iter_S_r (S n)). apply bupd_iter_mono.
@@ -180,8 +180,8 @@ Qed.
 
 Lemma wptp_invariance n e1 e2 t1 t2 σ1 σ2 I φ Φ :
   nsteps step n (e1 :: t1, σ1) (t2, σ2) →
-  (I ={⊤,∅}=★ ∃ σ', ownP σ' ∧ ■ φ σ') →
-  I ★ world σ1 ★ WP e1 {{ Φ }} ★ wptp t1 ⊢
+  (I ={⊤,∅}=∗ ∃ σ', ownP σ' ∧ ■ φ σ') →
+  I ∗ world σ1 ∗ WP e1 {{ Φ }} ∗ wptp t1 ⊢
   Nat.iter (S (S n)) (λ P, |==> ▷ P) (■ φ σ2).
 Proof.
   intros ? HI. rewrite wptp_steps //.
@@ -213,8 +213,8 @@ Proof.
 Qed.
 
 Theorem wp_invariance Σ `{irisPreG Λ Σ} e σ1 t2 σ2 I φ Φ :
-  (∀ `{irisG Λ Σ}, ownP σ1 ={⊤}=★ I ★ WP e {{ Φ }}) →
-  (∀ `{irisG Λ Σ}, I ={⊤,∅}=★ ∃ σ', ownP σ' ∧ ■ φ σ') →
+  (∀ `{irisG Λ Σ}, ownP σ1 ={⊤}=∗ I ∗ WP e {{ Φ }}) →
+  (∀ `{irisG Λ Σ}, I ={⊤,∅}=∗ ∃ σ', ownP σ' ∧ ■ φ σ') →
   rtc step ([e], σ1) (t2, σ2) →
   φ σ2.
 Proof.

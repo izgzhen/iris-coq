@@ -4,7 +4,7 @@ From iris.proofmode Require Import tactics.
 
 Definition ht `{irisG Λ Σ} (E : coPset) (P : iProp Σ)
     (e : expr Λ) (Φ : val Λ → iProp Σ) : iProp Σ :=
-  (□ (P -★ WP e @ E {{ Φ }}))%I.
+  (□ (P -∗ WP e @ E {{ Φ }}))%I.
 Instance: Params (@ht) 4.
 
 Notation "{{ P } } e @ E {{ Φ } }" := (ht E P e%E Φ)
@@ -96,17 +96,17 @@ Proof.
 Qed.
 
 Lemma ht_frame_l E P Φ R e :
-  {{ P }} e @ E {{ Φ }} ⊢ {{ R ★ P }} e @ E {{ v, R ★ Φ v }}.
+  {{ P }} e @ E {{ Φ }} ⊢ {{ R ∗ P }} e @ E {{ v, R ∗ Φ v }}.
 Proof. iIntros "#Hwp !# [$ HP]". by iApply "Hwp". Qed.
 
 Lemma ht_frame_r E P Φ R e :
-  {{ P }} e @ E {{ Φ }} ⊢ {{ P ★ R }} e @ E {{ v, Φ v ★ R }}.
+  {{ P }} e @ E {{ Φ }} ⊢ {{ P ∗ R }} e @ E {{ v, Φ v ∗ R }}.
 Proof. iIntros "#Hwp !# [HP $]". by iApply "Hwp". Qed.
 
 Lemma ht_frame_step_l E1 E2 P R1 R2 e Φ :
   to_val e = None → E2 ⊆ E1 →
   (R1 ={E1,E2}=> ▷ |={E2,E1}=> R2) ∧ {{ P }} e @ E2 {{ Φ }}
-  ⊢ {{ R1 ★ P }} e @ E1 {{ λ v, R2 ★ Φ v }}.
+  ⊢ {{ R1 ∗ P }} e @ E1 {{ λ v, R2 ∗ Φ v }}.
 Proof.
   iIntros (??) "[#Hvs #Hwp] !# [HR HP]".
   iApply (wp_frame_step_l E1 E2); try done.
@@ -116,7 +116,7 @@ Qed.
 Lemma ht_frame_step_r E1 E2 P R1 R2 e Φ :
   to_val e = None → E2 ⊆ E1 →
   (R1 ={E1,E2}=> ▷ |={E2,E1}=> R2) ∧ {{ P }} e @ E2 {{ Φ }}
-  ⊢ {{ P ★ R1 }} e @ E1 {{ λ v, Φ v ★ R2 }}.
+  ⊢ {{ P ∗ R1 }} e @ E1 {{ λ v, Φ v ∗ R2 }}.
 Proof.
   iIntros (??) "[#Hvs #Hwp] !# [HP HR]".
   iApply (wp_frame_step_r E1 E2); try done.
@@ -125,7 +125,7 @@ Qed.
 
 Lemma ht_frame_step_l' E P R e Φ :
   to_val e = None →
-  {{ P }} e @ E {{ Φ }} ⊢ {{ ▷ R ★ P }} e @ E {{ v, R ★ Φ v }}.
+  {{ P }} e @ E {{ Φ }} ⊢ {{ ▷ R ∗ P }} e @ E {{ v, R ∗ Φ v }}.
 Proof.
   iIntros (?) "#Hwp !# [HR HP]".
   iApply wp_frame_step_l'; try done. iFrame "HR". by iApply "Hwp".
@@ -133,7 +133,7 @@ Qed.
 
 Lemma ht_frame_step_r' E P Φ R e :
   to_val e = None →
-  {{ P }} e @ E {{ Φ }} ⊢ {{ P ★ ▷ R }} e @ E {{ v, Φ v ★ R }}.
+  {{ P }} e @ E {{ Φ }} ⊢ {{ P ∗ ▷ R }} e @ E {{ v, Φ v ∗ R }}.
 Proof.
   iIntros (?) "#Hwp !# [HP HR]".
   iApply wp_frame_step_r'; try done. iFrame "HR". by iApply "Hwp".

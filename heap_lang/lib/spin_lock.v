@@ -24,14 +24,14 @@ Section proof.
   Context `{!heapG Σ, !lockG Σ} (N : namespace).
 
   Definition lock_inv (γ : gname) (l : loc) (R : iProp Σ) : iProp Σ :=
-    (∃ b : bool, l ↦ #b ★ if b then True else own γ (Excl ()) ★ R)%I.
+    (∃ b : bool, l ↦ #b ∗ if b then True else own γ (Excl ()) ∗ R)%I.
 
   Definition is_lock (γ : gname) (lk : val) (R : iProp Σ) : iProp Σ :=
     (∃ l: loc, heapN ⊥ N ∧ heap_ctx ∧ lk = #l ∧ inv N (lock_inv γ l R))%I.
 
   Definition locked (γ : gname): iProp Σ := own γ (Excl ()).
 
-  Lemma locked_exclusive (γ : gname) : locked γ ★ locked γ ⊢ False.
+  Lemma locked_exclusive (γ : gname) : locked γ ∗ locked γ ⊢ False.
   Proof. rewrite /locked own_valid_2. by iIntros (?). Qed.
 
   Global Instance lock_inv_ne n γ l : Proper (dist n ==> dist n) (lock_inv γ l).
@@ -47,7 +47,7 @@ Section proof.
 
   Lemma newlock_spec (R : iProp Σ):
     heapN ⊥ N →
-    {{{ heap_ctx ★ R }}} newlock #() {{{ lk γ, RET lk; is_lock γ lk R }}}.
+    {{{ heap_ctx ∗ R }}} newlock #() {{{ lk γ, RET lk; is_lock γ lk R }}}.
   Proof.
     iIntros (? Φ) "[#Hh HR] HΦ". rewrite -wp_fupd /newlock /=.
     wp_seq. wp_alloc l as "Hl".
@@ -59,7 +59,7 @@ Section proof.
 
   Lemma try_acquire_spec γ lk R :
     {{{ is_lock γ lk R }}} try_acquire lk
-    {{{ b, RET #b; if b is true then locked γ ★ R else True }}}.
+    {{{ b, RET #b; if b is true then locked γ ∗ R else True }}}.
   Proof.
     iIntros (Φ) "#Hl HΦ". iDestruct "Hl" as (l) "(% & #? & % & #?)". subst.
     wp_rec. iInv N as ([]) "[Hl HR]" "Hclose".
@@ -71,7 +71,7 @@ Section proof.
   Qed.
 
   Lemma acquire_spec γ lk R :
-    {{{ is_lock γ lk R }}} acquire lk {{{ RET #(); locked γ ★ R }}}.
+    {{{ is_lock γ lk R }}} acquire lk {{{ RET #(); locked γ ∗ R }}}.
   Proof.
     iIntros (Φ) "#Hl HΦ". iLöb as "IH". wp_rec.
     wp_apply (try_acquire_spec with "Hl"). iIntros ([]).
@@ -80,7 +80,7 @@ Section proof.
   Qed.
 
   Lemma release_spec γ lk R :
-    {{{ is_lock γ lk R ★ locked γ ★ R }}} release lk {{{ RET #(); True }}}.
+    {{{ is_lock γ lk R ∗ locked γ ∗ R }}} release lk {{{ RET #(); True }}}.
   Proof.
     iIntros (Φ) "(Hlock & Hlocked & HR) HΦ".
     iDestruct "Hlock" as (l) "(% & #? & % & #?)". subst.

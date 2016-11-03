@@ -14,11 +14,11 @@ Qed.
 Lemma demo_1 (M : ucmraT) (P1 P2 P3 : nat → uPred M) :
   True ⊢ ∀ (x y : nat) a b,
     x ≡ y →
-    □ (uPred_ownM (a ⋅ b) -★
-    (∃ y1 y2 c, P1 ((x + y1) + y2) ∧ True ∧ □ uPred_ownM c) -★
-    □ ▷ (∀ z, P2 z ∨ True → P2 z) -★
-    ▷ (∀ n m : nat, P1 n → □ ((True ∧ P2 n) → □ (n = n ↔ P3 n))) -★
-    ▷ (x = 0) ∨ ∃ x z, ▷ P3 (x + z) ★ uPred_ownM b ★ uPred_ownM (core b)).
+    □ (uPred_ownM (a ⋅ b) -∗
+    (∃ y1 y2 c, P1 ((x + y1) + y2) ∧ True ∧ □ uPred_ownM c) -∗
+    □ ▷ (∀ z, P2 z ∨ True → P2 z) -∗
+    ▷ (∀ n m : nat, P1 n → □ ((True ∧ P2 n) → □ (n = n ↔ P3 n))) -∗
+    ▷ (x = 0) ∨ ∃ x z, ▷ P3 (x + z) ∗ uPred_ownM b ∗ uPred_ownM (core b)).
 Proof.
   iIntros (i [|j] a b ?) "!# [Ha Hb] H1 #H2 H3"; setoid_subst.
   { iLeft. by iNext. }
@@ -37,8 +37,8 @@ Proof.
 Qed.
 
 Lemma demo_2 (M : ucmraT) (P1 P2 P3 P4 Q : uPred M) (P5 : nat → uPredC M):
-    P2 ★ (P3 ★ Q) ★ True ★ P1 ★ P2 ★ (P4 ★ (∃ x:nat, P5 x ∨ P3)) ★ True
-  ⊢ P1 -★ (True ★ True) -★ (((P2 ∧ False ∨ P2 ∧ 0 = 0) ★ P3) ★ Q ★ P1 ★ True) ∧
+    P2 ∗ (P3 ∗ Q) ∗ True ∗ P1 ∗ P2 ∗ (P4 ∗ (∃ x:nat, P5 x ∨ P3)) ∗ True
+  ⊢ P1 -∗ (True ∗ True) -∗ (((P2 ∧ False ∨ P2 ∧ 0 = 0) ∗ P3) ∗ Q ∗ P1 ∗ True) ∧
      (P2 ∨ False) ∧ (False → P5 0).
 Proof.
   (* Intro-patterns do something :) *)
@@ -54,7 +54,7 @@ Proof.
 Qed.
 
 Lemma demo_3 (M : ucmraT) (P1 P2 P3 : uPred M) :
-  P1 ★ P2 ★ P3 ⊢ ▷ P1 ★ ▷ (P2 ★ ∃ x, (P3 ∧ x = 0) ∨ P3).
+  P1 ∗ P2 ∗ P3 ⊢ ▷ P1 ∗ ▷ (P2 ∗ ∃ x, (P3 ∧ x = 0) ∨ P3).
 Proof. iIntros "($ & $ & H)". iFrame "H". iNext. by iExists 0. Qed.
 
 Definition foo {M} (P : uPred M) := (P → P)%I.
@@ -64,7 +64,7 @@ Lemma demo_4 (M : ucmraT) : True ⊢ @bar M.
 Proof. iIntros. iIntros (P) "HP". done. Qed.
 
 Lemma demo_5 (M : ucmraT) (x y : M) (P : uPred M) :
-  (∀ z, P → z ≡ y) ⊢ (P -★ (x,x) ≡ (y,x)).
+  (∀ z, P → z ≡ y) ⊢ (P -∗ (x,x) ≡ (y,x)).
 Proof.
   iIntros "H1 H2".
   iRewrite (uPred.internal_eq_sym x x with "[#]"); first done.
@@ -81,7 +81,7 @@ Proof.
   by iIntros "# _".
 Qed.
 
-Lemma demo_7 (M : ucmraT) (P Q1 Q2 : uPred M) : P ★ (Q1 ∧ Q2) ⊢ P ★ Q1.
+Lemma demo_7 (M : ucmraT) (P Q1 Q2 : uPred M) : P ∗ (Q1 ∧ Q2) ⊢ P ∗ Q1.
 Proof. iIntros "[H1 [H2 _]]". by iFrame. Qed.
 
 Section iris.
@@ -91,7 +91,7 @@ Section iris.
 
   Lemma demo_8 N E P Q R :
     nclose N ⊆ E →
-    (True -★ P -★ inv N Q -★ True -★ R) ⊢ P -★ ▷ Q ={E}=★ R.
+    (True -∗ P -∗ inv N Q -∗ True -∗ R) ⊢ P -∗ ▷ Q ={E}=∗ R.
   Proof.
     iIntros (?) "H HP HQ".
     iApply ("H" with "[#] HP >[HQ] >").

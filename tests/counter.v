@@ -82,7 +82,7 @@ Context `{!heapG Σ, !counterG Σ}.
 Implicit Types l : loc.
 
 Definition I (γ : gname) (l : loc) : iProp Σ :=
-  (∃ c : nat, l ↦ #c ★ own γ (Auth c))%I.
+  (∃ c : nat, l ↦ #c ∗ own γ (Auth c))%I.
 
 Definition C (l : loc) (n : nat) : iProp Σ :=
   (∃ N γ, heapN ⊥ N ∧ heap_ctx ∧ inv N (I γ l) ∧ own γ (Frag n))%I.

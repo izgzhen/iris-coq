@@ -13,13 +13,13 @@ Module savedprop. Section savedprop.
   Context (sprop : Type) (saved : sprop → iProp → iProp).
   Hypothesis sprop_persistent : ∀ i P, PersistentP (saved i P).
   Hypothesis sprop_alloc_dep :
-    ∀ (P : sprop → iProp), True ==★ (∃ i, saved i (P i)).
+    ∀ (P : sprop → iProp), True ==∗ (∃ i, saved i (P i)).
   Hypothesis sprop_agree : ∀ i P Q, saved i P ∧ saved i Q ⊢ □ (P ↔ Q).
 
   (** A bad recursive reference: "Assertion with name [i] does not hold" *)
-  Definition A (i : sprop) : iProp := ∃ P, ¬ P ★ saved i P.
+  Definition A (i : sprop) : iProp := ∃ P, ¬ P ∗ saved i P.
 
-  Lemma A_alloc : True ==★ ∃ i, saved i (A i).
+  Lemma A_alloc : True ==∗ ∃ i, saved i (A i).
   Proof. by apply sprop_alloc_dep. Qed.
 
   Lemma saved_NA i : saved i (A i) ⊢ ¬ A i.
@@ -63,7 +63,7 @@ Module inv. Section inv.
   Hypothesis fupd_intro : ∀ E P, P ⊢ fupd E P.
   Hypothesis fupd_mono : ∀ E P Q, (P ⊢ Q) → fupd E P ⊢ fupd E Q.
   Hypothesis fupd_fupd : ∀ E P, fupd E (fupd E P) ⊢ fupd E P.
-  Hypothesis fupd_frame_l : ∀ E P Q, P ★ fupd E Q ⊢ fupd E (P ★ Q).
+  Hypothesis fupd_frame_l : ∀ E P Q, P ∗ fupd E Q ⊢ fupd E (P ∗ Q).
   Hypothesis fupd_mask_mono : ∀ P, fupd M0 P ⊢ fupd M1 P.
 
   (** We have invariants *)
@@ -71,7 +71,7 @@ Module inv. Section inv.
   Hypothesis inv_persistent : ∀ i P, PersistentP (inv i P).
   Hypothesis inv_alloc : ∀ P, P ⊢ fupd M1 (∃ i, inv i P).
   Hypothesis inv_open :
-    ∀ i P Q R, (P ★ Q ⊢ fupd M0 (P ★ R)) → (inv i P ★ Q ⊢ fupd M1 R).
+    ∀ i P Q R, (P ∗ Q ⊢ fupd M0 (P ∗ R)) → (inv i P ∗ Q ⊢ fupd M1 R).
 
   (* We have tokens for a little "two-state STS": [start] -> [finish].
      state. [start] also asserts the exact state; it is only ever owned by the
@@ -88,15 +88,15 @@ Module inv. Section inv.
   Hypothesis sts_alloc : True ⊢ fupd M0 (∃ γ, start γ).
   Hypotheses start_finish : ∀ γ, start γ ⊢ fupd M0 (finished γ).
 
-  Hypothesis finished_not_start : ∀ γ, start γ ★ finished γ ⊢ False.
+  Hypothesis finished_not_start : ∀ γ, start γ ∗ finished γ ⊢ False.
 
-  Hypothesis finished_dup : ∀ γ, finished γ ⊢ finished γ ★ finished γ.
+  Hypothesis finished_dup : ∀ γ, finished γ ⊢ finished γ ∗ finished γ.
 
   (** We assume that we cannot update to false. *)
   Hypothesis consistency : ¬ (True ⊢ fupd M1 False).
 
   (** Some general lemmas and proof mode compatibility. *)
-  Lemma inv_open' i P R : inv i P ★ (P -★ fupd M0 (P ★ fupd M1 R)) ⊢ fupd M1 R.
+  Lemma inv_open' i P R : inv i P ∗ (P -∗ fupd M0 (P ∗ fupd M1 R)) ⊢ fupd M1 R.
   Proof.
     iIntros "(#HiP & HP)". iApply fupd_fupd. iApply inv_open; last first.
     { iSplit; first done. iExact "HP". }
@@ -110,7 +110,7 @@ Module inv. Section inv.
     intros P Q; rewrite !uPred.equiv_spec=> -[??]; split; by apply fupd_mono.
   Qed.
 
-  Lemma fupd_frame_r E P Q : (fupd E P ★ Q) ⊢ fupd E (P ★ Q).
+  Lemma fupd_frame_r E P Q : (fupd E P ∗ Q) ⊢ fupd E (P ∗ Q).
   Proof. by rewrite comm fupd_frame_l comm. Qed.
 
   Global Instance elim_fupd_fupd E P Q : ElimModal (fupd E P) P (fupd E Q) (fupd E Q).
@@ -130,18 +130,18 @@ Module inv. Section inv.
 
   (** Now to the actual counterexample. We start with a weird form of saved propositions. *)
   Definition saved (γ : gname) (P : iProp) : iProp :=
-    ∃ i, inv i (start γ ∨ (finished γ ★ □ P)).
+    ∃ i, inv i (start γ ∨ (finished γ ∗ □ P)).
   Global Instance saved_persistent γ P : PersistentP (saved γ P) := _.
 
   Lemma saved_alloc (P : gname → iProp) : True ⊢ fupd M1 (∃ γ, saved γ (P γ)).
   Proof.
     iIntros "". iMod (sts_alloc) as (γ) "Hs".
-    iMod (inv_alloc (start γ ∨ (finished γ ★ □ (P γ))) with "[Hs]") as (i) "#Hi".
+    iMod (inv_alloc (start γ ∨ (finished γ ∗ □ (P γ))) with "[Hs]") as (i) "#Hi".
     { auto. }
     iApply fupd_intro. by iExists γ, i.
   Qed.
 
-  Lemma saved_cast γ P Q : saved γ P ★ saved γ Q ★ □ P ⊢ fupd M1 (□ Q).
+  Lemma saved_cast γ P Q : saved γ P ∗ saved γ Q ∗ □ P ⊢ fupd M1 (□ Q).
   Proof.
     iIntros "(#HsP & #HsQ & #HP)". iDestruct "HsP" as (i) "HiP".
     iApply (inv_open' i). iSplit; first done.
@@ -162,8 +162,8 @@ Module inv. Section inv.
   Qed.
 
   (** And now we tie a bad knot. *)
-  Notation "¬ P" := (□ (P -★ fupd M1 False))%I : uPred_scope.
-  Definition A i : iProp := ∃ P, ¬P ★ saved i P.
+  Notation "¬ P" := (□ (P -∗ fupd M1 False))%I : uPred_scope.
+  Definition A i : iProp := ∃ P, ¬P ∗ saved i P.
   Global Instance A_persistent i : PersistentP (A i) := _.
 
   Lemma A_alloc : True ⊢ fupd M1 (∃ i, saved i (A i)).

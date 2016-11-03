@@ -16,9 +16,9 @@ Lemma wp_ectx_bind {E e} K Φ :
 Proof. apply: weakestpre.wp_bind. Qed.
 
 Lemma wp_lift_head_step E Φ e1 :
-  (|={E,∅}=> ∃ σ1, ■ head_reducible e1 σ1 ★ ▷ ownP σ1 ★
-    ▷ ∀ e2 σ2 efs, ■ head_step e1 σ1 e2 σ2 efs ★ ownP σ2
-          ={∅,E}=★ WP e2 @ E {{ Φ }} ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
+  (|={E,∅}=> ∃ σ1, ■ head_reducible e1 σ1 ∗ ▷ ownP σ1 ∗
+    ▷ ∀ e2 σ2 efs, ■ head_step e1 σ1 e2 σ2 efs ∗ ownP σ2
+          ={∅,E}=∗ WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros "H". iApply (wp_lift_step E); try done.
@@ -31,7 +31,7 @@ Lemma wp_lift_pure_head_step E Φ e1 :
   (∀ σ1, head_reducible e1 σ1) →
   (∀ σ1 e2 σ2 efs, head_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
   (▷ ∀ e2 efs σ, ■ head_step e1 σ e2 σ efs →
-    WP e2 @ E {{ Φ }} ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
+    WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (??) "H". iApply wp_lift_pure_step; eauto. iNext.
@@ -41,9 +41,9 @@ Qed.
 Lemma wp_lift_atomic_head_step {E Φ} e1 σ1 :
   atomic e1 →
   head_reducible e1 σ1 →
-  ▷ ownP σ1 ★ ▷ (∀ v2 σ2 efs,
-  ■ head_step e1 σ1 (of_val v2) σ2 efs ∧ ownP σ2 -★
-    Φ v2 ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
+  ▷ ownP σ1 ∗ ▷ (∀ v2 σ2 efs,
+  ■ head_step e1 σ1 (of_val v2) σ2 efs ∧ ownP σ2 -∗
+    Φ v2 ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (??) "[? H]". iApply wp_lift_atomic_step; eauto. iFrame. iNext.
@@ -55,8 +55,8 @@ Lemma wp_lift_atomic_det_head_step {E Φ e1} σ1 v2 σ2 efs :
   head_reducible e1 σ1 →
   (∀ e2' σ2' efs', head_step e1 σ1 e2' σ2' efs' →
     σ2 = σ2' ∧ to_val e2' = Some v2 ∧ efs = efs') →
-  ▷ ownP σ1 ★ ▷ (ownP σ2 -★
-    Φ v2 ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
+  ▷ ownP σ1 ∗ ▷ (ownP σ2 -∗
+    Φ v2 ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof. eauto using wp_lift_atomic_det_step. Qed.
 
@@ -74,7 +74,7 @@ Qed.
 Lemma wp_lift_pure_det_head_step {E Φ} e1 e2 efs :
   (∀ σ1, head_reducible e1 σ1) →
   (∀ σ1 e2' σ2 efs', head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
-  ▷ (WP e2 @ E {{ Φ }} ★ [★ list] ef ∈ efs, WP ef {{ _, True }})
+  ▷ (WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof. eauto using wp_lift_pure_det_step. Qed.
 

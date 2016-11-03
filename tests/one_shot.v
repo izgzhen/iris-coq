@@ -33,12 +33,12 @@ Section proof.
 Context `{!heapG Σ, !one_shotG Σ} (N : namespace) (HN : heapN ⊥ N).
 
 Definition one_shot_inv (γ : gname) (l : loc) : iProp Σ :=
-  (l ↦ NONEV ★ own γ Pending ∨ ∃ n : Z, l ↦ SOMEV #n ★ own γ (Shot n))%I.
+  (l ↦ NONEV ∗ own γ Pending ∨ ∃ n : Z, l ↦ SOMEV #n ∗ own γ (Shot n))%I.
 
 Lemma wp_one_shot (Φ : val → iProp Σ) :
-  heap_ctx ★ (∀ f1 f2 : val,
-    (∀ n : Z, □ WP f1 #n {{ w, w = #true ∨ w = #false }}) ★
-    □ WP f2 #() {{ g, □ WP g #() {{ _, True }} }} -★ Φ (f1,f2)%V)
+  heap_ctx ∗ (∀ f1 f2 : val,
+    (∀ n : Z, □ WP f1 #n {{ w, w = #true ∨ w = #false }}) ∗
+    □ WP f2 #() {{ g, □ WP g #() {{ _, True }} }} -∗ Φ (f1,f2)%V)
   ⊢ WP one_shot_example #() {{ Φ }}.
 Proof.
   iIntros "[#? Hf] /=".
@@ -57,14 +57,14 @@ Proof.
       rewrite /one_shot_inv; eauto 10.
   - iIntros "!#". wp_seq. wp_bind (! _)%E.
     iInv N as ">Hγ" "Hclose".
-    iAssert (∃ v, l ↦ v ★ ((v = NONEV ★ own γ Pending) ∨
-       ∃ n : Z, v = SOMEV #n ★ own γ (Shot n)))%I with "[Hγ]" as "Hv".
+    iAssert (∃ v, l ↦ v ∗ ((v = NONEV ∗ own γ Pending) ∨
+       ∃ n : Z, v = SOMEV #n ∗ own γ (Shot n)))%I with "[Hγ]" as "Hv".
     { iDestruct "Hγ" as "[[Hl Hγ]|Hl]"; last iDestruct "Hl" as (m) "[Hl Hγ]".
       + iExists NONEV. iFrame. eauto.
       + iExists (SOMEV #m). iFrame. eauto. }
     iDestruct "Hv" as (v) "[Hl Hv]". wp_load.
-    iAssert (one_shot_inv γ l ★ (v = NONEV ∨ ∃ n : Z,
-      v = SOMEV #n ★ own γ (Shot n)))%I with "[Hl Hv]" as "[Hinv #Hv]".
+    iAssert (one_shot_inv γ l ∗ (v = NONEV ∨ ∃ n : Z,
+      v = SOMEV #n ∗ own γ (Shot n)))%I with "[Hl Hv]" as "[Hinv #Hv]".
     { iDestruct "Hv" as "[[% ?]|Hv]"; last iDestruct "Hv" as (m) "[% ?]"; subst.
       + iSplit. iLeft; by iSplitL "Hl". eauto.
       + iSplit. iRight; iExists m; by iSplitL "Hl". eauto. }
@@ -86,7 +86,7 @@ Qed.
 Lemma ht_one_shot (Φ : val → iProp Σ) :
   heap_ctx ⊢ {{ True }} one_shot_example #()
     {{ ff,
-      (∀ n : Z, {{ True }} Fst ff #n {{ w, w = #true ∨ w = #false }}) ★
+      (∀ n : Z, {{ True }} Fst ff #n {{ w, w = #true ∨ w = #false }}) ∗
       {{ True }} Snd ff #() {{ g, {{ True }} g #() {{ _, True }} }}
     }}.
 Proof.

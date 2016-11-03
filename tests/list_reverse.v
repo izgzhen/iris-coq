@@ -11,7 +11,7 @@ Implicit Types l : loc.
 Fixpoint is_list (hd : val) (xs : list val) : iProp Σ :=
   match xs with
   | [] => hd = NONEV
-  | x :: xs => ∃ l hd', hd = SOMEV #l ★ l ↦ (x,hd') ★ is_list hd' xs
+  | x :: xs => ∃ l hd', hd = SOMEV #l ∗ l ↦ (x,hd') ∗ is_list hd' xs
   end%I.
 
 Definition rev : val :=
@@ -27,8 +27,8 @@ Definition rev : val :=
 Global Opaque rev.
 
 Lemma rev_acc_wp hd acc xs ys (Φ : val → iProp Σ) :
-  heap_ctx ★ is_list hd xs ★ is_list acc ys ★
-    (∀ w, is_list w (reverse xs ++ ys) -★ Φ w)
+  heap_ctx ∗ is_list hd xs ∗ is_list acc ys ∗
+    (∀ w, is_list w (reverse xs ++ ys) -∗ Φ w)
   ⊢ WP rev hd acc {{ Φ }}.
 Proof.
   iIntros "(#Hh & Hxs & Hys & HΦ)".
@@ -43,7 +43,7 @@ Proof.
 Qed.
 
 Lemma rev_wp hd xs (Φ : val → iProp Σ) :
-  heap_ctx ★ is_list hd xs ★ (∀ w, is_list w (reverse xs) -★ Φ w)
+  heap_ctx ∗ is_list hd xs ∗ (∀ w, is_list w (reverse xs) -∗ Φ w)
   ⊢ WP rev hd (InjL #()) {{ Φ }}.
 Proof.
   iIntros "(#Hh & Hxs & HΦ)".

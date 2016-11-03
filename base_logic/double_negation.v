@@ -13,14 +13,14 @@ Notation "▷^ n P" := (uPred_laterN n P)
    format "▷^ n  P") : uPred_scope.
 
 Definition uPred_nnupd {M} (P: uPred M) : uPred M :=
-  ∀ n, (P -★ ▷^n False) -★ ▷^n False.
+  ∀ n, (P -∗ ▷^n False) -∗ ▷^n False.
 
 Notation "|=n=> Q" := (uPred_nnupd Q)
   (at level 99, Q at level 200, format "|=n=>  Q") : uPred_scope.
 Notation "P =n=> Q" := (P ⊢ |=n=> Q)
   (at level 99, Q at level 200, only parsing) : C_scope.
-Notation "P =n=★ Q" := (P -★ |=n=> Q)%I
-  (at level 99, Q at level 200, format "P  =n=★  Q") : uPred_scope.
+Notation "P =n=∗ Q" := (P -∗ |=n=> Q)%I
+  (at level 99, Q at level 200, format "P  =n=∗  Q") : uPred_scope.
 
 (* Our goal is to prove that:
   (1) |=n=> has (nearly) all the properties of the |==> modality that are used in Iris
@@ -62,9 +62,9 @@ Qed.
    are used throughout Iris hold for nnupd. 
 
    In fact, the first three properties that follow hold for any
-   modality of the form (- -★ Q) -★ Q for arbitrary Q. The situation
+   modality of the form (- -∗ Q) -∗ Q for arbitrary Q. The situation
    here is slightly different, because nnupd is of the form 
-   ∀ n, (- -★ (Q n)) -★ (Q n), but the proofs carry over straightforwardly.
+   ∀ n, (- -∗ (Q n)) -∗ (Q n), but the proofs carry over straightforwardly.
 
  *)
 
@@ -77,7 +77,7 @@ Proof.
   rewrite /uPred_nnupd (forall_elim n).
   apply wand_elim_r.
 Qed.
-Lemma nnupd_frame_r P R : (|=n=> P) ★ R =n=> P ★ R.
+Lemma nnupd_frame_r P R : (|=n=> P) ∗ R =n=> P ∗ R.
 Proof.
   apply forall_intro=>n. apply wand_intro_r.
   rewrite (comm _ P) -wand_curry.
@@ -106,7 +106,7 @@ Qed.
 
 (* However, the transitivity property seems to be much harder to
    prove. This is surprising, because transitivity does hold for 
-   modalities of the form (- -★ Q) -★ Q. What goes wrong when we quantify
+   modalities of the form (- -∗ Q) -∗ Q. What goes wrong when we quantify
    now over n? 
  *)
 
@@ -115,7 +115,7 @@ Proof.
   rewrite /uPred_nnupd.
   apply forall_intro=>a. apply wand_intro_l.
   rewrite (forall_elim a).
-  rewrite (nnupd_intro (P -★ _)).
+  rewrite (nnupd_intro (P -∗ _)).
   rewrite /uPred_nnupd.
   (* Oops -- the exponents of the later modality don't match up! *)
 Abort.
@@ -123,9 +123,9 @@ Abort.
 (* Instead, we will need to prove this in the model. We start by showing that 
    nnupd is the limit of a the following sequence:
 
-   (- -★ False) - ★ False,
-   (- -★ ▷ False) - ★ ▷ False ∧ (- -★ False) - ★ False,
-   (- -★ ▷^2 False) - ★ ▷^2 False ∧ (- -★ ▷ False) - ★ ▷ False ∧ (- -★ False) - ★ False,
+   (- -∗ False) - ∗ False,
+   (- -∗ ▷ False) - ∗ ▷ False ∧ (- -∗ False) - ∗ False,
+   (- -∗ ▷^2 False) - ∗ ▷^2 False ∧ (- -∗ ▷ False) - ∗ ▷ False ∧ (- -∗ False) - ∗ False,
    ...
 
    Then, it is easy enough to show that each of the uPreds in this sequence
@@ -134,7 +134,7 @@ Abort.
 
 (* The definition of the sequence above: *)
 Fixpoint uPred_nnupd_k {M} k (P: uPred M) : uPred M :=
-  ((P -★ ▷^k False) -★ ▷^k False) ∧
+  ((P -∗ ▷^k False) -∗ ▷^k False) ∧
   match k with 
     O => True
   | S k' => uPred_nnupd_k k' P
@@ -155,7 +155,7 @@ Proof.
     rewrite (forall_elim (S k)) //=.
 Qed.
 
-Lemma nnupd_k_elim n k P: n ≤ k → ((|=n=>_k P) ★ (P -★ (▷^n False)) ⊢  (▷^n False))%I.
+Lemma nnupd_k_elim n k P: n ≤ k → ((|=n=>_k P) ∗ (P -∗ (▷^n False)) ⊢  (▷^n False))%I.
 Proof.
   induction k.
   - inversion 1; subst; rewrite //= ?right_id. apply wand_elim_l.
@@ -165,10 +165,10 @@ Proof.
 Qed.
 
 Lemma nnupd_k_unfold k P:
-  (|=n=>_(S k) P) ⊣⊢ ((P -★ (▷^(S k) False)) -★ (▷^(S k) False)) ∧ (|=n=>_k P).
+  (|=n=>_(S k) P) ⊣⊢ ((P -∗ (▷^(S k) False)) -∗ (▷^(S k) False)) ∧ (|=n=>_k P).
 Proof. done.  Qed.
 Lemma nnupd_k_unfold' k P n x:
-  (|=n=>_(S k) P)%I n x ↔ (((P -★ (▷^(S k) False)) -★ (▷^(S k) False)) ∧ (|=n=>_k P))%I n x.
+  (|=n=>_(S k) P)%I n x ↔ (((P -∗ (▷^(S k) False)) -∗ (▷^(S k) False)) ∧ (|=n=>_k P))%I n x.
 Proof. done.  Qed.
 
 Lemma nnupd_k_weaken k P: (|=n=>_(S k) P) ⊢ |=n=>_k P.
@@ -238,13 +238,13 @@ Proof.
   revert P.
   induction k; intros P.
   - rewrite //= ?right_id. apply wand_intro_l. 
-    rewrite {1}(nnupd_k_intro 0 (P -★ False)%I) //= ?right_id. apply wand_elim_r. 
+    rewrite {1}(nnupd_k_intro 0 (P -∗ False)%I) //= ?right_id. apply wand_elim_r. 
   - rewrite {2}(nnupd_k_unfold k P).
     apply and_intro.
     * rewrite (nnupd_k_unfold k P). rewrite and_elim_l.
       rewrite nnupd_k_unfold. rewrite and_elim_l.
       apply wand_intro_l. 
-      rewrite {1}(nnupd_k_intro (S k) (P -★ ▷^(S k) (False)%I)).
+      rewrite {1}(nnupd_k_intro (S k) (P -∗ ▷^(S k) (False)%I)).
       rewrite nnupd_k_unfold and_elim_l. apply wand_elim_r.
     * do 2 rewrite nnupd_k_weaken //.
 Qed.

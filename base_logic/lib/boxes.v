@@ -22,15 +22,15 @@ Section box_defs.
     own γ (∅:auth (option (excl bool)), Some (to_agree (Next (iProp_unfold P)))).
 
   Definition slice_inv (γ : slice_name) (P : iProp Σ) : iProp Σ :=
-    (∃ b, box_own_auth γ (● Excl' b) ★ box_own_prop γ P ★ if b then P else True)%I.
+    (∃ b, box_own_auth γ (● Excl' b) ∗ box_own_prop γ P ∗ if b then P else True)%I.
 
   Definition slice (γ : slice_name) (P : iProp Σ) : iProp Σ :=
     inv N (slice_inv γ P).
 
   Definition box (f : gmap slice_name bool) (P : iProp Σ) : iProp Σ :=
     (∃ Φ : slice_name → iProp Σ,
-      ▷ (P ≡ [★ map] γ ↦ b ∈ f, Φ γ) ★
-      [★ map] γ ↦ b ∈ f, box_own_auth γ (◯ Excl' b) ★ box_own_prop γ (Φ γ) ★
+      ▷ (P ≡ [∗ map] γ ↦ b ∈ f, Φ γ) ∗
+      [∗ map] γ ↦ b ∈ f, box_own_auth γ (◯ Excl' b) ∗ box_own_prop γ (Φ γ) ∗
                          inv N (slice_inv γ (Φ γ)))%I.
 End box_defs.
 
@@ -55,22 +55,22 @@ Global Instance slice_persistent γ P : PersistentP (slice N γ P).
 Proof. apply _. Qed.
 
 Lemma box_own_auth_agree γ b1 b2 :
-  box_own_auth γ (● Excl' b1) ★ box_own_auth γ (◯ Excl' b2) ⊢ b1 = b2.
+  box_own_auth γ (● Excl' b1) ∗ box_own_auth γ (◯ Excl' b2) ⊢ b1 = b2.
 Proof.
   rewrite /box_own_prop own_valid_2 prod_validI /= and_elim_l.
   by iDestruct 1 as % [[[] [=]%leibniz_equiv] ?]%auth_valid_discrete.
 Qed.
 
 Lemma box_own_auth_update γ b1 b2 b3 :
-  box_own_auth γ (● Excl' b1) ★ box_own_auth γ (◯ Excl' b2)
-  ==★ box_own_auth γ (● Excl' b3) ★ box_own_auth γ (◯ Excl' b3).
+  box_own_auth γ (● Excl' b1) ∗ box_own_auth γ (◯ Excl' b2)
+  ==∗ box_own_auth γ (● Excl' b3) ∗ box_own_auth γ (◯ Excl' b3).
 Proof.
   rewrite /box_own_auth -!own_op. apply own_update, prod_update; last done.
   by apply auth_update, option_local_update, exclusive_local_update.
 Qed.
 
 Lemma box_own_agree γ Q1 Q2 :
-  (box_own_prop γ Q1 ★ box_own_prop γ Q2) ⊢ ▷ (Q1 ≡ Q2).
+  (box_own_prop γ Q1 ∗ box_own_prop γ Q2) ⊢ ▷ (Q1 ≡ Q2).
 Proof.
   rewrite /box_own_prop own_valid_2 prod_validI /= and_elim_r.
   rewrite option_validI /= agree_validI agree_equivI later_equivI /=.
@@ -86,8 +86,8 @@ Proof.
 Qed.
 
 Lemma box_insert f P Q :
-  ▷ box N f P ={N}=★ ∃ γ, f !! γ = None ★
-    slice N γ Q ★ ▷ box N (<[γ:=false]> f) (Q ★ P).
+  ▷ box N f P ={N}=∗ ∃ γ, f !! γ = None ∗
+    slice N γ Q ∗ ▷ box N (<[γ:=false]> f) (Q ∗ P).
 Proof.
   iDestruct 1 as (Φ) "[#HeqP Hf]".
   iMod (own_alloc_strong (● Excl' false ⋅ ◯ Excl' false,
@@ -100,17 +100,17 @@ Proof.
   iModIntro; iExists γ; repeat iSplit; auto.
   iNext. iExists (<[γ:=Q]> Φ); iSplit.
   - iNext. iRewrite "HeqP". by rewrite big_sepM_fn_insert'.
-  - rewrite (big_sepM_fn_insert (λ _ _ P',  _ ★ _ _ P' ★ _ _ (_ _ P')))%I //.
+  - rewrite (big_sepM_fn_insert (λ _ _ P',  _ ∗ _ _ P' ∗ _ _ (_ _ P')))%I //.
     iFrame; eauto.
 Qed.
 
 Lemma box_delete f P Q γ :
   f !! γ = Some false →
-  slice N γ Q ★ ▷ box N f P ={N}=★ ∃ P',
-    ▷ ▷ (P ≡ (Q ★ P')) ★ ▷ box N (delete γ f) P'.
+  slice N γ Q ∗ ▷ box N f P ={N}=∗ ∃ P',
+    ▷ ▷ (P ≡ (Q ∗ P')) ∗ ▷ box N (delete γ f) P'.
 Proof.
   iIntros (?) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
-  iExists ([★ map] γ'↦_ ∈ delete γ f, Φ γ')%I.
+  iExists ([∗ map] γ'↦_ ∈ delete γ f, Φ γ')%I.
   iInv N as (b) "(Hγ & #HγQ &_)" "Hclose".
   iApply fupd_trans_frame; iFrame "Hclose"; iModIntro; iNext.
   iDestruct (big_sepM_delete _ f _ false with "Hf")
@@ -125,7 +125,7 @@ Qed.
 
 Lemma box_fill f γ P Q :
   f !! γ = Some false →
-  slice N γ Q ★ ▷ Q ★ ▷ box N f P ={N}=★ ▷ box N (<[γ:=true]> f) P.
+  slice N γ Q ∗ ▷ Q ∗ ▷ box N f P ={N}=∗ ▷ box N (<[γ:=true]> f) P.
 Proof.
   iIntros (?) "(#Hinv & HQ & H)"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iInv N as (b') "(>Hγ & #HγQ & _)" "Hclose".
@@ -143,7 +143,7 @@ Qed.
 
 Lemma box_empty f P Q γ :
   f !! γ = Some true →
-  slice N γ Q ★ ▷ box N f P ={N}=★ ▷ Q ★ ▷ box N (<[γ:=false]> f) P.
+  slice N γ Q ∗ ▷ box N f P ={N}=∗ ▷ Q ∗ ▷ box N (<[γ:=false]> f) P.
 Proof.
   iIntros (?) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iInv N as (b) "(>Hγ & #HγQ & HQ)" "Hclose".
@@ -160,7 +160,7 @@ Proof.
     iFrame; eauto.
 Qed.
 
-Lemma box_fill_all f P Q : box N f P ★ ▷ P ={N}=★ box N (const true <$> f) P.
+Lemma box_fill_all f P Q : box N f P ∗ ▷ P ={N}=∗ box N (const true <$> f) P.
 Proof.
   iIntros "[H HP]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists Φ; iSplitR; first by rewrite big_sepM_fmap.
@@ -177,11 +177,11 @@ Qed.
 
 Lemma box_empty_all f P Q :
   map_Forall (λ _, (true =)) f →
-  box N f P ={N}=★ ▷ P ★ box N (const false <$> f) P.
+  box N f P ={N}=∗ ▷ P ∗ box N (const false <$> f) P.
 Proof.
   iDestruct 1 as (Φ) "[#HeqP Hf]".
-  iAssert ([★ map] γ↦b ∈ f, ▷ Φ γ ★ box_own_auth γ (◯ Excl' false) ★
-    box_own_prop γ (Φ γ) ★ inv N (slice_inv γ (Φ γ)))%I with ">[Hf]" as "[HΦ ?]".
+  iAssert ([∗ map] γ↦b ∈ f, ▷ Φ γ ∗ box_own_auth γ (◯ Excl' false) ∗
+    box_own_prop γ (Φ γ) ∗ inv N (slice_inv γ (Φ γ)))%I with ">[Hf]" as "[HΦ ?]".
   { iApply (fupd_big_sepM _ _ f); iApply (big_sepM_impl _ _ f); iFrame "Hf".
     iAlways; iIntros (γ b ?) "(Hγ' & #$ & #$)".
     assert (true = b) as <- by eauto.

@@ -17,16 +17,16 @@ Section client.
   Context `{!heapG Σ, !barrierG Σ, !spawnG Σ} (N : namespace).
 
   Definition y_inv (q : Qp) (l : loc) : iProp Σ :=
-    (∃ f : val, l ↦{q} f ★ □ ∀ n : Z, WP f #n {{ v, v = #(n + 42) }})%I.
+    (∃ f : val, l ↦{q} f ∗ □ ∀ n : Z, WP f #n {{ v, v = #(n + 42) }})%I.
 
-  Lemma y_inv_split q l : y_inv q l ⊢ (y_inv (q/2) l ★ y_inv (q/2) l).
+  Lemma y_inv_split q l : y_inv q l ⊢ (y_inv (q/2) l ∗ y_inv (q/2) l).
   Proof.
     iDestruct 1 as (f) "[[Hl1 Hl2] #Hf]".
     iSplitL "Hl1"; iExists f; by iSplitL; try iAlways.
   Qed.
 
   Lemma worker_safe q (n : Z) (b y : loc) :
-    heap_ctx ★ recv N b (y_inv q y) ⊢ WP worker n #b #y {{ _, True }}.
+    heap_ctx ∗ recv N b (y_inv q y) ⊢ WP worker n #b #y {{ _, True }}.
   Proof.
     iIntros "[#Hh Hrecv]". wp_lam. wp_let.
     wp_apply (wait_spec with "[- $Hrecv]"). iDestruct 1 as (f) "[Hy #Hf]".
