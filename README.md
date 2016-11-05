@@ -1,6 +1,6 @@
 # IRIS COQ DEVELOPMENT
 
-This is the Coq development of the [Iris Project](http://plv.mpi-sws.org/iris/).
+This is the Coq development of the [Iris Project](http://iris-project.org).
 
 ## Prerequisites
 
