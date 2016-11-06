@@ -314,3 +314,5 @@ Section proofmode_classes.
             (WP e @ E1 {{ Φ }}) (WP e @ E2 {{ v, |={E2,E1}=> Φ v }})%I | 100.
   Proof. intros. by rewrite /ElimModal fupd_frame_r wand_elim_r wp_atomic. Qed.
 End proofmode_classes.
+
+Hint Extern 0 (atomic _) => assumption : typeclass_instances.
