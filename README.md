@@ -7,7 +7,7 @@ This is the Coq development of the [Iris Project](http://iris-project.org).
 This version is known to compile with:
 
  - Coq 8.5pl2
- - Ssreflect 1.6
+ - [Ssreflect 1.6](https://github.com/math-comp/math-comp/tree/release/1.6/mathcomp/ssreflect)
 
 For development, better make sure you have a version of Ssreflect that includes
 commit be724937 (no such version has been released so far, you will have to
