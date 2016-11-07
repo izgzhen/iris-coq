@@ -501,6 +501,8 @@ Next Obligation. by intros x y; apply Qcplus_pos_pos. Qed.
 Definition Qp_minus (x y : Qp) : option Qp :=
   let z := (x - y)%Qc in
   match decide (0 < z)%Qc with left Hz => Some (mk_Qp z Hz) | _ => None end.
+Program Definition Qp_mult (x y : Qp) : Qp := mk_Qp (x * y) _.
+Next Obligation. intros x y. apply Qcmult_pos_pos; apply Qp_prf. Qed.
 Program Definition Qp_div (x : Qp) (y : positive) : Qp := mk_Qp (x / ('y)%Z) _.  
 Next Obligation.
   intros x y. assert (0 < ('y)%Z)%Qc.
@@ -512,6 +514,7 @@ Qed.
 Notation "1" := Qp_one : Qp_scope.
 Infix "+" := Qp_plus : Qp_scope.
 Infix "-" := Qp_minus : Qp_scope.
+Infix "*" := Qp_mult : Qp_scope.
 Infix "/" := Qp_div : Qp_scope.
 
 Instance Qp_inhabited : Inhabited Qp := populate 1%Qp.
@@ -534,6 +537,19 @@ Proof.
   rewrite (Qcplus_comm x), <- Qcplus_assoc, Qcplus_opp_r, Qcplus_0_r.
   destruct (decide _) as [|[]]; auto. by f_equal; apply Qp_eq.
 Qed.
+
+Instance Qp_mult_assoc : Assoc (=) Qp_mult.
+Proof. intros x y z; apply Qp_eq, Qcmult_assoc. Qed.
+Instance Qp_mult_comm : Comm (=) Qp_mult.
+Proof. intros x y; apply Qp_eq, Qcmult_comm. Qed.
+Lemma Qp_mult_plus_distr_r x y z: (x * (y + z) = x * y + x * z)%Qp.
+Proof. apply Qp_eq, Qcmult_plus_distr_r. Qed.
+Lemma Qp_mult_plus_distr_l x y z: ((x + y) * z = x * z + y * z)%Qp.
+Proof. apply Qp_eq, Qcmult_plus_distr_l. Qed.
+Lemma Qp_mult_1_l x: (1 * x)%Qp = x.
+Proof. apply Qp_eq, Qcmult_1_l. Qed.
+Lemma Qp_mult_1_r x: (x * 1)%Qp = x.
+Proof. apply Qp_eq, Qcmult_1_r. Qed.
 
 Lemma Qp_div_1 x : (x / 1 = x)%Qp.
 Proof.
