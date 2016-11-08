@@ -61,7 +61,7 @@ Lemma wp_load_pst E σ l v :
   σ !! l = Some v →
   {{{ ▷ ownP σ }}} Load (Lit (LitLoc l)) @ E {{{ RET v; ownP σ }}}.
 Proof.
-  intros ? Φ. apply (wp_lift_atomic_det_head_step' σ v σ); eauto.
+  intros ? Φ. apply wp_lift_atomic_det_head_step'; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -70,7 +70,7 @@ Lemma wp_store_pst E σ l v v' :
   {{{ ▷ ownP σ }}} Store (Lit (LitLoc l)) (of_val v) @ E
   {{{ RET LitV LitUnit; ownP (<[l:=v]>σ) }}}.
 Proof.
-  intros. apply (wp_lift_atomic_det_head_step' σ (LitV LitUnit) (<[l:=v]>σ)); eauto.
+  intros. apply wp_lift_atomic_det_head_step'; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -79,7 +79,7 @@ Lemma wp_cas_fail_pst E σ l v1 v2 v' :
   {{{ ▷ ownP σ }}} CAS (Lit (LitLoc l)) (of_val v1) (of_val v2) @ E
   {{{ RET LitV $ LitBool false; ownP σ }}}.
 Proof.
-  intros. apply (wp_lift_atomic_det_head_step' σ (LitV $ LitBool false) σ); eauto.
+  intros. apply wp_lift_atomic_det_head_step'; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -88,8 +88,7 @@ Lemma wp_cas_suc_pst E σ l v1 v2 :
   {{{ ▷ ownP σ }}} CAS (Lit (LitLoc l)) (of_val v1) (of_val v2) @ E
   {{{ RET LitV $ LitBool true; ownP (<[l:=v2]>σ) }}}.
 Proof.
-  intros. apply (wp_lift_atomic_det_head_step' σ (LitV $ LitBool true)
-    (<[l:=v2]>σ)); eauto.
+  intros. apply wp_lift_atomic_det_head_step'; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -136,14 +135,14 @@ Qed.
 Lemma wp_if_true E e1 e2 Φ :
   ▷ WP e1 @ E {{ Φ }} ⊢ WP If (Lit (LitBool true)) e1 e2 @ E {{ Φ }}.
 Proof.
-  rewrite -(wp_lift_pure_det_head_step' (If _ _ _) e1); eauto.
+  apply wp_lift_pure_det_head_step'; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_if_false E e1 e2 Φ :
   ▷ WP e2 @ E {{ Φ }} ⊢ WP If (Lit (LitBool false)) e1 e2 @ E {{ Φ }}.
 Proof.
-  rewrite -(wp_lift_pure_det_head_step' (If _ _ _) e2); eauto.
+  apply wp_lift_pure_det_head_step'; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
