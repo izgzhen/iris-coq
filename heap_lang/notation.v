@@ -85,8 +85,10 @@ Notation "e1 ;; e2" := (LamV BAnon e2%E e1%E)
   (at level 100, e2 at level 200, format "e1  ;;  e2") : val_scope.
 
 (* Shortcircuit Boolean connectives *)
-Notation "e1 && e2" := (If e1%E e2%E (Lit (LitBool false))) : expr_scope.
-Notation "e1 || e2" := (If e1%E (Lit (LitBool true)) e2%E) : expr_scope.
+Notation "e1 && e2" :=
+  (If e1%E e2%E (Lit (LitBool false))) (parsing only) : expr_scope.
+Notation "e1 || e2" :=
+  (If e1%E (Lit (LitBool true)) e2%E) (parsing only): expr_scope.
 
 (** Notations for option *)
 Notation NONE := (InjL #()).
