@@ -31,7 +31,7 @@ Section client.
     iIntros "[#Hh Hrecv]". wp_lam. wp_let.
     wp_apply (wait_spec with "[- $Hrecv]"). iDestruct 1 as (f) "[Hy #Hf]".
     wp_seq. wp_load.
-    iApply wp_wand_r. iSplitR; [iApply "Hf"|by iIntros (v) "_"].
+    iApply (wp_wand with "[]"). iApply "Hf". by iIntros (v) "_".
   Qed.
 
   Lemma client_safe : heapN ⊥ N → heap_ctx ⊢ WP client {{ _, True }}.

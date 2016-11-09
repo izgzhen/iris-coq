@@ -37,7 +37,7 @@ Lemma worker_spec e γ l (Φ Ψ : X → iProp Σ) `{!Closed [] e} :
 Proof.
   iIntros "[Hl #He]". wp_apply (wait_spec with "[- $Hl]"); simpl.
   iDestruct 1 as (x) "[#Hγ Hx]".
-  wp_seq. iApply wp_wand_l. iSplitR; [|by iApply "He"].
+  wp_seq. iApply (wp_wand with "[Hx]"); [by iApply "He"|].
   iIntros (v) "?"; iExists x; by iSplit.
 Qed.
 
@@ -81,7 +81,7 @@ Proof.
   set (workers_post (v : val) := (barrier_res γ Ψ1 ∗ barrier_res γ Ψ2)%I).
   wp_let. wp_apply (wp_par  (λ _, True)%I workers_post with "[- $Hh]").
   iSplitL "HP Hs Hγ"; [|iSplitL "Hr"].
-  - wp_bind eM. iApply wp_wand_l; iSplitR "HP"; [|by iApply "He"].
+  - wp_bind eM. iApply (wp_wand with "[HP]"); [by iApply "He"|].
     iIntros (v) "HP"; iDestruct "HP" as (x) "HP". wp_let.
     iMod (own_update with "Hγ") as "Hx".
     { by apply (cmra_update_exclusive (Shot x)). }

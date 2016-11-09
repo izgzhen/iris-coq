@@ -275,15 +275,18 @@ Lemma wp_frame_step_r' E e Φ R :
   to_val e = None → WP e @ E {{ Φ }} ∗ ▷ R ⊢ WP e @ E {{ v, Φ v ∗ R }}.
 Proof. iIntros (?) "[??]". iApply (wp_frame_step_r E E); try iFrame; eauto. Qed.
 
-Lemma wp_wand_l E e Φ Ψ :
-  (∀ v, Φ v -∗ Ψ v) ∗ WP e @ E {{ Φ }} ⊢ WP e @ E {{ Ψ }}.
+Lemma wp_wand E e Φ Ψ :
+  WP e @ E {{ Φ }} ⊢ (∀ v, Φ v -∗ Ψ v) -∗ WP e @ E {{ Ψ }}.
 Proof.
-  iIntros "[H Hwp]". iApply (wp_strong_mono E); auto.
+  iIntros "Hwp H". iApply (wp_strong_mono E); auto.
   iFrame "Hwp". iIntros (?) "?". by iApply "H".
 Qed.
+Lemma wp_wand_l E e Φ Ψ :
+  (∀ v, Φ v -∗ Ψ v) ∗ WP e @ E {{ Φ }} ⊢ WP e @ E {{ Ψ }}.
+Proof. iIntros "[H Hwp]". iApply (wp_wand with "Hwp H"). Qed.
 Lemma wp_wand_r E e Φ Ψ :
   WP e @ E {{ Φ }} ∗ (∀ v, Φ v -∗ Ψ v) ⊢ WP e @ E {{ Ψ }}.
-Proof. by rewrite comm wp_wand_l. Qed.
+Proof. iIntros "[Hwp H]". iApply (wp_wand with "Hwp H"). Qed.
 End wp.
 
 (** Proofmode class instances *)

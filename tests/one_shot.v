@@ -94,6 +94,6 @@ Proof.
   iIntros (f1 f2) "[#Hf1 #Hf2]"; iSplit.
   - iIntros (n) "!# _". wp_proj. iApply "Hf1".
   - iIntros "!# _". wp_proj.
-    iApply (wp_wand_r with "[- $Hf2]"). by iIntros (v) "#? !# _".
+    iApply (wp_wand with "Hf2"). by iIntros (v) "#? !# _".
 Qed.
 End proof.
