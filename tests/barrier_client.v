@@ -9,8 +9,8 @@ Definition worker (n : Z) : val :=
 Definition client : expr :=
   let: "y" := ref #0 in
   let: "b" := newbarrier #() in
-  ("y" <- (λ: "z", "z" + #42) ;; signal "b") ||
-    (worker 12 "b" "y" || worker 17 "b" "y").
+  ("y" <- (λ: "z", "z" + #42) ;; signal "b") |||
+    (worker 12 "b" "y" ||| worker 17 "b" "y").
 Global Opaque worker client.
 
 Section client.

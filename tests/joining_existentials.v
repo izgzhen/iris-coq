@@ -20,7 +20,7 @@ Proof. apply subG_inG. Qed.
 
 Definition client eM eW1 eW2 : expr :=
   let: "b" := newbarrier #() in
-  (eM ;; signal "b") || ((wait "b" ;; eW1) || (wait "b" ;; eW2)).
+  (eM ;; signal "b") ||| ((wait "b" ;; eW1) ||| (wait "b" ;; eW2)).
 Global Opaque client.
 
 Section proof.

@@ -10,7 +10,7 @@ Definition par : val :=
     let: "v2" := Snd "fs" #() in
     let: "v1" := join "handle" in
     ("v1", "v2").
-Notation "e1 || e2" := (par (Pair (λ: <>, e1) (λ: <>, e2)))%E : expr_scope.
+Notation "e1 ||| e2" := (par (Pair (λ: <>, e1) (λ: <>, e2)))%E : expr_scope.
 Global Opaque par.
 
 Section proof.
@@ -39,7 +39,7 @@ Lemma wp_par (Ψ1 Ψ2 : val → iProp Σ)
     (e1 e2 : expr) `{!Closed [] e1, Closed [] e2} (Φ : val → iProp Σ) :
   (heap_ctx ∗ WP e1 {{ Ψ1 }} ∗ WP e2 {{ Ψ2 }} ∗
    ∀ v1 v2, Ψ1 v1 ∗ Ψ2 v2 -∗ ▷ Φ (v1,v2)%V)
-  ⊢ WP e1 || e2 {{ Φ }}.
+  ⊢ WP e1 ||| e2 {{ Φ }}.
 Proof.
   iIntros "(#Hh&H1&H2&H)". iApply (par_spec Ψ1 Ψ2 with "[- $Hh $H]"); try wp_done.
   iSplitL "H1"; by wp_let.
