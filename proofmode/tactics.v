@@ -4,14 +4,11 @@ From iris.base_logic Require Export base_logic.
 From iris.proofmode Require Export classes notation.
 From iris.proofmode Require Import class_instances.
 From iris.prelude Require Import stringmap hlist.
+From iris.proofmode Require Import strings.
 
 Declare Reduction env_cbv := cbv [
+  beq ascii_beq string_beq
   env_lookup env_lookup_delete env_delete env_app env_replace env_dom
-  decide (* operational classes *)
-  sumbool_rec sumbool_rect (* sumbool *)
-  bool_eq_dec bool_rec bool_rect bool_dec eqb andb (* bool *)
-  assci_eq_dec ascii_to_digits Ascii.ascii_dec Ascii.ascii_rec Ascii.ascii_rect
-  string_eq_dec string_rec string_rect (* strings *)
   env_persistent env_spatial env_spatial_is_nil envs_dom
   envs_lookup envs_lookup_delete envs_delete envs_snoc envs_app
     envs_simple_replace envs_replace envs_split

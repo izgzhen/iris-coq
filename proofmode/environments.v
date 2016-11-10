@@ -1,4 +1,5 @@
 From iris.prelude Require Export strings.
+From iris.proofmode Require Import strings.
 From iris.algebra Require Export base.
 From iris.prelude Require Import stringmap.
 
@@ -13,7 +14,7 @@ Instance: Params (@Esnoc) 1.
 Fixpoint env_lookup {A} (i : string) (Γ : env A) : option A :=
   match Γ with
   | Enil => None
-  | Esnoc Γ j x => if decide (i = j) then Some x else env_lookup i Γ
+  | Esnoc Γ j x => if string_beq i j then Some x else env_lookup i Γ
   end.
 
 Module env_notations.
@@ -50,7 +51,7 @@ Fixpoint env_replace {A} (i: string) (Γi: env A) (Γ: env A) : option (env A) :
   match Γ with
   | Enil => None
   | Esnoc Γ j x =>
-     if decide (i = j) then env_app Γi Γ else
+     if string_beq i j then env_app Γi Γ else
      match Γi !! j with
      | None => Γ' ← env_replace i Γi Γ; Some (Esnoc Γ' j x)
      | Some _ => None
@@ -60,14 +61,14 @@ Fixpoint env_replace {A} (i: string) (Γi: env A) (Γ: env A) : option (env A) :
 Fixpoint env_delete {A} (i : string) (Γ : env A) : env A :=
   match Γ with
   | Enil => Enil
-  | Esnoc Γ j x => if decide (i = j) then Γ else Esnoc (env_delete i Γ) j x
+  | Esnoc Γ j x => if string_beq i j then Γ else Esnoc (env_delete i Γ) j x
   end.
 
 Fixpoint env_lookup_delete {A} (i : string) (Γ : env A) : option (A * env A) :=
   match Γ with
   | Enil => None
   | Esnoc Γ j x =>
-     if decide (i = j) then Some (x,Γ)
+     if string_beq i j then Some (x,Γ)
      else '(y,Γ') ← env_lookup_delete i Γ; Some (y, Esnoc Γ' j x)
   end.
 
@@ -83,7 +84,13 @@ Implicit Types i : string.
 Implicit Types x : A.
 Hint Resolve Esnoc_wf Enil_wf.
 
-Ltac simplify := repeat (case_match || simplify_option_eq).
+Ltac simplify :=
+  repeat match goal with
+  | _ => progress simplify_eq/=
+  | H : context [string_beq ?s1 ?s2] |- _ => destruct (string_beq_reflect s1 s2)
+  | |- context [string_beq ?s1 ?s2] => destruct (string_beq_reflect s1 s2)
+  | _ => case_match
+  end.
 
 Lemma env_lookup_perm Γ i x : Γ !! i = Some x → Γ ≡ₚ x :: env_delete i Γ.
 Proof.
@@ -130,10 +137,8 @@ Proof. revert Γ'. induction Γ; intros; simplify; eauto. Qed.
 Lemma env_replace_perm Γ Γi Γ' i :
   env_replace i Γi Γ = Some Γ' → Γ' ≡ₚ Γi ++ env_delete i Γ.
 Proof.
-  revert Γ'. induction Γ as [|Γ IH j y]=>Γ' ?; simplify_eq/=.
-  destruct (decide (i = j)); simplify_eq/=; auto using env_app_perm.
-  destruct (Γi !! j), (env_replace i Γi Γ) as [Γ''|] eqn:?; simplify_eq/=.
-  rewrite -Permutation_middle; f_equiv; eauto.
+  revert Γ'. induction Γ as [|Γ IH j y]=>Γ' ?; simplify; auto using env_app_perm.
+  rewrite -Permutation_middle -IH //.
 Qed.
 
 Lemma env_lookup_delete_correct Γ i :

@@ -117,6 +117,7 @@ tests/barrier_client.v
 tests/list_reverse.v
 tests/tree_sum.v
 tests/counter.v
+proofmode/strings.v
 proofmode/coq_tactics.v
 proofmode/environments.v
 proofmode/intro_patterns.v

@@ -187,11 +187,11 @@ Proof.
   apply wand_intro_l; destruct p; simpl.
   - apply sep_intro_True_l; [apply pure_intro|].
     + destruct Hwf; constructor; simpl; eauto using Esnoc_wf.
-      intros j; case_decide; naive_solver.
+      intros j; destruct (strings.string_beq_reflect j i); naive_solver.
     + by rewrite always_sep assoc.
   - apply sep_intro_True_l; [apply pure_intro|].
     + destruct Hwf; constructor; simpl; eauto using Esnoc_wf.
-      intros j; case_decide; naive_solver.
+      intros j; destruct (strings.string_beq_reflect j i); naive_solver.
     + solve_sep_entails.
 Qed.
 
