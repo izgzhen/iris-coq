@@ -317,6 +317,11 @@ Lemma alloc_fresh e v σ :
   to_val e = Some v → head_step (Alloc e) σ (Lit (LitLoc l)) (<[l:=v]>σ) [].
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset _)), is_fresh. Qed.
 
+(* Misc *)
+Lemma to_val_rec f x e `{!Closed (f :b: x :b: []) e} :
+  to_val (Rec f x e) = Some (RecV f x e).
+Proof. rewrite /to_val. case_decide=> //. do 2 f_equal; apply proof_irrel. Qed.
+
 (** Closed expressions *)
 Lemma is_closed_weaken X Y e : is_closed X e → X ⊆ Y → is_closed Y e.
 Proof. revert X Y; induction e; naive_solver (eauto; set_solver). Qed.
@@ -324,17 +329,62 @@ Proof. revert X Y; induction e; naive_solver (eauto; set_solver). Qed.
 Lemma is_closed_weaken_nil X e : is_closed [] e → is_closed X e.
 Proof. intros. by apply is_closed_weaken with [], list_subseteq_nil. Qed.
 
-Lemma is_closed_subst X e x es : is_closed X e → x ∉ X → subst x es e = e.
+Lemma is_closed_of_val X v : is_closed X (of_val v).
+Proof. apply is_closed_weaken_nil. induction v; simpl; auto. Qed.
+
+Lemma is_closed_subst X e x es :
+  is_closed [] es → is_closed (x :: X) e → is_closed X (subst x es e).
+Proof.
+  intros ?. revert X.
+  induction e=> X /= ?; destruct_and?; split_and?; simplify_option_eq;
+    try match goal with
+    | H : ¬(_ ∧ _) |- _ => apply not_and_l in H as [?%dec_stable|?%dec_stable]
+    end; eauto using is_closed_weaken with set_solver.
+Qed.
+Lemma is_closed_do_subst' X e x es :
+  is_closed [] es → is_closed (x :b: X) e → is_closed X (subst' x es e).
+Proof. destruct x; eauto using is_closed_subst. Qed.
+
+(* Substitution *)
+Lemma subst_is_closed X e x es : is_closed X e → x ∉ X → subst x es e = e.
 Proof.
   revert X. induction e=> X /=; rewrite ?bool_decide_spec ?andb_True=> ??;
     repeat case_decide; simplify_eq/=; f_equal; intuition eauto with set_solver.
 Qed.
 
-Lemma is_closed_nil_subst e x es : is_closed [] e → subst x es e = e.
-Proof. intros. apply is_closed_subst with []; set_solver. Qed.
+Lemma subst_is_closed_nil e x es : is_closed [] e → subst x es e = e.
+Proof. intros. apply subst_is_closed with []; set_solver. Qed.
 
-Lemma is_closed_of_val X v : is_closed X (of_val v).
-Proof. apply is_closed_weaken_nil. induction v; simpl; auto. Qed.
+Lemma subst_subst e x es es' :
+  Closed [] es' → subst x es (subst x es' e) = subst x es' e.
+Proof.
+  intros. induction e; simpl; try (f_equal; by auto);
+    simplify_option_eq; auto using subst_is_closed_nil with f_equal.
+Qed.
+Lemma subst_subst' e x es es' :
+  Closed [] es' → subst' x es (subst' x es' e) = subst' x es' e.
+Proof. destruct x; simpl; auto using subst_subst. Qed.
+
+Lemma subst_subst_ne e x y es es' :
+  Closed [] es → Closed [] es' → x ≠ y →
+  subst x es (subst y es' e) = subst y es' (subst x es e).
+Proof.
+  intros. induction e; simpl; try (f_equal; by auto);
+    simplify_option_eq; auto using eq_sym, subst_is_closed_nil with f_equal.
+Qed.
+Lemma subst_subst_ne' e x y es es' :
+  Closed [] es → Closed [] es' → x ≠ y →
+  subst' x es (subst' y es' e) = subst' y es' (subst' x es e).
+Proof. destruct x, y; simpl; auto using subst_subst_ne with congruence. Qed.
+
+Lemma subst_rec' f y e x es :
+  x = f ∨ x = y ∨ x = BAnon →
+  subst' x es (Rec f y e) = Rec f y e.
+Proof. intros. destruct x; simplify_option_eq; naive_solver. Qed.
+Lemma subst_rec_ne' f y e x es :
+  (x ≠ f ∨ f = BAnon) → (x ≠ y ∨ y = BAnon) →
+  subst' x es (Rec f y e) = Rec f y (subst' x es e).
+Proof. intros. destruct x; simplify_option_eq; naive_solver. Qed.
 End heap_lang.
 
 (** Language *)

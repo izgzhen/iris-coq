@@ -168,7 +168,7 @@ Lemma to_expr_subst x er e :
   to_expr (subst x er e) = heap_lang.subst x (to_expr er) (to_expr e).
 Proof.
   induction e; simpl; repeat case_decide;
-    f_equal; auto using is_closed_nil_subst, is_closed_of_val, eq_sym.
+    f_equal; auto using subst_is_closed_nil, is_closed_of_val, eq_sym.
 Qed.
 
 Definition atomic (e : expr) :=
