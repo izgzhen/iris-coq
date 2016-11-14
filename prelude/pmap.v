@@ -8,7 +8,7 @@ However, we extend Leroy's implementation by packing the trees into a Sigma
 type such that canonicity of representation is ensured. This is necesarry for
 Leibniz equality to become extensional. *)
 From Coq Require Import PArith.
-From iris.prelude Require Import mapset.
+From iris.prelude Require Import mapset countable.
 From iris.prelude Require Export fin_maps.
 
 Local Open Scope positive_scope.
@@ -300,11 +300,19 @@ Proof.
   - intros ??? ?? [??] [??] ?. by apply Pmerge_lookup.
 Qed.
 
+Program Instance Pmap_countable `{Countable A} : Countable (Pmap A) := {
+  encode m := encode (map_to_list m : list (positive * A));
+  decode p := map_of_list <$> decode p
+}.
+Next Obligation.
+  intros A ?? m; simpl. rewrite decode_encode; simpl. by rewrite map_of_to_list.
+Qed.
+
 (** * Finite sets *)
 (** We construct sets of [positives]s satisfying extensional equality. *)
 Notation Pset := (mapset Pmap).
 Instance Pmap_dom {A} : Dom (Pmap A) Pset := mapset_dom.
-Instance: FinMapDom positive Pmap Pset := mapset_dom_spec.
+Instance Pmap_dom_spec : FinMapDom positive Pmap Pset := mapset_dom_spec.
 
 (** * Fresh numbers *)
 Fixpoint Pdepth {A} (m : Pmap_raw A) : nat :=

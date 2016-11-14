@@ -112,6 +112,16 @@ Proof.
     by rewrite lookup_merge by done; destruct (m1 !! _), (m2 !! _).
 Qed.
 
+Program Instance gmap_countable
+    `{Countable K, Countable A} : Countable (gmap K A) := {
+  encode m := encode (map_to_list m : list (K * A));
+  decode p := map_of_list <$> decode p
+}.
+Next Obligation.
+  intros K ?? A ?? m; simpl. rewrite decode_encode; simpl.
+  by rewrite map_of_to_list.
+Qed.
+
 (** * Finite sets *)
 Notation gset K := (mapset (gmap K)).
 Instance gset_dom `{Countable K} {A} : Dom (gmap K A) (gset K) := mapset_dom.
