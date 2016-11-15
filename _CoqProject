@@ -20,6 +20,7 @@ prelude/collections.v
 prelude/listset.v
 prelude/streams.v
 prelude/gmap.v
+prelude/gmultiset.v
 prelude/base.v
 prelude/tactics.v
 prelude/prelude.v
