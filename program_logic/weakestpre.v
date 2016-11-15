@@ -310,12 +310,13 @@ Section proofmode_classes.
     ElimModal (|={E}=> P) P (WP e @ E {{ Φ }}) (WP e @ E {{ Φ }}).
   Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_wp. Qed.
 
-  (* lower precedence, if possible, it should always pick elim_upd_fupd_wp *)
-  Global Instance elim_modal_fupd_wp_atomic E1 E2 e P Φ :
+  Instance elim_modal_fupd_wp_atomic E1 E2 e P Φ :
     atomic e →
     ElimModal (|={E1,E2}=> P) P
             (WP e @ E1 {{ Φ }}) (WP e @ E2 {{ v, |={E2,E1}=> Φ v }})%I | 100.
   Proof. intros. by rewrite /ElimModal fupd_frame_r wand_elim_r wp_atomic. Qed.
 End proofmode_classes.
 
-Hint Extern 0 (atomic _) => assumption : typeclass_instances.
+(* Lower precedence, if possible, it should always pick elim_upd_fupd_wp *)
+Hint Extern 100 (ElimModal (|={_,_}=> _) _ (WP _ @ _ {{ _ }}) _) =>
+  eapply elim_modal_fupd_wp_atomic; solve [auto with atomic] : typeclass_instances.
