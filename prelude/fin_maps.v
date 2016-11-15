@@ -687,6 +687,12 @@ Proof.
     rewrite elem_of_map_to_list in Hlookup. congruence.
   - by rewrite !map_of_to_list.
 Qed.
+Lemma map_to_list_singleton {A} i (x : A) : map_to_list {[i:=x]} = [(i,x)].
+Proof.
+  apply Permutation_singleton. unfold singletonM, map_singleton.
+  by rewrite map_to_list_insert, map_to_list_empty by auto using lookup_empty.
+Qed.
+
 Lemma map_to_list_contains {A} (m1 m2 : M A) :
   m1 ⊆ m2 → map_to_list m1 `contains` map_to_list m2.
 Proof.
