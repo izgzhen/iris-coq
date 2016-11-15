@@ -54,7 +54,7 @@ Section proofs.
   Lemma tl_inv_alloc tid E N P : ▷ P ={E}=∗ tl_inv tid N P.
   Proof.
     iIntros "HP".
-    iMod (own_empty (A:=prodUR coPset_disjUR (gset_disjUR positive)) tid) as "Hempty".
+    iMod (own_empty (prodUR coPset_disjUR (gset_disjUR positive)) tid) as "Hempty".
     iMod (own_updateP with "Hempty") as ([m1 m2]) "[Hm Hown]".
     { apply prod_updateP'. apply cmra_updateP_id, (reflexivity (R:=eq)).
       apply (gset_disj_alloc_empty_updateP_strong' (λ i, i ∈ nclose N)).

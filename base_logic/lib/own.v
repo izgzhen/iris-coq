@@ -139,7 +139,7 @@ Arguments own_update {_ _} [_] _ _ _ _.
 Arguments own_update_2 {_ _} [_] _ _ _ _ _.
 Arguments own_update_3 {_ _} [_] _ _ _ _ _ _.
 
-Lemma own_empty `{inG Σ (A:ucmraT)} γ : True ==∗ own γ ∅.
+Lemma own_empty A `{inG Σ (A:ucmraT)} γ : True ==∗ own γ ∅.
 Proof.
   rewrite ownM_empty !own_eq /own_def.
   apply bupd_ownM_update, iprod_singleton_update_empty.
