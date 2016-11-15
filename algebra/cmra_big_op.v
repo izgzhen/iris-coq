@@ -1,5 +1,5 @@
 From iris.algebra Require Export cmra list.
-From iris.prelude Require Import functions gmap.
+From iris.prelude Require Import functions gmap gmultiset.
 
 (** The operator [ [⋅] Ps ] folds [⋅] over the list [Ps]. This operator is not a
 quantifier, so it binds strongly.
@@ -55,6 +55,14 @@ Typeclasses Opaque big_opS.
 Notation "'[⋅' 'set' ] x ∈ X , P" := (big_opS X (λ x, P))
   (at level 200, X at level 10, x at level 1, right associativity,
    format "[⋅  set ]  x  ∈  X ,  P") : C_scope.
+
+Definition big_opMS {M : ucmraT} `{Countable A}
+  (X : gmultiset A) (f : A → M) : M := [⋅] (f <$> elements X).
+Instance: Params (@big_opMS) 5.
+Typeclasses Opaque big_opMS.
+Notation "'[⋅' 'mset' ] x ∈ X , P" := (big_opMS X (λ x, P))
+  (at level 200, X at level 10, x at level 1, right associativity,
+   format "[⋅  'mset' ]  x  ∈  X ,  P") : C_scope.
 
 (** * Properties about big ops *)
 Section big_op.
@@ -388,6 +396,70 @@ Section gset.
     by rewrite IH -!assoc (assoc _ (g _)) [(g _ ⋅ _)]comm -!assoc.
   Qed.
 End gset.
+
+
+(** ** Big ops over finite msets *)
+Section gmultiset.
+  Context `{Countable A}.
+  Implicit Types X : gmultiset A.
+  Implicit Types f : A → M.
+
+  Lemma big_opMS_forall R f g X :
+    Reflexive R → Proper (R ==> R ==> R) (@op M _) →
+    (∀ x, x ∈ X → R (f x) (g x)) →
+    R ([⋅ mset] x ∈ X, f x) ([⋅ mset] x ∈ X, g x).
+  Proof.
+    intros ?? Hf. apply (big_op_Forall2 R _ _), Forall2_fmap, Forall_Forall2.
+    apply Forall_forall=> x ? /=. by apply Hf, gmultiset_elem_of_elements.
+  Qed.
+
+  Lemma big_opMS_mono f g X Y :
+    X ⊆ Y → (∀ x, x ∈ Y → f x ≼ g x) →
+    ([⋅ mset] x ∈ X, f x) ≼ [⋅ mset] x ∈ Y, g x.
+  Proof.
+    intros HX Hf. trans ([⋅ mset] x ∈ Y, f x).
+    - by apply big_op_contains, fmap_contains, gmultiset_elements_contains.
+    - apply big_opMS_forall; apply _ || auto.
+  Qed.
+  Lemma big_opMS_ext f g X :
+    (∀ x, x ∈ X → f x = g x) →
+    ([⋅ mset] x ∈ X, f x) = ([⋅ mset] x ∈ X, g x).
+  Proof. apply big_opMS_forall; apply _. Qed.
+  Lemma big_opMS_proper f g X :
+    (∀ x, x ∈ X → f x ≡ g x) →
+    ([⋅ mset] x ∈ X, f x) ≡ ([⋅ mset] x ∈ X, g x).
+  Proof. apply big_opMS_forall; apply _. Qed.
+
+  Lemma big_opMS_ne X n :
+    Proper (pointwise_relation _ (dist n) ==> dist n) (big_opMS (M:=M) X).
+  Proof. intros f g Hf. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
+  Lemma big_opMS_proper' X :
+    Proper (pointwise_relation _ (≡) ==> (≡)) (big_opMS (M:=M) X).
+  Proof. intros f g Hf. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
+  Lemma big_opMS_mono' X :
+    Proper (pointwise_relation _ (≼) ==> (≼)) (big_opMS (M:=M) X).
+  Proof. intros f g Hf. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
+
+  Lemma big_opMS_empty f : ([⋅ mset] x ∈ ∅, f x) = ∅.
+  Proof. by rewrite /big_opMS gmultiset_elements_empty. Qed.
+
+  Lemma big_opMS_union f X Y :
+    ([⋅ mset] y ∈ X ∪ Y, f y) ≡ ([⋅ mset] y ∈ X, f y) ⋅ [⋅ mset] y ∈ Y, f y.
+  Proof. by rewrite /big_opMS gmultiset_elements_union fmap_app big_op_app. Qed.
+
+  Lemma big_opMS_singleton f x : ([⋅ mset] y ∈ {[ x ]}, f y) ≡ f x.
+  Proof.
+    intros. by rewrite /big_opMS gmultiset_elements_singleton /= right_id.
+  Qed.
+
+  Lemma big_opMS_opS f g X :
+    ([⋅ mset] y ∈ X, f y ⋅ g y) ≡ ([⋅ mset] y ∈ X, f y) ⋅ ([⋅ mset] y ∈ X, g y).
+  Proof.
+    rewrite /big_opMS.
+    induction (elements X) as [|x l IH]; csimpl; first by rewrite ?right_id.
+    by rewrite IH -!assoc (assoc _ (g _)) [(g _ ⋅ _)]comm -!assoc.
+  Qed.
+End gmultiset.
 End big_op.
 
 (** Option *)
