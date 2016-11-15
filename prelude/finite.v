@@ -7,8 +7,10 @@ Class Finite A `{EqDecision A} := {
   NoDup_enum : NoDup enum;
   elem_of_enum x : x ∈ enum
 }.
-Arguments enum _ {_ _} : clear implicits.
-Arguments NoDup_enum _ {_ _} : clear implicits.
+Arguments enum _ _ _ : clear implicits.
+Arguments enum _ {_ _}.
+Arguments NoDup_enum _ _ _ : clear implicits.
+Arguments NoDup_enum _ {_ _}.
 Definition card A `{Finite A} := length (enum A).
 Program Instance finite_countable `{Finite A} : Countable A := {|
   encode := λ x,

@@ -34,7 +34,6 @@ prelude/lexico.v
 prelude/set.v
 prelude/decidable.v
 prelude/list.v
-prelude/error.v
 prelude/functions.v
 prelude/hlist.v
 prelude/sorting.v
