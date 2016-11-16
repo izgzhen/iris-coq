@@ -298,11 +298,11 @@ End union_intersection_difference.
 (** * Tactics *)
 Tactic Notation "case_option_guard" "as" ident(Hx) :=
   match goal with
-  | H : appcontext C [@mguard option _ ?P ?dec] |- _ =>
+  | H : context C [@mguard option _ ?P ?dec] |- _ =>
     change (@mguard option _ P dec) with (λ A (f : P → option A),
       match @decide P dec with left H' => f H' | _ => None end) in *;
     destruct_decide (@decide P dec) as Hx
-  | |- appcontext C [@mguard option _ ?P ?dec] =>
+  | |- context C [@mguard option _ ?P ?dec] =>
     change (@mguard option _ P dec) with (λ A (f : P → option A),
       match @decide P dec with left H' => f H' | _ => None end) in *;
     destruct_decide (@decide P dec) as Hx
@@ -326,9 +326,9 @@ Tactic Notation "simpl_option" "by" tactic3(tac) :=
       assert (mx = Some x') as H by tac
     | assert (mx = None) as H by tac ]
   in repeat match goal with
-  | H : appcontext [@mret _ _ ?A] |- _ =>
+  | H : context [@mret _ _ ?A] |- _ =>
      change (@mret _ _ A) with (@Some A) in H
-  | |- appcontext [@mret _ _ ?A] => change (@mret _ _ A) with (@Some A)
+  | |- context [@mret _ _ ?A] => change (@mret _ _ A) with (@Some A)
   | H : context [mbind (M:=option) (A:=?A) ?f ?mx] |- _ =>
     let Hx := fresh in assert_Some_None A mx Hx; rewrite Hx in H; clear Hx
   | H : context [fmap (M:=option) (A:=?A) ?f ?mx] |- _ =>

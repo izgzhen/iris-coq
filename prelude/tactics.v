@@ -158,7 +158,7 @@ Coq-club message:
 https://sympa.inria.fr/sympa/arc/coq-club/2012-10/msg00147.html *)
 Ltac fold_classes :=
   repeat match goal with
-  | |- appcontext [ ?F ] =>
+  | |- context [ ?F ] =>
     progress match type of F with
     | FMap _ =>
        change F with (@fmap _ F);
@@ -176,7 +176,7 @@ Ltac fold_classes :=
   end.
 Ltac fold_classes_hyps H :=
   repeat match type of H with
-  | appcontext [ ?F ] =>
+  | context [ ?F ] =>
     progress match type of F with
     | FMap _ =>
        change F with (@fmap _ F) in H;
