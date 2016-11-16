@@ -197,4 +197,4 @@ Proof.
 Qed.
 End box.
 
-Typeclasses Opaque slice_name slice box.
+Typeclasses Opaque slice box.
