@@ -517,13 +517,18 @@ Infix "-" := Qp_minus : Qp_scope.
 Infix "*" := Qp_mult : Qp_scope.
 Infix "/" := Qp_div : Qp_scope.
 
-Instance Qp_inhabited : Inhabited Qp := populate 1%Qp.
-
 Lemma Qp_eq x y : x = y ↔ Qp_car x = Qp_car y.
 Proof.
   split; [by intros ->|].
   destruct x, y; intros; simplify_eq/=; f_equal; apply (proof_irrel _).
 Qed.
+
+Instance Qp_inhabited : Inhabited Qp := populate 1%Qp.
+Instance Qp_eq_dec : EqDecision Qp.
+Proof.
+ refine (λ x y, cast_if (decide (Qp_car x = Qp_car y))); by rewrite Qp_eq.
+Defined.
+
 Instance Qp_plus_assoc : Assoc (=) Qp_plus.
 Proof. intros x y z; apply Qp_eq, Qcplus_assoc. Qed.
 Instance Qp_plus_comm : Comm (=) Qp_plus.
