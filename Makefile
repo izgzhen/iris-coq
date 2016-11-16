@@ -10,14 +10,9 @@ clean: Makefile.coq
 	+@make -f Makefile.coq clean
 	rm -f Makefile.coq
 
-uninstall:
-	+@make -f Makefile.uninstall uninstall
-
-install: Makefile.coq uninstall
-	+@make -f Makefile.coq install
-
 Makefile.coq: _CoqProject Makefile
-	coq_makefile -f _CoqProject | sed 's/$$(COQCHK) $$(COQCHKFLAGS) $$(COQLIBS)/$$(COQCHK) $$(COQCHKFLAGS) $$(subst -Q,-R,$$(COQLIBS))/' > Makefile.coq
+	coq_makefile -f _CoqProject | sed 's/$$(COQCHK) $$(COQCHKFLAGS) $$(COQLIBS)/$$(COQCHK) $$(COQCHKFLAGS) $$(subst -Q,-R,$$(COQLIBS))/' \
+	  | sed '/^install:$$/a \\tif [ -d "$$(DSTROOT)"$$(COQLIBINSTALL)/iris/ ]; then find "$$(DSTROOT)"$$(COQLIBINSTALL)/iris/ -name "*.vo" -print -delete; fi' > Makefile.coq
 
 _CoqProject: ;
 
@@ -25,4 +20,4 @@ Makefile: ;
 
 phony: ;
 
-.PHONY: all clean install uninstall phony
+.PHONY: all clean phony
