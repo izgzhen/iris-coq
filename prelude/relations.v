@@ -221,3 +221,13 @@ nor by conversion tests in the kernel), but in some cases we do need it for
 computation (that is, we cannot make it opaque). We use the [Strategy]
 command to make its expanding behavior less eager. *)
 Strategy 100 [wf_guard].
+
+Lemma Fix_F_proper `{R : relation A}
+    (B : A → Type)
+    (E : ∀ x, relation (B x)) {E_Equivalence : ∀ x, Equivalence (E x)}
+    (F : ∀ x, (∀ y, R y x → B y) → B x)
+    (HF : ∀ (x : A) (f g : ∀ y, R y x → B y),
+      (∀ y Hy Hy', E _ (f y Hy) (g y Hy')) → E _ (F x f) (F x g))
+    (x : A) (acc1 acc2 : Acc R x) :
+  E _ (Fix_F B F acc1) (Fix_F B F acc2).
+Proof. revert x acc1 acc2. fix 2. intros x [acc1] [acc2]; simpl; auto. Qed.
