@@ -33,6 +33,7 @@ Class TimelessP {M} (P : uPred M) := timelessP : ▷ P ⊢ ◇ P.
 Arguments timelessP {_} _ {_}.
 
 Class PersistentP {M} (P : uPred M) := persistentP : P ⊢ □ P.
+Hint Mode PersistentP - ! : typeclass_instances.
 Arguments persistentP {_} _ {_}.
 
 Module uPred.
