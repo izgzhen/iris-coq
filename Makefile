@@ -18,7 +18,7 @@ clean: Makefile.coq
 
 Makefile.coq: _CoqProject Makefile
 	coq_makefile $(COQ_MAKEFILE_FLAGS) -f _CoqProject | sed 's/$$(COQCHK) $$(COQCHKFLAGS) $$(COQLIBS)/$$(COQCHK) $$(COQCHKFLAGS) $$(subst -Q,-R,$$(COQLIBS))/' \
-	  | sed '/^install:$$/a \\tif [ -d "$$(DSTROOT)"$$(COQLIBINSTALL)/iris/ ]; then find "$$(DSTROOT)"$$(COQLIBINSTALL)/iris/ -name "*.vo" -print -delete; fi' > Makefile.coq
+	  | awk '/^install:$$/{print;print "\tif [ -d \"$$(DSTROOT)\"$$(COQLIBINSTALL)/iris/ ]; then find \"$$(DSTROOT)\"$$(COQLIBINSTALL)/iris/ -name \"*.vo\" -print -delete; fi";next}1' > Makefile.coq
 
 _CoqProject: ;
 
