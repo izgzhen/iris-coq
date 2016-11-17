@@ -106,7 +106,21 @@ Proof.
   destruct (X !! _), (Y !! _); simplify_option_eq; omega.
 Qed.
 
+Lemma elem_of_multiplicity x X : x ∈ X ↔ 0 < multiplicity x X.
+Proof. done. Qed.
+
 (* Algebraic laws *)
+Global Instance gmultiset_simple_collection : SimpleCollection A (gmultiset A).
+Proof.
+  split.
+  - intros x. rewrite elem_of_multiplicity, multiplicity_empty. omega.
+  - intros x y. destruct (decide (x = y)) as [->|].
+    + rewrite elem_of_multiplicity, multiplicity_singleton. split; auto with lia.
+    + rewrite elem_of_multiplicity, multiplicity_singleton_ne by done.
+      by split; auto with lia.
+  - intros X Y x. rewrite !elem_of_multiplicity, multiplicity_union. omega.
+Qed.
+
 Global Instance gmultiset_comm : Comm (@eq (gmultiset A)) (∪).
 Proof.
   intros X Y. apply gmultiset_eq; intros x. rewrite !multiplicity_union; omega.
