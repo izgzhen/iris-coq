@@ -21,6 +21,6 @@ Proof.
   iMod (own_alloc (● to_gen_heap σ)) as (γ) "Hh".
   { apply: auth_auth_valid. exact: to_gen_heap_valid. }
   iModIntro. iExists (λ σ, own γ (● to_gen_heap σ)); iFrame.
-  set (Hheap := GenHeapG loc val Σ _ _ _ _ γ).
+  set (Hheap := GenHeapG loc val Σ _ _ _ γ).
   iApply (Hwp (HeapG _ _ _)).
 Qed.
