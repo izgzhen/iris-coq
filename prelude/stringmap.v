@@ -11,6 +11,7 @@ Notation stringmap := (gmap string).
 Notation stringset := (gset string).
 
 (** * Generating fresh strings *)
+Section stringmap.
 Local Open Scope N_scope.
 Let R {A} (s : string) (m : stringmap A) (n1 n2 : N) :=
   n2 < n1 ∧ is_Some (m !! (s +:+ pretty (n1 - 1))).
@@ -59,3 +60,4 @@ Fixpoint fresh_strings_of_set
      let x := fresh_string_of_set s X in
      x :: fresh_strings_of_set s n ({[ x ]} ∪ X)
   end%nat.
+End stringmap.

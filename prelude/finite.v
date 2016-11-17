@@ -294,12 +294,13 @@ Proof.
   rewrite app_length, fmap_length. auto.
 Qed.
 
-Let list_enum {A} (l : list A) : ∀ n, list { l : list A | length l = n } :=
+Definition list_enum {A} (l : list A) : ∀ n, list { l : list A | length l = n } :=
   fix go n :=
   match n with
   | 0 => [[]↾eq_refl]
   | S n => foldr (λ x, (sig_map (x ::) (λ _ H, f_equal S H) <$> (go n) ++)) [] l
   end.
+
 Program Instance list_finite `{Finite A} n : Finite { l | length l = n } :=
   {| enum := list_enum (enum A) n |}.
 Next Obligation.
@@ -325,6 +326,7 @@ Next Obligation.
     eexists (l↾Hl'). split. by apply (sig_eq_pi _). done.
   - rewrite elem_of_app. eauto.
 Qed.
+
 Lemma list_card `{Finite A} n : card { l | length l = n } = card A ^ n.
 Proof.
   unfold card; simpl. induction n as [|n IH]; simpl; auto.
