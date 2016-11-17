@@ -157,6 +157,14 @@ Proof.
   rewrite multiplicity_difference, multiplicity_empty; omega.
 Qed.
 
+(* Order stuff *)
+Lemma gmultiset_elem_of_subseteq x X : x ∈ X → {[ x ]} ⊆ X.
+Proof.
+  rewrite elem_of_multiplicity. intros Hx y; destruct (decide (x = y)) as [->|].
+  - rewrite multiplicity_singleton; omega.
+  - rewrite multiplicity_singleton_ne by done; omega.
+Qed.
+
 (* Properties of the elements operation *)
 Lemma gmultiset_elements_empty : elements (∅ : gmultiset A) = [].
 Proof.

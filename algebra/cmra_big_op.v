@@ -452,6 +452,16 @@ Section gmultiset.
     intros. by rewrite /big_opMS gmultiset_elements_singleton /= right_id.
   Qed.
 
+  Lemma big_opMS_delete f X x :
+    x ∈ X → ([⋅ mset] y ∈ X, f y) ≡ f x ⋅ [⋅ mset] y ∈ X ∖ {[ x ]}, f y.
+  Proof.
+    intros ?%gmultiset_elem_of_subseteq. rewrite -big_opMS_singleton.
+    by rewrite -big_opMS_union -gmultiset_union_difference.
+  Qed.
+
+  Lemma big_opMS_elem_of f X x : x ∈ X → f x ≼ [⋅ mset] y ∈ X, f y.
+  Proof. intros. rewrite big_opMS_delete //. apply cmra_included_l. Qed.
+
   Lemma big_opMS_opS f g X :
     ([⋅ mset] y ∈ X, f y ⋅ g y) ≡ ([⋅ mset] y ∈ X, f y) ⋅ ([⋅ mset] y ∈ X, g y).
   Proof.
