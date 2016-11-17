@@ -35,9 +35,12 @@ declarations as the ones above. *)
 Tactic Notation "intuition" := intuition auto.
 
 (* [done] can get slow as it calls "trivial". [fast_done] can solve way less
-   goals, but it will also always finish quickly. *)
+   goals, but it will also always finish quickly.
+   We do 'reflexivity' last because for goals of the form ?x = y, if
+   we have x = y in the context, we will typically want to use the
+   assumption and not reflexivity *)
 Ltac fast_done :=
-  solve [ reflexivity | eassumption | symmetry; eassumption ].
+  solve [ eassumption | symmetry; eassumption | reflexivity ].
 Tactic Notation "fast_by" tactic(tac) :=
   tac; fast_done.
 
