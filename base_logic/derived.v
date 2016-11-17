@@ -199,6 +199,13 @@ Lemma and_exist_r {A} P (Φ: A → uPred M) : (∃ a, Φ a) ∧ P ⊣⊢ ∃ a, 
 Proof.
   rewrite -(comm _ P) and_exist_l. apply exist_proper=>a. by rewrite comm.
 Qed.
+Lemma or_exist {A} (Φ Ψ : A → uPred M) :
+  (∃ a, Φ a ∨ Ψ a) ⊣⊢ (∃ a, Φ a) ∨ (∃ a, Ψ a).
+Proof.
+  apply (anti_symm (⊢)).
+  - apply exist_elim=> a. by rewrite -!(exist_intro a).
+  - apply or_elim; apply exist_elim=> a; rewrite -(exist_intro a); auto.
+Qed.
 
 Lemma pure_mono φ1 φ2 : (φ1 → φ2) → ■ φ1 ⊢ ■ φ2.
 Proof. intros; apply pure_elim with φ1; eauto. Qed.
