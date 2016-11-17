@@ -1,7 +1,7 @@
 From iris.heap_lang Require Export lifting.
 From iris.algebra Require Import auth gmap frac dec_agree.
 From iris.base_logic.lib Require Export invariants.
-From iris.base_logic.lib Require Import wsat auth.
+From iris.base_logic.lib Require Import wsat auth fractional.
 From iris.proofmode Require Import tactics.
 Import uPred.
 (* TODO: The entire construction could be generalized to arbitrary languages that have
@@ -78,46 +78,34 @@ Section heap.
   Proof. rewrite /heap_ctx. apply _. Qed.
   Global Instance heap_mapsto_timeless l q v : TimelessP (l ↦{q} v).
   Proof. rewrite heap_mapsto_eq /heap_mapsto_def. apply _. Qed.
-
-  Lemma heap_mapsto_op_eq l q1 q2 v : l ↦{q1} v ∗ l ↦{q2} v ⊣⊢ l ↦{q1+q2} v.
+  Global Instance heap_mapsto_fractional l v : Fractional (λ q, l ↦{q} v)%I.
   Proof.
+    unfold Fractional; intros.
     by rewrite heap_mapsto_eq -auth_own_op op_singleton pair_op dec_agree_idemp.
   Qed.
+  Global Instance heap_mapsto_as_fractional l q v :
+    AsFractional (l ↦{q} v) (λ q, l ↦{q} v)%I q.
+  Proof. done. Qed.
 
-  Lemma heap_mapsto_op l q1 q2 v1 v2 :
-    l ↦{q1} v1 ∗ l ↦{q2} v2 ⊣⊢ ⌜v1 = v2⌝ ∧ l ↦{q1+q2} v1.
+  Lemma heap_mapsto_agree l q1 q2 v1 v2 :
+    l ↦{q1} v1 ∗ l ↦{q2} v2 ⊢ ⌜v1 = v2⌝.
   Proof.
-    destruct (decide (v1 = v2)) as [->|].
-    { by rewrite heap_mapsto_op_eq pure_True // left_id. }
-    apply (anti_symm (⊢)); last by apply pure_elim_l.
-    rewrite heap_mapsto_eq -auth_own_op auth_own_valid discrete_valid.
-    eapply pure_elim; [done|] =>  /=.
-    rewrite op_singleton pair_op dec_agree_ne // singleton_valid. by intros [].
+    rewrite heap_mapsto_eq -auth_own_op auth_own_valid discrete_valid
+            op_singleton singleton_valid.
+    f_equiv. move=>[_ ] /=.
+    destruct (decide (v1 = v2)) as [->|?]; first done. by rewrite dec_agree_ne.
   Qed.
 
-  Lemma heap_mapsto_op_1 l q1 q2 v1 v2 :
-    l ↦{q1} v1 ∗ l ↦{q2} v2 ⊢ ⌜v1 = v2⌝ ∧ l ↦{q1+q2} v1.
-  Proof. by rewrite heap_mapsto_op. Qed.
-
-  Lemma heap_mapsto_op_half l q v1 v2 :
-    l ↦{q/2} v1 ∗ l ↦{q/2} v2 ⊣⊢ ⌜v1 = v2⌝ ∧ l ↦{q} v1.
-  Proof. by rewrite heap_mapsto_op Qp_div_2. Qed.
-
-  Lemma heap_mapsto_op_half_1 l q v1 v2 :
-    l ↦{q/2} v1 ∗ l ↦{q/2} v2 ⊢ ⌜v1 = v2⌝ ∧ l ↦{q} v1.
-  Proof. by rewrite heap_mapsto_op_half. Qed.
-
-  Lemma heap_ex_mapsto_op l q1 q2 : l ↦{q1} - ∗ l ↦{q2} - ⊣⊢ l ↦{q1+q2} -.
+  Global Instance heap_ex_mapsto_fractional l : Fractional (λ q, l ↦{q} -)%I.
   Proof.
-    iSplit.
+    intros p q. iSplit.
+    - iDestruct 1 as (v) "[H1 H2]". iSplitL "H1"; eauto.
     - iIntros "[H1 H2]". iDestruct "H1" as (v1) "H1". iDestruct "H2" as (v2) "H2".
-      iDestruct (heap_mapsto_op_1 with "[$H1 $H2]") as "[% ?]"; subst; eauto.
-    - iDestruct 1 as (v) "H". rewrite -heap_mapsto_op_eq.
-      iDestruct "H" as "[H1 H2]"; iSplitL "H1"; eauto.
+      iDestruct (heap_mapsto_agree with "[$H1 $H2]") as %->. iExists v2. by iFrame.
   Qed.
-
-  Lemma heap_ex_mapsto_op_half l q : l ↦{q/2} - ∗ l ↦{q/2} - ⊣⊢ l ↦{q} -.
-  Proof. by rewrite heap_ex_mapsto_op Qp_div_2. Qed.
+  Global Instance heap_ex_mapsto_as_fractional l q :
+    AsFractional (l ↦{q} -) (λ q, l ↦{q} -)%I q.
+  Proof. done. Qed.
 
   Lemma heap_mapsto_valid l q v : l ↦{q} v ⊢ ✓ q.
   Proof.
@@ -126,7 +114,10 @@ Section heap.
   Qed.
   Lemma heap_mapsto_valid_2 l q1 q2 v1 v2 :
     l ↦{q1} v1 ∗ l ↦{q2} v2 ⊢ ✓ (q1 + q2)%Qp.
-  Proof. rewrite heap_mapsto_op heap_mapsto_valid. auto with I. Qed.
+  Proof.
+    iIntros "[H1 H2]". iDestruct (heap_mapsto_agree with "[$H1 $H2]") as %->.
+    iApply (heap_mapsto_valid l _ v2). by iFrame.
+  Qed.
 
   (** Weakest precondition *)
   Lemma wp_alloc E e v :

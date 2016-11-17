@@ -12,10 +12,6 @@ Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val → iProp Σ.
 Implicit Types Δ : envs (iResUR Σ).
 
-Global Instance into_and_mapsto l q v :
-  IntoAnd false (l ↦{q} v) (l ↦{q/2} v) (l ↦{q/2} v).
-Proof. by rewrite /IntoAnd heap_mapsto_op_eq Qp_div_2. Qed.
-
 Lemma tac_wp_alloc Δ Δ' E j e v Φ :
   to_val e = Some v →
   (Δ ⊢ heap_ctx) → nclose heapN ⊆ E →
