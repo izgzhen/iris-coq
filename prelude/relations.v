@@ -222,9 +222,7 @@ computation (that is, we cannot make it opaque). We use the [Strategy]
 command to make its expanding behavior less eager. *)
 Strategy 100 [wf_guard].
 
-Lemma Fix_F_proper `{R : relation A}
-    (B : A → Type)
-    (E : ∀ x, relation (B x)) {E_Equivalence : ∀ x, Equivalence (E x)}
+Lemma Fix_F_proper `{R : relation A} (B : A → Type) (E : ∀ x, relation (B x))
     (F : ∀ x, (∀ y, R y x → B y) → B x)
     (HF : ∀ (x : A) (f g : ∀ y, R y x → B y),
       (∀ y Hy Hy', E _ (f y Hy) (g y Hy')) → E _ (F x f) (F x g))
