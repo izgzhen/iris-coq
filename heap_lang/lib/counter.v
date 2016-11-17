@@ -54,9 +54,9 @@ Section mono_proof.
     iModIntro. wp_let. wp_op.
     wp_bind (CAS _ _ _). iInv N as (c') ">[Hγ Hl]" "Hclose".
     destruct (decide (c' = c)) as [->|].
-    - iDestruct (own_valid_2 with "[$Hγ $Hγf]")
+    - iDestruct (own_valid_2 with "Hγ Hγf")
         as %[?%mnat_included _]%auth_valid_discrete_2.
-      iMod (own_update_2 with "[$Hγ $Hγf]") as "[Hγ Hγf]".
+      iMod (own_update_2 with "Hγ Hγf") as "[Hγ Hγf]".
       { apply auth_update, (mnat_local_update _ _ (S c)); auto. } 
       wp_cas_suc. iMod ("Hclose" with "[Hl Hγ]") as "_".
       { iNext. iExists (S c). rewrite Nat2Z.inj_succ Z.add_1_l. by iFrame. }
@@ -74,9 +74,9 @@ Section mono_proof.
   Proof.
     iIntros (ϕ) "Hc HΦ". iDestruct "Hc" as (γ) "(% & #? & #Hinv & Hγf)".
     rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
-    iDestruct (own_valid_2 with "[$Hγ $Hγf]")
+    iDestruct (own_valid_2 with "Hγ Hγf")
       as %[?%mnat_included _]%auth_valid_discrete_2.
-    iMod (own_update_2 with "[$Hγ $Hγf]") as "[Hγ Hγf]".
+    iMod (own_update_2 with "Hγ Hγf") as "[Hγ Hγf]".
     { apply auth_update, (mnat_local_update _ _ c); auto. }
     iMod ("Hclose" with "[Hl Hγ]") as "_"; [iNext; iExists c; by iFrame|].
     iApply ("HΦ" with "[-]"). rewrite /mcounter; eauto 10.
@@ -132,7 +132,7 @@ Section contrib_spec.
     iModIntro. wp_let. wp_op.
     wp_bind (CAS _ _ _). iInv N as (c') ">[Hγ Hl]" "Hclose".
     destruct (decide (c' = c)) as [->|].
-    - iMod (own_update_2 with "[$Hγ $Hγf]") as "[Hγ Hγf]".
+    - iMod (own_update_2 with "Hγ Hγf") as "[Hγ Hγf]".
       { apply auth_update, option_local_update, prod_local_update_2.
         apply (nat_local_update _ _ (S c) (S n)); omega. }
       wp_cas_suc. iMod ("Hclose" with "[Hl Hγ]") as "_".
@@ -149,7 +149,7 @@ Section contrib_spec.
   Proof.
     iIntros (Φ) "(#(%&?&?) & Hγf) HΦ".
     rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
-    iDestruct (own_valid_2 with "[$Hγ $Hγf]")
+    iDestruct (own_valid_2 with "Hγ Hγf")
       as %[[? ?%nat_included]%Some_pair_included_total_2 _]%auth_valid_discrete_2.
     iMod ("Hclose" with "[Hl Hγ]") as "_"; [iNext; iExists c; by iFrame|].
     iApply ("HΦ" with "[-]"); rewrite /ccounter; eauto 10.
@@ -161,7 +161,7 @@ Section contrib_spec.
   Proof.
     iIntros (Φ) "(#(%&?&?) & Hγf) HΦ".
     rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
-    iDestruct (own_valid_2 with "[$Hγ $Hγf]") as %[Hn _]%auth_valid_discrete_2.
+    iDestruct (own_valid_2 with "Hγ Hγf") as %[Hn _]%auth_valid_discrete_2.
     apply (Some_included_exclusive _) in Hn as [= ->]%leibniz_equiv; last done.
     iMod ("Hclose" with "[Hl Hγ]") as "_"; [iNext; iExists c; by iFrame|].
     by iApply "HΦ".

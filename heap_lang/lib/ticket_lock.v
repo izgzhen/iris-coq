@@ -101,7 +101,7 @@ Section proof.
         iModIntro. wp_let. wp_op=>[_|[]] //.
         wp_if. 
         iApply ("HΦ" with "[-]"). rewrite /locked. iFrame. eauto.
-      + iDestruct (own_valid_2 with "[$Ht $Haown]") as % [_ ?%gset_disj_valid_op].
+      + iDestruct (own_valid_2 with "Ht Haown") as % [_ ?%gset_disj_valid_op].
         set_solver.
     - iMod ("Hclose" with "[Hlo Hln Ha]").
       { iNext. iExists o, n. by iFrame. }
@@ -149,18 +149,18 @@ Section proof.
     rewrite /release. wp_let. wp_proj. wp_proj. wp_bind (! _)%E.
     iInv N as (o' n) "(>Hlo & >Hln & >Hauth & Haown)" "Hclose".
     wp_load.
-    iDestruct (own_valid_2 with "[$Hauth $Hγo]") as
+    iDestruct (own_valid_2 with "Hauth Hγo") as
       %[[<-%Excl_included%leibniz_equiv _]%prod_included _]%auth_valid_discrete_2.
     iMod ("Hclose" with "[Hlo Hln Hauth Haown]") as "_".
     { iNext. iExists o, n. by iFrame. }
     iModIntro. wp_op.
     iInv N as (o' n') "(>Hlo & >Hln & >Hauth & Haown)" "Hclose".
     wp_store.
-    iDestruct (own_valid_2 with "[$Hauth $Hγo]") as
+    iDestruct (own_valid_2 with "Hauth Hγo") as
       %[[<-%Excl_included%leibniz_equiv _]%prod_included _]%auth_valid_discrete_2.
     iDestruct "Haown" as "[[Hγo' _]|?]".
-    { iDestruct (own_valid_2 with "[$Hγo $Hγo']") as %[[] ?]. }
-    iMod (own_update_2 with "[$Hauth $Hγo]") as "[Hauth Hγo]".
+    { iDestruct (own_valid_2 with "Hγo Hγo'") as %[[] ?]. }
+    iMod (own_update_2 with "Hauth Hγo") as "[Hauth Hγo]".
     { apply auth_update, prod_local_update_1.
       by apply option_local_update, (exclusive_local_update _ (Excl (S o))). }
     iMod ("Hclose" with "[Hlo Hln Hauth Haown Hγo HR]") as "_"; last by iApply "HΦ".

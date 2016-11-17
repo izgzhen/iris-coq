@@ -115,13 +115,13 @@ Implicit Types e : expr Λ.
 
 (* Physical state *)
 Lemma ownP_twice σ1 σ2 : ownP σ1 ∗ ownP σ2 ⊢ False.
-Proof. rewrite /ownP own_valid_2. by iIntros (?). Qed.
+Proof. rewrite /ownP -own_op own_valid. by iIntros (?). Qed.
 Global Instance ownP_timeless σ : TimelessP (@ownP (state Λ) Σ _ σ).
 Proof. rewrite /ownP; apply _. Qed.
 
 Lemma ownP_agree σ1 σ2 : ownP_auth σ1 ∗ ownP σ2 ⊢ σ1 = σ2.
 Proof.
-  rewrite /ownP /ownP_auth own_valid_2 -auth_both_op.
+  rewrite /ownP /ownP_auth -own_op own_valid -auth_both_op.
   by iIntros ([[[] [=]%leibniz_equiv] _]%auth_valid_discrete).
 Qed.
 Lemma ownP_update σ1 σ2 : ownP_auth σ1 ∗ ownP σ1 ==∗ ownP_auth σ2 ∗ ownP σ2.

@@ -57,7 +57,7 @@ Proof. by rewrite (own_empty (coPset_disjUR) enabled_name). Qed.
 Lemma ownE_op E1 E2 : E1 ⊥ E2 → ownE (E1 ∪ E2) ⊣⊢ ownE E1 ∗ ownE E2.
 Proof. intros. by rewrite /ownE -own_op coPset_disj_union. Qed.
 Lemma ownE_disjoint E1 E2 : ownE E1 ∗ ownE E2 ⊢ E1 ⊥ E2.
-Proof. rewrite /ownE own_valid_2. by iIntros (?%coPset_disj_valid_op). Qed.
+Proof. rewrite /ownE -own_op own_valid. by iIntros (?%coPset_disj_valid_op). Qed.
 Lemma ownE_op' E1 E2 : E1 ⊥ E2 ∧ ownE (E1 ∪ E2) ⊣⊢ ownE E1 ∗ ownE E2.
 Proof.
   iSplit; [iIntros "[% ?]"; by iApply ownE_op|].
@@ -72,7 +72,7 @@ Proof. by rewrite (own_empty (gset_disjUR positive) disabled_name). Qed.
 Lemma ownD_op E1 E2 : E1 ⊥ E2 → ownD (E1 ∪ E2) ⊣⊢ ownD E1 ∗ ownD E2.
 Proof. intros. by rewrite /ownD -own_op gset_disj_union. Qed.
 Lemma ownD_disjoint E1 E2 : ownD E1 ∗ ownD E2 ⊢ E1 ⊥ E2.
-Proof. rewrite /ownD own_valid_2. by iIntros (?%gset_disj_valid_op). Qed.
+Proof. rewrite /ownD -own_op own_valid. by iIntros (?%gset_disj_valid_op). Qed.
 Lemma ownD_op' E1 E2 : E1 ⊥ E2 ∧ ownD (E1 ∪ E2) ⊣⊢ ownD E1 ∗ ownD E2.
 Proof.
   iSplit; [iIntros "[% ?]"; by iApply ownD_op|].
@@ -87,7 +87,7 @@ Lemma invariant_lookup (I : gmap positive (iProp Σ)) i P :
   own invariant_name (◯ {[i := invariant_unfold P]}) ⊢
   ∃ Q, I !! i = Some Q ∗ ▷ (Q ≡ P).
 Proof.
-  rewrite own_valid_2 auth_validI /=. iIntros "[#HI #HvI]".
+  rewrite -own_op own_valid auth_validI /=. iIntros "[#HI #HvI]".
   iDestruct "HI" as (I') "HI". rewrite gmap_equivI gmap_validI.
   iSpecialize ("HI" $! i). iSpecialize ("HvI" $! i).
   rewrite left_id_L lookup_fmap lookup_op lookup_singleton uPred.option_equivI.

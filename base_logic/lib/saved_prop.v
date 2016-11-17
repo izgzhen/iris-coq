@@ -35,7 +35,7 @@ Section saved_prop.
   Lemma saved_prop_agree γ x y :
     saved_prop_own γ x ∗ saved_prop_own γ y ⊢ ▷ (x ≡ y).
   Proof.
-    rewrite own_valid_2 agree_validI agree_equivI later_equivI.
+    rewrite -own_op own_valid agree_validI agree_equivI later_equivI.
     set (G1 := cFunctor_map F (iProp_fold, iProp_unfold)).
     set (G2 := cFunctor_map F (@iProp_unfold Σ, @iProp_fold Σ)).
     assert (∀ z, G2 (G1 z) ≡ z) as help.
