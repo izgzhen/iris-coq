@@ -18,7 +18,7 @@ Proof. by rewrite /IntoAnd heap_mapsto_op_eq Qp_div_2. Qed.
 
 Lemma tac_wp_alloc Δ Δ' E j e v Φ :
   to_val e = Some v →
-  (Δ ⊢ heap_ctx) → nclose heapN ⊆ E →
+  (Δ ⊢ heap_ctx) → ↑heapN ⊆ E →
   IntoLaterEnvs Δ Δ' →
   (∀ l, ∃ Δ'',
     envs_app false (Esnoc Enil j (l ↦ v)) Δ' = Some Δ'' ∧
@@ -33,7 +33,7 @@ Proof.
 Qed.
 
 Lemma tac_wp_load Δ Δ' E i l q v Φ :
-  (Δ ⊢ heap_ctx) → nclose heapN ⊆ E →
+  (Δ ⊢ heap_ctx) → ↑heapN ⊆ E →
   IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I →
   (Δ' ⊢ Φ v) →
@@ -47,7 +47,7 @@ Qed.
 
 Lemma tac_wp_store Δ Δ' Δ'' E i l v e v' Φ :
   to_val e = Some v' →
-  (Δ ⊢ heap_ctx) → nclose heapN ⊆ E →
+  (Δ ⊢ heap_ctx) → ↑heapN ⊆ E →
   IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v')) Δ' = Some Δ'' →
@@ -62,7 +62,7 @@ Qed.
 
 Lemma tac_wp_cas_fail Δ Δ' E i l q v e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
-  (Δ ⊢ heap_ctx) → nclose heapN ⊆ E →
+  (Δ ⊢ heap_ctx) → ↑heapN ⊆ E →
   IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I → v ≠ v1 →
   (Δ' ⊢ Φ (LitV (LitBool false))) →
@@ -76,7 +76,7 @@ Qed.
 
 Lemma tac_wp_cas_suc Δ Δ' Δ'' E i l v e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
-  (Δ ⊢ heap_ctx) → nclose heapN ⊆ E →
+  (Δ ⊢ heap_ctx) → ↑heapN ⊆ E →
   IntoLaterEnvs Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I → v = v1 →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v2)) Δ' = Some Δ'' →

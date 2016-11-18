@@ -726,6 +726,8 @@ End disjoint_list.
 
 Class Filter A B := filter: ∀ (P : A → Prop) `{∀ x, Decision (P x)}, B → B.
 
+Class UpClose A B := up_close : A → B.
+Notation "↑ x" := (up_close x) (at level 20, format "↑ x").
 
 (** * Monadic operations *)
 (** We define operational type classes for the monadic operations bind, join 

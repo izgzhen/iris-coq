@@ -16,7 +16,7 @@ Section defs.
     own tid (CoPset E, ∅).
 
   Definition tl_inv (tid : thread_id) (N : namespace) (P : iProp Σ) : iProp Σ :=
-    (∃ i, ⌜i ∈ nclose N⌝ ∧
+    (∃ i, ⌜i ∈ ↑N⌝ ∧
           inv tlN (P ∗ own tid (∅, GSet {[i]}) ∨ tl_own tid {[i]}))%I.
 End defs.
 
@@ -57,8 +57,8 @@ Section proofs.
     iMod (own_empty (prodUR coPset_disjUR (gset_disjUR positive)) tid) as "Hempty".
     iMod (own_updateP with "Hempty") as ([m1 m2]) "[Hm Hown]".
     { apply prod_updateP'. apply cmra_updateP_id, (reflexivity (R:=eq)).
-      apply (gset_disj_alloc_empty_updateP_strong' (λ i, i ∈ nclose N)).
-      intros Ef. exists (coPpick (nclose N ∖ coPset.of_gset Ef)).
+      apply (gset_disj_alloc_empty_updateP_strong' (λ i, i ∈ ↑N)).
+      intros Ef. exists (coPpick (↑ N ∖ coPset.of_gset Ef)).
       rewrite -coPset.elem_of_of_gset comm -elem_of_difference.
       apply coPpick_elem_of=> Hfin.
       eapply nclose_infinite, (difference_finite_inv _ _), Hfin.
@@ -70,14 +70,14 @@ Section proofs.
   Qed.
 
   Lemma tl_inv_open tid tlE E N P :
-    nclose tlN ⊆ tlE → nclose N ⊆ E →
-    tl_inv tid N P ⊢ tl_own tid E ={tlE}=∗ ▷ P ∗ tl_own tid (E ∖ N) ∗
-                       (▷ P ∗ tl_own tid (E ∖ N) ={tlE}=∗ tl_own tid E).
+    ↑tlN ⊆ tlE → ↑N ⊆ E →
+    tl_inv tid N P ⊢ tl_own tid E ={tlE}=∗ ▷ P ∗ tl_own tid (E∖↑N) ∗
+                       (▷ P ∗ tl_own tid (E∖↑N) ={tlE}=∗ tl_own tid E).
   Proof.
     rewrite /tl_inv. iIntros (??) "#Htlinv Htoks".
     iDestruct "Htlinv" as (i) "[% Hinv]".
-    rewrite {1 4}(union_difference_L (nclose N) E) //.
-    rewrite {1 5}(union_difference_L {[i]} (nclose N)) ?tl_own_union; [|set_solver..].
+    rewrite {1 4}(union_difference_L (↑N) E) //.
+    rewrite {1 5}(union_difference_L {[i]} (↑N)) ?tl_own_union; [|set_solver..].
     iDestruct "Htoks" as "[[Htoki $] $]".
     iInv tlN as "[[$ >Hdis]|>Htoki2]" "Hclose".
     - iMod ("Hclose" with "[Htoki]") as "_"; first auto.

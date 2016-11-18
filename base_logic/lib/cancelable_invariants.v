@@ -51,8 +51,7 @@ Section proofs.
     iMod (inv_alloc N _ (P ∨ own γ 1%Qp)%I with "[HP]"); eauto.
   Qed.
 
-  Lemma cinv_cancel E N γ P :
-    nclose N ⊆ E → cinv N γ P ⊢ cinv_own γ 1 ={E}=∗ ▷ P.
+  Lemma cinv_cancel E N γ P : ↑N ⊆ E → cinv N γ P ⊢ cinv_own γ 1 ={E}=∗ ▷ P.
   Proof.
     rewrite /cinv. iIntros (?) "#Hinv Hγ".
     iInv N as "[$|>Hγ']" "Hclose"; first iApply "Hclose"; eauto.
@@ -60,8 +59,8 @@ Section proofs.
   Qed.
 
   Lemma cinv_open E N γ p P :
-    nclose N ⊆ E →
-    cinv N γ P ⊢ cinv_own γ p ={E,E∖N}=∗ ▷ P ∗ cinv_own γ p ∗ (▷ P ={E∖N,E}=∗ True).
+    ↑N ⊆ E →
+    cinv N γ P ⊢ cinv_own γ p ={E,E∖↑N}=∗ ▷ P ∗ cinv_own γ p ∗ (▷ P ={E∖↑N,E}=∗ True).
   Proof.
     rewrite /cinv. iIntros (?) "#Hinv Hγ".
     iInv N as "[$|>Hγ']" "Hclose".

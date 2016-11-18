@@ -128,10 +128,10 @@ Section auth.
   Qed.
 
   Lemma auth_open E N γ a :
-    nclose N ⊆ E →
-    auth_ctx γ N f φ ∗ auth_own γ a ={E,E∖N}=∗ ∃ t,
+    ↑N ⊆ E →
+    auth_ctx γ N f φ ∗ auth_own γ a ={E,E∖↑N}=∗ ∃ t,
       ⌜a ≼ f t⌝ ∗ ▷ φ t ∗ ∀ u b,
-      ⌜(f t, a) ~l~> (f u, b)⌝ ∗ ▷ φ u ={E∖N,E}=∗ auth_own γ b.
+      ⌜(f t, a) ~l~> (f u, b)⌝ ∗ ▷ φ u ={E∖↑N,E}=∗ auth_own γ b.
   Proof.
     iIntros (?) "[#? Hγf]". rewrite /auth_ctx. iInv N as "Hinv" "Hclose".
     (* The following is essentially a very trivial composition of the accessors
