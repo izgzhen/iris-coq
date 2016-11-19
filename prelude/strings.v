@@ -31,11 +31,17 @@ Fixpoint string_rev_app (s1 s2 : string) : string :=
 Definition string_rev (s : string) : string := string_rev_app s "".
 
 (* Break a string up into lists of words, delimited by white space *)
+Definition is_space (x : Ascii.ascii) : bool :=
+  match x with
+  | "009" | "010" | "011" | "012" | "013" | " " => true | _ => false
+  end%char.
+
 Fixpoint words_go (cur : option string) (s : string) : list string :=
   match s with
   | "" => option_list (string_rev <$> cur)
-  | String " " s => option_list (string_rev <$> cur) ++ words_go None s
-  | String a s => words_go (Some (default (String a "") cur (String a))) s
+  | String a s =>
+     if is_space a then option_list (string_rev <$> cur) ++ words_go None s
+     else words_go (Some (default (String a "") cur (String a))) s
   end.
 Definition words : string → list string := words_go None.
 

@@ -31,7 +31,6 @@ Fixpoint cons_name (kn : string) (k : list token) : list token :=
 Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   match s with
   | "" => rev (cons_name kn k)
-  | String " " s => tokenize_go s (cons_name kn k) ""
   | String "-" s => tokenize_go s (TMinus :: cons_name kn k) ""
   | String "[" s => tokenize_go s (TBracketL :: cons_name kn k) ""
   | String "]" s => tokenize_go s (TBracketR :: cons_name kn k) ""
@@ -40,7 +39,9 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String "*" s => tokenize_go s (TForall :: cons_name kn k) ""
   | String ">" s => tokenize_go s (TModal :: cons_name kn k) ""
   | String "$" s => tokenize_go s (TFrame :: cons_name kn k) ""
-  | String a s => tokenize_go s k (String a kn)
+  | String a s =>
+     if is_space a then tokenize_go s (cons_name kn k) ""
+     else tokenize_go s k (String a kn)
   end.
 Definition tokenize (s : string) : list token := tokenize_go s [] "".
 
