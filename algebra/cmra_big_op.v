@@ -455,14 +455,14 @@ Section gmultiset.
   Lemma big_opMS_delete f X x :
     x ∈ X → ([⋅ mset] y ∈ X, f y) ≡ f x ⋅ [⋅ mset] y ∈ X ∖ {[ x ]}, f y.
   Proof.
-    intros ?%gmultiset_elem_of_subseteq. rewrite -big_opMS_singleton.
-    by rewrite -big_opMS_union -gmultiset_union_difference.
+    intros. rewrite -big_opMS_singleton -big_opMS_union.
+    by rewrite -gmultiset_union_difference'.
   Qed.
 
   Lemma big_opMS_elem_of f X x : x ∈ X → f x ≼ [⋅ mset] y ∈ X, f y.
   Proof. intros. rewrite big_opMS_delete //. apply cmra_included_l. Qed.
 
-  Lemma big_opMS_opS f g X :
+  Lemma big_opMS_opMS f g X :
     ([⋅ mset] y ∈ X, f y ⋅ g y) ≡ ([⋅ mset] y ∈ X, f y) ⋅ ([⋅ mset] y ∈ X, g y).
   Proof.
     rewrite /big_opMS.
@@ -496,6 +496,14 @@ Lemma big_opS_None {M : cmraT} `{Countable A} (f : A → option M) X :
 Proof.
   induction X as [|x X ? IH] using collection_ind_L; [done|].
   rewrite -equiv_None big_opS_insert // equiv_None op_None IH. set_solver.
+Qed.
+Lemma big_opMS_None {M : cmraT} `{Countable A} (f : A → option M) X :
+  ([⋅ mset] x ∈ X, f x) = None ↔ ∀ x, x ∈ X → f x = None.
+Proof.
+  induction X as [|x X IH] using gmultiset_ind.
+  { rewrite big_opMS_empty. set_solver. }
+  rewrite -equiv_None big_opMS_union big_opMS_singleton equiv_None op_None IH.
+  set_solver.
 Qed.
 
 (** Commuting with respect to homomorphisms *)
@@ -552,6 +560,24 @@ Proof.
   - by rewrite !big_opS_insert // cmra_homomorphism -IH //.
 Qed.
 
+Lemma big_opMS_commute {M1 M2 : ucmraT} `{Countable A}
+    (h : M1 → M2) `{!UCMRAHomomorphism h} (f : A → M1) X :
+  h ([⋅ mset] x ∈ X, f x) ≡ ([⋅ mset] x ∈ X, h (f x)).
+Proof.
+  intros. induction X as [|x X IH] using gmultiset_ind.
+  - by rewrite !big_opMS_empty ucmra_homomorphism_unit.
+  - by rewrite !big_opMS_union !big_opMS_singleton cmra_homomorphism -IH.
+Qed.
+Lemma big_opMS_commute1 {M1 M2 : ucmraT} `{Countable A}
+    (h : M1 → M2) `{!CMRAHomomorphism h} (f : A → M1) X :
+  X ≠ ∅ → h ([⋅ mset] x ∈ X, f x) ≡ ([⋅ mset] x ∈ X, h (f x)).
+Proof.
+  intros. induction X as [|x X IH] using gmultiset_ind; [done|].
+  destruct (decide (X = ∅)) as [->|].
+  - by rewrite !big_opMS_union !big_opMS_singleton !big_opMS_empty !right_id.
+  - by rewrite !big_opMS_union !big_opMS_singleton cmra_homomorphism -IH //.
+Qed.
+
 Lemma big_opL_commute_L {M1 M2 : ucmraT} `{!LeibnizEquiv M2} {A}
     (h : M1 → M2) `{!UCMRAHomomorphism h} (f : nat → A → M1) l :
   h ([⋅ list] k↦x ∈ l, f k x) = ([⋅ list] k↦x ∈ l, h (f k x)).
@@ -578,3 +604,12 @@ Lemma big_opS_commute1_L {M1 M2 : ucmraT} `{!LeibnizEquiv M2, Countable A}
     (h : M1 → M2) `{!CMRAHomomorphism h} (f : A → M1) X :
   X ≠ ∅ → h ([⋅ set] x ∈ X, f x) = ([⋅ set] x ∈ X, h (f x)).
 Proof. intros. rewrite <-leibniz_equiv_iff. by apply big_opS_commute1. Qed.
+
+Lemma big_opMS_commute_L {M1 M2 : ucmraT} `{!LeibnizEquiv M2, Countable A}
+    (h : M1 → M2) `{!UCMRAHomomorphism h} (f : A → M1) X :
+  h ([⋅ mset] x ∈ X, f x) = ([⋅ mset] x ∈ X, h (f x)).
+Proof. unfold_leibniz. by apply big_opMS_commute. Qed.
+Lemma big_opMS_commute1_L {M1 M2 : ucmraT} `{!LeibnizEquiv M2, Countable A}
+    (h : M1 → M2) `{!CMRAHomomorphism h} (f : A → M1) X :
+  X ≠ ∅ → h ([⋅ mset] x ∈ X, f x) = ([⋅ mset] x ∈ X, h (f x)).
+Proof. intros. rewrite <-leibniz_equiv_iff. by apply big_opMS_commute1. Qed.
