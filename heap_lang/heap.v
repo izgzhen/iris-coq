@@ -79,6 +79,12 @@ Section heap.
   Global Instance heap_mapsto_timeless l q v : TimelessP (l ↦{q} v).
   Proof. rewrite heap_mapsto_eq /heap_mapsto_def. apply _. Qed.
 
+  Lemma heap_mapsto_valid l q v : l ↦{q} v ⊢ ✓ q.
+  Proof.
+    rewrite heap_mapsto_eq /heap_mapsto_def auth_own_valid !discrete_valid.
+    by apply pure_mono=> /singleton_valid [??].
+  Qed.
+
   Lemma heap_mapsto_op_eq l q1 q2 v : l ↦{q1} v ∗ l ↦{q2} v ⊣⊢ l ↦{q1+q2} v.
   Proof.
     by rewrite heap_mapsto_eq -auth_own_op op_singleton pair_op dec_agree_idemp.
