@@ -1,6 +1,6 @@
 From iris.algebra Require Export list cmra_big_op.
 From iris.base_logic Require Export base_logic.
-From iris.prelude Require Import gmap fin_collections functions.
+From iris.prelude Require Import gmap fin_collections gmultiset functions.
 Import uPred.
 
 (* We make use of the bigops on CMRAs, so we first define a (somewhat ad-hoc)
@@ -103,6 +103,10 @@ Notation "'[∗' 'map' ] x ∈ m , P" := (big_opM (M:=uPredUR _) m (λ _ x, P))
 Notation "'[∗' 'set' ] x ∈ X , P" := (big_opS (M:=uPredUR _) X (λ x, P))
   (at level 200, X at level 10, x at level 1, right associativity,
    format "[∗  set ]  x  ∈  X ,  P") : uPred_scope.
+
+Notation "'[∗' 'mset' ] x ∈ X , P" := (big_opMS (M:=uPredUR _) X (λ x, P))
+  (at level 200, X at level 10, x at level 1, right associativity,
+   format "[∗  mset ]  x  ∈  X ,  P") : uPred_scope.
 
 (** * Persistence and timelessness of lists of uPreds *)
 Class PersistentL {M} (Ps : list (uPred M)) :=
@@ -508,4 +512,72 @@ Section gset.
     (∀ x, TimelessP (Φ x)) → TimelessP ([∗ set] x ∈ X, Φ x).
   Proof. rewrite /big_opS. apply _. Qed.
 End gset.
+
+
+(** ** Big ops over finite multisets *)
+Section gmultiset.
+  Context `{Countable A}.
+  Implicit Types X : gmultiset A.
+  Implicit Types Φ : A → uPred M.
+
+  Lemma big_sepMS_mono Φ Ψ X Y :
+    Y ⊆ X → (∀ x, x ∈ Y → Φ x ⊢ Ψ x) →
+    ([∗ mset] x ∈ X, Φ x) ⊢ [∗ mset] x ∈ Y, Ψ x.
+  Proof.
+    intros HX HΦ. trans ([∗ mset] x ∈ Y, Φ x)%I.
+    - apply uPred_included. apply: big_op_contains.
+      by apply fmap_contains, gmultiset_elements_contains.
+    - apply big_opMS_forall; apply _ || auto.
+  Qed.
+  Lemma big_sepMS_proper Φ Ψ X :
+    (∀ x, x ∈ X → Φ x ⊣⊢ Ψ x) →
+    ([∗ mset] x ∈ X, Φ x) ⊣⊢ ([∗ mset] x ∈ X, Ψ x).
+  Proof. apply: big_opMS_proper. Qed.
+
+  Global Instance big_sepMS_mono' X :
+     Proper (pointwise_relation _ (⊢) ==> (⊢)) (big_opMS (M:=uPredUR M) X).
+  Proof. intros f g Hf. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
+
+  Lemma big_sepMS_empty Φ : ([∗ mset] x ∈ ∅, Φ x) ⊣⊢ True.
+  Proof. by rewrite big_opMS_empty. Qed.
+
+  Lemma big_sepMS_union Φ X Y :
+    ([∗ mset] y ∈ X ∪ Y, Φ y) ⊣⊢ ([∗ mset] y ∈ X, Φ y) ∗ [∗ mset] y ∈ Y, Φ y.
+  Proof. apply: big_opMS_union. Qed.
+
+  Lemma big_sepMS_delete Φ X x :
+    x ∈ X → ([∗ mset] y ∈ X, Φ y) ⊣⊢ Φ x ∗ [∗ mset] y ∈ X ∖ {[ x ]}, Φ y.
+  Proof. apply: big_opMS_delete. Qed.
+
+  Lemma big_sepMS_elem_of Φ X x : x ∈ X → ([∗ mset] y ∈ X, Φ y) ⊢ Φ x.
+  Proof. intros. apply uPred_included. by apply: big_opMS_elem_of. Qed. 
+
+  Lemma big_sepMS_singleton Φ x : ([∗ mset] y ∈ {[ x ]}, Φ y) ⊣⊢ Φ x.
+  Proof. apply: big_opMS_singleton. Qed.
+
+  Lemma big_sepMS_sepMS Φ Ψ X :
+    ([∗ mset] y ∈ X, Φ y ∗ Ψ y) ⊣⊢ ([∗ mset] y ∈ X, Φ y) ∗ ([∗ mset] y ∈ X, Ψ y).
+  Proof. apply: big_opMS_opMS. Qed.
+
+  Lemma big_sepMS_later Φ X : ▷ ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, ▷ Φ y).
+  Proof. apply (big_opMS_commute _). Qed.
+
+  Lemma big_sepMS_always Φ X : □ ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, □ Φ y).
+  Proof. apply (big_opMS_commute _). Qed.
+
+  Lemma big_sepMS_always_if q Φ X :
+    □?q ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, □?q Φ y).
+  Proof. apply (big_opMS_commute _). Qed.
+
+  Global Instance big_sepMS_empty_persistent Φ : PersistentP ([∗ mset] x ∈ ∅, Φ x).
+  Proof. rewrite /big_opMS gmultiset_elements_empty. apply _. Qed.
+  Global Instance big_sepMS_persistent Φ X :
+    (∀ x, PersistentP (Φ x)) → PersistentP ([∗ mset] x ∈ X, Φ x).
+  Proof. rewrite /big_opMS. apply _. Qed.
+  Global Instance big_sepMS_nil_timeless Φ : TimelessP ([∗ mset] x ∈ ∅, Φ x).
+  Proof. rewrite /big_opMS gmultiset_elements_empty. apply _. Qed.
+  Global Instance big_sepMS_timeless Φ X :
+    (∀ x, TimelessP (Φ x)) → TimelessP ([∗ mset] x ∈ X, Φ x).
+  Proof. rewrite /big_opMS. apply _. Qed.
+End gmultiset.
 End big_op.
