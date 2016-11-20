@@ -265,6 +265,12 @@ Proof. by intros ->. Qed.
 Lemma internal_eq_sym {A : cofeT} (a b : A) : a ≡ b ⊢ b ≡ a.
 Proof. apply (internal_eq_rewrite a b (λ b, b ≡ a)%I); auto. solve_proper. Qed.
 
+Lemma pure_impl_forall φ P : (■ φ → P) ⊣⊢ (∀ _ : φ, P).
+Proof.
+  apply (anti_symm _).
+  - apply forall_intro=> ?. by rewrite pure_equiv // left_id.
+  - apply impl_intro_l, pure_elim_l=> Hφ. by rewrite (forall_elim Hφ).
+Qed.
 Lemma pure_alt φ : ■ φ ⊣⊢ ∃ _ : φ, True.
 Proof.
   apply (anti_symm _).
