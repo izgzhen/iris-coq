@@ -330,6 +330,9 @@ Section gmap.
   Lemma big_sepM_lookup Φ m i x :
     m !! i = Some x → ([∗ map] k↦y ∈ m, Φ k y) ⊢ Φ i x.
   Proof. intros. apply uPred_included. by apply: big_opM_lookup. Qed. 
+  Lemma big_sepM_lookup_dom (Φ : K → uPred M) m i :
+    is_Some (m !! i) → ([∗ map] k↦_ ∈ m, Φ k) ⊢ Φ i.
+  Proof. intros [x ?]. by eapply (big_sepM_lookup (λ i x, Φ i)). Qed.
 
   Lemma big_sepM_singleton Φ i x : ([∗ map] k↦y ∈ {[i:=x]}, Φ k y) ⊣⊢ Φ i x.
   Proof. by rewrite big_opM_singleton. Qed.

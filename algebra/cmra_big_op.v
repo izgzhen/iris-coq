@@ -267,6 +267,9 @@ Section gmap.
   Lemma big_opM_lookup f m i x :
     m !! i = Some x → f i x ≼ [⋅ map] k↦y ∈ m, f k y.
   Proof. intros. rewrite big_opM_delete //. apply cmra_included_l. Qed.
+  Lemma big_opM_lookup_dom (f : K → M) m i :
+    is_Some (m !! i) → f i ≼ [⋅ map] k↦_ ∈ m, f k.
+  Proof. intros [x ?]. by eapply (big_opM_lookup (λ i x, f i)). Qed.
 
   Lemma big_opM_singleton f i x : ([⋅ map] k↦y ∈ {[i:=x]}, f k y) ≡ f i x.
   Proof.
