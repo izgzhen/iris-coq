@@ -160,7 +160,7 @@ Proof.
     iFrame; eauto.
 Qed.
 
-Lemma box_fill_all f P Q : box N f P ∗ ▷ P ={N}=∗ box N (const true <$> f) P.
+Lemma box_fill_all f P : box N f P ∗ ▷ P ={N}=∗ box N (const true <$> f) P.
 Proof.
   iIntros "[H HP]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists Φ; iSplitR; first by rewrite big_sepM_fmap.
@@ -175,7 +175,7 @@ Proof.
   iApply "Hclose". iNext; iExists true. by iFrame.
 Qed.
 
-Lemma box_empty_all f P Q :
+Lemma box_empty_all f P :
   map_Forall (λ _, (true =)) f →
   box N f P ={N}=∗ ▷ P ∗ box N (const false <$> f) P.
 Proof.
