@@ -684,7 +684,9 @@ Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" :=
        apply _ || fail "iIntro:" P "not pure"|]
     |(* (?P -∗ _) *) eapply tac_wand_intro_pure;
       [let P := match goal with |- IntoPure ?P _ => P end in
-       apply _ || fail "iIntro:" P "not pure"|]];
+       apply _ || fail "iIntro:" P "not pure"|]
+    |(* (■ ∀ _, _) *) apply tac_pure_forall_intro
+    |(* (■ (_ → _)) *) apply tac_pure_impl_intro];
   intros x.
 
 Local Tactic Notation "iIntro" constr(H) := first
