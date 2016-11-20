@@ -184,6 +184,27 @@ Lemma collection_fold_proper {B} (R : relation B) `{!Equivalence R}
   Proper ((≡) ==> R) (collection_fold f b : C → B).
 Proof. intros ?? E. apply (foldr_permutation R f b); auto. by rewrite E. Qed.
 
+Lemma minimal_exists `{!StrictOrder R, ∀ x y, Decision (R x y)} (X : C) :
+  X ≢ ∅ → ∃ x, x ∈ X ∧ minimal R x X.
+Proof.
+  pattern X; apply collection_ind; clear X.
+  { by intros X X' HX; setoid_rewrite HX. }
+  { done. }
+  intros x X ? IH Hemp. destruct (collection_choose_or_empty X) as [[z ?]|HX].
+  { destruct IH as (x' & Hx' & Hmin); [set_solver|].
+    destruct (decide (R x x')).
+    - exists x; split; [set_solver|].
+      eauto using union_minimal, singleton_minimal, minimal_weaken.
+    - exists x'; split; [set_solver|].
+      auto using union_minimal, singleton_minimal_not_above. }
+  exists x; split; [set_solver|].
+  rewrite HX, (right_id _ (∪)). apply singleton_minimal.
+Qed.
+Lemma minimal_exists_L
+    `{!LeibnizEquiv C, !StrictOrder R, ∀ x y, Decision (R x y)} (X : C) :
+  X ≠ ∅ → ∃ x, x ∈ X ∧ minimal R x X.
+Proof. unfold_leibniz. apply minimal_exists. Qed.
+
 (** * Decision procedures *)
 Global Instance set_Forall_dec `(P : A → Prop)
   `{∀ x, Decision (P x)} X : Decision (set_Forall P X) | 100.

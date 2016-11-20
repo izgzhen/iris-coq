@@ -993,3 +993,34 @@ Section seq_set.
     seq_set start (S len) = {[ start + len ]} ∪ seq_set start len.
   Proof. unfold_leibniz. apply seq_set_S_union. Qed.
 End seq_set.
+
+(** Mimimal elements *)
+Definition minimal `{ElemOf A C} (R : relation A) (x : A) (X : C) : Prop :=
+  ∀ y, y ∈ X → R y x → y = x.
+Instance: Params (@minimal) 5.
+
+Section minimal.
+  Context `{SimpleCollection A C} {R : relation A}.
+
+  Global Instance minimal_proper x : Proper (@equiv C _ ==> iff) (minimal R x).
+  Proof. intros X X' y; unfold minimal; set_solver. Qed.
+  Lemma empty_minimal x : minimal R x ∅.
+  Proof. unfold minimal; set_solver. Qed.
+  Lemma singleton_minimal x : minimal R x {[ x ]}.
+  Proof. unfold minimal; set_solver. Qed.
+  Lemma singleton_minimal_not_above y x : ¬R y x → minimal R x {[ y ]}.
+  Proof. unfold minimal; set_solver. Qed.
+  Lemma union_minimal X Y x :
+    minimal R x X → minimal R x Y → minimal R x (X ∪ Y).
+  Proof. unfold minimal; set_solver. Qed.
+  Lemma minimal_subseteq X Y x : minimal R x X → Y ⊆ X → minimal R x Y.
+  Proof. unfold minimal; set_solver. Qed.
+
+  Lemma minimal_weaken `{!StrictOrder R} X x x' :
+    minimal R x X → R x' x → minimal R x' X.
+  Proof.
+    intros Hmin ? y ??.
+    assert (y = x) as -> by (apply (Hmin y); [done|by trans x']).
+    destruct (irreflexivity R x). by trans x'.
+  Qed.
+End minimal.
