@@ -159,6 +159,15 @@ Proof.
     elem_of_singleton; destruct (decide (i = j)); intuition.
 Qed.
 
+Lemma to_gmap_dom `{Countable K} {A B} (m : gmap K A) (y : B) :
+  to_gmap y (dom _ m) = const y <$> m.
+Proof.
+  apply map_eq; intros j. rewrite lookup_fmap, lookup_to_gmap.
+  destruct (m !! j) as [x|] eqn:?.
+  - by rewrite option_guard_True by (rewrite elem_of_dom; eauto).
+  - by rewrite option_guard_False by (rewrite not_elem_of_dom; eauto).
+Qed.
+
 (** * Fresh elements *)
 (* This is pretty ad-hoc and just for the case of [gset positive]. We need a
 notion of countable non-finite types to generalize this. *)
