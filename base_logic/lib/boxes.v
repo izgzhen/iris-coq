@@ -85,8 +85,8 @@ Proof.
   - by rewrite big_sepM_empty.
 Qed.
 
-Lemma box_insert f P Q :
-  ▷ box N f P ={N}=∗ ∃ γ, f !! γ = None ∗
+Lemma box_insert E f P Q :
+  ▷ box N f P ={E}=∗ ∃ γ, f !! γ = None ∗
     slice N γ Q ∗ ▷ box N (<[γ:=false]> f) (Q ∗ P).
 Proof.
   iDestruct 1 as (Φ) "[#HeqP Hf]".
@@ -104,12 +104,13 @@ Proof.
     iFrame; eauto.
 Qed.
 
-Lemma box_delete f P Q γ :
+Lemma box_delete E f P Q γ :
+  nclose N ⊆ E →
   f !! γ = Some false →
-  slice N γ Q ∗ ▷ box N f P ={N}=∗ ∃ P',
+  slice N γ Q ∗ ▷ box N f P ={E}=∗ ∃ P',
     ▷ ▷ (P ≡ (Q ∗ P')) ∗ ▷ box N (delete γ f) P'.
 Proof.
-  iIntros (?) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
+  iIntros (??) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists ([∗ map] γ'↦_ ∈ delete γ f, Φ γ')%I.
   iInv N as (b) "(Hγ & #HγQ &_)" "Hclose".
   iApply fupd_trans_frame; iFrame "Hclose"; iModIntro; iNext.
@@ -123,11 +124,12 @@ Proof.
   - iExists Φ; eauto.
 Qed.
 
-Lemma box_fill f γ P Q :
+Lemma box_fill E f γ P Q :
+  nclose N ⊆ E →
   f !! γ = Some false →
-  slice N γ Q ∗ ▷ Q ∗ ▷ box N f P ={N}=∗ ▷ box N (<[γ:=true]> f) P.
+  slice N γ Q ∗ ▷ Q ∗ ▷ box N f P ={E}=∗ ▷ box N (<[γ:=true]> f) P.
 Proof.
-  iIntros (?) "(#Hinv & HQ & H)"; iDestruct "H" as (Φ) "[#HeqP Hf]".
+  iIntros (??) "(#Hinv & HQ & H)"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iInv N as (b') "(>Hγ & #HγQ & _)" "Hclose".
   iDestruct (big_sepM_later _ f with "Hf") as "Hf".
   iDestruct (big_sepM_delete _ f _ false with "Hf")
@@ -141,11 +143,12 @@ Proof.
     iFrame; eauto.
 Qed.
 
-Lemma box_empty f P Q γ :
+Lemma box_empty E f P Q γ :
+  nclose N ⊆ E →
   f !! γ = Some true →
-  slice N γ Q ∗ ▷ box N f P ={N}=∗ ▷ Q ∗ ▷ box N (<[γ:=false]> f) P.
+  slice N γ Q ∗ ▷ box N f P ={E}=∗ ▷ Q ∗ ▷ box N (<[γ:=false]> f) P.
 Proof.
-  iIntros (?) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
+  iIntros (??) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iInv N as (b) "(>Hγ & #HγQ & HQ)" "Hclose".
   iDestruct (big_sepM_later _ f with "Hf") as "Hf".
   iDestruct (big_sepM_delete _ f with "Hf")
@@ -160,9 +163,11 @@ Proof.
     iFrame; eauto.
 Qed.
 
-Lemma box_fill_all f P : box N f P ∗ ▷ P ={N}=∗ box N (const true <$> f) P.
+Lemma box_fill_all E f P :
+  nclose N ⊆ E →
+  box N f P ∗ ▷ P ={E}=∗ box N (const true <$> f) P.
 Proof.
-  iIntros "[H HP]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
+  iIntros (?) "[H HP]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists Φ; iSplitR; first by rewrite big_sepM_fmap.
   rewrite internal_eq_iff later_iff big_sepM_later.
   iDestruct ("HeqP" with "HP") as "HP".
@@ -175,9 +180,10 @@ Proof.
   iApply "Hclose". iNext; iExists true. by iFrame.
 Qed.
 
-Lemma box_empty_all f P :
+Lemma box_empty_all E f P :
+  nclose N ⊆ E →
   map_Forall (λ _, (true =)) f →
-  box N f P ={N}=∗ ▷ P ∗ box N (const false <$> f) P.
+  box N f P ={E}=∗ ▷ P ∗ box N (const false <$> f) P.
 Proof.
   iDestruct 1 as (Φ) "[#HeqP Hf]".
   iAssert ([∗ map] γ↦b ∈ f, ▷ Φ γ ∗ box_own_auth γ (◯ Excl' false) ∗
