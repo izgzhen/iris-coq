@@ -19,7 +19,8 @@ Definition nclose_aux : { x | x = @nclose_def }. by eexists. Qed.
 Instance nclose : UpClose namespace coPset := proj1_sig nclose_aux.
 Definition nclose_eq : @nclose = @nclose_def := proj2_sig nclose_aux.
 
-Infix ".@" := ndot (at level 19, left associativity) : C_scope.
+Notation "N .@ x" := (ndot N x)
+  (at level 19, left associativity, format "N .@ x") : C_scope.
 Notation "(.@)" := ndot (only parsing) : C_scope.
 
 Instance ndisjoint : Disjoint namespace := λ N1 N2, nclose N1 ⊥ nclose N2.
@@ -41,7 +42,7 @@ Section namespace.
     by apply elem_coPset_suffixes; exists xH; rewrite (left_id_L _ _).
   Qed.
 
-  Lemma nclose_subseteq N x : ↑N .@ x ⊆ (↑N : coPset).
+  Lemma nclose_subseteq N x : ↑N.@x ⊆ (↑N : coPset).
   Proof.
     intros p; rewrite nclose_eq /nclose !ndot_eq !elem_coPset_suffixes.
     intros [q ->]. destruct (list_encode_suffix N (ndot_def N x)) as [q' ?].
@@ -49,25 +50,25 @@ Section namespace.
     by exists (q ++ q')%positive; rewrite <-(assoc_L _); f_equal.
   Qed.
 
-  Lemma nclose_subseteq' E N x : ↑N ⊆ E → ↑N .@ x ⊆ E.
+  Lemma nclose_subseteq' E N x : ↑N ⊆ E → ↑N.@x ⊆ E.
   Proof. intros. etrans; eauto using nclose_subseteq. Qed.
 
-  Lemma ndot_nclose N x : encode (N .@ x) ∈ ↑ N.
+  Lemma ndot_nclose N x : encode (N.@x) ∈ ↑ N.
   Proof. apply nclose_subseteq with x, encode_nclose. Qed.
   Lemma nclose_infinite N : ¬set_finite (↑ N : coPset).
   Proof. rewrite nclose_eq. apply coPset_suffixes_infinite. Qed.
 
-  Lemma ndot_ne_disjoint N x y : x ≠ y → N .@ x ⊥ N .@ y.
+  Lemma ndot_ne_disjoint N x y : x ≠ y → N.@x ⊥ N.@y.
   Proof.
     intros Hxy a. rewrite !nclose_eq !elem_coPset_suffixes !ndot_eq.
     intros [qx ->] [qy Hqy].
     revert Hqy. by intros [= ?%encode_inj]%list_encode_suffix_eq.
   Qed.
 
-  Lemma ndot_preserve_disjoint_l N E x : ↑N ⊥ E → ↑N .@ x ⊥ E.
+  Lemma ndot_preserve_disjoint_l N E x : ↑N ⊥ E → ↑N.@x ⊥ E.
   Proof. intros. pose proof (nclose_subseteq N x). set_solver. Qed.
 
-  Lemma ndot_preserve_disjoint_r N E x : E ⊥ ↑N → E ⊥ ↑N .@ x.
+  Lemma ndot_preserve_disjoint_r N E x : E ⊥ ↑N → E ⊥ ↑N.@x.
   Proof. intros. by apply symmetry, ndot_preserve_disjoint_l. Qed.
 
   Lemma ndisj_subseteq_difference N E F : E ⊥ ↑N → E ⊆ F → E ⊆ F ∖ ↑N.
