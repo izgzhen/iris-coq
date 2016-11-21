@@ -756,33 +756,34 @@ End collection_monad_base.
 
 
 (** * Quantifiers *)
+Definition set_Forall `{ElemOf A C} (P : A → Prop) (X : C) := ∀ x, x ∈ X → P x.
+Definition set_Exists `{ElemOf A C} (P : A → Prop) (X : C) := ∃ x, x ∈ X ∧ P x.
+
 Section quantifiers.
   Context `{SimpleCollection A B} (P : A → Prop).
 
-  Definition set_Forall X := ∀ x, x ∈ X → P x.
-  Definition set_Exists X := ∃ x, x ∈ X ∧ P x.
-
-  Lemma set_Forall_empty : set_Forall ∅.
+  Lemma set_Forall_empty : set_Forall P ∅.
   Proof. unfold set_Forall. set_solver. Qed.
-  Lemma set_Forall_singleton x : set_Forall {[ x ]} ↔ P x.
+  Lemma set_Forall_singleton x : set_Forall P {[ x ]} ↔ P x.
   Proof. unfold set_Forall. set_solver. Qed.
-  Lemma set_Forall_union X Y : set_Forall X → set_Forall Y → set_Forall (X ∪ Y).
+  Lemma set_Forall_union X Y :
+    set_Forall P X → set_Forall P Y → set_Forall P (X ∪ Y).
   Proof. unfold set_Forall. set_solver. Qed.
-  Lemma set_Forall_union_inv_1 X Y : set_Forall (X ∪ Y) → set_Forall X.
+  Lemma set_Forall_union_inv_1 X Y : set_Forall P (X ∪ Y) → set_Forall P X.
   Proof. unfold set_Forall. set_solver. Qed.
-  Lemma set_Forall_union_inv_2 X Y : set_Forall (X ∪ Y) → set_Forall Y.
+  Lemma set_Forall_union_inv_2 X Y : set_Forall P (X ∪ Y) → set_Forall P Y.
   Proof. unfold set_Forall. set_solver. Qed.
 
-  Lemma set_Exists_empty : ¬set_Exists ∅.
+  Lemma set_Exists_empty : ¬set_Exists P ∅.
   Proof. unfold set_Exists. set_solver. Qed.
-  Lemma set_Exists_singleton x : set_Exists {[ x ]} ↔ P x.
+  Lemma set_Exists_singleton x : set_Exists P {[ x ]} ↔ P x.
   Proof. unfold set_Exists. set_solver. Qed.
-  Lemma set_Exists_union_1 X Y : set_Exists X → set_Exists (X ∪ Y).
+  Lemma set_Exists_union_1 X Y : set_Exists P X → set_Exists P (X ∪ Y).
   Proof. unfold set_Exists. set_solver. Qed.
-  Lemma set_Exists_union_2 X Y : set_Exists Y → set_Exists (X ∪ Y).
+  Lemma set_Exists_union_2 X Y : set_Exists P Y → set_Exists P (X ∪ Y).
   Proof. unfold set_Exists. set_solver. Qed.
   Lemma set_Exists_union_inv X Y :
-    set_Exists (X ∪ Y) → set_Exists X ∨ set_Exists Y.
+    set_Exists P (X ∪ Y) → set_Exists P X ∨ set_Exists P Y.
   Proof. unfold set_Exists. set_solver. Qed.
 End quantifiers.
 
