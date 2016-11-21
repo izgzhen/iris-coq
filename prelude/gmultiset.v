@@ -239,6 +239,20 @@ Proof.
   - intros X Y HXY HYX; apply gmultiset_eq; intros x. by apply (anti_symm (≤)).
 Qed.
 
+Lemma gmultiset_subseteq_alt X Y :
+  X ⊆ Y ↔
+  map_relation (≤) (λ _, False) (λ _, True) (gmultiset_car X) (gmultiset_car Y).
+Proof.
+  apply forall_proper; intros x. unfold multiplicity.
+  destruct (gmultiset_car X !! x), (gmultiset_car Y !! x); naive_solver omega.
+Qed.
+Global Instance gmultiset_subseteq_dec X Y : Decision (X ⊆ Y).
+Proof.
+ refine (cast_if (decide (map_relation (≤)
+   (λ _, False) (λ _, True) (gmultiset_car X) (gmultiset_car Y))));
+   by rewrite gmultiset_subseteq_alt.
+Defined.
+
 Lemma gmultiset_subset_subseteq X Y : X ⊂ Y → X ⊆ Y.
 Proof. apply strict_include. Qed.
 Hint Resolve gmultiset_subset_subseteq.
