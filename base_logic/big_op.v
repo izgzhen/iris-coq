@@ -457,6 +457,11 @@ Section gset.
     x ∉ X → ([∗ set] y ∈ {[ x ]} ∪ X, <[x:=P]> Φ y) ⊣⊢ (P ∗ [∗ set] y ∈ X, Φ y).
   Proof. apply: big_opS_fn_insert'. Qed.
 
+  Lemma big_sepS_union Φ X Y :
+    X ⊥ Y →
+    ([∗ set] y ∈ X ∪ Y, Φ y) ⊣⊢ ([∗ set] y ∈ X, Φ y) ∗ ([∗ set] y ∈ Y, Φ y).
+  Proof. apply: big_opS_union. Qed.
+
   Lemma big_sepS_delete Φ X x :
     x ∈ X → ([∗ set] y ∈ X, Φ y) ⊣⊢ Φ x ∗ [∗ set] y ∈ X ∖ {[ x ]}, Φ y.
   Proof. apply: big_opS_delete. Qed.
