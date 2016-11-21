@@ -217,11 +217,9 @@ Lemma step_fupd_mask_mono E1 E2 F1 F2 P :
   F1 ⊆ F2 → E1 ⊆ E2 → (|={E1,F2}▷=> P) ⊢ |={E2,F1}▷=> P.
 Proof.
   iIntros (??) "HP".
-  iAssert (|={E2,E1}▷=> True)%I as "HE".
-  { iApply fupd_mono. apply later_intro. by iApply fupd_intro_mask. }
-  iAssert (|={F2,F1}▷=> True)%I as "HF".
-  { iApply fupd_mono. apply later_intro. by iApply fupd_intro_mask. }
-  iMod "HE". iMod "HP". iMod "HF". iModIntro. iNext. iMod "HF". iMod "HP". by iMod "HE".
+  iMod (fupd_intro_mask') as "HM1"; first fast_done. iMod "HP".
+  iMod (fupd_intro_mask') as "HM2"; first fast_done. iModIntro.
+  iNext. iMod "HM2". iMod "HP". iMod "HM1". done.
 Qed.
 
 End step_fupd.
