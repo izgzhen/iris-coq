@@ -472,6 +472,19 @@ Section gset.
   Lemma big_sepS_singleton Φ x : ([∗ set] y ∈ {[ x ]}, Φ y) ⊣⊢ Φ x.
   Proof. apply: big_opS_singleton. Qed.
 
+  Lemma big_sepS_filter (P : A → Prop) `{∀ x, Decision (P x)} Φ X :
+    ([∗ set] y ∈ filter P X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ■ P y → Φ y).
+  Proof.
+    induction X as [|x X ? IH] using collection_ind_L.
+    { by rewrite filter_empty_L !big_sepS_empty. }
+    destruct (decide (P x)).
+    - rewrite filter_union_L filter_singleton_L //.
+      rewrite !big_sepS_insert //; last set_solver.
+      by rewrite IH pure_True // left_id.
+    - rewrite filter_union_L filter_singleton_not_L // left_id_L.
+      by rewrite !big_sepS_insert // IH pure_False // False_impl left_id.
+  Qed.
+
   Lemma big_sepS_sepS Φ Ψ X :
     ([∗ set] y ∈ X, Φ y ∗ Ψ y) ⊣⊢ ([∗ set] y ∈ X, Φ y) ∗ ([∗ set] y ∈ X, Ψ y).
   Proof. apply: big_opS_opS. Qed.

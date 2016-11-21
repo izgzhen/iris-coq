@@ -14,6 +14,7 @@ Definition collection_fold `{Elements A C} {B}
 Instance collection_filter
     `{Elements A C, Empty C, Singleton A C, Union C} : Filter A C := λ P _ X,
   of_list (filter P (elements X)).
+Typeclasses Opaque collection_filter.
 
 Section fin_collection.
 Context `{FinCollection A C}.
@@ -211,12 +212,41 @@ Lemma minimal_exists_L R `{!LeibnizEquiv C, !Transitive R,
 Proof. unfold_leibniz. apply (minimal_exists R). Qed.
 
 (** * Filter *)
-Lemma elem_of_filter (P : A → Prop) `{!∀ x, Decision (P x)} X x :
-  x ∈ filter P X ↔ P x ∧ x ∈ X.
-Proof.
-  unfold filter, collection_filter.
-  by rewrite elem_of_of_list, elem_of_list_filter, elem_of_elements.
-Qed.
+Section filter.
+  Context (P : A → Prop) `{!∀ x, Decision (P x)}.
+
+  Lemma elem_of_filter X x : x ∈ filter P X ↔ P x ∧ x ∈ X.
+  Proof.
+    unfold filter, collection_filter.
+    by rewrite elem_of_of_list, elem_of_list_filter, elem_of_elements.
+  Qed.
+  Global Instance set_unfold_filter X Q :
+    SetUnfold (x ∈ X) Q → SetUnfold (x ∈ filter P X) (P x ∧ Q).
+  Proof.
+    intros ??; constructor. by rewrite elem_of_filter, (set_unfold (x ∈ X) Q).
+  Qed.
+
+  Lemma filter_empty : filter P (∅:C) ≡ ∅.
+  Proof. set_solver. Qed.
+  Lemma filter_union X Y : filter P (X ∪ Y) ≡ filter P X ∪ filter P Y.
+  Proof. set_solver. Qed.
+  Lemma filter_singleton x : P x → filter P ({[ x ]} : C) ≡ {[ x ]}.
+  Proof. set_solver. Qed.
+  Lemma filter_singleton_not x : ¬P x → filter P ({[ x ]} : C) ≡ ∅.
+  Proof. set_solver. Qed.
+
+  Section leibniz_equiv.
+    Context `{!LeibnizEquiv C}.
+    Lemma filter_empty_L : filter P (∅:C) = ∅.
+    Proof. set_solver. Qed.
+    Lemma filter_union_L X Y : filter P (X ∪ Y) = filter P X ∪ filter P Y.
+    Proof. set_solver. Qed.
+    Lemma filter_singleton_L x : P x → filter P ({[ x ]} : C) = {[ x ]}.
+    Proof. set_solver. Qed.
+    Lemma filter_singleton_not_L x : ¬P x → filter P ({[ x ]} : C) = ∅.
+    Proof. set_solver. Qed.
+  End leibniz_equiv.
+End filter.
 
 (** * Decision procedures *)
 Global Instance set_Forall_dec `(P : A → Prop)
