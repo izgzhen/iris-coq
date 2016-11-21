@@ -217,8 +217,8 @@ Lemma step_fupd_mask_mono E1 E2 F1 F2 P :
   F1 ⊆ F2 → E1 ⊆ E2 → (|={E1,F2}▷=> P) ⊢ |={E2,F1}▷=> P.
 Proof.
   iIntros (??) "HP".
-  iMod (fupd_intro_mask') as "HM1"; first fast_done. iMod "HP".
-  iMod (fupd_intro_mask') as "HM2"; first fast_done. iModIntro.
+  iMod (fupd_intro_mask') as "HM1"; first done. iMod "HP".
+  iMod (fupd_intro_mask') as "HM2"; first done. iModIntro.
   iNext. iMod "HM2". iMod "HP". iMod "HM1". done.
 Qed.
 

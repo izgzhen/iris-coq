@@ -40,7 +40,11 @@ Tactic Notation "intuition" := intuition auto.
    we have x = y in the context, we will typically want to use the
    assumption and not reflexivity *)
 Ltac fast_done :=
-  solve [ eassumption | symmetry; eassumption | reflexivity ].
+  solve
+    [ eassumption
+    | symmetry; eassumption
+    | apply not_symmetry; eassumption
+    | reflexivity ].
 Tactic Notation "fast_by" tactic(tac) :=
   tac; fast_done.
 
@@ -50,16 +54,21 @@ to Ssreflect's [done], it does not compute the goal's [hnf] so as to avoid
 unfolding setoid equalities. Note that this tactic performs much better than
 Coq's [easy] tactic as it does not perform [inversion]. *)
 Ltac done :=
-  trivial; intros; solve
+  solve
   [ repeat first
     [ fast_done
     | solve [trivial]
+    (* All the tactics below will introduce themselves anyway, or make no sense
+       for goals of product type. So this is a good place for us to do it. *)
+    | progress intros
     | solve [symmetry; trivial]
+    | solve [apply not_symmetry; trivial]
     | discriminate
     | contradiction
-    | solve [apply not_symmetry; trivial]
-    | split ]
-  | match goal with H : ¬_ |- _ => solve [case H; trivial] end ].
+    | split
+    | match goal with H : ¬_ |- _ => case H; clear H; done end
+    ]
+  ].
 Tactic Notation "by" tactic(tac) :=
   tac; done.
 
@@ -477,12 +486,7 @@ Tactic Notation "naive_solver" tactic(tac) :=
   (**i simplify and solve equalities *)
   | |- _ => progress simplify_eq/=
   (**i solve the goal *)
-  | |- _ =>
-    solve
-    [ eassumption
-    | symmetry; eassumption
-    | apply not_symmetry; eassumption
-    | reflexivity ]
+  | |- _ => fast_done
   (**i operations that generate more subgoals *)
   | |- _ ∧ _ => split
   | |- Is_true (bool_decide _) => apply (bool_decide_pack _)
