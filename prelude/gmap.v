@@ -159,6 +159,12 @@ Proof.
     elem_of_singleton; destruct (decide (i = j)); intuition.
 Qed.
 
+Lemma fmap_to_gmap `{Countable K} {A B} (f : A → B) (X : gset K) (x : A) :
+  f <$> to_gmap x X = to_gmap (f x) X.
+Proof.
+  apply map_eq; intros j. rewrite lookup_fmap, !lookup_to_gmap.
+  by simplify_option_eq.
+Qed.
 Lemma to_gmap_dom `{Countable K} {A B} (m : gmap K A) (y : B) :
   to_gmap y (dom _ m) = const y <$> m.
 Proof.
