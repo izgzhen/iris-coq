@@ -349,13 +349,13 @@ Section gset.
     ([⋅ set] x ∈ X, f x) ≡ ([⋅ set] x ∈ X, g x).
   Proof. apply big_opS_forall; apply _. Qed.
 
-  Lemma big_opS_ne X n :
+  Global Instance big_opS_ne X n :
     Proper (pointwise_relation _ (dist n) ==> dist n) (big_opS (M:=M) X).
   Proof. intros f g Hf. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
-  Lemma big_opS_proper' X :
+  Global Instance big_opS_proper' X :
     Proper (pointwise_relation _ (≡) ==> (≡)) (big_opS (M:=M) X).
   Proof. intros f g Hf. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
-  Lemma big_opS_mono' X :
+  Global Instance big_opS_mono' X :
     Proper (pointwise_relation _ (≼) ==> (≼)) (big_opS (M:=M) X).
   Proof. intros f g Hf. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
 
@@ -433,13 +433,13 @@ Section gmultiset.
     ([⋅ mset] x ∈ X, f x) ≡ ([⋅ mset] x ∈ X, g x).
   Proof. apply big_opMS_forall; apply _. Qed.
 
-  Lemma big_opMS_ne X n :
+  Global Instance big_opMS_ne X n :
     Proper (pointwise_relation _ (dist n) ==> dist n) (big_opMS (M:=M) X).
   Proof. intros f g Hf. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
-  Lemma big_opMS_proper' X :
+  Global Instance big_opMS_proper' X :
     Proper (pointwise_relation _ (≡) ==> (≡)) (big_opMS (M:=M) X).
   Proof. intros f g Hf. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
-  Lemma big_opMS_mono' X :
+  Global Instance big_opMS_mono' X :
     Proper (pointwise_relation _ (≼) ==> (≼)) (big_opMS (M:=M) X).
   Proof. intros f g Hf. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
 
