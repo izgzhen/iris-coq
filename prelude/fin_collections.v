@@ -189,7 +189,7 @@ Lemma collection_fold_proper {B} (R : relation B) `{!Equivalence R}
 Proof. intros ?? E. apply (foldr_permutation R f b); auto. by rewrite E. Qed.
 
 (** * Minimal elements *)
-Lemma minimal_exists `{!StrictOrder R, ∀ x y, Decision (R x y)} (X : C) :
+Lemma minimal_exists R `{!Transitive R, ∀ x y, Decision (R x y)} (X : C) :
   X ≢ ∅ → ∃ x, x ∈ X ∧ minimal R x X.
 Proof.
   pattern X; apply collection_ind; clear X.
@@ -205,10 +205,10 @@ Proof.
   exists x; split; [set_solver|].
   rewrite HX, (right_id _ (∪)). apply singleton_minimal.
 Qed.
-Lemma minimal_exists_L
-    `{!LeibnizEquiv C, !StrictOrder R, ∀ x y, Decision (R x y)} (X : C) :
+Lemma minimal_exists_L R `{!LeibnizEquiv C, !Transitive R,
+    ∀ x y, Decision (R x y)} (X : C) :
   X ≠ ∅ → ∃ x, x ∈ X ∧ minimal R x X.
-Proof. unfold_leibniz. apply minimal_exists. Qed.
+Proof. unfold_leibniz. apply (minimal_exists R). Qed.
 
 (** * Filter *)
 Lemma elem_of_filter (P : A → Prop) `{!∀ x, Decision (P x)} X x :
