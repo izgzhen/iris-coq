@@ -41,6 +41,10 @@ Section definitions.
       let z := x - y in guard (0 < z); Some (pred z)) X Y.
 End definitions.
 
+Typeclasses Opaque gmultiset_elem_of gmultiset_subseteq.
+Typeclasses Opaque gmultiset_elements gmultiset_size gmultiset_empty.
+Typeclasses Opaque gmultiset_singleton gmultiset_union gmultiset_difference.
+
 (** These instances are declared using [Hint Extern] to avoid too
 eager type class search. *)
 Hint Extern 1 (ElemOf _ (gmultiset _)) =>
@@ -94,10 +98,10 @@ Proof.
   destruct (X !! _), (Y !! _); simplify_option_eq; omega.
 Qed.
 
+(* Collection *)
 Lemma elem_of_multiplicity x X : x ∈ X ↔ 0 < multiplicity x X.
 Proof. done. Qed.
 
-(* Algebraic laws *)
 Global Instance gmultiset_simple_collection : SimpleCollection A (gmultiset A).
 Proof.
   split.
@@ -108,7 +112,10 @@ Proof.
       by split; auto with lia.
   - intros X Y x. rewrite !elem_of_multiplicity, multiplicity_union. omega.
 Qed.
+Global Instance gmultiset_elem_of_dec x X : Decision (x ∈ X).
+Proof. unfold elem_of, gmultiset_elem_of. apply _. Defined.
 
+(* Algebraic laws *)
 Global Instance gmultiset_comm : Comm (@eq (gmultiset A)) (∪).
 Proof.
   intros X Y. apply gmultiset_eq; intros x. rewrite !multiplicity_union; omega.
