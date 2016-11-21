@@ -260,7 +260,7 @@ Section list.
     revert Φ HΦ. induction l as [|x l IH]=> Φ HΦ.
     { rewrite big_sepL_nil; auto with I. }
     rewrite big_sepL_cons. rewrite -always_and_sep_l; apply and_intro.
-    - by rewrite (forall_elim 0) (forall_elim x) pure_equiv // True_impl.
+    - by rewrite (forall_elim 0) (forall_elim x) pure_True // True_impl.
     - rewrite -IH. apply forall_intro=> k; by rewrite (forall_elim (S k)).
   Qed.
 
@@ -384,11 +384,11 @@ Section gmap.
     induction m as [|i x m ? IH] using map_ind; [rewrite ?big_sepM_empty; auto|].
     rewrite big_sepM_insert // -always_and_sep_l. apply and_intro.
     - rewrite (forall_elim i) (forall_elim x) lookup_insert.
-      by rewrite pure_equiv // True_impl.
+      by rewrite pure_True // True_impl.
     - rewrite -IH. apply forall_mono=> k; apply forall_mono=> y.
       apply impl_intro_l, pure_elim_l=> ?.
       rewrite lookup_insert_ne; last by intros ?; simplify_map_eq.
-      by rewrite pure_equiv // True_impl.
+      by rewrite pure_True // True_impl.
   Qed.
 
   Lemma big_sepM_impl Φ Ψ m :
@@ -492,12 +492,12 @@ Section gset.
     intros. apply (anti_symm _).
     { apply forall_intro=> x.
       apply impl_intro_l, pure_elim_l=> ?; by apply big_sepS_elem_of. }
-    induction X as [|x m ? IH] using collection_ind_L.
+    induction X as [|x X ? IH] using collection_ind_L.
     { rewrite big_sepS_empty; auto. }
     rewrite big_sepS_insert // -always_and_sep_l. apply and_intro.
-    - by rewrite (forall_elim x) pure_equiv ?True_impl; last set_solver.
+    - by rewrite (forall_elim x) pure_True ?True_impl; last set_solver.
     - rewrite -IH. apply forall_mono=> y. apply impl_intro_l, pure_elim_l=> ?.
-      by rewrite pure_equiv ?True_impl; last set_solver.
+      by rewrite pure_True ?True_impl; last set_solver.
   Qed.
 
   Lemma big_sepS_impl Φ Ψ X :

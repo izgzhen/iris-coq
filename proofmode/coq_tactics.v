@@ -152,10 +152,10 @@ Proof.
   rewrite /envs_lookup /of_envs=>?; apply pure_elim_sep_l=> Hwf.
   destruct Δ as [Γp Γs], (Γp !! i) eqn:?; simplify_eq/=.
   - rewrite (env_lookup_perm Γp) //= always_sep.
-    rewrite pure_equiv // left_id.
+    rewrite pure_True // left_id.
     cancel [□ P]%I. apply wand_intro_l. solve_sep_entails.
   - destruct (Γs !! i) eqn:?; simplify_eq/=.
-    rewrite (env_lookup_perm Γs) //=. rewrite pure_equiv // left_id.
+    rewrite (env_lookup_perm Γs) //=. rewrite pure_True // left_id.
     cancel [P]. apply wand_intro_l. solve_sep_entails.
 Qed.
 
@@ -398,7 +398,7 @@ Proof.
 Qed.
 
 Lemma tac_pure_revert Δ φ Q : (Δ ⊢ ■ φ → Q) → (φ → Δ ⊢ Q).
-Proof. intros HΔ ?. by rewrite HΔ pure_equiv // left_id. Qed.
+Proof. intros HΔ ?. by rewrite HΔ pure_True // left_id. Qed.
 
 (** * Later *)
 Class IntoLaterEnv (Γ1 Γ2 : env (uPred M)) :=
@@ -548,7 +548,7 @@ Lemma tac_specialize_assert_pure Δ Δ' j q R P1 P2 φ Q :
   φ → (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros. rewrite envs_simple_replace_sound //; simpl.
-  rewrite right_id (into_wand R) -(from_pure P1) pure_equiv //.
+  rewrite right_id (into_wand R) -(from_pure P1) pure_True //.
   by rewrite wand_True wand_elim_r.
 Qed.
 
@@ -745,7 +745,7 @@ Qed.
 (** * Framing *)
 Lemma tac_frame_pure Δ (φ : Prop) P Q :
   φ → Frame (■ φ) P Q → (Δ ⊢ Q) → Δ ⊢ P.
-Proof. intros ?? ->. by rewrite -(frame (■ φ) P) pure_equiv // left_id. Qed.
+Proof. intros ?? ->. by rewrite -(frame (■ φ) P) pure_True // left_id. Qed.
 
 Lemma tac_frame Δ Δ' i p R P Q :
   envs_lookup_delete i Δ = Some (p, R, Δ') → Frame R P Q →

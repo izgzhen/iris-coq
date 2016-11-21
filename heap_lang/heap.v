@@ -88,7 +88,7 @@ Section heap.
     l ↦{q1} v1 ∗ l ↦{q2} v2 ⊣⊢ v1 = v2 ∧ l ↦{q1+q2} v1.
   Proof.
     destruct (decide (v1 = v2)) as [->|].
-    { by rewrite heap_mapsto_op_eq pure_equiv // left_id. }
+    { by rewrite heap_mapsto_op_eq pure_True // left_id. }
     apply (anti_symm (⊢)); last by apply pure_elim_l.
     rewrite heap_mapsto_eq -auth_own_op auth_own_valid discrete_valid.
     eapply pure_elim; [done|] =>  /=.

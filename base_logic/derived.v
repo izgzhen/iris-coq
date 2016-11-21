@@ -163,6 +163,11 @@ Proof.
   - by rewrite -(left_id True%I uPred_and (_ → _)%I) impl_elim_r.
   - by apply impl_intro_l; rewrite left_id.
 Qed.
+Lemma False_impl P : (False → P) ⊣⊢ True.
+Proof.
+  apply (anti_symm (⊢)); [by auto|].
+  apply impl_intro_l. rewrite left_absorb. auto.
+Qed.
 
 Lemma exists_impl_forall {A} P (Ψ : A → uPred M) :
   ((∃ x : A, Ψ x) → P) ⊣⊢ ∀ x : A, Ψ x → P.
@@ -223,8 +228,11 @@ Lemma pure_elim_l φ Q R : (φ → Q ⊢ R) → ■ φ ∧ Q ⊢ R.
 Proof. intros; apply pure_elim with φ; eauto. Qed.
 Lemma pure_elim_r φ Q R : (φ → Q ⊢ R) → Q ∧ ■ φ ⊢ R.
 Proof. intros; apply pure_elim with φ; eauto. Qed.
-Lemma pure_equiv (φ : Prop) : φ → ■ φ ⊣⊢ True.
+
+Lemma pure_True (φ : Prop) : φ → ■ φ ⊣⊢ True.
 Proof. intros; apply (anti_symm _); auto. Qed.
+Lemma pure_False (φ : Prop) : ¬φ → ■ φ ⊣⊢ False.
+Proof. intros; apply (anti_symm _); eauto using pure_elim. Qed.
 
 Lemma pure_and φ1 φ2 : ■ (φ1 ∧ φ2) ⊣⊢ ■ φ1 ∧ ■ φ2.
 Proof.
@@ -243,7 +251,7 @@ Proof.
   apply (anti_symm _).
   - apply impl_intro_l. rewrite -pure_and. apply pure_mono. naive_solver.
   - rewrite -pure_forall_2. apply forall_intro=> ?.
-    by rewrite -(left_id True uPred_and (_→_))%I (pure_equiv φ1) // impl_elim_r.
+    by rewrite -(left_id True uPred_and (_→_))%I (pure_True φ1) // impl_elim_r.
 Qed.
 Lemma pure_forall {A} (φ : A → Prop) : ■ (∀ x, φ x) ⊣⊢ ∀ x, ■ φ x.
 Proof.
@@ -268,7 +276,7 @@ Proof. apply (internal_eq_rewrite a b (λ b, b ≡ a)%I); auto. solve_proper. Qe
 Lemma pure_impl_forall φ P : (■ φ → P) ⊣⊢ (∀ _ : φ, P).
 Proof.
   apply (anti_symm _).
-  - apply forall_intro=> ?. by rewrite pure_equiv // left_id.
+  - apply forall_intro=> ?. by rewrite pure_True // left_id.
   - apply impl_intro_l, pure_elim_l=> Hφ. by rewrite (forall_elim Hφ).
 Qed.
 Lemma pure_alt φ : ■ φ ⊣⊢ ∃ _ : φ, True.

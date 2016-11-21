@@ -95,7 +95,7 @@ Proof.
       first (eapply alloc_updateP_strong', cmra_transport_valid, Ha);
       naive_solver.
   - apply exist_elim=>m; apply pure_elim_l=>-[γ [Hfresh ->]].
-    by rewrite !own_eq /own_def -(exist_intro γ) pure_equiv // left_id.
+    by rewrite !own_eq /own_def -(exist_intro γ) pure_True // left_id.
 Qed.
 Lemma own_alloc a : ✓ a → True ==∗ ∃ γ, own γ a.
 Proof.
