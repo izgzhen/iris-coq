@@ -11,6 +11,10 @@ Instance collection_size `{Elements A C} : Size C := length ∘ elements.
 Definition collection_fold `{Elements A C} {B}
   (f : A → B → B) (b : B) : C → B := foldr f b ∘ elements.
 
+Instance collection_filter
+    `{Elements A C, Empty C, Singleton A C, Union C} : Filter A C := λ P _ X,
+  of_list (filter P (elements X)).
+
 Section fin_collection.
 Context `{FinCollection A C}.
 Implicit Types X Y : C.
@@ -184,6 +188,7 @@ Lemma collection_fold_proper {B} (R : relation B) `{!Equivalence R}
   Proper ((≡) ==> R) (collection_fold f b : C → B).
 Proof. intros ?? E. apply (foldr_permutation R f b); auto. by rewrite E. Qed.
 
+(** * Minimal elements *)
 Lemma minimal_exists `{!StrictOrder R, ∀ x y, Decision (R x y)} (X : C) :
   X ≢ ∅ → ∃ x, x ∈ X ∧ minimal R x X.
 Proof.
@@ -204,6 +209,14 @@ Lemma minimal_exists_L
     `{!LeibnizEquiv C, !StrictOrder R, ∀ x y, Decision (R x y)} (X : C) :
   X ≠ ∅ → ∃ x, x ∈ X ∧ minimal R x X.
 Proof. unfold_leibniz. apply minimal_exists. Qed.
+
+(** * Filter *)
+Lemma elem_of_filter (P : A → Prop) `{!∀ x, Decision (P x)} X x :
+  x ∈ filter P X ↔ P x ∧ x ∈ X.
+Proof.
+  unfold filter, collection_filter.
+  by rewrite elem_of_of_list, elem_of_list_filter, elem_of_elements.
+Qed.
 
 (** * Decision procedures *)
 Global Instance set_Forall_dec `(P : A → Prop)
