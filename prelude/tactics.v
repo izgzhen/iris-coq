@@ -478,8 +478,12 @@ Tactic Notation "naive_solver" tactic(tac) :=
   | |- ∀ _, _ => intro
   (**i simplification of assumptions *)
   | H : False |- _ => destruct H
-  | H : _ ∧ _ |- _ => destruct H
-  | H : ∃ _, _  |- _ => destruct H
+  | H : _ ∧ _ |- _ =>
+     let H1 := fresh in let H2 := fresh in
+     destruct H as [H1 H2]; try clear H
+  | H : ∃ _, _  |- _ =>
+     let x := fresh in let Hx := fresh in
+     destruct H as [x Hx]; try clear H
   | H : ?P → ?Q, H2 : ?P |- _ => specialize (H H2)
   | H : Is_true (bool_decide _) |- _ => apply (bool_decide_unpack _) in H
   | H : Is_true (_ && _) |- _ => apply andb_True in H; destruct H
@@ -491,7 +495,8 @@ Tactic Notation "naive_solver" tactic(tac) :=
   | |- _ ∧ _ => split
   | |- Is_true (bool_decide _) => apply (bool_decide_pack _)
   | |- Is_true (_ && _) => apply andb_True; split
-  | H : _ ∨ _ |- _ => destruct H
+  | H : _ ∨ _ |- _ =>
+     let H1 := fresh in destruct H as [H1|H1]; try clear H
   (**i solve the goal using the user supplied tactic *)
   | |- _ => solve [tac]
   end;
