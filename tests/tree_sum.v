@@ -9,10 +9,10 @@ Inductive tree :=
 
 Fixpoint is_tree `{!heapG Σ} (v : val) (t : tree) : iProp Σ :=
   match t with
-  | leaf n => v = InjLV #n
+  | leaf n => ⌜v = InjLV #n⌝
   | node tl tr =>
      ∃ (ll lr : loc) (vl vr : val),
-       v = InjRV (#ll,#lr) ∗ ll ↦ vl ∗ is_tree vl tl ∗ lr ↦ vr ∗ is_tree vr tr
+       ⌜v = InjRV (#ll,#lr)⌝ ∗ ll ↦ vl ∗ is_tree vl tl ∗ lr ↦ vr ∗ is_tree vr tr
   end%I.
 
 Fixpoint sum (t : tree) : Z :=

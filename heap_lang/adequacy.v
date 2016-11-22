@@ -16,7 +16,7 @@ Instance subG_heapPreG {Σ} : subG heapΣ Σ → heapPreG Σ.
 Proof. intros [? ?]%subG_inv. split; apply _. Qed.
 
 Definition heap_adequacy Σ `{heapPreG Σ} e σ φ :
-  (∀ `{heapG Σ}, heap_ctx ⊢ WP e {{ v, ■ φ v }}) →
+  (∀ `{heapG Σ}, heap_ctx ⊢ WP e {{ v, ⌜φ v⌝ }}) →
   adequate e σ φ.
 Proof.
   intros Hwp; eapply (wp_adequacy Σ); iIntros (?) "Hσ".

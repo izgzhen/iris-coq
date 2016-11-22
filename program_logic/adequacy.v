@@ -111,7 +111,7 @@ Qed.
 Lemma wptp_step e1 t1 t2 σ1 σ2 Φ :
   step (e1 :: t1,σ1) (t2, σ2) →
   world σ1 ∗ WP e1 {{ Φ }} ∗ wptp t1
-  ==∗ ∃ e2 t2', t2 = e2 :: t2' ∗ ▷ |==> ◇ (world σ2 ∗ WP e2 {{ Φ }} ∗ wptp t2').
+  ==∗ ∃ e2 t2', ⌜t2 = e2 :: t2'⌝ ∗ ▷ |==> ◇ (world σ2 ∗ WP e2 {{ Φ }} ∗ wptp t2').
 Proof.
   iIntros (Hstep) "(HW & He & Ht)".
   destruct Hstep as [e1' σ1' e2' σ2' efs [|? t1'] t2' ?? Hstep]; simplify_eq/=.
@@ -127,7 +127,7 @@ Lemma wptp_steps n e1 t1 t2 σ1 σ2 Φ :
   nsteps step n (e1 :: t1, σ1) (t2, σ2) →
   world σ1 ∗ WP e1 {{ Φ }} ∗ wptp t1 ⊢
   Nat.iter (S n) (λ P, |==> ▷ P) (∃ e2 t2',
-    t2 = e2 :: t2' ∗ world σ2 ∗ WP e2 {{ Φ }} ∗ wptp t2').
+    ⌜t2 = e2 :: t2'⌝ ∗ world σ2 ∗ WP e2 {{ Φ }} ∗ wptp t2').
 Proof.
   revert e1 t1 t2 σ1 σ2; simpl; induction n as [|n IH]=> e1 t1 t2 σ1 σ2 /=.
   { inversion_clear 1; iIntros "?"; eauto 10. }
@@ -148,8 +148,8 @@ Qed.
 
 Lemma wptp_result n e1 t1 v2 t2 σ1 σ2 φ :
   nsteps step n (e1 :: t1, σ1) (of_val v2 :: t2, σ2) →
-  world σ1 ∗ WP e1 {{ v, ■ φ v }} ∗ wptp t1 ⊢
-  Nat.iter (S (S n)) (λ P, |==> ▷ P) (■ φ v2).
+  world σ1 ∗ WP e1 {{ v, ⌜φ v⌝ }} ∗ wptp t1 ⊢
+  Nat.iter (S (S n)) (λ P, |==> ▷ P) ⌜φ v2⌝.
 Proof.
   intros. rewrite wptp_steps //.
   rewrite (Nat_iter_S_r (S n)). apply bupd_iter_mono.
@@ -159,7 +159,7 @@ Proof.
 Qed.
 
 Lemma wp_safe e σ Φ :
-  world σ ∗ WP e {{ Φ }} ==∗ ▷ ■ (is_Some (to_val e) ∨ reducible e σ).
+  world σ ∗ WP e {{ Φ }} ==∗ ▷ ⌜is_Some (to_val e) ∨ reducible e σ⌝.
 Proof.
   rewrite wp_unfold /wp_pre. iIntros "[(Hw&HE&Hσ) [H|[_ H]]]".
   { iDestruct "H" as (v) "[% _]"; eauto 10. }
@@ -170,7 +170,7 @@ Qed.
 Lemma wptp_safe n e1 e2 t1 t2 σ1 σ2 Φ :
   nsteps step n (e1 :: t1, σ1) (t2, σ2) → e2 ∈ t2 →
   world σ1 ∗ WP e1 {{ Φ }} ∗ wptp t1 ⊢
-  Nat.iter (S (S n)) (λ P, |==> ▷ P) (■ (is_Some (to_val e2) ∨ reducible e2 σ2)).
+  Nat.iter (S (S n)) (λ P, |==> ▷ P) ⌜is_Some (to_val e2) ∨ reducible e2 σ2⌝.
 Proof.
   intros ? He2. rewrite wptp_steps //; rewrite (Nat_iter_S_r (S n)). apply bupd_iter_mono.
   iDestruct 1 as (e2' t2') "(% & Hw & H & Htp)"; simplify_eq.
@@ -180,9 +180,9 @@ Qed.
 
 Lemma wptp_invariance n e1 e2 t1 t2 σ1 σ2 I φ Φ :
   nsteps step n (e1 :: t1, σ1) (t2, σ2) →
-  (I ={⊤,∅}=∗ ∃ σ', ownP σ' ∧ ■ φ σ') →
+  (I ={⊤,∅}=∗ ∃ σ', ownP σ' ∧ ⌜φ σ'⌝) →
   I ∗ world σ1 ∗ WP e1 {{ Φ }} ∗ wptp t1 ⊢
-  Nat.iter (S (S n)) (λ P, |==> ▷ P) (■ φ σ2).
+  Nat.iter (S (S n)) (λ P, |==> ▷ P) ⌜φ σ2⌝.
 Proof.
   intros ? HI. rewrite wptp_steps //.
   rewrite (Nat_iter_S_r (S n)) bupd_iter_frame_l. apply bupd_iter_mono.
@@ -196,7 +196,7 @@ Qed.
 End adequacy.
 
 Theorem wp_adequacy Σ `{irisPreG Λ Σ} e σ φ :
-  (∀ `{irisG Λ Σ}, ownP σ ⊢ WP e {{ v, ■ φ v }}) →
+  (∀ `{irisG Λ Σ}, ownP σ ⊢ WP e {{ v, ⌜φ v⌝ }}) →
   adequate e σ φ.
 Proof.
   intros Hwp; split.
@@ -214,7 +214,7 @@ Qed.
 
 Theorem wp_invariance Σ `{irisPreG Λ Σ} e σ1 t2 σ2 I φ Φ :
   (∀ `{irisG Λ Σ}, ownP σ1 ={⊤}=∗ I ∗ WP e {{ Φ }}) →
-  (∀ `{irisG Λ Σ}, I ={⊤,∅}=∗ ∃ σ', ownP σ' ∧ ■ φ σ') →
+  (∀ `{irisG Λ Σ}, I ={⊤,∅}=∗ ∃ σ', ownP σ' ∧ ⌜φ σ'⌝) →
   rtc step ([e], σ1) (t2, σ2) →
   φ σ2.
 Proof.

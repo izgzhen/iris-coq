@@ -10,8 +10,8 @@ Implicit Types l : loc.
 
 Fixpoint is_list (hd : val) (xs : list val) : iProp Σ :=
   match xs with
-  | [] => hd = NONEV
-  | x :: xs => ∃ l hd', hd = SOMEV #l ∗ l ↦ (x,hd') ∗ is_list hd' xs
+  | [] => ⌜hd = NONEV⌝
+  | x :: xs => ∃ l hd', ⌜hd = SOMEV #l⌝ ∗ l ↦ (x,hd') ∗ is_list hd' xs
   end%I.
 
 Definition rev : val :=

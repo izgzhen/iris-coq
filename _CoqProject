@@ -68,6 +68,7 @@ base_logic/big_op.v
 base_logic/hlist.v
 base_logic/soundness.v
 base_logic/double_negation.v
+base_logic/deprecated.v
 base_logic/lib/iprop.v
 base_logic/lib/own.v
 base_logic/lib/saved_prop.v

@@ -29,11 +29,11 @@ Section proof.
 Context `{!heapG Σ, !spawnG Σ} (N : namespace).
 
 Definition spawn_inv (γ : gname) (l : loc) (Ψ : val → iProp Σ) : iProp Σ :=
-  (∃ lv, l ↦ lv ∗ (lv = NONEV ∨
-                   ∃ v, lv = SOMEV v ∗ (Ψ v ∨ own γ (Excl ()))))%I.
+  (∃ lv, l ↦ lv ∗ (⌜lv = NONEV⌝ ∨
+                   ∃ v, ⌜lv = SOMEV v⌝ ∗ (Ψ v ∨ own γ (Excl ()))))%I.
 
 Definition join_handle (l : loc) (Ψ : val → iProp Σ) : iProp Σ :=
-  (heapN ⊥ N ∗ ∃ γ, heap_ctx ∗ own γ (Excl ()) ∗
+  (⌜heapN ⊥ N⌝ ∗ ∃ γ, heap_ctx ∗ own γ (Excl ()) ∗
                     inv N (spawn_inv γ l Ψ))%I.
 
 Typeclasses Opaque join_handle.

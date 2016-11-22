@@ -11,7 +11,7 @@ Lemma barrier_spec (N : namespace) :
   heapN ⊥ N →
   ∃ recv send : loc → iProp Σ -n> iProp Σ,
     (∀ P, heap_ctx ⊢ {{ True }} newbarrier #()
-                     {{ v, ∃ l : loc, v = #l ∗ recv l P ∗ send l P }}) ∧
+                     {{ v, ∃ l : loc, ⌜v = #l⌝ ∗ recv l P ∗ send l P }}) ∧
     (∀ l P, {{ send l P ∗ P }} signal #l {{ _, True }}) ∧
     (∀ l P, {{ recv l P }} wait #l {{ _, P }}) ∧
     (∀ l P Q, recv l (P ∗ Q) ={N}=> recv l P ∗ recv l Q) ∧

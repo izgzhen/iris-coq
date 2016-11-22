@@ -85,7 +85,7 @@ Section heap.
   Qed.
 
   Lemma heap_mapsto_op l q1 q2 v1 v2 :
-    l ↦{q1} v1 ∗ l ↦{q2} v2 ⊣⊢ v1 = v2 ∧ l ↦{q1+q2} v1.
+    l ↦{q1} v1 ∗ l ↦{q2} v2 ⊣⊢ ⌜v1 = v2⌝ ∧ l ↦{q1+q2} v1.
   Proof.
     destruct (decide (v1 = v2)) as [->|].
     { by rewrite heap_mapsto_op_eq pure_True // left_id. }
@@ -96,15 +96,15 @@ Section heap.
   Qed.
 
   Lemma heap_mapsto_op_1 l q1 q2 v1 v2 :
-    l ↦{q1} v1 ∗ l ↦{q2} v2 ⊢ v1 = v2 ∧ l ↦{q1+q2} v1.
+    l ↦{q1} v1 ∗ l ↦{q2} v2 ⊢ ⌜v1 = v2⌝ ∧ l ↦{q1+q2} v1.
   Proof. by rewrite heap_mapsto_op. Qed.
 
   Lemma heap_mapsto_op_half l q v1 v2 :
-    l ↦{q/2} v1 ∗ l ↦{q/2} v2 ⊣⊢ v1 = v2 ∧ l ↦{q} v1.
+    l ↦{q/2} v1 ∗ l ↦{q/2} v2 ⊣⊢ ⌜v1 = v2⌝ ∧ l ↦{q} v1.
   Proof. by rewrite heap_mapsto_op Qp_div_2. Qed.
 
   Lemma heap_mapsto_op_half_1 l q v1 v2 :
-    l ↦{q/2} v1 ∗ l ↦{q/2} v2 ⊢ v1 = v2 ∧ l ↦{q} v1.
+    l ↦{q/2} v1 ∗ l ↦{q/2} v2 ⊢ ⌜v1 = v2⌝ ∧ l ↦{q} v1.
   Proof. by rewrite heap_mapsto_op_half. Qed.
 
   Lemma heap_ex_mapsto_op l q1 q2 : l ↦{q1} - ∗ l ↦{q2} - ⊣⊢ l ↦{q1+q2} -.

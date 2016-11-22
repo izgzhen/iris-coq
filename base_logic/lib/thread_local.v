@@ -16,7 +16,7 @@ Section defs.
     own tid (CoPset E, ∅).
 
   Definition tl_inv (tid : thread_id) (N : namespace) (P : iProp Σ) : iProp Σ :=
-    (∃ i, ■ (i ∈ nclose N) ∧
+    (∃ i, ⌜i ∈ nclose N⌝ ∧
           inv tlN (P ∗ own tid (∅, GSet {[i]}) ∨ tl_own tid {[i]}))%I.
 End defs.
 
@@ -40,7 +40,7 @@ Section proofs.
   Lemma tl_alloc : True ==∗ ∃ tid, tl_own tid ⊤.
   Proof. by apply own_alloc. Qed.
 
-  Lemma tl_own_disjoint tid E1 E2 : tl_own tid E1 ∗ tl_own tid E2 ⊢ ■ (E1 ⊥ E2).
+  Lemma tl_own_disjoint tid E1 E2 : tl_own tid E1 ∗ tl_own tid E2 ⊢ ⌜E1 ⊥ E2⌝.
   Proof.
     rewrite /tl_own -own_op own_valid -coPset_disj_valid_op. by iIntros ([? _]).
   Qed.

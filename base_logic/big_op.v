@@ -252,7 +252,7 @@ Section list.
 
   Lemma big_sepL_forall Φ l :
     (∀ k x, PersistentP (Φ k x)) →
-    ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ (∀ k x, l !! k = Some x → Φ k x).
+    ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ (∀ k x, ⌜l !! k = Some x⌝ → Φ k x).
   Proof.
     intros HΦ. apply (anti_symm _).
     { apply forall_intro=> k; apply forall_intro=> x.
@@ -265,7 +265,7 @@ Section list.
   Qed.
 
   Lemma big_sepL_impl Φ Ψ l :
-    □ (∀ k x, l !! k = Some x → Φ k x → Ψ k x) ∧ ([∗ list] k↦x ∈ l, Φ k x)
+    □ (∀ k x, ⌜l !! k = Some x⌝ → Φ k x → Ψ k x) ∧ ([∗ list] k↦x ∈ l, Φ k x)
     ⊢ [∗ list] k↦x ∈ l, Ψ k x.
   Proof.
     rewrite always_and_sep_l. do 2 setoid_rewrite always_forall.
@@ -376,7 +376,7 @@ Section gmap.
 
   Lemma big_sepM_forall Φ m :
     (∀ k x, PersistentP (Φ k x)) →
-    ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ (∀ k x, m !! k = Some x → Φ k x).
+    ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ (∀ k x, ⌜m !! k = Some x⌝ → Φ k x).
   Proof.
     intros. apply (anti_symm _).
     { apply forall_intro=> k; apply forall_intro=> x.
@@ -392,7 +392,7 @@ Section gmap.
   Qed.
 
   Lemma big_sepM_impl Φ Ψ m :
-    □ (∀ k x, m !! k = Some x → Φ k x → Ψ k x) ∧ ([∗ map] k↦x ∈ m, Φ k x)
+    □ (∀ k x, ⌜m !! k = Some x⌝ → Φ k x → Ψ k x) ∧ ([∗ map] k↦x ∈ m, Φ k x)
     ⊢ [∗ map] k↦x ∈ m, Ψ k x.
   Proof.
     rewrite always_and_sep_l. do 2 setoid_rewrite always_forall.
@@ -473,7 +473,7 @@ Section gset.
   Proof. apply: big_opS_singleton. Qed.
 
   Lemma big_sepS_filter (P : A → Prop) `{∀ x, Decision (P x)} Φ X :
-    ([∗ set] y ∈ filter P X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ■ P y → Φ y).
+    ([∗ set] y ∈ filter P X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ⌜P y⌝ → Φ y).
   Proof.
     induction X as [|x X ? IH] using collection_ind_L.
     { by rewrite filter_empty_L !big_sepS_empty. }
@@ -500,7 +500,7 @@ Section gset.
   Proof. apply (big_opS_commute _). Qed.
 
   Lemma big_sepS_forall Φ X :
-    (∀ x, PersistentP (Φ x)) → ([∗ set] x ∈ X, Φ x) ⊣⊢ (∀ x, ■ (x ∈ X) → Φ x).
+    (∀ x, PersistentP (Φ x)) → ([∗ set] x ∈ X, Φ x) ⊣⊢ (∀ x, ⌜x ∈ X⌝ → Φ x).
   Proof.
     intros. apply (anti_symm _).
     { apply forall_intro=> x.
@@ -514,7 +514,7 @@ Section gset.
   Qed.
 
   Lemma big_sepS_impl Φ Ψ X :
-    □ (∀ x, ■ (x ∈ X) → Φ x → Ψ x) ∧ ([∗ set] x ∈ X, Φ x) ⊢ [∗ set] x ∈ X, Ψ x.
+    □ (∀ x, ⌜x ∈ X⌝ → Φ x → Ψ x) ∧ ([∗ set] x ∈ X, Φ x) ⊢ [∗ set] x ∈ X, Ψ x.
   Proof.
     rewrite always_and_sep_l always_forall.
     setoid_rewrite always_impl; setoid_rewrite always_pure.

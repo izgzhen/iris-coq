@@ -1148,7 +1148,7 @@ Tactic Notation "iRewrite" "-" open_constr(lem) "in" constr(H) :=
   iRewriteCore true lem in H.
 
 Ltac iSimplifyEq := repeat (
-  iMatchGoal ltac:(fun H P => match P with (_ = _)%I => iDestruct H as %? end)
+  iMatchGoal ltac:(fun H P => match P with (⌜_ = _⌝)%I => iDestruct H as %? end)
   || simplify_eq/=).
 
 (** * Update modality *)

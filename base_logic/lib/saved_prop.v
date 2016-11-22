@@ -26,7 +26,7 @@ Section saved_prop.
   Proof. rewrite /saved_prop_own; apply _. Qed.
 
   Lemma saved_prop_alloc_strong x (G : gset gname) :
-    True ==∗ ∃ γ, ■ (γ ∉ G) ∧ saved_prop_own γ x.
+    True ==∗ ∃ γ, ⌜γ ∉ G⌝ ∧ saved_prop_own γ x.
   Proof. by apply own_alloc_strong. Qed.
 
   Lemma saved_prop_alloc x : True ==∗ ∃ γ, saved_prop_own γ x.

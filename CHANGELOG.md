@@ -19,6 +19,9 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 * Renaming and moving things around: uPred and the rest of the base logic are
   in `base_logic`, while `program_logic` is for everything involving the
   general Iris notion of a language.
+* Changed notation for embedding Coq assertions into Iris.  The new notation
+  is ⌜φ⌝.  Also removed `=` and `⊥` from the Iris scope.
+  (The old notations are provided in `base_logic.deprecated`.)
 * With invariants and the physical state being handled in the logic, there
   is no longer any reason to demand the CMRA unit to be discrete.
 * The language can now fork off multiple threads at once.

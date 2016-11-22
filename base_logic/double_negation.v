@@ -36,7 +36,7 @@ Implicit Types x : M.
 Import uPred.
 
 (* Helper lemmas about iterated later modalities *)
-Lemma laterN_big n a x φ: ✓{n} x →  a ≤ n → (▷^a (■ φ))%I n x → φ.
+Lemma laterN_big n a x φ: ✓{n} x →  a ≤ n → (▷^a ⌜φ⌝)%I n x → φ.
 Proof.
   induction 2 as [| ?? IHle].
   - induction a; repeat (rewrite //= || uPred.unseal). 
@@ -46,7 +46,7 @@ Proof.
     eapply uPred_closed; eauto using cmra_validN_S.
 Qed.
 
-Lemma laterN_small n a x φ: ✓{n} x →  n < a → (▷^a (■ φ))%I n x.
+Lemma laterN_small n a x φ: ✓{n} x →  n < a → (▷^a ⌜φ⌝)%I n x.
 Proof.
   induction 2.
   - induction n as [| n IHn]; [| move: IHn];
@@ -85,7 +85,7 @@ Proof.
   by rewrite -assoc wand_elim_r wand_elim_l.
 Qed.
 Lemma nnupd_ownM_updateP x (Φ : M → Prop) :
-  x ~~>: Φ → uPred_ownM x =n=> ∃ y, ■ Φ y ∧ uPred_ownM y.
+  x ~~>: Φ → uPred_ownM x =n=> ∃ y, ⌜Φ y⌝ ∧ uPred_ownM y.
 Proof. 
   intros Hbupd. split. rewrite /uPred_nnupd. repeat uPred.unseal. 
   intros n y ? Hown a.
@@ -306,7 +306,7 @@ End classical.
    we establish adequacy without axioms? Unfortunately not, because adequacy for 
    nnupd would imply double negation elimination, which is classical: *)
 
-Lemma nnupd_dne φ: True ⊢ (|=n=> (■(¬¬ φ → φ)): uPred M)%I.
+Lemma nnupd_dne φ: True ⊢ (|=n=> ⌜¬¬ φ → φ⌝: uPred M)%I.
 Proof.
   rewrite /uPred_nnupd. apply forall_intro=>n.
   apply wand_intro_l. rewrite ?right_id. 
@@ -358,9 +358,9 @@ Proof.
     eapply IHn; eauto.
 Qed.
 
-Lemma adequacy φ n : (True ⊢ Nat.iter n (λ P, |=n=> ▷ P) (■ φ)) → ¬¬ φ.
+Lemma adequacy φ n : (True ⊢ Nat.iter n (λ P, |=n=> ▷ P) ⌜φ⌝) → ¬¬ φ.
 Proof.
-  cut (∀ x, ✓{S n} x → Nat.iter n (λ P, |=n=> ▷ P)%I (■ φ)%I (S n) x → ¬¬φ).
+  cut (∀ x, ✓{S n} x → Nat.iter n (λ P, |=n=> ▷ P)%I ⌜φ⌝%I (S n) x → ¬¬φ).
   { intros help H. eapply (help ∅); eauto using ucmra_unit_validN.
     eapply H; try unseal; eauto using ucmra_unit_validN. red; rewrite //=. }
   destruct n.

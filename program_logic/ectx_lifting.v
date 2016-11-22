@@ -16,8 +16,8 @@ Lemma wp_ectx_bind {E e} K Φ :
 Proof. apply: weakestpre.wp_bind. Qed.
 
 Lemma wp_lift_head_step E Φ e1 :
-  (|={E,∅}=> ∃ σ1, ■ head_reducible e1 σ1 ∗ ▷ ownP σ1 ∗
-    ▷ ∀ e2 σ2 efs, ■ head_step e1 σ1 e2 σ2 efs ∗ ownP σ2
+  (|={E,∅}=> ∃ σ1, ⌜head_reducible e1 σ1⌝ ∗ ▷ ownP σ1 ∗
+    ▷ ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ ∗ ownP σ2
           ={∅,E}=∗ WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
@@ -30,7 +30,7 @@ Qed.
 Lemma wp_lift_pure_head_step E Φ e1 :
   (∀ σ1, head_reducible e1 σ1) →
   (∀ σ1 e2 σ2 efs, head_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
-  (▷ ∀ e2 efs σ, ■ head_step e1 σ e2 σ efs →
+  (▷ ∀ e2 efs σ, ⌜head_step e1 σ e2 σ efs⌝ →
     WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
@@ -42,7 +42,7 @@ Lemma wp_lift_atomic_head_step {E Φ} e1 σ1 :
   atomic e1 →
   head_reducible e1 σ1 →
   ▷ ownP σ1 ∗ ▷ (∀ v2 σ2 efs,
-  ■ head_step e1 σ1 (of_val v2) σ2 efs ∧ ownP σ2 -∗
+  ⌜head_step e1 σ1 (of_val v2) σ2 efs⌝ ∧ ownP σ2 -∗
     Φ v2 ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.

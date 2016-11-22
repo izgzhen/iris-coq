@@ -48,7 +48,7 @@ Proof. exact: weakestpre.wp_bind. Qed.
 (** Base axioms for core primitives of the language: Stateful reductions. *)
 Lemma wp_alloc_pst E σ v :
   {{{ ▷ ownP σ }}} Alloc (of_val v) @ E
-  {{{ l, RET LitV (LitLoc l); σ !! l = None ∧ ownP (<[l:=v]>σ) }}}.
+  {{{ l, RET LitV (LitLoc l); ⌜σ !! l = None⌝ ∧ ownP (<[l:=v]>σ) }}}.
 Proof.
   iIntros (Φ) "HP HΦ".
   iApply (wp_lift_atomic_head_step (Alloc (of_val v)) σ); eauto.

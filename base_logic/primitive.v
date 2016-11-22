@@ -155,10 +155,9 @@ Definition uPred_bupd_aux : { x | x = @uPred_bupd_def }. by eexists. Qed.
 Definition uPred_bupd {M} := proj1_sig uPred_bupd_aux M.
 Definition uPred_bupd_eq : @uPred_bupd = @uPred_bupd_def := proj2_sig uPred_bupd_aux.
 
-Notation "■ φ" := (uPred_pure φ%C%type)
-  (at level 20, right associativity) : uPred_scope.
-Notation "x = y" := (uPred_pure (x%C%type = y%C%type)) : uPred_scope.
-Notation "x ⊥ y" := (uPred_pure (x%C%type ⊥ y%C%type)) : uPred_scope.
+(* Latest notation *)
+Notation "'⌜' φ '⌝'" := (uPred_pure φ%C%type)
+  (at level 1, φ at level 200, format "⌜ φ ⌝") : uPred_scope.
 Notation "'False'" := (uPred_pure False) : uPred_scope.
 Notation "'True'" := (uPred_pure True) : uPred_scope.
 Infix "∧" := uPred_and : uPred_scope.
@@ -317,13 +316,13 @@ Qed.
 Global Instance bupd_proper : Proper ((≡) ==> (≡)) (@uPred_bupd M) := ne_proper _.
 
 (** Introduction and elimination rules *)
-Lemma pure_intro φ P : φ → P ⊢ ■ φ.
+Lemma pure_intro φ P : φ → P ⊢ ⌜φ⌝.
 Proof. by intros ?; unseal; split. Qed.
-Lemma pure_elim φ Q R : (Q ⊢ ■ φ) → (φ → Q ⊢ R) → Q ⊢ R.
+Lemma pure_elim φ Q R : (Q ⊢ ⌜φ⌝) → (φ → Q ⊢ R) → Q ⊢ R.
 Proof.
   unseal; intros HQP HQR; split=> n x ??; apply HQR; first eapply HQP; eauto.
 Qed.
-Lemma pure_forall_2 {A} (φ : A → Prop) : (∀ x : A, ■ φ x) ⊢ ■ (∀ x : A, φ x).
+Lemma pure_forall_2 {A} (φ : A → Prop) : (∀ x : A, ⌜φ x⌝) ⊢ ⌜∀ x : A, φ x⌝.
 Proof. by unseal. Qed.
 
 Lemma and_elim_l P Q : P ∧ Q ⊢ P.
@@ -426,7 +425,7 @@ Qed.
 Lemma always_idemp P : □ P ⊢ □ □ P.
 Proof. unseal; split=> n x ?? /=. by rewrite cmra_core_idemp. Qed.
 
-Lemma always_pure_2 φ : ■ φ ⊢ □ ■ φ.
+Lemma always_pure_2 φ : ⌜φ⌝ ⊢ □ ⌜φ⌝.
 Proof. by unseal. Qed.
 Lemma always_forall_2 {A} (Ψ : A → uPred M) : (∀ a, □ Ψ a) ⊢ (□ ∀ a, Ψ a).
 Proof. by unseal. Qed.
@@ -542,7 +541,7 @@ Proof.
   apply uPred_closed with n; eauto 3 using cmra_validN_op_l, cmra_validN_op_r.
 Qed.
 Lemma bupd_ownM_updateP x (Φ : M → Prop) :
-  x ~~>: Φ → uPred_ownM x ==∗ ∃ y, ■ Φ y ∧ uPred_ownM y.
+  x ~~>: Φ → uPred_ownM x ==∗ ∃ y, ⌜Φ y⌝ ∧ uPred_ownM y.
 Proof.
   unseal=> Hup; split=> n x2 ? [x3 Hx] k yf ??.
   destruct (Hup k (Some (x3 ⋅ yf))) as (y&?&?); simpl in *.
@@ -562,9 +561,9 @@ Lemma later_equivI {A : ofeT} (x y : A) : Next x ≡ Next y ⊣⊢ ▷ (x ≡ y)
 Proof. by unseal. Qed.
 
 (* Discrete *)
-Lemma discrete_valid {A : cmraT} `{!CMRADiscrete A} (a : A) : ✓ a ⊣⊢ ■ ✓ a.
+Lemma discrete_valid {A : cmraT} `{!CMRADiscrete A} (a : A) : ✓ a ⊣⊢ ⌜✓ a⌝.
 Proof. unseal; split=> n x _. by rewrite /= -cmra_discrete_valid_iff. Qed.
-Lemma timeless_eq {A : ofeT} (a b : A) : Timeless a → a ≡ b ⊣⊢ ■ (a ≡ b).
+Lemma timeless_eq {A : ofeT} (a b : A) : Timeless a → a ≡ b ⊣⊢ ⌜a ≡ b⌝.
 Proof.
   unseal=> ?. apply (anti_symm (⊢)); split=> n x ?; by apply (timeless_iff n).
 Qed.

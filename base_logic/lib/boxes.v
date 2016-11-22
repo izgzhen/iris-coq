@@ -55,7 +55,7 @@ Global Instance slice_persistent γ P : PersistentP (slice N γ P).
 Proof. apply _. Qed.
 
 Lemma box_own_auth_agree γ b1 b2 :
-  box_own_auth γ (● Excl' b1) ∗ box_own_auth γ (◯ Excl' b2) ⊢ b1 = b2.
+  box_own_auth γ (● Excl' b1) ∗ box_own_auth γ (◯ Excl' b2) ⊢ ⌜b1 = b2⌝.
 Proof.
   rewrite /box_own_prop -own_op own_valid prod_validI /= and_elim_l.
   by iDestruct 1 as % [[[] [=]%leibniz_equiv] ?]%auth_valid_discrete.
@@ -86,7 +86,7 @@ Proof.
 Qed.
 
 Lemma box_insert E f P Q :
-  ▷ box N f P ={E}=∗ ∃ γ, f !! γ = None ∗
+  ▷ box N f P ={E}=∗ ∃ γ, ⌜f !! γ = None⌝ ∗
     slice N γ Q ∗ ▷ box N (<[γ:=false]> f) (Q ∗ P).
 Proof.
   iDestruct 1 as (Φ) "[#HeqP Hf]".

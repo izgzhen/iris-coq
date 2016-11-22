@@ -86,10 +86,10 @@ Proof. rewrite !own_eq /own_def; apply _. Qed.
 (* TODO: This also holds if we just have ✓ a at the current step-idx, as Iris
    assertion. However, the map_updateP_alloc does not suffice to show this. *)
 Lemma own_alloc_strong a (G : gset gname) :
-  ✓ a → True ==∗ ∃ γ, ■ (γ ∉ G) ∧ own γ a.
+  ✓ a → True ==∗ ∃ γ, ⌜γ ∉ G⌝ ∧ own γ a.
 Proof.
   intros Ha.
-  rewrite -(bupd_mono (∃ m, ■ (∃ γ, γ ∉ G ∧ m = iRes_singleton γ a) ∧ uPred_ownM m)%I).
+  rewrite -(bupd_mono (∃ m, ⌜∃ γ, γ ∉ G ∧ m = iRes_singleton γ a⌝ ∧ uPred_ownM m)%I).
   - rewrite ownM_empty.
     eapply bupd_ownM_updateP, (iprod_singleton_updateP_empty (inG_id _));
       first (eapply alloc_updateP_strong', cmra_transport_valid, Ha);
@@ -104,10 +104,10 @@ Proof.
 Qed.
 
 (** ** Frame preserving updates *)
-Lemma own_updateP P γ a : a ~~>: P → own γ a ==∗ ∃ a', ■ P a' ∧ own γ a'.
+Lemma own_updateP P γ a : a ~~>: P → own γ a ==∗ ∃ a', ⌜P a'⌝ ∧ own γ a'.
 Proof.
   intros Ha. rewrite !own_eq.
-  rewrite -(bupd_mono (∃ m, ■ (∃ a', m = iRes_singleton γ a' ∧ P a') ∧ uPred_ownM m)%I).
+  rewrite -(bupd_mono (∃ m, ⌜∃ a', m = iRes_singleton γ a' ∧ P a'⌝ ∧ uPred_ownM m)%I).
   - eapply bupd_ownM_updateP, iprod_singleton_updateP;
       first by (eapply singleton_updateP', cmra_transport_updateP', Ha).
     naive_solver.

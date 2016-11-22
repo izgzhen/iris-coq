@@ -17,7 +17,7 @@ Section client.
   Context `{!heapG Σ, !barrierG Σ, !spawnG Σ} (N : namespace).
 
   Definition y_inv (q : Qp) (l : loc) : iProp Σ :=
-    (∃ f : val, l ↦{q} f ∗ □ ∀ n : Z, WP f #n {{ v, v = #(n + 42) }})%I.
+    (∃ f : val, l ↦{q} f ∗ □ ∀ n : Z, WP f #n {{ v, ⌜v = #(n + 42)⌝ }})%I.
 
   Lemma y_inv_split q l : y_inv q l ⊢ (y_inv (q/2) l ∗ y_inv (q/2) l).
   Proof.

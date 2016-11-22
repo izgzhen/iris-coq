@@ -2,7 +2,7 @@ From iris.proofmode Require Import tactics.
 From iris.base_logic.lib Require Import invariants.
 
 Lemma demo_0 {M : ucmraT} (P Q : uPred M) :
-  □ (P ∨ Q) ⊢ (∀ x, x = 0 ∨ x = 1) → (Q ∨ P).
+  □ (P ∨ Q) ⊢ (∀ x, ⌜x = 0⌝ ∨ ⌜x = 1⌝) → (Q ∨ P).
 Proof.
   iIntros "#H #H2".
   (* should remove the disjunction "H" *)
@@ -17,8 +17,8 @@ Lemma demo_1 (M : ucmraT) (P1 P2 P3 : nat → uPred M) :
     □ (uPred_ownM (a ⋅ b) -∗
     (∃ y1 y2 c, P1 ((x + y1) + y2) ∧ True ∧ □ uPred_ownM c) -∗
     □ ▷ (∀ z, P2 z ∨ True → P2 z) -∗
-    ▷ (∀ n m : nat, P1 n → □ ((True ∧ P2 n) → □ (n = n ↔ P3 n))) -∗
-    ▷ (x = 0) ∨ ∃ x z, ▷ P3 (x + z) ∗ uPred_ownM b ∗ uPred_ownM (core b)).
+    ▷ (∀ n m : nat, P1 n → □ ((True ∧ P2 n) → □ (⌜n = n⌝ ↔ P3 n))) -∗
+    ▷ ⌜x = 0⌝ ∨ ∃ x z, ▷ P3 (x + z) ∗ uPred_ownM b ∗ uPred_ownM (core b)).
 Proof.
   iIntros (i [|j] a b ?) "!# [Ha Hb] H1 #H2 H3"; setoid_subst.
   { iLeft. by iNext. }
@@ -38,7 +38,7 @@ Qed.
 
 Lemma demo_2 (M : ucmraT) (P1 P2 P3 P4 Q : uPred M) (P5 : nat → uPredC M):
     P2 ∗ (P3 ∗ Q) ∗ True ∗ P1 ∗ P2 ∗ (P4 ∗ (∃ x:nat, P5 x ∨ P3)) ∗ True
-  ⊢ P1 -∗ (True ∗ True) -∗ (((P2 ∧ False ∨ P2 ∧ 0 = 0) ∗ P3) ∗ Q ∗ P1 ∗ True) ∧
+  ⊢ P1 -∗ (True ∗ True) -∗ (((P2 ∧ False ∨ P2 ∧ ⌜0 = 0⌝) ∗ P3) ∗ Q ∗ P1 ∗ True) ∧
      (P2 ∨ False) ∧ (False → P5 0).
 Proof.
   (* Intro-patterns do something :) *)
@@ -54,7 +54,7 @@ Proof.
 Qed.
 
 Lemma demo_3 (M : ucmraT) (P1 P2 P3 : uPred M) :
-  P1 ∗ P2 ∗ P3 ⊢ ▷ P1 ∗ ▷ (P2 ∗ ∃ x, (P3 ∧ x = 0) ∨ P3).
+  P1 ∗ P2 ∗ P3 ⊢ ▷ P1 ∗ ▷ (P2 ∗ ∃ x, (P3 ∧ ⌜x = 0⌝) ∨ P3).
 Proof. iIntros "($ & $ & H)". iFrame "H". iNext. by iExists 0. Qed.
 
 Definition foo {M} (P : uPred M) := (P → P)%I.
@@ -74,7 +74,7 @@ Qed.
 
 Lemma demo_6 (M : ucmraT) (P Q : uPred M) :
   True ⊢ ∀ x y z : nat,
-    x = plus 0 x → y = 0 → z = 0 → P → □ Q → foo (x ≡ x).
+    ⌜x = plus 0 x⌝ → ⌜y = 0⌝ → ⌜z = 0⌝ → P → □ Q → foo (x ≡ x).
 Proof.
   iIntros (a) "*".
   iIntros "#Hfoo **".
@@ -102,5 +102,5 @@ Section iris.
 End iris.
 
 Lemma demo_9 (M : ucmraT) (x y z : M) :
-  ✓ x → ■ (y ≡ z) ⊢ (✓ x ∧ ✓ x ∧ y ≡ z : uPred M).
+  ✓ x → ⌜y ≡ z⌝ ⊢ (✓ x ∧ ✓ x ∧ y ≡ z : uPred M).
 Proof. iIntros (Hv) "Hxy". by iFrame (Hv Hv) "Hxy". Qed.

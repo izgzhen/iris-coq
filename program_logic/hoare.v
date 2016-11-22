@@ -56,7 +56,7 @@ Proof. solve_proper. Qed.
 Lemma ht_alt E P Φ e : (P ⊢ WP e @ E {{ Φ }}) → {{ P }} e @ E {{ Φ }}.
 Proof. iIntros (Hwp) "!# HP". by iApply Hwp. Qed.
 
-Lemma ht_val E v : {{ True }} of_val v @ E {{ v', v = v' }}.
+Lemma ht_val E v : {{ True }} of_val v @ E {{ v', ⌜v = v'⌝ }}.
 Proof. iIntros "!# _". by iApply wp_value'. Qed.
 
 Lemma ht_vs E P P' Φ Φ' e :

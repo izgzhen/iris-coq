@@ -26,11 +26,11 @@ Definition wp_pre `{irisG Λ Σ}
     (wp : coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ) :
     coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ := λ E e1 Φ, (
   (* value case *)
-  (∃ v, to_val e1 = Some v ∧ |={E}=> Φ v) ∨
+  (∃ v, ⌜to_val e1 = Some v⌝ ∧ |={E}=> Φ v) ∨
   (* step case *)
-  (to_val e1 = None ∧ ∀ σ1,
-     ownP_auth σ1 ={E,∅}=∗ ■ reducible e1 σ1 ∗
-     ▷ ∀ e2 σ2 efs, ■ prim_step e1 σ1 e2 σ2 efs ={∅,E}=∗
+  (⌜to_val e1 = None⌝ ∧ ∀ σ1,
+     ownP_auth σ1 ={E,∅}=∗ ⌜reducible e1 σ1⌝ ∗
+     ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ={∅,E}=∗
        ownP_auth σ2 ∗ wp E e2 Φ ∗
        [∗ list] ef ∈ efs, wp ⊤ ef (λ _, True)))%I.
 
@@ -119,7 +119,7 @@ Proof. rewrite /ownP -own_op own_valid. by iIntros (?). Qed.
 Global Instance ownP_timeless σ : TimelessP (@ownP (state Λ) Σ _ σ).
 Proof. rewrite /ownP; apply _. Qed.
 
-Lemma ownP_agree σ1 σ2 : ownP_auth σ1 ∗ ownP σ2 ⊢ σ1 = σ2.
+Lemma ownP_agree σ1 σ2 : ownP_auth σ1 ∗ ownP σ2 ⊢ ⌜σ1 = σ2⌝.
 Proof.
   rewrite /ownP /ownP_auth -own_op own_valid -auth_both_op.
   by iIntros ([[[] [=]%leibniz_equiv] _]%auth_valid_discrete).

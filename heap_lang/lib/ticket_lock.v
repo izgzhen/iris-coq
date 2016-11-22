@@ -47,13 +47,13 @@ Section proof.
 
   Definition is_lock (γ : gname) (lk : val) (R : iProp Σ) : iProp Σ :=
     (∃ lo ln : loc,
-       heapN ⊥ N ∧ heap_ctx ∧
-       lk = (#lo, #ln)%V ∧ inv N (lock_inv γ lo ln R))%I.
+       ⌜heapN ⊥ N⌝ ∧ heap_ctx ∧
+       ⌜lk = (#lo, #ln)%V⌝ ∧ inv N (lock_inv γ lo ln R))%I.
 
   Definition issued (γ : gname) (lk : val) (x : nat) (R : iProp Σ) : iProp Σ :=
     (∃ lo ln: loc,
-       heapN ⊥ N ∧ heap_ctx ∧
-       lk = (#lo, #ln)%V ∧ inv N (lock_inv γ lo ln R) ∧
+       ⌜heapN ⊥ N⌝ ∧ heap_ctx ∧
+       ⌜lk = (#lo, #ln)%V⌝ ∧ inv N (lock_inv γ lo ln R) ∧
        own γ (◯ (∅, GSet {[ x ]})))%I.
 
   Definition locked (γ : gname) : iProp Σ := (∃ o, own γ (◯ (Excl' o, ∅)))%I.

@@ -21,7 +21,7 @@ Global Instance from_assumption_bupd p P Q :
 Proof. rewrite /FromAssumption=>->. apply bupd_intro. Qed.
 
 (* IntoPure *)
-Global Instance into_pure_pure φ : @IntoPure M (■ φ) φ.
+Global Instance into_pure_pure φ : @IntoPure M ⌜φ⌝ φ.
 Proof. done. Qed.
 Global Instance into_pure_eq {A : ofeT} (a b : A) :
   Timeless a → @IntoPure M (a ≡ b) (a ≡ b).
@@ -31,7 +31,7 @@ Global Instance into_pure_cmra_valid `{CMRADiscrete A} (a : A) :
 Proof. by rewrite /IntoPure discrete_valid. Qed.
 
 (* FromPure *)
-Global Instance from_pure_pure φ : @FromPure M (■ φ) φ.
+Global Instance from_pure_pure φ : @FromPure M ⌜φ⌝ φ.
 Proof. done. Qed.
 Global Instance from_pure_internal_eq {A : ofeT} (a b : A) :
   @FromPure M (a ≡ b) (a ≡ b).
@@ -240,7 +240,7 @@ Qed.
 (* Frame *)
 Global Instance frame_here R : Frame R R True.
 Proof. by rewrite /Frame right_id. Qed.
-Global Instance frame_here_pure φ Q : FromPure Q φ → Frame (■ φ) Q True.
+Global Instance frame_here_pure φ Q : FromPure Q φ → Frame ⌜φ⌝ Q True.
 Proof. rewrite /FromPure /Frame=> ->. by rewrite right_id. Qed.
 
 Class MakeSep (P Q PQ : uPred M) := make_sep : P ∗ Q ⊣⊢ PQ.

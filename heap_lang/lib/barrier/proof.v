@@ -38,7 +38,7 @@ Definition barrier_inv (l : loc) (P : iProp Σ) (s : state) : iProp Σ :=
   (l ↦ s ∗ ress (state_to_prop s P) (state_I s))%I.
 
 Definition barrier_ctx (γ : gname) (l : loc) (P : iProp Σ) : iProp Σ :=
-  (■ (heapN ⊥ N) ∗ heap_ctx ∗ sts_ctx γ N (barrier_inv l P))%I.
+  (⌜heapN ⊥ N⌝ ∗ heap_ctx ∗ sts_ctx γ N (barrier_inv l P))%I.
 
 Definition send (l : loc) (P : iProp Σ) : iProp Σ :=
   (∃ γ, barrier_ctx γ l P ∗ sts_ownS γ low_states {[ Send ]})%I.

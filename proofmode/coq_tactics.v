@@ -19,7 +19,7 @@ Record envs_wf {M} (Δ : envs M) := {
 }.
 
 Coercion of_envs {M} (Δ : envs M) : uPred M :=
-  (■ envs_wf Δ ∗ □ [∗] env_persistent Δ ∗ [∗] env_spatial Δ)%I.
+  (⌜envs_wf Δ⌝ ∗ □ [∗] env_persistent Δ ∗ [∗] env_spatial Δ)%I.
 Instance: Params (@of_envs) 1.
 
 Record envs_Forall2 {M} (R : relation (uPred M)) (Δ1 Δ2 : envs M) : Prop := {
@@ -110,7 +110,7 @@ Implicit Types Δ : envs M.
 Implicit Types P Q : uPred M.
 
 Lemma of_envs_def Δ :
-  of_envs Δ = (■ envs_wf Δ ∗ □ [∗] env_persistent Δ ∗ [∗] env_spatial Δ)%I.
+  of_envs Δ = (⌜envs_wf Δ⌝ ∗ □ [∗] env_persistent Δ ∗ [∗] env_spatial Δ)%I.
 Proof. done. Qed.
 
 Lemma envs_lookup_delete_Some Δ Δ' i p P :
@@ -397,7 +397,7 @@ Proof.
   rewrite (into_pure P); by apply pure_elim_sep_l.
 Qed.
 
-Lemma tac_pure_revert Δ φ Q : (Δ ⊢ ■ φ → Q) → (φ → Δ ⊢ Q).
+Lemma tac_pure_revert Δ φ Q : (Δ ⊢ ⌜φ⌝ → Q) → (φ → Δ ⊢ Q).
 Proof. intros HΔ ?. by rewrite HΔ pure_True // left_id. Qed.
 
 (** * Later *)
@@ -476,7 +476,7 @@ Proof.
   by rewrite right_id {1}(into_persistentP P) always_and_sep_l wand_elim_r.
 Qed.
 Lemma tac_pure_impl_intro Δ (φ ψ : Prop) :
-  (φ → Δ ⊢ ■ ψ) → Δ ⊢ ■ (φ → ψ).
+  (φ → Δ ⊢ ⌜ψ⌝) → Δ ⊢ ⌜φ → ψ⌝.
 Proof. intros. rewrite pure_impl. by apply impl_intro_l, pure_elim_l. Qed.
 Lemma tac_impl_intro_pure Δ P φ Q : IntoPure P φ → (φ → Δ ⊢ Q) → Δ ⊢ P → Q.
 Proof.
@@ -744,8 +744,8 @@ Qed.
 
 (** * Framing *)
 Lemma tac_frame_pure Δ (φ : Prop) P Q :
-  φ → Frame (■ φ) P Q → (Δ ⊢ Q) → Δ ⊢ P.
-Proof. intros ?? ->. by rewrite -(frame (■ φ) P) pure_True // left_id. Qed.
+  φ → Frame ⌜φ⌝ P Q → (Δ ⊢ Q) → Δ ⊢ P.
+Proof. intros ?? ->. by rewrite -(frame ⌜φ⌝ P) pure_True // left_id. Qed.
 
 Lemma tac_frame Δ Δ' i p R P Q :
   envs_lookup_delete i Δ = Some (p, R, Δ') → Frame R P Q →
@@ -781,7 +781,7 @@ Lemma tac_forall_intro {A} Δ (Φ : A → uPred M) : (∀ a, Δ ⊢ Φ a) → Δ
 Proof. apply forall_intro. Qed.
 
 Lemma tac_pure_forall_intro {A} Δ (φ : A → Prop) :
-  (∀ a, Δ ⊢ ■ φ a) → Δ ⊢ ■ ∀ a, φ a.
+  (∀ a, Δ ⊢ ⌜φ a⌝) → Δ ⊢ ⌜∀ a, φ a⌝.
 Proof. intros. rewrite pure_forall. by apply forall_intro. Qed.
 
 Class ForallSpecialize {As} (xs : hlist As)

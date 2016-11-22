@@ -27,7 +27,7 @@ Section proof.
     (∃ b : bool, l ↦ #b ∗ if b then True else own γ (Excl ()) ∗ R)%I.
 
   Definition is_lock (γ : gname) (lk : val) (R : iProp Σ) : iProp Σ :=
-    (∃ l: loc, heapN ⊥ N ∧ heap_ctx ∧ lk = #l ∧ inv N (lock_inv γ l R))%I.
+    (∃ l: loc, ⌜heapN ⊥ N⌝ ∧ heap_ctx ∧ ⌜lk = #l⌝ ∧ inv N (lock_inv γ l R))%I.
 
   Definition locked (γ : gname): iProp Σ := own γ (Excl ()).
 

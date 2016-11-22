@@ -26,7 +26,7 @@ Section mono_proof.
     (∃ n, own γ (● (n : mnat)) ∗ l ↦ #n)%I.
 
   Definition mcounter (l : loc) (n : nat) : iProp Σ :=
-    (∃ γ, heapN ⊥ N ∧ heap_ctx ∧
+    (∃ γ, ⌜heapN ⊥ N⌝ ∧ heap_ctx ∧
           inv N (mcounter_inv γ l) ∧ own γ (◯ (n : mnat)))%I.
 
   (** The main proofs. *)
@@ -70,7 +70,7 @@ Section mono_proof.
   Qed.
 
   Lemma read_mono_spec l j :
-    {{{ mcounter l j }}} read #l {{{ i, RET #i; ■ (j ≤ i)%nat ∧ mcounter l i }}}.
+    {{{ mcounter l j }}} read #l {{{ i, RET #i; ⌜j ≤ i⌝%nat ∧ mcounter l i }}}.
   Proof.
     iIntros (ϕ) "Hc HΦ". iDestruct "Hc" as (γ) "(% & #? & #Hinv & Hγf)".
     rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
@@ -99,7 +99,7 @@ Section contrib_spec.
     (∃ n, own γ (● Some (1%Qp, n)) ∗ l ↦ #n)%I.
 
   Definition ccounter_ctx (γ : gname) (l : loc) : iProp Σ :=
-    (heapN ⊥ N ∧ heap_ctx ∧ inv N (ccounter_inv γ l))%I.
+    (⌜heapN ⊥ N⌝ ∧ heap_ctx ∧ inv N (ccounter_inv γ l))%I.
 
   Definition ccounter (γ : gname) (q : frac) (n : nat) : iProp Σ :=
     own γ (◯ Some (q, n)).
@@ -145,7 +145,7 @@ Section contrib_spec.
 
   Lemma read_contrib_spec γ l q n :
     {{{ ccounter_ctx γ l ∗ ccounter γ q n }}} read #l
-    {{{ c, RET #c; ■ (n ≤ c)%nat ∧ ccounter γ q n }}}.
+    {{{ c, RET #c; ⌜n ≤ c⌝%nat ∧ ccounter γ q n }}}.
   Proof.
     iIntros (Φ) "(#(%&?&?) & Hγf) HΦ".
     rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.

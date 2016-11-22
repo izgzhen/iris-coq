@@ -69,7 +69,7 @@ Proof.
 Qed.
 
 Lemma fupd_mask_frame_r' E1 E2 Ef P :
-  E1 ⊥ Ef → (|={E1,E2}=> E2 ⊥ Ef → P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P.
+  E1 ⊥ Ef → (|={E1,E2}=> ⌜E2 ⊥ Ef⌝ → P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P.
 Proof.
   intros. rewrite fupd_eq /fupd_def ownE_op //. iIntros "Hvs (Hw & HE1 &HEf)".
   iMod ("Hvs" with "[Hw HE1]") as ">($ & HE2 & HP)"; first by iFrame.

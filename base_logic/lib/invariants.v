@@ -6,7 +6,7 @@ Import uPred.
 
 (** Derived forms and lemmas about them. *)
 Definition inv_def `{invG Σ} (N : namespace) (P : iProp Σ) : iProp Σ :=
-  (∃ i, ■ (i ∈ nclose N) ∧ ownI i P)%I.
+  (∃ i, ⌜i ∈ nclose N⌝ ∧ ownI i P)%I.
 Definition inv_aux : { x | x = @inv_def }. by eexists. Qed.
 Definition inv {Σ i} := proj1_sig inv_aux Σ i.
 Definition inv_eq : @inv = @inv_def := proj2_sig inv_aux.
