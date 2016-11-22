@@ -5,6 +5,9 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 
 ## Iris 3.0 (unfinished)
 
+* There now is a deprecation process.  The modules `*.deprecated`
+  contains deprecated notations and definitions that are provided for
+  backwards compatibility and will be removed in a future version of Iris.
 * View shifts are radically simplified to just internalize frame-preserving
   updates.  Weakestpre is defined inside the logic, and invariants and view
   shifts with masks are also coded up inside Iris.  Adequacy of weakestpre
@@ -12,8 +15,9 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 * Use OFEs instead of COFEs everywhere.  COFEs are only used for solving the
   recursive domain equation.  As a consequence, CMRAs no longer need a proof
   of completeness.
+  (The old `cofeT` is provided by `algebra.deprecated`.)
 * Renaming and moving things around: uPred and the rest of the base logic are
-  in [base_logic], while [program_logic] is for everything involving the
+  in `base_logic`, while `program_logic` is for everything involving the
   general Iris notion of a language.
 * With invariants and the physical state being handled in the logic, there
   is no longer any reason to demand the CMRA unit to be discrete.

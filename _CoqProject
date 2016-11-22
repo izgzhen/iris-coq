@@ -58,6 +58,7 @@ algebra/updates.v
 algebra/local_updates.v
 algebra/gset.v
 algebra/coPset.v
+algebra/deprecated.v
 base_logic/upred.v
 base_logic/primitive.v
 base_logic/derived.v
