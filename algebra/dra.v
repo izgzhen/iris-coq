@@ -114,7 +114,7 @@ Proof.
   - intros [x px ?] [y py ?] [z pz ?] [? Hxy] [? Hyz]; simpl in *.
     split; [|intros; trans y]; tauto.
 Qed.
-Canonical Structure validityC : cofeT := discreteC (validity A).
+Canonical Structure validityC : ofeT := discreteC (validity A).
 
 Instance dra_valid_proper' : Proper ((≡) ==> iff) (valid : A → Prop).
 Proof. by split; apply: dra_valid_proper. Qed.

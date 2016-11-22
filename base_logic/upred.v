@@ -22,14 +22,7 @@ Section cofe.
   Inductive uPred_dist' (n : nat) (P Q : uPred M) : Prop :=
     { uPred_in_dist : ∀ n' x, n' ≤ n → ✓{n'} x → P n' x ↔ Q n' x }.
   Instance uPred_dist : Dist (uPred M) := uPred_dist'.
-  Program Instance uPred_compl : Compl (uPred M) := λ c,
-    {| uPred_holds n x := c n n x |}.
-  Next Obligation. naive_solver eauto using uPred_mono. Qed.
-  Next Obligation.
-    intros c n1 n2 x ???; simpl in *.
-    apply (chain_cauchy c n2 n1); eauto using uPred_closed.
-  Qed.
-  Definition uPred_cofe_mixin : CofeMixin (uPred M).
+  Definition uPred_ofe_mixin : OfeMixin (uPred M).
   Proof.
     split.
     - intros P Q; split.
@@ -41,9 +34,20 @@ Section cofe.
       + intros P Q Q' HP HQ; split=> i x ??.
         by trans (Q i x);[apply HP|apply HQ].
     - intros n P Q HPQ; split=> i x ??; apply HPQ; auto.
-    - intros n c; split=>i x ??; symmetry; apply (chain_cauchy c i n); auto.
   Qed.
-  Canonical Structure uPredC : cofeT := CofeT (uPred M) uPred_cofe_mixin.
+  Canonical Structure uPredC : ofeT := OfeT (uPred M) uPred_ofe_mixin.
+
+  Program Definition uPred_compl : Compl uPredC := λ c,
+    {| uPred_holds n x := c n n x |}.
+  Next Obligation. naive_solver eauto using uPred_mono. Qed.
+  Next Obligation.
+    intros c n1 n2 x ???; simpl in *.
+    apply (chain_cauchy c n2 n1); eauto using uPred_closed.
+  Qed.
+  Global Program Instance uPred_cofe : Cofe uPredC := {| compl := uPred_compl |}.
+  Next Obligation.
+    intros n c; split=>i x ??; symmetry; apply (chain_cauchy c i n); auto.
+  Qed.
 End cofe.
 Arguments uPredC : clear implicits.
 

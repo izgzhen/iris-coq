@@ -1,7 +1,8 @@
-From iris.algebra Require Export cofe.
+From iris.algebra Require Export ofe.
 
 Record solution (F : cFunctor) := Solution {
-  solution_car :> cofeT;
+  solution_car :> ofeT;
+  solution_cofe : Cofe solution_car;
   solution_unfold : solution_car -n> F solution_car;
   solution_fold : F solution_car -n> solution_car;
   solution_fold_unfold X : solution_fold (solution_unfold X) ≡ X;
@@ -9,14 +10,17 @@ Record solution (F : cFunctor) := Solution {
 }.
 Arguments solution_unfold {_} _.
 Arguments solution_fold {_} _.
+Existing Instance solution_cofe.
 
 Module solver. Section solver.
 Context (F : cFunctor) `{Fcontr : cFunctorContractive F}
-        `{Finhab : Inhabited (F unitC)}.
+        `{Fcofe : ∀ T : ofeT, Cofe T → Cofe (F T)} `{Finh : Inhabited (F unitC)}.
 Notation map := (cFunctor_map F).
 
-Fixpoint A (k : nat) : cofeT :=
+Fixpoint A (k : nat) : ofeT :=
   match k with 0 => unitC | S k => F (A k) end.
+Local Instance: ∀ k, Cofe (A k).
+Proof. induction 0; apply _. Defined.
 Fixpoint f (k : nat) : A k -n> A (S k) :=
   match k with 0 => CofeMor (λ _, inhabitant) | S k => map (g k,f k) end
 with g (k : nat) : A (S k) -n> A k :=
@@ -47,17 +51,7 @@ Record tower := {
 }.
 Instance tower_equiv : Equiv tower := λ X Y, ∀ k, X k ≡ Y k.
 Instance tower_dist : Dist tower := λ n X Y, ∀ k, X k ≡{n}≡ Y k.
-Program Definition tower_chain (c : chain tower) (k : nat) : chain (A k) :=
-  {| chain_car i := c i k |}.
-Next Obligation. intros c k n i ?; apply (chain_cauchy c n); lia. Qed.
-Program Instance tower_compl : Compl tower := λ c,
-  {| tower_car n := compl (tower_chain c n) |}.
-Next Obligation.
-  intros c k; apply equiv_dist=> n.
-  by rewrite (conv_compl n (tower_chain c k))
-    (conv_compl n (tower_chain c (S k))) /= (g_tower (c _) k).
-Qed.
-Definition tower_cofe_mixin : CofeMixin tower.
+Definition tower_ofe_mixin : OfeMixin tower.
 Proof.
   split.
   - intros X Y; split; [by intros HXY n k; apply equiv_dist|].
@@ -68,10 +62,24 @@ Proof.
     + by intros X Y Z ?? n; trans (Y n).
   - intros k X Y HXY n; apply dist_S.
     by rewrite -(g_tower X) (HXY (S n)) g_tower.
-  - intros n c k; rewrite /= (conv_compl n (tower_chain c k)).
-    apply (chain_cauchy c); lia.
 Qed.
-Definition T : cofeT := CofeT tower tower_cofe_mixin.
+Definition T : ofeT := OfeT tower tower_ofe_mixin.
+
+Program Definition tower_chain (c : chain T) (k : nat) : chain (A k) :=
+  {| chain_car i := c i k |}.
+Next Obligation. intros c k n i ?; apply (chain_cauchy c n); lia. Qed.
+Program Definition tower_compl : Compl T := λ c,
+  {| tower_car n := compl (tower_chain c n) |}.
+Next Obligation.
+  intros c k; apply equiv_dist=> n.
+  by rewrite (conv_compl n (tower_chain c k))
+    (conv_compl n (tower_chain c (S k))) /= (g_tower (c _) k).
+Qed.
+Global Program Instance tower_cofe : Cofe T := { compl := tower_compl }.
+Next Obligation.
+  intros n c k; rewrite /= (conv_compl n (tower_chain c k)).
+  apply (chain_cauchy c); lia.
+Qed.
 
 Fixpoint ff {k} (i : nat) : A k -n> A (i + k) :=
   match i with 0 => cid | S i => f (i + k) ◎ ff i end.
@@ -197,7 +205,7 @@ Proof. by intros n X Y HXY k; rewrite /fold /= HXY. Qed.
 
 Theorem result : solution F.
 Proof.
-  apply (Solution F T (CofeMor unfold) (CofeMor fold)).
+  apply (Solution F T _ (CofeMor unfold) (CofeMor fold)).
   - move=> X /=. rewrite equiv_dist=> n k; rewrite /unfold /fold /=.
     rewrite -g_tower -(gg_tower _ n); apply (_ : Proper (_ ==> _) (g _)).
     trans (map (ff n, gg n) (X (S (n + k)))).

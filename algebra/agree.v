@@ -12,7 +12,7 @@ Arguments agree_car {_} _ _.
 Arguments agree_is_valid {_} _ _.
 
 Section agree.
-Context {A : cofeT}.
+Context {A : ofeT}.
 
 Instance agree_validN : ValidN (agree A) := λ n x,
   agree_is_valid x n ∧ ∀ n', n' ≤ n → agree_car x n ≡{n'}≡ agree_car x n'.
@@ -28,13 +28,7 @@ Instance agree_equiv : Equiv (agree A) := λ x y,
 Instance agree_dist : Dist (agree A) := λ n x y,
   (∀ n', n' ≤ n → agree_is_valid x n' ↔ agree_is_valid y n') ∧
   (∀ n', n' ≤ n → agree_is_valid x n' → agree_car x n' ≡{n'}≡ agree_car y n').
-Program Instance agree_compl : Compl (agree A) := λ c,
-  {| agree_car n := agree_car (c n) n;
-     agree_is_valid n := agree_is_valid (c n) n |}.
-Next Obligation.
-  intros c n ?. apply (chain_cauchy c n (S n)), agree_valid_S; auto.
-Qed.
-Definition agree_cofe_mixin : CofeMixin (agree A).
+Definition agree_ofe_mixin : OfeMixin (agree A).
 Proof.
   split.
   - intros x y; split.
@@ -47,10 +41,21 @@ Proof.
       * trans (agree_is_valid y n'). by apply Hxy. by apply Hyz.
       * trans (agree_car y n'). by apply Hxy. by apply Hyz, Hxy.
   - intros n x y Hxy; split; intros; apply Hxy; auto.
-  - intros n c; apply and_wlog_r; intros;
-      symmetry; apply (chain_cauchy c); naive_solver.
 Qed.
-Canonical Structure agreeC := CofeT (agree A) agree_cofe_mixin.
+Canonical Structure agreeC := OfeT (agree A) agree_ofe_mixin.
+
+Program Definition agree_compl : Compl agreeC := λ c,
+  {| agree_car n := agree_car (c n) n;
+     agree_is_valid n := agree_is_valid (c n) n |}.
+Next Obligation.
+  intros c n ?. apply (chain_cauchy c n (S n)), agree_valid_S; auto.
+Qed.
+Global Program Instance agree_cofe : Cofe agreeC :=
+  {| compl := agree_compl |}.
+Next Obligation.
+  intros n c; apply and_wlog_r; intros;
+    symmetry; apply (chain_cauchy c); naive_solver.
+Qed.
 
 Program Instance agree_op : Op (agree A) := λ x y,
   {| agree_car := agree_car x;
@@ -113,7 +118,7 @@ Proof.
     + by move: Hval; rewrite Hx; move=> /agree_op_inv->; rewrite agree_idemp.
 Qed.
 Canonical Structure agreeR : cmraT :=
-  CMRAT (agree A) agree_cofe_mixin agree_cmra_mixin.
+  CMRAT (agree A) agree_ofe_mixin agree_cmra_mixin.
 
 Global Instance agree_total : CMRATotal agreeR.
 Proof. rewrite /CMRATotal; eauto. Qed.
@@ -159,7 +164,7 @@ Lemma agree_map_compose {A B C} (f : A → B) (g : B → C) (x : agree A) :
 Proof. done. Qed.
 
 Section agree_map.
-  Context {A B : cofeT} (f : A → B) `{Hf: ∀ n, Proper (dist n ==> dist n) f}.
+  Context {A B : ofeT} (f : A → B) `{Hf: ∀ n, Proper (dist n ==> dist n) f}.
   Instance agree_map_ne n : Proper (dist n ==> dist n) (agree_map f).
   Proof. by intros x1 x2 Hx; split; simpl; intros; [apply Hx|apply Hf, Hx]. Qed.
   Instance agree_map_proper : Proper ((≡) ==> (≡)) (agree_map f) := ne_proper _.

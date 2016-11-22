@@ -1,5 +1,5 @@
 From iris.program_logic Require Export ectx_language ectxi_language.
-From iris.algebra Require Export cofe.
+From iris.algebra Require Export ofe.
 From iris.prelude Require Export strings.
 From iris.prelude Require Import gmap.
 

@@ -23,7 +23,7 @@ Proof. rewrite /FromAssumption=>->. apply bupd_intro. Qed.
 (* IntoPure *)
 Global Instance into_pure_pure φ : @IntoPure M (■ φ) φ.
 Proof. done. Qed.
-Global Instance into_pure_eq {A : cofeT} (a b : A) :
+Global Instance into_pure_eq {A : ofeT} (a b : A) :
   Timeless a → @IntoPure M (a ≡ b) (a ≡ b).
 Proof. intros. by rewrite /IntoPure timeless_eq. Qed.
 Global Instance into_pure_cmra_valid `{CMRADiscrete A} (a : A) :
@@ -33,7 +33,7 @@ Proof. by rewrite /IntoPure discrete_valid. Qed.
 (* FromPure *)
 Global Instance from_pure_pure φ : @FromPure M (■ φ) φ.
 Proof. done. Qed.
-Global Instance from_pure_internal_eq {A : cofeT} (a b : A) :
+Global Instance from_pure_internal_eq {A : ofeT} (a b : A) :
   @FromPure M (a ≡ b) (a ≡ b).
 Proof.
   rewrite /FromPure. eapply pure_elim; [done|]=> ->. apply internal_eq_refl'.

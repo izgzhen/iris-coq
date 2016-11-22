@@ -113,7 +113,7 @@ Qed.
 the construction, this way we are sure we do not use any properties of the
 construction, and also avoid Coq from blindly unfolding it. *)
 Module Type iProp_solution_sig.
-  Parameter iPreProp : gFunctors → cofeT.
+  Parameter iPreProp : gFunctors → ofeT.
   Definition iResUR (Σ : gFunctors) : ucmraT :=
     iprodUR (λ i, gmapUR gname (Σ i (iPreProp Σ))).
   Notation iProp Σ := (uPredC (iResUR Σ)).
@@ -131,7 +131,7 @@ Module Export iProp_solution : iProp_solution_sig.
   Definition iProp_result (Σ : gFunctors) :
     solution (uPredCF (iResF Σ)) := solver.result _.
 
-  Definition iPreProp (Σ : gFunctors) : cofeT := iProp_result Σ.
+  Definition iPreProp (Σ : gFunctors) : ofeT := iProp_result Σ.
   Definition iResUR (Σ : gFunctors) : ucmraT :=
     iprodUR (λ i, gmapUR gname (Σ i (iPreProp Σ))).
   Notation iProp Σ := (uPredC (iResUR Σ)).

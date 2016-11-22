@@ -58,7 +58,7 @@ Definition uPred_exist_aux : { x | x = @uPred_exist_def }. by eexists. Qed.
 Definition uPred_exist {M A} := proj1_sig uPred_exist_aux M A.
 Definition uPred_exist_eq: @uPred_exist = @uPred_exist_def := proj2_sig uPred_exist_aux.
 
-Program Definition uPred_internal_eq_def {M} {A : cofeT} (a1 a2 : A) : uPred M :=
+Program Definition uPred_internal_eq_def {M} {A : ofeT} (a1 a2 : A) : uPred M :=
   {| uPred_holds n x := a1 ≡{n}≡ a2 |}.
 Solve Obligations with naive_solver eauto 2 using (dist_le (A:=A)).
 Definition uPred_internal_eq_aux : { x | x = @uPred_internal_eq_def }. by eexists. Qed.
@@ -248,14 +248,14 @@ Proof.
 Qed.
 Global Instance wand_proper :
   Proper ((⊣⊢) ==> (⊣⊢) ==> (⊣⊢)) (@uPred_wand M) := ne_proper_2 _.
-Global Instance internal_eq_ne (A : cofeT) n :
+Global Instance internal_eq_ne (A : ofeT) n :
   Proper (dist n ==> dist n ==> dist n) (@uPred_internal_eq M A).
 Proof.
   intros x x' Hx y y' Hy; split=> n' z; unseal; split; intros; simpl in *.
   - by rewrite -(dist_le _ _ _ _ Hx) -?(dist_le _ _ _ _ Hy); auto.
   - by rewrite (dist_le _ _ _ _ Hx) ?(dist_le _ _ _ _ Hy); auto.
 Qed.
-Global Instance internal_eq_proper (A : cofeT) :
+Global Instance internal_eq_proper (A : ofeT) :
   Proper ((≡) ==> (≡) ==> (⊣⊢)) (@uPred_internal_eq M A) := ne_proper_2 _.
 Global Instance forall_ne A n :
   Proper (pointwise_relation _ (dist n) ==> dist n) (@uPred_forall M A).
@@ -358,16 +358,16 @@ Proof. unseal; split=> n x ??; by exists a. Qed.
 Lemma exist_elim {A} (Φ : A → uPred M) Q : (∀ a, Φ a ⊢ Q) → (∃ a, Φ a) ⊢ Q.
 Proof. unseal; intros HΦΨ; split=> n x ? [a ?]; by apply HΦΨ with a. Qed.
 
-Lemma internal_eq_refl {A : cofeT} (a : A) : True ⊢ a ≡ a.
+Lemma internal_eq_refl {A : ofeT} (a : A) : True ⊢ a ≡ a.
 Proof. unseal; by split=> n x ??; simpl. Qed.
-Lemma internal_eq_rewrite {A : cofeT} a b (Ψ : A → uPred M) P
+Lemma internal_eq_rewrite {A : ofeT} a b (Ψ : A → uPred M) P
   {HΨ : ∀ n, Proper (dist n ==> dist n) Ψ} : (P ⊢ a ≡ b) → (P ⊢ Ψ a) → P ⊢ Ψ b.
 Proof.
   unseal; intros Hab Ha; split=> n x ??. apply HΨ with n a; auto.
   - by symmetry; apply Hab with x.
   - by apply Ha.
 Qed.
-Lemma internal_eq_rewrite_contractive {A : cofeT} a b (Ψ : A → uPred M) P
+Lemma internal_eq_rewrite_contractive {A : ofeT} a b (Ψ : A → uPred M) P
   {HΨ : Contractive Ψ} : (P ⊢ ▷ (a ≡ b)) → (P ⊢ Ψ a) → P ⊢ Ψ b.
 Proof.
   unseal; intros Hab Ha; split=> n x ??. apply HΨ with n a; auto.
@@ -552,25 +552,25 @@ Proof.
 Qed.
 
 (* Products *)
-Lemma prod_equivI {A B : cofeT} (x y : A * B) : x ≡ y ⊣⊢ x.1 ≡ y.1 ∧ x.2 ≡ y.2.
+Lemma prod_equivI {A B : ofeT} (x y : A * B) : x ≡ y ⊣⊢ x.1 ≡ y.1 ∧ x.2 ≡ y.2.
 Proof. by unseal. Qed.
 Lemma prod_validI {A B : cmraT} (x : A * B) : ✓ x ⊣⊢ ✓ x.1 ∧ ✓ x.2.
 Proof. by unseal. Qed.
 
 (* Later *)
-Lemma later_equivI {A : cofeT} (x y : A) : Next x ≡ Next y ⊣⊢ ▷ (x ≡ y).
+Lemma later_equivI {A : ofeT} (x y : A) : Next x ≡ Next y ⊣⊢ ▷ (x ≡ y).
 Proof. by unseal. Qed.
 
 (* Discrete *)
 Lemma discrete_valid {A : cmraT} `{!CMRADiscrete A} (a : A) : ✓ a ⊣⊢ ■ ✓ a.
 Proof. unseal; split=> n x _. by rewrite /= -cmra_discrete_valid_iff. Qed.
-Lemma timeless_eq {A : cofeT} (a b : A) : Timeless a → a ≡ b ⊣⊢ ■ (a ≡ b).
+Lemma timeless_eq {A : ofeT} (a b : A) : Timeless a → a ≡ b ⊣⊢ ■ (a ≡ b).
 Proof.
   unseal=> ?. apply (anti_symm (⊢)); split=> n x ?; by apply (timeless_iff n).
 Qed.
 
 (* Option *)
-Lemma option_equivI {A : cofeT} (mx my : option A) :
+Lemma option_equivI {A : ofeT} (mx my : option A) :
   mx ≡ my ⊣⊢ match mx, my with
              | Some x, Some y => x ≡ y | None, None => True | _, _ => False
              end.
@@ -584,7 +584,7 @@ Proof. unseal. by destruct mx. Qed.
 (* Functions *)
 Lemma cofe_funC_equivI {A B} (f g : A -c> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
 Proof. by unseal. Qed.
-Lemma cofe_morC_equivI {A B : cofeT} (f g : A -n> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
+Lemma cofe_morC_equivI {A B : ofeT} (f g : A -n> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
 Proof. by unseal. Qed.
 End primitive.
 End uPred_primitive.

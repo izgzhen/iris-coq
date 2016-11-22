@@ -1,4 +1,4 @@
-From iris.algebra Require Export cofe.
+From iris.algebra Require Export ofe.
 
 Class PCore (A : Type) := pcore : A → option A.
 Instance: Params (@pcore) 2.
@@ -61,34 +61,32 @@ Structure cmraT := CMRAT' {
   cmra_car :> Type;
   cmra_equiv : Equiv cmra_car;
   cmra_dist : Dist cmra_car;
-  cmra_compl : Compl cmra_car;
   cmra_pcore : PCore cmra_car;
   cmra_op : Op cmra_car;
   cmra_valid : Valid cmra_car;
   cmra_validN : ValidN cmra_car;
-  cmra_cofe_mixin : CofeMixin cmra_car;
+  cmra_ofe_mixin : OfeMixin cmra_car;
   cmra_mixin : CMRAMixin cmra_car;
   _ : Type
 }.
-Arguments CMRAT' _ {_ _ _ _ _ _ _} _ _ _.
+Arguments CMRAT' _ {_ _ _ _ _ _} _ _ _.
 Notation CMRAT A m m' := (CMRAT' A m m' A).
 Arguments cmra_car : simpl never.
 Arguments cmra_equiv : simpl never.
 Arguments cmra_dist : simpl never.
-Arguments cmra_compl : simpl never.
 Arguments cmra_pcore : simpl never.
 Arguments cmra_op : simpl never.
 Arguments cmra_valid : simpl never.
 Arguments cmra_validN : simpl never.
-Arguments cmra_cofe_mixin : simpl never.
+Arguments cmra_ofe_mixin : simpl never.
 Arguments cmra_mixin : simpl never.
 Add Printing Constructor cmraT.
 Hint Extern 0 (PCore _) => eapply (@cmra_pcore _) : typeclass_instances.
 Hint Extern 0 (Op _) => eapply (@cmra_op _) : typeclass_instances.
 Hint Extern 0 (Valid _) => eapply (@cmra_valid _) : typeclass_instances.
 Hint Extern 0 (ValidN _) => eapply (@cmra_validN _) : typeclass_instances.
-Coercion cmra_cofeC (A : cmraT) : cofeT := CofeT A (cmra_cofe_mixin A).
-Canonical Structure cmra_cofeC.
+Coercion cmra_ofeC (A : cmraT) : ofeT := OfeT A (cmra_ofe_mixin A).
+Canonical Structure cmra_ofeC.
 
 (** Lifting properties from the mixin *)
 Section cmra_mixin.
@@ -160,36 +158,34 @@ Structure ucmraT := UCMRAT' {
   ucmra_car :> Type;
   ucmra_equiv : Equiv ucmra_car;
   ucmra_dist : Dist ucmra_car;
-  ucmra_compl : Compl ucmra_car;
   ucmra_pcore : PCore ucmra_car;
   ucmra_op : Op ucmra_car;
   ucmra_valid : Valid ucmra_car;
   ucmra_validN : ValidN ucmra_car;
   ucmra_empty : Empty ucmra_car;
-  ucmra_cofe_mixin : CofeMixin ucmra_car;
+  ucmra_ofe_mixin : OfeMixin ucmra_car;
   ucmra_cmra_mixin : CMRAMixin ucmra_car;
   ucmra_mixin : UCMRAMixin ucmra_car;
   _ : Type;
 }.
-Arguments UCMRAT' _ {_ _ _ _ _ _ _ _} _ _ _ _.
+Arguments UCMRAT' _ {_ _ _ _ _ _ _} _ _ _ _.
 Notation UCMRAT A m m' m'' := (UCMRAT' A m m' m'' A).
 Arguments ucmra_car : simpl never.
 Arguments ucmra_equiv : simpl never.
 Arguments ucmra_dist : simpl never.
-Arguments ucmra_compl : simpl never.
 Arguments ucmra_pcore : simpl never.
 Arguments ucmra_op : simpl never.
 Arguments ucmra_valid : simpl never.
 Arguments ucmra_validN : simpl never.
-Arguments ucmra_cofe_mixin : simpl never.
+Arguments ucmra_ofe_mixin : simpl never.
 Arguments ucmra_cmra_mixin : simpl never.
 Arguments ucmra_mixin : simpl never.
 Add Printing Constructor ucmraT.
 Hint Extern 0 (Empty _) => eapply (@ucmra_empty _) : typeclass_instances.
-Coercion ucmra_cofeC (A : ucmraT) : cofeT := CofeT A (ucmra_cofe_mixin A).
-Canonical Structure ucmra_cofeC.
+Coercion ucmra_ofeC (A : ucmraT) : ofeT := OfeT A (ucmra_ofe_mixin A).
+Canonical Structure ucmra_ofeC.
 Coercion ucmra_cmraR (A : ucmraT) : cmraT :=
-  CMRAT A (ucmra_cofe_mixin A) (ucmra_cmra_mixin A).
+  CMRAT A (ucmra_ofe_mixin A) (ucmra_cmra_mixin A).
 Canonical Structure ucmra_cmraR.
 
 (** Lifting properties from the mixin *)
@@ -687,7 +683,7 @@ Proof. split. apply _. by rewrite /= !ucmra_homomorphism_unit. Qed.
 
 (** Functors *)
 Structure rFunctor := RFunctor {
-  rFunctor_car : cofeT → cofeT → cmraT;
+  rFunctor_car : ofeT → ofeT → cmraT;
   rFunctor_map {A1 A2 B1 B2} :
     ((A2 -n> A1) * (B1 -n> B2)) → rFunctor_car A1 B1 -n> rFunctor_car A2 B2;
   rFunctor_ne A1 A2 B1 B2 n :
@@ -705,7 +701,7 @@ Instance: Params (@rFunctor_map) 5.
 Class rFunctorContractive (F : rFunctor) :=
   rFunctor_contractive A1 A2 B1 B2 :> Contractive (@rFunctor_map F A1 A2 B1 B2).
 
-Definition rFunctor_diag (F: rFunctor) (A: cofeT) : cmraT := rFunctor_car F A A.
+Definition rFunctor_diag (F: rFunctor) (A: ofeT) : cmraT := rFunctor_car F A A.
 Coercion rFunctor_diag : rFunctor >-> Funclass.
 
 Program Definition constRF (B : cmraT) : rFunctor :=
@@ -716,7 +712,7 @@ Instance constRF_contractive B : rFunctorContractive (constRF B).
 Proof. rewrite /rFunctorContractive; apply _. Qed.
 
 Structure urFunctor := URFunctor {
-  urFunctor_car : cofeT → cofeT → ucmraT;
+  urFunctor_car : ofeT → ofeT → ucmraT;
   urFunctor_map {A1 A2 B1 B2} :
     ((A2 -n> A1) * (B1 -n> B2)) → urFunctor_car A1 B1 -n> urFunctor_car A2 B2;
   urFunctor_ne A1 A2 B1 B2 n :
@@ -734,7 +730,7 @@ Instance: Params (@urFunctor_map) 5.
 Class urFunctorContractive (F : urFunctor) :=
   urFunctor_contractive A1 A2 B1 B2 :> Contractive (@urFunctor_map F A1 A2 B1 B2).
 
-Definition urFunctor_diag (F: urFunctor) (A: cofeT) : ucmraT := urFunctor_car F A A.
+Definition urFunctor_diag (F: urFunctor) (A: ofeT) : ucmraT := urFunctor_car F A A.
 Coercion urFunctor_diag : urFunctor >-> Funclass.
 
 Program Definition constURF (B : ucmraT) : urFunctor :=
@@ -790,7 +786,7 @@ Record RAMixin A `{Equiv A, PCore A, Op A, Valid A} := {
 Section discrete.
   Context `{Equiv A, PCore A, Op A, Valid A, @Equivalence A (≡)}.
   Context (ra_mix : RAMixin A).
-  Existing Instances discrete_dist discrete_compl.
+  Existing Instances discrete_dist.
 
   Instance discrete_validN : ValidN A := λ n x, ✓ x.
   Definition discrete_cmra_mixin : CMRAMixin A.
@@ -802,9 +798,9 @@ Section discrete.
 End discrete.
 
 Notation discreteR A ra_mix :=
-  (CMRAT A discrete_cofe_mixin (discrete_cmra_mixin ra_mix)).
+  (CMRAT A discrete_ofe_mixin (discrete_cmra_mixin ra_mix)).
 Notation discreteUR A ra_mix ucmra_mix :=
-  (UCMRAT A discrete_cofe_mixin (discrete_cmra_mixin ra_mix) ucmra_mix).
+  (UCMRAT A discrete_ofe_mixin (discrete_cmra_mixin ra_mix) ucmra_mix).
 
 Global Instance discrete_cmra_discrete `{Equiv A, PCore A, Op A, Valid A,
   @Equivalence A (≡)} (ra_mix : RAMixin A) : CMRADiscrete (discreteR A ra_mix).
@@ -843,13 +839,13 @@ Section unit.
   Instance unit_op : Op () := λ x y, ().
   Lemma unit_cmra_mixin : CMRAMixin ().
   Proof. apply discrete_cmra_mixin, ra_total_mixin; by eauto. Qed.
-  Canonical Structure unitR : cmraT := CMRAT () unit_cofe_mixin unit_cmra_mixin.
+  Canonical Structure unitR : cmraT := CMRAT () unit_ofe_mixin unit_cmra_mixin.
 
   Instance unit_empty : Empty () := ().
   Lemma unit_ucmra_mixin : UCMRAMixin ().
   Proof. done. Qed.
   Canonical Structure unitUR : ucmraT :=
-    UCMRAT () unit_cofe_mixin unit_cmra_mixin unit_ucmra_mixin.
+    UCMRAT () unit_ofe_mixin unit_cmra_mixin unit_ucmra_mixin.
 
   Global Instance unit_cmra_discrete : CMRADiscrete unitR.
   Proof. done. Qed.
@@ -993,7 +989,7 @@ Section prod.
       by exists (z11,z21), (z12,z22).
   Qed.
   Canonical Structure prodR :=
-    CMRAT (A * B) prod_cofe_mixin prod_cmra_mixin.
+    CMRAT (A * B) prod_ofe_mixin prod_cmra_mixin.
 
   Lemma pair_op (a a' : A) (b b' : B) : (a, b) ⋅ (a', b') = (a ⋅ a', b ⋅ b').
   Proof. done. Qed.
@@ -1032,7 +1028,7 @@ Section prod_unit.
     - rewrite prod_pcore_Some'; split; apply (persistent _).
   Qed.
   Canonical Structure prodUR :=
-    UCMRAT (A * B) prod_cofe_mixin prod_cmra_mixin prod_ucmra_mixin.
+    UCMRAT (A * B) prod_ofe_mixin prod_cmra_mixin prod_ucmra_mixin.
 
   Lemma pair_split (x : A) (y : B) : (x, y) ≡ (x, ∅) ⋅ (∅, y).
   Proof. by rewrite pair_op left_id right_id. Qed.
@@ -1166,7 +1162,7 @@ Section option.
       + exists None, None; repeat constructor.
   Qed.
   Canonical Structure optionR :=
-    CMRAT (option A) option_cofe_mixin option_cmra_mixin.
+    CMRAT (option A) option_ofe_mixin option_cmra_mixin.
 
   Global Instance option_cmra_discrete : CMRADiscrete A → CMRADiscrete optionR.
   Proof. split; [apply _|]. by intros [x|]; [apply (cmra_discrete_valid x)|]. Qed.
@@ -1175,7 +1171,7 @@ Section option.
   Lemma option_ucmra_mixin : UCMRAMixin optionR.
   Proof. split. done. by intros []. done. Qed.
   Canonical Structure optionUR :=
-    UCMRAT (option A) option_cofe_mixin option_cmra_mixin option_ucmra_mixin.
+    UCMRAT (option A) option_ofe_mixin option_cmra_mixin option_ucmra_mixin.
 
   (** Misc *)
   Global Instance Some_cmra_monotone : CMRAMonotone Some.

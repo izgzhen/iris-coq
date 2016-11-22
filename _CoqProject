@@ -43,7 +43,7 @@ algebra/cmra_tactics.v
 algebra/sts.v
 algebra/auth.v
 algebra/gmap.v
-algebra/cofe.v
+algebra/ofe.v
 algebra/base.v
 algebra/dra.v
 algebra/cofe_solver.v

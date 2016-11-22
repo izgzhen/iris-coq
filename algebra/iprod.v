@@ -4,25 +4,20 @@ From iris.prelude Require Import finite.
 
 (** * Indexed product *)
 (** Need to put this in a definition to make canonical structures to work. *)
-Definition iprod `{Finite A} (B : A → cofeT) := ∀ x, B x.
-Definition iprod_insert `{Finite A} {B : A → cofeT}
+Definition iprod `{Finite A} (B : A → ofeT) := ∀ x, B x.
+Definition iprod_insert `{Finite A} {B : A → ofeT}
     (x : A) (y : B x) (f : iprod B) : iprod B := λ x',
   match decide (x = x') with left H => eq_rect _ B y _ H | right _ => f x' end.
 Instance: Params (@iprod_insert) 5.
 
 Section iprod_cofe.
-  Context `{Finite A} {B : A → cofeT}.
+  Context `{Finite A} {B : A → ofeT}.
   Implicit Types x : A.
   Implicit Types f g : iprod B.
 
   Instance iprod_equiv : Equiv (iprod B) := λ f g, ∀ x, f x ≡ g x.
   Instance iprod_dist : Dist (iprod B) := λ n f g, ∀ x, f x ≡{n}≡ g x.
-  Program Definition iprod_chain (c : chain (iprod B)) (x : A) : chain (B x) :=
-    {| chain_car n := c n x |}.
-  Next Obligation. by intros c x n i ?; apply (chain_cauchy c). Qed.
-  Program Instance iprod_compl : Compl (iprod B) := λ c x,
-    compl (iprod_chain c x).
-  Definition iprod_cofe_mixin : CofeMixin (iprod B).
+  Definition iprod_ofe_mixin : OfeMixin (iprod B).
   Proof.
     split.
     - intros f g; split; [intros Hfg n k; apply equiv_dist, Hfg|].
@@ -32,11 +27,19 @@ Section iprod_cofe.
       + by intros f g ? x.
       + by intros f g h ?? x; trans (g x).
     - intros n f g Hfg x; apply dist_S, Hfg.
-    - intros n c x.
-      rewrite /compl /iprod_compl (conv_compl n (iprod_chain c x)).
-      apply (chain_cauchy c); lia.
   Qed.
-  Canonical Structure iprodC : cofeT := CofeT (iprod B) iprod_cofe_mixin.
+  Canonical Structure iprodC : ofeT := OfeT (iprod B) iprod_ofe_mixin.
+
+  Program Definition iprod_chain (c : chain iprodC) (x : A) : chain (B x) :=
+    {| chain_car n := c n x |}.
+  Next Obligation. by intros c x n i ?; apply (chain_cauchy c). Qed.
+  Global Program Instance iprod_cofe `{∀ a, Cofe (B a)} : Cofe iprodC :=
+    {| compl c x := compl (iprod_chain c x) |}.
+  Next Obligation.
+    intros ? n c x.
+    rewrite (conv_compl n (iprod_chain c x)).
+    apply (chain_cauchy c); lia.
+  Qed.
 
   (** Properties of iprod_insert. *)
   Context `{EqDecision A}.
@@ -125,7 +128,7 @@ Section iprod_cmra.
       exists (λ x, gg x.1), (λ x, gg x.2). split_and!=> -?; naive_solver.
   Qed.
   Canonical Structure iprodR :=
-    CMRAT (iprod B) iprod_cofe_mixin iprod_cmra_mixin.
+    CMRAT (iprod B) iprod_ofe_mixin iprod_cmra_mixin.
 
   Instance iprod_empty : Empty (iprod B) := λ x, ∅.
   Definition iprod_lookup_empty x : ∅ x = ∅ := eq_refl.
@@ -138,7 +141,7 @@ Section iprod_cmra.
     - constructor=> x. apply persistent_core, _.
   Qed.
   Canonical Structure iprodUR :=
-    UCMRAT (iprod B) iprod_cofe_mixin iprod_cmra_mixin iprod_ucmra_mixin.
+    UCMRAT (iprod B) iprod_ofe_mixin iprod_cmra_mixin iprod_ucmra_mixin.
 
   Global Instance iprod_empty_timeless :
     (∀ i, Timeless (∅ : B i)) → Timeless (∅ : iprod B).
@@ -264,21 +267,21 @@ Section iprod_singleton.
 End iprod_singleton.
 
 (** * Functor *)
-Definition iprod_map `{Finite A} {B1 B2 : A → cofeT} (f : ∀ x, B1 x → B2 x)
+Definition iprod_map `{Finite A} {B1 B2 : A → ofeT} (f : ∀ x, B1 x → B2 x)
   (g : iprod B1) : iprod B2 := λ x, f _ (g x).
 
-Lemma iprod_map_ext `{Finite A} {B1 B2 : A → cofeT} (f1 f2 : ∀ x, B1 x → B2 x) (g : iprod B1) :
+Lemma iprod_map_ext `{Finite A} {B1 B2 : A → ofeT} (f1 f2 : ∀ x, B1 x → B2 x) (g : iprod B1) :
   (∀ x, f1 x (g x) ≡ f2 x (g x)) → iprod_map f1 g ≡ iprod_map f2 g.
 Proof. done. Qed.
-Lemma iprod_map_id `{Finite A} {B : A → cofeT} (g : iprod B) :
+Lemma iprod_map_id `{Finite A} {B : A → ofeT} (g : iprod B) :
   iprod_map (λ _, id) g = g.
 Proof. done. Qed.
-Lemma iprod_map_compose `{Finite A} {B1 B2 B3 : A → cofeT}
+Lemma iprod_map_compose `{Finite A} {B1 B2 B3 : A → ofeT}
     (f1 : ∀ x, B1 x → B2 x) (f2 : ∀ x, B2 x → B3 x) (g : iprod B1) :
   iprod_map (λ x, f2 x ∘ f1 x) g = iprod_map f2 (iprod_map f1 g).
 Proof. done. Qed.
 
-Instance iprod_map_ne `{Finite A} {B1 B2 : A → cofeT} (f : ∀ x, B1 x → B2 x) n :
+Instance iprod_map_ne `{Finite A} {B1 B2 : A → ofeT} (f : ∀ x, B1 x → B2 x) n :
   (∀ x, Proper (dist n ==> dist n) (f x)) →
   Proper (dist n ==> dist n) (iprod_map f).
 Proof. by intros ? y1 y2 Hy x; rewrite /iprod_map (Hy x). Qed.
@@ -292,10 +295,10 @@ Proof.
     rewrite /iprod_map; apply (cmra_monotone _), Hf.
 Qed.
 
-Definition iprodC_map `{Finite A} {B1 B2 : A → cofeT}
+Definition iprodC_map `{Finite A} {B1 B2 : A → ofeT}
     (f : iprod (λ x, B1 x -n> B2 x)) :
   iprodC B1 -n> iprodC B2 := CofeMor (iprod_map f).
-Instance iprodC_map_ne `{Finite A} {B1 B2 : A → cofeT} n :
+Instance iprodC_map_ne `{Finite A} {B1 B2 : A → ofeT} n :
   Proper (dist n ==> dist n) (@iprodC_map A _ _ B1 B2).
 Proof. intros f1 f2 Hf g x; apply Hf. Qed.
 
