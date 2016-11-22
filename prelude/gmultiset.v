@@ -39,11 +39,15 @@ Section definitions.
     let (X) := X in let (Y) := Y in
     GMultiSet $ difference_with (λ x y,
       let z := x - y in guard (0 < z); Some (pred z)) X Y.
+
+  Instance gmultiset_dom : Dom (gmultiset A) (gset A) := λ X,
+    let (X) := X in dom _ X.
 End definitions.
 
 Typeclasses Opaque gmultiset_elem_of gmultiset_subseteq.
 Typeclasses Opaque gmultiset_elements gmultiset_size gmultiset_empty.
 Typeclasses Opaque gmultiset_singleton gmultiset_union gmultiset_difference.
+Typeclasses Opaque gmultiset_dom.
 
 (** These instances are declared using [Hint Extern] to avoid too
 eager type class search. *)
@@ -63,6 +67,8 @@ Hint Extern 1 (Elements _ (gmultiset _)) =>
   eapply @gmultiset_elements : typeclass_instances.
 Hint Extern 1 (Size (gmultiset _)) =>
   eapply @gmultiset_size : typeclass_instances.
+Hint Extern 1 (Dom (gmultiset _) _) =>
+  eapply @gmultiset_dom : typeclass_instances.
 
 Section lemmas.
 Context `{Countable A}.
@@ -195,6 +201,12 @@ Proof.
   - intros. destruct (X !! x) as [n|] eqn:Hx; [|omega].
     exists (x,n); split; [|by apply elem_of_map_to_list].
     apply elem_of_replicate; auto with omega.
+Qed.
+Lemma gmultiset_elem_of_dom x X : x ∈ dom (gset A) X ↔ x ∈ X.
+Proof.
+  unfold dom, gmultiset_dom, elem_of at 2, gmultiset_elem_of, multiplicity.
+  destruct X as [X]; simpl; rewrite elem_of_dom, <-not_eq_None_Some.
+  destruct (X !! x); naive_solver omega.
 Qed.
 
 (* Properties of the size operation *)
