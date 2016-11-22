@@ -479,6 +479,7 @@ Tactic Notation "naive_solver" tactic(tac) :=
   (**i simplification of assumptions *)
   | H : False |- _ => destruct H
   | H : _ ∧ _ |- _ =>
+     (* Work around bug https://coq.inria.fr/bugs/show_bug.cgi?id=2901 *)
      let H1 := fresh in let H2 := fresh in
      destruct H as [H1 H2]; try clear H
   | H : ∃ _, _  |- _ =>
