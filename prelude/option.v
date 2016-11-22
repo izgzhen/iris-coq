@@ -180,6 +180,16 @@ Proof. unfold is_Some; destruct mx; naive_solver. Qed.
 Lemma fmap_Some {A B} (f : A → B) mx y :
   f <$> mx = Some y ↔ ∃ x, mx = Some x ∧ y = f x.
 Proof. destruct mx; naive_solver. Qed.
+Lemma fmap_Some_setoid {A B} `{Equiv B} `{!Equivalence ((≡) : relation B)}
+      (f : A → B) mx y :
+  f <$> mx ≡ Some y ↔ ∃ x, mx = Some x ∧ y ≡ f x.
+Proof.
+  destruct mx; simpl; split.
+  - intros ?%Some_equiv_inj. eauto.
+  - intros (? & ->%Some_inj & ?). constructor. done.
+  - intros ?%symmetry%equiv_None. done.
+  - intros (? & ? & ?). done.
+Qed.
 Lemma fmap_None {A B} (f : A → B) mx : f <$> mx = None ↔ mx = None.
 Proof. by destruct mx. Qed.
 Lemma option_fmap_id {A} (mx : option A) : id <$> mx = mx.
