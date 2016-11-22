@@ -35,7 +35,7 @@ Notation "P ⊣⊢ Q" := (equiv (A:=uPred M) P%I Q%I). (* Force implicit argumen
 
 (* Derived logical stuff *)
 Lemma False_elim P : False ⊢ P.
-Proof. by apply (pure_elim False). Qed.
+Proof. by apply (pure_elim' False). Qed.
 Lemma True_intro P : P ⊢ True.
 Proof. by apply pure_intro. Qed.
 
@@ -212,6 +212,11 @@ Proof.
   - apply or_elim; apply exist_elim=> a; rewrite -(exist_intro a); auto.
 Qed.
 
+Lemma pure_elim φ Q R : (Q ⊢ ⌜φ⌝) → (φ → Q ⊢ R) → Q ⊢ R.
+Proof.
+  intros HQ HQR. rewrite -(idemp uPred_and Q) {1}HQ.
+  apply impl_elim_l', pure_elim'=> ?. by apply entails_impl, HQR.
+Qed.
 Lemma pure_mono φ1 φ2 : (φ1 → φ2) → ⌜φ1⌝ ⊢ ⌜φ2⌝.
 Proof. intros; apply pure_elim with φ1; eauto. Qed.
 Global Instance pure_mono' : Proper (impl ==> (⊢)) (@uPred_pure M).

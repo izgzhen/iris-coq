@@ -318,10 +318,8 @@ Global Instance bupd_proper : Proper ((≡) ==> (≡)) (@uPred_bupd M) := ne_pro
 (** Introduction and elimination rules *)
 Lemma pure_intro φ P : φ → P ⊢ ⌜φ⌝.
 Proof. by intros ?; unseal; split. Qed.
-Lemma pure_elim φ Q R : (Q ⊢ ⌜φ⌝) → (φ → Q ⊢ R) → Q ⊢ R.
-Proof.
-  unseal; intros HQP HQR; split=> n x ??; apply HQR; first eapply HQP; eauto.
-Qed.
+Lemma pure_elim' φ P : (φ → True ⊢ P) → ⌜φ⌝ ⊢ P.
+Proof. unseal; intros HP; split=> n x ??. by apply HP. Qed.
 Lemma pure_forall_2 {A} (φ : A → Prop) : (∀ x : A, ⌜φ x⌝) ⊢ ⌜∀ x : A, φ x⌝.
 Proof. by unseal. Qed.
 
