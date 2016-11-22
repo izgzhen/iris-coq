@@ -14,7 +14,7 @@ Notation "● a" := (Auth (Excl' a) ∅) (at level 20).
 
 (* COFE *)
 Section cofe.
-Context {A : cofeT}.
+Context {A : ofeT}.
 Implicit Types a : excl' A.
 Implicit Types b : A.
 Implicit Types x y : auth A.
@@ -37,9 +37,7 @@ Proof. by destruct 1. Qed.
 Global Instance own_proper : Proper ((≡) ==> (≡)) (@auth_own A).
 Proof. by destruct 1. Qed.
 
-Instance auth_compl : Compl (auth A) := λ c,
-  Auth (compl (chain_map authoritative c)) (compl (chain_map auth_own c)).
-Definition auth_cofe_mixin : CofeMixin (auth A).
+Definition auth_ofe_mixin : OfeMixin (auth A).
 Proof.
   split.
   - intros x y; unfold dist, auth_dist, equiv, auth_equiv.
@@ -49,10 +47,17 @@ Proof.
     + by intros ?? [??]; split; symmetry.
     + intros ??? [??] [??]; split; etrans; eauto.
   - by intros ? [??] [??] [??]; split; apply dist_S.
-  - intros n c; split. apply (conv_compl n (chain_map authoritative c)).
-    apply (conv_compl n (chain_map auth_own c)).
 Qed.
-Canonical Structure authC := CofeT (auth A) auth_cofe_mixin.
+Canonical Structure authC := OfeT (auth A) auth_ofe_mixin.
+
+Definition auth_compl `{Cofe A} : Compl authC := λ c,
+  Auth (compl (chain_map authoritative c)) (compl (chain_map auth_own c)).
+Global Program Instance auth_cofe `{Cofe A} : Cofe authC :=
+  {| compl := auth_compl |}.
+Next Obligation.
+  intros ? n c; split. apply (conv_compl n (chain_map authoritative c)).
+  apply (conv_compl n (chain_map auth_own c)).
+Qed.
 
 Global Instance Auth_timeless a b :
   Timeless a → Timeless b → Timeless (Auth a b).
@@ -151,7 +156,7 @@ Proof.
       as (b1&b2&?&?&?); auto using auth_own_validN.
     by exists (Auth ea1 b1), (Auth ea2 b2).
 Qed.
-Canonical Structure authR := CMRAT (auth A) auth_cofe_mixin auth_cmra_mixin.
+Canonical Structure authR := CMRAT (auth A) auth_ofe_mixin auth_cmra_mixin.
 
 Global Instance auth_cmra_discrete : CMRADiscrete A → CMRADiscrete authR.
 Proof.
@@ -171,7 +176,7 @@ Proof.
   - do 2 constructor; simpl; apply (persistent_core _).
 Qed.
 Canonical Structure authUR :=
-  UCMRAT (auth A) auth_cofe_mixin auth_cmra_mixin auth_ucmra_mixin.
+  UCMRAT (auth A) auth_ofe_mixin auth_cmra_mixin auth_ucmra_mixin.
 
 Global Instance auth_frag_persistent a : Persistent a → Persistent (◯ a).
 Proof. do 2 constructor; simpl; auto. by apply persistent_core. Qed.
@@ -235,13 +240,13 @@ Proof. by destruct x as [[[]|]]. Qed.
 Lemma auth_map_compose {A B C} (f : A → B) (g : B → C) (x : auth A) :
   auth_map (g ∘ f) x = auth_map g (auth_map f x).
 Proof. by destruct x as [[[]|]]. Qed.
-Lemma auth_map_ext {A B : cofeT} (f g : A → B) x :
+Lemma auth_map_ext {A B : ofeT} (f g : A → B) x :
   (∀ x, f x ≡ g x) → auth_map f x ≡ auth_map g x.
 Proof.
   constructor; simpl; auto.
   apply option_fmap_setoid_ext=> a; by apply excl_map_ext.
 Qed.
-Instance auth_map_ne {A B : cofeT} n :
+Instance auth_map_ne {A B : ofeT} n :
   Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@auth_map A B).
 Proof.
   intros f g Hf [??] [??] [??]; split; simpl in *; [|by apply Hf].

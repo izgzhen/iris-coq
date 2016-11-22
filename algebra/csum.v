@@ -22,7 +22,7 @@ Instance maybe_Cinr {A B} : Maybe (@Cinr A B) := λ x,
   match x with Cinr b => Some b | _ => None end.
 
 Section cofe.
-Context {A B : cofeT}.
+Context {A B : ofeT}.
 Implicit Types a : A.
 Implicit Types b : B.
 
@@ -55,19 +55,7 @@ Proof. by inversion_clear 1. Qed.
 Global Instance Cinr_inj_dist n : Inj (dist n) (dist n) (@Cinr A B).
 Proof. by inversion_clear 1. Qed.
 
-Program Definition csum_chain_l (c : chain (csum A B)) (a : A) : chain A :=
-  {| chain_car n := match c n return _ with Cinl a' => a' | _ => a end |}.
-Next Obligation. intros c a n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
-Program Definition csum_chain_r (c : chain (csum A B)) (b : B) : chain B :=
-  {| chain_car n := match c n return _ with Cinr b' => b' | _ => b end |}.
-Next Obligation. intros c b n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
-Instance csum_compl : Compl (csum A B) := λ c,
-  match c 0 with
-  | Cinl a => Cinl (compl (csum_chain_l c a))
-  | Cinr b => Cinr (compl (csum_chain_r c b))
-  | CsumBot => CsumBot
-  end.
-Definition csum_cofe_mixin : CofeMixin (csum A B).
+Definition csum_ofe_mixin : OfeMixin (csum A B).
 Proof.
   split.
   - intros mx my; split.
@@ -79,12 +67,30 @@ Proof.
     + by destruct 1; constructor.
     + destruct 1; inversion_clear 1; constructor; etrans; eauto.
   - by inversion_clear 1; constructor; apply dist_S.
-  - intros n c; rewrite /compl /csum_compl.
-    feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
-    + rewrite (conv_compl n (csum_chain_l c a')) /=. destruct (c n); naive_solver.
-    + rewrite (conv_compl n (csum_chain_r c b')) /=. destruct (c n); naive_solver.
 Qed.
-Canonical Structure csumC : cofeT := CofeT (csum A B) csum_cofe_mixin.
+Canonical Structure csumC : ofeT := OfeT (csum A B) csum_ofe_mixin.
+
+Program Definition csum_chain_l (c : chain csumC) (a : A) : chain A :=
+  {| chain_car n := match c n return _ with Cinl a' => a' | _ => a end |}.
+Next Obligation. intros c a n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
+Program Definition csum_chain_r (c : chain csumC) (b : B) : chain B :=
+  {| chain_car n := match c n return _ with Cinr b' => b' | _ => b end |}.
+Next Obligation. intros c b n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
+Definition csum_compl `{Cofe A, Cofe B} : Compl csumC := λ c,
+  match c 0 with
+  | Cinl a => Cinl (compl (csum_chain_l c a))
+  | Cinr b => Cinr (compl (csum_chain_r c b))
+  | CsumBot => CsumBot
+  end.
+Global Program Instance csum_cofe `{Cofe A, Cofe B} : Cofe csumC :=
+  {| compl := csum_compl |}.
+Next Obligation.
+  intros ?? n c; rewrite /compl /csum_compl.
+  feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
+  + rewrite (conv_compl n (csum_chain_l c a')) /=. destruct (c n); naive_solver.
+  + rewrite (conv_compl n (csum_chain_r c b')) /=. destruct (c n); naive_solver.
+Qed.
+
 Global Instance csum_discrete : Discrete A → Discrete B → Discrete csumC.
 Proof. by inversion_clear 3; constructor; apply (timeless _). Qed.
 Global Instance csum_leibniz :
@@ -115,10 +121,10 @@ Lemma csum_map_compose {A A' A'' B B' B''} (f : A → A') (f' : A' → A'')
                        (g : B → B') (g' : B' → B'') (x : csum A B) :
   csum_map (f' ∘ f) (g' ∘ g) x = csum_map f' g' (csum_map f g x).
 Proof. by destruct x. Qed.
-Lemma csum_map_ext {A A' B B' : cofeT} (f f' : A → A') (g g' : B → B') x :
+Lemma csum_map_ext {A A' B B' : ofeT} (f f' : A → A') (g g' : B → B') x :
   (∀ x, f x ≡ f' x) → (∀ x, g x ≡ g' x) → csum_map f g x ≡ csum_map f' g' x.
 Proof. by destruct x; constructor. Qed.
-Instance csum_map_cmra_ne {A A' B B' : cofeT} n :
+Instance csum_map_cmra_ne {A A' B B' : ofeT} n :
   Proper ((dist n ==> dist n) ==> (dist n ==> dist n) ==> dist n ==> dist n)
          (@csum_map A A' B B').
 Proof. intros f f' Hf g g' Hg []; destruct 1; constructor; by apply Hf || apply Hg. Qed.
@@ -224,7 +230,7 @@ Proof.
     + by exists CsumBot, CsumBot; destruct y1, y2; inversion_clear Hx'.
 Qed.
 Canonical Structure csumR :=
-  CMRAT (csum A B) csum_cofe_mixin csum_cmra_mixin.
+  CMRAT (csum A B) csum_ofe_mixin csum_cmra_mixin.
 
 Global Instance csum_cmra_discrete :
   CMRADiscrete A → CMRADiscrete B → CMRADiscrete csumR.

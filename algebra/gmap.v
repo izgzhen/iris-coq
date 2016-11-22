@@ -4,17 +4,12 @@ From iris.algebra Require Import updates local_updates.
 From iris.base_logic Require Import base_logic.
 
 Section cofe.
-Context `{Countable K} {A : cofeT}.
+Context `{Countable K} {A : ofeT}.
 Implicit Types m : gmap K A.
 
 Instance gmap_dist : Dist (gmap K A) := λ n m1 m2,
   ∀ i, m1 !! i ≡{n}≡ m2 !! i.
-Program Definition gmap_chain (c : chain (gmap K A))
-  (k : K) : chain (option A) := {| chain_car n := c n !! k |}.
-Next Obligation. by intros c k n i ?; apply (chain_cauchy c). Qed.
-Instance gmap_compl : Compl (gmap K A) := λ c,
-  map_imap (λ i _, compl (gmap_chain c i)) (c 0).
-Definition gmap_cofe_mixin : CofeMixin (gmap K A).
+Definition gmap_ofe_mixin : OfeMixin (gmap K A).
 Proof.
   split.
   - intros m1 m2; split.
@@ -25,11 +20,22 @@ Proof.
     + by intros m1 m2 ? k.
     + by intros m1 m2 m3 ?? k; trans (m2 !! k).
   - by intros n m1 m2 ? k; apply dist_S.
-  - intros n c k; rewrite /compl /gmap_compl lookup_imap.
-    feed inversion (λ H, chain_cauchy c 0 n H k); simpl; auto with lia.
-    by rewrite conv_compl /=; apply reflexive_eq.
 Qed.
-Canonical Structure gmapC : cofeT := CofeT (gmap K A) gmap_cofe_mixin.
+Canonical Structure gmapC : ofeT := OfeT (gmap K A) gmap_ofe_mixin.
+
+Program Definition gmap_chain (c : chain gmapC)
+  (k : K) : chain (optionC A) := {| chain_car n := c n !! k |}.
+Next Obligation. by intros c k n i ?; apply (chain_cauchy c). Qed.
+Definition gmap_compl `{Cofe A} : Compl gmapC := λ c,
+  map_imap (λ i _, compl (gmap_chain c i)) (c 0).
+Global Program Instance gmap_cofe `{Cofe A} : Cofe gmapC :=
+  {| compl := gmap_compl |}.
+Next Obligation.
+  intros ? n c k. rewrite /compl /gmap_compl lookup_imap.
+  feed inversion (λ H, chain_cauchy c 0 n H k);simplify_option_eq;auto with lia.
+  by rewrite conv_compl /=; apply reflexive_eq.
+Qed.
+
 Global Instance gmap_discrete : Discrete A → Discrete gmapC.
 Proof. intros ? m m' ? i. by apply (timeless _). Qed.
 (* why doesn't this go automatic? *)
@@ -165,7 +171,7 @@ Proof.
       * by rewrite lookup_partial_alter_ne // Hm2' lookup_delete_ne.
 Qed.
 Canonical Structure gmapR :=
-  CMRAT (gmap K A) gmap_cofe_mixin gmap_cmra_mixin.
+  CMRAT (gmap K A) gmap_ofe_mixin gmap_cmra_mixin.
 
 Global Instance gmap_cmra_discrete : CMRADiscrete A → CMRADiscrete gmapR.
 Proof. split; [apply _|]. intros m ? i. by apply: cmra_discrete_valid. Qed.
@@ -178,7 +184,7 @@ Proof.
   - constructor=> i. by rewrite lookup_omap lookup_empty.
 Qed.
 Canonical Structure gmapUR :=
-  UCMRAT (gmap K A) gmap_cofe_mixin gmap_cmra_mixin gmap_ucmra_mixin.
+  UCMRAT (gmap K A) gmap_ofe_mixin gmap_cmra_mixin gmap_ucmra_mixin.
 
 (** Internalized properties *)
 Lemma gmap_equivI {M} m1 m2 : m1 ≡ m2 ⊣⊢ (∀ i, m1 !! i ≡ m2 !! i : uPred M).
@@ -440,7 +446,7 @@ Qed.
 End properties.
 
 (** Functor *)
-Instance gmap_fmap_ne `{Countable K} {A B : cofeT} (f : A → B) n :
+Instance gmap_fmap_ne `{Countable K} {A B : ofeT} (f : A → B) n :
   Proper (dist n ==> dist n) f → Proper (dist n ==>dist n) (fmap (M:=gmap K) f).
 Proof. by intros ? m m' Hm k; rewrite !lookup_fmap; apply option_fmap_ne. Qed.
 Instance gmap_fmap_cmra_monotone `{Countable K} {A B : cmraT} (f : A → B)

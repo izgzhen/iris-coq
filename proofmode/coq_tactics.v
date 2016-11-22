@@ -649,7 +649,7 @@ Qed.
 (** * Rewriting *)
 Lemma tac_rewrite Δ i p Pxy (lr : bool) Q :
   envs_lookup i Δ = Some (p, Pxy) →
-  ∀ {A : cofeT} (x y : A) (Φ : A → uPred M),
+  ∀ {A : ofeT} (x y : A) (Φ : A → uPred M),
     (Pxy ⊢ x ≡ y) →
     (Q ⊣⊢ Φ (if lr then y else x)) →
     (∀ n, Proper (dist n ==> dist n) Φ) →
@@ -663,7 +663,7 @@ Qed.
 Lemma tac_rewrite_in Δ i p Pxy j q P (lr : bool) Q :
   envs_lookup i Δ = Some (p, Pxy) →
   envs_lookup j Δ = Some (q, P) →
-  ∀ {A : cofeT} Δ' x y (Φ : A → uPred M),
+  ∀ {A : ofeT} Δ' x y (Φ : A → uPred M),
     (Pxy ⊢ x ≡ y) →
     (P ⊣⊢ Φ (if lr then y else x)) →
     (∀ n, Proper (dist n ==> dist n) Φ) →

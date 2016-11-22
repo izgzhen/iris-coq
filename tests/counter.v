@@ -26,7 +26,7 @@ Section M.
   Arguments op _ _ !_ !_/.
   Arguments core _ _ !_/.
 
-  Canonical Structure M_C : cofeT := leibnizC M.
+  Canonical Structure M_C : ofeT := leibnizC M.
 
   Instance M_valid : Valid M := λ x, x ≠ Bot.
   Instance M_op : Op M := λ x y,

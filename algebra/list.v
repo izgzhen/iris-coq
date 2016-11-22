@@ -4,7 +4,7 @@ From iris.base_logic Require Import base_logic.
 From iris.algebra Require Import updates local_updates.
 
 Section cofe.
-Context {A : cofeT}.
+Context {A : ofeT}.
 
 Instance list_dist : Dist (list A) := λ n, Forall2 (dist n).
 
@@ -42,34 +42,40 @@ Proof. intros ???; by apply dist_option_Forall2, Forall2_last. Qed.
 Global Instance resize_ne n :
   Proper (dist n ==> dist n ==> dist n) (@resize A n) := _.
 
-Program Definition list_chain
-    (c : chain (list A)) (x : A) (k : nat) : chain A :=
-  {| chain_car n := from_option id x (c n !! k) |}.
-Next Obligation. intros c x k n i ?. by rewrite /= (chain_cauchy c n i). Qed.
-Instance list_compl : Compl (list A) := λ c,
-  match c 0 with
-  | [] => []
-  | x :: _ => compl ∘ list_chain c x <$> seq 0 (length (c 0))
-  end.
-
-Definition list_cofe_mixin : CofeMixin (list A).
+Definition list_ofe_mixin : OfeMixin (list A).
 Proof.
   split.
   - intros l k. rewrite equiv_Forall2 -Forall2_forall.
     split; induction 1; constructor; intros; try apply equiv_dist; auto.
   - apply _.
   - rewrite /dist /list_dist. eauto using Forall2_impl, dist_S.
-  - intros n c; rewrite /compl /list_compl.
-    destruct (c 0) as [|x l] eqn:Hc0 at 1.
-    { by destruct (chain_cauchy c 0 n); auto with omega. }
-    rewrite -(λ H, length_ne _ _ _ (chain_cauchy c 0 n H)); last omega.
-    apply Forall2_lookup=> i. rewrite -dist_option_Forall2 list_lookup_fmap.
-    destruct (decide (i < length (c n))); last first.
-    { rewrite lookup_seq_ge ?lookup_ge_None_2; auto with omega. }
-    rewrite lookup_seq //= (conv_compl n (list_chain c _ _)) /=.
-    by destruct (lookup_lt_is_Some_2 (c n) i) as [? ->].
 Qed.
-Canonical Structure listC := CofeT (list A) list_cofe_mixin.
+Canonical Structure listC := OfeT (list A) list_ofe_mixin.
+
+Program Definition list_chain
+    (c : chain listC) (x : A) (k : nat) : chain A :=
+  {| chain_car n := from_option id x (c n !! k) |}.
+Next Obligation. intros c x k n i ?. by rewrite /= (chain_cauchy c n i). Qed.
+Definition list_compl `{Cofe A} : Compl listC := λ c,
+  match c 0 with
+  | [] => []
+  | x :: _ => compl ∘ list_chain c x <$> seq 0 (length (c 0))
+  end.
+Global Program Instance list_cofe `{Cofe A} : Cofe listC :=
+  {| compl := list_compl |}.
+Next Obligation.
+  intros ? n c; rewrite /compl /list_compl.
+  destruct (c 0) as [|x l] eqn:Hc0 at 1.
+  { by destruct (chain_cauchy c 0 n); auto with omega. }
+  rewrite -(λ H, length_ne _ _ _ (chain_cauchy c 0 n H)); last omega.
+  apply Forall2_lookup=> i. rewrite -dist_option_Forall2 list_lookup_fmap.
+  destruct (decide (i < length (c n))); last first.
+  { rewrite lookup_seq_ge ?lookup_ge_None_2; auto with omega. }
+  rewrite lookup_seq //= (conv_compl n (list_chain c _ _)) /=.
+  destruct (lookup_lt_is_Some_2 (c n) i) as [? Hcn]; first done.
+  by rewrite Hcn.
+Qed.
+
 Global Instance list_discrete : Discrete A → Discrete listC.
 Proof. induction 2; constructor; try apply (timeless _); auto. Qed.
 
@@ -82,10 +88,10 @@ End cofe.
 Arguments listC : clear implicits.
 
 (** Functor *)
-Lemma list_fmap_ext_ne {A} {B : cofeT} (f g : A → B) (l : list A) n :
+Lemma list_fmap_ext_ne {A} {B : ofeT} (f g : A → B) (l : list A) n :
   (∀ x, f x ≡{n}≡ g x) → f <$> l ≡{n}≡ g <$> l.
 Proof. intros Hf. by apply Forall2_fmap, Forall_Forall2, Forall_true. Qed.
-Instance list_fmap_ne {A B : cofeT} (f : A → B) n:
+Instance list_fmap_ne {A B : ofeT} (f : A → B) n:
   Proper (dist n ==> dist n) f → Proper (dist n ==> dist n) (fmap (M:=list) f).
 Proof. intros Hf l k ?; by eapply Forall2_fmap, Forall2_impl; eauto. Qed.
 Definition listC_map {A B} (f : A -n> B) : listC A -n> listC B :=
@@ -212,7 +218,7 @@ Section cmra.
           (cmra_extend n x y1 y2) as (y1'&y2'&?&?&?); simplify_eq/=; auto.
         exists (y1' :: l1'), (y2' :: l2'); repeat constructor; auto.
   Qed.
-  Canonical Structure listR := CMRAT (list A) list_cofe_mixin list_cmra_mixin.
+  Canonical Structure listR := CMRAT (list A) list_ofe_mixin list_cmra_mixin.
 
   Global Instance empty_list : Empty (list A) := [].
   Definition list_ucmra_mixin : UCMRAMixin (list A).
@@ -223,7 +229,7 @@ Section cmra.
     - by constructor.
   Qed.
   Canonical Structure listUR :=
-    UCMRAT (list A) list_cofe_mixin list_cmra_mixin list_ucmra_mixin.
+    UCMRAT (list A) list_ofe_mixin list_cmra_mixin list_ucmra_mixin.
 
   Global Instance list_cmra_discrete : CMRADiscrete A → CMRADiscrete listR.
   Proof.

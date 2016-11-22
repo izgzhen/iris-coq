@@ -52,7 +52,7 @@ Section cmra.
   Qed.
 
   Canonical Structure uPredR :=
-    CMRAT (uPred M) uPred_cofe_mixin uPred_cmra_mixin.
+    CMRAT (uPred M) uPred_ofe_mixin uPred_cmra_mixin.
 
   Instance uPred_empty : Empty (uPred M) := True%I.
 
@@ -64,7 +64,7 @@ Section cmra.
   Qed.
 
   Canonical Structure uPredUR :=
-    UCMRAT (uPred M) uPred_cofe_mixin uPred_cmra_mixin uPred_ucmra_mixin.
+    UCMRAT (uPred M) uPred_ofe_mixin uPred_cmra_mixin uPred_ucmra_mixin.
 
   Global Instance uPred_always_homomorphism : UCMRAHomomorphism uPred_always.
   Proof. split; [split|]. apply _. apply always_sep. apply always_pure. Qed.

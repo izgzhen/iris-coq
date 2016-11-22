@@ -17,7 +17,7 @@ Instance maybe_Excl {A} : Maybe (@Excl A) := λ x,
   match x with Excl a => Some a | _ => None end.
 
 Section excl.
-Context {A : cofeT}.
+Context {A : ofeT}.
 Implicit Types a b : A.
 Implicit Types x y : excl A.
 
@@ -40,12 +40,7 @@ Proof. by inversion_clear 1. Qed.
 Global Instance Excl_dist_inj n : Inj (dist n) (dist n) (@Excl A).
 Proof. by inversion_clear 1. Qed.
 
-Program Definition excl_chain (c : chain (excl A)) (a : A) : chain A :=
-  {| chain_car n := match c n return _ with Excl y => y | _ => a end |}.
-Next Obligation. intros c a n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
-Instance excl_compl : Compl (excl A) := λ c,
-  match c 0 with Excl a => Excl (compl (excl_chain c a)) | x => x end.
-Definition excl_cofe_mixin : CofeMixin (excl A).
+Definition excl_ofe_mixin : OfeMixin (excl A).
 Proof.
   split.
   - intros x y; split; [by destruct 1; constructor; apply equiv_dist|].
@@ -56,11 +51,22 @@ Proof.
     + by destruct 1; constructor.
     + destruct 1; inversion_clear 1; constructor; etrans; eauto.
   - by inversion_clear 1; constructor; apply dist_S.
-  - intros n c; rewrite /compl /excl_compl.
-    feed inversion (chain_cauchy c 0 n); first auto with lia; constructor.
-    rewrite (conv_compl n (excl_chain c _)) /=. destruct (c n); naive_solver.
 Qed.
-Canonical Structure exclC : cofeT := CofeT (excl A) excl_cofe_mixin.
+Canonical Structure exclC : ofeT := OfeT (excl A) excl_ofe_mixin.
+
+Program Definition excl_chain (c : chain exclC) (a : A) : chain A :=
+  {| chain_car n := match c n return _ with Excl y => y | _ => a end |}.
+Next Obligation. intros c a n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
+Definition excl_compl `{Cofe A} : Compl exclC := λ c,
+  match c 0 with Excl a => Excl (compl (excl_chain c a)) | x => x end.
+Global Program Instance excl_cofe `{Cofe A} : Cofe exclC :=
+  {| compl := excl_compl |}.
+Next Obligation.
+  intros ? n c; rewrite /compl /excl_compl.
+  feed inversion (chain_cauchy c 0 n); auto with omega.
+  rewrite (conv_compl n (excl_chain c _)) /=. destruct (c n); naive_solver.
+Qed.
+
 Global Instance excl_discrete : Discrete A → Discrete exclC.
 Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
 Global Instance excl_leibniz : LeibnizEquiv A → LeibnizEquiv (excl A).
@@ -92,7 +98,7 @@ Proof.
   - intros n x [?|] [?|] ?; inversion_clear 1; eauto.
 Qed.
 Canonical Structure exclR :=
-  CMRAT (excl A) excl_cofe_mixin excl_cmra_mixin.
+  CMRAT (excl A) excl_ofe_mixin excl_cmra_mixin.
 
 Global Instance excl_cmra_discrete : Discrete A → CMRADiscrete exclR.
 Proof. split. apply _. by intros []. Qed.
@@ -138,13 +144,13 @@ Proof. by destruct x. Qed.
 Lemma excl_map_compose {A B C} (f : A → B) (g : B → C) (x : excl A) :
   excl_map (g ∘ f) x = excl_map g (excl_map f x).
 Proof. by destruct x. Qed.
-Lemma excl_map_ext {A B : cofeT} (f g : A → B) x :
+Lemma excl_map_ext {A B : ofeT} (f g : A → B) x :
   (∀ x, f x ≡ g x) → excl_map f x ≡ excl_map g x.
 Proof. by destruct x; constructor. Qed.
-Instance excl_map_ne {A B : cofeT} n :
+Instance excl_map_ne {A B : ofeT} n :
   Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@excl_map A B).
 Proof. by intros f f' Hf; destruct 1; constructor; apply Hf. Qed.
-Instance excl_map_cmra_monotone {A B : cofeT} (f : A → B) :
+Instance excl_map_cmra_monotone {A B : ofeT} (f : A → B) :
   (∀ n, Proper (dist n ==> dist n) f) → CMRAMonotone (excl_map f).
 Proof.
   split; try apply _.
