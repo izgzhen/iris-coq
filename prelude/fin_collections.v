@@ -254,21 +254,21 @@ Proof. rewrite Forall_forall. by setoid_rewrite elem_of_elements. Qed.
 Lemma set_Exists_elements P X : set_Exists P X ↔ Exists P (elements X).
 Proof. rewrite Exists_exists. by setoid_rewrite elem_of_elements. Qed.
 
-Lemma set_Forall_Exists_dec {P Q : A → Prop} (dec : ∀ x, {P x} + {Q x}) X :
+Lemma set_Forall_Exists_dec (P Q : A → Prop) (dec : ∀ x, {P x} + {Q x}) X :
   {set_Forall P X} + {set_Exists Q X}.
 Proof.
- refine (cast_if (Forall_Exists_dec dec (elements X)));
+ refine (cast_if (Forall_Exists_dec P Q dec (elements X)));
    [by apply set_Forall_elements|by apply set_Exists_elements].
 Defined.
 
 Lemma not_set_Forall_Exists P `{dec : ∀ x, Decision (P x)} X :
   ¬set_Forall P X → set_Exists (not ∘ P) X.
-Proof. intro. by destruct (set_Forall_Exists_dec dec X). Qed.
+Proof. intro. by destruct (set_Forall_Exists_dec P (not ∘ P) dec X). Qed.
 Lemma not_set_Exists_Forall P `{dec : ∀ x, Decision (P x)} X :
   ¬set_Exists P X → set_Forall (not ∘ P) X.
 Proof.
-  by destruct (@set_Forall_Exists_dec
-    (not ∘ P) _ (λ x, swap_if (decide (P x))) X).
+  by destruct (set_Forall_Exists_dec
+    (not ∘ P) P (λ x, swap_if (decide (P x))) X).
 Qed.
 
 Global Instance set_Forall_dec (P : A → Prop) `{∀ x, Decision (P x)} X :

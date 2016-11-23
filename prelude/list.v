@@ -2051,7 +2051,7 @@ Lemma list_subseteq_nil l : [] ⊆ l.
 Proof. intros x. by rewrite elem_of_nil. Qed.
 
 (** ** Properties of the [Forall] and [Exists] predicate *)
-Lemma Forall_Exists_dec {P Q : A → Prop} (dec : ∀ x, {P x} + {Q x}) :
+Lemma Forall_Exists_dec (P Q : A → Prop) (dec : ∀ x, {P x} + {Q x}) :
   ∀ l, {Forall P l} + {Exists Q l}.
 Proof.
  refine (
@@ -2232,21 +2232,19 @@ Section Forall_Exists.
 
   Context {dec : ∀ x, Decision (P x)}.
   Lemma not_Forall_Exists l : ¬Forall P l → Exists (not ∘ P) l.
-  Proof. intro. destruct (Forall_Exists_dec dec l); intuition. Qed.
+  Proof. intro. by destruct (Forall_Exists_dec P (not ∘ P) dec l). Qed.
   Lemma not_Exists_Forall l : ¬Exists P l → Forall (not ∘ P) l.
   Proof.
-    (* TODO: Coq 8.6 needs type annotation here, Coq 8.5 did not.
-       Should we report this? *)
-    by destruct (@Forall_Exists_dec (not ∘ P) _
+    by destruct (Forall_Exists_dec (not ∘ P) P
         (λ x : A, swap_if (decide (P x))) l).
   Qed.
   Global Instance Forall_dec l : Decision (Forall P l) :=
-    match Forall_Exists_dec dec l with
+    match Forall_Exists_dec P (not ∘ P) dec l with
     | left H => left H
     | right H => right (Exists_not_Forall _ H)
     end.
   Global Instance Exists_dec l : Decision (Exists P l) :=
-    match Forall_Exists_dec (λ x, swap_if (decide (P x))) l with
+    match Forall_Exists_dec (not ∘ P) P (λ x, swap_if (decide (P x))) l with
     | left H => right (Forall_not_Exists _ H)
     | right H => left H
     end.
