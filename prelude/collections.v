@@ -999,6 +999,7 @@ End seq_set.
 Definition minimal `{ElemOf A C} (R : relation A) (x : A) (X : C) : Prop :=
   ∀ y, y ∈ X → R y x → R x y.
 Instance: Params (@minimal) 5.
+Typeclasses Opaque minimal.
 
 Section minimal.
   Context `{SimpleCollection A C} {R : relation A}.
@@ -1006,18 +1007,19 @@ Section minimal.
   Global Instance minimal_proper x : Proper (@equiv C _ ==> iff) (minimal R x).
   Proof. intros X X' y; unfold minimal; set_solver. Qed.
 
-  Lemma minimal_anti_symm `{!AntiSymm (=) R} x X :
+  Lemma minimal_anti_symm_1 `{!AntiSymm (=) R} X x y :
+    minimal R x X → y ∈ X → R y x → x = y.
+  Proof. intros Hmin ??. apply (anti_symm _); auto. Qed.
+  Lemma minimal_anti_symm `{!AntiSymm (=) R} X x :
     minimal R x X ↔ ∀ y, y ∈ X → R y x → x = y.
-  Proof.
-    unfold minimal; split; [|naive_solver].
-    intros Hmin y ??. apply (anti_symm _); auto.
-  Qed.
-  Lemma minimal_strict `{!StrictOrder R} x X :
+  Proof. unfold minimal; naive_solver eauto using minimal_anti_symm_1. Qed.
+
+  Lemma minimal_strict_1 `{!StrictOrder R} X x y :
+    minimal R x X → y ∈ X → ¬R y x.
+  Proof. intros Hmin ??. destruct (irreflexivity R x); trans y; auto. Qed.
+  Lemma minimal_strict `{!StrictOrder R} X x :
     minimal R x X ↔ ∀ y, y ∈ X → ¬R y x.
-  Proof.
-    unfold minimal; split; [|naive_solver].
-    intros Hmin y ??. destruct (irreflexivity R x); trans y; auto.
-  Qed.
+  Proof. unfold minimal; split; [eauto using minimal_strict_1|naive_solver]. Qed.
 
   Lemma empty_minimal x : minimal R x ∅.
   Proof. unfold minimal; set_solver. Qed.
@@ -1034,7 +1036,6 @@ Section minimal.
   Lemma minimal_weaken `{!Transitive R} X x x' :
     minimal R x X → R x' x → minimal R x' X.
   Proof.
-    intros Hmin ? y ??. trans x; [done|].
-    by eapply (Hmin y), transitivity.
+    intros Hmin ? y ??. trans x; [done|]. by eapply (Hmin y), transitivity.
   Qed.
 End minimal.
