@@ -357,7 +357,7 @@ Tactic Notation "iter" tactic(tac) tactic(l) :=
   let rec go l :=
   match l with ?x :: ?l => tac x || go l end in go l.
 
-(** Given H : [A_1 → ... → A_n → B] (where each [A_i] is non-dependent), the
+(** Given [H : A_1 → ... → A_n → B] (where each [A_i] is non-dependent), the
 tactic [feed tac H tac_by] creates a subgoal for each [A_i] and calls [tac p]
 with the generated proof [p] of [B]. *)
 Tactic Notation "feed" tactic(tac) constr(H) :=
