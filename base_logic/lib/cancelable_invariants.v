@@ -1,4 +1,4 @@
-From iris.base_logic.lib Require Export invariants.
+From iris.base_logic.lib Require Export invariants fractional.
 From iris.algebra Require Export frac.
 From iris.proofmode Require Import tactics.
 Import uPred.
@@ -31,12 +31,11 @@ Section proofs.
   Global Instance cinv_persistent N γ P : PersistentP (cinv N γ P).
   Proof. rewrite /cinv; apply _. Qed.
 
-  Lemma cinv_own_op γ q1 q2 :
-    cinv_own γ q1 ∗ cinv_own γ q2 ⊣⊢ cinv_own γ (q1 + q2).
-  Proof. by rewrite /cinv_own own_op. Qed.
-
-  Lemma cinv_own_half γ q : cinv_own γ (q/2) ∗ cinv_own γ (q/2) ⊣⊢ cinv_own γ q.
-  Proof. by rewrite cinv_own_op Qp_div_2. Qed.
+  Global Instance cinv_own_fractionnal γ : Fractional (cinv_own γ).
+  Proof. intros ??. by rewrite -own_op. Qed.
+  Global Instance cinv_own_as_fractionnal γ q :
+    AsFractional (cinv_own γ q) (cinv_own γ) q.
+  Proof. done. Qed.
 
   Lemma cinv_own_valid γ q1 q2 : cinv_own γ q1 ∗ cinv_own γ q2 ⊢ ✓ (q1 + q2)%Qp.
   Proof. rewrite /cinv_own -own_op own_valid. by iIntros "% !%". Qed.
@@ -56,7 +55,7 @@ Section proofs.
   Proof.
     rewrite /cinv. iIntros (?) "#Hinv Hγ".
     iInv N as "[$|>Hγ']" "Hclose"; first iApply "Hclose"; eauto.
-    iDestruct (cinv_own_1_l with "[Hγ Hγ']") as %[]. by iFrame.
+    iDestruct (cinv_own_1_l with "[$Hγ $Hγ']") as %[].
   Qed.
 
   Lemma cinv_open E N γ p P :
@@ -66,6 +65,6 @@ Section proofs.
     rewrite /cinv. iIntros (?) "#Hinv Hγ".
     iInv N as "[$|>Hγ']" "Hclose".
     - iIntros "!> {$Hγ} HP". iApply "Hclose"; eauto.
-    - iDestruct (cinv_own_1_l with "[Hγ Hγ']") as %[]. by iFrame.
+    - iDestruct (cinv_own_1_l with "[$Hγ $Hγ']") as %[].
   Qed.
 End proofs.
