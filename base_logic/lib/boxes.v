@@ -105,7 +105,7 @@ Proof.
 Qed.
 
 Lemma box_delete E f P Q γ :
-  nclose N ⊆ E →
+  ↑N ⊆ E →
   f !! γ = Some false →
   slice N γ Q ∗ ▷ box N f P ={E}=∗ ∃ P',
     ▷ ▷ (P ≡ (Q ∗ P')) ∗ ▷ box N (delete γ f) P'.
@@ -125,7 +125,7 @@ Proof.
 Qed.
 
 Lemma box_fill E f γ P Q :
-  nclose N ⊆ E →
+  ↑N ⊆ E →
   f !! γ = Some false →
   slice N γ Q ∗ ▷ Q ∗ ▷ box N f P ={E}=∗ ▷ box N (<[γ:=true]> f) P.
 Proof.
@@ -144,7 +144,7 @@ Proof.
 Qed.
 
 Lemma box_empty E f P Q γ :
-  nclose N ⊆ E →
+  ↑N ⊆ E →
   f !! γ = Some true →
   slice N γ Q ∗ ▷ box N f P ={E}=∗ ▷ Q ∗ ▷ box N (<[γ:=false]> f) P.
 Proof.
@@ -164,7 +164,7 @@ Proof.
 Qed.
 
 Lemma box_fill_all E f P :
-  nclose N ⊆ E →
+  ↑N ⊆ E →
   box N f P ∗ ▷ P ={E}=∗ box N (const true <$> f) P.
 Proof.
   iIntros (?) "[H HP]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
@@ -181,7 +181,7 @@ Proof.
 Qed.
 
 Lemma box_empty_all E f P :
-  nclose N ⊆ E →
+  ↑N ⊆ E →
   map_Forall (λ _, (true =)) f →
   box N f P ={E}=∗ ▷ P ∗ box N (const false <$> f) P.
 Proof.

@@ -90,7 +90,7 @@ Section iris.
   Implicit Types P Q : iProp Σ.
 
   Lemma demo_8 N E P Q R :
-    nclose N ⊆ E →
+    ↑N ⊆ E →
     (True -∗ P -∗ inv N Q -∗ True -∗ R) ⊢ P -∗ ▷ Q ={E}=∗ R.
   Proof.
     iIntros (?) "H HP HQ".

@@ -6,7 +6,7 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 ## Iris 3.0 (unfinished)
 
 * There now is a deprecation process.  The modules `*.deprecated`
-  contains deprecated notations and definitions that are provided for
+  contain deprecated notations and definitions that are provided for
   backwards compatibility and will be removed in a future version of Iris.
 * View shifts are radically simplified to just internalize frame-preserving
   updates.  Weakestpre is defined inside the logic, and invariants and view
@@ -22,6 +22,7 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 * Changed notation for embedding Coq assertions into Iris.  The new notation
   is ⌜φ⌝.  Also removed `=` and `⊥` from the Iris scope.
   (The old notations are provided in `base_logic.deprecated`.)
+* Up-closure of namespaces is now a notation (↑) instead of a coercion.
 * With invariants and the physical state being handled in the logic, there
   is no longer any reason to demand the CMRA unit to be discrete.
 * The language can now fork off multiple threads at once.

@@ -69,13 +69,13 @@ Proof.
 Qed.
 
 Lemma vs_inv N E P Q R :
-  nclose N ⊆ E → inv N R ∗ (▷ R ∗ P ={E ∖ nclose N}=> ▷ R ∗ Q) ⊢ P ={E}=> Q.
+  ↑N ⊆ E → inv N R ∗ (▷ R ∗ P ={E∖↑N}=> ▷ R ∗ Q) ⊢ P ={E}=> Q.
 Proof.
   iIntros (?) "#[? Hvs] !# HP". iInv N as "HR" "Hclose".
   iMod ("Hvs" with "[HR HP]") as "[? $]"; first by iFrame.
   by iApply "Hclose".
 Qed.
 
-Lemma vs_alloc N P : ▷ P ={N}=> inv N P.
+Lemma vs_alloc N P : ▷ P ={↑N}=> inv N P.
 Proof. iIntros "!# HP". by iApply inv_alloc. Qed.
 End vs.

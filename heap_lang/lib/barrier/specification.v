@@ -14,7 +14,7 @@ Lemma barrier_spec (N : namespace) :
                      {{ v, ∃ l : loc, ⌜v = #l⌝ ∗ recv l P ∗ send l P }}) ∧
     (∀ l P, {{ send l P ∗ P }} signal #l {{ _, True }}) ∧
     (∀ l P, {{ recv l P }} wait #l {{ _, P }}) ∧
-    (∀ l P Q, recv l (P ∗ Q) ={N}=> recv l P ∗ recv l Q) ∧
+    (∀ l P Q, recv l (P ∗ Q) ={↑N}=> recv l P ∗ recv l Q) ∧
     (∀ l P Q, (P -∗ Q) ⊢ recv l P -∗ recv l Q).
 Proof.
   intros HN.
