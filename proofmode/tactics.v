@@ -47,6 +47,7 @@ Tactic Notation "iProof" :=
   | |- of_envs _ ⊢ _ => fail "iProof: already in Iris proofmode"
   | |- True ⊢ _ => apply tac_adequate
   | |- _ ⊢ _ => apply uPred.wand_entails, tac_adequate
+  | |- _ ⊣⊢ _ => apply uPred.iff_equiv, tac_adequate
   end.
 
 (** * Context manipulation *)
@@ -508,12 +509,12 @@ Local Tactic Notation "iOrDestruct" constr(H) "as" constr(H1) constr(H2) :=
 
 (** * Conjunction and separating conjunction *)
 Tactic Notation "iSplit" :=
+  try iProof;
   lazymatch goal with
   | |- _ ⊢ _ =>
     eapply tac_and_split;
       [let P := match goal with |- FromAnd ?P _ _ => P end in
        apply _ || fail "iSplit:" P "not a conjunction"| |]
-  | |- _ ⊣⊢ _ => apply (anti_symm (⊢))
   end.
 
 Tactic Notation "iSplitL" constr(Hs) :=
