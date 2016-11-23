@@ -45,9 +45,13 @@ Ltac iMatchGoal tac :=
 Tactic Notation "iProof" :=
   lazymatch goal with
   | |- of_envs _ ⊢ _ => fail "iProof: already in Iris proofmode"
-  | |- True ⊢ _ => apply tac_adequate
-  | |- _ ⊢ _ => apply uPred.wand_entails, tac_adequate
-  | |- _ ⊣⊢ _ => apply uPred.iff_equiv, tac_adequate
+  | |- ?P =>
+    match eval hnf in P with
+    | True ⊢ _ => apply tac_adequate
+    | _ ⊢ _ => apply uPred.wand_entails, tac_adequate
+    (* need to use the unfolded version of [⊣⊢] due to the hnf *)
+    | uPred_equiv' _ _ => apply uPred.iff_equiv, tac_adequate
+    end
   end.
 
 (** * Context manipulation *)
