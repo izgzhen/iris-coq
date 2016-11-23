@@ -12,7 +12,7 @@ Coq development, but not every API-breaking change is listed.  Changes marked
   updates.  Weakestpre is defined inside the logic, and invariants and view
   shifts with masks are also coded up inside Iris.  Adequacy of weakestpre
   is proven in the logic.
-* Use OFEs instead of COFEs everywhere.  COFEs are only used for solving the
+* [#] Use OFEs instead of COFEs everywhere.  COFEs are only used for solving the
   recursive domain equation.  As a consequence, CMRAs no longer need a proof
   of completeness.
   (The old `cofeT` is provided by `algebra.deprecated`.)
