@@ -8,7 +8,7 @@ bug-reports: "https://gitlab.mpi-sws.org/FP/iris-coq/issues"
 license: "BSD"
 dev-repo: "https://gitlab.mpi-sws.org/FP/iris-coq"
 build: [
-  [make]
+  [make "-j%{jobs}%"]
 ]
 install: [make "install"]
 remove: [ "sh" "-c" "rm -rf '%{lib}%/coq/user-contrib/iris'" ]
