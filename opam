@@ -6,7 +6,7 @@ authors: "The Iris Team"
 homepage: "http://iris-project.org/"
 bug-reports: "https://gitlab.mpi-sws.org/FP/iris-coq/issues"
 license: "BSD"
-dev-repo: "https://gitlab.mpi-sws.org/FP/iris-coq"
+dev-repo: "https://gitlab.mpi-sws.org/FP/iris-coq.git"
 build: [
   [make "-j%{jobs}%"]
 ]
