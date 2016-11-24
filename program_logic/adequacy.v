@@ -151,17 +151,17 @@ Proof.
   iApply wp_safe. iFrame "Hw". by iApply (big_sepL_elem_of with "Htp").
 Qed.
 
-Lemma wptp_invariance I n e1 e2 t1 t2 σ1 σ2 φ Φ :
+Lemma wptp_invariance n e1 e2 t1 t2 σ1 σ2 φ Φ :
   nsteps step n (e1 :: t1, σ1) (t2, σ2) →
-  I ∗ (state_interp σ2 -∗ I ={⊤,∅}=∗ ⌜φ⌝) ∗ world σ1 ∗ WP e1 {{ Φ }} ∗ wptp t1
+  (state_interp σ2 ={⊤,∅}=∗ ⌜φ⌝) ∗ world σ1 ∗ WP e1 {{ Φ }} ∗ wptp t1
   ⊢ Nat.iter (S (S n)) (λ P, |==> ▷ P) ⌜φ⌝.
 Proof.
   intros ?. rewrite wptp_steps //.
   rewrite (Nat_iter_S_r (S n)) !bupd_iter_frame_l. apply bupd_iter_mono.
-  iIntros "(HI & Hback & H)".
+  iIntros "[Hback H]".
   iDestruct "H" as (e2' t2') "(% & (Hw&HE&Hσ) & _)"; subst.
   rewrite fupd_eq.
-  iMod ("Hback" with "Hσ HI [$Hw $HE]") as "> (_ & _ & $)"; auto.
+  iMod ("Hback" with "Hσ [$Hw $HE]") as "> (_ & _ & $)"; auto.
 Qed.
 End adequacy.
 
@@ -189,12 +189,11 @@ Proof.
     iFrame. by iApply big_sepL_nil.
 Qed.
 
-Theorem wp_invariance {Λ} `{invPreG Σ} e σ1 t2 σ2 I φ Φ :
+Theorem wp_invariance {Λ} `{invPreG Σ} e σ1 t2 σ2 φ Φ :
   (∀ `{Hinv : invG Σ},
      True ={⊤}=∗ ∃ stateI : state Λ → iProp Σ,
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
-       stateI σ1 ∗ I ∗ WP e {{ Φ }} ∗
-         (stateI σ2 -∗ I ={⊤,∅}=∗ ⌜φ⌝)) →
+       stateI σ1 ∗ WP e {{ Φ }} ∗ (stateI σ2 ={⊤,∅}=∗ ⌜φ⌝)) →
   rtc step ([e], σ1) (t2, σ2) →
   φ.
 Proof.
@@ -202,7 +201,7 @@ Proof.
   eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
   rewrite Nat_iter_S. iMod wsat_alloc as (Hinv) "[Hw HE]".
   rewrite {1}fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
-  iDestruct "Hwp" as (Istate) "(HIstate & HI & Hwp & Hclose)".
-  iModIntro. iNext. iApply (@wptp_invariance _ _ (IrisG _ _ Hinv Istate) I); eauto.
-  iFrame "HI Hw HE Hwp HIstate Hclose". by iApply big_sepL_nil.
+  iDestruct "Hwp" as (Istate) "(HIstate & Hwp & Hclose)".
+  iModIntro. iNext. iApply (@wptp_invariance _ _ (IrisG _ _ Hinv Istate)); eauto.
+  iFrame "Hw HE Hwp HIstate Hclose". by iApply big_sepL_nil.
 Qed.
