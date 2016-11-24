@@ -26,11 +26,11 @@ Definition rev : val :=
     end.
 
 Lemma rev_acc_wp hd acc xs ys (Φ : val → iProp Σ) :
-  heap_ctx ∗ is_list hd xs ∗ is_list acc ys ∗
+  is_list hd xs ∗ is_list acc ys ∗
     (∀ w, is_list w (reverse xs ++ ys) -∗ Φ w)
   ⊢ WP rev hd acc {{ Φ }}.
 Proof.
-  iIntros "(#Hh & Hxs & Hys & HΦ)".
+  iIntros "(Hxs & Hys & HΦ)".
   iLöb as "IH" forall (hd acc xs ys Φ). wp_rec. wp_let.
   destruct xs as [|x xs]; iSimplifyEq.
   - wp_match. by iApply "HΦ".
@@ -42,11 +42,11 @@ Proof.
 Qed.
 
 Lemma rev_wp hd xs (Φ : val → iProp Σ) :
-  heap_ctx ∗ is_list hd xs ∗ (∀ w, is_list w (reverse xs) -∗ Φ w)
+  is_list hd xs ∗ (∀ w, is_list w (reverse xs) -∗ Φ w)
   ⊢ WP rev hd (InjL #()) {{ Φ }}.
 Proof.
-  iIntros "(#Hh & Hxs & HΦ)".
-  iApply (rev_acc_wp hd NONEV xs [] with "[- $Hh $Hxs]").
+  iIntros "[Hxs HΦ]".
+  iApply (rev_acc_wp hd NONEV xs [] with "[- $Hxs]").
   iSplit; first done. iIntros (w). rewrite right_id_L. iApply "HΦ".
 Qed.
 End list_reverse.

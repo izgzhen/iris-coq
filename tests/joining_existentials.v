@@ -66,19 +66,18 @@ Proof.
 Qed.
 
 Lemma client_spec_new eM eW1 eW2 `{!Closed [] eM, !Closed [] eW1, !Closed [] eW2} :
-  heapN ⊥ N →
-  heap_ctx ∗ P
+  P
   ∗ {{ P }} eM {{ _, ∃ x, Φ x }}
   ∗ (∀ x, {{ Φ1 x }} eW1 {{ _, Ψ1 x }})
   ∗ (∀ x, {{ Φ2 x }} eW2 {{ _, Ψ2 x }})
   ⊢ WP client eM eW1 eW2 {{ _, ∃ γ, barrier_res γ Ψ }}.
 Proof.
-  iIntros (HN) "/= (#Hh&HP&#He&#He1&#He2)"; rewrite /client.
+  iIntros "/= (HP & #He & #He1 & #He2)"; rewrite /client.
   iMod (own_alloc (Pending : one_shotR Σ F)) as (γ) "Hγ"; first done.
-  wp_apply (newbarrier_spec N (barrier_res γ Φ) with "Hh"); auto.
+  wp_apply (newbarrier_spec N (barrier_res γ Φ)); auto.
   iIntros (l) "[Hr Hs]".
   set (workers_post (v : val) := (barrier_res γ Ψ1 ∗ barrier_res γ Ψ2)%I).
-  wp_let. wp_apply (wp_par  (λ _, True)%I workers_post with "[- $Hh]").
+  wp_let. wp_apply (wp_par  (λ _, True)%I workers_post).
   iSplitL "HP Hs Hγ"; [|iSplitL "Hr"].
   - wp_bind eM. iApply (wp_wand with "[HP]"); [by iApply "He"|].
     iIntros (v) "HP"; iDestruct "HP" as (x) "HP". wp_let.
@@ -88,8 +87,7 @@ Proof.
     iExists x; auto.
   - iDestruct (recv_weaken with "[] Hr") as "Hr"; first by iApply P_res_split.
     iMod (recv_split with "Hr") as "[H1 H2]"; first done.
-    wp_apply (wp_par (λ _, barrier_res γ Ψ1)%I
-                     (λ _, barrier_res γ Ψ2)%I with "[-$Hh]").
+    wp_apply (wp_par (λ _, barrier_res γ Ψ1)%I (λ _, barrier_res γ Ψ2)%I).
     iSplitL "H1"; [|iSplitL "H2"].
     + iApply worker_spec; auto.
     + iApply worker_spec; auto.

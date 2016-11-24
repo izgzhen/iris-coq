@@ -17,8 +17,7 @@ Structure lock Σ `{!heapG Σ} := Lock {
   locked_exclusive γ : locked γ ∗ locked γ ⊢ False;
   (* -- operation specs -- *)
   newlock_spec N (R : iProp Σ) :
-    heapN ⊥ N →
-    {{{ heap_ctx ∗ R }}} newlock #() {{{ lk γ, RET lk; is_lock N γ lk R }}};
+    {{{ R }}} newlock #() {{{ lk γ, RET lk; is_lock N γ lk R }}};
   acquire_spec N γ lk R :
     {{{ is_lock N γ lk R }}} acquire lk {{{ RET #(); locked γ ∗ R }}};
   release_spec N γ lk R :

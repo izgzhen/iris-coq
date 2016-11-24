@@ -11,10 +11,10 @@ Section LiftingTests.
 
   Definition heap_e  : expr :=
     let: "x" := ref #1 in "x" <- !"x" + #1 ;; !"x".
-  Lemma heap_e_spec E :
-    ↑heapN ⊆ E → heap_ctx ⊢ WP heap_e @ E {{ v, ⌜v = #2⌝ }}.
+
+  Lemma heap_e_spec E : True ⊢ WP heap_e @ E {{ v, ⌜v = #2⌝ }}.
   Proof.
-    iIntros (HN) "#?". rewrite /heap_e.
+    iIntros "". rewrite /heap_e.
     wp_alloc l. wp_let. wp_load. wp_op. wp_store. by wp_load.
   Qed.
 
@@ -22,10 +22,10 @@ Section LiftingTests.
     let: "x" := ref #1 in
     let: "y" := ref #1 in
     "x" <- !"x" + #1 ;; !"x".
-  Lemma heap_e2_spec E :
-    ↑heapN ⊆ E → heap_ctx ⊢ WP heap_e2 @ E {{ v, ⌜v = #2⌝ }}.
+
+  Lemma heap_e2_spec E : True ⊢ WP heap_e2 @ E {{ v, ⌜v = #2⌝ }}.
   Proof.
-    iIntros (HN) "#?". rewrite /heap_e2.
+    iIntros "". rewrite /heap_e2.
     wp_alloc l. wp_let. wp_alloc l'. wp_let.
     wp_load. wp_op. wp_store. wp_load. done.
   Qed.

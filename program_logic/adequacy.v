@@ -22,21 +22,6 @@ Proof.
   intros [?%subG_inG [?%subG_inG ?%subG_inG]%subG_inv]%subG_inv; by constructor.
 Qed.
 
-
-Definition irisΣ (Λstate : Type) : gFunctors :=
-  #[invΣ;
-    GFunctor (constRF (authUR (optionUR (exclR (leibnizC Λstate)))))].
-
-Class irisPreG' (Λstate : Type) (Σ : gFunctors) : Set := IrisPreG {
-  inv_inG :> invPreG Σ;
-  state_inG :> inG Σ (authR (optionUR (exclR (leibnizC Λstate))))
-}.
-Notation irisPreG Λ Σ := (irisPreG' (state Λ) Σ).
-
-Instance subG_irisΣ {Λstate Σ} : subG (irisΣ Λstate) Σ → irisPreG' Λstate Σ.
-Proof. intros [??%subG_inG]%subG_inv; constructor; apply _. Qed.
-
-
 (* Allocation *)
 Lemma wsat_alloc `{invPreG Σ} : (|==> ∃ _ : invG Σ, wsat ∗ ownE ⊤)%I.
 Proof.
@@ -48,17 +33,6 @@ Proof.
   rewrite /wsat /ownE; iFrame.
   iExists ∅. rewrite fmap_empty big_sepM_empty. by iFrame.
 Qed.
-
-Lemma iris_alloc `{irisPreG' Λstate Σ} σ :
-  (|==> ∃ _ : irisG' Λstate Σ, wsat ∗ ownE ⊤ ∗ ownP_auth σ ∗ ownP σ)%I.
-Proof.
-  iIntros.
-  iMod wsat_alloc as (?) "[Hws HE]".
-  iMod (own_alloc (● (Excl' (σ:leibnizC Λstate)) ⋅ ◯ (Excl' σ)))
-    as (γσ) "[Hσ Hσ']"; first done.
-  iModIntro; iExists (IrisG _ _ _ _ γσ). rewrite /ownP_auth /ownP; iFrame.
-Qed.
-
 
 (* Program logic adequacy *)
 Record adequate {Λ} (e1 : expr Λ) (σ1 : state Λ) (φ : val Λ → Prop) := {
@@ -91,7 +65,7 @@ Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
 Implicit Types Φs : list (val Λ → iProp Σ).
 
-Notation world σ := (wsat ∗ ownE ⊤ ∗ ownP_auth σ)%I.
+Notation world σ := (wsat ∗ ownE ⊤ ∗ state_interp σ)%I.
 
 Notation wptp t := ([∗ list] ef ∈ t, WP ef {{ _, True }})%I.
 
@@ -104,8 +78,7 @@ Proof.
   rewrite fupd_eq /fupd_def.
   iMod ("H" $! σ1 with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
   iModIntro; iNext.
-  iMod ("H" $! e2 σ2 efs with "[%] [Hw HE]")
-    as ">($ & $ & $ & $)"; try iFrame; eauto.
+  by iMod ("H" $! e2 σ2 efs with "[%] [$Hw $HE]") as ">($ & $ & $ & $)".
 Qed.
 
 Lemma wptp_step e1 t1 t2 σ1 σ2 Φ :
@@ -178,50 +151,58 @@ Proof.
   iApply wp_safe. iFrame "Hw". by iApply (big_sepL_elem_of with "Htp").
 Qed.
 
-Lemma wptp_invariance n e1 e2 t1 t2 σ1 σ2 I φ Φ :
+Lemma wptp_invariance I n e1 e2 t1 t2 σ1 σ2 φ Φ :
   nsteps step n (e1 :: t1, σ1) (t2, σ2) →
-  (I ={⊤,∅}=∗ ∃ σ', ownP σ' ∧ ⌜φ σ'⌝) →
-  I ∗ world σ1 ∗ WP e1 {{ Φ }} ∗ wptp t1 ⊢
-  Nat.iter (S (S n)) (λ P, |==> ▷ P) ⌜φ σ2⌝.
+  I ∗ (state_interp σ2 -∗ I ={⊤,∅}=∗ ⌜φ⌝) ∗ world σ1 ∗ WP e1 {{ Φ }} ∗ wptp t1
+  ⊢ Nat.iter (S (S n)) (λ P, |==> ▷ P) ⌜φ⌝.
 Proof.
-  intros ? HI. rewrite wptp_steps //.
-  rewrite (Nat_iter_S_r (S n)) bupd_iter_frame_l. apply bupd_iter_mono.
-  iIntros "[HI H]".
+  intros ?. rewrite wptp_steps //.
+  rewrite (Nat_iter_S_r (S n)) !bupd_iter_frame_l. apply bupd_iter_mono.
+  iIntros "(HI & Hback & H)".
   iDestruct "H" as (e2' t2') "(% & (Hw&HE&Hσ) & _)"; subst.
-  rewrite fupd_eq in HI;
-    iMod (HI with "HI [Hw HE]") as "> (_ & _ & H)"; first by iFrame.
-  iDestruct "H" as (σ2') "[Hσf %]".
-  iDestruct (ownP_agree σ2 σ2' with "[-]") as %<-. by iFrame. eauto.
+  rewrite fupd_eq.
+  iMod ("Hback" with "Hσ HI [$Hw $HE]") as "> (_ & _ & $)"; auto.
 Qed.
 End adequacy.
 
-Theorem wp_adequacy Σ `{irisPreG Λ Σ} e σ φ :
-  (∀ `{irisG Λ Σ}, ownP σ ⊢ WP e {{ v, ⌜φ v⌝ }}) →
+Theorem wp_adequacy Σ Λ `{invPreG Σ} (e : expr Λ) σ φ :
+  (∀ `{Hinv : invG Σ},
+     True ={⊤}=∗ ∃ stateI : state Λ → iProp Σ,
+       let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
+       stateI σ ∗ WP e {{ v, ⌜φ v⌝ }}) →
   adequate e σ φ.
 Proof.
   intros Hwp; split.
   - intros t2 σ2 v2 [n ?]%rtc_nsteps.
     eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
-    rewrite Nat_iter_S. iMod (iris_alloc σ) as (?) "(?&?&?&Hσ)".
-    iModIntro. iNext. iApply wptp_result; eauto.
-    iFrame. iSplitL. by iApply Hwp. by iApply big_sepL_nil.
+    rewrite Nat_iter_S. iMod wsat_alloc as (Hinv) "[Hw HE]".
+    rewrite fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
+    iDestruct "Hwp" as (Istate) "[HI Hwp]".
+    iModIntro. iNext. iApply (@wptp_result _ _ (IrisG _ _ Hinv Istate)); eauto.
+    iFrame. by iApply big_sepL_nil.
   - intros t2 σ2 e2 [n ?]%rtc_nsteps ?.
     eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
-    rewrite Nat_iter_S. iMod (iris_alloc σ) as (?) "(Hw & HE & Hσ & Hσf)".
-    iModIntro. iNext. iApply wptp_safe; eauto.
-    iFrame "Hw HE Hσ". iSplitL. by iApply Hwp. by iApply big_sepL_nil.
+    rewrite Nat_iter_S. iMod wsat_alloc as (Hinv) "[Hw HE]".
+    rewrite fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
+    iDestruct "Hwp" as (Istate) "[HI Hwp]".
+    iModIntro. iNext. iApply (@wptp_safe _ _ (IrisG _ _ Hinv Istate)); eauto.
+    iFrame. by iApply big_sepL_nil.
 Qed.
 
-Theorem wp_invariance Σ `{irisPreG Λ Σ} e σ1 t2 σ2 I φ Φ :
-  (∀ `{irisG Λ Σ}, ownP σ1 ={⊤}=∗ I ∗ WP e {{ Φ }}) →
-  (∀ `{irisG Λ Σ}, I ={⊤,∅}=∗ ∃ σ', ownP σ' ∧ ⌜φ σ'⌝) →
+Theorem wp_invariance {Λ} `{invPreG Σ} e σ1 t2 σ2 I φ Φ :
+  (∀ `{Hinv : invG Σ},
+     True ={⊤}=∗ ∃ stateI : state Λ → iProp Σ,
+       let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
+       stateI σ1 ∗ I ∗ WP e {{ Φ }} ∗
+         (stateI σ2 -∗ I ={⊤,∅}=∗ ⌜φ⌝)) →
   rtc step ([e], σ1) (t2, σ2) →
-  φ σ2.
+  φ.
 Proof.
-  intros Hwp HI [n ?]%rtc_nsteps.
+  intros Hwp [n ?]%rtc_nsteps.
   eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
-  rewrite Nat_iter_S. iMod (iris_alloc σ1) as (?) "(Hw & HE & ? & Hσ)".
-  rewrite fupd_eq in Hwp.
-  iMod (Hwp _ with "Hσ [Hw HE]") as ">(? & ? & ? & ?)"; first by iFrame.
-  iModIntro. iNext. iApply wptp_invariance; eauto. iFrame. by iApply big_sepL_nil.
+  rewrite Nat_iter_S. iMod wsat_alloc as (Hinv) "[Hw HE]".
+  rewrite {1}fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
+  iDestruct "Hwp" as (Istate) "(HIstate & HI & Hwp & Hclose)".
+  iModIntro. iNext. iApply (@wptp_invariance _ _ (IrisG _ _ Hinv Istate) I); eauto.
+  iFrame "HI Hw HE Hwp HIstate Hclose". by iApply big_sepL_nil.
 Qed.

@@ -45,52 +45,6 @@ Lemma wp_bind_ctxi {E e} Ki Φ :
      WP fill_item Ki e @ E {{ Φ }}.
 Proof. exact: weakestpre.wp_bind. Qed.
 
-(** Base axioms for core primitives of the language: Stateful reductions. *)
-Lemma wp_alloc_pst E σ v :
-  {{{ ▷ ownP σ }}} Alloc (of_val v) @ E
-  {{{ l, RET LitV (LitLoc l); ⌜σ !! l = None⌝ ∧ ownP (<[l:=v]>σ) }}}.
-Proof.
-  iIntros (Φ) "HP HΦ".
-  iApply (wp_lift_atomic_head_step (Alloc (of_val v)) σ); eauto.
-  iFrame "HP". iNext. iIntros (v2 σ2 ef) "% HP". inv_head_step.
-  iSplitL; last by iApply big_sepL_nil. iApply "HΦ". by iSplit.
-Qed.
-
-Lemma wp_load_pst E σ l v :
-  σ !! l = Some v →
-  {{{ ▷ ownP σ }}} Load (Lit (LitLoc l)) @ E {{{ RET v; ownP σ }}}.
-Proof.
-  intros ? Φ. apply wp_lift_atomic_det_head_step'; eauto.
-  intros; inv_head_step; eauto.
-Qed.
-
-Lemma wp_store_pst E σ l v v' :
-  σ !! l = Some v' →
-  {{{ ▷ ownP σ }}} Store (Lit (LitLoc l)) (of_val v) @ E
-  {{{ RET LitV LitUnit; ownP (<[l:=v]>σ) }}}.
-Proof.
-  intros. apply wp_lift_atomic_det_head_step'; eauto.
-  intros; inv_head_step; eauto.
-Qed.
-
-Lemma wp_cas_fail_pst E σ l v1 v2 v' :
-  σ !! l = Some v' → v' ≠ v1 →
-  {{{ ▷ ownP σ }}} CAS (Lit (LitLoc l)) (of_val v1) (of_val v2) @ E
-  {{{ RET LitV $ LitBool false; ownP σ }}}.
-Proof.
-  intros. apply wp_lift_atomic_det_head_step'; eauto.
-  intros; inv_head_step; eauto.
-Qed.
-
-Lemma wp_cas_suc_pst E σ l v1 v2 :
-  σ !! l = Some v1 →
-  {{{ ▷ ownP σ }}} CAS (Lit (LitLoc l)) (of_val v1) (of_val v2) @ E
-  {{{ RET LitV $ LitBool true; ownP (<[l:=v2]>σ) }}}.
-Proof.
-  intros. apply wp_lift_atomic_det_head_step'; eauto.
-  intros; inv_head_step; eauto.
-Qed.
-
 (** Base axioms for core primitives of the language: Stateless reductions *)
 Lemma wp_fork E e Φ :
   ▷ Φ (LitV LitUnit) ∗ ▷ WP e {{ _, True }} ⊢ WP Fork e @ E {{ Φ }}.
@@ -106,7 +60,7 @@ Lemma wp_rec E f x erec e1 e2 Φ :
   Closed (f :b: x :b: []) erec →
   ▷ WP subst' x e2 (subst' f e1 erec) @ E {{ Φ }} ⊢ WP App e1 e2 @ E {{ Φ }}.
 Proof.
-  intros -> [v2 ?] ?. rewrite -(wp_lift_pure_det_head_step' (App _ _)
+  intros -> [v2 ?] ?. rewrite -(wp_lift_pure_det_head_step_no_fork (App _ _)
     (subst' x e2 (subst' f (Rec f x erec) erec))); eauto.
   intros; inv_head_step; eauto.
 Qed.
@@ -116,7 +70,7 @@ Lemma wp_un_op E op e v v' Φ :
   un_op_eval op v = Some v' →
   ▷ Φ v' ⊢ WP UnOp op e @ E {{ Φ }}.
 Proof.
-  intros. rewrite -(wp_lift_pure_det_head_step' (UnOp op _) (of_val v'))
+  intros. rewrite -(wp_lift_pure_det_head_step_no_fork (UnOp op _) (of_val v'))
     -?wp_value'; eauto.
   intros; inv_head_step; eauto.
 Qed.
@@ -126,7 +80,7 @@ Lemma wp_bin_op E op e1 e2 v1 v2 v' Φ :
   bin_op_eval op v1 v2 = Some v' →
   ▷ (Φ v') ⊢ WP BinOp op e1 e2 @ E {{ Φ }}.
 Proof.
-  intros. rewrite -(wp_lift_pure_det_head_step' (BinOp op _ _) (of_val v'))
+  intros. rewrite -(wp_lift_pure_det_head_step_no_fork (BinOp op _ _) (of_val v'))
     -?wp_value'; eauto.
   intros; inv_head_step; eauto.
 Qed.
@@ -134,14 +88,14 @@ Qed.
 Lemma wp_if_true E e1 e2 Φ :
   ▷ WP e1 @ E {{ Φ }} ⊢ WP If (Lit (LitBool true)) e1 e2 @ E {{ Φ }}.
 Proof.
-  apply wp_lift_pure_det_head_step'; eauto.
+  apply wp_lift_pure_det_head_step_no_fork; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
 Lemma wp_if_false E e1 e2 Φ :
   ▷ WP e2 @ E {{ Φ }} ⊢ WP If (Lit (LitBool false)) e1 e2 @ E {{ Φ }}.
 Proof.
-  apply wp_lift_pure_det_head_step'; eauto.
+  apply wp_lift_pure_det_head_step_no_fork; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -150,7 +104,7 @@ Lemma wp_fst E e1 v1 e2 Φ :
   ▷ Φ v1 ⊢ WP Fst (Pair e1 e2) @ E {{ Φ }}.
 Proof.
   intros ? [v2 ?].
-  rewrite -(wp_lift_pure_det_head_step' (Fst _) e1) -?wp_value; eauto.
+  rewrite -(wp_lift_pure_det_head_step_no_fork (Fst _) e1) -?wp_value; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -159,7 +113,7 @@ Lemma wp_snd E e1 e2 v2 Φ :
   ▷ Φ v2 ⊢ WP Snd (Pair e1 e2) @ E {{ Φ }}.
 Proof.
   intros [v1 ?] ?.
-  rewrite -(wp_lift_pure_det_head_step' (Snd _) e2) -?wp_value; eauto.
+  rewrite -(wp_lift_pure_det_head_step_no_fork (Snd _) e2) -?wp_value; eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -168,7 +122,7 @@ Lemma wp_case_inl E e0 e1 e2 Φ :
   ▷ WP App e1 e0 @ E {{ Φ }} ⊢ WP Case (InjL e0) e1 e2 @ E {{ Φ }}.
 Proof.
   intros [v0 ?].
-  rewrite -(wp_lift_pure_det_head_step' (Case _ _ _) (App e1 e0)); eauto.
+  rewrite -(wp_lift_pure_det_head_step_no_fork (Case _ _ _) (App e1 e0)); eauto.
   intros; inv_head_step; eauto.
 Qed.
 
@@ -177,7 +131,7 @@ Lemma wp_case_inr E e0 e1 e2 Φ :
   ▷ WP App e2 e0 @ E {{ Φ }} ⊢ WP Case (InjR e0) e1 e2 @ E {{ Φ }}.
 Proof.
   intros [v0 ?].
-  rewrite -(wp_lift_pure_det_head_step' (Case _ _ _) (App e2 e0)); eauto.
+  rewrite -(wp_lift_pure_det_head_step_no_fork (Case _ _ _) (App e2 e0)); eauto.
   intros; inv_head_step; eauto.
 Qed.
 End lifting.

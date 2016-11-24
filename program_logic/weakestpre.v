@@ -2,25 +2,13 @@ From iris.base_logic.lib Require Export fancy_updates.
 From iris.program_logic Require Export language.
 From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics classes.
-From iris.algebra Require Import auth.
 Import uPred.
 
-Class irisG' (Λstate : Type) (Σ : gFunctors) : Set := IrisG {
+Class irisG' (Λstate : Type) (Σ : gFunctors) := IrisG {
   iris_invG :> invG Σ;
-  state_inG :> inG Σ (authR (optionUR (exclR (leibnizC Λstate))));
-  state_name : gname;
+  state_interp : Λstate → iProp Σ;
 }.
 Notation irisG Λ Σ := (irisG' (state Λ) Σ).
-
-Definition ownP `{irisG' Λstate Σ} (σ : Λstate) : iProp Σ :=
-  own state_name (◯ (Excl' σ)).
-Typeclasses Opaque ownP.
-Instance: Params (@ownP) 3.
-
-Definition ownP_auth `{irisG' Λstate Σ} (σ : Λstate) : iProp Σ :=
-  own state_name (● (Excl' (σ:leibnizC Λstate))).
-Typeclasses Opaque ownP_auth.
-Instance: Params (@ownP_auth) 4.
 
 Definition wp_pre `{irisG Λ Σ}
     (wp : coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ) :
@@ -29,9 +17,9 @@ Definition wp_pre `{irisG Λ Σ}
   (∃ v, ⌜to_val e1 = Some v⌝ ∧ |={E}=> Φ v) ∨
   (* step case *)
   (⌜to_val e1 = None⌝ ∧ ∀ σ1,
-     ownP_auth σ1 ={E,∅}=∗ ⌜reducible e1 σ1⌝ ∗
+     state_interp σ1 ={E,∅}=∗ ⌜reducible e1 σ1⌝ ∗
      ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ={∅,E}=∗
-       ownP_auth σ2 ∗ wp E e2 Φ ∗
+       state_interp σ2 ∗ wp E e2 Φ ∗
        [∗ list] ef ∈ efs, wp ⊤ ef (λ _, True)))%I.
 
 Local Instance wp_pre_contractive `{irisG Λ Σ} : Contractive wp_pre.
@@ -108,23 +96,6 @@ Implicit Types P : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
 Implicit Types v : val Λ.
 Implicit Types e : expr Λ.
-
-(* Physical state *)
-Lemma ownP_twice σ1 σ2 : ownP σ1 ∗ ownP σ2 ⊢ False.
-Proof. rewrite /ownP -own_op own_valid. by iIntros (?). Qed.
-Global Instance ownP_timeless σ : TimelessP (@ownP (state Λ) Σ _ σ).
-Proof. rewrite /ownP; apply _. Qed.
-
-Lemma ownP_agree σ1 σ2 : ownP_auth σ1 ∗ ownP σ2 ⊢ ⌜σ1 = σ2⌝.
-Proof.
-  rewrite /ownP /ownP_auth -own_op own_valid -auth_both_op.
-  by iIntros ([[[] [=]%leibniz_equiv] _]%auth_valid_discrete).
-Qed.
-Lemma ownP_update σ1 σ2 : ownP_auth σ1 ∗ ownP σ1 ==∗ ownP_auth σ2 ∗ ownP σ2.
-Proof.
-  rewrite /ownP -!own_op.
-  by apply own_update, auth_update, option_local_update, exclusive_local_update.
-Qed.
 
 (* Weakest pre *)
 Lemma wp_unfold E e Φ : WP e @ E {{ Φ }} ⊣⊢ wp_pre wp E e Φ.

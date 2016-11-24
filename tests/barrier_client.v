@@ -25,20 +25,20 @@ Section client.
   Qed.
 
   Lemma worker_safe q (n : Z) (b y : loc) :
-    heap_ctx ∗ recv N b (y_inv q y) ⊢ WP worker n #b #y {{ _, True }}.
+    recv N b (y_inv q y) ⊢ WP worker n #b #y {{ _, True }}.
   Proof.
-    iIntros "[#Hh Hrecv]". wp_lam. wp_let.
+    iIntros "Hrecv". wp_lam. wp_let.
     wp_apply (wait_spec with "[- $Hrecv]"). iDestruct 1 as (f) "[Hy #Hf]".
     wp_seq. wp_load.
     iApply (wp_wand with "[]"). iApply "Hf". by iIntros (v) "_".
   Qed.
 
-  Lemma client_safe : heapN ⊥ N → heap_ctx ⊢ WP client {{ _, True }}.
+  Lemma client_safe : True ⊢ WP client {{ _, True }}.
   Proof.
-    iIntros (?) "#Hh"; rewrite /client. wp_alloc y as "Hy". wp_let.
-    wp_apply (newbarrier_spec N (y_inv 1 y) with "Hh"); first done.
+    iIntros ""; rewrite /client. wp_alloc y as "Hy". wp_let.
+    wp_apply (newbarrier_spec N (y_inv 1 y)).
     iIntros (l) "[Hr Hs]". wp_let.
-    iApply (wp_par (λ _, True%I) (λ _, True%I) with "[-$Hh]"). iSplitL "Hy Hs".
+    iApply (wp_par (λ _, True%I) (λ _, True%I)). iSplitL "Hy Hs".
     - (* The original thread, the sender. *)
       wp_store. iApply (signal_spec with "[-]"); last by iNext; auto.
       iSplitR "Hy"; first by eauto.
@@ -48,9 +48,9 @@ Section client.
       iDestruct (recv_weaken with "[] Hr") as "Hr".
       { iIntros "Hy". by iApply (y_inv_split with "Hy"). }
       iMod (recv_split with "Hr") as "[H1 H2]"; first done.
-      iApply (wp_par (λ _, True%I) (λ _, True%I) with "[- $Hh]").
+      iApply (wp_par (λ _, True%I) (λ _, True%I)).
       iSplitL "H1"; [|iSplitL "H2"; [|by iIntros (_ _) "_ !>"]];
-        iApply worker_safe; by iSplit.
+        by iApply worker_safe.
 Qed.
 End client.
 
