@@ -73,14 +73,25 @@ Section namespace.
 
   Lemma ndisj_subseteq_difference N E F : E ⊥ ↑N → E ⊆ F → E ⊆ F ∖ ↑N.
   Proof. set_solver. Qed.
+
+  Lemma namespace_subseteq_difference_l E1 E2 E3 : E1 ⊆ E3 → E1 ∖ E2 ⊆ E3.
+  Proof. set_solver. Qed.
+
+  Lemma ndisj_difference_l E N1 N2 : ↑N2 ⊆ (↑N1 : coPset) → E ∖ ↑N1 ⊥ ↑N2.
+  Proof. set_solver. Qed.
 End namespace.
 
 (* The hope is that registering these will suffice to solve most goals
-of the form [N1 ⊥ N2] and those of the form [↑N1 ⊆ E ∖ ↑N2 ∖ .. ∖ ↑Nn]. *)
+of the forms:
+- [N1 ⊥ N2] 
+- [↑N1 ⊆ E ∖ ↑N2 ∖ .. ∖ ↑Nn]
+- [E1 ∖ ↑N1 ⊆ E2 ∖ ↑N2 ∖ .. ∖ ↑Nn] *)
 Hint Resolve ndisj_subseteq_difference : ndisj.
 Hint Extern 0 (_ ⊥ _) => apply ndot_ne_disjoint; congruence : ndisj.
 Hint Resolve ndot_preserve_disjoint_l : ndisj.
 Hint Resolve ndot_preserve_disjoint_r : ndisj.
 Hint Extern 1 (_ ⊆ _) => apply nclose_subseteq' : ndisj.
+Hint Resolve 100 namespace_subseteq_difference_l : ndisj.
+Hint Resolve ndisj_difference_l : ndisj.
 
 Ltac solve_ndisj := solve [eauto with ndisj].
