@@ -134,6 +134,12 @@ Lemma big_sep_contains Ps Qs : Qs `contains` Ps → [∗] Ps ⊢ [∗] Qs.
 Proof. intros. apply uPred_included. by apply: big_op_contains. Qed.
 Lemma big_sep_elem_of Ps P : P ∈ Ps → [∗] Ps ⊢ P.
 Proof. intros. apply uPred_included. by apply: big_sep_elem_of. Qed.
+Lemma big_sep_elem_of_acc Ps P : P ∈ Ps → [∗] Ps ⊢ P ∗ (P -∗ [∗] Ps).
+Proof.
+  intros (Ps1&Ps2&->)%elem_of_list_split.
+  rewrite !big_sep_app /=. rewrite assoc (comm _ _ P) -assoc.
+  by apply sep_mono_r, wand_intro_l.
+Qed.
 
 (** ** Persistence *)
 Global Instance big_sep_persistent Ps : PersistentL Ps → PersistentP ([∗] Ps).
@@ -327,9 +333,17 @@ Section gmap.
     ([∗ map] k↦y ∈ m, Φ k y) ⊣⊢ Φ i x ∗ [∗ map] k↦y ∈ delete i m, Φ k y.
   Proof. apply: big_opM_delete. Qed.
 
+  Lemma big_sepM_lookup_acc Φ m i x :
+    m !! i = Some x →
+    ([∗ map] k↦y ∈ m, Φ k y) ⊢ Φ i x ∗ (Φ i x -∗ ([∗ map] k↦y ∈ m, Φ k y)).
+  Proof.
+    intros. rewrite big_sepM_delete //. by apply sep_mono_r, wand_intro_l.
+  Qed.
+
   Lemma big_sepM_lookup Φ m i x :
     m !! i = Some x → ([∗ map] k↦y ∈ m, Φ k y) ⊢ Φ i x.
-  Proof. intros. apply uPred_included. by apply: big_opM_lookup. Qed. 
+  Proof. intros. apply uPred_included. by apply: big_opM_lookup. Qed.
+
   Lemma big_sepM_lookup_dom (Φ : K → uPred M) m i :
     is_Some (m !! i) → ([∗ map] k↦_ ∈ m, Φ k) ⊢ Φ i.
   Proof. intros [x ?]. by eapply (big_sepM_lookup (λ i x, Φ i)). Qed.
@@ -469,6 +483,13 @@ Section gset.
   Lemma big_sepS_elem_of Φ X x : x ∈ X → ([∗ set] y ∈ X, Φ y) ⊢ Φ x.
   Proof. intros. apply uPred_included. by apply: big_opS_elem_of. Qed.
 
+  Lemma big_sepS_elem_of_acc Φ X x :
+    x ∈ X →
+    ([∗ set] y ∈ X, Φ y) ⊢ Φ x ∗ (Φ x -∗ ([∗ set] y ∈ X, Φ y)).
+  Proof.
+    intros. rewrite big_sepS_delete //. by apply sep_mono_r, wand_intro_l.
+  Qed.
+
   Lemma big_sepS_singleton Φ x : ([∗ set] y ∈ {[ x ]}, Φ y) ⊣⊢ Φ x.
   Proof. apply: big_opS_singleton. Qed.
 
@@ -572,6 +593,13 @@ Section gmultiset.
 
   Lemma big_sepMS_elem_of Φ X x : x ∈ X → ([∗ mset] y ∈ X, Φ y) ⊢ Φ x.
   Proof. intros. apply uPred_included. by apply: big_opMS_elem_of. Qed. 
+
+  Lemma big_sepMS_elem_of_acc Φ X x :
+    x ∈ X →
+    ([∗ mset] y ∈ X, Φ y) ⊢ Φ x ∗ (Φ x -∗ ([∗ mset] y ∈ X, Φ y)).
+  Proof.
+    intros. rewrite big_sepMS_delete //. by apply sep_mono_r, wand_intro_l.
+  Qed.
 
   Lemma big_sepMS_singleton Φ x : ([∗ mset] y ∈ {[ x ]}, Φ y) ⊣⊢ Φ x.
   Proof. apply: big_opMS_singleton. Qed.
