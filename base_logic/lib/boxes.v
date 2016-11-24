@@ -104,7 +104,7 @@ Proof.
     iFrame; eauto.
 Qed.
 
-Lemma box_delete E f P Q γ :
+Lemma box_delete_empty E f P Q γ :
   ↑N ⊆ E →
   f !! γ = Some false →
   slice N γ Q ∗ ▷ box N f P ={E}=∗ ∃ P',
@@ -143,18 +143,6 @@ Proof.
     iFrame; eauto.
 Qed.
 
-Lemma box_insert_full E f P Q :
-  ↑N ⊆ E →
-  ▷ Q ∗ ▷ box N f P ={E}=∗ ∃ γ, ⌜f !! γ = None⌝ ∗
-    slice N γ Q ∗ ▷ box N (<[γ:=true]> f) (Q ∗ P).
-Proof.
-  iIntros (?) "[HQ Hbox]".
-  iMod (box_insert_empty with "Hbox") as (γ) "(% & #Hslice & Hbox)".
-  iExists γ. iFrame "%#".
-  iMod (box_fill with "[$Hslice $HQ $Hbox]"). done.
-  by apply lookup_insert. by rewrite insert_insert.
-Qed.
-
 Lemma box_empty E f P Q γ :
   ↑N ⊆ E →
   f !! γ = Some true →
@@ -173,6 +161,33 @@ Proof.
   - by rewrite big_sepM_insert_override.
   - rewrite -insert_delete big_sepM_insert ?lookup_delete //.
     iFrame; eauto.
+Qed.
+
+Lemma box_insert_full E f P Q :
+  ↑N ⊆ E →
+  ▷ Q ∗ ▷ box N f P ={E}=∗ ∃ γ, ⌜f !! γ = None⌝ ∗
+    slice N γ Q ∗ ▷ box N (<[γ:=true]> f) (Q ∗ P).
+Proof.
+  iIntros (?) "[HQ Hbox]".
+  iMod (box_insert_empty with "Hbox") as (γ) "(% & #Hslice & Hbox)".
+  iExists γ. iFrame "%#".
+  iMod (box_fill with "[$Hslice $HQ $Hbox]"). done.
+  by apply lookup_insert. by rewrite insert_insert.
+Qed.
+
+Lemma box_delete_full E f P Q γ :
+  ↑N ⊆ E →
+  f !! γ = Some true →
+  slice N γ Q ∗ ▷ box N f P ={E}=∗
+  ▷ Q ∗ ∃ P', ▷ ▷ (P ≡ (Q ∗ P')) ∗ ▷ box N (delete γ f) P'.
+Proof.
+  iIntros (??) "[#Hslice Hbox]".
+  iMod (box_empty with "[$Hslice $Hbox]") as "[$ Hbox]"; try done.
+  iMod (box_delete_empty with "[$Hslice $Hbox]") as (P') "[Heq Hbox]".
+    done. by apply lookup_insert.
+  iExists P'. rewrite delete_insert. iFrame.
+  iMod (box_fill with "[$Hslice $HQ $Hbox]"). done.
+   by rewrite insert_insert.
 Qed.
 
 Lemma box_fill_all E f P :
