@@ -85,7 +85,7 @@ Proof.
   - by rewrite big_sepM_empty.
 Qed.
 
-Lemma box_insert E f P Q :
+Lemma box_insert_empty E f P Q :
   ▷ box N f P ={E}=∗ ∃ γ, ⌜f !! γ = None⌝ ∗
     slice N γ Q ∗ ▷ box N (<[γ:=false]> f) (Q ∗ P).
 Proof.
@@ -141,6 +141,18 @@ Proof.
   - by rewrite big_sepM_insert_override.
   - rewrite -insert_delete big_sepM_insert ?lookup_delete //.
     iFrame; eauto.
+Qed.
+
+Lemma box_insert_full E f P Q :
+  ↑N ⊆ E →
+  ▷ Q ∗ ▷ box N f P ={E}=∗ ∃ γ, ⌜f !! γ = None⌝ ∗
+    slice N γ Q ∗ ▷ box N (<[γ:=true]> f) (Q ∗ P).
+Proof.
+  iIntros (?) "[HQ Hbox]".
+  iMod (box_insert_empty with "Hbox") as (γ) "(% & #Hslice & Hbox)".
+  iExists γ. iFrame "%#".
+  iMod (box_fill with "[$Hslice $HQ $Hbox]"). done.
+  by apply lookup_insert. by rewrite insert_insert.
 Qed.
 
 Lemma box_empty E f P Q γ :
