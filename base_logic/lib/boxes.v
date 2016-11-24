@@ -185,9 +185,7 @@ Proof.
   iMod (box_empty with "[$Hslice $Hbox]") as "[$ Hbox]"; try done.
   iMod (box_delete_empty with "[$Hslice $Hbox]") as (P') "[Heq Hbox]".
     done. by apply lookup_insert.
-  iExists P'. rewrite delete_insert. iFrame.
-  iMod (box_fill with "[$Hslice $HQ $Hbox]"). done.
-   by rewrite insert_insert.
+  iExists P'. iFrame. rewrite -insert_delete delete_insert ?lookup_delete //.
 Qed.
 
 Lemma box_fill_all E f P :
