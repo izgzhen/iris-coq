@@ -301,12 +301,17 @@ Qed.
 Lemma gmultiset_union_subset_r X Y : X ≠ ∅ → Y ⊂ X ∪ Y.
 Proof. rewrite (comm_L (∪)). apply gmultiset_union_subset_l. Qed.
 
-Lemma gmultiset_elem_of_subseteq x X : x ∈ X → {[ x ]} ⊆ X.
+Lemma gmultiset_elem_of_singleton_subseteq x X : x ∈ X ↔ {[ x ]} ⊆ X.
 Proof.
-  rewrite elem_of_multiplicity. intros Hx y; destruct (decide (x = y)) as [->|].
-  - rewrite multiplicity_singleton; omega.
-  - rewrite multiplicity_singleton_ne by done; omega.
+  rewrite elem_of_multiplicity. split.
+  - intros Hx y; destruct (decide (x = y)) as [->|].
+    + rewrite multiplicity_singleton; omega.
+    + rewrite multiplicity_singleton_ne by done; omega.
+  - intros Hx. generalize (Hx x). rewrite multiplicity_singleton. omega.
 Qed.
+
+Lemma gmultiset_elem_of_subseteq X1 X2 x : x ∈ X1 → X1 ⊆ X2 → x ∈ X2.
+Proof. rewrite !gmultiset_elem_of_singleton_subseteq. by intros ->. Qed.
 
 Lemma gmultiset_union_difference X Y : X ⊆ Y → Y = X ∪ Y ∖ X.
 Proof.
@@ -314,7 +319,10 @@ Proof.
   rewrite multiplicity_union, multiplicity_difference; omega.
 Qed.
 Lemma gmultiset_union_difference' x Y : x ∈ Y → Y = {[ x ]} ∪ Y ∖ {[ x ]}.
-Proof. auto using gmultiset_union_difference, gmultiset_elem_of_subseteq. Qed.
+Proof.
+  intros. by apply gmultiset_union_difference,
+    gmultiset_elem_of_singleton_subseteq.
+Qed.
 
 Lemma gmultiset_size_difference X Y : Y ⊆ X → size (X ∖ Y) = size X - size Y.
 Proof.
@@ -364,7 +372,7 @@ Proof.
   intros Hemp Hinsert X. induction (gmultiset_wf X) as [X _ IH].
   destruct (gmultiset_choose_or_empty X) as [[x Hx]| ->]; auto.
   rewrite (gmultiset_union_difference' x X) by done.
-  apply Hinsert, IH, gmultiset_difference_subset;
-    auto using gmultiset_elem_of_subseteq, gmultiset_non_empty_singleton.
+  apply Hinsert, IH, gmultiset_difference_subset,
+    gmultiset_elem_of_singleton_subseteq; auto using gmultiset_non_empty_singleton.
 Qed.
 End lemmas.
