@@ -12,13 +12,13 @@ Proof.
 Qed.
 
 Lemma demo_1 (M : ucmraT) (P1 P2 P3 : nat → uPred M) :
-  True ⊢ ∀ (x y : nat) a b,
+  (∀ (x y : nat) a b,
     x ≡ y →
     □ (uPred_ownM (a ⋅ b) -∗
     (∃ y1 y2 c, P1 ((x + y1) + y2) ∧ True ∧ □ uPred_ownM c) -∗
     □ ▷ (∀ z, P2 z ∨ True → P2 z) -∗
     ▷ (∀ n m : nat, P1 n → □ ((True ∧ P2 n) → □ (⌜n = n⌝ ↔ P3 n))) -∗
-    ▷ ⌜x = 0⌝ ∨ ∃ x z, ▷ P3 (x + z) ∗ uPred_ownM b ∗ uPred_ownM (core b)).
+    ▷ ⌜x = 0⌝ ∨ ∃ x z, ▷ P3 (x + z) ∗ uPred_ownM b ∗ uPred_ownM (core b)))%I.
 Proof.
   iIntros (i [|j] a b ?) "!# [Ha Hb] H1 #H2 H3"; setoid_subst.
   { iLeft. by iNext. }

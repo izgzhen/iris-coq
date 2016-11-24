@@ -358,7 +358,7 @@ Global Instance Envs_mono (R : relation (uPred M)) :
 Proof. by constructor. Qed.
 
 (** * Adequacy *)
-Lemma tac_adequate P : (Envs Enil Enil ⊢ P) → True ⊢ P.
+Lemma tac_adequate P : (Envs Enil Enil ⊢ P) → P.
 Proof.
   intros <-. rewrite /of_envs /= always_pure !right_id.
   apply pure_intro; repeat constructor.
@@ -618,7 +618,7 @@ Proof.
 Qed.
 
 Lemma tac_pose_proof Δ Δ' j P Q :
-  (True ⊢ P) →
+  P →
   envs_app true (Esnoc Enil j P) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.

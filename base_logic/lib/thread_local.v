@@ -37,7 +37,7 @@ Section proofs.
   Global Instance tl_inv_persistent tid N P : PersistentP (tl_inv tid N P).
   Proof. rewrite /tl_inv; apply _. Qed.
 
-  Lemma tl_alloc : True ==∗ ∃ tid, tl_own tid ⊤.
+  Lemma tl_alloc : (|==> ∃ tid, tl_own tid ⊤)%I.
   Proof. by apply own_alloc. Qed.
 
   Lemma tl_own_disjoint tid E1 E2 : tl_own tid E1 ∗ tl_own tid E2 ⊢ ⌜E1 ⊥ E2⌝.
@@ -71,7 +71,7 @@ Section proofs.
 
   Lemma tl_inv_open tid tlE E N P :
     ↑tlN ⊆ tlE → ↑N ⊆ E →
-    tl_inv tid N P ⊢ tl_own tid E ={tlE}=∗ ▷ P ∗ tl_own tid (E∖↑N) ∗
+    tl_inv tid N P -∗ tl_own tid E ={tlE}=∗ ▷ P ∗ tl_own tid (E∖↑N) ∗
                        (▷ P ∗ tl_own tid (E∖↑N) ={tlE}=∗ tl_own tid E).
   Proof.
     rewrite /tl_inv. iIntros (??) "#Htlinv Htoks".

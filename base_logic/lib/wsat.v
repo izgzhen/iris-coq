@@ -52,8 +52,8 @@ Qed.
 Global Instance ownI_persistent i P : PersistentP (ownI i P).
 Proof. rewrite /ownI. apply _. Qed.
 
-Lemma ownE_empty : True ==∗ ownE ∅.
-Proof. by rewrite (own_empty (coPset_disjUR) enabled_name). Qed.
+Lemma ownE_empty : (|==> ownE ∅)%I.
+Proof. by rewrite /uPred_valid (own_empty (coPset_disjUR) enabled_name). Qed.
 Lemma ownE_op E1 E2 : E1 ⊥ E2 → ownE (E1 ∪ E2) ⊣⊢ ownE E1 ∗ ownE E2.
 Proof. intros. by rewrite /ownE -own_op coPset_disj_union. Qed.
 Lemma ownE_disjoint E1 E2 : ownE E1 ∗ ownE E2 ⊢ ⌜E1 ⊥ E2⌝.
@@ -67,8 +67,8 @@ Qed.
 Lemma ownE_singleton_twice i : ownE {[i]} ∗ ownE {[i]} ⊢ False.
 Proof. rewrite ownE_disjoint. iIntros (?); set_solver. Qed.
 
-Lemma ownD_empty : True ==∗ ownD ∅.
-Proof. by rewrite (own_empty (gset_disjUR positive) disabled_name). Qed.
+Lemma ownD_empty : (|==> ownD ∅)%I.
+Proof. by rewrite /uPred_valid (own_empty (gset_disjUR positive) disabled_name). Qed.
 Lemma ownD_op E1 E2 : E1 ⊥ E2 → ownD (E1 ∪ E2) ⊣⊢ ownD E1 ∗ ownD E2.
 Proof. intros. by rewrite /ownD -own_op gset_disj_union. Qed.
 Lemma ownD_disjoint E1 E2 : ownD E1 ∗ ownD E2 ⊢ ⌜E1 ⊥ E2⌝.

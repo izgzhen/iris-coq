@@ -8,13 +8,13 @@ CMRA structure on uPred. *)
 Section cmra.
   Context {M : ucmraT}.
 
-  Instance uPred_valid : Valid (uPred M) := λ P, ∀ n x, ✓{n} x → P n x.
-  Instance uPred_validN : ValidN (uPred M) := λ n P,
+  Instance uPred_valid_inst : Valid (uPred M) := λ P, ∀ n x, ✓{n} x → P n x.
+  Instance uPred_validN_inst : ValidN (uPred M) := λ n P,
     ∀ n' x, n' ≤ n → ✓{n'} x → P n' x.
   Instance uPred_op : Op (uPred M) := uPred_sep.
   Instance uPred_pcore : PCore (uPred M) := λ _, Some True%I.
 
-  Instance uPred_validN_ne n : Proper (dist n ==> iff) (uPred_validN n).
+  Instance uPred_validN_ne n : Proper (dist n ==> iff) (uPred_validN_inst n).
   Proof. intros P Q HPQ; split=> H n' x ??; by apply HPQ, H. Qed.
 
   Lemma uPred_validN_alt n (P : uPred M) : ✓{n} P → P ≡{n}≡ True%I.
@@ -467,7 +467,7 @@ Section gset.
   Proof. apply: big_opS_delete. Qed.
 
   Lemma big_sepS_elem_of Φ X x : x ∈ X → ([∗ set] y ∈ X, Φ y) ⊢ Φ x.
-  Proof. intros. apply uPred_included. by apply: big_opS_elem_of. Qed. 
+  Proof. intros. apply uPred_included. by apply: big_opS_elem_of. Qed.
 
   Lemma big_sepS_singleton Φ x : ([∗ set] y ∈ {[ x ]}, Φ y) ⊣⊢ Φ x.
   Proof. apply: big_opS_singleton. Qed.

@@ -89,20 +89,20 @@ Notation "'{{{' P } } } e @ E {{{ 'RET' pat ; Q } } }" :=
 
 Notation "'{{{' P } } } e {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
-      P ⊢ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e {{ Φ }})
+      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e {{ Φ }})
     (at level 20, x closed binder, y closed binder,
      format "{{{  P  } } }  e  {{{  x .. y ,  RET  pat ;  Q } } }") : C_scope.
 Notation "'{{{' P } } } e @ E {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
-      P ⊢ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E {{ Φ }})
+      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E {{ Φ }})
     (at level 20, x closed binder, y closed binder,
      format "{{{  P  } } }  e  @  E  {{{  x .. y ,  RET  pat ;  Q } } }") : C_scope.
 Notation "'{{{' P } } } e {{{ 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _, P ⊢ ▷ (Q -∗ Φ pat%V) -∗ WP e {{ Φ }})
+  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e {{ Φ }})
     (at level 20,
      format "{{{  P  } } }  e  {{{  RET  pat ;  Q } } }") : C_scope.
 Notation "'{{{' P } } } e @ E {{{ 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _, P ⊢ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E {{ Φ }})
+  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E {{ Φ }})
     (at level 20,
      format "{{{  P  } } }  e  @  E  {{{  RET  pat ;  Q } } }") : C_scope.
 
@@ -276,7 +276,7 @@ Lemma wp_frame_step_r' E e Φ R :
 Proof. iIntros (?) "[??]". iApply (wp_frame_step_r E E); try iFrame; eauto. Qed.
 
 Lemma wp_wand E e Φ Ψ :
-  WP e @ E {{ Φ }} ⊢ (∀ v, Φ v -∗ Ψ v) -∗ WP e @ E {{ Ψ }}.
+  WP e @ E {{ Φ }} -∗ (∀ v, Φ v -∗ Ψ v) -∗ WP e @ E {{ Ψ }}.
 Proof.
   iIntros "Hwp H". iApply (wp_strong_mono E); auto.
   iFrame "Hwp". iIntros (?) "?". by iApply "H".

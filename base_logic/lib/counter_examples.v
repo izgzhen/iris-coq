@@ -13,13 +13,13 @@ Module savedprop. Section savedprop.
   Context (sprop : Type) (saved : sprop → iProp → iProp).
   Hypothesis sprop_persistent : ∀ i P, PersistentP (saved i P).
   Hypothesis sprop_alloc_dep :
-    ∀ (P : sprop → iProp), True ==∗ (∃ i, saved i (P i)).
+    ∀ (P : sprop → iProp), (|==> (∃ i, saved i (P i)))%I.
   Hypothesis sprop_agree : ∀ i P Q, saved i P ∧ saved i Q ⊢ □ (P ↔ Q).
 
   (** A bad recursive reference: "Assertion with name [i] does not hold" *)
   Definition A (i : sprop) : iProp := ∃ P, ¬ P ∗ saved i P.
 
-  Lemma A_alloc : True ==∗ ∃ i, saved i (A i).
+  Lemma A_alloc : (|==> ∃ i, saved i (A i))%I.
   Proof. by apply sprop_alloc_dep. Qed.
 
   Lemma saved_NA i : saved i (A i) ⊢ ¬ A i.
@@ -85,7 +85,7 @@ Module inv. Section inv.
   Context (gname : Type).
   Context (start finished : gname → iProp).
 
-  Hypothesis sts_alloc : True ⊢ fupd M0 (∃ γ, start γ).
+  Hypothesis sts_alloc : fupd M0 (∃ γ, start γ).
   Hypotheses start_finish : ∀ γ, start γ ⊢ fupd M0 (finished γ).
 
   Hypothesis finished_not_start : ∀ γ, start γ ∗ finished γ ⊢ False.
@@ -93,7 +93,7 @@ Module inv. Section inv.
   Hypothesis finished_dup : ∀ γ, finished γ ⊢ finished γ ∗ finished γ.
 
   (** We assume that we cannot update to false. *)
-  Hypothesis consistency : ¬ (True ⊢ fupd M1 False).
+  Hypothesis consistency : ¬ (fupd M1 False).
 
   (** Some general lemmas and proof mode compatibility. *)
   Lemma inv_open' i P R : inv i P ∗ (P -∗ fupd M0 (P ∗ fupd M1 R)) ⊢ fupd M1 R.
@@ -110,7 +110,7 @@ Module inv. Section inv.
     intros P Q; rewrite !uPred.equiv_spec=> -[??]; split; by apply fupd_mono.
   Qed.
 
-  Lemma fupd_frame_r E P Q : (fupd E P ∗ Q) ⊢ fupd E (P ∗ Q).
+  Lemma fupd_frame_r E P Q : fupd E P ∗ Q ⊢ fupd E (P ∗ Q).
   Proof. by rewrite comm fupd_frame_l comm. Qed.
 
   Global Instance elim_fupd_fupd E P Q : ElimModal (fupd E P) P (fupd E Q) (fupd E Q).
@@ -133,7 +133,7 @@ Module inv. Section inv.
     ∃ i, inv i (start γ ∨ (finished γ ∗ □ P)).
   Global Instance saved_persistent γ P : PersistentP (saved γ P) := _.
 
-  Lemma saved_alloc (P : gname → iProp) : True ⊢ fupd M1 (∃ γ, saved γ (P γ)).
+  Lemma saved_alloc (P : gname → iProp) : fupd M1 (∃ γ, saved γ (P γ)).
   Proof.
     iIntros "". iMod (sts_alloc) as (γ) "Hs".
     iMod (inv_alloc (start γ ∨ (finished γ ∗ □ (P γ))) with "[Hs]") as (i) "#Hi".
@@ -166,7 +166,7 @@ Module inv. Section inv.
   Definition A i : iProp := ∃ P, ¬P ∗ saved i P.
   Global Instance A_persistent i : PersistentP (A i) := _.
 
-  Lemma A_alloc : True ⊢ fupd M1 (∃ i, saved i (A i)).
+  Lemma A_alloc : fupd M1 (∃ i, saved i (A i)).
   Proof. by apply saved_alloc. Qed.
 
   Lemma saved_NA i : saved i (A i) ⊢ ¬A i.

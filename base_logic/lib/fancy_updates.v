@@ -22,7 +22,7 @@ Notation "|={ E1 , E2 }=> Q" := (fupd E1 E2 Q)
 Notation "P ={ E1 , E2 }=∗ Q" := (P -∗ |={E1,E2}=> Q)%I
   (at level 99, E1,E2 at level 50, Q at level 200,
    format "P  ={ E1 , E2 }=∗  Q") : uPred_scope.
-Notation "P ={ E1 , E2 }=∗ Q" := (P ⊢ |={E1,E2}=> Q)
+Notation "P ={ E1 , E2 }=∗ Q" := (P -∗ |={E1,E2}=> Q)
   (at level 99, E1, E2 at level 50, Q at level 200, only parsing) : C_scope.
 
 Notation "|={ E }=> Q" := (fupd E E Q)
@@ -31,7 +31,7 @@ Notation "|={ E }=> Q" := (fupd E E Q)
 Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q)%I
   (at level 99, E at level 50, Q at level 200,
    format "P  ={ E }=∗  Q") : uPred_scope.
-Notation "P ={ E }=∗ Q" := (P ⊢ |={E}=> Q)
+Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q)
   (at level 99, E at level 50, Q at level 200, only parsing) : C_scope.
 
 Section fupd.
@@ -56,13 +56,13 @@ Proof. rewrite fupd_eq. iIntros ">H [Hw HE]". iApply "H"; by iFrame. Qed.
 Lemma bupd_fupd E P : (|==> P) ={E}=∗ P.
 Proof. rewrite fupd_eq /fupd_def. by iIntros ">? [$ $] !> !>". Qed.
 
-Lemma fupd_mono E1 E2 P Q : (P ⊢ Q) → (|={E1,E2}=> P) ={E1,E2}=∗ Q.
+Lemma fupd_mono E1 E2 P Q : (P ⊢ Q) → (|={E1,E2}=> P) ⊢ |={E1,E2}=> Q.
 Proof.
   rewrite fupd_eq /fupd_def. iIntros (HPQ) "HP HwE".
   rewrite -HPQ. by iApply "HP".
 Qed.
 
-Lemma fupd_trans E1 E2 E3 P : (|={E1,E2}=> |={E2,E3}=> P) ={E1,E3}=∗ P.
+Lemma fupd_trans E1 E2 E3 P : (|={E1,E2}=> |={E2,E3}=> P) ⊢ |={E1,E3}=> P.
 Proof.
   rewrite fupd_eq /fupd_def. iIntros "HP HwE".
   iMod ("HP" with "HwE") as ">(Hw & HE & HP)". iApply "HP"; by iFrame.
@@ -89,7 +89,7 @@ Proof. intros P Q; apply fupd_mono. Qed.
 
 Lemma fupd_intro E P : P ={E}=∗ P.
 Proof. iIntros "HP". by iApply bupd_fupd. Qed.
-Lemma fupd_intro_mask' E1 E2 : E2 ⊆ E1 → True ⊢ |={E1,E2}=> |={E2,E1}=> True.
+Lemma fupd_intro_mask' E1 E2 : E2 ⊆ E1 → (|={E1,E2}=> |={E2,E1}=> True)%I.
 Proof. exact: fupd_intro_mask. Qed.
 Lemma fupd_except_0 E1 E2 P : (|={E1,E2}=> ◇ P) ={E1,E2}=∗ P.
 Proof. by rewrite {1}(fupd_intro E2 P) except_0_fupd fupd_trans. Qed.

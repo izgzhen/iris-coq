@@ -189,7 +189,7 @@ Proof.
   - iExists γ, P, R2, i2. iFrame; auto.
 Qed.
 
-Lemma recv_weaken l P1 P2 : (P1 -∗ P2) ⊢ recv l P1 -∗ recv l P2.
+Lemma recv_weaken l P1 P2 : (P1 -∗ P2) -∗ recv l P1 -∗ recv l P2.
 Proof.
   rewrite /recv.
   iIntros "HP HP1"; iDestruct "HP1" as (γ P Q i) "(#Hctx&Hγ&Hi&HP1)".

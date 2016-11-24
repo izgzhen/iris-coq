@@ -59,7 +59,7 @@ Section LiftingTests.
   Qed.
 
   Lemma Pred_user E :
-    True ⊢ WP let: "x" := Pred #42 in Pred "x" @ E {{ v, ⌜v = #40⌝ }}.
+    (WP let: "x" := Pred #42 in Pred "x" @ E {{ v, ⌜v = #40⌝ }})%I.
   Proof. iIntros "". wp_apply Pred_spec. wp_let. by wp_apply Pred_spec. Qed.
 End LiftingTests.
 

@@ -188,6 +188,10 @@ Notation "P ==∗ Q" := (P ⊢ |==> Q)
 Notation "P ==∗ Q" := (P -∗ |==> Q)%I
   (at level 99, Q at level 200, format "P  ==∗  Q") : uPred_scope.
 
+Coercion uPred_valid {M} (P : uPred M) : Prop := True%I ⊢ P.
+Notation "P -∗ Q" := (P ⊢ Q)
+  (at level 99, Q at level 200, right associativity, only parsing) : C_scope.
+
 Module uPred_primitive.
 Definition unseal :=
   (uPred_pure_eq, uPred_and_eq, uPred_or_eq, uPred_impl_eq, uPred_forall_eq,
@@ -314,6 +318,10 @@ Proof.
     exists x'; split; auto; apply HPQ; eauto using cmra_validN_op_l.
 Qed.
 Global Instance bupd_proper : Proper ((≡) ==> (≡)) (@uPred_bupd M) := ne_proper _.
+Global Instance uPred_valid_proper : Proper ((⊣⊢) ==> iff) (@uPred_valid M).
+Proof. solve_proper. Qed.
+Global Instance uPred_valid_mono : Proper ((⊢) ==> impl) (@uPred_valid M).
+Proof. solve_proper. Qed.
 
 (** Introduction and elimination rules *)
 Lemma pure_intro φ P : φ → P ⊢ ⌜φ⌝.
@@ -355,7 +363,7 @@ Proof. unseal; split=> n x ??; by exists a. Qed.
 Lemma exist_elim {A} (Φ : A → uPred M) Q : (∀ a, Φ a ⊢ Q) → (∃ a, Φ a) ⊢ Q.
 Proof. unseal; intros HΦΨ; split=> n x ? [a ?]; by apply HΦΨ with a. Qed.
 
-Lemma internal_eq_refl {A : ofeT} (a : A) : True ⊢ a ≡ a.
+Lemma internal_eq_refl {A : ofeT} (a : A) : uPred_valid (M:=M) (a ≡ a).
 Proof. unseal; by split=> n x ??; simpl. Qed.
 Lemma internal_eq_rewrite {A : ofeT} a b (Ψ : A → uPred M) P
   {HΨ : ∀ n, Proper (dist n ==> dist n) Ψ} : (P ⊢ a ≡ b) → (P ⊢ Ψ a) → P ⊢ Ψ b.
@@ -491,7 +499,7 @@ Lemma always_ownM_core (a : M) : uPred_ownM a ⊢ □ uPred_ownM (core a).
 Proof.
   split=> n x /=; unseal; intros Hx. simpl. by apply cmra_core_monoN.
 Qed.
-Lemma ownM_empty : True ⊢ uPred_ownM ∅.
+Lemma ownM_empty : uPred_valid (M:=M) (uPred_ownM ∅).
 Proof. unseal; split=> n x ??; by  exists x; rewrite left_id. Qed.
 Lemma later_ownM a : ▷ uPred_ownM a ⊢ ∃ b, uPred_ownM b ∧ ▷ (a ≡ b).
 Proof.
@@ -506,7 +514,7 @@ Lemma ownM_valid (a : M) : uPred_ownM a ⊢ ✓ a.
 Proof.
   unseal; split=> n x Hv [a' ?]; cofe_subst; eauto using cmra_validN_op_l.
 Qed.
-Lemma cmra_valid_intro {A : cmraT} (a : A) : ✓ a → True ⊢ ✓ a.
+Lemma cmra_valid_intro {A : cmraT} (a : A) : ✓ a → uPred_valid (M:=M) (✓ a).
 Proof. unseal=> ?; split=> n x ? _ /=; by apply cmra_valid_validN. Qed.
 Lemma cmra_valid_elim {A : cmraT} (a : A) : ¬ ✓{0} a → ✓ a ⊢ False.
 Proof. unseal=> Ha; split=> n x ??; apply Ha, cmra_validN_le with n; auto. Qed.

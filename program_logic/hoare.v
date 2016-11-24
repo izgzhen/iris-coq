@@ -7,29 +7,17 @@ Definition ht `{irisG Λ Σ} (E : coPset) (P : iProp Σ)
   (□ (P -∗ WP e @ E {{ Φ }}))%I.
 Instance: Params (@ht) 4.
 
-Notation "{{ P } } e @ E {{ Φ } }" := (ht E P e%E Φ)
-  (at level 20, P, e, Φ at level 200,
-   format "{{  P  } }  e  @  E  {{  Φ  } }") : uPred_scope.
-Notation "{{ P } } e {{ Φ } }" := (ht ⊤ P e%E Φ)
-  (at level 20, P, e, Φ at level 200,
-   format "{{  P  } }  e  {{  Φ  } }") : uPred_scope.
-Notation "{{ P } } e @ E {{ Φ } }" := (True ⊢ ht E P e%E Φ)
+Notation "{{ P } } e @ E {{ Φ } }" := (ht E P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
    format "{{  P  } }  e  @  E  {{  Φ  } }") : C_scope.
-Notation "{{ P } } e {{ Φ } }" := (True ⊢ ht ⊤ P e%E Φ)
+Notation "{{ P } } e {{ Φ } }" := (ht ⊤ P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
    format "{{  P  } }  e  {{  Φ  } }") : C_scope.
 
-Notation "{{ P } } e @ E {{ v , Q } }" := (ht E P e%E (λ v, Q))
-  (at level 20, P, e, Q at level 200,
-   format "{{  P  } }  e  @  E  {{  v ,  Q  } }") : uPred_scope.
-Notation "{{ P } } e {{ v , Q } }" := (ht ⊤ P e%E (λ v, Q))
-  (at level 20, P, e, Q at level 200,
-   format "{{  P  } }  e  {{  v ,  Q  } }") : uPred_scope.
-Notation "{{ P } } e @ E {{ v , Q } }" := (True ⊢ ht E P e%E (λ v, Q))
+Notation "{{ P } } e @ E {{ v , Q } }" := (ht E P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
    format "{{  P  } }  e  @  E  {{  v ,  Q  } }") : C_scope.
-Notation "{{ P } } e {{ v , Q } }" := (True ⊢ ht ⊤ P e%E (λ v, Q))
+Notation "{{ P } } e {{ v , Q } }" := (ht ⊤ P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
    format "{{  P  } }  e  {{  v ,  Q  } }") : C_scope.
 

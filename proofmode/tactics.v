@@ -47,6 +47,7 @@ Tactic Notation "iProof" :=
   | |- of_envs _ ⊢ _ => fail "iProof: already in Iris proofmode"
   | |- ?P =>
     match eval hnf in P with
+    (* need to use the unfolded version of [uPred_valid] due to the hnf *)
     | True ⊢ _ => apply tac_adequate
     | _ ⊢ _ => apply uPred.wand_entails, tac_adequate
     (* need to use the unfolded version of [⊣⊢] due to the hnf *)
@@ -355,16 +356,16 @@ Tactic Notation "iSpecialize" open_constr(t) "#" :=
   iSpecializeCore t as true (fun _ => idtac).
 
 (** * Pose proof *)
-(* The tactic [iIntoEntails] tactic solves a goal [True ⊢ Q]. The arguments [t]
-is a Coq term whose type is of the following shape:
+(* The tactic [iIntoValid] tactic solves a goal [uPred_valid Q]. The
+arguments [t] is a Coq term whose type is of the following shape:
 
-- [∀ (x_1 : A_1) .. (x_n : A_n), True ⊢ Q]
+- [∀ (x_1 : A_1) .. (x_n : A_n), uPred_valid Q]
 - [∀ (x_1 : A_1) .. (x_n : A_n), P1 ⊢ P2], in which case [Q] becomes [P1 -∗ P2]
 - [∀ (x_1 : A_1) .. (x_n : A_n), P1 ⊣⊢ P2], in which case [Q] becomes [P1 ↔ P2]
 
 The tactic instantiates each dependent argument [x_i] with an evar and generates
 a goal [P] for non-dependent arguments [x_i : P]. *)
-Tactic Notation "iIntoEntails" open_constr(t) :=
+Tactic Notation "iIntoValid" open_constr(t) :=
   let rec go t :=
     let tT := type of t in
     lazymatch eval hnf in tT with
@@ -392,7 +393,7 @@ Tactic Notation "iPoseProofCore" open_constr(lem) "as" constr(p) tactic(tac) :=
          |tac Htmp]
     | _ =>
        eapply tac_pose_proof with _ Htmp _; (* (j:=H) *)
-         [iIntoEntails t
+         [iIntoValid t
          |env_cbv; reflexivity || fail "iPoseProof:" Htmp "not fresh"
          |tac Htmp]
     end;

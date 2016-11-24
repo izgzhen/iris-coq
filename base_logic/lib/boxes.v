@@ -70,7 +70,7 @@ Proof.
 Qed.
 
 Lemma box_own_agree γ Q1 Q2 :
-  (box_own_prop γ Q1 ∗ box_own_prop γ Q2) ⊢ ▷ (Q1 ≡ Q2).
+  box_own_prop γ Q1 ∗ box_own_prop γ Q2 ⊢ ▷ (Q1 ≡ Q2).
 Proof.
   rewrite /box_own_prop -own_op own_valid prod_validI /= and_elim_r.
   rewrite option_validI /= agree_validI agree_equivI later_equivI /=.
@@ -78,7 +78,7 @@ Proof.
   iRewrite "HQ". by rewrite iProp_fold_unfold.
 Qed.
 
-Lemma box_alloc : True ⊢ box N ∅ True.
+Lemma box_alloc : box N ∅ True%I.
 Proof.
   iIntros; iExists (λ _, True)%I; iSplit.
   - iNext. by rewrite big_sepM_empty.

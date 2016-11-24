@@ -38,7 +38,7 @@ Proof. intros [??%subG_inG]%subG_inv; constructor; apply _. Qed.
 
 
 (* Allocation *)
-Lemma wsat_alloc `{invPreG Σ} : True ==∗ ∃ _ : invG Σ, wsat ∗ ownE ⊤.
+Lemma wsat_alloc `{invPreG Σ} : (|==> ∃ _ : invG Σ, wsat ∗ ownE ⊤)%I.
 Proof.
   iIntros.
   iMod (own_alloc (● (∅ : gmap _ _))) as (γI) "HI"; first done.
@@ -50,7 +50,7 @@ Proof.
 Qed.
 
 Lemma iris_alloc `{irisPreG' Λstate Σ} σ :
-  True ==∗ ∃ _ : irisG' Λstate Σ, wsat ∗ ownE ⊤ ∗ ownP_auth σ ∗ ownP σ.
+  (|==> ∃ _ : irisG' Λstate Σ, wsat ∗ ownE ⊤ ∗ ownP_auth σ ∗ ownP σ)%I.
 Proof.
   iIntros.
   iMod wsat_alloc as (?) "[Hws HE]".

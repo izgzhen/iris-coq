@@ -306,7 +306,7 @@ End classical.
    we establish adequacy without axioms? Unfortunately not, because adequacy for 
    nnupd would imply double negation elimination, which is classical: *)
 
-Lemma nnupd_dne φ: True ⊢ (|=n=> ⌜¬¬ φ → φ⌝: uPred M)%I.
+Lemma nnupd_dne φ: (|=n=> ⌜¬¬ φ → φ⌝: uPred M)%I.
 Proof.
   rewrite /uPred_nnupd. apply forall_intro=>n.
   apply wand_intro_l. rewrite ?right_id. 
@@ -358,7 +358,7 @@ Proof.
     eapply IHn; eauto.
 Qed.
 
-Lemma adequacy φ n : (True ⊢ Nat.iter n (λ P, |=n=> ▷ P) ⌜φ⌝) → ¬¬ φ.
+Lemma adequacy φ n : Nat.iter n (λ P, |=n=> ▷ P)%I ⌜φ⌝%I → ¬¬ φ.
 Proof.
   cut (∀ x, ✓{S n} x → Nat.iter n (λ P, |=n=> ▷ P)%I ⌜φ⌝%I (S n) x → ¬¬φ).
   { intros help H. eapply (help ∅); eauto using ucmra_unit_validN.

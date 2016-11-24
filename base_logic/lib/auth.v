@@ -109,7 +109,7 @@ Section auth.
     iMod (auth_alloc_strong N E t ∅ with "Hφ") as (γ) "[_ ?]"; eauto.
   Qed.
 
-  Lemma auth_empty γ : True ==∗ auth_own γ ∅.
+  Lemma auth_empty γ : (|==> auth_own γ ∅)%I.
   Proof. by rewrite /auth_own -own_empty. Qed.
 
   Lemma auth_acc E γ a :

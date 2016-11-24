@@ -68,9 +68,9 @@ Proof.
   (* implicit arguments differ a bit *)
   by trans (✓ cmra_transport inG_prf a : iProp Σ)%I; last destruct inG_prf.
 Qed.
-Lemma own_valid_2 γ a1 a2 : own γ a1 ⊢ own γ a2 -∗ ✓ (a1 ⋅ a2).
+Lemma own_valid_2 γ a1 a2 : own γ a1 -∗ own γ a2 -∗ ✓ (a1 ⋅ a2).
 Proof. apply wand_intro_r. by rewrite -own_op own_valid. Qed.
-Lemma own_valid_3 γ a1 a2 a3 : own γ a1 ⊢ own γ a2 -∗ own γ a3 -∗ ✓ (a1 ⋅ a2 ⋅ a3).
+Lemma own_valid_3 γ a1 a2 a3 : own γ a1 -∗ own γ a2 -∗ own γ a3 -∗ ✓ (a1 ⋅ a2 ⋅ a3).
 Proof. do 2 apply wand_intro_r. by rewrite -!own_op own_valid. Qed.
 Lemma own_valid_r γ a : own γ a ⊢ own γ a ∗ ✓ a.
 Proof. apply (uPred.always_entails_r _ _). apply own_valid. Qed.
@@ -86,20 +86,20 @@ Proof. rewrite !own_eq /own_def; apply _. Qed.
 (* TODO: This also holds if we just have ✓ a at the current step-idx, as Iris
    assertion. However, the map_updateP_alloc does not suffice to show this. *)
 Lemma own_alloc_strong a (G : gset gname) :
-  ✓ a → True ==∗ ∃ γ, ⌜γ ∉ G⌝ ∧ own γ a.
+  ✓ a → (|==> ∃ γ, ⌜γ ∉ G⌝ ∧ own γ a)%I.
 Proof.
   intros Ha.
   rewrite -(bupd_mono (∃ m, ⌜∃ γ, γ ∉ G ∧ m = iRes_singleton γ a⌝ ∧ uPred_ownM m)%I).
-  - rewrite ownM_empty.
+  - rewrite /uPred_valid ownM_empty.
     eapply bupd_ownM_updateP, (iprod_singleton_updateP_empty (inG_id _));
       first (eapply alloc_updateP_strong', cmra_transport_valid, Ha);
       naive_solver.
   - apply exist_elim=>m; apply pure_elim_l=>-[γ [Hfresh ->]].
     by rewrite !own_eq /own_def -(exist_intro γ) pure_True // left_id.
 Qed.
-Lemma own_alloc a : ✓ a → True ==∗ ∃ γ, own γ a.
+Lemma own_alloc a : ✓ a → (|==> ∃ γ, own γ a)%I.
 Proof.
-  intros Ha. rewrite (own_alloc_strong a ∅) //; [].
+  intros Ha. rewrite /uPred_valid (own_alloc_strong a ∅) //; [].
   apply bupd_mono, exist_mono=>?. eauto with I.
 Qed.
 
@@ -121,10 +121,10 @@ Proof.
   by apply bupd_mono, exist_elim=> a''; apply pure_elim_l=> ->.
 Qed.
 Lemma own_update_2 γ a1 a2 a' :
-  a1 ⋅ a2 ~~> a' → own γ a1 ⊢ own γ a2 ==∗ own γ a'.
+  a1 ⋅ a2 ~~> a' → own γ a1 -∗ own γ a2 ==∗ own γ a'.
 Proof. intros. apply wand_intro_r. rewrite -own_op. by apply own_update. Qed.
 Lemma own_update_3 γ a1 a2 a3 a' :
-  a1 ⋅ a2 ⋅ a3 ~~> a' → own γ a1 ⊢ own γ a2 -∗ own γ a3 ==∗ own γ a'.
+  a1 ⋅ a2 ⋅ a3 ~~> a' → own γ a1 -∗ own γ a2 -∗ own γ a3 ==∗ own γ a'.
 Proof. intros. do 2 apply wand_intro_r. rewrite -!own_op. by apply own_update. Qed.
 End global.
 
@@ -138,9 +138,9 @@ Arguments own_update {_ _} [_] _ _ _ _.
 Arguments own_update_2 {_ _} [_] _ _ _ _ _.
 Arguments own_update_3 {_ _} [_] _ _ _ _ _ _.
 
-Lemma own_empty A `{inG Σ (A:ucmraT)} γ : True ==∗ own γ ∅.
+Lemma own_empty A `{inG Σ (A:ucmraT)} γ : (|==> own γ ∅)%I.
 Proof.
-  rewrite ownM_empty !own_eq /own_def.
+  rewrite /uPred_valid ownM_empty !own_eq /own_def.
   apply bupd_ownM_update, iprod_singleton_update_empty.
   apply (alloc_unit_singleton_update (cmra_transport inG_prf ∅)); last done.
   - apply cmra_transport_valid, ucmra_unit_valid.
