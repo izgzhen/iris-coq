@@ -42,6 +42,7 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String a s =>
      if is_space a then tokenize_go s (cons_name kn k) ""
      else tokenize_go s k (String a kn)
+  (* TODO: Complain about invalid characters, to future-proof this against making more characters special. *)
   end.
 Definition tokenize (s : string) : list token := tokenize_go s [] "".
 

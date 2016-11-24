@@ -29,7 +29,6 @@ Module intro_pat.
 Inductive token :=
   | TName : string → token
   | TAnom : token
-  | TDrop : token
   | TFrame : token
   | TBar : token
   | TBracketL : token
@@ -55,7 +54,6 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   match s with
   | "" => rev (cons_name kn k)
   | String "?" s => tokenize_go s (TAnom :: cons_name kn k) ""
-  | String "_" s => tokenize_go s (TDrop :: cons_name kn k) ""
   | String "$" s => tokenize_go s (TFrame :: cons_name kn k) ""
   | String "[" s => tokenize_go s (TBracketL :: cons_name kn k) ""
   | String "]" s => tokenize_go s (TBracketR :: cons_name kn k) ""
@@ -77,6 +75,7 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String a s =>
      if is_space a then tokenize_go s (cons_name kn k) ""
      else tokenize_go s k (String a kn)
+  (* TODO: Complain about invalid characters, to future-proof this against making more characters special. *)
   end.
 Definition tokenize (s : string) : list token := tokenize_go s [] "".
 
@@ -129,9 +128,9 @@ Fixpoint close_conj_list (k : stack)
 Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   match ts with
   | [] => Some k
+  | TName "_" :: ts => parse_go ts (SPat IDrop :: k)
   | TName s :: ts => parse_go ts (SPat (IName s) :: k)
   | TAnom :: ts => parse_go ts (SPat IAnom :: k)
-  | TDrop :: ts => parse_go ts (SPat IDrop :: k)
   | TFrame :: ts => parse_go ts (SPat IFrame :: k)
   | TBracketL :: ts => parse_go ts (SList :: k)
   | TBar :: ts => parse_go ts (SBar :: k)
