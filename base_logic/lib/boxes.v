@@ -49,8 +49,12 @@ Global Instance box_inv_ne n γ : Proper (dist n ==> dist n) (slice_inv γ).
 Proof. solve_proper. Qed.
 Global Instance slice_ne n γ : Proper (dist n ==> dist n) (slice N γ).
 Proof. solve_proper. Qed.
-Global Instance box_ne n f : Proper (dist n ==> dist n) (box N f).
-Proof. solve_proper. Qed.
+Global Instance box_contractive f : Contractive (box N f).
+Proof.
+  intros n P1 P2 HP1P2. apply exist_ne. intros Φ. f_equiv; last done.
+  apply contractive. intros n' ?. by rewrite HP1P2.
+Qed.
+
 Global Instance slice_persistent γ P : PersistentP (slice N γ P).
 Proof. apply _. Qed.
 
@@ -85,7 +89,7 @@ Proof.
   - by rewrite big_sepM_empty.
 Qed.
 
-Lemma box_insert_empty E f P Q :
+Lemma box_insert_empty Q E f P :
   ▷ box N f P ={E}=∗ ∃ γ, ⌜f !! γ = None⌝ ∗
     slice N γ Q ∗ ▷ box N (<[γ:=false]> f) (Q ∗ P).
 Proof.
@@ -107,10 +111,10 @@ Qed.
 Lemma box_delete_empty E f P Q γ :
   ↑N ⊆ E →
   f !! γ = Some false →
-  slice N γ Q ∗ ▷ box N f P ={E}=∗ ∃ P',
+  slice N γ Q -∗ ▷ box N f P ={E}=∗ ∃ P',
     ▷ ▷ (P ≡ (Q ∗ P')) ∗ ▷ box N (delete γ f) P'.
 Proof.
-  iIntros (??) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
+  iIntros (??) "#Hinv H"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists ([∗ map] γ'↦_ ∈ delete γ f, Φ γ')%I.
   iInv N as (b) "(Hγ & #HγQ &_)" "Hclose".
   iApply fupd_trans_frame; iFrame "Hclose"; iModIntro; iNext.
@@ -127,9 +131,9 @@ Qed.
 Lemma box_fill E f γ P Q :
   ↑N ⊆ E →
   f !! γ = Some false →
-  slice N γ Q ∗ ▷ Q ∗ ▷ box N f P ={E}=∗ ▷ box N (<[γ:=true]> f) P.
+  slice N γ Q -∗ ▷ Q -∗ ▷ box N f P ={E}=∗ ▷ box N (<[γ:=true]> f) P.
 Proof.
-  iIntros (??) "(#Hinv & HQ & H)"; iDestruct "H" as (Φ) "[#HeqP Hf]".
+  iIntros (??) "#Hinv HQ H"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iInv N as (b') "(>Hγ & #HγQ & _)" "Hclose".
   iDestruct (big_sepM_later _ f with "Hf") as "Hf".
   iDestruct (big_sepM_delete _ f _ false with "Hf")
@@ -146,9 +150,9 @@ Qed.
 Lemma box_empty E f P Q γ :
   ↑N ⊆ E →
   f !! γ = Some true →
-  slice N γ Q ∗ ▷ box N f P ={E}=∗ ▷ Q ∗ ▷ box N (<[γ:=false]> f) P.
+  slice N γ Q -∗ ▷ box N f P ={E}=∗ ▷ Q ∗ ▷ box N (<[γ:=false]> f) P.
 Proof.
-  iIntros (??) "[#Hinv H]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
+  iIntros (??) "#Hinv H"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iInv N as (b) "(>Hγ & #HγQ & HQ)" "Hclose".
   iDestruct (big_sepM_later _ f with "Hf") as "Hf".
   iDestruct (big_sepM_delete _ f with "Hf")
@@ -163,36 +167,35 @@ Proof.
     iFrame; eauto.
 Qed.
 
-Lemma box_insert_full E f P Q :
+Lemma box_insert_full Q E f P :
   ↑N ⊆ E →
-  ▷ Q ∗ ▷ box N f P ={E}=∗ ∃ γ, ⌜f !! γ = None⌝ ∗
+  ▷ Q -∗ ▷ box N f P ={E}=∗ ∃ γ, ⌜f !! γ = None⌝ ∗
     slice N γ Q ∗ ▷ box N (<[γ:=true]> f) (Q ∗ P).
 Proof.
-  iIntros (?) "[HQ Hbox]".
+  iIntros (?) "HQ Hbox".
   iMod (box_insert_empty with "Hbox") as (γ) "(% & #Hslice & Hbox)".
-  iExists γ. iFrame "%#".
-  iMod (box_fill with "[$Hslice $HQ $Hbox]"). done.
+  iExists γ. iFrame "%#". iMod (box_fill with "Hslice HQ Hbox"). done.
   by apply lookup_insert. by rewrite insert_insert.
 Qed.
 
 Lemma box_delete_full E f P Q γ :
   ↑N ⊆ E →
   f !! γ = Some true →
-  slice N γ Q ∗ ▷ box N f P ={E}=∗
-  ▷ Q ∗ ∃ P', ▷ ▷ (P ≡ (Q ∗ P')) ∗ ▷ box N (delete γ f) P'.
+  slice N γ Q -∗ ▷ box N f P ={E}=∗
+  ∃ P', ▷ Q ∗ ▷ ▷ (P ≡ (Q ∗ P')) ∗ ▷ box N (delete γ f) P'.
 Proof.
-  iIntros (??) "[#Hslice Hbox]".
-  iMod (box_empty with "[$Hslice $Hbox]") as "[$ Hbox]"; try done.
-  iMod (box_delete_empty with "[$Hslice $Hbox]") as (P') "[Heq Hbox]".
+  iIntros (??) "#Hslice Hbox".
+  iMod (box_empty with "Hslice Hbox") as "[$ Hbox]"; try done.
+  iMod (box_delete_empty with "Hslice Hbox") as (P') "[Heq Hbox]".
     done. by apply lookup_insert.
   iExists P'. iFrame. rewrite -insert_delete delete_insert ?lookup_delete //.
 Qed.
 
 Lemma box_fill_all E f P :
   ↑N ⊆ E →
-  box N f P ∗ ▷ P ={E}=∗ box N (const true <$> f) P.
+  box N f P -∗ ▷ P ={E}=∗ box N (const true <$> f) P.
 Proof.
-  iIntros (?) "[H HP]"; iDestruct "H" as (Φ) "[#HeqP Hf]".
+  iIntros (?) "H HP"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists Φ; iSplitR; first by rewrite big_sepM_fmap.
   rewrite internal_eq_iff later_iff big_sepM_later.
   iDestruct ("HeqP" with "HP") as "HP".
@@ -226,6 +229,54 @@ Proof.
   - rewrite internal_eq_iff later_iff big_sepM_later. by iApply "HeqP".
   - iExists Φ; iSplit; by rewrite big_sepM_fmap.
 Qed.
+
+Lemma box_split E f P Q1 Q2 γ b :
+  ↑N ⊆ E → f !! γ = Some b →
+  slice N γ (Q1 ∗ Q2) -∗ ▷ box N f P ={E}=∗ ∃ γ1 γ2,
+    ⌜delete γ f !! γ1 = None⌝ ∗ ⌜delete γ f !! γ2 = None⌝ ∗
+    slice N γ1 Q1 ∗ slice N γ2 Q2 ∗ ▷ box N (<[γ2 := b]>(<[γ1 := b]>(delete γ f))) P.
+Proof.
+  iIntros (??) "#Hslice Hbox". destruct b.
+  - iMod (box_delete_full with "Hslice Hbox") as (P') "([HQ1 HQ2] & Heq & Hbox)"; try done.
+    iMod (box_insert_full Q1 with "HQ1 Hbox") as (γ1) "(% & #Hslice1 & Hbox)". done.
+    iMod (box_insert_full Q2 with "HQ2 Hbox") as (γ2) "(% & #Hslice2 & Hbox)". done.
+    iExists γ1, γ2. iFrame "%#". iModIntro. iSplit.
+    { iPureIntro. by eapply lookup_insert_None. }
+    iNext. eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
+    iNext. iRewrite "Heq". iPureIntro. rewrite assoc. f_equiv. by rewrite comm. done.
+  - iMod (box_delete_empty with "Hslice Hbox") as (P') "[Heq Hbox]"; try done.
+    iMod (box_insert_empty Q1 with "Hbox") as (γ1) "(% & #Hslice1 & Hbox)".
+    iMod (box_insert_empty Q2 with "Hbox") as (γ2) "(% & #Hslice2 & Hbox)".
+    iExists γ1, γ2. iFrame "%#". iModIntro. iSplit.
+    { iPureIntro. by eapply lookup_insert_None. }
+    iNext. eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
+    iNext. iRewrite "Heq". iPureIntro. rewrite assoc. f_equiv. by rewrite comm. done.
+Qed.
+
+Lemma box_combine E f P Q1 Q2 γ1 γ2 b :
+  ↑N ⊆ E → γ1 ≠ γ2 → f !! γ1 = Some b → f !! γ2 = Some b →
+  slice N γ1 Q1 -∗ slice N γ2 Q2 -∗ ▷ box N f P ={E}=∗ ∃ γ,
+    ⌜delete γ2 (delete γ1 f) !! γ = None⌝ ∗ slice N γ (Q1 ∗ Q2) ∗
+    ▷ box N (<[γ := b]>(delete γ2 (delete γ1 f))) P.
+Proof.
+  iIntros (????) "#Hslice1 #Hslice2 Hbox". destruct b.
+  - iMod (box_delete_full with "Hslice1 Hbox") as (P1) "(HQ1 & Heq1 & Hbox)"; try done.
+    iMod (box_delete_full with "Hslice2 Hbox") as (P2) "(HQ2 & Heq2 & Hbox)".
+      done. by simplify_map_eq.
+    iMod (box_insert_full (Q1 ∗ Q2)%I with "[$HQ1 $HQ2] Hbox")
+        as (γ) "(% & #Hslice & Hbox)". done.
+    iExists γ. iFrame "%#". iModIntro. iNext.
+    eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
+    iNext. iRewrite "Heq1". iRewrite "Heq2". by rewrite assoc.
+  - iMod (box_delete_empty with "Hslice1 Hbox") as (P1) "(Heq1 & Hbox)"; try done.
+    iMod (box_delete_empty with "Hslice2 Hbox") as (P2) "(Heq2 & Hbox)".
+      done. by simplify_map_eq.
+    iMod (box_insert_empty (Q1 ∗ Q2)%I with "Hbox") as (γ) "(% & #Hslice & Hbox)".
+    iExists γ. iFrame "%#". iModIntro. iNext.
+    eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
+    iNext. iRewrite "Heq1". iRewrite "Heq2". by rewrite assoc.
+Qed.
+
 End box.
 
 Typeclasses Opaque slice box.
