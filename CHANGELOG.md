@@ -16,6 +16,8 @@ Coq development, but not every API-breaking change is listed.  Changes marked
   recursive domain equation.  As a consequence, CMRAs no longer need a proof
   of completeness.
   (The old `cofeT` is provided by `algebra.deprecated`.)
+* [#] Implement a new agreement construction.  Unlike the old one, this one
+  preserves discreteness.
 * Renaming and moving things around: uPred and the rest of the base logic are
   in `base_logic`, while `program_logic` is for everything involving the
   general Iris notion of a language.
