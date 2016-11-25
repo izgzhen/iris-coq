@@ -276,7 +276,6 @@ Proof.
     eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
     iNext. iRewrite "Heq1". iRewrite "Heq2". by rewrite assoc.
 Qed.
-
 End box.
 
 Typeclasses Opaque slice box.
