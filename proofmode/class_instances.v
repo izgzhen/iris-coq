@@ -330,9 +330,12 @@ Proof. done. Qed.
 Global Instance from_or_bupd P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (|==> P) (|==> Q1) (|==> Q2).
 Proof. rewrite /FromOr=><-. apply or_elim; apply bupd_mono; auto with I. Qed.
+Global Instance from_or_always P Q1 Q2 :
+  FromOr P Q1 Q2 → FromOr (□ P) (□ Q1) (□ Q2).
+Proof. rewrite /FromOr=> <-. by rewrite always_or. Qed.
 Global Instance from_or_later P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (▷ P) (▷ Q1) (▷ Q2).
-Proof. rewrite /FromOr=><-. apply or_elim; apply later_mono; auto with I. Qed.
+Proof. rewrite /FromOr=><-. by rewrite later_or. Qed.
 
 (* IntoOr *)
 Global Instance into_or_or P Q : IntoOr (P ∨ Q) P Q.
