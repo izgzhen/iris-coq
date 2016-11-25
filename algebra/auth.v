@@ -193,7 +193,7 @@ Lemma auth_validI {M} (x : auth A) :
           end : uPred M).
 Proof. uPred.unseal. by destruct x as [[[]|]]. Qed.
 
-Lemma auth_frag_op a b : ◯ (a ⋅ b) ≡ ◯ a ⋅ ◯ b.
+Lemma auth_frag_op a b : ◯ (a ⋅ b) = ◯ a ⋅ ◯ b.
 Proof. done. Qed.
 Lemma auth_frag_mono a b : a ≼ b → ◯ a ≼ ◯ b.
 Proof. intros [c ->]. rewrite auth_frag_op. apply cmra_included_l. Qed.
