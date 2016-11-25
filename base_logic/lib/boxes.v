@@ -233,22 +233,24 @@ Qed.
 Lemma box_split E f P Q1 Q2 γ b :
   ↑N ⊆ E → f !! γ = Some b →
   slice N γ (Q1 ∗ Q2) -∗ ▷ box N f P ={E}=∗ ∃ γ1 γ2,
-    ⌜delete γ f !! γ1 = None⌝ ∗ ⌜delete γ f !! γ2 = None⌝ ∗
+    ⌜delete γ f !! γ1 = None⌝ ∗ ⌜delete γ f !! γ2 = None⌝ ∗ ⌜γ1 ≠ γ2⌝ ∗
     slice N γ1 Q1 ∗ slice N γ2 Q2 ∗ ▷ box N (<[γ2 := b]>(<[γ1 := b]>(delete γ f))) P.
 Proof.
   iIntros (??) "#Hslice Hbox". destruct b.
   - iMod (box_delete_full with "Hslice Hbox") as (P') "([HQ1 HQ2] & Heq & Hbox)"; try done.
     iMod (box_insert_full Q1 with "HQ1 Hbox") as (γ1) "(% & #Hslice1 & Hbox)". done.
     iMod (box_insert_full Q2 with "HQ2 Hbox") as (γ2) "(% & #Hslice2 & Hbox)". done.
-    iExists γ1, γ2. iFrame "%#". iModIntro. iSplit.
-    { iPureIntro. by eapply lookup_insert_None. }
+    iExists γ1, γ2. iFrame "%#". iModIntro. iSplit; last iSplit; try iPureIntro.
+    { by eapply lookup_insert_None. }
+    { by apply (lookup_insert_None (delete γ f) γ1 γ2 true). }
     iNext. eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
     iNext. iRewrite "Heq". iPureIntro. rewrite assoc. f_equiv. by rewrite comm. done.
   - iMod (box_delete_empty with "Hslice Hbox") as (P') "[Heq Hbox]"; try done.
     iMod (box_insert_empty Q1 with "Hbox") as (γ1) "(% & #Hslice1 & Hbox)".
     iMod (box_insert_empty Q2 with "Hbox") as (γ2) "(% & #Hslice2 & Hbox)".
-    iExists γ1, γ2. iFrame "%#". iModIntro. iSplit.
-    { iPureIntro. by eapply lookup_insert_None. }
+    iExists γ1, γ2. iFrame "%#". iModIntro. iSplit; last iSplit; try iPureIntro.
+    { by eapply lookup_insert_None. }
+    { by apply (lookup_insert_None (delete γ f) γ1 γ2 false). }
     iNext. eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
     iNext. iRewrite "Heq". iPureIntro. rewrite assoc. f_equiv. by rewrite comm. done.
 Qed.
