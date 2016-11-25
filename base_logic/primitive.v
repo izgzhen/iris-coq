@@ -190,7 +190,7 @@ Notation "P ==∗ Q" := (P -∗ |==> Q)%I
 
 Coercion uPred_valid {M} (P : uPred M) : Prop := True%I ⊢ P.
 Notation "P -∗ Q" := (P ⊢ Q)
-  (at level 99, Q at level 200, right associativity, only parsing) : C_scope.
+  (at level 99, Q at level 200, right associativity) : C_scope.
 
 Module uPred_primitive.
 Definition unseal :=
