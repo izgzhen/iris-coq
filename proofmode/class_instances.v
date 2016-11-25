@@ -113,6 +113,9 @@ Global Instance into_wand_iff_r P Q : IntoWand (P ↔ Q) Q P.
 Proof. apply and_elim_r', impl_wand. Qed.
 Global Instance into_wand_always R P Q : IntoWand R P Q → IntoWand (□ R) P Q.
 Proof. rewrite /IntoWand=> ->. apply always_elim. Qed.
+Global Instance into_wand_later {M} (R P Q : uPred M) :
+  IntoWand R P Q → IntoWand R (▷ P) (▷ Q) | 100.
+Proof. rewrite /IntoWand=>->. by rewrite -later_wand -later_intro. Qed.
 Global Instance into_wand_bupd R P Q :
   IntoWand R P Q → IntoWand R (|==> P) (|==> Q) | 100.
 Proof. rewrite /IntoWand=>->. apply wand_intro_l. by rewrite bupd_wand_r. Qed.
@@ -126,6 +129,8 @@ Proof. intros. by rewrite /FromAnd always_and_sep_l. Qed.
 Global Instance from_and_sep_persistent_r P1 P2 :
   PersistentP P2 → FromAnd (P1 ∗ P2) P1 P2 | 10.
 Proof. intros. by rewrite /FromAnd always_and_sep_r. Qed.
+Global Instance from_and_pure φ ψ : @FromAnd M ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
+Proof. by rewrite /FromAnd pure_and. Qed.
 Global Instance from_and_always P Q1 Q2 :
   FromAnd P Q1 Q2 → FromAnd (□ P) (□ Q1) (□ Q2).
 Proof. rewrite /FromAnd=> <-. by rewrite always_and. Qed.
@@ -140,6 +145,8 @@ Global Instance from_sep_ownM (a b1 b2 : M) :
   FromOp a b1 b2 →
   FromSep (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
 Proof. intros. by rewrite /FromSep -ownM_op from_op. Qed.
+Global Instance from_sep_pure φ ψ : @FromSep M ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
+Proof. by rewrite /FromSep pure_and sep_and. Qed.
 Global Instance from_sep_always P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (□ P) (□ Q1) (□ Q2).
 Proof. rewrite /FromSep=> <-. by rewrite always_sep. Qed.
@@ -210,6 +217,13 @@ Global Instance into_and_and_persistent_r P Q :
   PersistentP Q → IntoAnd false (P ∧ Q) P Q.
 Proof. intros; by rewrite /IntoAnd /= always_and_sep_r. Qed.
 
+Global Instance into_and_pure p φ ψ : @IntoAnd M p ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
+Proof. apply mk_into_and_sep. by rewrite pure_and always_and_sep_r. Qed.
+Global Instance into_and_always p P Q1 Q2 :
+  IntoAnd true P Q1 Q2 → IntoAnd p (□ P) (□ Q1) (□ Q2).
+Proof.
+  rewrite /IntoAnd=>->. destruct p; by rewrite ?always_and always_and_sep_r.
+Qed.
 Global Instance into_and_later p P Q1 Q2 :
   IntoAnd p P Q1 Q2 → IntoAnd p (▷ P) (▷ Q1) (▷ Q2).
 Proof. rewrite /IntoAnd=>->. destruct p; by rewrite ?later_and ?later_sep. Qed.
@@ -330,6 +344,8 @@ Proof. done. Qed.
 Global Instance from_or_bupd P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (|==> P) (|==> Q1) (|==> Q2).
 Proof. rewrite /FromOr=><-. apply or_elim; apply bupd_mono; auto with I. Qed.
+Global Instance from_or_pure φ ψ : @FromOr M ⌜φ ∨ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
+Proof. by rewrite /FromOr pure_or. Qed.
 Global Instance from_or_always P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (□ P) (□ Q1) (□ Q2).
 Proof. rewrite /FromOr=> <-. by rewrite always_or. Qed.
@@ -340,6 +356,11 @@ Proof. rewrite /FromOr=><-. by rewrite later_or. Qed.
 (* IntoOr *)
 Global Instance into_or_or P Q : IntoOr (P ∨ Q) P Q.
 Proof. done. Qed.
+Global Instance into_or_pure φ ψ : @IntoOr M ⌜φ ∨ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
+Proof. by rewrite /IntoOr pure_or. Qed.
+Global Instance into_or_always P Q1 Q2 :
+  IntoOr P Q1 Q2 → IntoOr (□ P) (□ Q1) (□ Q2).
+Proof. rewrite /IntoOr=>->. by rewrite always_or. Qed.
 Global Instance into_or_later P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (▷ P) (▷ Q1) (▷ Q2).
 Proof. rewrite /IntoOr=>->. by rewrite later_or. Qed.
@@ -352,13 +373,26 @@ Global Instance from_exist_bupd {A} P (Φ : A → uPred M) :
 Proof.
   rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
 Qed.
+Global Instance from_exist_pure {A} (φ : A → Prop) :
+  @FromExist M A ⌜∃ x, φ x⌝ (λ a, ⌜φ a⌝)%I.
+Proof. by rewrite /FromExist pure_exist. Qed.
+Global Instance from_exist_always {A} P (Φ : A → uPred M) :
+  FromExist P Φ → FromExist (□ P) (λ a, □ (Φ a))%I.
+Proof.
+  rewrite /FromExist=> <-. apply exist_elim=>x. apply always_mono, exist_intro.
+Qed.
 Global Instance from_exist_later {A} P (Φ : A → uPred M) :
   FromExist P Φ → FromExist (▷ P) (λ a, ▷ (Φ a))%I.
-Proof. rewrite /FromExist=> <-. apply exist_elim=>x. apply later_mono, exist_intro. Qed.
+Proof.
+  rewrite /FromExist=> <-. apply exist_elim=>x. apply later_mono, exist_intro.
+Qed.
 
 (* IntoExist *)
 Global Instance into_exist_exist {A} (Φ : A → uPred M) : IntoExist (∃ a, Φ a) Φ.
 Proof. done. Qed.
+Global Instance into_exist_pure {A} (φ : A → Prop) :
+  @IntoExist M A ⌜∃ x, φ x⌝ (λ a, ⌜φ a⌝)%I.
+Proof. by rewrite /IntoExist pure_exist. Qed.
 Global Instance into_exist_later {A} P (Φ : A → uPred M) :
   IntoExist P Φ → Inhabited A → IntoExist (▷ P) (λ a, ▷ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP ?. by rewrite HP later_exist. Qed.
