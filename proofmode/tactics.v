@@ -1053,29 +1053,38 @@ Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
   iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) "∗" with (iLöbCore as IH).
 
 Tactic Notation "iLöb" "as" constr (IH) "forall" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros Hs with (iLöbCore as IH).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ")" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1) Hs with (iLöbCore as IH).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2) ")"
     constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2) Hs with (iLöbCore as IH).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ")" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2 x3) Hs with (iLöbCore as IH).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ")" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2 x3 x4) Hs with (iLöbCore as IH).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ident(x5) ")" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2 x3 x4 x5) Hs with (iLöbCore as IH).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ident(x5) ident(x6) ")" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2 x3 x4 x5 x6) Hs with (iLöbCore as IH).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ident(x5) ident(x6) ident(x7) ")" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2 x3 x4 x5 x6 x7) Hs with (iLöbCore as IH).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ident(x5) ident(x6) ident(x7) ident(x8) ")" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) Hs with (iLöbCore as IH).
 
 (** * Assert *)
