@@ -246,6 +246,11 @@ Section list.
     ⊣⊢ ([∗ list] k↦x ∈ l, Φ k x) ∗ ([∗ list] k↦x ∈ l, Ψ k x).
   Proof. by rewrite big_opL_opL. Qed.
 
+  Lemma big_sepL_and Φ Ψ l :
+    ([∗ list] k↦x ∈ l, Φ k x ∧ Ψ k x)
+    ⊢ ([∗ list] k↦x ∈ l, Φ k x) ∧ ([∗ list] k↦x ∈ l, Ψ k x).
+  Proof. auto using big_sepL_mono with I. Qed.
+
   Lemma big_sepL_later Φ l :
     ▷ ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, ▷ Φ k x).
   Proof. apply (big_opL_commute _). Qed.
@@ -378,9 +383,14 @@ Section gmap.
   Proof. apply: big_opM_fn_insert'. Qed.
 
   Lemma big_sepM_sepM Φ Ψ m :
-       ([∗ map] k↦x ∈ m, Φ k x ∗ Ψ k x)
+    ([∗ map] k↦x ∈ m, Φ k x ∗ Ψ k x)
     ⊣⊢ ([∗ map] k↦x ∈ m, Φ k x) ∗ ([∗ map] k↦x ∈ m, Ψ k x).
   Proof. apply: big_opM_opM. Qed.
+
+  Lemma big_sepM_and Φ Ψ m :
+    ([∗ map] k↦x ∈ m, Φ k x ∧ Ψ k x)
+    ⊢ ([∗ map] k↦x ∈ m, Φ k x) ∧ ([∗ map] k↦x ∈ m, Ψ k x).
+  Proof. auto using big_sepM_mono with I. Qed.
 
   Lemma big_sepM_later Φ m :
     ▷ ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, ▷ Φ k x).
@@ -520,6 +530,10 @@ Section gset.
     ([∗ set] y ∈ X, Φ y ∗ Ψ y) ⊣⊢ ([∗ set] y ∈ X, Φ y) ∗ ([∗ set] y ∈ X, Ψ y).
   Proof. apply: big_opS_opS. Qed.
 
+  Lemma big_sepS_and Φ Ψ X :
+    ([∗ set] y ∈ X, Φ y ∧ Ψ y) ⊢ ([∗ set] y ∈ X, Φ y) ∧ ([∗ set] y ∈ X, Ψ y).
+  Proof. auto using big_sepS_mono with I. Qed.
+
   Lemma big_sepS_later Φ X : ▷ ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ▷ Φ y).
   Proof. apply (big_opS_commute _). Qed.
 
@@ -621,6 +635,10 @@ Section gmultiset.
   Lemma big_sepMS_sepMS Φ Ψ X :
     ([∗ mset] y ∈ X, Φ y ∗ Ψ y) ⊣⊢ ([∗ mset] y ∈ X, Φ y) ∗ ([∗ mset] y ∈ X, Ψ y).
   Proof. apply: big_opMS_opMS. Qed.
+
+  Lemma big_sepMS_and Φ Ψ X :
+    ([∗ mset] y ∈ X, Φ y ∧ Ψ y) ⊢ ([∗ mset] y ∈ X, Φ y) ∧ ([∗ mset] y ∈ X, Ψ y).
+  Proof. auto using big_sepMS_mono with I. Qed.
 
   Lemma big_sepMS_later Φ X : ▷ ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, ▷ Φ y).
   Proof. apply (big_opMS_commute _). Qed.
