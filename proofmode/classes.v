@@ -17,11 +17,11 @@ Global Arguments from_pure : clear implicits.
 Class IntoPersistentP (P Q : uPred M) := into_persistentP : P ⊢ □ Q.
 Global Arguments into_persistentP : clear implicits.
 
-Class IntoLater (P Q : uPred M) := into_later : P ⊢ ▷ Q.
-Global Arguments into_later _ _ {_}.
+Class IntoLaterN (n : nat) (P Q : uPred M) := into_laterN : P ⊢ ▷^n Q.
+Global Arguments into_laterN _ _ _ {_}.
 
-Class FromLater (P Q : uPred M) := from_later : ▷ Q ⊢ P.
-Global Arguments from_later _ _ {_}.
+Class FromLaterN (n : nat) (P Q : uPred M) := from_laterN : ▷^n Q ⊢ P.
+Global Arguments from_laterN _ _ _ {_}.
 
 Class IntoWand (R P Q : uPred M) := into_wand : R ⊢ P -∗ Q.
 Global Arguments into_wand : clear implicits.

@@ -127,7 +127,7 @@ Proof.
   iSpecialize ("HΦ" with "[#]") => //. iFrame "HΦ".
   iMod ("Hclose" $! (State High I) (∅ : set token) with "[-]"); last done.
   iSplit; [iPureIntro; by eauto using signal_step|].
-  iNext. rewrite {2}/barrier_inv /ress /=; iFrame "Hl".
+  rewrite {2}/barrier_inv /ress /=. iNext. iFrame "Hl".
   iDestruct "Hr" as (Ψ) "[Hr Hsp]"; iExists Ψ; iFrame "Hsp".
   iNext. iIntros "_"; by iApply "Hr".
 Qed.
@@ -142,7 +142,7 @@ Proof.
     as ([p I]) "(% & [Hl Hr] & Hclose)"; eauto.
   wp_load. destruct p.
   - iMod ("Hclose" $! (State Low I) {[ Change i ]} with "[Hl Hr]") as "Hγ".
-    { iSplit; first done. iNext. rewrite {2}/barrier_inv /=. by iFrame. }
+    { iSplit; first done. rewrite {2}/barrier_inv /=. by iFrame. }
     iAssert (sts_ownS γ (i_states i) {[Change i]})%I with ">[Hγ]" as "Hγ".
     { iApply (sts_own_weaken with "Hγ"); eauto using i_states_closed. }
     iModIntro. wp_if.
@@ -155,7 +155,7 @@ Proof.
     { iNext. iApply (big_sepS_delete _ _ i); first done. by iApply "HΨ". }
     iMod ("Hclose" $! (State High (I ∖ {[ i ]})) (∅ : set token) with "[HΨ' Hl Hsp]").
     { iSplit; [iPureIntro; by eauto using wait_step|].
-      iNext. rewrite {2}/barrier_inv /=; iFrame "Hl". iExists Ψ; iFrame. auto. }
+      rewrite {2}/barrier_inv /=. iNext. iFrame "Hl". iExists Ψ; iFrame. auto. }
     iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by auto.
     iModIntro. wp_if.
     iApply "HΦ". iApply "HQR". by iRewrite "Heq".
@@ -175,7 +175,7 @@ Proof.
   iMod ("Hclose" $! (State p ({[i1; i2]} ∪ I ∖ {[i]}))
                    {[Change i1; Change i2 ]} with "[-]") as "Hγ".
   { iSplit; first by eauto using split_step.
-    iNext. rewrite {2}/barrier_inv /=. iFrame "Hl".
+    rewrite {2}/barrier_inv /=. iNext. iFrame "Hl".
     iApply (ress_split _ _ _ Q R1 R2); eauto. iFrame; auto. }
   iAssert (sts_ownS γ (i_states i1) {[Change i1]}
     ∗ sts_ownS γ (i_states i2) {[Change i2]})%I with ">[-]" as "[Hγ1 Hγ2]".

@@ -15,7 +15,7 @@ Implicit Types Δ : envs (iResUR Σ).
 Lemma tac_wp_alloc Δ Δ' E j e v Φ :
   to_val e = Some v →
   (Δ ⊢ heap_ctx) → ↑heapN ⊆ E →
-  IntoLaterEnvs Δ Δ' →
+  IntoLaterNEnvs 1 Δ Δ' →
   (∀ l, ∃ Δ'',
     envs_app false (Esnoc Enil j (l ↦ v)) Δ' = Some Δ'' ∧
     (Δ'' ⊢ Φ (LitV (LitLoc l)))) →
@@ -23,28 +23,28 @@ Lemma tac_wp_alloc Δ Δ' E j e v Φ :
 Proof.
   intros ???? HΔ. eapply wand_apply; first exact:wp_alloc. rewrite -always_and_sep_l.
   apply and_intro; first done.
-  rewrite into_later_env_sound; apply later_mono, forall_intro=> l.
+  rewrite into_laterN_env_sound; apply later_mono, forall_intro=> l.
   destruct (HΔ l) as (Δ''&?&HΔ'). rewrite envs_app_sound //; simpl.
   by rewrite right_id HΔ'.
 Qed.
 
 Lemma tac_wp_load Δ Δ' E i l q v Φ :
   (Δ ⊢ heap_ctx) → ↑heapN ⊆ E →
-  IntoLaterEnvs Δ Δ' →
+  IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I →
   (Δ' ⊢ Φ v) →
   Δ ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
 Proof.
   intros. eapply wand_apply; first exact:wp_load. rewrite -assoc -always_and_sep_l.
   apply and_intro; first done.
-  rewrite into_later_env_sound -later_sep envs_lookup_split //; simpl.
+  rewrite into_laterN_env_sound -later_sep envs_lookup_split //; simpl.
   by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
 Lemma tac_wp_store Δ Δ' Δ'' E i l v e v' Φ :
   to_val e = Some v' →
   (Δ ⊢ heap_ctx) → ↑heapN ⊆ E →
-  IntoLaterEnvs Δ Δ' →
+  IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v')) Δ' = Some Δ'' →
   (Δ'' ⊢ Φ (LitV LitUnit)) →
@@ -52,28 +52,28 @@ Lemma tac_wp_store Δ Δ' Δ'' E i l v e v' Φ :
 Proof.
   intros. eapply wand_apply; first by eapply wp_store. rewrite -assoc -always_and_sep_l.
   apply and_intro; first done.
-  rewrite into_later_env_sound -later_sep envs_simple_replace_sound //; simpl.
+  rewrite into_laterN_env_sound -later_sep envs_simple_replace_sound //; simpl.
   rewrite right_id. by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
 Lemma tac_wp_cas_fail Δ Δ' E i l q v e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
   (Δ ⊢ heap_ctx) → ↑heapN ⊆ E →
-  IntoLaterEnvs Δ Δ' →
+  IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I → v ≠ v1 →
   (Δ' ⊢ Φ (LitV (LitBool false))) →
   Δ ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
 Proof.
   intros. eapply wand_apply; first exact:wp_cas_fail. rewrite -assoc -always_and_sep_l.
   apply and_intro; first done.
-  rewrite into_later_env_sound -later_sep envs_lookup_split //; simpl.
+  rewrite into_laterN_env_sound -later_sep envs_lookup_split //; simpl.
   by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
 Lemma tac_wp_cas_suc Δ Δ' Δ'' E i l v e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
   (Δ ⊢ heap_ctx) → ↑heapN ⊆ E →
-  IntoLaterEnvs Δ Δ' →
+  IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I → v = v1 →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v2)) Δ' = Some Δ'' →
   (Δ'' ⊢ Φ (LitV (LitBool true))) →
@@ -81,7 +81,7 @@ Lemma tac_wp_cas_suc Δ Δ' Δ'' E i l v e1 v1 e2 v2 Φ :
 Proof.
   intros; subst. eapply wand_apply; first exact:wp_cas_suc. rewrite -assoc -always_and_sep_l.
   apply and_intro; first done.
-  rewrite into_later_env_sound -later_sep envs_simple_replace_sound //; simpl.
+  rewrite into_laterN_env_sound -later_sep envs_simple_replace_sound //; simpl.
   rewrite right_id. by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 End heap.

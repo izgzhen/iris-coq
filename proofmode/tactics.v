@@ -608,11 +608,17 @@ Tactic Notation "iAlways":=
     [reflexivity || fail "iAlways: spatial context non-empty"|].
 
 (** * Later *)
-Tactic Notation "iNext":=
-  eapply tac_next;
-    [apply _
-    |let P := match goal with |- FromLater ?P _ => P end in
-     apply _ || fail "iNext:" P "does not contain laters"|].
+Tactic Notation "iNext" open_constr(n) :=
+  let P := match goal with |- _ ⊢ ?P => P end in
+  try lazymatch n with 0 => fail 1 "iNext: cannot strip 0 laters" end;
+  eapply (tac_next _ _ n);
+    [apply _ || fail "iNext:" P "does not contain" n "laters"
+    |lazymatch goal with
+     | |- IntoLaterNEnvs 0 _ _ => fail "iNext:" P "does not contain laters"
+     | _ => apply _
+     end|].
+
+Tactic Notation "iNext":= iNext _.
 
 (** * Update modality *)
 Tactic Notation "iModIntro" :=

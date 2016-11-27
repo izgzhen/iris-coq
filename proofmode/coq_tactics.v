@@ -401,38 +401,38 @@ Lemma tac_pure_revert Δ φ Q : (Δ ⊢ ⌜φ⌝ → Q) → (φ → Δ ⊢ Q).
 Proof. intros HΔ ?. by rewrite HΔ pure_True // left_id. Qed.
 
 (** * Later *)
-Class IntoLaterEnv (Γ1 Γ2 : env (uPred M)) :=
-  into_later_env : env_Forall2 IntoLater Γ1 Γ2.
-Class IntoLaterEnvs (Δ1 Δ2 : envs M) := {
-  into_later_persistent: IntoLaterEnv (env_persistent Δ1) (env_persistent Δ2);
-  into_later_spatial: IntoLaterEnv (env_spatial Δ1) (env_spatial Δ2)
+Class IntoLaterNEnv (n : nat) (Γ1 Γ2 : env (uPred M)) :=
+  into_laterN_env : env_Forall2 (IntoLaterN n) Γ1 Γ2.
+Class IntoLaterNEnvs (n : nat) (Δ1 Δ2 : envs M) := {
+  into_later_persistent: IntoLaterNEnv n (env_persistent Δ1) (env_persistent Δ2);
+  into_later_spatial: IntoLaterNEnv n (env_spatial Δ1) (env_spatial Δ2)
 }.
 
-Global Instance into_later_env_nil : IntoLaterEnv Enil Enil.
+Global Instance into_laterN_env_nil n : IntoLaterNEnv n Enil Enil.
 Proof. constructor. Qed.
-Global Instance into_later_env_snoc Γ1 Γ2 i P Q :
-  IntoLaterEnv Γ1 Γ2 → IntoLater P Q →
-  IntoLaterEnv (Esnoc Γ1 i P) (Esnoc Γ2 i Q).
+Global Instance into_laterN_env_snoc n Γ1 Γ2 i P Q :
+  IntoLaterNEnv n Γ1 Γ2 → IntoLaterN n P Q →
+  IntoLaterNEnv n (Esnoc Γ1 i P) (Esnoc Γ2 i Q).
 Proof. by constructor. Qed.
 
-Global Instance into_later_envs Γp1 Γp2 Γs1 Γs2 :
-  IntoLaterEnv Γp1 Γp2 → IntoLaterEnv Γs1 Γs2 →
-  IntoLaterEnvs (Envs Γp1 Γs1) (Envs Γp2 Γs2).
+Global Instance into_laterN_envs n Γp1 Γp2 Γs1 Γs2 :
+  IntoLaterNEnv n Γp1 Γp2 → IntoLaterNEnv n Γs1 Γs2 →
+  IntoLaterNEnvs n (Envs Γp1 Γs1) (Envs Γp2 Γs2).
 Proof. by split. Qed.
 
-Lemma into_later_env_sound Δ1 Δ2 : IntoLaterEnvs Δ1 Δ2 → Δ1 ⊢ ▷ Δ2.
+Lemma into_laterN_env_sound n Δ1 Δ2 : IntoLaterNEnvs n Δ1 Δ2 → Δ1 ⊢ ▷^n Δ2.
 Proof.
-  intros [Hp Hs]; rewrite /of_envs /= !later_sep -always_later.
+  intros [Hp Hs]; rewrite /of_envs /= !laterN_sep -always_laterN.
   repeat apply sep_mono; try apply always_mono.
-  - rewrite -later_intro; apply pure_mono; destruct 1; constructor;
+  - rewrite -laterN_intro; apply pure_mono; destruct 1; constructor;
       naive_solver eauto using env_Forall2_wf, env_Forall2_fresh.
-  - induction Hp; rewrite /= ?later_sep. apply later_intro. by apply sep_mono.
-  - induction Hs; rewrite /= ?later_sep. apply later_intro. by apply sep_mono.
+  - induction Hp; rewrite /= ?laterN_sep. apply laterN_intro. by apply sep_mono.
+  - induction Hs; rewrite /= ?laterN_sep. apply laterN_intro. by apply sep_mono.
 Qed.
 
-Lemma tac_next Δ Δ' Q Q' :
-  IntoLaterEnvs Δ Δ' → FromLater Q Q' → (Δ' ⊢ Q') → Δ ⊢ Q.
-Proof. intros ?? HQ. by rewrite -(from_later Q) into_later_env_sound HQ. Qed.
+Lemma tac_next Δ Δ' n Q Q' :
+  FromLaterN n Q Q' → IntoLaterNEnvs n Δ Δ' → (Δ' ⊢ Q') → Δ ⊢ Q.
+Proof. intros ?? HQ. by rewrite -(from_laterN n Q) into_laterN_env_sound HQ. Qed.
 
 Lemma tac_löb Δ Δ' i Q :
   env_spatial_is_nil Δ = true →
