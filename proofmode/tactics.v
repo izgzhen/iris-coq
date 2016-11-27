@@ -36,7 +36,7 @@ Tactic Notation "iTypeOf" constr(H) tactic(tac):=
   | Some (?p,?P) => tac p P
   end.
 
-Ltac iMatchGoal tac :=
+Tactic Notation "iMatchHyp" tactic1(tac) :=
   match goal with
   | |- context[ environments.Esnoc _ ?x ?P ] => tac x P
   end.
@@ -431,11 +431,17 @@ Tactic Notation "iApply" open_constr(lem) :=
 
 (** * Revert *)
 Local Tactic Notation "iForallRevert" ident(x) :=
+  let err x :=
+    intros x;
+    iMatchHyp (fun H P =>
+      lazymatch P with
+      | context [x] => fail 2 "iRevert:" x "is used in hypothesis" H
+      end) in
   let A := type of x in
   lazymatch type of A with
-  | Prop => revert x; apply tac_pure_revert
-  | _ => revert x; apply tac_forall_revert
-  end || fail "iRevert: cannot revert" x.
+  | Prop => revert x; first [apply tac_pure_revert|err x]
+  | _ => revert x; first [apply tac_forall_revert|err x]
+  end.
 
 Tactic Notation "iRevert" constr(Hs) :=
   let rec go Hs :=
@@ -1169,7 +1175,7 @@ Tactic Notation "iRewrite" "-" open_constr(lem) "in" constr(H) :=
   iRewriteCore true lem in H.
 
 Ltac iSimplifyEq := repeat (
-  iMatchGoal ltac:(fun H P => match P with ⌜_ = _⌝%I => iDestruct H as %? end)
+  iMatchHyp (fun H P => match P with ⌜_ = _⌝%I => iDestruct H as %? end)
   || simplify_eq/=).
 
 (** * Update modality *)
