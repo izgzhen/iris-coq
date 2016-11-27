@@ -13,7 +13,10 @@ For development, better make sure you have a version of Ssreflect that includes
 commit ad273277 (no such version has been released so far, you will have to
 fetch the development branch yourself). Iris compiles fine even without this
 patch, but proof bullets will only be in 'strict' (enforcing) mode with the
-fixed version of Ssreflect.
+fixed version of Ssreflect.  If you are using opam, you can easily get a fixed
+version by running
+
+    opam pin add coq-mathcomp-ssreflect https://github.com/math-comp/math-comp.git#ad273277ab38bfe458e9332dea5f3a79e3885567
  
 ## Building Instructions
 
