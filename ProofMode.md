@@ -111,7 +111,10 @@ Modalities
 The later modality
 ------------------
 
-- `iNext` : introduce a later by stripping laters from all hypotheses.
+- `iNext n` : introduce `n` laters by stripping that number of laters from all
+  hypotheses. If the argument `n` is not given, it strips one later if the
+  leftmost conjuct is of the shape `▷ P`, or `n` laters if the leftmost conjuct
+  is of the shape `▷^n P`.
 - `iLöb as "IH" forall (x1 ... xn)` : perform Löb induction by generating a
   hypothesis `IH : ▷ goal`. The tactic generalizes over the Coq level variables
   `x1 ... xn`, the hypotheses given by the selection pattern `selpat`, and the
