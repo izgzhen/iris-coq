@@ -691,8 +691,8 @@ Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" :=
     |(* (?P -∗ _) *) eapply tac_wand_intro_pure;
       [let P := match goal with |- IntoPure ?P _ => P end in
        apply _ || fail "iIntro:" P "not pure"|]
-    |(* (■ ∀ _, _) *) apply tac_pure_forall_intro
-    |(* (■ (_ → _)) *) apply tac_pure_impl_intro];
+    |(* ⌜∀ _, _⌝ *) apply tac_pure_forall_intro
+    |(* ⌜_ → _⌝ *) apply tac_pure_impl_intro];
   intros x.
 
 Local Tactic Notation "iIntro" constr(H) := first
@@ -1163,7 +1163,7 @@ Tactic Notation "iRewrite" "-" open_constr(lem) "in" constr(H) :=
   iRewriteCore true lem in H.
 
 Ltac iSimplifyEq := repeat (
-  iMatchGoal ltac:(fun H P => match P with (⌜_ = _⌝)%I => iDestruct H as %? end)
+  iMatchGoal ltac:(fun H P => match P with ⌜_ = _⌝%I => iDestruct H as %? end)
   || simplify_eq/=).
 
 (** * Update modality *)
