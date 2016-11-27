@@ -73,6 +73,8 @@ Section cmra.
   Proof. split; [split|]. apply _. apply always_if_sep. apply always_if_pure. Qed.
   Global Instance uPred_later_homomorphism : UCMRAHomomorphism uPred_later.
   Proof. split; [split|]. apply _. apply later_sep. apply later_True. Qed.
+  Global Instance uPred_laterN_homomorphism n : UCMRAHomomorphism (uPred_laterN n).
+  Proof. split; [split|]. apply _. apply laterN_sep. apply laterN_True. Qed.
   Global Instance uPred_except_0_homomorphism :
     CMRAHomomorphism uPred_except_0.
   Proof. split. apply _. apply except_0_sep. Qed.
@@ -248,6 +250,10 @@ Section list.
     ▷ ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, ▷ Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
+  Lemma big_sepL_laterN Φ n l :
+    ▷^n ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, ▷^n Φ k x).
+  Proof. apply (big_opL_commute _). Qed.
+
   Lemma big_sepL_always Φ l :
     (□ [∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, □ Φ k x).
   Proof. apply (big_opL_commute _). Qed.
@@ -378,6 +384,10 @@ Section gmap.
 
   Lemma big_sepM_later Φ m :
     ▷ ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, ▷ Φ k x).
+  Proof. apply (big_opM_commute _). Qed.
+
+  Lemma big_sepM_laterN Φ n m :
+    ▷^n ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, ▷^n Φ k x).
   Proof. apply (big_opM_commute _). Qed.
 
   Lemma big_sepM_always Φ m :
@@ -513,6 +523,10 @@ Section gset.
   Lemma big_sepS_later Φ X : ▷ ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ▷ Φ y).
   Proof. apply (big_opS_commute _). Qed.
 
+  Lemma big_sepS_laterN Φ n X :
+    ▷^n ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ▷^n Φ y).
+  Proof. apply (big_opS_commute _). Qed.
+
   Lemma big_sepS_always Φ X : □ ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, □ Φ y).
   Proof. apply (big_opS_commute _). Qed.
 
@@ -609,6 +623,10 @@ Section gmultiset.
   Proof. apply: big_opMS_opMS. Qed.
 
   Lemma big_sepMS_later Φ X : ▷ ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, ▷ Φ y).
+  Proof. apply (big_opMS_commute _). Qed.
+
+  Lemma big_sepMS_laterN Φ n X :
+    ▷^n ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, ▷^n Φ y).
   Proof. apply (big_opMS_commute _). Qed.
 
   Lemma big_sepMS_always Φ X : □ ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, □ Φ y).

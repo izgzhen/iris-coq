@@ -3,15 +3,6 @@ Import upred.
 
 (* In this file we show that the bupd can be thought of a kind of
    step-indexed double-negation when our meta-logic is classical *)
-
-(* To define this, we need a way to talk about iterated later modalities: *)
-Definition uPred_laterN {M} (n : nat) (P : uPred M) : uPred M :=
-  Nat.iter n uPred_later P.
-Instance: Params (@uPred_laterN) 2.
-Notation "▷^ n P" := (uPred_laterN n P)
-  (at level 20, n at level 9, right associativity,
-   format "▷^ n  P") : uPred_scope.
-
 Definition uPred_nnupd {M} (P: uPred M) : uPred M :=
   ∀ n, (P -∗ ▷^n False) -∗ ▷^n False.
 
