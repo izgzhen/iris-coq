@@ -10,7 +10,7 @@ This version is known to compile with:
  - [Ssreflect 1.6](https://github.com/math-comp/math-comp/releases/tag/mathcomp-1.6)
 
 For development, better make sure you have a version of Ssreflect that includes
-commit be724937 (no such version has been released so far, you will have to
+commit ad273277 (no such version has been released so far, you will have to
 fetch the development branch yourself). Iris compiles fine even without this
 patch, but proof bullets will only be in 'strict' (enforcing) mode with the
 fixed version of Ssreflect.
