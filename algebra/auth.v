@@ -219,6 +219,33 @@ Lemma auth_update_alloc a a' b' : (a,∅) ~l~> (a',b') → ● a ~~> ● a' ⋅ 
 Proof. intros. rewrite -(right_id _ _ (● a)). by apply auth_update. Qed.
 Lemma auth_update_dealloc a b a' : (a,b) ~l~> (a',∅) → ● a ⋅ ◯ b ~~> ● a'.
 Proof. intros. rewrite -(right_id _ _ (● a')). by apply auth_update. Qed.
+
+Lemma auth_local_update (a b0 b1 a' b0' b1': A) :
+  (b0, b1) ~l~> (b0', b1') → b0' ≼ a' → ✓ a' →
+  (● a ⋅ ◯ b0, ● a ⋅ ◯ b1) ~l~> (● a' ⋅ ◯ b0', ● a' ⋅ ◯ b1').
+Proof.
+  move => H ? ? n /=.
+  move => [c|] [/= Le Val] [/= Ha Hb] /=;
+    rewrite /op /cmra_op /= in Ha;
+    rewrite ->!(left_id _ _) in Hb;
+    rewrite ->(left_id _ _) in Le; last first.
+  - destruct (H n None) as [Hval' Heq] => //.
+    + eapply cmra_validN_includedN; eauto.
+    + repeat split => //=.
+      * rewrite ->(left_id _ _). by apply cmra_included_includedN.
+      * by apply cmra_valid_validN.
+      * simpl in Heq. by rewrite Heq.
+  - destruct c as [ac bc].
+    destruct (H n (Some bc)) as [Hval' Heq] => //.
+    + eapply cmra_validN_includedN; eauto.
+    + rewrite -!auth_both_op. repeat split => //.
+      * apply cmra_included_includedN. by rewrite left_id.
+      * by apply cmra_valid_validN.
+      * simpl in *.
+        destruct ac as [[e|]|] => //;
+        rewrite /op /cmra_op /= /excl_op in Ha; inversion Ha; by inversion H2.
+Qed.
+
 End cmra.
 
 Arguments authR : clear implicits.
