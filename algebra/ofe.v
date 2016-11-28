@@ -342,11 +342,11 @@ Section unit.
   Definition unit_ofe_mixin : OfeMixin unit.
   Proof. by repeat split; try exists 0. Qed.
   Canonical Structure unitC : ofeT := OfeT unit unit_ofe_mixin.
-  
+
   Global Program Instance unit_cofe : Cofe unitC := { compl x := () }.
   Next Obligation. by repeat split; try exists 0. Qed.
-  
-Global Instance unit_discrete_cofe : Discrete unitC.
+
+  Global Instance unit_discrete_cofe : Discrete unitC.
   Proof. done. Qed.
 End unit.
 
