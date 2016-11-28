@@ -7,7 +7,7 @@ Section gset.
   Context `{Countable K}.
   Implicit Types X Y : gset K.
 
-  Canonical Structure gsetC := leibnizC (gset K).
+  Canonical Structure gsetC := discreteC (gset K).
 
   Instance gset_valid : Valid (gset K) := λ _, True.
   Instance gset_op : Op (gset K) := union.

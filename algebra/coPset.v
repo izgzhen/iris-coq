@@ -8,7 +8,7 @@ generalize the construction without breaking canonical structures. *)
 Section coPset.
   Implicit Types X Y : coPset.
 
-  Canonical Structure coPsetC := leibnizC coPset.
+  Canonical Structure coPsetC := discreteC coPset.
 
   Instance coPset_valid : Valid coPset := λ _, True.
   Instance coPset_op : Op coPset := union.
