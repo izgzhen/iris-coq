@@ -1,8 +1,6 @@
 From iris.algebra Require Export excl local_updates.
 From iris.base_logic Require Import base_logic.
 From iris.proofmode Require Import class_instances.
-Local Arguments valid _ _ !_ /.
-Local Arguments validN _ _ _ !_ /.
 
 Record auth (A : Type) := Auth { authoritative : excl' A; auth_own : A }.
 Add Printing Constructor auth.
@@ -95,6 +93,19 @@ Instance auth_pcore : PCore (auth A) := λ x,
 Instance auth_op : Op (auth A) := λ x y,
   Auth (authoritative x ⋅ authoritative y) (auth_own x ⋅ auth_own y).
 
+Definition auth_valid_eq :
+  valid = λ x, match authoritative x with
+               | Excl' a => (∀ n, auth_own x ≼{n} a) ∧ ✓ a
+               | None => ✓ auth_own x
+               | ExclBot' => False
+               end := eq_refl _.
+Definition auth_validN_eq :
+  validN = λ n x, match authoritative x with
+                  | Excl' a => auth_own x ≼{n} a ∧ ✓{n} a
+                  | None => ✓{n} auth_own x
+                  | ExclBot' => False
+                  end := eq_refl _.
+
 Lemma auth_included (x y : auth A) :
   x ≼ y ↔ authoritative x ≼ authoritative y ∧ auth_own x ≼ auth_own y.
 Proof.
@@ -105,7 +116,10 @@ Qed.
 Lemma authoritative_validN n x : ✓{n} x → ✓{n} authoritative x.
 Proof. by destruct x as [[[]|]]. Qed.
 Lemma auth_own_validN n x : ✓{n} x → ✓{n} auth_own x.
-Proof. destruct x as [[[]|]]; naive_solver eauto using cmra_validN_includedN. Qed.
+Proof.
+  rewrite auth_validN_eq.
+  destruct x as [[[]|]]; naive_solver eauto using cmra_validN_includedN.
+Qed.
 
 Lemma auth_valid_discrete `{CMRADiscrete A} x :
   ✓ x ↔ match authoritative x with
@@ -114,9 +128,11 @@ Lemma auth_valid_discrete `{CMRADiscrete A} x :
         | ExclBot' => False
         end.
 Proof.
-  destruct x as [[[?|]|] ?]; simpl; try done.
+  rewrite auth_valid_eq. destruct x as [[[?|]|] ?]; simpl; try done.
   setoid_rewrite <-cmra_discrete_included_iff; naive_solver eauto using 0.
 Qed.
+Lemma auth_validN_2 n a b : ✓{n} (● a ⋅ ◯ b) ↔ b ≼{n} a ∧ ✓{n} a.
+Proof. by rewrite auth_validN_eq /= left_id. Qed.
 Lemma auth_valid_discrete_2 `{CMRADiscrete A} a b : ✓ (● a ⋅ ◯ b) ↔ b ≼ a ∧ ✓ a.
 Proof. by rewrite auth_valid_discrete /= left_id. Qed.
 
@@ -134,11 +150,13 @@ Proof.
   - eauto.
   - by intros n x y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
   - by intros n y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
-  - intros n [x a] [y b] [Hx Ha]; simpl in *.
+  - intros n [x a] [y b] [Hx Ha]; simpl in *. rewrite !auth_validN_eq.
     destruct Hx as [?? Hx|]; first destruct Hx; intros ?; cofe_subst; auto.
-  - intros [[[?|]|] ?]; rewrite /= ?cmra_included_includedN ?cmra_valid_validN;
+  - intros [[[?|]|] ?]; rewrite /= ?auth_valid_eq
+      ?auth_validN_eq /= ?cmra_included_includedN ?cmra_valid_validN;
       naive_solver eauto using O.
-  - intros n [[[]|] ?] ?; naive_solver eauto using cmra_includedN_S, cmra_validN_S.
+  - intros n [[[]|] ?] ?; rewrite auth_validN_eq;
+      naive_solver eauto using cmra_includedN_S, cmra_validN_S.
   - by split; simpl; rewrite assoc.
   - by split; simpl; rewrite comm.
   - by split; simpl; rewrite ?cmra_core_l.
@@ -147,7 +165,7 @@ Proof.
     by split; simpl; apply cmra_core_mono.
   - assert (∀ n (a b1 b2 : A), b1 ⋅ b2 ≼{n} a → b1 ≼{n} a).
     { intros n a b1 b2 <-; apply cmra_includedN_l. }
-   intros n [[[a1|]|] b1] [[[a2|]|] b2];
+   intros n [[[a1|]|] b1] [[[a2|]|] b2]; rewrite auth_validN_eq;
      naive_solver eauto using cmra_validN_op_l, cmra_validN_includedN.
   - intros n x y1 y2 ? [??]; simpl in *.
     destruct (cmra_extend n (authoritative x) (authoritative y1)
@@ -161,7 +179,7 @@ Canonical Structure authR := CMRAT (auth A) auth_ofe_mixin auth_cmra_mixin.
 Global Instance auth_cmra_discrete : CMRADiscrete A → CMRADiscrete authR.
 Proof.
   split; first apply _.
-  intros [[[?|]|] ?]; rewrite /= /cmra_valid /cmra_validN /=; auto.
+  intros [[[?|]|] ?]; rewrite auth_valid_eq auth_validN_eq /=; auto.
   - setoid_rewrite <-cmra_discrete_included_iff.
     rewrite -cmra_discrete_valid_iff. tauto.
   - by rewrite -cmra_discrete_valid_iff.
@@ -171,7 +189,7 @@ Instance auth_empty : Empty (auth A) := Auth ∅ ∅.
 Lemma auth_ucmra_mixin : UCMRAMixin (auth A).
 Proof.
   split; simpl.
-  - apply (@ucmra_unit_valid A).
+  - rewrite auth_valid_eq /=. apply ucmra_unit_valid.
   - by intros x; constructor; rewrite /= left_id.
   - do 2 constructor; simpl; apply (persistent_core _).
 Qed.
@@ -224,28 +242,14 @@ Lemma auth_local_update (a b0 b1 a' b0' b1': A) :
   (b0, b1) ~l~> (b0', b1') → b0' ≼ a' → ✓ a' →
   (● a ⋅ ◯ b0, ● a ⋅ ◯ b1) ~l~> (● a' ⋅ ◯ b0', ● a' ⋅ ◯ b1').
 Proof.
-  move => H ? ? n /=.
-  move => [c|] [/= Le Val] [/= Ha Hb] /=;
-    rewrite /op /cmra_op /= in Ha;
-    rewrite ->!(left_id _ _) in Hb;
-    rewrite ->(left_id _ _) in Le; last first.
-  - destruct (H n None) as [Hval' Heq] => //.
-    + eapply cmra_validN_includedN; eauto.
-    + repeat split => //=.
-      * rewrite ->(left_id _ _). by apply cmra_included_includedN.
-      * by apply cmra_valid_validN.
-      * simpl in Heq. by rewrite Heq.
-  - destruct c as [ac bc].
-    destruct (H n (Some bc)) as [Hval' Heq] => //.
-    + eapply cmra_validN_includedN; eauto.
-    + rewrite -!auth_both_op. repeat split => //.
-      * apply cmra_included_includedN. by rewrite left_id.
-      * by apply cmra_valid_validN.
-      * simpl in *.
-        destruct ac as [[e|]|] => //;
-        rewrite /op /cmra_op /= /excl_op in Ha; inversion Ha; by inversion H2.
+  rewrite !local_update_unital=> Hup ? ? n /=.
+  move=> [[[ac|]|] bc] /auth_validN_2 [Le Val] [] /=;
+    inversion_clear 1 as [?? Ha|]; inversion_clear Ha. (* need setoid_discriminate! *)
+  rewrite !left_id=> ?.
+  destruct (Hup n bc) as [Hval' Heq]; eauto using cmra_validN_includedN.
+  rewrite -!auth_both_op auth_validN_eq /=.
+  split_and!; [by apply cmra_included_includedN|by apply cmra_valid_validN|done].
 Qed.
-
 End cmra.
 
 Arguments authR : clear implicits.
@@ -283,7 +287,7 @@ Instance auth_map_cmra_monotone {A B : ucmraT} (f : A → B) :
   CMRAMonotone f → CMRAMonotone (auth_map f).
 Proof.
   split; try apply _.
-  - intros n [[[a|]|] b]; rewrite /= /cmra_validN /=; try
+  - intros n [[[a|]|] b]; rewrite !auth_validN_eq; try
       naive_solver eauto using cmra_monotoneN, cmra_monotone_validN.
   - by intros [x a] [y b]; rewrite !auth_included /=;
       intros [??]; split; simpl; apply: cmra_monotone.
