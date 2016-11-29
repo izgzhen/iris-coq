@@ -338,15 +338,19 @@ Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) tactic(tac) :=
     end in
   lazymatch t with
   | ITrm ?H ?xs ?pat =>
-    lazymatch p with
-    | true =>
-       eapply tac_specialize_persistent_helper with _ H _ _ _;
-         [env_cbv; reflexivity || fail "iSpecialize:" H "not found"
-         |iSpecializeArgs H xs; iSpecializePat H pat; last (iExact H)
-         |let Q := match goal with |- PersistentP ?Q => Q end in
-          apply _ || fail "iSpecialize:" Q "not persistent"
-         |env_cbv; reflexivity|tac H]
-    | false => iSpecializeArgs H xs; iSpecializePat H pat; last (tac H)
+    lazymatch type of H with
+    | string =>
+      lazymatch p with
+      | true =>
+         eapply tac_specialize_persistent_helper with _ H _ _ _;
+           [env_cbv; reflexivity || fail "iSpecialize:" H "not found"
+           |iSpecializeArgs H xs; iSpecializePat H pat; last (iExact H)
+           |let Q := match goal with |- PersistentP ?Q => Q end in
+            apply _ || fail "iSpecialize:" Q "not persistent"
+           |env_cbv; reflexivity|tac H]
+      | false => iSpecializeArgs H xs; iSpecializePat H pat; last (tac H)
+      end
+    | _ => fail "iSpecialize:" H "should be a hypothesis, use iPoseProof instead"
     end
   end.
 
