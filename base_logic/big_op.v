@@ -526,6 +526,17 @@ Section gset.
       by rewrite !big_sepS_insert // IH pure_False // False_impl left_id.
   Qed.
 
+  Lemma big_sepS_filter_acc (P : A → Prop) `{∀ y, Decision (P y)} Φ X Y :
+    (∀ y, y ∈ Y → P y → y ∈ X) →
+    ([∗ set] y ∈ X, Φ y) -∗
+      ([∗ set] y ∈ Y, ⌜P y⌝ → Φ y) ∗
+      (([∗ set] y ∈ Y, ⌜P y⌝ → Φ y) -∗ [∗ set] y ∈ X, Φ y).
+  Proof.
+    intros ?. destruct (proj1 (subseteq_disjoint_union_L (filter P Y) X))
+      as (Z&->&?); first set_solver.
+    rewrite big_sepS_union // big_sepS_filter. by apply sep_mono_r, wand_intro_l.
+  Qed.
+
   Lemma big_sepS_sepS Φ Ψ X :
     ([∗ set] y ∈ X, Φ y ∗ Ψ y) ⊣⊢ ([∗ set] y ∈ X, Φ y) ∗ ([∗ set] y ∈ X, Ψ y).
   Proof. apply: big_opS_opS. Qed.
