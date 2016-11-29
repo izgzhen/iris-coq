@@ -240,6 +240,31 @@ Section set_unfold_monad.
   Proof. constructor. rewrite elem_of_join; naive_solver. Qed.
 End set_unfold_monad.
 
+Section set_unfold_list.
+  Context {A : Type}.
+  Implicit Types x : A.
+  Implicit Types l : list A.
+
+  Global Instance set_unfold_nil x : SetUnfold (x ∈ []) False.
+  Proof. constructor; apply elem_of_nil. Qed.
+  Global Instance set_unfold_cons x y l P :
+    SetUnfold (x ∈ l) P → SetUnfold (x ∈ y :: l) (x = y ∨ P).
+  Proof. constructor. by rewrite elem_of_cons, (set_unfold (x ∈ l) P). Qed.
+  Global Instance set_unfold_app x l k P Q :
+    SetUnfold (x ∈ l) P → SetUnfold (x ∈ k) Q → SetUnfold (x ∈ l ++ k) (P ∨ Q).
+  Proof.
+    intros ??; constructor.
+    by rewrite elem_of_app, (set_unfold (x ∈ l) P), (set_unfold (x ∈ k) Q).
+  Qed.
+  Global Instance set_unfold_included l k (P Q : A → Prop) :
+    (∀ x, SetUnfold (x ∈ l) (P x)) → (∀ x, SetUnfold (x ∈ k) (Q x)) →
+    SetUnfold (l ⊆ k) (∀ x, P x → Q x).
+  Proof.
+    constructor; unfold subseteq, list_subseteq.
+    apply forall_proper; naive_solver.
+  Qed.
+End set_unfold_list.
+
 Ltac set_unfold :=
   let rec unfold_hyps :=
     try match goal with
@@ -686,8 +711,13 @@ Fixpoint of_list `{Singleton A C, Empty C, Union C} (l : list A) : C :=
 
 Section of_option_list.
   Context `{SimpleCollection A C}.
+  Implicit Types l : list A.
+
   Lemma elem_of_of_option (x : A) mx: x ∈ of_option mx ↔ mx = Some x.
   Proof. destruct mx; set_solver. Qed.
+  Lemma not_elem_of_of_option (x : A) mx: x ∉ of_option mx ↔ mx ≠ Some x.
+  Proof. by rewrite elem_of_of_option. Qed.
+
   Lemma elem_of_of_list (x : A) l : x ∈ of_list l ↔ x ∈ l.
   Proof.
     split.
@@ -695,35 +725,31 @@ Section of_option_list.
       rewrite elem_of_union,elem_of_singleton; intros [->|?]; constructor; auto.
     - induction 1; simpl; rewrite elem_of_union, elem_of_singleton; auto.
   Qed.
+  Lemma not_elem_of_of_list (x : A) l : x ∉ of_list l ↔ x ∉ l.
+  Proof. by rewrite elem_of_of_list. Qed.
+
   Global Instance set_unfold_of_option (mx : option A) x :
     SetUnfold (x ∈ of_option mx) (mx = Some x).
   Proof. constructor; apply elem_of_of_option. Qed.
   Global Instance set_unfold_of_list (l : list A) x P :
     SetUnfold (x ∈ l) P → SetUnfold (x ∈ of_list l) P.
   Proof. constructor. by rewrite elem_of_of_list, (set_unfold (x ∈ l) P). Qed.
+
+  Lemma of_list_nil : of_list (C:=C) [] = ∅.
+  Proof. done. Qed.
+  Lemma of_list_cons x l : of_list (C:=C) (x :: l) = {[ x ]} ∪ of_list l.
+  Proof. done. Qed.
+  Lemma of_list_app l1 l2 : of_list (C:=C) (l1 ++ l2) ≡ of_list l1 ∪ of_list l2.
+  Proof. set_solver. Qed.
+  Global Instance of_list_perm : Proper ((≡ₚ) ==> (≡)) (of_list (C:=C)).
+  Proof. induction 1; set_solver. Qed.
+
+  Context `{!LeibnizEquiv C}.
+  Lemma of_list_app_L l1 l2 : of_list (C:=C) (l1 ++ l2) = of_list l1 ∪ of_list l2.
+  Proof. set_solver. Qed.
+  Global Instance of_list_perm_L : Proper ((≡ₚ) ==> (=)) (of_list (C:=C)).
+  Proof. induction 1; set_solver. Qed.
 End of_option_list.
-
-Section list_unfold.
-  Context {A : Type}.
-  Implicit Types x : A.
-  Implicit Types l : list A.
-
-  Global Instance set_unfold_nil x : SetUnfold (x ∈ []) False.
-  Proof. constructor; apply elem_of_nil. Qed.
-  Global Instance set_unfold_cons x y l P :
-    SetUnfold (x ∈ l) P → SetUnfold (x ∈ y :: l) (x = y ∨ P).
-  Proof. constructor. by rewrite elem_of_cons, (set_unfold (x ∈ l) P). Qed.
-  Global Instance set_unfold_app x l k P Q :
-    SetUnfold (x ∈ l) P → SetUnfold (x ∈ k) Q → SetUnfold (x ∈ l ++ k) (P ∨ Q).
-  Proof.
-    intros ??; constructor.
-    by rewrite elem_of_app, (set_unfold (x ∈ l) P), (set_unfold (x ∈ k) Q).
-  Qed.
-  Global Instance set_unfold_included l k (P Q : A → Prop) :
-    (∀ x, SetUnfold (x ∈ l) (P x)) → (∀ x, SetUnfold (x ∈ k) (Q x)) →
-    SetUnfold (l ⊆ k) (∀ x, P x → Q x).
-  Proof. by constructor; unfold subseteq, list_subseteq; set_unfold. Qed.
-End list_unfold.
 
 
 (** * Guard *)
