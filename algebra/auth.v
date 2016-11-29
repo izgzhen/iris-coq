@@ -155,7 +155,7 @@ Proof.
   - intros [[[?|]|] ?]; rewrite /= ?auth_valid_eq
       ?auth_validN_eq /= ?cmra_included_includedN ?cmra_valid_validN;
       naive_solver eauto using O.
-  - intros n [[[]|] ?] ?; rewrite auth_validN_eq;
+  - intros n [[[]|] ?]; rewrite !auth_validN_eq /=;
       naive_solver eauto using cmra_includedN_S, cmra_validN_S.
   - by split; simpl; rewrite assoc.
   - by split; simpl; rewrite comm.
