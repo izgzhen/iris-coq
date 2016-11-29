@@ -794,6 +794,9 @@ Proof.
   apply except_0_mono. rewrite internal_eq_sym.
   apply (internal_eq_rewrite b a (uPred_ownM)); first apply _; auto.
 Qed.
+Global Instance from_option_timeless {A} P (Ψ : A → uPred M) (mx : option A) :
+  (∀ x, TimelessP (Ψ x)) → TimelessP P → TimelessP (from_option Ψ P mx).
+Proof. destruct mx; apply _. Qed.
 
 (* Persistence *)
 Global Instance pure_persistent φ : PersistentP (⌜φ⌝ : uPred M)%I.
