@@ -146,16 +146,17 @@ Global Instance into_wand_iff_l P Q : IntoWand (P ↔ Q) P Q.
 Proof. by apply and_elim_l', impl_wand. Qed.
 Global Instance into_wand_iff_r P Q : IntoWand (P ↔ Q) Q P.
 Proof. apply and_elim_r', impl_wand. Qed.
+
 Global Instance into_wand_always R P Q : IntoWand R P Q → IntoWand (□ R) P Q.
 Proof. rewrite /IntoWand=> ->. apply always_elim. Qed.
-Global Instance into_wand_later (R P Q : uPred M) :
-  IntoWand R P Q → IntoWand R (▷ P) (▷ Q) | 100.
-Proof. rewrite /IntoWand=>->. by rewrite -later_wand -later_intro. Qed.
-Global Instance into_wand_laterN n (R P Q : uPred M) :
-  IntoWand R P Q → IntoWand R (▷^n P) (▷^n Q) | 100.
-Proof. rewrite /IntoWand=>->. by rewrite -laterN_wand -laterN_intro. Qed.
+Global Instance into_wand_later (R1 R2 P Q : uPred M) :
+  IntoLaterN 1 R1 R2 → IntoWand R2 P Q → IntoWand R1 (▷ P) (▷ Q) | 99.
+Proof. rewrite /IntoLaterN /IntoWand=> -> ->. by rewrite -later_wand. Qed.
+Global Instance into_wand_laterN n (R1 R2 P Q : uPred M) :
+  IntoLaterN n R1 R2 → IntoWand R2 P Q → IntoWand R1 (▷^n P) (▷^n Q) | 100.
+Proof. rewrite /IntoLaterN /IntoWand=> -> ->. by rewrite -laterN_wand. Qed.
 Global Instance into_wand_bupd R P Q :
-  IntoWand R P Q → IntoWand R (|==> P) (|==> Q) | 100.
+  IntoWand R P Q → IntoWand R (|==> P) (|==> Q) | 98.
 Proof. rewrite /IntoWand=>->. apply wand_intro_l. by rewrite bupd_wand_r. Qed.
 
 (* FromAnd *)
