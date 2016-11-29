@@ -1,6 +1,6 @@
 From iris.algebra Require Export excl local_updates.
 From iris.base_logic Require Import base_logic.
-From iris.proofmode Require Import class_instances.
+From iris.proofmode Require Import classes.
 
 Record auth (A : Type) := Auth { authoritative : excl' A; auth_own : A }.
 Add Printing Constructor auth.
