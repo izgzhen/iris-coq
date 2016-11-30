@@ -176,12 +176,12 @@ Section proofmode_classes.
   Proof. rewrite /IntoModal. apply fupd_intro. Qed.
 
   Global Instance elim_modal_bupd_fupd E1 E2 P Q :
-    ElimModal (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q).
+    ElimModal (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q) | 10.
   Proof.
     by rewrite /ElimModal (bupd_fupd E1) fupd_frame_r wand_elim_r fupd_trans.
   Qed.
   Global Instance elim_modal_fupd_fupd E1 E2 E3 P Q :
-    ElimModal (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q) | 10.
+    ElimModal (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
   Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 End proofmode_classes.
 
@@ -221,12 +221,4 @@ Proof.
   iMod (fupd_intro_mask') as "HM2"; first done. iModIntro.
   iNext. iMod "HM2". iMod "HP". iMod "HM1". done.
 Qed.
-
-Global Instance elim_modal_step_fupd E1 E2 E3 E4 P Q :
-  ElimModal (|={E1,E2}=>▷|={E2,E3}=> P) P
-            (|={E1,E2}=>▷|={E2,E4}=> Q) (|={E3,E4}=> Q).
-Proof.
-  iIntros "[A B]". iMod "A". iModIntro. iNext. iMod "A". by iApply "B".
-Qed.
-
 End step_fupd.
