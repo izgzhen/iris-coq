@@ -206,17 +206,18 @@ Proof.
   iMod (wp_value_inv with "H") as ">H". by iApply wp_value'.
 Qed.
 
-Lemma wp_frame_step_l E1 E2 e Φ R :
+Lemma wp_fupd_step E1 E2 e P Φ :
   to_val e = None → E2 ⊆ E1 →
-  (|={E1,E2}▷=> R) ∗ WP e @ E2 {{ Φ }} ⊢ WP e @ E1 {{ v, R ∗ Φ v }}.
+  (|={E1,E2}▷=> P) -∗ WP e @ E2 {{ v, P ={E1}=∗ Φ v }} -∗ WP e @ E1 {{ Φ }}.
 Proof.
-  rewrite !wp_unfold /wp_pre. iIntros (??) "[HR [Hv|[_ H]]]".
+  rewrite !wp_unfold /wp_pre. iIntros (??) "HR [Hv|[_ H]]".
   { iDestruct "Hv" as (v) "[% Hv]"; simplify_eq. }
   iRight; iSplit; [done|]. iIntros (σ1) "Hσ".
   iMod "HR". iMod ("H" $! _ with "Hσ") as "[$ H]".
   iModIntro; iNext; iIntros (e2 σ2 efs Hstep).
   iMod ("H" $! e2 σ2 efs with "[%]") as "($ & H & $)"; auto.
-  iMod "HR". iModIntro. iApply (wp_strong_mono E2 _ _ Φ); try iFrame; eauto.
+  iMod "HR". iModIntro. iApply (wp_strong_mono E2); first done.
+  iSplitR "H"; last iExact "H". iIntros (v) "H". by iApply "H".
 Qed.
 
 Lemma wp_bind K `{!LanguageCtx Λ K} E e Φ :
@@ -261,6 +262,13 @@ Proof. iIntros "[??]". iApply (wp_strong_mono E E _ Φ); try iFrame; eauto. Qed.
 Lemma wp_frame_r E e Φ R : WP e @ E {{ Φ }} ∗ R ⊢ WP e @ E {{ v, Φ v ∗ R }}.
 Proof. iIntros "[??]". iApply (wp_strong_mono E E _ Φ); try iFrame; eauto. Qed.
 
+Lemma wp_frame_step_l E1 E2 e Φ R :
+  to_val e = None → E2 ⊆ E1 →
+  (|={E1,E2}▷=> R) ∗ WP e @ E2 {{ Φ }} ⊢ WP e @ E1 {{ v, R ∗ Φ v }}.
+Proof.
+  iIntros (??) "[Hu Hwp]". iApply (wp_fupd_step with "Hu"); try done.
+  iApply (wp_mono with "Hwp"). by iIntros (?) "$$".
+Qed.
 Lemma wp_frame_step_r E1 E2 e Φ R :
   to_val e = None → E2 ⊆ E1 →
   WP e @ E2 {{ Φ }} ∗ (|={E1,E2}▷=> R) ⊢ WP e @ E1 {{ v, Φ v ∗ R }}.
@@ -316,6 +324,7 @@ Section proofmode_classes.
     ElimModal (|={E1,E2}=> P) P
             (WP e @ E1 {{ Φ }}) (WP e @ E2 {{ v, |={E2,E1}=> Φ v }})%I | 100.
   Proof. intros. by rewrite /ElimModal fupd_frame_r wand_elim_r wp_atomic. Qed.
+
 End proofmode_classes.
 
 Hint Extern 0 (atomic _) => assumption : typeclass_instances.

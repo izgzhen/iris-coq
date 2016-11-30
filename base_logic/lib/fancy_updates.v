@@ -222,4 +222,11 @@ Proof.
   iNext. iMod "HM2". iMod "HP". iMod "HM1". done.
 Qed.
 
+Global Instance elim_modal_step_fupd E1 E2 E3 E4 P Q :
+  ElimModal (|={E1,E2}=>▷|={E2,E3}=> P) P
+            (|={E1,E2}=>▷|={E2,E4}=> Q) (|={E3,E4}=> Q).
+Proof.
+  iIntros "[A B]". iMod "A". iModIntro. iNext. iMod "A". by iApply "B".
+Qed.
+
 End step_fupd.
