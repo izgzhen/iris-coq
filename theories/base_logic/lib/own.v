@@ -54,9 +54,9 @@ Instance: Params (@iRes_singleton) 4.
 
 Definition own_def `{inG Σ A} (γ : gname) (a : A) : iProp Σ :=
   uPred_ownM (iRes_singleton γ a).
-Definition own_aux : { x | x = @own_def }. by eexists. Qed.
-Definition own {Σ A i} := proj1_sig own_aux Σ A i.
-Definition own_eq : @own = @own_def := proj2_sig own_aux.
+Definition own_aux : seal (@own_def). by eexists. Qed.
+Definition own {Σ A i} := unseal own_aux Σ A i.
+Definition own_eq : @own = @own_def := seal_eq own_aux.
 Instance: Params (@own) 4.
 Typeclasses Opaque own.
 
