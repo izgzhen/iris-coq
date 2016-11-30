@@ -179,9 +179,9 @@ Section proofmode_classes.
     ElimModal (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q).
   Proof.
     by rewrite /ElimModal (bupd_fupd E1) fupd_frame_r wand_elim_r fupd_trans.
- Qed.
+  Qed.
   Global Instance elim_modal_fupd_fupd E1 E2 E3 P Q :
-    ElimModal (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
+    ElimModal (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q) | 10.
   Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 End proofmode_classes.
 
