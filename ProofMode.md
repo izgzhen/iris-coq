@@ -232,6 +232,9 @@ _specification patterns_ to express splitting of hypotheses:
 - `>[H1 ... Hn]` : same as the above pattern, but can only be used if the goal
   is a modality, in which case the modality will be kept in the generated goal
   for the premise will be wrapped into the modality.
+- `>[-H1 ... Hn]`  : negated form of the above pattern.
+- `>` : shorthand for `>[-]` (typically used for the last premise of an applied
+  lemma).
 - `[#]` : This pattern can be used when eliminating `P -★ Q` with `P`
   persistent. Using this pattern, all hypotheses are available in the goal for
   `P`, as well the remaining goal.
