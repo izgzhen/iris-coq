@@ -18,9 +18,11 @@ clean: Makefile.coq
 	rm -f Makefile.coq
 
 Makefile.coq: _CoqProject Makefile
-	coq_makefile $(COQ_MAKEFILE_FLAGS) -f _CoqProject -o Makefile.coq.tmp
+	@# we want to pass the correct name to coq_makefile or it will be confused
+	coq_makefile $(COQ_MAKEFILE_FLAGS) -f _CoqProject -o Makefile.coq
+	mv Makefile.coq Makefile.coq.tmp
 	sed 's/$$(COQCHK) $$(COQCHKFLAGS) $$(COQLIBS)/$$(COQCHK) $$(COQCHKFLAGS) $$(subst -Q,-R,$$(COQLIBS))/' < Makefile.coq.tmp \
-	  | awk '/^install:$$/{print;print "\tif [ -d \"$$(DSTROOT)\"$$(COQLIBINSTALL)/iris/ ]; then find \"$$(DSTROOT)\"$$(COQLIBINSTALL)/iris/ -name \"*.vo\" -print -delete; fi";next}1' > Makefile.coq
+	  | awk '/^uninstall:/{print "uninstall:";print "\tif [ -d \"$$(DSTROOT)\"$$(COQLIBINSTALL)/iris/ ]; then find \"$$(DSTROOT)\"$$(COQLIBINSTALL)/iris/ -name \"*.vo\" -print -delete; fi";getline;next}1' > Makefile.coq
 	rm Makefile.coq.tmp
 
 _CoqProject: ;
