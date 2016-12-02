@@ -322,6 +322,9 @@ Global Instance uPred_valid_proper : Proper ((⊣⊢) ==> iff) (@uPred_valid M).
 Proof. solve_proper. Qed.
 Global Instance uPred_valid_mono : Proper ((⊢) ==> impl) (@uPred_valid M).
 Proof. solve_proper. Qed.
+Global Instance uPred_valid_flip_mono :
+  Proper (flip (⊢) ==> flip impl) (@uPred_valid M).
+Proof. solve_proper. Qed.
 
 (** Introduction and elimination rules *)
 Lemma pure_intro φ P : φ → P ⊢ ⌜φ⌝.
