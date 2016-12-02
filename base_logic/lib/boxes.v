@@ -29,7 +29,7 @@ Section box_defs.
 
   Definition box (f : gmap slice_name bool) (P : iProp Σ) : iProp Σ :=
     (∃ Φ : slice_name → iProp Σ,
-      ▷ (P ≡ [∗ map] γ ↦ b ∈ f, Φ γ) ∗
+      ▷ (P ≡ [∗ map] γ ↦ _ ∈ f, Φ γ) ∗
       [∗ map] γ ↦ b ∈ f, box_own_auth γ (◯ Excl' b) ∗ box_own_prop γ (Φ γ) ∗
                          inv N (slice_inv γ (Φ γ)))%I.
 End box_defs.

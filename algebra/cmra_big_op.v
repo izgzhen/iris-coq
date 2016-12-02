@@ -284,12 +284,12 @@ Section gmap.
     f_equiv; apply reflexive_eq, list_fmap_ext. by intros []. done.
   Qed.
 
-  Lemma big_opM_insert_override (f : K → M) m i x y :
-    m !! i = Some x →
-    ([⋅ map] k↦_ ∈ <[i:=y]> m, f k) ≡ ([⋅ map] k↦_ ∈ m, f k).
+  Lemma big_opM_insert_override (f : K → A → M) m i x x' :
+    m !! i = Some x → f i x ≡ f i x' →
+    ([⋅ map] k↦y ∈ <[i:=x']> m, f k y) ≡ ([⋅ map] k↦y ∈ m, f k y).
   Proof.
-    intros. rewrite -insert_delete big_opM_insert ?lookup_delete //.
-    by rewrite -big_opM_delete.
+    intros ? Hx. rewrite -insert_delete big_opM_insert ?lookup_delete //.
+    by rewrite -Hx -big_opM_delete.
   Qed.
 
   Lemma big_opM_fn_insert {B} (g : K → A → B → M) (f : K → B) m i (x : A) b :
@@ -307,12 +307,13 @@ Section gmap.
   Proof. apply (big_opM_fn_insert (λ _ _, id)). Qed.
 
   Lemma big_opM_opM f g m :
-       ([⋅ map] k↦x ∈ m, f k x ⋅ g k x)
+    ([⋅ map] k↦x ∈ m, f k x ⋅ g k x)
     ≡ ([⋅ map] k↦x ∈ m, f k x) ⋅ ([⋅ map] k↦x ∈ m, g k x).
   Proof.
-    rewrite /big_opM.
-    induction (map_to_list m) as [|[i x] l IH]; csimpl; rewrite ?right_id //.
-    by rewrite IH -!assoc (assoc _ (g _ _)) [(g _ _ ⋅ _)]comm -!assoc.
+    induction m as [|i x ?? IH] using map_ind.
+    { by rewrite !big_opM_empty left_id. }
+    rewrite !big_opM_insert // IH.
+    by rewrite -!assoc (assoc _ (g _ _)) [(g _ _ ⋅ _)]comm -!assoc.
   Qed.
 End gmap.
 
@@ -404,12 +405,19 @@ Section gset.
   Lemma big_opS_opS f g X :
     ([⋅ set] y ∈ X, f y ⋅ g y) ≡ ([⋅ set] y ∈ X, f y) ⋅ ([⋅ set] y ∈ X, g y).
   Proof.
-    rewrite /big_opS.
-    induction (elements X) as [|x l IH]; csimpl; first by rewrite ?right_id.
-    by rewrite IH -!assoc (assoc _ (g _)) [(g _ ⋅ _)]comm -!assoc.
+    induction X as [|x X ? IH] using collection_ind_L.
+    { by rewrite !big_opS_empty left_id. }
+    rewrite !big_opS_insert // IH.
+    by rewrite -!assoc (assoc _ (g _)) [(g _ ⋅ _)]comm -!assoc.
   Qed.
 End gset.
 
+Lemma big_opM_dom `{Countable K} {A} (f : K → M) (m : gmap K A) :
+  ([⋅ map] k↦_ ∈ m, f k) ≡ ([⋅ set] k ∈ dom _ m, f k).
+Proof.
+  induction m as [|i x ?? IH] using map_ind; [by rewrite dom_empty_L|].
+  by rewrite dom_insert_L big_opM_insert // IH big_opS_insert ?not_elem_of_dom.
+Qed.
 
 (** ** Big ops over finite msets *)
 Section gmultiset.
@@ -478,9 +486,10 @@ Section gmultiset.
   Lemma big_opMS_opMS f g X :
     ([⋅ mset] y ∈ X, f y ⋅ g y) ≡ ([⋅ mset] y ∈ X, f y) ⋅ ([⋅ mset] y ∈ X, g y).
   Proof.
-    rewrite /big_opMS.
-    induction (elements X) as [|x l IH]; csimpl; first by rewrite ?right_id.
-    by rewrite IH -!assoc (assoc _ (g _)) [(g _ ⋅ _)]comm -!assoc.
+    induction X as [|x X IH] using gmultiset_ind.
+    { by rewrite !big_opMS_empty left_id. }
+    rewrite !big_opMS_union !big_opMS_singleton IH.
+    by rewrite -!assoc (assoc _ (g _)) [(g _ ⋅ _)]comm -!assoc.
   Qed.
 End gmultiset.
 End big_op.

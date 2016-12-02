@@ -366,10 +366,30 @@ Section gmap.
     ([∗ map] k↦y ∈ f <$> m, Φ k y) ⊣⊢ ([∗ map] k↦y ∈ m, Φ k (f y)).
   Proof. by rewrite big_opM_fmap. Qed.
 
-  Lemma big_sepM_insert_override (Φ : K → uPred M) m i x y :
-    m !! i = Some x →
-    ([∗ map] k↦_ ∈ <[i:=y]> m, Φ k) ⊣⊢ ([∗ map] k↦_ ∈ m, Φ k).
+  Lemma big_sepM_insert_override Φ m i x x' :
+    m !! i = Some x → (Φ i x ⊣⊢ Φ i x') →
+    ([∗ map] k↦y ∈ <[i:=x']> m, Φ k y) ⊣⊢ ([∗ map] k↦y ∈ m, Φ k y).
   Proof. apply: big_opM_insert_override. Qed.
+
+  Lemma big_sepM_insert_override_1 Φ m i x x' :
+    m !! i = Some x →
+    ([∗ map] k↦y ∈ <[i:=x']> m, Φ k y) ⊢
+      (Φ i x' -∗ Φ i x) -∗ ([∗ map] k↦y ∈ m, Φ k y).
+  Proof.
+    intros ?. apply wand_intro_l.
+    rewrite -insert_delete big_sepM_insert ?lookup_delete //.
+    by rewrite assoc wand_elim_l -big_sepM_delete.
+  Qed.
+
+  Lemma big_sepM_insert_override_2 Φ m i x x' :
+    m !! i = Some x →
+    ([∗ map] k↦y ∈ m, Φ k y) ⊢
+      (Φ i x -∗ Φ i x') -∗ ([∗ map] k↦y ∈ <[i:=x']> m, Φ k y).
+  Proof.
+    intros ?. apply wand_intro_l.
+    rewrite {1}big_sepM_delete //; rewrite assoc wand_elim_l.
+    rewrite -insert_delete big_sepM_insert ?lookup_delete //.
+  Qed.
 
   Lemma big_sepM_fn_insert {B} (Ψ : K → A → B → uPred M) (f : K → B) m i x b :
     m !! i = None →
@@ -593,6 +613,10 @@ Section gset.
     (∀ x, TimelessP (Φ x)) → TimelessP ([∗ set] x ∈ X, Φ x).
   Proof. rewrite /big_opS. apply _. Qed.
 End gset.
+
+Lemma big_sepM_dom `{Countable K} {A} (Φ : K → uPred M) (m : gmap K A) :
+  ([∗ map] k↦_ ∈ m, Φ k) ⊣⊢ ([∗ set] k ∈ dom _ m, Φ k).
+Proof. apply: big_opM_dom. Qed.
 
 
 (** ** Big ops over finite multisets *)
