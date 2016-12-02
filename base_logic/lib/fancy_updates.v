@@ -224,4 +224,7 @@ Proof.
   iMod (fupd_intro_mask') as "HM2"; first done. iModIntro.
   iNext. iMod "HM2". iMod "HP". iMod "HM1". done.
 Qed.
+
+Lemma step_fupd_intro E1 E2 P : E2 ⊆ E1 → ▷ P -∗ |={E1,E2}▷=> P.
+Proof. iIntros (?) "HP". iApply (step_fupd_mask_mono E2 _ _ E2); auto. Qed.
 End step_fupd.
