@@ -35,8 +35,6 @@ Record OfeMixin A `{Equiv A, Dist A} := {
   mixin_dist_equivalence n : Equivalence (dist n);
   mixin_dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y
 }.
-Class Contractive `{Dist A, Dist B} (f : A → B) :=
-  contractive n x y : (∀ i, i < n → x ≡{i}≡ y) → f x ≡{n}≡ f y.
 
 (** Bundeled version *)
 Structure ofeT := OfeT' {
@@ -129,17 +127,6 @@ Section cofe.
      unfold Proper, respectful; setoid_rewrite equiv_dist.
      by intros x1 x2 Hx y1 y2 Hy n; rewrite (Hx n) (Hy n).
   Qed.
-  Lemma contractive_S {B : ofeT} (f : A → B) `{!Contractive f} n x y :
-    x ≡{n}≡ y → f x ≡{S n}≡ f y.
-  Proof. eauto using contractive, dist_le with omega. Qed.
-  Lemma contractive_0 {B : ofeT} (f : A → B) `{!Contractive f} x y :
-    f x ≡{0}≡ f y.
-  Proof. eauto using contractive with omega. Qed.
-  Global Instance contractive_ne {B : ofeT} (f : A → B) `{!Contractive f} n :
-    Proper (dist n ==> dist n) f | 100.
-  Proof. by intros x y ?; apply dist_S, contractive_S. Qed.
-  Global Instance contractive_proper {B : ofeT} (f : A → B) `{!Contractive f} :
-    Proper ((≡) ==> (≡)) f | 100 := _.
 
   Lemma conv_compl' `{Cofe A} n (c : chain A) : compl c ≡{n}≡ c (S n).
   Proof.
@@ -152,8 +139,27 @@ Section cofe.
   Qed.
 End cofe.
 
+(** Contractive functions *)
+Class Contractive {A B : ofeT} (f : A → B) :=
+  contractive n x y : (∀ i, i < n → x ≡{i}≡ y) → f x ≡{n}≡ f y.
+
 Instance const_contractive {A B : ofeT} (x : A) : Contractive (@const A B x).
 Proof. by intros n y1 y2. Qed.
+
+Section contractive.
+  Context {A B : ofeT} (f : A → B) `{!Contractive f}.
+  Implicit Types x y : A.
+
+  Lemma contractive_0 x y : f x ≡{0}≡ f y.
+  Proof. eauto using contractive with omega. Qed.
+  Lemma contractive_S n x y : x ≡{n}≡ y → f x ≡{S n}≡ f y.
+  Proof. eauto using contractive, dist_le with omega. Qed.
+
+  Global Instance contractive_ne n : Proper (dist n ==> dist n) f | 100.
+  Proof. by intros x y ?; apply dist_S, contractive_S. Qed.
+  Global Instance contractive_proper : Proper ((≡) ==> (≡)) f | 100.
+  Proof. apply (ne_proper _). Qed.
+End contractive.
 
 (** Mapping a chain *)
 Program Definition chain_map {A B : ofeT} (f : A → B)
