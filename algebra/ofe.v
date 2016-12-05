@@ -874,6 +874,10 @@ Section later.
   Lemma contractive_alt {B : ofeT} (f : A → B) :
     Contractive f ↔ (∀ n x y, Next x ≡{n}≡ Next y → f x ≡{n}≡ f y).
   Proof. done. Qed.
+
+  Lemma later_car_anti_contractive :
+    ∀ n, Proper (dist n ==> dist_later n) later_car.
+  Proof. move=> n [x] [y] /= Hxy. done. Qed.
 End later.
 
 Arguments laterC : clear implicits.
