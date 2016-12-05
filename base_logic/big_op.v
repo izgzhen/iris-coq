@@ -229,6 +229,16 @@ Section list.
            (big_opL (M:=uPredUR M) l).
   Proof. intros f g Hf. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
 
+  Lemma big_sepL_lookup_acc Φ l i x :
+    l !! i = Some x →
+    ([∗ list] k↦y ∈ l, Φ k y) ⊢ Φ i x ∗ (Φ i x -∗ ([∗ list] k↦y ∈ l, Φ k y)).
+  Proof.
+    intros Hli. apply big_sep_elem_of_acc. revert Φ l Hli.
+    induction i as [|? IH]=>Φ [] //= y l; rewrite imap_cons.
+    - intros [=->]. constructor.
+    - intros ?. constructor. by apply (IH (_ ∘ S)).
+  Qed.
+
   Lemma big_sepL_lookup Φ l i x :
     l !! i = Some x → ([∗ list] k↦y ∈ l, Φ k y) ⊢ Φ i x.
   Proof. intros. apply uPred_included. by apply: big_opL_lookup. Qed.
