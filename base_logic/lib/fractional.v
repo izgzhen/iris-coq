@@ -1,4 +1,6 @@
+From iris.prelude Require Import gmap gmultiset.
 From iris.base_logic Require Export derived.
+From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import classes class_instances.
 
 Class Fractional {M} (Φ : Qp → uPred M) :=
@@ -17,10 +19,10 @@ Section fractional.
   Implicit Types Φ : Qp → uPred M.
   Implicit Types p q : Qp.
 
-  Lemma fractional_sep `{Fractional _ Φ} p q :
+  Lemma fractional_split `{Fractional _ Φ} p q :
     Φ (p + q)%Qp ⊢ Φ p ∗ Φ q.
   Proof. by rewrite fractional. Qed.
-  Lemma sep_fractional `{Fractional _ Φ} p q :
+  Lemma fractional_combine `{Fractional _ Φ} p q :
     Φ p ∗ Φ q ⊢ Φ (p + q)%Qp.
   Proof. by rewrite fractional. Qed.
   Lemma fractional_half_equiv `{Fractional _ Φ} p :
@@ -32,6 +34,47 @@ Section fractional.
   Lemma half_fractional `{Fractional _ Φ} p q :
     Φ (p/2)%Qp ∗ Φ (p/2)%Qp ⊢ Φ p.
   Proof. by rewrite -fractional_half_equiv. Qed.
+
+  (** Fractional and logical connectives *)
+
+  Global Instance persistent_fractional P :
+    PersistentP P → Fractional (λ _, P).
+  Proof. intros HP q q'. by apply uPred_derived.always_sep_dup. Qed.
+
+  Global Instance fractional_sep Φ Ψ :
+    Fractional Φ → Fractional Ψ → Fractional (λ q, Φ q ∗ Ψ q)%I.
+  Proof.
+    intros ?? q q'. rewrite !fractional -!assoc. f_equiv.
+    rewrite !assoc. f_equiv; last done. by rewrite comm.
+  Qed.
+
+  Global Instance fractional_big_sepL {A} l Ψ :
+    (∀ k (x : A), Fractional (Ψ k x)) →
+    Fractional (M:=M) (λ q, [∗ list] k↦x ∈ l, Ψ k x q)%I.
+  Proof.
+    intros ? q q'. rewrite -big_sepL_sepL. by setoid_rewrite fractional.
+  Qed.
+
+  Global Instance fractional_big_sepM `{Countable K} {A} (m : gmap K A) Ψ :
+    (∀ k (x : A), Fractional (Ψ k x)) →
+    Fractional (M:=M) (λ q, [∗ map] k↦x ∈ m, Ψ k x q)%I.
+  Proof.
+    intros ? q q'. rewrite -big_sepM_sepM. by setoid_rewrite fractional.
+  Qed.
+
+  Global Instance fractional_big_sepS `{Countable A} (X : gset A) Ψ :
+    (∀ x, Fractional (Ψ x)) →
+    Fractional (M:=M) (λ q, [∗ set] x ∈ X, Ψ x q)%I.
+  Proof.
+    intros ? q q'. rewrite -big_sepS_sepS. by setoid_rewrite fractional.
+  Qed.
+
+  Global Instance fractional_big_sepMS `{Countable A} (X : gmultiset A) Ψ :
+    (∀ x, Fractional (Ψ x)) →
+    Fractional (M:=M) (λ q, [∗ mset] x ∈ X, Ψ x q)%I.
+  Proof.
+    intros ? q q'. rewrite -big_sepMS_sepMS. by setoid_rewrite fractional.
+  Qed.
 
   (** Mult instances *)
 
