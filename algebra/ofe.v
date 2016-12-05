@@ -233,6 +233,85 @@ Section fixpoint.
   Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint_ne. Qed.
 End fixpoint.
 
+(** Mutual fixpoints *)
+Section fixpoint2.
+  Context `{Cofe A, Cofe B, !Inhabited A, !Inhabited B}.
+  Context (fA : A → B → A).
+  Context (fB : A → B → B).
+  Context `{∀ n, Proper (dist_later n ==> dist n ==> dist n) fA}.
+  Context `{∀ n, Proper (dist_later n ==> dist_later n ==> dist n) fB}.
+
+  Local Definition fixpoint_AB (x : A) : B := fixpoint (fB x).
+  Local Instance fixpoint_AB_contractive : Contractive fixpoint_AB.
+  Proof.
+    intros n x x' Hx; rewrite /fixpoint_AB.
+    apply fixpoint_ne=> y. by f_contractive.
+  Qed.
+
+  Local Definition fixpoint_AA (x : A) : A := fA x (fixpoint_AB x).
+  Local Instance fixpoint_AA_contractive : Contractive fixpoint_AA.
+  Proof. solve_contractive. Qed.
+
+  Definition fixpoint_A : A := fixpoint fixpoint_AA.
+  Definition fixpoint_B : B := fixpoint_AB fixpoint_A.
+
+  Lemma fixpoint_A_unfold : fA fixpoint_A fixpoint_B ≡ fixpoint_A.
+  Proof. by rewrite {2}/fixpoint_A (fixpoint_unfold _). Qed.
+  Lemma fixpoint_B_unfold : fB fixpoint_A fixpoint_B ≡ fixpoint_B.
+  Proof. by rewrite {2}/fixpoint_B /fixpoint_AB (fixpoint_unfold _). Qed.
+
+  Instance: Proper ((≡) ==> (≡) ==> (≡)) fA.
+  Proof.
+    apply ne_proper_2=> n x x' ? y y' ?. f_contractive; auto using dist_S.
+  Qed.
+  Instance: Proper ((≡) ==> (≡) ==> (≡)) fB.
+  Proof.
+    apply ne_proper_2=> n x x' ? y y' ?. f_contractive; auto using dist_S.
+  Qed.
+
+  Lemma fixpoint_A_unique p q : fA p q ≡ p → fB p q ≡ q → p ≡ fixpoint_A.
+  Proof.
+    intros HfA HfB. rewrite -HfA. apply fixpoint_unique. rewrite /fixpoint_AA.
+    f_equiv=> //. apply fixpoint_unique. by rewrite HfA HfB.
+  Qed.
+  Lemma fixpoint_B_unique p q : fA p q ≡ p → fB p q ≡ q → q ≡ fixpoint_B.
+  Proof. intros. apply fixpoint_unique. by rewrite -fixpoint_A_unique. Qed.
+End fixpoint2.
+
+Section fixpoint2_ne.
+  Context `{Cofe A, Cofe B, !Inhabited A, !Inhabited B}.
+  Context (fA fA' : A → B → A).
+  Context (fB fB' : A → B → B).
+  Context `{∀ n, Proper (dist_later n ==> dist n ==> dist n) fA}.
+  Context `{∀ n, Proper (dist_later n ==> dist n ==> dist n) fA'}.
+  Context `{∀ n, Proper (dist_later n ==> dist_later n ==> dist n) fB}.
+  Context `{∀ n, Proper (dist_later n ==> dist_later n ==> dist n) fB'}.
+
+  Lemma fixpoint_A_ne n :
+    (∀ x y, fA x y ≡{n}≡ fA' x y) → (∀ x y, fB x y ≡{n}≡ fB' x y) →
+    fixpoint_A fA fB ≡{n}≡ fixpoint_A fA' fB'.
+  Proof.
+    intros HfA HfB. apply fixpoint_ne=> z.
+    rewrite /fixpoint_AA /fixpoint_AB HfA. f_equiv. by apply fixpoint_ne.
+  Qed.
+  Lemma fixpoint_B_ne n :
+    (∀ x y, fA x y ≡{n}≡ fA' x y) → (∀ x y, fB x y ≡{n}≡ fB' x y) →
+    fixpoint_B fA fB ≡{n}≡ fixpoint_B fA' fB'.
+  Proof.
+    intros HfA HfB. apply fixpoint_ne=> z. rewrite HfB. f_contractive.
+    apply fixpoint_A_ne; auto using dist_S.
+  Qed.
+
+  Lemma fixpoint_A_proper :
+    (∀ x y, fA x y ≡ fA' x y) → (∀ x y, fB x y ≡ fB' x y) →
+    fixpoint_A fA fB ≡ fixpoint_A fA' fB'.
+  Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint_A_ne. Qed.
+  Lemma fixpoint_B_proper :
+    (∀ x y, fA x y ≡ fA' x y) → (∀ x y, fB x y ≡ fB' x y) →
+    fixpoint_B fA fB ≡ fixpoint_B fA' fB'.
+  Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint_B_ne. Qed.
+End fixpoint2_ne.
+
 (** Function space *)
 (* We make [ofe_fun] a definition so that we can register it as a canonical
 structure. *)
