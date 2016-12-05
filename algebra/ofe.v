@@ -871,13 +871,18 @@ Section later.
   Global Instance Later_inj n : Inj (dist n) (dist (S n)) (@Next A).
   Proof. by intros x y. Qed.
 
-  Lemma contractive_alt {B : ofeT} (f : A → B) :
-    Contractive f ↔ (∀ n x y, Next x ≡{n}≡ Next y → f x ≡{n}≡ f y).
-  Proof. done. Qed.
+  Instance later_car_anti_contractive n :
+    Proper (dist n ==> dist_later n) later_car.
+  Proof. move=> [x] [y] /= Hxy. done. Qed.
 
-  Lemma later_car_anti_contractive :
-    ∀ n, Proper (dist n ==> dist_later n) later_car.
-  Proof. move=> n [x] [y] /= Hxy. done. Qed.
+  Lemma contractive_alt {B : ofeT} (f : A → B) :
+    Contractive f ↔ ∃ g : later A → B,
+      (∀ n, Proper (dist n ==> dist n) g) ∧ (∀ x, f x ≡ g (Next x)).
+  Proof.
+    split.
+    - intros Hf. exists (f ∘ later_car); split=> // n x y ?. by f_equiv.
+    - intros (g&Hg&Hf) n x y Hxy. rewrite !Hf. by apply Hg.
+  Qed.
 End later.
 
 Arguments laterC : clear implicits.
