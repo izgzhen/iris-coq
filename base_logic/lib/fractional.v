@@ -45,7 +45,7 @@ Section fractional.
     Fractional Φ → Fractional Ψ → Fractional (λ q, Φ q ∗ Ψ q)%I.
   Proof.
     intros ?? q q'. rewrite !fractional -!assoc. f_equiv.
-    rewrite !assoc. f_equiv; last done. by rewrite comm.
+    rewrite !assoc. f_equiv. by rewrite comm.
   Qed.
 
   Global Instance fractional_big_sepL {A} l Ψ :
@@ -98,7 +98,6 @@ Section fractional.
   Proof. done. Qed.
 
   (** Proof mode instances *)
-
   Global Instance from_sep_fractional_fwd P P1 P2 Φ q1 q2 :
     AsFractional P Φ (q1 + q2) → Fractional Φ →
     AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
@@ -140,12 +139,11 @@ Section fractional.
     AsFractional R Φ r → AsFractional PP' Φ (p + p') → Fractional Φ →
     Frame R (Φ p') Q → MakeSep (Φ p) Q PQ → Frame R PP' PQ.
   Proof.
-    rewrite /Frame=>->->-><-<-. rewrite !assoc. f_equiv. by rewrite comm. done.
+    rewrite /Frame=>->->-><-<-. rewrite !assoc. f_equiv. by rewrite comm.
   Qed.
   Global Instance frame_fractional_half P Q R Φ p:
     AsFractional R Φ (p/2) → AsFractional P Φ p → Fractional Φ →
     AsFractional Q Φ (p/2)%Qp →
     Frame R P Q.
   Proof. by rewrite /Frame -{2}(Qp_div_2 p)=>->->->->. Qed.
-
 End fractional.

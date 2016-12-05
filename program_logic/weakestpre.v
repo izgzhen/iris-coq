@@ -37,11 +37,7 @@ Definition wp_pre `{irisG Λ Σ}
 Local Instance wp_pre_contractive `{irisG Λ Σ} : Contractive wp_pre.
 Proof.
   rewrite /wp_pre=> n wp wp' Hwp E e1 Φ.
-  apply or_ne, and_ne, forall_ne; auto=> σ1; apply wand_ne; auto.
-  apply fupd_ne, sep_ne, later_contractive; auto=> i ?.
-  apply forall_ne=> e2; apply forall_ne=> σ2; apply forall_ne=> efs.
-  apply wand_ne, fupd_ne, sep_ne, sep_ne; auto; first by apply Hwp.
-  apply big_opL_ne=> ? ef. by apply Hwp.
+  repeat (f_contractive || f_equiv); apply Hwp.
 Qed.
 
 Definition wp_def `{irisG Λ Σ} :
@@ -138,12 +134,12 @@ Global Instance wp_ne E e n :
   Proper (pointwise_relation _ (dist n) ==> dist n) (@wp Λ Σ _ E e).
 Proof.
   revert e. induction (lt_wf n) as [n _ IH]=> e Φ Ψ HΦ.
-  rewrite !wp_unfold /wp_pre. apply or_ne, and_ne; auto; first solve_proper.
-  apply forall_ne=> σ1.
-  apply wand_ne, fupd_ne, sep_ne, later_contractive; auto=> i ?.
-  apply forall_ne=> e2; apply forall_ne=> σ2; apply forall_ne=> ef.
-  apply wand_ne, fupd_ne, sep_ne, sep_ne; auto.
-  apply IH; [done|]=> v. eapply dist_le; eauto with omega.
+  rewrite !wp_unfold /wp_pre.
+  (* FIXME: figure out a way to properly automate this proof *)
+  (* FIXME: reflexivity, as being called many times by f_equiv and f_contractive
+  is very slow here *)
+  do 18 (f_contractive || f_equiv). apply IH; first lia.
+  intros v. eapply dist_le; eauto with omega.
 Qed.
 Global Instance wp_proper E e :
   Proper (pointwise_relation _ (≡) ==> (≡)) (@wp Λ Σ _ E e).

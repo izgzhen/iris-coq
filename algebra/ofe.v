@@ -83,6 +83,11 @@ Record chain (A : ofeT) := {
 Arguments chain_car {_} _ _.
 Arguments chain_cauchy {_} _ _ _ _.
 
+Program Definition chain_map {A B : ofeT} (f : A → B)
+    `{!∀ n, Proper (dist n ==> dist n) f} (c : chain A) : chain B :=
+  {| chain_car n := f (c n) |}.
+Next Obligation. by intros A B f Hf c n i ?; apply Hf, chain_cauchy. Qed.
+
 Notation Compl A := (chain A%type → A).
 Class Cofe (A : ofeT) := {
   compl : Compl A;
@@ -140,8 +145,14 @@ Section cofe.
 End cofe.
 
 (** Contractive functions *)
-Class Contractive {A B : ofeT} (f : A → B) :=
-  contractive n x y : (∀ i, i < n → x ≡{i}≡ y) → f x ≡{n}≡ f y.
+Definition dist_later {A : ofeT} (n : nat) (x y : A) : Prop :=
+  match n with 0 => True | S n => x ≡{n}≡ y end.
+Arguments dist_later _ !_ _ _ /.
+
+Global Instance dist_later_equivalence A n : Equivalence (@dist_later A n).
+Proof. destruct n as [|n]. by split. apply dist_equivalence. Qed.
+
+Notation Contractive f := (∀ n, Proper (dist_later n ==> dist n) f).
 
 Instance const_contractive {A B : ofeT} (x : A) : Contractive (@const A B x).
 Proof. by intros n y1 y2. Qed.
@@ -151,9 +162,9 @@ Section contractive.
   Implicit Types x y : A.
 
   Lemma contractive_0 x y : f x ≡{0}≡ f y.
-  Proof. eauto using contractive with omega. Qed.
+  Proof. by apply (_ : Contractive f). Qed.
   Lemma contractive_S n x y : x ≡{n}≡ y → f x ≡{S n}≡ f y.
-  Proof. eauto using contractive, dist_le with omega. Qed.
+  Proof. intros. by apply (_ : Contractive f). Qed.
 
   Global Instance contractive_ne n : Proper (dist n ==> dist n) f | 100.
   Proof. by intros x y ?; apply dist_S, contractive_S. Qed.
@@ -161,18 +172,27 @@ Section contractive.
   Proof. apply (ne_proper _). Qed.
 End contractive.
 
-(** Mapping a chain *)
-Program Definition chain_map {A B : ofeT} (f : A → B)
-    `{!∀ n, Proper (dist n ==> dist n) f} (c : chain A) : chain B :=
-  {| chain_car n := f (c n) |}.
-Next Obligation. by intros A B f Hf c n i ?; apply Hf, chain_cauchy. Qed.
+Ltac f_contractive :=
+  match goal with
+  | |- ?f _ ≡{_}≡ ?f _ => apply (_ : Proper (dist_later _ ==> _) f)
+  | |- ?f _ _ ≡{_}≡ ?f _ _ => apply (_ : Proper (dist_later _ ==> _ ==> _) f)
+  | |- ?f _ _ ≡{_}≡ ?f _ _ => apply (_ : Proper (_ ==> dist_later _ ==> _) f)
+  end;
+  try match goal with
+  | |- dist_later ?n ?x ?y => destruct n as [|n]; [done|change (x ≡{n}≡ y)]
+  end;
+  try reflexivity.
+
+Ltac solve_contractive :=
+  preprocess_solve_proper;
+  solve [repeat (first [f_contractive|f_equiv]; try eassumption)].
 
 (** Fixpoint *)
 Program Definition fixpoint_chain {A : ofeT} `{Inhabited A} (f : A → A)
   `{!Contractive f} : chain A := {| chain_car i := Nat.iter (S i) f inhabitant |}.
 Next Obligation.
   intros A ? f ? n.
-  induction n as [|n IH]; intros [|i] ?; simpl in *; try reflexivity || omega.
+  induction n as [|n IH]=> -[|i] //= ?; try omega.
   - apply (contractive_0 f).
   - apply (contractive_S f), IH; auto with omega.
 Qed.
@@ -212,6 +232,85 @@ Section fixpoint.
     (∀ x, f x ≡ g x) → fixpoint f ≡ fixpoint g.
   Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint_ne. Qed.
 End fixpoint.
+
+(** Mutual fixpoints *)
+Section fixpoint2.
+  Context `{Cofe A, Cofe B, !Inhabited A, !Inhabited B}.
+  Context (fA : A → B → A).
+  Context (fB : A → B → B).
+  Context `{∀ n, Proper (dist_later n ==> dist n ==> dist n) fA}.
+  Context `{∀ n, Proper (dist_later n ==> dist_later n ==> dist n) fB}.
+
+  Local Definition fixpoint_AB (x : A) : B := fixpoint (fB x).
+  Local Instance fixpoint_AB_contractive : Contractive fixpoint_AB.
+  Proof.
+    intros n x x' Hx; rewrite /fixpoint_AB.
+    apply fixpoint_ne=> y. by f_contractive.
+  Qed.
+
+  Local Definition fixpoint_AA (x : A) : A := fA x (fixpoint_AB x).
+  Local Instance fixpoint_AA_contractive : Contractive fixpoint_AA.
+  Proof. solve_contractive. Qed.
+
+  Definition fixpoint_A : A := fixpoint fixpoint_AA.
+  Definition fixpoint_B : B := fixpoint_AB fixpoint_A.
+
+  Lemma fixpoint_A_unfold : fA fixpoint_A fixpoint_B ≡ fixpoint_A.
+  Proof. by rewrite {2}/fixpoint_A (fixpoint_unfold _). Qed.
+  Lemma fixpoint_B_unfold : fB fixpoint_A fixpoint_B ≡ fixpoint_B.
+  Proof. by rewrite {2}/fixpoint_B /fixpoint_AB (fixpoint_unfold _). Qed.
+
+  Instance: Proper ((≡) ==> (≡) ==> (≡)) fA.
+  Proof.
+    apply ne_proper_2=> n x x' ? y y' ?. f_contractive; auto using dist_S.
+  Qed.
+  Instance: Proper ((≡) ==> (≡) ==> (≡)) fB.
+  Proof.
+    apply ne_proper_2=> n x x' ? y y' ?. f_contractive; auto using dist_S.
+  Qed.
+
+  Lemma fixpoint_A_unique p q : fA p q ≡ p → fB p q ≡ q → p ≡ fixpoint_A.
+  Proof.
+    intros HfA HfB. rewrite -HfA. apply fixpoint_unique. rewrite /fixpoint_AA.
+    f_equiv=> //. apply fixpoint_unique. by rewrite HfA HfB.
+  Qed.
+  Lemma fixpoint_B_unique p q : fA p q ≡ p → fB p q ≡ q → q ≡ fixpoint_B.
+  Proof. intros. apply fixpoint_unique. by rewrite -fixpoint_A_unique. Qed.
+End fixpoint2.
+
+Section fixpoint2_ne.
+  Context `{Cofe A, Cofe B, !Inhabited A, !Inhabited B}.
+  Context (fA fA' : A → B → A).
+  Context (fB fB' : A → B → B).
+  Context `{∀ n, Proper (dist_later n ==> dist n ==> dist n) fA}.
+  Context `{∀ n, Proper (dist_later n ==> dist n ==> dist n) fA'}.
+  Context `{∀ n, Proper (dist_later n ==> dist_later n ==> dist n) fB}.
+  Context `{∀ n, Proper (dist_later n ==> dist_later n ==> dist n) fB'}.
+
+  Lemma fixpoint_A_ne n :
+    (∀ x y, fA x y ≡{n}≡ fA' x y) → (∀ x y, fB x y ≡{n}≡ fB' x y) →
+    fixpoint_A fA fB ≡{n}≡ fixpoint_A fA' fB'.
+  Proof.
+    intros HfA HfB. apply fixpoint_ne=> z.
+    rewrite /fixpoint_AA /fixpoint_AB HfA. f_equiv. by apply fixpoint_ne.
+  Qed.
+  Lemma fixpoint_B_ne n :
+    (∀ x y, fA x y ≡{n}≡ fA' x y) → (∀ x y, fB x y ≡{n}≡ fB' x y) →
+    fixpoint_B fA fB ≡{n}≡ fixpoint_B fA' fB'.
+  Proof.
+    intros HfA HfB. apply fixpoint_ne=> z. rewrite HfB. f_contractive.
+    apply fixpoint_A_ne; auto using dist_S.
+  Qed.
+
+  Lemma fixpoint_A_proper :
+    (∀ x y, fA x y ≡ fA' x y) → (∀ x y, fB x y ≡ fB' x y) →
+    fixpoint_A fA fB ≡ fixpoint_A fA' fB'.
+  Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint_A_ne. Qed.
+  Lemma fixpoint_B_proper :
+    (∀ x y, fA x y ≡ fA' x y) → (∀ x y, fB x y ≡ fB' x y) →
+    fixpoint_B fA fB ≡ fixpoint_B fA' fB'.
+  Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint_B_ne. Qed.
+End fixpoint2_ne.
 
 (** Function space *)
 (* We make [ofe_fun] a definition so that we can register it as a canonical
@@ -513,7 +612,7 @@ Instance ofe_morCF_contractive F1 F2 :
   cFunctorContractive (ofe_morCF F1 F2).
 Proof.
   intros ?? A1 A2 B1 B2 n [f g] [f' g'] Hfg; simpl in *.
-  apply ofe_morC_map_ne; apply cFunctor_contractive=>i ?; split; by apply Hfg.
+  apply ofe_morC_map_ne; apply cFunctor_contractive; destruct n, Hfg; by split.
 Qed.
 
 (** Sum *)
@@ -606,6 +705,7 @@ Qed.
 (** Discrete cofe *)
 Section discrete_cofe.
   Context `{Equiv A, @Equivalence A (≡)}.
+
   Instance discrete_dist : Dist A := λ n x y, x ≡ y.
   Definition discrete_ofe_mixin : OfeMixin A.
   Proof.
@@ -614,7 +714,7 @@ Section discrete_cofe.
     - done.
     - done.
   Qed.
-  
+
   Global Program Instance discrete_cofe : Cofe (OfeT A discrete_ofe_mixin) :=
     { compl c := c 0 }.
   Next Obligation.
@@ -743,17 +843,17 @@ Section later.
   Context {A : ofeT}.
   Instance later_equiv : Equiv (later A) := λ x y, later_car x ≡ later_car y.
   Instance later_dist : Dist (later A) := λ n x y,
-    match n with 0 => True | S n => later_car x ≡{n}≡ later_car y end.
+    dist_later n (later_car x) (later_car y).
   Definition later_ofe_mixin : OfeMixin (later A).
   Proof.
     split.
     - intros x y; unfold equiv, later_equiv; rewrite !equiv_dist.
       split. intros Hxy [|n]; [done|apply Hxy]. intros Hxy n; apply (Hxy (S n)).
-    - intros [|n]; [by split|split]; unfold dist, later_dist.
+    - split; rewrite /dist /later_dist.
       + by intros [x].
       + by intros [x] [y].
       + by intros [x] [y] [z] ??; trans y.
-    - intros [|n] [x] [y] ?; [done|]; unfold dist, later_dist; by apply dist_S.
+    - intros [|n] [x] [y] ?; [done|]; rewrite /dist /later_dist; by apply dist_S.
   Qed.
   Canonical Structure laterC : ofeT := OfeT (later A) later_ofe_mixin.
 
@@ -767,15 +867,21 @@ Section later.
   Qed.
 
   Global Instance Next_contractive : Contractive (@Next A).
-  Proof. intros [|n] x y Hxy; [done|]; apply Hxy; lia. Qed.
+  Proof. by intros [|n] x y. Qed.
   Global Instance Later_inj n : Inj (dist n) (dist (S n)) (@Next A).
   Proof. by intros x y. Qed.
 
-  Lemma later_car_compose_ne {B : ofeT} (f : A → B) :
-    (Contractive f) → ∀ n, Proper (dist n ==> dist n) (f ∘ later_car).
+  Instance later_car_anti_contractive n :
+    Proper (dist n ==> dist_later n) later_car.
+  Proof. move=> [x] [y] /= Hxy. done. Qed.
+
+  Lemma contractive_alt {B : ofeT} (f : A → B) :
+    Contractive f ↔ ∃ g : later A → B,
+      (∀ n, Proper (dist n ==> dist n) g) ∧ (∀ x, f x ≡ g (Next x)).
   Proof.
-    move=> Hcont n [x] [y] /= Hxy. apply Hcont. intros m Hmn.
-    destruct n; first by (exfalso; omega). eapply dist_le', Hxy. omega.
+    split.
+    - intros Hf. exists (f ∘ later_car); split=> // n x y ?. by f_equiv.
+    - intros (g&Hg&Hf) n x y Hxy. rewrite !Hf. by apply Hg.
   Qed.
 End later.
 
@@ -819,8 +925,8 @@ Qed.
 
 Instance laterCF_contractive F : cFunctorContractive (laterCF F).
 Proof.
-  intros A1 A2 B1 B2 n fg fg' Hfg.
-  apply laterC_map_contractive => i ?. by apply cFunctor_ne, Hfg.
+  intros A1 A2 B1 B2 n fg fg' Hfg. apply laterC_map_contractive.
+  destruct n as [|n]; simpl in *; first done. apply cFunctor_ne, Hfg.
 Qed.
 
 (** Notation for writing functors *)
