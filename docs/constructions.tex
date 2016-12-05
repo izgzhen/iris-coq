@@ -141,35 +141,28 @@ $K \fpfn (-)$ is a locally non-expansive functor from $\CMRAs$ to $\CMRAs$.
 
 Given some OFE $\cofe$, we define the CMRA $\agm(\cofe)$ as follows:
 \begin{align*}
-  \agm(\cofe) \eqdef{}& \set{(c, V) \in (\nat \to \cofe) \times \SProp}/\ {\sim} \\[-0.2em]
-  \textnormal{where }& \melt \sim \meltB \eqdef{} \melt.V = \meltB.V \land 
-    \All n. n \in \melt.V \Ra \melt.c(n) \nequiv{n} \meltB.c(n)  \\
+  \agm(\cofe) \eqdef{}& \setComp{\melt \in \finpset\cofe}{c \neq \emptyset} /\ {\sim} \\[-0.2em]
+  \melt \nequiv{n} \meltB \eqdef{}& (\All x \in \melt. \Exists y \in \meltB. x \nequiv{n} y) \land (\All y \in \meltB. \Exists x \in \melt. x \nequiv{n} y) \\
+  \textnormal{where }& \melt \sim \meltB \eqdef{} \All n. \melt \nequiv{n} \meltB  \\
+~\\
 %    \All n \in {\melt.V}.\, \melt.x \nequiv{n} \meltB.x \\
-  \melt \nequiv{n} \meltB \eqdef{}& (\All m \leq n. m \in \melt.V \Lra m \in \meltB.V) \land (\All m \leq n. m \in \melt.V \Ra \melt.c(m) \nequiv{m} \meltB.c(m)) \\
-  \mval_n \eqdef{}& \setComp{\melt \in \agm(\cofe)}{ n \in \melt.V \land \All m \leq n. \melt.c(n) \nequiv{m} \melt.c(m) } \\
+  \mval_n \eqdef{}& \setComp{\melt \in \agm(\cofe)}{ \All x, y \in \melt. x \nequiv{n} y } \\
   \mcore\melt \eqdef{}& \melt \\
-  \melt \mtimes \meltB \eqdef{}& \left(\melt.c, \setComp{n}{n \in \melt.V \land n \in \meltB.V \land \melt \nequiv{n} \meltB }\right)
+  \melt \mtimes \meltB \eqdef{}& \melt \cup \meltB
 \end{align*}
 %Note that the carrier $\agm(\cofe)$ is a \emph{record} consisting of the two fields $c$ and $V$.
 
 $\agm(-)$ is a locally non-expansive functor from $\OFEs$ to $\CMRAs$.
 
-You can think of the $c$ as a \emph{chain} of elements of $\cofe$ that has to converge only for $n \in V$ steps.
-The reason we store a chain, rather than a single element, is that $\agm(\cofe)$ needs to be a COFE itself, so we need to be able to give a limit for every chain of $\agm(\cofe)$.
-However, given such a chain, we cannot constructively define its limit: Clearly, the $V$ of the limit is the limit of the $V$ of the chain.
-But what to pick for the actual data, for the element of $\cofe$?
-Only if $V = \nat$ we have a chain of $\cofe$ that we can take a limit of; if the $V$ is smaller, the chain ``cancels'', \ie stops converging as we reach indices $n \notin V$.
-To mitigate this, we apply the usual construction to close a set; we go from elements of $\cofe$ to chains of $\cofe$.
-
-We define an injection $\aginj$ into $\agm(\cofe)$ as follows:
-\[ \aginj(x) \eqdef \record{\mathrm c \eqdef \Lam \any. x, \mathrm V \eqdef \nat} \]
+We define a non-expansive injection $\aginj$ into $\agm(\cofe)$ as follows:
+\[ \aginj(x) \eqdef \set{x} \]
 There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can show the following:
 \begin{mathpar}
   \axiomH{ag-val}{\aginj(x) \in \mval_n}
 
   \axiomH{ag-dup}{\aginj(x) = \aginj(x)\mtimes\aginj(x)}
   
-  \axiomH{ag-agree}{\aginj(x) \mtimes \aginj(y) \in \mval_n \Ra x \nequiv{n} y}
+  \axiomH{ag-agree}{\aginj(x) \mtimes \aginj(y) \in \mval_n \Lra x \nequiv{n} y}
 \end{mathpar}
 
 
