@@ -154,6 +154,13 @@ Section list.
     (∀ k y, l !! k = Some y → f k y ≡ g k y) →
     ([⋅ list] k ↦ y ∈ l, f k y) ≡ ([⋅ list] k ↦ y ∈ l, g k y).
   Proof. apply big_opL_forall; apply _. Qed.
+  Lemma big_opL_permutation (f : A → M) l1 l2 :
+    l1 ≡ₚ l2 → ([⋅ list] x ∈ l1, f x) ≡ ([⋅ list] x ∈ l2, f x).
+  Proof.
+    assert (∀ l, imap (λ _ x, f x) l = map f l) as EQ;
+      last by rewrite /big_opL !EQ=>->.
+    intros l; revert f. induction l as [|?? IH]=>// f. rewrite imap_cons IH //.
+  Qed.
 
   Global Instance big_opL_ne l n :
     Proper (pointwise_relation _ (pointwise_relation _ (dist n)) ==> (dist n))
