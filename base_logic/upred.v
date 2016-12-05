@@ -118,8 +118,8 @@ Qed.
 Instance uPredCF_contractive F :
   urFunctorContractive F → cFunctorContractive (uPredCF F).
 Proof.
-  intros ? A1 A2 B1 B2 n P Q HPQ.
-  apply uPredC_map_ne, urFunctor_contractive=> i ?; split; by apply HPQ.
+  intros ? A1 A2 B1 B2 n P Q HPQ. apply uPredC_map_ne, urFunctor_contractive.
+  destruct n; split; by apply HPQ.
 Qed.
 
 (** logical entailement *)

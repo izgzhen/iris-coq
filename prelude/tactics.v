@@ -273,6 +273,7 @@ favor the second because the relation (dist) stays the same. *)
 Ltac f_equiv :=
   match goal with
   | _ => reflexivity
+  | |- pointwise_relation _ _ _ _ => intros ?
   (* We support matches on both sides, *if* they concern the same variable, or
      variables in some relation. *)
   | |- ?R (match ?x with _ => _ end) (match ?x with _ => _ end) =>
@@ -301,26 +302,12 @@ Ltac f_equiv :=
    (* In case the function symbol differs, but the arguments are the same,
       maybe we have a pointwise_relation in our context. *)
   | H : pointwise_relation _ ?R ?f ?g |- ?R (?f ?x) (?g ?x) => apply H
-  end.
-
-(** auto_proper solves goals of the form "f _ = f _", for any relation and any
-    number of arguments, by repeatedly applying f_equiv and handling trivial cases.
-    If it cannot solve an equality, it will leave that to the user. *)
-Ltac auto_equiv :=
-  (* Deal with "pointwise_relation" *)
-  repeat lazymatch goal with
-  | |- pointwise_relation _ _ _ _ => intros ?
   end;
-  (* Normalize away equalities. *)
-  simplify_eq;
-  (* repeatedly apply congruence lemmas and use the equalities in the hypotheses. *)
-  try (f_equiv; fast_done || auto_equiv).
+  try reflexivity.
 
-(** solve_proper solves goals of the form "Proper (R1 ==> R2)", for any
-    number of relations. All the actual work is done by auto_equiv;
-    solve_proper just introduces the assumptions and unfolds the first
-    head symbol. *)
-Ltac solve_proper :=
+(* The tactic [preprocess_solve_proper] unfolds the first head symbol, so that
+we proceed by repeatedly using [f_equiv]. *)
+Ltac preprocess_solve_proper :=
   (* Introduce everything *)
   intros;
   repeat lazymatch goal with
@@ -340,7 +327,14 @@ Ltac solve_proper :=
   | |- ?R (?f _ _) (?f _ _) => unfold f
   | |- ?R (?f _) (?f _) => unfold f
   end;
-  solve [ auto_equiv ].
+  simplify_eq.
+
+(** The tactic [solve_proper] solves goals of the form "Proper (R1 ==> R2)", for
+any number of relations. The actual work is done by repeatedly applying
+[f_equiv]. *)
+Ltac solve_proper :=
+  preprocess_solve_proper;
+  solve [repeat (f_equiv; try eassumption)].
 
 (** The tactic [intros_revert tac] introduces all foralls/arrows, performs tac,
 and then reverts them. *)

@@ -47,16 +47,16 @@ Global Instance box_own_prop_ne n γ : Proper (dist n ==> dist n) (box_own_prop 
 Proof. solve_proper. Qed.
 Global Instance box_inv_ne n γ : Proper (dist n ==> dist n) (slice_inv γ).
 Proof. solve_proper. Qed.
+
 Global Instance slice_ne n γ : Proper (dist n ==> dist n) (slice N γ).
 Proof. solve_proper. Qed.
-Global Instance box_contractive f : Contractive (box N f).
-Proof.
-  intros n P1 P2 HP1P2. apply exist_ne. intros Φ. f_equiv; last done.
-  apply contractive. intros n' ?. by rewrite HP1P2.
-Qed.
-
 Global Instance slice_persistent γ P : PersistentP (slice N γ P).
 Proof. apply _. Qed.
+
+Global Instance box_contractive f : Contractive (box N f).
+Proof. solve_contractive. Qed.
+Global Instance box_ne n f : Proper (dist n ==> dist n) (box N f).
+Proof. apply (contractive_ne _). Qed.
 
 Lemma box_own_auth_agree γ b1 b2 :
   box_own_auth γ (● Excl' b1) ∗ box_own_auth γ (◯ Excl' b2) ⊢ ⌜b1 = b2⌝.

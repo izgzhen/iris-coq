@@ -284,8 +284,8 @@ Proof.
 Qed.
 Global Instance later_contractive : Contractive (@uPred_later M).
 Proof.
-  intros n P Q HPQ; unseal; split=> -[|n'] x ??; simpl; [done|].
-  apply (HPQ n'); eauto using cmra_validN_S.
+  unseal; intros [|n] P Q HPQ; split=> -[|n'] x ?? //=; try omega.
+  apply HPQ; eauto using cmra_validN_S.
 Qed.
 Global Instance later_proper' :
   Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_later M) := ne_proper _.
@@ -583,12 +583,11 @@ Proof. unseal. by destruct mx. Qed.
 
 (* Contractive functions *)
 Lemma contractiveI {A B : ofeT} (f : A → B) :
-  Contractive f ↔ (∀ x y, ▷ (x ≡ y) ⊢ f x ≡ f y).
+  Contractive f ↔ (∀ a b, ▷ (a ≡ b) ⊢ f a ≡ f b).
 Proof.
   split; unseal; intros Hf.
-  - intros x y; split=> -[|n] z _ /=; eauto using contractive_0, contractive_S.
-  - intros [|i] x y Hxy; apply (uPred_in_entails _ _ (Hf x y) _ ∅);
-      simpl; eauto using ucmra_unit_validN.
+  - intros a b; split=> n x _; apply Hf.
+  - intros i a b; eapply Hf, ucmra_unit_validN.
 Qed.
 
 (* Functions *)

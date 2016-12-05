@@ -44,11 +44,10 @@ Context `{invG Σ}.
 Implicit Types P : iProp Σ.
 
 (* Invariants *)
+Instance invariant_unfold_contractive : Contractive (@invariant_unfold Σ).
+Proof. solve_contractive. Qed.
 Global Instance ownI_contractive i : Contractive (@ownI Σ _ i).
-Proof.
-  intros n P Q HPQ. rewrite /ownI /invariant_unfold. do 4 f_equiv.
-  apply Next_contractive=> j ?; by rewrite (HPQ j).
-Qed.
+Proof. solve_contractive. Qed.
 Global Instance ownI_persistent i P : PersistentP (ownI i P).
 Proof. rewrite /ownI. apply _. Qed.
 
