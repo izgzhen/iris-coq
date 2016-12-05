@@ -22,16 +22,16 @@ The purpose of this section is to describe how we solve these issues.
 
 \paragraph{Picking the resources.}
 The key ingredient that we will employ on top of the base logic is to give some more fixed structure to the resources.
-To instantiate the program logic, the user picks a family of locally contractive bifunctors $(\iFunc_i : \COFEs \to \CMRAs)_{i \in \mathcal{I}}$.
+To instantiate the program logic, the user picks a family of locally contractive bifunctors $(\iFunc_i : \OFEs \to \CMRAs)_{i \in \mathcal{I}}$.
 (This is in contrast to the base logic, where the user picks a single, fixed CMRA that has a unit.)
 
 From this, we construct the bifunctor defining the overall resources as follows:
 \begin{align*}
   \mathcal G \eqdef{}& \nat \\
-  \textdom{ResF}(\cofe^\op, \cofe) \eqdef{}& \prod_{i \in \mathcal I} \mathcal G \fpfn \iFunc_i(\cofe^\op, \cofe)
+  \textdom{ResF}(\ofe^\op, \ofe) \eqdef{}& \prod_{i \in \mathcal I} \mathcal G \fpfn \iFunc_i(\ofe^\op, \ofe)
 \end{align*}
 We will motivate both the use of a product and the finite partial function below.
-$\textdom{ResF}(\cofe^\op, \cofe)$ is a CMRA by lifting the individual CMRAs pointwise, and it has a unit (using the empty finite partial functions).
+$\textdom{ResF}(\ofe^\op, \ofe)$ is a CMRA by lifting the individual CMRAs pointwise, and it has a unit (using the empty finite partial functions).
 Furthermore, since the $\iFunc_i$ are locally contractive, so is $\textdom{ResF}$.
 
 Now we can write down the recursive domain equation:
@@ -93,7 +93,7 @@ We can show the following properties for this form of ownership:
     {\ownGhost\gname{\melt : M_i} \Ra \mval_{M_i}(\melt)}
 
   \inferH{res-timeless}
-    {\text{$\melt$ is a discrete COFE element}}
+    {\text{$\melt$ is a discrete OFE element}}
     {\timeless{\ownGhost\gname{\melt : M_i}}}
 \end{mathparpagebreakable}
 
@@ -121,8 +121,7 @@ We assume to have the following four CMRAs available:
 The last two are the tokens used for managing invariants, $\textmon{Inv}$ is the monoid used to manage the invariants themselves.
 Finally, $\textmon{State}$ is used to provide the program with a view of the physical state of the machine.
 
-Furthermore, we assume that instances named $\gname_{\textmon{State}}$, $\gname_{\textmon{Inv}}$, $\gname_{\textmon{En}}$ and $\gname_{\textmon{Dis}}$ of these CMRAs have been created.
-(We will discuss later how this assumption is discharged.)
+We assume that at the beginning of the verification, instances named $\gname_{\textmon{State}}$, $\gname_{\textmon{Inv}}$, $\gname_{\textmon{En}}$ and $\gname_{\textmon{Dis}}$ of these CMRAs have been created, such that these names are globally known.
 
 \paragraph{World Satisfaction.}
 We can now define the assertion $W$ (\emph{world satisfaction}) which ensures that the enabled invariants are actually maintained:
@@ -187,7 +186,7 @@ Fancy updates satisfy the following basic proof rules:
 % \inferH{fup-closeI}
 % {}{\knowInv\iname\prop \land \later\prop \proves \pvs[\emptyset][\set\iname] \TRUE}
 \end{mathparpagebreakable}
-(There are no rules related to invariants here. Those rules will be discussed later, in \Sref{sec:invariants}.)
+(There are no rules related to invariants here. Those rules will be discussed later, in \Sref{sec:namespaces}.)
 
 We can further define the notions of \emph{view shifts} and \emph{linear view shifts}:
 \begin{align*}

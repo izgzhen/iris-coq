@@ -1,65 +1,82 @@
 \section{Algebraic Structures}
 
+\subsection{OFE}
+
+The model of Iris lives in the category of \emph{Ordered Families of Equivalences} (OFEs).
+This definition varies slightly from the original one in~\cite{catlogic}.
+
+\begin{defn}
+  An \emph{ordered family of equivalences} (OFE) is a tuple $(\ofe, ({\nequiv{n}} \subseteq \ofe \times \ofe)_{n \in \nat})$ satisfying
+  \begin{align*}
+    \All n. (\nequiv{n}) ~& \text{is an equivalence relation} \tagH{ofe-equiv} \\
+    \All n, m.& n \geq m \Ra (\nequiv{n}) \subseteq (\nequiv{m}) \tagH{ofe-mono} \\
+    \All x, y.& x = y \Lra (\All n. x \nequiv{n} y) \tagH{ofe-limit}
+  \end{align*}
+\end{defn}
+
+The key intuition behind OFEs is that elements $x$ and $y$ are $n$-equivalent, notation $x \nequiv{n} y$, if they are \emph{equivalent for $n$ steps of computation}, \ie if they cannot be distinguished by a program running for no more than $n$ steps.
+In other words, as $n$ increases, $\nequiv{n}$ becomes more and more refined (\ruleref{ofe-mono})---and in the limit, it agrees with plain equality (\ruleref{ofe-limit}).
+
+\begin{defn}
+  An element $x \in \ofe$ of an OFE is called \emph{discrete} if
+  \[ \All y \in \ofe. x \nequiv{0} y \Ra x = y\]
+  An OFE $A$ is called \emph{discrete} if all its elements are discrete.
+  For a set $X$, we write $\Delta X$ for the discrete OFE with $x \nequiv{n} x' \eqdef x = x'$
+\end{defn}
+
+\begin{defn}
+  A function $f : \ofe \to \ofeB$ between two OFEs is \emph{non-expansive} (written $f : \ofe \nfn \ofeB$) if
+  \[\All n, x \in \ofe, y \in \ofe. x \nequiv{n} y \Ra f(x) \nequiv{n} f(y) \]
+  It is \emph{contractive} if
+  \[ \All n, x \in \ofe, y \in \ofe. (\All m < n. x \nequiv{m} y) \Ra f(x) \nequiv{n} f(y) \]
+\end{defn}
+Intuitively, applying a non-expansive function to some data will not suddenly introduce differences between seemingly equal data.
+Elements that cannot be distinguished by programs within $n$ steps remain indistinguishable after applying $f$.
+
+\begin{defn}
+  The category $\OFEs$ consists of OFEs as objects, and non-expansive functions as arrows.
+\end{defn}
+
+Note that $\OFEs$ is cartesian closed. In particular:
+\begin{defn}
+  Given two OFEs $\ofe$ and $\ofeB$, the set of non-expansive functions $\set{f : \ofe \nfn \ofeB}$ is itself an OFE with
+  \begin{align*}
+    f \nequiv{n} g \eqdef{}& \All x \in \ofe. f(x) \nequiv{n} g(x)
+  \end{align*}
+\end{defn}
+
+\begin{defn}
+  A (bi)functor $F : \OFEs \to \OFEs$ is called \emph{locally non-expansive} if its action $F_1$ on arrows is itself a non-expansive map.
+  Similarly, $F$ is called \emph{locally contractive} if $F_1$ is a contractive map.
+\end{defn}
+The function space $(-) \nfn (-)$ is a locally non-expansive bifunctor.
+Note that the composition of non-expansive (bi)functors is non-expansive, and the composition of a non-expansive and a contractive (bi)functor is contractive.
+
 \subsection{COFE}
 
-The model of Iris lives in the category of \emph{Complete Ordered Families of Equivalences} (COFEs).
-This definition varies slightly from the original one in~\cite{catlogic}.
+COFEs are \emph{complete OFEs}, which means that we can take limits of arbitrary chains.
 
 \begin{defn}[Chain]
   Given some set $\cofe$ and an indexed family $({\nequiv{n}} \subseteq \cofe \times \cofe)_{n \in \nat}$ of equivalence relations, a \emph{chain} is a function $c : \nat \to \cofe$ such that $\All n, m. n \leq m \Ra c (m) \nequiv{n} c (n)$.
 \end{defn}
 
 \begin{defn}
-  A \emph{complete ordered family of equivalences} (COFE) is a tuple $(\cofe, ({\nequiv{n}} \subseteq \cofe \times \cofe)_{n \in \nat}, \lim : \chain(\cofe) \to \cofe)$ satisfying
+  A \emph{complete ordered family of equivalences} (COFE) is a tuple $(\cofe : \OFEs,  \lim : \chain(\cofe) \to \cofe)$ satisfying
   \begin{align*}
-    \All n. (\nequiv{n}) ~& \text{is an equivalence relation} \tagH{cofe-equiv} \\
-    \All n, m.& n \geq m \Ra (\nequiv{n}) \subseteq (\nequiv{m}) \tagH{cofe-mono} \\
-    \All x, y.& x = y \Lra (\All n. x \nequiv{n} y) \tagH{cofe-limit} \\
     \All n, c.& \lim(c) \nequiv{n} c(n) \tagH{cofe-compl}
   \end{align*}
 \end{defn}
-
-The key intuition behind COFEs is that elements $x$ and $y$ are $n$-equivalent, notation $x \nequiv{n} y$, if they are \emph{equivalent for $n$ steps of computation}, \ie if they cannot be distinguished by a program running for no more than $n$ steps.
-In other words, as $n$ increases, $\nequiv{n}$ becomes more and more refined (\ruleref{cofe-mono})---and in the limit, it agrees with plain equality (\ruleref{cofe-limit}).
-In order to solve the recursive domain equation in \Sref{sec:model} it is also essential that COFEs are \emph{complete}, \ie that any chain has a limit (\ruleref{cofe-compl}).
-
-\begin{defn}
-  An element $x \in \cofe$ of a COFE is called \emph{discrete} if
-  \[ \All y \in \cofe. x \nequiv{0} y \Ra x = y\]
-  A COFE $A$ is called \emph{discrete} if all its elements are discrete.
-  For a set $X$, we write $\Delta X$ for the discrete COFE with $x \nequiv{n} x' \eqdef x = x'$
-
-\end{defn}
-
-\begin{defn}
-  A function $f : \cofe \to \cofeB$ between two COFEs is \emph{non-expansive} (written $f : \cofe \nfn \cofeB$) if
-  \[\All n, x \in \cofe, y \in \cofe. x \nequiv{n} y \Ra f(x) \nequiv{n} f(y) \]
-  It is \emph{contractive} if
-  \[ \All n, x \in \cofe, y \in \cofe. (\All m < n. x \nequiv{m} y) \Ra f(x) \nequiv{n} f(y) \]
-\end{defn}
-Intuitively, applying a non-expansive function to some data will not suddenly introduce differences between seemingly equal data.
-Elements that cannot be distinguished by programs within $n$ steps remain indistinguishable after applying $f$.
-The reason that contractive functions are interesting is that for every contractive $f : \cofe \to \cofe$ with $\cofe$ inhabited, there exists a \emph{unique} fixed-point $\fix(f)$ such that $\fix(f) = f(\fix(f))$.
 
 \begin{defn}
   The category $\COFEs$ consists of COFEs as objects, and non-expansive functions as arrows.
 \end{defn}
 
-Note that $\COFEs$ is cartesian closed. In particular:
-\begin{defn}
-  Given two COFEs $\cofe$ and $\cofeB$, the set of non-expansive functions $\set{f : \cofe \nfn \cofeB}$ is itself a COFE with
-  \begin{align*}
-    f \nequiv{n} g \eqdef{}& \All x \in \cofe. f(x) \nequiv{n} g(x)
-  \end{align*}
-\end{defn}
+The function space $\ofe \nfn \cofeB$ is a COFE if $\cofeB$ is a COFE (\ie the domain $\ofe$ can actually be just an OFE).
 
-\begin{defn}
-  A (bi)functor $F : \COFEs \to \COFEs$ is called \emph{locally non-expansive} if its action $F_1$ on arrows is itself a non-expansive map.
-  Similarly, $F$ is called \emph{locally contractive} if $F_1$ is a contractive map.
-\end{defn}
-The function space $(-) \nfn (-)$ is a locally non-expansive bifunctor.
-Note that the composition of non-expansive (bi)functors is non-expansive, and the composition of a non-expansive and a contractive (bi)functor is contractive.
-The reason contractive (bi)functors are interesting is that by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}, they have a unique\footnote{Uniqueness is not proven in Coq.} fixed-point.
+Completeness is necessary to take fixed-points.
+For once, every \emph{contractive function} $f : \ofe \to \cofeB$ where $\cofeB$ is a COFE and inhabited has a \emph{unique} fixed-point $\fix(f)$ such that $\fix(f) = f(\fix(f))$.
+Furthermore, by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}, every contractive (bi)functor from $\COFEs$ to $\COFEs$ has a unique\footnote{Uniqueness is not proven in Coq.} fixed-point.
+
 
 \subsection{RA}
 
@@ -115,7 +132,7 @@ Since Iris ensures that the global ghost state is valid, this means that we can 
 \subsection{CMRA}
 
 \begin{defn}
-  A \emph{CMRA} is a tuple $(\monoid : \COFEs, (\mval_n \subseteq \monoid)_{n \in \nat},\\ \mcore{{-}}: \monoid \nfn \maybe\monoid, (\mtimes) : \monoid \times \monoid \nfn \monoid)$ satisfying:
+  A \emph{CMRA} is a tuple $(\monoid : \OFEs, (\mval_n \subseteq \monoid)_{n \in \nat},\\ \mcore{{-}}: \monoid \nfn \maybe\monoid, (\mtimes) : \monoid \times \monoid \nfn \monoid)$ satisfying:
   \begin{align*}
     \All n, \melt, \meltB.& \melt \nequiv{n} \meltB \land \melt\in\mval_n \Ra \meltB\in\mval_n \tagH{cmra-valid-ne} \\
     \All n, m.& n \geq m \Ra \mval_n \subseteq \mval_m \tagH{cmra-valid-mono} \\
@@ -133,7 +150,7 @@ Since Iris ensures that the global ghost state is valid, this means that we can 
   \end{align*}
 \end{defn}
 
-This is a natural generalization of RAs over COFEs.
+This is a natural generalization of RAs over OFEs.
 All operations have to be non-expansive, and the validity predicate $\mval$ can now also depend on the step-index.
 We define the plain $\mval$ as the ``limit'' of the $\mval_n$:
 \[ \mval \eqdef \bigcap_{n \in \nat} \mval_n \]
@@ -209,7 +226,7 @@ Furthermore, discrete CMRAs can be turned into RAs by ignoring their COFE struct
 \begin{defn}
   The category $\CMRAs$ consists of CMRAs as objects, and monotone functions as arrows.
 \end{defn}
-Note that every object/arrow in $\CMRAs$ is also an object/arrow of $\COFEs$.
+Note that every object/arrow in $\CMRAs$ is also an object/arrow of $\OFEs$.
 The notion of a locally non-expansive (or contractive) bifunctor naturally generalizes to bifunctors between these categories.
 %TODO: Discuss how we probably have a commuting square of functors between Set, RA, CMRA, COFE.
 

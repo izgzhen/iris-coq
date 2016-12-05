@@ -1,20 +1,20 @@
-\section{COFE constructions}
+\section{OFE and COFE constructions}
 
 \subsection{Trivial pointwise lifting}
 
-The COFE structure on many types can be easily obtained by pointwise lifting of the structure of the components.
+The (C)OFE structure on many types can be easily obtained by pointwise lifting of the structure of the components.
 This is what we do for option $\maybe\cofe$, product $(M_i)_{i \in I}$ (with $I$ some finite index set), sum $\cofe + \cofe'$ and finite partial functions $K \fpfn \monoid$ (with $K$ infinite countable).
 
 \subsection{Next (type-level later)}
 
-Given a COFE $\cofe$, we define $\latert\cofe$ as follows (using a datatype-like notation to define the type):
+Given a OFE $\cofe$, we define $\latert\cofe$ as follows (using a datatype-like notation to define the type):
 \begin{align*}
   \latert\cofe \eqdef{}& \latertinj(x:\cofe) \\
   \latertinj(x) \nequiv{n} \latertinj(y) \eqdef{}& n = 0 \lor x \nequiv{n-1} y
 \end{align*}
 Note that in the definition of the carrier $\latert\cofe$, $\latertinj$ is a constructor (like the constructors in Coq), \ie this is short for $\setComp{\latertinj(x)}{x \in \cofe}$.
 
-$\latert(-)$ is a locally \emph{contractive} functor from $\COFEs$ to $\COFEs$.
+$\latert(-)$ is a locally \emph{contractive} functor from $\OFEs$ to $\OFEs$.
 
 
 \subsection{Uniform Predicates}
@@ -117,7 +117,7 @@ Notice that this core is total, as the result always lies in $\maybe\monoid$ (ra
 \subsection{Finite partial function}
 \label{sec:fpfnm}
 
-Given some infinite countable $K$ and some CMRA $\monoid$, the set of finite partial functions $K \fpfn \monoid$ is equipped with a COFE and CMRA structure by lifting everything pointwise.
+Given some infinite countable $K$ and some CMRA $\monoid$, the set of finite partial functions $K \fpfn \monoid$ is equipped with a CMRA structure by lifting everything pointwise.
 
 We obtain the following frame-preserving updates:
 \begin{mathpar}
@@ -139,7 +139,7 @@ $K \fpfn (-)$ is a locally non-expansive functor from $\CMRAs$ to $\CMRAs$.
 
 \subsection{Agreement}
 
-Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
+Given some OFE $\cofe$, we define the CMRA $\agm(\cofe)$ as follows:
 \begin{align*}
   \agm(\cofe) \eqdef{}& \set{(c, V) \in (\nat \to \cofe) \times \SProp}/\ {\sim} \\[-0.2em]
   \textnormal{where }& \melt \sim \meltB \eqdef{} \melt.V = \meltB.V \land 
@@ -152,7 +152,7 @@ Given some COFE $\cofe$, we define $\agm(\cofe)$ as follows:
 \end{align*}
 %Note that the carrier $\agm(\cofe)$ is a \emph{record} consisting of the two fields $c$ and $V$.
 
-$\agm(-)$ is a locally non-expansive functor from $\COFEs$ to $\CMRAs$.
+$\agm(-)$ is a locally non-expansive functor from $\OFEs$ to $\CMRAs$.
 
 You can think of the $c$ as a \emph{chain} of elements of $\cofe$ that has to converge only for $n \in V$ steps.
 The reason we store a chain, rather than a single element, is that $\agm(\cofe)$ needs to be a COFE itself, so we need to be able to give a limit for every chain of $\agm(\cofe)$.
@@ -175,7 +175,7 @@ There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can 
 
 \subsection{Exclusive CMRA}
 
-Given a COFE $\cofe$, we define a CMRA $\exm(\cofe)$ such that at most one $x \in \cofe$ can be owned:
+Given an OFE $\cofe$, we define a CMRA $\exm(\cofe)$ such that at most one $x \in \cofe$ can be owned:
 \begin{align*}
   \exm(\cofe) \eqdef{}& \exinj(\cofe) \mid \mundef \\
   \mval_n \eqdef{}& \setComp{\melt\in\exm(\cofe)}{\melt \neq \mundef}
@@ -193,7 +193,7 @@ The step-indexed equivalence is inductively defined as follows:
 
   \axiom{\mundef \nequiv{n} \mundef}
 \end{mathpar}
-$\exm(-)$ is a locally non-expansive functor from $\COFEs$ to $\CMRAs$.
+$\exm(-)$ is a locally non-expansive functor from $\OFEs$ to $\CMRAs$.
 
 We obtain the following frame-preserving update:
 \begin{mathpar}

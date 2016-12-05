@@ -51,7 +51,7 @@ Persistence is preserved by conjunction, disjunction, separating conjunction as 
 
 One of the troubles of working in a step-indexed logic is the ``later'' modality $\later$.
 It turns out that we can somewhat mitigate this trouble by working below the following \emph{except-0} modality:
-\[ \diamond \prop \eqdef \later\FALSE \lor \Prop \]
+\[ \diamond \prop \eqdef \later\FALSE \lor \prop \]
 
 This modality is useful because there is a class of assertions which we call \emph{timeless} assertions, for which we have
 \[ \timeless{\prop} \eqdef \later\prop \proves \diamond\prop  \]
@@ -122,11 +122,11 @@ The following rules identify the class of timeless assertions:
 \axiom{\timeless{\FALSE}}
 
 \infer
-{\text{$\term$ or $\term'$ is a discrete COFE element}}
+{\text{$\term$ or $\term'$ is a discrete OFE element}}
 {\timeless{\term =_\type \term'}}
 
 \infer
-{\text{$\melt$ is a discrete COFE element}}
+{\text{$\melt$ is a discrete OFE element}}
 {\timeless{\ownM\melt}}
 
 \infer
