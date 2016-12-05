@@ -375,14 +375,6 @@ Proof.
   - by symmetry; apply Hab with x.
   - by apply Ha.
 Qed.
-Lemma internal_eq_rewrite_contractive {A : ofeT} a b (Ψ : A → uPred M) P
-  {HΨ : Contractive Ψ} : (P ⊢ ▷ (a ≡ b)) → (P ⊢ Ψ a) → P ⊢ Ψ b.
-Proof.
-  unseal; intros Hab Ha; split=> n x ??. apply HΨ with n a; auto.
-  - destruct n; intros m ?; first omega. apply (dist_le n); last omega.
-    symmetry. by destruct Hab as [Hab]; eapply (Hab (S n)).
-  - by apply Ha.
-Qed.
 
 (* BI connectives *)
 Lemma sep_mono P P' Q Q' : (P ⊢ Q) → (P' ⊢ Q') → P ∗ P' ⊢ Q ∗ Q'.
@@ -565,7 +557,7 @@ Proof. by unseal. Qed.
 Lemma prod_validI {A B : cmraT} (x : A * B) : ✓ x ⊣⊢ ✓ x.1 ∧ ✓ x.2.
 Proof. by unseal. Qed.
 
-(* Later *)
+(* Type-level Later *)
 Lemma later_equivI {A : ofeT} (x y : A) : Next x ≡ Next y ⊣⊢ ▷ (x ≡ y).
 Proof. by unseal. Qed.
 
