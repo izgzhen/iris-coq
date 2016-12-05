@@ -290,10 +290,8 @@ Proof. apply (internal_eq_rewrite a b (λ b, b ≡ a)%I); auto. solve_proper. Qe
 Lemma internal_eq_rewrite_contractive {A : ofeT} a b (Ψ : A → uPred M) P
   {HΨ : Contractive Ψ} : (P ⊢ ▷ (a ≡ b)) → (P ⊢ Ψ a) → P ⊢ Ψ b.
 Proof.
-  rewrite -later_equivI. intros Heq.
-  change ((P ⊢ (Ψ ∘ later_car) (Next a)) → P ⊢ (Ψ ∘ later_car) (Next b)).
-  apply internal_eq_rewrite; last done.
-  exact: later_car_compose_ne.
+  move: HΨ=> /contractiveI HΨ Heq ?.
+  apply (internal_eq_rewrite (Ψ a) (Ψ b) id _)=>//=. by rewrite -HΨ.
 Qed.
 
 Lemma pure_impl_forall φ P : (⌜φ⌝ → P) ⊣⊢ (∀ _ : φ, P).

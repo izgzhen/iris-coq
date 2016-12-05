@@ -581,6 +581,16 @@ Lemma option_validI {A : cmraT} (mx : option A) :
   ✓ mx ⊣⊢ match mx with Some x => ✓ x | None => True end.
 Proof. unseal. by destruct mx. Qed.
 
+(* Contractive functions *)
+Lemma contractiveI {A B : ofeT} (f : A → B) :
+  Contractive f ↔ (∀ x y, ▷ (x ≡ y) ⊢ f x ≡ f y).
+Proof.
+  split; unseal; intros Hf.
+  - intros x y; split=> -[|n] z _ /=; eauto using contractive_0, contractive_S.
+  - intros [|i] x y Hxy; apply (uPred_in_entails _ _ (Hf x y) _ ∅);
+      simpl; eauto using ucmra_unit_validN.
+Qed.
+
 (* Functions *)
 Lemma cofe_funC_equivI {A B} (f g : A -c> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
 Proof. by unseal. Qed.

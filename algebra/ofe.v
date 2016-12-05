@@ -770,13 +770,6 @@ Section later.
   Proof. intros [|n] x y Hxy; [done|]; apply Hxy; lia. Qed.
   Global Instance Later_inj n : Inj (dist n) (dist (S n)) (@Next A).
   Proof. by intros x y. Qed.
-
-  Lemma later_car_compose_ne {B : ofeT} (f : A → B) :
-    (Contractive f) → ∀ n, Proper (dist n ==> dist n) (f ∘ later_car).
-  Proof.
-    move=> Hcont n [x] [y] /= Hxy. apply Hcont. intros m Hmn.
-    destruct n; first by (exfalso; omega). eapply dist_le', Hxy. omega.
-  Qed.
 End later.
 
 Arguments laterC : clear implicits.
