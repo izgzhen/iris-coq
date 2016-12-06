@@ -89,7 +89,6 @@ Section proof.
 End proof.
 
 Typeclasses Opaque is_lock locked.
-Global Opaque newlock try_acquire acquire release.
 
 Definition spin_lock `{!heapG Σ, !lockG Σ} : lock Σ :=
   {| lock.locked_exclusive := locked_exclusive; lock.newlock_spec := newlock_spec;

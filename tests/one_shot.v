@@ -96,5 +96,3 @@ Proof.
     iApply (wp_wand with "Hf2"). by iIntros (v) "#? !# _".
 Qed.
 End proof.
-
-Global Opaque one_shot_example.

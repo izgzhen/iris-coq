@@ -47,7 +47,7 @@ Notation "~ e" := (UnOp NegOp e%E) (at level 75, right associativity) : expr_sco
 Notation "e1 <- e2" := (Store e1%E e2%E) (at level 80) : expr_scope.
 Notation "'rec:' f x := e" := (Rec f%bind x%bind e%E)
   (at level 102, f at level 1, x at level 1, e at level 200) : expr_scope.
-Notation "'rec:' f x := e" := (RecV f%bind x%bind e%E)
+Notation "'rec:' f x := e" := (locked (RecV f%bind x%bind e%E))
   (at level 102, f at level 1, x at level 1, e at level 200) : val_scope.
 Notation "'if:' e1 'then' e2 'else' e3" := (If e1%E e2%E e3%E)
   (at level 200, e1, e2, e3 at level 200) : expr_scope.
@@ -58,20 +58,20 @@ defined above. This is needed because App is now a coercion, and these
 notations are otherwise not pretty printed back accordingly. *)
 Notation "'rec:' f x y := e" := (Rec f%bind x%bind (Lam y%bind e%E))
   (at level 102, f, x, y at level 1, e at level 200) : expr_scope.
-Notation "'rec:' f x y := e" := (RecV f%bind x%bind (Lam y%bind e%E))
+Notation "'rec:' f x y := e" := (locked (RecV f%bind x%bind (Lam y%bind e%E)))
   (at level 102, f, x, y at level 1, e at level 200) : val_scope.
 Notation "'rec:' f x y .. z := e" := (Rec f%bind x%bind (Lam y%bind .. (Lam z%bind e%E) ..))
   (at level 102, f, x, y, z at level 1, e at level 200) : expr_scope.
-Notation "'rec:' f x y .. z := e" := (RecV f%bind x%bind (Lam y%bind .. (Lam z%bind e%E) ..))
+Notation "'rec:' f x y .. z := e" := (locked (RecV f%bind x%bind (Lam y%bind .. (Lam z%bind e%E) ..)))
   (at level 102, f, x, y, z at level 1, e at level 200) : val_scope.
 
 Notation "λ: x , e" := (Lam x%bind e%E)
   (at level 102, x at level 1, e at level 200) : expr_scope.
 Notation "λ: x y .. z , e" := (Lam x%bind (Lam y%bind .. (Lam z%bind e%E) ..))
   (at level 102, x, y, z at level 1, e at level 200) : expr_scope.
-Notation "λ: x , e" := (LamV x%bind e%E)
+Notation "λ: x , e" := (locked (LamV x%bind e%E))
   (at level 102, x at level 1, e at level 200) : val_scope.
-Notation "λ: x y .. z , e" := (LamV x%bind (Lam y%bind .. (Lam z%bind e%E) .. ))
+Notation "λ: x y .. z , e" := (locked (LamV x%bind (Lam y%bind .. (Lam z%bind e%E) .. )))
   (at level 102, x, y, z at level 1, e at level 200) : val_scope.
 
 Notation "'let:' x := e1 'in' e2" := (Lam x%bind e2%E e1%E)

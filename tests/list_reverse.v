@@ -24,7 +24,6 @@ Definition rev : val :=
        "l" <- ("tmp1", "acc");;
        "rev" "tmp2" "hd"
     end.
-Global Opaque rev.
 
 Lemma rev_acc_wp hd acc xs ys (Φ : val → iProp Σ) :
   heap_ctx ∗ is_list hd xs ∗ is_list acc ys ∗

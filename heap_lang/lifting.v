@@ -111,12 +111,6 @@ Proof.
   intros; inv_head_step; eauto.
 Qed.
 
-Lemma wp_rec_locked E f x erec e1 e2 Φ `{!Closed (f :b: x :b: []) erec} :
-  e1 = of_val $ locked (RecV f x erec) →
-  is_Some (to_val e2) →
-  ▷ WP subst' x e2 (subst' f e1 erec) @ E {{ Φ }} ⊢ WP App e1 e2 @ E {{ Φ }}.
-Proof. unlock. auto using wp_rec. Qed.
-
 Lemma wp_un_op E op e v v' Φ :
   to_val e = Some v →
   un_op_eval op v = Some v' →

@@ -97,5 +97,3 @@ Proof.
   - iIntros (_ v) "[_ H]". iDestruct (Q_res_join with "H") as "?". auto.
 Qed.
 End proof.
-
-Global Opaque client.

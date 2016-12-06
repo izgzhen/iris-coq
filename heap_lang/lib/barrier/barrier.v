@@ -4,4 +4,3 @@ Definition newbarrier : val := λ: <>, ref #false.
 Definition signal : val := λ: "x", "x" <- #true.
 Definition wait : val :=
   rec: "wait" "x" := if: !"x" then #() else "wait" "x".
-Global Opaque newbarrier signal wait.

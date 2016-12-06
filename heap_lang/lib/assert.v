@@ -14,5 +14,3 @@ Proof.
   iIntros "HΦ". rewrite /assert. wp_let. wp_seq.
   iApply (wp_wand with "HΦ"). iIntros (v) "[% ?]"; subst. by wp_if.
 Qed.
-
-Global Opaque assert.

@@ -78,4 +78,3 @@ Qed.
 End proof.
 
 Typeclasses Opaque join_handle.
-Global Opaque spawn join.

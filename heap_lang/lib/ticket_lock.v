@@ -7,24 +7,24 @@ From iris.heap_lang.lib Require Export lock.
 Import uPred.
 
 Definition wait_loop: val :=
-  ssreflect.locked (rec: "wait_loop" "x" "lk" :=
+  rec: "wait_loop" "x" "lk" :=
     let: "o" := !(Fst "lk") in
     if: "x" = "o"
       then #() (* my turn *)
-      else "wait_loop" "x" "lk")%V.
+      else "wait_loop" "x" "lk".
 
 Definition newlock : val :=
-  ssreflect.locked (λ: <>, ((* owner *) ref #0, (* next *) ref #0))%V.
+  λ: <>, ((* owner *) ref #0, (* next *) ref #0).
 
 Definition acquire : val :=
-  ssreflect.locked (rec: "acquire" "lk" :=
+  rec: "acquire" "lk" :=
     let: "n" := !(Snd "lk") in
     if: CAS (Snd "lk") "n" ("n" + #1)
       then wait_loop "n" "lk"
-      else "acquire" "lk")%V.
+      else "acquire" "lk".
 
 Definition release : val :=
-  ssreflect.locked (λ: "lk", (Fst "lk") <- !(Fst "lk") + #1)%V.
+  λ: "lk", (Fst "lk") <- !(Fst "lk") + #1.
 
 (** The CMRAs we need. *)
 Class tlockG Σ :=
@@ -77,7 +77,7 @@ Section proof.
     heapN ⊥ N →
     {{{ heap_ctx ∗ R }}} newlock #() {{{ lk γ, RET lk; is_lock γ lk R }}}.
   Proof.
-    iIntros (HN Φ) "(#Hh & HR) HΦ". rewrite -wp_fupd /newlock. unlock.
+    iIntros (HN Φ) "(#Hh & HR) HΦ". rewrite -wp_fupd /newlock.
     wp_seq. wp_alloc lo as "Hlo". wp_alloc ln as "Hln".
     iMod (own_alloc (● (Excl' 0%nat, ∅) ⋅ ◯ (Excl' 0%nat, ∅))) as (γ) "[Hγ Hγ']".
     { by rewrite -auth_both_op. }
@@ -145,7 +145,7 @@ Section proof.
     iIntros (Φ) "(Hl & Hγ & HR) HΦ".
     iDestruct "Hl" as (lo ln) "(% & #? & % & #?)"; subst.
     iDestruct "Hγ" as (o) "Hγo".
-    rewrite /release. unlock. wp_let. wp_proj. wp_proj. wp_bind (! _)%E.
+    rewrite /release. wp_let. wp_proj. wp_proj. wp_bind (! _)%E.
     iInv N as (o' n) "(>Hlo & >Hln & >Hauth & Haown)" "Hclose".
     wp_load.
     iDestruct (own_valid_2 with "Hauth Hγo") as

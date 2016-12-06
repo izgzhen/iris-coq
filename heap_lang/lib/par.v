@@ -44,5 +44,3 @@ Proof.
   iSplitL "H1"; by wp_let.
 Qed.
 End proof.
-
-Global Opaque par.
