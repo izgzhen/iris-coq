@@ -5,15 +5,15 @@ From iris.heap_lang Require Import proofmode notation.
 From iris.algebra Require Import excl.
 
 Definition spawn : val :=
-  locked (λ: "f",
+  λ: "f",
     let: "c" := ref NONE in
-    Fork ("c" <- SOME ("f" #())) ;; "c")%V.
+    Fork ("c" <- SOME ("f" #())) ;; "c".
 Definition join : val :=
-  locked (rec: "join" "c" :=
+  rec: "join" "c" :=
     match: !"c" with
       SOME "x" => "x"
     | NONE => "join" "c"
-    end)%V.
+    end.
 
 (** The CMRA & functor we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
@@ -50,7 +50,7 @@ Lemma spawn_spec (Ψ : val → iProp Σ) e (f : val) :
   heapN ⊥ N →
   {{{ heap_ctx ∗ WP f #() {{ Ψ }} }}} spawn e {{{ l, RET #l; join_handle l Ψ }}}.
 Proof.
-  iIntros (<-%of_to_val ? Φ) "(#Hh & Hf) HΦ". rewrite /spawn -lock /=.
+  iIntros (<-%of_to_val ? Φ) "(#Hh & Hf) HΦ". rewrite /spawn /=.
   wp_let. wp_alloc l as "Hl". wp_let.
   iMod (own_alloc (Excl ())) as (γ) "Hγ"; first done.
   iMod (inv_alloc N _ (spawn_inv γ l Ψ) with "[Hl]") as "#?".
@@ -78,3 +78,4 @@ Qed.
 End proof.
 
 Typeclasses Opaque join_handle.
+Global Opaque spawn join.
