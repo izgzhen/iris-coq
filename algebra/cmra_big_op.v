@@ -10,7 +10,7 @@ Apart from that, we define the following big operators with binders build in:
   refers to each element at index [k].
 - The operator [ [⋅ map] k ↦ x ∈ m, P ] folds over a map [m]. The binder [x]
   refers to each element at index [k].
-- The operator [ [⋅ set] x ∈ X, P ] folds over a set [m]. The binder [x] refers
+- The operator [ [⋅ set] x ∈ X, P ] folds over a set [X]. The binder [x] refers
   to each element.
 
 Since these big operators are like quantifiers, they have the same precedence as
