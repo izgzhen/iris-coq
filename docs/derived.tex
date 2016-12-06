@@ -1,4 +1,65 @@
-%\section{Derived constructions}
+\section{Derived constructions}
+
+\subsection{Non-atomic invariants}
+
+Sometimes it is necessary to maintain invariants that we need to open non-atomically.
+Clearly, for this mechanism to be sound we need something that prevents us from opening the same invariant twice.
+Access to these \emph{non-atomic invariants} is thus guarded by tokens that take the role that masks play for ``normal'', atomic invariants.
+
+One way to think about them is as ``thread-local invariants''.
+For every thread, we have a set of \emph{tokens}.
+By giving up a token, you can obtain the invariant, and vice versa.
+Such invariants can only be opened by their respective thread, and as a consequence they can be kept open around any sequence of expressions (\ie there is no restriction to atomic expressions).
+To tie the threads and the tokens together, every thread is assigned a \emph{thread ID}.
+Note that these thread IDs are completely fictional, there is no operational aspect to them.
+In principle, the tokens could move between threads; that's not an issue at all.
+
+Concretely, this is the monoid structure we need:
+\begin{align*}
+\textdom{TId} \eqdef{}& \nat \\
+\textmon{TTok} \eqdef{}& \textdom{TId} \fpfn \pset{\textdom{InvName}}\\
+\textmon{TDis} \eqdef{}& \textdom{TId} \fpfn \finpset{\textdom{InvName}}
+\end{align*}
+For every thread, there is a set of tokens designating which invariants are \emph{enabled} (closed).
+This corresponds to the mask of ``normal'' invariants.
+We re-use the structure given by namespaces for non-atomic invariants.
+Furthermore, there is a \emph{finite} set of invariants that is \emph{disabled} (open).
+
+We assume a global instance $\Gttok$ of \textmon{TTok}, and an instance $\Gtdis$ of $\textmon{TDis}$.
+Then we can define some sugar for owning tokens:
+\begin{align*}
+\TTokE\tid\mask \eqdef{}& \ownGhost{\Gttok}{ \mapsingleton\tid\mask : \textmon{TTok} } \\
+\TTok\tid \eqdef{}& \TTokE\tid\top
+\end{align*}
+
+Next, we define non-atomic invariants.
+To simplify this construction,we piggy-back into ``normal'' invariants.
+\begin{align*}
+  \NaInv\tid\namesp\prop \eqdef{}& \Exists \iname\in\namesp. \knowInv\namesp{\prop * \ownGhost\Gtdis{\set{\iname}} \lor \TTokE\tid{\set{\iname}}}
+\end{align*}
+
+
+We easily obtain:
+\begin{mathpar}
+  \axiom
+  {\TRUE \vs[\bot] \Exists\tid. \TTok\tid}
+
+  \axiom
+  {\TTokE\tid{\mask_1 \uplus \mask_2} \Lra \TTokE\tid{\mask_1} * \TTokE\tid{\mask_2}}
+  
+  \axiom
+  {\later\prop  \vs[\namesp] \always\NaInv\tid\namesp\prop}
+
+  \axiom
+  {\NaInv\tid\namesp\prop \proves \Acc[\namesp]{\TTokE\tid\namesp}{\later\prop}}
+\end{mathpar}
+from which we can derive
+\begin{mathpar}
+  \infer
+  {\namesp \subseteq \mask}
+  {\NaInv\tid\namesp\prop \proves \Acc[\namesp]{\TTokE\tid\mask}{\later\prop * \TTokE\tid{\mask \setminus \namesp}}}
+\end{mathpar}
+
 
 % TODO: These need syncing with Coq
 % \subsection{STSs with interpretation}\label{sec:stsinterp}
