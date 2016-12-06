@@ -187,6 +187,7 @@ Lemma atomic_correct e : atomic e → language.atomic (to_expr e).
 Proof.
   intros He. apply ectx_language_atomic.
   - intros σ e' σ' ef.
+    intros H; apply language.val_irreducible; revert H.
     destruct e; simpl; try done; repeat (case_match; try done);
     inversion 1; rewrite ?to_of_val; eauto. subst.
     unfold subst'; repeat (case_match || contradiction || simplify_eq/=); eauto.

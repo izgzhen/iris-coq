@@ -34,8 +34,10 @@ Section language.
 
   Definition reducible (e : expr Λ) (σ : state Λ) :=
     ∃ e' σ' efs, prim_step e σ e' σ' efs.
+  Definition irreducible (e : expr Λ) (σ : state Λ) :=
+    ∀e' σ' efs, ~prim_step e σ e' σ' efs. 
   Definition atomic (e : expr Λ) : Prop :=
-    ∀ σ e' σ' efs, prim_step e σ e' σ' efs → is_Some (to_val e').
+    ∀ σ e' σ' efs, prim_step e σ e' σ' efs → irreducible e' σ'.
   Inductive step (ρ1 ρ2 : cfg Λ) : Prop :=
     | step_atomic e1 σ1 e2 σ2 efs t1 t2 :
        ρ1 = (t1 ++ e1 :: t2, σ1) →
@@ -47,6 +49,8 @@ Section language.
   Proof. intros <-. by rewrite to_of_val. Qed.
   Lemma reducible_not_val e σ : reducible e σ → to_val e = None.
   Proof. intros (?&?&?&?); eauto using val_stuck. Qed.
+  Lemma val_irreducible e σ : is_Some (to_val e) → irreducible e σ.
+  Proof. intros [??] ??? ?%val_stuck. by destruct (to_val e). Qed.
   Global Instance of_val_inj : Inj (=) (=) (@of_val Λ).
   Proof. by intros v v' Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
 End language.

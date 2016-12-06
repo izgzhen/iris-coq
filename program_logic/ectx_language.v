@@ -90,7 +90,7 @@ Section ectx_language.
   Proof. intros (e'&σ'&efs&?). eexists e', σ', efs. by apply head_prim_step. Qed.
 
   Lemma ectx_language_atomic e :
-    (∀ σ e' σ' efs, head_step e σ e' σ' efs → is_Some (to_val e')) →
+    (∀ σ e' σ' efs, head_step e σ e' σ' efs → irreducible e' σ') →
     (∀ K e', e = fill K e' → to_val e' = None → K = empty_ectx) →
     atomic e.
   Proof.

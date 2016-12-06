@@ -53,8 +53,7 @@ Proof.
   iIntros (Φ) "HP HΦ".
   iApply (wp_lift_atomic_head_step (Alloc (of_val v)) σ); eauto.
   iFrame "HP". iNext. iIntros (v2 σ2 ef) "[% HP]". inv_head_step.
-  match goal with H: _ = of_val v2 |- _ => apply (inj of_val (LitV _)) in H end.
-  subst v2. iSplit. iApply "HΦ"; by iSplit. by iApply big_sepL_nil.
+  iSplitL; last by iApply big_sepL_nil. iApply "HΦ". by iSplit.
 Qed.
 
 Lemma wp_load_pst E σ l v :

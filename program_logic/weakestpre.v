@@ -197,9 +197,14 @@ Proof.
   { iDestruct "H" as (v') "[% ?]"; simplify_eq. }
   iMod ("H" $! σ1 with "Hσ") as "[$ H]".
   iModIntro. iNext. iIntros (e2 σ2 efs Hstep).
-  destruct (Hatomic _ _ _ _ Hstep) as [v <-%of_to_val].
-  iMod ("H" $! _ σ2 efs with "[#]") as "($ & H & $)"; auto.
-  iMod (wp_value_inv with "H") as ">H". by iApply wp_value'.
+  iMod ("H" with "* []") as "(Hphy & H & $)"; first done.
+  rewrite wp_unfold /wp_pre. iDestruct "H" as "[H|H]".
+  - iDestruct "H" as (v) "[% >>?]". iModIntro. iFrame.
+    rewrite -(of_to_val e2 v) //. by iApply wp_value'.
+  - iDestruct "H" as "[_ H]".
+    iMod ("H" with "* Hphy") as "[H _]".
+    iDestruct "H" as %(? & ? & ? & ?). exfalso.
+    by eapply (Hatomic _ _ _ _ Hstep).
 Qed.
 
 Lemma wp_fupd_step E1 E2 e P Φ :
