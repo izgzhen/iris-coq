@@ -178,7 +178,7 @@ Proof.
   destruct X as [X], Y as [Y]; unfold elements, gmultiset_elements.
   set (f xn := let '(x, n) := xn in replicate (S n) x); simpl.
   revert Y; induction X as [|x n X HX IH] using map_ind; intros Y.
-  { by rewrite (left_id_L _ _), map_to_list_empty. }
+  { by rewrite (left_id_L _ _ Y), map_to_list_empty. }
   destruct (Y !! x) as [n'|] eqn:HY.
   - rewrite <-(insert_id Y x n'), <-(insert_delete Y) by done.
     erewrite <-insert_union_with by done.
