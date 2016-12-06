@@ -35,7 +35,7 @@ Section language.
   Definition reducible (e : expr Λ) (σ : state Λ) :=
     ∃ e' σ' efs, prim_step e σ e' σ' efs.
   Definition irreducible (e : expr Λ) (σ : state Λ) :=
-    ∀e' σ' efs, ~prim_step e σ e' σ' efs. 
+    ∀e' σ' efs, ¬prim_step e σ e' σ' efs. 
   Definition atomic (e : expr Λ) : Prop :=
     ∀ σ e' σ' efs, prim_step e σ e' σ' efs → irreducible e' σ'.
   Inductive step (ρ1 ρ2 : cfg Λ) : Prop :=
