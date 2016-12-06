@@ -71,14 +71,14 @@ Section proofs.
     iNext. iLeft. by iFrame.
   Qed.
 
-  Lemma na_inv_open tid E N P :
-    ↑N ⊆ E →
-    na_inv tid N P -∗ na_own tid E ={E}=∗ ▷ P ∗ na_own tid (E∖↑N) ∗
-                       (▷ P ∗ na_own tid (E∖↑N) ={E}=∗ na_own tid E).
+  Lemma na_inv_open tid E F N P :
+    ↑N ⊆ E → ↑N ⊆ F →
+    na_inv tid N P -∗ na_own tid F ={E}=∗ ▷ P ∗ na_own tid (F∖↑N) ∗
+                       (▷ P ∗ na_own tid (F∖↑N) ={E}=∗ na_own tid F).
   Proof.
-    rewrite /na_inv. iIntros (?) "#Htlinv Htoks".
+    rewrite /na_inv. iIntros (??) "#Htlinv Htoks".
     iDestruct "Htlinv" as (i) "[% Hinv]".
-    rewrite [E as X in na_own tid X](union_difference_L (↑N) E) //.
+    rewrite [F as X in na_own tid X](union_difference_L (↑N) F) //.
     rewrite [X in (X ∪ _)](union_difference_L {[i]} (↑N)) ?na_own_union; [|set_solver..].
     iDestruct "Htoks" as "[[Htoki $] $]".
     iInv N as "[[$ >Hdis]|>Htoki2]" "Hclose".
