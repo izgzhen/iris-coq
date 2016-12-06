@@ -287,6 +287,8 @@
 % for now, the update modality looks like a pvs without masks.
 \NewDocumentCommand \upd {} {\mathop{\mid\kern-0.4ex\Rrightarrow\kern-0.25ex}}
 
+\NewDocumentCommand\Acc{O{} O{} m m}{\langle #3 \vsE #4  \rangle_{#1}^{#2}}
+
 
 %% Hoare Triples
 \newcommand*{\hoaresizebox}[1]{%
