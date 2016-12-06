@@ -14,7 +14,6 @@ Definition join : val :=
       SOME "x" => "x"
     | NONE => "join" "c"
     end.
-Global Opaque spawn join.
 
 (** The CMRA & functor we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
@@ -79,3 +78,4 @@ Qed.
 End proof.
 
 Typeclasses Opaque join_handle.
+Global Opaque spawn join.

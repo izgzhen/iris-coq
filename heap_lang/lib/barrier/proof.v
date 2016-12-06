@@ -22,6 +22,8 @@ Section proof.
 Context `{!heapG Σ, !barrierG Σ} (N : namespace).
 Implicit Types I : gset gname.
 
+Local Transparent newbarrier signal wait.
+
 Definition ress (P : iProp Σ) (I : gset gname) : iProp Σ :=
   (∃ Ψ : gname → iProp Σ,
     ▷ (P -∗ [∗ set] i ∈ I, Ψ i) ∗ [∗ set] i ∈ I, saved_prop_own i (Ψ i))%I.

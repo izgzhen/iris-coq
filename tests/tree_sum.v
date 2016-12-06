@@ -33,8 +33,6 @@ Definition sum' : val := λ: "t",
   sum_loop "t" "l";;
   !"l".
 
-Global Opaque sum_loop sum'.
-
 Lemma sum_loop_wp `{!heapG Σ} v t l (n : Z) (Φ : val → iProp Σ) :
   heap_ctx ∗ l ↦ #n ∗ is_tree v t
     ∗ (l ↦ #(sum t + n) -∗ is_tree v t -∗ Φ #())
@@ -66,3 +64,6 @@ Proof.
   rewrite Z.add_0_r.
   iIntros "Hl Ht". wp_seq. wp_load. by iApply "HΦ".
 Qed.
+
+Global Opaque sum_loop sum'.
+

@@ -25,8 +25,6 @@ Definition acquire : val :=
 Definition release : val := λ: "lk",
   (Fst "lk") <- !(Fst "lk") + #1.
 
-Global Opaque newlock acquire release wait_loop.
-
 (** The CMRAs we need. *)
 Class tlockG Σ :=
   tlock_G :> inG Σ (authR (prodUR (optionUR (exclR natC)) (gset_disjUR nat))).
@@ -170,6 +168,7 @@ Section proof.
 End proof.
 
 Typeclasses Opaque is_lock issued locked.
+Global Opaque newlock acquire release wait_loop.
 
 Definition ticket_lock `{!heapG Σ, !tlockG Σ} : lock Σ :=
   {| lock.locked_exclusive := locked_exclusive; lock.newlock_spec := newlock_spec;

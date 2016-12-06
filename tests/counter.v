@@ -16,7 +16,6 @@ Definition incr : val :=
     let: "n" := !"l" in
     if: CAS "l" "n" (#1 + "n") then #() else "incr" "l".
 Definition read : val := λ: "l", !"l".
-Global Opaque newcounter incr read.
 
 (** The CMRA we need. *)
 Inductive M := Auth : nat → M | Frag : nat → M | Bot.
@@ -137,3 +136,5 @@ Proof.
   iModIntro; rewrite /C; eauto 10 with omega.
 Qed.
 End proof.
+
+Global Opaque newcounter incr read.

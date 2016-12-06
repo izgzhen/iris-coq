@@ -10,7 +10,6 @@ Definition try_acquire : val := λ: "l", CAS "l" #false #true.
 Definition acquire : val :=
   rec: "acquire" "l" := if: try_acquire "l" then #() else "acquire" "l".
 Definition release : val := λ: "l", "l" <- #false.
-Global Opaque newlock try_acquire acquire release.
 
 (** The CMRA we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
@@ -88,6 +87,9 @@ Section proof.
     wp_store. iApply "HΦ". iApply "Hclose". iNext. iExists false. by iFrame.
   Qed.
 End proof.
+
+Typeclasses Opaque is_lock locked.
+Global Opaque newlock try_acquire acquire release.
 
 Definition spin_lock `{!heapG Σ, !lockG Σ} : lock Σ :=
   {| lock.locked_exclusive := locked_exclusive; lock.newlock_spec := newlock_spec;

@@ -18,7 +18,6 @@ Definition one_shot_example : val := λ: <>,
        | SOME "m" => assert: "n" = "m"
        end
     end)).
-Global Opaque one_shot_example.
 
 Definition one_shotR := csumR (exclR unitC) (dec_agreeR Z).
 Definition Pending : one_shotR := (Cinl (Excl ()) : one_shotR).
@@ -97,3 +96,5 @@ Proof.
     iApply (wp_wand with "Hf2"). by iIntros (v) "#? !# _".
 Qed.
 End proof.
+
+Global Opaque one_shot_example.

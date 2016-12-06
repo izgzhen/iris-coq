@@ -11,7 +11,6 @@ Definition par : val :=
     let: "v1" := join "handle" in
     ("v1", "v2").
 Notation "e1 ||| e2" := (par (Pair (λ: <>, e1) (λ: <>, e2)))%E : expr_scope.
-Global Opaque par.
 
 Section proof.
 Context `{!heapG Σ, !spawnG Σ}.
@@ -45,3 +44,5 @@ Proof.
   iSplitL "H1"; by wp_let.
 Qed.
 End proof.
+
+Global Opaque par.

@@ -10,7 +10,6 @@ Definition incr : val :=
     let: "n" := !"l" in
     if: CAS "l" "n" (#1 + "n") then #() else "incr" "l".
 Definition read : val := λ: "l", !"l".
-Global Opaque newcounter incr get.
 
 (** Monotone counter *)
 Class mcounterG Σ := MCounterG { mcounter_inG :> inG Σ (authR mnatUR) }.
@@ -167,3 +166,5 @@ Section contrib_spec.
     by iApply "HΦ".
   Qed.
 End contrib_spec.
+
+Global Opaque newcounter incr get.

@@ -11,7 +11,6 @@ Definition client : expr :=
   let: "b" := newbarrier #() in
   ("y" <- (λ: "z", "z" + #42) ;; signal "b") |||
     (worker 12 "b" "y" ||| worker 17 "b" "y").
-Global Opaque worker client.
 
 Section client.
   Context `{!heapG Σ, !barrierG Σ, !spawnG Σ} (N : namespace).
@@ -54,6 +53,8 @@ Section client.
         iApply worker_safe; by iSplit.
 Qed.
 End client.
+
+Global Opaque worker client.
 
 Section ClosedProofs.
 
