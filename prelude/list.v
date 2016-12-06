@@ -1292,6 +1292,15 @@ Lemma imap_fmap {B C} (f : nat → B → C) (g : A → B) l :
   imap f (g <$> l) = imap (λ n, f n ∘ g) l.
 Proof. unfold imap. generalize 0. induction l; csimpl; auto with f_equal. Qed.
 
+Lemma imap_const {B} (f : A → B) l : imap (const f) l = f <$> l.
+Proof. unfold imap. generalize 0. induction l; csimpl; auto with f_equal. Qed.
+
+Lemma list_lookup_imap {B} (f : nat → A → B) l i : imap f l !! i = f i <$> l !! i.
+Proof.
+  revert f i. induction l as [|x l IH]; intros f [|i]; try done.
+  rewrite imap_cons; simpl. by rewrite IH.
+Qed.
+
 (** ** Properties of the [mask] function *)
 Lemma mask_nil f βs : mask f βs (@nil A) = [].
 Proof. by destruct βs. Qed.
@@ -1401,6 +1410,8 @@ Proof.
   revert i; induction l as [|y l IH]; intros [|i] ?; simplify_eq/=; auto.
   by rewrite Permutation_swap, <-(IH i).
 Qed.
+Lemma elem_of_Permutation l x : x ∈ l → ∃ k, l ≡ₚ x :: k.
+Proof. intros [i ?]%elem_of_list_lookup. eauto using delete_Permutation. Qed.
 
 (** ** Properties of the [prefix_of] and [suffix_of] predicates *)
 Global Instance: PreOrder (@prefix_of A).

@@ -137,11 +137,7 @@ Proof. intros. apply uPred_included. by apply: big_op_contains. Qed.
 Lemma big_sep_elem_of Ps P : P ∈ Ps → [∗] Ps ⊢ P.
 Proof. intros. apply uPred_included. by apply: big_sep_elem_of. Qed.
 Lemma big_sep_elem_of_acc Ps P : P ∈ Ps → [∗] Ps ⊢ P ∗ (P -∗ [∗] Ps).
-Proof.
-  intros (Ps1&Ps2&->)%elem_of_list_split.
-  rewrite !big_sep_app /=. rewrite assoc (comm _ _ P) -assoc.
-  by apply sep_mono_r, wand_intro_l.
-Qed.
+Proof. intros [k ->]%elem_of_Permutation. by apply sep_mono_r, wand_intro_l. Qed.
 
 (** ** Persistence *)
 Global Instance big_sep_persistent Ps : PersistentL Ps → PersistentP ([∗] Ps).
@@ -233,10 +229,8 @@ Section list.
     l !! i = Some x →
     ([∗ list] k↦y ∈ l, Φ k y) ⊢ Φ i x ∗ (Φ i x -∗ ([∗ list] k↦y ∈ l, Φ k y)).
   Proof.
-    intros Hli. apply big_sep_elem_of_acc. revert Φ l Hli.
-    induction i as [|? IH]=>Φ [] //= y l; rewrite imap_cons.
-    - intros [=->]. constructor.
-    - intros ?. constructor. by apply (IH (_ ∘ S)).
+    intros Hli. apply big_sep_elem_of_acc, (elem_of_list_lookup_2 _ i).
+    by rewrite list_lookup_imap Hli.
   Qed.
 
   Lemma big_sepL_lookup Φ l i x :
