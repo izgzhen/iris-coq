@@ -80,7 +80,7 @@ base_logic/lib/viewshifts.v
 base_logic/lib/auth.v
 base_logic/lib/sts.v
 base_logic/lib/boxes.v
-base_logic/lib/thread_local.v
+base_logic/lib/na_invariants.v
 base_logic/lib/cancelable_invariants.v
 base_logic/lib/counter_examples.v
 base_logic/lib/fractional.v
