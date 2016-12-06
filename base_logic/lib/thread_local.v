@@ -3,7 +3,6 @@ From iris.algebra Require Export gmap gset coPset.
 From iris.proofmode Require Import tactics.
 Import uPred.
 
-Definition tlN : namespace := nroot .@ "tl".
 Definition thread_id := gname.
 
 Class thread_localG Σ :=
@@ -17,7 +16,7 @@ Section defs.
 
   Definition tl_inv (tid : thread_id) (N : namespace) (P : iProp Σ) : iProp Σ :=
     (∃ i, ⌜i ∈ ↑N⌝ ∧
-          inv tlN (P ∗ own tid (∅, GSet {[i]}) ∨ tl_own tid {[i]}))%I.
+          inv N (P ∗ own tid (∅, GSet {[i]}) ∨ tl_own tid {[i]}))%I.
 End defs.
 
 Instance: Params (@tl_inv) 3.
@@ -65,26 +64,25 @@ Section proofs.
       apply of_gset_finite. }
     simpl. iDestruct "Hm" as %(<- & i & -> & ?).
     rewrite /tl_inv.
-    iMod (inv_alloc tlN with "[-]"); last (iModIntro; iExists i; eauto).
+    iMod (inv_alloc N with "[-]"); last (iModIntro; iExists i; eauto).
     iNext. iLeft. by iFrame.
   Qed.
 
-  Lemma tl_inv_open tid tlE E N P :
-    ↑tlN ⊆ tlE → ↑N ⊆ E →
-    tl_inv tid N P -∗ tl_own tid E ={tlE}=∗ ▷ P ∗ tl_own tid (E∖↑N) ∗
-                       (▷ P ∗ tl_own tid (E∖↑N) ={tlE}=∗ tl_own tid E).
+  Lemma tl_inv_open tid E N P :
+    ↑N ⊆ E →
+    tl_inv tid N P -∗ tl_own tid E ={E}=∗ ▷ P ∗ tl_own tid (E∖↑N) ∗
+                       (▷ P ∗ tl_own tid (E∖↑N) ={E}=∗ tl_own tid E).
   Proof.
-    rewrite /tl_inv. iIntros (??) "#Htlinv Htoks".
+    rewrite /tl_inv. iIntros (?) "#Htlinv Htoks".
     iDestruct "Htlinv" as (i) "[% Hinv]".
-    rewrite {1 4}(union_difference_L (↑N) E) //.
+    rewrite {1 8}(union_difference_L (↑N) E) //.
     rewrite {1 5}(union_difference_L {[i]} (↑N)) ?tl_own_union; [|set_solver..].
     iDestruct "Htoks" as "[[Htoki $] $]".
-    iInv tlN as "[[$ >Hdis]|>Htoki2]" "Hclose".
+    iInv N as "[[$ >Hdis]|>Htoki2]" "Hclose".
     - iMod ("Hclose" with "[Htoki]") as "_"; first auto.
       iIntros "!> [HP $]".
-      iInv tlN as "[[_ >Hdis2]|>Hitok]" "Hclose".
-      + iCombine "Hdis" "Hdis2" as "Hdis".
-        iDestruct (own_valid with "Hdis") as %[_ Hval%gset_disj_valid_op].
+      iInv N as "[[_ >Hdis2]|>Hitok]" "Hclose".
+      + iDestruct (own_valid_2 with "Hdis Hdis2") as %[_ Hval%gset_disj_valid_op].
         set_solver.
       + iFrame. iApply "Hclose". iNext. iLeft. by iFrame.
     - iDestruct (tl_own_disjoint tid {[i]} {[i]} with "[-]") as %?; first by iFrame.
