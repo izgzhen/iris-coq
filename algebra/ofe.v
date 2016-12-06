@@ -875,6 +875,7 @@ Section later.
     Proper (dist n ==> dist_later n) later_car.
   Proof. move=> [x] [y] /= Hxy. done. Qed.
 
+  (* f is contractive iff it can factor into `Next` and a non-expansive function. *)
   Lemma contractive_alt {B : ofeT} (f : A → B) :
     Contractive f ↔ ∃ g : later A → B,
       (∀ n, Proper (dist n ==> dist n) g) ∧ (∀ x, f x ≡ g (Next x)).
