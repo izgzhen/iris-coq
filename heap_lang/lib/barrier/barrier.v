@@ -1,7 +1,6 @@
 From iris.heap_lang Require Export notation.
 
-Definition newbarrier : val := λ: <>, ref #false.
-Definition signal : val := λ: "x", "x" <- #true.
+Definition newbarrier : val := locked (λ: <>, ref #false)%V.
+Definition signal : val := locked (λ: "x", "x" <- #true)%V.
 Definition wait : val :=
-  rec: "wait" "x" := if: !"x" then #() else "wait" "x".
-Global Opaque newbarrier signal wait.
+  locked (rec: "wait" "x" := if: !"x" then #() else "wait" "x")%V.

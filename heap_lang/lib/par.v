@@ -5,11 +5,11 @@ Import uPred.
 Definition parN : namespace := nroot .@ "par".
 
 Definition par : val :=
-  λ: "fs",
+  locked (λ: "fs",
     let: "handle" := spawn (Fst "fs") in
     let: "v2" := Snd "fs" #() in
     let: "v1" := join "handle" in
-    ("v1", "v2").
+    ("v1", "v2"))%V.
 Notation "e1 ||| e2" := (par (Pair (λ: <>, e1) (λ: <>, e2)))%E : expr_scope.
 
 Section proof.
@@ -26,7 +26,7 @@ Lemma par_spec (Ψ1 Ψ2 : val → iProp Σ) e (f1 f2 : val) (Φ : val → iProp 
   ⊢ WP par e {{ Φ }}.
 Proof.
   iIntros (?) "(#Hh&Hf1&Hf2&HΦ)".
-  rewrite /par. wp_value. wp_let. wp_proj.
+  rewrite /par -lock. wp_value. wp_let. wp_proj.
   wp_apply (spawn_spec parN with "[$Hh $Hf1]"); try wp_done; try solve_ndisj.
   iIntros (l) "Hl". wp_let. wp_proj. wp_bind (f2 _).
   iApply (wp_wand with "Hf2"); iIntros (v) "H2". wp_let.
