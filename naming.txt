@@ -14,7 +14,7 @@ l
 m : iGst = ghost state
 n
 o
-p
+p : progress bits
 q
 r : iRes = resources
 s : state (STSs)

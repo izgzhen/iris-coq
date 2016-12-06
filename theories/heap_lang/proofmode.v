@@ -27,7 +27,7 @@ Ltac wp_value_head := eapply tac_wp_value; [apply _|lazy beta].
 Tactic Notation "wp_pure" open_constr(efoc) :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?E ?e ?Q) => reshape_expr e ltac:(fun K e' =>
+  | |- envs_entails _ (wp true ?E ?e ?Q) => reshape_expr e ltac:(fun K e' =>
     unify e' efoc;
     eapply (tac_wp_pure K);
     [simpl; apply _                 (* PureExec *)
@@ -66,7 +66,7 @@ Ltac wp_bind_core K :=
 Tactic Notation "wp_bind" open_constr(efoc) :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?E ?e ?Q) =>
+  | |- envs_entails _ (wp true ?E ?e ?Q) =>
     reshape_expr e ltac:(fun K e' => unify e' efoc; wp_bind_core K)
     || fail "wp_bind: cannot find" efoc "in" e
   | _ => fail "wp_bind: not a 'wp'"
@@ -151,7 +151,7 @@ End heap.
 Tactic Notation "wp_apply" open_constr(lem) :=
   iPoseProofCore lem as false true (fun H =>
     lazymatch goal with
-    | |- envs_entails _ (wp ?E ?e ?Q) =>
+    | |- envs_entails _ (wp true ?E ?e ?Q) =>
       reshape_expr e ltac:(fun K e' =>
         wp_bind_core K; iApplyHyp H; try iNext; simpl) ||
       lazymatch iTypeOf H with
@@ -163,7 +163,7 @@ Tactic Notation "wp_apply" open_constr(lem) :=
 Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?E ?e ?Q) =>
+  | |- envs_entails _ (wp true ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
          eapply (tac_wp_alloc _ _ _ H K); [apply _|..])
@@ -182,7 +182,7 @@ Tactic Notation "wp_alloc" ident(l) :=
 Tactic Notation "wp_load" :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?E ?e ?Q) =>
+  | |- envs_entails _ (wp true ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' => eapply (tac_wp_load _ _ _ _ K))
       |fail 1 "wp_load: cannot find 'Load' in" e];
@@ -196,7 +196,7 @@ Tactic Notation "wp_load" :=
 Tactic Notation "wp_store" :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?E ?e ?Q) =>
+  | |- envs_entails _ (wp true ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
          eapply (tac_wp_store _ _ _ _ _ K); [apply _|..])
@@ -212,7 +212,7 @@ Tactic Notation "wp_store" :=
 Tactic Notation "wp_cas_fail" :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?E ?e ?Q) =>
+  | |- envs_entails _ (wp true ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
          eapply (tac_wp_cas_fail _ _ _ _ K); [apply _|apply _|..])
@@ -228,7 +228,7 @@ Tactic Notation "wp_cas_fail" :=
 Tactic Notation "wp_cas_suc" :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?E ?e ?Q) =>
+  | |- envs_entails _ (wp true ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
          eapply (tac_wp_cas_suc _ _ _ _ _ K); [apply _|apply _|..])

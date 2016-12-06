@@ -127,6 +127,16 @@ Section ectx_language.
     rewrite fill_empty. eapply Hatomic_step. by rewrite fill_empty.
   Qed.
 
+  Lemma ectx_language_strongly_atomic e :
+    (∀ σ e' σ' efs, head_step e σ e' σ' efs → is_Some (to_val e')) →
+    sub_values e →
+    StronglyAtomic e.
+  Proof.
+    intros Hatomic_step Hatomic_fill σ e' σ' efs [K e1' e2' -> -> Hstep].
+    assert (K = empty_ectx) as -> by eauto 10 using val_stuck.
+    rewrite fill_empty. eapply Hatomic_step. by rewrite fill_empty.
+  Qed.
+
   Lemma head_reducible_prim_step e1 σ1 e2 σ2 efs :
     head_reducible e1 σ1 →
     prim_step e1 σ1 e2 σ2 efs →

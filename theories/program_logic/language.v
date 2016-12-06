@@ -51,6 +51,8 @@ Section language.
     ∃ e' σ' efs, prim_step e σ e' σ' efs.
   Definition irreducible (e : expr Λ) (σ : state Λ) :=
     ∀ e' σ' efs, ¬prim_step e σ e' σ' efs.
+  Definition progressive (e : expr Λ) (σ : state Λ) :=
+    is_Some (to_val e) ∨ reducible e σ.
 
   (* This (weak) form of atomicity is enough to open invariants when WP ensures
      safety, i.e., programs never can get stuck.  We have an example in
@@ -82,6 +84,8 @@ Section language.
   Proof. unfold reducible, irreducible. naive_solver. Qed.
   Lemma reducible_not_val e σ : reducible e σ → to_val e = None.
   Proof. intros (?&?&?&?); eauto using val_stuck. Qed.
+  Lemma val_irreducible e σ : is_Some (to_val e) → irreducible e σ.
+  Proof. intros [??] ??? ?%val_stuck. by destruct (to_val e). Qed.
   Global Instance of_val_inj : Inj (=) (=) (@of_val Λ).
   Proof. by intros v v' Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
 

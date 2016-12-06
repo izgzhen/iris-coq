@@ -11,22 +11,36 @@ Implicit Types σ : state Λ.
 Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
 
-Lemma wp_lift_step E Φ e1 :
+Lemma wp_lift_step p E Φ e1 :
   to_val e1 = None →
   (∀ σ1, state_interp σ1 ={E,∅}=∗
     ⌜reducible e1 σ1⌝ ∗
     ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ={∅,E}=∗
-      state_interp σ2 ∗ WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
-  ⊢ WP e1 @ E {{ Φ }}.
-Proof. by rewrite wp_unfold /wp_pre=> ->. Qed.
+      state_interp σ2 ∗ WP e2 @ p; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ p; ⊤ {{ _, True }})
+  ⊢ WP e1 @ p; E {{ Φ }}.
+Proof.
+  rewrite wp_unfold /wp_pre=>->. iIntros "H" (σ1) "Hσ".
+  iMod ("H" with "Hσ") as "(%&?)". iModIntro. iSplit. by destruct p. done.
+Qed.
+
+Lemma wp_lift_stuck E Φ e :
+  to_val e = None →
+  (∀ σ, state_interp σ ={E,∅}=∗ ⌜¬ progressive e σ⌝)
+  ⊢ WP e @ E ?{{ Φ }}.
+Proof.
+  rewrite wp_unfold /wp_pre=>->. iIntros "H" (σ1) "Hσ".
+  iMod ("H" with "Hσ") as "Hstuck". iDestruct "Hstuck" as %Hstuck.
+  iModIntro. iSplit; first done. iIntros "!>" (e2 σ2 efs) "%". exfalso.
+  apply Hstuck. right. by exists e2, σ2, efs.
+Qed.
 
 (** Derived lifting lemmas. *)
-Lemma wp_lift_pure_step `{Inhabited (state Λ)} E E' Φ e1 :
+Lemma wp_lift_pure_step `{Inhabited (state Λ)} p E E' Φ e1 :
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 efs, prim_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
   (|={E,E'}▷=> ∀ e2 efs σ, ⌜prim_step e1 σ e2 σ efs⌝ →
-    WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
-  ⊢ WP e1 @ E {{ Φ }}.
+    WP e2 @ p; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ p; ⊤ {{ _, True }})
+  ⊢ WP e1 @ p; E {{ Φ }}.
 Proof.
   iIntros (Hsafe Hstep) "H". iApply wp_lift_step.
   { eapply reducible_not_val, (Hsafe inhabitant). }
@@ -37,18 +51,29 @@ Proof.
   iMod "Hclose" as "_". iFrame "Hσ". iMod "H". iApply "H"; auto.
 Qed.
 
+Lemma wp_lift_pure_stuck `{Inhabited (state Λ)} E Φ e :
+  (∀ σ, ¬ progressive e σ) →
+  True ⊢ WP e @ E ?{{ Φ }}.
+Proof.
+  iIntros (Hstuck) "_". iApply wp_lift_stuck.
+  - destruct(to_val e) as [v|] eqn:He; last done.
+    exfalso. apply (Hstuck inhabitant). left. by exists v.
+  - iIntros (σ) "_". iMod (fupd_intro_mask' E ∅) as "_".
+    by set_solver. by auto.
+Qed.
+
 (* Atomic steps don't need any mask-changing business here, one can
    use the generic lemmas here. *)
-Lemma wp_lift_atomic_step {E Φ} e1 :
+Lemma wp_lift_atomic_step {p E Φ} e1 :
   to_val e1 = None →
   (∀ σ1, state_interp σ1 ={E}=∗
     ⌜reducible e1 σ1⌝ ∗
     ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ={E}=∗
       state_interp σ2 ∗
-      default False (to_val e2) Φ ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
-  ⊢ WP e1 @ E {{ Φ }}.
+      default False (to_val e2) Φ ∗ [∗ list] ef ∈ efs, WP ef @ p; ⊤ {{ _, True }})
+  ⊢ WP e1 @ p; E {{ Φ }}.
 Proof.
-  iIntros (?) "H". iApply (wp_lift_step E _ e1)=>//; iIntros (σ1) "Hσ1".
+  iIntros (?) "H". iApply (wp_lift_step p E _ e1)=>//; iIntros (σ1) "Hσ1".
   iMod ("H" $! σ1 with "Hσ1") as "[$ H]".
   iMod (fupd_intro_mask' E ∅) as "Hclose"; first set_solver.
   iModIntro; iNext; iIntros (e2 σ2 efs) "%". iMod "Hclose" as "_".
@@ -57,13 +82,13 @@ Proof.
   by iApply wp_value.
 Qed.
 
-Lemma wp_lift_pure_det_step `{Inhabited (state Λ)} {E E' Φ} e1 e2 efs :
+Lemma wp_lift_pure_det_step `{Inhabited (state Λ)} {p E E' Φ} e1 e2 efs :
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2' σ2 efs', prim_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
-  (|={E,E'}▷=> WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
-  ⊢ WP e1 @ E {{ Φ }}.
+  (|={E,E'}▷=> WP e2 @ p; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ p; ⊤ {{ _, True }})
+  ⊢ WP e1 @ p; E {{ Φ }}.
 Proof.
-  iIntros (? Hpuredet) "H". iApply (wp_lift_pure_step E); try done.
+  iIntros (? Hpuredet) "H". iApply (wp_lift_pure_step p E); try done.
   { by intros; eapply Hpuredet. }
   iApply (step_fupd_wand with "H"); iIntros "H".
   by iIntros (e' efs' σ (_&->&->)%Hpuredet).
