@@ -39,8 +39,9 @@ Section proofs.
   Lemma tl_alloc : (|==> ∃ tid, tl_own tid ⊤)%I.
   Proof. by apply own_alloc. Qed.
 
-  Lemma tl_own_disjoint tid E1 E2 : tl_own tid E1 ∗ tl_own tid E2 ⊢ ⌜E1 ⊥ E2⌝.
+  Lemma tl_own_disjoint tid E1 E2 : tl_own tid E1 -∗ tl_own tid E2 -∗ ⌜E1 ⊥ E2⌝.
   Proof.
+    apply wand_intro_r.
     rewrite /tl_own -own_op own_valid -coPset_disj_valid_op. by iIntros ([? _]).
   Qed.
 
@@ -82,11 +83,9 @@ Section proofs.
     - iMod ("Hclose" with "[Htoki]") as "_"; first auto.
       iIntros "!> [HP $]".
       iInv N as "[[_ >Hdis2]|>Hitok]" "Hclose".
-      + iCombine "Hdis" "Hdis2" as "Hdis".
-        iDestruct (own_valid with "Hdis") as %[_ Hval%gset_disj_valid_op].
+      + iDestruct (own_valid_2 with "Hdis Hdis2") as %[_ Hval%gset_disj_valid_op].
         set_solver.
       + iFrame. iApply "Hclose". iNext. iLeft. by iFrame.
-    - iDestruct (tl_own_disjoint tid {[i]} {[i]} with "[-]") as %?; first by iFrame.
-      set_solver.
+    - iDestruct (tl_own_disjoint with "Htoki Htoki2") as %?. set_solver.
   Qed.
 End proofs.
