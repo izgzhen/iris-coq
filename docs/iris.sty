@@ -287,6 +287,8 @@
 % for now, the update modality looks like a pvs without masks.
 \NewDocumentCommand \upd {} {\mathop{\mid\kern-0.4ex\Rrightarrow\kern-0.25ex}}
 
+\NewDocumentCommand\Acc{O{} O{} m m}{\langle #3 \vsE #4  \rangle_{#1}^{#2}}
+
 
 %% Hoare Triples
 \newcommand*{\hoaresizebox}[1]{%
@@ -423,6 +425,15 @@
 
 %% Stored Propositions
 \newcommand{\mapstoprop}{\mathrel{\kern-0.5ex\tikz[baseline=(m)]{\node at (0,0) (m){}; \draw[line cap=round] (0,0.16) -- (0,-0.004);}\kern-1.5ex\Ra}}
+
+% Non-atomic invariants
+\newcommand*\Gttok{\gname_\textrm{TTok}}
+\newcommand*\Gtdis{\gname_\textrm{TDis}}
+\newcommand*\tid{t}
+\newcommand\NaInv[3]{\textlog{NAInv}^{#1.#2}(#3)}
+
+\newcommand*\TTok[1]{{[}\textrm{T}:#1{]}}
+\newcommand*\TTokE[2]{{[}\textrm{T}:#1.#2{]}}
 
 \endinput
 

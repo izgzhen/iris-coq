@@ -513,6 +513,10 @@ For this reason, we also call such accessors \emph{non-atomic}.
 The reasons accessors are useful is that they let us talk about ``opening X'' (\eg ``opening invariants'') without having to care what X is opened around.
 Furthermore, as we construct more sophisticated and more interesting things that can be opened (\eg invariants that can be ``cancelled'', or STSs), accessors become a useful interface that allows us to mix and match different abstractions in arbitrary ways.
 
+For the special case that $\prop = \propC$ and $\propB = \propB'$, we use the following notation that avoids repetition:
+\[ \Acc[\mask_1][\mask_2]\prop{\Ret x. \propB} \eqdef \prop \vs[\mask_1][\mask_2] \Exists\var. \propB * (\propB \vsW[\mask_2][\mask_1] \prop)  \]
+This accessor is ``idempotent'' in the sense that it doesn't actually change the state.  After applying it, we get our $\prop$ back so we end up where we started.
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "iris"
