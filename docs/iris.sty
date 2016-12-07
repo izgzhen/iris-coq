@@ -339,6 +339,9 @@
 \newcommand{\physatomic}[1]{\textlog{atomic}($#1$)}
 \newcommand{\infinite}{\textlog{infinite}}
 
+\newcommand\InvName{\textdom{InvName}}
+\newcommand\GName{\textdom{GName}}
+
 \newcommand{\Prop}{\textlog{Prop}}
 \newcommand{\Pred}{\textlog{Pred}}
 
@@ -427,13 +430,11 @@
 \newcommand{\mapstoprop}{\mathrel{\kern-0.5ex\tikz[baseline=(m)]{\node at (0,0) (m){}; \draw[line cap=round] (0,0.16) -- (0,-0.004);}\kern-1.5ex\Ra}}
 
 % Non-atomic invariants
-\newcommand*\Gttok{\gname_\textrm{TTok}}
-\newcommand*\Gtdis{\gname_\textrm{TDis}}
-\newcommand*\tid{t}
-\newcommand\NaInv[3]{\textlog{NAInv}^{#1.#2}(#3)}
+\newcommand*\pid{p}
+\newcommand\NaInv[3]{\textlog{NaInv}^{#1.#2}(#3)}
 
-\newcommand*\TTok[1]{{[}\textrm{T}:#1{]}}
-\newcommand*\TTokE[2]{{[}\textrm{T}:#1.#2{]}}
+\newcommand*\NaTok[1]{{[}\textrm{NaInv}:#1{]}}
+\newcommand*\NaTokE[2]{{[}\textrm{NaInv}:#1.#2{]}}
 
 \endinput
 
