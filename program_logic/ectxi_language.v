@@ -88,15 +88,14 @@ Section ectxi_language.
   Proof. change (LanguageCtx _ (fill [Ki])). apply _. Qed.
 
   Lemma step_is_head K e σ :
-    to_val e = None → (∀ Ki K e', e = fill (Ki::K) e' → ¬head_reducible e' σ) →
+    to_val e = None →
+    (∀ Ki K e', e = fill (Ki :: K) e' → ¬head_reducible e' σ) →
     reducible (fill K e) σ → head_reducible e σ.
   Proof.
     intros Hnonval Hnondecomp (e'&σ''&ef&Hstep).
     change fill with ectx_language.fill in Hstep.
-    apply fill_step_inv in Hstep; last done. destruct Hstep as (e2'&_&Hstep).
-    clear K. destruct Hstep as [K e1' e2'' ?? Hstep]. subst.
-    destruct K as [|K0 K].
-    { rewrite fill_empty in Hnonval. subst. eexists; eauto. }
-    exfalso. eapply Hnondecomp; first done. do 3 eexists. done.
+    apply fill_step_inv in Hstep as (e2'&_&Hstep); last done.
+    clear K. destruct Hstep as [[|Ki K] e1' e2'' -> -> Hstep]; [red; eauto|].
+    destruct (Hnondecomp Ki K e1'); unfold head_reducible; eauto.
   Qed.
 End ectxi_language.
