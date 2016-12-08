@@ -66,8 +66,7 @@ Ltac done :=
     | discriminate
     | contradiction
     | split
-    | match goal with H : ¬_ |- _ => case H; clear H; fast_done end
-    ]
+    | match goal with H : ¬_ |- _ => case H; clear H; fast_done end ]
   ].
 Tactic Notation "by" tactic(tac) :=
   tac; done.
@@ -214,8 +213,8 @@ Tactic Notation "csimpl" "in" "*" :=
 and injects equalities, and tries to contradict impossible inequalities. *)
 Tactic Notation "simplify_eq" := repeat
   match goal with
-  | H : _ ≠ _ |- _ => by case H; clear H
-  | H : _ = _ → False |- _ => by case H; clear H
+  | H : _ ≠ _ |- _ => by case H; try clear H
+  | H : _ = _ → False |- _ => by case H; try clear H
   | H : ?x = _ |- _ => subst x
   | H : _ = ?x |- _ => subst x
   | H : _ = _ |- _ => discriminate H
