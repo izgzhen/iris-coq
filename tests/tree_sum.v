@@ -64,6 +64,3 @@ Proof.
   rewrite Z.add_0_r.
   iIntros "Hl Ht". wp_seq. wp_load. by iApply "HΦ".
 Qed.
-
-Global Opaque sum_loop sum'.
-

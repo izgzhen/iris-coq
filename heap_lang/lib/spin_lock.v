@@ -5,11 +5,11 @@ From iris.heap_lang Require Import proofmode notation.
 From iris.algebra Require Import excl.
 From iris.heap_lang.lib Require Import lock.
 
-Definition newlock : val := ssreflect.locked (λ: <>, ref #false)%V.
-Definition try_acquire : val := ssreflect.locked (λ: "l", CAS "l" #false #true)%V.
+Definition newlock : val := λ: <>, ref #false.
+Definition try_acquire : val := λ: "l", CAS "l" #false #true.
 Definition acquire : val :=
-  ssreflect.locked (rec: "acquire" "l" := if: try_acquire "l" then #() else "acquire" "l")%V.
-Definition release : val := ssreflect.locked (λ: "l", "l" <- #false)%V.
+  rec: "acquire" "l" := if: try_acquire "l" then #() else "acquire" "l".
+Definition release : val := λ: "l", "l" <- #false.
 
 (** The CMRA we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
@@ -48,7 +48,7 @@ Section proof.
     heapN ⊥ N →
     {{{ heap_ctx ∗ R }}} newlock #() {{{ lk γ, RET lk; is_lock γ lk R }}}.
   Proof.
-    iIntros (? Φ) "[#Hh HR] HΦ". rewrite -wp_fupd /newlock. unlock.
+    iIntros (? Φ) "[#Hh HR] HΦ". rewrite -wp_fupd /newlock /=.
     wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (Excl ())) as (γ) "Hγ"; first done.
     iMod (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
@@ -83,7 +83,7 @@ Section proof.
   Proof.
     iIntros (Φ) "(Hlock & Hlocked & HR) HΦ".
     iDestruct "Hlock" as (l) "(% & #? & % & #?)". subst.
-    rewrite /release. unlock. wp_let. iInv N as (b) "[Hl _]" "Hclose".
+    rewrite /release /=. wp_let. iInv N as (b) "[Hl _]" "Hclose".
     wp_store. iApply "HΦ". iApply "Hclose". iNext. iExists false. by iFrame.
   Qed.
 End proof.

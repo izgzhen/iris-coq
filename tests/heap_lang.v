@@ -37,7 +37,6 @@ Section LiftingTests.
   Definition Pred : val :=
     λ: "x",
       if: "x" ≤ #0 then -FindPred (-"x" + #2) #0 else FindPred "x" #0.
-  Global Opaque FindPred Pred.
 
   Lemma FindPred_spec n1 n2 E Φ :
     n1 < n2 →

@@ -136,5 +136,3 @@ Proof.
   iModIntro; rewrite /C; eauto 10 with omega.
 Qed.
 End proof.
-
-Global Opaque newcounter incr read.
