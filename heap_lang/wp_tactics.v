@@ -44,20 +44,12 @@ Tactic Notation "wp_value" :=
   | _ => fail "wp_value: not a wp"
   end.
 
+Lemma of_val_unlock v e : of_val v = e → of_val (locked v) = e.
+Proof. by unlock. Qed.
+
 (* Applied to goals that are equalities of expressions. Will try to unlock the
    LHS once if necessary, to get rid of the lock added by the syntactic sugar. *)
-Ltac wp_unlock :=
-  solve [
-      reflexivity | (* If there are no locks, this is enough. *)
-      (* Otherwise, use unification to uncover the lock. *)
-      (* Step 1: Get the LHS into the form "of_val (locked v)" *)
-      let v := fresh "v" in
-      evar (v: val); trans (of_val (locked v)); subst v; first reflexivity;
-      (* Step 2: Remove the lock from the LHS. *)
-      etrans; first solve [ apply (f_equal of_val); symmetry; apply lock ];
-      (* Now things should be convertible. *)
-      reflexivity
-    ].
+Ltac solve_of_val_unlock := try apply of_val_unlock; reflexivity.
 
 Tactic Notation "wp_rec" :=
   lazymatch goal with
@@ -65,7 +57,8 @@ Tactic Notation "wp_rec" :=
     match eval hnf in e' with App ?e1 _ =>
 (* hnf does not reduce through an of_val *)
 (*      match eval hnf in e1 with Rec _ _ _ => *)
-    wp_bind_core K; etrans; [|eapply wp_rec; [wp_unlock|wp_done..]]; simpl_subst; wp_finish
+    wp_bind_core K; etrans;
+      [|eapply wp_rec; [solve_of_val_unlock|wp_done..]]; simpl_subst; wp_finish
 (*      end *) end) || fail "wp_rec: cannot find 'Rec' in" e
   | _ => fail "wp_rec: not a 'wp'"
   end.
@@ -75,7 +68,8 @@ Tactic Notation "wp_lam" :=
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     match eval hnf in e' with App ?e1 _ =>
 (*    match eval hnf in e1 with Rec BAnon _ _ => *)
-    wp_bind_core K; etrans; [|eapply wp_lam; [wp_unlock|wp_done..]]; simpl_subst; wp_finish
+    wp_bind_core K; etrans;
+      [|eapply wp_lam; [solve_of_val_unlock|wp_done..]]; simpl_subst; wp_finish
 (*    end *) end) || fail "wp_lam: cannot find 'Lam' in" e
   | _ => fail "wp_lam: not a 'wp'"
   end.
