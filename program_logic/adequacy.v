@@ -165,7 +165,7 @@ Proof.
 Qed.
 End adequacy.
 
-Theorem wp_adequacy Σ Λ `{invPreG Σ} (e : expr Λ) σ φ :
+Theorem wp_adequacy Σ Λ `{invPreG Σ} e σ φ :
   (∀ `{Hinv : invG Σ},
      True ={⊤}=∗ ∃ stateI : state Λ → iProp Σ,
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
@@ -189,7 +189,7 @@ Proof.
     iFrame. by iApply big_sepL_nil.
 Qed.
 
-Theorem wp_invariance {Λ} `{invPreG Σ} e σ1 t2 σ2 φ Φ :
+Theorem wp_invariance Σ Λ `{invPreG Σ} e σ1 t2 σ2 φ Φ :
   (∀ `{Hinv : invG Σ},
      True ={⊤}=∗ ∃ stateI : state Λ → iProp Σ,
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
