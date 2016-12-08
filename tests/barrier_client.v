@@ -54,8 +54,6 @@ Section client.
 Qed.
 End client.
 
-Global Opaque worker client.
-
 Section ClosedProofs.
 
 Let Σ : gFunctors := #[ heapΣ ; barrierΣ ; spawnΣ ].

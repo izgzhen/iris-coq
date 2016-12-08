@@ -4,12 +4,11 @@ From iris.proofmode Require Import tactics.
 From iris.algebra Require Import frac auth.
 From iris.heap_lang Require Import proofmode notation.
 
-Definition newcounter : val := locked (λ: <>, ref #0)%V.
-Definition incr : val := locked (
-  rec: "incr" "l" :=
+Definition newcounter : val := λ: <>, ref #0.
+Definition incr : val := rec: "incr" "l" :=
     let: "n" := !"l" in
-    if: CAS "l" "n" (#1 + "n") then #() else "incr" "l")%V.
-Definition read : val := locked (λ: "l", !"l")%V.
+    if: CAS "l" "n" (#1 + "n") then #() else "incr" "l".
+Definition read : val := λ: "l", !"l".
 
 (** Monotone counter *)
 Class mcounterG Σ := MCounterG { mcounter_inG :> inG Σ (authR mnatUR) }.
@@ -36,7 +35,7 @@ Section mono_proof.
     heapN ⊥ N →
     {{{ heap_ctx }}} newcounter #() {{{ l, RET #l; mcounter l 0 }}}.
   Proof.
-    iIntros (? Φ) "#Hh HΦ". rewrite -wp_fupd /newcounter -lock /=. wp_seq. wp_alloc l as "Hl".
+    iIntros (? Φ) "#Hh HΦ". rewrite -wp_fupd /newcounter. wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (● (O:mnat) ⋅ ◯ (O:mnat))) as (γ) "[Hγ Hγ']"; first done.
     iMod (inv_alloc N _ (mcounter_inv γ l) with "[Hl Hγ]").
     { iNext. iExists 0%nat. by iFrame. }
@@ -72,7 +71,7 @@ Section mono_proof.
     {{{ mcounter l j }}} read #l {{{ i, RET #i; ⌜j ≤ i⌝%nat ∧ mcounter l i }}}.
   Proof.
     iIntros (ϕ) "Hc HΦ". iDestruct "Hc" as (γ) "(% & #? & #Hinv & Hγf)".
-    rewrite /read -lock /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
+    rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
     iDestruct (own_valid_2 with "Hγ Hγf")
       as %[?%mnat_included _]%auth_valid_discrete_2.
     iMod (own_update_2 with "Hγ Hγf") as "[Hγ Hγf]".
@@ -113,7 +112,7 @@ Section contrib_spec.
     {{{ heap_ctx }}} newcounter #()
     {{{ γ l, RET #l; ccounter_ctx γ l ∗ ccounter γ 1 0 }}}.
   Proof.
-    iIntros (? Φ) "#Hh HΦ". rewrite -wp_fupd /newcounter -lock /=. wp_seq. wp_alloc l as "Hl".
+    iIntros (? Φ) "#Hh HΦ". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (● (Some (1%Qp, O%nat)) ⋅ ◯ (Some (1%Qp, 0%nat))))
       as (γ) "[Hγ Hγ']"; first done.
     iMod (inv_alloc N _ (ccounter_inv γ l) with "[Hl Hγ]").
@@ -147,7 +146,7 @@ Section contrib_spec.
     {{{ c, RET #c; ⌜n ≤ c⌝%nat ∧ ccounter γ q n }}}.
   Proof.
     iIntros (Φ) "(#(%&?&?) & Hγf) HΦ".
-    rewrite /read -lock /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
+    rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
     iDestruct (own_valid_2 with "Hγ Hγf")
       as %[[? ?%nat_included]%Some_pair_included_total_2 _]%auth_valid_discrete_2.
     iMod ("Hclose" with "[Hl Hγ]") as "_"; [iNext; iExists c; by iFrame|].
@@ -159,7 +158,7 @@ Section contrib_spec.
     {{{ n, RET #n; ccounter γ 1 n }}}.
   Proof.
     iIntros (Φ) "(#(%&?&?) & Hγf) HΦ".
-    rewrite /read -lock /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
+    rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
     iDestruct (own_valid_2 with "Hγ Hγf") as %[Hn _]%auth_valid_discrete_2.
     apply (Some_included_exclusive _) in Hn as [= ->]%leibniz_equiv; last done.
     iMod ("Hclose" with "[Hl Hγ]") as "_"; [iNext; iExists c; by iFrame|].

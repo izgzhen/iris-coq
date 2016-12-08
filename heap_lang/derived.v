@@ -17,15 +17,17 @@ Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val → iProp Σ.
 
 (** Proof rules for the sugar *)
-Lemma wp_lam E x ef e Φ :
-  is_Some (to_val e) → Closed (x :b: []) ef →
-  ▷ WP subst' x e ef @ E {{ Φ }} ⊢ WP App (Lam x ef) e @ E {{ Φ }}.
+Lemma wp_lam E x elam e1 e2 Φ :
+  e1 = Lam x elam →
+  is_Some (to_val e2) →
+  Closed (x :b: []) elam →
+  ▷ WP subst' x e2 elam @ E {{ Φ }} ⊢ WP App e1 e2 @ E {{ Φ }}.
 Proof. intros. by rewrite -(wp_rec _ BAnon) //. Qed.
 
 Lemma wp_let E x e1 e2 Φ :
   is_Some (to_val e1) → Closed (x :b: []) e2 →
   ▷ WP subst' x e1 e2 @ E {{ Φ }} ⊢ WP Let x e1 e2 @ E {{ Φ }}.
-Proof. apply wp_lam. Qed.
+Proof. by apply wp_lam. Qed.
 
 Lemma wp_seq E e1 e2 Φ :
   is_Some (to_val e1) → Closed [] e2 →
