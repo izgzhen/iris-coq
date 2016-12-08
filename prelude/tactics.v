@@ -66,7 +66,7 @@ Ltac done :=
     | discriminate
     | contradiction
     | split
-    | match goal with H : ¬_ |- _ => case H; clear H; done end
+    | match goal with H : ¬_ |- _ => case H; clear H; fast_done end
     ]
   ].
 Tactic Notation "by" tactic(tac) :=
