@@ -12,7 +12,7 @@ Implicit Types Φ : val Λ → iProp Σ.
 
 Lemma wp_lift_step E Φ e1 :
   (|={E,∅}=> ∃ σ1, ⌜reducible e1 σ1⌝ ∗ ▷ ownP σ1 ∗
-    ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ∗ ownP σ2
+    ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2
           ={∅,E}=∗ WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
@@ -25,7 +25,7 @@ Proof.
     iDestruct (ownP_agree σ1 σ1' with "[-]") as %<-; first by iFrame.
     iModIntro; iSplit; [done|]; iNext; iIntros (e2 σ2 efs Hstep).
     iMod (ownP_update σ1 σ2 with "[-H]") as "[$ ?]"; first by iFrame.
-    iApply "H"; eauto.
+    iApply ("H" with "* []"); eauto.
 Qed.
 
 Lemma wp_lift_pure_step `{Inhabited (state Λ)} E Φ e1 :
@@ -46,15 +46,15 @@ Qed.
 (** Derived lifting lemmas. *)
 Lemma wp_lift_atomic_step {E Φ} e1 σ1 :
   reducible e1 σ1 →
-  (▷ ownP σ1 ∗ ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ∗ ownP σ2 -∗
+  (▷ ownP σ1 ∗ ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2 -∗
     default False (to_val e2) Φ ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (?) "[Hσ H]". iApply (wp_lift_step E _ e1).
   iMod (fupd_intro_mask' E ∅) as "Hclose"; first set_solver. iModIntro.
   iExists σ1. iFrame "Hσ"; iSplit; eauto.
-  iNext; iIntros (e2 σ2 efs) "[% Hσ]".
-  iDestruct ("H" $! e2 σ2 efs with "[Hσ]") as "[HΦ $]"; first by eauto.
+  iNext; iIntros (e2 σ2 efs) "% Hσ".
+  iDestruct ("H" $! e2 σ2 efs with "[] [Hσ]") as "[HΦ $]"; [by eauto..|].
   destruct (to_val e2) eqn:?; last by iExFalso.
   iMod "Hclose". iApply wp_value; auto using to_of_val. done.
 Qed.
@@ -68,7 +68,7 @@ Lemma wp_lift_atomic_det_step {E Φ e1} σ1 v2 σ2 efs :
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (? Hdet) "[Hσ1 Hσ2]". iApply (wp_lift_atomic_step _ σ1); try done.
-  iFrame. iNext. iIntros (e2' σ2' efs') "[% Hσ2']".
+  iFrame. iNext. iIntros (e2' σ2' efs') "% Hσ2'".
   edestruct Hdet as (->&Hval&->). done. rewrite Hval. by iApply "Hσ2".
 Qed.
 

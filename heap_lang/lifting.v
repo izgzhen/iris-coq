@@ -52,7 +52,7 @@ Lemma wp_alloc_pst E σ v :
 Proof.
   iIntros (Φ) "HP HΦ".
   iApply (wp_lift_atomic_head_step (Alloc (of_val v)) σ); eauto.
-  iFrame "HP". iNext. iIntros (v2 σ2 ef) "[% HP]". inv_head_step.
+  iFrame "HP". iNext. iIntros (v2 σ2 ef) "% HP". inv_head_step.
   iSplitL; last by iApply big_sepL_nil. iApply "HΦ". by iSplit.
 Qed.
 
