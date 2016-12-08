@@ -1,4 +1,4 @@
-From iris.heap_lang Require Export lifting.
+From iris.heap_lang Require Export rules.
 Import uPred.
 
 (** Define some derived forms, and derived lemmas about them. *)
@@ -12,7 +12,7 @@ Notation Skip := (Seq (Lit LitUnit) (Lit LitUnit)).
 Notation Match e0 x1 e1 x2 e2 := (Case e0 (Lam x1 e1) (Lam x2 e2)).
 
 Section derived.
-Context `{irisG heap_lang Σ}.
+Context `{heapG Σ}.
 Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val → iProp Σ.
 

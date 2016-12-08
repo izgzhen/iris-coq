@@ -1,4 +1,5 @@
 From iris.program_logic Require Export weakestpre.
+From iris.base_logic.lib Require Export invariants.
 From iris.heap_lang Require Export lang.
 From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation.
@@ -71,7 +72,7 @@ Proof.
   - iDestruct "Hinv" as (v') "[% [HΨ|Hγ']]"; simplify_eq/=.
     + iMod ("Hclose" with "[Hl Hγ]"); [iNext; iExists _; iFrame; eauto|].
       iModIntro. wp_match. by iApply "HΦ".
-    + iCombine "Hγ" "Hγ'" as "Hγ". iDestruct (own_valid with "Hγ") as %[].
+    + iDestruct (own_valid_2 with "Hγ Hγ'") as %[].
 Qed.
 End proof.
 
