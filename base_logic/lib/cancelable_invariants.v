@@ -37,11 +37,14 @@ Section proofs.
     AsFractional (cinv_own γ q) (cinv_own γ) q.
   Proof. done. Qed.
 
-  Lemma cinv_own_valid γ q1 q2 : cinv_own γ q1 ∗ cinv_own γ q2 ⊢ ✓ (q1 + q2)%Qp.
-  Proof. rewrite /cinv_own -own_op own_valid. by iIntros "% !%". Qed.
+  Lemma cinv_own_valid γ q1 q2 : cinv_own γ q1 -∗ cinv_own γ q2 -∗ ✓ (q1 + q2)%Qp.
+  Proof. apply (own_valid_2 γ q1 q2). Qed.
 
-  Lemma cinv_own_1_l γ q : cinv_own γ 1 ∗ cinv_own γ q ⊢ False.
-  Proof. rewrite cinv_own_valid. by iIntros (?%(exclusive_l 1%Qp)). Qed.
+  Lemma cinv_own_1_l γ q : cinv_own γ 1 -∗ cinv_own γ q -∗ False.
+  Proof.
+    iIntros "H1 H2".
+    iDestruct (cinv_own_valid with "H1 H2") as %[]%(exclusive_l 1%Qp).
+  Qed.
 
   Lemma cinv_alloc E N P : ▷ P ={E}=∗ ∃ γ, cinv N γ P ∗ cinv_own γ 1.
   Proof.
@@ -54,7 +57,7 @@ Section proofs.
   Proof.
     rewrite /cinv. iIntros (?) "#Hinv Hγ".
     iInv N as "[$|>Hγ']" "Hclose"; first iApply "Hclose"; eauto.
-    iDestruct (cinv_own_1_l with "[$Hγ $Hγ']") as %[].
+    iDestruct (cinv_own_1_l with "Hγ Hγ'") as %[].
   Qed.
 
   Lemma cinv_open E N γ p P :
@@ -62,8 +65,8 @@ Section proofs.
     cinv N γ P -∗ cinv_own γ p ={E,E∖↑N}=∗ ▷ P ∗ cinv_own γ p ∗ (▷ P ={E∖↑N,E}=∗ True).
   Proof.
     rewrite /cinv. iIntros (?) "#Hinv Hγ".
-    iInv N as "[$|>Hγ']" "Hclose".
+    iInv N as "[$ | >Hγ']" "Hclose".
     - iIntros "!> {$Hγ} HP". iApply "Hclose"; eauto.
-    - iDestruct (cinv_own_1_l with "[$Hγ $Hγ']") as %[].
+    - iDestruct (cinv_own_1_l with "Hγ' Hγ") as %[].
   Qed.
 End proofs.
