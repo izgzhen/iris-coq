@@ -732,8 +732,11 @@ Proof. by intros x y. Qed.
 Instance leibnizC_leibniz A : LeibnizEquiv (leibnizC A).
 Proof. by intros x y. Qed.
 
-Canonical Structure natC := leibnizC nat.
 Canonical Structure boolC := leibnizC bool.
+Canonical Structure natC := leibnizC nat.
+Canonical Structure positiveC := leibnizC positive.
+Canonical Structure NC := leibnizC N.
+Canonical Structure ZC := leibnizC Z.
 
 (* Option *)
 Section option.
