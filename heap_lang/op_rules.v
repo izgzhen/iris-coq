@@ -6,6 +6,8 @@ From iris.proofmode Require Import tactics.
 From iris.prelude Require Import fin_maps.
 Import uPred.
 
+(** Basic rules for language operations. *)
+
 Class heapG Σ := HeapG {
   heapG_invG : invG Σ;
   heapG_gen_heapG :> gen_heapG loc val Σ
