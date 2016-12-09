@@ -48,7 +48,6 @@ algebra/base.v
 algebra/dra.v
 algebra/cofe_solver.v
 algebra/agree.v
-algebra/dec_agree.v
 algebra/excl.v
 algebra/iprod.v
 algebra/frac.v
