@@ -190,10 +190,10 @@ Proof.
   - intros ?%symmetry%equiv_None. done.
   - intros (? & ? & ?). done.
 Qed.
-Lemma fmap_Some_equiv' {A B} `{Equiv B} `{!Equivalence ((≡) : relation B)}
+Lemma fmap_Some_equiv_1 {A B} `{Equiv B} `{!Equivalence ((≡) : relation B)}
       (f : A → B) mx y :
   f <$> mx ≡ Some y → ∃ x, mx = Some x ∧ y ≡ f x.
-Proof. intros. apply fmap_Some_equiv. done. Qed.
+Proof. by rewrite fmap_Some_equiv. Qed.
 Lemma fmap_None {A B} (f : A → B) mx : f <$> mx = None ↔ mx = None.
 Proof. by destruct mx. Qed.
 Lemma option_fmap_id {A} (mx : option A) : id <$> mx = mx.
