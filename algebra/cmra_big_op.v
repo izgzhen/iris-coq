@@ -157,6 +157,9 @@ Section list.
   Lemma big_opL_permutation (f : A → M) l1 l2 :
     l1 ≡ₚ l2 → ([⋅ list] x ∈ l1, f x) ≡ ([⋅ list] x ∈ l2, f x).
   Proof. intros Hl. by rewrite /big_opL !imap_const Hl. Qed.
+  Lemma big_opL_contains (f : A → M) l1 l2 :
+    l1 `contains` l2 → ([⋅ list] x ∈ l1, f x) ≼ ([⋅ list] x ∈ l2, f x).
+  Proof. intros Hl. apply big_op_contains. rewrite !imap_const. by rewrite ->Hl. Qed.
 
   Global Instance big_opL_ne l n :
     Proper (pointwise_relation _ (pointwise_relation _ (dist n)) ==> (dist n))

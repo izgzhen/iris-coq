@@ -219,6 +219,9 @@ Section list.
     (∀ k y, l !! k = Some y → Φ k y ⊣⊢ Ψ k y) →
     ([∗ list] k ↦ y ∈ l, Φ k y) ⊣⊢ ([∗ list] k ↦ y ∈ l, Ψ k y).
   Proof. apply big_opL_proper. Qed.
+  Lemma big_sepL_contains (Φ : A → uPred M) l1 l2 :
+    l1 `contains` l2 → ([∗ list] y ∈ l2, Φ y) ⊢ [∗ list] y ∈ l1, Φ y.
+  Proof. intros ?. apply uPred_included. by apply: big_opL_contains. Qed.
 
   Global Instance big_sepL_mono' l :
     Proper (pointwise_relation _ (pointwise_relation _ (⊢)) ==> (⊢))
