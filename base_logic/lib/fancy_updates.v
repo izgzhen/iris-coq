@@ -121,6 +121,12 @@ Qed.
 
 Lemma fupd_sep E P Q : (|={E}=> P) ∗ (|={E}=> Q) ={E}=∗ P ∗ Q.
 Proof. by rewrite fupd_frame_r fupd_frame_l fupd_trans. Qed.
+Lemma fupd_big_sepL {A} E (Φ : nat → A → iProp Σ) (l : list A) :
+  ([∗ list] k↦x ∈ l, |={E}=> Φ k x) ={E}=∗ [∗ list] k↦x ∈ l, Φ k x.
+Proof.
+  apply (big_opL_forall (λ P Q, P ={E}=∗ Q)); auto using fupd_intro.
+  intros P1 P2 HP Q1 Q2 HQ. by rewrite HP HQ -fupd_sep.
+Qed.
 Lemma fupd_big_sepM `{Countable K} {A} E (Φ : K → A → iProp Σ) (m : gmap K A) :
   ([∗ map] k↦x ∈ m, |={E}=> Φ k x) ={E}=∗ [∗ map] k↦x ∈ m, Φ k x.
 Proof.
