@@ -15,6 +15,7 @@ Instance heapG_irisG `{heapG Σ} : irisG heap_lang Σ := {
   iris_invG := heapG_invG;
   state_interp := gen_heap_ctx
 }.
+Global Opaque iris_invG.
 
 (** Override the notations so that scopes and coercions work out *)
 Notation "l ↦{ q } v" := (mapsto (L:=loc) (V:=val) l q v%V)

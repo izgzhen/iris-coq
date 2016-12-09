@@ -15,6 +15,7 @@ Instance ownPG_irisG `{ownPG' Λstate Σ} : irisG' Λstate Σ := {
   iris_invG := ownP_invG;
   state_interp σ := own ownP_name (● (Excl' (σ:leibnizC Λstate)))
 }.
+Global Opaque iris_invG.
 
 Definition ownPΣ (Λstate : Type) : gFunctors :=
   #[invΣ;
