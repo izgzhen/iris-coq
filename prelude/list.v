@@ -2802,7 +2802,7 @@ Section fmap.
   Lemma list_fmap_ext (g : A → B) (l1 l2 : list A) :
     (∀ x, f x = g x) → l1 = l2 → fmap f l1 = fmap g l2.
   Proof. intros ? <-. induction l1; f_equal/=; auto. Qed.
-  Lemma list_fmap_setoid_ext `{Equiv B} (g : A → B) l :
+  Lemma list_fmap_equiv_ext `{Equiv B} (g : A → B) l :
     (∀ x, f x ≡ g x) → f <$> l ≡ g <$> l.
   Proof. induction l; constructor; auto. Qed.
 

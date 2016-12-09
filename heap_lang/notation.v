@@ -1,5 +1,5 @@
-From iris.heap_lang Require Export derived.
-Export heap_lang.
+From iris.program_logic Require Import language.
+From iris.heap_lang Require Export lang tactics.
 
 Coercion LitInt : Z >-> base_lit.
 Coercion LitBool : bool >-> base_lit.
@@ -91,15 +91,15 @@ Notation "e1 || e2" :=
   (If e1%E (Lit (LitBool true)) e2%E) (only parsing) : expr_scope.
 
 (** Notations for option *)
-Notation NONE := (InjL #()).
-Notation SOME x := (InjR x).
+Notation NONE := (InjL #()) (only parsing).
+Notation SOME x := (InjR x) (only parsing).
 
-Notation NONEV := (InjLV #()).
-Notation SOMEV x := (InjRV x).
+Notation NONEV := (InjLV #()) (only parsing).
+Notation SOMEV x := (InjRV x) (only parsing).
 
 Notation "'match:' e0 'with' 'NONE' => e1 | 'SOME' x => e2 'end'" :=
   (Match e0 BAnon e1 x%bind e2)
-  (e0, e1, x, e2 at level 200) : expr_scope.
+  (e0, e1, x, e2 at level 200, only parsing) : expr_scope.
 Notation "'match:' e0 'with' 'SOME' x => e2 | 'NONE' => e1 'end'" :=
   (Match e0 BAnon e1 x%bind e2)
   (e0, e1, x, e2 at level 200, only parsing) : expr_scope.

@@ -475,11 +475,11 @@ Next Obligation.
 Qed.
 Next Obligation.
   intros K ?? F A B x. rewrite /= -{2}(map_fmap_id x).
-  apply map_fmap_setoid_ext=>y ??; apply cFunctor_id.
+  apply map_fmap_equiv_ext=>y ??; apply cFunctor_id.
 Qed.
 Next Obligation.
   intros K ?? F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -map_fmap_compose.
-  apply map_fmap_setoid_ext=>y ??; apply cFunctor_compose.
+  apply map_fmap_equiv_ext=>y ??; apply cFunctor_compose.
 Qed.
 Instance gmapCF_contractive K `{Countable K} F :
   cFunctorContractive F → cFunctorContractive (gmapCF K F).
@@ -496,11 +496,11 @@ Next Obligation.
 Qed.
 Next Obligation.
   intros K ?? F A B x. rewrite /= -{2}(map_fmap_id x).
-  apply map_fmap_setoid_ext=>y ??; apply rFunctor_id.
+  apply map_fmap_equiv_ext=>y ??; apply rFunctor_id.
 Qed.
 Next Obligation.
   intros K ?? F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -map_fmap_compose.
-  apply map_fmap_setoid_ext=>y ??; apply rFunctor_compose.
+  apply map_fmap_equiv_ext=>y ??; apply rFunctor_compose.
 Qed.
 Instance gmapRF_contractive K `{Countable K} F :
   rFunctorContractive F → urFunctorContractive (gmapURF K F).

@@ -1,0 +1,145 @@
+From iris.algebra Require Import auth gmap frac dec_agree.
+From iris.base_logic.lib Require Export own.
+From iris.base_logic.lib Require Import fractional.
+From iris.proofmode Require Import tactics.
+Import uPred.
+
+Definition gen_heapUR (L V : Type) `{Countable L, EqDecision V} : ucmraT :=
+  gmapUR L (prodR fracR (dec_agreeR V)).
+Definition to_gen_heap `{Countable L, EqDecision V} : gmap L V → gen_heapUR L V :=
+  fmap (λ v, (1%Qp, DecAgree v)).
+
+(** The CMRA we need. *)
+Class gen_heapG (L V : Type) (Σ : gFunctors)
+    `{Countable L, EqDecision V} := GenHeapG {
+  gen_heap_inG :> inG Σ (authR (gen_heapUR L V));
+  gen_heap_name : gname
+}.
+
+Class gen_heapPreG (L V : Type) (Σ : gFunctors) `{Countable L, EqDecision V} :=
+  { gen_heap_preG_inG :> inG Σ (authR (gen_heapUR L V)) }.
+
+Definition gen_heapΣ (L V : Type) `{Countable L, EqDecision V} : gFunctors :=
+  #[GFunctor (constRF (authR (gen_heapUR L V)))].
+
+Instance subG_gen_heapPreG {Σ} `{Countable L, EqDecision V} :
+  subG (gen_heapΣ L V) Σ → gen_heapPreG L V Σ.
+Proof. intros ?%subG_inG; split; apply _. Qed.
+
+Section definitions.
+  Context `{gen_heapG L V Σ}.
+
+  Definition gen_heap_ctx (σ : gmap L V) : iProp Σ :=
+    own gen_heap_name (● to_gen_heap σ).
+
+  Definition mapsto_def (l : L) (q : Qp) (v: V) : iProp Σ :=
+    own gen_heap_name (◯ {[ l := (q, DecAgree v) ]}).
+  Definition mapsto_aux : { x | x = @mapsto_def }. by eexists. Qed.
+  Definition mapsto := proj1_sig mapsto_aux.
+  Definition mapsto_eq : @mapsto = @mapsto_def := proj2_sig mapsto_aux.
+End definitions.
+
+Local Notation "l ↦{ q } v" := (mapsto l q v)
+  (at level 20, q at level 50, format "l  ↦{ q }  v") : uPred_scope.
+Local Notation "l ↦ v" := (mapsto l 1 v) (at level 20) : uPred_scope.
+
+Local Notation "l ↦{ q } -" := (∃ v, l ↦{q} v)%I
+  (at level 20, q at level 50, format "l  ↦{ q }  -") : uPred_scope.
+Local Notation "l ↦ -" := (l ↦{1} -)%I (at level 20) : uPred_scope.
+
+Section gen_heap.
+  Context `{gen_heapG L V Σ}.
+  Implicit Types P Q : iProp Σ.
+  Implicit Types Φ : V → iProp Σ.
+  Implicit Types σ : gmap L V.
+  Implicit Types h g : gen_heapUR L V.
+
+  (** Conversion to heaps and back *)
+  Lemma to_gen_heap_valid σ : ✓ to_gen_heap σ.
+  Proof. intros l. rewrite lookup_fmap. by case (σ !! l). Qed.
+  Lemma lookup_to_gen_heap_None σ l : σ !! l = None → to_gen_heap σ !! l = None.
+  Proof. by rewrite /to_gen_heap lookup_fmap=> ->. Qed.
+  Lemma gen_heap_singleton_included σ l q v :
+    {[l := (q, DecAgree v)]} ≼ to_gen_heap σ → σ !! l = Some v.
+  Proof.
+    rewrite singleton_included=> -[[q' av] [/leibniz_equiv_iff Hl Hqv]].
+    move: Hl. rewrite /to_gen_heap lookup_fmap fmap_Some=> -[v' [Hl [??]]]; subst.
+    by move: Hqv=> /Some_pair_included_total_2 [_ /DecAgree_included ->].
+  Qed.
+  Lemma to_gen_heap_insert l v σ :
+    to_gen_heap (<[l:=v]> σ) = <[l:=(1%Qp, DecAgree v)]> (to_gen_heap σ).
+  Proof. by rewrite /to_gen_heap fmap_insert. Qed.
+
+  (** General properties of mapsto *)
+  Global Instance mapsto_timeless l q v : TimelessP (l ↦{q} v).
+  Proof. rewrite mapsto_eq /mapsto_def. apply _. Qed.
+  Global Instance mapsto_fractional l v : Fractional (λ q, l ↦{q} v)%I.
+  Proof.
+    intros p q. by rewrite mapsto_eq -own_op -auth_frag_op
+      op_singleton pair_op dec_agree_idemp.
+  Qed.
+  Global Instance mapsto_as_fractional l q v :
+    AsFractional (l ↦{q} v) (λ q, l ↦{q} v)%I q.
+  Proof. done. Qed.
+
+  Lemma mapsto_agree l q1 q2 v1 v2 : l ↦{q1} v1 ∗ l ↦{q2} v2 ⊢ ⌜v1 = v2⌝.
+  Proof.
+    rewrite mapsto_eq -own_op -auth_frag_op own_valid discrete_valid.
+    f_equiv=> /auth_own_valid /=. rewrite op_singleton singleton_valid pair_op.
+    by move=> [_ /= /dec_agree_op_inv [?]].
+  Qed.
+
+  Global Instance heap_ex_mapsto_fractional l : Fractional (λ q, l ↦{q} -)%I.
+  Proof.
+    intros p q. iSplit.
+    - iDestruct 1 as (v) "[H1 H2]". iSplitL "H1"; eauto.
+    - iIntros "[H1 H2]". iDestruct "H1" as (v1) "H1". iDestruct "H2" as (v2) "H2".
+      iDestruct (mapsto_agree with "[$H1 $H2]") as %->. iExists v2. by iFrame.
+  Qed.
+  Global Instance heap_ex_mapsto_as_fractional l q :
+    AsFractional (l ↦{q} -) (λ q, l ↦{q} -)%I q.
+  Proof. done. Qed.
+
+  Lemma mapsto_valid l q v : l ↦{q} v ⊢ ✓ q.
+  Proof.
+    rewrite mapsto_eq /mapsto_def own_valid !discrete_valid.
+    by apply pure_mono=> /auth_own_valid /singleton_valid [??].
+  Qed.
+  Lemma mapsto_valid_2 l q1 q2 v1 v2 :
+    l ↦{q1} v1 ∗ l ↦{q2} v2 ⊢ ✓ (q1 + q2)%Qp.
+  Proof.
+    iIntros "[H1 H2]". iDestruct (mapsto_agree with "[$H1 $H2]") as %->.
+    iApply (mapsto_valid l _ v2). by iFrame.
+  Qed.
+
+  Lemma gen_heap_alloc σ l v :
+    σ !! l = None → gen_heap_ctx σ ==∗ gen_heap_ctx (<[l:=v]>σ) ∗ l ↦ v.
+  Proof.
+    iIntros (?) "Hσ". rewrite /gen_heap_ctx mapsto_eq /mapsto_def.
+    iMod (own_update with "Hσ") as "[Hσ Hl]".
+    { eapply auth_update_alloc,
+        (alloc_singleton_local_update _ _ (1%Qp, DecAgree v))=> //.
+      by apply lookup_to_gen_heap_None. }
+    iModIntro. rewrite to_gen_heap_insert. iFrame.
+  Qed.
+
+  Lemma gen_heap_valid σ l q v : gen_heap_ctx σ -∗ l ↦{q} v -∗ ⌜σ !! l = Some v⌝.
+  Proof.
+    iIntros "Hσ Hl". rewrite /gen_heap_ctx mapsto_eq /mapsto_def.
+    iDestruct (own_valid_2 with "Hσ Hl")
+      as %[Hl%gen_heap_singleton_included _]%auth_valid_discrete_2; auto.
+  Qed.
+
+  Lemma gen_heap_update σ l v1 v2 :
+    gen_heap_ctx σ -∗ l ↦ v1 ==∗ gen_heap_ctx (<[l:=v2]>σ) ∗ l ↦ v2.
+  Proof.
+    iIntros "Hσ Hl". rewrite /gen_heap_ctx mapsto_eq /mapsto_def.
+    iDestruct (own_valid_2 with "Hσ Hl")
+      as %[Hl%gen_heap_singleton_included _]%auth_valid_discrete_2.
+    iMod (own_update_2 with "Hσ Hl") as "[Hσ Hl]".
+    { eapply auth_update, singleton_local_update,
+        (exclusive_local_update _ (1%Qp, DecAgree v2))=> //.
+      by rewrite /to_gen_heap lookup_fmap Hl. }
+    iModIntro. rewrite to_gen_heap_insert. iFrame.
+  Qed.
+End gen_heap.

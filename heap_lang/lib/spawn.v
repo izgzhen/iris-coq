@@ -1,4 +1,5 @@
 From iris.program_logic Require Export weakestpre.
+From iris.base_logic.lib Require Export invariants.
 From iris.heap_lang Require Export lang.
 From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation.
@@ -32,8 +33,7 @@ Definition spawn_inv (γ : gname) (l : loc) (Ψ : val → iProp Σ) : iProp Σ :
                    ∃ v, ⌜lv = SOMEV v⌝ ∗ (Ψ v ∨ own γ (Excl ()))))%I.
 
 Definition join_handle (l : loc) (Ψ : val → iProp Σ) : iProp Σ :=
-  (⌜heapN ⊥ N⌝ ∗ ∃ γ, heap_ctx ∗ own γ (Excl ()) ∗
-                    inv N (spawn_inv γ l Ψ))%I.
+  (∃ γ, own γ (Excl ()) ∗ inv N (spawn_inv γ l Ψ))%I.
 
 Typeclasses Opaque join_handle.
 
@@ -47,10 +47,9 @@ Proof. solve_proper. Qed.
 (** The main proofs. *)
 Lemma spawn_spec (Ψ : val → iProp Σ) e (f : val) :
   to_val e = Some f →
-  heapN ⊥ N →
-  {{{ heap_ctx ∗ WP f #() {{ Ψ }} }}} spawn e {{{ l, RET #l; join_handle l Ψ }}}.
+  {{{ WP f #() {{ Ψ }} }}} spawn e {{{ l, RET #l; join_handle l Ψ }}}.
 Proof.
-  iIntros (<-%of_to_val ? Φ) "(#Hh & Hf) HΦ". rewrite /spawn /=.
+  iIntros (<-%of_to_val Φ) "Hf HΦ". rewrite /spawn /=.
   wp_let. wp_alloc l as "Hl". wp_let.
   iMod (own_alloc (Excl ())) as (γ) "Hγ"; first done.
   iMod (inv_alloc N _ (spawn_inv γ l Ψ) with "[Hl]") as "#?".
@@ -65,7 +64,7 @@ Qed.
 Lemma join_spec (Ψ : val → iProp Σ) l :
   {{{ join_handle l Ψ }}} join #l {{{ v, RET v; Ψ v }}}.
 Proof.
-  rewrite /join_handle; iIntros (Φ) "[% H] HΦ". iDestruct "H" as (γ) "(#?&Hγ&#?)".
+  rewrite /join_handle; iIntros (Φ) "H HΦ". iDestruct "H" as (γ) "[Hγ #?]".
   iLöb as "IH". wp_rec. wp_bind (! _)%E. iInv N as (v) "[Hl Hinv]" "Hclose".
   wp_load. iDestruct "Hinv" as "[%|Hinv]"; subst.
   - iMod ("Hclose" with "[Hl]"); [iNext; iExists _; iFrame; eauto|].
@@ -73,7 +72,7 @@ Proof.
   - iDestruct "Hinv" as (v') "[% [HΨ|Hγ']]"; simplify_eq/=.
     + iMod ("Hclose" with "[Hl Hγ]"); [iNext; iExists _; iFrame; eauto|].
       iModIntro. wp_match. by iApply "HΦ".
-    + iCombine "Hγ" "Hγ'" as "Hγ". iDestruct (own_valid with "Hγ") as %[].
+    + iDestruct (own_valid_2 with "Hγ Hγ'") as %[].
 Qed.
 End proof.
 

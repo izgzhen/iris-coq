@@ -820,11 +820,11 @@ Next Obligation.
 Qed.
 Next Obligation.
   intros F A B x. rewrite /= -{2}(option_fmap_id x).
-  apply option_fmap_setoid_ext=>y; apply cFunctor_id.
+  apply option_fmap_equiv_ext=>y; apply cFunctor_id.
 Qed.
 Next Obligation.
   intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -option_fmap_compose.
-  apply option_fmap_setoid_ext=>y; apply cFunctor_compose.
+  apply option_fmap_equiv_ext=>y; apply cFunctor_compose.
 Qed.
 
 Instance optionCF_contractive F :

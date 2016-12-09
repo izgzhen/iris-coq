@@ -1,4 +1,4 @@
-From iris.heap_lang Require Export tactics derived.
+From iris.heap_lang Require Export tactics rules.
 Import uPred.
 
 (** wp-specific helper tactics *)

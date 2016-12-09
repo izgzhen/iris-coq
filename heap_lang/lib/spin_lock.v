@@ -26,12 +26,12 @@ Section proof.
     (∃ b : bool, l ↦ #b ∗ if b then True else own γ (Excl ()) ∗ R)%I.
 
   Definition is_lock (γ : gname) (lk : val) (R : iProp Σ) : iProp Σ :=
-    (∃ l: loc, ⌜heapN ⊥ N⌝ ∧ heap_ctx ∧ ⌜lk = #l⌝ ∧ inv N (lock_inv γ l R))%I.
+    (∃ l: loc, ⌜lk = #l⌝ ∧ inv N (lock_inv γ l R))%I.
 
   Definition locked (γ : gname): iProp Σ := own γ (Excl ()).
 
-  Lemma locked_exclusive (γ : gname) : locked γ ∗ locked γ ⊢ False.
-  Proof. rewrite /locked -own_op own_valid. by iIntros (?). Qed.
+  Lemma locked_exclusive (γ : gname) : locked γ -∗ locked γ -∗ False.
+  Proof. iIntros "H1 H2". by iDestruct (own_valid_2 with "H1 H2") as %?. Qed.
 
   Global Instance lock_inv_ne n γ l : Proper (dist n ==> dist n) (lock_inv γ l).
   Proof. solve_proper. Qed.
@@ -45,10 +45,9 @@ Section proof.
   Proof. apply _. Qed.
 
   Lemma newlock_spec (R : iProp Σ):
-    heapN ⊥ N →
-    {{{ heap_ctx ∗ R }}} newlock #() {{{ lk γ, RET lk; is_lock γ lk R }}}.
+    {{{ R }}} newlock #() {{{ lk γ, RET lk; is_lock γ lk R }}}.
   Proof.
-    iIntros (? Φ) "[#Hh HR] HΦ". rewrite -wp_fupd /newlock /=.
+    iIntros (Φ) "HR HΦ". rewrite -wp_fupd /newlock /=.
     wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (Excl ())) as (γ) "Hγ"; first done.
     iMod (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
@@ -60,7 +59,7 @@ Section proof.
     {{{ is_lock γ lk R }}} try_acquire lk
     {{{ b, RET #b; if b is true then locked γ ∗ R else True }}}.
   Proof.
-    iIntros (Φ) "#Hl HΦ". iDestruct "Hl" as (l) "(% & #? & % & #?)". subst.
+    iIntros (Φ) "#Hl HΦ". iDestruct "Hl" as (l) "[% #?]"; subst.
     wp_rec. iInv N as ([]) "[Hl HR]" "Hclose".
     - wp_cas_fail. iMod ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
       iModIntro. iApply ("HΦ" $! false). done.
@@ -82,7 +81,7 @@ Section proof.
     {{{ is_lock γ lk R ∗ locked γ ∗ R }}} release lk {{{ RET #(); True }}}.
   Proof.
     iIntros (Φ) "(Hlock & Hlocked & HR) HΦ".
-    iDestruct "Hlock" as (l) "(% & #? & % & #?)". subst.
+    iDestruct "Hlock" as (l) "[% #?]"; subst.
     rewrite /release /=. wp_let. iInv N as (b) "[Hl _]" "Hclose".
     wp_store. iApply "HΦ". iApply "Hclose". iNext. iExists false. by iFrame.
   Qed.

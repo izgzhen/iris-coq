@@ -10,8 +10,10 @@ Coq development, but not every API-breaking change is listed.  Changes marked
   backwards compatibility and will be removed in a future version of Iris.
 * View shifts are radically simplified to just internalize frame-preserving
   updates.  Weakestpre is defined inside the logic, and invariants and view
-  shifts with masks are also coded up inside Iris.  Adequacy of weakestpre
-  is proven in the logic.
+  shifts with masks are also coded up inside Iris.  Adequacy of weakestpre is
+  proven in the logic. [#] The old ownership of the entire physical state is
+  replaced by a user-selected predicate over physical state that is maintained
+  by weakestpre.
 * Use OFEs instead of COFEs everywhere.  COFEs are only used for solving the
   recursive domain equation.  As a consequence, CMRAs no longer need a proof
   of completeness.
