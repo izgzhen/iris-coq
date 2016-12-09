@@ -180,7 +180,7 @@ Proof. unfold is_Some; destruct mx; naive_solver. Qed.
 Lemma fmap_Some {A B} (f : A → B) mx y :
   f <$> mx = Some y ↔ ∃ x, mx = Some x ∧ y = f x.
 Proof. destruct mx; naive_solver. Qed.
-Lemma fmap_Some_setoid {A B} `{Equiv B} `{!Equivalence ((≡) : relation B)}
+Lemma fmap_Some_equiv {A B} `{Equiv B} `{!Equivalence ((≡) : relation B)}
       (f : A → B) mx y :
   f <$> mx ≡ Some y ↔ ∃ x, mx = Some x ∧ y ≡ f x.
 Proof.
@@ -190,6 +190,10 @@ Proof.
   - intros ?%symmetry%equiv_None. done.
   - intros (? & ? & ?). done.
 Qed.
+Lemma fmap_Some_equiv' {A B} `{Equiv B} `{!Equivalence ((≡) : relation B)}
+      (f : A → B) mx y :
+  f <$> mx ≡ Some y → ∃ x, mx = Some x ∧ y ≡ f x.
+Proof. intros. apply fmap_Some_equiv. done. Qed.
 Lemma fmap_None {A B} (f : A → B) mx : f <$> mx = None ↔ mx = None.
 Proof. by destruct mx. Qed.
 Lemma option_fmap_id {A} (mx : option A) : id <$> mx = mx.
@@ -200,7 +204,7 @@ Proof. by destruct mx. Qed.
 Lemma option_fmap_ext {A B} (f g : A → B) mx :
   (∀ x, f x = g x) → f <$> mx = g <$> mx.
 Proof. intros; destruct mx; f_equal/=; auto. Qed.
-Lemma option_fmap_setoid_ext `{Equiv A, Equiv B} (f g : A → B) mx :
+Lemma option_fmap_equiv_ext `{Equiv A, Equiv B} (f g : A → B) mx :
   (∀ x, f x ≡ g x) → f <$> mx ≡ g <$> mx.
 Proof. destruct mx; constructor; auto. Qed.
 Lemma option_fmap_bind {A B C} (f : A → B) (g : B → option C) mx :

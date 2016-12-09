@@ -108,11 +108,11 @@ Next Obligation.
 Qed.
 Next Obligation.
   intros F A B x. rewrite /= -{2}(list_fmap_id x).
-  apply list_fmap_setoid_ext=>y. apply cFunctor_id.
+  apply list_fmap_equiv_ext=>y. apply cFunctor_id.
 Qed.
 Next Obligation.
   intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -list_fmap_compose.
-  apply list_fmap_setoid_ext=>y; apply cFunctor_compose.
+  apply list_fmap_equiv_ext=>y; apply cFunctor_compose.
 Qed.
 
 Instance listCF_contractive F :
@@ -452,11 +452,11 @@ Next Obligation.
 Qed.
 Next Obligation.
   intros F A B x. rewrite /= -{2}(list_fmap_id x).
-  apply list_fmap_setoid_ext=>y. apply urFunctor_id.
+  apply list_fmap_equiv_ext=>y. apply urFunctor_id.
 Qed.
 Next Obligation.
   intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -list_fmap_compose.
-  apply list_fmap_setoid_ext=>y; apply urFunctor_compose.
+  apply list_fmap_equiv_ext=>y; apply urFunctor_compose.
 Qed.
 
 Instance listURF_contractive F :

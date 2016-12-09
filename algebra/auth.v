@@ -275,7 +275,7 @@ Lemma auth_map_ext {A B : ofeT} (f g : A → B) x :
   (∀ x, f x ≡ g x) → auth_map f x ≡ auth_map g x.
 Proof.
   constructor; simpl; auto.
-  apply option_fmap_setoid_ext=> a; by apply excl_map_ext.
+  apply option_fmap_equiv_ext=> a; by apply excl_map_ext.
 Qed.
 Instance auth_map_ne {A B : ofeT} n :
   Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@auth_map A B).
