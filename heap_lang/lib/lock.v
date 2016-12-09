@@ -15,7 +15,7 @@ Structure lock Σ `{!heapG Σ} := Lock {
   is_lock_ne N γ lk n: Proper (dist n ==> dist n) (is_lock N γ lk);
   is_lock_persistent N γ lk R : PersistentP (is_lock N γ lk R);
   locked_timeless γ : TimelessP (locked γ);
-  locked_exclusive γ : locked γ ∗ locked γ ⊢ False;
+  locked_exclusive γ : locked γ -∗ locked γ -∗ False;
   (* -- operation specs -- *)
   newlock_spec N (R : iProp Σ) :
     {{{ R }}} newlock #() {{{ lk γ, RET lk; is_lock N γ lk R }}};

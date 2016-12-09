@@ -46,11 +46,11 @@ Section proof.
 
   Definition is_lock (γ : gname) (lk : val) (R : iProp Σ) : iProp Σ :=
     (∃ lo ln : loc,
-       ⌜lk = (#lo, #ln)%V⌝ ∧ inv N (lock_inv γ lo ln R))%I.
+       ⌜lk = (#lo, #ln)%V⌝ ∗ inv N (lock_inv γ lo ln R))%I.
 
   Definition issued (γ : gname) (lk : val) (x : nat) (R : iProp Σ) : iProp Σ :=
     (∃ lo ln: loc,
-       ⌜lk = (#lo, #ln)%V⌝ ∧ inv N (lock_inv γ lo ln R) ∧
+       ⌜lk = (#lo, #ln)%V⌝ ∗ inv N (lock_inv γ lo ln R) ∗
        own γ (◯ (∅, GSet {[ x ]})))%I.
 
   Definition locked (γ : gname) : iProp Σ := (∃ o, own γ (◯ (Excl' o, ∅)))%I.
@@ -65,10 +65,10 @@ Section proof.
   Global Instance locked_timeless γ : TimelessP (locked γ).
   Proof. apply _. Qed.
 
-  Lemma locked_exclusive (γ : gname) : (locked γ ∗ locked γ ⊢ False)%I.
+  Lemma locked_exclusive (γ : gname) : locked γ -∗ locked γ -∗ False.
   Proof.
-    iIntros "[H1 H2]". iDestruct "H1" as (o1) "H1". iDestruct "H2" as (o2) "H2".
-    iCombine "H1" "H2" as "H". iDestruct (own_valid with "H") as %[[] _].
+    iDestruct 1 as (o1) "H1". iDestruct 1 as (o2) "H2".
+    iDestruct (own_valid_2 with "H1 H2") as %[[] _].
   Qed.
 
   Lemma newlock_spec (R : iProp Σ) :

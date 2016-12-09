@@ -73,11 +73,11 @@ Proof. solve_proper. Qed.
 (** Helper lemmas *)
 Lemma ress_split i i1 i2 Q R1 R2 P I :
   i ∈ I → i1 ∉ I → i2 ∉ I → i1 ≠ i2 →
-  saved_prop_own i Q ∗ saved_prop_own i1 R1 ∗ saved_prop_own i2 R2 ∗
-    (Q -∗ R1 ∗ R2) ∗ ress P I
-  ⊢ ress P ({[i1;i2]} ∪ I ∖ {[i]}).
+  saved_prop_own i Q -∗ saved_prop_own i1 R1 -∗ saved_prop_own i2 R2 -∗
+  (Q -∗ R1 ∗ R2) -∗ ress P I -∗
+  ress P ({[i1;i2]} ∪ I ∖ {[i]}).
 Proof.
-  iIntros (????) "(#HQ&#H1&#H2&HQR&H)"; iDestruct "H" as (Ψ) "[HPΨ HΨ]".
+  iIntros (????) "#HQ #H1 #H2 HQR"; iDestruct 1 as (Ψ) "[HPΨ HΨ]".
   iDestruct (big_sepS_delete _ _ i with "HΨ") as "[#HΨi HΨ]"; first done.
   iExists (<[i1:=R1]> (<[i2:=R2]> Ψ)). iSplitL "HQR HPΨ".
   - iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by iSplit.
@@ -175,7 +175,7 @@ Proof.
                    {[Change i1; Change i2 ]} with "[-]") as "Hγ".
   { iSplit; first by eauto using split_step.
     rewrite {2}/barrier_inv /=. iNext. iFrame "Hl".
-    iApply (ress_split _ _ _ Q R1 R2); eauto. iFrame; auto. }
+    by iApply (ress_split with "HQ Hi1 Hi2 HQR"). }
   iAssert (sts_ownS γ (i_states i1) {[Change i1]}
     ∗ sts_ownS γ (i_states i2) {[Change i2]})%I with ">[-]" as "[Hγ1 Hγ2]".
   { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
@@ -190,8 +190,7 @@ Qed.
 
 Lemma recv_weaken l P1 P2 : (P1 -∗ P2) -∗ recv l P1 -∗ recv l P2.
 Proof.
-  rewrite /recv.
-  iIntros "HP HP1"; iDestruct "HP1" as (γ P Q i) "(#Hctx&Hγ&Hi&HP1)".
+  rewrite /recv. iIntros "HP". iDestruct 1 as (γ P Q i) "(#Hctx&Hγ&Hi&HP1)".
   iExists γ, P, Q, i. iFrame "Hctx Hγ Hi".
   iNext. iIntros "HQ". by iApply "HP"; iApply "HP1".
 Qed.

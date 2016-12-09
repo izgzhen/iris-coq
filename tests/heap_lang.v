@@ -12,7 +12,7 @@ Section LiftingTests.
   Definition heap_e  : expr :=
     let: "x" := ref #1 in "x" <- !"x" + #1 ;; !"x".
 
-  Lemma heap_e_spec E : True ⊢ WP heap_e @ E {{ v, ⌜v = #2⌝ }}.
+  Lemma heap_e_spec E : WP heap_e @ E {{ v, ⌜v = #2⌝ }}%I.
   Proof.
     iIntros "". rewrite /heap_e.
     wp_alloc l. wp_let. wp_load. wp_op. wp_store. by wp_load.
@@ -23,7 +23,7 @@ Section LiftingTests.
     let: "y" := ref #1 in
     "x" <- !"x" + #1 ;; !"x".
 
-  Lemma heap_e2_spec E : True ⊢ WP heap_e2 @ E {{ v, ⌜v = #2⌝ }}.
+  Lemma heap_e2_spec E : WP heap_e2 @ E {{ v, ⌜v = #2⌝ }}%I.
   Proof.
     iIntros "". rewrite /heap_e2.
     wp_alloc l. wp_let. wp_alloc l'. wp_let.
@@ -40,7 +40,7 @@ Section LiftingTests.
 
   Lemma FindPred_spec n1 n2 E Φ :
     n1 < n2 →
-    Φ #(n2 - 1) ⊢ WP FindPred #n2 #n1 @ E {{ Φ }}.
+    Φ #(n2 - 1) -∗ WP FindPred #n2 #n1 @ E {{ Φ }}.
   Proof.
     iIntros (Hn) "HΦ". iLöb as "IH" forall (n1 Hn).
     wp_rec. wp_let. wp_op. wp_let. wp_op=> ?; wp_if.
@@ -48,7 +48,7 @@ Section LiftingTests.
     - by assert (n1 = n2 - 1) as -> by omega.
   Qed.
 
-  Lemma Pred_spec n E Φ : ▷ Φ #(n - 1) ⊢ WP Pred #n @ E {{ Φ }}.
+  Lemma Pred_spec n E Φ : ▷ Φ #(n - 1) -∗ WP Pred #n @ E {{ Φ }}.
   Proof.
     iIntros "HΦ". wp_lam. wp_op=> ?; wp_if.
     - wp_op. wp_op.
@@ -62,5 +62,5 @@ Section LiftingTests.
   Proof. iIntros "". wp_apply Pred_spec. wp_let. by wp_apply Pred_spec. Qed.
 End LiftingTests.
 
-Lemma heap_e_adequate σ : adequate heap_e σ (λ v, v = #2).
+Lemma heap_e_adequate σ : adequate heap_e σ (= #2).
 Proof. eapply (heap_adequacy heapΣ)=> ?. by apply heap_e_spec. Qed.

@@ -14,7 +14,7 @@ Lemma barrier_spec (N : namespace) :
     (∀ l P, {{ send l P ∗ P }} signal #l {{ _, True }}) ∧
     (∀ l P, {{ recv l P }} wait #l {{ _, P }}) ∧
     (∀ l P Q, recv l (P ∗ Q) ={↑N}=> recv l P ∗ recv l Q) ∧
-    (∀ l P Q, (P -∗ Q) ⊢ recv l P -∗ recv l Q).
+    (∀ l P Q, (P -∗ Q) -∗ recv l P -∗ recv l Q).
 Proof.
   exists (λ l, CofeMor (recv N l)), (λ l, CofeMor (send N l)).
   split_and?; simpl.

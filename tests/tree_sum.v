@@ -34,10 +34,10 @@ Definition sum' : val := λ: "t",
   !"l".
 
 Lemma sum_loop_wp `{!heapG Σ} v t l (n : Z) (Φ : val → iProp Σ) :
-  l ↦ #n ∗ is_tree v t ∗ (l ↦ #(sum t + n) -∗ is_tree v t -∗ Φ #())
-  ⊢ WP sum_loop v #l {{ Φ }}.
+  l ↦ #n -∗ is_tree v t -∗ (l ↦ #(sum t + n) -∗ is_tree v t -∗ Φ #()) -∗
+  WP sum_loop v #l {{ Φ }}.
 Proof.
-  iIntros "(Hl & Ht & HΦ)".
+  iIntros "Hl Ht HΦ".
   iLöb as "IH" forall (v t l n Φ). wp_rec. wp_let.
   destruct t as [n'|tl tr]; simpl in *.
   - iDestruct "Ht" as "%"; subst.
@@ -54,11 +54,11 @@ Proof.
 Qed.
 
 Lemma sum_wp `{!heapG Σ} v t Φ :
-  is_tree v t ∗ (is_tree v t -∗ Φ #(sum t)) ⊢ WP sum' v {{ Φ }}.
+  is_tree v t -∗ (is_tree v t -∗ Φ #(sum t)) -∗ WP sum' v {{ Φ }}.
 Proof.
-  iIntros "[Ht HΦ]". rewrite /sum' /=.
+  iIntros "Ht HΦ". rewrite /sum' /=.
   wp_let. wp_alloc l as "Hl". wp_let.
-  wp_apply (sum_loop_wp with "[- $Ht $Hl]").
+  wp_apply (sum_loop_wp with "Hl Ht").
   rewrite Z.add_0_r.
   iIntros "Hl Ht". wp_seq. wp_load. by iApply "HΦ".
 Qed.
