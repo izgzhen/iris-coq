@@ -98,7 +98,6 @@ heap_lang/lang.v
 heap_lang/tactics.v
 heap_lang/wp_tactics.v
 heap_lang/rules.v
-heap_lang/derived.v
 heap_lang/notation.v
 heap_lang/lib/spawn.v
 heap_lang/lib/par.v

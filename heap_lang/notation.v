@@ -1,5 +1,5 @@
-From iris.heap_lang Require Export derived.
-Export heap_lang.
+From iris.program_logic Require Import language.
+From iris.heap_lang Require Export lang tactics.
 
 Coercion LitInt : Z >-> base_lit.
 Coercion LitBool : bool >-> base_lit.
