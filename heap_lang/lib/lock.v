@@ -1,4 +1,5 @@
-From iris.heap_lang Require Import heap notation.
+From iris.heap_lang Require Export rules notation.
+From iris.base_logic.lib Require Export invariants.
 
 Structure lock Σ `{!heapG Σ} := Lock {
   (* -- operations -- *)
@@ -14,11 +15,10 @@ Structure lock Σ `{!heapG Σ} := Lock {
   is_lock_ne N γ lk n: Proper (dist n ==> dist n) (is_lock N γ lk);
   is_lock_persistent N γ lk R : PersistentP (is_lock N γ lk R);
   locked_timeless γ : TimelessP (locked γ);
-  locked_exclusive γ : locked γ ∗ locked γ ⊢ False;
+  locked_exclusive γ : locked γ -∗ locked γ -∗ False;
   (* -- operation specs -- *)
   newlock_spec N (R : iProp Σ) :
-    heapN ⊥ N →
-    {{{ heap_ctx ∗ R }}} newlock #() {{{ lk γ, RET lk; is_lock N γ lk R }}};
+    {{{ R }}} newlock #() {{{ lk γ, RET lk; is_lock N γ lk R }}};
   acquire_spec N γ lk R :
     {{{ is_lock N γ lk R }}} acquire lk {{{ RET #(); locked γ ∗ R }}};
   release_spec N γ lk R :

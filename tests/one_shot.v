@@ -29,18 +29,18 @@ Instance subG_one_shotΣ {Σ} : subG one_shotΣ Σ → one_shotG Σ.
 Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
 
 Section proof.
-Context `{!heapG Σ, !one_shotG Σ} (N : namespace) (HN : heapN ⊥ N).
+Context `{!heapG Σ, !one_shotG Σ} (N : namespace).
 
 Definition one_shot_inv (γ : gname) (l : loc) : iProp Σ :=
   (l ↦ NONEV ∗ own γ Pending ∨ ∃ n : Z, l ↦ SOMEV #n ∗ own γ (Shot n))%I.
 
 Lemma wp_one_shot (Φ : val → iProp Σ) :
-  heap_ctx ∗ (∀ f1 f2 : val,
+  (∀ f1 f2 : val,
     (∀ n : Z, □ WP f1 #n {{ w, ⌜w = #true⌝ ∨ ⌜w = #false⌝ }}) ∗
     □ WP f2 #() {{ g, □ WP g #() {{ _, True }} }} -∗ Φ (f1,f2)%V)
   ⊢ WP one_shot_example #() {{ Φ }}.
 Proof.
-  iIntros "[#? Hf] /=".
+  iIntros "Hf /=".
   rewrite -wp_fupd /one_shot_example /=. wp_seq. wp_alloc l as "Hl". wp_let.
   iMod (own_alloc Pending) as (γ) "Hγ"; first done.
   iMod (inv_alloc N _ (one_shot_inv γ l) with "[Hl Hγ]") as "#HN".
@@ -83,14 +83,13 @@ Proof.
 Qed.
 
 Lemma ht_one_shot (Φ : val → iProp Σ) :
-  heap_ctx ⊢ {{ True }} one_shot_example #()
+  {{ True }} one_shot_example #()
     {{ ff,
       (∀ n : Z, {{ True }} Fst ff #n {{ w, ⌜w = #true⌝ ∨ ⌜w = #false⌝ }}) ∗
       {{ True }} Snd ff #() {{ g, {{ True }} g #() {{ _, True }} }}
     }}.
 Proof.
-  iIntros "#? !# _". iApply wp_one_shot. iSplit; first done.
-  iIntros (f1 f2) "[#Hf1 #Hf2]"; iSplit.
+  iIntros "!# _". iApply wp_one_shot. iIntros (f1 f2) "[#Hf1 #Hf2]"; iSplit.
   - iIntros (n) "!# _". wp_proj. iApply "Hf1".
   - iIntros "!# _". wp_proj.
     iApply (wp_wand with "Hf2"). by iIntros (v) "#? !# _".

@@ -16,15 +16,17 @@ Lemma wp_ectx_bind {E e} K Φ :
 Proof. apply: weakestpre.wp_bind. Qed.
 
 Lemma wp_lift_head_step E Φ e1 :
-  (|={E,∅}=> ∃ σ1, ⌜head_reducible e1 σ1⌝ ∗ ▷ ownP σ1 ∗
-    ▷ ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2
-          ={∅,E}=∗ WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
+  to_val e1 = None →
+  (∀ σ1, state_interp σ1 ={E,∅}=∗
+    ⌜head_reducible e1 σ1⌝ ∗
+    ▷ ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ ={∅,E}=∗
+      state_interp σ2 ∗ WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  iIntros "H". iApply (wp_lift_step E); try done.
-  iMod "H" as (σ1) "(%&Hσ1&Hwp)". iModIntro. iExists σ1.
-  iSplit; first by eauto. iFrame. iNext. iIntros (e2 σ2 efs) "% ?".
-  iApply ("Hwp" with "* []"); by eauto.
+  iIntros (?) "H". iApply (wp_lift_step E)=>//. iIntros (σ1) "Hσ".
+  iMod ("H" $! σ1 with "Hσ") as "[% H]"; iModIntro.
+  iSplit; first by eauto. iNext. iIntros (e2 σ2 efs) "%".
+  iApply "H". by eauto.
 Qed.
 
 Lemma wp_lift_pure_head_step E Φ e1 :
@@ -38,47 +40,48 @@ Proof.
   iIntros (????). iApply "H". eauto.
 Qed.
 
-Lemma wp_lift_atomic_head_step {E Φ} e1 σ1 :
-  head_reducible e1 σ1 →
-  ▷ ownP σ1 ∗ ▷ (∀ e2 σ2 efs,
-  ⌜head_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2 -∗
-    default False (to_val e2) Φ ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
+Lemma wp_lift_atomic_head_step {E Φ} e1 :
+  to_val e1 = None →
+  (∀ σ1, state_interp σ1 ={E}=∗
+    ⌜head_reducible e1 σ1⌝ ∗
+    ▷ ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ ={E}=∗
+      state_interp σ2 ∗
+      default False (to_val e2) Φ ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  iIntros (?) "[? H]". iApply wp_lift_atomic_step; eauto. iFrame. iNext.
-  iIntros (???) "% ?". iApply ("H" with "* []"); eauto.
+  iIntros (?) "H". iApply wp_lift_atomic_step; eauto.
+  iIntros (σ1) "Hσ1". iMod ("H" $! σ1 with "Hσ1") as "[% H]"; iModIntro.
+  iSplit; first by eauto. iNext. iIntros (e2 σ2 efs) "%". iApply "H"; auto.
 Qed.
 
-Lemma wp_lift_atomic_det_head_step {E Φ e1} σ1 v2 σ2 efs :
-  head_reducible e1 σ1 →
-  (∀ e2' σ2' efs', head_step e1 σ1 e2' σ2' efs' →
-    σ2 = σ2' ∧ to_val e2' = Some v2 ∧ efs = efs') →
-  ▷ ownP σ1 ∗ ▷ (ownP σ2 -∗
-    Φ v2 ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
+Lemma wp_lift_atomic_head_step_no_fork {E Φ} e1 :
+  to_val e1 = None →
+  (∀ σ1, state_interp σ1 ={E}=∗
+    ⌜head_reducible e1 σ1⌝ ∗
+    ▷ ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ ={E}=∗
+      ⌜efs = []⌝ ∗ state_interp σ2 ∗ default False (to_val e2) Φ)
   ⊢ WP e1 @ E {{ Φ }}.
-Proof. eauto using wp_lift_atomic_det_step. Qed.
-
-Lemma wp_lift_atomic_det_head_step' {E e1} σ1 v2 σ2 :
-  head_reducible e1 σ1 →
-  (∀ e2' σ2' efs', head_step e1 σ1 e2' σ2' efs' →
-    σ2 = σ2' ∧ to_val e2' = Some v2 ∧ [] = efs') →
-  {{{ ▷ ownP σ1 }}} e1 @ E {{{ RET v2; ownP σ2 }}}.
 Proof.
-  intros. rewrite -(wp_lift_atomic_det_head_step σ1 v2 σ2 []); [|done..].
-  rewrite big_sepL_nil right_id. by apply uPred.wand_intro_r.
+  iIntros (?) "H". iApply wp_lift_atomic_head_step; eauto.
+  iIntros (σ1) "Hσ1". iMod ("H" $! σ1 with "Hσ1") as "[$ H]"; iModIntro.
+  iNext; iIntros (v2 σ2 efs) "%".
+  iMod ("H" $! v2 σ2 efs with "[#]") as "(% & $ & $)"=>//; subst.
+  by iApply big_sepL_nil.
 Qed.
 
 Lemma wp_lift_pure_det_head_step {E Φ} e1 e2 efs :
   (∀ σ1, head_reducible e1 σ1) →
-  (∀ σ1 e2' σ2 efs', head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
+  (∀ σ1 e2' σ2 efs',
+    head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
   ▷ (WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof. eauto using wp_lift_pure_det_step. Qed.
 
-Lemma wp_lift_pure_det_head_step' {E Φ} e1 e2 :
+Lemma wp_lift_pure_det_head_step_no_fork {E Φ} e1 e2 :
   to_val e1 = None →
   (∀ σ1, head_reducible e1 σ1) →
-  (∀ σ1 e2' σ2 efs', head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
+  (∀ σ1 e2' σ2 efs',
+    head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
   ▷ WP e2 @ E {{ Φ }} ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   intros. rewrite -(wp_lift_pure_det_step e1 e2 []) ?big_sepL_nil ?right_id; eauto.
