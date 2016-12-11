@@ -295,7 +295,7 @@ The frame-preserving update involves the notion of a \emph{local update}:
 \newcommand\lupd{\stackrel{\mathrm l}{\mupd}}
 \begin{defn}
   It is possible to do a \emph{local update} from $\melt_1$ and $\meltB_1$ to $\melt_2$ and $\meltB_2$, written $(\melt_1, \meltB_1) \lupd (\melt_2, \meltB_2)$, if
-  \[ \All n, \maybe{\melt_\f}. x_1 \in \mval_n \land \melt_1 \nequiv{n} \meltB_1 \mtimes \maybe{\melt_\f} \Ra \melt_2 \in \mval_n \land \melt_2 \nequiv{n} \meltB_2 \mtimes \maybe{\melt_\f} \]
+  \[ \All n, \maybe{\melt_\f}. \melt_1 \in \mval_n \land \melt_1 \nequiv{n} \meltB_1 \mtimes \maybe{\melt_\f} \Ra \melt_2 \in \mval_n \land \melt_2 \nequiv{n} \meltB_2 \mtimes \maybe{\melt_\f} \]
 \end{defn}
 In other words, the idea is that for every possible frame $\maybe{\melt_\f}$ completing $\meltB_1$ to $\melt_1$, the same frame also completes $\meltB_2$ to $\melt_2$.
 
