@@ -130,7 +130,7 @@ Here are some derived rules:
   \inferH{Slice-insert-full}{}
   {\later\propB * \lateropt b\ABox\namesp\prop{f} \vs[\namesp] \Exists\sname \notin \dom(f). \always\BoxSlice\namesp\propB\sname * \lateropt b\ABox\namesp{\prop * \propB}{\mapinsert\sname\BoxFull{f}}}
 
-  \inferH{Slice-insert-empty}
+  \inferH{Slice-delete-full}
   {f(\sname) = \BoxFull}
   {\BoxSlice\namesp\propB\sname \proves \lateropt b \ABox\namesp\prop{f} \vs[\namesp] \later\propB * \Exists \prop'. \lateropt b (\later(\prop = \prop' * \propB) * \ABox\namesp{\prop'}{\mapinsert\sname\bot{f}})}
 
