@@ -59,6 +59,92 @@ from which we can derive
   {\NaInv\pid\namesp\prop \proves \Acc[\namesp]{\NaTokE\pid\mask}{\later\prop * \NaTokE\pid{\mask \setminus \namesp}}}
 \end{mathpar}
 
+\subsection{Boxes}
+
+The idea behind the \emph{boxes} is to have an assertion $\prop$ that is actually split into a number of pieces, each of which can be taken out and back in separately.
+In some sense, this is a replacement for having an ``authoritative PCM of Iris assertions itself''.
+It is similar to the pattern involving saved propositions that was used for the barrier~\cite{iris2}, but more complicated because there are some operations that we want to perform without a later.
+
+Roughly, the idea is that a \emph{box} is a container for an assertion $\prop$.
+A box consists of a bunch of \emph{slices} which decompose $\prop$ into a separating conjunction of the assertions $\propB_\sname$ governed by the individual slices.
+Each slice is either \emph{full} (it right now contains $\propB_\sname$), or \emph{empty} (it does not contain anything currently).
+The assertion governing the box keeps track of the state of all the slices that make up the box.
+The crux is that opening and closing of a slice can be done even if we only have ownership of the boxes ``later'' ($\later$).
+
+The interface for boxes is as follows:
+The two core assertions are: $\BoxSlice\namesp\prop\sname$, saying that there is a slice in namespace $\namesp$ with name $\sname$  and content $\prop$; and $\ABox\namesp\prop{f}$, saying that $f$ describes the slices of a box in namespace $\namesp$, such that all the slices together contain $\prop$. Here, $f$ is of type $\nat \fpfn \BoxState$ mapping names to states, where $\BoxState \eqdef \set{\BoxFull, \BoxEmp}$.
+\begin{mathpar}
+  \inferH{Box-create}{}
+  {\TRUE \vs[\namesp] \ABox\namesp\TRUE\emptyset}
+
+  \inferH{Slice-insert-empty}{}
+  {\lateropt b\ABox\namesp\prop{f} \vs[\namesp] \Exists\sname \notin \dom(f). \always\BoxSlice\namesp\propB\sname * \lateropt b\ABox\namesp{\prop * \propB}{\mapinsert\sname\BoxEmp{f}}}
+
+  \inferH{Slice-delete-empty}
+  {f(\sname) = \BoxEmp}
+  {\BoxSlice\namesp\propB\sname \proves \lateropt b\ABox\namesp\prop{f} \vs[\namesp] \Exists \prop'. \lateropt b(\later(\prop = \prop' * \propB) * \ABox\namesp{\prop'}{\mapinsert\gname\bot{f}})}
+
+  \inferH{Slice-fill}
+  {f(\sname) = \BoxEmp}
+  {\BoxSlice\namesp\propB\sname \proves \lateropt b\propB * \later\ABox\namesp\prop{f} \vs[\namesp] \lateropt b\ABox\namesp\prop{\mapinsert\sname\BoxFull{f}}}
+
+  \inferH{Slice-empty}
+  {f(\sname) = \BoxFull}
+  {\BoxSlice\namesp\propB\sname \proves \lateropt b\ABox\namesp\prop{f} \vs[\namesp] \later\propB * \lateropt b\ABox\namesp\prop{\mapinsert\sname\BoxEmp{f}}}
+
+  \inferH{Box-fill}
+  {\All\sname\in\dom(f). f(\sname) = \BoxEmp}
+  {\later\prop * \ABox\namesp\prop{f} \vs[\namesp] \ABox\namesp\prop{\mapinsertComp\sname\BoxFull{\sname\in\dom(f)}{f}}}
+
+  \inferH{Box-empty}
+  {\All\sname\in\dom(f). f(\sname) = \BoxFull}
+  {\ABox\namesp\prop{f} \vs[\namesp] \later\prop * \ABox\namesp\prop{\mapinsertComp\sname\BoxEmp{\sname\in\dom(f)}{f}}}
+\end{mathpar}
+Above, $\lateropt b \prop$ is syntactic sugar for $\later\prop$ (if $b$ is $1$) or $\prop$ (if $b$ is $0$).
+This is essentially an \emph{optional later}, indicating that the lemmas can be applied with \textlog{Box} being owned now or later, and that ownership is returned the same way.
+
+\begingroup
+\paragraph{Model.}
+\newcommand\BoxM{\textmon{Box}}
+\newcommand\SliceInv{\textlog{SliceInv}}
+
+The above rules are validated by the following model.
+We need a CMRA as follows:
+\begin{align*}
+  \BoxState \eqdef{}& \BoxFull + \BoxEmp \\
+  \BoxM \eqdef{}& \authm(\maybe{\exm(\BoxState)}) \times \maybe{\agm(\latert \iProp)}
+\end{align*}
+
+Now we can define the assertions:
+\begin{align*}
+  \SliceInv(\sname, \prop) \eqdef{}& \Exists b. \ownGhost\sname{(\authfull b, \munit)} * (b = 1 \Ra \prop) \\
+  \BoxSlice\namesp\prop\sname \eqdef{}& \ownGhost\sname{(\munit, \prop)} * \knowInv\namesp{\SliceInv(\sname,\prop)} \\
+  \ABox\namesp\prop{f} \eqdef{}& \Exists \propB : \nat \to \Prop. \later\left( \prop = \Sep_{\sname \in \dom(f)} \propB(\sname) \right ) * {}\\
+  & \Sep_{\sname \in \dom(f)} \Exists \gname. \ownGhost\sname{(\authfrag f(\sname), \propB(\sname))} * \knowInv\namesp{\SliceInv(\sname,\propB(\sname))}
+\end{align*}
+\endgroup % Model paragraph
+
+\paragraph{Derived rules.}
+Here are some derived rules:
+\begin{mathpar}
+  \inferH{Slice-insert-full}{}
+  {\later\propB * \lateropt b\ABox\namesp\prop{f} \vs[\namesp] \Exists\sname \notin \dom(f). \always\BoxSlice\namesp\propB\sname * \lateropt b\ABox\namesp{\prop * \propB}{\mapinsert\sname\BoxFull{f}}}
+
+  \inferH{Slice-insert-empty}
+  {f(\sname) = \BoxFull}
+  {\BoxSlice\namesp\propB\sname \proves \lateropt b \ABox\namesp\prop{f} \vs[\namesp] \later\propB * \Exists \prop'. \lateropt b (\later(\prop = \prop' * \propB) * \ABox\namesp{\prop'}{\mapinsert\sname\bot{f}})}
+
+  \inferH{Slice-split}
+  {f(\sname) = s}
+  {\kern-4ex\BoxSlice\namesp{\propB_1 * \propB_2}\sname \proves \lateropt b \ABox\namesp\prop{f} \vs[\namesp] \Exists \sname_1 \notin \dom(f), \sname_2 \notin \dom(f). \sname_1 \neq \sname_1 \land {}\\\kern5ex \always\BoxSlice\namesp{\propB_1}{\sname_1} * \always\BoxSlice\namesp{\propB_2}{\sname_2} * \lateropt b \ABox\namesp\prop{\mapinsert{\sname_2}{s}{\mapinsert{\sname_1}{s}{\mapinsert\sname\bot{f}}}}}
+
+  \inferH{Slice-merge}
+  {\sname_1 \neq \sname_2 \and f(\sname_1) = f(\sname_2) = s}
+  {\BoxSlice\namesp{\propB_1}{\sname_1}, \BoxSlice\namesp{\propB_2}{\sname_2} \proves \lateropt b \ABox\namesp\prop{f} \vs[\namesp] \Exists \sname \notin \dom(f) \setminus \set{\sname_1, \sname_2}. {}\\\kern5ex \always\BoxSlice\namesp{\propB_1 * \propB_2}\sname * \lateropt b \ABox\namesp\prop{\mapinsert\sname{s}{\mapinsert{\sname_2}{\bot}{\mapinsert{\sname_1}{\bot}{f}}}}}
+\end{mathpar}
+
+
+
 
 % TODO: These need syncing with Coq
 % \subsection{STSs with interpretation}\label{sec:stsinterp}

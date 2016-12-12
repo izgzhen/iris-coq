@@ -244,9 +244,9 @@
 \NewDocumentCommand\wpre{m O{} m}%
   {\textlog{wp}_{#2}\spac#1\spac{\left\{#3\right\}}}
 
-\newcommand{\later}{\mathop{\triangleright}}
+\newcommand{\later}{\mathop{{\triangleright}}}
+\newcommand*{\lateropt}[1]{\mathop{{\later}^{#1}}}
 \newcommand{\always}{\mathop{\Box}}
-\newcommand{\pure}{\mathop{\blacksquare}}
 
 %% Invariants and Ghost ownership
 % PDS: Was 0pt inner, 2pt outer.
@@ -429,12 +429,21 @@
 %% Stored Propositions
 \newcommand{\mapstoprop}{\mathrel{\kern-0.5ex\tikz[baseline=(m)]{\node at (0,0) (m){}; \draw[line cap=round] (0,0.16) -- (0,-0.004);}\kern-1.5ex\Ra}}
 
-% Non-atomic invariants
+%% Non-atomic invariants
 \newcommand*\pid{p}
 \newcommand\NaInv[3]{\textlog{NaInv}^{#1.#2}(#3)}
 
 \newcommand*\NaTok[1]{{[}\textrm{NaInv}:#1{]}}
 \newcommand*\NaTokE[2]{{[}\textrm{NaInv}:#1.#2{]}}
+
+%% Boxes
+\newcommand*\sname{i}
+\newcommand*\BoxState{\textlog{BoxState}}
+\newcommand*\BoxFull{\textlog{full}}
+\newcommand*\BoxEmp{\textlog{empty}}
+\newcommand*\BoxSlice[3]{\textlog{BoxSlice}(#1, #2, #3)}
+\newcommand*\ABox[3]{\textlog{Box}(#1, #2, #3)}
+
 
 \endinput
 
