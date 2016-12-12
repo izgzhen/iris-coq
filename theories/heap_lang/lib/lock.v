@@ -1,4 +1,4 @@
-From iris.heap_lang Require Export op_rules notation.
+From iris.heap_lang Require Export lifting notation.
 From iris.base_logic.lib Require Export invariants.
 
 Structure lock Σ `{!heapG Σ} := Lock {
