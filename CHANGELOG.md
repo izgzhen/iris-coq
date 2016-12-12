@@ -47,7 +47,7 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 
 ## Iris 2.0-rc2
 
-This version matches the final ICFP paper.
+This version matches the final ICFP 2016 paper.
 
 * [algebra] Make the core of an RA or CMRA a partial function.
 * [program_logic/lifting] Lifting lemmas no longer round-trip through a
@@ -57,4 +57,4 @@ This version matches the final ICFP paper.
 
 ## Iris 2.0-rc1
 
-This is the Coq development and Iris Documentation as submitted to ICFP.
+This is the Coq development and Iris Documentation as submitted to ICFP 2016.
