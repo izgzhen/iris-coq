@@ -52,7 +52,7 @@ Local Hint Constructors head_step.
 Local Hint Resolve alloc_fresh.
 Local Hint Resolve to_of_val.
 
-Section rules.
+Section lifting.
 Context `{heapG Σ}.
 Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val → iProp Σ.
@@ -276,4 +276,4 @@ Proof.
   intros. rewrite -wp_bin_op //; [].
   destruct (bool_decide_reflect (v1 = v2)); by eauto.
 Qed.
-End rules.
+End lifting.
