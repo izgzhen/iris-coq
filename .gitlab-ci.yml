@@ -1,17 +1,41 @@
-image: coq:8.5
+image: ralfjung/opam-ci:latest
 
-buildjob:
+iris-coq8.5.3:
   tags:
   - coq
   script:
-  - coqc -v
+  # prepare
+  - . build/opam-ci.sh 'coq 8.5.3' 'coq-mathcomp-ssreflect 1.6'
+  # build
   - 'time make -j8 TIMED=y 2>&1 | tee build-log.txt'
   - 'fgrep Axiom build-log.txt && exit 1'
   - 'cat build-log.txt  | egrep "[a-zA-Z0-9_/-]+ \(user: [0-9]" | tee build-time.txt'
-  - make validate
+  #- make validate
+  cache:
+    key: "coq8.5.3"
+    paths:
+    - opamroot/
   only:
   - master
+  - ci
   - timing
   artifacts:
     paths:
     - build-time.txt
+
+iris-coq8.6beta:
+  tags:
+  - coq
+  script:
+  # prepare
+  - . build/opam-ci.sh 'coq 8.6.dev 'coq-mathcomp-ssreflect dev'
+  # build
+  - 'time make -j8'
+  cache:
+    key: "coq8.6"
+    paths:
+    - opamroot/
+  only:
+  - master
+  - ci
+  - timing
