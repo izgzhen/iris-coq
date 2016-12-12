@@ -96,7 +96,6 @@ theories/program_logic/ownp.v
 theories/heap_lang/lang.v
 theories/heap_lang/tactics.v
 theories/heap_lang/lifting.v
-theories/heap_lang/wp_tactics.v
 theories/heap_lang/notation.v
 theories/heap_lang/lib/spawn.v
 theories/heap_lang/lib/par.v
