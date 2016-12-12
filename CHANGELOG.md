@@ -5,9 +5,9 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 
 ## Iris 3.0 (unfinished)
 
-* There now is a deprecation process.  The modules `*.deprecated`
-  contain deprecated notations and definitions that are provided for
-  backwards compatibility and will be removed in a future version of Iris.
+* There now is a deprecation process.  The modules `*.deprecated` contain
+  deprecated notations and definitions that are provided for backwards
+  compatibility and will be removed in a future version of Iris.
 * View shifts are radically simplified to just internalize frame-preserving
   updates.  Weakestpre is defined inside the logic, and invariants and view
   shifts with masks are also coded up inside Iris.  Adequacy of weakestpre is
@@ -23,11 +23,11 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 * Renaming and moving things around: uPred and the rest of the base logic are
   in `base_logic`, while `program_logic` is for everything involving the
   general Iris notion of a language.
-* [#] Slightly weaker notion of atomicity: an expression is atomic if it reduces
-  in one step to something that does not reduce further.
-* Changed notation for embedding Coq assertions into Iris.  The new notation
-  is ⌜φ⌝.  Also removed `=` and `⊥` from the Iris scope.
-  (The old notations are provided in `base_logic.deprecated`.)
+* Slightly weaker notion of atomicity: an expression is atomic if it reduces in
+  one step to something that does not reduce further.
+* Changed notation for embedding Coq assertions into Iris.  The new notation is
+  ⌜φ⌝.  Also removed `=` and `⊥` from the Iris scope.  (The old notations are
+  provided in `base_logic.deprecated`.)
 * Up-closure of namespaces is now a notation (↑) instead of a coercion.
 * With invariants and the physical state being handled in the logic, there
   is no longer any reason to demand the CMRA unit to be discrete.
