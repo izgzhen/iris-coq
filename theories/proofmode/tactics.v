@@ -42,16 +42,17 @@ Tactic Notation "iMatchHyp" tactic1(tac) :=
   end.
 
 (** * Start a proof *)
-Tactic Notation "iProof" :=
+Ltac iStartProof :=
   lazymatch goal with
-  | |- of_envs _ ⊢ _ => fail "iProof: already in Iris proofmode"
+  | |- of_envs _ ⊢ _ => idtac
   | |- ?P =>
-    match eval hnf in P with
+    lazymatch eval hnf in P with
     (* need to use the unfolded version of [uPred_valid] due to the hnf *)
     | True ⊢ _ => apply tac_adequate
     | _ ⊢ _ => apply uPred.wand_entails, tac_adequate
     (* need to use the unfolded version of [⊣⊢] due to the hnf *)
     | uPred_equiv' _ _ => apply uPred.iff_equiv, tac_adequate
+    | _ => fail "iStartProof: not a uPred"
     end
   end.
 
@@ -389,6 +390,7 @@ Tactic Notation "iIntoValid" open_constr(t) :=
 Tactic Notation "iPoseProofCore" open_constr(lem) "as" constr(p) tactic(tac) :=
   let pose_trm t tac :=
     let Htmp := iFresh in
+    iStartProof;
     lazymatch type of t with
     | string =>
        eapply tac_pose_proof_hyp with _ _ t _ Htmp _;
@@ -506,10 +508,12 @@ Tactic Notation "iRevert" "(" ident(x1) ident(x2) ident(x3) ident(x4)
 
 (** * Disjunction *)
 Tactic Notation "iLeft" :=
+  iStartProof;
   eapply tac_or_l;
     [let P := match goal with |- FromOr ?P _ _ => P end in
      apply _ || fail "iLeft:" P "not a disjunction"|].
 Tactic Notation "iRight" :=
+  iStartProof;
   eapply tac_or_r;
     [let P := match goal with |- FromOr ?P _ _ => P end in
      apply _ || fail "iRight:" P "not a disjunction"|].
@@ -524,7 +528,7 @@ Local Tactic Notation "iOrDestruct" constr(H) "as" constr(H1) constr(H2) :=
 
 (** * Conjunction and separating conjunction *)
 Tactic Notation "iSplit" :=
-  try iProof;
+  iStartProof;
   lazymatch goal with
   | |- _ ⊢ _ =>
     eapply tac_and_split;
@@ -533,6 +537,7 @@ Tactic Notation "iSplit" :=
   end.
 
 Tactic Notation "iSplitL" constr(Hs) :=
+  iStartProof;
   let Hs := words Hs in
   eapply tac_sep_split with _ _ false Hs _ _; (* (js:=Hs) *)
     [let P := match goal with |- FromSep ?P _ _ => P end in
@@ -540,6 +545,7 @@ Tactic Notation "iSplitL" constr(Hs) :=
     |env_cbv; reflexivity || fail "iSplitL: hypotheses" Hs
                                   "not found in the context"| |].
 Tactic Notation "iSplitR" constr(Hs) :=
+  iStartProof;
   let Hs := words Hs in
   eapply tac_sep_split with _ _ true Hs _ _; (* (js:=Hs) *)
     [let P := match goal with |- FromSep ?P _ _ => P end in
@@ -575,6 +581,7 @@ Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
 
 (** * Existential *)
 Tactic Notation "iExists" uconstr(x1) :=
+  iStartProof;
   eapply tac_exist;
     [let P := match goal with |- FromExist ?P _ => P end in
      apply _ || fail "iExists:" P "not an existential"
@@ -614,11 +621,13 @@ Local Tactic Notation "iExistDestruct" constr(H)
 
 (** * Always *)
 Tactic Notation "iAlways":=
+  iStartProof;
   apply tac_always_intro;
     [reflexivity || fail "iAlways: spatial context non-empty"|].
 
 (** * Later *)
 Tactic Notation "iNext" open_constr(n) :=
+  iStartProof;
   let P := match goal with |- _ ⊢ ?P => P end in
   try lazymatch n with 0 => fail 1 "iNext: cannot strip 0 laters" end;
   eapply (tac_next _ _ n);
@@ -632,6 +641,7 @@ Tactic Notation "iNext":= iNext _.
 
 (** * Update modality *)
 Tactic Notation "iModIntro" :=
+  iStartProof;
   eapply tac_modal_intro;
     [let P := match goal with |- IntoModal _ ?P => P end in
      apply _ || fail "iModIntro:" P "not a modality"|].
@@ -775,11 +785,11 @@ Tactic Notation "iIntros" constr(pat) :=
     | ?pat :: ?pats =>
        let H := iFresh in iIntro H; iDestructHyp H as pat; go pats
     end
-  in let pats := intro_pat.parse pat in try iProof; go pats.
+  in let pats := intro_pat.parse pat in iStartProof; go pats.
 Tactic Notation "iIntros" := iIntros [IAll].
 
 Tactic Notation "iIntros" "(" simple_intropattern(x1) ")" :=
-  try iProof; iIntro ( x1 ).
+  try iStartProof; iIntro ( x1 ).
 Tactic Notation "iIntros" "(" simple_intropattern(x1)
     simple_intropattern(x2) ")" :=
   iIntros ( x1 ); iIntro ( x2 ).
@@ -908,7 +918,7 @@ Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
       | 0 => fail "iDestruct: cannot introduce" n "hypotheses"
       | 1 => repeat iIntroForall; let H := iFresh in iIntro H; tac H
       | S ?n' => repeat iIntroForall; let H := iFresh in iIntro H; go n'
-      end in intros; try iProof; go n in
+      end in intros; iStartProof; go n in
   lazymatch type of lem with
   | nat => intro_destruct lem
   | Z => (* to make it work in Z_scope. We should just be able to bind
@@ -1039,6 +1049,7 @@ Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
 
 (** * Löb Induction *)
 Tactic Notation "iLöbCore" "as" constr (IH) :=
+  iStartProof;
   eapply tac_löb with _ IH;
     [reflexivity || fail "iLöb: persistent context not empty"
     |env_cbv; reflexivity || fail "iLöb:" IH "not fresh"|].
@@ -1105,6 +1116,7 @@ Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
 
 (** * Assert *)
 Tactic Notation "iAssertCore" open_constr(Q) "with" constr(Hs) "as" tactic(tac) :=
+  iStartProof;
   let H := iFresh in
   let Hs := spec_pat.parse Hs in
   lazymatch Hs with

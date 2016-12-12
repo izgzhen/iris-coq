@@ -77,6 +77,7 @@ Qed.
 End heap.
 
 Tactic Notation "wp_apply" open_constr(lem) :=
+  iStartProof;
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     wp_bind_core K; iApply lem; try iNext)
@@ -84,6 +85,7 @@ Tactic Notation "wp_apply" open_constr(lem) :=
   end.
 
 Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
+  iStartProof;
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
@@ -105,6 +107,7 @@ Tactic Notation "wp_alloc" ident(l) :=
   let H := iFresh in wp_alloc l as H.
 
 Tactic Notation "wp_load" :=
+  iStartProof;
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
@@ -120,6 +123,7 @@ Tactic Notation "wp_load" :=
   end.
 
 Tactic Notation "wp_store" :=
+  iStartProof;
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
@@ -138,6 +142,7 @@ Tactic Notation "wp_store" :=
   end.
 
 Tactic Notation "wp_cas_fail" :=
+  iStartProof;
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
@@ -158,6 +163,7 @@ Tactic Notation "wp_cas_fail" :=
   end.
 
 Tactic Notation "wp_cas_suc" :=
+  iStartProof;
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
