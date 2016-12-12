@@ -19,24 +19,23 @@ Section fractional.
   Implicit Types Φ : Qp → uPred M.
   Implicit Types p q : Qp.
 
-  Lemma fractional_split `{Fractional _ Φ} p q :
+  Lemma fractional_split `{!Fractional Φ} p q :
     Φ (p + q)%Qp ⊢ Φ p ∗ Φ q.
   Proof. by rewrite fractional. Qed.
-  Lemma fractional_combine `{Fractional _ Φ} p q :
+  Lemma fractional_combine `{!Fractional Φ} p q :
     Φ p ∗ Φ q ⊢ Φ (p + q)%Qp.
   Proof. by rewrite fractional. Qed.
-  Lemma fractional_half_equiv `{Fractional _ Φ} p :
+  Lemma fractional_half_equiv `{!Fractional Φ} p :
     Φ p ⊣⊢ Φ (p/2)%Qp ∗ Φ (p/2)%Qp.
   Proof. by rewrite -(fractional (p/2) (p/2)) Qp_div_2. Qed.
-  Lemma fractional_half `{Fractional _ Φ} p :
+  Lemma fractional_half `{!Fractional Φ} p :
     Φ p ⊢ Φ (p/2)%Qp ∗ Φ (p/2)%Qp.
   Proof. by rewrite fractional_half_equiv. Qed.
-  Lemma half_fractional `{Fractional _ Φ} p q :
+  Lemma half_fractional `{!Fractional Φ} p q :
     Φ (p/2)%Qp ∗ Φ (p/2)%Qp ⊢ Φ p.
   Proof. by rewrite -fractional_half_equiv. Qed.
 
   (** Fractional and logical connectives *)
-
   Global Instance persistent_fractional P :
     PersistentP P → Fractional (λ _, P).
   Proof. intros HP q q'. by apply uPred_derived.always_sep_dup. Qed.
