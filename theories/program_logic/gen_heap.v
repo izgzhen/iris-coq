@@ -68,6 +68,9 @@ Section gen_heap.
   Lemma to_gen_heap_insert l v σ :
     to_gen_heap (<[l:=v]> σ) = <[l:=(1%Qp, to_agree (v:leibnizC V))]> (to_gen_heap σ).
   Proof. by rewrite /to_gen_heap fmap_insert. Qed.
+  Lemma to_gen_heap_delete l σ :
+    to_gen_heap (delete l σ) = delete l (to_gen_heap σ).
+  Proof. by rewrite /to_gen_heap fmap_delete. Qed.
 
   (** General properties of mapsto *)
   Global Instance mapsto_timeless l q v : TimelessP (l ↦{q} v).
@@ -119,6 +122,14 @@ Section gen_heap.
         (alloc_singleton_local_update _ _ (1%Qp, to_agree (v:leibnizC _)))=> //.
       by apply lookup_to_gen_heap_None. }
     iModIntro. rewrite to_gen_heap_insert. iFrame.
+  Qed.
+
+  Lemma gen_heap_dealloc σ l v :
+    gen_heap_ctx σ -∗ l ↦ v ==∗ gen_heap_ctx (delete l σ).
+  Proof.
+    iIntros "Hσ Hl". rewrite /gen_heap_ctx mapsto_eq /mapsto_def.
+    rewrite to_gen_heap_delete. iApply (own_update_2 with "Hσ Hl").
+    eapply auth_update_dealloc, (delete_singleton_local_update _ _ _).
   Qed.
 
   Lemma gen_heap_valid σ l q v : gen_heap_ctx σ -∗ l ↦{q} v -∗ ⌜σ !! l = Some v⌝.
