@@ -78,10 +78,12 @@ Qed.
 
 Lemma fin_to_nat_lt {n} (i : fin n) : fin_to_nat i < n.
 Proof. induction i; simpl; lia. Qed.
-Lemma fin_to_of_nat n m (H : n < m) : fin_to_nat (Fin.of_nat_lt H) = n.
+Lemma fin_to_of_nat n m (H : n < m) : fin_to_nat (fin_of_nat H) = n.
 Proof.
   revert m H. induction n; intros [|?]; simpl; auto; intros; exfalso; lia.
 Qed.
+Lemma fin_of_to_nat {n} (i : fin n) H : @fin_of_nat (fin_to_nat i) n H = i.
+Proof. apply (inj fin_to_nat), fin_to_of_nat. Qed.
 
 Fixpoint fin_plus_inv {n1 n2} : ∀ (P : fin (n1 + n2) → Type)
     (H1 : ∀ i1 : fin n1, P (Fin.L n2 i1))
@@ -258,16 +260,28 @@ Lemma vec_to_list_take_drop_lookup {A n} (v : vec A n) (i : fin n) :
   vec_to_list v = take i v ++ v !!! i :: drop (S i) v.
 Proof. rewrite <-(take_drop i v) at 1. by rewrite vec_to_list_drop_lookup. Qed.
 
+Lemma vlookup_lookup {A n} (v : vec A n) (i : fin n) x :
+  v !!! i = x ↔ (v : list A) !! (i : nat) = Some x.
+Proof.
+  induction v as [|? ? v IH]; inv_fin i. simpl; split; congruence. done.
+Qed.
+Lemma vlookup_lookup' {A n} (v : vec A n) (i : nat) x :
+  (∃ H : i < n, v !!! (fin_of_nat H) = x) ↔ (v : list A) !! i = Some x.
+Proof.
+  split.
+  - intros [Hlt ?]. rewrite <-(fin_to_of_nat i n Hlt). by apply vlookup_lookup.
+  - intros Hvix. assert (Hlt:=lookup_lt_Some _ _ _ Hvix).
+    rewrite vec_to_list_length in Hlt. exists Hlt.
+    apply vlookup_lookup. by rewrite fin_to_of_nat.
+Qed.
 Lemma elem_of_vlookup {A n} (v : vec A n) x :
   x ∈ vec_to_list v ↔ ∃ i, v !!! i = x.
 Proof.
-  split.
-  - induction v; simpl; [by rewrite elem_of_nil |].
-    inversion 1; subst; [by eexists 0%fin|].
-    destruct IHv as [i ?]; trivial. by exists (FS i).
-  - intros [i ?]; subst. induction v as [|??? IH]; inv_fin i; [by left|].
-    right; apply IH.
+  rewrite elem_of_list_lookup. setoid_rewrite <-vlookup_lookup'.
+  split; [by intros (?&?&?); eauto|]. intros [i Hx].
+  exists i, (fin_to_nat_lt _). by rewrite fin_of_to_nat.
 Qed.
+
 Lemma Forall_vlookup {A} (P : A → Prop) {n} (v : vec A n) :
   Forall P (vec_to_list v) ↔ ∀ i, P (v !!! i).
 Proof. rewrite Forall_forall. setoid_rewrite elem_of_vlookup. naive_solver. Qed.
