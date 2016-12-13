@@ -35,7 +35,7 @@ Section proofs.
   Proof. intros ??. by rewrite -own_op. Qed.
   Global Instance cinv_own_as_fractionnal γ q :
     AsFractional (cinv_own γ q) (cinv_own γ) q.
-  Proof. done. Qed.
+  Proof. split. done. apply _. Qed.
 
   Lemma cinv_own_valid γ q1 q2 : cinv_own γ q1 -∗ cinv_own γ q2 -∗ ✓ (q1 + q2)%Qp.
   Proof. apply (own_valid_2 γ q1 q2). Qed.
