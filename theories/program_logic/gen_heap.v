@@ -82,7 +82,7 @@ Section gen_heap.
   Qed.
   Global Instance mapsto_as_fractional l q v :
     AsFractional (l ↦{q} v) (λ q, l ↦{q} v)%I q.
-  Proof. done. Qed.
+  Proof. split. done. apply _. Qed.
 
   Lemma mapsto_agree l q1 q2 v1 v2 : l ↦{q1} v1 ∗ l ↦{q2} v2 ⊢ ⌜v1 = v2⌝.
   Proof.
@@ -100,7 +100,7 @@ Section gen_heap.
   Qed.
   Global Instance heap_ex_mapsto_as_fractional l q :
     AsFractional (l ↦{q} -) (λ q, l ↦{q} -)%I q.
-  Proof. done. Qed.
+  Proof. split. done. apply _. Qed.
 
   Lemma mapsto_valid l q v : l ↦{q} v ⊢ ✓ q.
   Proof.

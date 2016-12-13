@@ -5,8 +5,10 @@ From iris.proofmode Require Import classes class_instances.
 
 Class Fractional {M} (Φ : Qp → uPred M) :=
   fractional p q : Φ (p + q)%Qp ⊣⊢ Φ p ∗ Φ q.
-Class AsFractional {M} (P : uPred M) (Φ : Qp → uPred M) (q : Qp) :=
-  as_fractional : P ⊣⊢ Φ q.
+Class AsFractional {M} (P : uPred M) (Φ : Qp → uPred M) (q : Qp) := {
+  as_fractional : P ⊣⊢ Φ q;
+  as_fractional_fractional :> Fractional Φ
+}.
 
 Arguments fractional {_ _ _} _ _.
 
@@ -78,11 +80,15 @@ Section fractional.
   (** Mult instances *)
 
   Global Instance mult_fractional_l Φ Ψ p :
-    (∀ q, AsFractional (Φ q) Ψ (q * p)) → Fractional Ψ → Fractional Φ.
-  Proof. intros AF F q q'. by rewrite !AF Qp_mult_plus_distr_l F. Qed.
+    (∀ q, AsFractional (Φ q) Ψ (q * p)) → Fractional Φ.
+  Proof.
+    intros H q q'. rewrite ->!as_fractional, Qp_mult_plus_distr_l. by apply H.
+  Qed.
   Global Instance mult_fractional_r Φ Ψ p :
-    (∀ q, AsFractional (Φ q) Ψ (p * q)) → Fractional Ψ → Fractional Φ.
-  Proof. intros AF F q q'. by rewrite !AF Qp_mult_plus_distr_r F. Qed.
+    (∀ q, AsFractional (Φ q) Ψ (p * q)) → Fractional Φ.
+  Proof.
+    intros H q q'. rewrite ->!as_fractional, Qp_mult_plus_distr_r. by apply H.
+  Qed.
 
   (* REMARK: These two instances do not work in either direction of the
      search:
@@ -91,58 +97,71 @@ Section fractional.
          with the goal does not work. *)
   Instance mult_as_fractional_l P Φ p q :
     AsFractional P Φ (q * p) → AsFractional P (λ q, Φ (q * p)%Qp) q.
-  Proof. done. Qed.
+  Proof.
+    intros H. split. apply H. eapply (mult_fractional_l _ Φ p).
+    split. done. apply H.
+  Qed.
   Instance mult_as_fractional_r P Φ p q :
     AsFractional P Φ (p * q) → AsFractional P (λ q, Φ (p * q)%Qp) q.
-  Proof. done. Qed.
+  Proof.
+    intros H. split. apply H. eapply (mult_fractional_r _ Φ p).
+    split. done. apply H.
+  Qed.
 
   (** Proof mode instances *)
   Global Instance from_sep_fractional_fwd P P1 P2 Φ q1 q2 :
-    AsFractional P Φ (q1 + q2) → Fractional Φ →
-    AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
+    AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
     FromSep P P1 P2.
-  Proof. by rewrite /FromSep=> -> -> -> ->. Qed.
+  Proof. by rewrite /FromSep=>-[-> ->] [-> _] [-> _]. Qed.
   Global Instance from_sep_fractional_bwd P P1 P2 Φ q1 q2 :
-    AsFractional P1 Φ q1 → AsFractional P2 Φ q2 → Fractional Φ →
-    AsFractional P Φ (q1 + q2) →
+    AsFractional P1 Φ q1 → AsFractional P2 Φ q2 → AsFractional P Φ (q1 + q2) →
     FromSep P P1 P2 | 10.
-  Proof. by rewrite /FromSep=> -> -> <- ->. Qed.
+  Proof. by rewrite /FromSep=>-[-> _] [-> <-] [-> _]. Qed.
 
   Global Instance from_sep_fractional_half_fwd P Q Φ q :
-    AsFractional P Φ q → Fractional Φ →
-    AsFractional Q Φ (q/2) →
+    AsFractional P Φ q → AsFractional Q Φ (q/2) →
     FromSep P Q Q | 10.
-  Proof. by rewrite /FromSep -{1}(Qp_div_2 q)=> -> -> ->. Qed.
+  Proof. by rewrite /FromSep -{1}(Qp_div_2 q)=>-[-> ->] [-> _]. Qed.
   Global Instance from_sep_fractional_half_bwd P Q Φ q :
-    AsFractional P Φ (q/2) → Fractional Φ →
-    AsFractional Q Φ q →
+    AsFractional P Φ (q/2) → AsFractional Q Φ q →
     FromSep Q P P.
-  Proof. rewrite /FromSep=> -> <- ->. by rewrite Qp_div_2. Qed.
+  Proof. rewrite /FromSep=>-[-> <-] [-> _]. by rewrite Qp_div_2. Qed.
 
   Global Instance into_and_fractional P P1 P2 Φ q1 q2 :
-    AsFractional P Φ (q1 + q2) → Fractional Φ →
-    AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
+    AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
     IntoAnd false P P1 P2.
-  Proof. by rewrite /AsFractional /IntoAnd=>->->->->. Qed.
+  Proof. by rewrite /IntoAnd=>-[-> ->] [-> _] [-> _]. Qed.
   Global Instance into_and_fractional_half P Q Φ q :
-    AsFractional P Φ q → Fractional Φ →
-    AsFractional Q Φ (q/2) →
+    AsFractional P Φ q → AsFractional Q Φ (q/2) →
     IntoAnd false P Q Q | 100.
-  Proof. by rewrite /AsFractional /IntoAnd -{1}(Qp_div_2 q)=>->->->. Qed.
+  Proof. by rewrite /IntoAnd -{1}(Qp_div_2 q)=>-[->->][-> _]. Qed.
 
-  Global Instance frame_fractional_l R Q PP' QP' Φ r p p' :
-    AsFractional R Φ r → AsFractional PP' Φ (p + p') → Fractional Φ →
-    Frame R (Φ p) Q → MakeSep Q (Φ p') QP' → Frame R PP' QP'.
-  Proof. rewrite /Frame=>->->-><-<-. by rewrite assoc. Qed.
-  Global Instance frame_fractional_r R Q PP' PQ Φ r p p' :
-    AsFractional R Φ r → AsFractional PP' Φ (p + p') → Fractional Φ →
-    Frame R (Φ p') Q → MakeSep (Φ p) Q PQ → Frame R PP' PQ.
+  (* The instance [frame_fractional] can be tried at all the nodes of
+     the proof search. The proof search then fails almost always on
+     [AsFractional R Φ r], but the slowdown is still noticeable.  For
+     that reason, we factorize the three instances that could ave been
+     defined for that purpose into one. *)
+  Inductive FrameFractionalHyps R Φ RES : Qp → Qp → Prop :=
+  | frame_fractional_hyps_l Q p p' r:
+      Frame R (Φ p) Q → MakeSep Q (Φ p') RES →
+      FrameFractionalHyps R Φ RES r (p + p')
+  | frame_fractional_hyps_r Q p p' r:
+      Frame R (Φ p') Q → MakeSep Q (Φ p) RES →
+      FrameFractionalHyps R Φ RES r (p + p')
+  | frame_fractional_hyps_half p:
+      AsFractional RES Φ (p/2)%Qp → FrameFractionalHyps R Φ RES (p/2)%Qp p.
+  Existing Class FrameFractionalHyps.
+  Global Existing Instances frame_fractional_hyps_l frame_fractional_hyps_r
+         frame_fractional_hyps_half.
+  Global Instance frame_fractional R r Φ P p RES:
+    AsFractional R Φ r → AsFractional P Φ p → FrameFractionalHyps R Φ RES r p →
+    Frame R P RES.
   Proof.
-    rewrite /Frame=>->->-><-<-. rewrite !assoc. f_equiv. by rewrite comm.
+    rewrite /Frame=>-[HR _][->?]H.
+    revert H HR=>-[Q p0 p0' r0|Q p0 p0' r0|p0].
+    - rewrite fractional=><-<-. by rewrite assoc.
+    - rewrite fractional=><-<-=>_.
+      rewrite (comm _ Q (Φ p0)) !assoc. f_equiv. by rewrite comm.
+    - move=>-[-> _]->. by rewrite -fractional Qp_div_2.
   Qed.
-  Global Instance frame_fractional_half P Q R Φ p:
-    AsFractional R Φ (p/2) → AsFractional P Φ p → Fractional Φ →
-    AsFractional Q Φ (p/2)%Qp →
-    Frame R P Q.
-  Proof. by rewrite /Frame -{2}(Qp_div_2 p)=>->->->->. Qed.
 End fractional.
