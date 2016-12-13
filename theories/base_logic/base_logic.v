@@ -1,13 +1,12 @@
 From iris.base_logic Require Export derived.
 
-Module uPred.
-  Include uPred_entails.
-  Include uPred_primitive.
-  Include uPred_derived.
+Module Import uPred.
+  Export upred.uPred.
+  Export primitive.uPred.
+  Export derived.uPred.
 End uPred.
 
 (* Hint DB for the logic *)
-Import uPred.
 Hint Resolve pure_intro.
 Hint Resolve or_elim or_intro_l' or_intro_r' : I.
 Hint Resolve and_intro and_elim_l' and_elim_r' : I.

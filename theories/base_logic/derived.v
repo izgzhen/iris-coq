@@ -1,5 +1,5 @@
 From iris.base_logic Require Export primitive.
-Import uPred_entails uPred_primitive.
+Import upred.uPred primitive.uPred.
 
 Definition uPred_iff {M} (P Q : uPred M) : uPred M := ((P → Q) ∧ (Q → P))%I.
 Instance: Params (@uPred_iff) 1.
@@ -34,7 +34,7 @@ Arguments timelessP {_} _ {_}.
 Class PersistentP {M} (P : uPred M) := persistentP : P ⊢ □ P.
 Arguments persistentP {_} _ {_}.
 
-Module uPred_derived.
+Module uPred.
 Section derived.
 Context {M : ucmraT}.
 Implicit Types φ : Prop.
@@ -858,5 +858,4 @@ Proof. by rewrite -(always_always Q); apply always_entails_l'. Qed.
 Lemma always_entails_r P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ P ∗ Q.
 Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
 End derived.
-
-End uPred_derived.
+End uPred.

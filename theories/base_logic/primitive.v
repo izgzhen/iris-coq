@@ -192,7 +192,7 @@ Coercion uPred_valid {M} (P : uPred M) : Prop := True%I ⊢ P.
 Notation "P -∗ Q" := (P ⊢ Q)
   (at level 99, Q at level 200, right associativity) : C_scope.
 
-Module uPred_primitive.
+Module uPred.
 Definition unseal :=
   (uPred_pure_eq, uPred_and_eq, uPred_or_eq, uPred_impl_eq, uPred_forall_eq,
   uPred_exist_eq, uPred_internal_eq_eq, uPred_sep_eq, uPred_wand_eq, uPred_always_eq,
@@ -596,4 +596,4 @@ Proof. by unseal. Qed.
 Lemma cofe_morC_equivI {A B : ofeT} (f g : A -n> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
 Proof. by unseal. Qed.
 End primitive.
-End uPred_primitive.
+End uPred.

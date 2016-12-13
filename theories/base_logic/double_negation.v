@@ -1,5 +1,4 @@
 From iris.base_logic Require Import base_logic.
-Import upred.
 
 (* In this file we show that the bupd can be thought of a kind of
    step-indexed double-negation when our meta-logic is classical *)

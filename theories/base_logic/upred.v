@@ -138,7 +138,7 @@ Notation "P ⊣⊢ Q" := (equiv (A:=uPred _) P%I Q%I)
   (at level 95, no associativity) : C_scope.
 Notation "(⊣⊢)" := (equiv (A:=uPred _)) (only parsing) : C_scope.
 
-Module uPred_entails.
+Module uPred.
 Section entails.
 Context {M : ucmraT}.
 Implicit Types P Q : uPred M.
@@ -173,4 +173,4 @@ Proof. by intros ->. Qed.
 Lemma entails_equiv_r (P Q R : uPred M) : (P ⊢ Q) → (Q ⊣⊢ R) → (P ⊢ R).
 Proof. by intros ? <-. Qed.
 End entails.
-End uPred_entails.
+End uPred.

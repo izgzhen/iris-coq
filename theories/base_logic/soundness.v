@@ -1,5 +1,5 @@
-From iris.base_logic Require Export primitive derived.
-Import uPred_entails uPred_primitive.
+From iris.base_logic Require Export base_logic.
+Import uPred.
 
 Section adequacy.
 Context {M : ucmraT}.
