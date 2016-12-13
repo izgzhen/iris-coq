@@ -354,12 +354,22 @@ Proof.
   intros a b ?. apply equiv_dist=>n. apply to_agree_injN. by apply equiv_dist.
 Qed.
 
-Lemma to_agree_uninj n (x : agree A) : ✓{n} x → ∃ y : A, to_agree y ≡{n}≡ x.
+Lemma to_agree_uninjN n (x : agree A) : ✓{n} x → ∃ y : A, to_agree y ≡{n}≡ x.
 Proof.
   intros Hl. exists (agree_car x). rewrite /dist /agree_dist /=.
   split.
   - apply: list_setincl_singleton_in. set_solver+.
   - apply (list_agrees_iff_setincl _); first set_solver+. done.
+Qed.
+
+Lemma to_agree_uninj (x : agree A) : ✓ x → ∃ y : A, to_agree y ≡ x.
+Proof.
+  intros Hl. exists (agree_car x). rewrite /dist /agree_dist /=.
+  split.
+  - apply: list_setincl_singleton_in. set_solver+.
+  - apply (list_agrees_iff_setincl _); first set_solver+.
+    eapply list_agrees_subrel; last exact: Hl; [apply _..|].
+    intros ???. by apply equiv_dist.
 Qed.
 
 Lemma to_agree_included (a b : A) : to_agree a ≼ to_agree b ↔ a ≡ b.
