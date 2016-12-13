@@ -6,10 +6,7 @@ From iris.algebra Require Import ofe cmra.
 Notation cofeT := ofeT (only parsing).
 
 (* Deprecated 2016-12-09. Use agree instead. *)
-(* The module is called dec_agree_deprecated because if it was just dec_agree,
-   it would still be imported by "From iris Import dec_agree", and people would
-   not notice they use sth. deprecated. *)
-Module dec_agree_deprecated.
+Module dec_agree.
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 Local Arguments op _ _ _ !_ /.
@@ -76,4 +73,4 @@ End dec_agree.
 
 Arguments dec_agreeC : clear implicits.
 Arguments dec_agreeR _ {_}.
-End dec_agree_deprecated.
+End dec_agree.
