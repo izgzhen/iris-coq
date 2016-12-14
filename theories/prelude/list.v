@@ -477,24 +477,13 @@ Lemma list_lookup_middle l1 l2 x n :
   n = length l1 → (l1 ++ x :: l2) !! n = Some x.
 Proof. intros ->. by induction l1. Qed.
 
-Lemma nth_lookup_or_length l i d :
-  {l !! i = Some (nth i l d)} + {(length l ≤ i)%nat}.
+Lemma nth_lookup l i d : nth i l d = from_option id d (l !! i).
+Proof. revert i. induction l as [|x l IH]; intros [|i]; simpl; auto. Qed.
+Lemma nth_lookup_Some l i d x : l !! i = Some x → nth i l d = x.
+Proof. rewrite nth_lookup. by intros ->. Qed.
+Lemma nth_lookup_or_length l i d : {l !! i = Some (nth i l d)} + {length l ≤ i}.
 Proof.
-  revert i; induction l; intros i.
-  - right. simpl. omega.
-  - destruct i; simpl.
-    + left. done.
-    + destruct (IHl i) as [->|]; [by left|].
-      right. omega.
-Qed.
-
-Lemma nth_lookup l i d x :
-  l !! i = Some x → nth i l d = x.
-Proof.
-  revert i; induction l; intros i; [done|].
-  destruct i; simpl.
-  - congruence.
-  - apply IHl.
+  rewrite nth_lookup. destruct (l !! i) eqn:?; eauto using lookup_ge_None_1.
 Qed.
 
 Lemma list_insert_alter l i x : <[i:=x]>l = alter (λ _, x) i l.
