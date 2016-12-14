@@ -31,6 +31,19 @@ Global Instance into_pure_cmra_valid `{CMRADiscrete A} (a : A) :
   @IntoPure M (✓ a) (✓ a).
 Proof. by rewrite /IntoPure discrete_valid. Qed.
 
+Global Instance into_pure_exist {X : Type} (Φ : X → uPred M) φ :
+  (∀ x, @IntoPure M (Φ x) (φ x)) → @IntoPure M (∃ x, Φ x) (∃ x, φ x).
+Proof.
+  rewrite /IntoPure=>Hx. apply exist_elim=>x. rewrite Hx.
+  apply pure_elim'=>Hφ. apply pure_intro. eauto.
+Qed.
+
+Global Instance into_pure_forall {X : Type} (Φ : X → uPred M) φ :
+  (∀ x, @IntoPure M (Φ x) (φ x)) → @IntoPure M (∀ x, Φ x) (∀ x, φ x).
+Proof.
+  rewrite /IntoPure=>Hx. rewrite -pure_forall_2. by setoid_rewrite Hx.
+Qed.
+
 (* FromPure *)
 Global Instance from_pure_pure φ : @FromPure M ⌜φ⌝ φ.
 Proof. done. Qed.
