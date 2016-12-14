@@ -10,7 +10,7 @@ iris-coq8.5.3:
   - 'time make -j8 TIMED=y 2>&1 | tee build-log.txt'
   - 'if fgrep Axiom build-log-full.txt >/dev/null; then exit 1; fi'
   - 'cat build-log.txt | egrep "[a-zA-Z0-9_/-]+ \(user: [0-9]" | tee build-time.txt'
-  - make validate
+  - 'if ((RANDOM % 10 == 0 )); then make validate; fi'
   cache:
     key: "coq8.5.3"
     paths:
