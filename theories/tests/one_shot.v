@@ -29,7 +29,7 @@ Instance subG_one_shotΣ {Σ} : subG one_shotΣ Σ → one_shotG Σ.
 Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
 
 Section proof.
-Context `{!heapG Σ, !one_shotG Σ} (N : namespace).
+Context `{!heapG Σ, !one_shotG Σ}.
 
 Definition one_shot_inv (γ : gname) (l : loc) : iProp Σ :=
   (l ↦ NONEV ∗ own γ Pending ∨ ∃ n : Z, l ↦ SOMEV #n ∗ own γ (Shot n))%I.
@@ -40,7 +40,7 @@ Lemma wp_one_shot (Φ : val → iProp Σ) :
     □ WP f2 #() {{ g, □ WP g #() {{ _, True }} }} -∗ Φ (f1,f2)%V)
   ⊢ WP one_shot_example #() {{ Φ }}.
 Proof.
-  iIntros "Hf /=".
+  iIntros "Hf /=". pose proof (nroot .@ "N") as N.
   rewrite -wp_fupd /one_shot_example /=. wp_seq. wp_alloc l as "Hl". wp_let.
   iMod (own_alloc Pending) as (γ) "Hγ"; first done.
   iMod (inv_alloc N _ (one_shot_inv γ l) with "[Hl Hγ]") as "#HN".

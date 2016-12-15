@@ -2082,11 +2082,18 @@ Proof.
   end); clear go; intuition.
 Defined.
 
+Definition Forall_nil_2 := @Forall_nil A.
+Definition Forall_cons_2 := @Forall_cons A.
+Global Instance Forall_proper:
+  Proper (pointwise_relation _ (↔) ==> (=) ==> (↔)) (@Forall A).
+Proof. split; subst; induction 1; constructor; by firstorder auto. Qed.
+Global Instance Exists_proper:
+  Proper (pointwise_relation _ (↔) ==> (=) ==> (↔)) (@Exists A).
+Proof. split; subst; induction 1; constructor; by firstorder auto. Qed.
+
 Section Forall_Exists.
   Context (P : A → Prop).
 
-  Definition Forall_nil_2 := @Forall_nil A.
-  Definition Forall_cons_2 := @Forall_cons A.
   Lemma Forall_forall l : Forall P l ↔ ∀ x, x ∈ l → P x.
   Proof.
     split; [induction 1; inversion 1; subst; auto|].
@@ -2113,9 +2120,6 @@ Section Forall_Exists.
   Lemma Forall_impl (Q : A → Prop) l :
     Forall P l → (∀ x, P x → Q x) → Forall Q l.
   Proof. intros H ?. induction H; auto. Defined.
-  Global Instance Forall_proper:
-    Proper (pointwise_relation _ (↔) ==> (=) ==> (↔)) (@Forall A).
-  Proof. split; subst; induction 1; constructor; by firstorder auto. Qed.
   Lemma Forall_iff l (Q : A → Prop) :
     (∀ x, P x ↔ Q x) → Forall P l ↔ Forall Q l.
   Proof. intros H. apply Forall_proper. red; apply H. done. Qed.
@@ -2226,9 +2230,7 @@ Section Forall_Exists.
   Lemma Exists_impl (Q : A → Prop) l :
     Exists P l → (∀ x, P x → Q x) → Exists Q l.
   Proof. intros H ?. induction H; auto. Defined.
-  Global Instance Exists_proper:
-    Proper (pointwise_relation _ (↔) ==> (=) ==> (↔)) (@Exists A).
-  Proof. split; subst; induction 1; constructor; by firstorder auto. Qed.
+
   Lemma Exists_not_Forall l : Exists (not ∘ P) l → ¬Forall P l.
   Proof. induction 1; inversion_clear 1; contradiction. Qed.
   Lemma Forall_not_Exists l : Forall (not ∘ P) l → ¬Exists P l.
@@ -2291,7 +2293,26 @@ Proof.
     destruct Hj; subst. auto with lia.
 Qed.
 
+Lemma Forall2_same_length {A B} (l : list A) (k : list B) :
+  Forall2 (λ _ _, True) l k ↔ length l = length k.
+Proof.
+  split; [by induction 1; f_equal/=|].
+  revert k. induction l; intros [|??] ?; simplify_eq/=; auto.
+Qed.
+
 (** ** Properties of the [Forall2] predicate *)
+Lemma Forall_Forall2 {A} (Q : A → A → Prop) l :
+  Forall (λ x, Q x x) l → Forall2 Q l l.
+Proof. induction 1; constructor; auto. Qed.
+Lemma Forall2_forall `{Inhabited A} B C (Q : A → B → C → Prop) l k :
+  Forall2 (λ x y, ∀ z, Q z x y) l k ↔ ∀ z, Forall2 (Q z) l k.
+Proof.
+  split; [induction 1; constructor; auto|].
+  intros Hlk. induction (Hlk inhabitant) as [|x y l k _ _ IH]; constructor.
+  - intros z. by feed inversion (Hlk z).
+  - apply IH. intros z. by feed inversion (Hlk z).
+Qed.
+
 Section Forall2.
   Context {A B} (P : A → B → Prop).
   Implicit Types x : A.
@@ -2299,12 +2320,6 @@ Section Forall2.
   Implicit Types l : list A.
   Implicit Types k : list B.
 
-  Lemma Forall2_same_length l k :
-    Forall2 (λ _ _, True) l k ↔ length l = length k.
-  Proof.
-    split; [by induction 1; f_equal/=|].
-    revert k. induction l; intros [|??] ?; simplify_eq/=; auto.
-  Qed.
   Lemma Forall2_length l k : Forall2 P l k → length l = length k.
   Proof. by induction 1; f_equal/=. Qed.
   Lemma Forall2_length_l l k n : Forall2 P l k → length l = n → length k = n.
@@ -2329,18 +2344,7 @@ Section Forall2.
   Proof.
     intros H. revert k2. induction H; inversion_clear 1; intros; f_equal; eauto.
   Qed.
-  Lemma Forall2_forall `{Inhabited C} (Q : C → A → B → Prop) l k :
-    Forall2 (λ x y, ∀ z, Q z x y) l k ↔ ∀ z, Forall2 (Q z) l k.
-  Proof.
-    split; [induction 1; constructor; auto|].
-    intros Hlk. induction (Hlk inhabitant) as [|x y l k _ _ IH]; constructor.
-    - intros z. by feed inversion (Hlk z).
-    - apply IH. intros z. by feed inversion (Hlk z).
-  Qed.
 
-  Lemma Forall_Forall2 (Q : A → A → Prop) l :
-    Forall (λ x, Q x x) l → Forall2 Q l l.
-  Proof. induction 1; constructor; auto. Qed.
   Lemma Forall2_Forall_l (Q : A → Prop) l k :
     Forall2 P l k → Forall (λ y, ∀ x, P x y → Q x) k → Forall Q l.
   Proof. induction 1; inversion_clear 1; eauto. Qed.
@@ -2801,11 +2805,12 @@ Section setoid.
 End setoid.
 
 (** * Properties of the monadic operations *)
+Lemma list_fmap_id {A} (l : list A) : id <$> l = l.
+Proof. induction l; f_equal/=; auto. Qed.
+
 Section fmap.
   Context {A B : Type} (f : A → B).
 
-  Lemma list_fmap_id (l : list A) : id <$> l = l.
-  Proof. induction l; f_equal/=; auto. Qed.
   Lemma list_fmap_compose {C} (g : B → C) l : g ∘ f <$> l = g <$> f <$> l.
   Proof. induction l; f_equal/=; auto. Qed.
   Lemma list_fmap_ext (g : A → B) (l1 l2 : list A) :
