@@ -91,7 +91,7 @@ Hint Extern 0 (_ ⊥ _) => apply ndot_ne_disjoint; congruence : ndisj.
 Hint Resolve ndot_preserve_disjoint_l : ndisj.
 Hint Resolve ndot_preserve_disjoint_r : ndisj.
 Hint Extern 1 (_ ⊆ _) => apply nclose_subseteq' : ndisj.
-Hint Resolve 100 namespace_subseteq_difference_l : ndisj.
+Hint Resolve namespace_subseteq_difference_l | 100 : ndisj.
 Hint Resolve ndisj_difference_l : ndisj.
 
 Ltac solve_ndisj := solve [eauto with ndisj].
