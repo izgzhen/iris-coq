@@ -88,8 +88,8 @@ of the forms:
 - [E1 ∖ ↑N1 ⊆ E2 ∖ ↑N2 ∖ .. ∖ ↑Nn] *)
 Hint Resolve ndisj_subseteq_difference : ndisj.
 Hint Extern 0 (_ ⊥ _) => apply ndot_ne_disjoint; congruence : ndisj.
-Hint Resolve ndot_preserve_disjoint_l : ndisj.
-Hint Resolve ndot_preserve_disjoint_r : ndisj.
+Hint Extern 1 (_ ⊥ _) => apply ndot_preserve_disjoint_l : ndisj.
+Hint Extern 1 (_ ⊥ _) => apply ndot_preserve_disjoint_r : ndisj.
 Hint Extern 1 (_ ⊆ _) => apply nclose_subseteq' : ndisj.
 Hint Resolve namespace_subseteq_difference_l | 100 : ndisj.
 Hint Resolve ndisj_difference_l : ndisj.
