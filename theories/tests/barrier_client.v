@@ -13,7 +13,9 @@ Definition client : expr :=
     (worker 12 "b" "y" ||| worker 17 "b" "y").
 
 Section client.
-  Context `{!heapG Σ, !barrierG Σ, !spawnG Σ} (N : namespace).
+  Context `{!heapG Σ, !barrierG Σ, !spawnG Σ}.
+
+  Local Definition N := nroot .@ "barrier".
 
   Definition y_inv (q : Qp) (l : loc) : iProp Σ :=
     (∃ f : val, l ↦{q} f ∗ □ ∀ n : Z, WP f #n {{ v, ⌜v = #(n + 42)⌝ }})%I.
@@ -58,9 +60,7 @@ Section ClosedProofs.
 Let Σ : gFunctors := #[ heapΣ ; barrierΣ ; spawnΣ ].
 
 Lemma client_adequate σ : adequate client σ (λ _, True).
-Proof.
-  apply (heap_adequacy Σ)=> ?. apply (client_safe (nroot .@ "barrier")).
-Qed.
+Proof. apply (heap_adequacy Σ)=> ?. apply client_safe. Qed.
 
 End ClosedProofs.
 

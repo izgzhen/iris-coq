@@ -46,12 +46,9 @@ Local Notation "l ↦{ q } -" := (∃ v, l ↦{q} v)%I
   (at level 20, q at level 50, format "l  ↦{ q }  -") : uPred_scope.
 Local Notation "l ↦ -" := (l ↦{1} -)%I (at level 20) : uPred_scope.
 
-Section gen_heap.
-  Context `{gen_heapG L V Σ}.
-  Implicit Types P Q : iProp Σ.
-  Implicit Types Φ : V → iProp Σ.
+Section to_gen_heap.
+  Context (L V : Type) `{Countable L}.
   Implicit Types σ : gmap L V.
-  Implicit Types h g : gen_heapUR L V.
 
   (** Conversion to heaps and back *)
   Lemma to_gen_heap_valid σ : ✓ to_gen_heap σ.
@@ -71,6 +68,14 @@ Section gen_heap.
   Lemma to_gen_heap_delete l σ :
     to_gen_heap (delete l σ) = delete l (to_gen_heap σ).
   Proof. by rewrite /to_gen_heap fmap_delete. Qed.
+End to_gen_heap.
+
+Section gen_heap.
+  Context `{gen_heapG L V Σ}.
+  Implicit Types P Q : iProp Σ.
+  Implicit Types Φ : V → iProp Σ.
+  Implicit Types σ : gmap L V.
+  Implicit Types h g : gen_heapUR L V.
 
   (** General properties of mapsto *)
   Global Instance mapsto_timeless l q v : TimelessP (l ↦{q} v).
