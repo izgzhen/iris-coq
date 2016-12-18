@@ -6,7 +6,7 @@ This is the Coq development of the [Iris Project](http://iris-project.org).
 
 This version is known to compile with:
 
- - Coq 8.5pl3
+ - Coq 8.5pl3 / 8.6
  - Ssreflect 1.6
 
 The easiest way to install the correct versions of the dependencies is through
