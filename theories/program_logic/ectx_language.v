@@ -117,20 +117,20 @@ Section ectx_language.
     rewrite -not_reducible -not_head_reducible. eauto using prim_head_reducible.
   Qed.
 
-  Lemma ectx_language_atomic e :
-    (∀ σ e' σ' efs, head_step e σ e' σ' efs → irreducible e' σ') →
+  Lemma ectx_language_strong_atomic e :
+    (∀ σ e' σ' efs, head_step e σ e' σ' efs → is_Some (to_val e')) →
     sub_redexes_are_values e →
-    Atomic e.
+    StronglyAtomic e.
   Proof.
     intros Hatomic_step Hatomic_fill σ e' σ' efs [K e1' e2' -> -> Hstep].
     assert (K = empty_ectx) as -> by eauto 10 using val_stuck.
     rewrite fill_empty. eapply Hatomic_step. by rewrite fill_empty.
   Qed.
 
-  Lemma ectx_language_strongly_atomic e :
-    (∀ σ e' σ' efs, head_step e σ e' σ' efs → is_Some (to_val e')) →
-    sub_values e →
-    StronglyAtomic e.
+  Lemma ectx_language_atomic e :
+    (∀ σ e' σ' efs, head_step e σ e' σ' efs → irreducible e' σ') →
+    sub_redexes_are_values e →
+    Atomic e.
   Proof.
     intros Hatomic_step Hatomic_fill σ e' σ' efs [K e1' e2' -> -> Hstep].
     assert (K = empty_ectx) as -> by eauto 10 using val_stuck.
