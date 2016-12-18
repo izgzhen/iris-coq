@@ -23,7 +23,7 @@ iris-coq8.5.3:
     paths:
     - build-time.txt
 
-iris-coq8.6beta:
+iris-coq8.6:
   tags:
   - coq
   script:
