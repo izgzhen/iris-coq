@@ -11,26 +11,26 @@ Class irisG' (Λstate : Type) (Σ : gFunctors) := IrisG {
 }.
 Notation irisG Λ Σ := (irisG' (state Λ) Σ).
 
-Definition wp_pre `{irisG Λ Σ}
-    (wp : bool -c> coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ) :
-    bool -c> coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ := λ p E e1 Φ,
+Definition wp_pre `{irisG Λ Σ} (p : bool)
+    (wp : coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ) :
+    coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ := λ E e1 Φ,
   match to_val e1 with
   | Some v => |={E}=> Φ v
   | None => ∀ σ1,
      state_interp σ1 ={E,∅}=∗ ⌜if p then reducible e1 σ1 else True⌝ ∗
      ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ={∅,E}=∗
-       state_interp σ2 ∗ wp p E e2 Φ ∗
-       [∗ list] ef ∈ efs, wp p ⊤ ef (λ _, True)
+       state_interp σ2 ∗ wp E e2 Φ ∗
+       [∗ list] ef ∈ efs, wp ⊤ ef (λ _, True)
   end%I.
 
-Local Instance wp_pre_contractive `{irisG Λ Σ} : Contractive wp_pre.
+Local Instance wp_pre_contractive `{irisG Λ Σ} p : Contractive (wp_pre p).
 Proof.
-  rewrite /wp_pre=> n wp wp' Hwp p E e1 Φ.
+  rewrite /wp_pre=> n wp wp' Hwp E e1 Φ.
   repeat (f_contractive || f_equiv); apply Hwp.
 Qed.
 
-Definition wp_def `{irisG Λ Σ} :
-  bool → coPset → expr Λ → (val Λ → iProp Σ) → iProp Σ := fixpoint wp_pre.
+Definition wp_def `{irisG Λ Σ} p :
+  coPset → expr Λ → (val Λ → iProp Σ) → iProp Σ := fixpoint (wp_pre p).
 Definition wp_aux : seal (@wp_def). by eexists. Qed.
 Definition wp := unseal wp_aux.
 Definition wp_eq : @wp = @wp_def := seal_eq wp_aux.
@@ -172,8 +172,8 @@ Implicit Types v : val Λ.
 Implicit Types e : expr Λ.
 
 (* Weakest pre *)
-Lemma wp_unfold p E e Φ : WP e @ p; E {{ Φ }} ⊣⊢ wp_pre wp p E e Φ.
-Proof. rewrite wp_eq. apply (fixpoint_unfold wp_pre). Qed.
+Lemma wp_unfold p E e Φ : WP e @ p; E {{ Φ }} ⊣⊢ wp_pre p (wp p) E e Φ.
+Proof. rewrite wp_eq. apply (fixpoint_unfold (wp_pre p)). Qed.
 
 Global Instance wp_ne p E e n :
   Proper (pointwise_relation _ (dist n) ==> dist n) (@wp Λ Σ _ p E e).
@@ -210,7 +210,8 @@ Proof.
   iMod "Hclose" as "_". by iApply ("IH" with "HΦ").
 Qed.
 
-Lemma wp_forget_progress E e Φ : WP e @ E {{ Φ }} ⊢ WP e @ E ?{{ Φ }}.
+Lemma wp_forget_progress p E e Φ :
+  WP e @ p; E {{ Φ }} ⊢ WP e @ E ?{{ Φ }}.
 Proof.
   iIntros "H". iLöb as "IH" forall (E e Φ). rewrite !wp_unfold /wp_pre.
   destruct (to_val e) as [v|]; first iExact "H".

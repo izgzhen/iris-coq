@@ -108,8 +108,8 @@ Proof.
   iIntros (v) "Hv". by iApply "HwpK".
 Qed.
 
-Lemma ht_forget_progress E P Φ e :
-  {{ P }} e @ E {{ Φ }} ⊢ {{ P }} e @ E ?{{ Φ }}.
+Lemma ht_forget_progress p E P Φ e :
+  {{ P }} e @ p; E {{ Φ }} ⊢ {{ P }} e @ E ?{{ Φ }}.
 Proof.
   by iIntros "#Hwp !# ?"; iApply wp_forget_progress; iApply "Hwp".
 Qed.

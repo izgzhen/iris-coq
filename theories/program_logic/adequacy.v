@@ -65,11 +65,11 @@ Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
 Implicit Types Φs : list (val Λ → iProp Σ).
 
-Notation world' E σ := (wsat ∗ ownE E ∗ state_interp σ)%I.
-Notation world σ := (world' ⊤ σ).
+Notation world' E σ := (wsat ∗ ownE E ∗ state_interp σ)%I (only parsing).
+Notation world σ := (world' ⊤ σ) (only parsing).
 
-Notation wp' E e Φ := (WP e @ p; E {{ Φ }})%I.
-Notation wp e Φ := (wp' ⊤ e Φ).
+Notation wp' E e Φ := (WP e @ p; E {{ Φ }})%I (only parsing).
+Notation wp e Φ := (wp' ⊤ e Φ) (only parsing).
 Notation wptp t := ([∗ list] ef ∈ t, WP ef @ p; ⊤ {{ _, True }})%I.
 
 Lemma wp_step E e1 σ1 e2 σ2 efs Φ :
