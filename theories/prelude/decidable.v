@@ -36,6 +36,11 @@ Lemma decide_iff {A} P Q `{Decision P, Decision Q} (x y : A) :
   (P ↔ Q) → (if decide P then x else y) = (if decide Q then x else y).
 Proof. intros [??]. destruct (decide P), (decide Q); tauto. Qed.
 
+Lemma decide_left`{Decision P, !ProofIrrel P} (HP : P) : decide P = left HP.
+Proof. destruct (decide P) as [?|?]; [|contradiction]. f_equal. apply proof_irrel. Qed.
+Lemma decide_right`{Decision P} `{!ProofIrrel (¬ P)} (HP : ¬ P) : decide P = right HP.
+Proof. destruct (decide P) as [?|?]; [contradiction|]. f_equal. apply proof_irrel. Qed.
+
 (** The tactic [destruct_decide] destructs a sumbool [dec]. If one of the
 components is double negated, it will try to remove the double negation. *)
 Tactic Notation "destruct_decide" constr(dec) "as" ident(H) :=
