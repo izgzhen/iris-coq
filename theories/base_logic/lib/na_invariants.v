@@ -53,6 +53,13 @@ Section proofs.
     intros ?. by rewrite /na_own -own_op pair_op left_id coPset_disj_union.
   Qed.
 
+  Lemma na_own_acc E2 E1 tid :
+    E2 ⊆ E1 → na_own tid E1 -∗ na_own tid E2 ∗ (na_own tid E2 -∗ na_own tid E1).
+  Proof.
+    intros HF. assert (E1 = E2 ∪ (E1 ∖ E2)) as -> by exact: union_difference_L.
+    rewrite na_own_union; last by set_solver+. iIntros "[$ $]". auto.
+  Qed.
+
   Lemma na_inv_alloc p E N P : ▷ P ={E}=∗ na_inv p N P.
   Proof.
     iIntros "HP".
