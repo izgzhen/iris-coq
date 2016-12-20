@@ -709,6 +709,7 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
 
 (** * Introduction tactic *)
 Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" :=
+  try iStartProof;
   try first
     [(* (∀ _, _) *) apply tac_forall_intro
     |(* (?P → _) *) eapply tac_impl_intro_pure;
@@ -721,7 +722,9 @@ Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" :=
     |(* ⌜_ → _⌝ *) apply tac_pure_impl_intro];
   intros x.
 
-Local Tactic Notation "iIntro" constr(H) := first
+Local Tactic Notation "iIntro" constr(H) :=
+  iStartProof;
+  first
   [ (* (?Q → _) *)
     eapply tac_impl_intro with _ H; (* (i:=H) *)
       [reflexivity || fail 1 "iIntro: introducing" H
@@ -732,7 +735,9 @@ Local Tactic Notation "iIntro" constr(H) := first
       [env_cbv; reflexivity || fail 1 "iIntro:" H "not fresh"|]
   | fail 1 "iIntro: nothing to introduce" ].
 
-Local Tactic Notation "iIntro" "#" constr(H) := first
+Local Tactic Notation "iIntro" "#" constr(H) :=
+  iStartProof;
+  first
   [ (* (?P → _) *)
     eapply tac_impl_intro_persistent with _ H _; (* (i:=H) *)
       [let P := match goal with |- IntoPersistentP ?P _ => P end in
@@ -746,12 +751,14 @@ Local Tactic Notation "iIntro" "#" constr(H) := first
   | fail 1 "iIntro: nothing to introduce" ].
 
 Local Tactic Notation "iIntroForall" :=
+  try iStartProof;
   lazymatch goal with
   | |- ∀ _, ?P => fail
   | |- ∀ _, _ => intro
   | |- _ ⊢ (∀ x : _, _) => iIntro (x)
   end.
 Local Tactic Notation "iIntro" :=
+  try iStartProof;
   lazymatch goal with
   | |- _ → ?P => intro
   | |- _ ⊢ (_ -∗ _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
@@ -785,11 +792,11 @@ Tactic Notation "iIntros" constr(pat) :=
     | ?pat :: ?pats =>
        let H := iFresh in iIntro H; iDestructHyp H as pat; go pats
     end
-  in let pats := intro_pat.parse pat in iStartProof; go pats.
+  in let pats := intro_pat.parse pat in go pats.
 Tactic Notation "iIntros" := iIntros [IAll].
 
 Tactic Notation "iIntros" "(" simple_intropattern(x1) ")" :=
-  try iStartProof; iIntro ( x1 ).
+  iIntro ( x1 ).
 Tactic Notation "iIntros" "(" simple_intropattern(x1)
     simple_intropattern(x2) ")" :=
   iIntros ( x1 ); iIntro ( x2 ).
