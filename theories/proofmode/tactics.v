@@ -978,7 +978,7 @@ Tactic Notation "iInductionCore" constr(x)
     lazymatch goal with
     | H : coq_tactics.of_envs _ ⊢ _ |- _ =>
        eapply tac_revert_ih;
-         [reflexivity || fail "iInduction: persistent context not empty"
+         [reflexivity || fail "iInduction: spatial context not empty"
          |apply H|];
        clear H; fix_ihs;
        let IH' := iFresh' IH in iIntros [IAlwaysElim (IName IH')]
