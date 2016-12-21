@@ -5,7 +5,7 @@ Set Default Proof Using "Type".
 
 Section lifting.
 Context `{irisG Λ Σ}.
-Implicit Types p : bool.
+Implicit Types p : pbit.
 Implicit Types v : val Λ.
 Implicit Types e : expr Λ.
 Implicit Types σ : state Λ.

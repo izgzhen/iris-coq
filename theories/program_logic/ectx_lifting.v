@@ -6,7 +6,7 @@ Set Default Proof Using "Type".
 Section wp.
 Context {expr val ectx state} {Λ : EctxLanguage expr val ectx state}.
 Context `{irisG (ectx_lang expr) Σ} {Hinh : Inhabited state}.
-Implicit Types p : bool.
+Implicit Types p : pbit.
 Implicit Types P : iProp Σ.
 Implicit Types Φ : val → iProp Σ.
 Implicit Types v : val.

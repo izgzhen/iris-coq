@@ -11,7 +11,9 @@ Class irisG' (Λstate : Type) (Σ : gFunctors) := IrisG {
 }.
 Notation irisG Λ Σ := (irisG' (state Λ) Σ).
 
-Definition wp_pre `{irisG Λ Σ} (p : bool)
+CoInductive pbit := progress | noprogress.
+
+Definition wp_pre `{irisG Λ Σ} (p : pbit)
     (wp : coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ) :
     coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ := λ E e1 Φ,
   match to_val e1 with
@@ -41,32 +43,32 @@ Instance: Params (@wp) 6.
 Notation "'WP' e @ p ; E {{ Φ } }" := (wp p E e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'[' 'WP'  e  '/' @  p ;  E  {{  Φ  } } ']'") : uPred_scope.
-Notation "'WP' e @ E {{ Φ } }" := (wp true E e%E Φ)
+Notation "'WP' e @ E {{ Φ } }" := (wp progress E e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'[' 'WP'  e  '/' @  E  {{  Φ  } } ']'") : uPred_scope.
-Notation "'WP' e @ E ? {{ Φ } }" := (wp false E e%E Φ)
+Notation "'WP' e @ E ? {{ Φ } }" := (wp noprogress E e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'[' 'WP'  e  '/' @  E  ? {{  Φ  } } ']'") : uPred_scope.
-Notation "'WP' e {{ Φ } }" := (wp true ⊤ e%E Φ)
+Notation "'WP' e {{ Φ } }" := (wp progress ⊤ e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'[' 'WP'  e  '/' {{  Φ  } } ']'") : uPred_scope.
-Notation "'WP' e ? {{ Φ } }" := (wp false ⊤ e%E Φ)
+Notation "'WP' e ? {{ Φ } }" := (wp noprogress ⊤ e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'[' 'WP'  e  '/' ? {{  Φ  } } ']'") : uPred_scope.
 
 Notation "'WP' e @ p ; E {{ v , Q } }" := (wp p E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'[' 'WP'  e  '/' @  p ;  E  {{  v ,  Q  } } ']'") : uPred_scope.
-Notation "'WP' e @ E {{ v , Q } }" := (wp true E e%E (λ v, Q))
+Notation "'WP' e @ E {{ v , Q } }" := (wp progress E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'[' 'WP'  e  '/' @  E  {{  v ,  Q  } } ']'") : uPred_scope.
-Notation "'WP' e @ E ? {{ v , Q } }" := (wp false E e%E (λ v, Q))
+Notation "'WP' e @ E ? {{ v , Q } }" := (wp noprogress E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'[' 'WP'  e  '/' @  E  ? {{  v ,  Q  } } ']'") : uPred_scope.
-Notation "'WP' e {{ v , Q } }" := (wp true ⊤ e%E (λ v, Q))
+Notation "'WP' e {{ v , Q } }" := (wp progress ⊤ e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'[' 'WP'  e  '/' {{  v ,  Q  } } ']'") : uPred_scope.
-Notation "'WP' e ? {{ v , Q } }" := (wp false ⊤ e%E (λ v, Q))
+Notation "'WP' e ? {{ v , Q } }" := (wp noprogress ⊤ e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'[' 'WP'  e  '/' ? {{  v ,  Q  } } ']'") : uPred_scope.
 
@@ -165,7 +167,7 @@ Notation "'{{{' P } } } e ? {{{ 'RET' pat ; Q } } }" :=
 
 Section wp.
 Context `{irisG Λ Σ}.
-Implicit Types p : bool.
+Implicit Types p : pbit.
 Implicit Types P : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
 Implicit Types v : val Λ.
@@ -234,7 +236,7 @@ Lemma wp_fupd p E e Φ : WP e @ p; E {{ v, |={E}=> Φ v }} ⊢ WP e @ p; E {{ Φ
 Proof. iIntros "H". iApply (wp_strong_mono p E); try iFrame; auto. Qed.
 
 Lemma wp_atomic' p E1 E2 e Φ :
-  StronglyAtomic e ∨ p ∧ Atomic e →
+  StronglyAtomic e ∨ p = progress ∧ Atomic e →
   (|={E1,E2}=> WP e @ p; E2 {{ v, |={E2,E1}=> Φ v }}) ⊢ WP e @ p; E1 {{ Φ }}.
 Proof.
   iIntros (Hatomic) "H". rewrite !wp_unfold /wp_pre.

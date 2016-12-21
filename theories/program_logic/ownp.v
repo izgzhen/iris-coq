@@ -70,7 +70,7 @@ Qed.
 (** Lifting *)
 Section lifting.
   Context `{ownPG Λ Σ}.
-  Implicit Types p : bool.
+  Implicit Types p : pbit.
   Implicit Types e : expr Λ.
   Implicit Types Φ : val Λ → iProp Σ.
 
@@ -197,7 +197,7 @@ Section ectx_lifting.
   Import ectx_language.
   Context {expr val ectx state} {Λ : EctxLanguage expr val ectx state}.
   Context `{ownPG (ectx_lang expr) Σ} {Hinh : Inhabited state}.
-  Implicit Types p : bool.
+  Implicit Types p : pbit.
   Implicit Types Φ : val → iProp Σ.
   Implicit Types e : expr.
   Hint Resolve head_prim_reducible head_reducible_prim_step.

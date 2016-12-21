@@ -34,24 +34,24 @@ Proof.
 Qed.
 
 (* Program logic adequacy *)
-Record adequate {Λ} (p : bool) (e1 : expr Λ) (σ1 : state Λ) (φ : val Λ → Prop) := {
+Record adequate {Λ} (p : pbit) (e1 : expr Λ) (σ1 : state Λ) (φ : val Λ → Prop) := {
   adequate_result t2 σ2 v2 :
    rtc step ([e1], σ1) (of_val v2 :: t2, σ2) → φ v2;
   adequate_safe t2 σ2 e2 :
-   p →
+   p = progress →
    rtc step ([e1], σ1) (t2, σ2) →
    e2 ∈ t2 → progressive e2 σ2
 }.
 
 Theorem adequate_tp_safe {Λ} (e1 : expr Λ) t2 σ1 σ2 φ :
-  adequate true e1 σ1 φ →
+  adequate progress e1 σ1 φ →
   rtc step ([e1], σ1) (t2, σ2) →
   Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ t3 σ3, step (t2, σ2) (t3, σ3).
 Proof.
   intros Had ?.
   destruct (decide (Forall (λ e, is_Some (to_val e)) t2)) as [|Ht2]; [by left|].
   apply (not_Forall_Exists _), Exists_exists in Ht2; destruct Ht2 as (e2&?&He2).
-  destruct (adequate_safe true e1 σ1 φ Had t2 σ2 e2) as [?|(e3&σ3&efs&?)];
+  destruct (adequate_safe progress e1 σ1 φ Had t2 σ2 e2) as [?|(e3&σ3&efs&?)];
     rewrite ?eq_None_not_Some; auto.
   { exfalso. eauto. }
   destruct (elem_of_list_split t2 e2) as (t2'&t2''&->); auto.
@@ -59,7 +59,7 @@ Proof.
 Qed.
 
 Section adequacy.
-Context `{irisG Λ Σ} (p : bool).
+Context `{irisG Λ Σ} (p : pbit).
 Implicit Types e : expr Λ.
 Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
@@ -187,7 +187,7 @@ Proof.
     iMod wsat_alloc as (Hinv) "[Hw HE]".
     rewrite fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
-    iApply (@wptp_safe _ _ (IrisG _ _ Hinv Istate) true); eauto with iFrame.
+    iApply (@wptp_safe _ _ (IrisG _ _ Hinv Istate) progress); eauto with iFrame.
 Qed.
 
 Theorem wp_invariance Σ Λ `{invPreG Σ} p e σ1 t2 σ2 φ :

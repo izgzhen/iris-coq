@@ -3,7 +3,7 @@ From iris.base_logic.lib Require Export viewshifts.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 
-Definition ht `{irisG Λ Σ} (p : bool) (E : coPset) (P : iProp Σ)
+Definition ht `{irisG Λ Σ} (p : pbit) (E : coPset) (P : iProp Σ)
     (e : expr Λ) (Φ : val Λ → iProp Σ) : iProp Σ :=
   (□ (P -∗ WP e @ p; E {{ Φ }}))%I.
 Instance: Params (@ht) 5.
@@ -11,38 +11,38 @@ Instance: Params (@ht) 5.
 Notation "{{ P } } e @ p ; E {{ Φ } }" := (ht p E P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
    format "{{  P  } }  e  @  p ;  E  {{  Φ  } }") : C_scope.
-Notation "{{ P } } e @ E {{ Φ } }" := (ht true E P%I e%E Φ%I)
+Notation "{{ P } } e @ E {{ Φ } }" := (ht progress E P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
    format "{{  P  } }  e  @  E  {{  Φ  } }") : C_scope.
-Notation "{{ P } } e @ E ? {{ Φ } }" := (ht false E P%I e%E Φ%I)
+Notation "{{ P } } e @ E ? {{ Φ } }" := (ht noprogress E P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
    format "{{  P  } }  e  @  E  ? {{  Φ  } }") : C_scope.
-Notation "{{ P } } e {{ Φ } }" := (ht true ⊤ P%I e%E Φ%I)
+Notation "{{ P } } e {{ Φ } }" := (ht progress ⊤ P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
    format "{{  P  } }  e  {{  Φ  } }") : C_scope.
-Notation "{{ P } } e ? {{ Φ } }" := (ht false ⊤ P%I e%E Φ%I)
+Notation "{{ P } } e ? {{ Φ } }" := (ht noprogress ⊤ P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
    format "{{  P  } }  e  ? {{  Φ  } }") : C_scope.
 
 Notation "{{ P } } e @ p ; E {{ v , Q } }" := (ht p E P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
    format "{{  P  } }  e  @  p ;  E  {{  v ,  Q  } }") : C_scope.
-Notation "{{ P } } e @ E {{ v , Q } }" := (ht true E P%I e%E (λ v, Q)%I)
+Notation "{{ P } } e @ E {{ v , Q } }" := (ht progress E P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
    format "{{  P  } }  e  @  E  {{  v ,  Q  } }") : C_scope.
-Notation "{{ P } } e @ E ? {{ v , Q } }" := (ht false E P%I e%E (λ v, Q)%I)
+Notation "{{ P } } e @ E ? {{ v , Q } }" := (ht noprogress E P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
    format "{{  P  } }  e  @  E  ? {{  v ,  Q  } }") : C_scope.
-Notation "{{ P } } e {{ v , Q } }" := (ht true ⊤ P%I e%E (λ v, Q)%I)
+Notation "{{ P } } e {{ v , Q } }" := (ht progress ⊤ P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
    format "{{  P  } }  e  {{  v ,  Q  } }") : C_scope.
-Notation "{{ P } } e ? {{ v , Q } }" := (ht false ⊤ P%I e%E (λ v, Q)%I)
+Notation "{{ P } } e ? {{ v , Q } }" := (ht noprogress ⊤ P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
    format "{{  P  } }  e  ? {{  v ,  Q  } }") : C_scope.
 
 Section hoare.
 Context `{irisG Λ Σ}.
-Implicit Types p : bool.
+Implicit Types p : pbit.
 Implicit Types P Q : iProp Σ.
 Implicit Types Φ Ψ : val Λ → iProp Σ.
 Implicit Types v : val Λ.
@@ -77,7 +77,7 @@ Proof.
 Qed.
 
 Lemma ht_atomic' p E1 E2 P P' Φ Φ' e :
-  StronglyAtomic e ∨ p ∧ Atomic e →
+  StronglyAtomic e ∨ p = progress ∧ Atomic e →
   (P ={E1,E2}=> P') ∧ {{ P' }} e @ p; E2 {{ Φ' }} ∧ (∀ v, Φ' v ={E2,E1}=> Φ v)
   ⊢ {{ P }} e @ p; E1 {{ Φ }}.
 Proof.
