@@ -5,7 +5,7 @@ iris-coq8.5.3:
   - coq
   script:
   # prepare
-  - . build/opam-ci.sh 'coq 8.5.3' 'coq-mathcomp-ssreflect 1.6'
+  - . build/opam-ci.sh 'coq 8.5.3' 'coq-mathcomp-ssreflect 1.6.1'
   # build
   - 'time make -j8 TIMED=y 2>&1 | tee build-log.txt'
   - 'if fgrep Axiom build-log-full.txt >/dev/null; then exit 1; fi'
@@ -28,7 +28,7 @@ iris-coq8.6:
   - coq
   script:
   # prepare
-  - . build/opam-ci.sh 'coq 8.6' 'coq-mathcomp-ssreflect dev'
+  - . build/opam-ci.sh 'coq 8.6' 'coq-mathcomp-ssreflect 1.6.1'
   # build
   - 'time make -j8'
   cache:

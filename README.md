@@ -7,22 +7,13 @@ This is the Coq development of the [Iris Project](http://iris-project.org).
 This version is known to compile with:
 
  - Coq 8.5pl3 / 8.6
- - Ssreflect 1.6
+ - Ssreflect 1.6.1
 
 The easiest way to install the correct versions of the dependencies is through
 opam.  Once you got opam set up, just run `make build-dep` to install the right
 versions of the dependencies.  When the dependencies change, just run `make
 build-dep` again.
 
-For development, better make sure you have a version of Ssreflect that includes
-commit ad273277 (no such version has been released so far, you will have to
-fetch the development branch yourself).  Iris compiles fine even without this
-patch, but proof bullets will only be in 'strict' (enforcing) mode with the
-fixed version of Ssreflect.  If you are using opam, you can easily get a fixed
-version by running
-
-    opam pin add coq-mathcomp-ssreflect https://github.com/math-comp/math-comp.git#ad273277ab38bfe458e9332dea5f3a79e3885567
- 
 ## Building Instructions
 
 Run `make` to build the full development.
