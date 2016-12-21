@@ -172,5 +172,13 @@ Lemma entails_equiv_l (P Q R : uPred M) : (P ⊣⊢ Q) → (Q ⊢ R) → (P ⊢ 
 Proof. by intros ->. Qed.
 Lemma entails_equiv_r (P Q R : uPred M) : (P ⊢ Q) → (Q ⊣⊢ R) → (P ⊢ R).
 Proof. by intros ? <-. Qed.
+
+Lemma entails_lim (P Q : chain (uPredC M)) :
+  (∀ n, P n ⊢ Q n) → compl P ⊢ compl Q.
+Proof.
+  intros Hlim. split. intros n m Hval HP.
+  eapply uPred_holds_ne, Hlim, HP; eauto using conv_compl.
+Qed.
+
 End entails.
 End uPred.

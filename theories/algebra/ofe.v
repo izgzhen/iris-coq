@@ -68,7 +68,7 @@ End ofe_mixin.
 
 Hint Extern 1 (_ ≡{_}≡ _) => apply equiv_dist; assumption.
 
-(** Discrete COFEs and Timeless elements *)
+(** Discrete OFEs and Timeless elements *)
 (* TODO: On paper, We called these "discrete elements". I think that makes
    more sense. *)
 Class Timeless `{Equiv A, Dist A} (x : A) := timeless y : x ≡{0}≡ y → x ≡ y.
