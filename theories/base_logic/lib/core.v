@@ -7,7 +7,7 @@ Import uPred.
     in the shallow embedding. *)
 
 Definition coreP {M : ucmraT} (P : uPred M) : uPred M :=
-  (∀ (Q : uPred M) `(!PersistentP Q, !P -∗ Q), Q)%I.
+  (∀ `(!PersistentP Q, P ⊢ Q), Q)%I.
 
 Section core.
   Context {M : ucmraT}.
@@ -23,11 +23,18 @@ Section core.
     iIntros (HPQ). iApply HQ. unshelve iApply ("HCP" $! Q). done.
   Qed.
 
+  Global Instance coreP_mono : Proper ((⊢) ==> (⊢)) (@coreP M).
+  Proof.
+    unfold coreP. iIntros (?? ENT) "H *". unshelve iApply ("H" $! Q). by etrans.
+  Qed.
+
+  Global Instance coreP_proper : Proper ((⊣⊢) ==> (⊣⊢)) (@coreP M).
+  Proof. intros ??. rewrite !equiv_spec=>-[A B]. split; rewrite ?A // ?B //. Qed.
+
   Lemma coreP_elim P : PersistentP P → coreP P -∗ P.
   Proof.
     iIntros (?) "HCP". unshelve iApply ("HCP" $! P). iIntros "P". done.
   Qed.
 End core.
 
-
-
+Global Opaque coreP.
