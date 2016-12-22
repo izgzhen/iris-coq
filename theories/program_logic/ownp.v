@@ -201,97 +201,60 @@ Section ectx_lifting.
   Implicit Types Φ : val → iProp Σ.
   Implicit Types e : expr.
   Hint Resolve head_prim_reducible head_reducible_prim_step.
+  Hint Resolve (reducible_not_val _ inhabitant).
+  Hint Resolve progressive_head_progressive.
 
-  Lemma ownP_lift_head_step E Φ e1 :
+  Lemma ownP_lift_head_step p E Φ e1 :
     to_val e1 = None →
     (|={E,∅}=> ∃ σ1, ⌜head_reducible e1 σ1⌝ ∗ ▷ ownP σ1 ∗
       ▷ ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2
-            ={∅,E}=∗ WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
-    ⊢ WP e1 @ E {{ Φ }}.
+            ={∅,E}=∗ WP e2 @ p; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ p; ⊤ {{ _, True }})
+    ⊢ WP e1 @ p; E {{ Φ }}.
   Proof.
     iIntros (?) "H". iApply ownP_lift_step; first done.
     iMod "H" as (σ1 ?) "[Hσ1 Hwp]". iModIntro. iExists σ1.
-    iSplit; first by eauto. iFrame. iNext. iIntros (e2 σ2 efs) "% ?".
+    iSplit; first by destruct p; eauto. iFrame. iNext. iIntros (e2 σ2 efs) "% ?".
     iApply ("Hwp" with "[]"); eauto.
   Qed.
 
-  (* PDS: Discard *)
-  Lemma ownP_strong_lift_head_step p E Φ e1 :
-    to_val e1 = None →
-    (|={E,∅}=> ∃ σ1, ⌜if p then head_reducible e1 σ1 else True⌝ ∗ ▷ ownP σ1 ∗
-      ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2
-            ={∅,E}=∗ WP e2 @ p; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ p; ⊤{{ _, True }})
-    ⊢ WP e1 @ p; E {{ Φ }}.
+  Lemma ownP_lift_head_stuck E Φ e :
+    (|={E,∅}=> ∃ σ, ⌜¬ head_progressive e σ⌝ ∗ ▷ ownP σ)
+    ⊢ WP e @ E ?{{ Φ }}.
   Proof.
-    iIntros (?) "H"; iApply ownP_lift_step; first done.
-    iMod "H" as (σ1) "(%&Hσ1&Hwp)". iModIntro. iExists σ1.
-    iSplit; first by destruct p; eauto. by iFrame.
+    iIntros "H". iApply ownP_lift_stuck. iMod "H" as (σ) "[% >Hσ]".
+    iModIntro. iExists σ. iFrame "Hσ". by eauto.
   Qed.
 
-  Lemma ownP_lift_pure_head_step E Φ e1 :
+  Lemma ownP_lift_pure_head_step p E Φ e1 :
+    to_val e1 = None →
     (∀ σ1, head_reducible e1 σ1) →
     (∀ σ1 e2 σ2 efs, head_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
     (▷ ∀ e2 efs σ, ⌜head_step e1 σ e2 σ efs⌝ →
-      WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
-    ⊢ WP e1 @ E {{ Φ }}.
-  Proof using Hinh.
-    iIntros (??) "H". iApply ownP_lift_pure_step;
-      simpl; eauto using (reducible_not_val _ inhabitant).
-    iNext. iIntros (????). iApply "H"; eauto.
-  Qed.
-
-  (* PDS: Discard. *)
-  Lemma ownP_strong_lift_pure_head_step p E Φ e1 :
-    to_val e1 = None →
-    (∀ σ1, if p then head_reducible e1 σ1 else True) →
-    (∀ σ1 e2 σ2 efs, prim_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
-    (▷ ∀ e2 efs σ, ⌜prim_step e1 σ e2 σ efs⌝ →
       WP e2 @ p; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ p; ⊤ {{ _, True }})
     ⊢ WP e1 @ p; E {{ Φ }}.
   Proof using Hinh.
-    iIntros (???) "H". iApply ownP_lift_pure_step; eauto.
-    by destruct p; eauto.
+    iIntros (???) "H".  iApply ownP_lift_pure_step; eauto.
+    { by destruct p; auto. }
+    iNext. iIntros (????). iApply "H"; eauto.
   Qed.
 
-  Lemma ownP_lift_atomic_head_step {E Φ} e1 σ1 :
+  Lemma ownP_lift_atomic_head_step {p E Φ} e1 σ1 :
+    to_val e1 = None →
     head_reducible e1 σ1 →
     ▷ ownP σ1 ∗ ▷ (∀ e2 σ2 efs,
     ⌜head_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2 -∗
-      default False (to_val e2) Φ ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
-    ⊢ WP e1 @ E {{ Φ }}.
-  Proof.
-    iIntros (?) "[? H]". iApply ownP_lift_atomic_step;
-      simpl; eauto using reducible_not_val.
-    iFrame. iNext. iIntros (???) "% ?". iApply ("H" with "[]"); eauto.
-  Qed.
-
-  (* PDS: Discard. *)
-  Lemma ownP_strong_lift_atomic_head_step {p E Φ} e1 σ1 :
-    to_val e1 = None →
-    (if p then head_reducible e1 σ1 else True) →
-    ▷ ownP σ1 ∗ ▷ (∀ e2 σ2 efs,
-    ⌜prim_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2 -∗
       default False (to_val e2) Φ ∗ [∗ list] ef ∈ efs, WP ef @ p; ⊤ {{ _, True }})
     ⊢ WP e1 @ p; E {{ Φ }}.
   Proof.
-    iIntros (??) "[? H]". iApply ownP_lift_atomic_step; eauto; try iFrame.
-    by destruct p; eauto.
+    iIntros (??) "[? H]". iApply ownP_lift_atomic_step; eauto.
+    { by destruct p; eauto. }
+    iFrame. iNext. iIntros (???) "% ?". iApply ("H" with "[]"); eauto.
   Qed.
 
-  Lemma ownP_lift_atomic_det_head_step {E Φ e1} σ1 v2 σ2 efs :
+  Lemma ownP_lift_atomic_det_head_step {p E Φ e1} σ1 v2 σ2 efs :
+    to_val e1 = None →
     head_reducible e1 σ1 →
     (∀ e2' σ2' efs', head_step e1 σ1 e2' σ2' efs' →
-      σ2 = σ2' ∧ to_val e2' = Some v2 ∧ efs = efs') →
-    ▷ ownP σ1 ∗ ▷ (ownP σ2 -∗ Φ v2 ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
-    ⊢ WP e1 @ E {{ Φ }}.
-  Proof.
-    by eauto 10 using ownP_lift_atomic_det_step, reducible_not_val.
-  Qed.
-
-  Lemma ownP_strong_lift_atomic_det_head_step {p E Φ e1} σ1 v2 σ2 efs :
-    to_val e1 = None →
-    (if p then head_reducible e1 σ1 else True) →
-    (∀ e2' σ2' efs', prim_step e1 σ1 e2' σ2' efs' →
       σ2 = σ2' ∧ to_val e2' = Some v2 ∧ efs = efs') →
     ▷ ownP σ1 ∗ ▷ (ownP σ2 -∗ Φ v2 ∗ [∗ list] ef ∈ efs, WP ef @ p; ⊤ {{ _, True }})
     ⊢ WP e1 @ p; E {{ Φ }}.
@@ -299,20 +262,10 @@ Section ectx_lifting.
     by destruct p; eauto 10 using ownP_lift_atomic_det_step.
   Qed.
 
-  Lemma ownP_lift_atomic_det_head_step_no_fork {E e1} σ1 v2 σ2 :
+  Lemma ownP_lift_atomic_det_head_step_no_fork {p E e1} σ1 v2 σ2 :
+    to_val e1 = None →
     head_reducible e1 σ1 →
     (∀ e2' σ2' efs', head_step e1 σ1 e2' σ2' efs' →
-      σ2 = σ2' ∧ to_val e2' = Some v2 ∧ [] = efs') →
-    {{{ ▷ ownP σ1 }}} e1 @ E {{{ RET v2; ownP σ2 }}}.
-  Proof.
-    by eauto 10 using ownP_lift_atomic_det_step_no_fork, reducible_not_val.
-  Qed.
-
-  (* PDS: Discard. *)
-  Lemma ownP_strong_lift_atomic_det_head_step_no_fork {p E e1} σ1 v2 σ2 :
-    to_val e1 = None →
-    (if p then head_reducible e1 σ1 else True) →
-    (∀ e2' σ2' efs', prim_step e1 σ1 e2' σ2' efs' →
       σ2 = σ2' ∧ to_val e2' = Some v2 ∧ [] = efs') →
     {{{ ▷ ownP σ1 }}} e1 @ p; E {{{ RET v2; ownP σ2 }}}.
   Proof.
@@ -320,21 +273,10 @@ Section ectx_lifting.
     by destruct p; eauto.
   Qed.
 
-  Lemma ownP_lift_pure_det_head_step {E Φ} e1 e2 efs :
+  Lemma ownP_lift_pure_det_head_step {p E Φ} e1 e2 efs :
+    to_val e1 = None →
     (∀ σ1, head_reducible e1 σ1) →
     (∀ σ1 e2' σ2 efs', head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
-    ▷ (WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
-    ⊢ WP e1 @ E {{ Φ }}.
-  Proof using Hinh.
-    intros. rewrite -[(WP e1 @ _ {{ _ }})%I]wp_lift_pure_det_step;
-    eauto using (reducible_not_val _ inhabitant).
-  Qed.
-
-  (* PDS: Discard. *)
-  Lemma ownP_strong_lift_pure_det_head_step {p E Φ} e1 e2 efs :
-    to_val e1 = None →
-    (∀ σ1, if p then head_reducible e1 σ1 else True) →
-    (∀ σ1 e2' σ2 efs', prim_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
     ▷ (WP e2 @ p; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ p; ⊤ {{ _, True }})
     ⊢ WP e1 @ p; E {{ Φ }}.
   Proof using Hinh.
@@ -342,18 +284,10 @@ Section ectx_lifting.
     by destruct p; eauto.
   Qed.
 
-  Lemma ownP_lift_pure_det_head_step_no_fork {E Φ} e1 e2 :
+  Lemma ownP_lift_pure_det_head_step_no_fork {p E Φ} e1 e2 :
     to_val e1 = None →
     (∀ σ1, head_reducible e1 σ1) →
     (∀ σ1 e2' σ2 efs', head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
-    ▷ WP e2 @ E {{ Φ }} ⊢ WP e1 @ E {{ Φ }}.
-  Proof using Hinh. by eauto using ownP_lift_pure_det_step_no_fork. Qed.
-
-  (* PDS: Discard. *)
-  Lemma ownP_strong_lift_pure_det_head_step_no_fork {p E Φ} e1 e2 :
-    to_val e1 = None →
-    (∀ σ1, if p then head_reducible e1 σ1 else True) →
-    (∀ σ1 e2' σ2 efs', prim_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
     ▷ WP e2 @ p; E {{ Φ }} ⊢ WP e1 @ p; E {{ Φ }}.
   Proof using Hinh.
     iIntros (???) "H". iApply ownP_lift_pure_det_step_no_fork; eauto.

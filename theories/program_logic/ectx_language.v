@@ -61,6 +61,8 @@ Section ectx_language.
     ∃ e' σ' efs, head_step e σ e' σ' efs.
   Definition head_irreducible (e : expr) (σ : state) :=
     ∀ e' σ' efs, ¬head_step e σ e' σ' efs.
+  Definition head_progressive (e : expr) (σ : state) :=
+    is_Some(to_val e) ∨ ∃ K e', e = fill K e' ∧ head_reducible e' σ.
 
   (* All non-value redexes are at the root.  In other words, all sub-redexes are
      values. *)
@@ -115,6 +117,14 @@ Section ectx_language.
     head_irreducible e σ → sub_redexes_are_values e → irreducible e σ.
   Proof.
     rewrite -not_reducible -not_head_reducible. eauto using prim_head_reducible.
+  Qed.
+
+  Lemma progressive_head_progressive e σ :
+    progressive e σ → head_progressive e σ.
+  Proof.
+    case=>[?|Hred]; first by left.
+    right. move: Hred=> [] e' [] σ' [] efs [] K e1' e2' EQ EQ' Hstep. subst.
+    exists K, e1'. split; first done. by exists e2', σ', efs.
   Qed.
 
   Lemma ectx_language_strong_atomic e :
