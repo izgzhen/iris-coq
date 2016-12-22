@@ -83,6 +83,7 @@ theories/base_logic/lib/na_invariants.v
 theories/base_logic/lib/cancelable_invariants.v
 theories/base_logic/lib/counter_examples.v
 theories/base_logic/lib/fractional.v
+theories/base_logic/lib/gen_heap.v
 theories/program_logic/adequacy.v
 theories/program_logic/lifting.v
 theories/program_logic/weakestpre.v
@@ -91,7 +92,6 @@ theories/program_logic/language.v
 theories/program_logic/ectx_language.v
 theories/program_logic/ectxi_language.v
 theories/program_logic/ectx_lifting.v
-theories/program_logic/gen_heap.v
 theories/program_logic/ownp.v
 theories/heap_lang/lang.v
 theories/heap_lang/tactics.v

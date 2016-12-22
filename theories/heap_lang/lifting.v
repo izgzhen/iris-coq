@@ -1,4 +1,5 @@
-From iris.program_logic Require Export weakestpre gen_heap.
+From iris.base_logic Require Export gen_heap.
+From iris.program_logic Require Export weakestpre.
 From iris.program_logic Require Import ectx_lifting.
 From iris.heap_lang Require Export lang.
 From iris.heap_lang Require Import tactics.
