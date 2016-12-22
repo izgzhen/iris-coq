@@ -13,25 +13,19 @@ Section core.
   Context {M : ucmraT}.
   Implicit Types P Q : uPred M.
 
-  Lemma coreP_intro P :
-    P -∗ coreP P.
-  Proof.
-    iIntros "HP". iIntros (Q HQ HPQ). by iApply HPQ.
-  Qed.
+  Lemma coreP_intro P : P -∗ coreP P.
+  Proof. iIntros "HP". iIntros (Q HQ HPQ). by iApply HPQ. Qed.
 
-  Global Instance coreP_persistent P :
-    PersistentP (coreP P).
+  Global Instance coreP_persistent P : PersistentP (coreP P).
   Proof.
     iIntros "HCP". iApply always_forall. iIntros (Q).
     iApply always_forall. iIntros (HQ). iApply always_forall.
     iIntros (HPQ). iApply HQ. unshelve iApply ("HCP" $! Q). done.
   Qed.
 
-  Lemma corP_elim P :
-    PersistentP P → coreP P -∗ P.
+  Lemma corP_elim P : PersistentP P → coreP P -∗ P.
   Proof.
-    iIntros (?) "HCP". unshelve iApply ("HCP" $! P).
-    iIntros "P". done.
+    iIntros (?) "HCP". unshelve iApply ("HCP" $! P). iIntros "P". done.
   Qed.
 End core.
 
