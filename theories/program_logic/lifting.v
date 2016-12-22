@@ -96,21 +96,23 @@ Proof.
   by iIntros (e' efs' σ (_&->&->)%Hpuredet).
 Qed.
 
-Lemma wp_pure_step_fupd `{Inhabited (state Λ)} E E' e1 e2 φ Φ :
+Lemma wp_pure_step_fupd `{Inhabited (state Λ)} p E E' e1 e2 φ Φ :
   PureExec φ e1 e2 →
   φ →
-  (|={E,E'}▷=> WP e2 @ E {{ Φ }}) ⊢ WP e1 @ E {{ Φ }}.
+  (|={E,E'}▷=> WP e2 @ p; E {{ Φ }}) ⊢ WP e1 @ p; E {{ Φ }}.
 Proof.
   iIntros ([??] Hφ) "HWP".
-  iApply (wp_lift_pure_det_step with "[HWP]"); [|naive_solver|naive_solver|].
+  iApply (wp_lift_pure_det_step with "[HWP]").
   - apply (reducible_not_val _ inhabitant). by auto.
+  - destruct p; naive_solver.
+  - naive_solver.
   - by rewrite big_sepL_nil right_id.
 Qed.
 
-Lemma wp_pure_step_later `{Inhabited (state Λ)} E e1 e2 φ Φ :
+Lemma wp_pure_step_later `{Inhabited (state Λ)} p E e1 e2 φ Φ :
   PureExec φ e1 e2 →
   φ →
-  ▷ WP e2 @ E {{ Φ }} ⊢ WP e1 @ E {{ Φ }}.
+  ▷ WP e2 @ p; E {{ Φ }} ⊢ WP e1 @ p; E {{ Φ }}.
 Proof.
   intros ??. rewrite -wp_pure_step_fupd //. rewrite -step_fupd_intro //.
 Qed.
