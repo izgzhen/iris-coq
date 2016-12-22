@@ -84,6 +84,7 @@ theories/base_logic/lib/cancelable_invariants.v
 theories/base_logic/lib/counter_examples.v
 theories/base_logic/lib/fractional.v
 theories/base_logic/lib/gen_heap.v
+theories/base_logic/lib/core.v
 theories/program_logic/adequacy.v
 theories/program_logic/lifting.v
 theories/program_logic/weakestpre.v
