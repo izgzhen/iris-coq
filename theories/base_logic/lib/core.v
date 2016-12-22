@@ -23,7 +23,7 @@ Section core.
     iIntros (HPQ). iApply HQ. unshelve iApply ("HCP" $! Q). done.
   Qed.
 
-  Lemma corP_elim P : PersistentP P → coreP P -∗ P.
+  Lemma coreP_elim P : PersistentP P → coreP P -∗ P.
   Proof.
     iIntros (?) "HCP". unshelve iApply ("HCP" $! P). iIntros "P". done.
   Qed.
