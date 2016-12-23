@@ -45,11 +45,17 @@ Implicit Types P Q : iProp Σ.
 
 Global Instance box_own_prop_ne n γ : Proper (dist n ==> dist n) (box_own_prop γ).
 Proof. solve_proper. Qed.
+Global Instance box_own_prop_contractive γ : Contractive (box_own_prop γ).
+Proof. solve_contractive. Qed.
+
 Global Instance box_inv_ne n γ : Proper (dist n ==> dist n) (slice_inv γ).
 Proof. solve_proper. Qed.
 
 Global Instance slice_ne n γ : Proper (dist n ==> dist n) (slice N γ).
 Proof. solve_proper. Qed.
+Global Instance slice_contractive γ : Contractive (slice N γ).
+Proof. solve_contractive. Qed.
+
 Global Instance slice_persistent γ P : PersistentP (slice N γ P).
 Proof. apply _. Qed.
 
