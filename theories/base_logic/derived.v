@@ -437,6 +437,12 @@ Proof. intros P; apply (anti_symm _); auto. Qed.
 Global Instance False_sep : RightAbsorb (⊣⊢) False%I (@uPred_sep M).
 Proof. intros P; apply (anti_symm _); auto. Qed.
 
+Lemma entails_equiv_and P Q : (P ⊣⊢ Q ∧ P) ↔ (P ⊢ Q).
+Proof.
+  split; first by intros ->; apply uPred.and_elim_l. intros PQ.
+  apply uPred.equiv_spec; split;
+   [by apply uPred.and_intro|apply uPred.and_elim_r].
+Qed.
 Lemma sep_and_l P Q R : P ∗ (Q ∧ R) ⊢ (P ∗ Q) ∧ (P ∗ R).
 Proof. auto. Qed.
 Lemma sep_and_r P Q R : (P ∧ Q) ∗ R ⊢ (P ∗ R) ∧ (Q ∗ R).
