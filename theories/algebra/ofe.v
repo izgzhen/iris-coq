@@ -231,6 +231,24 @@ Section fixpoint.
   Lemma fixpoint_proper (g : A → A) `{!Contractive g} :
     (∀ x, f x ≡ g x) → fixpoint f ≡ fixpoint g.
   Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint_ne. Qed.
+
+  Lemma fixpoint_ind (P : A → Prop) :
+    Proper ((≡) ==> iff) P →
+    (∃ x, P x) → (∀ x, P x → P (f x)) →
+    (∀ (c : chain A), (∀ n, P (c n)) → P (compl c)) →
+    P (fixpoint f).
+  Proof.
+    intros ? [x Hx] Hincr Hlim. set (chcar i := Nat.iter (S i) f x).
+    assert (Hcauch : ∀ n i : nat, n ≤ i → chcar i ≡{n}≡ chcar n).
+    { intros n. induction n as [|n IH]=> -[|i] //= ?; try omega.
+      - apply (contractive_0 f).
+      - apply (contractive_S f), IH; auto with omega. }
+    set (fp2 := compl {| chain_cauchy := Hcauch |}).
+    rewrite -(fixpoint_unique fp2); first by apply Hlim; induction n; apply Hincr.
+    apply equiv_dist=>n.
+    rewrite /fp2 (conv_compl n) /= /chcar.
+    induction n as [|n IH]; simpl; eauto using contractive_0, contractive_S.
+  Qed.
 End fixpoint.
 
 (** Mutual fixpoints *)
@@ -863,7 +881,7 @@ Section later.
   Program Definition later_chain (c : chain laterC) : chain A :=
     {| chain_car n := later_car (c (S n)) |}.
   Next Obligation. intros c n i ?; apply (chain_cauchy c (S n)); lia. Qed.
-  Global Program Instance later_cofe `{Cofe A} : Cofe laterC := 
+  Global Program Instance later_cofe `{Cofe A} : Cofe laterC :=
     { compl c := Next (compl (later_chain c)) }.
   Next Obligation.
     intros ? [|n] c; [done|by apply (conv_compl n (later_chain c))].
