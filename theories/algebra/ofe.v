@@ -233,7 +233,7 @@ Section fixpoint.
   Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint_ne. Qed.
 
   Lemma fixpoint_ind (P : A → Prop) :
-    Proper ((≡) ==> iff) P →
+    Proper ((≡) ==> impl) P →
     (∃ x, P x) → (∀ x, P x → P (f x)) →
     (∀ (c : chain A), (∀ n, P (c n)) → P (compl c)) →
     P (fixpoint f).
