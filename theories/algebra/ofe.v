@@ -179,7 +179,8 @@ Ltac f_contractive :=
   | |- ?f _ _ ≡{_}≡ ?f _ _ => apply (_ : Proper (_ ==> dist_later _ ==> _) f)
   end;
   try match goal with
-  | |- dist_later ?n ?x ?y => destruct n as [|n]; [done|change (x ≡{n}≡ y)]
+  | |- @dist_later ?A ?n ?x ?y =>
+         destruct n as [|n]; [done|change (@dist A _ n x y)]
   end;
   try reflexivity.
 
