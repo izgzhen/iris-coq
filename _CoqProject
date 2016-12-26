@@ -53,6 +53,7 @@ theories/algebra/iprod.v
 theories/algebra/frac.v
 theories/algebra/csum.v
 theories/algebra/list.v
+theories/algebra/vector.v
 theories/algebra/updates.v
 theories/algebra/local_updates.v
 theories/algebra/gset.v
