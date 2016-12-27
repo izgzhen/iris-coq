@@ -755,7 +755,7 @@ Local Tactic Notation "iIntroForall" :=
   lazymatch goal with
   | |- ∀ _, ?P => fail
   | |- ∀ _, _ => intro
-  | |- _ ⊢ (∀ x : _, _) => iIntro (x)
+  | |- _ ⊢ (∀ x : _, _) => let x' := fresh x in iIntro (x')
   end.
 Local Tactic Notation "iIntro" :=
   try iStartProof;
