@@ -8,33 +8,29 @@ Import uPred.
 
 Definition coreP {M : ucmraT} (P : uPred M) : uPred M :=
   (∀ `(!PersistentP Q, P ⊢ Q), Q)%I.
+Instance: Params (@coreP) 1.
+Typeclasses Opaque coreP.
 
 Section core.
   Context {M : ucmraT}.
   Implicit Types P Q : uPred M.
 
   Lemma coreP_intro P : P -∗ coreP P.
-  Proof. iIntros "HP". iIntros (Q HQ HPQ). by iApply HPQ. Qed.
+  Proof. iIntros "HP". by iIntros (Q HQ ->). Qed.
 
   Global Instance coreP_persistent P : PersistentP (coreP P).
-  Proof.
-    iIntros "HCP". iApply always_forall. iIntros (Q).
-    iApply always_forall. iIntros (HQ). iApply always_forall.
-    iIntros (HPQ). iApply HQ. unshelve iApply ("HCP" $! Q). done.
-  Qed.
+  Proof. rewrite /coreP. apply _. Qed.
 
   Global Instance coreP_mono : Proper ((⊢) ==> (⊢)) (@coreP M).
   Proof.
-    unfold coreP. iIntros (?? ENT) "H *". unshelve iApply ("H" $! Q). by etrans.
+    rewrite /coreP. iIntros (P P' ?) "H"; iIntros (Q ??).
+    unshelve iApply ("H" $! Q). by etrans.
   Qed.
 
   Global Instance coreP_proper : Proper ((⊣⊢) ==> (⊣⊢)) (@coreP M).
-  Proof. intros ??. rewrite !equiv_spec=>-[A B]. split; rewrite ?A // ?B //. Qed.
+  Proof. intros P Q. rewrite !equiv_spec=>-[??]. by split; apply coreP_mono. Qed.
 
   Lemma coreP_elim P : PersistentP P → coreP P -∗ P.
-  Proof.
-    iIntros (?) "HCP". unshelve iApply ("HCP" $! P). iIntros "P". done.
-  Qed.
+  Proof. rewrite /coreP. iIntros (?) "HCP". unshelve iApply ("HCP" $! P); auto. Qed.
 End core.
 
-Global Opaque coreP.
