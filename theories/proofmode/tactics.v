@@ -325,18 +325,11 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
          |go H1 pats]
     end in let pats := spec_pat.parse pat in go H pats.
 
-(* p = whether the conclusion of the specialized term is persistent. It can
-either be a Boolean or an introduction pattern, which will be coerced in true
-when it only contains `#` or `%` patterns at the top-level. *)
+(* The argument [p] denotes whether the conclusion of the specialized term is
+persistent. It can either be a Boolean or an introduction pattern, which will be
+coerced into [true] when it only contains `#` or `%` patterns at the top-level. *)
 Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) tactic(tac) :=
-  let p :=
-    lazymatch type of p with
-    | intro_pat => eval cbv in (intro_pat_persistent p)
-    | string =>
-       let pat := intro_pat.parse_one p in
-       eval cbv in (intro_pat_persistent pat)
-    | _ => p
-    end in
+  let p := intro_pat_persistent p in
   lazymatch t with
   | ITrm ?H ?xs ?pat =>
     lazymatch type of H with
@@ -1122,41 +1115,61 @@ Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
   iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) Hs with (iLöbCore as IH).
 
 (** * Assert *)
-Tactic Notation "iAssertCore" open_constr(Q) "with" constr(Hs) "as" tactic(tac) :=
+(* The argument [p] denotes whether [Q] is persistent. It can either be a
+Boolean or an introduction pattern, which will be coerced into [true] when it
+only contains `#` or `%` patterns at the top-level. *)
+Tactic Notation "iAssertCore" open_constr(Q)
+    "with" constr(Hs) "as" constr(p) tactic(tac) :=
   iStartProof;
+  let p := intro_pat_persistent p in
   let H := iFresh in
   let Hs := spec_pat.parse Hs in
   lazymatch Hs with
   | [SGoalPersistent] =>
-     eapply tac_assert_persistent with _ H Q;
+     eapply tac_assert_persistent with _ _ _ true [] H Q;
        [env_cbv; reflexivity
+       |env_cbv; reflexivity
        |(*goal*)
        |apply _ || fail "iAssert:" Q "not persistent"
        |tac H]
   | [SGoal (SpecGoal ?m ?lr ?Hs_frame ?Hs)] =>
      let Hs' := eval cbv in (if lr then Hs else Hs_frame ++ Hs) in
-     eapply tac_assert with _ _ _ lr Hs' H Q _;
-       [match m with
-        | false => apply elim_modal_dummy
-        | true => apply _ || fail "iAssert: goal not a modality"
-        end
-       |env_cbv; reflexivity || fail "iAssert:" Hs "not found"
-       |env_cbv; reflexivity
-       |iFrame Hs_frame (*goal*)
-       |tac H]
+     match p with
+     | false =>
+       eapply tac_assert with _ _ _ lr Hs' H Q _;
+         [match m with
+          | false => apply elim_modal_dummy
+          | true => apply _ || fail "iAssert: goal not a modality"
+          end
+         |env_cbv; reflexivity || fail "iAssert:" Hs "not found"
+         |env_cbv; reflexivity
+         |iFrame Hs_frame (*goal*)
+         |tac H]
+     | true =>
+       eapply tac_assert_persistent with _ _ _ lr Hs' H Q;
+         [env_cbv; reflexivity
+         |env_cbv; reflexivity
+         |(*goal*)
+         |apply _ || fail "iAssert:" Q "not persistent"
+         |tac H]
+     end
   | ?pat => fail "iAssert: invalid pattern" pat
   end.
 
 Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as" constr(pat) :=
-  iAssertCore Q with Hs as (fun H => iDestructHyp H as pat).
+  iAssertCore Q with Hs as pat (fun H => iDestructHyp H as pat).
 Tactic Notation "iAssert" open_constr(Q) "as" constr(pat) :=
-  iAssert Q with "[]" as pat.
+  let p := intro_pat_persistent pat in
+  match p with
+  | true => iAssert Q with "[-]" as pat
+  | false => iAssert Q with "[]" as pat
+  end.
 
 Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs)
     "as" "%" simple_intropattern(pat) :=
-  iAssertCore Q with Hs as (fun H => iPure H as pat).
+  iAssertCore Q with Hs as true (fun H => iPure H as pat).
 Tactic Notation "iAssert" open_constr(Q) "as" "%" simple_intropattern(pat) :=
-  iAssert Q with "[]" as %pat.
+  iAssert Q with "[-]" as %pat.
 
 (** * Rewrite *)
 Local Ltac iRewriteFindPred :=

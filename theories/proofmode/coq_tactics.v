@@ -608,13 +608,15 @@ Proof.
   by rewrite right_id HP HQ.
 Qed.
 
-Lemma tac_assert_persistent Δ Δ' j P Q :
-  envs_app true (Esnoc Enil j P) Δ = Some Δ' →
-  (Δ ⊢ P) → PersistentP P → (Δ' ⊢ Q) → Δ ⊢ Q.
+Lemma tac_assert_persistent Δ Δ1 Δ2 Δ' lr js j P Q :
+  envs_split lr js Δ = Some (Δ1,Δ2) →
+  envs_app false (Esnoc Enil j P) Δ = Some Δ' →
+  (Δ1 ⊢ P) → PersistentP P →
+  (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
-  intros ? HP ??.
-  rewrite -(idemp uPred_and Δ) {1}HP envs_app_sound //; simpl.
-  by rewrite right_id {1}(persistentP P) always_and_sep_l wand_elim_r.
+  intros ?? HP ? <-. rewrite -(idemp uPred_and Δ) {1}envs_split_sound //.
+  rewrite HP sep_elim_l (always_and_sep_l P) envs_app_sound //; simpl.
+  by rewrite right_id wand_elim_r.
 Qed.
 
 Lemma tac_pose_proof Δ Δ' j P Q :

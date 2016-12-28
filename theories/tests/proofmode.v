@@ -105,3 +105,13 @@ End iris.
 Lemma demo_9 (M : ucmraT) (x y z : M) :
   ✓ x → ⌜y ≡ z⌝ -∗ (✓ x ∧ ✓ x ∧ y ≡ z : uPred M).
 Proof. iIntros (Hv) "Hxy". by iFrame (Hv Hv) "Hxy". Qed.
+
+Lemma demo_10 (M : ucmraT) (P Q : uPred M) : P -∗ Q -∗ True.
+Proof.
+  iIntros "HP HQ".
+  iAssert True%I as "#_". { by iClear "HP HQ". }
+  iAssert True%I with "[HP]" as "#_". { Fail iClear "HQ". by iClear "HP". }
+  iAssert True%I as %_. { by iClear "HP HQ". }
+  iAssert True%I with "[HP]" as %_. { Fail iClear "HQ". by iClear "HP". }
+  done.
+Qed.

@@ -38,12 +38,17 @@ Context management
   the resulting goal.
 - `iPoseProof pm_trm as "H"` : put `pm_trm` into the context as a new hypothesis
   `H`.
-- `iAssert P with "spat" as "ipat"` : create a new goal with conclusion `P` and
-  put `P` in the context of the original goal. The specialization pattern
-  `spat` specifies which hypotheses will be consumed by proving `P`. The
-  introduction pattern `ipat` specifies how to eliminate `P`.
-- `iAssert P with "spat" as %cpat` : assert `P` and eliminate it using the Coq
-  introduction pattern `cpat`.
+- `iAssert P with "spat" as "ipat"` : generates a new subgoal `P` and adds the
+  hypothesis `P` to the current goal. The specialization pattern `spat`
+  specifies which hypotheses will be consumed by proving `P`. The introduction
+  pattern `ipat` specifies how to eliminate `P`.
+  In case all branches of `ipat` start with a `#` (which causes `P` to be moved
+  to the persistent context) or with an `%` (which causes `P` to be moved to the
+  pure Coq context), then one can use all hypotheses for proving `P` as well as
+  for proving the current goal.
+- `iAssert P as %cpat` : assert `P` and eliminate it using the Coq introduction
+  pattern `cpat`. All hypotheses can be used for proving `P` as well as for
+  proving the current goal.
 
 Introduction of logical connectives
 -----------------------------------
@@ -67,13 +72,16 @@ Elimination of logical connectives
 ----------------------------------
 
 - `iExFalso` : Ex falso sequitur quod libet.
-- `iDestruct pm_trm as (x1 ... xn) "ipat"` : elimination of existential
-  quantifiers using Coq introduction patterns `x1 ... xn` and elimination of
-  object level connectives using the proof mode introduction pattern `ipat`.
-  In case all branches of `ipat` start with an `#` (moving the hypothesis to the
-  persistent context) or `%` (moving the hypothesis to the pure Coq context),
-  one can use all hypotheses for proving the premises of `pm_trm`, as well as
-  for proving the resulting goal.
+- `iDestruct pm_trm as (x1 ... xn) "ipat"` : elimination of a series of
+  existential quantifiers using Coq introduction patterns `x1 ... xn`, and
+  elimination of an object level connective using the proof mode introduction
+  pattern `ipat`.
+  In case all branches of `ipat` start with a `#` (which causes the hypothesis
+  to be moved to the persistent context) or with an `%` (which causes the
+  hypothesis to be moved to the pure Coq context), then one can use all
+  hypotheses for proving the premises of `pm_trm`, as well as for proving the
+  resulting goal. Note that in this case the hypotheses still need to be
+  subdivided among the spatial premises.
 - `iDestruct pm_trm as %cpat` : elimination of a pure hypothesis using the Coq
   introduction pattern `cpat`. When using this tactic, all hypotheses can be
   used for proving the premises of `pm_trm`, as well as for proving the

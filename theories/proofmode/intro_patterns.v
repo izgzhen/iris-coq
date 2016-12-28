@@ -17,14 +17,6 @@ Inductive intro_pat :=
   | IAll : intro_pat
   | IClear : list (bool * string) → intro_pat. (* true = frame, false = clear *)
 
-Fixpoint intro_pat_persistent (p : intro_pat) :=
-  match p with
-  | IPureElim => true
-  | IAlwaysElim _ => true
-  | IList pps => forallb (forallb intro_pat_persistent) pps
-  | _ => false
-  end.
-
 Module intro_pat.
 Inductive token :=
   | TName : string → token
@@ -186,3 +178,20 @@ Ltac parse_one s :=
      end
   end.
 End intro_pat.
+
+Fixpoint intro_pat_persistent (p : intro_pat) :=
+  match p with
+  | IPureElim => true
+  | IAlwaysElim _ => true
+  | IList pps => forallb (forallb intro_pat_persistent) pps
+  | _ => false
+  end.
+
+Ltac intro_pat_persistent p :=
+  lazymatch type of p with
+  | intro_pat => eval cbv in (intro_pat_persistent p)
+  | string =>
+     let pat := intro_pat.parse_one p in
+     eval cbv in (intro_pat_persistent pat)
+  | _ => p
+  end.
