@@ -72,53 +72,109 @@ Global Instance into_persistentP_persistent P :
 Proof. done. Qed.
 
 (* IntoLater *)
+(* The class [IntoLaterN] has only two instances:
+
+- The default instance [IntoLaterN n P P], i.e. [▷^n P -∗ P]
+- The instance [ProgIntoLaterN n P Q → IntoLaterN n P Q], where [ProgIntoLaterN]
+  is identical to [IntoLaterN], but computationally is supposed to make
+  progress, i.e. its instances should actually strip a later.
+
+The point of using the auxilary class [ProgIntoLaterN] is to ensure that the
+default instance is not applied deeply in the term, which may cause in too many
+definitions being unfolded (see issue #55).
+
+For binary connectives we have the following instances:
+
+<<
+ProgIntoLaterN n P P'       IntoLaterN n Q Q'
+---------------------------------------------
+ProgIntoLaterN n (P /\ Q) (P' /\ Q')
+
+
+   ProgIntoLaterN n Q Q'
+--------------------------------
+IntoLaterN n (P /\ Q) (P /\ Q')
+>>
+
+That is, to make progress, a later _should_ be stripped on either the left- or
+right-hand side of the binary connective. *)
+Class ProgIntoLaterN (n : nat) (P Q : uPred M) :=
+  prog_into_laterN : P ⊢ ▷^n Q.
+Global Arguments prog_into_laterN _ _ _ {_}.
+
 Global Instance into_laterN_default n P : IntoLaterN n P P | 1000.
 Proof. apply laterN_intro. Qed.
+Global Instance into_laterN_progress P Q :
+  ProgIntoLaterN n P Q → IntoLaterN n P Q.
+Proof. done. Qed.
+
 Global Instance into_laterN_later n P Q :
-  IntoLaterN n P Q → IntoLaterN (S n) (▷ P) Q.
-Proof. by rewrite /IntoLaterN=>->. Qed.
-Global Instance into_laterN_laterN n P : IntoLaterN n (▷^n P) P.
+  IntoLaterN n P Q → ProgIntoLaterN (S n) (▷ P) Q.
+Proof. by rewrite /IntoLaterN /ProgIntoLaterN=>->. Qed.
+Global Instance into_laterN_laterN n P : ProgIntoLaterN n (▷^n P) P.
 Proof. done. Qed.
 Global Instance into_laterN_laterN_plus n m P Q :
-  IntoLaterN m P Q → IntoLaterN (n + m) (▷^n P) Q.
-Proof. rewrite /IntoLaterN=>->. by rewrite laterN_plus. Qed.
+  IntoLaterN m P Q → ProgIntoLaterN (n + m) (▷^n P) Q.
+Proof. rewrite /IntoLaterN /ProgIntoLaterN=>->. by rewrite laterN_plus. Qed.
 
-Global Instance into_laterN_and n P1 P2 Q1 Q2 :
-  IntoLaterN n P1 Q1 → IntoLaterN n P2 Q2 → IntoLaterN n (P1 ∧ P2) (Q1 ∧ Q2).
-Proof. intros ??; red. by rewrite laterN_and; apply and_mono. Qed.
-Global Instance into_laterN_or n P1 P2 Q1 Q2 :
-  IntoLaterN n P1 Q1 → IntoLaterN n P2 Q2 → IntoLaterN n (P1 ∨ P2) (Q1 ∨ Q2).
-Proof. intros ??; red. by rewrite laterN_or; apply or_mono. Qed.
-Global Instance into_laterN_sep n P1 P2 Q1 Q2 :
-  IntoLaterN n P1 Q1 → IntoLaterN n P2 Q2 → IntoLaterN n (P1 ∗ P2) (Q1 ∗ Q2).
+Global Instance into_laterN_and_l n P1 P2 Q1 Q2 :
+  ProgIntoLaterN n P1 Q1 → IntoLaterN n P2 Q2 →
+  IntoLaterN n (P1 ∧ P2) (Q1 ∧ Q2).
+Proof. rewrite /ProgIntoLaterN /IntoLaterN=> -> ->. by rewrite laterN_and. Qed.
+Global Instance into_laterN_and_r n P P2 Q2 :
+  ProgIntoLaterN n P2 Q2 → ProgIntoLaterN n (P ∧ P2) (P ∧ Q2).
+Proof.
+  rewrite /ProgIntoLaterN=> ->. by rewrite laterN_and -(laterN_intro _ P).
+Qed.
+
+Global Instance into_laterN_or_l n P1 P2 Q1 Q2 :
+  ProgIntoLaterN n P1 Q1 → IntoLaterN n P2 Q2 →
+  IntoLaterN n (P1 ∨ P2) (Q1 ∨ Q2).
+Proof. rewrite /ProgIntoLaterN /IntoLaterN=> -> ->. by rewrite laterN_or. Qed.
+Global Instance into_laterN_or_r n P P2 Q2 :
+  ProgIntoLaterN n P2 Q2 →
+  ProgIntoLaterN n (P ∨ P2) (P ∨ Q2).
+Proof.
+  rewrite /ProgIntoLaterN=> ->. by rewrite laterN_or -(laterN_intro _ P).
+Qed.
+
+Global Instance into_laterN_sep_l n P1 P2 Q1 Q2 :
+  ProgIntoLaterN n P1 Q1 → IntoLaterN n P2 Q2 →
+  IntoLaterN n (P1 ∗ P2) (Q1 ∗ Q2).
 Proof. intros ??; red. by rewrite laterN_sep; apply sep_mono. Qed.
+Global Instance into_laterN_sep_r n P P2 Q2 :
+  ProgIntoLaterN n P2 Q2 →
+  ProgIntoLaterN n (P ∗ P2) (P ∗ Q2).
+Proof.
+  rewrite /ProgIntoLaterN=> ->. by rewrite laterN_sep -(laterN_intro _ P).
+Qed.
 
 Global Instance into_laterN_big_sepL n {A} (Φ Ψ : nat → A → uPred M) (l: list A) :
-  (∀ x k, IntoLaterN n (Φ k x) (Ψ k x)) →
-  IntoLaterN n ([∗ list] k ↦ x ∈ l, Φ k x) ([∗ list] k ↦ x ∈ l, Ψ k x).
+  (∀ x k, ProgIntoLaterN n (Φ k x) (Ψ k x)) →
+  ProgIntoLaterN n ([∗ list] k ↦ x ∈ l, Φ k x) ([∗ list] k ↦ x ∈ l, Ψ k x).
 Proof.
-  rewrite /IntoLaterN=> ?. rewrite big_sepL_laterN. by apply big_sepL_mono.
+  rewrite /ProgIntoLaterN=> ?. rewrite big_sepL_laterN. by apply big_sepL_mono.
 Qed.
 Global Instance into_laterN_big_sepM n `{Countable K} {A}
     (Φ Ψ : K → A → uPred M) (m : gmap K A) :
-  (∀ x k, IntoLaterN n (Φ k x) (Ψ k x)) →
-  IntoLaterN n ([∗ map] k ↦ x ∈ m, Φ k x) ([∗ map] k ↦ x ∈ m, Ψ k x).
+  (∀ x k, ProgIntoLaterN n (Φ k x) (Ψ k x)) →
+  ProgIntoLaterN n ([∗ map] k ↦ x ∈ m, Φ k x) ([∗ map] k ↦ x ∈ m, Ψ k x).
 Proof.
-  rewrite /IntoLaterN=> ?. rewrite big_sepM_laterN; by apply big_sepM_mono.
+  rewrite /ProgIntoLaterN=> ?. rewrite big_sepM_laterN; by apply big_sepM_mono.
 Qed.
 Global Instance into_laterN_big_sepS n `{Countable A}
     (Φ Ψ : A → uPred M) (X : gset A) :
-  (∀ x, IntoLaterN n (Φ x) (Ψ x)) →
-  IntoLaterN n ([∗ set] x ∈ X, Φ x) ([∗ set] x ∈ X, Ψ x).
+  (∀ x, ProgIntoLaterN n (Φ x) (Ψ x)) →
+  ProgIntoLaterN n ([∗ set] x ∈ X, Φ x) ([∗ set] x ∈ X, Ψ x).
 Proof.
-  rewrite /IntoLaterN=> ?. rewrite big_sepS_laterN; by apply big_sepS_mono.
+  rewrite /ProgIntoLaterN=> ?. rewrite big_sepS_laterN; by apply big_sepS_mono.
 Qed.
 Global Instance into_laterN_big_sepMS n `{Countable A}
     (Φ Ψ : A → uPred M) (X : gmultiset A) :
-  (∀ x, IntoLaterN n (Φ x) (Ψ x)) →
-  IntoLaterN n ([∗ mset] x ∈ X, Φ x) ([∗ mset] x ∈ X, Ψ x).
+  (∀ x, ProgIntoLaterN n (Φ x) (Ψ x)) →
+  ProgIntoLaterN n ([∗ mset] x ∈ X, Φ x) ([∗ mset] x ∈ X, Ψ x).
 Proof.
-  rewrite /IntoLaterN=> ?. rewrite big_sepMS_laterN; by apply big_sepMS_mono.
+  rewrite /ProgIntoLaterN=> ?. rewrite big_sepMS_laterN; by apply big_sepMS_mono.
 Qed.
 
 (* FromLater *)
