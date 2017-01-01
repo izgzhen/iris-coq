@@ -326,9 +326,11 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
     end in let pats := spec_pat.parse pat in go H pats.
 
 (* The argument [p] denotes whether the conclusion of the specialized term is
-persistent. It can either be a Boolean or an introduction pattern, which will be
-coerced into [true] when it only contains `#` or `%` patterns at the top-level. *)
-Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) tactic(tac) :=
+persistent. If so, one can use all spatial hypotheses for both proving the
+premises and the remaning goal. The argument [p] can either be a Boolean or an
+introduction pattern, which will be coerced into [true] when it solely contains
+`#` or `%` patterns at the top-level. *)
+Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
   let p := intro_pat_persistent p in
   lazymatch t with
   | ITrm ?H ?xs ?pat =>
@@ -341,17 +343,17 @@ Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) tactic(tac) :=
            |iSpecializeArgs H xs; iSpecializePat H pat; last (iExact H)
            |let Q := match goal with |- PersistentP ?Q => Q end in
             apply _ || fail "iSpecialize:" Q "not persistent"
-           |env_cbv; reflexivity|tac H]
-      | false => iSpecializeArgs H xs; iSpecializePat H pat; last (tac H)
+           |env_cbv; reflexivity|(* goal *)]
+      | false => iSpecializeArgs H xs; iSpecializePat H pat
       end
     | _ => fail "iSpecialize:" H "should be a hypothesis, use iPoseProof instead"
     end
   end.
 
 Tactic Notation "iSpecialize" open_constr(t) :=
-  iSpecializeCore t as false (fun _ => idtac).
-Tactic Notation "iSpecialize" open_constr(t) "#" :=
-  iSpecializeCore t as true (fun _ => idtac).
+  iSpecializeCore t as false.
+Tactic Notation "iSpecialize" open_constr(t) "as" "#" :=
+  iSpecializeCore t as true.
 
 (** * Pose proof *)
 (* The tactic [iIntoValid] tactic solves a goal [uPred_valid Q]. The
@@ -377,56 +379,58 @@ Tactic Notation "iIntoValid" open_constr(t) :=
        (* This is a workarround for Coq bug #4969. *)
        let e := fresh in evar (e:id T);
        let e' := eval unfold e in e in clear e; go (t e')
-    end
-  in go t.
+    end in
+  go t.
 
-Tactic Notation "iPoseProofCore" open_constr(lem) "as" constr(p) tactic(tac) :=
-  let pose_trm t tac :=
-    let Htmp := iFresh in
-    iStartProof;
+(* The tactic [tac] is called with a temporary fresh name [H]. The argument
+[lazy_tc] denotes whether type class inference on the premises of [lem] should
+be performed before (if false) or after (if true) [tac H] is called. *)
+Tactic Notation "iPoseProofCore" open_constr(lem)
+    "as" constr(p) constr(lazy_tc) tactic(tac) :=
+  try iStartProof;
+  let Htmp := iFresh in
+  let t :=
+    lazymatch lem with ITrm ?t ?xs ?pat => t | _ => lem end in
+  let spec_tac _ :=
+    lazymatch lem with
+    | ITrm ?t ?xs ?pat => iSpecializeCore (ITrm Htmp xs pat) as p
+    | _ => idtac
+    end in
+  let go goal_tac :=
     lazymatch type of t with
     | string =>
        eapply tac_pose_proof_hyp with _ _ t _ Htmp _;
          [env_cbv; reflexivity || fail "iPoseProof:" t "not found"
          |env_cbv; reflexivity || fail "iPoseProof:" Htmp "not fresh"
-         |tac Htmp]
+         |goal_tac ()]
     | _ =>
        eapply tac_pose_proof with _ Htmp _; (* (j:=H) *)
          [iIntoValid t
          |env_cbv; reflexivity || fail "iPoseProof:" Htmp "not fresh"
-         |tac Htmp]
+         |goal_tac ()]
     end;
-    try (apply _) (* solve TC constraints. It is essential that this happens
-    after the continuation [tac] has been called. *)
-  in lazymatch lem with
-  | ITrm ?t ?xs ?pat =>
-     pose_trm t ltac:(fun Htmp => iSpecializeCore (ITrm Htmp xs pat) as p tac)
-  | _ => pose_trm lem tac
+    try (apply _) in
+  lazymatch eval compute in lazy_tc with
+  | true => go ltac:(fun _ => spec_tac (); last (tac Htmp))
+  | false => go spec_tac; last (tac Htmp)
   end.
 
 Tactic Notation "iPoseProof" open_constr(lem) "as" constr(H) :=
-  iPoseProofCore lem as false (fun Htmp => iRename Htmp into H).
+  iPoseProofCore lem as false false (fun Htmp => iRename Htmp into H).
 
 (** * Apply *)
 Tactic Notation "iApply" open_constr(lem) :=
-  let finish H := first
+  let lem := (* add a `*` to specialize all top-level foralls *)
+    lazymatch lem with
+    | ITrm ?t ?xs ?pat => constr:(ITrm t xs ("*" +:+ pat))
+    | _ => constr:(ITrm lem hnil "*")
+    end in
+  iPoseProofCore lem as false true (fun H => first
     [iExact H
     |eapply tac_apply with _ H _ _ _;
-       [env_cbv; reflexivity || fail 1 "iApply:" H "not found"
-       |let P := match goal with |- IntoWand ?P _ _ => P end in
-        apply _ || fail 1 "iApply: cannot apply" P
-       |lazy beta (* reduce betas created by instantiation *)]] in
-  lazymatch lem with
-  | ITrm ?t ?xs ?pat =>
-     iPoseProofCore t as false (fun Htmp =>
-       iSpecializeArgs Htmp xs;
-       try (iSpecializeArgs Htmp (hcons _ _));
-       iSpecializePat Htmp pat; last finish Htmp)
-  | _ =>
-     iPoseProofCore lem as false (fun Htmp =>
-       try (iSpecializeArgs Htmp (hcons _ _));
-       finish Htmp)
-  end.
+      [env_cbv; reflexivity
+      |apply _
+      |lazy beta (* reduce betas created by instantiation *)]]).
 
 (** * Revert *)
 Local Tactic Notation "iForallRevert" ident(x) :=
@@ -928,10 +932,10 @@ Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
   | iTrm =>
      (* only copy the hypothesis when universal quantifiers are instantiated *)
      lazymatch lem with
-     | @iTrm string ?H _ hnil ?pat => iSpecializeCore lem as p tac
-     | _ => iPoseProofCore lem as p tac
+     | @iTrm string ?H _ hnil ?pat => iSpecializeCore lem as p; last tac
+     | _ => iPoseProofCore lem as p false tac
      end
-  | _ => iPoseProofCore lem as p tac
+  | _ => iPoseProofCore lem as p false tac
   end.
 
 Tactic Notation "iDestruct" open_constr(lem) "as" constr(pat) :=
@@ -1180,7 +1184,7 @@ Local Ltac iRewriteFindPred :=
   end.
 
 Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) :=
-  iPoseProofCore lem as true (fun Heq =>
+  iPoseProofCore lem as true true (fun Heq =>
     eapply (tac_rewrite _ Heq _ _ lr);
       [env_cbv; reflexivity || fail "iRewrite:" Heq "not found"
       |let P := match goal with |- ?P ⊢ _ => P end in
@@ -1195,7 +1199,7 @@ Tactic Notation "iRewrite" open_constr(lem) := iRewriteCore false lem.
 Tactic Notation "iRewrite" "-" open_constr(lem) := iRewriteCore true lem.
 
 Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) "in" constr(H) :=
-  iPoseProofCore lem as true (fun Heq =>
+  iPoseProofCore lem as true true (fun Heq =>
     eapply (tac_rewrite_in _ Heq _ _ H _ _ lr);
       [env_cbv; reflexivity || fail "iRewrite:" Heq "not found"
       |env_cbv; reflexivity || fail "iRewrite:" H "not found"
