@@ -36,8 +36,6 @@ Definition spawn_inv (γ : gname) (l : loc) (Ψ : val → iProp Σ) : iProp Σ :
 Definition join_handle (l : loc) (Ψ : val → iProp Σ) : iProp Σ :=
   (∃ γ, own γ (Excl ()) ∗ inv N (spawn_inv γ l Ψ))%I.
 
-Typeclasses Opaque join_handle.
-
 Global Instance spawn_inv_ne n γ l :
   Proper (pointwise_relation val (dist n) ==> dist n) (spawn_inv γ l).
 Proof. solve_proper. Qed.
@@ -65,7 +63,7 @@ Qed.
 Lemma join_spec (Ψ : val → iProp Σ) l :
   {{{ join_handle l Ψ }}} join #l {{{ v, RET v; Ψ v }}}.
 Proof.
-  rewrite /join_handle; iIntros (Φ) "H HΦ". iDestruct "H" as (γ) "[Hγ #?]".
+  iIntros (Φ) "H HΦ". iDestruct "H" as (γ) "[Hγ #?]".
   iLöb as "IH". wp_rec. wp_bind (! _)%E. iInv N as (v) "[Hl Hinv]" "Hclose".
   wp_load. iDestruct "Hinv" as "[%|Hinv]"; subst.
   - iMod ("Hclose" with "[Hl]"); [iNext; iExists _; iFrame; eauto|].

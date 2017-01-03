@@ -53,8 +53,6 @@ Global Instance barrier_ctx_persistent (γ : gname) (l : loc) (P : iProp Σ) :
   PersistentP (barrier_ctx γ l P).
 Proof. apply _. Qed.
 
-Typeclasses Opaque barrier_ctx send recv.
-
 (** Setoids *)
 Global Instance ress_ne n : Proper (dist n ==> (=) ==> dist n) ress.
 Proof. solve_proper. Qed.
@@ -103,7 +101,7 @@ Proof.
   { iNext. rewrite /barrier_inv /=. iFrame.
     iExists (const P). rewrite !big_sepS_singleton /=. eauto. }
   iAssert (barrier_ctx γ' l P)%I as "#?".
-  { rewrite /barrier_ctx. by repeat iSplit. }
+  { done. }
   iAssert (sts_ownS γ' (i_states γ) {[Change γ]}
     ∗ sts_ownS γ' low_states {[Send]})%I with ">[-]" as "[Hr Hs]".
   { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
@@ -111,15 +109,15 @@ Proof.
     - iApply (sts_own_weaken with "Hγ'");
         auto using sts.closed_op, i_states_closed, low_states_closed;
         abstract set_solver. }
-  iModIntro. rewrite /recv /send. iSplitL "Hr".
+  iModIntro. iSplitL "Hr".
   - iExists γ', P, P, γ. iFrame. auto.
-  - auto.
+  - rewrite /send. auto.
 Qed.
 
 Lemma signal_spec l P :
   {{{ send l P ∗ P }}} signal #l {{{ RET #(); True }}}.
 Proof.
-  rewrite /signal /send /barrier_ctx /=.
+  rewrite /signal /=.
   iIntros (Φ) "[Hs HP] HΦ". iDestruct "Hs" as (γ) "[#Hsts Hγ]". wp_let.
   iMod (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
     as ([p I]) "(% & [Hl Hr] & Hclose)"; eauto.
@@ -127,7 +125,7 @@ Proof.
   iSpecialize ("HΦ" with "[#]") => //. iFrame "HΦ".
   iMod ("Hclose" $! (State High I) (∅ : set token) with "[-]"); last done.
   iSplit; [iPureIntro; by eauto using signal_step|].
-  rewrite {2}/barrier_inv /ress /=. iNext. iFrame "Hl".
+  rewrite /barrier_inv /ress /=. iNext. iFrame "Hl".
   iDestruct "Hr" as (Ψ) "[Hr Hsp]"; iExists Ψ; iFrame "Hsp".
   iNext. iIntros "_"; by iApply "Hr".
 Qed.
@@ -135,14 +133,14 @@ Qed.
 Lemma wait_spec l P:
   {{{ recv l P }}} wait #l {{{ RET #(); P }}}.
 Proof.
-  rename P into R; rewrite /recv /barrier_ctx.
+  rename P into R.
   iIntros (Φ) "Hr HΦ"; iDestruct "Hr" as (γ P Q i) "(#Hsts & Hγ & #HQ & HQR)".
   iLöb as "IH". wp_rec. wp_bind (! _)%E.
   iMod (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
     as ([p I]) "(% & [Hl Hr] & Hclose)"; eauto.
   wp_load. destruct p.
   - iMod ("Hclose" $! (State Low I) {[ Change i ]} with "[Hl Hr]") as "Hγ".
-    { iSplit; first done. rewrite {2}/barrier_inv /=. by iFrame. }
+    { iSplit; first done. rewrite /barrier_inv /=. by iFrame. }
     iAssert (sts_ownS γ (i_states i) {[Change i]})%I with ">[Hγ]" as "Hγ".
     { iApply (sts_own_weaken with "Hγ"); eauto using i_states_closed. }
     iModIntro. wp_if.
@@ -155,7 +153,7 @@ Proof.
     { iNext. iApply (big_sepS_delete _ _ i); first done. by iApply "HΨ". }
     iMod ("Hclose" $! (State High (I ∖ {[ i ]})) (∅ : set token) with "[HΨ' Hl Hsp]").
     { iSplit; [iPureIntro; by eauto using wait_step|].
-      rewrite {2}/barrier_inv /=. iNext. iFrame "Hl". iExists Ψ; iFrame. auto. }
+      rewrite /barrier_inv /=. iNext. iFrame "Hl". iExists Ψ; iFrame. auto. }
     iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by auto.
     iModIntro. wp_if.
     iApply "HΦ". iApply "HQR". by iRewrite "Heq".
@@ -164,7 +162,7 @@ Qed.
 Lemma recv_split E l P1 P2 :
   ↑N ⊆ E → recv l (P1 ∗ P2) ={E}=∗ recv l P1 ∗ recv l P2.
 Proof.
-  rename P1 into R1; rename P2 into R2. rewrite {1}/recv /barrier_ctx.
+  rename P1 into R1; rename P2 into R2.
   iIntros (?). iDestruct 1 as (γ P Q i) "(#Hsts & Hγ & #HQ & HQR)".
   iMod (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
     as ([p I]) "(% & [Hl Hr] & Hclose)"; eauto.
@@ -175,7 +173,7 @@ Proof.
   iMod ("Hclose" $! (State p ({[i1; i2]} ∪ I ∖ {[i]}))
                    {[Change i1; Change i2 ]} with "[-]") as "Hγ".
   { iSplit; first by eauto using split_step.
-    rewrite {2}/barrier_inv /=. iNext. iFrame "Hl".
+    rewrite /barrier_inv /=. iNext. iFrame "Hl".
     by iApply (ress_split with "HQ Hi1 Hi2 HQR"). }
   iAssert (sts_ownS γ (i_states i1) {[Change i1]}
     ∗ sts_ownS γ (i_states i2) {[Change i2]})%I with ">[-]" as "[Hγ1 Hγ2]".
@@ -184,14 +182,14 @@ Proof.
     - iApply (sts_own_weaken with "Hγ");
         eauto using sts.closed_op, i_states_closed.
       abstract set_solver. }
-  iModIntro; iSplitL "Hγ1"; rewrite /recv /barrier_ctx.
+  iModIntro; iSplitL "Hγ1".
   - iExists γ, P, R1, i1. iFrame; auto.
   - iExists γ, P, R2, i2. iFrame; auto.
 Qed.
 
 Lemma recv_weaken l P1 P2 : (P1 -∗ P2) -∗ recv l P1 -∗ recv l P2.
 Proof.
-  rewrite /recv. iIntros "HP". iDestruct 1 as (γ P Q i) "(#Hctx&Hγ&Hi&HP1)".
+  iIntros "HP". iDestruct 1 as (γ P Q i) "(#Hctx&Hγ&Hi&HP1)".
   iExists γ, P, Q, i. iFrame "Hctx Hγ Hi".
   iNext. iIntros "HQ". by iApply "HP"; iApply "HP1".
 Qed.
