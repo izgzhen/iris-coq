@@ -285,18 +285,20 @@ Inductive contains {A} : relation (list A) :=
 Infix "`contains`" := contains (at level 70) : C_scope.
 Hint Extern 0 (_ `contains` _) => reflexivity.
 
-Section contains_dec_help.
-  Context `{EqDecision A}.
-  Fixpoint list_remove (x : A) (l : list A) : option (list A) :=
-    match l with
-    | [] => None
-    | y :: l => if decide (x = y) then Some l else (y ::) <$> list_remove x l
-    end.
-  Fixpoint list_remove_list (k : list A) (l : list A) : option (list A) :=
-    match k with
-    | [] => Some l | x :: k => list_remove x l ≫= list_remove_list k
-    end.
-End contains_dec_help.
+(** Removes [x] from the list [l]. The function returns a [Some] when the
++removal succeeds and [None] when [x] is not in [l]. *)
+Fixpoint list_remove `{EqDecision A} (x : A) (l : list A) : option (list A) :=
+  match l with
+  | [] => None
+  | y :: l => if decide (x = y) then Some l else (y ::) <$> list_remove x l
+  end.
+
+(** Removes all elements in the list [k] from the list [l]. The function returns
+a [Some] when the removal succeeds and [None] some element of [k] is not in [l]. *)
+Fixpoint list_remove_list `{EqDecision A} (k : list A) (l : list A) : option (list A) :=
+  match k with
+  | [] => Some l | x :: k => list_remove x l ≫= list_remove_list k
+  end.
 
 Inductive Forall3 {A B C} (P : A → B → C → Prop) :
      list A → list B → list C → Prop :=
