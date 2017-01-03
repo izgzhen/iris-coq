@@ -51,27 +51,34 @@ if project is None:
     sys.stderr.write("Project not found.\n")
     sys.exit(1)
 
+BREAK = False
 for commit in parse_log.parse_git_commits(args.commits):
+    if BREAK:
+        break
     print("Fetching {}...".format(commit))
     commit_data = req("/projects/{}/repository/commits/{}".format(project['id'], commit))
     if commit_data.status_code != 200:
         raise Exception("Commit not found?")
     builds = req("/projects/{}/repository/commits/{}/builds".format(project['id'], commit))
     if builds.status_code != 200:
-        # no build
-        continue
-    build = first(sorted(builds.json(), key = lambda b: -int(b['id'])))
-    if build is None or build['status'] == 'failed':
-        # build failed (or missing...??)
-        continue
-    if build['status'] == 'running':
-        # build still running, don't fetch this or any later commit
+        raise Exception("Build not found?")
+    # iterate over builds by decreasing ID, and look for the artifact
+    for build in builds.json():
+        if build['status'] in ('created', 'pending', 'running'):
+            # build still not yet done, don't fetch this or any later commit
+            BREAK = True
+            break
+        if build['status'] != 'success':
+            # build failed or cancelled, skip to next
+            continue
+        # now fetch the build times
+        build_times = requests.get("{}/builds/{}/artifacts/file/build-time.txt".format(project['web_url'], build['id']))
+        if build_times.status_code != 200:
+            # no artifact at this build, try another one
+            continue
+        # Output in the log file format
+        log_file.write("# {}\n".format(commit))
+        log_file.write(build_times.text)
+        log_file.flush()
+        # don't fetch another one
         break
-    # now fetch the build times
-    build_times = requests.get("{}/builds/{}/artifacts/file/build-time.txt".format(project['web_url'], build['id']))
-    if build_times.status_code != 200:
-        raise Exception("No artifact at build?")
-    # Output in the log file format
-    log_file.write("# {}\n".format(commit))
-    log_file.write(build_times.text)
-    log_file.flush()
