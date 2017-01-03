@@ -1,4 +1,5 @@
 From iris.algebra Require Export cmra.
+Set Default Proof Using "Type*".
 
 Record uPred (M : ucmraT) : Type := IProp {
   uPred_holds :> nat → M → Prop;

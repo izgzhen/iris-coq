@@ -3,6 +3,7 @@
 (** This files defines a lexicographic order on various common data structures
 and proves that it is a partial order having a strong variant of trichotomy. *)
 From iris.prelude Require Import numbers.
+Set Default Proof Using "Type*".
 
 Notation cast_trichotomy T :=
   match T with

@@ -4,6 +4,7 @@
 over Coq's data type of unary natural numbers [nat]. The implementation equips
 a list with a proof of canonicity. *)
 From iris.prelude Require Import fin_maps mapset.
+Set Default Proof Using "Type*".
 
 Notation natmap_raw A := (list (option A)).
 Definition natmap_wf {A} (l : natmap_raw A) :=

@@ -5,6 +5,7 @@ From iris.prelude Require Import functions.
 From iris.base_logic Require Import big_op lib.saved_prop lib.sts.
 From iris.heap_lang Require Import proofmode.
 From iris.heap_lang.lib.barrier Require Import protocol.
+Set Default Proof Using "Type*".
 
 (** The CMRAs/functors we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)

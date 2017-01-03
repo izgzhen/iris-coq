@@ -4,6 +4,7 @@
 maps. We provide such an axiomatization, instead of implementing the domain
 function in a generic way, to allow more efficient implementations. *)
 From iris.prelude Require Export collections fin_maps.
+Set Default Proof Using "Type*".
 
 Class FinMapDom K M D `{FMap M,
     ∀ A, Lookup K A (M A), ∀ A, Empty (M A), ∀ A, PartialAlter K A (M A),

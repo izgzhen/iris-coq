@@ -1,4 +1,5 @@
 From iris.algebra Require Export ofe.
+Set Default Proof Using "Type*".
 
 Record solution (F : cFunctor) := Solution {
   solution_car :> ofeT;

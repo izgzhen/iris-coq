@@ -8,6 +8,7 @@ From iris.heap_lang Require Export lang.
 From iris.program_logic Require Export hoare.
 From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation.
+Set Default Proof Using "Type*".
 Import uPred.
 
 Definition newcounter : val := λ: <>, ref #0.

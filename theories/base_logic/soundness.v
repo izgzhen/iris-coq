@@ -1,4 +1,5 @@
 From iris.base_logic Require Export base_logic.
+Set Default Proof Using "Type*".
 Import uPred.
 
 Section adequacy.

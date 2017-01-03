@@ -1,6 +1,7 @@
 From iris.algebra Require Export list cmra_big_op.
 From iris.base_logic Require Export base_logic.
 From iris.prelude Require Import gmap fin_collections gmultiset functions.
+Set Default Proof Using "Type*".
 Import uPred.
 
 (* We make use of the bigops on CMRAs, so we first define a (somewhat ad-hoc)

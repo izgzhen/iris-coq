@@ -1,5 +1,6 @@
 From iris.algebra Require Export cmra list.
 From iris.prelude Require Import functions gmap gmultiset.
+Set Default Proof Using "Type*".
 
 (** The operator [ [⋅] Ps ] folds [⋅] over the list [Ps]. This operator is not a
 quantifier, so it binds strongly.

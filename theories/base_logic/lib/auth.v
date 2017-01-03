@@ -3,6 +3,7 @@ From iris.algebra Require Export auth.
 From iris.algebra Require Import gmap.
 From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics.
+Set Default Proof Using "Type*".
 Import uPred.
 
 (* The CMRA we need. *)

@@ -1,4 +1,5 @@
 From iris.base_logic Require Export derived.
+Set Default Proof Using "Type*".
 
 Module Import uPred.
   Export upred.uPred.

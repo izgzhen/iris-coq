@@ -1,5 +1,6 @@
 From iris.base_logic Require Export upred.
 From iris.algebra Require Export updates.
+Set Default Proof Using "Type*".
 Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etrans; [|eassumption].
 Local Hint Extern 10 (_ ≤ _) => omega.

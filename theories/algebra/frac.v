@@ -1,5 +1,6 @@
 From Coq.QArith Require Import Qcanon.
 From iris.algebra Require Export cmra.
+Set Default Proof Using "Type*".
 
 Notation frac := Qp (only parsing).
 

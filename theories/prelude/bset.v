@@ -2,6 +2,7 @@
 (* This file is distributed under the terms of the BSD license. *)
 (** This file implements bsets as functions into Prop. *)
 From iris.prelude Require Export prelude.
+Set Default Proof Using "Type*".
 
 Record bset (A : Type) : Type := mkBSet { bset_car : A → bool }.
 Arguments mkBSet {_} _.

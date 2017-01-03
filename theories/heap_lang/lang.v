@@ -2,6 +2,7 @@ From iris.program_logic Require Export ectx_language ectxi_language.
 From iris.algebra Require Export ofe.
 From iris.prelude Require Export strings.
 From iris.prelude Require Import gmap.
+Set Default Proof Using "Type*".
 
 Module heap_lang.
 Open Scope Z_scope.

@@ -2,6 +2,7 @@ From iris.algebra Require Export cmra.
 From iris.prelude Require Export gmap.
 From iris.algebra Require Import updates local_updates.
 From iris.base_logic Require Import base_logic.
+Set Default Proof Using "Type*".
 
 Section cofe.
 Context `{Countable K} {A : ofeT}.

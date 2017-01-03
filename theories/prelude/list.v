@@ -4,6 +4,7 @@
 are not in the Coq standard library. *)
 From Coq Require Export Permutation.
 From iris.prelude Require Export numbers base option.
+Set Default Proof Using "Type*".
 
 Arguments length {_} _.
 Arguments cons {_} _ _.

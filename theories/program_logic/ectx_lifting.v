@@ -1,6 +1,7 @@
 (** Some derived lemmas for ectx-based languages *)
 From iris.program_logic Require Export ectx_language weakestpre lifting.
 From iris.proofmode Require Import tactics.
+Set Default Proof Using "Type*".
 
 Section wp.
 Context {expr val ectx state} {Λ : EctxLanguage expr val ectx state}.

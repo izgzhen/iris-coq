@@ -1,5 +1,6 @@
 From iris.base_logic Require Import base_logic soundness.
 From iris.proofmode Require Import tactics.
+Set Default Proof Using "All".
 
 (** This proves that we need the ▷ in a "Saved Proposition" construction with
 name-dependent allocation. *)

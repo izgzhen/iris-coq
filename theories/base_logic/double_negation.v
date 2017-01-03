@@ -1,4 +1,5 @@
 From iris.base_logic Require Import base_logic.
+Set Default Proof Using "Type*".
 
 (* In this file we show that the bupd can be thought of a kind of
    step-indexed double-negation when our meta-logic is classical *)

@@ -1,5 +1,6 @@
 From iris.prelude Require Export countable coPset.
 From iris.algebra Require Export base.
+Set Default Proof Using "Type*".
 
 Definition namespace := list positive.
 Instance namespace_eq_dec : EqDecision namespace := _.

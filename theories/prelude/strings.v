@@ -4,6 +4,7 @@ From Coq Require Import Ascii.
 From Coq Require Export String.
 From iris.prelude Require Export list.
 From iris.prelude Require Import countable.
+Set Default Proof Using "Type*".
 
 (* To avoid randomly ending up with String.length because this module is
 imported hereditarily somewhere. *)

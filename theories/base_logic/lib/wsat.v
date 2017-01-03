@@ -3,6 +3,7 @@ From iris.prelude Require Export coPset.
 From iris.algebra Require Import gmap auth agree gset coPset.
 From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics.
+Set Default Proof Using "Type*".
 
 Module invG.
   Class invG (Σ : gFunctors) : Set := WsatG {

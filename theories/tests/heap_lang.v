@@ -3,6 +3,7 @@ From iris.program_logic Require Export weakestpre hoare.
 From iris.heap_lang Require Export lang.
 From iris.heap_lang Require Import adequacy.
 From iris.heap_lang Require Import proofmode notation.
+Set Default Proof Using "Type*".
 
 Section LiftingTests.
   Context `{heapG Σ}.

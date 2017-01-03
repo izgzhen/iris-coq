@@ -2,6 +2,7 @@ From iris.program_logic Require Export hoare.
 From iris.heap_lang.lib.barrier Require Export barrier.
 From iris.heap_lang.lib.barrier Require Import proof.
 From iris.heap_lang Require Import proofmode.
+Set Default Proof Using "Type*".
 Import uPred.
 
 Section spec.

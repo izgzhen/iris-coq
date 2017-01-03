@@ -6,6 +6,7 @@ principles on finite collections . *)
 From Coq Require Import Permutation.
 From iris.prelude Require Import relations listset.
 From iris.prelude Require Export numbers collections.
+Set Default Proof Using "Type*".
 
 Instance collection_size `{Elements A C} : Size C := length ∘ elements.
 Definition collection_fold `{Elements A C} {B}

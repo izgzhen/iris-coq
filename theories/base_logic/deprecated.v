@@ -1,4 +1,5 @@
 From iris.base_logic Require Import primitive.
+Set Default Proof Using "Type*".
 
 (* Deprecated 2016-11-22. Use ⌜φ⌝ instead. *)
 Notation "■ φ" := (uPred_pure φ%C%type)

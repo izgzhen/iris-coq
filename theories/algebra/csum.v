@@ -1,6 +1,7 @@
 From iris.algebra Require Export cmra.
 From iris.base_logic Require Import base_logic.
 From iris.algebra Require Import local_updates.
+Set Default Proof Using "Type*".
 Local Arguments pcore _ _ !_ /.
 Local Arguments cmra_pcore _ !_ /.
 Local Arguments validN _ _ _ !_ /.

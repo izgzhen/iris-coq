@@ -2,6 +2,7 @@ From iris.base_logic Require Export base_logic.
 From iris.base_logic Require Import big_op tactics.
 From iris.proofmode Require Export environments classes.
 From iris.prelude Require Import stringmap hlist.
+Set Default Proof Using "Type*".
 Import uPred.
 Import env_notations.
 

@@ -1,5 +1,6 @@
 From iris.heap_lang Require Export lifting notation.
 From iris.base_logic.lib Require Export invariants.
+Set Default Proof Using "Type*".
 
 Structure lock Σ `{!heapG Σ} := Lock {
   (* -- operations -- *)

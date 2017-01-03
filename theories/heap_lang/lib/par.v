@@ -1,5 +1,6 @@
 From iris.heap_lang Require Export spawn.
 From iris.heap_lang Require Import proofmode notation.
+Set Default Proof Using "Type*".
 Import uPred.
 
 Definition parN : namespace := nroot .@ "par".

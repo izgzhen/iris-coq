@@ -1,6 +1,7 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
 From iris.prelude Require Export countable vector.
+Set Default Proof Using "Type*".
 
 Class Finite A `{EqDecision A} := {
   enum : list A;

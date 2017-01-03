@@ -1,4 +1,5 @@
 From iris.algebra Require Export ofe.
+Set Default Proof Using "Type*".
 
 Class PCore (A : Type) := pcore : A → option A.
 Instance: Params (@pcore) 2.

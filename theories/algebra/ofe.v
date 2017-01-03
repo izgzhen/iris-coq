@@ -1,4 +1,5 @@
 From iris.algebra Require Export base.
+Set Default Proof Using "Type*".
 
 (** This files defines (a shallow embedding of) the category of OFEs:
     Complete ordered families of equivalences. This is a cartesian closed

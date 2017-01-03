@@ -6,6 +6,7 @@ induction principles for finite maps and implements the tactic
 [simplify_map_eq] to simplify goals involving finite maps. *)
 From Coq Require Import Permutation.
 From iris.prelude Require Export relations orders vector.
+Set Default Proof Using "Type*".
 
 (** * Axiomatization of finite maps *)
 (** We require Leibniz equality to be extensional on finite maps. This of

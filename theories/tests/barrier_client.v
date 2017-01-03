@@ -3,6 +3,7 @@ From iris.heap_lang Require Export lang.
 From iris.heap_lang.lib.barrier Require Import proof.
 From iris.heap_lang Require Import par.
 From iris.heap_lang Require Import adequacy proofmode.
+Set Default Proof Using "Type*".
 
 Definition worker (n : Z) : val :=
   λ: "b" "y", wait "b" ;; !"y" #n.

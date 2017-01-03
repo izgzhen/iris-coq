@@ -4,6 +4,7 @@
 elements of the unit type. Since maps enjoy extensional equality, the
 constructed finite sets do so as well. *)
 From iris.prelude Require Export fin_map_dom.
+(* FIXME: This file needs a 'Proof Using' hint. *)
 
 Record mapset (M : Type → Type) : Type :=
   Mapset { mapset_car: M (unit : Type) }.

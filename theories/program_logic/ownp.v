@@ -3,6 +3,7 @@ From iris.program_logic Require Import lifting adequacy.
 From iris.program_logic Require ectx_language.
 From iris.algebra Require Import auth.
 From iris.proofmode Require Import tactics classes.
+Set Default Proof Using "Type*".
 
 Class ownPG' (Λstate : Type) (Σ : gFunctors) := OwnPG {
   ownP_invG : invG Σ;
