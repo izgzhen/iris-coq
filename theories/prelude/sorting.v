@@ -114,7 +114,7 @@ End sorted.
 
 (** ** Correctness of merge sort *)
 Section merge_sort_correct.
-  Context  {A} (R : relation A) `{∀ x y, Decision (R x y)} `{!Total R}.
+  Context  {A} (R : relation A) `{∀ x y, Decision (R x y)}.
 
   Lemma list_merge_cons x1 x2 l1 l2 :
     list_merge R (x1 :: l1) (x2 :: l2) =
@@ -127,7 +127,7 @@ Section merge_sort_correct.
     destruct 1 as [|x1 l1 IH1], 1 as [|x2 l2 IH2];
       rewrite ?list_merge_cons; simpl; repeat case_decide; auto.
   Qed.
-  Lemma Sorted_list_merge l1 l2 :
+  Lemma Sorted_list_merge `{!Total R} l1 l2 :
     Sorted R l1 → Sorted R l2 → Sorted R (list_merge R l1 l2).
   Proof.
     intros Hl1. revert l2. induction Hl1 as [|x1 l1 IH1];
@@ -158,7 +158,7 @@ Section merge_sort_correct.
     | Some l :: st => l ++ merge_stack_flatten st
     end.
 
-  Lemma Sorted_merge_list_to_stack st l :
+  Lemma Sorted_merge_list_to_stack `{!Total R} st l :
     merge_stack_Sorted st → Sorted R l →
     merge_stack_Sorted (merge_list_to_stack R st l).
   Proof.
@@ -172,7 +172,7 @@ Section merge_sort_correct.
     revert l. induction st as [|[l'|] st IH]; intros l; simpl; auto.
     by rewrite IH, merge_Permutation, (assoc_L _), (comm (++) l).
   Qed.
-  Lemma Sorted_merge_stack st :
+  Lemma Sorted_merge_stack `{!Total R} st :
     merge_stack_Sorted st → Sorted R (merge_stack R st).
   Proof. induction 1; simpl; auto using Sorted_list_merge. Qed.
   Lemma merge_stack_Permutation st : merge_stack R st ≡ₚ merge_stack_flatten st.
@@ -180,7 +180,7 @@ Section merge_sort_correct.
     induction st as [|[] ? IH]; intros; simpl; auto.
     by rewrite merge_Permutation, IH.
   Qed.
-  Lemma Sorted_merge_sort_aux st l :
+  Lemma Sorted_merge_sort_aux `{!Total R} st l :
     merge_stack_Sorted st → Sorted R (merge_sort_aux R st l).
   Proof.
     revert st. induction l; simpl;
@@ -194,11 +194,11 @@ Section merge_sort_correct.
     - rewrite IH, merge_list_to_stack_Permutation; simpl.
       by rewrite Permutation_middle.
   Qed.
-  Lemma Sorted_merge_sort l : Sorted R (merge_sort R l).
+  Lemma Sorted_merge_sort `{!Total R} l : Sorted R (merge_sort R l).
   Proof. apply Sorted_merge_sort_aux. by constructor. Qed.
   Lemma merge_sort_Permutation l : merge_sort R l ≡ₚ l.
   Proof. unfold merge_sort. by rewrite merge_sort_aux_Permutation. Qed.
-  Lemma StronglySorted_merge_sort `{!Transitive R} l :
+  Lemma StronglySorted_merge_sort `{!Transitive R, !Total R} l :
     StronglySorted R (merge_sort R l).
   Proof. auto using Sorted_StronglySorted, Sorted_merge_sort. Qed.
 End merge_sort_correct.
