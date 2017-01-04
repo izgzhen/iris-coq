@@ -142,4 +142,28 @@ Proof.
   iApply (big_sepM_insert _ I); first done.
   iFrame "HI". iLeft. by rewrite /ownD; iFrame.
 Qed.
+
+Lemma ownI_alloc_open φ P :
+  (∀ E : gset positive, ∃ i, i ∉ E ∧ φ i) →
+  wsat ==∗ ∃ i, ⌜φ i⌝ ∗ (ownE {[i]} -∗ wsat) ∗ ownI i P ∗ ownD {[i]}.
+Proof.
+  iIntros (Hfresh) "Hw". iDestruct "Hw" as (I) "[? HI]".
+  iMod (own_empty (gset_disjUR positive) disabled_name) as "HD".
+  iMod (own_updateP with "HD") as "HD".
+  { apply (gset_disj_alloc_empty_updateP_strong' (λ i, I !! i = None ∧ φ i)).
+    intros E. destruct (Hfresh (E ∪ dom _ I))
+      as (i & [? HIi%not_elem_of_dom]%not_elem_of_union & ?); eauto. }
+  iDestruct "HD" as (X) "[Hi HD]"; iDestruct "Hi" as %(i & -> & HIi & ?).
+  iMod (own_update with "Hw") as "[Hw HiP]".
+  { eapply auth_update_alloc,
+     (alloc_singleton_local_update _ i (invariant_unfold P)); last done.
+    by rewrite /= lookup_fmap HIi. }
+  iModIntro; iExists i;  iSplit; [done|]. rewrite /ownI; iFrame "HiP".
+  rewrite -/(ownD _). iFrame "HD".
+  iIntros "HE". iExists (<[i:=P]>I); iSplitL "Hw".
+  { by rewrite fmap_insert insert_singleton_op ?lookup_fmap ?HIi. }
+  iApply (big_sepM_insert _ I); first done.
+  iFrame "HI". by iRight.
+Qed.
+
 End wsat.
