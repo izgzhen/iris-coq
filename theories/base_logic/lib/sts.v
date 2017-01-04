@@ -58,7 +58,8 @@ Instance: Params (@sts_own) 5.
 Instance: Params (@sts_ctx) 6.
 
 Section sts.
-  Context `{invG Σ, stsG Σ sts} (φ : sts.state sts → iProp Σ).
+  Context `{invG Σ, stsG Σ sts}.
+  Implicit Types φ : sts.state sts → iProp Σ.
   Implicit Types N : namespace.
   Implicit Types P Q R : iProp Σ.
   Implicit Types γ : gname.
@@ -82,7 +83,7 @@ Section sts.
     sts_ownS γ (S1 ∩ S2) (T1 ∪ T2) ⊣⊢ (sts_ownS γ S1 T1 ∗ sts_ownS γ S2 T2).
   Proof. intros. by rewrite /sts_ownS -own_op sts_op_frag. Qed.
 
-  Lemma sts_alloc E N s :
+  Lemma sts_alloc φ E N s :
     ▷ φ s ={E}=∗ ∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s).
   Proof.
     iIntros "Hφ". rewrite /sts_ctx /sts_own.
@@ -93,7 +94,7 @@ Section sts.
     rewrite /sts_inv. iNext. iExists s. by iFrame.
   Qed.
 
-  Lemma sts_accS E γ S T :
+  Lemma sts_accS φ E γ S T :
     ▷ sts_inv γ φ ∗ sts_ownS γ S T ={E}=∗ ∃ s,
       ⌜s ∈ S⌝ ∗ ▷ φ s ∗ ∀ s' T',
       ⌜sts.steps (s, T) (s', T')⌝ ∗ ▷ φ s' ={E}=∗ ▷ sts_inv γ φ ∗ sts_own γ s' T'.
@@ -111,13 +112,13 @@ Section sts.
     iModIntro. iNext. iExists s'; by iFrame.
   Qed.
 
-  Lemma sts_acc E γ s0 T :
+  Lemma sts_acc φ E γ s0 T :
     ▷ sts_inv γ φ ∗ sts_own γ s0 T ={E}=∗ ∃ s,
       ⌜sts.frame_steps T s0 s⌝ ∗ ▷ φ s ∗ ∀ s' T',
       ⌜sts.steps (s, T) (s', T')⌝ ∗ ▷ φ s' ={E}=∗ ▷ sts_inv γ φ ∗ sts_own γ s' T'.
   Proof. by apply sts_accS. Qed.
 
-  Lemma sts_openS E N γ S T :
+  Lemma sts_openS φ E N γ S T :
     ↑N ⊆ E →
     sts_ctx γ N φ ∗ sts_ownS γ S T ={E,E∖↑N}=∗ ∃ s,
       ⌜s ∈ S⌝ ∗ ▷ φ s ∗ ∀ s' T',
@@ -135,7 +136,7 @@ Section sts.
     iMod ("HclSts" $! s' T' with "H") as "(Hinv & ?)". by iMod ("Hclose" with "Hinv").
   Qed.
 
-  Lemma sts_open E N γ s0 T :
+  Lemma sts_open φ E N γ s0 T :
     ↑N ⊆ E →
     sts_ctx γ N φ ∗ sts_own γ s0 T ={E,E∖↑N}=∗ ∃ s,
       ⌜sts.frame_steps T s0 s⌝ ∗ ▷ φ s ∗ ∀ s' T',
