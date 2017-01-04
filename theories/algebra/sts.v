@@ -1,7 +1,8 @@
 From iris.prelude Require Export set.
 From iris.algebra Require Export cmra.
 From iris.algebra Require Import dra.
-Set Default Proof Using "Type*".
+(* FIXME: This file needs a 'Proof Using' hint, but the default we use
+   everywhere makes for lots of extra ssumptions. *)
 Local Arguments valid _ _ !_ /.
 Local Arguments op _ _ !_ !_ /.
 Local Arguments core _ _ !_ /.

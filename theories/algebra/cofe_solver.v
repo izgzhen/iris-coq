@@ -1,5 +1,6 @@
 From iris.algebra Require Export ofe.
-Set Default Proof Using "Type*".
+(* FIXME: This file needs a 'Proof Using' hint, but the default we use
+   everywhere makes for lots of extra ssumptions. *)
 
 Record solution (F : cFunctor) := Solution {
   solution_car :> ofeT;
