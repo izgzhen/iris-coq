@@ -643,9 +643,9 @@ Section collection.
     Proof. unfold_leibniz; apply union_intersection_l. Qed.
     Lemma union_intersection_r_L X Y Z : (X ∩ Y) ∪ Z = (X ∪ Z) ∩ (Y ∪ Z).
     Proof. unfold_leibniz; apply union_intersection_r. Qed.
-    Lemma intersection_union_l_L X Y Z : X ∩ (Y ∪ Z) ≡ (X ∩ Y) ∪ (X ∩ Z).
+    Lemma intersection_union_l_L X Y Z : X ∩ (Y ∪ Z) = (X ∩ Y) ∪ (X ∩ Z).
     Proof. unfold_leibniz; apply intersection_union_l. Qed.
-    Lemma intersection_union_r_L X Y Z : (X ∪ Y) ∩ Z ≡ (X ∩ Z) ∪ (Y ∩ Z).
+    Lemma intersection_union_r_L X Y Z : (X ∪ Y) ∩ Z = (X ∩ Z) ∪ (Y ∩ Z).
     Proof. unfold_leibniz; apply intersection_union_r. Qed.
 
     (** Difference *)
