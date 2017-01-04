@@ -255,6 +255,8 @@ End fixpoint.
 
 (** Mutual fixpoints *)
 Section fixpoint2.
+  Local Unset Default Proof Using.
+
   Context `{Cofe A, Cofe B, !Inhabited A, !Inhabited B}.
   Context (fA : A → B → A).
   Context (fB : A → B → B).

@@ -32,7 +32,7 @@ Qed.
 
 (** * Choice principles *)
 Section choice.
-  Context `{Countable A} (P : A → Prop) `{∀ x, Decision (P x)}.
+  Context `{Countable A} (P : A → Prop).
 
   Inductive choose_step: relation positive :=
     | choose_step_None {p} : decode p = None → choose_step (Psucc p) p
@@ -50,6 +50,9 @@ Section choice.
     constructor. intros j.
     inversion 1 as [? Hd|? y Hd]; subst; auto with lia.
   Qed.
+
+  Context `{∀ x, Decision (P x)}.
+
   Fixpoint choose_go {i} (acc : Acc choose_step i) : A :=
     match Some_dec (decode i) with
     | inleft (x↾Hx) =>

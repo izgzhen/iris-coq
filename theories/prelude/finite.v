@@ -171,12 +171,14 @@ Proof. apply finite_bijective. eauto. Qed.
 
 (** Decidability of quantification over finite types *)
 Section forall_exists.
-  Context `{Finite A} (P : A → Prop) `{∀ x, Decision (P x)}.
+  Context `{Finite A} (P : A → Prop).
 
   Lemma Forall_finite : Forall P (enum A) ↔ (∀ x, P x).
   Proof. rewrite Forall_forall. intuition auto using elem_of_enum. Qed.
   Lemma Exists_finite : Exists P (enum A) ↔ (∃ x, P x).
   Proof. rewrite Exists_exists. naive_solver eauto using elem_of_enum. Qed.
+
+  Context `{∀ x, Decision (P x)}.
 
   Global Instance forall_dec: Decision (∀ x, P x).
   Proof.

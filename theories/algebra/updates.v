@@ -107,7 +107,7 @@ Section total_updates.
     rewrite cmra_total_updateP; setoid_rewrite <-cmra_discrete_valid_iff.
     naive_solver eauto using 0.
   Qed.
-  Lemma cmra_discrete_update `{CMRADiscrete A} (x y : A) :
+  Lemma cmra_discrete_update (x y : A) :
     x ~~> y ↔ ∀ z, ✓ (x ⋅ z) → ✓ (y ⋅ z).
   Proof.
     rewrite cmra_total_update; setoid_rewrite <-cmra_discrete_valid_iff.

@@ -735,6 +735,28 @@ End no_dup_dec.
 
 (** ** Set operations on lists *)
 Section list_set.
+  Lemma elem_of_list_intersection_with f l k x :
+    x ∈ list_intersection_with f l k ↔ ∃ x1 x2,
+        x1 ∈ l ∧ x2 ∈ k ∧ f x1 x2 = Some x.
+  Proof.
+    split.
+    - induction l as [|x1 l IH]; simpl; [by rewrite elem_of_nil|].
+      intros Hx. setoid_rewrite elem_of_cons.
+      cut ((∃ x2, x2 ∈ k ∧ f x1 x2 = Some x)
+           ∨ x ∈ list_intersection_with f l k); [naive_solver|].
+      clear IH. revert Hx. generalize (list_intersection_with f l k).
+      induction k; simpl; [by auto|].
+      case_match; setoid_rewrite elem_of_cons; naive_solver.
+    - intros (x1&x2&Hx1&Hx2&Hx). induction Hx1 as [x1|x1 ? l ? IH]; simpl.
+      + generalize (list_intersection_with f l k).
+        induction Hx2; simpl; [by rewrite Hx; left |].
+        case_match; simpl; try setoid_rewrite elem_of_cons; auto.
+      + generalize (IH Hx). clear Hx IH Hx2.
+        generalize (list_intersection_with f l k).
+        induction k; simpl; intros; [done|].
+        case_match; simpl; rewrite ?elem_of_cons; auto.
+  Qed.
+
   Context `{!EqDecision A}.
   Lemma elem_of_list_difference l k x : x ∈ list_difference l k ↔ x ∈ l ∧ x ∉ k.
   Proof.
@@ -772,27 +794,6 @@ Section list_set.
     - constructor.
     - constructor. rewrite elem_of_list_intersection; intuition. done.
     - done.
-  Qed.
-  Lemma elem_of_list_intersection_with f l k x :
-    x ∈ list_intersection_with f l k ↔ ∃ x1 x2,
-      x1 ∈ l ∧ x2 ∈ k ∧ f x1 x2 = Some x.
-  Proof.
-    split.
-    - induction l as [|x1 l IH]; simpl; [by rewrite elem_of_nil|].
-      intros Hx. setoid_rewrite elem_of_cons.
-      cut ((∃ x2, x2 ∈ k ∧ f x1 x2 = Some x)
-        ∨ x ∈ list_intersection_with f l k); [naive_solver|].
-      clear IH. revert Hx. generalize (list_intersection_with f l k).
-      induction k; simpl; [by auto|].
-      case_match; setoid_rewrite elem_of_cons; naive_solver.
-    - intros (x1&x2&Hx1&Hx2&Hx). induction Hx1 as [x1|x1 ? l ? IH]; simpl.
-      + generalize (list_intersection_with f l k).
-        induction Hx2; simpl; [by rewrite Hx; left |].
-        case_match; simpl; try setoid_rewrite elem_of_cons; auto.
-      + generalize (IH Hx). clear Hx IH Hx2.
-        generalize (list_intersection_with f l k).
-        induction k; simpl; intros; [done|].
-        case_match; simpl; rewrite ?elem_of_cons; auto.
   Qed.
 End list_set.
 
@@ -2171,7 +2172,7 @@ Section Forall_Exists.
   Lemma Forall_replicate n x : P x → Forall P (replicate n x).
   Proof. induction n; simpl; constructor; auto. Qed.
   Lemma Forall_replicate_eq n (x : A) : Forall (x =) (replicate n x).
-  Proof. induction n; simpl; constructor; auto. Qed.
+  Proof using -(P). induction n; simpl; constructor; auto. Qed.
   Lemma Forall_take n l : Forall P l → Forall P (take n l).
   Proof. intros Hl. revert n. induction Hl; intros [|?]; simpl; auto. Qed.
   Lemma Forall_drop n l : Forall P l → Forall P (drop n l).
@@ -2741,7 +2742,7 @@ End Forall3.
 
 (** Setoids *)
 Section setoid.
-  Context `{Equiv A} `{!Equivalence ((≡) : relation A)}.
+  Context `{Equiv A}.
   Implicit Types l k : list A.
 
   Lemma equiv_Forall2 l k : l ≡ k ↔ Forall2 (≡) l k.
@@ -2751,6 +2752,8 @@ Section setoid.
     rewrite equiv_Forall2, Forall2_lookup.
     by setoid_rewrite equiv_option_Forall2.
   Qed.
+
+  Context {Hequiv: Equivalence ((≡) : relation A)}.
 
   Global Instance list_equivalence : Equivalence ((≡) : relation (list A)).
   Proof.
@@ -2763,42 +2766,42 @@ Section setoid.
   Proof. induction 1; f_equal; fold_leibniz; auto. Qed.
 
   Global Instance cons_proper : Proper ((≡) ==> (≡) ==> (≡)) (@cons A).
-  Proof. by constructor. Qed.
+  Proof using -(Hequiv). by constructor. Qed.
   Global Instance app_proper : Proper ((≡) ==> (≡) ==> (≡)) (@app A).
-  Proof. induction 1; intros ???; simpl; try constructor; auto. Qed.
+  Proof using -(Hequiv). induction 1; intros ???; simpl; try constructor; auto. Qed.
   Global Instance length_proper : Proper ((≡) ==> (=)) (@length A).
-  Proof. induction 1; f_equal/=; auto. Qed.
+  Proof using -(Hequiv). induction 1; f_equal/=; auto. Qed.
   Global Instance tail_proper : Proper ((≡) ==> (≡)) (@tail A).
   Proof. by destruct 1. Qed.
   Global Instance take_proper n : Proper ((≡) ==> (≡)) (@take A n).
-  Proof. induction n; destruct 1; constructor; auto. Qed.
+  Proof using -(Hequiv). induction n; destruct 1; constructor; auto. Qed.
   Global Instance drop_proper n : Proper ((≡) ==> (≡)) (@drop A n).
-  Proof. induction n; destruct 1; simpl; try constructor; auto. Qed.
+  Proof using -(Hequiv). induction n; destruct 1; simpl; try constructor; auto. Qed.
   Global Instance list_lookup_proper i :
     Proper ((≡) ==> (≡)) (lookup (M:=list A) i).
   Proof. induction i; destruct 1; simpl; f_equiv; auto. Qed.
   Global Instance list_alter_proper f i :
     Proper ((≡) ==> (≡)) f → Proper ((≡) ==> (≡)) (alter (M:=list A) f i).
-  Proof. intros. induction i; destruct 1; constructor; eauto. Qed.
+  Proof using -(Hequiv). intros. induction i; destruct 1; constructor; eauto. Qed.
   Global Instance list_insert_proper i :
     Proper ((≡) ==> (≡) ==> (≡)) (insert (M:=list A) i).
-  Proof. intros ???; induction i; destruct 1; constructor; eauto. Qed.
+  Proof using -(Hequiv). intros ???; induction i; destruct 1; constructor; eauto. Qed.
   Global Instance list_inserts_proper i :
     Proper ((≡) ==> (≡) ==> (≡)) (@list_inserts A i).
-  Proof.
+  Proof using -(Hequiv).
     intros k1 k2 Hk; revert i.
     induction Hk; intros ????; simpl; try f_equiv; naive_solver.
   Qed.
   Global Instance list_delete_proper i :
     Proper ((≡) ==> (≡)) (delete (M:=list A) i).
-  Proof. induction i; destruct 1; try constructor; eauto. Qed.
+  Proof using -(Hequiv). induction i; destruct 1; try constructor; eauto. Qed.
   Global Instance option_list_proper : Proper ((≡) ==> (≡)) (@option_list A).
   Proof. destruct 1; by constructor. Qed.
   Global Instance list_filter_proper P `{∀ x, Decision (P x)} :
     Proper ((≡) ==> iff) P → Proper ((≡) ==> (≡)) (filter (B:=list A) P).
-  Proof. intros ???. rewrite !equiv_Forall2. by apply Forall2_filter. Qed.
+  Proof using -(Hequiv). intros ???. rewrite !equiv_Forall2. by apply Forall2_filter. Qed.
   Global Instance replicate_proper n : Proper ((≡) ==> (≡)) (@replicate A n).
-  Proof. induction n; constructor; auto. Qed.
+  Proof using -(Hequiv). induction n; constructor; auto. Qed.
   Global Instance reverse_proper : Proper ((≡) ==> (≡)) (@reverse A).
   Proof. induction 1; rewrite ?reverse_cons; repeat (done || f_equiv). Qed.
   Global Instance last_proper : Proper ((≡) ==> (≡)) (@last A).

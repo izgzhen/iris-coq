@@ -16,7 +16,7 @@ Instance subG_stsΣ Σ sts :
 Proof. intros ?%subG_inG ?. by split. Qed.
 
 Section definitions.
-  Context `{invG Σ, stsG Σ sts} (γ : gname).
+  Context `{stsG Σ sts} (γ : gname).
 
   Definition sts_ownS (S : sts.states sts) (T : sts.tokens sts) : iProp Σ :=
     own γ (sts_frag S T).
@@ -24,7 +24,7 @@ Section definitions.
     own γ (sts_frag_up s T).
   Definition sts_inv (φ : sts.state sts → iProp Σ) : iProp Σ :=
     (∃ s, own γ (sts_auth s ∅) ∗ φ s)%I.
-  Definition sts_ctx (N : namespace) (φ: sts.state sts → iProp Σ) : iProp Σ :=
+  Definition sts_ctx `{!invG Σ} (N : namespace) (φ: sts.state sts → iProp Σ) : iProp Σ :=
     inv N (sts_inv φ).
 
   Global Instance sts_inv_ne n :
@@ -37,13 +37,13 @@ Section definitions.
   Proof. solve_proper. Qed.
   Global Instance sts_own_proper s : Proper ((≡) ==> (⊣⊢)) (sts_own s).
   Proof. solve_proper. Qed.
-  Global Instance sts_ctx_ne n N :
+  Global Instance sts_ctx_ne `{!invG Σ} n N :
     Proper (pointwise_relation _ (dist n) ==> dist n) (sts_ctx N).
   Proof. solve_proper. Qed.
-  Global Instance sts_ctx_proper N :
+  Global Instance sts_ctx_proper `{!invG Σ} N :
     Proper (pointwise_relation _ (≡) ==> (⊣⊢)) (sts_ctx N).
   Proof. solve_proper. Qed.
-  Global Instance sts_ctx_persistent N φ : PersistentP (sts_ctx N φ).
+  Global Instance sts_ctx_persistent `{!invG Σ} N φ : PersistentP (sts_ctx N φ).
   Proof. apply _. Qed.
   Global Instance sts_own_peristent s : PersistentP (sts_own s ∅).
   Proof. apply _. Qed.
