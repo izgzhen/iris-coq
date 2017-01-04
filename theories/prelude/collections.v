@@ -4,7 +4,8 @@
 importantly, it implements some tactics to automatically solve goals involving
 collections. *)
 From iris.prelude Require Export orders list.
-Set Default Proof Using "Type*".
+(* FIXME: This file needs a 'Proof Using' hint, but the default we use
+   everywhere makes for lots of extra ssumptions. *)
 
 Instance collection_equiv `{ElemOf A C} : Equiv C := λ X Y,
   ∀ x, x ∈ X ↔ x ∈ Y.
