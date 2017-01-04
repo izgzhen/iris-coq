@@ -575,7 +575,7 @@ Section cmra_leibniz.
   Proof. unfold_leibniz. apply cmra_pcore_dup'. Qed.
 
   (** ** Persistent elements *)
-  Lemma persistent_dup_L x `{!Persistent x} : x ≡ x ⋅ x.
+  Lemma persistent_dup_L x `{!Persistent x} : x = x ⋅ x.
   Proof. unfold_leibniz. by apply persistent_dup. Qed.
 
   (** ** Total core *)
