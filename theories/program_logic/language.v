@@ -15,7 +15,7 @@ Structure language := Language {
 Delimit Scope expr_scope with E.
 Delimit Scope val_scope with V.
 Bind Scope expr_scope with expr.
-Bind Scope expr_scope with val.
+Bind Scope val_scope with val.
 Arguments of_val {_} _.
 Arguments to_val {_} _.
 Arguments prim_step {_} _ _ _ _ _.

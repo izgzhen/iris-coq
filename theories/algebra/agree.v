@@ -22,7 +22,9 @@ Definition list_setincl `(R : relation A) (al bl : list A) :=
   ∀ a, a ∈ al → ∃ b, b ∈ bl ∧ R a b.
 Definition list_setequiv `(R : relation A) (al bl : list A) :=
   list_setincl R al bl ∧ list_setincl R bl al.
-(* list_agrees is carefully written such that, when applied to a singleton, it is convertible to True. This makes working with agreement much more pleasant. *)
+(* list_agrees is carefully written such that, when applied to a
+   singleton, it is convertible to True. This makes working with
+   agreement much more pleasant. *)
 Definition list_agrees `(R : relation A) (al : list A) :=
   match al with
   | [] => True
