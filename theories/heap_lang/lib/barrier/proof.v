@@ -198,6 +198,4 @@ Lemma recv_mono l P1 P2 : (P1 ⊢ P2) → recv l P1 ⊢ recv l P2.
 Proof. iIntros (HP) "H". iApply (recv_weaken with "[] H"). iApply HP. Qed.
 End proof.
 
-SearchAbout _.
-
 Typeclasses Opaque barrier_ctx send recv.
