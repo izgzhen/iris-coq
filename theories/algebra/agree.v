@@ -1,8 +1,6 @@
 From iris.algebra Require Export cmra.
 From iris.algebra Require Import list.
 From iris.base_logic Require Import base_logic.
-(* FIXME: This file needs a 'Proof Using' hint. *)
-
 Local Arguments validN _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
 Local Arguments op _ _ _ !_ /.
@@ -48,6 +46,8 @@ Qed.
 
 Section list_theory.
   Context `(R: relation A) `{Equivalence A R}.
+  Collection Hyps := Type H.
+  Set Default Proof Using "Hyps".
 
   Global Instance: PreOrder (list_setincl R).
   Proof.
@@ -68,14 +68,14 @@ Section list_theory.
 
   Global Instance list_setincl_subrel `(R' : relation A) :
     subrelation R R' → subrelation (list_setincl R) (list_setincl R').
-  Proof.
+  Proof using.
     intros HRR' al bl Hab. intros a Ha. destruct (Hab _ Ha) as (b & Hb & HR).
     exists b. split; first done. exact: HRR'.
   Qed.
 
   Global Instance list_setequiv_subrel `(R' : relation A) :
     subrelation R R' → subrelation (list_setequiv R) (list_setequiv R').
-  Proof. intros HRR' ?? [??]. split; exact: list_setincl_subrel. Qed. 
+  Proof using. intros HRR' ?? [??]. split; exact: list_setincl_subrel. Qed.
 
   Global Instance list_setincl_perm : subrelation (≡ₚ) (list_setincl R).
   Proof.
@@ -144,7 +144,7 @@ Section list_theory.
 
   Lemma list_setincl_singleton_rev a b :
     list_setincl R [a] [b] → R a b.
-  Proof.
+  Proof using.
     intros Hl. destruct (Hl a) as (? & ->%elem_of_list_singleton & HR); last done.
     by apply elem_of_list_singleton.
   Qed.
@@ -191,10 +191,12 @@ Section list_theory.
 
   Section fmap.
     Context `(R' : relation B) (f : A → B) {Hf: Proper (R ==> R') f}.
+    Collection Hyps := Type Hf.
+    Set Default Proof Using "Hyps".
     
     Global Instance list_setincl_fmap :
       Proper (list_setincl R ==> list_setincl R') (fmap f).
-    Proof.
+    Proof using Hf.
       intros al bl Hab a' (a & -> & Ha)%elem_of_list_fmap.
       destruct (Hab _ Ha) as (b & Hb & HR). exists (f b).
       split; first eapply elem_of_list_fmap; eauto.
@@ -202,12 +204,12 @@ Section list_theory.
     
     Global Instance list_setequiv_fmap :
       Proper (list_setequiv R ==> list_setequiv R') (fmap f).
-    Proof. intros ?? [??]. split; apply list_setincl_fmap; done. Qed.
+    Proof using Hf. intros ?? [??]. split; apply list_setincl_fmap; done. Qed.
 
     Lemma list_agrees_fmap `{Equivalence _ R'} al :
       list_agrees R al → list_agrees R' (f <$> al).
-    Proof.
-      move=> /list_agrees_alt Hl. apply <-(list_agrees_alt R')=> a' b'.
+    Proof using All.
+      move=> /list_agrees_alt Hl. apply (list_agrees_alt R') => a' b'.
       intros (a & -> & Ha)%elem_of_list_fmap (b & -> & Hb)%elem_of_list_fmap.
       apply Hf. exact: Hl.
     Qed.
@@ -217,6 +219,7 @@ Section list_theory.
 End list_theory.
 
 Section agree.
+Set Default Proof Using "Type".
 Context {A : ofeT}.
 
 Definition agree_list (x : agree A) := agree_car x :: agree_with x.
@@ -418,8 +421,9 @@ Proof. rewrite /agree_map /= list_fmap_compose. done. Qed.
 
 Section agree_map.
   Context {A B : ofeT} (f : A → B) `{Hf: ∀ n, Proper (dist n ==> dist n) f}.
+  Collection Hyps := Type Hf.
   Instance agree_map_ne n : Proper (dist n ==> dist n) (agree_map f).
-  Proof.
+  Proof using Hyps.
     intros x y Hxy.
     change (list_setequiv (dist n)(f <$> (agree_list x))(f <$> (agree_list y))).
     eapply list_setequiv_fmap; last exact Hxy. apply _. 
@@ -435,7 +439,7 @@ Section agree_map.
   Qed.
 
   Global Instance agree_map_monotone : CMRAMonotone (agree_map f).
-  Proof.
+  Proof using Hyps.
     split; first apply _.
     - intros n x. rewrite /cmra_validN /validN /= /agree_validN /= => ?.
       change (list_agrees (dist n) (f <$> agree_list x)).
