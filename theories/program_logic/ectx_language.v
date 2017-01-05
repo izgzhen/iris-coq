@@ -2,7 +2,7 @@
     that this gives rise to a "language" in the Iris sense. *)
 From iris.algebra Require Export base.
 From iris.program_logic Require Import language.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (* We need to make thos arguments indices that we want canonical structure
    inference to use a keys. *)
