@@ -956,7 +956,7 @@ Proof.
 Qed.
 
 (** Sigma *)
-Class LimitPreserving {A : ofeT} `{!Cofe A} (P : A → Prop) : Prop :=
+Class LimitPreserving `{!Cofe A} (P : A → Prop) : Prop :=
   limit_preserving : ∀ c : chain A, (∀ n, P (c n)) → P (compl c).
 
 Section sigma.
@@ -987,7 +987,7 @@ Section sigma.
   Canonical Structure sigC : ofeT := OfeT (sig P) sig_ofe_mixin.
 
   (* FIXME: WTF, it seems that within these braces {...} the ofe argument of LimitPreserving
-     suddenyl becomes explicit...? *)
+     suddenly becomes explicit...? *)
   Program Definition sig_compl `{LimitPreserving _ P} : Compl sigC :=
     λ c, exist P (compl (chain_map proj1_sig c)) _.
   Next Obligation.
@@ -1009,7 +1009,7 @@ Section sigma.
   Qed.
 End sigma.
 
-Arguments sigC {A} P.
+Arguments sigC {_} _.
 
 (** Notation for writing functors *)
 Notation "∙" := idCF : cFunctor_scope.
