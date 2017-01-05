@@ -1,6 +1,11 @@
 From iris.algebra Require Export cmra.
 Set Default Proof Using "Type*".
 
+(** The basic definition of the uPred type, its metric and functor laws.
+    You probably do not want to import this file. Instead, import
+    base_logic.base_logic; that will also give you all the primitive
+    and many derived laws for the logic. *)
+
 Record uPred (M : ucmraT) : Type := IProp {
   uPred_holds :> nat → M → Prop;
   uPred_mono n x1 x2 : uPred_holds n x1 → x1 ≼{n} x2 → uPred_holds n x2;
