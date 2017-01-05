@@ -1,5 +1,5 @@
 From iris.algebra Require Export ofe.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Record solution (F : cFunctor) := Solution {
   solution_car :> ofeT;
@@ -21,7 +21,7 @@ Notation map := (cFunctor_map F).
 Fixpoint A (k : nat) : ofeT :=
   match k with 0 => unitC | S k => F (A k) end.
 Local Instance: ∀ k, Cofe (A k).
-Proof. induction 0; apply _. Defined.
+Proof using Fcofe. induction 0; apply _. Defined.
 Fixpoint f (k : nat) : A k -n> A (S k) :=
   match k with 0 => CofeMor (λ _, inhabitant) | S k => map (g k,f k) end
 with g (k : nat) : A (S k) -n> A k :=
@@ -33,12 +33,12 @@ Arguments f : simpl never.
 Arguments g : simpl never.
 
 Lemma gf {k} (x : A k) : g k (f k x) ≡ x.
-Proof.
+Proof using Fcontr.
   induction k as [|k IH]; simpl in *; [by destruct x|].
   rewrite -cFunctor_compose -{2}[x]cFunctor_id. by apply (contractive_proper map).
 Qed.
 Lemma fg {k} (x : A (S (S k))) : f (S k) (g (S k) x) ≡{k}≡ x.
-Proof.
+Proof using Fcontr.
   induction k as [|k IH]; simpl.
   - rewrite f_S g_S -{2}[x]cFunctor_id -cFunctor_compose.
     apply (contractive_0 map).
@@ -87,11 +87,11 @@ Fixpoint ff {k} (i : nat) : A k -n> A (i + k) :=
 Fixpoint gg {k} (i : nat) : A (i + k) -n> A k :=
   match i with 0 => cid | S i => gg i ◎ g (i + k) end.
 Lemma ggff {k i} (x : A k) : gg i (ff i x) ≡ x.
-Proof. induction i as [|i IH]; simpl; [done|by rewrite (gf (ff i x)) IH]. Qed.
+Proof using Fcontr. induction i as [|i IH]; simpl; [done|by rewrite (gf (ff i x)) IH]. Qed.
 Lemma f_tower k (X : tower) : f (S k) (X (S k)) ≡{k}≡ X (S (S k)).
-Proof. intros. by rewrite -(fg (X (S (S k)))) -(g_tower X). Qed.
+Proof using Fcontr. intros. by rewrite -(fg (X (S (S k)))) -(g_tower X). Qed.
 Lemma ff_tower k i (X : tower) : ff i (X (S k)) ≡{k}≡ X (i + S k).
-Proof.
+Proof using Fcontr.
   intros; induction i as [|i IH]; simpl; [done|].
   by rewrite IH Nat.add_succ_r (dist_le _ _ _ _ (f_tower _ X)); last omega.
 Qed.
@@ -137,7 +137,7 @@ Definition embed_coerce {k} (i : nat) : A k -n> A i :=
   end.
 Lemma g_embed_coerce {k i} (x : A k) :
   g i (embed_coerce (S i) x) ≡ embed_coerce i x.
-Proof.
+Proof using Fcontr.
   unfold embed_coerce; destruct (le_lt_dec (S i) k), (le_lt_dec i k); simpl.
   - symmetry; by erewrite (@gg_gg _ _ 1 (k - S i)); simpl.
   - exfalso; lia.
@@ -205,7 +205,7 @@ Instance fold_ne : Proper (dist n ==> dist n) fold.
 Proof. by intros n X Y HXY k; rewrite /fold /= HXY. Qed.
 
 Theorem result : solution F.
-Proof.
+Proof using All.
   apply (Solution F T _ (CofeMor unfold) (CofeMor fold)).
   - move=> X /=. rewrite equiv_dist=> n k; rewrite /unfold /fold /=.
     rewrite -g_tower -(gg_tower _ n); apply (_ : Proper (_ ==> _) (g _)).

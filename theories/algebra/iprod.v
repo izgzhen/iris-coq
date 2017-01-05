@@ -43,8 +43,6 @@ Section iprod_cofe.
   Qed.
 
   (** Properties of iprod_insert. *)
-  Context `{EqDecision A}.
-
   Global Instance iprod_insert_ne n x :
     Proper (dist n ==> dist n ==> dist n) (iprod_insert x).
   Proof.

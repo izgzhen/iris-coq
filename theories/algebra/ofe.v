@@ -260,6 +260,8 @@ End fixpoint.
 
 (** Mutual fixpoints *)
 Section fixpoint2.
+  Local Unset Default Proof Using.
+
   Context `{Cofe A, Cofe B, !Inhabited A, !Inhabited B}.
   Context (fA : A → B → A).
   Context (fB : A → B → B).
@@ -957,6 +959,62 @@ Proof.
   intros A1 A2 B1 B2 n fg fg' Hfg. apply laterC_map_contractive.
   destruct n as [|n]; simpl in *; first done. apply cFunctor_ne, Hfg.
 Qed.
+
+(** Sigma *)
+Class LimitPreserving `{!Cofe A} (P : A → Prop) : Prop :=
+  limit_preserving : ∀ c : chain A, (∀ n, P (c n)) → P (compl c).
+
+Section sigma.
+  Context {A : ofeT} {P : A → Prop}.
+
+  (* TODO: Find a better place for this Equiv instance. It also
+     should not depend on A being an OFE. *)
+  Instance sig_equiv : Equiv (sig P) :=
+    λ x1 x2, (proj1_sig x1) ≡ (proj1_sig x2).
+  Instance sig_dist : Dist (sig P) :=
+    λ n x1 x2, (proj1_sig x1) ≡{n}≡ (proj1_sig x2).
+  Lemma exist_ne :
+    ∀ n x1 x2, x1 ≡{n}≡ x2 →
+      ∀ (H1 : P x1) (H2 : P x2), (exist P x1 H1) ≡{n}≡ (exist P x2 H2).
+  Proof. intros n ?? Hx ??. exact Hx. Qed.
+  Global Instance proj1_sig_ne : Proper (dist n ==> dist n) (@proj1_sig _ P).
+  Proof. intros n [] [] ?. done. Qed.
+  Definition sig_ofe_mixin : OfeMixin (sig P).
+  Proof.
+    split.
+    - intros x y. unfold dist, sig_dist, equiv, sig_equiv.
+      destruct x, y. apply equiv_dist.
+    - unfold dist, sig_dist. intros n.
+      split; [intros [] | intros [] [] | intros [] [] []]; simpl; try done.
+      intros. by etrans.
+    - intros n [??] [??]. unfold dist, sig_dist. simpl. apply dist_S.
+  Qed.
+  Canonical Structure sigC : ofeT := OfeT (sig P) sig_ofe_mixin.
+
+  (* FIXME: WTF, it seems that within these braces {...} the ofe argument of LimitPreserving
+     suddenly becomes explicit...? *)
+  Program Definition sig_compl `{LimitPreserving _ P} : Compl sigC :=
+    λ c, exist P (compl (chain_map proj1_sig c)) _.
+  Next Obligation.
+    intros ? Hlim c. apply Hlim. move=>n /=. destruct (c n). done.
+  Qed.
+  Program Definition sig_cofe `{LimitPreserving _ P} : Cofe sigC :=
+    {| compl := sig_compl |}.
+  Next Obligation.
+    intros ? Hlim n c. apply (conv_compl n (chain_map proj1_sig c)).
+  Qed.
+
+  Global Instance sig_timeless (x : sig P) :
+    Timeless (proj1_sig x) → Timeless x.
+  Proof. intros ? y. destruct x, y. unfold dist, sig_dist, equiv, sig_equiv. apply (timeless _). Qed.
+  Global Instance sig_discrete_cofe : Discrete A → Discrete sigC.
+  Proof.
+    intros ? [??] [??]. rewrite /dist /equiv /ofe_dist /ofe_equiv /=.
+    rewrite /sig_dist /sig_equiv /=. apply discrete_timeless.
+  Qed.
+End sigma.
+
+Arguments sigC {_} _.
 
 (** Notation for writing functors *)
 Notation "∙" := idCF : cFunctor_scope.

@@ -358,33 +358,33 @@ Section freshness.
   Lemma alloc_updateP' m x :
     ✓ x → m ~~>: λ m', ∃ i, m' = <[i:=x]>m ∧ m !! i = None.
   Proof. eauto using alloc_updateP. Qed.
-
-  Lemma alloc_unit_singleton_updateP (P : A → Prop) (Q : gmap K A → Prop) u i :
-    ✓ u → LeftId (≡) u (⋅) →
-    u ~~>: P → (∀ y, P y → Q {[ i := y ]}) → ∅ ~~>: Q.
-  Proof.
-    intros ?? Hx HQ. apply cmra_total_updateP=> n gf Hg.
-    destruct (Hx n (gf !! i)) as (y&?&Hy).
-    { move:(Hg i). rewrite !left_id.
-      case: (gf !! i)=>[x|]; rewrite /= ?left_id //.
-      intros; by apply cmra_valid_validN. }
-    exists {[ i := y ]}; split; first by auto.
-    intros i'; destruct (decide (i' = i)) as [->|].
-    - rewrite lookup_op lookup_singleton.
-      move:Hy; case: (gf !! i)=>[x|]; rewrite /= ?right_id //.
-    - move:(Hg i'). by rewrite !lookup_op lookup_singleton_ne // !left_id.
-  Qed.
-  Lemma alloc_unit_singleton_updateP' (P: A → Prop) u i :
-    ✓ u → LeftId (≡) u (⋅) →
-    u ~~>: P → ∅ ~~>: λ m, ∃ y, m = {[ i := y ]} ∧ P y.
-  Proof. eauto using alloc_unit_singleton_updateP. Qed.
-  Lemma alloc_unit_singleton_update (u : A) i (y : A) :
-    ✓ u → LeftId (≡) u (⋅) → u ~~> y → (∅:gmap K A) ~~> {[ i := y ]}.
-  Proof.
-    rewrite !cmra_update_updateP;
-      eauto using alloc_unit_singleton_updateP with subst.
-  Qed.
 End freshness.
+
+Lemma alloc_unit_singleton_updateP (P : A → Prop) (Q : gmap K A → Prop) u i :
+  ✓ u → LeftId (≡) u (⋅) →
+  u ~~>: P → (∀ y, P y → Q {[ i := y ]}) → ∅ ~~>: Q.
+Proof.
+  intros ?? Hx HQ. apply cmra_total_updateP=> n gf Hg.
+  destruct (Hx n (gf !! i)) as (y&?&Hy).
+  { move:(Hg i). rewrite !left_id.
+    case: (gf !! i)=>[x|]; rewrite /= ?left_id //.
+    intros; by apply cmra_valid_validN. }
+  exists {[ i := y ]}; split; first by auto.
+  intros i'; destruct (decide (i' = i)) as [->|].
+  - rewrite lookup_op lookup_singleton.
+    move:Hy; case: (gf !! i)=>[x|]; rewrite /= ?right_id //.
+  - move:(Hg i'). by rewrite !lookup_op lookup_singleton_ne // !left_id.
+Qed.
+Lemma alloc_unit_singleton_updateP' (P: A → Prop) u i :
+  ✓ u → LeftId (≡) u (⋅) →
+  u ~~>: P → ∅ ~~>: λ m, ∃ y, m = {[ i := y ]} ∧ P y.
+Proof. eauto using alloc_unit_singleton_updateP. Qed.
+Lemma alloc_unit_singleton_update (u : A) i (y : A) :
+  ✓ u → LeftId (≡) u (⋅) → u ~~> y → (∅:gmap K A) ~~> {[ i := y ]}.
+Proof.
+  rewrite !cmra_update_updateP;
+    eauto using alloc_unit_singleton_updateP with subst.
+Qed.
 
 Lemma alloc_local_update m1 m2 i x :
   m1 !! i = None → ✓ x → (m1,m2) ~l~> (<[i:=x]>m1, <[i:=x]>m2).

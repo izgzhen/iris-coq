@@ -861,7 +861,7 @@ Tactic Notation "iRevertIntros" constr(Hs) "with" tactic(tac) :=
          match p with true => constr:([IAlwaysElim (IName H)]) | false => H end in
        iIntros H'
     end in
-  iElaborateSelPat Hs go.
+  try iStartProof; iElaborateSelPat Hs go.
 
 Tactic Notation "iRevertIntros" "(" ident(x1) ")" constr(Hs) "with" tactic(tac):=
   iRevertIntros Hs with (iRevert (x1); tac; iIntros (x1)).
@@ -1280,6 +1280,7 @@ Hint Extern 1 (of_envs _ ⊢ _) =>
   | |- _ ⊢ □ _ => iClear "*"; iAlways
   | |- _ ⊢ ∃ _, _ => iExists _
   | |- _ ⊢ |==> _ => iModIntro
+  | |- _ ⊢ ◇ _ => iModIntro
   end.
 Hint Extern 1 (of_envs _ ⊢ _) =>
   match goal with |- _ ⊢ (_ ∨ _)%I => iLeft end.
