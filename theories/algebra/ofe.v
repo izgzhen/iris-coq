@@ -959,6 +959,21 @@ Qed.
 Class LimitPreserving `{!Cofe A} (P : A → Prop) : Prop :=
   limit_preserving : ∀ c : chain A, (∀ n, P (c n)) → P (compl c).
 
+Section limit_preserving.
+  Context {A : ofeT} `{!Cofe A}.
+  (* These are not instances as they will never fire automatically...
+     but they can still be helpful in proving things to be limit preserving. *)
+
+  Lemma limit_preserving_and (P1 P2 : A → Prop) :
+    LimitPreserving P1 → LimitPreserving P2 →
+    LimitPreserving (λ x, P1 x ∧ P2 x).
+  Proof.
+    intros Hlim1 Hlim2 c Hc. split.
+    - apply Hlim1, Hc.
+    - apply Hlim2, Hc.
+  Qed.
+End limit_preserving.
+
 Section sigma.
   Context {A : ofeT} {P : A → Prop}.
 
