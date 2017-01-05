@@ -96,6 +96,11 @@ Class Cofe (A : ofeT) := {
 }.
 Arguments compl : simpl never.
 
+Lemma compl_chain_map `{Cofe A, Cofe B} (f : A → B) c
+      `(∀ n : nat, Proper (dist n ==> dist n) f) :
+  compl (chain_map f c) ≡ f (compl c).
+Proof. apply equiv_dist=>n. by rewrite !conv_compl. Qed.
+
 (** General properties *)
 Section cofe.
   Context {A : ofeT}.
