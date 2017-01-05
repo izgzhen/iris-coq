@@ -1009,7 +1009,7 @@ Section sigma.
   Qed.
 End sigma.
 
-Arguments sigC {A} f.
+Arguments sigC {A} P.
 
 (** Notation for writing functors *)
 Notation "∙" := idCF : cFunctor_scope.
