@@ -119,13 +119,13 @@ Context `{FinMap K M}.
 (** ** Setoids *)
 Section setoid.
   Context `{Equiv A}.
-  
+
   Lemma map_equiv_lookup_l (m1 m2 : M A) i x :
     m1 ≡ m2 → m1 !! i = Some x → ∃ y, m2 !! i = Some y ∧ x ≡ y.
   Proof. generalize (equiv_Some_inv_l (m1 !! i) (m2 !! i) x); naive_solver. Qed.
 
-  Context `{!Equivalence ((≡) : relation A)}.
-  Global Instance map_equivalence : Equivalence ((≡) : relation (M A)).
+  Global Instance map_equivalence :
+    Equivalence ((≡) : relation A) → Equivalence ((≡) : relation (M A)).
   Proof.
     split.
     - by intros m i.
@@ -147,7 +147,10 @@ Section setoid.
   Proof. by intros ???; apply partial_alter_proper; [constructor|]. Qed.
   Global Instance singleton_proper k :
     Proper ((≡) ==> (≡)) (singletonM k : A → M A).
-  Proof. by intros ???; apply insert_proper. Qed.
+  Proof.
+    intros ???; apply insert_proper; [done|].
+    intros ?. rewrite lookup_empty; constructor.
+  Qed.
   Global Instance delete_proper (i : K) :
     Proper ((≡) ==> (≡)) (delete (M:=M A) i).
   Proof. by apply partial_alter_proper; [constructor|]. Qed.
@@ -170,14 +173,12 @@ Section setoid.
     by do 2 destruct 1; first [apply Hf | constructor].
   Qed.
   Global Instance map_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (M A).
-  Proof.
-    intros m1 m2 Hm; apply map_eq; intros i.
-    by unfold_leibniz; apply lookup_proper.
-  Qed.
+  Proof. intros m1 m2 Hm; apply map_eq; intros i. apply leibniz_equiv, Hm. Qed.
   Lemma map_equiv_empty (m : M A) : m ≡ ∅ ↔ m = ∅.
   Proof.
-    split; [intros Hm; apply map_eq; intros i|by intros ->].
-    by rewrite lookup_empty, <-equiv_None, Hm, lookup_empty.
+    split; [intros Hm; apply map_eq; intros i|intros ->].
+    - generalize (Hm i). by rewrite lookup_empty, equiv_None.
+    - intros ?. rewrite lookup_empty; constructor.
   Qed.
   Global Instance map_fmap_proper `{Equiv B} (f : A → B) :
     Proper ((≡) ==> (≡)) f → Proper ((≡) ==> (≡)) (fmap (M:=M) f).
