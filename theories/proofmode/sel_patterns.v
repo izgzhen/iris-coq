@@ -1,5 +1,5 @@
 From iris.prelude Require Export strings.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Inductive sel_pat :=
   | SelPure

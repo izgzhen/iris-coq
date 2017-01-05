@@ -3,7 +3,7 @@ From iris.heap_lang Require Export lang.
 From iris.heap_lang.lib.barrier Require Import proof.
 From iris.heap_lang Require Import par.
 From iris.heap_lang Require Import adequacy proofmode.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Definition worker (n : Z) : val :=
   λ: "b" "y", wait "b" ;; !"y" #n.
@@ -14,9 +14,10 @@ Definition client : expr :=
     (worker 12 "b" "y" ||| worker 17 "b" "y").
 
 Section client.
+  Set Default Proof Using "Type*".
   Context `{!heapG Σ, !barrierG Σ, !spawnG Σ}.
 
-  Local Definition N := nroot .@ "barrier".
+  Definition N := nroot .@ "barrier".
 
   Definition y_inv (q : Qp) (l : loc) : iProp Σ :=
     (∃ f : val, l ↦{q} f ∗ □ ∀ n : Z, WP f #n {{ v, ⌜v = #(n + 42)⌝ }})%I.

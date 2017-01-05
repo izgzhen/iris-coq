@@ -3,7 +3,7 @@ From iris.heap_lang Require Export lifting.
 From iris.algebra Require Import auth.
 From iris.heap_lang Require Import proofmode notation.
 From iris.proofmode Require Import tactics.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Class heapPreG Σ := HeapPreG {
   heap_preG_iris :> invPreG Σ;

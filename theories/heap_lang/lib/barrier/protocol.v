@@ -1,7 +1,7 @@
 From iris.algebra Require Export sts.
 From iris.base_logic Require Import lib.own.
 From iris.prelude Require Export gmap.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (** The STS describing the main barrier protocol. Every state has an index-set
     associated with it. These indices are actually [gname], because we use them

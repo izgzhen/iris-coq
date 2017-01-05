@@ -4,7 +4,7 @@ From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation.
 From iris.algebra Require Import excl.
 From iris.heap_lang.lib Require Import lock.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Definition newlock : val := λ: <>, ref #false.
 Definition try_acquire : val := λ: "l", CAS "l" #false #true.

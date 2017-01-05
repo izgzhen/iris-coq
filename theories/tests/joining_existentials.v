@@ -4,7 +4,7 @@ From iris.algebra Require Import excl agree csum.
 From iris.heap_lang.lib.barrier Require Import proof specification.
 From iris.heap_lang Require Import notation par proofmode.
 From iris.proofmode Require Import tactics.
-Set Default Proof Using "All".
+Set Default Proof Using "Type".
 
 Definition one_shotR (Σ : gFunctors) (F : cFunctor) :=
   csumR (exclR unitC) (agreeR $ laterC $ F (iPreProp Σ)).
@@ -24,6 +24,7 @@ Definition client eM eW1 eW2 : expr :=
   (eM ;; signal "b") ||| ((wait "b" ;; eW1) ||| (wait "b" ;; eW2)).
 
 Section proof.
+Set Default Proof Using "Type*".
 Context `{!heapG Σ, !barrierG Σ, !spawnG Σ, !oneShotG Σ F}.
 Context (N : namespace).
 Local Notation X := (F (iProp Σ)).
@@ -71,7 +72,7 @@ Lemma client_spec_new eM eW1 eW2 `{!Closed [] eM, !Closed [] eW1, !Closed [] eW2
   (∀ x, {{ Φ1 x }} eW1 {{ _, Ψ1 x }}) -∗
   (∀ x, {{ Φ2 x }} eW2 {{ _, Ψ2 x }}) -∗
   WP client eM eW1 eW2 {{ _, ∃ γ, barrier_res γ Ψ }}.
-Proof.
+Proof using All.
   iIntros "/= HP #He #He1 #He2"; rewrite /client.
   iMod (own_alloc (Pending : one_shotR Σ F)) as (γ) "Hγ"; first done.
   wp_apply (newbarrier_spec N (barrier_res γ Φ)); auto.
