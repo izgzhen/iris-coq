@@ -1,5 +1,5 @@
 From iris.base_logic Require Import base_logic.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (* In this file we show that the bupd can be thought of a kind of
    step-indexed double-negation when our meta-logic is classical *)
@@ -274,7 +274,7 @@ Qed.
 Section classical.
 Context (not_all_not_ex: ∀ (P : M → Prop), ¬ (∀ n : M, ¬ P n) → ∃ n : M, P n).
 Lemma nnupd_bupd P:  (|=n=> P) ⊢ (|==> P).
-Proof.
+Proof using Type*.
   rewrite /uPred_nnupd.
   split. uPred.unseal; red; rewrite //=.
   intros n x ? Hforall k yf Hle ?.

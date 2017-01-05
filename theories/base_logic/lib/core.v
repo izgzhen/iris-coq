@@ -1,6 +1,6 @@
 From iris.base_logic Require Import base_logic.
 From iris.proofmode Require Import tactics.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 (** The "core" of an assertion is its maximal persistent part.

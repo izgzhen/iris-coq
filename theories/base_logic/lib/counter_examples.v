@@ -1,6 +1,6 @@
 From iris.base_logic Require Import base_logic soundness.
 From iris.proofmode Require Import tactics.
-Set Default Proof Using "All".
+Set Default Proof Using "Type*".
 
 (** This proves that we need the ▷ in a "Saved Proposition" construction with
 name-dependent allocation. *)
@@ -39,7 +39,7 @@ Module savedprop. Section savedprop.
   Qed.
 
   Lemma contradiction : False.
-  Proof.
+  Proof using All.
     apply (@soundness M False 1); simpl.
     iIntros "". iMod A_alloc as (i) "#H".
     iPoseProof (saved_NA with "H") as "HN".
@@ -186,7 +186,7 @@ Module inv. Section inv.
   Qed.
 
   Lemma contradiction : False.
-  Proof.
+  Proof using All.
     apply consistency. iIntros "".
     iMod A_alloc as (i) "#H".
     iPoseProof (saved_NA with "H") as "HN".

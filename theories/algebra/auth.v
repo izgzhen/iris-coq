@@ -1,7 +1,7 @@
 From iris.algebra Require Export excl local_updates.
 From iris.base_logic Require Import base_logic.
 From iris.proofmode Require Import classes.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Record auth (A : Type) := Auth { authoritative : excl' A; auth_own : A }.
 Add Printing Constructor auth.

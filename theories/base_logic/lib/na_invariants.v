@@ -1,7 +1,7 @@
 From iris.base_logic.lib Require Export invariants.
 From iris.algebra Require Export gmap gset coPset.
 From iris.proofmode Require Import tactics.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 (* Non-atomic ("thread-local") invariants. *)

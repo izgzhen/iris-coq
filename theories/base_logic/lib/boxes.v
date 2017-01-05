@@ -2,7 +2,7 @@ From iris.base_logic.lib Require Export invariants.
 From iris.algebra Require Import auth gmap agree.
 From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 (** The CMRAs we need. *)

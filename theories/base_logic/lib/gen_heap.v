@@ -2,7 +2,7 @@ From iris.algebra Require Import auth gmap frac agree.
 From iris.base_logic.lib Require Export own.
 From iris.base_logic.lib Require Import fractional.
 From iris.proofmode Require Import tactics.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 Definition gen_heapUR (L V : Type) `{Countable L} : ucmraT :=

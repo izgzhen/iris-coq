@@ -1,5 +1,5 @@
 From iris.algebra Require Export ofe.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Class PCore (A : Type) := pcore : A → option A.
 Instance: Params (@pcore) 2.
@@ -428,6 +428,7 @@ Qed.
 
 (** ** Total core *)
 Section total_core.
+  Set Default Proof Using "Type*".
   Context `{CMRATotal A}.
 
   Lemma cmra_core_l x : core x ⋅ x ≡ x.

@@ -1,5 +1,5 @@
 From iris.algebra Require Export base.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (** This files defines (a shallow embedding of) the category of OFEs:
     Complete ordered families of equivalences. This is a cartesian closed
@@ -159,6 +159,7 @@ Instance const_contractive {A B : ofeT} (x : A) : Contractive (@const A B x).
 Proof. by intros n y1 y2. Qed.
 
 Section contractive.
+  Set Default Proof Using "Type*".
   Context {A B : ofeT} (f : A → B) `{!Contractive f}.
   Implicit Types x y : A.
 

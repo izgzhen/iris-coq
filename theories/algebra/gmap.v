@@ -2,7 +2,7 @@ From iris.algebra Require Export cmra.
 From iris.prelude Require Export gmap.
 From iris.algebra Require Import updates local_updates.
 From iris.base_logic Require Import base_logic.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Section cofe.
 Context `{Countable K} {A : ofeT}.
@@ -334,6 +334,7 @@ Proof.
 Qed.
 
 Section freshness.
+  Set Default Proof Using "Type*".
   Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
   Lemma alloc_updateP_strong (Q : gmap K A → Prop) (I : gset K) m x :
     ✓ x → (∀ i, m !! i = None → i ∉ I → Q (<[i:=x]>m)) → m ~~>: Q.

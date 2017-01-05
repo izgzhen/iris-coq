@@ -1,6 +1,6 @@
 From iris.prelude Require Import gmap.
 From iris.base_logic Require Export base_logic big_op.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 Module uPred_reflection. Section uPred_reflection.

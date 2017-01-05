@@ -1,6 +1,6 @@
 From iris.algebra Require Export cmra.
 From iris.algebra Require Import cmra_big_op.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (** * Simple solver for validity and inclusion by reflection *)
 Module ra_reflection. Section ra_reflection.

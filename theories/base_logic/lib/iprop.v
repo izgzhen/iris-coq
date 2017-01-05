@@ -1,7 +1,7 @@
 From iris.base_logic Require Export base_logic.
 From iris.algebra Require Import iprod gmap.
 From iris.algebra Require cofe_solver.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (** In this file we construct the type [iProp] of propositions of the Iris
 logic. This is done by solving the following recursive domain equation:

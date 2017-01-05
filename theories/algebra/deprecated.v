@@ -1,5 +1,5 @@
 From iris.algebra Require Import ofe cmra.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (* Old notation for backwards compatibility. *)
 

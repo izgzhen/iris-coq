@@ -1,5 +1,5 @@
 From iris.base_logic Require Export primitive.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import upred.uPred primitive.uPred.
 
 Definition uPred_iff {M} (P Q : uPred M) : uPred M := ((P → Q) ∧ (Q → P))%I.
