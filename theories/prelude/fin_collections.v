@@ -69,9 +69,9 @@ Proof.
   apply Permutation_singleton. by rewrite <-(right_id ∅ (∪) {[x]}),
     elements_union_singleton, elements_empty by set_solver.
 Qed.
-Lemma elements_contains X Y : X ⊆ Y → elements X `contains` elements Y.
+Lemma elements_submseteq X Y : X ⊆ Y → elements X ⊆+ elements Y.
 Proof.
-  intros; apply NoDup_contains; auto using NoDup_elements.
+  intros; apply NoDup_submseteq; auto using NoDup_elements.
   intros x. rewrite !elem_of_elements; auto.
 Qed.
 
