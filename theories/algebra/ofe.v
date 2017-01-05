@@ -956,22 +956,25 @@ Proof.
 Qed.
 
 (** Sigma *)
+Class LimitPreserving {A : ofeT} `{!Cofe A} (P : A → Prop) : Prop :=
+  limit_preserving : ∀ c : chain A, (∀ n, P (c n)) → P (compl c).
+
 Section sigma.
-  Context {A : ofeT} {f : A → Prop}.
+  Context {A : ofeT} {P : A → Prop}.
 
   (* TODO: Find a better place for this Equiv instance. It also
      should not depend on A being an OFE. *)
-  Instance sig_equiv : Equiv (sig f) :=
+  Instance sig_equiv : Equiv (sig P) :=
     λ x1 x2, (proj1_sig x1) ≡ (proj1_sig x2).
-  Instance sig_dist : Dist (sig f) :=
+  Instance sig_dist : Dist (sig P) :=
     λ n x1 x2, (proj1_sig x1) ≡{n}≡ (proj1_sig x2).
-  Global Lemma exist_ne :
+  Lemma exist_ne :
     ∀ n x1 x2, x1 ≡{n}≡ x2 →
-      ∀ (H1 : f x1) (H2 : f x2), (exist f x1 H1) ≡{n}≡ (exist f x2 H2).
+      ∀ (H1 : P x1) (H2 : P x2), (exist P x1 H1) ≡{n}≡ (exist P x2 H2).
   Proof. intros n ?? Hx ??. exact Hx. Qed.
-  Global Instance proj1_sig_ne : Proper (dist n ==> dist n) (@proj1_sig _ f).
+  Global Instance proj1_sig_ne : Proper (dist n ==> dist n) (@proj1_sig _ P).
   Proof. intros n [] [] ?. done. Qed.
-  Definition sig_ofe_mixin : OfeMixin (sig f).
+  Definition sig_ofe_mixin : OfeMixin (sig P).
   Proof.
     split.
     - intros x y. unfold dist, sig_dist, equiv, sig_equiv.
@@ -979,24 +982,24 @@ Section sigma.
     - unfold dist, sig_dist. intros n.
       split; [intros [] | intros [] [] | intros [] [] []]; simpl; try done.
       intros. by etrans.
-    - intros n [] []. unfold dist, sig_dist. apply dist_S.
+    - intros n [??] [??]. unfold dist, sig_dist. simpl. apply dist_S.
   Qed.
-  Canonical Structure sigC : ofeT := OfeT (sig f) sig_ofe_mixin.
+  Canonical Structure sigC : ofeT := OfeT (sig P) sig_ofe_mixin.
 
-  Global Class LimitPreserving `{Cofe A} : Prop :=
-    limit_preserving : ∀ c : chain A, (∀ n, f (c n)) → f (compl c).
-  Program Definition sig_compl `{LimitPreserving} : Compl sigC :=
-    λ c, exist f (compl (chain_map proj1_sig c)) _.
+  (* FIXME: WTF, it seems that within these braces {...} the ofe argument of LimitPreserving
+     suddenyl becomes explicit...? *)
+  Program Definition sig_compl `{LimitPreserving _ P} : Compl sigC :=
+    λ c, exist P (compl (chain_map proj1_sig c)) _.
   Next Obligation.
     intros ? Hlim c. apply Hlim. move=>n /=. destruct (c n). done.
   Qed.
-  Program Definition sig_cofe `{LimitPreserving} : Cofe sigC :=
+  Program Definition sig_cofe `{LimitPreserving _ P} : Cofe sigC :=
     {| compl := sig_compl |}.
   Next Obligation.
     intros ? Hlim n c. apply (conv_compl n (chain_map proj1_sig c)).
   Qed.
 
-  Global Instance sig_timeless (x : sig f) :
+  Global Instance sig_timeless (x : sig P) :
     Timeless (proj1_sig x) → Timeless x.
   Proof. intros ? y. destruct x, y. unfold dist, sig_dist, equiv, sig_equiv. apply (timeless _). Qed.
   Global Instance sig_discrete_cofe : Discrete A → Discrete sigC.
