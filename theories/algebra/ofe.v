@@ -955,6 +955,59 @@ Proof.
   destruct n as [|n]; simpl in *; first done. apply cFunctor_ne, Hfg.
 Qed.
 
+(** Sigma *)
+Section sigma.
+  Context {A : ofeT} {f : A → Prop}.
+
+  (* TODO: Find a better place for this Equiv instance. It also
+     should not depend on A being an OFE. *)
+  Instance sig_equiv : Equiv (sig f) :=
+    λ x1 x2, (proj1_sig x1) ≡ (proj1_sig x2).
+  Instance sig_dist : Dist (sig f) :=
+    λ n x1 x2, (proj1_sig x1) ≡{n}≡ (proj1_sig x2).
+  Global Lemma exist_ne :
+    ∀ n x1 x2, x1 ≡{n}≡ x2 →
+      ∀ (H1 : f x1) (H2 : f x2), (exist f x1 H1) ≡{n}≡ (exist f x2 H2).
+  Proof. intros n ?? Hx ??. exact Hx. Qed.
+  Global Instance proj1_sig_ne : Proper (dist n ==> dist n) (@proj1_sig _ f).
+  Proof. intros n [] [] ?. done. Qed.
+  Definition sig_ofe_mixin : OfeMixin (sig f).
+  Proof.
+    split.
+    - intros x y. unfold dist, sig_dist, equiv, sig_equiv.
+      destruct x, y. apply equiv_dist.
+    - unfold dist, sig_dist. intros n.
+      split; [intros [] | intros [] [] | intros [] [] []]; simpl; try done.
+      intros. by etrans.
+    - intros n [] []. unfold dist, sig_dist. apply dist_S.
+  Qed.
+  Canonical Structure sigC : ofeT := OfeT (sig f) sig_ofe_mixin.
+
+  Global Class LimitPreserving `{Cofe A} : Prop :=
+    limit_preserving : ∀ c : chain A, (∀ n, f (c n)) → f (compl c).
+  Program Definition sig_compl `{LimitPreserving} : Compl sigC :=
+    λ c, exist f (compl (chain_map proj1_sig c)) _.
+  Next Obligation.
+    intros ? Hlim c. apply Hlim. move=>n /=. destruct (c n). done.
+  Qed.
+  Program Definition sig_cofe `{LimitPreserving} : Cofe sigC :=
+    {| compl := sig_compl |}.
+  Next Obligation.
+    intros ? Hlim n c. apply (conv_compl n (chain_map proj1_sig c)).
+  Qed.
+
+  Global Instance sig_timeless (x : sig f) :
+    Timeless (proj1_sig x) → Timeless x.
+  Proof. intros ? y. destruct x, y. unfold dist, sig_dist, equiv, sig_equiv. apply (timeless _). Qed.
+  Global Instance sig_discrete_cofe : Discrete A → Discrete sigC.
+  Proof.
+    intros ? [??] [??]. rewrite /dist /equiv /ofe_dist /ofe_equiv /=.
+    rewrite /sig_dist /sig_equiv /=. apply discrete_timeless.
+  Qed.
+End sigma.
+
+Arguments sigC {A} f.
+
 (** Notation for writing functors *)
 Notation "∙" := idCF : cFunctor_scope.
 Notation "T -c> F" := (ofe_funCF T%type F%CF) : cFunctor_scope.
