@@ -3,7 +3,7 @@
 (** This file collects general purpose definitions and theorems on the option
 data type that are not in the Coq standard library. *)
 From iris.prelude Require Export tactics.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Inductive option_reflect {A} (P : A → Prop) (Q : Prop) : option A → Type :=
   | ReflectSome x : P x → option_reflect P Q (Some x)

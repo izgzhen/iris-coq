@@ -1,7 +1,7 @@
 (* Copyright (c) 2012-2016, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
 From iris.prelude Require Import gmap.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Record gmultiset A `{Countable A} := GMultiSet { gmultiset_car : gmap A nat }.
 Arguments GMultiSet {_ _ _} _.

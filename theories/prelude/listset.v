@@ -3,7 +3,7 @@
 (** This file implements finite set as unordered lists without duplicates
 removed. This implementation forms a monad. *)
 From iris.prelude Require Export collections list.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Record listset A := Listset { listset_car: list A }.
 Arguments listset_car {_} _.

@@ -3,7 +3,7 @@
 (** Properties about arbitrary pre-, partial, and total orders. We do not use
 the relation [⊆] because we often have multiple orders on the same structure *)
 From iris.prelude Require Export tactics.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Section orders.
   Context {A} {R : relation A}.

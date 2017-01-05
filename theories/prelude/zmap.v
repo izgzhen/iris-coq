@@ -4,7 +4,7 @@
 maps whose keys range over Coq's data type of binary naturals [Z]. *)
 From iris.prelude Require Import pmap mapset.
 From iris.prelude Require Export prelude fin_maps.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Local Open Scope Z_scope.
 
 Record Zmap (A : Type) : Type :=

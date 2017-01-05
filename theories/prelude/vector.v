@@ -6,7 +6,7 @@ definitions from the standard library, but renames or changes their notations,
 so that it becomes more consistent with the naming conventions in this
 development. *)
 From iris.prelude Require Export list.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Open Scope vector_scope.
 
 (** * The fin type *)

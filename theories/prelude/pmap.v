@@ -10,7 +10,7 @@ Leibniz equality to become extensional. *)
 From Coq Require Import PArith.
 From iris.prelude Require Import mapset countable.
 From iris.prelude Require Export fin_maps.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Local Open Scope positive_scope.
 Local Hint Extern 0 (@eq positive _ _) => congruence.

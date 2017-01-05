@@ -1,7 +1,7 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
 From iris.prelude Require Export countable vector.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Class Finite A `{EqDecision A} := {
   enum : list A;
@@ -181,12 +181,12 @@ Section forall_exists.
   Context `{∀ x, Decision (P x)}.
 
   Global Instance forall_dec: Decision (∀ x, P x).
-  Proof.
+  Proof using Type*.
    refine (cast_if (decide (Forall P (enum A))));
     abstract by rewrite <-Forall_finite.
   Defined.
   Global Instance exists_dec: Decision (∃ x, P x).
-  Proof.
+  Proof using Type*.
    refine (cast_if (decide (Exists P (enum A))));
     abstract by rewrite <-Exists_finite.
   Defined.

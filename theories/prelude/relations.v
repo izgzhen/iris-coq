@@ -6,7 +6,7 @@ small step semantics. This file defines a hint database [ars] containing
 some theorems on abstract rewriting systems. *)
 From Coq Require Import Wf_nat.
 From iris.prelude Require Export tactics base.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (** * Definitions *)
 Section definitions.

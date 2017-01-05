@@ -6,7 +6,7 @@ search trees (uncompressed Patricia trees) as implemented in the file [pmap]
 and guarantees logarithmic-time operations. *)
 From iris.prelude Require Export fin_maps pretty.
 From iris.prelude Require Import gmap.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Notation stringmap := (gmap string).
 Notation stringset := (gset string).
