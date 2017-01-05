@@ -28,44 +28,39 @@ Qed.
 Global Instance inv_persistent N P : PersistentP (inv N P).
 Proof. rewrite inv_eq /inv; apply _. Qed.
 
+Lemma fresh_inv_name (E : gset positive) N : ∃ i, i ∉ E ∧ i ∈ ↑N.
+Proof.
+  exists (coPpick (↑ N ∖ coPset.of_gset E)).
+  rewrite -coPset.elem_of_of_gset (comm and) -elem_of_difference.
+  apply coPpick_elem_of=> Hfin.
+  eapply nclose_infinite, (difference_finite_inv _ _), Hfin.
+  apply of_gset_finite.
+Qed.
+
 Lemma inv_alloc N E P : ▷ P ={E}=∗ inv N P.
 Proof.
   rewrite inv_eq /inv_def fupd_eq /fupd_def. iIntros "HP [Hw $]".
-  iMod (ownI_alloc (∈ ↑ N) P with "[HP Hw]") as (i) "(% & $ & ?)"; auto.
-  - intros Ef. exists (coPpick (↑ N ∖ coPset.of_gset Ef)).
-    rewrite -coPset.elem_of_of_gset comm -elem_of_difference.
-    apply coPpick_elem_of=> Hfin.
-    eapply nclose_infinite, (difference_finite_inv _ _), Hfin.
-    apply of_gset_finite.
-  - by iFrame.
-  - rewrite /uPred_except_0; eauto.
+  iMod (ownI_alloc (∈ ↑ N) P with "[$HP $Hw]")
+    as (i) "(% & $ & ?)"; auto using fresh_inv_name.
 Qed.
 
 Lemma inv_alloc_open N E P :
   ↑N ⊆ E → True ={E, E∖↑N}=∗ inv N P ∗ (▷P ={E∖↑N, E}=∗ True).
 Proof.
-  rewrite inv_eq /inv_def fupd_eq /fupd_def.
-  iIntros (Sub) "[Hw HE]".
-  iMod (ownI_alloc_open (∈ ↑ N) P with "Hw") as (i) "(% & Hw & #Hi & HD)".
-  - intros Ef. exists (coPpick (↑ N ∖ coPset.of_gset Ef)).
-    rewrite -coPset.elem_of_of_gset comm -elem_of_difference.
-    apply coPpick_elem_of=> Hfin.
-    eapply nclose_infinite, (difference_finite_inv _ _), Hfin.
-    apply of_gset_finite.
-  - iAssert (ownE {[i]} ∗ ownE (↑ N ∖ {[i]}) ∗ ownE (E ∖ ↑ N))%I with "[HE]" as "(HEi & HEN\i & HE\N)".
-    { rewrite -?ownE_op; [|set_solver|set_solver].
-      rewrite assoc_L. rewrite <-!union_difference_L; try done; set_solver. }
-    iModIntro. rewrite /uPred_except_0. iRight. iFrame.
-    iSplitL "Hw HEi".
-    + by iApply "Hw".
-    + iSplitL "Hi"; [eauto|].
-      iIntros "HP [Hw HE\N]".
-      iDestruct (ownI_close with "[$Hw $Hi $HP $HD]") as "[? HEi]".
-      iModIntro. iRight. iFrame. iSplitL; [|done].
-      iCombine "HEi" "HEN\i" as "HEN".
-      iCombine "HEN" "HE\N" as "HE".
-      rewrite -?ownE_op; [|set_solver|set_solver].
-      rewrite <-!union_difference_L; try done; set_solver.
+  rewrite inv_eq /inv_def fupd_eq /fupd_def. iIntros (Sub) "[Hw HE]".
+  iMod (ownI_alloc_open (∈ ↑ N) P with "Hw")
+    as (i) "(% & Hw & #Hi & HD)"; auto using fresh_inv_name.
+  iAssert (ownE {[i]} ∗ ownE (↑ N ∖ {[i]}) ∗ ownE (E ∖ ↑ N))%I
+    with "[HE]" as "(HEi & HEN\i & HE\N)".
+  { rewrite -?ownE_op; [|set_solver..].
+    rewrite assoc_L -!union_difference_L //. set_solver. }
+  do 2 iModIntro. iFrame "HE\N". iSplitL "Hw HEi"; first by iApply "Hw".
+  iSplitL "Hi"; first by eauto. iIntros "HP [Hw HE\N]".
+  iDestruct (ownI_close with "[$Hw $Hi $HP $HD]") as "[$ HEi]".
+  do 2 iModIntro. iSplitL; [|done].
+  iCombine "HEi" "HEN\i" as "HEN"; iCombine "HEN" "HE\N" as "HE".
+  rewrite -?ownE_op; [|set_solver..].
+  rewrite -!union_difference_L //; set_solver.
 Qed.
 
 Lemma inv_open E N P :

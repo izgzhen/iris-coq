@@ -165,5 +165,4 @@ Proof.
   iApply (big_sepM_insert _ I); first done.
   iFrame "HI". by iRight.
 Qed.
-
 End wsat.
