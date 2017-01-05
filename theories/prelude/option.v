@@ -115,36 +115,38 @@ End Forall2.
 Instance option_equiv `{Equiv A} : Equiv (option A) := option_Forall2 (≡).
 
 Section setoids.
-  Context `{Equiv A} {Hequiv: Equivalence ((≡) : relation A)}.
+  Context `{Equiv A}.
   Implicit Types mx my : option A.
 
   Lemma equiv_option_Forall2 mx my : mx ≡ my ↔ option_Forall2 (≡) mx my.
-  Proof using -(Hequiv). done. Qed.
+  Proof. done. Qed.
 
-  Global Instance option_equivalence : Equivalence ((≡) : relation (option A)).
+  Global Instance option_equivalence :
+    Equivalence ((≡) : relation A) → Equivalence ((≡) : relation (option A)).
   Proof. apply _. Qed.
   Global Instance Some_proper : Proper ((≡) ==> (≡)) (@Some A).
-  Proof using -(Hequiv). by constructor. Qed.
+  Proof. by constructor. Qed.
   Global Instance Some_equiv_inj : Inj (≡) (≡) (@Some A).
-  Proof using -(Hequiv). by inversion_clear 1. Qed.
+  Proof. by inversion_clear 1. Qed.
   Global Instance option_leibniz `{!LeibnizEquiv A} : LeibnizEquiv (option A).
-  Proof. intros x y; destruct 1; fold_leibniz; congruence. Qed.
+  Proof. intros x y; destruct 1; f_equal; by apply leibniz_equiv. Qed.
 
   Lemma equiv_None mx : mx ≡ None ↔ mx = None.
-  Proof. split; [by inversion_clear 1|by intros ->]. Qed.
+  Proof. split; [by inversion_clear 1|intros ->; constructor]. Qed.
   Lemma equiv_Some_inv_l mx my x :
     mx ≡ my → mx = Some x → ∃ y, my = Some y ∧ x ≡ y.
-  Proof using -(Hequiv). destruct 1; naive_solver. Qed.
+  Proof. destruct 1; naive_solver. Qed.
   Lemma equiv_Some_inv_r mx my y :
     mx ≡ my → my = Some y → ∃ x, mx = Some x ∧ x ≡ y.
-  Proof using -(Hequiv). destruct 1; naive_solver. Qed.
+  Proof. destruct 1; naive_solver. Qed.
   Lemma equiv_Some_inv_l' my x : Some x ≡ my → ∃ x', Some x' = my ∧ x ≡ x'.
-  Proof using -(Hequiv). intros ?%(equiv_Some_inv_l _ _ x); naive_solver. Qed.
-  Lemma equiv_Some_inv_r' mx y : mx ≡ Some y → ∃ y', mx = Some y' ∧ y ≡ y'.
+  Proof. intros ?%(equiv_Some_inv_l _ _ x); naive_solver. Qed.
+  Lemma equiv_Some_inv_r' `{!Equivalence ((≡) : relation A)} mx y :
+    mx ≡ Some y → ∃ y', mx = Some y' ∧ y ≡ y'.
   Proof. intros ?%(equiv_Some_inv_r _ _ y); naive_solver. Qed.
 
   Global Instance is_Some_proper : Proper ((≡) ==> iff) (@is_Some A).
-  Proof using -(Hequiv). inversion_clear 1; split; eauto. Qed.
+  Proof. inversion_clear 1; split; eauto. Qed.
   Global Instance from_option_proper {B} (R : relation B) (f : A → B) :
     Proper ((≡) ==> R) f → Proper (R ==> (≡) ==> R) (from_option f).
   Proof. destruct 3; simpl; auto. Qed.

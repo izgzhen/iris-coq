@@ -1280,6 +1280,7 @@ Hint Extern 1 (of_envs _ ⊢ _) =>
   | |- _ ⊢ □ _ => iClear "*"; iAlways
   | |- _ ⊢ ∃ _, _ => iExists _
   | |- _ ⊢ |==> _ => iModIntro
+  | |- _ ⊢ ◇ _ => iModIntro
   end.
 Hint Extern 1 (of_envs _ ⊢ _) =>
   match goal with |- _ ⊢ (_ ∨ _)%I => iLeft end.

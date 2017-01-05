@@ -2753,9 +2753,8 @@ Section setoid.
     by setoid_rewrite equiv_option_Forall2.
   Qed.
 
-  Context {Hequiv: Equivalence ((≡) : relation A)}.
-
-  Global Instance list_equivalence : Equivalence ((≡) : relation (list A)).
+  Global Instance list_equivalence :
+    Equivalence ((≡) : relation A) → Equivalence ((≡) : relation (list A)).
   Proof.
     split.
     - intros l. by apply equiv_Forall2.
@@ -2766,48 +2765,53 @@ Section setoid.
   Proof. induction 1; f_equal; fold_leibniz; auto. Qed.
 
   Global Instance cons_proper : Proper ((≡) ==> (≡) ==> (≡)) (@cons A).
-  Proof using -(Hequiv). by constructor. Qed.
+  Proof. by constructor. Qed.
   Global Instance app_proper : Proper ((≡) ==> (≡) ==> (≡)) (@app A).
-  Proof using -(Hequiv). induction 1; intros ???; simpl; try constructor; auto. Qed.
+  Proof. induction 1; intros ???; simpl; try constructor; auto. Qed.
   Global Instance length_proper : Proper ((≡) ==> (=)) (@length A).
-  Proof using -(Hequiv). induction 1; f_equal/=; auto. Qed.
+  Proof. induction 1; f_equal/=; auto. Qed.
   Global Instance tail_proper : Proper ((≡) ==> (≡)) (@tail A).
-  Proof. by destruct 1. Qed.
+  Proof. destruct 1; try constructor; auto. Qed.
   Global Instance take_proper n : Proper ((≡) ==> (≡)) (@take A n).
-  Proof using -(Hequiv). induction n; destruct 1; constructor; auto. Qed.
+  Proof. induction n; destruct 1; constructor; auto. Qed.
   Global Instance drop_proper n : Proper ((≡) ==> (≡)) (@drop A n).
-  Proof using -(Hequiv). induction n; destruct 1; simpl; try constructor; auto. Qed.
+  Proof. induction n; destruct 1; simpl; try constructor; auto. Qed.
   Global Instance list_lookup_proper i :
     Proper ((≡) ==> (≡)) (lookup (M:=list A) i).
-  Proof. induction i; destruct 1; simpl; f_equiv; auto. Qed.
+  Proof. induction i; destruct 1; simpl; try constructor; auto. Qed.
   Global Instance list_alter_proper f i :
     Proper ((≡) ==> (≡)) f → Proper ((≡) ==> (≡)) (alter (M:=list A) f i).
-  Proof using -(Hequiv). intros. induction i; destruct 1; constructor; eauto. Qed.
+  Proof. intros. induction i; destruct 1; constructor; eauto. Qed.
   Global Instance list_insert_proper i :
     Proper ((≡) ==> (≡) ==> (≡)) (insert (M:=list A) i).
-  Proof using -(Hequiv). intros ???; induction i; destruct 1; constructor; eauto. Qed.
+  Proof. intros ???; induction i; destruct 1; constructor; eauto. Qed.
   Global Instance list_inserts_proper i :
     Proper ((≡) ==> (≡) ==> (≡)) (@list_inserts A i).
-  Proof using -(Hequiv).
+  Proof.
     intros k1 k2 Hk; revert i.
     induction Hk; intros ????; simpl; try f_equiv; naive_solver.
   Qed.
   Global Instance list_delete_proper i :
     Proper ((≡) ==> (≡)) (delete (M:=list A) i).
-  Proof using -(Hequiv). induction i; destruct 1; try constructor; eauto. Qed.
+  Proof. induction i; destruct 1; try constructor; eauto. Qed.
   Global Instance option_list_proper : Proper ((≡) ==> (≡)) (@option_list A).
-  Proof. destruct 1; by constructor. Qed.
+  Proof. destruct 1; repeat constructor; auto. Qed.
   Global Instance list_filter_proper P `{∀ x, Decision (P x)} :
     Proper ((≡) ==> iff) P → Proper ((≡) ==> (≡)) (filter (B:=list A) P).
-  Proof using -(Hequiv). intros ???. rewrite !equiv_Forall2. by apply Forall2_filter. Qed.
+  Proof. intros ???. rewrite !equiv_Forall2. by apply Forall2_filter. Qed.
   Global Instance replicate_proper n : Proper ((≡) ==> (≡)) (@replicate A n).
-  Proof using -(Hequiv). induction n; constructor; auto. Qed.
+  Proof. induction n; constructor; auto. Qed.
   Global Instance reverse_proper : Proper ((≡) ==> (≡)) (@reverse A).
-  Proof. induction 1; rewrite ?reverse_cons; repeat (done || f_equiv). Qed.
+  Proof.
+    induction 1; rewrite ?reverse_cons; simpl; [constructor|].
+    apply app_proper; repeat constructor; auto.
+  Qed.
   Global Instance last_proper : Proper ((≡) ==> (≡)) (@last A).
-  Proof. induction 1 as [|????? []]; simpl; repeat (done || f_equiv). Qed.
+  Proof. induction 1 as [|????? []]; simpl; repeat constructor; auto. Qed.
   Global Instance resize_proper n : Proper ((≡) ==> (≡) ==> (≡)) (@resize A n).
-  Proof. induction n; destruct 2; simpl; repeat (auto || f_equiv). Qed.
+  Proof.
+    induction n; destruct 2; simpl; repeat (constructor || f_equiv); auto.
+  Qed.
 End setoid.
 
 (** * Properties of the monadic operations *)
