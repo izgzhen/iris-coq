@@ -236,19 +236,19 @@ Fixpoint interleave {A} (x : A) (l : list A) : list (list A) :=
 Fixpoint permutations {A} (l : list A) : list (list A) :=
   match l with [] => [[]] | x :: l => permutations l ≫= interleave x end.
 
-(** The predicate [suffix_of] holds if the first list is a suffix of the second.
-The predicate [prefix_of] holds if the first list is a prefix of the second. *)
-Definition suffix_of {A} : relation (list A) := λ l1 l2, ∃ k, l2 = k ++ l1.
-Definition prefix_of {A} : relation (list A) := λ l1 l2, ∃ k, l2 = l1 ++ k.
-Infix "`suffix_of`" := suffix_of (at level 70) : C_scope.
-Infix "`prefix_of`" := prefix_of (at level 70) : C_scope.
+(** The predicate [suffix] holds if the first list is a suffix of the second.
+The predicate [prefix] holds if the first list is a prefix of the second. *)
+Definition suffix {A} : relation (list A) := λ l1 l2, ∃ k, l2 = k ++ l1.
+Definition prefix {A} : relation (list A) := λ l1 l2, ∃ k, l2 = l1 ++ k.
+Infix "`suffix_of`" := suffix (at level 70) : C_scope.
+Infix "`prefix_of`" := prefix (at level 70) : C_scope.
 Hint Extern 0 (_ `prefix_of` _) => reflexivity.
 Hint Extern 0 (_ `suffix_of` _) => reflexivity.
 
 Section prefix_suffix_ops.
   Context `{EqDecision A}.
 
-  Definition max_prefix_of : list A → list A → list A * list A * list A :=
+  Definition max_prefix : list A → list A → list A * list A * list A :=
     fix go l1 l2 :=
     match l1, l2 with
     | [], l2 => ([], l2, [])
@@ -257,12 +257,12 @@ Section prefix_suffix_ops.
       if decide_rel (=) x1 x2
       then prod_map id (x1 ::) (go l1 l2) else (x1 :: l1, x2 :: l2, [])
     end.
-  Definition max_suffix_of (l1 l2 : list A) : list A * list A * list A :=
-    match max_prefix_of (reverse l1) (reverse l2) with
+  Definition max_suffix (l1 l2 : list A) : list A * list A * list A :=
+    match max_prefix (reverse l1) (reverse l2) with
     | (k1, k2, k3) => (reverse k1, reverse k2, reverse k3)
     end.
-  Definition strip_prefix (l1 l2 : list A) := (max_prefix_of l1 l2).1.2.
-  Definition strip_suffix (l1 l2 : list A) := (max_suffix_of l1 l2).1.2.
+  Definition strip_prefix (l1 l2 : list A) := (max_prefix l1 l2).1.2.
+  Definition strip_suffix (l1 l2 : list A) := (max_suffix l1 l2).1.2.
 End prefix_suffix_ops.
 
 (** A list [l1] is a sublist of [l2] if [l2] is obtained by removing elements
@@ -271,19 +271,19 @@ Inductive sublist {A} : relation (list A) :=
   | sublist_nil : sublist [] []
   | sublist_skip x l1 l2 : sublist l1 l2 → sublist (x :: l1) (x :: l2)
   | sublist_cons x l1 l2 : sublist l1 l2 → sublist l1 (x :: l2).
-Infix "`sublist`" := sublist (at level 70) : C_scope.
-Hint Extern 0 (_ `sublist` _) => reflexivity.
+Infix "`sublist_of`" := sublist (at level 70) : C_scope.
+Hint Extern 0 (_ `sublist_of` _) => reflexivity.
 
-(** A list [l2] contains a list [l1] if [l2] is obtained by removing elements
+(** A list [l2] submseteq a list [l1] if [l2] is obtained by removing elements
 from [l1] while possiblity changing the order. *)
-Inductive contains {A} : relation (list A) :=
-  | contains_nil : contains [] []
-  | contains_skip x l1 l2 : contains l1 l2 → contains (x :: l1) (x :: l2)
-  | contains_swap x y l : contains (y :: x :: l) (x :: y :: l)
-  | contains_cons x l1 l2 : contains l1 l2 → contains l1 (x :: l2)
-  | contains_trans l1 l2 l3 : contains l1 l2 → contains l2 l3 → contains l1 l3.
-Infix "`contains`" := contains (at level 70) : C_scope.
-Hint Extern 0 (_ `contains` _) => reflexivity.
+Inductive submseteq {A} : relation (list A) :=
+  | submseteq_nil : submseteq [] []
+  | submseteq_skip x l1 l2 : submseteq l1 l2 → submseteq (x :: l1) (x :: l2)
+  | submseteq_swap x y l : submseteq (y :: x :: l) (x :: y :: l)
+  | submseteq_cons x l1 l2 : submseteq l1 l2 → submseteq l1 (x :: l2)
+  | submseteq_trans l1 l2 l3 : submseteq l1 l2 → submseteq l2 l3 → submseteq l1 l3.
+Infix "⊆+" := submseteq (at level 70) : C_scope.
+Hint Extern 0 (_ ⊆+ _) => reflexivity.
 
 (** Removes [x] from the list [l]. The function returns a [Some] when the
 +removal succeeds and [None] when [x] is not in [l]. *)
@@ -351,7 +351,7 @@ Section list_set.
 End list_set.
 
 (** * Basic tactics on lists *)
-(** The tactic [discriminate_list] discharges a goal if it contains
+(** The tactic [discriminate_list] discharges a goal if it submseteq
 a list equality involving [(::)] and [(++)] of two lists that have a different
 length as one of its hypotheses. *)
 Tactic Notation "discriminate_list" hyp(H) :=
@@ -1426,120 +1426,120 @@ Qed.
 Lemma elem_of_Permutation l x : x ∈ l → ∃ k, l ≡ₚ x :: k.
 Proof. intros [i ?]%elem_of_list_lookup. eauto using delete_Permutation. Qed.
 
-(** ** Properties of the [prefix_of] and [suffix_of] predicates *)
-Global Instance: PreOrder (@prefix_of A).
+(** ** Properties of the [prefix] and [suffix] predicates *)
+Global Instance: PreOrder (@prefix A).
 Proof.
   split.
   - intros ?. eexists []. by rewrite (right_id_L [] (++)).
   - intros ???[k1->] [k2->]. exists (k1 ++ k2). by rewrite (assoc_L (++)).
 Qed.
-Lemma prefix_of_nil l : [] `prefix_of` l.
+Lemma prefix_nil l : [] `prefix_of` l.
 Proof. by exists l. Qed.
-Lemma prefix_of_nil_not x l : ¬x :: l `prefix_of` [].
+Lemma prefix_nil_not x l : ¬x :: l `prefix_of` [].
 Proof. by intros [k ?]. Qed.
-Lemma prefix_of_cons x l1 l2 : l1 `prefix_of` l2 → x :: l1 `prefix_of` x :: l2.
+Lemma prefix_cons x l1 l2 : l1 `prefix_of` l2 → x :: l1 `prefix_of` x :: l2.
 Proof. intros [k ->]. by exists k. Qed.
-Lemma prefix_of_cons_alt x y l1 l2 :
+Lemma prefix_cons_alt x y l1 l2 :
   x = y → l1 `prefix_of` l2 → x :: l1 `prefix_of` y :: l2.
-Proof. intros ->. apply prefix_of_cons. Qed.
-Lemma prefix_of_cons_inv_1 x y l1 l2 : x :: l1 `prefix_of` y :: l2 → x = y.
+Proof. intros ->. apply prefix_cons. Qed.
+Lemma prefix_cons_inv_1 x y l1 l2 : x :: l1 `prefix_of` y :: l2 → x = y.
 Proof. by intros [k ?]; simplify_eq/=. Qed.
-Lemma prefix_of_cons_inv_2 x y l1 l2 :
+Lemma prefix_cons_inv_2 x y l1 l2 :
   x :: l1 `prefix_of` y :: l2 → l1 `prefix_of` l2.
 Proof. intros [k ?]; simplify_eq/=. by exists k. Qed.
-Lemma prefix_of_app k l1 l2 : l1 `prefix_of` l2 → k ++ l1 `prefix_of` k ++ l2.
+Lemma prefix_app k l1 l2 : l1 `prefix_of` l2 → k ++ l1 `prefix_of` k ++ l2.
 Proof. intros [k' ->]. exists k'. by rewrite (assoc_L (++)). Qed.
-Lemma prefix_of_app_alt k1 k2 l1 l2 :
+Lemma prefix_app_alt k1 k2 l1 l2 :
   k1 = k2 → l1 `prefix_of` l2 → k1 ++ l1 `prefix_of` k2 ++ l2.
-Proof. intros ->. apply prefix_of_app. Qed.
-Lemma prefix_of_app_l l1 l2 l3 : l1 ++ l3 `prefix_of` l2 → l1 `prefix_of` l2.
+Proof. intros ->. apply prefix_app. Qed.
+Lemma prefix_app_l l1 l2 l3 : l1 ++ l3 `prefix_of` l2 → l1 `prefix_of` l2.
 Proof. intros [k ->]. exists (l3 ++ k). by rewrite (assoc_L (++)). Qed.
-Lemma prefix_of_app_r l1 l2 l3 : l1 `prefix_of` l2 → l1 `prefix_of` l2 ++ l3.
+Lemma prefix_app_r l1 l2 l3 : l1 `prefix_of` l2 → l1 `prefix_of` l2 ++ l3.
 Proof. intros [k ->]. exists (k ++ l3). by rewrite (assoc_L (++)). Qed.
-Lemma prefix_of_length l1 l2 : l1 `prefix_of` l2 → length l1 ≤ length l2.
+Lemma prefix_length l1 l2 : l1 `prefix_of` l2 → length l1 ≤ length l2.
 Proof. intros [? ->]. rewrite app_length. lia. Qed.
-Lemma prefix_of_snoc_not l x : ¬l ++ [x] `prefix_of` l.
+Lemma prefix_snoc_not l x : ¬l ++ [x] `prefix_of` l.
 Proof. intros [??]. discriminate_list. Qed.
-Global Instance: PreOrder (@suffix_of A).
+Global Instance: PreOrder (@suffix A).
 Proof.
   split.
   - intros ?. by eexists [].
   - intros ???[k1->] [k2->]. exists (k2 ++ k1). by rewrite (assoc_L (++)).
 Qed.
-Global Instance prefix_of_dec `{!EqDecision A} : ∀ l1 l2,
+Global Instance prefix_dec `{!EqDecision A} : ∀ l1 l2,
     Decision (l1 `prefix_of` l2) := fix go l1 l2 :=
   match l1, l2 return { l1 `prefix_of` l2 } + { ¬l1 `prefix_of` l2 } with
-  | [], _ => left (prefix_of_nil _)
-  | _, [] => right (prefix_of_nil_not _ _)
+  | [], _ => left (prefix_nil _)
+  | _, [] => right (prefix_nil_not _ _)
   | x :: l1, y :: l2 =>
     match decide_rel (=) x y with
     | left Hxy =>
       match go l1 l2 with
-      | left Hl1l2 => left (prefix_of_cons_alt _ _ _ _ Hxy Hl1l2)
-      | right Hl1l2 => right (Hl1l2 ∘ prefix_of_cons_inv_2 _ _ _ _)
+      | left Hl1l2 => left (prefix_cons_alt _ _ _ _ Hxy Hl1l2)
+      | right Hl1l2 => right (Hl1l2 ∘ prefix_cons_inv_2 _ _ _ _)
       end
-    | right Hxy => right (Hxy ∘ prefix_of_cons_inv_1 _ _ _ _)
+    | right Hxy => right (Hxy ∘ prefix_cons_inv_1 _ _ _ _)
     end
   end.
 
 Section prefix_ops.
   Context `{!EqDecision A}.
-  Lemma max_prefix_of_fst l1 l2 :
-    l1 = (max_prefix_of l1 l2).2 ++ (max_prefix_of l1 l2).1.1.
+  Lemma max_prefix_fst l1 l2 :
+    l1 = (max_prefix l1 l2).2 ++ (max_prefix l1 l2).1.1.
   Proof.
     revert l2. induction l1; intros [|??]; simpl;
       repeat case_decide; f_equal/=; auto.
   Qed.
-  Lemma max_prefix_of_fst_alt l1 l2 k1 k2 k3 :
-    max_prefix_of l1 l2 = (k1, k2, k3) → l1 = k3 ++ k1.
+  Lemma max_prefix_fst_alt l1 l2 k1 k2 k3 :
+    max_prefix l1 l2 = (k1, k2, k3) → l1 = k3 ++ k1.
   Proof.
-    intros. pose proof (max_prefix_of_fst l1 l2).
-    by destruct (max_prefix_of l1 l2) as [[]?]; simplify_eq.
+    intros. pose proof (max_prefix_fst l1 l2).
+    by destruct (max_prefix l1 l2) as [[]?]; simplify_eq.
   Qed.
-  Lemma max_prefix_of_fst_prefix l1 l2 : (max_prefix_of l1 l2).2 `prefix_of` l1.
-  Proof. eexists. apply max_prefix_of_fst. Qed.
-  Lemma max_prefix_of_fst_prefix_alt l1 l2 k1 k2 k3 :
-    max_prefix_of l1 l2 = (k1, k2, k3) → k3 `prefix_of` l1.
-  Proof. eexists. eauto using max_prefix_of_fst_alt. Qed.
-  Lemma max_prefix_of_snd l1 l2 :
-    l2 = (max_prefix_of l1 l2).2 ++ (max_prefix_of l1 l2).1.2.
+  Lemma max_prefix_fst_prefix l1 l2 : (max_prefix l1 l2).2 `prefix_of` l1.
+  Proof. eexists. apply max_prefix_fst. Qed.
+  Lemma max_prefix_fst_prefix_alt l1 l2 k1 k2 k3 :
+    max_prefix l1 l2 = (k1, k2, k3) → k3 `prefix_of` l1.
+  Proof. eexists. eauto using max_prefix_fst_alt. Qed.
+  Lemma max_prefix_snd l1 l2 :
+    l2 = (max_prefix l1 l2).2 ++ (max_prefix l1 l2).1.2.
   Proof.
     revert l2. induction l1; intros [|??]; simpl;
       repeat case_decide; f_equal/=; auto.
   Qed.
-  Lemma max_prefix_of_snd_alt l1 l2 k1 k2 k3 :
-    max_prefix_of l1 l2 = (k1, k2, k3) → l2 = k3 ++ k2.
+  Lemma max_prefix_snd_alt l1 l2 k1 k2 k3 :
+    max_prefix l1 l2 = (k1, k2, k3) → l2 = k3 ++ k2.
   Proof.
-    intro. pose proof (max_prefix_of_snd l1 l2).
-    by destruct (max_prefix_of l1 l2) as [[]?]; simplify_eq.
+    intro. pose proof (max_prefix_snd l1 l2).
+    by destruct (max_prefix l1 l2) as [[]?]; simplify_eq.
   Qed.
-  Lemma max_prefix_of_snd_prefix l1 l2 : (max_prefix_of l1 l2).2 `prefix_of` l2.
-  Proof. eexists. apply max_prefix_of_snd. Qed.
-  Lemma max_prefix_of_snd_prefix_alt l1 l2 k1 k2 k3 :
-    max_prefix_of l1 l2 = (k1,k2,k3) → k3 `prefix_of` l2.
-  Proof. eexists. eauto using max_prefix_of_snd_alt. Qed.
-  Lemma max_prefix_of_max l1 l2 k :
-    k `prefix_of` l1 → k `prefix_of` l2 → k `prefix_of` (max_prefix_of l1 l2).2.
+  Lemma max_prefix_snd_prefix l1 l2 : (max_prefix l1 l2).2 `prefix_of` l2.
+  Proof. eexists. apply max_prefix_snd. Qed.
+  Lemma max_prefix_snd_prefix_alt l1 l2 k1 k2 k3 :
+    max_prefix l1 l2 = (k1,k2,k3) → k3 `prefix_of` l2.
+  Proof. eexists. eauto using max_prefix_snd_alt. Qed.
+  Lemma max_prefix_max l1 l2 k :
+    k `prefix_of` l1 → k `prefix_of` l2 → k `prefix_of` (max_prefix l1 l2).2.
   Proof.
     intros [l1' ->] [l2' ->]. by induction k; simpl; repeat case_decide;
-      simpl; auto using prefix_of_nil, prefix_of_cons.
+      simpl; auto using prefix_nil, prefix_cons.
   Qed.
-  Lemma max_prefix_of_max_alt l1 l2 k1 k2 k3 k :
-    max_prefix_of l1 l2 = (k1,k2,k3) →
+  Lemma max_prefix_max_alt l1 l2 k1 k2 k3 k :
+    max_prefix l1 l2 = (k1,k2,k3) →
     k `prefix_of` l1 → k `prefix_of` l2 → k `prefix_of` k3.
   Proof.
-    intro. pose proof (max_prefix_of_max l1 l2 k).
-    by destruct (max_prefix_of l1 l2) as [[]?]; simplify_eq.
+    intro. pose proof (max_prefix_max l1 l2 k).
+    by destruct (max_prefix l1 l2) as [[]?]; simplify_eq.
   Qed.
-  Lemma max_prefix_of_max_snoc l1 l2 k1 k2 k3 x1 x2 :
-    max_prefix_of l1 l2 = (x1 :: k1, x2 :: k2, k3) → x1 ≠ x2.
+  Lemma max_prefix_max_snoc l1 l2 k1 k2 k3 x1 x2 :
+    max_prefix l1 l2 = (x1 :: k1, x2 :: k2, k3) → x1 ≠ x2.
   Proof.
-    intros Hl ->. destruct (prefix_of_snoc_not k3 x2).
-    eapply max_prefix_of_max_alt; eauto.
-    - rewrite (max_prefix_of_fst_alt _ _ _ _ _ Hl).
-      apply prefix_of_app, prefix_of_cons, prefix_of_nil.
-    - rewrite (max_prefix_of_snd_alt _ _ _ _ _ Hl).
-      apply prefix_of_app, prefix_of_cons, prefix_of_nil.
+    intros Hl ->. destruct (prefix_snoc_not k3 x2).
+    eapply max_prefix_max_alt; eauto.
+    - rewrite (max_prefix_fst_alt _ _ _ _ _ Hl).
+      apply prefix_app, prefix_cons, prefix_nil.
+    - rewrite (max_prefix_snd_alt _ _ _ _ _ Hl).
+      apply prefix_app, prefix_cons, prefix_nil.
   Qed.
 End prefix_ops.
 
@@ -1553,147 +1553,147 @@ Qed.
 Lemma suffix_prefix_reverse l1 l2 :
   l1 `suffix_of` l2 ↔ reverse l1 `prefix_of` reverse l2.
 Proof. by rewrite prefix_suffix_reverse, !reverse_involutive. Qed.
-Lemma suffix_of_nil l : [] `suffix_of` l.
+Lemma suffix_nil l : [] `suffix_of` l.
 Proof. exists l. by rewrite (right_id_L [] (++)). Qed.
-Lemma suffix_of_nil_inv l : l `suffix_of` [] → l = [].
+Lemma suffix_nil_inv l : l `suffix_of` [] → l = [].
 Proof. by intros [[|?] ?]; simplify_list_eq. Qed.
-Lemma suffix_of_cons_nil_inv x l : ¬x :: l `suffix_of` [].
+Lemma suffix_cons_nil_inv x l : ¬x :: l `suffix_of` [].
 Proof. by intros [[] ?]. Qed.
-Lemma suffix_of_snoc l1 l2 x :
+Lemma suffix_snoc l1 l2 x :
   l1 `suffix_of` l2 → l1 ++ [x] `suffix_of` l2 ++ [x].
 Proof. intros [k ->]. exists k. by rewrite (assoc_L (++)). Qed.
-Lemma suffix_of_snoc_alt x y l1 l2 :
+Lemma suffix_snoc_alt x y l1 l2 :
   x = y → l1 `suffix_of` l2 → l1 ++ [x] `suffix_of` l2 ++ [y].
-Proof. intros ->. apply suffix_of_snoc. Qed.
-Lemma suffix_of_app l1 l2 k : l1 `suffix_of` l2 → l1 ++ k `suffix_of` l2 ++ k.
+Proof. intros ->. apply suffix_snoc. Qed.
+Lemma suffix_app l1 l2 k : l1 `suffix_of` l2 → l1 ++ k `suffix_of` l2 ++ k.
 Proof. intros [k' ->]. exists k'. by rewrite (assoc_L (++)). Qed.
-Lemma suffix_of_app_alt l1 l2 k1 k2 :
+Lemma suffix_app_alt l1 l2 k1 k2 :
   k1 = k2 → l1 `suffix_of` l2 → l1 ++ k1 `suffix_of` l2 ++ k2.
-Proof. intros ->. apply suffix_of_app. Qed.
-Lemma suffix_of_snoc_inv_1 x y l1 l2 :
+Proof. intros ->. apply suffix_app. Qed.
+Lemma suffix_snoc_inv_1 x y l1 l2 :
   l1 ++ [x] `suffix_of` l2 ++ [y] → x = y.
 Proof. intros [k' E]. rewrite (assoc_L (++)) in E. by simplify_list_eq. Qed.
-Lemma suffix_of_snoc_inv_2 x y l1 l2 :
+Lemma suffix_snoc_inv_2 x y l1 l2 :
   l1 ++ [x] `suffix_of` l2 ++ [y] → l1 `suffix_of` l2.
 Proof.
   intros [k' E]. exists k'. rewrite (assoc_L (++)) in E. by simplify_list_eq.
 Qed.
-Lemma suffix_of_app_inv l1 l2 k :
+Lemma suffix_app_inv l1 l2 k :
   l1 ++ k `suffix_of` l2 ++ k → l1 `suffix_of` l2.
 Proof.
   intros [k' E]. exists k'. rewrite (assoc_L (++)) in E. by simplify_list_eq.
 Qed.
-Lemma suffix_of_cons_l l1 l2 x : x :: l1 `suffix_of` l2 → l1 `suffix_of` l2.
+Lemma suffix_cons_l l1 l2 x : x :: l1 `suffix_of` l2 → l1 `suffix_of` l2.
 Proof. intros [k ->]. exists (k ++ [x]). by rewrite <-(assoc_L (++)). Qed.
-Lemma suffix_of_app_l l1 l2 l3 : l3 ++ l1 `suffix_of` l2 → l1 `suffix_of` l2.
+Lemma suffix_app_l l1 l2 l3 : l3 ++ l1 `suffix_of` l2 → l1 `suffix_of` l2.
 Proof. intros [k ->]. exists (k ++ l3). by rewrite <-(assoc_L (++)). Qed.
-Lemma suffix_of_cons_r l1 l2 x : l1 `suffix_of` l2 → l1 `suffix_of` x :: l2.
+Lemma suffix_cons_r l1 l2 x : l1 `suffix_of` l2 → l1 `suffix_of` x :: l2.
 Proof. intros [k ->]. by exists (x :: k). Qed.
-Lemma suffix_of_app_r l1 l2 l3 : l1 `suffix_of` l2 → l1 `suffix_of` l3 ++ l2.
+Lemma suffix_app_r l1 l2 l3 : l1 `suffix_of` l2 → l1 `suffix_of` l3 ++ l2.
 Proof. intros [k ->]. exists (l3 ++ k). by rewrite (assoc_L (++)). Qed.
-Lemma suffix_of_cons_inv l1 l2 x y :
+Lemma suffix_cons_inv l1 l2 x y :
   x :: l1 `suffix_of` y :: l2 → x :: l1 = y :: l2 ∨ x :: l1 `suffix_of` l2.
 Proof.
-  intros [[|? k] E]; [by left|]. right. simplify_eq/=. by apply suffix_of_app_r.
+  intros [[|? k] E]; [by left|]. right. simplify_eq/=. by apply suffix_app_r.
 Qed.
-Lemma suffix_of_length l1 l2 : l1 `suffix_of` l2 → length l1 ≤ length l2.
+Lemma suffix_length l1 l2 : l1 `suffix_of` l2 → length l1 ≤ length l2.
 Proof. intros [? ->]. rewrite app_length. lia. Qed.
-Lemma suffix_of_cons_not x l : ¬x :: l `suffix_of` l.
+Lemma suffix_cons_not x l : ¬x :: l `suffix_of` l.
 Proof. intros [??]. discriminate_list. Qed.
-Global Instance suffix_of_dec `{!EqDecision A} l1 l2 :
+Global Instance suffix_dec `{!EqDecision A} l1 l2 :
   Decision (l1 `suffix_of` l2).
 Proof.
-  refine (cast_if (decide_rel prefix_of (reverse l1) (reverse l2)));
+  refine (cast_if (decide_rel prefix (reverse l1) (reverse l2)));
    abstract (by rewrite suffix_prefix_reverse).
 Defined.
 
-Section max_suffix_of.
+Section max_suffix.
   Context `{!EqDecision A}.
 
-  Lemma max_suffix_of_fst l1 l2 :
-    l1 = (max_suffix_of l1 l2).1.1 ++ (max_suffix_of l1 l2).2.
+  Lemma max_suffix_fst l1 l2 :
+    l1 = (max_suffix l1 l2).1.1 ++ (max_suffix l1 l2).2.
   Proof.
     rewrite <-(reverse_involutive l1) at 1.
-    rewrite (max_prefix_of_fst (reverse l1) (reverse l2)). unfold max_suffix_of.
-    destruct (max_prefix_of (reverse l1) (reverse l2)) as ((?&?)&?); simpl.
+    rewrite (max_prefix_fst (reverse l1) (reverse l2)). unfold max_suffix.
+    destruct (max_prefix (reverse l1) (reverse l2)) as ((?&?)&?); simpl.
     by rewrite reverse_app.
   Qed.
-  Lemma max_suffix_of_fst_alt l1 l2 k1 k2 k3 :
-    max_suffix_of l1 l2 = (k1, k2, k3) → l1 = k1 ++ k3.
+  Lemma max_suffix_fst_alt l1 l2 k1 k2 k3 :
+    max_suffix l1 l2 = (k1, k2, k3) → l1 = k1 ++ k3.
   Proof.
-    intro. pose proof (max_suffix_of_fst l1 l2).
-    by destruct (max_suffix_of l1 l2) as [[]?]; simplify_eq.
+    intro. pose proof (max_suffix_fst l1 l2).
+    by destruct (max_suffix l1 l2) as [[]?]; simplify_eq.
   Qed.
-  Lemma max_suffix_of_fst_suffix l1 l2 : (max_suffix_of l1 l2).2 `suffix_of` l1.
-  Proof. eexists. apply max_suffix_of_fst. Qed.
-  Lemma max_suffix_of_fst_suffix_alt l1 l2 k1 k2 k3 :
-    max_suffix_of l1 l2 = (k1, k2, k3) → k3 `suffix_of` l1.
-  Proof. eexists. eauto using max_suffix_of_fst_alt. Qed.
-  Lemma max_suffix_of_snd l1 l2 :
-    l2 = (max_suffix_of l1 l2).1.2 ++ (max_suffix_of l1 l2).2.
+  Lemma max_suffix_fst_suffix l1 l2 : (max_suffix l1 l2).2 `suffix_of` l1.
+  Proof. eexists. apply max_suffix_fst. Qed.
+  Lemma max_suffix_fst_suffix_alt l1 l2 k1 k2 k3 :
+    max_suffix l1 l2 = (k1, k2, k3) → k3 `suffix_of` l1.
+  Proof. eexists. eauto using max_suffix_fst_alt. Qed.
+  Lemma max_suffix_snd l1 l2 :
+    l2 = (max_suffix l1 l2).1.2 ++ (max_suffix l1 l2).2.
   Proof.
     rewrite <-(reverse_involutive l2) at 1.
-    rewrite (max_prefix_of_snd (reverse l1) (reverse l2)). unfold max_suffix_of.
-    destruct (max_prefix_of (reverse l1) (reverse l2)) as ((?&?)&?); simpl.
+    rewrite (max_prefix_snd (reverse l1) (reverse l2)). unfold max_suffix.
+    destruct (max_prefix (reverse l1) (reverse l2)) as ((?&?)&?); simpl.
     by rewrite reverse_app.
   Qed.
-  Lemma max_suffix_of_snd_alt l1 l2 k1 k2 k3 :
-    max_suffix_of l1 l2 = (k1,k2,k3) → l2 = k2 ++ k3.
+  Lemma max_suffix_snd_alt l1 l2 k1 k2 k3 :
+    max_suffix l1 l2 = (k1,k2,k3) → l2 = k2 ++ k3.
   Proof.
-    intro. pose proof (max_suffix_of_snd l1 l2).
-    by destruct (max_suffix_of l1 l2) as [[]?]; simplify_eq.
+    intro. pose proof (max_suffix_snd l1 l2).
+    by destruct (max_suffix l1 l2) as [[]?]; simplify_eq.
   Qed.
-  Lemma max_suffix_of_snd_suffix l1 l2 : (max_suffix_of l1 l2).2 `suffix_of` l2.
-  Proof. eexists. apply max_suffix_of_snd. Qed.
-  Lemma max_suffix_of_snd_suffix_alt l1 l2 k1 k2 k3 :
-    max_suffix_of l1 l2 = (k1,k2,k3) → k3 `suffix_of` l2.
-  Proof. eexists. eauto using max_suffix_of_snd_alt. Qed.
-  Lemma max_suffix_of_max l1 l2 k :
-    k `suffix_of` l1 → k `suffix_of` l2 → k `suffix_of` (max_suffix_of l1 l2).2.
+  Lemma max_suffix_snd_suffix l1 l2 : (max_suffix l1 l2).2 `suffix_of` l2.
+  Proof. eexists. apply max_suffix_snd. Qed.
+  Lemma max_suffix_snd_suffix_alt l1 l2 k1 k2 k3 :
+    max_suffix l1 l2 = (k1,k2,k3) → k3 `suffix_of` l2.
+  Proof. eexists. eauto using max_suffix_snd_alt. Qed.
+  Lemma max_suffix_max l1 l2 k :
+    k `suffix_of` l1 → k `suffix_of` l2 → k `suffix_of` (max_suffix l1 l2).2.
   Proof.
-    generalize (max_prefix_of_max (reverse l1) (reverse l2)).
-    rewrite !suffix_prefix_reverse. unfold max_suffix_of.
-    destruct (max_prefix_of (reverse l1) (reverse l2)) as ((?&?)&?); simpl.
+    generalize (max_prefix_max (reverse l1) (reverse l2)).
+    rewrite !suffix_prefix_reverse. unfold max_suffix.
+    destruct (max_prefix (reverse l1) (reverse l2)) as ((?&?)&?); simpl.
     rewrite reverse_involutive. auto.
   Qed.
-  Lemma max_suffix_of_max_alt l1 l2 k1 k2 k3 k :
-    max_suffix_of l1 l2 = (k1, k2, k3) →
+  Lemma max_suffix_max_alt l1 l2 k1 k2 k3 k :
+    max_suffix l1 l2 = (k1, k2, k3) →
     k `suffix_of` l1 → k `suffix_of` l2 → k `suffix_of` k3.
   Proof.
-    intro. pose proof (max_suffix_of_max l1 l2 k).
-    by destruct (max_suffix_of l1 l2) as [[]?]; simplify_eq.
+    intro. pose proof (max_suffix_max l1 l2 k).
+    by destruct (max_suffix l1 l2) as [[]?]; simplify_eq.
   Qed.
-  Lemma max_suffix_of_max_snoc l1 l2 k1 k2 k3 x1 x2 :
-    max_suffix_of l1 l2 = (k1 ++ [x1], k2 ++ [x2], k3) → x1 ≠ x2.
+  Lemma max_suffix_max_snoc l1 l2 k1 k2 k3 x1 x2 :
+    max_suffix l1 l2 = (k1 ++ [x1], k2 ++ [x2], k3) → x1 ≠ x2.
   Proof.
-    intros Hl ->. destruct (suffix_of_cons_not x2 k3).
-    eapply max_suffix_of_max_alt; eauto.
-    - rewrite (max_suffix_of_fst_alt _ _ _ _ _ Hl).
-      by apply (suffix_of_app [x2]), suffix_of_app_r.
-    - rewrite (max_suffix_of_snd_alt _ _ _ _ _ Hl).
-      by apply (suffix_of_app [x2]), suffix_of_app_r.
+    intros Hl ->. destruct (suffix_cons_not x2 k3).
+    eapply max_suffix_max_alt; eauto.
+    - rewrite (max_suffix_fst_alt _ _ _ _ _ Hl).
+      by apply (suffix_app [x2]), suffix_app_r.
+    - rewrite (max_suffix_snd_alt _ _ _ _ _ Hl).
+      by apply (suffix_app [x2]), suffix_app_r.
   Qed.
-End max_suffix_of.
+End max_suffix.
 
 (** ** Properties of the [sublist] predicate *)
-Lemma sublist_length l1 l2 : l1 `sublist` l2 → length l1 ≤ length l2.
+Lemma sublist_length l1 l2 : l1 `sublist_of` l2 → length l1 ≤ length l2.
 Proof. induction 1; simpl; auto with arith. Qed.
-Lemma sublist_nil_l l : [] `sublist` l.
+Lemma sublist_nil_l l : [] `sublist_of` l.
 Proof. induction l; try constructor; auto. Qed.
-Lemma sublist_nil_r l : l `sublist` [] ↔ l = [].
+Lemma sublist_nil_r l : l `sublist_of` [] ↔ l = [].
 Proof. split. by inversion 1. intros ->. constructor. Qed.
 Lemma sublist_app l1 l2 k1 k2 :
-  l1 `sublist` l2 → k1 `sublist` k2 → l1 ++ k1 `sublist` l2 ++ k2.
+  l1 `sublist_of` l2 → k1 `sublist_of` k2 → l1 ++ k1 `sublist_of` l2 ++ k2.
 Proof. induction 1; simpl; try constructor; auto. Qed.
-Lemma sublist_inserts_l k l1 l2 : l1 `sublist` l2 → l1 `sublist` k ++ l2.
+Lemma sublist_inserts_l k l1 l2 : l1 `sublist_of` l2 → l1 `sublist_of` k ++ l2.
 Proof. induction k; try constructor; auto. Qed.
-Lemma sublist_inserts_r k l1 l2 : l1 `sublist` l2 → l1 `sublist` l2 ++ k.
+Lemma sublist_inserts_r k l1 l2 : l1 `sublist_of` l2 → l1 `sublist_of` l2 ++ k.
 Proof. induction 1; simpl; try constructor; auto using sublist_nil_l. Qed.
 Lemma sublist_cons_r x l k :
-  l `sublist` x :: k ↔ l `sublist` k ∨ ∃ l', l = x :: l' ∧ l' `sublist` k.
+  l `sublist_of` x :: k ↔ l `sublist_of` k ∨ ∃ l', l = x :: l' ∧ l' `sublist_of` k.
 Proof. split. inversion 1; eauto. intros [?|(?&->&?)]; constructor; auto. Qed.
 Lemma sublist_cons_l x l k :
-  x :: l `sublist` k ↔ ∃ k1 k2, k = k1 ++ x :: k2 ∧ l `sublist` k2.
+  x :: l `sublist_of` k ↔ ∃ k1 k2, k = k1 ++ x :: k2 ∧ l `sublist_of` k2.
 Proof.
   split.
   - intros Hlk. induction k as [|y k IH]; inversion Hlk.
@@ -1702,8 +1702,8 @@ Proof.
   - intros (k1&k2&->&?). by apply sublist_inserts_l, sublist_skip.
 Qed.
 Lemma sublist_app_r l k1 k2 :
-  l `sublist` k1 ++ k2 ↔
-    ∃ l1 l2, l = l1 ++ l2 ∧ l1 `sublist` k1 ∧ l2 `sublist` k2.
+  l `sublist_of` k1 ++ k2 ↔
+    ∃ l1 l2, l = l1 ++ l2 ∧ l1 `sublist_of` k1 ∧ l2 `sublist_of` k2.
 Proof.
   split.
   - revert l k2. induction k1 as [|y k1 IH]; intros l k2; simpl.
@@ -1716,8 +1716,8 @@ Proof.
   - intros (?&?&?&?&?); subst. auto using sublist_app.
 Qed.
 Lemma sublist_app_l l1 l2 k :
-  l1 ++ l2 `sublist` k ↔
-    ∃ k1 k2, k = k1 ++ k2 ∧ l1 `sublist` k1 ∧ l2 `sublist` k2.
+  l1 ++ l2 `sublist_of` k ↔
+    ∃ k1 k2, k = k1 ++ k2 ∧ l1 `sublist_of` k1 ∧ l2 `sublist_of` k2.
 Proof.
   split.
   - revert l2 k. induction l1 as [|x l1 IH]; intros l2 k; simpl.
@@ -1728,14 +1728,14 @@ Proof.
     auto using sublist_inserts_l, sublist_skip.
   - intros (?&?&?&?&?); subst. auto using sublist_app.
 Qed.
-Lemma sublist_app_inv_l k l1 l2 : k ++ l1 `sublist` k ++ l2 → l1 `sublist` l2.
+Lemma sublist_app_inv_l k l1 l2 : k ++ l1 `sublist_of` k ++ l2 → l1 `sublist_of` l2.
 Proof.
   induction k as [|y k IH]; simpl; [done |].
   rewrite sublist_cons_r. intros [Hl12|(?&?&?)]; [|simplify_eq; eauto].
   rewrite sublist_cons_l in Hl12. destruct Hl12 as (k1&k2&Hk&?).
   apply IH. rewrite Hk. eauto using sublist_inserts_l, sublist_cons.
 Qed.
-Lemma sublist_app_inv_r k l1 l2 : l1 ++ k `sublist` l2 ++ k → l1 `sublist` l2.
+Lemma sublist_app_inv_r k l1 l2 : l1 ++ k `sublist_of` l2 ++ k → l1 `sublist_of` l2.
 Proof.
   revert l1 l2. induction k as [|y k IH]; intros l1 l2.
   { by rewrite !(right_id_L [] (++)). }
@@ -1760,18 +1760,18 @@ Proof.
     induction Hl12; f_equal/=; auto with arith.
     apply sublist_length in Hl12. lia.
 Qed.
-Lemma sublist_take l i : take i l `sublist` l.
+Lemma sublist_take l i : take i l `sublist_of` l.
 Proof. rewrite <-(take_drop i l) at 2. by apply sublist_inserts_r. Qed.
-Lemma sublist_drop l i : drop i l `sublist` l.
+Lemma sublist_drop l i : drop i l `sublist_of` l.
 Proof. rewrite <-(take_drop i l) at 2. by apply sublist_inserts_l. Qed.
-Lemma sublist_delete l i : delete i l `sublist` l.
+Lemma sublist_delete l i : delete i l `sublist_of` l.
 Proof. revert i. by induction l; intros [|?]; simpl; constructor. Qed.
-Lemma sublist_foldr_delete l is : foldr delete l is `sublist` l.
+Lemma sublist_foldr_delete l is : foldr delete l is `sublist_of` l.
 Proof.
   induction is as [|i is IH]; simpl; [done |].
   trans (foldr delete l is); auto using sublist_delete.
 Qed.
-Lemma sublist_alt l1 l2 : l1 `sublist` l2 ↔ ∃ is, l1 = foldr delete l2 is.
+Lemma sublist_alt l1 l2 : l1 `sublist_of` l2 ↔ ∃ is, l1 = foldr delete l2 is.
 Proof.
   split; [|intros [is ->]; apply sublist_foldr_delete].
   intros Hl12. cut (∀ k, ∃ is, k ++ l1 = foldr delete (k ++ l2) is).
@@ -1784,7 +1784,7 @@ Proof.
     rewrite fold_right_app. simpl. by rewrite delete_middle.
 Qed.
 Lemma Permutation_sublist l1 l2 l3 :
-  l1 ≡ₚ l2 → l2 `sublist` l3 → ∃ l4, l1 `sublist` l4 ∧ l4 ≡ₚ l3.
+  l1 ≡ₚ l2 → l2 `sublist_of` l3 → ∃ l4, l1 `sublist_of` l4 ∧ l4 ≡ₚ l3.
 Proof.
   intros Hl1l2. revert l3.
   induction Hl1l2 as [|x l1 l2 ? IH|x y l1|l1 l1' l2 ? IH1 ? IH2].
@@ -1802,7 +1802,7 @@ Proof.
     split. done. etrans; eauto.
 Qed.
 Lemma sublist_Permutation l1 l2 l3 :
-  l1 `sublist` l2 → l2 ≡ₚ l3 → ∃ l4, l1 ≡ₚ l4 ∧ l4 `sublist` l3.
+  l1 `sublist_of` l2 → l2 ≡ₚ l3 → ∃ l4, l1 ≡ₚ l4 ∧ l4 `sublist_of` l3.
 Proof.
   intros Hl1l2 Hl2l3. revert l1 Hl1l2.
   induction Hl2l3 as [|x l2 l3 ? IH|x y l2|l2 l2' l3 ? IH1 ? IH2].
@@ -1823,27 +1823,27 @@ Proof.
     split; [|done]. etrans; eauto.
 Qed.
 
-(** Properties of the [contains] predicate *)
-Lemma contains_length l1 l2 : l1 `contains` l2 → length l1 ≤ length l2.
+(** Properties of the [submseteq] predicate *)
+Lemma submseteq_length l1 l2 : l1 ⊆+ l2 → length l1 ≤ length l2.
 Proof. induction 1; simpl; auto with lia. Qed.
-Lemma contains_nil_l l : [] `contains` l.
+Lemma submseteq_nil_l l : [] ⊆+ l.
 Proof. induction l; constructor; auto. Qed.
-Lemma contains_nil_r l : l `contains` [] ↔ l = [].
+Lemma submseteq_nil_r l : l ⊆+ [] ↔ l = [].
 Proof.
   split; [|intros ->; constructor].
-  intros Hl. apply contains_length in Hl. destruct l; simpl in *; auto with lia.
+  intros Hl. apply submseteq_length in Hl. destruct l; simpl in *; auto with lia.
 Qed.
-Global Instance: PreOrder (@contains A).
+Global Instance: PreOrder (@submseteq A).
 Proof.
   split.
   - intros l. induction l; constructor; auto.
-  - red. apply contains_trans.
+  - red. apply submseteq_trans.
 Qed.
-Lemma Permutation_contains l1 l2 : l1 ≡ₚ l2 → l1 `contains` l2.
+Lemma Permutation_submseteq l1 l2 : l1 ≡ₚ l2 → l1 ⊆+ l2.
 Proof. induction 1; econstructor; eauto. Qed.
-Lemma sublist_contains l1 l2 : l1 `sublist` l2 → l1 `contains` l2.
+Lemma sublist_submseteq l1 l2 : l1 `sublist_of` l2 → l1 ⊆+ l2.
 Proof. induction 1; constructor; auto. Qed.
-Lemma contains_Permutation l1 l2 : l1 `contains` l2 → ∃ k, l2 ≡ₚ l1 ++ k.
+Lemma submseteq_Permutation l1 l2 : l1 ⊆+ l2 → ∃ k, l2 ≡ₚ l1 ++ k.
 Proof.
   induction 1 as
     [|x y l ? [k Hk]| |x l1 l2 ? [k Hk]|l1 l2 l3 ? [k Hk] ? [k' Hk']].
@@ -1853,36 +1853,35 @@ Proof.
   - exists (x :: k). by rewrite Hk, Permutation_middle.
   - exists (k ++ k'). by rewrite Hk', Hk, (assoc_L (++)).
 Qed.
-Lemma contains_Permutation_length_le l1 l2 :
-  length l2 ≤ length l1 → l1 `contains` l2 → l1 ≡ₚ l2.
+Lemma submseteq_Permutation_length_le l1 l2 :
+  length l2 ≤ length l1 → l1 ⊆+ l2 → l1 ≡ₚ l2.
 Proof.
-  intros Hl21 Hl12. destruct (contains_Permutation l1 l2) as [[|??] Hk]; auto.
+  intros Hl21 Hl12. destruct (submseteq_Permutation l1 l2) as [[|??] Hk]; auto.
   - by rewrite Hk, (right_id_L [] (++)).
   - rewrite Hk, app_length in Hl21; simpl in Hl21; lia.
 Qed.
-Lemma contains_Permutation_length_eq l1 l2 :
-  length l2 = length l1 → l1 `contains` l2 → l1 ≡ₚ l2.
-Proof. intro. apply contains_Permutation_length_le. lia. Qed.
-Global Instance: Proper ((≡ₚ) ==> (≡ₚ) ==> iff) (@contains A).
+Lemma submseteq_Permutation_length_eq l1 l2 :
+  length l2 = length l1 → l1 ⊆+ l2 → l1 ≡ₚ l2.
+Proof. intro. apply submseteq_Permutation_length_le. lia. Qed.
+Global Instance: Proper ((≡ₚ) ==> (≡ₚ) ==> iff) (@submseteq A).
 Proof.
   intros l1 l2 ? k1 k2 ?. split; intros.
-  - trans l1. by apply Permutation_contains.
-    trans k1. done. by apply Permutation_contains.
-  - trans l2. by apply Permutation_contains.
-    trans k2. done. by apply Permutation_contains.
+  - trans l1. by apply Permutation_submseteq.
+    trans k1. done. by apply Permutation_submseteq.
+  - trans l2. by apply Permutation_submseteq.
+    trans k2. done. by apply Permutation_submseteq.
 Qed.
-Global Instance: AntiSymm (≡ₚ) (@contains A).
-Proof. red. auto using contains_Permutation_length_le, contains_length. Qed.
-Lemma contains_take l i : take i l `contains` l.
-Proof. auto using sublist_take, sublist_contains. Qed.
-Lemma contains_drop l i : drop i l `contains` l.
-Proof. auto using sublist_drop, sublist_contains. Qed.
-Lemma contains_delete l i : delete i l `contains` l.
-Proof. auto using sublist_delete, sublist_contains. Qed.
-Lemma contains_foldr_delete l is : foldr delete l is `sublist` l.
-Proof. auto using sublist_foldr_delete, sublist_contains. Qed.
-Lemma contains_sublist_l l1 l3 :
-  l1 `contains` l3 ↔ ∃ l2, l1 `sublist` l2 ∧ l2 ≡ₚ l3.
+Global Instance: AntiSymm (≡ₚ) (@submseteq A).
+Proof. red. auto using submseteq_Permutation_length_le, submseteq_length. Qed.
+Lemma submseteq_take l i : take i l ⊆+ l.
+Proof. auto using sublist_take, sublist_submseteq. Qed.
+Lemma submseteq_drop l i : drop i l ⊆+ l.
+Proof. auto using sublist_drop, sublist_submseteq. Qed.
+Lemma submseteq_delete l i : delete i l ⊆+ l.
+Proof. auto using sublist_delete, sublist_submseteq. Qed.
+Lemma submseteq_foldr_delete l is : foldr delete l is `sublist_of` l.
+Proof. auto using sublist_foldr_delete, sublist_submseteq. Qed.
+Lemma submseteq_sublist_l l1 l3 : l1 ⊆+ l3 ↔ ∃ l2, l1 `sublist_of` l2 ∧ l2 ≡ₚ l3.
 Proof.
   split.
   { intros Hl13. elim Hl13; clear l1 l3 Hl13.
@@ -1894,122 +1893,112 @@ Proof.
       destruct (Permutation_sublist l2 l3 l4) as (l3'&?&?); trivial.
       exists l3'. split; etrans; eauto. }
   intros (l2&?&?).
-  trans l2; auto using sublist_contains, Permutation_contains.
+  trans l2; auto using sublist_submseteq, Permutation_submseteq.
 Qed.
-Lemma contains_sublist_r l1 l3 :
-  l1 `contains` l3 ↔ ∃ l2, l1 ≡ₚ l2 ∧ l2 `sublist` l3.
+Lemma submseteq_sublist_r l1 l3 :
+  l1 ⊆+ l3 ↔ ∃ l2, l1 ≡ₚ l2 ∧ l2 `sublist_of` l3.
 Proof.
-  rewrite contains_sublist_l.
+  rewrite submseteq_sublist_l.
   split; intros (l2&?&?); eauto using sublist_Permutation, Permutation_sublist.
 Qed.
-Lemma contains_inserts_l k l1 l2 : l1 `contains` l2 → l1 `contains` k ++ l2.
+Lemma submseteq_inserts_l k l1 l2 : l1 ⊆+ l2 → l1 ⊆+ k ++ l2.
 Proof. induction k; try constructor; auto. Qed.
-Lemma contains_inserts_r k l1 l2 : l1 `contains` l2 → l1 `contains` l2 ++ k.
-Proof. rewrite (comm (++)). apply contains_inserts_l. Qed.
-Lemma contains_skips_l k l1 l2 : l1 `contains` l2 → k ++ l1 `contains` k ++ l2.
+Lemma submseteq_inserts_r k l1 l2 : l1 ⊆+ l2 → l1 ⊆+ l2 ++ k.
+Proof. rewrite (comm (++)). apply submseteq_inserts_l. Qed.
+Lemma submseteq_skips_l k l1 l2 : l1 ⊆+ l2 → k ++ l1 ⊆+ k ++ l2.
 Proof. induction k; try constructor; auto. Qed.
-Lemma contains_skips_r k l1 l2 : l1 `contains` l2 → l1 ++ k `contains` l2 ++ k.
-Proof. rewrite !(comm (++) _ k). apply contains_skips_l. Qed.
-Lemma contains_app l1 l2 k1 k2 :
-  l1 `contains` l2 → k1 `contains` k2 → l1 ++ k1 `contains` l2 ++ k2.
-Proof.
-  trans (l1 ++ k2); auto using contains_skips_l, contains_skips_r.
-Qed.
-Lemma contains_cons_r x l k :
-  l `contains` x :: k ↔ l `contains` k ∨ ∃ l', l ≡ₚ x :: l' ∧ l' `contains` k.
+Lemma submseteq_skips_r k l1 l2 : l1 ⊆+ l2 → l1 ++ k ⊆+ l2 ++ k.
+Proof. rewrite !(comm (++) _ k). apply submseteq_skips_l. Qed.
+Lemma submseteq_app l1 l2 k1 k2 : l1 ⊆+ l2 → k1 ⊆+ k2 → l1 ++ k1 ⊆+ l2 ++ k2.
+Proof. trans (l1 ++ k2); auto using submseteq_skips_l, submseteq_skips_r. Qed.
+Lemma submseteq_cons_r x l k :
+  l ⊆+ x :: k ↔ l ⊆+ k ∨ ∃ l', l ≡ₚ x :: l' ∧ l' ⊆+ k.
 Proof.
   split.
-  - rewrite contains_sublist_r. intros (l'&E&Hl').
+  - rewrite submseteq_sublist_r. intros (l'&E&Hl').
     rewrite sublist_cons_r in Hl'. destruct Hl' as [?|(?&?&?)]; subst.
-    + left. rewrite E. eauto using sublist_contains.
-    + right. eauto using sublist_contains.
+    + left. rewrite E. eauto using sublist_submseteq.
+    + right. eauto using sublist_submseteq.
   - intros [?|(?&E&?)]; [|rewrite E]; by constructor.
 Qed.
-Lemma contains_cons_l x l k :
-  x :: l `contains` k ↔ ∃ k', k ≡ₚ x :: k' ∧ l `contains` k'.
+Lemma submseteq_cons_l x l k : x :: l ⊆+ k ↔ ∃ k', k ≡ₚ x :: k' ∧ l ⊆+ k'.
 Proof.
   split.
-  - rewrite contains_sublist_l. intros (l'&Hl'&E).
+  - rewrite submseteq_sublist_l. intros (l'&Hl'&E).
     rewrite sublist_cons_l in Hl'. destruct Hl' as (k1&k2&?&?); subst.
-    exists (k1 ++ k2). split; eauto using contains_inserts_l, sublist_contains.
+    exists (k1 ++ k2). split; eauto using submseteq_inserts_l, sublist_submseteq.
     by rewrite Permutation_middle.
   - intros (?&E&?). rewrite E. by constructor.
 Qed.
-Lemma contains_app_r l k1 k2 :
-  l `contains` k1 ++ k2 ↔ ∃ l1 l2,
-    l ≡ₚ l1 ++ l2 ∧ l1 `contains` k1 ∧ l2 `contains` k2.
+Lemma submseteq_app_r l k1 k2 :
+  l ⊆+ k1 ++ k2 ↔ ∃ l1 l2, l ≡ₚ l1 ++ l2 ∧ l1 ⊆+ k1 ∧ l2 ⊆+ k2.
 Proof.
   split.
-  - rewrite contains_sublist_r. intros (l'&E&Hl').
+  - rewrite submseteq_sublist_r. intros (l'&E&Hl').
     rewrite sublist_app_r in Hl'. destruct Hl' as (l1&l2&?&?&?); subst.
-    exists l1, l2. eauto using sublist_contains.
-  - intros (?&?&E&?&?). rewrite E. eauto using contains_app.
+    exists l1, l2. eauto using sublist_submseteq.
+  - intros (?&?&E&?&?). rewrite E. eauto using submseteq_app.
 Qed.
-Lemma contains_app_l l1 l2 k :
-  l1 ++ l2 `contains` k ↔ ∃ k1 k2,
-    k ≡ₚ k1 ++ k2 ∧ l1 `contains` k1 ∧ l2 `contains` k2.
+Lemma submseteq_app_l l1 l2 k :
+  l1 ++ l2 ⊆+ k ↔ ∃ k1 k2, k ≡ₚ k1 ++ k2 ∧ l1 ⊆+ k1 ∧ l2 ⊆+ k2.
 Proof.
   split.
-  - rewrite contains_sublist_l. intros (l'&Hl'&E).
+  - rewrite submseteq_sublist_l. intros (l'&Hl'&E).
     rewrite sublist_app_l in Hl'. destruct Hl' as (k1&k2&?&?&?); subst.
-    exists k1, k2. split. done. eauto using sublist_contains.
-  - intros (?&?&E&?&?). rewrite E. eauto using contains_app.
+    exists k1, k2. split. done. eauto using sublist_submseteq.
+  - intros (?&?&E&?&?). rewrite E. eauto using submseteq_app.
 Qed.
-Lemma contains_app_inv_l l1 l2 k :
-  k ++ l1 `contains` k ++ l2 → l1 `contains` l2.
+Lemma submseteq_app_inv_l l1 l2 k : k ++ l1 ⊆+ k ++ l2 → l1 ⊆+ l2.
 Proof.
-  induction k as [|y k IH]; simpl; [done |]. rewrite contains_cons_l.
+  induction k as [|y k IH]; simpl; [done |]. rewrite submseteq_cons_l.
   intros (?&E&?). apply Permutation_cons_inv in E. apply IH. by rewrite E.
 Qed.
-Lemma contains_app_inv_r l1 l2 k :
-  l1 ++ k `contains` l2 ++ k → l1 `contains` l2.
+Lemma submseteq_app_inv_r l1 l2 k : l1 ++ k ⊆+ l2 ++ k → l1 ⊆+ l2.
 Proof.
   revert l1 l2. induction k as [|y k IH]; intros l1 l2.
   { by rewrite !(right_id_L [] (++)). }
   intros. feed pose proof (IH (l1 ++ [y]) (l2 ++ [y])) as Hl12.
   { by rewrite <-!(assoc_L (++)). }
-  rewrite contains_app_l in Hl12. destruct Hl12 as (k1&k2&E1&?&Hk2).
-  rewrite contains_cons_l in Hk2. destruct Hk2 as (k2'&E2&?).
+  rewrite submseteq_app_l in Hl12. destruct Hl12 as (k1&k2&E1&?&Hk2).
+  rewrite submseteq_cons_l in Hk2. destruct Hk2 as (k2'&E2&?).
   rewrite E2, (Permutation_cons_append k2'), (assoc_L (++)) in E1.
-  apply Permutation_app_inv_r in E1. rewrite E1. eauto using contains_inserts_r.
+  apply Permutation_app_inv_r in E1. rewrite E1. eauto using submseteq_inserts_r.
 Qed.
-Lemma contains_cons_middle x l k1 k2 :
-  l `contains` k1 ++ k2 → x :: l `contains` k1 ++ x :: k2.
-Proof. rewrite <-Permutation_middle. by apply contains_skip. Qed.
-Lemma contains_app_middle l1 l2 k1 k2 :
-  l2 `contains` k1 ++ k2 → l1 ++ l2 `contains` k1 ++ l1 ++ k2.
+Lemma submseteq_cons_middle x l k1 k2 : l ⊆+ k1 ++ k2 → x :: l ⊆+ k1 ++ x :: k2.
+Proof. rewrite <-Permutation_middle. by apply submseteq_skip. Qed.
+Lemma submseteq_app_middle l1 l2 k1 k2 :
+  l2 ⊆+ k1 ++ k2 → l1 ++ l2 ⊆+ k1 ++ l1 ++ k2.
 Proof.
   rewrite !(assoc (++)), (comm (++) k1 l1), <-(assoc_L (++)).
-  by apply contains_skips_l.
+  by apply submseteq_skips_l.
 Qed.
-Lemma contains_middle l k1 k2 : l `contains` k1 ++ l ++ k2.
-Proof. by apply contains_inserts_l, contains_inserts_r. Qed.
+Lemma submseteq_middle l k1 k2 : l ⊆+ k1 ++ l ++ k2.
+Proof. by apply submseteq_inserts_l, submseteq_inserts_r. Qed.
 
-Lemma Permutation_alt l1 l2 :
-  l1 ≡ₚ l2 ↔ length l1 = length l2 ∧ l1 `contains` l2.
+Lemma Permutation_alt l1 l2 : l1 ≡ₚ l2 ↔ length l1 = length l2 ∧ l1 ⊆+ l2.
 Proof.
   split.
   - by intros Hl; rewrite Hl.
-  - intros [??]; auto using contains_Permutation_length_eq.
+  - intros [??]; auto using submseteq_Permutation_length_eq.
 Qed.
 
-Lemma NoDup_contains l k : NoDup l → (∀ x, x ∈ l → x ∈ k) → l `contains` k.
+Lemma NoDup_submseteq l k : NoDup l → (∀ x, x ∈ l → x ∈ k) → l ⊆+ k.
 Proof.
   intros Hl. revert k. induction Hl as [|x l Hx ? IH].
-  { intros k Hk. by apply contains_nil_l. }
+  { intros k Hk. by apply submseteq_nil_l. }
   intros k Hlk. destruct (elem_of_list_split k x) as (l1&l2&?); subst.
   { apply Hlk. by constructor. }
-  rewrite <-Permutation_middle. apply contains_skip, IH.
+  rewrite <-Permutation_middle. apply submseteq_skip, IH.
   intros y Hy. rewrite elem_of_app.
   specialize (Hlk y). rewrite elem_of_app, !elem_of_cons in Hlk.
   by destruct Hlk as [?|[?|?]]; subst; eauto.
 Qed.
 Lemma NoDup_Permutation l k : NoDup l → NoDup k → (∀ x, x ∈ l ↔ x ∈ k) → l ≡ₚ k.
 Proof.
-  intros. apply (anti_symm contains); apply NoDup_contains; naive_solver.
+  intros. apply (anti_symm submseteq); apply NoDup_submseteq; naive_solver.
 Qed.
 
-Section contains_dec.
+Section submseteq_dec.
   Context `{!EqDecision A}.
 
   Lemma list_remove_Permutation l1 l2 k1 x :
@@ -2040,33 +2029,33 @@ Section contains_dec.
     - simpl; by case_decide.
     - by exists k'.
   Qed.
-  Lemma list_remove_list_contains l1 l2 :
-    l1 `contains` l2 ↔ is_Some (list_remove_list l1 l2).
+  Lemma list_remove_list_submseteq l1 l2 :
+    l1 ⊆+ l2 ↔ is_Some (list_remove_list l1 l2).
   Proof.
     split.
     - revert l2. induction l1 as [|x l1 IH]; simpl.
       { intros l2 _. by exists l2. }
-      intros l2. rewrite contains_cons_l. intros (k&Hk&?).
+      intros l2. rewrite submseteq_cons_l. intros (k&Hk&?).
       destruct (list_remove_Some_inv l2 k x) as (k2&?&Hk2); trivial.
       simplify_option_eq. apply IH. by rewrite <-Hk2.
     - intros [k Hk]. revert l2 k Hk.
       induction l1 as [|x l1 IH]; simpl; intros l2 k.
-      { intros. apply contains_nil_l. }
+      { intros. apply submseteq_nil_l. }
       destruct (list_remove x l2) as [k'|] eqn:?; intros; simplify_eq.
-      rewrite contains_cons_l. eauto using list_remove_Some.
+      rewrite submseteq_cons_l. eauto using list_remove_Some.
   Qed.
-  Global Instance contains_dec l1 l2 : Decision (l1 `contains` l2).
+  Global Instance submseteq_dec l1 l2 : Decision (l1 ⊆+ l2).
   Proof.
    refine (cast_if (decide (is_Some (list_remove_list l1 l2))));
-    abstract (rewrite list_remove_list_contains; tauto).
+    abstract (rewrite list_remove_list_submseteq; tauto).
   Defined.
   Global Instance Permutation_dec l1 l2 : Decision (l1 ≡ₚ l2).
   Proof.
    refine (cast_if_and
-    (decide (length l1 = length l2)) (decide (l1 `contains` l2)));
+    (decide (length l1 = length l2)) (decide (l1 ⊆+ l2)));
     abstract (rewrite Permutation_alt; tauto).
   Defined.
-End contains_dec.
+End submseteq_dec.
 
 (** ** Properties of [included] *)
 Global Instance list_subseteq_po : PreOrder (@subseteq (list A) _).
@@ -2919,7 +2908,7 @@ Section fmap.
 
   Global Instance fmap_sublist: Proper (sublist ==> sublist) (fmap f).
   Proof. induction 1; simpl; econstructor; eauto. Qed.
-  Global Instance fmap_contains: Proper (contains ==> contains) (fmap f).
+  Global Instance fmap_submseteq: Proper (submseteq ==> submseteq) (fmap f).
   Proof. induction 1; simpl; econstructor; eauto. Qed.
   Global Instance fmap_Permutation: Proper ((≡ₚ) ==> (≡ₚ)) (fmap f).
   Proof. induction 1; simpl; econstructor; eauto. Qed.
@@ -2989,12 +2978,12 @@ Section bind.
     induction 1; simpl; auto;
       [by apply sublist_app|by apply sublist_inserts_l].
   Qed.
-  Global Instance bind_contains: Proper (contains ==> contains) (mbind f).
+  Global Instance bind_submseteq: Proper (submseteq ==> submseteq) (mbind f).
   Proof.
     induction 1; csimpl; auto.
-    - by apply contains_app.
+    - by apply submseteq_app.
     - by rewrite !(assoc_L (++)), (comm (++) (f _)).
-    - by apply contains_inserts_l.
+    - by apply submseteq_inserts_l.
     - etrans; eauto.
   Qed.
   Global Instance bind_Permutation: Proper ((≡ₚ) ==> (≡ₚ)) (mbind f).
@@ -3504,8 +3493,8 @@ Section eval.
   Lemma eval_Permutation t1 t2 :
     to_list t1 ≡ₚ to_list t2 → eval E t1 ≡ₚ eval E t2.
   Proof. intros Ht. by rewrite !eval_alt, Ht. Qed.
-  Lemma eval_contains t1 t2 :
-    to_list t1 `contains` to_list t2 → eval E t1 `contains` eval E t2.
+  Lemma eval_submseteq t1 t2 :
+    to_list t1 ⊆+ to_list t2 → eval E t1 ⊆+ eval E t2.
   Proof. intros Ht. by rewrite !eval_alt, Ht. Qed.
 End eval.
 End rlist.
@@ -3523,16 +3512,16 @@ Ltac solve_Permutation :=
   quote_Permutation; apply rlist.eval_Permutation;
   apply (bool_decide_unpack _); by vm_compute.
 
-Ltac quote_contains :=
+Ltac quote_submseteq :=
   match goal with
-  | |- ?l1 `contains` ?l2 =>
+  | |- ?l1 ⊆+ ?l2 =>
     match type of (_ : rlist.Quote [] _ l1 _) with rlist.Quote _ ?E2 _ ?t1 =>
     match type of (_ : rlist.Quote E2 _ l2 _) with rlist.Quote _ ?E3 _ ?t2 =>
-      change (rlist.eval E3 t1 `contains` rlist.eval E3 t2)
+      change (rlist.eval E3 t1 ⊆+ rlist.eval E3 t2)
     end end
   end.
-Ltac solve_contains :=
-  quote_contains; apply rlist.eval_contains;
+Ltac solve_submseteq :=
+  quote_submseteq; apply rlist.eval_submseteq;
   apply (bool_decide_unpack _); by vm_compute.
 
 Ltac decompose_elem_of_list := repeat
@@ -3704,32 +3693,32 @@ Ltac decompose_Forall := repeat
     intros ?????; progress decompose_Forall_hyps
   end.
 
-(** The [simplify_suffix_of] tactic removes [suffix_of] hypotheses that are
-tautologies, and simplifies [suffix_of] hypotheses involving [(::)] and
+(** The [simplify_suffix] tactic removes [suffix] hypotheses that are
+tautologies, and simplifies [suffix] hypotheses involving [(::)] and
 [(++)]. *)
-Ltac simplify_suffix_of := repeat
+Ltac simplify_suffix := repeat
   match goal with
-  | H : suffix_of (_ :: _) _ |- _ => destruct (suffix_of_cons_not _ _ H)
-  | H : suffix_of (_ :: _) [] |- _ => apply suffix_of_nil_inv in H
-  | H : suffix_of (_ ++ _) (_ ++ _) |- _ => apply suffix_of_app_inv in H
-  | H : suffix_of (_ :: _) (_ :: _) |- _ =>
-    destruct (suffix_of_cons_inv _ _ _ _ H); clear H
-  | H : suffix_of ?x ?x |- _ => clear H
-  | H : suffix_of ?x (_ :: ?x) |- _ => clear H
-  | H : suffix_of ?x (_ ++ ?x) |- _ => clear H
+  | H : suffix (_ :: _) _ |- _ => destruct (suffix_cons_not _ _ H)
+  | H : suffix (_ :: _) [] |- _ => apply suffix_nil_inv in H
+  | H : suffix (_ ++ _) (_ ++ _) |- _ => apply suffix_app_inv in H
+  | H : suffix (_ :: _) (_ :: _) |- _ =>
+    destruct (suffix_cons_inv _ _ _ _ H); clear H
+  | H : suffix ?x ?x |- _ => clear H
+  | H : suffix ?x (_ :: ?x) |- _ => clear H
+  | H : suffix ?x (_ ++ ?x) |- _ => clear H
   | _ => progress simplify_eq/=
   end.
 
-(** The [solve_suffix_of] tactic tries to solve goals involving [suffix_of]. It
-uses [simplify_suffix_of] to simplify hypotheses and tries to solve [suffix_of]
+(** The [solve_suffix] tactic tries to solve goals involving [suffix]. It
+uses [simplify_suffix] to simplify hypotheses and tries to solve [suffix]
 conclusions. This tactic either fails or proves the goal. *)
-Ltac solve_suffix_of := by intuition (repeat
+Ltac solve_suffix := by intuition (repeat
   match goal with
   | _ => done
-  | _ => progress simplify_suffix_of
-  | |- suffix_of [] _ => apply suffix_of_nil
-  | |- suffix_of _ _ => reflexivity
-  | |- suffix_of _ (_ :: _) => apply suffix_of_cons_r
-  | |- suffix_of _ (_ ++ _) => apply suffix_of_app_r
-  | H : suffix_of _ _ → False |- _ => destruct H
+  | _ => progress simplify_suffix
+  | |- suffix [] _ => apply suffix_nil
+  | |- suffix _ _ => reflexivity
+  | |- suffix _ (_ :: _) => apply suffix_cons_r
+  | |- suffix _ (_ ++ _) => apply suffix_app_r
+  | H : suffix _ _ → False |- _ => destruct H
   end).

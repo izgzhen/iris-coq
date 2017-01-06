@@ -345,14 +345,14 @@ Proof.
 Qed.
 
 (* Mononicity *)
-Lemma gmultiset_elements_contains X Y : X ⊆ Y → elements X `contains` elements Y.
+Lemma gmultiset_elements_submseteq X Y : X ⊆ Y → elements X ⊆+ elements Y.
 Proof.
   intros ->%gmultiset_union_difference. rewrite gmultiset_elements_union.
-  by apply contains_inserts_r.
+  by apply submseteq_inserts_r.
 Qed.
 
 Lemma gmultiset_subseteq_size X Y : X ⊆ Y → size X ≤ size Y.
-Proof. intros. by apply contains_length, gmultiset_elements_contains. Qed.
+Proof. intros. by apply submseteq_length, gmultiset_elements_submseteq. Qed.
 
 Lemma gmultiset_subset_size X Y : X ⊂ Y → size X < size Y.
 Proof.

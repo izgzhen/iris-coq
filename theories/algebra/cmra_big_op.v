@@ -101,9 +101,9 @@ Proof.
   - by trans (big_op xs2).
 Qed.
 
-Lemma big_op_contains xs ys : xs `contains` ys → [⋅] xs ≼ [⋅] ys.
+Lemma big_op_submseteq xs ys : xs ⊆+ ys → [⋅] xs ≼ [⋅] ys.
 Proof.
-  intros [xs' ->]%contains_Permutation.
+  intros [xs' ->]%submseteq_Permutation.
   rewrite big_op_app; apply cmra_included_l.
 Qed.
 
@@ -158,9 +158,9 @@ Section list.
   Lemma big_opL_permutation (f : A → M) l1 l2 :
     l1 ≡ₚ l2 → ([⋅ list] x ∈ l1, f x) ≡ ([⋅ list] x ∈ l2, f x).
   Proof. intros Hl. by rewrite /big_opL !imap_const Hl. Qed.
-  Lemma big_opL_contains (f : A → M) l1 l2 :
-    l1 `contains` l2 → ([⋅ list] x ∈ l1, f x) ≼ ([⋅ list] x ∈ l2, f x).
-  Proof. intros Hl. apply big_op_contains. rewrite !imap_const. by rewrite ->Hl. Qed.
+  Lemma big_opL_submseteq (f : A → M) l1 l2 :
+    l1 ⊆+ l2 → ([⋅ list] x ∈ l1, f x) ≼ ([⋅ list] x ∈ l2, f x).
+  Proof. intros Hl. apply big_op_submseteq. rewrite !imap_const. by rewrite ->Hl. Qed.
 
   Global Instance big_opL_ne l n :
     Proper (pointwise_relation _ (pointwise_relation _ (dist n)) ==> (dist n))
@@ -230,7 +230,7 @@ Section gmap.
     ([⋅ map] k ↦ x ∈ m1, f k x) ≼ [⋅ map] k ↦ x ∈ m2, g k x.
   Proof.
     intros Hm Hf. trans ([⋅ map] k↦x ∈ m2, f k x).
-    - by apply big_op_contains, fmap_contains, map_to_list_contains.
+    - by apply big_op_submseteq, fmap_submseteq, map_to_list_submseteq.
     - apply big_opM_forall; apply _ || auto.
   Qed.
   Lemma big_opM_ext f g m :
@@ -345,7 +345,7 @@ Section gset.
     ([⋅ set] x ∈ X, f x) ≼ [⋅ set] x ∈ Y, g x.
   Proof.
     intros HX Hf. trans ([⋅ set] x ∈ Y, f x).
-    - by apply big_op_contains, fmap_contains, elements_contains.
+    - by apply big_op_submseteq, fmap_submseteq, elements_submseteq.
     - apply big_opS_forall; apply _ || auto.
   Qed.
   Lemma big_opS_ext f g X :
@@ -446,7 +446,7 @@ Section gmultiset.
     ([⋅ mset] x ∈ X, f x) ≼ [⋅ mset] x ∈ Y, g x.
   Proof.
     intros HX Hf. trans ([⋅ mset] x ∈ Y, f x).
-    - by apply big_op_contains, fmap_contains, gmultiset_elements_contains.
+    - by apply big_op_submseteq, fmap_submseteq, gmultiset_elements_submseteq.
     - apply big_opMS_forall; apply _ || auto.
   Qed.
   Lemma big_opMS_ext f g X :
