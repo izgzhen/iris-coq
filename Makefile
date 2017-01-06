@@ -20,19 +20,13 @@ all: Makefile.coq
 
 clean: Makefile.coq
 	+@make -f Makefile.coq clean
-	find \( -name "*.v.d" -o -name "*.vo" -o -name "*.aux" -o -name "*.cache" -o -name "*.glob" -o -name "*.vio" \) -print -delete
+	find theories \( -name "*.v.d" -o -name "*.vo" -o -name "*.aux" -o -name "*.cache" -o -name "*.glob" -o -name "*.vio" \) -print -delete
 	rm -f Makefile.coq
 
 # Create Coq Makefile
-Makefile.coq: _CoqProject Makefile
-	@# we want to pass the correct name to coq_makefile or it will be confused.
+Makefile.coq: _CoqProject Makefile awk.Makefile
 	coq_makefile $(COQ_MAKEFILE_FLAGS) -f _CoqProject -o Makefile.coq
-	mv Makefile.coq Makefile.coq.tmp
-	@# The sed script is for Coq 8.5 only, it fixes 'make verify'.
-	@# The awk script fixes 'make uninstall'.
-	sed 's/$$(COQCHK) $$(COQCHKFLAGS) $$(COQLIBS)/$$(COQCHK) $$(COQCHKFLAGS) $$(subst -Q,-R,$$(COQLIBS))/' < Makefile.coq.tmp \
-	  | awk '/^uninstall:/{print "uninstall:";print "\tif [ -d \"$$(DSTROOT)\"$$(COQLIBINSTALL)/iris/ ]; then find \"$$(DSTROOT)\"$$(COQLIBINSTALL)/iris/ -name \"*.vo\" -print -delete; fi";getline;next}1' > Makefile.coq
-	rm Makefile.coq.tmp
+	awk -i inplace -f awk.Makefile Makefile.coq
 
 # Install build-dependencies
 build-dep:
@@ -45,6 +39,7 @@ build-dep:
 # some fiels that do *not* need to be forwarded to Makefile.coq
 Makefile: ;
 _CoqProject: ;
+awk.Makefile: ;
 
 # Phony targets (i.e. targets that should be run no matter the timestamps of the involved files)
 phony: ;
