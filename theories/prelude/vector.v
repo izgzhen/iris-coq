@@ -191,7 +191,8 @@ Ltac inv_vec v :=
   | vec _ 0 =>
     revert dependent v; match goal with |- ∀ v, @?P v => apply (vec_0_inv P) end
   | vec _ (S ?n) =>
-    revert dependent v; match goal with |- ∀ v, @?P v => apply (vec_S_inv P) end
+    revert dependent v; match goal with |- ∀ v, @?P v => apply (vec_S_inv P) end;
+    try (let x := fresh "x" in intros x v; inv_vec v; revert x)
   end.
 
 (** The following tactic performs case analysis on all hypotheses of the shape
