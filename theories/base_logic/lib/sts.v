@@ -9,8 +9,8 @@ Class stsG Σ (sts : stsT) := StsG {
   sts_inG :> inG Σ (stsR sts);
   sts_inhabited :> Inhabited (sts.state sts);
 }.
-Definition stsΣ (sts : stsT) : gFunctors := #[ GFunctor (constRF (stsR sts)) ].
 
+Definition stsΣ (sts : stsT) : gFunctors := #[ GFunctor (stsR sts) ].
 Instance subG_stsΣ Σ sts :
   subG (stsΣ sts) Σ → Inhabited (sts.state sts) → stsG Σ sts.
 Proof. intros ?%subG_inG ?. by split. Qed.

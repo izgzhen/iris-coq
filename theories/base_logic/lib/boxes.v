@@ -11,6 +11,13 @@ Class boxG Σ :=
     (authR (optionUR (exclR boolC)))
     (optionR (agreeR (laterC (iPreProp Σ))))).
 
+Definition boxΣ : gFunctors := #[ GFunctor (authR (optionUR (exclR boolC)) *
+                                            optionRF (agreeRF (▶ ∙)) ) ].
+
+Instance subG_stsΣ Σ :
+  subG boxΣ Σ → boxG Σ.
+Proof. apply subG_inG. Qed.
+
 Section box_defs.
   Context `{invG Σ, boxG Σ} (N : namespace).
 

@@ -20,7 +20,7 @@ Global Opaque iris_invG.
 
 Definition ownPΣ (Λstate : Type) : gFunctors :=
   #[invΣ;
-    GFunctor (constRF (authUR (optionUR (exclR (leibnizC Λstate)))))].
+    GFunctor (authUR (optionUR (exclR (leibnizC Λstate))))].
 
 Class ownPPreG' (Λstate : Type) (Σ : gFunctors) : Set := IrisPreG {
   ownPPre_invG :> invPreG Σ;
@@ -30,7 +30,6 @@ Notation ownPPreG Λ Σ := (ownPPreG' (state Λ) Σ).
 
 Instance subG_ownPΣ {Λstate Σ} : subG (ownPΣ Λstate) Σ → ownPPreG' Λstate Σ.
 Proof. intros [??%subG_inG]%subG_inv; constructor; apply _. Qed.
-
 
 (** Ownership *)
 Definition ownP `{ownPG' Λstate Σ} (σ : Λstate) : iProp Σ :=

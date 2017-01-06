@@ -11,7 +11,7 @@ Class authG Σ (A : ucmraT) := AuthG {
   auth_inG :> inG Σ (authR A);
   auth_discrete :> CMRADiscrete A;
 }.
-Definition authΣ (A : ucmraT) : gFunctors := #[ GFunctor (constRF (authR A)) ].
+Definition authΣ (A : ucmraT) : gFunctors := #[ GFunctor (authR A) ].
 
 Instance subG_authΣ Σ A : subG (authΣ A) Σ → CMRADiscrete A → authG Σ A.
 Proof. intros ?%subG_inG ?. by split. Qed.

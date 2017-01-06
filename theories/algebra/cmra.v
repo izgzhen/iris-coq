@@ -700,6 +700,9 @@ Structure rFunctor := RFunctor {
 Existing Instances rFunctor_ne rFunctor_mono.
 Instance: Params (@rFunctor_map) 5.
 
+Delimit Scope rFunctor_scope with RF.
+Bind Scope rFunctor_scope with rFunctor.
+
 Class rFunctorContractive (F : rFunctor) :=
   rFunctor_contractive A1 A2 B1 B2 :> Contractive (@rFunctor_map F A1 A2 B1 B2).
 
@@ -709,6 +712,7 @@ Coercion rFunctor_diag : rFunctor >-> Funclass.
 Program Definition constRF (B : cmraT) : rFunctor :=
   {| rFunctor_car A1 A2 := B; rFunctor_map A1 A2 B1 B2 f := cid |}.
 Solve Obligations with done.
+Coercion constRF : cmraT >-> rFunctor.
 
 Instance constRF_contractive B : rFunctorContractive (constRF B).
 Proof. rewrite /rFunctorContractive; apply _. Qed.
@@ -729,6 +733,9 @@ Structure urFunctor := URFunctor {
 Existing Instances urFunctor_ne urFunctor_mono.
 Instance: Params (@urFunctor_map) 5.
 
+Delimit Scope urFunctor_scope with URF.
+Bind Scope urFunctor_scope with urFunctor.
+
 Class urFunctorContractive (F : urFunctor) :=
   urFunctor_contractive A1 A2 B1 B2 :> Contractive (@urFunctor_map F A1 A2 B1 B2).
 
@@ -738,6 +745,7 @@ Coercion urFunctor_diag : urFunctor >-> Funclass.
 Program Definition constURF (B : ucmraT) : urFunctor :=
   {| urFunctor_car A1 A2 := B; urFunctor_map A1 A2 B1 B2 f := cid |}.
 Solve Obligations with done.
+Coercion constURF : ucmraT >-> urFunctor.
 
 Instance constURF_contractive B : urFunctorContractive (constURF B).
 Proof. rewrite /urFunctorContractive; apply _. Qed.
@@ -1064,6 +1072,7 @@ Next Obligation.
   intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??]; simpl.
   by rewrite !rFunctor_compose.
 Qed.
+Notation "F1 * F2" := (prodRF F1%RF F2%RF) : rFunctor_scope.
 
 Instance prodRF_contractive F1 F2 :
   rFunctorContractive F1 → rFunctorContractive F2 →
@@ -1086,6 +1095,7 @@ Next Obligation.
   intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??]; simpl.
   by rewrite !urFunctor_compose.
 Qed.
+Notation "F1 * F2" := (prodURF F1%URF F2%URF) : urFunctor_scope.
 
 Instance prodURF_contractive F1 F2 :
   urFunctorContractive F1 → urFunctorContractive F2 →
@@ -1243,6 +1253,29 @@ Proof.
     intros [->|(x&y&->&->&[Hxy|?])]; simpl; eauto 10 using @cmra_monotone.
     right; exists (f x), (f y). by rewrite {3}Hxy; eauto.
 Qed.
+
+Program Definition optionRF (F : rFunctor) : rFunctor := {|
+  rFunctor_car A B := optionR (rFunctor_car F A B);
+  rFunctor_map A1 A2 B1 B2 fg := optionC_map (rFunctor_map F fg)
+|}.
+Next Obligation.
+  by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_ne.
+Qed.
+Next Obligation.
+  intros F A B x. rewrite /= -{2}(option_fmap_id x).
+  apply option_fmap_equiv_ext=>y; apply rFunctor_id.
+Qed.
+Next Obligation.
+  intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -option_fmap_compose.
+  apply option_fmap_equiv_ext=>y; apply rFunctor_compose.
+Qed.
+
+Instance optionRF_contractive F :
+  rFunctorContractive F → rFunctorContractive (optionRF F).
+Proof.
+  by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_contractive.
+Qed.
+
 Program Definition optionURF (F : rFunctor) : urFunctor := {|
   urFunctor_car A B := optionUR (rFunctor_car F A B);
   urFunctor_map A1 A2 B1 B2 fg := optionC_map (rFunctor_map F fg)

@@ -31,7 +31,7 @@ Definition release : val :=
 Class tlockG Σ :=
   tlock_G :> inG Σ (authR (prodUR (optionUR (exclR natC)) (gset_disjUR nat))).
 Definition tlockΣ : gFunctors :=
-  #[ GFunctor (constRF (authR (prodUR (optionUR (exclR natC)) (gset_disjUR nat)))) ].
+  #[ GFunctor (authR (prodUR (optionUR (exclR natC)) (gset_disjUR nat))) ].
 
 Instance subG_tlockΣ {Σ} : subG tlockΣ Σ → tlockG Σ.
 Proof. by intros ?%subG_inG. Qed.

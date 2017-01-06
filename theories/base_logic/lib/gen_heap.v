@@ -20,7 +20,7 @@ Class gen_heapPreG (L V : Type) (Σ : gFunctors) `{Countable L} :=
   { gen_heap_preG_inG :> inG Σ (authR (gen_heapUR L V)) }.
 
 Definition gen_heapΣ (L V : Type) `{Countable L} : gFunctors :=
-  #[GFunctor (constRF (authR (gen_heapUR L V)))].
+  #[GFunctor (authR (gen_heapUR L V))].
 
 Instance subG_gen_heapPreG {Σ L V} `{Countable L} :
   subG (gen_heapΣ L V) Σ → gen_heapPreG L V Σ.

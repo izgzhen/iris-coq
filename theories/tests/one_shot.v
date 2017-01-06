@@ -25,7 +25,7 @@ Definition Pending : one_shotR := (Cinl (Excl ()) : one_shotR).
 Definition Shot (n : Z) : one_shotR := (Cinr (to_agree n) : one_shotR).
 
 Class one_shotG Σ := { one_shot_inG :> inG Σ one_shotR }.
-Definition one_shotΣ : gFunctors := #[GFunctor (constRF one_shotR)].
+Definition one_shotΣ : gFunctors := #[GFunctor one_shotR].
 Instance subG_one_shotΣ {Σ} : subG one_shotΣ Σ → one_shotG Σ.
 Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
 

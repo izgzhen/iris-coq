@@ -552,6 +552,7 @@ Coercion cFunctor_diag : cFunctor >-> Funclass.
 Program Definition constCF (B : ofeT) : cFunctor :=
   {| cFunctor_car A1 A2 := B; cFunctor_map A1 A2 B1 B2 f := cid |}.
 Solve Obligations with done.
+Coercion constCF : ofeT >-> cFunctor.
 
 Instance constCF_contractive B : cFunctorContractive (constCF B).
 Proof. rewrite /cFunctorContractive; apply _. Qed.
@@ -559,6 +560,7 @@ Proof. rewrite /cFunctorContractive; apply _. Qed.
 Program Definition idCF : cFunctor :=
   {| cFunctor_car A1 A2 := A2; cFunctor_map A1 A2 B1 B2 f := f.2 |}.
 Solve Obligations with done.
+Notation "∙" := idCF : cFunctor_scope.
 
 Program Definition prodCF (F1 F2 : cFunctor) : cFunctor := {|
   cFunctor_car A B := prodC (cFunctor_car F1 A B) (cFunctor_car F2 A B);
@@ -573,6 +575,7 @@ Next Obligation.
   intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??]; simpl.
   by rewrite !cFunctor_compose.
 Qed.
+Notation "F1 * F2" := (prodCF F1%CF F2%CF) : cFunctor_scope.
 
 Instance prodCF_contractive F1 F2 :
   cFunctorContractive F1 → cFunctorContractive F2 →
@@ -604,6 +607,7 @@ Next Obligation.
   intros T F A1 A2 A3 B1 B2 B3 f g f' g' ??; simpl.
   by rewrite !cFunctor_compose.
 Qed.
+Notation "T -c> F" := (ofe_funCF T%type F%CF) : cFunctor_scope.
 
 Instance ofe_funCF_contractive (T : Type) (F : cFunctor) :
   cFunctorContractive F → cFunctorContractive (ofe_funCF T F).
@@ -629,6 +633,7 @@ Next Obligation.
   intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [h ?] ?; simpl in *.
   rewrite -!cFunctor_compose. do 2 apply (ne_proper _). apply cFunctor_compose.
 Qed.
+Notation "F1 -n> F2" := (ofe_morCF F1%CF F2%CF) : cFunctor_scope.
 
 Instance ofe_morCF_contractive F1 F2 :
   cFunctorContractive F1 → cFunctorContractive F2 →
@@ -716,6 +721,7 @@ Next Obligation.
   intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [?|?]; simpl;
     by rewrite !cFunctor_compose.
 Qed.
+Notation "F1 + F2" := (sumCF F1%CF F2%CF) : cFunctor_scope.
 
 Instance sumCF_contractive F1 F2 :
   cFunctorContractive F1 → cFunctorContractive F2 →
@@ -949,6 +955,7 @@ Next Obligation.
   intros F A1 A2 A3 B1 B2 B3 f g f' g' x; simpl. rewrite -later_map_compose.
   apply later_map_ext=>y; apply cFunctor_compose.
 Qed.
+Notation "▶ F"  := (laterCF F%CF) (at level 20, right associativity) : cFunctor_scope.
 
 Instance laterCF_contractive F : cFunctorContractive (laterCF F).
 Proof.
@@ -1026,12 +1033,3 @@ Section sigma.
 End sigma.
 
 Arguments sigC {_} _.
-
-(** Notation for writing functors *)
-Notation "∙" := idCF : cFunctor_scope.
-Notation "T -c> F" := (ofe_funCF T%type F%CF) : cFunctor_scope.
-Notation "F1 -n> F2" := (ofe_morCF F1%CF F2%CF) : cFunctor_scope.
-Notation "F1 * F2" := (prodCF F1%CF F2%CF) : cFunctor_scope.
-Notation "F1 + F2" := (sumCF F1%CF F2%CF) : cFunctor_scope.
-Notation "▶ F"  := (laterCF F%CF) (at level 20, right associativity) : cFunctor_scope.
-Coercion constCF : ofeT >-> cFunctor.

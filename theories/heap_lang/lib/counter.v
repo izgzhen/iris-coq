@@ -14,7 +14,7 @@ Definition read : val := λ: "l", !"l".
 
 (** Monotone counter *)
 Class mcounterG Σ := MCounterG { mcounter_inG :> inG Σ (authR mnatUR) }.
-Definition mcounterΣ : gFunctors := #[GFunctor (constRF (authR mnatUR))].
+Definition mcounterΣ : gFunctors := #[GFunctor (authR mnatUR)].
 
 Instance subG_mcounterΣ {Σ} : subG mcounterΣ Σ → mcounterG Σ.
 Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
