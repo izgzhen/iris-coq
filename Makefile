@@ -36,7 +36,7 @@ build-dep:
 	opam install coq-iris --deps-only $(YFLAG)
 	opam pin remove coq-iris
 
-# some fiels that do *not* need to be forwarded to Makefile.coq
+# Some files that do *not* need to be forwarded to Makefile.coq
 Makefile: ;
 _CoqProject: ;
 awk.Makefile: ;
