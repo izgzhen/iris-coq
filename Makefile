@@ -23,10 +23,10 @@ clean: Makefile.coq
 	find theories \( -name "*.v.d" -o -name "*.vo" -o -name "*.aux" -o -name "*.cache" -o -name "*.glob" -o -name "*.vio" \) -print -delete
 	rm -f Makefile.coq
 
-# Create Coq Makefile
+# Create Coq Makefile. POSIX awk can't do in-place editing, but coq_makefile wants the real filename, so we do some file gymnastics.
 Makefile.coq: _CoqProject Makefile awk.Makefile
 	coq_makefile $(COQ_MAKEFILE_FLAGS) -f _CoqProject -o Makefile.coq
-	awk -i inplace -f awk.Makefile Makefile.coq
+	mv Makefile.coq Makefile.coq.tmp && awk -f awk.Makefile Makefile.coq.tmp > Makefile.coq && rm Makefile.coq.tmp
 
 # Install build-dependencies
 build-dep:
