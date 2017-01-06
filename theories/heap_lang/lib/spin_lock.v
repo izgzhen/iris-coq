@@ -18,7 +18,7 @@ Class lockG Σ := LockG { lock_tokG :> inG Σ (exclR unitC) }.
 Definition lockΣ : gFunctors := #[GFunctor (constRF (exclR unitC))].
 
 Instance subG_lockΣ {Σ} : subG lockΣ Σ → lockG Σ.
-Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
+Proof. intros ?%subG_inG. split; apply _. Qed.
 
 Section proof.
   Context `{!heapG Σ, !lockG Σ} (N : namespace).
