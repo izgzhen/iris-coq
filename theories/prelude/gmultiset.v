@@ -7,14 +7,18 @@ Record gmultiset A `{Countable A} := GMultiSet { gmultiset_car : gmap A nat }.
 Arguments GMultiSet {_ _ _} _.
 Arguments gmultiset_car {_ _ _} _.
 
-Instance gmultiset_eq_dec `{Countable A} : EqDecision (gmultiset A).
+Lemma gmultiset_eq_dec `{Countable A} : EqDecision (gmultiset A).
 Proof. solve_decision. Defined.
+Hint Extern 1 (Decision (@eq (gmultiset _) _ _)) =>
+  eapply @gmultiset_eq_dec : typeclass_instances.
 
-Program Instance gmultiset_countable `{Countable A} :
+Program Definition gmultiset_countable `{Countable A} :
     Countable (gmultiset A) := {|
   encode X := encode (gmultiset_car X);  decode p := GMultiSet <$> decode p
 |}.
 Next Obligation. intros A ?? [X]; simpl. by rewrite decode_encode. Qed.
+Hint Extern 1 (Countable (gmultiset _)) =>
+  eapply @gmultiset_countable : typeclass_instances.
 
 Section definitions.
   Context `{Countable A}.
