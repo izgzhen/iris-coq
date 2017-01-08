@@ -15,7 +15,7 @@
 /^vio2vo:/ {
 	print "vio2vo:";
 	print "\t@make -j $(J) quick"
-	print "\t@VIOFILES=$$(for file in $(VOFILES:%.vo=%.vio); do if [ \"$$(echo \"$$file\" | sed \"s/\\.vio/.vo/\")\" -ot \"$$file\" ]; then echo -n \"$$file \"; fi; done); \\"
+	print "\t@VIOFILES=$$(for file in $(VOFILES:%.vo=%.vio); do vofile=\"$$(echo \"$$file\" | sed \"s/\\.vio/.vo/\")\"; if [ \"$$vofile\" -ot \"$$file\" -o ! -e \"$$vofile\" ]; then echo -n \"$$file \"; fi; done); \\"
 	print "\t echo \"VIO2VO: $$VIOFILES\"; \\"
 	print "\t if [ -n \"$$VIOFILES\" ]; then $(COQC) $(COQDEBUG) $(COQFLAGS) -schedule-vio2vo $(J) $$VIOFILES; fi"
 	getline;
