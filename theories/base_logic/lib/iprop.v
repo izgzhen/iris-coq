@@ -1,6 +1,7 @@
 From iris.base_logic Require Export base_logic.
 From iris.algebra Require Import iprod gmap.
 From iris.algebra Require cofe_solver.
+Import uPred.
 Set Default Proof Using "Type".
 
 (** In this file we construct the type [iProp] of propositions of the Iris
@@ -115,10 +116,30 @@ the construction, this way we are sure we do not use any properties of the
 construction, and also avoid Coq from blindly unfolding it. *)
 Module Type iProp_solution_sig.
   Parameter iPreProp : gFunctors → ofeT.
-  Definition iResUR (Σ : gFunctors) : ucmraT :=
-    iprodUR (λ i, gmapUR gname (Σ i (iPreProp Σ))).
-  Notation iProp Σ := (uPredC (iResUR Σ)).
+  Parameter iResUR : gFunctors → ucmraT.
 
+  Parameter iRes_singleton :
+    ∀ {Σ} (i : gid Σ) (γ : gname) (a : Σ i (iPreProp Σ)), iResUR Σ.
+  Parameter iRes_ne : ∀ Σ (i : gid Σ) γ, NonExpansive (iRes_singleton i γ).
+  Parameter iRes_op : ∀ Σ (i : gid Σ) γ a1 a2,
+    iRes_singleton i γ (a1 ⋅ a2) ≡ iRes_singleton i γ a1 ⋅ iRes_singleton i γ a2.
+  Parameter iRes_valid : ∀ {M} Σ (i : gid Σ) γ a,
+    ✓ iRes_singleton i γ a -∗ (✓ a : uPred M).
+  Parameter iRes_timeless : ∀ Σ (i : gid Σ) γ a,
+    Timeless a → Timeless (iRes_singleton i γ a).
+  Parameter iRes_persistent : ∀ Σ (i : gid Σ) γ a,
+    Persistent a → Persistent (iRes_singleton i γ a).
+  Parameter iRes_updateP : ∀ Σ (i : gid Σ) γ
+      (P : Σ i (iPreProp Σ) → Prop) (Q : iResUR Σ → Prop) a,
+    a ~~>: P → (∀ b, P b → Q (iRes_singleton i γ b)) →
+    iRes_singleton i γ a ~~>: Q.
+  Parameter iRes_alloc_strong : ∀ Σ (i : gid Σ)
+      (Q : iResUR Σ → Prop) (G : gset gname) (a : Σ i (iPreProp Σ)),
+    ✓ a → (∀ γ, γ ∉ G → Q (iRes_singleton i γ a)) → ∅ ~~>: Q.
+  Parameter iRes_alloc_unit_singleton : ∀ Σ (i : gid Σ) u γ,
+    ✓ u → LeftId (≡) u (⋅) → ∅ ~~> iRes_singleton i γ u.
+
+  Notation iProp Σ := (uPredC (iResUR Σ)).
   Parameter iProp_unfold: ∀ {Σ}, iProp Σ -n> iPreProp Σ.
   Parameter iProp_fold: ∀ {Σ}, iPreProp Σ -n> iProp Σ.
   Parameter iProp_fold_unfold: ∀ {Σ} (P : iProp Σ),
@@ -135,8 +156,45 @@ Module Export iProp_solution : iProp_solution_sig.
   Definition iPreProp (Σ : gFunctors) : ofeT := iProp_result Σ.
   Definition iResUR (Σ : gFunctors) : ucmraT :=
     iprodUR (λ i, gmapUR gname (Σ i (iPreProp Σ))).
-  Notation iProp Σ := (uPredC (iResUR Σ)).
 
+  Definition iRes_singleton {Σ}
+      (i : gid Σ) (γ : gname) (a : Σ i (iPreProp Σ)) : iResUR Σ :=
+    iprod_singleton i {[ γ := a ]}.
+  Lemma iRes_ne Σ (i : gid Σ) γ : NonExpansive (iRes_singleton i γ).
+  Proof. by intros n a a' Ha; apply iprod_singleton_ne; rewrite Ha. Qed.
+  Lemma iRes_op Σ (i : gid Σ) γ a1 a2 :
+    iRes_singleton i γ (a1 ⋅ a2) ≡ iRes_singleton i γ a1 ⋅ iRes_singleton i γ a2.
+  Proof. by rewrite /iRes_singleton iprod_op_singleton op_singleton. Qed.
+  Lemma iRes_valid {M} Σ (i : gid Σ) γ a :
+    ✓ iRes_singleton i γ a -∗ (✓ a : uPred M).
+  Proof.
+    rewrite /iRes_singleton iprod_validI (forall_elim i) iprod_lookup_singleton.
+    by rewrite gmap_validI (forall_elim γ) lookup_singleton option_validI.
+  Qed.
+  Definition iRes_timeless Σ (i : gid Σ) γ a :
+    Timeless a → Timeless (iRes_singleton i γ a) := _.
+  Definition iRes_persistent Σ (i : gid Σ) γ a :
+    Persistent a → Persistent (iRes_singleton i γ a) := _.
+  Lemma iRes_updateP Σ (i : gid Σ) γ (P : _ → Prop) (Q : iResUR Σ → Prop) a :
+    a ~~>: P → (∀ b, P b → Q (iRes_singleton i γ b)) →
+    iRes_singleton i γ a ~~>: Q.
+  Proof.
+    intros. eapply iprod_singleton_updateP;
+      [by apply singleton_updateP'|naive_solver].
+  Qed.
+  Lemma iRes_alloc_strong Σ (i : gid Σ) (Q : _ → Prop) (G : gset gname) a :
+    ✓ a → (∀ γ, γ ∉ G → Q (iRes_singleton i γ a)) → ∅ ~~>: Q.
+  Proof.
+    intros Ha ?. eapply iprod_singleton_updateP_empty;
+      [eapply alloc_updateP_strong', Ha|naive_solver].
+  Qed.
+  Lemma iRes_alloc_unit_singleton Σ (i : gid Σ) u γ :
+    ✓ u → LeftId (≡) u (⋅) → ∅ ~~> iRes_singleton i γ u.
+  Proof.
+    intros. by eapply iprod_singleton_update_empty, alloc_unit_singleton_update.
+  Qed.
+
+  Notation iProp Σ := (uPredC (iResUR Σ)).
   Definition iProp_unfold {Σ} : iProp Σ -n> iPreProp Σ :=
     solution_fold (iProp_result Σ).
   Definition iProp_fold {Σ} : iPreProp Σ -n> iProp Σ := solution_unfold _.
