@@ -21,8 +21,11 @@ Proof. move=> /(_ 0%fin) /= [j ->]. by exists j. Qed.
 Ltac solve_inG :=
   (* Get all assumptions *)
   intros;
-  (* Unfold the top-level xΣ *)
+  (* Unfold the top-level xΣ. We need to support this to be a function. *)
   lazymatch goal with
+  | H : subG (?xΣ _ _ _ _) _ |- _ => try unfold xΣ in H
+  | H : subG (?xΣ _ _ _) _ |- _ => try unfold xΣ in H
+  | H : subG (?xΣ _ _) _ |- _ => try unfold xΣ in H
   | H : subG (?xΣ _) _ |- _ => try unfold xΣ in H
   | H : subG ?xΣ _ |- _ => try unfold xΣ in H
   end;
