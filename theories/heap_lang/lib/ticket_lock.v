@@ -34,7 +34,7 @@ Definition tlockΣ : gFunctors :=
   #[ GFunctor (authR (prodUR (optionUR (exclR natC)) (gset_disjUR nat))) ].
 
 Instance subG_tlockΣ {Σ} : subG tlockΣ Σ → tlockG Σ.
-Proof. by intros ?%subG_inG. Qed.
+Proof. solve_inG. Qed.
 
 Section proof.
   Context `{!heapG Σ, !tlockG Σ} (N : namespace).

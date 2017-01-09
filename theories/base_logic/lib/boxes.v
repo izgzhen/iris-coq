@@ -16,7 +16,7 @@ Definition boxΣ : gFunctors := #[ GFunctor (authR (optionUR (exclR boolC)) *
 
 Instance subG_stsΣ Σ :
   subG boxΣ Σ → boxG Σ.
-Proof. apply subG_inG. Qed.
+Proof. solve_inG. Qed.
 
 Section box_defs.
   Context `{invG Σ, boxG Σ} (N : namespace).

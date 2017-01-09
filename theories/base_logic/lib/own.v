@@ -17,6 +17,33 @@ Arguments inG_id {_ _} _.
 Lemma subG_inG Σ (F : gFunctor) : subG F Σ → inG Σ (F (iPreProp Σ)).
 Proof. move=> /(_ 0%fin) /= [j ->]. by exists j. Qed.
 
+(** This tactic solves the usual obligations "subG ? Σ → {in,?}G ? Σ" *)
+Ltac solve_inG :=
+  (* Get all assumptions *)
+  intros;
+  (* Unfold the top-level xΣ *)
+  lazymatch goal with
+  | H : subG (?xΣ _) _ |- _ => try unfold xΣ in H
+  | H : subG ?xΣ _ |- _ => try unfold xΣ in H
+  end;
+  (* Take apart subG for non-"atomic" lists *)
+  repeat match goal with
+         | H : subG (gFunctors.app _ _) _ |- _ => apply subG_inv in H; destruct H
+         end;
+  (* Try to turn singleton subG into inG; but also keep the subG for typeclass
+     resolution -- to keep them, we put them onto the goal. *)
+  repeat match goal with
+         | H : subG _ _ |- _ => move:(H); (apply subG_inG in H || clear H)
+         end;
+  (* Again get all assumptions *)
+  intros;
+  (* We support two kinds of goals: Things convertible to inG;
+     and records with inG and typeclass fields. Try to solve the
+     first case. *)
+  try done;
+  (* That didn't work, now we're in for the second case. *)
+  split; (assumption || by apply _).
+
 (** * Definition of the connective [own] *)
 Definition iRes_singleton `{i : inG Σ A} (γ : gname) (a : A) : iResUR Σ :=
   iprod_singleton (inG_id i) {[ γ := cmra_transport inG_prf a ]}.

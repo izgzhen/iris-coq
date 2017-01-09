@@ -17,7 +17,7 @@ Class oneShotG (Σ : gFunctors) (F : cFunctor) :=
 Definition oneShotΣ (F : cFunctor) : gFunctors :=
   #[ GFunctor (csumRF (exclRF unitC) (agreeRF (▶ F))) ].
 Instance subG_oneShotΣ {Σ F} : subG (oneShotΣ F) Σ → oneShotG Σ F.
-Proof. apply subG_inG. Qed.
+Proof. solve_inG. Qed.
 
 Definition client eM eW1 eW2 : expr :=
   let: "b" := newbarrier #() in

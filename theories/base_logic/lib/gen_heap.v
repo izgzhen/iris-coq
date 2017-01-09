@@ -24,7 +24,7 @@ Definition gen_heapΣ (L V : Type) `{Countable L} : gFunctors :=
 
 Instance subG_gen_heapPreG {Σ L V} `{Countable L} :
   subG (gen_heapΣ L V) Σ → gen_heapPreG L V Σ.
-Proof. intros ?%subG_inG; split; apply _. Qed.
+Proof. solve_inG. Qed.
 
 Section definitions.
   Context `{gen_heapG L V Σ}.

@@ -19,9 +19,7 @@ Class invPreG (Σ : gFunctors) : Set := WsatPreG {
 }.
 
 Instance subG_invΣ {Σ} : subG invΣ Σ → invPreG Σ.
-Proof.
-  intros [?%subG_inG [?%subG_inG ?%subG_inG]%subG_inv]%subG_inv; by constructor.
-Qed.
+Proof. solve_inG. Qed.
 
 (* Allocation *)
 Lemma wsat_alloc `{invPreG Σ} : (|==> ∃ _ : invG Σ, wsat ∗ ownE ⊤)%I.

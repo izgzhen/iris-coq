@@ -8,7 +8,6 @@ From iris.heap_lang.lib.barrier Require Import protocol.
 Set Default Proof Using "Type".
 
 (** The CMRAs/functors we need. *)
-(* Not bundling heapG, as it may be shared with other users. *)
 Class barrierG Σ := BarrierG {
   barrier_stsG :> stsG Σ sts;
   barrier_savedPropG :> savedPropG Σ idCF;
@@ -16,7 +15,7 @@ Class barrierG Σ := BarrierG {
 Definition barrierΣ : gFunctors := #[stsΣ sts; savedPropΣ idCF].
 
 Instance subG_barrierΣ {Σ} : subG barrierΣ Σ → barrierG Σ.
-Proof. intros [? [? _]%subG_inv]%subG_inv. split; apply _. Qed.
+Proof. solve_inG. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.

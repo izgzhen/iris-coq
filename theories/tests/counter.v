@@ -75,7 +75,7 @@ End M.
 Class counterG Σ := CounterG { counter_tokG :> inG Σ M_UR }.
 Definition counterΣ : gFunctors := #[GFunctor M_UR].
 Instance subG_counterΣ {Σ} : subG counterΣ Σ → counterG Σ.
-Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
+Proof. solve_inG. Qed.
 
 Section proof.
 Context `{!heapG Σ, !counterG Σ}.

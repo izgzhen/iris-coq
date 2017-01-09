@@ -12,7 +12,7 @@ Class heapPreG Σ := HeapPreG {
 
 Definition heapΣ : gFunctors := #[invΣ; gen_heapΣ loc val].
 Instance subG_heapPreG {Σ} : subG heapΣ Σ → heapPreG Σ.
-Proof. intros [? ?]%subG_inv; split; apply _. Qed.
+Proof. solve_inG. Qed.
 
 Definition heap_adequacy Σ `{heapPreG Σ} e σ φ :
   (∀ `{heapG Σ}, True ⊢ WP e {{ v, ⌜φ v⌝ }}) →

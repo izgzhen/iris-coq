@@ -23,7 +23,7 @@ Class spawnG Σ := SpawnG { spawn_tokG :> inG Σ (exclR unitC) }.
 Definition spawnΣ : gFunctors := #[GFunctor (exclR unitC)].
 
 Instance subG_spawnΣ {Σ} : subG spawnΣ Σ → spawnG Σ.
-Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
+Proof. solve_inG. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.
