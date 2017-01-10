@@ -13,7 +13,7 @@
 # Also see <https://coq.inria.fr/bugs/show_bug.cgi?id=4907>.
 /^uninstall:/ {
 	print "uninstall:";
-	print "\tif [ -d \"$(DSTROOT)\"$(COQLIBINSTALL)/"PROJECT"/ ]; then find \"$(DSTROOT)\"$(COQLIBINSTALL)/"PROJECT"/ -name \"*.vo\" -print -delete; fi";
+	print "\tif [ -d \"$(DSTROOT)\"$(COQLIBINSTALL)/"PROJECT"/ ]; then find \"$(DSTROOT)\"$(COQLIBINSTALL)/"PROJECT"/ \\( -name \"*.vo\" -o \\( -type d -empty \\) \\) -print -delete; fi";
 	getline;
 	next
 }
