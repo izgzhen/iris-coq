@@ -9,7 +9,7 @@ Import uPred.
 Definition na_inv_pool_name := gname.
 
 Class na_invG Σ :=
-  tl_inG :> inG Σ (prodR coPset_disjR (gset_disjR positive)).
+  na_inG :> inG Σ (prodR coPset_disjR (gset_disjR positive)).
 
 Section defs.
   Context `{invG Σ, na_invG Σ}.
@@ -84,8 +84,8 @@ Section proofs.
     na_inv p N P -∗ na_own p F ={E}=∗ ▷ P ∗ na_own p (F∖↑N) ∗
                        (▷ P ∗ na_own p (F∖↑N) ={E}=∗ na_own p F).
   Proof.
-    rewrite /na_inv. iIntros (??) "#Htlinv Htoks".
-    iDestruct "Htlinv" as (i) "[% Hinv]".
+    rewrite /na_inv. iIntros (??) "#Hnainv Htoks".
+    iDestruct "Hnainv" as (i) "[% Hinv]".
     rewrite [F as X in na_own p X](union_difference_L (↑N) F) //.
     rewrite [X in (X ∪ _)](union_difference_L {[i]} (↑N)) ?na_own_union; [|set_solver..].
     iDestruct "Htoks" as "[[Htoki $] $]".
