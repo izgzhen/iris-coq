@@ -13,7 +13,7 @@ Since [positive]s are bitstrings, we encode [coPset]s as trees that correspond
 to the decision function that map bitstrings to bools. *)
 From iris.prelude Require Export collections.
 From iris.prelude Require Import pmap gmap mapset.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Local Open Scope positive_scope.
 
 (** * The tree data structure *)

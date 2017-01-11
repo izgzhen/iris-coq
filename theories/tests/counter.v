@@ -8,7 +8,7 @@ From iris.heap_lang Require Export lang.
 From iris.program_logic Require Export hoare.
 From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 Definition newcounter : val := λ: <>, ref #0.
@@ -73,9 +73,9 @@ Section M.
 End M.
 
 Class counterG Σ := CounterG { counter_tokG :> inG Σ M_UR }.
-Definition counterΣ : gFunctors := #[GFunctor (constRF M_UR)].
+Definition counterΣ : gFunctors := #[GFunctor M_UR].
 Instance subG_counterΣ {Σ} : subG counterΣ Σ → counterG Σ.
-Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
+Proof. solve_inG. Qed.
 
 Section proof.
 Context `{!heapG Σ, !counterG Σ}.

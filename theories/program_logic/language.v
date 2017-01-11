@@ -1,5 +1,5 @@
 From iris.algebra Require Export ofe.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Structure language := Language {
   expr : Type;

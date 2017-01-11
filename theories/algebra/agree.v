@@ -208,7 +208,7 @@ Section list_theory.
 
     Lemma list_agrees_fmap `{Equivalence _ R'} al :
       list_agrees R al → list_agrees R' (f <$> al).
-    Proof using All.
+    Proof using Type*.
       move=> /list_agrees_alt Hl. apply (list_agrees_alt R') => a' b'.
       intros (a & -> & Ha)%elem_of_list_fmap (b & -> & Hb)%elem_of_list_fmap.
       apply Hf. exact: Hl.

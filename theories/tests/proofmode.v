@@ -1,6 +1,6 @@
 From iris.proofmode Require Import tactics.
 From iris.base_logic.lib Require Import invariants.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Lemma demo_0 {M : ucmraT} (P Q : uPred M) :
   □ (P ∨ Q) -∗ (∀ x, ⌜x = 0⌝ ∨ ⌜x = 1⌝) → (Q ∨ P).

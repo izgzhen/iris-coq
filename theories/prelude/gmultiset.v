@@ -1,20 +1,24 @@
 (* Copyright (c) 2012-2016, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
 From iris.prelude Require Import gmap.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Record gmultiset A `{Countable A} := GMultiSet { gmultiset_car : gmap A nat }.
 Arguments GMultiSet {_ _ _} _.
 Arguments gmultiset_car {_ _ _} _.
 
-Instance gmultiset_eq_dec `{Countable A} : EqDecision (gmultiset A).
+Lemma gmultiset_eq_dec `{Countable A} : EqDecision (gmultiset A).
 Proof. solve_decision. Defined.
+Hint Extern 1 (Decision (@eq (gmultiset _) _ _)) =>
+  eapply @gmultiset_eq_dec : typeclass_instances.
 
-Program Instance gmultiset_countable `{Countable A} :
+Program Definition gmultiset_countable `{Countable A} :
     Countable (gmultiset A) := {|
   encode X := encode (gmultiset_car X);  decode p := GMultiSet <$> decode p
 |}.
 Next Obligation. intros A ?? [X]; simpl. by rewrite decode_encode. Qed.
+Hint Extern 1 (Countable (gmultiset _)) =>
+  eapply @gmultiset_countable : typeclass_instances.
 
 Section definitions.
   Context `{Countable A}.
@@ -345,14 +349,14 @@ Proof.
 Qed.
 
 (* Mononicity *)
-Lemma gmultiset_elements_contains X Y : X ⊆ Y → elements X `contains` elements Y.
+Lemma gmultiset_elements_submseteq X Y : X ⊆ Y → elements X ⊆+ elements Y.
 Proof.
   intros ->%gmultiset_union_difference. rewrite gmultiset_elements_union.
-  by apply contains_inserts_r.
+  by apply submseteq_inserts_r.
 Qed.
 
 Lemma gmultiset_subseteq_size X Y : X ⊆ Y → size X ≤ size Y.
-Proof. intros. by apply contains_length, gmultiset_elements_contains. Qed.
+Proof. intros. by apply submseteq_length, gmultiset_elements_submseteq. Qed.
 
 Lemma gmultiset_subset_size X Y : X ⊂ Y → size X < size Y.
 Proof.

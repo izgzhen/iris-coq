@@ -9,7 +9,7 @@ Global Set Automatic Coercions Import.
 Global Set Asymmetric Patterns.
 Global Unset Transparent Obligations.
 From Coq Require Export Morphisms RelationClasses List Bool Utf8 Setoid.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Export ListNotations.
 From Coq.Program Require Export Basics Syntax.
 Obligation Tactic := idtac.

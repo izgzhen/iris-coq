@@ -1,7 +1,7 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
 From iris.prelude Require Export countable vector.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Class Finite A `{EqDecision A} := {
   enum : list A;
@@ -107,17 +107,17 @@ Proof.
   unfold card; intros. destruct finA as [[|x ?] ??]; simpl in *; [exfalso;lia|].
   constructor; exact x.
 Qed.
-Lemma finite_inj_contains `{finA: Finite A} `{finB: Finite B} (f: A → B)
-  `{!Inj (=) (=) f} : f <$> enum A `contains` enum B.
+Lemma finite_inj_submseteq `{finA: Finite A} `{finB: Finite B} (f: A → B)
+  `{!Inj (=) (=) f} : f <$> enum A ⊆+ enum B.
 Proof.
-  intros. destruct finA, finB. apply NoDup_contains; auto using NoDup_fmap_2.
+  intros. destruct finA, finB. apply NoDup_submseteq; auto using NoDup_fmap_2.
 Qed.
 Lemma finite_inj_Permutation `{Finite A} `{Finite B} (f : A → B)
   `{!Inj (=) (=) f} : card A = card B → f <$> enum A ≡ₚ enum B.
 Proof.
-  intros. apply contains_Permutation_length_eq.
+  intros. apply submseteq_Permutation_length_eq.
   - by rewrite fmap_length.
-  - by apply finite_inj_contains.
+  - by apply finite_inj_submseteq.
 Qed.
 Lemma finite_inj_surj `{Finite A} `{Finite B} (f : A → B)
   `{!Inj (=) (=) f} : card A = card B → Surj (=) f.
@@ -144,7 +144,7 @@ Proof.
     destruct (finite_surj A B) as (g&?); auto with lia.
     destruct (surj_cancel g) as (f&?). exists f. apply cancel_inj.
   - intros [f ?]. unfold card. rewrite <-(fmap_length f).
-    by apply contains_length, (finite_inj_contains f).
+    by apply submseteq_length, (finite_inj_submseteq f).
 Qed.
 Lemma finite_bijective A `{Finite A} B `{Finite B} :
   card A = card B ↔ ∃ f : A → B, Inj (=) (=) f ∧ Surj (=) f.
@@ -181,12 +181,12 @@ Section forall_exists.
   Context `{∀ x, Decision (P x)}.
 
   Global Instance forall_dec: Decision (∀ x, P x).
-  Proof.
+  Proof using Type*.
    refine (cast_if (decide (Forall P (enum A))));
     abstract by rewrite <-Forall_finite.
   Defined.
   Global Instance exists_dec: Decision (∃ x, P x).
-  Proof.
+  Proof using Type*.
    refine (cast_if (decide (Exists P (enum A))));
     abstract by rewrite <-Exists_finite.
   Defined.

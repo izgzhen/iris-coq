@@ -5,7 +5,7 @@ From iris.heap_lang Require Export lang.
 From iris.heap_lang Require Import tactics.
 From iris.proofmode Require Import tactics.
 From iris.prelude Require Import fin_maps.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 (** Basic rules for language operations. *)

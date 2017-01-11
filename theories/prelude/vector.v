@@ -6,7 +6,7 @@ definitions from the standard library, but renames or changes their notations,
 so that it becomes more consistent with the naming conventions in this
 development. *)
 From iris.prelude Require Export list.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Open Scope vector_scope.
 
 (** * The fin type *)
@@ -191,7 +191,8 @@ Ltac inv_vec v :=
   | vec _ 0 =>
     revert dependent v; match goal with |- ∀ v, @?P v => apply (vec_0_inv P) end
   | vec _ (S ?n) =>
-    revert dependent v; match goal with |- ∀ v, @?P v => apply (vec_S_inv P) end
+    revert dependent v; match goal with |- ∀ v, @?P v => apply (vec_S_inv P) end;
+    try (let x := fresh "x" in intros x v; inv_vec v; revert x)
   end.
 
 (** The following tactic performs case analysis on all hypotheses of the shape

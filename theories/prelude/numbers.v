@@ -6,7 +6,7 @@ notations. *)
 From Coq Require Export EqdepFacts PArith NArith ZArith NPeano.
 From Coq Require Import QArith Qcanon.
 From iris.prelude Require Export base decidable option.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Open Scope nat_scope.
 
 Coercion Z.of_nat : nat >-> Z.

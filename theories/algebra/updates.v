@@ -1,5 +1,5 @@
 From iris.algebra Require Export cmra.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (** * Frame preserving updates *)
 (* This quantifies over [option A] for the frame.  That is necessary to
@@ -86,6 +86,7 @@ Qed.
 
 (** ** Frame preserving updates for total CMRAs *)
 Section total_updates.
+  Set Default Proof Using "Type*".
   Context `{CMRATotal A}.
 
   Lemma cmra_total_updateP x (P : A → Prop) :

@@ -1,6 +1,6 @@
 From iris.prelude Require Import gmap.
 From iris.base_logic Require Export base_logic big_op.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 Module uPred_reflection. Section uPred_reflection.
@@ -30,9 +30,9 @@ Module uPred_reflection. Section uPred_reflection.
       rewrite /= ?right_id ?fmap_app ?big_sep_app ?IH1 ?IH2 //. 
   Qed.
   Lemma flatten_entails Σ e1 e2 :
-    flatten e2 `contains` flatten e1 → eval Σ e1 ⊢ eval Σ e2.
+    flatten e2 ⊆+ flatten e1 → eval Σ e1 ⊢ eval Σ e2.
   Proof.
-    intros. rewrite !eval_flatten. by apply big_sep_contains, fmap_contains.
+    intros. rewrite !eval_flatten. by apply big_sep_submseteq, fmap_submseteq.
   Qed.
   Lemma flatten_equiv Σ e1 e2 :
     flatten e2 ≡ₚ flatten e1 → eval Σ e1 ⊣⊢ eval Σ e2.

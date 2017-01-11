@@ -2,7 +2,7 @@ From iris.base_logic.lib Require Export invariants.
 From iris.algebra Require Import auth gmap agree.
 From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 (** The CMRAs we need. *)
@@ -10,6 +10,13 @@ Class boxG Σ :=
   boxG_inG :> inG Σ (prodR
     (authR (optionUR (exclR boolC)))
     (optionR (agreeR (laterC (iPreProp Σ))))).
+
+Definition boxΣ : gFunctors := #[ GFunctor (authR (optionUR (exclR boolC)) *
+                                            optionRF (agreeRF (▶ ∙)) ) ].
+
+Instance subG_stsΣ Σ :
+  subG boxΣ Σ → boxG Σ.
+Proof. solve_inG. Qed.
 
 Section box_defs.
   Context `{invG Σ, boxG Σ} (N : namespace).

@@ -2,11 +2,12 @@ From iris.program_logic Require Export hoare.
 From iris.heap_lang.lib.barrier Require Export barrier.
 From iris.heap_lang.lib.barrier Require Import proof.
 From iris.heap_lang Require Import proofmode.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 Section spec.
-Context `{!heapG Σ} `{!barrierG Σ}.
+Set Default Proof Using "Type*".
+Context `{!heapG Σ, !barrierG Σ}.
 
 Lemma barrier_spec (N : namespace) :
   ∃ recv send : loc → iProp Σ -n> iProp Σ,

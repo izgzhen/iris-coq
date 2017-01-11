@@ -2,7 +2,7 @@ From iris.algebra Require Import auth gmap frac agree.
 From iris.base_logic.lib Require Export own.
 From iris.base_logic.lib Require Import fractional.
 From iris.proofmode Require Import tactics.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 Definition gen_heapUR (L V : Type) `{Countable L} : ucmraT :=
@@ -20,11 +20,11 @@ Class gen_heapPreG (L V : Type) (Σ : gFunctors) `{Countable L} :=
   { gen_heap_preG_inG :> inG Σ (authR (gen_heapUR L V)) }.
 
 Definition gen_heapΣ (L V : Type) `{Countable L} : gFunctors :=
-  #[GFunctor (constRF (authR (gen_heapUR L V)))].
+  #[GFunctor (authR (gen_heapUR L V))].
 
 Instance subG_gen_heapPreG {Σ L V} `{Countable L} :
   subG (gen_heapΣ L V) Σ → gen_heapPreG L V Σ.
-Proof. intros ?%subG_inG; split; apply _. Qed.
+Proof. solve_inG. Qed.
 
 Section definitions.
   Context `{gen_heapG L V Σ}.

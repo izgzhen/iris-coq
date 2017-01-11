@@ -8,7 +8,7 @@ COQ_VERSION=$(shell coqc --version | egrep -o 'version 8.[0-9]' | egrep -o '8.[0
 COQ_MAKEFILE_FLAGS ?=
 
 ifeq ($(COQ_VERSION), 8.6)
-	COQ_MAKEFILE_FLAGS += -arg -w -arg -notation-overridden,-redundant-canonical-projection
+	COQ_MAKEFILE_FLAGS += -arg -w -arg -notation-overridden,-redundant-canonical-projection,-several-object-files
 endif
 
 # Forward most targets to Coq makefile (with some trick to make this phony)
@@ -20,19 +20,13 @@ all: Makefile.coq
 
 clean: Makefile.coq
 	+@make -f Makefile.coq clean
-	find \( -name "*.v.d" -o -name "*.vo" -o -name "*.aux" -o -name "*.cache" -o -name "*.glob" -o -name "*.vio" \) -print -delete
+	find theories \( -name "*.v.d" -o -name "*.vo" -o -name "*.aux" -o -name "*.cache" -o -name "*.glob" -o -name "*.vio" \) -print -delete
 	rm -f Makefile.coq
 
-# Create Coq Makefile
-Makefile.coq: _CoqProject Makefile
-	@# we want to pass the correct name to coq_makefile or it will be confused.
+# Create Coq Makefile. POSIX awk can't do in-place editing, but coq_makefile wants the real filename, so we do some file gymnastics.
+Makefile.coq: _CoqProject Makefile awk.Makefile
 	coq_makefile $(COQ_MAKEFILE_FLAGS) -f _CoqProject -o Makefile.coq
-	mv Makefile.coq Makefile.coq.tmp
-	@# The sed script is for Coq 8.5 only, it fixes 'make verify'.
-	@# The awk script fixes 'make uninstall'.
-	sed 's/$$(COQCHK) $$(COQCHKFLAGS) $$(COQLIBS)/$$(COQCHK) $$(COQCHKFLAGS) $$(subst -Q,-R,$$(COQLIBS))/' < Makefile.coq.tmp \
-	  | awk '/^uninstall:/{print "uninstall:";print "\tif [ -d \"$$(DSTROOT)\"$$(COQLIBINSTALL)/iris/ ]; then find \"$$(DSTROOT)\"$$(COQLIBINSTALL)/iris/ -name \"*.vo\" -print -delete; fi";getline;next}1' > Makefile.coq
-	rm Makefile.coq.tmp
+	mv Makefile.coq Makefile.coq.tmp && awk -f awk.Makefile Makefile.coq.tmp > Makefile.coq && rm Makefile.coq.tmp
 
 # Install build-dependencies
 build-dep:
@@ -42,9 +36,10 @@ build-dep:
 	opam install coq-iris --deps-only $(YFLAG)
 	opam pin remove coq-iris
 
-# some fiels that do *not* need to be forwarded to Makefile.coq
+# Some files that do *not* need to be forwarded to Makefile.coq
 Makefile: ;
 _CoqProject: ;
+awk.Makefile: ;
 
 # Phony targets (i.e. targets that should be run no matter the timestamps of the involved files)
 phony: ;

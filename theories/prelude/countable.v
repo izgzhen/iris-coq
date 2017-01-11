@@ -1,7 +1,7 @@
 (* Copyright (c) 2012-2015, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
 From iris.prelude Require Export list.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Local Open Scope positive.
 
 Class Countable A `{EqDecision A} := {

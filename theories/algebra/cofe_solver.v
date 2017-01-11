@@ -205,7 +205,7 @@ Instance fold_ne : Proper (dist n ==> dist n) fold.
 Proof. by intros n X Y HXY k; rewrite /fold /= HXY. Qed.
 
 Theorem result : solution F.
-Proof using All.
+Proof using Type*.
   apply (Solution F T _ (CofeMor unfold) (CofeMor fold)).
   - move=> X /=. rewrite equiv_dist=> n k; rewrite /unfold /fold /=.
     rewrite -g_tower -(gg_tower _ n); apply (_ : Proper (_ ==> _) (g _)).

@@ -1,5 +1,5 @@
 From iris.algebra Require Export cmra.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (** The basic definition of the uPred type, its metric and functor laws.
     You probably do not want to import this file. Instead, import

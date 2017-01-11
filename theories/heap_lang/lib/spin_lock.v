@@ -4,7 +4,7 @@ From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation.
 From iris.algebra Require Import excl.
 From iris.heap_lang.lib Require Import lock.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Definition newlock : val := λ: <>, ref #false.
 Definition try_acquire : val := λ: "l", CAS "l" #false #true.
@@ -15,10 +15,10 @@ Definition release : val := λ: "l", "l" <- #false.
 (** The CMRA we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
 Class lockG Σ := LockG { lock_tokG :> inG Σ (exclR unitC) }.
-Definition lockΣ : gFunctors := #[GFunctor (constRF (exclR unitC))].
+Definition lockΣ : gFunctors := #[GFunctor (exclR unitC)].
 
 Instance subG_lockΣ {Σ} : subG lockΣ Σ → lockG Σ.
-Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
+Proof. solve_inG. Qed.
 
 Section proof.
   Context `{!heapG Σ, !lockG Σ} (N : namespace).

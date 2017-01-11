@@ -4,7 +4,7 @@ From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation.
 From iris.algebra Require Import auth gset.
 From iris.heap_lang.lib Require Export lock.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 Definition wait_loop: val :=
@@ -31,10 +31,10 @@ Definition release : val :=
 Class tlockG Σ :=
   tlock_G :> inG Σ (authR (prodUR (optionUR (exclR natC)) (gset_disjUR nat))).
 Definition tlockΣ : gFunctors :=
-  #[ GFunctor (constRF (authR (prodUR (optionUR (exclR natC)) (gset_disjUR nat)))) ].
+  #[ GFunctor (authR (prodUR (optionUR (exclR natC)) (gset_disjUR nat))) ].
 
 Instance subG_tlockΣ {Σ} : subG tlockΣ Σ → tlockG Σ.
-Proof. by intros ?%subG_inG. Qed.
+Proof. solve_inG. Qed.
 
 Section proof.
   Context `{!heapG Σ, !tlockG Σ} (N : namespace).

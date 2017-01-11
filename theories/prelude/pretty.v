@@ -3,7 +3,7 @@
 From iris.prelude Require Export strings.
 From iris.prelude Require Import relations.
 From Coq Require Import Ascii.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Class Pretty A := pretty : A → string.
 Definition pretty_N_char (x : N) : ascii :=

@@ -2,7 +2,7 @@
 (* This file is distributed under the terms of the BSD license. *)
 (** This file implements sets as functions into Prop. *)
 From iris.prelude Require Export collections.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Record set (A : Type) : Type := mkSet { set_car : A → Prop }.
 Add Printing Constructor set.

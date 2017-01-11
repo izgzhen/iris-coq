@@ -2,7 +2,7 @@ From iris.proofmode Require Export classes.
 From iris.algebra Require Import gmap.
 From iris.prelude Require Import gmultiset.
 From iris.base_logic Require Import big_op.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 Section classes.

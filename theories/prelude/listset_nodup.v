@@ -4,7 +4,7 @@
 Although this implementation is slow, it is very useful as decidable equality
 is the only constraint on the carrier set. *)
 From iris.prelude Require Export collections list.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Record listset_nodup A := ListsetNoDup {
   listset_nodup_car : list A; listset_nodup_prf : NoDup listset_nodup_car

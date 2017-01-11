@@ -3,7 +3,7 @@ From iris.algebra Require Export auth.
 From iris.algebra Require Import gmap.
 From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 (* The CMRA we need. *)
@@ -11,10 +11,10 @@ Class authG Σ (A : ucmraT) := AuthG {
   auth_inG :> inG Σ (authR A);
   auth_discrete :> CMRADiscrete A;
 }.
-Definition authΣ (A : ucmraT) : gFunctors := #[ GFunctor (constRF (authR A)) ].
+Definition authΣ (A : ucmraT) : gFunctors := #[ GFunctor (authR A) ].
 
 Instance subG_authΣ Σ A : subG (authΣ A) Σ → CMRADiscrete A → authG Σ A.
-Proof. intros ?%subG_inG ?. by split. Qed.
+Proof. solve_inG. Qed.
 
 Section definitions.
   Context `{invG Σ, authG Σ A} {T : Type} (γ : gname).
@@ -117,7 +117,7 @@ Section auth.
     ▷ auth_inv γ f φ ∗ auth_own γ a ={E}=∗ ∃ t,
       ⌜a ≼ f t⌝ ∗ ▷ φ t ∗ ∀ u b,
       ⌜(f t, a) ~l~> (f u, b)⌝ ∗ ▷ φ u ={E}=∗ ▷ auth_inv γ f φ ∗ auth_own γ b.
-  Proof.
+  Proof using Type*.
     iIntros "[Hinv Hγf]". rewrite /auth_inv /auth_own.
     iDestruct "Hinv" as (t) "[>Hγa Hφ]".
     iModIntro. iExists t.
@@ -133,7 +133,7 @@ Section auth.
     auth_ctx γ N f φ ∗ auth_own γ a ={E,E∖↑N}=∗ ∃ t,
       ⌜a ≼ f t⌝ ∗ ▷ φ t ∗ ∀ u b,
       ⌜(f t, a) ~l~> (f u, b)⌝ ∗ ▷ φ u ={E∖↑N,E}=∗ auth_own γ b.
-  Proof.
+  Proof using Type*.
     iIntros (?) "[#? Hγf]". rewrite /auth_ctx. iInv N as "Hinv" "Hclose".
     (* The following is essentially a very trivial composition of the accessors
        [auth_acc] and [inv_open] -- but since we don't have any good support

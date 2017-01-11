@@ -4,7 +4,7 @@ From iris.heap_lang Require Export lang.
 From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation.
 From iris.algebra Require Import excl.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Definition spawn : val :=
   λ: "f",
@@ -20,10 +20,10 @@ Definition join : val :=
 (** The CMRA & functor we need. *)
 (* Not bundling heapG, as it may be shared with other users. *)
 Class spawnG Σ := SpawnG { spawn_tokG :> inG Σ (exclR unitC) }.
-Definition spawnΣ : gFunctors := #[GFunctor (constRF (exclR unitC))].
+Definition spawnΣ : gFunctors := #[GFunctor (exclR unitC)].
 
 Instance subG_spawnΣ {Σ} : subG spawnΣ Σ → spawnG Σ.
-Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
+Proof. solve_inG. Qed.
 
 (** Now we come to the Iris part of the proof. *)
 Section proof.

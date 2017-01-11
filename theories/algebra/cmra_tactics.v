@@ -1,6 +1,6 @@
 From iris.algebra Require Export cmra.
 From iris.algebra Require Import cmra_big_op.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (** * Simple solver for validity and inclusion by reflection *)
 Module ra_reflection. Section ra_reflection.
@@ -29,9 +29,9 @@ Module ra_reflection. Section ra_reflection.
     by rewrite fmap_app IH1 IH2 big_op_app.
   Qed.
   Lemma flatten_correct Σ e1 e2 :
-    flatten e1 `contains` flatten e2 → eval Σ e1 ≼ eval Σ e2.
+    flatten e1 ⊆+ flatten e2 → eval Σ e1 ≼ eval Σ e2.
   Proof.
-    by intros He; rewrite !eval_flatten; apply big_op_contains; rewrite ->He.
+    by intros He; rewrite !eval_flatten; apply big_op_submseteq; rewrite ->He.
   Qed.
 
   Class Quote (Σ1 Σ2 : list A) (l : A) (e : expr) := {}.

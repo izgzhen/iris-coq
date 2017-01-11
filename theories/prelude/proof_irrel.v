@@ -2,7 +2,7 @@
 (* This file is distributed under the terms of the BSD license. *)
 (** This file collects facts on proof irrelevant types/propositions. *)
 From iris.prelude Require Export base.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Hint Extern 200 (ProofIrrel _) => progress (lazy beta) : typeclass_instances.
 

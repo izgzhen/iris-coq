@@ -4,7 +4,7 @@
 standard library, but without using the module system. *)
 From Coq Require Export Sorted.
 From iris.prelude Require Export orders list.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Section merge_sort.
   Context {A} (R : relation A) `{∀ x y, Decision (R x y)}.

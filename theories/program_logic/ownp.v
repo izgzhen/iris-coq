@@ -3,7 +3,7 @@ From iris.program_logic Require Import lifting adequacy.
 From iris.program_logic Require ectx_language.
 From iris.algebra Require Import auth.
 From iris.proofmode Require Import tactics classes.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Class ownPG' (Λstate : Type) (Σ : gFunctors) := OwnPG {
   ownP_invG : invG Σ;
@@ -20,7 +20,7 @@ Global Opaque iris_invG.
 
 Definition ownPΣ (Λstate : Type) : gFunctors :=
   #[invΣ;
-    GFunctor (constRF (authUR (optionUR (exclR (leibnizC Λstate)))))].
+    GFunctor (authUR (optionUR (exclR (leibnizC Λstate))))].
 
 Class ownPPreG' (Λstate : Type) (Σ : gFunctors) : Set := IrisPreG {
   ownPPre_invG :> invPreG Σ;
@@ -29,8 +29,7 @@ Class ownPPreG' (Λstate : Type) (Σ : gFunctors) : Set := IrisPreG {
 Notation ownPPreG Λ Σ := (ownPPreG' (state Λ) Σ).
 
 Instance subG_ownPΣ {Λstate Σ} : subG (ownPΣ Λstate) Σ → ownPPreG' Λstate Σ.
-Proof. intros [??%subG_inG]%subG_inv; constructor; apply _. Qed.
-
+Proof. solve_inG. Qed.
 
 (** Ownership *)
 Definition ownP `{ownPG' Λstate Σ} (σ : Λstate) : iProp Σ :=
@@ -158,7 +157,7 @@ End lifting.
 Section ectx_lifting.
   Import ectx_language.
   Context {expr val ectx state} {Λ : EctxLanguage expr val ectx state}.
-  Context `{ownPG (ectx_lang expr) Σ} `{Inhabited state}.
+  Context `{ownPG (ectx_lang expr) Σ} {Hinh : Inhabited state}.
   Implicit Types Φ : val → iProp Σ.
   Implicit Types e : expr.
   Hint Resolve head_prim_reducible head_reducible_prim_step.
@@ -181,7 +180,7 @@ Section ectx_lifting.
     (▷ ∀ e2 efs σ, ⌜head_step e1 σ e2 σ efs⌝ →
       WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
     ⊢ WP e1 @ E {{ Φ }}.
-  Proof.
+  Proof using Hinh.
     iIntros (??) "H". iApply ownP_lift_pure_step; eauto. iNext.
     iIntros (????). iApply "H". eauto.
   Qed.
@@ -220,14 +219,14 @@ Section ectx_lifting.
     (∀ σ1 e2' σ2 efs', head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
     ▷ (WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
     ⊢ WP e1 @ E {{ Φ }}.
-  Proof. eauto using wp_lift_pure_det_step. Qed.
+  Proof using Hinh. eauto using wp_lift_pure_det_step. Qed.
 
   Lemma ownP_lift_pure_det_head_step_no_fork {E Φ} e1 e2 :
     to_val e1 = None →
     (∀ σ1, head_reducible e1 σ1) →
     (∀ σ1 e2' σ2 efs', head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
     ▷ WP e2 @ E {{ Φ }} ⊢ WP e1 @ E {{ Φ }}.
-  Proof.
+  Proof using Hinh.
     intros. rewrite -(wp_lift_pure_det_step e1 e2 []) ?big_sepL_nil ?right_id; eauto.
   Qed.
 End ectx_lifting.

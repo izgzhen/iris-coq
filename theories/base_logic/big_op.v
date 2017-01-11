@@ -1,7 +1,7 @@
 From iris.algebra Require Export list cmra_big_op.
 From iris.base_logic Require Export base_logic.
 From iris.prelude Require Import gmap fin_collections gmultiset functions.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 (* We make use of the bigops on CMRAs, so we first define a (somewhat ad-hoc)
@@ -133,8 +133,8 @@ Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 Lemma big_sep_app Ps Qs : [∗] (Ps ++ Qs) ⊣⊢ [∗] Ps ∗ [∗] Qs.
 Proof. by rewrite big_op_app. Qed.
 
-Lemma big_sep_contains Ps Qs : Qs `contains` Ps → [∗] Ps ⊢ [∗] Qs.
-Proof. intros. apply uPred_included. by apply: big_op_contains. Qed.
+Lemma big_sep_submseteq Ps Qs : Qs ⊆+ Ps → [∗] Ps ⊢ [∗] Qs.
+Proof. intros. apply uPred_included. by apply: big_op_submseteq. Qed.
 Lemma big_sep_elem_of Ps P : P ∈ Ps → [∗] Ps ⊢ P.
 Proof. intros. apply uPred_included. by apply: big_sep_elem_of. Qed.
 Lemma big_sep_elem_of_acc Ps P : P ∈ Ps → [∗] Ps ⊢ P ∗ (P -∗ [∗] Ps).
@@ -220,9 +220,9 @@ Section list.
     (∀ k y, l !! k = Some y → Φ k y ⊣⊢ Ψ k y) →
     ([∗ list] k ↦ y ∈ l, Φ k y) ⊣⊢ ([∗ list] k ↦ y ∈ l, Ψ k y).
   Proof. apply big_opL_proper. Qed.
-  Lemma big_sepL_contains (Φ : A → uPred M) l1 l2 :
-    l1 `contains` l2 → ([∗ list] y ∈ l2, Φ y) ⊢ [∗ list] y ∈ l1, Φ y.
-  Proof. intros ?. apply uPred_included. by apply: big_opL_contains. Qed.
+  Lemma big_sepL_submseteq (Φ : A → uPred M) l1 l2 :
+    l1 ⊆+ l2 → ([∗ list] y ∈ l2, Φ y) ⊢ [∗ list] y ∈ l1, Φ y.
+  Proof. intros ?. apply uPred_included. by apply: big_opL_submseteq. Qed.
 
   Global Instance big_sepL_mono' l :
     Proper (pointwise_relation _ (pointwise_relation _ (⊢)) ==> (⊢))
@@ -353,8 +353,8 @@ Section gmap.
     ([∗ map] k ↦ x ∈ m1, Φ k x) ⊢ [∗ map] k ↦ x ∈ m2, Ψ k x.
   Proof.
     intros Hm HΦ. trans ([∗ map] k↦x ∈ m2, Φ k x)%I.
-    - apply uPred_included. apply: big_op_contains.
-      by apply fmap_contains, map_to_list_contains.
+    - apply uPred_included. apply: big_op_submseteq.
+      by apply fmap_submseteq, map_to_list_submseteq.
     - apply big_opM_forall; apply _ || auto.
   Qed.
   Lemma big_sepM_proper Φ Ψ m :
@@ -517,8 +517,8 @@ Section gset.
     ([∗ set] x ∈ X, Φ x) ⊢ [∗ set] x ∈ Y, Ψ x.
   Proof.
     intros HX HΦ. trans ([∗ set] x ∈ Y, Φ x)%I.
-    - apply uPred_included. apply: big_op_contains.
-      by apply fmap_contains, elements_contains.
+    - apply uPred_included. apply: big_op_submseteq.
+      by apply fmap_submseteq, elements_submseteq.
     - apply big_opS_forall; apply _ || auto.
   Qed.
   Lemma big_sepS_proper Φ Ψ X :
@@ -666,8 +666,8 @@ Section gmultiset.
     ([∗ mset] x ∈ X, Φ x) ⊢ [∗ mset] x ∈ Y, Ψ x.
   Proof.
     intros HX HΦ. trans ([∗ mset] x ∈ Y, Φ x)%I.
-    - apply uPred_included. apply: big_op_contains.
-      by apply fmap_contains, gmultiset_elements_contains.
+    - apply uPred_included. apply: big_op_submseteq.
+      by apply fmap_submseteq, gmultiset_elements_submseteq.
     - apply big_opMS_forall; apply _ || auto.
   Qed.
   Lemma big_sepMS_proper Φ Ψ X :

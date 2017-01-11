@@ -1,7 +1,7 @@
 From iris.prelude Require Import strings.
 From iris.algebra Require Import base.
 From Coq Require Import Ascii.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Local Notation "b1 && b2" := (if b1 then b2 else false) : bool_scope.
 

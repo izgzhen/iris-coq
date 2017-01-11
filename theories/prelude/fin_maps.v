@@ -699,10 +699,10 @@ Proof.
   by rewrite map_to_list_insert, map_to_list_empty by auto using lookup_empty.
 Qed.
 
-Lemma map_to_list_contains {A} (m1 m2 : M A) :
-  m1 ⊆ m2 → map_to_list m1 `contains` map_to_list m2.
+Lemma map_to_list_submseteq {A} (m1 m2 : M A) :
+  m1 ⊆ m2 → map_to_list m1 ⊆+ map_to_list m2.
 Proof.
-  intros; apply NoDup_contains; auto using NoDup_map_to_list.
+  intros; apply NoDup_submseteq; auto using NoDup_map_to_list.
   intros [i x]. rewrite !elem_of_map_to_list; eauto using lookup_weaken.
 Qed.
 Lemma map_to_list_fmap {A B} (f : A → B) m :

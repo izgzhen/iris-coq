@@ -1,7 +1,7 @@
 From iris.base_logic Require Export own.
 From iris.algebra Require Import agree.
 From iris.prelude Require Import gmap.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 Class savedPropG (Σ : gFunctors) (F : cFunctor) :=
@@ -10,7 +10,7 @@ Definition savedPropΣ (F : cFunctor) : gFunctors :=
   #[ GFunctor (agreeRF (▶ F)) ].
 
 Instance subG_savedPropΣ  {Σ F} : subG (savedPropΣ F) Σ → savedPropG Σ F.
-Proof. apply subG_inG. Qed.
+Proof. solve_inG. Qed.
 
 Definition saved_prop_own `{savedPropG Σ F}
     (γ : gname) (x : F (iProp Σ)) : iProp Σ :=

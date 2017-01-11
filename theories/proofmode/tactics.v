@@ -5,7 +5,7 @@ From iris.proofmode Require Export classes notation.
 From iris.proofmode Require Import class_instances.
 From iris.prelude Require Import stringmap hlist.
 From iris.proofmode Require Import strings.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Declare Reduction env_cbv := cbv [
   beq ascii_beq string_beq

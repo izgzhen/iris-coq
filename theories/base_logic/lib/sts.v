@@ -1,7 +1,7 @@
 From iris.base_logic.lib Require Export invariants.
 From iris.algebra Require Export sts.
 From iris.proofmode Require Import tactics.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 (** The CMRA we need. *)
@@ -9,11 +9,11 @@ Class stsG Σ (sts : stsT) := StsG {
   sts_inG :> inG Σ (stsR sts);
   sts_inhabited :> Inhabited (sts.state sts);
 }.
-Definition stsΣ (sts : stsT) : gFunctors := #[ GFunctor (constRF (stsR sts)) ].
 
+Definition stsΣ (sts : stsT) : gFunctors := #[ GFunctor (stsR sts) ].
 Instance subG_stsΣ Σ sts :
   subG (stsΣ sts) Σ → Inhabited (sts.state sts) → stsG Σ sts.
-Proof. intros ?%subG_inG ?. by split. Qed.
+Proof. solve_inG. Qed.
 
 Section definitions.
   Context `{stsG Σ sts} (γ : gname).

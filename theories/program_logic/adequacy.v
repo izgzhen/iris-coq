@@ -3,14 +3,14 @@ From iris.algebra Require Import gmap auth agree gset coPset.
 From iris.base_logic Require Import big_op soundness.
 From iris.base_logic.lib Require Import wsat.
 From iris.proofmode Require Import tactics.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 (* Global functor setup *)
 Definition invΣ : gFunctors :=
   #[GFunctor (authRF (gmapURF positive (agreeRF (laterCF idCF))));
-    GFunctor (constRF coPset_disjUR);
-    GFunctor (constRF (gset_disjUR positive))].
+    GFunctor coPset_disjUR;
+    GFunctor (gset_disjUR positive)].
 
 Class invPreG (Σ : gFunctors) : Set := WsatPreG {
   inv_inPreG :> inG Σ (authR (gmapUR positive (agreeR (laterC (iPreProp Σ)))));
@@ -19,9 +19,7 @@ Class invPreG (Σ : gFunctors) : Set := WsatPreG {
 }.
 
 Instance subG_invΣ {Σ} : subG invΣ Σ → invPreG Σ.
-Proof.
-  intros [?%subG_inG [?%subG_inG ?%subG_inG]%subG_inv]%subG_inv; by constructor.
-Qed.
+Proof. solve_inG. Qed.
 
 (* Allocation *)
 Lemma wsat_alloc `{invPreG Σ} : (|==> ∃ _ : invG Σ, wsat ∗ ownE ⊤)%I.

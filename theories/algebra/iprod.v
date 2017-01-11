@@ -1,7 +1,7 @@
 From iris.algebra Require Export cmra.
 From iris.base_logic Require Import base_logic.
 From iris.prelude Require Import finite.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (** * Indexed product *)
 (** Need to put this in a definition to make canonical structures to work. *)

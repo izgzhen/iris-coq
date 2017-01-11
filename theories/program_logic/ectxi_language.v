@@ -2,7 +2,7 @@
     a proof that these are instances of general ectx-based languages. *)
 From iris.algebra Require Export base.
 From iris.program_logic Require Import language ectx_language.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (* We need to make thos arguments indices that we want canonical structure
    inference to use a keys. *)

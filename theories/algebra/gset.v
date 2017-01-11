@@ -1,7 +1,7 @@
 From iris.algebra Require Export cmra.
 From iris.algebra Require Import updates local_updates.
 From iris.prelude Require Export collections gmap mapset.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 (* The union CMRA *)
 Section gset.
@@ -155,6 +155,7 @@ Section gset_disj.
   Proof. eauto using gset_disj_alloc_empty_updateP_strong. Qed.
 
   Section fresh_updates.
+    Set Default Proof Using "Type*".
     Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
 
     Lemma gset_disj_alloc_updateP (Q : gset_disj K → Prop) X :

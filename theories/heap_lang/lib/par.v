@@ -1,6 +1,6 @@
 From iris.heap_lang Require Export spawn.
 From iris.heap_lang Require Import proofmode notation.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 Import uPred.
 
 Definition parN : namespace := nroot .@ "par".
@@ -14,6 +14,7 @@ Definition par : val :=
 Notation "e1 ||| e2" := (par (Pair (λ: <>, e1) (λ: <>, e2)))%E : expr_scope.
 
 Section proof.
+Set Default Proof Using "Type*".
 Context `{!heapG Σ, !spawnG Σ}.
 
 (* Notice that this allows us to strip a later *after* the two Ψ have been

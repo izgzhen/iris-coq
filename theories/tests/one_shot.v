@@ -3,7 +3,7 @@ From iris.heap_lang Require Export lang.
 From iris.algebra Require Import excl agree csum.
 From iris.heap_lang Require Import assert proofmode notation.
 From iris.proofmode Require Import tactics.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Definition one_shot_example : val := λ: <>,
   let: "x" := ref NONE in (
@@ -25,11 +25,12 @@ Definition Pending : one_shotR := (Cinl (Excl ()) : one_shotR).
 Definition Shot (n : Z) : one_shotR := (Cinr (to_agree n) : one_shotR).
 
 Class one_shotG Σ := { one_shot_inG :> inG Σ one_shotR }.
-Definition one_shotΣ : gFunctors := #[GFunctor (constRF one_shotR)].
+Definition one_shotΣ : gFunctors := #[GFunctor one_shotR].
 Instance subG_one_shotΣ {Σ} : subG one_shotΣ Σ → one_shotG Σ.
-Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
+Proof. solve_inG. Qed.
 
 Section proof.
+Set Default Proof Using "Type*".
 Context `{!heapG Σ, !one_shotG Σ}.
 
 Definition one_shot_inv (γ : gname) (l : loc) : iProp Σ :=

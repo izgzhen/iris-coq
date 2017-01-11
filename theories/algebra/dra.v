@@ -1,5 +1,5 @@
 From iris.algebra Require Export cmra updates.
-Set Default Proof Using "Type*".
+Set Default Proof Using "Type".
 
 Record DRAMixin A `{Equiv A, Core A, Disjoint A, Op A, Valid A} := {
   (* setoids *)
