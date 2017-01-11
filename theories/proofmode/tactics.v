@@ -1270,19 +1270,12 @@ Hint Extern 0 (of_envs _ ⊢ _) => iAssumption.
 Hint Extern 0 (of_envs _ ⊢ _) => progress iIntros.
 Hint Resolve uPred.internal_eq_refl'. (* Maybe make an [iReflexivity] tactic *)
 
-(* We should be able to write [Hint Extern 1 (of_envs _ ⊢ (_ ∗ _)%I) => ...],
-but then [eauto] mysteriously fails. See bug 4762 *)
-Hint Extern 1 (of_envs _ ⊢ _) =>
-  match goal with
-  | |- _ ⊢ _ ∧ _ => iSplit
-  | |- _ ⊢ _ ∗ _ => iSplit
-  | |- _ ⊢ ▷ _ => iNext
-  | |- _ ⊢ □ _ => iClear "*"; iAlways
-  | |- _ ⊢ ∃ _, _ => iExists _
-  | |- _ ⊢ |==> _ => iModIntro
-  | |- _ ⊢ ◇ _ => iModIntro
-  end.
-Hint Extern 1 (of_envs _ ⊢ _) =>
-  match goal with |- _ ⊢ (_ ∨ _)%I => iLeft end.
-Hint Extern 1 (of_envs _ ⊢ _) =>
-  match goal with |- _ ⊢ (_ ∨ _)%I => iRight end.
+Hint Extern 1 (of_envs _ ⊢ _ ∧ _) => iSplit.
+Hint Extern 1 (of_envs _ ⊢ _ ∗ _) => iSplit.
+Hint Extern 1 (of_envs _ ⊢ ▷ _) => iNext.
+Hint Extern 1 (of_envs _ ⊢ □ _) => iClear "*"; iAlways.
+Hint Extern 1 (of_envs _ ⊢ ∃ _, _) => iExists _.
+Hint Extern 1 (of_envs _ ⊢ |==> _) => iModIntro.
+Hint Extern 1 (of_envs _ ⊢ ◇ _) => iModIntro.
+Hint Extern 1 (of_envs _ ⊢ _ ∨ _) => iLeft.
+Hint Extern 1 (of_envs _ ⊢ _ ∨ _) => iRight.
