@@ -260,7 +260,7 @@ Ltac reshape_val e tac :=
     let v1 := go e1 in let v2 := go e2 in constr:(PairV v1 v2)
   | InjL ?e => let v := go e in constr:(InjLV v)
   | InjR ?e => let v := go e in constr:(InjRV v)
-  end in let v := go e in first [tac v | fail 2].
+  end in let v := go e in tac v.
 
 Ltac reshape_expr e tac :=
   let rec go K e :=
