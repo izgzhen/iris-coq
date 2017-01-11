@@ -85,10 +85,10 @@ End mono_proof.
 Class ccounterG Σ :=
   CCounterG { ccounter_inG :> inG Σ (authR (optionUR (prodR fracR natR))) }.
 Definition ccounterΣ : gFunctors :=
-  #[GFunctor (constRF (authR (optionUR (prodR fracR natR))))].
+  #[GFunctor (authR (optionUR (prodR fracR natR)))].
 
 Instance subG_ccounterΣ {Σ} : subG ccounterΣ Σ → ccounterG Σ.
-Proof. intros [?%subG_inG _]%subG_inv. split; apply _. Qed.
+Proof. solve_inG. Qed.
 
 Section contrib_spec.
   Context `{!heapG Σ, !ccounterG Σ} (N : namespace).
