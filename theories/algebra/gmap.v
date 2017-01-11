@@ -146,8 +146,7 @@ Proof.
   - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
   - intros n m. induction m as [|i x m Hi IH] using map_ind=> m1 m2 Hmv Hm.
-    { exists ∅. exists ∅. (* FIXME: exists ∅, ∅. results in a TC loop in Coq 8.6 *)
-      split_and!=> -i; symmetry; symmetry in Hm; move: Hm=> /(_ i);
+    { exists ∅, ∅. split_and!=> -i; symmetry; symmetry in Hm; move: Hm=> /(_ i);
         rewrite !lookup_op !lookup_empty ?dist_None op_None; intuition. }
     destruct (IH (delete i m1) (delete i m2)) as (m1'&m2'&Hm'&Hm1'&Hm2').
     { intros j; move: Hmv=> /(_ j). destruct (decide (i = j)) as [->|].
