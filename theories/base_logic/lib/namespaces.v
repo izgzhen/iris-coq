@@ -11,14 +11,14 @@ Definition nroot : namespace := nil.
 
 Definition ndot_def `{Countable A} (N : namespace) (x : A) : namespace :=
   encode x :: N.
-Definition ndot_aux : { x | x = @ndot_def }. by eexists. Qed.
-Definition ndot {A A_dec A_count}:= proj1_sig ndot_aux A A_dec A_count.
-Definition ndot_eq : @ndot = @ndot_def := proj2_sig ndot_aux.
+Definition ndot_aux : seal (@ndot_def). by eexists. Qed.
+Definition ndot {A A_dec A_count}:= unseal ndot_aux A A_dec A_count.
+Definition ndot_eq : @ndot = @ndot_def := seal_eq ndot_aux.
 
 Definition nclose_def (N : namespace) : coPset := coPset_suffixes (encode N).
-Definition nclose_aux : { x | x = @nclose_def }. by eexists. Qed.
-Instance nclose : UpClose namespace coPset := proj1_sig nclose_aux.
-Definition nclose_eq : @nclose = @nclose_def := proj2_sig nclose_aux.
+Definition nclose_aux : seal (@nclose_def). by eexists. Qed.
+Instance nclose : UpClose namespace coPset := unseal nclose_aux.
+Definition nclose_eq : @nclose = @nclose_def := seal_eq nclose_aux.
 
 Notation "N .@ x" := (ndot N x)
   (at level 19, left associativity, format "N .@ x") : C_scope.

@@ -14,6 +14,13 @@ Export ListNotations.
 From Coq.Program Require Export Basics Syntax.
 Obligation Tactic := idtac.
 
+(** Sealing off definitions *)
+Set Primitive Projections.
+Record seal {A} (f : A) := { unseal : A; seal_eq : unseal = f }.
+Arguments unseal {_ _} _.
+Arguments seal_eq {_ _} _.
+Unset Primitive Projections.
+
 (** Throughout this development we use [C_scope] for all general purpose
 notations that do not belong to a more specific scope. *)
 Delimit Scope C_scope with C.

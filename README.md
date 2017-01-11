@@ -6,13 +6,16 @@ This is the Coq development of the [Iris Project](http://iris-project.org).
 
 This version is known to compile with:
 
- - Coq 8.5pl3 / 8.6
+ - Coq 8.6
  - Ssreflect 1.6.1
 
 The easiest way to install the correct versions of the dependencies is through
 opam.  Once you got opam set up, just run `make build-dep` to install the right
 versions of the dependencies.  When the dependencies change, just run `make
 build-dep` again.
+
+If you need to work with Coq 8.5, please check out the
+[iris-3.0 branch](https://gitlab.mpi-sws.org/FP/iris-coq/tree/iris-3.0).
 
 ## Building Instructions
 

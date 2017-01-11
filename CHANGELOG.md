@@ -3,7 +3,7 @@ way the logic is used on paper.  We also mention some significant changes in the
 Coq development, but not every API-breaking change is listed.  Changes marked
 `[#]` still need to be ported to the Iris Documentation LaTeX file(s).
 
-## Iris 3.0 (unfinished)
+## Iris 3.0.0 (released 2017-01-11)
 
 * There now is a deprecation process.  The modules `*.deprecated` contain
   deprecated notations and definitions that are provided for backwards
@@ -23,6 +23,10 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 * Renaming and moving things around: uPred and the rest of the base logic are in
   `base_logic`, while `program_logic` is for everything involving the general
   Iris notion of a language.
+* Renaming in prelude.list: Rename `prefix_of` -> `prefix` and `suffix_of` ->
+  `suffix` in lemma names, but keep notation ``l1 `prefix_of` l2`` and ``l1
+  `suffix_of` l2``.  `` l1 `sublist` l2`` becomes ``l1 `sublist_of` l2``. Rename
+  `contains` -> `submseteq` and change `` l1 `contains` l2`` to ``l1 ⊆+ l2``.
 * Slightly weaker notion of atomicity: an expression is atomic if it reduces in
   one step to something that does not reduce further.
 * Changed notation for embedding Coq assertions into Iris.  The new notation is
