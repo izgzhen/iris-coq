@@ -252,7 +252,7 @@ evaluation context [K] and a subexpression [e']. It calls the tactic [tac K e']
 for each possible decomposition until [tac] succeeds. *)
 Ltac reshape_val e tac :=
   let rec go e :=
-  match e with
+  lazymatch e with
   | of_val ?v => v
   | Rec ?f ?x ?e => constr:(RecV f x e)
   | Lit ?l => constr:(LitV l)
