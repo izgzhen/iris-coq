@@ -31,9 +31,9 @@ Qed.
 
 Definition wp_def `{irisG Λ Σ} :
   coPset → expr Λ → (val Λ → iProp Σ) → iProp Σ := fixpoint wp_pre.
-Definition wp_aux : { x | x = @wp_def }. by eexists. Qed.
-Definition wp := proj1_sig wp_aux.
-Definition wp_eq : @wp = @wp_def := proj2_sig wp_aux.
+Definition wp_aux : seal (@wp_def). by eexists. Qed.
+Definition wp := unseal wp_aux.
+Definition wp_eq : @wp = @wp_def := seal_eq wp_aux.
 
 Arguments wp {_ _ _} _ _%E _.
 Instance: Params (@wp) 5.

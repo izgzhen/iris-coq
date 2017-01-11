@@ -34,9 +34,9 @@ Section definitions.
 
   Definition mapsto_def (l : L) (q : Qp) (v: V) : iProp Σ :=
     own gen_heap_name (◯ {[ l := (q, to_agree (v : leibnizC V)) ]}).
-  Definition mapsto_aux : { x | x = @mapsto_def }. by eexists. Qed.
-  Definition mapsto := proj1_sig mapsto_aux.
-  Definition mapsto_eq : @mapsto = @mapsto_def := proj2_sig mapsto_aux.
+  Definition mapsto_aux : seal (@mapsto_def). by eexists. Qed.
+  Definition mapsto := unseal mapsto_aux.
+  Definition mapsto_eq : @mapsto = @mapsto_def := seal_eq mapsto_aux.
 End definitions.
 
 Local Notation "l ↦{ q } v" := (mapsto l q v)

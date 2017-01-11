@@ -54,9 +54,9 @@ Instance: Params (@iRes_singleton) 4.
 
 Definition own_def `{inG Σ A} (γ : gname) (a : A) : iProp Σ :=
   uPred_ownM (iRes_singleton γ a).
-Definition own_aux : { x | x = @own_def }. by eexists. Qed.
-Definition own {Σ A i} := proj1_sig own_aux Σ A i.
-Definition own_eq : @own = @own_def := proj2_sig own_aux.
+Definition own_aux : seal (@own_def). by eexists. Qed.
+Definition own {Σ A i} := unseal own_aux Σ A i.
+Definition own_eq : @own = @own_def := seal_eq own_aux.
 Instance: Params (@own) 4.
 Typeclasses Opaque own.
 
@@ -104,7 +104,7 @@ Proof. apply wand_intro_r. by rewrite -own_op own_valid. Qed.
 Lemma own_valid_3 γ a1 a2 a3 : own γ a1 -∗ own γ a2 -∗ own γ a3 -∗ ✓ (a1 ⋅ a2 ⋅ a3).
 Proof. do 2 apply wand_intro_r. by rewrite -!own_op own_valid. Qed.
 Lemma own_valid_r γ a : own γ a ⊢ own γ a ∗ ✓ a.
-Proof. apply (uPred.always_entails_r _ _). apply own_valid. Qed.
+Proof. apply: uPred.always_entails_r. apply own_valid. Qed.
 Lemma own_valid_l γ a : own γ a ⊢ ✓ a ∗ own γ a.
 Proof. by rewrite comm -own_valid_r. Qed.
 

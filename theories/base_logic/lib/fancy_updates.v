@@ -11,9 +11,9 @@ Import uPred.
 Program Definition fupd_def `{invG Σ}
     (E1 E2 : coPset) (P : iProp Σ) : iProp Σ :=
   (wsat ∗ ownE E1 ==∗ ◇ (wsat ∗ ownE E2 ∗ P))%I.
-Definition fupd_aux : { x | x = @fupd_def }. by eexists. Qed.
-Definition fupd := proj1_sig fupd_aux.
-Definition fupd_eq : @fupd = @fupd_def := proj2_sig fupd_aux.
+Definition fupd_aux : seal (@fupd_def). by eexists. Qed.
+Definition fupd := unseal fupd_aux.
+Definition fupd_eq : @fupd = @fupd_def := seal_eq fupd_aux.
 Arguments fupd {_ _} _ _ _%I.
 Instance: Params (@fupd) 4.
 
