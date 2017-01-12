@@ -72,12 +72,11 @@ Lemma wp_step e1 σ1 e2 σ2 efs Φ :
   prim_step e1 σ1 e2 σ2 efs →
   world σ1 ∗ WP e1 {{ Φ }} ==∗ ▷ |==> ◇ (world σ2 ∗ WP e2 {{ Φ }} ∗ wptp efs).
 Proof.
-  rewrite {1}wp_unfold /wp_pre. iIntros (Hstep) "[(Hw & HE & Hσ) [H|[_ H]]]".
-  { iDestruct "H" as (v) "[% _]". apply val_stuck in Hstep; simplify_eq. }
-  rewrite fupd_eq /fupd_def.
+  rewrite {1}wp_unfold /wp_pre. iIntros (?) "[(Hw & HE & Hσ) H]".
+  rewrite (val_stuck e1 σ1 e2 σ2 efs) // fupd_eq /fupd_def.
   iMod ("H" $! σ1 with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
   iModIntro; iNext.
-  by iMod ("H" $! e2 σ2 efs with "[%] [$Hw $HE]") as ">($ & $ & $ & $)".
+  iMod ("H" $! e2 σ2 efs with "[%] [$Hw $HE]") as ">($ & $ & $ & $)"; auto.
 Qed.
 
 Lemma wptp_step e1 t1 t2 σ1 σ2 Φ :
@@ -133,8 +132,8 @@ Qed.
 Lemma wp_safe e σ Φ :
   world σ ∗ WP e {{ Φ }} ==∗ ▷ ⌜is_Some (to_val e) ∨ reducible e σ⌝.
 Proof.
-  rewrite wp_unfold /wp_pre. iIntros "[(Hw&HE&Hσ) [H|[_ H]]]".
-  { iDestruct "H" as (v) "[% _]"; eauto 10. }
+  rewrite wp_unfold /wp_pre. iIntros "[(Hw&HE&Hσ) H]".
+  destruct (to_val e) as [v|] eqn:?; [eauto 10|].
   rewrite fupd_eq. iMod ("H" with "* Hσ [-]") as ">(?&?&%&?)"; first by iFrame.
   eauto 10.
 Qed.
