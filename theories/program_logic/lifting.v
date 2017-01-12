@@ -18,7 +18,7 @@ Lemma wp_lift_step E Φ e1 :
     ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ={∅,E}=∗
       state_interp σ2 ∗ WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
-Proof. iIntros (?) "H". rewrite wp_unfold /wp_pre; auto. Qed.
+Proof. by rewrite wp_unfold /wp_pre=> ->. Qed.
 
 (** Derived lifting lemmas. *)
 Lemma wp_lift_pure_step `{Inhabited (state Λ)} E Φ e1 :
