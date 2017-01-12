@@ -360,7 +360,7 @@ To express the adequacy statement for functional correctness, we assume that the
 The signature can of course state arbitrary additional properties of $\pred$, as long as they are proven sound.
 The adequacy statement now reads as follows:
 \begin{align*}
- &\All \mask, \expr, \val, \pred, \state.
+ &\All \mask, \expr, \val, \state.
  \\&( \TRUE \proves {\upd}_\mask \Exists S. S(\state) * \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
  \\&\expr, \state \vDash V
 \end{align*}
