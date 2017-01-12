@@ -352,7 +352,9 @@ Second, a proof of a weakest precondition with any postcondition should imply th
 \end{enumerate}
 \end{defn}
 
-To express the adequacy statement for functional correctness, we assume that the signature $\Sig$ adds a predicate $\pred$ to the logic which reflects the set $V$ of legal return values into the logic:
+To express the adequacy statement for functional correctness, we assume that the signature $\Sig$ adds a predicate $\pred$ to the logic:
+\[ \pred : \Val \to \Prop \in \SigFn \]
+Furthermore, we assume that the \emph{interpretation} $\Sem\pred$ of $\pred$ reflects some set $V$ of legal return values into the logic (also see \Sref{sec:model}):
 \[\begin{array}{rMcMl}
   \Sem\pred &:& \Sem{\Val\,} \nfn \Sem\Prop \\
   \Sem\pred &\eqdef& \Lam \val. \Lam \any. \setComp{n}{v \in V}
