@@ -14,7 +14,6 @@ test -d "$OPAMROOT/repo/coq-extra-dev" || opam repo add coq-extra-dev https://co
 test -d "$OPAMROOT/repo/coq-core-dev" || opam repo add coq-core-dev https://coq.inria.fr/opam/core-dev -p 5
 test -d "$OPAMROOT/repo/coq-released" || opam repo add coq-released https://coq.inria.fr/opam/released -p 10
 opam update
-opam install ocamlfind -y # Remove this once the Coq crew fixed their package...
 
 # Install fixed versions of some dependencies
 echo
