@@ -18,7 +18,7 @@ iris-coq8.5.3:
   only:
   - master
   - ci
-  - timing
+  - iris-3.0
   artifacts:
     paths:
     - build-time.txt
@@ -38,4 +38,4 @@ iris-coq8.6:
   only:
   - master
   - ci
-  - timing
+  - iris-3.0
