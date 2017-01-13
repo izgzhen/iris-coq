@@ -17,10 +17,16 @@ opam update
 
 # Install fixed versions of some dependencies
 echo
-for PIN in "${@}"
-do
-    echo "Applying pin: $PIN"
-    opam pin add $PIN -k version -y
+while (( "$#" )); do # while there are arguments left
+    PACKAGE="$1" ; shift
+    VERSION="$1" ; shift
+    # Check if the pin is already set
+    if opam pin list | fgrep "$PACKAGE.$VERSION " > /dev/null; then
+        echo "[opam-ci] $PACKAGE already pinned to $VERSION"
+    else
+        echo "[opam-ci] Pinning $PACKAGE to $VERSION"
+        opam pin add "$PACKAGE" "$VERSION" -k version -y
+    fi
 done
 
 # Install build-dependencies

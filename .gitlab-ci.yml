@@ -5,7 +5,7 @@ iris-coq8.6:
   - coq
   script:
   # prepare
-  - . build/opam-ci.sh 'coq 8.6' 'coq-mathcomp-ssreflect 1.6.1'
+  - . build/opam-ci.sh coq 8.6 coq-mathcomp-ssreflect 1.6.1
   # build
   - 'time make -j8'
   cache:

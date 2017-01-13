@@ -11,7 +11,11 @@ while read PACKAGE URL HASH; do
         # an MPI URL -- try doing recursive pin processing
         curl -f "$URL/raw/$HASH" 2> /dev/null | "$0"
     fi
-    echo "[opam-pins] Applying pin: $PACKAGE -> $URL#$HASH"
-    opam pin add "$PACKAGE.dev.$HASH" "$URL#$HASH" -k git -y -n
+    if opam pin list | fgrep "$PACKAGE.dev.$HASH " > /dev/null; then
+        echo "[opam-pins] $PACKAGE already at commit $HASH"
+    else
+        echo "[opam-pins] Applying pin: $PACKAGE -> $URL#$HASH"
+        opam pin add "$PACKAGE.dev.$HASH" "$URL#$HASH" -k git -y -n
+    fi
     echo
 done
