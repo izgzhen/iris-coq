@@ -1322,3 +1322,5 @@ Hint Extern 1 (of_envs _ ⊢ |==> _) => iModIntro.
 Hint Extern 1 (of_envs _ ⊢ ◇ _) => iModIntro.
 Hint Extern 1 (of_envs _ ⊢ _ ∨ _) => iLeft.
 Hint Extern 1 (of_envs _ ⊢ _ ∨ _) => iRight.
+
+Hint Extern 2 (coq_tactics.of_envs _ ⊢ _ ∗ _) => progress iFrame : iFrame.
