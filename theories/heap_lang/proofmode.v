@@ -222,7 +222,7 @@ Tactic Notation "wp_apply" open_constr(lem) :=
   iStartProof;
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    wp_bind_core K; iApply lem; try iNext)
+    wp_bind_core K; iApply lem; try iNext; simpl)
   | _ => fail "wp_apply: not a 'wp'"
   end.
 
