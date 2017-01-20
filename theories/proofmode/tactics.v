@@ -430,7 +430,8 @@ Tactic Notation "iApply" open_constr(lem) :=
     [iExact H
     |eapply tac_apply with _ H _ _ _;
       [env_cbv; reflexivity
-      |apply _
+      |let P := match goal with |- IntoWand ?P _ _ => P end in
+       apply _ || fail 1 "iApply: cannot apply" P
       |lazy beta (* reduce betas created by instantiation *)]]).
 
 (** * Revert *)
