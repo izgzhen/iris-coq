@@ -50,13 +50,13 @@ Proof.
   iApply (Hwp (OwnPG _ _ _ _ γσ)). by rewrite /ownP.
 Qed.
 
-Theorem ownP_invariance Σ `{ownPPreG Λ Σ} e σ1 t2 σ2 φ Φ :
+Theorem ownP_invariance Σ `{ownPPreG Λ Σ} e σ1 t2 σ2 φ :
   (∀ `{ownPG Λ Σ},
-    ownP σ1 ={⊤}=∗ WP e {{ Φ }} ∗ |={⊤,∅}=> ∃ σ', ownP σ' ∧ ⌜φ σ'⌝) →
+    ownP σ1 ={⊤}=∗ WP e {{ _, True }} ∗ |={⊤,∅}=> ∃ σ', ownP σ' ∧ ⌜φ σ'⌝) →
   rtc step ([e], σ1) (t2, σ2) →
   φ σ2.
 Proof.
-  intros Hwp Hsteps. eapply (wp_invariance Σ Λ e σ1 t2 σ2 _ Φ)=> //.
+  intros Hwp Hsteps. eapply (wp_invariance Σ Λ e σ1 t2 σ2 _)=> //.
   iIntros (?) "". iMod (own_alloc (● (Excl' (σ1 : leibnizC _)) ⋅ ◯ (Excl' σ1)))
     as (γσ) "[Hσ Hσf]"; first done.
   iExists (λ σ, own γσ (● (Excl' (σ:leibnizC _)))). iFrame "Hσ".

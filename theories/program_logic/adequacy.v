@@ -187,11 +187,11 @@ Proof.
     iFrame. by iApply big_sepL_nil.
 Qed.
 
-Theorem wp_invariance Σ Λ `{invPreG Σ} e σ1 t2 σ2 φ Φ :
+Theorem wp_invariance Σ Λ `{invPreG Σ} e σ1 t2 σ2 φ :
   (∀ `{Hinv : invG Σ},
      True ={⊤}=∗ ∃ stateI : state Λ → iProp Σ,
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
-       stateI σ1 ∗ WP e {{ Φ }} ∗ (stateI σ2 ={⊤,∅}=∗ ⌜φ⌝)) →
+       stateI σ1 ∗ WP e {{ _, True }} ∗ (stateI σ2 ={⊤,∅}=∗ ⌜φ⌝)) →
   rtc step ([e], σ1) (t2, σ2) →
   φ.
 Proof.
