@@ -426,13 +426,14 @@ Tactic Notation "iApply" open_constr(lem) :=
     | ITrm ?t ?xs ?pat => constr:(ITrm t xs ("*" +:+ pat))
     | _ => constr:(ITrm lem hnil "*")
     end in
-  iPoseProofCore lem as false true (fun H => first
-    [iExact H
-    |eapply tac_apply with _ H _ _ _;
+  let rec go H := first
+    [eapply tac_apply with _ H _ _ _;
       [env_cbv; reflexivity
-      |let P := match goal with |- IntoWand ?P _ _ => P end in
-       apply _ || fail 1 "iApply: cannot apply" P
-      |lazy beta (* reduce betas created by instantiation *)]]).
+      |apply _
+      |lazy beta (* reduce betas created by instantiation *)]
+    |iSpecializePat H "[-]"; last go H] in
+  iPoseProofCore lem as false true (fun H =>
+    first [iExact H|go H|iTypeOf H (fun Q => fail 1 "iApply: cannot apply" Q)]).
 
 (** * Revert *)
 Local Tactic Notation "iForallRevert" ident(x) :=
@@ -642,7 +643,7 @@ Tactic Notation "iNext":= iNext _.
 Tactic Notation "iModIntro" :=
   iStartProof;
   eapply tac_modal_intro;
-    [let P := match goal with |- IntoModal _ ?P => P end in
+    [let P := match goal with |- FromModal ?P _ => P end in
      apply _ || fail "iModIntro:" P "not a modality"|].
 
 Tactic Notation "iModCore" constr(H) :=

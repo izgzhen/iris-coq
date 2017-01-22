@@ -12,10 +12,10 @@ Section ofe.
   Definition vec_ofe_mixin m : OfeMixin (vec A m).
   Proof.
     split.
-    - intros x y. apply (equiv_dist (A:=listC A)).
+    - intros v w. apply (equiv_dist (A:=listC A)).
     - unfold dist, vec_dist. split.
         by intros ?. by intros ??. by intros ?????; etrans.
-    - intros. by apply (dist_S (A:=listC A)).
+    - intros n v w. by apply (dist_S (A:=listC A)).
   Qed.
   Canonical Structure vecC m : ofeT := OfeT (vec A m) (vec_ofe_mixin m).
 
@@ -48,22 +48,21 @@ Section proper.
     Proper (dist n ==> eq ==> dist n) (@Vector.nth A m).
   Proof.
     intros v. induction v as [|x m v IH]; intros v'; inv_vec v'.
-    - intros _ x. inversion x.
-    - intros x' v' EQ i ? <-. inversion_clear EQ. inv_fin i; first done.
-      intros i. by apply IH.
+    - intros _ x. inv_fin x.
+    - intros x' v' EQ i ? <-. inversion_clear EQ. inv_fin i=> // i. by apply IH.
   Qed.
   Global Instance vlookup_proper m :
     Proper (equiv ==> eq ==> equiv) (@Vector.nth A m).
   Proof.
-    intros ??????. apply equiv_dist=>?. subst. f_equiv. by apply equiv_dist.
+    intros v v' ? x x' ->. apply equiv_dist=> n. f_equiv. by apply equiv_dist.
   Qed.
 
   Global Instance vec_to_list_ne n m :
     Proper (dist n ==> dist n) (@vec_to_list A m).
-  Proof. intros ?? H. apply H. Qed.
+  Proof. by intros v v'. Qed.
   Global Instance vec_to_list_proper m :
     Proper (equiv ==> equiv) (@vec_to_list A m).
-  Proof. intros ?? H. apply H. Qed.
+  Proof. by intros v v'. Qed.
 End proper.
 
 Section cofe.
@@ -95,7 +94,7 @@ Instance vec_map_ne {A B : ofeT} m f n :
   Proper (dist n ==> dist n) f →
   Proper (dist n ==> dist n) (@vec_map A B m f).
 Proof.
-  intros ??? H. eapply list_fmap_ne in H; last done.
+  intros ? v v' H. eapply list_fmap_ne in H; last done.
   by rewrite -!vec_to_list_map in H.
 Qed.
 Definition vecC_map {A B : ofeT} m (f : A -n> B) : vecC A m -n> vecC B m :=

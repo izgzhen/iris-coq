@@ -8,7 +8,7 @@ Import uPred.
     in the shallow embedding. *)
 
 Definition coreP {M : ucmraT} (P : uPred M) : uPred M :=
-  (∀ `(!PersistentP Q, P ⊢ Q), Q)%I.
+  (∀ `(!PersistentP Q), ⌜P ⊢ Q⌝ → Q)%I.
 Instance: Params (@coreP) 1.
 Typeclasses Opaque coreP.
 
@@ -25,7 +25,7 @@ Section core.
   Global Instance coreP_mono : Proper ((⊢) ==> (⊢)) (@coreP M).
   Proof.
     rewrite /coreP. iIntros (P P' ?) "H"; iIntros (Q ??).
-    unshelve iApply ("H" $! Q). by etrans.
+    iApply ("H" $! Q with "[%]"). by etrans.
   Qed.
 
   Global Instance coreP_proper : Proper ((⊣⊢) ==> (⊣⊢)) (@coreP M).

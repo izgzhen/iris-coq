@@ -116,3 +116,7 @@ Proof.
   iAssert True%I with "[HP]" as %_. { Fail iClear "HQ". by iClear "HP". }
   done.
 Qed.
+
+Lemma demo_11 (M : ucmraT) (P Q R : uPred M) :
+  (P -∗ Q -∗ True -∗ True -∗ R) -∗ P -∗ Q -∗ R.
+Proof. iIntros "H HP HQ". by iApply ("H" with "[HP]"). Qed.

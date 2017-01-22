@@ -115,10 +115,12 @@ Notation "'[∗' 'mset' ] x ∈ X , P" := (big_opMS (M:=uPredUR _) X (λ x, P))
 Class PersistentL {M} (Ps : list (uPred M)) :=
   persistentL : Forall PersistentP Ps.
 Arguments persistentL {_} _ {_}.
+Hint Mode PersistentL + ! : typeclass_instances.
 
 Class TimelessL {M} (Ps : list (uPred M)) :=
   timelessL : Forall TimelessP Ps.
 Arguments timelessL {_} _ {_}.
+Hint Mode TimelessP + ! : typeclass_instances.
 
 (** * Properties *)
 Section big_op.

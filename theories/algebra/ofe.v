@@ -72,8 +72,10 @@ Hint Extern 1 (_ ≡{_}≡ _) => apply equiv_dist; assumption.
 (** Discrete OFEs and Timeless elements *)
 (* TODO: On paper, We called these "discrete elements". I think that makes
    more sense. *)
-Class Timeless `{Equiv A, Dist A} (x : A) := timeless y : x ≡{0}≡ y → x ≡ y.
-Arguments timeless {_ _ _} _ {_} _ _.
+Class Timeless {A : ofeT} (x : A) := timeless y : x ≡{0}≡ y → x ≡ y.
+Arguments timeless {_} _ {_} _ _.
+Hint Mode Timeless + ! : typeclass_instances.
+
 Class Discrete (A : ofeT) := discrete_timeless (x : A) :> Timeless x.
 
 (** OFEs with a completion *)
@@ -1029,12 +1031,13 @@ Section sigma.
 
   Global Instance sig_timeless (x : sig P) :
     Timeless (proj1_sig x) → Timeless x.
-  Proof. intros ? y. destruct x, y. unfold dist, sig_dist, equiv, sig_equiv. apply (timeless _). Qed.
-  Global Instance sig_discrete_cofe : Discrete A → Discrete sigC.
   Proof.
-    intros ? [??] [??]. rewrite /dist /equiv /ofe_dist /ofe_equiv /=.
-    rewrite /sig_dist /sig_equiv /=. apply discrete_timeless.
-  Qed.
+    intros ? [b ?]; destruct x as [a ?].
+    rewrite /dist /ofe_dist /= /sig_dist /equiv /ofe_equiv /= /sig_equiv /=.
+    apply (timeless _).
+   Qed.
+  Global Instance sig_discrete_cofe : Discrete A → Discrete sigC.
+  Proof. intros ??. apply _. Qed.
 End sigma.
 
 Arguments sigC {_} _.

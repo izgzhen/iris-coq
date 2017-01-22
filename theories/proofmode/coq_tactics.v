@@ -832,8 +832,8 @@ Proof.
 Qed.
 
 (** * Modalities *)
-Lemma tac_modal_intro Δ P Q : IntoModal Q P → (Δ ⊢ Q) → Δ ⊢ P.
-Proof. rewrite /IntoModal. by intros <- ->. Qed.
+Lemma tac_modal_intro Δ P Q : FromModal P Q → (Δ ⊢ Q) → Δ ⊢ P.
+Proof. rewrite /FromModal. by intros <- ->. Qed.
 
 Lemma tac_modal_elim Δ Δ' i p P' P Q Q' :
   envs_lookup i Δ = Some (p, P) →
@@ -845,3 +845,5 @@ Proof.
   rewrite right_id HΔ always_if_elim. by apply elim_modal.
 Qed.
 End tactics.
+
+Hint Mode ForallSpecialize + - - ! - : typeclass_instances.

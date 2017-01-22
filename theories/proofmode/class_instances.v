@@ -219,15 +219,22 @@ Proof. apply and_elim_r', impl_wand. Qed.
 
 Global Instance into_wand_always R P Q : IntoWand R P Q → IntoWand (□ R) P Q.
 Proof. rewrite /IntoWand=> ->. apply always_elim. Qed.
+
 Global Instance into_wand_later (R1 R2 P Q : uPred M) :
-  IntoLaterN 1 R1 R2 → IntoWand R2 P Q → IntoWand R1 (▷ P) (▷ Q) | 99.
-Proof. rewrite /IntoLaterN /IntoWand=> -> ->. by rewrite -later_wand. Qed.
+  IntoLaterN 1 R1 R2 → IntoWand R2 P Q → IntoWand' R1 (▷ P) (▷ Q) | 99.
+Proof.
+  rewrite /IntoLaterN /IntoWand' /IntoWand=> -> ->. by rewrite -later_wand.
+Qed.
 Global Instance into_wand_laterN n (R1 R2 P Q : uPred M) :
-  IntoLaterN n R1 R2 → IntoWand R2 P Q → IntoWand R1 (▷^n P) (▷^n Q) | 100.
-Proof. rewrite /IntoLaterN /IntoWand=> -> ->. by rewrite -laterN_wand. Qed.
+  IntoLaterN n R1 R2 → IntoWand R2 P Q → IntoWand' R1 (▷^n P) (▷^n Q) | 100.
+Proof.
+  rewrite /IntoLaterN /IntoWand' /IntoWand=> -> ->. by rewrite -laterN_wand.
+Qed.
 Global Instance into_wand_bupd R P Q :
-  IntoWand R P Q → IntoWand R (|==> P) (|==> Q) | 98.
-Proof. rewrite /IntoWand=>->. apply wand_intro_l. by rewrite bupd_wand_r. Qed.
+  IntoWand R P Q → IntoWand' R (|==> P) (|==> Q) | 98.
+Proof.
+  rewrite /IntoWand' /IntoWand=> ->. apply wand_intro_l. by rewrite bupd_wand_r.
+Qed.
 
 (* FromAnd *)
 Global Instance from_and_and P1 P2 : FromAnd (P1 ∧ P2) P1 P2.
@@ -564,12 +571,12 @@ Global Instance into_exist_laterN {A} n P (Φ : A → uPred M) :
   IntoExist P Φ → Inhabited A → IntoExist (▷^n P) (λ a, ▷^n (Φ a))%I.
 Proof. rewrite /IntoExist=> HP ?. by rewrite HP laterN_exist. Qed.
 
-(* IntoModal *)
-Global Instance into_modal_later P : IntoModal P (▷ P).
+(* FromModal *)
+Global Instance from_modal_later P : FromModal (▷ P) P.
 Proof. apply later_intro. Qed.
-Global Instance into_modal_bupd P : IntoModal P (|==> P).
+Global Instance from_modal_bupd P : FromModal (|==> P) P.
 Proof. apply bupd_intro. Qed.
-Global Instance into_modal_except_0 P : IntoModal P (◇ P).
+Global Instance from_modal_except_0 P : FromModal (◇ P) P.
 Proof. apply except_0_intro. Qed.
 
 (* ElimModal *)

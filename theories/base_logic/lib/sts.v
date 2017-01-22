@@ -101,13 +101,13 @@ Section sts.
   Proof.
     iIntros "[Hinv Hγf]". rewrite /sts_ownS /sts_inv /sts_own.
     iDestruct "Hinv" as (s) "[>Hγ Hφ]".
-    iCombine "Hγ" "Hγf" as "Hγ"; iDestruct (own_valid with "Hγ") as %Hvalid.
+    iDestruct (own_valid_2 with "Hγ Hγf") as %Hvalid.
     assert (s ∈ S) by eauto using sts_auth_frag_valid_inv.
     assert (✓ sts_frag S T) as [??] by eauto using cmra_valid_op_r.
-    rewrite sts_op_auth_frag //.
     iModIntro; iExists s; iSplit; [done|]; iFrame "Hφ".
     iIntros (s' T') "[% Hφ]".
-    iMod (own_update with "Hγ") as "Hγ"; first eauto using sts_update_auth.
+    iMod (own_update_2 with "Hγ Hγf") as "Hγ".
+    { rewrite sts_op_auth_frag; [|done..]. by apply sts_update_auth. }
     iRevert "Hγ"; rewrite -sts_op_auth_frag_up; iIntros "[Hγ $]".
     iModIntro. iNext. iExists s'; by iFrame.
   Qed.
