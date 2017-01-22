@@ -933,6 +933,32 @@ Section mnat.
   Proof. by constructor. Qed.
 End mnat.
 
+(** ** Positive integers. *)
+Section positive.
+  Instance pos_valid : Valid positive := λ x, True.
+  Instance pos_validN : ValidN positive := λ n x, True.
+  Instance pos_pcore : PCore positive := λ x, None.
+  Instance pos_op : Op positive := Pos.add.
+  Definition pos_op_plus x y : x ⋅ y = (x + y)%positive := eq_refl.
+  Lemma pos_included (x y : positive) : x ≼ y ↔ (x < y)%positive.
+  Proof.
+    split.
+    - intros [z ->]; unfold op, pos_op. lia.
+    - exists (y - x)%positive. symmetry. apply Pplus_minus. lia.
+  Qed.
+  Lemma pos_ra_mixin : RAMixin positive.
+  Proof.
+    split; try by eauto.
+    - by intros ??? ->.
+    - intros ???. apply Pos.add_assoc.
+    - intros ??. apply Pos.add_comm.
+  Qed.
+  Canonical Structure posR : cmraT := discreteR positive pos_ra_mixin.
+
+  Global Instance pos_cmra_discrete : CMRADiscrete posR.
+  Proof. constructor; apply _ || done. Qed.
+End positive.
+
 (** ** Product *)
 Section prod.
   Context {A B : cmraT}.
