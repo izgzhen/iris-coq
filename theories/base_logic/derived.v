@@ -808,9 +808,43 @@ Global Instance from_option_timeless {A} P (Ψ : A → uPred M) (mx : option A) 
   (∀ x, TimelessP (Ψ x)) → TimelessP P → TimelessP (from_option Ψ P mx).
 Proof. destruct mx; apply _. Qed.
 
+(* Derived lemmas for persistence *)
+Lemma always_always P `{!PersistentP P} : □ P ⊣⊢ P.
+Proof. apply (anti_symm (⊢)); auto using always_elim. Qed.
+Lemma always_if_always p P `{!PersistentP P} : □?p P ⊣⊢ P.
+Proof. destruct p; simpl; auto using always_always. Qed.
+Lemma always_intro P Q `{!PersistentP P} : (P ⊢ Q) → P ⊢ □ Q.
+Proof. rewrite -(always_always P); apply always_intro'. Qed.
+Lemma always_and_sep_l P Q `{!PersistentP P} : P ∧ Q ⊣⊢ P ∗ Q.
+Proof. by rewrite -(always_always P) always_and_sep_l'. Qed.
+Lemma always_and_sep_r P Q `{!PersistentP Q} : P ∧ Q ⊣⊢ P ∗ Q.
+Proof. by rewrite -(always_always Q) always_and_sep_r'. Qed.
+Lemma always_sep_dup P `{!PersistentP P} : P ⊣⊢ P ∗ P.
+Proof. by rewrite -(always_always P) -always_sep_dup'. Qed.
+Lemma always_entails_l P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ Q ∗ P.
+Proof. by rewrite -(always_always Q); apply always_entails_l'. Qed.
+Lemma always_entails_r P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ P ∗ Q.
+Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
+Lemma always_impl_wand P `{!PersistentP P} Q : (P → Q) ⊣⊢ (P -∗ Q).
+Proof.
+  apply (anti_symm _); auto using impl_wand.
+  apply impl_intro_l. by rewrite always_and_sep_l wand_elim_r.
+Qed.
+
 (* Persistence *)
 Global Instance pure_persistent φ : PersistentP (⌜φ⌝ : uPred M)%I.
 Proof. by rewrite /PersistentP always_pure. Qed.
+Global Instance pure_impl_persistent φ Q :
+  PersistentP Q → PersistentP (⌜φ⌝ → Q)%I.
+Proof.
+  rewrite /PersistentP pure_impl_forall always_forall. auto using forall_mono.
+Qed.
+Global Instance pure_wand_persistent φ Q :
+  PersistentP Q → PersistentP (⌜φ⌝ -∗ Q)%I.
+Proof.
+  rewrite /PersistentP -always_impl_wand pure_impl_forall always_forall.
+  auto using forall_mono.
+Qed.
 Global Instance always_persistent P : PersistentP (□ P).
 Proof. by intros; apply always_intro'. Qed.
 Global Instance and_persistent P Q :
@@ -843,23 +877,5 @@ Proof. intros. by rewrite /PersistentP always_ownM. Qed.
 Global Instance from_option_persistent {A} P (Ψ : A → uPred M) (mx : option A) :
   (∀ x, PersistentP (Ψ x)) → PersistentP P → PersistentP (from_option Ψ P mx).
 Proof. destruct mx; apply _. Qed.
-
-(* Derived lemmas for persistence *)
-Lemma always_always P `{!PersistentP P} : □ P ⊣⊢ P.
-Proof. apply (anti_symm (⊢)); auto using always_elim. Qed.
-Lemma always_if_always p P `{!PersistentP P} : □?p P ⊣⊢ P.
-Proof. destruct p; simpl; auto using always_always. Qed.
-Lemma always_intro P Q `{!PersistentP P} : (P ⊢ Q) → P ⊢ □ Q.
-Proof. rewrite -(always_always P); apply always_intro'. Qed.
-Lemma always_and_sep_l P Q `{!PersistentP P} : P ∧ Q ⊣⊢ P ∗ Q.
-Proof. by rewrite -(always_always P) always_and_sep_l'. Qed.
-Lemma always_and_sep_r P Q `{!PersistentP Q} : P ∧ Q ⊣⊢ P ∗ Q.
-Proof. by rewrite -(always_always Q) always_and_sep_r'. Qed.
-Lemma always_sep_dup P `{!PersistentP P} : P ⊣⊢ P ∗ P.
-Proof. by rewrite -(always_always P) -always_sep_dup'. Qed.
-Lemma always_entails_l P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ Q ∗ P.
-Proof. by rewrite -(always_always Q); apply always_entails_l'. Qed.
-Lemma always_entails_r P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ P ∗ Q.
-Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
 End derived.
 End uPred.
