@@ -130,10 +130,12 @@ Infix "⋅?" := opM (at level 50, left associativity) : C_scope.
 (** * Persistent elements *)
 Class Persistent {A : cmraT} (x : A) := persistent : pcore x ≡ Some x.
 Arguments persistent {_} _ {_}.
+Hint Mode Persistent + ! : typeclass_instances.
 
 (** * Exclusive elements (i.e., elements that cannot have a frame). *)
 Class Exclusive {A : cmraT} (x : A) := exclusive0_l y : ✓{0} (x ⋅ y) → False.
 Arguments exclusive0_l {_} _ {_} _ _.
+Hint Mode Exclusive + ! : typeclass_instances.
 
 (** * CMRAs whose core is total *)
 (** The function [core] may return a dummy when used on CMRAs without total
@@ -545,7 +547,7 @@ Section ucmra.
   Global Instance cmra_unit_total : CMRATotal A.
   Proof.
     intros x. destruct (cmra_pcore_mono' ∅ x ∅) as (cx&->&?);
-      eauto using ucmra_unit_least, (persistent ∅).
+      eauto using ucmra_unit_least, (persistent (∅:A)).
   Qed.
 End ucmra.
 Hint Immediate cmra_unit_total.

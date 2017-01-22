@@ -31,10 +31,12 @@ Typeclasses Opaque uPred_except_0.
 
 Class TimelessP {M} (P : uPred M) := timelessP : ▷ P ⊢ ◇ P.
 Arguments timelessP {_} _ {_}.
+Hint Mode TimelessP + ! : typeclass_instances.
 
 Class PersistentP {M} (P : uPred M) := persistentP : P ⊢ □ P.
 Hint Mode PersistentP - ! : typeclass_instances.
 Arguments persistentP {_} _ {_}.
+Hint Mode PersistentP + ! : typeclass_instances.
 
 Module uPred.
 Section derived.
