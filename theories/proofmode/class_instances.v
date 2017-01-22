@@ -626,3 +626,5 @@ Proof.
   by rewrite -{2}HP -(except_0_idemp P) -except_0_bupd -(except_0_intro P).
 Qed.
 End classes.
+
+Hint Mode ProgIntoLaterN + - ! - : typeclass_instances.
