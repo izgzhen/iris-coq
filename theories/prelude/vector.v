@@ -187,7 +187,8 @@ Proof.
 Defined.
 
 Ltac inv_vec v :=
-  match type of v with
+  let T := type of v in
+  match eval hnf in T with
   | vec _ 0 =>
     revert dependent v; match goal with |- ∀ v, @?P v => apply (vec_0_inv P) end
   | vec _ (S ?n) =>
