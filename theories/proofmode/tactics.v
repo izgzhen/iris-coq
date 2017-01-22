@@ -642,7 +642,7 @@ Tactic Notation "iNext":= iNext _.
 Tactic Notation "iModIntro" :=
   iStartProof;
   eapply tac_modal_intro;
-    [let P := match goal with |- IntoModal _ ?P => P end in
+    [let P := match goal with |- FromModal ?P _ => P end in
      apply _ || fail "iModIntro:" P "not a modality"|].
 
 Tactic Notation "iModCore" constr(H) :=

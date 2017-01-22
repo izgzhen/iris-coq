@@ -155,8 +155,10 @@ Section proofmode_classes.
   Proof. rewrite /FromAssumption=>->. apply bupd_fupd. Qed.
 
   Global Instance into_wand_fupd E1 E2 R P Q :
-    IntoWand R P Q → IntoWand R (|={E1,E2}=> P) (|={E1,E2}=> Q) | 100.
-  Proof. rewrite /IntoWand=>->. apply wand_intro_l. by rewrite fupd_wand_r. Qed.
+    IntoWand R P Q → IntoWand' R (|={E1,E2}=> P) (|={E1,E2}=> Q) | 100.
+  Proof.
+    rewrite /IntoWand' /IntoWand=>->. apply wand_intro_l. by rewrite fupd_wand_r.
+  Qed.
 
   Global Instance from_sep_fupd E P Q1 Q2 :
     FromSep P Q1 Q2 → FromSep (|={E}=> P) (|={E}=> Q1) (|={E}=> Q2).
@@ -179,8 +181,8 @@ Section proofmode_classes.
   Global Instance is_except_0_fupd E1 E2 P : IsExcept0 (|={E1,E2}=> P).
   Proof. by rewrite /IsExcept0 except_0_fupd. Qed.
 
-  Global Instance into_modal_fupd E P : IntoModal P (|={E}=> P).
-  Proof. rewrite /IntoModal. apply fupd_intro. Qed.
+  Global Instance from_modal_fupd E P : FromModal (|={E}=> P) P.
+  Proof. rewrite /FromModal. apply fupd_intro. Qed.
 
   (* Put a lower priority compared to [elim_modal_fupd_fupd], so that
      it is not taken when the first parameter is not specified (in
