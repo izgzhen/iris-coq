@@ -239,6 +239,24 @@ Proof.
   - iExists Φ; iSplit; by rewrite big_sepM_fmap.
 Qed.
 
+Lemma slice_iff E q f P Q Q' γ b :
+  ↑N ⊆ E → f !! γ = Some b →
+  ▷ □ (Q ↔ Q') -∗ slice N γ Q -∗ ▷?q box N f P ={E}=∗ ∃ γ' P',
+    ⌜delete γ f !! γ' = None⌝ ∗ ▷?q ▷ □ (P ↔ P') ∗
+    slice N γ' Q' ∗ ▷?q box N (<[γ' := b]>(delete γ f)) P'.
+Proof.
+  iIntros (??) "#HQQ' #Hs Hb". destruct b.
+  - iMod (slice_delete_full with "Hs Hb") as (P') "(HQ & Heq & Hb)"; try done.
+    iDestruct ("HQQ'" with "HQ") as "HQ'".
+    iMod (slice_insert_full with "HQ' Hb") as (γ') "(% & #Hs' & Hb)"; try done.
+    iExists γ', _. iFrame "∗#%". iIntros "!>". do 2 iNext. iRewrite "Heq".
+    iAlways. by iSplit; iIntros "[? $]"; iApply "HQQ'".
+  - iMod (slice_delete_empty with "Hs Hb") as (P') "(Heq & Hb)"; try done.
+    iMod (slice_insert_empty with "Hb") as (γ') "(% & #Hs' & Hb)"; try done.
+    iExists γ', _. iFrame "∗#%". iIntros "!>". do 2 iNext. iRewrite "Heq".
+    iAlways. by iSplit; iIntros "[? $]"; iApply "HQQ'".
+Qed.
+
 Lemma slice_split E q f P Q1 Q2 γ b :
   ↑N ⊆ E → f !! γ = Some b →
   slice N γ (Q1 ∗ Q2) -∗ ▷?q box N f P ={E}=∗ ∃ γ1 γ2,
