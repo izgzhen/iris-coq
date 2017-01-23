@@ -17,8 +17,8 @@ Applying hypotheses and lemmas
   conclusion of `pm_trm` and generates goals for the premises of `pm_trm`. See
   proof mode terms below.
   If the applied term has more premises than given specialization patterns, the
-  pattern is extended with `[-] ... [-]`.  As a consequence, all unused spatial
-  hypotheses move to the first premise without an explicit specialization
+  pattern is extended with `[] ... []`.  As a consequence, all unused spatial
+  hypotheses move to the last premise without an explicit specialization
   pattern.
 
 Context management

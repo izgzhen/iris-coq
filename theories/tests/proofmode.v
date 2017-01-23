@@ -118,5 +118,5 @@ Proof.
 Qed.
 
 Lemma demo_11 (M : ucmraT) (P Q R : uPred M) :
-  (P -∗ Q -∗ True -∗ True -∗ R) -∗ P -∗ Q -∗ R.
+  (P -∗ True -∗ True -∗ Q -∗ R) -∗ P -∗ Q -∗ R.
 Proof. iIntros "H HP HQ". by iApply ("H" with "[HP]"). Qed.

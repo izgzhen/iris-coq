@@ -431,7 +431,7 @@ Tactic Notation "iApply" open_constr(lem) :=
       [env_cbv; reflexivity
       |apply _
       |lazy beta (* reduce betas created by instantiation *)]
-    |iSpecializePat H "[-]"; last go H] in
+    |iSpecializePat H "[]"; last go H] in
   iPoseProofCore lem as false true (fun H =>
     first [iExact H|go H|iTypeOf H (fun Q => fail 1 "iApply: cannot apply" Q)]).
 
