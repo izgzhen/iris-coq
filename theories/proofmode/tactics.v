@@ -285,6 +285,9 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
   let rec go H1 pats :=
     lazymatch pats with
     | [] => idtac
+    | SForall :: ?pats =>
+       idtac "the * specialization pattern is deprecated because it is applied implicitly";
+       go H1 pats
     | SName ?H2 :: ?pats =>
        eapply tac_specialize with _ _ H2 _ H1 _ _ _ _; (* (j:=H1) (i:=H2) *)
          [env_cbv; reflexivity || fail "iSpecialize:" H2 "not found"
