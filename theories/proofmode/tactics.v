@@ -333,6 +333,8 @@ introduction pattern, which will be coerced into [true] when it solely contains
 `#` or `%` patterns at the top-level. *)
 Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
   let p := intro_pat_persistent p in
+  let t :=
+    match type of t with string => constr:(ITrm t hnil "") | _ => t end in
   lazymatch t with
   | ITrm ?H ?xs ?pat =>
     lazymatch type of H with
@@ -349,6 +351,7 @@ Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
       end
     | _ => fail "iSpecialize:" H "should be a hypothesis, use iPoseProof instead"
     end
+  | _ => fail "iSpecialize:" t "should be a proof mode term"
   end.
 
 Tactic Notation "iSpecialize" open_constr(t) :=
