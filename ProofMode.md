@@ -18,8 +18,7 @@ Applying hypotheses and lemmas
   proof mode terms below.
   If the applied term has more premises than given specialization patterns, the
   pattern is extended with `[] ... []`.  As a consequence, all unused spatial
-  hypotheses move to the last premise without an explicit specialization
-  pattern.
+  hypotheses move to the last premise.
 
 Context management
 ------------------
