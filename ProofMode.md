@@ -16,12 +16,10 @@ Applying hypotheses and lemmas
 - `iApply pm_trm` : match the conclusion of the current goal against the
   conclusion of `pm_trm` and generates goals for the premises of `pm_trm`. See
   proof mode terms below.
-  If the applied term has more premises than the number of given specialization
-  patterns, all remaining spatial hypotheses go to the first premise that does
-  not have corresponding specialization pattern. Subsequent premises without
-  specialization pattern do not get any spatial hypotheses. In other words, the
-  specialization pattern is extended with `[-] [] ... []` to account for
-  hypotheses without specialization pattern.
+  If the applied term has more premises than given specialization patterns, the
+  pattern is extended with `[-] ... [-]`.  As a consequence, all unused spatial
+  hypotheses move to the first premise without an explicit specialization
+  pattern.
 
 Context management
 ------------------
