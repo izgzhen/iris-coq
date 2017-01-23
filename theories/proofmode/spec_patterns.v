@@ -12,8 +12,7 @@ Inductive spec_pat :=
   | SGoal : spec_goal → spec_pat
   | SGoalPersistent : spec_pat
   | SGoalPure : spec_pat
-  | SName : string → spec_pat
-  | SForall : spec_pat.
+  | SName : string → spec_pat.
 
 Module spec_pat.
 Inductive token :=
@@ -23,7 +22,6 @@ Inductive token :=
   | TBracketR : token
   | TPersistent : token
   | TPure : token
-  | TForall : token
   | TModal : token
   | TFrame : token.
 
@@ -37,7 +35,6 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String "]" s => tokenize_go s (TBracketR :: cons_name kn k) ""
   | String "#" s => tokenize_go s (TPersistent :: cons_name kn k) ""
   | String "%" s => tokenize_go s (TPure :: cons_name kn k) ""
-  | String "*" s => tokenize_go s (TForall :: cons_name kn k) ""
   | String ">" s => tokenize_go s (TModal :: cons_name kn k) ""
   | String "$" s => tokenize_go s (TFrame :: cons_name kn k) ""
   | String a s =>
@@ -60,7 +57,6 @@ Fixpoint parse_go (ts : list token) (k : list spec_pat) : option (list spec_pat)
   | TBracketL :: ts => parse_goal ts (SpecGoal false false [] []) k
   | TModal :: TBracketL :: ts => parse_goal ts (SpecGoal true false [] []) k
   | TModal :: ts => parse_go ts (SGoal (SpecGoal true true [] []) :: k)
-  | TForall :: ts => parse_go ts (SForall :: k)
   | _ => None
   end
 with parse_goal (ts : list token) (g : spec_goal)

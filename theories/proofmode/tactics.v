@@ -285,7 +285,6 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
   let rec go H1 pats :=
     lazymatch pats with
     | [] => idtac
-    | SForall :: ?pats => try (iSpecializeArgs H1 (hcons _ _)); go H1 pats
     | SName ?H2 :: ?pats =>
        eapply tac_specialize with _ _ H2 _ H1 _ _ _ _; (* (j:=H1) (i:=H2) *)
          [env_cbv; reflexivity || fail "iSpecialize:" H2 "not found"
@@ -424,11 +423,6 @@ Tactic Notation "iPoseProof" open_constr(lem) "as" constr(H) :=
 
 (** * Apply *)
 Tactic Notation "iApply" open_constr(lem) :=
-  let lem := (* add a `*` to specialize all top-level foralls *)
-    lazymatch lem with
-    | ITrm ?t ?xs ?pat => constr:(ITrm t xs ("*" +:+ pat))
-    | _ => constr:(ITrm lem hnil "*")
-    end in
   let rec go H := first
     [eapply tac_apply with _ H _ _ _;
       [env_cbv; reflexivity
@@ -971,7 +965,8 @@ Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
       | 0 => fail "iDestruct: cannot introduce" n "hypotheses"
       | 1 => repeat iIntroForall; let H := iFresh in iIntro H; tac H
       | S ?n' => repeat iIntroForall; let H := iFresh in iIntro H; go n'
-      end in intros; iStartProof; go n in
+      end in
+    intros; iStartProof; go n in
   lazymatch type of lem with
   | nat => intro_destruct lem
   | Z => (* to make it work in Z_scope. We should just be able to bind

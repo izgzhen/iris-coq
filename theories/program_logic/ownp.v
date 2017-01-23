@@ -96,7 +96,7 @@ Section lifting.
       iMod (own_update_2 with "Hσ Hσf") as "[Hσ Hσf]".
       { by apply auth_update, option_local_update,
           (exclusive_local_update _ (Excl σ2)). }
-      iFrame "Hσ". iApply ("H" with "* []"); eauto.
+      iFrame "Hσ". iApply ("H" with "[]"); eauto.
   Qed.
 
   Lemma ownP_lift_pure_step `{Inhabited (state Λ)} E Φ e1 :
@@ -171,7 +171,7 @@ Section ectx_lifting.
     iIntros "H". iApply (ownP_lift_step E); try done.
     iMod "H" as (σ1) "(%&Hσ1&Hwp)". iModIntro. iExists σ1.
     iSplit; first by eauto. iFrame. iNext. iIntros (e2 σ2 efs) "% ?".
-    iApply ("Hwp" with "* []"); by eauto.
+    iApply ("Hwp" with "[]"); eauto.
   Qed.
 
   Lemma ownP_lift_pure_head_step E Φ e1 :
@@ -193,7 +193,7 @@ Section ectx_lifting.
     ⊢ WP e1 @ E {{ Φ }}.
   Proof.
     iIntros (?) "[? H]". iApply ownP_lift_atomic_step; eauto. iFrame. iNext.
-    iIntros (???) "% ?". iApply ("H" with "* []"); eauto.
+    iIntros (???) "% ?". iApply ("H" with "[]"); eauto.
   Qed.
 
   Lemma ownP_lift_atomic_det_head_step {E Φ e1} σ1 v2 σ2 efs :
