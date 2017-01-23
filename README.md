@@ -10,7 +10,7 @@ This version is known to compile with:
  - Ssreflect 1.6.1
 
 The easiest way to install the correct versions of the dependencies is
-through opam. Ssreflect is available on the coq-released repository,
+through opam. Coq packages are available on the coq-released repository,
 set up by the command:
 
     opam repo add coq-released https://coq.inria.fr/opam/released
