@@ -1,4 +1,4 @@
-(* Copyright (c) 2012-2015, Robbert Krebbers. *)
+(* Copyright (c) 2012-2017, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
 (** Properties about arbitrary pre-, partial, and total orders. We do not use
 the relation [⊆] because we often have multiple orders on the same structure *)

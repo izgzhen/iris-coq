@@ -1,4 +1,4 @@
-(* Copyright (c) 2012-2015, Robbert Krebbers. *)
+(* Copyright (c) 2012-2017, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
 (** This file collects facts on proof irrelevant types/propositions. *)
 From iris.prelude Require Export base.
