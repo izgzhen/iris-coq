@@ -1198,8 +1198,8 @@ Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
 
 (** * Assert *)
 (* The argument [p] denotes whether [Q] is persistent. It can either be a
-Boolean or an introduction pattern, which will be coerced into [true] when it
-only contains `#` or `%` patterns at the top-level. *)
+Boolean or an introduction pattern, which will be coerced into [true] if it
+only contains `#` or `%` patterns at the top-level, and [false] otherwise. *)
 Tactic Notation "iAssertCore" open_constr(Q)
     "with" constr(Hs) "as" constr(p) tactic(tac) :=
   iStartProof;
@@ -1237,15 +1237,46 @@ Tactic Notation "iAssertCore" open_constr(Q)
      end
   | ?pat => fail "iAssert: invalid pattern" pat
   end.
+Tactic Notation "iAssertCore" open_constr(Q) "as" constr(p) tactic(tac) :=
+  let p := intro_pat_persistent p in
+  match p with
+  | true => iAssertCore Q with "[-]" as p tac
+  | false => iAssertCore Q with "[]" as p tac
+  end.
 
 Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as" constr(pat) :=
   iAssertCore Q with Hs as pat (fun H => iDestructHyp H as pat).
+Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as"
+    "(" simple_intropattern(x1) ")" constr(pat) :=
+  iAssertCore Q with Hs as pat (fun H => iDestructHyp H as (x1) pat).
+Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as"
+    "(" simple_intropattern(x1) simple_intropattern(x2) ")" constr(pat) :=
+  iAssertCore Q with Hs as pat (fun H => iDestructHyp H as (x1 x2) pat).
+Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as"
+    "(" simple_intropattern(x1) simple_intropattern(x2) simple_intropattern(x3)
+    ")" constr(pat) :=
+  iAssertCore Q with Hs as pat (fun H => iDestructHyp H as (x1 x2 x3) pat).
+Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs) "as"
+    "(" simple_intropattern(x1) simple_intropattern(x2) simple_intropattern(x3)
+    simple_intropattern(x4) ")" constr(pat) :=
+  iAssertCore Q with Hs as pat (fun H => iDestructHyp H as (x1 x2 x3 x4) pat).
+
 Tactic Notation "iAssert" open_constr(Q) "as" constr(pat) :=
-  let p := intro_pat_persistent pat in
-  match p with
-  | true => iAssert Q with "[-]" as pat
-  | false => iAssert Q with "[]" as pat
-  end.
+  iAssertCore Q as pat (fun H => iDestructHyp H as pat).
+Tactic Notation "iAssert" open_constr(Q) "as"
+    "(" simple_intropattern(x1) ")" constr(pat) :=
+  iAssertCore Q as pat (fun H => iDestructHyp H as (x1) pat).
+Tactic Notation "iAssert" open_constr(Q) "as"
+    "(" simple_intropattern(x1) simple_intropattern(x2) ")" constr(pat) :=
+  iAssertCore Q as pat (fun H => iDestructHyp H as (x1 x2) pat).
+Tactic Notation "iAssert" open_constr(Q) "as"
+    "(" simple_intropattern(x1) simple_intropattern(x2) simple_intropattern(x3)
+    ")" constr(pat) :=
+  iAssertCore Q as pat (fun H => iDestructHyp H as (x1 x2 x3) pat).
+Tactic Notation "iAssert" open_constr(Q) "as"
+    "(" simple_intropattern(x1) simple_intropattern(x2) simple_intropattern(x3)
+    simple_intropattern(x4) ")" constr(pat) :=
+  iAssertCore Q as pat (fun H => iDestructHyp H as (x1 x2 x3 x4) pat).
 
 Tactic Notation "iAssert" open_constr(Q) "with" constr(Hs)
     "as" "%" simple_intropattern(pat) :=
