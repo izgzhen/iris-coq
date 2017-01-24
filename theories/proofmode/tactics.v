@@ -285,7 +285,9 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
   let rec go H1 pats :=
     lazymatch pats with
     | [] => idtac
-    | SForall :: ?pats => try (iSpecializeArgs H1 (hcons _ _)); go H1 pats
+    | SForall :: ?pats =>
+       idtac "the * specialization pattern is deprecated because it is applied implicitly";
+       go H1 pats
     | SName ?H2 :: ?pats =>
        eapply tac_specialize with _ _ H2 _ H1 _ _ _ _; (* (j:=H1) (i:=H2) *)
          [env_cbv; reflexivity || fail "iSpecialize:" H2 "not found"
@@ -424,11 +426,6 @@ Tactic Notation "iPoseProof" open_constr(lem) "as" constr(H) :=
 
 (** * Apply *)
 Tactic Notation "iApply" open_constr(lem) :=
-  let lem := (* add a `*` to specialize all top-level foralls *)
-    lazymatch lem with
-    | ITrm ?t ?xs ?pat => constr:(ITrm t xs ("*" +:+ pat))
-    | _ => constr:(ITrm lem hnil "*")
-    end in
   let rec go H := first
     [eapply tac_apply with _ H _ _ _;
       [env_cbv; reflexivity
@@ -964,27 +961,59 @@ Tactic Notation "iRevertIntros" "(" ident(x1) ident(x2) ident(x3) ident(x4)
   iRevertIntros (x1 x2 x3 x4 x5 x6 x7 x8) "" with tac.
 
 (** * Destruct tactic *)
+Class CopyDestruct {M} (P : uPred M).
+Hint Mode CopyDestruct + ! : typeclass_instances.
+
+Instance copy_destruct_forall {M A} (Φ : A → uPred M) : CopyDestruct (∀ x, Φ x).
+Instance copy_destruct_impl {M} (P Q : uPred M) :
+  CopyDestruct Q → CopyDestruct (P → Q).
+Instance copy_destruct_wand {M} (P Q : uPred M) :
+  CopyDestruct Q → CopyDestruct (P -∗ Q).
+Instance copy_destruct_always {M} (P : uPred M) :
+  CopyDestruct P → CopyDestruct (□ P).
+
 Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
+  let hyp_name :=
+    lazymatch type of lem with
+    | string => constr:(Some lem)
+    | iTrm =>
+       lazymatch lem with
+       | @iTrm string ?H _ _ => constr:(Some H) | _ => constr:(@None string)
+       end
+    | _ => constr:(@None string)
+    end in
   let intro_destruct n :=
     let rec go n' :=
       lazymatch n' with
       | 0 => fail "iDestruct: cannot introduce" n "hypotheses"
       | 1 => repeat iIntroForall; let H := iFresh in iIntro H; tac H
       | S ?n' => repeat iIntroForall; let H := iFresh in iIntro H; go n'
-      end in intros; iStartProof; go n in
+      end in
+    intros; iStartProof; go n in
   lazymatch type of lem with
   | nat => intro_destruct lem
   | Z => (* to make it work in Z_scope. We should just be able to bind
      tactic notation arguments to notation scopes. *)
      let n := eval compute in (Z.to_nat lem) in intro_destruct n
-  | string => tac lem
-  | iTrm =>
-     (* only copy the hypothesis when universal quantifiers are instantiated *)
-     lazymatch lem with
-     | @iTrm string ?H _ hnil ?pat => iSpecializeCore lem as p; last tac
-     | _ => iPoseProofCore lem as p false tac
+  | _ =>
+     (* Only copy the hypothesis in case there is a [CopyDestruct] instance.
+     Also, rule out cases in which it does not make sense to copy, namely when
+     destructing a lemma (instead of a hypothesis) or a spatial hyopthesis
+     (which cannot be kept). *)
+     lazymatch hyp_name with
+     | None => iPoseProofCore lem as p false tac
+     | Some ?H => iTypeOf H (fun q P =>
+        lazymatch q with
+        | true =>
+           (* persistent hypothesis, check for a CopyDestruct instance *)
+           tryif (let dummy := constr:(_ : CopyDestruct P) in idtac)
+           then (iPoseProofCore lem as p false tac)
+           else (iSpecializeCore lem as p; last (tac H))
+        | false =>
+           (* spatial hypothesis, cannot copy *)
+           iSpecializeCore lem as p; last (tac H)
+        end)
      end
-  | _ => iPoseProofCore lem as p false tac
   end.
 
 Tactic Notation "iDestruct" open_constr(lem) "as" constr(pat) :=

@@ -134,7 +134,7 @@ Lemma wp_safe e σ Φ :
 Proof.
   rewrite wp_unfold /wp_pre. iIntros "[(Hw&HE&Hσ) H]".
   destruct (to_val e) as [v|] eqn:?; [eauto 10|].
-  rewrite fupd_eq. iMod ("H" with "* Hσ [-]") as ">(?&?&%&?)"; first by iFrame.
+  rewrite fupd_eq. iMod ("H" with "Hσ [-]") as ">(?&?&%&?)"; first by iFrame.
   eauto 10.
 Qed.
 
