@@ -123,6 +123,56 @@ Next Obligation.
   by rewrite map_of_to_list.
 Qed.
 
+(** * Curry and uncurry *)
+Definition gmap_curry `{Countable K1, Countable K2} {A} :
+    gmap K1 (gmap K2 A) → gmap (K1 * K2) A :=
+  map_fold (λ i1 m' macc,
+    map_fold (λ i2 x, <[(i1,i2):=x]>) macc m') ∅.
+Definition gmap_uncurry `{Countable K1, Countable K2} {A} :
+    gmap (K1 * K2) A → gmap K1 (gmap K2 A) :=
+  map_fold (λ '(i1,i2) x,
+    partial_alter (Some ∘ <[i2:=x]> ∘ from_option id ∅) i1) ∅.
+
+Section curry_uncurry.
+  Context `{Countable K1, Countable K2} {A : Type}.
+
+  Lemma lookup_gmap_curry (m : gmap K1 (gmap K2 A)) i j :
+    gmap_curry m !! (i,j) = m !! i ≫= (!! j).
+  Proof.
+    apply (map_fold_ind (λ mr m, mr !! (i,j) = m !! i ≫= (!! j))).
+    { by rewrite !lookup_empty. }
+    clear m; intros i' m2 m m12 Hi' IH.
+    apply (map_fold_ind (λ m2r m2, m2r !! (i,j) = <[i':=m2]> m !! i ≫= (!! j))).
+    { rewrite IH. destruct (decide (i' = i)) as [->|].
+      - rewrite lookup_insert, Hi'; simpl; by rewrite lookup_empty.
+      - by rewrite lookup_insert_ne by done. }
+    intros j' y m2' m12' Hj' IH'. destruct (decide (i = i')) as [->|].
+    - rewrite lookup_insert; simpl. destruct (decide (j = j')) as [->|].
+      + by rewrite !lookup_insert.
+      + by rewrite !lookup_insert_ne, IH', lookup_insert by congruence.
+    - by rewrite !lookup_insert_ne, IH', lookup_insert_ne by congruence.
+  Qed.
+
+  Lemma lookup_gmap_uncurry (m : gmap (K1 * K2) A) i j :
+    gmap_uncurry m !! i ≫= (!! j) = m !! (i, j).
+  Proof.
+    apply (map_fold_ind (λ mr m, mr !! i ≫= (!! j) = m !! (i, j))).
+    { by rewrite !lookup_empty. }
+    clear m; intros [i' j'] x m12 mr Hij' IH.
+    destruct (decide (i = i')) as [->|].
+    - rewrite lookup_partial_alter. destruct (decide (j = j')) as [->|].
+      + destruct (mr !! i'); simpl; by rewrite !lookup_insert.
+      + destruct (mr !! i'); simpl; by rewrite !lookup_insert_ne by congruence.
+    - by rewrite lookup_partial_alter_ne, lookup_insert_ne by congruence.
+  Qed.
+
+  Lemma gmap_curry_uncurry (m : gmap (K1 * K2) A) :
+    gmap_curry (gmap_uncurry m) = m.
+  Proof.
+   apply map_eq; intros [i j]. by rewrite lookup_gmap_curry, lookup_gmap_uncurry.
+  Qed.
+End curry_uncurry.
+
 (** * Finite sets *)
 Notation gset K := (mapset (gmap K)).
 Instance gset_dom `{Countable K} {A} : Dom (gmap K A) (gset K) := mapset_dom.
